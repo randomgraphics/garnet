@@ -107,7 +107,7 @@ void printOglInfo( GN::HandleType disp, int index )
         "---------------------------------------------------\n";
     for ( size_t i = 0; i < glexts.size(); ++i )
     {
-        info += glexts[i] + " ";
+        info += glexts[i] + "\n";
     }
     info +=
         "\n"
@@ -161,6 +161,105 @@ void createWindow( int pfdIndex )
     ::ReleaseDC( hwnd, hdc );
 }
 
+int choosePixelFormat( HDC hdc, int total )
+{
+    GN_GUARD;
+
+    PIXELFORMATDESCRIPTOR pfd;
+
+    DWORD required_flags = PFD_DRAW_TO_WINDOW |
+        PFD_SUPPORT_OPENGL |
+        PFD_DOUBLEBUFFER   ;
+
+    // flags that can not exist
+    DWORD xxx_flags = PFD_NEED_PALETTE; // we're aiming for a RGB device
+
+    int candidates[4] =
+    {
+        0, // ICD
+        0, // MCD
+        0, // ???
+        0, // software
+    };
+
+    for ( int i = 1; i <= total; i++ )
+    {
+        if (!DescribePixelFormat(hdc, i, sizeof(pfd), &pfd))
+        {
+            GN_ERROR(sLogger)( "can't get the description of the %dth pixelformat!", i );
+            return 0;
+        }
+
+        // check pfd flags;
+        if( (pfd.dwFlags & required_flags) != required_flags ) continue;
+        if( (pfd.dwFlags & xxx_flags) != 0 ) continue;
+
+        // check pixel type
+        if( PFD_TYPE_RGBA != pfd.iPixelType ) continue;
+
+        // check z-buffer
+        if( 0 == pfd.cDepthBits ) continue;
+
+        // check stencil buffer
+        if( 0 == pfd.cStencilBits ) continue;
+
+        // check acceleration flag
+        if( PFD_GENERIC_ACCELERATED & pfd.dwFlags )
+        {
+            if( PFD_GENERIC_FORMAT & pfd.dwFlags )
+            {
+                // mixed device
+                if( 0 == candidates[2] ) candidates[2] = i;
+            }
+            else
+            {
+                // MCD device
+                if( 0 == candidates[1] ) candidates[1] = i;
+            }
+        }
+        else if( PFD_GENERIC_FORMAT & pfd.dwFlags )
+        {
+            // software device
+            if( 0 == candidates[3] ) candidates[3] = i;
+        }
+        else
+        {
+            // might be ICD device
+            if( 0 == candidates[0] ) candidates[0] = i;
+        }
+
+        if( candidates[0] > 0 && candidates[1] > 0 && candidates[2] > 0 )
+        {
+            // no need to iterate more formats
+            break;
+        }
+    }
+
+    // prefer hardware than mixed, than software
+    if( candidates[0] > 0 )
+    {
+        return candidates[0];
+    }
+    else if( candidates[1] > 0 )
+    {
+        return candidates[1];
+    }
+    else if( candidates[2] > 0 )
+    {
+        return candidates[2];
+    }
+    else if( candidates[3] > 0 )
+    {
+        return candidates[3];
+    }
+
+    // error
+    GN_ERROR(sLogger)( "no appropriate pixelformat!" );
+    return 0;
+
+    GN_UNGUARD;
+}
+
 int main()
 {
     GN::win::Window * mainWindow = GN::win::createWindow( GN::win::WCP_WINDOWED_RENDER_WINDOW );
@@ -174,12 +273,15 @@ int main()
     int count = DescribePixelFormat(hdc, 1, 0, 0);
     GN_INFO(sLogger)( "%d pixelformats in total.", count );
 
+    int bestPixelFormat = choosePixelFormat( hdc, count );
+
     ::ReleaseDC( hwnd, hdc );
 
-    for( int i = 1; i <= count; ++i )
-    {
-        createWindow( i );
-    }
+    //for( int i = 1; i <= count; ++i )
+    //{
+    //    createWindow( i );
+    //}
+    createWindow( bestPixelFormat );
 
     // success
     return 0;

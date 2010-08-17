@@ -72,11 +72,11 @@ bool init( Gpu & gpu )
     if( !rc.uniforms[0] ) return false;
 
     // setup vertex format
-    rc.vtxfmt.numElements = 1;
-    rc.vtxfmt.elements[0].bindTo( "position", 0 );
-    rc.vtxfmt.elements[0].format = ColorFormat::FLOAT4;
-    rc.vtxfmt.elements[0].offset = 0;
-    rc.vtxfmt.elements[0].stream = 0;
+    rc.vtxbind.resize( 1 );
+    rc.vtxbind[0].attribute = 0; // bind to the first GPU program attribute
+    rc.vtxbind[0].format = ColorFormat::FLOAT4;
+    rc.vtxbind[0].offset = 0;
+    rc.vtxbind[0].stream = 0;
 
     // create texture
     rc.textures[0].texture.attach( loadTextureFromFile( gpu, "media::texture\\earth.jpg" ) );

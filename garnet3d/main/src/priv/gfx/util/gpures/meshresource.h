@@ -22,7 +22,7 @@ namespace GN { namespace gfx
         bool used[GpuContext::MAX_VERTEX_BUFFERS];
 
         /// analyze vertex format
-        bool analyze( const VertexFormat & vf );
+        bool analyze( const MeshVertexFormat & vf );
     };
 
     ///

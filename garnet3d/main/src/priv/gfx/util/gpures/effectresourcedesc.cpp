@@ -299,10 +299,10 @@ static void sParseAttref( EffectResourceDesc::EffectGpuProgramDesc & sd, const X
     const char * attribute = sGetAttrib( node, "attribute" );
     if( !attribute ) return sPostError( node, "XML attribute 'attribute' not found" );
 
-    const char * shaderSemantic = sGetAttrib( node, "shaderSemantic" );
-    if( !shaderSemantic ) return sPostError( node, "Attribute 'shaderSemantic' not found" );
+    const char * shaderParameter = sGetAttrib( node, "shaderParameter" );
+    if( !shaderParameter ) return sPostError( node, "Attribute 'shaderParameter' not found" );
 
-    sd.attributes[shaderSemantic] = attribute;
+    sd.attributes[shaderParameter] = attribute;
 }
 
 //

@@ -31,22 +31,22 @@ static const UInt16 MESH_BINARY_ENDIAN_TAG_V1 = 0x0201;
 
 struct MeshBinaryFileHeaderV2
 {
-    char         tag[16];      ///< must be "GARNET MESH BIN\0"
-    UInt32       endian;       ///< endian tag: 0x01020304 means file is in the same endian as the host OS.
-    UInt32       version;      ///< mesh binary version must be 0x00010000
-    UInt32       prim;         ///< primitive type
-    UInt32       numvtx;       ///< number of vertices
-    UInt32       numidx;       ///< number of indices. 0 means non-indexed mesh
-    UInt8        idx32;        ///< true for 32-bit index buffer
-    UInt8        dynavb;       ///< true for dynamic vertex buffer
-    UInt8        dynaib;       ///< trur for dynamic index buffer
-    UInt8        _padding;     ///< padding for 32-bit alignment
-    VertexFormat vtxfmt;       ///< vertex format
-    UInt32       vertices[GpuContext::MAX_VERTEX_BUFFERS]; ///< The offset of vertex buffer data, not including the header.
-    UInt32       strides[GpuContext::MAX_VERTEX_BUFFERS];  ///< vertex buffer strides. 0 means using vertex size defined by vertex format.
-    UInt32       offsets[GpuContext::MAX_VERTEX_BUFFERS];  ///< vertex buffer offset.
-    UInt32       indices;                                  ///< The offset of index data. Ignored, if numidx is 0.
-    UInt32       bytes;        ///< total binary size in bytes, not including this header.
+    char                tag[16];      ///< must be "GARNET MESH BIN\0"
+    UInt32              endian;       ///< endian tag: 0x01020304 means file is in the same endian as the host OS.
+    UInt32              version;      ///< mesh binary version must be 0x00010000
+    UInt32              prim;         ///< primitive type
+    UInt32              numvtx;       ///< number of vertices
+    UInt32              numidx;       ///< number of indices. 0 means non-indexed mesh
+    UInt8               idx32;        ///< true for 32-bit index buffer
+    UInt8               dynavb;       ///< true for dynamic vertex buffer
+    UInt8               dynaib;       ///< trur for dynamic index buffer
+    UInt8               _padding;     ///< padding for 32-bit alignment
+    MeshVertexFormat    vtxfmt;       ///< vertex format
+    UInt32              vertices[GpuContext::MAX_VERTEX_BUFFERS]; ///< The offset of vertex buffer data, not including the header.
+    UInt32              strides[GpuContext::MAX_VERTEX_BUFFERS];  ///< vertex buffer strides. 0 means using vertex size defined by vertex format.
+    UInt32              offsets[GpuContext::MAX_VERTEX_BUFFERS];  ///< vertex buffer offset.
+    UInt32              indices;                                  ///< The offset of index data. Ignored, if numidx is 0.
+    UInt32              bytes;        ///< total binary size in bytes, not including this header.
 };
 
 static const char MESH_BINARY_TAG_V2[] = "GARNET MESH BIN";
@@ -68,11 +68,11 @@ struct MeshVertexPosition
 //
 // -----------------------------------------------------------------------------
 void sSwapVertexEndianInplace(
-    void *               buffer,
-    size_t               bufferSize, // buffer size in bytes
-    const VertexFormat & format,
-    size_t               stream,
-    size_t               stride )
+    void *                   buffer,
+    size_t                   bufferSize, // buffer size in bytes
+    const MeshVertexFormat & format,
+    size_t                   stream,
+    size_t                   stride )
 {
     if( stride == 0 ) stride = format.calcStreamStride( stream );
 
@@ -84,7 +84,7 @@ void sSwapVertexEndianInplace(
     {
         for( size_t i = 0; i < format.numElements; ++i )
         {
-            const VertexElement & e = format.elements[i];
+            const MeshVertexElement & e = format.elements[i];
 
             UInt8 * p = vertex + e.offset;
 
@@ -155,17 +155,17 @@ void sSwapIndexEndianInplace(
 //
 //
 // -----------------------------------------------------------------------------
-const VertexElement * sFindPositionElement( const VertexFormat & vf )
+const MeshVertexElement * sFindPositionElement( const MeshVertexFormat & vf )
 {
     for( size_t i = 0; i < vf.numElements; ++i )
     {
-        const VertexElement & e = vf.elements[i];
+        const MeshVertexElement & e = vf.elements[i];
 
-        if( ( 0 == stringCompareI( "position", e.binding ) ||
-              0 == stringCompareI( "pos", e.binding ) ||
-              0 == stringCompareI( "gl_vertex", e.binding ) )
-            &&
-            0 == e.bindingIndex )
+        if( 0 == stringCompareI( "position", e.semantic ) ||
+            0 == stringCompareI( "position0", e.semantic ) ||
+            0 == stringCompareI( "pos", e.semantic ) ||
+            0 == stringCompareI( "pos0", e.semantic ) ||
+            0 == stringCompareI( "gl_vertex", e.semantic ) )
         {
             return &e;
         }
@@ -180,7 +180,7 @@ const VertexElement * sFindPositionElement( const VertexFormat & vf )
 // -----------------------------------------------------------------------------
 bool sGetMeshVertexPositions( MeshVertexPosition & pos, const MeshResourceDesc & desc )
 {
-    const VertexElement * positionElement = sFindPositionElement( desc.vtxfmt );
+    const MeshVertexElement * positionElement = sFindPositionElement( desc.vtxfmt );
     if( NULL == positionElement ) return false;
 
     const float * vertices = (const float*)( ((const UInt8*)desc.vertices[positionElement->stream]) + positionElement->offset );
@@ -519,24 +519,21 @@ AutoRef<Blob> sLoadFromMeshXMLFile( File & fp, MeshResourceDesc & desc )
             continue;
         }
 
-        if( desc.vtxfmt.numElements >= VertexFormat::MAX_VERTEX_ELEMENTS )
+        if( desc.vtxfmt.numElements >= MeshVertexFormat::MAX_VERTEX_ELEMENTS )
         {
             GN_ERROR(sLogger)( "Too many vertex elements." );
             return AutoRef<Blob>::NULLREF;
         }
-        VertexElement & ve = desc.vtxfmt.elements[desc.vtxfmt.numElements];
-
-        UInt8 bidx;
+        MeshVertexElement & ve = desc.vtxfmt.elements[desc.vtxfmt.numElements];
 
         if( !sGetRequiredIntAttrib( ve.stream, *e, "stream" ) ||
             !sGetRequiredIntAttrib( ve.offset, *e, "offset" ) ||
-            NULL == ( a = sGetRequiredAttrib( *e, "binding" ) ) ||
-            !sGetRequiredIntAttrib( bidx, *e, "bindingIndex" ) )
+            NULL == ( a = sGetRequiredAttrib( *e, "semantic" ) ) )
         {
             return AutoRef<Blob>::NULLREF;
         }
 
-        ve.bindTo( a->value, bidx );
+        ve.setSemantic( a->value );
 
         a = e->findAttrib( "format" );
         if( !a || (ColorFormat::UNKNOWN == (ve.format = ColorFormat::sFromString(a->value)) ) )

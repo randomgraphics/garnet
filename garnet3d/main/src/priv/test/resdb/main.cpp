@@ -61,12 +61,16 @@ void initEffectDesc( EffectResourceDesc & ed )
 {
     ed.uniforms["MATRIX_PVW"];
     ed.textures["ALBEDO_TEXTURE"];
+    ed.attributes["POSITION"];
+    ed.attributes["TEXCOORD"];
 
     ed.gpuprograms["glsl"].gpd.lang = GpuProgramLanguage::GLSL;
     ed.gpuprograms["glsl"].gpd.vs.source = glslvscode;
     ed.gpuprograms["glsl"].gpd.ps.source = glslpscode;
     ed.gpuprograms["glsl"].uniforms["pvw"] = "MATRIX_PVW";
     ed.gpuprograms["glsl"].textures["t0"] = "ALBEDO_TEXTURE";
+    ed.gpuprograms["glsl"].attributes["gl_Vertex"] = "POSITION";
+    ed.gpuprograms["glsl"].attributes["gl_MultiTexCoord0"] = "TEXCOORD";
 
     ed.gpuprograms["hlsl"].gpd.lang = GpuProgramLanguage::HLSL9;
     ed.gpuprograms["hlsl"].gpd.vs.source = hlslvscode;
@@ -75,6 +79,8 @@ void initEffectDesc( EffectResourceDesc & ed )
     ed.gpuprograms["hlsl"].gpd.ps.entry = "main";
     ed.gpuprograms["hlsl"].uniforms["pvw"] = "MATRIX_PVW";
     ed.gpuprograms["hlsl"].textures["s0"] = "ALBEDO_TEXTURE";
+    ed.gpuprograms["hlsl"].attributes["POSITION0"] = "POSITION";
+    ed.gpuprograms["hlsl"].attributes["TEXCOORD0"] = "TEXCOORD";
 
     ed.techniques.resize( 2 );
     ed.techniques[0].passes.resize( 1 );
@@ -99,7 +105,7 @@ void initMeshDesc( MeshResourceDesc & md )
     md.prim = PrimitiveType::TRIANGLE_LIST;
     md.numvtx = GN_ARRAY_COUNT( vertices );
     md.numidx = GN_ARRAY_COUNT( indices );
-    md.vtxfmt = VertexFormat::XY_UV();
+    md.vtxfmt = MeshVertexFormat::XY_UV();
     md.vertices[0] = (void*)vertices;
     md.indices = (void*)indices;
 }

@@ -61,6 +61,27 @@ bool GN::gfx::LineRenderer::init()
     // standard init procedure
     GN_STDCLASS_INIT( GN::gfx::LineRenderer, () );
 
+    // create vertex format
+    mContext.vtxbind.resize( 6 );
+    mContext.vtxbind[0].stream = 0;
+    mContext.vtxbind[0].offset = GN_FIELD_OFFSET( LineVertex, pos );
+    mContext.vtxbind[0].format = ColorFormat::FLOAT3;
+    mContext.vtxbind[1].stream = 0;
+    mContext.vtxbind[1].offset = GN_FIELD_OFFSET( LineVertex, colorInRGBA );
+    mContext.vtxbind[1].format = ColorFormat::RGBA32;
+    mContext.vtxbind[2].stream = 0;
+    mContext.vtxbind[2].offset = GN_FIELD_OFFSET( LineVertex, transform );
+    mContext.vtxbind[2].format = ColorFormat::FLOAT4;
+    mContext.vtxbind[3].stream = 0;
+    mContext.vtxbind[3].offset = GN_FIELD_OFFSET( LineVertex, transform ) + sizeof(Vector4f);
+    mContext.vtxbind[3].format = ColorFormat::FLOAT4;
+    mContext.vtxbind[4].stream = 0;
+    mContext.vtxbind[4].offset = GN_FIELD_OFFSET( LineVertex, transform ) + sizeof(Vector4f) * 2;
+    mContext.vtxbind[4].format = ColorFormat::FLOAT4;
+    mContext.vtxbind[5].stream = 0;
+    mContext.vtxbind[5].offset = GN_FIELD_OFFSET( LineVertex, transform ) + sizeof(Vector4f) * 3;
+    mContext.vtxbind[5].format = ColorFormat::FLOAT4;
+
     // create GPU program
     const GpuCaps & caps = mGpu.caps();
     GpuProgramDesc gpd;
@@ -70,6 +91,18 @@ bool GN::gfx::LineRenderer::init()
         gpd.lang = GpuProgramLanguage::GLSL;
         gpd.vs.source = glslvscode;
         gpd.ps.source = glslpscode;
+
+        mContext.gpuProgram.attach( mGpu.createGpuProgram( gpd ) );
+        if( !mContext.gpuProgram ) return failure();
+
+        const GpuProgramParameterDesc & gppd = mContext.gpuProgram->getParameterDesc();
+
+        mContext.vtxbind[0].attribute = gppd.attributes["gl_Vertex"];
+        mContext.vtxbind[1].attribute = gppd.attributes["gl_Color"];
+        mContext.vtxbind[2].attribute = gppd.attributes["gl_MultiTexCoord0"];
+        mContext.vtxbind[3].attribute = gppd.attributes["gl_MultiTexCoord1"];
+        mContext.vtxbind[4].attribute = gppd.attributes["gl_MultiTexCoord2"];
+        mContext.vtxbind[5].attribute = gppd.attributes["gl_MultiTexCoord3"];
     }
     else if( caps.vsLanguages & GpuProgramLanguage::HLSL9 &&
              caps.psLanguages & GpuProgramLanguage::HLSL9 )
@@ -79,41 +112,24 @@ bool GN::gfx::LineRenderer::init()
         gpd.vs.entry = "main";
         gpd.ps.source = hlslpscode;
         gpd.ps.entry = "main";
+
+        mContext.gpuProgram.attach( mGpu.createGpuProgram( gpd ) );
+        if( !mContext.gpuProgram ) return failure();
+
+        const GpuProgramParameterDesc & gppd = mContext.gpuProgram->getParameterDesc();
+
+        mContext.vtxbind[0].attribute = gppd.attributes["POSITION0"];
+        mContext.vtxbind[1].attribute = gppd.attributes["COLOR0"];
+        mContext.vtxbind[2].attribute = gppd.attributes["TEXCOORD0"];
+        mContext.vtxbind[3].attribute = gppd.attributes["TEXCOORD1"];
+        mContext.vtxbind[4].attribute = gppd.attributes["TEXCOORD2"];
+        mContext.vtxbind[5].attribute = gppd.attributes["TEXCOORD3"];
     }
     else
     {
         GN_ERROR(sLogger)( "Sprite renderer requires either GLSL or HLSL support from graphics hardware." );
         return failure();
     }
-    mContext.gpuProgram.attach( mGpu.createGpuProgram( gpd ) );
-    if( !mContext.gpuProgram ) return failure();
-
-    // create vertex format
-    mContext.vtxfmt.numElements = 6;
-    mContext.vtxfmt.elements[0].stream = 0;
-    mContext.vtxfmt.elements[0].offset = GN_FIELD_OFFSET( LineVertex, pos );
-    mContext.vtxfmt.elements[0].format = ColorFormat::FLOAT3;
-    mContext.vtxfmt.elements[0].bindTo( "position", 0 );
-    mContext.vtxfmt.elements[1].stream = 0;
-    mContext.vtxfmt.elements[1].offset = GN_FIELD_OFFSET( LineVertex, colorInRGBA );
-    mContext.vtxfmt.elements[1].format = ColorFormat::RGBA32;
-    mContext.vtxfmt.elements[1].bindTo( "color", 0 );
-    mContext.vtxfmt.elements[2].stream = 0;
-    mContext.vtxfmt.elements[2].offset = GN_FIELD_OFFSET( LineVertex, transform );
-    mContext.vtxfmt.elements[2].format = ColorFormat::FLOAT4;
-    mContext.vtxfmt.elements[2].bindTo( "texcoord", 0 );
-    mContext.vtxfmt.elements[3].stream = 0;
-    mContext.vtxfmt.elements[3].offset = GN_FIELD_OFFSET( LineVertex, transform ) + sizeof(Vector4f);
-    mContext.vtxfmt.elements[3].format = ColorFormat::FLOAT4;
-    mContext.vtxfmt.elements[3].bindTo( "texcoord", 1 );
-    mContext.vtxfmt.elements[4].stream = 0;
-    mContext.vtxfmt.elements[4].offset = GN_FIELD_OFFSET( LineVertex, transform ) + sizeof(Vector4f) * 2;
-    mContext.vtxfmt.elements[4].format = ColorFormat::FLOAT4;
-    mContext.vtxfmt.elements[4].bindTo( "texcoord", 2 );
-    mContext.vtxfmt.elements[5].stream = 0;
-    mContext.vtxfmt.elements[5].offset = GN_FIELD_OFFSET( LineVertex, transform ) + sizeof(Vector4f) * 3;
-    mContext.vtxfmt.elements[5].format = ColorFormat::FLOAT4;
-    mContext.vtxfmt.elements[5].bindTo( "texcoord", 3 );
 
     // create vertex buffer
     mContext.vtxbufs[0].vtxbuf.attach( mGpu.createVtxBuf( MAX_LINES * sizeof(Line), true ) );

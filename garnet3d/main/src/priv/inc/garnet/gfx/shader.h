@@ -137,24 +137,25 @@ namespace GN { namespace gfx
     };
 
     ///
-    /// GPU program attribute (input vertex) description
-    ///
-    struct GpuProgramAttributeParameterDesc
-    {
-        const char * name; ///< attribute name.
-    };
-
-    ///
     /// GPU program texture parameter desc
     struct GpuProgramTextureParameterDesc
     {
         const char * name; ///< texture name
     };
 
+    ///
+    /// GPU program attribute (input vertex) description
+    ///
+    struct GpuProgramAttributeParameterDesc
+    {
+        const char * name; ///< attribute name.
+        //size_t       semanticIndex; ///< attribute semantic index
+    };
+
     enum
     {
         /// indicate a invalid parameter index
-        GPU_PROGRAM_PARAMETER_NOT_FOUND = (size_t)-1
+        GPU_PROGRAM_PARAMETER_NOT_FOUND = (UInt16)-1
     };
 
     ///
@@ -204,7 +205,7 @@ namespace GN { namespace gfx
         ///
         /// Look up parameter with specific name, return GPU_PROGRAM_PARAMETER_NOT_FOUND for invalid name
         ///
-        size_t operator[]( const char * name ) const
+        UInt16 operator[]( const char * name ) const
         {
             // Note: stride must be larger than size of parameter class
             GN_ASSERT( mStride >= sizeof(PARAMETER_DESC_CLASS) );
@@ -218,14 +219,84 @@ namespace GN { namespace gfx
                 if( 0 == stringCompare( name, paramName ) )
                 {
                     // got you!
-                    return i;
+                    return (UInt16)i;
                 }
             }
             GN_ERROR(getLogger("GN.gfx.GpuProgram.GpuProgramParameterDesc"))(
                 "Invalid GPU program parameter name: %s", name?name:"<NULLPTR>" );
-            return (size_t)GPU_PROGRAM_PARAMETER_NOT_FOUND;
+            return (UInt16)GPU_PROGRAM_PARAMETER_NOT_FOUND;
         }
     };
+
+    /*
+    /// GPU program attribute accessor
+    ///
+    class GpuProgramAtrributeAccessor
+    {
+        const UInt8 * & mData;
+        const size_t  & mCount;
+        const size_t  & mStride;
+
+    public:
+
+        ///
+        /// constructor
+        ///
+        GpuProgramParameterAccessor(
+            const GpuProgramAttributeParameterDesc * & data,
+            const size_t & count,
+            const size_t & stride )
+            : mData((const UInt8*&)data), mCount(count), mStride(stride)
+        {
+        }
+
+        ///
+        /// return number of parameters
+        ///
+        size_t count() const { return mCount; }
+
+        ///
+        /// bracket operator. index must be valid
+        ///
+        const GpuProgramAttributeParameterDesc & operator[]( size_t index ) const
+        {
+            // must be a valid index
+            GN_ASSERT( index < mCount );
+
+            // Note: stride must be larger than size of parameter class
+            GN_ASSERT( mStride >= sizeof(GpuProgramAttributeParameterDesc) );
+
+            const GpuProgramAttributeParameterDesc * p = (const GpuProgramAttributeParameterDesc *)(mData + mStride * index);
+
+            return *p;
+        }
+
+        ///
+        /// Look up attribute with specific semantic name and index, return GPU_PROGRAM_PARAMETER_NOT_FOUND for invalid name
+        ///
+        size_t find( const char * semanticName, size_t semanticIndex ) const
+        {
+            // Note: stride must be larger than size of parameter class
+            GN_ASSERT( mStride >= sizeof(GpuProgramAttributeParameterDesc) );
+
+            const UInt8 * p = mData;
+            for( size_t i = 0; i < mCount; ++i, p+=mStride )
+            {
+                /// Assume that the first member of PARAMETER_DESC_CLASS is always parameter name
+                const char * paramName = *(const char * const *)p;
+                size_t     * paramIndex = (size_t*)(paramName+1);
+
+                if( semanticIndex == paramIndex && 0 == stringCompare( semanticName, paramName ) )
+                {
+                    // got you!
+                    return i;
+                }
+            }
+            GN_ERROR(getLogger("GN.gfx.GpuProgram"))(
+                "Invalid semantic name or index: name=%s index=%d", semanticName?semanticName:"<NULLPTR>", semanticIndex );
+            return (size_t)GPU_PROGRAM_PARAMETER_NOT_FOUND;
+        }
+    };*/
 
     ///
     /// GPU program parameter descrption
@@ -237,8 +308,8 @@ namespace GN { namespace gfx
         /// parameter accessors
         ///@{
         GpuProgramParameterAccessor<GpuProgramUniformParameterDesc>   uniforms;
-        GpuProgramParameterAccessor<GpuProgramAttributeParameterDesc> attributes;
         GpuProgramParameterAccessor<GpuProgramTextureParameterDesc>   textures;
+        GpuProgramParameterAccessor<GpuProgramAttributeParameterDesc> attributes;
         ///@}
 
         ///
@@ -246,11 +317,11 @@ namespace GN { namespace gfx
         ///
         GpuProgramParameterDesc()
             : uniforms( mUniformArray, mUniformCount, mUniformArrayStride )
-            , attributes( mAttributeArray, mAttributeCount, mAttributeArrayStride )
             , textures( mTextureArray, mTextureCount, mTextureArrayStride )
+            , attributes( mAttributeArray, mAttributeCount, mAttributeArrayStride )
             , mUniformCount(0)
-            , mAttributeCount(0)
             , mTextureCount(0)
+            , mAttributeCount(0)
         {
         }
 
@@ -270,18 +341,18 @@ namespace GN { namespace gfx
         size_t                                   mUniformArrayStride;
         //@}
 
-        /// attribute parameters
-        //@{
-        const GpuProgramAttributeParameterDesc * mAttributeArray;
-        size_t                                   mAttributeCount;
-        size_t                                   mAttributeArrayStride;
-        //@}
-
         /// texture parameters
         //@{
         const GpuProgramTextureParameterDesc   * mTextureArray;
         size_t                                   mTextureCount;
         size_t                                   mTextureArrayStride;
+        //@}
+
+        /// attribute parameters
+        //@{
+        const GpuProgramAttributeParameterDesc * mAttributeArray;
+        size_t                                   mAttributeCount;
+        size_t                                   mAttributeArrayStride;
         //@}
     };
 

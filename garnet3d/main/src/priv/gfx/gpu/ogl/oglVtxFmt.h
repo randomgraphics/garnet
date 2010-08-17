@@ -34,7 +34,7 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        bool init( const VertexFormat &, const OGLBasicGpuProgram * program );
+        bool init( const VertexBinding &, const OGLBasicGpuProgram * program );
         void quit();
     private:
         void clear() { mAttribBindings.clear(); mStateBindings.clear(); mValid = false; }
@@ -44,11 +44,6 @@ namespace GN { namespace gfx
         // public functions
         // ********************************
     public:
-
-        ///
-        /// Get vertex format descriptor
-        ///
-        const VertexFormat & getFormat() const { return mFormat; }
 
         ///
         /// Bind the format to device
@@ -112,10 +107,10 @@ namespace GN { namespace gfx
             FP_setOglVertexState func;
         };
 
-        VertexFormat               mFormat;
-        bool                       mValid;
-        DynaArray<AttribBinding>   mAttribBindings;
-        DynaArray<StateBinding>    mStateBindings;
+        VertexBinding   mFormat;
+        bool                                mValid;
+        DynaArray<AttribBinding>            mAttribBindings;
+        DynaArray<StateBinding>             mStateBindings;
 
         // ********************************
         // private functions

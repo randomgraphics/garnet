@@ -12,6 +12,28 @@ static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.OGL.GpuProgramGLSL");
 // Local function
 // *****************************************************************************
 
+struct GLSLBuiltInAttribute
+{
+    const char * name;
+};
+
+static const GLSLBuiltInAttribute GLSL_BUILT_IN_ATTRIBUTES[] =
+{
+    { "gl_Color"          },
+    { "gl_SecondaryColor" },
+    { "gl_Normal"         },
+    { "gl_Vertex"         },
+    { "gl_MultiTexCoord0" },
+    { "gl_MultiTexCoord1" },
+    { "gl_MultiTexCoord2" },
+    { "gl_MultiTexCoord3" },
+    { "gl_MultiTexCoord4" },
+    { "gl_MultiTexCoord5" },
+    { "gl_MultiTexCoord6" },
+    { "gl_MultiTexCoord7" },
+    { "gl_FogCoord"       },
+};
+
 class AutoARBObjectDel
 {
     GLhandleARB mHandle;
@@ -60,6 +82,9 @@ GLhandleARB
 sCreateShader( const StrA & code, GLenum usage )
 {
     GN_GUARD;
+
+    // check for preexisting error.
+    GN_OGL_CHECK(;);
 
     if( code.empty() )
     {
@@ -236,6 +261,95 @@ sIsTextureUniform( GLenum type )
     return GL_SAMPLER_1D_ARB <= type && type <= GL_SAMPLER_2D_RECT_SHADOW_ARB;
 }
 
+//
+//
+// -----------------------------------------------------------------------------
+static bool sGetOglVertexSemantic( OGLVertexSemantic & semanticName, UInt8 & semanticIndex, const char * attributeName, GLuint attributeLocation )
+{
+    if( -1 == attributeLocation )
+    {
+        // this is conventional attribute
+
+        semanticIndex = 0;
+
+        if( 0 == stringCompare( "gl_Vertex", attributeName ) )
+        {
+            semanticName = VERTEX_SEMANTIC_VERTEX;
+        }
+        else if( 0 == stringCompare( "gl_Normal", attributeName ) )
+        {
+            semanticName = VERTEX_SEMANTIC_NORMAL;
+        }
+        else if( 0 == stringCompare( "gl_Color", attributeName ) )
+        {
+            semanticName = VERTEX_SEMANTIC_COLOR;
+        }
+        else if( 0 == stringCompare( "gl_SecondaryColor", attributeName ) )
+        {
+            semanticName  = VERTEX_SEMANTIC_COLOR;
+            semanticIndex = 1;
+        }
+        else if( 0 == stringCompare( "gl_FogCoord", attributeName ) )
+        {
+            semanticName = VERTEX_SEMANTIC_FOG;
+        }
+        else if( 0 == stringCompare( "gl_MultiTexCoord0", attributeName ) )
+        {
+            semanticName = VERTEX_SEMANTIC_TEXCOORD;
+        }
+        else if( 0 == stringCompare( "gl_MultiTexCoord1", attributeName ) )
+        {
+            semanticName = VERTEX_SEMANTIC_TEXCOORD;
+            semanticIndex    = 1;
+        }
+        else if( 0 == stringCompare( "gl_MultiTexCoord2", attributeName ) )
+        {
+            semanticName  = VERTEX_SEMANTIC_TEXCOORD;
+            semanticIndex = 2;
+        }
+        else if( 0 == stringCompare( "gl_MultiTexCoord3", attributeName ) )
+        {
+            semanticName  = VERTEX_SEMANTIC_TEXCOORD;
+            semanticIndex = 3;
+        }
+        else if( 0 == stringCompare( "gl_MultiTexCoord4", attributeName ) )
+        {
+            semanticName  = VERTEX_SEMANTIC_TEXCOORD;
+            semanticIndex = 4;
+        }
+        else if( 0 == stringCompare( "gl_MultiTexCoord5", attributeName ) )
+        {
+            semanticName  = VERTEX_SEMANTIC_TEXCOORD;
+            semanticIndex = 5;
+        }
+        else if( 0 == stringCompare( "gl_MultiTexCoord6", attributeName ) )
+        {
+            semanticName  = VERTEX_SEMANTIC_TEXCOORD;
+            semanticIndex = 6;
+        }
+        else if( 0 == stringCompare( "gl_MultiTexCoord7", attributeName ) )
+        {
+            semanticName  = VERTEX_SEMANTIC_TEXCOORD;
+            semanticIndex = 7;
+        }
+        else
+        {
+            // never reach here
+            GN_UNEXPECTED();
+            return false;
+        }
+    }
+    else
+    {
+        // this is general vertex attribute
+        semanticName  = VERTEX_SEMANTIC_ATTRIBUTE;
+        semanticIndex = (UInt8)attributeLocation;
+    }
+
+    // success
+    return true;
+}
+
 // *****************************************************************************
 // Initialize and shutdown
 // *****************************************************************************
@@ -304,144 +418,22 @@ void GN::gfx::OGLGpuProgramGLSL::quit()
 //
 // -----------------------------------------------------------------------------
 bool GN::gfx::OGLGpuProgramGLSL::getBindingDesc(
-    OGLVertexBindingDesc & result,
-    const char           * bindingName,
-    UInt8                  bindingIndex ) const
+    OGLVertexBindingDesc & result, size_t attributeIndex ) const
 {
-    if( stringEmpty(bindingName) )
+    if( attributeIndex >= mAttributes.size() )
     {
-        GN_ERROR(sLogger)( "bindingName must not be empty." );
+        GN_ERROR(sLogger)( "Invalid attribute index." );
+        result.index = 255;
+        result.semantic = (OGLVertexSemantic)-1;
         return false;
     }
 
-    // fill result with invalid data
-    result.index = 255;
-    result.semantic = (OGLVertexSemantic)-1;
+    const GLSLAttributeDesc & desc = mAttributes[attributeIndex];
 
-    const GLSLAttributeDesc * desc = NULL;
-
-    if( 0 == bindingIndex )
-    {
-        // if bindingIndex is zero, then looking for attribute without suffix first.
-        // So, for "position" and 0, look for attribute "position"
-        desc = lookupAttribute( bindingName );
-    }
-
-    if( NULL == desc )
-    {
-        // compose bindingName and bindingIndex into a single name, then look up again.
-        // So for "position" and 12 become "position12"
-        size_t len = stringLength( bindingName );
-        char * nameWithSuffix = (char*)alloca( len+4 );
-        memcpy( nameWithSuffix, bindingName, len+1 );
-        if( bindingIndex >= 100 )
-        {
-            nameWithSuffix[len++] = '0' + bindingIndex / 100;
-            bindingIndex %= 100;
-        }
-        if( bindingIndex >= 10 )
-        {
-            nameWithSuffix[len++] = '0' + bindingIndex / 10;
-            bindingIndex %= 10;
-        }
-        nameWithSuffix[len++] = '0' + bindingIndex;
-        nameWithSuffix[len] = 0;
-
-        desc = lookupAttribute( nameWithSuffix );
-    }
-
-    if( NULL == desc )
-    {
-        // this could be an expected failure. So no error messages.
-        return false;
-    }
-
-    if( -1 == desc->location )
-    {
-        // this is conventional attribute
-
-        const char * conventionalAttribName = desc->name.cptr();
-
-        // the index is 0 in most cases.
-        result.index = 0;
-
-        if( 0 == stringCompare( "gl_Vertex", conventionalAttribName ) )
-        {
-            result.semantic = VERTEX_SEMANTIC_VERTEX;
-        }
-        else if( 0 == stringCompare( "gl_Normal", conventionalAttribName ) )
-        {
-            result.semantic = VERTEX_SEMANTIC_NORMAL;
-        }
-        else if( 0 == stringCompare( "gl_Color", conventionalAttribName ) )
-        {
-            result.semantic = VERTEX_SEMANTIC_COLOR;
-        }
-        else if( 0 == stringCompare( "gl_SecondaryColor", conventionalAttribName ) )
-        {
-            result.semantic = VERTEX_SEMANTIC_COLOR;
-            result.index    = 1;
-        }
-        else if( 0 == stringCompare( "gl_FogCoord", conventionalAttribName ) )
-        {
-            result.semantic = VERTEX_SEMANTIC_FOG;
-        }
-        else if( 0 == stringCompare( "gl_MultiTexCoord0", conventionalAttribName ) )
-        {
-            result.semantic = VERTEX_SEMANTIC_COLOR;
-        }
-        else if( 0 == stringCompare( "gl_MultiTexCoord1", conventionalAttribName ) )
-        {
-            result.semantic = VERTEX_SEMANTIC_COLOR;
-            result.index    = 1;
-        }
-        else if( 0 == stringCompare( "gl_MultiTexCoord2", conventionalAttribName ) )
-        {
-            result.semantic = VERTEX_SEMANTIC_COLOR;
-            result.index    = 2;
-        }
-        else if( 0 == stringCompare( "gl_MultiTexCoord3", conventionalAttribName ) )
-        {
-            result.semantic = VERTEX_SEMANTIC_COLOR;
-            result.index    = 3;
-        }
-        else if( 0 == stringCompare( "gl_MultiTexCoord4", conventionalAttribName ) )
-        {
-            result.semantic = VERTEX_SEMANTIC_COLOR;
-            result.index    = 4;
-        }
-        else if( 0 == stringCompare( "gl_MultiTexCoord5", conventionalAttribName ) )
-        {
-            result.semantic = VERTEX_SEMANTIC_COLOR;
-            result.index    = 5;
-        }
-        else if( 0 == stringCompare( "gl_MultiTexCoord6", conventionalAttribName ) )
-        {
-            result.semantic = VERTEX_SEMANTIC_COLOR;
-            result.index    = 6;
-        }
-        else if( 0 == stringCompare( "gl_MultiTexCoord7", conventionalAttribName ) )
-        {
-            result.semantic = VERTEX_SEMANTIC_COLOR;
-            result.index    = 7;
-        }
-        else
-        {
-            // never reach here
-            GN_UNEXPECTED();
-            return false;
-        }
-    }
-    else
-    {
-        // this is general vertex attribute
-        result.semantic = VERTEX_SEMANTIC_ATTRIBUTE;
-        result.index    = (UInt8)desc->location;
-    }
+    result.semantic = desc.semanticName;
+    result.index = desc.semanticIndex;
 
     // success
-    GN_ASSERT( VERTEX_SEMANTIC_VERTEX <= result.semantic && result.semantic <= VERTEX_SEMANTIC_ATTRIBUTE );
-    GN_ASSERT( 255 != result.index );
     return true;
 }
 
@@ -728,11 +720,16 @@ GN::gfx::OGLGpuProgramGLSL::enumAttributes()
     for( GLint i = 0; i < numAttributes; ++i )
     {
         GLSLAttributeDesc a;
+        GLsizei unusedCount;
+        GLenum unusedType;
+        GLint location;
 
-        GN_OGL_CHECK_RV( glGetActiveAttribARB( mProgram, i, maxLength, NULL, &a.count, &a.type, nameptr ), false );
+        GN_OGL_CHECK_RV( glGetActiveAttribARB( mProgram, i, maxLength, NULL, &unusedCount, &unusedType, nameptr ), false );
         nameptr[maxLength] = 0;
 
-        GN_OGL_CHECK_RV( a.location = glGetAttribLocationARB( mProgram, nameptr ), false );
+        GN_OGL_CHECK_RV( location = glGetAttribLocationARB( mProgram, nameptr ), false );
+
+        if( !sGetOglVertexSemantic( a.semanticName, a.semanticIndex, nameptr, location ) ) return false;
 
         a.name = nameptr;
 
@@ -753,24 +750,4 @@ GN::gfx::OGLGpuProgramGLSL::enumAttributes()
         sizeof(GLSLAttributeDesc) );
 
     return true;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-const GN::gfx::OGLGpuProgramGLSL::GLSLAttributeDesc *
-GN::gfx::OGLGpuProgramGLSL::lookupAttribute( const char * name ) const
-{
-
-    const GLSLAttributeDesc * attrib = mAttributes.cptr();
-
-    for( size_t i = 0; i < mAttributes.size(); ++i, ++attrib )
-    {
-        if( name == attrib->name )
-        {
-            return attrib;
-        }
-    }
-
-    return NULL;
 }

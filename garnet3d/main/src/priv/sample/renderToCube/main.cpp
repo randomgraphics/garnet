@@ -39,7 +39,7 @@ class RenderToTexture : public SampleApp
         desc.numvtx = 24;
         desc.numidx = 36;
         desc.vtxfmt.numElements = 1;
-        desc.vtxfmt.elements[0].bindTo( "POSITION", 0 );
+        desc.vtxfmt.elements[0].setSemantic( "POSITION0" );
         desc.vtxfmt.elements[0].format = ColorFormat::RGB_32_32_32_FLOAT;
         desc.vertices[0] = vertices;
         desc.indices = indices;

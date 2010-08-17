@@ -6,13 +6,13 @@
 	>
 
 	<vtxfmt>
-		<attrib stream = "0" offset =  "0" binding = "POSITION" bindingIndex="0" format = "FLOAT3"/>
-		<attrib stream = "0" offset = "12" binding = "NORMAL"   bindingIndex="0" format = "FLOAT3"/>
-		<attrib stream = "0" offset = "24" binding = "TEXCOORD" bindingIndex="0" format = "FLOAT2"/>
-		<attrib stream = "1" offset =  "0" binding = "POSITION" bindingIndex="1" format = "FLOAT3"/>
-		<attrib stream = "1" offset = "12" binding = "NORMAL"   bindingIndex="1" format = "FLOAT3"/>
-		<attrib stream = "2" offset =  "0" binding = "POSITION" bindingIndex="2" format = "FLOAT3"/>
-		<attrib stream = "2" offset = "12" binding = "NORMAL"   bindingIndex="2" format = "FLOAT3"/>
+		<attrib stream = "0" offset =  "0" semantic = "POSITION0" format = "FLOAT3"/>
+		<attrib stream = "0" offset = "12" semantic = "NORMAL0"   format = "FLOAT3"/>
+		<attrib stream = "0" offset = "24" semantic = "TEXCOORD0" format = "FLOAT2"/>
+		<attrib stream = "1" offset =  "0" semantic = "POSITION1" format = "FLOAT3"/>
+		<attrib stream = "1" offset = "12" semantic = "NORMAL1"   format = "FLOAT3"/>
+		<attrib stream = "2" offset =  "0" semantic = "POSITION2" format = "FLOAT3"/>
+		<attrib stream = "2" offset = "12" semantic = "NORMAL2"   format = "FLOAT3"/>
 	</vtxfmt>
 
 	<vtxbuf stream = "0" offset = "0" stride = "32" ref="dolphin_1.vb"/>

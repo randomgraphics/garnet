@@ -232,7 +232,7 @@ namespace GN { namespace gfx
         void contextQuit();
         void contextClear() { mContext.clear(); mCurrentOGLVtxFmt = NULL; mRTMgr = NULL; }
 
-        inline OGLVtxFmt * findOrCreateOGLVtxFmt( const VertexFormat & vf, const OGLBasicGpuProgram * gpuProgram );
+        inline OGLVtxFmt * findOrCreateOGLVtxFmt( const VertexBinding & vtxbind, const OGLBasicGpuProgram * gpuProgram );
         inline bool bindContextShaders( const GpuContext & newContext, bool skipDirtyCheck );
         inline bool bindContextRenderStates( const GpuContext & newContext, bool skipDirtyCheck );
         inline bool bindContextRenderTargets( const GpuContext & newContext, bool skipDirtyCheck );
@@ -242,14 +242,27 @@ namespace GN { namespace gfx
 
         struct VertexFormatKey
         {
-            VertexFormat vtxfmt;
-            UInt64       shaderID;
+            VertexBinding vtxbind;
+            UInt64        shaderID;
 
             bool operator<( const VertexFormatKey & rhs ) const
             {
+                if( this == &rhs ) return false;
                 if( shaderID < rhs.shaderID ) return true;
                 if( shaderID > rhs.shaderID ) return false;
-                return vtxfmt < rhs.vtxfmt;
+                if( vtxbind.size() < rhs.vtxbind.size() ) return true;
+                if( vtxbind.size() > rhs.vtxbind.size() ) return false;
+
+                for( size_t i = 0; i < vtxbind.size(); ++i )
+                {
+                    const VertexElement & b1 = vtxbind[i];
+                    const VertexElement & b2 = rhs.vtxbind[i];
+
+                    if( b1 < b2 ) return true;
+                    if( b1 > b2 ) return false;
+                }
+
+                return false;
             }
         };
 

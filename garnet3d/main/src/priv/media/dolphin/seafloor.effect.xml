@@ -6,6 +6,9 @@
 		<uniform name="caustic" type="VECTOR4"/> <!-- caustic coordinate (scale_x, scale_y, offset_x, offset_y) -->
 		<texture name="seafloor" addressu="WRAP" addressv="WRAP"/> <!-- seafloor texture -->
 		<texture name="caustic" addressu="WRAP" addressv="WRAP"/>  <!-- caustic texture -->
+		<attribute name="POSITION0"/>
+		<attribute name="NORMAL0"/>
+		<attribute name="TEXCOORD0"/>
 	</parameters>
 
 	<!--
@@ -24,6 +27,9 @@
 			<uniref uniform="caustic" shaderParameter="caustic"/>
 			<texref texture="seafloor" shaderParameter="DiffuseSampler"/>
 			<texref texture="caustic" shaderParameter="CausticsSampler"/>
+			<attref attribute="POSITION0" shaderParameter="POSITION0"/>
+			<attref attribute="NORMAL0"   shaderParameter="NORMAL0"/>
+			<attref attribute="TEXCOORD0" shaderParameter="TEXCOORD0"/>
 			<vs entry="main">
 <![CDATA[
 uniform float4x4 view;
@@ -127,6 +133,9 @@ void main(
 			<uniref uniform="caustic" shaderParameter="caustic"/>
 			<texref texture="seafloor" shaderParameter="DiffuseSampler"/>
 			<texref texture="caustic" shaderParameter="CausticsSampler"/>
+			<attref attribute="POSITION0" shaderParameter="POSITION0"/>
+			<attref attribute="NORMAL0"   shaderParameter="NORMAL0"/>
+			<attref attribute="TEXCOORD0" shaderParameter="TEXCOORD0"/>
 			<vs entry="main">
 <![CDATA[
 uniform float4x4 view;

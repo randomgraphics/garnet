@@ -163,7 +163,7 @@ GN::gfx::OGLGpu::bindContextImpl(
 // -----------------------------------------------------------------------------
 inline OGLVtxFmt *
 GN::gfx::OGLGpu::findOrCreateOGLVtxFmt(
-    const VertexFormat       & vf,
+    const VertexBinding & vtxbind,
     const OGLBasicGpuProgram * program )
 {
     // get shader ID
@@ -178,14 +178,14 @@ GN::gfx::OGLGpu::findOrCreateOGLVtxFmt(
         shaderID = 0;
     }
 
-    VertexFormatKey key = { vf, shaderID };
+    VertexFormatKey key = { vtxbind, shaderID };
 
     OGLVtxFmt ** ppFormat = mVertexFormats.find( key );
 
     if( NULL != ppFormat ) return *ppFormat;
 
     AutoObjPtr<OGLVtxFmt> oglvf( new OGLVtxFmt(*this) );
-    if( !oglvf->init( vf, program ) ) return NULL;
+    if( !oglvf->init( vtxbind, program ) ) return NULL;
 
     mVertexFormats[key] = oglvf;
 
@@ -446,16 +446,16 @@ GN::gfx::OGLGpu::bindContextRenderTargets(
 inline bool
 GN::gfx::OGLGpu::bindContextResources(
     const GpuContext & newContext,
-    bool                    skipDirtyCheck )
+    bool               skipDirtyCheck )
 {
     GN_GUARD_SLOW;
 
     //
     // bind vertex format
     //
-    if( skipDirtyCheck || newContext.vtxfmt != mContext.vtxfmt || newContext.gpuProgram != mContext.gpuProgram )
+    if( skipDirtyCheck || newContext.vtxbind != mContext.vtxbind || newContext.gpuProgram != mContext.gpuProgram )
     {
-        mCurrentOGLVtxFmt = findOrCreateOGLVtxFmt( newContext.vtxfmt, (const OGLBasicGpuProgram*)newContext.gpuProgram.get() );
+        mCurrentOGLVtxFmt = findOrCreateOGLVtxFmt( newContext.vtxbind, (const OGLBasicGpuProgram*)newContext.gpuProgram.get() );
         if( !mCurrentOGLVtxFmt ) return false;
         if( !mCurrentOGLVtxFmt->bindStates() ) return false;
     }

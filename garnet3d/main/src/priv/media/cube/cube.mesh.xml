@@ -6,10 +6,10 @@
 	>
 
 	<vtxfmt>
-		<attrib stream="0" offset= "0" binding="POS" index="0" format="FMT_FLOAT3"/>
-		<attrib stream="0" offset="12" binding="NML" index="0" format="FMT_FLOAT3"/>
-		<attrib stream="0" offset="24" binding="TANG" index="0" format="FMT_FLOAT3"/>
-		<attrib stream="0" offset="36" binding="TEX" index="0" format="FMT_FLOAT2"/>
+		<attrib stream="0" offset= "0" binding="POSITION0" format="FMT_FLOAT3"/>
+		<attrib stream="0" offset="12" binding="NORMAL0"   format="FMT_FLOAT3"/>
+		<attrib stream="0" offset="24" binding="TANGENT0"  format="FMT_FLOAT3"/>
+		<attrib stream="0" offset="36" binding="TEXCOORD0" format="FMT_FLOAT2"/>
 	</vtxfmt>
 
 	<vtxbuf

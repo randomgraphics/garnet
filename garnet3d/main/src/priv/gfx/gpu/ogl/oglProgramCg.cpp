@@ -212,22 +212,20 @@ void GN::gfx::OGLGpuProgramCG::quit()
 //
 // -----------------------------------------------------------------------------
 bool GN::gfx::OGLGpuProgramCG::getBindingDesc(
-    OGLVertexBindingDesc & result, const char * bindingName, UInt8 bindingIndex ) const
+    OGLVertexBindingDesc & result, size_t attributeIndex ) const
 {
-    StrA fullBindingName = stringFormat( "%s%d", bindingName, bindingIndex );
-
-    for( const OglCgAttribute * attr = mAttributes.begin(); attr != mAttributes.end(); ++attr )
+    if( attributeIndex >= mAttributes.size() )
     {
-        if( attr->desc.name == fullBindingName )
-        {
-            // found it.
-            result = attr->binding;
-            return true;
-        }
+        GN_ERROR(sLogger)( "Invalid attribute index." );
+        result.index = 255;
+        result.semantic = (OGLVertexSemantic)-1;
+        return false;
     }
 
-    // not found (expected behavior, no error message here)
-    return false;
+    const OglCgAttribute & attrib = mAttributes[attributeIndex];
+    result = attrib.binding;
+
+    return true;
 }
 
 //

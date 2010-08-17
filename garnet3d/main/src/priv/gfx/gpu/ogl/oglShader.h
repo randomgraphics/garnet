@@ -89,7 +89,7 @@ namespace GN { namespace gfx
         /// Get vertex buffer binding description of specific attribute.
         /// Return false, if the binding name and index is not used byt the program.
         ///
-        virtual bool getBindingDesc( OGLVertexBindingDesc & result, const char * bindingName, UInt8 bindingIndex ) const = 0;
+        virtual bool getBindingDesc( OGLVertexBindingDesc & result, size_t attributeIndex ) const = 0;
 
         ///
         /// Enable the program
@@ -174,7 +174,7 @@ namespace GN { namespace gfx
         // ********************************
     public:
 
-        virtual bool getBindingDesc( OGLVertexBindingDesc & result, const char * bindingName, UInt8 bindingIndex ) const;
+        virtual bool getBindingDesc( OGLVertexBindingDesc & result, size_t attributeIndex ) const;
 
         virtual void enable() const
         {
@@ -217,11 +217,10 @@ namespace GN { namespace gfx
         ///
         struct GLSLAttributeDesc
         {
-            GpuProgramAttributeParameterDesc desc;     ///< attribute parameter description
-            GLenum                           type;     ///< attribute type, like GL_FLOAT, GL_FLOAT_VEC3_ARB and etc.
-            GLsizei                          count;    ///< attribyte count, in unit of type.
-            GLint                            location; ///< attribute location
-            StrA                             name;     ///< attribyte name
+            GpuProgramAttributeParameterDesc desc;          ///< attribute parameter description
+            StrA                             name;          ///< attribute name
+            OGLVertexSemantic                semanticName;
+            UInt8                            semanticIndex;
         };
 
         // GLSL program and shader object handles
@@ -248,8 +247,6 @@ namespace GN { namespace gfx
 
         bool enumParameters();
         bool enumAttributes();
-
-        const GLSLAttributeDesc * lookupAttribute( const char * name ) const;
     };
 
     // *************************************************************************
@@ -302,7 +299,7 @@ namespace GN { namespace gfx
 
         //@{
 
-        virtual bool getBindingDesc( OGLVertexBindingDesc & result, const char * bindingName, UInt8 bindingIndex ) const;
+        virtual bool getBindingDesc( OGLVertexBindingDesc & result, size_t attributeIndex ) const;
 
         virtual void enable() const
         {

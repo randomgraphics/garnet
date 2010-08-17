@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "d3d11Gpu.h"
 #include "d3d11VtxLayout.h"
+#include "d3d11shader.h"
 
 static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.D3D11.VtxLayout");
 
@@ -12,9 +13,10 @@ static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.D3D11.VtxLayout");
 /// convert vertdecl structure to a D3D vertex declaration array
 // -----------------------------------------------------------------------------
 static bool
-sVtxFmt2InputLayout(
+sVtxBind2D3D11InputLayout(
     GN::DynaArray<D3D11_INPUT_ELEMENT_DESC> & elements,
-    const GN::gfx::VertexFormat             & vtxfmt )
+    const GN::gfx::VertexBinding            & vtxbind,
+    const GN::gfx::D3D11GpuProgram          & gpuProgram )
 {
     GN_GUARD;
 
@@ -23,15 +25,15 @@ sVtxFmt2InputLayout(
 
     elements.clear();
 
-    for( size_t i = 0; i < vtxfmt.numElements; ++i )
+    for( size_t i = 0; i < vtxbind.size(); ++i )
     {
-        const VertexElement & ve = vtxfmt.elements[i];
+        const VertexElement & ve = vtxbind[i];
 
         D3D11_INPUT_ELEMENT_DESC elem;
 
-        // set attrib semantic
-        elem.SemanticName  = ve.binding;
-        elem.SemanticIndex = ve.bindingIndex;
+        // set attribute semantic
+        elem.SemanticName = gpuProgram.getAttributeSemantic( ve.attribute, &elem.SemanticIndex );
+        if( NULL == elem.SemanticName ) return false;
 
         // set attrib format
         elem.Format = (DXGI_FORMAT)colorFormat2DxgiFormat( ve.format );
@@ -67,72 +69,6 @@ sVtxFmt2InputLayout(
     GN_UNGUARD;
 }
 
-///
-/// Build a fake shader that can accept the input vertex format
-// -----------------------------------------------------------------------------
-static ID3D10Blob *
-sVtxFmt2ShaderBinary( const GN::gfx::VertexFormat & vtxfmt )
-{
-    GN_GUARD;
-
-    using namespace GN;
-    using namespace GN::gfx;
-
-    StrA code= "struct VS_INPUT_OUTPUT {\n";
-
-    for( size_t i = 0; i < vtxfmt.numElements; ++i )
-    {
-        const GN::gfx::VertexElement & ve = vtxfmt.elements[i];
-
-        code += stringFormat( "    float4 attr%d : %s%d;\n", i, ve.binding, ve.bindingIndex );
-    }
-
-    code += "}; VS_INPUT_OUTPUT main( in VS_INPUT_OUTPUT i ) { return i; }";
-
-    // return compiled shader binary
-    return d3d11::compileShader( "vs_4_0", code.cptr(), code.size() );
-
-    GN_UNGUARD;
-}
-
-// *****************************************************************************
-// public functions
-// *****************************************************************************
-
-//
-// create D3D input layout object from vertex format structure
-// -----------------------------------------------------------------------------
-static ID3D11InputLayout *
-sCreateD3D11InputLayout( ID3D11Device & dev, const GN::gfx::VertexFormat & format )
-{
-    GN_GUARD;
-
-    using namespace GN;
-    using namespace GN::gfx;
-
-    DynaArray<D3D11_INPUT_ELEMENT_DESC> elements;
-    if( !sVtxFmt2InputLayout( elements, format ) ) return false;
-    GN_ASSERT( !elements.empty() );
-
-    AutoComPtr<ID3D10Blob> bin( sVtxFmt2ShaderBinary( format ) );
-    if( !bin ) return false;
-
-    ID3D11InputLayout * layout;
-    GN_DX_CHECK_RETURN(
-        dev.CreateInputLayout(
-            &elements[0],
-            (UINT)elements.size(),
-            bin->GetBufferPointer(),
-            bin->GetBufferSize(),
-            &layout ),
-        0 );
-
-    // success
-    return layout;
-
-    GN_UNGUARD;
-}
-
 // *****************************************************************************
 // public functions
 // *****************************************************************************
@@ -141,12 +77,26 @@ sCreateD3D11InputLayout( ID3D11Device & dev, const GN::gfx::VertexFormat & forma
 //
 // -----------------------------------------------------------------------------
 bool GN::gfx::D3D11VertexLayout::init(
-    ID3D11Device                & dev,
-    const GN::gfx::VertexFormat & format )
+    ID3D11Device                 & dev,
+    const GN::gfx::VertexBinding & vtxbind,
+    const D3D11GpuProgram        & gpuProgram )
 {
-    // create D3D11 input layout object
-    il.attach( sCreateD3D11InputLayout( dev, format ) );
-    if( !il ) return false;
+    DynaArray<D3D11_INPUT_ELEMENT_DESC> elements;
+    if( !sVtxBind2D3D11InputLayout( elements, vtxbind, gpuProgram ) ) return false;
+    GN_ASSERT( !elements.empty() );
+
+    size_t signatureSize;
+    const void * signature = gpuProgram.getInputSignature( &signatureSize );
+    if( NULL == signature ) return false;
+
+    GN_DX_CHECK_RETURN(
+        dev.CreateInputLayout(
+            &elements[0],
+            (UINT)elements.size(),
+            signature,
+            signatureSize,
+            &il ),
+        false );
 
     return true;
 }

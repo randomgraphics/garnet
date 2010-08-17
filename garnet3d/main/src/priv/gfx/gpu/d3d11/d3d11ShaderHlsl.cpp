@@ -56,9 +56,9 @@ struct D3D11ShaderTypeTemplate<VERTEX_SHADER>
         UInt32         flags,
         const char   * entry,
         const char   * profile,
-        ID3D10Blob  ** signature )
+        ID3DBlob    ** signature )
     {
-        AutoComPtr<ID3D10Blob> bin( GN::d3d11::compileShader( profile, source, len, flags, entry ) );
+        AutoComPtr<ID3DBlob> bin( GN::d3d11::compileShader( profile, source, len, flags, entry ) );
         if( !bin ) return NULL;
 
         ID3D11VertexShader * shader;
@@ -102,9 +102,9 @@ struct D3D11ShaderTypeTemplate<GEOMETRY_SHADER>
         UInt32         flags,
         const char   * entry,
         const char   * profile,
-        ID3D10Blob  ** signature )
+        ID3DBlob  ** signature )
     {
-        AutoComPtr<ID3D10Blob> bin( GN::d3d11::compileShader( profile, source, len, flags, entry ) );
+        AutoComPtr<ID3DBlob> bin( GN::d3d11::compileShader( profile, source, len, flags, entry ) );
         if( !bin ) return NULL;
 
         ID3D11GeometryShader * shader;
@@ -148,9 +148,9 @@ struct D3D11ShaderTypeTemplate<PIXEL_SHADER>
         UInt32         flags,
         const char   * entry,
         const char   * profile,
-        ID3D10Blob  ** signature )
+        ID3DBlob  ** signature )
     {
-        AutoComPtr<ID3D10Blob> bin( GN::d3d11::compileShader( profile, source, len, flags, entry ) );
+        AutoComPtr<ID3DBlob> bin( GN::d3d11::compileShader( profile, source, len, flags, entry ) );
         if( !bin ) return NULL;
 
         ID3D11PixelShader * shader;
@@ -361,14 +361,15 @@ sInitTextures(
 // -----------------------------------------------------------------------------
 template<D3D11ShaderType SHADER_TYPE>
 static bool
-sInitShader(
+sInitD3D11Shader(
     ID3D11Device                                                           & dev,
     const ShaderCode                                                       & code,
     const D3D11ShaderCompileOptions                                        & options,
     D3D11GpuProgramParameterDesc                                           & paramDesc,
     AutoComPtr<typename D3D11ShaderTypeTemplate<SHADER_TYPE>::ShaderClass> & shader,
     D3D11ConstBufferArray                                                  & constBufs,
-    SysMemConstBufferArray                                                 & constData )
+    SysMemConstBufferArray                                                 & constData,
+    ID3DBlob                                                              ** byteCode = NULL )
 {
     GN_GUARD;
 
@@ -379,7 +380,7 @@ sInitShader(
     D3D11ShaderTypeTemplate<SHADER_TYPE> templ;
 
     // compile shader
-    AutoComPtr<ID3D10Blob> binary;
+    AutoComPtr<ID3DBlob> binary;
     shader.attach( templ.create(
         dev,
         code.source,
@@ -411,6 +412,34 @@ sInitShader(
     // initialize texture parameters
     if( !sInitTextures<SHADER_TYPE>( *reflection, paramDesc ) ) return false;
 
+    // initialize attribute parameters (vertex shader only)
+    if( VERTEX_SHADER == SHADER_TYPE )
+    {
+        D3D11_SHADER_DESC desc;
+        reflection->GetDesc( &desc );
+
+        for( UINT i = 0; i < desc.InputParameters; ++i )
+        {
+            D3D11_SIGNATURE_PARAMETER_DESC sig;
+            reflection->GetInputParameterDesc( i, &sig );
+
+            D3D11AttributeParameterDesc a;
+            a.semanticName  = sig.SemanticName;
+            a.semanticIndex = sig.SemanticIndex;
+            a.name          = sCloneString( stringFormat( "%s%d", sig.SemanticName, sig.SemanticIndex ) );
+
+            // append to attribute array
+            paramDesc.addAttribute( a );
+
+        }
+    }
+
+    if( byteCode )
+    {
+        *byteCode = binary;
+        (*byteCode)->AddRef();
+    }
+
     // success
     return true;
 
@@ -430,7 +459,7 @@ bool GN::gfx::D3D11VertexShaderHLSL::init(
     const D3D11ShaderCompileOptions & options,
     D3D11GpuProgramParameterDesc    & paramDesc )
 {
-    return sInitShader<VERTEX_SHADER>( dev, code, options, paramDesc, shader, constBufs, constData );
+    return sInitD3D11Shader<VERTEX_SHADER>( dev, code, options, paramDesc, shader, constBufs, constData, &byteCode );
 }
 
 // *****************************************************************************
@@ -446,7 +475,7 @@ bool GN::gfx::D3D11GeometryShaderHLSL::init(
     const D3D11ShaderCompileOptions & options,
     D3D11GpuProgramParameterDesc    & paramDesc )
 {
-    return sInitShader<GEOMETRY_SHADER>( dev, code, options, paramDesc, shader, constBufs, constData );
+    return sInitD3D11Shader<GEOMETRY_SHADER>( dev, code, options, paramDesc, shader, constBufs, constData );
 }
 
 // *****************************************************************************
@@ -462,5 +491,5 @@ bool GN::gfx::D3D11PixelShaderHLSL::init(
     const D3D11ShaderCompileOptions & options,
     D3D11GpuProgramParameterDesc    & paramDesc )
 {
-    return sInitShader<PIXEL_SHADER>( dev, code, options, paramDesc, shader, constBufs, constData );
+    return sInitD3D11Shader<PIXEL_SHADER>( dev, code, options, paramDesc, shader, constBufs, constData );
 }

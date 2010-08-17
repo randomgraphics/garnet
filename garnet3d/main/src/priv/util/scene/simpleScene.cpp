@@ -11,12 +11,11 @@ static GN::Logger * sLogger = GN::getLogger("GN.util");
 // Local stuff
 // *****************************************************************************
 
-static bool sHasSemantic( const VertexFormat & vf, const char * binding, size_t index )
+static bool sHasSemantic( const MeshVertexFormat & vf, const char * semantic )
 {
     for( size_t i = 0; i < vf.numElements; ++i )
     {
-        if( 0 == stringCompareI( vf.elements[i].binding, binding ) &&
-            index == vf.elements[i].bindingIndex )
+        if( 0 == stringCompareI( vf.elements[i].semantic, semantic ) )
         {
             return true;
         }
@@ -25,25 +24,25 @@ static bool sHasSemantic( const VertexFormat & vf, const char * binding, size_t 
     return false;
 }
 
-static bool sHasPosition( const VertexFormat & vf )
+static bool sHasPosition( const MeshVertexFormat & vf )
 {
-    return sHasSemantic( vf, "position", 0 )
-        || sHasSemantic( vf, "pos", 0 );
+    return sHasSemantic( vf, "position" )
+        || sHasSemantic( vf, "pos" );
 }
 
-static bool sHasNormal( const VertexFormat & vf )
+static bool sHasNormal( const MeshVertexFormat & vf )
 {
-    return sHasSemantic( vf, "normal", 0 );
+    return sHasSemantic( vf, "normal" );
 }
 
-static bool sHasTex0( const VertexFormat & vf )
+static bool sHasTex0( const MeshVertexFormat & vf )
 {
-    return sHasSemantic( vf, "texcoord", 0 );
+    return sHasSemantic( vf, "texcoord" );
 }
 
-static bool sHasTangent( const VertexFormat & vf )
+static bool sHasTangent( const MeshVertexFormat & vf )
 {
-    return sHasSemantic( vf, "tangent", 0 );
+    return sHasSemantic( vf, "tangent" );
 }
 
 ///
@@ -51,7 +50,7 @@ static bool sHasTangent( const VertexFormat & vf )
 ///
 static const ModelResourceDesc * sDetermineBestModelTemplate( const MeshResourceDesc & m )
 {
-    const VertexFormat & vf = m.vtxfmt;
+    const MeshVertexFormat & vf = m.vtxfmt;
 
     // position is required
     if( !sHasPosition( vf ) )

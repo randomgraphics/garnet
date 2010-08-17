@@ -314,217 +314,6 @@ namespace GN { namespace gfx
     };
 
     ///
-    /// definition of single vertex element
-    ///
-    struct VertexElement
-    {
-        ColorFormat format;       ///< format of the element
-        char        binding[16];  ///< binding to one of GPU program attributes (null terminated string).
-                                  ///< Checking of invalidate binding is not performed here, but when the whole
-                                  ///< render context is being applied to renderer.
-        UInt8       bindingIndex; ///< Binding index.
-                                  ///< The binding name and index combination has to be unique across whole vertex format strcture.
-        UInt8       stream;       ///< vertex buffer index
-        UInt16      offset;       ///< offset of the element
-
-        ///
-        /// Bind vertex element to specific GL program attribute variable.
-        ///
-        /// Note that name and index are shader specific (thus, API specific).
-        ///
-        void bindTo( const char * variableName, size_t index = 0 )
-        {
-            size_t len = stringLength( variableName );
-            if( 0 == len )
-            {
-                GN_ERROR(getLogger("GN.gfx.gpu"))( "Empty binding string is not allowed." );
-                return;
-            }
-
-            if( len >= GN_ARRAY_COUNT(binding) )
-            {
-                GN_ERROR(getLogger("GN.gfx.gpu"))(
-                    "Binding string (%s) is too long. Maxinum length is 16 characters including ending zero.",
-                    variableName );
-            }
-            len = math::getmin<size_t>( GN_ARRAY_COUNT(binding), len+1 );
-            memcpy( binding, variableName, len );
-
-            if( index > 255 )
-            {
-                GN_ERROR(getLogger("GN.gfx.gpu"))(
-                    "Binding index (%d) is too large. Maxinum value is 255.",
-                    index );
-                bindingIndex = 0;
-            }
-            else
-            {
-                bindingIndex = (UInt8)index;
-            }
-        }
-
-        /// equality check
-        bool operator==( const VertexElement & rhs ) const
-        {
-            return format == rhs.format
-                && stream == rhs.stream
-                && offset == rhs.offset
-                && bindingIndex == rhs.bindingIndex
-                && 0 == stringCompare( binding, rhs.binding, sizeof(binding) );
-        }
-
-        /// equality check
-        bool operator!=( const VertexElement & rhs ) const
-        {
-            return !operator==( rhs );
-        }
-    };
-
-    ///
-    /// define input vertex format
-    ///
-    struct VertexFormat
-    {
-        enum
-        {
-            MAX_VERTEX_ELEMENTS = 16,
-        };
-
-        UInt32        numElements;                   ///< number of elements
-        VertexElement elements[MAX_VERTEX_ELEMENTS]; ///< vertex element array
-
-        bool operator==( const VertexFormat & rhs ) const
-        {
-            if( numElements != rhs.numElements ) return false;
-            for( UInt32 i = 0; i < numElements; ++i )
-            {
-                if( elements[i] != rhs.elements[i] ) return false;
-            }
-            return true;
-        }
-
-        bool operator!=( const VertexFormat & rhs ) const
-        {
-            return !operator==( rhs );
-        }
-
-        bool operator<( const VertexFormat & rhs ) const
-        {
-            if( this == &rhs ) return false;
-
-            const UInt32 * a = (const UInt32*)this;
-            const UInt32 * b = (const UInt32*)&rhs;
-            size_t         n = sizeof(*this)/4;
-
-            for( UInt32 i = 0; i < n; ++i )
-            {
-                if( a[i] < b[i] ) return true;
-                if( a[i] > b[i] ) return false;
-            }
-
-            return false;
-        }
-
-        ///
-        /// clear the vertex format
-        ///
-        void clear() { numElements = 0; }
-
-        ///
-        /// Calculate number of streams.
-        ///
-        size_t inline calcNumStreams() const
-        {
-            size_t n = 0;
-            for( size_t i = 0; i < numElements; ++i )
-            {
-                const VertexElement & e =  elements[i];
-                if( e.stream >= n ) n = e.stream + 1;
-            }
-            return n;
-        }
-
-        ///
-        /// Calculate stride of specific stream.
-        ///
-        size_t inline calcStreamStride( size_t stream ) const
-        {
-            size_t stride = 0;
-            for( size_t i = 0; i < numElements; ++i )
-            {
-                const VertexElement & e =  elements[i];
-
-                size_t elementEnd = e.offset + e.format.getBytesPerBlock();
-
-                if( stream == e.stream && stride < elementEnd ) stride = elementEnd;
-            }
-            return stride;
-        }
-
-        ///
-        /// return a vertex format definition for vertex like this:
-        ///
-        /// struct VertexFormat
-        /// {
-        ///     float position[2];
-        ///     float texcoord[2];
-        /// };
-        ///
-        static VertexFormat XY_UV()
-        {
-            VertexFormat vf;
-
-            vf.numElements = 2;
-
-            vf.elements[0].bindTo( "POSITION", 0 );
-            vf.elements[0].format = ColorFormat::FLOAT2;
-            vf.elements[0].stream = 0;
-            vf.elements[0].offset = 0;
-
-            vf.elements[1].bindTo( "TEXCOORD", 0 );
-            vf.elements[1].format = ColorFormat::FLOAT2;
-            vf.elements[1].stream = 0;
-            vf.elements[1].offset = 8;
-
-            return vf;
-        }
-
-        ///
-        /// return a vertex format definition for vertex like this:
-        ///
-        /// struct VertexFormat
-        /// {
-        ///     float position[3];
-        ///     float normal[3];
-        ///     float texcoord[2];
-        /// };
-        ///
-        static VertexFormat XYZ_NORM_UV()
-        {
-            VertexFormat vf;
-
-            vf.numElements = 3;
-
-            vf.elements[0].bindTo( "POSITION", 0 );
-            vf.elements[0].format = ColorFormat::FLOAT3;
-            vf.elements[0].stream = 0;
-            vf.elements[0].offset = 0;
-
-            vf.elements[1].bindTo( "NORMAL", 0 );
-            vf.elements[1].format = ColorFormat::FLOAT3;
-            vf.elements[1].stream = 0;
-            vf.elements[1].offset = 12;
-
-            vf.elements[2].bindTo( "TEXCOORD", 0 );
-            vf.elements[2].format = ColorFormat::FLOAT2;
-            vf.elements[2].stream = 0;
-            vf.elements[2].offset = 24;
-
-            return vf;
-        }
-    };
-
-    ///
     /// Vertex buffer binding description
     ///
     struct VertexBufferBinding
@@ -664,6 +453,41 @@ namespace GN { namespace gfx
         }
     };
 
+    /// Define one vertex element
+    struct VertexElement
+    {
+        ColorFormat format;    ///< the vertex element format.
+        UInt8       stream;    ///< vertex buffer index
+        UInt8       offset;    ///< offset of the element in the vertex.
+        UInt16      attribute; ///< index of the GPU program attribute.
+
+        // operators
+        //@{
+        bool operator==( const VertexElement & rhs ) const
+        {
+            return *(const UInt64*)this == *(const UInt64*)&rhs;
+        }
+
+        bool operator!=( const VertexElement & rhs ) const
+        {
+            return *(const UInt64*)this != *(const UInt64*)&rhs;
+        }
+
+        bool operator<( const VertexElement & rhs ) const
+        {
+            return *(const UInt64*)this < *(const UInt64*)&rhs;
+        }
+
+        bool operator>( const VertexElement & rhs ) const
+        {
+            return *(const UInt64*)this > *(const UInt64*)&rhs;
+        }
+        //@}
+    };
+    GN_CASSERT( sizeof(VertexElement) == sizeof(UInt64) );
+
+    typedef StackArray<VertexElement, 32> VertexBinding;
+
     ///
     /// interface of GPU uniform
     ///
@@ -751,9 +575,9 @@ namespace GN { namespace gfx
         {
             //@{
 
-            MAX_VERTEX_BUFFERS       = 16,
-            MAX_TEXTURES             = 32,
-            MAX_COLOR_RENDER_TARGETS = 8,
+            MAX_VERTEX_BUFFERS         = 16,
+            MAX_TEXTURES               = 32,
+            MAX_COLOR_RENDER_TARGETS   = 8,
 
             FILL_SOLID = 0,
             FILL_WIREFRAME,
@@ -977,19 +801,19 @@ namespace GN { namespace gfx
         /// shader
         AutoRef<GpuProgram> gpuProgram;
 
-        /// shader Resources
+        /// GPU program parameters
         ///
-        /// \note   Resources are ordered in according to their binding index in current GPU program.
+        /// \note  Parameters are ordered based on their binding index in current GPU program.
         //@{
-        DynaArray<AutoRef<Uniform> >             uniforms; ///< uniforms
-        FixedArray<TextureBinding, MAX_TEXTURES> textures; ///< textures
+        DynaArray<AutoRef<Uniform> >                 uniforms;   ///< uniforms
+        FixedArray<TextureBinding, MAX_TEXTURES>     textures;   ///< textures
         //@}
 
         /// geometry data
         //@{
-        FixedArray<VertexBufferBinding, MAX_VERTEX_BUFFERS> vtxbufs;  ///< vertex buffers
-        VertexFormat                                        vtxfmt;   ///< vertex format (bindings to GPU program)
-        AutoRef<IdxBuf>                                     idxbuf;   ///< index buffer
+        VertexBinding                                       vtxbind; ///< vtxbind
+        FixedArray<VertexBufferBinding, MAX_VERTEX_BUFFERS> vtxbufs; ///< vertex buffers
+        AutoRef<IdxBuf>                                     idxbuf;  ///< index buffer
         //@}
 
         /// render targets
@@ -1003,31 +827,6 @@ namespace GN { namespace gfx
         ///
         GpuContext() { clear(); }
 
-        //
-        // clear all resources binded to the context
-        //
-        void clearResources()
-        {
-            uniforms.clear();
-
-            for( size_t i = 0; i < GN_ARRAY_COUNT(textures); ++i )
-            {
-                textures[i].clear();
-            }
-
-            for( size_t i = 0; i < GN_ARRAY_COUNT(vtxbufs); ++i )
-            {
-                vtxbufs[i].clear();
-            }
-
-            vtxfmt.clear();
-
-            idxbuf.clear();
-
-            colortargets.clear();
-            depthstencil.clear();
-        }
-
         ///
         /// reset context to default value
         ///
@@ -1037,15 +836,31 @@ namespace GN { namespace gfx
 
             gpuProgram.clear();
 
-            clearResources();
-        }
+            uniforms.clear();
 
+            for( size_t i = 0; i < GN_ARRAY_COUNT(textures); ++i )
+            {
+                textures[i].clear();
+            }
+
+            vtxbind.clear();
+
+            for( size_t i = 0; i < GN_ARRAY_COUNT(vtxbufs); ++i )
+            {
+                vtxbufs[i].clear();
+            }
+
+            idxbuf.clear();
+
+            colortargets.clear();
+            depthstencil.clear();
+        }
     };
 
     ///
     /// 清屏标志
     ///
-    enum ClearFlag
+    enum ScreenCleanFlag
     {
         CLEAR_C      = 1,     ///< clear color buffer
         CLEAR_Z      = 2,     ///< clear z buffer
@@ -1428,7 +1243,7 @@ namespace GN { namespace gfx
         ///
         /// 清屏操作
         ///
-        /// \param flags 清屏标志, see ClearFlag
+        /// \param flags 清屏标志, see ScreenCleanFlag
         /// \param c     背景色
         /// \param z     深度值
         /// \param s     模板值

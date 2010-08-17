@@ -1512,13 +1512,13 @@ static bool sWriteGeoObject( AseScene & dst, const AseSceneInternal & src, const
     dstmesh.vtxfmt.numElements = 3;
     dstmesh.vtxfmt.elements[0].format = ColorFormat::FLOAT3;
     dstmesh.vtxfmt.elements[0].offset = 0;
-    dstmesh.vtxfmt.elements[0].bindTo( "position", 0 );
+    dstmesh.vtxfmt.elements[0].setSemantic( "POSITION" );
     dstmesh.vtxfmt.elements[1].format = ColorFormat::FLOAT3;
     dstmesh.vtxfmt.elements[1].offset = 12;
-    dstmesh.vtxfmt.elements[1].bindTo( "normal", 0 );
+    dstmesh.vtxfmt.elements[1].setSemantic( "NORMAL" );
     dstmesh.vtxfmt.elements[2].format = ColorFormat::FLOAT2;
     dstmesh.vtxfmt.elements[2].offset = 24;
-    dstmesh.vtxfmt.elements[2].bindTo( "texcoord", 0 );
+    dstmesh.vtxfmt.elements[2].setSemantic( "TEXCOORD" );
     dstmesh.prim = PrimitiveType::TRIANGLE_LIST;
     dstmesh.strides[0] = sizeof(OutputVertex);
 
