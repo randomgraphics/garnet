@@ -76,15 +76,8 @@ namespace GN { namespace gfx
 
     struct D3D11AttributeParameterDesc : public GpuProgramAttributeParameterDesc
     {
-        ///
-        /// shader specific properties
-        ///
-        struct ShaderSpecificProperties
-        {
-            AutoInitializer<bool,false> used;  ///< are these properties used
-        };
-
-        ShaderSpecificProperties ssp[3]; ///< shader specific properites for each shader type
+        StrA   semanticName;
+        size_t semanticIndex;
 
         /// ctor
         D3D11AttributeParameterDesc()
@@ -124,7 +117,7 @@ namespace GN { namespace gfx
         //@{
         void addUniform( const D3D11UniformParameterDesc & u ) { mUniforms.append( u ); }
         void addTexture( const D3D11TextureParameterDesc & t ) { mTextures.append( t ); }
-        void addAttribute( const D3D11AttributeParameterDesc & );
+        void addAttribute( const D3D11AttributeParameterDesc & a ) { mAttributes.append( a ); }
         //@}
     };
 
@@ -150,6 +143,7 @@ namespace GN { namespace gfx
     struct D3D11VertexShaderHLSL
     {
         AutoComPtr<ID3D11VertexShader> shader;    ///< shader pointer
+        AutoComPtr<ID3DBlob>           byteCode;  ///< shader byte code.
         D3D11ConstBufferArray          constBufs; ///< constant buffers
         mutable SysMemConstBufferArray constData; ///< constant data
 
@@ -161,7 +155,7 @@ namespace GN { namespace gfx
             D3D11GpuProgramParameterDesc    & paramDesc );
 
         /// clear shader
-        void clear() { shader.clear(); constBufs.clear(); constData.clear(); }
+        void clear() { shader.clear(); byteCode.clear(); constBufs.clear(); constData.clear(); }
     };
 
     ///
@@ -217,11 +211,7 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        D3D11GpuProgram( D3D11Gpu & r )
-            : D3D11Resource(r)
-        {
-            clear();
-        }
+        D3D11GpuProgram( D3D11Gpu & );
         virtual ~D3D11GpuProgram() { quit(); }
         //@}
 
@@ -248,6 +238,18 @@ namespace GN { namespace gfx
         // public methods
         // ********************************
     public:
+
+        UInt64 getUniqueID() const { return m_ID; }
+
+        ///
+        /// Get attribute semantic name and semantic index
+        ///
+        const char * getAttributeSemantic( size_t attributeIndex, UINT * semanticIndex ) const;
+
+        ///
+        /// Get vertex input signature.
+        ///
+        const void * getInputSignature( size_t * pSignatureSize ) const;
 
         ///
         /// apply shader to D3D device
@@ -307,6 +309,8 @@ namespace GN { namespace gfx
         // private variables
         // ********************************
     private:
+
+        UInt64 m_ID;
 
         D3D11GpuProgramParameterDesc mParamDesc;
 

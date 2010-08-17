@@ -14,6 +14,7 @@ namespace GN { namespace gfx
 {
     // Forward declarations
     class D3D11Resource;
+    class D3D11GpuProgram;
     class D3D11RTMgr;
     class D3D11StateObjectManager;
 
@@ -29,7 +30,7 @@ namespace GN { namespace gfx
     public:
 
         /// initialize the layout
-        bool init( ID3D11Device & dev, const GN::gfx::VertexFormat & format );
+        bool init( ID3D11Device & dev, const GN::gfx::VertexBinding & vtxbind, const D3D11GpuProgram & gpuProgram );
 
         /// less operator
         bool operator<( const D3D11VertexLayout & rhs ) const
@@ -216,7 +217,7 @@ namespace GN { namespace gfx
 
         bool contextInit();
         void contextQuit();
-        void contextClear() { mContext.clear(); mSOMgr = 0; mRTMgr = 0; }
+        void contextClear() { mContext.clear(); mCurrentVertexLayout = NULL; mSOMgr = 0; mRTMgr = 0; }
 
         inline bool bindContextRenderTarget( const GpuContext & newContext, bool skipDirtyCheck );
         inline bool bindContextShader( const GpuContext & newContext, bool skipDirtyCheck );
@@ -225,10 +226,37 @@ namespace GN { namespace gfx
 
     private:
 
-        GN::Dictionary<VertexFormat,D3D11VertexLayout> mVertexLayouts;
-        AutoComPtr<ID3D11SamplerState>           mDefaultSampler;
-        D3D11StateObjectManager * mSOMgr;
-        D3D11RTMgr              * mRTMgr;
+        struct VertexFormatKey
+        {
+            VertexBinding vtxbind;
+            UInt64        shaderID;
+
+            bool operator<( const VertexFormatKey & rhs ) const
+            {
+                if( this == &rhs ) return false;
+                if( shaderID < rhs.shaderID ) return true;
+                if( shaderID > rhs.shaderID ) return false;
+                if( vtxbind.size() < rhs.vtxbind.size() ) return true;
+                if( vtxbind.size() > rhs.vtxbind.size() ) return false;
+
+                for( size_t i = 0; i < vtxbind.size(); ++i )
+                {
+                    const VertexElement & b1 = vtxbind[i];
+                    const VertexElement & b2 = rhs.vtxbind[i];
+
+                    if( b1 < b2 ) return true;
+                    if( b1 > b2 ) return false;
+                }
+
+                return false;
+            }
+        };
+
+        GN::Dictionary<VertexFormatKey,D3D11VertexLayout> mVertexLayouts;
+        D3D11VertexLayout                               * mCurrentVertexLayout;
+        AutoComPtr<ID3D11SamplerState>                    mDefaultSampler;
+        D3D11StateObjectManager                         * mSOMgr;
+        D3D11RTMgr                                      * mRTMgr;
 
         //@}
 

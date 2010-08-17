@@ -3,6 +3,7 @@
 	<parameters>
 		<uniform name="pvw" type="matrix"/>
 		<texture name="cube"/>
+		<attribute name="POSITION0"/>
 	</parameters>
 
 	<!--
@@ -17,6 +18,7 @@
 		<gpuprogram name="d3d" lang="HLSL9">
 			<uniref uniform="pvw" shaderParameter="pvw"/>
 			<texref texture="cube" shaderParameter="s0"/>
+			<attref attribute="POSITION0" shaderParameter="POSITION0"/>
 			<vs entry="main">
 <![CDATA[
 uniform float4x4 pvw : register(c0);
@@ -45,6 +47,7 @@ float4 main( in float4 ipos: POSITION0, in float3 itex : TEXCOORD0 ) : COLOR0
 		<gpuprogram name="glsl" lang="GLSL">
 			<uniref uniform="pvw" shaderParameter="pvw"/>
 			<texref texture="cube" shaderParameter="t0"/>
+			<attref attribute="POSITION0" shaderParameter="gl_Vertex"/>
 			<vs entry="main">
 <![CDATA[
 uniform mat4 pvw;
@@ -72,6 +75,7 @@ void main()
 		<gpuprogram name="cg" lang="CG">
 			<uniref uniform="pvw" shaderParameter="pvw"/>
 			<texref texture="cube" shaderParameter="s0"/>
+			<attref attribute="POSITION0" shaderParameter="POSITION"/>
 			<vs entry="main">
 <![CDATA[
 uniform float4x4 pvw : register(c0);

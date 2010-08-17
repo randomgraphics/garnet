@@ -13,13 +13,13 @@ static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpures");
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::VertexFormatProperties::analyze( const VertexFormat & vf )
+bool GN::gfx::VertexFormatProperties::analyze( const MeshVertexFormat & vf )
 {
     memset( this, 0, sizeof(*this) );
 
     for( size_t i = 0; i < vf.numElements; ++i )
     {
-        const VertexElement & e = vf.elements[i];
+        const MeshVertexElement & e = vf.elements[i];
 
         if( e.stream > GpuContext::MAX_VERTEX_BUFFERS )
         {
@@ -72,9 +72,6 @@ bool GN::gfx::MeshResource::Impl::reset( const MeshResourceDesc * desc )
 void
 GN::gfx::MeshResource::Impl::applyToContext( GpuContext & context ) const
 {
-    // vertex format
-    context.vtxfmt = mDesc.vtxfmt;
-
     // verex buffers
     GN_CASSERT( GN_ARRAY_COUNT(context.vtxbufs) == GN_ARRAY_COUNT(mVtxBufs) );
     for( size_t i = 0; i < GN_ARRAY_COUNT(context.vtxbufs); ++i )

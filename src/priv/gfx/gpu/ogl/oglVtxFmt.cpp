@@ -8,38 +8,20 @@ using namespace GN::gfx;
 static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.OGL.VtxFmt");
 
 // *****************************************************************************
-// Local classes and functions
-// *****************************************************************************
-
-//
-//
-// -----------------------------------------------------------------------------
-static size_t inline sCalcNumStreams( const VertexFormat & vf )
-{
-    size_t n = 0;
-    for( size_t i = 0; i < vf.numElements; ++i )
-    {
-        const VertexElement & e =  vf.elements[i];
-        if( e.stream >= n ) n = e.stream + 1;
-    }
-    return n;
-}
-
-// *****************************************************************************
 // Initialize and shutdown
 // *****************************************************************************
 
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::OGLVtxFmt::init( const VertexFormat & format, const OGLBasicGpuProgram * program )
+bool GN::gfx::OGLVtxFmt::init( const VertexBinding & attributes, const OGLBasicGpuProgram * program )
 {
     GN_GUARD;
 
     // standard init procedure
     GN_STDCLASS_INIT( GN::gfx::OGLVtxFmt, () );
 
-    mFormat = format;
+    mFormat = attributes;
 
     mValid = setupStateBindings( program );
 
@@ -179,31 +161,26 @@ bool GN::gfx::OGLVtxFmt::setupStateBindings( const OGLBasicGpuProgram * gpuProgr
 
     OGLVertexBindingDesc vbd;
 
-    mAttribBindings.reserve( mFormat.numElements );
+    mAttribBindings.reserve( mFormat.size() );
 
-    for( size_t i = 0; i < mFormat.numElements; ++i )
+    for( size_t i = 0; i < mFormat.size(); ++i )
     {
-        const VertexElement & e = mFormat.elements[i];
+        const VertexElement & e = mFormat[i];
 
         // get binding information
-        if(
-            // try get vertex binding information from GPU program first
-            ( NULL == gpuProgram || !gpuProgram->getBindingDesc( vbd, e.binding, e.bindingIndex ) ) &&
-            // then try standard/predefined binding.
-            !getStandardVertexBindingDesc( vbd, e.binding, e.bindingIndex ) )
+        if( ( NULL == gpuProgram || !gpuProgram->getBindingDesc( vbd, e.attribute ) ) )
         {
             GN_WARN(sLogger)(
-                "Vertex element (name=%s index=%d) is ignored, since it is neither used by "
-                "current active GPU program nor binding to any of conventional OpenGL attributes.",
-                e.binding,
-                e.bindingIndex );
+                "Attribute #%d is ignored, since it is not used by "
+                "current active GPU program.",
+                i );
             continue;
         }
 
         AttribBinding ab;
         ab.info.self = this;
-        ab.info.stream = e.stream;
-        ab.info.offset = e.offset;
+        ab.info.stream = (UInt8)e.stream;
+        ab.info.offset = (UInt8)e.offset;
 
         switch( vbd.semantic )
         {

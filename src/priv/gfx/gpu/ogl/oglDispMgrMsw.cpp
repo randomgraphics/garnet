@@ -362,10 +362,9 @@ bool GN::gfx::OGLGpu::dispInit()
     PFNWGLCREATECONTEXTATTRIBSARBPROC createContextFunc = (PFNWGLCREATECONTEXTATTRIBSARBPROC)wglGetProcAddress("wglCreateContextAttribsARB");
     if( createContextFunc )
     {
-        bool useDebugContext = ro.debug;
         GLint attributes[] =
         {
-            WGL_CONTEXT_FLAGS_ARB, useDebugContext ? WGL_CONTEXT_DEBUG_BIT_ARB : 0,
+            WGL_CONTEXT_FLAGS_ARB, ro.debug ? WGL_CONTEXT_DEBUG_BIT_ARB : 0,
             0,
         };
 

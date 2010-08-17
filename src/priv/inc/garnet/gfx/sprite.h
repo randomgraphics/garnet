@@ -168,11 +168,11 @@ namespace GN { namespace gfx
 
         AutoRef<Texture>           mPureWhiteTexture;
         AutoRef<GpuProgram>        mGpuProgram;
-        VertexFormat               mVertexFormat;
+        VertexBinding  mVertexBinding;
         AutoRef<VtxBuf>            mVertexBuffer;
         AutoRef<IdxBuf>            mIndexBuffer;
 
-        GpuContext            mContext;
+        GpuContext                 mContext;
 
         BitFields                  mOptions;
         float                      mVertexShift;

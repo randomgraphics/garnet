@@ -482,12 +482,12 @@ def UTIL_checkConfig( conf, confDir, compiler, variant ):
 		vista = string.find( str, "6.0" ) >= 0
 		win7  = string.find( str, "6.1" ) >= 0
 		return  vista or win7
-	conf['has_d3d10'] = has_dxerr_h and conf['has_d3d9'] and c.CheckCXXHeader( 'd3d10.h' ) and c.CheckCXXHeader( 'd3dx10.h' ) and ( isVistaOrWin7(env) or not UTIL_staticBuild( variant ) )
+
+	conf['has_d3d10'] = False #has_dxerr_h and conf['has_d3d9'] and c.CheckCXXHeader( 'd3d10.h' ) and c.CheckCXXHeader( 'd3dx10.h' ) and ( isVistaOrWin7(env) or not UTIL_staticBuild( variant ) )
 
 	# =============
 	#  «∑Ò÷ß≥÷D3D11
 	# =============
-	#conf['has_d3d11'] = c.CheckCXXHeader( ['d3d11.h','dxerr.h'] ) and c.CheckLibrary( 'd3d11.lib' )( isVistaOrWin7(env) or not UTIL_staticBuild( variant ) )
 	conf['has_d3d11'] = has_dxerr_h and conf['has_d3d9'] and c.CheckLibWithHeader( 'd3d11.lib', 'd3d11.h', 'C++' ) and isVistaOrWin7(env);
 
 	# ===================

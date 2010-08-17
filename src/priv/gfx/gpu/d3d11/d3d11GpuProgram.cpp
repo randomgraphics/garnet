@@ -247,6 +247,18 @@ sUpdateConstData(
     dirtyFlags[ssp.cbidx] = true;
 }
 
+static UInt64 sD3D11ShaderID = 1;
+
+//
+//
+// -----------------------------------------------------------------------------
+GN::gfx::D3D11GpuProgram::D3D11GpuProgram( D3D11Gpu & r )
+    : D3D11Resource(r)
+    , m_ID(sD3D11ShaderID++)
+{
+    clear();
+}
+
 //
 //
 // -----------------------------------------------------------------------------
@@ -304,6 +316,47 @@ void GN::gfx::D3D11GpuProgram::quit()
     GN_STDCLASS_QUIT();
 
     GN_UNGUARD;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+const char * GN::gfx::D3D11GpuProgram::getAttributeSemantic(
+    size_t attributeIndex,
+    UINT * semanticIndex ) const
+{
+    if( attributeIndex >= mParamDesc.attributes.count() )
+    {
+        GN_ERROR(sLogger)( "Invalid attribute index: %d", attributeIndex );
+        if( semanticIndex ) *semanticIndex = 0;
+        return NULL;
+    }
+    else
+    {
+        const D3D11AttributeParameterDesc & attribute = (const D3D11AttributeParameterDesc &)mParamDesc.attributes[attributeIndex];
+
+        if( semanticIndex ) *semanticIndex = attribute.semanticIndex;
+
+        return attribute.semanticName;
+    }
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+const void * GN::gfx::D3D11GpuProgram::getInputSignature( size_t * pSignatureSize ) const
+{
+    if( mVs.byteCode )
+    {
+        if( pSignatureSize ) *pSignatureSize = mVs.byteCode->GetBufferSize();
+        return mVs.byteCode->GetBufferPointer();
+    }
+    else
+    {
+        GN_ERROR(sLogger)( "The GPU program has no vertex shader." );
+        if( pSignatureSize ) *pSignatureSize = 0;
+        return NULL;
+    }
 }
 
 //

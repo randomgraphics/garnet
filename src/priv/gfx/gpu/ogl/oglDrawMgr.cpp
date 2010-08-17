@@ -401,11 +401,11 @@ void GN::gfx::OGLGpu::drawLines(
 
     GN_ASSERT( mLine );
 
-    // disable GPU program and resources
+    // clear context, but keep render states
     GpuContext ctx = getContext();
-    ctx.gpuProgram.clear();
-    ctx.uniforms.clear();
-    ctx.clearResources();
+    UInt64 oldrs = ctx.rs.bitFlags;
+    ctx.clear();
+    ctx.rs.bitFlags = oldrs;
 
     bindContext( ctx );
     if( !mContextOk ) return;

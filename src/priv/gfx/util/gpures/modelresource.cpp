@@ -564,9 +564,9 @@ void GN::gfx::ModelResource::Impl::TextureItem::updateContext( Texture * tex )
         const EffectResource::BindingLocation & location = prop.bindings[i];
 
         GN_ASSERT( location.pass < mOwner->mPasses.size() );
-        GN_ASSERT( location.offset < GpuContext::MAX_TEXTURES );
+        GN_ASSERT( location.gpuProgramParameterIndex < GpuContext::MAX_TEXTURES );
 
-        TextureBinding & binding = mOwner->mPasses[location.pass].gc.textures[location.offset];
+        TextureBinding & binding = mOwner->mPasses[location.pass].gc.textures[location.gpuProgramParameterIndex];
 
         binding.texture.set( tex );
         binding.sampler = prop.sampler;
@@ -657,16 +657,16 @@ void GN::gfx::ModelResource::Impl::UniformItem::updateContext( Uniform * uniform
         const EffectResource::BindingLocation & location = prop.bindings[i];
 
         GN_ASSERT( location.pass < mOwner->mPasses.size() );
-        GN_ASSERT( location.offset < GpuContext::MAX_TEXTURES );
+        GN_ASSERT( location.gpuProgramParameterIndex < GpuContext::MAX_TEXTURES );
 
         GpuContext & gc = mOwner->mPasses[location.pass].gc;
 
-        if( location.offset >= gc.uniforms.size() )
+        if( location.gpuProgramParameterIndex >= gc.uniforms.size() )
         {
-            gc.uniforms.resize( location.offset + 1 );
+            gc.uniforms.resize( location.gpuProgramParameterIndex + 1 );
         }
 
-        gc.uniforms[location.offset].set( uniform );
+        gc.uniforms[location.gpuProgramParameterIndex].set( uniform );
     }
 }
 
@@ -1287,63 +1287,49 @@ void GN::gfx::ModelResource::Impl::onMeshChanged( MeshResource & r )
 // -----------------------------------------------------------------------------
 void GN::gfx::ModelResource::Impl::updateVertexFormat()
 {
-    for( size_t i = 0; i < mPasses.size(); ++i )
+    for( size_t pi = 0; pi < mPasses.size(); ++pi )
     {
-        VertexFormat & vtxfmt = mPasses[i].gc.vtxfmt;
+        VertexBinding & vtxbind = mPasses[pi].gc.vtxbind;
 
-        if( NULL != mMeshResource )
+        vtxbind.clear();
+
+        if( NULL == mMeshResource || NULL == mEffectResource || NULL == mPasses[pi].gc.gpuProgram )
         {
-            vtxfmt = mMeshResource->getDesc().vtxfmt;
+            continue;
+        }
 
-            // TODO: remapping based on effect resource attribute list
-            /*
-            if( NULL != mEffectResource && NULL != mPasses[i].gc.gpuProgram )
+        const MeshVertexFormat & vtxfmt = mMeshResource->getDesc().vtxfmt;
+
+        const GpuProgramParameterDesc & gppdesc = mPasses[pi].gc.gpuProgram->getParameterDesc();
+
+        for( size_t vi = 0; vi < vtxfmt.numElements; ++vi )
+        {
+            const MeshVertexElement & mve = vtxfmt.elements[vi];
+
+            size_t ai = mEffectResource->findAttribute( mve.semantic );
+            if( EffectResource::PARAMETER_NOT_FOUND != ai )
             {
-                const GpuProgramParameterDesc & gppdesc = mPasses[i].gc.gpuProgram->getParameterDesc();
-
-                for( size_t i = 0; i < vtxfmt.numElements; ++i )
+                const EffectResource::AttributeProperties & ap = mEffectResource->attributeProperties( ai );
+                for( size_t bi = 0; bi < ap.bindings.size(); ++bi )
                 {
-                    VertexElement & ve = vtxfmt.elements[i];
+                    const EffectResource::BindingLocation & bl = ap.bindings[bi];
 
-                    StrA attributeName = stringFormat( "%s%d", ve.binding, ve.bindingIndex );
-
-                    size_t ai = mEffectResource->findAttribute( attributeName );
-                    if( EffectResource::PARAMETER_NOT_FOUND != ai )
+                    if( bl.pass == pi && bl.gpuProgramParameterIndex < gppdesc.attributes.count() )
                     {
-                        // do remap
-                        const EffectResource::AttributeProperties & ap = mEffectResource->attributeProperties( ai );
-                        for( size_t p = 0; p < ap.bindings.size(); ++p )
-                        {
-                            const EffectResource::BindingLocation & bl = ap.bindings[p];
+                        VertexElement ve;
+                        ve.format    = mve.format;
+                        ve.stream    = mve.stream;
+                        ve.offset    = mve.offset;
+                        ve.attribute = (UInt16)bl.gpuProgramParameterIndex;
 
-                            if( bl.pass == i && bl.offset < gppdesc.attributes.count() )
-                            {
-                                const char * newName = gppdesc.attributes[bl.offset].name;
-                                UpdateVertexBinding( ve, newName );
-                            }
-                        }
-                    }
-                    else if( ve.bindingIndex == 0 && EffectResource::PARAMETER_NOT_FOUND != ( ai = mEffectResource->findAttribute( ve.binding ) ) )
-                    {
-                        // remap again
-                        const EffectResource::AttributeProperties & ap = mEffectResource->attributeProperties( ai );
-                        for( size_t p = 0; p < ap.bindings.size(); ++p )
-                        {
-                            const EffectResource::BindingLocation & bl = ap.bindings[p];
-
-                            if( bl.pass == i && bl.offset < gppdesc.attributes.count() )
-                            {
-                                const char * newName = gppdesc.attributes[bl.offset].name;
-                                UpdateVertexBinding( ve, newName );
-                            }
-                        }
+                        vtxbind.append( ve );
                     }
                 }
-            }*/
-        }
-        else
-        {
-            vtxfmt.clear();
+            }
+            else
+            {
+                GN_WARN(sLogger)( "Mesh semantic '%s' is not found in Effect's attribute list", mve.semantic );
+            }
         }
     }
 }

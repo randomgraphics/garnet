@@ -253,9 +253,24 @@ size_t GN::gfx::EffectResource::Impl::findAttribute( const char * name ) const
 {
     if( NULL == name || 0 == *name ) return PARAMETER_NOT_FOUND;
 
+    // Treat name like 'POSITION0' as 'POSITION'
+    size_t nameLen = stringLength( name );
+    if( nameLen >= 2 && '0' == name[nameLen-1] && ( name[nameLen-2] < '0' || name[nameLen-2] > '9' ) )
+    {
+        nameLen--;
+    }
+
     for( size_t i = 0; i < mAttributes.size(); ++i )
     {
-        if( name == mAttributes[i].parameterName )
+        // Treat attribute like 'POSITION0' as 'POSITION' too.
+        const StrA & attribute = mAttributes[i].parameterName;
+        size_t attrLen = attribute.size();
+        if( attrLen >= 2 && '0' == attribute[attrLen-1] && ( attribute[attrLen-2] < '0' || attribute[attrLen-2] > '9' ) )
+        {
+            attrLen--;
+        }
+
+        if( nameLen == attrLen && 0 == stringCompareI( name, attribute.cptr(), nameLen ) )
         {
             return i;
         }
@@ -299,7 +314,7 @@ bool GN::gfx::EffectResource::Impl::init( const EffectResourceDesc & desc )
     if( !initTechniques( desc ) ) return false;
     if( !initTextures( desc ) ) return false;
     if( !initUniforms( desc ) ) return false;
-    // TODO: if( !initAttributes( desc ) ) return false;
+    if( !initAttributes( desc ) ) return false;
 
     // success
     return true;
@@ -523,7 +538,7 @@ GN::gfx::EffectResource::Impl::initTextures(
                 if( textureName == tp.parameterName )
                 {
                     BindingLocation b = { ipass, gpparam.textures[shaderParameterName] };
-                    GN_ASSERT( GPU_PROGRAM_PARAMETER_NOT_FOUND != b.offset );
+                    GN_ASSERT( GPU_PROGRAM_PARAMETER_NOT_FOUND != b.gpuProgramParameterIndex );
                     tp.bindings.append( b );
                 }
             }
@@ -579,7 +594,7 @@ GN::gfx::EffectResource::Impl::initUniforms(
                 if( uniformName == up.parameterName )
                 {
                     BindingLocation b = { ipass, gpparam.uniforms[shaderParameterName] };
-                    GN_ASSERT( GPU_PROGRAM_PARAMETER_NOT_FOUND != b.offset );
+                    GN_ASSERT( GPU_PROGRAM_PARAMETER_NOT_FOUND != b.gpuProgramParameterIndex );
                     up.bindings.append( b );
                 }
             }
@@ -632,8 +647,16 @@ GN::gfx::EffectResource::Impl::initAttributes(
                 if( attributeName == ap.parameterName )
                 {
                     BindingLocation b = { ipass, gpparam.attributes[shaderParameterName] };
-                    GN_ASSERT( GPU_PROGRAM_PARAMETER_NOT_FOUND != b.offset );
-                    ap.bindings.append( b );
+                    if( GPU_PROGRAM_PARAMETER_NOT_FOUND != b.gpuProgramParameterIndex )
+                    {
+                        ap.bindings.append( b );
+                    }
+                    else
+                    {
+                        GN_ERROR(sLogger)( "Effect attribute '%s' is binding to invalid GPU program parameter '%s'",
+                            attributeName.cptr(),
+                            shaderParameterName.cptr() );
+                    }
                 }
             }
         }

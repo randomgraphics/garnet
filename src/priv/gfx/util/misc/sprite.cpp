@@ -47,7 +47,7 @@ static const char * hlslpscode=
     "struct VSOUT { \n"
     "   float4 position  : POSITION0; \n"
     "   float4 color     : COLOR; \n"
-    "   float2 texcoords : TEXCOORD; \n"
+    "   float2 texcoords : TEXCOORD0; \n"
     "}; \n"
     "float4 main( VSOUT i ) : COLOR0 { \n"
     "   return i.color * tex2D( t0, i.texcoords ); \n"
@@ -89,6 +89,23 @@ bool GN::gfx::SpriteRenderer::init()
         gpd.lang = GpuProgramLanguage::GLSL;
         gpd.vs.source = glslvscode;
         gpd.ps.source = glslpscode;
+
+        mGpuProgram.attach( mGpu.createGpuProgram( gpd ) );
+        if( !mGpuProgram ) return failure();
+
+        mVertexBinding.resize( 3 );
+        mVertexBinding[0].stream    = 0;
+        mVertexBinding[0].offset    = 0;
+        mVertexBinding[0].format    = ColorFormat::FLOAT3;
+        mVertexBinding[0].attribute = mGpuProgram->getParameterDesc().attributes["gl_Vertex"];
+        mVertexBinding[1].stream    = 0;
+        mVertexBinding[1].offset    = GN_FIELD_OFFSET( SpriteVertex, clr );
+        mVertexBinding[1].format    = ColorFormat::RGBA32;
+        mVertexBinding[1].attribute = mGpuProgram->getParameterDesc().attributes["gl_Color"];
+        mVertexBinding[2].stream    = 0;
+        mVertexBinding[2].offset    = GN_FIELD_OFFSET( SpriteVertex, tex );
+        mVertexBinding[2].format    = ColorFormat::FLOAT2;
+        mVertexBinding[2].attribute = mGpuProgram->getParameterDesc().attributes["gl_MultiTexCoord0"];
     }
     else if( caps.vsLanguages & GpuProgramLanguage::HLSL9 &&
              caps.psLanguages & GpuProgramLanguage::HLSL9 )
@@ -98,29 +115,29 @@ bool GN::gfx::SpriteRenderer::init()
         gpd.vs.entry = "main";
         gpd.ps.source = hlslpscode;
         gpd.ps.entry = "main";
+
+        mGpuProgram.attach( mGpu.createGpuProgram( gpd ) );
+        if( !mGpuProgram ) return failure();
+
+        mVertexBinding.resize( 3 );
+        mVertexBinding[0].stream    = 0;
+        mVertexBinding[0].offset    = 0;
+        mVertexBinding[0].format    = ColorFormat::FLOAT3;
+        mVertexBinding[0].attribute = mGpuProgram->getParameterDesc().attributes["POSITION0"];
+        mVertexBinding[1].stream    = 0;
+        mVertexBinding[1].offset    = GN_FIELD_OFFSET( SpriteVertex, clr );
+        mVertexBinding[1].format    = ColorFormat::RGBA32;
+        mVertexBinding[1].attribute = mGpuProgram->getParameterDesc().attributes["COLOR0"];
+        mVertexBinding[2].stream    = 0;
+        mVertexBinding[2].offset    = GN_FIELD_OFFSET( SpriteVertex, tex );
+        mVertexBinding[2].format    = ColorFormat::FLOAT2;
+        mVertexBinding[2].attribute = mGpuProgram->getParameterDesc().attributes["TEXCOORD0"];
     }
     else
     {
         GN_ERROR(sLogger)( "Sprite renderer requires either GLSL or HLSL support from graphics hardware." );
         return failure();
     }
-    mGpuProgram.attach( mGpu.createGpuProgram( gpd ) );
-    if( !mGpuProgram ) return failure();
-
-    // create vertex format
-    mVertexFormat.numElements = 3;
-    mVertexFormat.elements[0].stream = 0;
-    mVertexFormat.elements[0].offset = 0;
-    mVertexFormat.elements[0].format = ColorFormat::FLOAT3;
-    mVertexFormat.elements[0].bindTo( "position", 0 );
-    mVertexFormat.elements[1].stream = 0;
-    mVertexFormat.elements[1].offset = GN_FIELD_OFFSET( SpriteVertex, clr );
-    mVertexFormat.elements[1].format = ColorFormat::RGBA32;
-    mVertexFormat.elements[1].bindTo( "color", 0 );
-    mVertexFormat.elements[2].stream = 0;
-    mVertexFormat.elements[2].offset = GN_FIELD_OFFSET( SpriteVertex, tex );
-    mVertexFormat.elements[2].format = ColorFormat::FLOAT2;
-    mVertexFormat.elements[2].bindTo( "texcoord", 0 );
 
     // create vertex buffer
     mVertexBuffer.attach( mGpu.createVtxBuf( VTXBUF_SIZE, true ) );
@@ -200,7 +217,7 @@ void GN::gfx::SpriteRenderer::drawBegin( Texture * texture, BitFields options )
 
     // setup parameters that are not affected by options
     mContext.textures[0].texture.set( texture );
-    mContext.vtxfmt            = mVertexFormat;
+    mContext.vtxbind           = mVertexBinding;
     mContext.vtxbufs[0].vtxbuf = mVertexBuffer;
     mContext.vtxbufs[0].stride = sizeof(SpriteVertex);
     mContext.idxbuf            = mIndexBuffer;

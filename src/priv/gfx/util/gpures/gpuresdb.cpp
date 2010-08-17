@@ -105,6 +105,9 @@ static AutoRef<EffectResource> sRegisterDiffuseEffect( GpuResourceDatabase & gdb
     ed.uniforms["LIGHT0_DIFFUSE"];
     ed.uniforms["ALBEDO_COLOR"];
     ed.textures["ALBEDO_TEXTURE"];
+    ed.attributes["POSITION0"];
+    ed.attributes["NORMAL0"];
+    ed.attributes["TEXCOORD0"];
 
     ed.gpuprograms["glsl"].gpd.lang = GpuProgramLanguage::GLSL;
     ed.gpuprograms["glsl"].gpd.vs.source = DIFFUSE_VS_GLSL;
@@ -116,6 +119,9 @@ static AutoRef<EffectResource> sRegisterDiffuseEffect( GpuResourceDatabase & gdb
     ed.gpuprograms["glsl"].uniforms["lightColor"] = "LIGHT0_DIFFUSE";
     ed.gpuprograms["glsl"].uniforms["albedoColor"] = "ALBEDO_COLOR";
     ed.gpuprograms["glsl"].textures["t0"] = "ALBEDO_TEXTURE";
+    ed.gpuprograms["glsl"].attributes["gl_Vertex"] = "POSITION0";
+    ed.gpuprograms["glsl"].attributes["gl_Normal"] = "NORMAL0";
+    ed.gpuprograms["glsl"].attributes["gl_MultiTexCoord0"] = "TEXCOORD0";
 
     ed.gpuprograms["hlsl9"].gpd.lang = GpuProgramLanguage::HLSL9;
     ed.gpuprograms["hlsl9"].gpd.vs.source = DIFFUSE_VS_HLSL9;
@@ -129,6 +135,9 @@ static AutoRef<EffectResource> sRegisterDiffuseEffect( GpuResourceDatabase & gdb
     ed.gpuprograms["hlsl9"].uniforms["lightColor"] = "LIGHT0_DIFFUSE";
     ed.gpuprograms["hlsl9"].uniforms["albedoColor"] = "ALBEDO_COLOR";
     ed.gpuprograms["hlsl9"].textures["t0"] = "ALBEDO_TEXTURE";
+    ed.gpuprograms["hlsl9"].attributes["POSITION0"] = "POSITION0";
+    ed.gpuprograms["hlsl9"].attributes["NORMAL0"] = "NORMAL0";
+    ed.gpuprograms["hlsl9"].attributes["TEXCOORD0"] = "TEXCOORD0";
 
     ed.techniques.resize( 2 );
     ed.techniques[0].name = "glsl";
@@ -192,12 +201,14 @@ static AutoRef<EffectResource> sRegisterWireframeEffect( GpuResourceDatabase & g
 
     ed.uniforms["MATRIX_PVW"];
     ed.uniforms["COLOR"];
+    ed.attributes["POSITION"];
 
     ed.gpuprograms["glsl"].gpd.lang = GpuProgramLanguage::GLSL;
     ed.gpuprograms["glsl"].gpd.vs.source = WIREFRAME_VS_GLSL;
     ed.gpuprograms["glsl"].gpd.ps.source = WIREFRAME_PS_GLSL;
     ed.gpuprograms["glsl"].uniforms["pvw"] = "MATRIX_PVW";
-    ed.gpuprograms["glsl"].uniforms["color"] = "COLOR";
+    ed.gpuprograms["glsl"].uniforms["color"] = "COLOR0";
+    ed.gpuprograms["glsl"].attributes["gl_Vertex"] = "POSITION";
 
     ed.gpuprograms["hlsl"].gpd.lang = GpuProgramLanguage::HLSL9;
     ed.gpuprograms["hlsl"].gpd.vs.source = WIREFRAME_VS_HLSL9;
@@ -205,7 +216,8 @@ static AutoRef<EffectResource> sRegisterWireframeEffect( GpuResourceDatabase & g
     ed.gpuprograms["hlsl"].gpd.ps.source = WIREFRAME_PS_HLSL9;
     ed.gpuprograms["hlsl"].gpd.ps.entry  = "main";
     ed.gpuprograms["hlsl"].uniforms["pvw"] = "MATRIX_PVW";
-    ed.gpuprograms["hlsl"].uniforms["color"] = "COLOR";
+    ed.gpuprograms["hlsl"].uniforms["color"] = "COLOR0";
+    ed.gpuprograms["hlsl"].attributes["POSITION0"] = "POSITION";
 
     ed.techniques.resize( 2 );
     ed.techniques[0].name = "glsl";
@@ -323,6 +335,10 @@ static AutoRef<EffectResource> sRegisterNormalMapEffect( GpuResourceDatabase & g
     ed.uniforms["ALBEDO_COLOR"];
     ed.textures["ALBEDO_TEXTURE"];
     ed.textures["NORMAL_TEXTURE"];
+    ed.attributes["POSITION0"];
+    ed.attributes["NORMAL0"];
+    ed.attributes["TANGENT"];
+    ed.attributes["TEXCOORD0"];
 
     ed.gpuprograms["glsl"].gpd.lang = GpuProgramLanguage::GLSL;
     ed.gpuprograms["glsl"].gpd.vs.source = NORMALMAP_VS_GLSL;
@@ -335,6 +351,9 @@ static AutoRef<EffectResource> sRegisterNormalMapEffect( GpuResourceDatabase & g
     ed.gpuprograms["glsl"].uniforms["albedoColor"] = "ALBEDO_COLOR";
     ed.gpuprograms["glsl"].textures["t0"] = "ALBEDO_TEXTURE";
     ed.gpuprograms["glsl"].textures["t1"] = "NORMAL_TEXTURE";
+    ed.gpuprograms["glsl"].attributes["gl_Vertex"] = "POSITION";
+    ed.gpuprograms["glsl"].attributes["gl_Normal"] = "NORMAL";
+    ed.gpuprograms["glsl"].attributes["gl_MultiTexCoord0"] = "TEXCOORD";
 
     ed.gpuprograms["hlsl"].gpd.lang = GpuProgramLanguage::HLSL9;
     ed.gpuprograms["hlsl"].gpd.vs.source = NORMALMAP_VS_HLSL9;
@@ -349,6 +368,9 @@ static AutoRef<EffectResource> sRegisterNormalMapEffect( GpuResourceDatabase & g
     ed.gpuprograms["hlsl"].uniforms["albedoColor"] = "ALBEDO_COLOR";
     ed.gpuprograms["hlsl"].textures["t0"] = "ALBEDO_TEXTURE";
     ed.gpuprograms["hlsl"].textures["t1"] = "NORMAL_TEXTURE";
+    ed.gpuprograms["hlsl9"].attributes["POSITION0"] = "POSITION";
+    ed.gpuprograms["hlsl9"].attributes["NORMAL0"] = "NORMAL";
+    ed.gpuprograms["hlsl9"].attributes["TEXCOORD0"] = "TEXCOORD";
 
     ed.techniques.resize( 2 );
     ed.techniques[0].name = "glsl";

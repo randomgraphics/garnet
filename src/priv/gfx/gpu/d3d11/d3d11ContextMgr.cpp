@@ -137,6 +137,8 @@ void GN::gfx::D3D11Gpu::contextQuit()
 
     mContext.clear();
 
+    mCurrentVertexLayout = NULL;
+
     safeDelete( mRTMgr );
     safeDelete( mSOMgr );
 
@@ -377,31 +379,28 @@ inline bool GN::gfx::D3D11Gpu::bindContextResource(
     bool               skipDirtyCheck )
 {
     //
-    // bind vertex format
+    // bind input layout
     //
-    D3D11VertexLayout * layout;
-    if( skipDirtyCheck || mContext.vtxfmt != newContext.vtxfmt )
+    D3D11GpuProgram * gpuProgram = (D3D11GpuProgram*)newContext.gpuProgram.get();
+    D3D11VertexLayout * layout = NULL;
+    if( NULL != gpuProgram )
     {
-        if( 0 == newContext.vtxfmt.numElements )
+        VertexFormatKey vfk = { newContext.vtxbind, gpuProgram->getUniqueID() };
+        layout = &mVertexLayouts[vfk];
+        if( NULL == layout->il )
         {
-            mDeviceContext->IASetInputLayout( NULL );
-            layout = NULL;
-        }
-        else
-        {
-            layout = &mVertexLayouts[newContext.vtxfmt];
-
-            if( NULL == layout->il )
+            AutoObjPtr<D3D11VertexLayout> newLayout( new D3D11VertexLayout() );
+            if( !layout->init( *mDevice, newContext.vtxbind, *gpuProgram ) )
             {
-                if( !layout->init( *mDevice, newContext.vtxfmt ) ) return false;
+                mVertexLayouts.remove( vfk );
+                return false;
             }
-
-            mDeviceContext->IASetInputLayout( layout->il );
         }
     }
-    else
+    if( skipDirtyCheck || layout != mCurrentVertexLayout )
     {
-        layout = &mVertexLayouts[mContext.vtxfmt];
+        mDeviceContext->IASetInputLayout( layout ? (ID3D11InputLayout*)layout->il : NULL );
+        mCurrentVertexLayout = layout;
     }
 
     ///

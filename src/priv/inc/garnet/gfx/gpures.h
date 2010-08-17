@@ -196,21 +196,215 @@ namespace GN { namespace gfx
     };
 
     ///
+    /// definition of single mesh vertex element
+    ///
+    struct MeshVertexElement
+    {
+        ColorFormat format;       ///< the vertex element format.
+        UInt8       stream;       ///< vertex buffer index
+        UInt8       offset;       ///< offset of the element in the vertex.
+        char        semantic[16]; ///< Semantic name (null terminated string, 15 characters at most).
+
+        ///
+        /// Bind vertex element to specific GL program attribute variable.
+        ///
+        /// Note that name and index are shader specific (thus, API specific).
+        ///
+        void setSemantic( const char * s )
+        {
+            size_t len = stringLength( s );
+            if( 0 == len )
+            {
+                GN_ERROR(getLogger("GN.gfx.gpu"))( "Empty semantic string is not allowed." );
+                return;
+            }
+
+            if( len >= GN_ARRAY_COUNT(semantic) )
+            {
+                GN_ERROR(getLogger("GN.gfx.gpu"))(
+                    "Semantic string (%s) is too long. Maxinum length is 16 characters including ending NULL.",
+                    s );
+            }
+            len = math::getmin<size_t>( GN_ARRAY_COUNT(semantic), len+1 );
+            memcpy( semantic, s, len );
+        }
+
+        /// equality check
+        bool operator==( const MeshVertexElement & rhs ) const
+        {
+            return format == rhs.format
+                && stream == rhs.stream
+                && offset == rhs.offset
+                && 0 == stringCompare( semantic, rhs.semantic, sizeof(semantic) );
+        }
+
+        /// equality check
+        bool operator!=( const MeshVertexElement & rhs ) const
+        {
+            return !operator==( rhs );
+        }
+    };
+
+    ///
+    /// define mesh vertex format
+    ///
+    struct MeshVertexFormat
+    {
+        enum
+        {
+            MAX_VERTEX_ELEMENTS = 16,
+        };
+
+        UInt32            numElements;                   ///< number of elements
+        MeshVertexElement elements[MAX_VERTEX_ELEMENTS]; ///< vertex element array
+
+        bool operator==( const MeshVertexFormat & rhs ) const
+        {
+            if( numElements != rhs.numElements ) return false;
+            for( UInt32 i = 0; i < numElements; ++i )
+            {
+                if( elements[i] != rhs.elements[i] ) return false;
+            }
+            return true;
+        }
+
+        bool operator!=( const MeshVertexFormat & rhs ) const
+        {
+            return !operator==( rhs );
+        }
+
+        bool operator<( const MeshVertexFormat & rhs ) const
+        {
+            if( this == &rhs ) return false;
+
+            const UInt32 * a = (const UInt32*)this;
+            const UInt32 * b = (const UInt32*)&rhs;
+            size_t         n = sizeof(*this)/4;
+
+            for( UInt32 i = 0; i < n; ++i )
+            {
+                if( a[i] < b[i] ) return true;
+                if( a[i] > b[i] ) return false;
+            }
+
+            return false;
+        }
+
+        ///
+        /// clear the vertex format
+        ///
+        void clear() { numElements = 0; }
+
+        ///
+        /// Calculate number of streams.
+        ///
+        size_t inline calcNumStreams() const
+        {
+            size_t n = 0;
+            for( size_t i = 0; i < numElements; ++i )
+            {
+                const MeshVertexElement & e =  elements[i];
+                if( e.stream >= n ) n = e.stream + 1;
+            }
+            return n;
+        }
+
+        ///
+        /// Calculate stride of specific stream.
+        ///
+        size_t inline calcStreamStride( size_t stream ) const
+        {
+            size_t stride = 0;
+            for( size_t i = 0; i < numElements; ++i )
+            {
+                const MeshVertexElement & e =  elements[i];
+
+                size_t elementEnd = e.offset + e.format.getBytesPerBlock();
+
+                if( stream == e.stream && stride < elementEnd ) stride = elementEnd;
+            }
+            return stride;
+        }
+
+        ///
+        /// return a vertex format definition for vertex like this:
+        ///
+        /// struct MeshVertexFormat
+        /// {
+        ///     float position[2];
+        ///     float texcoord[2];
+        /// };
+        ///
+        static MeshVertexFormat XY_UV()
+        {
+            MeshVertexFormat vf;
+
+            vf.numElements = 2;
+
+            vf.elements[0].setSemantic( "POSITION" );
+            vf.elements[0].format = ColorFormat::FLOAT2;
+            vf.elements[0].stream = 0;
+            vf.elements[0].offset = 0;
+
+            vf.elements[1].setSemantic( "TEXCOORD" );
+            vf.elements[1].format = ColorFormat::FLOAT2;
+            vf.elements[1].stream = 0;
+            vf.elements[1].offset = 8;
+
+            return vf;
+        }
+
+        ///
+        /// return a vertex format definition for vertex like this:
+        ///
+        /// struct MeshVertexFormat
+        /// {
+        ///     float position[3];
+        ///     float normal[3];
+        ///     float texcoord[2];
+        /// };
+        ///
+        static MeshVertexFormat XYZ_NORM_UV()
+        {
+            MeshVertexFormat vf;
+
+            vf.numElements = 3;
+
+            vf.elements[0].setSemantic( "POSITION" );
+            vf.elements[0].format = ColorFormat::FLOAT3;
+            vf.elements[0].stream = 0;
+            vf.elements[0].offset = 0;
+
+            vf.elements[1].setSemantic( "NORMAL" );
+            vf.elements[1].format = ColorFormat::FLOAT3;
+            vf.elements[1].stream = 0;
+            vf.elements[1].offset = 12;
+
+            vf.elements[2].setSemantic( "TEXCOORD" );
+            vf.elements[2].format = ColorFormat::FLOAT2;
+            vf.elements[2].stream = 0;
+            vf.elements[2].offset = 24;
+
+            return vf;
+        }
+    };
+
+    ///
     /// Mesh resource descriptor
     ///
     struct MeshResourceDesc
     {
-        PrimitiveType prim;   ///< primitive type
-        size_t        numvtx; ///< number of vertices
-        size_t        numidx; ///< number of indices. 0 means non-indexed mesh
-        bool          idx32;  ///< true for 32-bit index buffer
-        bool          dynavb; ///< true for dynamic vertex buffer
-        bool          dynaib; ///< trur for dynamic index buffer
-        VertexFormat  vtxfmt; ///< vertex format
-        void *        vertices[GpuContext::MAX_VERTEX_BUFFERS]; ///< NULL pointer means vertex data are undefined
-        size_t        strides[GpuContext::MAX_VERTEX_BUFFERS];  ///< vertex buffer strides. 0 means using vertex size defined by vertex format.
-        size_t        offsets[GpuContext::MAX_VERTEX_BUFFERS];
-        void *        indices; ///< Null means index data are undefined.
+        PrimitiveType       prim;   ///< primitive type
+        size_t              numvtx; ///< number of vertices
+        size_t              numidx; ///< number of indices. 0 means non-indexed mesh
+        bool                idx32;  ///< true for 32-bit index buffer
+        bool                dynavb; ///< true for dynamic vertex buffer
+        bool                dynaib; ///< trur for dynamic index buffer
+        MeshVertexFormat    vtxfmt; ///< vertex format
+        void *              vertices[GpuContext::MAX_VERTEX_BUFFERS]; ///< NULL pointer means vertex data are undefined
+        size_t              strides[GpuContext::MAX_VERTEX_BUFFERS];  ///< vertex buffer strides. 0 means using vertex size defined by vertex format.
+        size_t              offsets[GpuContext::MAX_VERTEX_BUFFERS];
+        void *              indices; ///< Null means index data are undefined.
 
         ///
         /// constructor
@@ -549,27 +743,27 @@ namespace GN { namespace gfx
 
         struct BindingLocation
         {
-            size_t pass;   // index of the pass
-            size_t offset; // index in the GPU program parameter array
+            size_t pass;                     // index of the pass
+            size_t gpuProgramParameterIndex; // index of the GPU program parameter
         };
 
-        struct ParameterProperties
+        struct EffectParameterProperties
         {
             StrA                       parameterName;
             DynaArray<BindingLocation> bindings;
         };
 
-        struct TextureProperties : public ParameterProperties
+        struct TextureProperties : public EffectParameterProperties
         {
             SamplerDesc sampler;
         };
 
-        struct UniformProperties : public ParameterProperties
+        struct UniformProperties : public EffectParameterProperties
         {
             size_t size; ///< uniform size in bytes
         };
 
-        struct AttributeProperties : public ParameterProperties
+        struct AttributeProperties : public EffectParameterProperties
         {
         };
 
