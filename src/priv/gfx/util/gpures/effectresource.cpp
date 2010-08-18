@@ -183,6 +183,24 @@ sCheckShaderUniforms(
     return true;
 }
 
+static bool sAttributeNameEqual( const char * name1, const char * name2 )
+{
+    // Treat name like 'POSITION0' as 'POSITION'
+    size_t len1 = stringLength( name1 );
+    if( len1 >= 2 && '0' == name1[len1-1] && ( name1[len1-2] < '0' || name1[len1-2] > '9' ) )
+    {
+        len1--;
+    }
+
+    size_t len2 = stringLength( name2 );
+    if( len2 >= 2 && '0' == name2[len2-1] && ( name2[len2-2] < '0' || name2[len2-2] > '9' ) )
+    {
+        len2--;
+    }
+
+    return len1 == len2 && 0 == stringCompareI( name1, name2, len1 );
+}
+
 // *****************************************************************************
 // GN::gfx::EffectResource::Impl - public methods
 // *****************************************************************************
@@ -251,26 +269,9 @@ size_t GN::gfx::EffectResource::Impl::findUniform( const char * name ) const
 // -----------------------------------------------------------------------------
 size_t GN::gfx::EffectResource::Impl::findAttribute( const char * name ) const
 {
-    if( NULL == name || 0 == *name ) return PARAMETER_NOT_FOUND;
-
-    // Treat name like 'POSITION0' as 'POSITION'
-    size_t nameLen = stringLength( name );
-    if( nameLen >= 2 && '0' == name[nameLen-1] && ( name[nameLen-2] < '0' || name[nameLen-2] > '9' ) )
-    {
-        nameLen--;
-    }
-
     for( size_t i = 0; i < mAttributes.size(); ++i )
     {
-        // Treat attribute like 'POSITION0' as 'POSITION' too.
-        const StrA & attribute = mAttributes[i].parameterName;
-        size_t attrLen = attribute.size();
-        if( attrLen >= 2 && '0' == attribute[attrLen-1] && ( attribute[attrLen-2] < '0' || attribute[attrLen-2] > '9' ) )
-        {
-            attrLen--;
-        }
-
-        if( nameLen == attrLen && 0 == stringCompareI( name, attribute.cptr(), nameLen ) )
+        if( sAttributeNameEqual( name, mAttributes[i].parameterName ) )
         {
             return i;
         }
@@ -642,9 +643,7 @@ GN::gfx::EffectResource::Impl::initAttributes(
                 const StrA & shaderParameterName = iter->key;
                 const StrA & attributeName = iter->value;
 
-                GN_ASSERT( NULL != effectDesc.attributes.find( attributeName ) );
-
-                if( attributeName == ap.parameterName )
+                if( sAttributeNameEqual( attributeName, ap.parameterName ) )
                 {
                     BindingLocation b = { ipass, gpparam.attributes[shaderParameterName] };
                     if( GPU_PROGRAM_PARAMETER_NOT_FOUND != b.gpuProgramParameterIndex )
