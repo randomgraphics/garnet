@@ -479,6 +479,43 @@ void GN::XmlNode::setParent( XmlNode * newParent, XmlNode * newPrev )
     }
 }
 
+static int XMLCALL sGBK_TO_UTF8(void *, const char *)
+{
+    GN_UNIMPL_WARNING();
+    return ' ';
+}
+
+static int XMLCALL sEncodingHandler(
+    void *encodingHandlerData,
+    const XML_Char *name,
+    XML_Encoding *info)
+{
+    using namespace GN;
+
+    GN_UNUSED_PARAM( encodingHandlerData );
+
+    if( 0 == stringCompareI( "gbk", name ) )
+    {
+        info->convert = &sGBK_TO_UTF8;
+        info->release = NULL;
+
+        for( int i = 0; i < 128; ++i )
+        {
+            info->map[i] = (char)i;
+        }
+        for( int i = 129; i < 256; ++i )
+        {
+            info->map[i] = -2;
+        }
+
+        return 1;
+    }
+
+    GN_ERROR(sLogger)( "Unknown encoding: %s", name );
+    return 0;
+}
+
+
 // *****************************************************************************
 // XmlDocument class
 // *****************************************************************************
@@ -496,8 +533,9 @@ bool GN::XmlDocument::parse(
     result.errColumn = 0;
 
     // create parser
+    const char * encoding = CharacterEncodingConverter::sEncoding2Str( getCurrentSystemEncoding() );
     XML_Memory_Handling_Suite mm = { &sXmlMalloc, &sXmlRealloc, &sXmlFree };
-    XML_Parser parser = XML_ParserCreate_MM( 0, &mm, 0 );
+    XML_Parser parser = XML_ParserCreate_MM( encoding, &mm, 0 );
     if( 0 == parser )
     {
         result.errInfo = "Fail to create parser.";
@@ -510,6 +548,7 @@ bool GN::XmlDocument::parse(
     XML_SetUserData( parser, &userData );
 
     // setup handlers
+    XML_SetUnknownEncodingHandler( parser, &sEncodingHandler, NULL );
     XML_SetElementHandler( parser, &sStartElementHandler, &sEndElementHandler );
     XML_SetCdataSectionHandler( parser, &sStartCdataSectionHandler, &sEndCdataSectionHandler );
     XML_SetCharacterDataHandler( parser, &sCharacterDataHandler );

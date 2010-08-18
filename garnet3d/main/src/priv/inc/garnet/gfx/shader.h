@@ -149,7 +149,6 @@ namespace GN { namespace gfx
     struct GpuProgramAttributeParameterDesc
     {
         const char * name; ///< attribute name.
-        //size_t       semanticIndex; ///< attribute semantic index
     };
 
     enum

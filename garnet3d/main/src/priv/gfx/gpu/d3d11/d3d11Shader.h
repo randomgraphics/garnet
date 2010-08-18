@@ -76,8 +76,8 @@ namespace GN { namespace gfx
 
     struct D3D11AttributeParameterDesc : public GpuProgramAttributeParameterDesc
     {
-        StrA   semanticName;
-        size_t semanticIndex;
+        StrA semanticName;
+        UINT semanticIndex;
 
         /// ctor
         D3D11AttributeParameterDesc()

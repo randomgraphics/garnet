@@ -13,7 +13,6 @@ TODO
       - dual way variable changing notification
       - compile time switch to remove tweakable code entirely
       - separate client (tuner) and server (variables)
-  - Need a mapping in model defintion that maps vertex streams to shader sementics?
   - scene framework and gpu resource database:
     - better way to resolve standard/built-in effects and textures (instead of
       using "@")
