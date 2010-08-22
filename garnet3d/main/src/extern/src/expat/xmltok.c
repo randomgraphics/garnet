@@ -1275,6 +1275,16 @@ unknown_toUtf8(const ENCODING *enc,
                const char **fromP, const char *fromLim,
                char **toP, const char *toLim)
 {
+#if 1
+
+  size_t fromSize = fromLim - *fromP;
+  size_t toSize = toLim - *toP;
+  size_t copySize = fromSize < toSize ? fromSize : toSize; // min(fromSize, toSize)
+  memcpy( *toP, *fromP, copySize );
+  *fromP += copySize;
+  *toP += copySize;
+
+#else
   const struct unknown_encoding *uenc = AS_UNKNOWN_ENCODING(enc);
   char buf[XML_UTF8_ENCODE_MAX];
   for (;;) {
@@ -1302,6 +1312,7 @@ unknown_toUtf8(const ENCODING *enc,
       *(*toP)++ = *utf8++;
     } while (--n != 0);
   }
+#endif
 }
 
 static void PTRCALL

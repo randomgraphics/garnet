@@ -125,10 +125,13 @@ ISSUES
     - std::string can't accept NULL pointer as valid input.
     - std::char_trait<wchar_t> is not well supported on cygwin.
 
-- TinyXml or Expat w/ DOM wrapper?
+- TinyXml, RapidXml or Expat?
   - RESOLVED: expat.
-    - expat is faster.
-    - custom DOM wrapper fits our requirement better, and is pretty easy to implement.
+  	- TinyXml is too slow.
+    - RapidXml does not support encoding right. It always read text as single
+      byte char*, which means it might confuse the second byte of a multi-byte
+      character with a ascii character.
+    - Custom DOM wrapper fits our requirement better, and is pretty easy to implement.
 
 DROPPED TASKS
 =============
