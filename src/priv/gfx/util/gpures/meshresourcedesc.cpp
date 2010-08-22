@@ -508,7 +508,7 @@ AutoRef<Blob> sLoadFromMeshXMLFile( File & fp, MeshResourceDesc & desc )
         GN_ERROR(sLogger)( "<vtxfmt> element is missing." );
         return AutoRef<Blob>::NULLREF;
     }
-    for( const XmlNode * n = vtxfmtNode->child; n != NULL; n = n->next )
+    for( const XmlNode * n = vtxfmtNode->firstc; n != NULL; n = n->nexts )
     {
         const XmlElement * e = n->toElement();
         if( !e ) continue;
@@ -547,7 +547,7 @@ AutoRef<Blob> sLoadFromMeshXMLFile( File & fp, MeshResourceDesc & desc )
 
     // parse vtxbuf and idxbuf elements, calculate mesh data size
     size_t meshDataSize = 0;
-    for( const XmlNode * n = root->child; n != NULL; n = n->next )
+    for( const XmlNode * n = root->firstc; n != NULL; n = n->nexts )
     {
         const XmlElement * e = n->toElement();
         if( !e ) continue;
@@ -600,7 +600,7 @@ AutoRef<Blob> sLoadFromMeshXMLFile( File & fp, MeshResourceDesc & desc )
     // parse vtxbuf and idxbuf elements, again, to read, calculate mesh data size
     SafeArrayAccessor<UInt8> meshData( (UInt8*)blob->data(), blob->size() );
     size_t offset = 0;
-    for( const XmlNode * n = root->child; n != NULL; n = n->next )
+    for( const XmlNode * n = root->firstc; n != NULL; n = n->nexts )
     {
         const XmlElement * e = n->toElement();
         if( !e ) continue;

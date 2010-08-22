@@ -28,7 +28,7 @@ namespace GN
         ///
         /// attach attribute to specific element
         ///
-        void setOwner( XmlElement * element );
+        void setOwner( XmlElement * element, XmlAttrib * prevAttrib = NULL );
 
     protected:
 
@@ -55,19 +55,20 @@ namespace GN
     ///
     struct XmlNode
     {
-        XmlDocument     & doc;     ///< reference to the owner document
-        const XmlNodeType type;    ///< node type. can't be modified.
-        XmlNode         * parent;  ///< pointer to parent node
-        XmlNode         * prev;    ///< pointer to previous brother node
-        XmlNode         * next;    ///< pointer to next brother node
-        XmlNode         * child;   ///< pointer to first child
+        XmlDocument     & doc;    ///< reference to the owner document
+        const XmlNodeType type;   ///< node type. can't be modified.
+        XmlNode         * parent; ///< pointer to parent node
+        XmlNode         * prevs;  ///< pointer to previous brother node
+        XmlNode         * nexts;  ///< pointer to next brother node
+        XmlNode         * firstc; ///< pointer to first child node
+        XmlNode         * lastc;  ///< pointer to last child node
 
         /// \name method required by traversal class
         //@{
         XmlNode * getParent() const { return parent; }
-        XmlNode * getPrevSibling() const { return prev; }
-        XmlNode * getNextSibling() const { return next; }
-        XmlNode * getFirstChild() const { return child; }
+        XmlNode * getPrevSibling() const { return prevs; }
+        XmlNode * getNextSibling() const { return nexts; }
+        XmlNode * getFirstChild() const { return firstc; }
         //@}
 
         ///
@@ -124,9 +125,10 @@ namespace GN
             : doc(d)
             , type(t)
             , parent(0)
-            , prev(0)
-            , next(0)
-            , child(0)
+            , prevs(0)
+            , nexts(0)
+            , firstc(0)
+            , lastc(0)
         {
             GN_ASSERT( 0 <= t && t < NUM_XML_NODE_TYPES );
         }
@@ -171,7 +173,8 @@ namespace GN
     ///
     struct XmlElement : public XmlNode
     {
-        XmlAttrib * attrib;  ///< pointer to first attribute
+        XmlAttrib * firsta;  ///< pointer to first attribute
+        XmlAttrib * lasta;   ///< pointer to last attribute
         StrA        name;    ///< element name
         StrA        text;    ///< optional text section
 
@@ -180,7 +183,7 @@ namespace GN
         ///
         XmlAttrib * findAttrib( const StrA & name, StringCompareCase scc = StringCompareCase::SENSITIVE ) const
         {
-            for( XmlAttrib * a = attrib; a; a = a->next )
+            for( XmlAttrib * a = firsta; a; a = a->next )
             {
                 if( StringCompareCase::SENSITIVE == scc )
                 {
@@ -195,11 +198,11 @@ namespace GN
         }
 
         ///
-        /// find specific child of element
+        /// find specific firstc of element
         ///
         XmlElement * findChildElement( const StrA & name, StringCompareCase scc = StringCompareCase::SENSITIVE ) const
         {
-            for( XmlNode * n = child; n; n = n->next )
+            for( XmlNode * n = firstc; n; n = n->nexts )
             {
                 XmlElement * e = n->toElement();
                 if( !e ) continue;
@@ -223,7 +226,8 @@ namespace GN
         ///
         XmlElement( XmlDocument & d )
             : XmlNode(d,XML_ELEMENT)
-            , attrib(0)
+            , firsta(0)
+            , lasta(0)
         {
         }
     };

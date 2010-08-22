@@ -208,7 +208,7 @@ bool GN::gfx::ModelResourceDesc::loadFromXml( const XmlNode & root, const char *
     bool effectFound = false;
     bool meshFound = false;
     bool subsetFound = false;
-    for( const XmlNode * n = rootElement->child; n != NULL; n = n->next )
+    for( const XmlNode * n = rootElement->firstc; n != NULL; n = n->nexts )
     {
         const XmlElement * e = n->toElement();
         if( !e ) continue;

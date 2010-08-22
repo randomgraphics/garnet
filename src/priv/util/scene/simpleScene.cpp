@@ -455,7 +455,7 @@ sParseEntity( SimpleWorldDesc & desc, XmlElement & root )
     XmlElement * visualNode = root.findChildElement( "visual" );
     if( visualNode )
     {
-        for( XmlNode * n = visualNode->child; n != NULL; n = n->next )
+        for( XmlNode * n = visualNode->firstc; n != NULL; n = n->nexts )
         {
             XmlElement * e = n->toElement();
             if( !e ) continue;
@@ -530,7 +530,7 @@ sLoadFromXML( SimpleWorldDesc & desc, File & file )
         sPostXMLError( *root, "Element <models> is missing." );
         return false;
     }
-    for( XmlNode * n = modelsNode->child; n != NULL; n = n->next )
+    for( XmlNode * n = modelsNode->firstc; n != NULL; n = n->nexts )
     {
         XmlElement * e = n->toElement();
         if( !e ) continue;
@@ -552,7 +552,7 @@ sLoadFromXML( SimpleWorldDesc & desc, File & file )
         sPostXMLError( *root, "Element <entities> is missing." );
         return false;
     }
-    for( XmlNode * n = entitiesNode->child; n != NULL; n = n->next )
+    for( XmlNode * n = entitiesNode->firstc; n != NULL; n = n->nexts )
     {
         XmlElement * e = n->toElement();
         if( !e ) continue;
