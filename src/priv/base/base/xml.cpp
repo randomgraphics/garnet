@@ -1,33 +1,12 @@
 #include "pch.h"
 #include "garnet/base/xml.h"
-#include <expat.h>
+#include <rapidxml.hpp>
 
 // *****************************************************************************
 // local functions
 // *****************************************************************************
 
 static GN::Logger * sLogger = GN::getLogger("GN.base.xml");
-
-struct AutoFree
-{
-    XML_Parser ptr;
-    AutoFree( XML_Parser p ) : ptr(p) { GN_ASSERT(p); }
-    ~AutoFree() { XML_ParserFree( ptr ); }
-};
-
-// This is used to trace where we are, during parsing the XML documents.
-struct ParseTracer
-{
-    XML_Parser parser;
-    GN::XmlDocument * doc;
-    GN::XmlParseResult * result;
-    GN::XmlNode * parent;
-    GN::XmlNode * prev;
-};
-
-static void * sXmlMalloc( size_t sz ) { return GN::HeapMemory::alloc( sz ); }
-static void * sXmlRealloc( void * p, size_t sz ) { return GN::HeapMemory::realloc( p, sz ); }
-static void sXmlFree( void * p ) { return GN::HeapMemory::dealloc( p ); }
 
 static void sIdent( GN::File & fp, int ident )
 {
@@ -192,189 +171,72 @@ static bool sCompactNodes( GN::File & fp, const GN::XmlNode * root )
     return true;
 }
 
-static void sParseFail( ParseTracer * tracer, const char * errInfo )
+static GN::XmlNode * sCreateXmlSubTree(
+    GN::XmlDocument & doc,
+    GN::XmlNode * parent,
+    const rapidxml::xml_node<> * node )
 {
-    XML_StopParser( tracer->parser, XML_FALSE );
-    tracer->result->errInfo = errInfo;
-    tracer->result->errLine = XML_GetCurrentLineNumber( tracer->parser );
-    tracer->result->errColumn = XML_GetCurrentColumnNumber( tracer->parser );
-}
+    using namespace rapidxml;
 
-static GN::XmlNode * sNewNode( ParseTracer * tracer, GN::XmlNodeType type )
-{
-    GN::XmlNode * n = tracer->doc->createNode( type, NULL );
-    if( 0 == n )
+    if( NULL == node ) return NULL;
+
+    switch( node->type() )
     {
-        sParseFail(
-            tracer,
-            GN::stringFormat( "Fail to create node with type of '%d'", type ).cptr() );
-        return NULL;
-    }
-
-    // update tree links
-    n->setParent( tracer->parent, tracer->prev );
-
-    // update tracer
-    tracer->parent = n;
-    tracer->prev = NULL;
-
-    return n;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-static GN::StrA sMangleText( const char * s, int len )
-{
-    // skip leading spaces
-    while( len > 0 && (' '==*s || '\t'==*s || '\n'==*s) )
-    {
-        ++s; --len;
-    }
-    if( 0 == len ) return "";
-
-    // skip tailing spaces
-    const XML_Char * e = s + len - 1;
-    while( len > 0 && (' '==*e || '\t'==*e || '\n'==*e) )
-    {
-        --e; --len;
-    }
-    if( 0 == len ) return "";
-
-    GN_TODO( "convert special characters" );
-
-    return GN::StrA( s, len );
-}
-
-// *****************************************************************************
-// Expat handlers
-// *****************************************************************************
-
-//
-//
-// -----------------------------------------------------------------------------
-void XMLCALL sStartElementHandler(
-    void * userData,
-    const XML_Char * name,
-    const XML_Char ** atts )
-{
-    GN_ASSERT( userData && name );
-
-    ParseTracer * tracer = (ParseTracer*)userData;
-
-    // create new node
-    GN::XmlNode * n = sNewNode( tracer, GN::XML_ELEMENT );
-    if( 0 == n ) return;
-    GN::XmlElement * e = n->toElement();
-    GN_ASSERT( e );
-
-    e->attrib = NULL;
-    e->name = name;
-
-    // create attribute list
-    while( *atts )
-    {
-        GN::XmlAttrib * a = tracer->doc->createAttrib( e );
-
-        if( 0 == a )
+        case node_element:
         {
-            sParseFail( tracer, "Fail to create attribute." );
-            return;
+            GN::XmlElement * n = doc.createElement( parent );
+            n->name = node->name();
+            if( node->first_attribute() )
+            {
+                for( xml_attribute<> *attr = node->last_attribute();
+                     attr;
+                     attr = attr->previous_attribute())
+                {
+                    GN::XmlAttrib * a = doc.createAttrib( n );
+                    a->name = attr->name();
+                    a->value = attr->value();
+                }
+            }
+
+            if( node->first_node() )
+            {
+                for( xml_node<> * child = node->last_node();
+                     child;
+                     child = child->previous_sibling() )
+                {
+                    sCreateXmlSubTree( doc, n, child );
+                }
+            }
+            return n;
         }
 
-        a->name = atts[0];
-        a->value = atts[1];
-
-        atts += 2;
-    }
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-void XMLCALL sEndElementHandler( void * userData, const XML_Char * )
-{
-    ParseTracer * tracer = (ParseTracer*)userData;
-
-    // update tracer
-    GN_ASSERT( tracer->parent );
-    tracer->prev = tracer->parent;
-    tracer->parent = tracer->parent->parent;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-static void XMLCALL sStartCdataSectionHandler( void * userData )
-{
-    ParseTracer * tracer = (ParseTracer*)userData;
-
-    // create new node
-    GN::XmlNode * n = sNewNode( tracer, GN::XML_CDATA );
-    if( 0 == n ) return;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-static void XMLCALL sEndCdataSectionHandler( void * userData )
-{
-    ParseTracer * tracer = (ParseTracer*)userData;
-
-    GN_ASSERT( tracer->parent && tracer->parent->type == GN::XML_CDATA );
-
-    // update tracer
-    GN_ASSERT( tracer->parent );
-    tracer->prev = tracer->parent;
-    tracer->parent = tracer->parent->parent;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-static void XMLCALL sCharacterDataHandler(
-    void * userData, const XML_Char * s, int len )
-{
-    ParseTracer * tracer = (ParseTracer*)userData;
-
-    GN_ASSERT( tracer->parent );
-
-    if( tracer->parent->type == GN::XML_CDATA )
-    {
-        GN::XmlCdata * t = tracer->parent->toCdata();
-        t->text.append( s, len );
-    }
-    else
-    {
-        GN::StrA text = sMangleText( s, len );
-        if( !text.empty() && tracer->parent->type == GN::XML_ELEMENT )
+        case node_data:
         {
-            GN::StrA & currentText = tracer->parent->toElement()->text;
-
-            if( !currentText.empty() ) currentText += ' ';
-
-            currentText += text;
+            GN_ASSERT( parent );
+            GN::XmlElement * n = parent->toElement();
+            GN_ASSERT( n );
+            n->text += node->value();
+            return NULL;
         }
+
+        case node_cdata:
+        {
+            GN::XmlCdata * n = doc.createNode( GN::XML_CDATA, parent )->toCdata();
+            n->text = node->value();
+            return n;
+        }
+
+        case node_comment:
+        {
+            GN::XmlComment * n = doc.createNode( GN::XML_COMMENT, parent )->toComment();
+            n->text = node->value();
+            return n;
+        }
+
+        default:
+            // do nothing
+            return NULL;
     }
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-static void XMLCALL sCommentHandler( void * userData, const XML_Char * data )
-{
-    ParseTracer * tracer = (ParseTracer*)userData;
-
-    // create new node
-    GN::XmlNode * n = sNewNode( tracer, GN::XML_COMMENT );
-    if( 0 == n ) return;
-    GN::XmlComment * c = n->toComment();
-    c->text.assign( data );
-
-    // update tracer
-    GN_ASSERT( c == tracer->parent );
-    tracer->prev = tracer->parent;
-    tracer->parent = tracer->parent->parent;
 }
 
 // *****************************************************************************
@@ -479,43 +341,6 @@ void GN::XmlNode::setParent( XmlNode * newParent, XmlNode * newPrev )
     }
 }
 
-static int XMLCALL sGBK_TO_UTF8(void *, const char *)
-{
-    GN_UNIMPL_WARNING();
-    return ' ';
-}
-
-static int XMLCALL sEncodingHandler(
-    void *encodingHandlerData,
-    const XML_Char *name,
-    XML_Encoding *info)
-{
-    using namespace GN;
-
-    GN_UNUSED_PARAM( encodingHandlerData );
-
-    if( 0 == stringCompareI( "gbk", name ) )
-    {
-        info->convert = &sGBK_TO_UTF8;
-        info->release = NULL;
-
-        for( int i = 0; i < 128; ++i )
-        {
-            info->map[i] = (char)i;
-        }
-        for( int i = 129; i < 256; ++i )
-        {
-            info->map[i] = -2;
-        }
-
-        return 1;
-    }
-
-    GN_ERROR(sLogger)( "Unknown encoding: %s", name );
-    return 0;
-}
-
-
 // *****************************************************************************
 // XmlDocument class
 // *****************************************************************************
@@ -528,49 +353,25 @@ bool GN::XmlDocument::parse(
 {
     GN_GUARD;
 
+    using namespace rapidxml;
+
     result.errInfo.clear();
     result.errLine = 0;
     result.errColumn = 0;
 
-    // create parser
-    const char * encoding = CharacterEncodingConverter::sEncoding2Str( getCurrentSystemEncoding() );
-    XML_Memory_Handling_Suite mm = { &sXmlMalloc, &sXmlRealloc, &sXmlFree };
-    XML_Parser parser = XML_ParserCreate_MM( encoding, &mm, 0 );
-    if( 0 == parser )
+    xml_document<> doc;
+    try
     {
-        result.errInfo = "Fail to create parser.";
-        return false;
+        doc.parse<0>( doc.allocate_string( content, length ) );
     }
-    AutoFree af(parser); // free the parser automatically when go out of this function.
-
-    // setup user data
-    ParseTracer userData = { parser, this, &result, NULL, NULL };
-    XML_SetUserData( parser, &userData );
-
-    // setup handlers
-    XML_SetUnknownEncodingHandler( parser, &sEncodingHandler, NULL );
-    XML_SetElementHandler( parser, &sStartElementHandler, &sEndElementHandler );
-    XML_SetCdataSectionHandler( parser, &sStartCdataSectionHandler, &sEndCdataSectionHandler );
-    XML_SetCharacterDataHandler( parser, &sCharacterDataHandler );
-    XML_SetCommentHandler( parser, &sCommentHandler );
-
-    // start parse
-    XML_Status status = XML_Parse( parser, content, (int)length, XML_TRUE );
-    if( XML_STATUS_OK != status )
+    catch(parse_error & e)
     {
-        if( result.errInfo.empty() )
-        {
-            result.errInfo = "XML_Parse() failed.";
-            result.errLine = XML_GetCurrentLineNumber( parser );
-            result.errColumn = XML_GetCurrentColumnNumber( parser );
-        }
+        result.root = NULL;
+        result.errInfo = e.what();
         return false;
     }
 
-    GN_ASSERT( userData.prev );
-    result.root = userData.prev;
-
-    // success
+    result.root = sCreateXmlSubTree( *this, NULL, doc.first_node() );
     return true;
 
     GN_UNGUARD;
@@ -618,9 +419,7 @@ bool GN::XmlDocument::writeToFile( File & file, const XmlNode & root, bool compa
     //static const UInt8 bom[3] = { 0xEF, 0xBB, 0xBF };
     //if( sizeof(bom) != file.write( bom, sizeof(bom) ) ) return false;
 
-    file << "<?xml version=\"1.0\" encoding=\""
-         << CharacterEncodingConverter::sEncoding2Str( getCurrentSystemEncoding() )
-         << "\"?>\n";
+    file << "<?xml version=\"1.0\"?>";
 
     if( compact )
     {
@@ -628,6 +427,7 @@ bool GN::XmlDocument::writeToFile( File & file, const XmlNode & root, bool compa
     }
     else
     {
+        file << "\n";
         return sFormatNodes( file, &root, 0 );
     }
 
