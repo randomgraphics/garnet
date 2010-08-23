@@ -36,6 +36,15 @@ namespace GN { namespace gfx
             const TextureBinding * bindings,
             size_t                 count,
             bool                   skipDirtyCheck ) const = 0;
+
+        ///
+        /// get the unique shader ID
+        ///
+        virtual UInt32 getUniqueID() const = 0;
+
+        ///
+        /// get the usage and usage index of specific attribute.
+        virtual bool getAttributeUsage( size_t attributeIndex, BYTE & usage, BYTE & usageIndex ) const = 0;
     };
 
     // *************************************************************************
@@ -85,6 +94,17 @@ namespace GN { namespace gfx
             const TextureBinding * bindings,
             size_t                 count,
             bool                   skipDirtyCheck ) const;
+
+        virtual UInt32 getUniqueID() const { return NULL == mVs ? 0 : mVs->GetIdentifier(); }
+
+        virtual bool getAttributeUsage( size_t attributeIndex, BYTE & usage, BYTE & usageIndex ) const
+        {
+            GN_UNIMPL();
+            GN_UNUSED_PARAM( attributeIndex );
+            GN_UNUSED_PARAM( usage );
+            GN_UNUSED_PARAM( usageIndex );
+            return false;
+        }
 
         // ********************************
         // from Shader
@@ -156,6 +176,10 @@ namespace GN { namespace gfx
             size_t                 count,
             bool                   skipDirtyCheck ) const;
 
+        virtual UInt32 getUniqueID() const { return NULL == mVs ? 0 : mVs->GetIdentifier(); }
+
+        virtual bool getAttributeUsage( size_t attributeIndex, BYTE & usage, BYTE & usageIndex ) const;
+
         // ********************************
         // from Shader
         // ********************************
@@ -175,7 +199,7 @@ namespace GN { namespace gfx
 
         struct XenonUniformParamDesc : public GpuProgramUniformParameterDesc
         {
-            StrA                 name;      ///< uniform name
+            StrA                 namestr;    ///< uniform name
             D3DXHANDLE           vshandle;  ///< VS constant handle. 0 means unused.
             D3DXHANDLE           pshandle;  ///< PS constant handle. 0 means unused.
             XenonUniformParamDesc() : vshandle(0), pshandle(0) {}
@@ -183,7 +207,7 @@ namespace GN { namespace gfx
 
         struct XenonTextureParamDesc : public GpuProgramTextureParameterDesc
         {
-            StrA                  name;
+            StrA                  namestr;
             D3DXHANDLE            vshandle;
             mutable SamplerDesc   vssampler;
             D3DXHANDLE            pshandle;
@@ -196,15 +220,23 @@ namespace GN { namespace gfx
             }
         };
 
-        IDirect3DVertexShader9          * mVs;
-        ID3DXConstantTable              * mVsConsts;
-        IDirect3DPixelShader9           * mPs;
-        ID3DXConstantTable              * mPsConsts;
+        struct XenonAttributeParamDesc : public GpuProgramAttributeParameterDesc
+        {
+            StrA namestr;
+            UINT usage;
+            UINT usageIndex;
+        };
 
-        DynaArray<XenonUniformParamDesc>  mUniforms;
-        DynaArray<XenonTextureParamDesc>  mTextures;
+        IDirect3DVertexShader9           * mVs;
+        ID3DXConstantTable               * mVsConsts;
+        IDirect3DPixelShader9            * mPs;
+        ID3DXConstantTable               * mPsConsts;
 
-        XenonGpuProgramParameterDesc      mParamDesc;
+        DynaArray<XenonUniformParamDesc>   mUniforms;
+        DynaArray<XenonTextureParamDesc>   mTextures;
+        DynaArray<XenonAttributeParamDesc> mAttributes;
+
+        XenonGpuProgramParameterDesc       mParamDesc;
 
         // ********************************
         // private functions
@@ -212,6 +244,7 @@ namespace GN { namespace gfx
     private:
 
         bool enumerateConsts( ID3DXConstantTable * constBuffer, bool vs );
+        void enumerateAttributes( ID3DXBuffer & shaderBinary );
         void buildUnformNameAndSizeArray();
     };
 }}

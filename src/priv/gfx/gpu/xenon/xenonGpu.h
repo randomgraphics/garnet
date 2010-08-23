@@ -15,15 +15,6 @@ namespace GN { namespace gfx
     class XenonLine;
 
     ///
-    /// Xenon vertex buffer declaration descriptor
-    ///
-    struct XenonVtxDeclDesc
-    {
-        VertexFormat                            format; ///< vertex format description
-        AutoComPtr<IDirect3DVertexDeclaration9> decl;   ///< D3D vertex decl
-    };
-
-    ///
     /// Xenon GPU class
     ///
     class XenonGpu : public BasicGpuXenon
@@ -204,7 +195,7 @@ namespace GN { namespace gfx
 
         bool contextInit();
         void contextQuit();
-        void contextClear() { mContext.clear(); mRTMgr = 0; }
+        void contextClear() { mContext.clear(); mRTMgr = 0; mCurrentDecl = 0; }
 
         inline bool bindContextRenderTargetsAndViewport( const GpuContext & newContext, bool skipDirtyCheck );
         inline bool bindContextRenderStates( const GpuContext & newContext, bool skipDirtyCheck  );
@@ -213,8 +204,41 @@ namespace GN { namespace gfx
 
     private:
 
-        XenonRenderTargetManager                                      * mRTMgr;
-        GN::Dictionary<VertexFormat,AutoComPtr<IDirect3DVertexDeclaration9> > mVertexFormats;
+        struct XenonVertexDeclDesc
+        {
+            UInt32        shaderID;
+            VertexBinding vtxbind;
+
+            bool operator<( const XenonVertexDeclDesc & rhs ) const
+            {
+                if( this == &rhs ) return false;
+                if( shaderID < rhs.shaderID ) return true;
+                if( shaderID > rhs.shaderID ) return false;
+                if( vtxbind.size() < rhs.vtxbind.size() ) return true;
+                if( vtxbind.size() > rhs.vtxbind.size() ) return false;
+
+                for( size_t i = 0; i < vtxbind.size(); ++i )
+                {
+                    const VertexElement & b1 = vtxbind[i];
+                    const VertexElement & b2 = rhs.vtxbind[i];
+
+                    if( b1 < b2 ) return true;
+                    if( b1 > b2 ) return false;
+                }
+
+                return false;
+            }
+        };
+
+        //typedef GN::HashMap<
+        //    XenonVertexDeclDesc,
+        //    IDirect3DVertexDeclaration9*,
+        //    HashMapUtils::HashFunc_MemoryHash<XenonVertexDeclDesc> > XenonVertexDeclarationDict;
+        typedef GN::Dictionary<XenonVertexDeclDesc,IDirect3DVertexDeclaration9*> XenonVertexDeclarationDict;
+
+        XenonRenderTargetManager    * mRTMgr;
+        XenonVertexDeclarationDict    mVertexFormats;
+        IDirect3DVertexDeclaration9 * mCurrentDecl;
 
         //@}
 

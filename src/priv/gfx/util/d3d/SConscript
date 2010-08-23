@@ -34,7 +34,9 @@ if GN.conf['has_d3d10'] or GN.conf['has_d3d11'] :
 	d3dlibs += ['dxgi.lib', 'dxguid.lib', 'dxerr.lib']
 if GN.conf['has_d3d9'] or GN.conf['has_xtl'] :
 	sources += d3d9_sources
-	d3dlibs += ['d3d9.lib', 'd3dx9.lib']
+	# libraries on Xenon platform are already defined in SConstruct
+	if not GN.conf['has_xtl']:
+		d3dlibs += ['d3d9.lib', 'd3dx9.lib']
 if GN.conf['has_d3d10'] :
 	sources += d3d10_sources
 	d3dlibs += ['d3d10.lib', 'd3dx10.lib']

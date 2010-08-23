@@ -9,53 +9,6 @@ static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.xenon");
 // local functions
 // *****************************************************************************
 
-static const D3DDECLUSAGE D3DDECLUSAGE_ERROR = (D3DDECLUSAGE)-1;
-
-///
-/// convert vertex format to d3d-decl usage
-// -----------------------------------------------------------------------------
-static inline D3DDECLUSAGE sVertexBindingToXenon( const char * binding )
-{
-    struct BindingMap
-    {
-        struct MapItem { const char * binding; D3DDECLUSAGE usage; };
-
-        StringMap<char,D3DDECLUSAGE> map;
-
-        BindingMap()
-        {
-            MapItem table[] =
-            {
-                { "position", D3DDECLUSAGE_POSITION },
-                { "pos",      D3DDECLUSAGE_POSITION },
-                { "weight",   D3DDECLUSAGE_BLENDWEIGHT },
-                { "normal",   D3DDECLUSAGE_NORMAL },
-                { "nml",      D3DDECLUSAGE_NORMAL },
-                { "color",    D3DDECLUSAGE_COLOR },
-                { "fog",      D3DDECLUSAGE_FOG },
-                { "tangent",  D3DDECLUSAGE_TANGENT },
-                { "tang",     D3DDECLUSAGE_TANGENT },
-                { "texcoord", D3DDECLUSAGE_TEXCOORD },
-                { "tex",      D3DDECLUSAGE_TEXCOORD },
-            };
-
-            for( size_t i = 0; i < GN_ARRAY_COUNT(table); ++i )
-            {
-                map[table[i].binding] = table[i].usage;
-            }
-        }
-    };
-
-    static const BindingMap sConvertTable;
-
-    StrA lowerCaseBinding( binding );
-    lowerCaseBinding.toLower();
-
-    const D3DDECLUSAGE * decl = sConvertTable.map.find( lowerCaseBinding );
-
-    return ( NULL == decl ) ? D3DDECLUSAGE_ERROR : *decl;
-}
-
 static const D3DDECLTYPE D3DDECLTYPE_ERROR = D3DDECLTYPE(MAXD3DDECLTYPE+1);
 
 ///
@@ -134,15 +87,18 @@ sElementSorting( const D3DVERTEXELEMENT9 & a, const D3DVERTEXELEMENT9 & b )
 /// convert vertdecl structure to a D3D vertex declaration array
 // -----------------------------------------------------------------------------
 static bool
-sVtxFmtDesc2D3DDecl( DynaArray<D3DVERTEXELEMENT9> & elements, const GN::gfx::VertexFormat & vtxfmt )
+sVtxFmtDesc2D3DDecl(
+    DynaArray<D3DVERTEXELEMENT9>        & elements,
+    const GN::gfx::XenonBasicGpuProgram & gpuProgram,
+    const GN::gfx::VertexBinding        & vtxbind )
 {
     GN_GUARD;
 
     elements.clear();
 
-    for( size_t i = 0; i < vtxfmt.numElements; ++i )
+    for( size_t i = 0; i < vtxbind.size(); ++i )
     {
-        const GN::gfx::VertexElement & ve = vtxfmt.elements[i];
+        const GN::gfx::VertexElement & ve = vtxbind[i];
 
         D3DVERTEXELEMENT9 elem;
 
@@ -155,11 +111,8 @@ sVtxFmtDesc2D3DDecl( DynaArray<D3DVERTEXELEMENT9> & elements, const GN::gfx::Ver
         // set method ( no tessellator is used )
         elem.Method = D3DDECLMETHOD_DEFAULT;
 
-        // set attrib semantic
-        elem.Usage = (BYTE)sVertexBindingToXenon( ve.binding );
-        if( (BYTE)D3DDECLUSAGE_ERROR == elem.Usage ) return false;
-
-        elem.UsageIndex = ve.bindingIndex;
+        // set usage and usage index
+        if( !gpuProgram.getAttributeUsage( ve.attribute, elem.Usage, elem.UsageIndex ) ) return false;
 
         // set attrib vtxfmt
         elem.Type = sColorFormatToXenon( ve.format );
@@ -190,12 +143,15 @@ sVtxFmtDesc2D3DDecl( DynaArray<D3DVERTEXELEMENT9> & elements, const GN::gfx::Ver
 // create D3D decl from vertex format structure
 // -----------------------------------------------------------------------------
 IDirect3DVertexDeclaration9 *
-GN::gfx::createXenonVertexDecl( IDirect3DDevice9 & dev, const GN::gfx::VertexFormat & format )
+GN::gfx::createXenonVertexDecl(
+    IDirect3DDevice9             & dev,
+    const XenonBasicGpuProgram   & gpuProgram,
+    const VertexBinding          & vtxbind )
 {
     GN_GUARD;
 
     DynaArray<D3DVERTEXELEMENT9> elements;
-    if( !sVtxFmtDesc2D3DDecl( elements, format ) ) return NULL;
+    if( !sVtxFmtDesc2D3DDecl( elements, gpuProgram, vtxbind ) ) return NULL;
     GN_ASSERT( !elements.empty() );
 
     IDirect3DVertexDeclaration9 * decl;

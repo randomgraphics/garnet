@@ -18,7 +18,7 @@ static T * sFindParameter( ARRAY & array, const char * name )
     {
         T & t = array[i];
 
-        if( t.name == name ) return &t;
+        if( t.namestr == name ) return &t;
     }
 
     return NULL;
@@ -54,6 +54,33 @@ sSetSampler( IDirect3DDevice9 & dev, UInt32 stage, const SamplerDesc & s )
     dev.SetSamplerState_Inline( stage, D3DSAMP_MIPFILTER, FILTER_TO_D3D[s.filterMip] );
 }
 
+static const char * D3D_DECL_USAGE_TO_STRING[] =
+{
+    "POSITION",       // D3DDECLUSAGE_POSITION = 0,
+    "BLENDWEIGHT",    // D3DDECLUSAGE_BLENDWEIGHT = 1,
+    "BLENDINDICES",   // D3DDECLUSAGE_BLENDINDICES = 2,
+    "NORMAL",         // D3DDECLUSAGE_NORMAL = 3,
+    "PSIZE",          // D3DDECLUSAGE_PSIZE = 4,
+    "TEXCOORD",       // D3DDECLUSAGE_TEXCOORD = 5,
+    "TANGENT",        // D3DDECLUSAGE_TANGENT = 6,
+    "BINORMAL",       // D3DDECLUSAGE_BINORMAL = 7,
+    "TESSFACTOR",     // D3DDECLUSAGE_TESSFACTOR = 8,
+    NULL,             // no use = 9,
+    "COLOR",          // D3DDECLUSAGE_COLOR = 10,
+    "FOG",            // D3DDECLUSAGE_FOG = 11,
+    "DEPTH",          // D3DDECLUSAGE_DEPTH = 12,
+    "SAMPLE",         // D3DDECLUSAGE_SAMPLE = 13
+};
+
+//
+//
+// -----------------------------------------------------------------------------
+static inline const char *
+sD3DDeclUsage2String( UINT decl )
+{
+    GN_ASSERT( 0 <= decl && decl <= GN_ARRAY_COUNT(D3D_DECL_USAGE_TO_STRING) && 9 != decl );
+    return D3D_DECL_USAGE_TO_STRING[decl];
+}
 
 // *****************************************************************************
 // Initialize and shutdown
@@ -75,6 +102,7 @@ bool GN::gfx::XenonGpuProgramHLSL::init( const GpuProgramDesc & desc )
 
     if( desc.vs.source )
     {
+        AutoComPtr<ID3DXBuffer> bin;
         mVs = d3d9::ShaderCompiler<IDirect3DVertexShader9>::compileAndCreate(
             dev,
             desc.vs.source,
@@ -82,11 +110,14 @@ bool GN::gfx::XenonGpuProgramHLSL::init( const GpuProgramDesc & desc )
             0, // compile flags
             desc.vs.entry,
             0, // profile
-            &mVsConsts );
+            &mVsConsts,
+            &bin );
 
         if( NULL == mVs ) return failure();
 
         enumerateConsts( mVsConsts, true );
+
+        enumerateAttributes( *bin );
     }
 
     if( desc.ps.source )
@@ -175,7 +206,7 @@ void GN::gfx::XenonGpuProgramHLSL::applyUniforms(
 
         const XenonUniformParamDesc & d = mUniforms[i];
 
-        GN_ASSERT( !d.name.empty() && (d.vshandle || d.pshandle) && d.size );
+        GN_ASSERT( !d.namestr.empty() && (d.vshandle || d.pshandle) && d.size );
 
         // check parameter size
         if( getGpu().paramCheckEnabled() )
@@ -184,7 +215,7 @@ void GN::gfx::XenonGpuProgramHLSL::applyUniforms(
             {
                 GN_WARN(sLogger)(
                     "parameter %s: value size(%d) differs from size defined in shader code(%d).",
-                    d.name.cptr(),
+                    d.namestr.cptr(),
                     u->size(),
                     d.size );
             }
@@ -266,6 +297,28 @@ void GN::gfx::XenonGpuProgramHLSL::applyTextures(
     }
 }
 
+//
+//
+// -----------------------------------------------------------------------------
+bool GN::gfx::XenonGpuProgramHLSL::getAttributeUsage(
+    size_t attributeIndex,
+    BYTE & usage,
+    BYTE & usageIndex ) const
+{
+    if( attributeIndex >= mAttributes.size() )
+    {
+        GN_ERROR(sLogger)( "Invalid attribute index: %d", attributeIndex );
+        return false;
+    }
+
+    const XenonAttributeParamDesc & a = mAttributes[attributeIndex];
+
+    usage      = (BYTE)a.usage;
+    usageIndex = (BYTE)a.usageIndex;
+
+    return true;
+}
+
 // *****************************************************************************
 // Private functions
 // *****************************************************************************
@@ -327,7 +380,7 @@ bool GN::gfx::XenonGpuProgramHLSL::enumerateConsts(
                     else
                     {
                         XenonUniformParamDesc u;
-                        u.name = cd.Name;
+                        u.namestr = cd.Name;
                         if( vs )
                         {
                             u.vshandle = c;
@@ -370,7 +423,7 @@ bool GN::gfx::XenonGpuProgramHLSL::enumerateConsts(
                     else
                     {
                         XenonTextureParamDesc t;
-                        t.name = cd.Name;
+                        t.namestr = cd.Name;
                         if( vs )
                         {
                             t.vshandle = c;
@@ -397,6 +450,27 @@ bool GN::gfx::XenonGpuProgramHLSL::enumerateConsts(
 //
 //
 // -----------------------------------------------------------------------------
+void GN::gfx::XenonGpuProgramHLSL::enumerateAttributes( ID3DXBuffer & shaderBinary )
+{
+    D3DXSEMANTIC semantics[MAXD3DDECLLENGTH];
+    UINT count;
+
+    if( FAILED( D3DXGetShaderInputSemantics( (const DWORD*)shaderBinary.GetBufferPointer(), semantics, &count ) ) )
+    {
+        GN_ERROR(sLogger)( "Fail to get shader input semantics." );
+        return;
+    }
+
+    mAttributes.resize( count );
+    for( size_t i = 0; i < count; ++i )
+    {
+        mAttributes[i].namestr = stringFormat( "%s%d", sD3DDeclUsage2String(semantics[i].Usage), semantics[i].UsageIndex );
+    }
+}
+
+//
+//
+// -----------------------------------------------------------------------------
 void GN::gfx::XenonGpuProgramHLSL::buildUnformNameAndSizeArray()
 {
     if( !mUniforms.empty() )
@@ -411,10 +485,7 @@ void GN::gfx::XenonGpuProgramHLSL::buildUnformNameAndSizeArray()
 
         for( size_t i = 0; i < count; ++i )
         {
-            // UGLY!!! UGLY!!!
-            XenonUniformParamDesc          & u1 = mUniforms[i];
-            GpuProgramUniformParameterDesc & u2 = mUniforms[i];
-            u2.name = u1.name.cptr();
+            mUniforms[i].name = mUniforms[i].namestr;
         }
     }
 
@@ -430,10 +501,23 @@ void GN::gfx::XenonGpuProgramHLSL::buildUnformNameAndSizeArray()
 
         for( size_t i = 0; i < count; ++i )
         {
-            // UGLY!!! UGLY!!!
-            XenonTextureParamDesc          & t1 = mTextures[i];
-            GpuProgramTextureParameterDesc & t2 = mTextures[i];
-            t2.name = t1.name.cptr();
+            mTextures[i].name = mTextures[i].namestr;
+        }
+    }
+
+    if( !mAttributes.empty() )
+    {
+        size_t count = mAttributes.size();
+
+        GN_ASSERT( count > 0 );
+
+        mParamDesc.mAttributeArray       = mAttributes.cptr();
+        mParamDesc.mAttributeCount       = mAttributes.size();
+        mParamDesc.mAttributeArrayStride = sizeof(mAttributes[0]);
+
+        for( size_t i = 0; i < count; ++i )
+        {
+            mAttributes[i].name = mAttributes[i].namestr;
         }
     }
 }

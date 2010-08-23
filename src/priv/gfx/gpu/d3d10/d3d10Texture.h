@@ -106,22 +106,22 @@ namespace GN { namespace gfx
         typedef HashMap<
             D3D10_SHADER_RESOURCE_VIEW_DESC,
             AutoComPtr<ID3D10ShaderResourceView>,
-            HashMapUtils::MemoryHash<D3D10_SHADER_RESOURCE_VIEW_DESC>,
-            HashMapUtils::MemoryCompare<D3D10_SHADER_RESOURCE_VIEW_DESC>
+            HashMapUtils::HashFunc_MemoryHash<D3D10_SHADER_RESOURCE_VIEW_DESC>,
+            HashMapUtils::EqualFunc_MemoryCompare<D3D10_SHADER_RESOURCE_VIEW_DESC>
             > SRViewMap;
 
         typedef HashMap<
             D3D10_RENDER_TARGET_VIEW_DESC,
             AutoComPtr<ID3D10RenderTargetView>,
-            HashMapUtils::MemoryHash<D3D10_RENDER_TARGET_VIEW_DESC>,
-            HashMapUtils::MemoryCompare<D3D10_RENDER_TARGET_VIEW_DESC>
+            HashMapUtils::HashFunc_MemoryHash<D3D10_RENDER_TARGET_VIEW_DESC>,
+            HashMapUtils::EqualFunc_MemoryCompare<D3D10_RENDER_TARGET_VIEW_DESC>
             > RTViewMap;
 
         typedef HashMap<
             D3D10_DEPTH_STENCIL_VIEW_DESC,
             AutoComPtr<ID3D10DepthStencilView>,
-            HashMapUtils::MemoryHash<D3D10_DEPTH_STENCIL_VIEW_DESC>,
-            HashMapUtils::MemoryCompare<D3D10_DEPTH_STENCIL_VIEW_DESC>
+            HashMapUtils::HashFunc_MemoryHash<D3D10_DEPTH_STENCIL_VIEW_DESC>,
+            HashMapUtils::EqualFunc_MemoryCompare<D3D10_DEPTH_STENCIL_VIEW_DESC>
             > DSViewMap;
 
         D3D10_SRV_DIMENSION        mDimension;      ///< texture dimension
