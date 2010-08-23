@@ -6,13 +6,18 @@
 /// \author  chenlee (2006.3.14)
 // *****************************************************************************
 
+#include "XenonShader.h"
+
 namespace GN { namespace gfx
 {
     ///
     /// create D3D9 decl from vertex format structure
     ///
     IDirect3DVertexDeclaration9 *
-    createXenonVertexDecl( IDirect3DDevice9 & dev, const GN::gfx::VertexFormat & format );
+    createXenonVertexDecl(
+        IDirect3DDevice9             & dev,
+        const XenonBasicGpuProgram   & gpuProgram,
+        const VertexBinding          & vtxbind );
 }}
 
 // *****************************************************************************

@@ -13,7 +13,7 @@ namespace GN
     namespace HashMapUtils
     {
         template<typename T>
-        struct DirectHash
+        struct HashFunc_ToUInt64
         {
             UInt64 operator()( const T & t ) const
             {
@@ -21,17 +21,34 @@ namespace GN
             }
         };
 
-        template<typename T>
-        struct EqualOperator
+        inline UInt64 MemoryHash( const void * data, size_t size )
         {
-            bool operator()( const T & a, const T & b ) const
+            const size_t N_64 = size / sizeof(UInt64);
+            const size_t TAIL = size % sizeof(UInt64);
+
+            const UInt64 * p64 = (const UInt64*)data;
+
+            UInt64 h = 5471;
+
+            for( size_t i = 0; i < N_64; ++i, ++p64 )
             {
-                return a == b;
+                h = h * 33 + *p64;
             }
-        };
+
+            const UInt8 * p8 = (const UInt8*)p64;
+            UInt64 tail = 0;
+            for( size_t i = 0; i < TAIL; ++i, ++p8 )
+            {
+                tail = (tail << 8) + *p8;
+            }
+
+            h = h * 33 + tail;
+
+            return h;
+        }
 
         template<typename T>
-        struct MemoryHash
+        struct HashFunc_MemoryHash
         {
             enum
             {
@@ -64,7 +81,25 @@ namespace GN
         };
 
         template<typename T>
-        struct MemoryCompare
+        struct HashFunc_HashMethod
+        {
+            UInt64 operator()( const T & t ) const
+            {
+                return t.hash();
+            }
+        };
+
+        template<typename T>
+        struct EqualFunc_Operator
+        {
+            bool operator()( const T & a, const T & b ) const
+            {
+                return a == b;
+            }
+        };
+
+        template<typename T>
+        struct EqualFunc_MemoryCompare
         {
             bool operator()( const T & a, const T & b ) const
             {
@@ -77,8 +112,8 @@ namespace GN
     template<
         class  KEY,
         class  VALUE,
-        class  KEY_HASH_FUNC = HashMapUtils::DirectHash<KEY>,
-        class  KEY_EQUAL_FUNC = HashMapUtils::EqualOperator<KEY>,
+        class  KEY_HASH_FUNC = HashMapUtils::HashFunc_ToUInt64<KEY>,
+        class  KEY_EQUAL_FUNC = HashMapUtils::EqualFunc_Operator<KEY>,
         size_t LOAD_FACTOR = 2 >
     class HashMap
     {

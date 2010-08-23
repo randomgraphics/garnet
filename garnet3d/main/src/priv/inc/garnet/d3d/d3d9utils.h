@@ -69,22 +69,22 @@ namespace GN { /* namespace for D3D9 utils */ namespace d3d9
     ///
     /// Compile vertex shader from string
     ///
-    LPDIRECT3DVERTEXSHADER9 compileAndCreateVS( LPDIRECT3DDEVICE9 dev, const char * code, size_t len = 0, UInt32 flags = 0, const char * entryFunc = "main", const char * profile = 0, LPD3DXCONSTANTTABLE * constTable = 0 );
+    LPDIRECT3DVERTEXSHADER9 compileAndCreateVS( LPDIRECT3DDEVICE9 dev, const char * code, size_t len = 0, UInt32 flags = 0, const char * entryFunc = "main", const char * profile = 0, LPD3DXCONSTANTTABLE * constTable = 0, LPD3DXBUFFER * binary = 0 );
 
     ///
     /// Compile vertex shader from file
     ///
-    LPDIRECT3DVERTEXSHADER9 compileAndCreateVSFromFile( LPDIRECT3DDEVICE9 dev, const char * file, UInt32 flags = 0, const char * entryFunc = "main", const char * profile = 0, LPD3DXCONSTANTTABLE * constTable = 0 );
+    LPDIRECT3DVERTEXSHADER9 compileAndCreateVSFromFile( LPDIRECT3DDEVICE9 dev, const char * file, UInt32 flags = 0, const char * entryFunc = "main", const char * profile = 0, LPD3DXCONSTANTTABLE * constTable = 0, LPD3DXBUFFER * binary = 0 );
 
     ///
     /// Assemble vertex shader from string
     ///
-    LPDIRECT3DVERTEXSHADER9 assembleAndCreateVS( LPDIRECT3DDEVICE9 dev, const char * code, size_t len = 0, UInt32 flags = 0 );
+    LPDIRECT3DVERTEXSHADER9 assembleAndCreateVS( LPDIRECT3DDEVICE9 dev, const char * code, size_t len = 0, UInt32 flags = 0, LPD3DXBUFFER * binary = 0 );
 
     ///
     /// Assemble vertex shader from file
     ///
-    LPDIRECT3DVERTEXSHADER9 assembleAndCreateVSFromFile( LPDIRECT3DDEVICE9 dev, const char * file, UInt32 flags = 0 );
+    LPDIRECT3DVERTEXSHADER9 assembleAndCreateVSFromFile( LPDIRECT3DDEVICE9 dev, const char * file, UInt32 flags = 0, LPD3DXBUFFER * binary = 0 );
 
     ///
     /// Compile pixel shader from string
@@ -125,21 +125,21 @@ namespace GN { /* namespace for D3D9 utils */ namespace d3d9
         //@{
 
         static inline IDirect3DVertexShader9 *
-        assembleAndCreate( IDirect3DDevice9 & dev, const char * code, size_t len = 0, UInt32 flags = 0 )
+        assembleAndCreate( IDirect3DDevice9 & dev, const char * code, size_t len = 0, UInt32 flags = 0, LPD3DXBUFFER * binary = 0 )
         {
-            return assembleAndCreateVS( &dev, code, len, flags );
+            return assembleAndCreateVS( &dev, code, len, flags, binary );
         }
 
         static inline IDirect3DVertexShader9 *
-        compileAndCreate( IDirect3DDevice9 & dev, const char * code, size_t len = 0, UInt32 flags = 0, const char * entryFunc = "main", const char * profile = 0, LPD3DXCONSTANTTABLE * constTable = 0 )
+        compileAndCreate( IDirect3DDevice9 & dev, const char * code, size_t len = 0, UInt32 flags = 0, const char * entryFunc = "main", const char * profile = 0, LPD3DXCONSTANTTABLE * constTable = 0, LPD3DXBUFFER * binary = 0 )
         {
-            return compileAndCreateVS( &dev, code, len, flags, entryFunc, profile, constTable );
+            return compileAndCreateVS( &dev, code, len, flags, entryFunc, profile, constTable, binary );
         }
 
         static inline IDirect3DVertexShader9 *
-        compileAndCreateFromFile( IDirect3DDevice9 & dev, const char * file, UInt32 flags = 0, const char * entryFunc = "main", const char * profile = 0, LPD3DXCONSTANTTABLE * constTable = 0 )
+        compileAndCreateFromFile( IDirect3DDevice9 & dev, const char * file, UInt32 flags = 0, const char * entryFunc = "main", const char * profile = 0, LPD3DXCONSTANTTABLE * constTable = 0, LPD3DXBUFFER * binary = 0 )
         {
-            return compileAndCreateVSFromFile( &dev, file, flags, entryFunc, profile, constTable );
+            return compileAndCreateVSFromFile( &dev, file, flags, entryFunc, profile, constTable, binary );
         }
 
         //@}

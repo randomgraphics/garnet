@@ -31,13 +31,13 @@
 			<uniref uniform="weights"   shaderParameter="g_vBlendWeights"/>
 			<texref texture="skin"      shaderParameter="DiffuseSampler"/>
 			<texref texture="caustic"   shaderParameter="CausticsSampler"/>
-			<attref attribute="position0" shaderSemantic="POSITION0"/>
-			<attref attribute="normal0"   shaderSemantic="NORMAL0"/>
-			<attref attribute="position1" shaderSemantic="POSITION1"/>
-			<attref attribute="normal1"   shaderSemantic="NORMAL1"/>
-			<attref attribute="position2" shaderSemantic="POSITION2"/>
-			<attref attribute="normal2"   shaderSemantic="NORMAL2"/>
-			<attref attribute="texcoord"  shaderSemantic="TEXCOORD0"/>
+			<attref attribute="position0" shaderParameter="POSITION0"/>
+			<attref attribute="normal0"   shaderParameter="NORMAL0"/>
+			<attref attribute="position1" shaderParameter="POSITION1"/>
+			<attref attribute="normal1"   shaderParameter="NORMAL1"/>
+			<attref attribute="position2" shaderParameter="POSITION2"/>
+			<attref attribute="normal2"   shaderParameter="NORMAL2"/>
+			<attref attribute="texcoord"  shaderParameter="TEXCOORD0"/>
 			<vs entry="main">
 <![CDATA[
 uniform float3   g_vBlendWeights     ;  // ( fWeight1, fWeight2, fWeight3, 0 )
@@ -153,13 +153,13 @@ void main(
 			<uniref uniform="weights"   shaderParameter="g_vBlendWeights"/>
 			<texref texture="skin"      shaderParameter="DiffuseSampler"/>
 			<texref texture="caustic"   shaderParameter="CausticsSampler"/>
-			<attref attribute="position0" shaderSemantic="POSITION0"/>
-			<attref attribute="normal0"   shaderSemantic="NORMAL0"/>
-			<attref attribute="position1" shaderSemantic="TEXCOORD0"/>
-			<attref attribute="normal1"   shaderSemantic="TEXCOORD1"/>
-			<attref attribute="position2" shaderSemantic="TEXCOORD2"/>
-			<attref attribute="normal2"   shaderSemantic="TEXCOORD3"/>
-			<attref attribute="texcoord"  shaderSemantic="TEXCOORD4"/>
+			<attref attribute="position0" shaderParameter="POSITION0"/>
+			<attref attribute="normal0"   shaderParameter="NORMAL0"/>
+			<attref attribute="position1" shaderParameter="TEXCOORD0"/>
+			<attref attribute="normal1"   shaderParameter="TEXCOORD1"/>
+			<attref attribute="position2" shaderParameter="TEXCOORD2"/>
+			<attref attribute="normal2"   shaderParameter="TEXCOORD3"/>
+			<attref attribute="texcoord"  shaderParameter="TEXCOORD4"/>
 			<vs entry="main">
 <![CDATA[
 uniform float3   g_vBlendWeights     ;  // ( fWeight1, fWeight2, fWeight3, 0 )

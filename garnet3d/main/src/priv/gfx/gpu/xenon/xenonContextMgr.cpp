@@ -48,7 +48,13 @@ void GN::gfx::XenonGpu::contextQuit()
     bindContext( emptyContext );
 
     // Delete all vertex formats
+    for( XenonVertexDeclarationDict::Iterator i = mVertexFormats.begin(); i != mVertexFormats.end(); ++i )
+    {
+        IDirect3DVertexDeclaration9 * decl = i->value();
+        decl->Release();
+    }
     mVertexFormats.clear();
+    mCurrentDecl = 0;
 
     //safeDelete( mRTMgr );
 
@@ -361,25 +367,27 @@ GN::gfx::XenonGpu::bindContextResources(
     bool               skipDirtyCheck )
 {
     //
-    // bind vertex format
+    // bind vertex declaration
     //
-    //if( skipDirtyCheck || newContext.vtxfmt != mContext.vtxfmt )
+    const XenonBasicGpuProgram * gpuProgram = (const XenonBasicGpuProgram*)newContext.gpuProgram.get();
+    IDirect3DVertexDeclaration9 * decl = NULL;
+    if( NULL != gpuProgram )
     {
-        IDirect3DVertexDeclaration9 * decl = NULL;
-        if( newContext.vtxfmt.numElements > 0 )
-        {
-            AutoComPtr<IDirect3DVertexDeclaration9> & declAutoPtr = mVertexFormats[newContext.vtxfmt];
-            if( !declAutoPtr )
-            {
-                declAutoPtr.attach( createXenonVertexDecl( *mDevice, newContext.vtxfmt ) );
-                if( !declAutoPtr ) return false;
-            }
+        XenonVertexDeclDesc decldesc = { gpuProgram->getUniqueID(), newContext.vtxbind };
 
-            decl = declAutoPtr;
+        IDirect3DVertexDeclaration9 ** ppdecl = &mVertexFormats[decldesc];
+
+        if( NULL == *ppdecl )
+        {
+            *ppdecl = createXenonVertexDecl( *mDevice, *gpuProgram, newContext.vtxbind );
         }
 
-        // apply to D3D device
+        decl = *ppdecl;
+    }
+    if( skipDirtyCheck || decl != mCurrentDecl )
+    {
         GN_DX_CHECK( mDevice->SetVertexDeclaration( decl ) );
+        mCurrentDecl = decl;
     }
 
     ///
