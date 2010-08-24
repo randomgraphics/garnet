@@ -60,6 +60,9 @@ namespace GN
     {
         UInt8  mBuffer[sizeof(T)*N];
         size_t mCount;
+#if GN_BUILD_DEBUG
+        T *    mTypedBuffer;
+#endif
 
         /// default constructor
         static inline void ctor( T * ptr, size_t count )
@@ -81,6 +84,13 @@ namespace GN
         static inline void dtor( T * ptr )
         {
             ptr->T::~T();
+        }
+
+        void updateTypedBufferPtr()
+        {
+#if GN_BUILD_DEBUG
+            mTypedBuffer = (T*)mBuffer;
+#endif
         }
 
         void doClear()
@@ -224,22 +234,33 @@ namespace GN
         ///
         /// default constructor
         ///
-        StackArray() : mCount(0) {}
+        StackArray() : mCount(0)
+        {
+            updateTypedBufferPtr();
+        }
 
         ///
         /// constructor with user-defined count.
         ///
-        explicit StackArray( size_t count ) : mCount(count) { ctor( cptr(), count ); }
+        explicit StackArray( size_t count ) : mCount(count)
+        {
+            updateTypedBufferPtr();
+            ctor( cptr(), count );
+        }
 
         ///
         /// copy constructor
         ///
-        StackArray( const StackArray & other ) : mCount(0) { doClone( other ); }
+        StackArray( const StackArray & other ) : mCount(0)
+        {
+            updateTypedBufferPtr();
+            doClone( other );
+        }
 
         ///
         /// dtor
         ///
-        virtual ~StackArray() { doClear(); }
+        ~StackArray() { doClear(); }
 
         /// \name Common array operations.
         ///

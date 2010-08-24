@@ -157,6 +157,8 @@ void GN::gfx::XenonGpuProgramHLSL::quit()
     safeRelease( mPsConsts );
 
     mUniforms.clear();
+    mTextures.clear();
+    mAttributes.clear();
 
     // standard quit procedure
     GN_STDCLASS_QUIT();
@@ -465,6 +467,8 @@ void GN::gfx::XenonGpuProgramHLSL::enumerateAttributes( ID3DXBuffer & shaderBina
     for( size_t i = 0; i < count; ++i )
     {
         mAttributes[i].namestr = stringFormat( "%s%d", sD3DDeclUsage2String(semantics[i].Usage), semantics[i].UsageIndex );
+        mAttributes[i].usage = semantics[i].Usage;
+        mAttributes[i].usageIndex = semantics[i].UsageIndex;
     }
 }
 

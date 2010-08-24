@@ -9,6 +9,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GNtestGpuResDB", "GNtestGpu
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GNsampleDolphin", "GNsampleDolphin.vcproj", "{1AC6CB6A-157F-450C-99D8-69F1466C0D6D}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "garnet", "garnet.vcproj", "{94AD7479-C925-43D0-B3D0-7798E6E643F0}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		scons|Xbox 360 = scons|Xbox 360
@@ -22,6 +24,7 @@ Global
 		{7115ADA1-1C6D-464C-97BC-956403EE15A7}.scons|Xbox 360.Build.0 = scons|Xbox 360
 		{1AC6CB6A-157F-450C-99D8-69F1466C0D6D}.scons|Xbox 360.ActiveCfg = scons|Xbox 360
 		{1AC6CB6A-157F-450C-99D8-69F1466C0D6D}.scons|Xbox 360.Build.0 = scons|Xbox 360
+		{94AD7479-C925-43D0-B3D0-7798E6E643F0}.scons|Xbox 360.ActiveCfg = scons|Xbox 360
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
