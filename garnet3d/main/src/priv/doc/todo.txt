@@ -13,21 +13,13 @@ TODO
       - dual way variable changing notification
       - compile time switch to remove tweakable code entirely
       - separate client (tuner) and server (variables)
-  - scene framework and gpu resource database:
-    - better way to resolve standard/built-in effects and textures (instead of
-      using "@")
-      - create a utility function to do it. Or,
-      - create a file system for build-in resources
   - mesh converter/loader
     - load and view specific model, instead of the whole scene
     - better ASE support:
       - opacity map (teraiyuki\woman.ase)
       - non-geometry node (games\swordman\1.ase)
-  - support chinese in XML parser
-    - XML_Encoding: http://www.vivtek.com/expat/api.html#XML_Encoding
   - skin mesh test case: porting DXSDK sample.
   - Cg shader for D3D11 API.
-  - Dictionary template that replaces GN::Dictionary
   - replace STL containers:
   	- queue, list, set
   - FontFace unit should be integer instead of float, since it is supposed to
@@ -72,6 +64,7 @@ TODO
   - sigslot class:
     - allow any type of functor
     - check behavior of redundant slot functors.
+  - refine Delegate performance: avoid virtual functions
   - memory-mapped IO.
 
 - p3
@@ -90,8 +83,6 @@ TODO
   - script layer
   - network layer
   - multi-window rendering
-  - refine build system
-    - figure out a way to simplify scons script
   - image format conversion
   - a ray tracer (for self-learning purpose)
 
