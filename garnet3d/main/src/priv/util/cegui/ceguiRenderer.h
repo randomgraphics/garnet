@@ -79,10 +79,10 @@ namespace CEGUI
             float  v0;
             float  u1;
             float  v1;
-            UInt32 cx0;
-            UInt32 cx1;
-            UInt32 cy0;
-            UInt32 cy1;
+            uint32 cx0;
+            uint32 cx1;
+            uint32 cy0;
+            uint32 cy1;
         };
 
         bool mQueueEnabled;

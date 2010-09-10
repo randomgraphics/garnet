@@ -39,7 +39,7 @@ static GN::StrA sAddLineCountD3D10( const GN::StrA & in )
 //
 //
 // -----------------------------------------------------------------------------
-static UInt32 sRefineFlagsD3D10( UInt32 flags )
+static uint32 sRefineFlagsD3D10( uint32 flags )
 {
 #if GN_BUILD_DEBUG
     flags |= D3D10_SHADER_DEBUG;
@@ -110,7 +110,7 @@ ID3D10Blob * GN::d3d10::compileShader(
     const char   * profile,
     const char   * source,
     size_t         len,
-    UInt32         flags,
+    uint32         flags,
     const char   * entry )
 {
     AutoComPtr<ID3D10Blob> bin, err;
@@ -169,7 +169,7 @@ ID3D10VertexShader * GN::d3d10::compileAndCreateVS(
     ID3D10Device & dev,
     const char   * source,
     size_t         len,
-    UInt32         flags,
+    uint32         flags,
     const char   * entry,
     const char   * profile,
     ID3D10Blob  ** signature )
@@ -196,7 +196,7 @@ ID3D10GeometryShader * GN::d3d10::compileAndCreateGS(
     ID3D10Device & dev,
     const char   * source,
     size_t         len,
-    UInt32         flags,
+    uint32         flags,
     const char   * entry,
     const char   * profile,
     ID3D10Blob  ** signature )
@@ -223,7 +223,7 @@ ID3D10PixelShader * GN::d3d10::compileAndCreatePS(
     ID3D10Device & dev,
     const char   * source,
     size_t         len,
-    UInt32         flags,
+    uint32         flags,
     const char   * entry,
     const char   * profile,
     ID3D10Blob  ** signature )

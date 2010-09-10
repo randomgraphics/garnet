@@ -53,7 +53,7 @@ namespace GN { namespace input
     public:
 
         void processInputEvents();
-        bool attachToWindow( HandleType, HandleType );
+        bool attachToWindow( intptr_t display, intptr_t window );
         void getMousePosition( int & x, int & y ) const;
 
         // ********************************

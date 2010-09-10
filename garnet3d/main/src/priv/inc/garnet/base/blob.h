@@ -29,7 +29,7 @@ namespace GN
     ///
     class SimpleBlob : public Blob
     {
-        DynaArray<UInt8> mBuffer;
+        DynaArray<uint8> mBuffer;
 
     public:
 

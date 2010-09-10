@@ -264,7 +264,7 @@ sIsTextureUniform( GLenum type )
 //
 //
 // -----------------------------------------------------------------------------
-static bool sGetOglVertexSemantic( OGLVertexSemantic & semanticName, UInt8 & semanticIndex, const char * attributeName, GLuint attributeLocation )
+static bool sGetOglVertexSemantic( OGLVertexSemantic & semanticName, uint8 & semanticIndex, const char * attributeName, GLuint attributeLocation )
 {
     if( -1 == attributeLocation )
     {
@@ -343,7 +343,7 @@ static bool sGetOglVertexSemantic( OGLVertexSemantic & semanticName, UInt8 & sem
     {
         // this is general vertex attribute
         semanticName  = VERTEX_SEMANTIC_ATTRIBUTE;
-        semanticIndex = (UInt8)attributeLocation;
+        semanticIndex = (uint8)attributeLocation;
     }
 
     // success

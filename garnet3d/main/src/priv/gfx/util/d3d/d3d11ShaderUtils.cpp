@@ -40,7 +40,7 @@ static GN::StrA sAddLineCountD3D11( const GN::StrA & in )
 //
 //
 // -----------------------------------------------------------------------------
-static UInt32 sRefineFlagsD3D11( UInt32 flags )
+static uint32 sRefineFlagsD3D11( uint32 flags )
 {
 #ifndef D3DCOMPILE_DEBUG
 #define D3DCOMPILE_DEBUG D3D10_SHADER_DEBUG
@@ -115,7 +115,7 @@ ID3DBlob * GN::d3d11::compileShader(
     const char   * profile,
     const char   * source,
     size_t         len,
-    UInt32         flags,
+    uint32         flags,
     const char   * entry )
 {
     AutoComPtr<ID3DBlob> bin, err;
@@ -170,7 +170,7 @@ ID3D11VertexShader * GN::d3d11::compileAndCreateVS(
     ID3D11Device & dev,
     const char   * source,
     size_t         len,
-    UInt32         flags,
+    uint32         flags,
     const char   * entry,
     const char   * profile,
     ID3DBlob  ** signature )
@@ -197,7 +197,7 @@ ID3D11GeometryShader * GN::d3d11::compileAndCreateGS(
     ID3D11Device & dev,
     const char   * source,
     size_t         len,
-    UInt32         flags,
+    uint32         flags,
     const char   * entry,
     const char   * profile,
     ID3DBlob  ** signature )
@@ -224,7 +224,7 @@ ID3D11PixelShader * GN::d3d11::compileAndCreatePS(
     ID3D11Device & dev,
     const char   * source,
     size_t         len,
-    UInt32         flags,
+    uint32         flags,
     const char   * entry,
     const char   * profile,
     ID3DBlob  ** signature )

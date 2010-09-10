@@ -20,7 +20,7 @@ namespace GN { namespace gfx
     ///
     struct D3D11ShaderCompileOptions
     {
-        UInt32 compileFlags; ///< combination of D3D11_SHADER flags.
+        uint32 compileFlags; ///< combination of D3D11_SHADER flags.
     };
 
     /// shader parameter classes
@@ -34,8 +34,8 @@ namespace GN { namespace gfx
         struct ShaderSpecificProperties
         {
             AutoInitializer<bool,false> used;   ///< are these properties used
-            UInt32                      cbidx;  ///< const buffer index
-            UInt32                      offset; ///< uniform offset in bytes in the const buffer.
+            uint32                      cbidx;  ///< const buffer index
+            uint32                      offset; ///< uniform offset in bytes in the const buffer.
         };
 
         ///
@@ -135,7 +135,7 @@ namespace GN { namespace gfx
     ///
     /// array of constant buffer in system memory
     ///
-    typedef StackArray<DynaArray<UInt8>,16> SysMemConstBufferArray;
+    typedef StackArray<DynaArray<uint8>,16> SysMemConstBufferArray;
 
     ///
     /// D3D11 vertex shader
@@ -239,7 +239,7 @@ namespace GN { namespace gfx
         // ********************************
     public:
 
-        UInt64 getUniqueID() const { return m_ID; }
+        uint64 getUniqueID() const { return m_ID; }
 
         ///
         /// Get attribute semantic name and semantic index
@@ -268,7 +268,7 @@ namespace GN { namespace gfx
             {
                 cxt.VSSetConstantBuffers(
                     0,
-                    (UInt32)mVs.constBufs.size(),
+                    (uint32)mVs.constBufs.size(),
                     &mVs.constBufs[0] );
             }
 
@@ -276,7 +276,7 @@ namespace GN { namespace gfx
             {
                 cxt.GSSetConstantBuffers(
                     0,
-                    (UInt32)mGs.constBufs.size(),
+                    (uint32)mGs.constBufs.size(),
                     &mGs.constBufs[0] );
             }
 
@@ -284,7 +284,7 @@ namespace GN { namespace gfx
             {
                 cxt.PSSetConstantBuffers(
                     0,
-                    (UInt32)mPs.constBufs.size(),
+                    (uint32)mPs.constBufs.size(),
                     &mPs.constBufs[0] );
             }
         }
@@ -310,7 +310,7 @@ namespace GN { namespace gfx
         // ********************************
     private:
 
-        UInt64 m_ID;
+        uint64 m_ID;
 
         D3D11GpuProgramParameterDesc mParamDesc;
 

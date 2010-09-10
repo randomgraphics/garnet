@@ -30,7 +30,7 @@ void GN::util::Camera::Impl::setProjectionMatrix( const Matrix44f & m )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::util::Camera::Impl::setViewport( const Rect<UInt32> & v )
+void GN::util::Camera::Impl::setViewport( const Rect<uint32> & v )
 {
     mViewport = v;
 }
@@ -70,5 +70,5 @@ void                 GN::util::Camera::setViewMatrix( const Matrix44f & m ) { re
 const Matrix44f    & GN::util::Camera::getViewMatrix() const { return mImpl->getViewMatrix(); }
 void                 GN::util::Camera::setProjectionMatrix( const Matrix44f & m ) { return mImpl->setProjectionMatrix( m ); }
 const Matrix44f    & GN::util::Camera::getProjectionMatrix() const { return mImpl->getProjectionMatrix(); }
-void                 GN::util::Camera::setViewport( const Rect<UInt32> & v ) { return mImpl->setViewport( v ); }
-const Rect<UInt32> & GN::util::Camera::getViewport() const { return mImpl->getViewport(); }
+void                 GN::util::Camera::setViewport( const Rect<uint32> & v ) { return mImpl->setViewport( v ); }
+const Rect<uint32> & GN::util::Camera::getViewport() const { return mImpl->getViewport(); }

@@ -797,7 +797,7 @@ bool GN::XmlDocument::writeToFile( File & file, const XmlNode & root, bool compa
 {
     GN_GUARD;
 
-    //static const UInt8 bom[3] = { 0xEF, 0xBB, 0xBF };
+    //static const uint8 bom[3] = { 0xEF, 0xBB, 0xBF };
     //if( sizeof(bom) != file.write( bom, sizeof(bom) ) ) return false;
 
     file << "<?xml version=\"1.0\"?>";

@@ -12,12 +12,12 @@ namespace GN
     //@{
 
     /// Define wait time, in 10^(-9) seconds
-    typedef UInt64 TimeInNanoSecond;
+    typedef uint64 TimeInNanoSecond;
 
     ///
     /// special TimeInNanoSecond number that indicates infinite time.
     ///
-    extern const TimeInNanoSecond INFINITE_TIME; // = (UInt64)(-1);
+    extern const TimeInNanoSecond INFINITE_TIME; // = (uint64)(-1);
 
     ///
     /// Define wait result
@@ -39,11 +39,11 @@ namespace GN
     /// \name atomic operations
     //@{
 
-    inline SInt32 atomGet32( const SInt32 volatile * ); ///< get 32bit integer value.
-    inline void   atomSet32( SInt32 volatile *, SInt32 ); ///< set 32bit integer value.
-    inline SInt32 atomInc32( SInt32 volatile * ); ///< return incremented value
-    inline SInt32 atomDec32( SInt32 volatile * ); ///< return decremented value
-    inline SInt32 atomXchg32( SInt32 volatile * dest, SInt32 xchg ); ///< return initial value of the destination.
+    inline sint32 atomGet32( const sint32 volatile * ); ///< get 32bit integer value.
+    inline void   atomSet32( sint32 volatile *, sint32 ); ///< set 32bit integer value.
+    inline sint32 atomInc32( sint32 volatile * ); ///< return incremented value
+    inline sint32 atomDec32( sint32 volatile * ); ///< return decremented value
+    inline sint32 atomXchg32( sint32 volatile * dest, sint32 xchg ); ///< return initial value of the destination.
 
     ///
     /// if initial value of "dest" equals "cmp", then do exchange; else, do nothing.
@@ -51,7 +51,7 @@ namespace GN
     /// \return
     ///     Always return initial value of "dest".
     ///
-    inline SInt32 atomCmpXchg32( SInt32 volatile * dest, SInt32 xchg, SInt32 cmp );
+    inline sint32 atomCmpXchg32( sint32 volatile * dest, sint32 xchg, sint32 cmp );
 
     ///
     /// memory barrier. currently implemented on MS Windows platform only.
@@ -65,7 +65,7 @@ namespace GN
     ///
     class SpinLoop
     {
-        volatile SInt32 mLock;
+        volatile sint32 mLock;
 
     public:
 
@@ -95,7 +95,7 @@ namespace GN
     ///
     class Mutex
     {
-        UInt32 mInternal[16]; ///< store platform dependata data here, no runtime heap allocation
+        uint32 mInternal[16]; ///< store platform dependata data here, no runtime heap allocation
 
     public:
 

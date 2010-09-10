@@ -13,20 +13,20 @@
 #pragma pack(push,1)
 struct TGA_HEADER
 {
-    UInt8  identsize;          ///< size of ID field that follows 18 UInt8 header (0 usually)
-    UInt8  colourmaptype;      ///< type of colour map 0=none, 1=has palette
-    UInt8  imagetype;          ///< type of image 0=none,1=indexed,2=rgb,3=grey,(9,10,11,32,33)=rle packed
+    uint8  identsize;          ///< size of ID field that follows 18 uint8 header (0 usually)
+    uint8  colourmaptype;      ///< type of colour map 0=none, 1=has palette
+    uint8  imagetype;          ///< type of image 0=none,1=indexed,2=rgb,3=grey,(9,10,11,32,33)=rle packed
 
-    UInt16 colourmapstart;     ///< first colour map entry in palette
-    UInt16 colourmaplength;    ///< number of colours in palette
-    UInt8  colourmapbits;      ///< number of bits per palette entry 15,16,24,32
+    uint16 colourmapstart;     ///< first colour map entry in palette
+    uint16 colourmaplength;    ///< number of colours in palette
+    uint8  colourmapbits;      ///< number of bits per palette entry 15,16,24,32
 
-    UInt16 xstart;             ///< image x origin
-    UInt16 ystart;             ///< image y origin
-    UInt16 width;              ///< image width in pixels
-    UInt16 height;             ///< image height in pixels
-    UInt8  bits;               ///< image bits per pixel 8,16,24,32
-    UInt8  descriptor;         ///< image descriptor bits (vh flip bits)
+    uint16 xstart;             ///< image x origin
+    uint16 ystart;             ///< image y origin
+    uint16 width;              ///< image width in pixels
+    uint16 height;             ///< image height in pixels
+    uint8  bits;               ///< image bits per pixel 8,16,24,32
+    uint8  descriptor;         ///< image descriptor bits (vh flip bits)
 
 
     void SwapEndian()
@@ -53,15 +53,15 @@ static GN::Logger * sLogger = GN::getLogger("GN.gfx.base.image.TGA");
 //
 //
 // -----------------------------------------------------------------------------
-static inline void sCopyPixel5551( const UInt8 * src, size_t srcStride, UInt8 * dst, size_t dstStride, size_t count )
+static inline void sCopyPixel5551( const uint8 * src, size_t srcStride, uint8 * dst, size_t dstStride, size_t count )
 {
     GN_DO_ONCE( GN_WARN(sLogger)( "TGA 5551 image has BGRA->RGBA bug!" ) );
-    const UInt16 * s;
-    UInt16 * d;
+    const uint16 * s;
+    uint16 * d;
     for( size_t i = 0; i < count; ++i )
     {
-        s = (const UInt16 *)src;
-        d = (UInt16 *)dst;
+        s = (const uint16 *)src;
+        d = (uint16 *)dst;
 #if GN_BIG_ENDIAN
         *d = GN_SWAP_ENDIAN_8IN16(*s);
 #else
@@ -75,7 +75,7 @@ static inline void sCopyPixel5551( const UInt8 * src, size_t srcStride, UInt8 * 
 //
 //
 // -----------------------------------------------------------------------------
-static inline void sCopyPixel888( const UInt8 * src, size_t srcStride, UInt8 * dst, size_t dstStride, size_t count )
+static inline void sCopyPixel888( const uint8 * src, size_t srcStride, uint8 * dst, size_t dstStride, size_t count )
 {
     for( size_t i = 0; i < count; ++i )
     {
@@ -98,7 +98,7 @@ static inline void sCopyPixel888( const UInt8 * src, size_t srcStride, UInt8 * d
 //
 //
 // -----------------------------------------------------------------------------
-static inline void sCopyPixel8888( const UInt8 * src, size_t srcStride, UInt8 * dst, size_t dstStride, size_t count )
+static inline void sCopyPixel8888( const uint8 * src, size_t srcStride, uint8 * dst, size_t dstStride, size_t count )
 {
     for( size_t i = 0; i < count; ++i )
     {
@@ -123,16 +123,16 @@ static inline void sCopyPixel8888( const UInt8 * src, size_t srcStride, UInt8 * 
 // -----------------------------------------------------------------------------
 static bool sReadRLERGBImage(
     const TGA_HEADER & header,
-    const UInt8 * src,
+    const uint8 * src,
     size_t srcSize,
-    UInt8 * dst )
+    uint8 * dst )
 {
     GN_GUARD;
 
 #define CHECK_SRC_SIZE( bytes ) \
     if( (src + (bytes) ) > end ) { GN_ERROR(sLogger)( "incomplete image data." ); return false; }
 
-    const UInt8 * end = src + srcSize;
+    const uint8 * end = src + srcSize;
 
     size_t srcBpp = header.bits / 8;
 
@@ -140,7 +140,7 @@ static bool sReadRLERGBImage(
 
     size_t i = 0;
 
-    UInt8 chunk;
+    uint8 chunk;
 
     while( src < end && i < numPixels )
     {
@@ -248,7 +248,7 @@ bool TGAReader::checkFormat( GN::File & fp )
 //
 // -----------------------------------------------------------------------------
 bool TGAReader::readHeader(
-    GN::gfx::ImageDesc & o_desc, const UInt8 * i_buf, size_t i_size )
+    GN::gfx::ImageDesc & o_desc, const uint8 * i_buf, size_t i_size )
 {
     GN_GUARD;
 
@@ -322,7 +322,7 @@ bool TGAReader::readHeader(
     m.width      = header.width;
     m.height     = header.height;
     m.depth      = 1;
-    m.rowPitch   = (UInt32)( header.width * mOutputBytesPerPixel );
+    m.rowPitch   = (uint32)( header.width * mOutputBytesPerPixel );
     m.slicePitch = m.rowPitch * header.height;
     m.levelPitch = m.slicePitch;
     GN_ASSERT( o_desc.valid() );
@@ -358,8 +358,8 @@ bool TGAReader::readImage( void * o_data )
     size_t skipOver = sizeof(TGA_HEADER)
                    + header.identsize
                    + header.colourmaptype * header.colourmaplength * header.colourmapbits / 8;
-    const UInt8 * src = mImageSrc + skipOver;
-    UInt8 * dst = (UInt8*)o_data;
+    const uint8 * src = mImageSrc + skipOver;
+    uint8 * dst = (uint8*)o_data;
     size_t srcSize = mImageSize - skipOver;
     size_t srcBpp = header.bits / 8;
     size_t numPixels = header.width * header.height;
@@ -386,7 +386,7 @@ bool TGAReader::readImage( void * o_data )
     id.u8 = header.descriptor;
 
     // read image to temporary buffer, if image is flipped and/or interleaved.
-    GN::DynaArray<UInt8> tempBuf;
+    GN::DynaArray<uint8> tempBuf;
     if( 0 != id.interleaved || 0 == id.flip )
     {
         tempBuf.resize( numPixels * mOutputBytesPerPixel );
@@ -451,7 +451,7 @@ bool TGAReader::readImage( void * o_data )
     // flip the image
     if( 0 == id.flip )
     {
-        dst = (UInt8*)o_data;
+        dst = (uint8*)o_data;
         size_t rowPitch = header.width * mOutputBytesPerPixel;
         for( size_t y = 0; y < header.height; ++y )
         {

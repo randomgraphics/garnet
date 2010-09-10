@@ -53,7 +53,7 @@ struct D3D11ShaderTypeTemplate<VERTEX_SHADER>
         ID3D11Device & dev,
         const char   * source,
         size_t         len,
-        UInt32         flags,
+        uint32         flags,
         const char   * entry,
         const char   * profile,
         ID3DBlob    ** signature )
@@ -99,7 +99,7 @@ struct D3D11ShaderTypeTemplate<GEOMETRY_SHADER>
         ID3D11Device & dev,
         const char   * source,
         size_t         len,
-        UInt32         flags,
+        uint32         flags,
         const char   * entry,
         const char   * profile,
         ID3DBlob  ** signature )
@@ -145,7 +145,7 @@ struct D3D11ShaderTypeTemplate<PIXEL_SHADER>
         ID3D11Device & dev,
         const char   * source,
         size_t         len,
-        UInt32         flags,
+        uint32         flags,
         const char   * entry,
         const char   * profile,
         ID3DBlob  ** signature )
@@ -214,7 +214,7 @@ sInitConstBuffers(
     // create constant buffers
     constBufs.resize( desc.ConstantBuffers );
     constData.resize( desc.ConstantBuffers );
-    for( UInt32 i = 0; i < desc.ConstantBuffers; ++i )
+    for( uint32 i = 0; i < desc.ConstantBuffers; ++i )
     {
         ID3D11ShaderReflectionConstantBuffer * cb = reflection.GetConstantBufferByIndex( i );
         GN_ASSERT( cb );

@@ -54,7 +54,7 @@ GN::gfx::TextureResource::loadFromFile(
 
     // load image
     ImageDesc id;
-    DynaArray<UInt8> texels;
+    DynaArray<uint8> texels;
     if( !loadImageFromFile( id, texels, filename ) ) return AutoRef<TextureResource>::NULLREF;
 
     // create texture

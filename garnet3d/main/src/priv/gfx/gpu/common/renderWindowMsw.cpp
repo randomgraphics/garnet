@@ -15,7 +15,7 @@ static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.common.renderWindow.MSW"
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::RenderWindowMsw::initExternalWindow( Gpu * gpu, HandleType externalWindow )
+bool GN::gfx::RenderWindowMsw::initExternalWindow( Gpu * gpu, intptr_t externalWindow )
 {
     GN_GUARD;
 
@@ -66,10 +66,10 @@ bool GN::gfx::RenderWindowMsw::initExternalWindow( Gpu * gpu, HandleType externa
 // -----------------------------------------------------------------------------
 bool GN::gfx::RenderWindowMsw::initInternalWindow(
     Gpu * gpu,
-    HandleType parentWindow,
-    HandleType monitor,
-    UInt32     width,
-    UInt32     height )
+    intptr_t parentWindow,
+    intptr_t monitor,
+    uint32     width,
+    uint32     height )
 {
     GN_GUARD;
 
@@ -131,7 +131,7 @@ void GN::gfx::RenderWindowMsw::quit()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::RenderWindowMsw::getClientSize( UInt32 & width, UInt32 & height ) const
+void GN::gfx::RenderWindowMsw::getClientSize( uint32 & width, uint32 & height ) const
 {
     GN_ASSERT( ::IsWindow(mWindow) );
 
@@ -157,7 +157,7 @@ void GN::gfx::RenderWindowMsw::handleSizeMove()
     if( ro.fullscreen ) return;
 
     // get client window size
-    UInt32 currentWidth, currentHeight;
+    uint32 currentWidth, currentHeight;
     getClientSize( currentWidth, currentHeight );
 
     // compare with old window properties
@@ -170,7 +170,7 @@ void GN::gfx::RenderWindowMsw::handleSizeMove()
         mOldMonitor = mMonitor;
 
         // trigger renderer signal when window size is changed or window is moved to another monitor
-        mGpu->getSignals().rendererWindowSizeMove( mMonitor, currentWidth, currentHeight );
+        mGpu->getSignals().rendererWindowSizeMove( (intptr_t)mMonitor, currentWidth, currentHeight );
     }
 
     GN_UNGUARD;
@@ -222,7 +222,7 @@ bool GN::gfx::RenderWindowMsw::postInit()
 //
 // -----------------------------------------------------------------------------
 bool
-GN::gfx::RenderWindowMsw::createWindow( HWND parent, HMONITOR monitor, UInt32 width, UInt32 height )
+GN::gfx::RenderWindowMsw::createWindow( HWND parent, HMONITOR monitor, uint32 width, uint32 height )
 {
     GN_GUARD;
 

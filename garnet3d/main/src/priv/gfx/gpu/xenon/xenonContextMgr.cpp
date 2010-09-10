@@ -126,7 +126,7 @@ GN::gfx::XenonGpu::bindContextRenderTargetsAndViewport(
         static const GpuContext::SurfaceDesc sNullSurface = { 0, 0, 0, 0 };
         const GpuContext::SurfaceDesc *newSurf, *oldSurf;
 
-        for( UInt32 i = 0; i < 4; ++i )
+        for( uint32 i = 0; i < 4; ++i )
         {
             newSurf = (i >= newContext.numColorBuffers) ? &sNullSurface : &newContext.colorBuffers[i];
             oldSurf = (i >= mContext.numColorBuffers) ? &sNullSurface : &mContext.colorBuffers[i];
@@ -154,7 +154,7 @@ GN::gfx::XenonGpu::bindContextRenderTargetsAndViewport(
                 else
                 {
                     // setup RT based on RTT
-                    //const Vector3<UInt32> & sz = newSurf->texture->getMipSize( newSurf->level );
+                    //const Vector3<uint32> & sz = newSurf->texture->getMipSize( newSurf->level );
                     //setupRT( sz.x, sz.y, newSurf->texture->getDesc().format );
                 }
 

@@ -48,7 +48,7 @@ bool GN::gfx::MultiThreadUniform::init( Uniform * uni )
 
     mUniform = uni;
     mSize    = uni->size();
-    mFrontEndData = (UInt8*)HeapMemory::alloc(mSize);
+    mFrontEndData = (uint8*)HeapMemory::alloc(mSize);
     if( NULL == mFrontEndData ) return failure();
 
     // success
@@ -96,7 +96,7 @@ void GN::gfx::MultiThreadUniform::update( size_t offset, size_t length, const vo
 
     memcpy( mFrontEndData + offset, data, length );
 
-    UInt16 cmdsize = (UInt16)( sizeof(UniformUpdateParam) + length );
+    uint16 cmdsize = (uint16)( sizeof(UniformUpdateParam) + length );
     CommandBuffer::Token token;
     if( CommandBuffer::OPERATION_SUCCEEDED == mGpu.cmdbuf().beginProduce( CMD_UNIFORM_UPDATE, cmdsize, &token ) )
     {

@@ -101,38 +101,38 @@ static const ModelResourceDesc * sDetermineBestModelTemplate( const MeshResource
 struct XPRFileHeader
 {
     FOURCC tag;        ///< must be XPR2
-    UInt32 size1;      ///< size tag 1
-    UInt32 size2;      ///< size tag 2 (file size = size1+size2+12)
-    UInt32 numObjects; ///< number of objects in this file
+    uint32 size1;      ///< size tag 1
+    uint32 size2;      ///< size tag 2 (file size = size1+size2+12)
+    uint32 numObjects; ///< number of objects in this file
 };
 
 struct XPRObjectHeader
 {
     FOURCC type;    ///< object type, could be "USER", "TX2D", "VBUF", "IBUF".
-    UInt32 offset;  ///< object offset in bytes. The actual offset is this value + 12.
-    UInt32 size;    ///< object size in bytes
-    UInt32 unknown; ///< I don't know what this is for.
+    uint32 offset;  ///< object offset in bytes. The actual offset is this value + 12.
+    uint32 size;    ///< object size in bytes
+    uint32 unknown; ///< I don't know what this is for.
 };
 
 // XPR texture descriptor, 0x28 bytes
 struct XPRTex2DDesc
 {
     // 10 dwords
-    UInt32 dwords[10];
+    uint32 dwords[10];
 };
 GN_CASSERT( 0x28 == sizeof(XPRTex2DDesc) );
 
 /// XPR vertex buffer descriptor, 0x14 bytes
 struct XPRVBufDesc
 {
-    UInt32 dwords[5];
+    uint32 dwords[5];
 };
 GN_CASSERT( 0x14 == sizeof(XPRVBufDesc) );
 
 /// XPR index buffer descriptor, 0x14 bytes
 struct XPRIBufDesc
 {
-    UInt32 dwords[5];
+    uint32 dwords[5];
 };
 GN_CASSERT( 0x14 == sizeof(XPRIBufDesc) );
 

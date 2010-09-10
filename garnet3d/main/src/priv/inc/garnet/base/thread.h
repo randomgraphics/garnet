@@ -24,7 +24,7 @@ namespace GN
     ///
     /// thread procedure functor
     ///
-    typedef Delegate1<UInt32,void*> ThreadProcedure;
+    typedef Delegate1<uint32,void*> ThreadProcedure;
 
     ///
     /// abstract thread interface
@@ -35,7 +35,7 @@ namespace GN
         //@{
         virtual ThreadPriority getPriority() const = 0;
         virtual void           setPriority( ThreadPriority ) = 0;
-        virtual void           setAffinity( UInt32 hardwareThread ) = 0;
+        virtual void           setAffinity( uint32 hardwareThread ) = 0;
         virtual bool           isCurrentThread() const = 0;
         //@}
 
@@ -49,7 +49,7 @@ namespace GN
         ///
         /// Note: when this function returns, the thread object should have been deleted.
         ///
-        virtual WaitResult waitForTermination( TimeInNanoSecond timeoutTime = INFINITE_TIME, UInt32 * threadProcReturnValue = 0 ) = 0;
+        virtual WaitResult waitForTermination( TimeInNanoSecond timeoutTime = INFINITE_TIME, uint32 * threadProcReturnValue = 0 ) = 0;
 
         //@}
     };
@@ -76,7 +76,7 @@ namespace GN
     ///
     /// Note that this function is much fater then generateCurrentThreadObject().
     ///
-    SInt32 getCurrentThreadId();
+    sint32 getCurrentThreadId();
 
     //@}
 }

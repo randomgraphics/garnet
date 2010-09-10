@@ -101,7 +101,7 @@ void GN::gfx::OGLGpu::present()
 //
 // -----------------------------------------------------------------------------
 void GN::gfx::OGLGpu::clearScreen(
-    const GN::Vector4f & c, float z, UInt8 s, BitFields flags )
+    const GN::Vector4f & c, float z, uint8 s, uint32 flags )
 {
     GN_GUARD_SLOW;
 
@@ -176,7 +176,7 @@ void GN::gfx::OGLGpu::drawIndexed(
     {
         if( ib->getDesc().bits32 )
         {
-            const UInt32 * indices = (const UInt32*)ib->getIdxData( startidx );
+            const uint32 * indices = (const uint32*)ib->getIdxData( startidx );
             for( size_t i = 0; i < numidx; ++i, ++indices )
             {
                 if( startvtx <= *indices && *indices < (startvtx+numvtx) )
@@ -187,7 +187,7 @@ void GN::gfx::OGLGpu::drawIndexed(
         }
         else
         {
-            const UInt16 * indices = (const UInt16*)ib->getIdxData( startidx );
+            const uint16 * indices = (const uint16*)ib->getIdxData( startidx );
             for( size_t i = 0; i < numidx; ++i, ++indices )
             {
                 if( startvtx <= *indices && *indices < (startvtx+numvtx) )
@@ -264,7 +264,7 @@ void GN::gfx::OGLGpu::drawIndexedUp(
     size_t         numvtx,
     const void *   vertexData,
     size_t         strideInBytes,
-    const UInt16 * indexData )
+    const uint16 * indexData )
 {
     GN_GUARD_SLOW;
 
@@ -290,7 +290,7 @@ void GN::gfx::OGLGpu::drawIndexedUp(
         // Verify index buffer
         if( paramCheckEnabled() )
         {
-            const UInt16 * indices = indexData;
+            const uint16 * indices = indexData;
             for( size_t i = 0; i < numidx; ++i, ++indices )
             {
                 if( *indices >= numvtx )
@@ -388,11 +388,11 @@ void GN::gfx::OGLGpu::drawUp(
 //
 // ----------------------------------------------------------------------------
 void GN::gfx::OGLGpu::drawLines(
-    BitFields options,
+    uint32 options,
     const void * positions,
     size_t stride,
     size_t numpoints,
-    UInt32 rgba,
+    uint32 rgba,
     const Matrix44f & model,
     const Matrix44f & view,
     const Matrix44f & proj )
@@ -403,7 +403,7 @@ void GN::gfx::OGLGpu::drawLines(
 
     // clear context, but keep render states
     GpuContext ctx = getContext();
-    UInt64 oldrs = ctx.rs.bitFlags;
+    uint64 oldrs = ctx.rs.bitFlags;
     ctx.clear();
     ctx.rs.bitFlags = oldrs;
 

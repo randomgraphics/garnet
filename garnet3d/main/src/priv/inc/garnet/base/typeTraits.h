@@ -44,14 +44,14 @@ namespace GN
         };
 
         template<typename T> struct NumericProperties {};
-        template<> struct NumericProperties<SInt8>{ static const bool isSigned = true; };
-        template<> struct NumericProperties<UInt8>{ static const bool isSigned = false; };
-        template<> struct NumericProperties<SInt16>{ static const bool isSigned = true; };
-        template<> struct NumericProperties<UInt16>{ static const bool isSigned = false; };
-        template<> struct NumericProperties<SInt32>{ static const bool isSigned = true; };
-        template<> struct NumericProperties<UInt32>{ static const bool isSigned = false; };
-        template<> struct NumericProperties<SInt64>{ static const bool isSigned = true; };
-        template<> struct NumericProperties<UInt64>{ static const bool isSigned = false; };
+        template<> struct NumericProperties<sint8>{ static const bool isSigned = true; };
+        template<> struct NumericProperties<uint8>{ static const bool isSigned = false; };
+        template<> struct NumericProperties<sint16>{ static const bool isSigned = true; };
+        template<> struct NumericProperties<uint16>{ static const bool isSigned = false; };
+        template<> struct NumericProperties<sint32>{ static const bool isSigned = true; };
+        template<> struct NumericProperties<uint32>{ static const bool isSigned = false; };
+        template<> struct NumericProperties<sint64>{ static const bool isSigned = true; };
+        template<> struct NumericProperties<uint64>{ static const bool isSigned = false; };
         template<> struct NumericProperties<float>{ static const bool isSigned = true; };
         template<> struct NumericProperties<double>{ static const bool isSigned = true; };
     }

@@ -185,7 +185,7 @@ bool GN::gfx::OGLRTMgrFBO::bind(
         }
 
         // update color render target size
-        newrt.colortargets[0].texture->getMipSize<UInt32>(
+        newrt.colortargets[0].texture->getMipSize<uint32>(
             newrt.colortargets[0].level,
             &mRenderTargetSize.x,
             &mRenderTargetSize.y );
@@ -199,7 +199,7 @@ bool GN::gfx::OGLRTMgrFBO::bind(
         GN_OGL_CHECK( glReadBuffer( GL_NONE ) );
 
         // update color render target size
-        newrt.depthstencil.texture->getMipSize<UInt32>(
+        newrt.depthstencil.texture->getMipSize<uint32>(
             newrt.depthstencil.level,
             &mRenderTargetSize.x,
             &mRenderTargetSize.y );
@@ -217,8 +217,8 @@ bool GN::gfx::OGLRTMgrFBO::bind(
             //
             // Current auto-z buffer is smaller than color render targets. Need to enlarge it.
             //
-            UInt32 newWidth  = math::getmax( mRenderTargetSize.x, mAutoZSize.x );
-            UInt32 newHeight = math::getmax( mRenderTargetSize.y, mAutoZSize.y );
+            uint32 newWidth  = math::getmax( mRenderTargetSize.x, mAutoZSize.x );
+            uint32 newHeight = math::getmax( mRenderTargetSize.y, mAutoZSize.y );
 
             // delete old z buffer
             if( mAutoZ )

@@ -106,7 +106,7 @@ static bool sGetOGLExtensions( Display * disp, DynaArray<StrA> & result )
 ///
 /// output GL implementation info.
 // ------------------------------------------------------------------------
-static void sOutputOGLInfo( HandleType disp, const DynaArray<StrA> & glexts )
+static void sOutputOGLInfo( intptr_t disp, const DynaArray<StrA> & glexts )
 {
     GN_GUARD;
 

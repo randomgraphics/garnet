@@ -43,19 +43,19 @@ namespace GN{ /** namespace for DXGI utilities */ namespace dxgi
         const char *     name;
 
         /// The block width.
-        UInt32           blockWidth;
+        uint32           blockWidth;
 
         /// The block height.
-        UInt32           blockHeight;
+        uint32           blockHeight;
 
         /// Block size in bytes
-        UInt32           blockBytes;
+        uint32           blockBytes;
 
         /// Bits of a single texel
-        UInt32           texelBits;
+        uint32           texelBits;
 
         /// Number of color channels.
-        UInt32           numChannels;
+        uint32           numChannels;
 
         /// The number format.
         DXGINumberFormat numfmt;

@@ -33,7 +33,7 @@ struct D3D10ShaderTypeTemplate<VERTEX_SHADER>
             ID3D10Device & dev,
             const char   * source,
             size_t         len,
-            UInt32         flags,
+            uint32         flags,
             const char   * entry,
             const char   * profile,
             ID3D10Blob  ** binary );
@@ -70,7 +70,7 @@ struct D3D10ShaderTypeTemplate<GEOMETRY_SHADER>
             ID3D10Device & dev,
             const char   * source,
             size_t         len,
-            UInt32         flags,
+            uint32         flags,
             const char   * entry,
             const char   * profile,
             ID3D10Blob  ** binary );
@@ -107,7 +107,7 @@ struct D3D10ShaderTypeTemplate<PIXEL_SHADER>
             ID3D10Device & dev,
             const char   * source,
             size_t         len,
-            UInt32         flags,
+            uint32         flags,
             const char   * entry,
             const char   * profile,
             ID3D10Blob  ** binary );
@@ -186,7 +186,7 @@ sInitConstBuffers(
     // create constant buffers
     constBufs.resize( desc.ConstantBuffers );
     constData.resize( desc.ConstantBuffers );
-    for( UInt32 i = 0; i < desc.ConstantBuffers; ++i )
+    for( uint32 i = 0; i < desc.ConstantBuffers; ++i )
     {
         ID3D10ShaderReflectionConstantBuffer * cb = reflection.GetConstantBufferByIndex( i );
         GN_ASSERT( cb );
@@ -445,7 +445,7 @@ void GN::gfx::D3D10ShaderHLSL::applyUniform( const Uniform & u ) const
 
     UniformUserData uud;
 
-    uud.u32 = (UInt32)u.userData;
+    uud.u32 = (uint32)u.userData;
 
     // get source pointer
     const void * src = 0;
@@ -501,7 +501,7 @@ void GN::gfx::D3D10ShaderHLSL::applyUniform( const Uniform & u ) const
 
     GN_ASSERT( uud.bufidx < constBufs.size() );
     ID3D10Buffer * cb = constBufs[uud.bufidx];
-    DynaArray<UInt8> & syscopy = constData[uud.bufidx];
+    DynaArray<uint8> & syscopy = constData[uud.bufidx];
 
     // copy data to system copy
     memcpy( &syscopy[uud.offsetdw*4], src, uud.sizedw * 4 );
@@ -517,7 +517,7 @@ void GN::gfx::D3D10ShaderHLSL::applyUniform( const Uniform & u ) const
         0 ); // slice pitch
 
 #else
-    UInt32 * data;
+    uint32 * data;
     if( FAILED( cb->Map( D3D10_MAP_WRITE_DISCARD, 0, (void**)&data ) ) )
     {
         GN_ERROR(sLogger)( "fail to map constant buffer." );

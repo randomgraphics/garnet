@@ -30,7 +30,7 @@ static GN::StrA sAddLineCountD3D9( const GN::StrA & in )
 //
 //
 // -----------------------------------------------------------------------------
-static UInt32 sRefineFlagsD3D9( UInt32 flags )
+static uint32 sRefineFlagsD3D9( uint32 flags )
 {
 #if GN_BUILD_DEBUG
     flags |= D3DXSHADER_DEBUG;
@@ -131,7 +131,7 @@ static GN::StrA sSaveCodeToTemporaryFile( const char * code, size_t len )
 //
 //
 // -----------------------------------------------------------------------------
-LPDIRECT3DVERTEXSHADER9 GN::d3d9::compileAndCreateVS( LPDIRECT3DDEVICE9 dev, const char * code, size_t len, UInt32 flags, const char * entry, const char * profile, LPD3DXCONSTANTTABLE * constTable, LPD3DXBUFFER * binary )
+LPDIRECT3DVERTEXSHADER9 GN::d3d9::compileAndCreateVS( LPDIRECT3DDEVICE9 dev, const char * code, size_t len, uint32 flags, const char * entry, const char * profile, LPD3DXCONSTANTTABLE * constTable, LPD3DXBUFFER * binary )
 {
     GN_GUARD;
 
@@ -177,7 +177,7 @@ LPDIRECT3DVERTEXSHADER9 GN::d3d9::compileAndCreateVS( LPDIRECT3DDEVICE9 dev, con
 //
 //
 // -----------------------------------------------------------------------------
-LPDIRECT3DVERTEXSHADER9 GN::d3d9::compileAndCreateVSFromFile( LPDIRECT3DDEVICE9 dev, const char * file, UInt32 flags, const char * entry, const char * profile, LPD3DXCONSTANTTABLE * constTable, LPD3DXBUFFER * binary )
+LPDIRECT3DVERTEXSHADER9 GN::d3d9::compileAndCreateVSFromFile( LPDIRECT3DDEVICE9 dev, const char * file, uint32 flags, const char * entry, const char * profile, LPD3DXCONSTANTTABLE * constTable, LPD3DXBUFFER * binary )
 {
     GN_GUARD;
 
@@ -223,7 +223,7 @@ LPDIRECT3DVERTEXSHADER9 GN::d3d9::compileAndCreateVSFromFile( LPDIRECT3DDEVICE9 
 //
 //
 // -----------------------------------------------------------------------------
-LPDIRECT3DVERTEXSHADER9 GN::d3d9::assembleAndCreateVS( LPDIRECT3DDEVICE9 dev, const char * code, size_t len, UInt32 flags, LPD3DXBUFFER * binary )
+LPDIRECT3DVERTEXSHADER9 GN::d3d9::assembleAndCreateVS( LPDIRECT3DDEVICE9 dev, const char * code, size_t len, uint32 flags, LPD3DXBUFFER * binary )
 {
     GN_GUARD;
 
@@ -271,7 +271,7 @@ LPDIRECT3DVERTEXSHADER9 GN::d3d9::assembleAndCreateVS( LPDIRECT3DDEVICE9 dev, co
 //
 //
 // -----------------------------------------------------------------------------
-LPDIRECT3DVERTEXSHADER9 GN::d3d9::assembleAndCreateVSFromFile( LPDIRECT3DDEVICE9 dev, const char * file, UInt32 flags, LPD3DXBUFFER * binary )
+LPDIRECT3DVERTEXSHADER9 GN::d3d9::assembleAndCreateVSFromFile( LPDIRECT3DDEVICE9 dev, const char * file, uint32 flags, LPD3DXBUFFER * binary )
 {
     GN_GUARD;
 
@@ -311,7 +311,7 @@ LPDIRECT3DVERTEXSHADER9 GN::d3d9::assembleAndCreateVSFromFile( LPDIRECT3DDEVICE9
 //
 //
 // -----------------------------------------------------------------------------
-LPDIRECT3DPIXELSHADER9 GN::d3d9::compileAndCreatePS( LPDIRECT3DDEVICE9 dev, const char * code, size_t len, UInt32 flags, const char * entry, const char * profile, LPD3DXCONSTANTTABLE * constTable )
+LPDIRECT3DPIXELSHADER9 GN::d3d9::compileAndCreatePS( LPDIRECT3DDEVICE9 dev, const char * code, size_t len, uint32 flags, const char * entry, const char * profile, LPD3DXCONSTANTTABLE * constTable )
 {
     GN_GUARD;
 
@@ -355,7 +355,7 @@ LPDIRECT3DPIXELSHADER9 GN::d3d9::compileAndCreatePS( LPDIRECT3DDEVICE9 dev, cons
 //
 //
 // -----------------------------------------------------------------------------
-LPDIRECT3DPIXELSHADER9 GN::d3d9::compileAndCreatePSFromFile( LPDIRECT3DDEVICE9 dev, const char * file, UInt32 flags, const char * entry, const char * profile, LPD3DXCONSTANTTABLE * constTable )
+LPDIRECT3DPIXELSHADER9 GN::d3d9::compileAndCreatePSFromFile( LPDIRECT3DDEVICE9 dev, const char * file, uint32 flags, const char * entry, const char * profile, LPD3DXCONSTANTTABLE * constTable )
 {
     GN_GUARD;
 
@@ -399,7 +399,7 @@ LPDIRECT3DPIXELSHADER9 GN::d3d9::compileAndCreatePSFromFile( LPDIRECT3DDEVICE9 d
 //
 //
 // -----------------------------------------------------------------------------
-LPDIRECT3DPIXELSHADER9 GN::d3d9::assembleAndCreatePS( LPDIRECT3DDEVICE9 dev, const char * code, size_t len, UInt32 flags )
+LPDIRECT3DPIXELSHADER9 GN::d3d9::assembleAndCreatePS( LPDIRECT3DDEVICE9 dev, const char * code, size_t len, uint32 flags )
 {
     GN_GUARD;
 
@@ -445,7 +445,7 @@ LPDIRECT3DPIXELSHADER9 GN::d3d9::assembleAndCreatePS( LPDIRECT3DDEVICE9 dev, con
 //
 //
 // -----------------------------------------------------------------------------
-LPDIRECT3DPIXELSHADER9 GN::d3d9::assembleAndCreatePSFromFile( LPDIRECT3DDEVICE9 dev, const char * file, UInt32 flags )
+LPDIRECT3DPIXELSHADER9 GN::d3d9::assembleAndCreatePSFromFile( LPDIRECT3DDEVICE9 dev, const char * file, uint32 flags )
 {
     GN_GUARD;
 
@@ -483,7 +483,7 @@ LPDIRECT3DPIXELSHADER9 GN::d3d9::assembleAndCreatePSFromFile( LPDIRECT3DDEVICE9 
 //
 //
 // -----------------------------------------------------------------------------
-LPD3DXEFFECT GN::d3d9::compileAndCreateEffect( LPDIRECT3DDEVICE9 dev, const char * code, size_t len, UInt32 flags, LPD3DXEFFECTPOOL pool )
+LPD3DXEFFECT GN::d3d9::compileAndCreateEffect( LPDIRECT3DDEVICE9 dev, const char * code, size_t len, uint32 flags, LPD3DXEFFECTPOOL pool )
 {
     GN_GUARD;
 

@@ -77,8 +77,8 @@ GN::gfx::MeshResource::Impl::applyToContext( GpuContext & context ) const
     for( size_t i = 0; i < GN_ARRAY_COUNT(context.vtxbufs); ++i )
     {
         context.vtxbufs[i].vtxbuf = mVtxBufs[i].gpudata;
-        context.vtxbufs[i].stride = (UInt16)mDesc.strides[i];
-        context.vtxbufs[i].offset = (UInt32)mDesc.offsets[i];
+        context.vtxbufs[i].stride = (uint16)mDesc.strides[i];
+        context.vtxbufs[i].offset = (uint32)mDesc.offsets[i];
     }
 
     // index buffers
@@ -93,7 +93,7 @@ GN::gfx::MeshResource::Impl::calculateBoundingBox( Box<float> & box ) const
 {
     MeshResourceDesc desc = mDesc;
 
-    DynaArray<UInt8> buffers[GpuContext::MAX_VERTEX_BUFFERS];
+    DynaArray<uint8> buffers[GpuContext::MAX_VERTEX_BUFFERS];
     for( size_t i = 0; i < GpuContext::MAX_VERTEX_BUFFERS; ++i )
     {
         if( mVtxBufs[i].gpudata )
@@ -115,7 +115,7 @@ GN::gfx::MeshResource::Impl::calculateBoundingSphere( Sphere<float> & sphere ) c
 {
     MeshResourceDesc desc = mDesc;
 
-    DynaArray<UInt8> buffers[GpuContext::MAX_VERTEX_BUFFERS];
+    DynaArray<uint8> buffers[GpuContext::MAX_VERTEX_BUFFERS];
     for( size_t i = 0; i < GpuContext::MAX_VERTEX_BUFFERS; ++i )
     {
         if( mVtxBufs[i].gpudata )
@@ -189,7 +189,7 @@ bool GN::gfx::MeshResource::Impl::create( const MeshResourceDesc & desc )
     // initialize index buffer
     if( desc.numidx > 0 )
     {
-        IdxBufDesc ibd = { (UInt32)desc.numidx, desc.idx32, desc.dynaib };
+        IdxBufDesc ibd = { (uint32)desc.numidx, desc.idx32, desc.dynaib };
         mIdxBuf.gpudata.attach( gpu.createIdxBuf( ibd ) );
         if( NULL == mIdxBuf.gpudata ) return false;
 

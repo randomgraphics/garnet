@@ -30,16 +30,16 @@ namespace GN
         ///
         /// increase reference counter
         ///
-        SInt32 incref() const  throw() { return atomInc32(&mRef); }
+        sint32 incref() const  throw() { return atomInc32(&mRef); }
 
         ///
         /// decrease reference counter, delete the object, if reference count reaches zero.
         ///
-        SInt32 decref() const
+        sint32 decref() const
         {
             GN_ASSERT( mRef > 0 );
 
-            SInt32 ref = atomDec32( &mRef ) ;
+            sint32 ref = atomDec32( &mRef ) ;
 
             if( 0 == ref )
             {
@@ -53,7 +53,7 @@ namespace GN
         ///
         /// get current reference counter value
         ///
-        SInt32 getref() const throw() { return atomGet32(&mRef); }
+        sint32 getref() const throw() { return atomGet32(&mRef); }
 
         // ********************************
         //    weak reference management
@@ -117,7 +117,7 @@ namespace GN
         ///
         /// reference counter
         ///
-        mutable volatile SInt32 mRef;
+        mutable volatile sint32 mRef;
 
         mutable std::list<void*> mWeakRefList;
     };

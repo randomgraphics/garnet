@@ -18,7 +18,7 @@
 
 #else
 
-static const char * DXERR_FUNC( SInt32 ) { return "unknown error code."; }
+static const char * DXERR_FUNC( sint32 ) { return "unknown error code."; }
 
 #endif
 
@@ -109,7 +109,7 @@ void GN::breakIntoDebugger()
 //
 // -----------------------------------------------------------------------------
 const char *
-GN::getWin32ErrorInfo( UInt32 win32ErrorCode ) throw()
+GN::getWin32ErrorInfo( uint32 win32ErrorCode ) throw()
 {
     static char info[4096];
 
@@ -157,7 +157,7 @@ GN::getWin32LastErrorInfo() throw()
 //
 // -----------------------------------------------------------------------------
 const char *
-GN::getDXErrorInfo( SInt32 hr ) throw()
+GN::getDXErrorInfo( sint32 hr ) throw()
 {
     return DXERR_FUNC( hr );
 }

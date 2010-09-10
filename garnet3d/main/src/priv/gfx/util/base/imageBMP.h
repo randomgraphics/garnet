@@ -32,9 +32,9 @@ class BMPReader
     {
         char     B;
         char     M;
-        UInt32 size; 
-        UInt32 reserved;
-        UInt32 offBits; 
+        uint32 size;
+        uint32 reserved;
+        uint32 offBits;
 
         void swapEndian()
         {
@@ -43,18 +43,18 @@ class BMPReader
         }
     };
     struct BMPInfoHeader
-    { 
-        UInt32 size; 
-        SInt32  width; 
-        SInt32  height; 
-        UInt16 planes; 
-        UInt16 bitCount;
-        UInt32 compression; 
-        UInt32 sizeImage; 
-        SInt32  xPelsPerMeter; 
-        SInt32  yPelsPerMeter; 
-        UInt32 clrUsed; 
-        UInt32 clrImportant;
+    {
+        uint32 size;
+        sint32  width;
+        sint32  height;
+        uint16 planes;
+        uint16 bitCount;
+        uint32 compression;
+        uint32 sizeImage;
+        sint32  xPelsPerMeter;
+        sint32  yPelsPerMeter;
+        uint32 clrUsed;
+        uint32 clrImportant;
 
         void swapEndian()
         {
@@ -83,8 +83,8 @@ class BMPReader
     #pragma pack(pop)
 
     BMPHeader       mHeader;
-    const UInt8 * mImageSrc; // pointer to the first pixel
-    UInt32        mOutputBytesPerPixel;
+    const uint8 * mImageSrc; // pointer to the first pixel
+    uint32        mOutputBytesPerPixel;
 
 public:
 
@@ -107,7 +107,7 @@ public:
     /// read BMP header
     ///
     bool readHeader(
-        GN::gfx::ImageDesc & o_desc, const UInt8 * i_buf, size_t i_size );
+        GN::gfx::ImageDesc & o_desc, const uint8 * i_buf, size_t i_size );
 
     ///
     /// read BMP image

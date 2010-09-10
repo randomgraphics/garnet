@@ -127,7 +127,7 @@ public:
         mPriority = p;
     }
 
-    virtual void setAffinity( UInt32 hardwareThread )
+    virtual void setAffinity( uint32 hardwareThread )
     {
         GN_UNIMPL_WARNING();
     }
@@ -148,7 +148,7 @@ public:
         GN_UNIMPL_WARNING();
     }
 
-    virtual bool waitForTermination( TimeInNanoSecond timeoutTime, UInt32 * threadProcReturnValue )
+    virtual bool waitForTermination( TimeInNanoSecond timeoutTime, uint32 * threadProcReturnValue )
     {
         // can't wait for self termination
         GN_ASSERT( !isCurrentThread() );
@@ -249,7 +249,7 @@ Thread * GN::generateCurrentThreadObject()
 //
 //
 // -----------------------------------------------------------------------------
-SInt32 GN::getCurrentThreadId()
+sint32 GN::getCurrentThreadId()
 {
     GN_UNIMPL_WARNING();
     return 0;

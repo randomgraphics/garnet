@@ -13,7 +13,7 @@ namespace GN { namespace gfx
     ///
     class SelfContainedGpuProgramDesc : public Blob
     {
-        DynaArray<UInt8> mBuffer;
+        DynaArray<uint8> mBuffer;
 
         static inline bool
         sCheckShaderCode(
@@ -62,8 +62,8 @@ namespace GN { namespace gfx
             // allocate buffer
             mBuffer.resize( length );
             GpuProgramDesc & copy = *(GpuProgramDesc*)mBuffer.cptr();
-            UInt8 * start = mBuffer.cptr();
-            UInt8 * ptr = start;
+            uint8 * start = mBuffer.cptr();
+            uint8 * ptr = start;
 
             // copy header
             memcpy( ptr, &desc, sizeof(desc) );
@@ -145,7 +145,7 @@ namespace GN { namespace gfx
     {
         const size_t mSize;
         void       * mData;
-        SInt32       mTimeStamp;
+        sint32       mTimeStamp;
 
     public:
 
@@ -179,7 +179,7 @@ namespace GN { namespace gfx
                 GN_ERROR(getLogger("GN.gfx.Uniform"))( "Null pointer!" );
                 return;
             }
-            memcpy( (UInt8*)mData + offset, data, length );
+            memcpy( (uint8*)mData + offset, data, length );
             ++mTimeStamp;
         }
 
@@ -188,7 +188,7 @@ namespace GN { namespace gfx
         void update( const T & t ) { set( 0, sizeof(t), &t ); }
 
         /// get current update time stamp
-        SInt32 getTimeStamp() const { return mTimeStamp; }
+        sint32 getTimeStamp() const { return mTimeStamp; }
     };
 }}
 

@@ -11,8 +11,8 @@ void GN::gfx::createBox(
     float * normals, size_t normStride,
     float * tangents, size_t tangStride,
     float * binormals, size_t n2Stride,
-    UInt16 * triList,
-    UInt16 * quadList )
+    uint16 * triList,
+    uint16 * quadList )
 {
     GN_GUARD;
 
@@ -43,7 +43,7 @@ void GN::gfx::createBox(
             Vector3f(  sx,  sy,  sz ),
             Vector3f( -sx,  sy,  sz ),
         };
-        #define VERTEX( index ) (*(Vector3f*)(((UInt8*)positions) + posStride*index))
+        #define VERTEX( index ) (*(Vector3f*)(((uint8*)positions) + posStride*index))
 
         VERTEX( 0) = v[0];
         VERTEX( 1) = v[1];
@@ -87,7 +87,7 @@ void GN::gfx::createBox(
             Vector2f( 1, 1 ),
             Vector2f( 0, 1 ),
         };
-        #define VERTEX( index ) (*(Vector2f*)(((UInt8*)texcoords) + texStride*index))
+        #define VERTEX( index ) (*(Vector2f*)(((uint8*)texcoords) + texStride*index))
 
         VERTEX( 0) = v[0];
         VERTEX( 1) = v[1];
@@ -130,7 +130,7 @@ void GN::gfx::createBox(
         Vector3f ny = Vector3f(  0, -1,  0 );
         Vector3f pz = Vector3f(  0,  0,  1 );
         Vector3f nz = Vector3f(  0,  0, -1 );
-        #define VERTEX( index ) (*(Vector3f*)(((UInt8*)normals) + normStride*index))
+        #define VERTEX( index ) (*(Vector3f*)(((uint8*)normals) + normStride*index))
 
         VERTEX( 0) = nz;
         VERTEX( 1) = nz;
@@ -173,7 +173,7 @@ void GN::gfx::createBox(
         Vector3f ny = Vector3f(  0, -1,  0 );
         Vector3f pz = Vector3f(  0,  0,  1 );
         Vector3f nz = Vector3f(  0,  0, -1 );
-        #define VERTEX( index ) (*(Vector3f*)(((UInt8*)tangents) + tangStride*index))
+        #define VERTEX( index ) (*(Vector3f*)(((uint8*)tangents) + tangStride*index))
 
         VERTEX( 0) = px;
         VERTEX( 1) = px;
@@ -216,7 +216,7 @@ void GN::gfx::createBox(
         Vector3f ny = Vector3f(  0, -1,  0 );
         Vector3f pz = Vector3f(  0,  0,  1 );
         Vector3f nz = Vector3f(  0,  0, -1 );
-        #define VERTEX( index ) (*(Vector3f*)(((UInt8*)binormals) + n2Stride*index))
+        #define VERTEX( index ) (*(Vector3f*)(((uint8*)binormals) + n2Stride*index))
 
         VERTEX( 0) = py;
         VERTEX( 1) = py;
@@ -253,7 +253,7 @@ void GN::gfx::createBox(
 
     if( triList )
     {
-        for( UInt16 i = 0; i < 6; ++i )
+        for( uint16 i = 0; i < 6; ++i )
         {
             triList[0] = i*4+2;
             triList[1] = i*4+1;
@@ -267,7 +267,7 @@ void GN::gfx::createBox(
 
     if( quadList )
     {
-        for( UInt16 i = 0; i < 6; ++i )
+        for( uint16 i = 0; i < 6; ++i )
         {
             quadList[0] = i*4+3;
             quadList[1] = i*4+2;

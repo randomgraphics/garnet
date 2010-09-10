@@ -10,7 +10,7 @@ static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.common");
 //
 // -----------------------------------------------------------------------------
 static bool
-sGetClientSize( HWND win, UInt32 * width, UInt32 * height )
+sGetClientSize( HWND win, uint32 * width, uint32 * height )
 {
     GN_GUARD;
 
@@ -18,9 +18,9 @@ sGetClientSize( HWND win, UInt32 * width, UInt32 * height )
 
     GN_MSW_CHECK_RETURN( ::GetClientRect( win, &rc ), false );
 
-    if( width ) *width = (UInt32)(rc.right - rc.left);
+    if( width ) *width = (uint32)(rc.right - rc.left);
 
-    if( height ) *height = (UInt32)(rc.bottom - rc.top);
+    if( height ) *height = (uint32)(rc.bottom - rc.top);
 
     return true;
 
@@ -30,7 +30,7 @@ sGetClientSize( HWND win, UInt32 * width, UInt32 * height )
 ///
 /// Determine monitor handle that render window should stay in.
 // ----------------------------------------------------------------------------
-static HMONITOR
+static intptr_t
 sDetermineMonitorHandle( const GN::gfx::GpuOptions & ro )
 {
     if( 0 == ro.monitorHandle )
@@ -51,11 +51,11 @@ sDetermineMonitorHandle( const GN::gfx::GpuOptions & ro )
             monitor = ::MonitorFromWindow( (HWND)ro.renderWindow, MONITOR_DEFAULTTONEAREST );
         }
         GN_ASSERT( monitor );
-        return monitor;
+        return (intptr_t)monitor;
     }
     else
     {
-        return (HMONITOR)ro.monitorHandle;
+        return ro.monitorHandle;
     }
 }
 
@@ -65,12 +65,12 @@ sDetermineMonitorHandle( const GN::gfx::GpuOptions & ro )
 static bool
 sGetCurrentDisplayMode(
     const GN::gfx::GpuOptions & ro,
-    GN::gfx::DisplayMode           & dm )
+    GN::gfx::DisplayMode      & dm )
 {
     GN_GUARD;
 
     // determine the monitor
-    GN::HandleType monitor = sDetermineMonitorHandle( ro );
+    intptr_t monitor = sDetermineMonitorHandle( ro );
     if( 0 == monitor ) return false;
 
     MONITORINFOEXA mi;
@@ -83,8 +83,8 @@ sGetCurrentDisplayMode(
     GN_MSW_CHECK_RETURN( ::GetMonitorInfoA( (HMONITOR)monitor, &mi ), false );
     GN_MSW_CHECK_RETURN( ::EnumDisplaySettingsA( mi.szDevice, ENUM_CURRENT_SETTINGS, &windm ), false );
 
-    GN_ASSERT( (UInt32) ( mi.rcMonitor.right - mi.rcMonitor.left ) == windm.dmPelsWidth );
-    GN_ASSERT( (UInt32) (mi.rcMonitor.bottom - mi.rcMonitor.top ) == windm.dmPelsHeight );
+    GN_ASSERT( (uint32) ( mi.rcMonitor.right - mi.rcMonitor.left ) == windm.dmPelsWidth );
+    GN_ASSERT( (uint32) (mi.rcMonitor.bottom - mi.rcMonitor.top ) == windm.dmPelsHeight );
 
     dm.width = windm.dmPelsWidth;
     dm.height = windm.dmPelsHeight;
@@ -104,8 +104,8 @@ static bool
 sDetermineWindowSize(
     const GN::gfx::GpuOptions & ro,
     const GN::gfx::DisplayMode & currentDisplayMode,
-    UInt32 & width,
-    UInt32 & height )
+    uint32 & width,
+    uint32 & height )
 {
     GN_GUARD;
 
@@ -227,7 +227,7 @@ bool GN::gfx::BasicGpuMsw::dispInit( const GpuOptions & ro )
     }
     else
     {
-        UInt32 w, h;
+        uint32 w, h;
         if( !sDetermineWindowSize( ro, dm, w, h ) ) return false;
         desc.width = ro.windowedWidth ? ro.windowedWidth : w;
         desc.height = ro.windowedHeight ? ro.windowedHeight : h;
@@ -247,7 +247,7 @@ bool GN::gfx::BasicGpuMsw::dispInit( const GpuOptions & ro )
     }
     if( !ro.fullscreen && !mWinProp.save( mWindow.getWindowHandle() ) ) return false;
     desc.displayHandle = 0;
-    desc.windowHandle  = mWindow.getWindowHandle();
+    desc.windowHandle  = (intptr_t)mWindow.getWindowHandle();
 
     GN_ASSERT_EX(
         desc.windowHandle && desc.monitorHandle,

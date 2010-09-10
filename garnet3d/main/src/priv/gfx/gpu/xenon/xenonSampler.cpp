@@ -107,7 +107,7 @@ void GN::gfx::D3D9SamplerObject::quit()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3D9SamplerObject::bind( UInt32 stage ) const
+void GN::gfx::D3D9SamplerObject::bind( uint32 stage ) const
 {
     GN_UNUSED_PARAM( stage );
     GN_UNIMPL_WARNING();

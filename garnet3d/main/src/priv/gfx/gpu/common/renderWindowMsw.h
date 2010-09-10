@@ -34,9 +34,9 @@ namespace GN { namespace gfx
         //@{
     public:
         /// initialize render window to use external window
-        bool initExternalWindow( Gpu * gpu, HandleType externalWindow );
+        bool initExternalWindow( Gpu * gpu, intptr_t externalWindow );
         /// initialize render window to use internal widow.
-        bool initInternalWindow( Gpu * gpu, HandleType parentWindow, HandleType monitor, UInt32 width, UInt32 height );
+        bool initInternalWindow( Gpu * gpu, intptr_t parentWindow, intptr_t monitor, uint32 width, uint32 height );
         void quit();
     private:
         void clear() { mGpu = 0; mWindow = 0; mHook = 0; mMonitor = 0; mOldWidth = 0; mOldHeight = 0; mOldMonitor = 0; }
@@ -61,7 +61,7 @@ namespace GN { namespace gfx
         ///
         /// Get client size
         ///
-        void getClientSize( UInt32 & width, UInt32 & height ) const;
+        void getClientSize( uint32 & width, uint32 & height ) const;
 
         ///
         /// handle render window size move, trigger renderer signal as apropriate.
@@ -89,7 +89,7 @@ namespace GN { namespace gfx
         HINSTANCE  mModuleInstance;
         HMONITOR   mMonitor;
         HHOOK      mHook;
-        UInt32     mOldWidth, mOldHeight;
+        uint32     mOldWidth, mOldHeight;
         HMONITOR   mOldMonitor;
         bool       mUseExternalWindow;
         bool       mInsideSizeMove;
@@ -104,7 +104,7 @@ namespace GN { namespace gfx
     private:
 
         bool    postInit();
-        bool    createWindow( HWND parent, HMONITOR monitor, UInt32 width, UInt32 height );
+        bool    createWindow( HWND parent, HMONITOR monitor, uint32 width, uint32 height );
         void    handleMessage( HWND wnd, UINT msg, WPARAM wp, LPARAM lp );
         LRESULT windowProc( HWND wnd, UINT msg, WPARAM wp, LPARAM lp );
         static  LRESULT CALLBACK staticWindowProc( HWND wnd, UINT msg, WPARAM wp, LPARAM lp );

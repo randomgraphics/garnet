@@ -43,10 +43,10 @@ static const GLenum INVALID_DIMENSION = 0xFFFFFFFF;
 // -----------------------------------------------------------------------------
 static inline GLenum
 sDetermineTextureDimension(
-    UInt32 faces,
-    UInt32 width,
-    UInt32 height,
-    UInt32 depth )
+    uint32 faces,
+    uint32 width,
+    uint32 height,
+    uint32 depth )
 {
     if( depth > 1 )
     {
@@ -361,7 +361,7 @@ static inline bool sColorFormat2OGL(
 ///
 /// map wrap mode to opengl constant
 // -----------------------------------------------------------------------------
-static inline GLint sTexWrap2OGL( UInt32 wrap )
+static inline GLint sTexWrap2OGL( uint32 wrap )
 {
     switch( wrap )
     {
@@ -711,14 +711,14 @@ void
 GN::gfx::OGLTexture::updateMipmap(
     size_t              face,
     size_t              level,
-    const Box<UInt32> * area,
+    const Box<uint32> * area,
     size_t              rowPitch,
     size_t              slicePitch,
     const void        * inputData,
     SurfaceUpdateFlag   flag )
 {
     // check update parameters,
-    Box<UInt32> clippedArea;
+    Box<uint32> clippedArea;
     if( !validateUpdateParameters( face, level, area, flag, clippedArea ) ) return;
 
     // Auto-restore texture binding when exiting this function.

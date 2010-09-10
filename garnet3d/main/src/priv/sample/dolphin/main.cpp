@@ -46,7 +46,7 @@ public:
     {
         // update caustic parameters
         Vector4f caustics( 0.05f, 0.05f, sinf(time)/8, cosf(time)/10 );
-        UInt32 causticTex = ((UInt32)(time*32))%32;
+        uint32 causticTex = ((uint32)(time*32))%32;
 
         // update seafloor effect parameters
         mSeafloor->uniformResource("view")->uniform()->update( view );
@@ -135,8 +135,8 @@ public:
     {
         Gpu & g = getGpu();
 
-        UInt32 width = g.getDispDesc().width;
-        UInt32 height = g.getDispDesc().height;
+        uint32 width = g.getDispDesc().width;
+        uint32 height = g.getDispDesc().height;
 
         float aspect = (float)width / height;
         g.composePerspectiveMatrixLh( proj, GN_PI/3, aspect, 1.0f, 1000.0f );

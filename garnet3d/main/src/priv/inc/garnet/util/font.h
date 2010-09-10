@@ -17,7 +17,7 @@ namespace GN { namespace util
     {
         size_t        width;  ///< bitmap width in pixel
         size_t        height; ///< bitmap height in pixel
-        const UInt8 * buffer; ///< bitmap data (8 bits gray image)
+        const uint8 * buffer; ///< bitmap data (8 bits gray image)
 
         /// \name per character metrics in unit of pixels,
         ///       X coordinate points left; Y coordinate points down.
@@ -70,10 +70,10 @@ namespace GN { namespace util
         float linegap;
 
         /// max height in pixels of all the glyphs.
-        UInt16 maxGlyphWidth() const { return (UInt16)ceil(xmax - xmin); }
+        uint16 maxGlyphWidth() const { return (uint16)ceil(xmax - xmin); }
 
         /// max height in pixels of all the glyphs.
-        UInt16 maxGlyphHeight() const { return (UInt16)ceil(ymax - ymin); }
+        uint16 maxGlyphHeight() const { return (uint16)ceil(ymax - ymin); }
 
         /// baseline-to-baseline distance of 2 rows of text
         float baseLineDistance() const { return ymax - ymin + linegap; }
@@ -117,12 +117,12 @@ namespace GN { namespace util
         ///
         /// Character width in pixel.
         ///
-        UInt16 width;
+        uint16 width;
 
         ///
         /// get character height in pixel
         ///
-        UInt16 height;
+        uint16 height;
 
         ///
         /// font quality
@@ -166,8 +166,8 @@ namespace GN { namespace util
         float           x;          ///< pen position of the first character
         float           y;          ///< pen position of the first character
         float           z;          ///< pen position of the first character
-        UInt32          rgba;       ///< text color in R-G-B-A format.
-        UInt32          alignment;  ///< combination of TextAlignment flags
+        uint32          rgba;       ///< text color in R-G-B-A format.
+        uint32          alignment;  ///< combination of TextAlignment flags
         bool            background; ///< draw background
         bool            kerning;    ///< enable text kerning
     };
@@ -265,7 +265,7 @@ namespace GN { namespace util
             ///
             /// texture index
             ///
-            UInt8 texidx;
+            uint8 texidx;
 
             ///
             /// offset value ( in pixel unit )
@@ -285,7 +285,7 @@ namespace GN { namespace util
             ///
             /// texture square( in pixel unit )
             ///
-            UInt16 x, y, w, h;
+            uint16 x, y, w, h;
         };
 
         // private constants
@@ -349,8 +349,8 @@ namespace GN { namespace util
         ///
         bool slotInit(
             gfx::Gpu & gpu,
-            UInt16     fontw,
-            UInt16     fonth,
+            uint16     fontw,
+            uint16     fonth,
             size_t     maxchars );
     };
 }}

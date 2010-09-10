@@ -49,7 +49,7 @@ namespace GN
     ///
     /// 用户实现该文件类时，不一定要实现下面的所有操作。
     ///
-    /// TODO: replace size_t with UInt64 or SInt64, to support large file on x86 system
+    /// TODO: replace size_t with uint64 or sint64, to support large file on x86 system
     ///
     struct File : public NoCopy
     {
@@ -338,8 +338,8 @@ namespace GN
     template< typename T >
     class MemFile : public File
     {
-        UInt8 * mStart;
-        UInt8 * mPtr;
+        uint8 * mStart;
+        uint8 * mPtr;
         size_t  mSize;
 
     public:
@@ -347,8 +347,8 @@ namespace GN
         /// \name ctor/dtor
         //@{
         MemFile( T * buf = 0, size_t size = 0, const StrA & name = "" )
-            : mStart((UInt8*)buf)
-            , mPtr((UInt8*)buf)
+            : mStart((uint8*)buf)
+            , mPtr((uint8*)buf)
             , mSize(size)
         {
             setCaps( 0xFF ); // support all operations
@@ -388,7 +388,7 @@ namespace GN
     ///
     class VectorFile : public File
     {
-        DynaArray<UInt8> mBuffer;
+        DynaArray<uint8> mBuffer;
         size_t mCursor;
 
     public:

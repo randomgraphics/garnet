@@ -158,7 +158,7 @@ namespace GN { namespace gfx
 
     private:
 
-        typedef DynaArray<UInt8> UserData;
+        typedef DynaArray<uint8> UserData;
 
         typedef HashMap<Guid,UserData,Guid::Hash> UserDataMap;
 

@@ -15,7 +15,7 @@
 /// Get byte offset of class member or struct field
 ///
 #define GN_FIELD_OFFSET( class_, field ) \
-    ( (size_t)(UIntPtr) &( ((class_*)(void*)(8))->field ) - 8 )
+    ( (size_t)(intptr_t) &( ((class_*)(void*)(8))->field ) - 8 )
 
 ///
 /// Execute only limited times during the entir life of the
@@ -44,11 +44,6 @@
 
 namespace GN
 {
-    ///
-    /// General handle type
-    ///
-    typedef const void * HandleType;
-
     ///
     /// type cast function
     ///
@@ -122,8 +117,8 @@ namespace GN
     ///
     union FOURCC
     {
-        UInt32        u32;   ///< FOURCC as unsigned 32-bit integer
-        SInt32        i32;   ///< FOURCC as 32-bit integer
+        uint32        u32;   ///< FOURCC as unsigned 32-bit integer
+        sint32        i32;   ///< FOURCC as 32-bit integer
         char          c8[4]; ///< FOURCC as 4 characters
         unsigned char u8[4]; ///< FOURCC as 4 unsigned characters
 
@@ -201,19 +196,19 @@ namespace GN
         ///
         struct Hash
         {
-            UInt64 operator()( const Guid & guid ) const
+            uint64 operator()( const Guid & guid ) const
             {
-                const UInt64 * u64 = (const UInt64*)&guid;
+                const uint64 * u64 = (const uint64*)&guid;
                 return u64[0] + u64[1];
             }
         };
 
         /// \name data members
         //@{
-        UInt32 data1;
-        UInt16 data2;
-        UInt16 data3;
-        UInt8  data4[8];
+        uint32 data1;
+        uint16 data2;
+        uint16 data3;
+        uint8  data4[8];
         //@}
 
         /// \name public methods
@@ -233,8 +228,8 @@ namespace GN
 
         Guid & operator=( const Guid & rhs )
         {
-            UInt64       * a = (UInt64*)this;
-            const UInt64 * b = (const UInt64*)&rhs;
+            uint64       * a = (uint64*)this;
+            const uint64 * b = (const uint64*)&rhs;
             a[0] = b[0];
             a[1] = b[1];
             return *this;
@@ -242,23 +237,23 @@ namespace GN
 
         bool operator==( const Guid & rhs ) const
         {
-            const UInt64 * a = (const UInt64*)this;
-            const UInt64 * b = (const UInt64*)&rhs;
+            const uint64 * a = (const uint64*)this;
+            const uint64 * b = (const uint64*)&rhs;
             return a[0] == b[0] && a[1] == b[1];
         }
 
         bool operator!=( const Guid & rhs ) const
         {
-            const UInt64 * a = (const UInt64*)this;
-            const UInt64 * b = (const UInt64*)&rhs;
+            const uint64 * a = (const uint64*)this;
+            const uint64 * b = (const uint64*)&rhs;
             return a[0] != b[0] || a[1] != b[1];
         }
 
         bool operator < ( const Guid & rhs ) const
         {
             // Note: may produce different result on machine with different endian.
-            const UInt64 * a = (const UInt64*)this;
-            const UInt64 * b = (const UInt64*)&rhs;
+            const uint64 * a = (const uint64*)this;
+            const uint64 * b = (const uint64*)&rhs;
             if( a[0] != b[0] )
                 return a[0] < b[0];
             else

@@ -58,7 +58,7 @@ Entity * GN::util::World::Impl::createEntity( const char * name )
     }
 
     // create new ID
-    UInt32 id = mEntities.add(name);
+    uint32 id = mEntities.add(name);
     if( 0 == id ) return false;
 
     // create new entity
@@ -85,7 +85,7 @@ void GN::util::World::Impl::deleteEntity( const char * name )
         return;
     }
 
-    UInt32 id = mEntities.name2handle( name );
+    uint32 id = mEntities.name2handle( name );
 
     delete (EntityInternal*)mEntities[id];
 
@@ -129,7 +129,7 @@ void GN::util::World::Impl::deleteEntity( Entity * entity )
 // -----------------------------------------------------------------------------;
 void GN::util::World::Impl::deleteAllEntities()
 {
-    for( UInt32 id = mEntities.first(); id != 0; id = mEntities.next( id ) )
+    for( uint32 id = mEntities.first(); id != 0; id = mEntities.next( id ) )
     {
         delete (EntityInternal*)mEntities[id];
     }

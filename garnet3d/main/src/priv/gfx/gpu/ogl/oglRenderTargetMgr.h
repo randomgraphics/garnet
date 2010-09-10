@@ -20,7 +20,7 @@ namespace GN { namespace gfx
     protected:
 
         OGLGpu & mGpu; ///< reference to GPU instance;
-        Vector2<UInt32> mRenderTargetSize;  ///< render target size
+        Vector2<uint32> mRenderTargetSize;  ///< render target size
 
         ///
         /// protected ctor.
@@ -42,7 +42,7 @@ namespace GN { namespace gfx
         ///
         /// Get color render target size
         ///
-        const Vector2<UInt32> & getRenderTargetSize() const { return mRenderTargetSize; }
+        const Vector2<uint32> & getRenderTargetSize() const { return mRenderTargetSize; }
 
         ///
         /// bind render target to device.
@@ -132,7 +132,7 @@ namespace GN { namespace gfx
 
         GLuint mFbo;
         GLuint mAutoZ;
-        Vector2<UInt32> mAutoZSize;
+        Vector2<uint32> mAutoZSize;
 
         // ********************************
         // private functions

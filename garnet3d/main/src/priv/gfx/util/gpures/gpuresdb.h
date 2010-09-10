@@ -14,11 +14,11 @@ namespace GN { namespace gfx
     {
         union
         {
-            UInt32 mU32;
+            uint32 mU32;
             struct
             {
-                UInt32 mIndexPlusOne   : 8;
-                UInt32 mInternalHandle : 24;
+                uint32 mIndexPlusOne   : 8;
+                uint32 mInternalHandle : 24;
             };
         };
 
@@ -28,26 +28,26 @@ namespace GN { namespace gfx
 
         enum { MAX_TYPES = (2^8)-1 };
 
-        explicit GpuResourceHandle( UInt32 u32 )
+        explicit GpuResourceHandle( uint32 u32 )
             : mU32( u32 )
         {
         }
 
-        GpuResourceHandle( size_t managerIndex, UInt32 internalHandle )
+        GpuResourceHandle( size_t managerIndex, uint32 internalHandle )
         {
             mIndexPlusOne = managerIndex + 1;
             mInternalHandle = internalHandle;
         }
 
-        void  set( UInt32 managerIndex, UInt32 internalHandle )
+        void  set( uint32 managerIndex, uint32 internalHandle )
         {
             mIndexPlusOne = managerIndex + 1;
             mInternalHandle = internalHandle;
         }
 
-        UInt32 u32()            const { return mU32; }
-        UInt32 managerIndex()   const { return mIndexPlusOne - 1; }
-        UInt32 internalHandle() const { return mInternalHandle; }
+        uint32 u32()            const { return mU32; }
+        uint32 managerIndex()   const { return mIndexPlusOne - 1; }
+        uint32 internalHandle() const { return mInternalHandle; }
 
         //@}
     };
@@ -83,7 +83,7 @@ namespace GN { namespace gfx
 
     private:
 
-        typedef NamedHandleManager<GpuResource::Impl*,UInt32> ResourceMap;
+        typedef NamedHandleManager<GpuResource::Impl*,uint32> ResourceMap;
 
         struct ResourceManager
         {

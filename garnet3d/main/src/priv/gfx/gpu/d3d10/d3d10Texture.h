@@ -50,7 +50,7 @@ namespace GN { namespace gfx
         // ********************************
     public:
 
-        virtual void   updateMipmap( size_t face, size_t level, const Box<UInt32>* area, size_t rowPitch, size_t slicePitch, const void * data, SurfaceUpdateFlag flag );
+        virtual void   updateMipmap( size_t face, size_t level, const Box<uint32>* area, size_t rowPitch, size_t slicePitch, const void * data, SurfaceUpdateFlag flag );
         virtual void   readMipmap( size_t face, size_t level, MipmapData & data );
         virtual void   blobWrite( const void *, size_t ) { GN_UNIMPL(); }
         virtual size_t blobRead( void * ) { GN_UNIMPL(); return 0; }
@@ -81,22 +81,22 @@ namespace GN { namespace gfx
         ///
         ID3D10ShaderResourceView * getSRView(
             DXGI_FORMAT format,
-            UInt32      firstFace,
-            UInt32      numFaces,
-            UInt32      firstMipLevel,
-            UInt32      numLevels,
-            UInt32      firstSlice,
-            UInt32      numSlices );
+            uint32      firstFace,
+            uint32      numFaces,
+            uint32      firstMipLevel,
+            uint32      numLevels,
+            uint32      firstSlice,
+            uint32      numSlices );
 
         ///
         /// get render target view of specific subresource
         ///
-        ID3D10RenderTargetView * getRTView( UInt32 face, UInt32 level, UInt32 slice );
+        ID3D10RenderTargetView * getRTView( uint32 face, uint32 level, uint32 slice );
 
         ///
         /// get render target view of specific subresource
         ///
-        ID3D10DepthStencilView * getDSView( UInt32 face, UInt32 level, UInt32 slice );
+        ID3D10DepthStencilView * getDSView( uint32 face, uint32 level, uint32 slice );
 
         // ********************************
         // private variables

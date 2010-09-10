@@ -98,7 +98,7 @@ void GN::gfx::XenonGpu::present()
 //
 // -----------------------------------------------------------------------------
 void GN::gfx::XenonGpu::clearScreen(
-    const Vector4f & c, float z, UInt8 s, BitFields flags )
+    const Vector4f & c, float z, uint8 s, uint32 flags )
 {
     GN_ASSERT( getCurrentThreadId() == mThreadId );
 
@@ -159,7 +159,7 @@ void GN::gfx::XenonGpu::drawIndexedUp(
     size_t         numvtx,
     const void *   vertexData,
     size_t         strideInBytes,
-    const UInt16 * indexData )
+    const uint16 * indexData )
 {
     PIXPERF_FUNCTION_EVENT();
 
@@ -225,11 +225,11 @@ void GN::gfx::XenonGpu::drawUp(
 //
 // -----------------------------------------------------------------------------
 void GN::gfx::XenonGpu::drawLines(
-    BitFields         options,
+    uint32         options,
     const void      * positions,
     size_t            stride,
     size_t            numpoints,
-    UInt32            rgba,
+    uint32            rgba,
     const Matrix44f & model,
     const Matrix44f & view,
     const Matrix44f & proj )

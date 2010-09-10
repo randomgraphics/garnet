@@ -49,7 +49,7 @@ namespace GN { namespace gfx
     public:
 
         virtual void update( size_t startidx, size_t numidx, const void * data, SurfaceUpdateFlag flag );
-        virtual void readback( DynaArray<UInt8> & data );
+        virtual void readback( DynaArray<uint8> & data );
 
         // ********************************
         // public functions

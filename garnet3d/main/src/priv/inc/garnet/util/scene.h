@@ -195,8 +195,8 @@ namespace GN { namespace util
         void                 setProjectionMatrix( const Matrix44f & );
         const Matrix44f    & getProjectionMatrix() const;
 
-        void                 setViewport( const Rect<UInt32> & );
-        const Rect<UInt32> & getViewport() const;
+        void                 setViewport( const Rect<uint32> & );
+        const Rect<uint32> & getViewport() const;
 
         //@}
 

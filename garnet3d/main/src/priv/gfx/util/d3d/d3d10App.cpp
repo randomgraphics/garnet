@@ -56,7 +56,7 @@ sStaticWindowProc( HWND wnd, UINT msg, WPARAM wp, LPARAM lp )
 //
 //
 // -----------------------------------------------------------------------------
-static HWND sCreateWindow( HWND parent, HMONITOR monitor, UInt32 width, UInt32 height, bool fullscreen )
+static HWND sCreateWindow( HWND parent, HMONITOR monitor, uint32 width, uint32 height, bool fullscreen )
 {
     // check parent
     if( !::IsWindow(parent) ) parent = 0;
@@ -151,7 +151,7 @@ void sPrintDeviceInfo( const DXGI_SWAP_CHAIN_DESC & scd )
 //
 //
 // -----------------------------------------------------------------------------
-static bool sAdjustWindow( HWND window, UInt32 width, UInt32 height, bool fullscreen )
+static bool sAdjustWindow( HWND window, uint32 width, uint32 height, bool fullscreen )
 {
     DWORD style = fullscreen ? WS_POPUP : WS_OVERLAPPEDWINDOW;
     style |= WS_VISIBLE;
@@ -295,7 +295,7 @@ bool GN::d3d10::D3D10Application::changeOption( const D3D10AppOption & o )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::d3d10::D3D10Application::clearScreen( float r, float g, float b, float a, float d, UInt8 s )
+void GN::d3d10::D3D10Application::clearScreen( float r, float g, float b, float a, float d, uint8 s )
 {
     float color[] = { r, g, b, a };
     mDevice->ClearRenderTargetView( mBackRTV, color );

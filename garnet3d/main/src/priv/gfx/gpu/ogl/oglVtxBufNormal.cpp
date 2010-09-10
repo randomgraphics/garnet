@@ -26,7 +26,7 @@ bool GN::gfx::OGLVtxBufNormal::init( const VtxBufDesc & desc )
     // store descriptor
     setDesc( desc );
 
-    mBuffer = (UInt8*)HeapMemory::alloc( desc.length );
+    mBuffer = (uint8*)HeapMemory::alloc( desc.length );
 
     // success
     return success();
@@ -82,7 +82,7 @@ void GN::gfx::OGLVtxBufNormal::update( size_t offset, size_t length, const void 
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLVtxBufNormal::readback( DynaArray<UInt8> & data )
+void GN::gfx::OGLVtxBufNormal::readback( DynaArray<uint8> & data )
 {
     size_t length = getDesc().length;
 

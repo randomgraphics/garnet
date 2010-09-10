@@ -39,7 +39,7 @@ HRESULT MyDevice9::create(
     UINT nAdapter = myd3d->GetAdapterCount();
     GN_ASSERT( nAdapter );
     GN_TRACE(sLogger)( "Looking for NVPerfHUD adapter in all adapters: total(%d), d3d(0x%p).", nAdapter, myd3d );
-    for( UInt32 i = 0; i < nAdapter; ++i )
+    for( uint32 i = 0; i < nAdapter; ++i )
     {
         D3DADAPTER_IDENTIFIER9 Identifier;
         GN_DX_CHECK( myd3d->GetAdapterIdentifier( i, 0, &Identifier ) );
@@ -77,10 +77,10 @@ ULONG MyDevice9::Release()
 
     if( c > 0 )
     {
-        UInt32 r = 0;
+        uint32 r = 0;
 
         // calculate number of streams in device
-        for( UInt32 i = 0; i < mCaps.MaxStreams; ++i )
+        for( uint32 i = 0; i < mCaps.MaxStreams; ++i )
         {
             if( mVtxBufs[i].stream ) ++r;
         }
@@ -93,7 +93,7 @@ ULONG MyDevice9::Release()
             // device instance as well.
 
             // unbind vertex buffers
-            for( UInt32 i = 0; i < mCaps.MaxStreams; ++i )
+            for( uint32 i = 0; i < mCaps.MaxStreams; ++i )
             {
                 if( mVtxBufs[i].stream )
                 {

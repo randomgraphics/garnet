@@ -119,7 +119,7 @@
 ///
 #define GN_MSW_CHECK_DO( func, something )                                   \
     if( true ) {                                                             \
-        intptr_t rr = (intptr_t)(func);                                      \
+        intptr_t rr = (intptr_t)(func);                                        \
         if( 0 == rr )                                                        \
         {                                                                    \
             static GN::Logger * sLogger = GN::getLogger("GN.base.MSWError"); \
@@ -263,7 +263,7 @@ namespace GN
     ///
     /// get OS error info (Windows specific)
     ///
-    const char * getWin32ErrorInfo( UInt32 win32ErrorCode ) throw();
+    const char * getWin32ErrorInfo( uint32 win32ErrorCode ) throw();
 
     ///
     /// get OS error info (Windows specific)
@@ -275,7 +275,7 @@ namespace GN
     ///
     /// get DX error string
     ///
-    const char * getDXErrorInfo( SInt32 hr ) throw();
+    const char * getDXErrorInfo( sint32 hr ) throw();
 
     ///
     /// convert errno value to string

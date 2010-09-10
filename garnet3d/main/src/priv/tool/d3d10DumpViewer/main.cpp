@@ -140,7 +140,7 @@ static bool sGetSlot( const XmlElement & node, UINT & slot )
 template<typename T>
 struct BinaryComDump
 {
-    DynaArray<UInt8> binary;
+    DynaArray<uint8> binary;
     AutoComPtr<T>    comptr;
 
     bool load( const XmlElement & node, const StrA & attr, const StrA & basedir )
@@ -185,7 +185,7 @@ struct D3D10InputLayoutDump
 {
     StackArray<StrA,256>                semantics;
     DynaArray<D3D10_INPUT_ELEMENT_DESC> elements;
-    DynaArray<UInt8>                    signature;
+    DynaArray<uint8>                    signature;
     AutoComPtr<ID3D10InputLayout>       comptr;
 
     bool load( const XmlElement & node, const StrA & basedir )
@@ -233,23 +233,23 @@ struct D3D10InputLayoutDump
 
 struct D3D10VtxBufDump : public D3D10BufferDump
 {
-    UInt32 stride;
-    UInt32 offset;
+    uint32 stride;
+    uint32 offset;
 };
 
 struct D3D10IdxBufDump : public D3D10BufferDump
 {
-    SInt32 format;
-    UInt32 offset;
+    sint32 format;
+    uint32 offset;
 };
 
 template<typename T>
 struct D3D10ViewDump
 {
-    UInt32                     width;
-    UInt32                     height;
-    DynaArray<UInt8>           desc;
-    DynaArray<UInt8>           content;
+    uint32                     width;
+    uint32                     height;
+    DynaArray<uint8>           desc;
+    DynaArray<uint8>           content;
     AutoComPtr<T>              view;
     AutoComPtr<ID3D10Resource> original; ///< store original resource data loaded from file
     AutoComPtr<ID3D10Resource> res;
@@ -263,7 +263,7 @@ struct D3D10ViewDump
 
     bool createBuffer( ID3D10Device & dev, UINT bind )
     {
-        width = (UInt32)content.size();
+        width = (uint32)content.size();
         height = 1;
 
         D3D10_BUFFER_DESC bd =
@@ -301,11 +301,11 @@ struct D3D10ViewDump
             // This is a depth format that is not supported by current D3D10X library.
             // We'll have to use our custom loader
 
-            MemFile<UInt8> file( content.cptr(), content.size() );
+            MemFile<uint8> file( content.cptr(), content.size() );
 
             ImageReader      ir;
             ImageDesc        id;
-            DynaArray<UInt8> data;
+            DynaArray<uint8> data;
 
             if( !ir.reset( file ) ) return false;
             if( !ir.readHeader( id ) ) return false;
@@ -335,8 +335,8 @@ struct D3D10ViewDump
 
                     DynaArray<D3D10_SUBRESOURCE_DATA> subdata;
                     subdata.resize( id.numLevels * id.numFaces );
-                    for( UInt32 f = 0; f < id.numFaces; ++f )
-                    for( UInt32 l = 0; l < id.numLevels; ++l )
+                    for( uint32 f = 0; f < id.numFaces; ++f )
+                    for( uint32 l = 0; l < id.numLevels; ++l )
                     {
                         const MipmapDesc       & m = id.getMipmap( f, l );
                         D3D10_SUBRESOURCE_DATA & d = subdata[D3D10CalcSubresource( l, f, id.numLevels )];
@@ -584,13 +584,13 @@ struct D3D10OperationDump
 {
     bool   indexed;
 	bool   instanced;
-    SInt32 prim;
-    UInt32 startidx; // StartIndexLocation
-    UInt32 numidx;   // IndexCountPerInstance
-    UInt32 startvtx; // BaseVertexLocation
-    UInt32 numvtx;
-	UInt32 numinst;
-	UInt32 startinst;
+    sint32 prim;
+    uint32 startidx; // StartIndexLocation
+    uint32 numidx;   // IndexCountPerInstance
+    uint32 startvtx; // BaseVertexLocation
+    uint32 numvtx;
+	uint32 numinst;
+	uint32 startinst;
 
 	D3D10OperationDump()
 	{
@@ -805,19 +805,19 @@ struct D3D10StateDump
             }
             else if( "viewport" == e->name )
             {
-                if( !sGetNumericAttr( *e, "x", (UInt32&)viewport.TopLeftX ) ) return false;
-                if( !sGetNumericAttr( *e, "y", (UInt32&)viewport.TopLeftY ) ) return false;
-                if( !sGetNumericAttr( *e, "w", (UInt32&)viewport.Width ) ) return false;
-                if( !sGetNumericAttr( *e, "h", (UInt32&)viewport.Height ) ) return false;
+                if( !sGetNumericAttr( *e, "x", (uint32&)viewport.TopLeftX ) ) return false;
+                if( !sGetNumericAttr( *e, "y", (uint32&)viewport.TopLeftY ) ) return false;
+                if( !sGetNumericAttr( *e, "w", (uint32&)viewport.Width ) ) return false;
+                if( !sGetNumericAttr( *e, "h", (uint32&)viewport.Height ) ) return false;
                 if( !sGetNumericAttr( *e, "zmin", viewport.MinDepth ) ) return false;
                 if( !sGetNumericAttr( *e, "zmax", viewport.MaxDepth ) ) return false;
             }
             else if( "scissor" == e->name )
             {
-                if( !sGetNumericAttr( *e, "l", (SInt32&)scissorrect.left ) ) return false;
-                if( !sGetNumericAttr( *e, "t", (SInt32&)scissorrect.top ) ) return false;
-                if( !sGetNumericAttr( *e, "r", (SInt32&)scissorrect.right ) ) return false;
-                if( !sGetNumericAttr( *e, "b", (SInt32&)scissorrect.bottom ) ) return false;
+                if( !sGetNumericAttr( *e, "l", (sint32&)scissorrect.left ) ) return false;
+                if( !sGetNumericAttr( *e, "t", (sint32&)scissorrect.top ) ) return false;
+                if( !sGetNumericAttr( *e, "r", (sint32&)scissorrect.right ) ) return false;
+                if( !sGetNumericAttr( *e, "b", (sint32&)scissorrect.bottom ) ) return false;
             }
             else if( "drawindexed" == e->name )
             {
@@ -1001,7 +1001,7 @@ struct D3D10StateDump
     /// restore render target cotent
     void restoreContent( ID3D10Device & dev )
     {
-        for( UInt32 i = 0; i < GN_ARRAY_COUNT(rendertargets); ++i )
+        for( uint32 i = 0; i < GN_ARRAY_COUNT(rendertargets); ++i )
         {
             rendertargets[i].restoreContent( dev );
         }
@@ -1035,7 +1035,7 @@ struct D3D10StateDump
         dev.IASetInputLayout( il.comptr );
 
         // vb
-        for( UInt32 i = 0; i < GN_ARRAY_COUNT(vtxbufs); ++i )
+        for( uint32 i = 0; i < GN_ARRAY_COUNT(vtxbufs); ++i )
         {
             const D3D10VtxBufDump & vb = vtxbufs[i];
             if( vb.comptr )
@@ -1051,7 +1051,7 @@ struct D3D10StateDump
         }
 
         // srv
-        for( UInt32 i = 0; i < GN_ARRAY_COUNT(vssrv); ++i )
+        for( uint32 i = 0; i < GN_ARRAY_COUNT(vssrv); ++i )
         {
             if( vssrv[i].view ) dev.VSSetShaderResources( i, 1, &vssrv[i].view );
             if( pssrv[i].view ) dev.PSSetShaderResources( i, 1, &pssrv[i].view );
@@ -1072,7 +1072,7 @@ struct D3D10StateDump
 
         // rtv
         ID3D10RenderTargetView * rtv[GN_ARRAY_COUNT(rendertargets)];
-        for( UInt32 i = 0; i < GN_ARRAY_COUNT(rendertargets); ++i )
+        for( uint32 i = 0; i < GN_ARRAY_COUNT(rendertargets); ++i )
         {
             rtv[i] = rendertargets[i].view;
         }

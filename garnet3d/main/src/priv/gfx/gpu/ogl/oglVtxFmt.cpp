@@ -99,7 +99,7 @@ GN::gfx::OGLVtxFmt::bindBuffers(
         const VertexBufferBinding & b = bindings[stream];
         const OGLBasicVtxBuf * vb = safeCastPtr<const OGLBasicVtxBuf>( b.vtxbuf.get() );
 
-        const UInt8 * vtxdata = vb ? (const UInt8*)vb->getVtxData() : NULL;
+        const uint8 * vtxdata = vb ? (const uint8*)vb->getVtxData() : NULL;
         size_t       stride  = b.stride;
         size_t       offset  = b.offset;
 
@@ -131,7 +131,7 @@ GN::gfx::OGLVtxFmt::bindRawMemoryBuffer( const void * data, size_t stride ) cons
             return false;
         }
 
-        ab.bind( (const UInt8*)data, stride );
+        ab.bind( (const uint8*)data, stride );
     }
 
     return true;
@@ -148,8 +148,8 @@ bool GN::gfx::OGLVtxFmt::setupStateBindings( const OGLBasicGpuProgram * gpuProgr
 {
     GN_GUARD;
 
-    UInt32 maxAttributes = getGpu().getOGLCaps().maxVertexAttributes;
-    UInt32 maxTextures = getGpu().caps().maxTextures;
+    uint32 maxAttributes = getGpu().getOGLCaps().maxVertexAttributes;
+    uint32 maxTextures = getGpu().caps().maxTextures;
 
     bool hasVertex = false;
     bool hasNormal = false;
@@ -179,8 +179,8 @@ bool GN::gfx::OGLVtxFmt::setupStateBindings( const OGLBasicGpuProgram * gpuProgr
 
         AttribBinding ab;
         ab.info.self = this;
-        ab.info.stream = (UInt8)e.stream;
-        ab.info.offset = (UInt8)e.offset;
+        ab.info.stream = (uint8)e.stream;
+        ab.info.offset = (uint8)e.offset;
 
         switch( vbd.semantic )
         {
@@ -308,7 +308,7 @@ bool GN::gfx::OGLVtxFmt::setupStateBindings( const OGLBasicGpuProgram * gpuProgr
     mStateBindings.append( sb );
 
     // vertex attributes
-    for( UInt32 i = 0; i < maxAttributes; ++i )
+    for( uint32 i = 0; i < maxAttributes; ++i )
     {
         sb.func = hasAttrib[i] ? &sEnableVAA : &sDisableVAA;
         sb.info.attribute = i;
@@ -316,7 +316,7 @@ bool GN::gfx::OGLVtxFmt::setupStateBindings( const OGLBasicGpuProgram * gpuProgr
     }
 
     // texture coordinates
-    for( UInt32 i = 0; i < maxTextures; ++i )
+    for( uint32 i = 0; i < maxTextures; ++i )
     {
         sb.func          = hasTexCoord[i] ? &sEnableTexArray : &sDisableTexArray;
         sb.info.self     = this;
@@ -337,15 +337,15 @@ bool GN::gfx::OGLVtxFmt::setupStateBindings( const OGLBasicGpuProgram * gpuProgr
 bool GN::gfx::OGLVtxFmt::getStandardVertexBindingDesc(
     OGLVertexBindingDesc & vbd,
     const char           * bindingName,
-    UInt8                  bindingIndex )
+    uint8                  bindingIndex )
 {
 #if GN_BUILD_ENABLE_ASSERT
     vbd.semantic = (OGLVertexSemantic)-1;
-    vbd.index = (UInt8)-1;
+    vbd.index = (uint8)-1;
 #endif
 
-    UInt32 maxAttributes = getGpu().getOGLCaps().maxVertexAttributes;
-    UInt32 maxTextures = getGpu().caps().maxTextures;
+    uint32 maxAttributes = getGpu().getOGLCaps().maxVertexAttributes;
+    uint32 maxTextures = getGpu().caps().maxTextures;
 
     if( ( 0 == stringCompareI( "position", bindingName ) ||
           0 == stringCompareI( "pos", bindingName ) ||
@@ -404,7 +404,7 @@ bool GN::gfx::OGLVtxFmt::getStandardVertexBindingDesc(
     // make sure vbd has valid value.
 #if GN_BUILD_ENABLE_ASSERT
     GN_ASSERT( (OGLVertexSemantic)-1 != vbd.semantic );
-    GN_ASSERT( (UInt8)-1 != vbd.index );
+    GN_ASSERT( (uint8)-1 != vbd.index );
 #endif
 
     // success
@@ -415,7 +415,7 @@ bool GN::gfx::OGLVtxFmt::getStandardVertexBindingDesc(
 //
 // -----------------------------------------------------------------------------
 void GN::gfx::OGLVtxFmt::sSetVertexPointer(
-    const AttribBindingInfo & info, const UInt8 * buf, size_t stride )
+    const AttribBindingInfo & info, const uint8 * buf, size_t stride )
 {
     GN_OGL_CHECK( glVertexPointer(
                     info.components,
@@ -428,7 +428,7 @@ void GN::gfx::OGLVtxFmt::sSetVertexPointer(
 //
 // -----------------------------------------------------------------------------
 void GN::gfx::OGLVtxFmt::sSetNormalPointer(
-    const AttribBindingInfo & info, const UInt8 * buf, size_t stride )
+    const AttribBindingInfo & info, const uint8 * buf, size_t stride )
 {
     GN_OGL_CHECK( glNormalPointer(
                     info.format,
@@ -440,7 +440,7 @@ void GN::gfx::OGLVtxFmt::sSetNormalPointer(
 //
 // -----------------------------------------------------------------------------
 void GN::gfx::OGLVtxFmt::sSetColorPointer(
-    const AttribBindingInfo & info, const UInt8 * buf, size_t stride )
+    const AttribBindingInfo & info, const uint8 * buf, size_t stride )
 {
     GN_OGL_CHECK( glColorPointer(
                     info.components,
@@ -453,7 +453,7 @@ void GN::gfx::OGLVtxFmt::sSetColorPointer(
 //
 // -----------------------------------------------------------------------------
 void GN::gfx::OGLVtxFmt::sSetSecondaryColorPointer(
-    const AttribBindingInfo & info, const UInt8 * buf, size_t stride )
+    const AttribBindingInfo & info, const uint8 * buf, size_t stride )
 {
     GN_ASSERT( GLEW_EXT_secondary_color );
     GN_OGL_CHECK( glSecondaryColorPointerEXT(
@@ -467,7 +467,7 @@ void GN::gfx::OGLVtxFmt::sSetSecondaryColorPointer(
 //
 // -----------------------------------------------------------------------------
 void GN::gfx::OGLVtxFmt::sSetFogPointer(
-    const AttribBindingInfo & info, const UInt8 * buf, size_t stride )
+    const AttribBindingInfo & info, const uint8 * buf, size_t stride )
 {
     GN_ASSERT( GLEW_EXT_fog_coord );
     GN_OGL_CHECK( glFogCoordPointerEXT(
@@ -480,7 +480,7 @@ void GN::gfx::OGLVtxFmt::sSetFogPointer(
 //
 // -----------------------------------------------------------------------------
 void GN::gfx::OGLVtxFmt::sSetTexCoordPointer(
-    const AttribBindingInfo & info, const UInt8 * buf, size_t stride )
+    const AttribBindingInfo & info, const uint8 * buf, size_t stride )
 {
     GN_ASSERT( info.self );
     OGLGpu & r = info.self->getGpu();
@@ -496,7 +496,7 @@ void GN::gfx::OGLVtxFmt::sSetTexCoordPointer(
 //
 // -----------------------------------------------------------------------------
 void GN::gfx::OGLVtxFmt::sSetVertexAttributePointer(
-    const AttribBindingInfo & info, const UInt8 * buf, size_t stride )
+    const AttribBindingInfo & info, const uint8 * buf, size_t stride )
 {
     GN_ASSERT( GLEW_ARB_vertex_program || GLEW_ARB_vertex_shader );
     GN_ASSERT( info.index < 16 );

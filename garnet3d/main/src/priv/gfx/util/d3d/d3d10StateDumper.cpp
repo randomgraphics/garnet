@@ -49,7 +49,7 @@ static StrA sToBase64( const void * data, size_t bytes )
         '='
     };
 
-    const UInt8 * p = (const UInt8*)data;
+    const uint8 * p = (const uint8*)data;
 
     char s[4];
 
@@ -162,7 +162,7 @@ static void sDumpVs( ID3D10Device & device, FILE * fp )
 
     if( !vs ) return;
 
-    DynaArray<UInt8> binbuf;
+    DynaArray<uint8> binbuf;
     UINT sz;
     vs->GetPrivateData( VSGUID(), &sz, 0 );
     if( 0 == sz )
@@ -187,7 +187,7 @@ static void sDumpGs( ID3D10Device & device, FILE * fp )
 
     if( !gs ) return;
 
-    DynaArray<UInt8> binbuf;
+    DynaArray<uint8> binbuf;
     UINT sz;
     gs->GetPrivateData( GSGUID(), &sz, 0 );
     if( 0 == sz )
@@ -216,7 +216,7 @@ static void sDumpPs( ID3D10Device & device, FILE * fp )
     static const GUID psguid =
     { 0x70ba5240, 0x59f8, 0x452a, { 0x88, 0xa0, 0x2c, 0x64, 0x83, 0xaa, 0xc8, 0x6f } };
 
-    DynaArray<UInt8> binbuf;
+    DynaArray<uint8> binbuf;
     UINT sz;
     ps->GetPrivateData( PSGUID(), &sz, 0 );
     if( 0 == sz )
@@ -277,7 +277,7 @@ static void sDumpVsConsts( ID3D10Device & device, FILE * fp )
 
     device.VSGetConstantBuffers( 0, 14, cb );
 
-    for( UInt32 i = 0; i < 14; ++i )
+    for( uint32 i = 0; i < 14; ++i )
     {
         if( cb[i] )
         {
@@ -303,7 +303,7 @@ static void sDumpPsConsts( ID3D10Device & device, FILE * fp )
 
     device.PSGetConstantBuffers( 0, 14, cb );
 
-    for( UInt32 i = 0; i < 14; ++i )
+    for( uint32 i = 0; i < 14; ++i )
     {
         if( cb[i] )
         {
@@ -328,7 +328,7 @@ static void sDumpGsConsts( ID3D10Device & device, FILE * fp )
 
     device.GSGetConstantBuffers( 0, 14, cb );
 
-    for( UInt32 i = 0; i < 14; ++i )
+    for( uint32 i = 0; i < 14; ++i )
     {
         if( cb[i] )
         {
@@ -356,7 +356,7 @@ static void sDumpInputLayout( ID3D10Device & device, FILE * fp )
     UINT sz;
 
     // dump signature binary
-    DynaArray<UInt8> signature;
+    DynaArray<uint8> signature;
     char sname[_MAX_PATH];
     sprintf_s( sname, "%s_inputlayout_signature.bin", sDumpFilePrefix );
     il->GetPrivateData( IL1GUID(), &sz, 0 );
@@ -811,7 +811,7 @@ ID3D10InputLayout * GN::d3d10::createDumpableIL(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::d3d10::dumpDraw( ID3D10Device & device, UInt32 vertexCount, UInt32 startVertex )
+void GN::d3d10::dumpDraw( ID3D10Device & device, uint32 vertexCount, uint32 startVertex )
 {
     DumpFile file;
 
@@ -830,7 +830,7 @@ void GN::d3d10::dumpDraw( ID3D10Device & device, UInt32 vertexCount, UInt32 star
 //
 //
 // -----------------------------------------------------------------------------
-void GN::d3d10::dumpDrawIndexed( ID3D10Device & device, UInt32 indexCount, UInt32 startIndex, UInt32 startVertex )
+void GN::d3d10::dumpDrawIndexed( ID3D10Device & device, uint32 indexCount, uint32 startIndex, uint32 startVertex )
 {
     DumpFile file;
 

@@ -232,9 +232,9 @@ sUpdateConstData(
             desc.size );
     }
 
-    DynaArray<UInt8>             & cb = cbarray[ssp.cbidx];
-    SafeArrayAccessor<const UInt8> src( (const UInt8*)uniform.getval(), uniform.size() );
-    SafeArrayAccessor<UInt8>       dst( cb.cptr(), cb.size() );
+    DynaArray<uint8>             & cb = cbarray[ssp.cbidx];
+    SafeArrayAccessor<const uint8> src( (const uint8*)uniform.getval(), uniform.size() );
+    SafeArrayAccessor<uint8>       dst( cb.cptr(), cb.size() );
 
     // copy uniform data to system const buffer
     src.copyTo(
@@ -344,7 +344,7 @@ void GN::gfx::D3D10GpuProgram::applyUniforms(
         if( skipDirtyCheck || vscDirty[i] )
         {
             ID3D10Buffer           & buf = *mVs.constBufs[i];
-            const DynaArray<UInt8> & data = mVs.constData[i];
+            const DynaArray<uint8> & data = mVs.constData[i];
             sUpdateConstBuffer( dev, buf, data.cptr(), data.size() );
         }
     }
@@ -355,7 +355,7 @@ void GN::gfx::D3D10GpuProgram::applyUniforms(
         if( skipDirtyCheck || gscDirty[i] )
         {
             ID3D10Buffer           & buf = *mGs.constBufs[i];
-            const DynaArray<UInt8> & data = mGs.constData[i];
+            const DynaArray<uint8> & data = mGs.constData[i];
             sUpdateConstBuffer( dev, buf, data.cptr(), data.size() );
         }
     }
@@ -366,7 +366,7 @@ void GN::gfx::D3D10GpuProgram::applyUniforms(
         if( skipDirtyCheck || pscDirty[i] )
         {
             ID3D10Buffer           & buf = *mPs.constBufs[i];
-            const DynaArray<UInt8> & data = mPs.constData[i];
+            const DynaArray<uint8> & data = mPs.constData[i];
             sUpdateConstBuffer( dev, buf, data.cptr(), data.size() );
         }
     }
@@ -430,7 +430,7 @@ void GN::gfx::D3D10GpuProgram::applyTextures(
 
     ID3D10Device & dev = getDeviceRef();
 
-    dev.VSSetShaderResources( 0, (UInt32)NUM_STAGES, srvArray );
-    dev.GSSetShaderResources( 0, (UInt32)NUM_STAGES, srvArray + NUM_STAGES );
-    dev.PSSetShaderResources( 0, (UInt32)NUM_STAGES, srvArray + NUM_STAGES * 2 );
+    dev.VSSetShaderResources( 0, (uint32)NUM_STAGES, srvArray );
+    dev.GSSetShaderResources( 0, (uint32)NUM_STAGES, srvArray + NUM_STAGES );
+    dev.PSSetShaderResources( 0, (uint32)NUM_STAGES, srvArray + NUM_STAGES * 2 );
 }

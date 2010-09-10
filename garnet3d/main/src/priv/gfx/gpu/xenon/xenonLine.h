@@ -57,11 +57,11 @@ namespace GN { namespace gfx {
         /// \sa Gpu::drawLines
         ///
         void drawLines(
-            BitFields         options,
+            uint32            options,
             const float *     positions,
             size_t            stride,
             size_t            numpoints,
-            UInt32            rgba,
+            uint32            rgba,
             const Matrix44f & model,
             const Matrix44f & view,
             const Matrix44f & proj );

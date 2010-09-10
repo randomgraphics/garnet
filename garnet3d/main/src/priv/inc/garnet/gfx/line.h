@@ -54,7 +54,7 @@ namespace GN { namespace gfx
             const void *      positions, // 3D positions
             size_t            stride,    // position buffer stride. 0 for default stride (3 floats).
             size_t            numpoints,
-            UInt32            colorInRgba,
+            uint32            colorInRgba,
             const Matrix44f & transform );
 
         ///
@@ -70,7 +70,7 @@ namespace GN { namespace gfx
         struct LineVertex
         {
             Vector3f  pos;
-            UInt32    colorInRGBA;
+            uint32    colorInRGBA;
             Matrix44f transform;
         };
 

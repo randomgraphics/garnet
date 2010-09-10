@@ -182,7 +182,7 @@ GN::d3d10::ResourcePool::findOrCreateResource( const PooledResourceDesc & desc, 
             // update resource data
             if( data )
             {
-                UInt32 numSubresources = 0;
+                uint32 numSubresources = 0;
                 switch( desc.dim )
                 {
                     case D3D10_RESOURCE_DIMENSION_BUFFER :

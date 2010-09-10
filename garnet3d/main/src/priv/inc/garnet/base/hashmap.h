@@ -15,9 +15,9 @@ namespace GN
         template<typename T>
         struct HashFunc_ToUInt64
         {
-            UInt64 operator()( const T & t ) const
+            uint64 operator()( const T & t ) const
             {
-                return (UInt64)t;
+                return (uint64)t;
             }
         };
 
@@ -26,23 +26,23 @@ namespace GN
         {
             enum
             {
-                N_64 = sizeof(T) / sizeof(UInt64),
-                TAIL = sizeof(T) % sizeof(UInt64),
+                N_64 = sizeof(T) / sizeof(uint64),
+                TAIL = sizeof(T) % sizeof(uint64),
             };
 
-            UInt64 operator()( const T & t ) const
+            uint64 operator()( const T & t ) const
             {
-                const UInt64 * p64 = (const UInt64*)&t;
+                const uint64 * p64 = (const uint64*)&t;
 
-                UInt64 h = 5471;
+                uint64 h = 5471;
 
                 for( size_t i = 0; i < N_64; ++i, ++p64 )
                 {
                     h = h * 33 + *p64;
                 }
 
-                const UInt8 * p8 = (const UInt8*)p64;
-                UInt64 tail = 0;
+                const uint8 * p8 = (const uint8*)p64;
+                uint64 tail = 0;
                 for( size_t i = 0; i < TAIL; ++i, ++p8 )
                 {
                     tail = (tail << 8) + *p8;
@@ -57,7 +57,7 @@ namespace GN
         template<typename T>
         struct HashFunc_HashMethod
         {
-            UInt64 operator()( const T & t ) const
+            uint64 operator()( const T & t ) const
             {
                 return t.hash();
             }
@@ -359,7 +359,7 @@ namespace GN
         }
 
         /// mod interger into range [0..N)
-        static inline size_t mod( UInt64 i, size_t N )
+        static inline size_t mod( uint64 i, size_t N )
         {
             return (size_t)( i % N );
         }

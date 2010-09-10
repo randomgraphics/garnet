@@ -27,7 +27,7 @@ bool GN::gfx::OGLIdxBuf::init( const IdxBufDesc & desc )
     setDesc( desc );
 
     mBytesPerIndex = desc.bits32 ? 4 : 2;
-    mBuffer = (UInt8*)HeapMemory::alloc( desc.numidx * mBytesPerIndex );
+    mBuffer = (uint8*)HeapMemory::alloc( desc.numidx * mBytesPerIndex );
 
     // success
     return success();
@@ -75,7 +75,7 @@ void GN::gfx::OGLIdxBuf::update( size_t startidx, size_t numidx, const void * da
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLIdxBuf::readback( DynaArray<UInt8> & data )
+void GN::gfx::OGLIdxBuf::readback( DynaArray<uint8> & data )
 {
     const IdxBufDesc & ibdesc = getDesc();
 

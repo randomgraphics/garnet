@@ -31,7 +31,7 @@ namespace GN
         ///
         /// Clock cycle type
         ///
-        typedef SInt64 CycleType;
+        typedef sint64 CycleType;
 
         ///
         /// 一个高精度的计时函数

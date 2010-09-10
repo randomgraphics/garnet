@@ -86,7 +86,7 @@ private:
     FontFaceDesc     mDesc;
     FT_Face          mFace;
     FT_StreamRec     mStream;
-    DynaArray<UInt8> mBitmapBuffer;
+    DynaArray<uint8> mBitmapBuffer;
 
     static Ft2Library * sLib;
 
@@ -277,7 +277,7 @@ bool FontFaceFt2::loadFontImage( FontImage & result, wchar_t ch )
 
     //取道位图数据
     mBitmapBuffer.resize( width * height );
-    UInt8 * buf = mBitmapBuffer.cptr();
+    uint8 * buf = mBitmapBuffer.cptr();
     switch( bitmap.pixel_mode )
     {
         case FT_PIXEL_MODE_MONO :
@@ -287,7 +287,7 @@ bool FontFaceFt2::loadFontImage( FontImage & result, wchar_t ch )
                 {
                     size_t k1 = i / 8 + pitch * j;
                     size_t k2 = 7 - i % 8;
-                    UInt8 _vl = (UInt8)( bitmap.buffer[k1] >> k2 );
+                    uint8 _vl = (uint8)( bitmap.buffer[k1] >> k2 );
                     buf[i + j * width] = _vl & 0x1 ? 0xFF : 0;
                 }
             }

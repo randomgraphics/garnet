@@ -167,7 +167,7 @@ GN::gfx::OGLGpu::findOrCreateOGLVtxFmt(
     const OGLBasicGpuProgram * program )
 {
     // get shader ID
-    UInt64 shaderID;
+    uint64 shaderID;
     if( program )
     {
         shaderID = program->uniqueID();
@@ -388,10 +388,10 @@ GN::gfx::OGLGpu::bindContextRenderTargets(
         return false;
 
     // get render target size
-    const Vector2<UInt32> & rtsize = mRTMgr->getRenderTargetSize();
+    const Vector2<uint32> & rtsize = mRTMgr->getRenderTargetSize();
 
     // clip viewport against render target size
-    Rect<UInt32> newvp = newContext.rs.viewport;
+    Rect<uint32> newvp = newContext.rs.viewport;
     if( (newvp.x+newvp.w) > rtsize.x )
     {
         GN_WARN(sLogger)( "Viewport cannot be larger with current render target size." );

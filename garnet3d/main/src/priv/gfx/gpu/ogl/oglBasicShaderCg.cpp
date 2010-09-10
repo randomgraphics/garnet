@@ -88,7 +88,7 @@ void GN::gfx::OglShaderCg::apply() const
     GN_CG_CHECK( cgGLBindProgram( mShader.getProgram() ) );
 
     // apply ALL uniforms to D3D device
-    UInt32 handle = getFirstUniform();
+    uint32 handle = getFirstUniform();
     while( handle )
     {
         applyUniform( getUniform( handle ) );
@@ -105,8 +105,8 @@ void GN::gfx::OglShaderCg::apply() const
 void GN::gfx::OglShaderCg::applyDirtyUniforms() const
 {
     GN_GUARD_SLOW;
-    const std::set<UInt32> dirtySet = getDirtyUniforms();
-    std::set<UInt32>::const_iterator i, e = dirtySet.end();
+    const std::set<uint32> dirtySet = getDirtyUniforms();
+    std::set<uint32>::const_iterator i, e = dirtySet.end();
     for( i = dirtySet.begin(); i != e; ++i )
     {
         applyUniform( getUniform( *i ) );
@@ -123,7 +123,7 @@ void GN::gfx::OglShaderCg::applyDirtyUniforms() const
 //
 // -----------------------------------------------------------------------------
 bool GN::gfx::OglShaderCg::queryDeviceUniform(
-    const char * name, HandleType & userData ) const
+    const char * name, intptr_t & userData ) const
 {
     GN_GUARD;
 
@@ -133,7 +133,7 @@ bool GN::gfx::OglShaderCg::queryDeviceUniform(
     if( 0 == param ) return false;
 
     // success
-    userData = (HandleType)param;
+    userData = (intptr_t)param;
     return true;
 
     GN_UNGUARD;

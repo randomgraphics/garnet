@@ -163,7 +163,7 @@ bool GN::gfx::D3D11RTMgr::bind(
         mDepth );
 
     // update mRenderTargetSize
-    Vector2<UInt32> newRtSize;
+    Vector2<uint32> newRtSize;
     if( newrt.colortargets.size() > 0 )
     {
         newrt.colortargets[0].texture->getMipSize( newrt.colortargets[0].level, &newRtSize.x, &newRtSize.y );

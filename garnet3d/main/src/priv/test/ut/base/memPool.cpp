@@ -29,7 +29,7 @@ public:
 
     void testPlacementNew()
     {
-        UInt8 buf[sizeof(Test)*10];
+        uint8 buf[sizeof(Test)*10];
         Test * a = new(buf) Test;
         TS_ASSERT_EQUALS( a, (Test*)buf );
         a->~Test();
@@ -63,11 +63,11 @@ public:
         void * p3 = a.alloc();
 
 #if GN_X64
-        TS_ASSERT_EQUALS( 40, (UInt8*)p0 - (UInt8*)p1 );
-        TS_ASSERT_EQUALS( 40, (UInt8*)p2 - (UInt8*)p3 );
+        TS_ASSERT_EQUALS( 40, (uint8*)p0 - (uint8*)p1 );
+        TS_ASSERT_EQUALS( 40, (uint8*)p2 - (uint8*)p3 );
 #else
-        TS_ASSERT_EQUALS( 24, (UInt8*)p0 - (UInt8*)p1 );
-        TS_ASSERT_EQUALS( 24, (UInt8*)p2 - (UInt8*)p3 );
+        TS_ASSERT_EQUALS( 24, (uint8*)p0 - (uint8*)p1 );
+        TS_ASSERT_EQUALS( 24, (uint8*)p2 - (uint8*)p3 );
 #endif
     }
 

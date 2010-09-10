@@ -14,7 +14,7 @@ namespace GN
     ///
     /// Unique debug varialbe ID
     ///
-    typedef UInt32 DebugVariableId;
+    typedef uint32 DebugVariableId;
 
     ///
     /// base class of debug variable
@@ -25,7 +25,7 @@ namespace GN
         DebugVariableId   mId; // unique ID of the variable
         const StrA        mName;
         const StrA        mType;
-        DynaArray<UInt8>  mValue;
+        DynaArray<uint8>  mValue;
 
     public:
 

@@ -31,10 +31,10 @@ namespace GN
 
         union Item
         {
-            UInt8  raw[ALIGNED_ITEM_SIZE];
+            uint8  raw[ALIGNED_ITEM_SIZE];
             struct
             {
-                UInt8  data[ITEM_SIZE];
+                uint8  data[ITEM_SIZE];
                 void * pool; ///< pointer to the pool
                 Item * prev; ///< points to previous item
                 Item * next; ///< points to next item

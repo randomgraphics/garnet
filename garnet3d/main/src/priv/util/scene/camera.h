@@ -34,8 +34,8 @@ namespace GN { namespace util
         void                 setProjectionMatrix( const Matrix44f & );
         const Matrix44f    & getProjectionMatrix() const { return mProj; }
 
-        void                 setViewport( const Rect<UInt32> & );
-        const Rect<UInt32> & getViewport() const { return mViewport; }
+        void                 setViewport( const Rect<uint32> & );
+        const Rect<uint32> & getViewport() const { return mViewport; }
 
         void                 draw( Entity * const * entities, size_t count );
 
@@ -50,7 +50,7 @@ namespace GN { namespace util
         Camera     & mOwner;
         Matrix44f    mView;
         Matrix44f    mProj;
-        Rect<UInt32> mViewport;
+        Rect<uint32> mViewport;
 
         // *****************************
         // private methods

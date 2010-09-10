@@ -24,19 +24,19 @@ namespace GN { namespace gfx
 
         GN_DEFINE_ENUM_CLASS_HELPERS( TextureUsage, Enum );
     };
-    GN_CASSERT( sizeof(TextureUsage) == sizeof(UInt32) );
+    GN_CASSERT( sizeof(TextureUsage) == sizeof(uint32) );
 
     ///
     /// Texture descriptor
     ///
     struct TextureDesc
     {
-        UInt32        width;   ///< basemap width
-        UInt32        height;  ///< basemap height
-        UInt32        depth;   ///< basemap depth
-        UInt32        faces;   ///< face count. When used as parameter of Gpu::createTexture(),
+        uint32        width;   ///< basemap width
+        uint32        height;  ///< basemap height
+        uint32        depth;   ///< basemap depth
+        uint32        faces;   ///< face count. When used as parameter of Gpu::createTexture(),
                                ///< you may set it to 0 to use default face count: 6 for cubemap, 1 for others.
-        UInt32        levels;  ///< mipmap level count. When used as parameter of Gpu::createTexture(),
+        uint32        levels;  ///< mipmap level count. When used as parameter of Gpu::createTexture(),
                                ///< you may set it to 0 to create full mipmap chain (down to 1x1).
         ColorFormat   format;  ///< pixel format.
         TextureUsage  usage;   ///< texture usage
@@ -44,7 +44,7 @@ namespace GN { namespace gfx
         ///
         /// get basemap size
         ///
-        const Vector3<UInt32> & size() const { return *(Vector3<UInt32>*)&width; }
+        const Vector3<uint32> & size() const { return *(Vector3<uint32>*)&width; }
 
         ///
         /// compose texture descriptor from image descriptor
@@ -67,8 +67,8 @@ namespace GN { namespace gfx
         bool validate()
         {
             // calculate maximum mipmap levels
-            UInt32 nx = 0, ny = 0, nz = 0;
-            UInt32 maxLevels;
+            uint32 nx = 0, ny = 0, nz = 0;
+            uint32 maxLevels;
 
             maxLevels = width;
             while( maxLevels > 0 ) { maxLevels >>= 1; ++nx; }
@@ -108,7 +108,7 @@ namespace GN { namespace gfx
     {
         size_t             rowPitch;
         size_t             slicePitch;
-        DynaArray<UInt8> data;
+        DynaArray<uint8> data;
     };
 
     ///
@@ -172,7 +172,7 @@ namespace GN { namespace gfx
         ///
         /// get size of base map
         ///
-        const Vector3<UInt32> & getBaseSize() const { return mDesc.size(); }
+        const Vector3<uint32> & getBaseSize() const { return mDesc.size(); }
 
         ///
         /// get size of base map
@@ -188,7 +188,7 @@ namespace GN { namespace gfx
         ///
         /// get size of specific mip level
         ///
-        const Vector3<UInt32> & getMipSize( size_t level ) const { GN_ASSERT( level < mDesc.levels ); return mMipSize[level]; }
+        const Vector3<uint32> & getMipSize( size_t level ) const { GN_ASSERT( level < mDesc.levels ); return mMipSize[level]; }
 
         ///
         /// get size of specific mip level
@@ -196,7 +196,7 @@ namespace GN { namespace gfx
         template<typename T>
         void getMipSize( size_t level, T * sx, T * sy = 0, T * sz = 0 ) const
         {
-            const Vector3<UInt32> & mipSize = getMipSize( level );
+            const Vector3<uint32> & mipSize = getMipSize( level );
             if( sx ) *sx = (T)mipSize.x;
             if( sy ) *sy = (T)mipSize.y;
             if( sz ) *sz = (T)mipSize.z;
@@ -215,7 +215,7 @@ namespace GN { namespace gfx
         virtual void updateMipmap(
             size_t              face,
             size_t              level,
-            const Box<UInt32> * area,
+            const Box<uint32> * area,
             size_t              rowPitch,
             size_t              slicePitch,
             const void        * data,
@@ -281,20 +281,20 @@ namespace GN { namespace gfx
                 ( sx == (T)mDesc.width &&
                   sy == (T)mDesc.height &&
                   sz == (T)mDesc.depth ) );
-            mMipSize[level].set( (UInt32)sx, (UInt32)sy, (UInt32)sz );
+            mMipSize[level].set( (uint32)sx, (uint32)sy, (uint32)sz );
         }
 
         ///
         /// setup mip size
         ///
-        void setMipSize( size_t level, const Vector3<UInt32> & s )
+        void setMipSize( size_t level, const Vector3<uint32> & s )
         {
             setMipSize( level, s.x, s.y, s.z );
         }
 
     private :
         TextureDesc                    mDesc;    ///< descriptor
-        DynaArray< Vector3<UInt32> > mMipSize; ///< mipmap size of each level
+        DynaArray< Vector3<uint32> > mMipSize; ///< mipmap size of each level
         StrA                           mName;    ///< texture name. Only for debug purpose.
     };
 
@@ -325,7 +325,7 @@ namespace GN { namespace gfx
         ///
         /// Read buffer content.
         ///
-        virtual void readback( DynaArray<UInt8> & data ) = 0;
+        virtual void readback( DynaArray<uint8> & data ) = 0;
 
     protected:
 
@@ -371,7 +371,7 @@ namespace GN { namespace gfx
         ///
         /// Read buffer content.
         ///
-        virtual void readback( DynaArray<UInt8> & data ) = 0;
+        virtual void readback( DynaArray<uint8> & data ) = 0;
 
     protected:
 

@@ -14,7 +14,7 @@ using namespace GN;
 
 
 // defined in syncmsw.cpp
-extern UInt32 ns2ms( TimeInNanoSecond ns );
+extern uint32 ns2ms( TimeInNanoSecond ns );
 
 static int sPriorityTable[] =
 {
@@ -174,7 +174,7 @@ public:
         mPriority = p;
     }
 
-    virtual void setAffinity( UInt32 hardwareThread )
+    virtual void setAffinity( uint32 hardwareThread )
     {
 #if GN_XENON
         if( (DWORD)-1 == XSetThreadProcessor( mHandle, hardwareThread ) )
@@ -210,12 +210,12 @@ public:
         }
     }
 
-    virtual WaitResult waitForTermination( TimeInNanoSecond timeoutTime, UInt32 * threadProcReturnValue )
+    virtual WaitResult waitForTermination( TimeInNanoSecond timeoutTime, uint32 * threadProcReturnValue )
     {
         // can't wait for self termination
         GN_ASSERT( !isCurrentThread() );
 
-        UInt32 ret = ::WaitForSingleObject( mHandle, ns2ms( timeoutTime ) );
+        uint32 ret = ::WaitForSingleObject( mHandle, ns2ms( timeoutTime ) );
 
         if( WAIT_TIMEOUT == ret )
         {
@@ -332,9 +332,9 @@ Thread * GN::generateCurrentThreadObject()
 //
 //
 // -----------------------------------------------------------------------------
-SInt32 GN::getCurrentThreadId()
+sint32 GN::getCurrentThreadId()
 {
-    return (SInt32)GetCurrentThreadId();
+    return (sint32)GetCurrentThreadId();
 }
 
 #endif

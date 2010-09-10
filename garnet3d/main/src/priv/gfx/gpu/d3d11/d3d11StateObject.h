@@ -34,7 +34,7 @@ namespace GN { namespace gfx
 
         union CompactDesc
         {
-            UInt64           u64;
+            uint64           u64;
             struct
             {
                 unsigned int fillmode  :  2;
@@ -52,7 +52,7 @@ namespace GN { namespace gfx
 
         struct Hash
         {
-            UInt64 operator()( const D3D11_RASTERIZER_DESC & desc ) const
+            uint64 operator()( const D3D11_RASTERIZER_DESC & desc ) const
             {
                 CompactDesc cd;
 
@@ -100,26 +100,26 @@ namespace GN { namespace gfx
 
         union CompactDesc
         {
-            UInt64 u64;
+            uint64 u64;
             struct
             {
-                UInt64 a2c  :  1;
-                UInt64 ibe  :  1;
-                UInt64 be   :  8;
-                UInt64 sb   :  5;
-                UInt64 db   :  5;
-                UInt64 bo   :  3;
-                UInt64 sba  :  5;
-                UInt64 dba  :  5;
-                UInt64 boa  :  3;
-                UInt64 mask : 28;
+                uint64 a2c  :  1;
+                uint64 ibe  :  1;
+                uint64 be   :  8;
+                uint64 sb   :  5;
+                uint64 db   :  5;
+                uint64 bo   :  3;
+                uint64 sba  :  5;
+                uint64 dba  :  5;
+                uint64 boa  :  3;
+                uint64 mask : 28;
             };
         };
         GN_CASSERT( 8 == sizeof(CompactDesc) );
 
         struct Hash
         {
-            UInt64 operator()( const D3D11_BLEND_DESC & desc ) const
+            uint64 operator()( const D3D11_BLEND_DESC & desc ) const
             {
                 CompactDesc cd;
 
@@ -174,7 +174,7 @@ namespace GN { namespace gfx
 
         union CompactDesc
         {
-            UInt64 u64;
+            uint64 u64;
             struct
             {
                 unsigned int depth     : 1;
@@ -198,7 +198,7 @@ namespace GN { namespace gfx
 
         struct Hash
         {
-            UInt64 operator()( const D3D11_DEPTH_STENCIL_DESC & desc ) const
+            uint64 operator()( const D3D11_DEPTH_STENCIL_DESC & desc ) const
             {
                 CompactDesc cd;
 
@@ -251,25 +251,25 @@ namespace GN { namespace gfx
 
         union CompactDesc
         {
-            UInt64           u64;
+            uint64           u64;
             struct
             {
-            UInt64 filter      :  8;
-            UInt64 addressU    :  3;
-            UInt64 addressV    :  3;
-            UInt64 addressW    :  3;
-            UInt64 lodbias     :  4;
-            UInt64 maxaniso    :  3;
-            UInt64 compare     :  3;
-            UInt64 bordercolor : 32;
-            UInt64 lod         :  5;
+            uint64 filter      :  8;
+            uint64 addressU    :  3;
+            uint64 addressV    :  3;
+            uint64 addressW    :  3;
+            uint64 lodbias     :  4;
+            uint64 maxaniso    :  3;
+            uint64 compare     :  3;
+            uint64 bordercolor : 32;
+            uint64 lod         :  5;
             };
         };
         GN_CASSERT( 8 == sizeof(CompactDesc) );
 
         struct Hash
         {
-            UInt64 operator()( const D3D11_SAMPLER_DESC & desc ) const
+            uint64 operator()( const D3D11_SAMPLER_DESC & desc ) const
             {
                 CompactDesc cd;
 
@@ -277,23 +277,23 @@ namespace GN { namespace gfx
     /// compose BGRA32 color constant
     ///
 #define GN_RGBA32_FROM_FLOAT4( r, g, b, a )   \
-            ( ( (((UInt32)(r*255.0f))&0xFF) <<  0 ) | \
-              ( (((UInt32)(g*255.0f))&0xFF) <<  8 ) | \
-              ( (((UInt32)(b*255.0f))&0xFF) << 16 ) | \
-              ( (((UInt32)(a*255.0f))&0xFF) << 24 ) )
+            ( ( (((uint32)(r*255.0f))&0xFF) <<  0 ) | \
+              ( (((uint32)(g*255.0f))&0xFF) <<  8 ) | \
+              ( (((uint32)(b*255.0f))&0xFF) << 16 ) | \
+              ( (((uint32)(a*255.0f))&0xFF) << 24 ) )
 
                 cd.filter      = desc.Filter;
                 cd.addressU    = desc.AddressU;
                 cd.addressV    = desc.AddressV;
                 cd.addressW    = desc.AddressW;
-                cd.lodbias     = (UInt64)desc.MipLODBias;
-                cd.maxaniso    = (UInt64)desc.MaxAnisotropy;
+                cd.lodbias     = (uint64)desc.MipLODBias;
+                cd.maxaniso    = (uint64)desc.MaxAnisotropy;
                 cd.compare     = desc.ComparisonFunc;
                 cd.bordercolor = GN_RGBA32_FROM_FLOAT4( desc.BorderColor[0],
                                                         desc.BorderColor[1],
                                                         desc.BorderColor[2],
                                                         desc.BorderColor[3] );
-                cd.lod         = (UInt32)( desc.MinLOD + desc.MaxLOD );
+                cd.lod         = (uint32)( desc.MinLOD + desc.MaxLOD );
 
                 return cd.u64;
             }
@@ -350,7 +350,7 @@ namespace GN { namespace gfx
 
             // initialize free item list
             mNextFreeItem = &mPool[0];
-            for( UInt32 i = 0; i < CACHE_SIZE - 1; ++i )
+            for( uint32 i = 0; i < CACHE_SIZE - 1; ++i )
             {
                 mPool[i].nextFree = &mPool[i+1];
             }
@@ -388,7 +388,7 @@ namespace GN { namespace gfx
 
             // rebuild free list
             mNextFreeItem = &mPool[0];
-            for( UInt32 i = 0; i < CACHE_SIZE - 1; ++i )
+            for( uint32 i = 0; i < CACHE_SIZE - 1; ++i )
             {
                 mPool[i].nextFree = &mPool[i+1];
             }
@@ -616,11 +616,11 @@ namespace GN { namespace gfx
         BlendStateCache           mBlendStates;
         ID3D11BlendState        * mCurrentBS;
         Vector4f                  mCurrentBlendFactors;
-        UInt32                    mCurrentSampleMask;
+        uint32                    mCurrentSampleMask;
 
         DepthStencilStateCache    mDepthStates;
         ID3D11DepthStencilState * mCurrentDS;
-        UInt32                    mCurrentStencilRef;
+        uint32                    mCurrentStencilRef;
 
         SamplerStateCache         mSamplerStates;
         ID3D11SamplerState      * mCurrentVSSamplers[D3D11_COMMONSHADER_SAMPLER_REGISTER_COUNT];
@@ -659,31 +659,31 @@ namespace GN { namespace gfx
         bool setBS(
             const D3D11_BLEND_DESC & desc,
             const Vector4f         & blendFactors,
-            UInt32                   sampleMask,
+            uint32                   sampleMask,
             bool                     skipDirtyCheck );
 
         /// set depth stencil state
         bool setDS(
             const D3D11_DEPTH_STENCIL_DESC & desc,
-            UInt32                           stencilRef,
+            uint32                           stencilRef,
             bool                             skipDirtyCheck );
 
         /// set VS samplers
         bool setVSSampler(
             const D3D11_SAMPLER_DESC & desc,
-            UInt32                     stage,
+            uint32                     stage,
             bool                       skipDirtyCheck );
 
         /// set VS samplers
         bool setGSSampler(
             const D3D11_SAMPLER_DESC & desc,
-            UInt32                     stage,
+            uint32                     stage,
             bool                       skipDirtyCheck );
 
         /// set VS samplers
         bool setPSSampler(
             const D3D11_SAMPLER_DESC & desc,
-            UInt32                     stage,
+            uint32                     stage,
             bool                       skipDirtyCheck );
     };
 }}

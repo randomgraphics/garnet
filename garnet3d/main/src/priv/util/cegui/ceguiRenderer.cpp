@@ -37,10 +37,10 @@ void CEGUI::GarnetRenderer::addQuad(
     float v0 = texture_rect.d_top;
     float u1 = texture_rect.d_right;
     float v1 = texture_rect.d_bottom;
-    UInt32 cx0 = colours.d_top_left.getARGB();
-    UInt32 cx1 = colours.d_top_right.getARGB();
-    UInt32 cy0 = colours.d_bottom_right.getARGB();
-    UInt32 cy1 = colours.d_bottom_left.getARGB();
+    uint32 cx0 = colours.d_top_left.getARGB();
+    uint32 cx1 = colours.d_top_right.getARGB();
+    uint32 cy0 = colours.d_bottom_right.getARGB();
+    uint32 cy1 = colours.d_bottom_left.getARGB();
 
     QuadDesc qd =
     {

@@ -71,7 +71,7 @@ GN::stringVarPrintf( wchar_t * buf, size_t bufSize, const wchar_t * fmt, va_list
 //
 //
 // -----------------------------------------------------------------------------
-size_t GN::string2SignedInteger( SInt64 & result, int bits, int base, const char * s )
+size_t GN::string2SignedInteger( sint64 & result, int bits, int base, const char * s )
 {
     // check invalid parameters
     if( bits < 2 && bits > 64 ) return 0;
@@ -83,16 +83,16 @@ size_t GN::string2SignedInteger( SInt64 & result, int bits, int base, const char
     char * e;
 
 #if GN_POSIX
-    SInt64 s64 = strtoq( s, &e, base );
+    sint64 s64 = strtoq( s, &e, base );
 #else
-    SInt64 s64 = _strtoi64( s, &e, base );
+    sint64 s64 = _strtoi64( s, &e, base );
 #endif
 
     if( 0 != errno || ( 0 == s64 && s == e ) ) return 0;
 
     // check for overflow
-    SInt64 maxval = ( 1LL << ( bits - 1 ) ) - 1;
-    SInt64 minval = ~maxval;
+    sint64 maxval = ( 1LL << ( bits - 1 ) ) - 1;
+    sint64 minval = ~maxval;
     if( s64 < minval || s64 > maxval ) return 0;
 
     // success
@@ -103,7 +103,7 @@ size_t GN::string2SignedInteger( SInt64 & result, int bits, int base, const char
 //
 //
 // -----------------------------------------------------------------------------
-size_t GN::string2UnsignedInteger( UInt64 & result, int bits, int base, const char * s )
+size_t GN::string2UnsignedInteger( uint64 & result, int bits, int base, const char * s )
 {
     // check invalid parameters
     if( bits < 2 && bits > 64 ) return 0;
@@ -114,9 +114,9 @@ size_t GN::string2UnsignedInteger( UInt64 & result, int bits, int base, const ch
 
     char * e;
 #if GN_POSIX
-    UInt64 u64 = strtouq( s, &e, base );
+    uint64 u64 = strtouq( s, &e, base );
 #else
-    UInt64 u64 = _strtoui64( s, &e, base );
+    uint64 u64 = _strtoui64( s, &e, base );
 #endif
 
     if( 0 != errno || ( 0 == u64 && s == e ) ) return 0;
@@ -127,7 +127,7 @@ size_t GN::string2UnsignedInteger( UInt64 & result, int bits, int base, const ch
     if( ptr < e && *ptr == '-' ) return 0;
 
     // check for overflow
-    UInt64 maxval = ( ((UInt64)-1) << (64-bits) ) >> (64-bits);
+    uint64 maxval = ( ((uint64)-1) << (64-bits) ) >> (64-bits);
     if( u64 > maxval ) return 0;
 
     // success

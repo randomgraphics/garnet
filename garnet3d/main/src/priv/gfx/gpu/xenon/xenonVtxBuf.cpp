@@ -143,7 +143,7 @@ GN::gfx::XenonVtxBuf::update(
     }
 
     // Note: XDK does not support range locking on vertex buffer
-    UInt8 * buf;
+    uint8 * buf;
     GN_DX_CHECK_DO(
         mVb->Lock( 0, 0, (void**)&buf, sLockFlags2Xenon( flag ) ),
         return; );
@@ -168,7 +168,7 @@ GN::gfx::XenonVtxBuf::update(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::XenonVtxBuf::readback( DynaArray<UInt8> & data )
+void GN::gfx::XenonVtxBuf::readback( DynaArray<uint8> & data )
 {
     GN_GUARD_SLOW;
 

@@ -19,12 +19,12 @@ namespace GN
             Variant value;
         };
 
-        HandleManager<Item,UInt32> mItems;
-        StringMap<char,UInt32> mNames;
+        HandleManager<Item,uint32> mItems;
+        StringMap<char,uint32> mNames;
 
         static Logger * sLogger;
 
-        const Variant * getItemByKey( UInt32 key, const char * name, bool printError ) const
+        const Variant * getItemByKey( uint32 key, const char * name, bool printError ) const
         {
             GN_GUARD_SLOW;
 
@@ -48,7 +48,7 @@ namespace GN
         ///
         /// Item key
         ///
-        typedef UInt32 ItemKey;
+        typedef uint32 ItemKey;
 
         ///
         /// Default constructor

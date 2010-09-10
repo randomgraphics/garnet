@@ -342,28 +342,28 @@ public:
     {
         using namespace GN;
 
-        UInt8 u8 = 123;
+        uint8 u8 = 123;
         TS_ASSERT( !string2Integer( u8, "-1" ) );
         TS_ASSERT( string2Integer( u8, "0" ) ); TS_ASSERT_EQUALS( u8, 0 );
         TS_ASSERT( string2Integer( u8, "255" ) ); TS_ASSERT_EQUALS( u8, 255 );
         TS_ASSERT( !string2Integer( u8, "256" ) );
 
-        SInt8 s8 = 123;
+        sint8 s8 = 123;
         TS_ASSERT( !string2Integer( s8, "-129" ) );
         TS_ASSERT( string2Integer( s8, "-128" ) ); TS_ASSERT_EQUALS( s8, -128 );
         TS_ASSERT( string2Integer( s8, "127" ) ); TS_ASSERT_EQUALS( s8, 127 );
         TS_ASSERT( !string2Integer( s8, "128" ) );
 
-        UInt64 u64 = 123;
+        uint64 u64 = 123;
         TS_ASSERT( !string2Integer( u64, "-1" ) );
         TS_ASSERT( string2Integer( u64, "0" ) ); TS_ASSERT_EQUALS( u64, 0 );
         TS_ASSERT( string2Integer( u64, "0xFFFFFFFFFFFFFFFF", 16 ) ); TS_ASSERT_EQUALS( u64, 0xFFFFFFFFFFFFFFFF );
         TS_ASSERT( !string2Integer( u64, "0x10000000000000000", 16 ) );
 
 
-        const SInt64 i64min = (-0x7fffffffffffffff - 1);
-        const SInt64 i64max = 0x7fffffffffffffff; // Note: 0x7FFFFFFFFFFFFFFF = 9223372036854775807
-        SInt64 s64 = 123;
+        const sint64 i64min = (-0x7fffffffffffffff - 1);
+        const sint64 i64max = 0x7fffffffffffffff; // Note: 0x7FFFFFFFFFFFFFFF = 9223372036854775807
+        sint64 s64 = 123;
         TS_ASSERT( !string2Integer( s64, "-9223372036854775809" ) );
         TS_ASSERT( string2Integer( s64, "-9223372036854775808" ) ); TS_ASSERT_EQUALS( s64, i64min );
         TS_ASSERT( string2Integer( s64, "9223372036854775807" ) ); TS_ASSERT_EQUALS( s64, i64max );

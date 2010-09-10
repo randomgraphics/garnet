@@ -84,7 +84,7 @@ namespace GN { namespace gfx
     private:
 
         CommandBuffer   mCommandBuffer;
-        volatile UInt32 mGpuCreationStatus; ///< 0: creation failed, 1: creation succeeded, 2: creation is not finished yet.
+        volatile uint32 mGpuCreationStatus; ///< 0: creation failed, 1: creation succeeded, 2: creation is not finished yet.
         SyncEvent       mWaitForIdleFence;
         SyncEvent       mPresentFence;
         Thread        * mThread;
@@ -116,7 +116,7 @@ namespace GN { namespace gfx
         // ********************************
     private:
 
-        UInt32 threadProc( void * );
+        uint32 threadProc( void * );
 
         // ********************************
         // rendering methods from Gpu
@@ -148,8 +148,8 @@ namespace GN { namespace gfx
         virtual void present();
         virtual void clearScreen( const Vector4f & c,
                                   float            z,
-                                  UInt8            s,
-                                  BitFields        flags );
+                                  uint8            s,
+                                  uint32        flags );
         virtual void drawIndexed( PrimitiveType prim,
                                   size_t        numprim,
                                   size_t        basevtx,
@@ -165,16 +165,16 @@ namespace GN { namespace gfx
                              size_t         numvtx,
                              const void *   vertexData,
                              size_t         strideInBytes,
-                             const UInt16 * indexData );
+                             const uint16 * indexData );
         virtual void drawUp( PrimitiveType prim,
                              size_t        numprim,
                              const void *  vertexData,
                              size_t        strideInBytes );
-        virtual void drawLines( BitFields         options,
+        virtual void drawLines( uint32         options,
                                 const void *      positions,
                                 size_t            stride,
                                 size_t            count,
-                                UInt32            rgba,
+                                uint32            rgba,
                                 const Matrix44f & model,
                                 const Matrix44f & view,
                                 const Matrix44f & proj );

@@ -14,7 +14,7 @@ static GN::Logger * sLogger = GN::getLogger("GN.util.AsciiFont");
 class AsciiFontFace : public FontFace
 {
     FontFaceDesc mDesc;
-    UInt8        mImage[8*13];
+    uint8        mImage[8*13];
 
 public:
 

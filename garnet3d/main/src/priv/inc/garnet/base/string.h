@@ -210,7 +210,7 @@ namespace GN
     /// set to length to 0 to hash NULL terminated string.
     ///
     template<typename CHAR>
-    inline UInt64 stringHash( const CHAR * s, size_t length = 0 )
+    inline uint64 stringHash( const CHAR * s, size_t length = 0 )
     {
         unsigned long hash = 5381;
 
@@ -539,7 +539,7 @@ namespace GN
         ///
         /// string hash
         ///
-        UInt64 hash() const { return stringHash( mPtr, mCount ); }
+        uint64 hash() const { return stringHash( mPtr, mCount ); }
 
         ///
         /// Insert a character at specific position
@@ -989,7 +989,7 @@ namespace GN
         ///
         struct Hash
         {
-            UInt64 operator()( const Str & s ) const
+            uint64 operator()( const Str & s ) const
             {
                 return stringHash( s.mPtr, s.mCount );
             }
@@ -1593,8 +1593,8 @@ namespace GN
     ///  Returns number of characters that are sucessfully converted. Return 0 for failure.
     //@{
 
-    size_t string2SignedInteger( SInt64 & result, int bits, int base, const char * s );
-    size_t string2UnsignedInteger( UInt64 & result, int bits, int base, const char * s );
+    size_t string2SignedInteger( sint64 & result, int bits, int base, const char * s );
+    size_t string2UnsignedInteger( uint64 & result, int bits, int base, const char * s );
 
     template<typename T> size_t string2Integer( T & i, const char * s, int base = 10 )
     {
@@ -1602,13 +1602,13 @@ namespace GN
 
         if( SignedType<T>::value )
         {
-            SInt64 s64;
+            sint64 s64;
             n = string2SignedInteger( s64, sizeof(T)*8, base, s );
             if( n > 0 ) i = (T)s64;
         }
         else
         {
-            UInt64 u64;
+            uint64 u64;
             n = string2UnsignedInteger( u64, sizeof(T)*8, base, s );
             if( n > 0 ) i = (T)u64;
         }

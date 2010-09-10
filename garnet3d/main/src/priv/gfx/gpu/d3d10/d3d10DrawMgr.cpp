@@ -33,7 +33,7 @@ sSetupUserD3D10Buffer(
     ID3D10Device  & dev,
     ID3D10Buffer ** buffer,
     size_t          size,
-    UInt32          bindFlags,
+    uint32          bindFlags,
     const void    * data )
 {
     GN_ASSERT( buffer );
@@ -43,7 +43,7 @@ sSetupUserD3D10Buffer(
         // create new buffer
 
         D3D10_BUFFER_DESC desc;
-        desc.ByteWidth      = (UInt32)size;
+        desc.ByteWidth      = (uint32)size;
         desc.Usage          = D3D10_USAGE_DYNAMIC;
         desc.BindFlags      = bindFlags;
         desc.CPUAccessFlags = D3D10_CPU_ACCESS_WRITE;
@@ -62,7 +62,7 @@ sSetupUserD3D10Buffer(
 
         if( desc.ByteWidth < size )
         {
-            desc.ByteWidth = (UInt32)size;
+            desc.ByteWidth = (uint32)size;
 
             (*buffer)->Release();
 
@@ -87,11 +87,11 @@ class D3D10RestoreVB0AndIB
 {
     ID3D10Device & mDevice;
     ID3D10Buffer * mOldVB;
-    UInt32         mOldStride;
-    UInt32         mOldVBOffset;
+    uint32         mOldStride;
+    uint32         mOldVBOffset;
     ID3D10Buffer * mOldIB;
     DXGI_FORMAT    mOldFormat;
-    UInt32         mOldIBOffset;
+    uint32         mOldIBOffset;
 
 public:
 
@@ -151,20 +151,20 @@ void GN::gfx::D3D10Gpu::present()
 //
 // -----------------------------------------------------------------------------
 void GN::gfx::D3D10Gpu::clearScreen(
-    const GN::Vector4f & c, float z, UInt8 s, BitFields flags )
+    const GN::Vector4f & c, float z, uint8 s, uint32 flags )
 {
     PIXPERF_FUNCTION_EVENT();
 
     if( CLEAR_C & flags )
     {
-        for( UInt32 i = 0; i < mRTMgr->getRenderTargetCount(); ++i )
+        for( uint32 i = 0; i < mRTMgr->getRenderTargetCount(); ++i )
         {
             mDevice->ClearRenderTargetView( mRTMgr->getRenderTargetView( i ) , c );
         }
     }
 
     ID3D10DepthStencilView * dsview = mRTMgr->getDepthStencilView();
-    UInt32 d3dflag = 0;
+    uint32 d3dflag = 0;
     if( CLEAR_Z ) d3dflag |= D3D10_CLEAR_DEPTH;
     if( CLEAR_S ) d3dflag |= D3D10_CLEAR_STENCIL;
     if( d3dflag && dsview )
@@ -216,7 +216,7 @@ void GN::gfx::D3D10Gpu::drawIndexedUp(
     size_t         numvtx,
     const void   * vertexData,
     size_t         strideInBytes,
-    const UInt16 * indexData )
+    const uint16 * indexData )
 {
     PIXPERF_FUNCTION_EVENT();
 
@@ -244,8 +244,8 @@ void GN::gfx::D3D10Gpu::drawIndexedUp(
     D3D10RestoreVB0AndIB autoRestore( *mDevice );
 
     // setup vertex buffer and index buffer
-    UInt32 stride = (UInt32)strideInBytes;
-    UInt32 offset = 0;
+    uint32 stride = (uint32)strideInBytes;
+    uint32 offset = 0;
     mDevice->IASetVertexBuffers( 0, 1, &mUserVB, &stride, &offset );
     mDevice->IASetIndexBuffer( mUserIB, DXGI_FORMAT_R16_UINT, 0 );
 
@@ -279,8 +279,8 @@ void GN::gfx::D3D10Gpu::drawUp(
     D3D10RestoreVB0AndIB autoRestore( *mDevice );
 
     // setup vertex buffer and index buffer
-    UInt32 stride = (UInt32)strideInBytes;
-    UInt32 offset = 0;
+    uint32 stride = (uint32)strideInBytes;
+    uint32 offset = 0;
     mDevice->IASetVertexBuffers( 0, 1, &mUserVB, &stride, &offset );
 
     // do rendering
@@ -292,11 +292,11 @@ void GN::gfx::D3D10Gpu::drawUp(
 //
 // -----------------------------------------------------------------------------
 void GN::gfx::D3D10Gpu::drawLines(
-    BitFields         /*options*/,
+    uint32         /*options*/,
     const void      * /*positions*/,
     size_t            /*stride*/,
     size_t            /*numPoints*/,
-    UInt32            /*rgba*/,
+    uint32            /*rgba*/,
     const Matrix44f & /*model*/,
     const Matrix44f & /*view*/,
     const Matrix44f & /*proj*/ )

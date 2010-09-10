@@ -46,16 +46,16 @@ class TestFillrate : public BasicTestCase
 
 public:
 
-    UInt mInitTexCount;
-    bool mInitDoubleDepth;
-    bool mInitMaxBandwidth;
+    uint32 mInitTexCount;
+    bool   mInitDoubleDepth;
+    bool   mInitMaxBandwidth;
 
     AverageValue<float> mFillrate;
 
 public:
 
     TestFillrate( BenchmarkingApp & app, const StrA & name,
-                  UInt texCount,
+                  uint32 texCount,
                   bool doubleDepth,
                   bool maxBandwidth )
         : BasicTestCase(app,name)
@@ -81,7 +81,7 @@ public:
         if( !mEffect || !mEffect->create() ) return false;
 
         // create texture
-        for( UInt i = 0; i < mInitTexCount; ++i )
+        for( uint32 i = 0; i < mInitTexCount; ++i )
         {
             mTextures[i].attach( re.create2DTexture( stringFormat("TestFillrate::mTexture[%d]",i), 2, 2, 1, FMT_RGBA32, TEXUSAGE_TILED ) );
             if( !mTextures[i] ) return false;
@@ -103,7 +103,7 @@ public:
             mContext.setRenderState( RS_COLOR0_WRITE, 0xF );
             mContext.setPS( mEffect->ps );
         }
-        for( UInt i = 0; i < mInitTexCount; ++i ) mContext.setTexture( i, mTextures[i] );
+        for( uint32 i = 0; i < mInitTexCount; ++i ) mContext.setTexture( i, mTextures[i] );
         if( mInitMaxBandwidth )
         {
             //mContext->
@@ -120,7 +120,7 @@ public:
     {
         mGeometry.destroy();
         safeDelete( mEffect );
-        for( UInt i = 0; i < 16; ++i ) mTextures[i].clear();
+        for( uint32 i = 0; i < 16; ++i ) mTextures[i].clear();
     }
 
     void onkey( input::KeyEvent key )

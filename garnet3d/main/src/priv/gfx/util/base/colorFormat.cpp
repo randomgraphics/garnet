@@ -547,14 +547,14 @@ GN::gfx::ColorFormat GN::gfx::xenonFormat2ColorFormat( int xefmt )
 //
 //
 // -----------------------------------------------------------------------------
-UInt32 GN::gfx::colorFormat2XenonFormat( ColorFormat clrfmt )
+uint32 GN::gfx::colorFormat2XenonFormat( ColorFormat clrfmt )
 {
     for( size_t i = 0; i < COLOR_FORMAT_CONVERT_TABLE_SIZE; ++i )
     {
         if( clrfmt == s_ColorFormatConvertTable[i].gnfmt )
             return s_ColorFormatConvertTable[i].xefmt;
     }
-    return (UInt32)XENON_FORMAT_UNKNOWN;
+    return (uint32)XENON_FORMAT_UNKNOWN;
 }
 
 //

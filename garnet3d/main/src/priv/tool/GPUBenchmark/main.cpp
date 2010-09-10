@@ -110,7 +110,7 @@ struct ManyManyQuads
         vtxbuf = re.createVtxBuf( "ManyManyQuads::vtxbuf", sizeof(Vertex)*4, false, false, sVertices );
         if( !vtxbuf ) return false;
 
-        DynaArray<UInt16> indices( INDEX_COUNT );
+        DynaArray<uint16> indices( INDEX_COUNT );
         for( size_t i = 0; i < QUAD_COUNT; ++i )
         {
             indices[i*6+0] = 0;
@@ -144,19 +144,19 @@ struct ManyManyQuads
         }
     }
 
-    void drawPrimRange( UInt32 startPrim, UInt32 numprim )
+    void drawPrimRange( uint32 startPrim, uint32 numprim )
     {
         GN_ASSERT( startPrim < PRIM_COUNT && (startPrim+numprim) <= PRIM_COUNT );
-        UInt32 startidx = startPrim * 3;
+        uint32 startidx = startPrim * 3;
         for( size_t i = 0; i < DRAW_COUNT; ++i )
             re.drawIndexed( PRIM_TYPE, numprim, 0, 0, VTX_COUNT, startidx );
     }
 
-    void drawQuadRange( UInt32 startQuad, UInt32 numQuads )
+    void drawQuadRange( uint32 startQuad, uint32 numQuads )
     {
         GN_ASSERT( startQuad < QUAD_COUNT && (startQuad+numQuads) <= QUAD_COUNT );
-        UInt32 numprim = numQuads * 2;
-        UInt32 startidx = startQuad * 6;
+        uint32 numprim = numQuads * 2;
+        uint32 startidx = startQuad * 6;
         for( size_t i = 0; i < DRAW_COUNT; ++i )
             re.drawIndexed( PRIM_TYPE, numprim, 0, 0, VTX_COUNT, startidx );
     }
@@ -228,9 +228,9 @@ struct SolidEffect : public BasicEffect
 
 struct TexturedEffect : public BasicEffect
 {
-    UInt32 mCount;
+    uint32 mCount;
 
-    TexturedEffect( RenderEngine & e, UInt32 count ) : BasicEffect(e), mCount(count) {}
+    TexturedEffect( RenderEngine & e, uint32 count ) : BasicEffect(e), mCount(count) {}
 
     bool create()
     {
@@ -504,7 +504,7 @@ bool BenchmarkingApp::onInit()
     mTestCases.append( cd );//*/
 
     /*
-    UInt32 texSize = 1024;
+    uint32 texSize = 1024;
     while( texSize >= 8 )
     {
         cd.theCase = new TestTextureBandwidth( *this, "Texture bandwidth", FMT_FLOAT4, texSize );
@@ -515,7 +515,7 @@ bool BenchmarkingApp::onInit()
     //*/
 
     /*
-    static UInt32 batchSizes[] = { 2048 };//, 32, 128, 512, 2048, 8192, 32768 };
+    static uint32 batchSizes[] = { 2048 };//, 32, 128, 512, 2048, 8192, 32768 };
     for( size_t i = 0; i < GN_ARRAY_COUNT(batchSizes); ++i )
     {
         cd.theCase = new TestBatchSize( *this, "Batch size", batchSizes[i] );

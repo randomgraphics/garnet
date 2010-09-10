@@ -40,7 +40,7 @@ namespace GN { namespace gfx
         ///
         /// get the unique shader ID
         ///
-        virtual UInt32 getUniqueID() const = 0;
+        virtual uint32 getUniqueID() const = 0;
 
         ///
         /// get the usage and usage index of specific attribute.
@@ -95,7 +95,7 @@ namespace GN { namespace gfx
             size_t                 count,
             bool                   skipDirtyCheck ) const;
 
-        virtual UInt32 getUniqueID() const { return NULL == mVs ? 0 : mVs->GetIdentifier(); }
+        virtual uint32 getUniqueID() const { return NULL == mVs ? 0 : mVs->GetIdentifier(); }
 
         virtual bool getAttributeUsage( size_t attributeIndex, BYTE & usage, BYTE & usageIndex ) const
         {
@@ -176,7 +176,7 @@ namespace GN { namespace gfx
             size_t                 count,
             bool                   skipDirtyCheck ) const;
 
-        virtual UInt32 getUniqueID() const { return NULL == mVs ? 0 : mVs->GetIdentifier(); }
+        virtual uint32 getUniqueID() const { return NULL == mVs ? 0 : mVs->GetIdentifier(); }
 
         virtual bool getAttributeUsage( size_t attributeIndex, BYTE & usage, BYTE & usageIndex ) const;
 

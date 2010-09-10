@@ -18,7 +18,7 @@ namespace GN { namespace gfx
     ///
     struct MipmapDesc
     {
-        UInt32 width,  ///< mipmap width in pixel
+        uint32 width,  ///< mipmap width in pixel
                height, ///< mipmap height in pixel
                depth;  ///< mipmap depth in pixel
 
@@ -26,17 +26,17 @@ namespace GN { namespace gfx
         /// bytes of one row of texel. For DXT compressed texture, this
         /// is 1/4 of bytes of one "block row"
         ///
-        UInt32 rowPitch;
+        uint32 rowPitch;
 
         ///
         /// bytes of one slice. Must be equal or larger than rowPitch * height
         ///
-        UInt32 slicePitch;
+        uint32 slicePitch;
 
         ///
         /// total bytes of this mip level. Must be equal or larger than slicePitch * depth.
         ///
-        UInt32 levelPitch;
+        uint32 levelPitch;
     };
 
     ///
@@ -64,8 +64,8 @@ namespace GN { namespace gfx
         //@{
 
         ColorFormat  format;    ///< color format
-        UInt32       numFaces;  ///< number of image faces. 6 for cubemaps, 1 for others
-        UInt32       numLevels; ///< number of avaliable mipmaps
+        uint32       numFaces;  ///< number of image faces. 6 for cubemaps, 1 for others
+        uint32       numLevels; ///< number of avaliable mipmaps
         MipmapDesc * mipmaps;   ///< mipmap array, face major. Mip data of face n, mips m is : mip[f*numLevels+m]
 
         //@}
@@ -212,7 +212,7 @@ namespace GN { namespace gfx
     /// load image from file
     ///
     inline bool
-    loadImageFromFile( ImageDesc & desc, DynaArray<UInt8> & data, const char * filename )
+    loadImageFromFile( ImageDesc & desc, DynaArray<uint8> & data, const char * filename )
     {
         AutoObjPtr<File> fp( fs::openFile( filename, "rb" ) );
         if( NULL == fp ) return false;

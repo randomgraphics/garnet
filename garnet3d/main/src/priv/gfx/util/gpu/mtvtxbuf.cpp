@@ -79,7 +79,7 @@ void GN::gfx::MultiThreadVtxBuf::update( size_t offset, size_t length, const voi
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::MultiThreadVtxBuf::readback( DynaArray<UInt8> & data )
+void GN::gfx::MultiThreadVtxBuf::readback( DynaArray<uint8> & data )
 {
     mGpu.cmdbuf().postCommand2( CMD_VTXBUF_READBACK, mVtxBuf, &data );
 }
@@ -128,7 +128,7 @@ namespace GN { namespace gfx
         struct VtxBufReadBackParam
         {
             VtxBuf             * vb;
-            DynaArray<UInt8> * buf;
+            DynaArray<uint8> * buf;
         };
         VtxBufReadBackParam * vbrp = (VtxBufReadBackParam*)p;
 

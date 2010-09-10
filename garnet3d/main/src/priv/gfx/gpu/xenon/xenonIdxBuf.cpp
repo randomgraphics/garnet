@@ -70,7 +70,7 @@ bool GN::gfx::XenonIdxBuf::init( const IdxBufDesc & desc )
     IDirect3DDevice9 & dev = getGpu().getDeviceInlined();
 
     // get bytes per index
-    UInt32 bpi = 2 << (UInt32)desc.bits32;
+    uint32 bpi = 2 << (uint32)desc.bits32;
 
     //
     // create d3d vertex buffer
@@ -130,7 +130,7 @@ GN::gfx::XenonIdxBuf::update(
     size_t bpi = 2 << (size_t)getDesc().bits32;
 
     // Note: XDK does not support partial locking on index buffer
-    UInt8 * buf;
+    uint8 * buf;
     GN_DX_CHECK_DO(
         mIb->Lock( 0, 0, (void**)&buf, sLockFlags2Xenon( flag ) ),
         return; );
@@ -146,7 +146,7 @@ GN::gfx::XenonIdxBuf::update(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::XenonIdxBuf::readback( DynaArray<UInt8> & data )
+void GN::gfx::XenonIdxBuf::readback( DynaArray<uint8> & data )
 {
     GN_GUARD_SLOW;
 

@@ -37,7 +37,7 @@ bool BMPReader::checkFormat( GN::File & fp )
 //
 // -----------------------------------------------------------------------------
 bool BMPReader::readHeader(
-    GN::gfx::ImageDesc & o_desc, const UInt8 * i_buf, size_t i_size )
+    GN::gfx::ImageDesc & o_desc, const uint8 * i_buf, size_t i_size )
 {
     GN_GUARD;
 
@@ -116,13 +116,13 @@ bool BMPReader::readImage( void * o_data ) const
 
     GN_ASSERT( mImageSrc );
 
-    const UInt8 * src = mImageSrc;
+    const uint8 * src = mImageSrc;
     size_t width = (size_t)mHeader.infoHeader.width;
     size_t height = (size_t)abs(mHeader.infoHeader.height);
     size_t srcPitch = ( width * mHeader.infoHeader.bitCount / 8 + 3 ) & ~3; // align to 4 bytes.
     size_t dstPitch = width * mOutputBytesPerPixel;
     bool topdown = mHeader.infoHeader.height < 0;
-    UInt8 * dst = topdown ? ( (UInt8*)o_data ) : ( (UInt8*)o_data + dstPitch * ( height - 1 ) );
+    uint8 * dst = topdown ? ( (uint8*)o_data ) : ( (uint8*)o_data + dstPitch * ( height - 1 ) );
 
     switch( mHeader.infoHeader.bitCount )
     {
@@ -160,8 +160,8 @@ bool BMPReader::readImage( void * o_data ) const
             {
                 for( size_t y = 0; y < height; ++y )
                 {
-                    const UInt8 * s = src;
-                    UInt8 * d = dst;
+                    const uint8 * s = src;
+                    uint8 * d = dst;
                     for( size_t x = 0; x < width; ++x, s+=3, d+=4 )
                     {
 #if GN_PPC
@@ -184,8 +184,8 @@ bool BMPReader::readImage( void * o_data ) const
             {
                 for( size_t y = 0; y < height; ++y )
                 {
-                    const UInt8 * s = src;
-                    UInt8 * d = dst;
+                    const uint8 * s = src;
+                    uint8 * d = dst;
                     for( size_t x = 0; x < width; ++x, s+=3, d+=4 )
                     {
 #if GN_PPC
@@ -211,8 +211,8 @@ bool BMPReader::readImage( void * o_data ) const
             {
                 for( size_t y = 0; y < height; ++y )
                 {
-                    const UInt8 * s = src;
-                    UInt8 * d = dst;
+                    const uint8 * s = src;
+                    uint8 * d = dst;
                     for( size_t x = 0; x < width; ++x, s+=4, d+=4 )
                     {
 #if GN_PPC
@@ -235,8 +235,8 @@ bool BMPReader::readImage( void * o_data ) const
             {
                 for( size_t y = 0; y < height; ++y )
                 {
-                    const UInt8 * s = src;
-                    UInt8 * d = dst;
+                    const uint8 * s = src;
+                    uint8 * d = dst;
                     for( size_t x = 0; x < width; ++x, s+=4, d+=4 )
                     {
 #if GN_PPC

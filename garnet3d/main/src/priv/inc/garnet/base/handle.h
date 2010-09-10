@@ -19,7 +19,7 @@ namespace GN
         ///
         struct Item
         {
-            UInt8 buf[sizeof(T)];
+            uint8 buf[sizeof(T)];
             bool  occupied;
 
             T & t() const
@@ -55,7 +55,7 @@ namespace GN
         DynaArray<size_t>                 mFreeList;
 
 
-        static inline size_t h2idx( HANDLE_TYPE h ) { return (UIntPtr)h - 1; }
+        static inline size_t h2idx( HANDLE_TYPE h ) { return (size_t)h - 1; }
 
         static HANDLE_TYPE idx2h( size_t idx ) { return (HANDLE_TYPE)( idx + 1 ); }
 

@@ -13,7 +13,7 @@ bool GN::gfx::D3D11IdxBuf::init( const IdxBufDesc & desc )
 {
     GN_GUARD;
 
-    UInt32 bytesPerIndex = 2 << (UInt32)desc.bits32;
+    uint32 bytesPerIndex = 2 << (uint32)desc.bits32;
 
     // standard init procedure
     GN_STDCLASS_INIT( GN::gfx::D3D11IdxBuf, (desc.numidx*bytesPerIndex, desc.fastCpuWrite, D3D11_BIND_INDEX_BUFFER) );
@@ -55,7 +55,7 @@ void GN::gfx::D3D11IdxBuf::update(
 {
     if( !validateUpdateParameters( startidx, &numidx, data, flag ) ) return;
 
-    UInt32 bytesPerIndex = 2 << (UInt32)getDesc().bits32;
+    uint32 bytesPerIndex = 2 << (uint32)getDesc().bits32;
 
     D3D11Buffer::update( startidx*bytesPerIndex, numidx*bytesPerIndex, data, flag );
 }
@@ -63,7 +63,7 @@ void GN::gfx::D3D11IdxBuf::update(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3D11IdxBuf::readback( DynaArray<UInt8> & data )
+void GN::gfx::D3D11IdxBuf::readback( DynaArray<uint8> & data )
 {
     D3D11Buffer::readback( data );
 }

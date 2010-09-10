@@ -70,15 +70,15 @@ namespace GN { namespace gfx
         struct AttribBindingInfo
         {
             const OGLVtxFmt * self;
-            UInt16            offset;
-            UInt8             stream; ///< vertex stream index
-            UInt8             index;  ///< texture coordinate stage index or vertex attribute index
+            uint16            offset;
+            uint8             stream; ///< vertex stream index
+            uint8             index;  ///< texture coordinate stage index or vertex attribute index
             GLuint            format;
             GLuint            components;
             GLboolean         normalization;
         };
 
-        typedef void (*FP_setOglVertexBuffer)( const AttribBindingInfo &, const UInt8 * buf, size_t stride );
+        typedef void (*FP_setOglVertexBuffer)( const AttribBindingInfo &, const uint8 * buf, size_t stride );
 
         struct AttribBinding
         {
@@ -87,7 +87,7 @@ namespace GN { namespace gfx
             void bind( const void * buf, size_t stride ) const
             {
                 GN_ASSERT( func );
-                func( info, (const UInt8*)buf, stride );
+                func( info, (const uint8*)buf, stride );
             }
         };
 
@@ -119,15 +119,15 @@ namespace GN { namespace gfx
 
         // setup state binding
         bool setupStateBindings( const OGLBasicGpuProgram * gpuProgram );
-        bool getStandardVertexBindingDesc( OGLVertexBindingDesc & result, const char * bindingName, UInt8 bindingIndex );
+        bool getStandardVertexBindingDesc( OGLVertexBindingDesc & result, const char * bindingName, uint8 bindingIndex );
 
-        static void sSetVertexPointer( const AttribBindingInfo &, const UInt8 * buf, size_t stride );
-        static void sSetNormalPointer( const AttribBindingInfo &, const UInt8 * buf, size_t stride );
-        static void sSetColorPointer( const AttribBindingInfo &, const UInt8 * buf, size_t stride );
-        static void sSetSecondaryColorPointer( const AttribBindingInfo &, const UInt8 * buf, size_t stride );
-        static void sSetFogPointer( const AttribBindingInfo &, const UInt8 * buf, size_t stride );
-        static void sSetTexCoordPointer( const AttribBindingInfo &, const UInt8 * buf, size_t stride );
-        static void sSetVertexAttributePointer( const AttribBindingInfo &, const UInt8 * buf, size_t stride );
+        static void sSetVertexPointer( const AttribBindingInfo &, const uint8 * buf, size_t stride );
+        static void sSetNormalPointer( const AttribBindingInfo &, const uint8 * buf, size_t stride );
+        static void sSetColorPointer( const AttribBindingInfo &, const uint8 * buf, size_t stride );
+        static void sSetSecondaryColorPointer( const AttribBindingInfo &, const uint8 * buf, size_t stride );
+        static void sSetFogPointer( const AttribBindingInfo &, const uint8 * buf, size_t stride );
+        static void sSetTexCoordPointer( const AttribBindingInfo &, const uint8 * buf, size_t stride );
+        static void sSetVertexAttributePointer( const AttribBindingInfo &, const uint8 * buf, size_t stride );
 
         static void sEnableClientState( const StateBindingInfo & info );
         static void sDisableClientState( const StateBindingInfo & info );

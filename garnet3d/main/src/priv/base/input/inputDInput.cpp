@@ -58,7 +58,7 @@ void GN::input::InputDInput::quit()
 //
 //
 // ----------------------------------------------------------------------------
-bool GN::input::InputDInput::attachToWindow( HandleType disp, HandleType window )
+bool GN::input::InputDInput::attachToWindow( intptr_t disp, intptr_t window )
 {
     GN_GUARD;
 
@@ -213,15 +213,15 @@ void GN::input::InputDInput::pollKeyboard()
 
     // retrieve keyboard data
     DIDEVICEOBJECTDATA od[IDX_INPUT_BUFFER_SIZE];
-    UInt32 elementCount = IDX_INPUT_BUFFER_SIZE;
+    uint32 elementCount = IDX_INPUT_BUFFER_SIZE;
     GN_DX_CHECK_DO(
         mKeyboard->GetDeviceData( sizeof(DIDEVICEOBJECTDATA), od, (LPDWORD)&elementCount, 0),
         mLost = (DIERR_INPUTLOST==hr||DIERR_NOTACQUIRED==hr); return; );
 
-    for( UInt32 i = 0; i < elementCount; ++i )
+    for( uint32 i = 0; i < elementCount; ++i )
     {
-        UInt8 dikeycode = static_cast<UInt8>(od[i].dwOfs);
-        UInt32 dikeydata = od[i].dwData;
+        uint8 dikeycode = static_cast<uint8>(od[i].dwOfs);
+        uint32 dikeydata = od[i].dwData;
 
         // do nothing with unrecognized keys
         if( KeyCode::NONE != mKeyMap[dikeycode] )
@@ -244,9 +244,9 @@ void GN::input::InputDInput::pollMouse()
     //NOTE: mouse movement has already be processed by basicMsgInput
 
     // process mouse action
-    UInt32 i;
+    uint32 i;
     DIDEVICEOBJECTDATA od[IDX_INPUT_BUFFER_SIZE];
-    UInt32 elementCount = IDX_INPUT_BUFFER_SIZE;
+    uint32 elementCount = IDX_INPUT_BUFFER_SIZE;
     GN_DX_CHECK_DO(
         mMouse->GetDeviceData(sizeof(DIDEVICEOBJECTDATA), od, (LPDWORD)&elementCount, 0),
         mLost = (DIERR_INPUTLOST==hr||DIERR_NOTACQUIRED==hr); return; );

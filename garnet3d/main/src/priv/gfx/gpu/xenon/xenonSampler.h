@@ -50,7 +50,7 @@ namespace GN { namespace gfx
         ///
         /// bind
         ///
-        void bind( UInt32 stage ) const;
+        void bind( uint32 stage ) const;
 
         // ********************************
         // private variables

@@ -206,7 +206,7 @@ namespace GN { namespace gfx
 
         struct XenonVertexDeclDesc
         {
-            UInt32        shaderID;
+            uint32        shaderID;
             VertexBinding vtxbind;
 
             bool operator<( const XenonVertexDeclDesc & rhs ) const
@@ -253,7 +253,7 @@ namespace GN { namespace gfx
     public:
 
         virtual void present();
-        virtual void clearScreen( const Vector4f & c, float z, UInt8 s, BitFields flags );
+        virtual void clearScreen( const Vector4f & c, float z, uint8 s, uint32 flags );
         virtual void drawIndexed( PrimitiveType prim,
                                   size_t        numidx,
                                   size_t        basevtx,
@@ -269,16 +269,16 @@ namespace GN { namespace gfx
                              size_t         numvtx,
                              const void *   vertexData,
                              size_t         strideInBytes,
-                             const UInt16 * indexData );
+                             const uint16 * indexData );
         virtual void drawUp( PrimitiveType prim,
                              size_t        numvtx,
                              const void *  vertexData,
                              size_t        strideInBytes );
-        virtual void drawLines( BitFields         options,
+        virtual void drawLines( uint32         options,
                                 const void *      positions,
                                 size_t            stride,
                                 size_t            numpoints,
-                                UInt32            rgba,
+                                uint32            rgba,
                                 const Matrix44f & model,
                                 const Matrix44f & view,
                                 const Matrix44f & proj );
@@ -318,7 +318,7 @@ namespace GN { namespace gfx
 
     public:
 
-        SInt32 getThreadId() const { return mThreadId; }
+        sint32 getThreadId() const { return mThreadId; }
 
     private:
 
@@ -326,7 +326,7 @@ namespace GN { namespace gfx
 
     private:
 
-        const SInt32 mThreadId; // initialized by constructor
+        const sint32 mThreadId; // initialized by constructor
 
         //@}
     };

@@ -201,8 +201,8 @@ namespace GN { namespace gfx
     struct MeshVertexElement
     {
         ColorFormat format;       ///< the vertex element format.
-        UInt8       stream;       ///< vertex buffer index
-        UInt8       offset;       ///< offset of the element in the vertex.
+        uint8       stream;       ///< vertex buffer index
+        uint8       offset;       ///< offset of the element in the vertex.
         char        semantic[16]; ///< Semantic name (null terminated string, 15 characters at most).
 
         ///
@@ -255,13 +255,13 @@ namespace GN { namespace gfx
             MAX_VERTEX_ELEMENTS = 16,
         };
 
-        UInt32            numElements;                   ///< number of elements
+        uint32            numElements;                   ///< number of elements
         MeshVertexElement elements[MAX_VERTEX_ELEMENTS]; ///< vertex element array
 
         bool operator==( const MeshVertexFormat & rhs ) const
         {
             if( numElements != rhs.numElements ) return false;
-            for( UInt32 i = 0; i < numElements; ++i )
+            for( uint32 i = 0; i < numElements; ++i )
             {
                 if( elements[i] != rhs.elements[i] ) return false;
             }
@@ -277,11 +277,11 @@ namespace GN { namespace gfx
         {
             if( this == &rhs ) return false;
 
-            const UInt32 * a = (const UInt32*)this;
-            const UInt32 * b = (const UInt32*)&rhs;
+            const uint32 * a = (const uint32*)this;
+            const uint32 * b = (const uint32*)&rhs;
             size_t         n = sizeof(*this)/4;
 
-            for( UInt32 i = 0; i < n; ++i )
+            for( uint32 i = 0; i < n; ++i )
             {
                 if( a[i] < b[i] ) return true;
                 if( a[i] > b[i] ) return false;
@@ -517,8 +517,8 @@ namespace GN { namespace gfx
         ///
         struct ShaderPrerequisites
         {
-            UInt32 numTextures;           ///< minimal number of textures required.
-            UInt32 numColorRenderTargets; ///< minimal number of color render targets.
+            uint32 numTextures;           ///< minimal number of textures required.
+            uint32 numColorRenderTargets; ///< minimal number of color render targets.
 
             /// default constructor
             ShaderPrerequisites()
@@ -615,38 +615,38 @@ namespace GN { namespace gfx
             struct RenderTargetAlphaBlend
             {
                 OverridableVariable<bool>  blendEnabled;
-                OverridableVariable<UInt8> blendSrc;
-                OverridableVariable<UInt8> blendDst;
-                OverridableVariable<UInt8> blendOp;
-                OverridableVariable<UInt8> blendAlphaSrc;
-                OverridableVariable<UInt8> blendAlphaDst;
-                OverridableVariable<UInt8> blendAlphaOp;
+                OverridableVariable<uint8> blendSrc;
+                OverridableVariable<uint8> blendDst;
+                OverridableVariable<uint8> blendOp;
+                OverridableVariable<uint8> blendAlphaSrc;
+                OverridableVariable<uint8> blendAlphaDst;
+                OverridableVariable<uint8> blendAlphaOp;
             };
 
             //@{
 
             OverridableVariable<bool>          depthTestEnabled;
             OverridableVariable<bool>          depthWriteEnabled;
-            OverridableVariable<UInt8>         depthFunc;
+            OverridableVariable<uint8>         depthFunc;
 
             OverridableVariable<bool>          stencilEnabled;
-            OverridableVariable<UInt8>         stencilPassOp;
-            OverridableVariable<UInt8>         stencilFailOp;
-            OverridableVariable<UInt8>         stencilZFailOp;
-            OverridableVariable<UInt8>         stencilFunc;
+            OverridableVariable<uint8>         stencilPassOp;
+            OverridableVariable<uint8>         stencilFailOp;
+            OverridableVariable<uint8>         stencilZFailOp;
+            OverridableVariable<uint8>         stencilFunc;
 
-            OverridableVariable<UInt8>         fillMode;
-            OverridableVariable<UInt8>         cullMode;
-            OverridableVariable<UInt8>         frontFace;
+            OverridableVariable<uint8>         fillMode;
+            OverridableVariable<uint8>         cullMode;
+            OverridableVariable<uint8>         frontFace;
             OverridableVariable<bool>          msaaEnabled;
 
             OverridableVariable<bool>          independentAlphaBlending;
             RenderTargetAlphaBlend             alphaBlend[GpuContext::MAX_COLOR_RENDER_TARGETS];
             OverridableVariable<Vector4f>      blendFactors;
 
-            OverridableVariable<UInt32>        colorWriteMask;
-            OverridableVariable<Rect<UInt32> > viewport;
-            OverridableVariable<Rect<UInt32> > scissorRect;
+            OverridableVariable<uint32>        colorWriteMask;
+            OverridableVariable<Rect<uint32> > viewport;
+            OverridableVariable<Rect<uint32> > scissorRect;
 
             //@}
         };
@@ -860,7 +860,7 @@ namespace GN { namespace gfx
         {
             StrA             resourceName; ///< if empty, then create a new uniform
             size_t           size;
-            DynaArray<UInt8> initialValue; ///< if empty, then no initial value.
+            DynaArray<uint8> initialValue; ///< if empty, then no initial value.
         };
 
         //@}

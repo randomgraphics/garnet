@@ -24,24 +24,24 @@ struct AseVertex
     DynaArray<Vector3f> t; ///< texcoord
     DynaArray<Vector3f> n; ///< normal
 
-    UInt32 addTexcoord( const Vector3f & v )
+    uint32 addTexcoord( const Vector3f & v )
     {
-        for( UInt32 i = 0; i < t.size(); ++i )
+        for( uint32 i = 0; i < t.size(); ++i )
         {
             if( t[i] == v ) return i;
         }
         t.append( v );
-        return (UInt32)( t.size() - 1 );
+        return (uint32)( t.size() - 1 );
     }
 
-    UInt32 addNormal( const Vector3f & v )
+    uint32 addNormal( const Vector3f & v )
     {
-        for( UInt32 i = 0; i < n.size(); ++i )
+        for( uint32 i = 0; i < n.size(); ++i )
         {
             if( n[i] == v ) return i;
         }
         n.append( v );
-        return (UInt32)( n.size() - 1 );
+        return (uint32)( n.size() - 1 );
     }
 };
 
@@ -50,12 +50,12 @@ struct AseVertex
 ///
 struct AseFace
 {
-    UInt32   v[3];   ///< vertices (index into AseMeshInternal.vertices)
-    UInt32   t[3];   ///< texcoords (index into AseVertex.t)
-    UInt32   vn[3];  ///< normal (index into AseVertex.n)
+    uint32   v[3];   ///< vertices (index into AseMeshInternal.vertices)
+    uint32   t[3];   ///< texcoords (index into AseVertex.t)
+    uint32   vn[3];  ///< normal (index into AseVertex.n)
     Vector3f fn;     ///< face normal
-    UInt32   smooth; ///< smooth group ID
-    UInt32   submat; ///< sub material ID
+    uint32   smooth; ///< smooth group ID
+    uint32   submat; ///< sub material ID
 };
 
 ///
@@ -63,8 +63,8 @@ struct AseFace
 ///
 struct AseFaceChunk
 {
-    UInt32            submat; ///< submaterial ID
-    DynaArray<UInt32> faces;  ///< indices into AseMeshInternal.faces
+    uint32            submat; ///< submaterial ID
+    DynaArray<uint32> faces;  ///< indices into AseMeshInternal.faces
 };
 
 ///
@@ -75,7 +75,7 @@ struct AseMeshInternal
     ///
     /// this group is loaded directly from ASE file.
     //@{
-    UInt32                  timevalue;
+    uint32                  timevalue;
     DynaArray<AseVertex>    vertices;  ///< vertex array
     DynaArray<AseFace>      faces;     ///< face array
     //@}
@@ -109,7 +109,7 @@ struct AseGeoObject : public GN::TreeNode<AseGeoObject>
 {
     AseNode         node;
     AseMeshInternal mesh;
-    UInt32          matid; ///< material ID into global material array
+    uint32          matid; ///< material ID into global material array
 };
 
 ///
@@ -168,7 +168,7 @@ struct AseFile
 
     union ScanOption
     {
-        UInt32 u32;
+        uint32 u32;
 
         struct
         {
@@ -177,7 +177,7 @@ struct AseFile
             unsigned int _       : 29; ///< reserved
         };
 
-        ScanOption( BitFields bits ) : u32(bits) {}
+        ScanOption( uint32 bits ) : u32(bits) {}
     };
 
     static inline bool isWhiteSpace( char ch )
@@ -483,7 +483,7 @@ struct AseFile
     //
     //
     // -----------------------------------------------------------------------------
-    bool readIndexedVector3Node( const char * nodename, UInt32 index, Vector3f & result, ScanOption option = 0  )
+    bool readIndexedVector3Node( const char * nodename, uint32 index, Vector3f & result, ScanOption option = 0  )
     {
         GN_ASSERT( !stringEmpty(nodename) );
         return next( nodename, option )
@@ -691,12 +691,12 @@ static bool sReadMaterial( AseMaterialInternal & m, AseFile & ase )
         }
         else if( 0 == stringCompare( token, "*NUMSUBMTLS" ) )
         {
-            UInt32 count;
+            uint32 count;
             if( !ase.readInt( count ) ) return false;
             m.submaterials.resize( count );
 
             // read sub-materials one by one
-            for( UInt32 i = 0; i < count; ++i )
+            for( uint32 i = 0; i < count; ++i )
             {
                 if( !ase.next( "*SUBMATERIAL" ) ) return false;
                 if( !ase.next( stringFormat("%d",i).cptr() ) ) return false;
@@ -738,13 +738,13 @@ static bool sReadMaterials( AseSceneInternal & scene, AseFile & ase )
 
     // read material count
     if( !ase.next( "*MATERIAL_COUNT" ) ) return false;
-    UInt32 matcount;
+    uint32 matcount;
     if( !ase.readInt( matcount ) ) return false;
 
     scene.materials.resize( matcount );
 
     // read materials one by one
-    for( UInt32 i = 0; i < matcount; ++i )
+    for( uint32 i = 0; i < matcount; ++i )
     {
         if( !ase.next( "*MATERIAL" ) ) return false;
         if( !ase.next( stringFormat("%d",i).cptr() ) ) return false;
@@ -768,7 +768,7 @@ static bool sReadMesh( AseMeshInternal & m, const Matrix44f & transform, AseFile
 
     if( !ase.next( "*TIMEVALUE" ) || !ase.readInt( m.timevalue ) ) return false;
 
-    UInt32 numvert, numface;
+    uint32 numvert, numface;
     if( !ase.next( "*MESH_NUMVERTEX" ) || !ase.readInt( numvert ) ) return false;
     if( !ase.next( "*MESH_NUMFACES" ) || !ase.readInt( numface ) ) return false;
 
@@ -777,7 +777,7 @@ static bool sReadMesh( AseMeshInternal & m, const Matrix44f & transform, AseFile
 
     // read vertices
     if( !ase.next( "*MESH_VERTEX_LIST" ) || !ase.readBlockStart() ) return false;
-    for( UInt32 i = 0; i < numvert; ++i )
+    for( uint32 i = 0; i < numvert; ++i )
     {
         // Note: vertex position in ASE file is post-transformed.
         if( !ase.readIndexedVector3Node( "*MESH_VERTEX", i, m.vertices[i].p ) ) return false;
@@ -796,7 +796,7 @@ static bool sReadMesh( AseMeshInternal & m, const Matrix44f & transform, AseFile
 
     // read faces
     if( !ase.next( "*MESH_FACE_LIST" ) || !ase.readBlockStart() ) return false;
-    for( UInt32 i = 0; i < numface; ++i )
+    for( uint32 i = 0; i < numface; ++i )
     {
         AseFace & f = m.faces[i];
         int dummy;
@@ -823,14 +823,14 @@ static bool sReadMesh( AseMeshInternal & m, const Matrix44f & transform, AseFile
     if( !ase.readBlockEnd() ) return false;
 
     // read texcoords
-    UInt numtexcoord;
+    uint32 numtexcoord;
     if( !ase.next( "*MESH_NUMTVERTEX" ) || !ase.readInt( numtexcoord ) ) return false;
     if( numtexcoord > 0 )
     {
         DynaArray<Vector3f> texcoords( numtexcoord );
 
         if( !ase.next( "*MESH_TVERTLIST" ) || !ase.readBlockStart() ) return false;
-        for( UInt32 i = 0; i < numtexcoord; ++i )
+        for( uint32 i = 0; i < numtexcoord; ++i )
         {
             if( !ase.readIndexedVector3Node( "*MESH_TVERT", i, texcoords[i] ) ) return false;
 
@@ -845,7 +845,7 @@ static bool sReadMesh( AseMeshInternal & m, const Matrix44f & transform, AseFile
         // read tface list
         if( !ase.next( "*MESH_NUMTVFACES" ) || !ase.next( stringFormat( "%d", numface ).cptr() ) ) return false;
         if( !ase.next( "*MESH_TFACELIST" ) || !ase.readBlockStart() ) return false;
-        for( UInt32 i = 0; i < numface; ++i )
+        for( uint32 i = 0; i < numface; ++i )
         {
             AseFace & f = m.faces[i];
 
@@ -853,12 +853,12 @@ static bool sReadMesh( AseMeshInternal & m, const Matrix44f & transform, AseFile
             if( !ase.next( stringFormat( "%d", i ).cptr() ) ) return false;
 
             // for each vertex in the face
-            for( UInt32 i = 0; i < 3; ++i )
+            for( uint32 i = 0; i < 3; ++i )
             {
                 AseVertex & v = m.vertices[ f.v[i] ];
 
                 // get the index into texcoord array
-                UInt32 t;
+                uint32 t;
                 if( !ase.readInt( t ) ) return false;
 
                 // add to vertex's texcoord array, store index in the face.
@@ -873,12 +873,12 @@ static bool sReadMesh( AseMeshInternal & m, const Matrix44f & transform, AseFile
 
         Vector3f zero(0,0,0);
 
-        for( UInt32 i = 0; i < m.vertices.size(); ++i )
+        for( uint32 i = 0; i < m.vertices.size(); ++i )
         {
             m.vertices[i].addTexcoord( zero );
         }
 
-        for( UInt32 i = 0; i < m.faces.size(); ++i )
+        for( uint32 i = 0; i < m.faces.size(); ++i )
         {
             AseFace & f = m.faces[i];
             f.t[0] = 0;
@@ -888,7 +888,7 @@ static bool sReadMesh( AseMeshInternal & m, const Matrix44f & transform, AseFile
     }
 
     // skip vertex colors
-    UInt numcolor;
+    uint32 numcolor;
     if( !ase.next( "*MESH_NUMCVERTEX" ) || !ase.readInt( numcolor ) ) return false;
     if( numcolor > 0 )
     {
@@ -899,16 +899,16 @@ static bool sReadMesh( AseMeshInternal & m, const Matrix44f & transform, AseFile
     // read normals
     if( !ase.next( "*MESH_NORMALS" ) || !ase.readBlockStart() ) return false;
     Matrix44f it = Matrix44f::sInvtrans( transform ); // use to transform normal
-    for( UInt32 i = 0; i < numface; ++i )
+    for( uint32 i = 0; i < numface; ++i )
     {
         AseFace & f = m.faces[i];
         if( !ase.readIndexedVector3Node( "*MESH_FACENORMAL", i, f.fn ) ) return false;
 
-        for( UInt32 i = 0; i < 3; ++i )
+        for( uint32 i = 0; i < 3; ++i )
         {
             if( !ase.next( "*MESH_VERTEXNORMAL" ) ) return false;
 
-            UInt32 vi;
+            uint32 vi;
             if( !ase.readInt( vi ) ) return false;
 
             AseVertex & v = m.vertices[vi];
@@ -1082,11 +1082,11 @@ static bool sReadGeomObject( AseSceneInternal & scene, AseFile & ase )
             {
                 m.chunks.reserve( mtl.submaterials.size() );
 
-                for( UInt32 i = 0; i < m.faces.size(); ++i )
+                for( uint32 i = 0; i < m.faces.size(); ++i )
                 {
                     const AseFace & f = m.faces[i];
 
-                    UInt32 cid;
+                    uint32 cid;
                     for( cid = 0; cid < m.chunks.size(); ++cid )
                     {
                         AseFaceChunk & c = m.chunks[cid];
@@ -1111,7 +1111,7 @@ static bool sReadGeomObject( AseSceneInternal & scene, AseFile & ase )
                 m.chunks.resize( 1 );
                 m.chunks[0].submat = 0;
                 m.chunks[0].faces.resize( m.faces.size() );
-                for( UInt32 i = 0; i < m.faces.size(); ++i )
+                for( uint32 i = 0; i < m.faces.size(); ++i )
                 {
                     m.chunks[0].faces[i] = i;
                 }
@@ -1353,9 +1353,9 @@ static bool sBuildNodeTree( AseSceneInternal & scene )
 /// unique vertex selector
 struct VertexSelector
 {
-    UInt32 p; ///< position (index into AseMeshInternal.vertices)
-    UInt32 t; ///< texcoord (index into AseVertex.t)
-    UInt32 n; ///< normal   (index into AseVertex.n)
+    uint32 p; ///< position (index into AseMeshInternal.vertices)
+    uint32 t; ///< texcoord (index into AseVertex.t)
+    uint32 n; ///< normal   (index into AseVertex.n)
 
     friend bool operator==( const VertexSelector & a, const VertexSelector & b )
     {
@@ -1364,9 +1364,9 @@ struct VertexSelector
 
     struct Hash
     {
-        UInt64 operator()( const VertexSelector & vs ) const
+        uint64 operator()( const VertexSelector & vs ) const
         {
-            UInt64 h = ( ( ((UInt64)vs.p) << 32 ) | vs.t ) ^ ( ((UInt64)vs.n) << 16 );
+            uint64 h = ( ( ((uint64)vs.p) << 32 ) | vs.t ) ^ ( ((uint64)vs.n) << 16 );
             return h;
         }
     };
@@ -1376,7 +1376,7 @@ struct VertexSelector
 template<typename T>
 class ElementCollection
 {
-    typedef GN::HashMap<T,UInt32,typename T::Hash> TypeMap;
+    typedef GN::HashMap<T,uint32,typename T::Hash> TypeMap;
 
     TypeMap      mMap;
     DynaArray<T> mBuffer;
@@ -1386,7 +1386,7 @@ public:
     ///
     /// add element into buffer, ignore redundant element.
     ///
-    UInt32 add( const T & element )
+    uint32 add( const T & element )
     {
         typename TypeMap::KeyValuePair * p = mMap.insert( element, 0xbad );
 
@@ -1396,7 +1396,7 @@ public:
             GN_ASSERT( 0xbad == p->value );
             GN_ASSERT( mBuffer.size() + 1 == mMap.size() );
 
-            p->value = (UInt32)( mBuffer.size() );
+            p->value = (uint32)( mBuffer.size() );
 
             mBuffer.append( element );
 
@@ -1445,12 +1445,12 @@ static bool operator==( const AseMaterial & a, const AseMaterial & b )
 //
 //
 // -----------------------------------------------------------------------------
-static UInt32
+static uint32
 sGetFaceChunkMatID(
     AseScene               & dst,
     const AseSceneInternal & src,
-    UInt32                   matid,
-    UInt32                   submat )
+    uint32                   matid,
+    uint32                   submat )
 {
     const AseMaterial * mat;
 
@@ -1463,7 +1463,7 @@ sGetFaceChunkMatID(
         mat = &src.materials[matid];
     }
 
-    for( UInt32 i = 0; i < dst.materials.size(); ++i )
+    for( uint32 i = 0; i < dst.materials.size(); ++i )
     {
         if( dst.materials[i] == *mat )
         {
@@ -1473,7 +1473,7 @@ sGetFaceChunkMatID(
     }
 
     // this is a new material
-    UInt32 newidx = (UInt32)dst.materials.size();
+    uint32 newidx = (uint32)dst.materials.size();
     dst.materials.resize( dst.materials.size() + 1 );
     dst.materials.back() = *mat;
     return newidx;
@@ -1525,7 +1525,7 @@ static bool sWriteGeoObject( AseScene & dst, const AseSceneInternal & src, const
     // generate mesh
     VertexCollection  vc;
     VertexSelector    vs;
-    DynaArray<UInt32> ib; // index into vertex collection
+    DynaArray<uint32> ib; // index into vertex collection
     for( size_t i = 0; i < obj.mesh.chunks.size(); ++i )
     {
         const AseFaceChunk & c = obj.mesh.chunks[i];
@@ -1538,8 +1538,8 @@ static bool sWriteGeoObject( AseScene & dst, const AseSceneInternal & src, const
         subset.startidx = ib.size();
         subset.numidx   = c.faces.size() * 3;
 
-        UInt32 minidx = 0xFFFFFFFF;
-        UInt32 maxidx = 0;
+        uint32 minidx = 0xFFFFFFFF;
+        uint32 maxidx = 0;
 
         for( size_t i = 0; i < c.faces.size(); ++i )
         {
@@ -1551,7 +1551,7 @@ static bool sWriteGeoObject( AseScene & dst, const AseSceneInternal & src, const
                 vs.t = f.t[i];
                 vs.n = f.vn[i];
 
-                UInt32 idx = vc.add( vs );
+                uint32 idx = vc.add( vs );
                 ib.append( idx );
 
                 if( idx < minidx ) minidx = idx;
@@ -1590,7 +1590,7 @@ static bool sWriteGeoObject( AseScene & dst, const AseSceneInternal & src, const
     if( vc.size() > 0x10000 )
     {
         // 32bit index buffer
-        blob.attach( new SimpleBlob(sizeof(UInt32) * ib.size()) );
+        blob.attach( new SimpleBlob(sizeof(uint32) * ib.size()) );
         memcpy( blob->data(), ib.cptr(), blob->size() );
         dstmesh.idx32 = true;
         dstmesh.indices = blob->data();
@@ -1599,12 +1599,12 @@ static bool sWriteGeoObject( AseScene & dst, const AseSceneInternal & src, const
     else
     {
         // 16bit index buffer
-        blob.attach( new SimpleBlob(sizeof(UInt16) * ib.size()) );
-        UInt16 * idx16 = (UInt16*)blob->data();
+        blob.attach( new SimpleBlob(sizeof(uint16) * ib.size()) );
+        uint16 * idx16 = (uint16*)blob->data();
         for( size_t i = 0; i < ib.size(); ++i )
         {
             GN_ASSERT( ib[i] < 0x10000 );
-            idx16[i] = (UInt16)ib[i];
+            idx16[i] = (uint16)ib[i];
         }
         dstmesh.idx32 = false;
         dstmesh.indices = idx16;

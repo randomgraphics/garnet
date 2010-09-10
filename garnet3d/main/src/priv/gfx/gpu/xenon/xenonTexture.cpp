@@ -159,7 +159,7 @@ bool GN::gfx::XenonTexture::init( const TextureDesc & inputDesc )
 
         DWORD depth = ( D3DRTYPE_VOLUMETEXTURE == xdesc.ResourceType ) ? xdesc.Depth : 1;
 
-        setMipSize( i, Vector3<UInt32>(xdesc.Width, xdesc.Height, depth) );
+        setMipSize( i, Vector3<uint32>(xdesc.Width, xdesc.Height, depth) );
     }
 
     // success
@@ -193,14 +193,14 @@ void GN::gfx::XenonTexture::quit()
 void GN::gfx::XenonTexture::updateMipmap(
     size_t              face,
     size_t              level,
-    const Box<UInt32> * area,
+    const Box<uint32> * area,
     size_t              rowPitch,
     size_t              slicePitch,
     const void        * data,
     SurfaceUpdateFlag   flag )
 {
     // check update parameters
-    Box<UInt32> clippedArea;
+    Box<uint32> clippedArea;
     if( !validateUpdateParameters( face, level, area, flag, clippedArea ) ) return;
 
     // prepare for update

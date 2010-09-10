@@ -51,7 +51,7 @@ namespace GN { namespace input
         // ********************************
     public:
 
-        virtual bool attachToWindow( HandleType, HandleType );
+        virtual bool attachToWindow( intptr_t, intptr_t );
         virtual void processInputEvents();
         virtual void getMousePosition( int &, int & ) const;
 
