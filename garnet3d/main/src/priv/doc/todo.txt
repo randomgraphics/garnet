@@ -24,6 +24,7 @@ TODO
   	- queue, list, set
   - FontFace unit should be integer instead of float, since it is supposed to
     represent post-rasterized font metrics.
+  - Refine uniform loading from XML
 
 - p1
   - Unit test for the CommandBuffer class.
