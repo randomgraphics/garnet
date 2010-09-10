@@ -78,8 +78,8 @@ namespace GN { /*namespace for D3D10 utils*/ namespace d3d10
         size_t                           bytes );
 
     void setDumpFilePrefix( const StrA & );
-    void dumpDraw( ID3D10Device & device, UInt32 vertexCount, UInt32 startVertex );
-    void dumpDrawIndexed( ID3D10Device & device, UInt32 indexCount, UInt32 startIndex, UInt32 startVertex );
+    void dumpDraw( ID3D10Device & device, uint32 vertexCount, uint32 startVertex );
+    void dumpDrawIndexed( ID3D10Device & device, uint32 indexCount, uint32 startIndex, uint32 startVertex );
 
     //@}
 
@@ -90,14 +90,14 @@ namespace GN { /*namespace for D3D10 utils*/ namespace d3d10
         const char   * profile,
         const char   * source,
         size_t         len = 0,
-        UInt32         flags = 0,
+        uint32         flags = 0,
         const char   * entry = "main" );
 
     ID3D10VertexShader * compileAndCreateVS(
         ID3D10Device & dev,
         const char   * source,
         size_t         len = 0,
-        UInt32         flags = 0,
+        uint32         flags = 0,
         const char   * entry = "main",
         const char   * profile = "vs_4_0",
         ID3D10Blob  ** binary = 0 );
@@ -106,7 +106,7 @@ namespace GN { /*namespace for D3D10 utils*/ namespace d3d10
         ID3D10Device & dev,
         const char   * source,
         size_t         len = 0,
-        UInt32         flags = 0,
+        uint32         flags = 0,
         const char   * entry = "main",
         const char   * profile = "gs_4_0",
         ID3D10Blob  ** binary = 0 );
@@ -115,7 +115,7 @@ namespace GN { /*namespace for D3D10 utils*/ namespace d3d10
         ID3D10Device & dev,
         const char   * source,
         size_t         len = 0,
-        UInt32         flags = 0,
+        uint32         flags = 0,
         const char   * entry = "main",
         const char   * profile = "ps_4_0",
         ID3D10Blob  ** binary = 0 );
@@ -303,7 +303,7 @@ namespace GN { /*namespace for D3D10 utils*/ namespace d3d10
         void beginTriangles();
         void    triangle( size_t i0, size_t i1, size_t i2 );
         void endTriangles();
-        void setTriangles( const UInt16 * triangles, size_t triangleCount );
+        void setTriangles( const uint16 * triangles, size_t triangleCount );
 
         void draw() const;
         void drawIndexed() const;
@@ -325,7 +325,7 @@ namespace GN { /*namespace for D3D10 utils*/ namespace d3d10
         size_t                   mVtxBufCapacity;
         size_t                   mNumVertices;
 
-        DynaArray<UInt16>        mIndices;
+        DynaArray<uint16>        mIndices;
         size_t                   mIdxBufCapacity;
         size_t                   mNumIndices;
 
@@ -370,10 +370,10 @@ namespace GN { /*namespace for D3D10 utils*/ namespace d3d10
     struct RenderToTextureOption
     {
         //@{
-        UInt32               width;
-        UInt32               height;
+        uint32               width;
+        uint32               height;
         DXGI_FORMAT          format;
-        UInt32               count;
+        uint32               count;
         MultiSampleAntiAlias msaa;
         bool                 stencil;
         //@}
@@ -419,7 +419,7 @@ namespace GN { /*namespace for D3D10 utils*/ namespace d3d10
         void bindNoDepth() const { mDevice->OMSetRenderTargets( (UINT)mColors.size(), mColorViews.cptr(), 0 ); }
         void bindWithDepth() const { mDevice->OMSetRenderTargets( (UINT)mColors.size(), mColorViews.cptr(), mDepth.dsv ); }
 
-        void clearScreen( float r, float g, float b, float a, float d, UInt8 s );
+        void clearScreen( float r, float g, float b, float a, float d, uint8 s );
 
         // ********************************
         // private variables
@@ -580,10 +580,10 @@ namespace GN { /*namespace for D3D10 utils*/ namespace d3d10
         ///
         bool fullscreen;
 
-        UInt32 width;   ///< Screen width.
-        UInt32 height;  ///< Screen height.
-        UInt32 depth;   ///< Color depth. Ignored for windowed mode.
-        UInt32 refrate; ///< Referesh rate. Ignored for windowed mode.
+        uint32 width;   ///< Screen width.
+        uint32 height;  ///< Screen height.
+        uint32 depth;   ///< Color depth. Ignored for windowed mode.
+        uint32 refrate; ///< Referesh rate. Ignored for windowed mode.
 
         ///
         /// MSAA.
@@ -616,7 +616,7 @@ namespace GN { /*namespace for D3D10 utils*/ namespace d3d10
 
         const D3D10AppOption & getOption() const { return mOption; }
 
-        void clearScreen( float r, float g, float b, float a, float d, UInt8 s );
+        void clearScreen( float r, float g, float b, float a, float d, uint8 s );
 
         void resetToDefaultRenderTargets() { mDevice->OMSetRenderTargets( 1, &mBackRTV, mDepthDSV ); }
 

@@ -63,7 +63,7 @@ namespace GN { namespace gfx
         MultiThreadGpu & mGpu;
         Uniform             * mUniform;
         size_t                mSize;
-        UInt8               * mFrontEndData;
+        uint8               * mFrontEndData;
 
         // ********************************
         // private functions

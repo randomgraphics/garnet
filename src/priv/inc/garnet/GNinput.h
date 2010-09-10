@@ -139,8 +139,8 @@ namespace GN
         ///
         union KeyStatus
         {
-            UInt8 u8;  ///< Key status as unsigned integer
-            SInt8 i8;  ///< Key status as signed integer
+            uint8 u8;  ///< Key status as unsigned integer
+            sint8 i8;  ///< Key status as signed integer
 
             struct
             {
@@ -180,15 +180,15 @@ namespace GN
         union KeyEvent
         {
             /// key event as unsigned 16bit integer
-            UInt16 u16;
+            uint16 u16;
 
             /// key event as signed 16bit integer
-            SInt16  i16;
+            sint16  i16;
 
             /// structured key states
             struct
             {
-                UInt8     code;   ///< Key code
+                uint8     code;   ///< Key code
                 KeyStatus status; ///< Key status
             };
 
@@ -197,7 +197,7 @@ namespace GN
             KeyEvent() {}
             KeyEvent( const KeyEvent & k ) : u16(k.u16) {}
             KeyEvent( KeyCode kc, KeyStatus ks )
-                : code( static_cast<UInt8>(kc) ), status(ks)
+                : code( static_cast<uint8>(kc) ), status(ks)
             { GN_ASSERT( kc < KeyCode::NUM_KEYS ); }
             //@}
 
@@ -225,7 +225,7 @@ namespace GN
             const KeyEvent & set( KeyCode kc, KeyStatus ks )
             {
                 GN_ASSERT( kc < KeyCode::NUM_KEYS );
-                code = static_cast<UInt8>(kc);
+                code = static_cast<uint8>(kc);
                 status = ks;
                 return *this;
             }
@@ -270,7 +270,7 @@ namespace GN
             ///
             /// \Note parameters displayHandle is only used on X11 platform.
             ///
-            virtual bool attachToWindow( HandleType displayHandle, HandleType windowHandle ) = 0;
+            virtual bool attachToWindow( intptr_t displayHandle, intptr_t windowHandle ) = 0;
 
             ///
             /// 获取并处理最新的输入事件

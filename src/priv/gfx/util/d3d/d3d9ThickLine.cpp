@@ -58,12 +58,12 @@ GN::d3d9::D3D9ThickLineRenderer::D3D9ThickLineRenderer()
     clear();
 
     // initialize index buffer
-    UInt16 numpoly = MAX_VERTICES / 6;
-    for( UInt16 i = 0; i < numpoly; ++i )
+    uint16 numpoly = MAX_VERTICES / 6;
+    for( uint16 i = 0; i < numpoly; ++i )
     {
-        UInt16 * p = m_Indices + i * 12;
+        uint16 * p = m_Indices + i * 12;
 
-        UInt16 v = i * 6;
+        uint16 v = i * 6;
 
         // v1-v2
         // |   \

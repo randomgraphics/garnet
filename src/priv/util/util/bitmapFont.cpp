@@ -306,7 +306,7 @@ GN::util::BitmapFont::createSlot( wchar_t ch )
 
     // copy font image into RGBA
     GN_ASSERT( fbm.width <= slot.w && fbm.height <= slot.h );
-    DynaArray<UInt8> tmpbuf( slot.w * slot.h * 4 );
+    DynaArray<uint8> tmpbuf( slot.w * slot.h * 4 );
     std::fill( tmpbuf.begin(), tmpbuf.end(), 0 );
     for( size_t y = 0; y < fbm.height; ++y )
     {
@@ -330,7 +330,7 @@ GN::util::BitmapFont::createSlot( wchar_t ch )
     }
 
     // update texture
-    Box<UInt32> area( (UInt32)slot.x, (UInt32)slot.y, 0, (UInt32)slot.w, (UInt32)slot.h, 1 );
+    Box<uint32> area( (uint32)slot.x, (uint32)slot.y, 0, (uint32)slot.w, (uint32)slot.h, 1 );
     mTextures[slot.texidx]->updateMipmap( 0, 0, &area, slot.w*4, tmpbuf.size(), tmpbuf.cptr() );
 
     // success
@@ -346,14 +346,14 @@ GN::util::BitmapFont::createSlot( wchar_t ch )
 bool
 GN::util::BitmapFont::slotInit(
     Gpu      & gpu,
-    UInt16     fontw,
-    UInt16     fonth,
+    uint16     fontw,
+    uint16     fonth,
     size_t     maxchars )
 {
     GN_GUARD;
 
-    UInt16 rectw = fontw + 0;
-    UInt16 recth = fonth + 0;
+    uint16 rectw = fontw + 0;
+    uint16 recth = fonth + 0;
 
     // determine texture size
     size_t texwidth, texheight, texcount;
@@ -373,7 +373,7 @@ GN::util::BitmapFont::slotInit(
     // initialize font slots
     float stepu = float(rectw) / texwidth;
     float stepv = float(recth) / texheight;
-    UInt16 x, y;
+    uint16 x, y;
     float  u, v;
     SafeArrayAccessor<FontSlot> slot( mFontSlots, mMaxSlots );
     for( size_t itex = 0; itex < texcount; ++itex )
@@ -386,7 +386,7 @@ GN::util::BitmapFont::slotInit(
             {
                 // setup slot
                 GN_ASSERT( itex < 256 );
-                slot->texidx = (UInt8)itex;
+                slot->texidx = (uint8)itex;
                 slot->u = u;
                 slot->v = v;
                 slot->tw = float(fontw)/texwidth;
@@ -414,11 +414,11 @@ GN::util::BitmapFont::slotInit(
     // and slot map is also empty
     mSlotMap.clear();
 
-    //DynaArray<UInt8> texels( texwidth * texheight * 4 );
+    //DynaArray<uint8> texels( texwidth * texheight * 4 );
     //std::fill( texels.begin(), texels.end(), 0 );
 
     // create font textures
-    TextureDesc td = { (UInt32)texwidth, (UInt32)texheight, 1, 1, 1, ColorFormat::RGBA_8_8_8_8_UNORM, TextureUsage::DEFAULT };
+    TextureDesc td = { (uint32)texwidth, (uint32)texheight, 1, 1, 1, ColorFormat::RGBA_8_8_8_8_UNORM, TextureUsage::DEFAULT };
     GN_ASSERT( texcount <= gpu.caps().maxTextures );
     mTextures.resize( texcount );
     for( size_t i = 0; i < texcount; ++i )

@@ -42,7 +42,7 @@ public:
 
         // create mesh
         static SimpleMesh::Vertex vertices[24];
-        static UInt16             indices[36];
+        static uint16             indices[36];
         gfx::createBox(
             1.0f, 1.0f, 1.0f,
             vertices[0].pos, sizeof(SimpleMesh::Vertex),

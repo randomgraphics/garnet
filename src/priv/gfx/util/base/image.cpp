@@ -46,8 +46,8 @@ bool GN::gfx::ImageDesc::valid() const
         }
 
         // check pitches
-        UInt32 w = math::alignToPowerOf2<UInt32>( m.width, cld.blockWidth );
-        UInt32 h = math::alignToPowerOf2<UInt32>( m.height, cld.blockHeight );
+        uint32 w = math::alignToPowerOf2<uint32>( m.width, cld.blockWidth );
+        uint32 h = math::alignToPowerOf2<uint32>( m.height, cld.blockHeight );
         if( m.rowPitch < w * cld.bits / 8 )
         {
             GN_ERROR(sLogger)( "rowPitch of mipmaps[%d][%d] is too small!", f, l );
@@ -102,7 +102,7 @@ class GN::gfx::ImageReader::Impl
         DATA_READEN,
     };
 
-    DynaArray<UInt8> mSrc;
+    DynaArray<uint8> mSrc;
 
     BMPReader mBMPReader;
     DDSReader mDDSReader;

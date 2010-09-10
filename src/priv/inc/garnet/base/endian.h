@@ -13,7 +13,7 @@ namespace GN
     //  1. in and out could be same for in-place endian swap
     //  2. count is in unit of elements, not bytes.
     //
-    
+
     ///
     /// endian swap 8 in 16.
     ///
@@ -35,10 +35,10 @@ namespace GN
     void swap16in32( void * out, const void * in, size_t count );
 
     //@{
-    inline UInt16 swap8in16( UInt16 i ) { UInt16 o; swap8in16( &o, &i, 1 ); return o; }
-    inline UInt32 swap8in32( UInt32 i ) { UInt32 o; swap8in32( &o, &i, 1 ); return o; }
-    inline UInt64 swap8in64( UInt64 i ) { UInt64 o; swap8in64( &o, &i, 1 ); return o; }
-    inline UInt32 swap16in32( UInt32 i ) { UInt32 o; swap16in32( &o, &i, 1 ); return o; }
+    inline uint16 swap8in16( uint16 i ) { uint16 o; swap8in16( &o, &i, 1 ); return o; }
+    inline uint32 swap8in32( uint32 i ) { uint32 o; swap8in32( &o, &i, 1 ); return o; }
+    inline uint64 swap8in64( uint64 i ) { uint64 o; swap8in64( &o, &i, 1 ); return o; }
+    inline uint32 swap16in32( uint32 i ) { uint32 o; swap16in32( &o, &i, 1 ); return o; }
     //@}
 }
 

@@ -39,9 +39,9 @@ public:
 ///
 class JpegDataSource : public jpeg_source_mgr
 {
-    const UInt8 * mStart;
+    const uint8 * mStart;
     size_t          mSize;
-    static UInt8  sFakeEOI[2];
+    static uint8  sFakeEOI[2];
 
     static void doNothing(j_decompress_ptr) {}
     //
@@ -136,7 +136,7 @@ public:
     /// read JPEG header
     ///
     bool readHeader(
-        GN::gfx::ImageDesc & o_desc, const UInt8 * i_buf, size_t i_size );
+        GN::gfx::ImageDesc & o_desc, const uint8 * i_buf, size_t i_size );
 
     ///
     /// read JPEG image

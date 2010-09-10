@@ -17,7 +17,7 @@ class MyVtxBuf9 : public BasicResource<IDirect3DVertexBuffer9>
 {
     typedef BasicResource<IDirect3DVertexBuffer9> ParentType;
 
-    DynaArray<UInt8> mSysCopy;
+    DynaArray<uint8> mSysCopy;
 
     UINT  mLockOffset;
     UINT  mLockBytes;

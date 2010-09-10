@@ -20,39 +20,39 @@ enum MeshFileType
 struct MeshBinaryHeaderV1
 {
     char   tag[2]; ///< must be "GN";
-    UInt16 endian; ///< 0x0201 means file is in same endian as the host OS.
-    UInt32 padding[7];
+    uint16 endian; ///< 0x0201 means file is in same endian as the host OS.
+    uint32 padding[7];
 };
 GN_CASSERT( 32 == sizeof(MeshBinaryHeaderV1) );
 
 static const char MESH_BINARY_TAG_V1[] = "GN";
 
-static const UInt16 MESH_BINARY_ENDIAN_TAG_V1 = 0x0201;
+static const uint16 MESH_BINARY_ENDIAN_TAG_V1 = 0x0201;
 
 struct MeshBinaryFileHeaderV2
 {
     char                tag[16];      ///< must be "GARNET MESH BIN\0"
-    UInt32              endian;       ///< endian tag: 0x01020304 means file is in the same endian as the host OS.
-    UInt32              version;      ///< mesh binary version must be 0x00010000
-    UInt32              prim;         ///< primitive type
-    UInt32              numvtx;       ///< number of vertices
-    UInt32              numidx;       ///< number of indices. 0 means non-indexed mesh
-    UInt8               idx32;        ///< true for 32-bit index buffer
-    UInt8               dynavb;       ///< true for dynamic vertex buffer
-    UInt8               dynaib;       ///< trur for dynamic index buffer
-    UInt8               _padding;     ///< padding for 32-bit alignment
+    uint32              endian;       ///< endian tag: 0x01020304 means file is in the same endian as the host OS.
+    uint32              version;      ///< mesh binary version must be 0x00010000
+    uint32              prim;         ///< primitive type
+    uint32              numvtx;       ///< number of vertices
+    uint32              numidx;       ///< number of indices. 0 means non-indexed mesh
+    uint8               idx32;        ///< true for 32-bit index buffer
+    uint8               dynavb;       ///< true for dynamic vertex buffer
+    uint8               dynaib;       ///< trur for dynamic index buffer
+    uint8               _padding;     ///< padding for 32-bit alignment
     MeshVertexFormat    vtxfmt;       ///< vertex format
-    UInt32              vertices[GpuContext::MAX_VERTEX_BUFFERS]; ///< The offset of vertex buffer data, not including the header.
-    UInt32              strides[GpuContext::MAX_VERTEX_BUFFERS];  ///< vertex buffer strides. 0 means using vertex size defined by vertex format.
-    UInt32              offsets[GpuContext::MAX_VERTEX_BUFFERS];  ///< vertex buffer offset.
-    UInt32              indices;                                  ///< The offset of index data. Ignored, if numidx is 0.
-    UInt32              bytes;        ///< total binary size in bytes, not including this header.
+    uint32              vertices[GpuContext::MAX_VERTEX_BUFFERS]; ///< The offset of vertex buffer data, not including the header.
+    uint32              strides[GpuContext::MAX_VERTEX_BUFFERS];  ///< vertex buffer strides. 0 means using vertex size defined by vertex format.
+    uint32              offsets[GpuContext::MAX_VERTEX_BUFFERS];  ///< vertex buffer offset.
+    uint32              indices;                                  ///< The offset of index data. Ignored, if numidx is 0.
+    uint32              bytes;        ///< total binary size in bytes, not including this header.
 };
 
 static const char MESH_BINARY_TAG_V2[] = "GARNET MESH BIN";
 GN_CASSERT( sizeof(MESH_BINARY_TAG_V2) == 16 );
 
-static const UInt32 MESH_BINARY_ENDIAN_TAG_V2 = 0x01020304;
+static const uint32 MESH_BINARY_ENDIAN_TAG_V2 = 0x01020304;
 
 struct MeshVertexPosition
 {
@@ -76,7 +76,7 @@ void sSwapVertexEndianInplace(
 {
     if( stride == 0 ) stride = format.calcStreamStride( stream );
 
-    UInt8 * vertex = (UInt8*)buffer;
+    uint8 * vertex = (uint8*)buffer;
 
     size_t count = bufferSize / stride;
 
@@ -86,7 +86,7 @@ void sSwapVertexEndianInplace(
         {
             const MeshVertexElement & e = format.elements[i];
 
-            UInt8 * p = vertex + e.offset;
+            uint8 * p = vertex + e.offset;
 
             switch( e.format.layout )
             {
@@ -183,7 +183,7 @@ bool sGetMeshVertexPositions( MeshVertexPosition & pos, const MeshResourceDesc &
     const MeshVertexElement * positionElement = sFindPositionElement( desc.vtxfmt );
     if( NULL == positionElement ) return false;
 
-    const float * vertices = (const float*)( ((const UInt8*)desc.vertices[positionElement->stream]) + positionElement->offset );
+    const float * vertices = (const float*)( ((const uint8*)desc.vertices[positionElement->stream]) + positionElement->offset );
 
     if( ColorFormat::FLOAT1 == positionElement->format )
     {
@@ -297,7 +297,7 @@ AutoRef<Blob> sLoadFromMeshBinaryFile( File & fp, MeshResourceDesc & desc )
         GN_ERROR(sLogger)( "fail to read mesh data." );
         return AutoRef<Blob>::NULLREF;
     }
-    UInt8 * start = (UInt8*)blob->data();
+    uint8 * start = (uint8*)blob->data();
 
     desc.prim   = (PrimitiveType)header.prim;
     desc.numvtx = header.numvtx;
@@ -423,7 +423,7 @@ static bool sGetBoolAttrib( const XmlElement & node, const char * attribName, bo
 //
 //
 // -----------------------------------------------------------------------------
-static bool sReadV1BinaryFile( MeshBinaryHeaderV1 & header, UInt8 * dst, size_t length, const char * filename )
+static bool sReadV1BinaryFile( MeshBinaryHeaderV1 & header, uint8 * dst, size_t length, const char * filename )
 {
     AutoObjPtr<File> fp( fs::openFile( filename, "rb" ) );
     if( !fp ) return false;
@@ -554,7 +554,7 @@ AutoRef<Blob> sLoadFromMeshXMLFile( File & fp, MeshResourceDesc & desc )
 
         if( "vtxbuf" == e->name )
         {
-            UInt32 stream, offset, stride;
+            uint32 stream, offset, stride;
             if( !sGetRequiredIntAttrib( stream, *e, "stream" ) ||
                 !sGetRequiredIntAttrib( offset, *e, "offset" ) ||
                 !sGetRequiredIntAttrib( stride, *e, "stride" ) ||
@@ -598,7 +598,7 @@ AutoRef<Blob> sLoadFromMeshXMLFile( File & fp, MeshResourceDesc & desc )
     StrA basedir = fs::dirName( fp.name() );
 
     // parse vtxbuf and idxbuf elements, again, to read, calculate mesh data size
-    SafeArrayAccessor<UInt8> meshData( (UInt8*)blob->data(), blob->size() );
+    SafeArrayAccessor<uint8> meshData( (uint8*)blob->data(), blob->size() );
     size_t offset = 0;
     for( const XmlNode * n = root->firstc; n != NULL; n = n->nexts )
     {
@@ -607,7 +607,7 @@ AutoRef<Blob> sLoadFromMeshXMLFile( File & fp, MeshResourceDesc & desc )
 
         if( "vtxbuf" == e->name )
         {
-            UInt32 stream = sGetIntAttrib<UInt32>( *e, "stream", 0xFFFFFFFF );
+            uint32 stream = sGetIntAttrib<uint32>( *e, "stream", 0xFFFFFFFF );
             GN_ASSERT( stream < GpuContext::MAX_VERTEX_BUFFERS );
 
             a = sGetRequiredAttrib( *e, "ref" );
@@ -615,7 +615,7 @@ AutoRef<Blob> sLoadFromMeshXMLFile( File & fp, MeshResourceDesc & desc )
 
             size_t vbsize = desc.strides[stream] * desc.numvtx;
 
-            UInt8 * vb = meshData.subrange( offset, vbsize );
+            uint8 * vb = meshData.subrange( offset, vbsize );
 
             MeshBinaryHeaderV1 header;
             if( !sReadV1BinaryFile( header, vb, vbsize, fs::resolvePath( basedir, a->value ) ) )
@@ -639,7 +639,7 @@ AutoRef<Blob> sLoadFromMeshXMLFile( File & fp, MeshResourceDesc & desc )
 
             size_t ibsize = desc.numidx * (desc.idx32?4:2);
 
-            UInt8 * ib = meshData.subrange( offset, ibsize );
+            uint8 * ib = meshData.subrange( offset, ibsize );
 
             MeshBinaryHeaderV1 header;
             if( !sReadV1BinaryFile( header, ib, ibsize, fs::resolvePath( basedir, a->value ) ) )
@@ -783,8 +783,8 @@ bool GN::gfx::MeshResourceDesc::saveToFile( File & fp ) const
     header.endian = MESH_BINARY_ENDIAN_TAG_V2;
     header.version = 0x00010000;
     header.prim   = this->prim;
-    header.numvtx = (UInt32)this->numvtx;
-    header.numidx = (UInt32)this->numidx;
+    header.numvtx = (uint32)this->numvtx;
+    header.numidx = (uint32)this->numidx;
     header.idx32  = this->idx32;
     header.dynavb = this->dynavb;
     header.dynaib = this->dynaib;
@@ -802,17 +802,17 @@ bool GN::gfx::MeshResourceDesc::saveToFile( File & fp ) const
             vbsizes[i] = numvtx * stride;
 
             header.vertices[i] = header.bytes;
-            header.bytes += (UInt32)vbsizes[i];
+            header.bytes += (uint32)vbsizes[i];
         }
-        header.strides[i] = (UInt32)this->strides[i];
-        header.offsets[i] = (UInt32)this->offsets[i];
+        header.strides[i] = (uint32)this->strides[i];
+        header.offsets[i] = (uint32)this->offsets[i];
     }
     size_t ibsize;
     if( numidx > 0 )
     {
         ibsize = numidx * (this->idx32?4:2);
         header.indices = header.bytes;
-        header.bytes  += (UInt32)ibsize;
+        header.bytes  += (uint32)ibsize;
     }
     else
     {

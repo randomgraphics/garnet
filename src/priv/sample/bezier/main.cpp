@@ -101,7 +101,7 @@ MeshResource * createMesh( GpuResourceDatabase & gdb )
     md.vertices[0] = vertices;
     md.strides[0] = sizeof(BezierVertex);
 
-    UInt16 indices[] =
+    uint16 indices[] =
     {
         0, 1, 2,
         1, 3, 4,
@@ -358,7 +358,7 @@ class BezierApp : public SampleApp
     {
     }
 
-    void onRenderWindowResize( HandleType, UInt32 width, UInt32 height )
+    void onRenderWindowResize( intptr_t, uint32 width, uint32 height )
     {
         arcball.setMouseMoveWindow( 0, 0, (int)width, (int)height );
     }

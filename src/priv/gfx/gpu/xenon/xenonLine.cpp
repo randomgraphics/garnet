@@ -6,7 +6,7 @@
 struct XenonLineVertex
 {
     GN::Vector3f p;
-    UInt32       c;
+    uint32       c;
 };
 GN_CASSERT( sizeof(XenonLineVertex) == 16 );
 
@@ -108,11 +108,11 @@ void GN::gfx::XenonLine::quit()
 //
 // ----------------------------------------------------------------------------
 void GN::gfx::XenonLine::drawLines(
-    BitFields         /*options*/,
+    uint32         /*options*/,
     const float     * /*positions*/,
     size_t            /*stride*/,
     size_t            /*numpoints*/,
-    UInt32            /*rgba*/,
+    uint32            /*rgba*/,
     const Matrix44f & /*model*/,
     const Matrix44f & /*view*/,
     const Matrix44f & /*proj*/ )
@@ -138,7 +138,7 @@ void GN::gfx::XenonLine::drawLines(
         size_t n = MAX_LINES - mNextLine;
         GN_ASSERT( n > 0 );
         drawLines( options, positions, stride, n, rgba, model, view, proj );
-        positions = (const float*)( ((const UInt8*)positions) + n * stride * 2 );
+        positions = (const float*)( ((const uint8*)positions) + n * stride * 2 );
         count -= n;
     }
 
@@ -164,7 +164,7 @@ void GN::gfx::XenonLine::drawLines(
     GN_DX_CHECK_RETURN_VOID( mVtxBuf->Lock( 0, 0, (void**)&vbData, 0 ) );
     vbData += mNextLine * ( LINE_STRIDE / sizeof(XenonLineVertex) );
 
-    UInt32 bgra =
+    uint32 bgra =
           ( (rgba)&0xFF000000) |
           (((rgba)&0x00FF0000)>>16) |
           ( (rgba)&0x0000FF00) |
@@ -187,7 +187,7 @@ void GN::gfx::XenonLine::drawLines(
             XenonLineVertex & v = vbData[i];
             v.p.set( positions[0]*scaleX+offsetX, positions[1]*scaleY+offsetY, positions[2] );
             v.c = bgra;
-            positions = (const float*)( ((const UInt8*)positions) + stride );
+            positions = (const float*)( ((const uint8*)positions) + stride );
         }
     }
     else
@@ -197,7 +197,7 @@ void GN::gfx::XenonLine::drawLines(
             XenonLineVertex & v = vbData[i];
             v.p.set( positions[0], positions[1], positions[2] );
             v.c = bgra;
-            positions = (const float*)( ((const UInt8*)positions) + stride );
+            positions = (const float*)( ((const uint8*)positions) + stride );
         }
     }
 

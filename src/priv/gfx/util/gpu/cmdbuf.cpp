@@ -26,7 +26,7 @@ bool GN::CommandBuffer::init( size_t bufferSize )
     }
 
     // allocate ring buffer
-    m_Buffer = (UInt8*)HeapMemory::alloc( bufferSize * 2 ); // allocate double sized buffer, to handle rewind issue
+    m_Buffer = (uint8*)HeapMemory::alloc( bufferSize * 2 ); // allocate double sized buffer, to handle rewind issue
     if( NULL == m_Buffer ) return failure();
     m_Size = bufferSize;
 
@@ -75,7 +75,7 @@ void GN::CommandBuffer::quit()
 
     // Invalidate tokenID, to unblock any thread that are waiting for consumption tokenID.
     // Note that tokenID value is 16 byte aligned. so -1 would never be a valid tokenID.
-    m_ReadenCursor = (UInt32)-1;
+    m_ReadenCursor = (uint32)-1;
 
     // delete events
     m_NotEmpty.destroy();
@@ -131,12 +131,12 @@ GN::CommandBuffer::waitForFence( Fence fence )
 {
     /*for(;;)
     {
-        UInt32 rf = m_ReadenCursor;
+        uint32 rf = m_ReadenCursor;
         memoryBarrier();
 
         if( rf >= tokenID )
         {
-            return (UInt32)-1 == rf ? OPERATION_CANCELLED : OPERATION_SUCCEEDED;
+            return (uint32)-1 == rf ? OPERATION_CANCELLED : OPERATION_SUCCEEDED;
         }
 
         // TODO: use a event to save some CPU.
@@ -151,8 +151,8 @@ GN::CommandBuffer::waitForFence( Fence fence )
 // -----------------------------------------------------------------------------
 GN::CommandBuffer::OperationResult
 GN::CommandBuffer::beginProduce(
-    UInt16               command,
-    UInt16               parameterSize,
+    uint16               command,
+    uint16               parameterSize,
     _Out_opt_ Token *    token,
     _In_opt_ SyncEvent * optionalCompletionEvent )
 {
@@ -163,7 +163,7 @@ GN::CommandBuffer::beginProduce(
         GN_ERROR(sLogger)( "Command size is too large." );
         return OPERATION_FAILED;
     }
-    parameterSize = (UInt16)( cmdsize - sizeof(TokenInternal) );
+    parameterSize = (uint16)( cmdsize - sizeof(TokenInternal) );
 
     m_ProducerLock.lock();
 
@@ -187,8 +187,8 @@ GN::CommandBuffer::beginProduce(
         {
             m_WritingToken = (TokenInternal*)(m_Buffer + ( wc % m_Size )); // TODO: align buffer size to power of 2 to save this mod operation.);
             m_WritingToken->commandId = command;
-            m_WritingToken->parameterSize = (UInt16)parameterSize;
-            m_WritingToken->endOffset = (UInt32)(wc + cmdsize);
+            m_WritingToken->parameterSize = (uint16)parameterSize;
+            m_WritingToken->endOffset = (uint32)(wc + cmdsize);
             m_WritingToken->completionEvent = optionalCompletionEvent;
 
             if( token )
@@ -268,7 +268,7 @@ GN::CommandBuffer::beginConsume( Token * token, TimeInNanoSecond timeoutTime )
         for(;;)
         {
             // cache production fences
-            UInt32 wc = m_WrittenCursor;
+            uint32 wc = m_WrittenCursor;
             memoryBarrier();
 
             size_t usedBytes = wc - m_ReadenCursor;
@@ -307,7 +307,7 @@ GN::CommandBuffer::beginConsume( Token * token, TimeInNanoSecond timeoutTime )
 
 #if GN_BUILD_ENABLE_ASSERT
         // full command including all parameters should have been written to command buffer.
-        UInt32 wc = m_WrittenCursor;
+        uint32 wc = m_WrittenCursor;
         memoryBarrier();
         size_t cmdsize = m_ReadingToken->parameterSize + sizeof(TokenInternal);
         GN_ASSERT( wc - m_ReadenCursor >= cmdsize );
@@ -351,7 +351,7 @@ void GN::CommandBuffer::endConsume()
     // atomic operation.
     m_DataLock.lock();
     {
-        UInt32 wf = m_WrittenCursor;
+        uint32 wf = m_WrittenCursor;
         memoryBarrier();
         if( wf == m_ReadenCursor )
         {

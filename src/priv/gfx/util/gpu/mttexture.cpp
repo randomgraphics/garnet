@@ -16,7 +16,7 @@ struct UpdateMipmapParam
     Texture         * tex;
     size_t            face;
     size_t            level;
-    Box<UInt32>       area;
+    Box<uint32>       area;
     size_t            rowPitch;
     size_t            slicePitch;
     void            * data;
@@ -85,7 +85,7 @@ void GN::gfx::MultiThreadTexture::quit()
 void GN::gfx::MultiThreadTexture::updateMipmap(
     size_t              face,
     size_t              level,
-    const Box<UInt32> * area,
+    const Box<uint32> * area,
     size_t              rowPitch,
     size_t              slicePitch,
     const void        * data,
@@ -97,7 +97,7 @@ void GN::gfx::MultiThreadTexture::updateMipmap(
         return;
     }
 
-    const Vector3<UInt32> & mipsize = getMipSize( level );
+    const Vector3<uint32> & mipsize = getMipSize( level );
 
     size_t dataSize = slicePitch * mipsize.z;
 
@@ -117,7 +117,7 @@ void GN::gfx::MultiThreadTexture::updateMipmap(
         ump->tex        = mTexture;
         ump->face       = face;
         ump->level      = level;
-        ump->area       = area ? *area : Box<UInt32>( 0, 0, 0, mipsize.x, mipsize.y, mipsize.z );
+        ump->area       = area ? *area : Box<uint32>( 0, 0, 0, mipsize.x, mipsize.y, mipsize.z );
         ump->rowPitch   = rowPitch;
         ump->slicePitch = slicePitch;
         ump->data       = tmpbuf;

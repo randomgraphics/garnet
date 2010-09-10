@@ -17,18 +17,18 @@ using namespace GN::gfx;
 
 struct CommandHeader
 {
-    UInt16 cid;    ///< command ID ( 2 bytes )
-    UInt16 size;   ///< command parameter size. command header is not included.
-    UInt32 fence;  ///< command fence
+    uint16 cid;    ///< command ID ( 2 bytes )
+    uint16 size;   ///< command parameter size. command header is not included.
+    uint32 fence;  ///< command fence
 };
 
 struct DrawLineParams
 {
-    BitFields options;
+    uint32 options;
     void    * positions;
     size_t    stride;
     size_t    numpoints;
-    UInt32    rgba;
+    uint32    rgba;
     Matrix44f model;
     Matrix44f view;
     Matrix44f proj;
@@ -138,7 +138,7 @@ void GN::gfx::MultiThreadGpu::waitForIdle()
 //
 //
 // -----------------------------------------------------------------------------
-UInt32 GN::gfx::MultiThreadGpu::threadProc( void * param )
+uint32 GN::gfx::MultiThreadGpu::threadProc( void * param )
 {
     // create the GPU instance
     GN_ASSERT( 2 == mGpuCreationStatus );
@@ -402,8 +402,8 @@ void GN::gfx::MultiThreadGpu::present()
 void GN::gfx::MultiThreadGpu::clearScreen(
     const Vector4f & c,
     float            z,
-    UInt8            s,
-    BitFields        flags )
+    uint8            s,
+    uint32        flags )
 {
     mCommandBuffer.postCommand4( CMD_CLEAR_SCREEN, c, z, s, flags );
 }
@@ -442,7 +442,7 @@ void GN::gfx::MultiThreadGpu::drawIndexedUp(
     size_t         numvtx,
     const void   * vertexData,
     size_t         strideInBytes,
-    const UInt16 * indexData )
+    const uint16 * indexData )
 {
     size_t vbsize = numvtx * strideInBytes;
     size_t ibsize = numidx * 2;
@@ -492,11 +492,11 @@ void GN::gfx::MultiThreadGpu::drawUp(
 // -----------------------------------------------------------------------------
 void
 GN::gfx::MultiThreadGpu::drawLines(
-    BitFields         options,
+    uint32         options,
     const void *      positions,
     size_t            stride,
     size_t            numpoints,
-    UInt32            rgba,
+    uint32            rgba,
     const Matrix44f & model,
     const Matrix44f & view,
     const Matrix44f & proj )
@@ -818,8 +818,8 @@ namespace GN { namespace gfx
         {
             Vector4f  c;
             float     z;
-            UInt8     s;
-            BitFields flags;
+            uint8     s;
+            uint32 flags;
         };
 #pragma pack( pop )
 
@@ -882,7 +882,7 @@ namespace GN { namespace gfx
             size_t         numvtx;
             void         * vertexData;
             size_t         strideInBytes;
-            UInt16       * indexData;
+            uint16       * indexData;
         };
 #pragma pack( pop )
 

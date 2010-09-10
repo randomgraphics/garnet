@@ -9,7 +9,7 @@ class StringMapTest : public CxxTest::TestSuite
 {
     struct StlStringHash
     {
-        UInt64 operator()( const std::string & s ) const
+        uint64 operator()( const std::string & s ) const
         {
             return GN::stringHash( s.c_str() );
         }

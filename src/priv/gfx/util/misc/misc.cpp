@@ -12,7 +12,7 @@ GN::gfx::loadTextureFromFile( Gpu & gpu, const char * filename )
 
     // load image
     ImageDesc id;
-    DynaArray<UInt8> texels;
+    DynaArray<uint8> texels;
     if( !loadImageFromFile( id, texels, filename ) ) return 0;
 
     // create texture

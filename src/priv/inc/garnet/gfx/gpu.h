@@ -13,15 +13,15 @@ namespace GN { namespace gfx
     ///
     struct DisplayMode
     {
-        UInt32 width;   ///< Screen width. Zero means using current screen width. Default value is zero.
-        UInt32 height;  ///< Screen height. Zero means using current screen height. Defualt value is zero.
-        UInt32 depth;   ///< Color depth. Zero means using current color depth. Default value is zero.
-        UInt32 refrate; ///< Referesh rate. Zero means using adapter default rate. Default value is zero.
+        uint32 width;   ///< Screen width. Zero means using current screen width. Default value is zero.
+        uint32 height;  ///< Screen height. Zero means using current screen height. Defualt value is zero.
+        uint32 depth;   ///< Color depth. Zero means using current color depth. Default value is zero.
+        uint32 refrate; ///< Referesh rate. Zero means using adapter default rate. Default value is zero.
 
         ///
         /// Set display mode parameters
         ///
-        void set( UInt32 w, UInt32 h, UInt32 d, UInt32 r )
+        void set( uint32 w, uint32 h, uint32 d, uint32 r )
         {
             width = w; height = h; depth = d; refrate = r;
         }
@@ -132,7 +132,7 @@ namespace GN { namespace gfx
         ///
         /// \note If zero, then default display will be used.
         ///
-        HandleType displayHandle;
+        intptr_t displayHandle;
 
         /// \name these fields are valid only when 'useExternalWindow' is true.
         ///@{
@@ -143,7 +143,7 @@ namespace GN { namespace gfx
         ///
         /// \note Effective only if useExternalWindow is true.
         ///
-        HandleType renderWindow;
+        intptr_t renderWindow;
 
         //@}
 
@@ -153,7 +153,7 @@ namespace GN { namespace gfx
         ///
         /// Handle of parent window. Default is zero, means a top-level window.
         ///
-        HandleType parentWindow;
+        intptr_t parentWindow;
 
         ///
         /// Monitor handle.
@@ -163,7 +163,7 @@ namespace GN { namespace gfx
         ///   If monitorHandle and parent window are both zero, primary monitor will be used.
         /// - 缺省为0.
         ///
-        HandleType monitorHandle;
+        intptr_t monitorHandle;
 
         //@}
 
@@ -179,7 +179,7 @@ namespace GN { namespace gfx
         /// Default is zero, which means using client width of render window.
         /// If render window is also not avaiable, 640 will be used.
         ///
-        UInt32 windowedWidth;
+        uint32 windowedWidth;
 
         ///
         /// Backbuffer height for windowed mode. Ignored in fullscreen mode.
@@ -187,7 +187,7 @@ namespace GN { namespace gfx
         /// If render window is also not avaiable, default height 480 will be used.
         /// 缺省为0.
         ///
-        UInt32 windowedHeight;
+        uint32 windowedHeight;
 
         ///
         /// Backbuffer MSAA type. Default value is MsaaType::NONE
@@ -273,13 +273,13 @@ namespace GN { namespace gfx
     ///
     struct DispDesc
     {
-        HandleType displayHandle;    ///< Display handle. For X Window only.
-        HandleType monitorHandle;    ///< Monitor handle.
-        HandleType windowHandle;     ///< Render window handle
-        UInt32     width;            ///< Back buffer width
-        UInt32     height;           ///< Back buffer height
-        UInt32     depth;            ///< Back buffer color depth in bits
-        UInt32     refrate;          ///< Screen refresh rate
+        intptr_t displayHandle;    ///< Display handle. For X Window only.
+        intptr_t monitorHandle;    ///< Monitor handle.
+        intptr_t windowHandle;     ///< Render window handle
+        uint32 width;            ///< Back buffer width
+        uint32 height;           ///< Back buffer height
+        uint32 depth;            ///< Back buffer color depth in bits
+        uint32 refrate;          ///< Screen refresh rate
 
         ///
         /// equality operator
@@ -303,14 +303,14 @@ namespace GN { namespace gfx
     ///
     struct GpuCaps
     {
-        UInt32 maxTex1DSize[2];       ///< width, array
-        UInt32 maxTex2DSize[3];       ///< width, height, array
-        UInt32 maxTex3DSize[4];       ///< width, height, array
-        UInt32 maxTextures;           ///< max number of simutaneous textures
-        UInt32 maxColorRenderTargets; ///< max number of simutaneous render targets
-        UInt32 vsLanguages;           ///< renderer supported vertex program languages.
-        UInt32 gsLanguages;           ///< renderer supported geometry program languages.
-        UInt32 psLanguages;           ///< renderer supported pixel program languages.
+        uint32 maxTex1DSize[2];       ///< width, array
+        uint32 maxTex2DSize[3];       ///< width, height, array
+        uint32 maxTex3DSize[4];       ///< width, height, array
+        uint32 maxTextures;           ///< max number of simutaneous textures
+        uint32 maxColorRenderTargets; ///< max number of simutaneous render targets
+        uint32 vsLanguages;           ///< renderer supported vertex program languages.
+        uint32 gsLanguages;           ///< renderer supported geometry program languages.
+        uint32 psLanguages;           ///< renderer supported pixel program languages.
     };
 
     ///
@@ -319,8 +319,8 @@ namespace GN { namespace gfx
     struct VertexBufferBinding
     {
         AutoRef<VtxBuf> vtxbuf; ///< vertex buffer
-        UInt16          stride; ///< vertex stride. 0 means using vertex stride defined in vertex format structure.
-        UInt32          offset; ///< Number of bytes from vertex buffer begining to the first element that will be used.
+        uint16          stride; ///< vertex stride. 0 means using vertex stride defined in vertex format structure.
+        uint32          offset; ///< Number of bytes from vertex buffer begining to the first element that will be used.
 
         /// ctor
         VertexBufferBinding()
@@ -406,7 +406,7 @@ namespace GN { namespace gfx
             };
         };
 
-        UInt8            border[4]; ///< border color in R-G-B-A. Default is (0,0,0,0)
+        uint8            border[4]; ///< border color in R-G-B-A. Default is (0,0,0,0)
         float            mipbias;   ///< Mip bias. Default is 0.0
         float            minlod;    ///< Min mipmap level. Default is zero
         float            maxlod;    ///< Max mipmap level. Default is negative that means no limination
@@ -427,7 +427,7 @@ namespace GN { namespace gfx
         {
             return filters == rhs.filters
                 && addressModes == rhs.addressModes
-                && *(UInt32*)border == *(UInt32*)rhs.border
+                && *(uint32*)border == *(uint32*)rhs.border
                 && mipbias == rhs.mipbias
                 && minlod == rhs.minlod
                 && maxlod == rhs.maxlod;
@@ -457,34 +457,34 @@ namespace GN { namespace gfx
     struct VertexElement
     {
         ColorFormat format;    ///< the vertex element format.
-        UInt8       stream;    ///< vertex buffer index
-        UInt8       offset;    ///< offset of the element in the vertex.
-        UInt16      attribute; ///< index of the GPU program attribute.
+        uint8       stream;    ///< vertex buffer index
+        uint8       offset;    ///< offset of the element in the vertex.
+        uint16      attribute; ///< index of the GPU program attribute.
 
         // operators
         //@{
         bool operator==( const VertexElement & rhs ) const
         {
-            return *(const UInt64*)this == *(const UInt64*)&rhs;
+            return *(const uint64*)this == *(const uint64*)&rhs;
         }
 
         bool operator!=( const VertexElement & rhs ) const
         {
-            return *(const UInt64*)this != *(const UInt64*)&rhs;
+            return *(const uint64*)this != *(const uint64*)&rhs;
         }
 
         bool operator<( const VertexElement & rhs ) const
         {
-            return *(const UInt64*)this < *(const UInt64*)&rhs;
+            return *(const uint64*)this < *(const uint64*)&rhs;
         }
 
         bool operator>( const VertexElement & rhs ) const
         {
-            return *(const UInt64*)this > *(const UInt64*)&rhs;
+            return *(const uint64*)this > *(const uint64*)&rhs;
         }
         //@}
     };
-    GN_CASSERT( sizeof(VertexElement) == sizeof(UInt64) );
+    GN_CASSERT( sizeof(VertexElement) == sizeof(uint64) );
 
     typedef StackArray<VertexElement, 32> VertexBinding;
 
@@ -517,7 +517,7 @@ namespace GN { namespace gfx
 
         union
         {
-            UInt32           subsurface;
+            uint32           subsurface;
             struct
             {
                 unsigned int face  : 12;
@@ -647,17 +647,17 @@ namespace GN { namespace gfx
         {
             struct
             {
-                UInt8 blendSrc          : 4;
-                UInt8 blendDst          : 4;
-                UInt8 blendAlphaSrc     : 4;
-                UInt8 blendAlphaDst     : 4;
-                UInt8 blendOp           : 3;
-                UInt8 blendAlphaOp      : 3;
-                UInt8 blendEnabled      : 2;
-                UInt8 _reserved         : 8;
+                uint8 blendSrc          : 4;
+                uint8 blendDst          : 4;
+                uint8 blendAlphaSrc     : 4;
+                uint8 blendAlphaDst     : 4;
+                uint8 blendOp           : 3;
+                uint8 blendAlphaOp      : 3;
+                uint8 blendEnabled      : 2;
+                uint8 _reserved         : 8;
             };
 
-            UInt32 u32;
+            uint32 u32;
 
             bool operator==( const RenderTargetAlphaBlend & rhs ) const
             {
@@ -674,7 +674,7 @@ namespace GN { namespace gfx
                 return u32 < rhs.u32;
             }
         };
-        GN_CASSERT( sizeof(RenderTargetAlphaBlend) == sizeof(UInt32) );
+        GN_CASSERT( sizeof(RenderTargetAlphaBlend) == sizeof(uint32) );
 
         /// Render state bit flags
         //@{
@@ -684,42 +684,42 @@ namespace GN { namespace gfx
             union
             {
 
-            UInt64 bitFlags; ///< aggregated render state bit flags in single 64 bits integer.
+            uint64 bitFlags; ///< aggregated render state bit flags in single 64 bits integer.
 
             struct
             {
 
             // depth stencil flags ( 1 bytes )
-            UInt64 depthTestEnabled  : 2;
-            UInt64 depthWriteEnabled : 2;
-            UInt64 depthFunc         : 4;
+            uint64 depthTestEnabled  : 2;
+            uint64 depthWriteEnabled : 2;
+            uint64 depthFunc         : 4;
 
             // stencil flags ( 3 bytes )
             // TODO: stencil function
-            UInt64 stencilEnabled    : 2;
-            UInt64 stencilPassOp     : 4; ///< pass both stencil and Z
-            UInt64 stencilFailOp     : 4; ///< fail stencil (no z test at all)
-            UInt64 stencilZFailOp    : 4; ///< pass stencil but fail Z
-            UInt64 stencilFunc       : 4; ///< Stencil function
-            UInt64 _reserved0        : 6; ///< reserved bits. keep them zero.
+            uint64 stencilEnabled    : 2;
+            uint64 stencilPassOp     : 4; ///< pass both stencil and Z
+            uint64 stencilFailOp     : 4; ///< fail stencil (no z test at all)
+            uint64 stencilZFailOp    : 4; ///< pass stencil but fail Z
+            uint64 stencilFunc       : 4; ///< Stencil function
+            uint64 _reserved0        : 6; ///< reserved bits. keep them zero.
 
             // misc. flags (1 byte)
-            UInt64 fillMode          : 2;
-            UInt64 cullMode          : 2;
-            UInt64 frontFace         : 2;
-            UInt64 msaaEnabled       : 2;
+            uint64 fillMode          : 2;
+            uint64 cullMode          : 2;
+            uint64 frontFace         : 2;
+            uint64 msaaEnabled       : 2;
 
             // reserved (3 byte)
-            UInt64 _reserved1        : 24; ///< reserved bits. keep them zero.
+            uint64 _reserved1        : 24; ///< reserved bits. keep them zero.
 
             };
 
             struct
             {
 
-            UInt64 depthFlags    :  8;
-            UInt64 stencilFlags  : 24;
-            UInt64 miscFlags     :  8;
+            uint64 depthFlags    :  8;
+            uint64 stencilFlags  : 24;
+            uint64 miscFlags     :  8;
 
             };
 
@@ -741,13 +741,13 @@ namespace GN { namespace gfx
             Vector4f blendFactors;
 
             /// 4 bits x 8 render targets.
-            UInt32 colorWriteMask;
+            uint32 colorWriteMask;
 
             /// viewport. (0,0,0,0) is used to represent current size of render target.
-            Rect<UInt32> viewport;
+            Rect<uint32> viewport;
 
             /// Scissor rect. (0,0,0,0) is used to represent current size of the render target.
-            Rect<UInt32> scissorRect;
+            Rect<uint32> scissorRect;
 
             /// clear to default render states
             void clear()
@@ -903,11 +903,11 @@ namespace GN { namespace gfx
         /// Happens when render windows is resized or moved to another monitor.
         ///
         /// The 3 parameters are:
-        ///  - HandleType monior   : monitor handle that render window stays in
-        ///  - UInt32 clientWidth  : width of client area of render window
-        ///  - UInt32 clientHeight : height of client area of render window
+        ///  - intptr_t monior       : monitor handle that render window stays in
+        ///  - uint32 clientWidth  : width of client area of render window
+        ///  - uint32 clientHeight : height of client area of render window
         ///
-        Signal3<void, HandleType, UInt32, UInt32> rendererWindowSizeMove;
+        Signal3<void, intptr_t, uint32, uint32> rendererWindowSizeMove;
 
         ///
         /// 当用户试图关闭渲染窗口时被触发，如点击窗口的关闭按钮或者按ALT-F4。
@@ -1055,8 +1055,8 @@ namespace GN { namespace gfx
         {
             TextureDesc desc =
             {
-                (UInt32)sx, (UInt32)sy, (UInt32)sz,
-                (UInt32)faces, (UInt32)levels,
+                (uint32)sx, (uint32)sy, (uint32)sz,
+                (uint32)faces, (uint32)levels,
                 ColorFormat::UNKNOWN == format ? getDefaultTextureFormat( usages ) : format,
                 usages,
             };
@@ -1145,7 +1145,7 @@ namespace GN { namespace gfx
         createIdxBuf16( size_t numidx, bool fastCpuWrite = false )
         {
             IdxBufDesc desc;
-            desc.numidx       = (UInt32)numidx;
+            desc.numidx       = (uint32)numidx;
             desc.bits32       = false;
             desc.fastCpuWrite = fastCpuWrite;
             return createIdxBuf( desc );
@@ -1158,7 +1158,7 @@ namespace GN { namespace gfx
         createIdxBuf32( size_t numidx, bool fastCpuWrite = false )
         {
             IdxBufDesc desc;
-            desc.numidx       = (UInt32)numidx;
+            desc.numidx       = (uint32)numidx;
             desc.bits32       = true;
             desc.fastCpuWrite = fastCpuWrite;
             return createIdxBuf( desc );
@@ -1250,8 +1250,8 @@ namespace GN { namespace gfx
         ///
         virtual void
         clearScreen( const Vector4f & c = Vector4f(0,0,0,1),
-                     float z = 1.0f, UInt8 s = 0,
-                     BitFields flags = CLEAR_ALL ) = 0;
+                     float z = 1.0f, uint8 s = 0,
+                     uint32 flags = CLEAR_ALL ) = 0;
 
         ///
         /// Draw indexed primitives.
@@ -1297,7 +1297,7 @@ namespace GN { namespace gfx
                              size_t         numvtx,
                              const void *   vertexData,
                              size_t         strideInBytes,
-                             const UInt16 * indexData ) = 0;
+                             const uint16 * indexData ) = 0;
 
         ///
         /// draw on-indexed primitives with user-defined data array
@@ -1324,11 +1324,11 @@ namespace GN { namespace gfx
         /// \param model, view, proj
         ///     Transformation matrices. Ignored when using DL_WINDOW_SPACE.
         ///
-        virtual void drawLines( BitFields         options,
+        virtual void drawLines( uint32         options,
                                 const void *      positions,
                                 size_t            stride,
                                 size_t            numpoints,
-                                UInt32            rgba,
+                                uint32            rgba,
                                 const Matrix44f & model,
                                 const Matrix44f & view,
                                 const Matrix44f & proj ) = 0;
@@ -1416,7 +1416,7 @@ namespace GN { namespace gfx
 
         struct BackBufferContent
         {
-            DynaArray<UInt8> data;
+            DynaArray<uint8> data;
             ColorFormat      format;
             size_t           width;
             size_t           height;

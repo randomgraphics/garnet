@@ -398,8 +398,8 @@ static AutoRef<TextureResource> sRegisterWhiteTexture( GpuResourceDatabase & gdb
 {
     AutoRef<TextureResource> tr = gdb.createResource<TextureResource>( "@WHITE" );
     AutoRef<Texture> t( gdb.getGpu().create2DTexture( 2, 2, 0, ColorFormat::RGBA32 ) );
-    UInt32 white[4] = { 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF };
-    t->updateMipmap( 0, 0, NULL, sizeof(UInt32)*2, sizeof(UInt32)*4, white, SurfaceUpdateFlag::DEFAULT );
+    uint32 white[4] = { 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF };
+    t->updateMipmap( 0, 0, NULL, sizeof(uint32)*2, sizeof(uint32)*4, white, SurfaceUpdateFlag::DEFAULT );
     tr->setTexture( t );
     return tr;
 }
@@ -411,8 +411,8 @@ static AutoRef<TextureResource> sRegisterBlackTexture( GpuResourceDatabase & gdb
 {
     AutoRef<TextureResource> tr = gdb.createResource<TextureResource>( "@BLACK" );
     AutoRef<Texture> t( gdb.getGpu().create2DTexture( 2, 2, 0, ColorFormat::RGBA32 ) );
-    UInt32 black[4] = { 0, 0, 0, 0 };
-    t->updateMipmap( 0, 0, NULL, sizeof(UInt32)*2, sizeof(UInt32)*4, black, SurfaceUpdateFlag::DEFAULT );
+    uint32 black[4] = { 0, 0, 0, 0 };
+    t->updateMipmap( 0, 0, NULL, sizeof(uint32)*2, sizeof(uint32)*4, black, SurfaceUpdateFlag::DEFAULT );
     tr->setTexture( t );
     return tr;
 }
@@ -424,8 +424,8 @@ static AutoRef<TextureResource> sRegisterFlatNormalMap( GpuResourceDatabase & gd
 {
     AutoRef<TextureResource> tr = gdb.createResource<TextureResource>( "@FLAT_NORMAL_MAP" );
     AutoRef<Texture> t(  gdb.getGpu().create2DTexture( 2, 2, 0, ColorFormat::RG_16_16_UNORM ) );
-    UInt32 up[4] = { 0x80008000, 0x80008000, 0x80008000, 0x80008000 };
-    t->updateMipmap( 0, 0, NULL, sizeof(UInt32)*2, sizeof(UInt32)*4, up, SurfaceUpdateFlag::DEFAULT );
+    uint32 up[4] = { 0x80008000, 0x80008000, 0x80008000, 0x80008000 };
+    t->updateMipmap( 0, 0, NULL, sizeof(uint32)*2, sizeof(uint32)*4, up, SurfaceUpdateFlag::DEFAULT );
     tr->setTexture( t );
     return tr;
 }
@@ -588,9 +588,9 @@ GpuResourceDatabase::Impl::createResource(
     newres->mImpl = resimpl;
 
     // create new handle
-    UInt32 internalHandle = mgr->resources.add( name, resimpl );
+    uint32 internalHandle = mgr->resources.add( name, resimpl );
     if( 0 ==internalHandle ) return AutoRef<GpuResource>::NULLREF;
-    resimpl->handle.set( (UInt32)mgr->index, internalHandle );
+    resimpl->handle.set( (uint32)mgr->index, internalHandle );
 
     // done
     return newres;
@@ -605,7 +605,7 @@ GpuResourceDatabase::Impl::findResource( const Guid & type, const char * name ) 
     const ResourceManager * mgr = getManager( type );
     if( NULL == mgr ) return AutoRef<GpuResource>::NULLREF;
 
-    UInt32 internalHandle = mgr->resources.name2handle(name);
+    uint32 internalHandle = mgr->resources.name2handle(name);
     if( 0 == internalHandle ) return AutoRef<GpuResource>::NULLREF;
 
     GpuResource::Impl * resimpl = mgr->resources[internalHandle];

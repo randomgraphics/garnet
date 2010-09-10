@@ -65,7 +65,7 @@ namespace GN { namespace gfx
     struct OGLVertexBindingDesc
     {
         OGLVertexSemantic semantic;
-        UInt8             index;
+        uint8             index;
     };
 
     ///
@@ -78,7 +78,7 @@ namespace GN { namespace gfx
         ///
         /// return non-zero unique shader ID.
         ///
-        UInt64 uniqueID() const { return mID; }
+        uint64 uniqueID() const { return mID; }
 
         ///
         /// return program language used by this shader
@@ -118,14 +118,14 @@ namespace GN { namespace gfx
         ///
         OGLBasicGpuProgram( OGLGpu & r, GpuProgramLanguage lang ) : OGLResource(r), mLanguage(lang)
         {
-            static UInt64 counter = 1;
+            static uint64 counter = 1;
             mID = counter++;
         }
 
     private:
 
         const GpuProgramLanguage mLanguage;
-        UInt64                   mID;
+        uint64                   mID;
     };
 
     // *************************************************************************
@@ -208,7 +208,7 @@ namespace GN { namespace gfx
             size_t                             size;         ///< uniform size in bytes
             StrA                               name;         ///< uniform name
             mutable WeakRef<const Uniform>     lastUniform;  ///< pointer to last uniform parameter
-            mutable SInt32                     lastStamp;    ///< update time stamp of the last uniform parameter
+            mutable sint32                     lastStamp;    ///< update time stamp of the last uniform parameter
             mutable AutoInitializer<size_t,-1> lastTexStage; ///< last texture stage associated to this parameter
         };
 
@@ -220,7 +220,7 @@ namespace GN { namespace gfx
             GpuProgramAttributeParameterDesc desc;          ///< attribute parameter description
             StrA                             name;          ///< attribute name
             OGLVertexSemantic                semanticName;
-            UInt8                            semanticIndex;
+            uint8                            semanticIndex;
         };
 
         // GLSL program and shader object handles

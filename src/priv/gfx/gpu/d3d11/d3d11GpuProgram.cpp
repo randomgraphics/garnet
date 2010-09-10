@@ -231,9 +231,9 @@ sUpdateConstData(
             desc.size );
     }
 
-    DynaArray<UInt8>             & cb = cbarray[ssp.cbidx];
-    SafeArrayAccessor<const UInt8> src( (const UInt8*)uniform.getval(), uniform.size() );
-    SafeArrayAccessor<UInt8>       dst( cb.cptr(), cb.size() );
+    DynaArray<uint8>             & cb = cbarray[ssp.cbidx];
+    SafeArrayAccessor<const uint8> src( (const uint8*)uniform.getval(), uniform.size() );
+    SafeArrayAccessor<uint8>       dst( cb.cptr(), cb.size() );
 
     // copy uniform data to system const buffer
     src.copyTo(
@@ -247,7 +247,7 @@ sUpdateConstData(
     dirtyFlags[ssp.cbidx] = true;
 }
 
-static UInt64 sD3D11ShaderID = 1;
+static uint64 sD3D11ShaderID = 1;
 
 //
 //
@@ -396,7 +396,7 @@ void GN::gfx::D3D11GpuProgram::applyUniforms(
         if( skipDirtyCheck || vscDirty[i] )
         {
             ID3D11Buffer           & buf = *mVs.constBufs[i];
-            const DynaArray<UInt8> & data = mVs.constData[i];
+            const DynaArray<uint8> & data = mVs.constData[i];
             sUpdateConstBuffer( cxt, buf, data.cptr(), data.size() );
         }
     }
@@ -407,7 +407,7 @@ void GN::gfx::D3D11GpuProgram::applyUniforms(
         if( skipDirtyCheck || gscDirty[i] )
         {
             ID3D11Buffer           & buf = *mGs.constBufs[i];
-            const DynaArray<UInt8> & data = mGs.constData[i];
+            const DynaArray<uint8> & data = mGs.constData[i];
             sUpdateConstBuffer( cxt, buf, data.cptr(), data.size() );
         }
     }
@@ -418,7 +418,7 @@ void GN::gfx::D3D11GpuProgram::applyUniforms(
         if( skipDirtyCheck || pscDirty[i] )
         {
             ID3D11Buffer           & buf = *mPs.constBufs[i];
-            const DynaArray<UInt8> & data = mPs.constData[i];
+            const DynaArray<uint8> & data = mPs.constData[i];
             sUpdateConstBuffer( cxt, buf, data.cptr(), data.size() );
         }
     }

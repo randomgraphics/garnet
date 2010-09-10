@@ -9,10 +9,10 @@ static GN::Logger * sLogger = GN::getLogger("GN.gfx.base.image");
 
 #ifndef MAKE_FOURCC
 #define MAKE_FOURCC(ch0, ch1, ch2, ch3)     \
-            ((UInt32)(UInt8)(ch0) |         \
-            ((UInt32)(UInt8)(ch1) << 8) |   \
-            ((UInt32)(UInt8)(ch2) << 16) |  \
-            ((UInt32)(UInt8)(ch3) << 24 ))
+            ((uint32)(uint8)(ch0) |         \
+            ((uint32)(uint8)(ch1) << 8) |   \
+            ((uint32)(uint8)(ch2) << 16) |  \
+            ((uint32)(uint8)(ch3) << 24 ))
 #endif /* defined(MAKE_FOURCC) */
 
 ///
@@ -125,11 +125,11 @@ static struct DdpfDesc
 
 struct DX10Info
 {
-    SInt32 format;    // DXGI_FORMAT
-    SInt32 dim;       // D3D10_RESOURCE_DIMENSION
-    UInt32 miscFlag;  // D3D10_RESOURCE_MISC_FLAG
-    UInt32 arraySize;
-    UInt32 reserved;
+    sint32 format;    // DXGI_FORMAT
+    sint32 dim;       // D3D10_RESOURCE_DIMENSION
+    uint32 miscFlag;  // D3D10_RESOURCE_MISC_FLAG
+    uint32 arraySize;
+    uint32 reserved;
 };
 
 // *****************************************************************************
@@ -169,7 +169,7 @@ static size_t sGetImageFaceCount( const DDSFileHeader & header )
 ///
 /// return image depth
 // -----------------------------------------------------------------------------
-static UInt32 sGetImageDepth( const DDSFileHeader & header )
+static uint32 sGetImageDepth( const DDSFileHeader & header )
 {
     return DDS_DDSD_DEPTH & header.flags ? header.depth : 1;
 }
@@ -181,7 +181,7 @@ static GN::gfx::ColorFormat getImageFormat( const DDPixelFormat & ddpf )
 {
     GN_GUARD;
 
-    UInt32 flags = ddpf.flags;
+    uint32 flags = ddpf.flags;
     if( flags & DDS_DDPF_FOURCC ) flags = DDS_DDPF_FOURCC;
 
     bool fourcc = !!( flags & DDS_DDPF_FOURCC );
@@ -264,13 +264,13 @@ bool DDSReader::checkFormat( GN::File & fp )
 //
 // -----------------------------------------------------------------------------
 bool DDSReader::readHeader(
-    GN::gfx::ImageDesc & o_desc, const UInt8 * i_buff, size_t i_size )
+    GN::gfx::ImageDesc & o_desc, const uint8 * i_buff, size_t i_size )
 {
     GN_GUARD;
 
     // check magic number
-    if( i_size < sizeof(UInt32) ||
-        *((const UInt32*)i_buff) != MAKE_FOURCC('D','D','S',' ') )
+    if( i_size < sizeof(uint32) ||
+        *((const uint32*)i_buff) != MAKE_FOURCC('D','D','S',' ') )
     {
         GN_ERROR(sLogger)( "fail to read DDS magic number!" );
         return false;
@@ -289,7 +289,7 @@ bool DDSReader::readHeader(
     i_size -= sizeof(mHeader);
 
     // validate header flags
-    UInt32 required_flags = DDS_DDSD_WIDTH | DDS_DDSD_HEIGHT;
+    uint32 required_flags = DDS_DDSD_WIDTH | DDS_DDSD_HEIGHT;
     if( required_flags != (required_flags & mHeader.flags) )
     {
         GN_ERROR(sLogger)( "damage DDS header!" );
@@ -322,9 +322,9 @@ bool DDSReader::readHeader(
     // grok image dimension
     size_t faces = sGetImageFaceCount( mHeader );
     if( 0 == faces ) return false;
-    UInt32 width = mHeader.width;
-    UInt32 height = mHeader.height;
-    UInt32 depth = sGetImageDepth( mHeader );
+    uint32 width = mHeader.width;
+    uint32 height = mHeader.height;
+    uint32 depth = sGetImageDepth( mHeader );
 
     // grok miplevel information
     bool hasMipmap = ( DDS_DDSD_MIPMAPCOUNT & mHeader.flags )
@@ -404,11 +404,11 @@ bool DDSReader::readImage( void * o_data ) const
     /*if( GN::gfx::ImageDesc::IMG_CUBE == mImgDesc.type )
     {
         // special case for cube texture
-        const UInt8 * src = mSrc;
+        const uint8 * src = mSrc;
         size_t size = mSize;
-        for( UInt8 face = 0; face < 6; ++face )
+        for( uint8 face = 0; face < 6; ++face )
         {
-            for( UInt8 level = 0; level < mImgDesc.numLevels; ++level )
+            for( uint8 level = 0; level < mImgDesc.numLevels; ++level )
             {
                 const GN::gfx::MipmapDesc & m = mImgDesc[level];
 
@@ -418,8 +418,8 @@ bool DDSReader::readImage( void * o_data ) const
                     return false;
                 }
 
-                UInt8 * dst =
-                    ((UInt8*)o_data) + mImgDesc.getSliceOffset( level, face );
+                uint8 * dst =
+                    ((uint8*)o_data) + mImgDesc.getSliceOffset( level, face );
 
                 memcpy( dst, src, m.slicePitch );
 

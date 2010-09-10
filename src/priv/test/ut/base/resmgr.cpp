@@ -62,14 +62,14 @@ namespace GN
     ///   - 一个常用的NameChecker就是检查该名字是否对应一个有效的磁盘文件. 这样, 当用户试图访问一个
     ///     不在资源管理器内, 但存在于磁盘上的资源时, 该资源就会被自动加入资源管理器.
     ///
-    template<typename RES, typename HANDLE=UInt32, bool SINGLETON=false>
+    template<typename RES, typename HANDLE=uint32, bool SINGLETON=false>
     class ResourceManagerTempl : public detail::SingletonSelector<ResourceManagerTempl<RES,HANDLE,SINGLETON>,SINGLETON>::type
     {
     public:
 
-        typedef HANDLE HandleType; ///< resource Handle. 0 means invalid handle
+        typedef HANDLE ResourceHandle; ///< resource Handle. 0 means invalid handle
 
-        typedef RES ResType; ///< resource type
+        typedef RES Resource; ///< resource type
 
         typedef Delegate3<bool,RES&,const StrA &,void*> Creator; ///< Resource creation functor
 
@@ -178,7 +178,7 @@ namespace GN
             disposeAll();
 
             // delete resource descriptions
-            HandleType h = mResHandles.first();
+            ResourceHandle h = mResHandles.first();
             while( h )
             {
                 GN_ASSERT( mResHandles[h] );
@@ -205,7 +205,7 @@ namespace GN
         ///
         /// Return true for valid resource handle
         ///
-        bool validResourceHandle( HandleType h ) const { return mResHandles.validHandle( h ); }
+        bool validResourceHandle( ResourceHandle h ) const { return mResHandles.validHandle( h ); }
 
         ///
         /// Return true for valid resource name
@@ -219,7 +219,7 @@ namespace GN
         ///
         /// Get resource by handle.
         ///
-        bool getResource( RES & result, HandleType handle )
+        bool getResource( RES & result, ResourceHandle handle )
         {
             GN_GUARD_SLOW;
             return getResourceImpl( result, handle, 0 );
@@ -231,7 +231,7 @@ namespace GN
         ///
         /// If failed, return default constructed resource instance.
         ///
-        RES getResource( HandleType handle )
+        RES getResource( ResourceHandle handle )
         {
             GN_GUARD_SLOW;
             RES res;
@@ -249,7 +249,7 @@ namespace GN
         {
             GN_GUARD_SLOW;
             StrA realname;
-            HandleType h = getResourceHandle( resolveName(realname,name), autoAddNewName );
+            ResourceHandle h = getResourceHandle( resolveName(realname,name), autoAddNewName );
             return getResourceImpl( result, h, realname.cptr() );
             GN_UNGUARD_SLOW;
         }
@@ -281,11 +281,11 @@ namespace GN
         ///       it'll be add to manager automatically, and a valid handle will be return.
         ///     - If false, return 0 for non-exist resource name.
         ///
-        HandleType getResourceHandle( const StrA & name, bool autoAddNewName = true )
+        ResourceHandle getResourceHandle( const StrA & name, bool autoAddNewName = true )
         {
             GN_GUARD_SLOW;
             StrA realname;
-            HandleType * handle = mResNames.find( resolveName(realname,name) );
+            ResourceHandle * handle = mResNames.find( resolveName(realname,name) );
             if( NULL != handle ) return *handle;
             if( autoAddNewName && ( !mNameChecker || mNameChecker(realname) ) ) return addResource( realname );
             return 0; // failed
@@ -295,7 +295,7 @@ namespace GN
         ///
         /// Get resource name
         ///
-        const StrA & getResourceName( HandleType handle ) const
+        const StrA & getResourceName( ResourceHandle handle ) const
         {
             GN_GUARD_SLOW;
             if( validResourceHandle(handle) )
@@ -310,7 +310,7 @@ namespace GN
         ///
         /// Add new resource item to manager
         ///
-        HandleType addResource(
+        ResourceHandle addResource(
             const StrA & name,
             void * userData = 0,
             const Creator & creator = Creator(),
@@ -319,10 +319,10 @@ namespace GN
         {
             GN_GUARD;
 
-            HandleType h;
+            ResourceHandle h;
             ResDesc * item;
             StrA realname;
-            HandleType * handle = mResNames.find( resolveName(realname,name) );
+            ResourceHandle * handle = mResNames.find( resolveName(realname,name) );
             if( NULL != handle )
             {
                 if( !overrideExistingResource )
@@ -362,7 +362,7 @@ namespace GN
         ///
         /// Remove resource from manager
         ///
-        void removeResourceByHandle( HandleType handle )
+        void removeResourceByHandle( ResourceHandle handle )
         {
             GN_GUARD;
             if( validResourceHandle(handle) )
@@ -381,7 +381,7 @@ namespace GN
 
             // find the resource
             StrA realname;
-            HandleType * handle = mResNames.find( resolveName(realname,name) );
+            ResourceHandle * handle = mResNames.find( resolveName(realname,name) );
             if( NULL == handle )
             {
                 GN_ERROR(sLogger)( "invalid resource name: %s", realname.cptr() );
@@ -389,7 +389,7 @@ namespace GN
             }
 
             // get the resource handle and pointer
-            HandleType h = *handle;
+            ResourceHandle h = *handle;
             ResDesc * r = mResHandles[h];
             GN_ASSERT( r );
 
@@ -417,7 +417,7 @@ namespace GN
         ///
         /// Dispose specific resource
         ///
-        void disposeResourceByHandle( HandleType h )
+        void disposeResourceByHandle( ResourceHandle h )
         {
             GN_GUARD;
             if( !validResourceHandle( h ) )
@@ -436,7 +436,7 @@ namespace GN
         {
             GN_GUARD;
             StrA realname;
-            HandleType * h = mResNames.find( resolveName(realname,name) );
+            ResourceHandle * h = mResNames.find( resolveName(realname,name) );
             if( NULL == h )
             {
                 GN_ERROR(sLogger)( "invalid resource name: %s", realname.cptr() );
@@ -452,7 +452,7 @@ namespace GN
         void disposeAll()
         {
             GN_GUARD;
-            HandleType h = mResHandles.first();
+            ResourceHandle h = mResHandles.first();
             while( h )
             {
                 doDispose( mResHandles.get(h) );
@@ -470,7 +470,7 @@ namespace GN
             GN_GUARD;
             RES res;
             bool ok = true;
-            HandleType h;
+            ResourceHandle h;
             for( h = mResHandles.first(); h != 0; h = mResHandles.next(h) )
             {
                 ok &= getResource( res, h );
@@ -482,7 +482,7 @@ namespace GN
         ///
         /// Set user data for specfic resource
         ///
-        void setUserData( HandleType h, void * data )
+        void setUserData( ResourceHandle h, void * data )
         {
             if( !validResourceHandle(h) )
             {
@@ -515,8 +515,8 @@ namespace GN
             ResDesc() : userData(0), prev(0), next(0) {}
         };
 
-        typedef StringMap<char,HandleType>         NameMap;
-        typedef HandleManager<ResDesc*,HandleType> ResHandleMgr;
+        typedef StringMap<char,ResourceHandle>         NameMap;
+        typedef HandleManager<ResDesc*,ResourceHandle> ResHandleMgr;
 
         ResHandleMgr mResHandles;
         NameMap      mResNames;
@@ -549,7 +549,7 @@ namespace GN
             return out;
         }
 
-        bool getResourceImpl( RES & res, HandleType handle, const char * name )
+        bool getResourceImpl( RES & res, ResourceHandle handle, const char * name )
         {
             GN_GUARD_SLOW;
 
@@ -795,7 +795,7 @@ public:
         // rm should be empty
         TS_ASSERT( rm.empty() );
 
-        ResMgr::HandleType h1 = rm.addResource( "1" );
+        ResMgr::ResourceHandle h1 = rm.addResource( "1" );
         TS_ASSERT( h1 );
 
         // rm should NOT be empty
@@ -817,8 +817,8 @@ public:
     {
         ResMgr rm;
 
-        ResMgr::HandleType h1 = rm.addResource( "1" );
-        ResMgr::HandleType h2 = rm.addResource( "2" );
+        ResMgr::ResourceHandle h1 = rm.addResource( "1" );
+        ResMgr::ResourceHandle h2 = rm.addResource( "2" );
 
         TS_ASSERT( rm.validResourceHandle( h1 ) );
         TS_ASSERT( rm.validResourceHandle( h2 ) );
@@ -833,8 +833,8 @@ public:
     {
         ResMgr rm;
 
-        ResMgr::HandleType h1 = rm.addResource( "1" );
-        ResMgr::HandleType h2 = rm.addResource( "2" );
+        ResMgr::ResourceHandle h1 = rm.addResource( "1" );
+        ResMgr::ResourceHandle h2 = rm.addResource( "2" );
 
         TS_ASSERT( rm.validResourceHandle( h1 ) );
         TS_ASSERT( rm.validResourceHandle( h2 ) );

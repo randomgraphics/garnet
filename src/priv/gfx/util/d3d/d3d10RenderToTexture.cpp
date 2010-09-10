@@ -153,7 +153,7 @@ void GN::d3d10::RenderToTexture::quit()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::d3d10::RenderToTexture::clearScreen( float r, float g, float b, float a, float d, UInt8 s )
+void GN::d3d10::RenderToTexture::clearScreen( float r, float g, float b, float a, float d, uint8 s )
 {
     float color[] = { r, g, b, a };
     for( size_t i = 0; i < mColors.size(); ++i )

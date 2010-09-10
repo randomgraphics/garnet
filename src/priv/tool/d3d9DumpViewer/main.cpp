@@ -33,16 +33,16 @@ struct D3D9VtxDeclDump
 
 struct D3D9VtxBufDump
 {
-    UInt32 offset;
-    UInt32 stride;
+    uint32 offset;
+    uint32 stride;
     StrA   ref;
     AutoComPtr<IDirect3DVertexBuffer9> vb;
 };
 
 struct D3D9IdxBufDump
 {
-    UInt32 format;
-    UInt32 startvtx;
+    uint32 format;
+    uint32 startvtx;
     StrA   ref;
     AutoComPtr<IDirect3DIndexBuffer9> ib;
 };
@@ -56,11 +56,11 @@ struct D3D9TextureDump
 struct D3D9RtDump
 {
     bool   inuse;
-    UInt32 width;
-    UInt32 height;
-    UInt32 format;
-    UInt32 msaa;
-    UInt32 quality;
+    uint32 width;
+    uint32 height;
+    uint32 format;
+    uint32 msaa;
+    uint32 quality;
     StrA   ref;
     AutoComPtr<IDirect3DSurface9> surf;
     AutoComPtr<IDirect3DSurface9> syscopy;
@@ -68,22 +68,22 @@ struct D3D9RtDump
 
 struct D3D9RsDump
 {
-    UInt32 type;
-    UInt32 value;
+    uint32 type;
+    uint32 value;
 };
 
 struct D3D9OperationDump
 {
     bool    indexed;
 
-    UInt32  prim;
-    UInt32  numprim;
-    UInt32  startvtx;
+    uint32  prim;
+    uint32  numprim;
+    uint32  startvtx;
 
     // for indexed draw only
-    UInt32  minvtxidx;
-    UInt32  numvtx;
-    UInt32  startidx;
+    uint32  minvtxidx;
+    uint32  numvtx;
+    uint32  startidx;
 
     void draw( IDirect3DDevice9 & dev )
     {
@@ -135,7 +135,7 @@ struct D3D9StateDump
 
     D3D9RsDump        renderstates[103];
 
-    UInt32            samplerstates[16][14]; // samplerstates[x][0] is unused.
+    uint32            samplerstates[16][14]; // samplerstates[x][0] is unused.
 
     D3DVIEWPORT9      viewport;
 
@@ -363,7 +363,7 @@ struct D3D9StateDump
         dev.SetVertexDeclaration( vtxdecl.decl );
 
         // vb
-        for( UInt32 i = 0; i < GN_ARRAY_COUNT(vtxbufs); ++i )
+        for( uint32 i = 0; i < GN_ARRAY_COUNT(vtxbufs); ++i )
         {
             const D3D9VtxBufDump & vb = vtxbufs[i];
             if( vb.vb )
@@ -380,13 +380,13 @@ struct D3D9StateDump
         dev.SetIndices( idxbuf.ib );
 
         // tex
-        for( UInt32 i = 0; i < GN_ARRAY_COUNT(textures); ++i )
+        for( uint32 i = 0; i < GN_ARRAY_COUNT(textures); ++i )
         {
             dev.SetTexture( i, textures[i].tex );
         }
 
         // rt
-        for( UInt32 i = 0; i < GN_ARRAY_COUNT(rendertargets); ++i )
+        for( uint32 i = 0; i < GN_ARRAY_COUNT(rendertargets); ++i )
         {
             dev.SetRenderTarget( i, rendertargets[i].surf );
         }
@@ -395,15 +395,15 @@ struct D3D9StateDump
         dev.SetDepthStencilSurface( depthstencil.surf );
 
         // rs
-        for( UInt32 i = 0; i < GN_ARRAY_COUNT(renderstates); ++i )
+        for( uint32 i = 0; i < GN_ARRAY_COUNT(renderstates); ++i )
         {
             const D3D9RsDump & rs = renderstates[i];
             dev.SetRenderState( (D3DRENDERSTATETYPE)rs.type, rs.value );
         }
 
         // ss
-        for( UInt32 s = 0; s < GN_ARRAY_COUNT(samplerstates); ++s )
-        for( UInt32 t = 1; t < GN_ARRAY_COUNT(samplerstates[0]); ++t )
+        for( uint32 s = 0; s < GN_ARRAY_COUNT(samplerstates); ++s )
+        for( uint32 t = 1; t < GN_ARRAY_COUNT(samplerstates[0]); ++t )
         {
             dev.SetSamplerState( s, (D3DSAMPLERSTATETYPE)t, samplerstates[s][t] );
         }
@@ -420,7 +420,7 @@ struct D3D9StateDump
         // load RT data
         {
             PixPerfScopeEvent pixevent( 0, "Load RT data" );
-            for( UInt32 i = 0; i < GN_ARRAY_COUNT(rendertargets); ++i )
+            for( uint32 i = 0; i < GN_ARRAY_COUNT(rendertargets); ++i )
             {
                 D3D9RtDump & rtd = rendertargets[i];
                 if( !rtd.inuse ) continue;
@@ -505,19 +505,19 @@ struct D3D9StateDump
             }
             else if( "viewport" == e->name )
             {
-                if( !sGetNumericAttr( *e, "x", (UInt32&)viewport.X ) ) return false;
-                if( !sGetNumericAttr( *e, "y", (UInt32&)viewport.Y ) ) return false;
-                if( !sGetNumericAttr( *e, "w", (UInt32&)viewport.Width ) ) return false;
-                if( !sGetNumericAttr( *e, "h", (UInt32&)viewport.Height ) ) return false;
+                if( !sGetNumericAttr( *e, "x", (uint32&)viewport.X ) ) return false;
+                if( !sGetNumericAttr( *e, "y", (uint32&)viewport.Y ) ) return false;
+                if( !sGetNumericAttr( *e, "w", (uint32&)viewport.Width ) ) return false;
+                if( !sGetNumericAttr( *e, "h", (uint32&)viewport.Height ) ) return false;
                 if( !sGetNumericAttr( *e, "zmin", viewport.MinZ ) ) return false;
                 if( !sGetNumericAttr( *e, "zmax", viewport.MaxZ ) ) return false;
             }
             else if( "scissor" == e->name )
             {
-                if( !sGetNumericAttr( *e, "l", (SInt32&)scissorrect.left ) ) return false;
-                if( !sGetNumericAttr( *e, "t", (SInt32&)scissorrect.top ) ) return false;
-                if( !sGetNumericAttr( *e, "r", (SInt32&)scissorrect.right ) ) return false;
-                if( !sGetNumericAttr( *e, "b", (SInt32&)scissorrect.bottom ) ) return false;
+                if( !sGetNumericAttr( *e, "l", (sint32&)scissorrect.left ) ) return false;
+                if( !sGetNumericAttr( *e, "t", (sint32&)scissorrect.top ) ) return false;
+                if( !sGetNumericAttr( *e, "r", (sint32&)scissorrect.right ) ) return false;
+                if( !sGetNumericAttr( *e, "b", (sint32&)scissorrect.bottom ) ) return false;
             }
             else if( "drawindexed" == e->name )
             {
@@ -865,7 +865,7 @@ private:
                 continue;
             }
 
-            UInt32 stage, type;
+            uint32 stage, type;
             if( !sGetNumericAttr( *e, "stage", stage ) ) return false;
             if( !sGetNumericAttr( *e, "type", type ) ) return false;
 

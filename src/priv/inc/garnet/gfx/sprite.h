@@ -76,7 +76,7 @@ namespace GN { namespace gfx
         ///
         /// \note set texture to NULL, to draw solid sprite
         ///
-        void drawBegin( Texture * texture, BitFields options );
+        void drawBegin( Texture * texture, uint32 options );
         void drawEnd();
 
         void drawTextured(
@@ -94,7 +94,7 @@ namespace GN { namespace gfx
         /// Note that [0,0] is upper left corner of the screen.
         ///
         void drawSolid(
-            UInt32 rgba,
+            uint32 rgba,
             float  x,
             float  y,
             float  w,
@@ -108,7 +108,7 @@ namespace GN { namespace gfx
 
         void drawSingleTexturedSprite(
             Texture * tex,
-            BitFields options,
+            uint32 options,
             float     x,
             float     y,
             float     w,
@@ -125,8 +125,8 @@ namespace GN { namespace gfx
         }
 
         void drawSingleSolidSprite(
-            UInt32    rgba, // color in R-G-B-A format
-            BitFields options,
+            uint32    rgba, // color in R-G-B-A format
+            uint32 options,
             float     x,
             float     y,
             float     w,
@@ -148,7 +148,7 @@ namespace GN { namespace gfx
         struct SpriteVertex
         {
             GN::Vector3f pos;
-            UInt32       clr; // color in R-G-B-A format
+            uint32       clr; // color in R-G-B-A format
             GN::Vector2f tex;
             float        _[2]; // padding to 32 bytes
         };
@@ -174,7 +174,7 @@ namespace GN { namespace gfx
 
         GpuContext                 mContext;
 
-        BitFields                  mOptions;
+        uint32                  mOptions;
         float                      mVertexShift;
         bool                       mDrawBegun;
         Sprite                   * mSprites;

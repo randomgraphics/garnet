@@ -72,7 +72,7 @@ void GN::input::InputX11::quit()
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::input::InputX11::attachToWindow( HandleType disp, HandleType win )
+bool GN::input::InputX11::attachToWindow( intptr_t disp, intptr_t win )
 {
     GN_GUARD;
 

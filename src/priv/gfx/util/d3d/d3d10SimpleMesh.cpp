@@ -173,9 +173,9 @@ void GN::d3d10::SimpleMesh::beginTriangles()
 // -----------------------------------------------------------------------------
 void GN::d3d10::SimpleMesh::triangle( size_t i0, size_t i1, size_t i2 )
 {
-    mIndices.append( (UInt16)i0 );
-    mIndices.append( (UInt16)i1 );
-    mIndices.append( (UInt16)i2 );
+    mIndices.append( (uint16)i0 );
+    mIndices.append( (uint16)i1 );
+    mIndices.append( (uint16)i2 );
 }
 
 
@@ -186,7 +186,7 @@ void GN::d3d10::SimpleMesh::endTriangles()
 {
     if( mIndices.empty() ) return;
 
-    UINT bytes = (UINT)( mIndices.size() * sizeof(UInt16) );
+    UINT bytes = (UINT)( mIndices.size() * sizeof(uint16) );
 
     if( mIdxBufCapacity < mIndices.size() )
     {
@@ -219,7 +219,7 @@ void GN::d3d10::SimpleMesh::endTriangles()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::d3d10::SimpleMesh::setTriangles( const UInt16 * triangles, size_t triangleCount )
+void GN::d3d10::SimpleMesh::setTriangles( const uint16 * triangles, size_t triangleCount )
 {
     beginTriangles();
     mIndices.append( triangles, triangleCount * 3 );

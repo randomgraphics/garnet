@@ -46,7 +46,7 @@ namespace GN { namespace gfx
         ///
         /// (re)initialize render window to use internal widow.
         ///
-        bool initInternalRenderWindow( Gpu * r, Display * display, Window parentWindow, Screen * monitor, UInt32 width, UInt32 height );
+        bool initInternalRenderWindow( Gpu * r, Display * display, Window parentWindow, Screen * monitor, uint32 width, uint32 height );
 
         ///
         /// Delete render window
@@ -71,7 +71,7 @@ namespace GN { namespace gfx
         ///
         /// Get client size
         ///
-        bool getClientSize( UInt32 & width , UInt32 & height ) const;
+        bool getClientSize( uint32 & width , uint32 & height ) const;
 
         ///
         /// handle render window size move, trigger renderer signal as apropriate.

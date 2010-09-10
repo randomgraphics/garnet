@@ -17,13 +17,13 @@ class GpuTest
     union RenderTargetPixel
     {
         float  f32[4];
-        UInt32 u32[4];
-        SInt32 s32[4];
-        UInt16 u16[8];
-        UInt8  u8[16];
+        uint32 u32[4];
+        sint32 s32[4];
+        uint16 u16[8];
+        uint8  u8[16];
         struct
         {
-            UInt8 r, g, b, a;
+            uint8 r, g, b, a;
         } rgba8888;
     };
 
@@ -49,7 +49,7 @@ class GpuTest
         rtp.s32[2] = rand();
         rtp.s32[3] = rand();
 
-        const Vector3<UInt32> & rtsize = rtt.texture->getMipSize( rtt.level );
+        const Vector3<uint32> & rtsize = rtt.texture->getMipSize( rtt.level );
         if( x >= rtsize.x && y >= rtsize.y )
         {
             TS_ASSERT( 0 );
@@ -66,7 +66,7 @@ class GpuTest
             TS_ASSERT( 0 );
             return rtp;
         }
-        const UInt8 * src = &md.data[srcOffset];
+        const uint8 * src = &md.data[srcOffset];
         size_t copiedBytes = math::getmin( md.data.size() - srcOffset, sizeof(rtp) );
         memcpy( &rtp, src, copiedBytes );
 
@@ -98,7 +98,7 @@ class GpuTest
         size_t srcOffset = bc.pitch * y + x * bytesPerPixel;
         TS_ASSERT( srcOffset < bc.data.size() );
         if( srcOffset >= bc.data.size() ) return rtp;
-        const UInt8 * src = &bc.data[srcOffset];
+        const uint8 * src = &bc.data[srcOffset];
         size_t copiedBytes = math::getmin( bc.data.size() - srcOffset, sizeof(rtp) );
         memcpy( &rtp, src, copiedBytes );
 

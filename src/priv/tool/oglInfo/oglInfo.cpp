@@ -60,7 +60,7 @@ bool sGetOGLExtensions( Display * disp, GN::DynaArray<GN::StrA> & result )
     GN_UNGUARD;
 }
 
-void printOglInfo( GN::HandleType disp, int index )
+void printOglInfo( intptr_t disp, int index )
 {
     GN_GUARD;
 
@@ -142,7 +142,7 @@ void createOGL( HDC hdc, int pfdIndex )
     glewInit();
 
     // print OGL info
-    printOglInfo( hdc, pfdIndex );
+    printOglInfo( (intptr_t)hdc, pfdIndex );
 
     // destroy OGL render context
     ::wglMakeCurrent(0, 0);

@@ -59,8 +59,8 @@ public:
 		//加载一个字体,取默认的Face,一般为Regualer
         FontFaceCreationDesc ffc;
         ffc.fontname = font_file;
-        ffc.width = (UInt16)_w;
-        ffc.height = (UInt16)_h;
+        ffc.width = (uint16)_w;
+        ffc.height = (uint16)_h;
         ffc.quality = FFQ_MONOCHROM;
         mFace.attach( createFontFace( ffc ) );
         if( !mFace ) exit(-1);

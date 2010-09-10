@@ -2,7 +2,7 @@
 
 #if GN_MSWIN || GN_XENON
 
-const GN::TimeInNanoSecond GN::INFINITE_TIME = (UInt64)(-1);
+const GN::TimeInNanoSecond GN::INFINITE_TIME = (uint64)(-1);
 
 static GN::Logger * sLogger = GN::getLogger("GN.base.Sync");
 
@@ -17,10 +17,10 @@ using namespace GN;
 // convert time from nanoseconds to milliseconds on MS windows platform
 // Note: this function is also used in threadmsw.cpp.
 // -----------------------------------------------------------------------------
-UInt32 ns2ms( TimeInNanoSecond time )
+uint32 ns2ms( TimeInNanoSecond time )
 {
     if( INFINITE_TIME == time ) return INFINITE;
-    else return (UInt32)( time / 1000000 );
+    else return (uint32)( time / 1000000 );
 }
 
 //

@@ -60,19 +60,19 @@
 /// compose RGBA32 color constant
 ///
 #define GN_RGBA32( r, g, b, a )   \
-        ( ( ((UInt32)(r)&0xFF) <<  0 ) | \
-          ( ((UInt32)(g)&0xFF) <<  8 ) | \
-          ( ((UInt32)(b)&0xFF) << 16 ) | \
-          ( ((UInt32)(a)&0xFF) << 24 ) )
+        ( ( ((uint32)(r)&0xFF) <<  0 ) | \
+          ( ((uint32)(g)&0xFF) <<  8 ) | \
+          ( ((uint32)(b)&0xFF) << 16 ) | \
+          ( ((uint32)(a)&0xFF) << 24 ) )
 
 ///
 /// compose BGRA32 color constant
 ///
 #define GN_BGRA32( r, g, b, a )   \
-        ( ( ((UInt32)(b)&0xFF) <<  0 ) | \
-          ( ((UInt32)(g)&0xFF) <<  8 ) | \
-          ( ((UInt32)(r)&0xFF) << 16 ) | \
-          ( ((UInt32)(a)&0xFF) << 24 ) )
+        ( ( ((uint32)(b)&0xFF) <<  0 ) | \
+          ( ((uint32)(g)&0xFF) <<  8 ) | \
+          ( ((uint32)(r)&0xFF) << 16 ) | \
+          ( ((uint32)(a)&0xFF) << 24 ) )
 
 namespace GN { namespace gfx
 {
@@ -348,7 +348,7 @@ namespace GN { namespace gfx
             DXN_SNORM                   = GN_MAKE_COLOR_FORMAT( LAYOUT_DXN, SIGN_SNORM, SWIZZLE_RGBA ),
         };
 
-        UInt32           u32;   ///< color format as unsigned integer
+        uint32           u32;   ///< color format as unsigned integer
         Alias            alias; ///< alias of the format
         struct
         {
@@ -381,7 +381,7 @@ namespace GN { namespace gfx
         ///
         /// construct from unsigned integer
         ///
-        ColorFormat( UInt32 u ) : u32(u) {}
+        ColorFormat( uint32 u ) : u32(u) {}
 
         ///
         /// construct from alias
@@ -391,7 +391,7 @@ namespace GN { namespace gfx
         ///
         /// construct from individual properties
         ///
-        ColorFormat( UInt32 l, UInt32 si012, UInt32 si3, UInt32 sw0, UInt32 sw1, UInt32 sw2, UInt32 sw3 )
+        ColorFormat( uint32 l, uint32 si012, uint32 si3, uint32 sw0, uint32 sw1, uint32 sw2, uint32 sw3 )
             : layout( l )
             , sign012( si012 )
             , sign3( si3 )
@@ -406,7 +406,7 @@ namespace GN { namespace gfx
         ///
         /// construct from individual properties
         ///
-        ColorFormat( UInt32 l, UInt32 si012, UInt32 si3, Swizzle4 sw0123 )
+        ColorFormat( uint32 l, uint32 si012, uint32 si3, Swizzle4 sw0123 )
             : layout( l )
             , sign012( si012 )
             , sign3( si3 )
@@ -442,12 +442,12 @@ namespace GN { namespace gfx
         ///
         /// Get bits-per-pixel
         ///
-        UInt8 getBitsPerPixel() const { return ALL_COLOR_LAYOUTS[layout].bits; }
+        uint8 getBitsPerPixel() const { return ALL_COLOR_LAYOUTS[layout].bits; }
 
         ///
         /// Get bytes-per-pixel-block
         ///
-        UInt8 getBytesPerBlock() const { return ALL_COLOR_LAYOUTS[layout].blockBytes; }
+        uint8 getBytesPerBlock() const { return ALL_COLOR_LAYOUTS[layout].blockBytes; }
 
         ///
         /// convert to string
@@ -531,7 +531,7 @@ namespace GN { namespace gfx
     ///
     /// \note this function always return tiled format.
     ///
-    UInt32 colorFormat2XenonFormat( ColorFormat );
+    uint32 colorFormat2XenonFormat( ColorFormat );
 
     ///
     /// Convert DXGI_FORMAT to ColorFormat. Return DXGI_FORMAT_UNKNOWN if failed.

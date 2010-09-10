@@ -11,7 +11,7 @@ inline void GN::memoryBarrier()
 //
 //
 // -----------------------------------------------------------------------------
-inline SInt32 GN::atomGet32( const SInt32 volatile * dest )
+inline sint32 GN::atomGet32( const sint32 volatile * dest )
 {
     return *dest;
 }
@@ -19,7 +19,7 @@ inline SInt32 GN::atomGet32( const SInt32 volatile * dest )
 //
 //
 // -----------------------------------------------------------------------------
-inline void GN::atomSet32( SInt32 volatile * dest, SInt32 value )
+inline void GN::atomSet32( sint32 volatile * dest, sint32 value )
 {
     *dest = value;
 }
@@ -27,7 +27,7 @@ inline void GN::atomSet32( SInt32 volatile * dest, SInt32 value )
 //
 //
 // -----------------------------------------------------------------------------
-inline SInt32 GN::atomInc32( SInt32 volatile * dest )
+inline sint32 GN::atomInc32( sint32 volatile * dest )
 {
     return __sync_add_and_fetch( dest, 1 );
 }
@@ -35,7 +35,7 @@ inline SInt32 GN::atomInc32( SInt32 volatile * dest )
 //
 //
 // -----------------------------------------------------------------------------
-inline SInt32 GN::atomDec32( SInt32 volatile * dest )
+inline sint32 GN::atomDec32( sint32 volatile * dest )
 {
     return __sync_sub_and_fetch( dest, 1 );
 }
@@ -43,7 +43,7 @@ inline SInt32 GN::atomDec32( SInt32 volatile * dest )
 //
 //
 // -----------------------------------------------------------------------------
-inline SInt32 GN::atomXchg32( SInt32 volatile * dest, SInt32 xchg )
+inline sint32 GN::atomXchg32( sint32 volatile * dest, sint32 xchg )
 {
     return __sync_lock_test_and_set( dest, xchg );
 }
@@ -51,7 +51,7 @@ inline SInt32 GN::atomXchg32( SInt32 volatile * dest, SInt32 xchg )
 //
 //
 // -----------------------------------------------------------------------------
-inline SInt32 GN::atomCmpXchg32( SInt32 volatile * dest, SInt32 xchg, SInt32 cmp )
+inline sint32 GN::atomCmpXchg32( sint32 volatile * dest, sint32 xchg, sint32 cmp )
 {
     return __sync_val_compare_and_swap( dest, cmp, xchg );
 }

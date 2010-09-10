@@ -75,7 +75,7 @@ public:
     {
     }
 
-    void onRenderWindowResize( HandleType, UInt32 width, UInt32 height )
+    void onRenderWindowResize( intptr_t, uint32 width, uint32 height )
     {
         arcball.setMouseMoveWindow( 0, 0, (int)width, (int)height );
     }

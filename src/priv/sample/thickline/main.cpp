@@ -41,7 +41,7 @@ class ThickLineDemo : public D3D9Application
 
     // box scene
     ThickLineVertex m_Box[24];
-    UInt16          m_BoxIndices[36];
+    uint16          m_BoxIndices[36];
 
     // view frustum scene
     D3D9ViewFrustum viewFrustum;

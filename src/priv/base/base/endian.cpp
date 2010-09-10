@@ -13,17 +13,17 @@ void GN::swap8in16( void * outvoid, const void * invoid, size_t count )
 {
     union Local
     {
-        UInt16 u16;
+        uint16 u16;
         struct
         {
-            UInt8 a, b;
+            uint8 a, b;
         };
     };
 
     Local tmp;
 
-    UInt16 * out = (UInt16*)outvoid;
-    const UInt16 * in = (const UInt16*)invoid;
+    uint16 * out = (uint16*)outvoid;
+    const uint16 * in = (const uint16*)invoid;
 
     for( size_t n = 0; n < count; ++n, ++in, ++out )
     {
@@ -43,17 +43,17 @@ void GN::swap8in32( void * outvoid, const void * invoid, size_t count )
 {
     union Local
     {
-        UInt32 u32;
+        uint32 u32;
         struct
         {
-            UInt8 a, b, c, d;
+            uint8 a, b, c, d;
         };
     };
 
     Local tmp;
 
-    UInt32 * out = (UInt32*)outvoid;
-    const UInt32 * in = (const UInt32*)invoid;
+    uint32 * out = (uint32*)outvoid;
+    const uint32 * in = (const uint32*)invoid;
 
     for( size_t n = 0; n < count; ++n, ++in, ++out )
     {
@@ -75,14 +75,14 @@ void GN::swap8in64( void * outvoid, const void * invoid, size_t count )
 {
     union Local
     {
-        UInt64 u64;
-        UInt8  u8[8];
+        uint64 u64;
+        uint8  u8[8];
     };
 
     Local tmp;
 
-    UInt64 * out = (UInt64*)outvoid;
-    const UInt64 * in = (const UInt64*)invoid;
+    uint64 * out = (uint64*)outvoid;
+    const uint64 * in = (const uint64*)invoid;
 
     for( size_t n = 0; n < count; ++n, ++in, ++out )
     {
@@ -108,17 +108,17 @@ void GN::swap16in32( void * outvoid, const void * invoid, size_t count )
 {
     union Local
     {
-        UInt32 u32;
+        uint32 u32;
         struct
         {
-            UInt16 a, b;
+            uint16 a, b;
         };
     };
 
     Local tmp;
 
-    UInt32 * out = (UInt32*)outvoid;
-    const UInt32 * in = (const UInt32*)invoid;
+    uint32 * out = (uint32*)outvoid;
+    const uint32 * in = (const uint32*)invoid;
 
     for( size_t n = 0; n < count; ++n, ++in, ++out )
     {

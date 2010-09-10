@@ -11,7 +11,7 @@
 ///
 class TGAReader
 {
-    const UInt8 * mImageSrc;
+    const uint8 * mImageSrc;
     size_t          mImageSize;
     size_t          mOutputBytesPerPixel;
 
@@ -36,7 +36,7 @@ public:
     /// read TGA header
     ///
     bool readHeader(
-        GN::gfx::ImageDesc & o_desc, const UInt8 * i_buf, size_t i_size );
+        GN::gfx::ImageDesc & o_desc, const uint8 * i_buf, size_t i_size );
 
     ///
     /// read TGA image

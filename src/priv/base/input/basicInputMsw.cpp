@@ -86,7 +86,7 @@ void GN::input::BasicInputMsw::processInputEvents()
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::input::BasicInputMsw::attachToWindow( HandleType, HandleType window )
+bool GN::input::BasicInputMsw::attachToWindow( intptr_t /*display*/, intptr_t window )
 {
     GN_GUARD;
 

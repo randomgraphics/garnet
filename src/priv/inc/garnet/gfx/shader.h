@@ -154,7 +154,7 @@ namespace GN { namespace gfx
     enum
     {
         /// indicate a invalid parameter index
-        GPU_PROGRAM_PARAMETER_NOT_FOUND = (UInt16)-1
+        GPU_PROGRAM_PARAMETER_NOT_FOUND = (uint16)-1
     };
 
     ///
@@ -163,7 +163,7 @@ namespace GN { namespace gfx
     template<class PARAMETER_DESC_CLASS>
     class GpuProgramParameterAccessor
     {
-        const UInt8 * & mData;
+        const uint8 * & mData;
         const size_t  & mCount;
         const size_t  & mStride;
 
@@ -176,7 +176,7 @@ namespace GN { namespace gfx
             const PARAMETER_DESC_CLASS * & data,
             const size_t & count,
             const size_t & stride )
-            : mData((const UInt8*&)data), mCount(count), mStride(stride)
+            : mData((const uint8*&)data), mCount(count), mStride(stride)
         {
         }
 
@@ -204,12 +204,12 @@ namespace GN { namespace gfx
         ///
         /// Look up parameter with specific name, return GPU_PROGRAM_PARAMETER_NOT_FOUND for invalid name
         ///
-        UInt16 operator[]( const char * name ) const
+        uint16 operator[]( const char * name ) const
         {
             // Note: stride must be larger than size of parameter class
             GN_ASSERT( mStride >= sizeof(PARAMETER_DESC_CLASS) );
 
-            const UInt8 * p = mData;
+            const uint8 * p = mData;
             for( size_t i = 0; i < mCount; ++i, p+=mStride )
             {
                 /// Assume that the first member of PARAMETER_DESC_CLASS is always parameter name
@@ -218,12 +218,12 @@ namespace GN { namespace gfx
                 if( 0 == stringCompare( name, paramName ) )
                 {
                     // got you!
-                    return (UInt16)i;
+                    return (uint16)i;
                 }
             }
             GN_ERROR(getLogger("GN.gfx.GpuProgram.GpuProgramParameterDesc"))(
                 "Invalid GPU program parameter name: %s", name?name:"<NULLPTR>" );
-            return (UInt16)GPU_PROGRAM_PARAMETER_NOT_FOUND;
+            return (uint16)GPU_PROGRAM_PARAMETER_NOT_FOUND;
         }
     };
 
@@ -232,7 +232,7 @@ namespace GN { namespace gfx
     ///
     class GpuProgramAtrributeAccessor
     {
-        const UInt8 * & mData;
+        const uint8 * & mData;
         const size_t  & mCount;
         const size_t  & mStride;
 
@@ -245,7 +245,7 @@ namespace GN { namespace gfx
             const GpuProgramAttributeParameterDesc * & data,
             const size_t & count,
             const size_t & stride )
-            : mData((const UInt8*&)data), mCount(count), mStride(stride)
+            : mData((const uint8*&)data), mCount(count), mStride(stride)
         {
         }
 
@@ -278,7 +278,7 @@ namespace GN { namespace gfx
             // Note: stride must be larger than size of parameter class
             GN_ASSERT( mStride >= sizeof(GpuProgramAttributeParameterDesc) );
 
-            const UInt8 * p = mData;
+            const uint8 * p = mData;
             for( size_t i = 0; i < mCount; ++i, p+=mStride )
             {
                 /// Assume that the first member of PARAMETER_DESC_CLASS is always parameter name

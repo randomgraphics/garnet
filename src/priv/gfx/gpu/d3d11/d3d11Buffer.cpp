@@ -11,7 +11,7 @@ static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.D3D11.Buffer");
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::D3D11Buffer::init( size_t bytes, bool fastCpuWrite, UInt32 bindFlags )
+bool GN::gfx::D3D11Buffer::init( size_t bytes, bool fastCpuWrite, uint32 bindFlags )
 {
     GN_GUARD;
 
@@ -28,7 +28,7 @@ bool GN::gfx::D3D11Buffer::init( size_t bytes, bool fastCpuWrite, UInt32 bindFla
     ID3D11Device & dev = getDeviceRef();
 
     D3D11_BUFFER_DESC d3ddesc;
-    d3ddesc.ByteWidth      = (UInt32)bytes;
+    d3ddesc.ByteWidth      = (uint32)bytes;
     d3ddesc.Usage          = fastCpuWrite ? D3D11_USAGE_DYNAMIC : D3D11_USAGE_DEFAULT ;
     d3ddesc.BindFlags      = bindFlags;
     d3ddesc.CPUAccessFlags = fastCpuWrite ? D3D11_CPU_ACCESS_WRITE : 0;
@@ -92,14 +92,14 @@ void GN::gfx::D3D11Buffer::update( size_t offset, size_t bytes, const void * dat
         // update dynamic d3d buffer
         D3D11_MAPPED_SUBRESOURCE mapped;
         GN_DX_CHECK_RETURN_VOID( dev.Map( mD3DBuffer, 0, SURFACE_UPDATE_FLAG_TO_D3D11_MAP[flag], 0, &mapped ) );
-        UInt8 * dst = (UInt8*)mapped.pData;
+        uint8 * dst = (uint8*)mapped.pData;
         memcpy( dst+offset, data, bytes );
         dev.Unmap( mD3DBuffer, 0 );
     }
     else
     {
         // update non-dynamic d3d buffer
-        D3D11_BOX box = { (UInt32)offset, 0, 0, (UInt32)(offset+bytes), 1, 1 };
+        D3D11_BOX box = { (uint32)offset, 0, 0, (uint32)(offset+bytes), 1, 1 };
         dev.UpdateSubresource(
             mD3DBuffer,
             0,   // subresource
@@ -113,7 +113,7 @@ void GN::gfx::D3D11Buffer::update( size_t offset, size_t bytes, const void * dat
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3D11Buffer::readback( DynaArray<UInt8> & data )
+void GN::gfx::D3D11Buffer::readback( DynaArray<uint8> & data )
 {
     PIXPERF_FUNCTION_EVENT();
 

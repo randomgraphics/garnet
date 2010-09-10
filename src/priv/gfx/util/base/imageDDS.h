@@ -11,14 +11,14 @@
 ///
 struct DDPixelFormat
 {
-    UInt32 size;   ///< size of this structure
-    UInt32 flags;  ///< pixel format flags
-    UInt32 fourcc; ///< fourcc
-    UInt32 bits;   ///< bits of the format
-    UInt32 rMask;  ///< R, Y
-    UInt32 gMask;  ///< G, U
-    UInt32 bMask;  ///< B, V
-    UInt32 aMask;  ///< A, A
+    uint32 size;   ///< size of this structure
+    uint32 flags;  ///< pixel format flags
+    uint32 fourcc; ///< fourcc
+    uint32 bits;   ///< bits of the format
+    uint32 rMask;  ///< R, Y
+    uint32 gMask;  ///< G, U
+    uint32 bMask;  ///< B, V
+    uint32 aMask;  ///< A, A
 };
 
 ///
@@ -27,20 +27,20 @@ struct DDPixelFormat
 struct DDSFileHeader
 {
     /// \cond NEVER
-    UInt32        size;
-    UInt32        flags;
-    UInt32        height;
-    UInt32        width;
-    UInt32        pitchOrLinearSize; // The number of bytes per scan line in an uncompressed texture; the total number of bytes in the top level texture for a compressed texture. The pitch must be DWORD aligned.
-    UInt32        depth;
-    UInt32        mipCount;
-    UInt32        reserved[11];
+    uint32        size;
+    uint32        flags;
+    uint32        height;
+    uint32        width;
+    uint32        pitchOrLinearSize; // The number of bytes per scan line in an uncompressed texture; the total number of bytes in the top level texture for a compressed texture. The pitch must be DWORD aligned.
+    uint32        depth;
+    uint32        mipCount;
+    uint32        reserved[11];
     DDPixelFormat ddpf;
-    UInt32        caps;
-    UInt32        caps2;
-    UInt32        caps3;
-    UInt32        caps4;
-    UInt32        reserved2;
+    uint32        caps;
+    uint32        caps2;
+    uint32        caps3;
+    uint32        caps4;
+    uint32        reserved2;
     /// \endcond
 };
 GN_CASSERT( sizeof(DDSFileHeader) == 124 );
@@ -53,7 +53,7 @@ class DDSReader
     DDSFileHeader      mHeader;
     GN::gfx::ImageDesc mImgDesc;
 
-    const UInt8 * mSrc;
+    const uint8 * mSrc;
     size_t        mSize;
 
 public:
@@ -81,7 +81,7 @@ public:
     /// Read DDS header
     ///
     bool readHeader(
-        GN::gfx::ImageDesc & o_desc, const UInt8 * i_buf, size_t i_size );
+        GN::gfx::ImageDesc & o_desc, const uint8 * i_buf, size_t i_size );
 
     ///
     /// Read DDS image

@@ -51,12 +51,12 @@ sGetCgVertexAttributeBinding( CGparameter param )
     {
         case CG_POSITION0:
             binding.semantic = VERTEX_SEMANTIC_VERTEX;
-            binding.index = (UInt8)cgGetParameterResourceIndex( param );
+            binding.index = (uint8)cgGetParameterResourceIndex( param );
             break;
 
         case CG_NORMAL0:
             binding.semantic = VERTEX_SEMANTIC_NORMAL;
-            binding.index = (UInt8)cgGetParameterResourceIndex( param );
+            binding.index = (uint8)cgGetParameterResourceIndex( param );
             break;
 
         case CG_DIFFUSE0:
@@ -71,12 +71,12 @@ sGetCgVertexAttributeBinding( CGparameter param )
 
         case CG_COLOR0:
             binding.semantic = VERTEX_SEMANTIC_COLOR;
-            binding.index = (UInt8)cgGetParameterResourceIndex( param );
+            binding.index = (uint8)cgGetParameterResourceIndex( param );
             break;
 
         case CG_TEXCOORD0:
             binding.semantic = VERTEX_SEMANTIC_TEXCOORD;
-            binding.index = (UInt8)cgGetParameterResourceIndex( param );
+            binding.index = (uint8)cgGetParameterResourceIndex( param );
             break;
 
         case CG_FOGCOORD:
@@ -87,7 +87,7 @@ sGetCgVertexAttributeBinding( CGparameter param )
 
         case CG_ATTR0:
             binding.semantic = VERTEX_SEMANTIC_ATTRIBUTE;
-            binding.index = (UInt8)cgGetParameterResourceIndex( param );
+            binding.index = (uint8)cgGetParameterResourceIndex( param );
             break;
 
         default:

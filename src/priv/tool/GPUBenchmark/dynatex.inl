@@ -8,22 +8,22 @@ using namespace GN::gfx::d3d9;
 class TestTextureBandwidth : public BasicTestCase
 {
     const ClrFmt   TEX_FORMAT;
-    const UInt32 TEX_SIZE;
-    UInt32       TEX_BYTES; // bytes per texture
-    const UInt32 TEX_COUNT; // must be in range [2,16];
-    UInt32       REPEAT_COUNT;
+    const uint32 TEX_SIZE;
+    uint32       TEX_BYTES; // bytes per texture
+    const uint32 TEX_COUNT; // must be in range [2,16];
+    uint32       REPEAT_COUNT;
 
     struct TextureDesc
     {
         AutoComPtr<IDirect3DTexture9> texture;
         void *                        baseMap;
-        UInt32                      fence;
+        uint32                      fence;
 
         TextureDesc() : baseMap(0), fence(0) {}
     };
 
     TextureDesc          mTextures[16];
-    UInt8 *            mMemBuf[2];
+    uint8 *            mMemBuf[2];
     ManyManyQuads        mGeometry;
     TexturedEffect       mEffect;
     RendererContext      mContext;
@@ -149,10 +149,10 @@ class TestTextureBandwidth : public BasicTestCase
 #endif
     }
 
-    void updateTexture( UInt32 texid, UInt32 memid )
+    void updateTexture( uint32 texid, uint32 memid )
     {
         TextureDesc & desc = mTextures[texid];
-        const UInt8 * data = mMemBuf[memid];
+        const uint8 * data = mMemBuf[memid];
 
 #if GN_XENON
         LPDIRECT3DDEVICE9 dev = (LPDIRECT3DDEVICE9)gRenderer.getD3DDevice();
@@ -171,7 +171,7 @@ class TestTextureBandwidth : public BasicTestCase
 #endif
     }
 
-    void drawTexture( UInt32 texid )
+    void drawTexture( uint32 texid )
     {
         LPDIRECT3DDEVICE9 dev = (LPDIRECT3DDEVICE9)gRenderer.getD3DDevice();
         dev->SetTexture( 0, mTextures[texid].texture );
@@ -185,7 +185,7 @@ class TestTextureBandwidth : public BasicTestCase
     {
         GN_ASSERT( 0 <= memid && memid < 2 );
         GN_ASSERT( TEX_COUNT > 1 );
-        for(  UInt32 i = 0; i < TEX_COUNT; ++i )
+        for(  uint32 i = 0; i < TEX_COUNT; ++i )
         {
             updateTexture( (i+TEX_COUNT/2)%TEX_COUNT, memid );
             drawTexture( i );
@@ -194,7 +194,7 @@ class TestTextureBandwidth : public BasicTestCase
 
 public:
 
-    TestTextureBandwidth( app::SampleApp & app, const StrA & name, ClrFmt fmt, UInt32 size )
+    TestTextureBandwidth( app::SampleApp & app, const StrA & name, ClrFmt fmt, uint32 size )
         : BasicTestCase( app, name )
         , TEX_FORMAT( fmt )
         , TEX_SIZE( size )
@@ -223,9 +223,9 @@ public:
         }
 
         // initialize memory buffer
-        mMemBuf[0] = (UInt8*)memAlloc( TEX_BYTES, 's' );
+        mMemBuf[0] = (uint8*)memAlloc( TEX_BYTES, 's' );
         memset( mMemBuf[0], 0, TEX_BYTES );
-        mMemBuf[1] = (UInt8*)memAlloc( TEX_BYTES, 's' );
+        mMemBuf[1] = (uint8*)memAlloc( TEX_BYTES, 's' );
         if( FMT_FLOAT4 == TEX_FORMAT )
         {
             float * p = (float*)mMemBuf[1];
@@ -323,7 +323,7 @@ public:
         r.setContext( mContext );
 
         // draw
-        for( UInt32 i = 0; i < REPEAT_COUNT; ++i )
+        for( uint32 i = 0; i < REPEAT_COUNT; ++i )
         {
             drawMemBuffer( 0 );
             drawMemBuffer( 1 );

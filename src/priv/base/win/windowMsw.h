@@ -45,10 +45,9 @@ namespace GN { namespace win
     public:
 
         //@{
-
-        DisplayHandle getDisplayHandle() const { return (DisplayHandle)1; }
-        MonitorHandle getMonitorHandle() const;
-        WindowHandle getWindowHandle() const { return mWindow; }
+        intptr_t getDisplayHandle() const { return (intptr_t)1; }
+        intptr_t getMonitorHandle() const;
+        intptr_t getWindowHandle() const { return (intptr_t)mWindow; }
         Vector2<size_t> getClientSize() const;
         void show();
         void hide();
@@ -57,7 +56,7 @@ namespace GN { namespace win
         void setClientSize( size_t, size_t );
         void repaint();
         void run();
-        void runUntilNoNewEvents() { processWindowMessages(mWindow,false); }
+        void runUntilNoNewEvents() { processWindowMessages((intptr_t)mWindow,false); }
         void stepOneEvent() { GN_UNIMPL_WARNING(); }
         void attachEventHandler( const StrA &, const WindowEventHandler & ) { GN_UNIMPL_WARNING(); }
         void removeEventHandler( const StrA &, const WindowEventHandler & ) { GN_UNIMPL_WARNING(); }

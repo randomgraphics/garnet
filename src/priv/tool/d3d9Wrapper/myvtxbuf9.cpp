@@ -57,7 +57,7 @@ HRESULT MyVtxBuf9::Unlock()
     // shortcut for readonly lock
     if( D3DLOCK_READONLY == mLockFlags ) return D3D_OK;
 
-    UInt8 * data;
+    uint8 * data;
 
     HRESULT hr = realobj()->Lock( mLockOffset, mLockBytes, (void**)&data, mLockFlags );
     if( FAILED(hr) ) return hr;

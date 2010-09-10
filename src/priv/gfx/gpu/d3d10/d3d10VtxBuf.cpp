@@ -58,7 +58,7 @@ void GN::gfx::D3D10VtxBuf::update(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3D10VtxBuf::readback( DynaArray<UInt8> & data )
+void GN::gfx::D3D10VtxBuf::readback( DynaArray<uint8> & data )
 {
     D3D10Buffer::readback( data );
 }

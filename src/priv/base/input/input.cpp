@@ -20,7 +20,7 @@ namespace GN { namespace input
     {
 
     public:
-        virtual bool attachToWindow( HandleType displayHandle, HandleType windowHandle ) { return true; }
+        virtual bool attachToWindow( intptr_t displayHandle, intptr_t windowHandle ) { return true; }
         virtual void processInputEvents() {}
         virtual KeyEvent popLastKeyEvent() { KeyEvent k; k.u16 = 0; return k; }
         virtual const KeyStatus * getKeyboardStatus() const { static KeyStatus ks[256]; return ks; }

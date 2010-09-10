@@ -30,7 +30,7 @@ namespace GN { namespace gfx
         ///
         /// Validate update parameters.
         ///
-        bool validateUpdateParameters( size_t face, size_t level, const Box<UInt32> * area, SurfaceUpdateFlag flag, Box<UInt32> & clippedArea )
+        bool validateUpdateParameters( size_t face, size_t level, const Box<uint32> * area, SurfaceUpdateFlag flag, Box<uint32> & clippedArea )
         {
             // check face
             if( face >= getDesc().faces )
@@ -57,7 +57,7 @@ namespace GN { namespace gfx
             }
 
             // get texture size
-            const Vector3<UInt32> & sz = getMipSize( level );
+            const Vector3<uint32> & sz = getMipSize( level );
 
             // make sure lock area is valid
             if( area )

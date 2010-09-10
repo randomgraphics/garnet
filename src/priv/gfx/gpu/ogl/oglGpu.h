@@ -23,7 +23,7 @@ namespace GN { namespace gfx
     ///
     struct OGLGpuCaps : public GpuCaps
     {
-        UInt32 maxVertexAttributes; ///< query GL_MAX_VERTEX_ATTRIBS_ARB
+        uint32 maxVertexAttributes; ///< query GL_MAX_VERTEX_ATTRIBS_ARB
     };
 
 #if GN_MSWIN
@@ -243,7 +243,7 @@ namespace GN { namespace gfx
         struct VertexFormatKey
         {
             VertexBinding vtxbind;
-            UInt64        shaderID;
+            uint64        shaderID;
 
             bool operator<( const VertexFormatKey & rhs ) const
             {
@@ -283,7 +283,7 @@ namespace GN { namespace gfx
     public:
 
         virtual void present();
-        virtual void clearScreen( const Vector4f & c, float z, UInt8 s, BitFields flags );
+        virtual void clearScreen( const Vector4f & c, float z, uint8 s, uint32 flags );
         virtual void drawIndexed( PrimitiveType prim,
                                   size_t        numidx,
                                   size_t        basevtx,
@@ -299,16 +299,16 @@ namespace GN { namespace gfx
                              size_t         numvtx,
                              const void *   vertexData,
                              size_t         strideInBytes,
-                             const UInt16 * indexData );
+                             const uint16 * indexData );
         virtual void drawUp( PrimitiveType prim,
                              size_t        numvtx,
                              const void *  vertexData,
                              size_t        strideInBytes );
-        virtual void drawLines( BitFields         options,
+        virtual void drawLines( uint32         options,
                                 const void *      positions,
                                 size_t            stride,
                                 size_t            numpoints,
-                                UInt32            rgba,
+                                uint32            rgba,
                                 const Matrix44f & model,
                                 const Matrix44f & view,
                                 const Matrix44f & proj );

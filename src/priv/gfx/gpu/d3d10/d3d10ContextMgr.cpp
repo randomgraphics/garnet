@@ -218,8 +218,8 @@ inline bool GN::gfx::D3D10Gpu::bindContextRenderTarget(
     }
 
     // bind viewport
-    const Vector2<UInt32> & rtsize = mRTMgr->getRenderTargetSize();
-    const Rect<UInt32> & newvp = newContext.rs.viewport;
+    const Vector2<uint32> & rtsize = mRTMgr->getRenderTargetSize();
+    const Rect<uint32> & newvp = newContext.rs.viewport;
     D3D10_VIEWPORT d3dvp;
     d3dvp.MinDepth = 0.0f;
     d3dvp.MaxDepth = 1.0f;
@@ -232,15 +232,15 @@ inline bool GN::gfx::D3D10Gpu::bindContextRenderTarget(
     }
     else
     {
-        UInt32 l = newvp.x;
-        UInt32 t = newvp.y;
-        UInt32 r = newvp.x + newvp.w;
-        UInt32 b = newvp.y + newvp.h;
+        uint32 l = newvp.x;
+        uint32 t = newvp.y;
+        uint32 r = newvp.x + newvp.w;
+        uint32 b = newvp.y + newvp.h;
 
-        math::clamp<UInt32>( l, 0, rtsize.width );
-        math::clamp<UInt32>( t, 0, rtsize.height );
-        math::clamp<UInt32>( r, 0, rtsize.width );
-        math::clamp<UInt32>( b, 0, rtsize.height );
+        math::clamp<uint32>( l, 0, rtsize.width );
+        math::clamp<uint32>( t, 0, rtsize.height );
+        math::clamp<uint32>( r, 0, rtsize.width );
+        math::clamp<uint32>( b, 0, rtsize.height );
 
         d3dvp.TopLeftX = l;
         d3dvp.TopLeftY = t;
@@ -339,7 +339,7 @@ inline bool GN::gfx::D3D10Gpu::bindContextState(
     dsdesc.FrontFace.StencilFailOp = STENCIL_OP_TO_D3D10[newContext.rs.stencilFailOp];
     dsdesc.FrontFace.StencilDepthFailOp = STENCIL_OP_TO_D3D10[newContext.rs.stencilZFailOp];
     dsdesc.BackFace = dsdesc.FrontFace;
-    UInt32 stencilRef = 0;
+    uint32 stencilRef = 0;
     if( !mSOMgr->setDS( dsdesc, stencilRef, skipDirtyCheck ) ) return false;
 
     // blend states
@@ -378,7 +378,7 @@ inline bool GN::gfx::D3D10Gpu::bindContextState(
     bsdesc.RenderTargetWriteMask[5] = D3D10_COLOR_WRITE_ENABLE_ALL;
     bsdesc.RenderTargetWriteMask[6] = D3D10_COLOR_WRITE_ENABLE_ALL;
     bsdesc.RenderTargetWriteMask[7] = D3D10_COLOR_WRITE_ENABLE_ALL;
-    UInt32 sampleMask = 0xFFFFFFFF;
+    uint32 sampleMask = 0xFFFFFFFF;
     if( !mSOMgr->setBS( bsdesc, newContext.rs.blendFactors, sampleMask, skipDirtyCheck ) ) return false;
 
     // Note: input and sampler states are handled in bindContextResource()

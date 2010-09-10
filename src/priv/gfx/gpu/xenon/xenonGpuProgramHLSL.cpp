@@ -44,7 +44,7 @@ GN_CASSERT( GN_ARRAY_COUNT(FILTER_TO_D3D) == SamplerDesc::NUM_FILTERS );
 //
 // -----------------------------------------------------------------------------
 static inline void
-sSetSampler( IDirect3DDevice9 & dev, UInt32 stage, const SamplerDesc & s )
+sSetSampler( IDirect3DDevice9 & dev, uint32 stage, const SamplerDesc & s )
 {
     dev.SetSamplerState_Inline( stage, D3DSAMP_ADDRESSU, ADDRESS_TO_D3D[s.addressU] );
     dev.SetSamplerState_Inline( stage, D3DSAMP_ADDRESSV, ADDRESS_TO_D3D[s.addressV] );

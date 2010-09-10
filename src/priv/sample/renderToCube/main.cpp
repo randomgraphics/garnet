@@ -21,7 +21,7 @@ class RenderToTexture : public SampleApp
     bool initMesh( MeshResource * m )
     {
         Vector3f vertices[24];
-        UInt16   indices[36];
+        uint16   indices[36];
 
         createBox( 100, 100, 100,
             (float*)vertices, sizeof(Vector3f),

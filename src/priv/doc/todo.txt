@@ -4,6 +4,7 @@ TODO
 - 程序中标注TODO的地方
 
 - p0
+  - Cuda or OpenCL integration
   - runtime tweakable parameters: client/server communication
     - basic features:
       - NOT for fast changing variables.
@@ -13,20 +14,19 @@ TODO
       - dual way variable changing notification
       - compile time switch to remove tweakable code entirely
       - separate client (tuner) and server (variables)
+  - Cg shader for D3D11 API.
+  - replace STL containers:
+  	- queue, list, set
+  - FontFace unit should be integer instead of float, since it is supposed to
+    represent post-rasterized font metrics.
+
+- p1
   - mesh converter/loader
     - load and view specific model, instead of the whole scene
     - better ASE support:
       - opacity map (teraiyuki\woman.ase)
       - non-geometry node (games\swordman\1.ase)
   - skin mesh test case: porting DXSDK sample.
-  - Cg shader for D3D11 API.
-  - replace STL containers:
-  	- queue, list, set
-  - FontFace unit should be integer instead of float, since it is supposed to
-    represent post-rasterized font metrics.
-  - Refine uniform loading from XML
-
-- p1
   - Unit test for the CommandBuffer class.
   - New build system based on GNU make.
   - avoid using /Yd in build script for cl.exe
@@ -48,6 +48,7 @@ TODO
   - GPU resouce aliasing
 
 - p2
+  - Refine uniform loading from XML
   - mesh classes
     - a cpu mesh that could be used to convert mesh format
     - a half-edge mesh for more complex mesh algorithm

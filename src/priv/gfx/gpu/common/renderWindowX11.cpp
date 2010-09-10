@@ -108,8 +108,8 @@ bool GN::gfx::RenderWindowX11::initInternalRenderWindow(
     Display  * display,
     Window     parentWindow,
     Screen   * monitor,
-    UInt32     width,
-    UInt32     height )
+    uint32     width,
+    uint32     height )
 {
     GN_GUARD;
 
@@ -223,7 +223,7 @@ void GN::gfx::RenderWindowX11::quit()
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::RenderWindowX11::getClientSize( UInt32 & width, UInt32 & height ) const
+bool GN::gfx::RenderWindowX11::getClientSize( uint32 & width, uint32 & height ) const
 {
     GN_GUARD;
 
@@ -232,8 +232,8 @@ bool GN::gfx::RenderWindowX11::getClientSize( UInt32 & width, UInt32 & height ) 
     XWindowAttributes attr;
     GN_X_CHECK_RETURN( XGetWindowAttributes( mDisplay, mWindow, &attr ), false );
 
-    width = (UInt32)attr.width;
-    height = (UInt32)attr.height;
+    width = (uint32)attr.width;
+    height = (uint32)attr.height;
 
     // success
     return true;

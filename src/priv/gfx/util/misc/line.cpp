@@ -175,14 +175,14 @@ void GN::gfx::LineRenderer::drawLines(
     const void *      positions,
     size_t            stride,
     size_t            numpoints,
-    UInt32            colorInRgba,
+    uint32            colorInRgba,
     const Matrix44f & transform )
 {
     if( 0 == stride ) stride = sizeof(float)*3;
 
     size_t numNewLines = numpoints / 2;
 
-    const UInt8 * positionsU8 = (const UInt8*)positions;
+    const uint8 * positionsU8 = (const uint8*)positions;
 
     if( numNewLines > MAX_LINES )
     {

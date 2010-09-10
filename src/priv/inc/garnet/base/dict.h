@@ -16,7 +16,7 @@ namespace GN
         /// Typeless iterator clas
         class Iterator
         {
-            UInt8 mBuf[32];
+            uint8 mBuf[32];
 
         public:
 

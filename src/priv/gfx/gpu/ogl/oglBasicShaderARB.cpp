@@ -180,7 +180,7 @@ void GN::gfx::OGLBasicShaderARB::apply() const
     GN_OGL_CHECK( glBindProgramARB( mTarget, mProgram ) );
 
     // apply ALL uniforms to D3D device
-    UInt32 handle = getFirstUniform();
+    uint32 handle = getFirstUniform();
     while( handle )
     {
         applyUniform( getUniform( handle ) );
@@ -198,8 +198,8 @@ void GN::gfx::OGLBasicShaderARB::applyDirtyUniforms() const
 {
     GN_GUARD_SLOW;
 
-    const std::set<UInt32> dirtySet = getDirtyUniforms();
-    std::set<UInt32>::const_iterator i, e = dirtySet.end();
+    const std::set<uint32> dirtySet = getDirtyUniforms();
+    std::set<uint32>::const_iterator i, e = dirtySet.end();
     for( i = dirtySet.begin(); i != e; ++i )
     {
         applyUniform( getUniform( *i ) );
@@ -272,7 +272,7 @@ inline void GN::gfx::OGLBasicShaderARB::applyUniform( const Uniform & u ) const
 
     UniformDesc desc;
 
-    desc.u32 = (UInt32)(uintptr_t)u.userData;
+    desc.u32 = (uint32)(uintptr_t)u.userData;
 
     if( ENV_PARAMETER == desc.type )
     {
@@ -374,7 +374,7 @@ inline void GN::gfx::OGLBasicShaderARB::applyUniform( const Uniform & u ) const
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::OGLBasicShaderARB::queryDeviceUniform( const char * name, HandleType & userData ) const
+bool GN::gfx::OGLBasicShaderARB::queryDeviceUniform( const char * name, intptr_t & userData ) const
 {
     GN_GUARD;
 
@@ -435,7 +435,7 @@ bool GN::gfx::OGLBasicShaderARB::queryDeviceUniform( const char * name, HandleTy
 
     // set user data
     desc.index = index;
-    userData = (HandleType)(uintptr_t)desc.u32;
+    userData = (intptr_t)(uintptr_t)desc.u32;
 
     // success
     return true;

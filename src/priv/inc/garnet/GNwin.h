@@ -13,10 +13,6 @@ namespace GN
     ///
     namespace win
     {
-        typedef HandleType DisplayHandle; ///< Display ID on X11. No use on platform other then X11.
-        typedef HandleType MonitorHandle; ///< Screen ID on X11; Monitor handle on MS Windows.
-        typedef HandleType WindowHandle;  ///< Window handle/ID.
-
         typedef Delegate2<void,void*,bool&> WindowEventHandler; ///< Window event handler.
 
         ///
@@ -32,9 +28,9 @@ namespace GN
             /// \name window properties
             //@{
 
-            virtual DisplayHandle getDisplayHandle() const = 0;
-            virtual MonitorHandle getMonitorHandle() const = 0;
-            virtual WindowHandle getWindowHandle() const = 0;
+            virtual intptr_t getDisplayHandle() const = 0;
+            virtual intptr_t getMonitorHandle() const = 0;
+            virtual intptr_t getWindowHandle() const = 0;
             virtual Vector2<size_t> getClientSize() const = 0;
 
             //@}
@@ -78,14 +74,14 @@ namespace GN
         ///
         struct WindowCreationParams
         {
-            StrA         caption;      ///< window title text.
-            WindowHandle parent;       ///< Parent window
-            size_t       clientWidth;  ///< client width. 0 means default width
-            size_t       clientHeight; ///< client height. 0 means default height
-            bool         hasBorder;    ///< has border or not
-            bool         hasTitleBar;  ///< has title bar or not
-            bool         topMost;      ///< top-most(always on top) or not
-            bool         closebox;     ///< close box is enabled.
+            StrA   caption;      ///< window title text.
+            intptr_t parent;       ///< Parent window
+            size_t clientWidth;  ///< client width. 0 means default width
+            size_t clientHeight; ///< client height. 0 means default height
+            bool   hasBorder;    ///< has border or not
+            bool   hasTitleBar;  ///< has title bar or not
+            bool   topMost;      ///< top-most(always on top) or not
+            bool   closebox;     ///< close box is enabled.
         };
 
         ///
@@ -117,12 +113,12 @@ namespace GN
         ///
         /// Get monitor handle by index. 0 is always primary screen. Return 0 for invalid index.
         ///
-        MonitorHandle getMonitorByIndex( size_t );
+        intptr_t getMonitorByIndex( size_t );
 
         ///
         /// Process windows messages. No effects on platform other than MS Windows.
         ///
-        void processWindowMessages( WindowHandle window, bool blockWhileMinized );
+        void processWindowMessages( intptr_t window, bool blockWhileMinized );
     }
 }
 

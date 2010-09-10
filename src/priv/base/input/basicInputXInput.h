@@ -21,7 +21,7 @@ namespace GN { namespace input
     ///
     class BasicXInput : public BasicInput
     {
-        UInt32 mXInputPacketNumber;
+        uint32 mXInputPacketNumber;
 
     protected:
 

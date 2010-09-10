@@ -5,7 +5,7 @@
 #pragma warning(disable:4611) // interaction between 'function' and C++ object destruction is non-portable
 #endif
 
-UInt8 JpegDataSource::sFakeEOI[2] = { 0xFF, JPEG_EOI };
+uint8 JpegDataSource::sFakeEOI[2] = { 0xFF, JPEG_EOI };
 
 static GN::Logger * sLogger = GN::getLogger("GN.gfx.base.image.JPG");
 
@@ -49,7 +49,7 @@ bool JPGReader::checkFormat( GN::File & fp )
 //
 // -----------------------------------------------------------------------------
 bool JPGReader::readHeader(
-    GN::gfx::ImageDesc & o_desc, const UInt8 * i_buf, size_t i_size )
+    GN::gfx::ImageDesc & o_desc, const uint8 * i_buf, size_t i_size )
 {
     GN_GUARD;
 
@@ -91,10 +91,10 @@ bool JPGReader::readHeader(
     // fill image descriptor
     o_desc.setFaceAndLevel( 1, 1 ); // 2D image
     GN::gfx::MipmapDesc & m = o_desc.getMipmap( 0, 0 );
-    m.width         = (UInt16)mCInfo.image_width;
-    m.height        = (UInt16)mCInfo.image_height;
+    m.width         = (uint16)mCInfo.image_width;
+    m.height        = (uint16)mCInfo.image_height;
     m.depth         = 1;
-    m.rowPitch      = (UInt32)(bpp * mCInfo.image_width);
+    m.rowPitch      = (uint32)(bpp * mCInfo.image_width);
     m.slicePitch    = m.rowPitch * m.height;
     m.levelPitch    = m.slicePitch;
 
@@ -139,18 +139,18 @@ bool JPGReader::readImage( void * o_data )
 	size_t width = (size_t)mCInfo.output_width;
 	size_t height = (size_t)mCInfo.output_height;
     size_t rowPitch = width * mCInfo.output_components;
-    GN::AutoObjPtr<UInt8> rgbBuf;
-    UInt8 * decompressedBuf;
+    GN::AutoObjPtr<uint8> rgbBuf;
+    uint8 * decompressedBuf;
     if( !grayscale )
     {
         // create temporary RGB_8_8_8 buffer
-        rgbBuf.attach( new UInt8[rowPitch*height] );
+        rgbBuf.attach( new uint8[rowPitch*height] );
         decompressedBuf = rgbBuf;
     }
-    else decompressedBuf = (UInt8*)o_data;
+    else decompressedBuf = (uint8*)o_data;
 
     // read scanlines
-    GN::DynaArray<UInt8*> scanlines;
+    GN::DynaArray<uint8*> scanlines;
     scanlines.resize( height );
     for( size_t i = 0; i < scanlines.size(); ++i )
     {
@@ -179,8 +179,8 @@ bool JPGReader::readImage( void * o_data )
     if( !grayscale )
     {
         GN_ASSERT( rgbBuf );
-        UInt8 * src = (UInt8*)rgbBuf;
-        UInt8 * dst = (UInt8*)o_data;
+        uint8 * src = (uint8*)rgbBuf;
+        uint8 * dst = (uint8*)o_data;
         for( size_t y = 0; y < height; ++y )
         {
             for( size_t x = 0; x < width; ++x )

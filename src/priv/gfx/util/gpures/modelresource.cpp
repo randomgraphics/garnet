@@ -92,7 +92,7 @@ static bool sGetRequiredIntAttrib( T & result, const XmlElement & node, const ch
 //
 // get value of integer attribute
 // -----------------------------------------------------------------------------
-static void sBinaryEncode( StrA & result, const UInt8 * data, size_t size )
+static void sBinaryEncode( StrA & result, const uint8 * data, size_t size )
 {
     static const char TABLE[] =
     {
@@ -105,7 +105,7 @@ static void sBinaryEncode( StrA & result, const UInt8 * data, size_t size )
 
     for( size_t i = 0; i < size; ++i, ++data )
     {
-        UInt8 u8 = *data;
+        uint8 u8 = *data;
 
         result.append( TABLE[u8>>4] );
         result.append( TABLE[u8&0xF] );
@@ -115,9 +115,9 @@ static void sBinaryEncode( StrA & result, const UInt8 * data, size_t size )
 //
 // get value of integer attribute
 // -----------------------------------------------------------------------------
-static bool sBinaryDecode( DynaArray<UInt8> & data, const StrA & s )
+static bool sBinaryDecode( DynaArray<uint8> & data, const StrA & s )
 {
-    /*static UInt8 TABLE[] =
+    /*static uint8 TABLE[] =
     {
 
         '0', '1', '2', '3', '4', '5', '6', '7',
@@ -139,7 +139,7 @@ static bool sBinaryDecode( DynaArray<UInt8> & data, const StrA & s )
         char hi = s[i*2];
         char lo = s[i*2+1];
 
-        UInt8 u8 = 0;
+        uint8 u8 = 0;
 
         if( '0' <= hi && hi <= '9' )
         {
@@ -1320,7 +1320,7 @@ void GN::gfx::ModelResource::Impl::updateVertexFormat()
                         ve.format    = mve.format;
                         ve.stream    = mve.stream;
                         ve.offset    = mve.offset;
-                        ve.attribute = (UInt16)bl.gpuProgramParameterIndex;
+                        ve.attribute = (uint16)bl.gpuProgramParameterIndex;
 
                         vtxbind.append( ve );
                     }

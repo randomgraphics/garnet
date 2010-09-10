@@ -9,7 +9,7 @@ static float sGetNextValue( const float * & buffer, size_t stride )
 
     float f = *buffer;
 
-    buffer = (const float*)((const UInt8*)buffer + stride);
+    buffer = (const float*)((const uint8*)buffer + stride);
 
     return f;
 }

@@ -18,8 +18,8 @@ class PNGReader
 {
     png_struct    * mPng;
     png_info      * mInfo;
-    UInt32        mRowPitch;
-    const UInt8 * mStart;
+    uint32        mRowPitch;
+    const uint8 * mStart;
     size_t          mSize;
 
     static void PNGAPI error( png_structp png, png_const_charp msg );
@@ -57,7 +57,7 @@ public:
     /// read PNG header
     ///
     bool readHeader(
-        GN::gfx::ImageDesc & o_desc, const UInt8 * i_buf, size_t i_size );
+        GN::gfx::ImageDesc & o_desc, const uint8 * i_buf, size_t i_size );
 
     ///
     /// read PNG image

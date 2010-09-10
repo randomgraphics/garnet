@@ -60,7 +60,7 @@ namespace GN { namespace gfx
         virtual void   updateMipmap(
                             size_t              face,
                             size_t              level,
-                            const Box<UInt32> * area,
+                            const Box<uint32> * area,
                             size_t              rowPitch,
                             size_t              slicePitch,
                             const void        * data,

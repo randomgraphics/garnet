@@ -21,9 +21,9 @@ namespace GN { namespace win
 
         //@{
 
-        DisplayHandle getDisplayHandle() const { return (DisplayHandle)1; }
-        MonitorHandle getMonitorHandle() const { return (MonitorHandle)1; }
-        WindowHandle getWindowHandle() const { return (WindowHandle)1; }
+        intptr_t getDisplayHandle() const { return (intptr_t)1; }
+        intptr_t getMonitorHandle() const { return (intptr_t)1; }
+        intptr_t getWindowHandle() const { return (intptr_t)1; }
         Vector2<size_t> getClientSize() const { return Vector2<size_t>(640,480); }
         void show() {}
         void hide() {}
@@ -120,7 +120,7 @@ namespace GN { namespace win
     //
     // -------------------------------------------------------------------------
 #if GN_XENON
-    MonitorHandle getMonitorByIndex( size_t ) { return (MonitorHandle)1; }
+    intptr_t getMonitorByIndex( size_t ) { return (intptr_t)1; }
 #elif GN_MSWIN
     struct MonitorEnumInfo
     {
@@ -142,14 +142,14 @@ namespace GN { namespace win
             return TRUE;
         }
     }
-    MonitorHandle getMonitorByIndex( size_t i )
+    intptr_t getMonitorByIndex( size_t i )
     {
         MonitorEnumInfo mei = { 0, i, 0 };
         ::EnumDisplayMonitors( 0, 0, &sMonitorEnumProc, (LPARAM)&mei );
-        return mei.handle;
+        return (intptr_t)mei.handle;
     }
 #else
-    MonitorHandle getMonitorByIndex( size_t )
+    intptr_t getMonitorByIndex( size_t )
     {
         GN_UNIMPL();
         return 0;
@@ -160,7 +160,7 @@ namespace GN { namespace win
     //
     // -------------------------------------------------------------------------
 #if GN_MSWIN
-    void processWindowMessages( WindowHandle window, bool blockWhileMinized )
+    void processWindowMessages( intptr_t window, bool blockWhileMinized )
     {
         GN_GUARD_SLOW;
 
@@ -189,6 +189,6 @@ namespace GN { namespace win
         GN_UNGUARD_SLOW;
     }
 #else
-    void processWindowMessages( WindowHandle, bool ) {}
+    void processWindowMessages( intptr_t, bool ) {}
 #endif
 }}

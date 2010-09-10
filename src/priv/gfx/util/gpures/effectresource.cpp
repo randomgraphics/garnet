@@ -30,19 +30,19 @@ sCheckGpuCaps( Gpu & r, const EffectGpuProgramDesc & desc )
     const GpuCaps & caps = r.caps();
 
     // check vertex shader
-    if( desc.gpd.vs.source && (UInt32)desc.gpd.lang != (caps.vsLanguages & desc.gpd.lang) )
+    if( desc.gpd.vs.source && (uint32)desc.gpd.lang != (caps.vsLanguages & desc.gpd.lang) )
     {
         return false;
     }
 
     // check geometry shader
-    if( desc.gpd.gs.source && (UInt32)desc.gpd.lang != (caps.gsLanguages & desc.gpd.lang) )
+    if( desc.gpd.gs.source && (uint32)desc.gpd.lang != (caps.gsLanguages & desc.gpd.lang) )
     {
         return false;
     }
 
     // check pixel shader
-    if( desc.gpd.ps.source && (UInt32)desc.gpd.lang != (caps.psLanguages & desc.gpd.lang) )
+    if( desc.gpd.ps.source && (uint32)desc.gpd.lang != (caps.psLanguages & desc.gpd.lang) )
     {
         return false;
     }

@@ -131,13 +131,13 @@ void GN::gfx::D3D10Texture::quit()
 void GN::gfx::D3D10Texture::updateMipmap(
     size_t              face,
     size_t              level,
-    const Box<UInt32> * area,
+    const Box<uint32> * area,
     size_t              rowPitch,
     size_t              slicePitch,
     const void        * data,
     SurfaceUpdateFlag   flag )
 {
-    Box<UInt32> clippedArea;
+    Box<uint32> clippedArea;
     if( !validateUpdateParameters( face, level, area, flag, clippedArea ) ) return;
 
     const TextureDesc & texdesc = getDesc();
@@ -153,8 +153,8 @@ void GN::gfx::D3D10Texture::updateMipmap(
         const dxgi::DXGI_FORMAT_DESCRIPTION & fmtdesc = dxgi::getDXGIFormatDesc( mTextureFormat );
 
         // align width and heigh to texel block boundary
-        clippedArea.w = math::alignToPowerOf2<UInt32>( clippedArea.w, fmtdesc.blockWidth );
-        clippedArea.h = math::alignToPowerOf2<UInt32>( clippedArea.h, fmtdesc.blockHeight );
+        clippedArea.w = math::alignToPowerOf2<uint32>( clippedArea.w, fmtdesc.blockWidth );
+        clippedArea.h = math::alignToPowerOf2<uint32>( clippedArea.h, fmtdesc.blockHeight );
 
         D3D10_BOX box =
         {
@@ -168,11 +168,11 @@ void GN::gfx::D3D10Texture::updateMipmap(
 
         dev.UpdateSubresource(
             mTexture,
-            D3D10CalcSubresource( (UInt32)level, (UInt32)face, texdesc.levels ),
+            D3D10CalcSubresource( (uint32)level, (uint32)face, texdesc.levels ),
             &box,
             data,
-            (UInt32)(rowPitch * fmtdesc.blockHeight),
-            (UInt32)slicePitch );
+            (uint32)(rowPitch * fmtdesc.blockHeight),
+            (uint32)slicePitch );
     }
 }
 
@@ -197,12 +197,12 @@ void GN::gfx::D3D10Texture::readMipmap(
 ID3D10ShaderResourceView *
 GN::gfx::D3D10Texture::getSRView(
     DXGI_FORMAT format,
-    UInt32      firstFace,
-    UInt32      numFaces,
-    UInt32      firstMipLevel,
-    UInt32      numLevels,
-    UInt32      firstSlice,
-    UInt32      numSlices )
+    uint32      firstFace,
+    uint32      numFaces,
+    uint32      firstMipLevel,
+    uint32      numLevels,
+    uint32      firstSlice,
+    uint32      numSlices )
 {
     D3D10_SHADER_RESOURCE_VIEW_DESC srvdesc;
     memset( &srvdesc, 0, sizeof(srvdesc) );
@@ -280,7 +280,7 @@ GN::gfx::D3D10Texture::getSRView(
 //
 // ----------------------------------------------------------------------------
 ID3D10RenderTargetView *
-GN::gfx::D3D10Texture::getRTView( UInt32 face, UInt32 level, UInt32 slice )
+GN::gfx::D3D10Texture::getRTView( uint32 face, uint32 level, uint32 slice )
 {
     // must be a color render target texture
     GN_ASSERT( TextureUsage::COLOR_RENDER_TARGET == getDesc().usage );
@@ -379,7 +379,7 @@ GN::gfx::D3D10Texture::getRTView( UInt32 face, UInt32 level, UInt32 slice )
 //
 // ----------------------------------------------------------------------------
 ID3D10DepthStencilView *
-GN::gfx::D3D10Texture::getDSView( UInt32 face, UInt32 level, UInt32 slice )
+GN::gfx::D3D10Texture::getDSView( uint32 face, uint32 level, uint32 slice )
 {
     // must be a depth texture
     GN_ASSERT( TextureUsage::DEPTH_RENDER_TARGET == getDesc().usage );
@@ -605,7 +605,7 @@ bool GN::gfx::D3D10Texture::createTexture()
     }
 
     // calculate mipmap sizes
-    Vector3<UInt32> mipSize( texdesc.width, texdesc.height, texdesc.depth );
+    Vector3<uint32> mipSize( texdesc.width, texdesc.height, texdesc.depth );
     for( size_t i = 0; i < texdesc.levels; ++i )
     {
         setMipSize( i, mipSize );

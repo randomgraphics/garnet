@@ -98,7 +98,7 @@ bool init( Gpu & gpu )
     rc.vtxbufs[0].vtxbuf->update( 0, 0, vertices );
 
     // create index buffer
-    UInt16 indices[] = { 0, 1, 3, 2 };
+    uint16 indices[] = { 0, 1, 3, 2 };
     IdxBufDesc ibd = { 4, false, false };
     rc.idxbuf.attach( gpu.createIdxBuf( ibd ) );
     if( !rc.idxbuf ) return false;
@@ -132,7 +132,7 @@ void draw( Gpu & r )
     r.drawUp( PrimitiveType::TRIANGLE_LIST, 3, vertices, 4*sizeof(float) );
 
     // DRAW_INDEXED_UP : triangle at left bottom
-    static UInt16 indices[] = { 0, 1, 3 };
+    static uint16 indices[] = { 0, 1, 3 };
     m.translate( -1.0f, -1.0f, 0 );
     rc.uniforms[0]->update( m );
     r.bindContext( rc );

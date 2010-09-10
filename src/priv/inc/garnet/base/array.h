@@ -58,7 +58,7 @@ namespace GN
     template<class T, size_t N>
     class StackArray
     {
-        UInt8  mBuffer[sizeof(T)*N];
+        uint8  mBuffer[sizeof(T)*N];
         size_t mCount;
 #if GN_BUILD_DEBUG
         T *    mTypedBuffer;

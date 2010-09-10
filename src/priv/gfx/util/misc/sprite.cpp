@@ -77,8 +77,8 @@ bool GN::gfx::SpriteRenderer::init()
     // create a 2x2 pure white texture
     mPureWhiteTexture.attach( mGpu.create2DTexture( 2, 2, 0, ColorFormat::RGBA32 ) );
     if( !mPureWhiteTexture ) return failure();
-    const UInt32 PURE_WHITE[] = { 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF } ;
-    mPureWhiteTexture->updateMipmap( 0, 0, NULL, sizeof(UInt32)*2, sizeof(UInt32)*4, &PURE_WHITE );
+    const uint32 PURE_WHITE[] = { 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF } ;
+    mPureWhiteTexture->updateMipmap( 0, 0, NULL, sizeof(uint32)*2, sizeof(uint32)*4, &PURE_WHITE );
 
     // create GPU program
     const GpuCaps & caps = mGpu.caps();
@@ -146,8 +146,8 @@ bool GN::gfx::SpriteRenderer::init()
     // create index buffer
     mIndexBuffer.attach( mGpu.createIdxBuf16( MAX_INDICES, false ) );
     if( !mIndexBuffer ) return failure();
-    DynaArray<UInt16> indices( MAX_INDICES );
-    for( UInt16 i = 0; i < MAX_SPRITES; ++i )
+    DynaArray<uint16> indices( MAX_INDICES );
+    for( uint16 i = 0; i < MAX_SPRITES; ++i )
     {
         indices[i*6+0] = i * 4 + 0;
         indices[i*6+1] = i * 4 + 1;
@@ -201,7 +201,7 @@ void GN::gfx::SpriteRenderer::quit()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::SpriteRenderer::drawBegin( Texture * texture, BitFields options )
+void GN::gfx::SpriteRenderer::drawBegin( Texture * texture, uint32 options )
 {
     if( mDrawBegun )
     {
@@ -371,7 +371,7 @@ GN::gfx::SpriteRenderer::drawTextured(
     GN_ASSERT( mNextFreeSprite < mSprites + MAX_SPRITES );
 
     // get screen size based on current context
-    UInt32 screenWidth, screenHeight;
+    uint32 screenWidth, screenHeight;
     mGpu.getCurrentRenderTargetSize( &screenWidth, &screenHeight );
 
     float x1 = ( x + mVertexShift ) / screenWidth;
@@ -407,7 +407,7 @@ GN::gfx::SpriteRenderer::drawTextured(
 // -----------------------------------------------------------------------------
 void
 GN::gfx::SpriteRenderer::drawSolid(
-    UInt32 rgba,
+    uint32 rgba,
     float  x,
     float  y,
     float  w,

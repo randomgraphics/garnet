@@ -6,7 +6,7 @@ using namespace GN::input;
 using namespace GN::util;
 
 SpriteRenderer      * sr = NULL;
-FontFaceCreationDesc ffc = { "font::simsun.ttc", (UInt16)64, (UInt16)64, FFQ_ANTIALIASED };
+FontFaceCreationDesc ffc = { "font::simsun.ttc", (uint16)64, (uint16)64, FFQ_ANTIALIASED };
 BitmapFont    ascii, ttf;
 wchar_t              textw[256];
 

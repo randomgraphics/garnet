@@ -133,7 +133,7 @@ bool GN::gfx::D3D10StateObjectManager::setRS(
 bool GN::gfx::D3D10StateObjectManager::setBS(
     const D3D10_BLEND_DESC & desc,
     const Vector4f         & blendFactors,
-    UInt32                   sampleMask,
+    uint32                   sampleMask,
     bool                     skipDirtyCheck )
 {
     ID3D10BlendState * stateObject = mBlendStates[desc];
@@ -159,7 +159,7 @@ bool GN::gfx::D3D10StateObjectManager::setBS(
 // -----------------------------------------------------------------------------
 bool GN::gfx::D3D10StateObjectManager::setDS(
     const D3D10_DEPTH_STENCIL_DESC & desc,
-    UInt32                           stencilRef,
+    uint32                           stencilRef,
     bool                             skipDirtyCheck )
 {
     ID3D10DepthStencilState * stateObject = mDepthStates[desc];
@@ -183,7 +183,7 @@ bool GN::gfx::D3D10StateObjectManager::setDS(
 // -----------------------------------------------------------------------------
 bool GN::gfx::D3D10StateObjectManager::setVSSampler(
     const D3D10_SAMPLER_DESC & desc,
-    UInt32                     stage,
+    uint32                     stage,
     bool                       skipDirtyCheck )
 {
     GN_UNIMPL();
@@ -198,7 +198,7 @@ bool GN::gfx::D3D10StateObjectManager::setVSSampler(
 // -----------------------------------------------------------------------------
 bool GN::gfx::D3D10StateObjectManager::setGSSampler(
     const D3D10_SAMPLER_DESC & desc,
-    UInt32                     stage,
+    uint32                     stage,
     bool                       skipDirtyCheck )
 {
     GN_UNIMPL();
@@ -213,7 +213,7 @@ bool GN::gfx::D3D10StateObjectManager::setGSSampler(
 // -----------------------------------------------------------------------------
 bool GN::gfx::D3D10StateObjectManager::setPSSampler(
     const D3D10_SAMPLER_DESC & desc,
-    UInt32                     stage,
+    uint32                     stage,
     bool                       skipDirtyCheck )
 {
     ID3D10SamplerState * ss = mSamplerStates[desc];
