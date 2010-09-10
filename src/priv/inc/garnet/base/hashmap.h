@@ -21,32 +21,6 @@ namespace GN
             }
         };
 
-        inline UInt64 MemoryHash( const void * data, size_t size )
-        {
-            const size_t N_64 = size / sizeof(UInt64);
-            const size_t TAIL = size % sizeof(UInt64);
-
-            const UInt64 * p64 = (const UInt64*)data;
-
-            UInt64 h = 5471;
-
-            for( size_t i = 0; i < N_64; ++i, ++p64 )
-            {
-                h = h * 33 + *p64;
-            }
-
-            const UInt8 * p8 = (const UInt8*)p64;
-            UInt64 tail = 0;
-            for( size_t i = 0; i < TAIL; ++i, ++p8 )
-            {
-                tail = (tail << 8) + *p8;
-            }
-
-            h = h * 33 + tail;
-
-            return h;
-        }
-
         template<typename T>
         struct HashFunc_MemoryHash
         {
