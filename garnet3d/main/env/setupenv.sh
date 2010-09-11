@@ -26,6 +26,10 @@ export SCONSFLAGS=-U
 # setup alias
 # ===========
 
+alias ls='ls --color=auto -F'
+alias dir='ls'
+alias ll='ls -l'
+alias v='ls -l'
 alias gnroot="cd ${GARNET_ROOT}/"
 alias gnbld="cd ${GARNET_ROOT}/build.tmp/${GN_BUILD_TARGET_OS}.${GN_BUILD_TARGET_CPU}.${GN_BUILD_COMPILER}.${GN_BUILD_VARIANT}/bin/"
 alias gnsrc="cd ${GARNET_ROOT}/src/"
