@@ -187,25 +187,6 @@ void GN::SyncEvent::signal() { return mImpl->signal(); }
 void GN::SyncEvent::unsignal() { return mImpl->unsignal(); }
 GN::WaitResult GN::SyncEvent::wait( TimeInNanoSecond timeoutTime ) const { return mImpl->wait( timeoutTime ); }
 
-/*
-//
-// -----------------------------------------------------------------------------
-GN::SyncEvent * GN::createSyncEvent(
-    SyncEvent::InitialState initialState,
-    SyncEvent::ResetMode resetMode,
-    const char * name )
-{
-    GN_GUARD;
-
-    AutoObjPtr<SyncEventMsw> s( new SyncEventMsw );
-
-    if( !s->init( initialState, resetMode, name ) ) return 0;
-
-    return s.detach();
-
-    GN_UNGUARD;
-}*/
-
 // *****************************************************************************
 // semaphore class
 // *****************************************************************************
@@ -213,9 +194,9 @@ GN::SyncEvent * GN::createSyncEvent(
 ///
 /// semaphore on MS Windows.
 ///
-class SemaphoreMsw : public Semaphore, public StdClass
+class Semaphore::Impl : public StdClass
 {
-    GN_DECLARE_STDCLASS( SemaphoreMsw, StdClass );
+    GN_DECLARE_STDCLASS( Impl, StdClass );
 
     // ********************************
     // ctor/dtor
@@ -223,8 +204,8 @@ class SemaphoreMsw : public Semaphore, public StdClass
 
     //@{
 public:
-    SemaphoreMsw()          { clear(); }
-    virtual ~SemaphoreMsw() { quit(); }
+    Impl()          { clear(); }
+    virtual ~Impl() { quit(); }
     //@}
 
     // ********************************
@@ -238,7 +219,7 @@ public:
         GN_GUARD;
 
         // standard init procedure
-        GN_STDCLASS_INIT( SemaphoreMsw, () );
+        GN_STDCLASS_INIT( Impl, () );
 
         GN_MSW_CHECK_RETURN(
             mHandle = CreateSemaphoreA( 0, (LONG)initialcount, (LONG)maxcount, name ),
@@ -269,12 +250,12 @@ private:
     // ********************************
 public:
 
-    virtual WaitResult wait( TimeInNanoSecond timeoutTime )
+    WaitResult wait( TimeInNanoSecond timeoutTime )
     {
         return sWaitResultFromWin32( WaitForSingleObject( mHandle, ns2ms( timeoutTime ) ) );
     }
 
-    virtual void wake( size_t count )
+    void wake( size_t count )
     {
         GN_ASSERT( mHandle );
         GN_MSW_CHECK( ReleaseSemaphore( mHandle, (LONG)count, 0 ) );
@@ -293,27 +274,11 @@ private:
 private:
 };
 
-// *****************************************************************************
-// public functions
-// *****************************************************************************
-
-//
-//
-// -----------------------------------------------------------------------------
-GN::Semaphore * GN::createSemaphore(
-    size_t maxcount,
-    size_t initialcount,
-    const char * name )
-{
-    GN_GUARD;
-
-    AutoObjPtr<SemaphoreMsw> s( new SemaphoreMsw );
-
-    if( !s->init( maxcount, initialcount, name ) ) return 0;
-
-    return s.detach();
-
-    GN_UNGUARD;
-}
+GN::Semaphore::Semaphore() : mImpl(NULL) { mImpl= new Impl(); }
+GN::Semaphore::~Semaphore() { delete mImpl; }
+bool GN::Semaphore::create( size_t maxcount, size_t initialcount, const char * name ) { return mImpl->init( maxcount, initialcount, name ); }
+void GN::Semaphore::destroy() { return mImpl->quit(); }
+GN::WaitResult GN::Semaphore::wait( TimeInNanoSecond timeoutTime ) { return mImpl->wait( timeoutTime ); }
+void GN::Semaphore::wake( size_t count ) { return mImpl->wake( count ); }
 
 #endif

@@ -3,7 +3,6 @@
 using namespace GN;
 using namespace GN::gfx;
 using namespace GN::input;
-using namespace GN::win;
 using namespace GN::util;
 
 struct Scene

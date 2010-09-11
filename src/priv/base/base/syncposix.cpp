@@ -161,9 +161,9 @@ GN::WaitResult GN::SyncEvent::wait( TimeInNanoSecond timeoutTime ) const { retur
 ///
 /// semaphore on POSIX system.
 ///
-class SemaphorePOSIX : public Semaphore, public StdClass
+class Semaphore::Impl : public StdClass
 {
-    GN_DECLARE_STDCLASS( SemaphorePOSIX, StdClass );
+    GN_DECLARE_STDCLASS( Impl, StdClass );
 
     // ********************************
     // ctor/dtor
@@ -171,8 +171,8 @@ class SemaphorePOSIX : public Semaphore, public StdClass
 
     //@{
 public:
-    SemaphorePOSIX()          { clear(); }
-    virtual ~SemaphorePOSIX() { quit(); }
+    Impl()          { clear(); }
+    virtual ~Impl() { quit(); }
     //@}
 
     // ********************************
@@ -186,7 +186,7 @@ public:
         GN_GUARD;
 
         // standard init procedure
-        GN_STDCLASS_INIT( SemaphorePOSIX, () );
+        GN_STDCLASS_INIT( Impl, () );
 
         GN_UNIMPL();
 
@@ -215,13 +215,13 @@ private:
     // ********************************
 public:
 
-    virtual WaitResult wait( TimeInNanoSecond timeoutTime )
+    WaitResult wait( TimeInNanoSecond timeoutTime )
     {
         GN_UNIMPL_WARNING();
         return WaitResult::COMPLETED;
     }
 
-    virtual void wake( size_t count )
+    void wake( size_t count )
     {
         GN_UNIMPL_WARNING();
     }
@@ -237,27 +237,11 @@ private:
 private:
 };
 
-// *****************************************************************************
-// public functions
-// *****************************************************************************
-
-//
-//
-// -----------------------------------------------------------------------------
-GN::Semaphore * GN::createSemaphore(
-    size_t maxcount,
-    size_t initialcount,
-    const char * name )
-{
-    GN_GUARD;
-
-    AutoObjPtr<SemaphorePOSIX> s( new SemaphorePOSIX );
-
-    if( !s->init( maxcount, initialcount, name ) ) return 0;
-
-    return s.detach();
-
-    GN_UNGUARD;
-}
+GN::Semaphore::Semaphore() : mImpl(NULL) { mImpl= new Impl(); }
+GN::Semaphore::~Semaphore() { delete mImpl; }
+bool GN::Semaphore::create( size_t maxcount, size_t initialcount, const char * name ) { return mImpl->init( maxcount, initialcount, name ); }
+void GN::Semaphore::destroy() { return mImpl->quit(); }
+GN::WaitResult GN::Semaphore::wait( TimeInNanoSecond timeoutTime ) { return mImpl->wait( timeoutTime ); }
+void GN::Semaphore::wake( size_t count ) { return mImpl->wake( count ); }
 
 #endif
