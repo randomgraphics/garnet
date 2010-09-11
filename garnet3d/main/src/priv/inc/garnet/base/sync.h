@@ -209,23 +209,33 @@ namespace GN
     ///
     /// Abstract semaphore interface
     ///
-    struct Semaphore : public NoCopy
+    class Semaphore : public NoCopy
     {
-        virtual WaitResult wait( TimeInNanoSecond timeoutTime = INFINITE_TIME ) = 0; ///< block calling thread, until the semaphore is available. return false means timeout.
-        virtual void       wake( size_t count = 1 ) = 0; ///< wake up specified number of threads that is waiting for this semaphore.
-
-        /// \name aliases for P/V operations
         //@{
-        WaitResult P( TimeInNanoSecond timeoutTime = INFINITE_TIME ) { return wait( timeoutTime ); }
-        void       V() { return wake(); }
+
+        Semaphore();
+        ~Semaphore();
+
         //@}
+
+        //@{
+
+        bool create( size_t maxcount, size_t initialcount, const char * name = 0 );
+        void destroy();
+
+        WaitResult wait( TimeInNanoSecond timeoutTime = INFINITE_TIME ); ///< block calling thread, until the semaphore is available. return false means timeout.
+        void       wake( size_t count ); ///< wake up specified number of threads that is waiting for this semaphore.
+
+        // aliases for P/V operations
+        WaitResult P( TimeInNanoSecond timeoutTime = INFINITE_TIME ) { return wait( timeoutTime ); }
+        void       V() { return wake( 1 ); }
+
+        //@}
+
+    private:
+        class Impl;
+        Impl * mImpl;
     };
-
-    //@{
-
-    Semaphore * createSemaphore( size_t maxcount, size_t initialcount, const char * name = 0 );
-
-    //@}
 }
 
 #if GN_MSWIN || GN_XENON

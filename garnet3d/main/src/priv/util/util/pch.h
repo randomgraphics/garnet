@@ -9,7 +9,6 @@
 #include "garnet/GNbase.h"
 #include "garnet/GNgfx.h"
 #include "garnet/GNinput.h"
-#include "garnet/GNwin.h"
 
 // *****************************************************************************
 //                                     EOF

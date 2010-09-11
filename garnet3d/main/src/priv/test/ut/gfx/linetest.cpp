@@ -1,6 +1,5 @@
 #include "../testCommon.h"
 #include "garnet/GNgfx.h"
-#include "garnet/GNwin.h"
 
 class LineRendererTest : public CxxTest::TestSuite
 {
@@ -8,7 +7,6 @@ class LineRendererTest : public CxxTest::TestSuite
     {
     public:
 
-        GN::AutoObjPtr<GN::win::Window> mWindow;
         GN::gfx::Gpu                  * mGpu;
         GN::gfx::LineRenderer         * mLine;
 
