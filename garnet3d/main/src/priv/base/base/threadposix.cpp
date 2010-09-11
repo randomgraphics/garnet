@@ -148,14 +148,14 @@ public:
         GN_UNIMPL_WARNING();
     }
 
-    virtual bool waitForTermination( TimeInNanoSecond timeoutTime, uint32 * threadProcReturnValue )
+    virtual WaitResult waitForTermination( TimeInNanoSecond timeoutTime, uint32 * threadProcReturnValue )
     {
         // can't wait for self termination
         GN_ASSERT( !isCurrentThread() );
 
         GN_UNIMPL_WARNING();
 
-        return true;
+        return WaitResult::KILLED;
     }
 
     // ********************************

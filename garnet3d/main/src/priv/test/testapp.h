@@ -39,7 +39,7 @@ public:
     //@{
 
     const char             * applicationName;
-    GN::gfx::GpuOptions rendererOptions;
+    GN::gfx::GpuOptions      rendererOptions;
     bool                     useMultiThreadGpu;
     Status                   status;
 
@@ -100,6 +100,8 @@ public:
             "   -mt   [on|off]          Use multithread renderer. Default is on.\n"
             "\n"
             "   -gapi [auto|ogl|d3d10]  Choose GPU API. Default is AUTO.\n"
+            "\n"
+            "   -vsync [on|off]         Enable/Disable vsync. Default is off.\n"
             );
     }
 
@@ -246,6 +248,12 @@ private:
                     if( NULL == value ) return INVALID_COMMAND_LINE;
 
                     if( !parseGpuAPI( rendererOptions.api, value ) )
+                        return INVALID_COMMAND_LINE;
+                }
+                else if( 0 == stringCompareI( "vsync", a+1 ) )
+                {
+                    const char * value = getOptionValue( argc, argv, i );
+                    if( NULL == value || !parseBool( rendererOptions.vsync, a, value ) )
                         return INVALID_COMMAND_LINE;
                 }
                 else

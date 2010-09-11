@@ -8,6 +8,7 @@
 
 #include <stddef.h>
 #include <wchar.h>
+#include <stdint.h>
 
 ///
 /// unsigned 8 bit integer

@@ -4,8 +4,8 @@
 
 #if GN_POSIX
 
-#include "glew.h"
-#include "glxew.h"
+#include <GL/glew.h>
+#include <GL/glxew.h>
 
 static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.common.renderWindow.X11");
 

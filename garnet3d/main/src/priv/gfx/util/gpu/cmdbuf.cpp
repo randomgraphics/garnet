@@ -151,10 +151,10 @@ GN::CommandBuffer::waitForFence( Fence fence )
 // -----------------------------------------------------------------------------
 GN::CommandBuffer::OperationResult
 GN::CommandBuffer::beginProduce(
-    uint16               command,
-    uint16               parameterSize,
-    _Out_opt_ Token *    token,
-    _In_opt_ SyncEvent * optionalCompletionEvent )
+    uint16      command,
+    uint16      parameterSize,
+    Token *     token,
+    SyncEvent * optionalCompletionEvent )
 {
     // align command size to 16 bytes
     size_t cmdsize = (sizeof(TokenInternal) + parameterSize + 15) & ~15;
