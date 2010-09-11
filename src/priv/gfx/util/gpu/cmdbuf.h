@@ -105,10 +105,10 @@ namespace GN
         //      OPERATION_SUCCEEDED, if production succeeds.
         //      OPERATION_CANCELLED if command buffer is shutting down.
         //      OPERATION_FAILED for other failures, like not paired with endProduce().
-        OperationResult beginProduce( uint16 command, uint16 parameterSize, _Out_opt_ Token * token, _In_opt_ SyncEvent * optionalCompletionEvent = NULL );
+        OperationResult beginProduce( uint16 command, uint16 parameterSize, Token * token, SyncEvent * optionalCompletionEvent = NULL );
         void            endProduce();
 
-        OperationResult postCommand0( uint16 command, _In_opt_ SyncEvent * optionalCompletionEvent = NULL )
+        OperationResult postCommand0( uint16 command, SyncEvent * optionalCompletionEvent = NULL )
         {
             Token token;
             OperationResult hr = beginProduce( command, 0, &token, optionalCompletionEvent );
@@ -120,7 +120,7 @@ namespace GN
         }
 
         template<typename T1>
-        OperationResult postCommand1( uint16 command, const T1 & p1, _In_opt_ SyncEvent * optionalCompletionEvent = NULL )
+        OperationResult postCommand1( uint16 command, const T1 & p1, SyncEvent * optionalCompletionEvent = NULL )
         {
             Token token;
             OperationResult hr = beginProduce( command, sizeof(p1), &token, optionalCompletionEvent );
@@ -134,7 +134,7 @@ namespace GN
         }
 
         template<typename T1, typename T2>
-        OperationResult postCommand2( uint16 command, const T1 & p1, const T2 & p2, _In_opt_ SyncEvent * optionalCompletionEvent = NULL )
+        OperationResult postCommand2( uint16 command, const T1 & p1, const T2 & p2, SyncEvent * optionalCompletionEvent = NULL )
         {
             Token token;
             OperationResult hr = beginProduce( command, sizeof(p1)+sizeof(p2), &token, optionalCompletionEvent );
@@ -149,7 +149,7 @@ namespace GN
         }
 
         template<typename T1, typename T2, typename T3>
-        OperationResult postCommand3( uint16 command, const T1 & p1, const T2 & p2, const T3 & p3, _In_opt_ SyncEvent * optionalCompletionEvent = NULL )
+        OperationResult postCommand3( uint16 command, const T1 & p1, const T2 & p2, const T3 & p3, SyncEvent * optionalCompletionEvent = NULL )
         {
             Token token;
             OperationResult hr = beginProduce( command, sizeof(p1)+sizeof(p2)+sizeof(p3), &token, optionalCompletionEvent );
@@ -165,7 +165,7 @@ namespace GN
         }
 
         template<typename T1, typename T2, typename T3, typename T4>
-        OperationResult postCommand4( uint16 command, const T1 & p1, const T2 & p2, const T3 & p3, const T4 & p4, _In_opt_ SyncEvent * optionalCompletionEvent = NULL )
+        OperationResult postCommand4( uint16 command, const T1 & p1, const T2 & p2, const T3 & p3, const T4 & p4, SyncEvent * optionalCompletionEvent = NULL )
         {
             Token token;
             OperationResult hr = beginProduce( command, sizeof(p1)+sizeof(p2)+sizeof(p3)+sizeof(p4), &token, optionalCompletionEvent );
@@ -182,7 +182,7 @@ namespace GN
         }
 
         template<typename T1, typename T2, typename T3, typename T4, typename T5>
-        OperationResult postCommand5( uint16 command, const T1 & p1, const T2 & p2, const T3 & p3, const T4 & p4, const T5 & p5, _In_opt_ SyncEvent * optionalCompletionEvent = NULL )
+        OperationResult postCommand5( uint16 command, const T1 & p1, const T2 & p2, const T3 & p3, const T4 & p4, const T5 & p5, SyncEvent * optionalCompletionEvent = NULL )
         {
             Token token;
             OperationResult hr = beginProduce( command, sizeof(p1)+sizeof(p2)+sizeof(p3)+sizeof(p4)+sizeof(p5), &token, optionalCompletionEvent );
@@ -200,7 +200,7 @@ namespace GN
         }
 
         template<typename T1, typename T2, typename T3, typename T4, typename T5, typename T6>
-        OperationResult postCommand6( uint16 command, const T1 & p1, const T2 & p2, const T3 & p3, const T4 & p4, const T5 & p5, const T6 & p6, _In_opt_ SyncEvent * optionalCompletionEvent = NULL )
+        OperationResult postCommand6( uint16 command, const T1 & p1, const T2 & p2, const T3 & p3, const T4 & p4, const T5 & p5, const T6 & p6, SyncEvent * optionalCompletionEvent = NULL )
         {
             Token token;
             OperationResult hr = beginProduce( command, sizeof(p1)+sizeof(p2)+sizeof(p3)+sizeof(p4)+sizeof(p5)+sizeof(p6), &token, optionalCompletionEvent );
@@ -228,7 +228,7 @@ namespace GN
         //      OPERATION_TIMEOUT if timed out
         //      OPERATION_CANCELLED if command buffer is shutting down.
         //      OPERATION_FAILED for other failures, like not paired with endConsume().
-        OperationResult beginConsume( _Out_ Token * token, TimeInNanoSecond timeoutTime = INFINITE_TIME );
+        OperationResult beginConsume( Token * token, TimeInNanoSecond timeoutTime = INFINITE_TIME );
         void            endConsume();
 
 
@@ -328,7 +328,7 @@ namespace GN
     private:
 
         // Internal version of produce function that support producing token command
-        OperationResult beginProduceInternal( uint16 command, uint16 parameterSize, _Out_opt_ Token * token = NULL, _In_opt_ SyncEvent * optionalCompletionEvent = NULL );
+        OperationResult beginProduceInternal( uint16 command, uint16 parameterSize, Token * token = NULL, SyncEvent * optionalCompletionEvent = NULL );
     };
 }
 

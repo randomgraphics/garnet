@@ -266,7 +266,7 @@ sIsTextureUniform( GLenum type )
 // -----------------------------------------------------------------------------
 static bool sGetOglVertexSemantic( OGLVertexSemantic & semanticName, uint8 & semanticIndex, const char * attributeName, GLuint attributeLocation )
 {
-    if( -1 == attributeLocation )
+    if( (GLuint)-1 == attributeLocation )
     {
         // this is conventional attribute
 

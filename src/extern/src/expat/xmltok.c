@@ -3,6 +3,7 @@
 */
 
 #include <stddef.h>
+#include <string.h> /* memcpy */
 
 #include "config.h"
 

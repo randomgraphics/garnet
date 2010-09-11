@@ -60,7 +60,7 @@ sGetCurrentDisplayMode(
     intptr_t monitor = sDetermineMonitorHandle( disp, ro );
     if( 0 == monitor ) return false;
 
-    if( (void*)1 == monitor )
+    if( 1 == monitor )
     {
         GN_WARN(sLogger)( "No valid screen found. Use hard-coded display mode:: 640x480 32bits" );
         dm.width = 640;
@@ -251,8 +251,8 @@ bool GN::gfx::BasicGpuX11::dispInit( const GpuOptions & ro )
     {
         if( !mWindow.initInternalRenderWindow( this, disp, (Window)ro.parentWindow, (Screen*)desc.monitorHandle, desc.width, desc.height ) ) return false;
     }
-    desc.displayHandle = disp;
-    desc.windowHandle = (void*)mWindow.getWindow();
+    desc.displayHandle = (intptr_t)disp;
+    desc.windowHandle = (intptr_t)mWindow.getWindow();
 
     GN_ASSERT_EX(
         desc.windowHandle && desc.monitorHandle,
