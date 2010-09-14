@@ -251,7 +251,7 @@ namespace GN
         ///     - base and relpath belongs to different file system.
         ///     - relpath is already an absolute path, like "c:/haha.txt".
         ///
-        GN_EXPORT void resolvePath( StrA & result, const StrA & base, const StrA & relpath );
+        void resolvePath( StrA & result, const StrA & base, const StrA & relpath );
 
         ///
         /// resolve relative path to absolute path.

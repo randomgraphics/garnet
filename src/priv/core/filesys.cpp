@@ -786,34 +786,3 @@ GN_EXPORT FileSystem * GN::fs::getFileSystem( const StrA & name )
 {
     return sGetFileSystemContainer().getFs( name );
 }
-
-//
-//
-// -----------------------------------------------------------------------------
-GN_EXPORT void GN::fs::resolvePath( StrA & result, const StrA & base, const StrA & relpath )
-{
-    // shortcut for empty path
-    if( base.empty() || relpath.empty() )
-    {
-        result = relpath;
-        return;
-    }
-
-    StrA basefs, basec, relfs, relc;
-    splitPath( base, basefs, basec );
-    splitPath( relpath, relfs, relc );
-
-    if( !relfs.empty() && basefs != relfs )
-    {
-        result = relpath;
-        return;
-    }
-
-    if( getFileSystem(relfs)->isAbsPath(relc) )
-    {
-        result = relpath;
-        return;
-    }
-
-    joinPath2( result, base, relc );
-}
