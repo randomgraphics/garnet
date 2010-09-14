@@ -8,7 +8,10 @@
 
 #include <stddef.h>
 #include <wchar.h>
+
+#if GN_POSIX
 #include <stdint.h>
+#endif
 
 ///
 /// unsigned 8 bit integer
