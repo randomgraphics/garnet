@@ -20,7 +20,6 @@
 #include <windows.h>
 #elif GN_POSIX
 #include <unistd.h>
-#include <linux/limits.h>
 #endif
 
 #include <errno.h>

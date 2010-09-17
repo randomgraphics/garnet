@@ -2,12 +2,15 @@
 # detect garnet root directory
 # ======================================
 GARNET_ROOT=$(cd $(dirname $(dirname ${BASH_SOURCE[0]})); pwd)
-echo Garnet root : ${GARNET_ROOT}
 
 # ===========================
 # setup build variants
 # ===========================
-export GN_BUILD_TARGET_OS=posix
+if [ ${OSTYPE} = "cygwin" ] ; then
+    export GN_BUILD_TARGET_OS=cygwin
+else
+    export GN_BUILD_TARGET_OS=posix
+fi
 export GN_BUILD_TARGET_CPU=x86
 export GN_BUILD_COMPILER=gcc
 export GN_BUILD_VARIANT=stdbg
@@ -15,12 +18,12 @@ export GN_BUILD_VARIANT=stdbg
 # ===========
 # setup scons
 # ===========
-SCONS_ROOT=${GARNET_ROOT}/env/scons/1.2.0.d20091224
-echo SCons Directory: ${SCONS_ROOT}
-PATH=${SCONS_ROOT}/script:${PATH}
-SCONS_LIB_DIR=${SCONS_ROOT}/engine
+SCONS_ROOT=${GARNET_ROOT}/env/scons/1.2.0
+PATH=${SCONS_ROOT}/scripts:${PATH}
+SCONS_LIB_DIR=${SCONS_ROOT}/lib
 export PATH SCONS_LIB_DIR
 export SCONSFLAGS=-U
+echo SCons Directory: ${SCONS_ROOT}
 
 # ===========
 # setup alias
@@ -68,6 +71,14 @@ cd ${GARNET_ROOT}
 # Call user specific script
 # =========================
 
-echo User name: ${USER}
 # if exist env/user/${USER}.sh env/user/${USER}.sh
 
+# ================================================
+# Garnet build environment setup done successfully
+# ================================================
+echo USERNAME            = $USER
+echo GARNET_ROOT         = $GARNET_ROOT
+echo GN_BUILD_COMPILER   = $GN_BUILD_COMPILER
+echo GN_BUILD_VARIANT    = $GN_BUILD_VARIANT
+echo GN_BUILD_TARGET_OS  = $GN_BUILD_TARGET_OS
+echo GN_BUILD_TARGET_CPU = $GN_BUILD_TARGET_CPU

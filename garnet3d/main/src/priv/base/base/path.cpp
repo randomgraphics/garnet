@@ -278,8 +278,8 @@ void GN::fs::getCurrentDir( StrA & result )
     result = full;
     result.trimRight( '/' );
 #elif GN_POSIX
-    char buf[PATH_MAX+1];
-    if( NULL == getcwd( buf, PATH_MAX ) )
+    char buf[FILENAME_MAX+1];
+    if( NULL == getcwd( buf, FILENAME_MAX ) )
     {
         static Logger * sLogger = getLogger( "GN.base.path" );
         GN_ERROR(sLogger)( "getcwd() failed: fail to get current directory." );
@@ -287,7 +287,7 @@ void GN::fs::getCurrentDir( StrA & result )
     }
     else
     {
-        buf[PATH_MAX] = 0;
+        buf[FILENAME_MAX] = 0;
         result = buf;
         result.trimRight( '/' );
     }

@@ -83,7 +83,7 @@ size_t GN::string2SignedInteger( sint64 & result, int bits, int base, const char
     char * e;
 
 #if GN_POSIX
-    sint64 s64 = strtoq( s, &e, base );
+    sint64 s64 = strtoll( s, &e, base );
 #else
     sint64 s64 = _strtoi64( s, &e, base );
 #endif
@@ -114,7 +114,7 @@ size_t GN::string2UnsignedInteger( uint64 & result, int bits, int base, const ch
 
     char * e;
 #if GN_POSIX
-    uint64 u64 = strtouq( s, &e, base );
+    uint64 u64 = strtoull( s, &e, base );
 #else
     uint64 u64 = _strtoui64( s, &e, base );
 #endif
