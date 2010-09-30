@@ -1,7 +1,6 @@
 #include "pch.h"
 #include "d3d11Gpu.h"
 #include "d3d11Resource.h"
-#include "../common/basicShader.h"
 #include "d3d11Shader.h"
 #include "d3d11Texture.h"
 #include "d3d11Buffer.h"

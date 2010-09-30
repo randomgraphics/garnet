@@ -12,7 +12,6 @@ sources = [
 	'd3d11Resource.cpp',
 	'd3d11ResourceManager.cpp',
 	'd3d11RenderTargetMgr.cpp',
-	'd3d11ShaderHlsl.cpp',
 	'd3d11StateObject.cpp',
 	'd3d11Texture.cpp',
 	'd3d11VtxBuf.cpp',

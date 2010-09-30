@@ -26,9 +26,9 @@ bool GN::gfx::XenonGpu::capsInit()
 
     mCaps.maxTextures = GPU_D3D_PIXEL_TEXTURE_FETCH_CONSTANT_COUNT;
     mCaps.maxColorRenderTargets = 4;
-    mCaps.vsLanguages = GpuProgramLanguage::HLSL9 | GpuProgramLanguage::MICROCODE;
-    mCaps.gsLanguages = 0;
-    mCaps.psLanguages = GpuProgramLanguage::HLSL9 | GpuProgramLanguage::MICROCODE;
+
+    mCaps.gpuProgramLanguage[GpuProgramLanguage::HLSL9]     = true;
+    mCaps.gpuProgramLanguage[GpuProgramLanguage::MICROCODE] = true;
 
     // successful
     return true;

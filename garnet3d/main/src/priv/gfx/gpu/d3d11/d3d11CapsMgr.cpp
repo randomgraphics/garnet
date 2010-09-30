@@ -38,29 +38,18 @@ bool GN::gfx::D3D11Gpu::capsInit()
     mCaps.maxColorRenderTargets = math::getmin<uint32>( D3D11_SIMULTANEOUS_RENDER_TARGET_COUNT, GpuContext::MAX_COLOR_RENDER_TARGETS );
 
     // shader caps
-    mCaps.vsLanguages = 0;
-    mCaps.gsLanguages = 0;
-    mCaps.psLanguages = 0;
-    switch( feature )
-    {
-        case D3D_FEATURE_LEVEL_11_0:
-            mCaps.vsLanguages |= GpuProgramLanguage::HLSL11;
-            mCaps.gsLanguages |= GpuProgramLanguage::HLSL11;
-            mCaps.psLanguages |= GpuProgramLanguage::HLSL11;
-            // fallthrough
+    mCaps.gpuProgramLanguage[ShaderStage::VS][GpuProgramLanguage::HLSL9] =
+    mCaps.gpuProgramLanguage[ShaderStage::PS][GpuProgramLanguage::HLSL9] = feature >= D3D_FEATURE_LEVEL_9_1;
 
-        case D3D_FEATURE_LEVEL_10_1:
-        case D3D_FEATURE_LEVEL_10_0:
-            mCaps.vsLanguages |= GpuProgramLanguage::HLSL10;
-            mCaps.gsLanguages |= GpuProgramLanguage::HLSL10;
-            mCaps.psLanguages |= GpuProgramLanguage::HLSL10;
-            // fallthrough
+    mCaps.gpuProgramLanguage[ShaderStage::VS][GpuProgramLanguage::HLSL10] =
+    mCaps.gpuProgramLanguage[ShaderStage::PS][GpuProgramLanguage::HLSL10] =
+    mCaps.gpuProgramLanguage[ShaderStage::GS][GpuProgramLanguage::HLSL10] = feature >= D3D_FEATURE_LEVEL_10_0;
 
-        default:
-            mCaps.vsLanguages |= GpuProgramLanguage::HLSL9;
-            mCaps.psLanguages |= GpuProgramLanguage::HLSL9;
-            break;
-    }
+    mCaps.gpuProgramLanguage[ShaderStage::VS][GpuProgramLanguage::HLSL11] =
+    mCaps.gpuProgramLanguage[ShaderStage::PS][GpuProgramLanguage::HLSL11] =
+    mCaps.gpuProgramLanguage[ShaderStage::GS][GpuProgramLanguage::HLSL11] =
+    mCaps.gpuProgramLanguage[ShaderStage::HS][GpuProgramLanguage::HLSL11] =
+    mCaps.gpuProgramLanguage[ShaderStage::DS][GpuProgramLanguage::HLSL11] = feature >= D3D_FEATURE_LEVEL_11_0;
 
     GN_INFO(sLogger)(
         "\n\n"
