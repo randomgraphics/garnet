@@ -8,11 +8,250 @@
 
 #include "d3d11Resource.h"
 #include "../common/basicShader.h"
+#include "../common/cgShader.h"
+#include <CG/cgD3d11.h>
 
 namespace GN { namespace gfx
 {
     // *************************************************************************
-    // HLSL shaders
+    // Common program interface
+    // *************************************************************************
+
+    class D3D11GpuProgram : public GpuProgram
+    {
+    public:
+
+        uint64 getUniqueID() const { return m_ID; }
+
+        ///
+        /// Get attribute semantic name and semantic index
+        ///
+        virtual const char * getAttributeSemantic( size_t attributeIndex, UINT * semanticIndex ) const = 0;
+
+        ///
+        /// Get vertex input signature.
+        ///
+        virtual const void * getInputSignature( size_t * pSignatureSize ) const = 0;
+
+        ///
+        /// apply shader to D3D device
+        ///
+        virtual void apply() const = 0;
+
+        ///
+        /// Apply uniforms to D3D device
+        ///
+        virtual void applyUniforms(
+            const Uniform * const * uniforms,
+            size_t                  count,
+            bool                    skipDirtyCheck ) const = 0;
+
+        ///
+        /// apply textures to D3D device
+        ///
+        virtual void applyTextures(
+            const TextureBinding * bindings,
+            size_t                 count,
+            bool                   skipDirtyCheck ) const = 0;
+
+    protected:
+
+        enum ShaderType
+        {
+            VS, // Vertex shader
+            PS, // Pixel shadser
+            GS, // Geometry shader
+            DS, // Domain shader
+            HS, // Hull shader
+            SHADER_TYPE_COUNT,
+        };
+
+        D3D11GpuProgram()
+        {
+            static uint64 sShaderID = 0;
+            m_ID = ++sShaderID;
+        }
+
+    private:
+
+        uint64 m_ID;
+    };
+
+    // *************************************************************************
+    // Cg program
+    // *************************************************************************
+
+#ifdef HAS_CG_D3D
+
+    ///
+    /// D3D11 Cg program
+    ///
+    class D3D11GpuProgramCG : public D3D11GpuProgram, public D3D11Resource, public StdClass
+    {
+        GN_DECLARE_STDCLASS( D3D11GpuProgramCG, StdClass );
+
+        // ********************************
+        // ctor/dtor
+        // ********************************
+
+        //@{
+    public:
+        D3D11GpuProgramCG( D3D11Gpu & g ) : D3D11Resource(g) { clear(); }
+        virtual ~D3D11GpuProgramCG() { quit(); }
+        //@}
+
+        // ********************************
+        // from StdClass
+        // ********************************
+
+        //@{
+    public:
+        bool init( const GpuProgramDesc & desc );
+        void quit();
+    private:
+        void clear() {}
+        //@}
+
+        // ********************************
+        // from Gpu
+        // ********************************
+    public:
+
+        virtual const GpuProgramParameterDesc & getParameterDesc() const { return mParam; }
+
+        // ********************************
+        // from D3D11GpuProgram
+        // ********************************
+    public:
+
+        virtual const char * getAttributeSemantic( size_t attributeIndex, UINT * semanticIndex ) const;
+
+        virtual const void * getInputSignature( size_t * pSignatureSize ) const;
+
+        virtual void apply() const;
+
+        virtual void applyUniforms(
+            const Uniform * const * uniforms,
+            size_t                  count,
+            bool                    skipDirtyCheck ) const;
+
+        virtual void applyTextures(
+            const TextureBinding * bindings,
+            size_t                 count,
+            bool                   skipDirtyCheck ) const;
+
+        // ********************************
+        // private types
+        // ********************************
+    private:
+
+        typedef void (CGENTRY *SetCgTypelessParameterValue)(CGparameter param, int n, const void * vals);
+
+        struct D3D11CgParameter
+        {
+            DynaArray<CGparameter> handles; // in case that the parameter is used in more than one programs.
+            StrA                   name;
+        };
+
+        struct D3D11CgUniform : public D3D11CgParameter
+        {
+            GpuProgramUniformParameterDesc desc;
+
+            // Total number of elements. For example, float2x3 blah[4][5] contains 2x3x4x5=120 elements.
+            size_t count;
+
+            // The function pointer that sets the uniform value.
+            SetCgTypelessParameterValue setValueFuncPtr;
+        };
+
+        struct D3D11CgTexture : public D3D11CgParameter
+        {
+            GpuProgramTextureParameterDesc desc;
+        };
+
+        struct D3D11CgAttribute : public D3D11CgParameter
+        {
+            GpuProgramAttributeParameterDesc desc;
+            const char *                     semantic;
+            UINT                             semanticIndex;
+        };
+
+        class FindCgParameterByName
+        {
+            const char * mName;
+
+        public:
+
+            FindCgParameterByName( const char * name ) : mName(name)
+            {
+            }
+
+            bool operator()( const D3D11CgParameter & param )
+            {
+                return param.name == mName;
+            }
+        };
+
+        class D3D11GpuProgramParameterDesc : public GpuProgramParameterDesc
+        {
+        public:
+
+            void setUniformArray(
+                const GpuProgramUniformParameterDesc * array,
+                size_t                                 count,
+                size_t                                 stride )
+            {
+                mUniformArray       = array;
+                mUniformCount       = count;
+                mUniformArrayStride = stride;
+            }
+
+            void setTextureArray(
+                const GpuProgramTextureParameterDesc * array,
+                size_t                                 count,
+                size_t                                 stride )
+            {
+                mTextureArray       = array;
+                mTextureCount       = count;
+                mTextureArrayStride = stride;
+            }
+
+            void setAttributeArray(
+                const GpuProgramAttributeParameterDesc * array,
+                size_t                                   count,
+                size_t                                   stride )
+            {
+                mAttributeArray       = array;
+                mAttributeCount       = count;
+                mAttributeArrayStride = stride;
+            }
+        };
+
+        // ********************************
+        // private variables
+        // ********************************
+    private:
+
+        CgShader mShaders[SHADER_TYPE_COUNT];
+        AutoComPtr<ID3DBlob>         mInputSignature;
+        DynaArray<D3D11CgUniform>    mUniforms;
+        DynaArray<D3D11CgTexture>    mTextures;
+        DynaArray<D3D11CgAttribute>  mAttributes;
+        D3D11GpuProgramParameterDesc mParam;
+
+        // ********************************
+        // private functions
+        // ********************************
+    private:
+
+        void enumCgParameters( CGprogram prog, CGenum name_space );
+        SetCgTypelessParameterValue GetCgSetParameterFuncPtr( CGparameter param );
+    };
+
+#endif
+
+    // *************************************************************************
+    // HLSL program
     // *************************************************************************
 
     ///
@@ -201,9 +440,9 @@ namespace GN { namespace gfx
     ///
     /// D3D11 HLSL GPU program
     ///
-    class D3D11GpuProgram : public GpuProgram, public D3D11Resource, public StdClass
+    class D3D11GpuProgramHLSL : public D3D11GpuProgram, public D3D11Resource, public StdClass
     {
-         GN_DECLARE_STDCLASS( D3D11GpuProgram, StdClass );
+         GN_DECLARE_STDCLASS( D3D11GpuProgramHLSL, StdClass );
 
         // ********************************
         // ctor/dtor
@@ -211,8 +450,8 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        D3D11GpuProgram( D3D11Gpu & );
-        virtual ~D3D11GpuProgram() { quit(); }
+        D3D11GpuProgramHLSL( D3D11Gpu & );
+        virtual ~D3D11GpuProgramHLSL() { quit(); }
         //@}
 
         // ********************************
@@ -235,72 +474,22 @@ namespace GN { namespace gfx
         virtual const GpuProgramParameterDesc & getParameterDesc() const { return mParamDesc; }
 
         // ********************************
-        // public methods
+        // from D3D11GpuProgram
         // ********************************
     public:
 
-        uint64 getUniqueID() const { return m_ID; }
+        virtual const char * getAttributeSemantic( size_t attributeIndex, UINT * semanticIndex ) const;
 
-        ///
-        /// Get attribute semantic name and semantic index
-        ///
-        const char * getAttributeSemantic( size_t attributeIndex, UINT * semanticIndex ) const;
+        virtual const void * getInputSignature( size_t * pSignatureSize ) const;
 
-        ///
-        /// Get vertex input signature.
-        ///
-        const void * getInputSignature( size_t * pSignatureSize ) const;
+        virtual void apply() const;
 
-        ///
-        /// apply shader to D3D device
-        ///
-        void apply() const
-        {
-            ID3D11DeviceContext & cxt = getDeviceContextRef();
-
-            // bind shader
-            cxt.VSSetShader( mVs.shader, NULL, 0 );
-            cxt.GSSetShader( mGs.shader, NULL, 0 );
-            cxt.PSSetShader( mPs.shader, NULL, 0 );
-
-            // bind constant buffers
-            if( mVs.constBufs.size() )
-            {
-                cxt.VSSetConstantBuffers(
-                    0,
-                    (uint32)mVs.constBufs.size(),
-                    &mVs.constBufs[0] );
-            }
-
-            if( mGs.constBufs.size() )
-            {
-                cxt.GSSetConstantBuffers(
-                    0,
-                    (uint32)mGs.constBufs.size(),
-                    &mGs.constBufs[0] );
-            }
-
-            if( mPs.constBufs.size() )
-            {
-                cxt.PSSetConstantBuffers(
-                    0,
-                    (uint32)mPs.constBufs.size(),
-                    &mPs.constBufs[0] );
-            }
-        }
-
-        ///
-        /// Apply uniforms to D3D device
-        ///
-        void applyUniforms(
+        virtual void applyUniforms(
             const Uniform * const * uniforms,
             size_t                  count,
             bool                    skipDirtyCheck ) const;
 
-        ///
-        /// apply textures to D3D device
-        ///
-        void applyTextures(
+        virtual void applyTextures(
             const TextureBinding * bindings,
             size_t                 count,
             bool                   skipDirtyCheck ) const;
@@ -309,8 +498,6 @@ namespace GN { namespace gfx
         // private variables
         // ********************************
     private:
-
-        uint64 m_ID;
 
         D3D11GpuProgramParameterDesc mParamDesc;
 

@@ -63,6 +63,11 @@ namespace GN { namespace gfx
     public:
 
         ///
+        /// Get the texture resource
+        ///
+        ID3D11Resource * getD3D11Resource() const { return mTexture; }
+
+        ///
         /// get shader resource view
         ///
         ID3D11ShaderResourceView * getSRView()
