@@ -105,10 +105,10 @@ bool GN::gfx::XenonGpuProgramHLSL::init( const GpuProgramDesc & desc )
         AutoComPtr<ID3DXBuffer> bin;
         mVs = d3d9::ShaderCompiler<IDirect3DVertexShader9>::compileAndCreate(
             dev,
-            desc.vs.source,
+            desc.code[ShaderStage::VS].source,
             0, // source length
             0, // compile flags
-            desc.vs.entry,
+            desc.code[ShaderStage::VS].entry,
             0, // profile
             &mVsConsts,
             &bin );
@@ -124,10 +124,10 @@ bool GN::gfx::XenonGpuProgramHLSL::init( const GpuProgramDesc & desc )
     {
         mPs = d3d9::ShaderCompiler<IDirect3DPixelShader9>::compileAndCreate(
             dev,
-            desc.ps.source,
+            desc.code[ShaderStage::PS].source,
             0,
             0,
-            desc.ps.entry,
+            desc.code[ShaderStage::PS].entry,
             0,
             &mPsConsts );
         if( NULL == mPs ) return failure();
