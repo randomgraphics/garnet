@@ -56,16 +56,6 @@ namespace GN { namespace gfx
 
     protected:
 
-        enum ShaderType
-        {
-            VS, // Vertex shader
-            PS, // Pixel shadser
-            GS, // Geometry shader
-            DS, // Domain shader
-            HS, // Hull shader
-            SHADER_TYPE_COUNT,
-        };
-
         D3D11GpuProgram()
         {
             static uint64 sShaderID = 0;
@@ -232,7 +222,7 @@ namespace GN { namespace gfx
         // ********************************
     private:
 
-        CgShader mShaders[SHADER_TYPE_COUNT];
+        CgShader mShaders[ShaderStage::COUNT];
         AutoComPtr<ID3DBlob>         mInputSignature;
         DynaArray<D3D11CgUniform>    mUniforms;
         DynaArray<D3D11CgTexture>    mTextures;
