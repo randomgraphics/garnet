@@ -85,8 +85,8 @@ bool GN::gfx::LineRenderer::init()
     // create GPU program
     const GpuCaps & caps = mGpu.caps();
     GpuProgramDesc gpd;
-    if( caps.vsLanguages & GpuProgramLanguage::GLSL &&
-        caps.psLanguages & GpuProgramLanguage::GLSL )
+    if( caps.gpuProgramLanguage[ShaderStage::VS][GpuProgramLanguage::GLSL] &&
+        caps.gpuProgramLanguage[ShaderStage::PS][GpuProgramLanguage::GLSL] )
     {
         gpd.lang = GpuProgramLanguage::GLSL;
         gpd.vs.source = glslvscode;
@@ -104,8 +104,8 @@ bool GN::gfx::LineRenderer::init()
         mContext.vtxbind[4].attribute = gppd.attributes["gl_MultiTexCoord2"];
         mContext.vtxbind[5].attribute = gppd.attributes["gl_MultiTexCoord3"];
     }
-    else if( caps.vsLanguages & GpuProgramLanguage::HLSL9 &&
-             caps.psLanguages & GpuProgramLanguage::HLSL9 )
+    else if( caps.gpuProgramLanguage[ShaderStage::VS][GpuProgramLanguage::HLSL9] &&
+             caps.gpuProgramLanguage[ShaderStage::PS][GpuProgramLanguage::HLSL9] )
     {
         gpd.lang = GpuProgramLanguage::HLSL9;
         gpd.vs.source = hlslvscode;

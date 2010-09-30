@@ -244,14 +244,6 @@ namespace GN { namespace gfx
     // HLSL program
     // *************************************************************************
 
-    ///
-    /// D3D11 shader compile flags
-    ///
-    struct D3D11ShaderCompileOptions
-    {
-        uint32 compileFlags; ///< combination of D3D11_SHADER flags.
-    };
-
     /// shader parameter classes
     //@{
 
@@ -268,13 +260,9 @@ namespace GN { namespace gfx
         };
 
         ///
-        /// shader specific properites for each shader type
+        /// shader specific properites for each shader stage
         ///
-        /// 0: VS
-        /// 1: GS
-        /// 2: PS
-        ///
-        ShaderSpecificProperties ssp[3];
+        ShaderSpecificProperties ssp[ShaderStage::COUNT];
 
         /// ctor
         D3D11UniformParameterDesc()
@@ -294,7 +282,7 @@ namespace GN { namespace gfx
             UINT                        stage; ///< texture stage that the parameter is binding to
         };
 
-        ShaderSpecificProperties ssp[3]; ///< shader specific properites for each shader type
+        ShaderSpecificProperties ssp[ShaderStage::COUNT]; ///< shader specific properites for each shader type
 
         /// ctor
         D3D11TextureParameterDesc()
@@ -329,6 +317,9 @@ namespace GN { namespace gfx
         /// dtor
         ~D3D11GpuProgramParameterDesc();
 
+        /// clear the descriptor
+        void clear();
+
         /// build parameter arrays
         void buildParameterArrays();
 
@@ -351,81 +342,6 @@ namespace GN { namespace gfx
     };
 
     //@}
-
-    ///
-    /// array of D3D11 constant buffer
-    ///
-    typedef StackArray<AutoComPtr<ID3D11Buffer>,16> D3D11ConstBufferArray;
-
-    // We'll cast this auto-ptr array to raw pointer array. So
-    // they must be the same size.
-    GN_CASSERT( sizeof(AutoComPtr<ID3D11Buffer>) == sizeof(ID3D11Buffer*) );
-
-    ///
-    /// array of constant buffer in system memory
-    ///
-    typedef StackArray<DynaArray<uint8>,16> SysMemConstBufferArray;
-
-    ///
-    /// D3D11 vertex shader
-    ///
-    struct D3D11VertexShaderHLSL
-    {
-        AutoComPtr<ID3D11VertexShader> shader;    ///< shader pointer
-        AutoComPtr<ID3DBlob>           byteCode;  ///< shader byte code.
-        D3D11ConstBufferArray          constBufs; ///< constant buffers
-        mutable SysMemConstBufferArray constData; ///< constant data
-
-        /// initialize shader
-        bool init(
-            ID3D11Device                    & dev,
-            const ShaderCode                & code,
-            const D3D11ShaderCompileOptions & options,
-            D3D11GpuProgramParameterDesc    & paramDesc );
-
-        /// clear shader
-        void clear() { shader.clear(); byteCode.clear(); constBufs.clear(); constData.clear(); }
-    };
-
-    ///
-    /// D3D11 geometry shader
-    ///
-    struct D3D11GeometryShaderHLSL
-    {
-        AutoComPtr<ID3D11GeometryShader> shader;    ///< shader pointer
-        D3D11ConstBufferArray            constBufs; ///< constant buffers
-        mutable SysMemConstBufferArray   constData; ///< constant data
-
-        /// initialize shader
-        bool init(
-            ID3D11Device                    & dev,
-            const ShaderCode                & code,
-            const D3D11ShaderCompileOptions & options,
-            D3D11GpuProgramParameterDesc    & paramDesc );
-
-        /// clear shader
-        void clear() { shader.clear(); constBufs.clear(); constData.clear(); }
-    };
-
-    ///
-    /// D3D11 pixel shader
-    ///
-    struct D3D11PixelShaderHLSL
-    {
-        AutoComPtr<ID3D11PixelShader>  shader;    ///< shader pointer
-        D3D11ConstBufferArray          constBufs; ///< constant buffers
-        mutable SysMemConstBufferArray constData; ///< constant data
-
-        /// initialize shader
-        bool init(
-            ID3D11Device                    & dev,
-            const ShaderCode                & code,
-            const D3D11ShaderCompileOptions & options,
-            D3D11GpuProgramParameterDesc    & paramDesc );
-
-        /// clear shader
-        void clear() { shader.clear(); constBufs.clear(); constData.clear(); }
-    };
 
     ///
     /// D3D11 HLSL GPU program
@@ -489,16 +405,58 @@ namespace GN { namespace gfx
         // ********************************
     private:
 
-        D3D11GpuProgramParameterDesc mParamDesc;
+        /// array of D3D11 constant buffer
+        typedef StackArray<AutoComPtr<ID3D11Buffer>,16> D3D11ConstBufferArray;
 
-        D3D11VertexShaderHLSL   mVs;
-        D3D11GeometryShaderHLSL mGs;
-        D3D11PixelShaderHLSL    mPs;
+        // We'll cast this auto-ptr array to raw pointer array. So they must be the same size.
+        GN_CASSERT( sizeof(AutoComPtr<ID3D11Buffer>) == sizeof(ID3D11Buffer*) );
+
+        /// array of constant buffer in system memory
+        typedef StackArray<DynaArray<uint8>,16> SysMemConstBufferArray;
+
+        struct ShaderHLSL
+        {
+            AutoComPtr<ID3D11DeviceChild>  shader;    ///< shader pointer
+            D3D11ConstBufferArray          constBufs; ///< constant buffers
+            mutable SysMemConstBufferArray constData; ///< constant data
+
+            void clear()
+            {
+                shader.clear();
+                constBufs.clear();
+                constData.clear();
+            }
+        };
+
+        D3D11GpuProgramParameterDesc mParamDesc;
+        ShaderHLSL                   mShaders[ShaderStage::COUNT];
+        AutoComPtr<ID3DBlob>         mInputSignature;
 
         // ********************************
         // private functions
         // ********************************
     private:
+
+        template<int SHADER_STAGE>
+        bool initShader(
+            ShaderHLSL                      & shader,
+            const ShaderCode                & code,
+            GpuProgramLanguage                targetLanguage,
+            uint32                            compileFlags );
+
+        static bool
+        sInitConstBuffers(
+            ID3D11Device           & dev,
+            ID3D11ShaderReflection & reflection,
+            D3D11ConstBufferArray  & constBufs,
+            SysMemConstBufferArray & constData );
+
+        static void sUpdateD3D11ConstData(
+            const D3D11UniformParameterDesc & desc,
+            const SysMemUniform             & uniform,
+            SysMemConstBufferArray          & cbarray,
+            ShaderStage::Enum                 shaderStage,
+            bool                            * dirtyFlags );
     };
 }}
 

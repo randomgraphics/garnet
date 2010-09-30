@@ -15,18 +15,20 @@ namespace GN { namespace gfx
     {
         enum Enum
         {
-            INVALID       = 0,    ///< Indicate invalid language
+            INVALID = 0,    ///< Indicate invalid language
 
-            HLSL9         = 1<<0, ///< HLSL for D3D9 and Xenon
-            HLSL10        = 1<<1, ///< HLSL for D3D10
-            HLSL11        = 1<<2, ///< HLSL for D3D11
+            HLSL9,          ///< HLSL for D3D9 and Xenon (shader model 3.0)
+            HLSL10,         ///< HLSL for D3D10 (shader model 4.0)
+            HLSL11,         ///< HLSL for D3D11 (shader model 5.0)
 
-            MICROCODE     = 1<<3, ///< Xenon microcode shader
+            MICROCODE,      ///< Xenon microcode shader
 
-            GLSL          = 1<<4, ///< OpenGL Shading language
-            ARB1          = 1<<5, ///< OpenGL ARB1 shading language
+            ARB1,           ///< OpenGL ARB1 shading language
+            GLSL,           ///< OpenGL Shading language
 
-            CG            = 1<<6, ///< Nvidia Cg
+            CG,             ///< Nvidia Cg
+
+            COUNT,          ///< Number of GPU program languages
         };
 
         /// check for validity
@@ -36,8 +38,8 @@ namespace GN { namespace gfx
                 || HLSL10 == *this
                 || HLSL11 == *this
                 || MICROCODE == *this
-                || GLSL == *this
                 || ARB1 == *this
+                || GLSL == *this
                 || CG == *this;
         }
 
@@ -50,8 +52,8 @@ namespace GN { namespace gfx
                 case HLSL10    : return "HLSL10";
                 case HLSL11    : return "HLSL11";
                 case MICROCODE : return "MICROCODE";
-                case GLSL      : return "GLSL";
                 case ARB1      : return "ARB1";
+                case GLSL      : return "GLSL";
                 case CG        : return "CG";
                 default        : return "INVALID_GPU_PROGRAM_LANGUAGE";
             };
@@ -64,10 +66,10 @@ namespace GN { namespace gfx
             else if( 0 == stringCompareI( s, "HLSL10" ) )    return HLSL10;
             else if( 0 == stringCompareI( s, "HLSL11" ) )    return HLSL11;
             else if( 0 == stringCompareI( s, "MICROCODE" ) ) return MICROCODE;
-            else if( 0 == stringCompareI( s, "GLSL" ) )      return GLSL;
             else if( 0 == stringCompareI( s, "ARB1" ) )      return ARB1;
+            else if( 0 == stringCompareI( s, "GLSL" ) )      return GLSL;
             else if( 0 == stringCompareI( s, "CG" ) )        return CG;
-            else                                      return INVALID;
+            else                                             return INVALID;
         }
 
         GN_DEFINE_ENUM_CLASS_HELPERS( GpuProgramLanguage, Enum )
@@ -78,7 +80,7 @@ namespace GN { namespace gfx
     ///
     struct ShaderStage
     {
-        enum ENUM
+        enum Enum
         {
             VS = 0, //< Vertex shader
             PS,     //< Pixel shader
@@ -88,6 +90,8 @@ namespace GN { namespace gfx
 
             COUNT,  //< Number of shader stages.
         };
+
+        GN_DEFINE_ENUM_CLASS_HELPERS( ShaderStage, Enum )
     };
 
     ///

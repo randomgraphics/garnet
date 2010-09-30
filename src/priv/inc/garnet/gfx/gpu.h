@@ -308,9 +308,7 @@ namespace GN { namespace gfx
         uint32 maxTex3DSize[4];       ///< width, height, array
         uint32 maxTextures;           ///< max number of simutaneous textures
         uint32 maxColorRenderTargets; ///< max number of simutaneous render targets
-        uint32 vsLanguages;           ///< renderer supported vertex program languages.
-        uint32 gsLanguages;           ///< renderer supported geometry program languages.
-        uint32 psLanguages;           ///< renderer supported pixel program languages.
+        bool   gpuProgramLanguage[ShaderStage::COUNT][GpuProgramLanguage::COUNT]; //< GPU program caps.
     };
 
     ///
