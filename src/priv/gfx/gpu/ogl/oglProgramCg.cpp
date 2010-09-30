@@ -195,6 +195,7 @@ void GN::gfx::OGLGpuProgramCG::quit()
     mTextures.clear();
     mAttributes.clear();
 
+    // TODO: Unload the programs
     mVs.quit();
     mPs.quit();
 

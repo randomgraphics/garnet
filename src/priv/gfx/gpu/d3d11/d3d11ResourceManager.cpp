@@ -21,7 +21,7 @@ bool GN::gfx::D3D11Gpu::resourceInit()
     GN_ASSERT( mResourceList.empty() );
 
 #ifdef HAS_CG_D3D11
-    GN_DX_CHECK_RETURN( cgD3D11SetDevice( &getDeviceRefInlined() ), false );
+    GN_DX_CHECK_RETURN( cgD3D11SetDevice( getCgContext(), &getDeviceRefInlined() ), false );
 #endif
 
     // success
@@ -49,6 +49,10 @@ void GN::gfx::D3D11Gpu::resourceQuit()
             ++i;
         }
     }
+
+#ifdef HAS_CG_D3D11
+    GN_DX_CHECK_RETURN( cgD3D11SetDevice( getCgContext(), NULL ), false );
+#endif
 
     GN_UNGUARD;
 }
@@ -85,10 +89,18 @@ GN::gfx::D3D11Gpu::createGpuProgram( const void * data, size_t length )
         GpuProgramLanguage::HLSL10 == desc.lang ||
         GpuProgramLanguage::HLSL9 == desc.lang )
     {
-        AutoRef<D3D11GpuProgram> prog( new D3D11GpuProgram(*this) );
+        AutoRef<D3D11GpuProgramHLSL> prog( new D3D11GpuProgramHLSL(*this) );
         if( !prog->init( desc ) ) return NULL;
         return prog.detach();
     }
+#ifdef HAS_CG_D3D
+    else if( GpuProgramLanguage::CG == desc.lang )
+    {
+        AutoRef<D3D11GpuProgramCG> prog( new D3D11GpuProgramCG(*this) );
+        if( !prog->init( desc ) ) return NULL;
+        return prog.detach();
+    }
+#endif
     else
     {
         GN_ERROR(sLogger)( "Unsupported or invalid GPU program language: %d", desc.lang.toRawEnum() );

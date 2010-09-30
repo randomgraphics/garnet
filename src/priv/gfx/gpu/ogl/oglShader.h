@@ -81,11 +81,6 @@ namespace GN { namespace gfx
         uint64 uniqueID() const { return mID; }
 
         ///
-        /// return program language used by this shader
-        ///
-        GpuProgramLanguage language() const { return mLanguage; }
-
-        ///
         /// Get vertex buffer binding description of specific attribute.
         /// Return false, if the binding name and index is not used byt the program.
         ///
@@ -116,7 +111,7 @@ namespace GN { namespace gfx
         ///
         /// protected ctor
         ///
-        OGLBasicGpuProgram( OGLGpu & r, GpuProgramLanguage lang ) : OGLResource(r), mLanguage(lang)
+        OGLBasicGpuProgram( OGLGpu & r ) : OGLResource(r)
         {
             static uint64 counter = 1;
             mID = counter++;
@@ -124,8 +119,7 @@ namespace GN { namespace gfx
 
     private:
 
-        const GpuProgramLanguage mLanguage;
-        uint64                   mID;
+        uint64 mID;
     };
 
     // *************************************************************************
@@ -145,7 +139,7 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        OGLGpuProgramGLSL( OGLGpu & r ) : OGLBasicGpuProgram( r, GpuProgramLanguage::GLSL ) { clear(); }
+        OGLGpuProgramGLSL( OGLGpu & r ) : OGLBasicGpuProgram( r ) { clear(); }
         virtual ~OGLGpuProgramGLSL() { quit(); }
         //@}
 
@@ -268,7 +262,7 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        OGLGpuProgramCG( OGLGpu & r ) : OGLBasicGpuProgram( r, GpuProgramLanguage::CG ) { clear(); }
+        OGLGpuProgramCG( OGLGpu & r ) : OGLBasicGpuProgram( r ) { clear(); }
         virtual ~OGLGpuProgramCG() { quit(); }
         //@}
 

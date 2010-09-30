@@ -436,13 +436,17 @@ def UTIL_checkConfig( conf, confDir, compiler, variant ):
 	# 是否支持Cg shader
 	# =================
 	if CONF_enableCg :
-		conf['has_cg']      = c.CheckLibWithHeader( 'cg', ['Cg/cg.h'], 'C', 'cgCreateContext();' )
-		conf['has_cg_d3d9'] = c.CheckLibWithHeader( 'cgD3D9', ['Cg/cg.h','Cg/cgD3D9.h'], 'C', "cgD3D9SetDevice(0);" )
-		conf['has_cg_ogl']  = c.CheckLibWithHeader( 'cgGL', ['Cg/cg.h','Cg/cgGL.h'], 'C', "cgGLRegisterStates(0);" )
+		conf['has_cg']       = c.CheckLibWithHeader( 'cg', ['Cg/cg.h'], 'C', 'cgCreateContext();' )
+		conf['has_cg_ogl']   = c.CheckLibWithHeader( 'cgGL', ['Cg/cg.h','Cg/cgGL.h'], 'C', "cgGLRegisterStates(0);" )
+		conf['has_cg_d3d9']  = c.CheckLibWithHeader( 'cgD3D9', ['Cg/cg.h','Cg/cgD3D9.h'], 'C', "cgD3D9SetDevice(0);" )
+		conf['has_cg_d3d10'] = c.CheckLibWithHeader( 'cgD3D10', ['Cg/cg.h','Cg/cgD3D10.h'], 'C', "cgD3D10SetDevice(0,0);" )
+		conf['has_cg_d3d11'] = c.CheckLibWithHeader( 'cgD3D11', ['Cg/cg.h','Cg/cgD3D11.h'], 'C', "cgD3D11SetDevice(0,0);" )
 	else:
-		conf['has_cg']      = 0
-		conf['has_cg_d3d9'] = 0
-		conf['has_cg_ogl']  = 0
+		conf['has_cg']       = 0
+		conf['has_cg_ogl']   = 0
+		conf['has_cg_d3d9']  = 0
+		conf['has_cg_d3d10'] = 0
+		conf['has_cg_d3d11'] = 0
 
 	# ==============
 	# 是否支持OpenGL
@@ -913,7 +917,7 @@ TARGET_shlibs = [
     'GNcore',
     'GNgpuOGL',
 	'GNgpuXenon',
-	'GNgpuD3D10',
+#	'GNgpuD3D10',
 	'GNgpuD3D11',
     ]
 

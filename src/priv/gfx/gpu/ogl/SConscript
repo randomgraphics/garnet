@@ -23,4 +23,4 @@ cluster = GN.newSourceCluster( sources, 'pch.h', 'pch.cpp' )
 target = GN.newTarget( 'shlib', 'GNgpuOGL', [cluster], dependencies = ['GNgpuCommon'] )
 if GN.conf['has_cg_ogl'] :
     cluster.addCompileFlags( CPPDEFINES = ['HAS_CG=1','HAS_CG_OGL=1'] )
-    target.externalDependencies += ['cgGL']
+    target.externalDependencies += ['cg','cgGL']

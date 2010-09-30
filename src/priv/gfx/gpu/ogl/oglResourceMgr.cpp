@@ -27,10 +27,6 @@ bool GN::gfx::OGLGpu::resourceInit()
         return false;
     }
 
-#ifdef HAS_CG_OGL
-    if( !mCgContext.init() ) return false;
-#endif
-
     // success
     return true;
 
@@ -54,10 +50,6 @@ void GN::gfx::OGLGpu::resourceQuit()
             GN_ERROR(sLogger)( "0x%p", r );
         }
     }
-
-#ifdef HAS_CG_OGL
-    mCgContext.quit();
-#endif
 
     GN_UNGUARD;
 }

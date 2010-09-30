@@ -8,7 +8,6 @@
 
 #include "../common/basicGpuX11.h"
 #include "../common/basicGpuMsw.h"
-#include "../common/cgShader.h"
 
 namespace GN { namespace gfx
 {
@@ -174,13 +173,6 @@ namespace GN { namespace gfx
 
     public:
 
-#if HAS_CG
-        ///
-        /// get global Cg context
-        ///
-        CGcontext getCgContext() const { return mCgContext; }
-#endif
-
         ///
         /// Insert resource into resource list. Can be only called by
         /// constructor of OGLResource.
@@ -201,9 +193,6 @@ namespace GN { namespace gfx
 
     private:
 
-#if HAS_CG
-        CgContextWrapper mCgContext;
-#endif
         std::list<OGLResource*> mResourceList;
 
         //@}

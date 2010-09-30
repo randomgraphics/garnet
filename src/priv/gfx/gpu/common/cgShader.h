@@ -6,6 +6,10 @@
 /// \author  chen@@HOME-PC (2006.10.28)
 // *****************************************************************************
 
+#ifdef HAS_CG
+
+#include <CG/cg.h>
+
 /// \name Cg error check macros
 //@{
 #define GN_CG_CHECK_DO( func, something )                                   \
@@ -31,7 +35,6 @@
 
 namespace GN { namespace gfx
 {
-#ifdef HAS_CG
 
     // *************************************************************************
     // Cg context
@@ -217,9 +220,9 @@ namespace GN { namespace gfx
         // ********************************
     private:
     };
-#endif
 }}
 
+#endif
 
 // *****************************************************************************
 //                                     EOF
