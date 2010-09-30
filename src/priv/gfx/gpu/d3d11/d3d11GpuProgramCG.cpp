@@ -59,28 +59,19 @@ bool GN::gfx::D3D11GpuProgramCG::init( const GpuProgramDesc & desc )
     }
 
     // get the latest vertex profile
-    CGprofile profiles[SHADER_TYPE_COUNT] =
+    CGprofile profiles[ShaderStage::COUNT] =
     {
         cgD3D11GetLatestVertexProfile(),
         cgD3D11GetLatestPixelProfile(),
         cgD3D11GetLatestGeometryProfile(),
-        cgD3D11GetLatestDomainProfile(),
         cgD3D11GetLatestHullProfile(),
+        cgD3D11GetLatestDomainProfile(),
     };
-    if( CG_PROFILE_UNKNOWN == profiles[VS] || CG_PROFILE_UNKNOWN == profiles[PS] )
+    if( CG_PROFILE_UNKNOWN == profiles[ShaderStage::VS] || CG_PROFILE_UNKNOWN == profiles[ShaderStage::PS] )
     {
-        GN_ERROR(sLogger)( "Programmable vertex and pixel shader is required!" );
+        GN_ERROR(sLogger)( "Programmable vertex and pixel shader are required!" );
         return failure();
     }
-
-    const ShaderCode * codes[SHADER_TYPE_COUNT] =
-    {
-        &desc.vs,
-        &desc.ps,
-        &desc.gs,
-        NULL,
-        NULL
-    };
 
     uint32 d3dCompileFlags;
     d3dCompileFlags = D3D10_SHADER_PACK_MATRIX_ROW_MAJOR; // use row major matrix at all time.
@@ -88,9 +79,9 @@ bool GN::gfx::D3D11GpuProgramCG::init( const GpuProgramDesc & desc )
     if( !desc.debug ) d3dCompileFlags |= D3D10_SHADER_DEBUG;
 
     // Initialize vertex shader
-    for( int i = 0; i < SHADER_TYPE_COUNT; ++i )
+    for( int i = 0; i < ShaderStage::COUNT; ++i )
     {
-        if( NULL != codes[i] && NULL != codes[i]->source )
+        if( NULL != desc.code[i].source )
         {
             if( CG_PROFILE_UNKNOWN == profiles[i] )
             {
@@ -98,7 +89,7 @@ bool GN::gfx::D3D11GpuProgramCG::init( const GpuProgramDesc & desc )
                 return failure();
             }
 
-            if( !mShaders[i].init( cgc, profiles[i], codes[i]->source, codes[i]->entry, NULL ) ) return failure();
+            if( !mShaders[i].init( cgc, profiles[i], desc.code[i].source, desc.code[i].entry, NULL ) ) return failure();
 
             GN_CG_CHECK_RV( cgD3D11LoadProgram( mShaders[i].getProgram(), d3dCompileFlags ), failure() );
 
@@ -108,9 +99,9 @@ bool GN::gfx::D3D11GpuProgramCG::init( const GpuProgramDesc & desc )
     }
 
     // get the vertex shader input signature
-    if( mShaders[VS].getProgram() )
+    if( mShaders[ShaderStage::VS].getProgram() )
     {
-        mInputSignature.attach( cgD3D11GetCompiledProgram( mShaders[VS].getProgram() ) );
+        mInputSignature.attach( cgD3D11GetCompiledProgram( mShaders[ShaderStage::VS].getProgram() ) );
     }
 
     // Fix up all char * pointers in parameter array
@@ -164,7 +155,7 @@ void GN::gfx::D3D11GpuProgramCG::quit()
 
     mInputSignature.clear();
 
-    for( int i = 0; i < SHADER_TYPE_COUNT; ++i )
+    for( int i = 0; i < ShaderStage::COUNT; ++i )
     {
         CGprogram program = mShaders[i].getProgram();
         if( program ) cgD3D11UnloadProgram( program );
@@ -232,7 +223,7 @@ void GN::gfx::D3D11GpuProgramCG::apply() const
 {
     ID3D11DeviceContext & cxt = getDeviceContextRef();
 
-    for( int i = 0; i < SHADER_TYPE_COUNT; ++i )
+    for( int i = 0; i < ShaderStage::COUNT; ++i )
     {
         CGprogram program = mShaders[i].getProgram();
         if( 0 != program )
@@ -241,11 +232,11 @@ void GN::gfx::D3D11GpuProgramCG::apply() const
         }
         else switch( i )
         {
-            case VS: cxt.VSSetShader( NULL, NULL, 0 );
-            case PS: cxt.PSSetShader( NULL, NULL, 0 );
-            case GS: cxt.GSSetShader( NULL, NULL, 0 );
-            case DS: cxt.DSSetShader( NULL, NULL, 0 );
-            case HS: cxt.HSSetShader( NULL, NULL, 0 );
+            case ShaderStage::VS: cxt.VSSetShader( NULL, NULL, 0 );
+            case ShaderStage::PS: cxt.PSSetShader( NULL, NULL, 0 );
+            case ShaderStage::GS: cxt.GSSetShader( NULL, NULL, 0 );
+            case ShaderStage::HS: cxt.HSSetShader( NULL, NULL, 0 );
+            case ShaderStage::DS: cxt.DSSetShader( NULL, NULL, 0 );
         }
     };
 }
@@ -318,7 +309,7 @@ void GN::gfx::D3D11GpuProgramCG::applyTextures(
 // -----------------------------------------------------------------------------
 void GN::gfx::D3D11GpuProgramCG::enumCgParameters( CGprogram prog, CGenum name_space )
 {
-    bool vs = cgGetProgramProfile( prog ) == mShaders[VS].getProfile();
+    bool vs = cgGetProgramProfile( prog ) == mShaders[ShaderStage::VS].getProfile();
 
     for( CGparameter param = cgGetFirstParameter( prog, name_space );
          param != 0;

@@ -74,15 +74,29 @@ namespace GN { namespace gfx
     };
 
     ///
+    /// Shader Stage
+    ///
+    struct ShaderStage
+    {
+        enum ENUM
+        {
+            VS = 0, //< Vertex shader
+            PS,     //< Pixel shader
+            GS,     //< Geoemtry shader
+            HS,     //< Hull (tessellation control) shader
+            DS,     //< Domain (tessellation evaluation) shader
+
+            COUNT,  //< Number of shader stages.
+        };
+    };
+
+    ///
     /// shader code
     ///
     struct ShaderCode
     {
         const char * source; ///< NULL terminated shader source. Set to NULL to use fixed functional pipeline.
         const char * entry;  ///< NULL terminated shader entry function (ignored for ASM shader code)
-
-        /// default ctor
-        ShaderCode() : source(NULL), entry(NULL) {}
     };
 
     ///
@@ -90,15 +104,29 @@ namespace GN { namespace gfx
     ///
     struct GpuProgramDesc
     {
-        GpuProgramLanguage lang;  ///< shading language.
-        ShaderCode         vs;    ///< vertex shader code
-        ShaderCode         gs;    ///< geometry shader code
-        ShaderCode         ps;    ///< pixel shader code
+        GpuProgramLanguage lang; ///< shading language.
+
+        union
+        {
+
+        ShaderCode         code[ShaderStage::COUNT]; //< shader code for each shader stage
+
+        struct
+        {
+
+        ShaderCode         vs; //< Vertex shader source code
+        ShaderCode         ps; //< Pixel shader source code
+        ShaderCode         gs; //< Geometry shader source code
+        ShaderCode         hs; //< Hull shader source code
+        ShaderCode         ds; //< Domain shadser source code
+
+        };
+        };
 
         /// compile options
         //@{
-        bool optimize; ///< generate optimized shader. Default is on.
-        bool debug;    ///< generate debug symbol. Default is on.
+        bool optimize; //< generate optimized shader. Default is on.
+        bool debug;    //< generate debug symbol. Default is on.
         //@}
 
         ///
@@ -109,6 +137,11 @@ namespace GN { namespace gfx
             , optimize(true)
             , debug(true)
         {
+            for( int i = 0; i < ShaderStage::COUNT; ++i )
+            {
+                code[i].source = NULL;
+                code[i].entry = NULL;
+            }
         }
     };
 
