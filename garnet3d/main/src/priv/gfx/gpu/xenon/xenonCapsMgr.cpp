@@ -12,6 +12,8 @@ bool GN::gfx::XenonGpu::capsInit()
 {
     GN_GUARD;
 
+    ZeroMemory( &mCaps, sizeof(mCaps) );
+
     mCaps.maxTex1DSize[0] = 16777216;
     mCaps.maxTex1DSize[1] = 1;
 
