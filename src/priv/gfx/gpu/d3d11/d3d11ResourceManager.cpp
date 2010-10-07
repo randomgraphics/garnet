@@ -19,7 +19,7 @@ bool GN::gfx::D3D11Gpu::resourceInit()
 
     GN_ASSERT( mResourceList.empty() );
 
-#ifdef HAS_CG_D3D11
+#ifdef HAS_CG_D3D
     GN_DX_CHECK_RETURN( cgD3D11SetDevice( getCgContext(), &getDeviceRefInlined() ), false );
 #endif
 
@@ -49,8 +49,8 @@ void GN::gfx::D3D11Gpu::resourceQuit()
         }
     }
 
-#ifdef HAS_CG_D3D11
-    GN_DX_CHECK_RETURN( cgD3D11SetDevice( getCgContext(), NULL ), false );
+#ifdef HAS_CG_D3D
+    GN_DX_CHECK_RETURN_VOID( cgD3D11SetDevice( getCgContext(), NULL ) );
 #endif
 
     GN_UNGUARD;

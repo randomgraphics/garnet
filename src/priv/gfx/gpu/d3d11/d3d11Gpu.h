@@ -164,13 +164,6 @@ namespace GN { namespace gfx
 
     public :
 
-#if HAS_CG_D3D
-        ///
-        /// get global Cg context
-        ///
-        CGcontext getCgContext() const { return mCgContext; }
-#endif
-
         ///
         /// Insert resource into resource list. Can be only called by
         /// constructor of D3D9Resource.
@@ -197,9 +190,6 @@ namespace GN { namespace gfx
 
     private :
 
-#if HAS_CG_D3D
-        CgContextWrapper mCgContext;
-#endif
         std::list<D3D11Resource*> mResourceList;
 
         //@}
