@@ -62,6 +62,7 @@ template<class T>
 static void sD3D11FreeNameString( T & t )
 {
     HeapMemory::dealloc( (void*)t.name );
+    t.name = NULL;
 }
 
 //

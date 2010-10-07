@@ -51,6 +51,14 @@ bool GN::gfx::D3D11Gpu::capsInit()
     mCaps.gpuProgramLanguage[ShaderStage::HS][GpuProgramLanguage::HLSL11] =
     mCaps.gpuProgramLanguage[ShaderStage::DS][GpuProgramLanguage::HLSL11] = feature >= D3D_FEATURE_LEVEL_11_0;
 
+#ifdef HAS_CG_D3D
+    mCaps.gpuProgramLanguage[ShaderStage::VS][GpuProgramLanguage::CG] =
+    mCaps.gpuProgramLanguage[ShaderStage::PS][GpuProgramLanguage::CG] = feature >= D3D_FEATURE_LEVEL_9_1;
+    mCaps.gpuProgramLanguage[ShaderStage::GS][GpuProgramLanguage::CG] = feature >= D3D_FEATURE_LEVEL_10_0;
+    mCaps.gpuProgramLanguage[ShaderStage::HS][GpuProgramLanguage::CG] =
+    mCaps.gpuProgramLanguage[ShaderStage::DS][GpuProgramLanguage::CG] = feature >= D3D_FEATURE_LEVEL_11_0;
+#endif
+
     GN_INFO(sLogger)(
         "\n\n"
         "===================================================\n"

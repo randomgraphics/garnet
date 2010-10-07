@@ -423,7 +423,7 @@ GN::gfx::EffectResource::Impl::initTechniques(
 
     if( (int)0x80000000 == currentQuality )
     {
-        GN_WARN(sLogger)( "No valid technique is found in effect '%s'", effectName() );
+        GN_ERROR(sLogger)( "No valid technique is found in effect '%s'", effectName() );
     }
 
     return true;

@@ -61,11 +61,11 @@ bool GN::gfx::D3D11GpuProgramCG::init( const GpuProgramDesc & desc )
     // get the latest vertex profile
     CGprofile profiles[ShaderStage::COUNT] =
     {
-        cgD3D11GetLatestVertexProfile(),
-        cgD3D11GetLatestPixelProfile(),
-        cgD3D11GetLatestGeometryProfile(),
-        cgD3D11GetLatestHullProfile(),
-        cgD3D11GetLatestDomainProfile(),
+        CG_PROFILE_VS_4_0, //cgD3D11GetLatestVertexProfile(),
+        CG_PROFILE_PS_4_0, //cgD3D11GetLatestPixelProfile(),
+        CG_PROFILE_GS_4_0, //cgD3D11GetLatestGeometryProfile(),
+        CG_PROFILE_UNKNOWN, //cgD3D11GetLatestHullProfile(),
+        CG_PROFILE_UNKNOWN, //cgD3D11GetLatestDomainProfile(),
     };
     if( CG_PROFILE_UNKNOWN == profiles[ShaderStage::VS] || CG_PROFILE_UNKNOWN == profiles[ShaderStage::PS] )
     {
@@ -91,7 +91,7 @@ bool GN::gfx::D3D11GpuProgramCG::init( const GpuProgramDesc & desc )
 
             if( !mShaders[i].init( cgc, profiles[i], desc.code[i].source, desc.code[i].entry, NULL ) ) return failure();
 
-            GN_CG_CHECK_RV( cgD3D11LoadProgram( mShaders[i].getProgram(), d3dCompileFlags ), failure() );
+            GN_DX_CHECK_RETURN( cgD3D11LoadProgram( mShaders[i].getProgram(), d3dCompileFlags ), failure() );
 
             enumCgParameters( mShaders[i].getProgram(), CG_GLOBAL );
             enumCgParameters( mShaders[i].getProgram(), CG_PROGRAM );

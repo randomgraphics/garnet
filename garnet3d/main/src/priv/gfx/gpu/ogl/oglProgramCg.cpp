@@ -296,6 +296,9 @@ void GN::gfx::OGLGpuProgramCG::enumCgParameters( CGprogram prog, CGenum name_spa
          param != 0;
          param = cgGetNextParameter( param ) )
     {
+        // Ignore non-referenced parameters
+        if( !cgIsParameterReferenced( param ) ) continue;
+
         // Ignore non-input parameters
         CGenum direction = cgGetParameterDirection( param );
         if( CG_IN != direction && CG_INOUT != direction ) return;
