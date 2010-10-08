@@ -99,7 +99,7 @@ public:
             "\n"
             "   -mt   [on|off]          Use multithread renderer. Default is on.\n"
             "\n"
-            "   -gapi [auto|ogl|d3d10]  Choose GPU API. Default is AUTO.\n"
+            "   -gpu [auto|ogl|d3d10]  Choose GPU API. Default is AUTO.\n"
             "\n"
             "   -vsync [on|off]         Enable/Disable vsync. Default is off.\n"
             );
@@ -242,7 +242,7 @@ private:
                     if( !parseBool( useMultiThreadGpu, a, value ) )
                         return INVALID_COMMAND_LINE;
                 }
-                else if( 0 == stringCompareI( "gapi", a+1 ) )
+                else if( 0 == stringCompareI( "gpu", a+1 ) )
                 {
                     const char * value = getOptionValue( argc, argv, i );
                     if( NULL == value ) return INVALID_COMMAND_LINE;

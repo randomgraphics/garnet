@@ -281,8 +281,8 @@ struct VSOUT
 };
 
 VSOUT main(
-	const float3 vPosition0     : POSITION0,
-	const float3 vNormal0       : NORMAL0,
+	const float3 vPosition0     : POSITION,
+	const float3 vNormal0       : NORMAL,
 	const float2 vBaseTexCoords : TEXCOORD0,
 	const float3 vPosition1     : TEXCOORD1,
 	const float3 vNormal1       : TEXCOORD2,
