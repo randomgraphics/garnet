@@ -1,4 +1,5 @@
 #include "pch.h"
+#include <garnet/d3d/dxgiutils.h>
 
 static GN::Logger * sLogger = GN::getLogger("GN.d3d10");
 

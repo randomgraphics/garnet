@@ -26,7 +26,7 @@
     } else void(0)
 #define GN_CG_CHECK_R( func )        GN_CG_CHECK_DO( func, return; )
 #define GN_CG_CHECK_RV( func, rval ) GN_CG_CHECK_DO( func, return rval; )
-#if GN_BUILD_DEBUG
+#if GN_ENABLE_DEBUG
 #define GN_CG_CHECK( func )          GN_CG_CHECK_DO( func, ; )
 #else
 #define GN_CG_CHECK( func )          func
@@ -211,7 +211,7 @@ namespace GN { namespace gfx
         CGcontext mContext;
         CGprofile mProfile;
 
-#if GN_BUILD_DEBUG
+#if GN_ENABLE_DEBUG
         StrA mCode;
 #endif
 

@@ -1,6 +1,6 @@
 #include "pch.h"
 
-#if GN_BUILD_GPU_API_HAS_XENON
+#if GN_XENON
 
 #include "dxerr9.h"
 #if GN_MSVC
@@ -8,7 +8,7 @@
 #endif
 #define DXERR_FUNC DXGetErrorDescription9A
 
-#elif GN_BUILD_GPU_API_HAS_D3D10 || GN_BUILD_GPU_API_HAS_D3D11
+#elif GN_MSWIN
 
 #include "dxerr.h"
 #if GN_MSVC

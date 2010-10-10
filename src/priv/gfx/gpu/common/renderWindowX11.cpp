@@ -263,7 +263,7 @@ bool GN::gfx::RenderWindowX11::initDisplay( Display * display )
     // store display pointer
     mDisplay = display;
 
-#if GN_BUILD_DEBUG
+#if GN_ENABLE_DEBUG
     // Trun on synchronous behavior for debug build.
     XSynchronize( mDisplay, true );
 #endif

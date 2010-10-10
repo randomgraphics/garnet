@@ -7,22 +7,10 @@
 // *****************************************************************************
 
 #include "GNbase.h"
-
-#if GN_BUILD_GPU_API_HAS_D3D10 || GN_BUILD_GPU_API_HAS_D3D11
 #include "d3d/dxgiutils.h"
-#endif
-
-#if GN_BUILD_GPU_API_HAS_XENON || GN_BUILD_GPU_API_HAS_D3D10 || GN_BUILD_GPU_API_HAS_D3D11
 #include "d3d/d3d9utils.h"
-#endif
-
-#if GN_BUILD_GPU_API_HAS_D3D10
 #include "d3d/d3d10utils.h"
-#endif
-
-#if GN_BUILD_GPU_API_HAS_D3D11
 #include "d3d/d3d11utils.h"
-#endif
 
 // *****************************************************************************
 //                                     EOF

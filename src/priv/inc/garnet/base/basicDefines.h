@@ -170,6 +170,10 @@
 #define GN_FORCE_INLINE   inline
 #endif
 
+/// \def GN_BUILD_STATIC    Enable static (non-dll) build.
+/// \note Changing of this flag requires rebuild of garnet libraries.
+#define GN_BUILD_STATIC  1
+
 // Export/Import function/variable tag
 
 /// \def GN_EXPORT

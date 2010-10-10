@@ -6,6 +6,12 @@
 /// \author  chenlee (2005.4.17)
 // *****************************************************************************
 
+// Garnet system uses right hand system by default. Define this macro to 1 to
+// use left hand system.
+//
+// Note: changing of this macro requires recompile of the whole system.
+#define GN_BUILD_LEFT_HAND 0
+
 namespace GN
 {
     namespace detail

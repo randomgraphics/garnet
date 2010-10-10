@@ -28,22 +28,17 @@ d3d11_sources = [
 ]
 
 sources = []
-d3dlibs = []
-if GN.conf['has_d3d10'] or GN.conf['has_d3d11'] :
-	sources += dxgi_sources
-	d3dlibs += ['dxgi.lib', 'dxguid.lib', 'dxerr.lib']
-if GN.conf['has_d3d9'] or GN.conf['has_xtl'] :
+
+if GN.conf['has_d3d9'] :
 	sources += d3d9_sources
-	# libraries on Xenon platform are already defined in SConstruct
-	if not GN.conf['has_xtl']:
-		d3dlibs += ['d3d9.lib', 'd3dx9.lib']
-if GN.conf['has_d3d10'] :
-	sources += d3d10_sources
-	d3dlibs += ['d3d10.lib', 'd3dx10.lib']
-if GN.conf['has_d3d11']:
-	sources += d3d11_sources
-	d3dlibs += ['d3d11.lib', 'd3dx11.lib']
+elif GN.conf['has_xtl'] :
+	sources += d3d9_sources
+if GN.conf['has_d3d10'] or GN.conf['has_d3d11']:
+	sources += dxgi_sources
+	if GN.conf['has_d3d10']:
+		sources += d3d10_sources
+	if GN.conf['has_d3d11']:
+		sources += d3d11_sources
 
 cluster = GN.newSourceCluster( sources, 'pch.h', 'pch.cpp' )
-cluster.externalDependencies = d3dlibs
 Return( 'cluster' )

@@ -76,7 +76,7 @@ void GN::ProfileTimer::stop()
 // -----------------------------------------------------------------------------
 GN::ProfilerManager::~ProfilerManager()
 {
-#if GN_BUILD_PROFILE
+#if GN_ENABLE_PROFILING
     // print profile result
     StrA s;
     toString( s );

@@ -339,7 +339,7 @@ bool GN::gfx::OGLVtxFmt::getStandardVertexBindingDesc(
     const char           * bindingName,
     uint8                  bindingIndex )
 {
-#if GN_BUILD_ENABLE_ASSERT
+#if GN_ENABLE_ASSERT
     vbd.semantic = (OGLVertexSemantic)-1;
     vbd.index = (uint8)-1;
 #endif
@@ -402,7 +402,7 @@ bool GN::gfx::OGLVtxFmt::getStandardVertexBindingDesc(
     }
 
     // make sure vbd has valid value.
-#if GN_BUILD_ENABLE_ASSERT
+#if GN_ENABLE_ASSERT
     GN_ASSERT( (OGLVertexSemantic)-1 != vbd.semantic );
     GN_ASSERT( (uint8)-1 != vbd.index );
 #endif

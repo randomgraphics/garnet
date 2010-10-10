@@ -174,10 +174,6 @@ private:
         {
             result = GpuAPI::OGL;
         }
-        else if( 0 == stringCompareI( "d3d10", value ) )
-        {
-            result = GpuAPI::D3D10;
-        }
         else if( 0 == stringCompareI( "d3d11", value ) )
         {
             result = GpuAPI::D3D11;

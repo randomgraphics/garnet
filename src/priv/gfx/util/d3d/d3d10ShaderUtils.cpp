@@ -41,7 +41,7 @@ static GN::StrA sAddLineCountD3D10( const GN::StrA & in )
 // -----------------------------------------------------------------------------
 static uint32 sRefineFlagsD3D10( uint32 flags )
 {
-#if GN_BUILD_DEBUG
+#if GN_ENABLE_DEBUG
     flags |= D3D10_SHADER_DEBUG;
 #endif
     return flags;
@@ -126,7 +126,7 @@ ID3D10Blob * GN::d3d10::compileShader(
 
     // generate temporary file to store shader source
     StrA filename;
-#if GN_BUILD_DEBUG
+#if GN_ENABLE_DEBUG
     TempFile file;
     if( file.open( "D3D10_shader_source", "wt", TempFile::MANUAL_DELETE ) )
     {

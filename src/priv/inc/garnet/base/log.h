@@ -8,7 +8,7 @@
 
 /// General log macros, with user specified source code location
 //@{
-#if GN_BUILD_ENABLE_LOG
+#if GN_ENABLE_LOG
 #define GN_LOG_EX( logger, level, func, file, line ) if( logger->isOff( level ) ) {} else GN::Logger::LogHelper( logger, level, func, file, line ).doLog
 #define GN_LOG_BEGIN( logger, level )                if( logger->isOn( level ) ) {
 #define GN_LOG_END()                                 }
@@ -58,7 +58,7 @@
 /// Debug only log macros (no effect to non-debug build)
 ///
 //@{
-#if GN_BUILD_DEBUG
+#if GN_ENABLE_DEBUG
 #define GN_TRACE( logger )   GN_INFO( logger )
 #define GN_VTRACE( logger )  GN_VERBOSE( logger )
 #define GN_VVTRACE( logger ) GN_VVERBOSE( logger )
