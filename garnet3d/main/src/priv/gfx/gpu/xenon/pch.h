@@ -8,7 +8,7 @@
 
 #include "../gpupch.h"
 
-#if GN_BUILD_DEBUG
+#if GN_ENABLE_DEBUG
 #define D3D_DEBUG_INFO // Enable "Enhanced D3DDebugging"
 #endif
 
@@ -22,12 +22,7 @@
 #include <d3d9.h>
 #include <d3dx9.h>
 
-#if GN_BUILD_RETAIL // disable PIX tag in retail build.
-#define PIXPERF_BEGIN_EVENT_EX( color, name )
-#define PIXPERF_END_EVENT()
-#define PIXPERF_SET_MARKER_EX( color, name )
-#define PIXPERF_SCOPE_EVENT_EX( color, name )
-#else
+#if GN_ENABLE_DEBUG || GN_ENABLE_PROFILING
 #define PIXPERF_BEGIN_EVENT_EX( color, name )   // PIXBeginNamedEvent( color, name )
 #define PIXPERF_END_EVENT()                     // PIXEndNamedEvent()
 #define PIXPERF_SET_MARKER_EX( color, name )    // PIXSetMarker( color, name )
@@ -43,7 +38,12 @@ struct PixPerfScopeEvent
         PIXEndNamedEvent();
     }
 };
-#endif // GN_BUILD_RETAIL
+#else
+#define PIXPERF_BEGIN_EVENT_EX( color, name )
+#define PIXPERF_END_EVENT()
+#define PIXPERF_SET_MARKER_EX( color, name )
+#define PIXPERF_SCOPE_EVENT_EX( color, name )
+#endif
 
 #define PIXPERF_BEGIN_EVENT( name ) PIXPERF_BEGIN_EVENT_EX( D3DCOLOR_ARGB(255,255,0,0), name )
 #define PIXPERF_SCOPE_EVENT( name ) PIXPERF_SCOPE_EVENT_EX( D3DCOLOR_ARGB(255,255,0,0), name )

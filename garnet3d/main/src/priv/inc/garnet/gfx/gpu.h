@@ -53,7 +53,6 @@ namespace GN { namespace gfx
         enum Enum
         {
             OGL,      ///< OpenGL
-            D3D10,    ///< D3D10
             D3D11,    ///< D3D11
             XENON,    ///< Xenon
             FAKE,     ///< Fake API
@@ -68,7 +67,6 @@ namespace GN { namespace gfx
             static const char * TABLE[] =
             {
                 "OGL",
-                "D3D10",
                 "D3D11",
                 "XENON",
                 "FAKE",
@@ -94,7 +92,6 @@ namespace GN { namespace gfx
             static const EnumName TABLE[] =
             {
                 { OGL, "OGL" },
-                { D3D10, "D3D10" },
                 { D3D11, "D3D11" },
                 { XENON, "XENON" },
                 { FAKE, "FAKE" },
@@ -258,7 +255,7 @@ namespace GN { namespace gfx
             , useExternalWindow(false)
             , fullscreen(false)
             , vsync(false)
-            , debug( GN_BUILD_DEBUG )
+            , debug( GN_ENABLE_DEBUG )
             , reference(false)
             , autoRestore(true)
         {
@@ -1514,7 +1511,7 @@ namespace GN { namespace gfx
 
     ///
     /// Create new renderer with a simple multithread wrapper. So
-    /// the renderer will run in another thread, and communite with
+    /// the renderer will run in another thread, and communicate with
     /// user through an internal command buffer.
     ///
     Gpu * createMultiThreadGpu( const GpuOptions & );

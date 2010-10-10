@@ -305,7 +305,7 @@ GN::CommandBuffer::beginConsume( Token * token, TimeInNanoSecond timeoutTime )
         // get command header and parameter
         m_ReadingToken = (TokenInternal*)( m_Buffer + (m_ReadenCursor % m_Size) );
 
-#if GN_BUILD_ENABLE_ASSERT
+#if GN_ENABLE_ASSERT
         // full command including all parameters should have been written to command buffer.
         uint32 wc = m_WrittenCursor;
         memoryBarrier();

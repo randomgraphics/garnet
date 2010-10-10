@@ -194,7 +194,7 @@ namespace GN
     struct SingleLinkedItem
     {
         T * next; ///< pointer to next item
-#if GN_BUILD_ENABLE_ASSERT
+#if GN_ENABLE_ASSERT
         void * owner; ///< pointer to the single-linked-list that this item belongs to.
 #endif
     };
@@ -246,7 +246,7 @@ namespace GN
             {
                 newItem->next = NULL;
             }
-#if GN_BUILD_ENABLE_ASSERT
+#if GN_ENABLE_ASSERT
             newItem->owner = this;
 #endif
             if( mTail == where ) mTail = newItem;

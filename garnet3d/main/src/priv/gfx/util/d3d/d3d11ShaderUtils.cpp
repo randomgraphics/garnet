@@ -46,7 +46,7 @@ static uint32 sRefineFlagsD3D11( uint32 flags )
 #define D3DCOMPILE_DEBUG D3D10_SHADER_DEBUG
 #endif
 
-#if GN_BUILD_DEBUG
+#if GN_ENABLE_DEBUG
     flags |= D3DCOMPILE_DEBUG;
 #endif
     return flags;
@@ -131,7 +131,7 @@ ID3DBlob * GN::d3d11::compileShader(
 
     // generate temporary file to store shader source
     StrA filename;
-#if GN_BUILD_DEBUG
+#if GN_ENABLE_DEBUG
     TempFile file;
     if( file.open( "D3D11_shader_source", "wt", TempFile::MANUAL_DELETE ) )
     {

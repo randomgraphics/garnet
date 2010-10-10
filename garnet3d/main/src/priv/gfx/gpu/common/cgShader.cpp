@@ -86,7 +86,7 @@ bool GN::gfx::CgShader::init(
     // success
     mContext = context;
     mProfile = profile;
-#if GN_BUILD_DEBUG
+#if GN_ENABLE_DEBUG
     mCode = code;
 #endif
     return success();

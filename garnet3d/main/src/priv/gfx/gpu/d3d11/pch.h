@@ -10,12 +10,7 @@
 
 extern bool gD3D11EnablePixPerf; // global variable to switch on/off PIX perf calls.
 
-#if GN_BUILD_RETAIL // disable PIX tag in retail build.
-#define PIXPERF_BEGIN_EVENT_EX( color, name )
-#define PIXPERF_END_EVENT()
-#define PIXPERF_SET_MARKER_EX( color, name )
-#define PIXPERF_SCOPE_EVENT_EX( color, name )
-#else
+#if GN_ENABLE_DEBUG || GN_ENABLE_PROFILING
 #include <d3d9.h> // Include D3D9 header for PIX routines.
 #define PIXPERF_BEGIN_EVENT_EX( color, name )   if( !gD3D11EnablePixPerf ) {} else D3DPERF_BeginEvent( color, GN_JOIN_DIRECT( L, name ) )
 #define PIXPERF_END_EVENT()                     if( !gD3D11EnablePixPerf ) {} else D3DPERF_EndEvent()
@@ -32,7 +27,12 @@ struct PixPerfScopeEvent
         if( gD3D11EnablePixPerf ) D3DPERF_EndEvent();
     }
 };
-#endif // GN_BUILD_RETAIL
+#else
+#define PIXPERF_BEGIN_EVENT_EX( color, name )
+#define PIXPERF_END_EVENT()
+#define PIXPERF_SET_MARKER_EX( color, name )
+#define PIXPERF_SCOPE_EVENT_EX( color, name )
+#endif
 
 #define PIXPERF_BEGIN_EVENT( name ) PIXPERF_BEGIN_EVENT_EX( D3DCOLOR_ARGB(255,255,0,0), name )
 #define PIXPERF_SCOPE_EVENT( name ) PIXPERF_SCOPE_EVENT_EX( D3DCOLOR_ARGB(255,255,0,0), name )

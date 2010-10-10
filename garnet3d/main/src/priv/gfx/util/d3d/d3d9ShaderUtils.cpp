@@ -32,7 +32,7 @@ static GN::StrA sAddLineCountD3D9( const GN::StrA & in )
 // -----------------------------------------------------------------------------
 static uint32 sRefineFlagsD3D9( uint32 flags )
 {
-#if GN_BUILD_DEBUG
+#if GN_ENABLE_DEBUG
     flags |= D3DXSHADER_DEBUG;
 #endif
     return flags;

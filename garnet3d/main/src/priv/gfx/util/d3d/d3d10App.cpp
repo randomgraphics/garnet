@@ -10,7 +10,7 @@ static GN::Logger * sLogger = GN::getLogger("GN.d3d10.d3d10app");
 #pragma comment( lib, "d3d10.lib" )
 #pragma comment( lib, "dxgi.lib" )
 #pragma comment( lib, "dxguid.lib" )
-#if GN_BUILD_DEBUG
+#if GN_ENABLE_DEBUG
 #pragma comment( lib, "d3dx10d.lib" )
 #else
 #pragma comment( lib, "d3dx10.lib" )
