@@ -78,7 +78,7 @@ elseif( "ia64" -ieq $env:PROCESSOR_ARCHITECTURE )
 
 # setup default build variants
 $env:GN_BUILD_COMPILER="vc80"
-$env:GN_BUILD_VARIANT="stdbg"
+$env:GN_BUILD_VARIANT="debug"
 $env:GN_BUILD_TARGET_OS="mswin"
 $env:GN_BUILD_TARGET_CPU=$current_cpu
 
@@ -93,7 +93,7 @@ foreach( $a in $args )
     {
         $name = $MyInvocation.InvocationName | split-path -leaf
 
-        "Usage: $name [/h|/?] [vc80|icl|mingw] [x86|x64|xenon] [debug|profile|retail|stdbg|stret|stprof]"
+        "Usage: $name [/h|/?] [vc80|icl|mingw] [x86|x64|xenon] [debug|profile|retail]"
     }
 
     elseif( ("vc80" -eq $a) -or ("icl" -eq $a) )
@@ -108,10 +108,7 @@ foreach( $a in $args )
 
     elseif( ("debug" -eq $a) -or
             ("profile" -eq $a) -or
-            ("retail" -eq $a) -or
-            ("stdbg" -eq $a) -or
-            ("stprof" -eq $a) -or
-            ("stret" -eq $a) )
+            ("retail" -eq $a) )
     {
         $env:GN_BUILD_VARIANT = $a
     }
@@ -297,7 +294,7 @@ if( "mswin" -eq $env:GN_BUILD_TARGET_OS )
 
         	"Run DirectX SDK setup script: $batch $target"
             ""
-            
+
             catch_batch_env $batch $target
         }
         else

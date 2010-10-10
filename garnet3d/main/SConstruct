@@ -79,7 +79,7 @@ def CONF_getCompiler( os, cpu ):
 	return None;
 
 # 定义编译模式
-CONF_allVariants = 'debug profile retail stdbg stprof stret'
+CONF_allVariants = 'debug profile retail'
 
 # 定义缺省的命令行选项
 CONF_defaultCmdArgs = {
@@ -142,8 +142,8 @@ def UTIL_error( msg ):
 	print 'ERROR : %s'%msg
 	print '===================================================================='
 
-#
-def UTIL_staticBuild( v ): return 'stdbg' == v or 'stprof' == v or 'stret' == v
+# Always run static build.
+def UTIL_staticBuild( v ): return True
 
 # get sub directory of a specific compiler and build variant
 def UTIL_bldsubdir( compiler, variant ):
@@ -280,7 +280,7 @@ def UTIL_newEnvEx( compiler, variant, batch ):
 			env['BUILDERS']['SharedObject'].add_emitter( suffix, shared_pch_emitter );
 
 	# 缺省编译选项
-	def generate_empty_options() : return { 'neutral':[], 'common':[],'debug':[],'profile':[],'retail':[],'stdbg':[],'stprof':[],'stret':[] }
+	def generate_empty_options() : return { 'neutral':[], 'common':[],'debug':[],'profile':[],'retail':[] }
 	cppdefines = generate_empty_options()
 	cpppath    = generate_empty_options()
 	libpath    = generate_empty_options()
@@ -291,39 +291,30 @@ def UTIL_newEnvEx( compiler, variant, batch ):
 
 	cpppath['common'] = [
 		'src/extern/inc',
-		UTIL_buildDir( compiler, variant ) + '/src/priv/inc',
 		'src/priv/inc']
 
 	libpath['common'] = ['src/extern/lib/' + compiler.os + '.' + compiler.cpu]
 
 	# 定制不同编译模式的编译选项
-	cppdefines['common']  += ['UNICODE','_UNICODE']
-	cppdefines['retail']  += ['GN_BUILD_VARIANT=0','NDEBUG']
-	cppdefines['profile'] += ['GN_BUILD_VARIANT=1','NDEBUG']
-	cppdefines['debug']   += ['GN_BUILD_VARIANT=2']
-	cppdefines['stret']   += ['GN_BUILD_VARIANT=3','NDEBUG']
-	cppdefines['stprof']  += ['GN_BUILD_VARIANT=4','NDEBUG']
-	cppdefines['stdbg']   += ['GN_BUILD_VARIANT=5']
+	cppdefines['common']  += ['UNICODE', '_UNICODE']
+	cppdefines['debug']   += ['GN_ENABLE_DEBUG=1', 'GN_ENABLE_PROFILING=1']
+	cppdefines['profile'] += ['GN_ENABLE_DEBUG=0', 'GN_ENABLE_PROFILING=1', 'NDEBUG']
+	cppdefines['retail']  += ['GN_ENABLE_DEBUG=0', 'GN_ENABLE_PROFILING=0', 'NDEBUG']
 
 	# 定制不同平台的编译选项
 	if 'xenon' == compiler.os:
-		ccflags['common'] += ['/QVMX128']
+		ccflags['common']     += ['/QVMX128']
 		cppdefines['profile'] += ['PROFILE']
-		cppdefines['stprof']  += ['PROFILE']
-		linkflags['profile'] += ['/NODEFAULTLIB:xapilib.lib']
-		linkflags['stprof'] += ['/NODEFAULTLIB:xapilib.lib']
-		libs['common']  += Split('xboxkrnl xbdm dxerr9')
-		libs['debug']   += Split('xapilibd d3d9d d3dx9d xgraphicsd xnetd xaudiod2 xactd3 vcompd libcmtd')
-		libs['profile'] += Split('xapilibi d3d9i d3dx9  xgraphics  xnet  xaudio2  xacti3 vcomp  libcmt')
-		libs['retail']  += Split('xapilib  d3d9  d3dx9  xgraphics  xnet  xaudio2  xact3  vcomp  libcmt')
-		libs['stdbg']   += Split('xapilibd d3d9d d3dx9d xgraphicsd xnetd xaudiod2 xactd3 vcompd libcmtd')
-		libs['stprof']  += Split('xapilibi d3d9i d3dx9  xgraphics  xnet  xaudio2  xacti3 vcomp  libcmt')
-		libs['stret']   += Split('xapilib  d3d9  d3dx9  xgraphics  xnet  xaudio2  xact3  vcomp  libcmt')
+		linkflags['profile']  += ['/NODEFAULTLIB:xapilib.lib']
+		libs['common']        += Split('xboxkrnl xbdm dxerr9')
+		libs['debug']         += Split('xapilibd d3d9d d3dx9d xgraphicsd xnetd xaudiod2 xactd3 vcompd libcmtd')
+		libs['profile']       += Split('xapilibi d3d9i d3dx9  xgraphics  xnet  xaudio2  xacti3 vcomp  libcmt')
+		libs['retail']        += Split('xapilib  d3d9  d3dx9  xgraphics  xnet  xaudio2  xact3  vcomp  libcmt')
 	elif 'mswin' == compiler.os:
-		libs['common'] += Split('kernel32 user32 gdi32 shlwapi advapi32 shell32')
+		libs['common']        += Split('kernel32 user32 gdi32 shlwapi advapi32 shell32')
 	else:
-		cpppath['common'] += Split('/usr/X11R6/include /usr/local/include')
-		libpath['common'] += Split('/usr/X11R6/lib /usr/local/lib')
+		cpppath['common']     += Split('/usr/X11R6/include /usr/local/include')
+		libpath['common']     += Split('/usr/X11R6/lib /usr/local/lib')
 
 	# 定制不同编译器的编译选项
 	if 'cl' == env['CC']:
@@ -333,61 +324,38 @@ def UTIL_newEnvEx( compiler, variant, batch ):
 		#
 		env['ENV']['USERPROFILE'] = os.environ['USERPROFILE']
 
-		cppdefines['debug']   += ['_DEBUG']
-		cppdefines['stdbg']   += ['_DEBUG']
+		cppdefines['debug'] += ['_DEBUG']
 
 		cxxflags['common']  += ['/EHa']
 
-		ccflags['common']  += ['/W4', '/WX', '/Ot', '/Oi', '/Z7', '/Yd'] # favor speed, enable intrinsic functions.
-		ccflags['debug']   += ['/GR', '/RTCscu']
-		ccflags['profile'] += ['/Ox'] # maximum optimization.
-		ccflags['retail']  += ['/Ox', '/GL']
-		ccflags['stdbg']   += ['/MTd', '/GR']
-		ccflags['stprof']  += ['/MT', '/Ox']
-		ccflags['stret']   += ['/MT', '/Ox', '/GL']
-		if 'xenon' == compiler.os:
-			ccflags['debug']   += ['/MTd']
-			ccflags['profile'] += ['/MT']
-			ccflags['retail']  += ['/MT']
-		else:
-			ccflags['debug']   += ['/MDd']
-			ccflags['profile'] += ['/MD']
-			ccflags['retail']  += ['/MD']
+		ccflags['common']   += ['/W4', '/WX', '/Ot', '/Oi', '/Z7', '/Yd'] # favor speed, enable intrinsic functions.
+		ccflags['debug']    += ['/MTd', '/GR', '/RTCscu']
+		ccflags['profile']  += ['/MT', '/Ox']
+		ccflags['retail']   += ['/MT', '/Ox', '/GL']
 
-		linkflags['common']  += ['/NODEFAULTLIB:libcp.lib', '/FIXED:NO'] # this is for vtune and magellan to do instrumentation
-		linkflags['debug']   += ['/MANIFEST']
-		linkflags['profile'] += ['/OPT:REF', '/MANIFEST']
-		linkflags['stprof']  += ['/OPT:REF']
-		linkflags['retail']  += ['/OPT:REF','/LTCG:STATUS', '/MANIFEST']
-		linkflags['stret']   += ['/OPT:REF','/LTCG:STATUS']
+		linkflags['common']  += ['/MANIFEST', '/NODEFAULTLIB:libcp.lib', '/FIXED:NO'] # this is for vtune and magellan to do instrumentation
+		linkflags['profile'] += ['/OPT:REF']
+		linkflags['retail']  += ['/OPT:REF']
 
 	elif 'icl' == env['CC']:
 		ccflags['common']  += ['/W3','/WX','/Wcheck','/Qpchi-','/Zc:forScope','/Zi','/debug:full']
-		ccflags['debug']   += ['/MDd','/GR','/Ge','/traceback']
-		ccflags['profile'] += ['/O2','/MD']
-		ccflags['retail']  += ['/O2','/MD']
-		ccflags['stdbg']   += ['/MTd','/GR','/Ge','/traceback']
-		ccflags['stret']   += ['/O2','/MT']
+		ccflags['debug']   += ['/MTd','/GR','/Ge','/traceback']
+		ccflags['profile'] += ['/O2','/MT']
+		ccflags['retail']  += ['/O2','/MT']
 
 		cxxflags['common'] += ['/EHs']
 
 		cppdefines['debug'] += ['_DEBUG']
-		cppdefines['stdbg'] += ['_DEBUG']
 
 		linkflags['common']  += ['/FIXED:NO', '/DEBUGTYPE:CV,FIXUP'] # this is for vtune and magellan to do instrumentation
 		linkflags['profile'] += ['/OPT:REF']
 		linkflags['retail']  += ['/OPT:REF']
-		linkflags['stprof']  += ['/OPT:REF']
-		linkflags['stret']   += ['/OPT:REF']
 
 	elif 'gcc' == env['CC']:
 		ccflags['common']  += ['-Wall','-Werror', '-finput-charset=GBK']
 		ccflags['debug']   += ['-g']
 		ccflags['profile'] += ['-O3']
 		ccflags['retail']  += ['-O3']
-		ccflags['stdbg']   += ['-g']
-		ccflags['stprof']  += ['-O3']
-		ccflags['stret']   += ['-O3']
 		if 'mingw' == compiler.name:
 			cppdefines['common'] += ['WINVER=0x500']
 
@@ -609,7 +577,7 @@ class GarnetEnv :
 	# Get list of D3D libraries that needs to be linked with
 	def getD3DLibs( self ):
 		libs = []
-		dbg = ( self.variant == "debug" or self.variant == "stdbg" )
+		dbg = ( self.variant == "debug" )
 		if( dbg ):
 			if( self.conf['has_d3d11'] )  : libs += ['dxgi', 'dxguid', 'd3d9', 'd3dx9d', 'd3d10', 'd3dx10d', 'd3d11', 'd3dx11']
 			elif( self.conf['has_d3d10'] ): libs += ['dxgi', 'dxguid', 'd3d9', 'd3dx9d', 'd3d10', 'd3dx10d']
@@ -1234,7 +1202,25 @@ def BUILD_custom( name, target ):
 for compiler, variants in ALL_targets.iteritems() :
 	BUILD_compiler = compiler
 	for variant, targets in variants.iteritems():
+
 		BUILD_env = UTIL_newEnv( compiler, variant )
+
+		d3ddefs = []
+		d3dlibs = []
+		if GN.conf['has_d3d9'] :
+			d3ddefs += ['HAS_D3D9']
+			d3dlibs += ['d3d9.lib', 'd3dx9.lib']
+		if GN.conf['has_d3d10'] or GN.conf['has_d3d11']:
+			d3dlibs += ['dxgi.lib', 'dxguid.lib', 'dxerr.lib']
+		if GN.conf['has_d3d10']:
+			d3ddefs += ['HAS_D3D10']
+			d3dlibs += ['d3d10.lib', 'd3dx10.lib']
+		if GN.conf['has_d3d11']:
+			d3ddefs += ['HAS_D3D11']
+			d3dlibs += ['d3d11.lib', 'd3dx11.lib']
+		BUILD_env.Append( CPPDEFINES = d3ddefs )
+		BUILD_env.Prepend( LIBS = d3dlibs )
+
 		BUILD_variant = variant
 		BUILD_bldDir = UTIL_buildDir( compiler, variant )
 		BUILD_libDir = os.path.join( BUILD_bldDir, 'lib' )
@@ -1297,41 +1283,41 @@ for compiler, variants in ALL_targets.iteritems() :
 		#
 		################################################################################
 
-		#define installation root directory
-		INSTALL_root = os.path.join( CONF_sdkroot, UTIL_bldsubdir( compiler, variant ) )
-
 		#define installation alias
-		ALIAS_add_default( "install", INSTALL_root )
+		ALIAS_add_default( "install", CONF_sdkroot )
 
-		def installTargets( dir, files ):
-			dstdir = os.path.join( INSTALL_root, dir )
+		def installTargets( dstroot, files ):
+			dstdir = os.path.join( CONF_sdkroot, dstroot + "." + UTIL_bldsubdir( compiler, variant ) )
 			for f in files:
 				Install( dstdir, getTargets(f) )
 
-		def installMedia( dstroot, srcroot ):
-			srcroot = Dir(srcroot).path
-			files = getTargets('GNmedia')
-			for src in files:
-				relpath = GN.relpath( src, srcroot )
-				dst     = os.path.join( INSTALL_root, dstroot, relpath )
-				InstallAs( dst, src )
+		installTargets( 'bin',   TARGET_shlibs + TARGET_tools + TARGET_samples + ['GNexternBin'] )
+		installTargets( 'lib',   TARGET_stlibs + TARGET_shlibs )
+		installTargets( 'doc',   ['GNdoc'] )
 
-		def installHeaders( dstroot, srcroot ):
-			if compiler and variant:
-				headers = GN.glob( srcroot, True )
-				for src in headers:
-					relpath = GN.relpath( src, srcroot )
-					dst     = os.path.join( INSTALL_root, dstroot, relpath )
-					InstallAs( dst, src )
+		# install media files
+		mediaroot = os.path.join( UTIL_buildDir( compiler, variant ), 'media' )
+		for src in getTargets('GNmedia'):
+			relpath = GN.relpath( src, mediaroot )
+			dst     = os.path.join( CONF_sdkroot, "media", relpath )
+			InstallAs( dst, src )
 
-		installTargets( 'bin',        TARGET_shlibs + TARGET_tools + TARGET_samples + ['GNexternBin'] )
-		installTargets( 'lib',        TARGET_stlibs + TARGET_shlibs )
-		installTargets( 'doc',        ['GNdoc'] )
-		installMedia  ( 'media',      os.path.join( UTIL_buildDir( compiler, variant ), 'media' ) )
+################################################################################
+#
+# Install SDK headers and media files
+#
+################################################################################
 
-		installTargets( 'inc/garnet/base', ['GNinc'] )
-		installHeaders( 'inc/garnet',      '#src/priv/inc/garnet' )
-		installHeaders( 'inc/extern',      '#src/extern/inc' )
+def installHeaders( dstroot, srcroot ):
+	if compiler and variant:
+		headers = GN.glob( srcroot, True )
+		for src in headers:
+			relpath = GN.relpath( src, srcroot )
+			dst     = os.path.join( CONF_sdkroot, dstroot, relpath )
+			InstallAs( dst, src )
+
+installHeaders( 'inc/garnet', '#src/priv/inc/garnet' )
+installHeaders( 'inc', '#src/extern/inc' )
 
 ################################################################################
 #
