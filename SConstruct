@@ -56,9 +56,8 @@ class Compiler:
 
 CONF_allCompilers = []
 if 'mswin' == CONF_os:
-	CONF_allCompilers.append( Compiler('vc71','mswin','x86') )
-	CONF_allCompilers.append( Compiler('vc80','mswin','x86') )
-	CONF_allCompilers.append( Compiler('vc80','mswin','x64') )
+	CONF_allCompilers.append( Compiler('vc100','mswin','x86') )
+	CONF_allCompilers.append( Compiler('vc90','mswin','x86') )
 	CONF_allCompilers.append( Compiler('icl','mswin','x86') )
 	CONF_allCompilers.append( Compiler('icl','mswin','x64') )
 	CONF_allCompilers.append( Compiler('icl','mswin','ia64') )
