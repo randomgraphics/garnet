@@ -77,7 +77,7 @@ elseif( "ia64" -ieq $env:PROCESSOR_ARCHITECTURE )
 # ==============================================================================
 
 # setup default build variants
-$env:GN_BUILD_COMPILER="vc80"
+$env:GN_BUILD_COMPILER="vc"
 $env:GN_BUILD_VARIANT="debug"
 $env:GN_BUILD_TARGET_OS="mswin"
 $env:GN_BUILD_TARGET_CPU=$current_cpu
@@ -93,10 +93,10 @@ foreach( $a in $args )
     {
         $name = $MyInvocation.InvocationName | split-path -leaf
 
-        "Usage: $name [/h|/?] [vc80|icl|mingw] [x86|x64|xenon] [debug|profile|retail]"
+        "Usage: $name [/h|/?] [vc|icl|mingw] [x86|x64|xenon] [debug|profile|retail]"
     }
 
-    elseif( ("vc80" -eq $a) -or ("icl" -eq $a) )
+    elseif( ("vc" -eq $a) -or ("icl" -eq $a) )
     {
         $env:GN_BUILD_COMPILER = $a
     }
@@ -130,9 +130,8 @@ foreach( $a in $args )
 # setup Visual Studio environment
 # ==============================================================================
 
-if( "vc80" -eq $env:GN_BUILD_COMPILER )
+if( "vc" -eq $env:GN_BUILD_COMPILER )
 {
-
     ""
     "====================================="
     "Setup Visual Studio build environment"
@@ -144,10 +143,12 @@ if( "vc80" -eq $env:GN_BUILD_COMPILER )
     if( $env:VS100COMNTOOLS )
     {
         $vcvarbat="$env:VS100COMNTOOLS..\..\VC\vcvarsall.bat"
+        $env:GN_BUILD_COMPILER="vc100";
     }
     elseif( $env:VS90COMNTOOLS )
     {
         $vcvarbat="$env:VS90COMNTOOLS..\..\VC\vcvarsall.bat"
+        $env:GN_BUILD_COMPILER="vc90";
     }
     else
     {
@@ -313,16 +314,16 @@ if( "mswin" -eq $env:GN_BUILD_TARGET_OS )
 # setup GREEN path and inclusion
 # ==============================================================================
 
-if( "x86" -eq $env:GN_BUILD_TARGET_CPU )
-{
-    if( $env:GREEN_INC_X86 ) { $env:INCLUDE = "$env:GREEN_INC_X86;$env:INCLUDE" }
-    if( $env:GREEN_LIB_X86 ) { $env:LIB     = "$env:GREEN_LIB_X86;$env:LIB" }
-}
-elseif( "x64" -eq $env:GN_BUILD_TARGET_CPU )
-{
-    if( $env:GREEN_INC_X64 ) { $env:INCLUDE = "$env:GREEN_INC_X64;$env:INCLUDE" }
-    if( $env:GREEN_LIB_X64 ) { $env:LIB     = "$env:GREEN_LIB_X64;$env:LIB" }
-}
+#if( "x86" -eq $env:GN_BUILD_TARGET_CPU )
+#{
+#    if( $env:GREEN_INC_X86 ) { $env:INCLUDE = "$env:GREEN_INC_X86;$env:INCLUDE" }
+#    if( $env:GREEN_LIB_X86 ) { $env:LIB     = "$env:GREEN_LIB_X86;$env:LIB" }
+#}
+#elseif( "x64" -eq $env:GN_BUILD_TARGET_CPU )
+#{
+#    if( $env:GREEN_INC_X64 ) { $env:INCLUDE = "$env:GREEN_INC_X64;$env:INCLUDE" }
+#    if( $env:GREEN_LIB_X64 ) { $env:LIB     = "$env:GREEN_LIB_X64;$env:LIB" }
+#}
 
 # ==============================================================================
 # setup XDK build environment
