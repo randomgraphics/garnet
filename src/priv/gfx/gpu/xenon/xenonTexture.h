@@ -49,6 +49,7 @@ namespace GN { namespace gfx
         void clear()
         {
             mD3DTexture = 0;
+            mStage = (UINT)NOT_BIND;
         }
         //@}
 
@@ -77,14 +78,19 @@ namespace GN { namespace gfx
     public:
 
         ///
-        /// return D3D texture
+        /// bind to D3D device
         ///
-        IDirect3DBaseTexture9 * getD3DTexture() const { return mD3DTexture; }
+        static void sBindToDevice( IDirect3DDevice9 & dev, UINT stage, const XenonTexture * tex );
 
         // ********************************
         // private variables
         // ********************************
     private:
+
+        enum
+        {
+            NOT_BIND = 0xFFFFFFFF
+        };
 
         ///
         /// D3D texture instance pointer
@@ -99,6 +105,9 @@ namespace GN { namespace gfx
         XenonTextureDimension   mD3DDimension;
         DWORD                   mD3DUsage;
         //@}
+
+        /// binding information
+        mutable UINT            mStage;
 
         ///
         /// D3D filters( min, mag, mip )

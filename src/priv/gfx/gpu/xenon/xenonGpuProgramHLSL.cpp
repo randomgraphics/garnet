@@ -260,12 +260,12 @@ void GN::gfx::XenonGpuProgramHLSL::applyTextures(
 
         const XenonTextureParamDesc & param = mTextures[i];
 
-        IDirect3DBaseTexture9 * d3dtex = tb.texture ? ((XenonTexture*)tb.texture.get())->getD3DTexture() : NULL;
+        XenonTexture * tex = (XenonTexture*)tb.texture.get();
 
         if( param.vshandle )
         {
             UINT stage = mVsConsts->GetSamplerIndex( param.vshandle );
-            dev.SetTexture( stage, d3dtex );
+            XenonTexture::sBindToDevice( dev, stage, tex );
             usedStages[stage] = true;
 
             if( tb.sampler != param.vssampler )
@@ -278,7 +278,7 @@ void GN::gfx::XenonGpuProgramHLSL::applyTextures(
         if( param.pshandle )
         {
             UINT stage = mPsConsts->GetSamplerIndex( param.pshandle );
-            dev.SetTexture( stage, d3dtex );
+            XenonTexture::sBindToDevice( dev, stage, tex );
             usedStages[stage] = true;
 
             if( tb.sampler != param.pssampler )

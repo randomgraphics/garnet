@@ -176,7 +176,16 @@ sSetupD3dpp( D3DPRESENT_PARAMETERS & d3dpp,
     d3dpp.Flags                 |= D3DPRESENTFLAG_DISCARD_DEPTHSTENCIL;
 
     // set display mode parameters
+#if GN_XENON
+    d3dpp.Windowed = false;
+    d3dpp.BackBufferCount  = 0;
+    // TODO: use HD when available.
+    d3dpp.BackBufferWidth  = 640;
+    d3dpp.BackBufferHeight = 480;
+    d3dpp.BackBufferFormat = D3DFMT_A8R8G8B8;
+#else
     d3dpp.Windowed = !o.fullscreen;
+
     if( o.fullscreen )
     {
         d3dpp.BackBufferCount  = 0;
@@ -191,6 +200,7 @@ sSetupD3dpp( D3DPRESENT_PARAMETERS & d3dpp,
         d3dpp.BackBufferHeight = o.windowedHeight;
         d3dpp.BackBufferFormat = D3DFMT_UNKNOWN;
     }
+#endif
 
     // set other parameters
     d3dpp.SwapEffect           = D3DSWAPEFFECT_DISCARD;

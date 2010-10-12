@@ -24,14 +24,14 @@ class BMPReader
     template<typename T>
     static GN_FORCE_INLINE T sSwap8In16( T in )
     {
-        return ( in << 8 ) | ( in >> 8 ) ;
+        return ( (in&0xFF) << 8 ) | ( in >> 8 ) ;
     }
 
     #pragma pack(push,1)
     struct BMPFileHeader
     {
-        char     B;
-        char     M;
+        char   B;
+        char   M;
         uint32 size;
         uint32 reserved;
         uint32 offBits;
@@ -45,14 +45,14 @@ class BMPReader
     struct BMPInfoHeader
     {
         uint32 size;
-        sint32  width;
-        sint32  height;
+        sint32 width;
+        sint32 height;
         uint16 planes;
         uint16 bitCount;
         uint32 compression;
         uint32 sizeImage;
-        sint32  xPelsPerMeter;
-        sint32  yPelsPerMeter;
+        sint32 xPelsPerMeter;
+        sint32 yPelsPerMeter;
         uint32 clrUsed;
         uint32 clrImportant;
 
@@ -82,7 +82,7 @@ class BMPReader
     };
     #pragma pack(pop)
 
-    BMPHeader       mHeader;
+    BMPHeader     mHeader;
     const uint8 * mImageSrc; // pointer to the first pixel
     uint32        mOutputBytesPerPixel;
 
