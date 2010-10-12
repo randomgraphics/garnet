@@ -327,7 +327,7 @@ GN::gfx::XenonGpu::bindContextRenderStates(
 inline bool
 GN::gfx::XenonGpu::bindContextShaders(
     const GpuContext & newContext,
-    bool                    skipDirtyCheck )
+    bool               skipDirtyCheck )
 {
     if( newContext.gpuProgram )
     {

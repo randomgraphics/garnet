@@ -7,10 +7,17 @@
 // *****************************************************************************
 
 #include "GNbase.h"
+
+#if !GN_XENON
 #include "d3d/dxgiutils.h"
+#endif
+
 #include "d3d/d3d9utils.h"
+
+#if !GN_XENON
 #include "d3d/d3d10utils.h"
 #include "d3d/d3d11utils.h"
+#endif
 
 // *****************************************************************************
 //                                     EOF

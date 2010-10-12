@@ -175,6 +175,10 @@ void GN::gfx::XenonTexture::quit()
 {
     GN_GUARD;
 
+    // should not be bind to the device any more.
+    GN_ASSERT( NULL == mD3DTexture || !mD3DTexture->IsSet( &getGpu().getDeviceInlined() ) );
+
+    // Delete the D3D texture instance.
     safeRelease( mD3DTexture );
 
     // standard quit procedure
@@ -186,6 +190,23 @@ void GN::gfx::XenonTexture::quit()
 // ****************************************************************************
 // from class Texture
 // ****************************************************************************
+
+//
+//
+// ----------------------------------------------------------------------------
+void GN::gfx::XenonTexture::sBindToDevice( IDirect3DDevice9 & dev, UINT stage, const XenonTexture * tex )
+{
+    if( tex )
+    {
+        GN_ASSERT( &dev == &tex->getGpu().getDeviceInlined() );
+        dev.SetTexture( stage, tex->mD3DTexture );
+        tex->mStage = stage;
+    }
+    else
+    {
+        dev.SetTexture( stage, NULL );
+    }
+}
 
 //
 //
@@ -215,6 +236,16 @@ void GN::gfx::XenonTexture::updateMipmap(
     if( !XGIsPackedTexture( mD3DTexture ) ) updateFlag |= XGTILE_NONPACKED;
     POINT pt = { clippedArea.x, clippedArea.y };
     RECT  rc = { 0, 0, clippedArea.w, clippedArea.h };
+
+    // unbind from device first
+    IDirect3DDevice9 & dev = getGpu().getDeviceInlined();
+    BOOL isSet = mD3DTexture->IsSet( &dev );
+    if( isSet )
+    {
+        GN_ASSERT( mStage != NOT_BIND );
+
+        dev.SetTexture( mStage, NULL );
+    }
 
     // do update
     switch( mD3DDimension )
@@ -247,10 +278,17 @@ void GN::gfx::XenonTexture::updateMipmap(
         case XENON_TEXDIM_3D:
         case XENON_TEXDIM_CUBE:
             GN_UNIMPL();
-            return;
+            break;
 
         default:
             GN_UNEXPECTED();
-            return;
-    };
+            break;
+    }
+
+    // rebind to texture
+    if( isSet )
+    {
+        GN_ASSERT( mStage != NOT_BIND );
+        dev.SetTexture( mStage, mD3DTexture );
+    }
 }
