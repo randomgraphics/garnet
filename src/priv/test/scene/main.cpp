@@ -144,11 +144,7 @@ int main( int argc, const char * argv[] )
             return -1;
     }
 
-    Gpu * r;
-    if( cmdargs.useMultiThreadGpu )
-        r = createMultiThreadGpu( cmdargs.rendererOptions );
-    else
-        r = createSingleThreadGpu( cmdargs.rendererOptions );
+    Gpu * r = createGpu( cmdargs.rendererOptions, cmdargs.useMultiThreadGpu ? GPU_CREATION_MULTIPLE_THREADS );
     if( NULL == r ) return -1;
 
     int result = run( *r );

@@ -1193,24 +1193,26 @@ for compiler, variants in ALL_targets.iteritems() :
 
 		BUILD_env = UTIL_newEnv( compiler, variant )
 
-		# Determine D3D defines and libraries.
-		d3ddefs = []
-		d3dlibs = []
+		# Determine Graphics defines and libraries.
+		gfxdefs = []
+		gfxlibs = []
 		dbg = ( variant == "debug" )
 		if GN.conf['has_d3d9'] :
-			d3ddefs += ['HAS_D3D9']
+			gfxdefs += ['HAS_D3D9']
 			if isinstance( compiler, Compiler ) and compiler.os == "mswin":
-				d3dlibs += ['d3d9.lib', 'd3dx9d.lib'] if dbg else ['d3d9.lib', 'd3dx9.lib']
+				gfxlibs += ['d3d9.lib', 'd3dx9d.lib'] if dbg else ['d3d9.lib', 'd3dx9.lib']
 		if GN.conf['has_d3d10'] or GN.conf['has_d3d11']:
-			d3dlibs += ['dxgi.lib', 'dxguid.lib', 'dxerr.lib']
+			gfxlibs += ['dxgi.lib', 'dxguid.lib', 'dxerr.lib']
 		if GN.conf['has_d3d10']:
-			d3ddefs += ['HAS_D3D10']
-			d3dlibs += ['d3d10.lib', 'd3dx10d.lib'] if dbg else ['d3d10.lib', 'd3dx10.lib']
+			gfxdefs += ['HAS_D3D10']
+			gfxlibs += ['d3d10.lib', 'd3dx10d.lib'] if dbg else ['d3d10.lib', 'd3dx10.lib']
 		if GN.conf['has_d3d11']:
-			d3ddefs += ['HAS_D3D11']
-			d3dlibs += ['d3d11.lib', 'd3dx11d.lib'] if dbg else ['d3d11.lib', 'd3dx11.lib']
-		BUILD_env.Append( CPPDEFINES = d3ddefs )
-		BUILD_env.Prepend( LIBS = d3dlibs )
+			gfxdefs += ['HAS_D3D11']
+			gfxlibs += ['d3d11.lib', 'd3dx11d.lib'] if dbg else ['d3d11.lib', 'd3dx11.lib']
+		if GN.conf['has_ogl']:
+			gfxdefs += ['HAS_OGL']
+		BUILD_env.Append( CPPDEFINES = gfxdefs )
+		BUILD_env.Prepend( LIBS = gfxlibs )
 
 		BUILD_variant = variant
 		BUILD_bldDir = UTIL_buildDir( compiler, variant )

@@ -500,10 +500,7 @@ bool GN::util::SampleApp::initGpu()
     GN_GUARD;
 
     // initialize GPU
-    if( mInitParam.useMultithreadGpu )
-        mGpu = createMultiThreadGpu( mInitParam.ro );
-    else
-        mGpu = createSingleThreadGpu( mInitParam.ro );
+    mGpu = createGpu( mInitParam.ro, mInitParam.useMultithreadGpu ? GPU_CREATION_MULTIPLE_THREADS : 0 );
     if( NULL == mGpu ) return false;
 
     // connect to renderer signal: post quit event, if render window is closed.

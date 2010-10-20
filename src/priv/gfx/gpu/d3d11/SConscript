@@ -18,6 +18,7 @@ sources = [
 	'd3d11VtxLayout.cpp',
 ]
 cluster = GN.newSourceCluster( sources, 'pch.h', 'pch.cpp' )
+cluster.addCompileFlags( CPPPATH = ['#src\priv\gfx\util\gpu'] )
 target = GN.newTarget( 'shlib', 'GNgpuD3D11', [cluster], dependencies = ['GNgpuCommon'] )
 if GN.conf['has_cg_d3d11'] :
     cluster.addCompileFlags( CPPDEFINES = ['HAS_CG=1','HAS_CG_D3D=1'] )

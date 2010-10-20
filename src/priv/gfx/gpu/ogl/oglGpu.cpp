@@ -1,17 +1,17 @@
 #include "pch.h"
 #include "oglGpu.h"
+#include <mtgpu.h>
 
 GN::Logger * GN::gfx::OGLGpu::sLogger = GN::getLogger("GN.gfx.gpu.OGL");
 
 // *****************************************************************************
-// Global functions
+// GPU creator
 // *****************************************************************************
 
-#if GN_BUILD_STATIC
-GN::gfx::Gpu * GNgfxCreateOGLGpu( const GN::gfx::GpuOptions & o )
-#else
-extern "C" GN_EXPORT GN::gfx::Gpu * GNgfxCreateGpu( const GN::gfx::GpuOptions & o )
-#endif
+//
+//
+// -----------------------------------------------------------------------------
+static GN::gfx::Gpu * sCreateOGLGpuPrivate( const GN::gfx::GpuOptions & o, void * )
 {
     GN_GUARD;
 
@@ -21,6 +21,36 @@ extern "C" GN_EXPORT GN::gfx::Gpu * GNgfxCreateGpu( const GN::gfx::GpuOptions & 
 
     GN_UNGUARD;
 }
+
+//
+//
+// -----------------------------------------------------------------------------
+#if GN_BUILD_STATIC
+GN::gfx::Gpu * GN::gfx::createOGLGpu( const GN::gfx::GpuOptions & o, uint32 creationFlags )
+{
+    GpuOptions localOptions = o;
+    localOptions.api = GpuAPI::OGL;
+
+    if( 0 != (creationFlags & GPU_CREATION_MULTIPLE_THREADS) )
+    {
+        return createMultiThreadGpu( o, sCreateOGLGpuPrivate, 0 );
+    }
+    else
+    {
+        return sCreateOGLGpuPrivate( localOptions, 0 );
+    }
+}
+#endif
+
+//
+//
+// -----------------------------------------------------------------------------
+#if !GN_BUILD_STATIC
+extern "C" GN_EXPORT GN::gfx::Gpu * GNgfxCreateGpu( const GN::gfx::GpuOptions & o )
+{
+    return sCreateOGLGpuPrivate( o, 0 );
+}
+#endif
 
 // *****************************************************************************
 // init/quit functions

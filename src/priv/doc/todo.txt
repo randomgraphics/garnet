@@ -4,9 +4,6 @@ TODO
 - 程序中标注TODO的地方
 
 - p0
-  - Maintain same headers accross different build variants
-    - The only macro that is need to be define at garnet time is: GN_BUILD_LEFT_HAND.
-  - In static build, create OGL GPU should not need to link to D3D libraries.
   - Winphone 7 integration
   - Cuda or OpenCL integration
   - runtime tweakable parameters: client/server communication

@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "d3d11Gpu.h"
+#include <mtgpu.h>
 
 #if GN_MSVC
 
@@ -17,18 +18,15 @@
 static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.D3D11");
 
 // *****************************************************************************
-// Global functions
+// GPU creator
 // *****************************************************************************
 
 bool gD3D11EnablePixPerf = true; // default is enabled
 
-#if GN_BUILD_STATIC
-GN::gfx::Gpu *
-GNgfxCreateD3D11Gpu( const GN::gfx::GpuOptions & o )
-#else
-extern "C" GN_EXPORT GN::gfx::Gpu *
-GNgfxCreateGpu( const GN::gfx::GpuOptions & o )
-#endif
+//
+//
+// -----------------------------------------------------------------------------
+static GN::gfx::Gpu * sCreateD3DGpuPrivate( const GN::gfx::GpuOptions & o, void * )
 {
     GN_GUARD;
 
@@ -38,6 +36,35 @@ GNgfxCreateGpu( const GN::gfx::GpuOptions & o )
 
     GN_UNGUARD;
 }
+
+//
+//
+// -----------------------------------------------------------------------------
+#if GN_BUILD_STATIC
+GN::gfx::Gpu * GN::gfx::createD3DGpu( const GN::gfx::GpuOptions & o, uint32 creationFlags )
+{
+    GpuOptions lo = o;
+    lo.api = GpuAPI::D3D11;
+    if( 0 != (creationFlags & GPU_CREATION_MULTIPLE_THREADS) )
+    {
+        return createMultiThreadGpu( lo, sCreateD3DGpuPrivate, 0 );
+    }
+    else
+    {
+        return sCreateD3DGpuPrivate( lo, 0 );
+    }
+}
+#endif
+
+//
+//
+// -----------------------------------------------------------------------------
+#if !GN_BUILD_STATIC
+extern "C" GN_EXPORT GN::gfx::Gpu * GNgfxCreateGpu( const GN::gfx::GpuOptions & o )
+{
+    return sCreateD3DGpuPrivate( o, 0 );
+}
+#endif
 
 // *****************************************************************************
 // init/quit functions
