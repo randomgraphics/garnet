@@ -34,6 +34,11 @@ namespace GN { namespace gfx
     };
 
     ///
+    /// Function type to create renderer.
+    ///
+    typedef GN::gfx::Gpu * (*CreateSingleThreadFunc)( const GN::gfx::GpuOptions & options, void * context );
+
+    ///
     /// Multi thread GPU wrapper
     ///
     class MultiThreadGpu : public Gpu, public StdClass
@@ -56,12 +61,13 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        bool init( const GpuOptions & o, const MultiThreadGpuOptions & mo );
+        bool init( const GpuOptions & o, const MultiThreadGpuOptions & mo, CreateSingleThreadFunc func, void * context );
         void quit();
     private:
         void clear()
         {
             mThread = NULL;
+            mCreator = NULL;
             mGpu = NULL;
         }
         //@}
@@ -109,7 +115,9 @@ namespace GN { namespace gfx
     private:
 
         // variables used in backend thread
-        Gpu * mGpu;
+        CreateSingleThreadFunc mCreator;
+        Gpu *                  mGpu;
+        void *                 mCreationContext;
 
         // ********************************
         // private functions
@@ -190,6 +198,19 @@ namespace GN { namespace gfx
 
         //@}
     };
+
+    ///
+    /// Create multi-threads GPU
+    // -------------------------------------------------------------------------
+    inline Gpu * createMultiThreadGpu( const GpuOptions & go, CreateSingleThreadFunc creator, void * context )
+    {
+        GN_GUARD;
+        MultiThreadGpu * r = new MultiThreadGpu;
+        MultiThreadGpuOptions mo; // use default multithread options
+        if( !r->init( go, mo, creator, context ) ) delete r, r = NULL;
+        return r;
+        GN_UNGUARD;
+    }
 }}
 
 // *****************************************************************************

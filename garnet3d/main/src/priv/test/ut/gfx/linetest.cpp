@@ -13,7 +13,7 @@ class LineRendererTest : public CxxTest::TestSuite
         LineRendererInitiator() : mGpu(NULL), mLine(NULL)
         {
             GN::gfx::GpuOptions ro;
-            mGpu = GN::gfx::createSingleThreadGpu( ro );
+            mGpu = GN::gfx::createGpu( ro, 0 );
             if( NULL == mGpu ) return;
 
             mLine = new GN::gfx::LineRenderer( *mGpu );

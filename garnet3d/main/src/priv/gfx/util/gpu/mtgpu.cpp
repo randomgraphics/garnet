@@ -49,12 +49,23 @@ static inline void sReplaceAutoRefPtr( AutoRef<T> & ref, T * newptr )
 // -----------------------------------------------------------------------------
 bool GN::gfx::MultiThreadGpu::init(
     const GpuOptions            & ro,
-    const MultiThreadGpuOptions & mo )
+    const MultiThreadGpuOptions & mo,
+    CreateSingleThreadFunc        func,
+    void *                        context )
 {
     GN_GUARD;
 
     // standard init procedure
     GN_STDCLASS_INIT( GN::gfx::MultiThreadGpu, () );
+
+    // check parameters
+    if( NULL == func )
+    {
+        GN_ERROR(sLogger)( "Null creator!" );
+        return failure();
+    }
+    mCreator = func;
+    mCreationContext = context;
 
     // initialize ring buffer
     if( !mCommandBuffer.init( mo.commandBufferSize ) ) return failure();
@@ -143,7 +154,7 @@ uint32 GN::gfx::MultiThreadGpu::threadProc( void * param )
     // create the GPU instance
     GN_ASSERT( 2 == mGpuCreationStatus );
     const GpuOptions * ro = (const GpuOptions*)param;
-    mGpu = createSingleThreadGpu( *ro );
+    mGpu = mCreator( *ro, mCreationContext );
     if( NULL == mGpu )
     {
         mGpuCreationStatus = 0;
@@ -658,12 +669,14 @@ namespace GN { namespace gfx
     // -------------------------------------------------------------------------
     void func_CHECK_TEXTURE_FORMAT_SUPPORT( Gpu & r, void * p, size_t )
     {
+#pragma pack( push, 1 )
         struct CheckTextureFormatSupportParam
         {
             bool        * result;
             ColorFormat   format;
             TextureUsage usages;
         };
+#pragma pack( pop )
         CheckTextureFormatSupportParam * param = (CheckTextureFormatSupportParam*)p;
 
         *param->result = r.checkTextureFormatSupport( param->format, param->usages );
@@ -674,11 +687,13 @@ namespace GN { namespace gfx
     // -------------------------------------------------------------------------
     void func_GET_DEFAULT_TEXTURE_FORMAT( Gpu & r, void * p, size_t )
     {
+#pragma pack( push, 1 )
         struct GetDefaultTextureFormatParam
         {
             ColorFormat * result;
             TextureUsage usages;
         };
+#pragma pack( pop )
         GetDefaultTextureFormatParam * param = (GetDefaultTextureFormatParam*)p;
 
         *param->result = r.getDefaultTextureFormat( param->usages );
@@ -689,11 +704,13 @@ namespace GN { namespace gfx
     // -------------------------------------------------------------------------
     void func_COMPILE_GPU_PROGRAM( Gpu & r, void * p, size_t )
     {
+#pragma pack( push, 1 )
         struct CompileGpuProgramParam
         {
             Blob                ** cgp;
             const GpuProgramDesc * desc;
         };
+#pragma pack( pop )
         CompileGpuProgramParam * cgpp = (CompileGpuProgramParam*)p;
 
         *cgpp->cgp = r.compileGpuProgram( *cgpp->desc );
@@ -704,12 +721,14 @@ namespace GN { namespace gfx
     // -------------------------------------------------------------------------
     void func_CREATE_GPU_PROGRAM( Gpu & r, void * p, size_t )
     {
+#pragma pack( push, 1 )
         struct CreateGpuProgramParam
         {
             GpuProgram ** gp;
             const void  * bin;
             size_t        length;
         };
+#pragma pack( pop )
         CreateGpuProgramParam * cgpp = (CreateGpuProgramParam*)p;
 
         *cgpp->gp = r.createGpuProgram( cgpp->bin, cgpp->length );
@@ -720,11 +739,13 @@ namespace GN { namespace gfx
     // -------------------------------------------------------------------------
     void func_CREATE_UNIFORM( Gpu & r, void * p, size_t )
     {
+#pragma pack( push, 1 )
         struct CreateUniformParam
         {
             Uniform ** result;
             size_t     length;
         };
+#pragma pack( pop )
 
         CreateUniformParam * cup = (CreateUniformParam*)p;
 
@@ -736,11 +757,13 @@ namespace GN { namespace gfx
     // -------------------------------------------------------------------------
     void func_CREATE_TEXTURE( Gpu & r, void * p, size_t )
     {
+#pragma pack( push, 1 )
         struct CreateTextureParam
         {
             Texture          ** result;
             const TextureDesc * desc;
         };
+#pragma pack( pop )
 
         CreateTextureParam * ctp = (CreateTextureParam*)p;
 
@@ -752,11 +775,13 @@ namespace GN { namespace gfx
     // -------------------------------------------------------------------------
     void func_CREATE_VTXBUF( Gpu & r, void * p, size_t )
     {
+#pragma pack( push, 1 )
         struct CreateVtxBufParam
         {
             VtxBuf          ** result;
             const VtxBufDesc * desc;
         };
+#pragma pack( pop )
 
         CreateVtxBufParam * param = (CreateVtxBufParam*)p;
 
@@ -768,11 +793,13 @@ namespace GN { namespace gfx
     // -------------------------------------------------------------------------
     void func_CREATE_IDXBUF( Gpu & r, void * p, size_t )
     {
+#pragma pack( push, 1 )
         struct CreateIdxBufParam
         {
             IdxBuf          ** result;
             const IdxBufDesc * desc;
         };
+#pragma pack( pop )
 
         CreateIdxBufParam * param = (CreateIdxBufParam*)p;
 
@@ -899,6 +926,7 @@ namespace GN { namespace gfx
     // -------------------------------------------------------------------------
     void func_DRAW_UP( Gpu & r, void * p, size_t )
     {
+#pragma pack( push, 1 )
         struct DrawUpParam
         {
             PrimitiveType prim;
@@ -906,6 +934,7 @@ namespace GN { namespace gfx
             void *        vertexData;
             size_t        strideInBytes;
         };
+#pragma pack( pop )
         DrawUpParam * dup = (DrawUpParam*)p;
         r.drawUp( dup->prim, dup->numvtx, dup->vertexData, dup->strideInBytes );
         HeapMemory::dealloc( dup->vertexData );
@@ -936,10 +965,12 @@ namespace GN { namespace gfx
     // -------------------------------------------------------------------------
     void func_GET_SIGNALS( Gpu & r, void * p, size_t )
     {
+#pragma pack( push, 1 )
         struct GetSignalsParam
         {
             GpuSignals ** ppSignals;
         };
+#pragma pack( pop )
         GetSignalsParam * param = (GetSignalsParam *)p;
         *(param->ppSignals) = &r.getSignals();
     }
@@ -976,11 +1007,13 @@ namespace GN { namespace gfx
     // -------------------------------------------------------------------------
     void func_DUMP_NEXT_FRAME( Gpu & r, void * p, size_t )
     {
+#pragma pack( push, 1 )
         struct DumpNextFrameParam
         {
             size_t startBatchIndex;
             size_t numBatches;
         };
+#pragma pack( pop )
 
         DumpNextFrameParam * param = (DumpNextFrameParam*)p;
         r.dumpNextFrame( param->startBatchIndex, param->numBatches );

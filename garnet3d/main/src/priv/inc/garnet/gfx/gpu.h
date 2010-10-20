@@ -1504,17 +1504,28 @@ namespace GN { namespace gfx
         //@}
     };
 
-    ///
-    /// Create new single thread renderer.
-    ///
-    Gpu * createSingleThreadGpu( const GpuOptions & );
+    enum GpuCreationFlag
+    {
+        /// Create renderer with a simple multithread wrapper. So
+        /// the renderer runs in another thread, communicating with
+        /// user through an internal command buffer.
+        GPU_CREATION_MULTIPLE_THREADS = 1,
+    };
 
     ///
-    /// Create new renderer with a simple multithread wrapper. So
-    /// the renderer will run in another thread, and communicate with
-    /// user through an internal command buffer.
+    /// Create OpenGL GPU (no linkage to any D3D libraries)
     ///
-    Gpu * createMultiThreadGpu( const GpuOptions & );
+    Gpu * createOGLGpu( const GpuOptions & go, uint32 creationFlags );
+
+    ///
+    /// Create D3D GPU (no linkage to any OpenGL libraries)
+    ///
+    Gpu * createD3DGpu( const GpuOptions & go, uint32 creationFlags );
+
+    ///
+    /// General GPU creator (link to both D3D and OpenGL libraries)
+    ///
+    Gpu * createGpu( const GpuOptions & go, uint32 creationFlags );
 
     ///
     /// Delete renderer

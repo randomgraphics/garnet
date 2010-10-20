@@ -1,5 +1,6 @@
 #include "pch.h"
 
+//*
 using namespace GN;
 using namespace GN::gfx;
 using namespace GN::input;
@@ -245,12 +246,10 @@ int main( int argc, const char * argv[] )
         }
     }
 
-    Gpu * r;
-    if( cmdargs.useMultiThreadGpu )
-        r = createMultiThreadGpu( cmdargs.rendererOptions );
-    else
-        r = createSingleThreadGpu( cmdargs.rendererOptions );
-    if( NULL == r ) return -1;
+    Gpu * r =
+        createGpu( cmdargs.rendererOptions, cmdargs.useMultiThreadGpu ? GPU_CREATION_MULTIPLE_THREADS : 0 );
+        //createOGLGpu( cmdargs.rendererOptions, cmdargs.useMultiThreadGpu ? GPU_CREATION_MULTIPLE_THREADS : 0 );
+        //createD3DGpu( cmdargs.rendererOptions, cmdargs.useMultiThreadGpu ? GPU_CREATION_MULTIPLE_THREADS : 0 );
 
     InputInitiator ii(*r);
 
@@ -260,3 +259,8 @@ int main( int argc, const char * argv[] )
 
     return result;
 }
+/*/
+int main()
+{
+    return 0;
+}//*/

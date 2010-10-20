@@ -9,6 +9,7 @@ sources = [
 	'mttexture.cpp',
 	'mtvtxbuf.cpp',
 	'gpuCreator.cpp',
+	'gpuDeletor.cpp',
 ]
 
 cluster = GN.newSourceCluster( sources, 'pch.h', 'pch.cpp' )

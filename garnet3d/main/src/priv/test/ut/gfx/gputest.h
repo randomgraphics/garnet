@@ -110,15 +110,7 @@ class GpuTest
     {
         GN::gfx::GpuOptions effectiveRO = ro;
         effectiveRO.api = mAPI;
-
-        if( mMultiThreading )
-        {
-            return GN::gfx::createMultiThreadGpu( effectiveRO );
-        }
-        else
-        {
-            return GN::gfx::createSingleThreadGpu( effectiveRO );
-        }
+        return GN::gfx::createGpu( effectiveRO, mCreationFlags );
     }
 
     class AutoGpu
@@ -142,12 +134,14 @@ class GpuTest
     };
 
     GN::gfx::GpuAPI mAPI;
-    bool                 mMultiThreading;
+    UINT            mCreationFlags;
 
 protected :
 
     /// ctor
-    GpuTest( GN::gfx::GpuAPI api, bool multithreading ) : mAPI( api ), mMultiThreading( multithreading )
+    GpuTest( GN::gfx::GpuAPI api, bool multithreading )
+        : mAPI( api )
+        , mCreationFlags( multithreading ? GN::gfx::GPU_CREATION_MULTIPLE_THREADS : 0 )
     {
     }
 
