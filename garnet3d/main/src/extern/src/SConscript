@@ -1,91 +1,91 @@
 Import( 'GN' )
 
-# ******************
-# define build flags
-# ******************
+if 1 == GN.version:
+	# ******************
+	# define build flags
+	# ******************
 
-ccflags = []
-cppdefines = []
+	ccflags = []
+	cppdefines = []
 
-if 'icl' == GN.compiler.name :
-    unimportant_warnings = [
-        '1572', # floating-point comparison
-        ]
-    ccflags += ['/W2'] + ['/Qwd%s'%w for w in unimportant_warnings]
-    cppdefines += ['_CRT_SECURE_NO_DEPRECATE','_CRT_NONSTDC_NO_DEPRECATE']
-elif 'vc71' == GN.compiler.name:
-    ccflags += ['/W3']
-elif 'vc80' == GN.compiler.name:
-    ccflags += ['/W3']
-    cppdefines += ['_CRT_SECURE_NO_DEPRECATE','_CRT_NONSTDC_NO_DEPRECATE']
-    if 'x64' == GN.compiler.cpu:
-        unimportant_warnings = [
-            '4334', # 32-bit shift convert to 64-bit
-            '4267', # conversion from 'size_t' to xxx, possible loss of data
-            '4244', # conversion from 'type1' to 'type2', possible loss of data
-            ]
-        ccflags += ['/wd%s'%w for w in unimportant_warnings]
-elif 'xenon' == GN.compiler.name:
-    cppdefines += ['NO_GETENV'] # Xenon platform does not support getenv()
+	if 'icl' == GN.compiler.name :
+	    unimportant_warnings = [
+	        '1572', # floating-point comparison
+	        ]
+	    ccflags += ['/W2'] + ['/Qwd%s'%w for w in unimportant_warnings]
+	    cppdefines += ['_CRT_SECURE_NO_DEPRECATE','_CRT_NONSTDC_NO_DEPRECATE']
+	elif 'vc71' == GN.compiler.name:
+	    ccflags += ['/W3']
+	elif 'vc80' == GN.compiler.name:
+	    ccflags += ['/W3']
+	    cppdefines += ['_CRT_SECURE_NO_DEPRECATE','_CRT_NONSTDC_NO_DEPRECATE']
+	    if 'x64' == GN.compiler.cpu:
+	        unimportant_warnings = [
+	            '4334', # 32-bit shift convert to 64-bit
+	            '4267', # conversion from 'size_t' to xxx, possible loss of data
+	            '4244', # conversion from 'type1' to 'type2', possible loss of data
+	            ]
+	        ccflags += ['/wd%s'%w for w in unimportant_warnings]
+	elif 'xenon' == GN.compiler.name:
+	    cppdefines += ['NO_GETENV'] # Xenon platform does not support getenv()
 
-# ========================
-# generate configurations
-# ========================
-import os.path
+	# ========================
+	# generate configurations
+	# ========================
+	import os.path
 
-# Create config environment with "batch" mode disabled,
-# since batch mode triggers scons 1.2.0.d20091224 config
-# code bug.
-conf_env = GN.newEnvEx( GN.compiler, GN.variant, None )
+	# Create config environment with "batch" mode disabled,
+	# since batch mode triggers scons 1.2.0.d20091224 config
+	# code bug.
+	conf_env = GN.newEnvEx( GN.compiler, GN.variant, None )
 
-conf_env.Replace( CCFLAGS = Split( ccflags ) )
-conf_env.BuildDir( build_dir='#build.tmp', src_dir='#' )
-conf_dir = os.path.join( GN.buildDir( GN.compiler, GN.variant ), 'config', 'extern' )
-conf = conf_env.Configure(
-    conf_dir=conf_dir,
-    log_file=os.path.join(conf_dir,'config.log'),
-    config_h='extern_config.h' )
+	conf_env.Replace( CCFLAGS = Split( ccflags ) )
+	conf_env.BuildDir( build_dir='#build.tmp', src_dir='#' )
+	conf_dir = os.path.join( GN.buildDir( GN.compiler, GN.variant ), 'config', 'extern' )
+	conf = conf_env.Configure(
+	    conf_dir=conf_dir,
+	    log_file=os.path.join(conf_dir,'config.log'),
+	    config_h='extern_config.h' )
 
 # TODO: check byte order
-conf.CheckFunc( 'bcopy' )
-conf.CheckCHeader( 'dlfcn.h' )
-conf.CheckCHeader( 'fcntl.h' )
-conf.CheckFunc( 'getpagesize' )
-conf.CheckCHeader( 'inttypes.h' )
-conf.CheckFunc( 'memmove' )
-conf.CheckHeader( 'memory.h' )
-conf.CheckFunc( 'mmap' )
-conf.CheckCHeader( 'stdint.h' )
-conf.CheckCHeader( 'stdlib.h' )
-conf.CheckCHeader( 'strings.h' )
-conf.CheckCHeader( 'string.h' )
-conf.CheckCHeader( 'sys/stat.h' )
-conf.CheckCHeader( 'sys/types.h' )
-conf.CheckCHeader( 'unistd.h' )
-conf.Finish()
+	conf.CheckFunc( 'bcopy' )
+	conf.CheckCHeader( 'dlfcn.h' )
+	conf.CheckCHeader( 'fcntl.h' )
+	conf.CheckFunc( 'getpagesize' )
+	conf.CheckCHeader( 'inttypes.h' )
+	conf.CheckFunc( 'memmove' )
+	conf.CheckHeader( 'memory.h' )
+	conf.CheckFunc( 'mmap' )
+	conf.CheckCHeader( 'stdint.h' )
+	conf.CheckCHeader( 'stdlib.h' )
+	conf.CheckCHeader( 'strings.h' )
+	conf.CheckCHeader( 'string.h' )
+	conf.CheckCHeader( 'sys/stat.h' )
+	conf.CheckCHeader( 'sys/types.h' )
+	conf.CheckCHeader( 'unistd.h' )
+	conf.Finish()
 
-# **********************
-# define source clusters
-# **********************
+	# **********************
+	# define source clusters
+	# **********************
 
-jpeg_cluster = GN.newSourceCluster( GN.glob( 'jpeg/*.c' ) )
-if 'gcc' == GN.compiler.name or 'mingw' == GN.compiler.name: jpeg_cluster.addCompileFlags( CCFLAGS = ['-Wno-main'] )
-jpeg_cluster.addCompileFlags( CPPPATH=['jpeg'], CCFLAGS = ccflags, CPPDEFINES = cppdefines )
-jpeg_cluster.removeCompileFlags( CCFLAGS = ['/W4','/Wcheck'] )
+	jpeg_cluster = GN.newSourceCluster( GN.glob( 'jpeg/*.c' ) )
+	if 'gcc' == GN.compiler.name or 'mingw' == GN.compiler.name: jpeg_cluster.addCompileFlags( CCFLAGS = ['-Wno-main'] )
+	jpeg_cluster.addCompileFlags( CPPPATH=['jpeg'], CCFLAGS = ccflags, CPPDEFINES = cppdefines )
+	jpeg_cluster.removeCompileFlags( CCFLAGS = ['/W4','/Wcheck'] )
 
-common_sources = GN.glob( Split('expat/*.c pcre/*.c* png/*.c zlib/*.c'), True )
-if 'mingw' != GN.compiler.name: common_sources += GN.glob( Split('freetype2/*.c lua/*.c'), True )
-if GN.conf['has_ogl']: common_sources += GN.glob( 'glew/*.c' )
-common_cluster = GN.newSourceCluster( common_sources )
-common_cluster.addCompileFlags( CCFLAGS = ccflags, CPPDEFINES = cppdefines )
-common_cluster.removeCompileFlags( CCFLAGS = ['/W4','/Wcheck','-Wall'] )
-if 'mswin' == GN.compiler.os:
-	common_cluster.externalDependencies = ['glu32','opengl32']
-elif 'xenon' != GN.compiler.os:
-	common_cluster.externalDependencies = ['GLU','GL','X11']
+	common_sources = GN.glob( Split('expat/*.c pcre/*.c* png/*.c zlib/*.c'), True )
+	if 'mingw' != GN.compiler.name: common_sources += GN.glob( Split('freetype2/*.c lua/*.c'), True )
+	if GN.conf['has_ogl']: common_sources += GN.glob( 'glew/*.c' )
+	common_cluster = GN.newSourceCluster( common_sources )
+	common_cluster.addCompileFlags( CCFLAGS = ccflags, CPPDEFINES = cppdefines )
+	common_cluster.removeCompileFlags( CCFLAGS = ['/W4','/Wcheck','-Wall'] )
+	if 'mswin' == GN.compiler.os:
+		common_cluster.externalDependencies = ['glu32','opengl32']
+	elif 'xenon' != GN.compiler.os:
+		common_cluster.externalDependencies = ['GLU','GL','X11']
 
-# **********************
-# Return source clusters
-# **********************
-r = [jpeg_cluster,common_cluster]
-Return( 'r' )
+	# **********************
+	# Build the external lib
+	# **********************
+	GN.newTarget( 'stlib', 'GNextern', [jpeg_cluster,common_cluster] )
