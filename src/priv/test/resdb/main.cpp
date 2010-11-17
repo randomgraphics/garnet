@@ -245,7 +245,7 @@ int main( int argc, const char * argv[] )
             return -1;
     }
 
-    Gpu * r = createGpu( cmdargs.rendererOptions, cmdargs.useMultiThreadGpu ? GPU_CREATION_MULTIPLE_THREADS );
+    Gpu * r = createGpu( cmdargs.rendererOptions, cmdargs.useMultiThreadGpu ? GPU_CREATION_MULTIPLE_THREADS : 0 );
     if( NULL == r ) return -1;
 
     InputInitiator ii(*r);
