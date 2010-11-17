@@ -15,7 +15,6 @@ TODO
       - dual way variable changing notification
       - compile time switch to remove tweakable code entirely
       - separate client (tuner) and server (variables)
-  - Cg shader for D3D11 API.
   - replace STL containers:
   	- queue, list, set
   - FontFace unit should be integer instead of float, since it is supposed to

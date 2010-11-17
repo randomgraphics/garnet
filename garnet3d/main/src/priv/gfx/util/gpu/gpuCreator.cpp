@@ -81,7 +81,7 @@ Gpu * GN::gfx::createOGLGpu( const GpuOptions & go, uint32 creationFlags )
     return sCreateGpuFromDLL( o, creationFlags, "GNgpuOGL" );
 }
 #elif !HAS_OGL
-Gpu * createOGLGpu( const GpuOptions &, uint32 )
+Gpu * GN::gfx::createOGLGpu( const GpuOptions &, uint32 )
 {
     GN_ERROR(sLogger)( "OpenGL renderer is not available." );
     return 0;
@@ -99,7 +99,7 @@ Gpu * GN::gfx::createD3DGpu( const GpuOptions & go, uint32 creationFlags )
     return sCreateGpuFromDLL( o, creationFlags, "GNgpu" D3D_GPU_NAME );
 }
 #elif !HAS_D3D11 && !GN_XENON
-Gpu * createD3DGpu( const GpuOptions &, uint32 )
+Gpu * GN::gfx::createD3DGpu( const GpuOptions &, uint32 )
 {
     GN_ERROR(sLogger)( D3D_GPU_NAME " renderer is not available." );
     return 0;
