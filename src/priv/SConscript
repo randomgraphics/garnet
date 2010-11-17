@@ -1,1 +1,5 @@
-SConscript( dirs=Split('base core doc gfx media sample test tool util') )
+Import( 'GN' )
+if 1 == GN.version:
+	SConscript( dirs=Split('base core doc gfx inc media sample test tool util') )
+else:
+	SConscript( dirs=Split('base inc') )
