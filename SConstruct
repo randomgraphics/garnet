@@ -292,6 +292,7 @@ def UTIL_newEnvEx( compiler, variant, batch ):
 
 	cpppath['common'] = [
 		'src/extern/inc',
+		UTIL_buildDir( compiler, variant ) + "/src/priv/inc",
 		'src/priv/inc']
 
 	libpath['common'] = ['src/extern/lib/' + compiler.os + '.' + compiler.cpu]
@@ -560,6 +561,7 @@ class UTIL_copy_to_devkit:
 class GarnetEnv :
 
 	def __init__( self ) :
+		self.version = 1;
 		self.compiler = None
 		self.variant = None
 		self.conf = {}
@@ -1287,6 +1289,7 @@ for compiler, variants in ALL_targets.iteritems() :
 		installTargets( 'bin',   TARGET_shlibs + TARGET_tools + TARGET_samples + ['GNexternBin'] )
 		installTargets( 'lib',   TARGET_stlibs + TARGET_shlibs )
 		installTargets( 'doc',   ['GNdoc'] )
+		Install( os.path.join( CONF_sdkroot, 'inc/garnet/base' ),   getTargets('GNinc') )
 
 		# install media files
 		mediaroot = os.path.join( UTIL_buildDir( compiler, variant ), 'media' )
