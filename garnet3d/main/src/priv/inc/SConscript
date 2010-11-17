@@ -3,17 +3,11 @@ Import( 'GN' )
 import os.path
 
 def GenConfigHeader( target, source, env ):
-	# determine variant value.
-	if   'retail'  == GN.variant: variant = 0
-	elif 'profile' == GN.variant: variant = 1
-	elif 'debug'   == GN.variant: variant = 2
-	elif 'stret'   == GN.variant: variant = 3
-	elif 'stprof'  == GN.variant: variant = 4
-	elif 'stdbg'   == GN.variant: variant = 5
-	else                         :
-		return -1;
 
-	# create header file
+	def bool2str( b ):
+		if b: return '1'
+		else: return '0'
+
 	FILE = open( target[0].path, 'wt' )
 	FILE.writelines(
 		'// *NOTE*: AUTO GENERATED FILE. DO NOT EDIT!\n'
@@ -21,43 +15,24 @@ def GenConfigHeader( target, source, env ):
 		'// This file defines compile time configurations.\n'
 		'//\n'
 		'\n'
-		'// Define build variant.\n'
-		'//\n'
-		'//   0 - retail build\n'
-		'//   1 - profile build\n'
-		'//   2 - debug build\n'
-		'//   3 - static retail build\n'
-		'//   4 - static profile build\n'
-		'//   5 - static debug build\n'
-		'//\n'
-		'#define GN_BUILD_VARIANT %d\n'%variant
+		'#define GN_PLATFORM_HAS_OGL   ' + bool2str( GN.conf['has_ogl']   ) + '\n'
+		'#define GN_PLATFORM_HAS_D3D10 ' + bool2str( GN.conf['has_d3d10'] ) + '\n'
+		'#define GN_PLATFORM_HAS_D3D11 ' + bool2str( GN.conf['has_d3d11'] ) + '\n'
+		'#define GN_PLATFORM_HAS_XENON ' + bool2str( GN.conf['has_xtl']   ) + '\n'
 		)
-	FILE.writelines(
-		'\n'
-		'// Define available renderer APIs.\n'
-		'#define GN_BUILD_GPU_API_HAS_OGL   %d\n'
-		'#define GN_BUILD_GPU_API_HAS_D3D10 %d\n'
-		'#define GN_BUILD_GPU_API_HAS_D3D11 %d\n'
-		'#define GN_BUILD_GPU_API_HAS_XENON %d\n'
-		%(
-		GN.conf['has_ogl'],
-		GN.conf['has_d3d10'],
-		GN.conf['has_d3d11'],
-		GN.conf['has_xtl'],
-		))
 	FILE.close()
 	return 0
 
-def ConfigHeaderBuilder( env, sources, blddir ):
-	# Note: use a intermediate file and MD5 decider to avoid rebuilding final gnconfig.h in every build.
-	target = [os.path.join(blddir, 'src/priv/inc/garnet/base/gnconfig.h')]
-	temp   = [os.path.join(blddir, 'tmp/gnconfig.h')]
-	env.AlwaysBuild( temp )
-	env.Command( temp[0], None, GenConfigHeader )
-	env.Decider( 'MD5' )
-	env.Command( target[0], temp[0], Copy( "$TARGET", "$SOURCE" ) )
-	return target
-
-cluster = GN.newCustomSourceCluster( [], ConfigHeaderBuilder )
-
-target = GN.newCustomTarget( 'GNinc', [cluster] )
+if 1 == GN.version:
+	def ConfigHeaderBuilder( env, sources, blddir ):
+		target = [blddir + '/src/priv/inc/garnet/base/platform.' + GN.compiler.os + "." + GN.compiler.cpu + '.h']
+		env.AlwaysBuild( target )
+		env.Command( target[0], None, GenConfigHeader )
+		return target
+	cluster = GN.newCustomSourceCluster( [], ConfigHeaderBuilder )
+	target = GN.newCustomTarget( 'GNinc', [cluster] )
+else:
+	env = GN.NewEnv()
+	target = 'garnet/base/platform.' + GN.targetOS + "." + GN.targetCPU + '.h'
+	env.AlwaysBuild( [target] )
+	env.Command( target, None, GenConfigHeader )
