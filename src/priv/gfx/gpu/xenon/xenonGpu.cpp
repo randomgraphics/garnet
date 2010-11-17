@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "xenonGpu.h"
 #include "xenonResource.h"
+#include <mtgpu.h>
 
 static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.xenon");
 
@@ -8,13 +9,10 @@ static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.xenon");
 // Global functions
 // *****************************************************************************
 
-#if GN_BUILD_STATIC
-GN::gfx::Gpu *
-GNgfxCreateXenonGpu( const GN::gfx::GpuOptions & o )
-#else
-extern "C" GN_EXPORT GN::gfx::Gpu *
-GNgfxCreateGpu( const GN::gfx::GpuOptions & o )
-#endif
+//
+//
+// -----------------------------------------------------------------------------
+static GN::gfx::Gpu * sCreateXenonGpuPrivate( const GN::gfx::GpuOptions & o, void * )
 {
     GN_GUARD;
 
@@ -24,6 +22,35 @@ GNgfxCreateGpu( const GN::gfx::GpuOptions & o )
 
     GN_UNGUARD;
 }
+
+//
+//
+// -----------------------------------------------------------------------------
+#if GN_BUILD_STATIC
+GN::gfx::Gpu * GN::gfx::createD3DGpu( const GN::gfx::GpuOptions & o, uint32 creationFlags )
+{
+    GpuOptions lo = o;
+    lo.api = GpuAPI::D3D11;
+    if( 0 != (creationFlags & GPU_CREATION_MULTIPLE_THREADS) )
+    {
+        return createMultiThreadGpu( lo, sCreateXenonGpuPrivate, 0 );
+    }
+    else
+    {
+        return sCreateXenonGpuPrivate( lo, 0 );
+    }
+}
+#endif
+
+//
+//
+// -----------------------------------------------------------------------------
+#if !GN_BUILD_STATIC
+extern "C" GN_EXPORT GN::gfx::Gpu * GNgfxCreateGpu( const GN::gfx::GpuOptions & o )
+{
+    return sCreateXenonGpuPrivate( o, 0 );
+}
+#endif
 
 // *****************************************************************************
 // init/quit functions
