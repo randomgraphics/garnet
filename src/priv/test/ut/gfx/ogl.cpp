@@ -9,7 +9,7 @@ public:
 
     void testExternalWindow()
     {
-        #if HAS_OGL
+        #if GN_PLATFORM_HAS_OGL
         externalWindow();
         #endif
     }

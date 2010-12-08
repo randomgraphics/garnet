@@ -80,7 +80,7 @@ Gpu * GN::gfx::createOGLGpu( const GpuOptions & go, uint32 creationFlags )
     o.api = GpuAPI::OGL;
     return sCreateGpuFromDLL( o, creationFlags, "GNgpuOGL" );
 }
-#elif !HAS_OGL
+#elif !GN_PLATFORM_HAS_OGL
 Gpu * GN::gfx::createOGLGpu( const GpuOptions &, uint32 )
 {
     GN_ERROR(sLogger)( "OpenGL renderer is not available." );
