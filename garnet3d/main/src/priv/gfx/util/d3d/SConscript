@@ -29,9 +29,7 @@ d3d11_sources = [
 
 sources = []
 
-if GN.conf['has_d3d9'] :
-	sources += d3d9_sources
-elif GN.conf['has_xtl'] :
+if GN.conf['has_d3d9'] or GN.conf['has_xtl']:
 	sources += d3d9_sources
 if GN.conf['has_d3d10'] or GN.conf['has_d3d11']:
 	sources += dxgi_sources
