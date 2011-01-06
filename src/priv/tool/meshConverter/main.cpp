@@ -6,8 +6,6 @@ using namespace GN::util;
 
 static GN::Logger * sLogger = GN::getLogger("GN.tool.meshConverter");
 
-static const char * outputFile = "app::boxes.scene.xml";
-
 void printHelp( const char * exepath )
 {
     printf( "Usage: %s inputfile <outputfile>\n",
