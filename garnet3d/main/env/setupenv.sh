@@ -13,7 +13,7 @@ else
 fi
 export GN_BUILD_TARGET_CPU=x86
 export GN_BUILD_COMPILER=gcc
-export GN_BUILD_VARIANT=stdbg
+export GN_BUILD_VARIANT=debug
 
 # ===========
 # setup scons
