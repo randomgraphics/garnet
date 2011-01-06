@@ -20,7 +20,7 @@ sources = [
     'oglVtxFmt.cpp',
 ]
 cluster = GN.newSourceCluster( sources, 'pch.h', 'pch.cpp' )
-cluster.addCompileFlags( CPPPATH=['#src\priv\gfx\util\gpu'] )
+cluster.addCompileFlags( CPPPATH=['#src/priv/gfx/util/gpu'] )
 target = GN.newTarget( 'shlib', 'GNgpuOGL', [cluster], dependencies = ['GNgpuCommon'] )
 if GN.conf['has_cg_ogl'] :
     cluster.addCompileFlags( CPPDEFINES = ['HAS_CG=1','HAS_CG_OGL=1'] )
