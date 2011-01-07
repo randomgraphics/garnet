@@ -354,7 +354,7 @@ def UTIL_newEnvEx( compiler, variant, batch ):
 		linkflags['retail']  += ['/OPT:REF']
 
 	elif 'gcc' == env['CC']:
-		ccflags['common']  += ['-Wall','-Werror', '-finput-charset=GBK']
+		ccflags['common']  += ['-Wall','-Werror', '-finput-charset=GBK', '-fexec-charset=GBK']
 		ccflags['debug']   += ['-g']
 		ccflags['profile'] += ['-O3']
 		ccflags['retail']  += ['-O3']
@@ -1014,6 +1014,10 @@ def BUILD_setupPCH( env, pchHeader, pchSource ):
 		pch = env.PCH(pchSource)
 		env['PCH'] = pch[0]
 		env['PCHSTOP'] = pchHeader
+		if 'g++' == env['CXX']:
+			# need to add ".gch" into include path, to make sure
+                        # it is referenced before the original header.
+			env.Prepend( CPPPATH=[os.path.dirname(pch[0].path)] )
 		if( len(pch) > 1 ):
 			return [pch[1]]
 		else:

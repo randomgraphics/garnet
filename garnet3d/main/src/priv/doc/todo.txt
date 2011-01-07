@@ -4,6 +4,7 @@ TODO
 - 程序中标注TODO的地方
 
 - p0
+  - OGL face clipping is wrong on Ubuntu
   - Winphone 7 integration
   - Cuda or OpenCL integration
   - runtime tweakable parameters: client/server communication
@@ -48,6 +49,8 @@ TODO
   - GPU resouce aliasing
 
 - p2
+  - refine PCH builder to generate PCH out of "pch.h" directly, instead of from "pch.cpp".
+    so that the PCH builder works the same way in gcc and vstudio.
   - Refine uniform loading from XML
   - mesh classes
     - a cpu mesh that could be used to convert mesh format
