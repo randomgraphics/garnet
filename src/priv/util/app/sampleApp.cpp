@@ -321,9 +321,7 @@ bool GN::util::SampleApp::init( int argc, const char * const argv[] )
 
     // convert help text to unicode
     static const char helpGBK[] =
-        "ESC            : ÍË³ö\n"
-        "XB360 button X : ÍË³ö\n"
-        "F1             : ÇÐ»»°ïÖúÆÁÄ»";
+        "ESC/XB360 BTN X : ÍË³ö";
     wchar_t helpUCS[sizeof(helpGBK)];
     CharacterEncodingConverter cec( CharacterEncodingConverter::GBK, CharacterEncodingConverter::WIDECHAR );
     if( 0 == cec( helpUCS, helpGBK ) )

@@ -49,7 +49,6 @@ GN::ProfileTimer::~ProfileTimer()
 // -----------------------------------------------------------------------------
 void GN::ProfileTimer::start()
 {
-    GN_ASSERT( 0 == timestart );
     timestart = clock.getTimeD();
 }
 
@@ -58,7 +57,6 @@ void GN::ProfileTimer::start()
 // -----------------------------------------------------------------------------
 void GN::ProfileTimer::stop()
 {
-    GN_ASSERT( 0 != timestart );
     double t = clock.getTimeD() - timestart;
     if( t < timemin ) timemin = t;
     if( t > timemax ) timemax = t;
