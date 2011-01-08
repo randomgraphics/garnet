@@ -9,8 +9,9 @@ public:
 
     void testExternalWindow()
     {
-        #if HAS_D3D11
+        #if GN_PLATFORM_HAS_D3D11
         externalWindow();
         #endif
     }
 };
+
