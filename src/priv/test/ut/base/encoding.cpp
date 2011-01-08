@@ -79,7 +79,7 @@ public:
             CharacterEncodingConverter::BIG5,
             CharacterEncodingConverter::GBK );
 
-        char big5[] = "痷パ"; // { 0xAF, 0x75, 0xA5, 0xD1, 0xAC, 0xFC }
+        char big5[] = { 0xAF, 0x75, 0xA5, 0xD1, 0xAC, 0xFC, 0x00 }; // "真由美" in BIG5 encoding
         char gbk[7] = { -2, -2, -2, -2, -2, -2, -2 };
         size_t converted = c( gbk, big5 );
         TS_ASSERT_EQUALS( converted, 7 );
@@ -96,8 +96,9 @@ public:
 
         char gbk[] = "真由美";
         char big5[7] = { -2, -2, -2, -2, -2, -2, -2 };
+        char golden[] = { 0xAF, 0x75, 0xA5, 0xD1, 0xAC, 0xFC, 0x00 }; // "真由美" in BIG5 encoding
         size_t converted = c( big5, gbk );
         TS_ASSERT_EQUALS( converted, 7 );
-        TS_ASSERT_EQUALS( big5, "痷パ" );
+        TS_ASSERT_EQUALS( big5, golden );
     }
 };

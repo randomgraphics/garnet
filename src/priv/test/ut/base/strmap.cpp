@@ -3,7 +3,7 @@
 #include <string.h>
 #include <string>
 #include <iostream>
-#include <hash_map>
+//#include <hash_map>
 
 class StringMapTest : public CxxTest::TestSuite
 {
@@ -370,7 +370,7 @@ public:
     {
         srand( (int)(0xFFFFFFFF & GN::Clock::sGetSystemCycleCount()) );
         WordTable w = words();
-        printf( "num words = %w\n", w.count );
+        printf( "num words = %d\n", w.count );
         doPerfTest( w );
     }
 

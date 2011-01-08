@@ -357,12 +357,12 @@ public:
         uint64 u64 = 123;
         TS_ASSERT( !string2Integer( u64, "-1" ) );
         TS_ASSERT( string2Integer( u64, "0" ) ); TS_ASSERT_EQUALS( u64, 0 );
-        TS_ASSERT( string2Integer( u64, "0xFFFFFFFFFFFFFFFF", 16 ) ); TS_ASSERT_EQUALS( u64, 0xFFFFFFFFFFFFFFFF );
+        TS_ASSERT( string2Integer( u64, "0xFFFFFFFFFFFFFFFF", 16 ) ); TS_ASSERT_EQUALS( u64, 0xFFFFFFFFFFFFFFFFLL );
         TS_ASSERT( !string2Integer( u64, "0x10000000000000000", 16 ) );
 
 
-        const sint64 i64min = (-0x7fffffffffffffff - 1);
-        const sint64 i64max = 0x7fffffffffffffff; // Note: 0x7FFFFFFFFFFFFFFF = 9223372036854775807
+        const sint64 i64min = (-0x7fffffffffffffffLL - 1);
+        const sint64 i64max = 0x7fffffffffffffffLL; // Note: 0x7FFFFFFFFFFFFFFF = 9223372036854775807
         sint64 s64 = 123;
         TS_ASSERT( !string2Integer( s64, "-9223372036854775809" ) );
         TS_ASSERT( string2Integer( s64, "-9223372036854775808" ) ); TS_ASSERT_EQUALS( s64, i64min );

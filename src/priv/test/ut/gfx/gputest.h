@@ -134,7 +134,7 @@ class GpuTest
     };
 
     GN::gfx::GpuAPI mAPI;
-    UINT            mCreationFlags;
+    uint32          mCreationFlags;
 
 protected :
 
