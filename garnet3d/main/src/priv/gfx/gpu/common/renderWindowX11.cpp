@@ -129,7 +129,12 @@ bool GN::gfx::RenderWindowX11::initInternalRenderWindow(
     if( mScreenNumber < 0 ) return false;
 
     // Choose an appropriate visual
-    static int attributeList[] = { GLX_RGBA, GLX_DOUBLEBUFFER, None };
+    static int attributeList[] = {
+        GLX_RGBA, GLX_DOUBLEBUFFER,
+        GLX_DEPTH_SIZE, 24,
+        GLX_STENCIL_SIZE, 8,
+        None
+    };
     AutoXPtr<XVisualInfo> vi( glXChooseVisual( display, mScreenNumber, attributeList ) );
     if( 0 == vi )
     {
