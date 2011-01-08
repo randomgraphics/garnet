@@ -224,9 +224,13 @@ void __cdecl exit(int __status);
 #endif
 
 /* Define APIENTRY and CALLBACK to nothing if we aren't on Win32. */
+# ifndef APIENTRY
 # define APIENTRY
 # define GLUT_APIENTRY_DEFINED
+# endif
+# ifndef CALLBACK
 # define CALLBACK
+# endif
 /* Define GLUTAPI and GLUTCALLBACK as below if we aren't on Win32. */
 # define GLUTAPI extern
 # define GLUTCALLBACK

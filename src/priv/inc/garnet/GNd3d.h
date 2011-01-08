@@ -8,7 +8,7 @@
 
 #include "GNbase.h"
 
-#if GN_PLATFORM_HAS_OGL
+#if GN_PLATFORM_HAS_D3D10 | GN_PLATFORM_HAS_D3D11
 #include "d3d/dxgiutils.h"
 #endif
 

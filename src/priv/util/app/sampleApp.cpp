@@ -358,7 +358,7 @@ bool GN::util::SampleApp::checkCmdLine( int argc, const char * const argv[] )
     GN_GUARD;
 
     // setup default options
-    mInitParam.useMultithreadGpu = true;
+    mInitParam.useMultithreadGpu = !GN_POSIX;
     mInitParam.iapi = input::InputAPI::NATIVE;
     mInitParam.ffc.fontname = "font::/simsun.ttc";
     mInitParam.ffc.width = 16;
