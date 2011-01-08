@@ -70,7 +70,7 @@ public:
 #else
     CommandLineArguments( int argc, const char * argv[] )
         : applicationName( argv[0] )
-        , useMultiThreadGpu( true )
+        , useMultiThreadGpu( !GN_POSIX )
         , status( INVALID_COMMAND_LINE )
         , extraArgc(0)
         , extraArgv(NULL)
