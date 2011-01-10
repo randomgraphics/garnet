@@ -47,6 +47,7 @@ bool GN::gfx::CgShader::init(
     GN_STDCLASS_INIT( GN::gfx::CgShader, () );
 
     // create program
+    GN_VTRACE(sLogger)( "create Cg shader with profile: %s", cgGetProfileString( profile ) );
     mProgram = cgCreateProgram( context, CG_SOURCE, code, profile, entry ? entry : "main", args );
     if( !mProgram )
     {
@@ -68,8 +69,6 @@ bool GN::gfx::CgShader::init(
         }
         return failure();
     }
-
-    GN_VTRACE(sLogger)( "create Cg shader with profile: %s", cgGetProfileString( mProfile ) );
 
     // show compile result
     GN_VTRACE(sLogger)(

@@ -61,6 +61,8 @@ bool GN::gfx::D3D11GpuProgramCG::init( const GpuProgramDesc & desc )
     // get the latest vertex profile
     CGprofile profiles[ShaderStage::COUNT] =
     {
+        // Cg 3.0.0.07 bug: cgD3D11GetLatestVertexProfile() always return VS_5_0, even on D3D10 hardware.
+
         CG_PROFILE_VS_4_0, //cgD3D11GetLatestVertexProfile(),
         CG_PROFILE_PS_4_0, //cgD3D11GetLatestPixelProfile(),
         CG_PROFILE_GS_4_0, //cgD3D11GetLatestGeometryProfile(),
@@ -75,7 +77,7 @@ bool GN::gfx::D3D11GpuProgramCG::init( const GpuProgramDesc & desc )
 
     uint32 d3dCompileFlags;
     d3dCompileFlags = D3D10_SHADER_PACK_MATRIX_ROW_MAJOR; // use row major matrix at all time.
-    if( !desc.optimize ) d3dCompileFlags |= D3D10_SHADER_SKIP_OPTIMIZATION;
+    //if( !desc.optimize ) d3dCompileFlags |= D3D10_SHADER_SKIP_OPTIMIZATION;
     if( !desc.debug ) d3dCompileFlags |= D3D10_SHADER_DEBUG;
 
     // Initialize vertex shader
@@ -91,6 +93,7 @@ bool GN::gfx::D3D11GpuProgramCG::init( const GpuProgramDesc & desc )
 
             if( !mShaders[i].init( cgc, profiles[i], desc.code[i].source, desc.code[i].entry, NULL ) ) return failure();
 
+            // Cg 3.0.0.07 bug: fails on D3D10 hardware.
             GN_DX_CHECK_RETURN( cgD3D11LoadProgram( mShaders[i].getProgram(), d3dCompileFlags ), failure() );
 
             enumCgParameters( mShaders[i].getProgram(), CG_GLOBAL );
@@ -311,9 +314,9 @@ void GN::gfx::D3D11GpuProgramCG::enumCgParameters( CGprogram prog, CGenum name_s
 {
     bool vs = cgGetProgramProfile( prog ) == mShaders[ShaderStage::VS].getProfile();
 
-    for( CGparameter param = cgGetFirstParameter( prog, name_space );
+    for( CGparameter param = cgGetFirstLeafParameter( prog, name_space );
          param != 0;
-         param = cgGetNextParameter( param ) )
+         param = cgGetNextLeafParameter( param ) )
     {
         // Ignore non-input parameters
         CGenum direction = cgGetParameterDirection( param );
@@ -381,7 +384,7 @@ void GN::gfx::D3D11GpuProgramCG::enumCgParameters( CGprogram prog, CGenum name_s
 
             D3D11CgAttribute attr;
             attr.handles.append( param );
-            attr.name = cgGetResourceString( cgGetParameterResource( param ) );
+            attr.name = name;//cgGetResourceString( cgGetParameterResource( param ) );
             attr.semantic = cgGetParameterSemantic( param );
             attr.semanticIndex = cgGetParameterResourceIndex( param );
             mAttributes.append( attr );
