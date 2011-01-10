@@ -133,9 +133,9 @@ void main(
 			<uniref uniform="caustic" shaderParameter="caustic"/>
 			<texref texture="seafloor" shaderParameter="DiffuseSampler"/>
 			<texref texture="caustic" shaderParameter="CausticsSampler"/>
-			<attref attribute="POSITION0" shaderParameter="POSITION0"/>
-			<attref attribute="NORMAL0"   shaderParameter="NORMAL0"/>
-			<attref attribute="TEXCOORD0" shaderParameter="TEXCOORD0"/>
+			<attref attribute="POSITION0" shaderParameter="ipos"/>
+			<attref attribute="NORMAL0"   shaderParameter="inml"/>
+			<attref attribute="TEXCOORD0" shaderParameter="itex"/>
 			<vs entry="main">
 <![CDATA[
 uniform float4x4 view;
@@ -151,8 +151,8 @@ struct VSOUT
 };
 
 VSOUT main(
-	in  float4 ipos : POSITION0,
-	in  float3 inml : NORMAL0,
+	in  float4 ipos : POSITION,
+	in  float3 inml : NORMAL,
 	in  float2 itex : TEXCOORD0 )
 {
 	const float3 lightdir = { 0, 1, 0 };
@@ -196,8 +196,8 @@ struct VSOUT
     float2 vCausticTexCoords : TEXCOORD2;
 };
 
-sampler   DiffuseSampler  : register(s0);
-sampler   CausticsSampler : register(s1);
+sampler2D   DiffuseSampler  : register(s0);
+sampler2D   CausticsSampler : register(s1);
 
 void main(
 	VSOUT Input,
@@ -242,11 +242,11 @@ void main(
         <renderstates
 			CULL_MODE="CULL_NONE"
 		/>
-		<technique name="hlsl9">
-			<pass gpuprogram="hlsl9"/>
-		</technique>
 		<technique name="cg">
 			<pass gpuprogram="cg"/>
+		</technique>
+		<technique name="hlsl9">
+			<pass gpuprogram="hlsl9"/>
 		</technique>
 	</techniques>
 </effect>

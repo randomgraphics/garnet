@@ -4,7 +4,8 @@ TODO
 - 程序中标注TODO的地方
 
 - p0
-  - OGL face clipping is wrong on Ubuntu
+  - upgrade Cg runtime.
+  - GNsampleDolphin does not release all D3D11 resources when quit.
   - Winphone 7 integration
   - Cuda or OpenCL integration
   - runtime tweakable parameters: client/server communication

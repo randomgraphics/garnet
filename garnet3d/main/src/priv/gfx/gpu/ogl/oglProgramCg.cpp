@@ -147,17 +147,21 @@ bool GN::gfx::OGLGpuProgramCG::init( const GpuProgramDesc & desc )
     }
 
     // Fix up all char * pointers in parameter array
+    GN_VTRACE(sLogger)("Dump GPU program parameters:");
     for( OglCgUniform * i = mUniforms.begin(); i != mUniforms.end(); ++i)
     {
         i->desc.name = i->name.cptr();
+        GN_VTRACE(sLogger)( "\tuniform  : %s", i->desc.name );
     }
     for( OglCgTexture * i = mTextures.begin(); i != mTextures.end(); ++i)
     {
         i->desc.name = i->name.cptr();
+        GN_VTRACE(sLogger)( "\ttexture  : %s", i->desc.name );
     }
     for( OglCgAttribute * i = mAttributes.begin(); i != mAttributes.end(); ++i)
     {
         i->desc.name = i->name.cptr();
+        GN_VTRACE(sLogger)( "\tattribute: %s", i->desc.name );
     }
 
     // update the parameter descriptor
@@ -292,18 +296,26 @@ void GN::gfx::OGLGpuProgramCG::enumCgParameters( CGprogram prog, CGenum name_spa
 {
     bool vs = cgGetProgramProfile( prog ) == mVs.getProfile();
 
-    for( CGparameter param = cgGetFirstParameter( prog, name_space );
+    for( CGparameter param = cgGetFirstLeafParameter( prog, name_space );
          param != 0;
-         param = cgGetNextParameter( param ) )
+         param = cgGetNextLeafParameter( param ) )
     {
+        const char * name = cgGetParameterName( param );
+
         // Ignore non-referenced parameters
-        if( !cgIsParameterReferenced( param ) ) continue;
+        if( !cgIsParameterReferenced( param ) )
+        {
+            GN_VTRACE(sLogger)( "Ignore unreferenced parameter: %s", name );
+            continue;
+        }
 
         // Ignore non-input parameters
         CGenum direction = cgGetParameterDirection( param );
-        if( CG_IN != direction && CG_INOUT != direction ) return;
-
-        const char * name = cgGetParameterName( param );
+        if( CG_IN != direction && CG_INOUT != direction )
+        {
+            GN_VTRACE(sLogger)( "Ignore non-input parameter: %s", name );
+            return;
+        }
 
         CGenum var = cgGetParameterVariability( param );
 
@@ -329,6 +341,7 @@ void GN::gfx::OGLGpuProgramCG::enumCgParameters( CGprogram prog, CGenum name_spa
                 texture.handles.append( param );
                 texture.name = name;
                 mTextures.append( texture );
+                GN_VTRACE(sLogger)( "new texture: %s", name );
             }
         }
         else if( CG_UNIFORM == var )
@@ -354,6 +367,7 @@ void GN::gfx::OGLGpuProgramCG::enumCgParameters( CGprogram prog, CGenum name_spa
                 uniform.setValueFuncPtr = GetCgSetParameterFuncPtr( param );
                 uniform.desc.size = uniform.count * 4;
                 mUniforms.append( uniform );
+                GN_VTRACE(sLogger)( "new uniform: %s", name );
             }
         }
         else if( vs && CG_VARYING == var )
@@ -365,9 +379,14 @@ void GN::gfx::OGLGpuProgramCG::enumCgParameters( CGprogram prog, CGenum name_spa
 
             OglCgAttribute attr;
             attr.handles.append( param );
-            attr.name = cgGetResourceString( cgGetParameterResource( param ) );
+            attr.name = name;//cgGetResourceString( cgGetParameterResource( param ) );
             attr.binding = sGetCgVertexAttributeBinding( param );
             mAttributes.append( attr );
+            GN_VTRACE(sLogger)( "new attribute: name=%s", name );
+        }
+        else
+        {
+            GN_VTRACE(sLogger)( "ignore parameter with unkonw type: %s", name );
         }
     }
 }
