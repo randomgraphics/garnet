@@ -1,14 +1,6 @@
 Import( 'GN' )
-
-if 1 == GN.version :
-	sources = []
-	sources.append( SConscript( 'base/SConscript' ) )
-	sources.append( SConscript( 'input/SConscript' ) )
-	sources.append( SConscript( 'win/SConscript' ) )
-	GN.newTarget( 'stlib', 'GNbase', sources )
-else:
-	objects = []
-	objects.append( SConscript( 'base/SConscript' ) )
-	#objects.append( SConscript( 'input/SConscript' ) )
-	#objects.append( SConscript( 'win/SConscript' ) )
-	GN.DefaultAlias( 'GNbase', GN.SDKLib( GN.Library( 'GNbase', objects ) ) )
+sources = []
+sources.append( SConscript( 'base/SConscript' ) )
+sources.append( SConscript( 'input/SConscript' ) )
+sources.append( SConscript( 'win/SConscript' ) )
+GN.newTarget( 'stlib', 'GNbase', sources )

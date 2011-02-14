@@ -1,0 +1,8 @@
+Import( 'GN' )
+objects = []
+#objects += SConscript( 'base/SConscript2' ),
+objects += SConscript( 'd3d/SConscript2' ),
+#objects += SConscript( 'gpu/SConscript2' ),
+#objects += SConscript( 'gpures/SConscript2' ),
+#objects += SConscript( 'misc/SConscript2' )
+GN.DefaultAlias( 'GNgfxUtil', GN.SDKLib( GN.Library( 'GNgfxUtil', objects ) ) )

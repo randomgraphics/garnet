@@ -1,0 +1,33 @@
+Import( 'GN' )
+
+sources = [
+	'boundingVolume.cpp',
+	'clock.cpp',
+	'codepage.cpp',
+	'codepageICONV.cpp',
+	'codepageMSWIN.cpp',
+	'codepageXenon.cpp',
+	'debug.cpp',
+	'dict.cpp',
+	'endian.cpp',
+	'file.cpp',
+	'hashmap.cpp',
+	'log.cpp',
+	'memory.cpp',
+	'misc.cpp',
+	'path.cpp',
+	'profiler.cpp',
+	'registry.cpp',
+	'sharedLib.cpp',
+	'spinloop.cpp',
+	'string.cpp',
+	'syncmsw.cpp',
+	'syncposix.cpp',
+	'threadmsw.cpp',
+	'threadposix.cpp',
+	'variant.cpp',
+	'xml.cpp',
+]
+
+objects = GN.Objects( sources, 'pch.h', 'pch.cpp' )
+Return( 'objects' )

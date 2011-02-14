@@ -10,10 +10,6 @@ def CopyExternalBinaries( env, sources, blddir ):
 		targets.append( dst )
 	return targets
 
-if 1 == GN.version:
-	sources = GN.glob( GN.compiler.os + "." + GN.compiler.cpu + "\*.*", True )
-	cluster = GN.newCustomSourceCluster( sources, CopyExternalBinaries )
-	GN.newCustomTarget( 'GNexternBin', [cluster] )
-else:
-	sources = GN.Glob( GN.targetOS + "." + GN.targetCPU + "\*.*", True )
-	GN.DefaultAlias( 'GNexternBin', GN.SDKBin( sources ) )
+sources = GN.glob( GN.compiler.os + "." + GN.compiler.cpu + "\*.*", True )
+cluster = GN.newCustomSourceCluster( sources, CopyExternalBinaries )
+GN.newCustomTarget( 'GNexternBin', [cluster] )

@@ -23,16 +23,10 @@ def GenConfigHeader( target, source, env ):
 	FILE.close()
 	return 0
 
-if 1 == GN.version:
-	def ConfigHeaderBuilder( env, sources, blddir ):
-		target = [blddir + '/src/priv/inc/garnet/base/platform.' + GN.compiler.os + "." + GN.compiler.cpu + '.h']
-		env.AlwaysBuild( target )
-		env.Command( target[0], None, GenConfigHeader )
-		return target
-	cluster = GN.newCustomSourceCluster( [], ConfigHeaderBuilder )
-	target = GN.newCustomTarget( 'GNinc', [cluster] )
-else:
-	env = GN.NewEnv()
-	target = 'garnet/base/platform.' + GN.targetOS + "." + GN.targetCPU + '.h'
-	env.AlwaysBuild( [target] )
-	env.Command( target, None, GenConfigHeader )
+def ConfigHeaderBuilder( env, sources, blddir ):
+	target = [blddir + '/src/priv/inc/garnet/base/platform.' + GN.compiler.os + "." + GN.compiler.cpu + '.h']
+	env.AlwaysBuild( target )
+	env.Command( target[0], None, GenConfigHeader )
+	return target
+cluster = GN.newCustomSourceCluster( [], ConfigHeaderBuilder )
+target = GN.newCustomTarget( 'GNinc', [cluster] )

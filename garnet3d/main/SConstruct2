@@ -1,0 +1,267 @@
+# -*- coding: GB18030 -*-
+
+import sys, os, os.path, re, fnmatch
+
+# try import xenon extension for SCons
+try:
+	sys.path.append( "env/scons/xenon" )
+	import xenon
+	CONF_has_xenon_extension = True
+except ImportError:
+	CONF_has_xenon_extension = False
+	print "no xenon extension for scons found."
+
+################################################################################
+#
+# Local Utilities
+#
+################################################################################
+
+# 读取环境变量
+def UTIL_getenv( name, defval = '' ):
+	if name in os.environ: return os.environ[name]
+	else: return defval
+
+# 输出调试信息
+def UTIL_trace( level, msg ):
+	level = float(level)
+	assert( 0 != level )
+	if ( CONF_trace > 0 and level <= CONF_trace ) or ( CONF_trace < 0 and level == -CONF_trace ):
+		print 'TRACE(%d) : %s'%(level,msg)
+
+# 输出提示信息
+def UTIL_info( msg ): print 'INFO : %s'%msg
+
+# 输出警告信息
+def UTIL_warn( msg ):
+	#print '===================================================================='
+	print 'WARNING : %s'%msg
+	#print '===================================================================='
+
+# 输出错误信息
+def UTIL_error( msg ):
+	print '===================================================================='
+	print 'ERROR : %s'%msg
+	print '===================================================================='
+
+################################################################################
+#
+# Configurations (step1)
+#
+################################################################################
+
+LOCAL_ENV = Environment( tools=[] )
+
+HOST_OS  = None
+HOST_CPU = None
+if 'win32' == LOCAL_ENV['PLATFORM']:
+	HOST_OS = 'mswin'
+	if 'AMD64' == UTIL_getenv('PROCESSOR_ARCHITECTURE') or 'AMD64' == UTIL_getenv('PROCESSOR_ARCHITEW6432'):
+		HOST_CPU = 'x64'
+	else:
+		HOST_CPU = 'x86'
+elif 'cygwin' == LOCAL_ENV['PLATFORM']:
+	HOST_OS = 'cygwin'
+	HOST_CPU = 'x86'
+elif 'posix' == LOCAL_ENV['PLATFORM']:
+	HOST_OS = 'posix'
+	HOST_CPU = 'x86'
+else:
+	print 'FATAL: Unknown platform:', LOCAL_ENV['PLATFORM']
+	Exit(-1)
+
+HOST_COMPILER = UTIL_getenv('GN_BUILD_COMPILER', None )
+if None == HOST_COMPILER:
+	if CONF_has_xenon_extension and xenon.exists( LOCAL_ENV ):
+		HOST_COMPILER = 'xenon'
+	elif 'mswin' == HOST_OS:
+		HOST_COMPILER = 'vc100'
+	else:
+		HOST_COMPILER = 'gcc'
+
+BUILD_VARIANT = UTIL_getenv('GN_BUILD_VARIANT', 'debug')
+
+BUILD_TARGET_OS = UTIL_getenv('GN_BUILD_TARGET_OS', HOST_OS )
+
+BUILD_TARGET_CPU = UTIL_getenv('GN_BUILD_TARGET_CPU', HOST_CPU )
+
+BUILD_ROOT_PATH = 'b2.tmp/' + BUILD_TARGET_OS + '.' + BUILD_TARGET_CPU + '.' + HOST_COMPILER + '.' + BUILD_VARIANT + "/"
+
+################################################################################
+#
+# Create default build envrionment
+#
+################################################################################
+
+# Create new environment
+def BUILD_newEnv():
+
+	env = Environment(
+		MSVC_BATCH=True
+		)
+
+	# Import environment variables that are used by C/C++ compiler.
+ 	env.PrependENVPath( 'PATH'     , UTIL_getenv('PATH') );
+ 	env.PrependENVPath( 'INCLUDE'  , UTIL_getenv('INCLUDE') );
+ 	env.PrependENVPath( 'LIB'      , UTIL_getenv('LIB') );
+ 	env['ENV']['LANG']     = UTIL_getenv('LANG');
+ 	env['ENV']['LANGUAGE'] = UTIL_getenv('LANGUAGE');
+
+	# cache implicit dependencies
+	env.SetOption( 'implicit_cache', 1 );
+
+	# setup default decider
+	env.Decider( 'MD5-timestamp' );
+
+	# setup signature file
+	env.SConsignFile( BUILD_ROOT_PATH + '.sconsign' )
+
+	# Set standard include path
+	env.Append(
+		CPPPATH = [
+			'#src/extern/inc',
+			'#' + BUILD_ROOT_PATH + 'priv/inc',
+			'#src/priv/inc',
+			],
+		)
+
+	# Platform specific options
+	if 'xenon' == HOST_OS:
+		pass
+	elif 'mswin' == HOST_OS:
+		pass;
+
+	# Compiler specific options
+	if 'cl' == env['CC']:
+		env.Append(
+			CXXFLAGS = ['/EHsc']
+			)
+
+	return env
+
+################################################################################
+#
+# Configurations (step2)
+#
+################################################################################
+
+
+################################################################################
+#
+# 定义 GarnetEnv class
+#
+################################################################################
+
+class GarnetEnv2 :
+
+	def __init__( self ) :
+		self.targetOS   = BUILD_TARGET_OS
+		self.targetCPU  = BUILD_TARGET_CPU
+		self.has_ogl   = 1
+		self.has_d3d9  = 1
+		self.has_d3d10 = 1
+		self.has_d3d11 = 1
+		self.has_xtl   = 1
+		self.has_iconv = 0
+
+	# UTIL functions
+	def Trace( self, level, msg ): UTIL_trace( level, msg )
+	def Info( self, msg ): UTIL_info( msg )
+	def Warn( self, msg ): UTIL_warn( msg )
+	def Error( self, msg ): UTIL_error( msg )
+	def NewEnv( self ) : return BUILD_newEnv()
+
+	# 查找指定目录下的文件
+	def Glob( self, patterns, recursive = False ):
+		def do_glob( pattern, dir, recursive ):
+			files = []
+			root = Dir(dir).srcnode().abspath;
+			try:
+				for file in os.listdir( root ):
+					if os.path.isdir( os.path.join(root,file) ):
+						if recursive and ( not '.svn' == file ) : # ignore subversion directory
+							files = files + do_glob( pattern, os.path.join(dir,file), recursive )
+					else:
+						# Note: ignore precompiled header
+						if not ('pch.cpp' == file or 'stdafx.cpp' == file):
+							#print 'fnmatch(%s,%s) = %s'%(file,pattern,fnmatch.fnmatch(file, pattern))
+							if fnmatch.fnmatch(file, pattern):
+								files.append( os.path.join( dir, file ) )
+			except WindowsError:
+				pass
+			return files
+		#print 'glob %s'%patterns )
+		files = []
+		if not patterns is list: patterns = [patterns]
+		for p in Flatten(patterns):
+			if os.path.isdir( GetBuildPath(p) ):
+				#print '    do_glob(*.*,%s)'%p
+				files += do_glob( '*.*', p, recursive )
+			else:
+				(dir,pattern) = os.path.split(p);
+				if '' == pattern: pattern = '*.*';
+				if '' == dir: dir = '.';
+				#print '    do_glob(%s,%s)'%(pattern,dir)
+				files += do_glob( pattern, dir, recursive )
+		return files
+
+	#
+	# setup environment for producing PCH, return PCH object file
+	#
+	def SetupPCH( self, env, pchHeader, pchSource ):
+		if 'PCH' in env['BUILDERS'] and pchSource:
+			pch = env.PCH(pchSource)
+			env['PCH'] = pch[0]
+			env['PCHSTOP'] = pchHeader
+			if( len(pch) > 1 ):
+				return [pch[1]]
+			else:
+				return []
+		else:
+			return []
+
+	def SetupPDB( self, env, target, pdb ):
+		if pdb : pdbfile = File(pdb)
+		else   : pdbfile = File("%s.pdb"%(target))
+		env['PDB'] = pdbfile
+
+	def Objects( self, sources, pchHeader=None, pchSource=None, env = None ):
+		if not env: env = self.NewEnv()
+		pchobj = self.SetupPCH( env, pchHeader, pchSource )
+		return Flatten( [env.Object(x) for x in sources] ) + pchobj
+
+	def Library( self, target, objects, pdb=None, env=None ):
+		if not env: env = self.NewEnv()
+		self.SetupPDB( env, target, pdb )
+		return env.Library( target, objects )
+
+	def SDKLib( self, files ):
+		targets = []
+		for x in files:
+			dst = '#' + BUILD_ROOT_PATH + '/lib/' + os.path.basename( File(x).path )
+			Command( dst, File(x), Copy( "$TARGET", "$SOURCE" ) )
+			targets.append( dst )
+		return targets
+
+	def SDKBin( self, files ):
+		targets = []
+		for x in files:
+			dst = '#' + BUILD_ROOT_PATH + '/bin/' + os.path.basename( File(x).path )
+			Command( dst, File(x), Copy( "$TARGET", "$SOURCE" ) )
+			targets.append( dst )
+		return targets
+
+	def DefaultAlias( self, alias, targets ):
+		Alias( alias, targets )
+		Default( alias )
+
+# Create garnet build environment (singleton)
+GN = GarnetEnv2()
+
+################################################################################
+#
+# Build subfolders
+#
+################################################################################
+Export( 'GN' )
+SConscript( 'src/SConscript2', variant_dir=BUILD_ROOT_PATH, duplicate=1)
