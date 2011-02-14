@@ -80,6 +80,7 @@ namespace GN
         /// destructor
         static inline void dtor( T * ptr )
         {
+            GN_UNUSED_PARAM(ptr);
             ptr->T::~T();
         }
 

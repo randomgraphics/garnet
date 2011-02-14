@@ -1,0 +1,4 @@
+SConscript([
+	'src/SConscript2',
+	'bin/SConscript2',
+	])

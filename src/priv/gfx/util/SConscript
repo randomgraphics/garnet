@@ -1,19 +1,9 @@
 Import( 'GN' )
-
-if 1 == GN.version:
-	sources = [
-		SConscript( 'base/SConscript' ),
-		SConscript( 'd3d/SConscript' ),
-		SConscript( 'gpu/SConscript' ),
-		SConscript( 'gpures/SConscript' ),
-		SConscript( 'misc/SConscript' )
-		]
-	GN.newTarget( 'stlib', 'GNgfxUtil', sources )
-else:
-	objects = []
-	#objects += SConscript( 'base/SConscript' ),
-	objects += SConscript( 'd3d/SConscript' ),
-	#objects += SConscript( 'gpu/SConscript' ),
-	#objects += SConscript( 'gpures/SConscript' ),
-	#objects += SConscript( 'misc/SConscript' )
-	GN.DefaultAlias( 'GNgfxUtil', GN.SDKLib( GN.Library( 'GNgfxUtil', objects ) ) )
+sources = [
+	SConscript( 'base/SConscript' ),
+	SConscript( 'd3d/SConscript' ),
+	SConscript( 'gpu/SConscript' ),
+	SConscript( 'gpures/SConscript' ),
+	SConscript( 'misc/SConscript' )
+	]
+GN.newTarget( 'stlib', 'GNgfxUtil', sources )

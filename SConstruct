@@ -561,7 +561,6 @@ class UTIL_copy_to_devkit:
 class GarnetEnv :
 
 	def __init__( self ) :
-		self.version = 1;
 		self.compiler = None
 		self.variant = None
 		self.conf = {}
