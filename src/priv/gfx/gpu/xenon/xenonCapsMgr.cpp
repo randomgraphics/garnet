@@ -53,7 +53,7 @@ bool GN::gfx::XenonGpu::checkTextureFormatSupport(
 {
     GN_GUARD;
 
-    GN_ASSERT( getCurrentThreadId() == mThreadId );
+    GN_ASSERT( isGpuThread() );
 
     GN_UNIMPL_WARNING()
 
@@ -71,7 +71,7 @@ bool GN::gfx::XenonGpu::checkTextureFormatSupport(
 GN::gfx::ColorFormat
 GN::gfx::XenonGpu::getDefaultTextureFormat( TextureUsage usage ) const
 {
-    GN_ASSERT( getCurrentThreadId() == mThreadId );
+    GN_ASSERT( isGpuThread() );
 
     if( TextureUsage::DEPTH_RENDER_TARGET == usage )
     {

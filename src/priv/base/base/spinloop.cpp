@@ -8,7 +8,7 @@ void GN::SpinLoop::lock()
         ++i;
         if( i > 1000000 )
         {
-            sleepCurrentThread( 0 );
+            Thread::sSleepCurrentThread( 0 );
             i = 0;
         }
     }

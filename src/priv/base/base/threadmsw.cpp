@@ -24,20 +24,20 @@ static int sPriorityTable[] =
     THREAD_PRIORITY_BELOW_NORMAL,
     THREAD_PRIORITY_IDLE,
 };
-GN_CASSERT( GN_ARRAY_COUNT(sPriorityTable) == NUM_THREAD_PRIORITIES );
+GN_CASSERT( GN_ARRAY_COUNT(sPriorityTable) == Thread::NUM_PRIORITIES );
 
 ///
 /// convert thread priority to WIN32 constant
 ///
-static int sPriority2Msw( ThreadPriority p )
+static int sPriority2Msw( Thread::Priority p )
 {
-    GN_ASSERT( p < NUM_THREAD_PRIORITIES );
+    GN_ASSERT( p < Thread::NUM_PRIORITIES );
 
     return sPriorityTable[p];
 }
 
 // *****************************************************************************
-// thread class
+// Thread::ThreadMsw class
 // *****************************************************************************
 
 ///
@@ -64,9 +64,9 @@ public:
     //@{
 public:
     bool create(
-        const ThreadProcedure & proc,
+        const Procedure & proc,
         void * param,
-        ThreadPriority priority,
+        Priority priority,
         bool initialSuspended,
         const char * )
     {
@@ -76,7 +76,12 @@ public:
         GN_STDCLASS_INIT( ThreadMsw, () );
 
         // check parameter
-        if( priority < 0 || priority >= NUM_THREAD_PRIORITIES )
+        if( proc.empty() )
+        {
+            GN_ERROR(sLogger)( "Null thread procedure." );
+            return failure();
+        }
+        if( priority < 0 || priority >= NUM_PRIORITIES )
         {
             GN_ERROR(sLogger)( "invalid thread priority." );
             return failure();
@@ -111,10 +116,10 @@ public:
         GN_STDCLASS_INIT( ThreadMsw, () );
 
         mHandle = GetCurrentThread();
-        mId = GetCurrentThreadId();
+        mId     = GetCurrentThreadId();
 
         // TODO: get real priority value, then convert to TP_XXX enums.
-        mPriority = TP_NORMAL;
+        mPriority = NORMAL;
 
         // success
         mAttached = true;
@@ -156,14 +161,19 @@ private:
     // ********************************
 public:
 
-    virtual ThreadPriority getPriority() const
+    virtual sint32 getID() const
+    {
+        return mId;
+    }
+
+    virtual Priority getPriority() const
     {
         return mPriority;
     }
 
-    virtual void setPriority( ThreadPriority p )
+    virtual void setPriority( Priority p ) const
     {
-        if( p < 0 || p >= NUM_THREAD_PRIORITIES )
+        if( p < 0 || p >= NUM_PRIORITIES )
         {
             GN_ERROR(sLogger)( "invalid thread priority!" );
             return;
@@ -174,7 +184,7 @@ public:
         mPriority = p;
     }
 
-    virtual void setAffinity( uint32 hardwareThread )
+    virtual void setAffinity( uint32 hardwareThread ) const
     {
 #if GN_XENON
         if( (DWORD)-1 == XSetThreadProcessor( mHandle, hardwareThread ) )
@@ -189,12 +199,12 @@ public:
 #endif
     }
 
-    bool isCurrentThread() const
+    virtual bool isCurrentThread() const
     {
         return ::GetCurrentThreadId() == mId;
     }
 
-    virtual void suspend()
+    virtual void suspend() const
     {
         if( (DWORD)-1 == ::SuspendThread( mHandle ) )
         {
@@ -202,7 +212,7 @@ public:
         }
     }
 
-    virtual void resume()
+    virtual void resume() const
     {
         if( (DWORD)-1 == ::ResumeThread( mHandle ) )
         {
@@ -210,10 +220,19 @@ public:
         }
     }
 
+    virtual void kill()
+    {
+        GN_UNIMPL();
+    }
+
     virtual WaitResult waitForTermination( TimeInNanoSecond timeoutTime, uint32 * threadProcReturnValue )
     {
         // can't wait for self termination
-        GN_ASSERT( !isCurrentThread() );
+        if( !isCurrentThread() )
+        {
+            GN_ERROR(sLogger)("Can't wait for termination of the current thread." );
+            return WaitResult::TIMEOUT;
+        }
 
         uint32 ret = ::WaitForSingleObject( mHandle, ns2ms( timeoutTime ) );
 
@@ -246,17 +265,17 @@ private:
     struct ThreadParam
     {
         ThreadMsw * instance;
-        void      * userparam;
+        void * userparam;
     };
 
-    ThreadProcedure mProc;
-    ThreadParam     mParam;
-    ThreadPriority  mPriority;
+    Procedure        mProc;
+    ThreadParam      mParam;
+    mutable Priority mPriority;
 
-    HANDLE          mHandle;
-    DWORD           mId;
+    HANDLE           mHandle;
+    DWORD            mId;
 
-    bool            mAttached;
+    bool             mAttached;
 
     // ********************************
     // private functions
@@ -280,61 +299,48 @@ private:
 };
 
 // *****************************************************************************
-// public functions
+// Thread class
 // *****************************************************************************
 
 //
 //
 // -----------------------------------------------------------------------------
-GN::Thread *
-GN::createThread(
-    const ThreadProcedure & proc,
-    void * param,
-    ThreadPriority priority,
-    bool initialSuspended,
-    const char * name )
+Thread * GN::Thread::sCreateThread(
+    const Procedure & proc,
+    void            * param,
+    Priority          priority,
+    bool              initialSuspended,
+    const char      * name )
 {
-    GN_GUARD;
-
-    AutoObjPtr<ThreadMsw> s( new ThreadMsw );
-
-    if( !s->create( proc, param, priority, initialSuspended, name ) ) return 0;
-
-    return s.detach();
-
-    GN_UNGUARD;
+    ThreadMsw * t = new ThreadMsw();
+    if( NULL != t && !t->create( proc, param, priority, initialSuspended, name ) )
+    {
+        delete t;
+        t = NULL;
+    }
+    return t;
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-void GN::sleepCurrentThread( TimeInNanoSecond sleepTime )
+Thread * GN::Thread::sAttachToCurrentThread()
 {
-   ::Sleep( ns2ms( sleepTime ) );
+    ThreadMsw * t = new ThreadMsw();
+    if( NULL != t && !t->attach() )
+    {
+        delete t;
+        t = NULL;
+    }
+    return t;
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-Thread * GN::generateCurrentThreadObject()
+void GN::Thread::sSleepCurrentThread( TimeInNanoSecond sleepTime )
 {
-    GN_GUARD;
-
-    AutoObjPtr<ThreadMsw> s( new ThreadMsw );
-
-    if( !s->attach() ) return 0;
-
-    return s.detach();
-
-    GN_UNGUARD;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-sint32 GN::getCurrentThreadId()
-{
-    return (sint32)GetCurrentThreadId();
+    ::Sleep( ns2ms( sleepTime ) );
 }
 
 #endif

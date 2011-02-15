@@ -11,11 +11,11 @@ using namespace GN;
 // *****************************************************************************
 
 ///
-/// thread class on MS Windows
+/// thread class on POSIX system
 ///
-class ThreadX11 : public Thread, public StdClass
+class ThreadPosix : public Thread, public StdClass
 {
-    GN_DECLARE_STDCLASS( ThreadX11, StdClass );
+    GN_DECLARE_STDCLASS( ThreadPosix, StdClass );
 
     // ********************************
     // ctor/dtor
@@ -23,8 +23,8 @@ class ThreadX11 : public Thread, public StdClass
 
     //@{
 public:
-    ThreadX11()          { clear(); }
-    virtual ~ThreadX11() { quit(); }
+    ThreadPosix()          { clear(); }
+    virtual ~ThreadPosix() { quit(); }
     //@}
 
     // ********************************
@@ -43,10 +43,10 @@ public:
         GN_GUARD;
 
         // standard init procedure
-        GN_STDCLASS_INIT( ThreadX11, () );
+        GN_STDCLASS_INIT( ThreadPosix, () );
 
         // check parameter
-        if( priority < 0 || priority >= NUM_THREAD_PRIORITIES )
+        if( priority < 0 || priority >= NUM_PRIORITIES )
         {
             GN_ERROR(sLogger)( "invalid thread priority." );
             return failure();
@@ -68,7 +68,7 @@ public:
         GN_UNIMPL_WARNING();
 
         // standard init procedure
-        GN_STDCLASS_INIT( ThreadX11, () );
+        GN_STDCLASS_INIT( ThreadPosix, () );
 
         // success
         mAttached = true;
@@ -109,14 +109,20 @@ private:
     // ********************************
 public:
 
-    virtual ThreadPriority getPriority() const
+    virtual sint32 getID() const
+    {
+        GN_UNIMPL_WARNING();
+        return 0;
+    }
+
+    virtual Priority getPriority() const
     {
         return mPriority;
     }
 
-    virtual void setPriority( ThreadPriority p )
+    virtual void setPriority( Priority p ) const
     {
-        if( p < 0 || p >= NUM_THREAD_PRIORITIES )
+        if( p < 0 || p >= NUM_PRIORITIES )
         {
             GN_ERROR(sLogger)( "invalid thread priority!" );
             return;
@@ -127,7 +133,7 @@ public:
         mPriority = p;
     }
 
-    virtual void setAffinity( uint32 hardwareThread )
+    virtual void setAffinity( uint32 hardwareThread ) const
     {
         GN_UNIMPL_WARNING();
     }
@@ -138,17 +144,22 @@ public:
         return true;
     }
 
-    virtual void suspend()
+    virtual void suspend() const
     {
         GN_UNIMPL_WARNING();
     }
 
-    virtual void resume()
+    virtual void resume() const
     {
         GN_UNIMPL_WARNING();
     }
 
-    virtual WaitResult waitForTermination( TimeInNanoSecond timeoutTime, uint32 * threadProcReturnValue )
+    virtual void kill()
+    {
+        GN_UNIMPL_WARNING();
+    }
+
+    virtual WaitResult waitForTermination( TimeInNanoSecond timeoutTime, uint32 * threadProcReturnValue ) const
     {
         // can't wait for self termination
         GN_ASSERT( !isCurrentThread() );
@@ -165,15 +176,15 @@ private:
 
     struct ThreadParam
     {
-        ThreadX11 * instance;
-        void      * userparam;
+        ThreadPosix * instance;
+        void        * userparam;
     };
 
-    ThreadProcedure mProc;
-    ThreadParam     mParam;
-    ThreadPriority  mPriority;
+    Procedure        mProc;
+    ThreadParam      mParam;
+    mutable Priority mPriority;
 
-    bool            mAttached;
+    bool             mAttached;
 
     // ********************************
     // private functions
@@ -204,16 +215,16 @@ private:
 //
 // -----------------------------------------------------------------------------
 GN::Thread *
-GN::createThread(
-    const ThreadProcedure & proc,
-    void                  * param,
-    ThreadPriority          priority,
-    bool                    initialSuspended,
-    const char            * name )
+GN::Thread::sCreateThread(
+    const Procedure & proc,
+    void            * param,
+    Priority          priority,
+    bool              initialSuspended,
+    const char      * name )
 {
     GN_GUARD;
 
-    AutoObjPtr<ThreadX11> s( new ThreadX11 );
+    AutoObjPtr<ThreadPosix> s( new ThreadPosix );
 
     if( !s->create( proc, param, priority, initialSuspended, name ) ) return 0;
 
@@ -225,25 +236,25 @@ GN::createThread(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::sleepCurrentThread( TimeInNanoSecond sleepTime )
-{
-    GN_UNIMPL_WARNING();
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-Thread * GN::generateCurrentThreadObject()
+Thread * GN::Thread::sAttachToCurrentThread()
 {
     GN_GUARD;
 
-    AutoObjPtr<ThreadX11> s( new ThreadX11 );
+    AutoObjPtr<ThreadPosix> s( new ThreadPosix );
 
     if( !s->attach() ) return 0;
 
     return s.detach();
 
     GN_UNGUARD;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::sSleepCurrentThread( TimeInNanoSecond sleepTime )
+{
+    GN_UNIMPL_WARNING();
 }
 
 //
