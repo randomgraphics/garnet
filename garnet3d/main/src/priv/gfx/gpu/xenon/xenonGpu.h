@@ -27,7 +27,7 @@ namespace GN { namespace gfx
 
         //@{
     public :
-        XenonGpu() : mThreadId(getCurrentThreadId()) { clear(); }
+        XenonGpu() { clear(); }
         virtual ~XenonGpu() { quit(); }
         //@}
 
@@ -48,7 +48,10 @@ namespace GN { namespace gfx
             contextClear();
             drawClear();
             miscClear();
+            mThread = NULL;
         }
+        const Thread * mThread;
+        bool isGpuThread() const { return NULL == mThread || mThread->isCurrentThread(); }
         //@}
 
     // ************************************************************************
@@ -316,17 +319,11 @@ namespace GN { namespace gfx
 
         virtual void dumpNextFrame( size_t startBatchIndex, size_t numBatches );
 
-    public:
-
-        sint32 getThreadId() const { return mThreadId; }
-
     private:
 
         void miscClear() {}
 
     private:
-
-        const sint32 mThreadId; // initialized by constructor
 
         //@}
     };

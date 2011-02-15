@@ -80,9 +80,9 @@ GN::gfx::XenonGpu::createGpuProgram( const void * compiledGpuProgramBinary, size
 {
     GN_GUARD;
 
-    GN_ASSERT( getCurrentThreadId() == mThreadId );
+    GN_ASSERT( isGpuThread() );
 
-    /// get shader description about of compiled binary
+    /// get shader description of compiled binary
     AutoRef<SelfContainedGpuProgramDesc> s( new SelfContainedGpuProgramDesc );
     if( !s->init( compiledGpuProgramBinary, length ) ) return NULL;
     const GpuProgramDesc & desc = s->getDesc();
@@ -129,7 +129,7 @@ GN::gfx::XenonGpu::createTexture( const TextureDesc & desc )
 {
     GN_GUARD;
 
-    GN_ASSERT( getCurrentThreadId() == mThreadId );
+    GN_ASSERT( isGpuThread() );
 
     AutoRef<XenonTexture> p( new XenonTexture(*this) );
     if( !p->init( desc ) ) return 0;
@@ -145,7 +145,7 @@ GN::gfx::VtxBuf * GN::gfx::XenonGpu::createVtxBuf( const VtxBufDesc & desc )
 {
     GN_GUARD;
 
-    GN_ASSERT( getCurrentThreadId() == mThreadId );
+    GN_ASSERT( isGpuThread() );
 
     AutoRef<XenonVtxBuf> buf( new XenonVtxBuf(*this) );
 
@@ -163,7 +163,7 @@ GN::gfx::IdxBuf * GN::gfx::XenonGpu::createIdxBuf( const IdxBufDesc & desc )
 {
     GN_GUARD;
 
-    GN_ASSERT( getCurrentThreadId() == mThreadId );
+    GN_ASSERT( isGpuThread() );
 
     AutoRef<XenonIdxBuf> buf( new XenonIdxBuf(*this) );
 

@@ -63,12 +63,14 @@ bool GN::gfx::XenonGpu::init( const GN::gfx::GpuOptions & o )
 {
     GN_GUARD;
 
-    GN_ASSERT( getCurrentThreadId() == mThreadId );
-
     PIXPERF_FUNCTION_EVENT();
 
     // standard init procedure
     GN_STDCLASS_INIT( GN::gfx::XenonGpu, (o) );
+
+    // get current thread
+    mThread = Thread::sAttachToCurrentThread();
+    if( NULL == mThread ) return failure();
 
     // init sub-components
     if( !dispInit()         ) return failure();
@@ -90,7 +92,7 @@ void GN::gfx::XenonGpu::quit()
 {
     GN_GUARD;
 
-    GN_ASSERT( getCurrentThreadId() == mThreadId );
+    GN_ASSERT( isGpuThread() );
 
     PIXPERF_FUNCTION_EVENT();
 
@@ -99,6 +101,8 @@ void GN::gfx::XenonGpu::quit()
     resourceQuit();
     capsQuit();
     dispQuit();
+
+    safeDelete( mThread );
 
     GN_STDCLASS_QUIT();
 

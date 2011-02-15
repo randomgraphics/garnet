@@ -69,7 +69,7 @@ void GN::gfx::XenonGpu::drawQuit()
 // -----------------------------------------------------------------------------
 void GN::gfx::XenonGpu::present()
 {
-    GN_ASSERT( getCurrentThreadId() == mThreadId );
+    GN_ASSERT( isGpuThread() );
 
     GN_ASSERT( mSceneBegun );
 
@@ -100,7 +100,7 @@ void GN::gfx::XenonGpu::present()
 void GN::gfx::XenonGpu::clearScreen(
     const Vector4f & c, float z, uint8 s, uint32 flags )
 {
-    GN_ASSERT( getCurrentThreadId() == mThreadId );
+    GN_ASSERT( isGpuThread() );
 
     // build d3d clear flag
     int d3dflag =
@@ -140,7 +140,7 @@ void GN::gfx::XenonGpu::drawIndexed(
 void GN::gfx::XenonGpu::draw(
     PrimitiveType prim, size_t numvtx, size_t startvtx )
 {
-    GN_ASSERT( getCurrentThreadId() == mThreadId );
+    GN_ASSERT( isGpuThread() );
 
     mDevice->DrawVertices(
         PRIMITIVE_TO_XENON[prim],    // primitive type
@@ -163,7 +163,7 @@ void GN::gfx::XenonGpu::drawIndexedUp(
 {
     PIXPERF_FUNCTION_EVENT();
 
-    GN_ASSERT( getCurrentThreadId() == mThreadId );
+    GN_ASSERT( isGpuThread() );
 
     // store vertex and index buffer
     AutoComPtr<IDirect3DVertexBuffer9> vb; UINT vbOffset; UINT vbStride;
@@ -201,7 +201,7 @@ void GN::gfx::XenonGpu::drawUp(
 {
     PIXPERF_FUNCTION_EVENT();
 
-    GN_ASSERT( getCurrentThreadId() == mThreadId );
+    GN_ASSERT( isGpuThread() );
 
     // store vertex and index buffer
     AutoComPtr<IDirect3DVertexBuffer9> vb; UINT vbOffset; UINT vbStride;
@@ -236,7 +236,7 @@ void GN::gfx::XenonGpu::drawLines(
 {
     PIXPERF_FUNCTION_EVENT();
 
-    GN_ASSERT( getCurrentThreadId() == mThreadId );
+    GN_ASSERT( isGpuThread() );
 
     mLine->drawLines(
         options,
