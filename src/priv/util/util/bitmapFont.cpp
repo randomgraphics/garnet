@@ -1,13 +1,6 @@
 #include "pch.h"
 #include "garnet/GNutil.h"
 
-#define ENABLE_IMDEBUG 0
-
-#if ENABLE_IMDEBUG
-#include "imdebug.h"
-#pragma comment( lib, "imdebug.lib" )
-#endif
-
 using namespace GN;
 using namespace GN::gfx;
 using namespace GN::util;
@@ -292,10 +285,6 @@ GN::util::BitmapFont::createSlot( wchar_t ch )
         GN_ERROR(sLogger)( L"fail to get font bitmap for character '%s'!", s );
         return false;
     }
-
-#if ENABLE_IMDEBUG
-    imdebug( "lum w=%d h=%d %p", fbm.width, fbm.height, fbm.buffer );
-#endif
 
     // update slot fields
     slot.ch   = ch;

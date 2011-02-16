@@ -360,10 +360,14 @@ bool GN::util::SampleApp::checkCmdLine( int argc, const char * const argv[] )
     // setup default options
     mInitParam.useMultithreadGpu = !GN_POSIX;
     mInitParam.iapi = input::InputAPI::NATIVE;
-    mInitParam.ffc.fontname = "font::/simsun.ttc";
-    mInitParam.ffc.width = 16;
-    mInitParam.ffc.height = 16;
-    mInitParam.ffc.quality = util::FFQ_MONOCHROM;
+    mInitParam.defaultFont.fontname = "font::/simsun.ttc";
+    mInitParam.defaultFont.width = 16;
+    mInitParam.defaultFont.height = 16;
+    mInitParam.defaultFont.quality = util::FFQ_MONOCHROM;
+    mInitParam.asciiFont.fontname = "font::/ltype.ttf";
+    mInitParam.asciiFont.width = 16;
+    mInitParam.asciiFont.height = 16;
+    mInitParam.asciiFont.quality = util::FFQ_MONOCHROM;
 
 #if GN_XENON
 
@@ -591,7 +595,12 @@ bool GN::util::SampleApp::initFont()
     GN_GUARD;
 
     // try load default font face in mInitParam first
-    AutoRef<util::FontFace> ff( util::createFontFace(mInitParam.ffc) );
+    util::MixedFontCreationDesc mfcd;
+    mfcd.font = mInitParam.asciiFont;
+    mfcd.firstChar = 0;
+    mfcd.numChars = 127;
+    AutoRef<util::FontFace> ff( util::createMixedFontFace(mInitParam.defaultFont, &mfcd, 1) );
+    //AutoRef<util::FontFace> ff( util::createFontFace(mInitParam.defaultFont) );
     if( !ff )
     {
         // if failed, then use simple ASCII font face

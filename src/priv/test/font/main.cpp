@@ -99,7 +99,7 @@ void draw( Gpu &, const wchar_t * fps )
     if( ttf.ok() )
     {
         ttf.drawText( textw, 100, 100 );
-        ttf.drawText( L"Hello!", 200, 200 );
+        ttf.drawText( L"Hello pretty!", 100, 200 );
     }
 }
 

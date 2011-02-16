@@ -42,7 +42,8 @@ namespace GN { namespace util
             gfx::GpuOptions            ro;                ///< renderer options
             bool                       useMultithreadGpu; ///< use multithread renderer or not.
             input::InputAPI            iapi;              ///< input API
-            util::FontFaceCreationDesc ffc;               ///< default font face creation descriptor
+            util::FontFaceCreationDesc defaultFont;       ///< default non-ascii font face creation descriptor
+            util::FontFaceCreationDesc asciiFont;         ///< default ascii font face creation descriptor.
         };
 
         static float UPDATE_INTERVAL; ///< Time interval for calling onUpdate(), in seconds.

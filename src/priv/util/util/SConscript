@@ -7,6 +7,7 @@ sources = [
 	'charBitmap8x13.cpp',
 	'fontft2.cpp',
 	'fpcamera.cpp',
+	'mixedfont.cpp',
 	]
 r = GN.newSourceCluster( sources, 'pch.h', 'pch.cpp' )
 Return( 'r' )

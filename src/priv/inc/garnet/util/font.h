@@ -20,10 +20,13 @@ namespace GN { namespace util
         const uint8 * buffer; ///< bitmap data (8 bits gray image)
 
         /// \name per character metrics in unit of pixels,
-        ///       X coordinate points left; Y coordinate points down.
+        ///
+        /// X coordinate points RIGHT; Y coordinate points DOWN.
+        ///
+        /// For Glyph metrics detail, check out http://www.freetype.org/freetype2/docs/glyphs/glyphs-3.html
         //@{
         float horiBearingX;
-        float horiBearingY;
+        float horiBearingY; // usually negative for horizontal font
         float horiAdvance;
 
         float vertAdvance;
@@ -58,15 +61,13 @@ namespace GN { namespace util
         /// Metrics that are defined for all glyphs in a given font.
         //@{
 
-        // bounding box in pixles. X is left; Y is down
-        float xmin;
-        float xmax;
-        float ymin;
-        float ymax;
+        // bounding box in pixles. X points RIGHT; Y points DOWN
+        float xmin; // left
+        float xmax; // right
+        float ymin; // top
+        float ymax; // bottom
 
         /// The distance that must be placed between two lines of text
-        /// The baseline-to-baseline distance should be computed as
-        /// maxGlyphHeight + linegap
         float linegap;
 
         /// max height in pixels of all the glyphs.
@@ -110,7 +111,7 @@ namespace GN { namespace util
     struct FontFaceCreationDesc
     {
         ///
-        /// font file name. Normally would be something like "font::/xxxx"
+        /// font file name. Usually would be something like "font::/xxxx"
         ///
         StrA fontname;
 
@@ -131,9 +132,27 @@ namespace GN { namespace util
     };
 
     ///
-    /// create font face (usually loading from a TTF file)
+    /// create font face from a font file
     ///
     FontFace * createFontFace( const FontFaceCreationDesc & cd );
+
+    ///
+    /// Mixed font face creation descriptor
+    ///
+    struct MixedFontCreationDesc
+    {
+        wchar_t              firstChar;
+        size_t               numChars;
+        FontFaceCreationDesc font;
+    };
+
+    ///
+    /// Create font face with mixed font face
+    ///
+    FontFace * createMixedFontFace(
+        const FontFaceCreationDesc  & defaultFont,
+        const MixedFontCreationDesc * additionalFonts,
+        size_t                        numAdditionalFonts );
 
     ///
     /// create simple ASCII only font with size of 8x16, without external font file dependency.
@@ -196,7 +215,7 @@ namespace GN { namespace util
         //@{
     public:
         /// \param sr           Pointer to sprite renderer
-        /// \param ff           Pointer to font face object. Its reference count will be increased by one after this function call.
+        /// \param ff           Pointer to the font face object. Its reference count will be increased by one after this function call.
         /// \param maxchars     Maxinum different characters allowed.
         bool init( gfx::SpriteRenderer * sr, FontFace * ff, size_t maxchars = 4096 );
         void quit();
@@ -217,9 +236,9 @@ namespace GN { namespace util
     public:
 
         ///
-        /// Get internal font pointer
+        /// Get default font pointer. The refcounter of the fount is _NOT_ increased.
         ///
-        FontFace * getFontFace() const { return mFont.get(); }
+        FontFace * getDefaultFontFace() const { return mFont.get(); }
 
         ///
         /// draw UNICODE text

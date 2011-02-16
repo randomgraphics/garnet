@@ -228,7 +228,7 @@ public:
     virtual WaitResult waitForTermination( TimeInNanoSecond timeoutTime, uint32 * threadProcReturnValue )
     {
         // can't wait for self termination
-        if( !isCurrentThread() )
+        if( isCurrentThread() )
         {
             GN_ERROR(sLogger)("Can't wait for termination of the current thread." );
             return WaitResult::TIMEOUT;
