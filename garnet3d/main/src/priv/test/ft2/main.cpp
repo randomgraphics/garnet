@@ -45,8 +45,6 @@ public:
 class xFreeTypeLib
 {
     AutoRef<FontFace> mFace;
-	int m_w;
-	int m_h;
 
 public:
 
@@ -54,18 +52,26 @@ public:
 	{
 	}
 
-	void load( const char * font_file , int _w , int _h )
+	void load( const char * font_file1, const char * font_file2, int _w , int _h )
 	{
 		//加载一个字体,取默认的Face,一般为Regualer
-        FontFaceCreationDesc ffc;
-        ffc.fontname = font_file;
-        ffc.width = (uint16)_w;
-        ffc.height = (uint16)_h;
-        ffc.quality = FFQ_MONOCHROM;
-        mFace.attach( createFontFace( ffc ) );
-        if( !mFace ) exit(-1);
+        FontFaceCreationDesc defaultFont;
+        defaultFont.fontname = font_file1;
+        defaultFont.width = (uint16)_w;
+        defaultFont.height = (uint16)_h;
+        defaultFont.quality = FFQ_MONOCHROM;
 
-		m_w = _w ; m_h = _h;
+        MixedFontCreationDesc asciiFont;
+        asciiFont.font.fontname = font_file2;
+        asciiFont.font.width = (uint16)_w;
+        asciiFont.font.height = (uint16)_h;
+        asciiFont.font.quality = FFQ_MONOCHROM;
+        asciiFont.firstChar = 0;
+        asciiFont.numChars = 127;
+
+        //mFace.attach( createFontFace( defaultFont ) );
+        mFace.attach( createMixedFontFace( defaultFont, &asciiFont, 1 ) );
+        if( !mFace ) exit(-1);
 	}
 
 	GLuint loadChar(wchar_t ch)
@@ -151,31 +157,39 @@ void drawText(const wchar_t* _strText,int x , int y, int maxW , int h)
 		if(_strText[i] =='\n')
 		{
 			sx = x ; sy += maxH + 12;
-			continue;
 		}
-		xCharTexture* pCharTex = getTextChar(_strText[i]);
-		glBindTexture(GL_TEXTURE_2D,pCharTex->m_texID);
-		glTexParameteri ( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
-		glTexParameteri ( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
-		glEnable(GL_BLEND);
-		glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
-		//glDisable(GL_TEXTURE_2D);
-		int w = pCharTex->m_Width;
-		int h = pCharTex->m_Height;
+        else if(_strText[i] =='\t')
+        {
+    		xCharTexture* space = getTextChar(' ');
+            sx += space->m_adv_x * 4;
+        }
+        else
+        {
+    		xCharTexture* pCharTex = getTextChar(_strText[i]);
+    		glBindTexture(GL_TEXTURE_2D,pCharTex->m_texID);
+    		glTexParameteri ( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
+    		glTexParameteri ( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
+    		glEnable(GL_BLEND);
+    		glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
+    		//glDisable(GL_TEXTURE_2D);
+    		int w = pCharTex->m_Width;
+    		int h = pCharTex->m_Height;
 
-		int ch_x = sx + pCharTex->m_delta_x;
-		int ch_y = sy - h + pCharTex->m_delta_y;
+    		int ch_x = sx + pCharTex->m_delta_x;
+    		int ch_y = sy + pCharTex->m_delta_y;
 
-		if(maxH < h) maxH = h;
-		glBegin ( GL_QUADS );
-		{
-			glTexCoord2f(0.0f, 1.0f); glVertex3f(ch_x     , ch_y    ,  1.0f);
-			glTexCoord2f(1.0f, 1.0f); glVertex3f(ch_x +  w, ch_y    ,  1.0f);
-			glTexCoord2f(1.0f, 0.0f); glVertex3f(ch_x +  w, ch_y + h,  1.0f);
-			glTexCoord2f(0.0f, 0.0f); glVertex3f(ch_x     , ch_y + h,  1.0f);
-		}
-		glEnd();
-		sx += pCharTex->m_adv_x;
+    		if(maxH < h) maxH = h;
+    		glBegin ( GL_QUADS );
+    		{
+    			glTexCoord2f(0.0f, 1.0f); glVertex3f(ch_x     , ch_y    ,  1.0f);
+    			glTexCoord2f(1.0f, 1.0f); glVertex3f(ch_x +  w, ch_y    ,  1.0f);
+    			glTexCoord2f(1.0f, 0.0f); glVertex3f(ch_x +  w, ch_y + h,  1.0f);
+    			glTexCoord2f(0.0f, 0.0f); glVertex3f(ch_x     , ch_y + h,  1.0f);
+    		}
+    		glEnd();
+    		sx += pCharTex->m_adv_x;
+        }
+
 		if(sx > x + maxW)
 		{
 			sx = x ; sy += maxH + 12;
@@ -185,6 +199,7 @@ void drawText(const wchar_t* _strText,int x , int y, int maxW , int h)
 }
 
 static const char * font_face   = "font::/simsun.ttc";
+static const char * ascii_font  = "font::/lsans.ttf";
 static int          font_width  = 16;
 static int          font_height = 16;
 void init(void)
@@ -195,7 +210,7 @@ void init(void)
    glColorMaterial ( GL_FRONT, GL_AMBIENT_AND_DIFFUSE );
 
    printf( "load font %s %dx%d\n", font_face, font_width, font_height );
-   g_FreeTypeLib.load( font_face, font_width, font_height );
+   g_FreeTypeLib.load( font_face, ascii_font, font_width, font_height );
 
    glDisable ( GL_CULL_FACE );
 
@@ -264,11 +279,12 @@ void arrow_keys ( int a_keys, int x, int y )  // Create Special Function (requir
 int main ( int argc, char** argv )   // Create Main Function For Bringing It All Together
 {
     enableCRTMemoryCheck();
-    if( argc > 3 )
+    if( argc > 4 )
     {
         font_face = argv[1];
-        font_width = GN::string2Integer( argv[2], font_width );
-        font_height = GN::string2Integer( argv[3], font_height );
+        ascii_font = argv[2];
+        font_width = GN::string2Integer( argv[3], font_width );
+        font_height = GN::string2Integer( argv[4], font_height );
     }
 
     glutInit            ( &argc, argv ); // Erm Just Write It =)

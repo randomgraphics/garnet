@@ -3,6 +3,13 @@
 #include <ft2build.h>
 #include FT_FREETYPE_H
 
+#define ENABLE_IMDEBUG 0
+
+#if ENABLE_IMDEBUG
+#include "imdebug.h"
+#pragma comment( lib, "imdebug.lib" )
+#endif
+
 using namespace GN;
 using namespace GN::util;
 
@@ -309,6 +316,10 @@ bool FontFaceFt2::loadFontImage( FontImage & result, wchar_t ch )
     result.horiBearingY = (float)-slot->bitmap_top;
     result.horiAdvance  = slot->advance.x / 64.0f;
     result.vertAdvance  = slot->advance.y / 64.0f;
+
+#if ENABLE_IMDEBUG
+    imdebug( "lum w=%d h=%d %p", result.width, result.height, result.buffer );
+#endif
 
     // success
     return true;
