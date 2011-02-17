@@ -1,9 +1,7 @@
 #include "pch.h"
-#include "garnet/GNutil.h"
 
 using namespace GN;
 using namespace GN::gfx;
-using namespace GN::util;
 
 static GN::Logger * sLogger = GN::getLogger("GN.util.BitmapFont");
 
@@ -48,12 +46,12 @@ sDetermineTextureSizeAndCount(
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::util::BitmapFont::init( SpriteRenderer * sr, FontFace * ff, size_t maxchars )
+bool GN::gfx::BitmapFont::init( SpriteRenderer * sr, FontFace * ff, size_t maxchars )
 {
     GN_GUARD;
 
     // standard init procedure
-    GN_STDCLASS_INIT( GN::util::BitmapFont, () );
+    GN_STDCLASS_INIT( GN::gfx::BitmapFont, () );
 
     if( NULL == sr || NULL == ff )
     {
@@ -85,7 +83,7 @@ bool GN::util::BitmapFont::init( SpriteRenderer * sr, FontFace * ff, size_t maxc
 //
 //
 // -----------------------------------------------------------------------------
-void GN::util::BitmapFont::quit()
+void GN::gfx::BitmapFont::quit()
 {
     GN_GUARD;
 
@@ -117,7 +115,7 @@ void GN::util::BitmapFont::quit()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::util::BitmapFont::drawText( const TextDesc & td )
+void GN::gfx::BitmapFont::drawText( const TextDesc & td )
 {
     GN_GUARD_SLOW;
 
@@ -240,8 +238,8 @@ void GN::util::BitmapFont::drawText( const TextDesc & td )
 //
 //
 // -----------------------------------------------------------------------------
-inline const GN::util::BitmapFont::FontSlot *
-GN::util::BitmapFont::getSlot( wchar_t ch )
+inline const GN::gfx::BitmapFont::FontSlot *
+GN::gfx::BitmapFont::getSlot( wchar_t ch )
 {
     // find font slot in slotmap
     size_t * slot = mSlotMap.find( ch );
@@ -259,8 +257,8 @@ GN::util::BitmapFont::getSlot( wchar_t ch )
 //
 //
 // -----------------------------------------------------------------------------
-const GN::util::BitmapFont::FontSlot *
-GN::util::BitmapFont::createSlot( wchar_t ch )
+const GN::gfx::BitmapFont::FontSlot *
+GN::gfx::BitmapFont::createSlot( wchar_t ch )
 {
     GN_GUARD_SLOW;
 
@@ -356,7 +354,7 @@ GN::util::BitmapFont::createSlot( wchar_t ch )
 //
 // -----------------------------------------------------------------------------
 bool
-GN::util::BitmapFont::slotInit(
+GN::gfx::BitmapFont::slotInit(
     Gpu      & gpu,
     uint16     fontw,
     uint16     fonth,

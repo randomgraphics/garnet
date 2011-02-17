@@ -1,7 +1,12 @@
 Import( 'GN' )
 sources = [
+	'asciifont.cpp',
+	'bitmapFont.cpp',
+	'charBitmap8x13.cpp',
+	'fontft2.cpp',
 	'line.cpp',
 	'misc.cpp',
+	'mixedfont.cpp',
 	'sprite.cpp',
 ]
 cluster = GN.newSourceCluster( sources, 'pch.h', 'pch.cpp' )

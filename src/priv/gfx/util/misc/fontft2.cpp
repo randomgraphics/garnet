@@ -1,5 +1,4 @@
 #include "pch.h"
-#include "garnet/GNutil.h"
 #include <ft2build.h>
 #include FT_FREETYPE_H
 #include FT_LCD_FILTER_H
@@ -12,9 +11,9 @@
 #endif
 
 using namespace GN;
-using namespace GN::util;
+using namespace GN::gfx;
 
-static GN::Logger * sLogger = GN::getLogger("GN.util.FontFt2");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.FontFt2");
 
 // *****************************************************************************
 // local functions
@@ -168,7 +167,7 @@ bool FontFaceFt2::init( const FontFaceCreationDesc & cd )
 
     GN_ASSERT( sLib && sLib->lib );
 
-    if( cd.quality < 0 || cd.quality >= NUM_FONT_QUALITIES )
+    if( cd.quality < 0 || cd.quality >= FontFaceDesc::NUM_FONT_QUALITIES )
     {
         GN_ERROR(sLogger)( "Invalid font quality enumeration: %d", cd.quality );
         return failure();
@@ -265,11 +264,11 @@ bool FontFaceFt2::loadFontImage( FontImage & result, wchar_t ch )
     FT_UInt flag = FT_LOAD_RENDER;
     switch( mDesc.quality )
     {
-        case FFQ_MONOCHROM   : flag |= FT_LOAD_MONOCHROME; break;
+        case FontFaceDesc::MONOCHROM   : flag |= FT_LOAD_MONOCHROME; break;
 #if SUBPIXEL_RENDERING
-        case FFQ_ANTIALIASED : flag |= FT_LOAD_TARGET_LCD; break;
+        case FontFaceDesc::ANTIALIASED : flag |= FT_LOAD_TARGET_LCD; break;
 #else
-        case FFQ_ANTIALIASED : flag |= FT_LOAD_DEFAULT; break;
+        case FontFaceDesc::ANTIALIASED : flag |= FT_LOAD_DEFAULT; break;
 #endif
         default : GN_UNEXPECTED();
     }
@@ -448,8 +447,8 @@ void FontFaceFt2::getKerning( int & dx, int & dy, wchar_t ch1, wchar_t ch2 )
 //
 //
 // -----------------------------------------------------------------------------
-GN::util::FontFace *
-GN::util::createFontFace( const FontFaceCreationDesc & cd )
+GN::gfx::FontFace *
+GN::gfx::createFontFace( const FontFaceCreationDesc & cd )
 {
     GN_GUARD;
 

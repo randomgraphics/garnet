@@ -59,13 +59,13 @@ public:
         defaultFont.fontname = font_file1;
         defaultFont.width = (uint16)_w;
         defaultFont.height = (uint16)_h;
-        defaultFont.quality = FFQ_ANTIALIASED;
+        defaultFont.quality = FontFaceDesc::ANTIALIASED;
 
         MixedFontCreationDesc asciiFont;
         asciiFont.font.fontname = font_file2;
         asciiFont.font.width = (uint16)_w;
         asciiFont.font.height = (uint16)_h;
-        asciiFont.font.quality = FFQ_ANTIALIASED;
+        asciiFont.font.quality = FontFaceDesc::ANTIALIASED;
         asciiFont.firstChar = 0;
         asciiFont.numChars = 127;
 

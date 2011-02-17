@@ -38,6 +38,7 @@ namespace GN
 #include "gfx/sprite.h"
 #include "gfx/line.h"
 #include "gfx/misc.h"
+#include "gfx/font.h"
 
 // *****************************************************************************
 //                         END of GNgfx.h
