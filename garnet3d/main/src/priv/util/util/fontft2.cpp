@@ -2,6 +2,7 @@
 #include "garnet/GNutil.h"
 #include <ft2build.h>
 #include FT_FREETYPE_H
+#include FT_LCD_FILTER_H
 
 #define ENABLE_IMDEBUG 0
 
@@ -257,14 +258,29 @@ bool FontFaceFt2::loadFontImage( FontImage & result, wchar_t ch )
 
     GN_ASSERT( mFace );
 
+#define SUBPIXEL_RENDERING 0
+
     // load glyph image.
     // Note this function will erase previous slot
     FT_UInt flag = FT_LOAD_RENDER;
     switch( mDesc.quality )
     {
         case FFQ_MONOCHROM   : flag |= FT_LOAD_MONOCHROME; break;
+#if SUBPIXEL_RENDERING
+        case FFQ_ANTIALIASED : flag |= FT_LOAD_TARGET_LCD; break;
+#else
         case FFQ_ANTIALIASED : flag |= FT_LOAD_DEFAULT; break;
+#endif
         default : GN_UNEXPECTED();
+    }
+    if( FT_LOAD_TARGET_LCD & flag )
+    {
+        FT_Error error = FT_Library_SetLcdFilter( sLib->lib, FT_LCD_FILTER_DEFAULT );
+        if (error)
+        {
+            GN_ERROR(sLogger)( "FT_Library_SetLcdFilter() failed." );
+            return false;
+        }
     }
     FT_Error error = FT_Load_Char( mFace, ch, flag );
     if (error)
@@ -276,6 +292,7 @@ bool FontFaceFt2::loadFontImage( FontImage & result, wchar_t ch )
     FT_GlyphSlot  slot = mFace->glyph;
     FT_Bitmap & bitmap = slot->bitmap;
 	size_t       width = (size_t)bitmap.width;
+    if( bitmap.pixel_mode == FT_PIXEL_MODE_LCD || bitmap.pixel_mode == FT_PIXEL_MODE_LCD_V ) width /= 3;
 	size_t      height = (size_t)bitmap.rows;
     size_t       pitch = (size_t)abs(bitmap.pitch);
 
@@ -283,6 +300,67 @@ bool FontFaceFt2::loadFontImage( FontImage & result, wchar_t ch )
     GN_ASSERT( height <= mDesc.maxGlyphHeight() );
 
     //取道位图数据
+#if SUBPIXEL_RENDERING
+    mBitmapBuffer.resize( width * height * 4 );
+    uint8 * buf = mBitmapBuffer.cptr();
+    switch( bitmap.pixel_mode )
+    {
+        case FT_PIXEL_MODE_MONO :
+            for( size_t y = 0; y < height ; ++y )
+            {
+                for( size_t x = 0; x < width; ++x )
+                {
+                    size_t k1 = x / 8 + pitch * y;
+                    size_t k2 = 7 - x % 8;
+                    uint8 _vl = (uint8)( bitmap.buffer[k1] >> k2 );
+                    size_t offset = (x + y * width)*4;
+                    uint8  color = _vl & 0x1 ? 0xFF : 0;
+                    buf[offset+0] = color;
+                    buf[offset+1] = color;
+                    buf[offset+2] = color;
+                    buf[offset+3] = color;
+                }
+            }
+            break;
+
+        case FT_PIXEL_MODE_GRAY:
+            for( size_t y = 0; y < height ; ++y )
+            {
+                for( size_t x = 0; x < width; ++x )
+                {
+                    const uint8 * s = bitmap.buffer + pitch * y + x;
+                    uint8 * d = buf + (x + y * width)*4;
+                    d[0] = d[1] = d[2] = 0xFF;
+                    d[3] = *s;
+                }
+            }
+            break;
+
+        case FT_PIXEL_MODE_LCD:
+        case FT_PIXEL_MODE_LCD_V:
+            for( size_t y = 0; y < height ; ++y )
+            {
+                for( size_t x = 0; x < width; ++x )
+                {
+                    const uint8 * s = bitmap.buffer + pitch * y + x*3;
+                    uint8 * d = buf + (x + y * width)*4;
+                    uint8 r = s[0];
+                    uint8 g = s[1];
+                    uint8 b = s[2];
+                    d[0] = r;
+                    d[1] = g;
+                    d[2] = b;
+                    d[3] = (uint8)(0.2989f * r + 0.5870f * g + 0.1140f * b);
+                }
+            }
+            break;
+
+        default:
+            GN_WARN(sLogger)( "Unsupported pixel mode: %d", bitmap.pixel_mode );
+            break;
+    };
+    result.format = FontImage::RGBA;
+#else
     mBitmapBuffer.resize( width * height );
     uint8 * buf = mBitmapBuffer.cptr();
     switch( bitmap.pixel_mode )
@@ -306,7 +384,13 @@ bool FontFaceFt2::loadFontImage( FontImage & result, wchar_t ch )
                 memcpy( buf + j * width, bitmap.buffer + pitch * j, width );
             }
             break;
+
+        default:
+            GN_WARN(sLogger)( "Unsupported pixel mode: %d", bitmap.pixel_mode );
+            break;
     };
+    result.format = FontImage::GRAYSCALE;
+#endif
 
     // copy glyph data to result structure
     result.width        = width;

@@ -363,11 +363,11 @@ bool GN::util::SampleApp::checkCmdLine( int argc, const char * const argv[] )
     mInitParam.defaultFont.fontname = "font::/simsun.ttc";
     mInitParam.defaultFont.width = 16;
     mInitParam.defaultFont.height = 16;
-    mInitParam.defaultFont.quality = util::FFQ_MONOCHROM;
+    mInitParam.defaultFont.quality = util::FFQ_ANTIALIASED;
     mInitParam.asciiFont.fontname = "font::/ltype.ttf";
     mInitParam.asciiFont.width = 16;
     mInitParam.asciiFont.height = 16;
-    mInitParam.asciiFont.quality = util::FFQ_MONOCHROM;
+    mInitParam.asciiFont.quality = util::FFQ_ANTIALIASED;
 
 #if GN_XENON
 
@@ -640,7 +640,7 @@ void GN::util::SampleApp::drawHUD()
 
         if( mShowHelp )
         {
-            mFont.drawText( mHelpText, 40, 80 );
+            mFont.drawText( mHelpText, 40, 90 );
         }
     }
 

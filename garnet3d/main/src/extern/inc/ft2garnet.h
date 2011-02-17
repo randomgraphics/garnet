@@ -8,3 +8,5 @@
 #include <freetype/config/ftoption.h>
 
 /* Overwrite default configuration here */
+
+#define FT_CONFIG_OPTION_SUBPIXEL_RENDERING

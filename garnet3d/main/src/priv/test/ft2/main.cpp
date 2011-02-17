@@ -59,13 +59,13 @@ public:
         defaultFont.fontname = font_file1;
         defaultFont.width = (uint16)_w;
         defaultFont.height = (uint16)_h;
-        defaultFont.quality = FFQ_MONOCHROM;
+        defaultFont.quality = FFQ_ANTIALIASED;
 
         MixedFontCreationDesc asciiFont;
         asciiFont.font.fontname = font_file2;
         asciiFont.font.width = (uint16)_w;
         asciiFont.font.height = (uint16)_h;
-        asciiFont.font.quality = FFQ_MONOCHROM;
+        asciiFont.font.quality = FFQ_ANTIALIASED;
         asciiFont.firstChar = 0;
         asciiFont.numChars = 127;
 
@@ -85,7 +85,7 @@ public:
 		FontImage fbm;
         if( !mFace->loadFontImage( fbm, ch ) ) exit(-1);
 
-        //imdebug( "lum b=8 w=%d h=%d %p", bitmap.width, bitmap.rows, bitmap.buffer );
+        //imdebug( "rgba b=8 w=%d h=%d %p", bitmap.width, bitmap.rows, bitmap.buffer );
 
 		//把位图数据拷贝自己定义的数据区里.这样旧可以画到需要的东西上面了。
 		int width  =  fbm.width;
@@ -100,17 +100,32 @@ public:
 		glGenTextures(1,&charTex.m_texID);
         glBindTexture(GL_TEXTURE_2D,charTex.m_texID);
 		char* pBuf = new char[width * height * 4];
-		for(int j=0; j  < height ; j++)
-		{
-			for(int i=0; i < width; i++)
-			{
-				pBuf[(4*i + (height - j - 1) * width * 4)  ] = 0xff;
-				pBuf[(4*i + (height - j - 1) * width * 4)+1] = 0xff;
-				pBuf[(4*i + (height - j - 1) * width * 4)+2] = 0xff;
-				pBuf[(4*i + (height - j - 1) * width * 4)+3] = fbm.buffer[ i+j*width];
-			}
-		}
-
+        if( fbm.format == FontImage::RGBA )
+        {
+    		for(int j=0; j  < height ; j++)
+    		{
+    			for(int i=0; i < width; i++)
+    			{
+    				pBuf[(4*i + (height - j - 1) * width * 4)  ] = fbm.buffer[(i+j*width)*4+0];
+    				pBuf[(4*i + (height - j - 1) * width * 4)+1] = fbm.buffer[(i+j*width)*4+1];
+    				pBuf[(4*i + (height - j - 1) * width * 4)+2] = fbm.buffer[(i+j*width)*4+2];
+    				pBuf[(4*i + (height - j - 1) * width * 4)+3] = fbm.buffer[(i+j*width)*4+3];
+    			}
+    		}
+        }
+        else
+        {
+    		for(int j=0; j  < height ; j++)
+    		{
+    			for(int i=0; i < width; i++)
+    			{
+    				pBuf[(4*i + (height - j - 1) * width * 4)  ] = 0xff;
+    				pBuf[(4*i + (height - j - 1) * width * 4)+1] = 0xff;
+    				pBuf[(4*i + (height - j - 1) * width * 4)+2] = 0xff;
+    				pBuf[(4*i + (height - j - 1) * width * 4)+3] = fbm.buffer[i+j*width];
+    			}
+    		}
+        }
 		glTexImage2D( GL_TEXTURE_2D,0,GL_RGBA,width, height,0,GL_RGBA,GL_UNSIGNED_BYTE,pBuf);
 		glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_S, GL_CLAMP);
 		glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_T, GL_CLAMP);

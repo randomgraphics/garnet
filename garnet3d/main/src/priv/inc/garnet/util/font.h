@@ -15,9 +15,17 @@ namespace GN { namespace util
     ///
     struct FontImage
     {
-        size_t        width;  ///< bitmap width in pixel
-        size_t        height; ///< bitmap height in pixel
-        const uint8 * buffer; ///< bitmap data (8 bits gray image)
+        /// Font image pixel format
+        enum PixelFormat
+        {
+            GRAYSCALE,  //< gray scale image
+            RGBA,       //< RGBA_8_8_8_8 image
+        };
+
+        size_t           width;  ///< bitmap width in pixel
+        size_t           height; ///< bitmap height in pixel
+        const uint8    * buffer; ///< bitmap data
+        PixelFormat      format; ///< pixel format
 
         /// \name per character metrics in unit of pixels,
         ///
