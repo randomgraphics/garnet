@@ -1,11 +1,10 @@
 #include "pch.h"
-#include "garnet/GNutil.h"
 #include "charBitmap.h"
 
 using namespace GN;
-using namespace GN::util;
+using namespace GN::gfx;
 
-static GN::Logger * sLogger = GN::getLogger("GN.util.AsciiFont");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.AsciiFont");
 
 // *****************************************************************************
 // ascii font face class
@@ -22,7 +21,7 @@ public:
     AsciiFontFace()
     {
         mDesc.fontname       = "ascii_8x13";
-        mDesc.quality        = FFQ_MONOCHROM;
+        mDesc.quality        = FontFaceDesc::MONOCHROM;
         mDesc.xmin           = 100;
         mDesc.xmax           = -100;
         mDesc.ymin           = 100;
@@ -94,8 +93,8 @@ public:
 //
 //
 // -----------------------------------------------------------------------------
-GN::util::FontFace *
-GN::util::createSimpleAsciiFontFace()
+GN::gfx::FontFace *
+GN::gfx::createSimpleAsciiFontFace()
 {
     return new AsciiFontFace;
 }

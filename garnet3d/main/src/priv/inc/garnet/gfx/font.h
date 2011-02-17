@@ -6,9 +6,7 @@
 /// \author  chen@@CHENLI-HOMEPC (2007.3.14)
 // *****************************************************************************
 
-#include "garnet/GNgfx.h"
-
-namespace GN { namespace util
+namespace GN { namespace gfx
 {
     ///
     /// bitmap image of single character
@@ -42,20 +40,20 @@ namespace GN { namespace util
     };
 
     ///
-    /// font quality
-    ///
-    enum FontFaceQuality
-    {
-        FFQ_MONOCHROM,      ///< default quality, suitable for small size font.
-        FFQ_ANTIALIASED,    ///< suitable for larger size font.
-        NUM_FONT_QUALITIES, ///< number of font quality enumerations
-    };
-
-    ///
     /// Font face descriptor
     ///
     struct FontFaceDesc
     {
+        ///
+        /// font quality
+        ///
+        enum Quality
+        {
+            MONOCHROM,          ///< default quality, suitable for small size font.
+            ANTIALIASED,        ///< suitable for larger size font.
+            NUM_FONT_QUALITIES, ///< number of font quality enumerations
+        };
+
         ///
         /// font file name. Normally would be something like "font::/xxxx"
         ///
@@ -64,7 +62,7 @@ namespace GN { namespace util
         ///
         /// font quality
         ///
-        FontFaceQuality quality;
+        Quality quality;
 
         /// Metrics that are defined for all glyphs in a given font.
         //@{
@@ -136,7 +134,7 @@ namespace GN { namespace util
         ///
         /// font quality
         ///
-        FontFaceQuality quality;
+        FontFaceDesc::Quality quality;
     };
 
     ///
@@ -168,11 +166,14 @@ namespace GN { namespace util
     FontFace * createSimpleAsciiFontFace();
 
     ///
-    /// font alignment flags
+    /// text descriptor
     ///
-    struct TextAlignment
+    struct TextDesc
     {
-        enum ENUM
+        ///
+        /// font alignment flags
+        ///
+        enum TextAlignment
         {
             HORI_LEFT      = 0,
 
@@ -181,13 +182,7 @@ namespace GN { namespace util
             VERT_BASELINE  = 2,
             VERT_BOTTOM    = 3,
         };
-    };
 
-    ///
-    /// text descriptor
-    ///
-    struct TextDesc
-    {
         const wchar_t * text;       ///< text string
         size_t          len;        ///< text lengh. Set to 0 for NULL-terminated string.
         float           x;          ///< pen position of the first character
@@ -265,7 +260,7 @@ namespace GN { namespace util
             td.y = y;
             td.z = 0;
             td.rgba = 0xFFFFFFFF;
-            td.alignment = TextAlignment::HORI_LEFT | TextAlignment::VERT_TOP;
+            td.alignment = TextDesc::HORI_LEFT | TextDesc::VERT_TOP;
             td.background = true;
             td.kerning = false;
             drawText( td );

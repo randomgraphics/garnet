@@ -39,11 +39,11 @@ namespace GN { namespace util
         ///
         struct InitParam
         {
-            gfx::GpuOptions            ro;                ///< renderer options
-            bool                       useMultithreadGpu; ///< use multithread renderer or not.
-            input::InputAPI            iapi;              ///< input API
-            util::FontFaceCreationDesc defaultFont;       ///< default non-ascii font face creation descriptor
-            util::FontFaceCreationDesc asciiFont;         ///< default ascii font face creation descriptor.
+            gfx::GpuOptions           ro;                ///< renderer options
+            bool                      useMultithreadGpu; ///< use multithread renderer or not.
+            input::InputAPI           iapi;              ///< input API
+            gfx::FontFaceCreationDesc defaultFont;       ///< default non-ascii font face creation descriptor
+            gfx::FontFaceCreationDesc asciiFont;         ///< default ascii font face creation descriptor.
         };
 
         static float UPDATE_INTERVAL; ///< Time interval for calling onUpdate(), in seconds.
@@ -124,7 +124,7 @@ namespace GN { namespace util
         ///
         /// get font renderer
         ///
-        util::BitmapFont & font() { return mFont; }
+        gfx::BitmapFont & font() { return mFont; }
 
         //@}
 
@@ -139,8 +139,8 @@ namespace GN { namespace util
         gfx::SpriteRenderer      * mSpriteRenderer;
         gfx::LineRenderer        * mLineRenderer;
         gfx::GpuResourceDatabase * mGpuResourceDatabase;
+        gfx::BitmapFont            mFont;
         util::World              * mWorld;
-        util::BitmapFont           mFont;
 
         // time stuff
         util::FpsCalculator        mFps;

@@ -1,5 +1,4 @@
 #include "pch.h"
-#include "garnet/GNutil.h"
 
 #define ENABLE_IMDEBUG 0
 
@@ -9,9 +8,9 @@
 #endif
 
 using namespace GN;
-using namespace GN::util;
+using namespace GN::gfx;
 
-static GN::Logger * sLogger = GN::getLogger("GN.util.MixedFont");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.MixedFont");
 
 // *****************************************************************************
 // local functions
@@ -118,7 +117,7 @@ public:
             }
         }
         mFontDesc.fontname = "mixed font";
-        mFontDesc.quality  = (FontFaceQuality)-1; // TODO: enum
+        mFontDesc.quality  = (FontFaceDesc::Quality)-1; // TODO: enum
 
         return true;
     }
@@ -169,11 +168,11 @@ public:
 //
 //
 // -----------------------------------------------------------------------------
-GN::util::FontFace *
-GN::util::createMixedFontFace(
-    const FontFaceCreationDesc & defaultFont,
-    const MixedFontCreationDesc    * additionalFonts,
-    size_t                           numAdditionalFonts )
+GN::gfx::FontFace *
+GN::gfx::createMixedFontFace(
+    const FontFaceCreationDesc  & defaultFont,
+    const MixedFontCreationDesc * additionalFonts,
+    size_t                        numAdditionalFonts )
 {
     GN_GUARD;
 

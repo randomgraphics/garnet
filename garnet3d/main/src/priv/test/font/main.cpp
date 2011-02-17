@@ -6,7 +6,7 @@ using namespace GN::input;
 using namespace GN::util;
 
 SpriteRenderer      * sr = NULL;
-FontFaceCreationDesc ffc = { "font::simsun.ttc", (uint16)64, (uint16)64, FFQ_ANTIALIASED };
+FontFaceCreationDesc ffc = { "font::simsun.ttc", (uint16)64, (uint16)64, FontFaceDesc::ANTIALIASED };
 BitmapFont    ascii, ttf;
 wchar_t              textw[256];
 
@@ -78,12 +78,12 @@ void onKeyPress( KeyEvent ke )
             break;
 
         case KeyCode::A :
-            ffc.quality = FFQ_ANTIALIASED;
+            ffc.quality = FontFaceDesc::ANTIALIASED;
             initTTF();
             break;
 
         case KeyCode::M :
-            ffc.quality = FFQ_MONOCHROM;
+            ffc.quality = FontFaceDesc::MONOCHROM;
             initTTF();
             break;
 
