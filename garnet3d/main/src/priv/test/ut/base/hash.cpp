@@ -6,6 +6,60 @@ class StrHashTest : public CxxTest::TestSuite
 
 public:
 
+    void testHashMapCrash()
+    {
+        // Hashmap used to crash when inserting values in specific order.
+
+        using namespace GN;
+
+        wchar_t keys[] = {
+            70    ,
+            80    ,
+            83    ,
+            58    ,
+            32    ,
+            48    ,
+            46    ,
+            51    ,
+            57    ,
+            40    ,
+            114   ,
+            101   ,
+            115   ,
+            49    ,
+            102   ,
+            111   ,
+            104   ,
+            108   ,
+            112   ,
+            41    ,
+            55    ,
+            50    ,
+            54    ,
+            53    ,
+            56    ,
+            69    ,
+            67    ,
+            47    ,
+            88    ,
+            66    ,
+            84    ,
+            78    ,
+            36864 ,
+            20986 ,
+            52
+        };
+
+        HashMap<wchar_t,size_t> m;
+        for( size_t i = 0; i < GN_ARRAY_COUNT(keys); ++i )
+        {
+            wchar_t key = keys[i];
+            m[key] = i;
+            TS_ASSERT( NULL != m.find(key) );
+            TS_ASSERT_EQUALS( i, *m.find(key) );
+        }
+    }
+
     void testHashMapSmoke()
     {
         using namespace GN;

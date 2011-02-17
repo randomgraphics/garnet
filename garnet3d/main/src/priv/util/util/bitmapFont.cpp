@@ -274,6 +274,7 @@ GN::util::BitmapFont::createSlot( wchar_t ch )
     }
 
     mSlotMap[ch] = mNumUsedSlots;
+    GN_ASSERT( mNumUsedSlots == *mSlotMap.find( ch ) );
     FontSlot & slot = mFontSlots[mNumUsedSlots];
     ++mNumUsedSlots;
 
