@@ -190,26 +190,41 @@ namespace GN
 
         KeyValuePair * insert( const KEY & key, const VALUE & value )
         {
-            const size_t N = HASH_MAP_PRIMARY_ARRAY[mPrimIndex];
-
-            GN_ASSERT( N == mTable.size() );
-
-            size_t k = mod( mKeyHashFunc(key), N );
-
-            HashItem & hi = mTable[k];
-
-            // check for redundency
-            for(
-                const PairType * const * pp = hi.values.begin();
-                pp != hi.values.end();
-                ++pp )
+            // Check for redundant insert
             {
-                if( mKeyEqualFunc( (*pp)->key, key ) )
+                const size_t N = HASH_MAP_PRIMARY_ARRAY[mPrimIndex];
+
+                GN_ASSERT( N == mTable.size() );
+
+                size_t k = mod( mKeyHashFunc(key), N );
+
+                HashItem & hi = mTable[k];
+
+                for(
+                    const PairType * const * pp = hi.values.begin();
+                    pp != hi.values.end();
+                    ++pp )
                 {
-                    // redundent item
-                    return NULL;
+                    if( mKeyEqualFunc( (*pp)->key, key ) )
+                    {
+                        // redundent item
+                        return NULL;
+                    }
+                }
+
+                // adjust primary index
+                if( (mCount+1) > (N*LOAD_FACTOR) && (mPrimIndex+1) < GN_ARRAY_COUNT(HASH_MAP_PRIMARY_ARRAY) )
+                {
+                    ++mPrimIndex;
+                    mTable.resize( HASH_MAP_PRIMARY_ARRAY[mPrimIndex] );
                 }
             }
+
+            // Note: mPrimaryIndex has changed, need re-hash.
+            const size_t N = HASH_MAP_PRIMARY_ARRAY[mPrimIndex];
+            GN_ASSERT( N == mTable.size() );
+            size_t k = mod( mKeyHashFunc(key), N );
+            HashItem & hi = mTable[k];
 
             // create new pair item
             PairType * newPair = new PairType( key, value );
@@ -222,11 +237,6 @@ namespace GN
 
             // adjust count
             ++mCount;
-            if( mCount > (N*LOAD_FACTOR) && (mPrimIndex+1) < GN_ARRAY_COUNT(HASH_MAP_PRIMARY_ARRAY) )
-            {
-                ++mPrimIndex;
-                mTable.resize( HASH_MAP_PRIMARY_ARRAY[mPrimIndex] );
-            }
 
             return newPair;
         }

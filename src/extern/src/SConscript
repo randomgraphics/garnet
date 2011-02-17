@@ -15,7 +15,7 @@ if 'icl' == GN.compiler.name :
     cppdefines += ['_CRT_SECURE_NO_DEPRECATE','_CRT_NONSTDC_NO_DEPRECATE']
 elif 'vc71' == GN.compiler.name:
     ccflags += ['/W3']
-elif 'vc80' == GN.compiler.name:
+elif 'vc80' == GN.compiler.name or 'vc100' == GN.compiler.name:
     ccflags += ['/W3']
     cppdefines += ['_CRT_SECURE_NO_DEPRECATE','_CRT_NONSTDC_NO_DEPRECATE']
     if 'x64' == GN.compiler.cpu:
@@ -68,13 +68,21 @@ conf.Finish()
 # define source clusters
 # **********************
 
+# JPEG
 jpeg_cluster = GN.newSourceCluster( GN.glob( 'jpeg/*.c' ) )
 if 'gcc' == GN.compiler.name or 'mingw' == GN.compiler.name: jpeg_cluster.addCompileFlags( CCFLAGS = ['-Wno-main'] )
 jpeg_cluster.addCompileFlags( CPPPATH=['jpeg'], CCFLAGS = ccflags, CPPDEFINES = cppdefines )
 jpeg_cluster.removeCompileFlags( CCFLAGS = ['/W4','/Wcheck'] )
 
-common_sources = GN.glob( Split('expat/*.c pcre/*.c* png/*.c zlib/*.c'), True )
-if 'mingw' != GN.compiler.name: common_sources += GN.glob( Split('freetype2/*.c lua/*.c'), True )
+# FREETYPE
+ft2_sources = SConscript( "freetype-2.4.4/SConscript" )
+ft2_cluster = GN.newSourceCluster( ft2_sources )
+ft2_cluster.addCompileFlags( CCFLAGS = ccflags, CPPDEFINES = cppdefines + ['FT2_BUILD_LIBRARY'] )
+ft2_cluster.removeCompileFlags( CCFLAGS = ['/W4'] )
+
+# Others
+common_sources = GN.glob( Split('expat/*.c pcre/*.c* png/*.c zlib/*.c') )
+if 'mingw' != GN.compiler.name: common_sources += GN.glob( 'lua/*.c' )
 if GN.conf['has_ogl']: common_sources += GN.glob( 'glew/*.c' )
 common_cluster = GN.newSourceCluster( common_sources )
 common_cluster.addCompileFlags( CCFLAGS = ccflags, CPPDEFINES = cppdefines )
@@ -87,4 +95,4 @@ elif 'xenon' != GN.compiler.os:
 # **********************
 # Build the external lib
 # **********************
-GN.newTarget( 'stlib', 'GNextern', [jpeg_cluster,common_cluster] )
+GN.newTarget( 'stlib', 'GNextern', [jpeg_cluster,ft2_cluster,common_cluster] )
