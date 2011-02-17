@@ -1,7 +1,7 @@
 #include "pch.h"
 
 using namespace GN;
-using namespace GN::util;
+using namespace GN::gfx;
 
 #if GN_MSVC
 #pragma warning(disable:4309)
