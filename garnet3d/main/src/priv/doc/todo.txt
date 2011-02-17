@@ -4,6 +4,7 @@ TODO
 - 程序中标注TODO的地方
 
 - p0
+  - fontft2 assert in GNsampleDolphin (press F1)
   - upgrade Cg runtime.
   - GNsampleDolphin does not release all D3D11 resources when quit.
   - Winphone 7 integration
@@ -23,6 +24,7 @@ TODO
     represent post-rasterized font metrics.
 
 - p1
+  - Use Windows font engine (Direct2D?)
   - mesh converter/loader
     - load and view specific model, instead of the whole scene
     - better ASE support:
