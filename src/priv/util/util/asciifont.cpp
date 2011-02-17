@@ -67,6 +67,7 @@ public:
             }
         }
 
+        result.format       = FontImage::GRAYSCALE;
         result.width        = 8;
         result.height       = bcd->height;
         result.buffer       = mImage;
