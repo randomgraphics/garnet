@@ -33,7 +33,9 @@ namespace GN
 #elif GN_XENON
 #   include     "base/platform.xenon.ppc.h"
 #elif GN_POSIX
-#   if GN_X64
+#   if GN_CYGWIN
+#       include "base/platform.cygwin.x86.h"
+#   elif GN_X64
 #       include "base/platform.posix.x64.h"
 #   elif GN_PPC
 #       include "base/platform.posix.ppc.h"
