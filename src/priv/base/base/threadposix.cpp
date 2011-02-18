@@ -34,9 +34,9 @@ public:
     //@{
 public:
     bool create(
-        const ThreadProcedure & proc,
+        const Procedure & proc,
         void * param,
-        ThreadPriority priority,
+        Priority priority,
         bool initialSuspended,
         const char * )
     {
@@ -159,7 +159,7 @@ public:
         GN_UNIMPL_WARNING();
     }
 
-    virtual WaitResult waitForTermination( TimeInNanoSecond timeoutTime, uint32 * threadProcReturnValue ) const
+    virtual WaitResult waitForTermination( TimeInNanoSecond timeoutTime, uint32 * threadProcReturnValue )
     {
         // can't wait for self termination
         GN_ASSERT( !isCurrentThread() );
@@ -252,18 +252,10 @@ Thread * GN::Thread::sAttachToCurrentThread()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::sSleepCurrentThread( TimeInNanoSecond sleepTime )
+void GN::Thread::sSleepCurrentThread( TimeInNanoSecond sleepTime )
 {
     GN_UNIMPL_WARNING();
 }
 
-//
-//
-// -----------------------------------------------------------------------------
-sint32 GN::getCurrentThreadId()
-{
-    GN_UNIMPL_WARNING();
-    return 0;
-}
 
 #endif
