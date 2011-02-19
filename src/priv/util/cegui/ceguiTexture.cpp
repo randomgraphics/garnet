@@ -19,7 +19,7 @@ void CEGUI::GarnetTexture::loadFromFile( const CEGUI::String & filename, const C
 
     mFileName = filename;
     mGroup = group;
-    GN::safeHeapFree( mMemBuffer );
+    GN::safeHeapDealloc( mMemBuffer );
 
     if( !reload() )
     {
@@ -36,7 +36,7 @@ void CEGUI::GarnetTexture::loadFromMemory(const void* buffPtr, uint buffWidth, u
 {
     GN_GUARD;
 
-    GN::safeHeapFree( mMemBuffer );
+    GN::safeHeapDealloc( mMemBuffer );
 
     // store memory buffer
     GN_ASSERT( 0 == mMemBuffer );

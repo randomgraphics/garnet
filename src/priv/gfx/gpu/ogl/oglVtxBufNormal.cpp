@@ -41,7 +41,7 @@ void GN::gfx::OGLVtxBufNormal::quit()
 {
     GN_GUARD;
 
-    safeHeapFree( mBuffer );
+    safeHeapDealloc( mBuffer );
 
     // standard quit procedure
     GN_STDCLASS_QUIT();

@@ -21,7 +21,6 @@
 #endif
 
 #include <exception>
-#include <malloc.h>
 #include <stdlib.h>
 
 // *****************************************************************************

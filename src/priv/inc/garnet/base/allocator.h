@@ -13,7 +13,7 @@ namespace GN
     ///
     /// STL compilant allocator that use garnet heap memory management routines.
     ///
-    template<typename T>
+    template<typename T, size_t ALIGNMENT=16>
     class StlAllocator
     {
         /// \cond NEVER
@@ -59,7 +59,7 @@ namespace GN
 
         pointer allocate( size_type count )
         {
-            void * p = HeapMemory::alloc( count * sizeof(T) );
+            void * p = HeapMemory::alignedAlloc( count * sizeof(T), ALIGNMENT );
             if( NULL == p )
             {
                 throw std::bad_alloc();

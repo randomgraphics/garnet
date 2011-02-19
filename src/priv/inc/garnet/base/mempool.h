@@ -13,7 +13,7 @@ namespace GN
     ///
     template<
         size_t ITEM_SIZE,
-        size_t ALIGNMENT = 8,
+        size_t ALIGNMENT = 16,
         size_t INITIAL_ITEMS_PER_BLOCK = 32,
         size_t MAX_ITEMS = 0 >
     class FixSizedRawMemoryPool : public NoCopy
@@ -109,7 +109,7 @@ namespace GN
                     GN_ERROR(getLogger("FixSizedRawMemoryPool"))( "out of heap memory!" );
                     return 0;
                 }
-                b->items = (Item*)HeapMemory::alloc( sizeof(Item) * mNewBlockSize );
+                b->items = (Item*)HeapMemory::alignedAlloc( sizeof(Item) * mNewBlockSize, ALIGNMENT );
                 if( 0 == b )
                 {
                     GN_ERROR(getLogger("FixSizedRawMemoryPool"))( "out of heap memory!" );
