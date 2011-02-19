@@ -4,9 +4,7 @@ TODO
 - 程序中标注TODO的地方
 
 - p0
-  - optimize vector/matrix classes (using xnamath or SSE2)
-  - fontft2 assert in GNsampleDolphin (press F1)
-  - upgrade Cg runtime.
+  - effect system.
   - GNsampleDolphin does not release all D3D11 resources when quit.
   - Winphone 7 integration
   - Cuda or OpenCL integration
@@ -23,6 +21,8 @@ TODO
   	- queue, list, set
 
 - p1
+  - optimize vector/matrix classes (using xnamath or SSE2)
+  - upgrade Cg runtime.
   - Use Windows font engine (Direct2D?)
   - mesh converter/loader
     - load and view specific model, instead of the whole scene

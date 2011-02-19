@@ -22,12 +22,11 @@ public:
     {
         mDesc.fontname       = "ascii_8x13";
         mDesc.quality        = FontFaceDesc::MONOCHROM;
+
         mDesc.xmin           = 100;
         mDesc.xmax           = -100;
         mDesc.ymin           = 100;
         mDesc.ymax           = -100;
-        mDesc.linegap        = 3;
-
         for( size_t i = 0; i < 256; ++i )
         {
             const BitmapCharDesc * bcd = gBitmapChars8x13[i];
@@ -42,6 +41,7 @@ public:
             if( ymin < mDesc.ymin ) mDesc.ymin = ymin;
             if( ymax > mDesc.ymax ) mDesc.ymax = ymax;
         }
+        mDesc.vdistance = mDesc.ymax - mDesc.ymin + 3;
     }
 
     virtual const FontFaceDesc & getDesc() const { return mDesc; }
@@ -73,7 +73,7 @@ public:
         result.horiBearingX = (float)bcd->xorig;
         result.horiBearingY = (float)bcd->yorig - bcd->height;
         result.horiAdvance  = (float)bcd->advance;
-        result.vertAdvance  = mDesc.maxGlyphHeight() + mDesc.linegap;
+        result.vertAdvance  = mDesc.vdistance;
 
         return true;
     }

@@ -134,7 +134,7 @@ void GN::gfx::BitmapFont::drawText( const TextDesc & td )
     const FontFaceDesc & ffd     = mFont->getDesc();
 
     // align baseline distance to interger for better clarity
-    float baselineDistance = ceil( ffd.baseLineDistance() );
+    float baselineDistance = ceil( ffd.vdistance );
 
     Rectf bbox( td.x + ffd.xmin, td.y + ffd.ymin, 0, baselineDistance );
 
