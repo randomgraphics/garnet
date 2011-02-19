@@ -212,16 +212,15 @@ bool FontFaceFt2::init( const FontFaceCreationDesc & cd )
 
     double scalex  = (double)mFace->size->metrics.x_scale / 65536.0 / 64.0;
     double scaley  = (double)mFace->size->metrics.y_scale / 65536.0 / 64.0;
-    double linegap = mFace->height - (mFace->bbox.yMax - mFace->bbox.yMin);
 
     // initialize descriptor
-    mDesc.fontname = cd.fontname;
-    mDesc.quality  = cd.quality;
-    mDesc.xmin     = (float)(mFace->bbox.xMin * scalex);
-    mDesc.xmax     = (float)(mFace->bbox.xMax * scalex);
-    mDesc.ymin     = (float)(-mFace->bbox.yMax* scaley);
-    mDesc.ymax     = (float)(-mFace->bbox.yMin* scaley);;
-    mDesc.linegap  = (float)(linegap * scaley);
+    mDesc.fontname  = cd.fontname;
+    mDesc.quality   = cd.quality;
+    mDesc.xmin      = (float)( mFace->bbox.xMin * scalex);
+    mDesc.xmax      = (float)( mFace->bbox.xMax * scalex);
+    mDesc.ymin      = (float)(-mFace->bbox.yMax * scaley);
+    mDesc.ymax      = (float)(-mFace->bbox.yMin * scaley);
+    mDesc.vdistance = (float)( mFace->height    * scaley);
 
     // success
     return success();
@@ -294,9 +293,6 @@ bool FontFaceFt2::loadFontImage( FontImage & result, wchar_t ch )
     if( bitmap.pixel_mode == FT_PIXEL_MODE_LCD || bitmap.pixel_mode == FT_PIXEL_MODE_LCD_V ) width /= 3;
 	size_t      height = (size_t)bitmap.rows;
     size_t       pitch = (size_t)abs(bitmap.pitch);
-
-    GN_ASSERT( width <= mDesc.maxGlyphWidth() );
-    GN_ASSERT( height <= mDesc.maxGlyphHeight() );
 
     //取道位图数据
 #if SUBPIXEL_RENDERING

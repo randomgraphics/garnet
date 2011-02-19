@@ -109,11 +109,11 @@ public:
             else
             {
 
-                mFontDesc.xmin    = math::getmin( mFontDesc.xmin, ffd.xmin );
-                mFontDesc.xmax    = math::getmax( mFontDesc.xmax, ffd.xmax );
-                mFontDesc.ymin    = math::getmin( mFontDesc.ymin, ffd.ymin );
-                mFontDesc.ymax    = math::getmax( mFontDesc.ymax, ffd.ymax );
-                mFontDesc.linegap = math::getmax( mFontDesc.linegap, ffd.linegap );
+                mFontDesc.xmin      = math::getmin( mFontDesc.xmin, ffd.xmin );
+                mFontDesc.xmax      = math::getmax( mFontDesc.xmax, ffd.xmax );
+                mFontDesc.ymin      = math::getmin( mFontDesc.ymin, ffd.ymin );
+                mFontDesc.ymax      = math::getmax( mFontDesc.ymax, ffd.ymax );
+                mFontDesc.vdistance = math::getmax( mFontDesc.vdistance, ffd.vdistance );
             }
         }
         mFontDesc.fontname = "mixed font";

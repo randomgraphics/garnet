@@ -67,23 +67,25 @@ namespace GN { namespace gfx
         /// Metrics that are defined for all glyphs in a given font.
         //@{
 
-        // bounding box in pixles. X points RIGHT; Y points DOWN
-        float xmin; // left
-        float xmax; // right
-        float ymin; // top
-        float ymax; // bottom
+        // Bounding box in pixles. X points RIGHT; Y points DOWN.
+        //
+        // Note that due to glyph hinting, the bounding box might not be exact for certain fonts.
+        // Thus they must be treated as unreliable with an error margin of at least one pixel!
+        // Indeed, the only way to get the exact metrics is to render all glyphs. As this would
+        // be a definite performance hit, it is up to client applications to perform such computations.
+        float xmin; //< bounding box left
+        float xmax; //< bounding box right
+        float ymin; //< bounding box top
+        float ymax; //< bounding box bottom
 
-        /// The distance that must be placed between two lines of text
-        float linegap;
+        /// The vertical distance between two consecutive baselines
+        float vdistance;
 
-        /// max height in pixels of all the glyphs.
+        /// max width in pixels of all the glyphs.
         uint16 maxGlyphWidth() const { return (uint16)ceil(xmax - xmin); }
 
         /// max height in pixels of all the glyphs.
         uint16 maxGlyphHeight() const { return (uint16)ceil(ymax - ymin); }
-
-        /// baseline-to-baseline distance of 2 rows of text
-        float baseLineDistance() const { return ymax - ymin + linegap; }
 
         //@}
     };
@@ -117,7 +119,7 @@ namespace GN { namespace gfx
     struct FontFaceCreationDesc
     {
         ///
-        /// font file name. Usually would be something like "font::/xxxx"
+        /// Font file name. Usually would be something like "font::/xxxx"
         ///
         StrA fontname;
 
@@ -127,7 +129,7 @@ namespace GN { namespace gfx
         uint16 width;
 
         ///
-        /// get character height in pixel
+        /// Character height in pixel
         ///
         uint16 height;
 
