@@ -25,22 +25,32 @@
 
 namespace GN
 {
-    struct HeapMemory
+    namespace HeapMemory
     {
         ///
         /// Allocate memory from heap. Can cross DLL boundary.
         ///
-        GN_PUBLIC static void * alloc( size_t sizeInBytes );
+        GN_PUBLIC void * alloc( size_t sizeInBytes );
 
         ///
         /// Re-allocate memory from heap. Can cross DLL boundary.
         ///
-        GN_PUBLIC static void * realloc( void *, size_t sizeInBytes );
+        GN_PUBLIC void * realloc( void * ptr, size_t sizeInBytes );
 
         ///
-        /// Free heap-allocated memory. Can cross DLL boundary.
+        /// Allocate aligned memory from heap. Can cross DLL boundary
         ///
-        GN_PUBLIC static void dealloc( void * );
+        GN_PUBLIC void * alignedAlloc( size_t sizeInBytes, size_t alignment );
+
+        ///
+        /// Re-allocate aligned memory from heap. Can cross DLL boundary
+        ///
+        GN_PUBLIC void * alignedRealloc( void * ptr, size_t sizeInBytes, size_t alignment );
+
+        ///
+        /// Free heap-allocated memory (aligned or unaligned). Can cross DLL boundary.
+        ///
+        GN_PUBLIC void dealloc( void * ptr );
     };
 }
 
@@ -79,23 +89,10 @@ namespace GN
     void enableCRTMemoryCheck( long breakOnAllocID = 0 );
 
     ///
-    /// general safe deallocation routine
-    // ------------------------------------------------------------------------
-    template < typename T, typename DEALLOC_FUNC >
-    GN_FORCE_INLINE void safeDealloc( T * & ptr )
-    {
-        if( ptr )
-        {
-            DEALLOC_FUNC( ptr );
-            ptr = 0;
-        }
-    }
-
-    ///
-    /// free a C-style heap pointer
+    /// free heap memory pointer allocated using GN::HeapMemory functions
     // ------------------------------------------------------------------------
     template < typename T >
-    GN_FORCE_INLINE void safeHeapFree( T * & ptr )
+    GN_FORCE_INLINE void safeHeapDealloc( T * & ptr )
     {
         if( ptr )
         {

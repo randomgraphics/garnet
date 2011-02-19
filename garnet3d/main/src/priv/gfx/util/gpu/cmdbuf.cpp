@@ -87,7 +87,7 @@ void GN::CommandBuffer::quit()
     //  - Clear initialize flag
 
     // deallocate ring buffer
-    if( NULL != m_Buffer ) ::free(m_Buffer), m_Buffer = NULL;
+	safeHeapDealloc( m_Buffer );
 
 #if GN_COMMAND_BUFFER_BUILT_IN_FENCE
     // deallocate fence array

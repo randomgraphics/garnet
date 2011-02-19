@@ -20,7 +20,7 @@ bool GN::gfx::OGLLine::init()
 
     // create vertex buffer
     GN_ASSERT( !mVtxBuf );
-    mVtxBuf = (LineVertex*)malloc( sizeof(LineVertex) * MAX_LINES * 2 );
+    mVtxBuf = (LineVertex*)HeapMemory::alloc( sizeof(LineVertex) * MAX_LINES * 2 );
     if( !mVtxBuf )
     {
         GN_ERROR(sLogger)( "out of memory!" );
@@ -40,7 +40,7 @@ void GN::gfx::OGLLine::quit()
 {
     GN_GUARD;
 
-    safeHeapFree( mVtxBuf );
+    safeHeapDealloc( mVtxBuf );
 
     // standard quit procedure
     GN_STDCLASS_QUIT();

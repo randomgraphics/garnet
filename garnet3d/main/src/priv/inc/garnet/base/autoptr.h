@@ -6,8 +6,6 @@
 /// \author  chenli@@REDMOND (2009.3.31)
 // *****************************************************************************
 
-#include <malloc.h>
-
 namespace GN
 {
     namespace detail

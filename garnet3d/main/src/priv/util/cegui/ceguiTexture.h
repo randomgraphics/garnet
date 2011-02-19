@@ -11,9 +11,9 @@
 #include "ceguiHeaders.h"
 
 namespace CEGUI
-{    
+{
     ///
-    /// CEGUI Texture adapter 
+    /// CEGUI Texture adapter
     ///
     class GarnetTexture : public Texture
     {
@@ -27,7 +27,7 @@ namespace CEGUI
             : Texture(r)
             , mWidth(0), mHeight(0)
             , mMemBuffer(0) {}
-        virtual ~GarnetTexture() { dispose(); GN::safeHeapFree(mMemBuffer); }
+        virtual ~GarnetTexture() { dispose(); GN::safeHeapDealloc(mMemBuffer); }
         //@}
 
         // ********************************

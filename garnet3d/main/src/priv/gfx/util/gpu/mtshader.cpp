@@ -70,7 +70,7 @@ void GN::gfx::MultiThreadUniform::quit()
         mUniform = NULL;
     }
 
-    safeHeapFree( mFrontEndData );
+    safeHeapDealloc( mFrontEndData );
 
     // standard quit procedure
     GN_STDCLASS_QUIT();

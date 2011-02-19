@@ -308,6 +308,11 @@ public:
     {
     }
 
+    ~OGLTempContext()
+    {
+        quit();
+    }
+
     bool init( HDC hdc )
     {
         GN_MSW_CHECK_RETURN( hrc = ::wglCreateContext( hdc ), false );

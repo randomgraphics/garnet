@@ -26,7 +26,6 @@
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <malloc.h>
 #include <wchar.h>
 #include <math.h>
 #include <cwchar>
