@@ -10,7 +10,7 @@
 using namespace GN;
 using namespace GN::gfx;
 
-static GN::Logger * sLogger = GN::getLogger("GN.gfx.MixedFont");
+//static GN::Logger * sLogger = GN::getLogger("GN.gfx.MixedFont");
 
 // *****************************************************************************
 // local functions
@@ -28,7 +28,7 @@ struct FontRange
 
     bool contains( wchar_t ch ) const
     {
-        return firstChar <= ch && ch <= (firstChar + numChars);
+        return (size_t)firstChar <= (size_t)ch && (size_t)ch <= (size_t)(firstChar + numChars);
     }
 };
 
