@@ -199,6 +199,7 @@ namespace GN
         explicit AutoHeapPtr( T * p = 0 ) throw() : ParentType(p) {}
     };
 
+#if 0
     ///
     /// Automatic C-style array created by malloc. Can NOT be used in STL containers.
     ///
@@ -224,6 +225,7 @@ namespace GN
         ///
         explicit AutoMallocPtr( T * p = 0 ) throw() : ParentType(p) {}
     };
+#endif
 
     ///
     /// Automatic COM pointer class. CAN be used in STL containers.

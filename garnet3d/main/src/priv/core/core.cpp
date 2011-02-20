@@ -52,8 +52,12 @@ namespace GN
     GN_PUBLIC void * HeapMemory::alignedAlloc( size_t sizeInBytes, size_t alignment )
     {
         if( 0 == alignment ) alignment = 1;
+#if GN_POSIX
+        void * ptr = memalign( alignment, sizeInBytes );
+#else
         void * ptr = _aligned_malloc( sizeInBytes, alignment );
-        if ( 0 == ptr ) GN_ERROR(sHeapLogger)( "out of memory!" );
+#endif
+        if ( 0 == ptr ) { GN_ERROR(sHeapLogger)( "out of memory!" ); }
         return ptr;
     }
 
@@ -63,8 +67,12 @@ namespace GN
     GN_PUBLIC void * HeapMemory::alignedRealloc( void * ptr, size_t sizeInBytes, size_t alignment )
     {
         if( 0 == alignment ) alignment = 1;
+#if GN_POSIX
+        ptr = realloc( ptr, sizeInBytes );        
+#else
         ptr = _aligned_realloc( ptr, sizeInBytes, alignment );
         if ( 0 == ptr ) { GN_ERROR(sHeapLogger)( "out of memory!" ); }
+#endif
         return ptr;
     }
 
@@ -73,6 +81,10 @@ namespace GN
     // -----------------------------------------------------------------------------
     GN_PUBLIC void HeapMemory::dealloc( void * ptr )
     {
+#if GN_POSIX
+        return ::free( ptr );
+#else
         return _aligned_free( ptr );
+#endif
     }
 }
