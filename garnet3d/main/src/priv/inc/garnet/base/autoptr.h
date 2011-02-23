@@ -199,34 +199,6 @@ namespace GN
         explicit AutoHeapPtr( T * p = 0 ) throw() : ParentType(p) {}
     };
 
-#if 0
-    ///
-    /// Automatic C-style array created by malloc. Can NOT be used in STL containers.
-    ///
-    template<typename T>
-    class AutoMallocPtr : public detail::BaseAutoPtr< T, AutoMallocPtr<T> >
-    {
-        typedef detail::BaseAutoPtr< T, AutoMallocPtr<T> > ParentType;
-#if GN_GCC
-        friend class detail::BaseAutoPtr< T, AutoMallocPtr<T> >;
-#else
-        friend class ParentType;
-#endif
-
-        static void sDoRelease( T * p )
-        {
-            if( p ) ::free((void*)p);
-        }
-
-    public:
-
-        ///
-        /// Construct from C-style pointer
-        ///
-        explicit AutoMallocPtr( T * p = 0 ) throw() : ParentType(p) {}
-    };
-#endif
-
     ///
     /// Automatic COM pointer class. CAN be used in STL containers.
     ///
