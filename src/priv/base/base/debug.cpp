@@ -8,12 +8,9 @@
 #endif
 #define DXERR_FUNC DXGetErrorDescription9A
 
-#elif GN_MSWIN
+#elif GN_MSWIN && (GN_PLATFORM_HAS_D3D9|GN_PLATFORM_HAS_D3D10|GN_PLATFORM_HAS_D3D11)
 
 #include "dxerr.h"
-#if GN_MSVC
-#pragma comment( lib, "dxerr.lib" )
-#endif
 #define DXERR_FUNC DXGetErrorDescriptionA
 
 #else
