@@ -1,31 +1,89 @@
-#include <garnet/garnet.h>
+#include <garnet/GNbase.h>
 
 namespace GN
 {
-    namespace game
+    namespace engine
     {
+        class World;
+
+
+
+
+
+
+
+
         /// Root class of game asset. Could be texture, mesh, or sound.
-        class Asset
+        class Asset : public NoCopy
         {
         };
 
         /// Texture used in game.
-        class Texture : public Asset
+        class TextureAsset : public Asset
+        {
+        public:
+
+            Texture * sLoadFromFile( World &, ...);
+            Texture * sCreateBlankTexture( World &, ...);
+        };
+
+        class EffectAsset : public Asset
         {
         };
 
-        /// Graphics effect
-        class GfxEffect : public Asset
+        // combination of effect, texture and other parameters
+        // Completly determines now a surface is rendered.
+        class MaterialAsset : public Asset
         {
         };
 
-        class WavSound : public Asset
+        class TriangleMeshAsset : public Asset
         {
         };
 
-        /// Root class of gameplay object that could be placed into game world.
+        class WavSoundAsset : public Asset
+        {
+        };
+
+
+
+
+
+
+        class Component : public NoCopy
+        {
+            protected: Component() {}
+            public: virtual ~Component() {}
+            public: virtual const Guid & getType() const = 0;
+        };
+
+        class PhysicalComponent : public Component
+        {
+        public:
+
+            static const Guid & sGetType();
+
+            const Vector4 & getScale() const;
+            const Vector4 & getPosition() const;
+            const Vector4 & getRotation() const;
+        };
+
+        class VisualComponent : public Component
+        {
+            public: static const Guid & sGetType();
+        };
+
+        /// Root class of game play object that could be placed into game world.
         class Entity : public NoCopy
         {
+            protected:       Entity( World & );
+            public: virtual ~Entity();
+
+            public:    Component * GetComponent( const Guid & type );
+            protected: void        AddComponent( const Guid & type, Component & );
+            protected: void        DelComponent( const Guid & type );
+
+            //public: virtual void processEvent( uint32 eventid, uint64 param1, void * param2 ) = 0;
         };
 
         /// Static mesh in the wolrd
@@ -38,12 +96,13 @@ namespace GN
         {
         };
 
-        class CoordinateIndicator : public NoCopy
+        class CoordinateIndicator : public Entity
         {
         };
 
+
         /// One game level
-        class Level
+        class Level : public Entity
         {
         public:
 
@@ -55,7 +114,10 @@ namespace GN
         {
         public:
 
+            // Initialize basic systems (file, memory, thread and etc.)
             bool Initialize();
+
+            // shutdown everthing.
             void Shutdown();
 
             bool GfxInitialize();
