@@ -100,6 +100,9 @@ namespace GN
         {
         };
 
+        class Light : public Entity
+        {
+        };
 
         /// One game level
         class Level : public Entity

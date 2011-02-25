@@ -127,7 +127,7 @@
 /// \def GN_CPU
 /// Indicate current CPU
 
-#if defined( _WIN64 ) || defined( WIN64 ) || ( 64 == __WORDSIZE )
+#if defined( _WIN64 ) || defined( WIN64 ) || defined(__amd64__) || defined(_M_AMD64) || defined(_AMD64_)
 #undef GN_X64
 #define GN_X64 1
 #define GN_CPU "x64"
@@ -135,10 +135,12 @@
 #undef GN_PPC
 #define GN_PPC 1
 #define GN_CPU "ppc"
-#else
+#elif defined(_M_IX86) || defined(_X86_)
 #undef GN_X86
 #define GN_X86 1
 #define GN_CPU "x86"
+#else
+#error "Unknown CPU"
 #endif
 
 // *****************************************************************************
