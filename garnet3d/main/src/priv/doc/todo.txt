@@ -117,7 +117,8 @@ RESOLVE ISSUES
   How about a higher level abstraction: material/effect system?
   - RESOLVED: we need both
     - They stay at different levels and serve for different purposes.
-      - Unified API is easy for prototyping
+      - Unified API is easy for prototyping, and simplify tasks like clearing
+        screen, presenting, switching display mode, handling device lost.
       - Material/effect system is required to build complex rendering framework.
         It could be built upon unified API, or not.
 
