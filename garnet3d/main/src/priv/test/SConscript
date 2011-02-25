@@ -1,5 +1,6 @@
 SConscript( dirs=[
 	'd3d10',
+	'engine',
 	'font',
 	'ft2',
 	'gpu',
@@ -8,6 +9,7 @@ SConscript( dirs=[
 	'renderToTexture',
 	'resdb',
 	'scene',
+	'simd',
 	'sprite',
 	'ut',
 	'xml',
