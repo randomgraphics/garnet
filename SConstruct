@@ -871,6 +871,7 @@ TARGET_stlibs = [
 	'GNbase',
 	'GNgfxUtil',
 	'GNgpuCommon',
+	'GNengine',
 	'GNutil',
 	]
 
