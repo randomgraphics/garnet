@@ -188,7 +188,18 @@ namespace GN
             return mLinkedItems.head();
         }
 
-        KeyValuePair * insert( const KEY & key, const VALUE & value )
+        /// Insert new key and value into the map
+        ///
+        /// \param key, value
+        ///     The new item's key and value
+        /// \param pair
+        ///     Optional. Could be NULL.
+        ///     If insertion succeeds, return the newly inserted key-value pair;
+        ///     if insertion failed because the key exists already, returns the
+        ///     exsiting pair.
+        /// \return
+        ///     Return if insert succeded or not.
+        bool insert( const KEY & key, const VALUE & value, KeyValuePair ** pair )
         {
             // Check for redundant insert
             {
@@ -201,14 +212,15 @@ namespace GN
                 HashItem & hi = mTable[k];
 
                 for(
-                    const PairType * const * pp = hi.values.begin();
+                    PairType ** pp = hi.values.begin();
                     pp != hi.values.end();
                     ++pp )
                 {
                     if( mKeyEqualFunc( (*pp)->key, key ) )
                     {
                         // redundent item
-                        return NULL;
+                        if( pair ) *pair = *pp;
+                        return false;
                     }
                 }
 
@@ -238,7 +250,23 @@ namespace GN
             // adjust count
             ++mCount;
 
-            return newPair;
+            if( pair ) *pair = newPair;
+            return true;
+        }
+
+        // return NULL, if insertion failed (like the key exists already)
+        KeyValuePair * insert( const KEY & key, const VALUE & value )
+        {
+            KeyValuePair * result;
+            if( insert( key, value, &result ) )
+            {
+                GN_ASSERT( result );
+                return result;
+            }
+            else
+            {
+                return NULL;
+            }
         }
 
         KeyValuePair * next( const KeyValuePair * p )

@@ -1,0 +1,8 @@
+Import( 'GN' )
+
+sources = [
+	'engine_base.cpp',
+]
+
+cluster = GN.newSourceCluster( sources, 'pch.h', 'pch.cpp' )
+GN.newTarget( 'stlib', 'GNengine', [cluster] )

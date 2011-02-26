@@ -87,12 +87,13 @@ namespace GN
         };
 
         /// Static mesh in the wolrd
-        class StaticMesh : public Entity
+        /// It has physical, visual nodes
+        class EStaticMesh : public Entity
         {
         };
 
-        /// Camera
-        class Camera : public Entity
+        /// Light entity. It has physical node
+        class ELight : public Entity
         {
         };
 
@@ -107,15 +108,19 @@ namespace GN
         /// One game level
         class Level : public Entity
         {
-        public:
-
-            void preload() = 0;
         };
 
-        /// The root of the game world
-        class World
+        /// coordinateindicator. It has physical and visual node
+        class CoordinateIndicator : public Entity
         {
-        public:
+        };
+
+        /// the game world (singleton)
+        /// Use C style interface to hide implementation details.
+        namespace world
+        {
+            bool initialize();
+            void shutdown();
 
             // Initialize basic systems (file, memory, thread and etc.)
             bool Initialize();
@@ -123,19 +128,14 @@ namespace GN
             // shutdown everthing.
             void Shutdown();
 
-            bool GfxInitialize();
-            void GfxShutdown();
+            bool inputInitialize();
+            void inputShutdown();
 
-            bool InputInitialize();
-            void InputShutdown();
+            bool soundInitialize();
+            void soundShutdown();
 
-            bool SoundInitialize();
-            void SoundShutdown();
-
-            bool NetworkInitialize();
-            void NetworkShutdown();
-
-        public:
+            bool networkInitialize();
+            void networkShutdown();
 
             // Graphics stuff
             GN::gfx::Gpu                 * getGpu() const;

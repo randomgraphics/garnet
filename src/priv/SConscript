@@ -1,1 +1,2 @@
-SConscript( dirs=Split('base core doc gfx inc media sample test tool util') )
+#Note: the order of subdirectories doesn't affect the build.
+SConscript( dirs=Split('base core doc engine gfx inc media sample test tool util') )
