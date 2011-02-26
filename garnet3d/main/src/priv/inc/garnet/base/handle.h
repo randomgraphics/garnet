@@ -196,11 +196,12 @@ namespace GN
         ///
         /// Remove item from manager
         ///
-        void remove( HANDLE_TYPE h )
+        bool remove( HANDLE_TYPE h )
         {
             if( !validHandle(h) )
             {
                 GN_ERROR(getLogger("GN.base.HandleManager"))( "Invalid handle!" );
+                return false;
             }
             else
             {
@@ -208,6 +209,7 @@ namespace GN
                 GN_ASSERT( mItems[idx] );
                 mItems[idx]->dtor();
                 mFreeList.append(idx);
+                return true;
             }
         }
 

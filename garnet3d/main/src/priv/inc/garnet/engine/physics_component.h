@@ -15,9 +15,9 @@ namespace GN { namespace engine
 
         static const Guid & sGetType();
 
-        const Vector3    & getScale() const;
-        const Vector3    & getPosition() const;
-        const Quaternion & getRotation() const;
+        const Vector3f    & getScale() const;
+        const Vector3f    & getPosition() const;
+        const Quaternionf & getRotation() const;
     };
 }}
 

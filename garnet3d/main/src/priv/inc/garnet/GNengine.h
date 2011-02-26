@@ -18,7 +18,7 @@ namespace GN
     }
 }
 
-#include "engine/world.h"
+#include "engine/engine_base.h"
 #include "engine/physics_component.h" // physics component
 //#include "engine/gfx_component.h" // graphics/visual component
 //#include "engine/mesh.h"   // mesh entites
