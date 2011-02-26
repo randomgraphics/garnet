@@ -201,42 +201,40 @@ namespace GN
         ///     Return if insert succeded or not.
         bool insert( const KEY & key, const VALUE & value, KeyValuePair ** pair )
         {
+            // Hasing
+            size_t N = HASH_MAP_PRIMARY_ARRAY[mPrimIndex];
+            GN_ASSERT( N == mTable.size() );
+            uint64 hashedKey = mKeyHashFunc(key);
+            size_t k = mod( hashedKey, N );
+
+            HashItem * hi = &mTable[k];
+
             // Check for redundant insert
+            for(
+                PairType ** pp = hi->values.begin();
+                pp != hi->values.end();
+                ++pp )
             {
-                const size_t N = HASH_MAP_PRIMARY_ARRAY[mPrimIndex];
-
-                GN_ASSERT( N == mTable.size() );
-
-                size_t k = mod( mKeyHashFunc(key), N );
-
-                HashItem & hi = mTable[k];
-
-                for(
-                    PairType ** pp = hi.values.begin();
-                    pp != hi.values.end();
-                    ++pp )
+                if( mKeyEqualFunc( (*pp)->key, key ) )
                 {
-                    if( mKeyEqualFunc( (*pp)->key, key ) )
-                    {
-                        // redundent item
-                        if( pair ) *pair = *pp;
-                        return false;
-                    }
-                }
-
-                // adjust primary index
-                if( (mCount+1) > (N*LOAD_FACTOR) && (mPrimIndex+1) < GN_ARRAY_COUNT(HASH_MAP_PRIMARY_ARRAY) )
-                {
-                    ++mPrimIndex;
-                    mTable.resize( HASH_MAP_PRIMARY_ARRAY[mPrimIndex] );
+                    // redundent item
+                    if( pair ) *pair = *pp;
+                    return false;
                 }
             }
 
-            // Note: mPrimaryIndex has changed, need re-hash.
-            const size_t N = HASH_MAP_PRIMARY_ARRAY[mPrimIndex];
-            GN_ASSERT( N == mTable.size() );
-            size_t k = mod( mKeyHashFunc(key), N );
-            HashItem & hi = mTable[k];
+            // adjust primary index
+            if( (mCount+1) > (N*LOAD_FACTOR) && (mPrimIndex+1) < GN_ARRAY_COUNT(HASH_MAP_PRIMARY_ARRAY) )
+            {
+                // increase table size
+                ++mPrimIndex;
+                N = HASH_MAP_PRIMARY_ARRAY[mPrimIndex];
+                mTable.resize( N );
+
+                // Re-hashing...
+                k = mod( hashedKey, N );
+                hi = &mTable[k];
+            }
 
             // create new pair item
             PairType * newPair = new PairType( key, value );
@@ -245,7 +243,7 @@ namespace GN
             mLinkedItems.append( newPair );
 
             // add to hash table
-            hi.values.append( newPair );
+            hi->values.append( newPair );
 
             // adjust count
             ++mCount;
@@ -286,6 +284,7 @@ namespace GN
             return ((const PairType*)p)->next;
         }
 
+        /// Remove key from the map. Invalid key would be siliently ignored.
         void remove( const KEY & key )
         {
             const size_t N = HASH_MAP_PRIMARY_ARRAY[mPrimIndex];

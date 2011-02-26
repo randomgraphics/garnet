@@ -8,12 +8,14 @@
 
 namespace GN { namespace engine
 {
-    /// Component class root. Must be attached directly to an entity.
+    class Entity;
+
+    /// Component class root. Can be attached to at most one entity at any moment.
     class Component : public RefCounter
     {
     protected:
 
-        Component()
+        Component() : mEntity(NULL)
         {
         }
 
@@ -23,7 +25,14 @@ namespace GN { namespace engine
         {
         }
 
+        Entity * getEntity() const { return mEntity; }
+
         virtual const Guid & getType() const = 0;
+
+    private:
+
+        friend class Entity;
+        Entity * mEntity;
     };
 
     /// Entity class. Root class of game play object that could be placed into game world.
@@ -42,19 +51,19 @@ namespace GN { namespace engine
         /// Get entity ID
         int getID() const { return mID; }
 
-        /// Get component pointer, but do not increase the reference counter of the component.
+        /// Get entity's component. No increasing reference counter of the component.
         Component * getComponent( const Guid & type ) const;
 
-        /// Add a new component to the entity. Increase component reference counter by one
-        void addComponent( const Guid & type, Component * );
-
-        /// Delete specific component. Decrease the component's reference counter by one.
-        void delComponent( const Guid & type );
+        /// Set entity's component.
+        ///   - Decease reference counter of existing component by 1.
+        ///   - Increase reference counter of the new component by 1.
+        ///   - Null component pointer is allowed.
+        void setComponent( const Guid & type, Component * comp );
 
         /// tempalte helpers
         //@{
         template<class T> T *  getComponent() const { return (T*)getComponent( T::sGetType() ); }
-        template<class T> void addComponent( T & t ) { return addComponent( T::sGetType(), t ); }
+        template<class T> void setComponent( T * t ) { return setComponent( T::sGetType(), t ); }
         //@}
 
         //public: virtual void processEvent( uint32 eventid, uint64 param1, void * param2 ) = 0;
