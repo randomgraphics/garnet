@@ -928,8 +928,16 @@ namespace GN { namespace gfx
     ///
     /// \nosubgrouping
     ///
-    struct Gpu : public NoCopy
+    class Gpu : public NoCopy
     {
+    protected:
+
+        // Can't delete Gpu instance directly. Must call deleteGpu()
+        friend void deleteGpu( gfx::Gpu * );
+        virtual ~Gpu() {}
+
+    public:
+
         // ********************************************************************
         //
         /// \name Display Manager

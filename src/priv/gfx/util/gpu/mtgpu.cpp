@@ -180,7 +180,7 @@ uint32 GN::gfx::MultiThreadGpu::threadProc( void * param )
     }
 
     // delete the GPU
-    delete mGpu;
+    deleteGpu( mGpu );
     mGpu = NULL;
 
     // success

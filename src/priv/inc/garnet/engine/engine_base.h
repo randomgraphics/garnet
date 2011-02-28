@@ -88,11 +88,20 @@ namespace GN { namespace engine
     // shutdown everthing.
     void shutdown();
 
-    bool gfxInitialize();
-    void gfxShutdown();
+    /// Graphics initialization options
+    struct GfxOptions
+    {
+        gfx::GpuOptions           gpuOptions;          ///< renderer options
+        bool                      useMultithreadGpu;   ///< use multithread renderer or not.
+        gfx::FontFaceCreationDesc defaultAsciiFont;    ///< default ascii font face creation descriptor.
+        gfx::FontFaceCreationDesc defaultNonAsciiFont; ///< default non-ascii font face creation descriptor
+    };
 
-    bool inputInitialize();
+    bool inputInitialize( input::InputAPI );
     void inputShutdown();
+
+    bool gfxInitialize( const GfxOptions & );
+    void gfxShutdown();
 
     //bool soundInitialize();
     //void soundShutdown();
@@ -104,7 +113,8 @@ namespace GN { namespace engine
     GN::gfx::Gpu                 * getGpu();
     GN::gfx::GpuResourceDatabase * getGdb();
     GN::gfx::SpriteRenderer      * getSpriteRenderer();
-    GN::gfx::BitmapFont          * getBmfRenderer();
+    GN::gfx::LineRenderer        * getLineRenderer();
+    GN::gfx::BitmapFont          * getDefaultFontRenderer();
 
     // Entity management
     Entity * findEntity( int id );
