@@ -19,11 +19,11 @@ namespace GN
 }
 
 #include "engine/engine_base.h"
-#include "engine/physics_component.h" // physics component
-//#include "engine/gfx_component.h" // graphics/visual component
-//#include "engine/mesh.h"   // mesh entites
-//#include "engine/camera.h" // camera entities
-//#include "engine/light.h"  // light entities
+#include "engine/spacial_component.h"
+//#include "engine/gfx_component.h"
+//#include "engine/mesh.h"
+//#include "engine/camera.h"
+//#include "engine/light.h"
 
 // *****************************************************************************
 //                                     EOF

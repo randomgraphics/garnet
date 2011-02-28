@@ -8,16 +8,21 @@
 
 namespace GN
 {
+    /// General tree structure.
     ///
-    /// general tree structure
+    /// Note that class T must be inherited from TreeNode. For example:
     ///
+    ///     class MyTreeNode : public TreeNode<MyTreeNode>
+    ///     {
+    ///         ...
+    ///     };
     template<class T>
     class TreeNode
     {
-        TreeNode<T> * mParent; ///< to the parent
-        TreeNode<T> * mPrev;   ///< to the previous brother
-        TreeNode<T> * mNext;   ///< to the next brother
-        TreeNode<T> * mChild;  ///< to the first child
+        T * mParent;      ///< to the parent
+        T * mPrev;        ///< to the previous brother
+        T * mNext;        ///< to the next brother
+        T * mFirstChild;  ///< to the first child
 
     public:
 
@@ -25,20 +30,20 @@ namespace GN
         //@}
 
         //@{
-        TreeNode() : mParent(0), mPrev(0), mNext(0), mChild(0) {}
+        TreeNode() : mParent(0), mPrev(0), mNext(0), mFirstChild(0) {}
         virtual ~TreeNode() { doDtor(); }
         //@}
 
         //@{
-        TreeNode<T> * getParent() const { return mParent; }
-        TreeNode<T> * getPrevSibling() const { return mPrev; }
-        TreeNode<T> * getNextSibling() const { return mNext; }
-        TreeNode<T> * getFirstChild() const { return mChild; }
-        void setParent( TreeNode<T> * newParent, TreeNode<T> * newPrev ) { doSetParent( newParent, newPrev ); }
+        T * getParent() const { return mParent; }
+        T * getPrevSibling() const { return mPrev; }
+        T * getNextSibling() const { return mNext; }
+        T * getFirstChild() const { return mFirstChild; }
+        void setParent( T * newParent, T * newPrev ) { doSetParent( newParent, newPrev ); }
         //@}
 
         //@{
-        bool isDescendant( const TreeNode<T> * p ) const { return doIsDescendant( p ); }
+        bool isDescendant( const T * p ) const { return doIsDescendant( p ); }
         size_t calcChildrenCount() const { return doCalcChildrenCount(); }
         //@}
 
@@ -53,7 +58,7 @@ namespace GN
             GN_ASSERT( 0 == mNext );
 
             // remove all children
-            TreeNode<T> * c1 = mChild, * c2;
+            T * c1 = mFirstChild, * c2;
             while( c1 )
             {
                 c2 = c1->mNext;
@@ -61,7 +66,7 @@ namespace GN
                 c1 = c2;
             }
 
-            GN_ASSERT( 0 == mChild );
+            GN_ASSERT( 0 == mFirstChild );
         }
 
         ///
@@ -71,9 +76,9 @@ namespace GN
         /// 2. Cannot be this
         /// 3. Cannot be in child tree.
         ///
-        bool checkParent( const TreeNode<T> * p ) const
+        bool checkParent( const T * p ) const
         {
-            if( this == p )
+            if( (T*)this == p )
             {
                 static Logger * sLogger = getLogger("GN.base.TreeNode");
                 GN_ERROR(sLogger)( "can't set itself as parent" );
@@ -92,11 +97,11 @@ namespace GN
         ///
         /// check for previous sibling pointer.
         ///
-        bool checkPrev( const TreeNode<T> * parent, const TreeNode<T> * prev ) const
+        bool checkPrev( const T * parent, const T * prev ) const
         {
             if( 0 == parent ) return true; // prev will be ignored, if parent is NULL.
 
-            if( this == prev )
+            if( (T*)this == prev )
             {
                 static Logger * sLogger = getLogger("GN.base.TreeNode");
                 GN_ERROR(sLogger)( "can't set itself as prev node" );
@@ -115,7 +120,7 @@ namespace GN
             return true;
         }
 
-        void doSetParent( TreeNode<T> * newParent, TreeNode<T> * newPrev )
+        void doSetParent( T * newParent, T * newPrev )
         {
             if( newParent == mParent ) return;
 
@@ -131,7 +136,7 @@ namespace GN
                 mParent = newParent;
                 if( newPrev )
                 {
-                    TreeNode<T> * c =  newParent->mChild;
+                    T * c =  newParent->mFirstChild;
                     while( c )
                     {
                         c = c->mNext;
@@ -139,8 +144,8 @@ namespace GN
                         {
                             mPrev = newPrev;
                             mNext = newPrev->mNext;
-                            if( mNext ) mNext->mPrev = this;
-                            newPrev->mNext = this;
+                            if( mNext ) mNext->mPrev = (T*)this;
+                            newPrev->mNext = (T*)this;
                             break;
                         }
                     }
@@ -154,16 +159,16 @@ namespace GN
                 else
                 {
                     mPrev = 0;
-                    mNext = newParent->mChild;
-                    newParent->mChild = this;
-                    if( mNext ) mNext->mPrev = this;
+                    mNext = newParent->mFirstChild;
+                    newParent->mFirstChild = (T*)this;
+                    if( mNext ) mNext->mPrev = (T*)this;
                 }
             }
             else
             {
-                if( mParent->mChild == this ) mParent->mChild = mNext;
+                if( mParent->mFirstChild == (T*)this ) mParent->mFirstChild = mNext;
 
-                TreeNode<T> * p = mPrev, * n = mNext;
+                T * p = mPrev, * n = mNext;
 
                 if( p ) p->mNext = n;
                 if( n ) n->mPrev = p;
@@ -174,9 +179,9 @@ namespace GN
              }
         }
 
-        bool doIsDescendant( const TreeNode<T> * p ) const
+        bool doIsDescendant( const T * p ) const
         {
-            for( TreeNode<T> * c = mChild; c; c = c->mNext )
+            for( T * c = mFirstChild; c; c = c->mNext )
             {
                 if( p == c ) return true;
                 if( c->doIsDescendant( p ) ) return true;
@@ -187,7 +192,7 @@ namespace GN
         size_t doCalcChildrenCount() const
         {
             size_t n = 0;
-            for( TreeNode<T> * c = mChild; c; c = c->mNext )
+            for( T * c = mFirstChild; c; c = c->mNext )
             {
                 n += c->doCalcChildrenCount() + 1;
             }

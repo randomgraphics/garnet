@@ -2,6 +2,7 @@ Import( 'GN' )
 
 sources = [
 	'engine_base.cpp',
+	'spacial_component.cpp',
 ]
 
 cluster = GN.newSourceCluster( sources, 'pch.h', 'pch.cpp' )

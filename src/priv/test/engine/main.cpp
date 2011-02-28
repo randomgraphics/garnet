@@ -19,18 +19,18 @@ int main()
     if( noerror )
     {
         // setup default graphics options
-        engine::GfxOptions go;
-        go.useMultithreadGpu = !GN_POSIX;
-        go.defaultNonAsciiFont.fontname = "font::/simsun.ttc";
-        go.defaultNonAsciiFont.width = 16;
-        go.defaultNonAsciiFont.height = 16;
-        go.defaultNonAsciiFont.quality = gfx::FontFaceDesc::ANTIALIASED;
-        go.defaultAsciiFont.fontname = "font::/ltype.ttf";
-        go.defaultAsciiFont.width = 16;
-        go.defaultAsciiFont.height = 16;
-        go.defaultAsciiFont.quality = gfx::FontFaceDesc::ANTIALIASED;
+        engine::GfxInitOptions gio;
+        gio.useMultithreadGpu = !GN_POSIX;
+        gio.defaultNonAsciiFont.fontname = "font::/simsun.ttc";
+        gio.defaultNonAsciiFont.width = 16;
+        gio.defaultNonAsciiFont.height = 16;
+        gio.defaultNonAsciiFont.quality = gfx::FontFaceDesc::ANTIALIASED;
+        gio.defaultAsciiFont.fontname = "font::/ltype.ttf";
+        gio.defaultAsciiFont.width = 16;
+        gio.defaultAsciiFont.height = 16;
+        gio.defaultAsciiFont.quality = gfx::FontFaceDesc::ANTIALIASED;
 
-        noerror = engine::gfxInitialize( go );
+        noerror = engine::gfxInitialize( gio );
     }
 
     if( noerror )
