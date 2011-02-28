@@ -2,18 +2,43 @@
 
 using namespace GN;
 
-int run()
+bool run()
 {
-    if( !engine::initialize() ) return -1;
-    if( !engine::gfxInitialize() ) return -1;
-    if( !engine::inputInitialize() ) return -1;
-
-    return 0;
+    return true;
 }
 
 int main()
 {
-    int r = run();
+    bool noerror = engine::initialize();
+
+    if( noerror )
+    {
+        noerror = engine::inputInitialize( input::InputAPI::NATIVE );
+    }
+
+    if( noerror )
+    {
+        // setup default graphics options
+        engine::GfxOptions go;
+        go.useMultithreadGpu = !GN_POSIX;
+        go.defaultNonAsciiFont.fontname = "font::/simsun.ttc";
+        go.defaultNonAsciiFont.width = 16;
+        go.defaultNonAsciiFont.height = 16;
+        go.defaultNonAsciiFont.quality = gfx::FontFaceDesc::ANTIALIASED;
+        go.defaultAsciiFont.fontname = "font::/ltype.ttf";
+        go.defaultAsciiFont.width = 16;
+        go.defaultAsciiFont.height = 16;
+        go.defaultAsciiFont.quality = gfx::FontFaceDesc::ANTIALIASED;
+
+        noerror = engine::gfxInitialize( go );
+    }
+
+    if( noerror )
+    {
+        noerror = run();
+    }
+
     engine::shutdown();
-    return r;
+
+    return noerror ? 0 : -1;
 }
