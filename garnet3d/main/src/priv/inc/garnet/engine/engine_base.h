@@ -89,7 +89,7 @@ namespace GN { namespace engine
     void shutdown();
 
     /// Graphics initialization options
-    struct GfxOptions
+    struct GfxInitOptions
     {
         gfx::GpuOptions           gpuOptions;          ///< renderer options
         bool                      useMultithreadGpu;   ///< use multithread renderer or not.
@@ -100,7 +100,7 @@ namespace GN { namespace engine
     bool inputInitialize( input::InputAPI );
     void inputShutdown();
 
-    bool gfxInitialize( const GfxOptions & );
+    bool gfxInitialize( const GfxInitOptions & );
     void gfxShutdown();
 
     //bool soundInitialize();
@@ -120,7 +120,7 @@ namespace GN { namespace engine
     Entity * findEntity( int id );
 
     /// Functions in this namespace are reserved for engine module itself,
-    /// and should not be called by engine clients or entity/component developer.
+    /// and should not be called by engine clients or entity/component developers.
     namespace impl
     {
         /// Entity management

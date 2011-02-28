@@ -134,7 +134,7 @@ static Engine s_engine;
 //
 //
 // -----------------------------------------------------------------------------
-static bool sGfxInitInternal( const GfxOptions & o )
+static bool sGfxInitInternal( const GfxInitOptions & o )
 {
     using namespace GN::gfx;
 
@@ -274,7 +274,7 @@ void GN::engine::inputShutdown()
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::engine::gfxInitialize( const GfxOptions & o )
+bool GN::engine::gfxInitialize( const GfxInitOptions & o )
 {
     bool result = sGfxInitInternal( o );
     if( !result ) gfxShutdown();
