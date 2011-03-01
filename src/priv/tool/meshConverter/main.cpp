@@ -37,7 +37,7 @@ int main( int argc, const char * argv[] )
         outputFile = stringFormat( "startup::%s.scene.xml", fs::baseName( inputFile ).cptr() );
     }
 
-    SimpleWorldDesc swd;
+    SampleWorldDesc swd;
 
     if( !swd.loadFromFile( inputFile ) ) return -1;
 

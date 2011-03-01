@@ -893,7 +893,6 @@ TARGET_tests = [
     'GNtestPcre',
     'GNtestRenderToTexture',
     'GNtestGpuResDB',
-    'GNtestScene',
     'GNtestSIMD',
     'GNtestSprite',
     'GNut',

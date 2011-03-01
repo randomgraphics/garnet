@@ -16,6 +16,7 @@ namespace GN { namespace engine
         //@{
 
         static const Guid & sGetType();
+        const Guid &        getType() const { return sGetType(); }
 
                             SpacialComponent();
                            ~SpacialComponent();
@@ -26,11 +27,11 @@ namespace GN { namespace engine
         void                setScale( const Vector3f & );       ///< set scaling for each axis.
         void                setBoundingBox( const Boxf & );     ///< set bounding box of the component itself (not taking account subcomponents) in local space.
 
-        SpacialComponent * getParent() const { return sToComponent( mTreeNode.getParent() ); }
-        SpacialComponent * getPrevSibling() const { return sToComponent( mTreeNode.getPrevSibling() ); }
-        SpacialComponent * getNextSibling() const { return sToComponent( mTreeNode.getNextSibling() ); }
-        SpacialComponent * getFirstChild() const { return sToComponent( mTreeNode.getFirstChild() ); }
-        SpacialComponent * getLastChild() const { GN_UNIMPL(); return NULL; }
+        SpacialComponent  * getParent() const { return sToComponent( mTreeNode.getParent() ); }
+        SpacialComponent  * getPrevSibling() const { return sToComponent( mTreeNode.getPrevSibling() ); }
+        SpacialComponent  * getNextSibling() const { return sToComponent( mTreeNode.getNextSibling() ); }
+        SpacialComponent  * getFirstChild() const { return sToComponent( mTreeNode.getFirstChild() ); }
+        SpacialComponent  * getLastChild() const { GN_UNIMPL(); return NULL; }
 
         const Vector3f    & getPosition() const { return mPosition; }       ///< get position in parent space
         const Quaternionf & getRotation() const { return mRotation; }       ///< get orientation, in parent space

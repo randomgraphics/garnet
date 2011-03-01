@@ -58,8 +58,8 @@ public:
         arcball.setViewMatrix( view );
         arcball.connectToInput();
 
-        Gpu                 & gpu = getGpu();
-        GpuResourceDatabase & gdb = getGdb();
+        Gpu                 & gpu = *engine::getGpu();
+        GpuResourceDatabase & gdb = *engine::getGdb();
 
         // load 2D faces
         StrA name = "media::/texture/cube2/a.bmp";
@@ -127,8 +127,8 @@ public:
 
     void onRender()
     {
-        Gpu            & gpu = getGpu();
-        SpriteRenderer & sr = spriteRenderer();
+        Gpu            & gpu = *engine::getGpu();
+        SpriteRenderer & sr  = *engine::getSpriteRenderer();
 
         // draw to cubemap
         gc.colortargets.resize( 1 );

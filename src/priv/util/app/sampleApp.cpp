@@ -119,12 +119,7 @@ static bool sParseGpuAPI( GN::gfx::GpuAPI & result, const char * value )
 //
 // -----------------------------------------------------------------------------
 GN::util::SampleApp::SampleApp()
-    : mGpu(NULL)
-    , mSpriteRenderer(NULL)
-    , mLineRenderer(NULL)
-    , mGpuResourceDatabase( NULL )
-    , mWorld(NULL)
-    , mFps( L"FPS: %.2f\n(Press F1 for help)" )
+    : mFps( L"FPS: %.2f\n(Press F1 for help)" )
     , mShowHUD(true)
     , mShowHelp(false)
 {
@@ -150,7 +145,7 @@ int GN::util::SampleApp::run( int argc, const char * const argv[] )
     while( !mDone )
     {
         // process render window messages
-        mGpu->processRenderWindowMessages( false );
+        engine::getGpu()->processRenderWindowMessages( false );
 
         // update timing stuff
         mFps.onFrame();
@@ -177,7 +172,7 @@ int GN::util::SampleApp::run( int argc, const char * const argv[] )
         mTimeSinceLastUpdate = mFps.currentTime() - lastUpdateTime;
         onRender();
         drawHUD();
-        mGpu->present();
+        engine::getGpu()->present();
     }
 
     // success
@@ -253,10 +248,11 @@ void GN::util::SampleApp::drawXYZCoordinateAxes( const Matrix44f & projViewWorld
     static const float X[] = { 0.0f, 0.0f, 0.0f, 10000.0f, 0.0f, 0.0f };
     static const float Y[] = { 0.0f, 0.0f, 0.0f, 0.0f, 10000.0f, 0.0f };
     static const float Z[] = { 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 10000.0f };
-    mLineRenderer->drawLines( X, 3*sizeof(float), 2, GN_RGBA32(255,0,0,255), projViewWorld );
-    mLineRenderer->drawLines( Y, 3*sizeof(float), 2, GN_RGBA32(0,255,0,255), projViewWorld );
-    mLineRenderer->drawLines( Z, 3*sizeof(float), 2, GN_RGBA32(0,0,255,255), projViewWorld );
-    mLineRenderer->flush();
+    LineRenderer * lr = engine::getLineRenderer();
+    lr->drawLines( X, 3*sizeof(float), 2, GN_RGBA32(255,0,0,255), projViewWorld );
+    lr->drawLines( Y, 3*sizeof(float), 2, GN_RGBA32(0,255,0,255), projViewWorld );
+    lr->drawLines( Z, 3*sizeof(float), 2, GN_RGBA32(0,0,255,255), projViewWorld );
+    lr->flush();
 }
 
 //
@@ -314,9 +310,7 @@ bool GN::util::SampleApp::init( int argc, const char * const argv[] )
 {
     if( !checkCmdLine(argc,argv) ) return false;
     if( !onPreInit( mInitParam ) ) return false;
-    if( !initGpu() ) return false;
-    if( !initInput() ) return false;
-    if( !initFont() ) return false;
+    if( !initEngine() ) return false;
     if( !onInit() ) return false;
 
     // convert help text to unicode
@@ -343,9 +337,7 @@ void GN::util::SampleApp::quit()
     GN_GUARD_ALWAYS;
 
     onQuit();
-    quitFont();
-    quitInput();
-    quitGpu();
+    quitEngine();
 
     GN_UNGUARD_ALWAYS_NO_THROW;
 }
@@ -497,72 +489,30 @@ bool GN::util::SampleApp::checkCmdLine( int argc, const char * const argv[] )
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::util::SampleApp::initGpu()
+bool GN::util::SampleApp::initEngine()
 {
     GN_GUARD;
 
-    // initialize GPU
-    mGpu = createGpu( mInitParam.ro, mInitParam.useMultithreadGpu ? GPU_CREATION_MULTIPLE_THREADS : 0 );
-    if( NULL == mGpu ) return false;
+    if( !engine::initialize() ) return false;
+
+    engine::GfxInitOptions gio;
+    gio.gpuOptions = mInitParam.ro;
+    gio.useMultithreadGpu = mInitParam.useMultithreadGpu;
+    gio.defaultNonAsciiFont = mInitParam.defaultFont;
+    gio.defaultAsciiFont = mInitParam.asciiFont;
+    if( !engine::gfxInitialize( gio ) ) return false;
 
     // connect to renderer signal: post quit event, if render window is closed.
-    mGpu->getSignals().rendererWindowClose.connect( this, &SampleApp::postExitEvent );
-    mGpu->getSignals().rendererWindowSizeMove.connect( this, &SampleApp::onRenderWindowResize );
+    engine::getGpu()->getSignals().rendererWindowClose.connect( this, &SampleApp::postExitEvent );
+    engine::getGpu()->getSignals().rendererWindowSizeMove.connect( this, &SampleApp::onRenderWindowResize );
 
-    // create sprite renderer
-    mSpriteRenderer = new SpriteRenderer( *mGpu );
-    if( !mSpriteRenderer->init() ) return false;
-
-    // create line renderer
-    mLineRenderer = new LineRenderer( *mGpu );
-    if( !mLineRenderer->init() ) return false;
-
-    // create GPU resource database
-    mGpuResourceDatabase = new GpuResourceDatabase( *mGpu );
-
-    // create the world
-    mWorld = new World( *mGpuResourceDatabase );
-
-    // create renderer
-    return true;
-
-    GN_UNGUARD;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-void GN::util::SampleApp::quitGpu()
-{
-    GN_GUARD;
-
-    safeDelete( mWorld );
-    safeDelete( mGpuResourceDatabase );
-    safeDelete( mLineRenderer );
-    safeDelete( mSpriteRenderer );
-    deleteGpu( mGpu ); mGpu = NULL;
-
-    GN_UNGUARD;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-bool GN::util::SampleApp::initInput()
-{
-    GN_GUARD;
-
-    // create INPUT system
-    if( !initializeInputSystem( mInitParam.iapi ) ) return false;
-    const DispDesc & dd = mGpu->getDispDesc();
-    gInput.attachToWindow( dd.displayHandle, dd.windowHandle );
-
-    // connect to input signals
+    // initialize input system
+    if( !engine::inputInitialize( mInitParam.iapi ) ) return false;
     gInput.sigKeyPress.connect( this, &SampleApp::onKeyPress );
     gInput.sigCharPress.connect( this, &SampleApp::onCharPress );
     gInput.sigAxisMove.connect( this, &SampleApp::onAxisMove );
 
-    // success
+    // done
     return true;
 
     GN_UNGUARD;
@@ -571,58 +521,11 @@ bool GN::util::SampleApp::initInput()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::util::SampleApp::quitInput()
+void GN::util::SampleApp::quitEngine()
 {
     GN_GUARD;
 
-    if( gInputPtr )
-    {
-        gInput.sigKeyPress.disconnect( this );
-        gInput.sigCharPress.disconnect( this );
-        gInput.sigAxisMove.disconnect( this );
-    }
-
-    shutdownInputSystem();
-
-    GN_UNGUARD;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-bool GN::util::SampleApp::initFont()
-{
-    GN_GUARD;
-
-    // try load default font face in mInitParam first
-    MixedFontCreationDesc mfcd;
-    mfcd.font = mInitParam.asciiFont;
-    mfcd.firstChar = 0;
-    mfcd.numChars = 127;
-    AutoRef<FontFace> ff( createMixedFontFace(mInitParam.defaultFont, &mfcd, 1) );
-    //AutoRef<util::FontFace> ff( util::createFontFace(mInitParam.defaultFont) );
-    if( !ff )
-    {
-        // if failed, then use simple ASCII font face
-        ff.attach( createSimpleAsciiFontFace() );
-
-        if( !ff ) return false;
-    }
-
-    // create font
-    return mFont.init( mSpriteRenderer, ff );
-
-    GN_UNGUARD;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-void GN::util::SampleApp::quitFont()
-{
-    GN_GUARD;
-
-    mFont.quit();
+    engine::shutdown();
 
     GN_UNGUARD;
 }
@@ -636,11 +539,13 @@ void GN::util::SampleApp::drawHUD()
 
     if( mShowHUD )
     {
-        mFont.drawText( mFps.fpsString().cptr(), 40, 40 );
+        BitmapFont * font = engine::getDefaultFontRenderer();
+
+        font->drawText( mFps.fpsString().cptr(), 40, 40 );
 
         if( mShowHelp )
         {
-            mFont.drawText( mHelpText, 40, 90 );
+            font->drawText( mHelpText, 40, 90 );
         }
     }
 

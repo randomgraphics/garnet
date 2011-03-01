@@ -101,31 +101,6 @@ namespace GN { namespace util
         ///
         float fps() const { return mFps.fps(); }
 
-        ///
-        /// get reference to renderer
-        ///
-        gfx::Gpu & getGpu() const { GN_ASSERT(mGpu); return *mGpu; }
-
-        ///
-        /// get reference to GPU resource database
-        ///
-        gfx::GpuResourceDatabase & getGdb() const { GN_ASSERT(mGpuResourceDatabase); return *mGpuResourceDatabase; }
-
-        ///
-        /// get refernece to the world
-        ///
-        util::World & getWorld() const { GN_ASSERT(mWorld); return *mWorld; }
-
-        ///
-        /// get sprite renderer
-        ///
-        gfx::SpriteRenderer & spriteRenderer() const { GN_ASSERT( mSpriteRenderer ); return *mSpriteRenderer; }
-
-        ///
-        /// get font renderer
-        ///
-        gfx::BitmapFont & font() { return mFont; }
-
         //@}
 
         // ********************************
@@ -134,13 +109,6 @@ namespace GN { namespace util
     private:
 
         InitParam                  mInitParam;
-
-        gfx::Gpu                 * mGpu;
-        gfx::SpriteRenderer      * mSpriteRenderer;
-        gfx::LineRenderer        * mLineRenderer;
-        gfx::GpuResourceDatabase * mGpuResourceDatabase;
-        gfx::BitmapFont            mFont;
-        util::World              * mWorld;
 
         // time stuff
         util::FpsCalculator        mFps;
@@ -160,13 +128,8 @@ namespace GN { namespace util
         bool init( int argc, const char *  const argv[] );
         void quit();
         bool checkCmdLine( int argc, const char * const argv[] );
-        bool initGpu();
-        void quitGpu();
-        bool recreateGpu();
-        bool initInput();
-        void quitInput();
-        bool initFont();
-        void quitFont();
+        bool initEngine();
+        void quitEngine();
         void drawHUD();
     };
 }}

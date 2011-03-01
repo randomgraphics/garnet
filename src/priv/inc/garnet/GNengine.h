@@ -20,7 +20,7 @@ namespace GN
 
 #include "engine/engine_base.h"
 #include "engine/spacial_component.h"
-//#include "engine/gfx_component.h"
+#include "engine/visual_component.h"
 //#include "engine/mesh.h"
 //#include "engine/camera.h"
 //#include "engine/light.h"
