@@ -295,10 +295,10 @@ class BezierApp : public SampleApp
         Matrix44f view;
     };
 
-    ArcBall                        arcball; // arcball camera
-    float                          radius;  // distance from camera to object
-    Camera                         camera;
-    AutoObjPtr<SampleVisualEntity> bezier;
+    ArcBall                arcball; // arcball camera
+    float                  radius;  // distance from camera to object
+    Camera                 camera;
+    AutoObjPtr<StaticMesh> bezier;
 
     void updateRadius()
     {
@@ -341,8 +341,8 @@ class BezierApp : public SampleApp
         model->setTextureResource( "DIFFUSE_TEXTURE", TextureResource::loadFromFile( gdb, "media::texture/earth.jpg" ) );
 
         // create entity
-        bezier.attach( new SampleVisualEntity() );
-        bezier->visual()->addModel( model );
+        bezier.attach( new StaticMesh() );
+        bezier->visual().addModel( model );
 
         // initialize arcball
         arcball.setHandness( util::RIGHT_HAND );
@@ -391,8 +391,7 @@ class BezierApp : public SampleApp
 
         const Vector3f & position = arcball.getTranslation();
 
-        engine::getStandardUniformManager()->setTransform( camera.proj, camera.view );
-        bezier->getComponent<VisualComponent>()->draw();
+        bezier->draw( camera.proj, camera.view );
 
         drawCoords();
 

@@ -6,22 +6,22 @@ using namespace GN::input;
 using namespace GN::engine;
 using namespace GN::util;
 
-SampleSpacialEntity * root = NULL;
-SampleVisualEntity * box = NULL;
-SampleVisualEntity * robot = NULL;
+StaticMesh * root = NULL;
+StaticMesh * box = NULL;
+StaticMesh * robot = NULL;
 Matrix44f proj, view;
 
 bool init()
 {
-    root = new SampleSpacialEntity();
+    root = new StaticMesh();
 
     // robot stays at the origin.
-    robot = new SampleVisualEntity();
-    robot->spacial()->setParent( root->spacial() );
-    if( !loadModelsFromFile( *robot->visual(), "media::/boxes/boxes.ase" ) ) return false;
-    //if( !loadModelsFromFile( *robot->visual(), "media::/model/R.F.R01/a01.ase" ) ) return false;
+    robot = new StaticMesh();
+    robot->spacial().setParent( &root->spacial() );
+    if( !robot->loadAllModelsFromFile( "media::/boxes/boxes.ase" ) ) return false;
+    //if( !robot->loadAllModelsFromFile "media::/model/R.F.R01/a01.ase" ) ) return false;
 
-    const Boxf & bbox = robot->spacial()->getBoundingBox();
+    const Boxf & bbox = robot->spacial().getBoundingBox();
     Spheref bs;
     calculateBoundingSphereFromBoundingBox( bs, bbox );
 
@@ -46,8 +46,7 @@ void quit()
 
 void draw()
 {
-    engine::getStandardUniformManager()->setTransform( proj, view );
-    robot->visual()->draw();
+    robot->draw( proj, view );
 }
 
 bool run()

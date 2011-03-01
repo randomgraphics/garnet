@@ -53,35 +53,6 @@ namespace GN { namespace util
         bool saveToFile( const char * filename );
     };
 
-    class SampleSpacialEntity : public engine::Entity
-    {
-        engine::SpacialComponent * mComp;
-
-    public:
-
-        SampleSpacialEntity() : mComp( new engine::SpacialComponent() )
-        {
-            this->setComponent( mComp );
-        }
-
-        engine::SpacialComponent * spacial() const { return mComp; }
-    };
-
-    class SampleVisualEntity : public SampleSpacialEntity
-    {
-        engine::VisualComponent * mComp;
-
-    public:
-
-        SampleVisualEntity() : mComp( new engine::VisualComponent() )
-        {
-            this->setComponent( mComp );
-        }
-
-        engine::VisualComponent * visual() const { return mComp; }
-    };
-
-
     ///
     /// Virtual world used in sample application
     ///
@@ -103,9 +74,6 @@ namespace GN { namespace util
 
         //@}
     };
-
-    /// Load models from file into visual component
-    bool loadModelsFromFile( engine::VisualComponent & comp, const char * filename );
 }}
 
 // *****************************************************************************

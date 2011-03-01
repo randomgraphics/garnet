@@ -44,7 +44,7 @@ namespace GN
             if( 0 == ref )
             {
                 // delete itself
-                delete this;
+                selfDestruct();
             }
 
             return ref;
@@ -98,6 +98,16 @@ namespace GN
                 NullifyWeakRef( *mWeakRefList.begin() );
             }
             GN_ASSERT( mWeakRefList.empty() );
+        }
+
+        ///
+        /// Override this function to change the behavior when reference counter reaches zero.
+        /// This is useful when RefCounter object is created on stack or declared as a member of
+        /// another structure/class.
+        ///
+        virtual void selfDestruct() const
+        {
+            delete this;
         }
 
         //@}

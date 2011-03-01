@@ -261,7 +261,7 @@ sLoadWorldFromXPR( SampleWorldDesc & desc, File & file )
 //
 //
 // -----------------------------------------------------------------------------
-static bool
+bool
 sLoadModelsFromXPR( VisualComponent & comp, GpuResourceDatabase & db, File & file )
 {
     // load XPR file
@@ -426,7 +426,7 @@ static ModelType::ENUM sDetermineBestModel( const MeshResource & m )
 //
 //
 // -----------------------------------------------------------------------------
-static bool
+bool
 sLoadModelsFromASE( VisualComponent & comp, GpuResourceDatabase & db, File & file )
 {
     GN_SCOPE_PROFILER( sLoadModelsFromASE, "Load ASE into VisualComponent" );
@@ -978,6 +978,44 @@ bool sLoadFromMeshBinary( SampleWorldDesc & desc, File & fp )
 // Common local functions
 // *****************************************************************************
 
+class SampleSpacialEntity : public engine::Entity
+{
+    engine::SpacialComponent * mComp;
+
+public:
+
+    SampleSpacialEntity() : mComp( new engine::SpacialComponent() )
+    {
+        this->setComponent( mComp );
+    }
+
+    ~SampleSpacialEntity()
+    {
+        safeDecref( mComp );
+    }
+
+    engine::SpacialComponent * spacial() const { return mComp; }
+};
+
+class SampleVisualEntity : public SampleSpacialEntity
+{
+    engine::VisualComponent * mComp;
+
+public:
+
+    SampleVisualEntity() : mComp( new engine::VisualComponent() )
+    {
+        this->setComponent( mComp );
+    }
+
+    ~SampleVisualEntity()
+    {
+        safeDecref( mComp );
+    }
+
+    engine::VisualComponent * visual() const { return mComp; }
+};
+
 //
 //
 // -----------------------------------------------------------------------------
@@ -1246,44 +1284,5 @@ void GN::util::SampleWorld::draw( const Matrix44f & proj, const Matrix44f & view
         {
             visual->draw();
         }
-    }
-}
-
-// *****************************************************************************
-// SampleWorld
-// *****************************************************************************
-
-//
-//
-// -----------------------------------------------------------------------------
-bool GN::util::loadModelsFromFile( engine::VisualComponent & comp, const char * filename )
-{
-    GN_SCOPE_PROFILER( loadModelsFromFile, "Load models from file into VisualComponent" );
-
-    comp.removeAllModels();
-
-    // open file
-    AutoObjPtr<File> fp( fs::openFile( filename, "rb" ) );
-    if( !fp ) return false;
-
-    // get file extension
-    StrA ext = fs::extName( filename );
-
-    GpuResourceDatabase & gdb = *getGdb();
-
-    // do loading
-    if( 0 == stringCompareI( ".ase", ext.cptr() ) )
-    {
-        return sLoadModelsFromASE( comp, gdb, *fp );
-    }
-    else if( 0 == stringCompareI( ".xpr", ext.cptr() ) ||
-             0 == stringCompareI( ".tpr", ext.cptr() ))
-    {
-        return sLoadModelsFromXPR( comp, gdb, *fp );
-    }
-    else
-    {
-        GN_ERROR(sLogger)( "Unknown file extension: %s", ext.cptr() );
-        return false;
     }
 }

@@ -99,6 +99,7 @@ void GN::engine::Entity::setComponent( const Guid & type, Component * comp )
         // add new component
         mComponents[type] = comp;
         comp->mEntity = this;
+        comp->incref();
     }
     else
     {
