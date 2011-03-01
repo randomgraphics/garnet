@@ -3,6 +3,7 @@
 
 using namespace GN;
 using namespace GN::gfx;
+using namespace GN::engine;
 using namespace GN::util;
 
 static GN::Logger * sLogger = GN::getLogger("GN.util");
@@ -147,7 +148,7 @@ struct XPRScene
 };
 
 static bool
-loadXprSceneFromFile( XPRScene & xpr, File & file )
+sLoadXprSceneFromFile( XPRScene & xpr, File & file )
 {
     size_t readen;
 
@@ -246,16 +247,42 @@ loadXprSceneFromFile( XPRScene & xpr, File & file )
 //
 // -----------------------------------------------------------------------------
 static bool
-sLoadFromXPR( SimpleWorldDesc & desc, File & file )
+sLoadWorldFromXPR( SampleWorldDesc & desc, File & file )
 {
     // load XPR file
     XPRScene xpr;
-    if( !loadXprSceneFromFile( xpr, file ) ) return NULL;
+    if( !sLoadXprSceneFromFile( xpr, file ) ) return NULL;
 
     GN_UNUSED_PARAM( desc );
     GN_UNIMPL_WARNING();
     return false;
 }
+
+//
+//
+// -----------------------------------------------------------------------------
+static bool
+sLoadModelsFromXPR( VisualComponent & comp, GpuResourceDatabase & db, File & file )
+{
+    // load XPR file
+    XPRScene xpr;
+    if( !sLoadXprSceneFromFile( xpr, file ) ) return NULL;
+
+    // create mesh list
+    DynaArray<AutoRef<MeshResource> > meshes;
+    meshes.resize( xpr.meshes.size() );
+    for( size_t i = 0; i < xpr.meshes.size(); ++i )
+    {
+        meshes[i] = db.createResource<MeshResource>( NULL );
+        if( !meshes[i] ) return false;
+        if( !meshes[i]->reset( &xpr.meshes[i] ) ) return false;
+    }
+
+    GN_UNUSED_PARAM( comp );
+    GN_UNIMPL_WARNING();
+    return false;
+}
+
 
 // *****************************************************************************
 //
@@ -267,7 +294,7 @@ sLoadFromXPR( SimpleWorldDesc & desc, File & file )
 //
 // -----------------------------------------------------------------------------
 static bool
-sLoadFromASE( SimpleWorldDesc & desc, File & file )
+sLoadWorldFromASE( SampleWorldDesc & desc, File & file )
 {
     // load ASE scene
     AseScene ase;
@@ -294,7 +321,7 @@ sLoadFromASE( SimpleWorldDesc & desc, File & file )
         desc.meshes[meshname] = src;
 
         // create the entity
-        SimpleWorldDesc::EntityDesc & entityDesc = desc.entities[meshname];
+        SampleWorldDesc::EntityDesc & entityDesc = desc.entities[meshname];
         entityDesc.spatial.parent = src.parent.empty() ? "" : FULL_MESH_NAME(src.parent);
         entityDesc.spatial.position = src.pos;
         entityDesc.spatial.orientation.fromRotation( src.rotaxis, src.rotangle );
@@ -347,8 +374,170 @@ sLoadFromASE( SimpleWorldDesc & desc, File & file )
     return true;
 }
 
+struct ModelType
+{
+    enum ENUM
+    {
+        NONE,
+        WIREFRAME,
+        DIFFUSE,
+        NORMAL_MAP,
+        NUM_EFFECT_TYPES,
+    };
+};
+
+///
+/// Determine the best effect that can show the mesh
+///
+static ModelType::ENUM sDetermineBestModel( const MeshResource & m )
+{
+    const MeshVertexFormat & vf = m.getDesc().vtxfmt;
+
+    // position is required
+    if( !sHasPosition( vf ) )
+    {
+        GN_ERROR(sLogger)( "The mesh has no position, which is required by the mesh viewer." );
+        return ModelType::NONE;
+    }
+
+    if( !sHasNormal( vf ) )
+    {
+        GN_WARN(sLogger)( "The mesh has no normal." );
+        return ModelType::WIREFRAME;
+    }
+
+    if( !sHasTex0( vf ) )
+    {
+        GN_WARN(sLogger)( "The mesh has no texture coordinate." );
+        return ModelType::WIREFRAME;
+    }
+
+    // use normal map, if the mesh has both normal and tangent.
+    if( sHasTangent( vf ) )
+    {
+        return ModelType::NORMAL_MAP;
+    }
+    else
+    {
+        return ModelType::DIFFUSE;
+    }
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+static bool
+sLoadModelsFromASE( VisualComponent & comp, GpuResourceDatabase & db, File & file )
+{
+    GN_SCOPE_PROFILER( sLoadModelsFromASE, "Load ASE into VisualComponent" );
+
+    // load ASE scene
+    AseScene ase;
+    if( !loadAseSceneFromFile( ase, file) ) return false;
+
+    // create mesh list
+    DynaArray<AutoRef<MeshResource> > meshes;
+    {
+        GN_SCOPE_PROFILER( sLoadModelsFromASE_GenerateMeshList, "Load ASE into VisualComponent: generating mesh list" );
+
+        meshes.resize( ase.meshes.size() );
+
+        for( size_t i = 0; i < ase.meshes.size(); ++i )
+        {
+            char meshname[1024];
+            stringPrintf( meshname, 1024, "%s.mesh.%u", file.name(), i );
+
+            meshes[i] = db.findResource<MeshResource>( meshname );
+            if( meshes[i] ) continue; // use exising mesh directly.
+
+            meshes[i] = db.createResource<MeshResource>( meshname );
+            if( !meshes[i] ) return false;
+            if( !meshes[i]->reset( &ase.meshes[i] ) ) return false;
+        }
+    }
+
+    // initialize model templates
+    SimpleWireframeModel wireframeModel( db );
+    if( !wireframeModel.init() ) return false;
+    SimpleDiffuseModel diffuseModel( db );
+    if( !diffuseModel.init() ) return false;
+    SimpleNormalMapModel normalMapModel( db );
+    if( !normalMapModel.init() ) return false;
+
+    // create model
+    for( size_t i = 0; i < ase.subsets.size(); ++i )
+    {
+        const AseMeshSubset & subset = ase.subsets[i];
+
+        MeshResource * mesh = meshes[subset.meshid];
+
+        // determine the model template
+        ModelType::ENUM mt = sDetermineBestModel( *mesh );
+        ModelResource * modelTemplate;
+        switch( mt )
+        {
+            case ModelType::WIREFRAME:
+                modelTemplate = &wireframeModel.modelResource();
+                break;
+
+            case ModelType::DIFFUSE:
+                modelTemplate = &diffuseModel.modelResource();
+                break;
+
+            case ModelType::NORMAL_MAP:
+                modelTemplate = &normalMapModel.modelResource();
+                break;
+
+            default:
+                modelTemplate = NULL;
+                break;
+        }
+
+        // skip the mesh, if there'subset no appropriate effect for it.
+        if( !modelTemplate ) continue;
+
+        // make a clone the selected modelTemplate
+        AutoRef<ModelResource> clone = modelTemplate->makeClone( NULL );
+        if( NULL == clone ) return false;
+
+        // bind textures to effect
+        {
+            GN_SCOPE_PROFILER( sLoadModelsFromASE_LoadTextures, "Load ASE into VisualComponent: load textures" );
+
+            AutoRef<EffectResource> e = clone->effectResource();
+
+            const AseMaterial & am = ase.materials[subset.matid];
+
+            AutoRef<TextureResource> t;
+
+            if( e->hasTexture("ALBEDO_TEXTURE") && !am.mapdiff.bitmap.empty() )
+            {
+                t = TextureResource::loadFromFile( db, am.mapdiff.bitmap );
+                clone->setTextureResource( "ALBEDO_TEXTURE", t );
+            }
+            if( e->hasTexture( "NORMAL_TEXTURE" ) && !am.mapbump.bitmap.empty() )
+            {
+                t = TextureResource::loadFromFile( db, am.mapbump.bitmap );
+                clone->setTextureResource( "ALBEDO_TEXTURE", t );
+            }
+        }
+
+        clone->setMeshResource( mesh, &subset );
+
+        comp.addModel( clone );
+    }
+
+    // update bounding box
+    Entity * e = comp.getEntity();
+    SpacialComponent * sn = e ? e->getComponent<SpacialComponent>() : NULL;
+    if( sn ) sn->setBoundingBox( ase.bbox );
+
+    return true;
+}
 // *****************************************************************************
+//
 // XML loader
+//
 // *****************************************************************************
 
 //
@@ -372,7 +561,7 @@ static void sPostXMLError( const XmlNode & node, const StrA & msg )
 //
 // -----------------------------------------------------------------------------
 static bool
-sParseModel( SimpleWorldDesc & desc, XmlElement & root, const StrA & basedir )
+sParseModel( SampleWorldDesc & desc, XmlElement & root, const StrA & basedir )
 {
     ModelResourceDesc md;
 
@@ -404,7 +593,7 @@ sParseModel( SimpleWorldDesc & desc, XmlElement & root, const StrA & basedir )
 //
 // -----------------------------------------------------------------------------
 static bool
-sParseEntity( SimpleWorldDesc & desc, XmlElement & root )
+sParseEntity( SampleWorldDesc & desc, XmlElement & root )
 {
     GN_ASSERT( root.name == "entity" );
 
@@ -415,7 +604,7 @@ sParseEntity( SimpleWorldDesc & desc, XmlElement & root )
         return false;
     }
 
-    SimpleWorldDesc::EntityDesc entity;
+    SampleWorldDesc::EntityDesc entity;
 
     // parse spatial
     XmlElement * spatialNode = root.findChildElement( "spatial" );
@@ -487,7 +676,7 @@ sParseEntity( SimpleWorldDesc & desc, XmlElement & root )
 //
 // -----------------------------------------------------------------------------
 static bool
-sLoadFromXML( SimpleWorldDesc & desc, File & file )
+sLoadFromXML( SampleWorldDesc & desc, File & file )
 {
     XmlDocument doc;
     XmlParseResult xpr;
@@ -575,7 +764,7 @@ sLoadFromXML( SimpleWorldDesc & desc, File & file )
 //
 // -----------------------------------------------------------------------------
 static bool
-sSaveToXML( const SimpleWorldDesc & desc, const char * filename )
+sSaveToXML( const SampleWorldDesc & desc, const char * filename )
 {
     // check dirname
     if( NULL == filename )
@@ -647,7 +836,7 @@ sSaveToXML( const SimpleWorldDesc & desc, const char * filename )
     // rename entities
     int entityIndex = 0;
     StringMap<char,StrA> entityNameMap;
-    for( const StringMap<char,SimpleWorldDesc::EntityDesc>::KeyValuePair * i = desc.entities.first();
+    for( const StringMap<char,SampleWorldDesc::EntityDesc>::KeyValuePair * i = desc.entities.first();
         i != NULL;
         i = desc.entities.next( i ) )
     {
@@ -659,12 +848,12 @@ sSaveToXML( const SimpleWorldDesc & desc, const char * filename )
     // write entities
     XmlElement * entities = xmldoc.createElement( root );
     entities->name = "entities";
-    for( const StringMap<char,SimpleWorldDesc::EntityDesc>::KeyValuePair * i = desc.entities.first();
+    for( const StringMap<char,SampleWorldDesc::EntityDesc>::KeyValuePair * i = desc.entities.first();
         i != NULL;
         i = desc.entities.next( i ) )
     {
         const StrA                        & entityName = *entityNameMap.find(i->key);
-        const SimpleWorldDesc::EntityDesc & entityDesc = i->value;
+        const SampleWorldDesc::EntityDesc & entityDesc = i->value;
 
         XmlElement * entity = xmldoc.createElement( entities );
         entity->name = "entity";
@@ -750,7 +939,7 @@ sSaveToXML( const SimpleWorldDesc & desc, const char * filename )
 //
 //
 // -----------------------------------------------------------------------------
-bool sLoadFromMeshBinary( SimpleWorldDesc & desc, File & fp )
+bool sLoadFromMeshBinary( SampleWorldDesc & desc, File & fp )
 {
     desc.clear();
 
@@ -774,7 +963,7 @@ bool sLoadFromMeshBinary( SimpleWorldDesc & desc, File & fp )
     desc.models[meshname] = model;
 
     // create a entity for the model
-    SimpleWorldDesc::EntityDesc & ed = desc.entities[meshname];
+    SampleWorldDesc::EntityDesc & ed = desc.entities[meshname];
     ed.spatial.position.set( 0, 0, 0 );
     ed.spatial.orientation.set( 0, 0, 0, 1 );
     mesh.calculateBoundingBox( ed.spatial.bbox );
@@ -792,49 +981,55 @@ bool sLoadFromMeshBinary( SimpleWorldDesc & desc, File & fp )
 //
 //
 // -----------------------------------------------------------------------------
-static Entity * sPopulateEntity( World & world, Entity * root, const SimpleWorldDesc & desc, const StrA & entityName )
+static Entity * sCreateEntity(
+    Entity                             * root,
+    const SampleWorldDesc              & worldDesc,
+    StringMap<char,Entity*>            & entities,
+    const StrA                         & entityName,
+    const SampleWorldDesc::EntityDesc  & entityDesc )
 {
-    GN_ASSERT( NULL != desc.entities.find( entityName ) );
-
-    const SimpleWorldDesc::EntityDesc & entityDesc = *desc.entities.find(entityName);
-
     // recursively populate parent entities
-    Entity * parent = NULL;
+    SampleSpacialEntity * parent = NULL;
     if( !entityDesc.spatial.parent.empty() )
     {
-        if( NULL == desc.entities.find( entityDesc.spatial.parent ) )
+        const SampleWorldDesc::EntityDesc * parentDesc = worldDesc.entities.find( entityDesc.spatial.parent );
+        if( NULL == parentDesc )
         {
             GN_ERROR(sLogger)( "Entity '%s' has a invalid parent: '%s'", entityName.cptr(), entityDesc.spatial.parent.cptr() );
         }
         else
         {
-            parent = sPopulateEntity( world, root, desc, entityDesc.spatial.parent );
+
+            parent = (SampleSpacialEntity*)sCreateEntity( root, worldDesc, entities, entityDesc.spatial.parent, *parentDesc );
+            if( NULL == parent ) return NULL;
         }
     }
 
-    // check if the entity is in the world already
-    Entity * e = world.findEntity( entityName );
-    if( e ) return e;
+    // check if the entity has been initialized;
+    Entity ** ppe = entities.find( entityName );
+    if( ppe ) return *ppe;
 
     // create a new entity instance
-    e = entityDesc.models.empty() ? world.createSpatialEntity( entityName ) : world.createVisualEntity( entityName );;
-    if( !e ) return NULL;
+    SampleSpacialEntity * e = entityDesc.models.empty() ? new SampleSpacialEntity() : new SampleVisualEntity();
+    if( !e )
+    {
+        GN_ERROR(sLogger)( "Out of memory." );
+        return NULL;
+    }
+    entities[entityName] = e;
+    GN_ASSERT( (Entity*)e == *entities.find( entityName ) );
 
     // attach the entity to parent node or root node
-    e->getNode<SpatialNode>()->setParent( parent ? parent->getNode<SpatialNode>() : root->getNode<SpatialNode>() );
+    e->spacial()->setParent( parent ? parent->spacial() : ((SampleSpacialEntity*)root)->spacial() );
 
     // calculate bounding sphere
-    const Boxf & bbox = entityDesc.spatial.bbox;
-    Spheref bs;
-    calculateBoundingSphereFromBoundingBox( bs, bbox );
-    e->getNode<SpatialNode>()->setBoundingSphere( bs );
+    e->spacial()->setBoundingBox( entityDesc.spatial.bbox );
 
     for( size_t i = 0; i < entityDesc.models.size(); ++i )
     {
         const StrA & modelName = entityDesc.models[i];
 
-
-        const GN::gfx::ModelResourceDesc * pModelDesc = desc.models.find( modelName );
+        const GN::gfx::ModelResourceDesc * pModelDesc = worldDesc.models.find( modelName );
         if( NULL == pModelDesc )
         {
             GN_ERROR(sLogger)(
@@ -848,13 +1043,14 @@ static Entity * sPopulateEntity( World & world, Entity * root, const SimpleWorld
         // to prevent it from being deleted, until the model is created.
         AutoRef<MeshResource> mesh;
 
-        if( !pModelDesc->mesh.empty() )
+        GpuResourceDatabase * gdb = engine::getGdb();
+        if( !pModelDesc->mesh.empty() && gdb )
         {
-            mesh = world.getGdb().findResource<MeshResource>( pModelDesc->mesh );
+            mesh = gdb->findResource<MeshResource>( pModelDesc->mesh );
             if( !mesh )
             {
 
-                const GN::gfx::MeshResourceDesc * pMeshDesc = desc.meshes.find(pModelDesc->mesh);
+                const GN::gfx::MeshResourceDesc * pMeshDesc = worldDesc.meshes.find(pModelDesc->mesh);
 
                 if( NULL == pMeshDesc )
                 {
@@ -866,15 +1062,15 @@ static Entity * sPopulateEntity( World & world, Entity * root, const SimpleWorld
                 }
 
                 // create new mesh
-                mesh = world.getGdb().createResource<MeshResource>( pModelDesc->mesh );
+                mesh = gdb->createResource<MeshResource>( pModelDesc->mesh );
                 if( !mesh || !mesh->reset( pMeshDesc ) ) continue;
             }
         }
 
-        AutoRef<ModelResource> model = world.getGdb().createResource<ModelResource>( NULL );
+        AutoRef<ModelResource> model = gdb->createResource<ModelResource>( NULL );
         if( !model->reset( pModelDesc ) ) continue;
 
-        e->getNode<VisualNode>()->addModel( model );
+        ((SampleVisualEntity*)e)->visual()->addModel( model );
     }
 
     return e;
@@ -899,13 +1095,13 @@ static bool sStrEndWithI( const char * string, const char * suffix )
 }
 
 // *****************************************************************************
-// public functions
+// SampleWorldDesc
 // *****************************************************************************
 
 //
 //
 // -----------------------------------------------------------------------------
-void GN::util::SimpleWorldDesc::clear()
+void GN::util::SampleWorldDesc::clear()
 {
     meshes.clear();
     meshdata.clear();
@@ -916,7 +1112,7 @@ void GN::util::SimpleWorldDesc::clear()
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::util::SimpleWorldDesc::loadFromFile( const char * filename )
+bool GN::util::SampleWorldDesc::loadFromFile( const char * filename )
 {
     GN_SCOPE_PROFILER( loadWorldFromFile, "Load simple world from file" );
 
@@ -938,12 +1134,12 @@ bool GN::util::SimpleWorldDesc::loadFromFile( const char * filename )
     }
     else if( sStrEndWithI( filename, ".ase" ) )
     {
-        return sLoadFromASE( *this, *fp );
+        return sLoadWorldFromASE( *this, *fp );
     }
     else if( sStrEndWithI( filename, ".xpr" ) ||
              sStrEndWithI( filename, ".tpr" ) )
     {
-        return sLoadFromXPR( *this, *fp );
+        return sLoadWorldFromXPR( *this, *fp );
     }
     else if( sStrEndWithI( filename, ".mesh.bin" ) )
     {
@@ -959,7 +1155,7 @@ bool GN::util::SimpleWorldDesc::loadFromFile( const char * filename )
 ///
 /// write world description to file
 // -----------------------------------------------------------------------------
-bool GN::util::SimpleWorldDesc::saveToFile( const char * filename )
+bool GN::util::SampleWorldDesc::saveToFile( const char * filename )
 {
     GN_SCOPE_PROFILER( profiler, "Save simple world to file" );
 
@@ -968,30 +1164,126 @@ bool GN::util::SimpleWorldDesc::saveToFile( const char * filename )
     return sSaveToXML( *this, filename );
 }
 
+// *****************************************************************************
+// SampleWorld
+// *****************************************************************************
+
 //
 //
 // -----------------------------------------------------------------------------
-Entity * GN::util::SimpleWorldDesc::populateTheWorld( World & world ) const
+GN::util::SampleWorld::SampleWorld()
+    : mRoot(NULL)
 {
-    // create root spatial entity of the whole world
-    Entity * root = world.createSpatialEntity( NULL );
-    if( NULL == root ) return NULL;
+}
 
-    for( const StringMap<char,EntityDesc>::KeyValuePair * i = entities.first();
+//
+//
+// -----------------------------------------------------------------------------
+GN::util::SampleWorld::~SampleWorld()
+{
+    clear();
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::util::SampleWorld::clear()
+{
+    for( const StringMap<char,Entity*>::KeyValuePair * i = mEntities.first();
          i != NULL;
-         i = entities.next( i ) )
+         i = mEntities.next( i ) )
+    {
+        delete i->value;
+    }
+    mEntities.clear();
+    safeDelete( mRoot );
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+bool GN::util::SampleWorld::createEntites( const SampleWorldDesc & desc )
+{
+    // clear old data.
+    clear();
+
+    // create root spatial entity of the whole world
+    mRoot = new SampleSpacialEntity();
+    if( NULL == mRoot ) return NULL;
+
+    for( const StringMap<char,SampleWorldDesc::EntityDesc>::KeyValuePair * i = desc.entities.first();
+         i != NULL;
+         i = desc.entities.next( i ) )
     {
         const StrA & entityName = i->key;
+        const SampleWorldDesc::EntityDesc & entityDesc = i->value;
 
-        if( !world.findEntity( entityName ) )
+        if( NULL == sCreateEntity( mRoot, desc, mEntities, entityName, entityDesc ) )
         {
-            sPopulateEntity( world, root, *this, entityName );
-        }
-        else
-        {
-            // The entity has been initialized, just skip it
+            // Failed.
+            clear();
+            return false;
         }
     }
 
-    return root;
+    return true;
+}
+
+//
+// Draw all entities in the world.
+// -----------------------------------------------------------------------------
+void GN::util::SampleWorld::draw( const Matrix44f & proj, const Matrix44f & view ) const
+{
+    engine::getStandardUniformManager()->setTransform( proj, view );
+
+    for( const StringMap<char,Entity*>::KeyValuePair * i = mEntities.first();
+         i != NULL;
+         i = mEntities.next( i ) )
+    {
+        Entity * e = i->value;
+        VisualComponent * visual = e->getComponent<VisualComponent>();
+        if( visual )
+        {
+            visual->draw();
+        }
+    }
+}
+
+// *****************************************************************************
+// SampleWorld
+// *****************************************************************************
+
+//
+//
+// -----------------------------------------------------------------------------
+bool GN::util::loadModelsFromFile( engine::VisualComponent & comp, const char * filename )
+{
+    GN_SCOPE_PROFILER( loadModelsFromFile, "Load models from file into VisualComponent" );
+
+    comp.removeAllModels();
+
+    // open file
+    AutoObjPtr<File> fp( fs::openFile( filename, "rb" ) );
+    if( !fp ) return false;
+
+    // get file extension
+    StrA ext = fs::extName( filename );
+
+    GpuResourceDatabase & gdb = *getGdb();
+
+    // do loading
+    if( 0 == stringCompareI( ".ase", ext.cptr() ) )
+    {
+        return sLoadModelsFromASE( comp, gdb, *fp );
+    }
+    else if( 0 == stringCompareI( ".xpr", ext.cptr() ) ||
+             0 == stringCompareI( ".tpr", ext.cptr() ))
+    {
+        return sLoadModelsFromXPR( comp, gdb, *fp );
+    }
+    else
+    {
+        GN_ERROR(sLogger)( "Unknown file extension: %s", ext.cptr() );
+        return false;
+    }
 }

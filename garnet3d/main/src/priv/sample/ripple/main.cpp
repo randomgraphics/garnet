@@ -28,7 +28,7 @@ public:
 
     bool onInit()
     {
-        Gpu & gpu = getGpu();
+        Gpu & gpu = *engine::getGpu();
 
         mSprite = new SpriteRenderer(gpu);
         if( !mSprite->init() ) return false;
@@ -160,7 +160,7 @@ public:
 
     void onRender()
     {
-        Gpu & gpu = getGpu();
+        Gpu & gpu = *engine::getGpu();
 
         const DispDesc & dd = gpu.getDispDesc();
 

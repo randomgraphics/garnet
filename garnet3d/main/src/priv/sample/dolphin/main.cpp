@@ -24,7 +24,7 @@ public:
 
     bool create()
     {
-        GpuResourceDatabase & gdb = mApp.getGdb();
+        GpuResourceDatabase & gdb = *engine::getGdb();
 
         // load caustic textures
         for( int i = 0; i < 32; ++i )
@@ -95,7 +95,7 @@ public:
 
     void render()
     {
-        mApp.getGpu().clearScreen( WATER_COLOR );
+        engine::getGpu()->clearScreen( WATER_COLOR );
         mSeafloor->draw();
         mDolphin->draw();
     }
@@ -133,7 +133,7 @@ public:
 
     bool onInit()
     {
-        Gpu & g = getGpu();
+        Gpu & g = *engine::getGpu();
 
         uint32 width = g.getDispDesc().width;
         uint32 height = g.getDispDesc().height;

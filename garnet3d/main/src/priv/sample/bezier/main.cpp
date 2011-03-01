@@ -3,6 +3,7 @@
 using namespace GN;
 using namespace GN::gfx;
 using namespace GN::input;
+using namespace GN::engine;
 using namespace GN::util;
 
 struct BezierVertex
@@ -288,36 +289,38 @@ createEffect( GpuResourceDatabase & gdb )
 
 class BezierApp : public SampleApp
 {
-    ArcBall  arcball; // arcball camera
-    float    radius;  // distance from camera to object
-    Camera   camera;
-    Entity * light;
-    Entity * bezier;
+    struct Camera
+    {
+        Matrix44f proj;
+        Matrix44f view;
+    };
+
+    ArcBall                        arcball; // arcball camera
+    float                          radius;  // distance from camera to object
+    Camera                         camera;
+    AutoObjPtr<SampleVisualEntity> bezier;
 
     void updateRadius()
     {
-        Gpu            & gpu = getGpu();
+        Gpu            & gpu = *engine::getGpu();
         const DispDesc & dd  = gpu.getDispDesc();
 
-        Matrix44f view, proj;
-        view.lookAtRh( Vector3f(0,0,radius), Vector3f(0,0,0), Vector3f(0,1,0) );
-        gpu.composePerspectiveMatrixRh( proj, GN_PI/4.0f, (float)dd.width/dd.height, radius / 100.0f, radius * 2.0f );
-        camera.setViewMatrix( view );
-        camera.setProjectionMatrix( proj );
+        camera.view.lookAtRh( Vector3f(0,0,radius), Vector3f(0,0,0), Vector3f(0,1,0) );
+        gpu.composePerspectiveMatrixRh( camera.proj, GN_PI/4.0f, (float)dd.width/dd.height, radius / 100.0f, radius * 2.0f );
 
         float h = tan( 0.5f ) * radius * 2.0f;
         arcball.setMouseMoveWindow( 0, 0, (int)dd.width, (int)dd.height );
-        arcball.setViewMatrix( view );
+        arcball.setViewMatrix( camera.view );
         arcball.setTranslationSpeed( h / dd.height );
 
-        // setup light
-        light->getNode<SpatialNode>()->setPosition( Vector3f(0,0,radius) ); // head light: same location as camera.
+        // setup light as a head light that is in same location as camera.
+        Vector4f lightPos(0,0,radius,1);
+        engine::getStandardUniformManager()->setGlobalUniform( engine::StandardUniformType::LIGHT0_POSITION, lightPos );
     }
 
     bool onInit()
     {
-        GpuResourceDatabase & gdb = getGdb();
-        World               & world = getWorld();
+        GpuResourceDatabase & gdb = *engine::getGdb();
 
         AutoRef<MeshResource>   mesh;
         AutoRef<EffectResource> effect;
@@ -338,9 +341,8 @@ class BezierApp : public SampleApp
         model->setTextureResource( "DIFFUSE_TEXTURE", TextureResource::loadFromFile( gdb, "media::texture/earth.jpg" ) );
 
         // create entity
-        light  = world.createLightEntity( NULL );
-        bezier = world.createVisualEntity( NULL );
-        bezier->getNode<VisualNode>()->addModel( model );
+        bezier.attach( new SampleVisualEntity() );
+        bezier->visual()->addModel( model );
 
         // initialize arcball
         arcball.setHandness( util::RIGHT_HAND );
@@ -356,6 +358,7 @@ class BezierApp : public SampleApp
 
     void onQuit()
     {
+        bezier.clear();
     }
 
     void onRenderWindowResize( intptr_t, uint32 width, uint32 height )
@@ -376,23 +379,24 @@ class BezierApp : public SampleApp
 
     void onUpdate()
     {
-        SpatialNode * spatialNode = bezier->getNode<SpatialNode>();
+        SpacialComponent * spacial = bezier->getComponent<SpacialComponent>();
         const Vector3f & position = arcball.getTranslation();
-        spatialNode->setPosition( position );
-        spatialNode->setRotation( arcball.getRotation() );
+        spacial->setPosition( position );
+        spacial->setRotation( arcball.getRotation() );
     }
 
     void onRender()
     {
-        getGpu().clearScreen( Vector4f(0,0.5f,0.5f,1.0f) );
+        engine::getGpu()->clearScreen( Vector4f(0,0.5f,0.5f,1.0f) );
 
         const Vector3f & position = arcball.getTranslation();
 
-        bezier->getNode<VisualNode>()->graph().draw( camera );
+        engine::getStandardUniformManager()->setTransform( camera.proj, camera.view );
+        bezier->getComponent<VisualComponent>()->draw();
 
         drawCoords();
 
-        font().drawText(
+        engine::getDefaultFontRenderer()->drawText(
             stringFormat(
                 L"position : %f, %f, %f\n"
                 L"radius   : %f",
@@ -407,11 +411,11 @@ class BezierApp : public SampleApp
         static const float Y[] = { 0.0f, 0.0f, 0.0f, 0.0f, 10000.0f, 0.0f };
         static const float Z[] = { 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 10000.0f };
 
-        Gpu & gpu = getGpu();
+        Gpu & gpu = *engine::getGpu();
 
         const Matrix44f & world = arcball.getRotationMatrix44();
-        const Matrix44f & view  = camera.getViewMatrix();
-        const Matrix44f & proj  = camera.getProjectionMatrix();
+        const Matrix44f & view  = camera.view;
+        const Matrix44f & proj  = camera.proj;
         gpu.drawLines( 0, X, 3*sizeof(float), 2, GN_RGBA32(255,0,0,255), world, view, proj );
         gpu.drawLines( 0, Y, 3*sizeof(float), 2, GN_RGBA32(0,255,0,255), world, view, proj );
         gpu.drawLines( 0, Z, 3*sizeof(float), 2, GN_RGBA32(0,0,255,255), world, view, proj );

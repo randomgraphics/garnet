@@ -1,0 +1,31 @@
+; name      space   type            global desc
+
+; Transformation matrices
+MATRIX_PVW,        ,GN::Matrix44f, ,false,proj * view * world
+MATRIX_PVW_INV,    ,GN::Matrix44f, ,false,inv( proj * view * world )
+MATRIX_PVW_IT,     ,GN::Matrix44f, ,false,inv( transpose( proj * view * world ) )
+MATRIX_PV,         ,GN::Matrix44f, ,true ,proj * view
+MATRIX_PV_INV,     ,GN::Matrix44f, ,true ,inv( proj * view )
+MATRIX_PV_IT,      ,GN::Matrix44f, ,true ,inv( transpose( proj * view ) )
+MATRIX_VW,         ,GN::Matrix44f, ,false,view * world
+MATRIX_VW_INV,     ,GN::Matrix44f, ,false,inv( view * world )
+MATRIX_VW_IT,      ,GN::Matrix44f, ,false,inv( transpose( view * world ) )
+MATRIX_PROJ,       ,GN::Matrix44f, ,true ,projection matrix
+MATRIX_PROJ_INV,   ,GN::Matrix44f, ,true ,inv( proj )
+MATRIX_PROJ_IT,    ,GN::Matrix44f, ,true ,inv( transpose( proj ) )
+MATRIX_VIEW,       ,GN::Matrix44f, ,true ,view matrix
+MATRIX_VIEW_INV,   ,GN::Matrix44f, ,true ,inv( view )
+MATRIX_VIEW_IT,    ,GN::Matrix44f, ,true ,inv( transpose( view ) )
+MATRIX_WORLD,      ,GN::Matrix44f, ,false,world matrix
+MATRIX_WORLD_INV,  ,GN::Matrix44f, ,false,inv( world )
+MATRIX_WORLD_IT,   ,GN::Matrix44f, ,false,inv( transpose( world ) )
+
+; Light parameter
+LIGHT0_POSITION,   ,GN::Vector4f,  ,true ,Position in world space of light 0
+LIGHT0_DIRECTION,  ,GN::Vector4f,  ,true ,Direction in world space of light 0 (undefined for point light)
+LIGHT0_DIFFUSE,    ,GN::Vector4f,  ,true ,Diffuse color of light 0
+LIGHT0_AMBIENT,    ,GN::Vector4f,  ,true ,Ambient color of light 0
+LIGHT0_SPECULAR,   ,GN::Vector4f,  ,true ,Specular color of light 0
+
+; Misc. parameters
+TIME,              ,float,         ,true ,Time in seconds

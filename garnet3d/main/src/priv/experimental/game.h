@@ -4,15 +4,6 @@ namespace GN
 {
     namespace engine
     {
-        class World;
-
-
-
-
-
-
-
-
         /// Root class of game asset. Could be texture, mesh, or sound.
         class Asset : public NoCopy
         {
@@ -23,8 +14,8 @@ namespace GN
         {
         public:
 
-            Texture * sLoadFromFile( World &, ...);
-            Texture * sCreateBlankTexture( World &, ...);
+            Texture * sLoadFromFile(...);
+            Texture * sCreateBlankTexture(...);
         };
 
         class EffectAsset : public Asset
@@ -49,59 +40,22 @@ namespace GN
 
 
 
-
-        class Component : public NoCopy
-        {
-            protected: Component() {}
-            public: virtual ~Component() {}
-            public: virtual const Guid & getType() const = 0;
-        };
-
-        class PhysicalComponent : public Component
-        {
-        public:
-
-            static const Guid & sGetType();
-
-            const Vector4 & getScale() const;
-            const Vector4 & getPosition() const;
-            const Vector4 & getRotation() const;
-        };
-
-        class VisualComponent : public Component
-        {
-            public: static const Guid & sGetType();
-        };
-
-        /// Root class of game play object that could be placed into game world.
         class Entity : public NoCopy
         {
-            protected:       Entity( World & );
-            public: virtual ~Entity();
-
-            public:    Component * GetComponent( const Guid & type );
-            protected: void        AddComponent( const Guid & type, Component & );
-            protected: void        DelComponent( const Guid & type );
-
-            //public: virtual void processEvent( uint32 eventid, uint64 param1, void * param2 ) = 0;
         };
 
         /// Static mesh in the wolrd
         /// It has physical, visual nodes
-        class EStaticMesh : public Entity
+        class StaticMesh : public Entity
         {
         };
 
         /// Light entity. It has physical node
-        class ELight : public Entity
+        class Light : public Entity
         {
         };
 
         class CoordinateIndicator : public Entity
-        {
-        };
-
-        class Light : public Entity
         {
         };
 
@@ -117,31 +71,22 @@ namespace GN
 
         /// the game world (singleton)
         /// Use C style interface to hide implementation details.
-        namespace world
-        {
-            bool initialize();
-            void shutdown();
+        bool initialize();
+        void shutdown();
 
-            // Initialize basic systems (file, memory, thread and etc.)
-            bool Initialize();
+        bool inputInitialize();
+        void inputShutdown();
 
-            // shutdown everthing.
-            void Shutdown();
+        bool soundInitialize();
+        void soundShutdown();
 
-            bool inputInitialize();
-            void inputShutdown();
+        bool networkInitialize();
+        void networkShutdown();
 
-            bool soundInitialize();
-            void soundShutdown();
-
-            bool networkInitialize();
-            void networkShutdown();
-
-            // Graphics stuff
-            GN::gfx::Gpu                 * getGpu() const;
-            GN::gfx::GpuResourceDatabase * getGdb() const;
-            GN::gfx::SpriteRenderer      * getSpriteRenderer() const;
-            GN::gfx::BitmapFont          * getBmfRenderer() const;
-        };
+        // Graphics stuff
+        GN::gfx::Gpu                 * getGpu() const;
+        GN::gfx::GpuResourceDatabase * getGdb() const;
+        GN::gfx::SpriteRenderer      * getSpriteRenderer() const;
+        GN::gfx::BitmapFont          * getBmfRenderer() const;
     }
 }

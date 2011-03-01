@@ -8,7 +8,6 @@ SConscript( dirs=[
 	'pcre',
 	'renderToTexture',
 	'resdb',
-	'scene',
 	'simd',
 	'sprite',
 	'ut',

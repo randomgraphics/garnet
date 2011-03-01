@@ -7,15 +7,15 @@ echo // *********************************************>%header%
 echo // This is script generated header. DO NOT EDIT.>>%header%
 echo // *********************************************>>%header%
 echo.>>%header%
-echo #ifndef __GN_UTIL_STANDARUNIFORMS_H__>>%header%
-echo #define __GN_UTIL_STANDARUNIFORMS_H__>>%header%
+echo #ifndef __GN_ENGINE_STANDARUNIFORMS_H__>>%header%
+echo #define __GN_ENGINE_STANDARUNIFORMS_H__>>%header%
 echo // *****************************************************************************>>%header%
 echo /// \file>>%header%
 echo /// \brief   Define standard scene parameters>>%header%
 echo /// \author  chenli@@REDMOND (%DATE%)>>%header%
 echo // *****************************************************************************>>%header%
 echo.>>%header%
-echo namespace GN { namespace util>>%header%
+echo namespace GN { namespace engine>>%header%
 echo {>>%header%
 echo.    /// standard uniform description>>%header%
 echo.    struct StandardUniformDesc>>%header%
@@ -65,7 +65,7 @@ echo.>>%header%
 echo // *****************************************************************************>>%header%
 echo //                                     EOF>>%header%
 echo // *****************************************************************************>>%header%
-echo #endif // __GN_UTIL_STANDARUNIFORMS_H__>>%header%
+echo #endif // __GN_ENGINE_STANDARUNIFORMS_H__>>%header%
 
 @echo Done.
 
