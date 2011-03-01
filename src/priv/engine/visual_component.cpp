@@ -35,7 +35,7 @@ GN::engine::VisualComponent::VisualComponent()
 // -----------------------------------------------------------------------------
 GN::engine::VisualComponent::~VisualComponent()
 {
-    removeAllModels();
+    clear();
     for( size_t i = 0; i < StandardUniformType::NUM_STANDARD_UNIFORMS; ++i )
     {
         mStandardPerObjectUniforms[i].clear();
@@ -88,7 +88,7 @@ int GN::engine::VisualComponent::addModel( ModelResource * model )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::engine::VisualComponent::removeAllModels()
+void GN::engine::VisualComponent::clear()
 {
     mModels.clear();
 }

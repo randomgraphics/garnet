@@ -31,6 +31,9 @@ namespace GN { namespace engine
         /// destructor
         virtual ~VisualComponent();
 
+        /// clear to empty component
+        void clear();
+
         /// add new model to the node. return the model ID, or 0 for failure.
         /// Note: models cannot be shared between components, since the component needs to setup
         /// model's uniforms to per-component value.
@@ -38,9 +41,6 @@ namespace GN { namespace engine
 
         /// load models from file, and add them to the component
         bool addModelsFromFile( const char * filename );
-
-        /// remove all models that are attached to the node
-        void removeAllModels();
 
         /// Render the component to screen
         void draw() const;
