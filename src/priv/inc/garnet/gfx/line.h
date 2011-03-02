@@ -58,6 +58,14 @@ namespace GN { namespace gfx
             const Matrix44f & transform );
 
         ///
+        /// draw a wireframe box
+        ///
+        void drawBox(
+            const Boxf      & box,
+            uint32            colorInRgba,
+            const Matrix44f & transform );
+
+        ///
         /// submit any pending line drawing requests to renderer
         ///
         void flush();

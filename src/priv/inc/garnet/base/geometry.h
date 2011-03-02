@@ -2286,7 +2286,7 @@ namespace GN
         typedef Vector3<T> PointType;
 
         ///
-        /// Box position and size
+        /// Box position and extend
         //@{
         T x, y, z, w, h, d;
         //@}
@@ -2301,7 +2301,7 @@ namespace GN
         ///
         Box() {}
         ///
-        /// construct from position and size
+        /// construct from position and extend
         ///
         Box( T x_, T y_, T z_, T w_, T h_, T d_ )
             : x(x_), y(y_), z(z_) , w(w_), h(h_), d(d_)
@@ -2376,24 +2376,43 @@ namespace GN
         PointType & pos() { return *(PointType*)this; }
 
         ///
-        /// return box size
+        /// return box extend
         ///
-        const PointType & size() const { return *(const PointType*)&w; }
+        const PointType & extend() const { return *(const PointType*)&w; }
 
         ///
-        /// return box size
+        /// return box extend
         ///
-        PointType & size() { return *(PointType*)&w; }
-
-        ///
-        /// return box center
-        ///
-        PointType center() const { return pos() + size() / (T)2.0; }
+        PointType & extend() { return *(PointType*)&w; }
 
         ///
         /// return box center
         ///
-        void center( PointType & out ) const { out = pos() + size() / (T)2.0; }
+        PointType center() const { return pos() + extend() / (T)2.0; }
+
+        ///
+        /// return box center
+        ///
+        void center( PointType & out ) const { out = pos() + extend() / (T)2.0; }
+
+        ///
+        /// return a corner point of the box
+        ///
+        PointType corner( int i ) const
+        {
+            switch( i )
+            {
+                case 0 : return PointType( x,     y,     z );
+                case 1 : return PointType( x + w, y,     z );
+                case 2 : return PointType( x + w, y + h, z );
+                case 3 : return PointType( x,     y + h, z );
+                case 4 : return PointType( x,     y,     z + d );
+                case 5 : return PointType( x + w, y,     z + d );
+                case 6 : return PointType( x + w, y + h, z + d );
+                case 7 : return PointType( x,     y + h, z + d );
+                default: return PointType( 0, 0, 0 );
+            }
+        }
 
         ///
         /// return the maximum axis. 0 for W, 1 for H, 2 for D.
@@ -2415,11 +2434,12 @@ namespace GN
         ///
         void fromPoints( const PointType & v1, const PointType & v2 )
         {
-            pos() = v1;
-            size() = v2 - v1;
+            pos()    = v1;
+            extend() = v2 - v1;
+            normalize();
         }
         ///
-        /// Normalization (that is, positive size)
+        /// Normalization (that is, positive extend)
         ///
         Box & normalize()
         {

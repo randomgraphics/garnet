@@ -50,6 +50,7 @@ public:
         SampleWorldDesc swd;
         if( !swd.loadFromFile( filename ) ) return false;
         if( !world.createEntites( swd ) ) return false;
+        world.showBoundingBoxes( true );
 
         // update scene radius
         Spheref bs;

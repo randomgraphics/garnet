@@ -1269,7 +1269,7 @@ static bool sBuildNodeTree( AseSceneInternal & scene )
     scene.root.node.rotangle = 0;
     scene.root.node.scale.set( 1, 1, 1 );
     scene.root.node.transform.identity();
-    scene.root.mesh.bbox.size().set( 0, 0, 0 );
+    scene.root.mesh.bbox.extend().set( 0, 0, 0 );
 
     // build node tree
     for( size_t i = 0; i < scene.objects.size(); ++i )
@@ -1334,9 +1334,9 @@ static bool sBuildNodeTree( AseSceneInternal & scene )
             n->node.selfbbox.pos().x,
             n->node.selfbbox.pos().y,
             n->node.selfbbox.pos().z,
-            n->node.selfbbox.size().x,
-            n->node.selfbbox.size().y,
-            n->node.selfbbox.size().z );
+            n->node.selfbbox.extend().x,
+            n->node.selfbbox.extend().y,
+            n->node.selfbbox.extend().z );
 
         GN_VERBOSE(sLogger)( s.cptr() );
 
