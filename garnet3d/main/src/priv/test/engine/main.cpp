@@ -18,7 +18,7 @@ bool init()
     // robot stays at the origin.
     robot = new StaticMesh();
     robot->spacial().setParent( &root->spacial() );
-    if( !robot->loadAllModelsFromFile( "media::/boxes/boxes.ase" ) ) return false;
+    if( !robot->loadFromFile( "media::/boxes/boxes.ase" ) ) return false;
     //if( !robot->loadAllModelsFromFile "media::/model/R.F.R01/a01.ase" ) ) return false;
 
     const Boxf & bbox = robot->spacial().getSelfBoundingBox();
@@ -46,7 +46,7 @@ void quit()
 
 void draw()
 {
-    robot->draw( proj, view );
+    robot->visual().draw( proj, view );
 }
 
 bool run()

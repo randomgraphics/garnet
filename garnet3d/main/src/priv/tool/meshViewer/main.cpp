@@ -3,9 +3,12 @@
 using namespace GN;
 using namespace GN::gfx;
 using namespace GN::input;
+using namespace GN::engine;
 using namespace GN::util;
 
 static GN::Logger * sLogger = GN::getLogger("GN.tool.meshViewer");
+
+#define USE_STATIC_MESH 0
 
 class MyApp : public SampleApp
 {
@@ -19,7 +22,12 @@ class MyApp : public SampleApp
     ArcBall      arcball; // arcball camera
     float        radius;  // distance from camera to object
     Camera       camera;
+
+#if USE_STATIC_MESH
+    AutoObjPtr<StaticMesh> mesh;
+#else
     SampleWorld  world;
+#endif
 
 public:
 
@@ -46,15 +54,22 @@ public:
 
     bool onInit()
     {
-        // load scene from file
+        // load mesh from file
+#if USE_STATIC_MESH
+        mesh.attach( new StaticMesh() );
+        mesh->loadFromFile( filename );
+        const Boxf & bbox = mesh->spacial().getUberBoundingBox();
+#else
         SampleWorldDesc swd;
         if( !swd.loadFromFile( filename ) ) return false;
         if( !world.createEntites( swd ) ) return false;
         world.showBoundingBoxes( true );
+        const Boxf & bbox = swd.bbox;
+#endif
 
         // update scene radius
         Spheref bs;
-        calculateBoundingSphereFromBoundingBox( bs, swd.bbox );
+        calculateBoundingSphereFromBoundingBox( bs, bbox );
         radius = bs.radius * 2.0f;
         if( 0.0f == radius ) radius = 1.0f;
         updateRadius();
@@ -70,7 +85,11 @@ public:
 
     void onQuit()
     {
+#if USE_STATIC_MESH
+        mesh.clear();
+#else
         world.clear();
+#endif
     }
 
     void onRenderWindowResize( intptr_t, uint32 width, uint32 height )
@@ -91,7 +110,11 @@ public:
 
     void onUpdate()
     {
-        engine::SpacialComponent * spacial = world.getRootEntity()->getComponent<engine::SpacialComponent>();
+#if USE_STATIC_MESH
+        SpacialComponent * spacial = &mesh->spacial();
+#else
+        SpacialComponent * spacial = world.getRootEntity()->getComponent<engine::SpacialComponent>();
+#endif
         const Vector3f & position = arcball.getTranslation();
         spacial->setPosition( position );
         spacial->setRotation( arcball.getRotation() );
@@ -103,8 +126,12 @@ public:
 
         gpu->clearScreen( Vector4f(0,0.5f,0.5f,1.0f) );
 
+#if USE_STATIC_MESH
+        mesh->visual().draw( camera.proj, camera.view );
+        mesh->spacial().drawBoundingBox( camera.proj, camera.view, 0xFF000000 );
+#else
         world.draw( camera.proj, camera.view );
-
+#endif
         const Vector3f & position = arcball.getTranslation();
 
         engine::getDefaultFontRenderer()->drawText(
