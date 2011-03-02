@@ -44,7 +44,7 @@ namespace GN { namespace engine
         /// draw the bounding box
         void                drawBoundingBox( const Matrix44f & proj, const Matrix44f & view, uint32 colorInRGBA ) const
         {
-            getStandardUniformManager()->setTransform( proj, view );
+            getGdb()->setTransform( proj, view );
             getLineRenderer()->drawBox(
                 getUberBoundingBox(),
                 colorInRGBA,

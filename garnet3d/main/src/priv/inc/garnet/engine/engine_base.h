@@ -6,8 +6,6 @@
 /// \author  chen@@CHENLI-OLDPC (2011.2.24)
 // *****************************************************************************
 
-#include "standardUniforms.h"
-
 namespace GN { namespace engine
 {
     class Entity;
@@ -78,42 +76,6 @@ namespace GN { namespace engine
         ComponentMap  mComponents;
     };
 
-    ///
-    /// Managing standard uniforms
-    ///
-    class StandardUniformManager
-    {
-    public:
-
-        //@{
-
-        StandardUniformManager();
-        ~StandardUniformManager();
-
-        /// get pointer to specific standard uniform resource, assuming that it is initialized already.
-        gfx::UniformResource * getGlobalUniformResource( StandardUniformType type ) const;
-
-        void setGlobalUniform( StandardUniformType type, const void * data, size_t dataSize );
-
-        template<typename T>
-        void setGlobalUniform( StandardUniformType type, const T & value ) { setGlobalUniform( type, &value, sizeof(T) ); }
-
-        void setTransform( const Matrix44f & proj, const Matrix44f & view );
-
-        void setLight0(
-                const Vector4f & diffuse,
-                const Vector4f & ambient,
-                const Vector4f & specular,
-                const Vector3f & position,
-                const Vector3f & direction );
-
-        //@}
-
-    private:
-
-        AutoRef<gfx::UniformResource> mUniforms[StandardUniformType::NUM_STANDARD_UNIFORMS];
-    };
-
     // --------------------------------------------------------------------------
     // Global engine functions
     // --------------------------------------------------------------------------
@@ -153,7 +115,6 @@ namespace GN { namespace engine
     gfx::LineRenderer        * getLineRenderer();
     gfx::BitmapFont          * getDefaultFontRenderer();
     gfx::GpuResourceDatabase * getGdb();
-    StandardUniformManager   * getStandardUniformManager();
 
     // Entity management
     Entity * findEntity( int id );

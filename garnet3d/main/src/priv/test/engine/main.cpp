@@ -27,7 +27,7 @@ bool init()
 
     // light is where eyes are
     Vector3f eye( 0, 0, bs.radius * 2.0f );
-    engine::getStandardUniformManager()->setGlobalUniform( engine::StandardUniformType::LIGHT0_POSITION, Vector4f(eye,1) );
+    engine::getGdb()->setGlobalUniform( StandardUniformType::LIGHT0_POSITION, Vector4f(eye,1) );
 
     // setup camera
     getGpu()->composePerspectiveMatrixRh( proj, 1.0f, 4.0f/3.0f, bs.radius / 100.0f, bs.radius * 10.0f );

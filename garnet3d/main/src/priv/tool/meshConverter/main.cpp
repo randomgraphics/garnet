@@ -2,7 +2,6 @@
 
 using namespace GN;
 using namespace GN::gfx;
-using namespace GN::util;
 
 static GN::Logger * sLogger = GN::getLogger("GN.tool.meshConverter");
 
@@ -37,11 +36,11 @@ int main( int argc, const char * argv[] )
         outputFile = stringFormat( "startup::%s.scene.xml", fs::baseName( inputFile ).cptr() );
     }
 
-    SampleWorldDesc swd;
+    ModelHierarchyDesc mhd;
 
-    if( !swd.loadFromFile( inputFile ) ) return -1;
+    if( !mhd.loadFromFile( inputFile ) ) return -1;
 
-    if( !swd.saveToFile( outputFile ) ) return -1;
+    if( !mhd.saveToFile( outputFile ) ) return -1;
 
     GN_INFO(sLogger)( "Conversion done successfully." );
     return 0;

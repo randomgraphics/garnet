@@ -325,7 +325,7 @@ sLoadModelHierarchyFromASE( ModelHierarchyDesc & desc, File & file )
         nodeDesc.position = src.pos;
         nodeDesc.orientation.fromRotation( src.rotaxis, src.rotangle );
 #else
-        // Note: ASE loader has flatten all meshes. So there's actually no hierarchy.
+        // Note: Ingore hierarchy properties in ASE, since models in ASE have already in "world" space.
         nodeDesc.parent = "";
         nodeDesc.position.set( 0, 0, 0 );
         nodeDesc.orientation.identity();

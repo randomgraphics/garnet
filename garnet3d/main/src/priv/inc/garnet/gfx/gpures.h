@@ -59,63 +59,6 @@ namespace GN { namespace gfx
     };
 
     ///
-    /// GPU resource factory
-    ///
-    struct GpuResourceFactory
-    {
-        /// create new resource instance
-        GpuResource * (*createResource)( GpuResourceDatabase & db );
-    };
-
-    ///
-    /// This class manages GPU resource creation, deletion, as well as
-    /// mapping betwen resource name and resource handle.
-    ///
-    class GpuResourceDatabase : public NoCopy
-    {
-        friend class GpuResource;
-
-        class Impl;
-
-        Impl * mImpl;
-
-    public:
-
-        //@{
-        GpuResourceDatabase( Gpu & );
-        virtual ~GpuResourceDatabase();
-        //@}
-
-        //@{
-        Gpu  & getGpu() const;
-        //@}
-
-        //@{
-        bool registerResourceFactory( const Guid & type, const char * descriptiveName, GpuResourceFactory factory );
-        bool hasResourceFactory( const Guid & type );
-        //@}
-
-        //@{
-        AutoRef<GpuResource> createResource( const Guid & type, const char * name );
-        AutoRef<GpuResource> findResource( const Guid & type, const char * name ) const;
-        AutoRef<GpuResource> findOrCreateResource( const Guid & type, const char * name );
-        bool                 validResource( const Guid & type, const GpuResource * resource ) const; // valid resource pointer of specific type
-        bool                 validResource( const GpuResource * resource ) const; // valid resource pointer of whatever type.
-        const char         * getResourceName( const GpuResource * resource ) const;
-        const Guid         & getResourceType( const GpuResource * resource ) const;
-        //@}
-
-        // templated utilities
-        //@{
-        template<class T> inline AutoRef<T> createResource( const char * name );
-        template<class T> inline AutoRef<T> findResource( const char * name ) const;
-        template<class T> inline AutoRef<T> findOrCreateResource( const char * name );
-        //@}
-
-    private:
-    };
-
-    ///
     /// Texture resource
     ///
     class TextureResource : public GpuResource
@@ -979,6 +922,84 @@ namespace GN { namespace gfx
         class Impl;
         Impl * mImpl;
         //@}
+    };
+
+    ///
+    /// GPU resource factory
+    ///
+    struct GpuResourceFactory
+    {
+        /// create new resource instance
+        GpuResource * (*createResource)( GpuResourceDatabase & db );
+    };
+
+    ///
+    /// This class manages GPU resource creation, deletion, as well as
+    /// mapping betwen resource name and resource handle.
+    ///
+    class GpuResourceDatabase : public NoCopy
+    {
+        friend class GpuResource;
+
+        class Impl;
+
+        Impl * mImpl;
+
+    public:
+
+        //@{
+        GpuResourceDatabase( Gpu & );
+        virtual ~GpuResourceDatabase();
+        //@}
+
+        //@{
+        Gpu  & getGpu() const;
+        //@}
+
+        //@{
+        bool registerResourceFactory( const Guid & type, const char * descriptiveName, GpuResourceFactory factory );
+        bool hasResourceFactory( const Guid & type );
+        //@}
+
+        //@{
+        AutoRef<GpuResource> createResource( const Guid & type, const char * name );
+        AutoRef<GpuResource> findResource( const Guid & type, const char * name ) const;
+        AutoRef<GpuResource> findOrCreateResource( const Guid & type, const char * name, bool * isExistingResource = NULL );
+        bool                 validResource( const Guid & type, const GpuResource * resource ) const; // valid resource pointer of specific type
+        bool                 validResource( const GpuResource * resource ) const; // valid resource pointer of whatever type.
+        const char         * getResourceName( const GpuResource * resource ) const;
+        const Guid         & getResourceType( const GpuResource * resource ) const;
+        //@}
+
+        // templated utilities
+        //@{
+        template<class T> inline AutoRef<T> createResource( const char * name );
+        template<class T> inline AutoRef<T> findResource( const char * name ) const;
+        template<class T> inline AutoRef<T> findOrCreateResource( const char * name, bool * isExistingResource = NULL );
+        //@}
+
+        /// standard uniform utilities (only global standard uniforms are handled here.
+        //@{
+
+        UniformResource * getGlobalUniformResource( StandardUniformType type ) const;
+
+        void setGlobalUniform( StandardUniformType type, const void * data, size_t dataSize );
+
+        template<typename T>
+        void setGlobalUniform( StandardUniformType type, const T & value ) { setGlobalUniform( type, &value, sizeof(T) ); }
+
+        void setTransform( const Matrix44f & proj, const Matrix44f & view );
+
+        void setLight0(
+                const Vector4f & diffuse,
+                const Vector4f & ambient,
+                const Vector4f & specular,
+                const Vector3f & position,
+                const Vector3f & direction );
+
+        //@}
+
+    private:
     };
 }}
 

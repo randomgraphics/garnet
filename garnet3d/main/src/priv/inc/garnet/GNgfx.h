@@ -31,6 +31,7 @@ namespace GN
 #include "gfx/gpu.h" // main GPU interface
 
 // GPU resource database
+#include "gfx/stdUniform.h"
 #include "gfx/gpures.h"
 #include "gfx/simpleModel.h" // commonly used model class wrapper
 

@@ -218,7 +218,7 @@ bool GN::util::SampleWorld::createEntites( const ModelHierarchyDesc & desc )
 // -----------------------------------------------------------------------------
 void GN::util::SampleWorld::draw( const Matrix44f & proj, const Matrix44f & view ) const
 {
-    engine::getStandardUniformManager()->setTransform( proj, view );
+    engine::getGdb()->setTransform( proj, view );
 
     LineRenderer * lr = engine::getLineRenderer();
 
