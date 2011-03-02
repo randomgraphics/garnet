@@ -135,7 +135,7 @@
 #undef GN_PPC
 #define GN_PPC 1
 #define GN_CPU "ppc"
-#elif defined(_M_IX86) || defined(_X86_)
+#elif defined(_M_IX86) || defined(_X86_) || defined(i386) || defined(__i386__)
 #undef GN_X86
 #define GN_X86 1
 #define GN_CPU "x86"

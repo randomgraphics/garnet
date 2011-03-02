@@ -39,7 +39,7 @@ echo.>>%header%
 echo.        /// Check if the enum value is valid or not.>>%header%
 echo.        bool isValid() const>>%header%
 echo.        {>>%header%
-echo.            return 0 ^<= (*this) ^&^& (*this) ^<= NUM_STANDARD_UNIFORMS;>>%header%
+echo.            return 0 ^<= (*this) ^&^& (*this) ^< NUM_STANDARD_UNIFORMS;>>%header%
 echo.        }>>%header%
 echo.>>%header%
 echo.        /// get uniform descriptor>>%header%
@@ -48,8 +48,9 @@ echo.        {>>%header%
 echo.            static const StandardUniformDesc DESCRIPTORS[] = {>>%header%
 for /f "eol=; delims=, tokens=1,2,3,4,5*" %%a in (%~dp0standardUniformMeta.txt) do echo.                { "%%a"%%b, sizeof(%%c)%%d, %%e, "%%f" },>>%header%
 echo.            };>>%header%
+echo.            GN_CASSERT( (size_t)NUM_STANDARD_UNIFORMS == GN_ARRAY_COUNT(DESCRIPTORS) );>>%header%
 echo.>>%header%
-echo.            GN_ASSERT( *this ^<= GN_ARRAY_COUNT(DESCRIPTORS) );>>%header%
+echo.            GN_ASSERT( *this ^< NUM_STANDARD_UNIFORMS );>>%header%
 echo.            return DESCRIPTORS[*this];>>%header%
 echo.        }>>%header%
 echo.>>%header%

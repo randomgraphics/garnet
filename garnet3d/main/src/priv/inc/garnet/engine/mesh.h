@@ -46,7 +46,7 @@ namespace GN { namespace engine
 
             virtual ~StackRefCounter()
             {
-                decref();
+                REF_COUNTED_CLASS::decref();
             }
 
         protected:
