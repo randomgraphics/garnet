@@ -530,7 +530,7 @@ sLoadModelsFromASE( VisualComponent & comp, GpuResourceDatabase & db, File & fil
     // update bounding box
     Entity * e = comp.getEntity();
     SpacialComponent * sn = e ? e->getComponent<SpacialComponent>() : NULL;
-    if( sn ) sn->setBoundingBox( ase.bbox );
+    if( sn ) sn->setSelfBoundingBox( ase.bbox );
 
     return true;
 }
@@ -1061,7 +1061,7 @@ static Entity * sCreateEntity(
     e->spacial()->setParent( parent ? parent->spacial() : ((SampleSpacialEntity*)root)->spacial() );
 
     // calculate bounding sphere
-    e->spacial()->setBoundingBox( entityDesc.spatial.bbox );
+    e->spacial()->setSelfBoundingBox( entityDesc.spatial.bbox );
 
     for( size_t i = 0; i < entityDesc.models.size(); ++i )
     {
@@ -1211,6 +1211,7 @@ bool GN::util::SampleWorldDesc::saveToFile( const char * filename )
 // -----------------------------------------------------------------------------
 GN::util::SampleWorld::SampleWorld()
     : mRoot(NULL)
+    , mShowBBox(false)
 {
 }
 
@@ -1274,15 +1275,35 @@ void GN::util::SampleWorld::draw( const Matrix44f & proj, const Matrix44f & view
 {
     engine::getStandardUniformManager()->setTransform( proj, view );
 
+    LineRenderer * lr = engine::getLineRenderer();
+
     for( const StringMap<char,Entity*>::KeyValuePair * i = mEntities.first();
          i != NULL;
          i = mEntities.next( i ) )
     {
         Entity * e = i->value;
+
         VisualComponent * visual = e->getComponent<VisualComponent>();
+
         if( visual )
         {
             visual->draw();
         }
+
+        // draw each entitie's bounding box
+        SpacialComponent * spacial = e->getComponent<SpacialComponent>();
+        if( mShowBBox && NULL != spacial )
+        {
+            const Boxf & bbox = spacial->getSelfBoundingBox();
+            lr->drawBox( bbox, 0xFFFF00FF, proj * view * spacial->getLocal2Root() );
+        }
+    }
+
+    // draw overall bounding box in red
+    SpacialComponent * spacial = mRoot->getComponent<SpacialComponent>();
+    if( mShowBBox && NULL != spacial )
+    {
+        const Boxf & bbox = spacial->getUberBoundingBox();
+        lr->drawBox( bbox, 0xFF000000, proj * view * spacial->getLocal2Root() );
     }
 }

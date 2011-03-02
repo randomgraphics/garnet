@@ -60,6 +60,7 @@ namespace GN { namespace util
     {
         engine::Entity                * mRoot;
         StringMap<char,engine::Entity*> mEntities; // entities (not including root)
+        bool                            mShowBBox;
 
     public:
 
@@ -71,7 +72,7 @@ namespace GN { namespace util
         bool             createEntites( const SampleWorldDesc & desc );
         engine::Entity * getRootEntity() const { return mRoot; }
         void             draw( const Matrix44f & proj, const Matrix44f & view ) const; //< Draw all entities in the world.
-
+        void             showBoundingBoxes( bool s ) { mShowBBox = s; }
         //@}
     };
 }}

@@ -21,7 +21,7 @@ bool init()
     if( !robot->loadAllModelsFromFile( "media::/boxes/boxes.ase" ) ) return false;
     //if( !robot->loadAllModelsFromFile "media::/model/R.F.R01/a01.ase" ) ) return false;
 
-    const Boxf & bbox = robot->spacial().getBoundingBox();
+    const Boxf & bbox = robot->spacial().getSelfBoundingBox();
     Spheref bs;
     calculateBoundingSphereFromBoundingBox( bs, bbox );
 

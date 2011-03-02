@@ -24,12 +24,13 @@ GN::engine::SpacialComponent::SpacialComponent()
     : mPosition( 0, 0, 0 )
     , mRotation( 0, 0, 0, 1 )
     , mScale( 1, 1, 1 )
-    , mBoundingBox( 0, 0, 0, 0, 0, 0 )
+    , mSelfBBox( 0, 0, 0, 0, 0, 0 )
     , mLocal2Parent( Matrix44f::sIdentity() )
     , mParent2Local( Matrix44f::sIdentity() )
     , mLocal2Root( Matrix44f::sIdentity() )
     , mRoot2Local( Matrix44f::sIdentity() )
     , mTransformDirty( false )
+    , mBBoxDirty( false )
 {
     mTreeNode.owner = this;
 }
@@ -50,6 +51,7 @@ void GN::engine::SpacialComponent::setParent( SpacialComponent * parent, Spacial
     {
         mTreeNode.setParent( sToTreeNode( parent ), sToTreeNode( prevSibling ) );
         invalidateTransform();
+        invalidateBoundingBox();
     }
 }
 
@@ -62,6 +64,7 @@ void GN::engine::SpacialComponent::setPosition( const Vector3f & p )
     {
         mPosition = p;
         invalidateTransform();
+        invalidateBoundingBox();
     }
 }
 
@@ -74,6 +77,7 @@ void GN::engine::SpacialComponent::setRotation( const Quaternionf & q )
     {
         mRotation = q;
         invalidateTransform();
+        invalidateBoundingBox();
     }
 }
 
@@ -86,15 +90,17 @@ void GN::engine::SpacialComponent::setScale( const Vector3f & s )
     {
         mScale = s;
         invalidateTransform();
+        invalidateBoundingBox();
     }
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-void GN::engine::SpacialComponent::setBoundingBox( const Boxf & b )
+void GN::engine::SpacialComponent::setSelfBoundingBox( const Boxf & b )
 {
-    mBoundingBox = b;
+    mSelfBBox = b;
+    invalidateBoundingBox();
 }
 
 // *****************************************************************************
@@ -102,17 +108,17 @@ void GN::engine::SpacialComponent::setBoundingBox( const Boxf & b )
 // *****************************************************************************
 
 //
-// Invalidate transformation of all nodes in subtree
+// Invalidate transformation of all nodes down in the subtree.
 // -----------------------------------------------------------------------------
 void GN::engine::SpacialComponent::invalidateTransform()
 {
-    if( mTransformDirty ) return;
-
-    mTransformDirty = true;
-
-    for( SpacialComponent * child = getFirstChild(); child; child = child->getNextSibling() )
+    if( !mTransformDirty )
     {
-        child->invalidateTransform();
+        mTransformDirty = true;
+        for( SpacialComponent * child = getFirstChild(); child; child = child->getNextSibling() )
+        {
+            child->invalidateTransform();
+        }
     }
 }
 
@@ -160,4 +166,74 @@ void GN::engine::SpacialComponent::calcTransform()
     }
 
     mTransformDirty = false;
+}
+
+//
+// Invalidate bounding box of all components up in the tree
+// -----------------------------------------------------------------------------
+void GN::engine::SpacialComponent::invalidateBoundingBox()
+{
+    mBBoxDirty = true;
+    for( SpacialComponent * parent = getParent(); parent; parent = parent->getParent() )
+    {
+        parent->mBBoxDirty = true;
+    }
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::engine::SpacialComponent::calcBoundingBox()
+{
+    GN_ASSERT( mBBoxDirty );
+
+    mUberBBox = mSelfBBox;
+    mUberBBox.normalize();
+
+    // gather child bounding boxes
+    for( SpacialComponent * child = getFirstChild(); child; child = child->getNextSibling() )
+    {
+        const Boxf & childbb = child->getUberBoundingBox();
+
+        // translate child bounding box into this component's local space
+        const Matrix44f & mat = child->getLocal2Parent();
+
+        for( int i = 0; i < 8; ++i )
+        {
+            Vector4f v( childbb.corner(i), 1.0f );
+            v = mat * v;
+
+            if( v.x < mUberBBox.x )
+            {
+                mUberBBox.w += mUberBBox.x - v.x;
+                mUberBBox.x = v.x;
+            }
+            else if( v.x > (mUberBBox.x+mUberBBox.w) )
+            {
+                mUberBBox.w = v.x - mUberBBox.x;
+            }
+
+            if( v.y < mUberBBox.y )
+            {
+                mUberBBox.h += mUberBBox.y - v.y;
+                mUberBBox.y = v.y;
+            }
+            else if( v.y > (mUberBBox.y+mUberBBox.h) )
+            {
+                mUberBBox.h = v.y - mUberBBox.y;
+            }
+
+            if( v.z < mUberBBox.z )
+            {
+                mUberBBox.d += mUberBBox.z - v.z;
+                mUberBBox.z = v.z;
+            }
+            else if( v.z > (mUberBBox.z+mUberBBox.d) )
+            {
+                mUberBBox.d = v.z - mUberBBox.z;
+            }
+        }
+    }
+
+    mBBoxDirty = false;
 }

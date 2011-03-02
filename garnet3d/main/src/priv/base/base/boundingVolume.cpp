@@ -95,7 +95,7 @@ void GN::calculateBoundingBox(
     }
 
     result.pos() = vMin;
-    result.size() = vMax - vMin;
+    result.extend() = vMax - vMin;
 
     GN_UNGUARD;
 }

@@ -233,6 +233,35 @@ void GN::gfx::LineRenderer::drawLines(
 //
 //
 // -----------------------------------------------------------------------------
+void GN::gfx::LineRenderer::drawBox(
+    const Boxf      & box,
+    uint32            colorInRgba,
+    const Matrix44f & transform )
+{
+    Vector3f points[] =
+    {
+        box.corner( 0 ), box.corner( 1 ),
+        box.corner( 1 ), box.corner( 2 ),
+        box.corner( 2 ), box.corner( 3 ),
+        box.corner( 3 ), box.corner( 0 ),
+
+        box.corner( 0 ), box.corner( 4 ),
+        box.corner( 1 ), box.corner( 5 ),
+        box.corner( 2 ), box.corner( 6 ),
+        box.corner( 3 ), box.corner( 7 ),
+
+        box.corner( 4 ), box.corner( 5 ),
+        box.corner( 5 ), box.corner( 6 ),
+        box.corner( 6 ), box.corner( 7 ),
+        box.corner( 7 ), box.corner( 4 ),
+    };
+
+    drawLines( points, sizeof(Vector3f), GN_ARRAY_COUNT(points), colorInRgba, transform );
+}
+
+//
+//
+// -----------------------------------------------------------------------------
 void GN::gfx::LineRenderer::flush()
 {
     size_t numPendingLines = mNextFreeLine - mNextPendingLine;
