@@ -57,7 +57,7 @@ namespace GN { namespace engine
         /// Check if the enum value is valid or not.
         bool isValid() const
         {
-            return 0 <= (*this) && (*this) <= NUM_STANDARD_UNIFORMS;
+            return 0 <= (*this) && (*this) < NUM_STANDARD_UNIFORMS;
         }
 
         /// get uniform descriptor
@@ -89,8 +89,9 @@ namespace GN { namespace engine
                 { "LIGHT0_SPECULAR"   , sizeof(GN::Vector4f)  , true , "Specular color of light 0" },
                 { "TIME"              , sizeof(float)         , true , "Time in seconds" },
             };
+            GN_CASSERT( (size_t)NUM_STANDARD_UNIFORMS == GN_ARRAY_COUNT(DESCRIPTORS) );
 
-            GN_ASSERT( *this <= GN_ARRAY_COUNT(DESCRIPTORS) );
+            GN_ASSERT( *this < NUM_STANDARD_UNIFORMS );
             return DESCRIPTORS[*this];
         }
 

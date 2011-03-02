@@ -50,7 +50,32 @@ namespace GN
         typedef XMVECTOR     vec4;
         typedef const vec4   cvec4;
     #else
-        typedef Vector4f     vec4;
+        struct vec4
+        {
+            union
+            {
+                struct { float x, y, z, w; };
+                float  f32[4];
+                sint8  s8[16];
+                sint16 s16[8];
+                sint32 s32[4];
+                sint64 s64[2];
+                uint8  u8[16];
+                uint16 u16[8];
+                uint32 u32[4];
+                uint64 u64[2];
+            };
+
+            vec4 operator+( const vec4 & v ) const
+            {
+                vec4 r;
+                r.x = x + v.x;
+                r.y = y + v.y;
+                r.z = z + v.z;
+                r.w = w + v.w;
+                return r;
+            }
+        };
         typedef const vec4 & cvec4;
     #endif
 
@@ -59,7 +84,7 @@ namespace GN
         #if GN_PLATFORM_HAS_XNAMATH
             return XMVectorGetX( v );
         #else
-            return vec4.x;
+            return v.x;
         #endif
         }
 
@@ -68,7 +93,7 @@ namespace GN
         #if GN_PLATFORM_HAS_XNAMATH
             return XMVectorGetY( v );
         #else
-            return vec4.y;
+            return v.y;
         #endif
         }
 
@@ -77,7 +102,7 @@ namespace GN
         #if GN_PLATFORM_HAS_XNAMATH
             return XMVectorGetZ( v );
         #else
-            return vec4.z;
+            return v.z;
         #endif
         }
 
@@ -86,7 +111,7 @@ namespace GN
         #if GN_PLATFORM_HAS_XNAMATH
             return XMVectorGetW( v );
         #else
-            return vec4.w;
+            return v.w;
         #endif
         }
 
@@ -95,7 +120,8 @@ namespace GN
         #if GN_PLATFORM_HAS_XNAMATH
             return XMVectorSet( x, y, z, w );
         #else
-            return vec4( x, y, z, w );
+            vec4 v = { { { x, y, z, w } } };
+            return v;
         #endif
         }
 
