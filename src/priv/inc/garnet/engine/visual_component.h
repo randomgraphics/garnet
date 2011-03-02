@@ -45,6 +45,13 @@ namespace GN { namespace engine
         /// Render the component to screen
         void draw() const;
 
+        /// Render the component to screen with specified transformation.
+        void draw( const Matrix44f & proj, const Matrix44f & view ) const
+        {
+            getStandardUniformManager()->setTransform( proj, view );
+            draw();
+        }
+
         //@}
 
     private:

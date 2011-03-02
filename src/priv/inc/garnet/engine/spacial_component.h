@@ -41,6 +41,16 @@ namespace GN { namespace engine
         const Matrix44f   & getLocal2Parent() const { validateTransform(); return mLocal2Parent; } ///< get local space to parent space transformation matrix
         const Matrix44f   & getLocal2Root() const { validateTransform(); return mLocal2Root; }     ///< get local space to root space transformation matrix
 
+        /// draw the bounding box
+        void                drawBoundingBox( const Matrix44f & proj, const Matrix44f & view, uint32 colorInRGBA ) const
+        {
+            getStandardUniformManager()->setTransform( proj, view );
+            getLineRenderer()->drawBox(
+                getUberBoundingBox(),
+                colorInRGBA,
+                proj * view * getLocal2Root() );
+        }
+
         //@}
 
     private:

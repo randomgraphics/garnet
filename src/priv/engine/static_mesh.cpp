@@ -43,7 +43,7 @@ GN::engine::StaticMesh::~StaticMesh()
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::engine::StaticMesh::loadAllModelsFromFile( const char * fileName )
+bool GN::engine::StaticMesh::loadFromFile( const char * fileName )
 {
     GN_SCOPE_PROFILER( StaticMesh_loadAllModelsFromFile, "Load models from file into VisualComponent" );
 
@@ -52,6 +52,8 @@ bool GN::engine::StaticMesh::loadAllModelsFromFile( const char * fileName )
     // open file
     AutoObjPtr<File> fp( fs::openFile( fileName, "rb" ) );
     if( !fp ) return false;
+
+    // TODO: better way to determine file type.
 
     // get file extension
     StrA ext = fs::extName( fileName );

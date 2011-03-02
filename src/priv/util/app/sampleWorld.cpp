@@ -493,10 +493,10 @@ sLoadModelsFromASE( VisualComponent & comp, GpuResourceDatabase & db, File & fil
                 break;
         }
 
-        // skip the mesh, if there'subset no appropriate effect for it.
+        // skip the mesh, if there's no appropriate template for it.
         if( !modelTemplate ) continue;
 
-        // make a clone the selected modelTemplate
+        // make a clone of the selected template
         AutoRef<ModelResource> clone = modelTemplate->makeClone( NULL );
         if( NULL == clone ) return false;
 
@@ -534,6 +534,7 @@ sLoadModelsFromASE( VisualComponent & comp, GpuResourceDatabase & db, File & fil
 
     return true;
 }
+
 // *****************************************************************************
 //
 // XML loader
