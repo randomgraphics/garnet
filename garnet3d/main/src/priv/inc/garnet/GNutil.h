@@ -18,7 +18,6 @@ namespace GN
 
 #include "util/camera.h"
 #include "util/fps.h"
-#include "util/ase.h"
 #include "util/sampleWorld.h"
 #include "util/sampleApp.h"
 

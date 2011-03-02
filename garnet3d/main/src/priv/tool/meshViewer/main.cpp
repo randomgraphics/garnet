@@ -55,16 +55,16 @@ public:
     bool onInit()
     {
         // load mesh from file
+        ModelHierarchyDesc swd;
+        if( !swd.loadFromFile( filename ) ) return false;
 #if USE_STATIC_MESH
         mesh.attach( new StaticMesh() );
-        mesh->loadFromFile( filename );
+        if( !mesh->loadFromModelHierarchy( swd ) ) return false;
         const Boxf & bbox = mesh->spacial().getUberBoundingBox();
 #else
-        SampleWorldDesc swd;
-        if( !swd.loadFromFile( filename ) ) return false;
         if( !world.createEntites( swd ) ) return false;
         world.showBoundingBoxes( true );
-        const Boxf & bbox = swd.bbox;
+        const Boxf & bbox = world.getRootEntity()->getComponent<SpacialComponent>()->getUberBoundingBox();
 #endif
 
         // update scene radius

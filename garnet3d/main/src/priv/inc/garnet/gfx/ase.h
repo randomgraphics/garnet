@@ -1,12 +1,12 @@
-#ifndef __GN_UTIL_ASE_H__
-#define __GN_UTIL_ASE_H__
+#ifndef __GN_GFX_ASE_H__
+#define __GN_GFX_ASE_H__
 // *****************************************************************************
 /// \file
 /// \brief   ASE loader
 /// \author  chenli@@REDMOND (2009.1.16)
 // *****************************************************************************
 
-namespace GN { namespace util
+namespace GN { namespace gfx
 {
     ///
     /// ASE map
@@ -85,22 +85,18 @@ namespace GN { namespace util
         DynaArray<AseMeshSubset>  subsets;
         Boxf                      bbox;     ///< bounding box of the whole scene
 
+        /// dtor
+        ~AseScene() { clear(); }
+
         /// clear the scene
         void clear();
 
-        /// dtor
-        ~AseScene() { clear(); }
+        /// load ASE scene from file. Exising content in the scene will be discarded.
+        bool loadFromFile( File & file );
     };
-
-    ///
-    /// load ASE scene from file
-    ///
-    bool loadAseSceneFromFile( AseScene & scene, File & file );
-
-
 }}
 
 // *****************************************************************************
 //                                     EOF
 // *****************************************************************************
-#endif // __GN_UTIL_ASE_H__
+#endif // __GN_GFX_ASE_H__
