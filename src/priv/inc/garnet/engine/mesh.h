@@ -37,6 +37,14 @@ namespace GN { namespace engine
         /// Existing content in the mesh will be discarded.
         bool loadFromModelHierarchy( const gfx::ModelHierarchyDesc & );
 
+        /// Load from file
+        bool loadFromFile( const char * filename )
+        {
+            gfx::ModelHierarchyDesc mhd;
+            if( !mhd.loadFromFile( filename ) ) return false;
+            return loadFromModelHierarchy( mhd );
+        }
+
     private:
 
         template<class REF_COUNTED_CLASS>
