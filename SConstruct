@@ -89,8 +89,8 @@ CONF_defaultCmdArgs = {
 	'compiler'  : UTIL_getenv('GN_BUILD_COMPILER', CONF_getCompiler(CONF_os,CONF_cpu).name ),
 	'os'        : UTIL_getenv('GN_BUILD_TARGET_OS', CONF_os ),
 	'cpu'       : UTIL_getenv('GN_BUILD_TARGET_CPU', CONF_cpu ),
-	'cg'        : UTIL_getenv('GN_BUILD_ENABLE_CG', 1), # use Cg by default.
-	'xedeploy'  : UTIL_getenv('GN_BUILD_XEDEPLOY', 1), # copy to devkit, default is true.
+	'cg'        : int(UTIL_getenv('GN_BUILD_ENABLE_CG', 1)), # use Cg by default.
+	'xedeploy'  : int(UTIL_getenv('GN_BUILD_XEDEPLOY', 1)), # copy to devkit, default is true.
 	'locale'    : UTIL_getenv('GN_BUILD_LOCALE', 'CHS'),
 	'sdkroot'   : UTIL_getenv('GN_BUILD_SDK_ROOT', '<svnroot>\\bin\\sdk') # root directory of SDK installation
 	}
@@ -245,7 +245,7 @@ def UTIL_newEnvEx( compiler, variant, batch ):
 	 	env['ENV']['LANGUAGE'] = UTIL_getenv('LANGUAGE');
 
 	# cache implicit dependencies
-	env.SetOption( 'implicit_cache', 1 );
+	env.SetOption( 'implicit_cache', int(UTIL_getenv('SCONS_CACHE_IMPLICIT_DEPS', 1)) );
 
 	# setup default decider
 	env.Decider( 'MD5-timestamp' );

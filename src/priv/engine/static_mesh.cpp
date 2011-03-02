@@ -7,18 +7,6 @@ using namespace GN::engine;
 static GN::Logger * sLogger = GN::getLogger("GN.engine");
 
 // *****************************************************************************
-// Local functions
-// *****************************************************************************
-
-// TODO: move this function to engine module
-extern bool
-sLoadModelsFromASE( VisualComponent & comp, GpuResourceDatabase & db, File & file );
-
-// TODO: move this function to engine module
-extern bool
-sLoadModelsFromXPR( VisualComponent & comp, GpuResourceDatabase & db, File & file );
-
-// *****************************************************************************
 // StaticMesh
 // *****************************************************************************
 
@@ -43,36 +31,53 @@ GN::engine::StaticMesh::~StaticMesh()
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::engine::StaticMesh::loadFromFile( const char * fileName )
+bool GN::engine::StaticMesh::loadFromModelHierarchy( const gfx::ModelHierarchyDesc & mhd )
 {
-    GN_SCOPE_PROFILER( StaticMesh_loadAllModelsFromFile, "Load models from file into VisualComponent" );
+    GN_SCOPE_PROFILER( StaticMesh_loadFromModelHierarchy, "Load models from mesh hierarchy" );
 
     mVisual.clear();
 
-    // open file
-    AutoObjPtr<File> fp( fs::openFile( fileName, "rb" ) );
-    if( !fp ) return false;
-
-    // TODO: better way to determine file type.
-
-    // get file extension
-    StrA ext = fs::extName( fileName );
-
     GpuResourceDatabase & gdb = *getGdb();
 
-    // do loading
-    if( 0 == stringCompareI( ".ase", ext.cptr() ) )
+    // create mesh list. TODO: load mesh on-demand.
+    DynaArray<AutoRef<MeshResource> > meshes;
     {
-        return sLoadModelsFromASE( mVisual, gdb, *fp );
+        GN_SCOPE_PROFILER( sLoadModelsFromASE_GenerateMeshList, "Load ASE into VisualComponent: generating mesh list" );
+
+        meshes.resize( mhd.meshes.size() );
+
+        size_t i = 0;
+        for( const StringMap<char,gfx::MeshResourceDesc>::KeyValuePair * p = mhd.meshes.first();
+             p != NULL; p = mhd.meshes.next( p ), ++i )
+        {
+            // TODO: avoid reloading existing mesh
+            const char * meshName = p->key;
+            const MeshResourceDesc & meshDesc = p->value;
+
+            meshes[i] = gdb.findResource<MeshResource>( meshName );
+            if( meshes[i] ) continue; // use exising mesh.
+
+            meshes[i] = gdb.createResource<MeshResource>( meshName );
+            if( !meshes[i] ) return false;
+            if( !meshes[i]->reset( &meshDesc ) ) return false;
+        }
     }
-    else if( 0 == stringCompareI( ".xpr", ext.cptr() ) ||
-             0 == stringCompareI( ".tpr", ext.cptr() ))
+
+    // create models
+    for( const StringMap<char,gfx::ModelResourceDesc>::KeyValuePair * p = mhd.models.first();
+         p != NULL; p = mhd.models.next( p ) )
     {
-        return sLoadModelsFromXPR( mVisual, gdb, *fp );
+        const ModelResourceDesc & modelDesc = p->value;
+        AutoRef<ModelResource> model = gdb.createResource<ModelResource>( NULL );
+        if( !model->reset( &modelDesc ) ) continue;
+
+        mVisual.addModel( model );
     }
-    else
-    {
-        GN_ERROR(sLogger)( "Unknown file extension: %s", ext.cptr() );
-        return false;
-    }
+
+    // update bounding box
+    mSpacial.setSelfBoundingBox( mhd.bbox );
+
+    // TODO: handle node hierarchy
+
+    return true;
 }

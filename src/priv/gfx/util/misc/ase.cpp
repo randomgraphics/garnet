@@ -1,9 +1,9 @@
 #include "pch.h"
-#include "garnet/GNutil.h"
+#include "garnet/GNgfx.h"
+
 
 using namespace GN;
 using namespace GN::gfx;
-using namespace GN::util;
 
 static GN::Logger * sLogger = GN::getLogger("GN.util.ase");
 
@@ -1646,7 +1646,7 @@ static bool sWriteScene( AseScene & dst, const AseSceneInternal & src )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::util::AseScene::clear()
+void GN::gfx::AseScene::clear()
 {
     materials.clear();
     meshes.clear();
@@ -1657,12 +1657,17 @@ void GN::util::AseScene::clear()
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::util::loadAseSceneFromFile( AseScene & scene, File & file )
+bool GN::gfx::AseScene::loadFromFile( File & file )
 {
-    GN_SCOPE_PROFILER( loadAseSceneFromFile, "Load ASE scene from file" );
+    GN_SCOPE_PROFILER( AseScene_loadFromFile, "Load ASE scene from file" );
+
+    // clear existing content
+    clear();
+
     AseSceneInternal internal;
     if( !sReadAse( internal, file ) ) return false;
     if( !sBuildNodeTree( internal ) ) return false;
-    if( !sWriteScene( scene, internal ) ) return false;
+    if( !sWriteScene( *this, internal ) ) return false;
+
     return true;
 }

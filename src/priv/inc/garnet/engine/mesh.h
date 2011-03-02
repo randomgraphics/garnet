@@ -33,9 +33,9 @@ namespace GN { namespace engine
         /// get the visual component
         VisualComponent & visual() { return mVisual; }
 
-        /// Load all models from the file as a single static mesh.
+        /// Load the whole model hierarchy as a single static mesh.
         /// Existing content in the mesh will be discarded.
-        bool loadFromFile( const char * fileName );
+        bool loadFromModelHierarchy( const gfx::ModelHierarchyDesc & );
 
     private:
 

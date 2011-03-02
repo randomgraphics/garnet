@@ -205,11 +205,7 @@ namespace GN { namespace gfx
         uint8       offset;       ///< offset of the element in the vertex.
         char        semantic[16]; ///< Semantic name (null terminated string, 15 characters at most).
 
-        ///
-        /// Bind vertex element to specific GL program attribute variable.
-        ///
-        /// Note that name and index are shader specific (thus, API specific).
-        ///
+        /// Set vertex element semantic.
         void setSemantic( const char * s )
         {
             size_t len = stringLength( s );
@@ -324,6 +320,21 @@ namespace GN { namespace gfx
                 if( stream == e.stream && stride < elementEnd ) stride = elementEnd;
             }
             return stride;
+        }
+
+        ///
+        /// Check if the vertex format has specific semantic.
+        ///
+        bool hasSemantic( const char * semantic ) const
+        {
+            for( size_t i = 0; i < numElements; ++i )
+            {
+                if( 0 == stringCompareI( elements[i].semantic, semantic ) )
+                {
+                    return true;
+                }
+            }
+            return false;
         }
 
         ///
@@ -867,12 +878,12 @@ namespace GN { namespace gfx
 
         //@{
 
-        StrA                            effect;   ///< effect resource name.
+        StrA                             effect;   ///< effect resource name.
         StringMap<char,ModelTextureDesc> textures; ///< key is effect parameter name
         StringMap<char,ModelUniformDesc> uniforms; ///< key is effect parameter name
 
-        StrA                            mesh;     ///< Mesh resource name.
-        MeshResourceSubset              subset;   ///< Mesh subset information.
+        StrA                             mesh;     ///< Mesh resource name.
+        MeshResourceSubset               subset;   ///< Mesh subset information.
 
         //@}
 
