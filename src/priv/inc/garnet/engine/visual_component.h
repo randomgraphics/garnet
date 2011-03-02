@@ -6,8 +6,6 @@
 /// \author  chenli@@REDMOND (2011.2.28)
 // *****************************************************************************
 
-#include "standardUniforms.h"
-
 namespace GN { namespace engine
 {
     ///
@@ -48,7 +46,7 @@ namespace GN { namespace engine
         /// Render the component to screen with specified transformation.
         void draw( const Matrix44f & proj, const Matrix44f & view ) const
         {
-            getStandardUniformManager()->setTransform( proj, view );
+            getGdb()->setTransform( proj, view );
             draw();
         }
 
@@ -58,14 +56,14 @@ namespace GN { namespace engine
 
         typedef HandleManager<AutoRef<gfx::ModelResource>,int> ModelManager;
 
-        typedef FixedArray<AutoRef<gfx::UniformResource>,StandardUniformType::NUM_STANDARD_UNIFORMS> StandardUniformArray;
+        typedef FixedArray<AutoRef<gfx::UniformResource>,gfx::StandardUniformType::NUM_STANDARD_UNIFORMS> StandardUniformArray;
 
         ModelManager               mModels;
         StandardUniformArray       mStandardPerObjectUniforms;
 
     private:
 
-        gfx::UniformResource * getPerObjectUniform( StandardUniformType type );
+        gfx::UniformResource * getPerObjectUniform( gfx::StandardUniformType type );
     };
 }}
 

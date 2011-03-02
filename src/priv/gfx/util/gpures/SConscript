@@ -10,6 +10,7 @@ sources = [
 	'simpleWireframeModel.cpp',
 	'simpleDiffuseModel.cpp',
 	'simpleNormalMapModel.cpp',
+    'stdUniform.cpp',
 	'textureresource.cpp',
 	'uniformresource.cpp',
 ]

@@ -106,6 +106,7 @@ namespace GN { namespace gfx
         Gpu                            & mGpu;
         ManagerArray                     mManagers;
         DynaArray<AutoRef<GpuResource> > mBuiltInResources;
+        AutoRef<UniformResource>         mStdUniforms[StandardUniformType::NUM_STANDARD_UNIFORMS];
 
         // *********************************************************************
         //
@@ -139,6 +140,18 @@ namespace GN { namespace gfx
         //@{
         void                 onResourceDelete( GpuResourceHandle handle );
         bool                 setupBuiltInResources();
+        //@}
+
+        //@{
+        UniformResource * getGlobalUniformResource( StandardUniformType type ) const;
+        void setGlobalUniform( StandardUniformType type, const void * data, size_t dataSize );
+        void setTransform( const Matrix44f & proj, const Matrix44f & view );
+        void setLight0(
+                const Vector4f & diffuse,
+                const Vector4f & ambient,
+                const Vector4f & specular,
+                const Vector3f & position,
+                const Vector3f & direction );
         //@}
 
     private:

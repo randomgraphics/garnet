@@ -55,8 +55,8 @@ int GN::engine::VisualComponent::addModel( ModelResource * model )
 
     GN_ASSERT( ModelResource::guid() == model->type() );
 
-    StandardUniformManager * sum = getStandardUniformManager();
-    GN_ASSERT( sum );
+    GpuResourceDatabase * gdb = getGdb();
+    GN_ASSERT( gdb );
 
     // handle standard uniforms
     AutoRef<EffectResource> effect = model->effectResource();
@@ -68,7 +68,7 @@ int GN::engine::VisualComponent::addModel( ModelResource * model )
         {
             if( d.global )
             {
-                model->setUniformResource( d.name, sum->getGlobalUniformResource( type ) );
+                model->setUniformResource( d.name, gdb->getGlobalUniformResource( type ) );
             }
             else
             {
@@ -103,10 +103,10 @@ void GN::engine::VisualComponent::draw() const
     SpacialComponent * sc = e ? e->getComponent<SpacialComponent>() : NULL;
     if( sc )
     {
-        StandardUniformManager * sum = getStandardUniformManager();
-        GN_ASSERT( sum );
+        GpuResourceDatabase * gdb = getGdb();
+        GN_ASSERT( gdb );
 
-        const Matrix44f pv = *(const Matrix44f *)sum->getGlobalUniformResource(StandardUniformType::MATRIX_PV)->uniform()->getval();
+        const Matrix44f pv = *(const Matrix44f *)gdb->getGlobalUniformResource(StandardUniformType::MATRIX_PV)->uniform()->getval();
 
         const Matrix44f & world = sc->getLocal2Root();
 
