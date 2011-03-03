@@ -362,10 +362,10 @@ if( "xenon" -eq $env:GN_BUILD_COMPILER )
 Setup SCONS build environment
 =============================
 
-SCons Directory : $GARNET_ROOT\env\scons\1.2.0.d20091224
+SCons Directory : $GARNET_ROOT\env\scons\2.1.0.alpha.20101125
 "
-$env:Path = "$GARNET_ROOT\env\scons\1.2.0.d20091224\script;$env:Path"
-$env:SCONS_LIB_DIR = "$GARNET_ROOT\env\scons\1.2.0.d20091224\engine"
+$env:Path = "$GARNET_ROOT\env\scons\2.1.0.alpha.20101125\script;$env:Path"
+$env:SCONS_LIB_DIR = "$GARNET_ROOT\env\scons\2.1.0.alpha.20101125\engine"
 $env:SCONSFLAGS="-U"
 
 # ==============================================================================
