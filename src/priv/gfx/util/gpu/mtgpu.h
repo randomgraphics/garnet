@@ -6,7 +6,7 @@
 /// \author  chenli@@REDMOND (2009.1.2)
 // *****************************************************************************
 
-#include "garnet/GNgfx.h"
+#include "../../gpu/gpupch.h"
 #include "cmdbuf.h"
 
 namespace GN { namespace gfx

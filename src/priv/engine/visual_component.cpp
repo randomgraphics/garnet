@@ -66,13 +66,13 @@ int GN::engine::VisualComponent::addModel( ModelResource * model )
 
         if( effect->hasUniform( d.name ) )
         {
-            if( d.global )
+            AutoRef<UniformResource> ur = gdb->getStandardUniformResource( type );
+
+            model->setUniformResource( d.name, ur );
+
+            if( !d.global )
             {
-                model->setUniformResource( d.name, gdb->getGlobalUniformResource( type ) );
-            }
-            else
-            {
-                model->setUniformResource( d.name, getPerObjectUniform( type ) );
+                mStandardPerObjectUniforms[type] = ur;
             }
         }
     }
@@ -106,7 +106,7 @@ void GN::engine::VisualComponent::draw() const
         GpuResourceDatabase * gdb = getGdb();
         GN_ASSERT( gdb );
 
-        const Matrix44f pv = *(const Matrix44f *)gdb->getGlobalUniformResource(StandardUniformType::MATRIX_PV)->uniform()->getval();
+        const Matrix44f pv = *(const Matrix44f *)gdb->getStandardUniformResource(StandardUniformType::MATRIX_PV)->uniform()->getval();
 
         const Matrix44f & world = sc->getLocal2Root();
 

@@ -143,8 +143,8 @@ namespace GN { namespace gfx
         //@}
 
         //@{
-        UniformResource * getGlobalUniformResource( StandardUniformType type ) const;
-        void setGlobalUniform( StandardUniformType type, const void * data, size_t dataSize );
+        AutoRef<UniformResource> getStandardUniformResource( StandardUniformType type ) const;
+        void setStandardUniform( StandardUniformType type, const void * data, size_t dataSize );
         void setTransform( const Matrix44f & proj, const Matrix44f & view );
         void setLight0(
                 const Vector4f & diffuse,
