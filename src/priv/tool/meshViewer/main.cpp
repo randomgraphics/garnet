@@ -49,7 +49,7 @@ public:
 
         // setup light as a head light that is in same location as camera.
         Vector4f lightPos(0,0,radius,1);
-        engine::getGdb()->setStandardUniform( StandardUniformType::LIGHT0_POSITION, lightPos );
+        engine::getGdb()->setStandardUniform( StandardUniform::Index::LIGHT0_POSITION, lightPos );
     }
 
     bool onInit()

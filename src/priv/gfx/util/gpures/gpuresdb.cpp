@@ -98,11 +98,11 @@ static AutoRef<EffectResource> sRegisterDiffuseEffect( GpuResourceDatabase & gdb
 {
     EffectResourceDesc ed;
 
-    ed.uniforms[StandardUniformDesc::MATRIX_PVW.name];
-    ed.uniforms[StandardUniformDesc::MATRIX_WORLD.name];
-    ed.uniforms[StandardUniformDesc::MATRIX_WORLD_IT.name];
-    ed.uniforms[StandardUniformDesc::LIGHT0_POSITION.name];
-    ed.uniforms[StandardUniformDesc::LIGHT0_DIFFUSE.name];
+    ed.uniforms[StandardUniform::Desc::MATRIX_PVW.name];
+    ed.uniforms[StandardUniform::Desc::MATRIX_WORLD.name];
+    ed.uniforms[StandardUniform::Desc::MATRIX_WORLD_IT.name];
+    ed.uniforms[StandardUniform::Desc::LIGHT0_POSITION.name];
+    ed.uniforms[StandardUniform::Desc::LIGHT0_DIFFUSE.name];
     ed.uniforms["ALBEDO_COLOR"];
     ed.textures["ALBEDO_TEXTURE"];
     ed.attributes["POSITION"];
@@ -112,11 +112,11 @@ static AutoRef<EffectResource> sRegisterDiffuseEffect( GpuResourceDatabase & gdb
     ed.gpuprograms["glsl"].gpd.lang = GpuProgramLanguage::GLSL;
     ed.gpuprograms["glsl"].gpd.vs.source = DIFFUSE_VS_GLSL;
     ed.gpuprograms["glsl"].gpd.ps.source = DIFFUSE_PS_GLSL;
-    ed.gpuprograms["glsl"].uniforms["pvw"] = StandardUniformDesc::MATRIX_PVW.name;
-    ed.gpuprograms["glsl"].uniforms["world"] = StandardUniformDesc::MATRIX_WORLD.name;
-    ed.gpuprograms["glsl"].uniforms["wit"] = StandardUniformDesc::MATRIX_WORLD_IT.name;
-    ed.gpuprograms["glsl"].uniforms["lightpos"] = StandardUniformDesc::LIGHT0_POSITION.name;
-    ed.gpuprograms["glsl"].uniforms["lightColor"] = StandardUniformDesc::LIGHT0_DIFFUSE.name;
+    ed.gpuprograms["glsl"].uniforms["pvw"] = StandardUniform::Desc::MATRIX_PVW.name;
+    ed.gpuprograms["glsl"].uniforms["world"] = StandardUniform::Desc::MATRIX_WORLD.name;
+    ed.gpuprograms["glsl"].uniforms["wit"] = StandardUniform::Desc::MATRIX_WORLD_IT.name;
+    ed.gpuprograms["glsl"].uniforms["lightpos"] = StandardUniform::Desc::LIGHT0_POSITION.name;
+    ed.gpuprograms["glsl"].uniforms["lightColor"] = StandardUniform::Desc::LIGHT0_DIFFUSE.name;
     ed.gpuprograms["glsl"].uniforms["albedoColor"] = "ALBEDO_COLOR";
     ed.gpuprograms["glsl"].textures["t0"] = "ALBEDO_TEXTURE";
     ed.gpuprograms["glsl"].attributes["gl_Vertex"] = "POSITION0";
@@ -128,11 +128,11 @@ static AutoRef<EffectResource> sRegisterDiffuseEffect( GpuResourceDatabase & gdb
     ed.gpuprograms["hlsl9"].gpd.vs.entry  = "main";
     ed.gpuprograms["hlsl9"].gpd.ps.source = DIFFUSE_PS_HLSL9;
     ed.gpuprograms["hlsl9"].gpd.ps.entry  = "main";
-    ed.gpuprograms["hlsl9"].uniforms["pvw"] = StandardUniformDesc::MATRIX_PVW.name;
-    ed.gpuprograms["hlsl9"].uniforms["world"] = StandardUniformDesc::MATRIX_WORLD.name;
-    ed.gpuprograms["hlsl9"].uniforms["wit"] = StandardUniformDesc::MATRIX_WORLD_IT.name;
-    ed.gpuprograms["hlsl9"].uniforms["lightpos"] = StandardUniformDesc::LIGHT0_POSITION.name;
-    ed.gpuprograms["hlsl9"].uniforms["lightColor"] = StandardUniformDesc::LIGHT0_DIFFUSE.name;
+    ed.gpuprograms["hlsl9"].uniforms["pvw"] = StandardUniform::Desc::MATRIX_PVW.name;
+    ed.gpuprograms["hlsl9"].uniforms["world"] = StandardUniform::Desc::MATRIX_WORLD.name;
+    ed.gpuprograms["hlsl9"].uniforms["wit"] = StandardUniform::Desc::MATRIX_WORLD_IT.name;
+    ed.gpuprograms["hlsl9"].uniforms["lightpos"] = StandardUniform::Desc::LIGHT0_POSITION.name;
+    ed.gpuprograms["hlsl9"].uniforms["lightColor"] = StandardUniform::Desc::LIGHT0_DIFFUSE.name;
     ed.gpuprograms["hlsl9"].uniforms["albedoColor"] = "ALBEDO_COLOR";
     ed.gpuprograms["hlsl9"].textures["t0"] = "ALBEDO_TEXTURE";
     ed.gpuprograms["hlsl9"].attributes["POSITION0"] = "POSITION";
@@ -199,14 +199,14 @@ static AutoRef<EffectResource> sRegisterWireframeEffect( GpuResourceDatabase & g
 {
     EffectResourceDesc ed;
 
-    ed.uniforms[StandardUniformDesc::MATRIX_PVW.name];
+    ed.uniforms[StandardUniform::Desc::MATRIX_PVW.name];
     ed.uniforms["ALBEDO_COLOR"];
     ed.attributes["POSITION"];
 
     ed.gpuprograms["glsl"].gpd.lang = GpuProgramLanguage::GLSL;
     ed.gpuprograms["glsl"].gpd.vs.source = WIREFRAME_VS_GLSL;
     ed.gpuprograms["glsl"].gpd.ps.source = WIREFRAME_PS_GLSL;
-    ed.gpuprograms["glsl"].uniforms["pvw"] = StandardUniformDesc::MATRIX_PVW.name;
+    ed.gpuprograms["glsl"].uniforms["pvw"] = StandardUniform::Desc::MATRIX_PVW.name;
     ed.gpuprograms["glsl"].uniforms["color"] = "ALBEDO_COLOR";
     ed.gpuprograms["glsl"].attributes["gl_Vertex"] = "POSITION";
 
@@ -215,7 +215,7 @@ static AutoRef<EffectResource> sRegisterWireframeEffect( GpuResourceDatabase & g
     ed.gpuprograms["hlsl"].gpd.vs.entry  = "main";
     ed.gpuprograms["hlsl"].gpd.ps.source = WIREFRAME_PS_HLSL9;
     ed.gpuprograms["hlsl"].gpd.ps.entry  = "main";
-    ed.gpuprograms["hlsl"].uniforms["pvw"] = StandardUniformDesc::MATRIX_PVW.name;
+    ed.gpuprograms["hlsl"].uniforms["pvw"] = StandardUniform::Desc::MATRIX_PVW.name;
     ed.gpuprograms["hlsl"].uniforms["color"] = "ALBEDO_COLOR";
     ed.gpuprograms["hlsl"].attributes["POSITION0"] = "POSITION";
 
@@ -724,16 +724,16 @@ bool GpuResourceDatabase::Impl::setupBuiltInResources()
     mBuiltInResources.append( sRegisterFlatNormalMap( mDatabase ) );
 
     // create built-in uniforms.
-    for( StandardUniformType i = 0; i < StandardUniformType::NUM_STANDARD_UNIFORMS; ++i )
+    for( int i = 0; i < StandardUniform::Index::NUM_STANDARD_UNIFORMS; ++i )
     {
         AutoRef<UniformResource> & ur = mStdUniforms[i];
 
-        const StandardUniformDesc & desc = i.getDesc();
+        const StandardUniform::Desc * desc = StandardUniform::sIndex2Desc( i );
 
         // Note: the content of the uniform leaves uninitialized.
-        AutoRef<Uniform> u( getGpu().createUniform( desc.size ) );
+        AutoRef<Uniform> u( getGpu().createUniform( desc->size ) );
 
-        ur = mDatabase.createResource<UniformResource>( desc.name );
+        ur = mDatabase.createResource<UniformResource>( desc->name );
         ur->setUniform( u );
     }
 
@@ -753,25 +753,25 @@ bool GpuResourceDatabase::Impl::setupBuiltInResources()
 //
 // -----------------------------------------------------------------------------
 AutoRef<UniformResource>
-GpuResourceDatabase::Impl::getStandardUniformResource( StandardUniformType type ) const
+GpuResourceDatabase::Impl::getStandardUniformResource( int index ) const
 {
-    if( !type.isValid() )
+    if( !StandardUniform::sIsValidIndex( index ) )
     {
-        GN_ERROR(sLogger)( "Invalid uniform type: %d", (StandardUniformType::ENUM)type );
+        GN_ERROR(sLogger)( "Invalid standard uniform index: %d", index );
         return AutoRef<UniformResource>::NULLREF;
     }
-    return mStdUniforms[type];
+    return mStdUniforms[index];
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-void GpuResourceDatabase::Impl::setStandardUniform( StandardUniformType type, const void * data, size_t dataSize )
+void GpuResourceDatabase::Impl::setStandardUniform( int index, const void * data, size_t dataSize )
 {
     // check parameters
-    if( !type.isValid() )
+    if( !StandardUniform::sIsValidIndex( index ) )
     {
-        GN_ERROR(sLogger)( "Invalid uniform type: %d", (StandardUniformType::ENUM)type );
+        GN_ERROR(sLogger)( "Invalid uniform type: %d", index );
         return;
     }
     if( NULL == data )
@@ -779,14 +779,14 @@ void GpuResourceDatabase::Impl::setStandardUniform( StandardUniformType type, co
         GN_ERROR(sLogger)( "Null point." );
         return;
     }
-    const gfx::StandardUniformDesc & desc = type.getDesc();
-    if( dataSize != desc.size )
+    const StandardUniform::Desc * desc = StandardUniform::sIndex2Desc( index );
+    if( dataSize != desc->size )
     {
-        GN_ERROR(sLogger)( "Incorrect uniform data size: expected=%d, actual=%d.", desc.size, dataSize );
+        GN_ERROR(sLogger)( "Incorrect uniform data size: expected=%d, actual=%d.", desc->size, dataSize );
         return;
     }
 
-    mStdUniforms[type]->uniform()->update( 0, dataSize, data );
+    mStdUniforms[index]->uniform()->update( 0, dataSize, data );
 }
 
 
@@ -805,17 +805,17 @@ void GpuResourceDatabase::Impl::setTransform( const Matrix44f & proj, const Matr
     Matrix44f iv  = Matrix44f::sInverse( view );
     Matrix44f itv = Matrix44f::sInverse( Matrix44f::sTranspose( view ) );
 
-    mStdUniforms[StandardUniformType::MATRIX_PV]->uniform()->update( pv );
-    mStdUniforms[StandardUniformType::MATRIX_PV_INV]->uniform()->update( ipv );
-    mStdUniforms[StandardUniformType::MATRIX_PV_IT]->uniform()->update( itpv );
+    mStdUniforms[StandardUniform::Index::MATRIX_PV]->uniform()->update( pv );
+    mStdUniforms[StandardUniform::Index::MATRIX_PV_INV]->uniform()->update( ipv );
+    mStdUniforms[StandardUniform::Index::MATRIX_PV_IT]->uniform()->update( itpv );
 
-    mStdUniforms[StandardUniformType::MATRIX_PROJ]->uniform()->update( proj );
-    mStdUniforms[StandardUniformType::MATRIX_PROJ_INV]->uniform()->update( ip );
-    mStdUniforms[StandardUniformType::MATRIX_PROJ_IT]->uniform()->update( itp );
+    mStdUniforms[StandardUniform::Index::MATRIX_PROJ]->uniform()->update( proj );
+    mStdUniforms[StandardUniform::Index::MATRIX_PROJ_INV]->uniform()->update( ip );
+    mStdUniforms[StandardUniform::Index::MATRIX_PROJ_IT]->uniform()->update( itp );
 
-    mStdUniforms[StandardUniformType::MATRIX_VIEW]->uniform()->update( view );
-    mStdUniforms[StandardUniformType::MATRIX_VIEW_INV]->uniform()->update( iv );
-    mStdUniforms[StandardUniformType::MATRIX_VIEW_IT]->uniform()->update( itv );
+    mStdUniforms[StandardUniform::Index::MATRIX_VIEW]->uniform()->update( view );
+    mStdUniforms[StandardUniform::Index::MATRIX_VIEW_INV]->uniform()->update( iv );
+    mStdUniforms[StandardUniform::Index::MATRIX_VIEW_IT]->uniform()->update( itv );
 }
 
 //
@@ -828,11 +828,11 @@ void GpuResourceDatabase::Impl::setLight0(
     const Vector3f & position,
     const Vector3f & direction )
 {
-    mStdUniforms[StandardUniformType::LIGHT0_DIFFUSE]->uniform()->update( diffuse );
-    mStdUniforms[StandardUniformType::LIGHT0_AMBIENT]->uniform()->update( ambient );
-    mStdUniforms[StandardUniformType::LIGHT0_SPECULAR]->uniform()->update( specular );
-    mStdUniforms[StandardUniformType::LIGHT0_POSITION]->uniform()->update( position );
-    mStdUniforms[StandardUniformType::LIGHT0_DIRECTION]->uniform()->update( direction );
+    mStdUniforms[StandardUniform::Index::LIGHT0_DIFFUSE]->uniform()->update( diffuse );
+    mStdUniforms[StandardUniform::Index::LIGHT0_AMBIENT]->uniform()->update( ambient );
+    mStdUniforms[StandardUniform::Index::LIGHT0_SPECULAR]->uniform()->update( specular );
+    mStdUniforms[StandardUniform::Index::LIGHT0_POSITION]->uniform()->update( position );
+    mStdUniforms[StandardUniform::Index::LIGHT0_DIRECTION]->uniform()->update( direction );
 }
 // *****************************************************************************
 // GpuResourceDatabase::Impl private methods
@@ -926,9 +926,9 @@ AutoRef<GpuResource>     GpuResourceDatabase::createResource( const Guid & type,
 AutoRef<GpuResource>     GpuResourceDatabase::findResource( const Guid & type, const char * name ) const { return mImpl->findResource( type, name ); }
 bool                     GpuResourceDatabase::validResource( const Guid & type, const GpuResource * resource ) const { return mImpl->validResource( type, resource ); }
 bool                     GpuResourceDatabase::validResource( const GpuResource * resource ) const { return mImpl->validResource( resource ); }
-const char             * GpuResourceDatabase::getResourceName( const GpuResource * resource ) const { return mImpl->getResourceName(resource); }
-const Guid             & GpuResourceDatabase::getResourceType( const GpuResource * resource ) const { return mImpl->getResourceType(resource); }
-AutoRef<UniformResource> GpuResourceDatabase::getStandardUniformResource( StandardUniformType type ) const { return mImpl->getStandardUniformResource( type ); }
-void                     GpuResourceDatabase::setStandardUniform( StandardUniformType type, const void * data, size_t dataSize ) { return mImpl->setStandardUniform( type, data, dataSize ); }
+const char             * GpuResourceDatabase::getResourceName( const GpuResource * resource ) const { return mImpl->getResourceName( resource ); }
+const Guid             & GpuResourceDatabase::getResourceType( const GpuResource * resource ) const { return mImpl->getResourceType( resource ); }
+AutoRef<UniformResource> GpuResourceDatabase::getStandardUniformResource( int index ) const { return mImpl->getStandardUniformResource( index ); }
+void                     GpuResourceDatabase::setStandardUniform( int index, const void * data, size_t dataSize ) { return mImpl->setStandardUniform( index, data, dataSize ); }
 void                     GpuResourceDatabase::setTransform( const Matrix44f & proj, const Matrix44f & view ) { return mImpl->setTransform( proj, view ); }
 void                     GpuResourceDatabase::setLight0( const Vector4f & diffuse, const Vector4f & ambient, const Vector4f & specular, const Vector3f & position, const Vector3f & direction ) { return mImpl->setLight0( diffuse, ambient, specular, position, direction ); }

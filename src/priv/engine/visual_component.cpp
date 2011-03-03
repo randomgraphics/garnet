@@ -36,7 +36,7 @@ GN::engine::VisualComponent::VisualComponent()
 GN::engine::VisualComponent::~VisualComponent()
 {
     clear();
-    for( size_t i = 0; i < StandardUniformType::NUM_STANDARD_UNIFORMS; ++i )
+    for( size_t i = 0; i < StandardUniform::Index::NUM_STANDARD_UNIFORMS; ++i )
     {
         mStandardPerObjectUniforms[i].clear();
     }
@@ -61,31 +61,31 @@ int GN::engine::VisualComponent::addModel( ModelResource * model )
 
     // handle standard uniforms
     AutoRef<EffectResource> effect = model->effectResource();
-    for( StandardUniformType type = 0; type < StandardUniformType::NUM_STANDARD_UNIFORMS; ++type )
+    for( StandardUniform::Index type = 0; type < StandardUniform::Index::NUM_STANDARD_UNIFORMS; ++type )
     {
-        const StandardUniformDesc & d = type.getDesc();
+        const StandardUniform::Desc * d = StandardUniform::sIndex2Desc( type );
 
-        if( effect->hasUniform( d.name ) )
+        if( effect->hasUniform( d->name ) )
         {
             AutoRef<UniformResource> ur;
 
-            if( d.global )
+            if( d->global )
             {
                 ur = gdb->getStandardUniformResource( type );
-                model->setUniformResource( d.name, ur );
+                model->setUniformResource( d->name, ur );
             }
             else
             {
                 #if 0
                 gdb->createResource<UniformResource>(NULL);
-                AutoRef<Uniform> u( gpu->createUniform( d.size ) );
+                AutoRef<Uniform> u( gpu->createUniform( d->size ) );
                 ur->setUniform( u );
-                model->setUniformResource( d.name, ur );
+                model->setUniformResource( d->name, ur );
                 #elif 1
                 ur = gdb->getStandardUniformResource( type );
-                model->setUniformResource( d.name, ur );
+                model->setUniformResource( d->name, ur );
                 #else
-                ur = model->uniformResource( d.name );
+                ur = model->uniformResource( d->name );
                 #endif
                 mStandardPerObjectUniforms[type] = ur;
             }
@@ -121,46 +121,46 @@ void GN::engine::VisualComponent::draw() const
         GpuResourceDatabase * gdb = getGdb();
         GN_ASSERT( gdb );
 
-        const Matrix44f pv = *(const Matrix44f *)gdb->getStandardUniformResource(StandardUniformType::MATRIX_PV)->uniform()->getval();
+        const Matrix44f pv = *(const Matrix44f *)gdb->getStandardUniformResource(StandardUniform::Index::MATRIX_PV)->uniform()->getval();
 
         const Matrix44f & world = sc->getLocal2Root();
 
         Matrix44f pvw = pv * world;
 
-        for( StandardUniformType type = 0; (size_t)type < mStandardPerObjectUniforms.size(); ++type )
+        for( int index = 0; (size_t)index < mStandardPerObjectUniforms.size(); ++index )
         {
-            UniformResource * ur = mStandardPerObjectUniforms[type];
+            UniformResource * ur = mStandardPerObjectUniforms[index];
             if( NULL == ur ) continue;
 
             // this should be per-object parameter
-            GN_ASSERT( !type.getDesc().global );
+            GN_ASSERT( !StandardUniform::sIndex2Desc( index )->global );
 
             AutoRef<Uniform> u = ur->uniform();
             if( NULL == u ) continue;
 
-            switch( type )
+            switch( index )
             {
-                case StandardUniformType::MATRIX_PVW :
+                case StandardUniform::Index::MATRIX_PVW :
                     u->update( pvw );
                     break;
 
-                case StandardUniformType::MATRIX_PVW_INV:
+                case StandardUniform::Index::MATRIX_PVW_INV:
                     u->update( Matrix44f::sInverse( pvw ) );
                     break;
 
-                case StandardUniformType::MATRIX_PVW_IT:
+                case StandardUniform::Index::MATRIX_PVW_IT:
                     u->update( Matrix44f::sInvtrans( pvw ) );
                     break;
 
-                case StandardUniformType::MATRIX_WORLD :
+                case StandardUniform::Index::MATRIX_WORLD :
                     u->update( world );
                     break;
 
-                case StandardUniformType::MATRIX_WORLD_INV:
+                case StandardUniform::Index::MATRIX_WORLD_INV:
                     u->update( Matrix44f::sInverse(world) );
                     break;
 
-                case StandardUniformType::MATRIX_WORLD_IT:
+                case StandardUniform::Index::MATRIX_WORLD_IT:
                     u->update( Matrix44f::sInvtrans(world) );
                     break;
 
