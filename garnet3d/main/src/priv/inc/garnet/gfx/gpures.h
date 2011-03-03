@@ -978,15 +978,15 @@ namespace GN { namespace gfx
         template<class T> inline AutoRef<T> findOrCreateResource( const char * name, bool * isExistingResource = NULL );
         //@}
 
-        /// standard uniform utilities (only global standard uniforms are handled here.
+        /// standard uniform utilities
         //@{
 
-        UniformResource * getGlobalUniformResource( StandardUniformType type ) const;
+        AutoRef<UniformResource> getStandardUniformResource( StandardUniformType type ) const;
 
-        void setGlobalUniform( StandardUniformType type, const void * data, size_t dataSize );
+        void setStandardUniform( StandardUniformType type, const void * data, size_t dataSize );
 
         template<typename T>
-        void setGlobalUniform( StandardUniformType type, const T & value ) { setGlobalUniform( type, &value, sizeof(T) ); }
+        void setStandardUniform( StandardUniformType type, const T & value ) { setStandardUniform( type, &value, sizeof(T) ); }
 
         void setTransform( const Matrix44f & proj, const Matrix44f & view );
 

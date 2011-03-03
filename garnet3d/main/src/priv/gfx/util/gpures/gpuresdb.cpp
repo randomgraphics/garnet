@@ -723,37 +723,28 @@ bool GpuResourceDatabase::Impl::setupBuiltInResources()
     mBuiltInResources.append( sRegisterBlackTexture( mDatabase ) );
     mBuiltInResources.append( sRegisterFlatNormalMap( mDatabase ) );
 
-    // create built-in global uniforms.
+    // create built-in uniforms.
     for( StandardUniformType i = 0; i < StandardUniformType::NUM_STANDARD_UNIFORMS; ++i )
     {
         AutoRef<UniformResource> & ur = mStdUniforms[i];
 
         const StandardUniformDesc & desc = i.getDesc();
 
-        if( desc.global )
-        {
-            // Note: the content of the uniform leaves uninitialized.
-            AutoRef<Uniform> u( getGpu().createUniform( desc.size ) );
+        // Note: the content of the uniform leaves uninitialized.
+        AutoRef<Uniform> u( getGpu().createUniform( desc.size ) );
 
-            ur = mDatabase.createResource<UniformResource>( desc.name );
-            ur->setUniform( u );
-
-            mBuiltInResources.append( ur );
-        }
+        ur = mDatabase.createResource<UniformResource>( desc.name );
+        ur->setUniform( u );
     }
 
-    // TODO: set default global uniform value based on the uniform meta file
+    // setup default uniform values
+    // TODO: set default uniform value based on the uniform meta file
     Vector4f diffuse(1,1,1,1);
     Vector4f ambient(0.2f,0.2f,0.2f,1.0f);
     Vector4f specular(1,1,1,1);
     Vector3f position(0,0,0);
     Vector3f direction(0,0,1);
     setLight0( diffuse, ambient, specular, position, direction );
-    mDatabase.findResource<UniformResource>(StandardUniformDesc::LIGHT0_DIFFUSE.name)->uniform()->update( diffuse );
-    mDatabase.findResource<UniformResource>(StandardUniformDesc::LIGHT0_AMBIENT.name)->uniform()->update( ambient );
-    mDatabase.findResource<UniformResource>(StandardUniformDesc::LIGHT0_SPECULAR.name)->uniform()->update( specular );
-    mDatabase.findResource<UniformResource>(StandardUniformDesc::LIGHT0_POSITION.name)->uniform()->update( position );
-    mDatabase.findResource<UniformResource>(StandardUniformDesc::LIGHT0_DIRECTION.name)->uniform()->update( direction );
 
     return true;
 }
@@ -761,28 +752,21 @@ bool GpuResourceDatabase::Impl::setupBuiltInResources()
 //
 //
 // -----------------------------------------------------------------------------
-GN::gfx::UniformResource *
-GpuResourceDatabase::Impl::getGlobalUniformResource( StandardUniformType type ) const
+AutoRef<UniformResource>
+GpuResourceDatabase::Impl::getStandardUniformResource( StandardUniformType type ) const
 {
     if( !type.isValid() )
     {
         GN_ERROR(sLogger)( "Invalid uniform type: %d", (StandardUniformType::ENUM)type );
-        return NULL;
+        return AutoRef<UniformResource>::NULLREF;
     }
-    const gfx::StandardUniformDesc & desc = type.getDesc();
-    if( !desc.global )
-    {
-        GN_ERROR(sLogger)( "Non-global parameter \"%s\" is not accessible through this function.", desc.name );
-        return NULL;
-    }
-
     return mStdUniforms[type];
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-void GpuResourceDatabase::Impl::setGlobalUniform( StandardUniformType type, const void * data, size_t dataSize )
+void GpuResourceDatabase::Impl::setStandardUniform( StandardUniformType type, const void * data, size_t dataSize )
 {
     // check parameters
     if( !type.isValid() )
@@ -790,17 +774,12 @@ void GpuResourceDatabase::Impl::setGlobalUniform( StandardUniformType type, cons
         GN_ERROR(sLogger)( "Invalid uniform type: %d", (StandardUniformType::ENUM)type );
         return;
     }
-    const gfx::StandardUniformDesc & desc = type.getDesc();
-    if( !desc.global )
-    {
-        GN_ERROR(sLogger)( "Non-global parameter \"%s\" is not accessible through this function.", desc.name );
-        return;
-    }
     if( NULL == data )
     {
         GN_ERROR(sLogger)( "Null point." );
         return;
     }
+    const gfx::StandardUniformDesc & desc = type.getDesc();
     if( dataSize != desc.size )
     {
         GN_ERROR(sLogger)( "Incorrect uniform data size: expected=%d, actual=%d.", desc.size, dataSize );
@@ -939,17 +918,17 @@ GpuResourceDatabase::GpuResourceDatabase( Gpu & g ) : mImpl(NULL)
     }
 }
 
-GpuResourceDatabase::~GpuResourceDatabase() { delete mImpl; }
-Gpu                & GpuResourceDatabase::getGpu() const { return mImpl->getGpu(); }
-bool                 GpuResourceDatabase::registerResourceFactory( const Guid & type, const char * desc, GpuResourceFactory factory ) { return mImpl->registerResourceFactory( type, desc, factory ); }
-bool                 GpuResourceDatabase::hasResourceFactory( const Guid & type ) { return mImpl->hasResourceFactory( type ); }
-AutoRef<GpuResource> GpuResourceDatabase::createResource( const Guid & type, const char * name ) { return mImpl->createResource( type, name ); }
-AutoRef<GpuResource> GpuResourceDatabase::findResource( const Guid & type, const char * name ) const { return mImpl->findResource( type, name ); }
-bool                 GpuResourceDatabase::validResource( const Guid & type, const GpuResource * resource ) const { return mImpl->validResource( type, resource ); }
-bool                 GpuResourceDatabase::validResource( const GpuResource * resource ) const { return mImpl->validResource( resource ); }
-const char         * GpuResourceDatabase::getResourceName( const GpuResource * resource ) const { return mImpl->getResourceName(resource); }
-const Guid         & GpuResourceDatabase::getResourceType( const GpuResource * resource ) const { return mImpl->getResourceType(resource); }
-UniformResource    * GpuResourceDatabase::getGlobalUniformResource( StandardUniformType type ) const { return mImpl->getGlobalUniformResource( type ); }
-void                 GpuResourceDatabase::setGlobalUniform( StandardUniformType type, const void * data, size_t dataSize ) { return mImpl->setGlobalUniform( type, data, dataSize ); }
-void                 GpuResourceDatabase::setTransform( const Matrix44f & proj, const Matrix44f & view ) { return mImpl->setTransform( proj, view ); }
-void                 GpuResourceDatabase::setLight0( const Vector4f & diffuse, const Vector4f & ambient, const Vector4f & specular, const Vector3f & position, const Vector3f & direction ) { return mImpl->setLight0( diffuse, ambient, specular, position, direction ); }
+                         GpuResourceDatabase::~GpuResourceDatabase() { delete mImpl; }
+Gpu                    & GpuResourceDatabase::getGpu() const { return mImpl->getGpu(); }
+bool                     GpuResourceDatabase::registerResourceFactory( const Guid & type, const char * desc, GpuResourceFactory factory ) { return mImpl->registerResourceFactory( type, desc, factory ); }
+bool                     GpuResourceDatabase::hasResourceFactory( const Guid & type ) { return mImpl->hasResourceFactory( type ); }
+AutoRef<GpuResource>     GpuResourceDatabase::createResource( const Guid & type, const char * name ) { return mImpl->createResource( type, name ); }
+AutoRef<GpuResource>     GpuResourceDatabase::findResource( const Guid & type, const char * name ) const { return mImpl->findResource( type, name ); }
+bool                     GpuResourceDatabase::validResource( const Guid & type, const GpuResource * resource ) const { return mImpl->validResource( type, resource ); }
+bool                     GpuResourceDatabase::validResource( const GpuResource * resource ) const { return mImpl->validResource( resource ); }
+const char             * GpuResourceDatabase::getResourceName( const GpuResource * resource ) const { return mImpl->getResourceName(resource); }
+const Guid             & GpuResourceDatabase::getResourceType( const GpuResource * resource ) const { return mImpl->getResourceType(resource); }
+AutoRef<UniformResource> GpuResourceDatabase::getStandardUniformResource( StandardUniformType type ) const { return mImpl->getStandardUniformResource( type ); }
+void                     GpuResourceDatabase::setStandardUniform( StandardUniformType type, const void * data, size_t dataSize ) { return mImpl->setStandardUniform( type, data, dataSize ); }
+void                     GpuResourceDatabase::setTransform( const Matrix44f & proj, const Matrix44f & view ) { return mImpl->setTransform( proj, view ); }
+void                     GpuResourceDatabase::setLight0( const Vector4f & diffuse, const Vector4f & ambient, const Vector4f & specular, const Vector3f & position, const Vector3f & direction ) { return mImpl->setLight0( diffuse, ambient, specular, position, direction ); }

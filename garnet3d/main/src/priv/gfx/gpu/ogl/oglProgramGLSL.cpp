@@ -457,7 +457,8 @@ void GN::gfx::OGLGpuProgramGLSL::applyUniforms(
         const SysMemUniform * uniform = (const SysMemUniform *)uniforms[i];
         if( NULL == uniform )
         {
-            GN_ERROR(sLogger)( "Null uniform pointer for GPU program uniform parameter #%d.", i );
+            const GpuProgramUniformParameterDesc & ud = mParamDesc.uniforms[i];
+            GN_ERROR(sLogger)( "Null uniform pointer for GPU program uniform parameter #%d: %s.", i, ud.name );
             continue;
         }
 
