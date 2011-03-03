@@ -42,7 +42,7 @@ import os.path
 conf_env = GN.newEnvEx( GN.compiler, GN.variant, None )
 
 conf_env.Replace( CCFLAGS = Split( ccflags ) )
-conf_env.BuildDir( build_dir='#build.tmp', src_dir='#' )
+conf_env.VariantDir( variant_dir='#build.tmp', src_dir='#' )
 conf_dir = os.path.join( GN.buildDir( GN.compiler, GN.variant ), 'config', 'extern' )
 conf = conf_env.Configure(
     conf_dir=conf_dir,
