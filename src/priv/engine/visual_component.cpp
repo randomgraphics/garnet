@@ -56,7 +56,8 @@ int GN::engine::VisualComponent::addModel( ModelResource * model )
     GN_ASSERT( ModelResource::guid() == model->type() );
 
     GpuResourceDatabase * gdb = getGdb();
-    GN_ASSERT( gdb );
+    Gpu * gpu = getGpu();
+    GN_ASSERT( gdb && gpu );
 
     // handle standard uniforms
     AutoRef<EffectResource> effect = model->effectResource();
@@ -66,12 +67,19 @@ int GN::engine::VisualComponent::addModel( ModelResource * model )
 
         if( effect->hasUniform( d.name ) )
         {
-            AutoRef<UniformResource> ur = gdb->getStandardUniformResource( type );
+            AutoRef<UniformResource> ur;
 
-            model->setUniformResource( d.name, ur );
-
-            if( !d.global )
+            if( d.global )
             {
+                ur = gdb->getStandardUniformResource( type );
+                model->setUniformResource( d.name, ur );
+            }
+            else
+            {
+                //ur = gdb->createResource<UniformResource>(NULL);
+                //AutoRef<Uniform> u( gpu->createUniform( d.size ) );
+                //ur->setUniform( u );
+                ur = model->uniformResource( d.name );
                 mStandardPerObjectUniforms[type] = ur;
             }
         }
@@ -163,32 +171,5 @@ void GN::engine::VisualComponent::draw() const
 
         m->draw();
     }
-}
-
-// *****************************************************************************
-// VisualComponent private methods
-// *****************************************************************************
-
-//
-//
-// -----------------------------------------------------------------------------
-GN::gfx::UniformResource *
-GN::engine::VisualComponent::getPerObjectUniform( StandardUniformType type )
-{
-    AutoRef<UniformResource> & ur = mStandardPerObjectUniforms[type];
-
-    StrA fullname = stringFormat( "GN.engine.visualcomponent.stduniform.%s", type.name() );
-
-    GpuResourceDatabase * gdb = getGdb();
-
-    ur = gdb->findOrCreateResource<UniformResource>( fullname );
-
-    if( !ur->uniform() )
-    {
-        AutoRef<Uniform> u( gdb->getGpu().createUniform( type.getDesc().size ) );
-        ur->setUniform( u );
-    }
-
-    return ur;
 }
 

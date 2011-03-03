@@ -841,14 +841,14 @@ namespace GN { namespace gfx
         void clear();
 
         ///
-        /// check if the model has a texture parameter with specific name
+        /// check if the model has a texture parameter that is mapped to specific effect parameter
         ///
-        bool hasTexture( const char * name ) const { return NULL != textures.find( name ); }
+        bool hasTexture( const char * effectParameterName ) const { return NULL != textures.find( effectParameterName ); }
 
         ///
-        /// check if the model has a uniform parameter with specific name
+        /// check if the model has an uniform parameter that is mapped to specific effect parameter
         ///
-        bool hasUniform( const char * name ) const { return NULL != uniforms.find( name ); }
+        bool hasUniform( const char * effectParameterName ) const { return NULL != uniforms.find( effectParameterName ); }
 
         ///
         /// setup the descriptor from XML

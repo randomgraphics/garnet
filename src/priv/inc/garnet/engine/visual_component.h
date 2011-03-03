@@ -60,10 +60,6 @@ namespace GN { namespace engine
 
         ModelManager               mModels;
         StandardUniformArray       mStandardPerObjectUniforms;
-
-    private:
-
-        gfx::UniformResource * getPerObjectUniform( gfx::StandardUniformType type );
     };
 }}
 
