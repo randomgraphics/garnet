@@ -981,12 +981,12 @@ namespace GN { namespace gfx
         /// standard uniform utilities
         //@{
 
-        AutoRef<UniformResource> getStandardUniformResource( StandardUniformType type ) const;
+        AutoRef<UniformResource> getStandardUniformResource( int index ) const;
 
-        void setStandardUniform( StandardUniformType type, const void * data, size_t dataSize );
+        void setStandardUniform( int index, const void * data, size_t dataSize );
 
         template<typename T>
-        void setStandardUniform( StandardUniformType type, const T & value ) { setStandardUniform( type, &value, sizeof(T) ); }
+        void setStandardUniform( int index, const T & value ) { setStandardUniform( index, &value, sizeof(T) ); }
 
         void setTransform( const Matrix44f & proj, const Matrix44f & view );
 

@@ -56,7 +56,7 @@ namespace GN { namespace engine
 
         typedef HandleManager<AutoRef<gfx::ModelResource>,int> ModelManager;
 
-        typedef FixedArray<AutoRef<gfx::UniformResource>,gfx::StandardUniformType::NUM_STANDARD_UNIFORMS> StandardUniformArray;
+        typedef FixedArray<AutoRef<gfx::UniformResource>,gfx::StandardUniform::Index::NUM_STANDARD_UNIFORMS> StandardUniformArray;
 
         ModelManager               mModels;
         StandardUniformArray       mStandardPerObjectUniforms;
