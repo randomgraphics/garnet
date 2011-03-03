@@ -76,10 +76,17 @@ int GN::engine::VisualComponent::addModel( ModelResource * model )
             }
             else
             {
-                //ur = gdb->createResource<UniformResource>(NULL);
-                //AutoRef<Uniform> u( gpu->createUniform( d.size ) );
-                //ur->setUniform( u );
+                #if 0
+                gdb->createResource<UniformResource>(NULL);
+                AutoRef<Uniform> u( gpu->createUniform( d.size ) );
+                ur->setUniform( u );
+                model->setUniformResource( d.name, ur );
+                #elif 1
+                ur = gdb->getStandardUniformResource( type );
+                model->setUniformResource( d.name, ur );
+                #else
                 ur = model->uniformResource( d.name );
+                #endif
                 mStandardPerObjectUniforms[type] = ur;
             }
         }
