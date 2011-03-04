@@ -306,7 +306,7 @@ sLoadModelHierarchyFromASE( ModelHierarchyDesc & desc, File & file )
     }
     filename = fs::resolvePath( fs::getCurrentDir(), filename );
 
-#define FULL_MESH_NAME( n ) (n) // stringFormat("%s.%s",filename.cptr(),n.cptr())
+#define FULL_MESH_NAME( n ) stringFormat("%s.%s",filename.cptr(),n.cptr())
 
     // copy meshes. create nodes as well, since in ASE scene, one mesh is one node.
     for( size_t i = 0; i < ase.meshes.size(); ++i )
