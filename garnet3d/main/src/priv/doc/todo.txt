@@ -4,10 +4,7 @@ TODO
 - 程序中标注TODO的地方
 
 - p0
-  - Misc.
-    - multithread support for GPU debug tag
-    - D3D resource leaking in GNtestEngine and GNsampleDolphin.
-    - ModelHierarchy loads "unnamed" models.
+  - D3D resource leaking in GNtestEngine and GNsampleDolphin.
   - Optimized vector and geomtry class to be SSE/xnamath compatible.
   - Winphone 7 integration
   - Cuda or OpenCL integration
