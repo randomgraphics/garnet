@@ -25,8 +25,8 @@ bool GN::CommandBuffer::init( size_t bufferSize )
         bufferSize = 16;
     }
 
-    // allocate ring buffer
-    m_Buffer = (uint8*)HeapMemory::alloc( bufferSize * 2 ); // allocate double sized buffer, to handle rewind issue
+    // allocate 16 byte aligned ring buffer (double sized, to handle rewind issue)
+    m_Buffer = (uint8*)HeapMemory::alignedAlloc( bufferSize * 2, 16 );
     if( NULL == m_Buffer ) return failure();
     m_Size = bufferSize;
 

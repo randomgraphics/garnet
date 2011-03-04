@@ -154,13 +154,13 @@ namespace GN { namespace gfx
 
         virtual GpuSignals & getSignals() { return mSignals; }
         virtual void         getBackBufferContent( BackBufferContent & );
-        virtual void         enableParameterCheck( bool enable ) { mParamCheckEnabled = enable; }
         virtual void         setUserData( const Guid & id, const void * data, size_t length );
         virtual const void * getUserData( const Guid & id, size_t * length ) const;
         virtual bool         hasUserData( const Guid & id ) const;
-        virtual void         debugMarkBegin( const char * ) const {}
-        virtual void         debugMarkEnd() const {}
-        virtual void         debugMarkSet( const char * ) const {}
+        virtual void         debugEnableParameterCheck( bool enable ) { mParamCheckEnabled = enable; }
+        virtual void         debugMarkBegin( const char * ) {}
+        virtual void         debugMarkEnd() {}
+        virtual void         debugMarkSet( const char * ) {}
 
     public:
 

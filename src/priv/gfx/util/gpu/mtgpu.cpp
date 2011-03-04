@@ -560,22 +560,6 @@ void GN::gfx::MultiThreadGpu::processRenderWindowMessages( bool blockWhileMinimi
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::MultiThreadGpu::enableParameterCheck( bool enable )
-{
-    mCommandBuffer.postCommand1( CMD_ENABLE_PARAMETER_CHECK, enable );
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-void GN::gfx::MultiThreadGpu::dumpNextFrame( size_t startBatchIndex, size_t numBatches )
-{
-    mCommandBuffer.postCommand2( CMD_DUMP_NEXT_FRAME, startBatchIndex, numBatches );
-}
-
-//
-//
-// -----------------------------------------------------------------------------
 void GN::gfx::MultiThreadGpu::setUserData( const Guid & id, const void * data, size_t length )
 {
     mGpu->setUserData( id, data, length );
@@ -600,24 +584,63 @@ bool GN::gfx::MultiThreadGpu::hasUserData( const Guid & id ) const
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::MultiThreadGpu::debugMarkBegin( const char * markerName ) const
+void GN::gfx::MultiThreadGpu::debugEnableParameterCheck( bool enable )
 {
-    GN_UNUSED_PARAM( markerName );
+    mCommandBuffer.postCommand1( CMD_DEBUG_ENABLE_PARAMETER_CHECK, enable );
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::MultiThreadGpu::debugMarkEnd() const
+void GN::gfx::MultiThreadGpu::debugDumpNextFrame( size_t startBatchIndex, size_t numBatches )
 {
+    mCommandBuffer.postCommand2( CMD_DEBUG_DUMP_NEXT_FRAME, startBatchIndex, numBatches );
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::MultiThreadGpu::debugMarkSet( const char * markerName ) const
+void GN::gfx::MultiThreadGpu::debugMarkBegin( const char * markerName )
 {
-    GN_UNUSED_PARAM( markerName );
+    uint32 len = (uint32)stringLength( markerName ) + 1;
+    if( len < 1 || len > 1024 ) return;
+
+    CommandBuffer::Token token;
+    CommandBuffer::OperationResult hr = mCommandBuffer.beginProduce( CMD_DEBUG_MARK_BEGIN, (uint16)len, &token );
+    if( CommandBuffer::OPERATION_SUCCEEDED == hr )
+    {
+        GN_ASSERT( token.commandID == CMD_DEBUG_MARK_BEGIN );
+        GN_ASSERT( token.parameterSize >= len );
+        memcpy( token.pParameterBuffer, markerName, len );
+        mCommandBuffer.endProduce();
+    }
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::gfx::MultiThreadGpu::debugMarkEnd()
+{
+    mCommandBuffer.postCommand0( CMD_DEBUG_MARK_END );
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::gfx::MultiThreadGpu::debugMarkSet( const char * markerName )
+{
+    uint32 len = (uint32)stringLength( markerName ) + 1;
+    if( len < 1 || len > 1024 ) return;
+
+    CommandBuffer::Token token;
+    CommandBuffer::OperationResult hr = mCommandBuffer.beginProduce( CMD_DEBUG_MARK_SET, (uint16)len, &token );
+    if( CommandBuffer::OPERATION_SUCCEEDED == hr )
+    {
+        GN_ASSERT( token.commandID == CMD_DEBUG_MARK_SET );
+        GN_ASSERT( token.parameterSize >= len );
+        memcpy( token.pParameterBuffer, markerName, len );
+        mCommandBuffer.endProduce();
+    }
 }
 
 // *****************************************************************************
@@ -1019,16 +1042,16 @@ namespace GN { namespace gfx
     //
     //
     // -------------------------------------------------------------------------
-    void func_ENABLE_PARAMETER_CHECK( Gpu & r, void * p, size_t )
+    void func_DEBUG_ENABLE_PARAMETER_CHECK( Gpu & r, void * p, size_t )
     {
         bool * enable = (bool*)p;
-        r.enableParameterCheck( *enable );
+        r.debugEnableParameterCheck( *enable );
     }
 
     //
     //
     // -------------------------------------------------------------------------
-    void func_DUMP_NEXT_FRAME( Gpu & r, void * p, size_t )
+    void func_DEBUG_DUMP_NEXT_FRAME( Gpu & r, void * p, size_t )
     {
 #pragma pack( push, 1 )
         struct DumpNextFrameParam
@@ -1039,6 +1062,30 @@ namespace GN { namespace gfx
 #pragma pack( pop )
 
         DumpNextFrameParam * param = (DumpNextFrameParam*)p;
-        r.dumpNextFrame( param->startBatchIndex, param->numBatches );
+        r.debugDumpNextFrame( param->startBatchIndex, param->numBatches );
+    }
+
+    //
+    //
+    // -------------------------------------------------------------------------
+    void func_DEBUG_MARK_BEGIN( Gpu & r, void * p, size_t )
+    {
+        r.debugMarkBegin( (const char*)p );
+    }
+
+    //
+    //
+    // -------------------------------------------------------------------------
+    void func_DEBUG_MARK_END( Gpu & r, void *, size_t )
+    {
+        r.debugMarkEnd();
+    }
+
+    //
+    //
+    // -------------------------------------------------------------------------
+    void func_DEBUG_MARK_SET( Gpu & r, void * p, size_t )
+    {
+        r.debugMarkSet( (const char*)p );
     }
 }}

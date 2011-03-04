@@ -123,13 +123,23 @@ void GN::gfx::D3D11Gpu::ReportLiveDeviceObjects()
 }
 
 // *****************************************************************************
-// Misc. GPU methods
+// Debug methods
 // *****************************************************************************
 
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3D11Gpu::debugMarkBegin( const char * markerName ) const
+void GN::gfx::D3D11Gpu::debugDumpNextFrame( size_t startBatchIndex, size_t numBatches )
+{
+    GN_UNUSED_PARAM( startBatchIndex );
+    GN_UNUSED_PARAM( numBatches );
+    GN_TODO( "D3D11 frame dump is not implemented." );
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::gfx::D3D11Gpu::debugMarkBegin( const char * markerName )
 {
     if( NULL != markerName && gD3D11EnablePixPerf )
     {
@@ -143,7 +153,7 @@ void GN::gfx::D3D11Gpu::debugMarkBegin( const char * markerName ) const
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3D11Gpu::debugMarkEnd() const
+void GN::gfx::D3D11Gpu::debugMarkEnd()
 {
     if( gD3D11EnablePixPerf ) D3DPERF_EndEvent();
 }
@@ -151,7 +161,7 @@ void GN::gfx::D3D11Gpu::debugMarkEnd() const
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3D11Gpu::debugMarkSet( const char * markerName ) const
+void GN::gfx::D3D11Gpu::debugMarkSet( const char * markerName )
 {
     if( NULL != markerName && gD3D11EnablePixPerf )
     {
@@ -161,14 +171,3 @@ void GN::gfx::D3D11Gpu::debugMarkSet( const char * markerName ) const
         D3DPERF_SetMarker( 0xFFFFFFFF, wcs );
     }
 }
-
-//
-//
-// -----------------------------------------------------------------------------
-void GN::gfx::D3D11Gpu::dumpNextFrame( size_t startBatchIndex, size_t numBatches )
-{
-    GN_UNUSED_PARAM( startBatchIndex );
-    GN_UNUSED_PARAM( numBatches );
-    GN_TODO( "D3D11 frame dump is not implemented." );
-}
-

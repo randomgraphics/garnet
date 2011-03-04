@@ -319,7 +319,7 @@ namespace GN { namespace gfx
 
         // ********************************************************************
         //
-        /// \name Misc. utilities
+        /// \name Debug
         //
         // ********************************************************************
 
@@ -327,10 +327,10 @@ namespace GN { namespace gfx
 
     public:
 
-        virtual void debugMarkBegin( const char * markerName ) const;
-        virtual void debugMarkEnd() const;
-        virtual void debugMarkSet( const char * markerName ) const;
-        virtual void dumpNextFrame( size_t startBatchIndex, size_t numBatches );
+        virtual void debugDumpNextFrame( size_t startBatchIndex, size_t numBatches );
+        virtual void debugMarkBegin( const char * markerName );
+        virtual void debugMarkEnd();
+        virtual void debugMarkSet( const char * markerName );
 
         //@}
     };
