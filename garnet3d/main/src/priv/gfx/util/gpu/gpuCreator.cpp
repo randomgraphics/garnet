@@ -98,7 +98,7 @@ Gpu * GN::gfx::createD3DGpu( const GpuOptions & go, uint32 creationFlags )
     o.api = D3D_GPU_API;
     return sCreateGpuFromDLL( o, creationFlags, "GNgpu" D3D_GPU_NAME );
 }
-#elif !HAS_D3D11 && !GN_XENON
+#elif !GN_PLATFORM_HAS_D3D11 && !GN_XENON
 Gpu * GN::gfx::createD3DGpu( const GpuOptions &, uint32 )
 {
     GN_ERROR(sLogger)( D3D_GPU_NAME " renderer is not available." );
