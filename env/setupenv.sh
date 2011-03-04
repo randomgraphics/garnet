@@ -18,9 +18,9 @@ export GN_BUILD_VARIANT=debug
 # ===========
 # setup scons
 # ===========
-SCONS_ROOT=${GARNET_ROOT}/env/scons/1.2.0
-PATH=${SCONS_ROOT}/scripts:${PATH}
-SCONS_LIB_DIR=${SCONS_ROOT}/lib
+SCONS_ROOT=${GARNET_ROOT}/env/scons/2.1.0.alpha.20101125
+PATH=${SCONS_ROOT}/script:${PATH}
+SCONS_LIB_DIR=${SCONS_ROOT}/engine
 export PATH SCONS_LIB_DIR
 export SCONSFLAGS=-U
 echo SCons Directory: ${SCONS_ROOT}
