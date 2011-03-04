@@ -336,10 +336,16 @@ sLoadModelHierarchyFromASE( ModelHierarchyDesc & desc, File & file )
     // copy mesh data
     desc.meshdata = ase.meshdata;
 
+    size_t totalVerts = 0;
+    size_t totalFaces = 0;
+
     // create models
     for( size_t i = 0; i < ase.subsets.size(); ++i )
     {
         const AseMeshSubset & subset = ase.subsets[i];
+
+        totalVerts += subset.numvtx;
+        totalFaces += subset.numidx / 3;
 
         const AseMesh & asemesh = ase.meshes[subset.meshid];
 
@@ -377,6 +383,8 @@ sLoadModelHierarchyFromASE( ModelHierarchyDesc & desc, File & file )
     // setup bounding box of the whole scene
     desc.bbox = ase.bbox;
 #endif
+
+    GN_INFO(sLogger)( "Total vertices: %d, faces: %d", totalVerts, totalFaces );
 
     return true;
 }

@@ -73,8 +73,7 @@ int GN::engine::VisualComponent::addModel( ModelResource * model )
     GN_ASSERT( ModelResource::guid() == model->type() );
 
     GpuResourceDatabase * gdb = getGdb();
-    Gpu * gpu = getGpu();
-    GN_ASSERT( gdb && gpu );
+    GN_ASSERT( gdb );
 
     // handle standard uniforms
     AutoRef<EffectResource> effect = model->effectResource();

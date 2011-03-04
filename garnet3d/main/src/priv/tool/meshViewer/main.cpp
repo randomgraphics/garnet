@@ -22,6 +22,7 @@ class MyApp : public SampleApp
     ArcBall      arcball; // arcball camera
     float        radius;  // distance from camera to object
     Camera       camera;
+    bool         showbbox;
 
 #if USE_STATIC_MESH
     AutoObjPtr<StaticMesh> mesh;
@@ -66,6 +67,7 @@ public:
         world.showBoundingBoxes( true );
         const Boxf & bbox = world.getRootEntity()->getComponent<SpacialComponent>()->getUberBoundingBox();
 #endif
+        showbbox = true;
 
         // update scene radius
         Spheref bs;
@@ -128,8 +130,9 @@ public:
 
 #if USE_STATIC_MESH
         mesh->visual().draw( camera.proj, camera.view );
-        mesh->spacial().drawBoundingBox( camera.proj, camera.view, 0xFF000000 );
+        if( showbbox ) mesh->spacial().drawBoundingBox( camera.proj, camera.view, 0xFF000000 );
 #else
+        world.showBoundingBoxes( showbbox );
         world.draw( camera.proj, camera.view );
 #endif
         const Vector3f & position = arcball.getTranslation();
@@ -145,6 +148,16 @@ public:
             320, 40 );
 
         drawXYZCoordinateAxes( camera.proj * camera.view * arcball.getRotationMatrix44() );
+    }
+
+    void onKeyPress( input::KeyEvent ke )
+    {
+        SampleApp::onKeyPress( ke );
+
+        if( input::KeyCode::B == ke.code && ke.status.down )
+        {
+            showbbox = !showbbox;
+        }
     }
 
     bool onCheckExtraCmdlineArguments( int argc, const char * const argv [] )
