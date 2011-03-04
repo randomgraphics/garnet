@@ -1509,6 +1509,18 @@ namespace GN { namespace gfx
             return copyLength;
         }
 
+        /// Currently, only used by D3D GPUs to set PIX markers.
+        //@{
+
+        /// Marks the beginning of a user-defined event in GPU debugging tool.
+        virtual void debugMarkBegin( const char * markerName ) const = 0;
+        /// Mark the end of a user-defined event in GPU debugging tool.
+        virtual void debugMarkEnd() const = 0;
+        /// Marks an instantaneous event in GPU debugging tool
+        virtual void debugMarkSet( const char * markerName ) const = 0;
+
+        //@}
+
         //@}
     };
 
@@ -1540,6 +1552,16 @@ namespace GN { namespace gfx
     ///
     void deleteGpu( gfx::Gpu * );
 }}
+
+#if GN_ENABLE_GPU_DEBUG_MARK
+#define GN_GPU_DEBUG_MARK_BEGIN( gpu, name )    (gpu)->debugMarkBegin( name )
+#define GN_GPU_DEBUG_MARK_END( gpu )            (gpu)->debugMarkEnd()
+#define GN_GPU_DEBUG_MARK_SET( gpu, name )      (gpu)->debugMarkSet( name )
+#else
+#define GN_GPU_DEBUG_MARK_BEGIN( gpu, name )    void(0)
+#define GN_GPU_DEBUG_MARK_END( gpu )            void(0)
+#define GN_GPU_DEBUG_MARK_SET( gpu, name )      void(0)
+#endif
 
 // *****************************************************************************
 //                                     EOF

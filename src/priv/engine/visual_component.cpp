@@ -7,6 +7,23 @@ using namespace GN::engine;
 static GN::Logger * sLogger = GN::getLogger("GN.engine");
 
 // *****************************************************************************
+// Local functions
+// *****************************************************************************
+
+//
+//
+// -----------------------------------------------------------------------------
+static inline bool sIsWorldTransform( StandardUniform::Index i )
+{
+    return StandardUniform::Index::MATRIX_PVW == i
+        || StandardUniform::Index::MATRIX_PVW_INV == i
+        || StandardUniform::Index::MATRIX_PVW_IT == i
+        || StandardUniform::Index::MATRIX_WORLD == i
+        || StandardUniform::Index::MATRIX_WORLD_INV == i
+        || StandardUniform::Index::MATRIX_WORLD_IT == i;
+}
+
+// *****************************************************************************
 // VisualComponent public methods
 // *****************************************************************************
 
@@ -74,19 +91,10 @@ int GN::engine::VisualComponent::addModel( ModelResource * model )
                 ur = gdb->getStandardUniformResource( type );
                 model->setUniformResource( d->name, ur );
             }
-            else
+            else if( sIsWorldTransform( type ) )
             {
-                #if 0
-                gdb->createResource<UniformResource>(NULL);
-                AutoRef<Uniform> u( gpu->createUniform( d->size ) );
-                ur->setUniform( u );
-                model->setUniformResource( d->name, ur );
-                #elif 1
                 ur = gdb->getStandardUniformResource( type );
                 model->setUniformResource( d->name, ur );
-                #else
-                ur = model->uniformResource( d->name );
-                #endif
                 mStandardPerObjectUniforms[type] = ur;
             }
         }
@@ -165,18 +173,21 @@ void GN::engine::VisualComponent::draw() const
                     break;
 
                 default:
-                    // do nothing
+                    // should never be here.
+                    GN_UNEXPECTED();
                     break;
             }
         }
     }
 
     // draw models
+    GN_GPU_DEBUG_MARK_BEGIN( getGpu(), "VisualComponent::draw" );
     for( int i = mModels.first(); i != 0; i = mModels.next( i ) )
     {
         ModelResource * m = mModels[i];
 
         m->draw();
     }
+    GN_GPU_DEBUG_MARK_END( getGpu() );
 }
 

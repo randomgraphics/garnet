@@ -121,3 +121,54 @@ void GN::gfx::D3D11Gpu::ReportLiveDeviceObjects()
     mD3D11Debug->ReportLiveDeviceObjects( D3D11_RLDO_DETAIL );
     mD3D11Debug->ReportLiveDeviceObjects( D3D11_RLDO_SUMMARY );
 }
+
+// *****************************************************************************
+// Misc. GPU methods
+// *****************************************************************************
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::gfx::D3D11Gpu::debugMarkBegin( const char * markerName ) const
+{
+    if( NULL != markerName && gD3D11EnablePixPerf )
+    {
+        size_t len = stringLength( markerName );
+        wchar_t * wcs = (wchar_t*)alloca( sizeof(wchar_t) * (len+1) );
+        mbs2wcs( wcs, len+1, markerName, len );
+        D3DPERF_BeginEvent( 0xFFFFFFFF, wcs );
+    }
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::gfx::D3D11Gpu::debugMarkEnd() const
+{
+    if( gD3D11EnablePixPerf ) D3DPERF_EndEvent();
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::gfx::D3D11Gpu::debugMarkSet( const char * markerName ) const
+{
+    if( NULL != markerName && gD3D11EnablePixPerf )
+    {
+        size_t len = stringLength( markerName );
+        wchar_t * wcs = (wchar_t*)alloca( sizeof(wchar_t) * (len+1) );
+        mbs2wcs( wcs, len+1, markerName, len );
+        D3DPERF_SetMarker( 0xFFFFFFFF, wcs );
+    }
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::gfx::D3D11Gpu::dumpNextFrame( size_t startBatchIndex, size_t numBatches )
+{
+    GN_UNUSED_PARAM( startBatchIndex );
+    GN_UNUSED_PARAM( numBatches );
+    GN_TODO( "D3D11 frame dump is not implemented." );
+}
+

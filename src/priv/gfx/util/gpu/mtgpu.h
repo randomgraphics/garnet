@@ -195,6 +195,9 @@ namespace GN { namespace gfx
         virtual void setUserData( const Guid & id, const void * data, size_t length );
         virtual const void * getUserData( const Guid & id, size_t * length ) const;
         virtual bool hasUserData( const Guid & id ) const;
+        virtual void debugMarkBegin( const char * markerName ) const;
+        virtual void debugMarkEnd() const;
+        virtual void debugMarkSet( const char * markerName ) const;
 
         //@}
     };

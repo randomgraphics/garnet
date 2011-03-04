@@ -597,6 +597,29 @@ bool GN::gfx::MultiThreadGpu::hasUserData( const Guid & id ) const
     return mGpu->hasUserData( id );
 }
 
+//
+//
+// -----------------------------------------------------------------------------
+void GN::gfx::MultiThreadGpu::debugMarkBegin( const char * markerName ) const
+{
+    GN_UNUSED_PARAM( markerName );
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::gfx::MultiThreadGpu::debugMarkEnd() const
+{
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::gfx::MultiThreadGpu::debugMarkSet( const char * markerName ) const
+{
+    GN_UNUSED_PARAM( markerName );
+}
+
 // *****************************************************************************
 // Command handlers (called by back end thread)
 // *****************************************************************************

@@ -327,12 +327,10 @@ namespace GN { namespace gfx
 
     public:
 
-        virtual void dumpNextFrame( size_t startBatchIndex, size_t numBatches )
-        {
-            GN_UNUSED_PARAM( startBatchIndex );
-            GN_UNUSED_PARAM( numBatches );
-            GN_TODO( "D3D11 frame dump is not implemented." );
-        }
+        virtual void debugMarkBegin( const char * markerName ) const;
+        virtual void debugMarkEnd() const;
+        virtual void debugMarkSet( const char * markerName ) const;
+        virtual void dumpNextFrame( size_t startBatchIndex, size_t numBatches );
 
         //@}
     };
