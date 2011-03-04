@@ -4,10 +4,11 @@ TODO
 - 程序中标注TODO的地方
 
 - p0
-  - Engine module
-    - standard uniform manager
+  - Misc.
+    - multithread support for GPU debug tag
+    - D3D resource leaking in GNtestEngine and GNsampleDolphin.
+    - ModelHierarchy loads "unnamed" models.
   - Optimized vector and geomtry class to be SSE/xnamath compatible.
-  - GNsampleDolphin does not release all D3D11 resources when quit.
   - Winphone 7 integration
   - Cuda or OpenCL integration
   - runtime tweakable parameters: client/server communication
