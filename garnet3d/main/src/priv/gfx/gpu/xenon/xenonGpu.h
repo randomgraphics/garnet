@@ -317,7 +317,7 @@ namespace GN { namespace gfx
 
     public:
 
-        virtual void dumpNextFrame( size_t startBatchIndex, size_t numBatches );
+        virtual void debugDumpNextFrame( size_t startBatchIndex, size_t numBatches );
 
     private:
 

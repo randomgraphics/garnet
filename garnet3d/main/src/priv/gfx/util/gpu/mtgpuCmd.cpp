@@ -34,8 +34,11 @@ void func_DRAW_UP( Gpu &, void *, size_t );
 void func_DRAW_LINES( Gpu &, void *, size_t );
 void func_GET_BACK_BUFFER_CONTENT( Gpu &, void *, size_t );
 void func_PROCESS_RENDER_WINDOW_MESSAGES( Gpu &, void *, size_t );
-void func_ENABLE_PARAMETER_CHECK( Gpu &, void *, size_t );
-void func_DUMP_NEXT_FRAME( Gpu &, void *, size_t );
+void func_DEBUG_ENABLE_PARAMETER_CHECK( Gpu &, void *, size_t );
+void func_DEBUG_DUMP_NEXT_FRAME( Gpu &, void *, size_t );
+void func_DEBUG_MARK_BEGIN( Gpu &, void *, size_t );
+void func_DEBUG_MARK_END( Gpu &, void *, size_t );
+void func_DEBUG_MARK_SET( Gpu &, void *, size_t );
 void func_GPU_PROGRAM_DESTROY( Gpu &, void *, size_t );
 void func_GPU_PROGRAM_INIT( Gpu &, void *, size_t );
 void func_UNIFORM_DESTROY( Gpu &, void *, size_t );
@@ -80,8 +83,11 @@ const GpuCommandHandler g_gpuCommandHandlers[] = {
 &func_DRAW_LINES,
 &func_GET_BACK_BUFFER_CONTENT,
 &func_PROCESS_RENDER_WINDOW_MESSAGES,
-&func_ENABLE_PARAMETER_CHECK,
-&func_DUMP_NEXT_FRAME,
+&func_DEBUG_ENABLE_PARAMETER_CHECK,
+&func_DEBUG_DUMP_NEXT_FRAME,
+&func_DEBUG_MARK_BEGIN,
+&func_DEBUG_MARK_END,
+&func_DEBUG_MARK_SET,
 &func_GPU_PROGRAM_DESTROY,
 &func_GPU_PROGRAM_INIT,
 &func_UNIFORM_DESTROY,

@@ -116,7 +116,7 @@ void GN::gfx::XenonGpu::quit()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::XenonGpu::dumpNextFrame( size_t startBatchIndex, size_t numBatches )
+void GN::gfx::XenonGpu::debugDumpNextFrame( size_t startBatchIndex, size_t numBatches )
 {
     GN_UNUSED_PARAM( startBatchIndex );
     GN_UNUSED_PARAM( numBatches );

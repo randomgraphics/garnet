@@ -1437,25 +1437,6 @@ namespace GN { namespace gfx
         virtual void processRenderWindowMessages( bool blockWhileMinimized ) = 0;
 
         ///
-        /// Enable/Disable parameter check for performance critical functions.
-        ///
-        /// Enabled by default for debug build; disabled by default for release build.
-        ///
-        virtual void enableParameterCheck( bool enable ) = 0;
-
-        ///
-        /// dump device states of the next frame.
-        ///
-        /// \param startBatchIndex, numBatches
-        ///     Specify range of the dump. Set (0,0) to dump the whole frame.
-        ///
-        /// \note
-        ///     Dump data format is renderer dependent.
-        ///     Check document of specific renderer implementation for details.
-        ///
-        virtual void dumpNextFrame( size_t startBatchIndex = 0, size_t numBatches = 0 ) = 0;
-
-        ///
         /// Attatch/Deatch user data to/from the renderer.
         ///
         /// \param id               User data ID.
@@ -1509,17 +1490,44 @@ namespace GN { namespace gfx
             return copyLength;
         }
 
-        /// Currently, only used by D3D GPUs to set PIX markers.
+        //@}
+
+        // ********************************************************************
+        //
+        /// \name Debug methods
+        //
+        // ********************************************************************
+
         //@{
 
-        /// Marks the beginning of a user-defined event in GPU debugging tool.
-        virtual void debugMarkBegin( const char * markerName ) const = 0;
-        /// Mark the end of a user-defined event in GPU debugging tool.
-        virtual void debugMarkEnd() const = 0;
-        /// Marks an instantaneous event in GPU debugging tool
-        virtual void debugMarkSet( const char * markerName ) const = 0;
+        ///
+        /// Enable/Disable parameter check for performance critical functions.
+        ///
+        /// Enabled by default for debug build; disabled by default for release build.
+        ///
+        virtual void debugEnableParameterCheck( bool enable ) = 0;
 
-        //@}
+        ///
+        /// dump device states of the next frame.
+        ///
+        /// \param startBatchIndex, numBatches
+        ///     Specify range of the dump. Set (0,0) to dump the whole frame.
+        ///
+        /// \note
+        ///     Dump data format is renderer dependent.
+        ///     Check document of specific renderer implementation for details.
+        ///
+        virtual void debugDumpNextFrame( size_t startBatchIndex = 0, size_t numBatches = 0 ) = 0;
+
+        /// Marks the beginning of a user-defined event in GPU debugging tool.
+        /// \note Debug mark currently works on D3D GPU only (PIX).
+        virtual void debugMarkBegin( const char * markerName ) = 0;
+
+        /// Mark the end of a user-defined event in GPU debugging tool.
+        virtual void debugMarkEnd() = 0;
+
+        /// Marks an instantaneous event in GPU debugging tool
+        virtual void debugMarkSet( const char * markerName ) = 0;
 
         //@}
     };
