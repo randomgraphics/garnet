@@ -4,7 +4,9 @@ TODO
 - 程序中标注TODO的地方
 
 - p0
-  - D3D resource leaking in GNtestEngine and GNsampleDolphin.
+  - D3D resource leaking in GNtestEngine and GNsampleDolphin:
+    - It comes from Cg Toolkit. And upgrading to the lasted Feb11 version
+      doesn't solve the issue.
   - Optimized vector and geomtry class to be SSE/xnamath compatible.
   - Winphone 7 integration
   - Cuda or OpenCL integration
