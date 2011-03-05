@@ -1,6 +1,6 @@
 /*
  *
- * Copyright (c) 2002-2010, NVIDIA Corporation.
+ * Copyright (c) 2002-2011, NVIDIA Corporation.
  *
  *
  *
@@ -58,7 +58,6 @@
 
 #include <windows.h>
 #include <d3d11.h>
-#include <D3Dcompiler.h>
 
 #include "Cg/cg.h"
 
