@@ -4,6 +4,7 @@ TODO
 - 程序中标注TODO的地方
 
 - p0
+  - FBX importer
   - D3D resource leaking in GNtestEngine and GNsampleDolphin:
     - It comes from Cg Toolkit. And upgrading to the lasted Feb11 version
       doesn't solve the issue.
@@ -66,9 +67,6 @@ TODO
     - model beautifier
       - add bump map and tessellation to PS2 model if possible.
       - implement a CPU based prototype first.
-  - FBX loader
-  - 3DS loader
-  - COLLADA loader
   - DDS viewer plugin
   	- don't write full viewer from scratch.
   	- just provide a plugin for existing picture viewers like acdsee or something.
@@ -138,7 +136,10 @@ RESOLVE ISSUES
       character with a ascii character.
     - Custom DOM wrapper fits our requirement better, and is pretty easy to implement.
 
-
+- COLLADA loader?
+  - RESOLVED: no.
+    - We've supported ASE already. So there's no need for another TEXT based
+     format. We need to support binary format like FBX.
 
 OPEN ISSUES
 ===========
