@@ -396,6 +396,7 @@ def UTIL_checkConfig( conf, confDir, compiler, variant ):
 	# Do NOT treat warning as error
 	ccflags = str(env.Dictionary('CCFLAGS'))
 	ccflags = ccflags.replace( '/WX', '' )
+	ccflags = ccflags.replace( '/W4', '/W3' )
 	ccflags = ccflags.replace( '-Werror', '')
 	env.Replace( CCFLAGS = Split( ccflags ) )
 	c = env.Configure(
@@ -521,6 +522,37 @@ def UTIL_checkConfig( conf, confDir, compiler, variant ):
 	else :
 		conf['has_iconv'] = None
 		conf['iconv_lib'] = None
+
+	# ===
+	# FBX
+	# ===
+
+	conf['has_fbx'] = False
+	FBX_dir = [
+		[ '',
+		  '' ],
+		# TODO: query install directory from Registry
+		[ 'C:/Program Files/Autodesk/FBX/FbxSdk/2011.3.1/include/',
+		  'C:/Program Files/Autodesk/FBX/FbxSdk/2011.3.1/lib/' ]
+		]
+	FBX_libs = [
+		['fbxsdk_mt2010', ['wininet']],
+		['fbxsdk_mt2010d',['wininet']],
+		]
+	for d in FBX_dir:
+		env.Append(
+			CPPPATH = [d[0]],
+			LIBPATH = [d[1]],
+			)
+		for l in FBX_libs:
+			env.Append( LIBS = l[1] )
+			if (not conf['has_fbx']) and c.CheckLibWithHeader( l[0], ['fbxsdk.h','fbxfilesdk/fbxfilesdk_nsuse.h'], 'C++', 'KFbxSdkManager::Create();' ):
+				conf['has_fbx'] = True
+				conf['fbx_inc_path']  = d[0]
+				conf['fbx_lib_path']  = d[1]
+				conf['fbx_libs'] = [l[0],'wininet']
+				break;
+		if conf['has_fbx']: break;
 
 	# =====================
 	# Copy to devkit or not
@@ -887,6 +919,7 @@ TARGET_tests = [
     'GNtestCegui',
     'GNtestD3D10',
     'GNtestEngine',
+    'GNtestFbx',
     'GNtestFt2',
     'GNtestGpu',
     'GNtestInput',
