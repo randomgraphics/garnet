@@ -1,6 +1,7 @@
 SConscript( dirs=[
 	'd3d10',
 	'engine',
+	'fbx',
 	'font',
 	'ft2',
 	'gpu',
