@@ -7,8 +7,8 @@ Copyright (c) 2006-2010, ASSIMP Development Team
 
 All rights reserved.
 
-Redistribution and use of this software in source and binary forms, 
-with or without modification, are permitted provided that the following 
+Redistribution and use of this software in source and binary forms,
+with or without modification, are permitted provided that the following
 conditions are met:
 
 * Redistributions of source code must retain the above
@@ -25,22 +25,22 @@ conditions are met:
   derived from this software without specific prior
   written permission of the ASSIMP Development Team.
 
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS 
-"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT 
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
 LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT 
+A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
 OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT 
+SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
 LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY 
-THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT 
-(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE 
+DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ---------------------------------------------------------------------------
 */
 
-/** @file  SMDLoader.cpp 
- *  @brief Implementation of the SMD importer class 
+/** @file  SMDLoader.cpp
+ *  @brief Implementation of the SMD importer class
  */
 
 #include "AssimpPCH.h"
@@ -59,12 +59,12 @@ SMDImporter::SMDImporter()
 {}
 
 // ------------------------------------------------------------------------------------------------
-// Destructor, private as well 
+// Destructor, private as well
 SMDImporter::~SMDImporter()
 {}
 
 // ------------------------------------------------------------------------------------------------
-// Returns whether the class can handle the format of the given file. 
+// Returns whether the class can handle the format of the given file.
 bool SMDImporter::CanRead( const std::string& pFile, IOSystem* pIOHandler, bool) const
 {
 	// fixme: auto format detection
@@ -83,7 +83,7 @@ void SMDImporter::GetExtensionList(std::set<std::string>& extensions)
 // Setup configuration properties
 void SMDImporter::SetupProperties(const Importer* pImp)
 {
-	// The 
+	// The
 	// AI_CONFIG_IMPORT_SMD_KEYFRAME option overrides the
 	// AI_CONFIG_IMPORT_GLOBAL_KEYFRAME option.
 	configFrameID = pImp->GetPropertyInteger(AI_CONFIG_IMPORT_SMD_KEYFRAME,0xffffffff);
@@ -93,8 +93,8 @@ void SMDImporter::SetupProperties(const Importer* pImp)
 }
 
 // ------------------------------------------------------------------------------------------------
-// Imports the given file into the given scene structure. 
-void SMDImporter::InternReadFile( 
+// Imports the given file into the given scene structure.
+void SMDImporter::InternReadFile(
 	const std::string& pFile, aiScene* pScene, IOSystem* pIOHandler)
 {
 	boost::scoped_ptr<IOStream> file( pIOHandler->Open( pFile, "rb"));
@@ -261,7 +261,7 @@ void SMDImporter::CreateOutputMeshes()
 			aaiFaces[(*iFace).iTexture].push_back((unsigned int)aszTextures.size()-1);
 		}
 		else aaiFaces[(*iFace).iTexture].push_back(iNum);
-	} 
+	}
 
 	// now create the output meshes
 	for (unsigned int i = 0; i < pScene->mNumMeshes;++i)
@@ -304,13 +304,13 @@ void SMDImporter::CreateOutputMeshes()
 			pcMesh->mFaces[iFace].mIndices = new unsigned int[3];
 			pcMesh->mFaces[iFace].mNumIndices = 3;
 
-			// fill the vertices 
+			// fill the vertices
 			unsigned int iSrcFace = aaiFaces[i][iFace];
 			SMD::Face& face = asTriangles[iSrcFace];
 
 			*pcVerts++ = face.avVertices[0].pos;
 			*pcVerts++ = face.avVertices[1].pos;
-			*pcVerts++ = face.avVertices[2].pos; 
+			*pcVerts++ = face.avVertices[2].pos;
 
 			// fill the normals
 			*pcNormals++ = face.avVertices[0].nor;
@@ -324,7 +324,7 @@ void SMDImporter::CreateOutputMeshes()
 				*pcUVs++ = face.avVertices[1].uv;
 				*pcUVs++ = face.avVertices[2].uv;
 			}
-			
+
 			for (unsigned int iVert = 0; iVert < 3;++iVert)
 			{
 				float fSum = 0.0f;
@@ -332,9 +332,9 @@ void SMDImporter::CreateOutputMeshes()
 				{
 					TempWeightListEntry& pairval = face.avVertices[iVert].aiBoneLinks[iBone];
 
-					// FIX: The second check is here just to make sure we won't 
+					// FIX: The second check is here just to make sure we won't
 					// assign more than one weight to a single vertex index
-					if (pairval.first >= asBones.size() || 
+					if (pairval.first >= asBones.size() ||
 						pairval.first == face.avVertices[iVert].iParentNode)
 					{
 						DefaultLogger::get()->error("[SMD/VTA] Bone index overflow. "
@@ -346,8 +346,8 @@ void SMDImporter::CreateOutputMeshes()
 					fSum += pairval.second;
 				}
 				// ******************************************************************
-				// If the sum of all vertex weights is not 1.0 we must assign 
-				// the rest to the vertex' parent node. Well, at least the doc says 
+				// If the sum of all vertex weights is not 1.0 we must assign
+				// the rest to the vertex' parent node. Well, at least the doc says
 				// we should ...
 				// FIX: We use 0.975 as limit, floating-point inaccuracies seem to
 				// be very strong in some SMD exporters. Furthermore it is possible
@@ -387,7 +387,7 @@ void SMDImporter::CreateOutputMeshes()
 		iNum = 0;
 		for (unsigned int iBone = 0; iBone < asBones.size();++iBone)
 			if (!aaiBones[iBone].empty())++iNum;
-		
+
 		if (false && iNum)
 		{
 			pcMesh->mNumBones = iNum;
@@ -471,7 +471,7 @@ void SMDImporter::CreateOutputNodes()
 	// AddBoneChildren(pScene->mRootNode,(uint32_t)-1);
 
 	// if we have only one bone we can even remove the root node
-	if (pScene->mFlags & AI_SCENE_FLAGS_INCOMPLETE && 
+	if (pScene->mFlags & AI_SCENE_FLAGS_INCOMPLETE &&
 		1 == pScene->mRootNode->mNumChildren)
 	{
 		aiNode* pcOldRoot = pScene->mRootNode;
@@ -515,7 +515,7 @@ void SMDImporter::CreateOutputAnimations()
 	anim->mTicksPerSecond = 25.0; // FIXME: is this correct?
 
 	aiNodeAnim** pp = anim->mChannels = new aiNodeAnim*[anim->mNumChannels];
-	
+
 	// now build valid keys
 	unsigned int a = 0;
 	for (std::vector<SMD::Bone>::const_iterator
@@ -570,7 +570,7 @@ void SMDImporter::ComputeAbsoluteBoneTransformations()
 		for (unsigned int i = 0; i < bone.sAnim.asKeys.size();++i)
 		{
 			double d = std::min(bone.sAnim.asKeys[i].dTime,dMin);
-			if (d < dMin)	
+			if (d < dMin)
 			{
 				dMin = d;
 				iIndex = i;
@@ -585,12 +585,12 @@ void SMDImporter::ComputeAbsoluteBoneTransformations()
 		for (unsigned int iBone = 0; iBone < asBones.size();++iBone)
 		{
 			SMD::Bone& bone = asBones[iBone];
-	
+
 			if (iParent == bone.iParent)
 			{
 				SMD::Bone& parentBone = asBones[iParent];
 
-			
+
 				uint32_t iIndex = bone.sAnim.iFirstTimeKey;
 				const aiMatrix4x4& mat = bone.sAnim.asKeys[iIndex].matrix;
 				aiMatrix4x4& matOut = bone.sAnim.asKeys[iIndex].matrixAbsolute;
@@ -606,7 +606,7 @@ void SMDImporter::ComputeAbsoluteBoneTransformations()
 		++iParent;
 	}
 
-	// Store the inverse of the absolute transformation matrix 
+	// Store the inverse of the absolute transformation matrix
 	// of the first key as bone offset matrix
 	for (iParent = 0; iParent < asBones.size();++iParent)
 	{
@@ -676,7 +676,7 @@ void SMDImporter::ParseFile()
 	{
 		if(!SkipSpacesAndLineEnd(szCurrent,&szCurrent)) break;
 
-		// "version <n> \n", <n> should be 1 for hl and hl² SMD files
+		// "version <n> \n", <n> should be 1 for hl and hl?SMD files
 		if (TokenMatch(szCurrent,"version",7))
 		{
 			if(!SkipSpaces(szCurrent,&szCurrent)) break;
@@ -785,8 +785,8 @@ void SMDImporter::ParseVASection(const char* szCurrent,
 		// "end\n" - Ends the "vertexanimation" section
 		if (TokenMatch(szCurrent,"end",3))
 			break;
-	
-		// "time <n>\n" 
+
+		// "time <n>\n"
 		if (TokenMatch(szCurrent,"time",4))
 		{
 			// NOTE: The doc says that time values COULD be negative ...
@@ -795,7 +795,7 @@ void SMDImporter::ParseVASection(const char* szCurrent,
 			if(!ParseSignedInt(szCurrent,&szCurrent,iTime) || configFrameID != (unsigned int)iTime)break;
 			SkipLine(szCurrent,&szCurrent);
 		}
-		else 
+		else
 		{
 			if(0 == iCurIndex)
 			{
@@ -828,7 +828,7 @@ void SMDImporter::ParseSkeletonSection(const char* szCurrent,
 		// "end\n" - Ends the skeleton section
 		if (TokenMatch(szCurrent,"end",3))
 			break;
-	
+
 		// "time <n>\n" - Specifies the current animation frame
 		else if (TokenMatch(szCurrent,"time",4))
 		{
@@ -840,7 +840,7 @@ void SMDImporter::ParseSkeletonSection(const char* szCurrent,
 		}
 		else ParseSkeletonElement(szCurrent,&szCurrent,iTime);
 	}
-	*szCurrentOut = szCurrent;	
+	*szCurrentOut = szCurrent;
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -985,7 +985,7 @@ void SMDImporter::ParseTriangle(const char* szCurrent,
 {
 	asTriangles.push_back(SMD::Face());
 	SMD::Face& face = asTriangles.back();
-	
+
 	if(!SkipSpaces(szCurrent,&szCurrent))
 	{
 		LogErrorNoThrow("Unexpected EOF/EOL while parsing a triangle");
