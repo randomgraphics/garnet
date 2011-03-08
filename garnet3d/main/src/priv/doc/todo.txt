@@ -4,8 +4,11 @@ TODO
 - 程序中标注TODO的地方
 
 - p0
-  - FBX importer
-    - replace FBX test app with something else (not owned by Autodesk).
+  - Binary 3D model importer
+    - FBX
+      - replace FBX test app with something else (not owned by Autodesk).
+    - assimp looks really promising.
+      - assimp currently does not support FBX. Consider implement one for it.
   - D3D resource leaking in GNtestEngine and GNsampleDolphin:
     - It comes from Cg Toolkit. And upgrading to the lasted Feb11 version
       doesn't solve the issue.

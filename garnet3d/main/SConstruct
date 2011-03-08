@@ -916,6 +916,7 @@ TARGET_shlibs = [
     ]
 
 TARGET_tests = [
+	'GNtestAssimp',
     'GNtestCegui',
     'GNtestD3D10',
     'GNtestEngine',
