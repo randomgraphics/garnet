@@ -1,0 +1,6 @@
+Import( 'GN' )
+
+if GN.conf['has_glut'] :
+    cluster = GN.newSourceCluster( ['main.c'] )
+    t = GN.newTarget( 'prog', 'GNtestAssimp', [cluster] )
+    t.externalDependencies = [ GN.conf['glut'] ]
