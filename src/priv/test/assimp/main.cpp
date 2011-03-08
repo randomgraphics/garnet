@@ -12,12 +12,18 @@
 
 #define _CRT_SECURE_NO_WARNINGS
 #include <stdlib.h>
+
+#define GLUT_DISABLE_ATEXIT_HACK
 #include <GL/glut.h>
 
 // assimp include files. These three are usually needed.
 #include <assimp/assimp.h>
 #include <assimp/aiPostProcess.h>
 #include <assimp/aiScene.h>
+
+#include <garnet/GNbase.h>
+
+//#include <garnet/GNbase.h>
 
 #if defined(_MSC_VER)
 #pragma warning(disable:4057)
@@ -151,9 +157,9 @@ void apply_material(const struct aiMaterial *mtl)
 	glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, c);
 
 	max = 1;
-	ret1 = aiGetMaterialFloatArray(mtl, AI_MATKEY_SHININESS, &shininess, &max);
+	ret1 = aiGetMaterialFloatArray(mtl, AI_MATKEY_SHININESS, &shininess, (unsigned int*)&max);
 	max = 1;
-	ret2 = aiGetMaterialFloatArray(mtl, AI_MATKEY_SHININESS_STRENGTH, &strength, &max);
+	ret2 = aiGetMaterialFloatArray(mtl, AI_MATKEY_SHININESS_STRENGTH, &strength, (unsigned int*)&max);
 	if((ret1 == AI_SUCCESS) && (ret2 == AI_SUCCESS))
 		glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, shininess * strength);
 	else {
@@ -163,14 +169,14 @@ void apply_material(const struct aiMaterial *mtl)
 	}
 
 	max = 1;
-	if(AI_SUCCESS == aiGetMaterialIntegerArray(mtl, AI_MATKEY_ENABLE_WIREFRAME, &wireframe, &max))
+	if(AI_SUCCESS == aiGetMaterialIntegerArray(mtl, AI_MATKEY_ENABLE_WIREFRAME, &wireframe, (unsigned int*)&max))
 		fill_mode = wireframe ? GL_LINE : GL_FILL;
 	else
 		fill_mode = GL_FILL;
 	glPolygonMode(GL_FRONT_AND_BACK, fill_mode);
 
 	max = 1;
-	if((AI_SUCCESS == aiGetMaterialIntegerArray(mtl, AI_MATKEY_TWOSIDED, &two_sided, &max)) && two_sided)
+	if((AI_SUCCESS == aiGetMaterialIntegerArray(mtl, AI_MATKEY_TWOSIDED, &two_sided, (unsigned int*)&max)) && two_sided)
 		glEnable(GL_CULL_FACE);
 	else
 		glDisable(GL_CULL_FACE);
@@ -348,10 +354,10 @@ int main(int argc, char **argv)
 
 	// the model name can be specified on the command line. we try to locate
 	// one of the more expressive test models from the repository.
-	if( 0 != loadasset( argc >= 2 ? argv[1] : "../../test/models-nonbsd/X/dwarf.x")) {
-		if( argc != 1 || 0 != loadasset( "../../../../test/models-nonbsd/X/dwarf.x") && 0 != loadasset( "../../test/models/X/Testwuson.X")) {
-			return -1;
-		}
+
+	if( 0 != loadasset( argc >= 2 ? argv[1] : GN::fs::toNativeDiskFilePath("media::model/R.F.R01/a01.ase") ) )
+    {
+        return -1;
 	}
 
 	glClearColor(0.1f,0.1f,0.1f,1.f);
