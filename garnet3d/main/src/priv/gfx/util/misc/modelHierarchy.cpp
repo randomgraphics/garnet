@@ -1,5 +1,20 @@
 #include "pch.h"
 
+#if GN_MSVC
+#pragma warning(disable:4100) // unreferenced formal parameter
+#endif
+#include <assimp/assimp.hpp>
+#include <assimp/aiScene.h>       // Output data structure
+#include <assimp/aiPostProcess.h> // Post processing flags
+#include <assimp/IOStream.h>
+#include <assimp/IOSystem.h>
+
+#ifdef HAS_FBX
+#include <fbxsdk.h>
+#include <fbxfilesdk/kfbxio/kfbximporter.h>
+#include <fbxfilesdk/fbxfilesdk_nsuse.h>
+#endif
+
 using namespace GN;
 using namespace GN::gfx;
 
@@ -390,9 +405,248 @@ sLoadModelHierarchyFromASE( ModelHierarchyDesc & desc, File & file )
 }
 
 }
+
 // *****************************************************************************
 //
-// XML loader
+// FBX loader
+//
+// *****************************************************************************
+
+namespace fbx
+{
+
+class FBXWrapper
+{
+public:
+
+    KFbxSdkManager * manager;
+
+    FBXWrapper() : manager(NULL)
+    {
+
+    }
+
+    ~FBXWrapper()
+    {
+        // Delete the FBX SDK manager. All the objects that have been allocated
+        // using the FBX SDK manager and that haven't been explicitly destroyed
+        // are automatically destroyed at the same time.
+        if (manager) manager->Destroy();
+        manager = NULL;
+    }
+
+    bool init()
+    {
+        manager = KFbxSdkManager::Create();
+        if( NULL == manager ) return false;
+
+    	// create an IOSettings object
+    	KFbxIOSettings * ios = KFbxIOSettings::Create( manager, IOSROOT );
+    	manager->SetIOSettings(ios);
+
+    	// Load plugins from the executable directory
+    	KString lPath = KFbxGetApplicationDirectory();
+#if defined(KARCH_ENV_WIN)
+    	KString lExtension = "dll";
+#elif defined(KARCH_ENV_MACOSX)
+    	KString lExtension = "dylib";
+#elif defined(KARCH_ENV_LINUX)
+    	KString lExtension = "so";
+#endif
+    	manager->LoadPluginsDirectory(lPath.Buffer(), lExtension.Buffer());
+
+        return true;
+    }
+
+};
+
+//
+//
+// -----------------------------------------------------------------------------
+static bool
+sLoadModelHierarchyFromFBX( ModelHierarchyDesc & desc, File & file )
+{
+#ifdef HAS_FBX
+
+    FBXWrapper wrapper;
+    if( !wrapper.init() ) return false;
+    KFbxSdkManager * gSdkManager = wrapper.manager;
+
+    // Create the entity that will hold the scene.
+    KFbxScene * gScene = KFbxScene::Create( gSdkManager, "" );
+    if( NULL == gScene ) return false;
+
+    // TODO: setup file system.
+
+    // detect file format
+    StrA filename = fs::toNativeDiskFilePath( file.name() );
+	int lFileFormat = -1;
+    if (!gSdkManager->GetIOPluginRegistry()->DetectReaderFileFormat(filename, lFileFormat) )
+    {
+        // Unrecognizable file format. Try to fall back to KFbxImporter::eFBX_BINARY
+        lFileFormat = gSdkManager->GetIOPluginRegistry()->FindReaderIDByDescription( "FBX binary (*.fbx)" );;
+    }
+
+    // Create the importer.
+    KFbxImporter* gImporter = KFbxImporter::Create(gSdkManager,"");
+    if(!gImporter->Initialize(filename, lFileFormat))
+    {
+        GN_ERROR(sLogger)( gImporter->GetLastErrorString() );
+        return false;
+    }
+
+    // Import the scene
+    if(!gImporter->Import(gScene))
+    {
+        GN_ERROR(sLogger)( gImporter->GetLastErrorString() );
+        return false;
+    }
+
+    // done
+    return true;
+
+#else
+
+    desc.clear();
+    GN_ERROR(sLogger)( "Fail to load file %s: FBX is not supported.", file.name() );
+    return false;
+
+#endif
+}
+
+}
+
+// *****************************************************************************
+//
+// Assimp loader
+//
+// *****************************************************************************
+namespace ai
+{
+
+// My own implementation of IOStream
+class MyIOStream : public Assimp::IOStream
+{
+    friend class MyIOSystem;
+
+    AutoObjPtr<File> mFile;
+
+protected:
+
+    // Constructor protected for private usage by MyIOSystem
+    MyIOStream( const std::string & filename, const std::string & mode )
+    {
+        mFile.attach( fs::openFile( filename.c_str(), mode.c_str() ) );
+    }
+
+public:
+
+    ~MyIOStream()
+    {
+        mFile.clear();
+    }
+
+    size_t Read( void* pvBuffer, size_t pSize, size_t pCount)
+    {
+        size_t readen;
+        if( mFile && mFile->write( pvBuffer, pSize * pCount, &readen ) )
+        {
+            return readen;
+        }
+        else
+        {
+            return 0;
+        }
+    }
+
+    size_t Write( const void* pvBuffer, size_t pSize, size_t pCount)
+    {
+        size_t written;
+        if( mFile && mFile->write( pvBuffer, pSize * pCount, &written ) )
+        {
+            return written;
+        }
+        else
+        {
+            return 0;
+        }
+    }
+
+    aiReturn Seek( size_t pOffset, aiOrigin pOrigin)
+    {
+        if( mFile )
+        {
+            FileSeek fs;
+            switch( pOrigin )
+            {
+                case aiOrigin_SET : fs = FileSeek::SET;
+                case aiOrigin_CUR : fs = FileSeek::CUR;
+                case aiOrigin_END : fs = FileSeek::END;
+                default           : return aiReturn_FAILURE;
+            }
+            return mFile->seek( pOffset, fs ) ? aiReturn_SUCCESS : aiReturn_FAILURE;
+        }
+        else
+        {
+            return aiReturn_FAILURE;
+        }
+    }
+
+    size_t Tell() const
+    {
+        return mFile ? mFile->tell() : 0;
+    }
+
+    size_t FileSize() const
+    {
+        return mFile ? mFile->size() : 0;
+    }
+
+    void Flush ()
+    {
+    }
+};
+
+// Fisher Price - My First Filesystem
+class MyIOSystem : public Assimp::IOSystem
+{
+    MyIOSystem()
+    {
+    }
+
+    ~MyIOSystem()
+    {
+    }
+
+    // Check whether a specific file exists
+    bool Exists( const std::string & filename ) const
+    {
+        return GN::fs::pathExist( filename.c_str() );
+    }
+
+    // Get the path delimiter character we'd like to see
+    char GetOsSeparator() const
+    {
+        return '/';
+    }
+
+    // ... and finally a method to open a custom stream
+    Assimp::IOStream * Open( const std::string & file, const std::string& mode )
+    {
+        return new MyIOStream( file, mode );
+    }
+
+    void Close( Assimp::IOStream* pFile)
+    {
+        delete pFile;
+    }
+};
+
+}
+
+// *****************************************************************************
+//
+// Garnet's homebew XML loader
 //
 // *****************************************************************************
 
@@ -875,6 +1129,10 @@ bool GN::gfx::ModelHierarchyDesc::loadFromFile( const char * filename )
     else if( sStrEndWithI( filename, ".ase" ) )
     {
         return ase::sLoadModelHierarchyFromASE( *this, *fp );
+    }
+    else if( sStrEndWithI( filename, ".fbx" ) )
+    {
+        return fbx::sLoadModelHierarchyFromFBX( *this, *fp );
     }
     else if( sStrEndWithI( filename, ".xpr" ) ||
              sStrEndWithI( filename, ".tpr" ) )
