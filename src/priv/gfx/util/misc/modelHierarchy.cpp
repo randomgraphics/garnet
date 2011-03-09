@@ -345,6 +345,7 @@ sLoadModelHierarchyFromASE( ModelHierarchyDesc & desc, File & file )
         nodeDesc.parent = "";
         nodeDesc.position.set( 0, 0, 0 );
         nodeDesc.orientation.identity();
+        nodeDesc.scaling.set( 1, 1, 1 );
 #endif
         nodeDesc.bbox = src.selfbbox;
     }
@@ -477,34 +478,33 @@ sLoadFbxMesh(
     ModelHierarchyDesc           & desc,
     ModelHierarchyDesc::NodeDesc & gnnode,
     FbxSdkWrapper                & sdk,
-    KFbxMesh                     * mesh )
+    KFbxMesh                     * mesh,
+    const char *                   meshName )
 {
-    const char * name = mesh->GetName();
-
     if( !mesh->IsTriangleMesh() )
     {
         mesh = sdk.converter->TriangulateMesh( mesh );
         if( NULL == mesh )
         {
-            GN_ERROR(sLogger)( "Fail to triangulate mesh node: %s", name );
+            GN_ERROR(sLogger)( "Fail to triangulate mesh node: %s", meshName );
             return;
         }
     }
 
-    // TODO: prefix mesh name with file name
+    // TODO: prefix mesh meshName with file meshName
 
     // load mesh
-    MeshResourceDesc  & gnmesh  = desc.meshes[name];
+    MeshResourceDesc  & gnmesh  = desc.meshes[meshName];
     gnmesh.prim = PrimitiveType::TRIANGLE_LIST;
     gnmesh.numvtx = (size_t)mesh->GetControlPointsCount();
     gnmesh.numidx = (size_t)mesh->GetPolygonCount() * 3;
     gnmesh.idx32  = gnmesh.numidx > 0x10000;
     gnmesh.vtxfmt = MeshVertexFormat::XYZ();
-    gnmesh.strides[0] = 32;
+    gnmesh.strides[0] = sizeof(Vector4f);
     gnmesh.offsets[0] = 0;
 
     // read vertices
-    AutoRef<Blob> blob( new SimpleBlob( gnmesh.numvtx * gnmesh.strides[0] );
+    AutoRef<Blob> blob( new SimpleBlob( gnmesh.numvtx * gnmesh.strides[0] ) );
     KFbxVector4 * fbxverts = mesh->GetControlPoints();
     Vector4f * vertices = (Vector4f*)blob->data();
     for( size_t i = 0; i < gnmesh.numvtx; ++i )
@@ -518,35 +518,38 @@ sLoadFbxMesh(
     // read polygons
     if( gnmesh.idx32 )
     {
-        blob.attach( new SimleBlob( 4 * gnmesh.numidx ) );
+        blob.attach( new SimpleBlob( 4 * gnmesh.numidx ) );
         uint32 * indices = (uint32*)blob->data();
-        for( size_t i = 0; i < gnmesh.numidx / 3; ++i )
-        {
-            int * v = mesh->GetPolygonVertices((int)i);
-            indices[i*3+0] = (uint32)v[0];
-            indices[i*3+1] = (uint32)v[1];
-            indices[i*3+2] = (uint32)v[2];
-        }
+        int * fbxindices = mesh->GetPolygonVertices();
+        memcpy( indices, fbxindices, blob->size() );
     }
     else
     {
-        blob.attach( new SimleBlob( 2 * gnmesh.numidx ) );
+        blob.attach( new SimpleBlob( 2 * gnmesh.numidx ) );
         uint16 * indices = (uint16*)blob->data();
-        for( size_t i = 0; i < gnmesh.numidx / 3; ++i )
+        int * fbxindices = mesh->GetPolygonVertices();
+        for( size_t i = 0; i < gnmesh.numidx; ++i )
         {
-            int * v = mesh->GetPolygonVertices((int)i);
-            indices[i*3+0] = (uint16)v[0];
-            indices[i*3+1] = (uint16)v[1];
-            indices[i*3+2] = (uint16)v[2];
+            indices[i] = (uint16)fbxindices[i];
         }
     }
-    gnmesh.indices[0] = blob->data();
+    gnmesh.indices = blob->data();
     desc.meshdata.append( blob );
 
-    ModelResourceDesc & gnmodel = desc.models[name];
+    ModelResourceDesc & gnmodel = desc.models[meshName];
     gnmodel = SimpleWireframeModel::DESC;
-    gnmodel.mesh = name;
+    gnmodel.mesh = meshName;
     gnmodel.subset.clear();
+
+    // update node
+    vertices = (Vector4f*)gnmesh.vertices[0];
+    calculateBoundingBox(
+        gnnode.bbox,
+        &vertices->x, sizeof(Vector4f),
+        &vertices->y, sizeof(Vector4f),
+        &vertices->z, sizeof(Vector4f),
+        gnmesh.numvtx );
+    gnnode.models.append( meshName );
 }
 
 //
@@ -582,11 +585,11 @@ sLoadFbxNodeRecursivly(
     gnnode.bbox.set( 0, 0, 0, 0, 0, 0 );
 
     KFbxNodeAttribute* attrib = node->GetNodeAttribute();
-    EAttributeType type = attrib ? attrib->GetAttributeType() : eUNIDENTIFIED;
+    KFbxNodeAttribute::EAttributeType type = attrib ? attrib->GetAttributeType() : KFbxNodeAttribute::eUNIDENTIFIED;
     if( KFbxNodeAttribute::eMESH == type )
     {
         // load mesh node
-        sLoadFbxMesh( desc, gnnode, sdk, (KFbxMesh*)attrib );
+        sLoadFbxMesh( desc, gnnode, sdk, (KFbxMesh*)attrib, name );
     }
     else
     {
@@ -597,8 +600,10 @@ sLoadFbxNodeRecursivly(
     // load children
     for( int i = 0; i < node->GetChildCount(); ++i )
     {
-        if( !sLoadFbxNodeRecursivly( desc, sdk, node->GetChild( i ), node )
+        if( !sLoadFbxNodeRecursivly( desc, sdk, node->GetChild( i ), node ) )
+        {
             return false;
+        }
     }
 
     // done

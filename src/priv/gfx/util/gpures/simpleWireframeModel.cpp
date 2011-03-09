@@ -21,8 +21,8 @@ static ModelResourceDesc sWireframeModelDesc()
         memcpy( md.uniforms[name].initialValue.cptr(), &def, sizeof(type) ); \
     } else void(0)
 
-    INIT_UNIFORM( "MATRIX_PVW" , Matrix44f, Matrix44f::sIdentity() );
-    INIT_UNIFORM( "COLOR"      , Vector4f,  Vector4f(1,1,1,1) );
+    INIT_UNIFORM( "MATRIX_PVW"   , Matrix44f, Matrix44f::sIdentity() );
+    INIT_UNIFORM( "ALBEDO_COLOR" , Vector4f,  Vector4f(1,1,1,1) );
 
     return md;
 }
@@ -49,7 +49,7 @@ bool GN::gfx::SimpleWireframeModel::init()
 
     // initialize uniforms
     mMatrixPvw = mModel->uniformResource( "MATRIX_PVW" );
-    mColor     = mModel->uniformResource( "COLOR" );
+    mColor     = mModel->uniformResource( "ALBEDO_COLOR" );
 
     // success
     return success();

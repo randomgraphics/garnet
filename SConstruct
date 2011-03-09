@@ -528,13 +528,6 @@ def UTIL_checkConfig( conf, confDir, compiler, variant ):
 	# ===
 
 	conf['has_fbx'] = False
-	FBX_dir = [
-		[ '',
-		  '' ],
-		# TODO: query install directory from Registry
-		[ 'C:/Program Files/Autodesk/FBX/FbxSdk/2011.3.1/include/',
-		  'C:/Program Files/Autodesk/FBX/FbxSdk/2011.3.1/lib/' ]
-		]
 	FBX_libs = [
 		['fbxsdk_mt2010',       ['wininet']],
 		['fbxsdk_mt2010d',      ['wininet']],
@@ -543,24 +536,12 @@ def UTIL_checkConfig( conf, confDir, compiler, variant ):
 		['fbxsdk_gcc4',  []],
 		['fbxsdk_gcc4d', []],
 		]
-	for d in FBX_dir:
-		env.Append(
-			CPPPATH = [d[0]],
-			LIBPATH = [d[1]],
-			)
-		for l in FBX_libs:
-			env.Append( LIBS = l[1] )
-			if (not conf['has_fbx']) and c.CheckLibWithHeader( l[0], ['fbxsdk.h','fbxfilesdk/fbxfilesdk_nsuse.h'], 'C++', 'KFbxSdkManager::Create();' ):
-				conf['has_fbx'] = True
-				conf['fbx_inc_path']  = d[0]
-				conf['fbx_lib_path']  = d[1]
-				conf['fbx_libs'] = [l[0],'wininet']
-				break;
-			for ll in l[1]: env['LIBS'].remove( ll )
-
-		env['CPPPATH'].remove( d[0] )
-		env['LIBPATH'].remove( d[1] )
-
+	for l in FBX_libs:
+		env.Append( LIBS = l[1] )
+		if (not conf['has_fbx']) and c.CheckLibWithHeader( l[0], ['fbxsdk.h','fbxfilesdk/fbxfilesdk_nsuse.h'], 'C++', 'KFbxSdkManager::Create();' ):
+			conf['has_fbx']  = True
+			conf['fbx_libs'] = [l[0]] + l[1]
+		for ll in l[1]: env['LIBS'].remove( ll )
 		if conf['has_fbx']: break;
 
 	# =====================

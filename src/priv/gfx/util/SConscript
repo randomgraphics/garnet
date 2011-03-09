@@ -9,7 +9,5 @@ sources = [
 
 t = GN.newTarget( 'stlib', 'GNgfxUtil', sources )
 
-if GN.conf['has_fbx']:
-	t.addLinkFlags( LIBPATH = [GN.conf['fbx_lib_path']] )
-	t.externalDependencies = GN.conf['fbx_libs']
+if GN.conf['has_fbx']: t.externalDependencies = GN.conf['fbx_libs']
 
