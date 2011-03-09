@@ -1619,6 +1619,13 @@ namespace GN
 			transformVector( dst, src );
             return dst;
         }
+        ///
+        /// Breaks down a general 3D transformation matrix into its scalar, rotational, and translational components
+        ///
+        bool decompose( Vector3<T> & translation, Vector3<T> & rotation, Vector3<T> & scaling ) const;
+        ///
+        /// Print the matrix to string.
+        ///
         void print( StrA & ) const;
         StrA print() const { StrA s; print(s); return s; }
 

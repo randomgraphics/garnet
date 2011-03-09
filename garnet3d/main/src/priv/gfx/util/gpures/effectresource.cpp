@@ -297,7 +297,7 @@ void GN::gfx::EffectResource::Impl::applyToContext( size_t passIndex, GpuContext
 
     gc.gpuProgram = gpitem.prog;
 
-    GN_TODO( "apply render states" );
+    // Note: render states are handled in model class
 }
 
 // *****************************************************************************

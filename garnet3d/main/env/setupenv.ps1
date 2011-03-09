@@ -321,13 +321,30 @@ if( "mswin" -eq $env:GN_BUILD_TARGET_OS )
     "Setup FBX SDK environment"
     "========================="
     ""
-    $fbxsdk = get-childitem "hklm:\software\Autodesk FBX SDK 2011.3.1*"
-    if( $fbxsdk )
+
+    $candidates = (
+        "hklm:\software\Autodesk FBX SDK 2011.3.1*",
+        "hklm:\software\Wow6432Node\Autodesk FBX SDK 2011.3.1*" )
+
+    foreach( $c in $candidates )
     {
-        $sdkroot = $fbxsdk.GetValue("Install_Dir")
-        $env:INCLUDE += ";$sdkroot\include"
-        $env:LIB     += ";$sdkroot\lib"
+        $fbxsdk = get-childitem $c
+        if( $fbxsdk )
+        {
+            $sdkroot = $fbxsdk.GetValue("Install_Dir")
+            $env:INCLUDE += ";$sdkroot\include"
+            $env:LIB     += ";$sdkroot\lib"
+            break;
+        }
+    }
+
+    if( $sdkroot )
+    {
         "FBX SDK found: $sdkroot"
+    }
+    else
+    {
+        warn "FBX SDK not found."
     }
 }
 
