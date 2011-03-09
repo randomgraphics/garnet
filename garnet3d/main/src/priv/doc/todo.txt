@@ -5,6 +5,7 @@ TODO
 
 - p0
   - Handle out-of-memory in DynaArray (not using exception)
+  - Special "use current" tag in GpuContext for color and depth render target.
   - Binary 3D model importer
     - FBX
       - replace FBX test app with something else (not owned by Autodesk).
