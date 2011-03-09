@@ -493,61 +493,99 @@ sLoadFbxMesh(
 
     // TODO: prefix mesh meshName with file meshName
 
+    struct MeshVertex
+    {
+        Vector3f pos;
+        Vector3f normal;
+        Vector2f uv;
+    };
+
     // load mesh
     MeshResourceDesc  & gnmesh  = desc.meshes[meshName];
     gnmesh.prim = PrimitiveType::TRIANGLE_LIST;
     gnmesh.numvtx = (size_t)mesh->GetControlPointsCount();
     gnmesh.numidx = (size_t)mesh->GetPolygonCount() * 3;
     gnmesh.idx32  = gnmesh.numidx > 0x10000;
-    gnmesh.vtxfmt = MeshVertexFormat::XYZ();
-    gnmesh.strides[0] = sizeof(Vector4f);
+    gnmesh.vtxfmt = MeshVertexFormat::XYZ_NORM_UV();
+    gnmesh.strides[0] = sizeof(MeshVertex);
     gnmesh.offsets[0] = 0;
 
     // read vertices
     AutoRef<Blob> blob( new SimpleBlob( gnmesh.numvtx * gnmesh.strides[0] ) );
     KFbxVector4 * fbxverts = mesh->GetControlPoints();
-    Vector4f * vertices = (Vector4f*)blob->data();
+    MeshVertex * vertices = (MeshVertex*)blob->data();
     for( size_t i = 0; i < gnmesh.numvtx; ++i )
     {
         const KFbxVector4 & v = fbxverts[i];
-        vertices[i].set( (float)v[0], (float)v[1], (float)v[2], 0 );
+        vertices[i].pos.set( (float)v[0], (float)v[1], (float)v[2] );
     }
     gnmesh.vertices[0] = vertices;
     desc.meshdata.append( blob );
 
     // read polygons
+    int * fbxindices = mesh->GetPolygonVertices();
     if( gnmesh.idx32 )
     {
         blob.attach( new SimpleBlob( 4 * gnmesh.numidx ) );
         uint32 * indices = (uint32*)blob->data();
-        int * fbxindices = mesh->GetPolygonVertices();
         memcpy( indices, fbxindices, blob->size() );
     }
     else
     {
         blob.attach( new SimpleBlob( 2 * gnmesh.numidx ) );
         uint16 * indices = (uint16*)blob->data();
-        int * fbxindices = mesh->GetPolygonVertices();
         for( size_t i = 0; i < gnmesh.numidx; ++i )
         {
             indices[i] = (uint16)fbxindices[i];
         }
     }
+    KFbxVector2 fbxUV = KFbxVector2(0.0, 0.0);
+    KFbxLayerElementUV* fbxLayerUV = mesh->GetLayer(0)->GetUVs();
+    for( size_t i = 0; i < gnmesh.numidx; ++i )
+    {
+        int vi = mesh->GetPolygonVertex( (int)i / 3, (int)i % 3 );
+        MeshVertex & v = vertices[vi];
+
+        KFbxVector4 normal;
+        mesh->GetPolygonVertexNormal( (int)i / 3, (int)i % 3, normal );
+        normal.Normalize();
+        v.normal.set( (float)normal[0], (float)normal[1], (float)normal[2] );
+
+        if (fbxLayerUV)
+        {
+            int iUVIndex = 0;
+            switch (fbxLayerUV->GetMappingMode())
+            {
+                case KFbxLayerElement::eBY_CONTROL_POINT:
+                    iUVIndex = vi;
+                    break;
+
+                case KFbxLayerElement::eBY_POLYGON_VERTEX:
+                    iUVIndex = mesh->GetTextureUVIndex((int)i/3, (int)i%3, KFbxLayerElement::eDIFFUSE_TEXTURES);
+                    break;
+            }
+            fbxUV = fbxLayerUV->GetDirectArray().GetAt(iUVIndex);
+        }
+        v.uv.set( (float)fbxUV[0], (float)fbxUV[1] );
+    }
     gnmesh.indices = blob->data();
     desc.meshdata.append( blob );
 
+    // update model
     ModelResourceDesc & gnmodel = desc.models[meshName];
     gnmodel = SimpleWireframeModel::DESC;
+    //gnmodel = SimpleDiffuseModel::DESC;
     gnmodel.mesh = meshName;
     gnmodel.subset.clear();
 
+    // TODO: load model textures
+
     // update node
-    vertices = (Vector4f*)gnmesh.vertices[0];
     calculateBoundingBox(
         gnnode.bbox,
-        &vertices->x, sizeof(Vector4f),
-        &vertices->y, sizeof(Vector4f),
-        &vertices->z, sizeof(Vector4f),
+        &vertices->pos.x, sizeof(MeshVertex),
+        &vertices->pos.y, sizeof(MeshVertex),
+        &vertices->pos.z, sizeof(MeshVertex),
         gnmesh.numvtx );
     gnnode.models.append( meshName );
 }
