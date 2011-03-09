@@ -415,19 +415,23 @@ sLoadModelHierarchyFromASE( ModelHierarchyDesc & desc, File & file )
 namespace fbx
 {
 
-class FBXWrapper
+class FbxSdkWrapper
 {
 public:
 
     KFbxSdkManager * manager;
+    KFbxGeometryConverter * converter,
 
-    FBXWrapper() : manager(NULL)
+    FbxSdkWrapper() : manager(NULL), converter(NULL)
     {
 
     }
 
-    ~FBXWrapper()
+    ~FbxSdkWrapper()
     {
+        delete converter;
+        converter = NULL;
+
         // Delete the FBX SDK manager. All the objects that have been allocated
         // using the FBX SDK manager and that haven't been explicitly destroyed
         // are automatically destroyed at the same time.
@@ -443,6 +447,9 @@ public:
     	// create an IOSettings object
     	KFbxIOSettings * ios = KFbxIOSettings::Create( manager, IOSROOT );
     	manager->SetIOSettings(ios);
+
+        // create a converter
+        converter = new KFbxGeometryConverter(manager);
 
     	// Load plugins from the executable directory
     	KString lPath = KFbxGetApplicationDirectory();
@@ -464,17 +471,116 @@ public:
 //
 // -----------------------------------------------------------------------------
 static bool
+sLoadFbxMesh(
+    ModelHierarchyDesc           & desc,
+    ModelHierarchyDesc::NodeDesc & gnnode,
+    FbxSdkWrapper                & sdk,
+    KFbxMesh                     * mesh )
+{
+    if( !mesh->IsTriangleMesh() )
+    {
+        if( !sdk.converter->TriangulateInPlace( mesh ) )
+        {
+            GN_ERROR(sLogger)( "Fail to triangulate mesh node: %s", mesh->GetName() );
+            return true;
+        }
+    }
+
+    const char * name = mesh->GetName();
+
+    // load mesh
+    MeshResourceDesc  & gnmesh  = desc.meshes[name];
+    gnmesh.prim = PrimitiveType::TRIANGLE_LIST;
+    gnmesh.numvtx = (size_t)mesh.GetControlPointsCount();
+    gnmesh.numidx = (size_t)mesh.GetPolygonCount() * 3;
+    gnmesh.idx32  = gnmesh.numidx > 0x10000;
+    gnmesh.vtxfmt = MeshVertexFormat::XYZ();
+    gnmesh.strides[0] = 32;
+    gnmesh.offsets[0] = 0;
+
+    AutoRef<Blob> blob( new SimpleBlob( gnmesh.numvtx * gnmesh.strides[0] );
+    KFbxVector4 * fbxverts = mesh.GetControlPoints();
+    Vector4f * vertices = (Vector4f*)blob->data();
+    for( int i = 0; i < mesh.GetControlPointsCount(); ++i )
+    {
+        const KFbxVector4 & v = fbxverts[i];
+        vertices[i].set( (float)v[0], (float)v[1], (float)v[2], 0 );
+    }
+
+    ModelResourceDesc & gnmodel = desc.models[name];
+
+    int numverts =
+
+    return true;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+static bool
+sLoadFbxNodeRecursivly(
+    ModelHierarchyDesc & desc,
+    FbxSdkWrapper      & sdk,
+    KFbxNode           * node,
+    KFbxNode           * parent )
+{
+    if( NULL == node ) return true;
+
+    // the node name should be unique
+    // TODO: if the name is not unique, make it unique.
+    const char * name = node->GetName();
+    if( desc.nodes.find(name) )
+    {
+        GN_VERBOSE(sLogger)( "Node named %s exists already.", name );
+        return true;
+    }
+
+    KFbxVector4 t = node->LclTranslation.Get();
+    KFbxVector4 r = node->LclRotation.Get();
+    KFbxVector4 s = node->LclScaling.Get();
+
+    ModelHierarchyDesc::NodeDesc & gnnode = desc.nodes[name];
+    gnnode.parent = parent ? parent->GetName() : "";
+    gnnode.position.set( (float)t[0], (float)t[1], (float)t[2] );
+    gnnode.orientation.identity(); // TODO: setup rotation.
+    gnnode.scaling.set( (float)s[0], (float)s[1], (float)s[2] );
+    gnnode.bbox.set( 0, 0, 0, 0, 0, 0 );
+
+    KFbxNodeAttribute* attrib = node->GetNodeAttribute();
+    EAttributeType type = attrib ? attrib->GetAttributeType() : eUNIDENTIFIED;
+    if( KFbxNodeAttribute::eMESH == type )
+    {
+        // load mesh node
+        if( !sLoadFbxMesh( desc, gnnode, sdk, (KFbxMesh*)attrib ) ) return false;
+    }
+    else
+    {
+        // create an empty node.
+        GN_VERBOSE(sLogger)( "Ignore unsupported node: type=%d, name=%s", type, name );
+    }
+
+    // load children
+    for( int i = 0; i < node->GetChildCount(); ++i )
+    {
+        if( !sLoadFbxNodeRecursivly( desc, sdk, node->GetChild( i ), node )
+            return false;
+    }
+
+    // done
+    return true;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+static bool
 sLoadModelHierarchyFromFBX( ModelHierarchyDesc & desc, File & file )
 {
 #ifdef HAS_FBX
 
-    FBXWrapper wrapper;
-    if( !wrapper.init() ) return false;
-    KFbxSdkManager * gSdkManager = wrapper.manager;
-
-    // Create the entity that will hold the scene.
-    KFbxScene * gScene = KFbxScene::Create( gSdkManager, "" );
-    if( NULL == gScene ) return false;
+    FbxSdkWrapper sdk;
+    if( !sdk.init() ) return false;
+    KFbxSdkManager * gSdkManager = sdk.manager;
 
     // TODO: setup file system.
 
@@ -489,6 +595,7 @@ sLoadModelHierarchyFromFBX( ModelHierarchyDesc & desc, File & file )
 
     // Create the importer.
     KFbxImporter* gImporter = KFbxImporter::Create(gSdkManager,"");
+    if( NULL == gImporter ) return false;
     if(!gImporter->Initialize(filename, lFileFormat))
     {
         GN_ERROR(sLogger)( gImporter->GetLastErrorString() );
@@ -496,14 +603,15 @@ sLoadModelHierarchyFromFBX( ModelHierarchyDesc & desc, File & file )
     }
 
     // Import the scene
+    KFbxScene * gScene = KFbxScene::Create( gSdkManager, "" );
+    if( NULL == gScene ) return false;
     if(!gImporter->Import(gScene))
     {
         GN_ERROR(sLogger)( gImporter->GetLastErrorString() );
         return false;
     }
 
-    // done
-    return true;
+    return sLoadFbxNodeRecursivly( desc, sdk, gScene->GetRootNode(), NULL );
 
 #else
 

@@ -536,8 +536,10 @@ def UTIL_checkConfig( conf, confDir, compiler, variant ):
 		  'C:/Program Files/Autodesk/FBX/FbxSdk/2011.3.1/lib/' ]
 		]
 	FBX_libs = [
-		['fbxsdk_mt2010', ['wininet']],
-		['fbxsdk_mt2010d',['wininet']],
+		['fbxsdk_mt2010',       ['wininet']],
+		['fbxsdk_mt2010d',      ['wininet']],
+		['fbxsdk_mt2010_amd64', ['wininet']],
+		['fbxsdk_mt2010_amd64d',['wininet']],
 		]
 	for d in FBX_dir:
 		env.Append(

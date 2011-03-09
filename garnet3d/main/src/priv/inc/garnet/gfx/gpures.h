@@ -285,6 +285,28 @@ namespace GN { namespace gfx
         ///
         /// struct MeshVertexFormat
         /// {
+        ///     float position[3];
+        /// };
+        ///
+        static MeshVertexFormat XYZ()
+        {
+            MeshVertexFormat vf;
+
+            vf.numElements = 1;
+
+            vf.elements[0].setSemantic( "POSITION" );
+            vf.elements[0].format = ColorFormat::FLOAT3;
+            vf.elements[0].stream = 0;
+            vf.elements[0].offset = 0;
+
+            return vf;
+        }
+
+        ///
+        /// return a vertex format definition for vertex like this:
+        ///
+        /// struct MeshVertexFormat
+        /// {
         ///     float position[2];
         ///     float texcoord[2];
         /// };
