@@ -491,6 +491,11 @@ sLoadFbxMesh(
         }
     }
 
+    if( NULL == mesh->GetLayer(0)->GetNormals() )
+    {
+        mesh->ComputeVertexNormals();
+    }
+
     // TODO: prefix mesh meshName with file meshName
 
     struct MeshVertex
@@ -573,12 +578,12 @@ sLoadFbxMesh(
 
     // update model
     ModelResourceDesc & gnmodel = desc.models[meshName];
-    gnmodel = SimpleWireframeModel::DESC;
-    //gnmodel = SimpleDiffuseModel::DESC;
+    //gnmodel = SimpleWireframeModel::DESC;
+    gnmodel = SimpleDiffuseModel::DESC;
     gnmodel.mesh = meshName;
     gnmodel.subset.clear();
 
-    // TODO: load model textures
+    // TODO: assign model textures
 
     // update node
     calculateBoundingBox(
