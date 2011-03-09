@@ -227,6 +227,8 @@ static AutoRef<EffectResource> sRegisterWireframeEffect( GpuResourceDatabase & g
     ed.techniques[1].passes.resize( 1 );
     ed.techniques[1].passes[0].gpuprogram = "hlsl";
 
+    ed.renderstates.fillMode = GpuContext::FILL_WIREFRAME;
+
     AutoRef<EffectResource> e = gdb.createResource<EffectResource>( "@WIREFRAME" );
 
     e->reset( &ed );

@@ -13,9 +13,6 @@ sources = [
 ]
 cluster = GN.newSourceCluster( sources, 'pch.h', 'pch.cpp' )
 
-if GN.conf['has_fbx']:
-	cluster.addCompileFlags(
-		CPPPATH = [GN.conf['fbx_inc_path']],
-		CPPDEFINES = ['HAS_FBX'] )
+if GN.conf['has_fbx']: cluster.addCompileFlags( CPPDEFINES = ['HAS_FBX'] )
 
 Return( 'cluster' )

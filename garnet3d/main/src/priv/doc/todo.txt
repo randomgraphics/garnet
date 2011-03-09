@@ -4,6 +4,7 @@ TODO
 - 程序中标注TODO的地方
 
 - p0
+  - Handle out-of-memory in DynaArray (not using exception)
   - Binary 3D model importer
     - FBX
       - replace FBX test app with something else (not owned by Autodesk).

@@ -311,6 +311,27 @@ if( "mswin" -eq $env:GN_BUILD_TARGET_OS )
 }
 
 # ==============================================================================
+# setup FBX SDK environment
+# ==============================================================================
+
+if( "mswin" -eq $env:GN_BUILD_TARGET_OS )
+{
+    ""
+    "========================="
+    "Setup FBX SDK environment"
+    "========================="
+    ""
+    $fbxsdk = get-childitem "hklm:\software\Autodesk FBX SDK 2011.3.1*"
+    if( $fbxsdk )
+    {
+        $sdkroot = $fbxsdk.GetValue("Install_Dir")
+        $env:INCLUDE += ";$sdkroot\include"
+        $env:LIB     += ";$sdkroot\lib"
+        "FBX SDK found: $sdkroot"
+    }
+}
+
+# ==============================================================================
 # setup GREEN path and inclusion
 # ==============================================================================
 

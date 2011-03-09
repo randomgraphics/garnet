@@ -15,8 +15,6 @@ if GN.conf['has_glut'] and GN.conf['has_fbx'] :
 	cluster = GN.newSourceCluster( sources, 'pch.h', 'pch.cpp' )
 	cluster.addCompileFlags(
 		CCFLAGS = ['/wd4100', '/wd4512'],
-		CPPPATH = [GN.conf['fbx_inc_path']]
 		)
 	t = GN.newTarget( 'prog', 'GNtestFbx', [cluster] )
-	t.addLinkFlags( LIBPATH = [GN.conf['fbx_lib_path']] )
 	t.externalDependencies = [ GN.conf['glut'] ] + GN.conf['fbx_libs']

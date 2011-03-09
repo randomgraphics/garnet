@@ -2366,6 +2366,14 @@ namespace GN
     public :
 
         ///
+        /// set box value
+        ///
+        void set( T x_, T y_, T z_, T w_, T h_, T d_ )
+        {
+            x = x_; y = y_; z = z_ ; w = w_; h = h_; d = d_;
+        }
+
+        ///
         /// return box position
         ///
         const PointType & pos() const { return *(const PointType*)this; }

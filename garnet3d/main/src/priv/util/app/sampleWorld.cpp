@@ -95,6 +95,7 @@ static Entity * sCreateEntity(
     e->spacial()->setParent( parent ? parent->spacial() : ((SampleSpacialEntity*)root)->spacial() );
     e->spacial()->setPosition( entityDesc.position );
     e->spacial()->setRotation( entityDesc.orientation );
+    e->spacial()->setScale( entityDesc.scaling );
     e->spacial()->setSelfBoundingBox( entityDesc.bbox );
 
     for( size_t i = 0; i < entityDesc.models.size(); ++i )
