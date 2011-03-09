@@ -540,6 +540,8 @@ def UTIL_checkConfig( conf, confDir, compiler, variant ):
 		['fbxsdk_mt2010d',      ['wininet']],
 		['fbxsdk_mt2010_amd64', ['wininet']],
 		['fbxsdk_mt2010_amd64d',['wininet']],
+		['fbxsdk_gcc4',  []],
+		['fbxsdk_gcc4d', []],
 		]
 	for d in FBX_dir:
 		env.Append(
@@ -554,6 +556,11 @@ def UTIL_checkConfig( conf, confDir, compiler, variant ):
 				conf['fbx_lib_path']  = d[1]
 				conf['fbx_libs'] = [l[0],'wininet']
 				break;
+			for ll in l[1]: env['LIBS'].remove( ll )
+
+		env['CPPPATH'].remove( d[0] )
+		env['LIBPATH'].remove( d[1] )
+
 		if conf['has_fbx']: break;
 
 	# =====================
