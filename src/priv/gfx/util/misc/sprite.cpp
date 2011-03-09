@@ -212,8 +212,9 @@ void GN::gfx::SpriteRenderer::drawBegin( Texture * texture, uint32 options )
     // use pure white texture, if input texture is NULL
     if( NULL == texture ) texture = mPureWhiteTexture;
 
-    // copy current renderer context
-    mContext = mGpu.getContext();
+    // copy render targets from current context
+    mContext.colortargets = mGpu.getContext().colortargets;
+    mContext.depthstencil = mGpu.getContext().depthstencil;
 
     // setup parameters that are not affected by options
     mContext.textures[0].texture.set( texture );

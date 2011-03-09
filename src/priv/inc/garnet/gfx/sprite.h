@@ -168,13 +168,13 @@ namespace GN { namespace gfx
 
         AutoRef<Texture>           mPureWhiteTexture;
         AutoRef<GpuProgram>        mGpuProgram;
-        VertexBinding  mVertexBinding;
+        VertexBinding              mVertexBinding;
         AutoRef<VtxBuf>            mVertexBuffer;
         AutoRef<IdxBuf>            mIndexBuffer;
 
         GpuContext                 mContext;
 
-        uint32                  mOptions;
+        uint32                     mOptions;
         float                      mVertexShift;
         bool                       mDrawBegun;
         Sprite                   * mSprites;

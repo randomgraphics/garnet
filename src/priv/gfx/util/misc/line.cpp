@@ -271,6 +271,10 @@ void GN::gfx::LineRenderer::flush()
 
     GN_ASSERT( firstPendingLineOffset + numPendingLines <= MAX_LINES );
 
+    // copy render targets from current context
+    mContext.colortargets = mGpu.getContext().colortargets;
+    mContext.depthstencil = mGpu.getContext().depthstencil;
+
     mContext.vtxbufs[0].vtxbuf->update(
         firstPendingLineOffset * sizeof(Line),
         numPendingLines * sizeof(Line),

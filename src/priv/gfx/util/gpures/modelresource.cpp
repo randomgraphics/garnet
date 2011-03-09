@@ -916,6 +916,7 @@ bool GN::gfx::ModelResource::Impl::setEffectResource( GpuResource * resource )
     mEffectResource.set( effect );
 
     // initialize passes array
+    GpuContext defaultGC;
     size_t numpasses = effect ? effect->numPasses() : 0;
     mPasses.resize( numpasses );
     for( size_t i = 0; i < mPasses.size(); ++i )
@@ -926,6 +927,9 @@ bool GN::gfx::ModelResource::Impl::setEffectResource( GpuResource * resource )
         effect->applyToContext( i, pass.gc );
 
         pass.renderstates = effect->renderStates( i );
+
+        // apply render states
+        sApplyRenderStates( pass.gc.rs, (0==i) ? defaultGC.rs : mPasses[i-1].gc.rs, pass.renderstates );
     }
 
     // reapply mesh
@@ -1007,9 +1011,6 @@ void GN::gfx::ModelResource::Impl::draw() const
         // copy render targets from current context
         gc.colortargets = currentContext.colortargets;
         gc.depthstencil = currentContext.depthstencil;
-
-        // apply render states
-        sApplyRenderStates( gc.rs, currentContext.rs, mPasses[i].renderstates );
     }
 
     // determine the subset

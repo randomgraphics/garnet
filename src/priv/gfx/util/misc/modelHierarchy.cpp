@@ -573,14 +573,15 @@ sLoadFbxNodeRecursivly(
         return true;
     }
 
-    KFbxVector4 t = node->LclTranslation.Get();
-    KFbxVector4 r = node->LclRotation.Get();
-    KFbxVector4 s = node->LclScaling.Get();
+    const KFbxXMatrix & localTransform = node->GetScene()->GetEvaluator()->GetNodeLocalTransform(node);
+    KFbxVector4    t = localTransform.GetT();
+    KFbxQuaternion q = localTransform.GetQ();
+    KFbxVector4    s = localTransform.GetS();
 
     ModelHierarchyDesc::NodeDesc & gnnode = desc.nodes[name];
     gnnode.parent = parent ? parent->GetName() : "";
     gnnode.position.set( (float)t[0], (float)t[1], (float)t[2] );
-    gnnode.orientation.identity(); // TODO: setup rotation.
+    gnnode.orientation.set( (float)q[0], (float)q[1], (float)q[2], (float)q[3] );
     gnnode.scaling.set( (float)s[0], (float)s[1], (float)s[2] );
     gnnode.bbox.set( 0, 0, 0, 0, 0, 0 );
 
