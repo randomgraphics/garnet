@@ -13,6 +13,7 @@
 #include <fbxsdk.h>
 #include <fbxfilesdk/kfbxio/kfbximporter.h>
 #include <fbxfilesdk/fbxfilesdk_nsuse.h>
+#include <fbxfilesdk/kfbxplugins/kfbxgeometryconverter.h>
 #endif
 
 using namespace GN;
@@ -414,13 +415,14 @@ sLoadModelHierarchyFromASE( ModelHierarchyDesc & desc, File & file )
 
 namespace fbx
 {
+#ifdef HAS_FBX
 
 class FbxSdkWrapper
 {
 public:
 
     KFbxSdkManager * manager;
-    KFbxGeometryConverter * converter,
+    KFbxGeometryConverter * converter;
 
     FbxSdkWrapper() : manager(NULL), converter(NULL)
     {
@@ -470,48 +472,81 @@ public:
 //
 //
 // -----------------------------------------------------------------------------
-static bool
+static void
 sLoadFbxMesh(
     ModelHierarchyDesc           & desc,
     ModelHierarchyDesc::NodeDesc & gnnode,
     FbxSdkWrapper                & sdk,
     KFbxMesh                     * mesh )
 {
+    const char * name = mesh->GetName();
+
     if( !mesh->IsTriangleMesh() )
     {
-        if( !sdk.converter->TriangulateInPlace( mesh ) )
+        mesh = sdk.converter->TriangulateMesh( mesh );
+        if( NULL == mesh )
         {
-            GN_ERROR(sLogger)( "Fail to triangulate mesh node: %s", mesh->GetName() );
-            return true;
+            GN_ERROR(sLogger)( "Fail to triangulate mesh node: %s", name );
+            return;
         }
     }
 
-    const char * name = mesh->GetName();
+    // TODO: prefix mesh name with file name
 
     // load mesh
     MeshResourceDesc  & gnmesh  = desc.meshes[name];
     gnmesh.prim = PrimitiveType::TRIANGLE_LIST;
-    gnmesh.numvtx = (size_t)mesh.GetControlPointsCount();
-    gnmesh.numidx = (size_t)mesh.GetPolygonCount() * 3;
+    gnmesh.numvtx = (size_t)mesh->GetControlPointsCount();
+    gnmesh.numidx = (size_t)mesh->GetPolygonCount() * 3;
     gnmesh.idx32  = gnmesh.numidx > 0x10000;
     gnmesh.vtxfmt = MeshVertexFormat::XYZ();
     gnmesh.strides[0] = 32;
     gnmesh.offsets[0] = 0;
 
+    // read vertices
     AutoRef<Blob> blob( new SimpleBlob( gnmesh.numvtx * gnmesh.strides[0] );
-    KFbxVector4 * fbxverts = mesh.GetControlPoints();
+    KFbxVector4 * fbxverts = mesh->GetControlPoints();
     Vector4f * vertices = (Vector4f*)blob->data();
-    for( int i = 0; i < mesh.GetControlPointsCount(); ++i )
+    for( size_t i = 0; i < gnmesh.numvtx; ++i )
     {
         const KFbxVector4 & v = fbxverts[i];
         vertices[i].set( (float)v[0], (float)v[1], (float)v[2], 0 );
     }
+    gnmesh.vertices[0] = vertices;
+    desc.meshdata.append( blob );
+
+    // read polygons
+    if( gnmesh.idx32 )
+    {
+        blob.attach( new SimleBlob( 4 * gnmesh.numidx ) );
+        uint32 * indices = (uint32*)blob->data();
+        for( size_t i = 0; i < gnmesh.numidx / 3; ++i )
+        {
+            int * v = mesh->GetPolygonVertices((int)i);
+            indices[i*3+0] = (uint32)v[0];
+            indices[i*3+1] = (uint32)v[1];
+            indices[i*3+2] = (uint32)v[2];
+        }
+    }
+    else
+    {
+        blob.attach( new SimleBlob( 2 * gnmesh.numidx ) );
+        uint16 * indices = (uint16*)blob->data();
+        for( size_t i = 0; i < gnmesh.numidx / 3; ++i )
+        {
+            int * v = mesh->GetPolygonVertices((int)i);
+            indices[i*3+0] = (uint16)v[0];
+            indices[i*3+1] = (uint16)v[1];
+            indices[i*3+2] = (uint16)v[2];
+        }
+    }
+    gnmesh.indices[0] = blob->data();
+    desc.meshdata.append( blob );
 
     ModelResourceDesc & gnmodel = desc.models[name];
-
-    int numverts =
-
-    return true;
+    gnmodel = SimpleWireframeModel::DESC;
+    gnmodel.mesh = name;
+    gnmodel.subset.clear();
 }
 
 //
@@ -551,7 +586,7 @@ sLoadFbxNodeRecursivly(
     if( KFbxNodeAttribute::eMESH == type )
     {
         // load mesh node
-        if( !sLoadFbxMesh( desc, gnnode, sdk, (KFbxMesh*)attrib ) ) return false;
+        sLoadFbxMesh( desc, gnnode, sdk, (KFbxMesh*)attrib );
     }
     else
     {
@@ -569,6 +604,8 @@ sLoadFbxNodeRecursivly(
     // done
     return true;
 }
+
+#endif
 
 //
 //
