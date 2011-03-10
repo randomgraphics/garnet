@@ -392,7 +392,7 @@ XmlElement * GN::gfx::ModelResourceDesc::saveToXml( XmlNode & root, const char *
     // create subset node
     XmlElement * subsetNode = doc.createElement(modelNode);
     subsetNode->name = "subset";
-    if( !subset.isWholeMesh() )
+    //if( !subset.isWholeMesh() )
     {
         XmlAttrib * a = doc.createAttrib( subsetNode );
         a->name = "basevtx";
