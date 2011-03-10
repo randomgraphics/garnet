@@ -1028,6 +1028,13 @@ sParseNode( ModelHierarchyDesc & desc, XmlElement & root )
         node.orientation.set( 0, 0, 0, 1 );
     }
 
+    a = root.findAttrib( "scaling" );
+    if( !a || 3 != string2FloatArray( (float*)&node.scaling, 3, a->value ) )
+    {
+        sPostXMLError( root, "Invalid scaling" );
+        node.scaling.set( 1, 1, 1 );
+    }
+
     a = root.findAttrib( "bbox" );
     if( !a || 6 != string2FloatArray( (float*)&node.bbox, 6, a->value ) )
     {
@@ -1283,8 +1290,15 @@ sSaveModelHierarchyToXML( const ModelHierarchyDesc & desc, const char * filename
         a->value = stringFormat( "%f,%f,%f,%f",
             nodeDesc.orientation.v.x,
             nodeDesc.orientation.v.y,
-            nodeDesc.orientation.v.x,
+            nodeDesc.orientation.v.z,
             nodeDesc.orientation.w );
+
+        a = xmldoc.createAttrib( node );
+        a->name  = "scaling";
+        a->value = stringFormat( "%f,%f,%f",
+            nodeDesc.scaling.x,
+            nodeDesc.scaling.y,
+            nodeDesc.scaling.z );
 
         a = xmldoc.createAttrib( node );
         a->name  = "bbox";
