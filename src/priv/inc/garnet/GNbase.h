@@ -64,10 +64,6 @@ namespace GN
 
 // memory management
 #include "base/memory.h"
-#include "base/allocator.h"
-
-// memory pool
-#include "base/mempool.h"
 
 // single/double linked list
 #include "base/linkedList.h"

@@ -94,7 +94,7 @@ namespace GN
             mCount = 0;
         }
 
-        void doClone( const StackArray & other )
+        void copyFrom( const StackArray & other )
         {
             T       * dst = cptr();
             const T * src = other.cptr();
@@ -242,7 +242,7 @@ namespace GN
         ///
         StackArray( const StackArray & other ) : mCount(0)
         {
-            doClone( other );
+            copyFrom( other );
         }
 
         ///
@@ -279,7 +279,7 @@ namespace GN
         /// \name common operators
         ///
         //@{
-        StackArray & operator=( const StackArray & other ) { doClone(other); return *this; }
+        StackArray & operator=( const StackArray & other ) { copyFrom(other); return *this; }
         bool         operator==( const StackArray & other ) const { return equal(other); }
         bool         operator!=( const StackArray & other ) const { return !equal(other); }
         T          & operator[]( size_t i ) { GN_ASSERT( i < mCount ); return cptr()[i]; }
@@ -311,18 +311,18 @@ namespace GN
             mAlloc.deallocate( ptr, capacity );
         }
 
-        void doAppend( const T * p, size_t count )
+        bool doAppend( const T * p, size_t count )
         {
-            if( 0 == count ) return;
+            if( 0 == count ) return true;
 
             if( 0 == p )
             {
                 GN_ERROR(getLogger("GN.base.DynaArray"))("non-zero count with NULL pointer is not allowed!");
-                return;
+                return false;
             }
 
             // reserve memory
-            doReserve( mCount + count );
+            if( !doReserve( mCount + count ) ) return false;
 
             // copy-construct new elements
             T * dst = mElements + mCount;
@@ -333,6 +333,8 @@ namespace GN
 
             // update count
             mCount += count;
+
+            return true;
         }
 
         void doClear()
@@ -345,9 +347,9 @@ namespace GN
             mCount = 0;
         }
 
-        void doClone( const DynaArray & other )
+        bool copyFrom( const DynaArray & other )
         {
-            doReserve( other.mCount );
+            if( !doReserve( other.mCount ) ) return false;
 
             size_t mincount = math::getmin<size_t>( mCount, other.mCount );
 
@@ -369,17 +371,19 @@ namespace GN
             }
 
             mCount = other.mCount;
+
+            return true;
         }
 
-        void doInsert( size_t position, const T & t )
+        bool doInsert( size_t position, const T & t )
         {
             if( position > mCount )
             {
                 GN_WARN(getLogger("GN.base.DynaArray"))("invalid insert position");
-                return;
+                return false;
             }
 
-            doResize( mCount + 1 );
+            if( !doResize( mCount + 1 ) ) return false;
 
             for( size_t i = mCount-1; i > position; --i )
             {
@@ -387,6 +391,8 @@ namespace GN
             }
 
             mElements[position] = t;
+
+            return true;
         }
 
         void doErase( size_t position )
@@ -409,9 +415,9 @@ namespace GN
             mAlloc.destroy( mElements + mCount );
         }
 
-        void doReserve( size_t count )
+        bool doReserve( size_t count )
         {
-            if( mCapacity >= count ) return;
+            if( mCapacity >= count ) return true;
 
             GN_ASSERT( count > mCount );
 
@@ -429,6 +435,11 @@ namespace GN
 
             // allocate new buffer (unconstructed raw memory)
             T * newBuf = mAlloc.allocate( newCap );
+            if( NULL == newBuf )
+            {
+                GN_ERROR(getLogger("GN.base.DynaArray"))("out of memory!");
+                return false;
+            }
 
             // copy construct new buffer
             for( size_t i = 0; i < mCount; ++i )
@@ -441,14 +452,16 @@ namespace GN
 
             mElements = newBuf;
             mCapacity = newCap;
+
+            return true;
         }
 
-        void doResize( size_t count )
+        bool doResize( size_t count )
         {
-            if( count == mCount ) return; // shortcut for redundant call
+            if( count == mCount ) return true; // shortcut for redundant call
 
             // reserve memory
-            doReserve( count );
+            if( !doReserve( count ) ) return false;
 
             // destruct extra objects, only when count < mCount
             for( size_t i = count; i < mCount; ++i )
@@ -463,14 +476,16 @@ namespace GN
             }
 
             mCount = count;
+
+            return true;
         }
 
-        void doResize( size_t count, const T & t )
+        bool doResize( size_t count, const T & t )
         {
-            if( count == mCount ) return; // shortcut for redundant call
+            if( count == mCount ) return true; // shortcut for redundant call
 
             // reserve memory
-            doReserve( count );
+            if( !doReserve( count ) ) return false;
 
             // destruct extra objects, only when count < mCount
             for( size_t i = count; i < mCount; ++i )
@@ -485,6 +500,8 @@ namespace GN
             }
 
             mCount = count;
+
+            return true;
         }
 
         void doSwap( DynaArray & another )
@@ -545,7 +562,7 @@ namespace GN
         ///
         /// copy constructor
         ///
-        DynaArray( const DynaArray & other ) : mElements(0), mCount(0), mCapacity(0), mAlloc(other.mAlloc) { doClone( other ); }
+        DynaArray( const DynaArray & other ) : mElements(0), mCount(0), mCapacity(0), mAlloc(other.mAlloc) { copyFrom( other ); }
 
         ///
         /// destructor
@@ -555,9 +572,9 @@ namespace GN
         /// \name Common array operations.
         ///
         //@{
-        void      append( const T & t ) { doAppend( &t, 1 ); }
-        void      append( const T * p, size_t count ) { doAppend( p, count ); }
-        void      append( const DynaArray & a ) { doAppend( a.mElements, a.mCount ); }
+        bool      append( const T & t ) { return doAppend( &t, 1 ); }
+        bool      append( const T * p, size_t count ) { return doAppend( p, count ); }
+        bool      append( const DynaArray & a ) { return doAppend( a.mElements, a.mCount ); }
         const T & back() const { GN_ASSERT( mCount > 0 ); return mElements[mCount-1]; }
         T       & back() { GN_ASSERT( mCount > 0 ); return mElements[mCount-1]; }
         const T * begin() const { return mElements; }
@@ -577,11 +594,11 @@ namespace GN
         const T & front() const { GN_ASSERT( mCount > 0 ); return mElements[0]; }
         T       & front() { GN_ASSERT( mCount > 0 ); return mElements[0]; }
         /** do nothing if position is invalid */
-        void      insert( size_t position, const T & t ) { doInsert( position, t ); }
+        bool      insert( size_t position, const T & t ) { return doInsert( position, t ); }
         const T * next( const T * t ) const { return ( mCount > 0 && mElements <= t && t < (mElements+mCount-1) ) ? ( t + 1 ) : NULL; }
         T       * next( const T * t ) { return ( mCount > 0 && mElements <= t && t < (mElements+mCount-1) ) ? ( t + 1 ) : NULL; }
-        void      reserve( size_t count ) { doReserve( count ); }
-        void      resize( size_t count ) { doResize( count ); }
+        bool      reserve( size_t count ) { return doReserve( count ); }
+        bool      resize( size_t count ) { return doResize( count ); }
         void      popBack() { doErase( mCount - 1 ); }
         /** clear array as well as release memory */
         void      purge() { dealloc( mElements, mCount, mCapacity ); mCount = 0; mCapacity = 0; mElements = 0; }
@@ -592,7 +609,7 @@ namespace GN
         /// \name common operators
         ///
         //@{
-        DynaArray & operator=( const DynaArray & other ) { doClone(other); return *this; }
+        DynaArray & operator=( const DynaArray & other ) { copyFrom(other); return *this; }
         bool        operator==( const DynaArray & other ) const { return equal(other); }
         bool        operator!=( const DynaArray & other ) const { return !equal(other); }
         T         & operator[]( size_t i ) { GN_ASSERT( i < mCount ); return mElements[i]; }
