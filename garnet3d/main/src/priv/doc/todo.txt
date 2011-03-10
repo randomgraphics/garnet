@@ -4,13 +4,11 @@ TODO
 - 程序中标注TODO的地方
 
 - p0
-  - Handle out-of-memory in DynaArray (not using exception)
   - Special "use current" tag in GpuContext for color and depth render target.
-  - Binary 3D model importer
-    - FBX
-      - replace FBX test app with something else (not owned by Autodesk).
-    - assimp looks really promising.
-      - assimp currently does not support FBX. Consider implement one for it.
+  - FBX importer
+    - replace FBX test app with something else (not owned by Autodesk).
+    - Fix FBX texture coordinate loading failure. (a01.fbx)
+    - Fix relative texture loadign failure. (a01.fbx)
   - D3D resource leaking in GNtestEngine and GNsampleDolphin:
     - It comes from Cg Toolkit. And upgrading to the lasted Feb11 version
       doesn't solve the issue.
@@ -142,13 +140,19 @@ RESOLVE ISSUES
       character with a ascii character.
     - Custom DOM wrapper fits our requirement better, and is pretty easy to implement.
 
-- COLLADA loader?
-  - RESOLVED: no.
-    - We've supported ASE already. So there's no need for another TEXT based
-     format. We need to support binary format like FBX.
+- What file format should we support:
+  - RESOLVED: FBX and garnet native format.
+    - FBX
+      - binary format loads fast.
+      - free SDK.
+    - ASE: does not support skeleton animation. It can't be imported back to 3ds max.
+    - COLLADA: need to get a good loader for that.
+    - ma (maya ascii): need to write my own loader.
+    - assimp: promising candidate. Investe more.
 
 OPEN ISSUES
 ===========
+
 
 - Embbed buffer for short string?
 
