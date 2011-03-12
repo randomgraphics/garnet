@@ -37,7 +37,7 @@ namespace GN
         /// ctor
         explicit SimpleBlob( size_t sz )
         {
-            mBuffer = HeapMemory::alloc( sz );
+            mBuffer = HeapMemory::alignedAlloc( sz, 16 );
             mSize = (NULL != mBuffer) ? sz : 0;
         }
 
