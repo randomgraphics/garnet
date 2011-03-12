@@ -153,10 +153,16 @@ namespace GN
         }
     }
 
+    template<size_t ITEM_SIZE>
+    struct DefaultMemoryAlignment
+    {
+        static const size_t VALUE = ( (0==(ITEM_SIZE%16)) ? 16 : ( (0==(ITEM_SIZE%8)) ? 8 : ( (0==(ITEM_SIZE%4)) ? 4 : ( (0==(ITEM_SIZE%2)) ? 2 : 1 ) ) ) );
+    };
+
     ///
     /// STL compilant allocator that use garnet heap memory management routines.
     ///
-    template<typename T, size_t ALIGNMENT=16>
+    template<typename T>
     class StlAllocator
     {
         /// \cond NEVER
@@ -202,7 +208,7 @@ namespace GN
 
         pointer allocate( size_type count )
         {
-            void * p = HeapMemory::alignedAlloc( count * sizeof(T), ALIGNMENT );
+            void * p = HeapMemory::alignedAlloc( count * sizeof(T), DefaultMemoryAlignment<sizeof(T)>::VALUE );
 
             // Note: here we are different from standard STL allocator. We return
             // NULL pointer instead of throw std::bad_alloc() pointer.
@@ -249,7 +255,7 @@ namespace GN
     ///
     template<
         size_t ITEM_SIZE,
-        size_t ALIGNMENT = ( (0==(ITEM_SIZE%16)) ? 16 : ( (0==(ITEM_SIZE%8)) ? 8 : ( (0==(ITEM_SIZE%4)) ? 4 : ( (0==(ITEM_SIZE%2)) ? 2 : 1 ) ) ) ),
+        size_t ALIGNMENT = DefaultMemoryAlignment<ITEM_SIZE>::VALUE,
         size_t INITIAL_ITEMS_PER_BLOCK = 32,
         size_t MAX_ITEMS = 0 >
     class FixSizedRawMemoryPool : public NoCopy
