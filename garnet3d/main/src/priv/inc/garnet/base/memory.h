@@ -249,7 +249,7 @@ namespace GN
     ///
     template<
         size_t ITEM_SIZE,
-        size_t ALIGNMENT = 16,
+        size_t ALIGNMENT = ( (0==(ITEM_SIZE%16)) ? 16 : ( (0==(ITEM_SIZE%8)) ? 8 : ( (0==(ITEM_SIZE%4)) ? 4 : ( (0==(ITEM_SIZE%2)) ? 2 : 1 ) ) ) ),
         size_t INITIAL_ITEMS_PER_BLOCK = 32,
         size_t MAX_ITEMS = 0 >
     class FixSizedRawMemoryPool : public NoCopy
@@ -346,7 +346,7 @@ namespace GN
                     return 0;
                 }
                 b->items = (Item*)HeapMemory::alignedAlloc( sizeof(Item) * mNewBlockSize, ALIGNMENT );
-                if( 0 == b )
+                if( 0 == b->items )
                 {
                     GN_ERROR(getLogger("FixSizedRawMemoryPool"))( "out of heap memory!" );
                     HeapMemory::dealloc( b );
@@ -432,6 +432,7 @@ namespace GN
             mItems = 0;
             mFreeItems = 0;
             mItemCount = 0;
+            mNewBlockSize = INITIAL_ITEMS_PER_BLOCK;
         }
 
         ///

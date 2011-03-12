@@ -77,6 +77,11 @@ int GN::engine::VisualComponent::addModel( ModelResource * model )
 
     // handle standard uniforms
     AutoRef<EffectResource> effect = model->effectResource();
+	if( NULL == effect )
+	{
+        GN_ERROR(sLogger)( "fail to attach model to visual node: No effect attached to the model." );
+		return 0;
+	}
     for( StandardUniform::Index type = 0; type < StandardUniform::Index::NUM_STANDARD_UNIFORMS; ++type )
     {
         const StandardUniform::Desc * d = StandardUniform::sIndex2Desc( type );

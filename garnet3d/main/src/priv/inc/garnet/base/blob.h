@@ -25,24 +25,58 @@ namespace GN
     };
 
     ///
-    /// A simple implementation of blob class
+    /// A simple fixed size blob class
     ///
     class SimpleBlob : public Blob
     {
-        DynaArray<uint8> mBuffer;
+        void * mBuffer;
+        size_t  mSize;
 
     public:
 
         /// ctor
-        explicit SimpleBlob( size_t sz = 0 ) : mBuffer(sz) {}
+        explicit SimpleBlob( size_t sz )
+        {
+            mBuffer = HeapMemory::alloc( sz );
+            mSize = (NULL != mBuffer) ? sz : 0;
+        }
+
+        /// dtor
+        virtual ~SimpleBlob()
+        {
+           HeapMemory::dealloc( mBuffer );
+           mBuffer = 0;
+           mSize = 0;
+        }
+
+        //@{
+        virtual void * data() const { return mBuffer; }
+        virtual size_t size() const { return mSize; }
+        //@}
+    };
+
+    ///
+    /// A blob class that used DynaArray as backend.
+    ///
+    template<typename T>
+    class DynaArrayBlob : public Blob
+    {
+        DynaArray<T> mBuffer;
+
+    public:
+
+        /// ctor
+        DynaArrayBlob() {}
 
         //@{
         virtual void * data() const { return (void*)mBuffer.cptr(); }
-        virtual size_t size() const { return mBuffer.size(); }
+        virtual size_t size() const { return sizeof(T) * mBuffer.size(); }
         //@}
 
-        /// resize the buffer
-        void resize( size_t newSize ) { mBuffer.resize( newSize ); }
+        //@{
+        DynaArray<T>       & array()       { return mBuffer; }
+        const DynaArray<T> & array() const { return mBuffer; }
+        //@}
     };
 };
 

@@ -353,16 +353,10 @@ sLoadModelHierarchyFromASE( ModelHierarchyDesc & desc, File & file )
     // copy mesh data
     desc.meshdata = ase.meshdata;
 
-    size_t totalVerts = 0;
-    size_t totalFaces = 0;
-
     // create models
     for( size_t i = 0; i < ase.subsets.size(); ++i )
     {
         const AseMeshSubset & subset = ase.subsets[i];
-
-        totalVerts += subset.numvtx;
-        totalFaces += subset.numidx / 3;
 
         const AseMesh & asemesh = ase.meshes[subset.meshid];
 
@@ -400,8 +394,6 @@ sLoadModelHierarchyFromASE( ModelHierarchyDesc & desc, File & file )
     // setup bounding box of the whole scene
     desc.bbox = ase.bbox;
 #endif
-
-    GN_INFO(sLogger)( "Total vertices: %d, faces: %d", totalVerts, totalFaces );
 
     return true;
 }
@@ -473,23 +465,6 @@ public:
 //
 //
 // -----------------------------------------------------------------------------
-template<typename T>
-static T * sCheckLayerElement( T * elements )
-{
-    if( NULL == elements ) return NULL;
-
-    // the loader supports per-vertex mapping only for now.
-    if( KFbxLayerElement::eBY_POLYGON_VERTEX != elements->GetMappingMode() )
-    {
-        return NULL;
-    }
-
-    return elements;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
 static const char * sGetTextureFileName( KFbxSurfaceMaterial * material, const char * textureType )
 {
     KFbxProperty prop = material->FindProperty( textureType );
@@ -511,7 +486,7 @@ static const char * sGetTextureFileName( KFbxSurfaceMaterial * material, const c
                 KFbxTexture * lTexture = KFbxCast <KFbxTexture> (lLayeredTexture->GetSrcObject(KFbxTexture::ClassId,k));
                 if(lTexture)
                 {
-                    return (const char *)lTexture->GetFileName();
+                    return (const char *)lTexture->GetRelativeFileName();
                 }
             }
         }
@@ -526,7 +501,7 @@ static const char * sGetTextureFileName( KFbxSurfaceMaterial * material, const c
             KFbxTexture* lTexture = KFbxCast <KFbxTexture>( prop.GetSrcObject(KFbxTexture::ClassId, j) );
             if(lTexture)
             {
-                return (const char *)lTexture->GetFileName();
+                return (const char *)lTexture->GetRelativeFileName();
             }
         }
     }
@@ -537,159 +512,386 @@ static const char * sGetTextureFileName( KFbxSurfaceMaterial * material, const c
 //
 //
 // -----------------------------------------------------------------------------
+template<typename T>
+static inline int sGetLayerElementIndex( const KFbxLayerElementTemplate<T> * elements, int index )
+{
+    if( NULL == elements ) return -1;
+
+    KFbxLayerElement::EReferenceMode refmode = elements->GetReferenceMode();
+
+    if( KFbxLayerElement::eDIRECT == refmode )
+    {
+        return index;
+    }
+    else if( KFbxLayerElement::eINDEX_TO_DIRECT == refmode )
+    {
+        return elements->GetIndexArray().GetAt(index);
+    }
+    else
+    {
+        GN_ERROR(sLogger)( "Unsupport reference mode: %d", refmode );
+        return -1;
+    }
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+template<typename T>
+static inline int sGetLayerElementIndex(
+    const KFbxLayerElementTemplate<T> * elements,
+    int vertexIndex,
+    int polygonIndex,
+    int cornerIndex )
+{
+    if( NULL == elements ) return -1;
+
+    KFbxLayerElement::EMappingMode mapmode = elements->GetMappingMode();
+
+    if( KFbxLayerElement::eBY_CONTROL_POINT == mapmode )
+    {
+        return sGetLayerElementIndex( elements, vertexIndex );
+    }
+    else if( KFbxLayerElement::eBY_POLYGON_VERTEX == mapmode )
+    {
+        return sGetLayerElementIndex( elements, polygonIndex * 3 + cornerIndex );
+    }
+    else if( KFbxLayerElement::eBY_POLYGON == mapmode )
+    {
+        return sGetLayerElementIndex( elements, polygonIndex );
+    }
+    else
+    {
+        GN_ERROR(sLogger)( "Invalid layer mapping mode: %d", mapmode );
+        return -1;
+    }
+}
+
+struct SortPolygonByMaterial
+{
+    KFbxLayerElementMaterial * materials;
+
+    SortPolygonByMaterial(KFbxLayerElementMaterial * m ) : materials(m) {}
+
+    bool operator()( const int & a, const int & b ) const
+    {
+        int ma = materials->GetIndexArray().GetAt(a);
+        int mb = materials->GetIndexArray().GetAt(b);
+        return ma < mb;
+    }
+};
+
+struct MeshVertex
+{
+    Vector3f pos;
+    Vector3f normal;
+    Vector2f uv;
+
+    static MeshVertexFormat sGetVertexFormat()
+    {
+        return MeshVertexFormat::XYZ_NORM_UV();
+    }
+};
+
+struct MeshVertexKey
+{
+    int pos;
+    int uv;
+    int normal;
+
+    MeshVertexKey()
+    {
+        ::memset( this, 0, sizeof(*this) );
+    }
+
+    uint64 hash() const
+    {
+        int sum = 0;
+        if( pos >= 0 ) sum += pos;
+        if( uv >= 0 ) sum += uv;
+        if( normal >= 0 ) sum += normal;
+        return (uint64)sum;
+    }
+
+    bool operator==( const MeshVertexKey & other ) const
+    {
+        return pos == other.pos
+            && uv == other.uv
+            && normal == other.normal;
+    }
+};
+
+typedef HashMap<
+    MeshVertexKey,
+    uint32,
+    HashMapUtils::HashFunc_HashMethod<MeshVertexKey>,
+    HashMapUtils::EqualFunc_Operator<MeshVertexKey> > MeshVertexHashMap;
+
+//
+//
+// -----------------------------------------------------------------------------
 static void
 sLoadFbxMesh(
     ModelHierarchyDesc           & desc,
+    const StrA                   & filename,
     ModelHierarchyDesc::NodeDesc & gnnode,
     FbxSdkWrapper                & sdk,
     KFbxNode                     * fbxnode,
-    KFbxMesh                     * mesh,
+    KFbxMesh                     * fbxmesh,
     const char *                   meshName )
 {
-    // TODO: prefix mesh meshName with file name
-
-    if( !mesh->IsTriangleMesh() )
+    if( !fbxmesh->IsTriangleMesh() )
     {
-        mesh = sdk.converter->TriangulateMesh( mesh );
-        if( NULL == mesh )
+        fbxmesh = sdk.converter->TriangulateMesh( fbxmesh );
+        if( NULL == fbxmesh )
         {
-            GN_ERROR(sLogger)( "Fail to triangulate mesh node: %s", meshName );
+            GN_ERROR(sLogger)( "Fail to triangulate fbxmesh node: %s", meshName );
             return;
         }
     }
 
-    // Retrieve mesh properties from layer 0
-    KFbxLayer * layer0 = mesh->GetLayer(0);
+    // For now, we supports layer 0 only.
+    KFbxLayer * layer0 = fbxmesh->GetLayer(0);
     if( NULL == layer0 )
     {
-        GN_ERROR(sLogger)( "The mesh does not have a layer: %s", meshName );
+        GN_ERROR(sLogger)( "The fbxmesh does not have a layer: %s", meshName );
         return;
     }
     if( NULL == layer0->GetNormals() )
     {
-        mesh->ComputeVertexNormals();
+        fbxmesh->ComputeVertexNormals();
     }
-    //KFbxLayerElementVertexColor* fbxColors  = sCheckLayerElement( layer0->GetVertexColors() );
-    KFbxLayerElementUV         * fbxUVs     = sCheckLayerElement( layer0->GetUVs() );
 
-    struct MeshVertex
+    // Get layers that we are interested in.
+    KFbxLayerElementUV          * fbxUVs       = layer0->GetUVs();
+    KFbxLayerElementNormal      * fbxNormals   = layer0->GetNormals();
+    KFbxLayerElementMaterial    * fbxMaterials = layer0->GetMaterials();
+    //KFbxLayerElementVertexColor * fbxColors    = layer0->GetVertexColors();
+    //KFbxLayerElementTangent     * fbxTangents  = layer0->GetTangents();
+    //KFbxLayerElementBinormal    * fbxBinormals = layer0->GetBinormals();
+
+    // How many materials are there?
+    int nummat;
+    if( fbxMaterials &&
+        KFbxLayerElement::eBY_POLYGON == fbxMaterials->GetMappingMode() &&
+        KFbxLayerElement::eINDEX_TO_DIRECT == fbxMaterials->GetReferenceMode() )
     {
-        Vector3f pos;
-        Vector3f normal;
-        Vector2f uv;
-    };
-
-    // load mesh
-    MeshResourceDesc  & gnmesh  = desc.meshes[meshName];
-    gnmesh.prim = PrimitiveType::TRIANGLE_LIST;
-    gnmesh.numvtx = (size_t)mesh->GetControlPointsCount();
-    gnmesh.numidx = (size_t)mesh->GetPolygonCount() * 3;
-    gnmesh.idx32  = gnmesh.numidx > 0x10000;
-    gnmesh.strides[0] = sizeof(MeshVertex);
-    gnmesh.offsets[0] = 0;
-    gnmesh.vtxfmt = MeshVertexFormat::XYZ_NORM_UV();
-
-    // read vertices
-    AutoRef<Blob> blob( new SimpleBlob( gnmesh.numvtx * gnmesh.strides[0] ) );
-    KFbxVector4 * fbxverts = mesh->GetControlPoints();
-    MeshVertex * vertices = (MeshVertex*)blob->data();
-    for( size_t i = 0; i < gnmesh.numvtx; ++i )
-    {
-        const KFbxVector4 & v = fbxverts[i];
-        vertices[i].pos.set( (float)v[0], (float)v[1], (float)v[2] );
-    }
-    gnmesh.vertices[0] = vertices;
-    desc.meshdata.append( blob );
-
-    // read polygons
-    int * fbxindices = mesh->GetPolygonVertices();
-    if( gnmesh.idx32 )
-    {
-        blob.attach( new SimpleBlob( 4 * gnmesh.numidx ) );
-        uint32 * indices = (uint32*)blob->data();
-        memcpy( indices, fbxindices, blob->size() );
+        // multiple materials
+        nummat = fbxnode->GetMaterialCount();
     }
     else
     {
-        blob.attach( new SimpleBlob( 2 * gnmesh.numidx ) );
-        uint16 * indices = (uint16*)blob->data();
-        for( size_t i = 0; i < gnmesh.numidx; ++i )
+        if( fbxMaterials && KFbxLayerElement::eALL_SAME != fbxMaterials->GetMappingMode() )
         {
-            indices[i] = (uint16)fbxindices[i];
+            GN_WARN(sLogger)("Unsupported FBX material layer: mapping mode=%d, reference mode=%d. It will be treated as eALL_SAME.", fbxMaterials->GetMappingMode(), fbxMaterials->GetReferenceMode() );
         }
+
+        // one material
+        nummat = 1;
     }
-    for( size_t i = 0; i < gnmesh.numidx; ++i )
+
+    // Get basic fbxmesh properties
+    int numtri = fbxmesh->GetPolygonCount();
+    int numidx = numtri * 3;
+
+    // Declare the hash table for vertices
+    MeshVertexHashMap vhash( (size_t)numidx * 2 );
+
+    int * fbxIndices = fbxmesh->GetPolygonVertices();
+    if( nummat > 1 )
     {
-        int vi = mesh->GetPolygonVertex( (int)i / 3, (int)i % 3 );
-        MeshVertex & v = vertices[vi];
+        // sort fbxIndices by material ID.
+        std::sort( fbxIndices, fbxIndices + numidx, SortPolygonByMaterial( fbxMaterials ) );
+    }
 
-        KFbxVector4 normal;
-        mesh->GetPolygonVertexNormal( (int)i / 3, (int)i % 3, normal );
-        normal.Normalize();
-        v.normal.set( (float)normal[0], (float)normal[1], (float)normal[2] );
+    // Create vertex blob that stores the final vertex buffer.
+    AutoRef<DynaArrayBlob<MeshVertex> > vertexBlob( new DynaArrayBlob<MeshVertex> );
+    if( !vertexBlob->array().reserve( numidx ) )
+    {
+        GN_ERROR(sLogger)( "Fail to load FBX mesh: out of memory." );
+        return;
+    }
 
-        KFbxVector2 uv = KFbxVector2(0.0, 0.0);
-        if (fbxUVs)
+    // Create index blob that stores the index buffer (assume 32-bit indices)
+    AutoRef<SimpleBlob> indexBlob( new SimpleBlob(numidx * sizeof(uint32) ) );
+    if( 0 == indexBlob->size() )
+    {
+        GN_ERROR(sLogger)( "Fail to load FBX mesh: out of memory." );
+        return;
+    }
+
+    // Create one model for each material. Note that there might be materials
+    // that are not referenced in this FBX mesh. So the actual number of models
+    // could be less than number of the materials.
+    DynaArray<ModelResourceDesc> models;
+    if( !models.resize( (size_t)nummat ) ) return;
+
+    // Split the FBX fbxmesh into multiple models, one material one model.
+    int uvIndex = 0;
+    int normalIndex = 0;
+    int lastMatID = -1;
+    for( int polygonIndex = 0; polygonIndex < numtri; ++polygonIndex )
+    {
+        int matid = nummat > 1 ? fbxMaterials->GetIndexArray().GetAt(polygonIndex) : 0;
+
+        // update mesh subset of each model
+        ModelResourceDesc & model = models[matid];
+        if( matid != lastMatID )
         {
-            switch( fbxUVs->GetReferenceMode() )
+            lastMatID = matid;
+            model = SimpleDiffuseModel::DESC;
+            model.subset.startidx = polygonIndex*3;
+            model.subset.numidx   = 0;
+            model.subset.basevtx  = 0;
+            // Final number of vertices are known yet.
+            //model.subset.numvert = ?;
+
+            // get the texture associated with the material.
+            KFbxSurfaceMaterial * mat = fbxnode->GetMaterial( matid );
+            if( mat )
             {
-                case KFbxLayerElement::eDIRECT:
-                    uv = fbxUVs->GetDirectArray().GetAt(vi);
-                    break;
-                case KFbxLayerElement::eINDEX_TO_DIRECT:
+                StrA dirname = fs::dirName( filename );
+                const char * diffuse = sGetTextureFileName( mat, KFbxSurfaceMaterial::sDiffuse );
+                if( model.hasTexture("ALBEDO_TEXTURE") && diffuse )
                 {
-                    int id = fbxUVs->GetIndexArray().GetAt(vi);
-                    uv = fbxUVs->GetDirectArray().GetAt(id);
-                    break;
+                    model.textures["ALBEDO_TEXTURE"].resourceName = fs::resolvePath( dirname, diffuse );
                 }
-                default:
-                    // other reference modes not supported here.
-                    break;
             }
         }
-        v.uv.set( (float)uv[0], (float)uv[1] );
-    }
-    gnmesh.indices = blob->data();
-    desc.meshdata.append( blob );
+        model.subset.numidx += 3;
 
-    // TODO: assign model textures
-    KFbxLayerElementMaterial* materials = layer0->GetMaterials();
-    if( materials && KFbxLayerElement::eALL_SAME == materials->GetMappingMode() )
-    {
-        //
-        // there's only one material for this mesh
-        //
-
-        // update model
-        ModelResourceDesc & gnmodel = desc.models[meshName];
-        //gnmodel = SimpleWireframeModel::DESC;
-        gnmodel = SimpleDiffuseModel::DESC;
-        gnmodel.mesh = meshName;
-        gnmodel.subset.clear();
-
-        // get the texture associated with the material.
-        KFbxSurfaceMaterial * mat0 = fbxnode->GetMaterialCount() > 0 ? fbxnode->GetMaterial( 0 ) : NULL;
-        if( mat0 )
+        // add the polygon to the model
+        for( int i = 0; i < 3; ++i )
         {
-            const char * diffuse = sGetTextureFileName( mat0, KFbxSurfaceMaterial::sDiffuse );
-            if( gnmodel.hasTexture("ALBEDO_TEXTURE") && diffuse )
+            int posIndex = fbxIndices[polygonIndex*3+i];
+
+            // get index into UV elements
+            if( -1 != uvIndex )
             {
-                gnmodel.textures["ALBEDO_TEXTURE"].resourceName = diffuse;
+                uvIndex = sGetLayerElementIndex( fbxUVs, posIndex, polygonIndex, i );
             }
+
+            // get index into normal elements.
+            if( -1 != normalIndex )
+            {
+                normalIndex = sGetLayerElementIndex( fbxNormals, posIndex, polygonIndex, i );
+            }
+
+            MeshVertexKey key;
+            key.pos = posIndex;
+            key.uv = uvIndex;
+            key.normal = normalIndex;
+
+            // If the key exists already, the pair will point to it.
+            // If the key does not exisit, the pair will point to the newly inserted one.
+            // Either way, pair->value should give us the correct index of the vertex.
+            MeshVertexHashMap::KeyValuePair * pair;
+            bool isNewVertex = vhash.insert( key, (uint32)vhash.size(), &pair );
+            uint32 vertexIndex = pair->value;
+
+            if( isNewVertex )
+            {
+                // If it is a new vertex, append it to the vertex blob.
+
+                MeshVertex vertex;
+
+                const KFbxVector4 & fbxvertex = fbxmesh->GetControlPoints()[posIndex];
+                vertex.pos.set( (float)fbxvertex[0], (float)fbxvertex[1], (float)fbxvertex[2] );
+
+                const KFbxVector4 & fbxnormal = fbxNormals->GetDirectArray().GetAt(normalIndex);
+                vertex.normal.set( (float)fbxnormal[0], (float)fbxnormal[1], (float)fbxnormal[2] );
+
+                if( fbxUVs )
+                {
+                    const KFbxVector2 & fbxUV = fbxUVs->GetDirectArray().GetAt(uvIndex);
+                    // BUGBUG: for some reason, U coordinates has to be inverted (1.0-v) to make the
+                    // model look right in the viewer.
+                    vertex.uv.set( (float)fbxUV[0], (float)(1.0-fbxUV[1]) );
+                }
+                else
+                {
+                    vertex.uv.set( 0, 0 );
+                }
+
+                vertexBlob->array().append( vertex );
+
+                GN_ASSERT( vertexBlob->array().size() == (vertexIndex + 1) );
+            }
+
+            // add the vertex index into the final index buffer
+            uint32 * indices = (uint32*)indexBlob->data();
+            indices[polygonIndex*3+i] = vertexIndex;
+        }
+    }
+
+    // Now both vertex and index buffers are filled up. Models' subset information are ready too.
+    // We are almost there.
+
+    // Compress index buffer to 16 bits, if possible.
+    if( vertexBlob->array().size() <= 0x10000 )
+    {
+        AutoRef<SimpleBlob> ib16( new SimpleBlob (numidx * sizeof(uint16) ) );
+        if( 0 == ib16->size() )
+        {
+            GN_ERROR(sLogger)( "Fail to load FBX mesh: out of memory." );
+            return;
         }
 
-        // attach the model to the node.
-        calculateBoundingBox(
-            gnnode.bbox,
-            &vertices->pos.x, sizeof(MeshVertex),
-            &vertices->pos.y, sizeof(MeshVertex),
-            &vertices->pos.z, sizeof(MeshVertex),
-            gnmesh.numvtx );
-        gnnode.models.append( meshName );
+        const uint32 * i32 = (const uint32*)indexBlob->data();
+        uint16       * i16 = (uint16 *)ib16->data();
+        for( size_t i = 0; i < (size_t)numidx; ++i )
+        {
+            i16[i] = (uint16)i32[i];
+        }
+
+        indexBlob = ib16;
     }
-    else
+
+    // calculate the bounding box of the mesh
+    const MeshVertex * vertices = vertexBlob->array().cptr();
+    Boxf boundingBox;
+    calculateBoundingBox(
+        boundingBox,
+        &vertices->pos.x, sizeof(MeshVertex),
+        &vertices->pos.y, sizeof(MeshVertex),
+        &vertices->pos.z, sizeof(MeshVertex),
+        vertexBlob->array().size() );
+
+    // Fill up the rest of informations for each models.
+    for( size_t i = 0; i < models.size(); ++i )
     {
-        GN_TODO( "Multi-material mesh is not supported yet." );
+        models[i].mesh           = meshName;
+        models[i].subset.numvtx  = (uint32)vertexBlob->array().size();
+    }
+
+    // Now copy everthing to the output descriptor. And we are done!
+    MeshResourceDesc & gnmesh = desc.meshes[meshName];
+    gnmesh.clear();
+    gnmesh.prim        = PrimitiveType::TRIANGLE_LIST;
+    gnmesh.numvtx      = (uint32)vertexBlob->array().size();
+    gnmesh.numidx      = numidx;
+    gnmesh.idx32       = gnmesh.numvtx > 0x10000;
+    gnmesh.vtxfmt      = MeshVertex::sGetVertexFormat();
+    gnmesh.vertices[0] = (void*)vertices;
+    gnmesh.strides[0]  = sizeof(MeshVertex);
+    gnmesh.offsets[0]  = 0;
+    gnmesh.indices     = indexBlob->data();
+
+    desc.meshdata.append( vertexBlob );
+    desc.meshdata.append( indexBlob );
+
+    gnnode.bbox = boundingBox;
+
+    for( size_t i = 0; i < models.size(); ++i )
+    {
+        ModelResourceDesc & model = models[i];
+
+        // skip empty models.
+        if( model.effect.empty() ) continue;
+
+        StrA modelName = stringFormat( "%s.%d", meshName, i );
+        desc.models[modelName] = model;
+        gnnode.models.append( modelName );
     }
 }
 
@@ -699,6 +901,7 @@ sLoadFbxMesh(
 static bool
 sLoadFbxNodeRecursivly(
     ModelHierarchyDesc & desc,
+    const StrA         & filename,
     FbxSdkWrapper      & sdk,
     KFbxNode           * node,
     KFbxNode           * parent )
@@ -710,9 +913,21 @@ sLoadFbxNodeRecursivly(
     const char * name = node->GetName();
     if( desc.nodes.find(name) )
     {
-        GN_VERBOSE(sLogger)( "Node named %s exists already.", name );
+        GN_WARN(sLogger)( "Node named %s exists already.", name );
         return true;
     }
+
+    // Get node type
+    KFbxNodeAttribute* attrib = node->GetNodeAttribute();
+    KFbxNodeAttribute::EAttributeType type = attrib ? attrib->GetAttributeType() : KFbxNodeAttribute::eUNIDENTIFIED;
+
+//    if( KFbxNodeAttribute::eSKELETON == type )
+//    {
+//        GN_INFO(sLogger)( "Skeleton animation is not supported yet. So Ignore skeleton node and and its sub nodes: name=%s", name );
+//        return true;
+//    }
+
+    // we don't support skeleton mesh yet. So ignore skeleton node for now.
 
     const KFbxXMatrix & localTransform = node->GetScene()->GetEvaluator()->GetNodeLocalTransform(node);
     KFbxVector4    t = localTransform.GetT();
@@ -726,23 +941,27 @@ sLoadFbxNodeRecursivly(
     gnnode.scaling.set( (float)s[0], (float)s[1], (float)s[2] );
     gnnode.bbox.set( 0, 0, 0, 0, 0, 0 );
 
-    KFbxNodeAttribute* attrib = node->GetNodeAttribute();
-    KFbxNodeAttribute::EAttributeType type = attrib ? attrib->GetAttributeType() : KFbxNodeAttribute::eUNIDENTIFIED;
     if( KFbxNodeAttribute::eMESH == type )
     {
         // load mesh node
-        sLoadFbxMesh( desc, gnnode, sdk, node, (KFbxMesh*)attrib, name );
+        StrA fullMeshName = filename + "." + name;
+        sLoadFbxMesh( desc, filename, gnnode, sdk, node, (KFbxMesh*)attrib, fullMeshName );
     }
-    else
+    else if(
+        // Some nodes are ignored silently.
+        KFbxNodeAttribute::eNULL != type &&
+        KFbxNodeAttribute::eUNIDENTIFIED != type &&
+        KFbxNodeAttribute::eLIGHT != type &&
+        KFbxNodeAttribute::eCAMERA != type &&
+        KFbxNodeAttribute::eSKELETON != type )
     {
-        // create an empty node.
-        GN_VERBOSE(sLogger)( "Ignore unsupported node: type=%d, name=%s", type, name );
+        GN_WARN(sLogger)( "Ignore unsupported node: type=%d, name=%s", type, name );
     }
 
     // load children
     for( int i = 0; i < node->GetChildCount(); ++i )
     {
-        if( !sLoadFbxNodeRecursivly( desc, sdk, node->GetChild( i ), node ) )
+        if( !sLoadFbxNodeRecursivly( desc, filename, sdk, node->GetChild( i ), node ) )
         {
             return false;
         }
@@ -795,12 +1014,12 @@ sLoadModelHierarchyFromFBX( ModelHierarchyDesc & desc, File & file )
         return false;
     }
 
-    return sLoadFbxNodeRecursivly( desc, sdk, gScene->GetRootNode(), NULL );
+    return sLoadFbxNodeRecursivly( desc, file.name(), sdk, gScene->GetRootNode(), NULL );
 
 #else
 
     desc.clear();
-    GN_ERROR(sLogger)( "Fail to load file %s: FBX is not supported.", file.name() );
+    GN_ERROR(sLogger)( "Fail to load file %s: FBX is not supported.", file.name().cptr() );
     return false;
 
 #endif
@@ -1090,7 +1309,7 @@ sLoadModelHierarchyFromXML( ModelHierarchyDesc & desc, File & file )
             "    line   : %d\n"
             "    column : %d\n"
             "    error  : %s",
-            file.name(),
+            file.name().cptr(),
             xpr.errLine,
             xpr.errColumn,
             xpr.errInfo.cptr() );
@@ -1430,30 +1649,42 @@ bool GN::gfx::ModelHierarchyDesc::loadFromFile( const char * filename )
     // do loading
     if( sStrEndWithI( filename, ".xml" ) )
     {
-        return xml::sLoadModelHierarchyFromXML( *this, *fp );
+        if( !xml::sLoadModelHierarchyFromXML( *this, *fp ) ) return false;
     }
     else if( sStrEndWithI( filename, ".ase" ) )
     {
-        return ase::sLoadModelHierarchyFromASE( *this, *fp );
+        if( !ase::sLoadModelHierarchyFromASE( *this, *fp ) ) return false;
     }
     else if( sStrEndWithI( filename, ".fbx" ) )
     {
-        return fbx::sLoadModelHierarchyFromFBX( *this, *fp );
+        if( !fbx::sLoadModelHierarchyFromFBX( *this, *fp ) ) return false;
     }
     else if( sStrEndWithI( filename, ".xpr" ) ||
              sStrEndWithI( filename, ".tpr" ) )
     {
-        return xpr::sLoadModelHierarchyFromXPR( *this, *fp );
+        if( !xpr::sLoadModelHierarchyFromXPR( *this, *fp ) ) return false;
     }
     else if( sStrEndWithI( filename, ".mesh.bin" ) )
     {
-        return bin::sLoadModelHierarchyFromMeshBinary( *this, *fp );
+        if( !bin::sLoadModelHierarchyFromMeshBinary( *this, *fp ) ) return false;
     }
     else
     {
         GN_ERROR(sLogger)( "Unknown file extension: %s", ext.cptr() );
         return false;
     }
+
+    size_t totalVerts = 0;
+    size_t totalFaces = 0;
+    for( const StringMap<char,MeshResourceDesc>::KeyValuePair * p = meshes.first(); p != NULL; p = meshes.next( p ) )
+    {
+        const MeshResourceDesc & m = p->value;
+        totalVerts += m.numvtx;
+        totalFaces += m.numidx / 3;
+    }
+    GN_INFO(sLogger)( "Total vertices: %d, faces: %d", totalVerts, totalFaces );
+
+    return true;
 }
 
 ///

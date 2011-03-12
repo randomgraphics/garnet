@@ -125,7 +125,7 @@ namespace GN
         ///
         /// return file name string
         ///
-        const char * name() const { return mName; }
+        const StrA & name() const { return mName; }
 
         ///
         /// dtor
