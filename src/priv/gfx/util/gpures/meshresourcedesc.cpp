@@ -465,7 +465,7 @@ AutoRef<Blob> sLoadFromMeshXMLFile( File & fp, MeshResourceDesc & desc )
             "    line   : %d\n"
             "    column : %d\n"
             "    error  : %s",
-            fp.name(),
+            fp.name().cptr(),
             xpr.errLine,
             xpr.errColumn,
             xpr.errInfo.cptr() );

@@ -57,7 +57,10 @@ namespace GN
 #else
         void * ptr = _aligned_malloc( sizeInBytes, alignment );
 #endif
-        if ( 0 == ptr ) { GN_ERROR(sHeapLogger)( "out of memory!" ); }
+        if ( 0 == ptr )
+        {
+            GN_ERROR(sHeapLogger)( "out of memory!" );
+        }
         return ptr;
     }
 
@@ -68,7 +71,7 @@ namespace GN
     {
         if( 0 == alignment ) alignment = 1;
 #if GN_POSIX
-        ptr = realloc( ptr, sizeInBytes );        
+        ptr = realloc( ptr, sizeInBytes );
 #else
         ptr = _aligned_realloc( ptr, sizeInBytes, alignment );
         if ( 0 == ptr ) { GN_ERROR(sHeapLogger)( "out of memory!" ); }
