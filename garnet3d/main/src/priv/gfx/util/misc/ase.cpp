@@ -869,7 +869,7 @@ static bool sReadMesh( AseMeshInternal & m, const Matrix44f & transform, AseFile
     }
     else
     {
-        GN_WARN(sLogger)( "Current mesh has no texcoord information. We'll have to fake it..." );
+        // The mesh has no texcoord information.
 
         Vector3f zero(0,0,0);
 
