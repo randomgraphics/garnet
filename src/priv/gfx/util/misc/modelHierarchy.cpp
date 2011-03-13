@@ -571,7 +571,10 @@ struct SortPolygonByMaterial
 {
     KFbxLayerElementMaterial * materials;
 
-    SortPolygonByMaterial(KFbxLayerElementMaterial * m ) : materials(m) {}
+    SortPolygonByMaterial( KFbxLayerElementMaterial * m )
+        : materials(m)
+    {
+    }
 
     bool operator()( const int & a, const int & b ) const
     {
@@ -595,37 +598,16 @@ struct MeshVertex
 
 struct MeshVertexKey
 {
-    int pos;
-    int uv;
-    int normal;
-
-    MeshVertexKey()
-    {
-        ::memset( this, 0, sizeof(*this) );
-    }
-
-    uint64 hash() const
-    {
-        int sum = 0;
-        if( pos >= 0 ) sum += pos;
-        if( uv >= 0 ) sum += uv;
-        if( normal >= 0 ) sum += normal;
-        return (uint64)sum;
-    }
-
-    bool operator==( const MeshVertexKey & other ) const
-    {
-        return pos == other.pos
-            && uv == other.uv
-            && normal == other.normal;
-    }
+    int      pos;
+    Vector3f normal;
+    Vector2f uv;
 };
 
 typedef HashMap<
     MeshVertexKey,
     uint32,
-    HashMapUtils::HashFunc_HashMethod<MeshVertexKey>,
-    HashMapUtils::EqualFunc_Operator<MeshVertexKey> > MeshVertexHashMap;
+    HashMapUtils::HashFunc_MemoryHash<MeshVertexKey>,
+    HashMapUtils::EqualFunc_MemoryCompare<MeshVertexKey> > MeshVertexHashMap;
 
 //
 //
@@ -697,11 +679,24 @@ sLoadFbxMesh(
     // Declare the hash table for vertices
     MeshVertexHashMap vhash( (size_t)numidx * 2 );
 
+    // sort polygon by material
     int * fbxIndices = fbxmesh->GetPolygonVertices();
+    DynaArray<int> sortedPolygons;
+    if( !sortedPolygons.resize( numtri ) )
+    {
+        GN_ERROR(sLogger)( "Fail to load FBX mesh: out of memory." );
+        return;
+    }
+    for( size_t i = 0; i < sortedPolygons.size(); ++i )
+    {
+        sortedPolygons[i] = (int)i;
+    }
     if( nummat > 1 )
     {
-        // sort fbxIndices by material ID.
-        std::sort( fbxIndices, fbxIndices + numidx, SortPolygonByMaterial( fbxMaterials ) );
+        std::sort(
+            sortedPolygons.begin(),
+            sortedPolygons.end(),
+            SortPolygonByMaterial( fbxMaterials ) );
     }
 
     // Create vertex blob that stores the final vertex buffer.
@@ -730,9 +725,12 @@ sLoadFbxMesh(
     int uvIndex = 0;
     int normalIndex = 0;
     int lastMatID = -1;
-    for( int polygonIndex = 0; polygonIndex < numtri; ++polygonIndex )
+    for( size_t sortedPolygonIndex = 0; sortedPolygonIndex < sortedPolygons.size(); ++sortedPolygonIndex )
     {
+        int polygonIndex = sortedPolygons[sortedPolygonIndex];
+
         int matid = nummat > 1 ? fbxMaterials->GetIndexArray().GetAt(polygonIndex) : 0;
+        GN_ASSERT( matid >= lastMatID );
 
         // update mesh subset of each model
         ModelResourceDesc & model = models[matid];
@@ -740,7 +738,8 @@ sLoadFbxMesh(
         {
             lastMatID = matid;
             model = SimpleDiffuseModel::DESC;
-            model.subset.startidx = polygonIndex*3;
+            //model = SimpleWireframeModel::DESC;
+            model.subset.startidx = sortedPolygonIndex*3;
             model.subset.numidx   = 0;
             model.subset.basevtx  = 0;
             // Final number of vertices are known yet.
@@ -777,10 +776,22 @@ sLoadFbxMesh(
                 normalIndex = sGetLayerElementIndex( fbxNormals, posIndex, polygonIndex, i );
             }
 
+            // create vetex key
             MeshVertexKey key;
             key.pos = posIndex;
-            key.uv = uvIndex;
-            key.normal = normalIndex;
+            const KFbxVector4 & fbxnormal = fbxNormals->GetDirectArray().GetAt(normalIndex);
+            key.normal.set( (float)fbxnormal[0], (float)fbxnormal[1], (float)fbxnormal[2] );
+            if( fbxUVs )
+            {
+                const KFbxVector2 & fbxUV = fbxUVs->GetDirectArray().GetAt(uvIndex);
+                // BUGBUG: for some reason, U coordinates has to be inverted (1.0-v) to make the
+                // model look right in the viewer.
+                key.uv.set( (float)fbxUV[0], (float)(1.0-fbxUV[1]) );
+            }
+            else
+            {
+                key.uv.set( FLT_MAX, FLT_MAX );
+            }
 
             // If the key exists already, the pair will point to it.
             // If the key does not exisit, the pair will point to the newly inserted one.
@@ -797,21 +808,8 @@ sLoadFbxMesh(
 
                 const KFbxVector4 & fbxvertex = fbxmesh->GetControlPoints()[posIndex];
                 vertex.pos.set( (float)fbxvertex[0], (float)fbxvertex[1], (float)fbxvertex[2] );
-
-                const KFbxVector4 & fbxnormal = fbxNormals->GetDirectArray().GetAt(normalIndex);
-                vertex.normal.set( (float)fbxnormal[0], (float)fbxnormal[1], (float)fbxnormal[2] );
-
-                if( fbxUVs )
-                {
-                    const KFbxVector2 & fbxUV = fbxUVs->GetDirectArray().GetAt(uvIndex);
-                    // BUGBUG: for some reason, U coordinates has to be inverted (1.0-v) to make the
-                    // model look right in the viewer.
-                    vertex.uv.set( (float)fbxUV[0], (float)(1.0-fbxUV[1]) );
-                }
-                else
-                {
-                    vertex.uv.set( 0, 0 );
-                }
+                vertex.normal = key.normal;
+                vertex.uv = key.uv;
 
                 vertexBlob->array().append( vertex );
 
@@ -820,7 +818,7 @@ sLoadFbxMesh(
 
             // add the vertex index into the final index buffer
             uint32 * indices = (uint32*)indexBlob->data();
-            indices[polygonIndex*3+i] = vertexIndex;
+            indices[sortedPolygonIndex*3+i] = vertexIndex;
         }
     }
 
@@ -876,6 +874,7 @@ sLoadFbxMesh(
     gnmesh.strides[0]  = sizeof(MeshVertex);
     gnmesh.offsets[0]  = 0;
     gnmesh.indices     = indexBlob->data();
+    GN_INFO(sLogger)( "Load FBX mesh %s: %d vertices, %d faces", meshName, gnmesh.numvtx, gnmesh.numidx / 3 );
 
     desc.meshdata.append( vertexBlob );
     desc.meshdata.append( indexBlob );
