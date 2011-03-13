@@ -647,13 +647,17 @@ sLoadFbxMesh(
         fbxmesh->ComputeVertexNormals();
     }
 
-    // Get layers that we are interested in.
+    // Get basic fbxmesh properties
+    int                         * fbxIndices   = fbxmesh->GetPolygonVertices();
+    const KFbxVector4           * fbxPositions = fbxmesh->GetControlPoints();
     KFbxLayerElementUV          * fbxUVs       = layer0->GetUVs();
     KFbxLayerElementNormal      * fbxNormals   = layer0->GetNormals();
     KFbxLayerElementMaterial    * fbxMaterials = layer0->GetMaterials();
     //KFbxLayerElementVertexColor * fbxColors    = layer0->GetVertexColors();
     //KFbxLayerElementTangent     * fbxTangents  = layer0->GetTangents();
     //KFbxLayerElementBinormal    * fbxBinormals = layer0->GetBinormals();
+    int                           numtri       = fbxmesh->GetPolygonCount();
+    int                           numidx       = numtri * 3;
 
     // How many materials are there?
     int nummat;
@@ -675,15 +679,10 @@ sLoadFbxMesh(
         nummat = 1;
     }
 
-    // Get basic fbxmesh properties
-    int numtri = fbxmesh->GetPolygonCount();
-    int numidx = numtri * 3;
-
     // Declare the hash table for vertices
     MeshVertexHashMap vhash( (size_t)numidx * 2 );
 
     // sort polygon by material
-    int * fbxIndices = fbxmesh->GetPolygonVertices();
     DynaArray<int> sortedPolygons;
     if( !sortedPolygons.resize( numtri ) )
     {
@@ -762,6 +761,8 @@ sLoadFbxMesh(
         }
         model.subset.numidx += 3;
 
+        // TODO: check polygon winding
+
         // add the polygon to the model
         for( int i = 0; i < 3; ++i )
         {
@@ -809,7 +810,7 @@ sLoadFbxMesh(
 
                 MeshVertex vertex;
 
-                const KFbxVector4 & fbxvertex = fbxmesh->GetControlPoints()[posIndex];
+                const KFbxVector4 & fbxvertex = fbxPositions[posIndex];
                 vertex.pos.set( (float)fbxvertex[0], (float)fbxvertex[1], (float)fbxvertex[2] );
                 vertex.normal = key.normal;
                 vertex.uv = key.uv;
