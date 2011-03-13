@@ -10,10 +10,13 @@
 #include <assimp/IOSystem.h>
 
 #ifdef HAS_FBX
+# if GN_GCC
+#  pragma GCC diagnostic ignored "-Wunused"
+# endif
 #include <fbxsdk.h>
 #include <fbxfilesdk/kfbxio/kfbximporter.h>
-#include <fbxfilesdk/fbxfilesdk_nsuse.h>
 #include <fbxfilesdk/kfbxplugins/kfbxgeometryconverter.h>
+#include <fbxfilesdk/fbxfilesdk_nsuse.h>
 #endif
 
 using namespace GN;
