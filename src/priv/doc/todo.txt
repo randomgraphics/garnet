@@ -4,15 +4,13 @@ TODO
 - 程序中标注TODO的地方
 
 - p0
+  - GNsampleDolphin crashes with D3D11 gpu because of D3D11 error.
+  - Skin mesh test case: porting DXSDK sample.
+    - SkinnedMesh entity
   - Special "use current" tag in GpuContext for color and depth render target.
-  - FBX importer
-    - replace FBX test app with something else (not owned by Autodesk).
-    - Fix FBX texture coordinate loading failure. (a01.fbx)
-    - Fix relative texture loadign failure. (a01.fbx)
   - D3D resource leaking in GNtestEngine and GNsampleDolphin:
     - It comes from Cg Toolkit. And upgrading to the lasted Feb11 version
       doesn't solve the issue.
-  - Optimized vector and geomtry class to be SSE/xnamath compatible.
   - Winphone 7 integration
   - Cuda or OpenCL integration
   - runtime tweakable parameters: client/server communication
@@ -28,15 +26,11 @@ TODO
   	- queue, list, set
 
 - p1
-  - optimize vector/matrix classes (using xnamath or SSE2)
+  - Optimized vector and matrix library using SIMD instructions. (simd.h)
   - upgrade Cg runtime.
   - Use Windows font engine (Direct2D?)
   - mesh converter/loader
     - load and view specific model, instead of the whole scene
-    - better ASE support:
-      - opacity map (teraiyuki\woman.ase)
-      - non-geometry node (games\swordman\1.ase)
-  - skin mesh test case: porting DXSDK sample.
   - Unit test for the CommandBuffer class.
   - New build system:
     - based on GNU make.
@@ -60,6 +54,9 @@ TODO
   - GPU resouce aliasing
 
 - p2
+  - FBX importer
+    - skeleton and animation
+    - replace FBX test app with something else (not owned by Autodesk).
   - refine PCH builder to generate PCH out of "pch.h" directly, instead of from "pch.cpp".
     so that the PCH builder works the same way in gcc and vstudio.
   - Refine uniform loading from XML
@@ -149,6 +146,12 @@ RESOLVE ISSUES
     - COLLADA: need to get a good loader for that.
     - ma (maya ascii): need to write my own loader.
     - assimp: promising candidate. Investe more.
+
+- Do we need to separate shading language enum and shader model enum?
+  - RESOLVED: Yes.
+    - One shading language, like Cg, could be compiled into multiple shader models; and vice versa.
+    - Shader model enum is used to determine the GPU hardware caps.
+    - Shading language enum is used to choose the shader compiler.
 
 OPEN ISSUES
 ===========

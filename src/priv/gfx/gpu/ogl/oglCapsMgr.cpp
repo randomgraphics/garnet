@@ -40,6 +40,7 @@ sFindExtension( const DynaArray<StrA> & glexts, const char * ext )
 {
     return glexts.end() != std::find( glexts.begin(), glexts.end(), ext );
 }
+
 ///
 /// Check required extensions
 // ------------------------------------------------------------------------
@@ -65,6 +66,40 @@ static bool sCheckRequiredExtensions( const DynaArray<StrA> & extensions )
         ++p;
     }
     return !fail;
+}
+
+///
+/// Get OpenGL version number
+// ------------------------------------------------------------------------
+static void sGetOpenGLVersion( const char * version, int * major, int * minor, int * release )
+{
+    // According to OpenGL standard, the version must starts with: major.minor or major.minor.release
+
+    StrA str;
+
+    // get major version
+    const char * p = version;
+    while( '.' != *p ) ++p;
+    if( major ) *major = string2Integer<int>( StrA(version, p-version).cptr(), 0 );
+
+    // get minor version
+    version = p + 1;
+    p = version;
+    while( *p && '.' != *p && ' ' != *p ) ++p;
+    if( minor ) *minor = string2Integer<int>( StrA(version, p-version).cptr(), 0 );
+
+    // get release version
+    if( *p && '.' == *p )
+    {
+        version = p + 1;
+        p = version;
+        while( *p && ' ' != *p ) ++p;
+        if( release ) *release = string2Integer<int>( StrA(version, p-version).cptr(), 0 );
+    }
+    else
+    {
+        if( release ) *release = 0;
+    }
 }
 
 ///
@@ -117,6 +152,14 @@ static void sOutputOGLInfo( intptr_t disp, const DynaArray<StrA> & glexts )
     const char * vendor   = (const char *)glGetString(GL_VENDOR);
     const char * version  = (const char *)glGetString(GL_VERSION);
     const char * renderer = (const char *)glGetString(GL_RENDERER);
+    const char * glsl     = "N/A";
+
+    int major;
+    sGetOpenGLVersion( version, &major, NULL, NULL );
+    if( major >= 2 )
+    {
+        glsl = (const char*)glGetString( GL_SHADING_LANGUAGE_VERSION );
+    }
 
     info = GN::stringFormat(
         "\n\n"
@@ -125,8 +168,9 @@ static void sOutputOGLInfo( intptr_t disp, const DynaArray<StrA> & glexts )
         "---------------------------------------------------\n"
         "    OpenGL vendor      :    %s\n"
         "    OpenGL version     :    %s\n"
-        "    OpenGL renderer    :    %s\n",
-        vendor, version, renderer );
+        "    OpenGL renderer    :    %s\n"
+        "    GLSL version       :    %s\n",
+        vendor, version, renderer, glsl );
 
     // caps. info.
     GLint ts, tu;
@@ -229,7 +273,39 @@ bool GN::gfx::OGLGpu::capsInit()
         mCaps.maxVertexAttributes = 0;
     }
 
+    // Get Opengl Major version
+    int majorVersion;
+    sGetOpenGLVersion( (const char *)glGetString( GL_VERSION ), &majorVersion, NULL, NULL );
+
     // shader caps
+    if( GLEW_ARB_vertex_program && GLEW_ARB_fragment_program )
+    {
+        mCaps.shaderModels |= ShaderModel::ARB1;
+    }
+    if( GLEW_ARB_shader_objects && GLEW_ARB_shading_language_100 && GLEW_ARB_vertex_shader && GLEW_ARB_fragment_shader )
+    {
+        mCaps.shaderModels |= ShaderModel::GLSL_1_00;
+    }
+    if( majorVersion >= 2 )
+    {
+        int glslMajor, glslMinor;
+        sGetOpenGLVersion( (const char *)glGetString( GL_SHADING_LANGUAGE_VERSION ), &glslMajor, &glslMinor, NULL );
+
+        if( glslMajor > 1 || (glslMajor==1 && glslMinor >= 20) )
+        {
+            mCaps.shaderModels |= ShaderModel::GLSL_1_20;
+        }
+        if( glslMajor > 1 || (glslMajor==1 && glslMinor >= 30) )
+        {
+            mCaps.shaderModels |= ShaderModel::GLSL_1_30;
+        }
+        if( glslMajor > 1 || (glslMajor==1 && glslMinor >= 50) )
+        {
+            mCaps.shaderModels |= ShaderModel::GLSL_1_50;
+        }
+    }
+    mCaps.cg = HAS_CG_OGL;
+#if 0
     mCaps.gpuProgramLanguage[ShaderStage::VS][GpuProgramLanguage::ARB1] =
     mCaps.gpuProgramLanguage[ShaderStage::PS][GpuProgramLanguage::ARB1] =
         (!!GLEW_ARB_vertex_program) && (!!GLEW_ARB_fragment_program);
@@ -243,6 +319,7 @@ bool GN::gfx::OGLGpu::capsInit()
     mCaps.gpuProgramLanguage[ShaderStage::PS][GpuProgramLanguage::CG] =
         (CG_PROFILE_UNKNOWN != cgGLGetLatestProfile( CG_GL_VERTEX )) &&
         (CG_PROFILE_UNKNOWN != cgGLGetLatestProfile( CG_GL_FRAGMENT ));
+#endif
 #endif
 
     // success;

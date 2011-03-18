@@ -102,6 +102,7 @@ public:
 
         GpuProgramDesc gpd;
         gpd.lang = GpuProgramLanguage::HLSL9;
+        gpd.shaderModels = ShaderModel::SM_2_0;
         gpd.vs.source = rippleCode;
         gpd.vs.entry = "vsmain";
         gpd.ps.source = rippleCode;

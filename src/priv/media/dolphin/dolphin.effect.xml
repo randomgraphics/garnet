@@ -25,7 +25,7 @@
 
 		<!-- HLSL9 program -->
 
-		<gpuprogram name="hlsl9" lang="HLSL9">
+		<gpuprogram name="hlsl9" lang="HLSL9" shaderModel="SM_2_0" >
 			<uniref uniform="pvw"       shaderParameter="g_matWorldViewProj"/>
 			<uniref uniform="viewworld" shaderParameter="g_matWorldView"/>
 			<uniref uniform="weights"   shaderParameter="g_vBlendWeights"/>
@@ -147,7 +147,7 @@ void main(
 
 		<!-- GLSL program -->
 
-		<gpuprogram name="glsl" lang="GLSL">
+		<gpuprogram name="glsl" lang="GLSL" shaderModel="GLSL_1_00">
 			<uniref uniform="pvw"         shaderParameter="g_matWorldViewProj"/>
 			<uniref uniform="viewworld"   shaderParameter="g_matWorldView"/>
 			<uniref uniform="weights"     shaderParameter="g_vBlendWeights"/>
@@ -253,7 +253,7 @@ void main()
 
 		<!-- Cg program -->
 
-		<gpuprogram name="cg" lang="CG">
+		<gpuprogram name="cg" lang="CG" shaderModel="ARB1|GLSL_1_00|SM_2_0">
 			<uniref uniform="pvw"       shaderParameter="g_matWorldViewProj"/>
 			<uniref uniform="viewworld" shaderParameter="g_matWorldView"/>
 			<uniref uniform="weights"   shaderParameter="g_vBlendWeights"/>

@@ -1596,7 +1596,7 @@ namespace GN
     size_t string2SignedInteger( sint64 & result, int bits, int base, const char * s );
     size_t string2UnsignedInteger( uint64 & result, int bits, int base, const char * s );
 
-    template<typename T> size_t string2Integer( T & i, const char * s, int base = 10 )
+    template<typename T> inline size_t string2Integer( T & i, const char * s, int base = 10 )
     {
         size_t n;
 
@@ -1633,9 +1633,17 @@ namespace GN
 
     size_t string2Double( double & i, const char * s );
 
-    template<typename T> size_t string2Number( T & i, const char * s ) { return string2Integer<T>( i, s, 10 ); }
+    template<typename T> inline size_t string2Number( T & i, const char * s ) { return string2Integer<T>( i, s, 10 ); }
     template<> inline size_t string2Number<float>( float & i, const char * s ) { return string2Float( i, s ); }
     template<> inline size_t string2Number<double>( double & i, const char * s ) { return string2Double( i, s ); }
+    template<typename T> T string2Number( const char * s, T defaultValue )
+    {
+        T result;
+        if( string2Number<T>( result, s ) )
+            return result;
+        else
+            return defaultValue;
+    }
 
     ///
     /// Convert string to float array. String should be in format like:

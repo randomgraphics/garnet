@@ -88,6 +88,22 @@ static void sPostError( const XmlNode & node, const StrA & msg )
 }
 
 //
+// post warning message
+// -----------------------------------------------------------------------------
+static void sPostWarning( const XmlNode & node, const StrA & msg )
+{
+    const XmlElement * e = node.toElement();
+    if( e )
+    {
+        GN_WARN(sLogger)( "Effect XML warning: element <%s> - %s", e->name.cptr(), msg.cptr() );
+    }
+    else
+    {
+        GN_WARN(sLogger)( "Effect XML warning: %s", msg.cptr() );
+    }
+}
+
+//
 // get value of specific attribute
 // -----------------------------------------------------------------------------
 static const char * sGetAttrib(
@@ -368,10 +384,56 @@ static void sParseGpuProgram( EffectResourceDesc & desc, const XmlElement & node
     // get shading language
     const char * lang = sGetAttrib( node, "lang" );
     sd.gpd.lang = GpuProgramLanguage::sFromString( lang );
-    if( GpuProgramLanguage::INVALID == sd.gpd.lang )
+    if( !sd.gpd.lang.valid() )
     {
         sPostError( node, stringFormat("invalid shading language: %s",lang?lang:"<NULL>") );
         return;
+    }
+
+    // get shading models
+    const char * models = sGetAttrib( node, "shaderModel" );
+    if( NULL == models )
+    {
+        switch( sd.gpd.lang )
+        {
+            case GpuProgramLanguage::HLSL9:
+                sd.gpd.shaderModels = ShaderModel::SM_2_0;
+                break;
+
+            case GpuProgramLanguage::HLSL10:
+                sd.gpd.shaderModels = ShaderModel::SM_4_0;
+                break;
+
+            case GpuProgramLanguage::MICROCODE:
+                sd.gpd.shaderModels = ShaderModel::SM_3_0;
+                break;
+
+            case GpuProgramLanguage::ARB1:
+                sd.gpd.shaderModels = ShaderModel::ARB1;
+                break;
+
+            case GpuProgramLanguage::GLSL:
+                sd.gpd.shaderModels = ShaderModel::GLSL_1_00;
+                break;
+
+            case GpuProgramLanguage::CG:
+                sd.gpd.shaderModels = ShaderModel::GLSL_1_00 | ShaderModel::SM_2_0;
+                break;
+
+            default:
+                GN_UNEXPECTED();
+                break;
+        };
+        sPostWarning( node, stringFormat( "shaderModel attribute is missing. Assume: %s", ShaderModel::sToString(sd.gpd.shaderModels).cptr() ) );
+    }
+    else
+    {
+        sd.gpd.shaderModels = ShaderModel::sFromString( models );
+        if( 0 == sd.gpd.shaderModels )
+        {
+            sPostError( node, stringFormat( "Invalid shaderModel attribute: %s", models ) );
+            return;
+        }
     }
 
     sd.gpd.optimize = sGetBoolAttrib( node, "optimize", true );

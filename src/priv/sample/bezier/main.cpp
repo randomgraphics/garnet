@@ -270,6 +270,7 @@ createEffect( GpuResourceDatabase & gdb )
     ed.uniforms["LIGHT0_POSITION"];
     ed.textures["DIFFUSE_TEXTURE"]; // create a texture parameter named "DIFFUSE_TEXTURE"
     ed.gpuprograms["glsl"].gpd.lang = GpuProgramLanguage::GLSL;
+    ed.gpuprograms["glsl"].gpd.shaderModels = ShaderModel::GLSL_1_00;
     ed.gpuprograms["glsl"].gpd.vs.source = glslvscode;
     ed.gpuprograms["glsl"].gpd.ps.source = glslpscode;
     ed.gpuprograms["glsl"].uniforms["pvw"] = "MATRIX_PVW";

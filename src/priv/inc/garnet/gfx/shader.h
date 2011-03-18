@@ -17,13 +17,14 @@ namespace GN { namespace gfx
         {
             INVALID = 0,    ///< Indicate invalid language
 
-            HLSL9,          ///< HLSL for D3D9 and Xenon (shader model 3.0)
-            HLSL10,         ///< HLSL for D3D10 (shader model 4.0)
-            HLSL11,         ///< HLSL for D3D11 (shader model 5.0)
+            HLSL9,          ///< HLSL for D3D9 and Xenon
+
+            HLSL10,         ///< HLSL for D3D10+
 
             MICROCODE,      ///< Xenon microcode shader
 
             ARB1,           ///< OpenGL ARB1 shading language
+
             GLSL,           ///< OpenGL Shading language
 
             CG,             ///< Nvidia Cg
@@ -36,7 +37,6 @@ namespace GN { namespace gfx
         {
             return HLSL9 == *this
                 || HLSL10 == *this
-                || HLSL11 == *this
                 || MICROCODE == *this
                 || ARB1 == *this
                 || GLSL == *this
@@ -50,7 +50,6 @@ namespace GN { namespace gfx
             {
                 case HLSL9     : return "HLSL9";
                 case HLSL10    : return "HLSL10";
-                case HLSL11    : return "HLSL11";
                 case MICROCODE : return "MICROCODE";
                 case ARB1      : return "ARB1";
                 case GLSL      : return "GLSL";
@@ -62,9 +61,8 @@ namespace GN { namespace gfx
         /// convert string to from string
         static GpuProgramLanguage sFromString( const char * s )
         {
-            if( 0 == stringCompareI( s, "HLSL9" ) )          return HLSL9;
+                 if( 0 == stringCompareI( s, "HLSL9" ) )     return HLSL9;
             else if( 0 == stringCompareI( s, "HLSL10" ) )    return HLSL10;
-            else if( 0 == stringCompareI( s, "HLSL11" ) )    return HLSL11;
             else if( 0 == stringCompareI( s, "MICROCODE" ) ) return MICROCODE;
             else if( 0 == stringCompareI( s, "ARB1" ) )      return ARB1;
             else if( 0 == stringCompareI( s, "GLSL" ) )      return GLSL;
@@ -95,6 +93,88 @@ namespace GN { namespace gfx
     };
 
     ///
+    /// Shader model flags
+    ///
+    struct ShaderModel
+    {
+        enum Enum
+        {
+            SM_2_0     = 1<<0, //< D3D Shader Model 2.0
+            SM_3_0     = 1<<1, //< D3D Shader Model 3.0
+            SM_4_0     = 1<<2, //< D3D Shader Model 4.0
+            SM_5_0     = 1<<3, //< D3D Shader Model 5.0
+            ARB1       = 1<<4, //< OpenGL ARB shader program 1.0
+            GLSL_1_00  = 1<<5, //< OpenGL Shading Language 1.00
+            GLSL_1_20  = 1<<6, //< OpenGL Shading Language 1.20 (OpenGL 2.0+)
+            GLSL_1_30  = 1<<7, //< OpenGL Shading Language 1.30 (GL_EXT_gpu_shader4)
+            GLSL_1_50  = 1<<8, //< OpenGL Shading Language 1.50 (GL_ARB_gpu_shader5)
+        };
+
+        static uint32 sFromString( const char * str )
+        {
+            if( NULL == str ) return 0;
+
+            uint32 flags = 0;
+
+            while( *str )
+            {
+                const char * s = str;
+                const char * e = str;
+
+                while( ' ' == *s || '\t' == *s || '\n' == *s ) ++s;
+
+                e = s;
+
+                while( *e && '|' != *e ) ++e;
+
+                const char * t = e-1;
+                while( ' ' == *t || '\t' == *t || '\n' == *t ) --t;
+
+                     if( 0 == stringCompareI( "SM_2_0",    s, t-s+1 ) ) flags |= SM_2_0;
+                else if( 0 == stringCompareI( "SM_3_0",    s, t-s+1 ) ) flags |= SM_3_0;
+                else if( 0 == stringCompareI( "SM_4_0",    s, t-s+1 ) ) flags |= SM_4_0;
+                else if( 0 == stringCompareI( "SM_5_0",    s, t-s+1 ) ) flags |= SM_5_0;
+                else if( 0 == stringCompareI( "ARB1",      s, t-s+1 ) ) flags |= ARB1;
+                else if( 0 == stringCompareI( "GLSL_1_00", s, t-s+1 ) ) flags |= GLSL_1_00;
+                else if( 0 == stringCompareI( "GLSL_1_20", s, t-s+1 ) ) flags |= GLSL_1_20;
+                else if( 0 == stringCompareI( "GLSL_1_30", s, t-s+1 ) ) flags |= GLSL_1_30;
+                else if( 0 == stringCompareI( "GLSL_1_50", s, t-s+1 ) ) flags |= GLSL_1_50;
+
+                GN_ASSERT( '|' == *e || 0 == *e );
+                str = e;
+                if( '|' == *e ) ++str;
+            }
+
+            return flags;
+        }
+
+        static StrA sToString( uint32 flags )
+        {
+            StrA str;
+
+            if( flags & SM_2_0    ) { flags &= ~SM_2_0;    str += str.empty() ? "SM_2_0"    : "|SM_2_0"; }
+            if( flags & SM_3_0    ) { flags &= ~SM_3_0;    str += str.empty() ? "SM_3_0"    : "|SM_3_0"; }
+            if( flags & SM_4_0    ) { flags &= ~SM_4_0;    str += str.empty() ? "SM_4_0"    : "|SM_4_0"; }
+            if( flags & SM_5_0    ) { flags &= ~SM_5_0;    str += str.empty() ? "SM_5_0"    : "|SM_5_0"; }
+            if( flags & ARB1      ) { flags &= ~ARB1;      str += str.empty() ? "ARB1"      : "|ARB1"; }
+            if( flags & GLSL_1_00 ) { flags &= ~GLSL_1_00; str += str.empty() ? "GLSL_1_00" : "|GLSL_1_00"; }
+            if( flags & GLSL_1_20 ) { flags &= ~GLSL_1_20; str += str.empty() ? "GLSL_1_20" : "|GLSL_1_20"; }
+            if( flags & GLSL_1_30 ) { flags &= ~GLSL_1_30; str += str.empty() ? "GLSL_1_30" : "|GLSL_1_30"; }
+            if( flags & GLSL_1_50 ) { flags &= ~GLSL_1_50; str += str.empty() ? "GLSL_1_50" : "|GLSL_1_50"; }
+
+            if( flags )
+            {
+                if(!str.empty()) str += "|";
+                str += stringFormat( "0x%X", flags );
+            }
+
+            return str;
+        }
+
+        GN_DEFINE_ENUM_CLASS_HELPERS( ShaderModel, Enum )
+    };
+
+    ///
     /// shader code
     ///
     struct ShaderCode
@@ -108,7 +188,8 @@ namespace GN { namespace gfx
     ///
     struct GpuProgramDesc
     {
-        GpuProgramLanguage lang; ///< shading language.
+        GpuProgramLanguage lang;         //< shading language.
+        uint32             shaderModels; //< shader models that the program is written against.
 
         union
         {
@@ -138,6 +219,7 @@ namespace GN { namespace gfx
         ///
         GpuProgramDesc()
             : lang(GpuProgramLanguage::INVALID)
+            , shaderModels(0)
             , optimize(true)
             , debug(true)
         {
@@ -263,76 +345,6 @@ namespace GN { namespace gfx
             return (uint16)GPU_PROGRAM_PARAMETER_NOT_FOUND;
         }
     };
-
-    /*
-    /// GPU program attribute accessor
-    ///
-    class GpuProgramAtrributeAccessor
-    {
-        const uint8 * & mData;
-        const size_t  & mCount;
-        const size_t  & mStride;
-
-    public:
-
-        ///
-        /// constructor
-        ///
-        GpuProgramParameterAccessor(
-            const GpuProgramAttributeParameterDesc * & data,
-            const size_t & count,
-            const size_t & stride )
-            : mData((const uint8*&)data), mCount(count), mStride(stride)
-        {
-        }
-
-        ///
-        /// return number of parameters
-        ///
-        size_t count() const { return mCount; }
-
-        ///
-        /// bracket operator. index must be valid
-        ///
-        const GpuProgramAttributeParameterDesc & operator[]( size_t index ) const
-        {
-            // must be a valid index
-            GN_ASSERT( index < mCount );
-
-            // Note: stride must be larger than size of parameter class
-            GN_ASSERT( mStride >= sizeof(GpuProgramAttributeParameterDesc) );
-
-            const GpuProgramAttributeParameterDesc * p = (const GpuProgramAttributeParameterDesc *)(mData + mStride * index);
-
-            return *p;
-        }
-
-        ///
-        /// Look up attribute with specific semantic name and index, return GPU_PROGRAM_PARAMETER_NOT_FOUND for invalid name
-        ///
-        size_t find( const char * semanticName, size_t semanticIndex ) const
-        {
-            // Note: stride must be larger than size of parameter class
-            GN_ASSERT( mStride >= sizeof(GpuProgramAttributeParameterDesc) );
-
-            const uint8 * p = mData;
-            for( size_t i = 0; i < mCount; ++i, p+=mStride )
-            {
-                /// Assume that the first member of PARAMETER_DESC_CLASS is always parameter name
-                const char * paramName = *(const char * const *)p;
-                size_t     * paramIndex = (size_t*)(paramName+1);
-
-                if( semanticIndex == paramIndex && 0 == stringCompare( semanticName, paramName ) )
-                {
-                    // got you!
-                    return i;
-                }
-            }
-            GN_ERROR(getLogger("GN.gfx.GpuProgram"))(
-                "Invalid semantic name or index: name=%s index=%d", semanticName?semanticName:"<NULLPTR>", semanticIndex );
-            return (size_t)GPU_PROGRAM_PARAMETER_NOT_FOUND;
-        }
-    };*/
 
     ///
     /// GPU program parameter descrption

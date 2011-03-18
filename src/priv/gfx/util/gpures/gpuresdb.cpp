@@ -110,6 +110,7 @@ static AutoRef<EffectResource> sRegisterDiffuseEffect( GpuResourceDatabase & gdb
     ed.attributes["TEXCOORD"];
 
     ed.gpuprograms["glsl"].gpd.lang = GpuProgramLanguage::GLSL;
+    ed.gpuprograms["glsl"].gpd.shaderModels = ShaderModel::GLSL_1_00;
     ed.gpuprograms["glsl"].gpd.vs.source = DIFFUSE_VS_GLSL;
     ed.gpuprograms["glsl"].gpd.ps.source = DIFFUSE_PS_GLSL;
     ed.gpuprograms["glsl"].uniforms["pvw"] = StandardUniform::Desc::MATRIX_PVW.name;
@@ -124,6 +125,7 @@ static AutoRef<EffectResource> sRegisterDiffuseEffect( GpuResourceDatabase & gdb
     ed.gpuprograms["glsl"].attributes["gl_MultiTexCoord0"] = "TEXCOORD0";
 
     ed.gpuprograms["hlsl9"].gpd.lang = GpuProgramLanguage::HLSL9;
+    ed.gpuprograms["hlsl9"].gpd.shaderModels = ShaderModel::SM_2_0;
     ed.gpuprograms["hlsl9"].gpd.vs.source = DIFFUSE_VS_HLSL9;
     ed.gpuprograms["hlsl9"].gpd.vs.entry  = "main";
     ed.gpuprograms["hlsl9"].gpd.ps.source = DIFFUSE_PS_HLSL9;
@@ -204,6 +206,7 @@ static AutoRef<EffectResource> sRegisterWireframeEffect( GpuResourceDatabase & g
     ed.attributes["POSITION"];
 
     ed.gpuprograms["glsl"].gpd.lang = GpuProgramLanguage::GLSL;
+    ed.gpuprograms["glsl"].gpd.shaderModels = ShaderModel::GLSL_1_00;
     ed.gpuprograms["glsl"].gpd.vs.source = WIREFRAME_VS_GLSL;
     ed.gpuprograms["glsl"].gpd.ps.source = WIREFRAME_PS_GLSL;
     ed.gpuprograms["glsl"].uniforms["pvw"] = StandardUniform::Desc::MATRIX_PVW.name;
@@ -211,6 +214,7 @@ static AutoRef<EffectResource> sRegisterWireframeEffect( GpuResourceDatabase & g
     ed.gpuprograms["glsl"].attributes["gl_Vertex"] = "POSITION";
 
     ed.gpuprograms["hlsl"].gpd.lang = GpuProgramLanguage::HLSL9;
+    ed.gpuprograms["hlsl"].gpd.shaderModels = ShaderModel::SM_2_0;
     ed.gpuprograms["hlsl"].gpd.vs.source = WIREFRAME_VS_HLSL9;
     ed.gpuprograms["hlsl"].gpd.vs.entry  = "main";
     ed.gpuprograms["hlsl"].gpd.ps.source = WIREFRAME_PS_HLSL9;
@@ -343,6 +347,7 @@ static AutoRef<EffectResource> sRegisterNormalMapEffect( GpuResourceDatabase & g
     ed.attributes["TEXCOORD"];
 
     ed.gpuprograms["glsl"].gpd.lang = GpuProgramLanguage::GLSL;
+    ed.gpuprograms["glsl"].gpd.shaderModels = ShaderModel::GLSL_1_00;
     ed.gpuprograms["glsl"].gpd.vs.source = NORMALMAP_VS_GLSL;
     ed.gpuprograms["glsl"].gpd.ps.source = NORMALMAP_PS_GLSL;
     ed.gpuprograms["glsl"].uniforms["pvw"] = "MATRIX_PVW";
@@ -358,6 +363,7 @@ static AutoRef<EffectResource> sRegisterNormalMapEffect( GpuResourceDatabase & g
     ed.gpuprograms["glsl"].attributes["gl_MultiTexCoord0"] = "TEXCOORD";
 
     ed.gpuprograms["hlsl"].gpd.lang = GpuProgramLanguage::HLSL9;
+    ed.gpuprograms["hlsl"].gpd.shaderModels = ShaderModel::SM_2_0;
     ed.gpuprograms["hlsl"].gpd.vs.source = NORMALMAP_VS_HLSL9;
     ed.gpuprograms["hlsl"].gpd.vs.entry  = "main";
     ed.gpuprograms["hlsl"].gpd.ps.source = NORMALMAP_PS_HLSL9;

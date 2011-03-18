@@ -38,6 +38,12 @@ bool GN::gfx::D3D11Gpu::capsInit()
     mCaps.maxColorRenderTargets = math::getmin<uint32>( D3D11_SIMULTANEOUS_RENDER_TARGET_COUNT, GpuContext::MAX_COLOR_RENDER_TARGETS );
 
     // shader caps
+    if( feature >= D3D_FEATURE_LEVEL_9_1  ) mCaps.shaderModels |= ShaderModel::SM_2_0;
+    if( feature >= D3D_FEATURE_LEVEL_10_0 ) mCaps.shaderModels |= ShaderModel::SM_3_0 | ShaderModel::SM_4_0;
+    if( feature >= D3D_FEATURE_LEVEL_11_0 ) mCaps.shaderModels |= ShaderModel::SM_5_0;
+    mCaps.cg = HAS_CG_D3D;
+
+    /*
     mCaps.gpuProgramLanguage[ShaderStage::VS][GpuProgramLanguage::HLSL9] =
     mCaps.gpuProgramLanguage[ShaderStage::PS][GpuProgramLanguage::HLSL9] = feature >= D3D_FEATURE_LEVEL_9_1;
 
@@ -58,6 +64,7 @@ bool GN::gfx::D3D11Gpu::capsInit()
     mCaps.gpuProgramLanguage[ShaderStage::HS][GpuProgramLanguage::CG] =
     mCaps.gpuProgramLanguage[ShaderStage::DS][GpuProgramLanguage::CG] = feature >= D3D_FEATURE_LEVEL_11_0;
 #endif
+    */
 
     GN_INFO(sLogger)(
         "\n\n"

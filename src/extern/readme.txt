@@ -1,9 +1,10 @@
 List of 3rd party libraries that are included here:
 (Note: all libraries are free to use in commercial/non-OSS products)
 
-Cg          2.2
+Assimp      2.0.863
+Cg          3.0 Feb 2011
 Expat       2.0.0
-Freetype    2.1.10 (http://www.freetype.org)
+Freetype    2.4.4 (http://www.freetype.org)
 glew        1.5.5 (http://glew.sourceforge.net)
 jpeg        jpeg-6b (http://www.ijg.org)
 lua         5.1 (http://www.lua.org)

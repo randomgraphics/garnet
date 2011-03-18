@@ -140,12 +140,12 @@ if( "vc" -eq $env:GN_BUILD_COMPILER )
 
     # locate vsvarall.bat
     $vcvarbat=$false
-    if( $env:VS100COMNTOOLS )
+    if( $env:VS100COMNTOOLS -and ( test-path $env:VS100COMNTOOLS ) )
     {
         $vcvarbat="$env:VS100COMNTOOLS..\..\VC\vcvarsall.bat"
         $env:GN_BUILD_COMPILER="vc100";
     }
-    elseif( $env:VS90COMNTOOLS )
+    elseif( $env:VS90COMNTOOLS -and ( test-path $env:VS90COMNTOOLS ) )
     {
         $vcvarbat="$env:VS90COMNTOOLS..\..\VC\vcvarsall.bat"
         $env:GN_BUILD_COMPILER="vc90";
@@ -276,7 +276,7 @@ if( "mswin" -eq $env:GN_BUILD_TARGET_OS )
     "==============================="
     ""
 
-    if( $env:DXSDK_DIR )
+    if( $env:DXSDK_DIR -and ( test-path $env:DXSDK_DIR ) )
     {
         $batch = "${env:DXSDK_DIR}Utilities\Bin\dx_setenv.cmd"
 
@@ -323,15 +323,14 @@ if( "mswin" -eq $env:GN_BUILD_TARGET_OS )
     ""
 
     $candidates = (
-        "hklm:\software\Autodesk FBX SDK 2011.3.1*",
-        "hklm:\software\Wow6432Node\Autodesk FBX SDK 2011.3.1*" )
+        "hklm:\software\Autodesk FBX SDK 2011.3.1",
+        "hklm:\software\Wow6432Node\Autodesk FBX SDK 2011.3.1" )
 
     foreach( $c in $candidates )
     {
-        $fbxsdk = get-childitem $c
-        if( $fbxsdk )
+        if( test-path $c )
         {
-            $sdkroot = $fbxsdk.GetValue("Install_Dir")
+            $sdkroot = (get-itemproperty $c).Install_Dir
             $env:INCLUDE += ";$sdkroot\include"
             $env:LIB     += ";$sdkroot\lib"
             break;

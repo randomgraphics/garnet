@@ -29,7 +29,19 @@ sCheckGpuCaps( Gpu & r, const EffectGpuProgramDesc & desc )
 {
     const GpuCaps & caps = r.caps();
 
-    // check vertex shader
+    // check shader model
+    if( 0 == (desc.gpd.shaderModels & caps.shaderModels) )
+    {
+        return false;
+    }
+
+    // check Cg language support.
+    if( GpuProgramLanguage::CG == desc.gpd.lang && !caps.cg )
+    {
+        return false;
+    }
+
+    /* check vertex shader
     if( desc.gpd.vs.source && !caps.gpuProgramLanguage[ShaderStage::VS][desc.gpd.lang] )
     {
         return false;
@@ -57,7 +69,7 @@ sCheckGpuCaps( Gpu & r, const EffectGpuProgramDesc & desc )
     if( caps.maxColorRenderTargets < desc.prerequisites.numColorRenderTargets )
     {
         return false;
-    }
+    }*/
 
     return true;
 }
