@@ -165,6 +165,13 @@ void GN::gfx::D3D11GpuProgramCG::quit()
         mShaders[i].quit();
     }
 
+    // clear string pool
+    for( size_t i = 0; i < mStringPool.size(); ++i )
+    {
+        HeapMemory::dealloc( mStringPool[i] );
+    }
+    mStringPool.clear();
+
     // standard quit procedure
     GN_STDCLASS_QUIT();
 
@@ -385,7 +392,22 @@ void GN::gfx::D3D11GpuProgramCG::enumCgParameters( CGprogram prog, CGenum name_s
             D3D11CgAttribute attr;
             attr.handles.append( param );
             attr.name = name;//cgGetResourceString( cgGetParameterResource( param ) );
-            attr.semantic = cgGetParameterSemantic( param );
+            const char * semantic = cgGetParameterSemantic( param );
+            size_t len = stringLength( semantic );
+            if( '0' <= semantic[len-1] && semantic[len-1] <= '9' )
+            {
+                mStringPool.append( (char*)HeapMemory::alloc(len+1) );
+                char * p = mStringPool.back();
+                memcpy( p, semantic, len+1 );
+                while( len > 0 && '0' <= p[len-1] && p[len-1] <= '9' )
+                {
+                    p[len-1] = 0;
+                    --len;
+                }
+
+                semantic = p;
+            }
+            attr.semantic = semantic;
             attr.semanticIndex = cgGetParameterResourceIndex( param );
             mAttributes.append( attr );
         }
