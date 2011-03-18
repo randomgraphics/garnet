@@ -307,7 +307,6 @@ namespace GN { namespace gfx
         uint32        maxColorRenderTargets; ///< max number of simutaneous render targets
         uint32        shaderModels;          ///< shader models supported by the GPU.
         bool          cg;                    ///< Support Cg language or not.
-        //bool          gpuProgramLanguage[ShaderStage::COUNT][GpuProgramLanguage::COUNT]; //< GPU program caps.
     };
 
     ///

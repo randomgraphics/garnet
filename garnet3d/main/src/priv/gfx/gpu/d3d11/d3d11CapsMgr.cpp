@@ -41,30 +41,9 @@ bool GN::gfx::D3D11Gpu::capsInit()
     if( feature >= D3D_FEATURE_LEVEL_9_1  ) mCaps.shaderModels |= ShaderModel::SM_2_0;
     if( feature >= D3D_FEATURE_LEVEL_10_0 ) mCaps.shaderModels |= ShaderModel::SM_3_0 | ShaderModel::SM_4_0;
     if( feature >= D3D_FEATURE_LEVEL_11_0 ) mCaps.shaderModels |= ShaderModel::SM_5_0;
-    mCaps.cg = HAS_CG_D3D;
 
-    /*
-    mCaps.gpuProgramLanguage[ShaderStage::VS][GpuProgramLanguage::HLSL9] =
-    mCaps.gpuProgramLanguage[ShaderStage::PS][GpuProgramLanguage::HLSL9] = feature >= D3D_FEATURE_LEVEL_9_1;
-
-    mCaps.gpuProgramLanguage[ShaderStage::VS][GpuProgramLanguage::HLSL10] =
-    mCaps.gpuProgramLanguage[ShaderStage::PS][GpuProgramLanguage::HLSL10] =
-    mCaps.gpuProgramLanguage[ShaderStage::GS][GpuProgramLanguage::HLSL10] = feature >= D3D_FEATURE_LEVEL_10_0;
-
-    mCaps.gpuProgramLanguage[ShaderStage::VS][GpuProgramLanguage::HLSL11] =
-    mCaps.gpuProgramLanguage[ShaderStage::PS][GpuProgramLanguage::HLSL11] =
-    mCaps.gpuProgramLanguage[ShaderStage::GS][GpuProgramLanguage::HLSL11] =
-    mCaps.gpuProgramLanguage[ShaderStage::HS][GpuProgramLanguage::HLSL11] =
-    mCaps.gpuProgramLanguage[ShaderStage::DS][GpuProgramLanguage::HLSL11] = feature >= D3D_FEATURE_LEVEL_11_0;
-
-#ifdef HAS_CG_D3D
-    mCaps.gpuProgramLanguage[ShaderStage::VS][GpuProgramLanguage::CG] =
-    mCaps.gpuProgramLanguage[ShaderStage::PS][GpuProgramLanguage::CG] = feature >= D3D_FEATURE_LEVEL_9_1;
-    mCaps.gpuProgramLanguage[ShaderStage::GS][GpuProgramLanguage::CG] = feature >= D3D_FEATURE_LEVEL_10_0;
-    mCaps.gpuProgramLanguage[ShaderStage::HS][GpuProgramLanguage::CG] =
-    mCaps.gpuProgramLanguage[ShaderStage::DS][GpuProgramLanguage::CG] = feature >= D3D_FEATURE_LEVEL_11_0;
-#endif
-    */
+    // Note: Feb11 Cg Toolkit does not work well on D3D10 level hardware. So Cg support is disabled for now.
+    mCaps.cg = false; // = HAS_CG_D3D;
 
     GN_INFO(sLogger)(
         "\n\n"

@@ -305,22 +305,6 @@ bool GN::gfx::OGLGpu::capsInit()
         }
     }
     mCaps.cg = HAS_CG_OGL;
-#if 0
-    mCaps.gpuProgramLanguage[ShaderStage::VS][GpuProgramLanguage::ARB1] =
-    mCaps.gpuProgramLanguage[ShaderStage::PS][GpuProgramLanguage::ARB1] =
-        (!!GLEW_ARB_vertex_program) && (!!GLEW_ARB_fragment_program);
-
-    mCaps.gpuProgramLanguage[ShaderStage::VS][GpuProgramLanguage::GLSL] =
-    mCaps.gpuProgramLanguage[ShaderStage::PS][GpuProgramLanguage::GLSL] =
-        GLEW_ARB_shader_objects && GLEW_ARB_shading_language_100 && GLEW_ARB_vertex_shader && GLEW_ARB_fragment_shader;
-
-#ifdef HAS_CG_OGL
-    mCaps.gpuProgramLanguage[ShaderStage::VS][GpuProgramLanguage::CG] =
-    mCaps.gpuProgramLanguage[ShaderStage::PS][GpuProgramLanguage::CG] =
-        (CG_PROFILE_UNKNOWN != cgGLGetLatestProfile( CG_GL_VERTEX )) &&
-        (CG_PROFILE_UNKNOWN != cgGLGetLatestProfile( CG_GL_FRAGMENT ));
-#endif
-#endif
 
     // success;
     return true;

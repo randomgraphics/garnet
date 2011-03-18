@@ -228,6 +228,7 @@ namespace GN { namespace gfx
         DynaArray<D3D11CgTexture>    mTextures;
         DynaArray<D3D11CgAttribute>  mAttributes;
         D3D11GpuProgramParameterDesc mParam;
+        DynaArray<char*>             mStringPool;
 
         // ********************************
         // private functions

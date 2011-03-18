@@ -4,13 +4,10 @@ TODO
 - 程序中标注TODO的地方
 
 - p0
-  - GNsampleDolphin crashes with D3D11 gpu because of D3D11 error.
-  - Skin mesh test case: porting DXSDK sample.
+  - skin mesh
+    - test case: porting DXSDK sample.
     - SkinnedMesh entity
-  - Special "use current" tag in GpuContext for color and depth render target.
-  - D3D resource leaking in GNtestEngine and GNsampleDolphin:
-    - It comes from Cg Toolkit. And upgrading to the lasted Feb11 version
-      doesn't solve the issue.
+    - FBX skeleton loader
   - Winphone 7 integration
   - Cuda or OpenCL integration
   - runtime tweakable parameters: client/server communication
@@ -26,6 +23,10 @@ TODO
   	- queue, list, set
 
 - p1
+  - Fix Feb 2011 Cg issues:
+	- GNsampleDolphin crashes with D3D11 gpu.
+    - D3D resource leak in GNtestEngine and GNsampleDolphin
+  - Special "use current" tag in GpuContext for color and depth render target.
   - Optimized vector and matrix library using SIMD instructions. (simd.h)
   - upgrade Cg runtime.
   - Use Windows font engine (Direct2D?)
@@ -155,7 +156,6 @@ RESOLVE ISSUES
 
 OPEN ISSUES
 ===========
-
 
 - Embbed buffer for short string?
 
