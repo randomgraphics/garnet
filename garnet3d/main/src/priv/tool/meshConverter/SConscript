@@ -5,4 +5,5 @@ sources = [
 ]
 
 cluster = GN.newSourceCluster( sources, 'pch.h', 'pch.cpp' )
+if GN.conf['has_fbx']: cluster.addCompileFlags( CPPDEFINES = ['HAS_FBX'] )
 GN.newTarget( 'prog', 'GNtoolMeshConverter', [cluster] )
