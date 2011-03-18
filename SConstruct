@@ -919,6 +919,7 @@ TARGET_tests = [
     'GNtestRenderToTexture',
     'GNtestGpuResDB',
     'GNtestSIMD',
+    'GNtestSkinnedMesh',
     'GNtestSprite',
     'GNut',
     'GNtestXenonNegativeZRange',

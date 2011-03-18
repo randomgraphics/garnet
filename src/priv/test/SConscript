@@ -11,6 +11,7 @@ SConscript( dirs=[
 	'renderToTexture',
 	'resdb',
 	'simd',
+	'skinnedMesh',
 	'sprite',
 	'ut',
 	'xml',
