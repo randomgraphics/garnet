@@ -88,6 +88,12 @@ GN::gfx::OGLGpu::createGpuProgram( const void * data, size_t length )
 
     const GpuProgramDesc & desc = s->getDesc();
 
+    if( 0 == (desc.shaderModels & mCaps.shaderModels) )
+    {
+        GN_ERROR(sLogger)( "Unsupported GPU shader model: %s", ShaderModel::sToString(desc.shaderModels).cptr() );
+        return NULL;
+    }
+
     switch( desc.lang )
     {
         case GpuProgramLanguage::GLSL:

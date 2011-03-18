@@ -64,6 +64,7 @@ void initEffectDesc( EffectResourceDesc & ed )
     ed.attributes["TEXCOORD"];
 
     ed.gpuprograms["glsl"].gpd.lang = GpuProgramLanguage::GLSL;
+    ed.gpuprograms["glsl"].gpd.shaderModels = ShaderModel::GLSL_1_00;
     ed.gpuprograms["glsl"].gpd.vs.source = glslvscode;
     ed.gpuprograms["glsl"].gpd.ps.source = glslpscode;
     ed.gpuprograms["glsl"].uniforms["pvw"] = "MATRIX_PVW";
@@ -72,6 +73,7 @@ void initEffectDesc( EffectResourceDesc & ed )
     ed.gpuprograms["glsl"].attributes["gl_MultiTexCoord0"] = "TEXCOORD";
 
     ed.gpuprograms["hlsl"].gpd.lang = GpuProgramLanguage::HLSL9;
+    ed.gpuprograms["hlsl"].gpd.shaderModels = ShaderModel::SM_2_0;
     ed.gpuprograms["hlsl"].gpd.vs.source = hlslvscode;
     ed.gpuprograms["hlsl"].gpd.vs.entry = "main";
     ed.gpuprograms["hlsl"].gpd.ps.source = hlslpscode;

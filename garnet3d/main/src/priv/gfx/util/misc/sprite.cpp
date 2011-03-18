@@ -83,10 +83,10 @@ bool GN::gfx::SpriteRenderer::init()
     // create GPU program
     const GpuCaps & caps = mGpu.caps();
     GpuProgramDesc gpd;
-    if( caps.gpuProgramLanguage[ShaderStage::VS][GpuProgramLanguage::GLSL] &&
-        caps.gpuProgramLanguage[ShaderStage::PS][GpuProgramLanguage::GLSL] )
+    if( caps.shaderModels & ShaderModel::GLSL_1_00 )
     {
         gpd.lang = GpuProgramLanguage::GLSL;
+        gpd.shaderModels = ShaderModel::GLSL_1_00;
         gpd.vs.source = glslvscode;
         gpd.ps.source = glslpscode;
 
@@ -107,10 +107,10 @@ bool GN::gfx::SpriteRenderer::init()
         mVertexBinding[2].format    = ColorFormat::FLOAT2;
         mVertexBinding[2].attribute = mGpuProgram->getParameterDesc().attributes["gl_MultiTexCoord0"];
     }
-    else if( caps.gpuProgramLanguage[ShaderStage::VS][GpuProgramLanguage::HLSL9] &&
-             caps.gpuProgramLanguage[ShaderStage::PS][GpuProgramLanguage::HLSL9] )
+    else if( caps.shaderModels & ShaderModel::SM_2_0 )
     {
         gpd.lang = GpuProgramLanguage::HLSL9;
+        gpd.shaderModels = ShaderModel::SM_2_0;
         gpd.vs.source = hlslvscode;
         gpd.vs.entry = "main";
         gpd.ps.source = hlslpscode;

@@ -21,7 +21,7 @@
 
 		<!-- D3D9 HLSL program -->
 
-		<gpuprogram name="hlsl9" lang="hlsl9">
+		<gpuprogram name="hlsl9" lang="hlsl9" shaderModel="SM_2_0">
 			<uniref uniform="view" shaderParameter="view"/>
 			<uniref uniform="proj" shaderParameter="proj"/>
 			<uniref uniform="caustic" shaderParameter="caustic"/>
@@ -127,7 +127,7 @@ void main(
 
 		<!-- Cg program -->
 
-		<gpuprogram name="cg" lang="cg">
+		<gpuprogram name="cg" lang="cg" shaderModel="SM_2_0|GLSL_1_00">
 			<uniref uniform="view" shaderParameter="view"/>
 			<uniref uniform="proj" shaderParameter="proj"/>
 			<uniref uniform="caustic" shaderParameter="caustic"/>

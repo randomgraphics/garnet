@@ -52,12 +52,14 @@ bool init( Gpu & gpu )
     if( GpuAPI::OGL == gpu.getOptions().api )
     {
         gpd.lang = GpuProgramLanguage::GLSL;
+        gpd.shaderModels = ShaderModel::GLSL_1_00;
         gpd.vs.source = glsl_vscode;
         gpd.ps.source = glsl_pscode;
     }
     else
     {
         gpd.lang = GpuProgramLanguage::HLSL9;
+        gpd.shaderModels = ShaderModel::SM_2_0;
         gpd.vs.source = hlsl_vscode;
         gpd.ps.source = hlsl_pscode;
         gpd.vs.entry  = "main";

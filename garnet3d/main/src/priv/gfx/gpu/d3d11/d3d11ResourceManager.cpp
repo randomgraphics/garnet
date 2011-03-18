@@ -84,8 +84,13 @@ GN::gfx::D3D11Gpu::createGpuProgram( const void * data, size_t length )
 
     const GpuProgramDesc & desc = s->getDesc();
 
-    if( GpuProgramLanguage::HLSL11 == desc.lang ||
-        GpuProgramLanguage::HLSL10 == desc.lang ||
+    if( 0 == (desc.shaderModels & mCaps.shaderModels) )
+    {
+        GN_ERROR(sLogger)( "Unsupported GPU shader model: %s", ShaderModel::sToString(desc.shaderModels).cptr() );
+        return NULL;
+    }
+
+    if( GpuProgramLanguage::HLSL10 == desc.lang ||
         GpuProgramLanguage::HLSL9 == desc.lang )
     {
         AutoRef<D3D11GpuProgramHLSL> prog( new D3D11GpuProgramHLSL(*this) );

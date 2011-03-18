@@ -528,21 +528,22 @@ def UTIL_checkConfig( conf, confDir, compiler, variant ):
 	# ===
 
 	conf['has_fbx'] = False
-	FBX_libs = [
-		['fbxsdk_mt2010',       ['wininet']],
-		['fbxsdk_mt2010d',      ['wininet']],
-		['fbxsdk_mt2010_amd64', ['wininet']],
-		['fbxsdk_mt2010_amd64d',['wininet']],
-		['fbxsdk_gcc4',  []],
-		['fbxsdk_gcc4d', []],
-		]
-	for l in FBX_libs:
-		env.Append( LIBS = l[1] )
-		if (not conf['has_fbx']) and c.CheckLibWithHeader( l[0], ['fbxsdk.h','fbxfilesdk/fbxfilesdk_nsuse.h'], 'C++', 'KFbxSdkManager::Create();' ):
-			conf['has_fbx']  = True
-			conf['fbx_libs'] = [l[0]] + l[1]
-		for ll in l[1]: env['LIBS'].remove( ll )
-		if conf['has_fbx']: break;
+
+	FBX_libname = "fbxsdk";
+	if compiler.name == 'vc100' : FBX_libname += "_mt2010"
+	elif compiler.name == 'vc90' : FBX_libname += "_mt2008"
+	elif compiler.name == 'gcc' : FBX_libname += "_gcc4"
+	if compiler.cpu == 'x64' : FBX_libname += "_amd64"
+	if variant == 'debug' : FBX_libname += 'd'
+
+	FBX_deps = []
+	if compiler.os == 'mswin' : FBX_deps += ['wininet'];
+
+	env.Append( LIBS = FBX_deps )
+	if c.CheckLibWithHeader( FBX_libname, ['fbxsdk.h','fbxfilesdk/fbxfilesdk_nsuse.h'], 'C++', 'KFbxSdkManager::Create();' ):
+		conf['has_fbx']  = True
+		conf['fbx_libs'] = [FBX_libname] + FBX_deps
+	for d in FBX_deps: env['LIBS'].remove( d )
 
 	# =====================
 	# Copy to devkit or not

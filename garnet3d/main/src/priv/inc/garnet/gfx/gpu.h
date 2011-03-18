@@ -300,12 +300,14 @@ namespace GN { namespace gfx
     ///
     struct GpuCaps
     {
-        uint32 maxTex1DSize[2];       ///< width, array
-        uint32 maxTex2DSize[3];       ///< width, height, array
-        uint32 maxTex3DSize[4];       ///< width, height, array
-        uint32 maxTextures;           ///< max number of simutaneous textures
-        uint32 maxColorRenderTargets; ///< max number of simutaneous render targets
-        bool   gpuProgramLanguage[ShaderStage::COUNT][GpuProgramLanguage::COUNT]; //< GPU program caps.
+        uint32        maxTex1DSize[2];       ///< width, array
+        uint32        maxTex2DSize[3];       ///< width, height, array
+        uint32        maxTex3DSize[4];       ///< width, height, array
+        uint32        maxTextures;           ///< max number of simutaneous textures
+        uint32        maxColorRenderTargets; ///< max number of simutaneous render targets
+        uint32        shaderModels;          ///< shader models supported by the GPU.
+        bool          cg;                    ///< Support Cg language or not.
+        //bool          gpuProgramLanguage[ShaderStage::COUNT][GpuProgramLanguage::COUNT]; //< GPU program caps.
     };
 
     ///
