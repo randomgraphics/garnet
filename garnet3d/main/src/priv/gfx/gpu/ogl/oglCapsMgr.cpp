@@ -304,7 +304,10 @@ bool GN::gfx::OGLGpu::capsInit()
             mCaps.shaderModels |= ShaderModel::GLSL_1_50;
         }
     }
-    mCaps.cg = HAS_CG_OGL;
+
+#ifdef HAS_CG_OGL
+    mCaps.cg = 1;
+#endif
 
     // success;
     return true;
