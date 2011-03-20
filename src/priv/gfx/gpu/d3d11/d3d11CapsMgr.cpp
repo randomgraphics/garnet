@@ -43,7 +43,7 @@ bool GN::gfx::D3D11Gpu::capsInit()
     if( feature >= D3D_FEATURE_LEVEL_11_0 ) mCaps.shaderModels |= ShaderModel::SM_5_0;
 
     // Note: Feb11 Cg Toolkit does not work well on D3D10 level hardware. So Cg support is disabled for now.
-    mCaps.cg = false; // = HAS_CG_D3D;
+    mCaps.cg = false;
 
     GN_INFO(sLogger)(
         "\n\n"
