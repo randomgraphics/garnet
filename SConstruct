@@ -532,6 +532,7 @@ def UTIL_checkConfig( conf, confDir, compiler, variant ):
 	FBX_libname = "fbxsdk";
 	if compiler.name == 'vc100' : FBX_libname += "_mt2010"
 	elif compiler.name == 'vc90' : FBX_libname += "_mt2008"
+	elif compiler.name == 'icl' : FBX_libname += "_mt2010"
 	elif compiler.name == 'gcc' : FBX_libname += "_gcc4"
 	if compiler.cpu == 'x64' : FBX_libname += "_amd64"
 	if variant == 'debug' : FBX_libname += 'd'

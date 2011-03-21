@@ -2,7 +2,7 @@
 #include "mtshader.h"
 #include "mtgpuCmd.h"
 
-static GN::Logger * sLogger = GN::getLogger("GN.gfx.util.gpu.mtshader");
+//static GN::Logger * sLogger = GN::getLogger("GN.gfx.util.gpu.mtshader");
 
 using namespace GN::gfx;
 

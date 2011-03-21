@@ -216,7 +216,7 @@ if( "icl" -eq $env:GN_BUILD_COMPILER )
     ""
 
     # TODO: Determine real ICL setup batch file path
-    $batch = "C:\Program Files\Intel\Compiler\11.0\072\cpp\Bin\iclvars.bat"
+    $batch = "C:\Program Files\Intel\ComposerXE-2011\bin\iclvars.bat"
 
     # call ICL setup batch file
     if( test-path -path $batch )

@@ -47,24 +47,6 @@ namespace GN { namespace engine
 
     private:
 
-        template<class REF_COUNTED_CLASS>
-        class StackRefCounter : public REF_COUNTED_CLASS
-        {
-        public:
-
-            virtual ~StackRefCounter()
-            {
-                REF_COUNTED_CLASS::decref();
-            }
-
-        protected:
-
-            virtual void selfDestruct() const
-            {
-                // do nothing here.
-            }
-        };
-
         StackRefCounter<SpacialComponent> mSpacial;
         StackRefCounter<VisualComponent>  mVisual;
     };
