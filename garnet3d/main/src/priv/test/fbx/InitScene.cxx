@@ -124,6 +124,10 @@ void LoadSupportedTexturesRecursive(KFbxNode* pNode, KArrayTemplate<VSTexture*>&
             case KFbxNodeAttribute::eMESH:
                 lLayerContainer = pNode->GetMesh();
                 break;
+
+            default:
+                // unhandled type
+                break;
             }
 
             if (lLayerContainer){
