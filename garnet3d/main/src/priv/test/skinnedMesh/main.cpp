@@ -6,6 +6,60 @@ using namespace GN::input;
 using namespace GN::engine;
 using namespace GN::util;
 
+namespace GN { namespace engine
+{
+    class SkinnedMesh : public Entity
+    {
+    public:
+
+         SkinnedMesh();
+        ~SkinnedMesh();
+
+        /// get the spacial component
+        const SpacialComponent & spacial() const { return mSpacial; }
+
+        /// get the spacial component
+        SpacialComponent & spacial() { return mSpacial; }
+
+        struct Bone
+        {
+            Vector4f translation;
+            Quaternionf rotation;
+            int id;
+            int parent;
+        };
+
+        bool init()
+        {
+
+        }
+
+    private:
+
+        StackRefCounter<SpacialComponent> mSpacial;
+        AutoRef<MeshResource> mMesh;
+        AutoRef<EffectResource> mEffect;
+    };
+}}
+
+//
+//
+// -----------------------------------------------------------------------------
+GN::engine::SkinnedMesh::SkinnedMesh()
+{
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+GN::engine::SkinnedMesh::~SkinnedMesh()
+{
+}
+
+
+//
+//
+// -----------------------------------------------------------------------------
 bool init()
 {
     // success
