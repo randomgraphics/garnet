@@ -7,7 +7,7 @@ TODO
   - skin mesh
     - test case: porting DXSDK sample.
     - SkinnedMesh entity
-    - FBX skeleton loader
+    - FBX skeleton and animation loader
   - Winphone 7 integration
   - Cuda or OpenCL integration
   - runtime tweakable parameters: client/server communication
@@ -28,10 +28,6 @@ TODO
     - D3D resource leak in GNtestEngine and GNsampleDolphin
   - Special "use current" tag in GpuContext for color and depth render target.
   - Optimized vector and matrix library using SIMD instructions. (simd.h)
-  - upgrade Cg runtime.
-  - Use Windows font engine (Direct2D?)
-  - mesh converter/loader
-    - load and view specific model, instead of the whole scene
   - Unit test for the CommandBuffer class.
   - New build system:
     - based on GNU make.
@@ -55,9 +51,8 @@ TODO
   - GPU resouce aliasing
 
 - p2
-  - FBX importer
-    - skeleton and animation
-    - replace FBX test app with something else (not owned by Autodesk).
+  - Use Windows font engine (Direct2D?)
+  - replace FBX test app with something else (not owned by Autodesk).
   - refine PCH builder to generate PCH out of "pch.h" directly, instead of from "pch.cpp".
     so that the PCH builder works the same way in gcc and vstudio.
   - Refine uniform loading from XML
