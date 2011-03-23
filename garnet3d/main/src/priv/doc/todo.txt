@@ -4,6 +4,10 @@ TODO
 - 程序中标注TODO的地方
 
 - p0
+  - Code tree reorg
+    - Flatten code tree
+    - Try Re-enable "non-static" build
+  - FatMesh for model loading/saving/conversion
   - skin mesh
     - test case: porting DXSDK sample.
     - SkinnedMesh entity
@@ -56,9 +60,7 @@ TODO
   - refine PCH builder to generate PCH out of "pch.h" directly, instead of from "pch.cpp".
     so that the PCH builder works the same way in gcc and vstudio.
   - Refine uniform loading from XML
-  - mesh classes
-    - a cpu mesh that could be used to convert mesh format
-    - a half-edge mesh for more complex mesh algorithm
+  - A half-edge mesh for complex mesh algorithm
   - PCXS2 GPU plugin:
     - move operations to GPU as much as possible
     - model beautifier
