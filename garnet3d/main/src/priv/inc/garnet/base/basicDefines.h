@@ -74,7 +74,7 @@
 // Windows platform
 #if defined( _WIN32 )
 #ifdef _XBOX_VER
-#if _XBOX_VER >= 200
+#if _XBOX_VER == 200
 #undef GN_XENON
 #define GN_XENON 1
 #undef GN_PLATFORM_NAME
