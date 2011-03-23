@@ -7,8 +7,8 @@ Copyright (c) 2006-2010, ASSIMP Development Team
 
 All rights reserved.
 
-Redistribution and use of this software in source and binary forms, 
-with or without modification, are permitted provided that the following 
+Redistribution and use of this software in source and binary forms,
+with or without modification, are permitted provided that the following
 conditions are met:
 
 * Redistributions of source code must retain the above
@@ -25,16 +25,16 @@ conditions are met:
   derived from this software without specific prior
   written permission of the ASSIMP Development Team.
 
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS 
-"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT 
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
 LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT 
+A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
 OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT 
+SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
 LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY 
-THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT 
-(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE 
+DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ---------------------------------------------------------------------------
 */
@@ -51,7 +51,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 	/* Define ASSIMP_BUILD_NO_XX_IMPORTER to disable a specific
 	 * file format loader. The loader is be excluded from the
 	 * build in this case. 'XX' stands for the most common file
-	 * extension of the file format. E.g.: 
+	 * extension of the file format. E.g.:
 	 * ASSIMP_BUILD_NO_X_IMPORTER disables the X loader.
 	 *
 	 * If you're unsure about that, take a look at the implementation of the
@@ -59,7 +59,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 	 * first lines of the corresponding unit.
 	 *
 	 * Other (mixed) configuration switches are listed here:
-	 *    ASSIMP_BUILD_NO_COMPRESSED_X 
+	 *    ASSIMP_BUILD_NO_COMPRESSED_X
 	 *      - Disable support for compressed X files
 	 *    ASSIMP_BUILD_NO_COMPRESSED_BLEND
 	 *      - Disable support for compressed Blender files*/
@@ -122,7 +122,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #	elif (defined ASSIMP_DLL)
 #		define ASSIMP_API __declspec(dllimport)
 #	else
-#		define ASSIMP_API 
+#		define ASSIMP_API
 #	endif
 
 	/* Force the compiler to inline a function, if possible
@@ -133,7 +133,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 	 * to skip dead paths (e.g. after an assertion evaluated to false). */
 #	define AI_WONT_RETURN __declspec(noreturn)
 #else
-	
+
 #	define AI_WONT_RETURN
 
 #	define ASSIMP_API
@@ -141,7 +141,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #endif // (defined _MSC_VER)
 
 #ifdef __cplusplus
-	/* No explicit 'struct' and 'enum' tags for C++, we don't want to 
+	/* No explicit 'struct' and 'enum' tags for C++, we don't want to
 	 * confuse the _AI_ of our IDE.
 	 */
 #	define C_STRUCT
@@ -157,8 +157,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 	MACRO_EXPANSION        = YES
 	EXPAND_ONLY_PREDEF     = YES
 	SEARCH_INCLUDES        = YES
-	INCLUDE_PATH           = 
-	INCLUDE_FILE_PATTERNS  = 
+	INCLUDE_PATH           =
+	INCLUDE_FILE_PATTERNS  =
 	PREDEFINED             = ASSIMP_DOXYGEN_BUILD=1
 	EXPAND_AS_DEFINED      = C_STRUCT C_ENUM
 	SKIP_FUNCTION_MACROS   = YES
@@ -170,8 +170,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 	 * to typedef all structs/enums. */
 	 //////////////////////////////////////////////////////////////////////////
 #	if (defined ASSIMP_DOXYGEN_BUILD)
-#		define C_STRUCT 
-#		define C_ENUM   
+#		define C_STRUCT
+#		define C_ENUM
 #	else
 #		define C_STRUCT struct
 #		define C_ENUM   enum
@@ -188,7 +188,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 	/* Define 'ASSIMP_BUILD_BOOST_WORKAROUND' to compile assimp
 	 * without boost. This is done by using a few workaround
 	 * classes and brings some limitations (e.g. some logging won't be done,
-	 * the library won't utilize threads or be threadsafe at all). 
+	 * the library won't utilize threads or be threadsafe at all).
 	 * This implies the 'ASSIMP_BUILD_SINGLETHREADED' setting. */
 	 //////////////////////////////////////////////////////////////////////////
 #ifdef ASSIMP_BUILD_BOOST_WORKAROUND
@@ -229,6 +229,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #		define ASSIMP_BUILD_X86_64BIT_ARCHITECTURE
 #	elif defined(_M_IA64)
 #		define ASSIMP_BUILD_IA_64BIT_ARCHITECTURE
+#	elif defined(_XBOX_VER) && _XBOX_VER == 200
+#		define ASSIMP_BUILD_PPC_32BIT_ARCHITECTURE
 #	else
 #		error unknown architecture
 #	endif

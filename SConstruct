@@ -572,10 +572,12 @@ class UTIL_copy_to_devkit:
 		popen2.popen3( 'xbmkdir %s'%path )
 
 	def __call__( self, target, source, env ):
+		xedk=UTIL_getenv("XEDK")
+		xbcp='%s\\bin\\win32\\xbcp.exe'%(xedk)
 		for x in target:
 			self.mkdir( self.targetDir, env )
 			# Note: xbcp.exe requires environment variable "SystemRoot".
-			cmdline = 'set SystemRoot=%s&xbcp /Q /D /Y %s %s'%(UTIL_getenv("SystemRoot"),x.abspath,self.targetDir)
+			cmdline = 'set SystemRoot=%s&"%s" /Q /D /Y "%s" %s'%(UTIL_getenv("SystemRoot"),xbcp,x.abspath,self.targetDir)
 			env.Execute( cmdline )
 			t = '%s\\%s'%(self.targetDir,os.path.basename(x.path))
 		return 0

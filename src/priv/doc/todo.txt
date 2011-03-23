@@ -136,14 +136,21 @@ RESOLVE ISSUES
     - Custom DOM wrapper fits our requirement better, and is pretty easy to implement.
 
 - What file format should we support:
-  - RESOLVED: FBX and garnet native format.
+  - RESOLVED: FBX, COLLADA and garnet native format.
     - FBX
-      - binary format loads fast.
+      - binary format get loaded fast.
       - free SDK.
-    - ASE: does not support skeleton animation. It can't be imported back to 3ds max.
-    - COLLADA: need to get a good loader for that.
-    - ma (maya ascii): need to write my own loader.
-    - assimp: promising candidate. Investe more.
+      - but, no xbox support
+    - COLLADA:
+      - need to get a good loader for that.
+      - format is open, which mean it could be supported on all platforms.
+      - but, ascii format get loaded slowly.
+    - ASE
+      - does not support skeleton animation. It can't be imported back to 3ds max.
+    - ma (maya ascii):
+      - need to write my own loader.
+    - assimp:
+      - promising candidate. Investe more.
 
 - Do we need to separate shading language enum and shader model enum?
   - RESOLVED: Yes.

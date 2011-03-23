@@ -99,15 +99,17 @@ namespace GN { namespace gfx
     {
         enum Enum
         {
-            SM_2_0     = 1<<0, //< D3D Shader Model 2.0
-            SM_3_0     = 1<<1, //< D3D Shader Model 3.0
-            SM_4_0     = 1<<2, //< D3D Shader Model 4.0
-            SM_5_0     = 1<<3, //< D3D Shader Model 5.0
-            ARB1       = 1<<4, //< OpenGL ARB shader program 1.0
-            GLSL_1_00  = 1<<5, //< OpenGL Shading Language 1.00
-            GLSL_1_20  = 1<<6, //< OpenGL Shading Language 1.20 (OpenGL 2.0+)
-            GLSL_1_30  = 1<<7, //< OpenGL Shading Language 1.30 (GL_EXT_gpu_shader4)
-            GLSL_1_50  = 1<<8, //< OpenGL Shading Language 1.50 (GL_ARB_gpu_shader5)
+            SM_2_0     = 1<<0, //< D3D Shader Model 2.0 (D3D9)
+            SM_3_0     = 1<<1, //< D3D Shader Model 3.0 (D3D9)
+            SM_3_X     = 1<<2, //< D3D Shader Model for Xbox 360
+            SM_4_0     = 1<<3, //< D3D Shader Model 4.0 (D3D10)
+            SM_5_0     = 1<<4, //< D3D Shader Model 5.0 (D3D11)
+
+            ARB1       = 1<<5, //< OpenGL ARB shader program 1.0
+            GLSL_1_00  = 1<<6, //< OpenGL Shading Language 1.00
+            GLSL_1_20  = 1<<7, //< OpenGL Shading Language 1.20 (OpenGL 2.0+)
+            GLSL_1_30  = 1<<8, //< OpenGL Shading Language 1.30 (GL_EXT_gpu_shader4)
+            GLSL_1_50  = 1<<9, //< OpenGL Shading Language 1.50 (GL_ARB_gpu_shader5)
         };
 
         static uint32 sFromString( const char * str )
@@ -132,6 +134,7 @@ namespace GN { namespace gfx
 
                      if( 0 == stringCompareI( "SM_2_0",    s, t-s+1 ) ) flags |= SM_2_0;
                 else if( 0 == stringCompareI( "SM_3_0",    s, t-s+1 ) ) flags |= SM_3_0;
+                else if( 0 == stringCompareI( "SM_3_X"   , s, t-s+1 ) ) flags |= SM_3_X;
                 else if( 0 == stringCompareI( "SM_4_0",    s, t-s+1 ) ) flags |= SM_4_0;
                 else if( 0 == stringCompareI( "SM_5_0",    s, t-s+1 ) ) flags |= SM_5_0;
                 else if( 0 == stringCompareI( "ARB1",      s, t-s+1 ) ) flags |= ARB1;
@@ -154,6 +157,7 @@ namespace GN { namespace gfx
 
             if( flags & SM_2_0    ) { flags &= ~SM_2_0;    str += str.empty() ? "SM_2_0"    : "|SM_2_0"; }
             if( flags & SM_3_0    ) { flags &= ~SM_3_0;    str += str.empty() ? "SM_3_0"    : "|SM_3_0"; }
+            if( flags & SM_3_X    ) { flags &= ~SM_3_X;    str += str.empty() ? "SM_3_X"    : "|SM_3_X"; }
             if( flags & SM_4_0    ) { flags &= ~SM_4_0;    str += str.empty() ? "SM_4_0"    : "|SM_4_0"; }
             if( flags & SM_5_0    ) { flags &= ~SM_5_0;    str += str.empty() ? "SM_5_0"    : "|SM_5_0"; }
             if( flags & ARB1      ) { flags &= ~ARB1;      str += str.empty() ? "ARB1"      : "|ARB1"; }
