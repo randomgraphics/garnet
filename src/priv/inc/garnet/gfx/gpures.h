@@ -379,7 +379,7 @@ namespace GN { namespace gfx
         MeshVertexFormat    vtxfmt; ///< vertex format
         void *              vertices[GpuContext::MAX_VERTEX_BUFFERS]; ///< NULL pointer means vertex data are undefined
         size_t              strides[GpuContext::MAX_VERTEX_BUFFERS];  ///< vertex buffer strides. 0 means using vertex size defined by vertex format.
-        size_t              offsets[GpuContext::MAX_VERTEX_BUFFERS];
+        size_t              offsets[GpuContext::MAX_VERTEX_BUFFERS];  ///< Number of bytes from vertex buffer beginning to the first element that will be used.
         void *              indices; ///< Null means index data are undefined.
 
         ///

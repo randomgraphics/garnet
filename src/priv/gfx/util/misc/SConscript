@@ -4,6 +4,8 @@ sources = [
 	'ase.cpp',
 	'bitmapFont.cpp',
 	'charBitmap8x13.cpp',
+	'fatModel.cpp',
+	'fatModelLoader.cpp',
 	'fontft2.cpp',
 	'line.cpp',
 	'misc.cpp',
