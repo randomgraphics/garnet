@@ -12,10 +12,6 @@ namespace GN { namespace gfx
 {
     class FatVertexBuffer
     {
-        void * mVertices[NUM_SEMANTICS];
-        size_t mCount;
-        uint32 mFormat;
-
     public:
 
         enum VertexSemantic
@@ -32,6 +28,7 @@ namespace GN { namespace gfx
             TEXCOORD5,
             TEXCOORD6,
             TEXCOORD7,
+            TEXCOORD_LAST = TEXCOORD7,
             ALBEDO,
             BONE_ID,
             BONE_WEIGHT,
@@ -77,12 +74,14 @@ namespace GN { namespace gfx
 
         uint32 getVertexFormat() const { return mFormat; }
 
+        size_t getVertexCount() const { return mCount; }
+
         // each semantic is an array with each element takes 128bit memory (could be float4, uint4 or int4)
         void * getVertexSementic( int semantic ) const
         {
             if( 0 <= semantic && semantic < NUM_SEMANTICS )
             {
-                return mVertices[i];
+                return mVertices[semantic];
             }
             else
             {
@@ -92,7 +91,24 @@ namespace GN { namespace gfx
 
         void * getPosition() const { return mVertices[POSITION]; }
         void * getNormal() const { return mVertices[NORMAL]; }
-        void * getTexcoord0() const { return mVertices[TEXCOORD0]; }
+        void * getTexcoord( size_t stage ) const
+        {
+            size_t semantic = TEXCOORD0+stage;
+            if( 0 <= semantic && semantic <= TEXCOORD_LAST )
+            {
+                return mVertices[semantic];
+            }
+            else
+            {
+                return NULL;
+            }
+        }
+
+    private:
+
+        void * mVertices[NUM_SEMANTICS];
+        size_t mCount;
+        uint32 mFormat;
     };
 
     struct FatMeshSubset
@@ -104,6 +120,15 @@ namespace GN { namespace gfx
         size_t numidx;
     };
 
+    struct FatMesh
+    {
+        FatVertexBuffer          vertices;
+        DynaArray<uint32>        indices;
+        DynaArray<FatMeshSubset> subsets;
+        StrA                     skeleton;
+        Boxf                     bbox;
+    };
+
     struct FatBone
     {
         // Transformation (from parent space to bone local space)
@@ -112,12 +137,26 @@ namespace GN { namespace gfx
         Vector3f    translation;
     };
 
+    struct FatSkeleton
+    {
+        StrA               name;
+        DynaArray<FatBone> bones;
+    };
+
     struct FatMaterial
     {
         StrA     name; //< Material name
         StrA     albedoTexture;
         StrA     normalTexture;
         Vector4f albedoColor;
+
+        void clear()
+        {
+            name.clear();
+            albedoTexture.clear();
+            normalTexture.clear();
+            albedoColor.set( 0, 0, 0, 1 );
+        }
     };
 
     struct FatBonePose
@@ -134,13 +173,23 @@ namespace GN { namespace gfx
 
     struct FatModel
     {
-        StrA                         name;
-        FatVertexBuffer              vertices;
-        DynaArray<uint32>            indices;
-        DynaArray<FatMeshSubset>     subsets;
-        DynaArray<FatBone>           skeleton;
+        DynaArray<FatMesh>           meshes;
+        StringMap<char,FatSkeleton>  skeletons;
         StringMap<char,FatMaterial>  materials;
         StringMap<char,FatAnimation> animations;
+        Boxf                         bbox;
+
+        void clear()
+        {
+            meshes.clear();
+            skeletons.clear();
+            materials.clear();
+            animations.clear();
+            bbox.clear();
+        }
+
+        bool loadFromFile( const StrA & filename );
+        bool saveToFile( const StrA & filename ) const;
     };
 }}
 

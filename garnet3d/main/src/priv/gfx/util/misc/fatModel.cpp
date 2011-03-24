@@ -3,6 +3,10 @@
 
 static GN::Logger * sLogger = GN::getLogger("GN.gfx.FatModel");
 
+// *****************************************************************************
+// FatVertexBuffer
+// *****************************************************************************
+
 //
 //
 // -----------------------------------------------------------------------------
@@ -21,7 +25,7 @@ bool GN::gfx::FatVertexBuffer::resize( uint32 format, size_t count )
     {
         if( (1<<i) & format )
         {
-            vertices[i] = HeapMemory::alignedAlloc( count * 128 );
+            vertices[i] = HeapMemory::alignedAlloc( count * 128, 16 );
             if( NULL == vertices[i] )
             {
                 outofmem = true;
@@ -41,15 +45,21 @@ bool GN::gfx::FatVertexBuffer::resize( uint32 format, size_t count )
 
     for( int i = 0; i < NUM_SEMANTICS; ++i )
     {
-        safeHeapDealloc( mVertices[i] );
-
         if( (1<<i) & format )
         {
             GN_ASSERT( vertices[i] );
+            memcpy( vertices[i], mVertices[i], math::getmin<>(count,mCount) );
+            safeHeapDealloc( mVertices[i] );
             mVertices[i] = vertices[i];
+        }
+        else
+        {
+            safeHeapDealloc( mVertices[i] );
         }
     }
 
+    mFormat = format;
+    mCount = count;
+
     return true;
 }
-

@@ -1,4 +1,5 @@
 #include "pch.h"
+#include "ase.h"
 
 #if GN_MSVC
 #pragma warning(disable:4100) // unreferenced formal parameter
@@ -1619,17 +1620,6 @@ bool sLoadModelHierarchyFromMeshBinary( ModelHierarchyDesc & desc, File & fp )
 // *****************************************************************************
 // ModelHierarchyDesc
 // *****************************************************************************
-
-//
-//
-// -----------------------------------------------------------------------------
-void GN::gfx::ModelHierarchyDesc::clear()
-{
-    meshes.clear();
-    meshdata.clear();
-    models.clear();
-    nodes.clear();
-}
 
 //
 //

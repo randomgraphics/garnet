@@ -4,9 +4,6 @@ TODO
 - 程序中标注TODO的地方
 
 - p0
-  - Code tree reorg
-    - Flatten code tree
-    - Try Re-enable "non-static" build
   - FatMesh for model loading/saving/conversion
   - skin mesh
     - test case: porting DXSDK sample.
@@ -55,6 +52,9 @@ TODO
   - GPU resouce aliasing
 
 - p2
+  - Code tree reorg
+    - Flatten code tree
+    - Try Re-enable "non-static" build
   - Use Windows font engine (Direct2D?)
   - replace FBX test app with something else (not owned by Autodesk).
   - refine PCH builder to generate PCH out of "pch.h" directly, instead of from "pch.cpp".

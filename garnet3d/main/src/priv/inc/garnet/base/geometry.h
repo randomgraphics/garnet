@@ -2373,6 +2373,14 @@ namespace GN
     public :
 
         ///
+        /// Clear the box
+        ///
+        void clear()
+        {
+            x = y = z = w = h = d = (T)0;
+        }
+
+        ///
         /// set box value
         ///
         void set( T x_, T y_, T z_, T w_, T h_, T d_ )

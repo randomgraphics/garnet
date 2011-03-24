@@ -38,16 +38,18 @@ namespace GN { namespace gfx
 
         //@{
 
-        void clear();
+        void clear()
+        {
+            meshes.clear();
+            meshdata.clear();
+            models.clear();
+            nodes.clear();
+        }
 
         /// Load models from file. Existing content will be discarded.
         bool loadFromFile( const char * filename );
 
         bool saveToFile( const char * filename ) const;
-
-        // TODO:
-        //  bool LoadFromFile( File & );
-        //  bool saveToFile( File & ) const;
 
         //@}
     };
