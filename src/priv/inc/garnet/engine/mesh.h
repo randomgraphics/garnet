@@ -6,6 +6,9 @@
 /// \author  chen@@chenli-homepc (2011.2.28)
 // *****************************************************************************
 
+// Forward declaration.
+namespace GN { namespace gfx { struct FatModel; } }
+
 namespace GN { namespace engine
 {
     ///
@@ -44,6 +47,9 @@ namespace GN { namespace engine
             if( !mhd.loadFromFile( filename ) ) return false;
             return loadFromModelHierarchy( mhd );
         }
+
+        /// Load the whole fat model as single static mesh
+        bool loadFromFatModel( const GN::gfx::FatModel & );
 
     private:
 

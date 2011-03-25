@@ -74,7 +74,7 @@ namespace GN { namespace gfx
 
         uint32 getVertexFormat() const { return mFormat; }
 
-        size_t getVertexCount() const { return mCount; }
+        uint32 getVertexCount() const { return mCount; }
 
         // each semantic is an array with each element takes 128bit memory (could be float4, uint4 or int4)
         void * getVertexSementic( int semantic ) const
@@ -107,7 +107,7 @@ namespace GN { namespace gfx
     private:
 
         void * mVertices[NUM_SEMANTICS];
-        size_t mCount;
+        uint32 mCount;
         uint32 mFormat;
     };
 
@@ -173,6 +173,7 @@ namespace GN { namespace gfx
 
     struct FatModel
     {
+        StrA                         name; // name of the model. Usually the filename which the model is loaded from.
         DynaArray<FatMesh>           meshes;
         StringMap<char,FatSkeleton>  skeletons;
         StringMap<char,FatMaterial>  materials;
