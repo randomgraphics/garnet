@@ -116,8 +116,8 @@ namespace GN { namespace gfx
         StrA   material; // name of the material.
         uint32 basevtx;
         uint32 numvtx;
-        size_t startidx;
-        size_t numidx;
+        uint32 startidx;
+        uint32 numidx;
     };
 
     struct FatMesh

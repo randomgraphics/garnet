@@ -158,7 +158,7 @@ void GN::wcs2mbs( StrA & o, const wchar_t * i, size_t l )
     else
     {
         o.mPtr[l] = 0;
-        o.mCount = l;
+        o.setSize( l );
     }
 }
 
@@ -216,7 +216,7 @@ void GN::mbs2wcs( StrW & o, const char * i, size_t l )
     {
         o.mPtr[ol] = 0;
         while( ol > 0 && 0 == o.mPtr[ol] ) --ol;
-        o.mCount = ol+1;
+        o.setSize( ol+1 );
     }
 #else
     l = ::mbstowcs( o.mPtr, i, l );
@@ -227,7 +227,7 @@ void GN::mbs2wcs( StrW & o, const char * i, size_t l )
     else
     {
         o.mPtr[l] = 0;
-        o.mCount = l;
+        o.setSize( l );
     }
 #endif
 }

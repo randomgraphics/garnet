@@ -474,12 +474,12 @@ namespace GN
             return h ? *h : (H)0;
         }
 
-        const char * handle2name( H h ) const
+        const StrA * handle2name( H h ) const
         {
             if( !mItems.validHandle( h ) )
                 return NULL;
             else
-                return mItems[h]->name;
+                return &mItems[h]->name;
         }
 
         T & get( H h ) const

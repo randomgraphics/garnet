@@ -34,7 +34,7 @@ namespace GN { namespace gfx
         //@{
         GpuResourceDatabase & getGdb() const { return mDatabase; }
         inline const Guid   & type() const;
-        inline const char   * name() const;
+        inline const StrA   & name() const;
         //@}
 
         /// Cast GPU resource pointer with type check.
@@ -957,7 +957,9 @@ namespace GN { namespace gfx
 
     ///
     /// This class manages GPU resource creation, deletion, as well as
-    /// mapping betwen resource name and resource handle.
+    /// mapping betwen resource name and resource instance.
+    ///
+    /// Note that resource name is optional
     ///
     class GpuResourceDatabase : public NoCopy
     {
@@ -989,8 +991,8 @@ namespace GN { namespace gfx
         AutoRef<GpuResource> findOrCreateResource( const Guid & type, const char * name, bool * isExistingResource = NULL );
         bool                 validResource( const Guid & type, const GpuResource * resource ) const; // valid resource pointer of specific type
         bool                 validResource( const GpuResource * resource ) const; // valid resource pointer of whatever type.
-        const char         * getResourceName( const GpuResource * resource ) const;
-        const Guid         & getResourceType( const GpuResource * resource ) const;
+        const StrA         * getResourceName( const GpuResource * resource ) const;
+        const Guid         * getResourceType( const GpuResource * resource ) const;
         //@}
 
         // templated utilities
