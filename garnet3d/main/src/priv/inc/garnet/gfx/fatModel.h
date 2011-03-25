@@ -14,7 +14,7 @@ namespace GN { namespace gfx
     {
     public:
 
-        enum VertexSemantic
+        enum Semantic
         {
             POSITION = 0,
             NORMAL,
@@ -41,14 +41,19 @@ namespace GN { namespace gfx
             CUSTOM6,
             CUSTOM7,
             NUM_SEMANTICS,
+            INVALID = 0xFFFFFFFF,
         };
+
+        static const char * const SEMANTIC_NAMES[];
+
+        static Semantic sString2Semantic( const char * s );
 
         FatVertexBuffer()
             : mCount(0)
-            , mFormat(0)
+            , mLayout(0)
         {
-            memset( &mVertices, 0, sizeof(mVertices) );
-
+            memset( &mElements, 0, sizeof(mElements) );
+            memset( &mFormats, 0, sizeof(mFormats) );
         }
 
         ~FatVertexBuffer()
@@ -60,28 +65,28 @@ namespace GN { namespace gfx
         {
             for( int i = 0; i < NUM_SEMANTICS; ++i )
             {
-                if( mVertices[i] )
+                if( mElements[i] )
                 {
-                    HeapMemory::dealloc( mVertices[i] );
-                    mVertices[i] = NULL;
+                    HeapMemory::dealloc( mElements[i] );
+                    mElements[i] = NULL;
                 }
             }
             mCount = 0;
         }
 
-        // If resizing fails, the function returns false. And the mesh content remains unchanged.
-        bool resize( uint32 format, size_t count );
+        /// If resizing fails, the function returns false. And the mesh content remains unchanged.
+        bool resize( uint32 layout, uint32 count );
 
-        uint32 getVertexFormat() const { return mFormat; }
+        uint32 getLayout() const { return mLayout; }
 
         uint32 getVertexCount() const { return mCount; }
 
-        // each semantic is an array with each element takes 128bit memory (could be float4, uint4 or int4)
-        void * getVertexSementic( int semantic ) const
+        /// No matter what the format is, element array is always in unit of 16 bytes (like float4 or int4).
+        void * getElementData( int semantic ) const
         {
             if( 0 <= semantic && semantic < NUM_SEMANTICS )
             {
-                return mVertices[semantic];
+                return mElements[semantic];
             }
             else
             {
@@ -89,14 +94,36 @@ namespace GN { namespace gfx
             }
         }
 
-        void * getPosition() const { return mVertices[POSITION]; }
-        void * getNormal() const { return mVertices[NORMAL]; }
+        /// Get format of the element.
+        ColorFormat getElementFormat( int semantic ) const
+        {
+            if( 0 <= semantic && semantic < NUM_SEMANTICS )
+            {
+                return mFormats[semantic];
+            }
+            else
+            {
+                return ColorFormat::UNKNOWN;
+            }
+        }
+
+        /// Set element format
+        void setElementFormat( int semantic, ColorFormat format )
+        {
+            if( 0 <= semantic && semantic < NUM_SEMANTICS )
+            {
+                mFormats[semantic] = format;
+            }
+        }
+
+        void * getPosition() const { return mElements[POSITION]; }
+        void * getNormal() const { return mElements[NORMAL]; }
         void * getTexcoord( size_t stage ) const
         {
             size_t semantic = TEXCOORD0+stage;
             if( 0 <= semantic && semantic <= TEXCOORD_LAST )
             {
-                return mVertices[semantic];
+                return mElements[semantic];
             }
             else
             {
@@ -104,11 +131,21 @@ namespace GN { namespace gfx
             }
         }
 
+        void GenerateMeshVertexFormat( MeshVertexFormat & mvf ) const;
+
+        bool GenerateVertexStream(
+                const MeshVertexFormat & mvf,
+                size_t                   stream,
+                size_t                   stride,
+                void                   * buffer,
+                size_t                   bufferSize ) const;
+
     private:
 
-        void * mVertices[NUM_SEMANTICS];
-        uint32 mCount;
-        uint32 mFormat;
+        void      * mElements[NUM_SEMANTICS];
+        ColorFormat mFormats[NUM_SEMANTICS];
+        uint32      mCount;
+        uint32      mLayout;
     };
 
     struct FatMeshSubset
@@ -123,7 +160,7 @@ namespace GN { namespace gfx
     struct FatMesh
     {
         FatVertexBuffer          vertices;
-        DynaArray<uint32>        indices;
+        DynaArray<uint32,uint32> indices;
         DynaArray<FatMeshSubset> subsets;
         StrA                     skeleton;
         Boxf                     bbox;

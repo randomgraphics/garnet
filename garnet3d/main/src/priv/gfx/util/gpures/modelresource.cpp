@@ -998,7 +998,7 @@ void GN::gfx::ModelResource::Impl::draw() const
     MeshResource * mesh = mMeshResource;
     if( NULL == mesh ) return;
 
-    const MeshResourceDesc & meshdesc = mesh->getDesc();
+    const MeshResourceDescBase & meshdesc = mesh->getDesc();
 
     Gpu & g = getGdb().getGpu();
 

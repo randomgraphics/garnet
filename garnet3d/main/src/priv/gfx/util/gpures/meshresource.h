@@ -16,7 +16,7 @@ namespace GN { namespace gfx
     struct VertexFormatProperties
     {
         /// minimal strides for each stream
-        uint32 minStrides[GpuContext::MAX_VERTEX_BUFFERS];
+        uint16 minStrides[GpuContext::MAX_VERTEX_BUFFERS];
 
         /// true means that stream is referenced by the vertex format.
         bool used[GpuContext::MAX_VERTEX_BUFFERS];
@@ -46,7 +46,7 @@ namespace GN { namespace gfx
     public:
 
         bool  reset( const MeshResourceDesc * desc );
-        const MeshResourceDesc & getDesc() const { return mDesc; }
+        const MeshResourceDescBase & getDesc() const { return mDesc; }
         void  applyToContext( GpuContext & context ) const;
         void  calculateBoundingBox( Box<float> & ) const;
         void  calculateBoundingSphere( Sphere<float> & ) const;
@@ -66,10 +66,10 @@ namespace GN { namespace gfx
             AutoRef<IdxBuf>  gpudata;
         };
 
-        MeshResource    & mOwner;
-        MeshResourceDesc  mDesc;
-        VertexBuffer      mVtxBufs[GpuContext::MAX_VERTEX_BUFFERS];
-        IndexBuffer       mIdxBuf;
+        MeshResource        & mOwner;
+        MeshResourceDescBase  mDesc;
+        VertexBuffer          mVtxBufs[GpuContext::MAX_VERTEX_BUFFERS];
+        IndexBuffer           mIdxBuf;
 
         // ********************************
         // private functions
