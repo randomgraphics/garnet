@@ -1,4 +1,5 @@
 #include "pch.h"
+#include <garnet/gfx/fatModel.h>
 
 using namespace GN;
 using namespace GN::gfx;
@@ -39,10 +40,10 @@ bool GN::engine::StaticMesh::loadFromModelHierarchy( const gfx::ModelHierarchyDe
 
     GpuResourceDatabase & gdb = *getGdb();
 
-    // create mesh list. TODO: load mesh on-demand.
+    // create mesh list.
     DynaArray<AutoRef<MeshResource> > meshes;
     {
-        GN_SCOPE_PROFILER( sLoadModelsFromASE_GenerateMeshList, "Load ASE into VisualComponent: generating mesh list" );
+        GN_SCOPE_PROFILER( sLoadModelsFromASE_GenerateMeshList, "generating mesh list" );
 
         meshes.resize( mhd.meshes.size() );
 
@@ -78,6 +79,43 @@ bool GN::engine::StaticMesh::loadFromModelHierarchy( const gfx::ModelHierarchyDe
     mSpacial.setSelfBoundingBox( mhd.bbox );
 
     // TODO: handle node hierarchy
+
+    return true;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+bool GN::engine::StaticMesh::loadFromFatModel( const GN::gfx::FatModel & fatmodel )
+{
+    GN_SCOPE_PROFILER( StaticMesh_loadFromFatModel, "Load models from FatModel" );
+
+    mVisual.clear();
+
+    GpuResourceDatabase & gdb = *getGdb();
+
+    DynaArray<AutoRef<MeshResource> > meshes;
+    meshes.resize( fatmodel.meshes.size() );
+    for( size_t i = 0; i < fatmodel.meshes.size(); ++i )
+    {
+        const FatMesh & fatmesh = fatmodel.meshes[i];
+
+        StrA meshName = stringFormat( "%s.mesh.%d", fatmodel.name, i );
+
+        // use exising mesh, if possible
+        meshes[i] = gdb.findResource<MeshResource>( meshName );
+        if( meshes[i] ) continue;
+
+        MeshResourceDesc mrd;
+        mrd.prim = PrimitiveType::TRIANGLE_LIST;
+        mrd.numvtx = fatmesh.vertices.getVertexCount();
+
+        GN_UNIMPL();
+
+        meshes[i] = gdb.createResource<MeshResource>( meshName );
+        if( !meshes[i] ) return false;
+        if( !meshes[i]->reset( &mrd ) ) return false;
+    }
 
     return true;
 }
