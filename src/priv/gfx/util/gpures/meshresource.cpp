@@ -29,9 +29,9 @@ bool GN::gfx::VertexFormatProperties::analyze( const MeshVertexFormat & vf )
 
         used[e.stream] = true;
 
-        uint32 currentStride = minStrides[e.stream];
+        uint16 currentStride = minStrides[e.stream];
 
-        uint32 newStride = e.offset + e.format.getBytesPerBlock();
+        uint16 newStride = e.offset + e.format.getBytesPerBlock();
 
         if( newStride > currentStride ) minStrides[e.stream] = newStride;
     }
@@ -91,7 +91,9 @@ GN::gfx::MeshResource::Impl::applyToContext( GpuContext & context ) const
 void
 GN::gfx::MeshResource::Impl::calculateBoundingBox( Box<float> & box ) const
 {
-    MeshResourceDesc desc = mDesc;
+    MeshResourceDesc desc;
+
+    (MeshResourceDescBase)desc = mDesc;
 
     DynaArray<uint8> buffers[GpuContext::MAX_VERTEX_BUFFERS];
     for( size_t i = 0; i < GpuContext::MAX_VERTEX_BUFFERS; ++i )
@@ -113,7 +115,9 @@ GN::gfx::MeshResource::Impl::calculateBoundingBox( Box<float> & box ) const
 void
 GN::gfx::MeshResource::Impl::calculateBoundingSphere( Sphere<float> & sphere ) const
 {
-    MeshResourceDesc desc = mDesc;
+    MeshResourceDesc desc;
+
+    (MeshResourceDescBase)desc = mDesc;
 
     DynaArray<uint8> buffers[GpuContext::MAX_VERTEX_BUFFERS];
     for( size_t i = 0; i < GpuContext::MAX_VERTEX_BUFFERS; ++i )
@@ -155,7 +159,7 @@ bool GN::gfx::MeshResource::Impl::create( const MeshResourceDesc & desc )
             if( !vfp.used[i] ) continue; // ignore unused vertex buffer
 
             // calculate vertex stride
-            uint32 stride;
+            uint16 stride;
             if( 0 == desc.strides[i] )
             {
                 stride = vfp.minStrides[i];
@@ -195,10 +199,6 @@ bool GN::gfx::MeshResource::Impl::create( const MeshResourceDesc & desc )
 
         if( desc.indices ) mIdxBuf.gpudata->update( 0, 0, desc.indices );
     }
-
-    // clear data pointers in stored decriptor
-    memset( mDesc.vertices, 0, sizeof(mDesc.vertices) );
-    mDesc.indices = NULL;
 
     // success
     return true;
@@ -330,7 +330,7 @@ bool GN::gfx::MeshResource::reset( const MeshResourceDesc * desc )
 //
 //
 // -----------------------------------------------------------------------------
-const MeshResourceDesc & GN::gfx::MeshResource::getDesc() const
+const MeshResourceDescBase & GN::gfx::MeshResource::getDesc() const
 {
     return mImpl->getDesc();
 }

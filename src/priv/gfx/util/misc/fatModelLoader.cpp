@@ -73,6 +73,8 @@ sLoadFromASE( FatModel & fatmodel, File & file, const StrA & filename )
     AseScene ase;
     if( !ase.loadFromFile(file) ) return false;
 
+    fatmodel.name = filename;
+
     // copy materials
     for( size_t i = 0; i < ase.materials.size(); ++i )
     {
@@ -129,14 +131,17 @@ sLoadFromASE( FatModel & fatmodel, File & file, const StrA & filename )
         if( position )
         {
             sCopyVertexElement<Vector3f>( dst.vertices.getPosition(), src, *position );
+            dst.vertices.setElementFormat( FatVertexBuffer::POSITION, ColorFormat::FLOAT3 );
         }
         if( normal )
         {
             sCopyVertexElement<Vector3f>( dst.vertices.getNormal(), src, *normal );
+            dst.vertices.setElementFormat( FatVertexBuffer::NORMAL, ColorFormat::FLOAT3 );
         }
         if( texcoord )
         {
             sCopyVertexElement<Vector2f>( dst.vertices.getTexcoord(0), src, *texcoord );
+            dst.vertices.setElementFormat( FatVertexBuffer::TEXCOORD0, ColorFormat::FLOAT2 );
         }
 
         // copy index buffer
@@ -172,7 +177,7 @@ sLoadFromASE( FatModel & fatmodel, File & file, const StrA & filename )
         dst.basevtx = src.basevtx;
         dst.numvtx = src.numvtx;
         dst.startidx = src.startidx;
-        dst.numidx = dst.numidx;
+        dst.numidx = src.numidx;
 
         fatmodel.meshes[src.meshid].subsets.append( dst );
     }

@@ -10,20 +10,67 @@ static GN::Logger * sLogger = GN::getLogger("GN.gfx.FatModel");
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::FatVertexBuffer::resize( uint32 format, size_t count )
+const char * const GN::gfx::FatVertexBuffer::SEMANTIC_NAMES[] =
 {
-    if( 0 == format || 0 == count )
+    "POSITION",
+    "NORMAL",
+    "TANGENT",
+    "BINORMAL",
+    "TEXCOORD0",
+    "TEXCOORD1",
+    "TEXCOORD2",
+    "TEXCOORD3",
+    "TEXCOORD4",
+    "TEXCOORD5",
+    "TEXCOORD6",
+    "TEXCOORD7",
+    "ALBEDO",
+    "BONE_ID",
+    "BONE_WEIGHT",
+    "CUSTOM0",
+    "CUSTOM1",
+    "CUSTOM2",
+    "CUSTOM3",
+    "CUSTOM4",
+    "CUSTOM5",
+    "CUSTOM6",
+    "CUSTOM7",
+};
+GN_CASSERT( GN_ARRAY_COUNT(GN::gfx::FatVertexBuffer::SEMANTIC_NAMES) == GN::gfx::FatVertexBuffer::NUM_SEMANTICS );
+
+//
+//
+// -----------------------------------------------------------------------------
+GN::gfx::FatVertexBuffer::Semantic GN::gfx::FatVertexBuffer::sString2Semantic( const char * s )
+{
+    for( int i = 0; i < NUM_SEMANTICS; ++i )
+    {
+        if( 0 == stringCompare( s, SEMANTIC_NAMES[i] ) )
+        {
+            return (Semantic)i;
+        }
+    }
+    return INVALID;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+bool GN::gfx::FatVertexBuffer::resize( uint32 layout, uint32 count )
+{
+    if( 0 == layout || 0 == count )
     {
         clear();
         return true;
     }
 
+    // allocate memory
     void * vertices[NUM_SEMANTICS];
     memset( vertices, 0, sizeof(vertices) );
     bool outofmem = false;
     for( int i = 0; i < NUM_SEMANTICS; ++i )
     {
-        if( (1<<i) & format )
+        if( (1<<i) & layout )
         {
             vertices[i] = HeapMemory::alignedAlloc( count * 128, 16 );
             if( NULL == vertices[i] )
@@ -43,23 +90,139 @@ bool GN::gfx::FatVertexBuffer::resize( uint32 format, size_t count )
         return false;
     }
 
+    // update data pointer and format
     for( int i = 0; i < NUM_SEMANTICS; ++i )
     {
-        if( (1<<i) & format )
+        if( (1<<i) & layout )
         {
             GN_ASSERT( vertices[i] );
-            memcpy( vertices[i], mVertices[i], math::getmin<>(count,mCount) );
-            safeHeapDealloc( mVertices[i] );
-            mVertices[i] = vertices[i];
+            memcpy( vertices[i], mElements[i], math::getmin<>(count,mCount) );
+            safeHeapDealloc( mElements[i] );
+            mElements[i] = vertices[i];
         }
         else
         {
-            safeHeapDealloc( mVertices[i] );
+            safeHeapDealloc( mElements[i] );
+        }
+
+        // clear both new and unused formats
+        if( (0 == ((1<<i) & layout)) || (0 == ((1<<i) & mLayout)) )
+        {
+            mFormats[i] = ColorFormat::UNKNOWN;
         }
     }
 
-    mFormat = format;
+    mLayout = layout;
     mCount = count;
+
+    return true;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::gfx::FatVertexBuffer::GenerateMeshVertexFormat( MeshVertexFormat & mvf ) const
+{
+    mvf.clear();
+
+    uint8 offset = 0;
+    for( int i = 0; i < NUM_SEMANTICS; ++i )
+    {
+        if( (1<<i) & mLayout )
+        {
+            MeshVertexElement & e = mvf.elements[mvf.numElements];
+
+            e.format = mFormats[i];
+            e.stream = 0;
+            e.offset = offset;
+            e.setSemantic( SEMANTIC_NAMES[i] );
+
+            offset += e.format.getBytesPerBlock();
+            ++mvf.numElements;
+        }
+    }
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+bool GN::gfx::FatVertexBuffer::GenerateVertexStream(
+    const MeshVertexFormat & mvf,
+    size_t                   stream,
+    size_t                   stride,
+    void                   * buffer,
+    size_t                   bufferSize ) const
+{
+    // Check parameters
+    uint32 numStreams = mvf.calcNumStreams();
+    if( stream >= numStreams )
+    {
+        GN_ERROR(sLogger)( "Invalid stream." );
+        return false;
+    }
+
+    uint32 minStride = mvf.calcStreamStride( (uint32)stream );
+    if( 0 == stride )
+    {
+        stride = minStride;
+    }
+    else if( stride < minStride )
+    {
+        GN_ERROR(sLogger)( "Stride is too small." );
+        return false;
+    }
+
+    if( NULL == buffer )
+    {
+        GN_ERROR(sLogger)( "Null buffer pointer." );
+        return false;
+    }
+
+    size_t minBufferSize = stride * mCount;
+    if( bufferSize < minBufferSize )
+    {
+        GN_ERROR(sLogger)( "Buffer size is too small." );
+        return false;
+    }
+
+    Semantic semantics[MeshVertexFormat::MAX_VERTEX_ELEMENTS];
+    for( size_t i = 0; i < mvf.numElements; ++i )
+    {
+        const char * s = mvf.elements[i].semantic;
+        if( stringEmpty(s) )
+        {
+            s = "[EMPTY]";
+            semantics[i] = INVALID;
+        }
+        else
+        {
+            semantics[i] = sString2Semantic(s);
+        }
+        if( INVALID == semantics[i] )
+        {
+            GN_WARN(sLogger)( "unsupport semantic: %s", mvf.elements[i].semantic );
+        }
+    }
+
+    // Copy vertex data
+    for( size_t j = 0; j < mvf.numElements; ++j )
+    {
+        if( semantics[j] == INVALID ) continue;
+
+        const MeshVertexElement & e = mvf.elements[j];
+        SafeArrayAccessor<const uint8> src( (const uint8*)mElements[semantics[j]], mCount * 16 );
+        SafeArrayAccessor<uint8>       dst( (uint8*)buffer + e.offset, (mCount * stride) - e.offset );
+        size_t size = e.format.getBytesPerBlock();
+
+        GN_ASSERT( ( e.offset + size ) <= stride );
+
+        for( size_t i = 0; i < mCount; ++i )
+        {
+            memcpy( dst.subrange(0,size), src.subrange(0,size), size );
+            src += 16;
+            dst += stride;
+        }
+    }
 
     return true;
 }

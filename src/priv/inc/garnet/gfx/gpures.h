@@ -251,14 +251,14 @@ namespace GN { namespace gfx
         ///
         /// Calculate stride of specific stream.
         ///
-        uint32 inline calcStreamStride( uint32 stream ) const
+        uint16 inline calcStreamStride( uint32 stream ) const
         {
-            uint32 stride = 0;
+            uint16 stride = 0;
             for( uint32 i = 0; i < numElements; ++i )
             {
                 const MeshVertexElement & e =  elements[i];
 
-                uint32 elementEnd = e.offset + e.format.getBytesPerBlock();
+                uint16 elementEnd = e.offset + e.format.getBytesPerBlock();
 
                 if( stream == e.stream && stride < elementEnd ) stride = elementEnd;
             }
@@ -366,9 +366,9 @@ namespace GN { namespace gfx
     };
 
     ///
-    /// Mesh resource descriptor
+    /// Mesh resource descriptor base (no data pointers)
     ///
-    struct MeshResourceDesc
+    struct MeshResourceDescBase
     {
         PrimitiveType       prim;   ///< primitive type
         uint32              numvtx; ///< number of vertices
@@ -377,10 +377,40 @@ namespace GN { namespace gfx
         bool                dynavb; ///< true for dynamic vertex buffer
         bool                dynaib; ///< trur for dynamic index buffer
         MeshVertexFormat    vtxfmt; ///< vertex format
-        void *              vertices[GpuContext::MAX_VERTEX_BUFFERS]; ///< NULL pointer means vertex data are undefined
-        uint32              strides[GpuContext::MAX_VERTEX_BUFFERS];  ///< vertex buffer strides. 0 means using vertex size defined by vertex format.
+        uint16              strides[GpuContext::MAX_VERTEX_BUFFERS];  ///< vertex buffer strides. 0 means using vertex size defined by vertex format.
         uint32              offsets[GpuContext::MAX_VERTEX_BUFFERS];  ///< Number of bytes from vertex buffer beginning to the first element that will be used.
-        void *              indices; ///< Null means index data are undefined.
+
+        ///
+        /// constructor
+        ///
+        MeshResourceDescBase() { clear(); }
+
+        ///
+        /// clear to an empty descriptor
+        ///
+        void clear()
+        {
+            memset( this, 0, sizeof(*this) );
+        }
+
+        ///
+        /// get vertex buffer size in bytes
+        ///
+        uint32 getVtxBufSize( uint32 stream ) const;
+
+        ///
+        /// get indices buffer size in bytes
+        ///
+        uint32 getIdxBufSize() const;
+    };
+
+    ///
+    /// Mesh resource descriptor with vertex and index data pointers
+    ///
+    struct MeshResourceDesc : public MeshResourceDescBase
+    {
+        void * vertices[GpuContext::MAX_VERTEX_BUFFERS]; ///< NULL pointer means vertex data are undefined
+        void * indices; ///< Null means that the mesh should be drawed as non-indexed mesh.
 
         ///
         /// constructor
@@ -404,16 +434,6 @@ namespace GN { namespace gfx
         /// calculate bounding sphere
         ///
         void calculateBoundingSphere( Sphere<float> & ) const;
-
-        ///
-        /// get vertex buffer size in bytes
-        ///
-        uint32 getVtxBufSize( uint32 stream ) const;
-
-        ///
-        /// get indices buffer size in bytes
-        ///
-        uint32 getIdxBufSize() const;
 
         ///
         /// Load descriptor from file, return the mesh data. Return a NULL blob for failure.
@@ -455,11 +475,11 @@ namespace GN { namespace gfx
         //@}
 
         //@{
-        bool                     reset( const MeshResourceDesc * desc );
-        const MeshResourceDesc & getDesc() const;
-        void                     applyToContext( GpuContext & context ) const;
-        void                     calculateBoundingBox( Box<float> & ) const; // AABB: axis aligned bounding box
-        void                     calculateBoundingSphere( Sphere<float> & ) const;
+        bool                         reset( const MeshResourceDesc * desc );
+        const MeshResourceDescBase & getDesc() const;
+        void                         applyToContext( GpuContext & context ) const;
+        void                         calculateBoundingBox( Box<float> & ) const; // AABB: axis aligned bounding box
+        void                         calculateBoundingSphere( Sphere<float> & ) const;
         //@}
 
     protected:

@@ -311,8 +311,8 @@ AutoRef<Blob> sLoadFromMeshBinaryFile( File & fp, MeshResourceDesc & desc )
         if( vfp.used[i] )
         {
             desc.vertices[i] = header.vertices[i] + start;
-            desc.strides[i] = header.strides[i];
-            desc.offsets[i] = header.offsets[i];
+            desc.strides[i]  = (uint16)header.strides[i];
+            desc.offsets[i]  = header.offsets[i];
         }
         else
         {
@@ -554,7 +554,8 @@ AutoRef<Blob> sLoadFromMeshXMLFile( File & fp, MeshResourceDesc & desc )
 
         if( "vtxbuf" == e->name )
         {
-            uint32 stream, offset, stride;
+            uint32 stream, offset;
+            uint16 stride;
             if( !sGetRequiredIntAttrib( stream, *e, "stream" ) ||
                 !sGetRequiredIntAttrib( offset, *e, "offset" ) ||
                 !sGetRequiredIntAttrib( stride, *e, "stride" ) ||
@@ -676,6 +677,36 @@ AutoRef<Blob> sLoadFromMeshXMLFile( File & fp, MeshResourceDesc & desc )
 //
 //
 // -----------------------------------------------------------------------------
+uint32 GN::gfx::MeshResourceDescBase::getVtxBufSize( uint32 stream ) const
+{
+    if( stream >= GpuContext::MAX_VERTEX_BUFFERS )
+    {
+        GN_ERROR(sLogger)( "invalid stream index." );
+        return 0;
+    }
+
+    VertexFormatProperties vfp;
+    if( !vfp.analyze( vtxfmt ) ) return 0;
+
+    if( !vfp.used[stream] ) return 0;
+
+    uint32 stride = strides[stream];
+    if( 0 == stride ) stride = vfp.minStrides[stream];
+
+    return numvtx * stride;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+uint32 GN::gfx::MeshResourceDescBase::getIdxBufSize() const
+{
+    return numidx * (idx32?4:2);
+}
+
+//
+//
+// -----------------------------------------------------------------------------
 void
 GN::gfx::MeshResourceDesc::calculateBoundingBox( Box<float> & box ) const
 {
@@ -702,36 +733,6 @@ GN::gfx::MeshResourceDesc::calculateBoundingSphere( Sphere<float> & sphere ) con
     if( !sGetMeshVertexPositions( positions, *this ) ) return;
 
     GN::calculateBoundingSphere( sphere, positions.x, positions.strideX, positions.y, positions.strideY, positions.z, positions.strideZ, numvtx );
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-uint32 GN::gfx::MeshResourceDesc::getVtxBufSize( uint32 stream ) const
-{
-    if( stream >= GpuContext::MAX_VERTEX_BUFFERS )
-    {
-        GN_ERROR(sLogger)( "invalid stream index." );
-        return 0;
-    }
-
-    VertexFormatProperties vfp;
-    if( !vfp.analyze( vtxfmt ) ) return 0;
-
-    if( !vfp.used[stream] ) return 0;
-
-    uint32 stride = strides[stream];
-    if( 0 == stride ) stride = vfp.minStrides[stream];
-
-    return numvtx * stride;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-uint32 GN::gfx::MeshResourceDesc::getIdxBufSize() const
-{
-    return numidx * (idx32?4:2);
 }
 
 //

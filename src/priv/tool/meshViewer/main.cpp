@@ -1,4 +1,5 @@
 #include "pch.h"
+#include <garnet/gfx/fatModel.h>
 
 using namespace GN;
 using namespace GN::gfx;
@@ -56,13 +57,16 @@ public:
     bool onInit()
     {
         // load mesh from file
-        ModelHierarchyDesc swd;
-        if( !swd.loadFromFile( filename ) ) return false;
 #if USE_STATIC_MESH
+        FatModel fm;
+        if( !fm.loadFromFile( filename ) ) return false;
         mesh.attach( new StaticMesh() );
-        if( !mesh->loadFromModelHierarchy( swd ) ) return false;
+        //if( !mesh->loadFromModelHierarchy( swd ) ) return false;
+        if( !mesh->loadFromFatModel( fm ) ) return false;
         const Boxf & bbox = mesh->spacial().getUberBoundingBox();
 #else
+        ModelHierarchyDesc swd;
+        if( !swd.loadFromFile( filename ) ) return false;
         if( !world.createEntites( swd ) ) return false;
         world.showBoundingBoxes( true );
         const Boxf & bbox = world.getRootEntity()->getComponent<SpacialComponent>()->getUberBoundingBox();
