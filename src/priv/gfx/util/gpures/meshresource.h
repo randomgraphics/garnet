@@ -77,7 +77,7 @@ namespace GN { namespace gfx
     private:
 
         GpuResourceDatabase & getGdb() const { return mOwner.getGdb(); }
-        const char *          meshName() const { return mOwner.getGdb().getResourceName( &mOwner ); }
+        const char *          getMeshName() const { return mOwner.getGdb().getResourceName( &mOwner )->cptr(); }
 
         bool create( const MeshResourceDesc & desc );
         void clear();

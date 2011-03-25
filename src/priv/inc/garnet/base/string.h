@@ -234,19 +234,33 @@ namespace GN
         return hash;
     }
 
+    ///
+    /// String Allocator
+    ///
+    struct StringAllocator
+    {
+        /// Allocate memory
+        static void * sAllocate( size_t size, size_t alignment )
+        {
+            return HeapMemory::alignedAlloc( size, alignment );
+        }
+
+        /// Deallocate memory
+        static void sDeallocate( void * ptr )
+        {
+            HeapMemory::dealloc( ptr );
+        }
+    };
 
     ///
     /// Custom string class
     ///
-    template<typename CHAR, typename ALLOCATOR = StlAllocator<CHAR> >
+    template<typename CHAR, typename ALLOCATOR = StringAllocator>
     class Str
     {
         typedef CHAR CharType;
-        typedef ALLOCATOR AllocatorType;
 
         CharType * mPtr;   ///< string buffer pointer.
-        size_t     mCount; ///< How many charecters in the string, not including null end.
-        size_t     mCaps;  ///< How many characters can we hold, not including null end?
 
     public:
 
@@ -263,41 +277,40 @@ namespace GN
         ///
         /// default constructor
         ///
-        Str() : mCount(0), mCaps(0)
+        Str() : mPtr(NULL)
         {
-            mPtr = alloc(mCaps);
+            setCaps( 0 );
             mPtr[0] = 0;
         }
 
         ///
         /// copy constructor
         ///
-        Str( const Str & s ) : mCount(s.mCount), mCaps(calcCaps(s.mCount))
+        Str( const Str & s ) : mPtr(NULL)
         {
-            mPtr = alloc(mCaps);
-            ::memcpy( mPtr, s.mPtr, (mCount+1)*sizeof(CharType) );
+            setCaps( s.size() );
+            ::memcpy( mPtr, s.mPtr, (s.size()+1)*sizeof(CharType) );
+            setSize( s.size() );
         }
 
         ///
         /// copy constructor from c-style string
         ///
-        Str( const CharType * s, size_t l = 0 )
+        Str( const CharType * s, size_t l = 0 ) : mPtr(NULL)
         {
             if( 0 == s )
             {
-                mCaps = 0;
-                mCount = 0;
-                mPtr = alloc(mCaps);
+                setCaps( 0 );
+                setSize( 0 );
                 mPtr[0] = 0;
             }
             else
             {
                 l = stringLength<CharType>(s,l);
-                mCaps = calcCaps(l);
-                mPtr = alloc(mCaps);
-                mCount = l;
+                setCaps( l );
                 ::memcpy( mPtr, s, l*sizeof(CharType) );
                 mPtr[l] = 0;
+                setSize( l );
             }
         }
 
@@ -306,7 +319,7 @@ namespace GN
         ///
         ~Str()
         {
-            dealloc( mPtr, mCaps );
+            dealloc( mPtr );
         }
 
         ///
@@ -316,10 +329,13 @@ namespace GN
         {
             if( 0 == s ) return;
             l = stringLength<CharType>(s,l);
-            setCaps( mCount + l );
-            ::memcpy( mPtr+mCount, s, l*sizeof(CharType) );
-            mCount += l;
-            mPtr[mCount] = 0;
+            if( 0 == l ) return;
+            size_t oldsize = size();
+            size_t newsize = oldsize + l;
+            setCaps( newsize );
+            setSize( newsize );
+            ::memcpy( mPtr+oldsize, s, l*sizeof(CharType) );
+            mPtr[newsize] = 0;
         }
 
         ///
@@ -328,11 +344,13 @@ namespace GN
         void append( const Str & s )
         {
             if( s.empty() ) return;
-            size_t l = s.size();
-            setCaps( mCount + l );
-            ::memcpy( mPtr+mCount, s.cptr(), l*sizeof(CharType) );
-            mCount += l;
-            mPtr[mCount] = 0;
+            size_t oldsize = size();
+            size_t ssize = s.size();
+            size_t newsize = oldsize + ssize;
+            setCaps( newsize );
+            setSize( newsize );
+            ::memcpy( mPtr+oldsize, s, ssize*sizeof(CharType) );
+            mPtr[newsize] = 0;
         }
 
         ///
@@ -341,10 +359,12 @@ namespace GN
         void append( CharType ch )
         {
             if( 0 == ch ) return;
-            setCaps( mCount + 1 );
-            mPtr[mCount] = ch;
-            ++mCount;
-            mPtr[mCount] = 0;
+            size_t oldsize = size();
+            size_t newsize = oldsize + 1;
+            setCaps( newsize );
+            setSize( newsize );
+            mPtr[oldsize] = ch;
+            mPtr[newsize] = 0;
         }
 
         ///
@@ -354,16 +374,17 @@ namespace GN
         {
             if( 0 == s )
             {
+                setCaps( 0 );
+                setSize( 0 );
                 mPtr[0] = 0;
-                mCount = 0;
             }
             else
             {
                 l = stringLength<CharType>(s,l);
-                setCaps(l);
-                mCount = l;
+                setCaps( l );
                 ::memcpy( mPtr, s, l*sizeof(CharType) );
                 mPtr[l] = 0;
+                setSize( l );
             }
         }
 
@@ -383,7 +404,7 @@ namespace GN
         void clear()
         {
             mPtr[0] = 0;
-            mCount = 0;
+            setSize( 0 );
         }
 
         ///
@@ -394,17 +415,17 @@ namespace GN
         ///
         /// empty string or not?
         ///
-        bool empty() const { return 0 == mCount; }
+        bool empty() const { return 0 == size(); }
 
         ///
         /// begin iterator(1)
         ///
-        CharType * end() { return mPtr+mCount; }
+        CharType * end() { return mPtr+size(); }
 
         ///
         /// begin iterator(2)
         ///
-        const CharType * end() const { return mPtr+mCount; }
+        const CharType * end() const { return mPtr+size(); }
 
         ///
         /// Searches through a string for the first character that matches any elements in user specified string
@@ -419,9 +440,9 @@ namespace GN
         size_t findFirstOf( const CharType * s, size_t offset = 0, size_t count = 0 ) const
         {
             if( 0 == s || 0 == *s ) return NOT_FOUND;
-            if( offset >= mCount ) return NOT_FOUND;
-            if( 0 == count ) count = mCount;
-            if( offset + count > mCount ) count = mCount - offset;
+            if( offset >= size() ) return NOT_FOUND;
+            if( 0 == count ) count = size();
+            if( offset + count > size() ) count = size() - offset;
             const CharType * p = mPtr + offset;
             for( size_t i = 0; i < count; ++i, ++p )
             {
@@ -440,9 +461,9 @@ namespace GN
         size_t findFirstNotOf( const CharType * s, size_t offset = 0, size_t count = 0 ) const
         {
             if( 0 == s || 0 == *s ) return NOT_FOUND;
-            if( offset >= mCount ) return NOT_FOUND;
-            if( 0 == count ) count = mCount;
-            if( offset + count > mCount ) count = mCount - offset;
+            if( offset >= size() ) return NOT_FOUND;
+            if( 0 == count ) count = size();
+            if( offset + count > size() ) count = size() - offset;
             const CharType * p = mPtr + offset;
             for( size_t i = 0; i < count; ++i, ++p )
             {
@@ -461,9 +482,9 @@ namespace GN
         template<typename PRED>
         size_t findFirstOf( PRED pred, size_t offset = 0, size_t count = 0 ) const
         {
-            if( offset >= mCount ) return NOT_FOUND;
-            if( 0 == count ) count = mCount;
-            if( offset + count > mCount ) count = mCount - offset;
+            if( offset >= size() ) return NOT_FOUND;
+            if( 0 == count ) count = size();
+            if( offset + count > size() ) count = size() - offset;
             const char * p = mPtr + offset;
             for( size_t i = 0; i < count; ++i, ++p )
             {
@@ -479,9 +500,9 @@ namespace GN
         size_t findLastOf( const CharType * s, size_t offset = 0, size_t count = 0 ) const
         {
             if( 0 == s || 0 == *s ) return NOT_FOUND;
-            if( offset >= mCount ) return NOT_FOUND;
-            if( 0 == count ) count = mCount;
-            if( offset + count > mCount ) count = mCount - offset;
+            if( offset >= size() ) return NOT_FOUND;
+            if( 0 == count ) count = size();
+            if( offset + count > size() ) count = size() - offset;
             GN_ASSERT( count > 0 );
             const CharType * p = mPtr + offset + count - 1;
             for( size_t i = count; i > 0; --i, --p )
@@ -534,12 +555,23 @@ namespace GN
         ///
         /// get string caps
         ///
-        size_t caps() const { return mCaps; }
+        size_t caps() const
+        {
+            if( NULL == mPtr )
+            {
+                return 0;
+            }
+            else
+            {
+                StringHeader * h = ((StringHeader*)mPtr) - 1;
+                return h->caps;
+            }
+        }
 
         ///
         /// string hash
         ///
-        uint64 hash() const { return stringHash( mPtr, mCount ); }
+        uint64 hash() const { return stringHash( mPtr, size() ); }
 
         ///
         /// Insert a character at specific position
@@ -547,36 +579,36 @@ namespace GN
         void insert( size_t pos, CharType ch )
         {
             if( 0 == ch ) return;
-            if( pos >= mCount )
+            if( pos >= size() )
             {
                 append( ch );
             }
             else
             {
-                setCaps( mCount + 1 );
-                for( size_t i = mCount+1; i > pos; --i )
+                setCaps( size() + 1 );
+                for( size_t i = size()+1; i > pos; --i )
                 {
                     mPtr[i] = mPtr[i-1];
                 }
                 mPtr[pos] = ch;
-                ++mCount;
+                setSize( size() + 1 );
             }
         }
 
         ///
         /// get last character of the string. If string is empty, return 0.
         ///
-        CharType last() const { return mCount>0 ? mPtr[mCount-1] : (CharType)0; }
+        CharType last() const { return size()>0 ? mPtr[size()-1] : (CharType)0; }
 
         ///
         /// pop last charater
         ///
         void popback()
         {
-            if( mCount > 0 )
+            if( size() > 0 )
             {
-                --mCount;
-                mPtr[mCount] = 0;
+                setSize( size() - 1 );
+                mPtr[size()] = 0;
             }
         }
 
@@ -586,7 +618,7 @@ namespace GN
         void replace( CharType from, CharType to )
         {
             CharType * p = mPtr;
-            for( size_t i = 0; i < mCount; ++i, ++p )
+            for( size_t i = 0; i < size(); ++i, ++p )
             {
                 if( from == *p ) *p = to;
             }
@@ -597,11 +629,11 @@ namespace GN
         ///
         void remove( size_t pos )
         {
-            for( size_t i = pos; i < mCount; ++i )
+            for( size_t i = pos; i < size(); ++i )
             {
                 mPtr[i] = mPtr[i+1];
             }
-            --mCount;
+            setSize( size() - 1 );
         }
 
         ///
@@ -609,28 +641,53 @@ namespace GN
         ///
         void setCaps( size_t newCaps )
         {
-            if( mCaps >= newCaps ) return;
-            size_t oldCaps = mCaps;
-            mCaps = calcCaps( newCaps );
-            CharType * newPtr = alloc( mCaps );
-            ::memcpy( newPtr, mPtr, sizeof(CharType)*(mCount+1) );
-            dealloc( mPtr, oldCaps );
-            mPtr = newPtr;
+            if( NULL == mPtr )
+            {
+                newCaps = calcCaps( newCaps );
+                mPtr = alloc( newCaps + 1 );
+                mPtr[0] = 0;
+                StringHeader * h = ((StringHeader*)mPtr) - 1;
+                h->caps = newCaps;
+                h->size = 0;
+            }
+            else if( caps() < newCaps )
+            {
+                GN_ASSERT( size() <= caps() );
+
+                CharType * oldptr = mPtr;
+                size_t oldsize = size();
+
+                newCaps = calcCaps( newCaps );
+                mPtr = alloc( newCaps + 1 );
+
+                StringHeader * h = ((StringHeader*)mPtr) - 1;
+                h->caps = newCaps;
+                h->size = oldsize;
+
+                ::memcpy( mPtr, oldptr, (oldsize + 1)*sizeof(CharType) );
+
+                dealloc( oldptr );
+            }
         }
 
         ///
         /// return string length in character, not including ending zero
         ///
-        size_t size() const { return mCount; }
+        size_t size() const
+        {
+            GN_ASSERT( mPtr );
+            StringHeader * h = ((StringHeader*)mPtr) - 1;
+            return h->size;
+        }
 
         ///
         /// Get sub string. (0==length) means to the end of original string.
         ///
         void subString( Str & result, size_t offset, size_t length ) const
         {
-            if( offset >= mCount ) { result.clear(); return; }
-            if( 0 == length ) length = mCount;
-            if( offset + length > mCount ) length = mCount - offset;
+            if( offset >= size() ) { result.clear(); return; }
+            if( 0 == length ) length = size();
+            if( offset + length > size() ) length = size() - offset;
             result.assign( mPtr+offset, length );
         }
 
@@ -650,7 +707,7 @@ namespace GN
         void toLower()
         {
             CHAR * p = mPtr;
-            CHAR * e = mPtr + mCount;
+            CHAR * e = mPtr + size();
             for( ; p < e; ++p )
             {
                 if( 'A' <= *p && *p <= 'Z' ) *p = (*p) - 'A' + 'a';
@@ -662,7 +719,7 @@ namespace GN
         ///
         void toSTL( std::basic_string<CharType> & s ) const
         {
-            s.assign( mPtr, mCount );
+            s.assign( mPtr, size() );
         }
 
         ///
@@ -670,7 +727,7 @@ namespace GN
         ///
         std::basic_string<CharType> toSTL() const
         {
-            return std::basic_string<CharType>(mPtr,mCount);
+            return std::basic_string<CharType>(mPtr,size());
         }
 
         ///
@@ -679,7 +736,7 @@ namespace GN
         void toUpper()
         {
             CHAR * p = mPtr;
-            CHAR * e = mPtr + mCount;
+            CHAR * e = mPtr + size();
             for( ; p < e; ++p )
             {
                 if( 'a' <= *p && *p <= 'z' ) *p = (*p) - 'a' + 'A';
@@ -711,7 +768,7 @@ namespace GN
             if( 0 == len ) len = stringLength( ch );
             if( 0 == len ) return;
             CharType * p = mPtr;
-            CharType * e = mPtr+mCount;
+            CharType * e = mPtr+size();
             while( p < e )
             {
                 bool equal = false;
@@ -726,12 +783,12 @@ namespace GN
                 if( !equal ) break;
                 ++p;
             }
-            mCount = e - p;
-            for( size_t i = 0; i < mCount; ++i )
+            setSize( e - p );
+            for( size_t i = 0; i < size(); ++i )
             {
                 mPtr[i] = p[i];
             }
-            mPtr[mCount] = 0;
+            mPtr[size()] = 0;
         }
 
         ///
@@ -744,11 +801,11 @@ namespace GN
         ///
         void trimRight( const CharType * ch, size_t len = 0 )
         {
-            if( 0 == mCount ) return;
+            if( 0 == size() ) return;
             if( 0 == ch ) return;
             if( 0 == len ) len = stringLength( ch );
             if( 0 == len ) return;
-            CharType * p = mPtr + mCount - 1;
+            CharType * p = mPtr + size() - 1;
             while( p >= mPtr )
             {
                 bool equal = false;
@@ -764,7 +821,7 @@ namespace GN
                 *p = 0;
                 --p;
             }
-            mCount = p - mPtr + 1;
+            setSize( p - mPtr + 1 );
         }
 
         ///
@@ -778,14 +835,14 @@ namespace GN
         template<typename PRED>
         void trimRightUntil( PRED pred )
         {
-            if( 0 == mCount ) return;
-            CharType * p = mPtr + mCount - 1;
+            if( 0 == size() ) return;
+            CharType * p = mPtr + size() - 1;
             while( p >= mPtr && !pred(*p) )
             {
                 *p = 0;
                 --p;
             }
-            mCount = p - mPtr + 1;
+            setSize( p - mPtr + 1 );
         }
 
         ///
@@ -803,7 +860,7 @@ namespace GN
         ///
         Str & operator = ( const Str & s )
         {
-            assign( s.mPtr, s.mCount );
+            assign( s.mPtr, s.size() );
             return *this;
         }
 
@@ -848,7 +905,7 @@ namespace GN
         ///
         Str & operator += ( std::basic_string<CharType> & s )
         {
-            append( s.cptr(), 0 );
+            append( s.c_str(), 0 );
             return *this;
         }
 
@@ -991,11 +1048,24 @@ namespace GN
         {
             uint64 operator()( const Str & s ) const
             {
-                return stringHash( s.mPtr, s.mCount );
+                return stringHash( s.mPtr, s.size() );
             }
         };
 
     private:
+
+        struct StringHeader
+        {
+            size_t caps; //< How many characters can the string hold, not including the null end.
+            size_t size; //< How many charecters in the string, not including the null end.
+        };
+
+        void setSize( size_t count )
+        {
+            GN_ASSERT(mPtr);
+            StringHeader * h = ((StringHeader*)mPtr) - 1;
+            h->size = count;
+        }
 
         // align caps to 2^n-1
         size_t calcCaps( size_t count )
@@ -1014,19 +1084,20 @@ namespace GN
         // Allocate a memory buffer that can hold at least 'count' characters, and one extra '\0'.
         static CharType * alloc( size_t count )
         {
-            AllocatorType a;
-            return a.allocate( count + 1 );
+            StringHeader * ptr = (StringHeader*)ALLOCATOR::sAllocate( sizeof(StringHeader) + sizeof(CharType) * (count + 1), sizeof(size_t) );
+            return (CharType*)(ptr + 1);
         }
 
-        static void dealloc( CharType * ptr, size_t count )
+        static void dealloc( CharType * ptr )
         {
-            AllocatorType a;
-            a.deallocate( ptr, count + 1 );
+            if( ptr )
+            {
+                StringHeader * p = (StringHeader*)ptr;
+                ALLOCATOR::sDeallocate( p - 1 );
+            }
         }
 
-        friend Str<char> wcs2mbs( const wchar_t *, size_t );
         friend void wcs2mbs( Str<char> &, const wchar_t *, size_t );
-        friend Str<wchar_t> mbs2wcs( const char *, size_t );
         friend void mbs2wcs( Str<wchar_t> &, const char *, size_t );
     };
 

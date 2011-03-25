@@ -8,16 +8,16 @@
 inline const GN::Guid &
 GN::gfx::GpuResource::type() const
 {
-    return mDatabase.getResourceType(this);
+    return *mDatabase.getResourceType(this);
 }
 
 //
 // Get resource name
 // -----------------------------------------------------------------------------
-inline const char *
+inline const GN::StrA &
 GN::gfx::GpuResource::name() const
 {
-    return mDatabase.getResourceName(this);
+    return *mDatabase.getResourceName(this);
 }
 
 //
@@ -26,7 +26,7 @@ GN::gfx::GpuResource::name() const
 template<typename T>
 inline T * GN::gfx::GpuResource::castTo( GpuResource * r )
 {
-    GN_ASSERT( 0 == r || T::guid() == r->getGdb().getResourceType( r ) );
+    GN_ASSERT( 0 == r || T::guid() == *r->getGdb().getResourceType( r ) );
     return (T*)r;
 }
 
@@ -36,7 +36,7 @@ inline T * GN::gfx::GpuResource::castTo( GpuResource * r )
 template<typename T>
 inline T & GN::gfx::GpuResource::castTo( GpuResource & r )
 {
-    GN_ASSERT( T::guid() == r.getGdb().getResourceType( &r ) );
+    GN_ASSERT( T::guid() == *r.getGdb().getResourceType( &r ) );
     return (T&)r;
 }
 
@@ -46,7 +46,7 @@ inline T & GN::gfx::GpuResource::castTo( GpuResource & r )
 template<typename T>
 inline const T & GN::gfx::GpuResource::castTo( const GpuResource & r )
 {
-    GN_ASSERT( T::guid() == r.getGdb().getResourceType( &r ) );
+    GN_ASSERT( T::guid() == *r.getGdb().getResourceType( &r ) );
     return (const T&)r;
 }
 

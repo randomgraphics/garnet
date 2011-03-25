@@ -802,8 +802,8 @@ public:
         TS_ASSERT( !rm.empty() );
 
         // handle -> name
-        TS_ASSERT_EQUALS( "1", rm.getResourceName(h1) );
-        TS_ASSERT_EQUALS( "", rm.getResourceName(h1+1) );
+        TS_ASSERT_EQUALS( "1", rm.getResourceName(h1).cptr() );
+        TS_ASSERT_EQUALS( "", rm.getResourceName(h1+1).cptr() );
 
         // name -> handle
         TS_ASSERT_EQUALS( h1, rm.getResourceHandle("1") );

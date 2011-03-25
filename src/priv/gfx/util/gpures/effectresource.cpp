@@ -435,7 +435,7 @@ GN::gfx::EffectResource::Impl::initTechniques(
 
     if( (int)0x80000000 == currentQuality )
     {
-        GN_ERROR(sLogger)( "No valid technique is found in effect '%s'", effectName() );
+        GN_ERROR(sLogger)( "No valid technique is found in effect '%s'", getEffectName() );
     }
 
     return true;
@@ -561,7 +561,7 @@ GN::gfx::EffectResource::Impl::initTextures(
         {
             GN_WARN(sLogger)( "Unused texture parameter '%s' in effect '%s'.",
                 tp.parameterName.cptr(),
-                effectName() );
+                getEffectName() );
         }
 
         mTextures.append( tp );
@@ -617,7 +617,7 @@ GN::gfx::EffectResource::Impl::initUniforms(
         {
             GN_WARN(sLogger)( "Unused uniform parameter '%s' in effect '%s'.",
                 up.parameterName.cptr(),
-                effectName() );
+                getEffectName() );
         }
 
         mUniforms.append( up );
@@ -676,7 +676,7 @@ GN::gfx::EffectResource::Impl::initAttributes(
         {
             GN_WARN(sLogger)( "Unused attribute parameter '%s' in effect '%s'.",
                 ap.parameterName.cptr(),
-                effectName() );
+                getEffectName() );
         }
 
         mAttributes.append( ap );
