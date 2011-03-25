@@ -388,8 +388,8 @@ bool FontFaceFt2::loadFontImage( FontImage & result, wchar_t ch )
 #endif
 
     // copy glyph data to result structure
-    result.width        = width;
-    result.height       = height;
+    result.width        = (uint32)width;
+    result.height       = (uint32)height;
     result.buffer       = mBitmapBuffer.cptr();
     result.horiBearingX = (float)slot->bitmap_left;
     result.horiBearingY = (float)-slot->bitmap_top;

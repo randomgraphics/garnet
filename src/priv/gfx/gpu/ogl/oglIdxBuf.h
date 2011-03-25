@@ -47,7 +47,7 @@ namespace GN { namespace gfx
         // ********************************
     public:
 
-        virtual void update( size_t startidx, size_t numidx, const void * data, SurfaceUpdateFlag flag );
+        virtual void update( uint32 startidx, uint32 numidx, const void * data, SurfaceUpdateFlag flag );
         virtual void readback( DynaArray<uint8> & data );
 
         // ********************************
@@ -58,7 +58,7 @@ namespace GN { namespace gfx
         ///
         /// Get index data pointer
         ///
-        const void * getIdxData( size_t startidx ) const { return mBuffer + startidx * mBytesPerIndex; }
+        const void * getIdxData( uint32 startidx ) const { return mBuffer + startidx * mBytesPerIndex; }
 
         // ********************************
         // private variables
@@ -66,7 +66,7 @@ namespace GN { namespace gfx
     private:
 
         uint8 * mBuffer;
-        size_t  mBytesPerIndex;
+        uint32  mBytesPerIndex;
 
         // ********************************
         // private functions

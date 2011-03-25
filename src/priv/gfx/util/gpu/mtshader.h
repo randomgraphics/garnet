@@ -51,9 +51,9 @@ namespace GN { namespace gfx
         // ********************************
     public:
 
-        virtual size_t size() const { return mSize; }
+        virtual uint32 size() const { return mSize; }
         virtual const void * getval() const { return mFrontEndData; }
-        virtual void update( size_t offset, size_t length, const void * data );
+        virtual void update( uint32 offset, uint32 length, const void * data );
 
         // ********************************
         // private variables
@@ -62,7 +62,7 @@ namespace GN { namespace gfx
 
         MultiThreadGpu & mGpu;
         Uniform             * mUniform;
-        size_t                mSize;
+        uint32                mSize;
         uint8               * mFrontEndData;
 
         // ********************************
@@ -121,7 +121,7 @@ namespace GN { namespace gfx
 
         MultiThreadGpu           & mGpu;
         GpuProgram                    * mGpuProgram;
-        size_t                          mNumParams;
+        uint32                          mNumParams;
         const GpuProgramParameterDesc * mParamDesc;
 
         // ********************************

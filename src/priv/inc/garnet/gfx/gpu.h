@@ -98,7 +98,7 @@ namespace GN { namespace gfx
                 { AUTO, "AUTO" },
             };
 
-            for( size_t i = 0; i < GN_ARRAY_COUNT(TABLE); ++i )
+            for( uint32 i = 0; i < GN_ARRAY_COUNT(TABLE); ++i )
             {
                 if( 0 == stringCompare( s, TABLE[i].name ) )
                 {
@@ -490,13 +490,13 @@ namespace GN { namespace gfx
     struct Uniform : public RefCounter
     {
         /// get parameter size
-        virtual size_t size() const = 0;
+        virtual uint32 size() const = 0;
 
         /// get current parameter value
         virtual const void * getval() const = 0;
 
         /// update parameter value
-        virtual void update( size_t offset, size_t length, const void * data ) = 0;
+        virtual void update( uint32 offset, uint32 length, const void * data ) = 0;
 
         /// update parameter value
         template<typename T>
@@ -801,21 +801,21 @@ namespace GN { namespace gfx
         ///
         /// \note  Parameters are ordered based on their binding index in current GPU program.
         //@{
-        DynaArray<AutoRef<Uniform> >                 uniforms;   ///< uniforms
-        FixedArray<TextureBinding, MAX_TEXTURES>     textures;   ///< textures
+        DynaArray<AutoRef<Uniform>,uint32>               uniforms;   ///< uniforms
+        FixedArray<TextureBinding, MAX_TEXTURES, uint32> textures;   ///< textures
         //@}
 
         /// geometry data
         //@{
-        VertexBinding                                       vtxbind; ///< vtxbind
-        FixedArray<VertexBufferBinding, MAX_VERTEX_BUFFERS> vtxbufs; ///< vertex buffers
-        AutoRef<IdxBuf>                                     idxbuf;  ///< index buffer
+        VertexBinding                                               vtxbind; ///< vtxbind
+        FixedArray<VertexBufferBinding, MAX_VERTEX_BUFFERS, uint32> vtxbufs; ///< vertex buffers
+        AutoRef<IdxBuf>                                             idxbuf;  ///< index buffer
         //@}
 
         /// render targets
         //@{
-        StackArray<RenderTargetTexture, MAX_COLOR_RENDER_TARGETS> colortargets;
-        RenderTargetTexture                                       depthstencil;
+        StackArray<RenderTargetTexture, MAX_COLOR_RENDER_TARGETS, uint32> colortargets;
+        RenderTargetTexture                                               depthstencil;
         //@}
 
         ///
@@ -834,14 +834,14 @@ namespace GN { namespace gfx
 
             uniforms.clear();
 
-            for( size_t i = 0; i < GN_ARRAY_COUNT(textures); ++i )
+            for( uint32 i = 0; i < GN_ARRAY_COUNT(textures); ++i )
             {
                 textures[i].clear();
             }
 
             vtxbind.clear();
 
-            for( size_t i = 0; i < GN_ARRAY_COUNT(vtxbufs); ++i )
+            for( uint32 i = 0; i < GN_ARRAY_COUNT(vtxbufs); ++i )
             {
                 vtxbufs[i].clear();
             }
@@ -1019,7 +1019,7 @@ namespace GN { namespace gfx
         /// create shader
         ///
         virtual GpuProgram *
-        createGpuProgram( const void * compiledGpuProgramBinary, size_t length ) = 0;
+        createGpuProgram( const void * compiledGpuProgramBinary, uint32 length ) = 0;
 
         ///
         /// create shader directly from description
@@ -1036,7 +1036,7 @@ namespace GN { namespace gfx
         /// create GPU uniform
         ///
         virtual Uniform *
-        createUniform( size_t size ) = 0;
+        createUniform( uint32 size ) = 0;
 
         ///
         /// Create new texture
@@ -1049,11 +1049,11 @@ namespace GN { namespace gfx
         /// Create new texture, with individual creation parameters.
         ///
         Texture *
-        createTexture( size_t        sx,
-                       size_t        sy,
-                       size_t        sz,
-                       size_t        faces  = 1,
-                       size_t        levels = 0, // 0 means full mipmap chain
+        createTexture( uint32        sx,
+                       uint32        sy,
+                       uint32        sz,
+                       uint32        faces  = 1,
+                       uint32        levels = 0, // 0 means full mipmap chain
                        ColorFormat   format = ColorFormat::UNKNOWN,
                        TextureUsage usages = TextureUsage::DEFAULT )
         {
@@ -1071,8 +1071,8 @@ namespace GN { namespace gfx
         /// Create 1D texture
         ///
         Texture *
-        create1DTexture( size_t        sx,
-                         size_t        levels = 0,
+        create1DTexture( uint32        sx,
+                         uint32        levels = 0,
                          ColorFormat   format = ColorFormat::UNKNOWN,
                          TextureUsage usages = TextureUsage::DEFAULT )
         {
@@ -1083,9 +1083,9 @@ namespace GN { namespace gfx
         /// Create 2D texture
         ///
         Texture *
-        create2DTexture( size_t        sx,
-                         size_t        sy,
-                         size_t        levels = 0,
+        create2DTexture( uint32        sx,
+                         uint32        sy,
+                         uint32        levels = 0,
                          ColorFormat   format = ColorFormat::UNKNOWN,
                          TextureUsage usages = TextureUsage::DEFAULT )
         {
@@ -1096,10 +1096,10 @@ namespace GN { namespace gfx
         /// Create 3D texture
         ///
         Texture *
-        create3DTexture( size_t        sx,
-                         size_t        sy,
-                         size_t        sz,
-                         size_t        levels = 0,
+        create3DTexture( uint32        sx,
+                         uint32        sy,
+                         uint32        sz,
+                         uint32        levels = 0,
                          ColorFormat   format = ColorFormat::UNKNOWN,
                          TextureUsage usages = TextureUsage::DEFAULT )
         {
@@ -1110,8 +1110,8 @@ namespace GN { namespace gfx
         /// Create CUBE texture
         ///
         Texture *
-        createCubeTexture( size_t        sx,
-                           size_t        levels = 0,
+        createCubeTexture( uint32        sx,
+                           uint32        levels = 0,
                            ColorFormat   format = ColorFormat::UNKNOWN,
                            TextureUsage usages = TextureUsage::DEFAULT )
         {
@@ -1128,7 +1128,7 @@ namespace GN { namespace gfx
         /// Create new vertex buffer
         ///
         VtxBuf *
-        createVtxBuf( size_t length, bool fastCpuWrite = false )
+        createVtxBuf( uint32 length, bool fastCpuWrite = false )
         {
             VtxBufDesc desc;
             desc.length       = length;
@@ -1146,7 +1146,7 @@ namespace GN { namespace gfx
         /// Create new 16 bit index buffer
         ///
         IdxBuf *
-        createIdxBuf16( size_t numidx, bool fastCpuWrite = false )
+        createIdxBuf16( uint32 numidx, bool fastCpuWrite = false )
         {
             IdxBufDesc desc;
             desc.numidx       = (uint32)numidx;
@@ -1159,7 +1159,7 @@ namespace GN { namespace gfx
         /// Create new 32 bit index buffer
         ///
         IdxBuf *
-        createIdxBuf32( size_t numidx, bool fastCpuWrite = false )
+        createIdxBuf32( uint32 numidx, bool fastCpuWrite = false )
         {
             IdxBufDesc desc;
             desc.numidx       = (uint32)numidx;
@@ -1272,11 +1272,11 @@ namespace GN { namespace gfx
         ///     index into index buffer of the first index
         ///
         virtual void drawIndexed( PrimitiveType prim,
-                                  size_t        numidx,
-                                  size_t        basevtx,
-                                  size_t        startvtx,
-                                  size_t        numvtx,
-                                  size_t        startidx ) = 0;
+                                  uint32        numidx,
+                                  uint32        basevtx,
+                                  uint32        startvtx,
+                                  uint32        numvtx,
+                                  uint32        startidx ) = 0;
 
         ///
         /// Draw non-indexed primitives.
@@ -1289,27 +1289,27 @@ namespace GN { namespace gfx
         ///     index into vertex buffer of the first vertex.
         ///
         virtual void draw( PrimitiveType prim,
-                           size_t        numvtx,
-                           size_t        startvtx ) = 0;
+                           uint32        numvtx,
+                           uint32        startvtx ) = 0;
 
         ///
         /// draw on-indexed primitives with user-defined data array
         ///
         virtual void drawIndexedUp(
                              PrimitiveType  prim,
-                             size_t         numidx,
-                             size_t         numvtx,
+                             uint32         numidx,
+                             uint32         numvtx,
                              const void *   vertexData,
-                             size_t         strideInBytes,
+                             uint32         strideInBytes,
                              const uint16 * indexData ) = 0;
 
         ///
         /// draw on-indexed primitives with user-defined data array
         ///
         virtual void drawUp( PrimitiveType prim,
-                             size_t        numvtx,
+                             uint32        numvtx,
                              const void *  vertexData,
-                             size_t        strideInBytes ) = 0;
+                             uint32        strideInBytes ) = 0;
 
         ///
         /// Draw line segments
@@ -1328,10 +1328,11 @@ namespace GN { namespace gfx
         /// \param model, view, proj
         ///     Transformation matrices. Ignored when using DL_WINDOW_SPACE.
         ///
+        GN_DEPRECIATED
         virtual void drawLines( uint32         options,
                                 const void *      positions,
-                                size_t            stride,
-                                size_t            numpoints,
+                                uint32            stride,
+                                uint32            numpoints,
                                 uint32            rgba,
                                 const Matrix44f & model,
                                 const Matrix44f & view,
@@ -1422,9 +1423,9 @@ namespace GN { namespace gfx
         {
             DynaArray<uint8> data;
             ColorFormat      format;
-            size_t           width;
-            size_t           height;
-            size_t           pitch;
+            uint32           width;
+            uint32           height;
+            uint32           pitch;
         };
 
         ///
@@ -1448,7 +1449,7 @@ namespace GN { namespace gfx
         /// - Settting both data and length to zero, to delete exsiting user data.
         /// - User data buffer will be deleted automatically when the renderer is deleted.
         ///
-        virtual void setUserData( const Guid & id, const void * data, size_t length ) = 0;
+        virtual void setUserData( const Guid & id, const void * data, uint32 length ) = 0;
 
         ///
         /// Get user data
@@ -1457,7 +1458,7 @@ namespace GN { namespace gfx
         /// \param length           Optional parameter to return user data length.
         /// \return                 Return user data pointer. Return NULL if ID is not found.
         ///
-        virtual const void * getUserData( const Guid & id, size_t * length = NULL ) const = 0;
+        virtual const void * getUserData( const Guid & id, uint32 * length = NULL ) const = 0;
 
         ///
         /// determine if there is the user data with specific ID
@@ -1467,9 +1468,9 @@ namespace GN { namespace gfx
         ///
         /// get user data length.
         ///
-        inline size_t getUserDataLength( const Guid & id ) const
+        inline uint32 getUserDataLength( const Guid & id ) const
         {
-            size_t length;
+            uint32 length;
             if( NULL == getUserData( id, &length ) ) length = 0;
             return length;
         }
@@ -1481,12 +1482,12 @@ namespace GN { namespace gfx
         /// \param data, length     Target buffer to store user data.
         /// \return                 return bytes copied to target buffer. Return 0 for failure.
         ///
-        inline size_t getUserData( const Guid & id, void * data, size_t length ) const
+        inline uint32 getUserData( const Guid & id, void * data, uint32 length ) const
         {
-            size_t srcLength;
+            uint32 srcLength;
             const void * src = getUserData( id, &srcLength );
             if( NULL == src ) return 0;
-            size_t copyLength = srcLength < length ? srcLength : length;
+            uint32 copyLength = srcLength < length ? srcLength : length;
             memcpy( data, src, copyLength );
             return copyLength;
         }
@@ -1518,7 +1519,7 @@ namespace GN { namespace gfx
         ///     Dump data format is renderer dependent.
         ///     Check document of specific renderer implementation for details.
         ///
-        virtual void debugDumpNextFrame( size_t startBatchIndex = 0, size_t numBatches = 0 ) = 0;
+        virtual void debugDumpNextFrame( uint32 startBatchIndex = 0, uint32 numBatches = 0 ) = 0;
 
         /// Marks the beginning of a user-defined event in GPU debugging tool.
         /// \note Debug mark currently works on D3D GPU only (PIX).

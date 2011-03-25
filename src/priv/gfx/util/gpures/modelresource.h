@@ -63,14 +63,14 @@ namespace GN { namespace gfx
             TextureItem();
             ~TextureItem();
 
-            void setResource( Impl & owner, size_t effectParameterIndex, TextureResource * );
+            void setResource( Impl & owner, uint32 effectParameterIndex, TextureResource * );
 
             const AutoRef<TextureResource> & getResource() const { return mResource; }
 
         private:
 
             Impl                   * mOwner;
-            size_t                   mEffectParameterIndex;
+            uint32                   mEffectParameterIndex;
             AutoRef<TextureResource> mResource;
 
         private:
@@ -90,14 +90,14 @@ namespace GN { namespace gfx
             UniformItem();
             ~UniformItem();
 
-            void setResource( Impl & owner, size_t effectParameterIndex, UniformResource * );
+            void setResource( Impl & owner, uint32 effectParameterIndex, UniformResource * );
 
             const AutoRef<UniformResource> & getResource() const { return mResource; }
 
         private:
 
             Impl                   * mOwner;
-            size_t                   mEffectParameterIndex;
+            uint32                   mEffectParameterIndex;
             AutoRef<UniformResource> mResource;
 
         private:

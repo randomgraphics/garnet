@@ -148,11 +148,11 @@ void GN::gfx::OGLGpu::clearScreen(
 // -----------------------------------------------------------------------------
 void GN::gfx::OGLGpu::drawIndexed(
     PrimitiveType prim,
-    size_t        numidx,
-    size_t        basevtx,
-    size_t        startvtx,
-    size_t        numvtx,
-    size_t        startidx )
+    uint32        numidx,
+    uint32        basevtx,
+    uint32        startvtx,
+    uint32        numvtx,
+    uint32        startidx )
 {
     GN_GUARD_SLOW;
 
@@ -229,7 +229,7 @@ void GN::gfx::OGLGpu::drawIndexed(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLGpu::draw( PrimitiveType prim, size_t numvtx, size_t startvtx )
+void GN::gfx::OGLGpu::draw( PrimitiveType prim, uint32 numvtx, uint32 startvtx )
 {
     GN_GUARD_SLOW;
 
@@ -260,10 +260,10 @@ void GN::gfx::OGLGpu::draw( PrimitiveType prim, size_t numvtx, size_t startvtx )
 // -----------------------------------------------------------------------------
 void GN::gfx::OGLGpu::drawIndexedUp(
     PrimitiveType  prim,
-    size_t         numidx,
-    size_t         numvtx,
+    uint32         numidx,
+    uint32         numvtx,
     const void *   vertexData,
-    size_t         strideInBytes,
+    uint32         strideInBytes,
     const uint16 * indexData )
 {
     GN_GUARD_SLOW;
@@ -341,9 +341,9 @@ void GN::gfx::OGLGpu::drawIndexedUp(
 // -----------------------------------------------------------------------------
 void GN::gfx::OGLGpu::drawUp(
     PrimitiveType prim,
-    size_t        numvtx,
+    uint32        numvtx,
     const void *  vertexData,
-    size_t        strideInBytes )
+    uint32        strideInBytes )
 {
     GN_GUARD_SLOW;
 
@@ -390,8 +390,8 @@ void GN::gfx::OGLGpu::drawUp(
 void GN::gfx::OGLGpu::drawLines(
     uint32 options,
     const void * positions,
-    size_t stride,
-    size_t numpoints,
+    uint32 stride,
+    uint32 numpoints,
     uint32 rgba,
     const Matrix44f & model,
     const Matrix44f & view,

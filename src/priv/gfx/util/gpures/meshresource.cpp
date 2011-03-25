@@ -29,9 +29,9 @@ bool GN::gfx::VertexFormatProperties::analyze( const MeshVertexFormat & vf )
 
         used[e.stream] = true;
 
-        size_t currentStride = minStrides[e.stream];
+        uint32 currentStride = minStrides[e.stream];
 
-        size_t newStride = e.offset + e.format.getBytesPerBlock();
+        uint32 newStride = e.offset + e.format.getBytesPerBlock();
 
         if( newStride > currentStride ) minStrides[e.stream] = newStride;
     }
@@ -155,7 +155,7 @@ bool GN::gfx::MeshResource::Impl::create( const MeshResourceDesc & desc )
             if( !vfp.used[i] ) continue; // ignore unused vertex buffer
 
             // calculate vertex stride
-            size_t stride;
+            uint32 stride;
             if( 0 == desc.strides[i] )
             {
                 stride = vfp.minStrides[i];
@@ -172,7 +172,7 @@ bool GN::gfx::MeshResource::Impl::create( const MeshResourceDesc & desc )
             mDesc.strides[i] = stride;
 
             // calculate vertex buffer size
-            size_t vbsize;
+            uint32 vbsize;
             vbsize = stride * desc.numvtx;
 
             // create GPU vertex buffer

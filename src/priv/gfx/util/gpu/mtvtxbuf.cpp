@@ -58,7 +58,7 @@ void GN::gfx::MultiThreadVtxBuf::quit()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::MultiThreadVtxBuf::update( size_t offset, size_t length, const void * data, SurfaceUpdateFlag flag )
+void GN::gfx::MultiThreadVtxBuf::update( uint32 offset, uint32 length, const void * data, SurfaceUpdateFlag flag )
 {
     if( 0 == length )
     {
@@ -93,7 +93,7 @@ namespace GN { namespace gfx
     //
     //
     // -------------------------------------------------------------------------
-    void func_VTXBUF_DESTROY( Gpu &, void * p, size_t )
+    void func_VTXBUF_DESTROY( Gpu &, void * p, uint32 )
     {
         VtxBuf * vb = *(VtxBuf**)p;
         vb->decref();
@@ -102,13 +102,13 @@ namespace GN { namespace gfx
     //
     //
     // -------------------------------------------------------------------------
-    void func_VTXBUF_UPDATE( Gpu &, void * p, size_t )
+    void func_VTXBUF_UPDATE( Gpu &, void * p, uint32 )
     {
         struct VtxBufUpdateParam
         {
             VtxBuf          * vtxbuf;
-            size_t            offset;
-            size_t            length;
+            uint32            offset;
+            uint32            length;
             void            * data;
             SurfaceUpdateFlag flag;
         };
@@ -123,7 +123,7 @@ namespace GN { namespace gfx
     //
     //
     // -------------------------------------------------------------------------
-    void func_VTXBUF_READBACK( Gpu &, void * p, size_t )
+    void func_VTXBUF_READBACK( Gpu &, void * p, uint32 )
     {
         struct VtxBufReadBackParam
         {

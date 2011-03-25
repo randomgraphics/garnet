@@ -2,7 +2,7 @@ SConscript( dirs=[
     'assimp',
 	'd3d10',
 	'engine',
-	'fbx',
+	#'fbx',
 	'font',
 	'ft2',
 	'gpu',

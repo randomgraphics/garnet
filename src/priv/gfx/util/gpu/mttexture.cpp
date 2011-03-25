@@ -14,11 +14,11 @@ using namespace GN::gfx;
 struct UpdateMipmapParam
 {
     Texture         * tex;
-    size_t            face;
-    size_t            level;
+    uint32            face;
+    uint32            level;
     Box<uint32>       area;
-    size_t            rowPitch;
-    size_t            slicePitch;
+    uint32            rowPitch;
+    uint32            slicePitch;
     void            * data;
     SurfaceUpdateFlag flag;
 };
@@ -45,7 +45,7 @@ bool GN::gfx::MultiThreadTexture::init( Texture * tex )
 
     setDesc( desc );
 
-    for( size_t i = 0; i < desc.levels; ++i )
+    for( uint32 i = 0; i < desc.levels; ++i )
     {
         setMipSize( i, mTexture->getMipSize( i ) );
     }
@@ -83,11 +83,11 @@ void GN::gfx::MultiThreadTexture::quit()
 //
 // -----------------------------------------------------------------------------
 void GN::gfx::MultiThreadTexture::updateMipmap(
-    size_t              face,
-    size_t              level,
+    uint32              face,
+    uint32              level,
     const Box<uint32> * area,
-    size_t              rowPitch,
-    size_t              slicePitch,
+    uint32              rowPitch,
+    uint32              slicePitch,
     const void        * data,
     SurfaceUpdateFlag   flag )
 {
@@ -99,7 +99,7 @@ void GN::gfx::MultiThreadTexture::updateMipmap(
 
     const Vector3<uint32> & mipsize = getMipSize( level );
 
-    size_t dataSize = slicePitch * mipsize.z;
+    uint32 dataSize = slicePitch * mipsize.z;
 
     void * tmpbuf = HeapMemory::alloc( dataSize );
     if( NULL == tmpbuf )
@@ -130,7 +130,7 @@ void GN::gfx::MultiThreadTexture::updateMipmap(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::MultiThreadTexture::readMipmap( size_t face, size_t level, MipmapData & data )
+void GN::gfx::MultiThreadTexture::readMipmap( uint32 face, uint32 level, MipmapData & data )
 {
     GN_UNUSED_PARAM( face );
     GN_UNUSED_PARAM( level );
@@ -142,7 +142,7 @@ void GN::gfx::MultiThreadTexture::readMipmap( size_t face, size_t level, MipmapD
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::MultiThreadTexture::blobWrite( const void * data, size_t length )
+void GN::gfx::MultiThreadTexture::blobWrite( const void * data, uint32 length )
 {
     GN_UNUSED_PARAM( data );
     GN_UNUSED_PARAM( length );
@@ -152,7 +152,7 @@ void GN::gfx::MultiThreadTexture::blobWrite( const void * data, size_t length )
 //
 //
 // -----------------------------------------------------------------------------
-size_t GN::gfx::MultiThreadTexture::blobRead( void * data )
+uint32 GN::gfx::MultiThreadTexture::blobRead( void * data )
 {
     GN_UNUSED_PARAM( data );
     GN_UNIMPL();
@@ -186,7 +186,7 @@ namespace GN { namespace gfx
     //
     //
     // -------------------------------------------------------------------------
-    void func_TEXTURE_DESTROY( Gpu &, void * p, size_t )
+    void func_TEXTURE_DESTROY( Gpu &, void * p, uint32 )
     {
         Texture ** tex = (Texture**)p;
         (*tex)->decref();
@@ -195,7 +195,7 @@ namespace GN { namespace gfx
     //
     //
     // -------------------------------------------------------------------------
-    void func_TEXTURE_UPDATE_MIPMAP( Gpu &, void * p, size_t )
+    void func_TEXTURE_UPDATE_MIPMAP( Gpu &, void * p, uint32 )
     {
         UpdateMipmapParam * ump = (UpdateMipmapParam*)p;
 
@@ -214,7 +214,7 @@ namespace GN { namespace gfx
     //
     //
     // -------------------------------------------------------------------------
-    void func_TEXTURE_READ_MIPMAP( Gpu &, void *, size_t )
+    void func_TEXTURE_READ_MIPMAP( Gpu &, void *, uint32 )
     {
         GN_UNIMPL();
     }
@@ -222,7 +222,7 @@ namespace GN { namespace gfx
     //
     //
     // -------------------------------------------------------------------------
-    void func_TEXTURE_BLOB_WRITE( Gpu &, void *, size_t )
+    void func_TEXTURE_BLOB_WRITE( Gpu &, void *, uint32 )
     {
         GN_UNIMPL();
     }
@@ -230,7 +230,7 @@ namespace GN { namespace gfx
     //
     //
     // -------------------------------------------------------------------------
-    void func_TEXTURE_BLOB_READ( Gpu &, void *, size_t )
+    void func_TEXTURE_BLOB_READ( Gpu &, void *, uint32 )
     {
         GN_UNIMPL();
     }

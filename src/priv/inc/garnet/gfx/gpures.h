@@ -121,7 +121,7 @@ namespace GN { namespace gfx
         //@}
 
         //@{
-        bool                     reset( size_t length, const void * initialData );
+        bool                     reset( uint32 length, const void * initialData );
         void                     setUniform( const AutoRef<Uniform> & );
         const AutoRef<Uniform> & uniform() const { return mUniform; }
         //@}
@@ -218,7 +218,7 @@ namespace GN { namespace gfx
 
             const uint32 * a = (const uint32*)this;
             const uint32 * b = (const uint32*)&rhs;
-            size_t         n = sizeof(*this)/4;
+            uint32         n = sizeof(*this)/4;
 
             for( uint32 i = 0; i < n; ++i )
             {
@@ -237,10 +237,10 @@ namespace GN { namespace gfx
         ///
         /// Calculate number of streams.
         ///
-        size_t inline calcNumStreams() const
+        uint32 inline calcNumStreams() const
         {
-            size_t n = 0;
-            for( size_t i = 0; i < numElements; ++i )
+            uint32 n = 0;
+            for( uint32 i = 0; i < numElements; ++i )
             {
                 const MeshVertexElement & e =  elements[i];
                 if( e.stream >= n ) n = e.stream + 1;
@@ -251,14 +251,14 @@ namespace GN { namespace gfx
         ///
         /// Calculate stride of specific stream.
         ///
-        size_t inline calcStreamStride( size_t stream ) const
+        uint32 inline calcStreamStride( uint32 stream ) const
         {
-            size_t stride = 0;
-            for( size_t i = 0; i < numElements; ++i )
+            uint32 stride = 0;
+            for( uint32 i = 0; i < numElements; ++i )
             {
                 const MeshVertexElement & e =  elements[i];
 
-                size_t elementEnd = e.offset + e.format.getBytesPerBlock();
+                uint32 elementEnd = e.offset + e.format.getBytesPerBlock();
 
                 if( stream == e.stream && stride < elementEnd ) stride = elementEnd;
             }
@@ -270,7 +270,7 @@ namespace GN { namespace gfx
         ///
         bool hasSemantic( const char * semantic ) const
         {
-            for( size_t i = 0; i < numElements; ++i )
+            for( uint32 i = 0; i < numElements; ++i )
             {
                 if( 0 == stringCompareI( elements[i].semantic, semantic ) )
                 {
@@ -371,15 +371,15 @@ namespace GN { namespace gfx
     struct MeshResourceDesc
     {
         PrimitiveType       prim;   ///< primitive type
-        size_t              numvtx; ///< number of vertices
-        size_t              numidx; ///< number of indices. 0 means non-indexed mesh
+        uint32              numvtx; ///< number of vertices
+        uint32              numidx; ///< number of indices. 0 means non-indexed mesh
         bool                idx32;  ///< true for 32-bit index buffer
         bool                dynavb; ///< true for dynamic vertex buffer
         bool                dynaib; ///< trur for dynamic index buffer
         MeshVertexFormat    vtxfmt; ///< vertex format
         void *              vertices[GpuContext::MAX_VERTEX_BUFFERS]; ///< NULL pointer means vertex data are undefined
-        size_t              strides[GpuContext::MAX_VERTEX_BUFFERS];  ///< vertex buffer strides. 0 means using vertex size defined by vertex format.
-        size_t              offsets[GpuContext::MAX_VERTEX_BUFFERS];  ///< Number of bytes from vertex buffer beginning to the first element that will be used.
+        uint32              strides[GpuContext::MAX_VERTEX_BUFFERS];  ///< vertex buffer strides. 0 means using vertex size defined by vertex format.
+        uint32              offsets[GpuContext::MAX_VERTEX_BUFFERS];  ///< Number of bytes from vertex buffer beginning to the first element that will be used.
         void *              indices; ///< Null means index data are undefined.
 
         ///
@@ -408,12 +408,12 @@ namespace GN { namespace gfx
         ///
         /// get vertex buffer size in bytes
         ///
-        size_t getVtxBufSize( size_t stream ) const;
+        uint32 getVtxBufSize( uint32 stream ) const;
 
         ///
         /// get indices buffer size in bytes
         ///
-        size_t getIdxBufSize() const;
+        uint32 getIdxBufSize() const;
 
         ///
         /// Load descriptor from file, return the mesh data. Return a NULL blob for failure.
@@ -521,7 +521,7 @@ namespace GN { namespace gfx
         ///
         struct EffectUniformDesc
         {
-            size_t size; ///< uniform size in bytes
+            uint32 size; ///< uniform size in bytes
 
             EffectUniformDesc() : size(0) {}
         };
@@ -719,8 +719,8 @@ namespace GN { namespace gfx
 
         struct BindingLocation
         {
-            size_t pass;                     // index of the pass
-            size_t gpuProgramParameterIndex; // index of the GPU program parameter
+            uint32 pass;                     // index of the pass
+            uint32 gpuProgramParameterIndex; // index of the GPU program parameter
         };
 
         struct EffectParameterProperties
@@ -736,14 +736,14 @@ namespace GN { namespace gfx
 
         struct UniformProperties : public EffectParameterProperties
         {
-            size_t size; ///< uniform size in bytes
+            uint32 size; ///< uniform size in bytes
         };
 
         struct AttributeProperties : public EffectParameterProperties
         {
         };
 
-        static const size_t PARAMETER_NOT_FOUND = 0xFFFFFFFF;
+        static const uint32 PARAMETER_NOT_FOUND = 0xFFFFFFFF;
 
         //@}
 
@@ -757,27 +757,27 @@ namespace GN { namespace gfx
 
         bool                          reset( const EffectResourceDesc * desc );
 
-        size_t                        numPasses() const;
+        uint32                        numPasses() const;
 
-        size_t                        numTextures() const;
-        size_t                        findTexture( const char * name ) const;
+        uint32                        numTextures() const;
+        uint32                        findTexture( const char * name ) const;
         bool                          hasTexture( const char * name ) const { return PARAMETER_NOT_FOUND != findTexture( name ); }
-        const TextureProperties     & textureProperties( size_t i ) const;
+        const TextureProperties     & textureProperties( uint32 i ) const;
 
-        size_t                        numUniforms() const;
-        size_t                        findUniform( const char * name ) const;
+        uint32                        numUniforms() const;
+        uint32                        findUniform( const char * name ) const;
         bool                          hasUniform( const char * name ) const { return PARAMETER_NOT_FOUND != findUniform( name ); }
-        const UniformProperties     & uniformProperties( size_t i ) const;
+        const UniformProperties     & uniformProperties( uint32 i ) const;
 
-        size_t                        numAttributes() const;
-        size_t                        findAttribute( const char * name ) const;
+        uint32                        numAttributes() const;
+        uint32                        findAttribute( const char * name ) const;
         bool                          hasAttribute( const char * name ) const { return PARAMETER_NOT_FOUND != findAttribute( name ); }
-        const AttributeProperties   & attributeProperties( size_t i ) const;
+        const AttributeProperties   & attributeProperties( uint32 i ) const;
 
         const EffectResourceDesc::EffectRenderStateDesc &
-                                      renderStates( size_t pass ) const;
+                                      renderStates( uint32 pass ) const;
 
-        void                          applyToContext( size_t pass, GpuContext & gc ) const;
+        void                          applyToContext( uint32 pass, GpuContext & gc ) const;
 
         //@}
 
@@ -796,10 +796,10 @@ namespace GN { namespace gfx
         /// data members
         //@{
 
-        size_t basevtx;
-        size_t numvtx;
-        size_t startidx;
-        size_t numidx;
+        uint32 basevtx;
+        uint32 numvtx;
+        uint32 startidx;
+        uint32 numidx;
 
         //@}
 
@@ -835,7 +835,7 @@ namespace GN { namespace gfx
         struct ModelUniformDesc
         {
             StrA             resourceName; ///< if empty, then create a new uniform
-            size_t           size;
+            uint32           size;
             DynaArray<uint8> initialValue; ///< if empty, then no initial value.
         };
 
@@ -1005,7 +1005,7 @@ namespace GN { namespace gfx
 
         AutoRef<UniformResource> getStandardUniformResource( int index ) const;
 
-        void setStandardUniform( int index, const void * data, size_t dataSize );
+        void setStandardUniform( int index, const void * data, uint32 dataSize );
 
         template<typename T>
         void setStandardUniform( int index, const T & value ) { setStandardUniform( index, &value, sizeof(T) ); }

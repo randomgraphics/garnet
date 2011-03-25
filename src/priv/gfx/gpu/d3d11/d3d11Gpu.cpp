@@ -129,7 +129,7 @@ void GN::gfx::D3D11Gpu::ReportLiveDeviceObjects()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3D11Gpu::debugDumpNextFrame( size_t startBatchIndex, size_t numBatches )
+void GN::gfx::D3D11Gpu::debugDumpNextFrame( uint32 startBatchIndex, uint32 numBatches )
 {
     GN_UNUSED_PARAM( startBatchIndex );
     GN_UNUSED_PARAM( numBatches );

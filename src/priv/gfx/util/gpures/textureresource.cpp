@@ -64,8 +64,8 @@ GN::gfx::TextureResource::loadFromFile(
     if( !tex ) return AutoRef<TextureResource>::NULLREF;
 
     // update texture content
-    for( size_t f = 0; f < td.faces; ++f )
-    for( size_t l = 0; l < td.levels; ++l )
+    for( uint32 f = 0; f < td.faces; ++f )
+    for( uint32 l = 0; l < td.levels; ++l )
     {
         const MipmapDesc & md = id.getMipmap( f, l );
         size_t offset = id.getMipmapOffset( f, l );

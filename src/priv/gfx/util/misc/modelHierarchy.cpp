@@ -728,7 +728,7 @@ sLoadFbxMesh(
     int uvIndex = 0;
     int normalIndex = 0;
     int lastMatID = -1;
-    for( size_t sortedPolygonIndex = 0; sortedPolygonIndex < sortedPolygons.size(); ++sortedPolygonIndex )
+    for( uint32 sortedPolygonIndex = 0; sortedPolygonIndex < sortedPolygons.size(); ++sortedPolygonIndex )
     {
         int polygonIndex = sortedPolygons[sortedPolygonIndex];
 

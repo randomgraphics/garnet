@@ -340,8 +340,8 @@ GN::gfx::BitmapFont::createSlot( wchar_t ch )
     }
 
     // update texture
-    Box<uint32> area( (uint32)slot.x, (uint32)slot.y, 0, (uint32)slot.w, (uint32)slot.h, 1 );
-    mTextures[slot.texidx]->updateMipmap( 0, 0, &area, slot.w*4, tmpbuf.size(), tmpbuf.cptr() );
+    Box<uint32> area( slot.x, slot.y, 0, slot.w, slot.h, 1 );
+    mTextures[slot.texidx]->updateMipmap( 0, 0, &area, slot.w*4, (uint32)tmpbuf.size(), tmpbuf.cptr() );
 
     // success
     return &slot;

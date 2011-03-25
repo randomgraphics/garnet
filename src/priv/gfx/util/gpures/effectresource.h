@@ -40,24 +40,24 @@ namespace GN { namespace gfx
 
         bool                          reset( const EffectResourceDesc * desc );
 
-        size_t                        numPasses() const { return mPasses.size(); }
+        uint32                        numPasses() const { return (uint32)mPasses.size(); }
 
-        size_t                        numTextures() const { return mTextures.size(); }
-        size_t                        findTexture( const char * name ) const;
-        const TextureProperties     & textureProperties( size_t i ) const { return mTextures[i]; }
+        uint32                        numTextures() const { return (uint32)mTextures.size(); }
+        uint32                        findTexture( const char * name ) const;
+        const TextureProperties     & textureProperties( uint32 i ) const { return mTextures[i]; }
 
-        size_t                        numUniforms() const { return mUniforms.size(); }
-        size_t                        findUniform( const char * name ) const;
-        const UniformProperties     & uniformProperties( size_t i ) const { return mUniforms[i]; }
+        uint32                        numUniforms() const { return (uint32)mUniforms.size(); }
+        uint32                        findUniform( const char * name ) const;
+        const UniformProperties     & uniformProperties( uint32 i ) const { return mUniforms[i]; }
 
-        size_t                        numAttributes() const { return mAttributes.size(); }
-        size_t                        findAttribute( const char * name ) const;
-        const AttributeProperties   & attributeProperties( size_t i ) const { return mAttributes[i]; }
+        uint32                        numAttributes() const { return (uint32)mAttributes.size(); }
+        uint32                        findAttribute( const char * name ) const;
+        const AttributeProperties   & attributeProperties( uint32 i ) const { return mAttributes[i]; }
 
         const EffectResourceDesc::EffectRenderStateDesc &
-                                      renderStates( size_t pass ) const { GN_ASSERT( pass < mPasses.size() ); return mPasses[pass].renderstates; }
+                                      renderStates( uint32 pass ) const { GN_ASSERT( pass < mPasses.size() ); return mPasses[pass].renderstates; }
 
-        void                          applyToContext( size_t pass, GpuContext & gc ) const;
+        void                          applyToContext( uint32 pass, GpuContext & gc ) const;
 
         // ********************************
         // private types
@@ -73,7 +73,7 @@ namespace GN { namespace gfx
         struct RenderPass
         {
             /// Index of GPU program used in this pass
-            size_t                                    gpuProgramIndex;
+            uint32                                    gpuProgramIndex;
 
             /// render states
             EffectResourceDesc::EffectRenderStateDesc renderstates;
@@ -122,7 +122,7 @@ namespace GN { namespace gfx
 
         bool initAttributes( const EffectResourceDesc & effectDesc );
 
-        size_t findGpuProgram(
+        uint32 findGpuProgram(
             const EffectResourceDesc & passDesc,
             const StrA               & programName );
     };

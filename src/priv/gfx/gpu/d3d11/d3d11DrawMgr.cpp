@@ -22,7 +22,7 @@ sSetupUserD3D11Buffer(
     ID3D11Device         & dev,
     ID3D11DeviceContext  & context,
     ID3D11Buffer        ** buffer,
-    size_t                 size,
+    uint32                 size,
     uint32                 bindFlags,
     const void           * data )
 {
@@ -52,7 +52,7 @@ sSetupUserD3D11Buffer(
 
         if( desc.ByteWidth < size )
         {
-            desc.ByteWidth = (uint32)size;
+            desc.ByteWidth = size;
 
             (*buffer)->Release();
 
@@ -168,18 +168,18 @@ void GN::gfx::D3D11Gpu::clearScreen(
 // -----------------------------------------------------------------------------
 void GN::gfx::D3D11Gpu::drawIndexed(
     PrimitiveType prim,
-    size_t        numidx,
-    size_t        basevtx,
-    size_t        ,//startvtx,
-    size_t        ,//numvtx,
-    size_t        startidx )
+    uint32        numidx,
+    uint32        basevtx,
+    uint32        ,//startvtx,
+    uint32        ,//numvtx,
+    uint32        startidx )
 {
     PIXPERF_FUNCTION_EVENT();
 
     mDeviceContext->IASetPrimitiveTopology( sD3D11PrimMap[prim] );
     mDeviceContext->DrawIndexed(
-        (UINT)numidx,
-        (UINT)startidx,
+        numidx,
+        startidx,
         (INT)basevtx );
 }
 
@@ -188,13 +188,13 @@ void GN::gfx::D3D11Gpu::drawIndexed(
 // -----------------------------------------------------------------------------
 void GN::gfx::D3D11Gpu::draw(
     PrimitiveType prim,
-    size_t        numvtx,
-    size_t        startvtx )
+    uint32        numvtx,
+    uint32        startvtx )
 {
     PIXPERF_FUNCTION_EVENT();
 
     mDeviceContext->IASetPrimitiveTopology( sD3D11PrimMap[prim] );
-    mDeviceContext->Draw( (UINT)numvtx, (UINT)startvtx );
+    mDeviceContext->Draw( numvtx, startvtx );
 }
 
 //
@@ -202,10 +202,10 @@ void GN::gfx::D3D11Gpu::draw(
 // -----------------------------------------------------------------------------
 void GN::gfx::D3D11Gpu::drawIndexedUp(
     PrimitiveType  prim,
-    size_t         numidx,
-    size_t         numvtx,
+    uint32         numidx,
+    uint32         numvtx,
     const void   * vertexData,
-    size_t         strideInBytes,
+    uint32         strideInBytes,
     const uint16 * indexData )
 {
     PIXPERF_FUNCTION_EVENT();
@@ -243,7 +243,7 @@ void GN::gfx::D3D11Gpu::drawIndexedUp(
 
     // do rendering
     mDeviceContext->IASetPrimitiveTopology( sD3D11PrimMap[prim] );
-    mDeviceContext->DrawIndexed( (UINT)numidx, 0, 0 );
+    mDeviceContext->DrawIndexed( numidx, 0, 0 );
 }
 
 //
@@ -251,9 +251,9 @@ void GN::gfx::D3D11Gpu::drawIndexedUp(
 // -----------------------------------------------------------------------------
 void GN::gfx::D3D11Gpu::drawUp(
     PrimitiveType prim,
-    size_t        numvtx,
+    uint32        numvtx,
     const void *  vertexData,
-    size_t        strideInBytes )
+    uint32        strideInBytes )
 {
     PIXPERF_FUNCTION_EVENT();
 
@@ -278,17 +278,17 @@ void GN::gfx::D3D11Gpu::drawUp(
 
     // do rendering
     mDeviceContext->IASetPrimitiveTopology( sD3D11PrimMap[prim] );
-    mDeviceContext->Draw( (UINT)numvtx, 0 );
+    mDeviceContext->Draw( numvtx, 0 );
 }
 
 //
 //
 // -----------------------------------------------------------------------------
 void GN::gfx::D3D11Gpu::drawLines(
-    uint32         /*options*/,
+    uint32            /*options*/,
     const void      * /*positions*/,
-    size_t            /*stride*/,
-    size_t            /*numPoints*/,
+    uint32            /*stride*/,
+    uint32            /*numPoints*/,
     uint32            /*rgba*/,
     const Matrix44f & /*model*/,
     const Matrix44f & /*view*/,

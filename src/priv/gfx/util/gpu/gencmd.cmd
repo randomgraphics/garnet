@@ -29,7 +29,7 @@ REM generate handler table
 echo ///>>%TARGET%
 echo /// Gpu command handler type.>>%TARGET%
 echo ///>>%TARGET%
-echo typedef void (*GpuCommandHandler)( Gpu ^& r, void * param, size_t size );>>%TARGET%
+echo typedef void (*GpuCommandHandler)( Gpu ^& r, void * param, uint32 size );>>%TARGET%
 echo.>>%TARGET%
 echo ///>>%TARGET%
 echo /// Gpu command handler table.>>%TARGET%
@@ -56,7 +56,7 @@ echo {>>%TARGET%
 echo.>>%TARGET%
 
 REM function prototypes
-for /F "tokens=1" %%a in ( mtgpuCommandMeta.txt ) do echo void func_%%a( Gpu ^&, void *, size_t );>>%TARGET%
+for /F "tokens=1" %%a in ( mtgpuCommandMeta.txt ) do echo void func_%%a( Gpu ^&, void *, uint32 );>>%TARGET%
 echo.>>%TARGET%
 
 REM handler table

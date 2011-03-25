@@ -16,14 +16,14 @@ static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.D3D11");
 //
 //
 // -----------------------------------------------------------------------------
-static size_t sGetCgParameterCount( CGparameter param )
+static uint32 sGetCgParameterCount( CGparameter param )
 {
     int rows  = cgGetParameterRows( param );
     int cols  = cgGetParameterColumns( param );
     int total = cgGetArrayTotalSize( param );
     if( 0 == total ) total = 1;
 
-    return (size_t)( rows * cols * total );
+    return (uint32)( rows * cols * total );
 }
 
 //
@@ -124,15 +124,15 @@ bool GN::gfx::D3D11GpuProgramCG::init( const GpuProgramDesc & desc )
     // update the parameter descriptor
     if( !mUniforms.empty() )
     {
-        mParam.setUniformArray( &mUniforms[0].desc, mUniforms.size(), sizeof(D3D11CgUniform) );
+        mParam.setUniformArray( &mUniforms[0].desc, (uint32)mUniforms.size(), sizeof(D3D11CgUniform) );
     }
     if( !mTextures.empty() )
     {
-        mParam.setTextureArray( &mTextures[0].desc, mTextures.size(), sizeof(D3D11CgTexture) );
+        mParam.setTextureArray( &mTextures[0].desc, (uint32)mTextures.size(), sizeof(D3D11CgTexture) );
     }
     if( !mAttributes.empty() )
     {
-        mParam.setAttributeArray( &mAttributes[0].desc, mAttributes.size(), sizeof(D3D11CgAttribute) );
+        mParam.setAttributeArray( &mAttributes[0].desc, (uint32)mAttributes.size(), sizeof(D3D11CgAttribute) );
     }
 
     // success
@@ -186,7 +186,7 @@ void GN::gfx::D3D11GpuProgramCG::quit()
 //
 // -----------------------------------------------------------------------------
 const char * GN::gfx::D3D11GpuProgramCG::getAttributeSemantic(
-    size_t attributeIndex, UINT * semanticIndex ) const
+    uint32 attributeIndex, UINT * semanticIndex ) const
 {
     if( attributeIndex >= mAttributes.size() )
     {
@@ -257,10 +257,10 @@ void GN::gfx::D3D11GpuProgramCG::apply() const
 // -----------------------------------------------------------------------------
 void GN::gfx::D3D11GpuProgramCG::applyUniforms(
     const Uniform * const * uniforms,
-    size_t                  count,
+    uint32                  count,
     bool                    skipDirtyCheck) const
 {
-    for( size_t i = 0; i < std::min( count, mUniforms.size() ); ++i )
+    for( size_t i = 0; i < std::min<size_t>( count, mUniforms.size() ); ++i )
     {
         const D3D11CgUniform & desc = mUniforms[i];
 
@@ -292,7 +292,7 @@ void GN::gfx::D3D11GpuProgramCG::applyUniforms(
 // -----------------------------------------------------------------------------
 void GN::gfx::D3D11GpuProgramCG::applyTextures(
     const TextureBinding * textures,
-    size_t                 count,
+    uint32                 count,
     bool                   skipDirtyCheck ) const
 {
     for( size_t i = 0; i < mTextures.size(); ++i )

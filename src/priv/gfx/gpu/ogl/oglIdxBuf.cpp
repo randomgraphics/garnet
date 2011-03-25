@@ -57,7 +57,7 @@ void GN::gfx::OGLIdxBuf::quit()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLIdxBuf::update( size_t startidx, size_t numidx, const void * data, SurfaceUpdateFlag flag )
+void GN::gfx::OGLIdxBuf::update( uint32 startidx, uint32 numidx, const void * data, SurfaceUpdateFlag flag )
 {
     GN_GUARD_SLOW;
 
@@ -79,7 +79,7 @@ void GN::gfx::OGLIdxBuf::readback( DynaArray<uint8> & data )
 {
     const IdxBufDesc & ibdesc = getDesc();
 
-    size_t lengthInBytes = ibdesc.numidx * mBytesPerIndex;
+    uint32 lengthInBytes = ibdesc.numidx * mBytesPerIndex;
 
     data.resize( lengthInBytes );
 

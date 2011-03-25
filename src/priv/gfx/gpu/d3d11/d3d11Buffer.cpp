@@ -11,7 +11,7 @@ static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.D3D11.Buffer");
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::D3D11Buffer::init( size_t bytes, bool fastCpuWrite, uint32 bindFlags )
+bool GN::gfx::D3D11Buffer::init( uint32 bytes, bool fastCpuWrite, uint32 bindFlags )
 {
     GN_GUARD;
 
@@ -76,7 +76,7 @@ static const D3D11_MAP SURFACE_UPDATE_FLAG_TO_D3D11_MAP[] =
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3D11Buffer::update( size_t offset, size_t bytes, const void * data, SurfaceUpdateFlag flag )
+void GN::gfx::D3D11Buffer::update( uint32 offset, uint32 bytes, const void * data, SurfaceUpdateFlag flag )
 {
     PIXPERF_FUNCTION_EVENT();
 

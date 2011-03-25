@@ -7,16 +7,6 @@ using namespace GN::gfx;
 //static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpures");
 
 // *****************************************************************************
-// Local stuff
-// *****************************************************************************
-
-struct UniformDesc
-{
-    size_t       length;
-    const void * initialData;
-};
-
-// *****************************************************************************
 // GN::gfx::UniformResource
 // *****************************************************************************
 
@@ -33,7 +23,7 @@ const Guid & GN::gfx::UniformResource::guid()
 //
 // -----------------------------------------------------------------------------
 bool GN::gfx::UniformResource::reset(
-    size_t                length,
+    uint32                length,
     const void          * initialData )
 {
     AutoRef<Uniform> u( getGdb().getGpu().createUniform( length ) );

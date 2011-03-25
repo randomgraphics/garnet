@@ -39,7 +39,7 @@ namespace GN { namespace gfx
                 "QUAD_LIST",
                 "RECT_LIST",
             };
-            GN_CASSERT( GN_ARRAY_COUNT(TABLE) == (size_t)NUM_PRIMITIVES );
+            GN_CASSERT( GN_ARRAY_COUNT(TABLE) == (uint32)NUM_PRIMITIVES );
 
             unsigned int e = *this;
             if( e < GN_ARRAY_COUNT(TABLE) ) return TABLE[e];
@@ -72,7 +72,7 @@ namespace GN { namespace gfx
     /// \param numvert  vertex count
     /// \return         primitive count
     ///
-    inline size_t calcPrimitiveCount( PrimitiveType pt, size_t numvert )
+    inline uint32 calcPrimitiveCount( PrimitiveType pt, uint32 numvert )
     {
         GN_GUARD_SLOW;
 
@@ -102,7 +102,7 @@ namespace GN { namespace gfx
     /// \param numprim  primitive count
     /// \return         vertex count
     ///
-    inline size_t calcVertexCount( PrimitiveType pt, size_t numprim )
+    inline uint32 calcVertexCount( PrimitiveType pt, uint32 numprim )
     {
         GN_GUARD_SLOW;
         switch( pt )

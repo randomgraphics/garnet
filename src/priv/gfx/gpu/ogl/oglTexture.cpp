@@ -633,7 +633,7 @@ bool GN::gfx::OGLTexture::init( const TextureDesc & inputDesc )
     if( 0 == mOGLTexture ) return failure();
 
     // setup mipmap size array
-    for( size_t i = 0; i < texdesc.levels; ++i )
+    for( uint32 i = 0; i < texdesc.levels; ++i )
     {
         GLint sx, sy, sz;
         switch( mTarget )
@@ -709,11 +709,11 @@ void GN::gfx::OGLTexture::quit()
 // -----------------------------------------------------------------------------
 void
 GN::gfx::OGLTexture::updateMipmap(
-    size_t              face,
-    size_t              level,
+    uint32              face,
+    uint32              level,
     const Box<uint32> * area,
-    size_t              rowPitch,
-    size_t              slicePitch,
+    uint32              rowPitch,
+    uint32              slicePitch,
     const void        * inputData,
     SurfaceUpdateFlag   flag )
 {
@@ -852,7 +852,7 @@ GN::gfx::OGLTexture::updateMipmap(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLTexture::readMipmap( size_t, size_t, MipmapData & )
+void GN::gfx::OGLTexture::readMipmap( uint32, uint32, MipmapData & )
 {
     GN_UNIMPL();
 }

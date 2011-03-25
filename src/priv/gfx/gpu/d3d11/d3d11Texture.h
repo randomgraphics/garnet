@@ -50,10 +50,10 @@ namespace GN { namespace gfx
         // ********************************
     public:
 
-        virtual void   updateMipmap( size_t face, size_t level, const Box<uint32>* area, size_t rowPitch, size_t slicePitch, const void * data, SurfaceUpdateFlag flag );
-        virtual void   readMipmap( size_t face, size_t level, MipmapData & data );
-        virtual void   blobWrite( const void *, size_t ) { GN_UNIMPL(); }
-        virtual size_t blobRead( void * ) { GN_UNIMPL(); return 0; }
+        virtual void   updateMipmap( uint32 face, uint32 level, const Box<uint32>* area, uint32 rowPitch, uint32 slicePitch, const void * data, SurfaceUpdateFlag flag );
+        virtual void   readMipmap( uint32 face, uint32 level, MipmapData & data );
+        virtual void   blobWrite( const void *, uint32 ) { GN_UNIMPL(); }
+        virtual uint32 blobRead( void * ) { GN_UNIMPL(); return 0; }
         virtual void   generateMipmapPyramid() { GN_UNIMPL(); }
         virtual void * getAPIDependentData() const { return mTexture; }
 
