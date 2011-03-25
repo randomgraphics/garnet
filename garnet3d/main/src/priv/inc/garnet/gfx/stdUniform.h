@@ -7,7 +7,7 @@
 // *****************************************************************************
 /// \file
 /// \brief   Define standard uniform resources
-/// \author  chenli@@REDMOND (2011/03/03 ÷‹Àƒ)
+/// \author  chenli@@REDMOND (?? 2011/03/24)
 // *****************************************************************************
 
 namespace GN { namespace gfx
@@ -54,7 +54,7 @@ namespace GN { namespace gfx
         {
             int          index;  //< uniform index
             const char * name;   //< uniform name
-            size_t       size;   //< uniform size in bytes
+            uint32       size;   //< uniform size in bytes
             bool         global; //< global or per-object uniform
 
             static const Desc MATRIX_PVW;        //< proj * view * world
@@ -118,7 +118,7 @@ namespace GN { namespace gfx
                 &Desc::LIGHT0_SPECULAR,
                 &Desc::TIME,
             };
-            GN_CASSERT( (size_t)Index::NUM_STANDARD_UNIFORMS == GN_ARRAY_COUNT(DESCRIPTORS) );
+            GN_CASSERT( (uint32)Index::NUM_STANDARD_UNIFORMS == GN_ARRAY_COUNT(DESCRIPTORS) );
 
             if( 0 <= i && i < Index::NUM_STANDARD_UNIFORMS )
             {

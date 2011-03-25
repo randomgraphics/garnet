@@ -201,6 +201,11 @@
 #define GN_PUBLIC   GN_IMPORT // All other modules only imports symbols
 #endif
 
+///
+/// Depreciated function tag
+///
+#define GN_DEPRECIATED
+
 // *****************************************************************************
 /// \name Call Convension
 // *****************************************************************************

@@ -114,7 +114,7 @@ bool GN::gfx::D3D11RTMgr::bind(
     else
     {
         // build RTV array
-        for( size_t i = 0; i < newrt.colortargets.size(); ++i )
+        for( uint32 i = 0; i < newrt.colortargets.size(); ++i )
         {
             const RenderTargetTexture & rtt = newrt.colortargets[i];
 
@@ -130,7 +130,7 @@ bool GN::gfx::D3D11RTMgr::bind(
             }
         }
         // fill remained items in RTV array with NULLs
-        for( size_t i = newrt.colortargets.size(); i < GpuContext::MAX_COLOR_RENDER_TARGETS; ++i )
+        for( uint32 i = newrt.colortargets.size(); i < GpuContext::MAX_COLOR_RENDER_TARGETS; ++i )
         {
             mColors[i] = NULL;
         }

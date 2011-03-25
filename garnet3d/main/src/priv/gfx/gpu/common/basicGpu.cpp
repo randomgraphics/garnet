@@ -114,7 +114,7 @@ void GN::gfx::BasicGpu::getBackBufferContent( BackBufferContent & c )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::BasicGpu::setUserData( const Guid & id, const void * data, size_t length )
+void GN::gfx::BasicGpu::setUserData( const Guid & id, const void * data, uint32 length )
 {
     UserData * currentUserData = mUserData.find( id );
 
@@ -160,13 +160,13 @@ void GN::gfx::BasicGpu::setUserData( const Guid & id, const void * data, size_t 
 //
 //
 // -----------------------------------------------------------------------------
-const void * GN::gfx::BasicGpu::getUserData( const Guid & id, size_t * length ) const
+const void * GN::gfx::BasicGpu::getUserData( const Guid & id, uint32 * length ) const
 {
     const UserData * currentUserData = mUserData.find( id );
 
     if( NULL != currentUserData )
     {
-        if( length ) *length = currentUserData->size();
+        if( length ) *length = (uint32)currentUserData->size();
 
         return currentUserData->cptr();
     }

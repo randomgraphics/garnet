@@ -30,7 +30,7 @@ namespace GN { namespace gfx
         ///
         /// Validate update parameters.
         ///
-        bool validateUpdateParameters( size_t face, size_t level, const Box<uint32> * area, SurfaceUpdateFlag flag, Box<uint32> & clippedArea )
+        bool validateUpdateParameters( uint32 face, uint32 level, const Box<uint32> * area, SurfaceUpdateFlag flag, Box<uint32> & clippedArea )
         {
             // check face
             if( face >= getDesc().faces )
@@ -130,7 +130,7 @@ namespace GN { namespace gfx
         ///
         /// Validate update parameters. Note that this function may modify "length" parameter
         ///
-        bool validateUpdateParameters( size_t offset, size_t * length, const void * data, SurfaceUpdateFlag flag )
+        bool validateUpdateParameters( uint32 offset, uint32 * length, const void * data, SurfaceUpdateFlag flag )
         {
             const VtxBufDesc & vbd = getDesc();
 
@@ -196,7 +196,7 @@ namespace GN { namespace gfx
         ///
         /// Validate update parameters.
         ///
-        bool validateUpdateParameters( size_t startidx, size_t * numidx, const void * data, SurfaceUpdateFlag flag )
+        bool validateUpdateParameters( uint32 startidx, uint32 * numidx, const void * data, SurfaceUpdateFlag flag )
         {
             GN_ASSERT( numidx );
 

@@ -16,7 +16,7 @@ namespace GN { namespace gfx
     struct VertexFormatProperties
     {
         /// minimal strides for each stream
-        size_t minStrides[GpuContext::MAX_VERTEX_BUFFERS];
+        uint32 minStrides[GpuContext::MAX_VERTEX_BUFFERS];
 
         /// true means that stream is referenced by the vertex format.
         bool used[GpuContext::MAX_VERTEX_BUFFERS];

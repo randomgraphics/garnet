@@ -321,8 +321,8 @@ void GN::gfx::SpriteRenderer::drawEnd()
         size_t firstPendingSpriteOffset = mNextPendingSprite - mSprites;
 
         mVertexBuffer->update(
-            firstPendingSpriteOffset * sizeof(Sprite),
-            numPendingSprites * sizeof(Sprite),
+            (uint32)(firstPendingSpriteOffset * sizeof(Sprite)),
+            (uint32)(numPendingSprites * sizeof(Sprite)),
             mNextPendingSprite,
             mSprites == mNextPendingSprite ? SurfaceUpdateFlag::DISCARD : SurfaceUpdateFlag::NO_OVERWRITE );
 
@@ -330,11 +330,11 @@ void GN::gfx::SpriteRenderer::drawEnd()
 
         mGpu.drawIndexed(
             PrimitiveType::TRIANGLE_LIST,
-            numPendingSprites * 6,        // numidx
-            firstPendingSpriteOffset * 4, // basevtx,
-            0,                            // startvtx
-            numPendingSprites * 4,        // numvtx
-            0 );                          // startidx
+            (uint32)(numPendingSprites * 6),        // numidx
+            (uint32)(firstPendingSpriteOffset * 4), // basevtx,
+            0,                                      // startvtx
+            (uint32)(numPendingSprites * 4),        // numvtx
+            0 );                                    // startidx
     }
 
     mDrawBegun = false;

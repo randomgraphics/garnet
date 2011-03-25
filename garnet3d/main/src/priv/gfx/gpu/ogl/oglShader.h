@@ -18,8 +18,8 @@ namespace GN { namespace gfx
 
         void setUniformArray(
             const GpuProgramUniformParameterDesc * array,
-            size_t                                 count,
-            size_t                                 stride )
+            uint32                                 count,
+            uint32                                 stride )
         {
             mUniformArray       = array;
             mUniformCount       = count;
@@ -28,8 +28,8 @@ namespace GN { namespace gfx
 
         void setTextureArray(
             const GpuProgramTextureParameterDesc * array,
-            size_t                                 count,
-            size_t                                 stride )
+            uint32                                 count,
+            uint32                                 stride )
         {
             mTextureArray       = array;
             mTextureCount       = count;
@@ -38,8 +38,8 @@ namespace GN { namespace gfx
 
         void setAttributeArray(
             const GpuProgramAttributeParameterDesc * array,
-            size_t                                   count,
-            size_t                                   stride )
+            uint32                                   count,
+            uint32                                   stride )
         {
             mAttributeArray       = array;
             mAttributeCount       = count;
@@ -84,7 +84,7 @@ namespace GN { namespace gfx
         /// Get vertex buffer binding description of specific attribute.
         /// Return false, if the binding name and index is not used byt the program.
         ///
-        virtual bool getBindingDesc( OGLVertexBindingDesc & result, size_t attributeIndex ) const = 0;
+        virtual bool getBindingDesc( OGLVertexBindingDesc & result, uint32 attributeIndex ) const = 0;
 
         ///
         /// Enable the program
@@ -99,12 +99,12 @@ namespace GN { namespace gfx
         ///
         /// Apply uniforms to OpenGL
         ///
-        virtual void applyUniforms( const Uniform * const * uniforms, size_t count ) const = 0;
+        virtual void applyUniforms( const Uniform * const * uniforms, uint32 count ) const = 0;
 
         ///
         /// Apply textures to OpenGL
         ///
-        virtual void applyTextures( const TextureBinding * textures, size_t count ) const = 0;
+        virtual void applyTextures( const TextureBinding * textures, uint32 count ) const = 0;
 
     protected:
 
@@ -168,7 +168,7 @@ namespace GN { namespace gfx
         // ********************************
     public:
 
-        virtual bool getBindingDesc( OGLVertexBindingDesc & result, size_t attributeIndex ) const;
+        virtual bool getBindingDesc( OGLVertexBindingDesc & result, uint32 attributeIndex ) const;
 
         virtual void enable() const
         {
@@ -180,9 +180,9 @@ namespace GN { namespace gfx
             GN_OGL_CHECK( glUseProgramObjectARB( 0 ) );
         }
 
-        virtual void applyUniforms( const Uniform * const * uniforms, size_t count ) const;
+        virtual void applyUniforms( const Uniform * const * uniforms, uint32 count ) const;
 
-        virtual void applyTextures( const TextureBinding * textures, size_t count ) const;
+        virtual void applyTextures( const TextureBinding * textures, uint32 count ) const;
 
         // ********************************
         // private variables
@@ -199,11 +199,11 @@ namespace GN { namespace gfx
             GLenum                             type;         ///< uniform type
             GLsizei                            count;        ///< uniform count
             GLint                              location;     ///< uniform location
-            size_t                             size;         ///< uniform size in bytes
+            uint32                             size;         ///< uniform size in bytes
             StrA                               name;         ///< uniform name
             mutable WeakRef<const Uniform>     lastUniform;  ///< pointer to last uniform parameter
             mutable sint32                     lastStamp;    ///< update time stamp of the last uniform parameter
-            mutable AutoInitializer<size_t,-1> lastTexStage; ///< last texture stage associated to this parameter
+            mutable AutoInitializer<uint32,-1> lastTexStage; ///< last texture stage associated to this parameter
         };
 
         ///
@@ -223,16 +223,16 @@ namespace GN { namespace gfx
         GLhandleARB mPS;
 
         // uniforms
-        DynaArray<GLSLUniformOrTextureDesc>  mUniforms;
+        DynaArray<GLSLUniformOrTextureDesc,uint32>  mUniforms;
 
         // textures
-        DynaArray<GLSLUniformOrTextureDesc>  mTextures;
+        DynaArray<GLSLUniformOrTextureDesc,uint32>  mTextures;
 
         // attributes
-        DynaArray<GLSLAttributeDesc>         mAttributes;
+        DynaArray<GLSLAttributeDesc,uint32>         mAttributes;
 
         // parameter descriptor
-        OglGpuProgramParameterDesc           mParamDesc;
+        OglGpuProgramParameterDesc                  mParamDesc;
 
         // ********************************
         // private functions
@@ -293,7 +293,7 @@ namespace GN { namespace gfx
 
         //@{
 
-        virtual bool getBindingDesc( OGLVertexBindingDesc & result, size_t attributeIndex ) const;
+        virtual bool getBindingDesc( OGLVertexBindingDesc & result, uint32 attributeIndex ) const;
 
         virtual void enable() const
         {
@@ -310,9 +310,9 @@ namespace GN { namespace gfx
             GN_CG_CHECK( cgGLDisableProfile( mPs.getProfile() ) );
         }
 
-        virtual void applyUniforms( const Uniform * const * uniforms, size_t count ) const;
+        virtual void applyUniforms( const Uniform * const * uniforms, uint32 count ) const;
 
-        virtual void applyTextures( const TextureBinding * textures, size_t count ) const;
+        virtual void applyTextures( const TextureBinding * textures, uint32 count ) const;
 
         //@}
 
@@ -339,7 +339,7 @@ namespace GN { namespace gfx
             GpuProgramUniformParameterDesc desc;
 
             // Total number of elements. For example, float2x3 blah[4][5] contains 2x3x4x5=120 elements.
-            size_t count;
+            uint32 count;
 
             // The function pointer that sets the uniform value.
             SetCgTypelessParameterValue setValueFuncPtr;
@@ -377,12 +377,12 @@ namespace GN { namespace gfx
         // ********************************
     private:
 
-        CgShader                   mVs;
-        CgShader                   mPs;
-        DynaArray<OglCgUniform>    mUniforms;
-        DynaArray<OglCgTexture>    mTextures;
-        DynaArray<OglCgAttribute>  mAttributes;
-        OglGpuProgramParameterDesc mParam;
+        CgShader                          mVs;
+        CgShader                          mPs;
+        DynaArray<OglCgUniform,uint32>    mUniforms;
+        DynaArray<OglCgTexture,uint32>    mTextures;
+        DynaArray<OglCgAttribute,uint32>  mAttributes;
+        OglGpuProgramParameterDesc        mParam;
 
         // ********************************
         // private functions

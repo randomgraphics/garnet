@@ -45,7 +45,7 @@ echo.        struct Desc>>%header%
 echo.        {>>%header%
 echo.            int          index;  //^< uniform index>>%header%
 echo.            const char * name;   //^< uniform name>>%header%
-echo.            size_t       size;   //^< uniform size in bytes>>%header%
+echo.            uint32       size;   //^< uniform size in bytes>>%header%
 echo.            bool         global; //^< global or per-object uniform>>%header%
 echo.>>%header%
 for /f "eol=# delims=; tokens=1,2,3,4,5,6*" %%a in (%~dp0stdUniformMeta.txt) do echo.            static const Desc %%a;%%b//^< %%g>>%header%
@@ -63,7 +63,7 @@ echo.        {>>%header%
 echo.            static const Desc * DESCRIPTORS[] = {>>%header%
 for /f "eol=# delims=; tokens=1,2,3,4,5,6*" %%a in (%~dp0stdUniformMeta.txt) do echo.                ^&Desc::%%a,>>%header%
 echo.            };>>%header%
-echo.            GN_CASSERT( (size_t)Index::NUM_STANDARD_UNIFORMS == GN_ARRAY_COUNT(DESCRIPTORS) );>>%header%
+echo.            GN_CASSERT( (uint32)Index::NUM_STANDARD_UNIFORMS == GN_ARRAY_COUNT(DESCRIPTORS) );>>%header%
 echo.>>%header%
 echo.            if( 0 ^<= i ^&^& i ^< Index::NUM_STANDARD_UNIFORMS )>>%header%
 echo.            {>>%header%

@@ -94,10 +94,10 @@ namespace GN { namespace gfx
 
         Gpu        & mGpu;
         GpuContext   mContext;
-        Line            * mLines;
-        Line            * mNextPendingLine;
-        Line            * mNextFreeLine;
-        bool              mBatchingModeEnabled;
+        Line       * mLines;
+        Line       * mNextPendingLine;
+        Line       * mNextFreeLine;
+        bool         mBatchingModeEnabled;
 
         // ********************************
         // private functions

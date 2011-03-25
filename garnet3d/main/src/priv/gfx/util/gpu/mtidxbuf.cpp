@@ -58,12 +58,12 @@ void GN::gfx::MultiThreadIdxBuf::quit()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::MultiThreadIdxBuf::update( size_t offset, size_t length, const void * data, SurfaceUpdateFlag flag )
+void GN::gfx::MultiThreadIdxBuf::update( uint32 offset, uint32 length, const void * data, SurfaceUpdateFlag flag )
 {
     if( 0 == length )
     {
         const IdxBufDesc & d = getDesc();
-        size_t maxlen = d.numidx * ( d.bits32 ? 4 : 2 );
+        uint32 maxlen = d.numidx * ( d.bits32 ? 4 : 2 );
         length = maxlen - offset;
     }
 
@@ -95,7 +95,7 @@ namespace GN { namespace gfx
     //
     //
     // -------------------------------------------------------------------------
-    void func_IDXBUF_DESTROY( Gpu &, void * p, size_t )
+    void func_IDXBUF_DESTROY( Gpu &, void * p, uint32 )
     {
         IdxBuf * ib = *(IdxBuf**)p;
         ib->decref();
@@ -104,13 +104,13 @@ namespace GN { namespace gfx
     //
     //
     // -------------------------------------------------------------------------
-    void func_IDXBUF_UPDATE( Gpu &, void * p, size_t )
+    void func_IDXBUF_UPDATE( Gpu &, void * p, uint32 )
     {
         struct IdxBufUpdateParam
         {
             IdxBuf          * idxbuf;
-            size_t            offset;
-            size_t            length;
+            uint32            offset;
+            uint32            length;
             void            * data;
             SurfaceUpdateFlag flag;
         };
@@ -125,7 +125,7 @@ namespace GN { namespace gfx
     //
     //
     // -------------------------------------------------------------------------
-    void func_IDXBUF_READBACK( Gpu &, void * p, size_t )
+    void func_IDXBUF_READBACK( Gpu &, void * p, uint32 )
     {
         struct IdxBufReadBackParam
         {

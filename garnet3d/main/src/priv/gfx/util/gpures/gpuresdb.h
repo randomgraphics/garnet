@@ -144,7 +144,7 @@ namespace GN { namespace gfx
 
         //@{
         AutoRef<UniformResource> getStandardUniformResource( int index ) const;
-        void setStandardUniform( int index, const void * data, size_t dataSize );
+        void setStandardUniform( int index, const void * data, uint32 dataSize );
         void setTransform( const Matrix44f & proj, const Matrix44f & view );
         void setLight0(
                 const Vector4f & diffuse,

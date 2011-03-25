@@ -276,8 +276,8 @@ void GN::gfx::LineRenderer::flush()
     mContext.depthstencil = mGpu.getContext().depthstencil;
 
     mContext.vtxbufs[0].vtxbuf->update(
-        firstPendingLineOffset * sizeof(Line),
-        numPendingLines * sizeof(Line),
+        (uint32)(firstPendingLineOffset * sizeof(Line)),
+        (uint32)(numPendingLines * sizeof(Line)),
         mNextPendingLine,
         mLines == mNextPendingLine ? SurfaceUpdateFlag::DISCARD : SurfaceUpdateFlag::NO_OVERWRITE );
 
@@ -285,8 +285,8 @@ void GN::gfx::LineRenderer::flush()
 
     mGpu.draw(
         PrimitiveType::LINE_LIST,
-        numPendingLines * 2,       // numvtx
-        firstPendingLineOffset * 2 // startvtx,
+        (uint32)(numPendingLines * 2),       // numvtx
+        (uint32)(firstPendingLineOffset * 2) // startvtx,
         );
 
     // rewind all pointers

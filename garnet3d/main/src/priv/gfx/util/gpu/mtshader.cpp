@@ -19,14 +19,14 @@ struct GpuProgramInitParam
 struct UniformInitParam
 {
     Uniform * uniform;
-    size_t    size;
+    uint32    size;
 };
 
 struct UniformUpdateParam
 {
     Uniform * uniform;
-    size_t    offset;
-    size_t    length;
+    uint32    offset;
+    uint32    length;
     void    * data;
 };
 
@@ -81,7 +81,7 @@ void GN::gfx::MultiThreadUniform::quit()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::MultiThreadUniform::update( size_t offset, size_t length, const void * data )
+void GN::gfx::MultiThreadUniform::update( uint32 offset, uint32 length, const void * data )
 {
     if( offset >= mSize || (offset+length) > mSize )
     {
@@ -176,7 +176,7 @@ namespace GN { namespace gfx
     //
     //
     // -------------------------------------------------------------------------
-    void func_GPU_PROGRAM_DESTROY( Gpu &, void * p, size_t )
+    void func_GPU_PROGRAM_DESTROY( Gpu &, void * p, uint32 )
     {
         GpuProgram & gp = **(GpuProgram**)p;
         gp.decref();
@@ -185,7 +185,7 @@ namespace GN { namespace gfx
     //
     //
     // -------------------------------------------------------------------------
-    void func_GPU_PROGRAM_INIT( Gpu &, void * p, size_t )
+    void func_GPU_PROGRAM_INIT( Gpu &, void * p, uint32 )
     {
         GpuProgramInitParam * gpip = *(GpuProgramInitParam**)p;
         gpip->params = &gpip->gp->getParameterDesc();
@@ -194,7 +194,7 @@ namespace GN { namespace gfx
     //
     //
     // -------------------------------------------------------------------------
-    void func_UNIFORM_DESTROY( Gpu &, void * p, size_t )
+    void func_UNIFORM_DESTROY( Gpu &, void * p, uint32 )
     {
         Uniform & u = **(Uniform**)p;
         u.decref();
@@ -203,7 +203,7 @@ namespace GN { namespace gfx
     //
     //
     // -------------------------------------------------------------------------
-    void func_UNIFORM_UPDATE( Gpu &, void * p, size_t )
+    void func_UNIFORM_UPDATE( Gpu &, void * p, uint32 )
     {
         const UniformUpdateParam & uup = *(const UniformUpdateParam*)p;
         uup.uniform->update( uup.offset, uup.length, uup.data );

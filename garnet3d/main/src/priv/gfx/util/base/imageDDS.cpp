@@ -139,7 +139,7 @@ struct DX10Info
 ///
 /// return image face count
 // -----------------------------------------------------------------------------
-static size_t sGetImageFaceCount( const DDSFileHeader & header )
+static uint32 sGetImageFaceCount( const DDSFileHeader & header )
 {
     if( DDS_DDSD_DEPTH & header.flags &&
         DDS_CAPS_COMPLEX & header.caps &&
@@ -210,7 +210,7 @@ static GN::gfx::ColorFormat getImageFormat( const DDPixelFormat & ddpf )
                           | DDS_DDPF_ALPHA
                           | DDS_DDPF_BUMPDUDV) );
 
-    for( size_t i = 0;
+    for( uint32 i = 0;
          i < sizeof(s_ddpfDescTable)/sizeof(s_ddpfDescTable[0]);
          ++i )
     {
@@ -320,7 +320,7 @@ bool DDSReader::readHeader(
     }
 
     // grok image dimension
-    size_t faces = sGetImageFaceCount( mHeader );
+    uint32 faces = sGetImageFaceCount( mHeader );
     if( 0 == faces ) return false;
     uint32 width = mHeader.width;
     uint32 height = mHeader.height;
@@ -331,14 +331,14 @@ bool DDSReader::readHeader(
                   && ( DDS_CAPS_MIPMAP & mHeader.caps )
                   && ( DDS_CAPS_COMPLEX & mHeader.caps );
     const GN::gfx::ColorLayoutDesc & cld = GN::gfx::ALL_COLOR_LAYOUTS[mImgDesc.format.layout];
-    size_t levels = hasMipmap ? mHeader.mipCount : 1;
+    uint32 levels = hasMipmap ? mHeader.mipCount : 1;
     if( 0 == levels ) levels = 1;
 
     // grok mipmaps
     mImgDesc.setFaceAndLevel( faces, levels );
-    for( size_t l = 0; l < mImgDesc.numLevels; ++l )
+    for( uint32 l = 0; l < mImgDesc.numLevels; ++l )
     {
-        for( size_t f = 0; f < mImgDesc.numFaces; ++f )
+        for( uint32 f = 0; f < mImgDesc.numFaces; ++f )
         {
             GN::gfx::MipmapDesc & m = mImgDesc.getMipmap( f, l );
 
@@ -405,7 +405,7 @@ bool DDSReader::readImage( void * o_data ) const
     {
         // special case for cube texture
         const uint8 * src = mSrc;
-        size_t size = mSize;
+        uint32 size = mSize;
         for( uint8 face = 0; face < 6; ++face )
         {
             for( uint8 level = 0; level < mImgDesc.numLevels; ++level )
@@ -432,7 +432,7 @@ bool DDSReader::readImage( void * o_data ) const
     else*/
     {
         // 1D, 2D, 3D texture
-        size_t nbytes = mImgDesc.getTotalBytes();
+        uint32 nbytes = mImgDesc.getTotalBytes();
         if( nbytes != mSize )
         {
             GN_ERROR(sLogger)( "image size is incorrect!" );

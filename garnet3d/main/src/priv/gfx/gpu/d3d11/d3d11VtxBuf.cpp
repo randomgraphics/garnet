@@ -45,8 +45,8 @@ void GN::gfx::D3D11VtxBuf::quit()
 //
 // -----------------------------------------------------------------------------
 void GN::gfx::D3D11VtxBuf::update(
-    size_t            offset,
-    size_t            length,
+    uint32            offset,
+    uint32            length,
     const void      * data,
     SurfaceUpdateFlag flag )
 {

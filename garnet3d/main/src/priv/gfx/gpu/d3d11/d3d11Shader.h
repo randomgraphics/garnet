@@ -26,7 +26,7 @@ namespace GN { namespace gfx
         ///
         /// Get attribute semantic name and semantic index
         ///
-        virtual const char * getAttributeSemantic( size_t attributeIndex, UINT * semanticIndex ) const = 0;
+        virtual const char * getAttributeSemantic( uint32 attributeIndex, UINT * semanticIndex ) const = 0;
 
         ///
         /// Get vertex input signature.
@@ -43,7 +43,7 @@ namespace GN { namespace gfx
         ///
         virtual void applyUniforms(
             const Uniform * const * uniforms,
-            size_t                  count,
+            uint32                  count,
             bool                    skipDirtyCheck ) const = 0;
 
         ///
@@ -51,7 +51,7 @@ namespace GN { namespace gfx
         ///
         virtual void applyTextures(
             const TextureBinding * bindings,
-            size_t                 count,
+            uint32                 count,
             bool                   skipDirtyCheck ) const = 0;
 
     protected:
@@ -114,7 +114,7 @@ namespace GN { namespace gfx
         // ********************************
     public:
 
-        virtual const char * getAttributeSemantic( size_t attributeIndex, UINT * semanticIndex ) const;
+        virtual const char * getAttributeSemantic( uint32 attributeIndex, UINT * semanticIndex ) const;
 
         virtual const void * getInputSignature( size_t * pSignatureSize ) const;
 
@@ -122,12 +122,12 @@ namespace GN { namespace gfx
 
         virtual void applyUniforms(
             const Uniform * const * uniforms,
-            size_t                  count,
+            uint32                  count,
             bool                    skipDirtyCheck ) const;
 
         virtual void applyTextures(
             const TextureBinding * bindings,
-            size_t                 count,
+            uint32                 count,
             bool                   skipDirtyCheck ) const;
 
         // ********************************
@@ -148,7 +148,7 @@ namespace GN { namespace gfx
             GpuProgramUniformParameterDesc desc;
 
             // Total number of elements. For example, float2x3 blah[4][5] contains 2x3x4x5=120 elements.
-            size_t count;
+            uint32 count;
 
             // The function pointer that sets the uniform value.
             SetCgTypelessParameterValue setValueFuncPtr;
@@ -188,8 +188,8 @@ namespace GN { namespace gfx
 
             void setUniformArray(
                 const GpuProgramUniformParameterDesc * array,
-                size_t                                 count,
-                size_t                                 stride )
+                uint32                                 count,
+                uint32                                 stride )
             {
                 mUniformArray       = array;
                 mUniformCount       = count;
@@ -198,8 +198,8 @@ namespace GN { namespace gfx
 
             void setTextureArray(
                 const GpuProgramTextureParameterDesc * array,
-                size_t                                 count,
-                size_t                                 stride )
+                uint32                                 count,
+                uint32                                 stride )
             {
                 mTextureArray       = array;
                 mTextureCount       = count;
@@ -208,8 +208,8 @@ namespace GN { namespace gfx
 
             void setAttributeArray(
                 const GpuProgramAttributeParameterDesc * array,
-                size_t                                   count,
-                size_t                                   stride )
+                uint32                                   count,
+                uint32                                   stride )
             {
                 mAttributeArray       = array;
                 mAttributeCount       = count;
@@ -385,7 +385,7 @@ namespace GN { namespace gfx
         // ********************************
     public:
 
-        virtual const char * getAttributeSemantic( size_t attributeIndex, UINT * semanticIndex ) const;
+        virtual const char * getAttributeSemantic( uint32 attributeIndex, UINT * semanticIndex ) const;
 
         virtual const void * getInputSignature( size_t * pSignatureSize ) const;
 
@@ -393,12 +393,12 @@ namespace GN { namespace gfx
 
         virtual void applyUniforms(
             const Uniform * const * uniforms,
-            size_t                  count,
+            uint32                  count,
             bool                    skipDirtyCheck ) const;
 
         virtual void applyTextures(
             const TextureBinding * bindings,
-            size_t                 count,
+            uint32                 count,
             bool                   skipDirtyCheck ) const;
 
         // ********************************

@@ -69,10 +69,10 @@ struct MeshVertexPosition
 // -----------------------------------------------------------------------------
 void sSwapVertexEndianInplace(
     void *                   buffer,
-    size_t                   bufferSize, // buffer size in bytes
+    uint32                   bufferSize, // buffer size in bytes
     const MeshVertexFormat & format,
-    size_t                   stream,
-    size_t                   stride )
+    uint32                   stream,
+    uint32                   stride )
 {
     if( stride == 0 ) stride = format.calcStreamStride( stream );
 
@@ -546,7 +546,7 @@ AutoRef<Blob> sLoadFromMeshXMLFile( File & fp, MeshResourceDesc & desc )
     }
 
     // parse vtxbuf and idxbuf elements, calculate mesh data size
-    size_t meshDataSize = 0;
+    uint32 meshDataSize = 0;
     for( const XmlNode * n = root->firstc; n != NULL; n = n->nexts )
     {
         const XmlElement * e = n->toElement();
@@ -599,7 +599,7 @@ AutoRef<Blob> sLoadFromMeshXMLFile( File & fp, MeshResourceDesc & desc )
 
     // parse vtxbuf and idxbuf elements, again, to read, calculate mesh data size
     SafeArrayAccessor<uint8> meshData( (uint8*)blob->data(), blob->size() );
-    size_t offset = 0;
+    uint32 offset = 0;
     for( const XmlNode * n = root->firstc; n != NULL; n = n->nexts )
     {
         const XmlElement * e = n->toElement();
@@ -613,7 +613,7 @@ AutoRef<Blob> sLoadFromMeshXMLFile( File & fp, MeshResourceDesc & desc )
             a = sGetRequiredAttrib( *e, "ref" );
             GN_ASSERT( a );
 
-            size_t vbsize = desc.strides[stream] * desc.numvtx;
+            uint32 vbsize = desc.strides[stream] * desc.numvtx;
 
             uint8 * vb = meshData.subrange( offset, vbsize );
 
@@ -637,7 +637,7 @@ AutoRef<Blob> sLoadFromMeshXMLFile( File & fp, MeshResourceDesc & desc )
             a = sGetRequiredAttrib( *e, "ref" );
             GN_ASSERT( a );
 
-            size_t ibsize = desc.numidx * (desc.idx32?4:2);
+            uint32 ibsize = desc.numidx * (desc.idx32?4:2);
 
             uint8 * ib = meshData.subrange( offset, ibsize );
 
@@ -707,7 +707,7 @@ GN::gfx::MeshResourceDesc::calculateBoundingSphere( Sphere<float> & sphere ) con
 //
 //
 // -----------------------------------------------------------------------------
-size_t GN::gfx::MeshResourceDesc::getVtxBufSize( size_t stream ) const
+uint32 GN::gfx::MeshResourceDesc::getVtxBufSize( uint32 stream ) const
 {
     if( stream >= GpuContext::MAX_VERTEX_BUFFERS )
     {
@@ -720,7 +720,7 @@ size_t GN::gfx::MeshResourceDesc::getVtxBufSize( size_t stream ) const
 
     if( !vfp.used[stream] ) return 0;
 
-    size_t stride = strides[stream];
+    uint32 stride = strides[stream];
     if( 0 == stride ) stride = vfp.minStrides[stream];
 
     return numvtx * stride;
@@ -729,7 +729,7 @@ size_t GN::gfx::MeshResourceDesc::getVtxBufSize( size_t stream ) const
 //
 //
 // -----------------------------------------------------------------------------
-size_t GN::gfx::MeshResourceDesc::getIdxBufSize() const
+uint32 GN::gfx::MeshResourceDesc::getIdxBufSize() const
 {
     return numidx * (idx32?4:2);
 }

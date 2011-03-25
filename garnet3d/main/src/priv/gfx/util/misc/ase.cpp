@@ -1533,9 +1533,9 @@ static bool sWriteGeoObject( AseScene & dst, const AseSceneInternal & src, const
         AseMeshSubset & subset = dst.subsets.back();
 
         subset.matid    = sGetFaceChunkMatID( dst, src, obj.matid, c.submat );
-        subset.meshid   = dst.meshes.size() - 1;
-        subset.startidx = ib.size();
-        subset.numidx   = c.faces.size() * 3;
+        subset.meshid   = (uint32)dst.meshes.size() - 1;
+        subset.startidx = (uint32)ib.size();
+        subset.numidx   = (uint32)c.faces.size() * 3;
 
         uint32 minidx = 0xFFFFFFFF;
         uint32 maxidx = 0;
@@ -1563,7 +1563,7 @@ static bool sWriteGeoObject( AseScene & dst, const AseSceneInternal & src, const
     }
 
     // copy vertices into destination scene
-    AutoRef<Blob> blob( new SimpleBlob(sizeof(OutputVertex) * vc.size()) );
+    AutoRef<Blob> blob( new SimpleBlob((uint32)(sizeof(OutputVertex) * vc.size())) );
     OutputVertex * vertices = (OutputVertex*)blob->data();
     if( NULL == vertices ) return false;
     for( size_t i = 0; i < vc.size(); ++i )
@@ -1580,16 +1580,16 @@ static bool sWriteGeoObject( AseScene & dst, const AseSceneInternal & src, const
         o.normal   = srcvert.n[vs.n];
         o.texcoord = Vector2f( srctexcoord.x, srctexcoord.y );
     }
-    dstmesh.numvtx = vc.size();
+    dstmesh.numvtx = (uint32)vc.size();
     dstmesh.vertices[0] = vertices;
     dst.meshdata.append( blob );
 
     // copy index data into destination scene
-    dstmesh.numidx = ib.size();
+    dstmesh.numidx = (uint32)ib.size();
     if( vc.size() > 0x10000 )
     {
         // 32bit index buffer
-        blob.attach( new SimpleBlob(sizeof(uint32) * ib.size()) );
+        blob.attach( new SimpleBlob((uint32)(sizeof(uint32) * ib.size())) );
         memcpy( blob->data(), ib.cptr(), blob->size() );
         dstmesh.idx32 = true;
         dstmesh.indices = blob->data();
@@ -1598,7 +1598,7 @@ static bool sWriteGeoObject( AseScene & dst, const AseSceneInternal & src, const
     else
     {
         // 16bit index buffer
-        blob.attach( new SimpleBlob(sizeof(uint16) * ib.size()) );
+        blob.attach( new SimpleBlob((uint32)(sizeof(uint16) * ib.size())) );
         uint16 * idx16 = (uint16*)blob->data();
         for( size_t i = 0; i < ib.size(); ++i )
         {

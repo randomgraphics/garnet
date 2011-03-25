@@ -1,7 +1,7 @@
 //
 //
 // -----------------------------------------------------------------------------
-inline bool GN::gfx::ImageDesc::setFaceAndLevel( size_t faces, size_t levels )
+inline bool GN::gfx::ImageDesc::setFaceAndLevel( uint32 faces, uint32 levels )
 {
     safeHeapDealloc( mipmaps );
     numFaces = (uint32)faces;
@@ -18,7 +18,7 @@ inline bool GN::gfx::ImageDesc::setFaceAndLevel( size_t faces, size_t levels )
 //
 // -----------------------------------------------------------------------------
 inline GN::gfx::MipmapDesc &
-GN::gfx::ImageDesc::getMipmap( size_t face, size_t level )
+GN::gfx::ImageDesc::getMipmap( uint32 face, uint32 level )
 {
     GN_ASSERT( mipmaps && face < numFaces && level < numLevels );
     return mipmaps[face*numLevels+level];
@@ -28,7 +28,7 @@ GN::gfx::ImageDesc::getMipmap( size_t face, size_t level )
 //
 // -----------------------------------------------------------------------------
 inline const GN::gfx::MipmapDesc &
-GN::gfx::ImageDesc::getMipmap( size_t face, size_t level ) const
+GN::gfx::ImageDesc::getMipmap( uint32 face, uint32 level ) const
 {
     GN_ASSERT( mipmaps && face < numFaces && level < numLevels );
     return mipmaps[face*numLevels+level];
@@ -63,7 +63,7 @@ inline GN::gfx::ImageType GN::gfx::ImageDesc::getImageType() const
 //
 //
 // -----------------------------------------------------------------------------
-inline size_t GN::gfx::ImageDesc::getTotalBytes() const
+inline uint32 GN::gfx::ImageDesc::getTotalBytes() const
 {
     return getFaceBytes() * numFaces;
 }
@@ -71,7 +71,7 @@ inline size_t GN::gfx::ImageDesc::getTotalBytes() const
 //
 //
 // -----------------------------------------------------------------------------
-inline size_t GN::gfx::ImageDesc::getLevelBytes( size_t level ) const
+inline uint32 GN::gfx::ImageDesc::getLevelBytes( uint32 level ) const
 {
     if( 0 == numLevels ) return 0;
     GN_ASSERT( mipmaps && 0 < numFaces && level < numLevels );
@@ -82,18 +82,18 @@ inline size_t GN::gfx::ImageDesc::getLevelBytes( size_t level ) const
 //
 //
 // -----------------------------------------------------------------------------
-inline size_t GN::gfx::ImageDesc::getFaceBytes() const
+inline uint32 GN::gfx::ImageDesc::getFaceBytes() const
 {
-    size_t sz = 0;
-    for( size_t i = 0; i < numLevels; ++i ) sz += getLevelBytes( i );
+    uint32 sz = 0;
+    for( uint32 i = 0; i < numLevels; ++i ) sz += getLevelBytes( i );
     return sz;
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-inline size_t GN::gfx::ImageDesc::getPixelOffset(
-    size_t face, size_t level, size_t x, size_t y, size_t z ) const
+inline uint32 GN::gfx::ImageDesc::getPixelOffset(
+    uint32 face, uint32 level, uint32 x, uint32 y, uint32 z ) const
 {
     GN_ASSERT(
         x < getMipmap( face, level ).width &&
@@ -105,8 +105,8 @@ inline size_t GN::gfx::ImageDesc::getPixelOffset(
 //
 //
 // -----------------------------------------------------------------------------
-inline size_t GN::gfx::ImageDesc::getScanlineOffset(
-    size_t face, size_t level, size_t y, size_t z ) const
+inline uint32 GN::gfx::ImageDesc::getScanlineOffset(
+    uint32 face, uint32 level, uint32 y, uint32 z ) const
 {
     const MipmapDesc & m = getMipmap( face, level );
     GN_ASSERT( y < m.height && z < m.depth );
@@ -116,8 +116,8 @@ inline size_t GN::gfx::ImageDesc::getScanlineOffset(
 //
 //
 // -----------------------------------------------------------------------------
-inline size_t GN::gfx::ImageDesc::getSliceOffset(
-    size_t face, size_t level, size_t z ) const
+inline uint32 GN::gfx::ImageDesc::getSliceOffset(
+    uint32 face, uint32 level, uint32 z ) const
 {
     const MipmapDesc & m = getMipmap( face, level );
     GN_ASSERT( z < m.depth );
@@ -127,10 +127,10 @@ inline size_t GN::gfx::ImageDesc::getSliceOffset(
 //
 //
 // -----------------------------------------------------------------------------
-inline size_t GN::gfx::ImageDesc::getMipmapOffset( size_t face, size_t level ) const
+inline uint32 GN::gfx::ImageDesc::getMipmapOffset( uint32 face, uint32 level ) const
 {
-    size_t sz = 0;
-    for( size_t i = 0; i < level; ++i )
+    uint32 sz = 0;
+    for( uint32 i = 0; i < level; ++i )
     {
         sz += getLevelBytes(i);
     }
@@ -140,7 +140,7 @@ inline size_t GN::gfx::ImageDesc::getMipmapOffset( size_t face, size_t level ) c
 //
 //
 // -----------------------------------------------------------------------------
-inline size_t GN::gfx::ImageDesc::getFaceOffset( size_t face ) const
+inline uint32 GN::gfx::ImageDesc::getFaceOffset( uint32 face ) const
 {
     return face * getFaceBytes();
 }

@@ -135,7 +135,7 @@ namespace GN { namespace gfx
         const GpuProgramDesc & getDesc() const { return *(const GpuProgramDesc*)mBuffer.cptr(); }
 
         virtual void         * data() const { return (void*)mBuffer.cptr(); }
-        virtual size_t         size() const { return mBuffer.size(); }
+        virtual uint32         size() const { return (uint32)mBuffer.size(); }
     };
 
     ///
@@ -143,17 +143,17 @@ namespace GN { namespace gfx
     ///
     class SysMemUniform : public Uniform
     {
-        const size_t mSize;
-        void       * mData;
+        const uint32 mSize;
         sint32       mTimeStamp;
+        void       * mData;
 
     public:
 
         /// ctor
-        SysMemUniform( size_t sz )
+        SysMemUniform( uint32 sz )
             : mSize(0==sz?1:sz)
-            , mData( HeapMemory::alloc(mSize) )
             , mTimeStamp(0)
+            , mData( HeapMemory::alloc(mSize) )
         {
         }
 
@@ -161,13 +161,13 @@ namespace GN { namespace gfx
         ~SysMemUniform() { HeapMemory::dealloc(mData); }
 
         /// get parameter size
-        virtual size_t size() const { return mSize; }
+        virtual uint32 size() const { return mSize; }
 
         /// get current parameter value
         virtual const void * getval() const { return mData; }
 
         /// update parameter value
-        virtual void update( size_t offset, size_t length, const void * data )
+        virtual void update( uint32 offset, uint32 length, const void * data )
         {
             if( offset >= mSize || (offset+length) > mSize )
             {

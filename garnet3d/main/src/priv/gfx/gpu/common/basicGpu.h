@@ -154,8 +154,8 @@ namespace GN { namespace gfx
 
         virtual GpuSignals & getSignals() { return mSignals; }
         virtual void         getBackBufferContent( BackBufferContent & );
-        virtual void         setUserData( const Guid & id, const void * data, size_t length );
-        virtual const void * getUserData( const Guid & id, size_t * length ) const;
+        virtual void         setUserData( const Guid & id, const void * data, uint32 length );
+        virtual const void * getUserData( const Guid & id, uint32 * length ) const;
         virtual bool         hasUserData( const Guid & id ) const;
         virtual void         debugEnableParameterCheck( bool enable ) { mParamCheckEnabled = enable; }
         virtual void         debugMarkBegin( const char * ) {}
@@ -188,20 +188,22 @@ namespace GN { namespace gfx
     };
 
     ///
-    /// render targets description
+    /// render targets description.
+    ///
+    /// Memory layout of this must match the render target fields defined in GpuContext.
     ///
     struct RenderTargetDesc
     {
         /// color render targets
-        StackArray<RenderTargetTexture, GpuContext::MAX_COLOR_RENDER_TARGETS> colortargets;
+        StackArray<RenderTargetTexture, GpuContext::MAX_COLOR_RENDER_TARGETS, uint32> colortargets;
 
         /// depth stencil render target
-        RenderTargetTexture                                                        depthstencil;
+        RenderTargetTexture                                                           depthstencil;
 
         /// check for invalid description.
         bool valid() const
         {
-            for( size_t i = 0; i < colortargets.size(); ++i )
+            for( uint32 i = 0; i < colortargets.size(); ++i )
             {
                 if( !colortargets[i].texture )
                 {
@@ -218,7 +220,7 @@ namespace GN { namespace gfx
         bool operator==( const RenderTargetDesc & rhs ) const
         {
             if( colortargets.size() != rhs.colortargets.size() ) return false;
-            for( size_t i = 0; i < colortargets.size(); ++i )
+            for( uint32 i = 0; i < colortargets.size(); ++i )
             {
                 if( colortargets[i] != rhs.colortargets[i] ) return false;
             }

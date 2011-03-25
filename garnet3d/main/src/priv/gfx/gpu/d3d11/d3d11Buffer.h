@@ -34,7 +34,7 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        bool init( size_t bytes, bool fastCpuWrite, uint32 bindFlags );
+        bool init( uint32 bytes, bool fastCpuWrite, uint32 bindFlags );
         void quit();
     private:
         void clear()
@@ -53,7 +53,7 @@ namespace GN { namespace gfx
         // Get D3D11 buffer pointer (no reference couter change).
         ID3D11Buffer * getD3DBuffer() const { GN_ASSERT(mD3DBuffer); return mD3DBuffer; }
 
-        void           update( size_t offset, size_t length, const void * data, SurfaceUpdateFlag flag );
+        void           update( uint32 offset, uint32 length, const void * data, SurfaceUpdateFlag flag );
         void           readback( DynaArray<uint8> & data );
 
         //@}
@@ -64,7 +64,7 @@ namespace GN { namespace gfx
     private:
 
         ID3D11Buffer * mD3DBuffer;
-        size_t         mBytes;
+        uint32         mBytes;
         bool           mFastCpuWrite;
 
         // ********************************
@@ -107,7 +107,7 @@ namespace GN { namespace gfx
         // ********************************
     public:
 
-        virtual void update( size_t offset, size_t length, const void * data, SurfaceUpdateFlag flag );
+        virtual void update( uint32 offset, uint32 length, const void * data, SurfaceUpdateFlag flag );
         virtual void readback( DynaArray<uint8> & data );
 
         // ********************************
@@ -160,7 +160,7 @@ namespace GN { namespace gfx
         // ********************************
     public:
 
-        virtual void update( size_t startidx, size_t numidx, const void * data, SurfaceUpdateFlag flag );
+        virtual void update( uint32 startidx, uint32 numidx, const void * data, SurfaceUpdateFlag flag );
         virtual void readback( DynaArray<uint8> & data );
 
         // ********************************

@@ -16,14 +16,14 @@ static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.OGL");
 //
 //
 // -----------------------------------------------------------------------------
-static size_t sGetCgParameterCount( CGparameter param )
+static uint32 sGetCgParameterCount( CGparameter param )
 {
     int rows  = cgGetParameterRows( param );
     int cols  = cgGetParameterColumns( param );
     int total = cgGetArrayTotalSize( param );
     if( 0 == total ) total = 1;
 
-    return (size_t)( rows * cols * total );
+    return (uint32)( rows * cols * total );
 }
 
 //
@@ -217,7 +217,7 @@ void GN::gfx::OGLGpuProgramCG::quit()
 //
 // -----------------------------------------------------------------------------
 bool GN::gfx::OGLGpuProgramCG::getBindingDesc(
-    OGLVertexBindingDesc & result, size_t attributeIndex ) const
+    OGLVertexBindingDesc & result, uint32 attributeIndex ) const
 {
     if( attributeIndex >= mAttributes.size() )
     {
@@ -237,9 +237,9 @@ bool GN::gfx::OGLGpuProgramCG::getBindingDesc(
 //
 // -----------------------------------------------------------------------------
 void GN::gfx::OGLGpuProgramCG::applyUniforms(
-    const Uniform * const * uniforms, size_t count ) const
+    const Uniform * const * uniforms, uint32 count ) const
 {
-    for( size_t i = 0; i < std::min( count, mUniforms.size() ); ++i )
+    for( uint32 i = 0; i < math::getmin<>( count, mUniforms.size() ); ++i )
     {
         const OglCgUniform & desc = mUniforms[i];
 
@@ -269,9 +269,9 @@ void GN::gfx::OGLGpuProgramCG::applyUniforms(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLGpuProgramCG::applyTextures( const TextureBinding * textures, size_t count ) const
+void GN::gfx::OGLGpuProgramCG::applyTextures( const TextureBinding * textures, uint32 count ) const
 {
-    for( size_t i = 0; i < mTextures.size(); ++i )
+    for( uint32 i = 0; i < mTextures.size(); ++i )
     {
         const OglCgTexture & desc = mTextures[i];
 

@@ -143,8 +143,8 @@ namespace GN { namespace gfx
         virtual ColorFormat getDefaultTextureFormat( TextureUsage usages ) const;
 
         virtual Blob * compileGpuProgram( const GpuProgramDesc & desc );
-        virtual GpuProgram * createGpuProgram( const void * compiledGpuProgramBinary, size_t length );
-        virtual Uniform * createUniform( size_t size );
+        virtual GpuProgram * createGpuProgram( const void * compiledGpuProgramBinary, uint32 length );
+        virtual Uniform * createUniform( uint32 size );
         virtual Texture * createTexture( const TextureDesc & desc );
         virtual VtxBuf * createVtxBuf( const VtxBufDesc & );
         virtual IdxBuf * createIdxBuf( const IdxBufDesc & desc );
@@ -159,29 +159,29 @@ namespace GN { namespace gfx
                                   uint8            s,
                                   uint32        flags );
         virtual void drawIndexed( PrimitiveType prim,
-                                  size_t        numprim,
-                                  size_t        basevtx,
-                                  size_t        startvtx,
-                                  size_t        numvtx,
-                                  size_t        startidx );
+                                  uint32        numprim,
+                                  uint32        basevtx,
+                                  uint32        startvtx,
+                                  uint32        numvtx,
+                                  uint32        startidx );
         virtual void draw( PrimitiveType prim,
-                           size_t        numprim,
-                           size_t        startvtx );
+                           uint32        numprim,
+                           uint32        startvtx );
         virtual void drawIndexedUp(
                              PrimitiveType  prim,
-                             size_t         numprim,
-                             size_t         numvtx,
+                             uint32         numprim,
+                             uint32         numvtx,
                              const void *   vertexData,
-                             size_t         strideInBytes,
+                             uint32         strideInBytes,
                              const uint16 * indexData );
         virtual void drawUp( PrimitiveType prim,
-                             size_t        numprim,
+                             uint32        numprim,
                              const void *  vertexData,
-                             size_t        strideInBytes );
+                             uint32        strideInBytes );
         virtual void drawLines( uint32         options,
                                 const void *      positions,
-                                size_t            stride,
-                                size_t            count,
+                                uint32            stride,
+                                uint32            count,
                                 uint32            rgba,
                                 const Matrix44f & model,
                                 const Matrix44f & view,
@@ -190,11 +190,11 @@ namespace GN { namespace gfx
         virtual GpuSignals & getSignals() { GN_ASSERT(mSignals); return *mSignals; }
         virtual void getBackBufferContent( BackBufferContent & );
         virtual void processRenderWindowMessages( bool blockWhileMinimized );
-        virtual void setUserData( const Guid & id, const void * data, size_t length );
-        virtual const void * getUserData( const Guid & id, size_t * length ) const;
+        virtual void setUserData( const Guid & id, const void * data, uint32 length );
+        virtual const void * getUserData( const Guid & id, uint32 * length ) const;
         virtual bool hasUserData( const Guid & id ) const;
         virtual void debugEnableParameterCheck( bool enable );
-        virtual void debugDumpNextFrame( size_t startBatchIndex, size_t numBatches );
+        virtual void debugDumpNextFrame( uint32 startBatchIndex, uint32 numBatches );
         virtual void debugMarkBegin( const char * markerName );
         virtual void debugMarkEnd();
         virtual void debugMarkSet( const char * markerName );

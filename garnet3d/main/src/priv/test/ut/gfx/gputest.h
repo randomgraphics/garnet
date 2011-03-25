@@ -31,7 +31,7 @@ class GpuTest
     /// \note
     ///     - position (0,0) is left-top corner of the render target
     ///     - this function may crash because of invalid parameters.
-    RenderTargetPixel getRenderTargetPixel( GN::gfx::Gpu & r, size_t rtidx, size_t x, size_t y )
+    RenderTargetPixel getRenderTargetPixel( GN::gfx::Gpu & r, uint32 rtidx, size_t x, size_t y )
     {
         using namespace GN;
         using namespace GN::gfx;

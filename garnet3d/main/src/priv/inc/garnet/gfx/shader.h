@@ -132,16 +132,18 @@ namespace GN { namespace gfx
                 const char * t = e-1;
                 while( ' ' == *t || '\t' == *t || '\n' == *t ) --t;
 
-                     if( 0 == stringCompareI( "SM_2_0",    s, t-s+1 ) ) flags |= SM_2_0;
-                else if( 0 == stringCompareI( "SM_3_0",    s, t-s+1 ) ) flags |= SM_3_0;
-                else if( 0 == stringCompareI( "SM_3_X"   , s, t-s+1 ) ) flags |= SM_3_X;
-                else if( 0 == stringCompareI( "SM_4_0",    s, t-s+1 ) ) flags |= SM_4_0;
-                else if( 0 == stringCompareI( "SM_5_0",    s, t-s+1 ) ) flags |= SM_5_0;
-                else if( 0 == stringCompareI( "ARB1",      s, t-s+1 ) ) flags |= ARB1;
-                else if( 0 == stringCompareI( "GLSL_1_00", s, t-s+1 ) ) flags |= GLSL_1_00;
-                else if( 0 == stringCompareI( "GLSL_1_20", s, t-s+1 ) ) flags |= GLSL_1_20;
-                else if( 0 == stringCompareI( "GLSL_1_30", s, t-s+1 ) ) flags |= GLSL_1_30;
-                else if( 0 == stringCompareI( "GLSL_1_50", s, t-s+1 ) ) flags |= GLSL_1_50;
+                size_t len = t-s+1;
+
+                     if( 0 == stringCompareI( "SM_2_0",    s, len ) ) flags |= SM_2_0;
+                else if( 0 == stringCompareI( "SM_3_0",    s, len ) ) flags |= SM_3_0;
+                else if( 0 == stringCompareI( "SM_3_X"   , s, len ) ) flags |= SM_3_X;
+                else if( 0 == stringCompareI( "SM_4_0",    s, len ) ) flags |= SM_4_0;
+                else if( 0 == stringCompareI( "SM_5_0",    s, len ) ) flags |= SM_5_0;
+                else if( 0 == stringCompareI( "ARB1",      s, len ) ) flags |= ARB1;
+                else if( 0 == stringCompareI( "GLSL_1_00", s, len ) ) flags |= GLSL_1_00;
+                else if( 0 == stringCompareI( "GLSL_1_20", s, len ) ) flags |= GLSL_1_20;
+                else if( 0 == stringCompareI( "GLSL_1_30", s, len ) ) flags |= GLSL_1_30;
+                else if( 0 == stringCompareI( "GLSL_1_50", s, len ) ) flags |= GLSL_1_50;
 
                 GN_ASSERT( '|' == *e || 0 == *e );
                 str = e;
@@ -256,7 +258,7 @@ namespace GN { namespace gfx
     struct GpuProgramUniformParameterDesc
     {
         const char * name; ///< uniform name
-        size_t       size; ///< uniform size in bytes
+        uint32       size; ///< uniform size in bytes
     };
 
     ///
@@ -287,8 +289,8 @@ namespace GN { namespace gfx
     class GpuProgramParameterAccessor
     {
         const uint8 * & mData;
-        const size_t  & mCount;
-        const size_t  & mStride;
+        const uint32  & mCount;
+        const uint32  & mStride;
 
     public:
 
@@ -297,8 +299,8 @@ namespace GN { namespace gfx
         ///
         GpuProgramParameterAccessor(
             const PARAMETER_DESC_CLASS * & data,
-            const size_t & count,
-            const size_t & stride )
+            const uint32 & count,
+            const uint32 & stride )
             : mData((const uint8*&)data), mCount(count), mStride(stride)
         {
         }
@@ -306,7 +308,7 @@ namespace GN { namespace gfx
         ///
         /// return number of parameters
         ///
-        size_t count() const { return mCount; }
+        uint32 count() const { return mCount; }
 
         ///
         /// bracket operator. index must be valid
@@ -333,7 +335,7 @@ namespace GN { namespace gfx
             GN_ASSERT( mStride >= sizeof(PARAMETER_DESC_CLASS) );
 
             const uint8 * p = mData;
-            for( size_t i = 0; i < mCount; ++i, p+=mStride )
+            for( uint32 i = 0; i < mCount; ++i, p+=mStride )
             {
                 /// Assume that the first member of PARAMETER_DESC_CLASS is always parameter name
                 const char * paramName = *(const char * const *)p;
@@ -389,22 +391,22 @@ namespace GN { namespace gfx
         /// uniform parameters
         //@{
         const GpuProgramUniformParameterDesc *   mUniformArray;
-        size_t                                   mUniformCount;
-        size_t                                   mUniformArrayStride;
+        uint32                                   mUniformCount;
+        uint32                                   mUniformArrayStride;
         //@}
 
         /// texture parameters
         //@{
         const GpuProgramTextureParameterDesc   * mTextureArray;
-        size_t                                   mTextureCount;
-        size_t                                   mTextureArrayStride;
+        uint32                                   mTextureCount;
+        uint32                                   mTextureArrayStride;
         //@}
 
         /// attribute parameters
         //@{
         const GpuProgramAttributeParameterDesc * mAttributeArray;
-        size_t                                   mAttributeCount;
-        size_t                                   mAttributeArrayStride;
+        uint32                                   mAttributeCount;
+        uint32                                   mAttributeArrayStride;
         //@}
     };
 

@@ -79,7 +79,7 @@ GN::gfx::OGLGpu::compileGpuProgram( const GpuProgramDesc & gpd )
 //
 // -----------------------------------------------------------------------------
 GN::gfx::GpuProgram *
-GN::gfx::OGLGpu::createGpuProgram( const void * data, size_t length )
+GN::gfx::OGLGpu::createGpuProgram( const void * data, uint32 length )
 {
     GN_GUARD;
 
@@ -124,7 +124,7 @@ GN::gfx::OGLGpu::createGpuProgram( const void * data, size_t length )
 //
 // -----------------------------------------------------------------------------
 GN::gfx::Uniform *
-GN::gfx::OGLGpu::createUniform( size_t size )
+GN::gfx::OGLGpu::createUniform( uint32 size )
 {
     return new SysMemUniform( size );
 }

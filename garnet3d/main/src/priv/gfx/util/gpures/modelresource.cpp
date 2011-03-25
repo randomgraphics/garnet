@@ -504,7 +504,7 @@ GN::gfx::ModelResource::Impl::TextureItem::~TextureItem()
 // -----------------------------------------------------------------------------
 void GN::gfx::ModelResource::Impl::TextureItem::setResource(
     Impl            & owner,
-    size_t            effectParameterIndex,
+    uint32            effectParameterIndex,
     TextureResource * newTexture )
 {
     if( mResource.get() == newTexture ) return;
@@ -597,7 +597,7 @@ GN::gfx::ModelResource::Impl::UniformItem::~UniformItem()
 // -----------------------------------------------------------------------------
 void GN::gfx::ModelResource::Impl::UniformItem::setResource(
     Impl            & owner,
-    size_t            effectParameterIndex,
+    uint32            effectParameterIndex,
     UniformResource * newUniform )
 {
     if( mResource.get() == newUniform ) return;
@@ -727,7 +727,7 @@ bool GN::gfx::ModelResource::Impl::setTextureResource( const char * effectParame
         return false;
     }
 
-    size_t parameterIndex = effect->findTexture( effectParameterName );
+    uint32 parameterIndex = effect->findTexture( effectParameterName );
     if( EffectResource::PARAMETER_NOT_FOUND == parameterIndex )
     {
         GN_ERROR(sLogger)( "%s is not a valid texture name for model %s!", effectParameterName, modelName() );
@@ -752,7 +752,7 @@ GN::gfx::ModelResource::Impl::textureResource( const char * effectParameterName 
         return AutoRef<TextureResource>::NULLREF;
     }
 
-    size_t parameterIndex = effect->findTexture( effectParameterName );
+    uint32 parameterIndex = effect->findTexture( effectParameterName );
     if( EffectResource::PARAMETER_NOT_FOUND == parameterIndex )
     {
         GN_ERROR(sLogger)( "%s is not a valid texture name for model %s!", effectParameterName, modelName() );
@@ -780,7 +780,7 @@ bool GN::gfx::ModelResource::Impl::setUniformResource( const char * effectParame
         return false;
     }
 
-    size_t parameterIndex = effect->findUniform( effectParameterName );
+    uint32 parameterIndex = effect->findUniform( effectParameterName );
     if( EffectResource::PARAMETER_NOT_FOUND == parameterIndex )
     {
         GN_ERROR(sLogger)( "%s is not a valid uniform name for model %s!", effectParameterName, modelName() );
@@ -919,7 +919,7 @@ bool GN::gfx::ModelResource::Impl::setEffectResource( GpuResource * resource )
     GpuContext defaultGC;
     size_t numpasses = effect ? effect->numPasses() : 0;
     mPasses.resize( numpasses );
-    for( size_t i = 0; i < mPasses.size(); ++i )
+    for( uint32 i = 0; i < mPasses.size(); ++i )
     {
         RenderPass & pass = mPasses[i];
 
@@ -938,7 +938,7 @@ bool GN::gfx::ModelResource::Impl::setEffectResource( GpuResource * resource )
     // reapply textures
     size_t numtextures = effect ? effect->numTextures() : 0;
     mTextures.resize( numtextures );
-    for( size_t i = 0; i < numtextures; ++i )
+    for( uint32 i = 0; i < numtextures; ++i )
     {
         TextureItem & ti = mTextures[i];
 
@@ -959,7 +959,7 @@ bool GN::gfx::ModelResource::Impl::setEffectResource( GpuResource * resource )
     // reapply uniforms
     size_t numuniforms = effect ? effect->numUniforms() : 0;
     mUniforms.resize( numuniforms );
-    for( size_t i = 0; i < numuniforms; ++i )
+    for( uint32 i = 0; i < numuniforms; ++i )
     {
         UniformItem & ui = mUniforms[i];
 
@@ -1004,7 +1004,7 @@ void GN::gfx::ModelResource::Impl::draw() const
 
     const GpuContext & currentContext = g.getContext();
 
-    for( size_t i = 0; i < mPasses.size(); ++i )
+    for( uint32 i = 0; i < mPasses.size(); ++i )
     {
         GpuContext & gc = mPasses[i].gc;
 
@@ -1101,7 +1101,7 @@ bool GN::gfx::ModelResource::Impl::fromDesc( const ModelResourceDesc & desc )
 
     // setup textures
     GN_ASSERT( mTextures.size() == (mEffectResource ? mEffectResource->numTextures() : 0) );
-    for( size_t i = 0; i < mTextures.size(); ++i )
+    for( uint32 i = 0; i < mTextures.size(); ++i )
     {
         TextureItem & t = mTextures[i];
 
@@ -1141,7 +1141,7 @@ bool GN::gfx::ModelResource::Impl::fromDesc( const ModelResourceDesc & desc )
 
     // setup uniforms
     GN_ASSERT( mUniforms.size() == (mEffectResource?mEffectResource->numUniforms() : 0) );
-    for( size_t i = 0; i < mUniforms.size(); ++i )
+    for( uint32 i = 0; i < mUniforms.size(); ++i )
     {
         UniformItem & u = mUniforms[i];
 
@@ -1235,13 +1235,13 @@ void GN::gfx::ModelResource::Impl::copyFrom( const Impl & other )
     GN_VERIFY( setMeshResource( other.mMeshResource, &other.mMeshSubset ) );
 
     GN_ASSERT( mTextures.size() == other.mTextures.size() );
-    for( size_t i = 0; i < other.mTextures.size(); ++i )
+    for( uint32 i = 0; i < other.mTextures.size(); ++i )
     {
         mTextures[i].setResource( *this, i, other.mTextures[i].getResource() );
     }
 
     GN_ASSERT( mUniforms.size() == other.mUniforms.size() );
-    for( size_t i = 0; i < other.mUniforms.size(); ++i )
+    for( uint32 i = 0; i < other.mUniforms.size(); ++i )
     {
         mUniforms[i].setResource( *this, i, other.mUniforms[i].getResource() );
     }
@@ -1306,15 +1306,15 @@ void GN::gfx::ModelResource::Impl::updateVertexFormat()
 
         const GpuProgramParameterDesc & gppdesc = mPasses[pi].gc.gpuProgram->getParameterDesc();
 
-        for( size_t vi = 0; vi < vtxfmt.numElements; ++vi )
+        for( uint32 vi = 0; vi < vtxfmt.numElements; ++vi )
         {
             const MeshVertexElement & mve = vtxfmt.elements[vi];
 
-            size_t ai = mEffectResource->findAttribute( mve.semantic );
+            uint32 ai = mEffectResource->findAttribute( mve.semantic );
             if( EffectResource::PARAMETER_NOT_FOUND != ai )
             {
                 const EffectResource::AttributeProperties & ap = mEffectResource->attributeProperties( ai );
-                for( size_t bi = 0; bi < ap.bindings.size(); ++bi )
+                for( uint32 bi = 0; bi < ap.bindings.size(); ++bi )
                 {
                     const EffectResource::BindingLocation & bl = ap.bindings[bi];
 

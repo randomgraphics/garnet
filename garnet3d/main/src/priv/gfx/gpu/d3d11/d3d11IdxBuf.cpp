@@ -48,8 +48,8 @@ void GN::gfx::D3D11IdxBuf::quit()
 //
 // -----------------------------------------------------------------------------
 void GN::gfx::D3D11IdxBuf::update(
-    size_t            startidx,
-    size_t            numidx,
+    uint32            startidx,
+    uint32            numidx,
     const void      * data,
     SurfaceUpdateFlag flag )
 {

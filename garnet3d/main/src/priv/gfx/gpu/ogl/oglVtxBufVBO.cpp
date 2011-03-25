@@ -70,7 +70,7 @@ void GN::gfx::OGLVtxBufVBO::quit()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLVtxBufVBO::update( size_t offset, size_t length, const void * data, SurfaceUpdateFlag flag )
+void GN::gfx::OGLVtxBufVBO::update( uint32 offset, uint32 length, const void * data, SurfaceUpdateFlag flag )
 {
     GN_GUARD_SLOW;
 

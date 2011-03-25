@@ -221,7 +221,7 @@ static void sParseUniform( EffectResourceDesc & desc, const XmlElement & node )
     const char * type = sGetAttrib( node, "type" );
     if( NULL == type )
     {
-        ud.size = sGetIntAttrib<size_t>( node, "size", 0 );
+        ud.size = sGetIntAttrib<uint32>( node, "size", 0 );
     }
     else
     {

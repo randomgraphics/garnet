@@ -26,8 +26,8 @@ struct DrawLineParams
 {
     uint32 options;
     void    * positions;
-    size_t    stride;
-    size_t    numpoints;
+    uint32    stride;
+    uint32    numpoints;
     uint32    rgba;
     Matrix44f model;
     Matrix44f view;
@@ -229,7 +229,7 @@ Blob * GN::gfx::MultiThreadGpu::compileGpuProgram( const GpuProgramDesc & desc )
 //
 //
 // -----------------------------------------------------------------------------
-GpuProgram * GN::gfx::MultiThreadGpu::createGpuProgram( const void * compiledGpuProgramBinary, size_t length )
+GpuProgram * GN::gfx::MultiThreadGpu::createGpuProgram( const void * compiledGpuProgramBinary, uint32 length )
 {
     GpuProgram * gp = NULL;
     mCommandBuffer.postCommand3( CMD_CREATE_GPU_PROGRAM, &gp, compiledGpuProgramBinary, length );
@@ -245,7 +245,7 @@ GpuProgram * GN::gfx::MultiThreadGpu::createGpuProgram( const void * compiledGpu
 //
 //
 // -----------------------------------------------------------------------------
-Uniform * GN::gfx::MultiThreadGpu::createUniform( size_t size )
+Uniform * GN::gfx::MultiThreadGpu::createUniform( uint32 size )
 {
     Uniform * uni = NULL;
     mCommandBuffer.postCommand2( CMD_CREATE_UNIFORM, &uni, size );
@@ -329,21 +329,21 @@ void GN::gfx::MultiThreadGpu::bindContext( const GpuContext & inputrc )
     sReplaceAutoRefPtr( rc->gpuProgram, mtgp ? mtgp->getRealGpuProgram() : NULL );
 
     // uniforms
-    for( size_t i = 0; i < rc->uniforms.size(); ++i )
+    for( uint32 i = 0; i < rc->uniforms.size(); ++i )
     {
         MultiThreadUniform * mtu = (MultiThreadUniform*)rc->uniforms[i].get();
         sReplaceAutoRefPtr( rc->uniforms[i], mtu ? mtu->getRealUniform() : NULL );
     }
 
     // textures
-    for( size_t i = 0; i < GN_ARRAY_COUNT(rc->textures); ++i )
+    for( uint32 i = 0; i < GN_ARRAY_COUNT(rc->textures); ++i )
     {
         MultiThreadTexture * mtt = (MultiThreadTexture*)rc->textures[i].texture.get();
         sReplaceAutoRefPtr( rc->textures[i].texture, mtt ? mtt->getRealTexture() : NULL );
     }
 
     // vertex buffers
-    for( size_t i = 0; i < GN_ARRAY_COUNT(rc->vtxbufs); ++i )
+    for( uint32 i = 0; i < GN_ARRAY_COUNT(rc->vtxbufs); ++i )
     {
         MultiThreadVtxBuf * mtvb = (MultiThreadVtxBuf *)rc->vtxbufs[i].vtxbuf.get();
         sReplaceAutoRefPtr( rc->vtxbufs[i].vtxbuf, mtvb ? mtvb->getRealVtxBuf() : NULL );
@@ -354,7 +354,7 @@ void GN::gfx::MultiThreadGpu::bindContext( const GpuContext & inputrc )
     sReplaceAutoRefPtr( rc->idxbuf, mtib ? mtib->getRealIdxBuf() : NULL );
 
     // color render targets
-    for( size_t i = 0; i < rc->colortargets.size(); ++i )
+    for( uint32 i = 0; i < rc->colortargets.size(); ++i )
     {
         MultiThreadTexture * mtt = (MultiThreadTexture*)rc->colortargets[i].texture.get();
         sReplaceAutoRefPtr( rc->colortargets[i].texture, mtt ? mtt->getRealTexture() : NULL );
@@ -424,11 +424,11 @@ void GN::gfx::MultiThreadGpu::clearScreen(
 // -----------------------------------------------------------------------------
 void GN::gfx::MultiThreadGpu::drawIndexed(
     PrimitiveType prim,
-    size_t        numidx,
-    size_t        basevtx,
-    size_t        startvtx,
-    size_t        numvtx,
-    size_t        startidx )
+    uint32        numidx,
+    uint32        basevtx,
+    uint32        startvtx,
+    uint32        numvtx,
+    uint32        startidx )
 {
     mCommandBuffer.postCommand6( CMD_DRAW_INDEXED, prim, numidx, basevtx, startvtx, numvtx, startidx );
 }
@@ -438,8 +438,8 @@ void GN::gfx::MultiThreadGpu::drawIndexed(
 // -----------------------------------------------------------------------------
 void GN::gfx::MultiThreadGpu::draw(
     PrimitiveType prim,
-    size_t        numvtx,
-    size_t        startvtx )
+    uint32        numvtx,
+    uint32        startvtx )
 {
     mCommandBuffer.postCommand3( CMD_DRAW, prim, numvtx, startvtx );
 }
@@ -449,14 +449,14 @@ void GN::gfx::MultiThreadGpu::draw(
 // -----------------------------------------------------------------------------
 void GN::gfx::MultiThreadGpu::drawIndexedUp(
     PrimitiveType  prim,
-    size_t         numidx,
-    size_t         numvtx,
+    uint32         numidx,
+    uint32         numvtx,
     const void   * vertexData,
-    size_t         strideInBytes,
+    uint32         strideInBytes,
     const uint16 * indexData )
 {
-    size_t vbsize = numvtx * strideInBytes;
-    size_t ibsize = numidx * 2;
+    uint32 vbsize = numvtx * strideInBytes;
+    uint32 ibsize = numidx * 2;
 
     void * tmpvb = HeapMemory::alloc( vbsize );
     if( NULL == tmpvb )
@@ -483,11 +483,11 @@ void GN::gfx::MultiThreadGpu::drawIndexedUp(
 // -----------------------------------------------------------------------------
 void GN::gfx::MultiThreadGpu::drawUp(
     PrimitiveType prim,
-    size_t        numvtx,
+    uint32        numvtx,
     const void *  vertexData,
-    size_t        strideInBytes )
+    uint32        strideInBytes )
 {
-    size_t sz = strideInBytes * numvtx;
+    uint32 sz = strideInBytes * numvtx;
     void * vb = HeapMemory::alloc( sz );
     if( NULL == vb )
     {
@@ -505,14 +505,14 @@ void
 GN::gfx::MultiThreadGpu::drawLines(
     uint32         options,
     const void *      positions,
-    size_t            stride,
-    size_t            numpoints,
+    uint32            stride,
+    uint32            numpoints,
     uint32            rgba,
     const Matrix44f & model,
     const Matrix44f & view,
     const Matrix44f & proj )
 {
-    size_t length = stride * numpoints;
+    uint32 length = stride * numpoints;
 
     void * tmpbuf = HeapMemory::alloc( length );
     if( NULL == tmpbuf )
@@ -560,7 +560,7 @@ void GN::gfx::MultiThreadGpu::processRenderWindowMessages( bool blockWhileMinimi
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::MultiThreadGpu::setUserData( const Guid & id, const void * data, size_t length )
+void GN::gfx::MultiThreadGpu::setUserData( const Guid & id, const void * data, uint32 length )
 {
     mGpu->setUserData( id, data, length );
 }
@@ -568,7 +568,7 @@ void GN::gfx::MultiThreadGpu::setUserData( const Guid & id, const void * data, s
 //
 //
 // -----------------------------------------------------------------------------
-const void * GN::gfx::MultiThreadGpu::getUserData( const Guid & id, size_t * length ) const
+const void * GN::gfx::MultiThreadGpu::getUserData( const Guid & id, uint32 * length ) const
 {
     return mGpu->getUserData( id, length );
 }
@@ -592,7 +592,7 @@ void GN::gfx::MultiThreadGpu::debugEnableParameterCheck( bool enable )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::MultiThreadGpu::debugDumpNextFrame( size_t startBatchIndex, size_t numBatches )
+void GN::gfx::MultiThreadGpu::debugDumpNextFrame( uint32 startBatchIndex, uint32 numBatches )
 {
     mCommandBuffer.postCommand2( CMD_DEBUG_DUMP_NEXT_FRAME, startBatchIndex, numBatches );
 }
@@ -652,7 +652,7 @@ namespace GN { namespace gfx
     //
     //
     // -------------------------------------------------------------------------
-    void func_SHUTDOWN( Gpu &, void *, size_t )
+    void func_SHUTDOWN( Gpu &, void *, uint32 )
     {
         // do nothing
     }
@@ -660,7 +660,7 @@ namespace GN { namespace gfx
     //
     //
     // -------------------------------------------------------------------------
-    void func_FENCE( Gpu &, void *, size_t )
+    void func_FENCE( Gpu &, void *, uint32 )
     {
         // do nothing
     }
@@ -668,7 +668,7 @@ namespace GN { namespace gfx
     //
     //
     // -------------------------------------------------------------------------
-    void func_GET_GPU_OPTIONS( Gpu & r, void * p, size_t )
+    void func_GET_GPU_OPTIONS( Gpu & r, void * p, uint32 )
     {
         GpuOptions ** ro = (GpuOptions **)p;
         memcpy( *ro, &r.getOptions(), sizeof(**ro) );
@@ -677,7 +677,7 @@ namespace GN { namespace gfx
     //
     //
     // -------------------------------------------------------------------------
-    void func_GET_DISP_DESC( Gpu & r, void * p, size_t )
+    void func_GET_DISP_DESC( Gpu & r, void * p, uint32 )
     {
         DispDesc ** dd = (DispDesc**)p;
         memcpy( *dd, &r.getDispDesc(), sizeof(**dd) );
@@ -686,7 +686,7 @@ namespace GN { namespace gfx
     //
     //
     // -------------------------------------------------------------------------
-    void func_GET_D3D_DEVICE( Gpu & r, void * p, size_t )
+    void func_GET_D3D_DEVICE( Gpu & r, void * p, uint32 )
     {
         void *** dev = (void***)p;
         **dev = r.getD3DDevice();
@@ -695,7 +695,7 @@ namespace GN { namespace gfx
     //
     //
     // -------------------------------------------------------------------------
-    void func_GET_OGL_RC( Gpu & r, void * p, size_t )
+    void func_GET_OGL_RC( Gpu & r, void * p, uint32 )
     {
         void *** rc = (void***)p;
         **rc = r.getOGLRC();
@@ -704,7 +704,7 @@ namespace GN { namespace gfx
     //
     //
     // -------------------------------------------------------------------------
-    void func_GET_CAPS( Gpu & r, void * p, size_t )
+    void func_GET_CAPS( Gpu & r, void * p, uint32 )
     {
         GpuCaps ** caps = (GpuCaps**)p;
         memcpy( *caps, &r.caps(), sizeof(**caps) );
@@ -713,7 +713,7 @@ namespace GN { namespace gfx
     //
     //
     // -------------------------------------------------------------------------
-    void func_CHECK_TEXTURE_FORMAT_SUPPORT( Gpu & r, void * p, size_t )
+    void func_CHECK_TEXTURE_FORMAT_SUPPORT( Gpu & r, void * p, uint32 )
     {
 #pragma pack( push, 1 )
         struct CheckTextureFormatSupportParam
@@ -731,7 +731,7 @@ namespace GN { namespace gfx
     //
     //
     // -------------------------------------------------------------------------
-    void func_GET_DEFAULT_TEXTURE_FORMAT( Gpu & r, void * p, size_t )
+    void func_GET_DEFAULT_TEXTURE_FORMAT( Gpu & r, void * p, uint32 )
     {
 #pragma pack( push, 1 )
         struct GetDefaultTextureFormatParam
@@ -748,7 +748,7 @@ namespace GN { namespace gfx
     //
     //
     // -------------------------------------------------------------------------
-    void func_COMPILE_GPU_PROGRAM( Gpu & r, void * p, size_t )
+    void func_COMPILE_GPU_PROGRAM( Gpu & r, void * p, uint32 )
     {
 #pragma pack( push, 1 )
         struct CompileGpuProgramParam
@@ -765,14 +765,14 @@ namespace GN { namespace gfx
     //
     //
     // -------------------------------------------------------------------------
-    void func_CREATE_GPU_PROGRAM( Gpu & r, void * p, size_t )
+    void func_CREATE_GPU_PROGRAM( Gpu & r, void * p, uint32 )
     {
 #pragma pack( push, 1 )
         struct CreateGpuProgramParam
         {
             GpuProgram ** gp;
             const void  * bin;
-            size_t        length;
+            uint32        length;
         };
 #pragma pack( pop )
         CreateGpuProgramParam * cgpp = (CreateGpuProgramParam*)p;
@@ -783,13 +783,13 @@ namespace GN { namespace gfx
     //
     //
     // -------------------------------------------------------------------------
-    void func_CREATE_UNIFORM( Gpu & r, void * p, size_t )
+    void func_CREATE_UNIFORM( Gpu & r, void * p, uint32 )
     {
 #pragma pack( push, 1 )
         struct CreateUniformParam
         {
             Uniform ** result;
-            size_t     length;
+            uint32     length;
         };
 #pragma pack( pop )
 
@@ -801,7 +801,7 @@ namespace GN { namespace gfx
     //
     //
     // -------------------------------------------------------------------------
-    void func_CREATE_TEXTURE( Gpu & r, void * p, size_t )
+    void func_CREATE_TEXTURE( Gpu & r, void * p, uint32 )
     {
 #pragma pack( push, 1 )
         struct CreateTextureParam
@@ -819,7 +819,7 @@ namespace GN { namespace gfx
     //
     //
     // -------------------------------------------------------------------------
-    void func_CREATE_VTXBUF( Gpu & r, void * p, size_t )
+    void func_CREATE_VTXBUF( Gpu & r, void * p, uint32 )
     {
 #pragma pack( push, 1 )
         struct CreateVtxBufParam
@@ -837,7 +837,7 @@ namespace GN { namespace gfx
     //
     //
     // -------------------------------------------------------------------------
-    void func_CREATE_IDXBUF( Gpu & r, void * p, size_t )
+    void func_CREATE_IDXBUF( Gpu & r, void * p, uint32 )
     {
 #pragma pack( push, 1 )
         struct CreateIdxBufParam
@@ -855,7 +855,7 @@ namespace GN { namespace gfx
     //
     //
     // -------------------------------------------------------------------------
-    void func_BIND_CONTEXT( Gpu & r, void * p, size_t )
+    void func_BIND_CONTEXT( Gpu & r, void * p, uint32 )
     {
         GpuContext * rc = (GpuContext*)p;
 
@@ -868,7 +868,7 @@ namespace GN { namespace gfx
     //
     //
     // -------------------------------------------------------------------------
-    void func_REBIND_CONTEXT( Gpu & r, void *, size_t )
+    void func_REBIND_CONTEXT( Gpu & r, void *, uint32 )
     {
         r.rebindContext();
     }
@@ -876,7 +876,7 @@ namespace GN { namespace gfx
     //
     //
     // -------------------------------------------------------------------------
-    void func_PRESENT( Gpu & r, void *, size_t )
+    void func_PRESENT( Gpu & r, void *, uint32 )
     {
         r.present();
     }
@@ -884,7 +884,7 @@ namespace GN { namespace gfx
     //
     //
     // -------------------------------------------------------------------------
-    void func_CLEAR_SCREEN( Gpu & r, void * p, size_t )
+    void func_CLEAR_SCREEN( Gpu & r, void * p, uint32 )
     {
 #pragma pack( push, 1 )
         struct ClearParam
@@ -904,17 +904,17 @@ namespace GN { namespace gfx
     //
     //
     // -------------------------------------------------------------------------
-    void func_DRAW_INDEXED( Gpu & r, void * p, size_t )
+    void func_DRAW_INDEXED( Gpu & r, void * p, uint32 )
     {
 #pragma pack( push, 1 )
         struct DrawIndexedParam
         {
             PrimitiveType prim;
-            size_t        numidx;
-            size_t        basevtx;
-            size_t        startvtx;
-            size_t        numvtx;
-            size_t        startidx;
+            uint32        numidx;
+            uint32        basevtx;
+            uint32        startvtx;
+            uint32        numvtx;
+            uint32        startidx;
         };
 #pragma pack( pop )
 
@@ -926,14 +926,14 @@ namespace GN { namespace gfx
     //
     //
     // -------------------------------------------------------------------------
-    void func_DRAW( Gpu & r, void * p, size_t )
+    void func_DRAW( Gpu & r, void * p, uint32 )
     {
 #pragma pack( push, 1 )
         struct DrawParam
         {
             PrimitiveType prim;
-            size_t        numvtx;
-            size_t        startvtx;
+            uint32        numvtx;
+            uint32        startvtx;
         };
 #pragma pack( pop )
 
@@ -945,16 +945,16 @@ namespace GN { namespace gfx
     //
     //
     // -------------------------------------------------------------------------
-    void func_DRAW_INDEXED_UP( Gpu & r, void * p, size_t )
+    void func_DRAW_INDEXED_UP( Gpu & r, void * p, uint32 )
     {
 #pragma pack( push, 1 )
         struct DrawIndexedUpParam
         {
             PrimitiveType  prim;
-            size_t         numidx;
-            size_t         numvtx;
+            uint32         numidx;
+            uint32         numvtx;
             void         * vertexData;
-            size_t         strideInBytes;
+            uint32         strideInBytes;
             uint16       * indexData;
         };
 #pragma pack( pop )
@@ -970,15 +970,15 @@ namespace GN { namespace gfx
     //
     //
     // -------------------------------------------------------------------------
-    void func_DRAW_UP( Gpu & r, void * p, size_t )
+    void func_DRAW_UP( Gpu & r, void * p, uint32 )
     {
 #pragma pack( push, 1 )
         struct DrawUpParam
         {
             PrimitiveType prim;
-            size_t        numvtx;
+            uint32        numvtx;
             void *        vertexData;
-            size_t        strideInBytes;
+            uint32        strideInBytes;
         };
 #pragma pack( pop )
         DrawUpParam * dup = (DrawUpParam*)p;
@@ -989,7 +989,7 @@ namespace GN { namespace gfx
     //
     //
     // -------------------------------------------------------------------------
-    void func_DRAW_LINES( Gpu & r, void * p, size_t )
+    void func_DRAW_LINES( Gpu & r, void * p, uint32 )
     {
         DrawLineParams * dlp = (DrawLineParams*)p;
 
@@ -1009,7 +1009,7 @@ namespace GN { namespace gfx
     //
     //
     // -------------------------------------------------------------------------
-    void func_GET_SIGNALS( Gpu & r, void * p, size_t )
+    void func_GET_SIGNALS( Gpu & r, void * p, uint32 )
     {
 #pragma pack( push, 1 )
         struct GetSignalsParam
@@ -1024,7 +1024,7 @@ namespace GN { namespace gfx
     //
     //
     // -------------------------------------------------------------------------
-    void func_GET_BACK_BUFFER_CONTENT( Gpu & r, void * p, size_t )
+    void func_GET_BACK_BUFFER_CONTENT( Gpu & r, void * p, uint32 )
     {
         Gpu::BackBufferContent ** param = (Gpu::BackBufferContent **)p;
         r.getBackBufferContent( **param );
@@ -1033,7 +1033,7 @@ namespace GN { namespace gfx
     //
     //
     // -------------------------------------------------------------------------
-    void func_PROCESS_RENDER_WINDOW_MESSAGES( Gpu & r, void * p, size_t )
+    void func_PROCESS_RENDER_WINDOW_MESSAGES( Gpu & r, void * p, uint32 )
     {
         bool * blockWhileMinimized = (bool*)p;
         r.processRenderWindowMessages( *blockWhileMinimized );
@@ -1042,7 +1042,7 @@ namespace GN { namespace gfx
     //
     //
     // -------------------------------------------------------------------------
-    void func_DEBUG_ENABLE_PARAMETER_CHECK( Gpu & r, void * p, size_t )
+    void func_DEBUG_ENABLE_PARAMETER_CHECK( Gpu & r, void * p, uint32 )
     {
         bool * enable = (bool*)p;
         r.debugEnableParameterCheck( *enable );
@@ -1051,13 +1051,13 @@ namespace GN { namespace gfx
     //
     //
     // -------------------------------------------------------------------------
-    void func_DEBUG_DUMP_NEXT_FRAME( Gpu & r, void * p, size_t )
+    void func_DEBUG_DUMP_NEXT_FRAME( Gpu & r, void * p, uint32 )
     {
 #pragma pack( push, 1 )
         struct DumpNextFrameParam
         {
-            size_t startBatchIndex;
-            size_t numBatches;
+            uint32 startBatchIndex;
+            uint32 numBatches;
         };
 #pragma pack( pop )
 
@@ -1068,7 +1068,7 @@ namespace GN { namespace gfx
     //
     //
     // -------------------------------------------------------------------------
-    void func_DEBUG_MARK_BEGIN( Gpu & r, void * p, size_t )
+    void func_DEBUG_MARK_BEGIN( Gpu & r, void * p, uint32 )
     {
         r.debugMarkBegin( (const char*)p );
     }
@@ -1076,7 +1076,7 @@ namespace GN { namespace gfx
     //
     //
     // -------------------------------------------------------------------------
-    void func_DEBUG_MARK_END( Gpu & r, void *, size_t )
+    void func_DEBUG_MARK_END( Gpu & r, void *, uint32 )
     {
         r.debugMarkEnd();
     }
@@ -1084,7 +1084,7 @@ namespace GN { namespace gfx
     //
     //
     // -------------------------------------------------------------------------
-    void func_DEBUG_MARK_SET( Gpu & r, void * p, size_t )
+    void func_DEBUG_MARK_SET( Gpu & r, void * p, uint32 )
     {
         r.debugMarkSet( (const char*)p );
     }

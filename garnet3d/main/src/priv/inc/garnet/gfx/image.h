@@ -96,7 +96,7 @@ namespace GN { namespace gfx
             if( d.mipmaps > 0 )
             {
                 setFaceAndLevel( numFaces, numLevels );
-                size_t mipCount = numFaces * numLevels;
+                uint32 mipCount = numFaces * numLevels;
                 memcpy( mipmaps, d.mipmaps, sizeof(MipmapDesc)*mipCount );
             }
         }
@@ -109,7 +109,7 @@ namespace GN { namespace gfx
             if( rhs.mipmaps > 0 )
             {
                 setFaceAndLevel( numFaces, numLevels );
-                size_t mipCount = numFaces * numLevels;
+                uint32 mipCount = numFaces * numLevels;
                 memcpy( mipmaps, rhs.mipmaps, sizeof(MipmapDesc)*mipCount );
             }
             return *this;
@@ -131,17 +131,17 @@ namespace GN { namespace gfx
         ///
         /// set image face count and level count, allocate mipmap array as well.
         ///
-        bool setFaceAndLevel( size_t faces, size_t levels );
+        bool setFaceAndLevel( uint32 faces, uint32 levels );
 
         ///
         /// return descriptor of specific mipmap
         ///
-        MipmapDesc & getMipmap( size_t face, size_t level );
+        MipmapDesc & getMipmap( uint32 face, uint32 level );
 
         ///
         /// return descriptor of specific mipmap
         ///
-        const MipmapDesc & getMipmap( size_t face, size_t level ) const;
+        const MipmapDesc & getMipmap( uint32 face, uint32 level ) const;
 
         ///
         /// Get image type
@@ -151,42 +151,42 @@ namespace GN { namespace gfx
         ///
         /// total bytes of the whole image
         ///
-        inline size_t getTotalBytes() const;
+        inline uint32 getTotalBytes() const;
 
         ///
         /// bytes of one mip level
         ///
-        inline size_t getLevelBytes( size_t level ) const;
+        inline uint32 getLevelBytes( uint32 level ) const;
 
         ///
         /// bytes per face
         ///
-        inline size_t getFaceBytes() const;
+        inline uint32 getFaceBytes() const;
 
         ///
         /// offset of specific pixel
         ///
-        inline size_t getPixelOffset( size_t face, size_t level, size_t x, size_t y, size_t z ) const;
+        inline uint32 getPixelOffset( uint32 face, uint32 level, uint32 x, uint32 y, uint32 z ) const;
 
         ///
         /// offset of specific scanline
         ///
-        inline size_t getScanlineOffset( size_t face, size_t level, size_t y, size_t z ) const;
+        inline uint32 getScanlineOffset( uint32 face, uint32 level, uint32 y, uint32 z ) const;
 
         ///
         /// offset of specific slice
         ///
-        inline size_t getSliceOffset( size_t face, size_t level, size_t z ) const;
+        inline uint32 getSliceOffset( uint32 face, uint32 level, uint32 z ) const;
 
         ///
         /// offset of specific mip level
         ///
-        inline size_t getMipmapOffset( size_t face, size_t level ) const;
+        inline uint32 getMipmapOffset( uint32 face, uint32 level ) const;
 
         ///
         /// offset of specific face
         ///
-        inline size_t getFaceOffset( size_t face ) const;
+        inline uint32 getFaceOffset( uint32 face ) const;
 
         //@}
     };

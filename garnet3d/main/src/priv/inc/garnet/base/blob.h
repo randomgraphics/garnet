@@ -21,7 +21,7 @@ namespace GN
         ///
         /// get binary size in bytes
         ///
-        virtual size_t size() const = 0;
+        virtual uint32 size() const = 0;
     };
 
     ///
@@ -30,12 +30,12 @@ namespace GN
     class SimpleBlob : public Blob
     {
         void * mBuffer;
-        size_t  mSize;
+        uint32 mSize;
 
     public:
 
         /// ctor
-        explicit SimpleBlob( size_t sz )
+        explicit SimpleBlob( uint32 sz )
         {
             mBuffer = HeapMemory::alignedAlloc( sz, 16 );
             mSize = (NULL != mBuffer) ? sz : 0;
@@ -51,7 +51,7 @@ namespace GN
 
         //@{
         virtual void * data() const { return mBuffer; }
-        virtual size_t size() const { return mSize; }
+        virtual uint32 size() const { return mSize; }
         //@}
     };
 
@@ -70,7 +70,7 @@ namespace GN
 
         //@{
         virtual void * data() const { return (void*)mBuffer.cptr(); }
-        virtual size_t size() const { return sizeof(T) * mBuffer.size(); }
+        virtual uint32 size() const { return (uint32)(sizeof(T) * mBuffer.size()); }
         //@}
 
         //@{

@@ -70,8 +70,8 @@ namespace GN { namespace gfx
     ///
     struct AseMeshSubset : public gfx::MeshResourceSubset
     {
-        size_t matid;  ///< index into AseScene::materials array
-        size_t meshid; ///< index into AseScene::meshes array
+        uint32 matid;  ///< index into AseScene::materials array
+        uint32 meshid; ///< index into AseScene::meshes array
     };
 
     ///

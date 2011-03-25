@@ -774,7 +774,7 @@ GpuResourceDatabase::Impl::getStandardUniformResource( int index ) const
 //
 //
 // -----------------------------------------------------------------------------
-void GpuResourceDatabase::Impl::setStandardUniform( int index, const void * data, size_t dataSize )
+void GpuResourceDatabase::Impl::setStandardUniform( int index, const void * data, uint32 dataSize )
 {
     // check parameters
     if( !StandardUniform::sIsValidIndex( index ) )
@@ -937,6 +937,6 @@ bool                     GpuResourceDatabase::validResource( const GpuResource *
 const char             * GpuResourceDatabase::getResourceName( const GpuResource * resource ) const { return mImpl->getResourceName( resource ); }
 const Guid             & GpuResourceDatabase::getResourceType( const GpuResource * resource ) const { return mImpl->getResourceType( resource ); }
 AutoRef<UniformResource> GpuResourceDatabase::getStandardUniformResource( int index ) const { return mImpl->getStandardUniformResource( index ); }
-void                     GpuResourceDatabase::setStandardUniform( int index, const void * data, size_t dataSize ) { return mImpl->setStandardUniform( index, data, dataSize ); }
+void                     GpuResourceDatabase::setStandardUniform( int index, const void * data, uint32 dataSize ) { return mImpl->setStandardUniform( index, data, dataSize ); }
 void                     GpuResourceDatabase::setTransform( const Matrix44f & proj, const Matrix44f & view ) { return mImpl->setTransform( proj, view ); }
 void                     GpuResourceDatabase::setLight0( const Vector4f & diffuse, const Vector4f & ambient, const Vector4f & specular, const Vector3f & position, const Vector3f & direction ) { return mImpl->setLight0( diffuse, ambient, specular, position, direction ); }

@@ -106,8 +106,8 @@ namespace GN { namespace gfx
 
     struct MipmapData
     {
-        size_t             rowPitch;
-        size_t             slicePitch;
+        uint32             rowPitch;
+        uint32             slicePitch;
         DynaArray<uint8> data;
     };
 
@@ -188,13 +188,13 @@ namespace GN { namespace gfx
         ///
         /// get size of specific mip level
         ///
-        const Vector3<uint32> & getMipSize( size_t level ) const { GN_ASSERT( level < mDesc.levels ); return mMipSize[level]; }
+        const Vector3<uint32> & getMipSize( uint32 level ) const { GN_ASSERT( level < mDesc.levels ); return mMipSize[level]; }
 
         ///
         /// get size of specific mip level
         ///
         template<typename T>
-        void getMipSize( size_t level, T * sx, T * sy = 0, T * sz = 0 ) const
+        void getMipSize( uint32 level, T * sx, T * sy = 0, T * sz = 0 ) const
         {
             const Vector3<uint32> & mipSize = getMipSize( level );
             if( sx ) *sx = (T)mipSize.x;
@@ -213,23 +213,23 @@ namespace GN { namespace gfx
         ///                         The data must be the same format as the texture.
         ///
         virtual void updateMipmap(
-            size_t              face,
-            size_t              level,
+            uint32              face,
+            uint32              level,
             const Box<uint32> * area,
-            size_t              rowPitch,
-            size_t              slicePitch,
+            uint32              rowPitch,
+            uint32              slicePitch,
             const void        * data,
             SurfaceUpdateFlag   flag = SurfaceUpdateFlag::DEFAULT ) = 0;
 
         ///
         /// read mipmap content.
         ///
-        virtual void readMipmap( size_t face, size_t level, MipmapData & data ) = 0;
+        virtual void readMipmap( uint32 face, uint32 level, MipmapData & data ) = 0;
 
         /// read/write the whole texture as a BLOB.
         //@{
-        virtual void   blobWrite( const void * data, size_t length ) = 0;
-        virtual size_t blobRead( void * data ) = 0;
+        virtual void   blobWrite( const void * data, uint32 length ) = 0;
+        virtual uint32 blobRead( void * data ) = 0;
         //@}
 
         ///
@@ -274,7 +274,7 @@ namespace GN { namespace gfx
         /// setup mip size
         ///
         template<typename T>
-        void setMipSize( size_t level, T sx, T sy, T sz )
+        void setMipSize( uint32 level, T sx, T sy, T sz )
         {
             GN_ASSERT( level < mDesc.levels );
             GN_ASSERT( level > 0 ||
@@ -287,7 +287,7 @@ namespace GN { namespace gfx
         ///
         /// setup mip size
         ///
-        void setMipSize( size_t level, const Vector3<uint32> & s )
+        void setMipSize( uint32 level, const Vector3<uint32> & s )
         {
             setMipSize( level, s.x, s.y, s.z );
         }
@@ -303,7 +303,7 @@ namespace GN { namespace gfx
     ///
     struct VtxBufDesc
     {
-        size_t length;        ///< length in bytes of the vertex buffer
+        uint32 length;        ///< length in bytes of the vertex buffer
         bool   fastCpuWrite;  ///< support fast CPU write (rendering speed compromised)
     };
 
@@ -320,7 +320,7 @@ namespace GN { namespace gfx
         ///
         /// update vertex buffer content
         ///
-        virtual void update( size_t offset, size_t length, const void * data, SurfaceUpdateFlag flag = SurfaceUpdateFlag::DEFAULT ) = 0;
+        virtual void update( uint32 offset, uint32 length, const void * data, SurfaceUpdateFlag flag = SurfaceUpdateFlag::DEFAULT ) = 0;
 
         ///
         /// Read buffer content.
@@ -348,7 +348,7 @@ namespace GN { namespace gfx
     ///
     struct IdxBufDesc
     {
-        size_t numidx;        ///< number of indices in index buffer
+        uint32 numidx;        ///< number of indices in index buffer
         bool   bits32;        ///< is 32-bit index buffer or not.
         bool   fastCpuWrite;  ///< support fast CPU write (rendering speed compromised)
     };
@@ -366,7 +366,7 @@ namespace GN { namespace gfx
         ///
         /// update index buffer content
         ///
-        virtual void update( size_t startidx, size_t numidx, const void * data, SurfaceUpdateFlag flag = SurfaceUpdateFlag::DEFAULT ) = 0;
+        virtual void update( uint32 startidx, uint32 numidx, const void * data, SurfaceUpdateFlag flag = SurfaceUpdateFlag::DEFAULT ) = 0;
 
         ///
         /// Read buffer content.

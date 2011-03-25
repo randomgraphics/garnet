@@ -20,8 +20,8 @@ namespace GN { namespace gfx
             RGBA,       //< RGBA_8_8_8_8 image
         };
 
-        size_t           width;  ///< bitmap width in pixel
-        size_t           height; ///< bitmap height in pixel
+        uint32           width;  ///< bitmap width in pixel
+        uint32           height; ///< bitmap height in pixel
         const uint8    * buffer; ///< bitmap data
         PixelFormat      format; ///< pixel format
 

@@ -117,16 +117,16 @@ void GN::gfx::D3D11GpuProgramParameterDesc::clear()
 void GN::gfx::D3D11GpuProgramParameterDesc::buildParameterArrays()
 {
     mUniformArray       = mUniforms.cptr();
-    mUniformCount       = mUniforms.size();
-    mUniformArrayStride = sizeof(mUniforms[0]);
+    mUniformCount       = (uint32)mUniforms.size();
+    mUniformArrayStride = (uint32)sizeof(mUniforms[0]);
 
     mTextureArray       = mTextures.cptr();
-    mTextureCount       = mTextures.size();
-    mTextureArrayStride = sizeof(mTextures[0]);
+    mTextureCount       = (uint32)mTextures.size();
+    mTextureArrayStride = (uint32)sizeof(mTextures[0]);
 
     mAttributeArray       = mAttributes.cptr();
-    mAttributeCount       = mAttributes.size();
-    mAttributeArrayStride = sizeof(mAttributes[0]);
+    mAttributeCount       = (uint32)mAttributes.size();
+    mAttributeArrayStride = (uint32)sizeof(mAttributes[0]);
 }
 
 //
@@ -438,7 +438,7 @@ void GN::gfx::D3D11GpuProgramHLSL::quit()
 //
 // -----------------------------------------------------------------------------
 const char * GN::gfx::D3D11GpuProgramHLSL::getAttributeSemantic(
-    size_t attributeIndex,
+    uint32 attributeIndex,
     UINT * semanticIndex ) const
 {
     if( attributeIndex >= mParamDesc.attributes.count() )
@@ -504,7 +504,7 @@ void GN::gfx::D3D11GpuProgramHLSL::apply() const
 // -----------------------------------------------------------------------------
 void GN::gfx::D3D11GpuProgramHLSL::applyUniforms(
     const Uniform * const * uniforms,
-    size_t                  count,
+    uint32                  count,
     bool                    skipDirtyCheck ) const
 {
     count = math::getmin( count, mParamDesc.uniforms.count() );
@@ -547,7 +547,7 @@ void GN::gfx::D3D11GpuProgramHLSL::applyUniforms(
 // -----------------------------------------------------------------------------
 void GN::gfx::D3D11GpuProgramHLSL::applyTextures(
     const TextureBinding * bindings,
-    size_t                 count,
+    uint32                 count,
     bool                   skipDirtyCheck ) const
 {
     const size_t NUM_STAGES = getGpu().caps().maxTextures;

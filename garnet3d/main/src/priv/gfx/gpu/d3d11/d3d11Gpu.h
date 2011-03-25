@@ -156,8 +156,8 @@ namespace GN { namespace gfx
     public :
 
         virtual Blob       * compileGpuProgram( const GpuProgramDesc & desc );
-        virtual GpuProgram * createGpuProgram( const void * compiledGpuProgramBinary, size_t length );
-        virtual Uniform    * createUniform( size_t size );
+        virtual GpuProgram * createGpuProgram( const void * compiledGpuProgramBinary, uint32 length );
+        virtual Uniform    * createUniform( uint32 size );
         virtual Texture    * createTexture( const TextureDesc & desc );
         virtual VtxBuf     * createVtxBuf( const VtxBufDesc & desc );
         virtual IdxBuf     * createIdxBuf( const IdxBufDesc & desc );
@@ -273,29 +273,29 @@ namespace GN { namespace gfx
         virtual void present();
         virtual void clearScreen( const Vector4f & c, float z, uint8 s, uint32 flags );
         virtual void drawIndexed( PrimitiveType prim,
-                                  size_t        numidx,
-                                  size_t        basevtx,
-                                  size_t        startvtx,
-                                  size_t        numvtx,
-                                  size_t        startidx );
+                                  uint32        numidx,
+                                  uint32        basevtx,
+                                  uint32        startvtx,
+                                  uint32        numvtx,
+                                  uint32        startidx );
         virtual void draw( PrimitiveType prim,
-                           size_t        numvtx,
-                           size_t        startvtx );
+                           uint32        numvtx,
+                           uint32        startvtx );
         virtual void drawIndexedUp(
                              PrimitiveType  prim,
-                             size_t         numidx,
-                             size_t         numvtx,
+                             uint32         numidx,
+                             uint32         numvtx,
                              const void *   vertexData,
-                             size_t         strideInBytes,
+                             uint32         strideInBytes,
                              const uint16 * indexData );
         virtual void drawUp( PrimitiveType prim,
-                             size_t        numvtx,
+                             uint32        numvtx,
                              const void *  vertexData,
-                             size_t        strideInBytes );
+                             uint32        strideInBytes );
         virtual void drawLines( uint32         options,
                                 const void *      positions,
-                                size_t            stride,
-                                size_t            numpoints,
+                                uint32            stride,
+                                uint32            numpoints,
                                 uint32            rgba,
                                 const Matrix44f & model,
                                 const Matrix44f & view,
@@ -305,12 +305,9 @@ namespace GN { namespace gfx
 
         bool drawInit();
         void drawQuit();
-        void drawClear() { mFrameCounter = 0; mDrawCounter = 0; mUserVB = mUserIB = 0; }
+        void drawClear() { mUserVB = mUserIB = 0; }
 
     private:
-
-        size_t mFrameCounter;
-        size_t mDrawCounter;
 
         ID3D11Buffer * mUserVB;
         ID3D11Buffer * mUserIB;
@@ -327,7 +324,7 @@ namespace GN { namespace gfx
 
     public:
 
-        virtual void debugDumpNextFrame( size_t startBatchIndex, size_t numBatches );
+        virtual void debugDumpNextFrame( uint32 startBatchIndex, uint32 numBatches );
         virtual void debugMarkBegin( const char * markerName );
         virtual void debugMarkEnd();
         virtual void debugMarkSet( const char * markerName );

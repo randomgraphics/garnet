@@ -129,11 +129,11 @@ void GN::gfx::D3D11Texture::quit()
 //
 // ----------------------------------------------------------------------------
 void GN::gfx::D3D11Texture::updateMipmap(
-    size_t              face,
-    size_t              level,
+    uint32              face,
+    uint32              level,
     const Box<uint32> * area,
-    size_t              rowPitch,
-    size_t              slicePitch,
+    uint32              rowPitch,
+    uint32              slicePitch,
     const void        * data,
     SurfaceUpdateFlag   flag )
 {
@@ -184,8 +184,8 @@ void GN::gfx::D3D11Texture::updateMipmap(
 //
 // ----------------------------------------------------------------------------
 void GN::gfx::D3D11Texture::readMipmap(
-    size_t       /*face*/,
-    size_t       /*level*/,
+    uint32       /*face*/,
+    uint32       /*level*/,
     MipmapData & /*data*/ )
 {
     GN_UNIMPL();
@@ -610,7 +610,7 @@ bool GN::gfx::D3D11Texture::createTexture()
 
     // calculate mipmap sizes
     Vector3<uint32> mipSize( texdesc.width, texdesc.height, texdesc.depth );
-    for( size_t i = 0; i < texdesc.levels; ++i )
+    for( uint32 i = 0; i < texdesc.levels; ++i )
     {
         setMipSize( i, mipSize );
         if( mipSize.x > 1 ) mipSize.x >>= 1;

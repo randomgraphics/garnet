@@ -61,7 +61,7 @@ enum GpuCommand {
 ///
 /// Gpu command handler type.
 ///
-typedef void (*GpuCommandHandler)( Gpu & r, void * param, size_t size );
+typedef void (*GpuCommandHandler)( Gpu & r, void * param, uint32 size );
 
 ///
 /// Gpu command handler table.

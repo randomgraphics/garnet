@@ -33,8 +33,8 @@ bool GN::gfx::ImageDesc::valid() const
     const GN::gfx::ColorLayoutDesc & cld = ALL_COLOR_LAYOUTS[format.layout];
 
     // check mipmaps
-    for( size_t f = 0; f < numFaces; ++f )
-    for( size_t l = 0; l < numLevels; ++l )
+    for( uint32 f = 0; f < numFaces; ++f )
+    for( uint32 l = 0; l < numLevels; ++l )
     {
         const MipmapDesc & m = getMipmap( f, l );
 
@@ -147,6 +147,7 @@ public:
         #undef CHECK_FORMAT
 
         // read whole file
+        // TODO: Progressive read.
         size_t sz = i_file.size();
         mSrc.resize( sz );
         if( !i_file.seek( 0, FileSeek::SET ) ) return false;

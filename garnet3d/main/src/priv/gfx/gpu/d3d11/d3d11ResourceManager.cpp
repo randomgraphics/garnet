@@ -77,7 +77,7 @@ GN::gfx::D3D11Gpu::compileGpuProgram( const GpuProgramDesc & gpd )
 //
 // -----------------------------------------------------------------------------
 GN::gfx::GpuProgram *
-GN::gfx::D3D11Gpu::createGpuProgram( const void * data, size_t length )
+GN::gfx::D3D11Gpu::createGpuProgram( const void * data, uint32 length )
 {
     AutoRef<SelfContainedGpuProgramDesc> s( new SelfContainedGpuProgramDesc );
     if( !s->init( data, length ) ) return NULL;
@@ -116,7 +116,7 @@ GN::gfx::D3D11Gpu::createGpuProgram( const void * data, size_t length )
 //
 // -----------------------------------------------------------------------------
 GN::gfx::Uniform *
-GN::gfx::D3D11Gpu::createUniform( size_t size )
+GN::gfx::D3D11Gpu::createUniform( uint32 size )
 {
     return new SysMemUniform( size );
 }
