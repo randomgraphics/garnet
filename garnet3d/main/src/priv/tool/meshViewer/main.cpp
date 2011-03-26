@@ -9,7 +9,7 @@ using namespace GN::util;
 
 static GN::Logger * sLogger = GN::getLogger("GN.tool.meshViewer");
 
-#define USE_STATIC_MESH 0
+#define USE_STATIC_MESH 1
 
 class MyApp : public SampleApp
 {

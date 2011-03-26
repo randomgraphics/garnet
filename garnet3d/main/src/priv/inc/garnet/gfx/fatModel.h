@@ -44,9 +44,14 @@ namespace GN { namespace gfx
             INVALID = 0xFFFFFFFF,
         };
 
+        static const uint32 POS_NORMAL_TEX = (1<<POSITION) | (1<<NORMAL) | (1<<TEXCOORD0);
+
         static const char * const SEMANTIC_NAMES[];
 
         static Semantic sString2Semantic( const char * s );
+
+        // Each element is 16 bytes;
+        static const size_t ELEMENT_SIZE = 16;
 
         FatVertexBuffer()
             : mCount(0)
@@ -56,9 +61,25 @@ namespace GN { namespace gfx
             memset( &mFormats, 0, sizeof(mFormats) );
         }
 
+        FatVertexBuffer( const FatVertexBuffer & fvb )
+            : mCount(0)
+            , mLayout(0)
+        {
+            memset( &mElements, 0, sizeof(mElements) );
+            memset( &mFormats, 0, sizeof(mFormats) );
+
+            copyFrom( fvb );
+        }
+
         ~FatVertexBuffer()
         {
             clear();
+        }
+
+        FatVertexBuffer & operator=( const FatVertexBuffer & rhs )
+        {
+            copyFrom( rhs );
+            return *this;
         }
 
         void clear()
@@ -81,7 +102,7 @@ namespace GN { namespace gfx
 
         uint32 getVertexCount() const { return mCount; }
 
-        /// No matter what the format is, element array is always in unit of 16 bytes (like float4 or int4).
+        /// No matter what the format is, size of each unit in the element array is always ELEMENT_SIZE.
         void * getElementData( int semantic ) const
         {
             if( 0 <= semantic && semantic < NUM_SEMANTICS )
@@ -146,6 +167,8 @@ namespace GN { namespace gfx
         ColorFormat mFormats[NUM_SEMANTICS];
         uint32      mCount;
         uint32      mLayout;
+
+        bool copyFrom( const FatVertexBuffer & other );
     };
 
     struct FatMeshSubset
@@ -211,14 +234,25 @@ namespace GN { namespace gfx
     struct FatModel
     {
         StrA                         name; // name of the model. Usually the filename which the model is loaded from.
-        DynaArray<FatMesh>           meshes;
+        DynaArray<FatMesh*>          meshes;
         StringMap<char,FatSkeleton>  skeletons;
         StringMap<char,FatMaterial>  materials;
         StringMap<char,FatAnimation> animations;
         Boxf                         bbox;
 
+        /// destructor
+        ~FatModel()
+        {
+            clear();
+        }
+
+        /// clear the model
         void clear()
         {
+            for( size_t i = 0; i < meshes.size(); ++i )
+            {
+                delete meshes[i];
+            }
             meshes.clear();
             skeletons.clear();
             materials.clear();
@@ -226,7 +260,10 @@ namespace GN { namespace gfx
             bbox.clear();
         }
 
+        /// load fatmodel from file
         bool loadFromFile( const StrA & filename );
+
+        /// save fatmodel to file.
         bool saveToFile( const StrA & filename ) const;
     };
 }}

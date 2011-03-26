@@ -839,13 +839,13 @@ namespace GN
         }
         Vector4 & normalize()
         {
-			normalize( *this, *this );
+			sNormalize( *this, *this );
             return *this;
         }
         static Vector4 sNormalize( const Vector4 & v )
         {
             Vector4 r;
-            normalize( r, v );
+            sNormalize( r, v );
             return r;
         }
         static void sNormalize( Vector4 & o, const Vector4 & i )

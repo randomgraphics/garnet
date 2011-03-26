@@ -1,6 +1,6 @@
 #include "pch.h"
-#include <garnet/gfx/fatModel.h>
 #include "ase.h"
+#include <garnet/gfx/fatModel.h>
 
 #if GN_MSVC
 #pragma warning(disable:4100) // unreferenced formal parameter
@@ -10,11 +10,6 @@
 #include <assimp/aiPostProcess.h> // Post processing flags
 #include <assimp/IOStream.h>
 #include <assimp/IOSystem.h>
-
-// Disable FBX for now
-#ifdef HAS_FBX
-#undef HAS_FBX
-#endif
 
 #ifdef HAS_FBX
 # if GN_GCC
@@ -94,77 +89,81 @@ sLoadFromASE( FatModel & fatmodel, File & file, const StrA & filename )
     fatmodel.meshes.resize( ase.meshes.size() );
     for( size_t i = 0; i < ase.meshes.size(); ++i )
     {
+        fatmodel.meshes[i] = NULL;
+
         const AseMesh & src = ase.meshes[i];
-        FatMesh & dst = fatmodel.meshes[i];
+        AutoObjPtr<FatMesh> dst( new FatMesh );
 
         // determine vertex format
         const MeshVertexElement * position = NULL;
         const MeshVertexElement * normal = NULL;
         const MeshVertexElement * texcoord = NULL;
         uint32 vtxfmt = 0;
-        for( uint32 i = 0; i < src.vtxfmt.numElements; ++i )
+        for( uint32 e = 0; e < src.vtxfmt.numElements; ++e )
         {
-            const MeshVertexElement & e = src.vtxfmt.elements[i];
-            if( 0 == stringCompare( "POSITION", e.semantic ) )
+            const MeshVertexElement & mve = src.vtxfmt.elements[e];
+            if( 0 == stringCompare( "POSITION", mve.semantic ) )
             {
-                position = &e;
+                position = &mve;
                 vtxfmt |= 1 << FatVertexBuffer::POSITION;
             }
-            else if( 0 == stringCompare( "NORMAL", e.semantic ) )
+            else if( 0 == stringCompare( "NORMAL", mve.semantic ) )
             {
-                normal = &e;
+                normal = &mve;
                 vtxfmt |= 1 << FatVertexBuffer::NORMAL;
             }
-            else if( 0 == stringCompare( "TEXCOORD", e.semantic ) )
+            else if( 0 == stringCompare( "TEXCOORD", mve.semantic ) )
             {
-                texcoord = &e;
+                texcoord = &mve;
                 vtxfmt |= 1 << FatVertexBuffer::TEXCOORD0;
             }
         }
 
         // copy vertex buffer.
-        if( !dst.vertices.resize( vtxfmt, src.numvtx ) )
+        if( !dst->vertices.resize( vtxfmt, src.numvtx ) )
         {
             GN_ERROR(sLogger)( "Out of memory." );
             return false;
         }
         if( position )
         {
-            sCopyVertexElement<Vector3f>( dst.vertices.getPosition(), src, *position );
-            dst.vertices.setElementFormat( FatVertexBuffer::POSITION, ColorFormat::FLOAT3 );
+            sCopyVertexElement<Vector3f>( dst->vertices.getPosition(), src, *position );
+            dst->vertices.setElementFormat( FatVertexBuffer::POSITION, ColorFormat::FLOAT3 );
         }
         if( normal )
         {
-            sCopyVertexElement<Vector3f>( dst.vertices.getNormal(), src, *normal );
-            dst.vertices.setElementFormat( FatVertexBuffer::NORMAL, ColorFormat::FLOAT3 );
+            sCopyVertexElement<Vector3f>( dst->vertices.getNormal(), src, *normal );
+            dst->vertices.setElementFormat( FatVertexBuffer::NORMAL, ColorFormat::FLOAT3 );
         }
         if( texcoord )
         {
-            sCopyVertexElement<Vector2f>( dst.vertices.getTexcoord(0), src, *texcoord );
-            dst.vertices.setElementFormat( FatVertexBuffer::TEXCOORD0, ColorFormat::FLOAT2 );
+            sCopyVertexElement<Vector2f>( dst->vertices.getTexcoord(0), src, *texcoord );
+            dst->vertices.setElementFormat( FatVertexBuffer::TEXCOORD0, ColorFormat::FLOAT2 );
         }
 
         // copy index buffer
-        if( !dst.indices.resize( src.numidx ) )
+        if( !dst->indices.resize( src.numidx ) )
         {
             GN_ERROR(sLogger)( "Out of memory." );
             return false;
         }
         if( src.idx32 )
         {
-            memcpy( dst.indices.cptr(), src.indices, src.numidx * 4 );
+            memcpy( dst->indices.cptr(), src.indices, src.numidx * 4 );
         }
         else
         {
             const uint16 * s = (const uint16*)src.indices;
-            uint32 * d = dst.indices.cptr();
+            uint32 * d = dst->indices.cptr();
             for( size_t i = 0; i < src.numidx; ++i, ++s, ++d )
             {
                 *d = *s;
             }
         }
 
-        dst.bbox = src.selfbbox;
+        dst->bbox = src.selfbbox;
+
+        fatmodel.meshes[i] = dst.detach();
     }
 
     // copy subsets
@@ -172,14 +171,16 @@ sLoadFromASE( FatModel & fatmodel, File & file, const StrA & filename )
     {
         const AseMeshSubset & src = ase.subsets[i];
 
-        FatMeshSubset dst;
-        dst.material = ase.materials[src.matid].name;
-        dst.basevtx = src.basevtx;
-        dst.numvtx = src.numvtx;
-        dst.startidx = src.startidx;
-        dst.numidx = src.numidx;
-
-        fatmodel.meshes[src.meshid].subsets.append( dst );
+        if( fatmodel.meshes[src.meshid] )
+        {
+            FatMeshSubset dst;
+            dst.material = ase.materials[src.matid].name;
+            dst.basevtx = src.basevtx;
+            dst.numvtx = src.numvtx;
+            dst.startidx = src.startidx;
+            dst.numidx = src.numidx;
+            fatmodel.meshes[src.meshid]->subsets.append( dst );
+        }
     }
 
     // setup bounding box of the whole scene
@@ -254,7 +255,7 @@ public:
 //
 //
 // -----------------------------------------------------------------------------
-static const char * sGetTextureFileName( KFbxSurfaceMaterial * material, const char * textureType )
+static const char * sGetTextureFileName( const KFbxSurfaceMaterial * material, const char * textureType )
 {
     KFbxProperty prop = material->FindProperty( textureType );
     if( !prop.IsValid() ) return NULL;
@@ -401,22 +402,88 @@ typedef HashMap<
 //
 //
 // -----------------------------------------------------------------------------
+static bool
+sLoadVertices(
+    FatVertexBuffer  & fatvb,
+    KFbxNode         * fbxnode,
+    const MeshVertex * vertices,
+    uint32             count )
+{
+    // Compute the node's global position.
+    KFbxXMatrix globalTransform = fbxnode->GetScene()->GetEvaluator()->GetNodeGlobalTransform(fbxnode);
+
+    // Geometry offset is not inherited by the children.
+    KFbxXMatrix geometryOffset;
+    KFbxVector4 lT, lR, lS;
+    lT = fbxnode->GetGeometricTranslation(KFbxNode::eSOURCE_SET);
+    lR = fbxnode->GetGeometricRotation(KFbxNode::eSOURCE_SET);
+    lS = fbxnode->GetGeometricScaling(KFbxNode::eSOURCE_SET);
+    geometryOffset.SetT(lT);
+    geometryOffset.SetR(lR);
+    geometryOffset.SetS(lS);
+    globalTransform = globalTransform * geometryOffset;
+
+    Matrix44f m44(
+        (float)globalTransform[0][0], (float)globalTransform[0][1], (float)globalTransform[0][2], (float)globalTransform[0][3],
+        (float)globalTransform[1][0], (float)globalTransform[1][1], (float)globalTransform[1][2], (float)globalTransform[1][3],
+        (float)globalTransform[2][0], (float)globalTransform[2][1], (float)globalTransform[2][2], (float)globalTransform[2][3],
+        (float)globalTransform[3][0], (float)globalTransform[3][1], (float)globalTransform[3][2], (float)globalTransform[3][3] );
+
+    // This is used to transform normal vector.
+    Matrix44f itm44 = m44.invtrans();
+
+    if( !fatvb.resize( FatVertexBuffer::POS_NORMAL_TEX, count ) ) return false;
+
+    fatvb.setElementFormat( FatVertexBuffer::POSITION,  ColorFormat::FLOAT3 );
+    fatvb.setElementFormat( FatVertexBuffer::NORMAL,    ColorFormat::FLOAT3 );
+    fatvb.setElementFormat( FatVertexBuffer::TEXCOORD0, ColorFormat::FLOAT2 );
+
+    Vector4f * pos = (Vector4f*)fatvb.getPosition();
+    Vector4f * nml = (Vector4f*)fatvb.getNormal();
+    Vector4f * uv0 = (Vector4f*)fatvb.getTexcoord(0);
+
+    Vector4f v4;
+
+    for( size_t i = 0; i < count; ++i )
+    {
+        // translate position to global space
+        v4.set( vertices->pos, 1.0f );
+        *pos = m44 * v4;
+
+        // translate normal to global space.
+        v4.set( vertices->normal, 0.0f );
+        *nml = itm44 * v4;
+        nml->w = 0.0f;
+        nml->normalize();
+
+        uv0->set( vertices->uv, 0, 0 );
+
+        ++pos;
+        ++nml;
+        ++uv0;
+        ++vertices;
+    }
+
+    return true;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
 static void
 sLoadFbxMesh(
-    ModelHierarchyDesc           & desc,
-    const StrA                   & filename,
-    ModelHierarchyDesc::NodeDesc & gnnode,
-    FbxSdkWrapper                & sdk,
-    KFbxNode                     * fbxnode,
-    KFbxMesh                     * fbxmesh,
-    const char *                   meshName )
+    FatModel      & fatmodel,
+    const StrA    & filename,
+    FbxSdkWrapper & sdk,
+    KFbxNode      * fbxnode,
+    KFbxMesh      * fbxmesh )
 {
     if( !fbxmesh->IsTriangleMesh() )
     {
         fbxmesh = sdk.converter->TriangulateMesh( fbxmesh );
         if( NULL == fbxmesh )
         {
-            GN_ERROR(sLogger)( "Fail to triangulate fbxmesh node: %s", meshName );
+            GN_ERROR(sLogger)( "Fail to triangulate fbxmesh node: %s", fbxnode->GetName() );
             return;
         }
     }
@@ -425,7 +492,7 @@ sLoadFbxMesh(
     KFbxLayer * layer0 = fbxmesh->GetLayer(0);
     if( NULL == layer0 )
     {
-        GN_ERROR(sLogger)( "The fbxmesh does not have a layer: %s", meshName );
+        GN_ERROR(sLogger)( "The fbxmesh does not have a layer: %s", fbxnode->GetName() );
         return;
     }
     if( NULL == layer0->GetNormals() )
@@ -465,6 +532,34 @@ sLoadFbxMesh(
         nummat = 1;
     }
 
+    // add materials to fatmodel.
+    DynaArray<StrA> materialNames;
+    materialNames.resize( nummat );
+    for( int i = 0; i < nummat; ++i )
+    {
+        const KFbxSurfaceMaterial * fbxmat = fbxnode->GetMaterial( i );
+
+        if( fbxmat )
+        {
+            FatMaterial & fatmat = fatmodel.materials[fbxmat->GetName()];
+
+            StrA dirname = fs::dirName( filename );
+            const char * texname = sGetTextureFileName( fbxmat, KFbxSurfaceMaterial::sDiffuse );
+            if( texname ) fatmat.albedoTexture = fs::resolvePath( dirname, texname );
+
+            texname = sGetTextureFileName( fbxmat, KFbxSurfaceMaterial::sNormalMap );
+            if( texname ) fatmat.normalTexture = fs::resolvePath( dirname, texname );
+
+            // TODO: get diffuse color.
+
+            materialNames[i] = fbxmat->GetName();
+        }
+        else
+        {
+            materialNames[i] = "";
+        }
+    }
+
     // Declare the hash table for vertices
     MeshVertexHashMap vhash( (size_t)numidx * 2 );
 
@@ -487,69 +582,65 @@ sLoadFbxMesh(
             SortPolygonByMaterial( fbxMaterials ) );
     }
 
-    // Create vertex blob that stores the final vertex buffer.
-    AutoRef<DynaArrayBlob<MeshVertex> > vertexBlob( new DynaArrayBlob<MeshVertex> );
+    // Create the mesh object
+    AutoObjPtr<FatMesh> fatMeshAutoPtr( new FatMesh );
+    if( NULL == fatMeshAutoPtr )
+    {
+        GN_ERROR(sLogger)( "Fail to load FBX mesh: out of memory." );
+        return;
+    }
+    FatMesh & fatmesh = *fatMeshAutoPtr;
+
+    // Create temporary vertex blob to hold the vertex data
+    AutoRef<DynaArrayBlob<MeshVertex,uint32> > vertexBlob( new DynaArrayBlob<MeshVertex,uint32> );
     if( !vertexBlob->array().reserve( numidx ) )
     {
         GN_ERROR(sLogger)( "Fail to load FBX mesh: out of memory." );
         return;
     }
 
-    // Create index blob that stores the index buffer (assume 32-bit indices)
-    AutoRef<SimpleBlob> indexBlob( new SimpleBlob(numidx * sizeof(uint32) ) );
-    if( 0 == indexBlob->size() )
+    // Allocate index buffer
+    if( !fatmesh.indices.resize( (uint32)numidx ) )
     {
         GN_ERROR(sLogger)( "Fail to load FBX mesh: out of memory." );
         return;
     }
 
-    // Create one model for each material. Note that there might be materials
-    // that are not referenced in this FBX mesh. So the actual number of models
-    // could be less than number of the materials.
-    DynaArray<ModelResourceDesc> models;
-    if( !models.resize( (size_t)nummat ) ) return;
-
     // Split the FBX fbxmesh into multiple models, one material one model.
     int uvIndex = 0;
     int normalIndex = 0;
     int lastMatID = -1;
-    for( size_t sortedPolygonIndex = 0; sortedPolygonIndex < sortedPolygons.size(); ++sortedPolygonIndex )
+    FatMeshSubset * lastSubset = NULL;
+    for( uint32 sortedPolygonIndex = 0; sortedPolygonIndex < sortedPolygons.size(); ++sortedPolygonIndex )
     {
         int polygonIndex = sortedPolygons[sortedPolygonIndex];
 
         int matid = nummat > 1 ? fbxMaterials->GetIndexArray().GetAt(polygonIndex) : 0;
         GN_ASSERT( matid >= lastMatID );
 
-        // update mesh subset of each model
-        ModelResourceDesc & model = models[matid];
+        // create new subset for each new material
         if( matid != lastMatID )
         {
             lastMatID = matid;
-            model = SimpleDiffuseModel::DESC;
-            //model = SimpleWireframeModel::DESC;
-            model.subset.startidx = sortedPolygonIndex*3;
-            model.subset.numidx   = 0;
-            model.subset.basevtx  = 0;
-            // Final number of vertices are known yet.
-            //model.subset.numvert = ?;
 
-            // get the texture associated with the material.
-            KFbxSurfaceMaterial * mat = fbxnode->GetMaterial( matid );
-            if( mat )
+            // create a new subset
+            if( !fatmesh.subsets.resize( fatmesh.subsets.size() + 1 ) )
             {
-                StrA dirname = fs::dirName( filename );
-                const char * diffuse = sGetTextureFileName( mat, KFbxSurfaceMaterial::sDiffuse );
-                if( model.hasTexture("ALBEDO_TEXTURE") && diffuse )
-                {
-                    model.textures["ALBEDO_TEXTURE"].resourceName = fs::resolvePath( dirname, diffuse );
-                }
+                GN_ERROR(sLogger)( "Fail to load FBX mesh: out of memory." );
+                return;
             }
+            FatMeshSubset & subset = fatmesh.subsets.back();
+            subset.material = materialNames[matid];
+            subset.startidx = sortedPolygonIndex*3;
+            subset.numidx   = 0;
+            subset.basevtx  = 0;
+            // Note: final number of vertices are unknown yet.
+
+            lastSubset = &subset;
         }
-        model.subset.numidx += 3;
+        lastSubset->numidx += 3;
 
-        // TODO: check polygon winding
-
-        // add the polygon to the model
+        // add the polygon to the mesh
         for( int i = 0; i < 3; ++i )
         {
             int posIndex = fbxIndices[polygonIndex*3+i];
@@ -606,82 +697,39 @@ sLoadFbxMesh(
                 GN_ASSERT( vertexBlob->array().size() == (vertexIndex + 1) );
             }
 
-            // add the vertex index into the final index buffer
-            uint32 * indices = (uint32*)indexBlob->data();
-            indices[sortedPolygonIndex*3+i] = vertexIndex;
+            // add the vertex index into the index buffer
+            fatmesh.indices[sortedPolygonIndex*3+i] = vertexIndex;
         }
     }
 
     // Now both vertex and index buffers are filled up. Models' subset information are ready too.
     // We are almost there.
 
-    // Compress index buffer to 16 bits, if possible.
-    if( vertexBlob->array().size() <= 0x10000 )
+    // Fill up the rest of informations for each subset
+    for( size_t i = 0; i < fatmesh.subsets.size(); ++i )
     {
-        AutoRef<SimpleBlob> ib16( new SimpleBlob (numidx * sizeof(uint16) ) );
-        if( 0 == ib16->size() )
-        {
-            GN_ERROR(sLogger)( "Fail to load FBX mesh: out of memory." );
-            return;
-        }
-
-        const uint32 * i32 = (const uint32*)indexBlob->data();
-        uint16       * i16 = (uint16 *)ib16->data();
-        for( size_t i = 0; i < (size_t)numidx; ++i )
-        {
-            i16[i] = (uint16)i32[i];
-        }
-
-        indexBlob = ib16;
+        fatmesh.subsets[i].numvtx = (uint32)vertexBlob->array().size();
     }
+
+    // Now copy vertex data to fatmesh, and translate position and normal to global space.
+    if( !sLoadVertices( fatmesh.vertices, fbxnode, vertexBlob->array().cptr(), vertexBlob->array().size() ) ) return;
 
     // calculate the bounding box of the mesh
-    const MeshVertex * vertices = vertexBlob->array().cptr();
-    Boxf boundingBox;
+    const Vector4f * vertices = (const Vector4f *)fatmesh.vertices.getPosition();
     calculateBoundingBox(
-        boundingBox,
-        &vertices->pos.x, sizeof(MeshVertex),
-        &vertices->pos.y, sizeof(MeshVertex),
-        &vertices->pos.z, sizeof(MeshVertex),
-        vertexBlob->array().size() );
+        fatmesh.bbox,
+        &vertices->x, sizeof(vertices[0]),
+        &vertices->y, sizeof(vertices[0]),
+        &vertices->z, sizeof(vertices[0]),
+        fatmesh.vertices.getVertexCount() );
 
-    // Fill up the rest of informations for each models.
-    for( size_t i = 0; i < models.size(); ++i )
-    {
-        models[i].mesh           = meshName;
-        models[i].subset.numvtx  = (uint32)vertexBlob->array().size();
-    }
+    GN_INFO(sLogger)( "Load FBX mesh %s: %d vertices, %d faces",
+        fbxnode->GetName(),
+        fatmesh.vertices.getVertexCount(),
+        fatmesh.indices.size() );
 
-    // Now copy everthing to the output descriptor. And we are done!
-    MeshResourceDesc & gnmesh = desc.meshes[meshName];
-    gnmesh.clear();
-    gnmesh.prim        = PrimitiveType::TRIANGLE_LIST;
-    gnmesh.numvtx      = (uint32)vertexBlob->array().size();
-    gnmesh.numidx      = numidx;
-    gnmesh.idx32       = gnmesh.numvtx > 0x10000;
-    gnmesh.vtxfmt      = MeshVertex::sGetVertexFormat();
-    gnmesh.vertices[0] = (void*)vertices;
-    gnmesh.strides[0]  = sizeof(MeshVertex);
-    gnmesh.offsets[0]  = 0;
-    gnmesh.indices     = indexBlob->data();
-    GN_INFO(sLogger)( "Load FBX mesh %s: %d vertices, %d faces", meshName, gnmesh.numvtx, gnmesh.numidx / 3 );
-
-    desc.meshdata.append( vertexBlob );
-    desc.meshdata.append( indexBlob );
-
-    gnnode.bbox = boundingBox;
-
-    for( size_t i = 0; i < models.size(); ++i )
-    {
-        ModelResourceDesc & model = models[i];
-
-        // skip empty models.
-        if( model.effect.empty() ) continue;
-
-        StrA modelName = stringFormat( "%s.%d", meshName, i );
-        desc.models[modelName] = model;
-        gnnode.models.append( modelName );
-    }
+    // finally, add the fatmesh to fatmodel. And we are done!
+    fatmodel.meshes.append( fatMeshAutoPtr.detach() );
 }
 
 //
@@ -701,23 +749,10 @@ sLoadFbxNodeRecursivly(
     KFbxNodeAttribute* attrib = node->GetNodeAttribute();
     KFbxNodeAttribute::EAttributeType type = attrib ? attrib->GetAttributeType() : KFbxNodeAttribute::eUNIDENTIFIED;
 
-    const KFbxXMatrix & localTransform = node->GetScene()->GetEvaluator()->GetNodeLocalTransform(node);
-    KFbxVector4    t = localTransform.GetT();
-    KFbxQuaternion q = localTransform.GetQ();
-    KFbxVector4    s = localTransform.GetS();
-
-    ModelHierarchyDesc::NodeDesc & gnnode = desc.nodes[name];
-    gnnode.parent = parent ? parent->GetName() : "";
-    gnnode.position.set( (float)t[0], (float)t[1], (float)t[2] );
-    gnnode.orientation.set( (float)q[0], (float)q[1], (float)q[2], (float)q[3] );
-    gnnode.scaling.set( (float)s[0], (float)s[1], (float)s[2] );
-    gnnode.bbox.set( 0, 0, 0, 0, 0, 0 );
-
     if( KFbxNodeAttribute::eMESH == type )
     {
         // load mesh node
-        StrA fullMeshName = filename + "." + name;
-        sLoadFbxMesh( desc, filename, gnnode, sdk, node, (KFbxMesh*)attrib, fullMeshName );
+        sLoadFbxMesh( fatmodel, filename, sdk, node, (KFbxMesh*)attrib );
     }
     else if(
         // Some nodes are ignored silently.
@@ -727,16 +762,24 @@ sLoadFbxNodeRecursivly(
         KFbxNodeAttribute::eCAMERA != type &&
         KFbxNodeAttribute::eSKELETON != type )
     {
-        GN_WARN(sLogger)( "Ignore unsupported node: type=%d, name=%s", type, name );
+        GN_WARN(sLogger)( "Ignore unsupported node: type=%d, name=%s", type, node->GetName() );
     }
 
     // load children
     for( int i = 0; i < node->GetChildCount(); ++i )
     {
-        if( !sLoadFbxNodeRecursivly( desc, filename, sdk, node->GetChild( i ), node ) )
+        if( !sLoadFbxNodeRecursivly( fatmodel, filename, sdk, node->GetChild( i ), node ) )
         {
             return false;
         }
+    }
+
+    // calculate the final bounding box
+    fatmodel.bbox.clear();
+    for( size_t i = 0; i < fatmodel.meshes.size(); ++i )
+    {
+        GN_ASSERT( fatmodel.meshes[i] );
+        Boxf::sGetUnion( fatmodel.bbox, fatmodel.bbox, fatmodel.meshes[i]->bbox );
     }
 
     // done
@@ -760,7 +803,6 @@ sLoadFromFBX( FatModel & fatmodel, File & file, const StrA & filename )
     // TODO: setup file system.
 
     // detect file format
-    StrA filename = fs::toNativeDiskFilePath( file.name() );
 	int lFileFormat = -1;
     if (!gSdkManager->GetIOPluginRegistry()->DetectReaderFileFormat(filename, lFileFormat) )
     {
@@ -925,9 +967,12 @@ bool GN::gfx::FatModel::loadFromFile( const StrA & filename )
         size_t totalFaces = 0;
         for( size_t i = 0; i < this->meshes.size(); ++i )
         {
-            const FatMesh & m = this->meshes[i];
-            totalVerts += m.vertices.getVertexCount();
-            totalFaces += m.indices.size() / 3;
+            const FatMesh * m = this->meshes[i];
+            if( m )
+            {
+                totalVerts += m->vertices.getVertexCount();
+                totalFaces += m->indices.size() / 3;
+            }
         }
         GN_INFO(sLogger)( "Total vertices: %d, faces: %d", totalVerts, totalFaces );
     }
