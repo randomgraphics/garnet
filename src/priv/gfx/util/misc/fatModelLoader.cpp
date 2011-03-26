@@ -423,14 +423,16 @@ sLoadVertices(
     geometryOffset.SetS(lS);
     globalTransform = globalTransform * geometryOffset;
 
+    // FBX matrix is column major.
+    double * d44 = globalTransform;
     Matrix44f m44(
-        (float)globalTransform[0][0], (float)globalTransform[0][1], (float)globalTransform[0][2], (float)globalTransform[0][3],
-        (float)globalTransform[1][0], (float)globalTransform[1][1], (float)globalTransform[1][2], (float)globalTransform[1][3],
-        (float)globalTransform[2][0], (float)globalTransform[2][1], (float)globalTransform[2][2], (float)globalTransform[2][3],
-        (float)globalTransform[3][0], (float)globalTransform[3][1], (float)globalTransform[3][2], (float)globalTransform[3][3] );
+        (float)d44[0], (float)d44[4], (float)d44[8],  (float)d44[12],
+        (float)d44[1], (float)d44[5], (float)d44[9],  (float)d44[13],
+        (float)d44[2], (float)d44[6], (float)d44[10], (float)d44[14],
+        (float)d44[3], (float)d44[7], (float)d44[11], (float)d44[15] );
 
     // This is used to transform normal vector.
-    Matrix44f itm44 = m44.invtrans();
+    Matrix44f itm44 = Matrix44f::sInvtrans( m44 );
 
     if( !fatvb.resize( FatVertexBuffer::POS_NORMAL_TEX, count ) ) return false;
 
@@ -449,6 +451,11 @@ sLoadVertices(
         // translate position to global space
         v4.set( vertices->pos, 1.0f );
         *pos = m44 * v4;
+        float divw = 1.0f / pos->w;
+        pos->x *= divw;
+        pos->y *= divw;
+        pos->z *= divw;
+        pos->w  = 1.0f;
 
         // translate normal to global space.
         v4.set( vertices->normal, 0.0f );
@@ -732,6 +739,8 @@ sLoadFbxMesh(
     fatmodel.meshes.append( fatMeshAutoPtr.detach() );
 }
 
+#define RECURSIVE_LOAD 0
+#if RECURSIVE_LOAD
 //
 //
 // -----------------------------------------------------------------------------
@@ -774,19 +783,13 @@ sLoadFbxNodeRecursivly(
         }
     }
 
-    // calculate the final bounding box
-    fatmodel.bbox.clear();
-    for( size_t i = 0; i < fatmodel.meshes.size(); ++i )
-    {
-        GN_ASSERT( fatmodel.meshes[i] );
-        Boxf::sGetUnion( fatmodel.bbox, fatmodel.bbox, fatmodel.meshes[i]->bbox );
-    }
-
     // done
     return true;
 }
 
-#endif
+#endif // RECURSIVE_LOAD
+
+#endif // HAS_FBX
 
 //
 //
@@ -828,16 +831,75 @@ sLoadFromFBX( FatModel & fatmodel, File & file, const StrA & filename )
         return false;
     }
 
-    return sLoadFbxNodeRecursivly( fatmodel, filename, sdk, gScene->GetRootNode(), NULL );
+    // Convert Axis System to what is used in this example, if needed
+    KFbxAxisSystem SceneAxisSystem = gScene->GetGlobalSettings().GetAxisSystem();
+    KFbxAxisSystem OurAxisSystem(KFbxAxisSystem::YAxis, KFbxAxisSystem::ParityOdd, KFbxAxisSystem::RightHanded);
+    if( SceneAxisSystem != OurAxisSystem )
+    {
+        OurAxisSystem.ConvertScene(gScene);
+    }
+
+    // Convert Unit System to what is used in this example, if needed
+    KFbxSystemUnit SceneSystemUnit = gScene->GetGlobalSettings().GetSystemUnit();
+    if( SceneSystemUnit.GetScaleFactor() != 1.0 )
+    {
+        KFbxSystemUnit OurSystemUnit(1.0);
+        OurSystemUnit.ConvertScene(gScene);
+    }
+
+#if RECURSIVE_LOAD
+
+    if( !sLoadFbxNodeRecursivly( fatmodel, filename, sdk, gScene->GetRootNode(), NULL ) ) return false;
 
 #else
+
+    // Cycle through nodes in linear way.
+    int lNodeCount = KFbxGetSrcCount<KFbxNode>(gScene);
+    for( int lIndex=0; lIndex<lNodeCount; lIndex++ )
+    {
+        KFbxNode * node = KFbxGetSrc<KFbxNode>(gScene, lIndex);
+
+        // Get node type
+        KFbxNodeAttribute* attrib = node->GetNodeAttribute();
+        KFbxNodeAttribute::EAttributeType type = attrib ? attrib->GetAttributeType() : KFbxNodeAttribute::eUNIDENTIFIED;
+
+        if( KFbxNodeAttribute::eMESH == type )
+        {
+            // load mesh node
+            sLoadFbxMesh( fatmodel, filename, sdk, node, (KFbxMesh*)attrib );
+        }
+        else if(
+            // Some nodes are ignored silently.
+            KFbxNodeAttribute::eNULL != type &&
+            KFbxNodeAttribute::eUNIDENTIFIED != type &&
+            KFbxNodeAttribute::eLIGHT != type &&
+            KFbxNodeAttribute::eCAMERA != type &&
+            KFbxNodeAttribute::eSKELETON != type )
+        {
+            GN_WARN(sLogger)( "Ignore unsupported node: type=%d, name=%s", type, node->GetName() );
+        }
+    }
+
+#endif
+
+    // calculate the final bounding box
+    fatmodel.bbox.clear();
+    for( size_t i = 0; i < fatmodel.meshes.size(); ++i )
+    {
+        GN_ASSERT( fatmodel.meshes[i] );
+        Boxf::sGetUnion( fatmodel.bbox, fatmodel.bbox, fatmodel.meshes[i]->bbox );
+    }
+
+    return true;
+
+#else // HAS_FBX
 
     fatmodel.clear();
     GN_UNUSED_PARAM( file );
     GN_ERROR(sLogger)( "Fail to load file %s: FBX is not supported.", filename.cptr() );
     return false;
 
-#endif
+#endif // HAS_FBX
 }
 
 }

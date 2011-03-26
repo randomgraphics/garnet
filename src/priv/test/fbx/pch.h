@@ -8,6 +8,12 @@
 
 #define _CRT_SECURE_NO_WARNINGS
 
+#if _MSC_VER
+#pragma warning(disable:4100)
+#pragma warning(disable:4512)
+#pragma warning(disable:4189) // local variable is initialized but not referenced
+#endif
+
 #include <fbxsdk.h>
 #include <fbxfilesdk/kfbxio/kfbxiosettings.h>
 #include <fbxfilesdk/kfbxio/kfbximporter.h>
