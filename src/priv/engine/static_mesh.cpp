@@ -31,7 +31,8 @@ static const ModelResourceDesc * sDetermineBestModelTemplate( const MeshVertexFo
 
         static bool sHasTex0( const MeshVertexFormat & vf )
         {
-            return vf.hasSemantic( "texcoord" );
+            return vf.hasSemantic( "texcoord" )
+                || vf.hasSemantic( "texcoord0" );
         }
 
         static bool sHasTangent( const MeshVertexFormat & vf )
@@ -165,7 +166,9 @@ bool GN::engine::StaticMesh::loadFromFatModel( const GN::gfx::FatModel & fatmode
 
     for( size_t i = 0; i < fatmodel.meshes.size(); ++i )
     {
-        const FatMesh & fatmesh = fatmodel.meshes[i];
+        if( NULL == fatmodel.meshes[i] ) continue;
+
+        const FatMesh & fatmesh = *fatmodel.meshes[i];
 
         StrA meshName = stringFormat( "%s.mesh.%d", fatmodel.name, i );
 

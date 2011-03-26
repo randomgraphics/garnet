@@ -72,7 +72,7 @@ bool GN::gfx::FatVertexBuffer::resize( uint32 layout, uint32 count )
     {
         if( (1<<i) & layout )
         {
-            vertices[i] = HeapMemory::alignedAlloc( count * 128, 16 );
+            vertices[i] = HeapMemory::alignedAlloc( count * 128, ELEMENT_SIZE );
             if( NULL == vertices[i] )
             {
                 outofmem = true;
@@ -210,7 +210,7 @@ bool GN::gfx::FatVertexBuffer::GenerateVertexStream(
         if( semantics[j] == INVALID ) continue;
 
         const MeshVertexElement & e = mvf.elements[j];
-        SafeArrayAccessor<const uint8> src( (const uint8*)mElements[semantics[j]], mCount * 16 );
+        SafeArrayAccessor<const uint8> src( (const uint8*)mElements[semantics[j]], mCount * ELEMENT_SIZE );
         SafeArrayAccessor<uint8>       dst( (uint8*)buffer + e.offset, (mCount * stride) - e.offset );
         size_t size = e.format.getBytesPerBlock();
 
@@ -219,10 +219,35 @@ bool GN::gfx::FatVertexBuffer::GenerateVertexStream(
         for( size_t i = 0; i < mCount; ++i )
         {
             memcpy( dst.subrange(0,size), src.subrange(0,size), size );
-            src += 16;
+            src += ELEMENT_SIZE;
             dst += stride;
         }
     }
+
+    return true;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+bool GN::gfx::FatVertexBuffer::copyFrom( const FatVertexBuffer & other )
+{
+    GN_UNUSED_PARAM( other );
+    GN_UNIMPL();
+
+    /*clear();
+
+    if( !resize( other.getLayout(), other.getVertexCount() ) ) return false;
+
+    for( int i = 0; i < NUM_SEMANTICS; ++i )
+    {
+        if( other.mElements[i] )
+        {
+            memcpy( mElements[i], other.mElements[i], mCount * ELEMENT_SIZE );
+        }
+
+        mFormats[i] = other.mFormats[i];
+    }*/
 
     return true;
 }

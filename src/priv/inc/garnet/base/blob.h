@@ -58,10 +58,10 @@ namespace GN
     ///
     /// A blob class that used DynaArray as backend.
     ///
-    template<typename T>
+    template<typename T, typename SIZE_TYPE=size_t>
     class DynaArrayBlob : public Blob
     {
-        DynaArray<T> mBuffer;
+        DynaArray<T,SIZE_TYPE> mBuffer;
 
     public:
 
@@ -74,8 +74,8 @@ namespace GN
         //@}
 
         //@{
-        DynaArray<T>       & array()       { return mBuffer; }
-        const DynaArray<T> & array() const { return mBuffer; }
+        DynaArray<T,SIZE_TYPE>       & array()       { return mBuffer; }
+        const DynaArray<T,SIZE_TYPE> & array() const { return mBuffer; }
         //@}
     };
 };
