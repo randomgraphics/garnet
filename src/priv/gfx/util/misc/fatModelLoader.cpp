@@ -678,7 +678,7 @@ sLoadFbxMesh(
             }
             else
             {
-                key.uv.set( FLT_MAX, FLT_MAX );
+                key.uv.set( 0, 0 );
             }
 
             // If the key exists already, the pair will point to it.
@@ -831,7 +831,7 @@ sLoadFromFBX( FatModel & fatmodel, File & file, const StrA & filename )
         return false;
     }
 
-    // Convert Axis System to what is used in this example, if needed
+    // Convert Axis System to right handed system, if needed
     KFbxAxisSystem SceneAxisSystem = gScene->GetGlobalSettings().GetAxisSystem();
     KFbxAxisSystem OurAxisSystem(KFbxAxisSystem::YAxis, KFbxAxisSystem::ParityOdd, KFbxAxisSystem::RightHanded);
     if( SceneAxisSystem != OurAxisSystem )
@@ -839,7 +839,7 @@ sLoadFromFBX( FatModel & fatmodel, File & file, const StrA & filename )
         OurAxisSystem.ConvertScene(gScene);
     }
 
-    // Convert Unit System to what is used in this example, if needed
+    // Convert Unit System to 1.0, if needed
     KFbxSystemUnit SceneSystemUnit = gScene->GetGlobalSettings().GetSystemUnit();
     if( SceneSystemUnit.GetScaleFactor() != 1.0 )
     {
