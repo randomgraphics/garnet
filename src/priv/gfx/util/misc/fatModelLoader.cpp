@@ -386,7 +386,8 @@ struct MeshVertexCache
     Vector3f                  pos;
     DynaArray<Vector3f,uint8> normal;
     DynaArray<Vector2f,uint8> tc0;
-    DynaArray<Skin,uint8>     skin;
+    Vector4i                  bones;
+    Vector4f                  weights;
 
     template<typename T>
     uint8 AddAttribute( DynaArray<T,uint8> & array, const T & value )
@@ -427,6 +428,7 @@ typedef HashMap<
     HashMapUtils::HashFunc_MemoryHash<MeshVertexKey>,
     HashMapUtils::EqualFunc_MemoryCompare<MeshVertexKey> > MeshVertexHashMap;
 
+#if 0
 /*
 //
 // -----------------------------------------------------------------------------
@@ -441,6 +443,55 @@ static void sLoadFbxSkin(
 
     }
 }//*/
+
+//
+//
+// -----------------------------------------------------------------------------
+static void
+sLoadFbxLimbNodeRecursivly(
+    FatSkeleton & fatsk,
+    KFbxNode    * fbxnode )
+{
+    if( NULL == fbxnode ) return;
+
+    KFbxSkeleton * fbxsk = fbxnode->GetSkeleton();
+    if( NULL == fbxsk ) return;
+
+    KFbxNode * fbxnode = skeleton->GetNode();
+    const StrA & skeletonName = node->GetName();
+
+    int count = node->GetChildCount();
+    for( int i = 0; i < count; ++i )
+    {
+        sLoadFbxLimbRecursivly( fatsk, node->GetChild( i ) );
+    }
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+static void
+sLoadFbxSkeleton(
+    FatModel      & fatmodel,
+    FbxSdkWrapper & sdk,
+    KFbxSkeleton  * fbxsk )
+{
+    KFbxNode * node = skeleton->GetNode();
+
+    FatSkeleton fatsk;
+    fatsk.name = node->GetName();
+
+    fatsk.bindPose.resize( 1 );
+    fatsk.bindPose[0].parent = -1;
+    fatsk.bindPose[0].transform.setIdentity();
+
+    int count = node->GetChildCount();
+    for( int i = 0; i < count; ++i )
+    {
+        sLoadFbxLimbRecursivly( fatsk, node->GetChild( i ) );
+    }
+}
+#endif
 
 //
 //
@@ -542,9 +593,10 @@ sLoadFbxMesh(
     FatModel      & fatmodel,
     const StrA    & filename,
     FbxSdkWrapper & sdk,
-    KFbxNode      * fbxnode,
     KFbxMesh      * fbxmesh )
 {
+    KFbxNode * fbxnode = fbxmesh->GetNode(),
+
     if( !fbxmesh->IsTriangleMesh() )
     {
         fbxmesh = sdk.converter->TriangulateMesh( fbxmesh );
@@ -578,6 +630,26 @@ sLoadFbxMesh(
     //KFbxLayerElementBinormal    * fbxBinormals = layer0->GetBinormals();
     int                           numtri       = fbxmesh->GetPolygonCount();
     int                           numidx       = numtri * 3;
+
+    /* Load skin and skeleton
+    KFbxSkin * fbxskin = NULL;
+    int numdef = fbxmesh->GetDeformerCount();
+    for( int i = 0; i < numdef; ++i )
+    {
+        KFbxDeformer * def = fbxmesh->GetDeformer( i );
+        KFbxDeformer::EDeformerType deftype = def->GetDeformerType();
+        if( KFbxDeformer::eSKIN == deftype )
+        {
+            if( NULL == fbxskin )
+            {
+                fbxskin = (KFbxSkin*)def;
+            }
+            else
+            {
+                GN_WARN(sLogger)("Multiple skins are not supported yet.");
+            }
+        }
+    }//*/
 
     // How many materials are there?
     int nummat;
@@ -806,56 +878,6 @@ sLoadFbxMesh(
     fatmodel.meshes.append( fatMeshAutoPtr.detach() );
 }
 
-#define RECURSIVE_LOAD 0
-#if RECURSIVE_LOAD
-//
-//
-// -----------------------------------------------------------------------------
-static bool
-sLoadFbxNodeRecursivly(
-    FatModel           & fatmodel,
-    const StrA         & filename,
-    FbxSdkWrapper      & sdk,
-    KFbxNode           * node,
-    KFbxNode           * parent )
-{
-    if( NULL == node ) return true;
-
-    // Get node type
-    KFbxNodeAttribute* attrib = node->GetNodeAttribute();
-    KFbxNodeAttribute::EAttributeType type = attrib ? attrib->GetAttributeType() : KFbxNodeAttribute::eUNIDENTIFIED;
-
-    if( KFbxNodeAttribute::eMESH == type )
-    {
-        // load mesh node
-        sLoadFbxMesh( fatmodel, filename, sdk, node, (KFbxMesh*)attrib );
-    }
-    else if(
-        // Some nodes are ignored silently.
-        KFbxNodeAttribute::eNULL != type &&
-        KFbxNodeAttribute::eUNIDENTIFIED != type &&
-        KFbxNodeAttribute::eLIGHT != type &&
-        KFbxNodeAttribute::eCAMERA != type &&
-        KFbxNodeAttribute::eSKELETON != type )
-    {
-        GN_WARN(sLogger)( "Ignore unsupported node: type=%d, name=%s", type, node->GetName() );
-    }
-
-    // load children
-    for( int i = 0; i < node->GetChildCount(); ++i )
-    {
-        if( !sLoadFbxNodeRecursivly( fatmodel, filename, sdk, node->GetChild( i ), node ) )
-        {
-            return false;
-        }
-    }
-
-    // done
-    return true;
-}
-
-#endif // RECURSIVE_LOAD
-
 #endif // HAS_FBX
 
 //
@@ -924,40 +946,24 @@ sLoadFromFBX( FatModel & fatmodel, File & file, const StrA & filename )
     //fatmodel.materials[0].normalTexture = "";
     //fatmodel.materials[0].albedoColor.set( 1, 1, 1, 1 );
 
-#if RECURSIVE_LOAD
-
-    if( !sLoadFbxNodeRecursivly( fatmodel, filename, sdk, gScene->GetRootNode(), NULL ) ) return false;
-
-#else
-
-    // Cycle through nodes in linear way.
-    int lNodeCount = KFbxGetSrcCount<KFbxNode>(gScene);
-    for( int lIndex=0; lIndex<lNodeCount; lIndex++ )
+    /* Load skeletons
+    int skCount = KFbxGetSrcCount<KFbxSkeleton>(gScene);
+    for( int i = 0; i < skCount; i++ )
     {
-        KFbxNode * node = KFbxGetSrc<KFbxNode>(gScene, lIndex);
-
-        // Get node type
-        KFbxNodeAttribute* attrib = node->GetNodeAttribute();
-        KFbxNodeAttribute::EAttributeType type = attrib ? attrib->GetAttributeType() : KFbxNodeAttribute::eUNIDENTIFIED;
-
-        if( KFbxNodeAttribute::eMESH == type )
+        KFbxSkeleton * sk = KFbxGetSrc<KFbxSkeleton>(gScene, i);
+        if( KFbxSkeleton::eROOT == sk->GetSkeletonType() )
         {
-            // load mesh node
-            sLoadFbxMesh( fatmodel, filename, sdk, node, (KFbxMesh*)attrib );
+            sLoadFbxSkeleton( fatmodel, sdk, *sk );
         }
-        else if(
-            // Some nodes are ignored silently.
-            KFbxNodeAttribute::eNULL != type &&
-            KFbxNodeAttribute::eUNIDENTIFIED != type &&
-            KFbxNodeAttribute::eLIGHT != type &&
-            KFbxNodeAttribute::eCAMERA != type &&
-            KFbxNodeAttribute::eSKELETON != type )
-        {
-            GN_WARN(sLogger)( "Ignore unsupported node: type=%d, name=%s", type, node->GetName() );
-        }
+    }//*/
+
+    // Load meshes
+    int meshCount = KFbxGetSrcCount<KFbxMesh>(gScene);
+    for( int i=0; i<meshCount; i++ )
+    {
+        KFbxMesh * fbxmesh = KFbxGetSrc<KFbxMesh>(gScene, i);
+        sLoadFbxMesh( fatmodel, filename, sdk, fbxmesh );
     }
-
-#endif
 
     // calculate the final bounding box
     fatmodel.bbox.clear();
