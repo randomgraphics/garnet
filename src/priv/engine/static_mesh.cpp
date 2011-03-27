@@ -161,9 +161,6 @@ bool GN::engine::StaticMesh::loadFromFatModel( const GN::gfx::FatModel & fatmode
 
     DynaArray<uint8> vb;
 
-    FatMaterial emptyMaterial;
-    emptyMaterial.clear();
-
     for( size_t i = 0; i < fatmodel.meshes.size(); ++i )
     {
         if( NULL == fatmodel.meshes[i] ) continue;
@@ -211,12 +208,7 @@ bool GN::engine::StaticMesh::loadFromFatModel( const GN::gfx::FatModel & fatmode
         for( size_t s = 0; s < fatmesh.subsets.size(); ++s )
         {
             const FatMeshSubset & fatsubset = fatmesh.subsets[s];
-            const FatMaterial   * fatmat = fatmodel.materials.find( fatsubset.material );
-            if( NULL == fatmat )
-            {
-                GN_WARN(sLogger)( "FatModel.meshes[%d].subsets[%d] references invalid material: %s", i, s, fatsubset.material );
-                fatmat = &emptyMaterial;
-            }
+            const FatMaterial   & fatmat    = fatmodel.materials[fatsubset.material];
 
             // setup model descriptor
             ModelResourceDesc mord = *modelTemplate;
@@ -227,13 +219,13 @@ bool GN::engine::StaticMesh::loadFromFatModel( const GN::gfx::FatModel & fatmode
             mord.subset.numidx = fatsubset.numidx;
 
             // associate textures to the model
-            if( mord.hasTexture("ALBEDO_TEXTURE") && !fatmat->albedoTexture.empty() )
+            if( mord.hasTexture("ALBEDO_TEXTURE") && !fatmat.albedoTexture.empty() )
             {
-                mord.textures["ALBEDO_TEXTURE"].resourceName = fatmat->albedoTexture;
+                mord.textures["ALBEDO_TEXTURE"].resourceName = fatmat.albedoTexture;
             }
-            if( mord.hasTexture("NORMAL_TEXTURE") && !fatmat->normalTexture.empty() )
+            if( mord.hasTexture("NORMAL_TEXTURE") && !fatmat.normalTexture.empty() )
             {
-                mord.textures["NORMAL_TEXTURE"].resourceName = fatmat->normalTexture;
+                mord.textures["NORMAL_TEXTURE"].resourceName = fatmat.normalTexture;
             }
 
             // TODO: associate uniforms to the model

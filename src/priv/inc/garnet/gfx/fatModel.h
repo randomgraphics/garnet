@@ -173,7 +173,7 @@ namespace GN { namespace gfx
 
     struct FatMeshSubset
     {
-        StrA   material; // name of the material.
+        uint32 material; // index into FatModel.materials array.
         uint32 basevtx;
         uint32 numvtx;
         uint32 startidx;
@@ -236,7 +236,7 @@ namespace GN { namespace gfx
         StrA                         name; // name of the model. Usually the filename which the model is loaded from.
         DynaArray<FatMesh*>          meshes;
         StringMap<char,FatSkeleton>  skeletons;
-        StringMap<char,FatMaterial>  materials;
+        DynaArray<FatMaterial>       materials;
         StringMap<char,FatAnimation> animations;
         Boxf                         bbox;
 

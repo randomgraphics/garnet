@@ -71,11 +71,12 @@ sLoadFromASE( FatModel & fatmodel, File & file, const StrA & filename )
     fatmodel.name = filename;
 
     // copy materials
+    fatmodel.materials.resize( ase.materials.size() );
     for( size_t i = 0; i < ase.materials.size(); ++i )
     {
         const AseMaterial & src = ase.materials[i];
 
-        FatMaterial & dst = fatmodel.materials[src.name];
+        FatMaterial & dst = fatmodel.materials[i];
 
         dst.clear();
 
@@ -174,7 +175,7 @@ sLoadFromASE( FatModel & fatmodel, File & file, const StrA & filename )
         if( fatmodel.meshes[src.meshid] )
         {
             FatMeshSubset dst;
-            dst.material = ase.materials[src.matid].name;
+            dst.material = src.matid;
             dst.basevtx = src.basevtx;
             dst.numvtx = src.numvtx;
             dst.startidx = src.startidx;
@@ -540,31 +541,27 @@ sLoadFbxMesh(
     }
 
     // add materials to fatmodel.
-    DynaArray<StrA> materialNames;
-    materialNames.resize( nummat );
+    DynaArray<size_t> fatmatIndices( nummat );
     for( int i = 0; i < nummat; ++i )
     {
         const KFbxSurfaceMaterial * fbxmat = fbxnode->GetMaterial( i );
+        GN_ASSERT( fbxmat );
 
-        if( fbxmat )
-        {
-            FatMaterial & fatmat = fatmodel.materials[fbxmat->GetName()];
+        FatMaterial fatmat;
+        fatmat.name = fbxmat->GetName();
 
-            StrA dirname = fs::dirName( filename );
-            const char * texname = sGetTextureFileName( fbxmat, KFbxSurfaceMaterial::sDiffuse );
-            if( texname ) fatmat.albedoTexture = fs::resolvePath( dirname, texname );
+        StrA dirname = fs::dirName( filename );
+        const char * texname = sGetTextureFileName( fbxmat, KFbxSurfaceMaterial::sDiffuse );
+        if( texname ) fatmat.albedoTexture = fs::resolvePath( dirname, texname );
 
-            texname = sGetTextureFileName( fbxmat, KFbxSurfaceMaterial::sNormalMap );
-            if( texname ) fatmat.normalTexture = fs::resolvePath( dirname, texname );
+        texname = sGetTextureFileName( fbxmat, KFbxSurfaceMaterial::sNormalMap );
+        if( texname ) fatmat.normalTexture = fs::resolvePath( dirname, texname );
 
-            // TODO: get diffuse color.
+        // TODO: get diffuse color.
+        fatmat.albedoColor.set( 1, 1, 1, 1 );
 
-            materialNames[i] = fbxmat->GetName();
-        }
-        else
-        {
-            materialNames[i] = "";
-        }
+        fatmodel.materials.append( fatmat );
+        fatmatIndices[i] = fatmodel.materials.size() - 1;
     }
 
     // Declare the hash table for vertices
@@ -623,6 +620,7 @@ sLoadFbxMesh(
         int polygonIndex = sortedPolygons[sortedPolygonIndex];
 
         int matid = nummat > 1 ? fbxMaterials->GetIndexArray().GetAt(polygonIndex) : 0;
+        GN_ASSERT( matid < nummat );
         GN_ASSERT( matid >= lastMatID );
 
         // create new subset for each new material
@@ -637,7 +635,7 @@ sLoadFbxMesh(
                 return;
             }
             FatMeshSubset & subset = fatmesh.subsets.back();
-            subset.material = materialNames[matid];
+            subset.material = fatmatIndices[matid];
             subset.startidx = sortedPolygonIndex*3;
             subset.numidx   = 0;
             subset.basevtx  = 0;
@@ -846,6 +844,16 @@ sLoadFromFBX( FatModel & fatmodel, File & file, const StrA & filename )
         KFbxSystemUnit OurSystemUnit(1.0);
         OurSystemUnit.ConvertScene(gScene);
     }
+
+    // preallocate material array.
+    int nummat = KFbxGetSrcCount<KFbxSurfaceMaterial>(gScene);
+    fatmodel.materials.reserve( (size_t)nummat );
+
+    //fatmodel.materials.resize( 1 );
+    //fatmodel.materials[0].name = "=[DEFAULT]=";
+    //fatmodel.materials[0].albedoTexture = "";
+    //fatmodel.materials[0].normalTexture = "";
+    //fatmodel.materials[0].albedoColor.set( 1, 1, 1, 1 );
 
 #if RECURSIVE_LOAD
 
