@@ -375,11 +375,29 @@ struct SortPolygonByMaterial
     }
 };
 
-struct MeshVertex
+struct MeshVertexCache
 {
-    Vector3f pos;
-    Vector3f normal;
-    Vector2f uv;
+    struct Skin
+    {
+        int boneID;
+        float weight;
+    };
+
+    Vector3f                  pos;
+    DynaArray<Vector3f,uint8> normal;
+    DynaArray<Vector2f,uint8> tc0;
+    DynaArray<Skin,uint8>     skin;
+
+    template<typename T>
+    uint8 AddAttribute( DynaArray<T,uint8> & array, const T & value )
+    {
+        for( uint8 i = 0; i < array.size(); ++i )
+        {
+            if( array[i] == value ) return i;
+        }
+        array.append( value );
+        return array.size() - 1;
+    }
 
     static MeshVertexFormat sGetVertexFormat()
     {
@@ -389,9 +407,18 @@ struct MeshVertex
 
 struct MeshVertexKey
 {
-    int      pos;
-    Vector3f normal;
-    Vector2f uv;
+    int      pos;    //< Index of the the vertex in FBX mesh control point array.
+    uint8    normal; //< Index into MeshVertexCache.normal.
+    uint8    tc0;    //< Index into MeshVertexCache.texcoord0.
+    uint8    skin;   //< Index into MeshVertexCache.skin.
+
+    MeshVertexKey()
+        : pos(-1)
+        , normal((uint8)-1)
+        , tc0((uint8)-1)
+        , skin((uint8)-1)
+    {
+    }
 };
 
 typedef HashMap<
@@ -400,15 +427,31 @@ typedef HashMap<
     HashMapUtils::HashFunc_MemoryHash<MeshVertexKey>,
     HashMapUtils::EqualFunc_MemoryCompare<MeshVertexKey> > MeshVertexHashMap;
 
+/*
+//
+// -----------------------------------------------------------------------------
+static void sLoadFbxSkin(
+    FbxSdkWrapper & sdk,
+    KFbxSkin & skin )
+{
+    // Load bind pose
+    int numClusters = skin.GetClusterCount();
+    for( int i = 0; i < numClusters; ++i )
+    {
+
+    }
+}//*/
+
 //
 //
 // -----------------------------------------------------------------------------
 static bool
-sLoadVertices(
-    FatVertexBuffer  & fatvb,
-    KFbxNode         * fbxnode,
-    const MeshVertex * vertices,
-    uint32             count )
+sLoadFbxVertices(
+    FatVertexBuffer       & fatvb,
+    KFbxNode              * fbxnode,
+    const MeshVertexCache * vertices,
+    const MeshVertexKey   * keys,
+    uint32                  numkeys )
 {
     // Compute the node's global position.
     KFbxXMatrix globalTransform = fbxnode->GetScene()->GetEvaluator()->GetNodeGlobalTransform(fbxnode);
@@ -435,7 +478,7 @@ sLoadVertices(
     // This is used to transform normal vector.
     Matrix44f itm44 = Matrix44f::sInvtrans( m44 );
 
-    if( !fatvb.resize( FatVertexBuffer::POS_NORMAL_TEX, count ) ) return false;
+    if( !fatvb.resize( FatVertexBuffer::POS_NORMAL_TEX, numkeys ) ) return false;
 
     fatvb.setElementFormat( FatVertexBuffer::POSITION,  ColorFormat::FLOAT3 );
     fatvb.setElementFormat( FatVertexBuffer::NORMAL,    ColorFormat::FLOAT3 );
@@ -447,10 +490,13 @@ sLoadVertices(
 
     Vector4f v4;
 
-    for( size_t i = 0; i < count; ++i )
+    for( size_t i = 0; i < numkeys; ++i )
     {
+        const MeshVertexKey   & k = keys[i];
+        const MeshVertexCache & v = vertices[k.pos];
+
         // translate position to global space
-        v4.set( vertices->pos, 1.0f );
+        v4.set( v.pos, 1.0f );
         *pos = m44 * v4;
         float divw = 1.0f / pos->w;
         pos->x *= divw;
@@ -459,17 +505,30 @@ sLoadVertices(
         pos->w  = 1.0f;
 
         // translate normal to global space.
-        v4.set( vertices->normal, 0.0f );
-        *nml = itm44 * v4;
-        nml->w = 0.0f;
-        nml->normalize();
+        if( k.normal < v.normal.size() )
+        {
+            v4.set( v.normal[k.normal], 0.0f );
+            *nml = itm44 * v4;
+            nml->w = 0.0f;
+            nml->normalize();
+        }
+        else
+        {
+            nml->set( 0, 0, 0, 0 );
+        }
 
-        uv0->set( vertices->uv, 0, 0 );
+        if( k.tc0 < v.tc0.size() )
+        {
+            uv0->set( v.tc0[k.tc0], 0, 0 );
+        }
+        else
+        {
+            uv0->set( 0, 0, 0, 0 );
+        }
 
         ++pos;
         ++nml;
         ++uv0;
-        ++vertices;
     }
 
     return true;
@@ -564,9 +623,6 @@ sLoadFbxMesh(
         fatmatIndices[i] = fatmodel.materials.size() - 1;
     }
 
-    // Declare the hash table for vertices
-    MeshVertexHashMap vhash( (size_t)numidx * 2 );
-
     // sort polygon by material
     DynaArray<int> sortedPolygons;
     if( !sortedPolygons.resize( numtri ) )
@@ -595,16 +651,33 @@ sLoadFbxMesh(
     }
     FatMesh & fatmesh = *fatMeshAutoPtr;
 
-    // Create temporary vertex blob to hold the vertex data
-    AutoRef<DynaArrayBlob<MeshVertex,uint32> > vertexBlob( new DynaArrayBlob<MeshVertex,uint32> );
-    if( !vertexBlob->array().reserve( numidx ) )
+    // Allocate index buffer
+    if( !fatmesh.indices.resize( (uint32)numidx ) )
     {
         GN_ERROR(sLogger)( "Fail to load FBX mesh: out of memory." );
         return;
     }
 
-    // Allocate index buffer
-    if( !fatmesh.indices.resize( (uint32)numidx ) )
+    // Declare vertex cache array
+    DynaArray<MeshVertexCache,uint32> vcache;
+    int numpos = fbxmesh->GetControlPointsCount();
+    if( !vcache.resize( (uint32)numpos ) )
+    {
+        GN_ERROR(sLogger)( "Fail to load FBX mesh: out of memory." );
+        return;
+    }
+    for( int i = 0; i < numpos; ++i )
+    {
+        const KFbxVector4 & fbxpos = fbxPositions[i];
+        vcache[i].pos.set( (float)fbxpos[0], (float)fbxpos[1], (float)fbxpos[2] );
+    }
+
+    // Declare the vertex hash table
+    MeshVertexHashMap vhash( (size_t)numidx * 2 );
+
+    // Allocate another buffer to hold the final sequance of vertex keys
+    DynaArray<MeshVertexKey> vertexKeys;
+    if( !vertexKeys.reserve( (uint32)numidx ) )
     {
         GN_ERROR(sLogger)( "Fail to load FBX mesh: out of memory." );
         return;
@@ -650,33 +723,37 @@ sLoadFbxMesh(
         {
             int posIndex = fbxIndices[polygonIndex*3+i];
 
-            // get index into UV elements
-            if( -1 != uvIndex )
-            {
-                uvIndex = sGetLayerElementIndex( fbxUVs, posIndex, polygonIndex, i );
-            }
-
-            // get index into normal elements.
-            if( -1 != normalIndex )
-            {
-                normalIndex = sGetLayerElementIndex( fbxNormals, posIndex, polygonIndex, i );
-            }
+            MeshVertexCache & vc = vcache[posIndex];
 
             // create vetex key
             MeshVertexKey key;
             key.pos = posIndex;
-            const KFbxVector4 & fbxnormal = fbxNormals->GetDirectArray().GetAt(normalIndex);
-            key.normal.set( (float)fbxnormal[0], (float)fbxnormal[1], (float)fbxnormal[2] );
-            if( fbxUVs )
+
+            // get normal
+            if( -1 != normalIndex )
             {
-                const KFbxVector2 & fbxUV = fbxUVs->GetDirectArray().GetAt(uvIndex);
-                // BUGBUG: for some reason, U coordinates has to be inverted (1.0-v) to make the
-                // model look right in the viewer.
-                key.uv.set( (float)fbxUV[0], (float)(1.0-fbxUV[1]) );
+                normalIndex = sGetLayerElementIndex( fbxNormals, posIndex, polygonIndex, i );
+
+                if( -1 != normalIndex )
+                {
+                    const KFbxVector4 & fbxnormal = fbxNormals->GetDirectArray().GetAt(normalIndex);
+                    Vector3f normal( (float)fbxnormal[0], (float)fbxnormal[1], (float)fbxnormal[2] );
+                    key.normal = vc.AddAttribute( vc.normal, normal );
+                }
             }
-            else
+
+            // get texcoord0
+            if( -1 != uvIndex )
             {
-                key.uv.set( 0, 0 );
+                uvIndex = sGetLayerElementIndex( fbxUVs, posIndex, polygonIndex, i );
+
+                if( -1 != uvIndex )
+                {
+                    const KFbxVector2 & fbxuv = fbxUVs->GetDirectArray().GetAt(uvIndex);
+                    // BUGBUG: for some reason, U coordinates has to be inverted (1.0-v) to make the model look right in the viewer.
+                    Vector2f tc0( (float)fbxuv[0], (float)(1.0-fbxuv[1]) );
+                    key.tc0 = vc.AddAttribute( vc.tc0, tc0 );
+                }
             }
 
             // If the key exists already, the pair will point to it.
@@ -688,18 +765,10 @@ sLoadFbxMesh(
 
             if( isNewVertex )
             {
-                // If it is a new vertex, append it to the vertex blob.
+                // If it is a new vertex, append it to the vertex key array.
+                vertexKeys.append( key );
 
-                MeshVertex vertex;
-
-                const KFbxVector4 & fbxvertex = fbxPositions[posIndex];
-                vertex.pos.set( (float)fbxvertex[0], (float)fbxvertex[1], (float)fbxvertex[2] );
-                vertex.normal = key.normal;
-                vertex.uv = key.uv;
-
-                vertexBlob->array().append( vertex );
-
-                GN_ASSERT( vertexBlob->array().size() == (vertexIndex + 1) );
+                GN_ASSERT( vertexKeys.size() == (vertexIndex + 1) );
             }
 
             // add the vertex index into the index buffer
@@ -713,11 +782,11 @@ sLoadFbxMesh(
     // Fill up the rest of informations for each subset
     for( size_t i = 0; i < fatmesh.subsets.size(); ++i )
     {
-        fatmesh.subsets[i].numvtx = (uint32)vertexBlob->array().size();
+        fatmesh.subsets[i].numvtx = (uint32)vertexKeys.size();
     }
 
     // Now copy vertex data to fatmesh, and translate position and normal to global space.
-    if( !sLoadVertices( fatmesh.vertices, fbxnode, vertexBlob->array().cptr(), vertexBlob->array().size() ) ) return;
+    if( !sLoadFbxVertices( fatmesh.vertices, fbxnode, vcache.cptr(), vertexKeys.cptr(), vertexKeys.size() ) ) return;
 
     // calculate the bounding box of the mesh
     const Vector4f * vertices = (const Vector4f *)fatmesh.vertices.getPosition();
