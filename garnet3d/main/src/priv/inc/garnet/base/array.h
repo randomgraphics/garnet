@@ -422,11 +422,8 @@ namespace GN
             GN_ASSERT( count > mCount );
 
             // align caps to next power of 2
-            SIZE_TYPE newCap = count - 1;
-            if( sizeof(SIZE_TYPE) >= 8 )
-            {
-                newCap |= (SIZE_TYPE)( ((uint64)newCap) >> 32 );
-            }
+            uint64 newCap = count - 1;
+            newCap |= newCap >> 32;
             newCap |= newCap >> 16;
             newCap |= newCap >> 8;
             newCap |= newCap >> 4;
@@ -434,8 +431,14 @@ namespace GN
             newCap |= newCap >> 1;
             newCap += 1;
 
+            // Cap to maximum allowable value.
+            const uint64 MAX_CAPS = (uint64)(SIZE_TYPE)-1;
+            if( newCap > MAX_CAPS ) newCap = MAX_CAPS;
+
+            GN_ASSERT( count <= MAX_CAPS );
+
             // allocate new buffer (unconstructed raw memory)
-            T * newBuf = mAlloc.allocate( newCap );
+            T * newBuf = mAlloc.allocate( (SIZE_TYPE)newCap );
             if( NULL == newBuf )
             {
                 GN_ERROR(getLogger("GN.base.DynaArray"))("out of memory!");
@@ -452,7 +455,7 @@ namespace GN
             dealloc( mElements, mCount, mCapacity );
 
             mElements = newBuf;
-            mCapacity = newCap;
+            mCapacity = (SIZE_TYPE)newCap;
 
             return true;
         }

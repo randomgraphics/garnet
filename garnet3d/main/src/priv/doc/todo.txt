@@ -4,6 +4,7 @@ TODO
 - 程序中标注TODO的地方
 
 - p0
+  - unit test: DynaArray<???,uint8>
   - FatMesh for model loading/saving/conversion
   - skin mesh
     - test case: porting DXSDK sample.

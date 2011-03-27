@@ -173,7 +173,7 @@ namespace GN { namespace gfx
 
     struct FatMeshSubset
     {
-        uint32 material; // index into FatModel.materials array.
+        uint32 material; //< index into FatModel.materials array.
         uint32 basevtx;
         uint32 numvtx;
         uint32 startidx;
@@ -185,22 +185,8 @@ namespace GN { namespace gfx
         FatVertexBuffer          vertices;
         DynaArray<uint32,uint32> indices;
         DynaArray<FatMeshSubset> subsets;
-        StrA                     skeleton;
+        uint32                   skeleton; //< Index into FatModel.skeleton array.
         Boxf                     bbox;
-    };
-
-    struct FatBone
-    {
-        // Transformation (from parent space to bone local space)
-        //  matrix = translation * rotation;
-        Quaternionf rotation;
-        Vector3f    translation;
-    };
-
-    struct FatSkeleton
-    {
-        StrA               name;
-        DynaArray<FatBone> bones;
     };
 
     struct FatMaterial
@@ -219,26 +205,46 @@ namespace GN { namespace gfx
         }
     };
 
-    struct FatBonePose
+    struct FatBoneTransform
     {
-        FatBone pose;
-        float   time;
+        // Transformation (from parent space to bone local space)
+        //  matrix = translation * rotation;
+        Quaternionf rotation;
+        Vector3f    translation;
     };
 
-    struct FatAnimation
+    struct FatBone
     {
-        StrA                               name;
-        DynaArray<DynaArray<FatBonePose> > keyframes; /// keyframes[bone_id][frame_id]
+        FatBoneTransform transform;
+        int              parent; //< -1 means no parent
+    };
+
+    struct FatSkeletonKeyFrame
+    {
+        FatBoneTransform pose;
+        float            time; //< time in seconds.
+    };
+
+    struct FatSkeletonAnimation
+    {
+        StrA                                       name;      //< name of the animation
+        DynaArray<DynaArray<FatSkeletonKeyFrame> > keyframes; //< keyframes[bone_id][frame_id]
+    };
+
+    struct FatSkeleton
+    {
+        StrA                            name;       //< name of the skeleton
+        DynaArray<FatBone>              bindPose;   //< Bind Pose
+        DynaArray<FatSkeletonAnimation> animations; //< skeleton animations.
     };
 
     struct FatModel
     {
-        StrA                         name; // name of the model. Usually the filename which the model is loaded from.
-        DynaArray<FatMesh*>          meshes;
-        StringMap<char,FatSkeleton>  skeletons;
-        DynaArray<FatMaterial>       materials;
-        StringMap<char,FatAnimation> animations;
-        Boxf                         bbox;
+        StrA                    name; //< name of the model. Usually the filename which the model is loaded from.
+        DynaArray<FatMesh*>     meshes;
+        DynaArray<FatMaterial>  materials;
+        DynaArray<FatSkeleton>  skeletons;
+        Boxf                    bbox;
 
         /// destructor
         ~FatModel()
@@ -256,7 +262,6 @@ namespace GN { namespace gfx
             meshes.clear();
             skeletons.clear();
             materials.clear();
-            animations.clear();
             bbox.clear();
         }
 
