@@ -5,7 +5,7 @@
 #if GN_MSVC
 #pragma warning(disable:4100) // unreferenced formal parameter
 #endif
-#include <assimp/assimp.hpp>
+#include <assimp/assimp.h>
 #include <assimp/aiScene.h>       // Output data structure
 #include <assimp/aiPostProcess.h> // Post processing flags
 #include <assimp/IOStream.h>
@@ -161,6 +161,7 @@ sLoadFromASE( FatModel & fatmodel, File & file, const StrA & filename )
                 *d = *s;
             }
         }
+        dst->primitive = PrimitiveType::TRIANGLE_LIST;
 
         dst->bbox = src.selfbbox;
 
@@ -595,7 +596,7 @@ sLoadFbxMesh(
     FbxSdkWrapper & sdk,
     KFbxMesh      * fbxmesh )
 {
-    KFbxNode * fbxnode = fbxmesh->GetNode(),
+    KFbxNode * fbxnode = fbxmesh->GetNode();
 
     if( !fbxmesh->IsTriangleMesh() )
     {
@@ -869,6 +870,9 @@ sLoadFbxMesh(
         &vertices->z, sizeof(vertices[0]),
         fatmesh.vertices.getVertexCount() );
 
+    // It's always triangle list.
+    fatmesh.primitive = PrimitiveType::TRIANGLE_LIST;
+
     GN_INFO(sLogger)( "Load FBX mesh %s: %d vertices, %d faces",
         fbxnode->GetName(),
         fatmesh.vertices.getVertexCount(),
@@ -986,6 +990,368 @@ sLoadFromFBX( FatModel & fatmodel, File & file, const StrA & filename )
 }
 
 }
+
+// *****************************************************************************
+// Assimp loader
+// *****************************************************************************
+
+namespace ai
+{
+
+using namespace Assimp;
+
+// My own implementation of IOStream
+class MyIOStream : public Assimp::IOStream
+{
+    friend class MyIOSystem;
+
+    AutoObjPtr<File> mFile;
+
+protected:
+
+    // Constructor protected for private usage by MyIOSystem
+    MyIOStream( const std::string & filename, const std::string & mode )
+    {
+        mFile.attach( fs::openFile( filename.c_str(), mode.c_str() ) );
+    }
+
+public:
+
+    ~MyIOStream()
+    {
+        mFile.clear();
+    }
+
+    size_t Read( void* pvBuffer, size_t pSize, size_t pCount)
+    {
+        size_t readen;
+        if( mFile && mFile->write( pvBuffer, pSize * pCount, &readen ) )
+        {
+            return readen;
+        }
+        else
+        {
+            return 0;
+        }
+    }
+
+    size_t Write( const void* pvBuffer, size_t pSize, size_t pCount)
+    {
+        size_t written;
+        if( mFile && mFile->write( pvBuffer, pSize * pCount, &written ) )
+        {
+            return written;
+        }
+        else
+        {
+            return 0;
+        }
+    }
+
+    aiReturn Seek( size_t pOffset, aiOrigin pOrigin)
+    {
+        if( mFile )
+        {
+            FileSeek fs;
+            switch( pOrigin )
+            {
+                case aiOrigin_SET : fs = FileSeek::SET;
+                case aiOrigin_CUR : fs = FileSeek::CUR;
+                case aiOrigin_END : fs = FileSeek::END;
+                default           : return aiReturn_FAILURE;
+            }
+            return mFile->seek( pOffset, fs ) ? aiReturn_SUCCESS : aiReturn_FAILURE;
+        }
+        else
+        {
+            return aiReturn_FAILURE;
+        }
+    }
+
+    size_t Tell() const
+    {
+        return mFile ? mFile->tell() : 0;
+    }
+
+    size_t FileSize() const
+    {
+        return mFile ? mFile->size() : 0;
+    }
+
+    void Flush ()
+    {
+    }
+};
+
+// Fisher Price - My First Filesystem
+class MyIOSystem : public Assimp::IOSystem
+{
+    MyIOSystem()
+    {
+    }
+
+    ~MyIOSystem()
+    {
+    }
+
+    // Check whether a specific file exists
+    bool Exists( const std::string & filename ) const
+    {
+        return GN::fs::pathExist( filename.c_str() );
+    }
+
+    // Get the path delimiter character we'd like to see
+    char GetOsSeparator() const
+    {
+        return '/';
+    }
+
+    // ... and finally a method to open a custom stream
+    Assimp::IOStream * Open( const std::string & file, const std::string& mode )
+    {
+        return new MyIOStream( file, mode );
+    }
+
+    void Close( Assimp::IOStream* pFile)
+    {
+        delete pFile;
+    }
+};
+
+//
+//
+// -----------------------------------------------------------------------------
+static uint32 sDetermineFatVertexLayout( const aiMesh * aimesh )
+{
+    uint32 layout = 1<<FatVertexBuffer::POSITION;
+
+    if( aimesh->mNormals ) layout |= 1<<FatVertexBuffer::NORMAL;
+
+    uint32 maxtc = math::getmin<uint32>( GN_ARRAY_COUNT(aimesh->mTextureCoords), FatVertexBuffer::MAX_TEXCOORDS );
+    for( uint32 t = 0; t < maxtc; ++t )
+    {
+        if( aimesh->mTextureCoords[t] ) layout |= 1<<(FatVertexBuffer::TEXCOORD0 + t);
+    }
+
+    return layout;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+static bool sLoadAiVertices(
+    FatMesh           & fatmesh,
+    const aiScene     * aiscene,
+    const aiMesh      * aimesh,
+    const aiMatrix4x4 & transform )
+{
+    FatVertexBuffer & fatvb = fatmesh.vertices;
+
+    uint32 fatlayout = sDetermineFatVertexLayout( aimesh );
+
+    if( !fatvb.resize( fatlayout, aimesh->mNumVertices ) ) return false;
+
+    Vector4f * fatpos = (Vector4f*)fatvb.getPosition();
+    if( fatpos ) fatvb.setElementFormat( FatVertexBuffer::POSITION, ColorFormat::FLOAT3 );
+
+    Vector4f * fatnormal = (Vector4f*)fatvb.getNormal();
+    if( fatnormal ) fatvb.setElementFormat( FatVertexBuffer::NORMAL, ColorFormat::FLOAT3 );
+
+    Vector4f * fattc0 = (Vector4f*)fatvb.getTexcoord(0);
+    // TODO: get texcood format from aimesh.
+    if( fattc0 ) fatvb.setElementFormat( FatVertexBuffer::TEXCOORD0, ColorFormat::FLOAT2 );
+
+    aiMatrix4x4 normalTransform = transform;
+    normalTransform.Transpose();
+    normalTransform.Inverse();
+
+    aiVector3D bbmin, bbmax;
+	bbmin.x = bbmin.y = bbmin.z =  1e10f;
+	bbmax.x = bbmax.y = bbmax.z = -1e10f;
+
+    for( uint32 i = 0; i < aimesh->mNumVertices; ++i )
+    {
+        if( fatpos )
+        {
+            aiVector3D aipos = aimesh->mVertices[i];
+            aiTransformVecByMatrix4( &aipos, &transform );
+
+			bbmin.x = math::getmin<>(bbmin.x,aipos.x);
+			bbmin.y = math::getmin<>(bbmin.y,aipos.y);
+			bbmin.z = math::getmin<>(bbmin.z,aipos.z);
+
+			bbmax.x = math::getmax<>(bbmax.x,aipos.x);
+			bbmax.y = math::getmax<>(bbmax.y,aipos.y);
+			bbmax.z = math::getmax<>(bbmax.z,aipos.z);
+
+            fatpos->set( *(const Vector3f*)&aipos, 1.0f );
+
+            ++fatpos;
+        }
+
+        if( fatnormal )
+        {
+            aiVector3D ainormal = aimesh->mNormals[i];
+            aiTransformVecByMatrix4( &ainormal, &normalTransform );
+            fatnormal->set( *(const Vector3f*)&ainormal, 0.0f );
+
+            ++fatnormal;
+        }
+
+        if( fattc0 )
+        {
+            const aiVector3D & aitc0 = aimesh->mTextureCoords[0][i];
+            // BUGBUG: why invert V?
+            fattc0->set( aitc0.x, 1.0f-aitc0.y, aitc0.z, 0.0f );
+
+            ++fattc0;
+        }
+    }
+
+    aiVector3D bbsize = bbmax - bbmin;
+    fatmesh.bbox.set( bbmin.x, bbmin.y, bbmin.z, bbsize.x, bbsize.y, bbsize.z );
+
+    return true;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+static bool sLoadAiIndices( FatMesh& fatmesh, const aiMesh * aimesh )
+{
+    uint32 numidx = 0;
+    uint32 idxppt = 0; // indices per primitive.
+    switch( aimesh->mPrimitiveTypes )
+    {
+        case aiPrimitiveType_POINT:
+            numidx = aimesh->mNumFaces;
+            idxppt = 1;
+            fatmesh.primitive = PrimitiveType::POINT_LIST;
+            break;
+
+        case aiPrimitiveType_LINE:
+            numidx = aimesh->mNumFaces * 2;
+            idxppt = 2;
+            fatmesh.primitive = PrimitiveType::LINE_LIST;
+            break;
+
+        case aiPrimitiveType_TRIANGLE:
+            numidx = aimesh->mNumFaces * 3;
+            idxppt = 3;
+            fatmesh.primitive = PrimitiveType::TRIANGLE_LIST;
+            break;
+
+        default:
+            // Unsupported primitive.
+            GN_ERROR(sLogger)( "Unsupported primitive: %d", aimesh->mPrimitiveTypes );
+            return false;
+    }
+
+    if( !fatmesh.indices.resize( numidx ) )
+    {
+        GN_ERROR(sLogger)( "Out of memory." );
+        return false;
+    }
+
+    for( uint32 f = 0; f < aimesh->mNumFaces; ++f )
+    {
+        const aiFace & aif = aimesh->mFaces[f];
+
+        for( uint32 i = 0; i < idxppt; ++i )
+        {
+            fatmesh.indices[f * idxppt + i] = aif.mIndices[i];
+        }
+    }
+
+    return true;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+static void sLoadAiNodeRecursivly(
+    FatModel & fatmodel,
+    const aiScene * aiscene,
+    const aiNode * ainode,
+    const aiMatrix4x4 & parentTransform )
+{
+    if( NULL == ainode ) return;
+
+    aiMatrix4x4 myTransform = parentTransform;
+	aiMultiplyMatrix4(&myTransform,&ainode->mTransformation);
+
+    for( uint32 i = 0; i < ainode->mNumMeshes; ++i )
+    {
+        const aiMesh * aimesh = aiscene->mMeshes[ainode->mMeshes[i]];
+
+        AutoObjPtr<FatMesh> fatmeshAutoPtr( new FatMesh );
+        FatMesh & fatmesh = *fatmeshAutoPtr;
+
+        if( !sLoadAiIndices( fatmesh, aimesh ) ) continue;
+        if( !sLoadAiVertices( fatmesh, aiscene, aimesh, myTransform ) ) continue;
+
+        fatmesh.subsets.resize( 1 );
+        FatMeshSubset & subset = fatmesh.subsets[0];
+        memset( &subset, 0, sizeof(subset) );
+        subset.material = aimesh->mMaterialIndex;
+
+        fatmodel.meshes.append( &fatmesh );
+        fatmeshAutoPtr.detach();
+    }
+
+    for( uint32 i = 0; i < ainode->mNumChildren; ++i )
+    {
+        sLoadAiNodeRecursivly( fatmodel, aiscene, ainode->mChildren[i], myTransform );
+    }
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+static bool sLoadFromAssimp( FatModel & fatmodel, const StrA & filename )
+{
+    const aiScene * scene = aiImportFile( filename, aiProcessPreset_TargetRealtime_Quality );
+    if( NULL == scene ) return false;
+
+    // Load AI materials
+    StrA dirname = fs::dirName( filename );
+    fatmodel.materials.resize( scene->mNumMaterials );
+    for( uint32 i = 0; i < fatmodel.materials.size(); ++i )
+    {
+        const aiMaterial * aimat = scene->mMaterials[i];
+
+        FatMaterial & fatmat = fatmodel.materials[i];
+
+        fatmat.clear();
+
+        aiString path;
+
+        if( aimat->GetTextureCount(aiTextureType_DIFFUSE) > 0 &&
+            aiReturn_SUCCESS == aimat->GetTexture( aiTextureType_DIFFUSE, 0, &path ) )
+        {
+            fatmat.albedoTexture = fs::resolvePath( dirname, path.data );
+        }
+    }
+
+    // Load AI nodes
+	aiMatrix4x4 rootTransform;
+	aiIdentityMatrix4(&rootTransform);
+    sLoadAiNodeRecursivly( fatmodel, scene, scene->mRootNode, rootTransform );
+
+    // calculate the final bounding box
+    fatmodel.bbox.clear();
+    for( size_t i = 0; i < fatmodel.meshes.size(); ++i )
+    {
+        GN_ASSERT( fatmodel.meshes[i] );
+        Boxf::sGetUnion( fatmodel.bbox, fatmodel.bbox, fatmodel.meshes[i]->bbox );
+    }
+
+    aiReleaseImport( scene );
+    return true;
+}
+
+};
+
 // *****************************************************************************
 // XML loader
 // *****************************************************************************
@@ -1068,42 +1434,47 @@ bool GN::gfx::FatModel::loadFromFile( const StrA & filename )
 {
     clear();
 
-    // Open the file.
-    AutoObjPtr<File> file( fs::openFile( filename, "rb" ) );
-    if( NULL == file ) return false;
+    bool noerr = true;
 
-    // determine file format
-    FileFormat ff = sDetermineFileFormatByContent( *file );
-    if( FF_UNKNOWN == ff )
+    // Try assimp first;
+    if( !ai::sLoadFromAssimp( *this, filename ) )
     {
-        ff = sDetermineFileFormatByFileName( filename );
-    }
+        // Open the file.
+        AutoObjPtr<File> file( fs::openFile( filename, "rb" ) );
+        if( NULL == file ) return false;
 
-    StrA fullFileName = fs::resolvePath( fs::getCurrentDir(), filename );
+        // determine file format
+        FileFormat ff = sDetermineFileFormatByContent( *file );
+        if( FF_UNKNOWN == ff )
+        {
+            ff = sDetermineFileFormatByFileName( filename );
+        }
 
-    bool noerr;
-    switch( ff )
-    {
-        case FF_ASE:
-            noerr = ase::sLoadFromASE( *this, *file, filename );
-            break;
+        StrA fullFileName = fs::resolvePath( fs::getCurrentDir(), filename );
 
-        case FF_FBX:
-            noerr = fbx::sLoadFromFBX( *this, *file, filename );
-            break;
+        switch( ff )
+        {
+            case FF_ASE:
+                noerr = ase::sLoadFromASE( *this, *file, filename );
+                break;
 
-        case FF_GARNET_XML:
-            noerr = false;
-            break;
+            case FF_FBX:
+                noerr = fbx::sLoadFromFBX( *this, *file, filename );
+                break;
 
-        case FF_GARNET_BIN:
-            noerr = false;
-            break;
+            case FF_GARNET_XML:
+                noerr = false;
+                break;
 
-        default:
-            GN_ERROR(sLogger)( "Unknown file format: %s", filename.cptr() );
-            noerr = false;
-            break;
+            case FF_GARNET_BIN:
+                noerr = false;
+                break;
+
+            default:
+                GN_ERROR(sLogger)( "Unknown file format: %s", filename.cptr() );
+                noerr = false;
+                break;
+        }
     }
 
     if( noerr )

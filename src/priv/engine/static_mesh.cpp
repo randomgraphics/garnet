@@ -176,7 +176,7 @@ bool GN::engine::StaticMesh::loadFromFatModel( const GN::gfx::FatModel & fatmode
             // setup mesh descriptor
             MeshResourceDesc merd;
             memset( &merd, 0, sizeof(merd) );
-            merd.prim = PrimitiveType::TRIANGLE_LIST;
+            merd.prim = fatmesh.primitive;
             merd.numvtx = fatmesh.vertices.getVertexCount();
             merd.numidx = fatmesh.indices.size();
             merd.idx32 = true; // TODO: use 16-bit index buffer, when possible.

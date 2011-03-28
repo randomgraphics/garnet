@@ -44,6 +44,8 @@ namespace GN { namespace gfx
             INVALID = 0xFFFFFFFF,
         };
 
+        static const uint32 MAX_TEXCOORDS = (uint32)(TEXCOORD_LAST - TEXCOORD0);
+
         static const uint32 POS_NORMAL_TEX = (1<<POSITION) | (1<<NORMAL) | (1<<TEXCOORD0);
 
         static const char * const SEMANTIC_NAMES[];
@@ -184,6 +186,7 @@ namespace GN { namespace gfx
     {
         FatVertexBuffer          vertices;
         DynaArray<uint32,uint32> indices;
+        PrimitiveType            primitive;
         DynaArray<FatMeshSubset> subsets;
         uint32                   skeleton; //< Index into FatModel.skeleton array.
         Boxf                     bbox;
