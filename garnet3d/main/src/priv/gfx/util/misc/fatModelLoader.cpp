@@ -378,8 +378,22 @@ struct SortPolygonByMaterial
 
 struct Skinning
 {
-    uint32 joint[4];  //< Joint Index
-    float  weight[4]; //< Binding weight;
+    uint32 joints[4];  //< Joint Index
+    float  weights[4]; //< Binding weight;
+
+    bool operator==( const Skinning & rhs ) const
+    {
+        for( int i = 0; i < 4; ++i )
+        {
+            if( joints[i]  != rhs.joints[i] ||
+                weights[i] != rhs.weights[i] )
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
 };
 
 struct MeshVertexCache
@@ -553,13 +567,13 @@ sLoadFbxLimbNodes(
     newjoint.parent = parent;
 
     // Setup the default child and sibling of the new joint
-    newjoint.child   = FatJoint::INVALID_JOINT_INDEX;
-    newjoint.sibling = FatJoint::INVALID_JOINT_INDEX;
+    newjoint.child   = FatJoint::NO_JOINT;
+    newjoint.sibling = FatJoint::NO_JOINT;
 
     // If the new joint has parent, and the parent has no child yet,
     // then set the new joint as the first child of the parent.
-    if( FatJoint::INVALID_JOINT_INDEX != parent &&
-        FatJoint::INVALID_JOINT_INDEX == fatsk.joints[parent].child )
+    if( FatJoint::NO_JOINT != parent &&
+        FatJoint::NO_JOINT == fatsk.joints[parent].child )
     {
         GN_ASSERT( parent < fatsk.joints.size() );
         fatsk.joints[parent].child = fatsk.joints.size();
@@ -567,10 +581,10 @@ sLoadFbxLimbNodes(
 
     // If the new joint has previous sibling, then set the new
     // joint as its "next" sibling.
-    if( FatJoint::INVALID_JOINT_INDEX != previousSibling )
+    if( FatJoint::NO_JOINT != previousSibling )
     {
         GN_ASSERT( previousSibling < fatsk.joints.size() );
-        GN_ASSERT( FatJoint::INVALID_JOINT_INDEX == fatsk.joints[previousSibling].sibling );
+        GN_ASSERT( FatJoint::NO_JOINT == fatsk.joints[previousSibling].sibling );
         fatsk.joints[previousSibling].sibling = fatsk.joints.size();
     }
 
@@ -586,7 +600,7 @@ sLoadFbxLimbNodes(
 
     // recursively load subtrees
     uint32 newParent = fatsk.joints.size() - 1;
-    uint32 newPrevSibling = FatJoint::INVALID_JOINT_INDEX;
+    uint32 newPrevSibling = FatJoint::NO_JOINT;
     int count = fbxnode->GetChildCount();
     for( int i = 0; i < count; ++i )
     {
@@ -619,7 +633,7 @@ sLoadFbxSkeletons(
     {
         // We get a new skeleton, load all sub limbs.
         FatSkeleton fatsk;
-        sLoadFbxLimbNodes( fatsk, FatJoint::INVALID_JOINT_INDEX, FatJoint::INVALID_JOINT_INDEX, fbxnode );
+        sLoadFbxLimbNodes( fatsk, FatJoint::NO_JOINT, FatJoint::NO_JOINT, fbxnode );
         if( !fatsk.joints.empty() )
         {
             fatmodel.skeletons.append( fatsk );
@@ -649,12 +663,264 @@ sLoadFbxSkeletons(
 #endif
 }
 
+#ifndef IN
+#define IN
+#endif
+
+#ifndef OUT
+#define OUT
+#endif
+
+#ifndef INOUT
+#define INOUT
+#endif
+
+//
+// Search through all skeletons for joint with specific name.
+// -----------------------------------------------------------------------------
+static bool
+sSearchForNamedJoint(
+    OUT uint32         & skeleton,
+    OUT uint32         & joint,
+    IN  const FatModel & fatmodel,
+    IN  const char     * jointName )
+{
+    for( uint32 i = 0; i < fatmodel.skeletons.size(); ++i )
+    {
+        // Reference the skeleton
+        const FatSkeleton & sk = fatmodel.skeletons[i];
+
+        for( uint32 j = 0; j < sk.joints.size(); ++j )
+        {
+            if( sk.joints[j].name == jointName )
+            {
+                skeleton = i;
+                joint = j;
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
+//
+// Get vertex skinning information for the vertex specified by controlPointIndex.
+// -----------------------------------------------------------------------------
+static void
+sLoadVertexSkinning(
+    INOUT uint32         & skeleton, // Index into FatModel::skeleton arrayreturns the skeleton that of the joint
+    OUT   Skinning       & sk,
+    IN    const FatModel & fatmodel,
+    IN    const KFbxMesh * fbxmesh,
+    IN    int              controlPointIndex,
+    IN    bool             firstVertex )
+{
+    // Initialize the global skeleton value for the first vertex.
+    if( firstVertex )
+    {
+        skeleton = FatMesh::NO_SKELETON;
+    }
+
+    // set the default binding: bind to nothing.
+    for( int i = 0; i < GN_ARRAY_COUNT(sk.joints); ++i )
+    {
+        sk.joints[i]  = FatJoint::NO_JOINT;
+        sk.weights[i] = 0;
+    }
+
+    // Search through all deformers
+    int numdef = fbxmesh->GetDeformerCount();
+    for( int iDef = 0; iDef < numdef; ++iDef )
+    {
+        KFbxDeformer * def = fbxmesh->GetDeformer( iDef );
+        KFbxDeformer::EDeformerType deftype = def->GetDeformerType();
+
+        // Ignore the deformer, if it is not a skin.
+        if( KFbxDeformer::eSKIN != deftype ) continue;
+
+        KFbxSkin * skin = (KFbxSkin*)def;
+
+        // Search through all clusters
+        int numclusters = skin->GetClusterCount();
+        for( int iCluster = 0; iCluster < numclusters; ++iCluster )
+        {
+            KFbxCluster * cl = skin->GetCluster( iCluster );
+
+            KFbxNode * link = cl->GetLink();
+            if( NULL == link ) continue;
+
+            uint32 currentSkeleton;
+            uint32 currentJoint;
+            if( !sSearchForNamedJoint(
+                currentSkeleton,
+                currentJoint,
+                fatmodel,
+                link->GetName() ) )
+            {
+                // The cluster links to an node that is not part of any skeletons.
+                // This should not happen for a valid FBX file. But any way, the cluster
+                // has to be ignored, with warning.
+                GN_ERROR(sLogger)( "Cluter is ignored, because it is linking to a node that is not part of any skeleton." );
+                continue;
+            }
+            GN_ASSERT( currentSkeleton < fatmodel.skeletons.size() );
+            GN_ASSERT( currentJoint < fatmodel.skeletons[currentSkeleton].joints.size() );
+
+            // See if the cluster is linking to the same skeleton as what is linking to
+            // the first vertex.
+            if( firstVertex )
+            {
+                // This is the first vertex. Update the "global" skeleton.
+                skeleton = currentSkeleton;
+            }
+            else if( skeleton != currentSkeleton )
+            {
+                // The cluster is linking to a skeleton other than the skeleton linked to vertex #0.
+                // We support at most one skeleton per mesh. So this cluster will be ignored, with warning.
+                GN_ERROR(sLogger)( "Cluster is ignored, because it is linking to another skeleton." );
+                continue;
+            }
+
+            // Search through all control points of the current cluster.
+            int cpicount = cl->GetControlPointIndicesCount();
+            const int * cpi = cl->GetControlPointIndices();
+            const double * weights = cl->GetControlPointWeights();
+            for( int iCpi = 0; iCpi < cpicount; ++iCpi )
+            {
+                // Search though until we found the index that we are looking for.
+                if( cpi[iCpi] != controlPointIndex ) continue;
+
+                // So, we found it. This cluster is affecting the vertex. But if
+                // the weight is zero, we still need to ignore it.
+                float currentWeight = (float)weights[iCpi];
+                if( 0 == currentWeight ) continue;
+
+                // Add it to the skinning structure, and keep the joints
+                // in the desending order of weights. We support at most
+                // 4 joints per vertex. When too many joints are affecting
+                // a single vertex, joints with less influence will be
+                // dropped.
+
+                int maxJoints = (int)GN_ARRAY_COUNT(sk.joints);
+                for( int iJoint = maxJoints - 1; iJoint >= 0; --iJoint )
+                {
+                    if( FatJoint::NO_JOINT == sk.joints[iJoint] ||
+                        sk.weights[iJoint] < currentWeight )
+                    {
+                        // The new/current weight is larger than the existing weight in slot #iJoint,
+                        // or there's no joint in slot #iJoint. We need to move the existing joint
+                        // to the next slot to make space for the new joint, or drop the existing
+                        // joint, if the joint array is full already.
+
+                        if( (iJoint+1) < maxJoints )
+                        {
+                            sk.joints[iJoint+1]  = sk.joints[iJoint];
+                            sk.weights[iJoint+1] = sk.weights[iJoint];
+
+                            if( 0 == iJoint )
+                            {
+                                // The current weight is larger than any existing weights the
+                                // the array. So just store current joint and weight in slot 0.
+                                sk.joints[0]  = currentJoint;
+                                sk.weights[0] = currentWeight;
+                            }
+                        }
+                        else if( FatJoint::NO_JOINT != sk.joints[iJoint] )
+                        {
+                            // The joint array is full. And the last existing weight in the array
+                            // is smaller then the new/current weight. So the existing one will be
+                            // dropped, with warning.
+                            GN_ERROR(sLogger)(
+                                "Vertex %d has more than 4 joints attatched. "
+                                "Joint %d (weight=%f) in skeleton %d is going to be ignore, "
+                                "because it has less influence to the vertex "
+                                "then other joints.",
+                                controlPointIndex,
+                                sk.joints[iJoint], sk.weights[iJoint],
+                                skeleton );
+                        }
+                    }
+                    else
+                    {
+                        // The new weight is smaller then the weight in slot #iJoint. So we need
+                        // to store the new weight in slot (iJoint+1), or ignore the new weight
+                        // if the joint array is full already.
+
+                        if( (iJoint+1) < maxJoints )
+                        {
+                            // Store new joint at slot (iJoint+1)
+                            sk.joints[iJoint+1] = currentJoint;
+                            sk.weights[iJoint+1] = currentWeight;
+                        }
+                        else
+                        {
+                            // Drop the new joint, since the joint array is full already.
+                            GN_ERROR(sLogger)(
+                                "Vertex %d has more than 4 joints attatched. "
+                                "Joint %d (weight=%f) in skeleton %d is going to be ignore, "
+                                "because it has less influence to the vertex "
+                                "then other joints.",
+                                controlPointIndex,
+                                currentJoint, currentWeight,
+                                skeleton );
+                        }
+
+                        // We've done with the new joint. It has been either stored in the array,
+                        // or dropped already.
+                        break;
+                    }
+                }
+
+                // We've assigned the joint linked to the cluster to the vertex. So break out of this
+                // loop and contineu with next cluster.
+                break;
+            }
+
+            // Done with the current cluster. Loop to next one.
+        }
+
+        // Done with the current deformer. Loop to next one.
+    }
+
+    // Get sum of all weights.
+    float sum = 0.0f;
+    for( int i = 0; i < GN_ARRAY_COUNT(sk.joints); ++i )
+    {
+        if( FatJoint::NO_JOINT != sk.joints[i] )
+        {
+            sum += sk.weights[i];
+        }
+    }
+
+    // If the vertex does not linked to any joints, or the weight sum is zero,
+    // then fallback to the root joint.
+    if( FatJoint::NO_JOINT == sk.joints[0] || 0.0f == sum )
+    {
+        sk.joints[0] = 0;
+        sk.weights[0] = 1.0;
+    }
+    else
+    {
+        // We might have dropped some joints, because we have limit of 4 joints per vertex.
+        // So we need to renormalize the joint weight, to keep sum of all weights 1.0.
+        float invsum = 1.0f / sum;
+        for( int i = 0; i < GN_ARRAY_COUNT(sk.joints); ++i )
+        {
+            if( FatJoint::NO_JOINT != sk.joints[i] )
+            {
+                sk.weights[i] *= invsum;
+            }
+        }
+    }
+}
+
 //
 //
 // -----------------------------------------------------------------------------
 static bool
-sLoadFbxVertices(
-    FatVertexBuffer       & fatvb,
+sGenerateFatVertices(
+    FatMesh               & fatmesh,
     KFbxNode              * fbxnode,
     const MeshVertexCache * vertices,
     const MeshVertexKey   * keys,
@@ -680,15 +946,29 @@ sLoadFbxVertices(
     // This is used to transform normal vector.
     Matrix44f itm44 = Matrix44f::sInvtrans( m44 );
 
-    if( !fatvb.resize( FatVertexBuffer::POS_NORMAL_TEX, numkeys ) ) return false;
+    // Determine vertex layout
+    uint32 layout = FatVertexBuffer::POS_NORMAL_TEX;
+    bool skinning = fatmesh.skeleton != FatMesh::NO_SKELETON;
+    if( skinning ) layout |= (1<<FatVertexBuffer::JOINT_ID) | (1<<FatVertexBuffer::JOINT_WEIGHT);
+
+    // Allocate fat vertex buffer.
+    FatVertexBuffer & fatvb = fatmesh.vertices;
+    if( !fatvb.resize( FatVertexBuffer::POS_NORMAL_TEX_SKINNING, numkeys ) ) return false;
 
     fatvb.setElementFormat( FatVertexBuffer::POSITION,  ColorFormat::FLOAT3 );
     fatvb.setElementFormat( FatVertexBuffer::NORMAL,    ColorFormat::FLOAT3 );
     fatvb.setElementFormat( FatVertexBuffer::TEXCOORD0, ColorFormat::FLOAT2 );
+    if( skinning )
+    {
+        fatvb.setElementFormat( FatVertexBuffer::JOINT_ID,     ColorFormat::UINT4 );
+        fatvb.setElementFormat( FatVertexBuffer::JOINT_WEIGHT, ColorFormat::FLOAT4 );
+    }
 
-    Vector4f * pos = (Vector4f*)fatvb.getPosition();
-    Vector4f * nml = (Vector4f*)fatvb.getNormal();
-    Vector4f * uv0 = (Vector4f*)fatvb.getTexcoord(0);
+    Vector4f * pos     = (Vector4f*)fatvb.getPosition();
+    Vector4f * nml     = (Vector4f*)fatvb.getNormal();
+    Vector4f * uv0     = (Vector4f*)fatvb.getTexcoord(0);
+    Vector4i * joints  = (Vector4i*)fatvb.getElementData( FatVertexBuffer::JOINT_ID );
+    Vector4f * weights = (Vector4f*)fatvb.getElementData( FatVertexBuffer::JOINT_WEIGHT );
 
     Vector4f v4;
 
@@ -728,9 +1008,19 @@ sLoadFbxVertices(
             uv0->set( 0, 0, 0, 0 );
         }
 
+        if( skinning )
+        {
+            GN_ASSERT( k.skinning < v.skinnings.size() );
+            const Skinning & sk = v.skinnings[k.skinning];
+            *joints  = *(Vector4i*)&sk.joints;
+            *weights = *(Vector4f*)&sk.weights;
+        }
+
         ++pos;
         ++nml;
         ++uv0;
+        ++joints;
+        ++weights;
     }
 
     return true;
@@ -781,26 +1071,6 @@ sLoadFbxMesh(
     //KFbxLayerElementBinormal    * fbxBinormals = layer0->GetBinormals();
     int                           numtri       = fbxmesh->GetPolygonCount();
     int                           numidx       = numtri * 3;
-
-    /* Load skin and skeleton
-    KFbxSkin * fbxskin = NULL;
-    int numdef = fbxmesh->GetDeformerCount();
-    for( int i = 0; i < numdef; ++i )
-    {
-        KFbxDeformer * def = fbxmesh->GetDeformer( i );
-        KFbxDeformer::EDeformerType deftype = def->GetDeformerType();
-        if( KFbxDeformer::eSKIN == deftype )
-        {
-            if( NULL == fbxskin )
-            {
-                fbxskin = (KFbxSkin*)def;
-            }
-            else
-            {
-                GN_WARN(sLogger)("Multiple skins are not supported yet.");
-            }
-        }
-    }//*/
 
     // How many materials are there?
     int nummat;
@@ -906,6 +1176,9 @@ sLoadFbxMesh(
         return;
     }
 
+    // Initialize skeleton index of the mesh to default value.
+    fatmesh.skeleton = FatMesh::NO_SKELETON;
+
     // Split the FBX fbxmesh into multiple models, one material one model.
     int uvIndex = 0;
     int normalIndex = 0;
@@ -979,6 +1252,36 @@ sLoadFbxMesh(
                 }
             }
 
+            // get skinning information.
+            bool firstVertex = ( 0 == polygonIndex && 0 == i );
+            Skinning sk;
+            if( firstVertex )
+            {
+                // Always load skinning information for the first vertex.
+                // The function will also determine of the mesh is binding to a skeleton or not, by
+                // updating fatmesh.skeleton.
+                sLoadVertexSkinning( fatmesh.skeleton, sk, fatmodel, fbxmesh, posIndex, firstVertex );
+            }
+            else if( fatmesh.skeleton != FatMesh::NO_SKELETON )
+            {
+                // Load skinning information for the following vertices, only when the mesh is binding
+                // to a skeleton.
+                sLoadVertexSkinning( fatmesh.skeleton, sk, fatmodel, fbxmesh, posIndex, firstVertex );
+            }
+            if( fatmesh.skeleton != FatMesh::NO_SKELETON )
+            {
+                // Sanity check
+                for( size_t i = 0; i < GN_ARRAY_COUNT(sk.joints); ++i )
+                {
+                    GN_ASSERT(
+                        sk.joints[i] == FatJoint::NO_JOINT ||
+                        sk.joints[i] < fatmodel.skeletons[fatmesh.skeleton].joints.size() );
+                }
+
+                // Update the skinning key only when the mesh has skeleton.
+                key.skinning = vc.AddAttribute( vc.skinnings, sk );
+            }
+
             // If the key exists already, the pair will point to it.
             // If the key does not exisit, the pair will point to the newly inserted one.
             // Either way, pair->value should give us the correct index of the vertex.
@@ -1009,7 +1312,7 @@ sLoadFbxMesh(
     }
 
     // Now copy vertex data to fatmesh, and translate position and normal to global space.
-    if( !sLoadFbxVertices( fatmesh.vertices, fbxnode, vcache.cptr(), vertexKeys.cptr(), vertexKeys.size() ) ) return;
+    if( !sGenerateFatVertices( fatmesh, fbxnode, vcache.cptr(), vertexKeys.cptr(), vertexKeys.size() ) ) return;
 
     // calculate the bounding box of the mesh
     const Vector4f * vertices = (const Vector4f *)fatmesh.vertices.getPosition();

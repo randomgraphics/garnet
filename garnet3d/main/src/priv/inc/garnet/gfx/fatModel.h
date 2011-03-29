@@ -30,8 +30,8 @@ namespace GN { namespace gfx
             TEXCOORD7,
             TEXCOORD_LAST = TEXCOORD7,
             ALBEDO,
-            BONE_ID,
-            BONE_WEIGHT,
+            JOINT_ID,
+            JOINT_WEIGHT,
             CUSTOM0,
             CUSTOM1,
             CUSTOM2,
@@ -47,6 +47,8 @@ namespace GN { namespace gfx
         static const uint32 MAX_TEXCOORDS = (uint32)(TEXCOORD_LAST - TEXCOORD0);
 
         static const uint32 POS_NORMAL_TEX = (1<<POSITION) | (1<<NORMAL) | (1<<TEXCOORD0);
+
+        static const uint32 POS_NORMAL_TEX_SKINNING = (1<<POSITION) | (1<<NORMAL) | (1<<TEXCOORD0) | (1<<JOINT_ID) | (1<<JOINT_WEIGHT);
 
         static const char * const SEMANTIC_NAMES[];
 
@@ -184,11 +186,14 @@ namespace GN { namespace gfx
 
     struct FatMesh
     {
+        /// Constant value indicating that the mesh has no skeleton.
+        static const uint32 NO_SKELETON = (uint32)-1;
+
         FatVertexBuffer          vertices;
         DynaArray<uint32,uint32> indices;
         PrimitiveType            primitive;
         DynaArray<FatMeshSubset> subsets;
-        uint32                   skeleton; ///< index into FatModel::skeletons.
+        uint32                   skeleton; ///< index into FatModel::skeletons, or NO_SKELETON if the mesh has no skeleton.
         Boxf                     bbox;
     };
 
@@ -218,14 +223,14 @@ namespace GN { namespace gfx
 
     struct FatJoint
     {
-        static const uint32 INVALID_JOINT_INDEX = 0xFFFFFFFF;
+        static const uint32 NO_JOINT = (uint32)-1;
 
         StrA               name;     //< Joint name (unique in a skeleton).
 
         // Hierarchy
-        uint32             parent;   //< parent joint index
-        uint32             child;    //< first child joint index
-        uint32             sibling;  //< next sibling joing index.
+        uint32             parent;   //< parent joint index. NO_JOINT, if the joint has no parent.
+        uint32             child;    //< first child joint index. NO_JOINT, if the joint has no child.
+        uint32             sibling;  //< next sibling joing index. NO_JOINT, if the joint has no next sibling.
 
         Matrix44f          bindPose; //< model space -> joint space transformation.
     };
@@ -241,11 +246,11 @@ namespace GN { namespace gfx
 
     struct FatModel : public NoCopy
     {
-        StrA                    name;       //< name of the model. Usually the filename which the model is loaded from.
-        DynaArray<FatMesh*>     meshes;     //< Mesh array. Use FatMesh* to avoid expensive copy opertaion when the array is resized.
-        DynaArray<FatMaterial>  materials;
-        DynaArray<FatSkeleton>  skeletons;
-        Boxf                    bbox;
+        StrA                           name;       //< name of the model. Usually the filename which the model is loaded from.
+        DynaArray<FatMesh*,uint32>     meshes;     //< Mesh array. Use FatMesh* to avoid expensive copy opertaion when the array is resized.
+        DynaArray<FatMaterial,uint32>  materials;
+        DynaArray<FatSkeleton,uint32>  skeletons;
+        Boxf                           bbox;
 
         /// destructor
         ~FatModel()
@@ -256,7 +261,7 @@ namespace GN { namespace gfx
         /// clear the model
         void clear()
         {
-            for( size_t i = 0; i < meshes.size(); ++i )
+            for( uint32 i = 0; i < meshes.size(); ++i )
             {
                 delete meshes[i];
             }
