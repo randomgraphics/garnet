@@ -333,6 +333,10 @@ namespace GN { namespace gfx
             RGBA_32_32_32_32_UINT       = GN_MAKE_COLOR_FORMAT( LAYOUT_32_32_32_32, SIGN_UINT , SWIZZLE_RGBA ),
             RGBA_32_32_32_32_SINT       = GN_MAKE_COLOR_FORMAT( LAYOUT_32_32_32_32, SIGN_SINT , SWIZZLE_RGBA ),
             RGBA_32_32_32_32_FLOAT      = GN_MAKE_COLOR_FORMAT( LAYOUT_32_32_32_32, SIGN_FLOAT, SWIZZLE_RGBA ),
+            UINT4N                      = RGBA_32_32_32_32_UNORM,
+            SINT4N                      = RGBA_32_32_32_32_SNORM,
+            UINT4                       = RGBA_32_32_32_32_UINT,
+            SINT4                       = RGBA_32_32_32_32_SINT,
             FLOAT4                      = RGBA_32_32_32_32_FLOAT,
 
             // compressed

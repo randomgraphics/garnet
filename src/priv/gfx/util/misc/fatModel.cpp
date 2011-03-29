@@ -28,8 +28,8 @@ const char * const GN::gfx::FatVertexBuffer::SEMANTIC_NAMES[] =
     "TEXCOORD6",
     "TEXCOORD7",
     "ALBEDO",
-    "BONE_ID",
-    "BONE_WEIGHT",
+    "JOINT_ID",
+    "JOINT_WEIGHT",
     "CUSTOM0",
     "CUSTOM1",
     "CUSTOM2",
@@ -273,7 +273,7 @@ static void sPrintFatJointRecursivly( StrA & s, const FatJoint * joints, uint32 
     {
         s += stringFormat( "(%d) %s\n", depth, joints[root].name );
 
-        for( uint32 i = joints[root].child; i != FatJoint::INVALID_JOINT_INDEX; i = joints[i].sibling )
+        for( uint32 i = joints[root].child; i != FatJoint::NO_JOINT; i = joints[i].sibling )
         {
             sPrintFatJointRecursivly( s, joints, count, i, depth + 1 );
         }
