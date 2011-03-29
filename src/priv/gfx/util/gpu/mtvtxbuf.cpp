@@ -60,10 +60,17 @@ void GN::gfx::MultiThreadVtxBuf::quit()
 // -----------------------------------------------------------------------------
 void GN::gfx::MultiThreadVtxBuf::update( uint32 offset, uint32 length, const void * data, SurfaceUpdateFlag flag )
 {
-    if( 0 == length )
+    if( NULL == data )
     {
-        length = getDesc().length - offset;
+        GN_ERROR(sLogger)( "Null data pointer." );
+        return;
     }
+
+    const VtxBufDesc & d = getDesc();
+
+    // Validate offset and length. Make sure they are in valid range.
+    if( offset >= d.length ) return;
+    if( 0 == length ) length = d.length - offset;
 
     void * tmpbuf = HeapMemory::alloc( length );
     if( NULL == tmpbuf )

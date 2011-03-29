@@ -188,7 +188,7 @@ namespace GN { namespace gfx
         DynaArray<uint32,uint32> indices;
         PrimitiveType            primitive;
         DynaArray<FatMeshSubset> subsets;
-        uint32                   skeleton; //< Index into FatModel.skeleton array.
+        uint32                   skeleton; ///< index into FatModel::skeletons.
         Boxf                     bbox;
     };
 
@@ -208,43 +208,41 @@ namespace GN { namespace gfx
         }
     };
 
-    struct FatBoneTransform
+    /*struct FatJointTransform
     {
-        // Transformation (from parent space to bone local space)
-        //  matrix = translation * rotation;
-        Quaternionf rotation;
-        Vector3f    translation;
-    };
+        // Local->Parent transform = T * R * S;
+        Vector3f    position; //< Position in parent space
+        Quaternionf rotation; //< Rotation in local space
+        Vector3f    scaling;  //< Scaling in local space.
+    };*/
 
-    struct FatBone
+    struct FatJoint
     {
-        FatBoneTransform transform;
-        int              parent; //< -1 means no parent
-    };
+        static const uint32 INVALID_JOINT_INDEX = 0xFFFFFFFF;
 
-    struct FatSkeletonKeyFrame
-    {
-        FatBoneTransform pose;
-        float            time; //< time in seconds.
-    };
+        StrA               name;     //< Joint name (unique in a skeleton).
 
-    struct FatSkeletonAnimation
-    {
-        StrA                                       name;      //< name of the animation
-        DynaArray<DynaArray<FatSkeletonKeyFrame> > keyframes; //< keyframes[bone_id][frame_id]
+        // Hierarchy
+        uint32             parent;   //< parent joint index
+        uint32             child;    //< first child joint index
+        uint32             sibling;  //< next sibling joing index.
+
+        Matrix44f          bindPose; //< model space -> joint space transformation.
     };
 
     struct FatSkeleton
     {
-        StrA                            name;       //< name of the skeleton
-        DynaArray<FatBone>              bindPose;   //< Bind Pose
-        DynaArray<FatSkeletonAnimation> animations; //< skeleton animations.
+        StrA                       name;   //< name of the skeleton.
+        DynaArray<FatJoint,uint32> joints; //< Joint array.
+
+        /// Print joint hierarchy to a string.
+        void printJointHierarchy( StrA & ) const;
     };
 
-    struct FatModel
+    struct FatModel : public NoCopy
     {
-        StrA                    name; //< name of the model. Usually the filename which the model is loaded from.
-        DynaArray<FatMesh*>     meshes;
+        StrA                    name;       //< name of the model. Usually the filename which the model is loaded from.
+        DynaArray<FatMesh*>     meshes;     //< Mesh array. Use FatMesh* to avoid expensive copy opertaion when the array is resized.
         DynaArray<FatMaterial>  materials;
         DynaArray<FatSkeleton>  skeletons;
         Boxf                    bbox;
@@ -263,10 +261,13 @@ namespace GN { namespace gfx
                 delete meshes[i];
             }
             meshes.clear();
-            skeletons.clear();
             materials.clear();
+            skeletons.clear();
             bbox.clear();
         }
+
+        // Calculate FatModel.bbox from mesh data.
+        void calcBoundingBox();
 
         /// load fatmodel from file
         bool loadFromFile( const StrA & filename );
@@ -274,7 +275,17 @@ namespace GN { namespace gfx
         /// save fatmodel to file.
         bool saveToFile( const StrA & filename ) const;
     };
-}}
+
+    // Misc. ulitities
+    //@{
+
+    ///
+    /// Print module file node hierarchy
+    ///w
+    void printModelFileNodeHierarchy( StrA & hierarchy, const StrA & filename );
+
+    //@}
+ }}
 
 // *****************************************************************************
 //                                     EOF

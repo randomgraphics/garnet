@@ -51,7 +51,7 @@ namespace GN { namespace gfx
         // ********************************
     public:
 
-        virtual void update( uint32 offset, uint32 length, const void * data, SurfaceUpdateFlag flag );
+        virtual void update( uint32 startidx, uint32 numidx, const void * data, SurfaceUpdateFlag flag );
         virtual void readback( DynaArray<uint8> & data );
 
         // ********************************

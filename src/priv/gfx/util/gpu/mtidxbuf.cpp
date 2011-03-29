@@ -58,14 +58,21 @@ void GN::gfx::MultiThreadIdxBuf::quit()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::MultiThreadIdxBuf::update( uint32 offset, uint32 length, const void * data, SurfaceUpdateFlag flag )
+void GN::gfx::MultiThreadIdxBuf::update( uint32 startidx, uint32 numidx, const void * data, SurfaceUpdateFlag flag )
 {
-    if( 0 == length )
+    if( NULL == data )
     {
-        const IdxBufDesc & d = getDesc();
-        uint32 maxlen = d.numidx * ( d.bits32 ? 4 : 2 );
-        length = maxlen - offset;
+        GN_ERROR(sLogger)( "Null data pointer." );
+        return;
     }
+
+    const IdxBufDesc & d = getDesc();
+
+    // Validate startidx and numidx. Make sure they are in valid range.
+    if( startidx >= d.numidx ) return;
+    if( 0 == numidx ) numidx = d.numidx - startidx;
+
+    uint32 length = numidx * (d.bits32?4:2);
 
     void * tmpbuf = HeapMemory::alloc( length );
     if( NULL == tmpbuf )
@@ -75,7 +82,7 @@ void GN::gfx::MultiThreadIdxBuf::update( uint32 offset, uint32 length, const voi
     }
     memcpy( tmpbuf, data, length );
 
-    mGpu.cmdbuf().postCommand5( CMD_IDXBUF_UPDATE, mIdxBuf, offset, length, tmpbuf, flag );
+    mGpu.cmdbuf().postCommand5( CMD_IDXBUF_UPDATE, mIdxBuf, startidx, numidx, tmpbuf, flag );
 }
 
 //

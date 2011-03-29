@@ -1,6 +1,9 @@
 #include "pch.h"
 #include "garnet/gfx/fatModel.h"
 
+using namespace GN;
+using namespace GN::gfx;
+
 static GN::Logger * sLogger = GN::getLogger("GN.gfx.FatModel");
 
 // *****************************************************************************
@@ -250,4 +253,65 @@ bool GN::gfx::FatVertexBuffer::copyFrom( const FatVertexBuffer & other )
     }*/
 
     return true;
+}
+
+// *****************************************************************************
+// FatSkeleton
+// *****************************************************************************
+
+//
+//
+// -----------------------------------------------------------------------------
+static void sPrintFatJointRecursivly( StrA & s, const FatJoint * joints, uint32 count, uint32 root, uint32 depth )
+{
+    for( uint32 i = 0; i < depth; ++i )
+    {
+        s += "  ";
+    }
+
+    if( root < count )
+    {
+        s += stringFormat( "(%d) %s\n", depth, joints[root].name );
+
+        for( uint32 i = joints[root].child; i != FatJoint::INVALID_JOINT_INDEX; i = joints[i].sibling )
+        {
+            sPrintFatJointRecursivly( s, joints, count, i, depth + 1 );
+        }
+    }
+    else
+    {
+        s += stringFormat( "(%d) ERROR: joint index out of range: %d\n", depth, root );
+    }
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::gfx::FatSkeleton::printJointHierarchy( StrA & s ) const
+{
+    if( joints.empty() )
+    {
+        s = "[Empty skeleton]";
+    }
+    else
+    {
+        return sPrintFatJointRecursivly( s, joints.cptr(), joints.size(), 0, 0 );
+    }
+}
+
+// *****************************************************************************
+// FatModel
+// *****************************************************************************
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::gfx::FatModel::calcBoundingBox()
+{
+    bbox.clear();
+    for( size_t i = 0; i < meshes.size(); ++i )
+    {
+        GN_ASSERT( meshes[i] );
+        Boxf::sGetUnion( bbox, bbox, meshes[i]->bbox );
+    }
 }

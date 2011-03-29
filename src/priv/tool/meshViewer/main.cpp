@@ -164,15 +164,28 @@ public:
         }
     }
 
-    bool onCheckExtraCmdlineArguments( int argc, const char * const argv [] )
+    bool onCheckExtraCmdlineArguments( const char * exename, int argc, const char * const argv [] )
     {
+        GN_UNUSED_PARAM( exename );
+
         if( 0 == argc )
         {
             GN_ERROR(sLogger)( "Mesh file name is missing." );
             return false;
         }
-        filename = argv[0];
-        return true;
+
+        if( argc >= 2 && ( 0 == stringCompare( argv[0], "-print" ) || 0 == stringCompare( argv[0], "--print" ) ) )
+        {
+            StrA s;
+            printModelFileNodeHierarchy( s, argv[1] );
+            GN_INFO(sLogger)( "%s", s );
+            return false;
+        }
+        else
+        {
+            filename = argv[0];
+            return true;
+        }
     }
 
     void onPrintHelpScreen( const char * executableName )
