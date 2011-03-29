@@ -34,7 +34,7 @@ namespace GN { namespace gfx
         bool init();
         void quit();
     private:
-        void clear() { mLines = 0; mBatchingModeEnabled = true; }
+        void clear() { mLines = 0; mBatchingModeEnabled = false; }
         //@}
 
         // ********************************
@@ -43,9 +43,33 @@ namespace GN { namespace gfx
     public:
 
         ///
-        /// Enable/Disable batch rendering mode. It is enabled by default.
+        /// Begin batching draw. Must be pair with batchingEnd().
         ///
-        void setBatchRenderingEnable( bool enabled ) { flush(); mBatchingModeEnabled = enabled; }
+        bool batchingBegin()
+        {
+            if( !mBatchingModeEnabled )
+            {
+                mBatchingModeEnabled = true;
+                return true;
+            }
+            else
+            {
+                // Already in batching mode. Call batchingEnd() first.
+                return false;
+            }
+        }
+
+        ///
+        /// End batching draw. Must be paired with batchingBegin().
+        ///
+        void batchingEnd()
+        {
+            if( mBatchingModeEnabled )
+            {
+                mBatchingModeEnabled = false;
+                flush();
+            }
+        }
 
         ///
         /// draw line list
@@ -64,11 +88,6 @@ namespace GN { namespace gfx
             const Boxf      & box,
             uint32            colorInRgba,
             const Matrix44f & transform );
-
-        ///
-        /// submit any pending line drawing requests to renderer
-        ///
-        void flush();
 
         // ********************************
         // private variables
@@ -103,6 +122,11 @@ namespace GN { namespace gfx
         // private functions
         // ********************************
     private:
+
+        ///
+        /// submit any pending line drawing requests to renderer
+        ///
+        void flush();
     };
 }}
 
