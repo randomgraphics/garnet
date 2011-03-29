@@ -309,7 +309,7 @@ void GN::gfx::FatSkeleton::printJointHierarchy( StrA & s ) const
 void GN::gfx::FatModel::calcBoundingBox()
 {
     bbox.clear();
-    for( size_t i = 0; i < meshes.size(); ++i )
+    for( uint32 i = 0; i < meshes.size(); ++i )
     {
         GN_ASSERT( meshes[i] );
         Boxf::sGetUnion( bbox, bbox, meshes[i]->bbox );

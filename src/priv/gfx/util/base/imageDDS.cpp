@@ -319,6 +319,12 @@ bool DDSReader::readHeader(
         if( GN::gfx::ColorFormat::UNKNOWN == mImgDesc.format ) return false;
     }
 
+    // BGR format is not compatible with D3D10/D3D11 hardware. So we need to convert it to RGB format.
+    // sUpdateSwizzle() will update format swizzle from BGR to RGB. And we'll do data convertion later
+    // in readImage() function.
+    mOriginalFormat   = mImgDesc.format;
+    mFormatConversion = sCheckFormatConversion( mImgDesc.format );
+
     // grok image dimension
     uint32 faces = sGetImageFaceCount( mHeader );
     if( 0 == faces ) return false;
@@ -401,48 +407,94 @@ bool DDSReader::readImage( void * o_data ) const
         return false;
     }
 
-    /*if( GN::gfx::ImageDesc::IMG_CUBE == mImgDesc.type )
+    // 1D, 2D, 3D texture
+    uint32 nbytes = mImgDesc.getTotalBytes();
+    if( nbytes != mSize )
     {
-        // special case for cube texture
-        const uint8 * src = mSrc;
-        uint32 size = mSize;
-        for( uint8 face = 0; face < 6; ++face )
-        {
-            for( uint8 level = 0; level < mImgDesc.numLevels; ++level )
-            {
-                const GN::gfx::MipmapDesc & m = mImgDesc[level];
-
-                if( size < m.slicePitch )
-                {
-                    GN_ERROR(sLogger)( "incomplete image data!" );
-                    return false;
-                }
-
-                uint8 * dst =
-                    ((uint8*)o_data) + mImgDesc.getSliceOffset( level, face );
-
-                memcpy( dst, src, m.slicePitch );
-
-                // next slice
-                src += m.slicePitch;
-                size -= m.slicePitch;
-            }
-        }
+        GN_ERROR(sLogger)( "image size is incorrect!" );
+        return false;
     }
-    else*/
+    memcpy( o_data, mSrc, nbytes );
+
+    // Do format conversion, if needed.
+    if( FC_NONE != mFormatConversion )
     {
-        // 1D, 2D, 3D texture
-        uint32 nbytes = mImgDesc.getTotalBytes();
-        if( nbytes != mSize )
-        {
-            GN_ERROR(sLogger)( "image size is incorrect!" );
-            return false;
-        }
-        memcpy( o_data, mSrc, nbytes );
+        // There might be gaps between each mipmap level, or even between each scan line.
+        // But we assume that the data in the gaps are not important and could be converted
+        // as well without any side effects. We also assume that each scan line always starts
+        // from pixel size aligned address (4 bytes aligned for 8888 format) regardless of gaps.
+        sConvertFormat( mFormatConversion, mOriginalFormat, mImgDesc.format, o_data, nbytes );
     }
 
     // success
     return true;
 
     GN_UNGUARD;
+}
+
+// *****************************************************************************
+// DDSReader private functions
+// *****************************************************************************
+
+//
+//
+// -----------------------------------------------------------------------------
+DDSReader::FormatConversion
+DDSReader::sCheckFormatConversion( GN::gfx::ColorFormat & format )
+{
+    using namespace GN::gfx;
+
+    if( ColorFormat::LAYOUT_8_8_8_8 == format.layout &&
+        ColorFormat::SWIZZLE_B == format.swizzle0 &&
+        ColorFormat::SWIZZLE_G == format.swizzle1 &&
+        ColorFormat::SWIZZLE_R == format.swizzle2 )
+    {
+        format.swizzle0 = ColorFormat::SWIZZLE_R;
+        format.swizzle1 = ColorFormat::SWIZZLE_G;
+        format.swizzle2 = ColorFormat::SWIZZLE_B;
+        format.swizzle3 = ColorFormat::SWIZZLE_A;
+        return FC_BGRX8888_TO_RGBA8888;
+    }
+    else
+    {
+        return FC_NONE;
+    }
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+void DDSReader::sConvertFormat(
+    FormatConversion fc,
+    GN::gfx::ColorFormat from,
+    GN::gfx::ColorFormat to,
+    void * data,
+    size_t size )
+{
+    using namespace GN::gfx;
+
+    if( FC_BGRX8888_TO_RGBA8888 == fc )
+    {
+
+        GN_ASSERT( ColorFormat::LAYOUT_8_8_8_8 == from.layout );
+        GN_ASSERT( ColorFormat::LAYOUT_8_8_8_8 == to.layout );
+
+        size_t   numPixels = size / 4;
+        uint32 * pixels = (uint32*)data;
+        uint32 * end = pixels + numPixels;
+        for( ; pixels < end; ++pixels )
+        {
+            // Determine Alpha channel.
+            uint32 a;
+            switch( from.swizzle3 )
+            {
+                case ColorFormat::SWIZZLE_0 : a = 0; break;
+                case ColorFormat::SWIZZLE_1 : a = 0xFF000000; break;
+                default                     : a = ((*pixels)&0xFF000000);
+            }
+
+            //        A              R                         G                       B
+            *pixels = a | (((*pixels)&0xFF0000)>>16) | ((*pixels)&0xFF00) | (((*pixels)&0xFF)<<16);
+        }
+    }
 }

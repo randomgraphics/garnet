@@ -71,8 +71,8 @@ sLoadFromASE( FatModel & fatmodel, File & file, const StrA & filename )
     fatmodel.name = filename;
 
     // copy materials
-    fatmodel.materials.resize( ase.materials.size() );
-    for( size_t i = 0; i < ase.materials.size(); ++i )
+    fatmodel.materials.resize( (uint32)ase.materials.size() );
+    for( uint32 i = 0; i < ase.materials.size(); ++i )
     {
         const AseMaterial & src = ase.materials[i];
 
@@ -87,8 +87,8 @@ sLoadFromASE( FatModel & fatmodel, File & file, const StrA & filename )
     }
 
     // copy meshes
-    fatmodel.meshes.resize( ase.meshes.size() );
-    for( size_t i = 0; i < ase.meshes.size(); ++i )
+    fatmodel.meshes.resize( (uint32)ase.meshes.size() );
+    for( uint32 i = 0; i < ase.meshes.size(); ++i )
     {
         fatmodel.meshes[i] = NULL;
 
@@ -2075,7 +2075,7 @@ bool GN::gfx::FatModel::loadFromFile( const StrA & filename )
     {
         size_t totalVerts = 0;
         size_t totalFaces = 0;
-        for( size_t i = 0; i < this->meshes.size(); ++i )
+        for( uint32 i = 0; i < this->meshes.size(); ++i )
         {
             const FatMesh * m = this->meshes[i];
             if( m )

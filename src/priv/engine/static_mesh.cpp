@@ -161,7 +161,7 @@ bool GN::engine::StaticMesh::loadFromFatModel( const GN::gfx::FatModel & fatmode
 
     DynaArray<uint8> vb;
 
-    for( size_t i = 0; i < fatmodel.meshes.size(); ++i )
+    for( uint32 i = 0; i < fatmodel.meshes.size(); ++i )
     {
         if( NULL == fatmodel.meshes[i] ) continue;
 
