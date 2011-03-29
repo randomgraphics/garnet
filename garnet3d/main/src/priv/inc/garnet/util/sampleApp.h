@@ -49,7 +49,7 @@ namespace GN { namespace util
         static float UPDATE_INTERVAL; ///< Time interval for calling onUpdate(), in seconds.
 
         virtual int  run( int argc, const char * const argv[] );
-        virtual bool onCheckExtraCmdlineArguments( int argc, const char * const argv[] ); // only non-standard/unknown arguments are passed to this function.
+        virtual bool onCheckExtraCmdlineArguments( const char * exename, int argc, const char * const argv[] ); // only non-standard/unknown arguments are passed to this function.
         virtual void onPrintHelpScreen( const char * executableName );
         virtual bool onPreInit( InitParam & ) { return true; }
         virtual bool onInit() = 0;

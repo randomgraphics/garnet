@@ -183,8 +183,10 @@ int GN::util::SampleApp::run( int argc, const char * const argv[] )
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::util::SampleApp::onCheckExtraCmdlineArguments( int argc, const char * const argv[] )
+bool GN::util::SampleApp::onCheckExtraCmdlineArguments( const char * exename, int argc, const char * const argv[] )
 {
+    GN_UNUSED_PARAM( exename );
+
     if( argc > 0 )
     {
         StrA s = "unknown command line arguments:";
@@ -284,7 +286,7 @@ void GN::util::SampleApp::printStandardCommandLineOptions()
         "\n"
         "   -mt   [on|off]          Use multithread renderer. Default is on.\n"
         "\n"
-        "   -gpu [auto|ogl|d3d10]  Choose GPU API. Default is AUTO.\n"
+        "   -gpu [auto|ogl|d3d10]   Choose GPU API. Default is AUTO.\n"
         "\n"
         "   -ww [num]               Windows width. Default is 640.\n"
         "\n"
@@ -476,7 +478,7 @@ bool GN::util::SampleApp::checkCmdLine( int argc, const char * const argv[] )
     }
 
     // handle unrecoganized arguments
-    if( !onCheckExtraCmdlineArguments( (int)unknownArgs.size(), unknownArgs.cptr() ) ) return false;
+    if( !onCheckExtraCmdlineArguments( argv[0], (int)unknownArgs.size(), unknownArgs.cptr() ) ) return false;
 
 #endif
 

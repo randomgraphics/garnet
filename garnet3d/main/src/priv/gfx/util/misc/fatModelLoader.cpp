@@ -185,7 +185,7 @@ sLoadFromASE( FatModel & fatmodel, File & file, const StrA & filename )
         }
     }
 
-    // setup bounding box of the whole scene
+    // copy bounding box of the whole scene
     fatmodel.bbox = ase.bbox;
 
     return true;
@@ -376,19 +376,18 @@ struct SortPolygonByMaterial
     }
 };
 
+struct Skinning
+{
+    uint32 joint[4];  //< Joint Index
+    float  weight[4]; //< Binding weight;
+};
+
 struct MeshVertexCache
 {
-    struct Skin
-    {
-        int boneID;
-        float weight;
-    };
-
     Vector3f                  pos;
-    DynaArray<Vector3f,uint8> normal;
+    DynaArray<Vector3f,uint8> normals;
     DynaArray<Vector2f,uint8> tc0;
-    Vector4i                  bones;
-    Vector4f                  weights;
+    DynaArray<Skinning,uint8> skinnings;
 
     template<typename T>
     uint8 AddAttribute( DynaArray<T,uint8> & array, const T & value )
@@ -400,25 +399,20 @@ struct MeshVertexCache
         array.append( value );
         return array.size() - 1;
     }
-
-    static MeshVertexFormat sGetVertexFormat()
-    {
-        return MeshVertexFormat::XYZ_NORM_UV();
-    }
 };
 
 struct MeshVertexKey
 {
-    int      pos;    //< Index of the the vertex in FBX mesh control point array.
-    uint8    normal; //< Index into MeshVertexCache.normal.
-    uint8    tc0;    //< Index into MeshVertexCache.texcoord0.
-    uint8    skin;   //< Index into MeshVertexCache.skin.
+    int      pos;      //< Index of the the vertex in FBX mesh control point array.
+    uint8    normal;   //< Index into MeshVertexCache.normal.
+    uint8    tc0;      //< Index into MeshVertexCache.texcoord0.
+    uint8    skinning; //< Index into MeshVertexCache.skinnings;
 
     MeshVertexKey()
         : pos(-1)
         , normal((uint8)-1)
         , tc0((uint8)-1)
-        , skin((uint8)-1)
+        , skinning((uint8)-1)
     {
     }
 };
@@ -495,6 +489,167 @@ sLoadFbxSkeleton(
 #endif
 
 //
+// Convert FBX matrix (column-major) to Garnet matrix (row-major)
+// -----------------------------------------------------------------------------
+Matrix44f & sFbxMatrix2GarnetMatrix( Matrix44f & gnmat, const KFbxXMatrix & fbxmat )
+{
+    const double * d44 = fbxmat;
+
+    gnmat.set(
+        (float)d44[0], (float)d44[4], (float)d44[8],  (float)d44[12],
+        (float)d44[1], (float)d44[5], (float)d44[9],  (float)d44[13],
+        (float)d44[2], (float)d44[6], (float)d44[10], (float)d44[14],
+        (float)d44[3], (float)d44[7], (float)d44[11], (float)d44[15] );
+
+    return gnmat;
+}
+
+//
+// See if the FBX node contains an eLIMB_NODE skeleton attribute.
+// -----------------------------------------------------------------------------
+static KFbxSkeleton * sFbxNode2LimbNode( KFbxNode * fbxnode )
+{
+    if( NULL == fbxnode )
+    {
+        return NULL;
+    }
+
+    KFbxSkeleton * fbxlimb = fbxnode->GetSkeleton();
+
+    if( NULL == fbxlimb )
+    {
+        return NULL;
+    }
+
+    if( fbxlimb->GetSkeletonType() != KFbxSkeleton::eLIMB_NODE )
+    {
+        return NULL;
+    }
+
+    return fbxlimb;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+static void
+sLoadFbxLimbNodes(
+    FatSkeleton & fatsk,
+    uint32        parent,
+    uint32        previousSibling,
+    KFbxNode    * fbxnode )
+{
+    if( NULL == fbxnode ) return;
+
+    KFbxSkeleton * limb = sFbxNode2LimbNode(fbxnode);
+    if( NULL == limb ) return;
+
+    FatJoint newjoint;
+
+    // Store joint name
+    newjoint.name = fbxnode->GetName();
+
+    // Store the parent.
+    newjoint.parent = parent;
+
+    // Setup the default child and sibling of the new joint
+    newjoint.child   = FatJoint::INVALID_JOINT_INDEX;
+    newjoint.sibling = FatJoint::INVALID_JOINT_INDEX;
+
+    // If the new joint has parent, and the parent has no child yet,
+    // then set the new joint as the first child of the parent.
+    if( FatJoint::INVALID_JOINT_INDEX != parent &&
+        FatJoint::INVALID_JOINT_INDEX == fatsk.joints[parent].child )
+    {
+        GN_ASSERT( parent < fatsk.joints.size() );
+        fatsk.joints[parent].child = fatsk.joints.size();
+    }
+
+    // If the new joint has previous sibling, then set the new
+    // joint as its "next" sibling.
+    if( FatJoint::INVALID_JOINT_INDEX != previousSibling )
+    {
+        GN_ASSERT( previousSibling < fatsk.joints.size() );
+        GN_ASSERT( FatJoint::INVALID_JOINT_INDEX == fatsk.joints[previousSibling].sibling );
+        fatsk.joints[previousSibling].sibling = fatsk.joints.size();
+    }
+
+    // Get the global transform of the node, which is the transformation
+    // from local/joint space to model space.
+    sFbxMatrix2GarnetMatrix( newjoint.bindPose, fbxnode->GetScene()->GetEvaluator()->GetNodeGlobalTransform( fbxnode ) );
+
+    // Inverse that to get the bind pose transfomration we want.
+    newjoint.bindPose.inverse();
+
+    // Add the new joint into the joint array
+    fatsk.joints.append( newjoint );
+
+    // recursively load subtrees
+    uint32 newParent = fatsk.joints.size() - 1;
+    uint32 newPrevSibling = FatJoint::INVALID_JOINT_INDEX;
+    int count = fbxnode->GetChildCount();
+    for( int i = 0; i < count; ++i )
+    {
+        uint32 oldJointCount = fatsk.joints.size();
+
+        // load subtree
+        sLoadFbxLimbNodes( fatsk, newParent, newPrevSibling, fbxnode->GetChild( i ) );
+
+        uint32 newJointCount = fatsk.joints.size();
+
+        // If sLoadFbxLimbNodes() creates more joints, then the first new joint must
+        // be the root joint of the subtree, which is the previous sibling of the next
+        // subtree.
+        if( newJointCount > oldJointCount )
+        {
+            newPrevSibling = oldJointCount;
+        }
+    }
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+static void
+sLoadFbxSkeletons(
+    FatModel & fatmodel,
+    KFbxNode * fbxnode )
+{
+    if( sFbxNode2LimbNode( fbxnode ) )
+    {
+        // We get a new skeleton, load all sub limbs.
+        FatSkeleton fatsk;
+        sLoadFbxLimbNodes( fatsk, FatJoint::INVALID_JOINT_INDEX, FatJoint::INVALID_JOINT_INDEX, fbxnode );
+        if( !fatsk.joints.empty() )
+        {
+            fatmodel.skeletons.append( fatsk );
+        }
+    }
+    else if( fbxnode )
+    {
+        // continue search its subtree for skeletons.
+        int count = fbxnode->GetChildCount();
+        for( int i = 0; i < count; ++i )
+        {
+            sLoadFbxSkeletons( fatmodel, fbxnode->GetChild( i ) );
+        }
+    }
+
+#if 0
+    // Print joint hierarchy
+    if( fbxnode && fbxnode == fbxnode->GetScene()->GetRootNode() )
+    {
+        for( uint32 i = 0; i < fatmodel.skeletons.size(); ++i )
+        {
+            StrA s;
+            fatmodel.skeletons[i].printJointHierarchy( s );
+            GN_INFO(sLogger)( s );
+        }
+    }
+#endif
+}
+
+//
 //
 // -----------------------------------------------------------------------------
 static bool
@@ -519,13 +674,8 @@ sLoadFbxVertices(
     geometryOffset.SetS(lS);
     globalTransform = globalTransform * geometryOffset;
 
-    // FBX matrix is column major.
-    double * d44 = globalTransform;
-    Matrix44f m44(
-        (float)d44[0], (float)d44[4], (float)d44[8],  (float)d44[12],
-        (float)d44[1], (float)d44[5], (float)d44[9],  (float)d44[13],
-        (float)d44[2], (float)d44[6], (float)d44[10], (float)d44[14],
-        (float)d44[3], (float)d44[7], (float)d44[11], (float)d44[15] );
+    Matrix44f m44;
+    sFbxMatrix2GarnetMatrix( m44, globalTransform );
 
     // This is used to transform normal vector.
     Matrix44f itm44 = Matrix44f::sInvtrans( m44 );
@@ -557,9 +707,9 @@ sLoadFbxVertices(
         pos->w  = 1.0f;
 
         // translate normal to global space.
-        if( k.normal < v.normal.size() )
+        if( k.normal < v.normals.size() )
         {
-            v4.set( v.normal[k.normal], 0.0f );
+            v4.set( v.normals[k.normal], 0.0f );
             *nml = itm44 * v4;
             nml->w = 0.0f;
             nml->normalize();
@@ -749,7 +899,7 @@ sLoadFbxMesh(
     MeshVertexHashMap vhash( (size_t)numidx * 2 );
 
     // Allocate another buffer to hold the final sequance of vertex keys
-    DynaArray<MeshVertexKey> vertexKeys;
+    DynaArray<MeshVertexKey,uint32> vertexKeys;
     if( !vertexKeys.reserve( (uint32)numidx ) )
     {
         GN_ERROR(sLogger)( "Fail to load FBX mesh: out of memory." );
@@ -781,7 +931,7 @@ sLoadFbxMesh(
                 return;
             }
             FatMeshSubset & subset = fatmesh.subsets.back();
-            subset.material = fatmatIndices[matid];
+            subset.material = (uint32)fatmatIndices[matid];
             subset.startidx = sortedPolygonIndex*3;
             subset.numidx   = 0;
             subset.basevtx  = 0;
@@ -811,7 +961,7 @@ sLoadFbxMesh(
                 {
                     const KFbxVector4 & fbxnormal = fbxNormals->GetDirectArray().GetAt(normalIndex);
                     Vector3f normal( (float)fbxnormal[0], (float)fbxnormal[1], (float)fbxnormal[2] );
-                    key.normal = vc.AddAttribute( vc.normal, normal );
+                    key.normal = vc.AddAttribute( vc.normals, normal );
                 }
             }
 
@@ -882,6 +1032,25 @@ sLoadFbxMesh(
     fatmodel.meshes.append( fatMeshAutoPtr.detach() );
 }
 
+//
+//
+// -----------------------------------------------------------------------------
+static void
+sLoadFbxMeshes(
+    FatModel      & fatmodel,
+    const StrA    & filename,
+    FbxSdkWrapper & sdk,
+    KFbxScene     & scene )
+{
+    // Load meshes
+    int meshCount = KFbxGetSrcCount<KFbxMesh>(&scene);
+    for( int i=0; i<meshCount; i++ )
+    {
+        KFbxMesh * fbxmesh = KFbxGetSrc<KFbxMesh>(&scene, i);
+        sLoadFbxMesh( fatmodel, filename, sdk, fbxmesh );
+    }
+}
+
 #endif // HAS_FBX
 
 //
@@ -943,40 +1112,22 @@ sLoadFromFBX( FatModel & fatmodel, File & file, const StrA & filename )
     // preallocate material array.
     int nummat = KFbxGetSrcCount<KFbxSurfaceMaterial>(gScene);
     fatmodel.materials.reserve( (size_t)nummat );
-
     //fatmodel.materials.resize( 1 );
     //fatmodel.materials[0].name = "=[DEFAULT]=";
     //fatmodel.materials[0].albedoTexture = "";
     //fatmodel.materials[0].normalTexture = "";
     //fatmodel.materials[0].albedoColor.set( 1, 1, 1, 1 );
 
-    /* Load skeletons
-    int skCount = KFbxGetSrcCount<KFbxSkeleton>(gScene);
-    for( int i = 0; i < skCount; i++ )
-    {
-        KFbxSkeleton * sk = KFbxGetSrc<KFbxSkeleton>(gScene, i);
-        if( KFbxSkeleton::eROOT == sk->GetSkeletonType() )
-        {
-            sLoadFbxSkeleton( fatmodel, sdk, *sk );
-        }
-    }//*/
+    // Load skeletons
+    sLoadFbxSkeletons( fatmodel, gScene->GetRootNode() );
 
     // Load meshes
-    int meshCount = KFbxGetSrcCount<KFbxMesh>(gScene);
-    for( int i=0; i<meshCount; i++ )
-    {
-        KFbxMesh * fbxmesh = KFbxGetSrc<KFbxMesh>(gScene, i);
-        sLoadFbxMesh( fatmodel, filename, sdk, fbxmesh );
-    }
+    sLoadFbxMeshes( fatmodel, filename, sdk, *gScene );
 
     // calculate the final bounding box
-    fatmodel.bbox.clear();
-    for( size_t i = 0; i < fatmodel.meshes.size(); ++i )
-    {
-        GN_ASSERT( fatmodel.meshes[i] );
-        Boxf::sGetUnion( fatmodel.bbox, fatmodel.bbox, fatmodel.meshes[i]->bbox );
-    }
+    fatmodel.calcBoundingBox();
 
+    // done!
     return true;
 
 #else // HAS_FBX
@@ -987,6 +1138,152 @@ sLoadFromFBX( FatModel & fatmodel, File & file, const StrA & filename )
     return false;
 
 #endif // HAS_FBX
+}
+
+static void
+sPrintFBXNodeHierarchy( StrA & hierarchy, const StrA & filename )
+{
+#ifdef HAS_FBX
+
+    FbxSdkWrapper sdk;
+    if( !sdk.init() )
+    {
+        hierarchy = "ERROR: fail to initialize FBX sdk.";
+        return;
+    }
+
+    KFbxSdkManager * gSdkManager = sdk.manager;
+
+    // detect file format
+	int lFileFormat = -1;
+    if (!gSdkManager->GetIOPluginRegistry()->DetectReaderFileFormat(filename, lFileFormat) )
+    {
+        // Unrecognizable file format. Try to fall back to KFbxImporter::eFBX_BINARY
+        lFileFormat = gSdkManager->GetIOPluginRegistry()->FindReaderIDByDescription( "FBX binary (*.fbx)" );;
+    }
+
+    // Create the importer.
+    KFbxImporter* gImporter = KFbxImporter::Create(gSdkManager,"");
+    if( NULL == gImporter )
+    {
+        hierarchy = "ERROR: out of memory.";
+        return;
+    }
+    if(!gImporter->Initialize(filename, lFileFormat))
+    {
+        hierarchy = gImporter->GetLastErrorString();
+        return;
+    }
+
+    // Import the scene
+    KFbxScene * gScene = KFbxScene::Create( gSdkManager, "" );
+    if( NULL == gScene )
+    {
+        hierarchy = "ERROR: out of memory.";
+        return;
+    }
+    if(!gImporter->Import(gScene))
+    {
+        hierarchy = gImporter->GetLastErrorString();
+        return;
+    }
+
+    struct Local
+    {
+        static void sPrintNodeRecursivly( StrA & hierarchy, KFbxNode * node, int depth )
+        {
+            if( NULL == node ) return;
+
+            for( int i = 0; i < depth; ++i )
+            {
+                hierarchy += "  ";
+            }
+
+            hierarchy += stringFormat( "(%d) ", depth );
+
+            const char * name = node->GetName();
+
+            hierarchy += stringEmpty(name) ? "[UNNAMED]" : name;
+
+            hierarchy += " : ";
+
+            KFbxNodeAttribute * a = node->GetNodeAttribute();
+            if( a )
+            {
+                static const char * sAttributeTypeNames[] =
+                {
+                    "eUNIDENTIFIED",
+                    "eNULL",
+                    "eMARKER",
+                    "eSKELETON",
+                    "eMESH",
+                    "eNURB",
+                    "ePATCH",
+                    "eCAMERA",
+                    "eCAMERA_STEREO",
+                    "eCAMERA_SWITCHER",
+                    "eLIGHT",
+                    "eOPTICAL_REFERENCE",
+                    "eOPTICAL_MARKER",
+                    "eNURBS_CURVE",
+                    "eTRIM_NURBS_SURFACE",
+                    "eBOUNDARY",
+                    "eNURBS_SURFACE",
+                    "eSHAPE",
+                    "eLODGROUP",
+                    "eSUBDIV",
+                    "eCACHED_EFFECT",
+                };
+
+                KFbxNodeAttribute::EAttributeType atype = a->GetAttributeType();
+
+                if( KFbxNodeAttribute::eSKELETON == atype )
+                {
+                    KFbxSkeleton::ESkeletonType stype = ((KFbxSkeleton*)a)->GetSkeletonType();
+                    switch(stype)
+                    {
+                        case KFbxSkeleton::eROOT      : hierarchy += "eSKELETON : eROOT"; break;
+                        case KFbxSkeleton::eLIMB      : hierarchy += "eSKELETON : eLIMB"; break;
+                        case KFbxSkeleton::eLIMB_NODE : hierarchy += "eSKELETON : eLIMB_NODE"; break;
+                        case KFbxSkeleton::eEFFECTOR  : hierarchy += "eSKELETON : eEFFECTOR"; break;
+                        default                       : hierarchy += "eSKELETON : [INVALID TYPE]"; break;
+                    }
+                }
+                else if( 0 <= atype && atype < GN_ARRAY_COUNT(sAttributeTypeNames) )
+                {
+                    hierarchy += sAttributeTypeNames[atype];
+                }
+                else
+                {
+                    hierarchy += stringFormat("[INVALID:%d]", atype);
+                }
+            }
+            else
+            {
+                hierarchy += "[NULL]";
+            }
+
+            hierarchy += "\n";
+
+            int count = node->GetChildCount();
+
+            for( int i = 0; i < count; ++i )
+            {
+                sPrintNodeRecursivly( hierarchy, node->GetChild( i ), depth + 1 );
+            }
+        }
+    };
+
+    Local::sPrintNodeRecursivly( hierarchy, gScene->GetRootNode(), 0 );
+
+    if( hierarchy.empty() ) hierarchy = "[EMPTY FILE]";
+
+#else
+
+    GN_UNUSED_PARAM( filename );
+    hierarchy = "No FBX support.";
+
+#endif
 }
 
 }
@@ -1339,12 +1636,7 @@ static bool sLoadFromAssimp( FatModel & fatmodel, const StrA & filename )
     sLoadAiNodeRecursivly( fatmodel, scene, scene->mRootNode, rootTransform );
 
     // calculate the final bounding box
-    fatmodel.bbox.clear();
-    for( size_t i = 0; i < fatmodel.meshes.size(); ++i )
-    {
-        GN_ASSERT( fatmodel.meshes[i] );
-        Boxf::sGetUnion( fatmodel.bbox, fatmodel.bbox, fatmodel.meshes[i]->bbox );
-    }
+    fatmodel.calcBoundingBox();
 
     aiReleaseImport( scene );
     return true;
@@ -1436,45 +1728,44 @@ bool GN::gfx::FatModel::loadFromFile( const StrA & filename )
 
     bool noerr = true;
 
-    // Try assimp first;
-    if( !ai::sLoadFromAssimp( *this, filename ) )
+    // Open the file.
+    AutoObjPtr<File> file( fs::openFile( filename, "rb" ) );
+    if( NULL == file ) return false;
+
+    // determine file format
+    FileFormat ff = sDetermineFileFormatByContent( *file );
+    if( FF_UNKNOWN == ff )
     {
-        // Open the file.
-        AutoObjPtr<File> file( fs::openFile( filename, "rb" ) );
-        if( NULL == file ) return false;
+        ff = sDetermineFileFormatByFileName( filename );
+    }
 
-        // determine file format
-        FileFormat ff = sDetermineFileFormatByContent( *file );
-        if( FF_UNKNOWN == ff )
-        {
-            ff = sDetermineFileFormatByFileName( filename );
-        }
+    StrA fullFileName = fs::resolvePath( fs::getCurrentDir(), filename );
 
-        StrA fullFileName = fs::resolvePath( fs::getCurrentDir(), filename );
+    switch( ff )
+    {
+        case FF_ASE:
+            noerr = ase::sLoadFromASE( *this, *file, fullFileName );
+            break;
 
-        switch( ff )
-        {
-            case FF_ASE:
-                noerr = ase::sLoadFromASE( *this, *file, filename );
-                break;
+        case FF_FBX:
+            noerr = fbx::sLoadFromFBX( *this, *file, fullFileName );
+            break;
 
-            case FF_FBX:
-                noerr = fbx::sLoadFromFBX( *this, *file, filename );
-                break;
+        case FF_GARNET_XML:
+            noerr = false;
+            break;
 
-            case FF_GARNET_XML:
-                noerr = false;
-                break;
+        case FF_GARNET_BIN:
+            noerr = false;
+            break;
 
-            case FF_GARNET_BIN:
-                noerr = false;
-                break;
-
-            default:
+        default:
+            if( !ai::sLoadFromAssimp( *this, fullFileName ) )
+            {
                 GN_ERROR(sLogger)( "Unknown file format: %s", filename.cptr() );
                 noerr = false;
-                break;
-        }
+            }
+            break;
     }
 
     if( noerr )
@@ -1498,4 +1789,21 @@ bool GN::gfx::FatModel::loadFromFile( const StrA & filename )
     }
 
     return noerr;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::gfx::printModelFileNodeHierarchy( StrA & hierarchy, const StrA & filename )
+{
+    StrA fullFileName = fs::resolvePath( fs::getCurrentDir(), filename );
+
+    FileFormat ff = sDetermineFileFormatByFileName( fullFileName );
+    if( FF_FBX != ff )
+    {
+        hierarchy = "ERROR: FBX file only.";
+        return;
+    }
+
+    fbx::sPrintFBXNodeHierarchy( hierarchy, fullFileName );
 }

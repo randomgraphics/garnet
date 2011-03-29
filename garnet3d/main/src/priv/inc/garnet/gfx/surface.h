@@ -318,7 +318,7 @@ namespace GN { namespace gfx
         const VtxBufDesc & getDesc() const { return mDesc; }
 
         ///
-        /// update vertex buffer content
+        /// update vertex buffer content. offset and length are in number of bytes.
         ///
         virtual void update( uint32 offset, uint32 length, const void * data, SurfaceUpdateFlag flag = SurfaceUpdateFlag::DEFAULT ) = 0;
 
