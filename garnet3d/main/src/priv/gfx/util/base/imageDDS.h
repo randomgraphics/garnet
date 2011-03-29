@@ -53,15 +53,26 @@ class DDSReader
     DDSFileHeader      mHeader;
     GN::gfx::ImageDesc mImgDesc;
 
-    const uint8 * mSrc;
-    size_t        mSize;
+    enum FormatConversion
+    {
+        FC_NONE,
+        FC_BGRX8888_TO_RGBA8888,
+    };
+
+    const uint8 *        mSrc;
+    size_t               mSize;
+    GN::gfx::ColorFormat mOriginalFormat;
+    FormatConversion     mFormatConversion;
+
+    static FormatConversion sCheckFormatConversion( GN::gfx::ColorFormat & );
+    static void sConvertFormat( FormatConversion fc, GN::gfx::ColorFormat from, GN::gfx::ColorFormat to, void * data, size_t size );
 
 public:
 
     ///
     /// Constructor
     ///
-    DDSReader()
+    DDSReader() : mSrc(NULL), mSize(0), mFormatConversion(FC_NONE)
     {
     }
 
