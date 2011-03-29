@@ -141,6 +141,8 @@ public:
 #endif
         const Vector3f & position = arcball.getTranslation();
 
+        drawXYZCoordinateAxes( camera.proj * camera.view * arcball.getRotationMatrix44() );
+
         engine::getDefaultFontRenderer()->drawText(
             stringFormat(
                 L"position : %f,\n"
@@ -150,8 +152,6 @@ public:
                 position.x, position.y, position.z,
                 radius ).cptr(),
             320, 40 );
-
-        drawXYZCoordinateAxes( camera.proj * camera.view * arcball.getRotationMatrix44() );
     }
 
     void onKeyPress( input::KeyEvent ke )
