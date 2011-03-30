@@ -178,7 +178,7 @@ namespace GN { namespace gfx
 
         typedef DynaArray<uint8> UserData;
 
-        typedef HashMap<Guid,UserData,Guid::Hash> UserDataMap;
+        typedef Dictionary<Guid,UserData> UserDataMap;
 
         GpuSignals  mSignals;
         bool        mParamCheckEnabled;

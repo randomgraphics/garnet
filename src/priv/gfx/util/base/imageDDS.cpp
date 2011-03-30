@@ -473,9 +473,10 @@ void DDSReader::sConvertFormat(
 {
     using namespace GN::gfx;
 
+    GN_UNUSED_PARAM( to );
+
     if( FC_BGRX8888_TO_RGBA8888 == fc )
     {
-
         GN_ASSERT( ColorFormat::LAYOUT_8_8_8_8 == from.layout );
         GN_ASSERT( ColorFormat::LAYOUT_8_8_8_8 == to.layout );
 

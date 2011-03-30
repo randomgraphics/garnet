@@ -610,6 +610,7 @@ struct MeshVertexKey
 typedef HashMap<
     MeshVertexKey,
     uint32,
+    4096,
     HashMapUtils::HashFunc_MemoryHash<MeshVertexKey>,
     HashMapUtils::EqualFunc_MemoryCompare<MeshVertexKey> > MeshVertexHashMap;
 

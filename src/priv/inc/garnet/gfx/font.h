@@ -327,7 +327,7 @@ namespace GN { namespace gfx
 
         typedef StackArray<AutoRef<gfx::Texture>,MAX_TEXTURES> TextureArray;
 
-        typedef HashMap<wchar_t,size_t> SlotMap;
+        typedef Dictionary<wchar_t,size_t> SlotMap;
 
         // graphics resources
         gfx::SpriteRenderer       * mSpriteRenderer;

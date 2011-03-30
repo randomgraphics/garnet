@@ -2,7 +2,7 @@
 
 class StrHashTest : public CxxTest::TestSuite
 {
-    typedef GN::HashMap<GN::StrA, int, GN::StrA::Hash> StrHashMap;
+    typedef GN::HashMap<GN::StrA, int, 128, GN::StrA::Hash> StrHashMap;
 
 public:
 

@@ -311,12 +311,24 @@ namespace fbx
 {
 #ifdef HAS_FBX
 
+#define USE_JOINT_MAP 1
+
 class FbxSdkWrapper
 {
 public:
 
     KFbxSdkManager * manager;
     KFbxGeometryConverter * converter;
+
+    #if USE_JOINT_MAP
+    struct JointLocation
+    {
+        uint32 skeletonIndex;
+        uint32 jointIndex;
+    };
+    //HashMap<StrA,JointLocation,HashMapUtils::HashFunc_HashMethod<StrA> > jointMap;
+    StringMap<char,JointLocation> jointMap;
+    #endif
 
     FbxSdkWrapper() : manager(NULL), converter(NULL)
     {
@@ -543,8 +555,9 @@ struct MeshVertexKey
 typedef HashMap<
     MeshVertexKey,
     uint32,
+    4096,
     HashMapUtils::HashFunc_MemoryHash<MeshVertexKey>,
-    HashMapUtils::EqualFunc_MemoryCompare<MeshVertexKey> > MeshVertexHashMap;
+    HashMapUtils::EqualFunc_MemoryCompare<MeshVertexKey> > MeshVertexMap;
 
 #if 0
 /*
@@ -787,9 +800,29 @@ static bool
 sSearchForNamedJoint(
     OUT uint32         & skeleton,
     OUT uint32         & joint,
+    IN  FbxSdkWrapper  & sdk,
     IN  const FatModel & fatmodel,
     IN  const char     * jointName )
 {
+#if USE_JOINT_MAP
+
+    GN_UNUSED_PARAM( fatmodel );
+
+    const FbxSdkWrapper::JointLocation * location = sdk.jointMap.find( jointName );
+    if( location )
+    {
+        skeleton = location->skeletonIndex;
+        joint    = location->jointIndex;
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+
+#else
+
+    GN_UNUSED_PARAM( sdk );
     for( uint32 i = 0; i < fatmodel.skeletons.size(); ++i )
     {
         // Reference the skeleton
@@ -805,8 +838,9 @@ sSearchForNamedJoint(
             }
         }
     }
-
     return false;
+
+#endif
 }
 
 //
@@ -816,6 +850,7 @@ static void
 sLoadFbxVertexSkinning(
     INOUT uint32         & skeleton, // Index into FatModel::skeleton arrayreturns the skeleton that of the joint
     OUT   Skinning       & sk,
+    IN    FbxSdkWrapper  & sdk,
     IN    const FatModel & fatmodel,
     IN    const KFbxMesh * fbxmesh,
     IN    int              controlPointIndex,
@@ -860,6 +895,7 @@ sLoadFbxVertexSkinning(
             if( !sSearchForNamedJoint(
                 currentSkeleton,
                 currentJoint,
+                sdk,
                 fatmodel,
                 link->GetName() ) )
             {
@@ -1197,8 +1233,8 @@ sLoadFbxMesh(
         vcache[i].pos.set( (float)fbxpos[0], (float)fbxpos[1], (float)fbxpos[2] );
     }
 
-    // Declare the vertex hash table
-    MeshVertexHashMap vhash( (size_t)numidx * 2 );
+    // Declare the vertex map
+    MeshVertexMap vtxmap( (size_t)numidx * 2 );
 
     // Allocate another buffer to hold the final sequance of vertex keys
     DynaArray<MeshVertexKey,uint32> vertexKeys;
@@ -1292,13 +1328,13 @@ sLoadFbxMesh(
                 // Always load skinning information for the first vertex.
                 // The function will also determine of the mesh is binding to a skeleton or not, by
                 // updating fatmesh.skeleton.
-                sLoadFbxVertexSkinning( fatmesh.skeleton, sk, fatmodel, fbxmesh, posIndex, firstVertex );
+                sLoadFbxVertexSkinning( fatmesh.skeleton, sk, sdk, fatmodel, fbxmesh, posIndex, firstVertex );
             }
             else if( fatmesh.skeleton != FatMesh::NO_SKELETON )
             {
                 // Load skinning information for the following vertices, only when the mesh is binding
                 // to a skeleton.
-                sLoadFbxVertexSkinning( fatmesh.skeleton, sk, fatmodel, fbxmesh, posIndex, firstVertex );
+                sLoadFbxVertexSkinning( fatmesh.skeleton, sk, sdk, fatmodel, fbxmesh, posIndex, firstVertex );
             }
             if( fatmesh.skeleton != FatMesh::NO_SKELETON )
             {
@@ -1317,8 +1353,8 @@ sLoadFbxMesh(
             // If the key exists already, the pair will point to it.
             // If the key does not exisit, the pair will point to the newly inserted one.
             // Either way, pair->value should give us the correct index of the vertex.
-            MeshVertexHashMap::KeyValuePair * pair;
-            bool isNewVertex = vhash.insert( key, (uint32)vhash.size(), &pair );
+            MeshVertexMap::KeyValuePair * pair;
+            bool isNewVertex = vtxmap.insert( key, (uint32)vtxmap.size(), &pair );
             uint32 vertexIndex = pair->value;
 
             if( isNewVertex )
@@ -1455,6 +1491,21 @@ sLoadFromFBX( FatModel & fatmodel, File & file, const StrA & filename )
 
     // Load skeletons
     sLoadFbxSkeletons( fatmodel, gScene->GetRootNode() );
+
+    #if USE_JOINT_MAP
+    // Build joint map to accelerate joint searching by name.
+    for( uint32 s = 0; s < fatmodel.skeletons.size(); ++s )
+    {
+        FatSkeleton & fatsk = fatmodel.skeletons[s];
+        for( uint32 j = 0; j < fatsk.joints.size(); ++j )
+        {
+            const StrA & jointName = fatsk.joints[j].name;
+            FbxSdkWrapper::JointLocation location = { s, j };
+            sdk.jointMap.insert( jointName, location );
+            //printf( "Insert joint %s to joint map.\n", jointName );
+        }
+    }
+    #endif
 
     // TODO: Load animations
     //sLoadFbxAnimations( fatmodel, gScene->GetRootNode() );

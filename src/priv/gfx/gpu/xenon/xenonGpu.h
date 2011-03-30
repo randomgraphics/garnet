@@ -233,11 +233,11 @@ namespace GN { namespace gfx
             }
         };
 
-        //typedef GN::HashMap<
+        //typedef HashMap<
         //    XenonVertexDeclDesc,
         //    IDirect3DVertexDeclaration9*,
         //    HashMapUtils::HashFunc_MemoryHash<XenonVertexDeclDesc> > XenonVertexDeclarationDict;
-        typedef GN::Dictionary<XenonVertexDeclDesc,IDirect3DVertexDeclaration9*> XenonVertexDeclarationDict;
+        typedef Dictionary<XenonVertexDeclDesc,IDirect3DVertexDeclaration9*> XenonVertexDeclarationDict;
 
         XenonRenderTargetManager    * mRTMgr;
         XenonVertexDeclarationDict    mVertexFormats;

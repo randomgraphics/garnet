@@ -15,7 +15,7 @@ class StringMapTest : public CxxTest::TestSuite
         }
     };
 
-    typedef GN::HashMap<std::string, size_t, StlStringHash> StrHashMap;
+    typedef GN::HashMap<std::string, size_t, 128, StlStringHash> StrHashMap;
 
     struct WordTable
     {
