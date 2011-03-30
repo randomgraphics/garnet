@@ -86,9 +86,10 @@ namespace GN
     template<
         class  KEY,
         class  VALUE,
+        size_t DEFAULT_HASH_TABLE_SIZE,
         class  KEY_HASH_FUNC = HashMapUtils::HashFunc_ToUInt64<KEY>,
-        class  KEY_EQUAL_FUNC = HashMapUtils::EqualFunc_Operator<KEY>,
-        size_t LOAD_FACTOR = 2 >
+        class  KEY_EQUAL_FUNC = HashMapUtils::EqualFunc_Operator<KEY>
+        >
     class HashMap
     {
     public:
@@ -113,10 +114,10 @@ namespace GN
         //@{
 
 
-        explicit HashMap( size_t initialTableSize = 0 )
+        explicit HashMap( size_t hashTableSize = DEFAULT_HASH_TABLE_SIZE )
             : mKeyHashFunc( KEY_HASH_FUNC() )
             , mKeyEqualFunc( KEY_EQUAL_FUNC() )
-            , mPrimIndex( getInitialPrimIndex( initialTableSize ) )
+            , mPrimIndex( sDeterminePrimIndex( hashTableSize ) )
             , mCount(0)
             , mTable( HASH_MAP_PRIMARY_ARRAY[mPrimIndex] )
         {
@@ -221,19 +222,6 @@ namespace GN
                     if( pair ) *pair = *pp;
                     return false;
                 }
-            }
-
-            // adjust primary index
-            if( (mCount+1) > (N*LOAD_FACTOR) && (mPrimIndex+1) < GN_ARRAY_COUNT(HASH_MAP_PRIMARY_ARRAY) )
-            {
-                // increase table size
-                ++mPrimIndex;
-                N = HASH_MAP_PRIMARY_ARRAY[mPrimIndex];
-                mTable.resize( N );
-
-                // Re-hashing...
-                k = mod( hashedKey, N );
-                hi = &mTable[k];
             }
 
             // create new pair item
@@ -382,14 +370,18 @@ namespace GN
 
     private:
 
-        /// return index to primay number array
-        static inline size_t getInitialPrimIndex( size_t initialSize )
+        /// Find a primary number in the primary number array that is equal
+        /// or larger than the hash table size.
+        ///
+        /// \param  hashTableSize   The hash table size.
+        /// \return                 index of the primary number in the primary number array.
+        static inline size_t sDeterminePrimIndex( size_t hashTableSize )
         {
             size_t i;
 
             for( i = 0; i < GN_ARRAY_COUNT(HASH_MAP_PRIMARY_ARRAY); ++i )
             {
-                if( HASH_MAP_PRIMARY_ARRAY[i] >= initialSize ) return i;
+                if( HASH_MAP_PRIMARY_ARRAY[i] >= hashTableSize ) return i;
             }
 
             return i - 1;

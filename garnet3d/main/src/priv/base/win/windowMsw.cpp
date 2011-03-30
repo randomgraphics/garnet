@@ -3,7 +3,7 @@
 
 #if GN_MSWIN
 
-GN::HashMap<void*,GN::win::WindowMsw*> GN::win::WindowMsw::msInstanceMap;
+GN::Dictionary<void*,GN::win::WindowMsw*> GN::win::WindowMsw::msInstanceMap;
 
 static GN::Logger * sLogger = GN::getLogger("GN.win.MSW");
 

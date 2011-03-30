@@ -70,7 +70,7 @@ namespace GN { namespace engine
 
     private:
 
-        typedef HashMap<Guid, Component*, Guid::Hash> ComponentMap;
+        typedef HashMap<Guid, Component*, 128, Guid::Hash> ComponentMap;
 
         int           mID;
         ComponentMap  mComponents;

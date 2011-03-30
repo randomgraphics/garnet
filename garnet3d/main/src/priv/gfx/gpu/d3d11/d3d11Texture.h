@@ -112,6 +112,7 @@ namespace GN { namespace gfx
         typedef HashMap<
             D3D11_SHADER_RESOURCE_VIEW_DESC,
             AutoComPtr<ID3D11ShaderResourceView>,
+            128,
             HashMapUtils::HashFunc_MemoryHash<D3D11_SHADER_RESOURCE_VIEW_DESC>,
             HashMapUtils::EqualFunc_MemoryCompare<D3D11_SHADER_RESOURCE_VIEW_DESC>
             > SRViewMap;
@@ -119,6 +120,7 @@ namespace GN { namespace gfx
         typedef HashMap<
             D3D11_RENDER_TARGET_VIEW_DESC,
             AutoComPtr<ID3D11RenderTargetView>,
+            128,
             HashMapUtils::HashFunc_MemoryHash<D3D11_RENDER_TARGET_VIEW_DESC>,
             HashMapUtils::EqualFunc_MemoryCompare<D3D11_RENDER_TARGET_VIEW_DESC>
             > RTViewMap;
@@ -126,6 +128,7 @@ namespace GN { namespace gfx
         typedef HashMap<
             D3D11_DEPTH_STENCIL_VIEW_DESC,
             AutoComPtr<ID3D11DepthStencilView>,
+            128,
             HashMapUtils::HashFunc_MemoryHash<D3D11_DEPTH_STENCIL_VIEW_DESC>,
             HashMapUtils::EqualFunc_MemoryCompare<D3D11_DEPTH_STENCIL_VIEW_DESC>
             > DSViewMap;

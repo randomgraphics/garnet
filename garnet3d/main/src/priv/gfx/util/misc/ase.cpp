@@ -1375,12 +1375,20 @@ struct VertexSelector
 template<typename T>
 class ElementCollection
 {
-    typedef GN::HashMap<T,uint32,typename T::Hash> TypeMap;
+    typedef GN::HashMap<T,uint32, 128, typename T::Hash> TypeMap;
 
     TypeMap      mMap;
     DynaArray<T> mBuffer;
 
 public:
+
+    ///
+    /// Contructor
+    ///
+    ElementCollection( size_t potentialItemCount )
+        : mMap( potentialItemCount * 2 )
+    {
+    }
 
     ///
     /// add element into buffer, ignore redundant element.
@@ -1522,7 +1530,7 @@ static bool sWriteGeoObject( AseScene & dst, const AseSceneInternal & src, const
     dstmesh.strides[0] = sizeof(OutputVertex);
 
     // generate mesh
-    VertexCollection  vc;
+    VertexCollection  vc( obj.mesh.faces.size() * 3 );
     VertexSelector    vs;
     DynaArray<uint32> ib; // index into vertex collection
     for( size_t i = 0; i < obj.mesh.chunks.size(); ++i )

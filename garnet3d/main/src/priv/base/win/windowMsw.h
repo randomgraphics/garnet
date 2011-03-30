@@ -72,7 +72,7 @@ namespace GN { namespace win
         HINSTANCE mModuleInstance;
         HWND mWindow;
 
-        static HashMap<void*,WindowMsw*> msInstanceMap;
+        static Dictionary<void*,WindowMsw*> msInstanceMap;
 
         // ********************************
         // private functions

@@ -508,6 +508,7 @@ namespace GN { namespace gfx
         typedef HashMap<
             OBJECT_DESC,
             StateObjectItem*,
+            CACHE_SIZE,
             typename D3D11StateObjectCreator<OBJECT_DESC>::Hash,
             typename D3D11StateObjectCreator<OBJECT_DESC>::Equal
             > ObjectHashMap;
