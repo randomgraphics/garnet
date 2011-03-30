@@ -81,8 +81,17 @@ namespace GN
         Impl * mImpl;
     };
 
+    template<typename T>
+    struct DictionaryUtil_LessOperator
+    {
+        bool operator()( const T & a, const T & b )
+        {
+            return a < b;
+        }
+    };
+
     /// Dictionary template
-    template<typename KEY_TYPE, typename VALUE_TYPE>
+    template<typename KEY_TYPE, typename VALUE_TYPE, typename KEY_LESS_FUNC=DictionaryUtil_LessOperator<KEY_TYPE> >
     class Dictionary
     {
     public:
@@ -202,9 +211,17 @@ namespace GN
         // public methods
         //@{
 
-        Dictionary() : mTypelessDict( TypeHelper<KEY_TYPE>::sMakeKeyTypeTraits(), TypeHelper<VALUE_TYPE>::sMakeValueTypeTraits() ) {}
-        Dictionary( const Dictionary & d ) : mTypelessDict( d.mTypelessDict ) {}
-        ~Dictionary() {}
+        Dictionary()
+            : mTypelessDict( TypeHelper<KEY_TYPE>::sMakeKeyTypeTraits(), TypeHelper<VALUE_TYPE>::sMakeValueTypeTraits() )
+        {
+        }
+        Dictionary( const Dictionary & d )
+            : mTypelessDict( d.mTypelessDict )
+        {
+        }
+        ~Dictionary()
+        {
+        }
 
         ConstIterator       begin() const { ConstIterator i( mTypelessDict.begin() ); return i; }
         Iterator            begin() { Iterator i( mTypelessDict.begin() ); return i; }
@@ -309,11 +326,12 @@ namespace GN
             static bool less( const void * a, const void * b )
             {
                 GN_ASSERT( a && b );
-                return (*(const T*)a) < (*(const T*)b);
+                KEY_LESS_FUNC lessFunc;
+                return lessFunc( *(const T*)a, *(const T*)b );
             }
         };
 
-        TypelessDict mTypelessDict;
+        TypelessDict  mTypelessDict;
     };
 };
 
