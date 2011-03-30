@@ -1796,15 +1796,129 @@ sLoadAiJointHierarchy( FatSkeleton & fatsk, uint32 parentJointIndex, const aiNod
             currentJoint.sibling = parentJoint.child;
             parentJoint.child = currentJointIndex;
         }
+
+        // Search through the subtree for more joints.
+        for( uint32 i = 0; i < ainode->mNumChildren; ++i )
+        {
+            sLoadAiJointHierarchy( fatsk, currentJointIndex, ainode->mChildren[i] );
+        }
+    }
+    else if( FatJoint::NO_JOINT == parentJointIndex )
+    {
+        // The current joint does not match any joints. Since the parent joint index,
+        // is NO_JOINT too, it means that we havn't searched deep enough to even find
+        // the root node of the skeleton. So keep searching...
+        for( uint32 i = 0; i < ainode->mNumChildren; ++i )
+        {
+            sLoadAiJointHierarchy( fatsk, currentJointIndex, ainode->mChildren[i] );
+        }
     }
     else
     {
-        // If there's no joint in the skeleton that matches the node name,
-        // then the parentJoint is already the leaf joint.
-        GN_ASSERT(
-            FatJoint::NO_JOINT == parentJointIndex ||
-            FatJoint::NO_JOINT == fatsk.joints[parentJointIndex].child );
+        // If there's no joint in the skeleton that matches the current node.
+        // It means the parent joint must be a leaf joint. So there's no need
+        // to search through the sub tree.
+        GN_ASSERT( FatJoint::NO_JOINT == fatsk.joints[parentJointIndex].child );
     }
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+static bool
+sSortJointHierarchy( FatSkeleton & fatsk )
+{
+    // In an valid joint hierarchy, there should be one joint
+    // and one joint only that has no parent.
+    uint32 jointArraySize = fatsk.joints.size();
+    uint32 root = FatJoint::NO_JOINT;
+    for( uint32 i = 0; i < jointArraySize; ++i )
+    {
+        FatJoint & j = fatsk.joints[i];
+
+        // make sure parent/child/sibling are in vaild range
+        if( j.parent  >= jointArraySize && FatJoint::NO_JOINT != j.parent ||
+            j.child   >= jointArraySize && FatJoint::NO_JOINT != j.child  ||
+            j.sibling >= jointArraySize && FatJoint::NO_JOINT != j.sibling )
+        {
+            GN_ERROR(sLogger)( "Invalid joint herarchy: joint %d contains invalid joint index.", i );
+            return false;
+        }
+
+        // If the joint has no parent, it should be the root joint.
+        if( FatJoint::NO_JOINT == j.parent )
+        {
+            if( root != FatJoint::NO_JOINT )
+            {
+                // There's more than one joint in the tree that has no parent.
+                GN_ERROR(sLogger)( "Invalid joint hierarchy: multiple root joints." );
+                return false;
+            }
+
+            // Remember index of the root joint. Then continue the loop, to see if
+            // there's another root joint.
+            root = i;
+        }
+    }
+    if( root == FatJoint::NO_JOINT )
+    {
+        GN_ERROR(sLogger)( "Invalid joint hierarchy: root joint not found." );
+        return false;
+    }
+
+    // Move root joint to slot 0, if it is not already there.
+    if( 0 != root )
+    {
+        // Swap joint[0] with joint[root]
+        FatJoint tmp = fatsk.joints[root];
+        fatsk.joints[root] = fatsk.joints[0];
+        fatsk.joints[0] = tmp;
+
+        // Now update indices in all joints:
+        //   - if the index points to joint[root], reset it to joint[0]; or,
+        //   - if the index points to joint[0], reset it to joint[root].
+        for( uint32 i = 0; i < fatsk.joints.size(); ++i )
+        {
+            FatJoint & j = fatsk.joints[i];
+
+            if( 0 == j.parent ) j.parent = root;
+            else if( root == j.parent ) j.parent = 0;
+
+            if( 0 == j.child ) j.child = root;
+            else if( root == j.child ) j.child = 0;
+
+            if( 0 == j.sibling ) j.sibling = root;
+            else if( root == j.sibling ) j.sibling = 0;
+        }
+    }
+
+#if 0
+    // Count number of joints in the hierarchy recursivly.
+    // It should equal size of the joint array.
+    struct Local
+    {
+        static void sCountJointRecursivly( const FatJoint * joints, uint32 arraySize, uint32 & counter, uint32 parent )
+        {
+            GN_UNIMPL();
+        }
+    };
+    uint32 counter = 0;
+    Local::sCountJointRecursivly( fatsk.joints.cptr(), fatsk.joints.size(), counter, 0 );
+    if( counter != fatsk.joints.size() )
+    {
+        GN_ERROR(sLogger)( "Invalid joint hierarchy!" );
+        return false;
+    }
+#endif
+
+#if 0
+    // Print joint hierarchy
+    StrA s;
+    fatsk.printJointHierarchy( s );
+    GN_INFO(sLogger)( s );
+#endif
+
+    return true;
 }
 
 //
@@ -1854,10 +1968,11 @@ void sLoadAiMeshSkeleton( FatModel & fatmodel, FatMesh & fatmesh, const aiScene 
         fatjoint.sibling = FatJoint::NO_JOINT;
     }
 
-    // setup joint hierarchy.
-    sLoadAiJointHierarchy( fatsk, aiscene->mRootNode );
+    // Load joint hierarchy from AI scene
+    sLoadAiJointHierarchy( fatsk, FatJoint::NO_JOINT, aiscene.mRootNode );
 
-    // TODO: validate the hierarchy to make sure that it is a single tree.
+    // Then sort the hierarchy based on depth, to make sure that the root joint stays at index 0.
+    if( !sSortJointHierarchy( fatsk ) ) return;
 
     // Add the new skeleton to fat model.
     if( !fatmodel.skeletons.append(fatsk) )
@@ -2098,8 +2213,8 @@ static void sLoadAiNodeRecursivly(
         AutoObjPtr<FatMesh> fatmeshAutoPtr( new FatMesh );
         FatMesh & fatmesh = *fatmeshAutoPtr;
 
-        // Load skeletons
-        sLoadAiMeshSkeleton( fatmodel, fatmesh, *aiscene, *aimesh, );
+        // Load skeleton
+        sLoadAiMeshSkeleton( fatmodel, fatmesh, *aiscene, *aimesh );
 
         // Load mesh vertices and indices
         if( !sLoadAiIndices( fatmesh, aimesh ) ) continue;
@@ -2157,6 +2272,46 @@ static bool sLoadFromAssimp( FatModel & fatmodel, const StrA & filename )
 
     // calculate the final bounding box
     fatmodel.calcBoundingBox();
+
+    aiReleaseImport( scene );
+    return true;
+}
+
+static bool
+sPrintAiNodeHierarchy( StrA & hierarchy, const StrA & filename )
+{
+    const aiScene * scene = aiImportFile( filename, aiProcessPreset_TargetRealtime_Quality );
+    if( NULL == scene ) return false;
+
+    struct Local
+    {
+        static void sPrintRecursivly( StrA & hierarchy, const aiNode * node, int depth )
+        {
+            if( NULL == node ) return;
+
+            for( int i = 0; i < depth; ++i )
+            {
+                hierarchy += "  ";
+            }
+
+            hierarchy += stringFormat( "(%d) ", depth );
+
+            const char * name = node->mName.data;
+
+            hierarchy += stringEmpty(name) ? "[UNNAMED]" : name;
+
+            hierarchy += "\n";
+
+            for( uint32 i = 0; i < node->mNumChildren; ++i )
+            {
+                sPrintRecursivly( hierarchy, node->mChildren[i], depth + 1 );
+            }
+        }
+    };
+
+    Local::sPrintRecursivly( hierarchy, scene->mRootNode, 0 );
+
+    if( hierarchy.empty() ) hierarchy = "[EMPTY FILE]";
 
     aiReleaseImport( scene );
     return true;
@@ -2319,11 +2474,13 @@ void GN::gfx::printModelFileNodeHierarchy( StrA & hierarchy, const StrA & filena
     StrA fullFileName = fs::resolvePath( fs::getCurrentDir(), filename );
 
     FileFormat ff = sDetermineFileFormatByFileName( fullFileName );
-    if( FF_FBX != ff )
+    if( FF_FBX == ff )
     {
-        hierarchy = "ERROR: FBX file only.";
-        return;
+        fbx::sPrintFBXNodeHierarchy( hierarchy, fullFileName );
+    }
+    else if( !ai::sPrintAiNodeHierarchy( hierarchy, fullFileName ) )
+    {
+        hierarchy = "ERROR: unsupported or unknown file format.";
     }
 
-    fbx::sPrintFBXNodeHierarchy( hierarchy, fullFileName );
 }
