@@ -42,7 +42,15 @@ class BasicInterface : public T
 {
     typedef BasicInterface<T> MyType;
 
-    typedef GN::HashMap<IID,MyType*,IIDHash,IIDEqual> TypeTable;
+    struct IIDLess
+    {
+        bool operator()( const IID & a, const IID & b ) const
+        {
+            return ::memcmp( &a, &b, sizeof(a) ) < 0;
+        }
+    };
+
+    typedef GN::Dictionary<IID, MyType*, IIDLess> TypeTable;
 
     TypeTable mRtti; ///< My runtime type information, used by query interface
 
