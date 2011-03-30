@@ -203,7 +203,7 @@ bool GN::gfx::FatVertexBuffer::GenerateVertexStream(
         }
         if( INVALID == semantics[i] )
         {
-            GN_WARN(sLogger)( "unsupport semantic: %s", mvf.elements[i].semantic );
+            GN_WARN(sLogger)( "unsupport semantic: %s", s );
         }
     }
 
@@ -213,11 +213,14 @@ bool GN::gfx::FatVertexBuffer::GenerateVertexStream(
         if( semantics[j] == INVALID ) continue;
 
         const MeshVertexElement & e = mvf.elements[j];
-        SafeArrayAccessor<const uint8> src( (const uint8*)mElements[semantics[j]], mCount * ELEMENT_SIZE );
-        SafeArrayAccessor<uint8>       dst( (uint8*)buffer + e.offset, (mCount * stride) - e.offset );
+
         size_t size = e.format.getBytesPerBlock();
+        if( 0 == size ) continue;
 
         GN_ASSERT( ( e.offset + size ) <= stride );
+
+        SafeArrayAccessor<const uint8> src( (const uint8*)mElements[semantics[j]], mCount * ELEMENT_SIZE );
+        SafeArrayAccessor<uint8>       dst( (uint8*)buffer + e.offset, (mCount * stride) - e.offset );
 
         for( size_t i = 0; i < mCount; ++i )
         {

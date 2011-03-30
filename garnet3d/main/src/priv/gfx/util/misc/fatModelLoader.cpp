@@ -28,6 +28,115 @@ using namespace GN::gfx;
 
 static GN::Logger * sLogger = GN::getLogger("GN.gfx.FatModel");
 
+
+#ifndef IN
+#define IN
+#endif
+
+#ifndef OUT
+#define OUT
+#endif
+
+#ifndef INOUT
+#define INOUT
+#endif
+
+// *****************************************************************************
+// Common utilities
+// *****************************************************************************
+
+//
+//
+// -----------------------------------------------------------------------------
+template<uint32 MAX_JOINTS_PER_VERTEX>
+static void sAddNewBone(
+    INOUT uint32 * joints,
+    INOUT float  * weights,
+    IN    uint32   newJoint,
+    IN    float    newWeight,
+    // Parameters bellow are only used in error logging.
+    IN    uint32   vertexIndex,
+    IN    uint32   skeletonIndex )
+{
+    // Add new bone and weight to the skinning structure, and keep the
+    // joints in the desending order of weights. We support limited number
+    // of joints per vertex. When too many joints are affecting a single
+    // vertex, joints with less influence will be dropped, with warning.
+
+    // The loop index "j" is deliberately set to an unsigned integer.
+    // When the loop reaches the end, j's value should be -1, which, in term
+    // of unsigned int, is actually 0xFFFFFFFF.
+    for( uint32 j = MAX_JOINTS_PER_VERTEX - 1; j < MAX_JOINTS_PER_VERTEX; --j )
+    {
+        if( FatJoint::NO_JOINT == joints[j] ||
+            weights[j] < newWeight )
+        {
+            // The new/current weight is larger than the existing weight in slot #j,
+            // or there's no joint in slot #j. We need to move the existing joint
+            // to the next slot to make space for the new joint, or drop the existing
+            // joint, if the joint array is full already.
+
+            if( (j+1) < MAX_JOINTS_PER_VERTEX )
+            {
+                joints[j+1]  = joints[j];
+                weights[j+1] = weights[j];
+
+                if( 0 == j )
+                {
+                    // The current weight is larger than any existing weights the
+                    // the array. So just store current joint and weight in slot 0.
+                    joints[0]  = newJoint;
+                    weights[0] = newWeight;
+                }
+            }
+            else if( FatJoint::NO_JOINT != joints[j] )
+            {
+                // The joint array is full. And the last existing weight in the array
+                // is smaller then the new/current weight. So the existing one will be
+                // dropped, with warning.
+                GN_VERBOSE(sLogger)(
+                    "Vertex %d has more than 4 joints attatched. "
+                    "Joint %d (weight=%f) in skeleton %d is going to be ignore, "
+                    "because it has less influence to the vertex "
+                    "then other joints.",
+                    vertexIndex,
+                    joints[j], weights[j],
+                    skeletonIndex );
+            }
+        }
+        else
+        {
+            // The new weight is smaller then the weight in slot #j. So we need
+            // to store the new weight in slot (j+1), or ignore the new weight
+            // if the joint array is full already.
+
+            if( (j+1) < MAX_JOINTS_PER_VERTEX )
+            {
+                // Store new joint at slot (j+1)
+                joints[j+1] = newJoint;
+                weights[j+1] = newWeight;
+            }
+            else
+            {
+                // Drop the new joint, since the joint array is full already.
+                GN_VERBOSE(sLogger)(
+                    "Vertex %d has more than 4 joints attatched. "
+                    "Joint %d (weight=%f) in skeleton %d is going to be ignore, "
+                    "because it has less influence to the vertex "
+                    "then other joints.",
+                    vertexIndex,
+                    newJoint, newWeight,
+                    skeletonIndex );
+            }
+
+            // We've done with the new joint. It has been either stored in the array,
+            // or dropped already.
+            break;
+        }
+    }
+}
+
+
 // *****************************************************************************
 // ASE loader
 // *****************************************************************************
@@ -663,17 +772,13 @@ sLoadFbxSkeletons(
 #endif
 }
 
-#ifndef IN
-#define IN
-#endif
+/*
+// Search through all skeletons for joint with specific name.
+// -----------------------------------------------------------------------------
+static void sLoadFbxAnimations( FatModel & fatmodel, KFbxScene * fbxscene )
+{
 
-#ifndef OUT
-#define OUT
-#endif
-
-#ifndef INOUT
-#define INOUT
-#endif
+}*/
 
 //
 // Search through all skeletons for joint with specific name.
@@ -708,7 +813,7 @@ sSearchForNamedJoint(
 // Get vertex skinning information for the vertex specified by controlPointIndex.
 // -----------------------------------------------------------------------------
 static void
-sLoadVertexSkinning(
+sLoadFbxVertexSkinning(
     INOUT uint32         & skeleton, // Index into FatModel::skeleton arrayreturns the skeleton that of the joint
     OUT   Skinning       & sk,
     IN    const FatModel & fatmodel,
@@ -796,81 +901,8 @@ sLoadVertexSkinning(
                 float currentWeight = (float)weights[iCpi];
                 if( 0 == currentWeight ) continue;
 
-                // Add it to the skinning structure, and keep the joints
-                // in the desending order of weights. We support at most
-                // 4 joints per vertex. When too many joints are affecting
-                // a single vertex, joints with less influence will be
-                // dropped.
-
-                int maxJoints = (int)GN_ARRAY_COUNT(sk.joints);
-                for( int iJoint = maxJoints - 1; iJoint >= 0; --iJoint )
-                {
-                    if( FatJoint::NO_JOINT == sk.joints[iJoint] ||
-                        sk.weights[iJoint] < currentWeight )
-                    {
-                        // The new/current weight is larger than the existing weight in slot #iJoint,
-                        // or there's no joint in slot #iJoint. We need to move the existing joint
-                        // to the next slot to make space for the new joint, or drop the existing
-                        // joint, if the joint array is full already.
-
-                        if( (iJoint+1) < maxJoints )
-                        {
-                            sk.joints[iJoint+1]  = sk.joints[iJoint];
-                            sk.weights[iJoint+1] = sk.weights[iJoint];
-
-                            if( 0 == iJoint )
-                            {
-                                // The current weight is larger than any existing weights the
-                                // the array. So just store current joint and weight in slot 0.
-                                sk.joints[0]  = currentJoint;
-                                sk.weights[0] = currentWeight;
-                            }
-                        }
-                        else if( FatJoint::NO_JOINT != sk.joints[iJoint] )
-                        {
-                            // The joint array is full. And the last existing weight in the array
-                            // is smaller then the new/current weight. So the existing one will be
-                            // dropped, with warning.
-                            GN_ERROR(sLogger)(
-                                "Vertex %d has more than 4 joints attatched. "
-                                "Joint %d (weight=%f) in skeleton %d is going to be ignore, "
-                                "because it has less influence to the vertex "
-                                "then other joints.",
-                                controlPointIndex,
-                                sk.joints[iJoint], sk.weights[iJoint],
-                                skeleton );
-                        }
-                    }
-                    else
-                    {
-                        // The new weight is smaller then the weight in slot #iJoint. So we need
-                        // to store the new weight in slot (iJoint+1), or ignore the new weight
-                        // if the joint array is full already.
-
-                        if( (iJoint+1) < maxJoints )
-                        {
-                            // Store new joint at slot (iJoint+1)
-                            sk.joints[iJoint+1] = currentJoint;
-                            sk.weights[iJoint+1] = currentWeight;
-                        }
-                        else
-                        {
-                            // Drop the new joint, since the joint array is full already.
-                            GN_ERROR(sLogger)(
-                                "Vertex %d has more than 4 joints attatched. "
-                                "Joint %d (weight=%f) in skeleton %d is going to be ignore, "
-                                "because it has less influence to the vertex "
-                                "then other joints.",
-                                controlPointIndex,
-                                currentJoint, currentWeight,
-                                skeleton );
-                        }
-
-                        // We've done with the new joint. It has been either stored in the array,
-                        // or dropped already.
-                        break;
-                    }
-                }
+                // Add the new binding information to the skinning structure.
+                sAddNewBone<GN_ARRAY_COUNT(sk.joints)>( sk.joints, sk.weights, currentJoint, currentWeight, controlPointIndex, skeleton );
 
                 // We've assigned the joint linked to the cluster to the vertex. So break out of this
                 // loop and contineu with next cluster.
@@ -953,7 +985,7 @@ sGenerateFatVertices(
 
     // Allocate fat vertex buffer.
     FatVertexBuffer & fatvb = fatmesh.vertices;
-    if( !fatvb.resize( FatVertexBuffer::POS_NORMAL_TEX_SKINNING, numkeys ) ) return false;
+    if( !fatvb.resize( layout, numkeys ) ) return false;
 
     fatvb.setElementFormat( FatVertexBuffer::POSITION,  ColorFormat::FLOAT3 );
     fatvb.setElementFormat( FatVertexBuffer::NORMAL,    ColorFormat::FLOAT3 );
@@ -1260,13 +1292,13 @@ sLoadFbxMesh(
                 // Always load skinning information for the first vertex.
                 // The function will also determine of the mesh is binding to a skeleton or not, by
                 // updating fatmesh.skeleton.
-                sLoadVertexSkinning( fatmesh.skeleton, sk, fatmodel, fbxmesh, posIndex, firstVertex );
+                sLoadFbxVertexSkinning( fatmesh.skeleton, sk, fatmodel, fbxmesh, posIndex, firstVertex );
             }
             else if( fatmesh.skeleton != FatMesh::NO_SKELETON )
             {
                 // Load skinning information for the following vertices, only when the mesh is binding
                 // to a skeleton.
-                sLoadVertexSkinning( fatmesh.skeleton, sk, fatmodel, fbxmesh, posIndex, firstVertex );
+                sLoadFbxVertexSkinning( fatmesh.skeleton, sk, fatmodel, fbxmesh, posIndex, firstVertex );
             }
             if( fatmesh.skeleton != FatMesh::NO_SKELETON )
             {
@@ -1423,6 +1455,9 @@ sLoadFromFBX( FatModel & fatmodel, File & file, const StrA & filename )
 
     // Load skeletons
     sLoadFbxSkeletons( fatmodel, gScene->GetRootNode() );
+
+    // TODO: Load animations
+    //sLoadFbxAnimations( fatmodel, gScene->GetRootNode() );
 
     // Load meshes
     sLoadFbxMeshes( fatmodel, filename, sdk, *gScene );
@@ -1721,6 +1756,122 @@ class MyIOSystem : public Assimp::IOSystem
 //
 //
 // -----------------------------------------------------------------------------
+static void
+sLoadAiJointHierarchy( FatSkeleton & fatsk, uint32 parentJointIndex, const aiNode * ainode )
+{
+    if( NULL == ainode ) return;
+
+    // Store node name.
+    const StrA & name = ainode->mName.data;
+
+    // Search through joints for a joint with the same name as node name.
+    uint32 currentJointIndex = FatJoint::NO_JOINT;
+    for( uint32 i = 0; i < fatsk.joints.size(); ++i )
+    {
+        if( fatsk.joints[i].name == name )
+        {
+            currentJointIndex = i;
+            break;
+        }
+    }
+
+    if( FatJoint::NO_JOINT != currentJointIndex )
+    {
+        // We found the joint. It must be one of the children of the parent joint.
+
+        // Reference the current joint
+        FatJoint & currentJoint = fatsk.joints[currentJointIndex];
+
+        // Store parent index
+        currentJoint.parent = parentJointIndex;
+
+        if( FatJoint::NO_JOINT != parentJointIndex )
+        {
+            // Reference the parent joint.
+            FatJoint & parentJoint = fatsk.joints[parentJointIndex];
+
+            // Add the current joint to parent joint's children list. We do prepending
+            // instead of appending, because the childen list is a single-linked-list.
+            // The prepending operation is much cheaper than appending operation.
+            currentJoint.sibling = parentJoint.child;
+            parentJoint.child = currentJointIndex;
+        }
+    }
+    else
+    {
+        // If there's no joint in the skeleton that matches the node name,
+        // then the parentJoint is already the leaf joint.
+        GN_ASSERT(
+            FatJoint::NO_JOINT == parentJointIndex ||
+            FatJoint::NO_JOINT == fatsk.joints[parentJointIndex].child );
+    }
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+void sLoadAiMeshSkeleton( FatModel & fatmodel, FatMesh & fatmesh, const aiScene & aiscene, const aiMesh & aimesh )
+{
+    // No skeleton by default.
+    fatmesh.skeleton = FatMesh::NO_SKELETON;
+
+    if( 0 == aimesh.mNumBones ) return;
+
+    FatSkeleton fatsk;
+    fatsk.name = aimesh.mName.data;
+
+    if( !fatsk.joints.resize( aimesh.mNumBones ) )
+    {
+        GN_ERROR(sLogger)( "Out of memory." );
+        return;
+    }
+
+    for( uint32 i = 0; i < aimesh.mNumBones; ++i )
+    {
+        const aiBone & aibone = *aimesh.mBones[i];
+
+        FatJoint & fatjoint = fatsk.joints[i];
+
+        fatjoint.name = aibone.mName.data;
+
+        // AI matrix is in D3D style. What does it mean is that when the AI matrix is
+        // used to transform a vector, it is done in this way:
+        //
+        //          V' = V * M
+        //
+        // In Garnet geometry system, however, the same math is done like this:
+        //
+        //          V' = M * V
+        //
+        // Noticing that the order of mutiplication is different. And it matters.
+        //
+        // To address this difference, the AI matrix has to be transposed.
+        fatjoint.bindPose = Matrix44f::sTranspose( *(Matrix44f*)&aibone.mOffsetMatrix );
+
+        // Setup default hierarchy
+        fatjoint.parent  = FatJoint::NO_JOINT;
+        fatjoint.child   = FatJoint::NO_JOINT;
+        fatjoint.sibling = FatJoint::NO_JOINT;
+    }
+
+    // setup joint hierarchy.
+    sLoadAiJointHierarchy( fatsk, aiscene->mRootNode );
+
+    // TODO: validate the hierarchy to make sure that it is a single tree.
+
+    // Add the new skeleton to fat model.
+    if( !fatmodel.skeletons.append(fatsk) )
+    {
+        GN_ERROR(sLogger)( "Out of memory." );
+        return;
+    }
+
+    fatmesh.skeleton = fatmodel.skeletons.size() - 1;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
 static uint32 sDetermineFatVertexLayout( const aiMesh * aimesh )
 {
     uint32 layout = 1<<FatVertexBuffer::POSITION;
@@ -1733,7 +1884,50 @@ static uint32 sDetermineFatVertexLayout( const aiMesh * aimesh )
         if( aimesh->mTextureCoords[t] ) layout |= 1<<(FatVertexBuffer::TEXCOORD0 + t);
     }
 
+    if( aimesh->mNumBones > 0 ) layout |= (1<<FatVertexBuffer::JOINT_ID) | (1<<FatVertexBuffer::JOINT_WEIGHT);
+
     return layout;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+static void
+sLoadAiVertexSkinning(
+    uint32         joints[],
+    float          weights[],
+    uint32         vertexIndex,
+    uint32         skeletonIndex,
+    const aiMesh & aimesh )
+{
+    const uint32 MAX_JOINTS_PER_VERTEX = 4;
+
+    // setup default skinning: no bone, zero weight.
+    for( uint32 i = 0; i < MAX_JOINTS_PER_VERTEX; ++i )
+    {
+        joints[i] = FatJoint::NO_JOINT;
+        weights[i] = 0.0f;
+    }
+
+    // Search through all bones for the bone that affects the vertex specified by "vertexIndex".
+    for( uint32 b = 0; b < aimesh.mNumBones; ++b )
+    {
+        const aiBone & aibone = *aimesh.mBones[b];
+
+        for( uint32 w = 0; w <= aibone.mNumWeights; ++w )
+        {
+            const aiVertexWeight & aivw = aibone.mWeights[w];
+
+            if( aivw.mVertexId != vertexIndex ) continue;
+
+            // OK, we found the bone that affects the vertex. But if the weight
+            // is zero, we still need to ignore it.
+            if( 0.0 == aivw.mWeight ) continue;
+
+            // Add the new joint binding information into joint and weight array.
+            sAddNewBone<MAX_JOINTS_PER_VERTEX>( joints, weights, b, aivw.mWeight, vertexIndex, skeletonIndex );
+        }
+    }
 }
 
 //
@@ -1760,6 +1954,12 @@ static bool sLoadAiVertices(
     Vector4f * fattc0 = (Vector4f*)fatvb.getTexcoord(0);
     // TODO: get texcood format from aimesh.
     if( fattc0 ) fatvb.setElementFormat( FatVertexBuffer::TEXCOORD0, ColorFormat::FLOAT2 );
+
+    Vector4<uint32> * fatjoint = (Vector4<uint32>*)fatvb.getElementData( FatVertexBuffer::JOINT_ID );
+    if( fatjoint ) fatvb.setElementFormat( FatVertexBuffer::JOINT_ID, ColorFormat::UINT4 );
+
+    Vector4f * fatweight = (Vector4f*)fatvb.getElementData( FatVertexBuffer::JOINT_WEIGHT );
+    if( fatweight ) fatvb.setElementFormat( FatVertexBuffer::JOINT_WEIGHT, ColorFormat::FLOAT4 );
 
     aiMatrix4x4 normalTransform = transform;
     normalTransform.Transpose();
@@ -1805,6 +2005,16 @@ static bool sLoadAiVertices(
             fattc0->set( aitc0.x, 1.0f-aitc0.y, aitc0.z, 0.0f );
 
             ++fattc0;
+        }
+
+        if( fatjoint )
+        {
+            GN_ASSERT( fatweight );
+
+            sLoadAiVertexSkinning( *fatjoint, *fatweight, i, fatmesh.skeleton, *aimesh );
+
+            ++fatjoint;
+            ++fatweight;
         }
     }
 
@@ -1884,17 +2094,24 @@ static void sLoadAiNodeRecursivly(
     {
         const aiMesh * aimesh = aiscene->mMeshes[ainode->mMeshes[i]];
 
+        // create a new fat mesh instance
         AutoObjPtr<FatMesh> fatmeshAutoPtr( new FatMesh );
         FatMesh & fatmesh = *fatmeshAutoPtr;
 
+        // Load skeletons
+        sLoadAiMeshSkeleton( fatmodel, fatmesh, *aiscene, *aimesh, );
+
+        // Load mesh vertices and indices
         if( !sLoadAiIndices( fatmesh, aimesh ) ) continue;
         if( !sLoadAiVertices( fatmesh, aiscene, aimesh, myTransform ) ) continue;
 
+        // Setup mesh subset
         fatmesh.subsets.resize( 1 );
         FatMeshSubset & subset = fatmesh.subsets[0];
         memset( &subset, 0, sizeof(subset) );
         subset.material = aimesh->mMaterialIndex;
 
+        // Add the mesh to fat model.
         fatmodel.meshes.append( &fatmesh );
         fatmeshAutoPtr.detach();
     }
@@ -1913,7 +2130,7 @@ static bool sLoadFromAssimp( FatModel & fatmodel, const StrA & filename )
     const aiScene * scene = aiImportFile( filename, aiProcessPreset_TargetRealtime_Quality );
     if( NULL == scene ) return false;
 
-    // Load AI materials
+    // Load materials
     StrA dirname = fs::dirName( filename );
     fatmodel.materials.resize( scene->mNumMaterials );
     for( uint32 i = 0; i < fatmodel.materials.size(); ++i )
@@ -1933,9 +2150,9 @@ static bool sLoadFromAssimp( FatModel & fatmodel, const StrA & filename )
         }
     }
 
-    // Load AI nodes
-	aiMatrix4x4 rootTransform;
-	aiIdentityMatrix4(&rootTransform);
+    // Load meshes recursively
+    aiMatrix4x4 rootTransform;
+    aiIdentityMatrix4(&rootTransform);
     sLoadAiNodeRecursivly( fatmodel, scene, scene->mRootNode, rootTransform );
 
     // calculate the final bounding box
