@@ -235,27 +235,9 @@ namespace GN
     }
 
     ///
-    /// String Allocator
+    /// Custom string class. CHAR type must be POD type.
     ///
-    struct StringAllocator
-    {
-        /// Allocate memory
-        static void * sAllocate( size_t size, size_t alignment )
-        {
-            return HeapMemory::alignedAlloc( size, alignment );
-        }
-
-        /// Deallocate memory
-        static void sDeallocate( void * ptr )
-        {
-            HeapMemory::dealloc( ptr );
-        }
-    };
-
-    ///
-    /// Custom string class
-    ///
-    template<typename CHAR, typename ALLOCATOR = StringAllocator>
+    template<typename CHAR, typename RAW_MEMORY_ALLOCATOR = RawHeapMemoryAllocator>
     class Str
     {
         typedef CHAR CharType;
@@ -1084,16 +1066,20 @@ namespace GN
         // Allocate a memory buffer that can hold at least 'count' characters, and one extra '\0'.
         static CharType * alloc( size_t count )
         {
-            StringHeader * ptr = (StringHeader*)ALLOCATOR::sAllocate( sizeof(StringHeader) + sizeof(CharType) * (count + 1), sizeof(size_t) );
+            // ALLOCATOR:sAllocate only allocates raw memory buffer. No constuctors are invoked.
+            // This is safe, as long as CharType is POD type.
+            StringHeader * ptr = (StringHeader*)RAW_MEMORY_ALLOCATOR::sAllocate( sizeof(StringHeader) + sizeof(CharType) * (count + 1), sizeof(size_t) );
             return (CharType*)(ptr + 1);
         }
 
         static void dealloc( CharType * ptr )
         {
+            // ALLOCATOR:sDeallocate frees memory without calling destructors.
+            // This is safe, as long as CharType is POD type.
             if( ptr )
             {
                 StringHeader * p = (StringHeader*)ptr;
-                ALLOCATOR::sDeallocate( p - 1 );
+                RAW_MEMORY_ALLOCATOR::sDeallocate( p - 1 );
             }
         }
 

@@ -213,14 +213,6 @@ namespace GN { namespace gfx
         }
     };
 
-    /*struct FatJointTransform
-    {
-        // Local->Parent transform = T * R * S;
-        Vector3f    position; //< Position in parent space
-        Quaternionf rotation; //< Rotation in local space
-        Vector3f    scaling;  //< Scaling in local space.
-    };*/
-
     struct FatJoint
     {
         static const uint32 NO_JOINT = (uint32)-1;
@@ -244,12 +236,37 @@ namespace GN { namespace gfx
         void printJointHierarchy( StrA & ) const;
     };
 
+    struct FatJointRestPose
+    {
+        /// Time stamp.
+        uint32 timeInMilliSeconds;
+
+        // Local->Parent transform = T * R * S;
+        Vector3f    position; //< Position in parent space
+        Quaternionf rotation; //< Rotation in local space
+        Vector3f    scaling;  //< Scaling in local space.
+    };
+
+    struct FatJointAnimation
+    {
+        uint32                      skeleton;  //< Index into FatModel::skeletons
+        uint32                      joint;     //< Index into FatSkeleton::joints
+        DynaArray<FatJointRestPose> restPoses; //< Joint rest poses sorted by time.
+    };
+
+    struct FatAnimation
+    {
+        StrA                         name;            //< Name of the animation.
+        DynaArray<FatJointAnimation> jointAnimations; //< Joint animation array.
+    };
+
     struct FatModel : public NoCopy
     {
         StrA                           name;       //< name of the model. Usually the filename which the model is loaded from.
         DynaArray<FatMesh*,uint32>     meshes;     //< Mesh array. Use FatMesh* to avoid expensive copy opertaion when the array is resized.
         DynaArray<FatMaterial,uint32>  materials;
         DynaArray<FatSkeleton,uint32>  skeletons;
+        DynaArray<FatAnimation,uint32> animations;
         Boxf                           bbox;
 
         /// destructor
@@ -268,6 +285,7 @@ namespace GN { namespace gfx
             meshes.clear();
             materials.clear();
             skeletons.clear();
+            animations.clear();
             bbox.clear();
         }
 
