@@ -14,19 +14,6 @@ class MemPoolTest : public CxxTest::TestSuite
 
 public:
 
-    void testCustomAllocator()
-	{
-#if GN_GCC
-        GN_TODO( "StlAllocator<> does not pass GCC build." );
-#else
-        typedef GN::DynaArray<char,size_t,GN::StlAllocator<char> > CharArray;
-        typedef GN::DynaArray<Test,size_t,GN::StlAllocator<GN::StrA> > TestArray;
-        CharArray a1(10);
-        TestArray a2(10);
-        TS_ASSERT_EQUALS( a1.size(), a2.size() );
-#endif
-    }
-
     void testPlacementNew()
     {
         uint8 buf[sizeof(Test)*10];

@@ -290,25 +290,22 @@ namespace GN
     ///
     /// Resizeable array.
     ///
-    template<class T, typename SIZE_TYPE = size_t, class ALLOCATOR = StlAllocator<T> >
+    template<class T, typename SIZE_TYPE = size_t, class OBJECT_ALLOCATOR = CxxObjectAllocator<T> >
     class DynaArray
     {
-        typedef typename ALLOCATOR::template rebind<T>::other ElementAllocator;
-
         T              * mElements;
         SIZE_TYPE        mCount;
         SIZE_TYPE        mCapacity;
-        ElementAllocator mAlloc;
 
-        /// destruct and free memory
-        void dealloc( T * ptr, SIZE_TYPE count, SIZE_TYPE capacity )
+        /// Destruct all objects, and free the memory.
+        static inline void sDestroyAll( T * ptr, size_t count )
         {
-            for( SIZE_TYPE i = 0; i < count; ++i )
+            T * end = ptr + count;
+            for( T * p = ptr; p < end; ++p )
             {
-                mAlloc.destroy( ptr + i );
+                OBJECT_ALLOCATOR::sDestruct( p );
             }
-
-            mAlloc.deallocate( ptr, capacity );
+            OBJECT_ALLOCATOR::sDeallocate( ptr );
         }
 
         bool doAppend( const T * p, SIZE_TYPE count )
@@ -328,7 +325,7 @@ namespace GN
             T * dst = mElements + mCount;
             for( SIZE_TYPE i = 0; i < count; ++i, ++dst, ++p )
             {
-                mAlloc.construct( dst, *p );
+                OBJECT_ALLOCATOR::sConstruct( dst, *p );
             }
 
             // update count
@@ -339,10 +336,11 @@ namespace GN
 
         void doClear()
         {
+            // Destruct all objects, but do not free memory.
             T * p = mElements;
             for( SIZE_TYPE i = 0; i < mCount; ++i, ++p )
             {
-                mAlloc.destroy( p );
+                OBJECT_ALLOCATOR::sDestruct( p );
             }
             mCount = 0;
         }
@@ -361,13 +359,13 @@ namespace GN
             // destruct extra objects, only when other.mCount < mCount
             for( SIZE_TYPE i = other.mCount; i < mCount; ++i )
             {
-                mAlloc.destroy( mElements + i );
+                OBJECT_ALLOCATOR::sDestruct( mElements + i );
             }
 
             // copy-construct new objects, only when mCount < other.mCount
             for( SIZE_TYPE i = mCount; i < other.mCount; ++i )
             {
-                mAlloc.construct( mElements + i, other.mElements[i] );
+                OBJECT_ALLOCATOR::sConstruct( mElements + i, other.mElements[i] );
             }
 
             mCount = other.mCount;
@@ -411,8 +409,8 @@ namespace GN
                 mElements[i] = mElements[i+1];
             }
 
-            // then destroy the last element
-            mAlloc.destroy( mElements + mCount );
+            // then destruct the last element
+            OBJECT_ALLOCATOR::sDestruct( mElements + mCount );
         }
 
         bool doReserve( SIZE_TYPE count )
@@ -438,7 +436,7 @@ namespace GN
             GN_ASSERT( count <= MAX_CAPS );
 
             // allocate new buffer (unconstructed raw memory)
-            T * newBuf = mAlloc.allocate( (SIZE_TYPE)newCap );
+            T * newBuf = OBJECT_ALLOCATOR::sAllocate( (SIZE_TYPE)newCap );
             if( NULL == newBuf )
             {
                 GN_ERROR(getLogger("GN.base.DynaArray"))("out of memory!");
@@ -448,11 +446,11 @@ namespace GN
             // copy construct new buffer
             for( SIZE_TYPE i = 0; i < mCount; ++i )
             {
-                mAlloc.construct( newBuf + i, mElements[i] );
+                OBJECT_ALLOCATOR::sConstruct( newBuf + i, mElements[i] );
             }
 
             // deallocate old buffer
-            dealloc( mElements, mCount, mCapacity );
+            sDestroyAll( mElements, mCount );
 
             mElements = newBuf;
             mCapacity = (SIZE_TYPE)newCap;
@@ -470,13 +468,13 @@ namespace GN
             // destruct extra objects, only when count < mCount
             for( SIZE_TYPE i = count; i < mCount; ++i )
             {
-                mAlloc.destroy( mElements + i );
+                OBJECT_ALLOCATOR::sDestruct( mElements + i );
             }
 
             // construct new objects, only when mCount < count
             for( SIZE_TYPE i = mCount; i < count; ++i )
             {
-                mAlloc.construct( mElements + i );
+                OBJECT_ALLOCATOR::sConstruct( mElements + i );
             }
 
             mCount = count;
@@ -494,13 +492,13 @@ namespace GN
             // destruct extra objects, only when count < mCount
             for( SIZE_TYPE i = count; i < mCount; ++i )
             {
-                mAlloc.destroy( mElements + i );
+                OBJECT_ALLOCATOR::sDestruct( mElements + i );
             }
 
             // copy-construct new objects, only when mCount < count
             for( SIZE_TYPE i = mCount; i < count; ++i )
             {
-                mAlloc.construct( mElements + i, t );
+                OBJECT_ALLOCATOR::sConstruct( mElements + i, t );
             }
 
             mCount = count;
@@ -510,20 +508,17 @@ namespace GN
 
         void doSwap( DynaArray & another )
         {
-            T *           p = mElements;
-            SIZE_TYPE        n = mCount;
-            SIZE_TYPE        c = mCapacity;
-            AllocatorType a = mAlloc;
+            T *       p = mElements;
+            SIZE_TYPE n = mCount;
+            SIZE_TYPE c = mCapacity;
 
             mElements = another.mElements;
             mCount    = another.mCount;
             mCapacity = another.mCapacity;
-            mAlloc    = another.mAlloc;
 
             another.mElements = p;
             another.mCount    = n;
             another.mCapacity = c;
-            another.mAlloc    = a;
         }
 
         bool equal( const DynaArray & other ) const
@@ -538,10 +533,10 @@ namespace GN
 
     public:
 
-        typedef T ElementType; ///< element type
-        typedef ALLOCATOR AllocatorType; ///< allocator type
-        typedef const T * ConstIterator;
-        typedef T * Iterator;
+        typedef T                ElementType;   //< element type
+        typedef OBJECT_ALLOCATOR AllocatorType; //< allocator type
+        typedef const T        * ConstIterator; //< Constant iterator type
+        typedef T              * Iterator;      //< Iterator type.
 
         ///
         /// default constructor
@@ -566,12 +561,12 @@ namespace GN
         ///
         /// copy constructor
         ///
-        DynaArray( const DynaArray & other ) : mElements(0), mCount(0), mCapacity(0), mAlloc(other.mAlloc) { copyFrom( other ); }
+        DynaArray( const DynaArray & other ) : mElements(0), mCount(0), mCapacity(0) { copyFrom( other ); }
 
         ///
         /// destructor
         ///
-        ~DynaArray() { dealloc( mElements, mCount, mCapacity ); }
+        ~DynaArray() { sDestroyAll( mElements, mCount ); }
 
         /// \name Common array operations.
         ///
@@ -605,7 +600,7 @@ namespace GN
         bool      resize( SIZE_TYPE count ) { return doResize( count ); }
         void      popBack() { doErase( mCount - 1 ); }
         /** clear array as well as release memory */
-        void      purge() { dealloc( mElements, mCount, mCapacity ); mCount = 0; mCapacity = 0; mElements = 0; }
+        void      purge() { sDestroyAll( mElements, mCount ); mCount = 0; mCapacity = 0; mElements = 0; }
         SIZE_TYPE size() const { return mCount; }
         void      swap( DynaArray & another ) { doSwap( another ); } ///< swap data with another array
         //@}

@@ -160,6 +160,69 @@ namespace GN
     };
 
     ///
+    /// Raw heap memory Allocator, no constructors and destructors involved.
+    ///
+    struct RawHeapMemoryAllocator
+    {
+        /// Allocate raw memory from heap
+        static inline void * sAllocate( size_t sizeInBytes, size_t alignmentInBytes )
+        {
+            return HeapMemory::alignedAlloc( sizeInBytes, alignmentInBytes );
+        }
+
+        /// Deallocate raw memory buffer.
+        static inline void sDeallocate( void * ptr )
+        {
+            HeapMemory::dealloc( ptr );
+        }
+    };
+
+    ///
+    /// C++ object allocator built on top of a raw memory allocator
+    ///
+    template<typename T, typename RAW_MEMORY_ALLOCATOR=RawHeapMemoryAllocator>
+    struct CxxObjectAllocator
+    {
+        /// Allocate raw memory from heap
+        static inline T * sAllocate( size_t objectCount, size_t alignmentInBytes = DefaultMemoryAlignment<sizeof(T)>::VALUE )
+        {
+            return (T*)RAW_MEMORY_ALLOCATOR::sAllocate( objectCount * sizeof(T), alignmentInBytes );
+        }
+
+        /// Deallocate memory buffer
+        static inline void sDeallocate( void * ptr )
+        {
+            RAW_MEMORY_ALLOCATOR::sDeallocate( ptr );
+        }
+
+        /// Construct the object
+        static inline void sConstruct( T * ptr )
+        {
+            new (ptr) T;
+        }
+
+        /// Copy construct the object on existing memory buffer.
+        static inline void sConstruct( T * ptr, const T & x )
+        {
+            new (ptr) T(x);
+        }
+
+        /// Destruct the object, but do not free the memory buffer.
+        static inline void sDestruct( T * ptr )
+        {
+            ptr->T::~T();
+
+            // Note:
+            //  This is to ensure that the compiler thinks that variable ptr is used.
+            //
+            //  When T is a simple type, like char or integer, VC compiler will generate
+            //  warning of "unreferenced formal parameter", since there's no destructor for POD types.
+            (void)ptr;
+        }
+    };
+
+#if 0
+    ///
     /// STL compilant allocator that use garnet heap memory management routines.
     ///
     template<typename T>
@@ -249,6 +312,7 @@ namespace GN
         }
         /// \endcond
     };
+#endif
 
     ///
     /// Fix-sized raw memory pool, no ctor/dtor involved.

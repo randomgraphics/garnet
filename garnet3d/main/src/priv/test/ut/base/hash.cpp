@@ -50,7 +50,7 @@ public:
             52
         };
 
-        HashMap<wchar_t,size_t> m;
+        HashMap<wchar_t,size_t,GN_ARRAY_COUNT(keys)> m;
         for( size_t i = 0; i < GN_ARRAY_COUNT(keys); ++i )
         {
             wchar_t key = keys[i];
