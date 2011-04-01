@@ -11,156 +11,66 @@ static GN::Logger * sLogger = GN::getLogger("GN.engine");
 // Local stuff
 // *****************************************************************************
 
-///
-/// Determine the best model template that can show the mesh, return NULL for failure
+//
+//
 // -----------------------------------------------------------------------------
-static const ModelResourceDesc * sDetermineBestModelTemplate( const MeshVertexFormat & vf )
-{
-    struct Local
-    {
-        static bool sHasPosition( const MeshVertexFormat & vf )
-        {
-            return vf.hasSemantic( "position" )
-                || vf.hasSemantic( "pos" );
-        }
-
-        static bool sHasNormal( const MeshVertexFormat & vf )
-        {
-            return vf.hasSemantic( "normal" );
-        }
-
-        static bool sHasTex0( const MeshVertexFormat & vf )
-        {
-            return vf.hasSemantic( "texcoord" )
-                || vf.hasSemantic( "texcoord0" );
-        }
-
-        static bool sHasTangent( const MeshVertexFormat & vf )
-        {
-            return vf.hasSemantic( "tangent" );
-        }
-    };
-
-    // position is required
-    if( !Local::sHasPosition( vf ) )
-    {
-        GN_ERROR(sLogger)( "The mesh has no position, which is required by the mesh viewer." );
-        return NULL;
-    }
-
-    if( !Local::sHasNormal( vf ) )
-    {
-        GN_WARN(sLogger)( "The mesh has no normal." );
-        return &SimpleWireframeModel::DESC;
-    }
-
-    if( !Local::sHasTex0( vf ) )
-    {
-        GN_WARN(sLogger)( "The mesh has no texture coordinate." );
-        return &SimpleDiffuseModel::DESC;
-    }
-
-    // Program reaches here, means that the mesh has position, norml and texcoord.
-
-    if( Local::sHasTangent( vf ) )
-    {
-        return &SimpleNormalMapModel::DESC;
-    }
-    else
-    {
-        return &SimpleDiffuseModel::DESC;
-    }
-}
 
 // *****************************************************************************
-// StaticMesh
+// SkinnedMesh
 // *****************************************************************************
 
 //
 //
 // -----------------------------------------------------------------------------
-GN::engine::StaticMesh::StaticMesh()
+GN::engine::SkinnedMesh::SkinnedMesh()
 {
-    setComponent( &mVisual );
-    setComponent( &mSpacial );
+    clear();
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-GN::engine::StaticMesh::~StaticMesh()
+GN::engine::SkinnedMesh::~SkinnedMesh()
 {
-    setComponent( VisualComponent::sGetType(), NULL );
-    setComponent( SpacialComponent::sGetType(), NULL );
+    clear();
+    setComponent<VisualComponent>( NULL );
+    setComponent<SpacialComponent>( NULL );
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::engine::StaticMesh::loadFromModelHierarchy( const gfx::ModelHierarchyDesc & mhd )
+void GN::engine::SkinnedMesh::clear()
 {
-    GN_SCOPE_PROFILER( StaticMesh_loadFromModelHierarchy, "Load models from mesh hierarchy" );
+    mJoints.resize( 1 );
+    mJoints[0].attach( new SpacialComponent );
+    setComponent<SpacialComponent>( mJoints[0] );
 
-    mVisual.clear();
+    mVisual.attach( new VisualComponent );
+    setComponent<VisualComponent>( mVisual );
+}
 
-    GpuResourceDatabase & gdb = *getGdb();
+//
+//
+// -----------------------------------------------------------------------------
+bool GN::engine::SkinnedMesh::loadFromFatModel( const GN::gfx::FatModel & fatmodel )
+{
+    GN_SCOPE_PROFILER( SkinnedMesh_loadFromFatModel, "Load skinned mesh from FatModel" );
 
-    // create mesh list.
-    DynaArray<AutoRef<MeshResource> > meshes;
+    // Clear existing data.
+    clear();
+
+    if( fatmodel.skeletons.empty() )
     {
-        GN_SCOPE_PROFILER( sLoadModelsFromASE_GenerateMeshList, "generating mesh list" );
-
-        meshes.resize( mhd.meshes.size() );
-
-        size_t i = 0;
-        for( const StringMap<char,gfx::MeshResourceDesc>::KeyValuePair * p = mhd.meshes.first();
-             p != NULL; p = mhd.meshes.next( p ), ++i )
-        {
-            // TODO: avoid reloading existing mesh
-            const char * meshName = p->key;
-            const MeshResourceDesc & meshDesc = p->value;
-
-            meshes[i] = gdb.findResource<MeshResource>( meshName );
-            if( meshes[i] ) continue; // use exising mesh.
-
-            meshes[i] = gdb.createResource<MeshResource>( meshName );
-            if( !meshes[i] ) return false;
-            if( !meshes[i]->reset( &meshDesc ) ) return false;
-        }
+        GN_ERROR(sLogger)( "The fat model does not contain any skeletons." );
+        return false;
     }
-
-    // create models
-    for( const StringMap<char,gfx::ModelResourceDesc>::KeyValuePair * p = mhd.models.first();
-         p != NULL; p = mhd.models.next( p ) )
-    {
-        const ModelResourceDesc & modelDesc = p->value;
-        AutoRef<ModelResource> model = gdb.createResource<ModelResource>( NULL );
-        if( !model->reset( &modelDesc ) ) continue;
-
-        mVisual.addModel( model );
-    }
-
-    // update bounding box
-    mSpacial.setSelfBoundingBox( mhd.bbox );
-
-    // TODO: handle node hierarchy
-
-    return true;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-bool GN::engine::StaticMesh::loadFromFatModel( const GN::gfx::FatModel & fatmodel )
-{
-    GN_SCOPE_PROFILER( StaticMesh_loadFromFatModel, "Load models from FatModel" );
-
-    mVisual.clear();
 
     GpuResourceDatabase & gdb = *getGdb();
 
     DynaArray<uint8> vb;
 
+    // Load all meshes
     for( uint32 i = 0; i < fatmodel.meshes.size(); ++i )
     {
         if( NULL == fatmodel.meshes[i] ) continue;
@@ -201,8 +111,9 @@ bool GN::engine::StaticMesh::loadFromFatModel( const GN::gfx::FatModel & fatmode
         }
 
         GN_ASSERT( mesh );
-        const ModelResourceDesc * modelTemplate = sDetermineBestModelTemplate( mesh->getDesc().vtxfmt );
-        if( NULL == modelTemplate ) continue;
+
+        // TODO: create special model descriptor for skinned effect.
+        const ModelResourceDesc * modelTemplate = &SimpleDiffuseModel::DESC;
 
         // create one model for each mesh subset
         for( size_t s = 0; s < fatmesh.subsets.size(); ++s )
@@ -228,19 +139,17 @@ bool GN::engine::StaticMesh::loadFromFatModel( const GN::gfx::FatModel & fatmode
                 mord.textures["NORMAL_TEXTURE"].resourceName = fatmat.normalTexture;
             }
 
-            // TODO: associate uniforms to the model
-
             // create model and add to visual
             AutoRef<ModelResource> model = gdb.createResource<ModelResource>( NULL );
             if( model && model->reset( &mord ) )
             {
-                mVisual.addModel( model );
+                mVisual->addModel( model );
             }
         }
     }
 
     // update bounding box
-    mSpacial.setSelfBoundingBox( fatmodel.bbox );
+    mJoints[0]->setSelfBoundingBox( fatmodel.bbox );
 
     return true;
 }
@@ -248,9 +157,10 @@ bool GN::engine::StaticMesh::loadFromFatModel( const GN::gfx::FatModel & fatmode
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::engine::StaticMesh::loadFromFile( const StrA & filename )
+bool GN::engine::SkinnedMesh::loadFromFile( const StrA & filename )
 {
     FatModel fm;
     if( !fm.loadFromFile( filename ) ) return false;
     return loadFromFatModel( fm );
 }
+

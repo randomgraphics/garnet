@@ -5,11 +5,8 @@ TODO
 
 - p0
   - unit test: DynaArray<???,uint8>
-  - FatMesh for model loading/saving/conversion
-  - skin mesh
-    - test case: porting DXSDK sample.
-    - SkinnedMesh entity
-    - FBX skeleton and animation loader
+  - skin mesh test
+    - SkinnedMesh and SkinnedVisual
   - Winphone 7 integration
   - Cuda or OpenCL integration
   - runtime tweakable parameters: client/server communication
@@ -164,6 +161,9 @@ OPEN ISSUES
 
 - Embbed buffer for short string?
 
+- Possible engine module features:
+  - build visual component by combining several existing visual components.
+  - entity embeded in another entity.
 
 DROPPED TASKS
 =============
