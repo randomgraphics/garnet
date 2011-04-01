@@ -2,6 +2,7 @@ Import( 'GN' )
 
 sources = [
 	'engine_base.cpp',
+	'skinned_mesh.cpp',
 	'static_mesh.cpp',
 	'spacial_component.cpp',
     'visual_component.cpp',

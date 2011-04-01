@@ -6,8 +6,6 @@
 /// \author  chenlee (2006.3.8)
 // *****************************************************************************
 
-#include "GNengine.h"
-
 namespace GN
 {
     ///
@@ -18,7 +16,7 @@ namespace GN
 
 #include "util/camera.h"
 #include "util/fps.h"
-#include "util/sampleWorld.h"
+//#include "util/sampleWorld.h"
 #include "util/sampleApp.h"
 
 // *****************************************************************************

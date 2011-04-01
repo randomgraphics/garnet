@@ -26,7 +26,7 @@ class MyApp : public SampleApp
     bool         showbbox;
 
 #if USE_STATIC_MESH
-    AutoObjPtr<StaticMesh> mesh;
+    AutoObjPtr<Entity> entity;
 #else
     SampleWorld  world;
 #endif
@@ -60,10 +60,19 @@ public:
 #if USE_STATIC_MESH
         FatModel fm;
         if( !fm.loadFromFile( filename ) ) return false;
-        mesh.attach( new StaticMesh() );
-        //if( !mesh->loadFromModelHierarchy( swd ) ) return false;
-        if( !mesh->loadFromFatModel( fm ) ) return false;
-        const Boxf & bbox = mesh->spacial().getUberBoundingBox();
+        if( fm.skeletons.empty() )
+        {
+            StaticMesh * mesh = new StaticMesh;
+            entity.attach( mesh );
+            if( !mesh->loadFromFatModel( fm ) ) return false;
+        }
+        else
+        {
+            SkinnedMesh * mesh = new SkinnedMesh;
+            entity.attach( mesh );
+            if( !mesh->loadFromFatModel( fm ) ) return false;
+        }
+        const Boxf & bbox = entity->getComponent<SpacialComponent>()->getUberBoundingBox();
 #else
         ModelHierarchyDesc swd;
         if( !swd.loadFromFile( filename ) ) return false;
@@ -92,7 +101,7 @@ public:
     void onQuit()
     {
 #if USE_STATIC_MESH
-        mesh.clear();
+        entity.clear();
 #else
         world.clear();
 #endif
@@ -117,7 +126,7 @@ public:
     void onUpdate()
     {
 #if USE_STATIC_MESH
-        SpacialComponent * spacial = &mesh->spacial();
+        SpacialComponent * spacial = entity->getComponent<SpacialComponent>();
 #else
         SpacialComponent * spacial = world.getRootEntity()->getComponent<engine::SpacialComponent>();
 #endif
@@ -133,8 +142,8 @@ public:
         gpu->clearScreen( Vector4f(0,0.5f,0.5f,1.0f) );
 
 #if USE_STATIC_MESH
-        mesh->visual().draw( camera.proj, camera.view );
-        if( showbbox ) mesh->spacial().drawBoundingBox( camera.proj, camera.view, 0xFF000000 );
+        entity->getComponent<VisualComponent>()->draw( camera.proj, camera.view );
+        if( showbbox ) entity->getComponent<SpacialComponent>()->drawBoundingBox( camera.proj, camera.view, 0xFF000000 );
 #else
         world.showBoundingBoxes( showbbox );
         world.draw( camera.proj, camera.view );

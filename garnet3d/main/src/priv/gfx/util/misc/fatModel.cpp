@@ -210,8 +210,6 @@ bool GN::gfx::FatVertexBuffer::GenerateVertexStream(
     // Copy vertex data
     for( size_t j = 0; j < mvf.numElements; ++j )
     {
-        if( semantics[j] == INVALID ) continue;
-
         const MeshVertexElement & e = mvf.elements[j];
 
         size_t size = e.format.getBytesPerBlock();
@@ -219,14 +217,26 @@ bool GN::gfx::FatVertexBuffer::GenerateVertexStream(
 
         GN_ASSERT( ( e.offset + size ) <= stride );
 
-        SafeArrayAccessor<const uint8> src( (const uint8*)mElements[semantics[j]], mCount * ELEMENT_SIZE );
-        SafeArrayAccessor<uint8>       dst( (uint8*)buffer + e.offset, (mCount * stride) - e.offset );
+        SafeArrayAccessor<uint8> dst( (uint8*)buffer + e.offset, (mCount * stride) - e.offset );
 
-        for( size_t i = 0; i < mCount; ++i )
+        if( semantics[j] != INVALID )
         {
-            memcpy( dst.subrange(0,size), src.subrange(0,size), size );
-            src += ELEMENT_SIZE;
-            dst += stride;
+            SafeArrayAccessor<const uint8> src( (const uint8*)mElements[semantics[j]], mCount * ELEMENT_SIZE );
+
+            for( size_t i = 0; i < mCount; ++i )
+            {
+                memcpy( dst.subrange(0,size), src.subrange(0,size), size );
+                src += ELEMENT_SIZE;
+                dst += stride;
+            }
+        }
+        else
+        {
+            for( size_t i = 0; i < mCount; ++i )
+            {
+                memset( dst.subrange(0,size), 0, size );
+                dst += stride;
+            }
         }
     }
 

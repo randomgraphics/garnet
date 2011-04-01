@@ -35,13 +35,12 @@ namespace GN { namespace engine
         /// add new model to the node. return the model ID, or 0 for failure.
         /// Note: models cannot be shared between components, since the component needs to setup
         /// model's uniforms to per-component value.
-        int  addModel( gfx::ModelResource * model );
+        int addModel( gfx::ModelResource * model );
 
-        /// load models from file, and add them to the component
-        bool addModelsFromFile( const char * filename );
-
-        /// Render the component to screen
-        void draw() const;
+        /// Render all models in the component
+        ///
+        /// Subclass could override this method to do custom rendering.
+        virtual void draw() const;
 
         /// Render the component to screen with specified transformation.
         void draw( const Matrix44f & proj, const Matrix44f & view ) const
@@ -56,7 +55,10 @@ namespace GN { namespace engine
 
         typedef HandleManager<AutoRef<gfx::ModelResource>,int> ModelManager;
 
-        typedef FixedArray<AutoRef<gfx::UniformResource>,gfx::StandardUniform::Index::NUM_STANDARD_UNIFORMS> StandardUniformArray;
+        typedef FixedArray<
+            AutoRef<gfx::UniformResource>,
+            gfx::StandardUniform::Index::NUM_STANDARD_UNIFORMS
+            > StandardUniformArray;
 
         ModelManager               mModels;
         StandardUniformArray       mStandardPerObjectUniforms;
