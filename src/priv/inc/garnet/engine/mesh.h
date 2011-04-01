@@ -88,6 +88,7 @@ namespace GN { namespace engine
     private:
         DynaArray<AutoRef<SpacialComponent> > mJoints;
         AutoRef<VisualComponent>              mVisual;
+        AutoRef<gfx::EffectResource>          mSkinnedEffect;
     };
 }}
 

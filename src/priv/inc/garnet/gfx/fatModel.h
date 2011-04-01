@@ -236,22 +236,22 @@ namespace GN { namespace gfx
         void printJointHierarchy( StrA & ) const;
     };
 
-    struct FatJointRestPose
+    template<typename T>
+    struct FatKeyFrame
     {
-        /// Time stamp.
-        uint32 timeInMilliSeconds;
-
-        // Local->Parent transform = T * R * S;
-        Vector3f    position; //< Position in parent space
-        Quaternionf rotation; //< Rotation in local space
-        Vector3f    scaling;  //< Scaling in local space.
+        double time;  //< Time stamp in seconds.
+        T      value; //< The value at the specified time.
     };
 
     struct FatJointAnimation
     {
-        uint32                      skeleton;  //< Index into FatModel::skeletons
-        uint32                      joint;     //< Index into FatSkeleton::joints
-        DynaArray<FatJointRestPose> restPoses; //< Joint rest poses sorted by time.
+        uint32                               skeleton;  //< Index into FatModel::skeletons
+        uint32                               joint;     //< Index into FatSkeleton::joints
+
+        // Local->Parent transform = T * R * S;
+        DynaArray<FatKeyFrame<Vector3f> >    positions; //< Position in parent space
+        DynaArray<FatKeyFrame<Quaternionf> > rotations; //< Rotation in local space
+        DynaArray<FatKeyFrame<Vector3f> >    scalings;  //< Scaling in local space.
     };
 
     struct FatAnimation

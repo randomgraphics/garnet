@@ -268,12 +268,13 @@ namespace GN { namespace gfx
         ///
         /// Check if the vertex format has specific semantic.
         ///
-        bool hasSemantic( const char * semantic ) const
+        bool hasSemantic( const char * semantic, uint32 * elementIndex = NULL ) const
         {
             for( uint32 i = 0; i < numElements; ++i )
             {
                 if( 0 == stringCompareI( elements[i].semantic, semantic ) )
                 {
+                    if( NULL != elementIndex ) *elementIndex = i;
                     return true;
                 }
             }

@@ -262,6 +262,30 @@ bool GN::gfx::OGLVtxFmt::setupStateBindings( const OGLBasicGpuProgram * gpuProgr
                 ab.info.normalization = true;
                 break;
 
+            case ColorFormat::USHORT4 :
+                ab.info.format = GL_UNSIGNED_SHORT;
+                ab.info.components = 4;
+                ab.info.normalization = false;
+                break;
+
+            case ColorFormat::SHORT4 :
+                ab.info.format = GL_SHORT;
+                ab.info.components = 4;
+                ab.info.normalization = false;
+                break;
+
+            case ColorFormat::UINT4 :
+                ab.info.format = GL_UNSIGNED_INT;
+                ab.info.components = 4;
+                ab.info.normalization = false;
+                break;
+
+            case ColorFormat::SINT4 :
+                ab.info.format = GL_INT;
+                ab.info.components = 4;
+                ab.info.normalization = false;
+                break;
+
             default:
                 GN_ERROR(sLogger)( "unsupport vertex format: %s", e.format.toString().cptr() );
                 return false;
