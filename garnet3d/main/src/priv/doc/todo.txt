@@ -5,6 +5,19 @@ TODO
 
 - p0
   - unit test: DynaArray<???,uint8>
+  - programmable/compositable shader component:
+    - example:
+      - diffuse light shader:
+        - input: position, normal, color(optional)
+        - output: color
+      - skinning shader:
+        - input: position, normal(optional), binormal(optional), skinning(bones+weights)
+        - output: position, normal(optional), binormal(optional)
+      - texturing:
+        - input texcoord, color(optional)
+        - output: color
+      - final shader = diffuse shader + skinning shader + texturing shader.
+    - See if there's existing (open source) code
   - skin mesh test
     - SkinnedMesh and SkinnedVisual
   - Winphone 7 integration

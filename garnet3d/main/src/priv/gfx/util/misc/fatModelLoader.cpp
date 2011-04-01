@@ -45,6 +45,57 @@ static GN::Logger * sLogger = GN::getLogger("GN.gfx.FatModel");
 // Common utilities
 // *****************************************************************************
 
+struct JointLocation
+{
+    uint32 skeletonIndex;
+    uint32 jointIndex;
+};
+
+//
+//
+// -----------------------------------------------------------------------------
+static void sBuildJointMapFromSkeletons(
+    StringMap<char,JointLocation>       & jointMap,
+    const DynaArray<FatSkeleton,uint32> & skeletons )
+{
+    jointMap.clear();
+    for( uint32 s = 0; s < skeletons.size(); ++s )
+    {
+        const FatSkeleton & fatsk = skeletons[s];
+        for( uint32 j = 0; j < fatsk.joints.size(); ++j )
+        {
+            const StrA & jointName = fatsk.joints[j].name;
+            JointLocation location = { s, j };
+            jointMap.insert( jointName, location );
+            //printf( "Insert joint %s to joint map.\n", jointName );
+        }
+    }
+}
+
+//
+// Search through all skeletons for joint with specific name.
+// -----------------------------------------------------------------------------
+static bool
+sSearchForNamedJoint(
+    OUT uint32                              & skeleton,
+    OUT uint32                              & joint,
+    IN  const StringMap<char,JointLocation> & jointMap,
+    IN  const char                          * jointName )
+{
+    const JointLocation * location = jointMap.find( jointName );
+    if( location )
+    {
+        skeleton = location->skeletonIndex;
+        joint    = location->jointIndex;
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+
+
 //
 //
 // -----------------------------------------------------------------------------
@@ -135,7 +186,6 @@ static void sAddNewBone(
         }
     }
 }
-
 
 // *****************************************************************************
 // ASE loader
@@ -311,8 +361,6 @@ namespace fbx
 {
 #ifdef HAS_FBX
 
-#define USE_JOINT_MAP 1
-
 class FbxSdkWrapper
 {
 public:
@@ -320,15 +368,7 @@ public:
     KFbxSdkManager * manager;
     KFbxGeometryConverter * converter;
 
-    #if USE_JOINT_MAP
-    struct JointLocation
-    {
-        uint32 skeletonIndex;
-        uint32 jointIndex;
-    };
-    //HashMap<StrA,JointLocation,HashMapUtils::HashFunc_HashMethod<StrA> > jointMap;
     StringMap<char,JointLocation> jointMap;
-    #endif
 
     FbxSdkWrapper() : manager(NULL), converter(NULL)
     {
@@ -794,56 +834,6 @@ static void sLoadFbxAnimations( FatModel & fatmodel, KFbxScene * fbxscene )
 }*/
 
 //
-// Search through all skeletons for joint with specific name.
-// -----------------------------------------------------------------------------
-static bool
-sSearchForNamedJoint(
-    OUT uint32         & skeleton,
-    OUT uint32         & joint,
-    IN  FbxSdkWrapper  & sdk,
-    IN  const FatModel & fatmodel,
-    IN  const char     * jointName )
-{
-#if USE_JOINT_MAP
-
-    GN_UNUSED_PARAM( fatmodel );
-
-    const FbxSdkWrapper::JointLocation * location = sdk.jointMap.find( jointName );
-    if( location )
-    {
-        skeleton = location->skeletonIndex;
-        joint    = location->jointIndex;
-        return true;
-    }
-    else
-    {
-        return false;
-    }
-
-#else
-
-    GN_UNUSED_PARAM( sdk );
-    for( uint32 i = 0; i < fatmodel.skeletons.size(); ++i )
-    {
-        // Reference the skeleton
-        const FatSkeleton & sk = fatmodel.skeletons[i];
-
-        for( uint32 j = 0; j < sk.joints.size(); ++j )
-        {
-            if( sk.joints[j].name == jointName )
-            {
-                skeleton = i;
-                joint = j;
-                return true;
-            }
-        }
-    }
-    return false;
-
-#endif
-}
-
-//
 // Get vertex skinning information for the vertex specified by controlPointIndex.
 // -----------------------------------------------------------------------------
 static void
@@ -851,7 +841,6 @@ sLoadFbxVertexSkinning(
     INOUT uint32         & skeleton, // Index into FatModel::skeleton arrayreturns the skeleton that of the joint
     OUT   Skinning       & sk,
     IN    FbxSdkWrapper  & sdk,
-    IN    const FatModel & fatmodel,
     IN    const KFbxMesh * fbxmesh,
     IN    int              controlPointIndex,
     IN    bool             firstVertex )
@@ -895,8 +884,7 @@ sLoadFbxVertexSkinning(
             if( !sSearchForNamedJoint(
                 currentSkeleton,
                 currentJoint,
-                sdk,
-                fatmodel,
+                sdk.jointMap,
                 link->GetName() ) )
             {
                 // The cluster links to an node that is not part of any skeletons.
@@ -905,8 +893,6 @@ sLoadFbxVertexSkinning(
                 GN_ERROR(sLogger)( "Cluter is ignored, because it is linking to a node that is not part of any skeleton." );
                 continue;
             }
-            GN_ASSERT( currentSkeleton < fatmodel.skeletons.size() );
-            GN_ASSERT( currentJoint < fatmodel.skeletons[currentSkeleton].joints.size() );
 
             // See if the cluster is linking to the same skeleton as what is linking to
             // the first vertex.
@@ -1328,13 +1314,13 @@ sLoadFbxMesh(
                 // Always load skinning information for the first vertex.
                 // The function will also determine of the mesh is binding to a skeleton or not, by
                 // updating fatmesh.skeleton.
-                sLoadFbxVertexSkinning( fatmesh.skeleton, sk, sdk, fatmodel, fbxmesh, posIndex, firstVertex );
+                sLoadFbxVertexSkinning( fatmesh.skeleton, sk, sdk, fbxmesh, posIndex, firstVertex );
             }
             else if( fatmesh.skeleton != FatMesh::NO_SKELETON )
             {
                 // Load skinning information for the following vertices, only when the mesh is binding
                 // to a skeleton.
-                sLoadFbxVertexSkinning( fatmesh.skeleton, sk, sdk, fatmodel, fbxmesh, posIndex, firstVertex );
+                sLoadFbxVertexSkinning( fatmesh.skeleton, sk, sdk, fbxmesh, posIndex, firstVertex );
             }
             if( fatmesh.skeleton != FatMesh::NO_SKELETON )
             {
@@ -1492,20 +1478,8 @@ sLoadFromFBX( FatModel & fatmodel, File & file, const StrA & filename )
     // Load skeletons
     sLoadFbxSkeletons( fatmodel, gScene->GetRootNode() );
 
-    #if USE_JOINT_MAP
-    // Build joint map to accelerate joint searching by name.
-    for( uint32 s = 0; s < fatmodel.skeletons.size(); ++s )
-    {
-        FatSkeleton & fatsk = fatmodel.skeletons[s];
-        for( uint32 j = 0; j < fatsk.joints.size(); ++j )
-        {
-            const StrA & jointName = fatsk.joints[j].name;
-            FbxSdkWrapper::JointLocation location = { s, j };
-            sdk.jointMap.insert( jointName, location );
-            //printf( "Insert joint %s to joint map.\n", jointName );
-        }
-    }
-    #endif
+    // Build joint map to accelerate joint searching.
+    sBuildJointMapFromSkeletons( sdk.jointMap, fatmodel.skeletons );
 
     // TODO: Load animations
     //sLoadFbxAnimations( fatmodel, gScene->GetRootNode() );
@@ -2291,6 +2265,122 @@ static void sLoadAiNodeRecursivly(
 //
 //
 // -----------------------------------------------------------------------------
+static void sLoadAiAnimations( FatModel & fatmodel, const aiScene & aiscene )
+{
+    // Build a joint map to accelerate joint searching by name.
+    StringMap<char,JointLocation> jointMap;
+    sBuildJointMapFromSkeletons( jointMap, fatmodel.skeletons );
+
+    // Go through the animation list. Load them one by one. And for now,
+    // we load node animations only, and ignore mesh animations.
+    for( uint32 a = 0; a < aiscene.mNumAnimations; ++a )
+    {
+        // Reference the Assimp animation object
+        const aiAnimation & aianim = *aiscene.mAnimations[a];
+
+        // Declara a new Fat animation object.
+        FatAnimation fatanim;
+        fatanim.name = aianim.mName.data;
+
+        // Certain combinations of file format and exporter don't always store
+        // this information in the exported file. In this case, mTicksPerSecond
+        // is set to 0 to indicate the lack of knowledge. And we'll use 1.0
+        // in this case, which means 1 tick is 1 second.
+        double secondsPerTick;
+        if( 0 == aianim.mTicksPerSecond )
+        {
+            secondsPerTick = 1;
+        }
+        else
+        {
+            secondsPerTick = 1.0f / aianim.mTicksPerSecond;
+        }
+
+        // Go through each animation channels. Each channel controls
+        // one node in the scene.
+        for( uint32 c = 0; c < aianim.mNumChannels; ++c )
+        {
+            const aiNodeAnim & aina = *aianim.mChannels[c];
+
+            // Declare a Fat joint animation object.
+            FatJointAnimation fatJointAnim;
+
+            // See if there's a joint affected by the current node animation.
+            if( !sSearchForNamedJoint(
+                fatJointAnim.skeleton,
+                fatJointAnim.joint,
+                jointMap,
+                aina.mNodeName.data ) )
+            {
+                // The current animation links to a joint node.
+                // Ignore it, since we care about skeleton animation only.
+                continue;
+            }
+            GN_ASSERT( fatJointAnim.skeleton < fatmodel.skeletons.size() );
+            GN_ASSERT( fatJointAnim.joint < fatmodel.skeletons[fatJointAnim.skeleton].joints.size() );
+
+            // Allocate fat key frames
+            if( !fatJointAnim.positions.resize(aina.mNumPositionKeys) ||
+                !fatJointAnim.rotations.resize(aina.mNumRotationKeys) ||
+                !fatJointAnim.scalings.resize(aina.mNumScalingKeys) )
+            {
+                // We are running out of memory. Stop loading.
+                GN_ERROR(sLogger)( "Out of memory." );
+                return;
+            }
+
+            // Load position key frames
+            for( uint32 k = 0; k < aina.mNumPositionKeys; ++k )
+            {
+                const aiVectorKey & aikey = aina.mPositionKeys[k];
+                FatKeyFrame<Vector3f> & fatkey = fatJointAnim.positions[k];
+                fatkey.time = aikey.mTime * secondsPerTick;
+                fatkey.value = *(Vector3f*)&aikey.mValue;
+            }
+
+            // Load rotation key frames
+            for( uint32 k = 0; k < aina.mNumRotationKeys; ++k )
+            {
+                const aiQuatKey & aikey = aina.mRotationKeys[k];
+                FatKeyFrame<Quaternionf> & fatkey = fatJointAnim.rotations[k];
+                fatkey.time = aikey.mTime * secondsPerTick;
+                fatkey.value.v.x = aikey.mValue.x;
+                fatkey.value.v.y = aikey.mValue.y;
+                fatkey.value.v.z = aikey.mValue.z;
+                fatkey.value.w   = aikey.mValue.w;
+            }
+
+            // Load scaling key frames
+            for( uint32 k = 0; k < aina.mNumScalingKeys; ++k )
+            {
+                const aiVectorKey & aikey = aina.mScalingKeys[k];
+                FatKeyFrame<Vector3f> & fatkey = fatJointAnim.scalings[k];
+                fatkey.time = aikey.mTime * secondsPerTick;
+                fatkey.value = *(Vector3f*)&aikey.mValue;
+            }
+
+            // Add the joint animation to fat animation object.
+            if( !fatanim.jointAnimations.append( fatJointAnim ) )
+            {
+                // We are running out of memory. Stop loading.
+                GN_ERROR(sLogger)( "Out of memory." );
+                return;
+            }
+        }
+
+        // Add the fat animation object to fat model.
+        if( !fatmodel.animations.append( fatanim ) )
+        {
+            // We are running out of memory. Stop loading.
+            GN_ERROR(sLogger)( "Out of memory." );
+            return;
+        }
+    } // end of for each animation
+}
+
+//
+//
+// -----------------------------------------------------------------------------
 static bool sLoadFromAssimp( FatModel & fatmodel, const StrA & filename )
 {
     const aiScene * scene = aiImportFile( filename, aiProcessPreset_TargetRealtime_Quality );
@@ -2320,6 +2410,9 @@ static bool sLoadFromAssimp( FatModel & fatmodel, const StrA & filename )
     aiMatrix4x4 rootTransform;
     aiIdentityMatrix4(&rootTransform);
     sLoadAiNodeRecursivly( fatmodel, scene, scene->mRootNode, rootTransform );
+
+    // Load animations.
+    sLoadAiAnimations( fatmodel, *scene );
 
     // calculate the final bounding box
     fatmodel.calcBoundingBox();
