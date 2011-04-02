@@ -9,7 +9,7 @@ using namespace GN::util;
 
 static GN::Logger * sLogger = GN::getLogger("GN.tool.meshViewer");
 
-#define USE_STATIC_MESH 1
+#define USE_ENTITY 1
 
 class MyApp : public SampleApp
 {
@@ -25,11 +25,14 @@ class MyApp : public SampleApp
     Camera       camera;
     bool         showbbox;
 
-#if USE_STATIC_MESH
+#if USE_ENTITY
     AutoObjPtr<Entity> entity;
 #else
     SampleWorld  world;
 #endif
+
+    float animationDuration;
+    float currentTime;
 
 public:
 
@@ -56,8 +59,12 @@ public:
 
     bool onInit()
     {
+        // Set default animation (no animation)
+        animationDuration = 0;
+        currentTime = 0;
+
         // load mesh from file
-#if USE_STATIC_MESH
+#if USE_ENTITY
         FatModel fm;
         if( !fm.loadFromFile( filename ) ) return false;
         if( fm.skeletons.empty() )
@@ -71,6 +78,11 @@ public:
             SkinnedMesh * mesh = new SkinnedMesh;
             entity.attach( mesh );
             if( !mesh->loadFromFatModel( fm ) ) return false;
+            SkinnedAnimationInfo anim;
+            if( mesh->getAnimationInfo( 0, anim ) )
+            {
+                animationDuration = (float)anim.duration;
+            }
         }
         const Boxf & bbox = entity->getComponent<SpacialComponent>()->getUberBoundingBox();
 #else
@@ -100,7 +112,7 @@ public:
 
     void onQuit()
     {
-#if USE_STATIC_MESH
+#if USE_ENTITY
         entity.clear();
 #else
         world.clear();
@@ -125,8 +137,14 @@ public:
 
     void onUpdate()
     {
-#if USE_STATIC_MESH
+#if USE_ENTITY
         SpacialComponent * spacial = entity->getComponent<SpacialComponent>();
+        if( animationDuration > 0 )
+        {
+            SkinnedMesh * mesh = (SkinnedMesh*)entity.cptr();
+            mesh->setAnimation( 0, currentTime );
+            currentTime += UPDATE_INTERVAL;
+        }
 #else
         SpacialComponent * spacial = world.getRootEntity()->getComponent<engine::SpacialComponent>();
 #endif
@@ -141,7 +159,7 @@ public:
 
         gpu->clearScreen( Vector4f(0,0.5f,0.5f,1.0f) );
 
-#if USE_STATIC_MESH
+#if USE_ENTITY
         entity->getComponent<VisualComponent>()->draw( camera.proj, camera.view );
         if( showbbox ) entity->getComponent<SpacialComponent>()->drawBoundingBox( camera.proj, camera.view, 0xFF000000 );
 #else
