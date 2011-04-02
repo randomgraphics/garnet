@@ -257,6 +257,7 @@ namespace GN { namespace gfx
     struct FatAnimation
     {
         StrA                         name;            //< Name of the animation.
+        double                       duration;        //< Duration of the animation.
         DynaArray<FatJointAnimation> jointAnimations; //< Joint animation array.
     };
 
