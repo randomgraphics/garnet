@@ -34,7 +34,7 @@ static Logger * sLogger = getLogger("GN.base.filesys");
 // -----------------------------------------------------------------------------
 static bool sNativeIsDir( const StrA & path )
 {
-    DIR * d = opendir( path.cptr() );
+    DIR * d = opendir( path.rawptr() );
     if( 0 == d ) return false;
     closedir( d );
     return true;
@@ -46,7 +46,7 @@ static bool sNativeIsDir( const StrA & path )
 static bool sNativeExist( const StrA & path )
 {
     if( sNativeIsDir(path) ) return true;
-    FILE * fp = fopen( path.cptr(), "r" );
+    FILE * fp = fopen( path.rawptr(), "r" );
     if( 0 == fp ) return false;
     fclose( fp );
     return true;
@@ -81,7 +81,7 @@ static bool sIsAbsPath( const StrA & path )
 // -----------------------------------------------------------------------------
 static bool sNativeExist( const StrA & path )
 {
-    return !!::PathFileExistsA( path.cptr() );
+    return !!::PathFileExistsA( path.rawptr() );
 }
 
 //
@@ -89,7 +89,7 @@ static bool sNativeExist( const StrA & path )
 // -----------------------------------------------------------------------------
 static bool sNativeIsDir( const StrA & path )
 {
-    return !!::PathIsDirectoryA( path.cptr() );
+    return !!::PathIsDirectoryA( path.rawptr() );
 }
 
 //
@@ -124,7 +124,7 @@ static bool sIsAbsPath( const StrA & path )
 static bool sNativeExist( const StrA & path )
 {
     WIN32_FIND_DATAA wfd;
-    HANDLE fh = ::FindFirstFileA( path.cptr(), &wfd );
+    HANDLE fh = ::FindFirstFileA( path.rawptr(), &wfd );
     if( INVALID_HANDLE_VALUE == fh )
     {
         return false;
@@ -142,7 +142,7 @@ static bool sNativeExist( const StrA & path )
 static bool sNativeIsDir( const StrA & path )
 {
     WIN32_FIND_DATAA wfd;
-    HANDLE fh = ::FindFirstFileA( path.cptr(), &wfd );
+    HANDLE fh = ::FindFirstFileA( path.rawptr(), &wfd );
     if( INVALID_HANDLE_VALUE == fh )
     {
         return false;
@@ -229,9 +229,9 @@ public:
         }
         // convert to full path
         char absPath[MAX_PATH+1];
-        if( 0 == _fullpath( absPath, tmp.cptr(), MAX_PATH ) )
+        if( 0 == _fullpath( absPath, tmp.rawptr(), MAX_PATH ) )
         {
-            GN_ERROR(sLogger)( "invalid path '%s'.", path.cptr() );
+            GN_ERROR(sLogger)( "invalid path '%s'.", path.rawptr() );
             result.clear();
             return;
         }
@@ -269,13 +269,13 @@ public:
 
         if( !exist(dirName) )
         {
-            GN_TRACE(sLogger)( "'%s' does not exist!", dirName.cptr() );
+            GN_TRACE(sLogger)( "'%s' does not exist!", dirName.rawptr() );
             return result;
         }
 
         if( !isDir(dirName) )
         {
-            GN_TRACE(sLogger)( "'%s' is not directory!", dirName.cptr() );
+            GN_TRACE(sLogger)( "'%s' is not directory!", dirName.rawptr() );
             return result;
         }
 
@@ -321,7 +321,7 @@ private:
             // TODO: ignore links/junctions
             CSimpleGlobA sg( SG_GLOB_ONLYDIR | SG_GLOB_NODOT );
             StrA p = joinPath( curDir, "*" );
-            sg.Add( p.cptr() );
+            sg.Add( p.rawptr() );
             char ** dirs = sg.Files();
             int c = sg.FileCount();
             for( int i = 0; i < c; ++i, ++dirs )
@@ -334,7 +334,7 @@ private:
         // search in current directory
         CSimpleGlobA sg( SG_GLOB_ONLYFILE );
         StrA p = joinPath( curDir, (useRegex ? "*.*" : pattern) );
-        sg.Add( p.cptr() );
+        sg.Add( p.rawptr() );
         char ** files = sg.Files();
         int c = sg.FileCount();
         for( int i = 0; i < c; ++i, ++files )
@@ -603,7 +603,7 @@ public:
         const StrA * root = findRoot( path );
         if( !root )
         {
-            GN_ERROR(sLogger)( "file '%s' not found!", path.cptr() );
+            GN_ERROR(sLogger)( "file '%s' not found!", path.rawptr() );
             return 0;
         }
         return GN::fs::openFile( joinPath( *root, path ), mode );
@@ -728,7 +728,7 @@ struct FileSystemContainer
 
         if( NULL != mFileSystems.find( name ) )
         {
-            GN_ERROR(sLogger)( "File system '%s' already exists!", name.cptr() );
+            GN_ERROR(sLogger)( "File system '%s' already exists!", name.rawptr() );
             return false;
         }
 

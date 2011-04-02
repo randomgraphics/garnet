@@ -19,7 +19,7 @@ static GN::Logger * sLogger = GN::getLogger("GN.tool.meshConverter");
 void printHelp( const char * exepath )
 {
     printf( "Usage: %s inputfile <outputfile>\n",
-        fs::baseName( exepath ).cptr() );
+        fs::baseName( exepath ).rawptr() );
 }
 
 #ifdef HAS_FBX
@@ -34,7 +34,7 @@ int FbxBin2Ascii( int argc, const char * argv[] )
         static void Local::sPrintHelp( const char * exepath )
         {
             printf( "Usage: -fbx inputfile outputfile\n",
-                fs::baseName( exepath ).cptr() );
+                fs::baseName( exepath ).rawptr() );
         }
 
         KFbxSdkManager * sdk;
@@ -151,7 +151,7 @@ int main( int argc, const char * argv[] )
     }
     else
     {
-        outputFile = stringFormat( "startup::%s.scene.xml", fs::baseName( inputFile ).cptr() );
+        outputFile = stringFormat( "startup::%s.scene.xml", fs::baseName( inputFile ).rawptr() );
     }
 
     ModelHierarchyDesc mhd;

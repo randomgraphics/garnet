@@ -83,8 +83,8 @@ class TestTextureBandwidth : public BasicTestCase
         double elapsed = c.getTimeD() - start;
 		StrA txt;
 		txt.format( "memcpy bandwidth = %fGB/s\n", LOOP_COUNT * BUF_SIZE / elapsed / 1000000000.0 );
-		OutputDebugStringA( txt.cptr() );
-		GN_INFO(sLogger)( txt.cptr() );
+		OutputDebugStringA( txt.rawptr() );
+		GN_INFO(sLogger)( txt.rawptr() );
 
         memFree( src );
         memFree( dst );
@@ -306,7 +306,7 @@ public:
             "texture count = %d\n"
             "bytes/tex     = %d Bytes\n"
             "quad count    = %d x %d x %d",
-            getName().cptr(),
+            getName().rawptr(),
             bandwidth,
             fillrate,
             TEX_SIZE,
@@ -336,7 +336,7 @@ public:
         r.rebindContext( ff );
 
         // draw text
-        scene::gAsciiFont.drawText( mInfo.cptr(), 0, 100, GN_RGBA32(255,0,0,255) );
+        scene::gAsciiFont.drawText( mInfo.rawptr(), 0, 100, GN_RGBA32(255,0,0,255) );
     }
 
     StrA printResult()

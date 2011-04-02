@@ -97,7 +97,7 @@ GN::gfx::OGLVtxFmt::bindBuffers(
         }
 
         const VertexBufferBinding & b = bindings[stream];
-        const OGLBasicVtxBuf * vb = safeCastPtr<const OGLBasicVtxBuf>( b.vtxbuf.get() );
+        const OGLBasicVtxBuf * vb = safeCastPtr<const OGLBasicVtxBuf>( b.vtxbuf.rawptr() );
 
         const uint8 * vtxdata = vb ? (const uint8*)vb->getVtxData() : NULL;
         size_t       stride  = b.stride;
@@ -287,7 +287,7 @@ bool GN::gfx::OGLVtxFmt::setupStateBindings( const OGLBasicGpuProgram * gpuProgr
                 break;
 
             default:
-                GN_ERROR(sLogger)( "unsupport vertex format: %s", e.format.toString().cptr() );
+                GN_ERROR(sLogger)( "unsupport vertex format: %s", e.format.toString().rawptr() );
                 return false;
         }
 

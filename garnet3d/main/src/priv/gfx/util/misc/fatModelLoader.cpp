@@ -309,12 +309,12 @@ sLoadFromASE( FatModel & fatmodel, File & file, const StrA & filename )
         }
         if( src.idx32 )
         {
-            memcpy( dst->indices.cptr(), src.indices, src.numidx * 4 );
+            memcpy( dst->indices.rawptr(), src.indices, src.numidx * 4 );
         }
         else
         {
             const uint16 * s = (const uint16*)src.indices;
-            uint32 * d = dst->indices.cptr();
+            uint32 * d = dst->indices.rawptr();
             for( size_t i = 0; i < src.numidx; ++i, ++s, ++d )
             {
                 *d = *s;
@@ -1377,7 +1377,7 @@ sLoadFbxMesh(
     }
 
     // Now copy vertex data to fatmesh, and translate position and normal to global space.
-    if( !sGenerateFatVertices( fatmesh, fbxnode, vcache.cptr(), vertexKeys.cptr(), vertexKeys.size() ) ) return;
+    if( !sGenerateFatVertices( fatmesh, fbxnode, vcache.rawptr(), vertexKeys.rawptr(), vertexKeys.size() ) ) return;
 
     // calculate the bounding box of the mesh
     const Vector4f * vertices = (const Vector4f *)fatmesh.vertices.getPosition();
@@ -1508,7 +1508,7 @@ sLoadFromFBX( FatModel & fatmodel, File & file, const StrA & filename )
 
     fatmodel.clear();
     GN_UNUSED_PARAM( file );
-    GN_ERROR(sLogger)( "Fail to load file %s: FBX is not supported.", filename.cptr() );
+    GN_ERROR(sLogger)( "Fail to load file %s: FBX is not supported.", filename.rawptr() );
     return false;
 
 #endif // HAS_FBX
@@ -1939,7 +1939,7 @@ sSortJointHierarchy( FatSkeleton & fatsk )
         }
     };
     uint32 counter = 0;
-    Local::sCountJointRecursivly( fatsk.joints.cptr(), fatsk.joints.size(), counter, 0 );
+    Local::sCountJointRecursivly( fatsk.joints.rawptr(), fatsk.joints.size(), counter, 0 );
     if( counter != fatsk.joints.size() )
     {
         GN_ERROR(sLogger)( "Invalid joint hierarchy!" );
@@ -2651,7 +2651,7 @@ bool GN::gfx::FatModel::loadFromFile( const StrA & filename )
         default:
             if( !ai::sLoadFromAssimp( *this, fullFileName ) )
             {
-                GN_ERROR(sLogger)( "Unknown file format: %s", filename.cptr() );
+                GN_ERROR(sLogger)( "Unknown file format: %s", filename.rawptr() );
                 noerr = false;
             }
             break;

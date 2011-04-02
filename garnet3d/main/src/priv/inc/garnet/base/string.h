@@ -392,7 +392,7 @@ namespace GN
         ///
         /// return c-style const char pointer
         ///
-        const CharType * cptr() const { return mPtr; }
+        const CharType * rawptr() const { return mPtr; }
 
         ///
         /// empty string or not?
@@ -1019,7 +1019,7 @@ namespace GN
         ///
         friend std::ostream & operator << ( std::ostream & os, const Str & str )
         {
-            os << str.cptr();
+            os << str.rawptr();
             return os;
         }
 
@@ -1137,7 +1137,7 @@ namespace GN
         }
         StackStr( const Str<CHAR> & s )
         {
-            memcpy( mBuf, s.cptr(), sizeof(CHAR) * sValidateLength(s.size()) );
+            memcpy( mBuf, s.rawptr(), sizeof(CHAR) * sValidateLength(s.size()) );
         }
         //@}
     };

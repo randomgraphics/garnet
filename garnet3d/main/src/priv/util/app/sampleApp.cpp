@@ -195,7 +195,7 @@ bool GN::util::SampleApp::onCheckExtraCmdlineArguments( const char * exename, in
             s += " ";
             s += argv[i];
         }
-        GN_ERROR(sLogger)( s.cptr() );
+        GN_ERROR(sLogger)( s.rawptr() );
     }
 
     return true;
@@ -436,9 +436,9 @@ bool GN::util::SampleApp::checkCmdLine( int argc, const char * const argv[] )
                     StrA name( value.subString( 0, k ) );
                     StrA leveltok( value.subString( k+1, 0 ) );
                     int level;
-                    if( !name.empty() && 0 != string2Integer( level, leveltok.cptr() ) )
+                    if( !name.empty() && 0 != string2Integer( level, leveltok.rawptr() ) )
                     {
-                        getLogger( name.cptr() )->setLevel( level );
+                        getLogger( name.rawptr() )->setLevel( level );
                     }
                     else
                     {
@@ -481,7 +481,7 @@ bool GN::util::SampleApp::checkCmdLine( int argc, const char * const argv[] )
     }
 
     // handle unrecoganized arguments
-    if( !onCheckExtraCmdlineArguments( argv[0], (int)unknownArgs.size(), unknownArgs.cptr() ) ) return false;
+    if( !onCheckExtraCmdlineArguments( argv[0], (int)unknownArgs.size(), unknownArgs.rawptr() ) ) return false;
 
 #endif
 
@@ -546,7 +546,7 @@ void GN::util::SampleApp::drawHUD()
     {
         BitmapFont * font = engine::getDefaultFontRenderer();
 
-        font->drawText( mFps.fpsString().cptr(), 40, 40 );
+        font->drawText( mFps.fpsString().rawptr(), 40, 40 );
 
         if( mShowHelp )
         {

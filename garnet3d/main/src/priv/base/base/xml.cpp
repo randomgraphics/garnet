@@ -319,7 +319,7 @@ static GN::XmlNode * sNewNode( ParseTracer * tracer, GN::XmlNodeType type )
     {
         sParseFail(
             tracer,
-            GN::stringFormat( "Fail to create node with type of '%d'", type ).cptr() );
+            GN::stringFormat( "Fail to create node with type of '%d'", type ).rawptr() );
         return NULL;
     }
 

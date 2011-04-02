@@ -26,12 +26,12 @@ namespace GN
         ///
         /// convert to C pointer
         ///
-        const T* cptr() const { return mElements; }
+        const T* rawptr() const { return mElements; }
 
         ///
         /// convert to C pointer
         ///
-        T* cptr() { return mElements; }
+        T* rawptr() { return mElements; }
 
         ///
         /// return size of the array (always be MAX_SIZE)
@@ -86,7 +86,7 @@ namespace GN
 
         void doClear()
         {
-            T * p = cptr();
+            T * p = rawptr();
             for( SIZE_TYPE i = 0; i < mCount; ++i, ++p )
             {
                 dtor( p );
@@ -96,8 +96,8 @@ namespace GN
 
         void copyFrom( const StackArray & other )
         {
-            T       * dst = cptr();
-            const T * src = other.cptr();
+            T       * dst = rawptr();
+            const T * src = other.rawptr();
 
             SIZE_TYPE mincount = math::getmin<SIZE_TYPE>( mCount, other.mCount );
             for( SIZE_TYPE i = 0; i < mincount; ++i )
@@ -136,7 +136,7 @@ namespace GN
                 return;
             }
 
-            T * p = cptr();
+            T * p = rawptr();
 
             // construct last element
             ctor( p + mCount, 1 );
@@ -163,7 +163,7 @@ namespace GN
 
             --mCount;
 
-            T * p = cptr();
+            T * p = rawptr();
 
             // move elements
             for( SIZE_TYPE i = position; i < mCount; ++i )
@@ -185,7 +185,7 @@ namespace GN
                 return;
             }
 
-            T * p = cptr();
+            T * p = rawptr();
 
             // destruct extra objects, only when count < mCount
             for( SIZE_TYPE i = count; i < mCount; ++i )
@@ -206,8 +206,8 @@ namespace GN
         {
             if( mCount != other.mCount ) return false;
 
-            const T * p1 = cptr();
-            const T * p2 = other.cptr();
+            const T * p1 = rawptr();
+            const T * p2 = other.rawptr();
 
             for( SIZE_TYPE i = 0; i < mCount; ++i )
             {
@@ -234,7 +234,7 @@ namespace GN
         ///
         explicit StackArray( SIZE_TYPE count ) : mCount(count)
         {
-            ctor( cptr(), count );
+            ctor( rawptr(), count );
         }
 
         ///
@@ -254,21 +254,21 @@ namespace GN
         ///
         //@{
         void      append( const T & t ) { doInsert( mCount, t ); }
-        const T & back() const { GN_ASSERT( mCount > 0 ); return cptr()[mCount-1]; }
-        T       & back() { GN_ASSERT( mCount > 0 ); return cptr()[mCount-1]; }
-        const T * begin() const { return cptr(); }
-        T       * begin() { return cptr(); }
+        const T & back() const { GN_ASSERT( mCount > 0 ); return rawptr()[mCount-1]; }
+        T       & back() { GN_ASSERT( mCount > 0 ); return rawptr()[mCount-1]; }
+        const T * begin() const { return rawptr(); }
+        T       * begin() { return rawptr(); }
         void      clear() { doClear(); }
-        const T * cptr() const { return (const T*)mBuffer; }
-        T       * cptr() { return (T*)mBuffer; }
+        const T * rawptr() const { return (const T*)mBuffer; }
+        T       * rawptr() { return (T*)mBuffer; }
         bool      empty() const { return 0 == mCount; }
-        const T * end() const { return cptr() + mCount; }
-        T       * end() { return cptr() + mCount; }
+        const T * end() const { return rawptr() + mCount; }
+        T       * end() { return rawptr() + mCount; }
         /** do nothing if position is invalid or array is empty */
         void      eraseIdx( SIZE_TYPE position ) { doErase( position ); }
         void      erasePtr( const T * ptr ) { doErase( ptr - mBuffer ); }
-        const T & front() const { GN_ASSERT( mCount > 0 ); return cptr()[0]; }
-        T       & front() { GN_ASSERT( mCount > 0 ); return cptr()[0]; }
+        const T & front() const { GN_ASSERT( mCount > 0 ); return rawptr()[0]; }
+        T       & front() { GN_ASSERT( mCount > 0 ); return rawptr()[0]; }
         /** do nothing if position is invalid or array is full */
         void      insert( SIZE_TYPE position, const T & t ) { doInsert( position, t ); }
         void      resize( SIZE_TYPE count ) { doResize( count ); }
@@ -282,8 +282,8 @@ namespace GN
         StackArray & operator=( const StackArray & other ) { copyFrom(other); return *this; }
         bool         operator==( const StackArray & other ) const { return equal(other); }
         bool         operator!=( const StackArray & other ) const { return !equal(other); }
-        T          & operator[]( SIZE_TYPE i ) { GN_ASSERT( i < mCount ); return cptr()[i]; }
-        const T    & operator[]( SIZE_TYPE i ) const { GN_ASSERT( i < mCount ); return cptr()[i]; }
+        T          & operator[]( SIZE_TYPE i ) { GN_ASSERT( i < mCount ); return rawptr()[i]; }
+        const T    & operator[]( SIZE_TYPE i ) const { GN_ASSERT( i < mCount ); return rawptr()[i]; }
         //@}
     };
 
@@ -580,8 +580,8 @@ namespace GN
         T       * begin() { return mElements; }
         SIZE_TYPE capacity() const { return mCapacity; }
         void      clear() { doClear(); }
-        const T * cptr() const { return mElements; }
-        T       * cptr() { return mElements; }
+        const T * rawptr() const { return mElements; }
+        T       * rawptr() { return mElements; }
         bool      empty() const { return 0 == mCount; }
         const T * end() const { return mElements + mCount; }
         T       * end() { return mElements + mCount; }

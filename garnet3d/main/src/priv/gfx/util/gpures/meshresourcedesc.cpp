@@ -211,7 +211,7 @@ bool sGetMeshVertexPositions( MeshVertexPosition & pos, const MeshResourceDesc &
     }
     else
     {
-        GN_ERROR(sLogger)( "AABB calculation failed: unsupported vertex format %s", positionElement->format.toString().cptr() );
+        GN_ERROR(sLogger)( "AABB calculation failed: unsupported vertex format %s", positionElement->format.toString().rawptr() );
         return false;
     }
     pos.strideX = pos.strideY = pos.strideZ = desc.strides[positionElement->stream];
@@ -344,7 +344,7 @@ static const XmlAttrib * sGetRequiredAttrib( const XmlElement & node, const char
     {
         GN_ERROR(sLogger)(
             "Element <%s>: attribute \"%s\" is missing.",
-            node.name.cptr(),
+            node.name.rawptr(),
             attribName ? attribName : "!!!NULLPTR!!!" );
     }
 
@@ -358,7 +358,7 @@ template<typename T>
 static bool sGetIntAttrib( T & result, const XmlElement & node, const char * attribName )
 {
     const XmlAttrib * a = node.findAttrib( attribName );
-    return a && 0 != string2Integer<T>( result, a->value.cptr() );
+    return a && 0 != string2Integer<T>( result, a->value.rawptr() );
 }
 
 //
@@ -382,11 +382,11 @@ template<typename T>
 static bool sGetRequiredIntAttrib( T & result, const XmlElement & node, const char * attribName )
 {
     const XmlAttrib * a = node.findAttrib( attribName );
-    if( !a || 0 == string2Integer<T>( result, a->value.cptr() ) )
+    if( !a || 0 == string2Integer<T>( result, a->value.rawptr() ) )
     {
         GN_ERROR(sLogger)(
             "Element <%s>: attribute \"%s\" is missing or is not a valid integer.",
-            node.name.cptr(),
+            node.name.rawptr(),
             attribName ? attribName : "!!!NULLPTR!!!" );
         return false;
     }
@@ -404,13 +404,13 @@ static bool sGetBoolAttrib( const XmlElement & node, const char * attribName, bo
     const XmlAttrib * a = node.findAttrib( attribName );
     if( !a ) return defaultValue;
 
-    if( 0 == stringCompareI( "1", a->value.cptr() ) ||
-        0 == stringCompareI( "true", a->value.cptr() ) )
+    if( 0 == stringCompareI( "1", a->value.rawptr() ) ||
+        0 == stringCompareI( "true", a->value.rawptr() ) )
     {
         return true;
     }
-    else if( 0 == stringCompareI( "0", a->value.cptr() ) ||
-             0 == stringCompareI( "false", a->value.cptr() ) )
+    else if( 0 == stringCompareI( "0", a->value.rawptr() ) ||
+             0 == stringCompareI( "false", a->value.rawptr() ) )
     {
         return false;
     }
@@ -465,10 +465,10 @@ AutoRef<Blob> sLoadFromMeshXMLFile( File & fp, MeshResourceDesc & desc )
             "    line   : %d\n"
             "    column : %d\n"
             "    error  : %s",
-            fp.name().cptr(),
+            fp.name().rawptr(),
             xpr.errLine,
             xpr.errColumn,
-            xpr.errInfo.cptr() );
+            xpr.errInfo.rawptr() );
         return AutoRef<Blob>::NULLREF;
     }
     GN_ASSERT( xpr.root );
@@ -483,7 +483,7 @@ AutoRef<Blob> sLoadFromMeshXMLFile( File & fp, MeshResourceDesc & desc )
     const XmlAttrib * a = root->findAttrib( "primtype" );
     if( !a || PrimitiveType::INVALID == (desc.prim = PrimitiveType::sFromString(a->value)) )
     {
-        GN_ERROR(sLogger)( "Element <%s> attribute \"%s\": missing or invalid.", root->name.cptr(), "primtype" );
+        GN_ERROR(sLogger)( "Element <%s> attribute \"%s\": missing or invalid.", root->name.rawptr(), "primtype" );
         return AutoRef<Blob>::NULLREF;
     }
 
@@ -515,7 +515,7 @@ AutoRef<Blob> sLoadFromMeshXMLFile( File & fp, MeshResourceDesc & desc )
 
         if( "attrib" != e->name )
         {
-            GN_WARN(sLogger)( "Ignore unrecognized vertex format element: <%s>.", e->name.cptr() );
+            GN_WARN(sLogger)( "Ignore unrecognized vertex format element: <%s>.", e->name.rawptr() );
             continue;
         }
 
@@ -585,7 +585,7 @@ AutoRef<Blob> sLoadFromMeshXMLFile( File & fp, MeshResourceDesc & desc )
         }
         else
         {
-            GN_WARN(sLogger)( "Ignore unrecognized element: <%s>.", e->name.cptr() );
+            GN_WARN(sLogger)( "Ignore unrecognized element: <%s>.", e->name.rawptr() );
         }
     }
 
@@ -663,7 +663,7 @@ AutoRef<Blob> sLoadFromMeshXMLFile( File & fp, MeshResourceDesc & desc )
         }
         else
         {
-            GN_WARN(sLogger)( "Ignore unrecognized element: <%s>.", e->name.cptr() );
+            GN_WARN(sLogger)( "Ignore unrecognized element: <%s>.", e->name.rawptr() );
         }
     }
 

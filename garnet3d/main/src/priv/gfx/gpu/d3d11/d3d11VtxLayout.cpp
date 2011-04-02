@@ -39,7 +39,7 @@ sVtxBind2D3D11InputLayout(
         elem.Format = (DXGI_FORMAT)colorFormat2DxgiFormat( ve.format );
         if( DXGI_FORMAT_UNKNOWN == elem.Format )
         {
-            GN_ERROR(sLogger)( "Unknown element format: %s", ve.format.toString().cptr() );
+            GN_ERROR(sLogger)( "Unknown element format: %s", ve.format.toString().rawptr() );
             return false;
         }
 

@@ -130,10 +130,10 @@ bool CEGUI::GarnetTexture::reload()
         CEGUI::RawDataContainer rdc;
         rp->loadRawDataContainer( mFileName, rdc, mGroup );
 
-        GN_TRACE(sLogger)( "Load GUI texture: name(%s), group(%s).", mFileName.cptr(), mFileName.cptr() );
+        GN_TRACE(sLogger)( "Load GUI texture: name(%s), group(%s).", mFileName.rawptr(), mFileName.rawptr() );
 
         // load texture
-        MemFile<uint8> mf( rdc.getDataPtr(), rdc.getSize(), mFileName.cptr() );
+        MemFile<uint8> mf( rdc.getDataPtr(), rdc.getSize(), mFileName.rawptr() );
         mGarnetTexture.attach( scene::createTextureFromFile( mf ) );
         if( !mGarnetTexture ) return false;
 

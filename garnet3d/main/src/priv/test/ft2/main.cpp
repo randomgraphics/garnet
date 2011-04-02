@@ -159,7 +159,7 @@ GN::StrW g_text(
     L"   glTexParameteri ( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );\n"
     L"   glEnable(GL_BLEND);\n"
     L"   glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);" );
-const wchar_t * g_UnicodeString = g_text.cptr();
+const wchar_t * g_UnicodeString = g_text.rawptr();
 
 void drawText(const wchar_t* _strText,int x , int y, int maxW , int h)
 {

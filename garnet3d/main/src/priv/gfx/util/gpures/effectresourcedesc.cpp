@@ -79,11 +79,11 @@ static void sPostError( const XmlNode & node, const StrA & msg )
     const XmlElement * e = node.toElement();
     if( e )
     {
-        GN_ERROR(sLogger)( "Effect XML error: element <%s> - %s", e->name.cptr(), msg.cptr() );
+        GN_ERROR(sLogger)( "Effect XML error: element <%s> - %s", e->name.rawptr(), msg.rawptr() );
     }
     else
     {
-        GN_ERROR(sLogger)( "Effect XML error: %s", msg.cptr() );
+        GN_ERROR(sLogger)( "Effect XML error: %s", msg.rawptr() );
     }
 }
 
@@ -95,11 +95,11 @@ static void sPostWarning( const XmlNode & node, const StrA & msg )
     const XmlElement * e = node.toElement();
     if( e )
     {
-        GN_WARN(sLogger)( "Effect XML warning: element <%s> - %s", e->name.cptr(), msg.cptr() );
+        GN_WARN(sLogger)( "Effect XML warning: element <%s> - %s", e->name.rawptr(), msg.rawptr() );
     }
     else
     {
-        GN_WARN(sLogger)( "Effect XML warning: %s", msg.cptr() );
+        GN_WARN(sLogger)( "Effect XML warning: %s", msg.rawptr() );
     }
 }
 
@@ -112,7 +112,7 @@ static const char * sGetAttrib(
     const char * defaultValue = NULL )
 {
     const XmlAttrib * a = node.findAttrib( attribName );
-    return a ? a->value.cptr() : defaultValue;
+    return a ? a->value.rawptr() : defaultValue;
 }
 
 //
@@ -125,7 +125,7 @@ static T sGetIntAttrib( const XmlElement & node, const char * attribName, T defa
 
     T result;
 
-    if( !a || 0 == string2Integer<T>( result, a->value.cptr() ) )
+    if( !a || 0 == string2Integer<T>( result, a->value.rawptr() ) )
         return defaultValue;
     else
         return result;
@@ -139,13 +139,13 @@ static bool sGetBoolAttrib( const XmlElement & node, const char * attribName, bo
     const XmlAttrib * a = node.findAttrib( attribName );
     if( !a ) return defaultValue;
 
-    if( 0 == stringCompareI( "1", a->value.cptr() ) ||
-        0 == stringCompareI( "true", a->value.cptr() ) )
+    if( 0 == stringCompareI( "1", a->value.rawptr() ) ||
+        0 == stringCompareI( "true", a->value.rawptr() ) )
     {
         return true;
     }
-    else if( 0 == stringCompareI( "0", a->value.cptr() ) ||
-             0 == stringCompareI( "false", a->value.cptr() ) )
+    else if( 0 == stringCompareI( "0", a->value.rawptr() ) ||
+             0 == stringCompareI( "false", a->value.rawptr() ) )
     {
         return false;
     }
@@ -166,7 +166,7 @@ static const char * sGetItemName( const XmlElement & node, const char * nodeType
         sPostError( node, stringFormat("Unnamed %s node. Ignored.", nodeType) );
         return 0;
     }
-    return a->value.cptr();
+    return a->value.rawptr();
 }
 
 //
@@ -275,7 +275,7 @@ static void sParseParameters( EffectResourceDesc & desc, const XmlNode & root )
         if( "texture" == e->name ) sParseTexture( desc, *e );
         else if( "uniform" == e->name ) sParseUniform( desc, *e );
         else if( "attribute" == e->name ) sParseAttribute( desc, *e );
-        else sPostError( *e, stringFormat( "Unknown parameter '%s'. Ignored", e->name.cptr() ) );
+        else sPostError( *e, stringFormat( "Unknown parameter '%s'. Ignored", e->name.rawptr() ) );
     }
 }
 
@@ -344,7 +344,7 @@ static void sParseCode( EffectGpuProgramDesc & sd, ShaderCode & code, const XmlE
         if( c )
         {
             size_t offset = sd.shaderSourceBuffer.size();
-            sd.shaderSourceBuffer.append( c->text.cptr(), c->text.size() + 1 );
+            sd.shaderSourceBuffer.append( c->text.rawptr(), c->text.size() + 1 );
             code.source = (const char*)offset;
             break;
         }
@@ -424,7 +424,7 @@ static void sParseGpuProgram( EffectResourceDesc & desc, const XmlElement & node
                 GN_UNEXPECTED();
                 break;
         };
-        sPostWarning( node, stringFormat( "shaderModel attribute is missing. Assume: %s", ShaderModel::sToString(sd.gpd.shaderModels).cptr() ) );
+        sPostWarning( node, stringFormat( "shaderModel attribute is missing. Assume: %s", ShaderModel::sToString(sd.gpd.shaderModels).rawptr() ) );
     }
     else
     {
@@ -456,7 +456,7 @@ static void sParseGpuProgram( EffectResourceDesc & desc, const XmlElement & node
     }
 
     // convert all shader source offsets to pointers
-    const char * start = sd.shaderSourceBuffer.cptr();
+    const char * start = sd.shaderSourceBuffer.rawptr();
     if( sd.gpd.vs.source ) sd.gpd.vs.source += (size_t)start;
     if( sd.gpd.vs.entry  ) sd.gpd.vs.entry  += (size_t)start;
     if( sd.gpd.gs.source ) sd.gpd.gs.source += (size_t)start;
@@ -503,8 +503,8 @@ static void sParseRenderStates( EffectResourceDesc::EffectRenderStateDesc & rsde
 
     for( const XmlAttrib * a = node.firsta; a; a = a->next )
     {
-        const char * rsname = a->name.cptr();
-        const char * rsvalue = a->value.cptr();
+        const char * rsname = a->name.rawptr();
+        const char * rsvalue = a->value.rawptr();
 
         if( 0 == stringCompareI( "CULL_MODE", rsname ) )
         {
@@ -613,12 +613,12 @@ static void sCopyShaderSourcePtr(
 {
     GN_ASSERT( tobuf.size() == frombuf.size() );
 
-    const char * s = frombuf.cptr();
+    const char * s = frombuf.rawptr();
     const char * e = s + frombuf.size();
 
     if( s <= from && from < e )
     {
-        to = tobuf.cptr() + ( from - s );
+        to = tobuf.rawptr() + ( from - s );
     }
     else
     {

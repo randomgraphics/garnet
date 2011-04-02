@@ -243,7 +243,7 @@ namespace GN { namespace gfx
         ///
         /// Get default font pointer. The refcounter of the fount is _NOT_ increased.
         ///
-        FontFace * getDefaultFontFace() const { return mFont.get(); }
+        FontFace * getDefaultFontFace() const { return mFont; }
 
         ///
         /// draw UNICODE text

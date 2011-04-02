@@ -141,14 +141,14 @@ sCheckShaderTextures(
         if( GPU_PROGRAM_PARAMETER_NOT_FOUND == param.textures[shaderParameterName] )
         {
             GN_ERROR(sLogger)( "Invalid GPU program parameter named '%s' is referenced in shader '%s'.",
-                shaderParameterName.cptr(),
+                shaderParameterName.rawptr(),
                 programName );
             return false;
         }
         else if( NULL == effectDesc.textures.find( textureName ) )
         {
             GN_ERROR(sLogger)( "Invalid texture named '%s' is referenced in shader '%s'.",
-                shaderParameterName.cptr(),
+                shaderParameterName.rawptr(),
                 programName );
             return false;
         }
@@ -179,14 +179,14 @@ sCheckShaderUniforms(
         if( GPU_PROGRAM_PARAMETER_NOT_FOUND == param.uniforms[shaderParameterName] )
         {
             GN_ERROR(sLogger)( "Invalid GPU program parameter named '%s' is referenced in shader '%s'.",
-                shaderParameterName.cptr(),
+                shaderParameterName.rawptr(),
                 programName );
             return false;
         }
         else if( NULL == effectDesc.uniforms.find( uniformName ) )
         {
             GN_ERROR(sLogger)( "Invalid uniform named '%s' is referenced in shader '%s'.",
-                shaderParameterName.cptr(),
+                shaderParameterName.rawptr(),
                 programName );
             return false;
         }
@@ -373,7 +373,7 @@ GN::gfx::EffectResource::Impl::initGpuProgram(
     const StrA                 & programName,
     const EffectGpuProgramDesc & programDesc )
 {
-    GN_VERBOSE(sLogger)( "Initialize GPU program: name=%s, language=%s", programName.cptr(), programDesc.gpd.lang.toString() );
+    GN_VERBOSE(sLogger)( "Initialize GPU program: name=%s, language=%s", programName.rawptr(), programDesc.gpd.lang.toString() );
 
     Gpu & gpu = getGdb().getGpu();
 
@@ -382,7 +382,7 @@ GN::gfx::EffectResource::Impl::initGpuProgram(
     //       So here only a verbose, instead of error, message is issued.
     if( !sCheckGpuCaps( gpu, programDesc ) )
     {
-        GN_VERBOSE(sLogger)( "shader '%s' is skipped due to missing GPU caps.", programName.cptr() );
+        GN_VERBOSE(sLogger)( "shader '%s' is skipped due to missing GPU caps.", programName.rawptr() );
         return false;
     }
 
@@ -479,8 +479,8 @@ GN::gfx::EffectResource::Impl::initTech(
             {
                 GN_ERROR(sLogger)(
                     "Technique '%s' referencs non-exist shader name '%s' in pass %u",
-                    techName.cptr(),
-                    programName.cptr(),
+                    techName.rawptr(),
+                    programName.rawptr(),
                     ipass );
             }
 
@@ -492,8 +492,8 @@ GN::gfx::EffectResource::Impl::initTech(
                 GN_VERBOSE(sLogger)(
                     "Technique '%s' is skipped because shader '%s', which is referenced by the technique in pass %u, "
                     "is not supported by current graphics hardware.",
-                    techName.cptr(),
-                    programName.cptr(),
+                    techName.rawptr(),
+                    programName.rawptr(),
                     ipass );
                 return false;
             }
@@ -501,8 +501,8 @@ GN::gfx::EffectResource::Impl::initTech(
             {
                 GN_ERROR(sLogger)(
                     "Shader '%s' referenced by technique '%s' in pass %u is not properly initialized",
-                    programName.cptr(),
-                    techName.cptr(),
+                    programName.rawptr(),
+                    techName.rawptr(),
                     ipass );
             }
 
@@ -560,7 +560,7 @@ GN::gfx::EffectResource::Impl::initTextures(
         if( tp.bindings.empty() )
         {
             GN_WARN(sLogger)( "Unused texture parameter '%s' in effect '%s'.",
-                tp.parameterName.cptr(),
+                tp.parameterName.rawptr(),
                 getEffectName() );
         }
 
@@ -616,7 +616,7 @@ GN::gfx::EffectResource::Impl::initUniforms(
         if( up.bindings.empty() )
         {
             GN_WARN(sLogger)( "Unused uniform parameter '%s' in effect '%s'.",
-                up.parameterName.cptr(),
+                up.parameterName.rawptr(),
                 getEffectName() );
         }
 
@@ -665,8 +665,8 @@ GN::gfx::EffectResource::Impl::initAttributes(
                     else
                     {
                         GN_ERROR(sLogger)( "Effect attribute '%s' is binding to invalid GPU program parameter '%s'",
-                            attributeName.cptr(),
-                            shaderParameterName.cptr() );
+                            attributeName.rawptr(),
+                            shaderParameterName.rawptr() );
                     }
                 }
             }
@@ -675,7 +675,7 @@ GN::gfx::EffectResource::Impl::initAttributes(
         if( ap.bindings.empty() )
         {
             GN_WARN(sLogger)( "Unused attribute parameter '%s' in effect '%s'.",
-                ap.parameterName.cptr(),
+                ap.parameterName.rawptr(),
                 getEffectName() );
         }
 
@@ -812,10 +812,10 @@ AutoRef<EffectResource> GN::gfx::EffectResource::loadFromFile(
             "    line   : %d\n"
             "    column : %d\n"
             "    error  : %s",
-            fp->name().cptr(),
+            fp->name().rawptr(),
             xpr.errLine,
             xpr.errColumn,
-            xpr.errInfo.cptr() );
+            xpr.errInfo.rawptr() );
         return AutoRef<EffectResource>::NULLREF;
     }
     fp.clear();

@@ -67,7 +67,7 @@ static Entity * sCreateEntity(
         const ModelHierarchyDesc::NodeDesc * parentDesc = worldDesc.nodes.find( entityDesc.parent );
         if( NULL == parentDesc )
         {
-            GN_ERROR(sLogger)( "Entity '%s' has a invalid parent: '%s'", entityName.cptr(), entityDesc.parent.cptr() );
+            GN_ERROR(sLogger)( "Entity '%s' has a invalid parent: '%s'", entityName.rawptr(), entityDesc.parent.rawptr() );
         }
         else
         {
@@ -107,8 +107,8 @@ static Entity * sCreateEntity(
         {
             GN_ERROR(sLogger)(
                 "Entity %s references invalid model named \"%s\".",
-                entityName.cptr(),
-                modelName.cptr() );
+                entityName.rawptr(),
+                modelName.rawptr() );
             continue;
         }
 
@@ -128,8 +128,8 @@ static Entity * sCreateEntity(
                 {
                     GN_ERROR(sLogger)(
                         "Model \"%s\" references a mesh \"%s\" that does not belong to this scene.",
-                        modelName.cptr(),
-                        pModelDesc->mesh.cptr() );
+                        modelName.rawptr(),
+                        pModelDesc->mesh.rawptr() );
                     continue; // ignore the model
                 }
 

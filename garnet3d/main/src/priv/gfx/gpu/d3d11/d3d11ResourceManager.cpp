@@ -86,7 +86,7 @@ GN::gfx::D3D11Gpu::createGpuProgram( const void * data, uint32 length )
 
     if( 0 == (desc.shaderModels & mCaps.shaderModels) )
     {
-        GN_ERROR(sLogger)( "Unsupported GPU shader model: %s", ShaderModel::sToString(desc.shaderModels).cptr() );
+        GN_ERROR(sLogger)( "Unsupported GPU shader model: %s", ShaderModel::sToString(desc.shaderModels).rawptr() );
         return NULL;
     }
 

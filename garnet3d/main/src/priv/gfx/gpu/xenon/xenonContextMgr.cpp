@@ -338,8 +338,8 @@ GN::gfx::XenonGpu::bindContextShaders(
             prog->apply();
         }
 
-        prog->applyUniforms( (const Uniform * const *)newContext.uniforms.cptr(), newContext.uniforms.size(), skipDirtyCheck );
-        prog->applyTextures( newContext.textures.cptr(), newContext.textures.MAX_SIZE, skipDirtyCheck );
+        prog->applyUniforms( (const Uniform * const *)newContext.uniforms.rawptr(), newContext.uniforms.size(), skipDirtyCheck );
+        prog->applyTextures( newContext.textures.rawptr(), newContext.textures.MAX_SIZE, skipDirtyCheck );
     }
     else if( skipDirtyCheck || mContext.gpuProgram )
     {

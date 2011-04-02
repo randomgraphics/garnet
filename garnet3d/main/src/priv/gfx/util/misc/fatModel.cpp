@@ -308,7 +308,7 @@ void GN::gfx::FatSkeleton::printJointHierarchy( StrA & s ) const
     }
     else
     {
-        return sPrintFatJointRecursivly( s, joints.cptr(), joints.size(), 0, 0 );
+        return sPrintFatJointRecursivly( s, joints.rawptr(), joints.size(), 0, 0 );
     }
 }
 

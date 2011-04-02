@@ -80,13 +80,13 @@ static void sGetOpenGLVersion( const char * version, int * major, int * minor, i
     // get major version
     const char * p = version;
     while( '.' != *p ) ++p;
-    if( major ) *major = string2Integer<int>( StrA(version, p-version).cptr(), 0 );
+    if( major ) *major = string2Integer<int>( StrA(version, p-version).rawptr(), 0 );
 
     // get minor version
     version = p + 1;
     p = version;
     while( *p && '.' != *p && ' ' != *p ) ++p;
-    if( minor ) *minor = string2Integer<int>( StrA(version, p-version).cptr(), 0 );
+    if( minor ) *minor = string2Integer<int>( StrA(version, p-version).rawptr(), 0 );
 
     // get release version
     if( *p && '.' == *p )
@@ -94,7 +94,7 @@ static void sGetOpenGLVersion( const char * version, int * major, int * minor, i
         version = p + 1;
         p = version;
         while( *p && ' ' != *p ) ++p;
-        if( release ) *release = string2Integer<int>( StrA(version, p-version).cptr(), 0 );
+        if( release ) *release = string2Integer<int>( StrA(version, p-version).rawptr(), 0 );
     }
     else
     {
@@ -186,7 +186,7 @@ static void sOutputOGLInfo( intptr_t disp, const DynaArray<StrA> & glexts )
         "===================================================\n"
         "\n\n",
         ts,tu );
-    GN_INFO(sLogger)( info.cptr() );
+    GN_INFO(sLogger)( info.rawptr() );
 
     // extension info.
     info =
@@ -202,7 +202,7 @@ static void sOutputOGLInfo( intptr_t disp, const DynaArray<StrA> & glexts )
         "===================================================\n"
         "\n\n";
 
-    GN_VERBOSE(sLogger)( info.cptr() );
+    GN_VERBOSE(sLogger)( info.rawptr() );
 
     GN_UNGUARD;
 }

@@ -116,15 +116,15 @@ void GN::gfx::D3D11GpuProgramParameterDesc::clear()
 // -----------------------------------------------------------------------------
 void GN::gfx::D3D11GpuProgramParameterDesc::buildParameterArrays()
 {
-    mUniformArray       = mUniforms.cptr();
+    mUniformArray       = mUniforms.rawptr();
     mUniformCount       = (uint32)mUniforms.size();
     mUniformArrayStride = (uint32)sizeof(mUniforms[0]);
 
-    mTextureArray       = mTextures.cptr();
+    mTextureArray       = mTextures.rawptr();
     mTextureCount       = (uint32)mTextures.size();
     mTextureArrayStride = (uint32)sizeof(mTextures[0]);
 
-    mAttributeArray       = mAttributes.cptr();
+    mAttributeArray       = mAttributes.rawptr();
     mAttributeCount       = (uint32)mAttributes.size();
     mAttributeArrayStride = (uint32)sizeof(mAttributes[0]);
 }
@@ -536,7 +536,7 @@ void GN::gfx::D3D11GpuProgramHLSL::applyUniforms(
             {
                 ID3D11Buffer           & buf = *mShaders[s].constBufs[i];
                 const DynaArray<uint8> & data = mShaders[s].constData[i];
-                sUpdateD3D11ConstBuffer( cxt, buf, data.cptr(), data.size() );
+                sUpdateD3D11ConstBuffer( cxt, buf, data.rawptr(), data.size() );
             }
         }
     }
@@ -574,7 +574,7 @@ void GN::gfx::D3D11GpuProgramHLSL::applyTextures(
     {
         const TextureBinding & tb = bindings[i];
 
-        D3D11Texture * tex = (D3D11Texture*)tb.texture.get();
+        D3D11Texture * tex = (D3D11Texture*)tb.texture.rawptr();
 
         if( tex )
         {
@@ -771,7 +771,7 @@ void GN::gfx::D3D11GpuProgramHLSL::sUpdateD3D11ConstData(
 
     DynaArray<uint8>             & cb = cbarray[ssp.cbidx];
     SafeArrayAccessor<const uint8> src( (const uint8*)uniform.getval(), uniform.size() );
-    SafeArrayAccessor<uint8>       dst( cb.cptr(), cb.size() );
+    SafeArrayAccessor<uint8>       dst( cb.rawptr(), cb.size() );
 
     // copy uniform data to system const buffer
     src.copyTo(

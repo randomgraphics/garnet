@@ -36,7 +36,7 @@ public:
                 }
 
                 StrA name;
-                name.format( "d:/software/green/cegui/datafiles/%s", filename.cptr() );
+                name.format( "d:/software/green/cegui/datafiles/%s", filename.rawptr() );
 
                 DiskFile fp;
                 if( !fp.open( name, "rb" ) )

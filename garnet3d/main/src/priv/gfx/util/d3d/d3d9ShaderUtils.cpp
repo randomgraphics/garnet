@@ -12,7 +12,7 @@ static GN::StrA sAddLineCountD3D9( const GN::StrA & in )
     GN::StrA out( "(  1) : " );
 
     int line = 1;
-    for( const char * s = in.cptr(); *s; ++s )
+    for( const char * s = in.rawptr(); *s; ++s )
     {
         if( '\n' == *s )
         {
@@ -53,7 +53,7 @@ static void sPrintShaderCompileErrorD3D9( HRESULT hr, const char * code, LPD3DXB
         "\n---------------------------------------------------------\n"
         "%s\n"
         "\n=========================================================\n",
-        code ? sAddLineCountD3D9(code).cptr() : "Shader code: <EMPTY>",
+        code ? sAddLineCountD3D9(code).rawptr() : "Shader code: <EMPTY>",
         hr, GN::getDXErrorInfo(hr),
         err ? (const char*)err->GetBufferPointer() : "Error: <EMPTY>" );
 
@@ -86,8 +86,8 @@ static void sPrintShaderCompileInfoD3D9( const char * hlsl, ID3DXBuffer * bin )
         "\n---------------------------------------------------------\n"
         "%s\n"
         "\n=========================================================\n",
-        sAddLineCountD3D9(hlsl).cptr(),
-        sAddLineCountD3D9((const char*)asm_->GetBufferPointer()).cptr() );
+        sAddLineCountD3D9(hlsl).rawptr(),
+        sAddLineCountD3D9((const char*)asm_->GetBufferPointer()).rawptr() );
 
     GN_UNGUARD;
 }
@@ -188,7 +188,7 @@ LPDIRECT3DVERTEXSHADER9 GN::d3d9::compileAndCreateVSFromFile( LPDIRECT3DDEVICE9 
     AutoComPtr<ID3DXBuffer> err;
     HRESULT hr;
     if( FAILED(hr = D3DXCompileShaderFromFileA(
-            fs::toNativeDiskFilePath(file).cptr(),
+            fs::toNativeDiskFilePath(file).rawptr(),
             NULL, NULL, // no macros, no includes,
             entry,
             stringEmpty(profile) ? D3DXGetVertexShaderProfile( dev ) : profile,
@@ -282,7 +282,7 @@ LPDIRECT3DVERTEXSHADER9 GN::d3d9::assembleAndCreateVSFromFile( LPDIRECT3DDEVICE9
     AutoComPtr<ID3DXBuffer> err;
     HRESULT hr;
     if( FAILED(hr = D3DXAssembleShaderFromFileA(
-            fs::toNativeDiskFilePath(file).cptr(),
+            fs::toNativeDiskFilePath(file).rawptr(),
             NULL, NULL, // no macros, no includes,
             sRefineFlagsD3D9(flags),
             &bin,
@@ -366,7 +366,7 @@ LPDIRECT3DPIXELSHADER9 GN::d3d9::compileAndCreatePSFromFile( LPDIRECT3DDEVICE9 d
     AutoComPtr<ID3DXBuffer> err;
     HRESULT hr;
     if( FAILED(hr = D3DXCompileShaderFromFileA(
-            fs::toNativeDiskFilePath(file).cptr(),
+            fs::toNativeDiskFilePath(file).rawptr(),
             NULL, NULL, // no macros, no includes,
             entry,
             stringEmpty(profile) ? D3DXGetPixelShaderProfile( dev ) : profile,
@@ -456,7 +456,7 @@ LPDIRECT3DPIXELSHADER9 GN::d3d9::assembleAndCreatePSFromFile( LPDIRECT3DDEVICE9 
     AutoComPtr<ID3DXBuffer> err;
     HRESULT hr;
     if( FAILED(hr = D3DXAssembleShaderFromFileA(
-            fs::toNativeDiskFilePath(file).cptr(),
+            fs::toNativeDiskFilePath(file).rawptr(),
             NULL, NULL, // no macros, no includes,
             sRefineFlagsD3D9(flags),
             &bin,
@@ -498,7 +498,7 @@ LPD3DXEFFECT GN::d3d9::compileAndCreateEffect( LPDIRECT3DDEVICE9 dev, const char
     HRESULT hr;
     if( FAILED(hr = D3DXCreateEffect(
             dev,
-            code, (UINT)(len?len:stringLength(code)), //tmpfile.cptr(),
+            code, (UINT)(len?len:stringLength(code)), //tmpfile.rawptr(),
             NULL, NULL, // no macros, no includes,
             sRefineFlagsD3D9(flags),
             pool,

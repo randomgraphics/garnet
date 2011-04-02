@@ -302,20 +302,20 @@ public:
         TS_ASSERT_EQUALS(  1, GN::stringCompare(L"abc",L"ABC") );
         TS_ASSERT_EQUALS( -1, GN::stringCompare(L"abc",L"abcd") );
 
-        TS_ASSERT_EQUALS(  0, GN::stringCompare( s1.cptr(), s2.cptr(), 0 ) );
-        TS_ASSERT_EQUALS(  0, GN::stringCompare( s1.cptr(), s2.cptr(), 1 ) );
-        TS_ASSERT_EQUALS( -1, GN::stringCompare( s1.cptr(), s2.cptr(), 2 ) );
-        TS_ASSERT_EQUALS(  0, GN::stringCompare( s4.cptr(), s5.cptr(), 4 ) );
-        TS_ASSERT_EQUALS( -1, GN::stringCompare( s4.cptr(), s5.cptr(), 5 ) );
+        TS_ASSERT_EQUALS(  0, GN::stringCompare( s1.rawptr(), s2.rawptr(), 0 ) );
+        TS_ASSERT_EQUALS(  0, GN::stringCompare( s1.rawptr(), s2.rawptr(), 1 ) );
+        TS_ASSERT_EQUALS( -1, GN::stringCompare( s1.rawptr(), s2.rawptr(), 2 ) );
+        TS_ASSERT_EQUALS(  0, GN::stringCompare( s4.rawptr(), s5.rawptr(), 4 ) );
+        TS_ASSERT_EQUALS( -1, GN::stringCompare( s4.rawptr(), s5.rawptr(), 5 ) );
 
-        TS_ASSERT( -1 == GN::stringCompareI<wchar_t>( 0, s1.cptr() ) );
-        TS_ASSERT( 1 == GN::stringCompareI<wchar_t>( s1.cptr(), 0 ) );
-        TS_ASSERT( 1 == GN::stringCompareI( s5.cptr(), s3.cptr() ) );
-        TS_ASSERT( 0 == GN::stringCompareI( s4.cptr(), s4.cptr() ) );
-        TS_ASSERT( 0 == GN::stringCompareI( s2.cptr(), s4.cptr() ) );
-        TS_ASSERT( 0 == GN::stringCompareI( s4.cptr(), s2.cptr() ) );
-        TS_ASSERT( -1 == GN::stringCompareI( s1.cptr(), s4.cptr() ) );
-        TS_ASSERT( 1 == GN::stringCompareI( s4.cptr(), s1.cptr() ) );
+        TS_ASSERT( -1 == GN::stringCompareI<wchar_t>( 0, s1.rawptr() ) );
+        TS_ASSERT( 1 == GN::stringCompareI<wchar_t>( s1.rawptr(), 0 ) );
+        TS_ASSERT( 1 == GN::stringCompareI( s5.rawptr(), s3.rawptr() ) );
+        TS_ASSERT( 0 == GN::stringCompareI( s4.rawptr(), s4.rawptr() ) );
+        TS_ASSERT( 0 == GN::stringCompareI( s2.rawptr(), s4.rawptr() ) );
+        TS_ASSERT( 0 == GN::stringCompareI( s4.rawptr(), s2.rawptr() ) );
+        TS_ASSERT( -1 == GN::stringCompareI( s1.rawptr(), s4.rawptr() ) );
+        TS_ASSERT( 1 == GN::stringCompareI( s4.rawptr(), s1.rawptr() ) );
 
     }
 

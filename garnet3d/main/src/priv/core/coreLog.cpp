@@ -284,10 +284,10 @@ namespace GN
                     "%s(%d)\n"
                     "\tname(%s), level(%s)\n"
                     "\t%s\n\n",
-                    sFormatPath(desc.file).cptr(),
+                    sFormatPath(desc.file).rawptr(),
                     desc.line,
                     logger.getName(),
-                    sLevel2Str(desc.level).cptr(),
+                    sLevel2Str(desc.level).rawptr(),
                     msg );
             }
         };
@@ -309,10 +309,10 @@ namespace GN
                     "%s(%d)\n"
                     "\tname(%s), level(%s)\n"
                     "\t%S\n\n",
-                    sFormatPath(desc.file).cptr(),
+                    sFormatPath(desc.file).rawptr(),
                     desc.line,
                     logger.getName(),
-                    sLevel2Str(desc.level).cptr(),
+                    sLevel2Str(desc.level).rawptr(),
                     msg );
             }
         };
@@ -332,9 +332,9 @@ namespace GN
             {
                 if( name.empty() ) return;
 #if GN_MSVC8
-                if( 0 != ::fopen_s( &fp, name.cptr(), mode ) ) fp = 0;
+                if( 0 != ::fopen_s( &fp, name.rawptr(), mode ) ) fp = 0;
 #else
-                fp = ::fopen( name.cptr(), mode );
+                fp = ::fopen( name.rawptr(), mode );
 #endif
             }
             ~AutoFile()
@@ -372,10 +372,10 @@ namespace GN
 
             ::fprintf( af.fp,
                 "<log file=\"%s\" line=\"%d\" name=\"%s\" level=\"%s\"><![CDATA[%s]]></log>\n",
-                sFormatPath(desc.file).cptr(),
+                sFormatPath(desc.file).rawptr(),
                 desc.line,
                 logger.getName(),
-                sLevel2Str(desc.level).cptr(),
+                sLevel2Str(desc.level).rawptr(),
                 msg );
         }
         virtual void onLog( Logger & logger, const Logger::LogDesc & desc, const wchar_t * msg )
@@ -387,10 +387,10 @@ namespace GN
 
             ::fprintf( af.fp,
                 "<log file=\"%s\" line=\"%d\" name=\"%s\" level=\"%s\"><![CDATA[%S]]></log>\n",
-                sFormatPath(desc.file).cptr(),
+                sFormatPath(desc.file).rawptr(),
                 desc.line,
                 logger.getName(),
-                sLevel2Str(desc.level).cptr(),
+                sLevel2Str(desc.level).rawptr(),
                 msg );
         }
     };
@@ -408,10 +408,10 @@ namespace GN
                 buf,
                 16384,
                 "%s(%d) : name(%s), level(%s) : %s\n",
-                sFormatPath(desc.file).cptr(),
+                sFormatPath(desc.file).rawptr(),
                 desc.line,
                 logger.getName(),
-                sLevel2Str(desc.level).cptr(),
+                sLevel2Str(desc.level).rawptr(),
                 msg );
             ::OutputDebugStringA( buf );
 #endif
@@ -427,10 +427,10 @@ namespace GN
                 buf,
                 16384,
                 L"%S(%d) : name(%S), level(%S) : %s\n",
-                sFormatPath(desc.file).cptr(),
+                sFormatPath(desc.file).rawptr(),
                 desc.line,
                 logger.getName(),
-                sLevel2Str(desc.level).cptr(),
+                sLevel2Str(desc.level).rawptr(),
                 msg );
             ::OutputDebugStringW( buf );
 #endif
@@ -607,7 +607,7 @@ namespace GN
             GN_ASSERT( n > 0 );
             StrA parent = name.subString( 0, n );
 
-            return getLogger( parent.cptr() );
+            return getLogger( parent.rawptr() );
         }
 
         void printLoggerTree( StrA & str, int level, LoggerImpl & logger )
@@ -649,7 +649,7 @@ namespace GN
                 "    Logger Tree\n"
                 "===================" );
             printLoggerTree( loggerTree, 0, mRootLogger );
-            GN_VERBOSE(sLogger)( "\n%s", loggerTree.cptr() );
+            GN_VERBOSE(sLogger)( "\n%s", loggerTree.rawptr() );
             for( LoggerMap::KeyValuePair * p = mLoggers.first(); NULL != p; p = mLoggers.next( p ) )
             {
                 delete p->value;
@@ -665,7 +665,7 @@ namespace GN
             n.trim( '.' );
 
             // shortcut for root logger
-            if( n.empty() || 0 == stringCompareI( "ROOT", n.cptr() ) ) return &mRootLogger;
+            if( n.empty() || 0 == stringCompareI( "ROOT", n.rawptr() ) ) return &mRootLogger;
 
             // find for existing logger
             LoggerImpl ** pplogger = mLoggers.find( n );

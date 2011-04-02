@@ -259,9 +259,9 @@ namespace GN
         XPTR operator->() const throw()  { GN_ASSERT(mPtr); return  mPtr; }
 
         ///
-        /// get internal pointer
+        /// get internal raw pointer
         ///
-        XPTR get() const throw() { return mPtr; }
+        XPTR rawptr() const throw() { return mPtr; }
 
         ///
         /// get address of internal pointer.

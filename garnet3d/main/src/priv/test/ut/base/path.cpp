@@ -74,8 +74,8 @@ public:
             toNativeDiskFilePath("startup::"),
         };
 
-        GN_INFO(sLogger)( "appDir = %s", s[0].cptr() );
-        GN_INFO(sLogger)( "startup = %s", s[1].cptr() );
+        GN_INFO(sLogger)( "appDir = %s", s[0].rawptr() );
+        GN_INFO(sLogger)( "startup = %s", s[1].rawptr() );
 
         for( size_t i = 0; i < 2; ++i )
         {

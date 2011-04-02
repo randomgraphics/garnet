@@ -122,7 +122,7 @@ struct ManyManyQuads
         }
 
         // create index buffer
-        idxbuf = re.createIdxBuf( "ManyManyQuads::idxbuf", INDEX_COUNT, false, false, indices.cptr() );
+        idxbuf = re.createIdxBuf( "ManyManyQuads::idxbuf", INDEX_COUNT, false, false, indices.rawptr() );
         if( !idxbuf ) return false;
 
         // success
@@ -330,7 +330,7 @@ class BenchmarkingApp : public app::SampleApp
         GN_ASSERT( !mTestCases.empty() );
         CaseDesc & cd = mTestCases.back();
         GN_ASSERT( cd.theCase );
-        GN_INFO(sLogger)( "TEST RESULT: name(%s) %s", cd.theCase->getName().cptr(), cd.theCase->printResult().cptr() );
+        GN_INFO(sLogger)( "TEST RESULT: name(%s) %s", cd.theCase->getName().rawptr(), cd.theCase->printResult().rawptr() );
         cd.theCase->destroy();
         delete cd.theCase;
         mTestCases.popBack();

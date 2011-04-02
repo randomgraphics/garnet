@@ -136,14 +136,14 @@ struct AseFile
         // read ASE file
         buf.resize( file.size() + 1 );
         size_t readen;
-        if( !file.read( buf.cptr(), file.size(), &readen ) )
+        if( !file.read( buf.rawptr(), file.size(), &readen ) )
         {
             return false;
         }
         GN_ASSERT( readen <= file.size() );
         buf[readen] = 0;
 
-        str = buf.cptr();
+        str = buf.rawptr();
         line = 0;
 
         // get file dir
@@ -153,9 +153,9 @@ struct AseFile
         return true;
     }
 
-    void err( const StrA & msg )     const { GN_ERROR(sLogger)  ( "ASEFILE: line %d : %s", line, msg.cptr() ); }
-    void warn( const StrA & msg )    const { GN_WARN(sLogger)   ( "ASEFILE: line %d : %s", line, msg.cptr() ); }
-    void verbose( const StrA & msg ) const { GN_VERBOSE(sLogger)( "ASEFILE: line %d : %s", line, msg.cptr() ); }
+    void err( const StrA & msg )     const { GN_ERROR(sLogger)  ( "ASEFILE: line %d : %s", line, msg.rawptr() ); }
+    void warn( const StrA & msg )    const { GN_WARN(sLogger)   ( "ASEFILE: line %d : %s", line, msg.rawptr() ); }
+    void verbose( const StrA & msg ) const { GN_VERBOSE(sLogger)( "ASEFILE: line %d : %s", line, msg.rawptr() ); }
 
     enum ScanOptionEnum
     {
@@ -486,7 +486,7 @@ struct AseFile
     {
         GN_ASSERT( !stringEmpty(nodename) );
         return next( nodename, option )
-            && next( stringFormat( "%d", index ).cptr(), option )
+            && next( stringFormat( "%d", index ).rawptr(), option )
             && readVector3( result, option );
     }
 };
@@ -589,7 +589,7 @@ static bool sReadMap( AseMap & m, AseFile & ase )
         }
         else
         {
-            ase.err( stringFormat( "expecting node or close-brace, but met '%s'!", token ).cptr() );
+            ase.err( stringFormat( "expecting node or close-brace, but met '%s'!", token ).rawptr() );
             return false;
         }
     }
@@ -698,7 +698,7 @@ static bool sReadMaterial( AseMaterialInternal & m, AseFile & ase )
             for( uint32 i = 0; i < count; ++i )
             {
                 if( !ase.next( "*SUBMATERIAL" ) ) return false;
-                if( !ase.next( stringFormat("%d",i).cptr() ) ) return false;
+                if( !ase.next( stringFormat("%d",i).rawptr() ) ) return false;
                 if( !sReadMaterial( m.submaterials[i], ase ) ) return false;
             }
         }
@@ -714,7 +714,7 @@ static bool sReadMaterial( AseMaterialInternal & m, AseFile & ase )
         }
         else
         {
-            ase.err( stringFormat( "expecting node or close-brace, but met '%s'!", token ).cptr() );
+            ase.err( stringFormat( "expecting node or close-brace, but met '%s'!", token ).rawptr() );
             return false;
         }
     }
@@ -746,7 +746,7 @@ static bool sReadMaterials( AseSceneInternal & scene, AseFile & ase )
     for( uint32 i = 0; i < matcount; ++i )
     {
         if( !ase.next( "*MATERIAL" ) ) return false;
-        if( !ase.next( stringFormat("%d",i).cptr() ) ) return false;
+        if( !ase.next( stringFormat("%d",i).rawptr() ) ) return false;
         if( !sReadMaterial( scene.materials[i], ase ) ) return false;
     }
 
@@ -800,7 +800,7 @@ static bool sReadMesh( AseMeshInternal & m, const Matrix44f & transform, AseFile
         AseFace & f = m.faces[i];
         int dummy;
         if( !ase.next( "*MESH_FACE" ) ) return false;
-        if( !ase.next( stringFormat( "%d:", i ).cptr() ) ) return false;
+        if( !ase.next( stringFormat( "%d:", i ).rawptr() ) ) return false;
         if( !ase.next( "A:" ) || !ase.readInt( f.v[0] ) ) return false;
         if( !ase.next( "B:" ) || !ase.readInt( f.v[1] ) ) return false;
         if( !ase.next( "C:" ) || !ase.readInt( f.v[2] ) ) return false;
@@ -842,14 +842,14 @@ static bool sReadMesh( AseMeshInternal & m, const Matrix44f & transform, AseFile
         if( !ase.readBlockEnd() ) return false;
 
         // read tface list
-        if( !ase.next( "*MESH_NUMTVFACES" ) || !ase.next( stringFormat( "%d", numface ).cptr() ) ) return false;
+        if( !ase.next( "*MESH_NUMTVFACES" ) || !ase.next( stringFormat( "%d", numface ).rawptr() ) ) return false;
         if( !ase.next( "*MESH_TFACELIST" ) || !ase.readBlockStart() ) return false;
         for( uint32 i = 0; i < numface; ++i )
         {
             AseFace & f = m.faces[i];
 
             if( !ase.next( "*MESH_TFACE" ) ) return false;
-            if( !ase.next( stringFormat( "%d", i ).cptr() ) ) return false;
+            if( !ase.next( stringFormat( "%d", i ).rawptr() ) ) return false;
 
             // for each vertex in the face
             for( uint32 i = 0; i < 3; ++i )
@@ -1033,7 +1033,7 @@ static bool sReadGeomObject( AseSceneInternal & scene, AseFile & ase )
                 ase.err( "Node name can't be empty!" );
                 return false;
             }
-            ase.verbose( stringFormat( "read geometry object '%s' ...", o.node.name.cptr() ) );
+            ase.verbose( stringFormat( "read geometry object '%s' ...", o.node.name.rawptr() ) );
         }
         else if( 0 == stringCompare( token, "*NODE_PARENT" ) )
         {
@@ -1070,7 +1070,7 @@ static bool sReadGeomObject( AseSceneInternal & scene, AseFile & ase )
 
             if( !hasMaterial )
             {
-                ase.warn( stringFormat( "object '%s' has no material. Using default one.", o.node.name.cptr() ) );
+                ase.warn( stringFormat( "object '%s' has no material. Using default one.", o.node.name.rawptr() ) );
                 o.matid = 0;
             }
 
@@ -1121,7 +1121,7 @@ static bool sReadGeomObject( AseSceneInternal & scene, AseFile & ase )
         }
         else
         {
-            ase.err( stringFormat( "expecting node or close-brace, but met '%s'!", token ).cptr() );
+            ase.err( stringFormat( "expecting node or close-brace, but met '%s'!", token ).rawptr() );
             return false;
         }
     }
@@ -1280,7 +1280,7 @@ static bool sBuildNodeTree( AseSceneInternal & scene )
         if( 0 == p )
         {
             GN_ERROR(sLogger)( "Object %s has invalid parent: %s. Replace it with \"root\".",
-                o.node.name.cptr(), o.node.parent.cptr() );
+                o.node.name.rawptr(), o.node.parent.rawptr() );
             p = &scene.root;
         }
 
@@ -1291,7 +1291,7 @@ static bool sBuildNodeTree( AseSceneInternal & scene )
     GN_ASSERT_EX(
         scene.root.calcChildrenCount() == scene.objects.size(),
         stringFormat( "numchildren=%d, numobjects=%d",
-            scene.root.calcChildrenCount(), scene.objects.size() ).cptr() );
+            scene.root.calcChildrenCount(), scene.objects.size() ).rawptr() );
 
     // calculate bounding box for each node, in post order
     TreeTraversePostOrder<AseGeoObject> ttpost( &scene.root );
@@ -1329,7 +1329,7 @@ static bool sBuildNodeTree( AseSceneInternal & scene )
         for( int i = 0; i < level; ++i ) s += "- ";
         s += stringFormat(
             "%s : bbox_pos(%f,%f,%f), bbox_size(%f,%f,%f)",
-            n->node.name.cptr(),
+            n->node.name.rawptr(),
             n->node.selfbbox.pos().x,
             n->node.selfbbox.pos().y,
             n->node.selfbbox.pos().z,
@@ -1337,7 +1337,7 @@ static bool sBuildNodeTree( AseSceneInternal & scene )
             n->node.selfbbox.extend().y,
             n->node.selfbbox.extend().z );
 
-        GN_VERBOSE(sLogger)( s.cptr() );
+        GN_VERBOSE(sLogger)( s.rawptr() );
 
         // next node
         n = ttpre.next( n, &level );
@@ -1598,7 +1598,7 @@ static bool sWriteGeoObject( AseScene & dst, const AseSceneInternal & src, const
     {
         // 32bit index buffer
         blob.attach( new SimpleBlob((uint32)(sizeof(uint32) * ib.size())) );
-        memcpy( blob->data(), ib.cptr(), blob->size() );
+        memcpy( blob->data(), ib.rawptr(), blob->size() );
         dstmesh.idx32 = true;
         dstmesh.indices = blob->data();
         dst.meshdata.append( blob );

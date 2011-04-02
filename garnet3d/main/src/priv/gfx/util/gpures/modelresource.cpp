@@ -77,10 +77,10 @@ template<typename T>
 static bool sGetRequiredIntAttrib( T & result, const XmlElement & node, const char * attribName )
 {
     const XmlAttrib * a = node.findAttrib( attribName );
-    if( !a || 0 == string2Integer<T>( result, a->value.cptr() ) )
+    if( !a || 0 == string2Integer<T>( result, a->value.rawptr() ) )
     {
         GN_ERROR(sLogger)( "Integer attribute \"%s\" of element <%s> is either missing or invalid.",
-            attribName, node.name.cptr() );
+            attribName, node.name.rawptr() );
         return false;
     }
     else
@@ -322,7 +322,7 @@ bool GN::gfx::ModelResourceDesc::loadFromXml( const XmlNode & root, const char *
         }
         else
         {
-            GN_WARN(sLogger)( "Ignore unrecognized element <%s>.", e->name.cptr() );
+            GN_WARN(sLogger)( "Ignore unrecognized element <%s>.", e->name.rawptr() );
         }
     }
 
@@ -464,7 +464,7 @@ XmlElement * GN::gfx::ModelResourceDesc::saveToXml( XmlNode & root, const char *
             {
                 XmlElement * bin = doc.createElement( uniformNode );
                 bin->name = "initialValue";
-                sBinaryEncode( bin->text, unidesc.initialValue.cptr(), unidesc.initialValue.size() );
+                sBinaryEncode( bin->text, unidesc.initialValue.rawptr(), unidesc.initialValue.size() );
             }
         }
         else
@@ -507,7 +507,7 @@ void GN::gfx::ModelResource::Impl::TextureItem::setResource(
     uint32            effectParameterIndex,
     TextureResource * newTexture )
 {
-    if( mResource.get() == newTexture ) return;
+    if( mResource == newTexture ) return;
 
     // disconnect from old handle
     if( mResource ) mResource->sigTextureChanged.disconnect( this );
@@ -600,7 +600,7 @@ void GN::gfx::ModelResource::Impl::UniformItem::setResource(
     uint32            effectParameterIndex,
     UniformResource * newUniform )
 {
-    if( mResource.get() == newUniform ) return;
+    if( mResource == newUniform ) return;
 
     // disconnect from old handle
     if( mResource ) mResource->sigUniformChanged.disconnect( this );
@@ -947,7 +947,7 @@ bool GN::gfx::ModelResource::Impl::setEffectResource( GpuResource * resource )
         if( !texres )
         {
             const EffectResource::TextureProperties & tp = mEffectResource->textureProperties( i );
-            StrA texname = stringFormat( "%s.texture.%s", getModelName(), tp.parameterName.cptr() );
+            StrA texname = stringFormat( "%s.texture.%s", getModelName(), tp.parameterName.rawptr() );
             texres = getGdb().findOrCreateResource<TextureResource>( texname );
             if( !texres ) return false;
         }
@@ -968,7 +968,7 @@ bool GN::gfx::ModelResource::Impl::setEffectResource( GpuResource * resource )
         if( !unires )
         {
             const EffectResource::UniformProperties & up = mEffectResource->uniformProperties( i );
-            StrA uniname = stringFormat( "%s.uniform.%s", getModelName(), up.parameterName.cptr() );
+            StrA uniname = stringFormat( "%s.uniform.%s", getModelName(), up.parameterName.rawptr() );
             unires = getGdb().findOrCreateResource<UniformResource>( uniname );
             if( !unires ) return false;
             AutoRef<Uniform> u = unires->uniform();
@@ -1026,8 +1026,8 @@ void GN::gfx::ModelResource::Impl::draw() const
 
     // draw
     GN_GPU_DEBUG_MARK_BEGIN( &g, stringFormat( "ModelResource::draw : %s (%s)",
-        mOwner.name().cptr(),
-        (fs::baseName(mMeshResource->name()) + fs::extName(mMeshResource->name())).cptr() ) );
+        mOwner.name().rawptr(),
+        (fs::baseName(mMeshResource->name()) + fs::extName(mMeshResource->name())).rawptr() ) );
     for( size_t i = 0; i < mPasses.size(); ++i )
     {
         const GpuContext & gc = mPasses[i].gc;
@@ -1076,7 +1076,7 @@ bool GN::gfx::ModelResource::Impl::fromDesc( const ModelResourceDesc & desc )
             effect = EffectResource::loadFromFile( db, desc.effect );
             if( 0 == effect )
             {
-                GN_ERROR(sLogger)( "%s is not a valid effect resource name.", desc.effect.cptr() );
+                GN_ERROR(sLogger)( "%s is not a valid effect resource name.", desc.effect.rawptr() );
                 return false;
             }
         }
@@ -1092,7 +1092,7 @@ bool GN::gfx::ModelResource::Impl::fromDesc( const ModelResourceDesc & desc )
             mesh = MeshResource::loadFromFile( db, desc.mesh );
             if( 0 == mesh )
             {
-                GN_ERROR(sLogger)( "%s is not a valid mesh resource name.", desc.mesh.cptr() );
+                GN_ERROR(sLogger)( "%s is not a valid mesh resource name.", desc.mesh.rawptr() );
                 return false;
             }
         }
@@ -1119,7 +1119,7 @@ bool GN::gfx::ModelResource::Impl::fromDesc( const ModelResourceDesc & desc )
             }
             else
             {
-                StrA texname = stringFormat( "%s.texture.%s", getModelName(), tp.parameterName.cptr() );
+                StrA texname = stringFormat( "%s.texture.%s", getModelName(), tp.parameterName.rawptr() );
                 texres = db.findOrCreateResource<TextureResource>( texname );
                 if( texres ) texres->reset( &td->desc );
             }
@@ -1128,7 +1128,7 @@ bool GN::gfx::ModelResource::Impl::fromDesc( const ModelResourceDesc & desc )
         {
             GN_ERROR(sLogger)(
                 "Effec texture parameter '%s' in effect '%s' is not defined in model '%s'.",
-                tp.parameterName.cptr(),
+                tp.parameterName.rawptr(),
                 mEffectResource->name(),
                 getModelName() );
 
@@ -1158,20 +1158,20 @@ bool GN::gfx::ModelResource::Impl::fromDesc( const ModelResourceDesc & desc )
                 if( !unires )
                 {
                     GN_ERROR(sLogger)( "Invalid uniform resource name '%s' in model '%s'.",
-                        ud->resourceName.cptr(),
+                        ud->resourceName.rawptr(),
                         getModelName() );
                 }
             }
             else
             {
-                StrA uniname = stringFormat( "%s.uniform.%s", getModelName(), up.parameterName.cptr() );
+                StrA uniname = stringFormat( "%s.uniform.%s", getModelName(), up.parameterName.rawptr() );
 
-                const void * initialValue = ud->initialValue.cptr();
+                const void * initialValue = ud->initialValue.rawptr();
                 if( !ud->initialValue.empty() && ud->initialValue.size() != ud->size )
                 {
                     GN_ERROR(sLogger)(
                         "Incorrect initial data size of uniform '%s in model '%s'.",
-                        up.parameterName.cptr(),
+                        up.parameterName.rawptr(),
                         getModelName() );
                     initialValue = NULL;
                 }
@@ -1184,7 +1184,7 @@ bool GN::gfx::ModelResource::Impl::fromDesc( const ModelResourceDesc & desc )
         {
             GN_ERROR(sLogger)(
                 "Effec uniform parameter '%s' in effect '%s' is not defined in model '%s'.",
-                up.parameterName.cptr(),
+                up.parameterName.rawptr(),
                 mEffectResource->name(),
                 getModelName() );
 

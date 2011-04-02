@@ -78,7 +78,7 @@ GN::ProfilerManager::~ProfilerManager()
     // print profile result
     StrA s;
     toString( s );
-    printf( "%s\n", s.cptr() );
+    printf( "%s\n", s.rawptr() );
 #endif
 }
 
@@ -107,10 +107,10 @@ void GN::ProfilerManager::toString( GN::StrA & rval ) const
             "\n",
             i->key,
             t.count,
-            sTime2Str( t.timesum ).cptr(),
-            sTime2Str( t.timesum / t.count ).cptr(),
-            sTime2Str( t.timemin ).cptr(),
-            sTime2Str( t.timemax ).cptr() );
+            sTime2Str( t.timesum ).rawptr(),
+            sTime2Str( t.timesum / t.count ).rawptr(),
+            sTime2Str( t.timemin ).rawptr(),
+            sTime2Str( t.timemax ).rawptr() );
     }
     rval +=
         "=====================================================================\n"

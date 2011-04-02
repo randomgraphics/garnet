@@ -217,7 +217,7 @@ void GN::gfx::XenonGpuProgramHLSL::applyUniforms(
             {
                 GN_WARN(sLogger)(
                     "parameter %s: value size(%d) differs from size defined in shader code(%d).",
-                    d.namestr.cptr(),
+                    d.namestr.rawptr(),
                     u->size(),
                     d.size );
             }
@@ -483,7 +483,7 @@ void GN::gfx::XenonGpuProgramHLSL::buildUnformNameAndSizeArray()
 
         GN_ASSERT( count > 0 );
 
-        mParamDesc.mUniformArray       = mUniforms.cptr();
+        mParamDesc.mUniformArray       = mUniforms.rawptr();
         mParamDesc.mUniformCount       = mUniforms.size();
         mParamDesc.mUniformArrayStride = sizeof(mUniforms[0]);
 
@@ -499,7 +499,7 @@ void GN::gfx::XenonGpuProgramHLSL::buildUnformNameAndSizeArray()
 
         GN_ASSERT( count > 0 );
 
-        mParamDesc.mTextureArray       = mTextures.cptr();
+        mParamDesc.mTextureArray       = mTextures.rawptr();
         mParamDesc.mTextureCount       = mTextures.size();
         mParamDesc.mTextureArrayStride = sizeof(mTextures[0]);
 
@@ -515,7 +515,7 @@ void GN::gfx::XenonGpuProgramHLSL::buildUnformNameAndSizeArray()
 
         GN_ASSERT( count > 0 );
 
-        mParamDesc.mAttributeArray       = mAttributes.cptr();
+        mParamDesc.mAttributeArray       = mAttributes.rawptr();
         mParamDesc.mAttributeCount       = mAttributes.size();
         mParamDesc.mAttributeArrayStride = sizeof(mAttributes[0]);
 

@@ -116,9 +116,9 @@ void GN::gfx::RenderWindowMsw::quit()
     // tru unregister window class
     if( !mClassName.empty() )
     {
-        GN_VERBOSE(sLogger)( "Unregister window class: %ls (module handle: 0x%X)", mClassName.cptr(), mModuleInstance );
+        GN_VERBOSE(sLogger)( "Unregister window class: %ls (module handle: 0x%X)", mClassName.rawptr(), mModuleInstance );
         GN_ASSERT( mModuleInstance );
-        GN_MSW_CHECK( ::UnregisterClassW( mClassName.cptr(), mModuleInstance ) );
+        GN_MSW_CHECK( ::UnregisterClassW( mClassName.rawptr(), mModuleInstance ) );
         mClassName.clear();
     }
 
@@ -238,10 +238,10 @@ GN::gfx::RenderWindowMsw::createWindow( HWND parent, HMONITOR monitor, uint32 wi
     do
     {
         mClassName.format( L"GNgfxRenderWindow_%d", rand() );
-    } while( ::GetClassInfoExW( mModuleInstance, mClassName.cptr(), &wcex ) );
+    } while( ::GetClassInfoExW( mModuleInstance, mClassName.rawptr(), &wcex ) );
 
     // register window class
-    GN_VERBOSE(sLogger)( "Register window class: %ls (module handle: 0x%X)", mClassName.cptr(), mModuleInstance );
+    GN_VERBOSE(sLogger)( "Register window class: %ls (module handle: 0x%X)", mClassName.rawptr(), mModuleInstance );
     wcex.cbSize         = sizeof(wcex);
     wcex.style          = 0;
     wcex.lpfnWndProc    = (WNDPROC)&staticWindowProc;
@@ -252,7 +252,7 @@ GN::gfx::RenderWindowMsw::createWindow( HWND parent, HMONITOR monitor, uint32 wi
     wcex.hCursor        = LoadCursor (0,IDC_ARROW);
     wcex.hbrBackground  = (HBRUSH)(COLOR_WINDOW+1);
     wcex.lpszMenuName   = 0;
-    wcex.lpszClassName  = mClassName.cptr();
+    wcex.lpszClassName  = mClassName.rawptr();
     wcex.hIconSm        = LoadIcon(0, IDI_APPLICATION);
     if( 0 == ::RegisterClassExW(&wcex) )
     {
@@ -276,7 +276,7 @@ GN::gfx::RenderWindowMsw::createWindow( HWND parent, HMONITOR monitor, uint32 wi
     // create window
     mWindow = ::CreateWindowExW(
         exStyle,
-        mClassName.cptr(),
+        mClassName.rawptr(),
         L"Garnet Render Window",
         style,
         mi.rcWork.left, mi.rcWork.top,
