@@ -213,6 +213,17 @@ namespace GN { namespace gfx
         }
     };
 
+    struct FatJointBindPose
+    {
+        // Local transformation (relative to parent joint)
+        Vector3f           position;    //< Position in parent space
+        Quaternionf        rotation;    //< Rotation in local space
+        Vector3f           scaling;     //< Scaling in local space.
+
+        // Global transformation (in model space)
+        Matrix44f          model2joint; //< bind pose in model space -> joint space transformation.
+    };
+
     struct FatJoint
     {
         static const uint32 NO_JOINT = (uint32)-1;
@@ -224,13 +235,13 @@ namespace GN { namespace gfx
         uint32             child;    //< first child joint index. NO_JOINT, if the joint has no child.
         uint32             sibling;  //< next sibling joing index. NO_JOINT, if the joint has no next sibling.
 
-        Matrix44f          bindPose; //< model space -> joint space transformation.
+        FatJointBindPose   bindPose; //< Bind pose transformation.
     };
 
     struct FatSkeleton
     {
         StrA                       name;   //< name of the skeleton.
-        DynaArray<FatJoint,uint32> joints; //< Joint array.
+        DynaArray<FatJoint,uint32> joints; //< Joint array. The first joint is always the root of the skeleton.
 
         /// Print joint hierarchy to a string.
         void printJointHierarchy( StrA & ) const;
@@ -239,26 +250,23 @@ namespace GN { namespace gfx
     template<typename T>
     struct FatKeyFrame
     {
-        double time;  //< Time stamp in seconds.
-        T      value; //< The value at the specified time.
+        float time;  //< Time stamp in seconds.
+        T     value; //< The value at the specified time.
     };
 
     struct FatJointAnimation
     {
-        uint32                               skeleton;  //< Index into FatModel::skeletons
-        uint32                               joint;     //< Index into FatSkeleton::joints
-
-        // Local->Parent transform = T * R * S;
-        DynaArray<FatKeyFrame<Vector3f> >    positions; //< Position in parent space
-        DynaArray<FatKeyFrame<Quaternionf> > rotations; //< Rotation in local space
-        DynaArray<FatKeyFrame<Vector3f> >    scalings;  //< Scaling in local space.
+        // joint space -> model space transform = T * R * S;
+        DynaArray<FatKeyFrame<Vector3f> >    positions;
+        DynaArray<FatKeyFrame<Quaternionf> > rotations;
+        DynaArray<FatKeyFrame<Vector3f> >    scalings;
     };
 
     struct FatAnimation
     {
-        StrA                         name;            //< Name of the animation.
-        double                       duration;        //< Duration of the animation.
-        DynaArray<FatJointAnimation> jointAnimations; //< Joint animation array.
+        StrA                                     name;               //< Name of the animation.
+        double                                   duration;           //< Duration of the animation.
+        DynaArray<DynaArray<FatJointAnimation> > skeletonAnimations; //< 2D array that stores animations of each joint indexed by [skeletonIndex][jointIndex]
     };
 
     struct FatModel : public NoCopy

@@ -240,6 +240,118 @@ static ModelResourceDesc sSkinnedModelDesc()
     return md;
 }
 
+//
+//
+// -----------------------------------------------------------------------------
+template<typename T>
+struct Interpolate
+{
+    // Linear interpolation
+    static inline void sDoWork( T & result, const T & a, const T & b, float factor )
+    {
+        result = a * (1-factor) + b * factor;
+    }
+};
+
+//
+//
+// -----------------------------------------------------------------------------
+template<>
+struct Interpolate<Quaternionf>
+{
+    // Spherical interpolation
+    static inline void sDoWork( Quaternionf & res, const Quaternionf & from, const Quaternionf & to, float factor )
+    {
+        float  to1[4];
+        float  scale0, scale1;
+        double omega, cosom, sinom;
+
+        // calculate cosine
+        cosom = from.v.x * to.v.x + from.v.y * to.v.y + from.v.z * to.v.z + from.w * to.w;
+
+        // adjust signs (if necessary)
+        if ( cosom <0.0 )
+        {
+            cosom = -cosom; to1[0] = - to.v.x;
+            to1[1] = - to.v.y;
+            to1[2] = - to.v.z;
+            to1[3] = - to.w;
+        }
+        else
+        {
+            to1[0] = to.v.x;
+            to1[1] = to.v.y;
+            to1[2] = to.v.z;
+            to1[3] = to.w;
+        }
+
+        // calculate coefficients
+        if ( (1.0 - cosom) > 0.01 )
+        {
+            // standard case (slerp)
+            omega  = acos(cosom);
+            sinom  = sin(omega);
+            scale0 = (float)( sin((1.0 - factor) * omega) / sinom );
+            scale1 = (float)( sin(factor * omega) / sinom );
+        }
+        else
+        {
+            // "from" and "to" quaternions are very close
+            //  ... so we can do a linear interpolation
+            scale0 = 1.0f - factor;
+            scale1 = factor;
+        }
+
+        // calculate final values
+        res.v.x = scale0 * from.v.x + scale1 * to1[0];
+        res.v.y = scale0 * from.v.y + scale1 * to1[1];
+        res.v.z = scale0 * from.v.z + scale1 * to1[2];
+        res.w   = scale0 * from.w   + scale1 * to1[3];
+    }
+};
+
+//
+//
+// -----------------------------------------------------------------------------
+template<typename T>
+static inline bool
+sGetInterpolatedValue( T & result, const DynaArray<FatKeyFrame<T> > & array, float time )
+{
+    if( array.empty() ) return false;
+
+    // binary search for the appropriate key frame.
+    size_t first = 0;
+    size_t last  = array.size() - 1;
+    size_t mid;
+    float  midtime;
+    while( (first+1) < last )
+    {
+        mid = (first + last) / 2;
+
+        midtime = array[mid].time;
+
+        if( midtime < time )
+        {
+            first = mid;
+        }
+        else
+        {
+            last = mid;
+        }
+    }
+
+    // Cache the first and last key frames.
+    const FatKeyFrame<T> & key1 = array[first];
+    const FatKeyFrame<T> & key2 = array[last];
+
+    // Calculate interpolation factor basing on time.
+    float factor = (time - key1.time) / (key2.time - key1.time);
+
+    // Interpolate between first and last, basing on time.
+    Interpolate<T>::sDoWork( result, key1.value, key2.value, factor );
+
+    return true;
+}
 
 // *****************************************************************************
 // SkinnedAnimation
@@ -262,7 +374,11 @@ struct GN::engine::SkinnedMesh::SkinnedAnimation : public FatAnimation
 // -----------------------------------------------------------------------------
 GN::engine::SkinnedMesh::SkinnedMesh()
 {
-    clear();
+    mRootSpacial.attach( new SpacialComponent );
+    setComponent<SpacialComponent>( mRootSpacial );
+
+    mVisual.attach( new VisualComponent );
+    setComponent<VisualComponent>( mVisual );
 }
 
 //
@@ -271,8 +387,11 @@ GN::engine::SkinnedMesh::SkinnedMesh()
 GN::engine::SkinnedMesh::~SkinnedMesh()
 {
     clear();
+
     setComponent<VisualComponent>( NULL );
     setComponent<SpacialComponent>( NULL );
+    mRootSpacial.clear();
+    mVisual.clear();
 }
 
 //
@@ -280,17 +399,18 @@ GN::engine::SkinnedMesh::~SkinnedMesh()
 // -----------------------------------------------------------------------------
 void GN::engine::SkinnedMesh::clear()
 {
-    mJoints.resize( 1 );
-    mJoints[0].attach( new SpacialComponent );
-    setComponent<SpacialComponent>( mJoints[0] );
-
-    mVisual.attach( new VisualComponent );
-    setComponent<VisualComponent>( mVisual );
-
-    mSkinnedEffect.clear();
-
+    // Delete all animations
     std::for_each( mAnimations.begin(), mAnimations.end(), SkinnedAnimation::sDeleteAnimation );
     mAnimations.clear();
+
+    // Delete all skeletons
+    mSkeletons.clear();
+
+    // Delete the effect
+    mSkinnedEffect.clear();
+
+    // Clear the visual component (but do not delete the visual instance)
+    mVisual->clear();
 }
 
 //
@@ -310,6 +430,88 @@ bool GN::engine::SkinnedMesh::getAnimationInfo( size_t animationIndex, SkinnedAn
     info.duration = sa->duration;
 
     return true;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::engine::SkinnedMesh::setAnimation( size_t animationIndex, float seconds )
+{
+    if( animationIndex >= mAnimations.size() || NULL == mAnimations[animationIndex] )
+    {
+        GN_ERROR(sLogger)( "Invalid animation index." );
+        return;
+    }
+
+    const FatAnimation & fatanim = *mAnimations[animationIndex];
+
+    Matrix44f   matrices[MAX_JOINTS_PER_MESH];
+    Vector3f    t;
+    Quaternionf r;
+    Vector3f    s;
+    Matrix33f   r33;
+    Matrix44f   t44, r44, s44;
+    Matrix44f   jointSpace_to_RestPose;
+
+    for( uint32 skeletonIndex = 0; skeletonIndex < fatanim.skeletonAnimations.size(); ++skeletonIndex )
+    {
+        const DynaArray<FatJointAnimation> & skanim = fatanim.skeletonAnimations[skeletonIndex];
+
+        Skeleton & mysk = mSkeletons[skeletonIndex];
+
+        for( uint32 jointIndex = 0; jointIndex < skanim.size(); ++jointIndex )
+        {
+            // After we support mesh spliting, this should be remapped to a
+            // value less than MAX_JOINTS_PER_MESH.
+            if( jointIndex >= MAX_JOINTS_PER_MESH ) continue;
+
+            const FatJointAnimation & jointanim = skanim[jointIndex];
+
+            // Reference the bind pose transformation, which is the bind pose
+            // (in model space) to joint space transformation.
+            const Matrix44f & bindPose_to_JointSpace = mysk.bindPoses[jointIndex];
+
+            // Reference the final transformation matrix of the joint.
+            // It is the transformation from bind pose to rest pose.
+            // Note that both bind pose and rest pose are in model space.
+            Matrix44f & bindPose_to_RestPose = matrices[jointIndex];
+
+            // Get rest pose tranformation of the joint. T*R*S is the
+            // the transformation from rest pose (in model space) to joint space.
+            if( sGetInterpolatedValue( t, jointanim.positions, seconds ) &&
+                sGetInterpolatedValue( r, jointanim.rotations, seconds ) &&
+                sGetInterpolatedValue( s, jointanim.scalings, seconds ) )
+            {
+                r.toMatrix33( r33 );
+                r44.set( r33 );
+
+                t44.translate( t );
+
+                s44.identity();
+                s44[0][0] = s[0];
+                s44[1][1] = s[1];
+                s44[2][2] = s[2];
+
+                jointSpace_to_RestPose = t44 * r44 * s44;
+
+                // bind -> rest = bind -> joint -> rest
+                bindPose_to_RestPose = jointSpace_to_RestPose * bindPose_to_JointSpace;
+            }
+            else
+            {
+                // No rest pose found for this joint at this time,
+                // which means bind pose to rest pose transformation
+                // should be identity.
+                bindPose_to_RestPose.identity();
+            }
+        }
+
+        // update the matrix uniform.
+        Uniform * uniform = mysk.matrices->uniform().get();
+        GN_ASSERT( uniform->size() >= sizeof(Matrix44f)*MAX_JOINTS_PER_MESH );
+        size_t size = sizeof(Matrix44f) * math::getmin<size_t>(MAX_JOINTS_PER_MESH,skanim.size());
+        uniform->update( 0, size, matrices );
+    }
 }
 
 //
@@ -336,14 +538,54 @@ bool GN::engine::SkinnedMesh::loadFromFatModel( const GN::gfx::FatModel & fatmod
     mSkinnedEffect = sRegisterSkinnedEffect( gdb );
     if( NULL == mSkinnedEffect ) return false;
 
-    // Load all meshes
-    for( uint32 i = 0; i < fatmodel.meshes.size(); ++i )
+    // Load skeleton array
+    Matrix44f defaultMatrices[MAX_JOINTS_PER_MESH];
+    for( uint32 i = 0; i < MAX_JOINTS_PER_MESH; ++i ) defaultMatrices[i].identity();
+    mSkeletons.resize( fatmodel.skeletons.size() );
+    for( uint32 i = 0; i < fatmodel.skeletons.size(); ++i )
     {
-        if( NULL == fatmodel.meshes[i] ) continue;
+        const FatSkeleton & source = fatmodel.skeletons[i];
+        Skeleton & dest = mSkeletons[i];
 
-        const FatMesh & fatmesh = *fatmodel.meshes[i];
+        // Loop through each joints; create spacial component and bind poses.
+        dest.spacials.resize( source.joints.size() );
+        dest.bindPoses.resize( source.joints.size() );
+        for( uint32 j = 0; j < source.joints.size(); ++j )
+        {
+            // Create one spacial component per joint.
+            dest.spacials[j].attach( new SpacialComponent );
 
-        StrA meshName = stringFormat( "%s.mesh.%d", fatmodel.name, i );
+            // copy bind pose matrix
+            dest.bindPoses[j] = source.joints[j].bindPose.model2joint;
+        }
+
+        // Then connect them in the same way as how joints are
+        // connected. Note that joint spacial componets are not
+        // linked to the root spacial component of the whole model.
+        // The reason is that those joint spacial components are used
+        // calculate transformation from joint space to model space.
+        // Transfomration outside of the model space should not be
+        // involved.
+        for( uint32 j = 0; j < source.joints.size(); ++j )
+        {
+            uint32 parent = source.joints[j].parent;
+            dest.spacials[j]->setParent( (parent == FatJoint::NO_JOINT) ? AutoRef<SpacialComponent>::NULLREF : dest.spacials[parent] );
+        }
+
+        // Create a uniform resource for the skeleton
+        dest.matrices = gdb.createResource<UniformResource>( NULL );
+        if( NULL == dest.matrices ) return false;
+        if( !dest.matrices->reset( sizeof(defaultMatrices), defaultMatrices ) ) return false;
+    }
+
+    // Load all meshes
+    for( uint32 mi = 0; mi < fatmodel.meshes.size(); ++mi )
+    {
+        if( NULL == fatmodel.meshes[mi] ) continue;
+
+        const FatMesh & fatmesh = *fatmodel.meshes[mi];
+
+        StrA meshName = stringFormat( "%s.mesh.%d", fatmodel.name, mi );
 
         uint32 jointCountInTheMesh = fatmodel.skeletons[fatmesh.skeleton].joints.size();
         if( jointCountInTheMesh > MAX_JOINTS_PER_MESH )
@@ -389,7 +631,11 @@ bool GN::engine::SkinnedMesh::loadFromFatModel( const GN::gfx::FatModel & fatmod
                     uint8 * p = (uint8*)merd.vertices[0] + mve.offset;
                     for( uint32 i = 0; i < merd.numvtx; ++i, p += merd.strides[0] )
                     {
-                        *(float*)p = (float)*(uint32*)p;
+                        // Offset the value by 0.5 to avoid float to integer rounding error. Or else,
+                        // it is possible that an integer value, for example 10, could be converted to
+                        // floating point value 9.999999999. When it is converted back to integer
+                        // in shader, it becomes 9.
+                        *(float*)p = (float)*(uint32*)p + 0.5f;
                     }
                 }
             }
@@ -433,6 +679,13 @@ bool GN::engine::SkinnedMesh::loadFromFatModel( const GN::gfx::FatModel & fatmod
             if( model && model->reset( &mord ) )
             {
                 mVisual->addModel( model );
+
+                // bind joint matrix uniform to the mesh.
+                uint32 skeletonIndex = fatmesh.skeleton;
+                if( skeletonIndex != FatMesh::NO_SKELETON )
+                {
+                    model->setUniformResource( "JOINT_MATRICES", mSkeletons[skeletonIndex].matrices );
+                }
             }
         }
     }
@@ -452,7 +705,7 @@ bool GN::engine::SkinnedMesh::loadFromFatModel( const GN::gfx::FatModel & fatmod
     }
 
     // update bounding box
-    mJoints[0]->setSelfBoundingBox( fatmodel.bbox );
+    mRootSpacial->setSelfBoundingBox( fatmodel.bbox );
 
     return true;
 }

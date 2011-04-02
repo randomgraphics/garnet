@@ -750,12 +750,23 @@ sLoadFbxLimbNodes(
         fatsk.joints[previousSibling].sibling = fatsk.joints.size();
     }
 
-    // Get the global transform of the node, which is the transformation
-    // from local/joint space to model space.
-    sFbxMatrix2GarnetMatrix( newjoint.bindPose, fbxnode->GetScene()->GetEvaluator()->GetNodeGlobalTransform( fbxnode ) );
+    // Get the global transform of the node. Note that it is the transformation
+    // from joint space to model space.
+    sFbxMatrix2GarnetMatrix(
+        newjoint.bindPose.model2joint,
+        fbxnode->GetScene()->GetEvaluator()->GetNodeGlobalTransform( fbxnode ) );
 
     // Inverse that to get the bind pose transfomration we want.
-    newjoint.bindPose.inverse();
+    newjoint.bindPose.model2joint.inverse();
+
+    // Now get joint local transformations.
+    KFbxXMatrix localTransform = fbxnode->GetScene()->GetEvaluator()->GetNodeLocalTransform( fbxnode );
+    KFbxVector4 t = localTransform.GetT(),
+                r = localTransform.GetR(),
+                s = localTransform.GetS();
+    newjoint.bindPose.position.set( (float)t[0], (float)t[1], (float)t[2] );
+    newjoint.bindPose.rotation.set( (float)r[0], (float)r[1], (float)r[2], (float)r[3] );
+    newjoint.bindPose.scaling.set ( (float)s[0], (float)s[1], (float)s[2] );
 
     // Add the new joint into the joint array
     fatsk.joints.append( newjoint );
@@ -1985,7 +1996,7 @@ void sLoadAiMeshSkeleton( FatModel & fatmodel, FatMesh & fatmesh, const aiScene 
         // Noticing that the order of mutiplication is different. And it matters.
         //
         // To address this difference, the AI matrix has to be transposed.
-        fatjoint.bindPose = Matrix44f::sTranspose( *(Matrix44f*)&aibone.mOffsetMatrix );
+        fatjoint.bindPose.model2joint = Matrix44f::sTranspose( *(Matrix44f*)&aibone.mOffsetMatrix );
 
         // Setup default hierarchy
         fatjoint.parent  = FatJoint::NO_JOINT;
@@ -1998,6 +2009,31 @@ void sLoadAiMeshSkeleton( FatModel & fatmodel, FatMesh & fatmesh, const aiScene 
 
     // Then sort the hierarchy based on depth, to make sure that the root joint stays at index 0.
     if( !sSortJointHierarchy( fatsk ) ) return;
+
+    GN_TODO( "Build local transformations of each node." );
+    // Build local transformations of each node.
+    // We'll get that by multiply inverse of its parent's global transform
+    // with the node's global transformation.
+    for( uint32 i = 0; i < aimesh.mNumBones; ++i )
+    {
+        FatJoint & fatjoint = fatsk.joints[i];
+
+        /* TODO: need to Matrix44::decompose() first.
+        Matrix44f parent2local;
+        if( FatJoint::NO_JOINT != fatjoint.parent )
+        {
+            FatJoint & parentJoint = fatsk.joints[fatjoint.parent];
+            parent2local = Matrix44f::sInverse(parentJoint.bindPose.model2joint) * fatjoint.bindPose.model2joint;
+        }
+        else
+        {
+            parent2local = fatjoint.bindPose.model2joint;
+        }//*/
+
+        fatjoint.bindPose.position.set( 0, 0, 0 );
+        fatjoint.bindPose.rotation.identity();
+        fatjoint.bindPose.scaling.set( 1, 1, 1 );
+    }
 
     // Add the new skeleton to fat model.
     if( !fatmodel.skeletons.append(fatsk) )
@@ -2265,116 +2301,146 @@ static void sLoadAiNodeRecursivly(
 //
 //
 // -----------------------------------------------------------------------------
+static bool sLoadAiJointAnimation(
+    FatModel                            & fatmodel,
+    FatAnimation                        & fatanim,
+    const StringMap<char,JointLocation> & jointMap,
+    const aiAnimation                   & aianim )
+{
+    // Preallocate animation buffer.
+    if( !fatanim.skeletonAnimations.resize( fatmodel.skeletons.size() ) )
+    {
+        GN_ERROR(sLogger)( "Out of memory." );
+        return false;
+    }
+    for( uint32 i = 0; i < fatanim.skeletonAnimations.size(); ++i )
+    {
+        if( !fatanim.skeletonAnimations[i].resize( fatmodel.skeletons[i].joints.size() ) )
+        {
+            GN_ERROR(sLogger)( "Out of memory." );
+            return false;
+        }
+    }
+
+    // Certain combinations of file format and exporter don't always store
+    // this information in the exported file. In this case, mTicksPerSecond
+    // is set to 0 to indicate the lack of knowledge. And we'll use 1.0
+    // in this case, which means 1 tick is 1 second.
+    double secondsPerTick;
+    if( 0 == aianim.mTicksPerSecond )
+    {
+        secondsPerTick = 1;
+    }
+    else
+    {
+        secondsPerTick = 1.0f / aianim.mTicksPerSecond;
+    }
+
+    // Declara a new Fat animation object.
+    fatanim.name = aianim.mName.data;
+    fatanim.duration = aianim.mDuration * secondsPerTick;
+
+    // Go through each animation channels. Each channel controls
+    // one node in the scene.
+    for( uint32 c = 0; c < aianim.mNumChannels; ++c )
+    {
+        const aiNodeAnim & aina = *aianim.mChannels[c];
+
+        // See if there's a joint affected by the current node animation.
+        uint32 skeletonIndex, jointIndex;
+        if( !sSearchForNamedJoint(
+            skeletonIndex,
+            jointIndex,
+            jointMap,
+            aina.mNodeName.data ) )
+        {
+            // The animation channel does not link to a joint node.
+            // Ignore it, since we care about skeleton animation only.
+            continue;
+        }
+        GN_ASSERT( skeletonIndex < fatmodel.skeletons.size() );
+        GN_ASSERT( jointIndex < fatmodel.skeletons[skeletonIndex].joints.size() );
+
+        // Reference the fat joint animation object that was preallocated at the beginning
+        // of the function.
+        FatJointAnimation & fatJointAnim = fatanim.skeletonAnimations[skeletonIndex][jointIndex];
+
+        // Allocate fat key frames
+        if( !fatJointAnim.positions.resize(aina.mNumPositionKeys) ||
+            !fatJointAnim.rotations.resize(aina.mNumRotationKeys) ||
+            !fatJointAnim.scalings.resize(aina.mNumScalingKeys) )
+        {
+            // We are running out of memory. Stop loading.
+            GN_ERROR(sLogger)( "Out of memory." );
+            return false;
+        }
+
+        // Load position key frames
+        for( uint32 k = 0; k < aina.mNumPositionKeys; ++k )
+        {
+            const aiVectorKey & aikey = aina.mPositionKeys[k];
+            FatKeyFrame<Vector3f> & fatkey = fatJointAnim.positions[k];
+            fatkey.time = (float)(aikey.mTime * secondsPerTick);
+            fatkey.value = *(Vector3f*)&aikey.mValue;
+        }
+
+        // Load rotation key frames
+        for( uint32 k = 0; k < aina.mNumRotationKeys; ++k )
+        {
+            const aiQuatKey & aikey = aina.mRotationKeys[k];
+            FatKeyFrame<Quaternionf> & fatkey = fatJointAnim.rotations[k];
+            fatkey.time = (float)(aikey.mTime * secondsPerTick);
+            fatkey.value.v.x = aikey.mValue.x;
+            fatkey.value.v.y = aikey.mValue.y;
+            fatkey.value.v.z = aikey.mValue.z;
+            fatkey.value.w   = aikey.mValue.w;
+        }
+
+        // Load scaling key frames
+        for( uint32 k = 0; k < aina.mNumScalingKeys; ++k )
+        {
+            const aiVectorKey & aikey = aina.mScalingKeys[k];
+            FatKeyFrame<Vector3f> & fatkey = fatJointAnim.scalings[k];
+            fatkey.time = (float)(aikey.mTime * secondsPerTick);
+            fatkey.value = *(Vector3f*)&aikey.mValue;
+        }
+    }
+
+    return true;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
 static void sLoadAiAnimations( FatModel & fatmodel, const aiScene & aiscene )
 {
     // Build a joint map to accelerate joint searching by name.
     StringMap<char,JointLocation> jointMap;
     sBuildJointMapFromSkeletons( jointMap, fatmodel.skeletons );
 
+    // Preallocate animation array
+    if( !fatmodel.animations.reserve( aiscene.mNumAnimations ) )
+    {
+        GN_ERROR(sLogger)( "Fail to preallocate fat animation array: out of memory." );
+        return;
+    }
+
     // Go through the animation list. Load them one by one. And for now,
-    // we load node animations only, and ignore mesh animations.
+    // we load node/joint animations only. Mesh animations are not supported yet.
     for( uint32 a = 0; a < aiscene.mNumAnimations; ++a )
     {
         // Reference the Assimp animation object
         const aiAnimation & aianim = *aiscene.mAnimations[a];
 
-        // Certain combinations of file format and exporter don't always store
-        // this information in the exported file. In this case, mTicksPerSecond
-        // is set to 0 to indicate the lack of knowledge. And we'll use 1.0
-        // in this case, which means 1 tick is 1 second.
-        double secondsPerTick;
-        if( 0 == aianim.mTicksPerSecond )
+        // Create a new Fat animation object.
+        fatmodel.animations.resize( fatmodel.animations.size() + 1 );
+        FatAnimation & fatanim = fatmodel.animations.back();
+
+        if( !sLoadAiJointAnimation( fatmodel, fatanim, jointMap, aianim ) )
         {
-            secondsPerTick = 1;
-        }
-        else
-        {
-            secondsPerTick = 1.0f / aianim.mTicksPerSecond;
-        }
-
-        // Declara a new Fat animation object.
-        FatAnimation fatanim;
-        fatanim.name = aianim.mName.data;
-        fatanim.duration = aianim.mDuration * secondsPerTick;
-
-        // Go through each animation channels. Each channel controls
-        // one node in the scene.
-        for( uint32 c = 0; c < aianim.mNumChannels; ++c )
-        {
-            const aiNodeAnim & aina = *aianim.mChannels[c];
-
-            // Declare a Fat joint animation object.
-            FatJointAnimation fatJointAnim;
-
-            // See if there's a joint affected by the current node animation.
-            if( !sSearchForNamedJoint(
-                fatJointAnim.skeleton,
-                fatJointAnim.joint,
-                jointMap,
-                aina.mNodeName.data ) )
-            {
-                // The current animation links to a joint node.
-                // Ignore it, since we care about skeleton animation only.
-                continue;
-            }
-            GN_ASSERT( fatJointAnim.skeleton < fatmodel.skeletons.size() );
-            GN_ASSERT( fatJointAnim.joint < fatmodel.skeletons[fatJointAnim.skeleton].joints.size() );
-
-            // Allocate fat key frames
-            if( !fatJointAnim.positions.resize(aina.mNumPositionKeys) ||
-                !fatJointAnim.rotations.resize(aina.mNumRotationKeys) ||
-                !fatJointAnim.scalings.resize(aina.mNumScalingKeys) )
-            {
-                // We are running out of memory. Stop loading.
-                GN_ERROR(sLogger)( "Out of memory." );
-                return;
-            }
-
-            // Load position key frames
-            for( uint32 k = 0; k < aina.mNumPositionKeys; ++k )
-            {
-                const aiVectorKey & aikey = aina.mPositionKeys[k];
-                FatKeyFrame<Vector3f> & fatkey = fatJointAnim.positions[k];
-                fatkey.time = aikey.mTime * secondsPerTick;
-                fatkey.value = *(Vector3f*)&aikey.mValue;
-            }
-
-            // Load rotation key frames
-            for( uint32 k = 0; k < aina.mNumRotationKeys; ++k )
-            {
-                const aiQuatKey & aikey = aina.mRotationKeys[k];
-                FatKeyFrame<Quaternionf> & fatkey = fatJointAnim.rotations[k];
-                fatkey.time = aikey.mTime * secondsPerTick;
-                fatkey.value.v.x = aikey.mValue.x;
-                fatkey.value.v.y = aikey.mValue.y;
-                fatkey.value.v.z = aikey.mValue.z;
-                fatkey.value.w   = aikey.mValue.w;
-            }
-
-            // Load scaling key frames
-            for( uint32 k = 0; k < aina.mNumScalingKeys; ++k )
-            {
-                const aiVectorKey & aikey = aina.mScalingKeys[k];
-                FatKeyFrame<Vector3f> & fatkey = fatJointAnim.scalings[k];
-                fatkey.time = aikey.mTime * secondsPerTick;
-                fatkey.value = *(Vector3f*)&aikey.mValue;
-            }
-
-            // Add the joint animation to fat animation object.
-            if( !fatanim.jointAnimations.append( fatJointAnim ) )
-            {
-                // We are running out of memory. Stop loading.
-                GN_ERROR(sLogger)( "Out of memory." );
-                return;
-            }
-        }
-
-        // Add the fat animation object to fat model.
-        if( !fatmodel.animations.append( fatanim ) )
-        {
-            // We are running out of memory. Stop loading.
-            GN_ERROR(sLogger)( "Out of memory." );
-            return;
+            // Animation loading failed. Destroy the fat animation object
+            // that was just created.
+            fatmodel.animations.popBack();
         }
     } // end of for each animation
 }

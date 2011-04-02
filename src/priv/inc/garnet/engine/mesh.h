@@ -74,10 +74,10 @@ namespace GN { namespace engine
         void clear();
 
         /// get the spacial component of the skeleton root.
-        const SpacialComponent & spacial() const { return *mJoints[0]; }
+        const SpacialComponent & spacial() const { return *mRootSpacial; }
 
         /// get the spacial component
-        SpacialComponent & spacial() { return *mJoints[0]; }
+        SpacialComponent & spacial() { return *mRootSpacial; }
 
         /// get the visual component
         const VisualComponent & visual() const { return *mVisual; }
@@ -92,7 +92,7 @@ namespace GN { namespace engine
         bool getAnimationInfo( size_t animationIndex, SkinnedAnimationInfo & info );
 
         /// Set the animation and the time stamp.
-        void setAnimation( size_t animationIndex, double seconds );
+        void setAnimation( size_t animationIndex, float seconds );
 
         /// Load the whole fat model as single skinned mesh
         bool loadFromFatModel( const GN::gfx::FatModel & );
@@ -104,10 +104,18 @@ namespace GN { namespace engine
 
         struct SkinnedAnimation;
 
-        DynaArray<AutoRef<SpacialComponent> > mJoints;
-        AutoRef<VisualComponent>              mVisual;
-        AutoRef<gfx::EffectResource>          mSkinnedEffect;
-        DynaArray<SkinnedAnimation*>          mAnimations;
+        struct Skeleton
+        {
+            DynaArray<AutoRef<SpacialComponent> > spacials;  //< Spacial components for each joint.
+            DynaArray<Matrix44f>                  bindPoses; //< Bind pose transformation for each joint in the skeleton.
+            AutoRef<gfx::UniformResource>         matrices;  //< Uniform resource that stores final joint matrices
+        };
+
+        AutoRef<SpacialComponent>                 mRootSpacial;
+        AutoRef<VisualComponent>                  mVisual;
+        AutoRef<gfx::EffectResource>              mSkinnedEffect;
+        DynaArray<Skeleton>                       mSkeletons;
+        DynaArray<SkinnedAnimation*>              mAnimations;
     };
 }}
 
