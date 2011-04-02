@@ -7,6 +7,9 @@ using namespace GN::engine;
 
 static GN::Logger * sLogger = GN::getLogger("GN.engine");
 
+#define MAX_JOINTS_PER_MESH     40
+#define MAX_JOINTS_PER_MESH_STR "40"
+
 // *****************************************************************************
 // Local stuff
 // *****************************************************************************
@@ -18,7 +21,7 @@ static const char * SKINNED_VS_HLSL9 =
     "uniform float4x4 pvw; \n"
     "uniform float4x4 world; \n"
     "uniform float4x4 wit; \n"
-    "uniform float4x4 joint_matrices[20]; \n"
+    "uniform float4x4 joint_matrices[" MAX_JOINTS_PER_MESH_STR "]; \n"
     "struct VSOUTPUT \n"
     "{ \n"
     "   float4 hpos      : POSITION0;  // vertex position in homogenous space \n"
@@ -79,7 +82,7 @@ static const char * SKINNED_VS_GLSL =
     "uniform mat4 pvw; \n"
     "uniform mat4 world; \n"
     "uniform mat4 wit; \n"
-    "uniform mat4 joint_matrices[20]; \n"
+    "uniform mat4 joint_matrices[" MAX_JOINTS_PER_MESH_STR "]; \n"
     "\n"
     "varying vec4  pos_world; // vertex position in world space \n"
     "varying vec3  nml_world; // vertex normal in world space \n"
@@ -203,7 +206,7 @@ static ModelResourceDesc sSkinnedModelDesc()
 {
     struct JointMatrices
     {
-        Matrix44f matrices[20];
+        Matrix44f matrices[MAX_JOINTS_PER_MESH];
 
         JointMatrices()
         {
@@ -236,6 +239,19 @@ static ModelResourceDesc sSkinnedModelDesc()
 
     return md;
 }
+
+
+// *****************************************************************************
+// SkinnedAnimation
+// *****************************************************************************
+
+struct GN::engine::SkinnedMesh::SkinnedAnimation : public FatAnimation
+{
+    static void sDeleteAnimation( SkinnedAnimation * p )
+    {
+        delete p;
+    }
+};
 
 // *****************************************************************************
 // SkinnedMesh
@@ -272,6 +288,28 @@ void GN::engine::SkinnedMesh::clear()
     setComponent<VisualComponent>( mVisual );
 
     mSkinnedEffect.clear();
+
+    std::for_each( mAnimations.begin(), mAnimations.end(), SkinnedAnimation::sDeleteAnimation );
+    mAnimations.clear();
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+bool GN::engine::SkinnedMesh::getAnimationInfo( size_t animationIndex, SkinnedAnimationInfo & info )
+{
+    if( animationIndex >= mAnimations.size() || NULL == mAnimations[animationIndex] )
+    {
+        GN_ERROR(sLogger)( "Invalid animation index." );
+        return false;
+    }
+
+    const SkinnedAnimation * sa = mAnimations[animationIndex];
+
+    info.name = sa->name;
+    info.duration = sa->duration;
+
+    return true;
 }
 
 //
@@ -306,6 +344,15 @@ bool GN::engine::SkinnedMesh::loadFromFatModel( const GN::gfx::FatModel & fatmod
         const FatMesh & fatmesh = *fatmodel.meshes[i];
 
         StrA meshName = stringFormat( "%s.mesh.%d", fatmodel.name, i );
+
+        uint32 jointCountInTheMesh = fatmodel.skeletons[fatmesh.skeleton].joints.size();
+        if( jointCountInTheMesh > MAX_JOINTS_PER_MESH )
+        {
+            // TODO: split the mesh!
+            GN_ERROR(sLogger)( "Ignore mesh %s. It contains too many joints (#%d) then the current code allowed (#%d)",
+                meshName, jointCountInTheMesh, MAX_JOINTS_PER_MESH );
+            continue;
+        }
 
         // use exising mesh, if possible
         AutoRef<MeshResource> mesh = gdb.findResource<MeshResource>( meshName );
@@ -388,6 +435,20 @@ bool GN::engine::SkinnedMesh::loadFromFatModel( const GN::gfx::FatModel & fatmod
                 mVisual->addModel( model );
             }
         }
+    }
+
+    // loading all animations
+    if( mAnimations.resize( fatmodel.animations.size() ) )
+    {
+        for( uint32 i = 0; i < fatmodel.animations.size(); ++i )
+        {
+            mAnimations[i] = new SkinnedAnimation;
+            ((FatAnimation)*mAnimations[i]) = fatmodel.animations[i];
+        }
+    }
+    else
+    {
+        GN_ERROR(sLogger)( "Fail to load animations: out of memory." );
     }
 
     // update bounding box

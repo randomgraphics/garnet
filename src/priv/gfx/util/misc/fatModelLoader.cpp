@@ -2278,10 +2278,6 @@ static void sLoadAiAnimations( FatModel & fatmodel, const aiScene & aiscene )
         // Reference the Assimp animation object
         const aiAnimation & aianim = *aiscene.mAnimations[a];
 
-        // Declara a new Fat animation object.
-        FatAnimation fatanim;
-        fatanim.name = aianim.mName.data;
-
         // Certain combinations of file format and exporter don't always store
         // this information in the exported file. In this case, mTicksPerSecond
         // is set to 0 to indicate the lack of knowledge. And we'll use 1.0
@@ -2295,6 +2291,11 @@ static void sLoadAiAnimations( FatModel & fatmodel, const aiScene & aiscene )
         {
             secondsPerTick = 1.0f / aianim.mTicksPerSecond;
         }
+
+        // Declara a new Fat animation object.
+        FatAnimation fatanim;
+        fatanim.name = aianim.mName.data;
+        fatanim.duration = aianim.mDuration * secondsPerTick;
 
         // Go through each animation channels. Each channel controls
         // one node in the scene.
@@ -2559,6 +2560,9 @@ bool GN::gfx::FatModel::loadFromFile( const StrA & filename )
     }
 
     StrA fullFileName = fs::resolvePath( fs::getCurrentDir(), filename );
+
+    // by default the fat model name would be the file.
+    this->name = fullFileName;
 
     switch( ff )
     {

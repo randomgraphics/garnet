@@ -51,6 +51,12 @@ namespace GN { namespace engine
         StackRefCounter<VisualComponent>  mVisual;
     };
 
+    struct SkinnedAnimationInfo
+    {
+        StrA   name;
+        double duration;
+    };
+
     ///
     /// Skinned Mesh Entity
     ///
@@ -79,6 +85,15 @@ namespace GN { namespace engine
         /// get the visual component
         VisualComponent & visual() { return *mVisual; }
 
+        /// get number of animations
+        size_t getAnimationCount() const { return mAnimations.size(); }
+
+        /// get information about specific animation.
+        bool getAnimationInfo( size_t animationIndex, SkinnedAnimationInfo & info );
+
+        /// Set the animation and the time stamp.
+        void setAnimation( size_t animationIndex, double seconds );
+
         /// Load the whole fat model as single skinned mesh
         bool loadFromFatModel( const GN::gfx::FatModel & );
 
@@ -86,9 +101,13 @@ namespace GN { namespace engine
         bool loadFromFile( const StrA & filename );
 
     private:
+
+        struct SkinnedAnimation;
+
         DynaArray<AutoRef<SpacialComponent> > mJoints;
         AutoRef<VisualComponent>              mVisual;
         AutoRef<gfx::EffectResource>          mSkinnedEffect;
+        DynaArray<SkinnedAnimation*>          mAnimations;
     };
 }}
 
