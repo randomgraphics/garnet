@@ -80,7 +80,7 @@ namespace GN
         ///
         /// write string to file
         ///
-        inline bool print( const StrA & s ) { return write( s.cptr(), s.size(), 0 ); }
+        inline bool print( const StrA & s ) { return write( s.rawptr(), s.size(), 0 ); }
 
         ///
         /// write formatted string to file
@@ -203,7 +203,7 @@ namespace GN
     inline File & operator<<( File & fp, const StrA & s )
     {
         if( s.empty() ) return fp;
-        fp.write( s.cptr(), s.size(), 0 );
+        fp.write( s.rawptr(), s.size(), 0 );
         return fp;
     }
 

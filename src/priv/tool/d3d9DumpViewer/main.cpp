@@ -178,14 +178,14 @@ struct D3D9StateDump
         // vs
         if( !vs.source.empty() )
         {
-            vs.vs.attach( assembleAndCreateVS( &dev, vs.source.cptr(), 0 ) );
+            vs.vs.attach( assembleAndCreateVS( &dev, vs.source.rawptr(), 0 ) );
             if( vs.vs.empty() ) return false;
         }
 
         // ps
         if( !ps.source.empty() )
         {
-            ps.ps.attach( assembleAndCreatePS( &dev, ps.source.cptr(), 0 ) );
+            ps.ps.attach( assembleAndCreatePS( &dev, ps.source.rawptr(), 0 ) );
             if( ps.ps.empty() ) return false;
         }
 
@@ -247,25 +247,25 @@ struct D3D9StateDump
 
             D3DXIMAGE_INFO info;
 
-            GN_DX_CHECK_RETURN( D3DXGetImageInfoFromFileA( filename.cptr(), &info ), false );
+            GN_DX_CHECK_RETURN( D3DXGetImageInfoFromFileA( filename.rawptr(), &info ), false );
 
             switch( info.ResourceType )
             {
                 case D3DRTYPE_TEXTURE:
                     GN_DX_CHECK_RETURN(
-                        D3DXCreateTextureFromFileA( &dev, filename.cptr(), (LPDIRECT3DTEXTURE9*)&td.tex ),
+                        D3DXCreateTextureFromFileA( &dev, filename.rawptr(), (LPDIRECT3DTEXTURE9*)&td.tex ),
                         false );
                     break;
 
                 case D3DRTYPE_CUBETEXTURE:
                     GN_DX_CHECK_RETURN(
-                        D3DXCreateCubeTextureFromFileA( &dev, filename.cptr(), (LPDIRECT3DCUBETEXTURE9*)&td.tex ),
+                        D3DXCreateCubeTextureFromFileA( &dev, filename.rawptr(), (LPDIRECT3DCUBETEXTURE9*)&td.tex ),
                         false );
                     break;
 
                 case D3DRTYPE_VOLUMETEXTURE:
                     GN_DX_CHECK_RETURN(
-                        D3DXCreateVolumeTextureFromFileA( &dev, filename.cptr(), (LPDIRECT3DVOLUMETEXTURE9*)&td.tex ),
+                        D3DXCreateVolumeTextureFromFileA( &dev, filename.rawptr(), (LPDIRECT3DVOLUMETEXTURE9*)&td.tex ),
                         false );
                     break;
 
@@ -425,7 +425,7 @@ struct D3D9StateDump
                 D3D9RtDump & rtd = rendertargets[i];
                 if( !rtd.inuse ) continue;
 
-                GN_DX_CHECK( D3DXLoadSurfaceFromFileA( rtd.surf, 0, 0, rtd.ref.cptr(), 0, D3DX_FILTER_NONE, 0, 0 ) );
+                GN_DX_CHECK( D3DXLoadSurfaceFromFileA( rtd.surf, 0, 0, rtd.ref.rawptr(), 0, D3DX_FILTER_NONE, 0, 0 ) );
             }
         }
 
@@ -544,7 +544,7 @@ struct D3D9StateDump
             }
             else
             {
-                GN_WARN(sLogger)( "%s : ignore unknown node %s", e->getLocation(), e->name.cptr() );
+                GN_WARN(sLogger)( "%s : ignore unknown node %s", e->getLocation(), e->name.rawptr() );
             }
         }
 
@@ -575,9 +575,9 @@ private:
     static bool sGetNumericAttr( const XmlElement & node, const StrA & attrname, T & result )
     {
         const XmlAttrib * a = node.findAttrib( attrname );
-        if ( !a || !string2Number<T>( result, a->value.cptr() ) )
+        if ( !a || !string2Number<T>( result, a->value.rawptr() ) )
         {
-            GN_ERROR(sLogger)("%s : attribute '%s' is missing!", node.getLocation(), attrname.cptr() );
+            GN_ERROR(sLogger)("%s : attribute '%s' is missing!", node.getLocation(), attrname.rawptr() );
             return false;
         }
         else
@@ -599,7 +599,7 @@ private:
 
         if( !fs::isFile( result ) )
         {
-            GN_WARN(sLogger)("%s : invalid reference :  %s!", node.getLocation(), result.cptr() );
+            GN_WARN(sLogger)("%s : invalid reference :  %s!", node.getLocation(), result.rawptr() );
         }
 
         // success
@@ -614,7 +614,7 @@ private:
             if( !e ) continue;
             if( e->name != "f" )
             {
-                GN_ERROR(sLogger)( "%s : ignore unknown node %s", e->getLocation(), e->name.cptr() );
+                GN_ERROR(sLogger)( "%s : ignore unknown node %s", e->getLocation(), e->name.rawptr() );
                 continue;
             }
 
@@ -709,7 +709,7 @@ private:
 
             if( e->name != "element" )
             {
-                GN_WARN(sLogger)( "%s : ignore unknown node %s", e->getLocation(), e->name.cptr() );
+                GN_WARN(sLogger)( "%s : ignore unknown node %s", e->getLocation(), e->name.rawptr() );
                 continue;
             }
 
@@ -825,7 +825,7 @@ private:
 
             if( "rs" != e->name )
             {
-                GN_WARN(sLogger)( "%s : ignore unknown node %s", e->getLocation(), e->name.cptr() );
+                GN_WARN(sLogger)( "%s : ignore unknown node %s", e->getLocation(), e->name.rawptr() );
                 continue;
             }
 
@@ -861,7 +861,7 @@ private:
 
             if( "ss" != e->name )
             {
-                GN_WARN(sLogger)( "%s : ignore unknown node %s", e->getLocation(), e->name.cptr() );
+                GN_WARN(sLogger)( "%s : ignore unknown node %s", e->getLocation(), e->name.rawptr() );
                 continue;
             }
 
@@ -968,7 +968,7 @@ protected:
 
 void printhelp( const char * appname )
 {
-    printf( "Usage: %s [dumpname]\n", (fs::baseName(appname) + fs::extName(appname)).cptr() );
+    printf( "Usage: %s [dumpname]\n", (fs::baseName(appname) + fs::extName(appname)).rawptr() );
 }
 
 int main( int argc, const char * argv [] )

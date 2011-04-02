@@ -85,7 +85,7 @@ void GN::input::BasicInput::triggerCharPress( char ch )
     if( (unsigned char)ch < 128 )
     {
         // ASCII character
-        //GN_TRACE( "Char press: %s", StrA(&ch,1).cptr() );
+        //GN_TRACE( "Char press: %s", StrA(&ch,1).rawptr() );
         sigCharPress( ch );
     }
     else if( mHalfWideChar )
@@ -94,7 +94,7 @@ void GN::input::BasicInput::triggerCharPress( char ch )
         wchar_t wch[2];
         mbs2wcs( wch, 2, mHalfBytes, 2 );
 
-        //GN_TRACE( "Char press: %s", StrA(mHalfBytes,2).cptr() );
+        //GN_TRACE( "Char press: %s", StrA(mHalfBytes,2).rawptr() );
         sigCharPress( wch[0] );
 
         // Çå³ý¡°°ë×Ö·û¡±±êÖ¾

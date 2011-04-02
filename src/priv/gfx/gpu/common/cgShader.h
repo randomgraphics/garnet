@@ -182,7 +182,7 @@ namespace GN { namespace gfx
             GN_GUARD_SLOW;
             CGparameter param;
             GN_CG_CHECK_RV(
-                param = cgGetNamedParameter( mProgram, name.cptr() ),
+                param = cgGetNamedParameter( mProgram, name.rawptr() ),
                 0 );
             return param;
             GN_UNGUARD_SLOW;

@@ -60,7 +60,7 @@ static GN::StrA sAddLineCount( const GN::StrA & in )
     GN::StrA out( "(  1) : " );
 
     int line = 1;
-    for( const char * s = in.cptr(); *s; ++s )
+    for( const char * s = in.rawptr(); *s; ++s )
     {
         if( '\n' == *s )
         {
@@ -125,7 +125,7 @@ sCreateShader( const StrA & code, GLenum usage )
     AutoARBObjectDel autodel( sh );
 
     // set shader code
-    const char * code_str = code.cptr();
+    const char * code_str = code.rawptr();
     GLint code_size = static_cast<GLint>( code.size() );
     GN_OGL_CHECK_RV(
         glShaderSourceARB( sh, 1, &code_str, &code_size ),
@@ -146,7 +146,7 @@ sCreateShader( const StrA & code, GLenum usage )
             "\n========= compile error ========\n"
             "%s\n"
             "==================================\n",
-            sAddLineCount(code_str).cptr(), buf );
+            sAddLineCount(code_str).rawptr(), buf );
         return false;
     }
 
@@ -482,7 +482,7 @@ void GN::gfx::OGLGpuProgramGLSL::applyUniforms(
             {
                 GN_WARN(sLogger)(
                     "parameter %s: value size(%d) differs from size defined in shader code(%d).",
-                    desc.name.cptr(),
+                    desc.name.rawptr(),
                     uniform->size(),
                     desc.size );
             }
@@ -584,7 +584,7 @@ void GN::gfx::OGLGpuProgramGLSL::applyTextures(
         {
             r.chooseTextureStage( i );
 
-            const OGLTexture * ogltexture = safeCastPtr<const OGLTexture>(b.texture.get());
+            const OGLTexture * ogltexture = safeCastPtr<const OGLTexture>(b.texture.rawptr());
 
             // bind sampler
             ogltexture->setSampler( b.sampler );
@@ -662,13 +662,13 @@ GN::gfx::OGLGpuProgramGLSL::enumParameters()
     for( uint32 i = 0; i < mUniforms.size(); ++i )
     {
         GLSLUniformOrTextureDesc & u = mUniforms[i];
-        u.uniformDesc.name = u.name.cptr();
+        u.uniformDesc.name = u.name.rawptr();
         u.uniformDesc.size = u.size;
     }
     for( uint32 i = 0; i < mTextures.size(); ++i )
     {
         GLSLUniformOrTextureDesc & t = mTextures[i];
-        t.textureDesc.name = t.name.cptr();
+        t.textureDesc.name = t.name.rawptr();
     }
 
     // update parameter descriptor
@@ -741,7 +741,7 @@ GN::gfx::OGLGpuProgramGLSL::enumAttributes()
     for( uint32 i = 0; i < mAttributes.size(); ++i )
     {
         GLSLAttributeDesc & a = mAttributes[i];
-        a.desc.name = a.name.cptr();
+        a.desc.name = a.name.rawptr();
     }
 
     // update parameter descriptor

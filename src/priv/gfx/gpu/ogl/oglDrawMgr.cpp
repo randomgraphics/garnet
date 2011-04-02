@@ -160,7 +160,7 @@ void GN::gfx::OGLGpu::drawIndexed(
 
     // bind vertex buffer based on current startvtx
     if( mCurrentOGLVtxFmt &&
-        !mCurrentOGLVtxFmt->bindBuffers( mContext.vtxbufs.cptr(),
+        !mCurrentOGLVtxFmt->bindBuffers( mContext.vtxbufs.rawptr(),
                                          mContext.vtxbufs.size(),
                                          basevtx ) )
     {
@@ -169,7 +169,7 @@ void GN::gfx::OGLGpu::drawIndexed(
 
     // get current index buffer
     GN_ASSERT( mContext.idxbuf );
-    const OGLIdxBuf * ib = safeCastPtr<const OGLIdxBuf>( mContext.idxbuf.get() );
+    const OGLIdxBuf * ib = safeCastPtr<const OGLIdxBuf>( mContext.idxbuf.rawptr() );
 
     // Verify index buffer
     if( paramCheckEnabled() )
@@ -237,7 +237,7 @@ void GN::gfx::OGLGpu::draw( PrimitiveType prim, uint32 numvtx, uint32 startvtx )
 
     // bind vertex buffer based on current startvtx
     if( mCurrentOGLVtxFmt &&
-        !mCurrentOGLVtxFmt->bindBuffers( mContext.vtxbufs.cptr(),
+        !mCurrentOGLVtxFmt->bindBuffers( mContext.vtxbufs.rawptr(),
                                          mContext.vtxbufs.size(),
                                          startvtx ) )
     {

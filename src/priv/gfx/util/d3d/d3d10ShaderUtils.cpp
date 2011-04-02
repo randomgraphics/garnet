@@ -21,7 +21,7 @@ static GN::StrA sAddLineCountD3D10( const GN::StrA & in )
     GN::StrA out( "(  1) : " );
 
     int line = 1;
-    for( const char * s = in.cptr(); *s; ++s )
+    for( const char * s = in.rawptr(); *s; ++s )
     {
         if( '\n' == *s )
         {
@@ -60,7 +60,7 @@ static void sPrintShaderCompileErrorD3D10( const char * code, ID3D10Blob * err )
         "\n---------------------------------------------------------\n"
         "%s\n"
         "\n=========================================================\n",
-        code ? sAddLineCountD3D10(code).cptr() : "Shader code: <EMPTY>",
+        code ? sAddLineCountD3D10(code).rawptr() : "Shader code: <EMPTY>",
         err ? (const char*)err->GetBufferPointer() : "Error: <EMPTY>" );
 
     GN_UNGUARD;
@@ -93,8 +93,8 @@ static void sPrintShaderCompileInfoD3D10( const char * hlsl, ID3D10Blob * bin )
         "\n---------------------------------------------------------\n"
         "%s\n"
         "\n=========================================================\n",
-        sAddLineCountD3D10(hlsl).cptr(),
-        sAddLineCountD3D10((const char*)asm_->GetBufferPointer()).cptr() );
+        sAddLineCountD3D10(hlsl).rawptr(),
+        sAddLineCountD3D10((const char*)asm_->GetBufferPointer()).rawptr() );
 
     GN_UNGUARD;
 }
@@ -143,7 +143,7 @@ ID3D10Blob * GN::d3d10::compileShader(
     if( FAILED( D3DCompile(
         source,
         len,
-        filename.cptr(),
+        filename.rawptr(),
         0, // defines
         0, // includes
         entry,

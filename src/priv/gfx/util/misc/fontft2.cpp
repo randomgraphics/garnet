@@ -198,7 +198,7 @@ bool FontFaceFt2::init( const FontFaceCreationDesc & cd )
         &mFace );
     if( err )
     {
-        GN_ERROR(sLogger)( "fail to load font face '%s' from file %s.", cd.fontname.cptr() );
+        GN_ERROR(sLogger)( "fail to load font face '%s' from file %s.", cd.fontname.rawptr() );
         return failure();
     }
 
@@ -297,7 +297,7 @@ bool FontFaceFt2::loadFontImage( FontImage & result, wchar_t ch )
     //取道位图数据
 #if SUBPIXEL_RENDERING
     mBitmapBuffer.resize( width * height * 4 );
-    uint8 * buf = mBitmapBuffer.cptr();
+    uint8 * buf = mBitmapBuffer.rawptr();
     switch( bitmap.pixel_mode )
     {
         case FT_PIXEL_MODE_MONO :
@@ -357,7 +357,7 @@ bool FontFaceFt2::loadFontImage( FontImage & result, wchar_t ch )
     result.format = FontImage::RGBA;
 #else
     mBitmapBuffer.resize( width * height );
-    uint8 * buf = mBitmapBuffer.cptr();
+    uint8 * buf = mBitmapBuffer.rawptr();
     switch( bitmap.pixel_mode )
     {
         case FT_PIXEL_MODE_MONO :
@@ -390,7 +390,7 @@ bool FontFaceFt2::loadFontImage( FontImage & result, wchar_t ch )
     // copy glyph data to result structure
     result.width        = (uint32)width;
     result.height       = (uint32)height;
-    result.buffer       = mBitmapBuffer.cptr();
+    result.buffer       = mBitmapBuffer.rawptr();
     result.horiBearingX = (float)slot->bitmap_left;
     result.horiBearingY = (float)-slot->bitmap_top;
     result.horiAdvance  = slot->advance.x / 64.0f;

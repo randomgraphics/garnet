@@ -35,7 +35,7 @@ GN::Registry::ItemKey GN::Registry::set(
     }
     else
     {
-        GN_ERROR(sLogger)( "Item '%s' is already existed.!", name.cptr() );
+        GN_ERROR(sLogger)( "Item '%s' is already existed.!", name.rawptr() );
         return 0;
     }
 
@@ -54,7 +54,7 @@ void GN::Registry::importFromStr( const StrA & s )
 
     if( s.empty() ) return;
 
-    const char * ptr = s.cptr();
+    const char * ptr = s.rawptr();
     const char * end = ptr + s.size();
 
 #define NOT_EOL (ptr < end && *ptr != '\n')

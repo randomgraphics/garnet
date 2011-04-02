@@ -181,7 +181,7 @@ bool GN::engine::StaticMesh::loadFromFatModel( const GN::gfx::FatModel & fatmode
             merd.numidx = fatmesh.indices.size();
             merd.idx32 = true; // TODO: use 16-bit index buffer, when possible.
             merd.offsets[0] = 0;
-            merd.indices = (void*)fatmesh.indices.cptr();
+            merd.indices = (void*)fatmesh.indices.rawptr();
 
             // setup vertex format
             fatmesh.vertices.GenerateMeshVertexFormat( merd.vtxfmt );
@@ -189,8 +189,8 @@ bool GN::engine::StaticMesh::loadFromFatModel( const GN::gfx::FatModel & fatmode
 
             // copy vertex data
             if( !vb.resize( merd.strides[0] * fatmesh.vertices.getVertexCount() ) ) continue;
-            if( !fatmesh.vertices.GenerateVertexStream( merd.vtxfmt, 0, merd.strides[0], vb.cptr(), vb.size() ) ) continue;
-            merd.vertices[0] = vb.cptr();
+            if( !fatmesh.vertices.GenerateVertexStream( merd.vtxfmt, 0, merd.strides[0], vb.rawptr(), vb.size() ) ) continue;
+            merd.vertices[0] = vb.rawptr();
 
             // create GPU mesh resource
             mesh = gdb.createResource<MeshResource>( meshName );

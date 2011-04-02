@@ -156,7 +156,7 @@ bool GN::gfx::SpriteRenderer::init()
         indices[i*6+4] = i * 4 + 2;
         indices[i*6+5] = i * 4 + 3;
     }
-    mIndexBuffer->update( 0, MAX_INDICES, indices.cptr() );
+    mIndexBuffer->update( 0, MAX_INDICES, indices.rawptr() );
 
 
     // create pending vertex buffer
@@ -366,7 +366,7 @@ GN::gfx::SpriteRenderer::drawTextured(
     if( mNextFreeSprite == mSprites + MAX_SPRITES )
     {
         drawEnd();
-        drawBegin( mContext.textures[0].texture.get(), mOptions );
+        drawBegin( mContext.textures[0].texture, mOptions );
     }
 
     GN_ASSERT( mNextFreeSprite < mSprites + MAX_SPRITES );
@@ -424,7 +424,7 @@ GN::gfx::SpriteRenderer::drawSolid(
     if( mNextFreeSprite == mSprites + MAX_SPRITES )
     {
         drawEnd();
-        drawBegin( mContext.textures[0].texture.get(), mOptions );
+        drawBegin( mContext.textures[0].texture, mOptions );
     }
 
     GN_ASSERT( mNextFreeSprite < mSprites + MAX_SPRITES );

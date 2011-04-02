@@ -90,7 +90,7 @@ bool GN::StdFile::read( void * buffer, size_t size, size_t * readen )
 
     if( (size_t)-1 == r )
     {
-        GN_ERROR(sLogger)( "%s : fread() failed!", name().cptr() );
+        GN_ERROR(sLogger)( "%s : fread() failed!", name().rawptr() );
         return false;
     }
 
@@ -124,7 +124,7 @@ bool GN::StdFile::write( const void * buffer, size_t size, size_t * written )
     size_t r = ::fwrite( buffer, 1, size, mFile );
     if ( (size_t)-1 == r )
     {
-        GN_ERROR(sLogger)( "%s: fwrite() failed!", name().cptr() );
+        GN_ERROR(sLogger)( "%s: fwrite() failed!", name().rawptr() );
         return false;
     }
 
@@ -172,7 +172,7 @@ bool GN::StdFile::seek( size_t offset, FileSeek origin )
     // check parameter
     if( origin >= FileSeek::NUM_MODES )
     {
-        GN_ERROR(sLogger)( "%s: invalid seek origin!", name().cptr() );
+        GN_ERROR(sLogger)( "%s: invalid seek origin!", name().rawptr() );
         return false;
     }
 
@@ -184,7 +184,7 @@ bool GN::StdFile::seek( size_t offset, FileSeek origin )
 
     if( 0 != ::fseek( mFile, (int)offset, seek_table[origin] ) )
     {
-        GN_ERROR(sLogger)( "%s : fseek() failed!", name().cptr() );
+        GN_ERROR(sLogger)( "%s : fseek() failed!", name().rawptr() );
         return false;
     }
 
@@ -211,7 +211,7 @@ size_t GN::StdFile::tell() const
 
     if( (size_t)-1 == r )
     {
-        GN_ERROR(sLogger)( "%s : ftell() failed!", name().cptr() );
+        GN_ERROR(sLogger)( "%s : ftell() failed!", name().rawptr() );
     }
 
     return r;
@@ -236,14 +236,14 @@ size_t GN::StdFile::size() const
     long oldPos = ::ftell( mFile );
     if( -1 == oldPos )
     {
-        GN_ERROR(sLogger)( "%s : fail to get current file position!", name().cptr() );
+        GN_ERROR(sLogger)( "%s : fail to get current file position!", name().rawptr() );
         return 0;
     }
 
     // seek to the end of the file
     if( 0 == ::fseek( mFile, SEEK_END, 0 ) )
     {
-        GN_ERROR(sLogger)( "%s : fail to seek to the end of file!", name().cptr() );
+        GN_ERROR(sLogger)( "%s : fail to seek to the end of file!", name().rawptr() );
         return 0;
     }
 
@@ -253,7 +253,7 @@ size_t GN::StdFile::size() const
     // restore file position
     if( 0 == ::fseek( mFile, SEEK_SET, oldPos ) )
     {
-        GN_ERROR(sLogger)( "%s : fail to restore file position!", name().cptr() );
+        GN_ERROR(sLogger)( "%s : fail to restore file position!", name().rawptr() );
         return 0;
     }
 
@@ -285,7 +285,7 @@ bool GN::DiskFile::open( const StrA & filename, const StrA & mode )
     }
 
     // 打开文件
-    FILE * fp = sOpenFile( filename.cptr(), mode.cptr() );
+    FILE * fp = sOpenFile( filename.rawptr(), mode.rawptr() );
     if( 0 == fp )
     {
         close(); return false;
@@ -341,7 +341,7 @@ bool GN::TempFile::open( const StrA & prefix, const StrA & mode, Behavior beh )
     AutoMallocPtr<const char> filename( _tempnam( NULL, "GN_" + prefix ) );
 
     // open the file
-    FILE * fp = sOpenFile( filename.cptr(), mode );
+    FILE * fp = sOpenFile( filename.rawptr(), mode );
     if( 0 == fp )
     {
         close();
@@ -350,7 +350,7 @@ bool GN::TempFile::open( const StrA & prefix, const StrA & mode, Behavior beh )
 
     // success
     setFile( fp );
-    setName( filename.cptr() );
+    setName( filename.rawptr() );
     return true;
 
 #else
@@ -374,7 +374,7 @@ bool GN::TempFile::open( const StrA & prefix, const StrA & mode, Behavior beh )
     if( 0 == fp )
     {
         GN_ERROR(sLogger)( "fail to open file '%s' with mode '%s' : %s",
-            fileNameTempl.cptr(), mode.cptr(), errno2str( errno ) );
+            fileNameTempl.rawptr(), mode.rawptr(), errno2str( errno ) );
         close();
         return false;
     }

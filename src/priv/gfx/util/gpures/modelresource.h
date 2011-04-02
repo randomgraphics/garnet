@@ -137,7 +137,7 @@ namespace GN { namespace gfx
     private:
 
         GpuResourceDatabase & getGdb() const { return mOwner.getGdb(); }
-        const char *          getModelName() const { return mOwner.getGdb().getResourceName( &mOwner )->cptr(); }
+        const char *          getModelName() const { return mOwner.getGdb().getResourceName( &mOwner )->rawptr(); }
 
         bool fromDesc( const ModelResourceDesc & desc );
         void clear();

@@ -43,7 +43,7 @@ namespace GN
 
         size_t       getSize() const { return mValue.size(); }
 
-        const void * getValue() const { return mValue.cptr(); }
+        const void * getValue() const { return mValue.rawptr(); }
 
         const StrA & getName() const { return mName; }
 

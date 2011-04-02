@@ -141,7 +141,7 @@ public:
         SpacialComponent * spacial = entity->getComponent<SpacialComponent>();
         if( animationDuration > 0 )
         {
-            SkinnedMesh * mesh = (SkinnedMesh*)entity.cptr();
+            SkinnedMesh * mesh = (SkinnedMesh*)entity.rawptr();
             mesh->setAnimation( 0, currentTime );
             currentTime += UPDATE_INTERVAL;
         }
@@ -177,7 +177,7 @@ public:
                 L"           %f\n"
                 L"radius   : %f",
                 position.x, position.y, position.z,
-                radius ).cptr(),
+                radius ).rawptr(),
             320, 40 );
     }
 

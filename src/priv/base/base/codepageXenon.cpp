@@ -75,7 +75,7 @@ GN::CECImplXenon::convert(
                 destBufferSizeInBytes / sizeof(wchar_t) ),
             0 );
 
-        sourceBuffer = tempBuffer.cptr();
+        sourceBuffer = tempBuffer.rawptr();
         sourceBufferSizeInBytes = tempBuffer.size() * sizeof(wchar_t);
     }
     else

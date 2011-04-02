@@ -69,7 +69,7 @@ namespace GN
         DynaArrayBlob() {}
 
         //@{
-        virtual void * data() const { return (void*)mBuffer.cptr(); }
+        virtual void * data() const { return (void*)mBuffer.rawptr(); }
         virtual uint32 size() const { return (uint32)(sizeof(T) * mBuffer.size()); }
         //@}
 

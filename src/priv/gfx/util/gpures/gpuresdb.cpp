@@ -573,7 +573,7 @@ GpuResourceDatabase::Impl::createResource(
     {
         static int i = 0;
         ++i;
-        stringPrintf( unnamed, GN_ARRAY_COUNT(unnamed), "Unnamed %s #%d", mgr->desc.cptr(), i );
+        stringPrintf( unnamed, GN_ARRAY_COUNT(unnamed), "Unnamed %s #%d", mgr->desc.rawptr(), i );
         name = unnamed;
 
         GN_ASSERT( !mgr->resources.validName( name ) );

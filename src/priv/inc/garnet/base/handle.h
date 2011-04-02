@@ -354,7 +354,7 @@ namespace GN
 
             if( NULL != mNames.find( name ) )
             {
-                GN_ERROR(getLogger("GN.base.NamedHandleManager"))( "name '%s' is not unique.", name.cptr() );
+                GN_ERROR(getLogger("GN.base.NamedHandleManager"))( "name '%s' is not unique.", name.rawptr() );
                 return 0;
             }
 
@@ -386,7 +386,7 @@ namespace GN
 
             if( NULL != mNames.find( name ) )
             {
-                GN_ERROR(getLogger("GN.base.NamedHandleManager"))( "name '%s' is not unique.", name.cptr() );
+                GN_ERROR(getLogger("GN.base.NamedHandleManager"))( "name '%s' is not unique.", name.rawptr() );
                 return 0;
             }
 
@@ -432,7 +432,7 @@ namespace GN
 
             if( !validName( name ) )
             {
-                GN_ERROR(getLogger("GN.base.NamedHandleManager"))( "invalid name: %s.", name.cptr() );
+                GN_ERROR(getLogger("GN.base.NamedHandleManager"))( "invalid name: %s.", name.rawptr() );
                 return;
             }
 

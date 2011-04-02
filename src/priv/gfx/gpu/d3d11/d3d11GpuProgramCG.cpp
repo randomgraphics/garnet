@@ -110,15 +110,15 @@ bool GN::gfx::D3D11GpuProgramCG::init( const GpuProgramDesc & desc )
     // Fix up all char * pointers in parameter array
     for( D3D11CgUniform * i = mUniforms.begin(); i != mUniforms.end(); ++i)
     {
-        i->desc.name = i->name.cptr();
+        i->desc.name = i->name.rawptr();
     }
     for( D3D11CgTexture * i = mTextures.begin(); i != mTextures.end(); ++i)
     {
-        i->desc.name = i->name.cptr();
+        i->desc.name = i->name.rawptr();
     }
     for( D3D11CgAttribute * i = mAttributes.begin(); i != mAttributes.end(); ++i)
     {
-        i->desc.name = i->name.cptr();
+        i->desc.name = i->name.rawptr();
     }
 
     // update the parameter descriptor
@@ -299,7 +299,7 @@ void GN::gfx::D3D11GpuProgramCG::applyTextures(
     {
         const D3D11CgTexture & desc = mTextures[i];
 
-        ID3D11Resource * d3dtex = ( i < count ) ? ((const D3D11Texture*)(textures[i].texture.get()))->getD3D11Resource() : 0;
+        ID3D11Resource * d3dtex = ( i < count ) ? ((const D3D11Texture*)(textures[i].texture.rawptr()))->getD3D11Resource() : 0;
 
         for( const CGparameter * param = desc.handles.begin(); param != desc.handles.end(); ++param )
         {

@@ -81,7 +81,7 @@ bool GN::gfx::XenonTexture::init( const TextureDesc & inputDesc )
     mD3DFormat = (D3DFORMAT)colorFormat2XenonFormat( texdesc.format );
     if( D3DFMT_UNKNOWN == mD3DFormat )
     {
-        GN_ERROR(sLogger)( "Fail to convert color format '%s' to D3DFORMAT.", texdesc.format.toString().cptr() );
+        GN_ERROR(sLogger)( "Fail to convert color format '%s' to D3DFORMAT.", texdesc.format.toString().rawptr() );
         return failure();
     }
 

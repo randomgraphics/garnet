@@ -100,7 +100,7 @@ namespace GN
 
         /// get registry value by name
         //@{
-        const Variant * get( const StrA & name ) const { return getItemByKey( name2Key(name), name.cptr(), true ); }
+        const Variant * get( const StrA & name ) const { return getItemByKey( name2Key(name), name.rawptr(), true ); }
         //@}
 
         /// get registry value with default value, by key

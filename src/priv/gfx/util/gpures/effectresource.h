@@ -97,7 +97,7 @@ namespace GN { namespace gfx
     private:
 
         GpuResourceDatabase & getGdb() const { return mOwner.getGdb(); }
-        const char *          getEffectName() const { return mOwner.getGdb().getResourceName( &mOwner )->cptr(); }
+        const char *          getEffectName() const { return mOwner.getGdb().getResourceName( &mOwner )->rawptr(); }
 
         bool init( const EffectResourceDesc & desc );
         void clear();

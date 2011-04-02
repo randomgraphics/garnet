@@ -150,17 +150,17 @@ bool GN::gfx::OGLGpuProgramCG::init( const GpuProgramDesc & desc )
     GN_VTRACE(sLogger)("Dump GPU program parameters:");
     for( OglCgUniform * i = mUniforms.begin(); i != mUniforms.end(); ++i)
     {
-        i->desc.name = i->name.cptr();
+        i->desc.name = i->name.rawptr();
         GN_VTRACE(sLogger)( "\tuniform  : %s", i->desc.name );
     }
     for( OglCgTexture * i = mTextures.begin(); i != mTextures.end(); ++i)
     {
-        i->desc.name = i->name.cptr();
+        i->desc.name = i->name.rawptr();
         GN_VTRACE(sLogger)( "\ttexture  : %s", i->desc.name );
     }
     for( OglCgAttribute * i = mAttributes.begin(); i != mAttributes.end(); ++i)
     {
-        i->desc.name = i->name.cptr();
+        i->desc.name = i->name.rawptr();
         GN_VTRACE(sLogger)( "\tattribute: %s", i->desc.name );
     }
 
@@ -275,7 +275,7 @@ void GN::gfx::OGLGpuProgramCG::applyTextures( const TextureBinding * textures, u
     {
         const OglCgTexture & desc = mTextures[i];
 
-        GLuint ogltex = ( i < count ) ? ((const OGLTexture*)(textures[i].texture.get()))->getOGLTexture() : 0;
+        GLuint ogltex = ( i < count ) ? ((const OGLTexture*)(textures[i].texture.rawptr()))->getOGLTexture() : 0;
 
         for( const CGparameter * param = desc.handles.begin(); param != desc.handles.end(); ++param )
         {

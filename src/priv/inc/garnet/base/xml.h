@@ -191,7 +191,7 @@ namespace GN
                 }
                 else
                 {
-                    if( 0 == stringCompareI( name.cptr(), a->name.cptr() ) ) return a;
+                    if( 0 == stringCompareI( name.rawptr(), a->name.rawptr() ) ) return a;
                 }
             }
             return NULL;
@@ -213,7 +213,7 @@ namespace GN
                 }
                 else
                 {
-                    if( 0 == stringCompareI( name.cptr(), e->name.cptr() ) ) return e;
+                    if( 0 == stringCompareI( name.rawptr(), e->name.rawptr() ) ) return e;
                 }
             }
             return NULL;
@@ -336,10 +336,10 @@ namespace GN
                 "    line   : %d\n"
                 "    column : %d\n"
                 "    error  : %s",
-                fp.name().cptr(),
+                fp.name().rawptr(),
                 xpr.errLine,
                 xpr.errColumn,
-                xpr.errInfo.cptr() );
+                xpr.errInfo.rawptr() );
             return false;
         }
         GN_ASSERT( xpr.root );
@@ -357,7 +357,7 @@ namespace GN
         GN_GUARD;
 
         static Logger * sLogger = getLogger( "GN.base.xml" );
-        GN_INFO(sLogger)( "Load '%s'", filename.cptr() );
+        GN_INFO(sLogger)( "Load '%s'", filename.rawptr() );
 
         AutoObjPtr<File> fp( fs::openFile( filename, "rt" ) );
         if( !fp ) return false;

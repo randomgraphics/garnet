@@ -401,7 +401,7 @@ class BezierApp : public SampleApp
                 L"position : %f, %f, %f\n"
                 L"radius   : %f",
                 position.x, position.y, position.z,
-                radius ).cptr(),
+                radius ).rawptr(),
             0, 320 );
     }
 

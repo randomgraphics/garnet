@@ -12,7 +12,7 @@ static GN::StrA sAddLineCountCG( const GN::StrA & in )
     GN::StrA out( "(  1) : " );
 
     int line = 1;
-    for( const char * s = in.cptr(); *s; ++s )
+    for( const char * s = in.rawptr(); *s; ++s )
     {
         if( '\n' == *s )
         {
@@ -64,7 +64,7 @@ bool GN::gfx::CgShader::init(
                 "%s\n"
                 "=====================================================\n"
                 "\n",
-                sAddLineCountCG( code ).cptr(),
+                sAddLineCountCG( code ).rawptr(),
                 cgGetLastListing(context) );
         }
         return failure();
@@ -79,8 +79,8 @@ bool GN::gfx::CgShader::init(
         "%s\n"
         "=========================================================\n"
         "\n",
-        sAddLineCountCG( code ).cptr(),
-        sAddLineCountCG( cgGetProgramString( mProgram, CG_COMPILED_PROGRAM ) ).cptr() );
+        sAddLineCountCG( code ).rawptr(),
+        sAddLineCountCG( cgGetProgramString( mProgram, CG_COMPILED_PROGRAM ) ).rawptr() );
 
     // success
     mContext = context;

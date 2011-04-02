@@ -50,9 +50,9 @@ void GN::win::WindowMsw::quit()
     // unregister window class
     if( !mClassName.empty() )
     {
-        GN_TRACE(sLogger)( "Unregister window class: %S (module handle: 0x%X)", mClassName.cptr(), mModuleInstance );
+        GN_TRACE(sLogger)( "Unregister window class: %S (module handle: 0x%X)", mClassName.rawptr(), mModuleInstance );
         GN_ASSERT( mModuleInstance );
-        GN_MSW_CHECK( ::UnregisterClassW( mClassName.cptr(), mModuleInstance ) );
+        GN_MSW_CHECK( ::UnregisterClassW( mClassName.rawptr(), mModuleInstance ) );
         mClassName.clear();
     }
 
@@ -213,7 +213,7 @@ bool GN::win::WindowMsw::createWindow( const WindowCreationParams & wcp )
     do
     {
         mClassName.format( L"GNwindowMsw_%d", rand() );
-    } while( ::GetClassInfoExW( mModuleInstance, mClassName.cptr(), &wcex ) );
+    } while( ::GetClassInfoExW( mModuleInstance, mClassName.rawptr(), &wcex ) );
 
     // register window class
     wcex.cbSize         = sizeof(WNDCLASSEXW);
@@ -226,14 +226,14 @@ bool GN::win::WindowMsw::createWindow( const WindowCreationParams & wcp )
     wcex.hCursor        = LoadCursor (0,IDC_ARROW);
     wcex.hbrBackground  = (HBRUSH)(COLOR_WINDOW+1);
     wcex.lpszMenuName   = 0;
-    wcex.lpszClassName  = mClassName.cptr();
+    wcex.lpszClassName  = mClassName.rawptr();
     wcex.hIconSm        = LoadIcon(0, IDI_APPLICATION);
     if( 0 == ::RegisterClassExW(&wcex) )
     {
         GN_ERROR(sLogger)( "fail to register window class, %s!", getWin32LastErrorInfo() );
         return false;
     }
-    GN_TRACE(sLogger)( "Register window class: %S (module handle: 0x%X)", mClassName.cptr(), mModuleInstance );
+    GN_TRACE(sLogger)( "Register window class: %S (module handle: 0x%X)", mClassName.rawptr(), mModuleInstance );
 
     // setup window style
     DWORD exStyle = parent ? WS_EX_TOOLWINDOW : 0;
@@ -258,8 +258,8 @@ bool GN::win::WindowMsw::createWindow( const WindowCreationParams & wcp )
     // create window
     mWindow = ::CreateWindowExW(
         exStyle,
-        mClassName.cptr(),
-        mbs2wcs(wcp.caption).cptr(),
+        mClassName.rawptr(),
+        mbs2wcs(wcp.caption).rawptr(),
         style,
         CW_USEDEFAULT, CW_USEDEFAULT,
         wcp.clientWidth ? (rc.right - rc.left) : CW_USEDEFAULT,

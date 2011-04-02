@@ -250,7 +250,7 @@ namespace GN
             GN_GUARD_SLOW;
             StrA realname;
             ResourceHandle h = getResourceHandle( resolveName(realname,name), autoAddNewName );
-            return getResourceImpl( result, h, realname.cptr() );
+            return getResourceImpl( result, h, realname.rawptr() );
             GN_UNGUARD_SLOW;
         }
 
@@ -327,7 +327,7 @@ namespace GN
             {
                 if( !overrideExistingResource )
                 {
-                    GN_ERROR(sLogger)( "resource '%s' already exist!", realname.cptr() );
+                    GN_ERROR(sLogger)( "resource '%s' already exist!", realname.rawptr() );
                     return 0;
                 }
                 GN_ASSERT( mResHandles.validHandle(*handle) );
@@ -384,7 +384,7 @@ namespace GN
             ResourceHandle * handle = mResNames.find( resolveName(realname,name) );
             if( NULL == handle )
             {
-                GN_ERROR(sLogger)( "invalid resource name: %s", realname.cptr() );
+                GN_ERROR(sLogger)( "invalid resource name: %s", realname.rawptr() );
                 return;
             }
 
@@ -439,7 +439,7 @@ namespace GN
             ResourceHandle * h = mResNames.find( resolveName(realname,name) );
             if( NULL == h )
             {
-                GN_ERROR(sLogger)( "invalid resource name: %s", realname.cptr() );
+                GN_ERROR(sLogger)( "invalid resource name: %s", realname.rawptr() );
                 return;
             }
             disposeResourceByHandle( *h );
@@ -599,7 +599,7 @@ namespace GN
 
                 if( !ok )
                 {
-                    GN_WARN(sLogger)( "Fall back to null instance for resource '%s'.", item->name.cptr() );
+                    GN_WARN(sLogger)( "Fall back to null instance for resource '%s'.", item->name.rawptr() );
                     if( item->nullor )
                     {
                         ok = item->nullor( item->res, item->name, item->userData );
@@ -610,7 +610,7 @@ namespace GN
                     }
                     if( !ok )
                     {
-                        GN_ERROR(sLogger)( "Fail to create NULL instance for resource '%s'.", item->name.cptr() );
+                        GN_ERROR(sLogger)( "Fail to create NULL instance for resource '%s'.", item->name.rawptr() );
                         return false;
                     }
                 }
@@ -672,7 +672,7 @@ typedef GN::ResourceManagerTempl<int> ResMgr;
 
 bool defCreator( int & res, const GN::StrA & name, void * )
 {
-    return 0 != GN::string2Integer<int>( res, name.cptr() );
+    return 0 != GN::string2Integer<int>( res, name.rawptr() );
 }
 
 bool nullCreator( int & res, const GN::StrA &, void * )
@@ -802,8 +802,8 @@ public:
         TS_ASSERT( !rm.empty() );
 
         // handle -> name
-        TS_ASSERT_EQUALS( "1", rm.getResourceName(h1).cptr() );
-        TS_ASSERT_EQUALS( "", rm.getResourceName(h1+1).cptr() );
+        TS_ASSERT_EQUALS( "1", rm.getResourceName(h1).rawptr() );
+        TS_ASSERT_EQUALS( "", rm.getResourceName(h1+1).rawptr() );
 
         // name -> handle
         TS_ASSERT_EQUALS( h1, rm.getResourceHandle("1") );

@@ -271,8 +271,8 @@ inline bool GN::gfx::D3D11Gpu::bindContextShader(
     //
     if( newContext.gpuProgram )
     {
-        D3D11GpuProgram * newProg = (D3D11GpuProgram*)newContext.gpuProgram.get();
-        D3D11GpuProgram * oldProg = (D3D11GpuProgram*)mContext.gpuProgram.get();
+        D3D11GpuProgram * newProg = (D3D11GpuProgram*)newContext.gpuProgram.rawptr();
+        D3D11GpuProgram * oldProg = (D3D11GpuProgram*)mContext.gpuProgram.rawptr();
 
         // apply shader
         if( skipDirtyCheck || newProg != oldProg )
@@ -284,8 +284,8 @@ inline bool GN::gfx::D3D11Gpu::bindContextShader(
         GN_CASSERT( sizeof(AutoRef<Uniform>) == sizeof(Uniform*) );
 
         // apply GPU program resources
-        newProg->applyUniforms( (const Uniform * const *)newContext.uniforms.cptr(), (uint32)newContext.uniforms.size(), skipDirtyCheck );
-        newProg->applyTextures( newContext.textures.cptr(), (uint32)newContext.textures.size(), skipDirtyCheck );
+        newProg->applyUniforms( (const Uniform * const *)newContext.uniforms.rawptr(), (uint32)newContext.uniforms.size(), skipDirtyCheck );
+        newProg->applyTextures( newContext.textures.rawptr(), (uint32)newContext.textures.size(), skipDirtyCheck );
     }
     else if( skipDirtyCheck || (NULL != mContext.gpuProgram) )
     {
@@ -383,7 +383,7 @@ inline bool GN::gfx::D3D11Gpu::bindContextResource(
     //
     // bind input layout
     //
-    D3D11GpuProgram * gpuProgram = (D3D11GpuProgram*)newContext.gpuProgram.get();
+    D3D11GpuProgram * gpuProgram = (D3D11GpuProgram*)newContext.gpuProgram.rawptr();
     D3D11VertexLayout * layout = NULL;
     if( NULL != gpuProgram )
     {
@@ -417,7 +417,7 @@ inline bool GN::gfx::D3D11Gpu::bindContextResource(
         {
             const VertexBufferBinding & b = newContext.vtxbufs[i];
 
-            buf[i]     = b.vtxbuf ? safeCastPtr<const D3D11VtxBuf>(b.vtxbuf.get())->getD3DBuffer() : NULL;
+            buf[i]     = b.vtxbuf ? safeCastPtr<const D3D11VtxBuf>(b.vtxbuf.rawptr())->getD3DBuffer() : NULL;
             strides[i] = b.stride;
             offsets[i] = b.offset;
         }
@@ -431,7 +431,7 @@ inline bool GN::gfx::D3D11Gpu::bindContextResource(
     {
         if( newContext.idxbuf )
         {
-            const D3D11IdxBuf * ib = (const D3D11IdxBuf*)newContext.idxbuf.get();
+            const D3D11IdxBuf * ib = (const D3D11IdxBuf*)newContext.idxbuf.rawptr();
 
             const IdxBufDesc & ibdesc = ib->getDesc();
 

@@ -81,7 +81,7 @@ public:
         if( CONTINUE_EXECUTION == status )
         {
             extraArgc = mExtraArgs.size();
-            extraArgv = mExtraArgs.cptr();
+            extraArgv = mExtraArgs.rawptr();
         }
     }
 #endif
@@ -112,7 +112,7 @@ public:
 
         StrA executableName = fs::baseName( applicationName ) + fs::extName( applicationName );
 
-        GN_INFO(logger)( "Usage: %s [options]\n", executableName.cptr() );
+        GN_INFO(logger)( "Usage: %s [options]\n", executableName.rawptr() );
         showStandardCommandLineOptions();
     }
 

@@ -518,7 +518,7 @@ static void sDumpShaderResources(
             sDumpFilePrefix, tag, i );
         StrA resname = sDumpResource( device, fname, res );
 
-        fprintf( fp, "\t<%ssrv slot=\"%d\" desc=\"%s\" res=\"%s\"/>\n", tag, i, descname, resname.cptr() );
+        fprintf( fp, "\t<%ssrv slot=\"%d\" desc=\"%s\" res=\"%s\"/>\n", tag, i, descname, resname.rawptr() );
     }
 }
 
@@ -595,7 +595,7 @@ static void sDumpRenderTargets( ID3D10Device & device, FILE * fp )
 
         fprintf( fp,
             "\t<rendertarget slot=\"%d\" desc=\"%s\" res=\"%s\"/>\n",
-            i, descname, resname.cptr() );
+            i, descname, resname.rawptr() );
 
         colors[i]->Release();
     }
@@ -615,7 +615,7 @@ static void sDumpRenderTargets( ID3D10Device & device, FILE * fp )
 
         fprintf( fp,
             "\t<depthstencil desc=\"%s\" res=\"%s\"/>\n",
-            descname, resname.cptr() );
+            descname, resname.rawptr() );
 
         depth->Release();
     }
@@ -726,7 +726,7 @@ void sDumpD3D10States( ID3D10Device & device, FILE * fp )
 void GN::d3d10::setDumpFilePrefix( const StrA & prefix )
 {
     size_t n = math::getmin<size_t>( prefix.size(), _MAX_PATH );
-    memcpy( sDumpFilePrefix, prefix.cptr(), n );
+    memcpy( sDumpFilePrefix, prefix.rawptr(), n );
     sDumpFilePrefix[_MAX_PATH-1] = 0;
 }
 

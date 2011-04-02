@@ -201,10 +201,10 @@ bool GN::gfx::BasicGpuX11::dispInit( const GpuOptions & ro )
     if( 0 == ro.displayHandle )
     {
         StrA dispStr = getEnv("DISPLAY");
-        mDefaultDisplay = XOpenDisplay( dispStr.cptr() );
+        mDefaultDisplay = XOpenDisplay( dispStr.rawptr() );
         if( 0 == mDefaultDisplay )
         {
-            GN_ERROR(sLogger)( "Fail to open display '%s'.", dispStr.cptr() );
+            GN_ERROR(sLogger)( "Fail to open display '%s'.", dispStr.rawptr() );
             return false;
         }
         disp = mDefaultDisplay;
@@ -256,7 +256,7 @@ bool GN::gfx::BasicGpuX11::dispInit( const GpuOptions & ro )
 
     GN_ASSERT_EX(
         desc.windowHandle && desc.monitorHandle,
-        stringFormat( "win(0x%X), monitor(0x%X)", desc.windowHandle, desc.monitorHandle ).cptr() );
+        stringFormat( "win(0x%X), monitor(0x%X)", desc.windowHandle, desc.monitorHandle ).rawptr() );
 
     // success
     mOptions = ro;

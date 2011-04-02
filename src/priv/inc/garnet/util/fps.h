@@ -43,7 +43,7 @@ namespace GN { namespace util
         {
             mCurrentTime = mClock.getTimeD();
             mFpsValue = 60.0f; // ensure non-zero FPS for the very first frame.
-            mFpsString.format( mFormatString.cptr(), 0 );
+            mFpsString.format( mFormatString.rawptr(), 0 );
             mFrameCounter = 0;
             mLastFrameElapsed = 1.0f / mFpsValue;
             mLastFrameTime = mCurrentTime - mLastFrameElapsed;
@@ -68,7 +68,7 @@ namespace GN { namespace util
             {
                 mBeforeFirstUpdate = false;
                 mFpsValue = (float)( mFrameCounter / timeSinceLastCheckPoint );
-                mFpsString.format( mFormatString.cptr(), mFpsValue );
+                mFpsString.format( mFormatString.rawptr(), mFpsValue );
                 mLastCheckPoint = mCurrentTime;
                 mFrameCounter = 0;
                 static Logger * sLogger = getLogger("GN.util.fps");
@@ -77,7 +77,7 @@ namespace GN { namespace util
             else if( mBeforeFirstUpdate )
             {
                 mFpsValue = (float)( (mCurrentTime - mLastCheckPoint) / mFrameCounter );
-                mFpsString.format( mFormatString.cptr(), mFpsValue );
+                mFpsString.format( mFormatString.rawptr(), mFpsValue );
             }
         }
 

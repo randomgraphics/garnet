@@ -38,6 +38,6 @@ public:
 
         GN::DynaArray<GN::Vector3f> positions( 513 );
 
-        l.mLine->drawLines( positions.cptr(), 0, 513, 0, GN::Matrix44f::sIdentity() );
+        l.mLine->drawLines( positions.rawptr(), 0, 513, 0, GN::Matrix44f::sIdentity() );
     }
 };

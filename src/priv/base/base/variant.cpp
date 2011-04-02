@@ -40,19 +40,19 @@ bool GN::Variant::getb( bool & b ) const
 {
     int i;
     float f;
-    if( 0 == stringCompareI( "yes", mValue.cptr() ) ||
-        0 == stringCompareI( "true", mValue.cptr() ) ||
-        0 == stringCompareI( "on", mValue.cptr() ) ||
-        0 == stringCompare( "1", mValue.cptr() ) )
+    if( 0 == stringCompareI( "yes", mValue.rawptr() ) ||
+        0 == stringCompareI( "true", mValue.rawptr() ) ||
+        0 == stringCompareI( "on", mValue.rawptr() ) ||
+        0 == stringCompare( "1", mValue.rawptr() ) )
     {
         b = true;
         return true;
     }
     else if(
-        0 == stringCompareI( "no", mValue.cptr() ) ||
-        0 == stringCompareI( "false", mValue.cptr() ) ||
-        0 == stringCompareI( "off", mValue.cptr() ) ||
-        0 == stringCompare( "0", mValue.cptr() ) )
+        0 == stringCompareI( "no", mValue.rawptr() ) ||
+        0 == stringCompareI( "false", mValue.rawptr() ) ||
+        0 == stringCompareI( "off", mValue.rawptr() ) ||
+        0 == stringCompare( "0", mValue.rawptr() ) )
     {
         b = false;
         return true;
@@ -69,36 +69,36 @@ bool GN::Variant::getb( bool & b ) const
     }
     else
     {
-        GN_ERROR(sLogger)( "Can't convert string '%s' to boolean.", mValue.cptr() );
+        GN_ERROR(sLogger)( "Can't convert string '%s' to boolean.", mValue.rawptr() );
         return false;
     }
 }
 //
 bool GN::Variant::geti( int & i ) const
 {
-    return 0 != string2Integer<int>( i, mValue.cptr() );
+    return 0 != string2Integer<int>( i, mValue.rawptr() );
 }
 //
 bool GN::Variant::getf( float & f ) const
 {
-    return 0 != string2Float( f, mValue.cptr() );
+    return 0 != string2Float( f, mValue.rawptr() );
 }
 //
 bool GN::Variant::getp( void * & p ) const
 {
-    bool b = 0 != string2Integer<size_t>( (size_t&)p, mValue.cptr() );
+    bool b = 0 != string2Integer<size_t>( (size_t&)p, mValue.rawptr() );
     if( !b ) p = NULL;
     return b;
 }
 //
 bool GN::Variant::getv( Vector4f & v ) const
 {
-    return 4 == string2FloatArray( v, 4, mValue.cptr(), mValue.size() );
+    return 4 == string2FloatArray( v, 4, mValue.rawptr(), mValue.size() );
 }
 //
 bool GN::Variant::getm( Matrix44f & m ) const
 {
-    return 16 == string2FloatArray( m[0], 16, mValue.cptr(), mValue.size() );
+    return 16 == string2FloatArray( m[0], 16, mValue.rawptr(), mValue.size() );
 }
 
 // *****************************************************************************

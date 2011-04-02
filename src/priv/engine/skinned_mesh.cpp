@@ -226,7 +226,7 @@ static ModelResourceDesc sSkinnedModelDesc()
         md.uniforms[name].size = sizeof(type); \
         md.uniforms[name].initialValue.resize( sizeof(type) ); \
         type def defval; \
-        memcpy( md.uniforms[name].initialValue.cptr(), &def, sizeof(type) ); \
+        memcpy( md.uniforms[name].initialValue.rawptr(), &def, sizeof(type) ); \
     } else void(0)
 
     INIT_UNIFORM( "MATRIX_PVW"      , Matrix44f,     = Matrix44f::sIdentity() );
@@ -507,7 +507,7 @@ void GN::engine::SkinnedMesh::setAnimation( size_t animationIndex, float seconds
         }
 
         // update the matrix uniform.
-        Uniform * uniform = mysk.matrices->uniform().get();
+        Uniform * uniform = mysk.matrices->uniform().rawptr();
         GN_ASSERT( uniform->size() >= sizeof(Matrix44f)*MAX_JOINTS_PER_MESH );
         size_t bytes = sizeof(Matrix44f) * math::getmin<size_t>(MAX_JOINTS_PER_MESH,skanim.size());
         uniform->update( 0, (uint32)bytes, matrices );
@@ -608,7 +608,7 @@ bool GN::engine::SkinnedMesh::loadFromFatModel( const GN::gfx::FatModel & fatmod
             merd.numidx = fatmesh.indices.size();
             merd.idx32 = true; // TODO: use 16-bit index buffer, when possible.
             merd.offsets[0] = 0;
-            merd.indices = (void*)fatmesh.indices.cptr();
+            merd.indices = (void*)fatmesh.indices.rawptr();
 
             // setup vertex format
             fatmesh.vertices.GenerateMeshVertexFormat( merd.vtxfmt );
@@ -616,8 +616,8 @@ bool GN::engine::SkinnedMesh::loadFromFatModel( const GN::gfx::FatModel & fatmod
 
             // copy vertex data
             if( !vb.resize( merd.strides[0] * fatmesh.vertices.getVertexCount() ) ) continue;
-            if( !fatmesh.vertices.GenerateVertexStream( merd.vtxfmt, 0, merd.strides[0], vb.cptr(), vb.size() ) ) continue;
-            merd.vertices[0] = vb.cptr();
+            if( !fatmesh.vertices.GenerateVertexStream( merd.vtxfmt, 0, merd.strides[0], vb.rawptr(), vb.size() ) ) continue;
+            merd.vertices[0] = vb.rawptr();
 
             // convert integer joint index to floats to workaround hardware liminations (not all hardware supports integer
             // vertex elements)
