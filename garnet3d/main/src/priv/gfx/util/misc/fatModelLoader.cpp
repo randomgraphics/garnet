@@ -2324,16 +2324,16 @@ static bool sLoadAiJointAnimation(
 
     // Certain combinations of file format and exporter don't always store
     // this information in the exported file. In this case, mTicksPerSecond
-    // is set to 0 to indicate the lack of knowledge. And we'll use 1.0
-    // in this case, which means 1 tick is 1 second.
+    // is set to 0 to indicate the lack of knowledge. And we'll use 1000
+    // in this case, which means 1000 tick is 1 second.
     double secondsPerTick;
     if( 0 == aianim.mTicksPerSecond )
     {
-        secondsPerTick = 1;
+        secondsPerTick = 0.001; // 1 / 1000
     }
     else
     {
-        secondsPerTick = 1.0f / aianim.mTicksPerSecond;
+        secondsPerTick = 1.0 / aianim.mTicksPerSecond;
     }
 
     // Declara a new Fat animation object.

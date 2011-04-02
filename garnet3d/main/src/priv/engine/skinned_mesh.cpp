@@ -509,8 +509,8 @@ void GN::engine::SkinnedMesh::setAnimation( size_t animationIndex, float seconds
         // update the matrix uniform.
         Uniform * uniform = mysk.matrices->uniform().get();
         GN_ASSERT( uniform->size() >= sizeof(Matrix44f)*MAX_JOINTS_PER_MESH );
-        size_t size = sizeof(Matrix44f) * math::getmin<size_t>(MAX_JOINTS_PER_MESH,skanim.size());
-        uniform->update( 0, size, matrices );
+        size_t bytes = sizeof(Matrix44f) * math::getmin<size_t>(MAX_JOINTS_PER_MESH,skanim.size());
+        uniform->update( 0, (uint32)bytes, matrices );
     }
 }
 
@@ -696,7 +696,10 @@ bool GN::engine::SkinnedMesh::loadFromFatModel( const GN::gfx::FatModel & fatmod
         for( uint32 i = 0; i < fatmodel.animations.size(); ++i )
         {
             mAnimations[i] = new SkinnedAnimation;
-            ((FatAnimation)*mAnimations[i]) = fatmodel.animations[i];
+            const FatAnimation & src = fatmodel.animations[i];
+            FatAnimation & dst = *(FatAnimation*)mAnimations[i];
+            dst = src;
+            GN_ASSERT( dst.duration == src.duration );
         }
     }
     else
