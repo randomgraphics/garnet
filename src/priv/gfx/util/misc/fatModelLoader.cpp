@@ -863,7 +863,7 @@ sLoadFbxVertexSkinning(
     }
 
     // set the default binding: bind to nothing.
-    for( int i = 0; i < GN_ARRAY_COUNT(sk.joints); ++i )
+    for( size_t i = 0; i < GN_ARRAY_COUNT(sk.joints); ++i )
     {
         sk.joints[i]  = FatJoint::NO_JOINT;
         sk.weights[i] = 0;
@@ -950,7 +950,7 @@ sLoadFbxVertexSkinning(
 
     // Get sum of all weights.
     float sum = 0.0f;
-    for( int i = 0; i < GN_ARRAY_COUNT(sk.joints); ++i )
+    for( size_t i = 0; i < GN_ARRAY_COUNT(sk.joints); ++i )
     {
         if( FatJoint::NO_JOINT != sk.joints[i] )
         {
@@ -970,7 +970,7 @@ sLoadFbxVertexSkinning(
         // We might have dropped some joints, because we have limit of 4 joints per vertex.
         // So we need to renormalize the joint weight, to keep sum of all weights 1.0.
         float invsum = 1.0f / sum;
-        for( int i = 0; i < GN_ARRAY_COUNT(sk.joints); ++i )
+        for( size_t i = 0; i < GN_ARRAY_COUNT(sk.joints); ++i )
         {
             if( FatJoint::NO_JOINT != sk.joints[i] )
             {
@@ -1623,7 +1623,7 @@ sPrintFBXNodeHierarchy( StrA & hierarchy, const StrA & filename )
                         default                       : hierarchy += "eSKELETON : [INVALID TYPE]"; break;
                     }
                 }
-                else if( 0 <= atype && atype < GN_ARRAY_COUNT(sAttributeTypeNames) )
+                else if( 0 <= atype && atype < (int)GN_ARRAY_COUNT(sAttributeTypeNames) )
                 {
                     hierarchy += sAttributeTypeNames[atype];
                 }
@@ -1873,9 +1873,9 @@ sSortJointHierarchy( FatSkeleton & fatsk )
         FatJoint & j = fatsk.joints[i];
 
         // make sure parent/child/sibling are in vaild range
-        if( j.parent  >= jointArraySize && FatJoint::NO_JOINT != j.parent ||
-            j.child   >= jointArraySize && FatJoint::NO_JOINT != j.child  ||
-            j.sibling >= jointArraySize && FatJoint::NO_JOINT != j.sibling )
+        if( ( j.parent  >= jointArraySize && FatJoint::NO_JOINT != j.parent  ) ||
+            ( j.child   >= jointArraySize && FatJoint::NO_JOINT != j.child   ) ||
+            ( j.sibling >= jointArraySize && FatJoint::NO_JOINT != j.sibling ) )
         {
             GN_ERROR(sLogger)( "Invalid joint herarchy: joint %d contains invalid joint index.", i );
             return false;

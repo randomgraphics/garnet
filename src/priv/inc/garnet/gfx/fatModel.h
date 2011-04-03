@@ -44,11 +44,11 @@ namespace GN { namespace gfx
             INVALID = 0xFFFFFFFF,
         };
 
-        static const uint32 MAX_TEXCOORDS = (uint32)(TEXCOORD_LAST - TEXCOORD0);
+        static const uint32 MAX_TEXCOORDS;// = (uint32)(TEXCOORD_LAST - TEXCOORD0);
 
-        static const uint32 POS_NORMAL_TEX = (1<<POSITION) | (1<<NORMAL) | (1<<TEXCOORD0);
+        static const uint32 POS_NORMAL_TEX;// = (1<<POSITION) | (1<<NORMAL) | (1<<TEXCOORD0);
 
-        static const uint32 POS_NORMAL_TEX_SKINNING = (1<<POSITION) | (1<<NORMAL) | (1<<TEXCOORD0) | (1<<JOINT_ID) | (1<<JOINT_WEIGHT);
+        static const uint32 POS_NORMAL_TEX_SKINNING;// = (1<<POSITION) | (1<<NORMAL) | (1<<TEXCOORD0) | (1<<JOINT_ID) | (1<<JOINT_WEIGHT);
 
         static const char * const SEMANTIC_NAMES[];
 
@@ -88,7 +88,7 @@ namespace GN { namespace gfx
 
         void clear()
         {
-            for( int i = 0; i < NUM_SEMANTICS; ++i )
+            for( int i = 0; i < (int)NUM_SEMANTICS; ++i )
             {
                 if( mElements[i] )
                 {
@@ -109,7 +109,7 @@ namespace GN { namespace gfx
         /// No matter what the format is, size of each unit in the element array is always ELEMENT_SIZE.
         void * getElementData( int semantic ) const
         {
-            if( 0 <= semantic && semantic < NUM_SEMANTICS )
+            if( 0 <= semantic && semantic < (int)NUM_SEMANTICS )
             {
                 return mElements[semantic];
             }
@@ -122,7 +122,7 @@ namespace GN { namespace gfx
         /// Get format of the element.
         ColorFormat getElementFormat( int semantic ) const
         {
-            if( 0 <= semantic && semantic < NUM_SEMANTICS )
+            if( 0 <= semantic && semantic < (int)NUM_SEMANTICS )
             {
                 return mFormats[semantic];
             }
@@ -135,7 +135,7 @@ namespace GN { namespace gfx
         /// Set element format
         void setElementFormat( int semantic, ColorFormat format )
         {
-            if( 0 <= semantic && semantic < NUM_SEMANTICS )
+            if( 0 <= semantic && semantic < (int)NUM_SEMANTICS )
             {
                 mFormats[semantic] = format;
             }

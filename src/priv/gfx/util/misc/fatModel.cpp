@@ -10,6 +10,10 @@ static GN::Logger * sLogger = GN::getLogger("GN.gfx.FatModel");
 // FatVertexBuffer
 // *****************************************************************************
 
+const uint32 GN::gfx::FatVertexBuffer::MAX_TEXCOORDS = (uint32)(GN::gfx::FatVertexBuffer::TEXCOORD_LAST - GN::gfx::FatVertexBuffer::TEXCOORD0);
+const uint32 GN::gfx::FatVertexBuffer::POS_NORMAL_TEX = (1<<GN::gfx::FatVertexBuffer::POSITION) | (1<<GN::gfx::FatVertexBuffer::NORMAL) | (1<<GN::gfx::FatVertexBuffer::TEXCOORD0);
+const uint32 GN::gfx::FatVertexBuffer::POS_NORMAL_TEX_SKINNING = (1<<GN::gfx::FatVertexBuffer::POSITION) | (1<<GN::gfx::FatVertexBuffer::NORMAL) | (1<<GN::gfx::FatVertexBuffer::TEXCOORD0) | (1<<GN::gfx::FatVertexBuffer::JOINT_ID) | (1<<GN::gfx::FatVertexBuffer::JOINT_WEIGHT);
+
 //
 //
 // -----------------------------------------------------------------------------
@@ -46,7 +50,7 @@ GN_CASSERT( GN_ARRAY_COUNT(GN::gfx::FatVertexBuffer::SEMANTIC_NAMES) == GN::gfx:
 // -----------------------------------------------------------------------------
 GN::gfx::FatVertexBuffer::Semantic GN::gfx::FatVertexBuffer::sString2Semantic( const char * s )
 {
-    for( int i = 0; i < NUM_SEMANTICS; ++i )
+    for( int i = 0; i < (int)NUM_SEMANTICS; ++i )
     {
         if( 0 == stringCompare( s, SEMANTIC_NAMES[i] ) )
         {
@@ -71,7 +75,7 @@ bool GN::gfx::FatVertexBuffer::resize( uint32 layout, uint32 count )
     void * vertices[NUM_SEMANTICS];
     memset( vertices, 0, sizeof(vertices) );
     bool outofmem = false;
-    for( int i = 0; i < NUM_SEMANTICS; ++i )
+    for( int i = 0; i < (int)NUM_SEMANTICS; ++i )
     {
         if( (1<<i) & layout )
         {
@@ -85,7 +89,7 @@ bool GN::gfx::FatVertexBuffer::resize( uint32 layout, uint32 count )
     }
     if( outofmem )
     {
-        for( int i = 0; i < NUM_SEMANTICS; ++i )
+        for( int i = 0; i < (int)NUM_SEMANTICS; ++i )
         {
             safeHeapDealloc( vertices[i] );
         }
@@ -94,7 +98,7 @@ bool GN::gfx::FatVertexBuffer::resize( uint32 layout, uint32 count )
     }
 
     // update data pointer and format
-    for( int i = 0; i < NUM_SEMANTICS; ++i )
+    for( int i = 0; i < (int)NUM_SEMANTICS; ++i )
     {
         if( (1<<i) & layout )
         {
@@ -129,7 +133,7 @@ void GN::gfx::FatVertexBuffer::GenerateMeshVertexFormat( MeshVertexFormat & mvf 
     mvf.clear();
 
     uint8 offset = 0;
-    for( int i = 0; i < NUM_SEMANTICS; ++i )
+    for( int i = 0; i < (int)NUM_SEMANTICS; ++i )
     {
         if( (1<<i) & mLayout )
         {
@@ -284,7 +288,7 @@ static void sPrintFatJointRecursivly( StrA & s, const FatJoint * joints, uint32 
 
     if( root < count )
     {
-        s += stringFormat( "(%d) %s\n", depth, joints[root].name );
+        s += stringFormat( "(%d) %s\n", depth, joints[root].name.rawptr() );
 
         for( uint32 i = joints[root].child; i != FatJoint::NO_JOINT; i = joints[i].sibling )
         {

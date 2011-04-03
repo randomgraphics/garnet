@@ -1129,7 +1129,7 @@ bool GN::gfx::ModelResource::Impl::fromDesc( const ModelResourceDesc & desc )
             GN_ERROR(sLogger)(
                 "Effec texture parameter '%s' in effect '%s' is not defined in model '%s'.",
                 tp.parameterName.rawptr(),
-                mEffectResource->name(),
+                mEffectResource->name().rawptr(),
                 getModelName() );
 
             return false;
@@ -1185,7 +1185,7 @@ bool GN::gfx::ModelResource::Impl::fromDesc( const ModelResourceDesc & desc )
             GN_ERROR(sLogger)(
                 "Effec uniform parameter '%s' in effect '%s' is not defined in model '%s'.",
                 up.parameterName.rawptr(),
-                mEffectResource->name(),
+                mEffectResource->name().rawptr(),
                 getModelName() );
 
             return false;

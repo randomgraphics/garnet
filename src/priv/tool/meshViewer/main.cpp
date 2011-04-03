@@ -205,7 +205,7 @@ public:
         {
             StrA s;
             printModelFileNodeHierarchy( s, argv[1] );
-            GN_INFO(sLogger)( "%s", s );
+            GN_INFO(sLogger)( "%s", s.rawptr() );
             return false;
         }
         else

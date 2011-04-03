@@ -585,14 +585,14 @@ bool GN::engine::SkinnedMesh::loadFromFatModel( const GN::gfx::FatModel & fatmod
 
         const FatMesh & fatmesh = *fatmodel.meshes[mi];
 
-        StrA meshName = stringFormat( "%s.mesh.%d", fatmodel.name, mi );
+        StrA meshName = stringFormat( "%s.mesh.%d", fatmodel.name.rawptr(), mi );
 
         uint32 jointCountInTheMesh = fatmodel.skeletons[fatmesh.skeleton].joints.size();
         if( jointCountInTheMesh > MAX_JOINTS_PER_MESH )
         {
             // TODO: split the mesh!
             GN_ERROR(sLogger)( "Ignore mesh %s. It contains too many joints (#%d) then the current code allowed (#%d)",
-                meshName, jointCountInTheMesh, MAX_JOINTS_PER_MESH );
+                meshName.rawptr(), jointCountInTheMesh, MAX_JOINTS_PER_MESH );
             continue;
         }
 
