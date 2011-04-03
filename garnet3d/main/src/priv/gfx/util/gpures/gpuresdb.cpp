@@ -690,7 +690,6 @@ GpuResourceDatabase::Impl::getResourceType( const GpuResource * resource ) const
 
     if( NULL == resimpl )
     {
-        static const Guid INVALID_TYPE = { 0, 0, 0, { 0, 0, 0, 0, 0, 0, 0, 0 } };
         return NULL;
     }
 
