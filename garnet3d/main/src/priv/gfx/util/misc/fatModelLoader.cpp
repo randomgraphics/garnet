@@ -1984,19 +1984,7 @@ void sLoadAiMeshSkeleton( FatModel & fatmodel, FatMesh & fatmesh, const aiScene 
 
         fatjoint.name = aibone.mName.data;
 
-        // AI matrix is in D3D style. What does it mean is that when the AI matrix is
-        // used to transform a vector, it is done in this way:
-        //
-        //          V' = V * M
-        //
-        // In Garnet geometry system, however, the same math is done like this:
-        //
-        //          V' = M * V
-        //
-        // Noticing that the order of mutiplication is different. And it matters.
-        //
-        // To address this difference, the AI matrix has to be transposed.
-        fatjoint.bindPose.model2joint = Matrix44f::sTranspose( *(Matrix44f*)&aibone.mOffsetMatrix );
+        fatjoint.bindPose.model2joint = *(Matrix44f*)&aibone.mOffsetMatrix;
 
         // Setup default hierarchy
         fatjoint.parent  = FatJoint::NO_JOINT;
@@ -2010,29 +1998,31 @@ void sLoadAiMeshSkeleton( FatModel & fatmodel, FatMesh & fatmesh, const aiScene 
     // Then sort the hierarchy based on depth, to make sure that the root joint stays at index 0.
     if( !sSortJointHierarchy( fatsk ) ) return;
 
-    GN_TODO( "Build local transformations of each node." );
     // Build local transformations of each node.
-    // We'll get that by multiply inverse of its parent's global transform
-    // with the node's global transformation.
     for( uint32 i = 0; i < aimesh.mNumBones; ++i )
     {
         FatJoint & fatjoint = fatsk.joints[i];
 
-        /* TODO: need to Matrix44::decompose() first.
-        Matrix44f parent2local;
+        Matrix44f local2parent;
         if( FatJoint::NO_JOINT != fatjoint.parent )
         {
             FatJoint & parentJoint = fatsk.joints[fatjoint.parent];
-            parent2local = Matrix44f::sInverse(parentJoint.bindPose.model2joint) * fatjoint.bindPose.model2joint;
+            local2parent = parentJoint.bindPose.model2joint * Matrix44f::sInverse(fatjoint.bindPose.model2joint);
         }
         else
         {
-            parent2local = fatjoint.bindPose.model2joint;
-        }//*/
+            local2parent = Matrix44f::sInverse( fatjoint.bindPose.model2joint );
+        }
 
-        fatjoint.bindPose.position.set( 0, 0, 0 );
-        fatjoint.bindPose.rotation.identity();
-        fatjoint.bindPose.scaling.set( 1, 1, 1 );
+        // TODO: implement Matrix44::decompose(...).
+        aiVector3D s;
+        aiQuaternion r;
+	    aiVector3D t;
+        ((aiMatrix4x4*)&local2parent)->Decompose( s, r, t );
+
+        fatjoint.bindPose.position.set( t.x, t.y, t.z );
+        fatjoint.bindPose.rotation.set( r.x, r.y, r.z, r.w );
+        fatjoint.bindPose.scaling.set( s.x, s.y, s.z );
     }
 
     // Add the new skeleton to fat model.
