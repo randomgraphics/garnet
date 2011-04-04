@@ -256,7 +256,7 @@ namespace GN { namespace gfx
 
     struct FatJointAnimation
     {
-        // joint space -> model space transform = T * R * S;
+        // joint space -> parent space transform = T * R * S;
         DynaArray<FatKeyFrame<Vector3f> >    positions;
         DynaArray<FatKeyFrame<Quaternionf> > rotations;
         DynaArray<FatKeyFrame<Vector3f> >    scalings;
