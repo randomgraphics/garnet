@@ -613,7 +613,14 @@ void GN::engine::SkinnedMesh::setAnimation( size_t animationIndex, float seconds
             // bind pose is rest pose in this case.
             for( uint32 jointIndex = 0; jointIndex < sk.invRestPose.size(); ++jointIndex )
             {
-                sk.invRestPose[jointIndex] = Matrix44f::sInverse( sk.bindPose[jointIndex] );
+                SpacialComponent * spacial = sk.spacials[jointIndex];
+                spacial->setPosition( sk.bindPose[jointIndex].position );
+                spacial->setRotation( sk.bindPose[jointIndex].rotation );
+                spacial->setScale( sk.bindPose[jointIndex].scaling );
+            }
+            for( uint32 jointIndex = 0; jointIndex < sk.invRestPose.size(); ++jointIndex )
+            {
+                sk.invRestPose[jointIndex] = Matrix44f::sInverse( sk.bindPose[jointIndex].model2joint );
             }
 
             // And the bind pose -> rest pose transformation should be identity.
@@ -635,12 +642,11 @@ void GN::engine::SkinnedMesh::setAnimation( size_t animationIndex, float seconds
         // Mod time stamp by animation duration.
         seconds = fmod( seconds, (float)fatanim.duration );
 
-        Matrix44f   matrices[MAX_JOINTS_PER_MESH];
+        Matrix44f   matrices[MAX_JOINTS_PER_MESH]; // stores final bind pose -> rest pose transformation matrices.
         Vector3f    t;
         Quaternionf r;
         Vector3f    s;
-        Matrix33f   r33;
-        Matrix44f   t44, r44, s44;
+        Matrix44f   local2parent;
 
         for( uint32 skeletonIndex = 0; skeletonIndex < fatanim.skeletonAnimations.size(); ++skeletonIndex )
         {
@@ -648,53 +654,59 @@ void GN::engine::SkinnedMesh::setAnimation( size_t animationIndex, float seconds
 
             Skeleton & mysk = mSkeletons[skeletonIndex];
 
+            GN_ASSERT( skanim.size() == mysk.spacials.size() );
+
+            // Loop through all joints, update each spacial component with
+            // the rest pose transformation.
             for( uint32 jointIndex = 0; jointIndex < skanim.size(); ++jointIndex )
             {
-                // After we support mesh spliting, this should be remapped to a
-                // value less than MAX_JOINTS_PER_MESH.
-                if( jointIndex >= MAX_JOINTS_PER_MESH ) continue;
-
                 const FatJointAnimation & jointanim = skanim[jointIndex];
 
-                // Reference the bind pose matrix, which is the bind pose
-                // (in model space) to joint space transformation.
-                const Matrix44f & bindPose_to_JointSpace = mysk.bindPose[jointIndex];
-
-                // Reference the inverse of rest pose matrix. ( joint space -> rest pose )
-                Matrix44f & jointSpace_to_RestPose = mysk.invRestPose[jointIndex];
-
-                // Reference the final transformation matrix of the joint.
-                // It is the transformation from bind pose to rest pose.
-                Matrix44f & bindPose_to_RestPose = matrices[jointIndex];
+                SpacialComponent * spacial = mysk.spacials[jointIndex];
 
                 // Get rest pose tranformation of the joint. T*R*S is the
-                // the transformation from rest pose (in model space) to joint space.
+                // the transformation from local space to it's parent space.
                 if( sGetInterpolatedValue( t, jointanim.positions, seconds ) &&
                     sGetInterpolatedValue( r, jointanim.rotations, seconds ) &&
                     sGetInterpolatedValue( s, jointanim.scalings, seconds ) )
                 {
-                    r.toMatrix33( r33 );
-                    r44.set( r33 );
-
-                    t44.translate( t );
-
-                    s44.identity();
-                    s44[0][0] = s[0];
-                    s44[1][1] = s[1];
-                    s44[2][2] = s[2];
-
-                    jointSpace_to_RestPose = t44 * r44 * s44;
-
-                    // bind -> rest = bind -> joint -> rest
-                    bindPose_to_RestPose = jointSpace_to_RestPose * bindPose_to_JointSpace;
+                    spacial->setPosition( t );
+                    spacial->setRotation( r );
+                    spacial->setScale( s );
                 }
                 else
                 {
                     // No rest pose found for this joint at this time. We'll use
-                    // bind pose as rest pose, which means bind pose to rest pose
-                    // transformation should be identity.
-                    jointSpace_to_RestPose = Matrix44f::sInverse( bindPose_to_JointSpace );
-                    bindPose_to_RestPose.identity();
+                    // bind pose as rest pose.
+                    spacial->setPosition( mysk.bindPose[jointIndex].position );
+                    spacial->setRotation( mysk.bindPose[jointIndex].rotation );
+                    spacial->setScale( mysk.bindPose[jointIndex].scaling );
+                }
+            }
+
+            // Loop through all joints again. Caluclate bind pose -> rest post
+            // transformation for each joint.
+            for( uint32 jointIndex = 0; jointIndex < skanim.size(); ++jointIndex )
+            {
+                // Reference the spacial component of the joint.
+                SpacialComponent * spacial = mysk.spacials[jointIndex];
+
+                // Reference the bind pose matrix, which is the bind pose
+                // (in model space) to joint space transformation.
+                const Matrix44f & bind_to_joint = mysk.bindPose[jointIndex].model2joint;
+
+                // Reference the inverse of rest pose matrix. ( joint space -> rest pose )
+                Matrix44f & joint_to_rest = mysk.invRestPose[jointIndex];
+
+                // Query rest pose tranformation of the joint from spacial component.
+                joint_to_rest = spacial->getLocal2Root();
+
+                // After we support mesh spliting, this should be remapped to a
+                // value less than MAX_JOINTS_PER_MESH.
+                if( jointIndex < MAX_JOINTS_PER_MESH )
+                {
+                    // bind -> rest = bind -> joint -> rest
+                    matrices[jointIndex] = joint_to_rest * bind_to_joint;
                 }
             }
 
@@ -748,19 +760,29 @@ bool GN::engine::SkinnedMesh::loadFromFatModel( const GN::gfx::FatModel & fatmod
         // Loop through each joints (first pass)
         for( uint32 j = 0; j < source.joints.size(); ++j )
         {
+            const FatJoint & srcjoint = source.joints[j];
+
             // Replicate the hierarchy
-            dest.hierarchy[j].parent  = source.joints[j].parent;
-            dest.hierarchy[j].child   = source.joints[j].child;
-            dest.hierarchy[j].sibling = source.joints[j].sibling;
+            dest.hierarchy[j].parent  = srcjoint.parent;
+            dest.hierarchy[j].child   = srcjoint.child;
+            dest.hierarchy[j].sibling = srcjoint.sibling;
 
             // Create one spacial component per joint.
             dest.spacials[j].attach( new SpacialComponent );
 
-            // copy bind pose matrix
-            dest.bindPose[j] = source.joints[j].bindPose.model2joint;
+            // setup the local transformation of the spacial component
+            dest.spacials[j]->setPosition( srcjoint.bindPose.position );
+            dest.spacials[j]->setRotation( srcjoint.bindPose.rotation );
+            dest.spacials[j]->setScale( srcjoint.bindPose.scaling );
+
+            // copy bind pose transformation
+            dest.bindPose[j].model2joint = srcjoint.bindPose.model2joint;
+            dest.bindPose[j].position = srcjoint.bindPose.position;
+            dest.bindPose[j].rotation = srcjoint.bindPose.rotation;
+            dest.bindPose[j].scaling = srcjoint.bindPose.scaling;
 
             // Initial rest pose is same as bind pose.
-            dest.invRestPose[j] = Matrix44f::sInverse( source.joints[j].bindPose.model2joint );
+            dest.invRestPose[j] = Matrix44f::sInverse( srcjoint.bindPose.model2joint );
         }
 
         // Loop through each joints again (second pass)

@@ -120,6 +120,17 @@ namespace GN { namespace engine
             uint32 sibling;
         };
 
+        struct JointBindPose
+        {
+            // Global transformation from model space to joint space.
+            Matrix44f   model2joint;
+
+            // Local transformation (relative to parent joint)
+            Vector3f    position; //< Position in parent space
+            Quaternionf rotation; //< Rotation in local space
+            Vector3f    scaling;  //< Scaling in local space.
+        };
+
         struct Skeleton
         {
             /// Joint hierarchy. The first joint is always the root.
@@ -130,7 +141,9 @@ namespace GN { namespace engine
             DynaArray<AutoRef<SpacialComponent> > spacials;
 
             /// Stores bind pose of the skeleton. Array size equals joint count.
-            DynaArray<Matrix44f>                  bindPose;
+            /// This array contains constant transform information for each joint
+            /// that are initialized when the mesh is loaded.
+            DynaArray<JointBindPose>              bindPose;
 
             /// Store inverse of the active rest pose of the skeleton. Array size equals joint count.
             DynaArray<Matrix44f>                  invRestPose;
