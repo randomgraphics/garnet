@@ -161,7 +161,19 @@ public:
 
 #if USE_ENTITY
         entity->getComponent<VisualComponent>()->draw( camera.proj, camera.view );
-        if( showbbox ) entity->getComponent<SpacialComponent>()->drawBoundingBox( camera.proj, camera.view, 0xFF000000 );
+#if 0
+        // Draw skeleton of the skinned mesh.
+        if( animationDuration > 0 )
+        {
+            SkinnedMesh * mesh = (SkinnedMesh*)entity.rawptr();
+            Matrix44f transform = camera.proj * camera.view;
+            mesh->drawSkeletons( 0xFFFFFFFF, transform );
+        }
+#endif
+        if( showbbox )
+        {
+            entity->getComponent<SpacialComponent>()->drawBoundingBox( camera.proj, camera.view, 0xFF000000 );
+        }
 #else
         world.showBoundingBoxes( showbbox );
         world.draw( camera.proj, camera.view );

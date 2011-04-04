@@ -92,6 +92,12 @@ namespace GN { namespace engine
         bool getAnimationInfo( size_t animationIndex, SkinnedAnimationInfo & info );
 
         /// Set the animation and the time stamp.
+        /// \param animationIndex
+        ///     Specify index of the animation in the animation arrary.
+        ///     Set this to -1 to render the skeleton in bind pose.
+        /// \param seconds
+        ///     Specify time stamp in the animation. Ignored when
+        ///     animationIndex is -1.
         void setAnimation( size_t animationIndex, float seconds );
 
         /// Load the whole fat model as single skinned mesh
@@ -100,15 +106,37 @@ namespace GN { namespace engine
         /// Load from file
         bool loadFromFile( const StrA & filename );
 
+        /// Draw skeletons as line segments.
+        void drawSkeletons( uint32 colorInRGBA, const Matrix44f & transform );
+
     private:
 
         struct SkinnedAnimation;
 
+        struct JointHierarchy
+        {
+            uint32 parent;
+            uint32 child;
+            uint32 sibling;
+        };
+
         struct Skeleton
         {
-            DynaArray<AutoRef<SpacialComponent> > spacials;  //< Spacial components for each joint.
-            DynaArray<Matrix44f>                  bindPoses; //< Bind pose transformation for each joint in the skeleton.
-            AutoRef<gfx::UniformResource>         matrices;  //< Uniform resource that stores final joint matrices
+            /// Joint hierarchy. The first joint is always the root.
+            DynaArray<JointHierarchy>             hierarchy;
+
+            /// Spacial components for each joint. Array size equals joint count.
+            /// The first spacial component always represents the root joint.
+            DynaArray<AutoRef<SpacialComponent> > spacials;
+
+            /// Stores bind pose of the skeleton. Array size equals joint count.
+            DynaArray<Matrix44f>                  bindPose;
+
+            /// Store inverse of the active rest pose of the skeleton. Array size equals joint count.
+            DynaArray<Matrix44f>                  invRestPose;
+
+            /// Uniform resource that stores bind pose to rest pose matrices.
+            AutoRef<gfx::UniformResource>         matrices;
         };
 
         AutoRef<SpacialComponent>                 mRootSpacial;
