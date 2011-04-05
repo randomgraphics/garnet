@@ -128,15 +128,24 @@ sGetInterpolatedValue( T & result, const DynaArray<FatKeyFrame<T> > & array, flo
         }
     }
 
-    // Cache the first and last key frames.
-    const FatKeyFrame<T> & key1 = array[first];
-    const FatKeyFrame<T> & key2 = array[last];
+    if( first == last )
+    {
+        result = array[first].value;
+    }
+    else
+    {
+        GN_ASSERT( first < last );
 
-    // Calculate interpolation factor basing on time.
-    float factor = (time - key1.time) / (key2.time - key1.time);
+        // Cache the first and last key frames.
+        const FatKeyFrame<T> & key1 = array[first];
+        const FatKeyFrame<T> & key2 = array[last];
 
-    // Interpolate between first and last, basing on time.
-    Interpolate<T>::sDoWork( result, key1.value, key2.value, factor );
+        // Calculate interpolation factor basing on time.
+        float factor = (time - key1.time) / (key2.time - key1.time);
+
+        // Interpolate between first and last, basing on time.
+        Interpolate<T>::sDoWork( result, key1.value, key2.value, factor );
+    }
 
     return true;
 }
