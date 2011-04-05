@@ -47,26 +47,12 @@ namespace GN
 
     public :
 
-        ///
-        /// X coordinate
-        ///
         union
         {
-            T x;
-            T u;
-            T s;
-            T width;
-        };
-
-        ///
-        /// Y coordinate
-        ///
-        union
-        {
-            T y;
-            T v;
-            T t;
-            T height;
+            struct { T x, y; };
+            struct { T u, v; };
+            struct { T s, t; };
+            struct { T width, height; };
         };
 
         // ********************************
@@ -344,34 +330,11 @@ namespace GN
         ///
         typedef T ElementType;
 
-        ///
-        /// X-coordinate
-        ///
         union
         {
-            T x;
-            T r;
-            T pitch;
-        };
-
-        ///
-        /// Y-coordinate
-        ///
-        union
-        {
-            T y;
-            T g;
-            T yaw;
-        };
-
-        ///
-        /// Z-coordinate
-        ///
-        union
-        {
-            T z;
-            T b;
-            T roll;
+            struct { T x, y, z; };
+            struct { T r, g, b; };
+            struct { T pitch, yaw, roll; };
         };
 
         // ********************************
@@ -618,40 +581,10 @@ namespace GN
         ///
         typedef T ElementType;
 
-        ///
-        /// X-coordinate
-        ///
         union
         {
-            T x;
-            T r;
-        };
-
-        ///
-        /// Y-coordinate
-        ///
-        union
-        {
-            T y;
-            T g;
-        };
-
-        ///
-        /// Z-coordinate
-        ///
-        union
-        {
-            T z;
-            T b;
-        };
-
-        ///
-        /// W-coordinate
-        ///
-        union
-        {
-            T w;
-            T a;
+            struct { T x, y, z, w; };
+            struct { T r, g, b, a; };
         };
 
         // ********************************
@@ -1767,7 +1700,7 @@ namespace GN
         ///
         T getNormal() const
         {
-            return w * w + Vector3<T>::dot( v, v );
+            return w * w + Vector3<T>::sDot( v, v );
         }
         ///
         /// normalize a quaternion
@@ -1840,7 +1773,7 @@ namespace GN
         ///
         /// inverse
         ///
-        static void sInvert( Quaternion & dst, const Quaternion & src )
+        static void sInverse( Quaternion & dst, const Quaternion & src )
         {
             dst = src;
             dst.inverse();
@@ -1964,7 +1897,7 @@ namespace GN
         typedef T ElementType;
 
         Vector3<T>  n; ///< normal (X:a, Y:b, Z:c)
-        T d; ///< constant factor
+        T           d; ///< constant factor
 
     public :
         /// \name constructors
