@@ -133,23 +133,25 @@ namespace GN { namespace engine
 
         struct Skeleton
         {
+            uint32 jointCount;
+
             /// Joint hierarchy. The first joint is always the root.
-            DynaArray<JointHierarchy>             hierarchy;
+            JointHierarchy * hierarchy;
 
             /// Spacial components for each joint. Array size equals joint count.
             /// The first spacial component always represents the root joint.
-            DynaArray<AutoRef<SpacialComponent> > spacials;
+            SpacialComponent ** spacials;
 
             /// Stores bind pose of the skeleton. Array size equals joint count.
             /// This array contains constant transform information for each joint
             /// that are initialized when the mesh is loaded.
-            DynaArray<JointBindPose>              bindPose;
+            JointBindPose * bindPose;
 
             /// Store inverse of the active rest pose of the skeleton. Array size equals joint count.
-            DynaArray<Matrix44f>                  invRestPose;
+            Matrix44f * invRestPose;
 
             /// Uniform resource that stores bind pose to rest pose matrices.
-            AutoRef<gfx::UniformResource>         matrices;
+            gfx::UniformResource * matrices;
         };
 
         AutoRef<SpacialComponent>                 mRootSpacial;

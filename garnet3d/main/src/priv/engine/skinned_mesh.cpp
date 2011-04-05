@@ -569,6 +569,19 @@ void GN::engine::SkinnedMesh::clear()
     mAnimations.clear();
 
     // Delete all skeletons
+    for( size_t i = 0; i < mSkeletons.size(); ++i )
+    {
+        Skeleton & sk = mSkeletons[i];
+        safeHeapDealloc( sk.hierarchy );
+        for( size_t j = 0; j < sk.jointCount; ++j )
+        {
+            safeDecref( sk.spacials[j] );
+        }
+        safeHeapDealloc( sk.spacials );
+        safeHeapDealloc( sk.bindPose );
+        safeHeapDealloc( sk.invRestPose );
+        safeDecref( sk.matrices );
+    }
     mSkeletons.clear();
 
     // Delete the effect
@@ -616,18 +629,15 @@ void GN::engine::SkinnedMesh::setAnimation( size_t animationIndex, float seconds
         {
             Skeleton & sk = mSkeletons[skeletonIndex];
 
-            // these 2 array should always be in same size.
-            GN_ASSERT( sk.bindPose.size() == sk.invRestPose.size() );
-
             // bind pose is rest pose in this case.
-            for( uint32 jointIndex = 0; jointIndex < sk.invRestPose.size(); ++jointIndex )
+            for( uint32 jointIndex = 0; jointIndex < sk.jointCount; ++jointIndex )
             {
                 SpacialComponent * spacial = sk.spacials[jointIndex];
                 spacial->setPosition( sk.bindPose[jointIndex].position );
                 spacial->setRotation( sk.bindPose[jointIndex].rotation );
                 spacial->setScale( sk.bindPose[jointIndex].scaling );
             }
-            for( uint32 jointIndex = 0; jointIndex < sk.invRestPose.size(); ++jointIndex )
+            for( uint32 jointIndex = 0; jointIndex < sk.jointCount; ++jointIndex )
             {
                 sk.invRestPose[jointIndex] = Matrix44f::sInverse( sk.bindPose[jointIndex].model2joint );
             }
@@ -661,17 +671,17 @@ void GN::engine::SkinnedMesh::setAnimation( size_t animationIndex, float seconds
         {
             const DynaArray<FatJointAnimation> & skanim = fatanim.skeletonAnimations[skeletonIndex];
 
-            Skeleton & mysk = mSkeletons[skeletonIndex];
+            Skeleton & sk = mSkeletons[skeletonIndex];
 
-            GN_ASSERT( skanim.size() == mysk.spacials.size() );
+            GN_ASSERT( skanim.size() == sk.jointCount );
 
             // Loop through all joints, update each spacial component with
             // the rest pose transformation.
-            for( uint32 jointIndex = 0; jointIndex < skanim.size(); ++jointIndex )
+            for( uint32 jointIndex = 0; jointIndex < sk.jointCount; ++jointIndex )
             {
                 const FatJointAnimation & jointanim = skanim[jointIndex];
 
-                SpacialComponent * spacial = mysk.spacials[jointIndex];
+                SpacialComponent * spacial = sk.spacials[jointIndex];
 
                 // Get rest pose tranformation of the joint. T*R*S is the
                 // the transformation from local space to it's parent space.
@@ -687,25 +697,25 @@ void GN::engine::SkinnedMesh::setAnimation( size_t animationIndex, float seconds
                 {
                     // No rest pose found for this joint at this time. We'll use
                     // bind pose as rest pose.
-                    spacial->setPosition( mysk.bindPose[jointIndex].position );
-                    spacial->setRotation( mysk.bindPose[jointIndex].rotation );
-                    spacial->setScale( mysk.bindPose[jointIndex].scaling );
+                    spacial->setPosition( sk.bindPose[jointIndex].position );
+                    spacial->setRotation( sk.bindPose[jointIndex].rotation );
+                    spacial->setScale( sk.bindPose[jointIndex].scaling );
                 }
             }
 
             // Loop through all joints again. Caluclate bind pose -> rest post
             // transformation for each joint.
-            for( uint32 jointIndex = 0; jointIndex < skanim.size(); ++jointIndex )
+            for( uint32 jointIndex = 0; jointIndex < sk.jointCount; ++jointIndex )
             {
                 // Reference the spacial component of the joint.
-                SpacialComponent * spacial = mysk.spacials[jointIndex];
+                SpacialComponent * spacial = sk.spacials[jointIndex];
 
                 // Reference the bind pose matrix, which is the bind pose
                 // (in model space) to joint space transformation.
-                const Matrix44f & bind_to_joint = mysk.bindPose[jointIndex].model2joint;
+                const Matrix44f & bind_to_joint = sk.bindPose[jointIndex].model2joint;
 
                 // Reference the inverse of rest pose matrix. ( joint space -> rest pose )
-                Matrix44f & joint_to_rest = mysk.invRestPose[jointIndex];
+                Matrix44f & joint_to_rest = sk.invRestPose[jointIndex];
 
                 // Query rest pose tranformation of the joint from spacial component.
                 joint_to_rest = spacial->getLocal2Root();
@@ -720,9 +730,9 @@ void GN::engine::SkinnedMesh::setAnimation( size_t animationIndex, float seconds
             }
 
             // update the matrix uniform.
-            Uniform * uniform = mysk.matrices->uniform().rawptr();
+            Uniform * uniform = sk.matrices->uniform().rawptr();
             GN_ASSERT( uniform->size() >= sizeof(Matrix44f)*MAX_JOINTS_PER_MESH );
-            size_t bytes = sizeof(Matrix44f) * math::getmin<size_t>(MAX_JOINTS_PER_MESH,skanim.size());
+            size_t bytes = sizeof(Matrix44f) * math::getmin<size_t>(MAX_JOINTS_PER_MESH,sk.jointCount);
             uniform->update( 0, (uint32)bytes, matrices );
         }
     }
@@ -741,6 +751,7 @@ bool GN::engine::SkinnedMesh::loadFromFatModel( const GN::gfx::FatModel & fatmod
     if( fatmodel.skeletons.empty() )
     {
         GN_ERROR(sLogger)( "The fat model does not contain any skeletons." );
+        clear();
         return false;
     }
 
@@ -756,15 +767,23 @@ bool GN::engine::SkinnedMesh::loadFromFatModel( const GN::gfx::FatModel & fatmod
     Matrix44f defaultMatrices[MAX_JOINTS_PER_MESH];
     for( uint32 i = 0; i < MAX_JOINTS_PER_MESH; ++i ) defaultMatrices[i].identity();
     mSkeletons.resize( fatmodel.skeletons.size() );
+    memset( mSkeletons.rawptr(), 0, sizeof(Skeleton)*mSkeletons.size() );
     for( uint32 i = 0; i < fatmodel.skeletons.size(); ++i )
     {
         const FatSkeleton & source = fatmodel.skeletons[i];
-        Skeleton & dest = mSkeletons[i];
 
-        dest.hierarchy.resize( source.joints.size() );
-        dest.spacials.resize( source.joints.size() );
-        dest.bindPose.resize( source.joints.size() );
-        dest.invRestPose.resize( source.joints.size() );
+        Skeleton & dest = mSkeletons[i];
+        dest.jointCount = source.joints.size();
+        dest.hierarchy = (JointHierarchy*)HeapMemory::alloc( sizeof(JointHierarchy) * dest.jointCount );
+        dest.spacials = (SpacialComponent**)HeapMemory::alloc( sizeof(void*) * dest.jointCount );
+        dest.bindPose = (JointBindPose*)HeapMemory::alloc( sizeof(JointBindPose) * dest.jointCount );
+        dest.invRestPose = (Matrix44f*)HeapMemory::alloc( sizeof(Matrix44f) * dest.jointCount );
+        if( !dest.hierarchy || !dest.spacials || !dest.bindPose || !dest.invRestPose )
+        {
+            GN_ERROR(sLogger)( "Fail to load skinned mesh from FatModel: out of memory." );
+            clear();
+            return false;
+        }
 
         // Loop through each joints (first pass)
         for( uint32 j = 0; j < source.joints.size(); ++j )
@@ -777,7 +796,7 @@ bool GN::engine::SkinnedMesh::loadFromFatModel( const GN::gfx::FatModel & fatmod
             dest.hierarchy[j].sibling = srcjoint.sibling;
 
             // Create one spacial component per joint.
-            dest.spacials[j].attach( new SpacialComponent );
+            dest.spacials[j] = new SpacialComponent;
 
             // setup the local transformation of the spacial component
             dest.spacials[j]->setPosition( srcjoint.bindPose.position );
@@ -810,9 +829,12 @@ bool GN::engine::SkinnedMesh::loadFromFatModel( const GN::gfx::FatModel & fatmod
         }
 
         // Create a uniform resource for the skeleton
-        dest.matrices = gdb.createResource<UniformResource>( NULL );
-        if( NULL == dest.matrices ) return false;
-        if( !dest.matrices->reset( sizeof(defaultMatrices), defaultMatrices ) ) return false;
+        dest.matrices = gdb.createResource<UniformResource>( NULL ).detach();
+        if( NULL == dest.matrices || !dest.matrices->reset( sizeof(defaultMatrices), defaultMatrices ) )
+        {
+            clear();
+            return false;
+        }
     }
 
     // Load all meshes
@@ -984,7 +1006,7 @@ void GN::engine::SkinnedMesh::drawSkeletons( uint32 colorInRGBA, const Matrix44f
         const Skeleton & sk = mSkeletons[i];
 
         // Loop through joints
-        for( uint32 j = 0; j < sk.hierarchy.size(); ++j )
+        for( uint32 j = 0; j < sk.jointCount; ++j )
         {
             const JointHierarchy & h = sk.hierarchy[j];
 

@@ -2440,7 +2440,13 @@ static void sLoadAiAnimations( FatModel & fatmodel, const aiScene & aiscene )
 // -----------------------------------------------------------------------------
 static bool sLoadFromAssimp( FatModel & fatmodel, const StrA & filename )
 {
-    const aiScene * scene = aiImportFile( filename, aiProcessPreset_TargetRealtime_Quality );
+    GN_SCOPE_PROFILER( sLoadFromAssimp, "Load model from Assimp." );
+
+    const aiScene * scene;
+    {
+        GN_SCOPE_PROFILER( sLoadFromAssimp_Import, "Load model from Assimp - importing." );
+        scene = aiImportFile( filename, aiProcessPreset_TargetRealtime_Quality );
+    }
     if( NULL == scene ) return false;
 
     // Load materials
@@ -2464,17 +2470,26 @@ static bool sLoadFromAssimp( FatModel & fatmodel, const StrA & filename )
     }
 
     // Load meshes recursively
-    aiMatrix4x4 rootTransform;
-    aiIdentityMatrix4(&rootTransform);
-    sLoadAiNodeRecursivly( fatmodel, scene, scene->mRootNode, rootTransform );
+    {
+        GN_SCOPE_PROFILER( sLoadFromAssimp_LoadMesh, "Load model from Assimp - load meshes." );
+        aiMatrix4x4 rootTransform;
+        aiIdentityMatrix4(&rootTransform);
+        sLoadAiNodeRecursivly( fatmodel, scene, scene->mRootNode, rootTransform );
+    }
 
     // Load animations.
-    sLoadAiAnimations( fatmodel, *scene );
+    {
+        GN_SCOPE_PROFILER( sLoadFromAssimp_LoadAnim, "Load model from Assimp - load animations." );
+        sLoadAiAnimations( fatmodel, *scene );
+    }
 
     // calculate the final bounding box
     fatmodel.calcBoundingBox();
 
-    aiReleaseImport( scene );
+    {
+        GN_SCOPE_PROFILER( sLoadFromAssimp_Release, "Load model from Assimp - releasing." );
+        aiReleaseImport( scene );
+    }
     return true;
 }
 
