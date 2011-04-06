@@ -1960,7 +1960,12 @@ sSortJointHierarchy( FatSkeleton & fatsk )
 //
 //
 // -----------------------------------------------------------------------------
-void sLoadAiMeshSkeleton( FatModel & fatmodel, FatMesh & fatmesh, const aiScene & aiscene, const aiMesh & aimesh )
+void sLoadAiMeshSkeleton(
+    FatModel & fatmodel,
+    FatMesh & fatmesh,
+    const aiScene & aiscene,
+    const aiMesh & aimesh,
+    const aiMatrix4x4 & meshTransform )
 {
     // No skeleton by default.
     fatmesh.skeleton = FatMesh::NO_SKELETON;
@@ -1976,6 +1981,11 @@ void sLoadAiMeshSkeleton( FatModel & fatmodel, FatMesh & fatmesh, const aiScene 
         return;
     }
 
+    aiMatrix4x4 boneTransform;
+
+    aiMatrix4x4 invMeshTransform = meshTransform;
+    invMeshTransform.Inverse();
+
     for( uint32 i = 0; i < aimesh.mNumBones; ++i )
     {
         const aiBone & aibone = *aimesh.mBones[i];
@@ -1984,7 +1994,8 @@ void sLoadAiMeshSkeleton( FatModel & fatmodel, FatMesh & fatmesh, const aiScene 
 
         fatjoint.name = aibone.mName.data;
 
-        fatjoint.bindPose.model2joint = *(Matrix44f*)&aibone.mOffsetMatrix;
+        boneTransform = aibone.mOffsetMatrix * invMeshTransform;
+        fatjoint.bindPose.model2joint = *(Matrix44f*)&boneTransform;
 
         // Setup default hierarchy
         fatjoint.parent  = FatJoint::NO_JOINT;
@@ -2256,10 +2267,6 @@ static void sLoadAiNodeRecursivly(
     aiMatrix4x4 myTransform = parentTransform;
 	aiMultiplyMatrix4(&myTransform,&ainode->mTransformation);
 
-    // hack hack: reset transform to identity to make the bone transformations
-    // matches vertex positions.
-    myTransform = aiMatrix4x4();
-
     for( uint32 i = 0; i < ainode->mNumMeshes; ++i )
     {
         const aiMesh * aimesh = aiscene->mMeshes[ainode->mMeshes[i]];
@@ -2269,7 +2276,7 @@ static void sLoadAiNodeRecursivly(
         FatMesh & fatmesh = *fatmeshAutoPtr;
 
         // Load skeleton
-        sLoadAiMeshSkeleton( fatmodel, fatmesh, *aiscene, *aimesh );
+        sLoadAiMeshSkeleton( fatmodel, fatmesh, *aiscene, *aimesh, myTransform );
 
         // Load mesh vertices and indices
         if( !sLoadAiIndices( fatmesh, aimesh ) ) continue;
