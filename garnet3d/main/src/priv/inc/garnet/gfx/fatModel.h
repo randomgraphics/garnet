@@ -240,8 +240,9 @@ namespace GN { namespace gfx
 
     struct FatSkeleton
     {
-        StrA                       name;   //< name of the skeleton.
-        DynaArray<FatJoint,uint32> joints; //< Joint array. The first joint is always the root of the skeleton.
+        StrA                       name;           //< name of the skeleton.
+        DynaArray<FatJoint,uint32> joints;         //< Joint array.
+        uint32                     rootJointIndex; //< Index of the root joint.
 
         /// Print joint hierarchy to a string.
         void printJointHierarchy( StrA & ) const;

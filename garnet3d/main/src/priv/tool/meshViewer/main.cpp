@@ -164,6 +164,7 @@ public:
         gpu->clearScreen( Vector4f(0,0.5f,0.5f,1.0f) );
 
 #if USE_ENTITY
+#if 0
         if( animationDuration > 0 )
         {
             // Draw skeleton of the skinned mesh.
@@ -171,6 +172,7 @@ public:
             Matrix44f transform = camera.proj * camera.view;
             mesh->drawSkeletons( 0xFFFFFFFF, transform );
         }
+#endif
         entity->getComponent<VisualComponent>()->draw( camera.proj, camera.view );
         if( showbbox )
         {
