@@ -82,6 +82,10 @@ public:
             if( mesh->getAnimationInfo( 0, anim ) )
             {
                 animationDuration = (float)anim.duration;
+                if( animationDuration > 0 )
+                {
+                    mesh->setAnimation( 0, 0 );
+                }
             }
         }
         const Boxf & bbox = entity->getComponent<SpacialComponent>()->getUberBoundingBox();
@@ -167,10 +171,7 @@ public:
             Matrix44f transform = camera.proj * camera.view;
             mesh->drawSkeletons( 0xFFFFFFFF, transform );
         }
-        else
-        {
-            entity->getComponent<VisualComponent>()->draw( camera.proj, camera.view );
-        }
+        entity->getComponent<VisualComponent>()->draw( camera.proj, camera.view );
         if( showbbox )
         {
             entity->getComponent<SpacialComponent>()->drawBoundingBox( camera.proj, camera.view, 0xFF000000 );

@@ -2256,6 +2256,10 @@ static void sLoadAiNodeRecursivly(
     aiMatrix4x4 myTransform = parentTransform;
 	aiMultiplyMatrix4(&myTransform,&ainode->mTransformation);
 
+    // hack hack: reset transform to identity to make the bone transformations
+    // matches vertex positions.
+    myTransform = aiMatrix4x4();
+
     for( uint32 i = 0; i < ainode->mNumMeshes; ++i )
     {
         const aiMesh * aimesh = aiscene->mMeshes[ainode->mMeshes[i]];
