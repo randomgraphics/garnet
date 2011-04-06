@@ -894,7 +894,10 @@ bool GN::engine::SkinnedMesh::loadFromFatModel( const GN::gfx::FatModel & fatmod
                         // it is possible that an integer value, for example 10, could be converted to
                         // floating point value 9.999999999. When it is converted back to integer
                         // in shader, it becomes 9.
-                        *(float*)p = (float)*(uint32*)p + 0.5f;
+                        ((float*)p)[0] = (float)(p[0]==FatJoint::NO_JOINT?255:p[0]) + 0.5f;
+                        ((float*)p)[1] = (float)(p[1]==FatJoint::NO_JOINT?255:p[0]) + 0.5f;
+                        ((float*)p)[2] = (float)(p[2]==FatJoint::NO_JOINT?255:p[0]) + 0.5f;
+                        ((float*)p)[3] = (float)(p[3]==FatJoint::NO_JOINT?255:p[0]) + 0.5f;
                     }
                 }
             }
@@ -1014,16 +1017,36 @@ void GN::engine::SkinnedMesh::drawSkeletons( uint32 colorInRGBA, const Matrix44f
             // a line between the joint and the parent.
             if( FatJoint::NO_JOINT != h.parent )
             {
+#if 1
+                // rest pose is transformation from model space to
+                // joint space. So we use invese of it to transform
+                // Point (0,0,0) to joint position in model space.
+                parent  = sk.invRestPose[h.parent];
+                current = sk.invRestPose[j];
+                parent.transformPoint( line[0], zero );
+                current.transformPoint( line[1], zero );
+#elif 0
                 // bind pose is transformation from model space to
                 // joint space. So we use invese of it to transform
                 // Point (0,0,0) to joint position in model space.
+                parent = Matrix44f::sInverse( sk.bindPose[h.parent].model2joint );
+                current = Matrix44f::sInverse( sk.bindPose[j].model2joint );
+                parent.transformPoint( line[0], zero );
+                current.transformPoint( line[1], zero );
+#else
+                // This is to verify matrices in the uniform resource.
 
-                parent  = sk.invRestPose[h.parent];
-                current = sk.invRestPose[j];
-
+                // transform to bind pose first
+                parent = Matrix44f::sInverse( sk.bindPose[h.parent].model2joint );
+                current = Matrix44f::sInverse( sk.bindPose[j].model2joint );
                 parent.transformPoint( line[0], zero );
                 current.transformPoint( line[1], zero );
 
+                // then transform to rest pose
+                const Matrix44f * b2r = (const Matrix44f*)sk.matrices->uniform()->getval();
+                b2r[h.parent].transformPoint( line[0], line[0] );
+                b2r[j].transformPoint( line[1], line[1] );
+#endif
                 // draw a line between parent and current joint.
                 lr->drawLines(
                     line,
