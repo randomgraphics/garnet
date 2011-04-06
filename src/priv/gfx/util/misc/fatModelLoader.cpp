@@ -1859,10 +1859,11 @@ sLoadAiJointHierarchy( FatSkeleton & fatsk, uint32 parentJointIndex, const aiNod
 }
 
 //
-//
+// Find the root joint in the hierarchy. Return FatJoint::NO_JOINT,
+// if there's no root or more than one root found.
 // -----------------------------------------------------------------------------
-static bool
-sSortJointHierarchy( FatSkeleton & fatsk )
+static uint32
+sFindRootJoint( const FatSkeleton & fatsk )
 {
     // In an valid joint hierarchy, there should be one joint
     // and one joint only that has no parent.
@@ -1870,7 +1871,7 @@ sSortJointHierarchy( FatSkeleton & fatsk )
     uint32 root = FatJoint::NO_JOINT;
     for( uint32 i = 0; i < jointArraySize; ++i )
     {
-        FatJoint & j = fatsk.joints[i];
+        const FatJoint & j = fatsk.joints[i];
 
         // make sure parent/child/sibling are in vaild range
         if( ( j.parent  >= jointArraySize && FatJoint::NO_JOINT != j.parent  ) ||
@@ -1878,7 +1879,7 @@ sSortJointHierarchy( FatSkeleton & fatsk )
             ( j.sibling >= jointArraySize && FatJoint::NO_JOINT != j.sibling ) )
         {
             GN_ERROR(sLogger)( "Invalid joint herarchy: joint %d contains invalid joint index.", i );
-            return false;
+            return FatJoint::NO_JOINT;
         }
 
         // If the joint has no parent, it should be the root joint.
@@ -1888,7 +1889,7 @@ sSortJointHierarchy( FatSkeleton & fatsk )
             {
                 // There's more than one joint in the tree that has no parent.
                 GN_ERROR(sLogger)( "Invalid joint hierarchy: multiple root joints." );
-                return false;
+                return FatJoint::NO_JOINT;
             }
 
             // Remember index of the root joint. Then continue the loop, to see if
@@ -1899,9 +1900,39 @@ sSortJointHierarchy( FatSkeleton & fatsk )
     if( root == FatJoint::NO_JOINT )
     {
         GN_ERROR(sLogger)( "Invalid joint hierarchy: root joint not found." );
-        return false;
+        return FatJoint::NO_JOINT;
     }
 
+#if 0
+    // Count number of joints in the hierarchy recursivly.
+    // It should equal size of the joint array.
+    struct Local
+    {
+        static void sCountJointRecursivly( const FatJoint * joints, uint32 arraySize, uint32 & counter, uint32 parent )
+        {
+            GN_UNIMPL();
+        }
+    };
+    uint32 counter = 0;
+    Local::sCountJointRecursivly( fatsk.joints.rawptr(), fatsk.joints.size(), counter, fatsk.rootJointIndex );
+    if( counter != fatsk.joints.size() )
+    {
+        GN_ERROR(sLogger)( "Invalid joint hierarchy!" );
+        return FatJoint::NO_JOINT;
+    }
+#endif
+
+    // TODO: more validations.
+
+    return root;
+}
+
+/*
+//
+// -----------------------------------------------------------------------------
+static bool
+sSortJointHierarchy( FatMesh & mesh )// FatSkeleton & fatsk )
+{
     // Move root joint to slot 0, if it is not already there.
     if( 0 != root )
     {
@@ -1928,34 +1959,8 @@ sSortJointHierarchy( FatSkeleton & fatsk )
         }
     }
 
-#if 0
-    // Count number of joints in the hierarchy recursivly.
-    // It should equal size of the joint array.
-    struct Local
-    {
-        static void sCountJointRecursivly( const FatJoint * joints, uint32 arraySize, uint32 & counter, uint32 parent )
-        {
-            GN_UNIMPL();
-        }
-    };
-    uint32 counter = 0;
-    Local::sCountJointRecursivly( fatsk.joints.rawptr(), fatsk.joints.size(), counter, 0 );
-    if( counter != fatsk.joints.size() )
-    {
-        GN_ERROR(sLogger)( "Invalid joint hierarchy!" );
-        return false;
-    }
-#endif
-
-#if 0
-    // Print joint hierarchy
-    StrA s;
-    fatsk.printJointHierarchy( s );
-    GN_INFO(sLogger)( s );
-#endif
-
     return true;
-}
+}*/
 
 //
 //
@@ -2006,8 +2011,9 @@ void sLoadAiMeshSkeleton(
     // Load joint hierarchy from AI scene
     sLoadAiJointHierarchy( fatsk, FatJoint::NO_JOINT, aiscene.mRootNode );
 
-    // Then sort the hierarchy based on depth, to make sure that the root joint stays at index 0.
-    if( !sSortJointHierarchy( fatsk ) ) return;
+    // Find root joint of the hierarchy.
+    fatsk.rootJointIndex = sFindRootJoint( fatsk );
+    if( FatJoint::NO_JOINT == fatsk.rootJointIndex ) return;
 
     // Build local transformations of each node.
     for( uint32 i = 0; i < aimesh.mNumBones; ++i )
@@ -2035,6 +2041,13 @@ void sLoadAiMeshSkeleton(
         fatjoint.bindPose.rotation.set( r.x, r.y, r.z, r.w );
         fatjoint.bindPose.scaling.set( s.x, s.y, s.z );
     }
+
+#if 0
+    // Print joint hierarchy
+    StrA s;
+    fatsk.printJointHierarchy( s );
+    GN_INFO(sLogger)( s );
+#endif
 
     // Add the new skeleton to fat model.
     if( !fatmodel.skeletons.append(fatsk) )

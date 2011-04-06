@@ -894,10 +894,11 @@ bool GN::engine::SkinnedMesh::loadFromFatModel( const GN::gfx::FatModel & fatmod
                         // it is possible that an integer value, for example 10, could be converted to
                         // floating point value 9.999999999. When it is converted back to integer
                         // in shader, it becomes 9.
-                        ((float*)p)[0] = (float)(p[0]==FatJoint::NO_JOINT?255:p[0]) + 0.5f;
-                        ((float*)p)[1] = (float)(p[1]==FatJoint::NO_JOINT?255:p[0]) + 0.5f;
-                        ((float*)p)[2] = (float)(p[2]==FatJoint::NO_JOINT?255:p[0]) + 0.5f;
-                        ((float*)p)[3] = (float)(p[3]==FatJoint::NO_JOINT?255:p[0]) + 0.5f;
+                        uint32 * joints = (uint32*)p;
+                        ((float*)joints)[0] = (float)(joints[0]==FatJoint::NO_JOINT?255:joints[0]) + 0.5f;
+                        ((float*)joints)[1] = (float)(joints[1]==FatJoint::NO_JOINT?255:joints[1]) + 0.5f;
+                        ((float*)joints)[2] = (float)(joints[2]==FatJoint::NO_JOINT?255:joints[2]) + 0.5f;
+                        ((float*)joints)[3] = (float)(joints[3]==FatJoint::NO_JOINT?255:joints[3]) + 0.5f;
                     }
                 }
             }
@@ -1018,23 +1019,37 @@ void GN::engine::SkinnedMesh::drawSkeletons( uint32 colorInRGBA, const Matrix44f
             if( FatJoint::NO_JOINT != h.parent )
             {
 #if 1
+                //
+                // Show rest pose skeleton
+                //
                 // rest pose is transformation from model space to
                 // joint space. So we use invese of it to transform
                 // Point (0,0,0) to joint position in model space.
+                //
                 parent  = sk.invRestPose[h.parent];
                 current = sk.invRestPose[j];
                 parent.transformPoint( line[0], zero );
                 current.transformPoint( line[1], zero );
 #elif 0
+                //
+                // Show bind pose skeleton.
+                //
                 // bind pose is transformation from model space to
                 // joint space. So we use invese of it to transform
                 // Point (0,0,0) to joint position in model space.
+                //
                 parent = Matrix44f::sInverse( sk.bindPose[h.parent].model2joint );
                 current = Matrix44f::sInverse( sk.bindPose[j].model2joint );
                 parent.transformPoint( line[0], zero );
                 current.transformPoint( line[1], zero );
 #else
-                // This is to verify matrices in the uniform resource.
+                //
+                // Show rest pose skeleton, using transformation stored
+                // in the uniform resource.
+                //
+                // This is to verify correctness of matrices stored in
+                // the uniform resource.
+                //
 
                 // transform to bind pose first
                 parent = Matrix44f::sInverse( sk.bindPose[h.parent].model2joint );
