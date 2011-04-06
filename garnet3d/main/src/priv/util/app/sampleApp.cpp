@@ -140,6 +140,10 @@ int GN::util::SampleApp::run( int argc, const char * const argv[] )
     double elapsedUpdateTime;
     double lastUpdateTime = mFps.currentTime();
 
+    // TODO:
+    // Read this: http://msdn.microsoft.com/en-us/library/bb203873.aspx
+    // And update the game loop accordingly.
+
     const int MAX_UPDATE_COUNT = (int)( 1.0f / UPDATE_INTERVAL );
 
     while( !mDone )
@@ -158,8 +162,8 @@ int GN::util::SampleApp::run( int argc, const char * const argv[] )
             gInput.processInputEvents();
 
             int count = firstframe ? 1 : (int)( elapsedUpdateTime / UPDATE_INTERVAL );
-            if( count > MAX_UPDATE_COUNT ) count = MAX_UPDATE_COUNT; // make easy of long time debug break.
-            for( int i = 0; i < count; ++i )
+            int loop = math::getmin( count, MAX_UPDATE_COUNT ); // make easy of long time debug break.
+            for( int i = 0; i < loop; ++i )
             {
                 onUpdate();
             }
