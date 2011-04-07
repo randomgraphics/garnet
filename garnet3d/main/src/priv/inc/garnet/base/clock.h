@@ -42,6 +42,11 @@ namespace GN
         static CycleType sGetSystemCycleCount();
 
         ///
+        /// Get system cycle frequency
+        ///
+        static CycleType sGetSystemCycleFrequency() { return mSystemCycleFrequency; }
+
+        ///
         /// 获得当前时间计数
         ///
         CycleType getCycleCount() const

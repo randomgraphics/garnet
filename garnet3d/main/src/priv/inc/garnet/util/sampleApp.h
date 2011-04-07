@@ -44,7 +44,8 @@ namespace GN { namespace util
             gfx::FontFaceCreationDesc asciiFont;         ///< default ascii font face creation descriptor.
         };
 
-        static float UPDATE_INTERVAL; ///< Time interval for calling onUpdate(), in seconds.
+        static const uint32 UPDATE_FREQUENCY; //< Frequency of onUpdate() call.
+        static const float  UPDATE_INTERVAL;  //< 1.0 / UPDATE_FREQUENCY.
 
         virtual int  run( int argc, const char * const argv[] );
         virtual bool onCheckExtraCmdlineArguments( const char * exename, int argc, const char * const argv[] ); // only non-standard/unknown arguments are passed to this function.
@@ -80,21 +81,6 @@ namespace GN { namespace util
 		void showHUD( bool show ) { mShowHUD = show; }
 
         ///
-        /// Return time in seconds since application starts
-        ///
-        double currentTime() const { return mFps.currentTime(); }
-
-        ///
-        /// Return time in seconds of the last frame
-        ///
-        double lastFrameTime() const { return mLastFrameTime; }
-
-        ///
-        /// Return time in seconds since last call to onUpdate()
-        ///
-        double timeElapsedSinceLastUpdate() const { return mTimeSinceLastUpdate; }
-
-        ///
         /// get the FPS
         ///
         float fps() const { return mFps.fps(); }
@@ -108,10 +94,7 @@ namespace GN { namespace util
 
         InitParam                  mInitParam;
 
-        // time stuff
-        util::FpsCalculator        mFps;
-        double                     mLastFrameTime;
-        double                     mTimeSinceLastUpdate;
+        util::FpsCalculator        mFps; ///< FPS counter
 
         StrW                       mHelpText;
         bool                       mShowHUD;  ///< show simple HUD over game scene

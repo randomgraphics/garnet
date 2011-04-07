@@ -6,7 +6,8 @@ using namespace GN::gfx;
 using namespace GN::input;
 using namespace GN::util;
 
-float GN::util::SampleApp::UPDATE_INTERVAL = 1.0f/60.0f;
+const uint32 GN::util::SampleApp::UPDATE_FREQUENCY = 60;
+const float  GN::util::SampleApp::UPDATE_INTERVAL = 1.0f / (float)GN::util::SampleApp::UPDATE_FREQUENCY;
 
 static GN::Logger * sLogger = GN::getLogger("GN.util");
 
@@ -136,47 +137,114 @@ int GN::util::SampleApp::run( int argc, const char * const argv[] )
 
     mDone = false;
 
-    bool firstframe = true;
-    double elapsedUpdateTime;
-    double lastUpdateTime = mFps.currentTime();
+    //
+    // This explains how game loop works in XNA 2.0:
+    //      http://msdn.microsoft.com/en-us/library/bb203873.aspx
+    //
+    // And this explains why it is that way:
+    //  http://blogs.msdn.com/b/shawnhar/archive/2007/11/23/game-timing-in-xna-game-studio-2-0.aspx
+    //
 
-    // TODO:
-    // Read this: http://msdn.microsoft.com/en-us/library/bb203873.aspx
-    // And update the game loop accordingly.
+    Clock clock;
 
-    const int MAX_UPDATE_COUNT = (int)( 1.0f / UPDATE_INTERVAL );
+    const sint64 ONE_SECOND                = clock.sGetSystemCycleFrequency();
+    const sint64 UPDATE_INTERVAL_IN_CYCLES = ONE_SECOND / UPDATE_FREQUENCY;
+
+    int updateMissed = 0;
+    sint64 nextUpdateTime = clock.getCycleCount();
 
     while( !mDone )
     {
         // process render window messages
         engine::getGpu()->processRenderWindowMessages( false );
 
-        // update timing stuff
-        mFps.onFrame();
+        // process user input
+        gInput.processInputEvents();
 
         // call update in fixed interval
-        elapsedUpdateTime = mFps.currentTime() - lastUpdateTime;
-        if( elapsedUpdateTime > UPDATE_INTERVAL || firstframe )
+        sint64 currentTime = clock.getCycleCount();
+
+        if( currentTime >= nextUpdateTime )
         {
-            // process user input
-            gInput.processInputEvents();
+            // Next update time has elasped. We need to call update immediatly.
+            onUpdate();
 
-            int count = firstframe ? 1 : (int)( elapsedUpdateTime / UPDATE_INTERVAL );
-            int loop = math::getmin( count, MAX_UPDATE_COUNT ); // make easy of long time debug break.
-            for( int i = 0; i < loop; ++i )
+            // Remember when update finishes.
+            sint64 updateFinishTime = clock.getCycleCount();
+
+            // Next update time is current update startup time plus the update interval.
+            nextUpdateTime += UPDATE_INTERVAL_IN_CYCLES;
+
+#if 0
+            //
+            // Test code: simulate too-slow update function. The application should
+            // run in roughly 30 FPS, with no frame skipping.
+            //
+            Thread::sSleepCurrentThread( 1000000000/30 );
+            updateFinishTime = clock.getCycleCount();
+#endif
+
+            if( updateFinishTime > nextUpdateTime )
             {
-                onUpdate();
-            }
-            lastUpdateTime += UPDATE_INTERVAL * count;
-            firstframe = false;
-        }
+                // The update function by itself has run out of the frame time budget.
+                // There's simply no way to catch up. In this case, we switch to variable
+                // time step mode, call one update and one render per frame, and let the
+                // application runs as fast as it could, until the update function gets
+                // faster.
 
-        // do render
-        mLastFrameTime = 1.0 / mFps.fps();
-        mTimeSinceLastUpdate = mFps.currentTime() - lastUpdateTime;
-        onRender();
-        drawHUD();
-        engine::getGpu()->present();
+                onRender();
+                drawHUD();
+                engine::getGpu()->present();
+
+                // We just rendered a frame. Let's update the FPS counter
+                mFps.onFrame();
+
+                // We didn't miss a frame, since we are in variable time step mode. So clear
+                // the miss counter.
+                updateMissed = 0;
+
+                // We are in variable time step mode. There's no need to schedule the next
+                // update in fixed time step. Simply call next update as fast as possible.
+                nextUpdateTime = clock.getCycleCount();
+            }
+            else if( currentTime < nextUpdateTime )
+            {
+                // onUpdate() runs fast. It is not time to call next update yet.
+                // It's time to render!
+                onRender();
+                drawHUD();
+                engine::getGpu()->present();
+
+                // We just rendered a frame. Let's update the FPS counter.
+                mFps.onFrame();
+
+                // The lasted update call has finished before the next update time.
+                // It means the application is simply fast enough to keep up with real time,
+                // or we finally catched up by skipping rendering calls. Either way, the
+                // updateMissed counter should be cleared.
+                updateMissed = 0;
+            }
+            else
+            {
+                // By the time the onUpdate() finished, we have missed the next update time already.
+                // What should we do now?
+                sint64 missed = currentTime - nextUpdateTime;
+                if( missed > ONE_SECOND || updateMissed > 10 )
+                {
+                    // We have missed too much. Instead of calling update 60 times (assuming
+                    // 60HZ update frequency). Let's simplly reset the next update time step,
+                    // and start over.
+                    nextUpdateTime = updateFinishTime;
+                    updateMissed = 0;
+                }
+                else
+                {
+                    // We have missed the deadline, but not to much. Let's see if we can
+                    // catch up by skipping rendering calls.
+                    ++updateMissed;
+                }
+            }
+        }
     }
 
     // success
