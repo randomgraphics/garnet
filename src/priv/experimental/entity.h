@@ -1,5 +1,6 @@
 class EntityManager;
 
+
 class Entity
 {
 public:
@@ -13,6 +14,8 @@ public:
     void _deref( Entity * referencee )
     {
     }
+
+    // todo: streaming (byte packer/unpacker)
 
 protected:
 

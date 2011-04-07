@@ -519,6 +519,21 @@ static ModelResourceDesc sSkinnedWireframeModelDesc()
 #endif
 
 // *****************************************************************************
+// SkinnedVisualComponent
+// *****************************************************************************
+
+class SkinnedVisualComponent : public VisualComponent
+{
+protected:
+
+    virtual void drawModelResource( ModelResource & model ) const
+    {
+        // TODO: update joint matrices
+        model.draw();
+    }
+};
+
+// *****************************************************************************
 // SkinnedAnimation
 // *****************************************************************************
 
@@ -542,7 +557,7 @@ GN::engine::SkinnedMesh::SkinnedMesh()
     mRootSpacial.attach( new SpacialComponent );
     setComponent<SpacialComponent>( mRootSpacial );
 
-    mVisual.attach( new VisualComponent );
+    mVisual.attach( new SkinnedVisualComponent );
     setComponent<VisualComponent>( mVisual );
 }
 
@@ -913,7 +928,7 @@ bool GN::engine::SkinnedMesh::loadFromFatModel( const GN::gfx::FatModel & fatmod
 
         GN_ASSERT( mesh );
 
-        // create one model for each mesh subset
+        // Loop through all mesh subsets. Create one model for each subset.
         for( size_t s = 0; s < fatmesh.subsets.size(); ++s )
         {
             const FatMeshSubset & fatsubset = fatmesh.subsets[s];

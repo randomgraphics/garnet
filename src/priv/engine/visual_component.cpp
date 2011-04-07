@@ -186,11 +186,10 @@ void GN::engine::VisualComponent::draw() const
 
     // draw models
     GN_GPU_DEBUG_MARK_BEGIN( getGpu(), "VisualComponent::draw" );
+
     for( int i = mModels.first(); i != 0; i = mModels.next( i ) )
     {
-        ModelResource * m = mModels[i];
-
-        m->draw();
+        drawModelResource( *mModels[i] );
     }
     GN_GPU_DEBUG_MARK_END( getGpu() );
 }

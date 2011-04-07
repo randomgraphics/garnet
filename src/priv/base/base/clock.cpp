@@ -42,7 +42,7 @@ static GN::Clock::CycleType sGetSystemCycleFrequency()
 // *****************************************************************************
 
 GN::Clock::CycleType
-GN::Clock::mSystemCycleFrequency = sGetSystemCycleFrequency();
+GN::Clock::mSystemCycleFrequency = ::sGetSystemCycleFrequency();
 
 //
 //

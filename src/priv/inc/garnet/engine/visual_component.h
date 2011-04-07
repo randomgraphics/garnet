@@ -38,9 +38,7 @@ namespace GN { namespace engine
         int addModel( gfx::ModelResource * model );
 
         /// Render all models in the component
-        ///
-        /// Subclass could override this method to do custom rendering.
-        virtual void draw() const;
+        void draw() const;
 
         /// Render the component to screen with specified transformation.
         void draw( const Matrix44f & proj, const Matrix44f & view ) const
@@ -50,6 +48,16 @@ namespace GN { namespace engine
         }
 
         //@}
+
+    protected:
+
+        /// This method is called for each model in the visual component. The default
+        /// implementation just calls ModelResource::draw(). Subclass could override
+        /// this function to do custom rendering for each model.
+        virtual void drawModelResource( gfx::ModelResource & model ) const
+        {
+            model.draw();
+        }
 
     private:
 
