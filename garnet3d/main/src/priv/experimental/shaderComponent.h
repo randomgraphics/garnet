@@ -46,8 +46,12 @@ namespace GN { namespace gfx
     {
         DynaArray<ShaderParameter> parameters;
         GpuProgramLanguage         lang;
-        StrA                       code;
         StrA                       description;
+
+        // the component is either a chunk of shader code.
+        StrA                       code;
+
+        // Or a group of components connected as DAG.
     };
 
     ShaderComponent DIFFUSE_VS(
@@ -71,17 +75,39 @@ namespace GN { namespace gfx
         "Per-pixel diffuse lighting vertex shader"
     );
 
-    ShaderComponent SKINNED_VS(
+    ShaderComponent SKINNING_POINT(
         // parameters
         {
             { ShaderParameter::NUMBER, ShaderParameter::FLOAT4, "joints",           ShaderParameter::REQUIRED_INPUT },
             { ShaderParameter::NUMBER, ShaderParameter::FLOAT3, "weights",          ShaderParameter::REQUIRED_INPUT },
             { ShaderParameter::ARRAY,  ShaderParameter::MAT4X4, "matries",          ShaderParameter::REQUIRED_INPUT },
-            { ShaderParameter::NUMBER, ShaderParameter::FLOAT3, "point",            ShaderParameter::OPTIONAL_INPUT },
-            { ShaderParameter::NUMBER, ShaderParameter::FLOAT3, "vector",           ShaderParameter::OPTIONAL_INPUT },
+            { ShaderParameter::NUMBER, ShaderParameter::FLOAT3, "point",            ShaderParameter::REQUIRED_INPUT },
 
             { ShaderParameter::NUMBER, ShaderParameter::FLOAT3, "deformed_point",   ShaderParameter::OUTPUT },
+        },
+        // lang
+        GpuProgramLanguage::HLSL9,
+        // code
+        "...",
+        // description
+        "..."
+    );
+
+    ShaderComponent SKINNING_VECTOR(
+        // parameters
+        {
+            { ShaderParameter::NUMBER, ShaderParameter::FLOAT4, "joints",           ShaderParameter::REQUIRED_INPUT },
+            { ShaderParameter::NUMBER, ShaderParameter::FLOAT3, "weights",          ShaderParameter::REQUIRED_INPUT },
+            { ShaderParameter::ARRAY,  ShaderParameter::MAT4X4, "matries",          ShaderParameter::REQUIRED_INPUT },
+            { ShaderParameter::NUMBER, ShaderParameter::FLOAT3, "vector",           ShaderParameter::REQUIRED_INPUT },
+
             { ShaderParameter::NUMBER, ShaderParameter::FLOAT3, "deformed_vector",  ShaderParameter::OUTPUT },
         },
+        // lang
+        GpuProgramLanguage::HLSL9,
+        // code
+        "...",
+        // description
+        "..."
     );
 }}
