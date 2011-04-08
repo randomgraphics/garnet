@@ -5,7 +5,9 @@ TODO
 
 - p0
   - unit test: DynaArray<???,uint8>
-  - programmable/compositable shader component:
+  - programmable/compositable shader component in GFX module:
+    - features
+      - optional shader parameter
     - example:
       - diffuse light shader:
         - input: position, normal, color(optional)
@@ -18,8 +20,19 @@ TODO
         - output: color
       - final shader = diffuse shader + skinning shader + texturing shader.
     - See if there's existing (open source) code
-  - skin mesh test
-    - SkinnedMesh and SkinnedVisual
+  - New Engine module entity class
+    - support RTTI
+    - unique entity ID
+    - optional entity name (might not be unique)
+    - unify entity and component interface
+    - loop through all entities
+    - loop through entities of specific type
+    - loop through entities that are referenced by another entity
+    - avoid reference counting if possible, to allow embedded object without
+      new/delete.
+      - requires weak reference
+
+- p1
   - Winphone 7 integration
   - Cuda or OpenCL integration
   - runtime tweakable parameters: client/server communication
@@ -33,8 +46,6 @@ TODO
       - separate client (tuner) and server (variables)
   - replace STL containers:
   	- queue, list, set
-
-- p1
   - Fix Feb 2011 Cg issues:
 	- GNsampleDolphin crashes with D3D11 gpu.
     - D3D resource leak in GNtestEngine and GNsampleDolphin
