@@ -15,6 +15,9 @@ TODO
     - loop through all entities
     - loop through entities of specific type
     - loop through entities that are referenced by another entity
+  - Refine double linked list classes:
+    - DoubleLinkedItem and DoubleLinkedList should be combined into one single
+    class.
 
 - p1
   - Shader resource library: DLL or static library that defines common
