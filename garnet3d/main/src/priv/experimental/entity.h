@@ -2,36 +2,6 @@ class EntityManager;
 
 typedef int EntityType;
 
-class EntityLink
-{
-    EntityLink * mPrev;
-    EntityLink * mNext;
-
-    void detach()
-    {
-    }
-
-public:
-
-    EntityLink() : mPrev(NULL), mNext(NULL)
-    {
-    }
-
-    ~EntityLink()
-    {
-        detach();
-    }
-
-    EntityLink * getPrev() const { return mPrev; }
-
-    EntityLink * getNext() const { return mNext; }
-
-    static void sLink( EntityLink * a, EntityLink * b )
-    {
-        // TODO: unimpl
-    }
-};
-
 class Entity
 {
 public:
@@ -48,13 +18,17 @@ public:
         EntityLink * next;
         while( NULL != (next = mReferences.getNext()) )
         {
+            ((EntityRefBase*)next)->clear();
         }
 	}
 
 
 protected:
 
-	Entity( EntityManager & );
+	Entity( EntityManager & m ) : mManager(m)
+	{
+        mReferences.context = this;
+	}
 
 private:
 
@@ -63,21 +37,19 @@ private:
 
 	EntityManager & mManager;
 	uint64          mUniqueID;
-	EntityLink      mGlobalLink; // Global linked list that links to all items.
-
-    EntityLink      mReferences; // Linked list of entities that are directly referencing this entity.
-
-	//EntityLink    mNameLink;   // Linked list of items for all items with same name.
+    DoubleLink      mReferences; // Linked list of entities that are directly referencing this entity.
 };
 
-class EntityRefBase : EntityLink
+class EntityRefBase
 {
-    Entity * mPtr;  //< Pointer to the entity that is being referenced.
+    DoubleLink mLink;
+    Entity   * mPtr;  //< Pointer to the entity that is being referenced.
 
 public:
 
     EntityRefBase() : mPtr(NULL)
     {
+        mLink.context = this;
     }
 
     ~EntityRefBase()
@@ -90,20 +62,22 @@ public:
         if( e == mPtr ) return;
 
         // detach from old pointer
-        if( mPrev ) mPrev->mNext = mNext;
-        if( mNext ) mNext->mPrev = mPrev;
+        mLink.detach();
 
         // then attach to new pointer
         if( e )
         {
+            mLink.insertAfter( e->mReferences );
         }
-        else
-        {
-            mPtr  = NULL;
-            mPrev = NULL;
-            mNext = NULL;
-        }
+
+        mPtr = e;
 	}
+
+    void clear()
+    {
+        mLink.detach();
+        mPtr = NULL;
+    }
 
 	Entity * rawptr() const
 	{

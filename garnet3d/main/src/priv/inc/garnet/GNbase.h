@@ -66,6 +66,9 @@ namespace GN
 #include "base/memory.h"
 
 // single/double linked list
+#include "base/link.h"
+
+// This header is depreciated.
 #include "base/linkedList.h"
 
 // string types
