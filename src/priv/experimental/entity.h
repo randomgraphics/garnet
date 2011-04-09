@@ -1,21 +1,56 @@
 class EntityManager;
 
+typedef int EntityType;
+
+class EntityLink
+{
+    EntityLink * mPrev;
+    EntityLink * mNext;
+
+    void detach()
+    {
+    }
+
+public:
+
+    EntityLink() : mPrev(NULL), mNext(NULL)
+    {
+    }
+
+    ~EntityLink()
+    {
+        detach();
+    }
+
+    EntityLink * getPrev() const { return mPrev; }
+
+    EntityLink * getNext() const { return mNext; }
+
+    static void sLink( EntityLink * a, EntityLink * b )
+    {
+        // TODO: unimpl
+    }
+};
 
 class Entity
 {
 public:
 
-	virtual ~Entity();
-
-    void _ref( Entity * referencee )
+    static EntityType sGetType()
     {
     }
 
-    void _deref( Entity * referencee )
-    {
-    }
+    virtual bool IsTypeOf( const EntityType & ) const;
 
-    // todo: streaming (byte packer/unpacker)
+	virtual ~Entity()
+	{
+        // Loop through mReferences list, and clear all of them.
+        EntityLink * next;
+        while( NULL != (next = mReferences.getNext()) )
+        {
+        }
+	}
+
 
 protected:
 
@@ -24,49 +59,72 @@ protected:
 private:
 
 	friend class EntityManager;
-
-	struct EntityLink
-	{
-		Entity * prev;
-		Entity * next;
-	};
+    friend struct EntityRefBase;
 
 	EntityManager & mManager;
 	uint64          mUniqueID;
 	EntityLink      mGlobalLink; // Global linked list that links to all items.
-	EntityLink      mNameLink;   // Linked list of items for all items with same name.
-	EntityLink      mReferences; // LInked list of entities that are directly referencing this entity.
+
+    EntityLink      mReferences; // Linked list of entities that are directly referencing this entity.
+
+	//EntityLink    mNameLink;   // Linked list of items for all items with same name.
 };
 
-template<class T>
-class EntityRef
+class EntityRefBase : EntityLink
 {
-    Entity & mContainer;
-	Entity * mPtr;
+    Entity * mPtr;  //< Pointer to the entity that is being referenced.
 
 public:
 
-    EntityRef( Entity & container ) : mContainer(container), mPtr(NULL)
+    EntityRefBase() : mPtr(NULL)
     {
     }
 
-    ~EntityRef()
+    ~EntityRefBase()
     {
-        set(NULL);
+        mPtr = NULL;
     }
 
-	void set( T * t )
+	void attach( Entity * e )
 	{
-        if( t == mPtr ) return;
-        mContainer._deref( mPtr );
-        mContainer._ref( t );
-        mPtr = t;
+        if( e == mPtr ) return;
+
+        // detach from old pointer
+        if( mPrev ) mPrev->mNext = mNext;
+        if( mNext ) mNext->mPrev = mPrev;
+
+        // then attach to new pointer
+        if( e )
+        {
+        }
+        else
+        {
+            mPtr  = NULL;
+            mPrev = NULL;
+            mNext = NULL;
+        }
 	}
 
-	T * get() const
+	Entity * rawptr() const
 	{
         return mPtr;
 	}
+};
+
+template<typename T>
+class EntityRef : private EntityRefBase
+{
+public:
+
+    void attach( T * t )
+    {
+        EntityRefBase::attach( t );
+    }
+
+    T * rawptr() const
+    {
+        return (T*)EntityRefBase::rawptr();
+    }
 };
 
 class MyEntity1 : public Entity
