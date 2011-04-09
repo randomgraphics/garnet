@@ -6,6 +6,7 @@ TODO
 - p0
   - unit test: DynaArray<???,uint8>
   - New Engine module entity class
+    - See if I can separate WeakRef with RefCounter.
     - RTTI
     - unique entity ID
     - optional entity name (might not be unique)
