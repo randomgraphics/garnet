@@ -35,6 +35,9 @@ namespace GN { namespace engine
         Entity * mEntity;
     };
 
+    /// Define entity type class.
+    typedef Guid EntityType;
+
     /// Entity class. Root class of game play object that could be placed into game world.
     class Entity : public NoCopy
     {
@@ -48,7 +51,10 @@ namespace GN { namespace engine
         /// destructor
         virtual ~Entity();
 
-        /// Get entity ID
+        /// See if the entity class implementes a specific entity type.
+        virtual bool isTypeOf( const EntityType & ) const { return false; }
+
+        /// Get unique entity ID
         int getID() const { return mID; }
 
         /// Get entity's component. No increasing reference counter of the component.

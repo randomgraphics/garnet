@@ -5,7 +5,26 @@ TODO
 
 - p0
   - unit test: DynaArray<???,uint8>
-  - programmable/compositable shader component in GFX module:
+  - New Engine module entity class
+    - RTTI
+    - unique entity ID
+    - optional entity name (might not be unique)
+    - unify entity and component interface
+    - weak reference
+    - loop through all entities
+    - loop through entities of specific type
+    - loop through entities that are referenced by another entity
+
+- p1
+  - Shader resource library: DLL or static library that defines common
+    shaders.
+  - Compositable shader component:
+    - What about existing shader authoring tool?
+      - there's no tools that is simply good enough.
+        - RenderMonkey has dead for a long time.
+        - FxCompose is too FX centric. It does not support GLSL.
+    - It is a standalone offline toolset that generates EffectDescriptor or XML file.
+    - It is not meant for runtime use.
     - features
       - optional shader parameter
     - example:
@@ -20,19 +39,6 @@ TODO
         - output: color
       - final shader = diffuse shader + skinning shader + texturing shader.
     - See if there's existing (open source) code
-  - New Engine module entity class
-    - support RTTI
-    - unique entity ID
-    - optional entity name (might not be unique)
-    - unify entity and component interface
-    - loop through all entities
-    - loop through entities of specific type
-    - loop through entities that are referenced by another entity
-    - avoid reference counting if possible, to allow embedded object without
-      new/delete.
-      - requires weak reference
-
-- p1
   - Winphone 7 integration
   - Cuda or OpenCL integration
   - runtime tweakable parameters: client/server communication
