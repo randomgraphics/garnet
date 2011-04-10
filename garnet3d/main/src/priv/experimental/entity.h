@@ -15,7 +15,7 @@ public:
 	virtual ~Entity()
 	{
         // Loop through mReferences list, and clear all of them.
-        EntityLink * next;
+        DoubleLink * next;
         while( NULL != (next = mReferences.getNext()) )
         {
             ((EntityRefBase*)next)->clear();

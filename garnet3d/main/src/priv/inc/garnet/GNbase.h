@@ -74,9 +74,6 @@ namespace GN
 // smart pointer
 #include "base/smartptr.h"
 
-// This header is depreciated.
-#include "base/linkedList.h"
-
 // string types
 #include "base/string.h"
 
