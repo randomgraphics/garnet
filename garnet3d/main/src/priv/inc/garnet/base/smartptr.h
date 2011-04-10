@@ -1,13 +1,220 @@
-#ifndef __GN_BASE_REFCOUNTER_H__
-#define __GN_BASE_REFCOUNTER_H__
+#ifndef __GN_BASE_SMARTPTR_H__
+#define __GN_BASE_SMARTPTR_H__
 // *****************************************************************************
 /// \file
-/// \brief   Reference counting classes
-/// \author  chenlee (2005.8.13)
+/// \brief   Smart pointer classes and utilities
+/// \author  chen@@chenli-homepc (2011.4.9)
 // *****************************************************************************
 
 namespace GN
 {
+    ///
+    /// Base class that support weak referencing
+    // -------------------------------------------------------------------------
+    class WeakObject
+    {
+        friend class WeakRefBase;
+
+        mutable DoubleLink mRefs;
+
+    public:
+
+        /// Default constructor
+        WeakObject()
+        {
+            // This context pointer is never used.
+            mRefs.context = (void*)0xbadbeef;
+        }
+
+        /// Copy constructor
+        WeakObject( const WeakObject & )
+        {
+            // Nothing to copy
+            mRefs.context = (void*)0xbadbeef;
+        }
+
+        /// Destructor
+        virtual ~WeakObject();
+
+        /// Copy operator
+        WeakObject & operator=( const WeakObject & )
+        {
+            // Nothing to copy.
+            return *this;
+        }
+    };
+
+    ///
+    /// Base class of weak referencing pointer. This class is a building
+    /// block of weak-ref pointer. It should not be used directly by
+    /// client code.
+    // -------------------------------------------------------------------------
+    class WeakRefBase
+    {
+        friend class WeakObject;
+
+    protected:
+
+        const WeakObject * mPtr;
+        DoubleLink         mLink;
+
+        /// Constructor
+        WeakRefBase( const WeakObject * ptr ) : mPtr(ptr)
+        {
+            mLink.context = this;
+            if( ptr ) mLink.linkAfter( &ptr->mRefs );
+        }
+
+        /// copy constructor
+        WeakRefBase( const WeakRefBase & ref ) : mPtr(ref.mPtr)
+        {
+            mLink.context = this;
+            if( mPtr ) mLink.linkAfter( &mPtr->mRefs );
+        }
+
+        /// non virtual destructor
+        ~WeakRefBase()
+        {
+        }
+
+        /// Attach to a new weak object (detach from current one)
+        void attachTo( const WeakObject * ptr )
+        {
+            if( mPtr == ptr ) return;
+
+            // detach from current object
+            mLink.detach();
+
+            // attach to new object
+            if( ptr ) mLink.linkAfter( &ptr->mRefs );
+            mPtr = ptr;
+         }
+    };
+
+    ///
+    /// Weak object destructor
+    // -------------------------------------------------------------------------
+    inline WeakObject::~WeakObject()
+    {
+        // Loop through reference list. Clear them all.
+        DoubleLink * next;
+        WeakRefBase * ref;
+        while( NULL != (next = mRefs.next) )
+        {
+            ref = (WeakRefBase*)next->context;
+            ref->mPtr = NULL;
+            next->detach();
+        }
+    }
+
+    ///
+    /// 配合 WeakObject 使用的 weak reference pointer.
+    // -------------------------------------------------------------------------
+    template<typename X>
+    class WeakRef : private WeakRefBase
+    {
+        typedef X * XPTR;
+        typedef X & XREF;
+
+    public:
+
+        ///
+        /// constructor
+        ///
+        WeakRef( XPTR ptr = NULL ) : WeakRefBase(ptr)
+        {
+        }
+
+        ///
+        /// copy constructor
+        ///
+        WeakRef( const WeakRef & ref ) : WeakRefBase(ref)
+        {
+        }
+
+        ///
+        /// Destructor
+        ///
+        ~WeakRef()
+        {
+            clear();
+        }
+
+        ///
+        /// clear the reference
+        ///
+        void clear()
+        {
+            mLink.detach();
+            mPtr = NULL;
+        }
+
+        ///
+        /// get the raw pointer
+        ///
+        XPTR rawptr() const { return (XPTR)WeakRefBase::rawptr(); }
+
+        ///
+        /// check for empty reference
+        ///
+        bool empty() const { return NULL == mPtr; }
+
+        ///
+        /// set/reset the pointer. Null pointer is allowed.
+        ///
+        void set( XPTR ptr )
+        {
+            if( mPtr == ptr ) return;
+            attachTo( ptr );
+        }
+
+        ///
+        /// Convert to XPTR
+        ///
+        operator XPTR () const { return (XPTR)mPtr; }
+
+        ///
+        /// 比较操作
+        ///
+        bool operator == ( const WeakRef & rhs ) const throw()
+        {
+            return mPtr == rhs.mPtr;
+        }
+
+        ///
+        /// 比较操作
+        ///
+        bool operator != ( const WeakRef & rhs ) const throw()
+        {
+            return mPtr != rhs.mPtr;
+        }
+
+        ///
+        /// 比较操作
+        ///
+        bool operator < ( const WeakRef & rhs ) const throw()
+        {
+            return mPtr < rhs.mPtr;
+        }
+
+        ///
+        /// NOT operator
+        ///
+        bool operator !() const throw() { return !mPtr; }
+
+        ///
+        /// dereference operator.
+        ///
+        /// TODO: is this thread safe?
+        ///
+        XREF operator *() const throw()  { GN_ASSERT(mPtr); return *mPtr; }
+
+        ///
+        /// arrow operator
+        ///
+        XPTR operator->() const throw()  { GN_ASSERT(mPtr); return  mPtr; }
+    };
+
     ///
     /// 引用计数器
     ///
@@ -19,8 +226,8 @@ namespace GN
     ///     - 如果有相互引用的现象存在（不管是直接的还是间接的），在释放对象前
     ///       必须首先打开引用环，否则将造成内存泄漏，环中的变量将永远无法释放
     ///     - 就这些吧，其它的以后想到再说....
-    ///
-    class RefCounter : public NoCopy
+    // -------------------------------------------------------------------------
+    class RefCounter : public WeakObject, public NoCopy
     {
         // ********************************
         //       reference management
@@ -56,21 +263,6 @@ namespace GN
         sint32 getref() const throw() { return atomGet32(&mRef); }
 
         // ********************************
-        //    weak reference management
-        // ********************************
-    public :
-
-        std::list<void*>::iterator _addWeakRef( void * p ) const
-        {
-            return mWeakRefList.insert( mWeakRefList.end(), p );
-        }
-
-        void _removeWeakRef( const std::list<void*>::iterator & iter ) const
-        {
-            mWeakRefList.erase( iter );
-        }
-
-        // ********************************
         /// \name protective ctor/dtor
         // ********************************
     protected:
@@ -91,13 +283,6 @@ namespace GN
             {
                 GN_UNEXPECTED_EX( "Destructing reference counted object with non-zero reference counter usually means memory corruption, thus is not allowed!" );
             }
-
-            // NULL all weak references
-            while( !mWeakRefList.empty() )
-            {
-                NullifyWeakRef( *mWeakRefList.begin() );
-            }
-            GN_ASSERT( mWeakRefList.empty() );
         }
 
         ///
@@ -113,13 +298,6 @@ namespace GN
         //@}
 
         // ********************************
-        // private methods
-        // ********************************
-    private:
-
-        static inline void NullifyWeakRef( void * );
-
-        // ********************************
         // private data members
         // ********************************
     private:
@@ -128,13 +306,11 @@ namespace GN
         /// reference counter
         ///
         mutable volatile sint32 mRef;
-
-        mutable std::list<void*> mWeakRefList;
     };
 
     ///
-    /// 和 RefCounter 配合使用的自动指针类
-    ///
+    /// 配合 RefCounter 使用的自动指针类
+    // -------------------------------------------------------------------------
     template <class X, class MUTEX=SingleThreadMutex> class AutoRef
     {
         ///
@@ -351,7 +527,7 @@ namespace GN
 
     ///
     /// This is used to create referenced counted class on stack (or as a member of another class)
-    ///
+    // -------------------------------------------------------------------------
     template<class REF_COUNTED_CLASS>
     class StackRefCounter : public REF_COUNTED_CLASS
     {
@@ -371,159 +547,9 @@ namespace GN
             // do nothing here.
         }
     };
-
-    namespace detail
-    {
-        ///
-        /// base class of weak reference
-        ///
-        class WeakRefBase
-        {
-        protected:
-
-            const RefCounter         * mPtr;
-            std::list<void*>::iterator mIter;
-
-        public:
-
-            /// constructor
-            WeakRefBase( const RefCounter * ptr = NULL ) : mPtr(ptr)
-            {
-                if( mPtr )
-                {
-                    mIter = mPtr->_addWeakRef( this );
-                }
-            }
-
-            /// copy constructor
-            WeakRefBase( const WeakRefBase & ref ) : mPtr(ref.mPtr)
-            {
-                if( mPtr )
-                {
-                    mIter = mPtr->_addWeakRef( this );
-                }
-            }
-
-            /// destructor
-            virtual ~WeakRefBase()
-            {
-                clear();
-            }
-
-            /// clear the reference
-            void clear()
-            {
-                if( mPtr )
-                {
-                    mPtr->_removeWeakRef( mIter );
-                    mPtr = NULL;
-                }
-            }
-        };
-    }
-
-    ///
-    /// Weak reference class
-    ///
-    template<class X>
-    class WeakRef : public detail::WeakRefBase
-    {
-        typedef X * XPTR;
-        typedef X & XREF;
-
-    public:
-
-        /// constructor
-        WeakRef( const X * ptr = NULL ) : detail::WeakRefBase(ptr)
-        {
-        }
-
-        /// copy constructor
-        WeakRef( const WeakRef & ref ) : detail::WeakRefBase(ref)
-        {
-        }
-
-        // get the pointer
-        XPTR get() const { return (X*)mPtr; }
-
-        /// check for empty reference
-        bool empty() const { return NULL == mPtr; }
-
-        /// clear the reference
-        void clear() { return detail::WeakRefBase::clear(); }
-
-        /// set/reset the pointer
-        void set( const X * ptr )
-        {
-            if( mPtr == ptr ) return;
-
-            clear();
-
-            if( ptr )
-            {
-                mPtr = ptr;
-                mIter = mPtr->_addWeakRef( this );
-            }
-        }
-
-        ///
-        /// Convert to XPTR
-        ///
-        operator XPTR () const { return (XPTR)mPtr; }
-
-        ///
-        /// 比较操作
-        ///
-        bool operator == ( const WeakRef & rhs ) const throw()
-        {
-            return mPtr == rhs.mPtr;
-        }
-
-        ///
-        /// 比较操作
-        ///
-        bool operator != ( const WeakRef & rhs ) const throw()
-        {
-            return mPtr != rhs.mPtr;
-        }
-
-        ///
-        /// 比较操作
-        ///
-        bool operator < ( const WeakRef & rhs ) const throw()
-        {
-            return mPtr < rhs.mPtr;
-        }
-
-        ///
-        /// NOT operator
-        ///
-        bool operator !() const throw() { return !mPtr; }
-
-        ///
-        /// dereference operator.
-        ///
-        /// TODO: is this thread safe?
-        ///
-        XREF operator *() const throw()  { GN_ASSERT(mPtr); return *mPtr; }
-
-        ///
-        /// arrow operator
-        ///
-        XPTR operator->() const throw()  { GN_ASSERT(mPtr); return  mPtr; }
-    };
-
-    ///
-    ///
-    // -------------------------------------------------------------------------
-    inline void RefCounter::NullifyWeakRef( void * ptr )
-    {
-        detail::WeakRefBase * ref = (detail::WeakRefBase *)ptr;
-        ref->clear();
-    }
 }
 
 // *****************************************************************************
 //                                     EOF
 // *****************************************************************************
-#endif // __GN_BASE_REFCOUNTER_H__
+#endif // __GN_BASE_SMARTPTR_H__
