@@ -65,8 +65,14 @@ namespace GN
 // memory management
 #include "base/memory.h"
 
+// basic sync. primitives
+#include "base/sync.h"
+
 // single/double linked list
 #include "base/link.h"
+
+// smart pointer
+#include "base/smartptr.h"
 
 // This header is depreciated.
 #include "base/linkedList.h"
@@ -83,9 +89,6 @@ namespace GN
 
 // various auto pointers
 #include "base/autoptr.h"
-
-// basic sync. primitives
-#include "base/sync.h"
 
 // exceptions
 #include "base/exception.h"
@@ -110,7 +113,6 @@ namespace GN
 #include "base/handle.h"
 
 // misc.
-#include "base/refCounter.h"
 #include "base/blob.h"
 #include "base/stdClass.h"
 #include "base/singleton.h"

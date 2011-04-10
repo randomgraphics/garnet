@@ -49,13 +49,13 @@ public:
     {
         using namespace GN;
 
-        AutoRef<MyRefObj> o1( new MyRefObj );
+        WeakObject * o = new WeakObject;
 
-        WeakRef<MyRefObj> w1( o1.get() );
-        WeakRef<MyRefObj> w2;
-        WeakRef<MyRefObj> w3( w1 );
+        WeakRef<WeakObject> w1( o );
+        WeakRef<WeakObject> w2;
+        WeakRef<WeakObject> w3( w1 );
 
-        w2.set( o1 );
+        w2.set( o );
 
         TS_ASSERT( w1 );
         TS_ASSERT( w2 );
@@ -63,7 +63,7 @@ public:
         TS_ASSERT( w1 == w2 );
         TS_ASSERT( w1 == w3 );
 
-        o1.clear();
+        delete o;
 
         TS_ASSERT( !w1 );
         TS_ASSERT( !w2 );
