@@ -130,14 +130,15 @@ namespace GN
 
         void clear()
         {
-            // clear link table
-            for( PairType * p = mLinkedItems.head(); p != NULL; )
+            // clear all pairs.
+            DoubleLink * next;
+            while( NULL != (next = mLinkedItems.next) )
             {
-                PairType * np = p->next;
+                PairType * p = (PairType*)next->context;
+                next->detach();
                 delete p;
-                p = np;
             }
-            memset( &mLinkedItems, 0, sizeof(mLinkedItems) );
+            GN_ASSERT( NULL == mLinkedItems.prev && NULL == mLinkedItems.next );
 
             // clear hash table
             mTable.clear();
@@ -179,14 +180,22 @@ namespace GN
             return 0;
         }
 
+        ///
+        /// Get first item in the map
+        ///
         KeyValuePair * first()
         {
-            return mLinkedItems.head();
+            DoubleLink * link = mLinkedItems.next;
+            return link ? (KeyValuePair*)link->context : NULL;
         }
 
+        ///
+        /// Get first item in the map
+        ///
         const KeyValuePair * first() const
         {
-            return mLinkedItems.head();
+            DoubleLink * link = mLinkedItems.next;
+            return link ? (const KeyValuePair*)link->context : NULL;
         }
 
         /// Insert new key and value into the map
@@ -225,10 +234,19 @@ namespace GN
             }
 
             // create new pair item
-            PairType * newPair = new PairType( key, value );
+            PairType * newPair = new PairType( *this, key, value );
 
             // add to linked list
-            mLinkedItems.append( newPair );
+            if( mLinkedItems.prev )
+            {
+                newPair->link.linkAfter( mLinkedItems.prev );
+            }
+            else
+            {
+                // This is the first item.
+                newPair->link.linkAfter( &mLinkedItems );
+                newPair->link.linkBefore( &mLinkedItems );
+            }
 
             // add to hash table
             hi->values.append( newPair );
@@ -261,15 +279,21 @@ namespace GN
 
             PairType * pt = (PairType*)p;
 
-            if( pt->owner != &mLinkedItems ) return NULL;
+            if( &pt->owner != this ) return NULL;
 
-            return pt->next;
+            DoubleLink * n = pt->link.next;
+
+            if( n == &mLinkedItems ) return NULL;
+
+            if( !n ) return NULL;
+
+            return (KeyValuePair*)n->context;
         }
 
         const KeyValuePair * next( const KeyValuePair * p ) const
         {
-            if( NULL == p && p->owner != &mLinkedItems ) return NULL;
-            return ((const PairType*)p)->next;
+            HashMap * pThis = (HashMap*)this;
+            return pThis->next();
         }
 
         /// Remove key from the map. Invalid key would be siliently ignored.
@@ -294,7 +318,7 @@ namespace GN
                     GN_ASSERT( mCount > 0 );
 
                     // remove from linked list
-                    mLinkedItems.remove( (*pp) );
+                    (*pp)->link.detach();
 
                     // delete the pair item
                     delete *pp;
@@ -342,16 +366,17 @@ namespace GN
 
         struct PairType : public KeyValuePair
         {
-            void *     owner;
-            PairType * prev;
-            PairType * next;
+            // Pointer to the hash table.
+            HashMap & owner;
 
-            PairType( const KEY & k, const VALUE & v )
+            // Link to other pairs
+            DoubleLink link;
+
+            PairType( HashMap & owner_, const KEY & k, const VALUE & v )
                 : KeyValuePair( k, v )
-                , owner(NULL)
-                , prev(0)
-                , next(0)
+                , owner(owner_)
             {
+                link.context = this;
             }
         };
 
@@ -366,7 +391,7 @@ namespace GN
         size_t                     mPrimIndex;
         size_t                     mCount;
         DynaArray<HashItem>        mTable;
-        DoubleLinkedList<PairType> mLinkedItems;
+        DoubleLink                 mLinkedItems;
 
     private:
 

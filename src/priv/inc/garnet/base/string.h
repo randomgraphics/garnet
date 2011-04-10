@@ -1264,21 +1264,21 @@ namespace GN
 
         struct Leaf : public KeyValuePair
         {
-            // double linked list fields
-            Leaf * prev;
-            Leaf * next;
-            void * owner;
+            StringMap & owner;
 
-            Leaf( const CHAR * text, size_t textlen, const T & v )
+            // links to other leaves
+            DoubleLink link;
+
+            Leaf( StringMap & owner_, const CHAR * text, size_t textlen, const T & v )
                 : KeyValuePair( (const char*)HeapMemory::alloc(textlen+1), v )
-                , prev(NULL)
-                , next(NULL)
-                , owner(NULL)
+                , owner(owner_)
             {
                 if( NULL != KeyValuePair::key )
                 {
                     memcpy( (char*)KeyValuePair::key, text, textlen+1 );
                 }
+
+                link.context = this;
             }
 
             ~Leaf()
@@ -1307,7 +1307,7 @@ namespace GN
         size_t mCount; // number of items in map
         FixSizedRawMemoryPool<sizeof(Node)> mNodePool;
         ObjectPool<Leaf>                    mLeafPool;
-        DoubleLinkedList<Leaf>              mLeafs;
+        DoubleLink                          mLeaves;
 
         // *****************************
         // private methods
@@ -1331,7 +1331,7 @@ namespace GN
             if( NULL == p ) return NULL;
 
             // call in-place new to construct the leaf
-            new (p) Leaf( text, textlen, value );
+            new (p) Leaf( *this, text, textlen, value );
             if( NULL == p->key )
             {
                 mLeafPool.freeWithoutDeconstruct( p );
@@ -1343,8 +1343,8 @@ namespace GN
 
         void freeLeaf( Leaf * l )
         {
-            GN_ASSERT( l );
-            mLeafs.remove( l );
+            GN_ASSERT( l && this == &l->owner );
+            l->link.detach();
             mLeafPool.deconstructAndFree( l );
         }
 
@@ -1356,8 +1356,11 @@ namespace GN
             mNodePool.freeAll();
             mLeafPool.deconstructAndFreeAll();
 
-            // I know this is hacky. But it works.
-            memset( &mLeafs, 0, sizeof(mLeafs) );
+            // All leaves have been destructed already. So there's no
+            // need to call detach() at all. Just clear the prev and
+            // next pointers.
+            mLeaves.prev = NULL;
+            mLeaves.next = NULL;
         }
 
         /// make itself a clone of another map
@@ -1530,12 +1533,17 @@ namespace GN
                         return NULL;
                     }
 
-                    // TODO: find the real "previous" leaf node
-                    Leaf * previousNode = mLeafs.tail();
+                    // TODO: sort leaves
 
-                    // insert the new leaf into linked list
-                    // TODO: sort and insert
-                    mLeafs.insertAfter( previousNode, newNode->leaf );
+                    // Insert the new leaf to the end of the list.
+                    newNode->leaf->link.linkBefore( &mLeaves );
+                    if( NULL == mLeaves.next )
+                    {
+                        // This is the first leaf. Make a link loop. So that mLeaves.next
+                        // points to the first item and mLeaves.prev points to the last
+                        // item.
+                        newNode->leaf->link.linkAfter( &mLeaves );
+                    }
 
                     ++mCount;
                     inserted = true;
@@ -1568,7 +1576,7 @@ namespace GN
 
         Leaf * doFirst() const
         {
-            return mLeafs.head();
+            return mLeaves.next ? (Leaf*)mLeaves.next->context : NULL;
         }
 
         Leaf * doNext( const KeyValuePair * p ) const
@@ -1577,14 +1585,18 @@ namespace GN
 
             Leaf * leaf = (Leaf*)p;
 
-            if( leaf->owner != &mLeafs )
+            if( &leaf->owner != this )
             {
                 static Logger * sLogger = getLogger("GN.base.StringMap");
                 GN_ERROR(sLogger)( "Input pointer does not belong to this string map." );
                 return NULL;
             }
 
-            return leaf->next;
+            DoubleLink * n = leaf->link.next;
+
+            if( NULL == n || &mLeaves == n ) return NULL;
+
+            return (Leaf*)n->context;
         }
 
         Node * doRecursiveErase( Node * n, const CHAR * text )
