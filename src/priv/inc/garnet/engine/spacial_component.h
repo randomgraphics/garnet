@@ -9,14 +9,13 @@
 namespace GN { namespace engine
 {
     /// Physics component. Define object location, shape and other physical properties.
-    class SpacialComponent : public Component
+    class SpacialComponent : public Entity
     {
+        GN_ENGINE_DECLARE_ENTITY( SpacialComponent, Entity );
+
     public:
 
         //@{
-
-        static const Guid & sGetType();
-        const Guid &        getType() const { return sGetType(); }
 
                             SpacialComponent();
                            ~SpacialComponent();

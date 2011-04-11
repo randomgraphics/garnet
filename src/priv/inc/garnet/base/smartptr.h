@@ -130,6 +130,7 @@ namespace GN
         ///
         WeakRef( const WeakRef & ref ) : WeakRefBase(ref)
         {
+            attachTo( ref.mPtr );
         }
 
         ///
@@ -166,6 +167,15 @@ namespace GN
         {
             if( mPtr == ptr ) return;
             attachTo( ptr );
+        }
+
+        ///
+        /// copy operator
+        ///
+        WeakRef & operator = ( const WeakRef & rhs )
+        {
+            attachTo( rhs.mPtr );
+            return *this;
         }
 
         ///

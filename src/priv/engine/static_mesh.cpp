@@ -79,6 +79,12 @@ static const ModelResourceDesc * sDetermineBestModelTemplate( const MeshVertexFo
 //
 //
 // -----------------------------------------------------------------------------
+static const GN::Guid STATIC_MESH_GUID = { 0x694830b1, 0x49f9, 0x4dd6, { 0x85, 0x56, 0x4d, 0xa5, 0x31, 0xf6, 0xac, 0x2c } };
+GN_ENGINE_IMPLEMENT_ENTITY( GN::engine::StaticMesh, STATIC_MESH_GUID );
+
+//
+//
+// -----------------------------------------------------------------------------
 GN::engine::StaticMesh::StaticMesh()
 {
     setComponent( &mVisual );

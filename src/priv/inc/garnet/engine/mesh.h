@@ -16,6 +16,8 @@ namespace GN { namespace engine
     ///
     class StaticMesh : public Entity
     {
+        GN_ENGINE_DECLARE_ENTITY( StaticMesh, Entity );
+
     public:
 
         /// constructor
@@ -47,8 +49,8 @@ namespace GN { namespace engine
         bool loadFromFile( const StrA & filename );
 
     private:
-        StackRefCounter<SpacialComponent> mSpacial;
-        StackRefCounter<VisualComponent>  mVisual;
+        SpacialComponent mSpacial;
+        VisualComponent  mVisual;
     };
 
     struct SkinnedAnimationInfo
@@ -62,6 +64,8 @@ namespace GN { namespace engine
     ///
     class SkinnedMesh : public Entity
     {
+        GN_ENGINE_DECLARE_ENTITY( SkinnedMesh, Entity );
+
     public:
 
         /// constructor
@@ -74,16 +78,16 @@ namespace GN { namespace engine
         void clear();
 
         /// get the spacial component of the skeleton root.
-        const SpacialComponent & spacial() const { return *mRootSpacial; }
+        const SpacialComponent & spacial() const { return mRootSpacial; }
 
         /// get the spacial component
-        SpacialComponent & spacial() { return *mRootSpacial; }
+        SpacialComponent & spacial() { return mRootSpacial; }
 
         /// get the visual component
-        const VisualComponent & visual() const { return *mVisual; }
+        const VisualComponent & visual() const { return mVisual; }
 
         /// get the visual component
-        VisualComponent & visual() { return *mVisual; }
+        VisualComponent & visual() { return mVisual; }
 
         /// get number of animations
         size_t getAnimationCount() const { return mAnimations.size(); }
@@ -154,8 +158,8 @@ namespace GN { namespace engine
             gfx::UniformResource * matrices;
         };
 
-        AutoRef<SpacialComponent>                 mRootSpacial;
-        AutoRef<VisualComponent>                  mVisual;
+        SpacialComponent                          mRootSpacial;
+        VisualComponent                           mVisual;
         AutoRef<gfx::EffectResource>              mSkinnedEffect;
         DynaArray<Skeleton>                       mSkeletons;
         DynaArray<SkinnedAnimation*>              mAnimations;

@@ -6,11 +6,6 @@ using namespace GN::engine;
 GN::Logger * sLogger = GN::getLogger("GN.engine");
 
 // *****************************************************************************
-// Component
-// *****************************************************************************
-
-
-// *****************************************************************************
 // Entity
 // *****************************************************************************
 
@@ -28,10 +23,6 @@ GN::engine::Entity::Entity()
 GN::engine::Entity::~Entity()
 {
     // remove all components.
-    for( ComponentMap::KeyValuePair * i = mComponents.first(); i != NULL; i = mComponents.next( i ) )
-    {
-        i->value->decref();
-    }
     mComponents.clear();
 
     impl::onEntityDtor( mID );
@@ -40,12 +31,12 @@ GN::engine::Entity::~Entity()
 //
 //
 // -----------------------------------------------------------------------------
-GN::engine::Component * GN::engine::Entity::getComponent( const Guid & type ) const
+GN::engine::Entity * GN::engine::Entity::getComponent( const EntityType & type ) const
 {
-    Component ** pp = mComponents.find( type );
+    EntityRef<Entity> * pp = mComponents.find( type );
     if( pp )
     {
-        GN_ASSERT( (*pp) );
+        GN_ASSERT( *pp );
         return *pp;
     }
     else
@@ -57,53 +48,15 @@ GN::engine::Component * GN::engine::Entity::getComponent( const Guid & type ) co
 //
 //
 // -----------------------------------------------------------------------------
-void GN::engine::Entity::setComponent( const Guid & type, Component * comp )
+void GN::engine::Entity::setComponent( const EntityType & type, Entity * comp )
 {
-    if( NULL != comp && NULL != comp->mEntity )
+    if( comp )
     {
-        GN_ERROR(sLogger)( "The component has attached to another entity." );
-        return;
-    }
-
-    Component ** pp = mComponents.find( type );
-
-    if( NULL != pp )
-    {
-        Component * old = *pp;
-        GN_ASSERT( old );
-
-        if( old != comp )
-        {
-            if( NULL != comp )
-            {
-                // replace existing component
-
-                comp->mEntity = this;
-                comp->incref();
-                *pp = comp;
-
-                old->mEntity = NULL;
-                old->decref();
-            }
-            else
-            {
-                // remove existing component
-                old->mEntity = NULL;
-                old->decref();
-                mComponents.remove( type );
-            }
-        }
-    }
-    else if( NULL != comp )
-    {
-        // add new component
-        mComponents[type] = comp;
-        comp->mEntity = this;
-        comp->incref();
+        mComponents[type].set( comp );
     }
     else
     {
-        GN_ERROR(sLogger)( "NULL component pointer!" );
+        mComponents.remove( type );
     }
 }
 

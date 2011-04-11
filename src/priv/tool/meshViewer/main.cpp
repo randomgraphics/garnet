@@ -173,7 +173,7 @@ public:
             mesh->drawSkeletons( 0xFFFFFFFF, transform );
         }
 #endif
-        entity->getComponent<VisualComponent>()->draw( camera.proj, camera.view );
+        entity->getComponent<VisualComponent>()->draw( camera.proj, camera.view, entity->getComponent<SpacialComponent>() );
         if( showbbox )
         {
             entity->getComponent<SpacialComponent>()->drawBoundingBox( camera.proj, camera.view, 0xFF000000 );
