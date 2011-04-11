@@ -6,40 +6,43 @@
 /// \author  chen@@CHENLI-OLDPC (2011.2.24)
 // *****************************************************************************
 
+/// Declare an entity type
+#define GN_ENGINE_DECLARE_ENTITY( self, parent ) \
+    public: static  const EntityType & sGetType(); \
+            static  bool               sIsTypeOf( const EntityType & ); \
+            virtual bool               isTypeOf( const EntityType & ) const; \
+    private: typedef self SelfClass; typedef parent ParentClass;
+
+/// Implement common entity methods
+#define GN_ENGINE_IMPLEMENT_ENTITY( self, type ) \
+    const GN::engine::EntityType & self::sGetType() { return type; } \
+    bool                           self::sIsTypeOf( const EntityType & t ) { return ParentClass::sIsTypeOf(t) || t == (type); } \
+    bool                           self::isTypeOf( const EntityType & t ) const { return ParentClass::isTypeOf(t) || t == (type); }
+
 namespace GN { namespace engine
 {
-    class Entity;
-
-    /// Component class root. Can be attached to at most one entity at any moment.
-    class Component : public RefCounter
-    {
-    protected:
-
-        Component() : mEntity(NULL)
-        {
-        }
-
-    public:
-
-        virtual ~Component()
-        {
-        }
-
-        Entity * getEntity() const { return mEntity; }
-
-        virtual const Guid & getType() const = 0;
-
-    private:
-
-        friend class Entity;
-        Entity * mEntity;
-    };
-
-    /// Define entity type class.
+    /// Define entity type class
     typedef Guid EntityType;
 
+    ///
+    /// Entity refernce class
+    ///
+    template<typename T>
+    class EntityRef : public WeakRef<T>
+    {
+    public:
+
+        ///
+        /// Destructor (non virtual)
+        ///
+        ~EntityRef()
+        {
+            clear();
+        }
+    };
+
     /// Entity class. Root class of game play object that could be placed into game world.
-    class Entity : public NoCopy
+    class Entity : public WeakObject, public NoCopy
     {
     protected:
 
@@ -51,20 +54,23 @@ namespace GN { namespace engine
         /// destructor
         virtual ~Entity();
 
-        /// See if the entity class implementes a specific entity type.
+        /// See if the entity class implementes a specific entity type. (static version)
+        static bool sIsTypeOf( const EntityType & ) { return false; }
+
+        /// See if the entity class implementes a specific entity type. (virtual version)
         virtual bool isTypeOf( const EntityType & ) const { return false; }
 
         /// Get unique entity ID
         int getID() const { return mID; }
 
         /// Get entity's component. No increasing reference counter of the component.
-        Component * getComponent( const Guid & type ) const;
+        Entity * getComponent( const EntityType & type ) const;
 
         /// Set entity's component.
         ///   - Decease reference counter of existing component by 1.
         ///   - Increase reference counter of the new component by 1.
         ///   - Null component pointer is allowed.
-        void setComponent( const Guid & type, Component * comp );
+        void setComponent( const EntityType & type, Entity * comp );
 
         /// tempalte helpers
         //@{
@@ -76,7 +82,7 @@ namespace GN { namespace engine
 
     private:
 
-        typedef HashMap<Guid, Component*, 128, Guid::Hash> ComponentMap;
+        typedef HashMap<EntityType, EntityRef<Entity>, 128, EntityType::Hash> ComponentMap;
 
         int           mID;
         ComponentMap  mComponents;

@@ -30,15 +30,11 @@ static inline bool sIsWorldTransform( StandardUniform::Index i )
 //
 //
 // -----------------------------------------------------------------------------
-const GN::Guid & GN::engine::VisualComponent::sGetType()
+static const GN::Guid VISUAL_COMPONENT_GUID =
 {
-    static const GN::Guid MY_GUID =
-    {
-        0x910f5f26, 0x8183, 0x4186, { 0x81, 0x32, 0xbf, 0x19, 0xc5, 0x8b, 0xd8, 0x6b }
-    };
-
-    return MY_GUID;
-}
+    0x910f5f26, 0x8183, 0x4186, { 0x81, 0x32, 0xbf, 0x19, 0xc5, 0x8b, 0xd8, 0x6b }
+};
+GN_ENGINE_IMPLEMENT_ENTITY( GN::engine::VisualComponent, VISUAL_COMPONENT_GUID );
 
 //
 //
@@ -123,11 +119,9 @@ void GN::engine::VisualComponent::clear()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::engine::VisualComponent::draw() const
+void GN::engine::VisualComponent::draw( const SpacialComponent * sc ) const
 {
-    // update standard transformation based on spacial information
-    Entity * e = getEntity();
-    SpacialComponent * sc = e ? e->getComponent<SpacialComponent>() : NULL;
+    // update standard transformation based on spacial information, if a spacial component is provided.
     if( sc )
     {
         GpuResourceDatabase * gdb = getGdb();

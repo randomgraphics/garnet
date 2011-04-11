@@ -2,7 +2,7 @@ class EntityManager;
 
 typedef int EntityType;
 
-class Entity
+class Entity : public WeakObject
 {
 public:
 
@@ -14,14 +14,7 @@ public:
 
 	virtual ~Entity()
 	{
-        // Loop through mReferences list, and clear all of them.
-        DoubleLink * next;
-        while( NULL != (next = mReferences.getNext()) )
-        {
-            ((EntityRefBase*)next)->clear();
-        }
 	}
-
 
 protected:
 
@@ -37,68 +30,6 @@ private:
 
 	EntityManager & mManager;
 	uint64          mUniqueID;
-    DoubleLink      mReferences; // Linked list of entities that are directly referencing this entity.
-};
-
-class EntityRefBase
-{
-    DoubleLink mLink;
-    Entity   * mPtr;  //< Pointer to the entity that is being referenced.
-
-public:
-
-    EntityRefBase() : mPtr(NULL)
-    {
-        mLink.context = this;
-    }
-
-    ~EntityRefBase()
-    {
-        mPtr = NULL;
-    }
-
-	void attach( Entity * e )
-	{
-        if( e == mPtr ) return;
-
-        // detach from old pointer
-        mLink.detach();
-
-        // then attach to new pointer
-        if( e )
-        {
-            mLink.insertAfter( e->mReferences );
-        }
-
-        mPtr = e;
-	}
-
-    void clear()
-    {
-        mLink.detach();
-        mPtr = NULL;
-    }
-
-	Entity * rawptr() const
-	{
-        return mPtr;
-	}
-};
-
-template<typename T>
-class EntityRef : private EntityRefBase
-{
-public:
-
-    void attach( T * t )
-    {
-        EntityRefBase::attach( t );
-    }
-
-    T * rawptr() const
-    {
-        return (T*)EntityRefBase::rawptr();
-    }
 };
 
 class MyEntity1 : public Entity
@@ -144,17 +75,7 @@ public:
 	{
 	}
 
-    void onEntityRef( Entity * referencer, Entity * referencee )
-    {
-    }
-
-    void onEntittyDeref( Entity * referencer, Entity * referencee )
-    {
-    }
-
 private:
-
-	FixedRawMemoryPool<sizeof(EntityInstance),8> mEntityPool;
 
 	Entity * mFirstEntity;
 	Entity * mLastEntity;

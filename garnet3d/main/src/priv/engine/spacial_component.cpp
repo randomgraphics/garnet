@@ -7,15 +7,11 @@
 //
 //
 // -----------------------------------------------------------------------------
-const GN::Guid & GN::engine::SpacialComponent::sGetType()
+static const GN::Guid SPATIAL_COMPONENT_GUID =
 {
-    static const GN::Guid SPATIAL_COMPONENT_GUID =
-    {
-        0xaab1738d, 0x3bc7, 0x424d, { 0x90, 0x35, 0x49, 0x19, 0x47, 0xef, 0xa7, 0x20 },
-    };
-
-    return SPATIAL_COMPONENT_GUID;
-}
+    0xaab1738d, 0x3bc7, 0x424d, { 0x90, 0x35, 0x49, 0x19, 0x47, 0xef, 0xa7, 0x20 },
+};
+GN_ENGINE_IMPLEMENT_ENTITY( GN::engine::SpacialComponent, SPATIAL_COMPONENT_GUID );
 
 //
 //

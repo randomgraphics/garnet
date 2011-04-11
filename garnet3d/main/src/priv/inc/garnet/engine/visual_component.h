@@ -11,17 +11,13 @@ namespace GN { namespace engine
     ///
     /// Component that renders object onto screen
     ///
-    class VisualComponent : public Component
+    class VisualComponent : public Entity
     {
+        GN_ENGINE_DECLARE_ENTITY( VisualComponent, Entity );
+
     public:
 
         //@{
-
-        /// Get visual component's type ID.
-        static const Guid & sGetType();
-
-        /// get component type ID
-        virtual const Guid & getType() const { return sGetType(); }
 
         /// Construct an empty visual component
         VisualComponent();
@@ -37,14 +33,15 @@ namespace GN { namespace engine
         /// model's uniforms to per-component value.
         int addModel( gfx::ModelResource * model );
 
-        /// Render all models in the component
-        void draw() const;
+        /// Render all models in the component. If an spcial component is provided, it will be
+        /// used to update the standard transformation uniforms.
+        void draw( const SpacialComponent * sc ) const;
 
         /// Render the component to screen with specified transformation.
-        void draw( const Matrix44f & proj, const Matrix44f & view ) const
+        void draw( const Matrix44f & proj, const Matrix44f & view, const SpacialComponent * sc ) const
         {
             getGdb()->setTransform( proj, view );
-            draw();
+            draw( sc );
         }
 
         //@}

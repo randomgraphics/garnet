@@ -552,13 +552,16 @@ struct GN::engine::SkinnedMesh::SkinnedAnimation : public FatAnimation
 //
 //
 // -----------------------------------------------------------------------------
+static const GN::Guid SKINNED_MESH_GUID = { 0x950374b7, 0x3b50, 0x4d6e, { 0x9b, 0xd3, 0xa2, 0x36, 0xbe, 0xdb, 0x8e, 0x83 } };
+GN_ENGINE_IMPLEMENT_ENTITY( GN::engine::SkinnedMesh, SKINNED_MESH_GUID );
+
+//
+//
+// -----------------------------------------------------------------------------
 GN::engine::SkinnedMesh::SkinnedMesh()
 {
-    mRootSpacial.attach( new SpacialComponent );
-    setComponent<SpacialComponent>( mRootSpacial );
-
-    mVisual.attach( new SkinnedVisualComponent );
-    setComponent<VisualComponent>( mVisual );
+    setComponent<SpacialComponent>( &mRootSpacial );
+    setComponent<VisualComponent>( &mVisual );
 }
 
 //
@@ -567,11 +570,8 @@ GN::engine::SkinnedMesh::SkinnedMesh()
 GN::engine::SkinnedMesh::~SkinnedMesh()
 {
     clear();
-
     setComponent<VisualComponent>( NULL );
     setComponent<SpacialComponent>( NULL );
-    mRootSpacial.clear();
-    mVisual.clear();
 }
 
 //
@@ -590,7 +590,7 @@ void GN::engine::SkinnedMesh::clear()
         safeHeapDealloc( sk.hierarchy );
         for( size_t j = 0; j < sk.jointCount; ++j )
         {
-            safeDecref( sk.spacials[j] );
+            safeDelete( sk.spacials[j] );
         }
         safeHeapDealloc( sk.spacials );
         safeHeapDealloc( sk.bindPose );
@@ -603,7 +603,7 @@ void GN::engine::SkinnedMesh::clear()
     mSkinnedEffect.clear();
 
     // Clear the visual component (but do not delete the visual instance)
-    mVisual->clear();
+    mVisual.clear();
 }
 
 //
@@ -840,7 +840,7 @@ bool GN::engine::SkinnedMesh::loadFromFatModel( const GN::gfx::FatModel & fatmod
         for( uint32 j = 0; j < source.joints.size(); ++j )
         {
             uint32 parent = source.joints[j].parent;
-            dest.spacials[j]->setParent( (parent == FatJoint::NO_JOINT) ? AutoRef<SpacialComponent>::NULLREF : dest.spacials[parent] );
+            dest.spacials[j]->setParent( (parent == FatJoint::NO_JOINT) ? NULL : dest.spacials[parent] );
         }
 
         // Create a uniform resource for the skeleton
@@ -956,7 +956,7 @@ bool GN::engine::SkinnedMesh::loadFromFatModel( const GN::gfx::FatModel & fatmod
             AutoRef<ModelResource> model = gdb.createResource<ModelResource>( NULL );
             if( model && model->reset( &mord ) )
             {
-                mVisual->addModel( model );
+                mVisual.addModel( model );
 
                 // bind joint matrix uniform to the mesh.
                 uint32 skeletonIndex = fatmesh.skeleton;
@@ -986,7 +986,7 @@ bool GN::engine::SkinnedMesh::loadFromFatModel( const GN::gfx::FatModel & fatmod
     }
 
     // update bounding box
-    mRootSpacial->setSelfBoundingBox( fatmodel.bbox );
+    mRootSpacial.setSelfBoundingBox( fatmodel.bbox );
 
     return true;
 }
@@ -1017,7 +1017,7 @@ void GN::engine::SkinnedMesh::drawSkeletons( uint32 colorInRGBA, const Matrix44f
 
     Matrix44f parent, current;
 
-    Matrix44f finalTransform = transform * mRootSpacial->getLocal2Root();
+    Matrix44f finalTransform = transform * mRootSpacial.getLocal2Root();
 
     // Loop through skeletons
     for( uint32 i = 0; i < mSkeletons.size(); ++i )
