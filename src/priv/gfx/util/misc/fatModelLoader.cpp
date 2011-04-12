@@ -2301,6 +2301,16 @@ static void sLoadAiNodeRecursivly(
         memset( &subset, 0, sizeof(subset) );
         subset.material = aimesh->mMaterialIndex;
 
+        // Assume that the subset is using all joints in the mesh.
+        if( FatMesh::NO_SKELETON != fatmesh.skeleton )
+        {
+            subset.joints.resize( fatmodel.skeletons[fatmesh.skeleton].joints.size() );
+            for( uint32 i = 0; i < subset.joints.size(); ++i )
+            {
+                subset.joints[i] = i;
+            }
+        }
+
         // Add the mesh to fat model.
         fatmodel.meshes.append( &fatmesh );
         fatmeshAutoPtr.detach();
@@ -2725,5 +2735,4 @@ void GN::gfx::printModelFileNodeHierarchy( StrA & hierarchy, const StrA & filena
     {
         hierarchy = "ERROR: unsupported or unknown file format.";
     }
-
 }

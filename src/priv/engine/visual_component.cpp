@@ -54,12 +54,12 @@ GN::engine::VisualComponent::~VisualComponent()
 //
 //
 // -----------------------------------------------------------------------------
-int GN::engine::VisualComponent::addModel( ModelResource * model )
+bool GN::engine::VisualComponent::addModel( ModelResource * model )
 {
     if( NULL == model )
     {
         GN_ERROR(sLogger)( "fail to attach model to visual node: NULL model pointer." );
-        return 0;
+        return false;
     }
 
     GN_ASSERT( ModelResource::guid() == model->type() );
@@ -72,7 +72,7 @@ int GN::engine::VisualComponent::addModel( ModelResource * model )
 	if( NULL == effect )
 	{
         GN_ERROR(sLogger)( "fail to attach model to visual node: No effect attached to the model." );
-		return 0;
+		return false;
 	}
     for( StandardUniform::Index type = 0; type < StandardUniform::Index::NUM_STANDARD_UNIFORMS; ++type )
     {
@@ -97,11 +97,15 @@ int GN::engine::VisualComponent::addModel( ModelResource * model )
     }
 
     // add the model into model list
-    int h = mModels.newHandle();
-    if( 0 != h ) mModels[h].set( model );
+    if( !mModels.resize( mModels.size() + 1 ) )
+    {
+        GN_ERROR(sLogger)( "Out of memory." );
+        return false;
+    }
+    mModels.back().set( model );
 
     // done
-    return h;
+    return true;
 }
 
 //
@@ -181,9 +185,9 @@ void GN::engine::VisualComponent::draw( const SpacialComponent * sc ) const
     // draw models
     GN_GPU_DEBUG_MARK_BEGIN( getGpu(), "VisualComponent::draw" );
 
-    for( int i = mModels.first(); i != 0; i = mModels.next( i ) )
+    for( uint32 i = 0; i < mModels.size(); ++i )
     {
-        drawModelResource( *mModels[i] );
+        drawModelResource( i, *mModels[i] );
     }
     GN_GPU_DEBUG_MARK_END( getGpu() );
 }

@@ -7,7 +7,7 @@
 // *****************************************************************************
 
 // Forward declaration.
-namespace GN { namespace gfx { struct FatModel; } }
+namespace GN { namespace gfx { struct FatModel; struct FatMeshSubset; } }
 
 namespace GN { namespace engine
 {
@@ -68,6 +68,9 @@ namespace GN { namespace engine
 
     public:
 
+        /// Get joint count threshold per draw.
+        static uint32 sGetMaxJointsPerDraw();
+
         /// constructor
         SkinnedMesh();
 
@@ -84,10 +87,10 @@ namespace GN { namespace engine
         SpacialComponent & spacial() { return mRootSpacial; }
 
         /// get the visual component
-        const VisualComponent & visual() const { return mVisual; }
+        const VisualComponent & visual() const { return *mVisual; }
 
         /// get the visual component
-        VisualComponent & visual() { return mVisual; }
+        VisualComponent & visual() { return *mVisual; }
 
         /// get number of animations
         size_t getAnimationCount() const { return mAnimations.size(); }
@@ -115,7 +118,18 @@ namespace GN { namespace engine
 
     private:
 
+        class SkinnedVisualComponent;
+
         struct SkinnedAnimation;
+
+        struct SkinnedSubset
+        {
+            /// Index of the skeleton into mSkeletons.
+            uint32 skeleton;
+
+            /// Joints used by the subset.
+            DynaArray<uint32,uint32> joints;
+        };
 
         struct JointHierarchy
         {
@@ -152,17 +166,24 @@ namespace GN { namespace engine
             JointBindPose * bindPose;
 
             /// Store inverse of the active rest pose of the skeleton. Array size equals joint count.
+            /// Matrices in this array are updated by animation.
             Matrix44f * invRestPose;
 
-            /// Uniform resource that stores bind pose to rest pose matrices.
+            /// Bind pose to rest pose transformations for each joint. Array size equals joint count.
+            /// Matrices in this array are updated by animation.
+            Matrix44f * bind2rest;
+
+            /// Uniform resource that stores bind pose to rest pose matrices for the current subset.
+            /// Note that uniform size might small than joint count.
             gfx::UniformResource * matrices;
         };
 
         SpacialComponent                          mRootSpacial;
-        VisualComponent                           mVisual;
+        VisualComponent *                         mVisual;
         AutoRef<gfx::EffectResource>              mSkinnedEffect;
         DynaArray<Skeleton>                       mSkeletons;
         DynaArray<SkinnedAnimation*>              mAnimations;
+        DynaArray<SkinnedSubset>                  mSubsets; // One subset for each model in visual component.
     };
 }}
 

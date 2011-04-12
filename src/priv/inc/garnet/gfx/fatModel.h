@@ -132,15 +132,8 @@ namespace GN { namespace gfx
             }
         }
 
-        /// Set element format
-        void setElementFormat( int semantic, ColorFormat format )
-        {
-            if( 0 <= semantic && semantic < (int)NUM_SEMANTICS )
-            {
-                mFormats[semantic] = format;
-            }
-        }
-
+        /// getXXX() helpers
+        //@{
         void * getPosition() const { return mElements[POSITION]; }
         void * getNormal() const { return mElements[NORMAL]; }
         void * getTexcoord( size_t stage ) const
@@ -153,6 +146,16 @@ namespace GN { namespace gfx
             else
             {
                 return NULL;
+            }
+        }
+        //@}
+
+        /// Set element format
+        void setElementFormat( int semantic, ColorFormat format )
+        {
+            if( 0 <= semantic && semantic < (int)NUM_SEMANTICS )
+            {
+                mFormats[semantic] = format;
             }
         }
 
@@ -178,10 +181,17 @@ namespace GN { namespace gfx
     struct FatMeshSubset
     {
         uint32 material; //< index into FatModel.materials array.
+
+        // Vertex range.
         uint32 basevtx;
         uint32 numvtx;
+
+        // Index range. If the mesh has no index buffer, index range will be ignored.
         uint32 startidx;
         uint32 numidx;
+
+        /// Joints used by the subset.
+        DynaArray<uint32,uint32> joints;
     };
 
     struct FatMesh
@@ -301,6 +311,9 @@ namespace GN { namespace gfx
 
         // Calculate FatModel.bbox from mesh data.
         void calcBoundingBox();
+
+        /// split skinned mesh to meet "maximum joints per subset" criteria.
+        bool splitSkinnedMesh( uint32 maxJointsPerSubset );
 
         /// load fatmodel from file
         bool loadFromFile( const StrA & filename );

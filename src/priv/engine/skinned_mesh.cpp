@@ -14,7 +14,7 @@ static GN::Logger * sLogger = GN::getLogger("GN.engine");
 //
 //
 // -----------------------------------------------------------------------------
-#define MAX_JOINTS_PER_MESH     40
+#define MAX_JOINTS_PER_DRAW     40
 #define MAX_JOINTS_PER_MESH_STR "40"
 
 //
@@ -346,7 +346,7 @@ static ModelResourceDesc sSkinnedDiffuseModelDesc()
 {
     struct JointMatrices
     {
-        Matrix44f matrices[MAX_JOINTS_PER_MESH];
+        Matrix44f matrices[MAX_JOINTS_PER_DRAW];
 
         JointMatrices()
         {
@@ -495,7 +495,7 @@ static ModelResourceDesc sSkinnedWireframeModelDesc()
 {
     struct JointMatrices
     {
-        Matrix44f matrices[MAX_JOINTS_PER_MESH];
+        Matrix44f matrices[MAX_JOINTS_PER_DRAW];
 
         JointMatrices()
         {
@@ -522,14 +522,50 @@ static ModelResourceDesc sSkinnedWireframeModelDesc()
 // SkinnedVisualComponent
 // *****************************************************************************
 
-class SkinnedVisualComponent : public VisualComponent
+class GN::engine::SkinnedMesh::SkinnedVisualComponent : public VisualComponent
 {
+    SkinnedMesh  & mOwner;
+
 protected:
 
-    virtual void drawModelResource( ModelResource & model ) const
+    virtual void drawModelResource( uint32 index, ModelResource & model ) const
     {
-        // TODO: update joint matrices
+        // Reference the subset
+        GN_ASSERT( index < mOwner.mSubsets.size() );
+        const SkinnedMesh::SkinnedSubset & subset = mOwner.mSubsets[index];
+
+        Matrix44f matrices[MAX_JOINTS_PER_DRAW];
+
+        // Upload joint matrices to GPU uniform
+        if( FatMesh::NO_SKELETON != subset.skeleton )
+        {
+            const SkinnedMesh::Skeleton & sk = mOwner.mSkeletons[subset.skeleton];
+
+            Uniform * uniform = sk.matrices->uniform().rawptr();
+
+            GN_ASSERT( uniform->size() >= sizeof(Matrix44f)*MAX_JOINTS_PER_DRAW );
+            GN_ASSERT( subset.joints.size() <= MAX_JOINTS_PER_DRAW );
+
+            for( uint32 i = 0; i < subset.joints.size(); ++i )
+            {
+                uint32 jointIndex = subset.joints[i];
+                matrices[i] = sk.bind2rest[jointIndex];
+            }
+
+            size_t uploadBytes = sizeof(Matrix44f) * subset.joints.size();
+
+            uniform->update( 0, (uint32)uploadBytes, matrices );
+        }
+
+        // draw the GPU model resource.
         model.draw();
+    }
+
+public:
+
+    SkinnedVisualComponent( SkinnedMesh & owner )
+        : mOwner(owner)
+    {
     }
 };
 
@@ -558,10 +594,19 @@ GN_ENGINE_IMPLEMENT_ENTITY( GN::engine::SkinnedMesh, SKINNED_MESH_GUID );
 //
 //
 // -----------------------------------------------------------------------------
+uint32 GN::engine::SkinnedMesh::sGetMaxJointsPerDraw()
+{
+    return MAX_JOINTS_PER_DRAW;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
 GN::engine::SkinnedMesh::SkinnedMesh()
 {
     setComponent<SpacialComponent>( &mRootSpacial );
-    setComponent<VisualComponent>( &mVisual );
+    mVisual = new SkinnedVisualComponent( *this );
+    setComponent<VisualComponent>( mVisual );
 }
 
 //
@@ -595,15 +640,19 @@ void GN::engine::SkinnedMesh::clear()
         safeHeapDealloc( sk.spacials );
         safeHeapDealloc( sk.bindPose );
         safeHeapDealloc( sk.invRestPose );
+        safeHeapDealloc( sk.bind2rest );
         safeDecref( sk.matrices );
     }
     mSkeletons.clear();
+
+    // Delete all subsets.
+    mSubsets.clear();
 
     // Delete the effect
     mSkinnedEffect.clear();
 
     // Clear the visual component (but do not delete the visual instance)
-    mVisual.clear();
+    mVisual->clear();
 }
 
 //
@@ -634,12 +683,6 @@ void GN::engine::SkinnedMesh::setAnimation( size_t animationIndex, float seconds
     {
         // reset back to bind pose.
 
-        Matrix44f identityMatrices[MAX_JOINTS_PER_MESH];
-        for( uint32 i = 0; i < MAX_JOINTS_PER_MESH; ++i )
-        {
-            identityMatrices[i].identity();
-        }
-
         for( uint32 skeletonIndex = 0; skeletonIndex < mSkeletons.size(); ++skeletonIndex )
         {
             Skeleton & sk = mSkeletons[skeletonIndex];
@@ -655,12 +698,13 @@ void GN::engine::SkinnedMesh::setAnimation( size_t animationIndex, float seconds
             for( uint32 jointIndex = 0; jointIndex < sk.jointCount; ++jointIndex )
             {
                 sk.invRestPose[jointIndex] = Matrix44f::sInverse( sk.bindPose[jointIndex].model2joint );
+                sk.bind2rest[jointIndex].identity();
             }
 
-            // And the bind pose -> rest pose transformation should be identity.
+            /* And the bind pose -> rest pose transformation should be identity.
             Uniform * uniform = sk.matrices->uniform().rawptr();
             GN_ASSERT( uniform->size() >= sizeof(identityMatrices) );
-            uniform->update( 0, (uint32)sizeof(identityMatrices), identityMatrices );
+            uniform->update( 0, (uint32)sizeof(identityMatrices), identityMatrices );*/
         }
     }
     else
@@ -676,7 +720,6 @@ void GN::engine::SkinnedMesh::setAnimation( size_t animationIndex, float seconds
         // Mod time stamp by animation duration.
         seconds = fmod( seconds, (float)fatanim.duration );
 
-        Matrix44f   matrices[MAX_JOINTS_PER_MESH]; // stores final bind pose -> rest pose transformation matrices.
         Vector3f    t;
         Quaternionf r;
         Vector3f    s;
@@ -735,20 +778,15 @@ void GN::engine::SkinnedMesh::setAnimation( size_t animationIndex, float seconds
                 // Query rest pose tranformation of the joint from spacial component.
                 joint_to_rest = spacial->getLocal2Root();
 
-                // After we support mesh spliting, this should be remapped to a
-                // value less than MAX_JOINTS_PER_MESH.
-                if( jointIndex < MAX_JOINTS_PER_MESH )
-                {
-                    // bind -> rest = bind -> joint -> rest
-                    matrices[jointIndex] = joint_to_rest * bind_to_joint;
-                }
+                // bind -> rest = bind -> joint -> rest
+                sk.bind2rest[jointIndex] = joint_to_rest * bind_to_joint;
             }
 
-            // update the matrix uniform.
+            /* update the matrix uniform.
             Uniform * uniform = sk.matrices->uniform().rawptr();
-            GN_ASSERT( uniform->size() >= sizeof(Matrix44f)*MAX_JOINTS_PER_MESH );
-            size_t bytes = sizeof(Matrix44f) * math::getmin<size_t>(MAX_JOINTS_PER_MESH,sk.jointCount);
-            uniform->update( 0, (uint32)bytes, matrices );
+            GN_ASSERT( uniform->size() >= sizeof(Matrix44f)*MAX_JOINTS_PER_DRAW );
+            size_t bytes = sizeof(Matrix44f) * math::getmin<size_t>(MAX_JOINTS_PER_DRAW,sk.jointCount);
+            uniform->update( 0, (uint32)bytes, matrices );*/
         }
     }
 }
@@ -779,8 +817,6 @@ bool GN::engine::SkinnedMesh::loadFromFatModel( const GN::gfx::FatModel & fatmod
     if( NULL == mSkinnedEffect ) return false;
 
     // Load skeleton array
-    Matrix44f defaultMatrices[MAX_JOINTS_PER_MESH];
-    for( uint32 i = 0; i < MAX_JOINTS_PER_MESH; ++i ) defaultMatrices[i].identity();
     mSkeletons.resize( fatmodel.skeletons.size() );
     memset( mSkeletons.rawptr(), 0, sizeof(Skeleton)*mSkeletons.size() );
     for( uint32 i = 0; i < fatmodel.skeletons.size(); ++i )
@@ -793,7 +829,8 @@ bool GN::engine::SkinnedMesh::loadFromFatModel( const GN::gfx::FatModel & fatmod
         dest.spacials = (SpacialComponent**)HeapMemory::alloc( sizeof(void*) * dest.jointCount );
         dest.bindPose = (JointBindPose*)HeapMemory::alloc( sizeof(JointBindPose) * dest.jointCount );
         dest.invRestPose = (Matrix44f*)HeapMemory::alloc( sizeof(Matrix44f) * dest.jointCount );
-        if( !dest.hierarchy || !dest.spacials || !dest.bindPose || !dest.invRestPose )
+        dest.bind2rest = (Matrix44f*)HeapMemory::alloc( sizeof(Matrix44f) * dest.jointCount );
+        if( !dest.hierarchy || !dest.spacials || !dest.bindPose || !dest.invRestPose || !dest.bind2rest )
         {
             GN_ERROR(sLogger)( "Fail to load skinned mesh from FatModel: out of memory." );
             clear();
@@ -826,6 +863,9 @@ bool GN::engine::SkinnedMesh::loadFromFatModel( const GN::gfx::FatModel & fatmod
 
             // Initial rest pose is same as bind pose.
             dest.invRestPose[j] = Matrix44f::sInverse( srcjoint.bindPose.model2joint );
+
+            // And Initial bind->rest transformation would be identity
+            dest.bind2rest[j].identity();
         }
 
         // Loop through each joints again (second pass)
@@ -845,7 +885,7 @@ bool GN::engine::SkinnedMesh::loadFromFatModel( const GN::gfx::FatModel & fatmod
 
         // Create a uniform resource for the skeleton
         dest.matrices = gdb.createResource<UniformResource>( NULL ).detach();
-        if( NULL == dest.matrices || !dest.matrices->reset( sizeof(defaultMatrices), defaultMatrices ) )
+        if( NULL == dest.matrices || !dest.matrices->reset( sizeof(Matrix44f)*MAX_JOINTS_PER_DRAW, NULL ) )
         {
             clear();
             return false;
@@ -860,15 +900,6 @@ bool GN::engine::SkinnedMesh::loadFromFatModel( const GN::gfx::FatModel & fatmod
         const FatMesh & fatmesh = *fatmodel.meshes[mi];
 
         StrA meshName = stringFormat( "%s.mesh.%d", fatmodel.name.rawptr(), mi );
-
-        uint32 jointCountInTheMesh = fatmodel.skeletons[fatmesh.skeleton].joints.size();
-        if( jointCountInTheMesh > MAX_JOINTS_PER_MESH )
-        {
-            // TODO: split the mesh!
-            GN_ERROR(sLogger)( "Ignore mesh %s. It contains too many joints (#%d) then the current code allowed (#%d)",
-                meshName.rawptr(), jointCountInTheMesh, MAX_JOINTS_PER_MESH );
-            continue;
-        }
 
         // use exising mesh, if possible
         AutoRef<MeshResource> mesh = gdb.findResource<MeshResource>( meshName );
@@ -928,11 +959,27 @@ bool GN::engine::SkinnedMesh::loadFromFatModel( const GN::gfx::FatModel & fatmod
 
         GN_ASSERT( mesh );
 
+        // reserve memory for mesh subsets.
+        if( !mSubsets.reserve( fatmesh.subsets.size() ) )
+        {
+            GN_ERROR(sLogger)( "Out of memory." );
+            clear();
+            return false;
+        }
+
         // Loop through all mesh subsets. Create one model for each subset.
         for( size_t s = 0; s < fatmesh.subsets.size(); ++s )
         {
             const FatMeshSubset & fatsubset = fatmesh.subsets[s];
             const FatMaterial   & fatmat    = fatmodel.materials[fatsubset.material];
+
+            uint32 jointCountInTheSubset = fatsubset.joints.size();
+            if( jointCountInTheSubset > MAX_JOINTS_PER_DRAW )
+            {
+                GN_ERROR(sLogger)( "Ignore mesh %s subset %d. It contains too many joints (#%d) then the current code allowed (#%d)",
+                    meshName.rawptr(), s, jointCountInTheSubset, MAX_JOINTS_PER_DRAW );
+                continue;
+            }
 
             // setup model descriptor
             ModelResourceDesc mord = sSkinnedDiffuseModelDesc();
@@ -952,18 +999,23 @@ bool GN::engine::SkinnedMesh::loadFromFatModel( const GN::gfx::FatModel & fatmod
                 mord.textures["NORMAL_TEXTURE"].resourceName = fatmat.normalTexture;
             }
 
-            // create model and add to visual
+            // create new GPU model resource
             AutoRef<ModelResource> model = gdb.createResource<ModelResource>( NULL );
-            if( model && model->reset( &mord ) )
-            {
-                mVisual.addModel( model );
+            if( !model || !model->reset( &mord ) ) continue;
 
-                // bind joint matrix uniform to the mesh.
-                uint32 skeletonIndex = fatmesh.skeleton;
-                if( skeletonIndex != FatMesh::NO_SKELETON )
-                {
-                    model->setUniformResource( "JOINT_MATRICES", mSkeletons[skeletonIndex].matrices );
-                }
+            // add model to visual component.
+            if( !mVisual->addModel( model ) ) continue;
+
+            // remember the subset information.
+            GN_VERIFY( mSubsets.resize( mSubsets.size() + 1 ) );
+            mSubsets.back().skeleton = fatmesh.skeleton;
+            mSubsets.back().joints = fatsubset.joints;
+
+            // bind joint matrix uniform to the mesh.
+            uint32 skeletonIndex = fatmesh.skeleton;
+            if( skeletonIndex != FatMesh::NO_SKELETON )
+            {
+                model->setUniformResource( "JOINT_MATRICES", mSkeletons[skeletonIndex].matrices );
             }
         }
     }
