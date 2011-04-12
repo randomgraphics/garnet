@@ -169,10 +169,13 @@ void GN::engine::SpacialComponent::calcTransform()
 // -----------------------------------------------------------------------------
 void GN::engine::SpacialComponent::invalidateBoundingBox()
 {
-    mBBoxDirty = true;
-    for( SpacialComponent * parent = getParent(); parent; parent = parent->getParent() )
+    if( !mBBoxDirty )
     {
-        parent->mBBoxDirty = true;
+        mBBoxDirty = true;
+        for( SpacialComponent * parent = getParent(); parent; parent = parent->getParent() )
+        {
+            parent->mBBoxDirty = true;
+        }
     }
 }
 

@@ -28,10 +28,10 @@ namespace GN { namespace engine
         /// clear to empty component
         void clear();
 
-        /// add new model to the node. return the model ID, or 0 for failure.
-        /// Note: models cannot be shared between components, since the component needs to setup
-        /// model's uniforms to per-component value.
-        int addModel( gfx::ModelResource * model );
+        /// add new model to the node.
+        /// Note: models cannot be shared between components, since the visual component need to
+        /// setup model's uniforms to per-component value.
+        bool addModel( gfx::ModelResource * model );
 
         /// Render all models in the component. If an spcial component is provided, it will be
         /// used to update the standard transformation uniforms.
@@ -51,14 +51,15 @@ namespace GN { namespace engine
         /// This method is called for each model in the visual component. The default
         /// implementation just calls ModelResource::draw(). Subclass could override
         /// this function to do custom rendering for each model.
-        virtual void drawModelResource( gfx::ModelResource & model ) const
+        virtual void drawModelResource( uint32 modelIndex, gfx::ModelResource & model ) const
         {
+            GN_UNUSED_PARAM(modelIndex);
             model.draw();
         }
 
     private:
 
-        typedef HandleManager<AutoRef<gfx::ModelResource>,int> ModelManager;
+        typedef DynaArray<AutoRef<gfx::ModelResource>,uint32> ModelManager;
 
         typedef FixedArray<
             AutoRef<gfx::UniformResource>,

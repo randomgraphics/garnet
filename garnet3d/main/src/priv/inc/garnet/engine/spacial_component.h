@@ -35,11 +35,11 @@ namespace GN { namespace engine
         const Vector3f    & getPosition() const { return mPosition; }       ///< get position in parent space
         const Quaternionf & getRotation() const { return mRotation; }       ///< get orientation, in parent space
         const Vector3f    & getScale() const { return mScale; }             ///< get scaling for each axis in local space.
-        const Boxf        & getSelfBoundingBox() const { return mSelfBBox; } ///< get bounding box of the component in local space.
-        const Boxf        & getUberBoundingBox() const { validateBoundingBox(); return mUberBBox; } ///< get the uber bounding box of the component and all sub components, in local space.
         const Matrix44f   & getLocal2Parent() const { validateTransform(); return mLocal2Parent; } ///< get local space to parent space transformation matrix
         const Matrix44f   & getLocal2Root() const { validateTransform(); return mLocal2Root; }     ///< get local space to root space transformation matrix
 
+        const Boxf        & getSelfBoundingBox() const { return mSelfBBox; } ///< get bounding box of the component in local space.
+        const Boxf        & getUberBoundingBox() const { validateBoundingBox(); return mUberBBox; } ///< get the uber bounding box of the component and all sub components, in local space.
         /// draw the bounding box
         void                drawBoundingBox( const Matrix44f & proj, const Matrix44f & view, uint32 colorInRGBA ) const
         {
@@ -72,7 +72,7 @@ namespace GN { namespace engine
         Matrix44f   mParent2Local;   ///< parent->local space transformation
         Matrix44f   mLocal2Root;     ///< local->root space transformation
         Matrix44f   mRoot2Local;     ///< root->local transformation
-        bool        mTransformDirty; ///< transformation dirty flag
+        bool        mTransformDirty; ///< self and subtree transformation dirty flag
         bool        mBBoxDirty;      ///< bounding box dirty flag.
 
     private:

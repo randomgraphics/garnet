@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "garnet/gfx/fatModel.h"
+#include <set>
 
 using namespace GN;
 using namespace GN::gfx;
@@ -323,6 +324,18 @@ void GN::gfx::FatSkeleton::printJointHierarchy( StrA & s ) const
 //
 //
 // -----------------------------------------------------------------------------
+static void sJointSet2JointArray( DynaArray<uint32,uint32> & jarray, const std::set<uint32> & jset )
+{
+    jarray.clear();
+    for( std::set<uint32>::const_iterator i = jset.begin(); i != jset.end(); ++i )
+    {
+        jarray.append( *i );
+    }
+}
+
+//
+//
+// -----------------------------------------------------------------------------
 void GN::gfx::FatModel::calcBoundingBox()
 {
     bbox.clear();
@@ -331,4 +344,191 @@ void GN::gfx::FatModel::calcBoundingBox()
         GN_ASSERT( meshes[i] );
         Boxf::sGetUnion( bbox, bbox, meshes[i]->bbox );
     }
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+bool GN::gfx::FatModel::splitSkinnedMesh( uint32 maxJointsPerSubset )
+{
+    if( maxJointsPerSubset < 12 )
+    {
+        GN_ERROR(sLogger)( "The minimal MAX_JOINTS_PER_SUBSET is 12." );
+        maxJointsPerSubset = 12;
+    }
+
+    //
+    // Loop through all meshes
+    //
+    for( uint32 i = 0; i < meshes.size(); ++i )
+    {
+        FatMesh & mesh = *meshes[i];
+
+        // ignore mesh without skeleton
+        if( FatMesh::NO_SKELETON == mesh.skeleton ) continue;
+
+        // ignore mesh without skin information in vertex.
+        const uint32 * joints  = (uint32*)mesh.vertices.getElementData( FatVertexBuffer::JOINT_ID );
+        float  * weights = (float*)mesh.vertices.getElementData( FatVertexBuffer::JOINT_WEIGHT );
+        if( NULL == joints || NULL == weights ) continue;
+
+        // cache mesh index buffer (might be NULL)
+        uint32 * indices = mesh.indices.rawptr();
+
+        // Temporary array to hold newly created subset.
+        DynaArray<FatMeshSubset> newSubsets;
+
+        //
+        // Loop through all subsets in the mesh. See if any of them need to be
+        // split into smaller pieces to meet the joint number threshold. All
+        // newly created subsets are stored in array "newSubsets".
+        //
+        for( uint32 i = 0; i < mesh.subsets.size(); ++i )
+        {
+            // This is the subset that we're currently looping through
+            FatMeshSubset & subset = mesh.subsets[i];
+
+            // This is to see if we have created a new subset.
+            FatMeshSubset * newsub = NULL;
+
+            // Loop through each triangle in the subset. Accumulate joints on the way.
+            // Whenever number of joints exceeds the threshold, creates a new subset
+            // and reset the joint count.
+
+            std::set<uint32> accumulatedJoints;
+
+            uint32 faceCount = (indices ? subset.numidx : subset.numvtx) / 3;
+
+            for( uint32 i = 0; i < faceCount; ++i )
+            {
+                // Collect joint of this face (triangle)
+                std::set<uint32> newJoints;
+                for( uint32 j = 0; j < 3; ++j )
+                {
+                    uint32 vertexIndex = subset.basevtx + ( indices ? indices[subset.startidx+i*3+j] : (i*3+j) );
+                    const uint32 * vertexJoints = joints + vertexIndex;
+                    if( FatJoint::NO_JOINT != vertexJoints[0] ) newJoints.insert( vertexJoints[0] );
+                    if( FatJoint::NO_JOINT != vertexJoints[1] ) newJoints.insert( vertexJoints[1] );
+                    if( FatJoint::NO_JOINT != vertexJoints[2] ) newJoints.insert( vertexJoints[2] );
+                    if( FatJoint::NO_JOINT != vertexJoints[3] ) newJoints.insert( vertexJoints[3] );
+                }
+
+                // Merge current joints and new joints into a temporary set.
+                std::set<uint32> tempJointSet( accumulatedJoints );
+                tempJointSet.insert( newJoints.begin(), newJoints.end() );
+
+                // See if the size of the merged joint set exceeds the limit.
+                if( tempJointSet.size() > maxJointsPerSubset )
+                {
+                    //
+                    // There's no eough space to hold the new face in current subset. We have to
+                    // create a new subset and put the newJoints into it. And if it is the first
+                    // time we split, we also need to remember the current face index, which we
+                    // will use later to adjust the original subset.
+                    //
+
+                    if( NULL == newsub )
+                    {
+                        // This is the first time we split. We need to adjust the original subset
+                        // to remove all faces that will been moved to new subsets. We have
+                        // remembered the orignal face count in variable "faceCount". So this should
+                        // not affect the looping.
+                        if( indices )
+                        {
+                            GN_ASSERT( ( i * 3 ) > subset.startidx );
+                            subset.numidx = i * 3 - subset.startidx;
+                        }
+                        else
+                        {
+                            GN_ASSERT( ( i * 3 ) > subset.basevtx );
+                            subset.numvtx = i * 3 - subset.basevtx;
+                        }
+
+                        // The accumualted joint set should contain joints and only joints that are
+                        // used by the subset
+                        sJointSet2JointArray( subset.joints, accumulatedJoints );
+                    }
+                    else
+                    {
+                        // We have split the subset before. It's time to finalize the previous split
+                        // subset by filling in the number of vertices or indices in the subset.
+                        if( indices )
+                        {
+                            newsub->numidx = i * 3 - newsub->startidx;
+                        }
+                        else
+                        {
+                            newsub->numvtx = i * 3 - newsub->basevtx;
+                        }
+
+                        // copy accumulated joints to the new subset.
+                        sJointSet2JointArray( newsub->joints, accumulatedJoints );
+                    }
+
+                    // Now, create a new subset.
+                    newSubsets.resize( newSubsets.size() + 1 );
+                    newsub = &newSubsets.back();
+
+                    // Initialize the new subset. Note that we don't know the final vertex and
+                    // index count yet.
+                    newsub->material = subset.material;
+                    if( indices )
+                    {
+                        newsub->basevtx = subset.basevtx;
+                        newsub->numvtx = subset.numvtx;
+                        newsub->startidx = i * 3;
+                        newsub->numidx = 0xbadbeef; // don't know this yet.
+                    }
+                    else
+                    {
+                        newsub->basevtx = i * 3;
+                        newsub->numvtx = 0xbadbeef; // don't know this yet.
+                        newsub->startidx = 0;
+                        newsub->numidx = 0;
+                    }
+
+                    // We just split a new subset. So we need to reset the joint set to start
+                    // a new round of accumulation towards the joint count threshold.
+                    accumulatedJoints = newJoints;
+                }
+                else
+                {
+                    // Not yet. Let's add the new joints into accumulated joint set then continue.
+                    accumulatedJoints = tempJointSet;
+                }
+            }
+
+            // If we have split the subset at least once, ...
+            if( NULL != newsub )
+            {
+                // So we need to finalize the last new subset, in the same way we finalize other
+                // subsets.
+                if( indices )
+                {
+                    newsub->numidx = faceCount * 3 - newsub->startidx;
+                }
+                else
+                {
+                    newsub->numvtx = faceCount * 3 - newsub->basevtx;
+                }
+
+                // copy accumulated joints to the new subset.
+                sJointSet2JointArray( newsub->joints, accumulatedJoints );
+            }
+        }
+        // end loo: for each subset
+
+        // We have gone through all subsets in the mesh and make sure every single of them meets
+        // the joint threshold (anyone that doesn't has been split). Now is time to add all newly
+        // created subsets back to the mesh.
+        mesh.subsets.append( newSubsets );
+
+        // TODOs:
+        // 1. remap vertex joint ID, split vertex if needed.
+        // 2. sort subsets to minimize joint matrix upload.
+    }
+    // end loop: for each mesh
+
+    // We have gone through all meshes. Job is well done.
+    return true;
 }

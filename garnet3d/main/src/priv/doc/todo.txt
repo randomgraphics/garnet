@@ -5,21 +5,16 @@ TODO
 
 - p0
   - unit test: DynaArray<???,uint8>
+  - skinned mesh
+    - load skin and animation from FBX.
+    - support skeleton with more than 40 joints. (split mesh)
   - New Engine module entity class
-    - See if I can separate WeakRef with RefCounter.
-    - RTTI
-    - unique entity ID
-    - optional entity name (might not be unique)
-    - unify entity and component interface
-    - weak reference
     - loop through all entities
     - loop through entities of specific type
     - loop through entities that are referenced by another entity
-  - Refine double linked list classes:
-    - DoubleLinkedItem and DoubleLinkedList should be combined into one single
-    class.
 
 - p1
+  - skinned animation: update bounding box with animation
   - Shader resource library: DLL or static library that defines common
     shaders.
   - Compositable shader component:
