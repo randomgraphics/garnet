@@ -190,7 +190,16 @@ namespace GN { namespace gfx
         uint32 startidx;
         uint32 numidx;
 
-        /// Joints used by the subset.
+        /// Joints used by the subset. This is also a joint ID remapping table for
+        /// vertices used by this subset:
+        ///
+        ///     joint ID = joints[vertex.jointID].
+        ///
+        /// If a vertex is used by more than one subsets, the FatModel loading function
+        /// guarantees that each subset have exactly same mapping for that paticular
+        /// vertex:
+        ///
+        ///    subset1.joints[TheVertex.jointID] == subset2.joints[TheVertex.jointID] == subset3....
         DynaArray<uint32,uint32> joints;
     };
 
@@ -312,7 +321,10 @@ namespace GN { namespace gfx
         // Calculate FatModel.bbox from mesh data.
         void calcBoundingBox();
 
-        /// split skinned mesh to meet "maximum joints per subset" criteria.
+        /// Split skinned mesh to meet "maximum joints per subset" criteria.
+        /// If the function fails (and returns false), the FatModel will be
+        /// left in undefine state. User must call clear to reset the FatModel
+        /// content and start over.
         bool splitSkinnedMesh( uint32 maxJointsPerSubset );
 
         /// load fatmodel from file
