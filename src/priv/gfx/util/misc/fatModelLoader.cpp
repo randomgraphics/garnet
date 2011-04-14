@@ -2298,7 +2298,10 @@ static void sLoadAiNodeRecursivly(
         // Setup mesh subset
         fatmesh.subsets.resize( 1 );
         FatMeshSubset & subset = fatmesh.subsets[0];
-        memset( &subset, 0, sizeof(subset) );
+        subset.basevtx = 0;
+        subset.numvtx = fatmesh.vertices.getVertexCount();
+        subset.startidx = 0;
+        subset.numidx = fatmesh.indices.size();
         subset.material = aimesh->mMaterialIndex;
 
         // Assume that the subset is using all joints in the mesh.

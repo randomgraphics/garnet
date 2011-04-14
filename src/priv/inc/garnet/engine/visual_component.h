@@ -33,8 +33,13 @@ namespace GN { namespace engine
         /// setup model's uniforms to per-component value.
         bool addModel( gfx::ModelResource * model );
 
+        ///
+        /// Get number of models in the component.
+        ///
+        uint32 getModelCount() const { return mModels.size(); }
+
         /// Render all models in the component. If an spcial component is provided, it will be
-        /// used to update the standard transformation uniforms.
+        /// used to update world transformations.
         void draw( const SpacialComponent * sc ) const;
 
         /// Render the component to screen with specified transformation.
@@ -44,6 +49,16 @@ namespace GN { namespace engine
             draw( sc );
         }
 
+        /// Specific model in the component. If an spcial component is provided, it will be
+        /// used to update world transformations.
+        void drawModel( size_t modelIndex, const SpacialComponent * sc ) const;
+
+        /// Render specific model to screen with specified transformation.
+        void drawModel( size_t modelIndex, const Matrix44f & proj, const Matrix44f & view, const SpacialComponent * sc ) const
+        {
+            getGdb()->setTransform( proj, view );
+            drawModel( modelIndex, sc );
+        }
         //@}
 
     protected:
@@ -56,6 +71,10 @@ namespace GN { namespace engine
             GN_UNUSED_PARAM(modelIndex);
             model.draw();
         }
+
+    private:
+
+        void updateWorldTransform( const Matrix44f & world ) const;
 
     private:
 
