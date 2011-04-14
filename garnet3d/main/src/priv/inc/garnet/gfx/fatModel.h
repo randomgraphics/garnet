@@ -168,6 +168,9 @@ namespace GN { namespace gfx
                 void                   * buffer,
                 size_t                   bufferSize ) const;
 
+        /// Switch content of 2 fat vertex buffers. (No memory allocation/deallocation/copy, only pointers are switched)
+        static void sSwitchContent( FatVertexBuffer & vb1, FatVertexBuffer & vb2 );
+
     private:
 
         void      * mElements[NUM_SEMANTICS];

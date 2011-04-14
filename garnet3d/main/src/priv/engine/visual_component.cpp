@@ -125,62 +125,8 @@ void GN::engine::VisualComponent::clear()
 // -----------------------------------------------------------------------------
 void GN::engine::VisualComponent::draw( const SpacialComponent * sc ) const
 {
-    // update standard transformation based on spacial information, if a spacial component is provided.
-    if( sc )
-    {
-        GpuResourceDatabase * gdb = getGdb();
-        GN_ASSERT( gdb );
-
-        const Matrix44f pv = *(const Matrix44f *)gdb->getStandardUniformResource(StandardUniform::Index::MATRIX_PV)->uniform()->getval();
-
-        const Matrix44f & world = sc->getLocal2Root();
-
-        Matrix44f pvw = pv * world;
-
-        for( int index = 0; (size_t)index < mStandardPerObjectUniforms.size(); ++index )
-        {
-            UniformResource * ur = mStandardPerObjectUniforms[index];
-            if( NULL == ur ) continue;
-
-            // this should be per-object parameter
-            GN_ASSERT( !StandardUniform::sIndex2Desc( index )->global );
-
-            AutoRef<Uniform> u = ur->uniform();
-            if( NULL == u ) continue;
-
-            switch( index )
-            {
-                case StandardUniform::Index::MATRIX_PVW :
-                    u->update( pvw );
-                    break;
-
-                case StandardUniform::Index::MATRIX_PVW_INV:
-                    u->update( Matrix44f::sInverse( pvw ) );
-                    break;
-
-                case StandardUniform::Index::MATRIX_PVW_IT:
-                    u->update( Matrix44f::sInvtrans( pvw ) );
-                    break;
-
-                case StandardUniform::Index::MATRIX_WORLD :
-                    u->update( world );
-                    break;
-
-                case StandardUniform::Index::MATRIX_WORLD_INV:
-                    u->update( Matrix44f::sInverse(world) );
-                    break;
-
-                case StandardUniform::Index::MATRIX_WORLD_IT:
-                    u->update( Matrix44f::sInvtrans(world) );
-                    break;
-
-                default:
-                    // should never be here.
-                    GN_UNEXPECTED();
-                    break;
-            }
-        }
-    }
+    // update world transformation.
+    if( sc ) updateWorldTransform( sc->getLocal2Root() );
 
     // draw models
     GN_GPU_DEBUG_MARK_BEGIN( getGpu(), "VisualComponent::draw" );
@@ -192,3 +138,73 @@ void GN::engine::VisualComponent::draw( const SpacialComponent * sc ) const
     GN_GPU_DEBUG_MARK_END( getGpu() );
 }
 
+//
+//
+// -----------------------------------------------------------------------------
+void GN::engine::VisualComponent::drawModel( size_t modelIndex, const SpacialComponent * sc ) const
+{
+    if( modelIndex >= mModels.size() ) return;
+
+    if( sc ) updateWorldTransform( sc->getLocal2Root() );
+
+    GN_GPU_DEBUG_MARK_BEGIN( getGpu(), "VisualComponent::drawModel" );
+    drawModelResource( modelIndex, *mModels[(uint32)modelIndex] );
+    GN_GPU_DEBUG_MARK_END( getGpu() );
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::engine::VisualComponent::updateWorldTransform( const Matrix44f & world ) const
+{
+    GpuResourceDatabase * gdb = getGdb();
+    GN_ASSERT( gdb );
+
+    const Matrix44f pv = *(const Matrix44f *)gdb->getStandardUniformResource(StandardUniform::Index::MATRIX_PV)->uniform()->getval();
+
+    Matrix44f pvw = pv * world;
+
+    for( int index = 0; (size_t)index < mStandardPerObjectUniforms.size(); ++index )
+    {
+        UniformResource * ur = mStandardPerObjectUniforms[index];
+        if( NULL == ur ) continue;
+
+        // this should be per-object parameter
+        GN_ASSERT( !StandardUniform::sIndex2Desc( index )->global );
+
+        AutoRef<Uniform> u = ur->uniform();
+        if( NULL == u ) continue;
+
+        switch( index )
+        {
+            case StandardUniform::Index::MATRIX_PVW :
+                u->update( pvw );
+                break;
+
+            case StandardUniform::Index::MATRIX_PVW_INV:
+                u->update( Matrix44f::sInverse( pvw ) );
+                break;
+
+            case StandardUniform::Index::MATRIX_PVW_IT:
+                u->update( Matrix44f::sInvtrans( pvw ) );
+                break;
+
+            case StandardUniform::Index::MATRIX_WORLD :
+                u->update( world );
+                break;
+
+            case StandardUniform::Index::MATRIX_WORLD_INV:
+                u->update( Matrix44f::sInverse(world) );
+                break;
+
+            case StandardUniform::Index::MATRIX_WORLD_IT:
+                u->update( Matrix44f::sInvtrans(world) );
+                break;
+
+            default:
+                // should never be here.
+                GN_UNEXPECTED();
+                break;
+        }
+    }
+}

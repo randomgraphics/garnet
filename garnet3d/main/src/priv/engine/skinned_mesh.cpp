@@ -617,6 +617,7 @@ GN::engine::SkinnedMesh::~SkinnedMesh()
     clear();
     setComponent<VisualComponent>( NULL );
     setComponent<SpacialComponent>( NULL );
+    delete mVisual;
 }
 
 //

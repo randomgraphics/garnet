@@ -67,6 +67,7 @@ public:
 #if USE_ENTITY
         FatModel fm;
         if( !fm.loadFromFile( filename ) ) return false;
+        if( !fm.splitSkinnedMesh( SkinnedMesh::sGetMaxJointsPerDraw() ) ) return false;
         if( fm.skeletons.empty() )
         {
             StaticMesh * mesh = new StaticMesh;
@@ -173,11 +174,10 @@ public:
             mesh->drawSkeletons( 0xFFFFFFFF, transform );
         }
 #endif
-        entity->getComponent<VisualComponent>()->draw( camera.proj, camera.view, entity->getComponent<SpacialComponent>() );
-        if( showbbox )
-        {
-            entity->getComponent<SpacialComponent>()->drawBoundingBox( camera.proj, camera.view, 0xFF000000 );
-        }
+        VisualComponent * vc = entity->getComponent<VisualComponent>();
+        SpacialComponent * sc = entity->getComponent<SpacialComponent>();
+        vc->draw( camera.proj, camera.view, sc );
+        if( showbbox ) sc->drawBoundingBox( camera.proj, camera.view, 0xFF000000 );
 #else
         world.showBoundingBoxes( showbbox );
         world.draw( camera.proj, camera.view );
