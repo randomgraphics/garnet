@@ -251,7 +251,7 @@ def UTIL_newEnvEx( compiler, variant, batch ):
 	env.Decider( 'MD5-timestamp' );
 
 	# setup signature file
-	env.SConsignFile( File( os.path.join( UTIL_buildRoot(), '.sconsign.dbm' ) ).path )
+	env.SConsignFile( File( os.path.join( UTIL_buildDir(compiler, variant), '.sconsign.dbm' ) ).path )
 
 	# setup builder for gcc precompiled header
 	if 'g++' == env['CXX']:
