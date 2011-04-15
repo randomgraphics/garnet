@@ -5,16 +5,28 @@ TODO
 
 - p0
   - unit test: DynaArray<???,uint8>
-  - skinned mesh
-    - load skin and animation from FBX.
-    - support skeleton with more than 40 joints. (split mesh)
+  - skinned animation
+    - update bounding box with animation
+    - load skeleton animation from FBX.
+  - fatmodel XML/BIN loader and saver.
+  - spacial orgnization:
+    - octree
+    - volumn hierarchy
+    - bsp
+    - pvs
+    - portal
+    - view frustum culling
+  - terrain
+  - tree
+  - grass
+  - particle system
+  - light and shadow
+
+- p1
   - New Engine module entity class
     - loop through all entities
     - loop through entities of specific type
     - loop through entities that are referenced by another entity
-
-- p1
-  - skinned animation: update bounding box with animation
   - Shader resource library: DLL or static library that defines common
     shaders.
   - Compositable shader component:
@@ -72,49 +84,45 @@ TODO
       - spatial management
       - resource streaming
   - A coordinate basis renderer (like Maya)
-  - A boost style smart pointer template that do not require inheritence form
-    GN::RefCounter.
   - Renderer unit test framework
   - Enable ETW in profiler
   - GPU resouce aliasing
+  - runtime call-stack dump
+  - in game GUI:
+  - replace FBX test app with something else (not owned by Autodesk).
 
-- p2
+- Backlog
   - Code tree reorg
     - Flatten code tree
     - Try Re-enable "non-static" build
   - Use Windows font engine (Direct2D?)
-  - replace FBX test app with something else (not owned by Autodesk).
   - refine PCH builder to generate PCH out of "pch.h" directly, instead of from "pch.cpp".
     so that the PCH builder works the same way in gcc and vstudio.
   - Refine uniform loading from XML
   - A half-edge mesh for complex mesh algorithm
+  - DDS viewer plugin
+  	- don't write full viewer from scratch.
+  	- just provide a plugin for existing picture viewers like acdsee or something.
   - PCXS2 GPU plugin:
     - move operations to GPU as much as possible
     - model beautifier
       - add bump map and tessellation to PS2 model if possible.
       - implement a CPU based prototype first.
-  - DDS viewer plugin
-  	- don't write full viewer from scratch.
-  	- just provide a plugin for existing picture viewers like acdsee or something.
   - sigslot class:
     - allow any type of functor
     - check behavior of redundant slot functors.
   - refine Delegate performance: avoid virtual functions
   - memory-mapped IO.
-
-- p3
+  - A boost style smart pointer template that do not require inheritence form
+    GN::RefCounter.
   - Custom sscanf(...)
   - cross-platform window util functions:
     - set window title
     - change window size
     - ...
     - use wxWidgets?
-  - runtime call-stack dump
-  - in game GUI:
   - make sure OGL resource creation/deletion do not affect renderer states
     - depends on OGL renderer state dumper
-
-- p?
   - script layer
   - network layer
   - multi-window rendering
