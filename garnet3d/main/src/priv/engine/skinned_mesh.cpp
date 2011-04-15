@@ -663,7 +663,7 @@ bool GN::engine::SkinnedMesh::getAnimationInfo( size_t animationIndex, SkinnedAn
 {
     if( animationIndex >= mAnimations.size() || NULL == mAnimations[animationIndex] )
     {
-        GN_ERROR(sLogger)( "Invalid animation index." );
+        // Invalid animation index
         return false;
     }
 
