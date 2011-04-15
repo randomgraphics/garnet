@@ -1453,10 +1453,22 @@ sLoadFbxMeshes(
 // -----------------------------------------------------------------------------
 static void
 sLoadFbxAnimStack(
-    FatModel      & /*fatmodel*/,
-    FbxSdkWrapper & /*sdk*/,
-    KFbxAnimStack & /*fbxanim*/ )
+    FatModel      & fatmodel,
+    KFbxAnimStack & fbxanim )
 {
+    FatAnimation fatanim;
+
+    // store animation name
+    fatanim.name = fbxanim.Description.Get();
+
+    // Get animation time.
+    KTimeSpan timespan = fbxanim.GetLocalTimeSpan();
+    //KTime start = timespan.GetStart();
+    //KTime stop  = timespan.GetStop();
+    KTime duration = timespan.GetDuration();
+    fatanim.duration = duration.GetSecondDouble();
+
+    // We care about skeleton animations only for now.
 }
 
 //
@@ -1465,7 +1477,6 @@ sLoadFbxAnimStack(
 static void
 sLoadFbxAnimations(
     FatModel      & fatmodel,
-    FbxSdkWrapper & sdk,
     KFbxScene     & fbxscene )
 {
     // Iterate through all animation stacks in the scene. Load them one by one.
@@ -1473,7 +1484,7 @@ sLoadFbxAnimations(
     for( int i=0; i<animCount; i++ )
     {
         KFbxAnimStack * fbxanim = KFbxGetSrc<KFbxAnimStack>(&fbxscene, i);
-        sLoadFbxAnimStack( fatmodel, sdk, *fbxanim );
+        sLoadFbxAnimStack( fatmodel, *fbxanim );
     }
 }
 
@@ -1551,7 +1562,7 @@ sLoadFromFBX( FatModel & fatmodel, File & file, const StrA & filename )
     sBuildJointMapFromSkeletons( sdk.jointMap, fatmodel.skeletons );
 
     // Load animations
-    sLoadFbxAnimations( fatmodel, sdk, *gScene );
+    sLoadFbxAnimations( fatmodel, *gScene );
 
     // Load meshes
     sLoadFbxMeshes( fatmodel, filename, sdk, *gScene );
