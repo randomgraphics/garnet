@@ -1470,10 +1470,10 @@ sLoadFbxAnimations(
 {
     // Iterate through all animation stacks in the scene. Load them one by one.
     int animCount = KFbxGetSrcCount<KFbxAnimStack>(&fbxscene);
-    for( int i=0; i<meshCount; i++ )
+    for( int i=0; i<animCount; i++ )
     {
         KFbxAnimStack * fbxanim = KFbxGetSrc<KFbxAnimStack>(&fbxscene, i);
-        sLoadFbxAnimStack( fatmodel, sdk, fbxanim );
+        sLoadFbxAnimStack( fatmodel, sdk, *fbxanim );
     }
 }
 
