@@ -331,7 +331,7 @@ GN::gfx::XenonGpu::bindContextShaders(
 {
     if( newContext.gpuProgram )
     {
-        const XenonBasicGpuProgram * prog = (const XenonBasicGpuProgram *)newContext.gpuProgram.get();
+        const XenonBasicGpuProgram * prog = (const XenonBasicGpuProgram *)newContext.gpuProgram.rawptr();
 
         if( skipDirtyCheck || mContext.gpuProgram != newContext.gpuProgram )
         {
@@ -369,7 +369,7 @@ GN::gfx::XenonGpu::bindContextResources(
     //
     // bind vertex declaration
     //
-    const XenonBasicGpuProgram * gpuProgram = (const XenonBasicGpuProgram*)newContext.gpuProgram.get();
+    const XenonBasicGpuProgram * gpuProgram = (const XenonBasicGpuProgram*)newContext.gpuProgram.rawptr();
     IDirect3DVertexDeclaration9 * decl = NULL;
     if( NULL != gpuProgram )
     {
@@ -401,7 +401,7 @@ GN::gfx::XenonGpu::bindContextResources(
         {
             GN_DX_CHECK( mDevice->SetStreamSource(
                 i,
-                vbb.vtxbuf ? safeCastPtr<const XenonVtxBuf>(vbb.vtxbuf.get())->getD3DBuffer() : NULL,
+                vbb.vtxbuf ? safeCastPtr<const XenonVtxBuf>(vbb.vtxbuf.rawptr())->getD3DBuffer() : NULL,
                 vbb.offset,
                 vbb.stride ) );
         }
@@ -413,7 +413,7 @@ GN::gfx::XenonGpu::bindContextResources(
     if( skipDirtyCheck || newContext.idxbuf != mContext.idxbuf )
     {
         GN_DX_CHECK( mDevice->SetIndices( newContext.idxbuf
-            ? safeCastPtr<const XenonIdxBuf>(newContext.idxbuf.get())->getD3DBuffer()
+            ? safeCastPtr<const XenonIdxBuf>(newContext.idxbuf.rawptr())->getD3DBuffer()
             : NULL ) );
     }
 

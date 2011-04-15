@@ -260,7 +260,7 @@ void GN::gfx::XenonGpuProgramHLSL::applyTextures(
 
         const XenonTextureParamDesc & param = mTextures[i];
 
-        XenonTexture * tex = (XenonTexture*)tb.texture.get();
+        XenonTexture * tex = (XenonTexture*)tb.texture.rawptr();
 
         if( param.vshandle )
         {
