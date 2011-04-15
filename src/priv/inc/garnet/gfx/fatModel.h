@@ -136,6 +136,7 @@ namespace GN { namespace gfx
         //@{
         void * getPosition() const { return mElements[POSITION]; }
         void * getNormal() const { return mElements[NORMAL]; }
+        void * getJoints() const { return mElements[JOINT_ID]; }
         void * getTexcoord( size_t stage ) const
         {
             size_t semantic = TEXCOORD0+stage;

@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "ase.h"
 #include <garnet/gfx/fatModel.h>
+#include <set>
 
 #if GN_MSVC
 #pragma warning(disable:4100) // unreferenced formal parameter
@@ -599,71 +600,6 @@ typedef HashMap<
     HashMapUtils::HashFunc_MemoryHash<MeshVertexKey>,
     HashMapUtils::EqualFunc_MemoryCompare<MeshVertexKey> > MeshVertexMap;
 
-#if 0
-/*
-//
-// -----------------------------------------------------------------------------
-static void sLoadFbxSkin(
-    FbxSdkWrapper & sdk,
-    KFbxSkin & skin )
-{
-    // Load bind pose
-    int numClusters = skin.GetClusterCount();
-    for( int i = 0; i < numClusters; ++i )
-    {
-
-    }
-}//*/
-
-//
-//
-// -----------------------------------------------------------------------------
-static void
-sLoadFbxLimbNodeRecursivly(
-    FatSkeleton & fatsk,
-    KFbxNode    * fbxnode )
-{
-    if( NULL == fbxnode ) return;
-
-    KFbxSkeleton * fbxsk = fbxnode->GetSkeleton();
-    if( NULL == fbxsk ) return;
-
-    KFbxNode * fbxnode = skeleton->GetNode();
-    const StrA & skeletonName = node->GetName();
-
-    int count = node->GetChildCount();
-    for( int i = 0; i < count; ++i )
-    {
-        sLoadFbxLimbRecursivly( fatsk, node->GetChild( i ) );
-    }
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-static void
-sLoadFbxSkeleton(
-    FatModel      & fatmodel,
-    FbxSdkWrapper & sdk,
-    KFbxSkeleton  * fbxsk )
-{
-    KFbxNode * node = skeleton->GetNode();
-
-    FatSkeleton fatsk;
-    fatsk.name = node->GetName();
-
-    fatsk.bindPose.resize( 1 );
-    fatsk.bindPose[0].parent = -1;
-    fatsk.bindPose[0].transform.setIdentity();
-
-    int count = node->GetChildCount();
-    for( int i = 0; i < count; ++i )
-    {
-        sLoadFbxLimbRecursivly( fatsk, node->GetChild( i ) );
-    }
-}
-#endif
-
 //
 // Convert FBX matrix (column-major) to Garnet matrix (row-major)
 // -----------------------------------------------------------------------------
@@ -809,6 +745,10 @@ sLoadFbxSkeletons(
         sLoadFbxLimbNodes( fatsk, FatJoint::NO_JOINT, FatJoint::NO_JOINT, fbxnode );
         if( !fatsk.joints.empty() )
         {
+            // The first joint must be the root joint.
+            GN_ASSERT( FatJoint::NO_JOINT == fatsk.joints[0].parent );
+            fatsk.rootJointIndex = 0;
+
             fatmodel.skeletons.append( fatsk );
         }
     }
@@ -1086,6 +1026,92 @@ sGenerateFatVertices(
         ++uv0;
         ++joints;
         ++weights;
+    }
+
+    return true;
+}
+
+
+//
+//
+// -----------------------------------------------------------------------------
+static bool
+sBuildFatMeshSubsetJointList( FatMesh & mesh )
+{
+    // Ignore non skinned mesh without skeleton
+    if( FatMesh::NO_SKELETON == mesh.skeleton ) return true;
+
+    const uint32 * joints = (const uint32*)mesh.vertices.getJoints();
+    if( NULL == joints ) return true;
+
+    const uint32 * indices = mesh.indices.rawptr();
+
+    // Loop through all subsets.
+    for( uint32 i = 0; i < mesh.subsets.size(); ++i )
+    {
+        FatMeshSubset & subset = mesh.subsets[i];
+
+        std::set<uint32> accumulatedJoints;
+
+        // Determine start and end of vertex loop (indexed or non-indexed mesh)
+        uint32 start, end;
+        if( indices )
+        {
+            start = subset.startidx;
+            end   = start + subset.numidx;
+        }
+        else
+        {
+            start = subset.basevtx;
+            end   = start + subset.numvtx;
+        }
+
+        // Loop through all vertices in the subset. Gather joint IDs
+        // that are used in the subset.
+        for( uint32 i = start; i < end; ++i )
+        {
+            // Get the vertex index (indexed or non-indexed mesh)
+            uint32 vertexIndex;
+            if( indices )
+            {
+                vertexIndex = indices[i] + subset.basevtx;
+            }
+            else
+            {
+                vertexIndex = i;
+            }
+
+            // For each joint in the vertex.
+            uint32 offset = vertexIndex * 4;
+            for( uint32 i = 0; i < 4; ++i )
+            {
+                // If the joint is not NO_JOINT, add it to accumulated joint set.
+                uint32 joint = joints[offset+i];
+                if( FatJoint::NO_JOINT != joint )
+                {
+                    accumulatedJoints.insert( joint );
+                }
+            }
+        }
+
+
+        // We have looped through all verties in the subset and gathered
+        // all joints that are used in this subset. Now build subset
+        // joint array.
+
+        // Allocate array memory first.
+        if( !subset.joints.resize( (uint32)accumulatedJoints.size() ) )
+        {
+            GN_ERROR(sLogger)( "Out of memory" );
+            return false;
+        }
+
+        // Copy joints from set to array. Not that joints in set are already sorted.
+        uint32 i = 0;
+        for( std::set<uint32>::const_iterator iter = accumulatedJoints.begin(); iter != accumulatedJoints.end(); ++iter, ++i )
+        {
+            subset.joints[i] = *iter;
+        }
     }
 
     return true;
@@ -1379,6 +1405,9 @@ sLoadFbxMesh(
     // Now copy vertex data to fatmesh, and translate position and normal to global space.
     if( !sGenerateFatVertices( fatmesh, fbxnode, vcache.rawptr(), vertexKeys.rawptr(), vertexKeys.size() ) ) return;
 
+    // Build joint list for each subset.
+    if( !sBuildFatMeshSubsetJointList( fatmesh ) ) return;
+
     // calculate the bounding box of the mesh
     const Vector4f * vertices = (const Vector4f *)fatmesh.vertices.getPosition();
     calculateBoundingBox(
@@ -1416,6 +1445,35 @@ sLoadFbxMeshes(
     {
         KFbxMesh * fbxmesh = KFbxGetSrc<KFbxMesh>(&scene, i);
         sLoadFbxMesh( fatmodel, filename, sdk, fbxmesh );
+    }
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+static void
+sLoadFbxAnimStack(
+    FatModel      & /*fatmodel*/,
+    FbxSdkWrapper & /*sdk*/,
+    KFbxAnimStack & /*fbxanim*/ )
+{
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+static void
+sLoadFbxAnimations(
+    FatModel      & fatmodel,
+    FbxSdkWrapper & sdk,
+    KFbxScene     & fbxscene )
+{
+    // Iterate through all animation stacks in the scene. Load them one by one.
+    int animCount = KFbxGetSrcCount<KFbxAnimStack>(&fbxscene);
+    for( int i=0; i<meshCount; i++ )
+    {
+        KFbxAnimStack * fbxanim = KFbxGetSrc<KFbxAnimStack>(&fbxscene, i);
+        sLoadFbxAnimStack( fatmodel, sdk, fbxanim );
     }
 }
 
@@ -1492,8 +1550,8 @@ sLoadFromFBX( FatModel & fatmodel, File & file, const StrA & filename )
     // Build joint map to accelerate joint searching.
     sBuildJointMapFromSkeletons( sdk.jointMap, fatmodel.skeletons );
 
-    // TODO: Load animations
-    //sLoadFbxAnimations( fatmodel, gScene->GetRootNode() );
+    // Load animations
+    sLoadFbxAnimations( fatmodel, sdk, *gScene );
 
     // Load meshes
     sLoadFbxMeshes( fatmodel, filename, sdk, *gScene );
@@ -2652,6 +2710,8 @@ static FileFormat sDetermineFileFormatByFileName( const StrA & filename )
 // -----------------------------------------------------------------------------
 bool GN::gfx::FatModel::loadFromFile( const StrA & filename )
 {
+    GN_SCOPE_PROFILER( FatModel_loadFromFile, "Load FatModel from file." );
+
     clear();
 
     bool noerr = true;

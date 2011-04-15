@@ -736,6 +736,8 @@ void GN::gfx::FatModel::calcBoundingBox()
 // -----------------------------------------------------------------------------
 bool GN::gfx::FatModel::splitSkinnedMesh( uint32 maxJointsPerSubset )
 {
+    GN_SCOPE_PROFILER( FatModel_splitSkinnedMesh, "Split skinned mesh in FatModel." );
+
     if( maxJointsPerSubset < 12 )
     {
         GN_ERROR(sLogger)( "The minimal MAX_JOINTS_PER_SUBSET is 12." );
