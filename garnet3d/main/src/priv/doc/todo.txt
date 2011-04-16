@@ -4,31 +4,45 @@ TODO
 - 程序中标注TODO的地方
 
 - p0
-  - unit test: DynaArray<???,uint8>
-  - skinned animation
-    - update bounding box with animation
+  - massive 3D scene explorer.
+    - importer/exporter
+    - scene graph / spacial organization.
+    - shader llibrary
+  - scene import/export
+    - fatmodel XML/BIN loader and saver.
     - load skeleton animation from FBX.
-  - fatmodel XML/BIN loader and saver.
-  - spacial orgnization:
+  - spacial organization:
     - octree
     - volumn hierarchy
     - bsp
     - pvs
     - portal
     - view frustum culling
-  - terrain
-  - tree
-  - grass
-  - particle system
-  - light and shadow
+  - more entities
+    - terrain
+    - tree
+    - grass
+    - particle system
+    - light and shadow
+    - multi-camera support
+  - Shader Library
+    - DLL or resource file that defines common shaders.
+    - Compiled from effect files.
+    - Precompile GPU shaders when possible to cache compile errors offline.
 
 - p1
+  - update skinned meesh bounding box with animation
+  - unit test:
+    - DynaArray<???,uint8>
+  - port useful stuffs from old garnet library (0.7.0a):
+    - gui system
+    - bump demo
+    - portal demo
+    - application task scheduler.
   - New Engine module entity class
     - loop through all entities
     - loop through entities of specific type
     - loop through entities that are referenced by another entity
-  - Shader resource library: DLL or static library that defines common
-    shaders.
   - Compositable shader component:
     - What about existing shader authoring tool?
       - there's no tools that is simply good enough.
@@ -62,7 +76,7 @@ TODO
       - compile time switch to remove tweakable code entirely
       - separate client (tuner) and server (variables)
   - replace STL containers:
-  	- queue, list, set
+  	- deque, list, set
   - Fix Feb 2011 Cg issues:
 	- GNsampleDolphin crashes with D3D11 gpu.
     - D3D resource leak in GNtestEngine and GNsampleDolphin
