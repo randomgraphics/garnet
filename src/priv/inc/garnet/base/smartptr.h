@@ -153,7 +153,7 @@ namespace GN
         ///
         /// get the raw pointer
         ///
-        XPTR rawptr() const { return (XPTR)WeakRefBase::rawptr(); }
+        XPTR rawptr() const { return (XPTR)mPtr; }
 
         ///
         /// check for empty reference
