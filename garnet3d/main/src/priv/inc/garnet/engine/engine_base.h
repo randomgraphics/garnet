@@ -37,7 +37,7 @@ namespace GN { namespace engine
         ///
         ~EntityRef()
         {
-            clear();
+            WeakRef<T>::clear();
         }
     };
 
