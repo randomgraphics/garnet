@@ -34,7 +34,7 @@ static inline WaitResult sWaitResultFromWin32( DWORD result )
     }
     else if( WAIT_TIMEOUT == result )
     {
-        return WaitResult::TIMEOUT;
+        return WaitResult::TIMEDOUT;
     }
     else
     {

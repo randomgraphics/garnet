@@ -19,11 +19,8 @@ GN::Mutex::Mutex()
 {
     // initiialize a recursive mutex (same behavior as mutex on MSWIN)
     GN_CASSERT( sizeof(pthread_mutex_t) <= sizeof(mInternal) );
-    pthread_mutexattr_t mta;
-    pthread_mutexattr_init(&mta);
-    pthread_mutexattr_settype( &mta, PTHREAD_MUTEX_RECURSIVE );
-    pthread_mutex_init( (pthread_mutex_t*)mInternal, &mta );
-    pthread_mutexattr_destroy(&mta);
+    pthread_mutex_t m = PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP;
+    memcpy( mInternal, &m, sizeof(m) );
 }
 
 //
@@ -75,8 +72,16 @@ class SyncEvent::Impl : public StdClass
 
     //@{
 public:
-    Impl()          { clear(); }
-    virtual ~Impl() { quit(); }
+    Impl()
+    {
+        pthread_mutex_init( &mMutex, NULL );
+        clear();
+    }
+    virtual ~Impl()
+    {
+        quit();
+        pthread_mutex_destroy( &mMutex );
+    }
     //@}
 
     // ********************************
@@ -87,31 +92,41 @@ public:
 public:
     bool init( SyncEvent::InitialState initialState, SyncEvent::ResetMode resetMode, const char * name )
     {
-        GN_GUARD;
+        Locker lock(mMutex);
 
         // standard init procedure
         GN_STDCLASS_INIT( Impl, () );
 
-        GN_UNIMPL();
+        // Create condition
+        int error = pthread_cond_init( &mCondition, NULL );
+        if( error ) return failure();
+
+        mSignaled = (SyncEvent::SIGNALED == initialState );
+        mAutoReset = (SyncEvent::AUTO_RESET == resetMode );
+        mInitialized = true;
 
         // success
         return success();
-
-        GN_UNGUARD;
     }
     void quit()
     {
-        GN_GUARD;
+        Locker lock(mMutex);
 
-        GN_UNIMPL();
+        if( mInitialized )
+        {
+            mInitialized = false;
+            pthread_cond_broadcast( &mCondition );
+            pthread_cond_destroy( &mCondition );
+        }
 
         // standard quit procedure
         GN_STDCLASS_QUIT();
-
-        GN_UNGUARD;
     }
 private:
-    void clear() {}
+    void clear()
+    {
+        mInitialized = false;
+    }
     //@}
 
     // ********************************
@@ -121,24 +136,92 @@ public:
 
     void signal()
     {
-        GN_UNIMPL_WARNING();
+        Locker lock(mMutex);
+
+        if( mInitialized )
+        {
+            mSignaled = true;
+            pthread_cond_signal( &mCondition );
+        }
     }
 
     void unsignal()
     {
-        GN_UNIMPL_WARNING();
+        Locker lock(mMutex);
+
+        if( mInitialized )
+        {
+            mSignaled = false;
+        }
     }
 
     WaitResult wait( TimeInNanoSecond timeoutTime )
     {
-        GN_UNIMPL_WARNING();
-        return WaitResult::KILLED;
+        Locker lock(mMutex);
+
+        if( !mInitialized )
+        {
+            return WaitResult::KILLED;
+        }
+
+        if( mSignaled )
+        {
+            if( mAutoReset ) mSignaled = false;
+            return WaitResult::COMPLETED;
+        }
+
+        int error;
+        if( INFINITE_TIME == timeoutTime )
+        {
+            error = pthread_cond_wait( &mCondition, &mMutex );
+        }
+        else
+        {
+            timespec time;
+            clock_gettime(CLOCK_REALTIME, &time);
+            time.tv_nsec += timeoutTime;
+            error = pthread_cond_timedwait( &mCondition, &mMutex, &time );
+        }
+
+        if( ETIMEDOUT == error )
+        {
+            return WaitResult::TIMEDOUT;
+        }
+        else if( error || !mInitialized )
+        {
+            return WaitResult::KILLED;
+        }
+        else
+        {
+            return WaitResult::COMPLETED;
+        }
     }
 
     // ********************************
     // private variables
     // ********************************
 private:
+
+    struct Locker
+    {
+        pthread_mutex_t & mutex;
+
+        Locker( pthread_mutex_t & m ) : mutex(m)
+        {
+            pthread_mutex_lock( &mutex );
+        }
+
+        ~Locker()
+        {
+            pthread_mutex_unlock( &mutex );
+        }
+    };
+
+    pthread_mutex_t mMutex;
+    pthread_cond_t  mCondition;
+    bool            mSignaled;
+    bool            mAutoReset;
+    bool            mInitialized;
 
     // ********************************
     // private functions
