@@ -33,7 +33,7 @@ namespace GN
         {
             OPERATION_SUCCEEDED,    // Operation is done successfully
             OPERATION_FAILED,       // Operation is failed.
-            OPERATION_TIMEOUT,      // Operation is timeout.
+            OPERATION_TIMEDOUT,     // Operation is timed out.
             OPERATION_CANCELLED,    // Operation is cancelled.
         };
 

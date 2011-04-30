@@ -231,15 +231,15 @@ public:
         if( isCurrentThread() )
         {
             GN_ERROR(sLogger)("Can't wait for termination of the current thread." );
-            return WaitResult::TIMEOUT;
+            return WaitResult::TIMEDOUT;
         }
 
         uint32 ret = ::WaitForSingleObject( mHandle, ns2ms( timeoutTime ) );
 
         if( WAIT_TIMEOUT == ret )
         {
-            GN_TRACE(sLogger)( "time out!" );
-            return WaitResult::TIMEOUT;
+            GN_TRACE(sLogger)( "timed out!" );
+            return WaitResult::TIMEDOUT;
         }
         else if( WAIT_OBJECT_0 == ret )
         {

@@ -277,9 +277,9 @@ GN::CommandBuffer::beginConsume( Token * token, TimeInNanoSecond timeoutTime )
             {
                 WaitResult waitResult = m_NotEmpty.wait( timeoutTime );
 
-                if( WaitResult::TIMEOUT == waitResult )
+                if( WaitResult::TIMEDOUT == waitResult )
                 {
-                    hr = OPERATION_TIMEOUT;
+                    hr = OPERATION_TIMEDOUT;
                     break;
                 }
                 else if( WaitResult::KILLED == waitResult )

@@ -66,7 +66,7 @@ void GN::calculateBoundingBox(
 {
     GN_GUARD;
 
-    result.x = result.y = result.z = result.w = result.h = result.z = 0.0f;
+    result.x = result.y = result.z = result.w = result.h = result.d = 0.0f;
 
     if( 0 == count ) return;
 
