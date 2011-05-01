@@ -11,9 +11,12 @@ namespace GN
     ///
     /// abstract thread interface
     ///
-    struct Thread : public NoCopy
+    struct Thread
     {
         //@{
+
+        /// Thread ID
+        typedef void * ThreadID;
 
         /// Thread priority
         enum Priority
@@ -33,42 +36,45 @@ namespace GN
 
         //@}
 
-        /// \name thread properties
-        //@{
-        virtual sint32   getID() const = 0;
-        virtual Priority getPriority() const = 0;
-        virtual void     setPriority( Priority ) const = 0;
-        virtual void     setAffinity( uint32 hardwareThread ) const = 0;
-        virtual bool     isCurrentThread() const = 0;
-        //@}
-
         /// \name thread operations
         //@{
 
-        static Thread * sCreateThread(
+        /// Create a new thread. Return 0 on failure.
+        ///
+        /// Note that All resources associated with the thread will
+        /// be released automatically when the thread exits normally.
+        /// So there's no need to explictly "destroy" a thread ID.
+        static ThreadID sCreate(
             const Procedure & proc,
             void            * param,
-            Priority          priority,
-            bool              initialSuspended = false,
             const char      * name = 0 );
 
-        static Thread * sAttachToCurrentThread();
+        /// Terminate a thread by force.
+        ///
+        /// Note that terminating a thread does not ensure that all resources allocated
+        /// by the tread are released. So use this function with extreme caution.
+        static void sKill( ThreadID );
 
         static void sSleepCurrentThread( TimeInNanoSecond sleepTime );
 
-        virtual ~Thread() {}
-
-        virtual void suspend() const = 0;
-        virtual void resume() const = 0;
         /// Wait for termination of the thread (join operation).
-        /// COMPLETED: the thread is terminated normally.
-        /// KILLED   : the thread has been killed.
+        /// COMPLETED: the thread is terminated, either normally or being killed.
         /// TIMEOUT  : time out before the thread is either terminated or killed; or the caller is current thread.
         /// FAILED   : wait operation failed for unspecified reason.
-        virtual WaitResult waitForTermination(
+        static WaitResult sWaitForTermination(
+            ThreadID         thread,
             TimeInNanoSecond timeoutTime = INFINITE_TIME,
-            uint32         * threadProcReturnValue = 0 ) = 0;
+            uint32         * threadProcReturnValue = 0 );
 
+        //@}
+
+        /// \name thread properties
+        //@{
+        static ThreadID sGetCurrentThread();
+        static bool     sIsCurrentThread( ThreadID );
+        static Priority sGetPriority( ThreadID ); ///< Return NORMAL if the thread ID is invalid.
+        static void     sSetPriority( ThreadID, Priority );
+        static void     sSetAffinity( ThreadID, uint32 hardwareThread ); //< Meaning of hardwareThread is platform specific.
         //@}
     };
 }

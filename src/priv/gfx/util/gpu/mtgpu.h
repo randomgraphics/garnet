@@ -66,7 +66,7 @@ namespace GN { namespace gfx
     private:
         void clear()
         {
-            mThread = NULL;
+            mThread = 0;
             mCreator = NULL;
             mGpu = NULL;
         }
@@ -89,11 +89,11 @@ namespace GN { namespace gfx
         // ********************************
     private:
 
-        CommandBuffer   mCommandBuffer;
-        volatile uint32 mGpuCreationStatus; ///< 0: creation failed, 1: creation succeeded, 2: creation is not finished yet.
-        SyncEvent       mWaitForIdleFence;
-        SyncEvent       mPresentFence;
-        Thread        * mThread;
+        CommandBuffer    mCommandBuffer;
+        volatile uint32  mGpuCreationStatus; ///< 0: creation failed, 1: creation succeeded, 2: creation is not finished yet.
+        SyncEvent        mWaitForIdleFence;
+        SyncEvent        mPresentFence;
+        Thread::ThreadID mThread;
 
         // ********************************
         // front end variables

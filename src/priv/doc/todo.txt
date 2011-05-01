@@ -4,6 +4,7 @@ TODO
 - 程序中标注TODO的地方
 
 - p0
+  - thread and sync objects unit tests.
   - massive 3D scene explorer.
     - importer/exporter
     - scene graph / spacial organization.
@@ -11,6 +12,7 @@ TODO
   - scene import/export
     - fatmodel XML/BIN loader and saver.
     - load skeleton animation from FBX.
+    - Import large scale game scene
   - spacial organization:
     - octree
     - volumn hierarchy
