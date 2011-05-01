@@ -29,6 +29,7 @@ namespace GN
             COMPLETED, ///< Wait operation completes successfully
             KILLED,    ///< Wait operation aborted because the primitive is killed.
             TIMEDOUT,  ///< Wait operation is time out.
+            FAILED,    ///< Wait failed for unspecified reason.
         };
 
         GN_DEFINE_ENUM_CLASS_HELPERS( WaitResult, Enum );
@@ -197,6 +198,7 @@ namespace GN
         ///     WaitResult::COMPLETED   : the event is signaled
         ///     WaitResult::KILLED      : the event is destroied before signaled.
         ///     WaitResult::TIMEDOUT    : time out before the event is signaled.
+        ///     WaitResult::FAILED      : wait operation failed for unspecified reason.
         WaitResult wait( TimeInNanoSecond timeoutTime = INFINITE_TIME ) const;
 
         //@}

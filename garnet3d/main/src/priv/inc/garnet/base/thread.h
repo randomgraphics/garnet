@@ -60,10 +60,11 @@ namespace GN
 
         virtual void suspend() const = 0;
         virtual void resume() const = 0;
-        /// Wait for termination of the thread.
+        /// Wait for termination of the thread (join operation).
         /// COMPLETED: the thread is terminated normally.
-        /// KILLED   : the thread has been killed
+        /// KILLED   : the thread has been killed.
         /// TIMEOUT  : time out before the thread is either terminated or killed; or the caller is current thread.
+        /// FAILED   : wait operation failed for unspecified reason.
         virtual WaitResult waitForTermination(
             TimeInNanoSecond timeoutTime = INFINITE_TIME,
             uint32         * threadProcReturnValue = 0 ) = 0;

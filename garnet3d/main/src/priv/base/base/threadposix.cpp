@@ -52,7 +52,31 @@ public:
             return failure();
         }
 
-        GN_UNIMPL_WARNING();
+        // Store user parameters
+        if( proc.empty() )
+        {
+            GN_ERROR(sLogger)( "Null thread procedure." );
+            return failure();
+        }
+        mUserProc = proc;
+        mUserParam = param;
+
+        // create thread attribute
+        int error = pthread_attr_init( &mAttr );
+        if( error )
+        {
+            GN_ERROR(sLogger)( "pthread_attr_init() failed: %d.", error );
+            return failure();
+        }
+        mAttrOk = true;
+
+        // create thread object.
+        error = pthread_create( &mThread, &mAttr, sProcDispatcher, this );
+        if( error )
+        {
+            GN_ERROR(sLogger)( "pthread_create() failed: %d.", error );
+            return failure();
+        }
 
         // success
         mAttached = false;
@@ -70,6 +94,8 @@ public:
         // standard init procedure
         GN_STDCLASS_INIT( ThreadPosix, () );
 
+        mThread = pthread_self();
+
         // success
         mAttached = true;
         return success();
@@ -81,14 +107,21 @@ public:
     {
         GN_GUARD;
 
-        GN_UNIMPL_WARNING();
-
-        if( !mAttached /*&& mHandle*/ )
+        if( mThread )
         {
             // wait for thread termination
-            waitForTermination( INFINITE_TIME, 0 );
+            if( !mAttached )
+            {
+                pthread_join( mThread, NULL );
+                mAttached = false;
+            }
+            mThread = 0;
+        }
 
-            // TODO: close thread handle
+        if( mAttrOk )
+        {
+            pthread_attr_destroy( &mAttr );
+            mAttrOk = false;
         }
 
         // standard quit procedure
@@ -100,6 +133,8 @@ public:
 private:
     void clear()
     {
+        mAttrOk   = false;
+        mThread   = 0;
         mAttached = false;
     }
     //@}
@@ -111,8 +146,7 @@ public:
 
     virtual sint32 getID() const
     {
-        GN_UNIMPL_WARNING();
-        return 0;
+        return (sint32)mThread;
     }
 
     virtual Priority getPriority() const
@@ -140,8 +174,7 @@ public:
 
     bool isCurrentThread() const
     {
-        GN_UNIMPL_WARNING();
-        return true;
+        return mThread && pthread_equal( mThread, pthread_self() );
     }
 
     virtual void suspend() const
@@ -164,9 +197,16 @@ public:
         // can't wait for self termination
         GN_ASSERT( !isCurrentThread() );
 
-        GN_UNIMPL_WARNING();
+        if( !mThread ) return WaitResult::KILLED;
 
-        return WaitResult::KILLED;
+        int error = pthread_join( mThread, NULL );
+        if( error )
+        {
+            GN_ERROR(sLogger)( "pthread_join() failed: %d.", error );
+            return WaitResult::FAILED;
+        }
+
+        return WaitResult::COMPLETED;
     }
 
     // ********************************
@@ -174,16 +214,14 @@ public:
     // ********************************
 private:
 
-    struct ThreadParam
-    {
-        ThreadPosix * instance;
-        void        * userparam;
-    };
-
-    Procedure        mProc;
-    ThreadParam      mParam;
+    Procedure        mUserProc;
+    void *           mUserParam;
     mutable Priority mPriority;
 
+    pthread_attr_t   mAttr;
+    bool             mAttrOk;
+
+    pthread_t        mThread;
     bool             mAttached;
 
     // ********************************
@@ -194,15 +232,17 @@ private:
     ///
     /// thread procedure dispather
     ///
-    static unsigned int sProcDispatcher( void * parameter )
+    static void * sProcDispatcher( void * parameter )
     {
         GN_ASSERT( parameter );
 
-        ThreadParam * p = (ThreadParam*)parameter;
+        ThreadPosix * pThis = (ThreadPosix*)parameter;
 
-        GN_ASSERT( p->instance );
+        GN_ASSERT( pThis );
 
-        return p->instance->mProc( p->userparam );
+        int status = pThis->mUserProc( pThis->mUserParam );
+
+        return (void*)status;
     };
 
 };
