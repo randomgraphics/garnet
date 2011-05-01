@@ -80,8 +80,8 @@ bool GN::gfx::MultiThreadGpu::init(
 
     // create thread
     Thread::Procedure proc = makeDelegate( this, &GN::gfx::MultiThreadGpu::threadProc );
-    mThread = Thread::sCreateThread( proc, (void*)&ro, Thread::NORMAL );
-    if( NULL == mThread ) return failure();
+    mThread = Thread::sCreate( proc, (void*)&ro );
+    if( 0 == mThread ) return failure();
 
     // wait for the GPU creation
     while( 2 == mGpuCreationStatus ) Thread::sSleepCurrentThread(0);
@@ -116,8 +116,7 @@ void GN::gfx::MultiThreadGpu::quit()
     if( mThread )
     {
         mCommandBuffer.postCommand0( CMD_SHUTDOWN );
-        mThread->waitForTermination();
-        delete mThread;
+        Thread::sWaitForTermination( mThread );
         mThread = NULL;
     }
 
