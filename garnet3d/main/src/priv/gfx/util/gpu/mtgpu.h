@@ -89,11 +89,11 @@ namespace GN { namespace gfx
         // ********************************
     private:
 
-        CommandBuffer    mCommandBuffer;
-        volatile uint32  mGpuCreationStatus; ///< 0: creation failed, 1: creation succeeded, 2: creation is not finished yet.
-        SyncEvent        mWaitForIdleFence;
-        SyncEvent        mPresentFence;
-        Thread::ThreadID mThread;
+        CommandBuffer      mCommandBuffer;
+        volatile uint32    mGpuCreationStatus; ///< 0: creation failed, 1: creation succeeded, 2: creation is not finished yet.
+        SyncEvent          mWaitForIdleFence;
+        SyncEvent          mPresentFence;
+        Thread::Identifier mThread;
 
         // ********************************
         // front end variables
@@ -124,7 +124,7 @@ namespace GN { namespace gfx
         // ********************************
     private:
 
-        uint32 threadProc( void * );
+        void threadProc( void * );
 
         // ********************************
         // rendering methods from Gpu
