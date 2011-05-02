@@ -116,7 +116,7 @@ void GN::gfx::MultiThreadGpu::quit()
     if( mThread )
     {
         mCommandBuffer.postCommand0( CMD_SHUTDOWN );
-        Thread::sWaitForTermination( mThread );
+        Thread::sJoin( mThread );
         mThread = NULL;
     }
 
@@ -148,7 +148,7 @@ void GN::gfx::MultiThreadGpu::waitForIdle()
 //
 //
 // -----------------------------------------------------------------------------
-uint32 GN::gfx::MultiThreadGpu::threadProc( void * param )
+void GN::gfx::MultiThreadGpu::threadProc( void * param )
 {
     // create the GPU instance
     GN_ASSERT( 2 == mGpuCreationStatus );
@@ -157,7 +157,7 @@ uint32 GN::gfx::MultiThreadGpu::threadProc( void * param )
     if( NULL == mGpu )
     {
         mGpuCreationStatus = 0;
-        return 0;
+        return;
     }
     mGpuCreationStatus = 1;
 
@@ -181,9 +181,6 @@ uint32 GN::gfx::MultiThreadGpu::threadProc( void * param )
     // delete the GPU
     deleteGpu( mGpu );
     mGpu = NULL;
-
-    // success
-    return 0;
 }
 
 // *****************************************************************************

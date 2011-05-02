@@ -20,6 +20,11 @@ namespace GN
     extern const TimeInNanoSecond INFINITE_TIME; // = (uint64)(-1);
 
     ///
+    /// One second in unit of nano second
+    ///
+    extern const TimeInNanoSecond ONE_SECOND_IN_NS;
+
+    ///
     /// Define wait result
     ///
     struct WaitResult

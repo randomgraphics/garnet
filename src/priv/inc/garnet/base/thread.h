@@ -15,8 +15,13 @@ namespace GN
     {
         //@{
 
-        /// Thread ID
-        typedef void * ThreadID;
+        /// Thread ID.
+        ///
+        /// Unless we have run out of all identifier values (which is very unlikly),
+        /// thread id is never reused in one OS life time. And you can always use
+        /// the id to query the status of the thread you want, without worrying about
+        /// it being redirected to another thread suddenly.
+        typedef uint64 Identifier;
 
         /// Thread priority
         enum Priority
@@ -32,7 +37,7 @@ namespace GN
         ///
         /// thread procedure functor
         ///
-        typedef Delegate1<uint32,void*> Procedure;
+        typedef Delegate1<void,void*> Procedure;
 
         //@}
 
@@ -41,19 +46,19 @@ namespace GN
 
         /// Create a new thread. Return 0 on failure.
         ///
-        /// Note that All resources associated with the thread will
-        /// be released automatically when the thread exits normally.
-        /// So there's no need to explictly "destroy" a thread ID.
-        static ThreadID sCreate(
+        /// \note
+        ///     All resources associated with the thread will
+        ///     be released automatically when the thread exits normally.
+        ///     So there's no need to explictly "destroy" a thread ID.
+        static Identifier sCreate(
             const Procedure & proc,
             void            * param,
             const char      * name = 0 );
 
         /// Terminate a thread by force.
-        ///
-        /// Note that terminating a thread does not ensure that all resources allocated
-        /// by the tread are released. So use this function with extreme caution.
-        static void sKill( ThreadID );
+        /// Note that killing a thread could potentially harm the whole process.
+        /// So use this function only as the last resort.
+        static void sKill( Identifier );
 
         static void sSleepCurrentThread( TimeInNanoSecond sleepTime );
 
@@ -62,19 +67,26 @@ namespace GN
         /// TIMEOUT  : time out before the thread is either terminated or killed; or the caller is current thread.
         /// FAILED   : wait operation failed for unspecified reason.
         static WaitResult sWaitForTermination(
-            ThreadID         thread,
-            TimeInNanoSecond timeoutTime = INFINITE_TIME,
-            uint32         * threadProcReturnValue = 0 );
+            Identifier       thread,
+            TimeInNanoSecond timeoutTime = INFINITE_TIME );
+
+        /// Alias for sWaitForTermination
+        static WaitResult sJoin(
+            Identifier       thread,
+            TimeInNanoSecond timeoutTime = INFINITE_TIME )
+        {
+            return sWaitForTermination( thread, timeoutTime );
+        }
 
         //@}
 
         /// \name thread properties
         //@{
-        static ThreadID sGetCurrentThread();
-        static bool     sIsCurrentThread( ThreadID );
-        static Priority sGetPriority( ThreadID ); ///< Return NORMAL if the thread ID is invalid.
-        static void     sSetPriority( ThreadID, Priority );
-        static void     sSetAffinity( ThreadID, uint32 hardwareThread ); //< Meaning of hardwareThread is platform specific.
+        static Identifier sGetCurrentThread();
+        static bool       sIsCurrentThread( Identifier );
+        static Priority   sGetPriority( Identifier ); ///< Return NORMAL if the thread ID is invalid.
+        static void       sSetPriority( Identifier, Priority );
+        static void       sSetAffinity( Identifier, uint32 hardwareThread ); //< Meaning of hardwareThread is platform specific.
         //@}
     };
 }

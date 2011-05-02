@@ -281,9 +281,9 @@ private:
 // -----------------------------------------------------------------------------
 struct ThreadMsw : public DoubleLink
 {
-    typedef GN::Thread::ThreadID ThreadID;
+    typedef GN::Thread::Identifier Identifier;
 
-    static ThreadID sCreate(
+    static Identifier sCreate(
         const Thread::Procedure & proc,
         void                    * param,
         const char              * name )
@@ -292,7 +292,7 @@ struct ThreadMsw : public DoubleLink
         if( proc.empty() )
         {
             GN_ERROR(sLogger)( "Null thread procedure." );
-            return NULL;
+            return 0;
         }
 
         // create a new instance.
@@ -300,7 +300,7 @@ struct ThreadMsw : public DoubleLink
         if( NULL == thread )
         {
             GN_ERROR(sLogger)( "Out of memory" );
-            return NULL;
+            return 0;
         }
 
         // store user specified properties
@@ -308,89 +308,73 @@ struct ThreadMsw : public DoubleLink
         thread->mUserParam = param;
         thread->mName = name;
 
-        // create thread parameter.
-        ThreadParam tp;
-        tp.pThis = thread;
-        tp.id    = 0;
+        // create init events (auto-reset, initially unsignaled)
+        for( size_t i = 0; i < GN_ARRAY_COUNT(thread->mInitEvents); ++i )
+        {
+            thread->mInitEvents[i] = ::CreateEvent( NULL, FALSE, FALSE, NULL );
+            if( !thread->mInitEvents[i] )
+            {
+                delete thread;
+                GN_ERROR(sLogger)( "Fail to create init event for the thread: %s.", getWin32LastErrorInfo() );
+                return 0;
+            }
+        }
 
         // Create native thread.
-        if( !_beginthread(
-            sThreadProcDispatcher,
+        // Note that the new thread, if created, will be blocked by the init event #0.
+        // That's why we can safely access mNativeHandle and mNativeID here.
+        thread->mNativeHandle = (HANDLE)_beginthreadex(
+            0, // default security
             0, // default stack size
-            &tp ) )
+            sMainThreadProc,
+            thread,
+            0, // default flag,
+            &thread->mNativeID );
+        if( 0 == thread->mNativeHandle )
         {
-            thread->destroy();
+            delete thread;
             GN_ERROR(sLogger)( "_beginthreadex() failed: %s.", getWin32LastErrorInfo() );
             return 0;
         }
 
-        // We can't assume that thread object is still valid, since it
-        // may have finished and self deleted. So we have to get the
-        // thread ID from tp.id, instead of from thread->mNativeID.
-        while( 0 == tp.id )
-        {
-            ::Sleep(0);
-        }
+        // The first step of initialization is done.
+        // Now its time to resume the newly created thread.
+        SetEvent( thread->mInitEvents[0] );
+
+        // Now wait for the new tread to be fully initialized.
+        ::WaitForSingleObject( thread->mInitEvents[1], INFINITE );
 
         // done
-        return tp.id;
+        return thread->mID;
     }
 
-    static void sTerminate( ThreadID id )
-    {
-        HANDLE h = OpenThread( THREAD_TERMINATE, FALSE, (DWORD)id );
-        if( h )
-        {
-            TerminateThread( h, (DWORD)-1 );
-            CloseHandle( h );
-        }
-    }
+    static Thread::Identifier sAttachToCurrentThread();
 
-    ThreadID getID() const { return (ThreadID)mNativeID; }
+    /// Close the thread object (kill it optionally)
+    void close( bool killIt );
 
-    int run();
+    Identifier getID() const { return mID; }
 
-    /// self destruction
-    void destroy();
+    DWORD getNativeID() const { return mNativeID; }
+
+    HANDLE getNativeHandle() const { return mNativeHandle; }
 
 private:
 
-    struct ThreadParam
-    {
-        ThreadMsw       * pThis;
-        volatile ThreadID id;
-    };
-
+    Thread::Identifier    mID;
     Thread::Procedure     mUserProc;
     void                * mUserParam;
     StrA                  mName;
-    HANDLE                mUtilEvent;
-    volatile unsigned int mNativeID;
+    HANDLE                mInitEvents[2];
+    unsigned int          mNativeID;
+    HANDLE                mNativeHandle;
 
 private:
 
-    ThreadMsw()
-        : mUtilEvent(0)
-        , mNativeID(0)
-    {
-    }
-
-    ~ThreadMsw()
-    {
-    }
-
-    static void sThreadProcDispatcher( void * parameter )
-    {
-        GN_ASSERT( parameter );
-
-        ThreadParam * p = (ThreadParam*)parameter;
-
-        GN_ASSERT( p->pThis );
-
-        p->id = (ThreadID)GetCurrentThreadId();
-
-        p->pThis->run();
-    };
+    ThreadMsw();
+    ~ThreadMsw();
+    static unsigned int __stdcall sMainThreadProc( void * parameter );
+    static void sUtilThreadProc( void * parameter );
 };
 
 //
@@ -398,30 +382,69 @@ private:
 // -----------------------------------------------------------------------------
 class ThreadTable
 {
-    CRITICAL_SECTION mLock;
-    DoubleLink       mThreads;
+    mutable CRITICAL_SECTION   mLock;
+    DoubleLink                 mThreads;
+    Thread::Identifier         mNextIdentifier;
 
-    void enter()
+    void enter() const
     {
         EnterCriticalSection( &mLock );
     }
 
-    void leave()
+    void leave() const
     {
         LeaveCriticalSection( &mLock );
     }
 
 public:
 
-    ThreadTable()
+    ThreadTable() : mNextIdentifier(1)
     {
         InitializeCriticalSection( &mLock );
     }
 
     ~ThreadTable()
     {
-        // TODO: verify that all threads should have been deleted.
+        // Close remaining thread objects, but do not terminate them by force.
+        for(;;)
+        {
+            // Remove the tread from thread table first.
+            enter();
+            ThreadMsw * thread = (ThreadMsw*)mThreads.next;
+            if( thread ) thread->detach();
+            leave();
+
+            if( thread )
+                // Then close the thread object.
+                thread->close( false );
+            else
+                // No more threads in the table. Break out of the loop.
+                break;
+        }
+
         DeleteCriticalSection( &mLock );
+    }
+
+    Thread::Identifier newThreadId()
+    {
+        enter();
+
+        Thread::Identifier id = mNextIdentifier++;
+
+        leave();
+
+        return id;
+    }
+
+    bool isValidThreadId( Thread::Identifier id ) const
+    {
+        enter();
+
+        bool valid = id > 0 && id < mNextIdentifier;
+
+        leave();
+
+        return valid;
     }
 
     void insert( ThreadMsw * thread )
@@ -430,13 +453,25 @@ public:
 
         enter();
 
-        mThreads.linkBefore( thread );
+        if( mThreads.next )
+        {
+            GN_VERIFY( thread->linkBefore( mThreads.next ) );
+        }
+        else
+        {
+            GN_VERIFY( thread->linkAfter( &mThreads ) );
+        }
+
+        // Always insert "after" mThreads.
+        GN_ASSERT( NULL == mThreads.prev && NULL != mThreads.next );
 
         leave();
     }
 
-    void remove( ThreadMsw * thread )
+    bool remove( ThreadMsw * thread )
     {
+        bool removed = false;
+
         enter();
 
         for( ThreadMsw * t = (ThreadMsw*)mThreads.next; t != NULL; t = (ThreadMsw*)t->next )
@@ -444,38 +479,85 @@ public:
             if( t == thread )
             {
                 // We found it. Now remove it from the list.
-                thread->detach();
+                t->detach();
+                removed = true;
             }
         }
 
         leave();
+
+        return removed;
     }
 
-    void kill( Thread::ThreadID thread )
+    void kill( Thread::Identifier id )
     {
-        bool found = false;
+        ThreadMsw * thread = NULL;
 
         enter();
 
         for( ThreadMsw * t = (ThreadMsw*)mThreads.next; t != NULL; t = (ThreadMsw*)t->next )
         {
-            if( t->getID() == thread )
+            if( t->getID() == id )
             {
-                // We found it. Now destroy it!
-                found = true;
-                t->destroy();
+                // We found it. Remove it from thread table.
+                thread = t;
+                t->detach();
                 break;
             }
         }
 
         leave();
 
-        if( !found )
+        // Now kill it, out of critical section.
+        if( thread ) thread->close( true );
+    }
+
+    Thread::Identifier getCurrentThread()
+    {
+        DWORD currentThread = GetCurrentThreadId();
+
+        Thread::Identifier id = 0;
+
+        enter();
+        for( ThreadMsw * t = (ThreadMsw*)mThreads.next; t != NULL; t = (ThreadMsw*)t->next )
         {
-            GN_WARN(sLogger)( "Killing a thread that is not created through garnet thread API." );
+            if( t->getNativeID() == currentThread )
+            {
+                // We found it.
+                id = t->getID();
+                break;
+            }
+        }
+        leave();
+
+        if( 0 == id )
+        {
+            id = ThreadMsw::sAttachToCurrentThread();
         }
 
-        ThreadMsw::sTerminate( thread );
+        return id;
+    }
+
+    /// Be cautious that by the time the function returns, the thread might have ended
+    /// and self destructed.
+    HANDLE getNativeHandle( Thread::Identifier id )
+    {
+        HANDLE h = 0;
+
+        enter();
+
+        for( ThreadMsw * t = (ThreadMsw*)mThreads.next; t != NULL; t = (ThreadMsw*)t->next )
+        {
+            if( t->getID() == id )
+            {
+                h = t->getNativeHandle();
+                break;
+            }
+        }
+
+        leave();
+
+        return h;
     }
 };
 static ThreadTable s_ThreadTable;
@@ -483,33 +565,165 @@ static ThreadTable s_ThreadTable;
 //
 //
 // -----------------------------------------------------------------------------
-int ThreadMsw::run()
+ThreadMsw::ThreadMsw()
+    : mID( s_ThreadTable.newThreadId() )
+    , mNativeID(0)
+    , mNativeHandle(0)
 {
-    mNativeID = GetCurrentThreadId();
-
-    // Add thread object to the global thread table.
-    s_ThreadTable.insert( this );
-
-    // call user's thread proc
-    int ret = mUserProc( mUserParam );
-
-    destroy();
-
-    return ret;
+    //InitializeCriticalSection( &mHoldingLock );
+    memset( mInitEvents, 0, sizeof(mInitEvents) );
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-void
-ThreadMsw::destroy()
+ThreadMsw::~ThreadMsw()
 {
-    // remove self from thread table.
-    s_ThreadTable.remove( this );
+    for( size_t i = 0; i < GN_ARRAY_COUNT(mInitEvents); ++i )
+    {
+        if( 0 != mInitEvents[i] )
+        {
+            CloseHandle( mInitEvents[i] );
+        }
+    }
 
-    // delte the thread object.
+    if( mNativeHandle )
+    {
+        CloseHandle( mNativeHandle );
+    }
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+Thread::Identifier ThreadMsw::sAttachToCurrentThread()
+{
+    // create a new instance.
+    ThreadMsw * thread = new ThreadMsw;
+    if( NULL == thread )
+    {
+        GN_ERROR(sLogger)( "Out of memory" );
+        return 0;
+    }
+
+    // get native thread ID.
+    thread->mNativeID = GetCurrentThreadId();
+
+    // Create one init event.
+    thread->mInitEvents[0] = ::CreateEvent( NULL, FALSE, FALSE, NULL );
+    if( !thread->mInitEvents[0] )
+    {
+        GN_ERROR(sLogger)( "Fail to create init event for the thread: %s.", getWin32LastErrorInfo() );
+        delete thread;
+        return 0;
+    }
+
+    // Get native handle of the thread.
+    thread->mNativeHandle = OpenThread( SYNCHRONIZE | THREAD_TERMINATE, FALSE, thread->mNativeID );
+    if( !thread->mNativeHandle )
+    {
+        GN_ERROR(sLogger)( "Fail to open thread %d: %s", thread->mNativeID, getWin32LastErrorInfo() );
+        delete thread;
+        return 0;
+    }
+
+    // create a utility thread that monitors termination of the current thread.
+    if( !_beginthread(
+        sUtilThreadProc,
+        0, // default stack size
+        thread ) )
+    {
+        GN_ERROR(sLogger)( "Fail to create utility thread: %s.", getWin32LastErrorInfo() );
+        delete thread;
+        return 0;
+    }
+
+    // Wait until init event is signaled.
+    ::WaitForSingleObject( thread->mInitEvents[0], INFINITE );
+
+    // done
+    return thread->mID;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+void ThreadMsw::close( bool terminate )
+{
+    // terminate the thread, if asked to do so.
+    if( mNativeHandle && terminate )
+    {
+        TerminateThread( mNativeHandle, (DWORD)-1 );
+    }
+
+    // self destruct.
     delete this;
 }
+
+//
+//
+// -----------------------------------------------------------------------------
+unsigned int __stdcall ThreadMsw::sMainThreadProc( void * parameter )
+{
+    GN_ASSERT( parameter );
+    ThreadMsw * pThis = (ThreadMsw*)parameter;
+
+    // Wait for init event 0.
+    ::WaitForSingleObject( pThis->mInitEvents[0], INFINITE );
+
+    // Add thread object to the global thread table.
+    s_ThreadTable.insert( pThis );
+
+    // Now signal the creation thread that initialization is done.
+    ::SetEvent( pThis->mInitEvents[1] );
+
+    // call user's thread proc
+    pThis->mUserProc( pThis->mUserParam );
+
+    // remove self from thread table, atomically
+    if( s_ThreadTable.remove( pThis ) )
+    {
+        // self destruct.
+        delete pThis;
+    }
+    else
+    {
+        // this means that the thread is being killed, or has been killed.
+    }
+
+    return 0;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+void ThreadMsw::sUtilThreadProc( void * parameter )
+{
+    GN_ASSERT( parameter );
+
+    ThreadMsw * pThis = (ThreadMsw*)parameter;
+
+    // Add self to the thread table.
+    s_ThreadTable.insert( pThis );
+
+    // Now signal the creation thread that initialization is done.
+    ::SetEvent( pThis->mInitEvents[0] );
+
+    // Wait for termination of the native thread.
+    ::WaitForSingleObject( pThis->mNativeHandle, INFINITE );
+
+    // remove self from thread table, atomically
+    if( s_ThreadTable.remove( pThis ) )
+    {
+        // self destruct.
+        delete pThis;
+    }
+    else
+    {
+        // this means that the thread is being killed, or has been killed.
+    }
+}
+
 
 // *****************************************************************************
 // Public thread functions
@@ -518,7 +732,7 @@ ThreadMsw::destroy()
 //
 //
 // -----------------------------------------------------------------------------
-GN::Thread::ThreadID GN::Thread::sCreate(
+GN::Thread::Identifier GN::Thread::sCreate(
     const Procedure & proc,
     void            * param,
     const char      * name )
@@ -529,27 +743,24 @@ GN::Thread::ThreadID GN::Thread::sCreate(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::Thread::sKill( ThreadID id )
+void GN::Thread::sKill( Identifier id )
 {
     s_ThreadTable.kill( id );
- }
-
-//
-//
-// -----------------------------------------------------------------------------
-void GN::Thread::sSleepCurrentThread( TimeInNanoSecond sleepTime )
-{
-    ::Sleep( ns2ms( sleepTime ) );
 }
 
 //
 //
 // -----------------------------------------------------------------------------
 GN::WaitResult GN::Thread::sWaitForTermination(
-    ThreadID         thread,
-    TimeInNanoSecond timeoutTime,
-    uint32         * threadProcReturnValue )
+    Identifier       thread,
+    TimeInNanoSecond timeoutTime )
 {
+    if( !s_ThreadTable.isValidThreadId( thread ) )
+    {
+        GN_ERROR(sLogger)("Invalid thread ID.", thread );
+        return WaitResult::FAILED;
+    }
+
     // can't wait for self termination
     if( sIsCurrentThread(thread) )
     {
@@ -557,14 +768,14 @@ GN::WaitResult GN::Thread::sWaitForTermination(
         return WaitResult::TIMEDOUT;
     }
 
-    HANDLE h = OpenThread( SYNCHRONIZE, FALSE, (DWORD)thread );
-    if( 0 == h )
+    HANDLE nativeHandle = s_ThreadTable.getNativeHandle( thread );
+    if( 0 == nativeHandle )
     {
-        GN_ERROR(sLogger)("Invalid thread ID or access denied." );
-        return WaitResult::FAILED;
+        // The thread has died already.
+        return WaitResult::KILLED;
     }
 
-    uint32 ret = ::WaitForSingleObject( h, ns2ms( timeoutTime ) );
+    uint32 ret = ::WaitForSingleObject( nativeHandle, ns2ms( timeoutTime ) );
 
     if( WAIT_TIMEOUT == ret )
     {
@@ -573,10 +784,6 @@ GN::WaitResult GN::Thread::sWaitForTermination(
     }
     else if( WAIT_OBJECT_0 == ret )
     {
-        if( threadProcReturnValue )
-        {
-            GN_MSW_CHECK( GetExitCodeThread( h, (LPDWORD)threadProcReturnValue ) );
-        }
         return WaitResult::COMPLETED;
     }
     else
@@ -589,24 +796,31 @@ GN::WaitResult GN::Thread::sWaitForTermination(
 //
 //
 // -----------------------------------------------------------------------------
-GN::Thread::ThreadID GN::Thread::sGetCurrentThread()
+void GN::Thread::sSleepCurrentThread( TimeInNanoSecond sleepTime )
 {
-    return (ThreadID)GetCurrentThreadId();
+    ::Sleep( ns2ms( sleepTime ) );
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::Thread::sIsCurrentThread( ThreadID id )
+GN::Thread::Identifier GN::Thread::sGetCurrentThread()
 {
-    ThreadID current = (ThreadID)GetCurrentThreadId();
-    return current == id;
+    return s_ThreadTable.getCurrentThread();
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-GN::Thread::Priority GN::Thread::sGetPriority( ThreadID )
+bool GN::Thread::sIsCurrentThread( Identifier id )
+{
+    return id == s_ThreadTable.getCurrentThread();
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+GN::Thread::Priority GN::Thread::sGetPriority( Identifier )
 {
     GN_UNIMPL_WARNING();
     return Thread::NORMAL;
@@ -615,7 +829,7 @@ GN::Thread::Priority GN::Thread::sGetPriority( ThreadID )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::Thread::sSetPriority( ThreadID t, Priority p )
+void GN::Thread::sSetPriority( Identifier t, Priority p )
 {
     if( p < 0 || p >= NUM_PRIORITIES )
     {
@@ -623,18 +837,22 @@ void GN::Thread::sSetPriority( ThreadID t, Priority p )
         return;
     }
 
-    HANDLE h = OpenThread( THREAD_ALL_ACCESS, FALSE, (DWORD)t );
-    if( h )
+    int nativePriority = sPriority2Msw(p);
+
+    HANDLE nativeHandle = s_ThreadTable.getNativeHandle( t );
+    if( 0 == nativeHandle )
     {
-        GN_MSW_CHECK( ::SetThreadPriority( h, sPriority2Msw(p) ) );
-        CloseHandle( h );
+        GN_ERROR(sLogger)( "Thread %t is either invalid or has terminated." );
+        return;
     }
+
+    GN_MSW_CHECK( ::SetThreadPriority( nativeHandle, nativePriority ) );
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-void GN::Thread::sSetAffinity( ThreadID, uint32 )
+void GN::Thread::sSetAffinity( Identifier, uint32 )
 {
     GN_UNIMPL_WARNING();
 }
