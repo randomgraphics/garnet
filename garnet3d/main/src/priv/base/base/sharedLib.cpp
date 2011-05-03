@@ -28,7 +28,7 @@ static GN::Logger * sLogger = GN::getLogger("GN.base.SharedLib");
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::SharedLib::load( const char * libName )
+GN_API bool GN::SharedLib::load( const char * libName )
 {
     GN_GUARD;
 
@@ -69,7 +69,7 @@ bool GN::SharedLib::load( const char * libName )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::SharedLib::unload()
+GN_API void GN::SharedLib::unload()
 {
     GN_GUARD;
 
@@ -86,7 +86,7 @@ void GN::SharedLib::unload()
 //
 //
 // -----------------------------------------------------------------------------
-void * GN::SharedLib::getSymbol( const char * symbol )
+GN_API void * GN::SharedLib::getSymbol( const char * symbol )
 {
     GN_GUARD;
 

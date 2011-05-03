@@ -26,7 +26,7 @@ static GN::StrA sTime2Str( double time )
 //
 //
 // -----------------------------------------------------------------------------
-GN::ProfileTimer::ProfileTimer( Clock & c )
+GN_API GN::ProfileTimer::ProfileTimer( Clock & c )
     : clock(c)
     , count(0)
     , timesum(0)
@@ -40,14 +40,14 @@ GN::ProfileTimer::ProfileTimer( Clock & c )
 //
 //
 // -----------------------------------------------------------------------------
-GN::ProfileTimer::~ProfileTimer()
+GN_API GN::ProfileTimer::~ProfileTimer()
 {
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-void GN::ProfileTimer::start()
+GN_API void GN::ProfileTimer::start()
 {
     timestart = clock.getTimeD();
 }
@@ -55,7 +55,7 @@ void GN::ProfileTimer::start()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::ProfileTimer::stop()
+GN_API void GN::ProfileTimer::stop()
 {
     double t = clock.getTimeD() - timestart;
     if( t < timemin ) timemin = t;
@@ -72,7 +72,7 @@ void GN::ProfileTimer::stop()
 //
 //
 // -----------------------------------------------------------------------------
-GN::ProfilerManager::~ProfilerManager()
+GN_API GN::ProfilerManager::~ProfilerManager()
 {
 #if GN_ENABLE_PROFILING
     // print profile result
@@ -85,7 +85,7 @@ GN::ProfilerManager::~ProfilerManager()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::ProfilerManager::toString( GN::StrA & rval ) const
+GN_API void GN::ProfilerManager::toString( GN::StrA & rval ) const
 {
     ScopeMutex<SpinLoop> lock( mMutex );
 

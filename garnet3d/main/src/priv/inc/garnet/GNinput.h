@@ -347,19 +347,19 @@ namespace GN
         ///
         /// initialize of input system (shutdown previous input system automatically)
         ///
-        bool initializeInputSystem( InputAPI = InputAPI::NATIVE );
+        GN_API bool initializeInputSystem( InputAPI = InputAPI::NATIVE );
 
         ///
         /// shutdown input system
         ///
-        void shutdownInputSystem();
+        GN_API void shutdownInputSystem();
 
         ///
         /// convert string to keycode
         ///
         /// \return 失败时返回 KeyCode::NONE
         ///
-        KeyCode str2kc( const char * );
+        inline KeyCode str2kc( const char * );
 
         ///
         /// convert keycode to string
@@ -367,7 +367,7 @@ namespace GN
         /// \return  失败时返回空字串（注意，是空字串""，不是NULL，
         ///          你可以用 GN::stringEmpty() 来检测返回值
         ///
-        const char * keyCode2String( int );
+        inline const char * keyCode2String( int );
 
     }
 }

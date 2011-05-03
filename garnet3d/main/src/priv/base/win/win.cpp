@@ -54,7 +54,7 @@ namespace GN { namespace win
     // Public functions
     // *************************************************************************
 
-    const WindowCreationParams WCP_APPLICATION_WINDOW =
+    GN_API const WindowCreationParams WCP_APPLICATION_WINDOW =
     {
         StrA("Garnet Application"),
         0,     // no parent
@@ -65,7 +65,7 @@ namespace GN { namespace win
         true,  // has close box
     };
 
-    const WindowCreationParams WCP_WINDOWED_RENDER_WINDOW =
+    GN_API const WindowCreationParams WCP_WINDOWED_RENDER_WINDOW =
     {
         StrA("Garnet Application"),
         0, // no parent
@@ -76,7 +76,7 @@ namespace GN { namespace win
         false, // no close box
     };
 
-    const WindowCreationParams WCP_FULLSCREEN_RENDER_WINDOW =
+    GN_API const WindowCreationParams WCP_FULLSCREEN_RENDER_WINDOW =
     {
         StrA(""),
         0, // no parent
@@ -90,7 +90,7 @@ namespace GN { namespace win
     //
     //
     // -------------------------------------------------------------------------
-    Window * createWindow( const WindowCreationParams & wcp )
+    GN_API Window * createWindow( const WindowCreationParams & wcp )
     {
         GN_GUARD;
 
@@ -120,7 +120,7 @@ namespace GN { namespace win
     //
     // -------------------------------------------------------------------------
 #if GN_XENON
-    intptr_t getMonitorByIndex( size_t ) { return (intptr_t)1; }
+    GN_API intptr_t getMonitorByIndex( size_t ) { return (intptr_t)1; }
 #elif GN_MSWIN
     struct MonitorEnumInfo
     {
@@ -142,14 +142,14 @@ namespace GN { namespace win
             return TRUE;
         }
     }
-    intptr_t getMonitorByIndex( size_t i )
+    GN_API intptr_t getMonitorByIndex( size_t i )
     {
         MonitorEnumInfo mei = { 0, i, 0 };
         ::EnumDisplayMonitors( 0, 0, &sMonitorEnumProc, (LPARAM)&mei );
         return (intptr_t)mei.handle;
     }
 #else
-    intptr_t getMonitorByIndex( size_t )
+    GN_API intptr_t getMonitorByIndex( size_t )
     {
         GN_UNIMPL();
         return 0;
@@ -160,7 +160,7 @@ namespace GN { namespace win
     //
     // -------------------------------------------------------------------------
 #if GN_MSWIN
-    void processWindowMessages( intptr_t window, bool blockWhileMinized )
+    GN_API void processWindowMessages( intptr_t window, bool blockWhileMinized )
     {
         GN_GUARD_SLOW;
 
@@ -189,6 +189,6 @@ namespace GN { namespace win
         GN_UNGUARD_SLOW;
     }
 #else
-    void processWindowMessages( intptr_t, bool ) {}
+    GN_API void processWindowMessages( intptr_t, bool ) {}
 #endif
 }}

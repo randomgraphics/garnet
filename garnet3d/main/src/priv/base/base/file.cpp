@@ -62,7 +62,7 @@ static FILE * sOpenFile( const char * filename, const char * mode )
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::StdFile::read( void * buffer, size_t size, size_t * readen )
+GN_API bool GN::StdFile::read( void * buffer, size_t size, size_t * readen )
 {
     GN_GUARD;
 
@@ -104,7 +104,7 @@ bool GN::StdFile::read( void * buffer, size_t size, size_t * readen )
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::StdFile::write( const void * buffer, size_t size, size_t * written )
+GN_API bool GN::StdFile::write( const void * buffer, size_t size, size_t * written )
 {
     GN_GUARD;
 
@@ -138,7 +138,7 @@ bool GN::StdFile::write( const void * buffer, size_t size, size_t * written )
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::StdFile::eof() const
+GN_API bool GN::StdFile::eof() const
 {
     GN_GUARD;
 
@@ -156,7 +156,7 @@ bool GN::StdFile::eof() const
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::StdFile::seek( size_t offset, FileSeek origin )
+GN_API bool GN::StdFile::seek( size_t offset, FileSeek origin )
 {
     GN_GUARD;
 
@@ -197,7 +197,7 @@ bool GN::StdFile::seek( size_t offset, FileSeek origin )
 //
 //
 // -----------------------------------------------------------------------------
-size_t GN::StdFile::tell() const
+GN_API size_t GN::StdFile::tell() const
 {
     GN_GUARD;
 
@@ -222,7 +222,7 @@ size_t GN::StdFile::tell() const
 //
 //
 // -----------------------------------------------------------------------------
-size_t GN::StdFile::size() const
+GN_API size_t GN::StdFile::size() const
 {
     GN_GUARD;
 
@@ -270,7 +270,7 @@ size_t GN::StdFile::size() const
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::DiskFile::open( const StrA & filename, const StrA & mode )
+GN_API bool GN::DiskFile::open( const StrA & filename, const StrA & mode )
 {
     GN_GUARD_ALWAYS;
 
@@ -307,7 +307,7 @@ bool GN::DiskFile::open( const StrA & filename, const StrA & mode )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::DiskFile::close() throw()
+GN_API void GN::DiskFile::close() throw()
 {
     GN_GUARD_ALWAYS;
 
@@ -329,7 +329,7 @@ void GN::DiskFile::close() throw()
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::TempFile::open( const StrA & prefix, const StrA & mode, Behavior beh )
+GN_API bool GN::TempFile::open( const StrA & prefix, const StrA & mode, Behavior beh )
 {
     GN_GUARD_ALWAYS;
 
@@ -392,7 +392,7 @@ bool GN::TempFile::open( const StrA & prefix, const StrA & mode, Behavior beh )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::TempFile::close()
+GN_API void GN::TempFile::close()
 {
     GN_GUARD_ALWAYS;
 

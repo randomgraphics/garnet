@@ -3,7 +3,7 @@
 //
 //
 // -----------------------------------------------------------------------------
-void
+GN_API void
 GN::stringPrintf( char * buf, size_t bufSize, const char * fmt, ... )
 {
     va_list arglist;
@@ -15,7 +15,7 @@ GN::stringPrintf( char * buf, size_t bufSize, const char * fmt, ... )
 //
 //
 // -----------------------------------------------------------------------------
-void
+GN_API void
 GN::stringPrintf( wchar_t * buf, size_t bufSize, const wchar_t * fmt, ... )
 {
     va_list arglist;
@@ -27,7 +27,7 @@ GN::stringPrintf( wchar_t * buf, size_t bufSize, const wchar_t * fmt, ... )
 //
 //
 // -----------------------------------------------------------------------------
-void
+GN_API void
 GN::stringVarPrintf( char * buf, size_t bufSize, const char * fmt, va_list args )
 {
     if ( buf && bufSize )
@@ -46,7 +46,7 @@ GN::stringVarPrintf( char * buf, size_t bufSize, const char * fmt, va_list args 
 //
 //
 // -----------------------------------------------------------------------------
-void
+GN_API void
 GN::stringVarPrintf( wchar_t * buf, size_t bufSize, const wchar_t * fmt, va_list args )
 {
     if ( buf && bufSize )
@@ -71,7 +71,8 @@ GN::stringVarPrintf( wchar_t * buf, size_t bufSize, const wchar_t * fmt, va_list
 //
 //
 // -----------------------------------------------------------------------------
-size_t GN::string2SignedInteger( sint64 & result, int bits, int base, const char * s )
+GN_API size_t
+GN::string2SignedInteger( sint64 & result, int bits, int base, const char * s )
 {
     // check invalid parameters
     if( bits < 2 && bits > 64 ) return 0;
@@ -103,7 +104,8 @@ size_t GN::string2SignedInteger( sint64 & result, int bits, int base, const char
 //
 //
 // -----------------------------------------------------------------------------
-size_t GN::string2UnsignedInteger( uint64 & result, int bits, int base, const char * s )
+GN_API size_t
+GN::string2UnsignedInteger( uint64 & result, int bits, int base, const char * s )
 {
     // check invalid parameters
     if( bits < 2 && bits > 64 ) return 0;
@@ -138,7 +140,8 @@ size_t GN::string2UnsignedInteger( uint64 & result, int bits, int base, const ch
 //
 //
 // -----------------------------------------------------------------------------
-size_t GN::string2Float( float & i, const char * s )
+GN_API size_t
+GN::string2Float( float & i, const char * s )
 {
     double d;
     size_t n = string2Double( d, s );
@@ -155,7 +158,8 @@ size_t GN::string2Float( float & i, const char * s )
 //
 //
 // -----------------------------------------------------------------------------
-size_t GN::string2Double( double & i, const char * s )
+GN_API size_t
+GN::string2Double( double & i, const char * s )
 {
     if( stringEmpty(s) ) return 0;
 
@@ -176,7 +180,8 @@ size_t GN::string2Double( double & i, const char * s )
 //
 //
 // -----------------------------------------------------------------------------
-size_t GN::string2FloatArray( float * buffer, size_t maxCount, const char * str, size_t length )
+GN_API size_t
+GN::string2FloatArray( float * buffer, size_t maxCount, const char * str, size_t length )
 {
     if( NULL == buffer ) return 0;
     if( stringEmpty(str) ) return 0;

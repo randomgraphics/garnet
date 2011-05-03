@@ -165,7 +165,7 @@ namespace GN
     /// safe sprintf. This function always outputs null-terminated string,
     /// like StringCchPrintf(...)
     ///
-    void
+    GN_API void
     stringPrintf(
         char *       buf,
         size_t       bufSizeInChar,
@@ -176,7 +176,7 @@ namespace GN
     /// safe sprintf. This function always outputs null-terminated string,
     /// like StringCchPrintf(...)
     ///
-    void
+    GN_API void
     stringPrintf(
         wchar_t *       buf,
         size_t          bufSizeInWchar,
@@ -187,7 +187,7 @@ namespace GN
     /// safe sprintf. This function always outputs null-terminated string,
     /// like StringCchPrintf(...)
     ///
-    void
+    GN_API void
     stringVarPrintf(
         char *       buf,
         size_t       bufSizeInChar,
@@ -197,7 +197,7 @@ namespace GN
     ///
     /// printf-like format string (wide-char)
     ///
-    void
+    GN_API void
     stringVarPrintf(
         wchar_t *       buf,
         size_t          bufSizeInWchar,
@@ -1083,8 +1083,8 @@ namespace GN
             }
         }
 
-        friend void wcs2mbs( Str<char> &, const wchar_t *, size_t );
-        friend void mbs2wcs( Str<wchar_t> &, const char *, size_t );
+        friend GN_API void wcs2mbs( Str<char> &, const wchar_t *, size_t );
+        friend GN_API void mbs2wcs( Str<wchar_t> &, const char *, size_t );
     };
 
     // Implement static data member
@@ -1662,8 +1662,8 @@ namespace GN
     ///  Returns number of characters that are sucessfully converted. Return 0 for failure.
     //@{
 
-    size_t string2SignedInteger( sint64 & result, int bits, int base, const char * s );
-    size_t string2UnsignedInteger( uint64 & result, int bits, int base, const char * s );
+    GN_API size_t string2SignedInteger( sint64 & result, int bits, int base, const char * s );
+    GN_API size_t string2UnsignedInteger( uint64 & result, int bits, int base, const char * s );
 
     template<typename T> inline size_t string2Integer( T & i, const char * s, int base = 10 )
     {
@@ -1698,9 +1698,9 @@ namespace GN
         }
     }
 
-    size_t string2Float( float & i, const char * s );
+    GN_API size_t string2Float( float & i, const char * s );
 
-    size_t string2Double( double & i, const char * s );
+    GN_API size_t string2Double( double & i, const char * s );
 
     template<typename T> inline size_t string2Number( T & i, const char * s ) { return string2Integer<T>( i, s, 10 ); }
     template<> inline size_t string2Number<float>( float & i, const char * s ) { return string2Float( i, s ); }
@@ -1725,7 +1725,7 @@ namespace GN
     ///
     ///     REVIEW: this function returns number of floats, while other function returns number of characters.
     ///
-    size_t string2FloatArray( float * buffer, size_t maxCount, const char * str, size_t stringLength = 0 );
+    GN_API size_t string2FloatArray( float * buffer, size_t maxCount, const char * str, size_t stringLength = 0 );
 
     //@}
 

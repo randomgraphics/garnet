@@ -213,7 +213,7 @@ static const size_t COLOR_FORMAT_CONVERT_TABLE_SIZE = GN_ARRAY_COUNT(s_ColorForm
 // public data
 // *****************************************************************************
 
-const GN::gfx::ColorLayoutDesc GN::gfx::ALL_COLOR_LAYOUTS[] =
+GN_API const GN::gfx::ColorLayoutDesc GN::gfx::ALL_COLOR_LAYOUTS[] =
 {
     //BW  BH  BB   BPP   CH      CH0        CH1          CH2          CH3
     { 0 , 0 , 0  , 0   , 0 , { { 0 , 0  }, { 0  , 0  }, { 0  , 0  }, { 0  , 0  } } }, //LAYOUT_UNKNOWN,
@@ -261,7 +261,7 @@ const GN::gfx::ColorLayoutDesc GN::gfx::ALL_COLOR_LAYOUTS[] =
 //
 //
 // -----------------------------------------------------------------------------
-bool
+GN_API bool
 GN::gfx::ColorFormat::sFromString( ColorFormat & result, const char * str )
 {
     struct ColorFormatName
@@ -297,11 +297,107 @@ GN::gfx::ColorFormat::sFromString( ColorFormat & result, const char * str )
 //
 //
 // -----------------------------------------------------------------------------
-GN::gfx::ColorFormat
+GN_API GN::gfx::ColorFormat
 GN::gfx::ColorFormat::sFromString( const char * str )
 {
     ColorFormat result;
     return sFromString( result, str ) ? result : UNKNOWN;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+GN_API void GN::gfx::ColorFormat::toString( GN::StrA & s ) const
+{
+    struct Local
+    {
+        static inline const char *
+        layout2str( size_t layout )
+        {
+            static const char * LAYOUT_STRING[] = {
+                "LAYOUT_UNKNOWN",
+                "LAYOUT_1",
+                "LAYOUT_4_4",
+                "LAYOUT_4_4_4_4",
+                "LAYOUT_5_5_5_1",
+                "LAYOUT_5_6_5",
+                "LAYOUT_8",
+                "LAYOUT_8_8",
+                "LAYOUT_8_8_8",
+                "LAYOUT_8_8_8_8",
+                "LAYOUT_10_11_11",
+                "LAYOUT_11_11_10",
+                "LAYOUT_10_10_10_2",
+                "LAYOUT_16",
+                "LAYOUT_16_16",
+                "LAYOUT_16_16_16_16",
+                "LAYOUT_32",
+                "LAYOUT_32_32",
+                "LAYOUT_32_32_32",
+                "LAYOUT_32_32_32_32",
+                "LAYOUT_24",
+                "LAYOUT_8_24",
+                "LAYOUT_24_8",
+                "LAYOUT_4_4_24",
+                "LAYOUT_32_8_24",
+                "LAYOUT_DXT1",
+                "LAYOUT_DXT3",
+                "LAYOUT_DXT3A",
+                "LAYOUT_DXT5",
+                "LAYOUT_DXT5A",
+                "LAYOUT_DXN",
+                "LAYOUT_CTX1",
+                "LAYOUT_DXT3A_AS_1_1_1_1",
+                "LAYOUT_GRGB",
+                "LAYOUT_RGBG"
+            };
+
+            return ( layout < GN_ARRAY_COUNT(LAYOUT_STRING) ) ? LAYOUT_STRING[layout] : "INVALID_LAYOUT";
+        }
+
+        static inline const char *
+        sign2str( size_t sign )
+        {
+            static const char * SIGN_STR[] = {
+                "UNORM",
+                "SNORM",
+                "GNORM",
+                "BNORM",
+                "UINT",
+                "SINT",
+                "GINT",
+                "BINT",
+                "FLOAT",
+            };
+
+            return ( sign < GN_ARRAY_COUNT(SIGN_STR) ) ? SIGN_STR[sign] : "INVALID_SIGN";
+        }
+
+        static inline const char *
+        swizzle2str( size_t swizzle )
+        {
+            static const char * SWIZZLE_STR[] = {
+                "X",
+                "Y",
+                "Z",
+                "W",
+                "0",
+                "1",
+            };
+
+            return ( swizzle < GN_ARRAY_COUNT(SWIZZLE_STR) ) ? SWIZZLE_STR[swizzle] : "_";
+        }
+    };
+
+    s = stringFormat(
+        "%s-sign012(%s)-sign3(%s)-%s%s%s%s",
+        Local::layout2str(layout),
+        Local::sign2str(sign012),
+        Local::sign2str(sign3),
+        Local::swizzle2str(swizzle0),
+        Local::swizzle2str(swizzle1),
+        Local::swizzle2str(swizzle2),
+        Local::swizzle2str(swizzle3) );
 }
 
 // *****************************************************************************
@@ -311,7 +407,7 @@ GN::gfx::ColorFormat::sFromString( const char * str )
 //
 //
 // -----------------------------------------------------------------------------
-const char * GN::gfx::d3d9Format2Str( int d3d9fmt )
+GN_API const char * GN::gfx::d3d9Format2Str( int d3d9fmt )
 {
     struct Item { int fmt; const char * str; };
     static const Item sTable[] =
@@ -393,7 +489,7 @@ const char * GN::gfx::d3d9Format2Str( int d3d9fmt )
 //
 //
 // -----------------------------------------------------------------------------
-const char * GN::gfx::xenonFormat2Str( int xefmt )
+GN_API const char * GN::gfx::xenonFormat2Str( int xefmt )
 {
     GN_UNUSED_PARAM(xefmt);
     return "NOT IMPLEMENTED";
@@ -402,7 +498,7 @@ const char * GN::gfx::xenonFormat2Str( int xefmt )
 //
 //
 // -----------------------------------------------------------------------------
-const char * GN::gfx::dxgiFormat2Str( int dxgifmt )
+GN_API const char * GN::gfx::dxgiFormat2Str( int dxgifmt )
 {
     struct Item { int fmt; const char * str; };
     static const Item sTable[] =
@@ -508,7 +604,7 @@ const char * GN::gfx::dxgiFormat2Str( int dxgifmt )
 //
 //
 // -----------------------------------------------------------------------------
-GN::gfx::ColorFormat GN::gfx::d3d9Format2ColorFormat( int d3d9fmt )
+GN_API GN::gfx::ColorFormat GN::gfx::d3d9Format2ColorFormat( int d3d9fmt )
 {
     for( size_t i = 0; i < COLOR_FORMAT_CONVERT_TABLE_SIZE; ++i )
     {
@@ -521,7 +617,7 @@ GN::gfx::ColorFormat GN::gfx::d3d9Format2ColorFormat( int d3d9fmt )
 //
 //
 // -----------------------------------------------------------------------------
-int GN::gfx::colorFormat2D3D9Format( ColorFormat clrfmt )
+GN_API int GN::gfx::colorFormat2D3D9Format( ColorFormat clrfmt )
 {
     for( size_t i = 0; i < COLOR_FORMAT_CONVERT_TABLE_SIZE; ++i )
     {
@@ -534,7 +630,7 @@ int GN::gfx::colorFormat2D3D9Format( ColorFormat clrfmt )
 //
 //
 // -----------------------------------------------------------------------------
-GN::gfx::ColorFormat GN::gfx::xenonFormat2ColorFormat( int xefmt )
+GN_API GN::gfx::ColorFormat GN::gfx::xenonFormat2ColorFormat( int xefmt )
 {
     for( size_t i = 0; i < COLOR_FORMAT_CONVERT_TABLE_SIZE; ++i )
     {
@@ -547,7 +643,7 @@ GN::gfx::ColorFormat GN::gfx::xenonFormat2ColorFormat( int xefmt )
 //
 //
 // -----------------------------------------------------------------------------
-uint32 GN::gfx::colorFormat2XenonFormat( ColorFormat clrfmt )
+GN_API uint32 GN::gfx::colorFormat2XenonFormat( ColorFormat clrfmt )
 {
     for( size_t i = 0; i < COLOR_FORMAT_CONVERT_TABLE_SIZE; ++i )
     {
@@ -560,7 +656,7 @@ uint32 GN::gfx::colorFormat2XenonFormat( ColorFormat clrfmt )
 //
 //
 // -----------------------------------------------------------------------------
-GN::gfx::ColorFormat GN::gfx::dxgiFormat2ColorFormat( int dxgifmt )
+GN_API GN::gfx::ColorFormat GN::gfx::dxgiFormat2ColorFormat( int dxgifmt )
 {
     for( size_t i = 0; i < COLOR_FORMAT_CONVERT_TABLE_SIZE; ++i )
     {
@@ -573,7 +669,7 @@ GN::gfx::ColorFormat GN::gfx::dxgiFormat2ColorFormat( int dxgifmt )
 //
 //
 // -----------------------------------------------------------------------------
-int GN::gfx::colorFormat2DxgiFormat( ColorFormat clrfmt )
+GN_API int GN::gfx::colorFormat2DxgiFormat( ColorFormat clrfmt )
 {
     for( size_t i = 0; i < COLOR_FORMAT_CONVERT_TABLE_SIZE; ++i )
     {
@@ -581,104 +677,4 @@ int GN::gfx::colorFormat2DxgiFormat( ColorFormat clrfmt )
             return s_ColorFormatConvertTable[i].dxgifmt;
     }
     return DXGI_FORMAT_UNKNOWN;
-}
-
-// *****************************************************************************
-// ColorFormat
-// *****************************************************************************
-
-//
-//
-// -----------------------------------------------------------------------------
-void GN::gfx::ColorFormat::toString( GN::StrA & s ) const
-{
-    struct Local
-    {
-        static inline const char *
-        layout2str( size_t layout )
-        {
-            static const char * LAYOUT_STRING[] = {
-                "LAYOUT_UNKNOWN",
-                "LAYOUT_1",
-                "LAYOUT_4_4",
-                "LAYOUT_4_4_4_4",
-                "LAYOUT_5_5_5_1",
-                "LAYOUT_5_6_5",
-                "LAYOUT_8",
-                "LAYOUT_8_8",
-                "LAYOUT_8_8_8",
-                "LAYOUT_8_8_8_8",
-                "LAYOUT_10_11_11",
-                "LAYOUT_11_11_10",
-                "LAYOUT_10_10_10_2",
-                "LAYOUT_16",
-                "LAYOUT_16_16",
-                "LAYOUT_16_16_16_16",
-                "LAYOUT_32",
-                "LAYOUT_32_32",
-                "LAYOUT_32_32_32",
-                "LAYOUT_32_32_32_32",
-                "LAYOUT_24",
-                "LAYOUT_8_24",
-                "LAYOUT_24_8",
-                "LAYOUT_4_4_24",
-                "LAYOUT_32_8_24",
-                "LAYOUT_DXT1",
-                "LAYOUT_DXT3",
-                "LAYOUT_DXT3A",
-                "LAYOUT_DXT5",
-                "LAYOUT_DXT5A",
-                "LAYOUT_DXN",
-                "LAYOUT_CTX1",
-                "LAYOUT_DXT3A_AS_1_1_1_1",
-                "LAYOUT_GRGB",
-                "LAYOUT_RGBG"
-            };
-
-            return ( layout < GN_ARRAY_COUNT(LAYOUT_STRING) ) ? LAYOUT_STRING[layout] : "INVALID_LAYOUT";
-        }
-
-        static inline const char *
-        sign2str( size_t sign )
-        {
-            static const char * SIGN_STR[] = {
-                "UNORM",
-                "SNORM",
-                "GNORM",
-                "BNORM",
-                "UINT",
-                "SINT",
-                "GINT",
-                "BINT",
-                "FLOAT",
-            };
-
-            return ( sign < GN_ARRAY_COUNT(SIGN_STR) ) ? SIGN_STR[sign] : "INVALID_SIGN";
-        }
-
-        static inline const char *
-        swizzle2str( size_t swizzle )
-        {
-            static const char * SWIZZLE_STR[] = {
-                "X",
-                "Y",
-                "Z",
-                "W",
-                "0",
-                "1",
-            };
-
-            return ( swizzle < GN_ARRAY_COUNT(SWIZZLE_STR) ) ? SWIZZLE_STR[swizzle] : "_";
-        }
-    };
-
-    s = stringFormat(
-        "%s-sign012(%s)-sign3(%s)-%s%s%s%s",
-        Local::layout2str(layout),
-        Local::sign2str(sign012),
-        Local::sign2str(sign3),
-        Local::swizzle2str(swizzle0),
-        Local::swizzle2str(swizzle1),
-        Local::swizzle2str(swizzle2),
-        Local::swizzle2str(swizzle3) );
 }

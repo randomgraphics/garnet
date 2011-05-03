@@ -723,7 +723,7 @@ void sDumpD3D10States( ID3D10Device & device, FILE * fp )
 // public function
 // *****************************************************************************
 
-void GN::d3d10::setDumpFilePrefix( const StrA & prefix )
+GN_API void GN::d3d10::setDumpFilePrefix( const StrA & prefix )
 {
     size_t n = math::getmin<size_t>( prefix.size(), _MAX_PATH );
     memcpy( sDumpFilePrefix, prefix.rawptr(), n );
@@ -733,7 +733,7 @@ void GN::d3d10::setDumpFilePrefix( const StrA & prefix )
 //
 //
 // -----------------------------------------------------------------------------
-ID3D10VertexShader * GN::d3d10::createDumpableVS(
+GN_API ID3D10VertexShader * GN::d3d10::createDumpableVS(
     ID3D10Device & device,
     const void * binary,
     size_t bytes )
@@ -750,7 +750,7 @@ ID3D10VertexShader * GN::d3d10::createDumpableVS(
 //
 //
 // -----------------------------------------------------------------------------
-ID3D10GeometryShader * GN::d3d10::createDumpableGS(
+GN_API ID3D10GeometryShader * GN::d3d10::createDumpableGS(
     ID3D10Device & device,
     const void * binary,
     size_t bytes )
@@ -767,7 +767,7 @@ ID3D10GeometryShader * GN::d3d10::createDumpableGS(
 //
 //
 // -----------------------------------------------------------------------------
-ID3D10PixelShader * GN::d3d10::createDumpablePS(
+GN_API ID3D10PixelShader * GN::d3d10::createDumpablePS(
     ID3D10Device & device,
     const void * binary,
     size_t bytes )
@@ -784,7 +784,7 @@ ID3D10PixelShader * GN::d3d10::createDumpablePS(
 //
 //
 // -----------------------------------------------------------------------------
-ID3D10InputLayout * GN::d3d10::createDumpableIL(
+GN_API ID3D10InputLayout * GN::d3d10::createDumpableIL(
     ID3D10Device                   & device,
     const D3D10_INPUT_ELEMENT_DESC * elements,
     size_t                           count,
@@ -811,7 +811,7 @@ ID3D10InputLayout * GN::d3d10::createDumpableIL(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::d3d10::dumpDraw( ID3D10Device & device, uint32 vertexCount, uint32 startVertex )
+GN_API void GN::d3d10::dumpDraw( ID3D10Device & device, uint32 vertexCount, uint32 startVertex )
 {
     DumpFile file;
 
@@ -830,7 +830,7 @@ void GN::d3d10::dumpDraw( ID3D10Device & device, uint32 vertexCount, uint32 star
 //
 //
 // -----------------------------------------------------------------------------
-void GN::d3d10::dumpDrawIndexed( ID3D10Device & device, uint32 indexCount, uint32 startIndex, uint32 startVertex )
+GN_API void GN::d3d10::dumpDrawIndexed( ID3D10Device & device, uint32 indexCount, uint32 startIndex, uint32 startVertex )
 {
     DumpFile file;
 

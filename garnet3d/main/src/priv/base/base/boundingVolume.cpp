@@ -17,7 +17,7 @@ static float sGetNextValue( const float * & buffer, size_t stride )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::calculateBoundingSphere(
+GN_API void GN::calculateBoundingSphere(
     Spheref & result,
     const float * x, size_t strideX,
     const float * y, size_t strideY,
@@ -35,7 +35,7 @@ void GN::calculateBoundingSphere(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::calculateBoundingSphere( Spheref & result, const Vector3f * positions, size_t strideInBytes, size_t count )
+GN_API void GN::calculateBoundingSphere( Spheref & result, const Vector3f * positions, size_t strideInBytes, size_t count )
 {
     return calculateBoundingSphere(
         result,
@@ -48,7 +48,7 @@ void GN::calculateBoundingSphere( Spheref & result, const Vector3f * positions, 
 //
 //
 // -----------------------------------------------------------------------------
-void GN::calculateBoundingSphereFromBoundingBox( Spheref & result, const Boxf & bbox )
+GN_API void GN::calculateBoundingSphereFromBoundingBox( Spheref & result, const Boxf & bbox )
 {
     result.center = bbox.center();
     result.radius = Vector3f::sDistance( result.center, bbox.pos() );

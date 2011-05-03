@@ -11,7 +11,7 @@ namespace GN
     ///
     /// ◊¢≤·±Ì¿‡–Õ.
     ///
-    class Registry
+    class GN_API Registry
     {
         struct Item
         {

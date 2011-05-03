@@ -69,42 +69,42 @@ namespace GN { /* namespace for D3D9 utils */ namespace d3d9
     ///
     /// Compile vertex shader from string
     ///
-    LPDIRECT3DVERTEXSHADER9 compileAndCreateVS( LPDIRECT3DDEVICE9 dev, const char * code, size_t len = 0, uint32 flags = 0, const char * entryFunc = "main", const char * profile = 0, LPD3DXCONSTANTTABLE * constTable = 0, LPD3DXBUFFER * binary = 0 );
+    GN_API LPDIRECT3DVERTEXSHADER9 compileAndCreateVS( LPDIRECT3DDEVICE9 dev, const char * code, size_t len = 0, uint32 flags = 0, const char * entryFunc = "main", const char * profile = 0, LPD3DXCONSTANTTABLE * constTable = 0, LPD3DXBUFFER * binary = 0 );
 
     ///
     /// Compile vertex shader from file
     ///
-    LPDIRECT3DVERTEXSHADER9 compileAndCreateVSFromFile( LPDIRECT3DDEVICE9 dev, const char * file, uint32 flags = 0, const char * entryFunc = "main", const char * profile = 0, LPD3DXCONSTANTTABLE * constTable = 0, LPD3DXBUFFER * binary = 0 );
+    GN_API LPDIRECT3DVERTEXSHADER9 compileAndCreateVSFromFile( LPDIRECT3DDEVICE9 dev, const char * file, uint32 flags = 0, const char * entryFunc = "main", const char * profile = 0, LPD3DXCONSTANTTABLE * constTable = 0, LPD3DXBUFFER * binary = 0 );
 
     ///
     /// Assemble vertex shader from string
     ///
-    LPDIRECT3DVERTEXSHADER9 assembleAndCreateVS( LPDIRECT3DDEVICE9 dev, const char * code, size_t len = 0, uint32 flags = 0, LPD3DXBUFFER * binary = 0 );
+    GN_API LPDIRECT3DVERTEXSHADER9 assembleAndCreateVS( LPDIRECT3DDEVICE9 dev, const char * code, size_t len = 0, uint32 flags = 0, LPD3DXBUFFER * binary = 0 );
 
     ///
     /// Assemble vertex shader from file
     ///
-    LPDIRECT3DVERTEXSHADER9 assembleAndCreateVSFromFile( LPDIRECT3DDEVICE9 dev, const char * file, uint32 flags = 0, LPD3DXBUFFER * binary = 0 );
+    GN_API LPDIRECT3DVERTEXSHADER9 assembleAndCreateVSFromFile( LPDIRECT3DDEVICE9 dev, const char * file, uint32 flags = 0, LPD3DXBUFFER * binary = 0 );
 
     ///
     /// Compile pixel shader from string
     ///
-    LPDIRECT3DPIXELSHADER9 compileAndCreatePS( LPDIRECT3DDEVICE9 dev, const char * code, size_t len = 0, uint32 flags = 0, const char * entryFunc = "main", const char * profile = 0, LPD3DXCONSTANTTABLE * constTable = 0 );
+    GN_API LPDIRECT3DPIXELSHADER9 compileAndCreatePS( LPDIRECT3DDEVICE9 dev, const char * code, size_t len = 0, uint32 flags = 0, const char * entryFunc = "main", const char * profile = 0, LPD3DXCONSTANTTABLE * constTable = 0 );
 
     ///
     /// Compile pixel shader from file
     ///
-    LPDIRECT3DPIXELSHADER9 compileAndCreatePSFromFile( LPDIRECT3DDEVICE9 dev, const char * file, uint32 flags = 0, const char * entryFunc = "main", const char * profile = 0, LPD3DXCONSTANTTABLE * constTable = 0 );
+    GN_API LPDIRECT3DPIXELSHADER9 compileAndCreatePSFromFile( LPDIRECT3DDEVICE9 dev, const char * file, uint32 flags = 0, const char * entryFunc = "main", const char * profile = 0, LPD3DXCONSTANTTABLE * constTable = 0 );
 
     ///
     /// Assemble pixel shader from string
     ///
-    LPDIRECT3DPIXELSHADER9 assembleAndCreatePS( LPDIRECT3DDEVICE9 dev, const char * code, size_t len = 0, uint32 flags = 0 );
+    GN_API LPDIRECT3DPIXELSHADER9 assembleAndCreatePS( LPDIRECT3DDEVICE9 dev, const char * code, size_t len = 0, uint32 flags = 0 );
 
     ///
     /// Assemble pixel shader from file
     ///
-    LPDIRECT3DPIXELSHADER9 assembleAndCreatePSFromFile( LPDIRECT3DDEVICE9 dev, const char * file, uint32 flags = 0 );
+    GN_API LPDIRECT3DPIXELSHADER9 assembleAndCreatePSFromFile( LPDIRECT3DDEVICE9 dev, const char * file, uint32 flags = 0 );
 
     //@{
 
@@ -171,7 +171,7 @@ namespace GN { /* namespace for D3D9 utils */ namespace d3d9
     ///
     /// Compile effect from string
     ///
-    LPD3DXEFFECT compileAndCreateEffect( LPDIRECT3DDEVICE9 dev, const char * code, size_t len = 0, uint32 flags = 0, LPD3DXEFFECTPOOL pool = 0 );
+    GN_API LPD3DXEFFECT compileAndCreateEffect( LPDIRECT3DDEVICE9 dev, const char * code, size_t len = 0, uint32 flags = 0, LPD3DXEFFECTPOOL pool = 0 );
 
 
     ///
@@ -228,7 +228,7 @@ namespace GN { /* namespace for D3D9 utils */ namespace d3d9
         GN_UNGUARD_SLOW;
     }
 
-    class D3D9RenderStateSaver
+    class GN_API D3D9RenderStateSaver
     {
         struct RenderStateItem
         {
@@ -426,7 +426,7 @@ namespace GN { /* namespace for D3D9 utils */ namespace d3d9
                                      // false : line width is in view space
     };
 
-    class D3D9ThickLineRenderer
+    class GN_API D3D9ThickLineRenderer
     {
 
     public:
@@ -463,7 +463,7 @@ namespace GN { /* namespace for D3D9 utils */ namespace d3d9
             uint32   _; // padding
         };
 
-        struct EndPoint
+        struct GN_API EndPoint
         {
             float posl, posr, post, posb, posz, posw;
             float texl, texr, text, texb;
@@ -589,7 +589,7 @@ namespace GN { /* namespace for D3D9 utils */ namespace d3d9
     ///
     /// D3D9 application framework
     ///
-    class D3D9Application : public SlotBase
+    class GN_API D3D9Application : public SlotBase
     {
     public:
 

@@ -7,7 +7,7 @@ namespace GN { namespace gfx
     //
     //
     // -------------------------------------------------------------------------
-    void deleteGpu( Gpu * r )
+    GN_API void deleteGpu( Gpu * r )
     {
         GN_GUARD;
 

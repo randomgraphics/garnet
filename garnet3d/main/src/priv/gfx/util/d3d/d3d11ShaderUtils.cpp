@@ -111,7 +111,7 @@ static void sPrintShaderCompileInfoD3D11( const char * hlsl, ID3DBlob * bin )
 //
 //
 // -----------------------------------------------------------------------------
-ID3DBlob * GN::d3d11::compileShader(
+GN_API ID3DBlob * GN::d3d11::compileShader(
     const char   * profile,
     const char   * source,
     size_t         len,
@@ -166,7 +166,7 @@ ID3DBlob * GN::d3d11::compileShader(
 //
 //
 // -----------------------------------------------------------------------------
-ID3D11VertexShader * GN::d3d11::compileAndCreateVS(
+GN_API ID3D11VertexShader * GN::d3d11::compileAndCreateVS(
     ID3D11Device & dev,
     const char   * source,
     size_t         len,
@@ -193,7 +193,7 @@ ID3D11VertexShader * GN::d3d11::compileAndCreateVS(
 //
 //
 // -----------------------------------------------------------------------------
-ID3D11GeometryShader * GN::d3d11::compileAndCreateGS(
+GN_API ID3D11GeometryShader * GN::d3d11::compileAndCreateGS(
     ID3D11Device & dev,
     const char   * source,
     size_t         len,
@@ -220,7 +220,7 @@ ID3D11GeometryShader * GN::d3d11::compileAndCreateGS(
 //
 //
 // -----------------------------------------------------------------------------
-ID3D11PixelShader * GN::d3d11::compileAndCreatePS(
+GN_API ID3D11PixelShader * GN::d3d11::compileAndCreatePS(
     ID3D11Device & dev,
     const char   * source,
     size_t         len,

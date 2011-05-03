@@ -3,7 +3,7 @@
 //
 //
 // -----------------------------------------------------------------------------
-void GN::putEnv( const char * name, const char * value )
+GN_API void GN::putEnv( const char * name, const char * value )
 {
     static GN::Logger * sLogger = GN::getLogger("GN.base.putEnv");
 
@@ -47,7 +47,7 @@ void GN::putEnv( const char * name, const char * value )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::getEnv( StrA & result, const char * name )
+GN_API void GN::getEnv( StrA & result, const char * name )
 {
 #if GN_XENON
     // Xenon does not support getenv()
@@ -77,7 +77,7 @@ void GN::getEnv( StrA & result, const char * name )
 //
 //
 // -----------------------------------------------------------------------------
-const char * GN::Guid::toStr() const
+GN_API const char * GN::Guid::toStr() const
 {
     // GUID as string: {xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx}
     static char str[1+8+1+4+1+4+1+4+1+12+1];

@@ -11,7 +11,7 @@ namespace GN
     ///
     /// high resolution clock system
     ///
-    class Clock
+    class GN_API Clock
     {
         // ********************************
         /// name  ctor/dtor
@@ -44,7 +44,7 @@ namespace GN
         ///
         /// Get system cycle frequency
         ///
-        static CycleType sGetSystemCycleFrequency() { return mSystemCycleFrequency; }
+        static CycleType sGetSystemCycleFrequency() { return msSystemCycleFrequency; }
 
         ///
         /// 获得当前时间计数
@@ -60,7 +60,7 @@ namespace GN
         double getTimeD() const
         {
             double c1 = static_cast<double>( getCleanCycleCount() );
-            double c2 = static_cast<double>( mSystemCycleFrequency );
+            double c2 = static_cast<double>( msSystemCycleFrequency );
             return c1 / c2;
         }
 
@@ -103,7 +103,7 @@ namespace GN
         bool      mPaused;       ///< 计时器是否暂停
 
         ///< 系统计时器的频率（每秒钟的cycle数）
-        static CycleType mSystemCycleFrequency;
+        static CycleType msSystemCycleFrequency;
 
         // ********************************
         //   private functions

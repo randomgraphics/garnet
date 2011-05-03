@@ -176,19 +176,29 @@
 
 /// \def GN_EXPORT
 /// Export function tag
+#if GN_MSVC
+#define GN_IMPORT       __declspec(dllimport)
+#else
 #define GN_IMPORT
+#endif
 
 /// \def GN_IMPORT
 /// Import function tag
+#if GN_MSVC
+#define GN_EXPORT       __declspec(dllexport)
+#else
 #define GN_EXPORT
+#endif
 
 ///
-/// Public/global function/variable tag
+/// Garnet public API tag.
 ///
-#if defined(_GN_CORE)
-#define GN_PUBLIC   GN_EXPORT // Only core module exports symbols
+/// Any public functions and classes, unless fully defined in header, should have this tag.
+///
+#ifdef GN_CORE_INTERNAL
+#define GN_API       GN_EXPORT
 #else
-#define GN_PUBLIC   GN_IMPORT // All other modules only imports symbols
+#define GN_API       GN_IMPORT
 #endif
 
 ///

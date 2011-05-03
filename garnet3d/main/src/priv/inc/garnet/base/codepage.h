@@ -11,7 +11,7 @@ namespace GN
     ///
     /// Multi-Byte character encoding class (represents language specific encodings)
     ///
-    class CharacterEncodingConverter
+    class GN_API CharacterEncodingConverter
     {
     public:
 
@@ -145,12 +145,12 @@ namespace GN
     ///
     /// get current system encoding
     ///
-    CharacterEncodingConverter::Encoding getCurrentSystemEncoding();
+    GN_API CharacterEncodingConverter::Encoding getCurrentSystemEncoding();
 
     ///
     /// convert wide char string to multi-byte string in current system encoding
     ///
-    void wcs2mbs( StrA &, const wchar_t *, size_t );
+    GN_API void wcs2mbs( StrA &, const wchar_t *, size_t );
 
     ///
     /// convert wide char string to multi-byte string in current system encoding
@@ -189,12 +189,12 @@ namespace GN
     ///     character count in input buffer, not including null terminator. If zero,
     ///     then input buffer must be a null-terminated string.
     ///
-    size_t mbs2wcs( wchar_t * obuf, size_t ocount, const char * ibuf, size_t icount );
+    GN_API size_t mbs2wcs( wchar_t * obuf, size_t ocount, const char * ibuf, size_t icount );
 
     ///
     /// convert multi-byte string in current system code page to wide char string
     ///
-    void mbs2wcs( StrW &, const char *, size_t );
+    GN_API void mbs2wcs( StrW &, const char *, size_t );
 
     ///
     /// convert multi-byte string in current system code page to wide char string

@@ -49,7 +49,7 @@ namespace GN
     ///
     /// profile timer
     ///
-    class ProfileTimer
+    class GN_API ProfileTimer
     {
         Clock & clock;
 
@@ -87,7 +87,7 @@ namespace GN
     ///
     /// \todo Make it thread-safe.
     ///
-    class ProfilerManager
+    class GN_API ProfilerManager
     {
         // ********************************
         // ctor/dtor
@@ -107,7 +107,7 @@ namespace GN
         ///
         /// return global instance of the profiler
         ///
-        static GN_PUBLIC ProfilerManager & sGetGlobalInstance();
+        static ProfilerManager & sGetGlobalInstance();
 
         ///
         /// reset profiler, clear all timers

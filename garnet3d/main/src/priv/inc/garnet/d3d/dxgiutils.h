@@ -73,7 +73,7 @@ namespace GN{ /** namespace for DXGI utilities */ namespace dxgi
     };
 
     /// Get the DXGI format description for a specific format.
-    const DXGI_FORMAT_DESCRIPTION & getDXGIFormatDesc( DXGI_FORMAT );
+    GN_API const DXGI_FORMAT_DESCRIPTION & getDXGIFormatDesc( DXGI_FORMAT );
 }}
 
 // *****************************************************************************

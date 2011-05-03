@@ -17,12 +17,12 @@ namespace GN
     ///
     /// special TimeInNanoSecond number that indicates infinite time.
     ///
-    extern const TimeInNanoSecond INFINITE_TIME; // = (uint64)(-1);
+    extern GN_API const TimeInNanoSecond INFINITE_TIME; // = (uint64)(-1);
 
     ///
     /// One second in unit of nano second
     ///
-    extern const TimeInNanoSecond ONE_SECOND_IN_NS;
+    extern GN_API const TimeInNanoSecond ONE_SECOND_IN_NS;
 
     ///
     /// Define wait result
@@ -99,7 +99,7 @@ namespace GN
     ///
     /// Mutex lock.
     ///
-    class Mutex
+    class GN_API Mutex
     {
         uint32 mInternal[16]; ///< store platform dependata data here, no runtime heap allocation
 
@@ -164,7 +164,7 @@ namespace GN
     ///
     /// sync event
     ///
-    class SyncEvent : public NoCopy
+    class GN_API SyncEvent : public NoCopy
     {
     public:
 
@@ -216,7 +216,7 @@ namespace GN
     ///
     /// Abstract semaphore interface
     ///
-    class Semaphore : public NoCopy
+    class GN_API Semaphore : public NoCopy
     {
         //@{
 

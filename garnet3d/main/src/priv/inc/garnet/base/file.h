@@ -210,7 +210,7 @@ namespace GN
     ///
     /// 用File包装的standard file stream
     ///
-    class StdFile : public File
+    class GN_API StdFile : public File
     {
         FILE * mFile;
 
@@ -264,7 +264,7 @@ namespace GN
     ///
     /// disk file class
     ///
-    class DiskFile : public StdFile
+    class GN_API DiskFile : public StdFile
     {
         size_t mSize;
     public:
@@ -298,7 +298,7 @@ namespace GN
     ///
     /// temporary file
     ///
-    class TempFile : public StdFile
+    class GN_API TempFile : public StdFile
     {
     public:
 

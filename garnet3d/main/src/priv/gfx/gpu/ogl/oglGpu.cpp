@@ -25,7 +25,7 @@ static GN::gfx::Gpu * sCreateOGLGpuPrivate( const GN::gfx::GpuOptions & o, void 
 //
 //
 // -----------------------------------------------------------------------------
-GN::gfx::Gpu * GN::gfx::createOGLGpu( const GN::gfx::GpuOptions & o, uint32 creationFlags )
+GN_API GN::gfx::Gpu * GN::gfx::createOGLGpu( const GN::gfx::GpuOptions & o, uint32 creationFlags )
 {
     GpuOptions localOptions = o;
     localOptions.api = GpuAPI::OGL;

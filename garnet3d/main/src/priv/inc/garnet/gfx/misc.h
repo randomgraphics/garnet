@@ -11,12 +11,12 @@ namespace GN { namespace gfx
     ///
     /// load texture from image file
     ///
-    Texture * loadTextureFromFile( Gpu & gpu, const char * filename );
+    GN_API Texture * loadTextureFromFile( Gpu & gpu, const char * filename );
 
     ///
     /// A collection of models with hierarchy.
     ///
-    struct ModelHierarchyDesc : public NoCopy
+    struct GN_API ModelHierarchyDesc : public NoCopy
     {
         //@{
         struct NodeDesc

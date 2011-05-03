@@ -9,7 +9,7 @@
 ///
 /// 实现跨模块单件中的静态变量
 ///
-#define GN_IMPLEMENT_CROSS_DLL_SINGLETON(T) template<> GN_EXPORT T * ::GN::CrossDllSingleton< T >::msInstancePtr = 0;
+#define GN_IMPLEMENT_CROSS_DLL_SINGLETON(T) template<> GN_API T * ::GN::CrossDllSingleton< T >::msInstancePtr = 0;
 
 namespace GN
 {
@@ -58,7 +58,7 @@ namespace GN
     template<typename T>
     class CrossDllSingleton
     {
-        static GN_PUBLIC T * msInstancePtr; ///< 指向singleton的实例
+        static GN_API T * msInstancePtr; ///< 指向singleton的实例
 
     public:
 

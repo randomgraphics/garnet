@@ -6,6 +6,7 @@
 // \author  chenlee (2006.1.7)
 // *****************************************************************************
 
+#define GN_CORE_INTERNAL
 #include "garnet/GNbase.h"
 #include "garnet/GNgfx.h"
 #include "garnet/GNinput.h"

@@ -1625,7 +1625,7 @@ bool sLoadModelHierarchyFromMeshBinary( ModelHierarchyDesc & desc, File & fp )
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::ModelHierarchyDesc::loadFromFile( const char * filename )
+GN_API bool GN::gfx::ModelHierarchyDesc::loadFromFile( const char * filename )
 {
     GN_SCOPE_PROFILER( ModelHierarchyDesc_loadFromFile, "Load models hierarchy from file" );
 
@@ -1684,7 +1684,7 @@ bool GN::gfx::ModelHierarchyDesc::loadFromFile( const char * filename )
 ///
 /// write world description to file
 // -----------------------------------------------------------------------------
-bool GN::gfx::ModelHierarchyDesc::saveToFile( const char * filename ) const
+GN_API bool GN::gfx::ModelHierarchyDesc::saveToFile( const char * filename ) const
 {
     GN_SCOPE_PROFILER( ModelHierarchyDesc_saveToFile, "Save models hierarchy to file" );
 

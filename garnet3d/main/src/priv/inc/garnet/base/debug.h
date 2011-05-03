@@ -241,12 +241,12 @@ namespace GN
     /// \return
     ///     Return old behavior.
     ///
-    RuntimeAssertBehavior setRuntimeAssertBehavior( RuntimeAssertBehavior );
+    GN_API RuntimeAssertBehavior setRuntimeAssertBehavior( RuntimeAssertBehavior );
 
     ///
     /// break into debugger ( ASCII version )
     ///
-    bool
+    GN_API bool
     assertFunc(
         const char * msg,
         const char * file,
@@ -256,31 +256,31 @@ namespace GN
 	///
 	/// Debug break function
 	///
-	void breakIntoDebugger();
+	GN_API void breakIntoDebugger();
 
 #if GN_MSWIN || GN_XENON
 
     ///
     /// get OS error info (Windows specific)
     ///
-    const char * getWin32ErrorInfo( uint32 win32ErrorCode ) throw();
+    GN_API const char * getWin32ErrorInfo( uint32 win32ErrorCode ) throw();
 
     ///
     /// get OS error info (Windows specific)
     ///
-    const char * getWin32LastErrorInfo() throw();
+    GN_API const char * getWin32LastErrorInfo() throw();
 
 #endif
 
     ///
     /// get DX error string
     ///
-    const char * getDXErrorInfo( sint32 hr ) throw();
+    GN_API const char * getDXErrorInfo( sint32 hr ) throw();
 
     ///
     /// convert errno value to string
     ///
-    const char * errno2str( int );
+    GN_API const char * errno2str( int );
 
     //@}
 }

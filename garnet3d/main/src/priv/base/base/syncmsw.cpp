@@ -49,7 +49,8 @@ static inline WaitResult sWaitResultFromWin32( DWORD result )
 
 //
 //
-GN::Mutex::Mutex()
+// -----------------------------------------------------------------------------
+GN_API GN::Mutex::Mutex()
 {
     GN_CASSERT( sizeof(CRITICAL_SECTION) <= sizeof(mInternal) );
 
@@ -60,7 +61,7 @@ GN::Mutex::Mutex()
 //
 //
 // -----------------------------------------------------------------------------
-GN::Mutex::~Mutex()
+GN_API GN::Mutex::~Mutex()
 {
     DeleteCriticalSection( (CRITICAL_SECTION*)mInternal );
 }
@@ -68,7 +69,7 @@ GN::Mutex::~Mutex()
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::Mutex::trylock()
+GN_API bool GN::Mutex::trylock()
 {
     return !!TryEnterCriticalSection( (CRITICAL_SECTION*)mInternal );
 }
@@ -76,7 +77,7 @@ bool GN::Mutex::trylock()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::Mutex::lock()
+GN_API void GN::Mutex::lock()
 {
     EnterCriticalSection( (CRITICAL_SECTION*)mInternal );
 }
@@ -84,7 +85,7 @@ void GN::Mutex::lock()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::Mutex::unlock()
+GN_API void GN::Mutex::unlock()
 {
     LeaveCriticalSection( (CRITICAL_SECTION*)mInternal );
 }
@@ -180,13 +181,13 @@ private:
 private:
 };
 
-GN::SyncEvent::SyncEvent() : mImpl(NULL) { mImpl = new Impl(); }
-GN::SyncEvent::~SyncEvent() { delete mImpl; }
-bool GN::SyncEvent::create(SyncEvent::InitialState initialState, SyncEvent::ResetMode resetMode, const char * name ) { return mImpl->init(initialState, resetMode, name); }
-void GN::SyncEvent::destroy() { return mImpl->quit(); }
-void GN::SyncEvent::signal() { return mImpl->signal(); }
-void GN::SyncEvent::unsignal() { return mImpl->unsignal(); }
-GN::WaitResult GN::SyncEvent::wait( TimeInNanoSecond timeoutTime ) const { return mImpl->wait( timeoutTime ); }
+GN_API GN::SyncEvent::SyncEvent() : mImpl(NULL) { mImpl = new Impl(); }
+GN_API GN::SyncEvent::~SyncEvent() { delete mImpl; }
+GN_API bool GN::SyncEvent::create(SyncEvent::InitialState initialState, SyncEvent::ResetMode resetMode, const char * name ) { return mImpl->init(initialState, resetMode, name); }
+GN_API void GN::SyncEvent::destroy() { return mImpl->quit(); }
+GN_API void GN::SyncEvent::signal() { return mImpl->signal(); }
+GN_API void GN::SyncEvent::unsignal() { return mImpl->unsignal(); }
+GN_API GN::WaitResult GN::SyncEvent::wait( TimeInNanoSecond timeoutTime ) const { return mImpl->wait( timeoutTime ); }
 
 // *****************************************************************************
 // semaphore class
@@ -275,11 +276,11 @@ private:
 private:
 };
 
-GN::Semaphore::Semaphore() : mImpl(NULL) { mImpl= new Impl(); }
-GN::Semaphore::~Semaphore() { delete mImpl; }
-bool GN::Semaphore::create( size_t maxcount, size_t initialcount, const char * name ) { return mImpl->init( maxcount, initialcount, name ); }
-void GN::Semaphore::destroy() { return mImpl->quit(); }
-GN::WaitResult GN::Semaphore::wait( TimeInNanoSecond timeoutTime ) { return mImpl->wait( timeoutTime ); }
-void GN::Semaphore::wake( size_t count ) { return mImpl->wake( count ); }
+GN_API GN::Semaphore::Semaphore() : mImpl(NULL) { mImpl= new Impl(); }
+GN_API GN::Semaphore::~Semaphore() { delete mImpl; }
+GN_API bool GN::Semaphore::create( size_t maxcount, size_t initialcount, const char * name ) { return mImpl->init( maxcount, initialcount, name ); }
+GN_API void GN::Semaphore::destroy() { return mImpl->quit(); }
+GN_API GN::WaitResult GN::Semaphore::wait( TimeInNanoSecond timeoutTime ) { return mImpl->wait( timeoutTime ); }
+GN_API void GN::Semaphore::wake( size_t count ) { return mImpl->wake( count ); }
 
 #endif

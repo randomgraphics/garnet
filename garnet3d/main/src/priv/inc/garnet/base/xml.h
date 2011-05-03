@@ -16,7 +16,7 @@ namespace GN
     ///
     /// XML attribute class
     ///
-    struct XmlAttrib
+    struct GN_API XmlAttrib
     {
         XmlDocument & doc;   ///< The document that this attribute belongs to.
         XmlElement  * node;  ///< pointer to the element that this attribute belongs to.
@@ -53,7 +53,7 @@ namespace GN
     ///
     /// XML node class
     ///
-    struct XmlNode
+    struct GN_API XmlNode
     {
         XmlDocument     & doc;    ///< reference to the owner document
         const XmlNodeType type;   ///< node type. can't be modified.
@@ -137,7 +137,7 @@ namespace GN
     ///
     /// XML cdata node
     ///
-    struct XmlCdata : public XmlNode
+    struct GN_API XmlCdata : public XmlNode
     {
         StrA text;  ///< text content.
 
@@ -152,7 +152,7 @@ namespace GN
     ///
     /// XML comment node
     ///
-    struct XmlComment : public XmlNode
+    struct GN_API XmlComment : public XmlNode
     {
         StrA text; ///< comment text
 
@@ -171,7 +171,7 @@ namespace GN
     ///     Here we assume that one element can have, at most, one text section.
     ///     If there were multiple text sections, they would be merged into one.
     ///
-    struct XmlElement : public XmlNode
+    struct GN_API XmlElement : public XmlNode
     {
         XmlAttrib * firsta;  ///< pointer to first attribute
         XmlAttrib * lasta;   ///< pointer to last attribute
@@ -246,7 +246,7 @@ namespace GN
     ///
     /// XML document
     ///
-    class XmlDocument
+    class GN_API XmlDocument
     {
         // T must be one of XML node class
         template<class T> struct PooledNode : public T

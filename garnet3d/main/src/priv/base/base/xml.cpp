@@ -538,7 +538,7 @@ static int XMLCALL sEncodingHandler(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::XmlAttrib::setOwner( XmlElement * newOwner, XmlAttrib * newPrev )
+GN_API void GN::XmlAttrib::setOwner( XmlElement * newOwner, XmlAttrib * newPrev )
 {
     if( node == newOwner ) return;
 
@@ -608,7 +608,7 @@ void GN::XmlAttrib::setOwner( XmlElement * newOwner, XmlAttrib * newPrev )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::XmlNode::setParent( XmlNode * newParent, XmlNode * newPrev )
+GN_API void GN::XmlNode::setParent( XmlNode * newParent, XmlNode * newPrev )
 {
     if( parent == newParent ) return;
 
@@ -678,7 +678,7 @@ void GN::XmlNode::setParent( XmlNode * newParent, XmlNode * newPrev )
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::XmlDocument::parse(
+GN_API bool GN::XmlDocument::parse(
     XmlParseResult & result, const char * content, size_t length )
 {
     GN_GUARD;
@@ -761,7 +761,7 @@ bool GN::XmlDocument::parse(
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::XmlDocument::parse( XmlParseResult & result, File & fp )
+GN_API bool GN::XmlDocument::parse( XmlParseResult & result, File & fp )
 {
     GN_GUARD;
 
@@ -793,7 +793,7 @@ bool GN::XmlDocument::parse( XmlParseResult & result, File & fp )
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::XmlDocument::writeToFile( File & file, const XmlNode & root, bool compact )
+GN_API bool GN::XmlDocument::writeToFile( File & file, const XmlNode & root, bool compact )
 {
     GN_GUARD;
 
@@ -818,7 +818,7 @@ bool GN::XmlDocument::writeToFile( File & file, const XmlNode & root, bool compa
 //
 //
 // -----------------------------------------------------------------------------
-GN::XmlNode * GN::XmlDocument::createNode( XmlNodeType type, XmlNode * parent )
+GN_API GN::XmlNode * GN::XmlDocument::createNode( XmlNodeType type, XmlNode * parent )
 {
     XmlNode * p;
     switch( type )
@@ -836,7 +836,7 @@ GN::XmlNode * GN::XmlDocument::createNode( XmlNodeType type, XmlNode * parent )
 //
 //
 // -----------------------------------------------------------------------------
-GN::XmlAttrib * GN::XmlDocument::createAttrib( XmlElement * owner )
+GN_API GN::XmlAttrib * GN::XmlDocument::createAttrib( XmlElement * owner )
 {
     PooledAttrib * a = new PooledAttrib( *this );
 
@@ -850,7 +850,7 @@ GN::XmlAttrib * GN::XmlDocument::createAttrib( XmlElement * owner )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::XmlDocument::releaseAllNodesAndAttribs()
+GN_API void GN::XmlDocument::releaseAllNodesAndAttribs()
 {
     GN_GUARD;
 

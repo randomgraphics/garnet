@@ -9,7 +9,7 @@ GN::Logger * GN::Registry::sLogger = GN::getLogger( "GN.base.Registry" );
 //
 //
 // -----------------------------------------------------------------------------
-GN::Registry::ItemKey GN::Registry::set(
+GN_API GN::Registry::ItemKey GN::Registry::set(
     const StrA & name, const Variant & value, bool overwriteExisting )
 {
     GN_GUARD;
@@ -48,7 +48,7 @@ GN::Registry::ItemKey GN::Registry::set(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::Registry::importFromStr( const StrA & s )
+GN_API void GN::Registry::importFromStr( const StrA & s )
 {
     GN_GUARD;
 

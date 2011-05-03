@@ -9,7 +9,7 @@ static GN::Logger * sLogger = GN::getLogger("GN.d3d10.SimpleMesh");
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::d3d10::SimpleMesh::init( ID3D10Device * dev )
+GN_API bool GN::d3d10::SimpleMesh::init( ID3D10Device * dev )
 {
     GN_GUARD;
 
@@ -54,7 +54,7 @@ bool GN::d3d10::SimpleMesh::init( ID3D10Device * dev )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::d3d10::SimpleMesh::quit()
+GN_API void GN::d3d10::SimpleMesh::quit()
 {
     GN_GUARD;
 
@@ -75,7 +75,7 @@ void GN::d3d10::SimpleMesh::quit()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::d3d10::SimpleMesh::beginVertices()
+GN_API void GN::d3d10::SimpleMesh::beginVertices()
 {
     mVertices.clear();
 }
@@ -83,7 +83,7 @@ void GN::d3d10::SimpleMesh::beginVertices()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::d3d10::SimpleMesh::pos( float x, float y, float z )
+GN_API void GN::d3d10::SimpleMesh::pos( float x, float y, float z )
 {
     mNewVertex.pos.set( x, y, z );
     mVertices.append( mNewVertex );
@@ -92,7 +92,7 @@ void GN::d3d10::SimpleMesh::pos( float x, float y, float z )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::d3d10::SimpleMesh::normal( float x, float y, float z )
+GN_API void GN::d3d10::SimpleMesh::normal( float x, float y, float z )
 {
     mNewVertex.normal.set( x, y, z );
 }
@@ -100,7 +100,7 @@ void GN::d3d10::SimpleMesh::normal( float x, float y, float z )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::d3d10::SimpleMesh::tex( float x, float y )
+GN_API void GN::d3d10::SimpleMesh::tex( float x, float y )
 {
     mNewVertex.tex.set( x, y );
 }
@@ -108,7 +108,7 @@ void GN::d3d10::SimpleMesh::tex( float x, float y )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::d3d10::SimpleMesh::color( float r, float g, float b, float a )
+GN_API void GN::d3d10::SimpleMesh::color( float r, float g, float b, float a )
 {
     mNewVertex.color.set( r, g, b, a );
 }
@@ -116,7 +116,7 @@ void GN::d3d10::SimpleMesh::color( float r, float g, float b, float a )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::d3d10::SimpleMesh::endVertices()
+GN_API void GN::d3d10::SimpleMesh::endVertices()
 {
     if( mVertices.empty() ) return;
 
@@ -153,7 +153,7 @@ void GN::d3d10::SimpleMesh::endVertices()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::d3d10::SimpleMesh::setVertices( const Vertex * vertices, size_t count )
+GN_API void GN::d3d10::SimpleMesh::setVertices( const Vertex * vertices, size_t count )
 {
     beginVertices();
     mVertices.append( vertices, count );
@@ -163,7 +163,7 @@ void GN::d3d10::SimpleMesh::setVertices( const Vertex * vertices, size_t count )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::d3d10::SimpleMesh::beginTriangles()
+GN_API void GN::d3d10::SimpleMesh::beginTriangles()
 {
     mIndices.clear();
 }
@@ -171,7 +171,7 @@ void GN::d3d10::SimpleMesh::beginTriangles()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::d3d10::SimpleMesh::triangle( size_t i0, size_t i1, size_t i2 )
+GN_API void GN::d3d10::SimpleMesh::triangle( size_t i0, size_t i1, size_t i2 )
 {
     mIndices.append( (uint16)i0 );
     mIndices.append( (uint16)i1 );
@@ -182,7 +182,7 @@ void GN::d3d10::SimpleMesh::triangle( size_t i0, size_t i1, size_t i2 )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::d3d10::SimpleMesh::endTriangles()
+GN_API void GN::d3d10::SimpleMesh::endTriangles()
 {
     if( mIndices.empty() ) return;
 
@@ -219,7 +219,7 @@ void GN::d3d10::SimpleMesh::endTriangles()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::d3d10::SimpleMesh::setTriangles( const uint16 * triangles, size_t triangleCount )
+GN_API void GN::d3d10::SimpleMesh::setTriangles( const uint16 * triangles, size_t triangleCount )
 {
     beginTriangles();
     mIndices.append( triangles, triangleCount * 3 );
@@ -229,7 +229,7 @@ void GN::d3d10::SimpleMesh::setTriangles( const uint16 * triangles, size_t trian
 //
 //
 // -----------------------------------------------------------------------------
-void GN::d3d10::SimpleMesh::draw() const
+GN_API void GN::d3d10::SimpleMesh::draw() const
 {
     if( mNumVertices > 0 )
     {
@@ -245,7 +245,7 @@ void GN::d3d10::SimpleMesh::draw() const
 //
 //
 // -----------------------------------------------------------------------------
-void GN::d3d10::SimpleMesh::drawIndexed() const
+GN_API void GN::d3d10::SimpleMesh::drawIndexed() const
 {
     if( mNumIndices > 0 )
     {

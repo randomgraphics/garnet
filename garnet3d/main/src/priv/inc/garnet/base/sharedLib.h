@@ -11,7 +11,7 @@ namespace GN
     ///
     /// Shared library class
     ///
-    class SharedLib : public NoCopy
+    class GN_API SharedLib : public NoCopy
     {
         // ********************************
         // ctor/dtor
