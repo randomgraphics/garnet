@@ -26,7 +26,6 @@ static GN::gfx::Gpu * sCreateXenonGpuPrivate( const GN::gfx::GpuOptions & o, voi
 //
 //
 // -----------------------------------------------------------------------------
-#if GN_BUILD_STATIC
 GN::gfx::Gpu * GN::gfx::createD3DGpu( const GN::gfx::GpuOptions & o, uint32 creationFlags )
 {
     GpuOptions lo = o;
@@ -40,17 +39,6 @@ GN::gfx::Gpu * GN::gfx::createD3DGpu( const GN::gfx::GpuOptions & o, uint32 crea
         return sCreateXenonGpuPrivate( lo, 0 );
     }
 }
-#endif
-
-//
-//
-// -----------------------------------------------------------------------------
-#if !GN_BUILD_STATIC
-extern "C" GN_EXPORT GN::gfx::Gpu * GNgfxCreateGpu( const GN::gfx::GpuOptions & o )
-{
-    return sCreateXenonGpuPrivate( o, 0 );
-}
-#endif
 
 // *****************************************************************************
 // init/quit functions

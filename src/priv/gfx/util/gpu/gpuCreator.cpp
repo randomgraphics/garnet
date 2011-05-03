@@ -20,52 +20,6 @@ static GN::Logger * sLogger = GN::getLogger("GN.gfx.util.gpu");
 #define DEFAULT_GPU_API GpuAPI::OGL;
 #endif
 
-#if !GN_BUILD_STATIC
-
-extern const Guid GN::gfx::GPU_DLL_GUID;
-
-//
-// create single thread GPU from DLL
-// -----------------------------------------------------------------------------
-static Gpu * sCreateSingleThreadGpuFromDLL( const GpuOptions & go, void * context )
-{
-    typedef GN::gfx::Gpu * (*GpuDLLEntry)( const GN::gfx::GpuOptions & );
-
-    const char * dllname = (const char*)context;
-
-    AutoObjPtr<SharedLib> dll( new SharedLib );
-    if( !dll->load( dllname ) ) return NULL;
-
-    GpuDLLEntry creator = (GpuDLLEntry)dll->getSymbol( "GNgfxCreateGpu" );
-    if( !creator ) return NULL;
-
-    Gpu * r = creator( go );
-    if( 0 == r ) return NULL;
-
-    SharedLib * dllptr = dll;
-    r->setUserData( GN::gfx::GPU_DLL_GUID, &dllptr, sizeof(dllptr) );
-    dll.detach();
-
-    return r;
-}
-
-//
-// create GPU from DLL
-// -----------------------------------------------------------------------------
-static Gpu * sCreateGpuFromDLL( const GpuOptions & go, uint32 creationFlags, const char * dllname )
-{
-    if( 0 != (GPU_CREATION_MULTIPLE_THREADS & creationFlags) )
-    {
-        return createMultiThreadGpu( go, sCreateSingleThreadGpuFromDLL, dllname );
-    }
-    else
-    {
-        return sCreateSingleThreadGpuFromDLL( go, dllname );
-    }
-}
-
-#endif
-
 // ***********************************************************************
 // Public functions
 // ***********************************************************************
@@ -73,14 +27,7 @@ static Gpu * sCreateGpuFromDLL( const GpuOptions & go, uint32 creationFlags, con
 //
 //
 // -------------------------------------------------------------------------
-#if !GN_BUILD_STATIC
-Gpu * GN::gfx::createOGLGpu( const GpuOptions & go, uint32 creationFlags )
-{
-    GpuOptions o = go;
-    o.api = GpuAPI::OGL;
-    return sCreateGpuFromDLL( o, creationFlags, "GNgpuOGL" );
-}
-#elif !GN_PLATFORM_HAS_OGL
+#if !GN_PLATFORM_HAS_OGL
 Gpu * GN::gfx::createOGLGpu( const GpuOptions &, uint32 )
 {
     GN_ERROR(sLogger)( "OpenGL renderer is not available." );
@@ -91,14 +38,7 @@ Gpu * GN::gfx::createOGLGpu( const GpuOptions &, uint32 )
 //
 //
 // -------------------------------------------------------------------------
-#if !GN_BUILD_STATIC
-Gpu * GN::gfx::createD3DGpu( const GpuOptions & go, uint32 creationFlags )
-{
-    GpuOptions o = go;
-    o.api = D3D_GPU_API;
-    return sCreateGpuFromDLL( o, creationFlags, "GNgpu" D3D_GPU_NAME );
-}
-#elif !GN_PLATFORM_HAS_D3D11 && !GN_XENON
+#if !GN_PLATFORM_HAS_D3D11 && !GN_XENON
 Gpu * GN::gfx::createD3DGpu( const GpuOptions &, uint32 )
 {
     GN_ERROR(sLogger)( D3D_GPU_NAME " renderer is not available." );

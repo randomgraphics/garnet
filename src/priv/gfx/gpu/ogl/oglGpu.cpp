@@ -25,7 +25,6 @@ static GN::gfx::Gpu * sCreateOGLGpuPrivate( const GN::gfx::GpuOptions & o, void 
 //
 //
 // -----------------------------------------------------------------------------
-#if GN_BUILD_STATIC
 GN::gfx::Gpu * GN::gfx::createOGLGpu( const GN::gfx::GpuOptions & o, uint32 creationFlags )
 {
     GpuOptions localOptions = o;
@@ -40,17 +39,6 @@ GN::gfx::Gpu * GN::gfx::createOGLGpu( const GN::gfx::GpuOptions & o, uint32 crea
         return sCreateOGLGpuPrivate( localOptions, 0 );
     }
 }
-#endif
-
-//
-//
-// -----------------------------------------------------------------------------
-#if !GN_BUILD_STATIC
-extern "C" GN_EXPORT GN::gfx::Gpu * GNgfxCreateGpu( const GN::gfx::GpuOptions & o )
-{
-    return sCreateOGLGpuPrivate( o, 0 );
-}
-#endif
 
 // *****************************************************************************
 // init/quit functions
