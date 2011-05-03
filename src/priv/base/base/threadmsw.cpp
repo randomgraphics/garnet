@@ -350,14 +350,13 @@ struct ThreadMsw : public DoubleLink
 
     static Thread::Identifier sAttachToCurrentThread();
 
-    /// Close the thread object (kill it optionally)
-    void close( bool killIt );
-
     Identifier getID() const { return mID; }
 
     DWORD getNativeID() const { return mNativeID; }
 
     HANDLE getNativeHandle() const { return mNativeHandle; }
+
+    ~ThreadMsw();
 
 private:
 
@@ -372,7 +371,6 @@ private:
 private:
 
     ThreadMsw();
-    ~ThreadMsw();
     static unsigned int __stdcall sMainThreadProc( void * parameter );
     static void sUtilThreadProc( void * parameter );
 };
@@ -415,8 +413,8 @@ public:
             leave();
 
             if( thread )
-                // Then close the thread object.
-                thread->close( false );
+                // Delete the thread object.
+                delete thread;
             else
                 // No more threads in the table. Break out of the loop.
                 break;
@@ -487,29 +485,6 @@ public:
         leave();
 
         return removed;
-    }
-
-    void kill( Thread::Identifier id )
-    {
-        ThreadMsw * thread = NULL;
-
-        enter();
-
-        for( ThreadMsw * t = (ThreadMsw*)mThreads.next; t != NULL; t = (ThreadMsw*)t->next )
-        {
-            if( t->getID() == id )
-            {
-                // We found it. Remove it from thread table.
-                thread = t;
-                t->detach();
-                break;
-            }
-        }
-
-        leave();
-
-        // Now kill it, out of critical section.
-        if( thread ) thread->close( true );
     }
 
     Thread::Identifier getCurrentThread()
@@ -648,21 +623,6 @@ Thread::Identifier ThreadMsw::sAttachToCurrentThread()
 //
 //
 // -----------------------------------------------------------------------------
-void ThreadMsw::close( bool terminate )
-{
-    // terminate the thread, if asked to do so.
-    if( mNativeHandle && terminate )
-    {
-        TerminateThread( mNativeHandle, (DWORD)-1 );
-    }
-
-    // self destruct.
-    delete this;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
 unsigned int __stdcall ThreadMsw::sMainThreadProc( void * parameter )
 {
     GN_ASSERT( parameter );
@@ -738,14 +698,6 @@ GN::Thread::Identifier GN::Thread::sCreate(
     const char      * name )
 {
     return ThreadMsw::sCreate( proc, param, name );
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-void GN::Thread::sKill( Identifier id )
-{
-    s_ThreadTable.kill( id );
 }
 
 //
