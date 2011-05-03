@@ -392,7 +392,7 @@ class BezierApp : public SampleApp
 
         const Vector3f & position = arcball.getTranslation();
 
-        bezier->visual().draw( camera.proj, camera.view );
+        bezier->visual().draw( camera.proj, camera.view, &bezier->spacial() );
 
         drawCoords();
 

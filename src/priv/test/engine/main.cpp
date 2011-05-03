@@ -46,7 +46,7 @@ void quit()
 
 void draw()
 {
-    robot->visual().draw( proj, view );
+    robot->visual().draw( proj, view, &root->spacial() );
 }
 
 bool run()
