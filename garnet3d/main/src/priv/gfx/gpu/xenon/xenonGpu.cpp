@@ -69,8 +69,8 @@ bool GN::gfx::XenonGpu::init( const GN::gfx::GpuOptions & o )
     GN_STDCLASS_INIT( GN::gfx::XenonGpu, (o) );
 
     // get current thread
-    mThread = Thread::sAttachToCurrentThread();
-    if( NULL == mThread ) return failure();
+    mThread = Thread::sGetCurrentThread();
+    if( 0 == mThread ) return failure();
 
     // init sub-components
     if( !dispInit()         ) return failure();
@@ -102,7 +102,7 @@ void GN::gfx::XenonGpu::quit()
     capsQuit();
     dispQuit();
 
-    safeDelete( mThread );
+    mThread = 0;
 
     GN_STDCLASS_QUIT();
 

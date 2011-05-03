@@ -48,10 +48,10 @@ namespace GN { namespace gfx
             contextClear();
             drawClear();
             miscClear();
-            mThread = NULL;
+            mThread = 0;
         }
-        const Thread * mThread;
-        bool isGpuThread() const { return NULL == mThread || mThread->isCurrentThread(); }
+        Thread::Identifier mThread;
+        bool isGpuThread() const { return 0 == mThread || Thread::sIsCurrentThread(mThread); }
         //@}
 
     // ************************************************************************

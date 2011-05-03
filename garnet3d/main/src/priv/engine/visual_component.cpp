@@ -148,7 +148,7 @@ void GN::engine::VisualComponent::drawModel( size_t modelIndex, const SpacialCom
     if( sc ) updateWorldTransform( sc->getLocal2Root() );
 
     GN_GPU_DEBUG_MARK_BEGIN( getGpu(), "VisualComponent::drawModel" );
-    drawModelResource( modelIndex, *mModels[(uint32)modelIndex] );
+    drawModelResource( (uint32)modelIndex, *mModels[(uint32)modelIndex] );
     GN_GPU_DEBUG_MARK_END( getGpu() );
 }
 

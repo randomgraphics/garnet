@@ -9,7 +9,9 @@
 namespace GN
 {
     ///
-    /// abstract thread interface
+    /// Threading API.
+    ///
+    /// TODO: instead of a class with static methods, could this be just a namespace?
     ///
     struct Thread
     {
@@ -55,11 +57,7 @@ namespace GN
             void            * param,
             const char      * name = 0 );
 
-        /// Terminate a thread by force.
-        /// Note that killing a thread could potentially harm the whole process.
-        /// So use this function only as the last resort.
-        static void sKill( Identifier );
-
+        /// Block calling thread for a fixed amount of time.
         static void sSleepCurrentThread( TimeInNanoSecond sleepTime );
 
         /// Wait for termination of the thread (join operation).
