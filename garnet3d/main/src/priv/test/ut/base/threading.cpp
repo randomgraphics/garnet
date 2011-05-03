@@ -14,8 +14,6 @@ public:
         {
             Thread::Identifier id = candidates[i];
 
-            Thread::sKill( id );
-
             TS_ASSERT_EQUALS( WaitResult::FAILED, Thread::sJoin( id ) );
         }
     }

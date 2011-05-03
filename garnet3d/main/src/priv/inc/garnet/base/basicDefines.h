@@ -160,6 +160,30 @@
 #endif
 
 // *****************************************************************************
+// platform specific configurations
+// *****************************************************************************
+
+#if GN_MSWIN
+#   if GN_X64
+#       include "platform.mswin.x64.h"
+#   elif GN_X86
+#       include "platform.mswin.x86.h"
+#   endif
+#elif GN_XENON
+#   include     "platform.xenon.ppc.h"
+#elif GN_POSIX
+#   if GN_CYGWIN
+#       include "platform.cygwin.x86.h"
+#   elif GN_X64
+#       include "platform.posix.x64.h"
+#   elif GN_PPC
+#       include "platform.posix.ppc.h"
+#   elif GN_X86
+#       include "platform.posix.x86.h"
+#   endif
+#endif
+
+// *****************************************************************************
 // 定义函数和变量声明
 // *****************************************************************************
 

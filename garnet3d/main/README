@@ -20,12 +20,12 @@ Directory Structure
     - base          base library
     - core          core library
     - doc           documenation
+    - engine        engine library
     - gfx           graphics libraries
       - util        graphics utility library
       - gpu         GPUs
         - ogl       OpenGL GPU
-        - d3d9      D3D9.1 GPU (obsolete)
-        - d3d10     D3D10.0 GPU
+        - d3d11     D3D11 GPU
         - xenon     Xbox360 GPU
     - inc           public headers of garnet library.
     - media         media files (textures, models, shaders, fonts and etc.)
@@ -41,8 +41,9 @@ Component Dependencies
 Each item depends on all items below it:
 
   sample test tool
-       util
-       gfx
-       core
-       base
-      extern
+  core
+  util
+  engine
+  gfx
+  base
+  extern

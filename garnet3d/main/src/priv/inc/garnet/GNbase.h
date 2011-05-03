@@ -23,27 +23,6 @@ namespace GN
 // basic defines
 #include "base/basicDefines.h"
 
-// platform specific configurations
-#if GN_MSWIN
-#   if GN_X64
-#       include "base/platform.mswin.x64.h"
-#   elif GN_X86
-#       include "base/platform.mswin.x86.h"
-#   endif
-#elif GN_XENON
-#   include     "base/platform.xenon.ppc.h"
-#elif GN_POSIX
-#   if GN_CYGWIN
-#       include "base/platform.cygwin.x86.h"
-#   elif GN_X64
-#       include "base/platform.posix.x64.h"
-#   elif GN_PPC
-#       include "base/platform.posix.ppc.h"
-#   elif GN_X86
-#       include "base/platform.posix.x86.h"
-#   endif
-#endif
-
 // global pragma
 #include "base/pragma.h"
 

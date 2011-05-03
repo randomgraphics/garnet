@@ -1,8 +1,0 @@
-Import( 'GN' )
-
-sources = [
-	'main.cpp',
-	]
-
-cluster = GN.newSourceCluster( sources, 'pch.h', 'pch.cpp' )
-GN.newTarget( 'prog', 'GNtestSkinnedMesh', [cluster] )
