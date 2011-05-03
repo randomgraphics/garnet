@@ -19,4 +19,4 @@ sources = [
 ]
 cluster = GN.newSourceCluster( sources, 'pch.h', 'pch.cpp' )
 cluster.addCompileFlags( CPPPATH = ['#src\priv\gfx\util\gpu'] )
-target  = GN.newTarget( 'shlib', 'GNgpuXenon', [cluster], dependencies = ['GNgpuCommon'] )
+target  = GN.newTarget( 'stlib', 'GNgpuXenon', [cluster], dependencies = ['GNgpuCommon'] )

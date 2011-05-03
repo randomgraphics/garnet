@@ -5,4 +5,4 @@ sources = [
 ]
 
 cluster = GN.newSourceCluster( sources )
-GN.newTarget( 'dylib', 'GNcore', [cluster] )
+GN.newTarget( 'shlib', 'GNcore', [cluster] )

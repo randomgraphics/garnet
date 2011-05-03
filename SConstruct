@@ -144,7 +144,8 @@ def UTIL_error( msg ):
 	print '===================================================================='
 
 # Always run static build.
-def UTIL_staticBuild( v ): return True
+def UTIL_staticBuild( variant ):
+	return True
 
 # get sub directory of a specific compiler and build variant
 def UTIL_bldsubdir( compiler, variant ):
@@ -425,9 +426,11 @@ def UTIL_checkConfig( conf, confDir, compiler, variant ):
 	if c.CheckLibWithHeader( 'opengl32', ['GL/glew.h'], 'C', 'glVertex3f(0,0,0);' ) and \
 		c.CheckLibWithHeader( 'glu32', ['GL/glew.h','GL/glu.h'], 'C', 'gluOrtho2D(0,0,0,0);' ) :
 		conf['has_ogl'] = True
+		conf['ogl_libs'] = ['opengl32','glu32']
 	elif c.CheckLibWithHeader( 'GL', ['GL/glew.h'], 'C', 'glVertex3f(0,0,0);' ) and \
 		c.CheckLibWithHeader( 'GLU', ['GL/glew.h','GL/glu.h'], 'C', 'gluOrtho2D(0,0,0,0);' ) :
 		conf['has_ogl'] = True
+		conf['ogl_libs'] = ['GL','GLU']
 	else :
 		conf['has_ogl'] = False
 
@@ -596,6 +599,7 @@ class GarnetEnv :
 		self.conf = {}
 
 	# UTIL functions
+	def isStaticBuild( self ) : return UTIL_staticBuild( variant )
 	def buildDir( self, compiler, variant ) : return UTIL_buildDir( compiler, variant )
 	def newEnv( self, compiler, variant ) : return UTIL_newEnv( compiler, variant )
 	def newEnvEx( self, compiler, variant, batch ) : return UTIL_newEnvEx( compiler, variant, batch )
@@ -686,9 +690,6 @@ class GarnetEnv :
 	def newTarget( self, type, name, sources, dependencies = [], ignoreDefaultDependencies = False, pdb = None ):
 		# create new target instance
 		t = Target()
-		if 'shlib' == type:
-			if UTIL_staticBuild( self.variant ) : type = 'stlib'
-			else : type = 'dylib'
 		t.compiler = self.compiler
 		t.variant = self.variant
 		t.type = type
@@ -1086,6 +1087,32 @@ def BUILD_staticLib( name, target ):
 	ALIAS_add_default( name, target.targets )
 
 #
+# build monolithic static lib that contains other static libs
+#
+def BUILD_aggregatedLib( name, target ):
+
+	env = BUILD_newLinkEnv( target )
+
+	# build sub library list
+	sublibs = []
+	exdeps = []
+	for x in TARGET_stlibs:
+		if x in targets:
+			sublibs += [ os.path.join( UTIL_buildDir(compiler,variant), "lib", x + BUILD_getSuffix() + env['LIBSUFFIX'] ) ]
+			exdeps += targets[x].externalDependencies
+		else:
+			GN.warn( "Ingore non-exist dependency for target %s: %s"%(name,x) )
+
+	# update external dependencies
+	if name in targets:
+		targets[name].externalDependencies += exdeps;
+
+	# build the monolithic library.
+	libName = '%s%s%s%s'%( env['LIBPREFIX'], name, BUILD_getSuffix(), env['LIBSUFFIX'] )
+	target.targets = env.Library( os.path.join(BUILD_libDir,libName), sublibs )
+	ALIAS_add_default( name, target.targets )
+
+#
 # handle dependencies
 #
 def BUILD_toList( x ):
@@ -1142,9 +1169,7 @@ def BUILD_dynamicLib( name, target ):
 
 	stdlibs = []
 	if not target.ignoreDefaultDependencies:
-		stdlibs += TARGET_stlibs
-		# dynamic libraries other than GNcore depend on GNcore.
-		if 'GNcore' != name : stdlibs += ['GNcore']
+		stdlibs += ['GNcore']
 
 	BUILD_addExternalDependencies( env, name, BUILD_toList(target.externalDependencies) )
 	BUILD_addDependencies( env, name, BUILD_toList(target.dependencies) + stdlibs )
@@ -1189,7 +1214,7 @@ def BUILD_program( name, target ):
 
 	env = BUILD_newLinkEnv( target )
 
-    # setup standard library list
+	# setup standard library list
 	stdlibs = []
 	if not target.ignoreDefaultDependencies:
 		stdlibs += ['GNcore'];
@@ -1257,9 +1282,22 @@ for compiler, variants in ALL_targets.iteritems() :
 		#
 		################################################################################
 
+		# build libs first
 		for name, x in targets.iteritems():
 			if 'stlib' == x.type :
 				BUILD_staticLib( name, x )
+			elif 'shlib' == x.type :
+				if UTIL_staticBuild :
+					BUILD_aggregatedLib( name, x )
+				else:
+					BUILD_dynamicLib( name, x )
+
+		# build everyting else
+		for name, x in targets.iteritems():
+			if 'stlib' == x.type :
+				pass
+			elif 'shlib' == x.type :
+				pass
 			elif 'dylib' == x.type :
 				BUILD_dynamicLib( name, x )
 			elif 'prog' == x.type :
