@@ -9,7 +9,7 @@ static GN::Logger * sLogger = GN::getLogger("GN.d3d11.utils");
 //
 //
 // -----------------------------------------------------------------------------
-DXGI_SAMPLE_DESC GN::d3d11::constructDXGISampleDesc(
+GN_API DXGI_SAMPLE_DESC GN::d3d11::constructDXGISampleDesc(
     ID3D11Device       & device,
     MultiSampleAntiAlias msaa,
     DXGI_FORMAT          format )

@@ -14,7 +14,7 @@ static GN::Logger * sLogger = GN::getLogger("GN.gfx.base.image");
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::ImageDesc::valid() const
+GN_API bool GN::gfx::ImageDesc::valid() const
 {
     // check format
     if( !format.valid() )
@@ -256,27 +256,27 @@ public:
 //
 // ctor/dtor
 // -----------------------------------------------------------------------------
-GN::gfx::ImageReader::ImageReader() : mImpl( new Impl ) {}
-GN::gfx::ImageReader::~ImageReader() { delete mImpl; }
+GN_API GN::gfx::ImageReader::ImageReader() : mImpl( new Impl ) {}
+GN_API GN::gfx::ImageReader::~ImageReader() { delete mImpl; }
 
 //
 // forward call to Impl
 // -----------------------------------------------------------------------------
-bool GN::gfx::ImageReader::reset( File & i_file )
+GN_API bool GN::gfx::ImageReader::reset( File & i_file )
 {
     GN_GUARD;
     return mImpl->reset( i_file );
     GN_UNGUARD;
 }
 //
-bool GN::gfx::ImageReader::readHeader( ImageDesc & o_desc )
+GN_API bool GN::gfx::ImageReader::readHeader( ImageDesc & o_desc )
 {
     GN_GUARD;
     return mImpl->readHeader( o_desc );
     GN_UNGUARD;
 }
 //
-bool GN::gfx::ImageReader::readImage( void * o_data )
+GN_API bool GN::gfx::ImageReader::readImage( void * o_data )
 {
     GN_GUARD;
     return mImpl->readImage( o_data );

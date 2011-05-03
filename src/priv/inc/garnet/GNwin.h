@@ -89,36 +89,36 @@ namespace GN
         ///
         /// border, title, no parent, default size
         ///
-        extern const WindowCreationParams WCP_APPLICATION_WINDOW;
+        extern GN_API const WindowCreationParams WCP_APPLICATION_WINDOW;
 
         ///
         /// Default parameters to create main render window.
         ///
         /// border, title, no parent, 640x480
         ///
-        extern const WindowCreationParams WCP_WINDOWED_RENDER_WINDOW;
+        extern GN_API const WindowCreationParams WCP_WINDOWED_RENDER_WINDOW;
 
         ///
         /// Default parameters to create main render window.
         ///
         /// no border, no title, no parent, topmost, 640x480
         ///
-        extern const WindowCreationParams WCP_FULLSCREEN_RENDER_WINDOW;
+        extern GN_API const WindowCreationParams WCP_FULLSCREEN_RENDER_WINDOW;
 
         ///
         /// Create window instance
         ///
-        Window * createWindow( const WindowCreationParams & );
+        GN_API Window * createWindow( const WindowCreationParams & );
 
         ///
         /// Get monitor handle by index. 0 is always primary screen. Return 0 for invalid index.
         ///
-        intptr_t getMonitorByIndex( size_t );
+        GN_API intptr_t getMonitorByIndex( size_t );
 
         ///
         /// Process windows messages. No effects on platform other than MS Windows.
         ///
-        void processWindowMessages( intptr_t window, bool blockWhileMinized );
+        GN_API void processWindowMessages( intptr_t window, bool blockWhileMinized );
     }
 }
 

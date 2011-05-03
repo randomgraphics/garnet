@@ -52,24 +52,24 @@ namespace GN
         ///     All resources associated with the thread will
         ///     be released automatically when the thread exits normally.
         ///     So there's no need to explictly "destroy" a thread ID.
-        static Identifier sCreate(
+        GN_API static Identifier sCreate(
             const Procedure & proc,
             void            * param,
             const char      * name = 0 );
 
         /// Block calling thread for a fixed amount of time.
-        static void sSleepCurrentThread( TimeInNanoSecond sleepTime );
+        GN_API static void sSleepCurrentThread( TimeInNanoSecond sleepTime );
 
         /// Wait for termination of the thread (join operation).
         /// COMPLETED: the thread is terminated, either normally or being killed.
         /// TIMEOUT  : time out before the thread is either terminated or killed; or the caller is current thread.
         /// FAILED   : wait operation failed for unspecified reason.
-        static WaitResult sWaitForTermination(
+        GN_API static WaitResult sWaitForTermination(
             Identifier       thread,
             TimeInNanoSecond timeoutTime = INFINITE_TIME );
 
         /// Alias for sWaitForTermination
-        static WaitResult sJoin(
+        static inline WaitResult sJoin(
             Identifier       thread,
             TimeInNanoSecond timeoutTime = INFINITE_TIME )
         {
@@ -80,11 +80,11 @@ namespace GN
 
         /// \name thread properties
         //@{
-        static Identifier sGetCurrentThread();
-        static bool       sIsCurrentThread( Identifier );
-        static Priority   sGetPriority( Identifier ); ///< Return NORMAL if the thread ID is invalid.
-        static void       sSetPriority( Identifier, Priority );
-        static void       sSetAffinity( Identifier, uint32 hardwareThread ); //< Meaning of hardwareThread is platform specific.
+        GN_API static Identifier sGetCurrentThread();
+        GN_API static bool       sIsCurrentThread( Identifier );
+        GN_API static Priority   sGetPriority( Identifier ); ///< Return NORMAL if the thread ID is invalid.
+        GN_API static void       sSetPriority( Identifier, Priority );
+        GN_API static void       sSetAffinity( Identifier, uint32 hardwareThread ); //< Meaning of hardwareThread is platform specific.
         //@}
     };
 }

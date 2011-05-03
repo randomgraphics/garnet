@@ -48,7 +48,7 @@ echo.            const char * name;   //^< uniform name>>%header%
 echo.            uint32       size;   //^< uniform size in bytes>>%header%
 echo.            bool         global; //^< global or per-object uniform>>%header%
 echo.>>%header%
-for /f "eol=# delims=; tokens=1,2,3,4,5,6*" %%a in (%~dp0stdUniformMeta.txt) do echo.            static const Desc %%a;%%b//^< %%g>>%header%
+for /f "eol=# delims=; tokens=1,2,3,4,5,6*" %%a in (%~dp0stdUniformMeta.txt) do echo.            GN_API static const Desc %%a;%%b//^< %%g>>%header%
 echo.        };>>%header%
 echo.>>%header%
 echo.        /// Check if the uniform index is valid or not.>>%header%
@@ -114,7 +114,7 @@ echo // This is script generated cpp. DO NOT EDIT.>>%cpp%
 echo // *********************************************>>%cpp%
 echo #include "pch.h">>%cpp%
 echo.>>%cpp%
-for /f "eol=# delims=; tokens=1,2,3,4,5,6*" %%a in (%~dp0stdUniformMeta.txt) do echo.const GN::gfx::StandardUniform::Desc GN::gfx::StandardUniform::Desc::%%a%%b = { GN::gfx::StandardUniform::Index::%%a%%b, "%%a"%%b, sizeof(%%c)%%d, %%e };>>%cpp%
+for /f "eol=# delims=; tokens=1,2,3,4,5,6*" %%a in (%~dp0stdUniformMeta.txt) do echo.GN_API const GN::gfx::StandardUniform::Desc GN::gfx::StandardUniform::Desc::%%a%%b = { GN::gfx::StandardUniform::Index::%%a%%b, "%%a"%%b, sizeof(%%c)%%d, %%e };>>%cpp%
 echo.>>%cpp%
 
 echo Done.

@@ -25,7 +25,7 @@ namespace GN { /*namespace for D3D10 utils*/ namespace d3d10
     ///
     /// construct sample descriptor based on MSAA flags
     ///
-    DXGI_SAMPLE_DESC constructDXGISampleDesc( ID3D10Device & device, GN::d3d10::MultiSampleAntiAlias msaa, DXGI_FORMAT format );
+    GN_API DXGI_SAMPLE_DESC constructDXGISampleDesc( ID3D10Device & device, GN::d3d10::MultiSampleAntiAlias msaa, DXGI_FORMAT format );
 
     ///
     /// construct default sampler descriptor
@@ -67,33 +67,33 @@ namespace GN { /*namespace for D3D10 utils*/ namespace d3d10
     /// \name state dumper
     //@{
 
-    ID3D10VertexShader   * createDumpableVS( ID3D10Device & device, const void * binary, size_t bytes );
-    ID3D10GeometryShader * createDumpableGS( ID3D10Device & device, const void * binary, size_t bytes );
-    ID3D10PixelShader    * createDumpablePS( ID3D10Device & device, const void * binary, size_t bytes );
-    ID3D10InputLayout    * createDumpableIL(
+    GN_API ID3D10VertexShader   * createDumpableVS( ID3D10Device & device, const void * binary, size_t bytes );
+    GN_API ID3D10GeometryShader * createDumpableGS( ID3D10Device & device, const void * binary, size_t bytes );
+    GN_API ID3D10PixelShader    * createDumpablePS( ID3D10Device & device, const void * binary, size_t bytes );
+    GN_API ID3D10InputLayout    * createDumpableIL(
         ID3D10Device                   & device,
         const D3D10_INPUT_ELEMENT_DESC * elements,
         size_t                           count,
         const void                     * signature,
         size_t                           bytes );
 
-    void setDumpFilePrefix( const StrA & );
-    void dumpDraw( ID3D10Device & device, uint32 vertexCount, uint32 startVertex );
-    void dumpDrawIndexed( ID3D10Device & device, uint32 indexCount, uint32 startIndex, uint32 startVertex );
+    GN_API void setDumpFilePrefix( const StrA & );
+    GN_API void dumpDraw( ID3D10Device & device, uint32 vertexCount, uint32 startVertex );
+    GN_API void dumpDrawIndexed( ID3D10Device & device, uint32 indexCount, uint32 startIndex, uint32 startVertex );
 
     //@}
 
     /// \name shader utils
     //@{
 
-    ID3D10Blob * compileShader(
+    GN_API ID3D10Blob * compileShader(
         const char   * profile,
         const char   * source,
         size_t         len = 0,
         uint32         flags = 0,
         const char   * entry = "main" );
 
-    ID3D10VertexShader * compileAndCreateVS(
+    GN_API ID3D10VertexShader * compileAndCreateVS(
         ID3D10Device & dev,
         const char   * source,
         size_t         len = 0,
@@ -102,7 +102,7 @@ namespace GN { /*namespace for D3D10 utils*/ namespace d3d10
         const char   * profile = "vs_4_0",
         ID3D10Blob  ** binary = 0 );
 
-    ID3D10GeometryShader * compileAndCreateGS(
+    GN_API ID3D10GeometryShader * compileAndCreateGS(
         ID3D10Device & dev,
         const char   * source,
         size_t         len = 0,
@@ -111,7 +111,7 @@ namespace GN { /*namespace for D3D10 utils*/ namespace d3d10
         const char   * profile = "gs_4_0",
         ID3D10Blob  ** binary = 0 );
 
-    ID3D10PixelShader * compileAndCreatePS(
+    GN_API ID3D10PixelShader * compileAndCreatePS(
         ID3D10Device & dev,
         const char   * source,
         size_t         len = 0,
@@ -123,7 +123,7 @@ namespace GN { /*namespace for D3D10 utils*/ namespace d3d10
     //@}
 
     /// D3D10 resource pool
-    class ResourcePool : public StdClass
+    class GN_API ResourcePool : public StdClass
     {
         GN_DECLARE_STDCLASS( ResourcePool, StdClass );
 
@@ -169,7 +169,7 @@ namespace GN { /*namespace for D3D10 utils*/ namespace d3d10
     private:
 
         /// D3D10 pooled resource description
-        struct PooledResourceDesc
+        struct GN_API PooledResourceDesc
         {
             D3D10_RESOURCE_DIMENSION dim;
             union
@@ -233,7 +233,7 @@ namespace GN { /*namespace for D3D10 utils*/ namespace d3d10
     ///
     /// simple D3D mesh
     ///
-    class SimpleMesh : public StdClass
+    class GN_API SimpleMesh : public StdClass
     {
         GN_DECLARE_STDCLASS( SimpleMesh, StdClass );
 
@@ -382,7 +382,7 @@ namespace GN { /*namespace for D3D10 utils*/ namespace d3d10
     ///
     /// utility class to simplify render-to-texture
     ///
-    class RenderToTexture : public StdClass
+    class GN_API RenderToTexture : public StdClass
     {
         GN_DECLARE_STDCLASS( RenderToTexture, StdClass );
 
@@ -467,7 +467,7 @@ namespace GN { /*namespace for D3D10 utils*/ namespace d3d10
     ///
     /// sceeen aligned quad mesh
     ///
-    class ScreenAlignedQuad : public StdClass
+    class GN_API ScreenAlignedQuad : public StdClass
     {
         GN_DECLARE_STDCLASS( ScreenAlignedQuad, StdClass );
 
@@ -594,7 +594,7 @@ namespace GN { /*namespace for D3D10 utils*/ namespace d3d10
     ///
     /// D3D10 application framework
     ///
-    class D3D10Application
+    class GN_API D3D10Application
     {
     public:
 

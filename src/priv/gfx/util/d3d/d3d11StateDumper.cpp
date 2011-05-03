@@ -728,7 +728,10 @@ void sDumpD3D11States( ID3D11DeviceContext & devcxt, FILE * fp )
 // public function
 // *****************************************************************************
 
-void GN::d3d11::setDumpFilePrefix( const StrA & prefix )
+//
+//
+// -----------------------------------------------------------------------------
+GN_API void GN::d3d11::setDumpFilePrefix( const StrA & prefix )
 {
     size_t n = math::getmin<size_t>( prefix.size(), _MAX_PATH );
     memcpy( sDumpFilePrefix, prefix.rawptr(), n );
@@ -738,7 +741,7 @@ void GN::d3d11::setDumpFilePrefix( const StrA & prefix )
 //
 //
 // -----------------------------------------------------------------------------
-ID3D11VertexShader * GN::d3d11::createDumpableVS(
+GN_API ID3D11VertexShader * GN::d3d11::createDumpableVS(
     ID3D11Device & device,
     const void   * binary,
     size_t         bytes )
@@ -755,7 +758,7 @@ ID3D11VertexShader * GN::d3d11::createDumpableVS(
 //
 //
 // -----------------------------------------------------------------------------
-ID3D11GeometryShader * GN::d3d11::createDumpableGS(
+GN_API ID3D11GeometryShader * GN::d3d11::createDumpableGS(
     ID3D11Device & device,
     const void   * binary,
     size_t         bytes )
@@ -772,7 +775,7 @@ ID3D11GeometryShader * GN::d3d11::createDumpableGS(
 //
 //
 // -----------------------------------------------------------------------------
-ID3D11PixelShader * GN::d3d11::createDumpablePS(
+GN_API ID3D11PixelShader * GN::d3d11::createDumpablePS(
     ID3D11Device & device,
     const void   * binary,
     size_t         bytes )
@@ -789,7 +792,7 @@ ID3D11PixelShader * GN::d3d11::createDumpablePS(
 //
 //
 // -----------------------------------------------------------------------------
-ID3D11InputLayout * GN::d3d11::createDumpableIL(
+GN_API ID3D11InputLayout * GN::d3d11::createDumpableIL(
     ID3D11Device                   & device,
     const D3D11_INPUT_ELEMENT_DESC * elements,
     size_t                           count,
@@ -816,7 +819,7 @@ ID3D11InputLayout * GN::d3d11::createDumpableIL(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::d3d11::dumpDraw( ID3D11DeviceContext & devcxt, uint32 vertexCount, uint32 startVertex )
+GN_API void GN::d3d11::dumpDraw( ID3D11DeviceContext & devcxt, uint32 vertexCount, uint32 startVertex )
 {
     DumpFile file;
 
@@ -835,7 +838,7 @@ void GN::d3d11::dumpDraw( ID3D11DeviceContext & devcxt, uint32 vertexCount, uint
 //
 //
 // -----------------------------------------------------------------------------
-void GN::d3d11::dumpDrawIndexed( ID3D11DeviceContext & devcxt, uint32 indexCount, uint32 startIndex, uint32 startVertex )
+GN_API void GN::d3d11::dumpDrawIndexed( ID3D11DeviceContext & devcxt, uint32 indexCount, uint32 startIndex, uint32 startVertex )
 {
     DumpFile file;
 

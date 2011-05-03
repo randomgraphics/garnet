@@ -16,7 +16,7 @@ namespace GN
     /// - string value like "yes", "true", "on" and "1" can be translate to boolean value "true" (case insensitive)
     /// - string value like "no", "false", "off" and "0" can be translate to boolean value "false" (case insensitive)
     ///
-    class Variant
+    class GN_API Variant
     {
         StrA mValue;
 

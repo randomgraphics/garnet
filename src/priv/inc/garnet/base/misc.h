@@ -82,12 +82,12 @@ namespace GN
     /// Set environment variable. Set value to empty or NULL to delete
     /// that environment variable.
     ///
-    void putEnv( const char * name, const char * value );
+    GN_API void putEnv( const char * name, const char * value );
 
     ///
     /// Get environment variable.
     ///
-    void getEnv( StrA & result, const char * name );
+    GN_API void getEnv( StrA & result, const char * name );
 
     ///
     /// Get environment variable.
@@ -189,7 +189,7 @@ namespace GN
     ///
     /// GUID class
     ///
-    struct Guid
+    struct GN_API Guid
     {
         ///
         /// Hasing

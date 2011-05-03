@@ -26,7 +26,7 @@ namespace GN { /*namespace for D3D11 utils*/ namespace d3d11
     ///
     /// construct sample descriptor based on MSAA flags
     ///
-    DXGI_SAMPLE_DESC constructDXGISampleDesc( ID3D11Device & device, GN::d3d11::MultiSampleAntiAlias msaa, DXGI_FORMAT format );
+    GN_API DXGI_SAMPLE_DESC constructDXGISampleDesc( ID3D11Device & device, GN::d3d11::MultiSampleAntiAlias msaa, DXGI_FORMAT format );
 
     ///
     /// construct default sampler descriptor
@@ -68,33 +68,33 @@ namespace GN { /*namespace for D3D11 utils*/ namespace d3d11
     /// \name state dumper
     //@{
 
-    ID3D11VertexShader   * createDumpableVS( ID3D11Device & device, const void * binary, size_t bytes );
-    ID3D11GeometryShader * createDumpableGS( ID3D11Device & device, const void * binary, size_t bytes );
-    ID3D11PixelShader    * createDumpablePS( ID3D11Device & device, const void * binary, size_t bytes );
-    ID3D11InputLayout    * createDumpableIL(
+    GN_API ID3D11VertexShader   * createDumpableVS( ID3D11Device & device, const void * binary, size_t bytes );
+    GN_API ID3D11GeometryShader * createDumpableGS( ID3D11Device & device, const void * binary, size_t bytes );
+    GN_API ID3D11PixelShader    * createDumpablePS( ID3D11Device & device, const void * binary, size_t bytes );
+    GN_API ID3D11InputLayout    * createDumpableIL(
         ID3D11Device                   & device,
         const D3D11_INPUT_ELEMENT_DESC * elements,
         size_t                           count,
         const void                     * signature,
         size_t                           bytes );
 
-    void setDumpFilePrefix( const StrA & );
-    void dumpDraw( ID3D11DeviceContext & devcxt, uint32 vertexCount, uint32 startVertex );
-    void dumpDrawIndexed( ID3D11DeviceContext & devcxt, uint32 indexCount, uint32 startIndex, uint32 startVertex );
+    GN_API void setDumpFilePrefix( const StrA & );
+    GN_API void dumpDraw( ID3D11DeviceContext & devcxt, uint32 vertexCount, uint32 startVertex );
+    GN_API void dumpDrawIndexed( ID3D11DeviceContext & devcxt, uint32 indexCount, uint32 startIndex, uint32 startVertex );
 
     //@}
 
     /// \name shader utils
     //@{
 
-    ID3D10Blob * compileShader(
+    GN_API ID3D10Blob * compileShader(
         const char   * profile,
         const char   * source,
         size_t         len = 0,
         uint32         flags = 0,
         const char   * entry = "main" );
 
-    ID3D11VertexShader * compileAndCreateVS(
+    GN_API ID3D11VertexShader * compileAndCreateVS(
         ID3D11Device & dev,
         const char   * source,
         size_t         len = 0,
@@ -103,7 +103,7 @@ namespace GN { /*namespace for D3D11 utils*/ namespace d3d11
         const char   * profile = "vs_4_0",
         ID3D10Blob  ** binary = 0 );
 
-    ID3D11GeometryShader * compileAndCreateGS(
+    GN_API ID3D11GeometryShader * compileAndCreateGS(
         ID3D11Device & dev,
         const char   * source,
         size_t         len = 0,
@@ -112,7 +112,7 @@ namespace GN { /*namespace for D3D11 utils*/ namespace d3d11
         const char   * profile = "gs_4_0",
         ID3D10Blob  ** binary = 0 );
 
-    ID3D11PixelShader * compileAndCreatePS(
+    GN_API ID3D11PixelShader * compileAndCreatePS(
         ID3D11Device & dev,
         const char   * source,
         size_t         len = 0,

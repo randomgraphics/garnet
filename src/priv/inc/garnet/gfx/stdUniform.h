@@ -7,7 +7,7 @@
 // *****************************************************************************
 /// \file
 /// \brief   Define standard uniform resources
-/// \author  chenli@@REDMOND (?? 2011/03/24)
+/// \author  chenli@@REDMOND (2011/05/02 ÷‹“ª)
 // *****************************************************************************
 
 namespace GN { namespace gfx
@@ -57,30 +57,30 @@ namespace GN { namespace gfx
             uint32       size;   //< uniform size in bytes
             bool         global; //< global or per-object uniform
 
-            static const Desc MATRIX_PVW;        //< proj * view * world
-            static const Desc MATRIX_PVW_INV;    //< inv( proj * view * world )
-            static const Desc MATRIX_PVW_IT;     //< inv( transpose( proj * view * world ) )
-            static const Desc MATRIX_PV;         //< proj * view
-            static const Desc MATRIX_PV_INV;     //< inv( proj * view )
-            static const Desc MATRIX_PV_IT;      //< inv( transpose( proj * view ) )
-            static const Desc MATRIX_VW;         //< view * world
-            static const Desc MATRIX_VW_INV;     //< inv( view * world )
-            static const Desc MATRIX_VW_IT;      //< inv( transpose( view * world ) )
-            static const Desc MATRIX_PROJ;       //< projection matrix
-            static const Desc MATRIX_PROJ_INV;   //< inv( proj )
-            static const Desc MATRIX_PROJ_IT;    //< inv( transpose( proj ) )
-            static const Desc MATRIX_VIEW;       //< view matrix
-            static const Desc MATRIX_VIEW_INV;   //< inv( view )
-            static const Desc MATRIX_VIEW_IT;    //< inv( transpose( view ) )
-            static const Desc MATRIX_WORLD;      //< world matrix
-            static const Desc MATRIX_WORLD_INV;  //< inv( world )
-            static const Desc MATRIX_WORLD_IT;   //< inv( transpose( world ) )
-            static const Desc LIGHT0_POSITION;   //< Position in world space of light 0
-            static const Desc LIGHT0_DIRECTION;  //< Direction in world space of light 0 (undefined for point light)
-            static const Desc LIGHT0_DIFFUSE;    //< Diffuse color of light 0
-            static const Desc LIGHT0_AMBIENT;    //< Ambient color of light 0
-            static const Desc LIGHT0_SPECULAR;   //< Specular color of light 0
-            static const Desc TIME;              //< Time in seconds
+            GN_API static const Desc MATRIX_PVW;        //< proj * view * world
+            GN_API static const Desc MATRIX_PVW_INV;    //< inv( proj * view * world )
+            GN_API static const Desc MATRIX_PVW_IT;     //< inv( transpose( proj * view * world ) )
+            GN_API static const Desc MATRIX_PV;         //< proj * view
+            GN_API static const Desc MATRIX_PV_INV;     //< inv( proj * view )
+            GN_API static const Desc MATRIX_PV_IT;      //< inv( transpose( proj * view ) )
+            GN_API static const Desc MATRIX_VW;         //< view * world
+            GN_API static const Desc MATRIX_VW_INV;     //< inv( view * world )
+            GN_API static const Desc MATRIX_VW_IT;      //< inv( transpose( view * world ) )
+            GN_API static const Desc MATRIX_PROJ;       //< projection matrix
+            GN_API static const Desc MATRIX_PROJ_INV;   //< inv( proj )
+            GN_API static const Desc MATRIX_PROJ_IT;    //< inv( transpose( proj ) )
+            GN_API static const Desc MATRIX_VIEW;       //< view matrix
+            GN_API static const Desc MATRIX_VIEW_INV;   //< inv( view )
+            GN_API static const Desc MATRIX_VIEW_IT;    //< inv( transpose( view ) )
+            GN_API static const Desc MATRIX_WORLD;      //< world matrix
+            GN_API static const Desc MATRIX_WORLD_INV;  //< inv( world )
+            GN_API static const Desc MATRIX_WORLD_IT;   //< inv( transpose( world ) )
+            GN_API static const Desc LIGHT0_POSITION;   //< Position in world space of light 0
+            GN_API static const Desc LIGHT0_DIRECTION;  //< Direction in world space of light 0 (undefined for point light)
+            GN_API static const Desc LIGHT0_DIFFUSE;    //< Diffuse color of light 0
+            GN_API static const Desc LIGHT0_AMBIENT;    //< Ambient color of light 0
+            GN_API static const Desc LIGHT0_SPECULAR;   //< Specular color of light 0
+            GN_API static const Desc TIME;              //< Time in seconds
         };
 
         /// Check if the uniform index is valid or not.

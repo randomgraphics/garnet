@@ -40,7 +40,7 @@ static GN::gfx::Gpu * sCreateD3DGpuPrivate( const GN::gfx::GpuOptions & o, void 
 //
 //
 // -----------------------------------------------------------------------------
-GN::gfx::Gpu * GN::gfx::createD3DGpu( const GN::gfx::GpuOptions & o, uint32 creationFlags )
+GN_API GN::gfx::Gpu * GN::gfx::createD3DGpu( const GN::gfx::GpuOptions & o, uint32 creationFlags )
 {
     GpuOptions lo = o;
     lo.api = GpuAPI::D3D11;

@@ -115,7 +115,7 @@ GN_CASSERT( sizeof(MapType::iterator) <= sizeof(GN::TypelessDict::Iterator) );
 //
 //
 // -----------------------------------------------------------------------------
-GN::TypelessDict::Iterator::Iterator()
+GN_API GN::TypelessDict::Iterator::Iterator()
 {
     new (mBuf) MapType::iterator();
 }
@@ -123,7 +123,7 @@ GN::TypelessDict::Iterator::Iterator()
 //
 //
 // -----------------------------------------------------------------------------
-GN::TypelessDict::Iterator::Iterator( const Iterator & i )
+GN_API GN::TypelessDict::Iterator::Iterator( const Iterator & i )
 {
     MapType::iterator & mi = TO_MAP_ITER(i);
     MapType::iterator haha( mi );
@@ -133,7 +133,7 @@ GN::TypelessDict::Iterator::Iterator( const Iterator & i )
 //
 //
 // -----------------------------------------------------------------------------
-GN::TypelessDict::Iterator::~Iterator()
+GN_API GN::TypelessDict::Iterator::~Iterator()
 {
     ((MapType::iterator*)mBuf)->MapType::iterator::~iterator();
 }
@@ -141,7 +141,7 @@ GN::TypelessDict::Iterator::~Iterator()
 //
 //
 // -----------------------------------------------------------------------------
-const void * GN::TypelessDict::Iterator::key() const
+GN_API const void * GN::TypelessDict::Iterator::key() const
 {
     std::pair<const MapKey,MapValue> & p = *TO_MAP_ITER(*this);
     return p.first.data();
@@ -150,7 +150,7 @@ const void * GN::TypelessDict::Iterator::key() const
 //
 //
 // -----------------------------------------------------------------------------
-void * GN::TypelessDict::Iterator::value() const
+GN_API void * GN::TypelessDict::Iterator::value() const
 {
     std::pair<const MapKey,MapValue> & p = *TO_MAP_ITER(*this);
     return p.second.data();
@@ -159,7 +159,7 @@ void * GN::TypelessDict::Iterator::value() const
 //
 //
 // -----------------------------------------------------------------------------
-void GN::TypelessDict::Iterator::moveToNext()
+GN_API void GN::TypelessDict::Iterator::moveToNext()
 {
     ++TO_MAP_ITER(*this);
 }
@@ -167,7 +167,7 @@ void GN::TypelessDict::Iterator::moveToNext()
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::TypelessDict::Iterator::equal( const Iterator & i ) const
+GN_API bool GN::TypelessDict::Iterator::equal( const Iterator & i ) const
 {
     return TO_MAP_ITER(*this) == TO_MAP_ITER( i );
 }
@@ -175,7 +175,7 @@ bool GN::TypelessDict::Iterator::equal( const Iterator & i ) const
 //
 //
 // -----------------------------------------------------------------------------
-GN::TypelessDict::Iterator &
+GN_API GN::TypelessDict::Iterator &
 GN::TypelessDict::Iterator::operator=( const Iterator & i )
 {
     TO_MAP_ITER(*this) = TO_MAP_ITER( i );
@@ -323,28 +323,28 @@ public:
 //
 //
 // -----------------------------------------------------------------------------
-GN::TypelessDict::TypelessDict( TypeTraits key, TypeTraits value )
+GN_API GN::TypelessDict::TypelessDict( TypeTraits key, TypeTraits value )
     : mImpl( new Impl( key, value ) )
 {
 }
 
-GN::TypelessDict::TypelessDict( const TypelessDict & d )
+GN_API GN::TypelessDict::TypelessDict( const TypelessDict & d )
     : mImpl( new Impl( *d.mImpl ) )
 {
 }
 
-GN::TypelessDict::~TypelessDict()
+GN_API GN::TypelessDict::~TypelessDict()
 {
     delete mImpl;
 }
 
-GN::TypelessDict::Iterator  GN::TypelessDict::begin() const { return mImpl->begin(); }
-void                        GN::TypelessDict::clear() { return mImpl->clear(); }
-void                        GN::TypelessDict::copyFrom( const TypelessDict & d ) { return mImpl->copyFrom( d ); }
-bool                        GN::TypelessDict::empty() const { return mImpl->empty(); }
-GN::TypelessDict::Iterator  GN::TypelessDict::end() const { return mImpl->end(); }
-void *                      GN::TypelessDict::find( const void * key ) const { return mImpl->find( key ); }
-void *                      GN::TypelessDict::findOrInsert( const void * key, TypeTraits::CtorFunc ctor ) { return mImpl->findOrInsert( key, ctor ); }
-bool                        GN::TypelessDict::insert( const void * key, const void * value, Iterator * iter ) { return mImpl->insert( key, value, iter ); }
-void                        GN::TypelessDict::remove( const void * key ) { return mImpl->remove( key ); }
-size_t                      GN::TypelessDict::size() const { return mImpl->size(); }
+GN_API GN::TypelessDict::Iterator  GN::TypelessDict::begin() const { return mImpl->begin(); }
+GN_API void                        GN::TypelessDict::clear() { return mImpl->clear(); }
+GN_API void                        GN::TypelessDict::copyFrom( const TypelessDict & d ) { return mImpl->copyFrom( d ); }
+GN_API bool                        GN::TypelessDict::empty() const { return mImpl->empty(); }
+GN_API GN::TypelessDict::Iterator  GN::TypelessDict::end() const { return mImpl->end(); }
+GN_API void *                      GN::TypelessDict::find( const void * key ) const { return mImpl->find( key ); }
+GN_API void *                      GN::TypelessDict::findOrInsert( const void * key, TypeTraits::CtorFunc ctor ) { return mImpl->findOrInsert( key, ctor ); }
+GN_API bool                        GN::TypelessDict::insert( const void * key, const void * value, Iterator * iter ) { return mImpl->insert( key, value, iter ); }
+GN_API void                        GN::TypelessDict::remove( const void * key ) { return mImpl->remove( key ); }
+GN_API size_t                      GN::TypelessDict::size() const { return mImpl->size(); }

@@ -11,7 +11,7 @@
 //
 //
 // -----------------------------------------------------------------------------
-void GN::fs::normalizePathSeparator( GN::StrA & result, const GN::StrA & path )
+GN_API void GN::fs::normalizePathSeparator( GN::StrA & result, const GN::StrA & path )
 {
     StrA tmp;
 
@@ -49,7 +49,7 @@ void GN::fs::normalizePathSeparator( GN::StrA & result, const GN::StrA & path )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::fs::parentPath( StrA & result, const StrA & path )
+GN_API void GN::fs::parentPath( StrA & result, const StrA & path )
 {
     struct Local
     {
@@ -65,7 +65,7 @@ void GN::fs::parentPath( StrA & result, const StrA & path )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::fs::extName( StrA & result, const StrA & path )
+GN_API void GN::fs::extName( StrA & result, const StrA & path )
 {
     StrA tmp;
 
@@ -90,7 +90,7 @@ void GN::fs::extName( StrA & result, const StrA & path )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::fs::baseName( StrA & result, const StrA & path )
+GN_API void GN::fs::baseName( StrA & result, const StrA & path )
 {
     StrA tmp;
     normalizePathSeparator( tmp, path );
@@ -109,7 +109,7 @@ void GN::fs::baseName( StrA & result, const StrA & path )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::fs::relPath( StrA & result, const StrA & path, const StrA & base )
+GN_API void GN::fs::relPath( StrA & result, const StrA & path, const StrA & base )
 {
     GN_GUARD;
 
@@ -184,7 +184,7 @@ void GN::fs::relPath( StrA & result, const StrA & path, const StrA & base )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::fs::joinPath2(
+GN_API void GN::fs::joinPath2(
     StrA & result,
     const StrA & path1,
     const StrA & path2,
@@ -219,7 +219,7 @@ void GN::fs::joinPath2(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::fs::splitPath( const StrA & path, StrA & root, StrA & child )
+GN_API void GN::fs::splitPath( const StrA & path, StrA & root, StrA & child )
 {
     root.clear();
     child.clear();
@@ -266,7 +266,7 @@ void GN::fs::splitPath( const StrA & path, StrA & root, StrA & child )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::fs::getCurrentDir( StrA & result )
+GN_API void GN::fs::getCurrentDir( StrA & result )
 {
 #if GN_XENON
     result = "game:";
@@ -299,7 +299,7 @@ void GN::fs::getCurrentDir( StrA & result )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::fs::getCurrentDrive( StrA & result )
+GN_API void GN::fs::getCurrentDrive( StrA & result )
 {
 #if GN_XENON
     result.clear();
@@ -320,7 +320,7 @@ void GN::fs::getCurrentDrive( StrA & result )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::fs::resolvePath( StrA & result, const StrA & base, const StrA & relpath )
+GN_API void GN::fs::resolvePath( StrA & result, const StrA & base, const StrA & relpath )
 {
     // shortcut for empty path
     if( base.empty() || relpath.empty() )

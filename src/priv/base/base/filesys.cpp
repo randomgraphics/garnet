@@ -766,7 +766,7 @@ FileSystemContainer & sGetFileSystemContainer()
 //
 //
 // -----------------------------------------------------------------------------
-GN_EXPORT bool GN::fs::registerFileSystem( const StrA & name, FileSystem * root )
+GN_API bool GN::fs::registerFileSystem( const StrA & name, FileSystem * root )
 {
     return sGetFileSystemContainer().registerFs( name, root );
 }
@@ -774,7 +774,7 @@ GN_EXPORT bool GN::fs::registerFileSystem( const StrA & name, FileSystem * root 
 //
 //
 // -----------------------------------------------------------------------------
-GN_EXPORT void GN::fs::UnregisterFileSystem( const StrA & name )
+GN_API void GN::fs::UnregisterFileSystem( const StrA & name )
 {
     sGetFileSystemContainer().UnregisterFs( name );
 }
@@ -782,7 +782,7 @@ GN_EXPORT void GN::fs::UnregisterFileSystem( const StrA & name )
 //
 //
 // -----------------------------------------------------------------------------
-GN_EXPORT FileSystem * GN::fs::getFileSystem( const StrA & name )
+GN_API FileSystem * GN::fs::getFileSystem( const StrA & name )
 {
     return sGetFileSystemContainer().getFs( name );
 }

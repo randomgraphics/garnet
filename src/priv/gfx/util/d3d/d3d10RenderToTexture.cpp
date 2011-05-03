@@ -17,7 +17,7 @@ static GN::Logger * sLogger = GN::getLogger("GN.d3d10.RenderToTexture");
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::d3d10::RenderToTexture::init(
+GN_API bool GN::d3d10::RenderToTexture::init(
     ID3D10Device * device, const RenderToTextureOption & options )
 {
     GN_GUARD;
@@ -129,7 +129,7 @@ bool GN::d3d10::RenderToTexture::init(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::d3d10::RenderToTexture::quit()
+GN_API void GN::d3d10::RenderToTexture::quit()
 {
     GN_GUARD;
 
@@ -153,7 +153,7 @@ void GN::d3d10::RenderToTexture::quit()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::d3d10::RenderToTexture::clearScreen( float r, float g, float b, float a, float d, uint8 s )
+GN_API void GN::d3d10::RenderToTexture::clearScreen( float r, float g, float b, float a, float d, uint8 s )
 {
     float color[] = { r, g, b, a };
     for( size_t i = 0; i < mColors.size(); ++i )

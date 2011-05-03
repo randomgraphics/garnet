@@ -6,9 +6,6 @@ GN_IMPLEMENT_CROSS_DLL_SINGLETON( GN::input::Input )
 
 namespace GN
 {
-    // Global runtime assert behavior flag.
-    GN_PUBLIC RuntimeAssertBehavior gRuntimeAssertBehavior = RAB_ASK_USER;
-
     static Logger * sHeapLogger = getLogger("GN.core.heapAllocation");
 
     const char TAG[] = "garnet3d_memory";
@@ -24,7 +21,7 @@ namespace GN
     //
     //
     // -----------------------------------------------------------------------------
-    GN_PUBLIC ProfilerManager & ProfilerManager::sGetGlobalInstance()
+    GN_API ProfilerManager & ProfilerManager::sGetGlobalInstance()
     {
         static ProfilerManager sInstance = ProfilerManager();
         return sInstance;
@@ -33,7 +30,7 @@ namespace GN
     //
     //
     // -----------------------------------------------------------------------------
-    GN_PUBLIC void * HeapMemory::alloc( size_t sz )
+    GN_API void * HeapMemory::alloc( size_t sz )
     {
         return HeapMemory::alignedAlloc( sz, 1 );
     }
@@ -41,7 +38,7 @@ namespace GN
     //
     //
     // -----------------------------------------------------------------------------
-    GN_PUBLIC void * HeapMemory::realloc( void * ptr, size_t sz )
+    GN_API void * HeapMemory::realloc( void * ptr, size_t sz )
     {
         return HeapMemory::alignedRealloc( ptr, sz, 1 );
     }
@@ -49,7 +46,7 @@ namespace GN
     //
     //
     // -----------------------------------------------------------------------------
-    GN_PUBLIC void * HeapMemory::alignedAlloc( size_t sizeInBytes, size_t alignment )
+    GN_API void * HeapMemory::alignedAlloc( size_t sizeInBytes, size_t alignment )
     {
         if( 0 == alignment ) alignment = 1;
 #if GN_POSIX
@@ -67,7 +64,7 @@ namespace GN
     //
     //
     // -----------------------------------------------------------------------------
-    GN_PUBLIC void * HeapMemory::alignedRealloc( void * ptr, size_t sizeInBytes, size_t alignment )
+    GN_API void * HeapMemory::alignedRealloc( void * ptr, size_t sizeInBytes, size_t alignment )
     {
         if( 0 == alignment ) alignment = 1;
 #if GN_POSIX
@@ -82,7 +79,7 @@ namespace GN
     //
     //
     // -----------------------------------------------------------------------------
-    GN_PUBLIC void HeapMemory::dealloc( void * ptr )
+    GN_API void HeapMemory::dealloc( void * ptr )
     {
 #if GN_POSIX
         return ::free( ptr );

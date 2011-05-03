@@ -17,22 +17,22 @@ namespace GN
     ///
     /// endian swap 8 in 16.
     ///
-    void swap8in16( void * out, const void * in, size_t count );
+    GN_API void swap8in16( void * out, const void * in, size_t count );
 
     ///
     /// endian swap 8 in 32.
     ///
-    void swap8in32( void * out, const void * in, size_t count );
+    GN_API void swap8in32( void * out, const void * in, size_t count );
 
     ///
     /// endian swap 8 in 64
     ///
-    void swap8in64( void * out, const void * in, size_t count );
+    GN_API void swap8in64( void * out, const void * in, size_t count );
 
     ///
     /// endian swap 16 in 32.
     ///
-    void swap16in32( void * out, const void * in, size_t count );
+    GN_API void swap16in32( void * out, const void * in, size_t count );
 
     //@{
     inline uint16 swap8in16( uint16 i ) { uint16 o; swap8in16( &o, &i, 1 ); return o; }

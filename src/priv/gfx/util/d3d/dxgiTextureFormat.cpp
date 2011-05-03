@@ -105,7 +105,7 @@ static GN::dxgi::DXGI_FORMAT_DESCRIPTION sFormatTable[] =
  *
  * \return          Returns the format description for the specified DXGI format.
  */
-const GN::dxgi::DXGI_FORMAT_DESCRIPTION &
+GN_API const GN::dxgi::DXGI_FORMAT_DESCRIPTION &
 GN::dxgi::getDXGIFormatDesc( DXGI_FORMAT dxfmt )
 {
 	GN_ASSERT( 0 <= dxfmt &&  dxfmt < GN_ARRAY_COUNT(sFormatTable) );

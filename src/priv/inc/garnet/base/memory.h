@@ -30,27 +30,27 @@ namespace GN
         ///
         /// Allocate memory from heap. Can cross DLL boundary.
         ///
-        GN_PUBLIC void * alloc( size_t sizeInBytes );
+        GN_API void * alloc( size_t sizeInBytes );
 
         ///
         /// Re-allocate memory from heap. Can cross DLL boundary.
         ///
-        GN_PUBLIC void * realloc( void * ptr, size_t sizeInBytes );
+        GN_API void * realloc( void * ptr, size_t sizeInBytes );
 
         ///
         /// Allocate aligned memory from heap. Can cross DLL boundary
         ///
-        GN_PUBLIC void * alignedAlloc( size_t sizeInBytes, size_t alignment );
+        GN_API void * alignedAlloc( size_t sizeInBytes, size_t alignment );
 
         ///
         /// Re-allocate aligned memory from heap. Can cross DLL boundary
         ///
-        GN_PUBLIC void * alignedRealloc( void * ptr, size_t sizeInBytes, size_t alignment );
+        GN_API void * alignedRealloc( void * ptr, size_t sizeInBytes, size_t alignment );
 
         ///
         /// Free heap-allocated memory (aligned or unaligned). Can cross DLL boundary.
         ///
-        GN_PUBLIC void dealloc( void * ptr );
+        GN_API void dealloc( void * ptr );
     };
 }
 
@@ -86,7 +86,7 @@ namespace GN
     /// enable CRT memory leak checking. Currently only work for MSVC compiler
     ///
     /// \param breakOnAllocID       Set allocation ID for "break-on-memory-allocation". Set to 0 to disable it.
-    void enableCRTMemoryCheck( long breakOnAllocID = 0 );
+    GN_API void enableCRTMemoryCheck( long breakOnAllocID = 0 );
 
     ///
     /// free heap memory pointer allocated using GN::HeapMemory functions

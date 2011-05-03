@@ -9,12 +9,12 @@
 namespace GN
 {
     /// Typeless dictionary class.
-    class TypelessDict
+    class GN_API TypelessDict
     {
     public:
 
         /// Typeless iterator clas
-        class Iterator
+        class GN_API Iterator
         {
             uint8 mBuf[32];
 

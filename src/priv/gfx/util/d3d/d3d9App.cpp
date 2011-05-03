@@ -218,7 +218,7 @@ sSetupD3dpp( D3DPRESENT_PARAMETERS & d3dpp,
 //
 //
 // -----------------------------------------------------------------------------
-GN::d3d9::D3D9Application::D3D9Application()
+GN_API GN::d3d9::D3D9Application::D3D9Application()
     : mWindow(0)
     , mD3D(0)
     , mDevice(0)
@@ -229,14 +229,14 @@ GN::d3d9::D3D9Application::D3D9Application()
 //
 //
 // -----------------------------------------------------------------------------
-GN::d3d9::D3D9Application::~D3D9Application()
+GN_API GN::d3d9::D3D9Application::~D3D9Application()
 {
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-int GN::d3d9::D3D9Application::run( const D3D9AppOption * )
+GN_API int GN::d3d9::D3D9Application::run( const D3D9AppOption * )
 {
     GN_GUARD_ALWAYS;
 
@@ -294,7 +294,7 @@ int GN::d3d9::D3D9Application::run( const D3D9AppOption * )
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::d3d9::D3D9Application::changeOption( const D3D9AppOption & o )
+GN_API bool GN::d3d9::D3D9Application::changeOption( const D3D9AppOption & o )
 {
     disposeDevice();
     destroyDevice();
@@ -309,7 +309,7 @@ bool GN::d3d9::D3D9Application::changeOption( const D3D9AppOption & o )
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::d3d9::D3D9Application::init()
+GN_API bool GN::d3d9::D3D9Application::init()
 {
 #if !GN_XENON
     // get primary monitor
@@ -352,7 +352,7 @@ bool GN::d3d9::D3D9Application::init()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::d3d9::D3D9Application::quit()
+GN_API void GN::d3d9::D3D9Application::quit()
 {
     disposeDevice();
     destroyDevice();
@@ -381,7 +381,7 @@ void GN::d3d9::D3D9Application::quit()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::d3d9::D3D9Application::onKeyPress( input::KeyEvent ke )
+GN_API void GN::d3d9::D3D9Application::onKeyPress( input::KeyEvent ke )
 {
 #if GN_XENON
     GN_UNUSED_PARAM( ke );
@@ -396,7 +396,7 @@ void GN::d3d9::D3D9Application::onKeyPress( input::KeyEvent ke )
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::d3d9::D3D9Application::createDevice()
+GN_API bool GN::d3d9::D3D9Application::createDevice()
 {
     PixPerfScopeEvent pixevent( 0, "Create" );
 
@@ -466,7 +466,7 @@ bool GN::d3d9::D3D9Application::createDevice()
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::d3d9::D3D9Application::restoreDevice()
+GN_API bool GN::d3d9::D3D9Application::restoreDevice()
 {
     PixPerfScopeEvent pixevent( 0, "Restore" );
 
@@ -488,7 +488,7 @@ bool GN::d3d9::D3D9Application::restoreDevice()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::d3d9::D3D9Application::disposeDevice()
+GN_API void GN::d3d9::D3D9Application::disposeDevice()
 {
     if( mDevice )
     {
@@ -499,7 +499,7 @@ void GN::d3d9::D3D9Application::disposeDevice()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::d3d9::D3D9Application::destroyDevice()
+GN_API void GN::d3d9::D3D9Application::destroyDevice()
 {
     if( mDevice )
     {

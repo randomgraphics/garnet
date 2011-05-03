@@ -934,7 +934,7 @@ namespace GN { namespace gfx
     protected:
 
         // Can't delete Gpu instance directly. Must call deleteGpu()
-        friend void deleteGpu( gfx::Gpu * );
+        friend void GN_API deleteGpu( gfx::Gpu * );
         virtual ~Gpu() {}
 
     public:
@@ -1545,22 +1545,22 @@ namespace GN { namespace gfx
     ///
     /// Create OpenGL GPU (no linkage to any D3D libraries)
     ///
-    Gpu * createOGLGpu( const GpuOptions & go, uint32 creationFlags );
+    GN_API Gpu * createOGLGpu( const GpuOptions & go, uint32 creationFlags );
 
     ///
     /// Create D3D GPU (no linkage to any OpenGL libraries)
     ///
-    Gpu * createD3DGpu( const GpuOptions & go, uint32 creationFlags );
+    GN_API Gpu * createD3DGpu( const GpuOptions & go, uint32 creationFlags );
 
     ///
     /// General GPU creator (link to both D3D and OpenGL libraries)
     ///
-    Gpu * createGpu( const GpuOptions & go, uint32 creationFlags );
+    GN_API Gpu * createGpu( const GpuOptions & go, uint32 creationFlags );
 
     ///
     /// Delete renderer
     ///
-    void deleteGpu( gfx::Gpu * );
+    GN_API void deleteGpu( gfx::Gpu * );
 }}
 
 #if GN_ENABLE_GPU_DEBUG_MARK

@@ -15,12 +15,12 @@ static GN::Logger * sLogger = GN::getLogger("GN.base.Variant");
 //
 // set value
 // -----------------------------------------------------------------------------
-void GN::Variant::setb( bool b ) { mValue = b ? "1" : "0"; }
-void GN::Variant::seti( int i ) { mValue.format( "%d", i ); }
-void GN::Variant::setf( float f ) { mValue.format( "%f", f ); }
-void GN::Variant::setp( void * p ) { if( 0 == p ) mValue = "0"; else mValue.format( "%p", p ); }
-void GN::Variant::setv( const Vector4f & v ) { mValue.format( "%f,%f,%f,%f", v.x, v.y, v.z, v.w ); }
-void GN::Variant::setm( const Matrix44f & m )
+GN_API void GN::Variant::setb( bool b ) { mValue = b ? "1" : "0"; }
+GN_API void GN::Variant::seti( int i ) { mValue.format( "%d", i ); }
+GN_API void GN::Variant::setf( float f ) { mValue.format( "%f", f ); }
+GN_API void GN::Variant::setp( void * p ) { if( 0 == p ) mValue = "0"; else mValue.format( "%p", p ); }
+GN_API void GN::Variant::setv( const Vector4f & v ) { mValue.format( "%f,%f,%f,%f", v.x, v.y, v.z, v.w ); }
+GN_API void GN::Variant::setm( const Matrix44f & m )
 {
     mValue.format(
         "%f,%f,%f,%f,\n"
@@ -36,7 +36,7 @@ void GN::Variant::setm( const Matrix44f & m )
 //
 // get value
 // -----------------------------------------------------------------------------
-bool GN::Variant::getb( bool & b ) const
+GN_API bool GN::Variant::getb( bool & b ) const
 {
     int i;
     float f;
@@ -74,29 +74,29 @@ bool GN::Variant::getb( bool & b ) const
     }
 }
 //
-bool GN::Variant::geti( int & i ) const
+GN_API bool GN::Variant::geti( int & i ) const
 {
     return 0 != string2Integer<int>( i, mValue.rawptr() );
 }
 //
-bool GN::Variant::getf( float & f ) const
+GN_API bool GN::Variant::getf( float & f ) const
 {
     return 0 != string2Float( f, mValue.rawptr() );
 }
 //
-bool GN::Variant::getp( void * & p ) const
+GN_API bool GN::Variant::getp( void * & p ) const
 {
     bool b = 0 != string2Integer<size_t>( (size_t&)p, mValue.rawptr() );
     if( !b ) p = NULL;
     return b;
 }
 //
-bool GN::Variant::getv( Vector4f & v ) const
+GN_API bool GN::Variant::getv( Vector4f & v ) const
 {
     return 4 == string2FloatArray( v, 4, mValue.rawptr(), mValue.size() );
 }
 //
-bool GN::Variant::getm( Matrix44f & m ) const
+GN_API bool GN::Variant::getm( Matrix44f & m ) const
 {
     return 16 == string2FloatArray( m[0], 16, mValue.rawptr(), mValue.size() );
 }

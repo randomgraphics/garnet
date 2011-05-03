@@ -17,7 +17,7 @@ static GN::Logger * sLogger = GN::getLogger("GN.d3d10.ScreenAlignedQuad");
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::d3d10::ScreenAlignedQuad::init(
+GN_API bool GN::d3d10::ScreenAlignedQuad::init(
     ID3D10Device * device, const ScreenAlignedQuadDesc & desc )
 {
     GN_GUARD;
@@ -94,7 +94,7 @@ bool GN::d3d10::ScreenAlignedQuad::init(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::d3d10::ScreenAlignedQuad::quit()
+GN_API void GN::d3d10::ScreenAlignedQuad::quit()
 {
     GN_GUARD;
 
@@ -118,7 +118,7 @@ void GN::d3d10::ScreenAlignedQuad::quit()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::d3d10::ScreenAlignedQuad::drawTexed( ID3D10ShaderResourceView * srv )
+GN_API void GN::d3d10::ScreenAlignedQuad::drawTexed( ID3D10ShaderResourceView * srv )
 {
     ID3D10SamplerState * nullsamp = 0;
 

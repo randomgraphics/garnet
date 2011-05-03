@@ -19,7 +19,7 @@ static const GUID POOL_PTR_GUID = { 0xc6f87514, 0x48b1, 0x4e3c, { 0x97, 0x6a, 0x
 //
 //
 // -----------------------------------------------------------------------------
-inline bool GN::d3d10::ResourcePool::PooledResourceDesc::isImmutable() const
+GN_API inline bool GN::d3d10::ResourcePool::PooledResourceDesc::isImmutable() const
 {
     switch( dim )
     {
@@ -38,7 +38,7 @@ inline bool GN::d3d10::ResourcePool::PooledResourceDesc::isImmutable() const
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::d3d10::ResourcePool::init( ID3D10Device * dev )
+GN_API bool GN::d3d10::ResourcePool::init( ID3D10Device * dev )
 {
     GN_GUARD;
 
@@ -62,7 +62,7 @@ bool GN::d3d10::ResourcePool::init( ID3D10Device * dev )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::d3d10::ResourcePool::quit()
+GN_API void GN::d3d10::ResourcePool::quit()
 {
     GN_GUARD;
 
@@ -79,7 +79,7 @@ void GN::d3d10::ResourcePool::quit()
 //
 //
 // -----------------------------------------------------------------------------
-ID3D10Buffer *
+GN_API ID3D10Buffer *
 GN::d3d10::ResourcePool::createBuffer( const D3D10_BUFFER_DESC & desc, const D3D10_SUBRESOURCE_DATA * data )
 {
     return (ID3D10Buffer*)findOrCreateResource( desc, data );
@@ -88,7 +88,7 @@ GN::d3d10::ResourcePool::createBuffer( const D3D10_BUFFER_DESC & desc, const D3D
 //
 //
 // -----------------------------------------------------------------------------
-void
+GN_API void
 GN::d3d10::ResourcePool::returnResource( ID3D10Resource * resource )
 {
     // Silently ignore NULL pointer
@@ -163,7 +163,7 @@ GN::d3d10::ResourcePool::returnResource( ID3D10Resource * resource )
 //
 //
 // -----------------------------------------------------------------------------
-ID3D10Resource *
+GN_API ID3D10Resource *
 GN::d3d10::ResourcePool::findOrCreateResource( const PooledResourceDesc & desc, const D3D10_SUBRESOURCE_DATA * data )
 {
     GN_GUARD;
@@ -229,7 +229,7 @@ GN::d3d10::ResourcePool::findOrCreateResource( const PooledResourceDesc & desc, 
 //
 //
 // -----------------------------------------------------------------------------
-ID3D10Resource *
+GN_API ID3D10Resource *
 GN::d3d10::ResourcePool::createResource( const PooledResourceDesc & desc, const D3D10_SUBRESOURCE_DATA * data )
 {
     GN_GUARD;

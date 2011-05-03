@@ -101,12 +101,12 @@ namespace GN { namespace gfx
     ///
     /// color layout descriptors
     ///
-    extern const ColorLayoutDesc ALL_COLOR_LAYOUTS[];
+    extern GN_API const ColorLayoutDesc ALL_COLOR_LAYOUTS[];
 
     ///
     /// color format structure
     ///
-	union ColorFormat
+	union GN_API ColorFormat
     {
         ///
         /// color layout
@@ -503,49 +503,49 @@ namespace GN { namespace gfx
     ///
     /// D3DFMT to string. Return "INVALID D3D9 FORMAT" if failed.
     ///
-    const char * d3d9Format2Str( int );
+    GN_API const char * d3d9Format2Str( int );
 
     ///
     /// Xenon texture format to string. Return "INVALID Xenon FORMAT" if failed.
     ///
-    const char * xenonFormat2Str( int );
+    GN_API const char * xenonFormat2Str( int );
 
     ///
     /// DXGI_FORMAT to string. Return "INVALID DXGI_FORMAT" if failed.
     ///
-    const char * dxgiFormat2Str( int );
+    GN_API const char * dxgiFormat2Str( int );
 
     ///
     /// Convert D3DFMT to ColorFormat. Return ColorFormat::UNKNOWN if failed.
     ///
-    ColorFormat d3d9Format2ColorFormat( int );
+    GN_API ColorFormat d3d9Format2ColorFormat( int );
 
     ///
     /// Convert ColorFormat to D3D9 format. Return D3DFMT_UNKNOWN if failed.
     ///
-    int colorFormat2D3D9Format( ColorFormat );
+    GN_API int colorFormat2D3D9Format( ColorFormat );
 
     ///
     /// Convert Xenon texture format to ColorFormat. Return ColorFormat::UNKNOWN if failed.
     ///
-    ColorFormat xenonFormat2ColorFormat( int );
+    GN_API ColorFormat xenonFormat2ColorFormat( int );
 
     ///
     /// Convert ColorFormat to Xenon texture format. Return D3DFMT_UNKNOWN if failed.
     ///
     /// \note this function always return tiled format.
     ///
-    uint32 colorFormat2XenonFormat( ColorFormat );
+    GN_API uint32 colorFormat2XenonFormat( ColorFormat );
 
     ///
     /// Convert DXGI_FORMAT to ColorFormat. Return DXGI_FORMAT_UNKNOWN if failed.
     ///
-    ColorFormat dxgiFormat2ColorFormat( int );
+    GN_API ColorFormat dxgiFormat2ColorFormat( int );
 
     ///
     /// Convert ColorFormat to DXGI_FORMAT. Return DXGI_FORMAT_UNKNOWN if failed.
     ///
-    int colorFormat2DxgiFormat( ColorFormat );
+    GN_API int colorFormat2DxgiFormat( ColorFormat );
 }}
 
 // *****************************************************************************

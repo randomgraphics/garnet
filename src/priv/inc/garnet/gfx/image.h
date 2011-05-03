@@ -55,7 +55,7 @@ namespace GN { namespace gfx
     ///
     /// image descriptor
     ///
-    struct ImageDesc
+    struct GN_API ImageDesc
     {
         // ****************************
         /// \name member data
@@ -131,17 +131,17 @@ namespace GN { namespace gfx
         ///
         /// set image face count and level count, allocate mipmap array as well.
         ///
-        bool setFaceAndLevel( uint32 faces, uint32 levels );
+        inline bool setFaceAndLevel( uint32 faces, uint32 levels );
 
         ///
         /// return descriptor of specific mipmap
         ///
-        MipmapDesc & getMipmap( uint32 face, uint32 level );
+        inline MipmapDesc & getMipmap( uint32 face, uint32 level );
 
         ///
         /// return descriptor of specific mipmap
         ///
-        const MipmapDesc & getMipmap( uint32 face, uint32 level ) const;
+        inline const MipmapDesc & getMipmap( uint32 face, uint32 level ) const;
 
         ///
         /// Get image type
@@ -194,7 +194,7 @@ namespace GN { namespace gfx
     ///
     /// image reader
     ///
-    class ImageReader
+    class GN_API ImageReader
     {
     public:
         ImageReader();                  ///< constructor

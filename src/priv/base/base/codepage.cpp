@@ -54,7 +54,7 @@ struct CECImpl
 //
 //
 // -----------------------------------------------------------------------------
-const char * GN::CharacterEncodingConverter::sEncoding2Str( Encoding e )
+GN_API const char * GN::CharacterEncodingConverter::sEncoding2Str( Encoding e )
 {
     switch( e )
     {
@@ -78,7 +78,7 @@ const char * GN::CharacterEncodingConverter::sEncoding2Str( Encoding e )
 //
 //
 // -----------------------------------------------------------------------------
-GN::CharacterEncodingConverter::CharacterEncodingConverter( Encoding from, Encoding to )
+GN_API GN::CharacterEncodingConverter::CharacterEncodingConverter( Encoding from, Encoding to )
     : mImpl( new CECImpl )
 {
     CECImpl * p = (CECImpl*)mImpl;
@@ -93,7 +93,7 @@ GN::CharacterEncodingConverter::CharacterEncodingConverter( Encoding from, Encod
 //
 //
 // -----------------------------------------------------------------------------
-GN::CharacterEncodingConverter::~CharacterEncodingConverter()
+GN_API GN::CharacterEncodingConverter::~CharacterEncodingConverter()
 {
     delete (CECImpl*)mImpl;
 }
@@ -101,7 +101,7 @@ GN::CharacterEncodingConverter::~CharacterEncodingConverter()
 //
 //
 // -----------------------------------------------------------------------------
-size_t GN::CharacterEncodingConverter::convert(
+GN_API size_t GN::CharacterEncodingConverter::convert(
     void            * destBuffer,
     size_t            destBufferSizeInBytes,
     const void      * sourceBuffer,
@@ -129,7 +129,7 @@ size_t GN::CharacterEncodingConverter::convert(
 //
 //
 // -----------------------------------------------------------------------------
-GN::CharacterEncodingConverter::Encoding GN::getCurrentSystemEncoding()
+GN_API GN::CharacterEncodingConverter::Encoding GN::getCurrentSystemEncoding()
 {
     GN_UNIMPL_WARNING();
     return CharacterEncodingConverter::GBK;
@@ -138,7 +138,7 @@ GN::CharacterEncodingConverter::Encoding GN::getCurrentSystemEncoding()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::wcs2mbs( StrA & o, const wchar_t * i, size_t l )
+GN_API void GN::wcs2mbs( StrA & o, const wchar_t * i, size_t l )
 {
     if ( 0 == i ) { o.clear(); return; }
     if ( 0 == l ) l = stringLength(i);
@@ -165,7 +165,7 @@ void GN::wcs2mbs( StrA & o, const wchar_t * i, size_t l )
 //
 //
 // -----------------------------------------------------------------------------
-size_t GN::mbs2wcs( wchar_t * o, size_t os, const char * i, size_t is )
+GN_API size_t GN::mbs2wcs( wchar_t * o, size_t os, const char * i, size_t is )
 {
     StrW wcs;
     mbs2wcs( wcs, i, is );
@@ -200,7 +200,7 @@ size_t GN::mbs2wcs( wchar_t * o, size_t os, const char * i, size_t is )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::mbs2wcs( StrW & o, const char * i, size_t l )
+GN_API void GN::mbs2wcs( StrW & o, const char * i, size_t l )
 {
     if ( 0 == i ) { o.clear(); return; }
     if ( 0 == l ) l = stringLength(i);

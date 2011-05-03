@@ -276,7 +276,7 @@ namespace GN
     /// \param name
     ///     Logger name (case insensitive)
     ///
-    GN_PUBLIC Logger * getLogger( const char * name );
+    GN_API Logger * getLogger( const char * name );
 
     ///
     /// Get root logger

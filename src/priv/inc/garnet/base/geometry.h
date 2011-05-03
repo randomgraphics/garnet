@@ -2584,7 +2584,7 @@ namespace GN
     ///
     /// Calculate bounding sphere.
     ///
-    void calculateBoundingSphere(
+    GN_API void calculateBoundingSphere(
         Spheref & result,
         const float * x, size_t strideX,
         const float * y, size_t strideY,
@@ -2594,17 +2594,17 @@ namespace GN
     ///
     /// Calculate bounding sphere.
     ///
-    void calculateBoundingSphere( Spheref & result, const Vector3f * positions, size_t strideInBytes, size_t count );
+    GN_API void calculateBoundingSphere( Spheref & result, const Vector3f * positions, size_t strideInBytes, size_t count );
 
     ///
     /// Calculate bounding sphere.
     ///
-    void calculateBoundingSphereFromBoundingBox( Spheref & result, const Boxf & bbox );
+    GN_API void calculateBoundingSphereFromBoundingBox( Spheref & result, const Boxf & bbox );
 
     ///
     /// Calculate axis aligned bounding box.
     ///
-    void calculateBoundingBox(
+    GN_API void calculateBoundingBox(
         Boxf & result,
         const float * x, size_t strideX,
         const float * y, size_t strideY,
@@ -2614,7 +2614,7 @@ namespace GN
     ///
     /// Calculate axis aligned bounding box.
     ///
-    void calculateBoundingBox( Boxf & result, const Vector3f * positions, size_t strideInBytes, size_t count );
+    GN_API void calculateBoundingBox( Boxf & result, const Vector3f * positions, size_t strideInBytes, size_t count );
 }
 
 // *****************************************************************************

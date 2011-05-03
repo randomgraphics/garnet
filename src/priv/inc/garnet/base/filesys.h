@@ -100,9 +100,9 @@ namespace GN
         //      - if register same file system multiple times, only the last one is effective.
         ///
         //@{
-        GN_EXPORT bool registerFileSystem( const StrA & name, FileSystem * fs );
-        GN_EXPORT void UnregisterFileSystem( const StrA & name );
-        GN_EXPORT FileSystem * getFileSystem( const StrA & name );
+        GN_API  bool registerFileSystem( const StrA & name, FileSystem * fs );
+        GN_API  void UnregisterFileSystem( const StrA & name );
+        GN_API  FileSystem * getFileSystem( const StrA & name );
         //@}
 
         /// path related utilites
@@ -113,7 +113,7 @@ namespace GN
         /// 2. remove redundent separators
         /// 3. convert to unix style
         ///
-        void normalizePathSeparator( GN::StrA & result, const GN::StrA & path );
+        GN_API void normalizePathSeparator( GN::StrA & result, const GN::StrA & path );
 
         ///
         /// Get the parent path (directory) of the path.
@@ -132,7 +132,7 @@ namespace GN
         ///     - "c:a" -> "c:"
         ///     - "c:" -> "c:"
         ///
-        void parentPath( StrA &, const StrA & );
+        GN_API void parentPath( StrA &, const StrA & );
 
         ///
         /// Get the parent path (directory) of the path
@@ -148,7 +148,7 @@ namespace GN
         ///     - "a." -> "."
         ///     - "a" -> ""
         ///
-        void extName( StrA &, const StrA & );
+        GN_API void extName( StrA &, const StrA & );
 
         ///
         /// Get extension name of the path.
@@ -158,7 +158,7 @@ namespace GN
         ///
         /// get basename of a path (no directory, no extension)
         ///
-        void baseName( StrA & result, const StrA & path );
+        GN_API void baseName( StrA & result, const StrA & path );
 
         ///
         /// get basename of a path
@@ -178,7 +178,7 @@ namespace GN
         ///
         /// Convert a path to relative path from a base dir.
         ///
-        void relPath( StrA & result, const StrA & path, const StrA & base );
+        GN_API void relPath( StrA & result, const StrA & path, const StrA & base );
 
         ///
         /// Convert a path to relative path from and base dir.
@@ -193,7 +193,7 @@ namespace GN
         ///
         /// Join path
         ///
-        void joinPath2(
+        GN_API void joinPath2(
             StrA & result,
             const StrA & path1 = StrA::EMPTYSTR,
             const StrA & path2 = StrA::EMPTYSTR,
@@ -221,12 +221,12 @@ namespace GN
         ///
         /// fs and local path are separated by "::"
         ///
-        void splitPath( const StrA & path, StrA & fs, StrA & local );
+        GN_API void splitPath( const StrA & path, StrA & fs, StrA & local );
 
         ///
         /// get current working directory
         ///
-        void getCurrentDir( StrA & );
+        GN_API void getCurrentDir( StrA & );
 
         ///
         /// get current working directory
@@ -236,7 +236,7 @@ namespace GN
         ///
         /// get current driver (for Windows only, return empty string on *nix system)
         ///
-        void getCurrentDrive( StrA & );
+        GN_API void getCurrentDrive( StrA & );
 
         ///
         /// get current driver (for Windows only, return empty string on *nix system)
@@ -251,7 +251,7 @@ namespace GN
         ///     - base and relpath belongs to different file system.
         ///     - relpath is already an absolute path, like "c:/haha.txt".
         ///
-        void resolvePath( StrA & result, const StrA & base, const StrA & relpath );
+        GN_API void resolvePath( StrA & result, const StrA & base, const StrA & relpath );
 
         ///
         /// resolve relative path to absolute path.

@@ -20,32 +20,30 @@ static const char * DXERR_FUNC( sint32 ) { return "unknown error code."; }
 #endif
 
 
-namespace GN
-{
-    // Global runtime assert behavior flag. Implemented in core module.
-    extern GN_PUBLIC RuntimeAssertBehavior gRuntimeAssertBehavior;
-}
+// Runtime assert behavior flag.
+static GN::RuntimeAssertBehavior sRuntimeAssertBehavior = GN::RAB_BREAK_ALWAYS;
+
 //
 //
 // -----------------------------------------------------------------------------
-GN::RuntimeAssertBehavior GN::setRuntimeAssertBehavior( RuntimeAssertBehavior rab )
+GN_API GN::RuntimeAssertBehavior GN::setRuntimeAssertBehavior( RuntimeAssertBehavior rab )
 {
-    RuntimeAssertBehavior old = gRuntimeAssertBehavior;
-    gRuntimeAssertBehavior = rab;
+    RuntimeAssertBehavior old = sRuntimeAssertBehavior;
+    sRuntimeAssertBehavior = rab;
     return old;
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-bool
+GN_API bool
 GN::assertFunc(
     const char * msg,
     const char * file,
     int          line,
     bool *       ignoreFromNowOn ) throw()
 {
-    if( RAB_SILENCE == gRuntimeAssertBehavior ) return false;
+    if( RAB_SILENCE == sRuntimeAssertBehavior ) return false;
 
     ::fprintf(
         stderr,
@@ -59,9 +57,9 @@ GN::assertFunc(
         line,
         msg?msg:"" );
 
-    if( RAB_LOG_ONLY == gRuntimeAssertBehavior ) return false;
+    if( RAB_LOG_ONLY == sRuntimeAssertBehavior ) return false;
 
-    if( RAB_BREAK_ALWAYS == gRuntimeAssertBehavior ) return true;
+    if( RAB_BREAK_ALWAYS == sRuntimeAssertBehavior ) return true;
 
 #if GN_MSWIN
     char buf[1024];
@@ -89,7 +87,7 @@ GN::assertFunc(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::breakIntoDebugger()
+GN_API void GN::breakIntoDebugger()
 {
 #if GN_MSVC
 	::DebugBreak();
@@ -105,7 +103,7 @@ void GN::breakIntoDebugger()
 //
 //
 // -----------------------------------------------------------------------------
-const char *
+GN_API const char *
 GN::getWin32ErrorInfo( uint32 win32ErrorCode ) throw()
 {
     static char info[4096];
@@ -141,7 +139,7 @@ GN::getWin32ErrorInfo( uint32 win32ErrorCode ) throw()
 //
 //
 // -----------------------------------------------------------------------------
-const char *
+GN_API const char *
 GN::getWin32LastErrorInfo() throw()
 {
     return getWin32ErrorInfo( ::GetLastError() );
@@ -153,7 +151,7 @@ GN::getWin32LastErrorInfo() throw()
 //
 //
 // -----------------------------------------------------------------------------
-const char *
+GN_API const char *
 GN::getDXErrorInfo( sint32 hr ) throw()
 {
     return DXERR_FUNC( hr );
@@ -162,7 +160,7 @@ GN::getDXErrorInfo( sint32 hr ) throw()
 //
 //
 // -----------------------------------------------------------------------------
-const char *
+GN_API const char *
 GN::errno2str( int err )
 {
     switch( err )

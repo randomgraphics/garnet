@@ -897,16 +897,15 @@ TARGET_stlibs = [
 	'GNbase',
 	'GNgfxUtil',
 	'GNgpuCommon',
+    'GNgpuOGL',
+	'GNgpuXenon',
+	'GNgpuD3D11',
 	'GNengine',
 	'GNutil',
 	]
 
 TARGET_shlibs = [
     'GNcore',
-    'GNgpuOGL',
-	'GNgpuXenon',
-#	'GNgpuD3D10',
-	'GNgpuD3D11',
     ]
 
 TARGET_tests = [
@@ -1193,7 +1192,7 @@ def BUILD_program( name, target ):
     # setup standard library list
 	stdlibs = []
 	if not target.ignoreDefaultDependencies:
-		stdlibs += TARGET_stlibs + TARGET_shlibs;
+		stdlibs += ['GNcore'];
 
 	BUILD_addExternalDependencies( env, name, BUILD_toList(target.externalDependencies) )
 	BUILD_addDependencies( env, name, stdlibs + BUILD_toList(target.dependencies) )

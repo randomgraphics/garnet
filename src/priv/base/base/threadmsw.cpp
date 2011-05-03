@@ -692,7 +692,7 @@ void ThreadMsw::sUtilThreadProc( void * parameter )
 //
 //
 // -----------------------------------------------------------------------------
-GN::Thread::Identifier GN::Thread::sCreate(
+GN_API GN::Thread::Identifier GN::Thread::sCreate(
     const Procedure & proc,
     void            * param,
     const char      * name )
@@ -703,7 +703,7 @@ GN::Thread::Identifier GN::Thread::sCreate(
 //
 //
 // -----------------------------------------------------------------------------
-GN::WaitResult GN::Thread::sWaitForTermination(
+GN_API GN::WaitResult GN::Thread::sWaitForTermination(
     Identifier       thread,
     TimeInNanoSecond timeoutTime )
 {
@@ -756,7 +756,7 @@ void GN::Thread::sSleepCurrentThread( TimeInNanoSecond sleepTime )
 //
 //
 // -----------------------------------------------------------------------------
-GN::Thread::Identifier GN::Thread::sGetCurrentThread()
+GN_API GN::Thread::Identifier GN::Thread::sGetCurrentThread()
 {
     return s_ThreadTable.getCurrentThread();
 }
@@ -764,7 +764,7 @@ GN::Thread::Identifier GN::Thread::sGetCurrentThread()
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::Thread::sIsCurrentThread( Identifier id )
+GN_API bool GN::Thread::sIsCurrentThread( Identifier id )
 {
     return id == s_ThreadTable.getCurrentThread();
 }
@@ -772,7 +772,7 @@ bool GN::Thread::sIsCurrentThread( Identifier id )
 //
 //
 // -----------------------------------------------------------------------------
-GN::Thread::Priority GN::Thread::sGetPriority( Identifier )
+GN_API GN::Thread::Priority GN::Thread::sGetPriority( Identifier )
 {
     GN_UNIMPL_WARNING();
     return Thread::NORMAL;
@@ -781,7 +781,7 @@ GN::Thread::Priority GN::Thread::sGetPriority( Identifier )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::Thread::sSetPriority( Identifier t, Priority p )
+GN_API void GN::Thread::sSetPriority( Identifier t, Priority p )
 {
     if( p < 0 || p >= NUM_PRIORITIES )
     {
@@ -804,7 +804,7 @@ void GN::Thread::sSetPriority( Identifier t, Priority p )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::Thread::sSetAffinity( Identifier, uint32 )
+GN_API void GN::Thread::sSetAffinity( Identifier, uint32 )
 {
     GN_UNIMPL_WARNING();
 }

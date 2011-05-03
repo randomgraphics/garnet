@@ -56,7 +56,7 @@ static GN::input::Input * sCreateNativeInputSystem()
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::input::initializeInputSystem( InputAPI api )
+GN_API bool GN::input::initializeInputSystem( InputAPI api )
 {
     GN_GUARD;
 
@@ -94,7 +94,7 @@ bool GN::input::initializeInputSystem( InputAPI api )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::input::shutdownInputSystem()
+GN_API void GN::input::shutdownInputSystem()
 {
     GN_GUARD;
 

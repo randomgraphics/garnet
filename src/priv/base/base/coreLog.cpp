@@ -701,7 +701,7 @@ namespace GN
     //
     // Implement global log function.
     // -------------------------------------------------------------------------
-    GN_PUBLIC Logger * getLogger( const char * name )
+    GN_API Logger * getLogger( const char * name )
     {
         LoggerContainer & lc = sGetLoggerContainer();
         return lc.getLogger( name );

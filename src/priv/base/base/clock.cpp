@@ -41,19 +41,19 @@ static GN::Clock::CycleType sGetSystemCycleFrequency()
 //                      interface functions
 // *****************************************************************************
 
-GN::Clock::CycleType
-GN::Clock::mSystemCycleFrequency = ::sGetSystemCycleFrequency();
+GN_API GN::Clock::CycleType
+GN::Clock::msSystemCycleFrequency = ::sGetSystemCycleFrequency();
 
 //
 //
 // -----------------------------------------------------------------------------
-GN::Clock::CycleType GN::Clock::sGetSystemCycleCount()
+GN_API GN::Clock::CycleType GN::Clock::sGetSystemCycleCount()
 {
     GN_GUARD_SLOW;
 
 #if GN_MSWIN || GN_XENON
     CycleType r;
-    if( 1000 != mSystemCycleFrequency )
+    if( 1000 != msSystemCycleFrequency )
     {
         QueryPerformanceCounter( (LARGE_INTEGER*)&r );
     }
@@ -76,7 +76,7 @@ GN::Clock::CycleType GN::Clock::sGetSystemCycleCount()
 //
 // 计时器复位
 // -----------------------------------------------------------------------------
-void GN::Clock::reset()
+GN_API void GN::Clock::reset()
 {
     // reset timer variables
     mResetTime = sGetSystemCycleCount();
@@ -88,7 +88,7 @@ void GN::Clock::reset()
 //
 // 计时器暂停
 // -----------------------------------------------------------------------------
-void GN::Clock::pause()
+GN_API void GN::Clock::pause()
 {
     if (!mPaused)
     {
@@ -101,7 +101,7 @@ void GN::Clock::pause()
 //
 // 计时器恢复
 // -----------------------------------------------------------------------------
-void GN::Clock::resume()
+GN_API void GN::Clock::resume()
 {
     if (mPaused)
     {

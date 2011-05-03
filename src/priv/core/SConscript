@@ -1,13 +1,8 @@
 Import( 'GN' )
 
 sources = [
-    'core.cpp',
-    'coreLog.cpp',
-	'filesys.cpp'
+    'all_public_headers.cpp',
 ]
 
-cluster = GN.newSourceCluster( sources, 'pch.h', 'pch.cpp' )
-
-cluster.addCompileFlags( CPPDEFINES = ['_GN_CORE'] )
-
-GN.newTarget( 'shlib', 'GNcore', [cluster] )
+cluster = GN.newSourceCluster( sources )
+GN.newTarget( 'dylib', 'GNcore', [cluster] )

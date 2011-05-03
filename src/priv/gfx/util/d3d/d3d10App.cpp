@@ -197,7 +197,7 @@ static void sDestroyWindow( HWND hwnd )
 //
 //
 // -----------------------------------------------------------------------------
-GN::d3d10::D3D10Application::D3D10Application()
+GN_API GN::d3d10::D3D10Application::D3D10Application()
     : mWindow(0)
     , mAdapter(0)
     , mDevice(0)
@@ -215,7 +215,7 @@ GN::d3d10::D3D10Application::D3D10Application()
 //
 //
 // -----------------------------------------------------------------------------
-GN::d3d10::D3D10Application::~D3D10Application()
+GN_API GN::d3d10::D3D10Application::~D3D10Application()
 {
     input::shutdownInputSystem();
 }
@@ -225,7 +225,7 @@ GN::d3d10::D3D10Application::~D3D10Application()
 //
 //
 // -----------------------------------------------------------------------------
-int GN::d3d10::D3D10Application::run( const D3D10AppOption & o )
+GN_API int GN::d3d10::D3D10Application::run( const D3D10AppOption & o )
 {
     GN_GUARD_ALWAYS;
 
@@ -285,7 +285,7 @@ int GN::d3d10::D3D10Application::run( const D3D10AppOption & o )
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::d3d10::D3D10Application::changeOption( const D3D10AppOption & o )
+GN_API bool GN::d3d10::D3D10Application::changeOption( const D3D10AppOption & o )
 {
     destroyDevice();
     mOption = o;
@@ -295,7 +295,7 @@ bool GN::d3d10::D3D10Application::changeOption( const D3D10AppOption & o )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::d3d10::D3D10Application::clearScreen( float r, float g, float b, float a, float d, uint8 s )
+GN_API void GN::d3d10::D3D10Application::clearScreen( float r, float g, float b, float a, float d, uint8 s )
 {
     float color[] = { r, g, b, a };
     mDevice->ClearRenderTargetView( mBackRTV, color );
@@ -309,7 +309,7 @@ void GN::d3d10::D3D10Application::clearScreen( float r, float g, float b, float 
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::d3d10::D3D10Application::init()
+GN_API bool GN::d3d10::D3D10Application::init()
 {
     // get primary monitor
     POINT pt = { LONG_MIN, LONG_MIN };
@@ -335,7 +335,7 @@ bool GN::d3d10::D3D10Application::init()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::d3d10::D3D10Application::quit()
+GN_API void GN::d3d10::D3D10Application::quit()
 {
     onQuit();
 
@@ -347,7 +347,7 @@ void GN::d3d10::D3D10Application::quit()
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::d3d10::D3D10Application::createDevice()
+GN_API bool GN::d3d10::D3D10Application::createDevice()
 {
     PixPerfScopeEvent pixevent( 0, L"Create" );
 
@@ -493,7 +493,7 @@ bool GN::d3d10::D3D10Application::createDevice()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::d3d10::D3D10Application::destroyDevice()
+GN_API void GN::d3d10::D3D10Application::destroyDevice()
 {
     if( mDevice )
     {
