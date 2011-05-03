@@ -195,7 +195,9 @@
 ///
 /// Any public functions and classes, unless fully defined in header, should have this tag.
 ///
-#ifdef GN_CORE_INTERNAL
+#if GN_PLATFORM_IS_STATIC
+#define GN_API
+#elif defined(GN_CORE_INTERNAL)
 #define GN_API       GN_EXPORT
 #else
 #define GN_API       GN_IMPORT
