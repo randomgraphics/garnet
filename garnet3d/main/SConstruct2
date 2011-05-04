@@ -163,20 +163,22 @@ class GarnetEnv2 :
 		#
 		self.target_os    = BUILD_TARGET_OS
 		self.target_cpu   = BUILD_TARGET_CPU
-		# TODO: run platform detector
-		self.static_build = True
-		# TODO: run C/C++ compiler detector
-		self.cc = 'vc100'
+		self.host_os      = HOST_OS
+		self.cc           = HOST_COMPILER
+		self.static_build = True # TODO: run platform detector
 		# TODO: run header/lib detector
-		self.has_ogl     = True
-		self.ogl_libs    = ['opengl32','glu32'] # or ['GLU','GL','X11'] on Linux
-		self.has_dxerr   = True
-		self.has_xnamath = True
-		self.has_d3d9    = True
-		self.has_d3d10   = True
-		self.has_d3d11   = True
-		self.has_xtl     = True
-		self.has_iconv   = False
+		self.has_ogl      = True
+		self.ogl_libs     = ['opengl32','glu32'] # or ['GLU','GL','X11'] on Linux
+		self.has_dxerr    = True
+		self.has_xnamath  = True
+		self.has_d3d9     = True
+		self.has_d3d10    = True
+		self.has_d3d11    = True
+		self.has_xtl      = True
+		self.has_iconv    = False
+		self.has_xinput   = True
+		self.has_xinput2  = True
+		self.has_dinput   = True
 
 		#
 		# List of known targets that are created by NewTarget method
@@ -309,6 +311,11 @@ class GarnetEnv2 :
 
 		# Add to alias list
 		self.targets[name] = target
+
+	#
+	# Create alias for a build target. Also add it into default target list.
+	#
+	def NewDefaultTarget( self, name, target ): return self.NewTarget( name, target, addToDefault = True )
 
 	#
 	# Find target by name.

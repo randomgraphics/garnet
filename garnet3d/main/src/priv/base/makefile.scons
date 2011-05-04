@@ -2,6 +2,6 @@ Import( 'GN' )
 
 objects = []
 objects.append( SConscript( 'base/makefile.scons' ) )
-#objects.append( SConscript( 'input/makefile.scons' ) )
-#objects.append( SConscript( 'win/makefile.scons' ) )
+objects.append( SConscript( 'input/makefile.scons' ) )
+objects.append( SConscript( 'win/makefile.scons' ) )
 GN.NewTarget( 'GNbase', GN.BuildLib( 'GNbase', objects ) )

@@ -1,0 +1,7 @@
+Import( 'GN' )
+sources = [
+    'win.cpp',
+    'windowMsw.cpp',
+]
+r = GN.BuildObjects( sources, 'pch.h', 'pch.cpp' )
+Return( 'r' )

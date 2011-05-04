@@ -1,0 +1,33 @@
+Import( 'GN' )
+
+import sys
+
+if 'mswin' == GN.host_os:
+
+	env = GN.NewEnv()
+
+	# Generate doxyfile
+	doxyfile = env.Command(
+		'DoxyFile',
+		['gendoxyfile.py','doxyfile.in'],
+		'%s $SOURCES OUTPUT_DIRECTORY=%s CHM_FILE=%s GENERATE_HTMLHELP=%s HHC_LOCATION=%s > $TARGET'%(
+			sys.executable,
+			Dir('.').path,
+			'reference.chm',
+			'YES', # Generate HTML help,
+			File('#env/bin/mswin/x86/hhc.exe'),
+			)
+		)
+
+	# Generate document
+	doxygen = File('#env/bin/mswin/x86/doxygen.exe').path
+	chmfile = env.Command(
+		'html/reference.chm',
+		doxyfile,
+		'%s $SOURCES'%(doxygen)
+		)
+
+	# The document depends on all public headers.
+	env.Depends( chmfile, GN.Glob( '#src/priv/inc/*.[h|inl]', True ) )
+
+	GN.NewDefaultTarget( 'GNdoc', chmfile )
