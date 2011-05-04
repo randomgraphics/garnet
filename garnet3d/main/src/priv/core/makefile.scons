@@ -1,0 +1,21 @@
+Import( 'GN' )
+
+sources = [
+    'all_public_headers.cpp',
+]
+
+libs = [GN.FindTarget(x) for x in [
+	'GNextern',
+	'GNbase',
+]]
+
+env = GN.NewEnv()
+
+# build the monolithic core library.
+if GN.static_build:
+	GN.NewTarget( 'GNcore', env.Library( 'GNcore', libs ) )
+else:
+	pass
+	# TODO: build GNcore.dll
+	#env['LIBS'] += libs
+	#Alias( 'GNcore', env.SharedLibrary( 'GNcore', sources ) )

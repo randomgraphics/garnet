@@ -1,0 +1,4 @@
+SConscript([
+	'src/makefile.scons',
+	'bin/makefile.scons',
+	])

@@ -84,7 +84,7 @@ ft2_cluster.addCompileFlags( CCFLAGS = ccflags, CPPDEFINES = cppdefines + ['FT2_
 ft2_cluster.removeCompileFlags( CCFLAGS = ['/W4'] )
 
 # assimp
-ai_cluster = SConscript( "assimp/SConscript" )
+ai_cluster = GN.newSourceCluster( GN.glob( 'assimp/*.cpp' ), 'AssimpPCH.h', 'assimp/AssimpPCH.cpp' )
 ai_cluster.addCompileFlags(
 	CPPPATH=['#src/extern/inc/assimp','assimp/BoostWorkaround'],
 	CCFLAGS = ccflags,

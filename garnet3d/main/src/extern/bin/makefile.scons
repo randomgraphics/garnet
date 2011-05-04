@@ -1,0 +1,5 @@
+Import( 'GN' )
+
+sources = GN.Glob( GN.target_os + '.' + GN.target_cpu + '\*.*', True )
+
+Alias( 'GNexternBin', GN.Place( 'bin', sources ) )

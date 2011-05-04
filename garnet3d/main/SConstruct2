@@ -46,7 +46,7 @@ def UTIL_error( msg ):
 
 ################################################################################
 #
-# Configurations (step1)
+# Configurations (part 1/2)
 #
 ################################################################################
 
@@ -94,10 +94,10 @@ BUILD_ROOT_PATH = 'b2.tmp/' + BUILD_TARGET_OS + '.' + BUILD_TARGET_CPU + '.' + H
 ################################################################################
 
 # Create new environment
-def BUILD_newEnv():
+def BUILD_newEnv( msvcBatchMode ):
 
 	env = Environment(
-		MSVC_BATCH=True
+		MSVC_BATCH = msvcBatchMode
 		)
 
 	# Import environment variables that are used by C/C++ compiler.
@@ -141,10 +141,12 @@ def BUILD_newEnv():
 
 ################################################################################
 #
-# Configurations (step2)
+# Configurations (part 2/2)
 #
 ################################################################################
 
+#CONFIG_env = BUILD_newEnv( msvcBatchMode = False )
+#CONFIG_conf = CONFIG_env.Configure(...)
 
 ################################################################################
 #
@@ -155,23 +157,43 @@ def BUILD_newEnv():
 class GarnetEnv2 :
 
 	def __init__( self ) :
-		self.targetOS   = BUILD_TARGET_OS
-		self.targetCPU  = BUILD_TARGET_CPU
-		self.has_ogl   = 1
-		self.has_d3d9  = 1
-		self.has_d3d10 = 1
-		self.has_d3d11 = 1
-		self.has_xtl   = 1
-		self.has_iconv = 0
 
-	# UTIL functions
+		#
+		# Build configurations
+		#
+		self.target_os    = BUILD_TARGET_OS
+		self.target_cpu   = BUILD_TARGET_CPU
+		# TODO: run platform detector
+		self.static_build = True
+		# TODO: run C/C++ compiler detector
+		self.cc = 'vc100'
+		# TODO: run header/lib detector
+		self.has_ogl     = True
+		self.ogl_libs    = ['opengl32','glu32'] # or ['GLU','GL','X11'] on Linux
+		self.has_dxerr   = True
+		self.has_xnamath = True
+		self.has_d3d9    = True
+		self.has_d3d10   = True
+		self.has_d3d11   = True
+		self.has_xtl     = True
+		self.has_iconv   = False
+
+		#
+		# List of known targets that are created by NewTarget method
+		#
+		self.targets = {}
+
+	#
+	# Logging
+	#
 	def Trace( self, level, msg ): UTIL_trace( level, msg )
 	def Info( self, msg ): UTIL_info( msg )
 	def Warn( self, msg ): UTIL_warn( msg )
 	def Error( self, msg ): UTIL_error( msg )
-	def NewEnv( self ) : return BUILD_newEnv()
 
+	#
 	# 查找指定目录下的文件
+	#
 	def Glob( self, patterns, recursive = False ):
 		def do_glob( pattern, dir, recursive ):
 			files = []
@@ -206,6 +228,20 @@ class GarnetEnv2 :
 		return files
 
 	#
+	# Create new build environment
+	#
+	def NewEnv( self, msvcBatchMode = True ) : return BUILD_newEnv( msvcBatchMode )
+
+	#
+	# Remove items from environment list
+	#
+	def RemoveEnvListItems( self, env, name, toBeRemoved ):
+		if toBeRemoved:
+			for x in toBeRemoved:
+				if x in env[name]:
+					env[name].remove(x)
+
+	#
 	# setup environment for producing PCH, return PCH object file
 	#
 	def SetupPCH( self, env, pchHeader, pchSource ):
@@ -220,40 +256,69 @@ class GarnetEnv2 :
 		else:
 			return []
 
+	#
+	# Setup build environment to produce PDB file
+	#
 	def SetupPDB( self, env, target, pdb ):
 		if pdb : pdbfile = File(pdb)
 		else   : pdbfile = File("%s.pdb"%(target))
 		env['PDB'] = pdbfile
 
-	def Objects( self, sources, pchHeader=None, pchSource=None, env = None ):
+	#
+	# Build list of static object files from list of sources
+	#
+	def BuildObjects( self, sources, pchHeader=None, pchSource=None, env = None ):
 		if not env: env = self.NewEnv()
 		pchobj = self.SetupPCH( env, pchHeader, pchSource )
 		return Flatten( [env.Object(x) for x in sources] ) + pchobj
 
-	def Library( self, target, objects, pdb=None, env=None ):
+	#
+	# Build static library from list of objects
+	#
+	def BuildLib( self, target, objects, pdb=None, env=None ):
 		if not env: env = self.NewEnv()
 		self.SetupPDB( env, target, pdb )
 		return env.Library( target, objects )
 
-	def SDKLib( self, files ):
+	#
+	# Place files to common folder.
+	#
+	def Place( self, subfolder, files ):
 		targets = []
 		for x in files:
-			dst = '#' + BUILD_ROOT_PATH + '/lib/' + os.path.basename( File(x).path )
+			dst = '#' + BUILD_ROOT_PATH + subfolder + '/' + os.path.basename( File(x).path )
 			Command( dst, File(x), Copy( "$TARGET", "$SOURCE" ) )
 			targets.append( dst )
 		return targets
 
-	def SDKBin( self, files ):
-		targets = []
-		for x in files:
-			dst = '#' + BUILD_ROOT_PATH + '/bin/' + os.path.basename( File(x).path )
-			Command( dst, File(x), Copy( "$TARGET", "$SOURCE" ) )
-			targets.append( dst )
-		return targets
+	#
+	# Create alias for a build target. So that it can be
+	# referenced easily in makefiles.
+	#
+	def NewTarget( self, name, target, addToDefault = False ):
 
-	def DefaultAlias( self, alias, targets ):
-		Alias( alias, targets )
-		Default( alias )
+		# See if the alias has existed already.
+		if self.FindTarget(name, warnForNonExistTarget = False):
+			self.Error( 'Alias %s has existed.'%(name) )
+			return
+
+		# Create scons alias.
+		Alias( name, target )
+		if addToDefault :
+			Default( name )
+
+		# Add to alias list
+		self.targets[name] = target
+
+	#
+	# Find target by name.
+	#
+	def FindTarget( self, name, warnForNonExistTarget = True ):
+		if name in self.targets:
+			return self.targets[name]
+		else:
+			if warnForNonExistTarget: self.Warn( 'Target %s does not exist.'%(name) )
+			return None
 
 # Create garnet build environment (singleton)
 GN = GarnetEnv2()
@@ -264,4 +329,4 @@ GN = GarnetEnv2()
 #
 ################################################################################
 Export( 'GN' )
-SConscript( 'src/SConscript2', variant_dir=BUILD_ROOT_PATH, duplicate=1)
+SConscript( 'src/makefile.scons', variant_dir=BUILD_ROOT_PATH, duplicate=1)
