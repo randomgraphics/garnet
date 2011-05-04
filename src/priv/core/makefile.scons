@@ -4,18 +4,22 @@ sources = [
     'all_public_headers.cpp',
 ]
 
+objects = [GN.FindTarget(x) for x in [
+	'GNexternObjects',
+	'GNbaseObjects',
+]]
+
 libs = [GN.FindTarget(x) for x in [
-	'GNextern',
-	'GNbase',
+	'GNexternLib',
+	'GNbaseLib',
 ]]
 
 env = GN.NewEnv()
 
 # build the monolithic core library.
 if GN.static_build:
-	GN.NewTarget( 'GNcore', env.Library( 'GNcore', libs ) )
+	GN.NewTarget( 'GNcore', env.Library( 'GNcore', objects ) )
 else:
-	pass
-	# TODO: build GNcore.dll
-	#env['LIBS'] += libs
-	#Alias( 'GNcore', env.SharedLibrary( 'GNcore', sources ) )
+	# TODO: add external libraries, such opengl, d3d, X11...
+	env['LIBS'] += libs
+	Alias( 'GNcore', env.SharedLibrary( 'GNcore', sources ) )
