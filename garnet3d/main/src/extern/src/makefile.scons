@@ -116,10 +116,12 @@ misc_cluster = GN.BuildObjects( misc_sources, misc_env )
 # **********************
 # Build the external lib
 # **********************
-GN.NewTarget( 'GNextern', GN.BuildLib( 'GNextern', [
+objects = Flatten([
 	jpeg_cluster,
 	ft2_cluster,
 	ai_cluster,
 	ai_contrib_cluster,
 	misc_cluster
-] ) )
+])
+GN.NewTarget( 'GNexternObjects', objects  )
+GN.NewTarget( 'GNexternLib', GN.BuildLib( 'GNextern', objects ) )
