@@ -1,4 +1,0 @@
-SConscript( [
-	'base/SConscript2',
-	'inc/SConscript2'
-	] )

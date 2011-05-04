@@ -1,0 +1,125 @@
+Import( 'GN' )
+
+# ******************
+# define build flags
+# ******************
+
+ccflags = []
+cppdefines = []
+
+if 'icl' == GN.cc :
+    unimportant_warnings = [
+        '1572', # floating-point comparison
+        ]
+    ccflags += ['/W2'] + ['/Qwd%s'%w for w in unimportant_warnings]
+    cppdefines += ['_CRT_SECURE_NO_DEPRECATE','_CRT_NONSTDC_NO_DEPRECATE','_SCL_SECURE_NO_WARNINGS']
+elif 'vc100' == GN.cc:
+    ccflags += ['/W3']
+    cppdefines += ['_CRT_SECURE_NO_DEPRECATE','_CRT_NONSTDC_NO_DEPRECATE','_SCL_SECURE_NO_WARNINGS']
+    unimportant_warnings = [
+    	'4146', # unary minus operator applied to unsigned type, result still unsigned
+    	]
+    if 'x64' == GN.target_cpu:
+        unimportant_warnings += [
+            '4334', # 32-bit shift convert to 64-bit
+            '4267', # conversion from 'size_t' to xxx, possible loss of data
+            '4244', # conversion from 'type1' to 'type2', possible loss of data
+            ]
+    ccflags += ['/wd%s'%w for w in unimportant_warnings]
+elif 'xenon' == GN.cc:
+    cppdefines += ['NO_GETENV'] # Xenon platform does not support getenv()
+elif 'gcc' == GN.cc:
+	pass
+else:
+	GN.Error( 'Unknown compiler: ' + GN.cc );
+
+# ========================
+# generate configurations
+# ========================
+
+import os.path
+
+conf_env = GN.NewEnv()
+conf_env.Replace( CCFLAGS = Split( ccflags ) )
+conf = conf_env.Configure(
+    conf_dir=Dir('.'),
+    log_file='config.log',
+    config_h='extern_config.h' )
+
+# TODO: check byte order
+
+# Note: scons 2.1.0.alpha.20101125.r5183 has bug that CheckFunc() always tries
+# to compile conftest_0.c. To workaround this on Windows, put 'memmove' test
+# as the first test.
+conf.CheckFunc( 'memmove' )
+conf.CheckFunc( 'bcopy' )
+conf.CheckFunc( 'mmap' )
+conf.CheckFunc( 'getpagesize' )
+conf.CheckCHeader( 'dlfcn.h' )
+conf.CheckCHeader( 'fcntl.h' )
+conf.CheckCHeader( 'inttypes.h' )
+conf.CheckCHeader( 'memory.h' )
+conf.CheckCHeader( 'stdint.h' )
+conf.CheckCHeader( 'stdlib.h' )
+conf.CheckCHeader( 'strings.h' )
+conf.CheckCHeader( 'string.h' )
+conf.CheckCHeader( 'sys/stat.h' )
+conf.CheckCHeader( 'sys/types.h' )
+conf.CheckCHeader( 'unistd.h' )
+conf.Finish()
+
+# **********************
+# define source clusters
+# **********************
+
+# JPEG
+jpeg_env = GN.NewEnv()
+jpeg_env.Append( CPPPATH=['jpeg'], CCFLAGS = ccflags, CPPDEFINES = cppdefines )
+if 'gcc' == GN.cc or 'mingw' == GN.cc: jpeg_env.Append( CCFLAGS = ['-Wno-main'] )
+GN.RemoveEnvListItems( jpeg_env, 'CCFLAGS', ['/W4','/Wcheck','-Wall'] )
+jpeg_cluster = GN.BuildObjects( GN.Glob( 'jpeg/*.c' ), env=jpeg_env )
+
+# FREETYPE
+ft2_sources = SConscript( "freetype-2.4.4/makefile.scons" )
+ft2_env = GN.NewEnv()
+ft2_env.Append( CCFLAGS = ccflags, CPPDEFINES = cppdefines + ['FT2_BUILD_LIBRARY'] )
+GN.RemoveEnvListItems( ft2_env, 'CCFLAGS', ['/W4'] )
+ft2_cluster = GN.BuildObjects( ft2_sources, env=ft2_env )
+
+# assimp
+ai_env = GN.NewEnv()
+ai_env.Append(
+	CPPPATH=['#src/extern/inc/assimp','assimp/BoostWorkaround'],
+	CCFLAGS = ccflags,
+	CPPDEFINES = cppdefines + ['ASSIMP_BUILD_BOOST_WORKAROUND','ASSIMP_BUILD_NO_OWN_ZLIB'] )
+GN.RemoveEnvListItems( ai_env, 'CCFLAGS', ['/W4','/Wcheck','-Wall'] )
+ai_cluster = GN.BuildObjects( GN.Glob( 'assimp/*.cpp' ), 'AssimpPCH.h', 'assimp/AssimpPCH.cpp', env=ai_env )
+
+# assimp contrib
+ai_contrib_env = GN.NewEnv()
+ai_contrib_env.Append(
+	CPPPATH=['#src/extern/inc/assimp','assimp/BoostWorkaround','assimp'],
+	CCFLAGS = ccflags,
+	CPPDEFINES = cppdefines + ['ASSIMP_BUILD_BOOST_WORKAROUND','ASSIMP_BUILD_NO_OWN_ZLIB'] )
+GN.RemoveEnvListItems( ai_contrib_env, 'CCFLAGS', ['/W4','/Wcheck','-Wall'] )
+ai_contrib_cluster = GN.BuildObjects( GN.Glob( ['assimp/contrib/*.c','assimp/contrib/*.cpp'], True ), env=ai_contrib_env )
+
+# Others
+misc_env = GN.NewEnv()
+misc_env.Append( CCFLAGS = ccflags, CPPDEFINES = cppdefines )
+GN.RemoveEnvListItems( misc_env, 'CCFLAGS', ['/W4','/Wcheck','-Wall'] )
+misc_sources = GN.Glob( Split('expat/*.c pcre/*.c* png/*.c zlib/*.c') )
+if 'mingw' != GN.cc: misc_sources += GN.Glob( 'lua/*.c' )
+if GN.has_ogl: misc_sources += GN.Glob( 'glew/*.c' )
+misc_cluster = GN.BuildObjects( misc_sources, misc_env )
+
+# **********************
+# Build the external lib
+# **********************
+GN.NewTarget( 'GNextern', GN.BuildLib( 'GNextern', [
+	jpeg_cluster,
+	ft2_cluster,
+	ai_cluster,
+	ai_contrib_cluster,
+	misc_cluster
+] ) )

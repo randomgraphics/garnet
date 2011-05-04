@@ -1,4 +1,0 @@
-SConscript( [
-	'extern/SConscript2',
-	'priv/SConscript2'
-	] )

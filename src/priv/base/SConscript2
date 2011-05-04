@@ -1,7 +1,0 @@
-Import( 'GN' )
-
-objects = []
-objects.append( SConscript( 'base/SConscript2' ) )
-#objects.append( SConscript( 'input/SConscript2' ) )
-#objects.append( SConscript( 'win/SConscript2' ) )
-GN.DefaultAlias( 'GNbase', GN.SDKLib( GN.Library( 'GNbase', objects ) ) )
