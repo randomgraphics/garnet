@@ -1,0 +1,16 @@
+Import( 'GN' )
+sources = [
+    'basicInput.cpp',
+    'basicInputMsw.cpp',
+    'basicInputXInput.cpp',
+    'input.cpp',
+    'inputDInput.cpp',
+    'inputMsw.cpp',
+    'inputX11.cpp',
+]
+env = GN.NewEnv()
+if GN.has_xinput  : env.Append( CPPDEFINES = ['HAS_XINPUT'] )
+if GN.has_xinput2 : env.Append( CPPDEFINES = ['HAS_XINPUT2'] )
+if GN.has_dinput  : env.Append( CPPDEFINES = ['HAS_DINPUT'] )
+r = GN.BuildObjects( sources, 'pch.h', 'pch.cpp', env=env )
+Return( 'r' )

@@ -1,5 +1,7 @@
 SConscript( [
+	# In order of dependencies
 	'inc/makefile.scons',
 	'base/makefile.scons',
 	'core/makefile.scons',
+	'doc/makefile.scons',
 	] )
