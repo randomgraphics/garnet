@@ -1,0 +1,1 @@
+python -OO %~dp0scons -f SConstruct2 %*

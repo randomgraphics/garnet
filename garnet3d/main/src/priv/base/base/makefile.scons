@@ -29,6 +29,6 @@ sources = [
 	'xml.cpp',
 ]
 
-objects = GN.BuildObjects( sources, 'pch.h', 'pch.cpp' )
+objects = GN.BuildObjects( None, sources, 'pch.h', 'pch.cpp' )
 
 Return( 'objects' )
