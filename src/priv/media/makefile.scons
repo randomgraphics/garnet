@@ -10,9 +10,11 @@ sources = GN.Glob( '*.*', True )
 # Copy media files to media folder
 targets = GN.CopyToBinFolder( 'media', sources, True )
 
-# Deploy to console.
+'''
+# TODO: Deploy to console.
 if GN.cc == 'xenon':
 	for x in targets:
+		print x
 		subfolder = os.path.dirname( GN.RelativePath( x.srcnode().path, Dir('.').path ) )
 		env.AddPostAction(
 			x,
@@ -20,6 +22,7 @@ if GN.cc == 'xenon':
 				'xe:\\garnet3d\%s\media\%s'%(GN.variant,subfolder),
 				x )
 		)
+'''
 
 # Create media build target.
 GN.NewTarget( 'GNmedia', targets )

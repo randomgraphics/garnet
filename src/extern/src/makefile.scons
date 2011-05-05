@@ -39,8 +39,7 @@ else:
 
 import os.path
 
-conf_env = GN.NewEnv()
-conf_env.Replace( CCFLAGS = Split( ccflags ) )
+conf_env = GN.NewConfigEnv()
 conf = conf_env.Configure(
     conf_dir=Dir('.'),
     log_file='config.log',
@@ -77,14 +76,14 @@ jpeg_env = GN.NewEnv()
 jpeg_env.Append( CPPPATH=['jpeg'], CCFLAGS = ccflags, CPPDEFINES = cppdefines )
 if 'gcc' == GN.cc or 'mingw' == GN.cc: jpeg_env.Append( CCFLAGS = ['-Wno-main'] )
 GN.RemoveEnvListItems( jpeg_env, 'CCFLAGS', ['/W4','/Wcheck','-Wall'] )
-jpeg_cluster = GN.BuildObjects( GN.Glob( 'jpeg/*.c' ), env=jpeg_env )
+jpeg_cluster = GN.BuildObjects( jpeg_env, GN.Glob( 'jpeg/*.c' ) )
 
 # FREETYPE
 ft2_sources = SConscript( "freetype-2.4.4/makefile.scons" )
 ft2_env = GN.NewEnv()
 ft2_env.Append( CCFLAGS = ccflags, CPPDEFINES = cppdefines + ['FT2_BUILD_LIBRARY'] )
 GN.RemoveEnvListItems( ft2_env, 'CCFLAGS', ['/W4'] )
-ft2_cluster = GN.BuildObjects( ft2_sources, env=ft2_env )
+ft2_cluster = GN.BuildObjects( ft2_env, ft2_sources )
 
 # assimp
 ai_env = GN.NewEnv()
@@ -93,7 +92,7 @@ ai_env.Append(
 	CCFLAGS = ccflags,
 	CPPDEFINES = cppdefines + ['ASSIMP_BUILD_BOOST_WORKAROUND','ASSIMP_BUILD_NO_OWN_ZLIB'] )
 GN.RemoveEnvListItems( ai_env, 'CCFLAGS', ['/W4','/Wcheck','-Wall'] )
-ai_cluster = GN.BuildObjects( GN.Glob( 'assimp/*.cpp' ), 'AssimpPCH.h', 'assimp/AssimpPCH.cpp', env=ai_env )
+ai_cluster = GN.BuildObjects( ai_env, GN.Glob( 'assimp/*.cpp' ), 'AssimpPCH.h', 'assimp/AssimpPCH.cpp' )
 
 # assimp contrib
 ai_contrib_env = GN.NewEnv()
@@ -102,7 +101,7 @@ ai_contrib_env.Append(
 	CCFLAGS = ccflags,
 	CPPDEFINES = cppdefines + ['ASSIMP_BUILD_BOOST_WORKAROUND','ASSIMP_BUILD_NO_OWN_ZLIB'] )
 GN.RemoveEnvListItems( ai_contrib_env, 'CCFLAGS', ['/W4','/Wcheck','-Wall'] )
-ai_contrib_cluster = GN.BuildObjects( GN.Glob( ['assimp/contrib/*.c','assimp/contrib/*.cpp'], True ), env=ai_contrib_env )
+ai_contrib_cluster = GN.BuildObjects( ai_contrib_env, GN.Glob( ['assimp/contrib/*.c','assimp/contrib/*.cpp'], True ) )
 
 # Others
 misc_env = GN.NewEnv()
@@ -111,7 +110,7 @@ GN.RemoveEnvListItems( misc_env, 'CCFLAGS', ['/W4','/Wcheck','-Wall'] )
 misc_sources = GN.Glob( Split('expat/*.c pcre/*.c* png/*.c zlib/*.c') )
 if 'mingw' != GN.cc: misc_sources += GN.Glob( 'lua/*.c' )
 if GN.has_ogl: misc_sources += GN.Glob( 'glew/*.c' )
-misc_cluster = GN.BuildObjects( misc_sources, misc_env )
+misc_cluster = GN.BuildObjects( misc_env, misc_sources )
 
 # **********************
 # Build the external lib
@@ -124,4 +123,4 @@ objects = Flatten([
 	misc_cluster
 ])
 GN.NewTarget( 'GNexternObjects', objects  )
-GN.NewTarget( 'GNexternLib', GN.BuildLib( 'GNextern', objects ) )
+GN.NewTarget( 'GNexternLib', GN.BuildLib( None, 'GNextern', objects ) )

@@ -2,15 +2,6 @@
 
 import sys, os, os.path, re, fnmatch
 
-# try import xenon extension for SCons
-try:
-	sys.path.append( "env/scons/xenon" )
-	import xenon
-	CONF_has_xenon_extension = True
-except ImportError:
-	CONF_has_xenon_extension = False
-	print "no xenon extension for scons found."
-
 ################################################################################
 #
 # Local Utilities
@@ -44,9 +35,16 @@ def UTIL_error( msg ):
 	print 'ERROR : %s'%msg
 	print '===================================================================='
 
+# Fatal Error. Need to halt building
+def UTIL_fatal( msg ):
+	print '===================================================================='
+	print 'FATAL : %s'%msg
+	print '===================================================================='
+	Exit(-1)
+
 ################################################################################
 #
-# Configurations (part 1/2)
+# Configurations (part 1/2) : intialize build time constants
 #
 ################################################################################
 
@@ -70,14 +68,23 @@ else:
 	print 'FATAL: Unknown platform:', LOCAL_ENV['PLATFORM']
 	Exit(-1)
 
-HOST_COMPILER = UTIL_getenv('GN_BUILD_COMPILER', None )
-if None == HOST_COMPILER:
-	if CONF_has_xenon_extension and xenon.exists( LOCAL_ENV ):
-		HOST_COMPILER = 'xenon'
+# try import xenon extension for SCons
+BUILD_HAS_XENON_EXTENSION = False
+try:
+	sys.path.append( "env/scons/xenon" )
+	import xenon
+	BUILD_HAS_XENON_EXTENSION = True
+except ImportError:
+	print "no xenon extension for scons found."
+
+BUILD_COMPILER = UTIL_getenv('GN_BUILD_COMPILER', None )
+if None == BUILD_COMPILER:
+	if BUILD_HAS_XENON_EXTENSION and xenon.exists( LOCAL_ENV ):
+		BUILD_COMPILER = 'xenon'
 	elif 'mswin' == HOST_OS:
-		HOST_COMPILER = 'vc100'
+		BUILD_COMPILER = 'vc100'
 	else:
-		HOST_COMPILER = 'gcc'
+		BUILD_COMPILER = 'gcc'
 
 BUILD_VARIANT = UTIL_getenv('GN_BUILD_VARIANT', 'debug')
 
@@ -85,7 +92,7 @@ BUILD_TARGET_OS = UTIL_getenv('GN_BUILD_TARGET_OS', HOST_OS )
 
 BUILD_TARGET_CPU = UTIL_getenv('GN_BUILD_TARGET_CPU', HOST_CPU )
 
-BUILD_ROOT_PATH = 'b2.tmp/' + BUILD_TARGET_OS + '.' + BUILD_TARGET_CPU + '.' + HOST_COMPILER + '.' + BUILD_VARIANT + "/"
+BUILD_ROOT_PATH = 'b2.tmp/' + BUILD_TARGET_OS + '.' + BUILD_TARGET_CPU + '.' + BUILD_COMPILER + '.' + BUILD_VARIANT + "/"
 
 ################################################################################
 #
@@ -93,28 +100,108 @@ BUILD_ROOT_PATH = 'b2.tmp/' + BUILD_TARGET_OS + '.' + BUILD_TARGET_CPU + '.' + H
 #
 ################################################################################
 
-# Create new environment
-def BUILD_newEnv( msvcBatchMode ):
+def BUILD_new_env( msvcBatchMode ):
 
-	env = Environment(
-		MSVC_BATCH = msvcBatchMode
-		)
+	if 'xenon' == BUILD_COMPILER:
 
-	# Import environment variables that are used by C/C++ compiler.
- 	env.PrependENVPath( 'PATH'     , UTIL_getenv('PATH') );
- 	env.PrependENVPath( 'INCLUDE'  , UTIL_getenv('INCLUDE') );
- 	env.PrependENVPath( 'LIB'      , UTIL_getenv('LIB') );
- 	env['ENV']['LANG']     = UTIL_getenv('LANG');
- 	env['ENV']['LANGUAGE'] = UTIL_getenv('LANGUAGE');
+		# construct empty environment for xenon platform
+		env = Environment(
+			tools          = [],
+			MSVC_VERSION   = "8.0",
+			MSVS8_PLATFORM = 'Xbox 360',
+			ENV            = {
+			                 	# Required by Xenon C++ compiler version 15.00.8153.
+			                 	# Or else the compiler will report error D8037
+								'SystemDrive' : UTIL_getenv('SystemDrive'),
+								'SystemRoot'  : UTIL_getenv('SystemRoot'),
+				}
+			)
+
+		# Setup standard XDK header and library path
+		xedk = UTIL_getenv('XEDK');
+		inc = os.path.join( xedk, "include" ) + ";" + os.path.join( xedk, "include\\sys" );
+		lib = os.path.join( xedk, "lib\\xbox" );
+
+		# Import environment variables that are used by C/C++ compiler.
+	 	env.PrependENVPath( 'PATH'     , UTIL_getenv('PATH') );
+	 	env.PrependENVPath( 'INCLUDE'  , inc );
+	 	env.PrependENVPath( 'LIB'      , lib );
+	 	env['ENV']['LANG']     = UTIL_getenv('LANG');
+	 	env['ENV']['LANGUAGE'] = UTIL_getenv('LANGUAGE');
+
+		# attach xenon build tools to the environment
+		xenon.generate( env )
+
+	else:
+
+		# construct build environment for other platforms
+
+		if 'mswin' == HOST_OS:
+			tools = ['msvc','mslink','mslib','msvs','masm']
+		else:
+			tools = ['default']
+
+		# determine msvs platform
+		msvs_platform = 'x86'
+		if 'icl' == BUILD_COMPILER:
+			tools += ['intelc']
+			if 'x64' == HOST_CPU :
+				icl_abi = 'em64t'
+				msvs_platform = 'x64'
+		elif 'x64' == HOST_CPU :
+			msvs_platform = 'x64'
+		elif 'mingw' == BUILD_COMPILER :
+			tools = ['mingw']
+
+		# create new environment
+		env = Environment(
+			tools          = tools,
+			MSVS8_PLATFORM = msvs_platform,
+			MSVC_BATCH     = msvcBatchMode,
+			)
+
+		# Import environment variables that are used by C/C++ compiler.
+	 	env.PrependENVPath( 'PATH'     , UTIL_getenv('PATH') );
+	 	env.PrependENVPath( 'INCLUDE'  , UTIL_getenv('INCLUDE') );
+	 	env.PrependENVPath( 'LIB'      , UTIL_getenv('LIB') );
+	 	env['ENV']['LANG']     = UTIL_getenv('LANG');
+	 	env['ENV']['LANGUAGE'] = UTIL_getenv('LANGUAGE');
 
 	# cache implicit dependencies
-	env.SetOption( 'implicit_cache', 1 );
+	env.SetOption( 'implicit_cache', int(UTIL_getenv('SCONS_CACHE_IMPLICIT_DEPS', 1)) );
 
 	# setup default decider
 	env.Decider( 'MD5-timestamp' );
 
 	# setup signature file
 	env.SConsignFile( BUILD_ROOT_PATH + '.sconsign' )
+
+	# setup GCC precompiled header bilder
+	if 'g++' == env['CXX']:
+
+		import SCons.Defaults
+		import SCons.Tool
+
+		# attach gch builder
+		bld = Builder(
+			action = '$CXXCOM',
+			suffix = '.h.gch',
+			source_scanner = SCons.Tool.SourceFileScanner )
+		env.Append( BUILDERS={'PCH':bld} )
+
+		# Sets up the PCH dependencies for an object file
+		def pch_emitter( target, source, env, parent_emitter ):
+			parent_emitter( target, source, env )
+			if env.has_key('PCH') and env['PCH']:
+				env.Depends(target, env['PCH'])
+			return (target, source)
+		def static_pch_emitter(target,source,env):
+			return pch_emitter(target,source,env,SCons.Defaults.StaticObjectEmitter)
+		def shared_pch_emitter(target,source,env):
+			return pch_emitter(target,source,env,SCons.Defaults.SharedObjectEmitter)
+		for suffix in Split('.c .C .cc .cxx .cpp .c++'):
+			env['BUILDERS']['StaticObject'].add_emitter( suffix, static_pch_emitter );
+			env['BUILDERS']['SharedObject'].add_emitter( suffix, shared_pch_emitter );
 
 	# Set standard include path
 	env.Append(
@@ -125,28 +212,267 @@ def BUILD_newEnv( msvcBatchMode ):
 			],
 		)
 
-	# Platform specific options
-	if 'xenon' == HOST_OS:
-		pass
-	elif 'mswin' == HOST_OS:
-		pass;
+	# Initialize C/C++ compiler options
+	def generate_empty_options() : return { 'common':[],'debug':[],'profile':[],'retail':[] }
+	cppdefines = generate_empty_options()
+	cpppath    = generate_empty_options()
+	libpath    = generate_empty_options()
+	libs       = generate_empty_options()
+	ccflags    = generate_empty_options()
+	cxxflags   = generate_empty_options()
+	linkflags  = generate_empty_options()
+
+	# Setup standard options
+	cpppath['common']     += [	'#src/extern/inc',
+								'#' + BUILD_ROOT_PATH + 'priv/inc',
+								'#src/priv/inc',
+								];
+	libpath['common']     += ['src/extern/lib/' + HOST_OS + '.' + HOST_CPU]
+	cppdefines['common']  += ['UNICODE', '_UNICODE']
+	cppdefines['debug']   += ['GN_ENABLE_DEBUG=1', 'GN_ENABLE_PROFILING=1', '_DEBUG']
+	cppdefines['profile'] += ['GN_ENABLE_DEBUG=0', 'GN_ENABLE_PROFILING=1', 'NDEBUG']
+	cppdefines['retail']  += ['GN_ENABLE_DEBUG=0', 'GN_ENABLE_PROFILING=0', 'NDEBUG']
+
+	# Target platform specific options
+	if 'xenon' == BUILD_TARGET_OS:
+		ccflags['common']     += ['/QVMX128']
+		cppdefines['profile'] += ['PROFILE']
+		linkflags['profile']  += ['/NODEFAULTLIB:xapilib.lib']
+		libs['common']        += Split('xboxkrnl xbdm dxerr9')
+		libs['debug']         += Split('xapilibd d3d9d d3dx9d xgraphicsd xnetd xaudiod2 xactd3 vcompd libcmtd')
+		libs['profile']       += Split('xapilibi d3d9i d3dx9  xgraphics  xnet  xaudio2  xacti3 vcomp  libcmt')
+		libs['retail']        += Split('xapilib  d3d9  d3dx9  xgraphics  xnet  xaudio2  xact3  vcomp  libcmt')
+	elif 'mswin' == BUILD_TARGET_OS:
+		libs['common']        += Split('kernel32 user32 gdi32 shlwapi advapi32 shell32')
+	else:
+		cpppath['common']     += Split('/usr/X11R6/include /usr/local/include')
+		libpath['common']     += Split('/usr/X11R6/lib /usr/local/lib')
 
 	# Compiler specific options
 	if 'cl' == env['CC']:
-		env.Append(
-			CXXFLAGS = ['/EHsc']
-			)
+		#
+		# To workaround an bug in scons 0.96.1, this variable has to be imported
+		# or else, link.exe will report error: cannot open file 'TEMPFILE'
+		#
+		env['ENV']['USERPROFILE'] = os.environ['USERPROFILE']
 
+		# Enable C++ EH (with SEH exceptions)
+		cxxflags['common']  += ['/EHa']
+
+		ccflags['common']   += ['/W4', '/WX', '/Ot', '/Oi', '/Z7', '/Yd'] # favor speed, enable intrinsic functions.
+		ccflags['debug']    += ['/MTd', '/GR', '/RTCscu']
+		ccflags['profile']  += ['/MT', '/Ox']
+		ccflags['retail']   += ['/MT', '/Ox', '/GL']
+
+		linkflags['common']  += ['/MANIFEST', '/NODEFAULTLIB:libcp.lib', '/FIXED:NO'] # this is for vtune and magellan to do instrumentation
+		linkflags['profile'] += ['/OPT:REF']
+		linkflags['retail']  += ['/OPT:REF']
+
+	elif 'icl' == env['CC']:
+		ccflags['common']  += ['/W3','/WX','/Wcheck','/Qpchi-','/Zc:forScope','/Zi','/debug:full']
+		ccflags['debug']   += ['/MTd','/GR','/Ge','/traceback']
+		ccflags['profile'] += ['/O2','/MT']
+		ccflags['retail']  += ['/O2','/MT']
+
+		# Enable C++ EH (no SEH exceptions)
+		cxxflags['common'] += ['/EHs']
+
+		cppdefines['debug'] += ['_DEBUG']
+
+		linkflags['common']  += ['/FIXED:NO', '/DEBUGTYPE:CV,FIXUP'] # this is for vtune and magellan to do instrumentation
+		linkflags['profile'] += ['/OPT:REF']
+		linkflags['retail']  += ['/OPT:REF']
+
+	elif 'gcc' == env['CC']:
+		ccflags['common']  += ['-Wall','-Werror', '-finput-charset=GBK', '-fexec-charset=GBK']
+		ccflags['debug']   += ['-g']
+		ccflags['profile'] += ['-O3']
+		ccflags['retail']  += ['-O3']
+		if 'mingw' == BUILD_compiler:
+			cppdefines['common'] += ['WINVER=0x500']
+
+	else:
+		UTIL_fatal( 'unknown compiler: %s'%env['CC'] )
+
+	# apply compiler options based on current build variant
+	def apply_options( env, variant ):
+		env.Append(
+			CPPDEFINES = cppdefines[variant],
+			CPPPATH = cpppath[variant],
+			LIBPATH = libpath[variant],
+			CCFLAGS = ccflags[variant],
+			CXXFLAGS = cxxflags[variant],
+			LINKFLAGS = linkflags[variant] );
+		env.Prepend(
+			LIBS    = libs[variant] ); # for gcc link
+	apply_options( env, BUILD_VARIANT )
+	apply_options( env, 'common' )
+
+	# Done.
 	return env
 
+def BUILD_new_config_env():
+
+	# Create config environment with "batch" mode disabled,
+	# since batch mode triggers scons 1.2.0.d20091224 config
+	# code bug.
+	env = BUILD_new_env( msvcBatchMode = False )
+
+	# Do NOT treat warning as error
+	ccflags = str(env['CCFLAGS'])
+	ccflags = ccflags.replace( '/WX', '' )
+	ccflags = ccflags.replace( '/W4', '/W3' )
+	ccflags = ccflags.replace( '-Werror', '')
+	env.Replace( CCFLAGS = Split( ccflags ) )
+
+	return env;
+
+
 ################################################################################
 #
-# Configurations (part 2/2)
+# Configurations (part 2/2): Run SCons configuration script.
 #
 ################################################################################
 
-#CONFIG_env = BUILD_newEnv( msvcBatchMode = False )
-#CONFIG_conf = CONFIG_env.Configure(...)
+CONFIG = {}
+
+def CheckConfig():
+
+	# Create configuration object
+	env = BUILD_new_config_env()
+	confdir = '#' + BUILD_ROOT_PATH + 'config'
+	c = env.Configure( conf_dir=confdir, log_file=confdir + '/config.log' )
+
+	# =========
+	# Cg shader
+	# =========
+	if False : # CONF_enableCg :
+		CONFIG['has_cg']       = c.CheckLibWithHeader( 'cg', ['Cg/cg.h'], 'C', 'cgCreateContext();' )
+		CONFIG['has_cg_ogl']   = c.CheckLibWithHeader( 'cgGL', ['Cg/cg.h','Cg/cgGL.h'], 'C', "cgGLRegisterStates(0);" )
+		CONFIG['has_cg_d3d9']  = c.CheckLibWithHeader( 'cgD3D9', ['Cg/cg.h','Cg/cgD3D9.h'], 'C', "cgD3D9SetDevice(0);" )
+		CONFIG['has_cg_d3d10'] = c.CheckLibWithHeader( 'cgD3D10', ['Cg/cg.h','Cg/cgD3D10.h'], 'C', "cgD3D10SetDevice(0,0);" )
+		CONFIG['has_cg_d3d11'] = c.CheckLibWithHeader( 'cgD3D11', ['Cg/cg.h','Cg/cgD3D11.h'], 'C', "cgD3D11SetDevice(0,0);" )
+	else:
+		CONFIG['has_cg']       = 0
+		CONFIG['has_cg_ogl']   = 0
+		CONFIG['has_cg_d3d9']  = 0
+		CONFIG['has_cg_d3d10'] = 0
+		CONFIG['has_cg_d3d11'] = 0
+
+	# ======
+	# OpenGL
+	# ======
+	if c.CheckLibWithHeader( 'opengl32', ['GL/glew.h'], 'C', 'glVertex3f(0,0,0);' ) and \
+		c.CheckLibWithHeader( 'glu32', ['GL/glew.h','GL/glu.h'], 'C', 'gluOrtho2D(0,0,0,0);' ) :
+		CONFIG['has_ogl'] = True
+		CONFIG['ogl_libs'] = ['opengl32','glu32']
+	elif c.CheckLibWithHeader( 'GL', ['GL/glew.h'], 'C', 'glVertex3f(0,0,0);' ) and \
+		c.CheckLibWithHeader( 'GLU', ['GL/glew.h','GL/glu.h'], 'C', 'gluOrtho2D(0,0,0,0);' ) :
+		CONFIG['has_ogl'] = True
+		CONFIG['ogl_libs'] = ['GL','GLU']
+	else :
+		CONFIG['has_ogl'] = False
+		CONFIG['ogl_libs'] = []
+
+	# ====
+	# GLUT
+	# ====
+	if c.CheckLibWithHeader( 'glut', 'GL/glut.h', 'C', 'glutInit(0,0);' ) :
+	    CONFIG['has_glut'] = True
+	    CONFIG['glut'] = 'glut'
+	elif c.CheckLibWithHeader( 'glut32', 'GL/glut.h', 'C', 'glutInit(0,0);' ) :
+	    CONFIG['has_glut'] = True
+	    CONFIG['glut'] = 'glut32'
+	else :
+	    CONFIG['has_glut'] = None
+
+	# ===
+	# XTL
+	# ===
+	CONFIG['has_xtl'] = c.CheckCHeader( 'xtl.h' )
+
+	# =================
+	# Misc. D3D headers
+	# =================
+	CONFIG['has_dxerr']   = c.CheckCXXHeader( ['windows.h','dxerr.h'] )
+	CONFIG['has_xnamath'] = c.CheckCXXHeader( ['windows.h','xnamath.h'] ) or c.CheckCXXHeader( ['xtl.h','xnamath.h'] )
+
+	# ====
+	# D3D9
+	# ====
+	CONFIG['has_d3d9'] = CONFIG['has_xtl'] or ( CONFIG['has_dxerr'] and c.CheckCXXHeader( 'd3d9.h' ) and c.CheckCXXHeader( 'd3dx9.h' ) )
+
+	# =====
+	# D3D11
+	# =====
+	CONFIG['has_d3d11'] = CONFIG['has_dxerr'] and CONFIG['has_d3d9'] and c.CheckLibWithHeader( 'd3d11.lib', 'd3d11.h', 'C++' ) and isVistaOrWin7(env);
+	
+	# ===========
+	# DirectInput
+	# ===========
+	CONFIG['has_dinput'] = c.CheckCHeader( ['windows.h', 'dxerr.h', 'dinput.h'] )
+
+	# ======
+	# XInput
+	# ======
+	CONFIG['has_xinput'] = c.CheckCHeader( ['windows.h', 'xinput.h'] ) or c.CheckCHeader( ['xtl.h', 'xinput.h'] )
+	CONFIG['has_xinput2'] = c.CheckCHeader( ['windows.h', 'xinput2.h'] ) or c.CheckCHeader( ['xtl.h', 'xinput2.h'] )
+
+	# =====
+	# cegui
+	# =====
+	CONFIG['has_cegui'] = c.CheckCXXHeader( 'CEGUI.h' )
+
+	# ======
+	# maxsdk
+	# ======
+	CONFIG['has_maxsdk'] = c.CheckCHeader( ['max.h','maxapi.h','maxversion.h'] )
+
+	# =====
+	# ICONV
+	# =====
+	if c.CheckLibWithHeader( 'iconv', 'iconv.h', 'c', 'iconv_open(0,0);' ):
+	    CONFIG['has_iconv'] = True
+	    CONFIG['iconv_lib'] = 'iconv'
+	elif c.CheckLibWithHeader( 'libiconv', 'iconv.h', 'c', 'iconv_open(0,0);' ):
+	    CONFIG['has_iconv'] = True
+	    CONFIG['iconv_lib'] = 'libiconv'
+	elif c.CheckLibWithHeader( 'c', 'iconv.h', 'c', 'iconv_open(0,0);' ):
+	    CONFIG['has_iconv'] = True
+	    CONFIG['iconv_lib'] = 'c'
+	else :
+		CONFIG['has_iconv'] = None
+		CONFIG['iconv_lib'] = None
+
+	# ===
+	# FBX
+	# ===
+
+	CONFIG['has_fbx'] = False
+
+	FBX_libname = "fbxsdk";
+	if BUILD_COMPILER == 'vc100'  : FBX_libname += "_mt2010"
+	elif BUILD_COMPILER == 'vc90' : FBX_libname += "_mt2008"
+	elif BUILD_COMPILER == 'icl'  : FBX_libname += "_mt2010"
+	elif BUILD_COMPILER == 'gcc'  : FBX_libname += "_gcc4"
+	if HOST_CPU == 'x64'          : FBX_libname += "_amd64"
+	if BUILD_VARIANT == 'debug'   : FBX_libname += 'd'
+
+	FBX_deps = []
+	if HOST_OS == 'mswin' : FBX_deps += ['wininet'];
+
+	env.Append( LIBS = FBX_deps )
+	if c.CheckLibWithHeader( FBX_libname, ['fbxsdk.h','fbxfilesdk/fbxfilesdk_nsuse.h'], 'C++', 'KFbxSdkManager::Create();' ):
+		CONFIG['has_fbx']  = True
+		CONFIG['fbx_libs'] = [FBX_libname] + FBX_deps
+	for d in FBX_deps: env['LIBS'].remove( d )
+
+	# =============
+	# finish config
+	# =============
+	c.Finish()
+
+CheckConfig()
 
 ################################################################################
 #
@@ -163,22 +489,22 @@ class GarnetEnv2 :
 		#
 		self.target_os    = BUILD_TARGET_OS
 		self.target_cpu   = BUILD_TARGET_CPU
+		self.cc           = BUILD_COMPILER
+		self.variant      = BUILD_VARIANT
 		self.host_os      = HOST_OS
-		self.cc           = HOST_COMPILER
 		self.static_build = True # TODO: run platform detector
-		# TODO: run header/lib detector
-		self.has_ogl      = True
-		self.ogl_libs     = ['opengl32','glu32'] # or ['GLU','GL','X11'] on Linux
-		self.has_dxerr    = True
-		self.has_xnamath  = True
-		self.has_d3d9     = True
-		self.has_d3d10    = True
-		self.has_d3d11    = True
-		self.has_xtl      = True
-		self.has_iconv    = False
-		self.has_xinput   = True
-		self.has_xinput2  = True
-		self.has_dinput   = True
+		self.has_ogl      = CONFIG['has_ogl']
+		self.ogl_libs     = CONFIG['ogl_libs']
+		self.has_dxerr    = CONFIG['has_dxerr']
+		self.has_xnamath  = CONFIG['has_xnamath']
+		self.has_d3d9     = CONFIG['has_d3d9']
+		self.has_d3d10    = False # D3D10 support is dropped.
+		self.has_d3d11    = CONFIG['has_d3d11']
+		self.has_xtl      = CONFIG['has_xtl']
+		self.has_iconv    = CONFIG['has_iconv']
+		self.has_xinput   = CONFIG['has_xinput']
+		self.has_xinput2  = CONFIG['has_xinput2']
+		self.has_dinput   = CONFIG['has_dinput']
 
 		#
 		# List of known targets that are created by NewTarget method
@@ -261,7 +587,12 @@ class GarnetEnv2 :
 	#
 	# Create new build environment
 	#
-	def NewEnv( self, msvcBatchMode = True ) : return BUILD_newEnv( msvcBatchMode )
+	def NewEnv( self, msvcBatchMode = True ) : return BUILD_new_env( msvcBatchMode )
+
+	#
+	# Create new configuration environment
+	#
+	def NewConfigEnv( self ) : return BUILD_new_config_env()
 
 	#
 	# Remove items from environment list
@@ -298,7 +629,7 @@ class GarnetEnv2 :
 	#
 	# Build list of static object files from list of sources
 	#
-	def BuildObjects( self, sources, pchHeader=None, pchSource=None, env = None ):
+	def BuildObjects( self, env, sources, pchHeader=None, pchSource=None ):
 		if not env: env = self.NewEnv()
 		pchobj = self.SetupPCH( env, pchHeader, pchSource )
 		return Flatten( [env.Object(x) for x in sources] ) + pchobj
@@ -306,7 +637,7 @@ class GarnetEnv2 :
 	#
 	# Build static library from list of objects
 	#
-	def BuildLib( self, target, objects, pdb=None, env=None ):
+	def BuildLib( self, env, target, objects, pdb=None ):
 		if not env: env = self.NewEnv()
 		self.SetupPDB( env, target, pdb )
 		return env.Library( target, objects )
@@ -320,24 +651,27 @@ class GarnetEnv2 :
 		if '' == subfolder : subfolder = '.'
 		targets = []
 		for x in sources:
-			dst = '#' + BUILD_ROOT_PATH + '/' + subfolder + '/'
+			dst = '#' + BUILD_ROOT_PATH + subfolder + '/'
 			if preserveDirectoryTree:
 				dst += x
 			else:
 				dst += os.path.basename( x )
-			Command( dst, x, Copy( "$TARGET", "$SOURCE" ) )
-			targets.append( dst )
-		return targets
+			targets.append( Command( dst, x, Copy( "$TARGET", "$SOURCE" ) ) )
+		return Flatten(targets)
 
 	#
 	# Copy one file to Xenon devkit
 	#
-	def CopyToDevkit( target, source ):
+	def CopyToDevkit( self, target, source ):
 		xedk=UTIL_getenv("XEDK")
 		xbcp='%s\\bin\\win32\\xbcp.exe'%(xedk)
 		# Note: xbcp.exe requires environment variable "SystemRoot".
-		cmdline = 'set SystemRoot=%s&"%s" /Q /D /Y /T "%s" %s'%(UTIL_getenv("SystemRoot"),xbcp,x.abspath,self.targetDir)
-		env.Execute( cmdline )
+		cmdline = 'set SystemRoot=%s&"%s" /Q /D /Y /T "%s" %s'%(
+			UTIL_getenv("SystemRoot"),
+			xbcp,
+			source,
+			target)
+		Execute( cmdline )
 
 	#
 	# Create alias for a build target. So that it can be

@@ -5,4 +5,4 @@ Import( 'GN' )
 #objects += SConscript( 'gpu/makefile.scons' ),
 #objects += SConscript( 'gpures/makefile.scons' ),
 #objects += SConscript( 'misc/makefile.scons' )
-#Alias( 'GNgfxUtil', GN.BuildLib( 'GNgfxUtil', objects ) )
+#Alias( 'GNgfxUtil', GN.BuildLib( None, 'GNgfxUtil', objects ) )
