@@ -4,7 +4,7 @@ import sys
 
 if 'mswin' == GN.host_os:
 
-	env = GN.NewEnv()
+	env = GN.NewBuildEnv()
 
 	# Generate doxyfile
 	doxyfile = env.Command(

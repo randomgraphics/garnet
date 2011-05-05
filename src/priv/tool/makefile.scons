@@ -1,0 +1,7 @@
+Import( 'GN' )
+#SConscript( dirs=['GPUBenchmark'] )
+#SConscript( 'meshConverter/makefile.scons' )
+SConscript( 'meshViewer/makefile.scons' )
+#if GN.conf['has_ogl']: SConscript( 'oglInfo/makefile.scons' )
+#if GN.conf['has_d3d9'] and 'xenon' != GN.compiler.name: SConscript( ['d3d9DumpViewer/makefile.scons','d3d9Wrapper/makefile.scons'] )
+#if GN.conf['has_d3d10']: SConscript( dirs=['d3d10DumpViewer'] )

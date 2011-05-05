@@ -100,7 +100,7 @@ BUILD_ROOT_PATH = 'b2.tmp/' + BUILD_TARGET_OS + '.' + BUILD_TARGET_CPU + '.' + B
 #
 ################################################################################
 
-def BUILD_new_env( msvcBatchMode ):
+def UTIL_new_env( msvcBatchMode ):
 
 	if 'xenon' == BUILD_COMPILER:
 
@@ -311,12 +311,12 @@ def BUILD_new_env( msvcBatchMode ):
 	# Done.
 	return env
 
-def BUILD_new_config_env():
+def UTIL_new_config_env():
 
 	# Create config environment with "batch" mode disabled,
 	# since batch mode triggers scons 1.2.0.d20091224 config
 	# code bug.
-	env = BUILD_new_env( msvcBatchMode = False )
+	env = UTIL_new_env( msvcBatchMode = None )
 
 	# Do NOT treat warning as error
 	ccflags = str(env['CCFLAGS'])
@@ -339,19 +339,25 @@ CONFIG = {}
 def CheckConfig():
 
 	# Create configuration object
-	env = BUILD_new_config_env()
+	env = UTIL_new_config_env()
 	confdir = '#' + BUILD_ROOT_PATH + 'config'
 	c = env.Configure( conf_dir=confdir, log_file=confdir + '/config.log' )
 
 	# =========
 	# Cg shader
 	# =========
+	CONFIG['cg_libs'] = []
 	if False : # CONF_enableCg :
 		CONFIG['has_cg']       = c.CheckLibWithHeader( 'cg', ['Cg/cg.h'], 'C', 'cgCreateContext();' )
 		CONFIG['has_cg_ogl']   = c.CheckLibWithHeader( 'cgGL', ['Cg/cg.h','Cg/cgGL.h'], 'C', "cgGLRegisterStates(0);" )
 		CONFIG['has_cg_d3d9']  = c.CheckLibWithHeader( 'cgD3D9', ['Cg/cg.h','Cg/cgD3D9.h'], 'C', "cgD3D9SetDevice(0);" )
 		CONFIG['has_cg_d3d10'] = c.CheckLibWithHeader( 'cgD3D10', ['Cg/cg.h','Cg/cgD3D10.h'], 'C', "cgD3D10SetDevice(0,0);" )
 		CONFIG['has_cg_d3d11'] = c.CheckLibWithHeader( 'cgD3D11', ['Cg/cg.h','Cg/cgD3D11.h'], 'C', "cgD3D11SetDevice(0,0);" )
+		if CONFIG['has_cg_ogl']   : CONFIG['cg_libs'] += ['cgGL']
+		if CONFIG['has_cg_d3d9']  : CONFIG['cg_libs'] += ['cgD3D9']
+		if CONFIG['has_cg_d3d10'] : CONFIG['cg_libs'] += ['cgD3D10']
+		if CONFIG['has_cg_d3d11'] : CONFIG['cg_libs'] += ['cgD3D11']
+		if CONFIG['has_cg']       : CONFIG['cg_libs'] += ['cg']
 	else:
 		CONFIG['has_cg']       = 0
 		CONFIG['has_cg_ogl']   = 0
@@ -384,12 +390,7 @@ def CheckConfig():
 	    CONFIG['has_glut'] = True
 	    CONFIG['glut'] = 'glut32'
 	else :
-	    CONFIG['has_glut'] = None
-
-	# ===
-	# XTL
-	# ===
-	CONFIG['has_xtl'] = c.CheckCHeader( 'xtl.h' )
+	    CONFIG['has_glut'] = False
 
 	# =================
 	# Misc. D3D headers
@@ -400,13 +401,25 @@ def CheckConfig():
 	# ====
 	# D3D9
 	# ====
-	CONFIG['has_d3d9'] = CONFIG['has_xtl'] or ( CONFIG['has_dxerr'] and c.CheckCXXHeader( 'd3d9.h' ) and c.CheckCXXHeader( 'd3dx9.h' ) )
+	CONFIG['has_d3d9'] = ('xenon' == BUILD_TARGET_OS) or ( CONFIG['has_dxerr'] and c.CheckCXXHeader( 'd3d9.h' ) and c.CheckCXXHeader( 'd3dx9.h' ) )
 
 	# =====
 	# D3D11
 	# =====
+
+	# Detect Windows Vista and Windows 7
+	def isVistaOrWin7( env ):
+		if 'win32' != env['PLATFORM']: return False
+		stdout = os.popen( "ver" )
+		str = stdout.read()
+		stdout.close()
+		import string
+		vista = string.find( str, "6.0" ) >= 0
+		win7  = string.find( str, "6.1" ) >= 0
+		return  vista or win7
+
 	CONFIG['has_d3d11'] = CONFIG['has_dxerr'] and CONFIG['has_d3d9'] and c.CheckLibWithHeader( 'd3d11.lib', 'd3d11.h', 'C++' ) and isVistaOrWin7(env);
-	
+
 	# ===========
 	# DirectInput
 	# ===========
@@ -441,8 +454,8 @@ def CheckConfig():
 	    CONFIG['has_iconv'] = True
 	    CONFIG['iconv_lib'] = 'c'
 	else :
-		CONFIG['has_iconv'] = None
-		CONFIG['iconv_lib'] = None
+		CONFIG['has_iconv'] = False
+		CONFIG['iconv_lib'] = []
 
 	# ===
 	# FBX
@@ -493,9 +506,14 @@ class GarnetEnv2 :
 		self.variant      = BUILD_VARIANT
 		self.host_os      = HOST_OS
 		self.static_build = True # TODO: run platform detector
-		self.has_d3d10    = False # D3D10 support is dropped.
-		self.has_d3d11    = CONFIG['has_d3d11']
+		self.has_cg       = CONFIG['has_cg']
+		self.has_cg_ogl   = CONFIG['has_cg_ogl']
+		self.has_cg_d3d9  = CONFIG['has_cg_d3d9']
+		self.has_cg_d3d10 = CONFIG['has_cg_d3d10']
+		self.has_cg_d3d11 = CONFIG['has_cg_d3d11']
 		self.has_d3d9     = CONFIG['has_d3d9']
+		self.has_d3d10    = False # D3D10 support has been dropped.
+		self.has_d3d11    = CONFIG['has_d3d11']
 		self.has_dinput   = CONFIG['has_dinput']
 		self.has_dxerr    = CONFIG['has_dxerr']
 		self.has_fbx      = CONFIG['has_fbx']
@@ -504,8 +522,7 @@ class GarnetEnv2 :
 		self.has_xinput   = CONFIG['has_xinput']
 		self.has_xinput2  = CONFIG['has_xinput2']
 		self.has_xnamath  = CONFIG['has_xnamath']
-		self.has_xtl      = CONFIG['has_xtl']
-		self.ogl_libs     = CONFIG['ogl_libs']
+		self.has_xtl      = 'xenon' == BUILD_TARGET_OS
 
 		#
 		# List of known targets that are created by NewTarget method
@@ -586,16 +603,6 @@ class GarnetEnv2 :
 		return files
 
 	#
-	# Create new build environment
-	#
-	def NewEnv( self, msvcBatchMode = True ) : return BUILD_new_env( msvcBatchMode )
-
-	#
-	# Create new configuration environment
-	#
-	def NewConfigEnv( self ) : return BUILD_new_config_env()
-
-	#
 	# Remove items from environment list
 	#
 	def RemoveEnvListItems( self, env, name, toBeRemoved ):
@@ -605,9 +612,25 @@ class GarnetEnv2 :
 					env[name].remove(x)
 
 	#
-	# setup environment for producing PCH, return PCH object file
+	# Create new configuration environment
 	#
-	def SetupPCH( self, env, pchHeader, pchSource ):
+	def NewConfigEnv( self ) :
+		return UTIL_new_config_env()
+
+	#
+	# Create new build environment
+	#
+	def NewBuildEnv( self ) :
+
+		# create default environment
+		env = UTIL_new_env( msvcBatchMode = True )
+
+		return env
+
+	#
+	# setup environment for build precompiled header, return PCH object file
+	#
+	def _BuildSetupPCH( self, env, pchHeader, pchSource ):
 		if 'PCH' in env['BUILDERS'] and pchSource:
 			pch = env.PCH(pchSource)
 			env['PCH'] = pch[0]
@@ -620,28 +643,62 @@ class GarnetEnv2 :
 			return []
 
 	#
-	# Setup build environment to produce PDB file
+	# Setup build environment to build PDB file.
 	#
-	def SetupPDB( self, env, target, pdb ):
+	def _BuildSetupPDB( self, env, target, pdb ):
 		if pdb : pdbfile = File(pdb)
 		else   : pdbfile = File("%s.pdb"%(target))
 		env['PDB'] = pdbfile
 
 	#
+	# Setup libraries. Note that this is a private methods that should only
+	# be used inside GarnetEnv class.
+	#
+	def _BuildSetupLibs( self, env ):
+
+		# Add external libraries as needed. Note that
+		# when using gcc, the library order matters.
+		libs = self.CollectTargets( ['GNcore'] )
+		libs += CONFIG['cg_libs']
+		libs += CONFIG['ogl_libs']
+		libs += CONFIG['fbx_libs']
+		libs += CONFIG['iconv_lib']
+		dbg = ( BUILD_VARIANT == "debug" )
+		if CONFIG['has_d3d9'] and ('xenon' != BUILD_TARGET_OS) :
+			libs += ['d3d9.lib', 'd3dx9d.lib'] if dbg else ['d3d9.lib', 'd3dx9.lib']
+		if CONFIG['has_d3d11']:
+			libs += ['dxgi.lib', 'dxguid.lib', 'dxerr.lib']
+			libs += ['d3d11.lib', 'd3dx11d.lib'] if dbg else ['d3d11.lib', 'd3dx11.lib']
+		env.Prepend( LIBS = libs )
+
+	#
 	# Build list of static object files from list of sources
 	#
 	def BuildObjects( self, env, sources, pchHeader=None, pchSource=None ):
-		if not env: env = self.NewEnv()
-		pchobj = self.SetupPCH( env, pchHeader, pchSource )
+		if not env: env = self.NewBuildEnv()
+		pchobj = self._BuildSetupPCH( env, pchHeader, pchSource )
 		return Flatten( [env.Object(x) for x in sources] ) + pchobj
 
 	#
 	# Build static library from list of objects
 	#
 	def BuildLib( self, env, target, objects, pdb=None ):
-		if not env: env = self.NewEnv()
-		self.SetupPDB( env, target, pdb )
+		if not env: env = self.NewBuildEnv()
+		self._BuildSetupPDB( env, target, pdb )
 		return env.Library( target, objects )
+
+	#
+	# Build executable
+	#
+	def BuildProgram( self, env, target, sources, pchHeader=None, pchSource=None, pdb=None ):
+
+		# build the program
+		if not env: env = self.NewBuildEnv()
+		objects = self.BuildObjects( env, sources, pchHeader, pchSource )
+		self._BuildSetupPDB( env, target, pdb )
+		self._BuildSetupLibs( env )
+
+		return env.Program( target, objects )
 
 	#
 	# Copy a set of files to build output folder.
@@ -661,6 +718,32 @@ class GarnetEnv2 :
 		return Flatten(targets)
 
 	#
+	# Binplace program target to bin folder.
+	#
+	def BinplaceProgram( self, program ):
+
+		# copy to bin folder
+		tmp = []
+		for x in program:
+			dst = '#' + BUILD_ROOT_PATH + 'bin/' + os.path.basename( x.path )
+			tmp.append( Command( dst, x, Copy( "$TARGET", "$SOURCE" ) ) )
+		Flatten(tmp)
+		program = tmp;
+
+		# setup dependency to other targets
+		Depends( program, GN.CollectTargets([
+			'GNexternBin',
+			'GNmedia',
+		]))
+
+		# Make program depend on its by-products, such as manifest and PDB,
+		# to make sure those files are always up to date.
+		for x in program[1:] :
+			Depends( program[0], x )
+
+		return program
+
+	#
 	# Copy one file to Xenon devkit
 	#
 	def CopyToDevkit( self, target, source ):
@@ -678,7 +761,7 @@ class GarnetEnv2 :
 	# Create alias for a build target. So that it can be
 	# referenced easily in makefiles.
 	#
-	def NewTarget( self, name, target, addToDefault = False ):
+	def NewTarget( self, name, target ):
 
 		# See if the alias has existed already.
 		if self.FindTarget(name, warnForNonExistTarget = False):
@@ -687,19 +770,19 @@ class GarnetEnv2 :
 
 		# Create scons alias.
 		Alias( name, target )
-		if addToDefault :
-			Default( name )
 
-		# Add to alias list
+		# Add to target list
 		self.targets[name] = target
 
 	#
 	# Create alias for a build target. Also add it into default target list.
 	#
-	def NewDefaultTarget( self, name, target ): return self.NewTarget( name, target, addToDefault = True )
+	def NewDefaultTarget( self, name, target ):
+		self.NewTarget( name, target )
+		Default( target )
 
 	#
-	# Find target by name.
+	# Find one target by name.
 	#
 	def FindTarget( self, name, warnForNonExistTarget = True ):
 		if name in self.targets:
@@ -707,6 +790,16 @@ class GarnetEnv2 :
 		else:
 			if warnForNonExistTarget: self.Warn( 'Target %s does not exist.'%(name) )
 			return None
+
+	#
+	# Generate target list from names
+	#
+	def CollectTargets( self, names, warnForNonExistTarget = True ):
+		targets = []
+		for name in names:
+			t = self.FindTarget( name, warnForNonExistTarget )
+			if t: targets += [t]
+		return targets
 
 # Create garnet build environment (singleton)
 GN = GarnetEnv2()

@@ -1,5 +1,0 @@
-Import( "GN" )
-
-cluster = GN.newSourceCluster( GN.glob( '*.cpp' ), 'AssimpPCH.h', 'AssimpPCH.cpp' )
-
-Return( "cluster" )

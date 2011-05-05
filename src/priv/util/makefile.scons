@@ -1,0 +1,7 @@
+Import( 'GN' )
+objects = []
+objects += SConscript( 'app/makefile.scons' )
+#objects += SConscript( 'cegui/makefile.scons' )
+objects += SConscript( 'util/makefile.scons' )
+GN.NewTarget( 'GNutilObjects', objects )
+GN.NewTarget( 'GNutilLib', GN.BuildLib( None, 'GNutil', objects ) )

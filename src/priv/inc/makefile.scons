@@ -40,7 +40,7 @@ def GenConfigHeader( target, source, env ):
 	return 0
 
 
-env = GN.NewEnv()
+env = GN.NewBuildEnv()
 target = 'garnet/base/platform.' + GN.target_os + "." + GN.target_cpu + '.h'
 env.AlwaysBuild( [target] )
 GN.NewTarget( 'GNinc', env.Command( target, None, GenConfigHeader ) )

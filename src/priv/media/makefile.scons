@@ -2,7 +2,7 @@ Import( 'GN' )
 
 import os.path
 
-env = GN.NewEnv()
+env = GN.NewBuildEnv()
 
 # Gather media files
 sources = GN.Glob( '*.*', True )
