@@ -493,18 +493,19 @@ class GarnetEnv2 :
 		self.variant      = BUILD_VARIANT
 		self.host_os      = HOST_OS
 		self.static_build = True # TODO: run platform detector
-		self.has_ogl      = CONFIG['has_ogl']
-		self.ogl_libs     = CONFIG['ogl_libs']
-		self.has_dxerr    = CONFIG['has_dxerr']
-		self.has_xnamath  = CONFIG['has_xnamath']
-		self.has_d3d9     = CONFIG['has_d3d9']
 		self.has_d3d10    = False # D3D10 support is dropped.
 		self.has_d3d11    = CONFIG['has_d3d11']
-		self.has_xtl      = CONFIG['has_xtl']
+		self.has_d3d9     = CONFIG['has_d3d9']
+		self.has_dinput   = CONFIG['has_dinput']
+		self.has_dxerr    = CONFIG['has_dxerr']
+		self.has_fbx      = CONFIG['has_fbx']
 		self.has_iconv    = CONFIG['has_iconv']
+		self.has_ogl      = CONFIG['has_ogl']
 		self.has_xinput   = CONFIG['has_xinput']
 		self.has_xinput2  = CONFIG['has_xinput2']
-		self.has_dinput   = CONFIG['has_dinput']
+		self.has_xnamath  = CONFIG['has_xnamath']
+		self.has_xtl      = CONFIG['has_xtl']
+		self.ogl_libs     = CONFIG['ogl_libs']
 
 		#
 		# List of known targets that are created by NewTarget method
