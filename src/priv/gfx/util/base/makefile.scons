@@ -1,0 +1,13 @@
+Import( 'GN' )
+sources = [
+    'colorFormat.cpp',
+    'image.cpp',
+    'imageBMP.cpp',
+    'imageDDS.cpp',
+    'imageJPG.cpp',
+    'imagePNG.cpp',
+    'imageTGA.cpp',
+    'shape.cpp',
+]
+objects = GN.BuildObjects( None, sources, 'pch.h', 'pch.cpp' )
+Return( 'objects' )

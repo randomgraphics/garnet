@@ -1,0 +1,4 @@
+SConscript( [
+	'util/makefile.scons',
+	#'gpu/makefile.scons',
+	] )

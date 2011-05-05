@@ -1,0 +1,24 @@
+Import( 'GN' )
+
+sources = [
+	'asciifont.cpp',
+	'ase.cpp',
+	'bitmapFont.cpp',
+	'charBitmap8x13.cpp',
+	'fatModel.cpp',
+	'fatModelLoader.cpp',
+	'fontft2.cpp',
+	'line.cpp',
+	'misc.cpp',
+	'mixedfont.cpp',
+	'modelHierarchy.cpp',
+	'sprite.cpp',
+]
+
+env = GN.NewEnv()
+
+if GN.has_fbx: env.Append( CPPDEFINES = ['HAS_FBX'] )
+
+objects = GN.BuildObjects( env, sources, 'pch.h', 'pch.cpp' )
+
+Return( 'objects' )

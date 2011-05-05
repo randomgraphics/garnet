@@ -1,0 +1,39 @@
+Import( 'GN' )
+
+dxgi_sources = [
+	'dxgiTextureFormat.cpp'
+]
+
+d3d9_sources = [
+	'd3d9App.cpp',
+	'd3d9ShaderUtils.cpp',
+	'd3d9ThickLine.cpp',
+]
+
+d3d10_sources = [
+	'd3d10App.cpp',
+	'd3d10RenderToTexture.cpp',
+	'd3d10ResourcePool.cpp',
+	'd3d10ScreenAlignedQuad.cpp',
+	'd3d10ShaderUtils.cpp',
+	'd3d10SimpleMesh.cpp',
+	'd3d10StateDumper.cpp',
+	'd3d10Utils.cpp',
+]
+
+d3d11_sources = [
+	'd3d11ShaderUtils.cpp',
+	'd3d11StateDumper.cpp',
+   	'd3d11Utils.cpp',
+]
+
+sources = []
+
+if GN.has_d3d9 or GN.has_xtl:
+	sources += d3d9_sources
+if GN.has_d3d11:
+	sources += dxgi_sources
+	sources += d3d11_sources
+
+objects = GN.BuildObjects( None, sources, 'pch.h', 'pch.cpp' )
+Return( 'objects' )
