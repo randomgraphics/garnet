@@ -41,9 +41,10 @@ import os.path
 
 conf_env = GN.NewConfigEnv()
 conf = conf_env.Configure(
-    conf_dir=Dir('.'),
+    conf_dir='.',
     log_file='config.log',
     config_h='extern_config.h' )
+#conf = GN.NewConfig( None, 'extern_config.h' )
 
 # TODO: check byte order
 
@@ -72,7 +73,7 @@ conf.Finish()
 # **********************
 
 # JPEG
-jpeg_env = GN.NewEnv()
+jpeg_env = GN.NewBuildEnv()
 jpeg_env.Append( CPPPATH=['jpeg'], CCFLAGS = ccflags, CPPDEFINES = cppdefines )
 if 'gcc' == GN.cc or 'mingw' == GN.cc: jpeg_env.Append( CCFLAGS = ['-Wno-main'] )
 GN.RemoveEnvListItems( jpeg_env, 'CCFLAGS', ['/W4','/Wcheck','-Wall'] )
@@ -80,13 +81,13 @@ jpeg_cluster = GN.BuildObjects( jpeg_env, GN.Glob( 'jpeg/*.c' ) )
 
 # FREETYPE
 ft2_sources = SConscript( "freetype-2.4.4/makefile.scons" )
-ft2_env = GN.NewEnv()
+ft2_env = GN.NewBuildEnv()
 ft2_env.Append( CCFLAGS = ccflags, CPPDEFINES = cppdefines + ['FT2_BUILD_LIBRARY'] )
 GN.RemoveEnvListItems( ft2_env, 'CCFLAGS', ['/W4'] )
 ft2_cluster = GN.BuildObjects( ft2_env, ft2_sources )
 
 # assimp
-ai_env = GN.NewEnv()
+ai_env = GN.NewBuildEnv()
 ai_env.Append(
 	CPPPATH=['#src/extern/inc/assimp','assimp/BoostWorkaround'],
 	CCFLAGS = ccflags,
@@ -95,7 +96,7 @@ GN.RemoveEnvListItems( ai_env, 'CCFLAGS', ['/W4','/Wcheck','-Wall'] )
 ai_cluster = GN.BuildObjects( ai_env, GN.Glob( 'assimp/*.cpp' ), 'AssimpPCH.h', 'assimp/AssimpPCH.cpp' )
 
 # assimp contrib
-ai_contrib_env = GN.NewEnv()
+ai_contrib_env = GN.NewBuildEnv()
 ai_contrib_env.Append(
 	CPPPATH=['#src/extern/inc/assimp','assimp/BoostWorkaround','assimp'],
 	CCFLAGS = ccflags,
@@ -104,7 +105,7 @@ GN.RemoveEnvListItems( ai_contrib_env, 'CCFLAGS', ['/W4','/Wcheck','-Wall'] )
 ai_contrib_cluster = GN.BuildObjects( ai_contrib_env, GN.Glob( ['assimp/contrib/*.c','assimp/contrib/*.cpp'], True ) )
 
 # Others
-misc_env = GN.NewEnv()
+misc_env = GN.NewBuildEnv()
 misc_env.Append( CCFLAGS = ccflags, CPPDEFINES = cppdefines )
 GN.RemoveEnvListItems( misc_env, 'CCFLAGS', ['/W4','/Wcheck','-Wall'] )
 misc_sources = GN.Glob( Split('expat/*.c pcre/*.c* png/*.c zlib/*.c') )

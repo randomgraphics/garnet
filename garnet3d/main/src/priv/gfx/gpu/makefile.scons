@@ -1,0 +1,6 @@
+Import( 'GN' )
+objects = SConscript( 'common/makefile.scons' )
+if GN.has_ogl  : objects += SConscript( 'ogl/makefile.scons' )
+if GN.has_xtl  : objects += SConscript( 'xenon/makefile.scons' )
+if GN.has_d3d11: objects += SConscript( 'd3d11/makefile.scons' )
+Return( 'objects' )

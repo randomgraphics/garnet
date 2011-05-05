@@ -15,7 +15,7 @@ sources = [
 	'sprite.cpp',
 ]
 
-env = GN.NewEnv()
+env = GN.NewBuildEnv()
 
 if GN.has_fbx: env.Append( CPPDEFINES = ['HAS_FBX'] )
 

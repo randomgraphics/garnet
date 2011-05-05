@@ -1,0 +1,7 @@
+Import( 'GN' )
+sources = [
+	'arcball.cpp',
+	'fpcamera.cpp',
+	]
+objects = GN.BuildObjects( None, sources, 'pch.h', 'pch.cpp' )
+Return('objects')

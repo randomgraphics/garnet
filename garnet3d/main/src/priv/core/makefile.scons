@@ -4,17 +4,23 @@ sources = [
     'all_public_headers.cpp',
 ]
 
-objects = [GN.FindTarget(x) for x in [
+objects = GN.CollectTargets([
 	'GNexternObjects',
 	'GNbaseObjects',
-]]
+	'GNgfxObjects',
+	'GNengineObjects',
+	'GNutilObjects',
+])
 
-libs = [GN.FindTarget(x) for x in [
+libs = GN.CollectTargets([
 	'GNexternLib',
 	'GNbaseLib',
-]]
+	'GNgfxLib',
+	'GNengineLib',
+	'GNutilLib',
+])
 
-env = GN.NewEnv()
+env = GN.NewBuildEnv()
 
 # build the monolithic core library.
 if GN.static_build:

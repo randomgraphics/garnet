@@ -3,7 +3,10 @@ SConscript( [
 	'inc/makefile.scons',
 	'base/makefile.scons',
 	'gfx/makefile.scons',
+	'engine/makefile.scons',
+	'util/makefile.scons',
 	'core/makefile.scons',
 	'media/makefile.scons',
+	'tool/makefile.scons',
 	'doc/makefile.scons',
 	] )
