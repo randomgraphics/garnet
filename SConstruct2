@@ -718,17 +718,12 @@ class GarnetEnv2 :
 		return Flatten(targets)
 
 	#
-	# Binplace program target to bin folder.
+	# Binplace program to bin folder.
 	#
 	def BinplaceProgram( self, program ):
 
 		# copy to bin folder
-		tmp = []
-		for x in program:
-			dst = '#' + BUILD_ROOT_PATH + 'bin/' + os.path.basename( x.path )
-			tmp.append( Command( dst, x, Copy( "$TARGET", "$SOURCE" ) ) )
-		Flatten(tmp)
-		program = tmp;
+		program = Install( '#' + BUILD_ROOT_PATH + 'bin/', program )
 
 		# setup dependency to other targets
 		Depends( program, GN.CollectTargets([
