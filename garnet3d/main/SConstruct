@@ -158,7 +158,7 @@ def UTIL_bldsubdir( compiler, variant ):
 
 # get root directory of build directory
 def UTIL_buildRoot() :
-	return os.path.join( '#build.tmp' )
+	return os.path.join( '#build.tmp.old' )
 
 # get build directory of specific compiler and build variant
 def UTIL_buildDir( compiler, variant ) :

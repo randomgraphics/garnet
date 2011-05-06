@@ -1,1 +1,1 @@
-python -OO "%SCONS_SCRIPT_DIR%scons" -f SConstruct2 %*
+python -OO "%SCONS_SCRIPT_DIR%scons" -f SConstruct %*

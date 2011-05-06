@@ -92,7 +92,7 @@ BUILD_TARGET_OS = UTIL_getenv('GN_BUILD_TARGET_OS', HOST_OS )
 
 BUILD_TARGET_CPU = UTIL_getenv('GN_BUILD_TARGET_CPU', HOST_CPU )
 
-BUILD_ROOT_PATH = 'b2.tmp/' + BUILD_TARGET_OS + '.' + BUILD_TARGET_CPU + '.' + BUILD_COMPILER + '.' + BUILD_VARIANT + "/"
+BUILD_ROOT_PATH = 'build.tmp/' + BUILD_TARGET_OS + '.' + BUILD_TARGET_CPU + '.' + BUILD_COMPILER + '.' + BUILD_VARIANT + "/"
 
 ################################################################################
 #

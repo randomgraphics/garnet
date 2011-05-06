@@ -30,4 +30,4 @@ if 'mswin' == GN.host_os:
 	# The document depends on all public headers.
 	env.Depends( chmfile, GN.Glob( '#src/priv/inc/*.[h|inl]', True ) )
 
-	GN.NewDefaultTarget( 'GNdoc', chmfile )
+	GN.NewTarget( 'GNdoc', chmfile )
