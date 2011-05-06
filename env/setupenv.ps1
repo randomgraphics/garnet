@@ -406,14 +406,14 @@ if( "xenon" -eq $env:GN_BUILD_COMPILER )
     # SCons 2.1.0.alpha doesn't build Assimp directory on Xenon when PCH is used.
     # So we need to keep SCons 1.2.0 for xenon build.
     $SCONS_DIR= "$GARNET_ROOT\env\scons\1.2.0"
-    $env:Path = "$SCONS_DIR\scripts;$env:Path"
-    $env:SCONS_LIB_DIR = "$SCONS_DIR\lib"
+    $env:SCONS_LIB_DIR    = "$SCONS_DIR\lib"
+    $env:SCONS_SCRIPT_DIR = "$SCONS_DIR\scripts\"
 }
 else
 {
     $SCONS_DIR= "$GARNET_ROOT\env\scons\2.1.0.alpha.20101125"
-    $env:Path = "$SCONS_DIR\script;$env:Path"
-    $env:SCONS_LIB_DIR = "$SCONS_DIR\engine"
+    $env:SCONS_LIB_DIR    = "$SCONS_DIR\engine"
+    $env:SCONS_SCRIPT_DIR = "$SCONS_DIR\script\"
 }
 $env:SCONSFLAGS="-U"
 

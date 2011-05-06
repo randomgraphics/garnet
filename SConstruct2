@@ -525,9 +525,14 @@ class GarnetEnv2 :
 		self.has_xtl      = 'xenon' == BUILD_TARGET_OS
 
 		#
-		# List of known targets that are created by NewTarget method
+		# Dictionary of known targets that are created by NewTarget method
 		#
 		self.targets = {}
+
+		#
+		# List of default target that should be build when invoking SCons from root directory.
+		#
+		self.defaults = []
 
 	#
 	# Logging
@@ -766,6 +771,9 @@ class GarnetEnv2 :
 		# Create scons alias.
 		Alias( name, target )
 
+		# Add to SCons's default list
+		Default( name )
+
 		# Add to target list
 		self.targets[name] = target
 
@@ -774,7 +782,7 @@ class GarnetEnv2 :
 	#
 	def NewDefaultTarget( self, name, target ):
 		self.NewTarget( name, target )
-		Default( target )
+		self.defaults += [name];
 
 	#
 	# Find one target by name.
@@ -806,3 +814,11 @@ GN = GarnetEnv2()
 ################################################################################
 Export( 'GN' )
 SConscript( 'src/makefile.scons', variant_dir=BUILD_ROOT_PATH, duplicate=1)
+
+# Create pseudo target in root folder for all default targets.
+# So that they can be built automatically when invoking
+# SCons from root directory.
+for d in GN.defaults:
+	name = '__default__' + d
+	Alias( name, d )
+	Default( name )
