@@ -461,8 +461,6 @@ def CheckConfig():
 	# FBX
 	# ===
 
-	CONFIG['has_fbx'] = False
-
 	FBX_libname = "fbxsdk";
 	if BUILD_COMPILER == 'vc100'  : FBX_libname += "_mt2010"
 	elif BUILD_COMPILER == 'vc90' : FBX_libname += "_mt2008"
@@ -478,6 +476,9 @@ def CheckConfig():
 	if c.CheckLibWithHeader( FBX_libname, ['fbxsdk.h','fbxfilesdk/fbxfilesdk_nsuse.h'], 'C++', 'KFbxSdkManager::Create();' ):
 		CONFIG['has_fbx']  = True
 		CONFIG['fbx_libs'] = [FBX_libname] + FBX_deps
+	else:
+		CONFIG['has_fbx']  = False
+		CONFIG['fbx_libs'] = []
 	for d in FBX_deps: env['LIBS'].remove( d )
 
 	# =============
@@ -706,21 +707,26 @@ class GarnetEnv2 :
 		return env.Program( target, objects )
 
 	#
-	# Copy a set of files to build output folder.
+	# Place a set of files to output folder.
 	#
-	# To preserve tree structure in sources, all pathes in sources must be relative path.
+	def PlaceFiles( self, targetFolder, sources ):
+		if '' == targetFolder : targetFolder = '.'
+		targetFolder = '#' + BUILD_ROOT_PATH + targetFolder
+		return Install( targetFolder, sources )
+
 	#
-	def CopyToBinFolder( self, subfolder, sources, preserveDirectoryTree ):
-		if '' == subfolder : subfolder = '.'
-		targets = []
+	# Place a set of files to output folder, preserving tree structure
+	#
+	def PlaceSubTree( self, targetBaseFolder, sourceBaseFolder, sources ):
+   		if '' == sourceBaseFolder : sourceBaseFolder = '.'
+   		if '' == targetBaseFolder : targetBaseFolder = '.'
+   		targetBaseFolder = '#' + BUILD_ROOT_PATH + targetBaseFolder + '/'
+   		targets = []
 		for x in sources:
-			dst = '#' + BUILD_ROOT_PATH + subfolder + '/'
-			if preserveDirectoryTree:
-				dst += x
-			else:
-				dst += os.path.basename( x )
-			targets.append( Command( dst, x, Copy( "$TARGET", "$SOURCE" ) ) )
-		return Flatten(targets)
+			srcdir = os.path.dirname( self.RelativePath( x, sourceBaseFolder ) )
+			dstdir = targetBaseFolder + '/' + srcdir
+			targets += Install( dstdir, x )
+		return targets
 
 	#
 	# Binplace program to bin folder.

@@ -8,7 +8,7 @@ env = GN.NewBuildEnv()
 sources = GN.Glob( '*.*', True )
 
 # Copy media files to media folder
-targets = GN.CopyToBinFolder( 'media', sources, True )
+targets = GN.PlaceSubTree( 'media', '.', sources )
 
 '''
 # TODO: Deploy to console.
