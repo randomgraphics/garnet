@@ -100,7 +100,7 @@ BUILD_ROOT_PATH = 'build.tmp/' + BUILD_TARGET_OS + '.' + BUILD_TARGET_CPU + '.' 
 #
 ################################################################################
 
-def UTIL_new_env( msvcBatchMode ):
+def UTIL_new_env_ex( msvcBatchMode ):
 
 	if 'xenon' == BUILD_COMPILER:
 
@@ -168,10 +168,10 @@ def UTIL_new_env( msvcBatchMode ):
 	 	env['ENV']['LANGUAGE'] = UTIL_getenv('LANGUAGE');
 
 	# cache implicit dependencies
-	env.SetOption( 'implicit_cache', int(UTIL_getenv('SCONS_CACHE_IMPLICIT_DEPS', 1)) );
+	env.SetOption( 'implicit_cache', int(UTIL_getenv('SCONS_CACHE_IMPLICIT_DEPS', 1)) )
 
 	# setup default decider
-	env.Decider( 'MD5-timestamp' );
+	env.Decider( 'MD5-timestamp' )
 
 	# setup signature file
 	env.SConsignFile( BUILD_ROOT_PATH + '.sconsign' )
@@ -310,6 +310,14 @@ def UTIL_new_env( msvcBatchMode ):
 
 	# Done.
 	return env
+
+DEFAULT_BATCH_ENV     = UTIL_new_env_ex( True )
+DEFAULT_NON_BATCH_ENV = UTIL_new_env_ex( None )
+def UTIL_new_env( msvcBatchMode ):
+	if msvcBatchMode:
+		return DEFAULT_BATCH_ENV.Clone()
+	else:
+		return DEFAULT_NON_BATCH_ENV.Clone()
 
 def UTIL_new_config_env():
 
