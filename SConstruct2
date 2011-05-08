@@ -227,7 +227,7 @@ def UTIL_new_env_ex( msvcBatchMode ):
 								'#' + BUILD_ROOT_PATH + 'priv/inc',
 								'#src/priv/inc',
 								];
-	libpath['common']     += ['src/extern/lib/' + HOST_OS + '.' + HOST_CPU]
+	libpath['common']     += ['#src/extern/lib/' + HOST_OS + '.' + HOST_CPU]
 	cppdefines['common']  += ['UNICODE', '_UNICODE']
 	cppdefines['debug']   += ['GN_ENABLE_DEBUG=1', 'GN_ENABLE_PROFILING=1', '_DEBUG']
 	cppdefines['profile'] += ['GN_ENABLE_DEBUG=0', 'GN_ENABLE_PROFILING=1', 'NDEBUG']
@@ -526,6 +526,7 @@ class GarnetEnv2 :
 		self.has_dinput   = CONFIG['has_dinput']
 		self.has_dxerr    = CONFIG['has_dxerr']
 		self.has_fbx      = CONFIG['has_fbx']
+		self.has_glut     = CONFIG['has_glut']
 		self.has_iconv    = CONFIG['has_iconv']
 		self.has_ogl      = CONFIG['has_ogl']
 		self.has_xinput   = CONFIG['has_xinput']

@@ -1,0 +1,23 @@
+Import( 'GN' )
+
+import sys
+
+# build case list
+cases = []
+cases += GN.Glob( 'base/*.cpp' )
+cases += GN.Glob( 'gfx/*.cpp' )
+
+# generate cxxtest glue file.
+cxxtest = Command(
+    'ut.cpp', cases,
+    '%s %s --error-printer --include="garnet/GNbase.h" -o $TARGET ${SOURCES.abspath}'%(
+        sys.executable,
+        File('cxxtestgen.py').srcnode().path)
+    )
+Depends( cxxtest, 'cxxtestgen.py' )
+
+# build unit test application
+env = GN.NewBuildEnv()
+if 'gcc' == GN.cc: env.Append( CCFLAGS=['-Wno-sign-compare'] )
+name = 'GNut'
+GN.NewDefaultTarget( name, GN.BinplaceProgram( GN.BuildProgram( env, name, [str(cxxtest[0]),'testCommon.cpp'] ) ) )
