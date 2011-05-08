@@ -1,0 +1,18 @@
+SConscript( [
+    'assimp/makefile.scons',
+#	'd3d10/makefile.scons',
+	'engine/makefile.scons',
+	'fbx/makefile.scons',
+	'font/makefile.scons',
+	'ft2/makefile.scons',
+	'gpu/makefile.scons',
+	'input/makefile.scons',
+	'pcre/makefile.scons',
+	'renderToTexture/makefile.scons',
+	'resdb/makefile.scons',
+	'simd/makefile.scons',
+	'sprite/makefile.scons',
+	'ut/makefile.scons',
+#	'xenon/makefile.scons',
+	'xml/makefile.scons',
+])

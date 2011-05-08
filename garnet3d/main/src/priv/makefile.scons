@@ -8,5 +8,6 @@ SConscript( [
 	'core/makefile.scons',
 	'media/makefile.scons',
 	'tool/makefile.scons',
+	'test/makefile.scons',
 	'doc/makefile.scons',
 	] )

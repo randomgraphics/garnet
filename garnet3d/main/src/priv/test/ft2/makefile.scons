@@ -1,0 +1,5 @@
+Import( 'GN' )
+
+if GN.has_glut :
+	name = 'GNtestFt2'
+	GN.NewDefaultTarget( name, GN.BinplaceProgram( GN.BuildProgram( None, name, ['main.cpp'], 'pch.h', 'pch.cpp' ) ) )
