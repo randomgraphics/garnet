@@ -1,6 +1,0 @@
-Import( 'GN' )
-sources = []
-sources.append( SConscript( 'base/SConscript' ) )
-sources.append( SConscript( 'input/SConscript' ) )
-sources.append( SConscript( 'win/SConscript' ) )
-GN.newTarget( 'stlib', 'GNbase', sources )

@@ -1,6 +1,0 @@
-Import( 'GN' )
-objects = []
-objects += SConscript( 'util/makefile.scons' )
-objects += SConscript( 'gpu/makefile.scons' )
-GN.NewTarget( 'GNgfxObjects', objects )
-GN.NewTarget( 'GNgfxLib', GN.BuildLib( None, 'GNgfx', objects ) )

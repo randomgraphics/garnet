@@ -2,7 +2,6 @@ Import( 'GN' )
 objects = []
 objects += SConscript( 'base/makefile.scons' )
 objects += SConscript( 'd3d/makefile.scons' )
-objects += SConscript( 'gpu/makefile.scons' )
 objects += SConscript( 'gpures/makefile.scons' )
 objects += SConscript( 'misc/makefile.scons' )
 Return( 'objects' )

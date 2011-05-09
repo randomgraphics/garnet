@@ -1,6 +1,0 @@
-Import( 'GN' )
-sources = []
-sources.append( SConscript( 'app/SConscript' ) )
-#sources.append( SConscript( 'cegui/SConscript' ) )
-sources.append( SConscript( 'util/SConscript' ) )
-GN.newTarget( 'stlib', 'GNutil', sources )

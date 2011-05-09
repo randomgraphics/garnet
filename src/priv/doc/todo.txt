@@ -31,6 +31,7 @@ TODO
     - DLL or resource file that defines common shaders.
     - Compiled from effect files.
     - Precompile GPU shaders when possible to cache compile errors offline.
+  - reorg code structure.
 
 - p1
   - update skinned meesh bounding box with animation

@@ -756,21 +756,27 @@ class GarnetEnv2 :
 		for x in program[1:] :
 			Depends( program[0], x )
 
+		# Deploy to devkit
+		AddPostAction( program, self.CopyToDevkit( '', program ) )
+
 		return program
 
 	#
 	# Copy one file to Xenon devkit
 	#
-	def CopyToDevkit( self, target, source ):
-		xedk=UTIL_getenv("XEDK")
-		xbcp='%s\\bin\\win32\\xbcp.exe'%(xedk)
-		# Note: xbcp.exe requires environment variable "SystemRoot".
-		cmdline = 'set SystemRoot=%s&"%s" /Q /D /Y /T "%s" %s'%(
-			UTIL_getenv("SystemRoot"),
-			xbcp,
-			source,
-			target)
-		Execute( cmdline )
+	def CopyToDevkit( self, destdir, sources ):
+		if 'xenon' == BUILD_TARGET_OS:
+			if '' == destdir: destdir='.'
+			for s in sources:
+				xedk=UTIL_getenv("XEDK")
+				# Note: xbcp.exe requires environment variable "SystemRoot".
+				cmdline = 'set PATH="%s"&set SystemRoot=%s&xbcp.exe /Q /D /Y /T "%s" %s'%(
+					xedk + "\\bin\\win32",
+					UTIL_getenv("SystemRoot"),
+					File(s).abspath,
+					'xe:\\garnet3d\\%s\\%s\\'%(BUILD_VARIANT,destdir))
+				Execute( cmdline )
+		return []
 
 	#
 	# Create alias for a build target. So that it can be
@@ -831,8 +837,7 @@ Export( 'GN' )
 SConscript( 'src/makefile.scons', variant_dir=BUILD_ROOT_PATH, duplicate=1)
 
 # Create pseudo target in root folder for all default targets.
-# So that they can be built automatically when invoking
-# SCons from root directory.
+# So that they can be built automatically when invok SCons from root directory.
 for d in GN.defaults:
 	name = '__default__' + d
 	Alias( name, d )
