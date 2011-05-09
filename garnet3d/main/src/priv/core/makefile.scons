@@ -1,31 +1,18 @@
 Import( 'GN' )
 
-sources = [
-    'all_public_headers.cpp',
-]
+objects  = GN.CollectTargets( ['GNexternObjects'] )
+objects += SConscript( 'app/makefile.scons' )
+objects += SConscript( 'base/makefile.scons' )
+#objects += SConscript( 'cegui/makefile.scons' )
+objects += SConscript( 'engine/makefile.scons' )
+objects += SConscript( 'gfx/makefile.scons' )
+objects += SConscript( 'gpu/makefile.scons' )
+objects += SConscript( 'input/makefile.scons' )
+objects += SConscript( 'util/makefile.scons' )
+objects += SConscript( 'win/makefile.scons' )
 
-objects = GN.CollectTargets([
-	'GNexternObjects',
-	'GNbaseObjects',
-	'GNgfxObjects',
-	'GNengineObjects',
-	'GNutilObjects',
-])
-
-libs = GN.CollectTargets([
-	'GNexternLib',
-	'GNbaseLib',
-	'GNgfxLib',
-	'GNengineLib',
-	'GNutilLib',
-])
-
-env = GN.NewBuildEnv()
-
-# build the monolithic core library.
 if GN.static_build:
-	GN.NewTarget( 'GNcore', env.Library( 'GNcore', objects ) )
+	GN.NewTarget( 'GNcore', GN.BuildLib( None, 'GNcore', objects ) )
 else:
-	# TODO: add external libraries, such opengl, d3d, X11...
-	env['LIBS'] += libs
-	Alias( 'GNcore', env.SharedLibrary( 'GNcore', sources ) )
+	env = GN.NewBuildEnv()
+	GN.NewTarget( 'GNcore', env.SharedLibrary( 'GNcore', objects ) )

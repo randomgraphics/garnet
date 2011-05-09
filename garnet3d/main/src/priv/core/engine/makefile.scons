@@ -8,5 +8,4 @@ sources = [
     'visual_component.cpp',
 ]
 objects = GN.BuildObjects( None, sources, 'pch.h', 'pch.cpp' )
-GN.NewTarget( 'GNengineObjects', objects )
-GN.NewTarget( 'GNengineLib', GN.BuildLib( None, 'GNutil', objects ) )
+Return( 'objects' )
