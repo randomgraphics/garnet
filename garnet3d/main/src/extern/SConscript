@@ -1,4 +1,0 @@
-SConscript([
-	'src/SConscript',
-	'bin/SConscript',
-	])
