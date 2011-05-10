@@ -1,0 +1,3 @@
+#!/bin/bash
+
+${SCONS_ROOT}/script/scons -f SConstruct2 $*

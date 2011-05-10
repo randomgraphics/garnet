@@ -1,3 +1,4 @@
+#!/usr/bin/bash
 # ======================================
 # detect garnet root directory
 # ======================================
@@ -19,8 +20,8 @@ export GN_BUILD_VARIANT=debug
 # setup scons
 # ===========
 SCONS_ROOT=${GARNET_ROOT}/env/scons/2.1.0.alpha.20101125
-PATH=${SCONS_ROOT}/script:${PATH}
 SCONS_LIB_DIR=${SCONS_ROOT}/engine
+export SCONS_ROOT
 export PATH SCONS_LIB_DIR
 export SCONSFLAGS=-U
 echo SCons Directory: ${SCONS_ROOT}
@@ -36,22 +37,21 @@ alias v='ls -l'
 alias gnroot="cd ${GARNET_ROOT}/"
 alias gnbld="cd ${GARNET_ROOT}/build.tmp/${GN_BUILD_TARGET_OS}.${GN_BUILD_TARGET_CPU}.${GN_BUILD_COMPILER}.${GN_BUILD_VARIANT}/bin/"
 alias gnsrc="cd ${GARNET_ROOT}/src/"
+alias gnextern="cd ${GARNET_ROOT}/src/extern/"
 alias gnpriv="cd ${GARNET_ROOT}/src/priv/"
-alias gnbase="cd ${GARNET_ROOT}/src/priv/base/"
-alias gncore="cd ${GARNET_ROOT}/src/priv/core/"
-alias gndoc="cd ${GARNET_ROOT}/src/priv/doc/"
-alias gneng="cd ${GARNET_ROOT}/src/priv/engine/"
-alias gngfx="cd ${GARNET_ROOT}/src/priv/gfx/"
-alias gngpu="cd ${GARNET_ROOT}/src/priv/gfx/gpu/"
 alias gninc="cd ${GARNET_ROOT}/src/priv/inc/garnet/"
+alias gncore="cd ${GARNET_ROOT}/src/priv/core/"
+alias gnbase="cd ${GARNET_ROOT}/src/priv/core/base/"
+alias gneng="cd ${GARNET_ROOT}/src/priv/core/engine/"
+alias gnutil="cd ${GARNET_ROOT}/src/priv/core/util/"
+alias gngfx="cd ${GARNET_ROOT}/src/priv/gfx/"
+alias gngpu="cd ${GARNET_ROOT}/src/priv/gpu/"
 alias gnmedia="cd ${GARNET_ROOT}/src/priv/media/"
 alias gnmisc="cd ${GARNET_ROOT}/src/priv/misc/"
 alias gnsample="cd ${GARNET_ROOT}/src/priv/sample/"
 alias gntest="cd ${GARNET_ROOT}/src/priv/test/"
 alias gntool="cd ${GARNET_ROOT}/src/priv/tool/"
-alias gnutil="cd ${GARNET_ROOT}/src/priv/util/"
-alias gnextern="cd ${GARNET_ROOT}/src/extern/"
-alias gnbin="cd ${GARNET_ROOT}/bin/"
+alias gndoc="cd ${GARNET_ROOT}/src/priv/doc/"
 alias gnmsvc="cd ${GARNET_ROOT}/msvc"
 alias gnenv="cd ${GARNET_ROOT}/env/"
 
@@ -61,6 +61,8 @@ alias gnenv="cd ${GARNET_ROOT}/env/"
 
 unset INCLUDE
 unset LIBS
+PATH=${GARNET_ROOT}/env/bin/bash:${PATH}
+
 
 # ============
 # End of setup

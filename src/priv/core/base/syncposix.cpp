@@ -3,6 +3,7 @@
 #if GN_POSIX
 
 GN::TimeInNanoSecond const GN::INFINITE_TIME = (GN::TimeInNanoSecond)-1;
+GN::TimeInNanoSecond const GN::ONE_SECOND_IN_NS = 1000000000; // 10^9
 
 static GN::Logger * sLogger = GN::getLogger("GN.base.Sync");
 
