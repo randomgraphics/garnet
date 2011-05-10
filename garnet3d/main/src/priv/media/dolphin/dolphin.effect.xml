@@ -224,8 +224,8 @@ varying vec2 o_CausticTexCoords;
 
 void main()
 {
-	const vec4 g_vFogColor = vec4( 0.0f, 0.25f, 0.5f, 1.0f );
-	const vec4 g_vAmbient  = vec4( 0.25f, 0.25f, 0.25f, 0.25f );
+	const vec4 g_vFogColor = vec4( 0.0, 0.25, 0.5, 1.0 );
+	const vec4 g_vAmbient  = vec4( 0.25, 0.25, 0.25, 0.25 );
 
 	// Decompress input values
 	vec3  vLightColor       = o_Misc.xxx;
@@ -245,7 +245,7 @@ void main()
 	gl_FragColor = mix( g_vFogColor, PixelColor0 + PixelColor1, fFogValue );
 
 	// Return depth to the second render target
-	gl_FragDepth = o_Misc.z / o_Misc.w;
+	// gl_FragDepth = o_Misc.z / o_Misc.w;
 }
 ]]>
 			</ps>

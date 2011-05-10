@@ -642,7 +642,9 @@ GN::gfx::OGLGpuProgramGLSL::enumParameters()
 
         GN_OGL_CHECK_RV( glGetActiveUniformARB( mProgram, i, maxLength, NULL, &u.count, &u.type, nameptr ), false );
         nameptr[maxLength] = 0;
-
+        
+        GN_VTRACE(sLogger)( "Found GLSL uniform: %s", nameptr );
+            
         GN_OGL_CHECK_RV( u.location = glGetUniformLocationARB( mProgram, nameptr ), false );
 
         u.name = nameptr;
