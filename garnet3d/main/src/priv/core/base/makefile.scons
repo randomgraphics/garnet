@@ -32,6 +32,10 @@ sources = [
 	'xml.cpp',
 ]
 
-objects = GN.BuildObjects( None, sources, 'pch.h', 'pch.cpp' )
+env = GN.NewBuildEnv()
+
+if GN.has_iconv : env.Append( CPPDEFINES=['HAS_ICONV'] )
+
+objects = GN.BuildObjects( env, sources, 'pch.h', 'pch.cpp' )
 
 Return( 'objects' )

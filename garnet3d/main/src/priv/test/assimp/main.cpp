@@ -233,7 +233,7 @@ void recursive_render (const struct aiScene *sc, const struct aiNode* nd)
 
 			glBegin(face_mode);
 
-			for(i = 0; i < face->mNumIndices; i++) {
+			for(i = 0; i < (int)face->mNumIndices; i++) {
 				int index = face->mIndices[i];
 				if(mesh->mColors[0] != NULL)
 					Color4f(&mesh->mColors[0][index]);
@@ -355,7 +355,7 @@ int main(int argc, char **argv)
 	// the model name can be specified on the command line. we try to locate
 	// one of the more expressive test models from the repository.
 
-	if( 0 != loadasset( argc >= 2 ? argv[1] : GN::fs::toNativeDiskFilePath("media::model/R.F.R01/a01.ase") ) )
+	if( 0 != loadasset( argc >= 2 ? argv[1] : (const char*)GN::fs::toNativeDiskFilePath("media::model/R.F.R01/a01.ase") ) )
     {
         return -1;
 	}

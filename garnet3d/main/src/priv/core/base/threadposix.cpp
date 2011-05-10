@@ -2,11 +2,11 @@
 
 #if GN_POSIX
 
-static GN::Logger * sLogger = GN::getLogger("GN.base.Thread");
+//static GN::Logger * sLogger = GN::getLogger("GN.base.Thread");
 
 using namespace GN;
 
-// *****************************************************************************
+/* *****************************************************************************
 // thread class
 // *****************************************************************************
 
@@ -36,8 +36,6 @@ public:
     bool create(
         const Procedure & proc,
         void * param,
-        Priority priority,
-        bool initialSuspended,
         const char * )
     {
         GN_GUARD;
@@ -245,7 +243,7 @@ private:
         return (void*)status;
     };
 
-};
+}; */
 
 // *****************************************************************************
 // public functions
@@ -254,21 +252,21 @@ private:
 //
 //
 // -----------------------------------------------------------------------------
-GN::Thread *
-GN::Thread::sCreateThread(
+GN_API GN::Thread::Identifier GN::Thread::sCreate(
     const Procedure & proc,
     void            * param,
-    Priority          priority,
-    bool              initialSuspended,
     const char      * name )
 {
     GN_GUARD;
 
-    AutoObjPtr<ThreadPosix> s( new ThreadPosix );
-
-    if( !s->create( proc, param, priority, initialSuspended, name ) ) return 0;
-
-    return s.detach();
+    //AutoObjPtr<ThreadPosix> s( new ThreadPosix );
+    //if( !s->create( proc, param, name ) ) return 0;
+    //return s.detach();
+    GN_UNIMPL_WARNING();
+    GN_UNUSED_PARAM( proc );
+    GN_UNUSED_PARAM( param );
+    GN_UNUSED_PARAM( name );
+    return 0;
 
     GN_UNGUARD;
 }
@@ -276,17 +274,14 @@ GN::Thread::sCreateThread(
 //
 //
 // -----------------------------------------------------------------------------
-Thread * GN::Thread::sAttachToCurrentThread()
+GN_API GN::WaitResult GN::Thread::sWaitForTermination(
+    Identifier       thread,
+    TimeInNanoSecond timeoutTime )
 {
-    GN_GUARD;
-
-    AutoObjPtr<ThreadPosix> s( new ThreadPosix );
-
-    if( !s->attach() ) return 0;
-
-    return s.detach();
-
-    GN_UNGUARD;
+    GN_UNIMPL_WARNING();
+    GN_UNUSED_PARAM( thread );
+    GN_UNUSED_PARAM( timeoutTime );
+    return GN::WaitResult::FAILED;
 }
 
 //
@@ -295,7 +290,51 @@ Thread * GN::Thread::sAttachToCurrentThread()
 void GN::Thread::sSleepCurrentThread( TimeInNanoSecond sleepTime )
 {
     GN_UNIMPL_WARNING();
+    GN_UNUSED_PARAM( sleepTime );
 }
 
+//
+//
+// -----------------------------------------------------------------------------
+GN_API GN::Thread::Identifier GN::Thread::sGetCurrentThread()
+{
+    GN_UNIMPL_WARNING();
+    return 0;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+GN_API bool GN::Thread::sIsCurrentThread( Identifier id )
+{
+    return id == sGetCurrentThread();
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+GN_API GN::Thread::Priority GN::Thread::sGetPriority( Identifier )
+{
+    GN_UNIMPL_WARNING();
+    return Thread::NORMAL;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+GN_API void GN::Thread::sSetPriority( Identifier t, Priority p )
+{
+    GN_UNIMPL_WARNING();
+    GN_UNUSED_PARAM( t );
+    GN_UNUSED_PARAM( p );
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+GN_API void GN::Thread::sSetAffinity( Identifier, uint32 )
+{
+    GN_UNIMPL_WARNING();
+}
 
 #endif

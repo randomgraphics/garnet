@@ -1,3 +1,4 @@
+#!/usr/bin/python
 # -*- coding: GB18030 -*-
 
 import sys, os, os.path, re, fnmatch
@@ -288,7 +289,7 @@ def UTIL_new_env_ex( msvcBatchMode ):
 		ccflags['debug']   += ['-g']
 		ccflags['profile'] += ['-O3']
 		ccflags['retail']  += ['-O3']
-		if 'mingw' == BUILD_compiler:
+		if 'mingw' == BUILD_COMPILER:
 			cppdefines['common'] += ['WINVER=0x500']
 
 	else:
@@ -392,13 +393,14 @@ def CheckConfig():
 	# GLUT
 	# ====
 	if c.CheckLibWithHeader( 'glut', 'GL/glut.h', 'C', 'glutInit(0,0);' ) :
-	    CONFIG['has_glut'] = True
-	    CONFIG['glut'] = 'glut'
+		CONFIG['has_glut'] = True
+		CONFIG['glut'] = ['glut']
 	elif c.CheckLibWithHeader( 'glut32', 'GL/glut.h', 'C', 'glutInit(0,0);' ) :
-	    CONFIG['has_glut'] = True
-	    CONFIG['glut'] = 'glut32'
+		CONFIG['has_glut'] = True
+		CONFIG['glut'] = ['glut32']
 	else :
-	    CONFIG['has_glut'] = False
+		CONFIG['has_glut'] = False
+		CONFIG['glut'] = []
 
 	# =================
 	# Misc. D3D headers
@@ -589,16 +591,19 @@ class GarnetEnv2 :
 			files = []
 			root = Dir(dir).srcnode().abspath;
 			try:
-				for file in os.listdir( root ):
-					if os.path.isdir( os.path.join(root,file) ):
-						if recursive and ( not '.svn' == file ) : # ignore subversion directory
-							files = files + do_glob( pattern, os.path.join(dir,file), recursive )
-					else:
-						# Note: ignore precompiled headers and makefiles
-						if not ('pch.cpp' == file or 'stdafx.cpp' == file or 'makefile.scons' == file):
-							#print 'fnmatch(%s,%s) = %s'%(file,pattern,fnmatch.fnmatch(file, pattern))
-							if fnmatch.fnmatch(file, pattern):
-								files.append( os.path.join( dir, file ) )
+				if os.path.isdir( root ):
+					for file in os.listdir( root ):
+						if os.path.isdir( os.path.join(root,file) ):
+							if recursive and ( not '.svn' == file ) : # ignore subversion directory
+								files = files + do_glob( pattern, os.path.join(dir,file), recursive )
+						else:
+							# Note: ignore precompiled headers and makefiles
+							if not ('pch.cpp' == file or 'stdafx.cpp' == file or 'makefile.scons' == file):
+								#print 'fnmatch(%s,%s) = %s'%(file,pattern,fnmatch.fnmatch(file, pattern))
+								if fnmatch.fnmatch(file, pattern):
+									files.append( os.path.join( dir, file ) )
+				else:
+					UTIL_warn( "%s is not directory."%(root) )
 			except WindowsError:
 				pass
 			return files
@@ -675,6 +680,7 @@ class GarnetEnv2 :
 		# when using gcc, the library order matters.
 		libs = self.CollectTargets( ['GNcore'] )
 		libs += CONFIG['cg_libs']
+		libs += CONFIG['glut']
 		libs += CONFIG['ogl_libs']
 		libs += CONFIG['fbx_libs']
 		libs += CONFIG['iconv_lib']

@@ -117,7 +117,7 @@ void GN::gfx::MultiThreadGpu::quit()
     {
         mCommandBuffer.postCommand0( CMD_SHUTDOWN );
         Thread::sJoin( mThread );
-        mThread = NULL;
+        mThread = 0;
     }
 
     mCommandBuffer.quit();
