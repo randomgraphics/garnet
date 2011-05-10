@@ -1,7 +1,0 @@
-SConscript( dirs=[
-	'bezier',
-	'dolphin',
-	'ripple',
-	'renderToCube',
-	'thickline',
-	] )

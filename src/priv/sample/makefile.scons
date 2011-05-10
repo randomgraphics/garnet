@@ -1,0 +1,7 @@
+SConscript( [
+#	'bezier',
+	'dolphin/makefile.scons',
+#	'ripple',
+#	'renderToCube',
+#	'thickline',
+	] )

@@ -4,6 +4,7 @@ SConscript( [
 	'core/makefile.scons',
 	'media/makefile.scons',
 	'tool/makefile.scons',
+	'sample/makefile.scons',
 	'test/makefile.scons',
 	'doc/makefile.scons',
 	] )
