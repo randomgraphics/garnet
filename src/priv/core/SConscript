@@ -1,8 +1,0 @@
-Import( 'GN' )
-
-sources = [
-    'all_public_headers.cpp',
-]
-
-cluster = GN.newSourceCluster( sources )
-GN.newTarget( 'shlib', 'GNcore', [cluster] )

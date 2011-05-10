@@ -1,7 +1,0 @@
-Import( 'GN' )
-sources = [
-	'arcball.cpp',
-	'fpcamera.cpp',
-	]
-r = GN.newSourceCluster( sources, 'pch.h', 'pch.cpp' )
-Return( 'r' )
