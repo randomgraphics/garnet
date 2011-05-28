@@ -186,10 +186,10 @@ void main()
 	vec4 vModelPosition = vec4( gl_Vertex.xyz * g_vBlendWeights.x + i_Position1 * g_vBlendWeights.y + i_Position2 * g_vBlendWeights.z, 1.0f );
 
 	// Transform position to the clipping space
-	vec4 vOutputPosition = mul( g_matWorldViewProj, vModelPosition );
+	vec4 vOutputPosition = g_matWorldViewProj * vModelPosition;
 
 	// Transform position to the camera space
-	vec4 vViewPosition = mul( g_matWorldView, vModelPosition );
+	vec4 vViewPosition = g_matWorldView * vModelPosition;
 
 	// Tween the 3 normals (v3,v4,v5) into one normal
 	vec3 vModelNormal = gl_Normal * g_vBlendWeights.x + i_Normal1 * g_vBlendWeights.y + i_Normal2 * g_vBlendWeights.z;

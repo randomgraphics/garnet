@@ -266,84 +266,79 @@ sIsTextureUniform( GLenum type )
 // -----------------------------------------------------------------------------
 static bool sGetOglVertexSemantic( OGLVertexSemantic & semanticName, uint8 & semanticIndex, const char * attributeName, GLuint attributeLocation )
 {
-    if( (GLuint)-1 == attributeLocation )
+    semanticIndex = 0;
+
+    if( 0 == stringCompare( "gl_Vertex", attributeName ) )
     {
-        // this is conventional attribute
-
-        semanticIndex = 0;
-
-        if( 0 == stringCompare( "gl_Vertex", attributeName ) )
-        {
-            semanticName = VERTEX_SEMANTIC_VERTEX;
-        }
-        else if( 0 == stringCompare( "gl_Normal", attributeName ) )
-        {
-            semanticName = VERTEX_SEMANTIC_NORMAL;
-        }
-        else if( 0 == stringCompare( "gl_Color", attributeName ) )
-        {
-            semanticName = VERTEX_SEMANTIC_COLOR;
-        }
-        else if( 0 == stringCompare( "gl_SecondaryColor", attributeName ) )
-        {
-            semanticName  = VERTEX_SEMANTIC_COLOR;
-            semanticIndex = 1;
-        }
-        else if( 0 == stringCompare( "gl_FogCoord", attributeName ) )
-        {
-            semanticName = VERTEX_SEMANTIC_FOG;
-        }
-        else if( 0 == stringCompare( "gl_MultiTexCoord0", attributeName ) )
-        {
-            semanticName = VERTEX_SEMANTIC_TEXCOORD;
-        }
-        else if( 0 == stringCompare( "gl_MultiTexCoord1", attributeName ) )
-        {
-            semanticName = VERTEX_SEMANTIC_TEXCOORD;
-            semanticIndex    = 1;
-        }
-        else if( 0 == stringCompare( "gl_MultiTexCoord2", attributeName ) )
-        {
-            semanticName  = VERTEX_SEMANTIC_TEXCOORD;
-            semanticIndex = 2;
-        }
-        else if( 0 == stringCompare( "gl_MultiTexCoord3", attributeName ) )
-        {
-            semanticName  = VERTEX_SEMANTIC_TEXCOORD;
-            semanticIndex = 3;
-        }
-        else if( 0 == stringCompare( "gl_MultiTexCoord4", attributeName ) )
-        {
-            semanticName  = VERTEX_SEMANTIC_TEXCOORD;
-            semanticIndex = 4;
-        }
-        else if( 0 == stringCompare( "gl_MultiTexCoord5", attributeName ) )
-        {
-            semanticName  = VERTEX_SEMANTIC_TEXCOORD;
-            semanticIndex = 5;
-        }
-        else if( 0 == stringCompare( "gl_MultiTexCoord6", attributeName ) )
-        {
-            semanticName  = VERTEX_SEMANTIC_TEXCOORD;
-            semanticIndex = 6;
-        }
-        else if( 0 == stringCompare( "gl_MultiTexCoord7", attributeName ) )
-        {
-            semanticName  = VERTEX_SEMANTIC_TEXCOORD;
-            semanticIndex = 7;
-        }
-        else
-        {
-            // never reach here
-            GN_UNEXPECTED();
-            return false;
-        }
+        semanticName = VERTEX_SEMANTIC_VERTEX;
     }
-    else
+    else if( 0 == stringCompare( "gl_Normal", attributeName ) )
+    {
+        semanticName = VERTEX_SEMANTIC_NORMAL;
+    }
+    else if( 0 == stringCompare( "gl_Color", attributeName ) )
+    {
+        semanticName = VERTEX_SEMANTIC_COLOR;
+    }
+    else if( 0 == stringCompare( "gl_SecondaryColor", attributeName ) )
+    {
+        semanticName  = VERTEX_SEMANTIC_COLOR;
+        semanticIndex = 1;
+    }
+    else if( 0 == stringCompare( "gl_FogCoord", attributeName ) )
+    {
+        semanticName = VERTEX_SEMANTIC_FOG;
+    }
+    else if( 0 == stringCompare( "gl_MultiTexCoord0", attributeName ) )
+    {
+        semanticName = VERTEX_SEMANTIC_TEXCOORD;
+    }
+    else if( 0 == stringCompare( "gl_MultiTexCoord1", attributeName ) )
+    {
+        semanticName = VERTEX_SEMANTIC_TEXCOORD;
+        semanticIndex    = 1;
+    }
+    else if( 0 == stringCompare( "gl_MultiTexCoord2", attributeName ) )
+    {
+        semanticName  = VERTEX_SEMANTIC_TEXCOORD;
+        semanticIndex = 2;
+    }
+    else if( 0 == stringCompare( "gl_MultiTexCoord3", attributeName ) )
+    {
+        semanticName  = VERTEX_SEMANTIC_TEXCOORD;
+        semanticIndex = 3;
+    }
+    else if( 0 == stringCompare( "gl_MultiTexCoord4", attributeName ) )
+    {
+        semanticName  = VERTEX_SEMANTIC_TEXCOORD;
+        semanticIndex = 4;
+    }
+    else if( 0 == stringCompare( "gl_MultiTexCoord5", attributeName ) )
+    {
+        semanticName  = VERTEX_SEMANTIC_TEXCOORD;
+        semanticIndex = 5;
+    }
+    else if( 0 == stringCompare( "gl_MultiTexCoord6", attributeName ) )
+    {
+        semanticName  = VERTEX_SEMANTIC_TEXCOORD;
+        semanticIndex = 6;
+    }
+    else if( 0 == stringCompare( "gl_MultiTexCoord7", attributeName ) )
+    {
+        semanticName  = VERTEX_SEMANTIC_TEXCOORD;
+        semanticIndex = 7;
+    }
+    else if( -1 != attributeLocation )
     {
         // this is general vertex attribute
         semanticName  = VERTEX_SEMANTIC_ATTRIBUTE;
         semanticIndex = (uint8)attributeLocation;
+    }
+    else
+    {
+        // never reach here
+        GN_UNEXPECTED();
+        return false;
     }
 
     // success
@@ -642,9 +637,9 @@ GN::gfx::OGLGpuProgramGLSL::enumParameters()
 
         GN_OGL_CHECK_RV( glGetActiveUniformARB( mProgram, i, maxLength, NULL, &u.count, &u.type, nameptr ), false );
         nameptr[maxLength] = 0;
-        
+
         GN_VTRACE(sLogger)( "Found GLSL uniform: %s", nameptr );
-            
+
         GN_OGL_CHECK_RV( u.location = glGetUniformLocationARB( mProgram, nameptr ), false );
 
         u.name = nameptr;
