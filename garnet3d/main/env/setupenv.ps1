@@ -322,23 +322,14 @@ if( "mswin" -eq $env:GN_BUILD_TARGET_OS )
     "========================="
     ""
 
-    $candidates = (
-        "hklm:\software\Autodesk FBX SDK 2011.3.1",
-        "hklm:\software\Wow6432Node\Autodesk FBX SDK 2011.3.1" )
+	# sort found items in reverse order. So that the latest SDK in the first one in the list.
+	$candidates = get-childitem "hklm:\software\Autodesk FBX SDK*" | sort-object -Descending
 
-    foreach( $c in $candidates )
+	if( $candidates.Count -gt 0 )
     {
-        if( test-path $c )
-        {
-            $sdkroot = (get-itemproperty $c).Install_Dir
-            $env:INCLUDE += ";$sdkroot\include"
-            $env:LIB     += ";$sdkroot\lib"
-            break;
-        }
-    }
-
-    if( $sdkroot )
-    {
+		$sdkroot = $candidates[0].GetValue("Install_Dir")
+		$env:INCLUDE += ";$sdkroot\include"
+		$env:LIB     += ";$sdkroot\lib"
         "FBX SDK found: $sdkroot"
     }
     else
