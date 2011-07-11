@@ -85,6 +85,11 @@ namespace GN { namespace util
         ///
         float fps() const { return mFps.fps(); }
 
+        ///
+        /// Get the frame idle percentage
+        ///
+        int frameIdlePercentage() const { return mFrameIdlePercentage; }
+
         //@}
 
         // ********************************
@@ -95,6 +100,7 @@ namespace GN { namespace util
         InitParam                  mInitParam;
 
         util::FpsCalculator        mFps; ///< FPS counter
+        int                        mFrameIdlePercentage;
 
         StrW                       mHelpText;
         bool                       mShowHUD;  ///< show simple HUD over game scene

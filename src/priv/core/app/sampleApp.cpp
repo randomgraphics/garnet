@@ -150,39 +150,66 @@ int GN::util::SampleApp::run( int argc, const char * const argv[] )
     const sint64 ONE_SECOND                = clock.sGetSystemCycleFrequency();
     const sint64 UPDATE_INTERVAL_IN_CYCLES = ONE_SECOND / UPDATE_FREQUENCY;
 
-    int updateMissed = 0;
+    int    updateMissed = 0;
     sint64 nextUpdateTime = clock.getCycleCount();
+    bool   idle = false;
+    sint64 idleStartTick = 0;
+    sint64 idleTimes[30] = {0};
+    int    idleCounter = 0;
+    const int IDLE_BUF_SIZE = (int)GN_ARRAY_COUNT(idleTimes);
+
+    mFrameIdlePercentage = 0;
 
     while( !mDone )
     {
-        // process render window messages
-        engine::getGpu()->processRenderWindowMessages( false );
+        if(!idle)
+        {
+            // process render window messages
+            engine::getGpu()->processRenderWindowMessages( false );
 
-        // process user input
-        gInput.processInputEvents();
+            // process user input
+            gInput.processInputEvents();
+        }
 
         // call update in fixed interval
         sint64 currentTime = clock.getCycleCount();
 
         if( currentTime >= nextUpdateTime )
         {
+            if( idle )
+            {
+                // clear idle flag
+                idle = false;
+
+                // calculate idle time
+                idleTimes[idleCounter%IDLE_BUF_SIZE] = currentTime - idleStartTick;
+                ++idleCounter;
+
+                sint64 aveIdleTime = 0;
+                int count = idleCounter > IDLE_BUF_SIZE ? IDLE_BUF_SIZE : idleCounter;
+                for( int i = 0; i < count; ++i )
+                {
+                    aveIdleTime += idleTimes[i];
+                }
+                mFrameIdlePercentage = (int)(aveIdleTime * 100 / count / UPDATE_INTERVAL_IN_CYCLES);
+            }
+
             // Next update time has elasped. We need to call update immediatly.
             onUpdate();
+
+#if 1
+            //
+            // Test code: simulate too-slow update function. The application should
+            // run in roughly 30 FPS, with no frame skipping, no idle time.
+            //
+            Thread::sSleepCurrentThread( 1000000000/30 );
+#endif
 
             // Remember when update finishes.
             sint64 updateFinishTime = clock.getCycleCount();
 
             // Next update time is current update startup time plus the update interval.
             nextUpdateTime += UPDATE_INTERVAL_IN_CYCLES;
-
-#if 0
-            //
-            // Test code: simulate too-slow update function. The application should
-            // run in roughly 30 FPS, with no frame skipping.
-            //
-            Thread::sSleepCurrentThread( 1000000000/30 );
-            updateFinishTime = clock.getCycleCount();
-#endif
 
             if( updateFinishTime > nextUpdateTime )
             {
@@ -218,10 +245,10 @@ int GN::util::SampleApp::run( int argc, const char * const argv[] )
                 // We just rendered a frame. Let's update the FPS counter.
                 mFps.onFrame();
 
-                // The lasted update call has finished before the next update time.
-                // It means the application is simply fast enough to keep up with real time,
-                // or we finally catched up by skipping rendering calls. Either way, the
-                // updateMissed counter should be cleared.
+                // Last update call has finished before the next update time.
+                // It means the application is fast enough to keep up with real time,
+                // or we finally catched up by skipping enough rendering calls.
+                // Either way, the updateMissed counter should be cleared.
                 updateMissed = 0;
             }
             else
@@ -244,6 +271,11 @@ int GN::util::SampleApp::run( int argc, const char * const argv[] )
                     ++updateMissed;
                 }
             }
+        }
+        else if (!idle )
+        {
+            idleStartTick = currentTime;
+            idle = true;
         }
     }
 
@@ -363,9 +395,9 @@ void GN::util::SampleApp::printStandardCommandLineOptions()
         "\n"
         "   -gpu [auto|ogl|d3d10]   Choose GPU API. Default is AUTO.\n"
         "\n"
-        "   -ww [num]               Windows width. Default is 640.\n"
+        "   -ww [num]               Windows width. Default is 800.\n"
         "\n"
-        "   -wh [num]               Windows width. Default is 480.\n"
+        "   -wh [num]               Windows width. Default is 600.\n"
         "\n"
         "   -vsync [on|off]         Enable/Disable vsync. Default is off.\n"
         //"\n"
@@ -437,6 +469,8 @@ bool GN::util::SampleApp::checkCmdLine( int argc, const char * const argv[] )
     mInitParam.asciiFont.width = 16;
     mInitParam.asciiFont.height = 16;
     mInitParam.asciiFont.quality = FontFaceDesc::ANTIALIASED;
+    mInitParam.ro.windowedWidth = 800;
+    mInitParam.ro.windowedHeight = 600;
 
 #if GN_XENON
 
@@ -618,11 +652,17 @@ void GN::util::SampleApp::drawHUD()
     {
         BitmapFont * font = engine::getDefaultFontRenderer();
 
-        font->drawText( mFps.fpsString().rawptr(), 40, 40 );
+        StrW timeInfo = stringFormat(
+            L"FPS: %.2f\tIdle: %d%%\n"
+            L"(Press F1 for more helps)",
+            mFps.fps(),
+            mFrameIdlePercentage );
+
+        font->drawText( timeInfo.rawptr(), 40, 40 );
 
         if( mShowHelp )
         {
-            font->drawText( mHelpText, 40, 90 );
+            font->drawText( mHelpText, 40, 120 );
         }
     }
 
