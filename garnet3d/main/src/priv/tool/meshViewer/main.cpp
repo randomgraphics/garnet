@@ -194,7 +194,7 @@ public:
                 L"radius   : %f",
                 position.x, position.y, position.z,
                 radius ).rawptr(),
-            320, 40 );
+            (float)getGpu()->getDispDesc().width - 320, 40 );
     }
 
     void onKeyPress( input::KeyEvent ke )

@@ -322,25 +322,23 @@ if( "mswin" -eq $env:GN_BUILD_TARGET_OS )
     "========================="
     ""
 
-	if( test-path "hklm:\software\Wow6432Node" )
-	{
-		# sort items in reverse order. So that the latest SDK in the first one in the list.
-		$candidates = get-childitem "hklm:\software\Wow6432Node\Autodesk FBX SDKa*" | sort-object -Descending
-	}
-	else
-	{
-		$candidates = get-childitem "hklm:\software\Autodesk FBX SDK*" | sort-object -Descending
-	}
-	if( "System.Array" -ne $candidates.GetType().FullName )
-	{
-		$candidates = @($candidates)
-	}
+    $candidates = (
+        "hklm:\software\Autodesk FBX SDK 2011.3.1",
+        "hklm:\software\Wow6432Node\Autodesk FBX SDK 2011.3.1" )
 
-	if( $candidates.Count -gt 0 )
+    foreach( $c in $candidates )
     {
-		$sdkroot = $candidates[0].GetValue("Install_Dir")
-		$env:INCLUDE += ";$sdkroot\include"
-		$env:LIB     += ";$sdkroot\lib"
+        if( test-path $c )
+        {
+            $sdkroot = (get-itemproperty $c).Install_Dir
+            $env:INCLUDE += ";$sdkroot\include"
+            $env:LIB     += ";$sdkroot\lib"
+            break;
+        }
+    }
+
+    if( $sdkroot )
+    {
         "FBX SDK found: $sdkroot"
     }
     else
