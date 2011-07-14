@@ -197,7 +197,7 @@ int GN::util::SampleApp::run( int argc, const char * const argv[] )
             // Next update time has elasped. We need to call update immediatly.
             onUpdate();
 
-#if 1
+#if 0
             //
             // Test code: simulate too-slow update function. The application should
             // run in roughly 30 FPS, with no frame skipping, no idle time.
