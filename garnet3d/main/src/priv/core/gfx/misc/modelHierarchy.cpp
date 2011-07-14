@@ -487,7 +487,7 @@ static const char * sGetTextureFileName( KFbxSurfaceMaterial * material, const c
 
             for(int k =0; k<lNbTextures; ++k)
             {
-                KFbxTexture * lTexture = KFbxCast <KFbxTexture> (lLayeredTexture->GetSrcObject(KFbxTexture::ClassId,k));
+                KFbxFileTexture * lTexture = KFbxCast <KFbxFileTexture> (lLayeredTexture->GetSrcObject(KFbxTexture::ClassId,k));
                 if(lTexture)
                 {
                     return (const char *)lTexture->GetRelativeFileName();
@@ -502,7 +502,7 @@ static const char * sGetTextureFileName( KFbxSurfaceMaterial * material, const c
         for(int j =0; j<lNbTextures; ++j)
         {
 
-            KFbxTexture* lTexture = KFbxCast <KFbxTexture>( prop.GetSrcObject(KFbxTexture::ClassId, j) );
+            KFbxFileTexture* lTexture = KFbxCast <KFbxFileTexture>( prop.GetSrcObject(KFbxTexture::ClassId, j) );
             if(lTexture)
             {
                 return (const char *)lTexture->GetRelativeFileName();

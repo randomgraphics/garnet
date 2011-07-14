@@ -471,12 +471,7 @@ def CheckConfig():
 	# FBX
 	# ===
 
-	FBX_libname = "fbxsdk";
-	if BUILD_COMPILER == 'vc100'  : FBX_libname += "_mt2010"
-	elif BUILD_COMPILER == 'vc90' : FBX_libname += "_mt2008"
-	elif BUILD_COMPILER == 'icl'  : FBX_libname += "_mt2010"
-	elif BUILD_COMPILER == 'gcc'  : FBX_libname += "_gcc4"
-	if HOST_CPU == 'x64'          : FBX_libname += "_amd64"
+	FBX_libname = "fbxsdk-" + UTIL_getenv("FBX_SDK_VERSION") + "-mt";
 	if BUILD_VARIANT == 'debug'   : FBX_libname += 'd'
 
 	FBX_deps = []

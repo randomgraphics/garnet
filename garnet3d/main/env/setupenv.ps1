@@ -322,24 +322,32 @@ if( "mswin" -eq $env:GN_BUILD_TARGET_OS )
     "========================="
     ""
 
-    $candidates = (
-        "hklm:\software\Autodesk FBX SDK 2011.3.1",
-        "hklm:\software\Wow6432Node\Autodesk FBX SDK 2011.3.1" )
-
-    foreach( $c in $candidates )
+    if( test-path "hklm:\software\Wow6432Node" )
     {
-        if( test-path $c )
-        {
-            $sdkroot = (get-itemproperty $c).Install_Dir
-            $env:INCLUDE += ";$sdkroot\include"
-            $env:LIB     += ";$sdkroot\lib"
-            break;
-        }
+        # sort items in reverse order. So that the latest SDK in the first one in the list.
+        $candidates = get-childitem "hklm:\software\Wow6432Node\Autodesk FBX SDKa*" | sort-object -Descending
+    }
+    else
+    {
+        $candidates = get-childitem "hklm:\software\Autodesk FBX SDK*" | sort-object -Descending
+    }
+    if( "System.Array" -ne $candidates.GetType().FullName )
+    {
+        $candidates = @($candidates)
     }
 
-    if( $sdkroot )
+    if( $candidates.Count -gt 0 )
     {
-        "FBX SDK found: $sdkroot"
+        $sdkroot = $candidates[0].GetValue("Install_Dir")
+
+        $env:FBX_SDK_VERSION = $candidates[0].Name.SubString($candidates[0].Name.LastIndexOf(' ') + 1)
+        $env:INCLUDE        += ";$sdkroot\include"
+        $env:LIB            += ";$sdkroot\lib\vs2010\$env:GN_BUILD_TARGET_CPU"
+
+        "FBX SDK found    : $sdkroot"
+        "FBX_SDK_VERSION  : $env:FBX_SDK_VERSION"
+        "FBX INCLUDE PATH : $sdkroot\include"
+        "FBX LIB PATH     : $sdkroot\lib\vs2010\$env:GN_BUILD_TARGET_CPU"
     }
     else
     {
