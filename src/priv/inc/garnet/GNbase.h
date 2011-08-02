@@ -12,9 +12,10 @@
 namespace GN
 {
     ///
-    /// namespace for implementation details of garnet library
+    /// namespace for declaration of internal classes and functions that are reserved
+    /// for garnet library.
     ///
-    namespace detail {}
+    namespace internal {}
 }
 
 // user configurable configurations
