@@ -10,12 +10,13 @@
 /// Assert failture
 ///
 #define GN_ASSERT_FAILURE( desc )                                \
-    {                                                            \
-        static bool sIgnoreFromNowOn = false;                    \
-        if( !sIgnoreFromNowOn && GN::assertFunc( desc, __FILE__, \
-            __LINE__, &sIgnoreFromNowOn ) )                      \
-        { ::GN::breakIntoDebugger(); }                                    \
-    }
+    if( true ) {                                                 \
+        static bool sIgnoredForever = false;                     \
+        if( !sIgnoredForever ) {                                 \
+            GN::internal::handleAssertFailure(                   \
+                desc, __FILE__, __LINE__, &sIgnoredForever );    \
+        }                                                        \
+    } else void(0)
 
 ///
 /// Perform runtime assert.
@@ -23,7 +24,7 @@
 /// This macro will perform assertion in all builds, in case you want assert in
 /// release build. Normally, you don't need this.
 ///
-#define GN_DO_ASSERT( exp, desc ) if( !(exp) ) GN_ASSERT_FAILURE(desc) else void(0)
+#define GN_DO_ASSERT( exp, desc ) if( !(exp) ) GN_ASSERT_FAILURE(desc); else void(0)
 
 
 ///
@@ -229,11 +230,22 @@ namespace GN
 
     enum RuntimeAssertBehavior
     {
-        RAB_ASK_USER,       ///< Ask user how to respond assert failure. This is default behavior
-        RAB_BREAK_ALWAYS,   ///< Always break into debugger.
-        RAB_LOG_ONLY,       ///< Ignore assert failure, output log message only.
-        RAB_SILENCE,        ///< Silence ignore assert failure. No break, No message.
+        RAB_ASK_USER,           ///< Ask user how to respond assert failure. This is default behavior
+        RAB_BREAK_ALWAYS,       ///< Always break into debugger.
+        RAB_LOG_ONLY,           ///< Ignore assert failure, output log message only.
+        RAB_SILENCE,            ///< Silence ignore assert failure. No break, No message.
+        RAB_CALL_USER_ROUTINE,  ///< Call a user specified routine when assert failed.
     };
+
+    ///
+    /// Define user routine that will be called when assert fails.
+    ///
+    typedef void (*AssertFailuerUserRoutine)(
+        void       * userContext,
+        const char * msg,
+        const char * file,
+        int          line,
+        bool       * ignoreTheFailureForEver );
 
     ///
     /// Change runtime assert behavior. Default is RAB_ASK_USER.
@@ -244,14 +256,13 @@ namespace GN
     GN_API RuntimeAssertBehavior setRuntimeAssertBehavior( RuntimeAssertBehavior );
 
     ///
-    /// break into debugger ( ASCII version )
+    /// Set the assert failure routine. Return the current routine.
     ///
-    GN_API bool
-    assertFunc(
-        const char * msg,
-        const char * file,
-        int          line,
-        bool *       ignore ) throw();
+    GN_API void setAssertFailerUserRoutine(
+        AssertFailuerUserRoutine   newRoutine,
+        void                     * newUserContext,
+        AssertFailuerUserRoutine * oldRoutine = NULL,
+        void                    ** oldUserContext = NULL );
 
 	///
 	/// Debug break function
@@ -281,6 +292,19 @@ namespace GN
     /// convert errno value to string
     ///
     GN_API const char * errno2str( int );
+
+    namespace internal
+    {
+        ///
+        /// Handle assert failure
+        ///
+        GN_API void
+        handleAssertFailure(
+            const char * msg,
+            const char * file,
+            int          line,
+            bool *       ignoreForever ) throw();
+    };
 
     //@}
 }

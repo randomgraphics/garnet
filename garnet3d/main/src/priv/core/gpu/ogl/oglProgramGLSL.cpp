@@ -243,7 +243,7 @@ sGetUniformSize( GLenum type )
         case GL_SAMPLER_2D_SHADOW_ARB      :
         case GL_SAMPLER_2D_RECT_ARB        :
         case GL_SAMPLER_2D_RECT_SHADOW_ARB :
-            GN_UNEXPECTED_EX( "Texture parameter is not supposed to be handled by this function." )
+            GN_UNEXPECTED_EX( "Texture parameter is not supposed to be handled by this function." );
             return sizeof(GLint);
 
         default :

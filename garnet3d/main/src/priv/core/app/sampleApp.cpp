@@ -138,7 +138,7 @@ int GN::util::SampleApp::run( int argc, const char * const argv[] )
     mDone = false;
 
     //
-    // This explains how game loop works in XNA 2.0:
+    // This function follows the game loop works in XNA 2.0 that is explained here:
     //      http://msdn.microsoft.com/en-us/library/bb203873.aspx
     //
     // And this explains why it is that way:
@@ -160,15 +160,25 @@ int GN::util::SampleApp::run( int argc, const char * const argv[] )
 
     mFrameIdlePercentage = 0;
 
+    GN_DEFINE_STATIC_PROFILER( Runtime, "Main game loop" );
+    GN_DEFINE_STATIC_PROFILER( Input, "Process System messages and user input" );
+    GN_DEFINE_STATIC_PROFILER( Update, "Update game logic" );
+    GN_DEFINE_STATIC_PROFILER( Render, "Render game frame" );
+
+    GN_START_PROFILER( Runtime );
     while( !mDone )
     {
         if(!idle)
         {
+            GN_START_PROFILER( Input );
+
             // process render window messages
             engine::getGpu()->processRenderWindowMessages( false );
 
             // process user input
             gInput.processInputEvents();
+
+            GN_STOP_PROFILER( Input );
         }
 
         // call update in fixed interval
@@ -176,6 +186,9 @@ int GN::util::SampleApp::run( int argc, const char * const argv[] )
 
         if( currentTime >= nextUpdateTime )
         {
+            // Next update time has elasped. We need to call update immediatly. We
+            // also need to clear idle flag.
+
             if( idle )
             {
                 // clear idle flag
@@ -194,9 +207,8 @@ int GN::util::SampleApp::run( int argc, const char * const argv[] )
                 mFrameIdlePercentage = (int)(aveIdleTime * 100 / count / UPDATE_INTERVAL_IN_CYCLES);
             }
 
-            // Next update time has elasped. We need to call update immediatly.
+            GN_START_PROFILER( Update );
             onUpdate();
-
 #if 0
             //
             // Test code: simulate too-slow update function. The application should
@@ -204,6 +216,7 @@ int GN::util::SampleApp::run( int argc, const char * const argv[] )
             //
             Thread::sSleepCurrentThread( 1000000000/30 );
 #endif
+            GN_STOP_PROFILER( Update );
 
             // Remember when update finishes.
             sint64 updateFinishTime = clock.getCycleCount();
@@ -211,20 +224,21 @@ int GN::util::SampleApp::run( int argc, const char * const argv[] )
             // Next update time is current update startup time plus the update interval.
             nextUpdateTime += UPDATE_INTERVAL_IN_CYCLES;
 
-            if( updateFinishTime > nextUpdateTime )
+            if( (updateFinishTime - currentTime) >= UPDATE_INTERVAL_IN_CYCLES )
             {
                 // The update function by itself has run out of the frame time budget.
-                // There's simply no way to catch up. In this case, we switch to variable
+                // There's no way to catch up with real time in this case. We switch to variable
                 // time step mode, call one update and one render per frame, and let the
                 // application runs as fast as it could, until the update function gets
                 // faster.
 
+                GN_START_PROFILER( Render );
                 onRender();
                 drawHUD();
                 engine::getGpu()->present();
-
                 // We just rendered a frame. Let's update the FPS counter
                 mFps.onFrame();
+                GN_STOP_PROFILER( Render );
 
                 // We didn't miss a frame, since we are in variable time step mode. So clear
                 // the miss counter.
@@ -233,17 +247,19 @@ int GN::util::SampleApp::run( int argc, const char * const argv[] )
                 // We are in variable time step mode. There's no need to schedule the next
                 // update in fixed time step. Simply call next update as fast as possible.
                 nextUpdateTime = clock.getCycleCount();
+
             }
-            else if( currentTime < nextUpdateTime )
+            else if( updateFinishTime < nextUpdateTime )
             {
-                // onUpdate() runs fast. It is not time to call next update yet.
-                // It's time to render!
+                // onUpdate() runs fast. It is not time to call next update yet. Let's render!
+
+                GN_START_PROFILER( Render );
                 onRender();
                 drawHUD();
                 engine::getGpu()->present();
-
                 // We just rendered a frame. Let's update the FPS counter.
                 mFps.onFrame();
+                GN_STOP_PROFILER( Render );
 
                 // Last update call has finished before the next update time.
                 // It means the application is fast enough to keep up with real time,
@@ -255,7 +271,7 @@ int GN::util::SampleApp::run( int argc, const char * const argv[] )
             {
                 // By the time the onUpdate() finished, we have missed the next update time already.
                 // What should we do now?
-                sint64 missed = currentTime - nextUpdateTime;
+                sint64 missed = updateFinishTime - nextUpdateTime;
                 if( missed > ONE_SECOND || updateMissed > 10 )
                 {
                     // We have missed too much. Instead of calling update 60 times (assuming
@@ -266,8 +282,8 @@ int GN::util::SampleApp::run( int argc, const char * const argv[] )
                 }
                 else
                 {
-                    // We have missed the deadline, but not to much. Let's see if we can
-                    // catch up by skipping rendering calls.
+                    // We have missed the deadline, but not that much. Let's see if we can
+                    // catch up by skipping some rendering calls.
                     ++updateMissed;
                 }
             }
@@ -278,6 +294,7 @@ int GN::util::SampleApp::run( int argc, const char * const argv[] )
             idle = true;
         }
     }
+    GN_STOP_PROFILER( Runtime );
 
     // success
     quit();

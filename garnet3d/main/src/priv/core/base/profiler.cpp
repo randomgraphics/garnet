@@ -108,9 +108,9 @@ GN_API void GN::ProfilerManager::toString( GN::StrA & rval ) const
             i->key,
             t.count,
             sTime2Str( t.timesum ).rawptr(),
-            sTime2Str( t.timesum / t.count ).rawptr(),
-            sTime2Str( t.timemin ).rawptr(),
-            sTime2Str( t.timemax ).rawptr() );
+            sTime2Str( 0 == t.count ? 0 : ( t.timesum / t.count ) ).rawptr(),
+            sTime2Str( 0 == t.count ? 0 : t.timemin ).rawptr(),
+            sTime2Str( 0 == t.count ? 0 : t.timemax ).rawptr() );
     }
     rval +=
         "=====================================================================\n"

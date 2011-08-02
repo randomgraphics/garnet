@@ -23,6 +23,10 @@ static const char * DXERR_FUNC( sint32 ) { return "unknown error code."; }
 // Runtime assert behavior flag.
 static GN::RuntimeAssertBehavior sRuntimeAssertBehavior = GN::RAB_BREAK_ALWAYS;
 
+// Assert failure routine
+static GN::AssertFailuerUserRoutine sAssertFailureUserRoutine = NULL;
+static void * sAssertFailureUserContext = NULL;
+
 //
 //
 // -----------------------------------------------------------------------------
@@ -36,14 +40,39 @@ GN_API GN::RuntimeAssertBehavior GN::setRuntimeAssertBehavior( RuntimeAssertBeha
 //
 //
 // -----------------------------------------------------------------------------
-GN_API bool
-GN::assertFunc(
+GN_API void
+GN::setAssertFailerUserRoutine(
+    AssertFailuerUserRoutine   newRoutine,
+    void                     * newUserContext,
+    AssertFailuerUserRoutine * oldRoutine,
+    void                    ** oldUserContext )
+{
+    AssertFailuerUserRoutine oldR = sAssertFailureUserRoutine;
+    void                   * oldC = sAssertFailureUserContext;
+    sAssertFailureUserRoutine = newRoutine;
+    sAssertFailureUserContext = newUserContext;
+
+    if( oldRoutine ) *oldRoutine = oldR;
+    if( oldUserContext ) *oldUserContext = oldC;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+GN_API void
+GN::internal::handleAssertFailure(
     const char * msg,
     const char * file,
     int          line,
-    bool *       ignoreFromNowOn ) throw()
+    bool *       ignoreForever ) throw()
 {
-    if( RAB_SILENCE == sRuntimeAssertBehavior ) return false;
+    if( RAB_CALL_USER_ROUTINE == sRuntimeAssertBehavior && NULL != sAssertFailureUserRoutine )
+    {
+        sAssertFailureUserRoutine( sAssertFailureUserContext, msg, file, line, ignoreForever );
+        return;
+    }
+
+    if( RAB_SILENCE == sRuntimeAssertBehavior ) return;
 
     ::fprintf(
         stderr,
@@ -57,31 +86,43 @@ GN::assertFunc(
         line,
         msg?msg:"" );
 
-    if( RAB_LOG_ONLY == sRuntimeAssertBehavior ) return false;
+    if( RAB_LOG_ONLY == sRuntimeAssertBehavior ) return;
 
-    if( RAB_BREAK_ALWAYS == sRuntimeAssertBehavior ) return true;
+    bool debuggerBreak = false;
 
-#if GN_MSWIN
-    char buf[1024];
-    stringPrintf( buf, 1024,
-        "%s(%d)\n"
-        "%s\n\n"
-        "Break into debugger?\n"
-        "(If canceled, this specific assert failure will not be triggered again)",
-        file?file:"", line, msg?msg:"" );
-    int ret = ::MessageBoxA(
-        0,
-        buf,
-        "Assert Failure",
-        MB_YESNOCANCEL|MB_ICONQUESTION
-        );
+    if( RAB_BREAK_ALWAYS == sRuntimeAssertBehavior )
+    {
+        debuggerBreak = true;
+    }
+    else
+    {
+    #if GN_MSWIN
+        char buf[1024];
+        stringPrintf( buf, 1024,
+            "%s(%d)\n"
+            "%s\n\n"
+            "Break into debugger?\n"
+            "(If canceled, this specific assert failure will not trigger debug break anymore)",
+            file?file:"", line, msg?msg:"" );
+        int ret = ::MessageBoxA(
+            0,
+            buf,
+            "Assert Failure",
+            MB_YESNOCANCEL|MB_ICONQUESTION
+            );
 
-    if(ignoreFromNowOn) *ignoreFromNowOn = ( IDCANCEL == ret );
-    return IDYES == ret;
-#else
-    if( *ignoreFromNowOn ) *ignoreFromNowOn = false;
-    return true;
-#endif
+        *ignoreForever = ( IDCANCEL == ret );
+        debuggerBreak = IDYES == ret;
+    #else
+        if( *ignoreForever ) *ignoreForever = false;
+        debuggerBreak = true;
+    #endif
+    }
+
+    if( debuggerBreak )
+    {
+        GN::breakIntoDebugger();
+    }
 }
 
 //
