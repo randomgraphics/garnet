@@ -31,8 +31,11 @@ sources = []
 
 if GN.has_d3d9 or GN.has_xtl:
 	sources += d3d9_sources
-if GN.has_d3d11:
+if GN.has_d3d10 or GN.has_d3d11:
 	sources += dxgi_sources
+if GN.has_d3d10:
+	sources += d3d10_sources
+if GN.has_d3d11:
 	sources += d3d11_sources
 
 objects = GN.BuildObjects( None, sources, 'pch.h', 'pch.cpp' )

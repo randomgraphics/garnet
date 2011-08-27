@@ -413,10 +413,6 @@ def CheckConfig():
 	# ====
 	CONFIG['has_d3d9'] = ('xenon' == BUILD_TARGET_OS) or ( CONFIG['has_dxerr'] and c.CheckCXXHeader( 'd3d9.h' ) and c.CheckCXXHeader( 'd3dx9.h' ) )
 
-	# =====
-	# D3D11
-	# =====
-
 	# Detect Windows Vista and Windows 7
 	def isVistaOrWin7( env ):
 		if 'win32' != env['PLATFORM']: return False
@@ -427,6 +423,15 @@ def CheckConfig():
 		vista = string.find( str, "6.0" ) >= 0
 		win7  = string.find( str, "6.1" ) >= 0
 		return  vista or win7
+
+	# =====
+	# D3D10
+	# =====
+	CONFIG['has_d3d10'] = CONFIG['has_dxerr'] and CONFIG['has_d3d9'] and c.CheckLibWithHeader( 'd3d10.lib', 'd3d10.h', 'C++' ) and isVistaOrWin7(env);
+
+	# =====
+	# D3D11
+	# =====
 
 	CONFIG['has_d3d11'] = CONFIG['has_dxerr'] and CONFIG['has_d3d9'] and c.CheckLibWithHeader( 'd3d11.lib', 'd3d11.h', 'C++' ) and isVistaOrWin7(env);
 
@@ -518,7 +523,7 @@ class GarnetEnv2 :
 		self.has_cg_d3d10 = CONFIG['has_cg_d3d10']
 		self.has_cg_d3d11 = CONFIG['has_cg_d3d11']
 		self.has_d3d9     = CONFIG['has_d3d9']
-		self.has_d3d10    = False # D3D10 support has been dropped.
+		self.has_d3d10    = CONFIG['has_d3d10']
 		self.has_d3d11    = CONFIG['has_d3d11']
 		self.has_dinput   = CONFIG['has_dinput']
 		self.has_dxerr    = CONFIG['has_dxerr']
@@ -548,6 +553,11 @@ class GarnetEnv2 :
 	def Info( self, msg ): UTIL_info( msg )
 	def Warn( self, msg ): UTIL_warn( msg )
 	def Error( self, msg ): UTIL_error( msg )
+
+	#
+	# Get environment variable
+	#
+	def GetEnv( self, name, defaultValue = '' ): return UTIL_getenv( name, defaultValue )
 
 	#
 	# 生成从target到base的相对路径
@@ -704,16 +714,23 @@ class GarnetEnv2 :
 		return env.Library( target, objects )
 
 	#
-	# Build executable
+	# Build DLL
 	#
-	def BuildProgram( self, env, target, sources, pchHeader=None, pchSource=None, pdb=None ):
-
-		# build the program
+	def BuildDLL( self, env, target, sources, pchHeader=None, pchSource=None, pdb=None ):
 		if not env: env = self.NewBuildEnv()
 		objects = self.BuildObjects( env, sources, pchHeader, pchSource )
 		self._BuildSetupPDB( env, target, pdb )
 		self._BuildSetupLibs( env )
+		return env.SharedLibrary( target, objects )
 
+	#
+	# Build executable
+	#
+	def BuildProgram( self, env, target, sources, pchHeader=None, pchSource=None, pdb=None ):
+		if not env: env = self.NewBuildEnv()
+		objects = self.BuildObjects( env, sources, pchHeader, pchSource )
+		self._BuildSetupPDB( env, target, pdb )
+		self._BuildSetupLibs( env )
 		return env.Program( target, objects )
 
 	#
@@ -737,6 +754,28 @@ class GarnetEnv2 :
 			dstdir = targetBaseFolder + '/' + srcdir
 			targets += Install( dstdir, x )
 		return targets
+
+	#
+	# Binplace DLL and its export library.
+	#
+	def BinplaceDLL( self, dll ):
+
+ 		# split DLL binaries and libraries
+		bins = []
+		libs = []
+		for x in dll:
+			p,e = os.path.splitext( str(x) )
+			if '.lib' == e or '.exp' == e  or '.a' == e :
+				libs += [x]
+			else:
+				bins += [x]
+
+		# binplace binaries
+		bins = self.BinplaceProgram( bins )
+
+		# TODO: copy libs
+
+		return bins + libs
 
 	#
 	# Binplace program to bin folder.
