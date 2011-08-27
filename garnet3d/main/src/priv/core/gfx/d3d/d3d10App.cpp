@@ -325,7 +325,7 @@ GN_API bool GN::d3d10::D3D10Application::init()
 
     if( gInputPtr )
     {
-        gInput.attachToWindow( 0, mWindow );
+        gInput.attachToWindow( 0, (intptr_t)mWindow );
     }
 
     // success

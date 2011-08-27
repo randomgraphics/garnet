@@ -1,0 +1,16 @@
+Import( 'GN' )
+
+sources = [
+    'myd3d9.cpp',
+	'mydev_vtxbuf.cpp',
+	'mydev_idxbuf.cpp',
+    'mydevice9.cpp',
+    'myvtxbuf9.cpp',
+]
+
+env = GN.NewBuildEnv()
+env.Append( LINKFLAGS = ['/DEF:%s'%File('myd3d9.def').srcnode().path] )
+
+GN.NewDefaultTarget(
+	'GNtoolD3D9Wrapper',
+	GN.BinplaceDLL( GN.BuildDLL( env, 'GNtoolD3D9Wrapper', sources, 'pch.h', 'pch.cpp' ) ) )

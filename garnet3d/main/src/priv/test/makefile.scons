@@ -1,6 +1,6 @@
 SConscript( [
-    'assimp/makefile.scons',
-#	'd3d10/makefile.scons',
+	'assimp/makefile.scons',
+	'd3d10/makefile.scons',
 	'engine/makefile.scons',
 	'fbx/makefile.scons',
 	'font/makefile.scons',

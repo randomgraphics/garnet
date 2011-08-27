@@ -1,6 +1,4 @@
 #include "pch.h"
-#include "garnet/GNgfx.h"
-#include "garnet/GNutil.h"
 
 static const char * fxcode =
 #include "effect.h"
