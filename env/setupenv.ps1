@@ -138,12 +138,17 @@ if( "vc" -eq $env:GN_BUILD_COMPILER )
     "====================================="
     ""
 
-    # locate vsvarall.bat
+    # locate vsvarall.bat, prefer vs2010 over others
     $vcvarbat=$false
     if( $env:VS100COMNTOOLS -and ( test-path $env:VS100COMNTOOLS ) )
     {
         $vcvarbat="$env:VS100COMNTOOLS..\..\VC\vcvarsall.bat"
         $env:GN_BUILD_COMPILER="vc100";
+    }
+    elseif( $env:VS110COMNTOOLS -and ( test-path $env:VS110COMNTOOLS ) )
+    {
+        $vcvarbat="$env:VS110COMNTOOLS..\..\VC\vcvarsall.bat"
+        $env:GN_BUILD_COMPILER="vc100"; # TODO: it breaks build script when set to "vc110"
     }
     elseif( $env:VS90COMNTOOLS -and ( test-path $env:VS90COMNTOOLS ) )
     {
@@ -152,7 +157,7 @@ if( "vc" -eq $env:GN_BUILD_COMPILER )
     }
     else
     {
-        error "Neither VS100COMNTOOLS nor VS90COMNTOOLS are found. Please install VS 2010 or VS 2008"
+        error "VS110COMNTOOLS//VS100COMNTOOLS//VS90COMNTOOLS not found. Please install VS2011//2010//2008"
     }
 
     # run vsvarall.bat, catch all environments
@@ -333,7 +338,14 @@ if( "mswin" -eq $env:GN_BUILD_TARGET_OS )
     }
     if( -not( $candidates -is [System.Array] ) )
     {
-        $candidates = @($candidates)
+        if($candiates)
+        {
+            $candidates = @($candidates)
+        }
+        else
+        {
+            $candidates = @()
+        }
     }
     if( $candidates.Count -gt 0 )
     {
