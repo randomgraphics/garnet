@@ -1,7 +1,7 @@
 SConscript( [
 #	'bezier',
 	'dolphin/makefile.scons',
-#	'ripple',
-#	'renderToCube',
-#	'thickline',
+#	'ripple/makefile.scons',
+#	'renderToCube/makefile.scons',
+	'thickline/makefile.scons',
 	] )

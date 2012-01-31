@@ -463,7 +463,7 @@ namespace GN { /* namespace for D3D9 utils */ namespace d3d9
             uint32   _; // padding
         };
 
-        struct GN_API EndPoint
+        struct EndPoint
         {
             float posl, posr, post, posb, posz, posw;
             float texl, texr, text, texb;
