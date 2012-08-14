@@ -120,6 +120,13 @@ foreach( $a in $args )
         $env:GN_BUILD_TARGET_CPU = "ppc"
     }
 
+    elseif( "durango" -eq $a )
+    {
+        $env:GN_BUILD_COMPILER = "vc"
+        $env:GN_BUILD_TARGET_OS = "durango"
+        $env:GN_BUILD_TARGET_CPU = "x64"
+    }
+
     else
     {
         warn "Unrecoginized command line argument: $a"
@@ -140,15 +147,15 @@ if( "vc" -eq $env:GN_BUILD_COMPILER )
 
     # locate vsvarall.bat, prefer vs2010 over others
     $vcvarbat=$false
-    if( $env:VS100COMNTOOLS -and ( test-path $env:VS100COMNTOOLS ) )
+    if( $env:VS110COMNTOOLS -and ( test-path $env:VS110COMNTOOLS ) )
+    {
+        $vcvarbat="$env:VS110COMNTOOLS..\..\VC\vcvarsall.bat"
+        $env:GN_BUILD_COMPILER="vc110"; # TODO: it breaks build script when set to "vc110"
+    }
+    elseif( $env:VS100COMNTOOLS -and ( test-path $env:VS100COMNTOOLS ) )
     {
         $vcvarbat="$env:VS100COMNTOOLS..\..\VC\vcvarsall.bat"
         $env:GN_BUILD_COMPILER="vc100";
-    }
-    elseif( $env:VS110COMNTOOLS -and ( test-path $env:VS110COMNTOOLS ) )
-    {
-        $vcvarbat="$env:VS110COMNTOOLS..\..\VC\vcvarsall.bat"
-        $env:GN_BUILD_COMPILER="vc100"; # TODO: it breaks build script when set to "vc110"
     }
     elseif( $env:VS90COMNTOOLS -and ( test-path $env:VS90COMNTOOLS ) )
     {
@@ -157,7 +164,7 @@ if( "vc" -eq $env:GN_BUILD_COMPILER )
     }
     else
     {
-        error "VS110COMNTOOLS//VS100COMNTOOLS//VS90COMNTOOLS not found. Please install VS2011//2010//2008"
+        error "VS110COMNTOOLS//VS100COMNTOOLS//VS90COMNTOOLS not found. Please install VS2012//2010//2008"
     }
 
     # run vsvarall.bat, catch all environments
@@ -187,7 +194,7 @@ if( "vc" -eq $env:GN_BUILD_COMPILER )
             }
             elseif( "x64" -eq $env:GN_BUILD_TARGET_CPU )
             {
-                $target = "amd64"
+                $target = "x86_amd64"
             }
             else
             {
@@ -385,7 +392,7 @@ if( "mswin" -eq $env:GN_BUILD_TARGET_OS )
 # setup XDK build environment
 # ==============================================================================
 
-if( "xenon" -eq $env:GN_BUILD_COMPILER )
+if( "xenon" -eq $env:GN_BUILD_TARGET_OS )
 {
     ""
 	"============================="
@@ -407,6 +414,35 @@ if( "xenon" -eq $env:GN_BUILD_COMPILER )
     else
     {
         error "XDK setup script $batch not found."
+    }
+}
+
+# ==============================================================================
+# setup Durango build environment
+# ==============================================================================
+
+if( "durango" -eq $env:GN_BUILD_TARGET_OS )
+{
+    ""
+	"==============================="
+	"Setup Durango build environment"
+	"==============================="
+    ""
+
+    if( !$env:DurangoXDK )
+    {
+        error "Environment DurangoXDK not found. Please install Durango XDK"
+    }
+
+    $batch = "$env:DurangoXDK\DurangoVars.cmd"
+
+    if( test-path $batch )
+    {
+        catch_batch_env $batch
+    }
+    else
+    {
+        error "Durango XDK setup script $batch not found."
     }
 }
 

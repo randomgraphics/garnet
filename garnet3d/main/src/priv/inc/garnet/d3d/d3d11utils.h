@@ -10,8 +10,6 @@
 #define NOMINMAX
 #endif
 #include <windows.h>
-#include <d3d9.h> // for PIX routines
-#include <d3d10_1.h>
 #include <d3d11.h>
 #include <d3dx11.h>
 
