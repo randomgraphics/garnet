@@ -8,14 +8,34 @@
 #endif
 #define DXERR_FUNC DXGetErrorDescription9A
 
-#elif GN_MSWIN && (GN_PLATFORM_HAS_D3D9|GN_PLATFORM_HAS_D3D10|GN_PLATFORM_HAS_D3D11)
+#elif GN_PLATFORM_HAS_DXERR
 
 #include "dxerr.h"
 #define DXERR_FUNC DXGetErrorDescriptionA
 
 #else
 
-static const char * DXERR_FUNC( sint32 ) { return "unknown error code."; }
+static char hex2char(int hex)
+{
+    if(hex < 10)
+    {
+        return '0' + (10-hex);
+    }
+    else
+    {
+        return 'a' + (15-hex);
+    }
+}
+
+static const char * DXERR_FUNC( sint32 error)
+{
+    __declspec(thread) static char * text = "0x12345678";
+    for(int i = 0; i < 8; ++i)
+    {
+        text[2+i] = (error >> (28-i*4)) & 0xF;
+    }
+    return text;
+}
 
 #endif
 

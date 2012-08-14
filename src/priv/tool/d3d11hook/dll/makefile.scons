@@ -1,0 +1,12 @@
+Import( 'GN' )
+
+sources = [
+    'device.cpp',
+]
+
+env = GN.NewBuildEnv()
+env.Append( LINKFLAGS = ['/DEF:%s'%File('myd3d11.def').srcnode().path] )
+
+GN.NewDefaultTarget(
+	'GNtoolD3D11Hook',
+	GN.BinplaceDLL( GN.BuildDLL( env, 'GNtoolD3D11Hook', sources, 'pch.h', 'pch.cpp' ) ) )

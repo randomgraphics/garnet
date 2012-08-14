@@ -13,7 +13,7 @@ if 'icl' == GN.cc :
         ]
     ccflags += ['/W2'] + ['/Qwd%s'%w for w in unimportant_warnings]
     cppdefines += ['_CRT_SECURE_NO_DEPRECATE','_CRT_NONSTDC_NO_DEPRECATE','_SCL_SECURE_NO_WARNINGS']
-elif 'vc100' == GN.cc:
+elif 'vc100' == GN.cc or 'vc110' == GN.cc:
     ccflags += ['/W3']
     cppdefines += ['_CRT_SECURE_NO_DEPRECATE','_CRT_NONSTDC_NO_DEPRECATE','_SCL_SECURE_NO_WARNINGS']
     unimportant_warnings = [

@@ -11,37 +11,37 @@ import sys, os, os.path, re, fnmatch
 
 # 读取环境变量
 def UTIL_getenv( name, defval = '' ):
-	if name in os.environ: return os.environ[name]
-	else: return defval
+    if name in os.environ: return os.environ[name]
+    else: return defval
 
 # 输出调试信息
 def UTIL_trace( level, msg ):
-	level = float(level)
-	assert( 0 != level )
-	if ( CONF_trace > 0 and level <= CONF_trace ) or ( CONF_trace < 0 and level == -CONF_trace ):
-		print 'TRACE(%d) : %s'%(level,msg)
+    level = float(level)
+    assert( 0 != level )
+    if ( CONF_trace > 0 and level <= CONF_trace ) or ( CONF_trace < 0 and level == -CONF_trace ):
+        print 'TRACE(%d) : %s'%(level,msg)
 
 # 输出提示信息
 def UTIL_info( msg ): print 'INFO : %s'%msg
 
 # 输出警告信息
 def UTIL_warn( msg ):
-	#print '===================================================================='
-	print 'WARNING : %s'%msg
-	#print '===================================================================='
+    #print '===================================================================='
+    print 'WARNING : %s'%msg
+    #print '===================================================================='
 
 # 输出错误信息
 def UTIL_error( msg ):
-	print '===================================================================='
-	print 'ERROR : %s'%msg
-	print '===================================================================='
+    print '===================================================================='
+    print 'ERROR : %s'%msg
+    print '===================================================================='
 
 # Fatal Error. Need to halt building
 def UTIL_fatal( msg ):
-	print '===================================================================='
-	print 'FATAL : %s'%msg
-	print '===================================================================='
-	Exit(-1)
+    print '===================================================================='
+    print 'FATAL : %s'%msg
+    print '===================================================================='
+    Exit(-1)
 
 ################################################################################
 #
@@ -54,38 +54,38 @@ LOCAL_ENV = Environment( tools=[] )
 HOST_OS  = None
 HOST_CPU = None
 if 'win32' == LOCAL_ENV['PLATFORM']:
-	HOST_OS = 'mswin'
-	if 'AMD64' == UTIL_getenv('PROCESSOR_ARCHITECTURE') or 'AMD64' == UTIL_getenv('PROCESSOR_ARCHITEW6432'):
-		HOST_CPU = 'x64'
-	else:
-		HOST_CPU = 'x86'
+    HOST_OS = 'mswin'
+    if 'AMD64' == UTIL_getenv('PROCESSOR_ARCHITECTURE') or 'AMD64' == UTIL_getenv('PROCESSOR_ARCHITEW6432'):
+        HOST_CPU = 'x64'
+    else:
+        HOST_CPU = 'x86'
 elif 'cygwin' == LOCAL_ENV['PLATFORM']:
-	HOST_OS = 'cygwin'
-	HOST_CPU = 'x86'
+    HOST_OS = 'cygwin'
+    HOST_CPU = 'x86'
 elif 'posix' == LOCAL_ENV['PLATFORM']:
-	HOST_OS = 'posix'
-	HOST_CPU = 'x86'
+    HOST_OS = 'posix'
+    HOST_CPU = 'x86'
 else:
-	print 'FATAL: Unknown platform:', LOCAL_ENV['PLATFORM']
-	Exit(-1)
+    print 'FATAL: Unknown platform:', LOCAL_ENV['PLATFORM']
+    Exit(-1)
 
 # try import xenon extension for SCons
 BUILD_HAS_XENON_EXTENSION = False
 try:
-	sys.path.append( "env/scons/xenon" )
-	import xenon
-	BUILD_HAS_XENON_EXTENSION = True
+    sys.path.append( "env/scons/xenon" )
+    import xenon
+    BUILD_HAS_XENON_EXTENSION = True
 except ImportError:
-	print "no xenon extension for scons found."
+    print "no xenon extension for scons found."
 
 BUILD_COMPILER = UTIL_getenv('GN_BUILD_COMPILER', None )
 if None == BUILD_COMPILER:
-	if BUILD_HAS_XENON_EXTENSION and xenon.exists( LOCAL_ENV ):
-		BUILD_COMPILER = 'xenon'
-	elif 'mswin' == HOST_OS:
-		BUILD_COMPILER = 'vc100'
-	else:
-		BUILD_COMPILER = 'gcc'
+    if BUILD_HAS_XENON_EXTENSION and xenon.exists( LOCAL_ENV ):
+        BUILD_COMPILER = 'xenon'
+    elif 'mswin' == HOST_OS:
+        BUILD_COMPILER = 'vc100'
+    else:
+        BUILD_COMPILER = 'gcc'
 
 BUILD_VARIANT = UTIL_getenv('GN_BUILD_VARIANT', 'debug')
 
@@ -103,238 +103,272 @@ BUILD_ROOT_PATH = 'build.tmp/' + BUILD_TARGET_OS + '.' + BUILD_TARGET_CPU + '.' 
 
 def UTIL_new_env_ex( msvcBatchMode ):
 
-	if 'xenon' == BUILD_COMPILER:
+    if 'xenon' == BUILD_COMPILER:
 
-		# construct empty environment for xenon platform
-		env = Environment(
-			tools          = [],
-			MSVC_VERSION   = "8.0",
-			MSVS8_PLATFORM = 'Xbox 360',
-			ENV            = {
-			                 	# Required by Xenon C++ compiler version 15.00.8153.
-			                 	# Or else the compiler will report error D8037
-								'SystemDrive' : UTIL_getenv('SystemDrive'),
-								'SystemRoot'  : UTIL_getenv('SystemRoot'),
-				}
-			)
+        # construct empty environment for xenon platform
+        env = Environment(
+            tools          = [],
+            MSVC_VERSION   = "8.0",
+            MSVS8_PLATFORM = 'Xbox 360',
+            ENV            = {
+                                # Required by Xenon C++ compiler version 15.00.8153.
+                                # Or else the compiler will report error D8037
+                                'SystemDrive' : UTIL_getenv('SystemDrive'),
+                                'SystemRoot'  : UTIL_getenv('SystemRoot'),
+                }
+            )
 
-		# Setup standard XDK header and library path
-		xedk = UTIL_getenv('XEDK');
-		inc = os.path.join( xedk, "include" ) + ";" + os.path.join( xedk, "include\\sys" );
-		lib = os.path.join( xedk, "lib\\xbox" );
+        # Setup standard XDK header and library path
+        xedk = UTIL_getenv('XEDK');
+        inc = os.path.join( xedk, "include" ) + ";" + os.path.join( xedk, "include\\sys" );
+        lib = os.path.join( xedk, "lib\\xbox" );
 
-		# Import environment variables that are used by C/C++ compiler.
-	 	env.PrependENVPath( 'PATH'     , UTIL_getenv('PATH') );
-	 	env.PrependENVPath( 'INCLUDE'  , inc );
-	 	env.PrependENVPath( 'LIB'      , lib );
-	 	env['ENV']['LANG']     = UTIL_getenv('LANG');
-	 	env['ENV']['LANGUAGE'] = UTIL_getenv('LANGUAGE');
+        # Import environment variables that are used by C/C++ compiler.
+        env.PrependENVPath( 'PATH'     , UTIL_getenv('PATH') );
+        env.PrependENVPath( 'INCLUDE'  , inc );
+        env.PrependENVPath( 'LIB'      , lib );
+        env['ENV']['LANG']     = UTIL_getenv('LANG');
+        env['ENV']['LANGUAGE'] = UTIL_getenv('LANGUAGE');
 
-		# attach xenon build tools to the environment
-		xenon.generate( env )
+        # attach xenon build tools to the environment
+        xenon.generate( env )
 
-	else:
+    else:
 
-		# construct build environment for other platforms
+        # construct build environment for other platforms
 
-		if 'mswin' == HOST_OS:
-			tools = ['msvc','mslink','mslib','msvs','masm']
-		else:
-			tools = ['default']
+        if 'mswin' == HOST_OS:
+            tools = ['msvc','mslink','mslib','msvs','masm']
+        else:
+            tools = ['default']
 
-		# determine msvs platform
-		msvs_platform = 'x86'
-		if 'icl' == BUILD_COMPILER:
-			tools += ['intelc']
-			if 'x64' == HOST_CPU :
-				icl_abi = 'em64t'
-				msvs_platform = 'x64'
-		elif 'x64' == HOST_CPU :
-			msvs_platform = 'x64'
-		elif 'mingw' == BUILD_COMPILER :
-			tools = ['mingw']
+        # determine msvs platform
+        msvs_platform = 'x86'
+        if 'icl' == BUILD_COMPILER:
+            tools += ['intelc']
+            if 'x64' == BUILD_TARGET_OS :
+                icl_abi = 'em64t'
+                msvs_platform = 'x64'
+        elif 'durango' == BUILD_TARGET_OS:
+            msvs_platform = 'Durango'
+        elif 'x64' == BUILD_TARGET_CPU :
+            msvs_platform = 'x64'
+        elif 'mingw' == BUILD_COMPILER :
+            tools = ['mingw']
 
-		# create new environment
-		env = Environment(
-			tools          = tools,
-			MSVS8_PLATFORM = msvs_platform,
-			MSVC_BATCH     = msvcBatchMode,
-			)
+        # create new environment
+        env = Environment(
+            tools          = tools,
+            MSVS8_PLATFORM = msvs_platform,
+            MSVC_BATCH     = msvcBatchMode,
+            )
 
-		# Import environment variables that are used by C/C++ compiler.
-	 	env.PrependENVPath( 'PATH'     , UTIL_getenv('PATH') );
-	 	env.PrependENVPath( 'INCLUDE'  , UTIL_getenv('INCLUDE') );
-	 	env.PrependENVPath( 'LIB'      , UTIL_getenv('LIB') );
-	 	env['ENV']['LANG']     = UTIL_getenv('LANG');
-	 	env['ENV']['LANGUAGE'] = UTIL_getenv('LANGUAGE');
+        # Import environment variables that are used by C/C++ compiler.
+        env['ENV']['PATH']     = UTIL_getenv('PATH');
+        env['ENV']['INCLUDE']  = UTIL_getenv('INCLUDE');
+        env['ENV']['LIB']      = UTIL_getenv('LIB');
+        env['ENV']['LANG']     = UTIL_getenv('LANG');
+        env['ENV']['LANGUAGE'] = UTIL_getenv('LANGUAGE');
 
-	# cache implicit dependencies
-	env.SetOption( 'implicit_cache', int(UTIL_getenv('SCONS_CACHE_IMPLICIT_DEPS', 1)) )
+        # --- test code ---
+        print env['ENV']['INCLUDE']
+        print env['ENV']['LIB']
 
-	# setup default decider
-	env.Decider( 'MD5-timestamp' )
+    # cache implicit dependencies
+    env.SetOption( 'implicit_cache', int(UTIL_getenv('SCONS_CACHE_IMPLICIT_DEPS', 1)) )
 
-	# setup signature file
-	env.SConsignFile( BUILD_ROOT_PATH + '.sconsign' )
+    # setup default decider
+    env.Decider( 'MD5-timestamp' )
 
-	# setup GCC precompiled header bilder
-	if 'g++' == env['CXX']:
+    # setup signature file
+    env.SConsignFile( BUILD_ROOT_PATH + '.sconsign' )
 
-		import SCons.Defaults
-		import SCons.Tool
+    # setup GCC precompiled header bilder
+    if 'g++' == env['CXX']:
 
-		# attach gch builder
-		bld = Builder(
-			action = '$CXXCOM',
-			suffix = '.h.gch',
-			source_scanner = SCons.Tool.SourceFileScanner )
-		env.Append( BUILDERS={'PCH':bld} )
+        import SCons.Defaults
+        import SCons.Tool
 
-		# Sets up the PCH dependencies for an object file
-		def pch_emitter( target, source, env, parent_emitter ):
-			parent_emitter( target, source, env )
-			if env.has_key('PCH') and env['PCH']:
-				env.Depends(target, env['PCH'])
-			return (target, source)
-		def static_pch_emitter(target,source,env):
-			return pch_emitter(target,source,env,SCons.Defaults.StaticObjectEmitter)
-		def shared_pch_emitter(target,source,env):
-			return pch_emitter(target,source,env,SCons.Defaults.SharedObjectEmitter)
-		for suffix in Split('.c .C .cc .cxx .cpp .c++'):
-			env['BUILDERS']['StaticObject'].add_emitter( suffix, static_pch_emitter );
-			env['BUILDERS']['SharedObject'].add_emitter( suffix, shared_pch_emitter );
+        # attach gch builder
+        bld = Builder(
+            action = '$CXXCOM',
+            suffix = '.h.gch',
+            source_scanner = SCons.Tool.SourceFileScanner )
+        env.Append( BUILDERS={'PCH':bld} )
 
-	# Set standard include path
-	env.Append(
-		CPPPATH = [
-			'#src/extern/inc',
-			'#' + BUILD_ROOT_PATH + 'priv/inc',
-			'#src/priv/inc',
-			],
-		)
+        # Sets up the PCH dependencies for an object file
+        def pch_emitter( target, source, env, parent_emitter ):
+            parent_emitter( target, source, env )
+            if env.has_key('PCH') and env['PCH']:
+                env.Depends(target, env['PCH'])
+            return (target, source)
+        def static_pch_emitter(target,source,env):
+            return pch_emitter(target,source,env,SCons.Defaults.StaticObjectEmitter)
+        def shared_pch_emitter(target,source,env):
+            return pch_emitter(target,source,env,SCons.Defaults.SharedObjectEmitter)
+        for suffix in Split('.c .C .cc .cxx .cpp .c++'):
+            env['BUILDERS']['StaticObject'].add_emitter( suffix, static_pch_emitter );
+            env['BUILDERS']['SharedObject'].add_emitter( suffix, shared_pch_emitter );
 
-	# Initialize C/C++ compiler options
-	def generate_empty_options() : return { 'common':[],'debug':[],'profile':[],'retail':[] }
-	cppdefines = generate_empty_options()
-	cpppath    = generate_empty_options()
-	libpath    = generate_empty_options()
-	libs       = generate_empty_options()
-	ccflags    = generate_empty_options()
-	cxxflags   = generate_empty_options()
-	linkflags  = generate_empty_options()
+    # Set standard include path
+    env.Append(
+        CPPPATH = [
+            '#src/extern/inc',
+            '#' + BUILD_ROOT_PATH + 'priv/inc',
+            '#src/priv/inc',
+            ],
+        )
 
-	# Setup standard options
-	cpppath['common']     += [	'#src/extern/inc',
-								'#' + BUILD_ROOT_PATH + 'priv/inc',
-								'#src/priv/inc',
-								];
-	libpath['common']     += ['#src/extern/lib/' + HOST_OS + '.' + HOST_CPU]
-	cppdefines['common']  += ['UNICODE', '_UNICODE']
-	cppdefines['debug']   += ['GN_ENABLE_DEBUG=1', 'GN_ENABLE_PROFILING=1', '_DEBUG']
-	cppdefines['profile'] += ['GN_ENABLE_DEBUG=0', 'GN_ENABLE_PROFILING=1', 'NDEBUG']
-	cppdefines['retail']  += ['GN_ENABLE_DEBUG=0', 'GN_ENABLE_PROFILING=0', 'NDEBUG']
+    # Initialize C/C++ compiler options
+    def generate_empty_options() : return { 'common':[],'debug':[],'profile':[],'retail':[] }
+    cppdefines = generate_empty_options()
+    cpppath    = generate_empty_options()
+    libpath    = generate_empty_options()
+    libs       = generate_empty_options()
+    ccflags    = generate_empty_options()
+    cxxflags   = generate_empty_options()
+    linkflags  = generate_empty_options()
 
-	# Target platform specific options
-	if 'xenon' == BUILD_TARGET_OS:
-		ccflags['common']     += ['/QVMX128']
-		cppdefines['profile'] += ['PROFILE']
-		linkflags['profile']  += ['/NODEFAULTLIB:xapilib.lib']
-		libs['common']        += Split('xboxkrnl xbdm dxerr9')
-		libs['debug']         += Split('xapilibd d3d9d d3dx9d xgraphicsd xnetd xaudiod2 xactd3 vcompd libcmtd')
-		libs['profile']       += Split('xapilibi d3d9i d3dx9  xgraphics  xnet  xaudio2  xacti3 vcomp  libcmt')
-		libs['retail']        += Split('xapilib  d3d9  d3dx9  xgraphics  xnet  xaudio2  xact3  vcomp  libcmt')
-	elif 'mswin' == BUILD_TARGET_OS:
-		libs['common']        += Split('kernel32 user32 gdi32 shlwapi advapi32 shell32')
-	else:
-		cpppath['common']     += Split('/usr/X11R6/include /usr/local/include')
-		libpath['common']     += Split('/usr/X11R6/lib /usr/local/lib')
+    # Setup standard options
+    cpppath['common']     += [  '#src/extern/inc',
+                                '#' + BUILD_ROOT_PATH + 'priv/inc',
+                                '#src/priv/inc',
+                                ];
+    libpath['common']     += ['#src/extern/lib/' + HOST_OS + '.' + HOST_CPU]
+    cppdefines['common']  += ['UNICODE', '_UNICODE']
+    cppdefines['debug']   += ['GN_ENABLE_DEBUG=1', 'GN_ENABLE_PROFILING=1', '_DEBUG']
+    cppdefines['profile'] += ['GN_ENABLE_DEBUG=0', 'GN_ENABLE_PROFILING=1', 'NDEBUG']
+    cppdefines['retail']  += ['GN_ENABLE_DEBUG=0', 'GN_ENABLE_PROFILING=0', 'NDEBUG']
 
-	# Compiler specific options
-	if 'cl' == env['CC']:
-		#
-		# To workaround an bug in scons 0.96.1, this variable has to be imported
-		# or else, link.exe will report error: cannot open file 'TEMPFILE'
-		#
-		env['ENV']['USERPROFILE'] = os.environ['USERPROFILE']
+    # Target platform specific options
+    if 'xenon' == BUILD_TARGET_OS:
+        ccflags['common']     += ['/QVMX128']
+        cppdefines['profile'] += ['PROFILE']
+        linkflags['profile']  += ['/NODEFAULTLIB:xapilib.lib']
+        libs['common']        += Split('xboxkrnl xbdm dxerr9')
+        libs['debug']         += Split('xapilibd d3d9d d3dx9d xgraphicsd xnetd xaudiod2 xactd3 vcompd libcmtd')
+        libs['profile']       += Split('xapilibi d3d9i d3dx9  xgraphics  xnet  xaudio2  xacti3 vcomp  libcmt')
+        libs['retail']        += Split('xapilib  d3d9  d3dx9  xgraphics  xnet  xaudio2  xact3  vcomp  libcmt')
+    elif 'mswin' == BUILD_TARGET_OS:
+        libs['common']        += Split('kernel32 user32 gdi32 shlwapi advapi32 shell32')
+    elif 'durango' == BUILD_TARGET_OS:
+        cppdefines['common']  += [
+            'CONDITION_HANDLING=1',
+            'WIN32_LEAN_AND_MEAN=1',
+            'DEVL=1',
+            'DBG=1',
+            'XBOX',
+            'XOS',
+            '_UNICODE',
+            'UNICODE',
+            '_USE_DEV11_CRT',
+            '_APISET_WINDOWS_VERSION=0x601',
+            '_APISET_MINWIN_VERSION=0x0101',
+            '_APISET_MINCORE_VERSION=0x0100',
+            'MSC_NOOPT',
+            'NTDDI_VERSION=0x06020000',
+            '__WRL_CONFIGURATION_LEGACY__',
+            '_USE_DECLSPECS_FOR_SAL=1',
+            '_ATL_DLL',
+            ]
+        libs['common']        += Split('kernel32 user32 gdi32 shlwapi advapi32 shell32')
+        libs['debug']         += Split('dxgii d3d11i')
+        libs['profile']       += Split('dxgii d3d11i')
+        libs['retail']        += Split('dxgi d3d11')
+    else:
+        cpppath['common']     += Split('/usr/X11R6/include /usr/local/include')
+        libpath['common']     += Split('/usr/X11R6/lib /usr/local/lib')
 
-		# Enable C++ EH (with SEH exceptions)
-		cxxflags['common']  += ['/EHa']
+    # Compiler specific options
+    if 'cl' == env['CC']:
+        #
+        # To workaround an bug in scons 0.96.1, this variable has to be imported
+        # or else, link.exe will report error: cannot open file 'TEMPFILE'
+        #
+        env['ENV']['USERPROFILE'] = os.environ['USERPROFILE']
 
-		ccflags['common']   += ['/W4', '/WX', '/Ot', '/Oi', '/Z7', '/Yd'] # favor speed, enable intrinsic functions.
-		ccflags['debug']    += ['/MTd', '/GR', '/RTCscu']
-		ccflags['profile']  += ['/MT', '/Ox']
-		ccflags['retail']   += ['/MT', '/Ox', '/GL']
+        # Enable C++ EH (with SEH exceptions)
+        cxxflags['common']  += ['/EHa']
 
-		linkflags['common']  += ['/MANIFEST', '/NODEFAULTLIB:libcp.lib', '/FIXED:NO'] # this is for vtune and magellan to do instrumentation
-		linkflags['profile'] += ['/OPT:REF']
-		linkflags['retail']  += ['/OPT:REF']
+        ccflags['common']   += ['/W4', '/WX', '/Ot', '/Oi', '/Z7', '/Yd'] # favor speed, enable intrinsic functions.
+        ccflags['debug']    += ['/MTd', '/GR', '/RTCscu']
+        ccflags['profile']  += ['/MT', '/Ox']
+        ccflags['retail']   += ['/MT', '/Ox', '/GL']
 
-	elif 'icl' == env['CC']:
-		ccflags['common']  += ['/W3','/WX','/Wcheck','/Qpchi-','/Zc:forScope','/Zi','/debug:full']
-		ccflags['debug']   += ['/MTd','/GR','/Ge','/traceback']
-		ccflags['profile'] += ['/O2','/MT']
-		ccflags['retail']  += ['/O2','/MT']
+        linkflags['common']  += ['/MANIFEST', '/NODEFAULTLIB:libcp.lib', '/FIXED:NO'] # this is for vtune and magellan to do instrumentation
+        linkflags['profile'] += ['/OPT:REF']
+        linkflags['retail']  += ['/OPT:REF']
 
-		# Enable C++ EH (no SEH exceptions)
-		cxxflags['common'] += ['/EHs']
+    elif 'icl' == env['CC']:
+        ccflags['common']  += ['/W3','/WX','/Wcheck','/Qpchi-','/Zc:forScope','/Zi','/debug:full']
+        ccflags['debug']   += ['/MTd','/GR','/Ge','/traceback']
+        ccflags['profile'] += ['/O2','/MT']
+        ccflags['retail']  += ['/O2','/MT']
 
-		cppdefines['debug'] += ['_DEBUG']
+        # Enable C++ EH (no SEH exceptions)
+        cxxflags['common'] += ['/EHs']
 
-		linkflags['common']  += ['/FIXED:NO', '/DEBUGTYPE:CV,FIXUP'] # this is for vtune and magellan to do instrumentation
-		linkflags['profile'] += ['/OPT:REF']
-		linkflags['retail']  += ['/OPT:REF']
+        cppdefines['debug'] += ['_DEBUG']
 
-	elif 'gcc' == env['CC']:
-		ccflags['common']  += ['-Wall','-Werror', '-finput-charset=GBK', '-fexec-charset=GBK']
-		ccflags['debug']   += ['-g']
-		ccflags['profile'] += ['-O3']
-		ccflags['retail']  += ['-O3']
-		if 'mingw' == BUILD_COMPILER:
-			cppdefines['common'] += ['WINVER=0x500']
+        linkflags['common']  += ['/FIXED:NO', '/DEBUGTYPE:CV,FIXUP'] # this is for vtune and magellan to do instrumentation
+        linkflags['profile'] += ['/OPT:REF']
+        linkflags['retail']  += ['/OPT:REF']
 
-	else:
-		UTIL_fatal( 'unknown compiler: %s'%env['CC'] )
+    elif 'gcc' == env['CC']:
+        ccflags['common']  += ['-Wall','-Werror', '-finput-charset=GBK', '-fexec-charset=GBK']
+        ccflags['debug']   += ['-g']
+        ccflags['profile'] += ['-O3']
+        ccflags['retail']  += ['-O3']
+        if 'mingw' == BUILD_COMPILER:
+            cppdefines['common'] += ['WINVER=0x500']
 
-	# apply compiler options based on current build variant
-	def apply_options( env, variant ):
-		env.Append(
-			CPPDEFINES = cppdefines[variant],
-			CPPPATH = cpppath[variant],
-			LIBPATH = libpath[variant],
-			CCFLAGS = ccflags[variant],
-			CXXFLAGS = cxxflags[variant],
-			LINKFLAGS = linkflags[variant] );
-		env.Prepend(
-			LIBS    = libs[variant] ); # for gcc link
-	apply_options( env, BUILD_VARIANT )
-	apply_options( env, 'common' )
+    else:
+        UTIL_fatal( 'unknown compiler: %s'%env['CC'] )
 
-	# Done.
-	return env
+    # apply compiler options based on current build variant
+    def apply_options( env, variant ):
+        env.Append(
+            CPPDEFINES = cppdefines[variant],
+            CPPPATH = cpppath[variant],
+            LIBPATH = libpath[variant],
+            CCFLAGS = ccflags[variant],
+            CXXFLAGS = cxxflags[variant],
+            LINKFLAGS = linkflags[variant] );
+        env.Prepend(
+            LIBS    = libs[variant] ); # for gcc link
+    apply_options( env, BUILD_VARIANT )
+    apply_options( env, 'common' )
+
+    # Done.
+    return env
 
 DEFAULT_BATCH_ENV     = UTIL_new_env_ex( True )
 DEFAULT_NON_BATCH_ENV = UTIL_new_env_ex( None )
 def UTIL_new_env( msvcBatchMode ):
-	if msvcBatchMode:
-		return DEFAULT_BATCH_ENV.Clone()
-	else:
-		return DEFAULT_NON_BATCH_ENV.Clone()
+    if msvcBatchMode:
+        return DEFAULT_BATCH_ENV.Clone()
+    else:
+        return DEFAULT_NON_BATCH_ENV.Clone()
 
 def UTIL_new_config_env():
 
-	# Create config environment with "batch" mode disabled,
-	# since batch mode triggers scons 1.2.0.d20091224 config
-	# code bug.
-	env = UTIL_new_env( msvcBatchMode = None )
+    # Create config environment with "batch" mode disabled,
+    # since batch mode triggers scons 1.2.0.d20091224 config
+    # code bug.
+    env = UTIL_new_env( msvcBatchMode = None )
 
-	# Do NOT treat warning as error
-	ccflags = str(env['CCFLAGS'])
-	ccflags = ccflags.replace( '/WX', '' )
-	ccflags = ccflags.replace( '/W4', '/W3' )
-	ccflags = ccflags.replace( '-Werror', '')
-	env.Replace( CCFLAGS = Split( ccflags ) )
+    # Do NOT treat warning as error
+    ccflags = str(env['CCFLAGS'])
+    ccflags = ccflags.replace( '/WX', '' )
+    ccflags = ccflags.replace( '/W4', '/W3' )
+    ccflags = ccflags.replace( '-Werror', '')
 
-	return env;
+    # -- test code --
+    ccflags += ' -showIncludes'
+
+    env.Replace( CCFLAGS = Split( ccflags ) )
+
+    return env;
 
 
 ################################################################################
@@ -347,154 +381,165 @@ CONFIG = {}
 
 def CheckConfig():
 
-	# Create configuration object
-	env = UTIL_new_config_env()
-	confdir = '#' + BUILD_ROOT_PATH + 'config'
-	c = env.Configure( conf_dir=confdir, log_file=confdir + '/config.log' )
+    # Create configuration object
+    env = UTIL_new_config_env()
+    confdir = '#' + BUILD_ROOT_PATH + 'config'
+    c = env.Configure( conf_dir=confdir, log_file=confdir + '/config.log' )
 
-	# =========
-	# Cg shader
-	# =========
-	CONFIG['cg_libs'] = []
-	if False : # CONF_enableCg :
-		CONFIG['has_cg']       = c.CheckLibWithHeader( 'cg', ['Cg/cg.h'], 'C', 'cgCreateContext();' )
-		CONFIG['has_cg_ogl']   = c.CheckLibWithHeader( 'cgGL', ['Cg/cg.h','Cg/cgGL.h'], 'C', "cgGLRegisterStates(0);" )
-		CONFIG['has_cg_d3d9']  = c.CheckLibWithHeader( 'cgD3D9', ['Cg/cg.h','Cg/cgD3D9.h'], 'C', "cgD3D9SetDevice(0);" )
-		CONFIG['has_cg_d3d10'] = c.CheckLibWithHeader( 'cgD3D10', ['Cg/cg.h','Cg/cgD3D10.h'], 'C', "cgD3D10SetDevice(0,0);" )
-		CONFIG['has_cg_d3d11'] = c.CheckLibWithHeader( 'cgD3D11', ['Cg/cg.h','Cg/cgD3D11.h'], 'C', "cgD3D11SetDevice(0,0);" )
-		if CONFIG['has_cg_ogl']   : CONFIG['cg_libs'] += ['cgGL']
-		if CONFIG['has_cg_d3d9']  : CONFIG['cg_libs'] += ['cgD3D9']
-		if CONFIG['has_cg_d3d10'] : CONFIG['cg_libs'] += ['cgD3D10']
-		if CONFIG['has_cg_d3d11'] : CONFIG['cg_libs'] += ['cgD3D11']
-		if CONFIG['has_cg']       : CONFIG['cg_libs'] += ['cg']
-	else:
-		CONFIG['has_cg']       = 0
-		CONFIG['has_cg_ogl']   = 0
-		CONFIG['has_cg_d3d9']  = 0
-		CONFIG['has_cg_d3d10'] = 0
-		CONFIG['has_cg_d3d11'] = 0
+    # =========
+    # Cg shader
+    # =========
+    CONFIG['cg_libs'] = []
+    if False : # CONF_enableCg :
+        CONFIG['has_cg']       = c.CheckLibWithHeader( 'cg', ['Cg/cg.h'], 'C', 'cgCreateContext();' )
+        CONFIG['has_cg_ogl']   = c.CheckLibWithHeader( 'cgGL', ['Cg/cg.h','Cg/cgGL.h'], 'C', "cgGLRegisterStates(0);" )
+        CONFIG['has_cg_d3d9']  = c.CheckLibWithHeader( 'cgD3D9', ['Cg/cg.h','Cg/cgD3D9.h'], 'C', "cgD3D9SetDevice(0);" )
+        CONFIG['has_cg_d3d10'] = c.CheckLibWithHeader( 'cgD3D10', ['Cg/cg.h','Cg/cgD3D10.h'], 'C', "cgD3D10SetDevice(0,0);" )
+        CONFIG['has_cg_d3d11'] = c.CheckLibWithHeader( 'cgD3D11', ['Cg/cg.h','Cg/cgD3D11.h'], 'C', "cgD3D11SetDevice(0,0);" )
+        if CONFIG['has_cg_ogl']   : CONFIG['cg_libs'] += ['cgGL']
+        if CONFIG['has_cg_d3d9']  : CONFIG['cg_libs'] += ['cgD3D9']
+        if CONFIG['has_cg_d3d10'] : CONFIG['cg_libs'] += ['cgD3D10']
+        if CONFIG['has_cg_d3d11'] : CONFIG['cg_libs'] += ['cgD3D11']
+        if CONFIG['has_cg']       : CONFIG['cg_libs'] += ['cg']
+    else:
+        CONFIG['has_cg']       = 0
+        CONFIG['has_cg_ogl']   = 0
+        CONFIG['has_cg_d3d9']  = 0
+        CONFIG['has_cg_d3d10'] = 0
+        CONFIG['has_cg_d3d11'] = 0
 
-	# ======
-	# OpenGL
-	# ======
-	if c.CheckLibWithHeader( 'opengl32', ['GL/glew.h'], 'C', 'glVertex3f(0,0,0);' ) and \
-		c.CheckLibWithHeader( 'glu32', ['GL/glew.h','GL/glu.h'], 'C', 'gluOrtho2D(0,0,0,0);' ) :
-		CONFIG['has_ogl'] = True
-		CONFIG['ogl_libs'] = ['opengl32','glu32']
-	elif c.CheckLibWithHeader( 'GL', ['GL/glew.h'], 'C', 'glVertex3f(0,0,0);' ) and \
-		c.CheckLibWithHeader( 'GLU', ['GL/glew.h','GL/glu.h'], 'C', 'gluOrtho2D(0,0,0,0);' ) :
-		CONFIG['has_ogl'] = True
-		CONFIG['ogl_libs'] = ['GL','GLU']
-	else :
-		CONFIG['has_ogl'] = False
-		CONFIG['ogl_libs'] = []
+    # ======
+    # OpenGL
+    # ======
+    if c.CheckLibWithHeader( 'opengl32', ['GL/glew.h'], 'C', 'glVertex3f(0,0,0);' ) and \
+        c.CheckLibWithHeader( 'glu32', ['GL/glew.h','GL/glu.h'], 'C', 'gluOrtho2D(0,0,0,0);' ) :
+        CONFIG['has_ogl'] = True
+        CONFIG['ogl_libs'] = ['opengl32','glu32']
+    elif c.CheckLibWithHeader( 'GL', ['GL/glew.h'], 'C', 'glVertex3f(0,0,0);' ) and \
+        c.CheckLibWithHeader( 'GLU', ['GL/glew.h','GL/glu.h'], 'C', 'gluOrtho2D(0,0,0,0);' ) :
+        CONFIG['has_ogl'] = True
+        CONFIG['ogl_libs'] = ['GL','GLU']
+    else :
+        CONFIG['has_ogl'] = False
+        CONFIG['ogl_libs'] = []
 
-	# ====
-	# GLUT
-	# ====
-	if c.CheckLibWithHeader( 'glut', 'GL/glut.h', 'C', 'glutInit(0,0);' ) :
-		CONFIG['has_glut'] = True
-		CONFIG['glut'] = ['glut']
-	elif c.CheckLibWithHeader( 'glut32', 'GL/glut.h', 'C', 'glutInit(0,0);' ) :
-		CONFIG['has_glut'] = True
-		CONFIG['glut'] = ['glut32']
-	else :
-		CONFIG['has_glut'] = False
-		CONFIG['glut'] = []
+    # ====
+    # GLUT
+    # ====
+    if c.CheckLibWithHeader( 'glut', 'GL/glut.h', 'C', 'glutInit(0,0);' ) :
+        CONFIG['has_glut'] = True
+        CONFIG['glut'] = ['glut']
+    elif c.CheckLibWithHeader( 'glut32', 'GL/glut.h', 'C', 'glutInit(0,0);' ) :
+        CONFIG['has_glut'] = True
+        CONFIG['glut'] = ['glut32']
+    else :
+        CONFIG['has_glut'] = False
+        CONFIG['glut'] = []
 
-	# =================
-	# Misc. D3D headers
-	# =================
-	CONFIG['has_dxerr']   = c.CheckCXXHeader( ['windows.h','dxerr.h'] )
-	CONFIG['has_xnamath'] = c.CheckCXXHeader( ['windows.h','xnamath.h'] ) or c.CheckCXXHeader( ['xtl.h','xnamath.h'] )
+    # =================
+    # Misc. D3D headers
+    # =================
+    CONFIG['has_dxerr']       = c.CheckCXXHeader( ['windows.h','dxerr.h'] )
 
-	# ====
-	# D3D9
-	# ====
-	CONFIG['has_d3d9'] = ('xenon' == BUILD_TARGET_OS) or ( CONFIG['has_dxerr'] and c.CheckCXXHeader( 'd3d9.h' ) and c.CheckCXXHeader( 'd3dx9.h' ) )
+    CONFIG['has_xnamath']     = c.CheckCXXHeader( ['windows.h','xnamath.h'] ) or \
+                                c.CheckCXXHeader( ['xtl.h','xnamath.h'] )
 
-	# Detect Windows Vista and Windows 7
-	def isVistaOrWin7( env ):
-		if 'win32' != env['PLATFORM']: return False
-		stdout = os.popen( "ver" )
-		str = stdout.read()
-		stdout.close()
-		import string
-		vista = string.find( str, "6.0" ) >= 0
-		win7  = string.find( str, "6.1" ) >= 0
-		return  vista or win7
+    CONFIG['has_directxmath'] = c.CheckCXXHeader( ['xdk.h','directxmath.h'] ) or \
+                                c.CheckCXXHeader( ['windows.h','directxmath.h'] ) or \
+                                c.CheckCXXHeader( ['xtl.h','directxmath.h'] )
 
-	# =====
-	# D3D10
-	# =====
-	CONFIG['has_d3d10'] = CONFIG['has_dxerr'] and CONFIG['has_d3d9'] and c.CheckLibWithHeader( 'd3d10.lib', 'd3d10.h', 'C++' ) and isVistaOrWin7(env);
+    # ====
+    # D3D9
+    # ====
+    CONFIG['has_d3d9'] = ('xenon' == BUILD_TARGET_OS) or ( CONFIG['has_dxerr'] and c.CheckCXXHeader( 'd3d9.h' ) and c.CheckCXXHeader( 'd3dx9.h' ) )
 
-	# =====
-	# D3D11
-	# =====
+    # Detect Windows Vista and Windows 7
+    def isVistaOrWin7( env ):
+        if 'win32' != env['PLATFORM']: return False
+        stdout = os.popen( "ver" )
+        str = stdout.read()
+        stdout.close()
+        import string
+        vista = string.find( str, "6.0" ) >= 0
+        win7  = string.find( str, "6.1" ) >= 0
+        return  vista or win7
 
-	CONFIG['has_d3d11'] = CONFIG['has_dxerr'] and CONFIG['has_d3d9'] and c.CheckLibWithHeader( 'd3d11.lib', 'd3d11.h', 'C++' ) and isVistaOrWin7(env);
+    # =====
+    # D3D10
+    # =====
+    CONFIG['has_d3d10'] = CONFIG['has_dxerr'] and CONFIG['has_d3d9'] and c.CheckLibWithHeader( 'd3d10.lib', 'd3d10.h', 'C++' ) and isVistaOrWin7(env);
 
-	# ===========
-	# DirectInput
-	# ===========
-	CONFIG['has_dinput'] = c.CheckCHeader( ['windows.h', 'dxerr.h', 'dinput.h'] )
+    # =====
+    # D3D11
+    # =====
 
-	# ======
-	# XInput
-	# ======
-	CONFIG['has_xinput'] = c.CheckCHeader( ['windows.h', 'xinput.h'] ) or c.CheckCHeader( ['xtl.h', 'xinput.h'] )
-	CONFIG['has_xinput2'] = c.CheckCHeader( ['windows.h', 'xinput2.h'] ) or c.CheckCHeader( ['xtl.h', 'xinput2.h'] )
+    CONFIG['has_d3d11']  = c.CheckLibWithHeader( 'd3d11.lib', 'd3d11.h', 'C++' ) and isVistaOrWin7(env);
+    CONFIG['has_d3dx11'] = c.CheckLibWithHeader( 'd3dx11.lib', 'd3dx11.h', 'C++' ) and isVistaOrWin7(env);
 
-	# =====
-	# cegui
-	# =====
-	CONFIG['has_cegui'] = c.CheckCXXHeader( 'CEGUI.h' )
+    # ===========
+    # DirectInput
+    # ===========
+    CONFIG['has_dinput'] = c.CheckCHeader( ['windows.h', 'dxerr.h', 'dinput.h'] )
 
-	# ======
-	# maxsdk
-	# ======
-	CONFIG['has_maxsdk'] = c.CheckCHeader( ['max.h','maxapi.h','maxversion.h'] )
+    # ======
+    # XInput
+    # ======
+    CONFIG['has_xinput'] = c.CheckCHeader( ['windows.h', 'xinput.h'] ) or \
+                           c.CheckCHeader( ['xtl.h', 'xinput.h'] ) or \
+                           c.CheckCHeader( ['xdk.h', 'xinput.h'] )
+    CONFIG['has_xinput2'] = c.CheckCHeader( ['windows.h', 'xinput2.h'] ) or \
+                            c.CheckCHeader( ['xtl.h', 'xinput2.h'] ) or \
+                            c.CheckCHeader( ['xdk.h', 'xinput2.h'] )
 
-	# =====
-	# ICONV
-	# =====
-	if c.CheckLibWithHeader( 'iconv', 'iconv.h', 'c', 'iconv_open(0,0);' ):
-	    CONFIG['has_iconv'] = True
-	    CONFIG['iconv_lib'] = 'iconv'
-	elif c.CheckLibWithHeader( 'libiconv', 'iconv.h', 'c', 'iconv_open(0,0);' ):
-	    CONFIG['has_iconv'] = True
-	    CONFIG['iconv_lib'] = 'libiconv'
-	elif c.CheckLibWithHeader( 'c', 'iconv.h', 'c', 'iconv_open(0,0);' ):
-	    CONFIG['has_iconv'] = True
-	    CONFIG['iconv_lib'] = 'c'
-	else :
-		CONFIG['has_iconv'] = False
-		CONFIG['iconv_lib'] = []
+    # =====
+    # cegui
+    # =====
+    CONFIG['has_cegui'] = c.CheckCXXHeader( 'CEGUI.h' )
 
-	# ===
-	# FBX
-	# ===
+    # ======
+    # maxsdk
+    # ======
+    CONFIG['has_maxsdk'] = c.CheckCHeader( ['max.h','maxapi.h','maxversion.h'] )
 
-	FBX_libname = "fbxsdk-" + UTIL_getenv("FBX_SDK_VERSION") + "-mt";
-	if BUILD_VARIANT == 'debug'   : FBX_libname += 'd'
+    # =====
+    # ICONV
+    # =====
+    if c.CheckLibWithHeader( 'iconv', 'iconv.h', 'c', 'iconv_open(0,0);' ):
+        CONFIG['has_iconv'] = True
+        CONFIG['iconv_lib'] = 'iconv'
+    elif c.CheckLibWithHeader( 'libiconv', 'iconv.h', 'c', 'iconv_open(0,0);' ):
+        CONFIG['has_iconv'] = True
+        CONFIG['iconv_lib'] = 'libiconv'
+    elif c.CheckLibWithHeader( 'c', 'iconv.h', 'c', 'iconv_open(0,0);' ):
+        CONFIG['has_iconv'] = True
+        CONFIG['iconv_lib'] = 'c'
+    else :
+        CONFIG['has_iconv'] = False
+        CONFIG['iconv_lib'] = []
 
-	FBX_deps = []
-	if HOST_OS == 'mswin' : FBX_deps += ['wininet'];
+    # ===
+    # FBX
+    # ===
 
-	env.Append( LIBS = FBX_deps )
-	if c.CheckLibWithHeader( FBX_libname, ['fbxsdk.h','fbxfilesdk/fbxfilesdk_nsuse.h'], 'C++', 'KFbxSdkManager::Create();' ):
-		CONFIG['has_fbx']  = True
-		CONFIG['fbx_libs'] = [FBX_libname] + FBX_deps
-	else:
-		CONFIG['has_fbx']  = False
-		CONFIG['fbx_libs'] = []
-	for d in FBX_deps: env['LIBS'].remove( d )
+    FBX_libname = "fbxsdk-" + UTIL_getenv("FBX_SDK_VERSION") + "-mt";
+    if BUILD_VARIANT == 'debug'   : FBX_libname += 'd'
 
-	# =============
-	# finish config
-	# =============
-	c.Finish()
+    FBX_deps = []
+    if HOST_OS == 'mswin' : FBX_deps += ['wininet'];
+
+    env.Append( LIBS = FBX_deps )
+    if c.CheckLibWithHeader( FBX_libname, ['fbxsdk.h','fbxfilesdk/fbxfilesdk_nsuse.h'], 'C++', 'KFbxSdkManager::Create();' ):
+        CONFIG['has_fbx']  = True
+        CONFIG['fbx_libs'] = [FBX_libname] + FBX_deps
+    else:
+        CONFIG['has_fbx']  = False
+        CONFIG['fbx_libs'] = []
+    for d in FBX_deps: env['LIBS'].remove( d )
+
+    # =============
+    # finish config
+    # =============
+    c.Finish()
 
 CheckConfig()
 
@@ -506,364 +551,366 @@ CheckConfig()
 
 class GarnetEnv2 :
 
-	def __init__( self ) :
+    def __init__( self ) :
 
-		#
-		# Build configurations
-		#
-		self.target_os    = BUILD_TARGET_OS
-		self.target_cpu   = BUILD_TARGET_CPU
-		self.cc           = BUILD_COMPILER
-		self.variant      = BUILD_VARIANT
-		self.host_os      = HOST_OS
-		self.static_build = True # TODO: run platform detector
-		self.has_cg       = CONFIG['has_cg']
-		self.has_cg_ogl   = CONFIG['has_cg_ogl']
-		self.has_cg_d3d9  = CONFIG['has_cg_d3d9']
-		self.has_cg_d3d10 = CONFIG['has_cg_d3d10']
-		self.has_cg_d3d11 = CONFIG['has_cg_d3d11']
-		self.has_d3d9     = CONFIG['has_d3d9']
-		self.has_d3d10    = CONFIG['has_d3d10']
-		self.has_d3d11    = CONFIG['has_d3d11']
-		self.has_dinput   = CONFIG['has_dinput']
-		self.has_dxerr    = CONFIG['has_dxerr']
-		self.has_fbx      = CONFIG['has_fbx']
-		self.has_glut     = CONFIG['has_glut']
-		self.has_iconv    = CONFIG['has_iconv']
-		self.has_ogl      = CONFIG['has_ogl']
-		self.has_xinput   = CONFIG['has_xinput']
-		self.has_xinput2  = CONFIG['has_xinput2']
-		self.has_xnamath  = CONFIG['has_xnamath']
-		self.has_xtl      = 'xenon' == BUILD_TARGET_OS
+        #
+        # Build configurations
+        #
+        self.target_os    = BUILD_TARGET_OS
+        self.target_cpu   = BUILD_TARGET_CPU
+        self.cc           = BUILD_COMPILER
+        self.variant      = BUILD_VARIANT
+        self.host_os      = HOST_OS
+        self.static_build = True # TODO: run platform detector
+        self.has_cg       = CONFIG['has_cg']
+        self.has_cg_ogl   = CONFIG['has_cg_ogl']
+        self.has_cg_d3d9  = CONFIG['has_cg_d3d9']
+        self.has_cg_d3d10 = CONFIG['has_cg_d3d10']
+        self.has_cg_d3d11 = CONFIG['has_cg_d3d11']
+        self.has_d3d9     = CONFIG['has_d3d9']
+        self.has_d3d10    = CONFIG['has_d3d10']
+        self.has_d3d11    = CONFIG['has_d3d11']
+        self.has_d3dx11   = CONFIG['has_d3dx11']
+        self.has_dinput   = CONFIG['has_dinput']
+        self.has_directxmath  = CONFIG['has_directxmath']
+        self.has_dxerr    = CONFIG['has_dxerr']
+        self.has_fbx      = CONFIG['has_fbx']
+        self.has_glut     = CONFIG['has_glut']
+        self.has_iconv    = CONFIG['has_iconv']
+        self.has_ogl      = CONFIG['has_ogl']
+        self.has_xinput   = CONFIG['has_xinput']
+        self.has_xinput2  = CONFIG['has_xinput2']
+        self.has_xnamath  = CONFIG['has_xnamath']
+        self.has_xtl      = 'xenon' == BUILD_TARGET_OS
 
-		#
-		# Dictionary of known targets that are created by NewTarget method
-		#
-		self.targets = {}
+        #
+        # Dictionary of known targets that are created by NewTarget method
+        #
+        self.targets = {}
 
-		#
-		# List of default target that should be build when invoking SCons from root directory.
-		#
-		self.defaults = []
+        #
+        # List of default target that should be build when invoking SCons from root directory.
+        #
+        self.defaults = []
 
-	#
-	# Logging
-	#
-	def Trace( self, level, msg ): UTIL_trace( level, msg )
-	def Info( self, msg ): UTIL_info( msg )
-	def Warn( self, msg ): UTIL_warn( msg )
-	def Error( self, msg ): UTIL_error( msg )
+    #
+    # Logging
+    #
+    def Trace( self, level, msg ): UTIL_trace( level, msg )
+    def Info( self, msg ): UTIL_info( msg )
+    def Warn( self, msg ): UTIL_warn( msg )
+    def Error( self, msg ): UTIL_error( msg )
 
-	#
-	# Get environment variable
-	#
-	def GetEnv( self, name, defaultValue = '' ): return UTIL_getenv( name, defaultValue )
+    #
+    # Get environment variable
+    #
+    def GetEnv( self, name, defaultValue = '' ): return UTIL_getenv( name, defaultValue )
 
-	#
-	# 生成从target到base的相对路径
-	#
-	def RelativePath( self, target, base ):
-		"""
-		Return a relative path to the target from either the current dir or an optional base dir.
-		Base can be a directory specified either as absolute or relative to current dir.
-		"""
+    #
+    # 生成从target到base的相对路径
+    #
+    def RelativePath( self, target, base ):
+        """
+        Return a relative path to the target from either the current dir or an optional base dir.
+        Base can be a directory specified either as absolute or relative to current dir.
+        """
 
-		base_list = (os.path.abspath(base)).split(os.sep)
-		target_list = (os.path.abspath(target)).split(os.sep)
+        base_list = (os.path.abspath(base)).split(os.sep)
+        target_list = (os.path.abspath(target)).split(os.sep)
 
-		# On the windows platform the target may be on a completely different drive from the base.
-		if os.name in ['nt','dos','os2'] and base_list[0] <> target_list[0]:
-			raise OSError, 'Target is on a different drive to base. Target: '+target_list[0].upper()+', base: '+base_list[0].upper()
+        # On the windows platform the target may be on a completely different drive from the base.
+        if os.name in ['nt','dos','os2'] and base_list[0] <> target_list[0]:
+            raise OSError, 'Target is on a different drive to base. Target: '+target_list[0].upper()+', base: '+base_list[0].upper()
 
-		# Starting from the filepath root, work out how much of the filepath is
-		# shared by base and target.
-		for i in range(min(len(base_list), len(target_list))):
-			if base_list[i] <> target_list[i]: break
-		else:
-			# If we broke out of the loop, i is pointing to the first differing path elements.
-			# If we didn't break out of the loop, i is pointing to identical path elements.
-			# Increment i so that in all cases it points to the first differing path elements.
-			i+=1
+        # Starting from the filepath root, work out how much of the filepath is
+        # shared by base and target.
+        for i in range(min(len(base_list), len(target_list))):
+            if base_list[i] <> target_list[i]: break
+        else:
+            # If we broke out of the loop, i is pointing to the first differing path elements.
+            # If we didn't break out of the loop, i is pointing to identical path elements.
+            # Increment i so that in all cases it points to the first differing path elements.
+            i+=1
 
-		rel_list = [os.pardir] * (len(base_list)-i) + target_list[i:]
-		return os.path.join(*rel_list)
+        rel_list = [os.pardir] * (len(base_list)-i) + target_list[i:]
+        return os.path.join(*rel_list)
 
-	#
-	# 查找指定目录下的文件
-	#
-	def Glob( self, patterns, recursive = False ):
-		def do_glob( pattern, dir, recursive ):
-			files = []
-			root = Dir(dir).srcnode().abspath;
-			try:
-				if os.path.isdir( root ):
-					for file in os.listdir( root ):
-						if os.path.isdir( os.path.join(root,file) ):
-							if recursive and ( not '.svn' == file ) : # ignore subversion directory
-								files = files + do_glob( pattern, os.path.join(dir,file), recursive )
-						else:
-							# Note: ignore precompiled headers and makefiles
-							if not ('pch.cpp' == file or 'stdafx.cpp' == file or 'makefile.scons' == file):
-								#print 'fnmatch(%s,%s) = %s'%(file,pattern,fnmatch.fnmatch(file, pattern))
-								if fnmatch.fnmatch(file, pattern):
-									files.append( os.path.join( dir, file ) )
-				else:
-					UTIL_warn( "%s is not directory."%(root) )
-			except WindowsError:
-				pass
-			return files
-		#print 'glob %s'%patterns )
-		files = []
-		if not patterns is list: patterns = [patterns]
-		for p in Flatten(patterns):
-			if os.path.isdir( GetBuildPath(p) ):
-				#print '    do_glob(*.*,%s)'%p
-				files += do_glob( '*.*', p, recursive )
-			else:
-				(dir,pattern) = os.path.split(p);
-				if '' == pattern: pattern = '*.*';
-				if '' == dir: dir = '.';
-				#print '    do_glob(%s,%s)'%(pattern,dir)
-				files += do_glob( pattern, dir, recursive )
-		return files
+    #
+    # 查找指定目录下的文件
+    #
+    def Glob( self, patterns, recursive = False ):
+        def do_glob( pattern, dir, recursive ):
+            files = []
+            root = Dir(dir).srcnode().abspath;
+            try:
+                if os.path.isdir( root ):
+                    for file in os.listdir( root ):
+                        if os.path.isdir( os.path.join(root,file) ):
+                            if recursive and ( not '.svn' == file ) : # ignore subversion directory
+                                files = files + do_glob( pattern, os.path.join(dir,file), recursive )
+                        else:
+                            # Note: ignore precompiled headers and makefiles
+                            if not ('pch.cpp' == file or 'stdafx.cpp' == file or 'makefile.scons' == file):
+                                #print 'fnmatch(%s,%s) = %s'%(file,pattern,fnmatch.fnmatch(file, pattern))
+                                if fnmatch.fnmatch(file, pattern):
+                                    files.append( os.path.join( dir, file ) )
+                else:
+                    UTIL_warn( "%s is not directory."%(root) )
+            except WindowsError:
+                pass
+            return files
+        #print 'glob %s'%patterns )
+        files = []
+        if not patterns is list: patterns = [patterns]
+        for p in Flatten(patterns):
+            if os.path.isdir( GetBuildPath(p) ):
+                #print '    do_glob(*.*,%s)'%p
+                files += do_glob( '*.*', p, recursive )
+            else:
+                (dir,pattern) = os.path.split(p);
+                if '' == pattern: pattern = '*.*';
+                if '' == dir: dir = '.';
+                #print '    do_glob(%s,%s)'%(pattern,dir)
+                files += do_glob( pattern, dir, recursive )
+        return files
 
-	#
-	# Remove items from environment list
-	#
-	def RemoveEnvListItems( self, env, name, toBeRemoved ):
-		if toBeRemoved:
-			for x in toBeRemoved:
-				if x in env[name]:
-					env[name].remove(x)
+    #
+    # Remove items from environment list
+    #
+    def RemoveEnvListItems( self, env, name, toBeRemoved ):
+        if toBeRemoved:
+            for x in toBeRemoved:
+                if x in env[name]:
+                    env[name].remove(x)
 
-	#
-	# Create new configuration environment
-	#
-	def NewConfigEnv( self ) :
-		return UTIL_new_config_env()
+    #
+    # Create new configuration environment
+    #
+    def NewConfigEnv( self ) :
+        return UTIL_new_config_env()
 
-	#
-	# Create new build environment
-	#
-	def NewBuildEnv( self ) :
+    #
+    # Create new build environment
+    #
+    def NewBuildEnv( self ) :
 
-		# create default environment
-		env = UTIL_new_env( msvcBatchMode = True )
+        # create default environment
+        env = UTIL_new_env( msvcBatchMode = True )
 
-		return env
+        return env
 
-	#
-	# setup environment for build precompiled header, return PCH object file
-	#
-	def _BuildSetupPCH( self, env, pchHeader, pchSource ):
-		if 'PCH' in env['BUILDERS'] and pchSource:
-			pch = env.PCH(pchSource)
-			env['PCH'] = pch[0]
-			env['PCHSTOP'] = pchHeader
-			if( len(pch) > 1 ):
-				return [pch[1]]
-			else:
-				return []
-		else:
-			return []
+    #
+    # setup environment for build precompiled header, return PCH object file
+    #
+    def _BuildSetupPCH( self, env, pchHeader, pchSource ):
+        if 'PCH' in env['BUILDERS'] and pchSource:
+            pch = env.PCH(pchSource)
+            env['PCH'] = pch[0]
+            env['PCHSTOP'] = pchHeader
+            if( len(pch) > 1 ):
+                return [pch[1]]
+            else:
+                return []
+        else:
+            return []
 
-	#
-	# Setup build environment to build PDB file.
-	#
-	def _BuildSetupPDB( self, env, target, pdb ):
-		if pdb : pdbfile = File(pdb)
-		else   : pdbfile = File("%s.pdb"%(target))
-		env['PDB'] = pdbfile
+    #
+    # Setup build environment to build PDB file.
+    #
+    def _BuildSetupPDB( self, env, target, pdb ):
+        if pdb : pdbfile = File(pdb)
+        else   : pdbfile = File("%s.pdb"%(target))
+        env['PDB'] = pdbfile
 
-	#
-	# Setup libraries. Note that this is a private methods that should only
-	# be used inside GarnetEnv class.
-	#
-	def _BuildSetupLibs( self, env ):
+    #
+    # Setup libraries. Note that this is a private methods that should only
+    # be used inside GarnetEnv class.
+    #
+    def _BuildSetupLibs( self, env ):
 
-		# Add external libraries as needed. Note that
-		# when using gcc, the library order matters.
-		libs = self.CollectTargets( ['GNcore'] )
-		libs += CONFIG['cg_libs']
-		libs += CONFIG['glut']
-		libs += CONFIG['ogl_libs']
-		libs += CONFIG['fbx_libs']
-		libs += CONFIG['iconv_lib']
-		dbg = ( BUILD_VARIANT == "debug" )
-		if CONFIG['has_d3d9'] and ('xenon' != BUILD_TARGET_OS) :
-			libs += ['d3d9.lib', 'd3dx9d.lib'] if dbg else ['d3d9.lib', 'd3dx9.lib']
-		if CONFIG['has_d3d11']:
-			libs += ['dxgi.lib', 'dxguid.lib', 'dxerr.lib']
-			libs += ['d3d11.lib', 'd3dx11d.lib'] if dbg else ['d3d11.lib', 'd3dx11.lib']
-		env.Prepend( LIBS = libs )
+        # Add external libraries as needed. Note that
+        # when using gcc, the library order matters.
+        libs = self.CollectTargets( ['GNcore'] )
+        libs += CONFIG['cg_libs']
+        libs += CONFIG['glut']
+        libs += CONFIG['ogl_libs']
+        libs += CONFIG['fbx_libs']
+        libs += CONFIG['iconv_lib']
+        dbg = ( BUILD_VARIANT == "debug" )
+        if CONFIG['has_d3d9'] and ('xenon' != BUILD_TARGET_OS) :
+            libs += ['d3d9.lib', 'd3dx9d.lib'] if dbg else ['d3d9.lib', 'd3dx9.lib']
+        if CONFIG['has_d3d11']:
+            libs += ['dxgi.lib', 'dxguid.lib', 'dxerr.lib']
+            libs += ['d3d11.lib', 'd3dx11d.lib'] if dbg else ['d3d11.lib', 'd3dx11.lib']
+        env.Prepend( LIBS = libs )
 
-	#
-	# Build list of static object files from list of sources
-	#
-	def BuildObjects( self, env, sources, pchHeader=None, pchSource=None ):
-		if not env: env = self.NewBuildEnv()
-		pchobj = self._BuildSetupPCH( env, pchHeader, pchSource )
-		return Flatten( [env.Object(x) for x in sources] ) + pchobj
+    #
+    # Build list of static object files from list of sources
+    #
+    def BuildObjects( self, env, sources, pchHeader=None, pchSource=None ):
+        if not env: env = self.NewBuildEnv()
+        pchobj = self._BuildSetupPCH( env, pchHeader, pchSource )
+        return Flatten( [env.Object(x) for x in sources] ) + pchobj
 
-	#
-	# Build static library from list of objects
-	#
-	def BuildLib( self, env, target, objects, pdb=None ):
-		if not env: env = self.NewBuildEnv()
-		self._BuildSetupPDB( env, target, pdb )
-		return env.Library( target, objects )
+    #
+    # Build static library from list of objects
+    #
+    def BuildLib( self, env, target, objects, pdb=None ):
+        if not env: env = self.NewBuildEnv()
+        self._BuildSetupPDB( env, target, pdb )
+        return env.Library( target, objects )
 
-	#
-	# Build DLL
-	#
-	def BuildDLL( self, env, target, sources, pchHeader=None, pchSource=None, pdb=None ):
-		if not env: env = self.NewBuildEnv()
-		objects = self.BuildObjects( env, sources, pchHeader, pchSource )
-		self._BuildSetupPDB( env, target, pdb )
-		self._BuildSetupLibs( env )
-		return env.SharedLibrary( target, objects )
+    #
+    # Build DLL
+    #
+    def BuildDLL( self, env, target, sources, pchHeader=None, pchSource=None, pdb=None ):
+        if not env: env = self.NewBuildEnv()
+        objects = self.BuildObjects( env, sources, pchHeader, pchSource )
+        self._BuildSetupPDB( env, target, pdb )
+        self._BuildSetupLibs( env )
+        return env.SharedLibrary( target, objects )
 
-	#
-	# Build executable
-	#
-	def BuildProgram( self, env, target, sources, pchHeader=None, pchSource=None, pdb=None ):
-		if not env: env = self.NewBuildEnv()
-		objects = self.BuildObjects( env, sources, pchHeader, pchSource )
-		self._BuildSetupPDB( env, target, pdb )
-		self._BuildSetupLibs( env )
-		return env.Program( target, objects )
+    #
+    # Build executable
+    #
+    def BuildProgram( self, env, target, sources, pchHeader=None, pchSource=None, pdb=None ):
+        if not env: env = self.NewBuildEnv()
+        objects = self.BuildObjects( env, sources, pchHeader, pchSource )
+        self._BuildSetupPDB( env, target, pdb )
+        self._BuildSetupLibs( env )
+        return env.Program( target, objects )
 
-	#
-	# Place a set of files to output folder.
-	#
-	def PlaceFiles( self, targetFolder, sources ):
-		if '' == targetFolder : targetFolder = '.'
-		targetFolder = '#' + BUILD_ROOT_PATH + targetFolder
-		return Install( targetFolder, sources )
+    #
+    # Place a set of files to output folder.
+    #
+    def PlaceFiles( self, targetFolder, sources ):
+        if '' == targetFolder : targetFolder = '.'
+        targetFolder = '#' + BUILD_ROOT_PATH + targetFolder
+        return Install( targetFolder, sources )
 
-	#
-	# Place a set of files to output folder, preserving tree structure
-	#
-	def PlaceSubTree( self, targetBaseFolder, sourceBaseFolder, sources ):
-   		if '' == sourceBaseFolder : sourceBaseFolder = '.'
-   		if '' == targetBaseFolder : targetBaseFolder = '.'
-   		targetBaseFolder = '#' + BUILD_ROOT_PATH + targetBaseFolder + '/'
-   		targets = []
-		for x in sources:
-			srcdir = os.path.dirname( self.RelativePath( x, sourceBaseFolder ) )
-			dstdir = targetBaseFolder + '/' + srcdir
-			targets += Install( dstdir, x )
-		return targets
+    #
+    # Place a set of files to output folder, preserving tree structure
+    #
+    def PlaceSubTree( self, targetBaseFolder, sourceBaseFolder, sources ):
+        if '' == sourceBaseFolder : sourceBaseFolder = '.'
+        if '' == targetBaseFolder : targetBaseFolder = '.'
+        targetBaseFolder = '#' + BUILD_ROOT_PATH + targetBaseFolder + '/'
+        targets = []
+        for x in sources:
+            srcdir = os.path.dirname( self.RelativePath( x, sourceBaseFolder ) )
+            dstdir = targetBaseFolder + '/' + srcdir
+            targets += Install( dstdir, x )
+        return targets
 
-	#
-	# Binplace DLL and its export library.
-	#
-	def BinplaceDLL( self, dll ):
+    #
+    # Binplace DLL and its export library.
+    #
+    def BinplaceDLL( self, dll ):
 
- 		# split DLL binaries and libraries
-		bins = []
-		libs = []
-		for x in dll:
-			p,e = os.path.splitext( str(x) )
-			if '.lib' == e or '.exp' == e  or '.a' == e :
-				libs += [x]
-			else:
-				bins += [x]
+        # split DLL binaries and libraries
+        bins = []
+        libs = []
+        for x in dll:
+            p,e = os.path.splitext( str(x) )
+            if '.lib' == e or '.exp' == e  or '.a' == e :
+                libs += [x]
+            else:
+                bins += [x]
 
-		# binplace binaries
-		bins = self.BinplaceProgram( bins )
+        # binplace binaries
+        bins = self.BinplaceProgram( bins )
 
-		# TODO: copy libs
+        # TODO: copy libs
 
-		return bins + libs
+        return bins + libs
 
-	#
-	# Binplace program to bin folder.
-	#
-	def BinplaceProgram( self, program ):
+    #
+    # Binplace program to bin folder.
+    #
+    def BinplaceProgram( self, program ):
 
-		# copy to bin folder
-		program = Install( '#' + BUILD_ROOT_PATH + 'bin/', program )
+        # copy to bin folder
+        program = Install( '#' + BUILD_ROOT_PATH + 'bin/', program )
 
-		# setup dependency to other targets
-		Depends( program, GN.CollectTargets([
-			'GNexternBin',
-			'GNmedia',
-		]))
+        # setup dependency to other targets
+        Depends( program, GN.CollectTargets([
+            'GNexternBin',
+            'GNmedia',
+        ]))
 
-		# Make program depend on its by-products, such as manifest and PDB,
-		# to make sure those files are always up to date.
-		for x in program[1:] :
-			Depends( program[0], x )
+        # Make program depend on its by-products, such as manifest and PDB,
+        # to make sure those files are always up to date.
+        for x in program[1:] :
+            Depends( program[0], x )
 
-		# Deploy to devkit
-		AddPostAction( program, self.CopyToDevkit( '', program ) )
+        # Deploy to devkit
+        AddPostAction( program, self.CopyToDevkit( '', program ) )
 
-		return program
+        return program
 
-	#
-	# Copy one file to Xenon devkit
-	#
-	def CopyToDevkit( self, destdir, sources ):
-		if 'xenon' == BUILD_TARGET_OS:
-			if '' == destdir: destdir='.'
-			for s in sources:
-				xedk=UTIL_getenv("XEDK")
-				# Note: xbcp.exe requires environment variable "SystemRoot".
-				cmdline = 'set PATH="%s"&set SystemRoot=%s&xbcp.exe /Q /D /Y /T "%s" %s'%(
-					xedk + "\\bin\\win32",
-					UTIL_getenv("SystemRoot"),
-					File(s).abspath,
-					'xe:\\garnet3d\\%s\\%s\\'%(BUILD_VARIANT,destdir))
-				Execute( cmdline )
-		return []
+    #
+    # Copy one file to Xenon devkit
+    #
+    def CopyToDevkit( self, destdir, sources ):
+        if 'xenon' == BUILD_TARGET_OS:
+            if '' == destdir: destdir='.'
+            for s in sources:
+                xedk=UTIL_getenv("XEDK")
+                # Note: xbcp.exe requires environment variable "SystemRoot".
+                cmdline = 'set PATH="%s"&set SystemRoot=%s&xbcp.exe /Q /D /Y /T "%s" %s'%(
+                    xedk + "\\bin\\win32",
+                    UTIL_getenv("SystemRoot"),
+                    File(s).abspath,
+                    'xe:\\garnet3d\\%s\\%s\\'%(BUILD_VARIANT,destdir))
+                Execute( cmdline )
+        return []
 
-	#
-	# Create alias for a build target. So that it can be
-	# referenced easily in makefiles.
-	#
-	def NewTarget( self, name, target ):
+    #
+    # Create alias for a build target. So that it can be
+    # referenced easily in makefiles.
+    #
+    def NewTarget( self, name, target ):
 
-		# See if the alias has existed already.
-		if self.FindTarget(name, warnForNonExistTarget = False):
-			self.Error( 'Alias %s has existed.'%(name) )
-			return
+        # See if the alias has existed already.
+        if self.FindTarget(name, warnForNonExistTarget = False):
+            self.Error( 'Alias %s has existed.'%(name) )
+            return
 
-		# Create scons alias.
-		Alias( name, target )
+        # Create scons alias.
+        Alias( name, target )
 
-		# Add to SCons's default list
-		Default( name )
+        # Add to SCons's default list
+        Default( name )
 
-		# Add to target list
-		self.targets[name] = target
+        # Add to target list
+        self.targets[name] = target
 
-	#
-	# Create alias for a build target. Also add it into default target list.
-	#
-	def NewDefaultTarget( self, name, target ):
-		self.NewTarget( name, target )
-		self.defaults += [name];
+    #
+    # Create alias for a build target. Also add it into default target list.
+    #
+    def NewDefaultTarget( self, name, target ):
+        self.NewTarget( name, target )
+        self.defaults += [name];
 
-	#
-	# Find one target by name.
-	#
-	def FindTarget( self, name, warnForNonExistTarget = True ):
-		if name in self.targets:
-			return self.targets[name]
-		else:
-			if warnForNonExistTarget: self.Warn( 'Target %s does not exist.'%(name) )
-			return None
+    #
+    # Find one target by name.
+    #
+    def FindTarget( self, name, warnForNonExistTarget = True ):
+        if name in self.targets:
+            return self.targets[name]
+        else:
+            if warnForNonExistTarget: self.Warn( 'Target %s does not exist.'%(name) )
+            return None
 
-	#
-	# Generate target list from names
-	#
-	def CollectTargets( self, names, warnForNonExistTarget = True ):
-		targets = []
-		for name in names:
-			t = self.FindTarget( name, warnForNonExistTarget )
-			if t: targets += [t]
-		return targets
+    #
+    # Generate target list from names
+    #
+    def CollectTargets( self, names, warnForNonExistTarget = True ):
+        targets = []
+        for name in names:
+            t = self.FindTarget( name, warnForNonExistTarget )
+            if t: targets += [t]
+        return targets
 
 # Create garnet build environment (singleton)
 GN = GarnetEnv2()
@@ -879,6 +926,6 @@ SConscript( 'src/makefile.scons', variant_dir=BUILD_ROOT_PATH, duplicate=1)
 # Create pseudo target in root folder for all default targets.
 # So that they can be built automatically when invok SCons from root directory.
 for d in GN.defaults:
-	name = '__default__' + d
-	Alias( name, d )
-	Default( name )
+    name = '__default__' + d
+    Alias( name, d )
+    Default( name )

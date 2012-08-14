@@ -429,12 +429,14 @@ GN::gfx::SpriteRenderer::drawSolid(
 
     GN_ASSERT( mNextFreeSprite < mSprites + MAX_SPRITES );
 
-    const DispDesc & dd = mGpu.getDispDesc();
+    // get screen size based on current context
+    uint32 screenWidth, screenHeight;
+    mGpu.getCurrentRenderTargetSize( &screenWidth, &screenHeight );
 
-    float x1 = x / dd.width;
-    float y1 = y / dd.height;
-    float x2 = (x + w) / dd.width;
-    float y2 = (y + h) / dd.height;
+    float x1 = x / screenWidth;
+    float y1 = y / screenHeight;
+    float x2 = (x + w) / screenWidth;
+    float y2 = (y + h) / screenHeight;
 
     mNextFreeSprite->v[0].pos.set( x1, y1, z );
     mNextFreeSprite->v[0].clr = rgba;

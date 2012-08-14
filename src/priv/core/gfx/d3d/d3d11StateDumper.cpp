@@ -486,7 +486,7 @@ static StrA sDumpResource( ID3D11DeviceContext & devcxt, const char * prefix, ID
     else
     {
         sprintf_s( fname, "%s_texture.dds", prefix );
-        D3DX11SaveTextureToFileA( &devcxt, res, D3DX11_IFF_DDS, fname );
+        //D3DX11SaveTextureToFileA( &devcxt, res, D3DX11_IFF_DDS, fname );
     }
 
     return fname;
