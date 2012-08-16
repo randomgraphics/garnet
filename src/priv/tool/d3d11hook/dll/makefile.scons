@@ -2,10 +2,11 @@ Import( 'GN' )
 
 sources = [
     'device.cpp',
+    'ID3D11Device.cpp',
 ]
 
 env = GN.NewBuildEnv()
-env.Append( LINKFLAGS = ['/DEF:%s'%File('myd3d11.def').srcnode().path] )
+#env.Append( LINKFLAGS = ['/DEF:%s'%File('myd3d11.def').srcnode().path] )
 
 GN.NewDefaultTarget(
 	'GNtoolD3D11Hook',

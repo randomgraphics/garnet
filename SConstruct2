@@ -171,8 +171,8 @@ def UTIL_new_env_ex( msvcBatchMode ):
         env['ENV']['LANGUAGE'] = UTIL_getenv('LANGUAGE');
 
         # --- test code ---
-        print env['ENV']['INCLUDE']
-        print env['ENV']['LIB']
+        #print env['ENV']['INCLUDE']
+        #print env['ENV']['LIB']
 
     # cache implicit dependencies
     env.SetOption( 'implicit_cache', int(UTIL_getenv('SCONS_CACHE_IMPLICIT_DEPS', 1)) )
@@ -364,7 +364,7 @@ def UTIL_new_config_env():
     ccflags = ccflags.replace( '-Werror', '')
 
     # -- test code --
-    ccflags += ' -showIncludes'
+    #ccflags += ' -showIncludes'
 
     env.Replace( CCFLAGS = Split( ccflags ) )
 
