@@ -1,0 +1,1 @@
+python %~dp0parse_d3d_headers.py

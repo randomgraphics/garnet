@@ -1,2 +1,2 @@
 Import( 'GN' )
-SConscript( dirs=['dll'] )
+SConscript( ['dll/makefile.scons'] )
