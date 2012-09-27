@@ -15,25 +15,25 @@ def UTIL_trace( level, msg ):
         print 'TRACE(%d) : %s'%(level,msg)
 
 # ------------------------------------------------------------------------------
-def UTIL_info( msg ): print 'INFO : %s'%msg
+def UTIL_info( msg ): print '[INFO] %s'%msg
 
 # ------------------------------------------------------------------------------
 def UTIL_warn( msg ):
-    #print '===================================================================='
-    print 'WARNING : %s'%msg
-    #print '===================================================================='
+    print '===================================================================='
+    print '[WARN] %s'%msg
+    print '===================================================================='
 
 # ------------------------------------------------------------------------------
 def UTIL_error( msg ):
     print '===================================================================='
-    print 'ERROR : %s'%msg
+    print '[ERROR] %s'%msg
     print '===================================================================='
 
 # ------------------------------------------------------------------------------
 # Fatal Error. Need to halt.
 def UTIL_fatal( msg ):
     print '===================================================================='
-    print 'FATAL : %s'%msg
+    print '[FATAL] %s'%msg
     print '===================================================================='
     Exit(-1)
 
@@ -206,18 +206,23 @@ def PARSE_get_func_parameter( line ):
 
 # ------------------------------------------------------------------------------
 # Parse interface definition, generate c++ declarations
-def PARSE_interface( class_name, include, lines ):
-    interface_name = 'I' + class_name
-    UTIL_info( "Parsing " + interface_name + "...");
-    start_line = interface_name + " : public IUnknown"
+#   interface_name : name of the interface that you want to parse
+#   class_name     : name of the hook class
+#   include        : include this header file in generated .h file
+#   lines          : the source code that you want to parse.
+def PARSE_interface( interface_name, class_name, include, lines ):
+    UTIL_info( '    Parse ' + interface_name);
 
+    assert not (interface_name in g_interface_to_wrapper)
+
+    start_line = interface_name + ' : public'
     found = False
     ended = False
     methods = []
     func_sig = None
 
     for l in lines:
-        if  l == start_line: found = True
+        if  -1 != l.find(start_line): found = True
         elif found and l == '};': ended = True
         elif found and (not ended):
             temp_func_sig = PARSE_get_interface_method_decl(l)
@@ -252,22 +257,32 @@ def PARSE_interface( class_name, include, lines ):
             for m in methods: m.WriteImplementationToFile( f, class_name )
         cid_file.write('\n')
         cid_file.write('    // CID for ' + interface_name + '\n')
-        cid_file.write('    CID_ID3D11DEVICE_BASE,\n'),
-        cid_file.write('    CID_ID3D11DEVICE_COUNT = ' + str(len(methods)) + ',\n'),
-        cid_file.write('    CID_ID3D11DEVICE_AddRef = CID_ID3D11DEVICE_BASE,\n'),
-        cid_file.write('    CID_ID3D11DEVICE_Release,\n'),
-        cid_file.write('    CID_ID3D11DEVICE_QueryInterface,\n'),
+        cid_file.write('    CID_' + interface_name + '_BASE,\n'),
+        cid_file.write('    CID_' + interface_name + '_COUNT = ' + str(len(methods)) + ',\n'),
+        cid_file.write('    CID_' + interface_name + '_AddRef = CID_' + interface_name + '_BASE,\n'),
+        cid_file.write('    CID_' + interface_name + '_Release,\n'),
+        cid_file.write('    CID_' + interface_name + '_QueryInterface,\n'),
         for m in methods: m.WriteCID(interface_name)
+        # We have successfully parsed the interface. Put the interface -> wrapp mapping
+        # into the global mapping table.
+        g_interface_to_wrapper[interface_name] = class_name
+    elif not found:
+        UTIL_error(interface_name + ' not found!')
+    else:
+        UTIL_error('The end of ' + interface_name + ' not found!')
 
     # end of the function
     pass
 
 # ------------------------------------------------------------------------------
-# Parse d3d11.h
-def PARSE_d3d11_h( f ):
-    lines = [line.strip() for line in f.readlines()]
-    PARSE_interface('D3D11Device', 'device.h', lines)
-
+# Parse a list of interfaces in an opened file
+def PARSE_interfaces_from_opened_file(file, common_include_header, interfaces):
+    UTIL_info( 'Parse ' + file.name);
+    lines = [line.strip() for line in file.readlines()]
+    for interface_name in interfaces:
+        hook_class_name = interface_name[1:] + 'Hook'
+        PARSE_interface(interface_name, hook_class_name, common_include_header, lines)
+    pass
 
 # ------------------------------------------------------------------------------
 # Start of main procedure
@@ -285,7 +300,30 @@ cid_file.write(
 enum D3D11_CALL_ID
 {""")
 
-with open(os.path.join( DXSDK_INC_PATH, "d3d11.h" )) as f: PARSE_d3d11_h(f)
+# define the global interface->wrapper mapping
+g_interface_to_wrapper = dict()
+
+# parse d3d11.h
+with open(os.path.join( DXSDK_INC_PATH, "d3d11.h" )) as f:
+    PARSE_interfaces_from_opened_file(f, 'd3d11hook.h', [
+        'ID3D11Device',
+        'ID3D11DeviceChild',
+        'ID3D11DeviceContext'
+    ])
+
+# parse d3d11sdklayer.h
+with open(os.path.join( DXSDK_INC_PATH, "d3d11sdklayers.h" )) as f:
+    PARSE_interfaces_from_opened_file(f, 'd3d11hook.h', [
+        'ID3D11Debug',
+        'ID3D11InfoQueue'
+    ])
+
+# parse dxgi.h
+with open(os.path.join( DXSDK_INC_PATH, "dxgi.h" )) as f:
+    PARSE_interfaces_from_opened_file(f, 'd3d11hook.h', [
+        'IDXGIAdapter',
+        'IDXGIFactory'
+    ])
 
 
 # close global CID file
