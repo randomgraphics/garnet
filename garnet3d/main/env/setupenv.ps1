@@ -146,13 +146,14 @@ if( "vc" -eq $env:GN_BUILD_COMPILER )
     ""
 
     # locate vsvarall.bat, prefer vs2010 over others
-    $vcvarbat=$false
+    '''$vcvarbat=$false
     if( $env:VS110COMNTOOLS -and ( test-path $env:VS110COMNTOOLS ) )
     {
         $vcvarbat="$env:VS110COMNTOOLS..\..\VC\vcvarsall.bat"
         $env:GN_BUILD_COMPILER="vc110"; # TODO: it breaks build script when set to "vc110"
     }
-    elseif( $env:VS100COMNTOOLS -and ( test-path $env:VS100COMNTOOLS ) )
+    else'''
+    if( $env:VS100COMNTOOLS -and ( test-path $env:VS100COMNTOOLS ) )
     {
         $vcvarbat="$env:VS100COMNTOOLS..\..\VC\vcvarsall.bat"
         $env:GN_BUILD_COMPILER="vc100";
@@ -194,7 +195,7 @@ if( "vc" -eq $env:GN_BUILD_COMPILER )
             }
             elseif( "x64" -eq $env:GN_BUILD_TARGET_CPU )
             {
-                $target = "x86_amd64"
+                $target = "amd64"
             }
             else
             {
