@@ -13,6 +13,18 @@
 
 typedef void* (*WrapRealObjectFuncPtr)(void * realobj);
 
+template<class HOOKED_CLASS, class REAL_INTERFACE>
+inline HOOKED_CLASS * GetHookedFromReal(REAL_INTERFACE * realobj)
+{
+    HOOKED_CLASS * hooked;
+    UINT size = (UINT)sizeof(hooked);
+    GN_VERIFY(S_OK == realobj->GetPrivateData(
+        GN_D3D11HOOK_HOOKED_OBJECT_GUID,
+        &size,
+        &hooked));
+    return hooked;
+}
+
 ///
 /// Wrapper of classes that is directly inherited from IUnknown
 ///
@@ -79,7 +91,7 @@ public:
         WRAP_CLASS2::AddQIInterface<WRAP_CLASS>();
     }
 
-    static void * CreateInstanceFromRealObj(void * realobj)
+    static WRAP_CLASS * CreateInstanceFromRealObj(REAL_INTERFACE * realobj)
     {
         //GN_ASSERT(realobj != nullptr);
         //WRAP_CLASS * wrapper = new WRAP_CLASS((REAL_INTERFACE*)realobj);
@@ -179,12 +191,9 @@ public:
         GN::AutoComPtr<ID3D11Device> pRealDevice;
         GetRealObj()->GetDevice(&pRealDevice);
 
-        ID3D11Device * pHookedDevice;
+        ID3D11Device * pHookedDevice = GetHookedFromReal<ID3D11Device, ID3D11Device>(pRealDevice);
         UINT size = (UINT)sizeof(pHookedDevice);
-        GN_VERIFY(S_OK == pRealDevice->GetPrivateData(
-            GN_D3D11HOOK_HOOKED_OBJECT_GUID,
-            &size,
-            &pHookedDevice));
+        GN_ASSERT(nullptr != pHookedDevice);
 
         *ppDevice = pHookedDevice;
     }
