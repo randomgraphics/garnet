@@ -1,3 +1,4 @@
+// script generated file. DO NOT edit.
 // -----------------------------------------------------------------------------
 virtual void STDMETHODCALLTYPE VSSetConstantBuffers(
     UINT StartSlot,

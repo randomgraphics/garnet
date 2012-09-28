@@ -283,10 +283,13 @@ def PARSE_interface( interface_name, class_name, include, lines ):
     # write methods to file
     if found and ended:
         with open(interface_name + "_meta.h", "w") as f:
+            f.write('// script generated file. DO NOT edit.\n')
             for m in methods: m.WriteMetaDataToFile( f )
         with open(interface_name + ".h", "w") as f:
+            f.write('// script generated file. DO NOT edit.\n')
             for m in methods: m.WritePrototypeToFile( f, class_name )
         with open(interface_name + ".cpp", "w") as f:
+            f.write('// script generated file. DO NOT edit.\n')
             f.write('#include "pch.h"\n')
             f.write('#include "' + include + '"\n')
             for m in methods: m.WriteImplementationToFile( f, class_name )
