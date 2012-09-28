@@ -314,11 +314,12 @@ void STDMETHODCALLTYPE D3D11DeviceContextHook::OMSetRenderTargetsAndUnorderedAcc
 // -----------------------------------------------------------------------------
 void STDMETHODCALLTYPE D3D11DeviceContextHook::OMSetBlendState(
     ID3D11BlendState * pBlendState,
+    const FLOAT BlendFactor[4],
     UINT SampleMask)
 {
-    if (_OMSetBlendState_pre_ptr._value) { (this->*_OMSetBlendState_pre_ptr._value)(pBlendState, SampleMask); }
-    GetRealObj()->OMSetBlendState(pBlendState, SampleMask);
-    if (_OMSetBlendState_post_ptr._value) { (this->*_OMSetBlendState_post_ptr._value)(pBlendState, SampleMask); }
+    if (_OMSetBlendState_pre_ptr._value) { (this->*_OMSetBlendState_pre_ptr._value)(pBlendState, BlendFactor, SampleMask); }
+    GetRealObj()->OMSetBlendState(pBlendState, BlendFactor, SampleMask);
+    if (_OMSetBlendState_post_ptr._value) { (this->*_OMSetBlendState_post_ptr._value)(pBlendState, BlendFactor, SampleMask); }
 }
 
 // -----------------------------------------------------------------------------
@@ -473,29 +474,32 @@ void STDMETHODCALLTYPE D3D11DeviceContextHook::CopyStructureCount(
 
 // -----------------------------------------------------------------------------
 void STDMETHODCALLTYPE D3D11DeviceContextHook::ClearRenderTargetView(
-    ID3D11RenderTargetView * pRenderTargetView)
+    ID3D11RenderTargetView * pRenderTargetView,
+    const FLOAT ColorRGBA[4])
 {
-    if (_ClearRenderTargetView_pre_ptr._value) { (this->*_ClearRenderTargetView_pre_ptr._value)(pRenderTargetView); }
-    GetRealObj()->ClearRenderTargetView(pRenderTargetView);
-    if (_ClearRenderTargetView_post_ptr._value) { (this->*_ClearRenderTargetView_post_ptr._value)(pRenderTargetView); }
+    if (_ClearRenderTargetView_pre_ptr._value) { (this->*_ClearRenderTargetView_pre_ptr._value)(pRenderTargetView, ColorRGBA); }
+    GetRealObj()->ClearRenderTargetView(pRenderTargetView, ColorRGBA);
+    if (_ClearRenderTargetView_post_ptr._value) { (this->*_ClearRenderTargetView_post_ptr._value)(pRenderTargetView, ColorRGBA); }
 }
 
 // -----------------------------------------------------------------------------
 void STDMETHODCALLTYPE D3D11DeviceContextHook::ClearUnorderedAccessViewUint(
-    ID3D11UnorderedAccessView * pUnorderedAccessView)
+    ID3D11UnorderedAccessView * pUnorderedAccessView,
+    const UINT Values[4])
 {
-    if (_ClearUnorderedAccessViewUint_pre_ptr._value) { (this->*_ClearUnorderedAccessViewUint_pre_ptr._value)(pUnorderedAccessView); }
-    GetRealObj()->ClearUnorderedAccessViewUint(pUnorderedAccessView);
-    if (_ClearUnorderedAccessViewUint_post_ptr._value) { (this->*_ClearUnorderedAccessViewUint_post_ptr._value)(pUnorderedAccessView); }
+    if (_ClearUnorderedAccessViewUint_pre_ptr._value) { (this->*_ClearUnorderedAccessViewUint_pre_ptr._value)(pUnorderedAccessView, Values); }
+    GetRealObj()->ClearUnorderedAccessViewUint(pUnorderedAccessView, Values);
+    if (_ClearUnorderedAccessViewUint_post_ptr._value) { (this->*_ClearUnorderedAccessViewUint_post_ptr._value)(pUnorderedAccessView, Values); }
 }
 
 // -----------------------------------------------------------------------------
 void STDMETHODCALLTYPE D3D11DeviceContextHook::ClearUnorderedAccessViewFloat(
-    ID3D11UnorderedAccessView * pUnorderedAccessView)
+    ID3D11UnorderedAccessView * pUnorderedAccessView,
+    const FLOAT Values[4])
 {
-    if (_ClearUnorderedAccessViewFloat_pre_ptr._value) { (this->*_ClearUnorderedAccessViewFloat_pre_ptr._value)(pUnorderedAccessView); }
-    GetRealObj()->ClearUnorderedAccessViewFloat(pUnorderedAccessView);
-    if (_ClearUnorderedAccessViewFloat_post_ptr._value) { (this->*_ClearUnorderedAccessViewFloat_post_ptr._value)(pUnorderedAccessView); }
+    if (_ClearUnorderedAccessViewFloat_pre_ptr._value) { (this->*_ClearUnorderedAccessViewFloat_pre_ptr._value)(pUnorderedAccessView, Values); }
+    GetRealObj()->ClearUnorderedAccessViewFloat(pUnorderedAccessView, Values);
+    if (_ClearUnorderedAccessViewFloat_post_ptr._value) { (this->*_ClearUnorderedAccessViewFloat_post_ptr._value)(pUnorderedAccessView, Values); }
 }
 
 // -----------------------------------------------------------------------------
@@ -918,11 +922,12 @@ void STDMETHODCALLTYPE D3D11DeviceContextHook::OMGetRenderTargetsAndUnorderedAcc
 // -----------------------------------------------------------------------------
 void STDMETHODCALLTYPE D3D11DeviceContextHook::OMGetBlendState(
     ID3D11BlendState ** ppBlendState,
+    FLOAT BlendFactor[4],
     UINT * pSampleMask)
 {
-    if (_OMGetBlendState_pre_ptr._value) { (this->*_OMGetBlendState_pre_ptr._value)(ppBlendState, pSampleMask); }
-    GetRealObj()->OMGetBlendState(ppBlendState, pSampleMask);
-    if (_OMGetBlendState_post_ptr._value) { (this->*_OMGetBlendState_post_ptr._value)(ppBlendState, pSampleMask); }
+    if (_OMGetBlendState_pre_ptr._value) { (this->*_OMGetBlendState_pre_ptr._value)(ppBlendState, BlendFactor, pSampleMask); }
+    GetRealObj()->OMGetBlendState(ppBlendState, BlendFactor, pSampleMask);
+    if (_OMGetBlendState_post_ptr._value) { (this->*_OMGetBlendState_post_ptr._value)(ppBlendState, BlendFactor, pSampleMask); }
 }
 
 // -----------------------------------------------------------------------------

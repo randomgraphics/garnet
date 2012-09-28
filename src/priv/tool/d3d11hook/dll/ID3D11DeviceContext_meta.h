@@ -140,8 +140,9 @@ DEFINE_INTERFACE_METHOD(virtual, void, STDMETHODCALLTYPE, OMSetRenderTargetsAndU
     DEFINE_METHOD_PARAMETER(ID3D11UnorderedAccessView *const *, ppUnorderedAccessViews),
     DEFINE_METHOD_PARAMETER(const UINT *, pUAVInitialCounts)))
 // -----------------------------------------------------------------------------
-DEFINE_INTERFACE_METHOD(virtual, void, STDMETHODCALLTYPE, OMSetBlendState, PARAMETER_LIST_2(
+DEFINE_INTERFACE_METHOD(virtual, void, STDMETHODCALLTYPE, OMSetBlendState, PARAMETER_LIST_3(
     DEFINE_METHOD_PARAMETER(ID3D11BlendState *, pBlendState),
+    DEFINE_METHOD_ARRAY_PARAMETER(const FLOAT, BlendFactor, 4),
     DEFINE_METHOD_PARAMETER(UINT, SampleMask)))
 // -----------------------------------------------------------------------------
 DEFINE_INTERFACE_METHOD(virtual, void, STDMETHODCALLTYPE, OMSetDepthStencilState, PARAMETER_LIST_2(
@@ -210,14 +211,17 @@ DEFINE_INTERFACE_METHOD(virtual, void, STDMETHODCALLTYPE, CopyStructureCount, PA
     DEFINE_METHOD_PARAMETER(UINT, DstAlignedByteOffset),
     DEFINE_METHOD_PARAMETER(ID3D11UnorderedAccessView *, pSrcView)))
 // -----------------------------------------------------------------------------
-DEFINE_INTERFACE_METHOD(virtual, void, STDMETHODCALLTYPE, ClearRenderTargetView, PARAMETER_LIST_1(
-    DEFINE_METHOD_PARAMETER(ID3D11RenderTargetView *, pRenderTargetView)))
+DEFINE_INTERFACE_METHOD(virtual, void, STDMETHODCALLTYPE, ClearRenderTargetView, PARAMETER_LIST_2(
+    DEFINE_METHOD_PARAMETER(ID3D11RenderTargetView *, pRenderTargetView),
+    DEFINE_METHOD_ARRAY_PARAMETER(const FLOAT, ColorRGBA, 4)))
 // -----------------------------------------------------------------------------
-DEFINE_INTERFACE_METHOD(virtual, void, STDMETHODCALLTYPE, ClearUnorderedAccessViewUint, PARAMETER_LIST_1(
-    DEFINE_METHOD_PARAMETER(ID3D11UnorderedAccessView *, pUnorderedAccessView)))
+DEFINE_INTERFACE_METHOD(virtual, void, STDMETHODCALLTYPE, ClearUnorderedAccessViewUint, PARAMETER_LIST_2(
+    DEFINE_METHOD_PARAMETER(ID3D11UnorderedAccessView *, pUnorderedAccessView),
+    DEFINE_METHOD_ARRAY_PARAMETER(const UINT, Values, 4)))
 // -----------------------------------------------------------------------------
-DEFINE_INTERFACE_METHOD(virtual, void, STDMETHODCALLTYPE, ClearUnorderedAccessViewFloat, PARAMETER_LIST_1(
-    DEFINE_METHOD_PARAMETER(ID3D11UnorderedAccessView *, pUnorderedAccessView)))
+DEFINE_INTERFACE_METHOD(virtual, void, STDMETHODCALLTYPE, ClearUnorderedAccessViewFloat, PARAMETER_LIST_2(
+    DEFINE_METHOD_PARAMETER(ID3D11UnorderedAccessView *, pUnorderedAccessView),
+    DEFINE_METHOD_ARRAY_PARAMETER(const FLOAT, Values, 4)))
 // -----------------------------------------------------------------------------
 DEFINE_INTERFACE_METHOD(virtual, void, STDMETHODCALLTYPE, ClearDepthStencilView, PARAMETER_LIST_4(
     DEFINE_METHOD_PARAMETER(ID3D11DepthStencilView *, pDepthStencilView),
@@ -407,8 +411,9 @@ DEFINE_INTERFACE_METHOD(virtual, void, STDMETHODCALLTYPE, OMGetRenderTargetsAndU
     DEFINE_METHOD_PARAMETER(UINT, NumUAVs),
     DEFINE_METHOD_PARAMETER(ID3D11UnorderedAccessView **, ppUnorderedAccessViews)))
 // -----------------------------------------------------------------------------
-DEFINE_INTERFACE_METHOD(virtual, void, STDMETHODCALLTYPE, OMGetBlendState, PARAMETER_LIST_2(
+DEFINE_INTERFACE_METHOD(virtual, void, STDMETHODCALLTYPE, OMGetBlendState, PARAMETER_LIST_3(
     DEFINE_METHOD_PARAMETER(ID3D11BlendState **, ppBlendState),
+    DEFINE_METHOD_ARRAY_PARAMETER(FLOAT, BlendFactor, 4),
     DEFINE_METHOD_PARAMETER(UINT *, pSampleMask)))
 // -----------------------------------------------------------------------------
 DEFINE_INTERFACE_METHOD(virtual, void, STDMETHODCALLTYPE, OMGetDepthStencilState, PARAMETER_LIST_2(

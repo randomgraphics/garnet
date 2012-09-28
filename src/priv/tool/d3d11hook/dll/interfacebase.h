@@ -8,6 +8,7 @@
 
 #include <garnet/GNbase.h>
 #include <map>
+#include <d3d11.h>
 #include "utils.h"
 
 typedef void* (*WrapRealObjectFuncPtr)(void * realobj);

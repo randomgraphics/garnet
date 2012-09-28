@@ -41,9 +41,9 @@ def UTIL_fatal( msg ):
 # Function classes
 
 class FunctionParameter:
-    def __init__( self, type, name, defval_ = '' ) :
+    def __init__( self, type, name, array_count = 0, defval_ = '' ) :
         t = type.strip()
-        m = re.match(r"(__\w+\(.+\))\s+(.+$)",t)
+        m = re.match(r"(__\w+\(.+\))\s+(.+$)", t)
         if m is None:
             m = re.match(r"(__\w+)\s+(.+$)", t)
         if m is not None:
@@ -55,6 +55,15 @@ class FunctionParameter:
             self._type = t
         self._name = name.strip()
         self._defval = defval_
+        self._array_count = array_count # 0 means non-array parameter
+
+    def IsArray( self ):
+        return self._array_count > 0
+
+    def IsRef( self ):
+        return '&' == self._type[:-1] or \
+               self._type == 'REFGUID' or \
+               self._type == 'REFIID'
 
 class FunctionSignature:
     def __init__( self, prefix, return_type, decl, name ) :
@@ -75,16 +84,22 @@ class FunctionSignature:
         cid_file.write('    CID_' + interface_name + '_' + self._name + ',\n')
 
     def WriteParameterList(self, fp, writeType, writeName, makeRef = False, newLine = False):
+        if newLine and len(self._parameter_list):
+            fp.write('\n')
         for i in range(len(self._parameter_list)):
             if newLine: fp.write('    ')
             if writeType:
                 fp.write(self._parameter_list[i]._type)
-                if makeRef:
-                    # TODO: fp.write(' &') wont' work, if the paramter is already a ref type.
-                    pass
+                if makeRef and not self._parameter_list[i].IsRef():
+                    if self._parameter_list[i].IsArray():
+                        fp.write(' *')
+                    else:
+                        fp.write(' &')
             if writeName:
                 if writeType: fp.write(' ')
                 fp.write(self._parameter_list[i]._name)
+            if writeType and self._parameter_list[i].IsArray() and (not makeRef):
+                fp.write(' [' + self._parameter_list[i]._array_count + ']')
             if i < (len(self._parameter_list) - 1):
                 if newLine:
                     fp.write(',\n')
@@ -105,6 +120,8 @@ class FunctionSignature:
             fp.write('\n')
             for i in range(len(self._parameter_list)):
                 fp.write('    ' + self._parameter_list[i]._type + ' ' + self._parameter_list[i]._name)
+                if self._parameter_list[i].IsArray():
+                    fp.write('[' + self._parameter_list[i]._array_count + ']')
                 if i < (len(self._parameter_list) - 1):
                     fp.write(',\n')
                 else:
@@ -126,7 +143,7 @@ class FunctionSignature:
         self.WriteParameterNameList(fp)
         fp.write(');\n')
 
-        # call xxx_POST(...)
+        # call xxx_post_ptr(...)
         fp.write('    if (_' + self._name + '_post_ptr._value) { (this->*_' + self._name + '_post_ptr._value)(')
         if 'void' != self._return_type:
             fp.write('ret')
@@ -147,7 +164,10 @@ class FunctionSignature:
         if len(self._parameter_list) > 0:
             fp.write('\n')
             for i in range(len(self._parameter_list)):
-                fp.write('    DEFINE_METHOD_PARAMETER(' + self._parameter_list[i]._type + ', ' + self._parameter_list[i]._name + ')')
+                if self._parameter_list[i].IsArray():
+                    fp.write('    DEFINE_METHOD_ARRAY_PARAMETER(' + self._parameter_list[i]._type + ', ' + self._parameter_list[i]._name + ', ' + self._parameter_list[i]._array_count + ')')
+                else:
+                    fp.write('    DEFINE_METHOD_PARAMETER(' + self._parameter_list[i]._type + ', ' + self._parameter_list[i]._name + ')')
                 if i < (len(self._parameter_list) - 1):
                     fp.write(',\n')
                 else:
@@ -158,16 +178,8 @@ class FunctionSignature:
     def WritePrototypeToFile( self, fp, class_name ):
         fp.write('// -----------------------------------------------------------------------------\n')
         fp.write(self._prefix + ' ' + self._return_type + ' ' + self._decl + ' ' + self._name + '(')
-        if len(self._parameter_list) > 0:
-            fp.write('\n')
-            for i in range(len(self._parameter_list)):
-                fp.write('    ' + self._parameter_list[i]._type + ' ' + self._parameter_list[i]._name)
-                if i < (len(self._parameter_list) - 1):
-                    fp.write(',\n')
-                else:
-                    fp.write(');\n')
-        else:
-            fp.write(');\n')
+        self.WriteParameterList(fp, writeType=True, writeName=True, newLine=True)
+        fp.write(');\n')
         # write prototype for pre method
         fp.write('NullPtr<void (' + class_name + '::*)(')
         self.WriteParameterTypeList(fp, makeRef=True)
@@ -178,7 +190,7 @@ class FunctionSignature:
             fp.write(self._return_type)
             if len(self._parameter_list) > 0:
                 fp.write(', ')
-        self.WriteParameterTypeList(fp)
+        self.WriteParameterTypeList(fp, makeRef=False)
         fp.write(')> _' + self._name + '_post_ptr;\n')
 
 
@@ -195,14 +207,37 @@ def PARSE_get_interface_method_decl( line ):
 # ------------------------------------------------------------------------------
 # Returns FunctionParameter or None
 def PARSE_get_func_parameter( line ):
+    # __in_opt  const FLOAT parameter,
     m = re.match(r"(.+[^\w])(\w+),$", line)
-    if m is None:
-        m = re.match(r"(.+[^\w])(\w+)\) = 0;$", line)
     if m is not None:
         #print 'm[1] = "',m.group(1),'" m[2] = "',m.group(2),'"'
         return FunctionParameter(m.group(1), m.group(2))
-    else:
+
+    # __in  const UINT Value) = 0;
+    m = re.match(r"(.+[^\w])(\w+)\) = 0;$", line)
+    if m is not None:
+        #print 'm[1] = "',m.group(1),'" m[2] = "',m.group(2),'"'
+        return FunctionParameter(m.group(1), m.group(2))
+
+    # __in_opt  const FLOAT BlendFactor[ 4 ],
+    m = re.match(r"(.+[^\w])(\w+)\[\s*(\w+)\s*\],$", line)
+    if m is not None:
+        #print 'm[1] = "',m.group(1),'" m[2] = "',m.group(2),'" m[3] = "',m.group(3),'"'
+        return FunctionParameter(m.group(1), m.group(2), array_count=m.group(3))
+
+    #  __in  const FLOAT ColorRGBA[ 4 ]) = 0;
+    m = re.match(r"(.+[^\w])(\w+)\[\s*(\w+)\s*\]\) = 0;$", line)
+    if m is not None:
+        #print 'm[1] = "',m.group(1),'" m[2] = "',m.group(2),'" m[3] = "',m.group(3),'"'
+        return FunctionParameter(m.group(1), m.group(2), array_count=m.group(3))
+
+    # comment line
+    m = re.match(r"/\*.*", line)
+    if m is not None:
         return None
+
+    UTIL_error('Unrecognized function parameter line: ' + line)
+    return None
 
 # ------------------------------------------------------------------------------
 # Parse interface definition, generate c++ declarations
@@ -307,7 +342,6 @@ g_interface_to_wrapper = dict()
 with open(os.path.join( DXSDK_INC_PATH, "d3d11.h" )) as f:
     PARSE_interfaces_from_opened_file(f, 'd3d11hook.h', [
         'ID3D11Device',
-        'ID3D11DeviceChild',
         'ID3D11DeviceContext'
     ])
 
