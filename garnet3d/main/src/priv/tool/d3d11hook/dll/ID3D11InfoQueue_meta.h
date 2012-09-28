@@ -1,3 +1,4 @@
+// script generated file. DO NOT edit.
 // -----------------------------------------------------------------------------
 DEFINE_INTERFACE_METHOD(virtual, HRESULT, STDMETHODCALLTYPE, SetMessageCountLimit, PARAMETER_LIST_1(
     DEFINE_METHOD_PARAMETER(UINT64, MessageCountLimit)))

@@ -1,3 +1,4 @@
+// script generated file. DO NOT edit.
 // -----------------------------------------------------------------------------
 virtual HRESULT STDMETHODCALLTYPE CreateBuffer(
     const D3D11_BUFFER_DESC * pDesc,

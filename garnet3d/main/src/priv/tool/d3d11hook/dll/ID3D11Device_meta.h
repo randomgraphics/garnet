@@ -1,3 +1,4 @@
+// script generated file. DO NOT edit.
 // -----------------------------------------------------------------------------
 DEFINE_INTERFACE_METHOD(virtual, HRESULT, STDMETHODCALLTYPE, CreateBuffer, PARAMETER_LIST_3(
     DEFINE_METHOD_PARAMETER(const D3D11_BUFFER_DESC *, pDesc),

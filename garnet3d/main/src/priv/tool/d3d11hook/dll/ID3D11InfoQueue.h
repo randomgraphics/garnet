@@ -1,3 +1,4 @@
+// script generated file. DO NOT edit.
 // -----------------------------------------------------------------------------
 virtual HRESULT STDMETHODCALLTYPE SetMessageCountLimit(
     UINT64 MessageCountLimit);
