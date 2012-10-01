@@ -206,6 +206,7 @@ namespace GN
     class AutoComPtr
     {
         T * mPtr;
+
     public:
 
         ///
@@ -216,12 +217,14 @@ namespace GN
         ///
         /// Construct from normal pointer
         ///
-        explicit AutoComPtr( T * p ) throw() : mPtr(p) {}
+        template<typename T2>
+        explicit AutoComPtr( T2 * p ) throw() : mPtr(p) {}
 
         ///
         /// Copy constructor
         ///
-        AutoComPtr( const AutoComPtr & other ) throw() : mPtr(other.mPtr)
+        template<typename T2>
+        AutoComPtr( const AutoComPtr<T2> & other ) throw() : mPtr((T2*)other)
         {
             if( mPtr ) mPtr->AddRef();
         }
@@ -237,9 +240,10 @@ namespace GN
         ///
         /// Assignment operator
         ///
-        AutoComPtr & operator=( const AutoComPtr & rhs )
+        template<typename T2>
+        AutoComPtr & operator=( const AutoComPtr<T2> & rhs )
         {
-            set( rhs.mPtr );
+            set( (T2*)rhs );
             return *this;
         }
 
@@ -327,7 +331,8 @@ namespace GN
         ///
         /// Release existing interface, then hold new interface
         ///
-        void set( T * p ) throw()
+        template<typename T2>
+        void set( T2 * p ) throw()
         {
             if( p ) p->AddRef();
             if( mPtr ) mPtr->Release();
@@ -337,7 +342,8 @@ namespace GN
         ///
         /// Attach to an existing interface (does not AddRef)
         ///
-        void attach( T * p2 ) throw()
+        template<typename T2>
+        void attach( T2 * p2 ) throw()
         {
             if (mPtr) mPtr->Release();
             mPtr = p2;

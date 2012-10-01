@@ -473,8 +473,9 @@ def CheckConfig():
     # D3D11
     # =====
 
-    CONFIG['has_d3d11']  = c.CheckLibWithHeader( 'd3d11.lib', 'd3d11.h', 'C++' ) and isVistaOrWin7(env);
-    CONFIG['has_d3dx11'] = c.CheckLibWithHeader( 'd3dx11.lib', 'd3dx11.h', 'C++' ) and isVistaOrWin7(env);
+    CONFIG['has_d3d11']   = c.CheckLibWithHeader( 'd3d11.lib', 'd3d11.h', 'C++' ) and isVistaOrWin7(env);
+    CONFIG['has_d3d11_1'] = c.CheckLibWithHeader( 'd3d11.lib', 'd3d11_1.h', 'C++' ) and isVistaOrWin7(env);
+    CONFIG['has_d3dx11']  = c.CheckLibWithHeader( 'd3dx11.lib', 'd3dx11.h', 'C++' ) and isVistaOrWin7(env);
 
     # ===========
     # DirectInput
@@ -556,32 +557,33 @@ class GarnetEnv2 :
         #
         # Build configurations
         #
-        self.target_os    = BUILD_TARGET_OS
-        self.target_cpu   = BUILD_TARGET_CPU
-        self.cc           = BUILD_COMPILER
-        self.variant      = BUILD_VARIANT
-        self.host_os      = HOST_OS
-        self.static_build = True # TODO: run platform detector
-        self.has_cg       = CONFIG['has_cg']
-        self.has_cg_ogl   = CONFIG['has_cg_ogl']
-        self.has_cg_d3d9  = CONFIG['has_cg_d3d9']
-        self.has_cg_d3d10 = CONFIG['has_cg_d3d10']
-        self.has_cg_d3d11 = CONFIG['has_cg_d3d11']
-        self.has_d3d9     = CONFIG['has_d3d9']
-        self.has_d3d10    = CONFIG['has_d3d10']
-        self.has_d3d11    = CONFIG['has_d3d11']
-        self.has_d3dx11   = CONFIG['has_d3dx11']
-        self.has_dinput   = CONFIG['has_dinput']
+        self.target_os        = BUILD_TARGET_OS
+        self.target_cpu       = BUILD_TARGET_CPU
+        self.cc               = BUILD_COMPILER
+        self.variant          = BUILD_VARIANT
+        self.host_os          = HOST_OS
+        self.static_build     = True # TODO: run platform detector
+        self.has_cg           = CONFIG['has_cg']
+        self.has_cg_ogl       = CONFIG['has_cg_ogl']
+        self.has_cg_d3d9      = CONFIG['has_cg_d3d9']
+        self.has_cg_d3d10     = CONFIG['has_cg_d3d10']
+        self.has_cg_d3d11     = CONFIG['has_cg_d3d11']
+        self.has_d3d9         = CONFIG['has_d3d9']
+        self.has_d3d10        = CONFIG['has_d3d10']
+        self.has_d3d11        = CONFIG['has_d3d11']
+        self.has_d3d11_1      = CONFIG['has_d3d11_1']
+        self.has_d3dx11       = CONFIG['has_d3dx11']
+        self.has_dinput       = CONFIG['has_dinput']
         self.has_directxmath  = CONFIG['has_directxmath']
-        self.has_dxerr    = CONFIG['has_dxerr']
-        self.has_fbx      = CONFIG['has_fbx']
-        self.has_glut     = CONFIG['has_glut']
-        self.has_iconv    = CONFIG['has_iconv']
-        self.has_ogl      = CONFIG['has_ogl']
-        self.has_xinput   = CONFIG['has_xinput']
-        self.has_xinput2  = CONFIG['has_xinput2']
-        self.has_xnamath  = CONFIG['has_xnamath']
-        self.has_xtl      = 'xenon' == BUILD_TARGET_OS
+        self.has_dxerr        = CONFIG['has_dxerr']
+        self.has_fbx          = CONFIG['has_fbx']
+        self.has_glut         = CONFIG['has_glut']
+        self.has_iconv        = CONFIG['has_iconv']
+        self.has_ogl          = CONFIG['has_ogl']
+        self.has_xinput       = CONFIG['has_xinput']
+        self.has_xinput2      = CONFIG['has_xinput2']
+        self.has_xnamath      = CONFIG['has_xnamath']
+        self.has_xtl          = 'xenon' == BUILD_TARGET_OS
 
         #
         # Dictionary of known targets that are created by NewTarget method
@@ -740,7 +742,7 @@ class GarnetEnv2 :
         if CONFIG['has_d3d9'] and ('xenon' != BUILD_TARGET_OS) :
             libs += ['d3d9.lib', 'd3dx9d.lib'] if dbg else ['d3d9.lib', 'd3dx9.lib']
         if CONFIG['has_d3d11']:
-            libs += ['dxgi.lib', 'dxguid.lib', 'dxerr.lib']
+            libs += ['dxgi.lib', 'dxguid.lib', 'dxerr.lib', 'd3dcompiler.lib']
             libs += ['d3d11.lib', 'd3dx11d.lib'] if dbg else ['d3d11.lib', 'd3dx11.lib']
         env.Prepend( LIBS = libs )
 

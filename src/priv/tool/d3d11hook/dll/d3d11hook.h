@@ -14,40 +14,6 @@
 #include "dxgihook.h"
 
 // *****************************************************************************
-// D3D11 global functions
-// *****************************************************************************
-
-extern "C" {
-
-GN_EXPORT HRESULT WINAPI D3D11CreateDevice(
-    __in_opt IDXGIAdapter* pAdapter,
-    D3D_DRIVER_TYPE DriverType,
-    HMODULE Software,
-    UINT Flags,
-    __in_ecount_opt( FeatureLevels ) CONST D3D_FEATURE_LEVEL* pFeatureLevels,
-    UINT FeatureLevels,
-    UINT SDKVersion,
-    __out_opt ID3D11Device** ppDevice,
-    __out_opt D3D_FEATURE_LEVEL* pFeatureLevel,
-    __out_opt ID3D11DeviceContext** ppImmediateContext );
-
-GN_EXPORT HRESULT WINAPI D3D11CreateDeviceAndSwapChain(
-    __in_opt IDXGIAdapter* pAdapter,
-    D3D_DRIVER_TYPE DriverType,
-    HMODULE Software,
-    UINT Flags,
-    __in_ecount_opt( FeatureLevels ) CONST D3D_FEATURE_LEVEL* pFeatureLevels,
-    UINT FeatureLevels,
-    UINT SDKVersion,
-    __in_opt CONST DXGI_SWAP_CHAIN_DESC* pSwapChainDesc,
-    __out_opt IDXGISwapChain** ppSwapChain,
-    __out_opt ID3D11Device** ppDevice,
-    __out_opt D3D_FEATURE_LEVEL* pFeatureLevel,
-    __out_opt ID3D11DeviceContext** ppImmediateContext );
-
-}
-
-// *****************************************************************************
 // D3D11 interfaces
 // *****************************************************************************
 

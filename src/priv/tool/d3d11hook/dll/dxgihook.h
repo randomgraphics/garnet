@@ -53,6 +53,26 @@ public:
     #include "IDXGIFactory.h"
 };
 
+///
+/// IDXGISwapChain wrapper
+///
+class DXGISwapChainHook : public DXGIObjectHook<DXGISwapChainHook, IDXGISwapChain, CID_IDXGISwapChain_COUNT>
+{
+public:
+
+    DXGISwapChainHook(IDXGISwapChain * realobj) : IDXGIOBJECT_BASE_TYPE(realobj)
+    {
+    }
+
+    ~DXGISwapChainHook()
+    {
+    }
+
+public:
+
+    #include "IDXGISwapChain.h"
+};
+
 // *****************************************************************************
 //                                     EOF
 // *****************************************************************************

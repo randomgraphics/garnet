@@ -11,7 +11,7 @@ static GN::Logger * sLogger = GN::getLogger("GN.tool.d3d11hook");
 
 struct DllDictionary
 {
-    std::map<std::string, HMODULE> handles;
+    std::map<StrW, HMODULE> handles;
 
     ~DllDictionary()
     {
@@ -27,20 +27,20 @@ static DllDictionary g_dlls;
 //
 //
 // -----------------------------------------------------------------------------
-void * GetRealFunctionPtr(const char * dllName, const char * functionName)
+void * GetRealFunctionPtr(const wchar_t * dllName, const char * functionName)
 {
     HMODULE dll;
     auto iter = g_dlls.handles.find(dllName);
-    if (iter != g_dlls.end())
+    if (iter != g_dlls.handles.end())
     {
         dll = iter->second;
     }
     else
     {
-        dll = ::LoadLibrary(dllName);
+        dll = ::LoadLibraryW(dllName);
         if (0 == dll)
         {
-            GN_ERROR(sLogger)("Can't load dll: %s", dllName);
+            GN_ERROR(sLogger)("Can't load dll: %S", dllName);
             return nullptr;
         }
         g_dlls.handles[dllName] = dll;
@@ -49,7 +49,7 @@ void * GetRealFunctionPtr(const char * dllName, const char * functionName)
     void * proc = ::GetProcAddress(dll, functionName);
     if(0 == proc)
     {
-        GN_ERROR(sLogger)("Can't get proc address: dllName=%s, functionName=%s", dllName, functionName);
+        GN_ERROR(sLogger)("Can't get proc address: dllName=%S, functionName=%s", dllName, functionName);
     }
 
     return proc;
@@ -65,7 +65,7 @@ extern "C" {
 //
 // -----------------------------------------------------------------------------
 GN_EXPORT HRESULT WINAPI
-D3D11CreateDevice(
+D3D11CreateDeviceHook(
     __in_opt IDXGIAdapter* pAdapter,
     D3D_DRIVER_TYPE DriverType,
     HMODULE Software,
@@ -73,11 +73,11 @@ D3D11CreateDevice(
     __in_ecount_opt( FeatureLevels ) CONST D3D_FEATURE_LEVEL* pFeatureLevels,
     UINT FeatureLevels,
     UINT SDKVersion,
-    __out_opt ID3D11Device** ppHookedDevice,
+    __out_opt ID3D11Device** ppDevice,
     __out_opt D3D_FEATURE_LEVEL* pFeatureLevel,
     __out_opt ID3D11DeviceContext** ppImmediateContext )
 {
-    PFN_D3D11_CREATE_DEVICE_AND_SWAP_CHAIN realFunc = (PFN_D3D11_CREATE_DEVICE_AND_SWAP_CHAIN)GetRealFunctionPtr("d3d11.dll", "D3D11CreateDevice");
+    PFN_D3D11_CREATE_DEVICE realFunc = (PFN_D3D11_CREATE_DEVICE)GetRealFunctionPtr(L"d3d11.dll", "D3D11CreateDevice");
     if (nullptr == realFunc) return E_FAIL;
 
     DXGIAdapterHook * hookedAdapter = (DXGIAdapterHook *)pAdapter;
@@ -87,7 +87,7 @@ D3D11CreateDevice(
     HRESULT hr = realFunc(
         hookedAdapter->GetRealObj(),
         DriverType, Software, Flags, pFeatureLevels, FeatureLevels, SDKVersion,
-        ppHookedDevice ? &realDevice : nullptr,
+        ppDevice ? &realDevice : nullptr,
         pFeatureLevel,
         ppImmediateContext ? &realContext : nullptr);
     if( FAILED(hr) )
@@ -98,7 +98,7 @@ D3D11CreateDevice(
     AutoComPtr<D3D11DeviceHook> hookedDevice;
     if( realDevice )
     {
-        hookedDevice.attach(D3D11DeviceHook::CreateInstanceFromRealObj(realDevice));
+        hookedDevice.attach(D3D11DeviceHook::CreateTypedInstanceFromRealObj(realDevice));
         if (nullptr == hookedDevice)
         {
             return E_OUTOFMEMORY;
@@ -108,7 +108,7 @@ D3D11CreateDevice(
     AutoComPtr<D3D11DeviceContextHook> hookedContext;
     if( realContext )
     {
-        hookedContext.attach(D3D11DeviceContextHook::CreateInstanceFromRealObj(realContext));
+        hookedContext.attach(D3D11DeviceContextHook::CreateTypedInstanceFromRealObj(realContext));
         if (nullptr == hookedContext)
         {
             return E_OUTOFMEMORY;
@@ -116,7 +116,7 @@ D3D11CreateDevice(
     }
 
     // success
-    if( ppHookedDevice ) *ppHookedDevice = hookedDevice.detach();
+    if( ppDevice ) *ppDevice = hookedDevice.detach();
     if( ppImmediateContext ) *ppImmediateContext = hookedContext.detach();
     return S_OK;
 }
@@ -125,7 +125,7 @@ D3D11CreateDevice(
 //
 // -----------------------------------------------------------------------------
 GN_EXPORT HRESULT WINAPI
-D3D11CreateDeviceAndSwapChain(
+D3D11CreateDeviceAndSwapChainHook(
     __in_opt IDXGIAdapter* pAdapter,
     D3D_DRIVER_TYPE DriverType,
     HMODULE Software,
@@ -139,6 +139,62 @@ D3D11CreateDeviceAndSwapChain(
     __out_opt D3D_FEATURE_LEVEL* pFeatureLevel,
     __out_opt ID3D11DeviceContext** ppImmediateContext )
 {
+    PFN_D3D11_CREATE_DEVICE_AND_SWAP_CHAIN realFunc = (PFN_D3D11_CREATE_DEVICE_AND_SWAP_CHAIN)GetRealFunctionPtr(L"d3d11.dll", "D3D11CreateDeviceAndSwapChain");
+    if (nullptr == realFunc) return E_FAIL;
+
+    DXGIAdapterHook * hookedAdapter = (DXGIAdapterHook *)pAdapter;
+
+    AutoComPtr<ID3D11Device> realDevice;
+    AutoComPtr<IDXGISwapChain> realSwapChain;
+    AutoComPtr<ID3D11DeviceContext> realContext;
+    HRESULT hr = realFunc(
+        hookedAdapter->GetRealObj(),
+        DriverType, Software, Flags, pFeatureLevels, FeatureLevels, SDKVersion,
+        pSwapChainDesc,
+        ppSwapChain ? &realSwapChain : nullptr,
+        ppDevice ? &realDevice : nullptr,
+        pFeatureLevel,
+        ppImmediateContext ? &realContext : nullptr);
+    if( FAILED(hr) )
+    {
+        return hr;
+    }
+
+    AutoComPtr<D3D11DeviceHook> hookedDevice;
+    if( realDevice )
+    {
+        hookedDevice.attach(D3D11DeviceHook::CreateTypedInstanceFromRealObj(realDevice));
+        if (nullptr == hookedDevice)
+        {
+            return E_OUTOFMEMORY;
+        }
+    }
+
+    AutoComPtr<DXGISwapChainHook> hookedSwapChain;
+    if( realSwapChain )
+    {
+        hookedSwapChain.attach(DXGISwapChainHook::CreateTypedInstanceFromRealObj(realSwapChain));
+        if (nullptr == hookedSwapChain)
+        {
+            return E_OUTOFMEMORY;
+        }
+    }
+
+    AutoComPtr<D3D11DeviceContextHook> hookedContext;
+    if( realContext )
+    {
+        hookedContext.attach(D3D11DeviceContextHook::CreateTypedInstanceFromRealObj(realContext));
+        if (nullptr == hookedContext)
+        {
+            return E_OUTOFMEMORY;
+        }
+    }
+
+    // success
+    if( ppDevice ) *ppDevice = hookedDevice.detach();
+    if( ppSwapChain ) *ppSwapChain = hookedSwapChain.detach();
+    if( ppImmediateContext ) *ppImmediateContext = hookedContext.detach();
+    return S_OK;
 }
 
 } // extern "C"

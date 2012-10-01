@@ -22,8 +22,9 @@ d3d10_sources = [
 ]
 
 d3d11_sources = [
-	'd3d11ShaderUtils.cpp',
-	'd3d11StateDumper.cpp',
+	'd3d11app.cpp',
+    'd3d11sprite.cpp',
+    'd3d11text.cpp',
    	'd3d11Utils.cpp',
 ]
 
