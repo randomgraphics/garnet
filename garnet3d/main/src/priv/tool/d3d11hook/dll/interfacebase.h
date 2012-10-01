@@ -11,10 +11,15 @@
 #include <d3d11.h>
 #include "utils.h"
 
+// {CF9120C7-4E7A-493A-96AA-0C33583803F6}
+static const GUID GN_D3D11HOOK_HOOKED_OBJECT_GUID =
+{ 0xcf9120c7, 0x4e7a, 0x493a, { 0x96, 0xaa, 0xc, 0x33, 0x58, 0x38, 0x3, 0xf6 } };
+
+
 typedef void* (*WrapRealObjectFuncPtr)(void * realobj);
 
 template<class HOOKED_CLASS, class REAL_INTERFACE>
-inline HOOKED_CLASS * GetHookedFromReal(REAL_INTERFACE * realobj)
+inline HOOKED_CLASS * GetHookedInstanceFromReal(REAL_INTERFACE * realobj)
 {
     HOOKED_CLASS * hooked;
     UINT size = (UINT)sizeof(hooked);
@@ -91,7 +96,7 @@ public:
         WRAP_CLASS2::AddQIInterface<WRAP_CLASS>();
     }
 
-    static WRAP_CLASS * CreateInstanceFromRealObj(REAL_INTERFACE * realobj)
+    static void * CreateInstanceFromRealObj(void * realobj)
     {
         //GN_ASSERT(realobj != nullptr);
         //WRAP_CLASS * wrapper = new WRAP_CLASS((REAL_INTERFACE*)realobj);
@@ -99,6 +104,11 @@ public:
         //return wrapper;
         GN_UNUSED_PARAM(realobj);
         return nullptr;
+    }
+
+    static WRAP_CLASS * CreateTypedInstanceFromRealObj(REAL_INTERFACE * realobj)
+    {
+        return (WRAP_CLASS*)CreateInstanceFromRealObj(realobj);
     }
 
     REAL_INTERFACE * GetRealObj() const { GN_ASSERT(_realobj); return _realobj; }
@@ -157,10 +167,6 @@ public:
     //@}
 };
 
-// {CF9120C7-4E7A-493A-96AA-0C33583803F6}
-static const GUID GN_D3D11HOOK_HOOKED_OBJECT_GUID =
-{ 0xcf9120c7, 0x4e7a, 0x493a, { 0x96, 0xaa, 0xc, 0x33, 0x58, 0x38, 0x3, 0xf6 } };
-
 ///
 /// Wrapper of classes that is directly inherited from IUnknown
 ///
@@ -191,8 +197,7 @@ public:
         GN::AutoComPtr<ID3D11Device> pRealDevice;
         GetRealObj()->GetDevice(&pRealDevice);
 
-        ID3D11Device * pHookedDevice = GetHookedFromReal<ID3D11Device, ID3D11Device>(pRealDevice);
-        UINT size = (UINT)sizeof(pHookedDevice);
+        ID3D11Device * pHookedDevice = GetHookedInstanceFromReal<ID3D11Device, ID3D11Device>(pRealDevice);
         GN_ASSERT(nullptr != pHookedDevice);
 
         *ppDevice = pHookedDevice;

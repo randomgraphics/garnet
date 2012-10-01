@@ -1,0 +1,39 @@
+Import( 'GN' )
+
+if GN.has_d3d11:
+
+	import string
+
+	def Fx2Cpp( target, source, env ):
+		s = open( source[0].path, 'r' )
+		t = open( target[0].path, 'w' )
+		for line in s:
+			t.write( '"%s \\n"\n'%string.strip( line, '\r\n' ) )
+		return None
+
+	fxo = Command(
+		'shaders.fxo',
+		'shaders.fx',
+		'"%sUtilities\\Bin\\x86\\fxc.exe" /T fx_5_0 /Fo $TARGET $SOURCE'%( GN.GetEnv("DXSDK_DIR") )
+		)
+
+	fxh = Command( 'shaders.h', 'shaders.fx', Fx2Cpp );
+
+	main2 = Command( 'main2.cpp', 'main.cpp', Copy("$TARGET", "$SOURCE") );
+
+	Depends( main2, [fxo,fxh] );
+
+	sources = [
+	    "main2.cpp",
+        "d3dx11dbg.cpp",
+        "d3dxGlobal.cpp",
+        "EffectAPI.cpp",
+        "EffectLoad.cpp",
+        "EffectNonRuntime.cpp",
+        "EffectReflection.cpp",
+        "EffectRuntime.cpp",
+    ]
+
+	GN.NewDefaultTarget(
+		'GNtestD3D11',
+		GN.BinplaceProgram( GN.BuildProgram( None, 'GNtestD3D11', sources, 'pch.h', 'pch.cpp' ) ) )

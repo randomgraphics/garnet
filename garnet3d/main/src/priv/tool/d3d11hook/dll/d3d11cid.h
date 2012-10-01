@@ -244,4 +244,21 @@ enum D3D11_CALL_ID
     CID_IDXGIFactory_GetWindowAssociation,
     CID_IDXGIFactory_CreateSwapChain,
     CID_IDXGIFactory_CreateSoftwareAdapter,
+
+    // CID for IDXGISwapChain
+    CID_IDXGISwapChain_BASE,
+    CID_IDXGISwapChain_COUNT = 10,
+    CID_IDXGISwapChain_AddRef = CID_IDXGISwapChain_BASE,
+    CID_IDXGISwapChain_Release,
+    CID_IDXGISwapChain_QueryInterface,
+    CID_IDXGISwapChain_Present,
+    CID_IDXGISwapChain_GetBuffer,
+    CID_IDXGISwapChain_SetFullscreenState,
+    CID_IDXGISwapChain_GetFullscreenState,
+    CID_IDXGISwapChain_GetDesc,
+    CID_IDXGISwapChain_ResizeBuffers,
+    CID_IDXGISwapChain_ResizeTarget,
+    CID_IDXGISwapChain_GetContainingOutput,
+    CID_IDXGISwapChain_GetFrameStatistics,
+    CID_IDXGISwapChain_GetLastPresentCount,
 };

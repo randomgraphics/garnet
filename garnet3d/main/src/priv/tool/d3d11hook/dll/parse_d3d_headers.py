@@ -345,21 +345,22 @@ g_interface_to_wrapper = dict()
 with open(os.path.join( DXSDK_INC_PATH, "d3d11.h" )) as f:
     PARSE_interfaces_from_opened_file(f, 'd3d11hook.h', [
         'ID3D11Device',
-        'ID3D11DeviceContext'
+        'ID3D11DeviceContext',
     ])
 
 # parse d3d11sdklayer.h
 with open(os.path.join( DXSDK_INC_PATH, "d3d11sdklayers.h" )) as f:
     PARSE_interfaces_from_opened_file(f, 'd3d11hook.h', [
         'ID3D11Debug',
-        'ID3D11InfoQueue'
+        'ID3D11InfoQueue',
     ])
 
 # parse dxgi.h
 with open(os.path.join( DXSDK_INC_PATH, "dxgi.h" )) as f:
     PARSE_interfaces_from_opened_file(f, 'd3d11hook.h', [
         'IDXGIAdapter',
-        'IDXGIFactory'
+        'IDXGIFactory',
+        'IDXGISwapChain',
     ])
 
 
