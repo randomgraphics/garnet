@@ -145,15 +145,14 @@ if( "vc" -eq $env:GN_BUILD_COMPILER )
     "====================================="
     ""
 
-    # locate vsvarall.bat, prefer vs2010 over others
-    '''$vcvarbat=$false
+    # locate vsvarall.bat, prefer vs2012 over others
+    $vcvarbat=$false
     if( $env:VS110COMNTOOLS -and ( test-path $env:VS110COMNTOOLS ) )
     {
         $vcvarbat="$env:VS110COMNTOOLS..\..\VC\vcvarsall.bat"
         $env:GN_BUILD_COMPILER="vc110"; # TODO: it breaks build script when set to "vc110"
     }
-    else'''
-    if( $env:VS100COMNTOOLS -and ( test-path $env:VS100COMNTOOLS ) )
+    elseif( $env:VS100COMNTOOLS -and ( test-path $env:VS100COMNTOOLS ) )
     {
         $vcvarbat="$env:VS100COMNTOOLS..\..\VC\vcvarsall.bat"
         $env:GN_BUILD_COMPILER="vc100";
@@ -165,7 +164,7 @@ if( "vc" -eq $env:GN_BUILD_COMPILER )
     }
     else
     {
-        error "VS110COMNTOOLS//VS100COMNTOOLS//VS90COMNTOOLS not found. Please install VS2012//2010//2008"
+        error "VS110COMNTOOLS\VS100COMNTOOLS\VS90COMNTOOLS not found. Please install VS2012\2010\2008"
     }
 
     # run vsvarall.bat, catch all environments
@@ -275,6 +274,37 @@ if( "icl" -eq $env:GN_BUILD_COMPILER )
     {
         error "File $batch not found."
     }
+}
+
+# ==============================================================================
+# setup Windows SDK environment
+# ==============================================================================
+
+if( "mswin" -eq $env:GN_BUILD_TARGET_OS )
+{
+    ""
+    "==============================="
+    "Setup Windows SDK environment"
+    "==============================="
+    ""
+    $winsdk_path = ""
+    if( test-path "${env:ProgramFiles}\Microsoft SDKs\Windows\v7.1A\Include" )
+    {
+        $winsdk_path = "${env:ProgramFiles}\Microsoft SDKs\Windows\v7.1A"
+    }
+    elseif( test-path "${env:ProgramFiles(x86)}\Microsoft SDKs\Windows\v7.1A\Include" )
+    {
+        $winsdk_path = "${env:ProgramFiles(x86)}\Microsoft SDKs\Windows\v7.1A"
+    }
+    else
+    {
+        "Windows SDK is not insalled."
+    }
+    
+    if( "" -ne $winsdk_path )
+    {
+    }
+
 }
 
 # ==============================================================================
@@ -467,7 +497,7 @@ if( "xenon" -eq $env:GN_BUILD_COMPILER )
 }
 else
 {
-    $SCONS_DIR= "$GARNET_ROOT\env\scons\2.1.0.alpha.20101125"
+    $SCONS_DIR= "$GARNET_ROOT\env\scons\2.2.0"
     $env:SCONS_LIB_DIR    = "$SCONS_DIR\engine"
     $env:SCONS_SCRIPT_DIR = "$SCONS_DIR\script\"
 }
