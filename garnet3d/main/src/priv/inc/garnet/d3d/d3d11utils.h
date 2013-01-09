@@ -46,24 +46,6 @@ namespace GN { /*namespace for D3D11 utils*/ namespace d3d11
     /// \name misc. utils
     //@{
 
-    ///
-    /// scoped PIX event
-    ///
-    struct PixPerfScopeEvent
-    {
-        //@{
-        PixPerfScopeEvent( ID3D11DeviceContext & context, D3DCOLOR color, const wchar_t * name )
-        {
-            GN_UNUSED_PARAM(context);
-            GN_UNUSED_PARAM(color);
-            GN_UNUSED_PARAM(name);
-        }
-        ~PixPerfScopeEvent()
-        {
-        }
-        //@}
-    };
-
     enum MultiSampleAntiAlias
     {
         MSAA_DISABLE      = 0,

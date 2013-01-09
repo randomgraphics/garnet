@@ -1,4 +1,5 @@
 #include "pch.h"
+#include <garnet/GNinput.h>
 
 using namespace GN;
 using namespace GN::d3d11;
@@ -280,7 +281,7 @@ GN::d3d11::D3D11Application::D3D11Application()
 // -----------------------------------------------------------------------------
 GN::d3d11::D3D11Application::~D3D11Application()
 {
-    //input::shutdownInputSystem();
+    input::shutdownInputSystem();
 }
 
 // -----------------------------------------------------------------------------
@@ -476,7 +477,7 @@ bool GN::d3d11::D3D11Application::createDevice()
     // try query 11.1 interfaces.
     mDevice->QueryInterface<ID3D11Device1>(&mDevice1);
     mContext->QueryInterface<ID3D11DeviceContext1>(&mContext1);
-    mSwapChain->QueryInterface<IDXGISwapChain1>(&mSwapChain);
+    mSwapChain->QueryInterface<IDXGISwapChain1>(&mSwapChain1);
 #endif
 
     // get default back buffer

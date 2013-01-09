@@ -117,6 +117,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <numeric>
 #include <new>
 #include <cstdio>
+#include <functional>
 
 // Boost headers
 #include <boost/pointer_cast.hpp>

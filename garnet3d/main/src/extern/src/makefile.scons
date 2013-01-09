@@ -93,7 +93,9 @@ ai_env.Append(
 	CCFLAGS = ccflags,
 	CPPDEFINES = cppdefines + ['ASSIMP_BUILD_BOOST_WORKAROUND','ASSIMP_BUILD_NO_OWN_ZLIB'] )
 GN.RemoveEnvListItems( ai_env, 'CCFLAGS', ['/W4','/Wcheck','-Wall'] )
-ai_cluster = GN.BuildObjects( ai_env, GN.Glob( 'assimp/*.cpp' ), 'AssimpPCH.h', 'assimp/AssimpPCH.cpp' )
+assimp_sources = GN.Glob( 'assimp/*.cpp' )
+assimp_sources.remove('assimp\\AssimpPCH.cpp')
+ai_cluster = GN.BuildObjects( ai_env, assimp_sources, 'AssimpPCH.h', 'assimp/AssimpPCH.cpp' )
 
 # assimp contrib
 ai_contrib_env = GN.NewBuildEnv()
