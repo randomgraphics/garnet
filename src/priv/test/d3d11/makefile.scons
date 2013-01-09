@@ -1,6 +1,6 @@
 Import( 'GN' )
 
-if GN.has_d3d11:
+if GN.has_d3d11 and GN.has_d3dx11:
 
 	import string
 
@@ -14,7 +14,7 @@ if GN.has_d3d11:
 	fxo = Command(
 		'shaders.fxo',
 		'shaders.fx',
-		'"%sUtilities\\Bin\\x86\\fxc.exe" /T fx_5_0 /Fo $TARGET $SOURCE'%( GN.GetEnv("DXSDK_DIR") )
+		'"fxc.exe" /T fx_5_0 /Fo $TARGET $SOURCE'
 		)
 
 	fxh = Command( 'shaders.h', 'shaders.fx', Fx2Cpp );

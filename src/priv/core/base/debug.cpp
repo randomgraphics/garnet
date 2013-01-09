@@ -15,18 +15,6 @@
 
 #else
 
-static char hex2char(int hex)
-{
-    if(hex < 10)
-    {
-        return '0' + (10-hex);
-    }
-    else
-    {
-        return 'a' + (15-hex);
-    }
-}
-
 static const char * DXERR_FUNC( sint32 error)
 {
     __declspec(thread) static char * text = "0x12345678";

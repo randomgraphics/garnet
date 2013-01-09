@@ -453,8 +453,8 @@ def CheckConfig():
     # ====
     CONFIG['has_d3d9'] = ('xenon' == BUILD_TARGET_OS) or ( CONFIG['has_dxerr'] and c.CheckCXXHeader( 'd3d9.h' ) and c.CheckCXXHeader( 'd3dx9.h' ) )
 
-    # Detect Windows Vista and Windows 7
-    def isVistaOrWin7( env ):
+    # Detect if current OS is Windows Vista or newer.
+    def IsVistaOrNewer( env ):
         if 'win32' != env['PLATFORM']: return False
         stdout = os.popen( "ver" )
         str = stdout.read()
@@ -462,20 +462,21 @@ def CheckConfig():
         import string
         vista = string.find( str, "6.0" ) >= 0
         win7  = string.find( str, "6.1" ) >= 0
-        return  vista or win7
+        win8  = string.find( str, "6.2" ) >= 0
+        return  vista or win7 or win8
 
     # =====
     # D3D10
     # =====
-    CONFIG['has_d3d10'] = CONFIG['has_dxerr'] and CONFIG['has_d3d9'] and c.CheckLibWithHeader( 'd3d10.lib', 'd3d10.h', 'C++' ) and isVistaOrWin7(env);
+    CONFIG['has_d3d10'] = CONFIG['has_dxerr'] and CONFIG['has_d3d9'] and c.CheckLibWithHeader( 'd3d10.lib', 'd3d10.h', 'C++' ) and IsVistaOrNewer(env);
 
     # =====
     # D3D11
     # =====
 
-    CONFIG['has_d3d11']   = c.CheckLibWithHeader( 'd3d11.lib', 'd3d11.h', 'C++' ) and isVistaOrWin7(env);
-    CONFIG['has_d3d11_1'] = c.CheckLibWithHeader( 'd3d11.lib', 'd3d11_1.h', 'C++' ) and isVistaOrWin7(env);
-    CONFIG['has_d3dx11']  = c.CheckLibWithHeader( 'd3dx11.lib', 'd3dx11.h', 'C++' ) and isVistaOrWin7(env);
+    CONFIG['has_d3d11']   = c.CheckLibWithHeader( 'd3d11.lib', 'd3d11.h', 'C++' ) and IsVistaOrNewer(env);
+    CONFIG['has_d3d11_1'] = c.CheckLibWithHeader( 'd3d11.lib', 'd3d11_1.h', 'C++' ) and IsVistaOrNewer(env);
+    CONFIG['has_d3dx11']  = c.CheckLibWithHeader( 'd3dx11.lib', 'd3dx11.h', 'C++' ) and IsVistaOrNewer(env);
 
     # ===========
     # DirectInput
@@ -742,8 +743,11 @@ class GarnetEnv2 :
         if CONFIG['has_d3d9'] and ('xenon' != BUILD_TARGET_OS) :
             libs += ['d3d9.lib', 'd3dx9d.lib'] if dbg else ['d3d9.lib', 'd3dx9.lib']
         if CONFIG['has_d3d11']:
-            libs += ['dxgi.lib', 'dxguid.lib', 'dxerr.lib', 'd3dcompiler.lib']
-            libs += ['d3d11.lib', 'd3dx11d.lib'] if dbg else ['d3d11.lib', 'd3dx11.lib']
+            libs += ['dxgi.lib', 'dxguid.lib', 'd3dcompiler.lib', 'd3d11.lib']
+        if CONFIG['has_d3dx11']:
+            libs += ['d3dx11d.lib'] if dbg else ['d3dx11.lib']
+        if CONFIG['has_dxerr']:
+        	libs += ['dxerr.lib']
         env.Prepend( LIBS = libs )
 
     #

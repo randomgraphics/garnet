@@ -1,7 +1,12 @@
 #pragma once
 
 #include <d3d9.h>
+#if GN_PLATFORM_HAS_XNAMATH
 #include <xnamath.h>
+#elif GN_PLATFORM_HAS_DIRECTXMATH
+#include <directxmath.h>
+using namespace DirectX;
+#endif
 
 class D3D9OrientationBox
 {

@@ -5,3 +5,4 @@
 // *****************************************************************************
 #define GN_CORE_INTERNAL
 #include "garnet/GNd3d.h"
+#include <memory> // for unique_ptr
