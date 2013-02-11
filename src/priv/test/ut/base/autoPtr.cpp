@@ -52,5 +52,49 @@ public:
         TS_ASSERT_EQUALS( p1, p3 );
         TS_ASSERT( !p2 );
     }
+
+    struct FakeComClass
+    {
+        int ref;
+
+        FakeComClass() : ref(0)
+        {
+        }
+
+        ~FakeComClass()
+        {
+        }
+
+        int AddRef() { return ++ref; }
+        int Release() { return --ref; }
+    };
+
+    void testAutoComPtrAttach()
+    {
+        using namespace GN;
+
+        FakeComClass c;
+        c.ref = 1;
+        AutoComPtr<FakeComClass> p1 = AutoComPtr<FakeComClass>::sAttach(&c);
+        TS_ASSERT_EQUALS(c.ref, 1);
+    }
+
+    void testAutoComPtrAssignment()
+    {
+        using namespace GN;
+
+        FakeComClass c;
+
+        AutoComPtr<FakeComClass> p1;
+        AutoComPtr<FakeComClass> p2;
+        p1.set(&c);
+        p2 = p1;
+        TS_ASSERT_EQUALS(c.ref, 2);
+        p2.clear();
+        TS_ASSERT_EQUALS(c.ref, 1);
+        p1.clear();
+        TS_ASSERT_EQUALS(c.ref, 0);
+    }
+
 };
 int AutoPtrTest::a;

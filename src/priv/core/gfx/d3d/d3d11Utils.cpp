@@ -193,7 +193,7 @@ ID3D11DeviceChild * GN::d3d11::createShader(
         }
     }
 
-    AutoComPtr<ID3DBlob> bin( compileShader( profile, source, len, flags, entry ) );
+    AutoComPtr<ID3DBlob> bin = AutoComPtr<ID3DBlob>::sAttach( compileShader( profile, source, len, flags, entry ) );
     if( !bin ) return nullptr;
 
     const void * binary = bin->GetBufferPointer();

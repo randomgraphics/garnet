@@ -215,10 +215,12 @@ namespace GN
         AutoComPtr() throw() : mPtr(0) {}
 
         ///
-        /// Construct from normal pointer
+        /// Copy constructor
         ///
-        template<typename T2>
-        explicit AutoComPtr( T2 * p ) throw() : mPtr(p) {}
+        AutoComPtr( const AutoComPtr & other ) throw() : mPtr(other)
+        {
+            if( mPtr ) mPtr->AddRef();
+        }
 
         ///
         /// Copy constructor
@@ -235,6 +237,15 @@ namespace GN
         ~AutoComPtr() throw()
         {
             if (mPtr) mPtr->Release();
+        }
+
+        ///
+        /// Assignment operator
+        ///
+        AutoComPtr & operator=( const AutoComPtr & rhs )
+        {
+            set( (T*)rhs );
+            return *this;
         }
 
         ///
@@ -347,6 +358,16 @@ namespace GN
         {
             if (mPtr) mPtr->Release();
             mPtr = p2;
+        }
+
+        ///
+        /// Attach to an existing interface (does not AddRef)
+        ///
+        static AutoComPtr<T> sAttach(T * p2) throw()
+        {
+            AutoComPtr<T> p;
+            p.attach(p2);
+            return p;
         }
 
         ///
