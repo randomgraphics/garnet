@@ -44,7 +44,7 @@ namespace GN { namespace gfx
             const char   * profile,
             ID3DBlob    ** signature )
         {
-            AutoComPtr<ID3DBlob> bin( GN::d3d11::compileShader( profile, source, len, flags, entry ) );
+            AutoComPtr<ID3DBlob> bin = AutoComPtr<ID3DBlob>::sAttach( GN::d3d11::compileShader( profile, source, len, flags, entry ) );
             if( !bin ) return NULL;
 
             ID3D11VertexShader * shader;
@@ -99,7 +99,7 @@ namespace GN { namespace gfx
             const char   * profile,
             ID3DBlob  ** signature )
         {
-            AutoComPtr<ID3DBlob> bin( GN::d3d11::compileShader( profile, source, len, flags, entry ) );
+            AutoComPtr<ID3DBlob> bin = AutoComPtr<ID3DBlob>::sAttach( GN::d3d11::compileShader( profile, source, len, flags, entry ) );
             if( !bin ) return NULL;
 
             ID3D11PixelShader * shader;
@@ -150,7 +150,7 @@ namespace GN { namespace gfx
             const char   * profile,
             ID3DBlob  ** signature )
         {
-            AutoComPtr<ID3DBlob> bin( GN::d3d11::compileShader( profile, source, len, flags, entry ) );
+            AutoComPtr<ID3DBlob> bin = AutoComPtr<ID3DBlob>::sAttach( GN::d3d11::compileShader( profile, source, len, flags, entry ) );
             if( !bin ) return NULL;
 
             ID3D11GeometryShader * shader;
@@ -198,7 +198,7 @@ namespace GN { namespace gfx
             const char   * profile,
             ID3DBlob  ** signature )
         {
-            AutoComPtr<ID3DBlob> bin( GN::d3d11::compileShader( profile, source, len, flags, entry ) );
+            AutoComPtr<ID3DBlob> bin = AutoComPtr<ID3DBlob>::sAttach( GN::d3d11::compileShader( profile, source, len, flags, entry ) );
             if( !bin ) return NULL;
 
             ID3D11HullShader * shader;
@@ -246,7 +246,7 @@ namespace GN { namespace gfx
             const char   * profile,
             ID3DBlob  ** signature )
         {
-            AutoComPtr<ID3DBlob> bin( GN::d3d11::compileShader( profile, source, len, flags, entry ) );
+            AutoComPtr<ID3DBlob> bin = AutoComPtr<ID3DBlob>::sAttach( GN::d3d11::compileShader( profile, source, len, flags, entry ) );
             if( !bin ) return NULL;
 
             ID3D11DomainShader * shader;
