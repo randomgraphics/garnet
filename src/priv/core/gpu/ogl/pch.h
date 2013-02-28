@@ -8,7 +8,7 @@
 
 #include "../gpupch.h"
 
-#if GN_MSWIN
+#if GN_WINPC
 #ifndef NOMINMAX
 #define NOMINMAX
 #endif
@@ -16,7 +16,7 @@
 #endif
 
 #include <GL/glew.h>
-#if GN_MSWIN
+#if GN_WINPC
 #include <GL/wglew.h>
 #elif GN_POSIX
 #include <GL/glxew.h>

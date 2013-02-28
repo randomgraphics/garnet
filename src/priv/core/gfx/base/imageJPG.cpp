@@ -185,7 +185,7 @@ bool JPGReader::readImage( void * o_data )
         {
             for( size_t x = 0; x < width; ++x )
             {
-#if GN_XENON
+#if GN_XBOX2
                 dst[3] = src[0];
                 dst[2] = src[1];
                 dst[1] = src[2];

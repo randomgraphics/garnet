@@ -15,7 +15,7 @@ static GN::Logger * sLogger = GN::getLogger("GN.util");
 // command line parser
 // *****************************************************************************
 
-#if !GN_XENON
+#if !GN_XBOX2
 
 //
 //
@@ -489,7 +489,7 @@ bool GN::util::SampleApp::checkCmdLine( int argc, const char * const argv[] )
     mInitParam.ro.windowedWidth = 800;
     mInitParam.ro.windowedHeight = 600;
 
-#if GN_XENON
+#if GN_XBOX2
 
     // Xenon platform has no command line at all.
     GN_UNUSED_PARAM( argc );
@@ -515,7 +515,7 @@ bool GN::util::SampleApp::checkCmdLine( int argc, const char * const argv[] )
             return false;
         }
         else if( '-' == *a
-            #if GN_MSWIN || GN_XENON
+            #if GN_MSWIN
             || '/' == *a
             #endif
             )

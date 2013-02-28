@@ -33,8 +33,8 @@ namespace GN
             UTF16_BE,
             UTF16,          ///< UTF16_LE on little endian system; UTF16_BE on big endian system.
             UTF32_LE,
-            UTF32_BE,       ///< UTF32_LE on little endian system; UTF32_BE on big endian system.
-            UTF32,
+            UTF32_BE,
+            UTF32,          ///< UTF32_LE on little endian system; UTF32_BE on big endian system.
             WIDECHAR,       ///< UTF16, if sizeof(wchar_t)==2; or UTF32, if sizeof(wchar_t)==4
 
             // Chinese

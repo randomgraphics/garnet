@@ -120,7 +120,7 @@ GN::gfx::XenonGpu::bindContextRenderTargetsAndViewport(
 
 /*
 
-#if GN_XENON
+#if GN_XBOX2
 	if( newFlags.colorBuffers )
     {
         static const GpuContext::SurfaceDesc sNullSurface = { 0, 0, 0, 0 };

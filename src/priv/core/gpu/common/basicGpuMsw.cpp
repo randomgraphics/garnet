@@ -2,7 +2,7 @@
 #include "basicGpuMsw.h"
 #include "garnet/GNwin.h"
 
-#if GN_MSWIN
+#if GN_WINPC
 
 static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.common");
 

@@ -1,6 +1,6 @@
-#if GN_MSWIN || GN_XENON
+#if GN_MSWIN
 
-#if GN_XENON
+#if GN_XBOX2
 #include <xtl.h>
 #else
 #include <intrin.h>
@@ -11,7 +11,7 @@
 // -----------------------------------------------------------------------------
 inline void GN::memoryBarrier()
 {
-#if GN_XENON
+#if GN_XBOX2
     __lwsync();
 #else
     _ReadWriteBarrier();

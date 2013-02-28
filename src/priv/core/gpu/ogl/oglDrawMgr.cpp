@@ -80,7 +80,7 @@ void GN::gfx::OGLGpu::present()
 {
     GN_GUARD_SLOW;
 
-#if GN_MSWIN
+#if GN_WINPC
     GN_MSW_CHECK( ::SwapBuffers( mDeviceContext ) );
 #else
     const DispDesc & dd = getDispDesc();

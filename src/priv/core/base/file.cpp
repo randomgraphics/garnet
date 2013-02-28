@@ -26,7 +26,7 @@ static FILE * sOpenFile( const char * filename, const char * mode )
     return fp;
 }
 
-#if GN_MSWIN || GN_XENON
+#if GN_MSWIN
     ///
     /// Automatic C-style array created by malloc. Can NOT be used in STL containers.
     ///
@@ -335,7 +335,7 @@ GN_API bool GN::TempFile::open( const StrA & prefix, const StrA & mode, Behavior
 
     mBehavior = beh;
 
-#if GN_MSWIN || GN_XENON
+#if GN_MSWIN
 
     // generate temporary file name
     AutoMallocPtr<const char> filename( _tempnam( NULL, "GN_" + prefix ) );

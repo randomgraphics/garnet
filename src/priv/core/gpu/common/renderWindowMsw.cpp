@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "renderWindowMsw.h"
 
-#if GN_MSWIN
+#if GN_WINPC
 
 GN::gfx::RenderWindowMsw::WindowMap GN::gfx::RenderWindowMsw::msInstanceMap;
 
@@ -523,4 +523,4 @@ void GN::gfx::WinProp::restore()
     GN_UNGUARD;
 }
 
-#endif // GN_MSWIN
+#endif // GN_WINPC

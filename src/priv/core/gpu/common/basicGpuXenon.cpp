@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "basicGpuXenon.h"
 
-#if GN_XENON
+#if GN_XBOX2
 
 static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.common");
 

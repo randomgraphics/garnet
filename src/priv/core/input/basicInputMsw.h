@@ -8,7 +8,7 @@
 
 #include "basicInputXInput.h"
 
-#if GN_MSWIN
+#if GN_WINPC
 
 namespace GN { namespace input
 {
@@ -127,7 +127,7 @@ namespace GN { namespace input
     };
 }}
 
-#endif // GN_MSWIN
+#endif // GN_WINPC
 
 // *****************************************************************************
 //                                     EOF

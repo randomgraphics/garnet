@@ -1,6 +1,6 @@
 #include "pch.h"
 
-#if GN_MSWIN || GN_XENON
+#if GN_MSWIN
 
 const GN::TimeInNanoSecond GN::INFINITE_TIME = (uint64)(-1);
 const GN::TimeInNanoSecond GN::ONE_SECOND_IN_NS = 1000000000; // 10^9

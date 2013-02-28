@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "basicInputXInput.h"
 
-#if defined(HAS_XINPUT) || GN_XENON
+#if defined(HAS_XINPUT) || GN_XBOX2
 
 typedef DWORD (WINAPI*XInputGetStateFuncPtr)(DWORD dwUserIndex,XINPUT_STATE* pState);
 

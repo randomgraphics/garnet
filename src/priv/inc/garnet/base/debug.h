@@ -269,7 +269,7 @@ namespace GN
 	///
 	GN_API void breakIntoDebugger();
 
-#if GN_MSWIN || GN_XENON
+#if GN_MSWIN
 
     ///
     /// get OS error info (Windows specific)

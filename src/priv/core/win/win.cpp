@@ -94,12 +94,12 @@ namespace GN { namespace win
     {
         GN_GUARD;
 
-#if GN_XENON
+#if GN_XBOX2
 
         GN_UNUSED_PARAM( wcp );
         return new FakeWindow;
 
-#elif GN_MSWIN
+#elif GN_WINPC
 
         AutoObjPtr<WindowMsw> p( new WindowMsw );
         if( !p->init( wcp ) ) return 0;
@@ -119,9 +119,9 @@ namespace GN { namespace win
     //
     //
     // -------------------------------------------------------------------------
-#if GN_XENON
+#if GN_XBOX2
     GN_API intptr_t getMonitorByIndex( size_t ) { return (intptr_t)1; }
-#elif GN_MSWIN
+#elif GN_WINPC
     struct MonitorEnumInfo
     {
         HMONITOR handle;
@@ -159,7 +159,7 @@ namespace GN { namespace win
     //
     //
     // -------------------------------------------------------------------------
-#if GN_MSWIN
+#if GN_WINPC
     GN_API void processWindowMessages( intptr_t window, bool blockWhileMinized )
     {
         GN_GUARD_SLOW;

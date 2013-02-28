@@ -118,7 +118,7 @@ void sSet_FILL_MODE( GN::gfx::D3D9Gpu & r, sint32 val )
 static inline
 void sSet_FOG( GN::gfx::D3D9Gpu & r, sint32 val )
 {
-#if GN_XENON
+#if GN_XBOX2
     GN_UNUSED_PARAM(r);
     GN_UNUSED_PARAM(val);
 #else
@@ -132,7 +132,7 @@ void sSet_FOG( GN::gfx::D3D9Gpu & r, sint32 val )
 static inline void
 sSet_LIGHTING( GN::gfx::D3D9Gpu & r, sint32 val )
 {
-#if GN_XENON
+#if GN_XBOX2
     GN_UNUSED_PARAM(r);
     GN_UNUSED_PARAM(val);
 #else

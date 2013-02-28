@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "windowMsw.h"
 
-#if GN_MSWIN
+#if GN_WINPC
 
 GN::Dictionary<void*,GN::win::WindowMsw*> GN::win::WindowMsw::msInstanceMap;
 

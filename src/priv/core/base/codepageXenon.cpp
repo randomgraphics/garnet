@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "codepageXenon.h"
 
-#if GN_XENON
+#if GN_XBOX2
 
 static GN::Logger * sLogger = GN::getLogger("GN.base.codepage");
 

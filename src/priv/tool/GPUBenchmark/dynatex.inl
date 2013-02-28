@@ -35,7 +35,7 @@ class TestTextureBandwidth : public BasicTestCase
     void * memAlloc( size_t count, char srcOrDst )
     {
         GN_UNUSED_PARAM( srcOrDst );
-#if GN_XENON
+#if GN_XBOX2
         DWORD flags = PAGE_READWRITE | MEM_LARGE_PAGES;
 #if USE_WRITE_COMBINE
         if( 'd' == srcOrDst ) flags |= PAGE_WRITECOMBINE;
@@ -49,7 +49,7 @@ class TestTextureBandwidth : public BasicTestCase
     void memFree( void * p )
     {
         if( !p ) return;
-#if GN_XENON
+#if GN_XBOX2
         XPhysicalFree( p );
 #else
         HeapMemory::dealloc( p );
@@ -58,7 +58,7 @@ class TestTextureBandwidth : public BasicTestCase
 
     void memCopy( void * d, const void * s, size_t c )
     {
-#if GN_XENON && !USE_WRITE_COMBINE
+#if GN_XBOX2 && !USE_WRITE_COMBINE
         XMemCpy( d, s, c );
 #else
         memcpy( d, s, c );
@@ -96,7 +96,7 @@ class TestTextureBandwidth : public BasicTestCase
 
         LPDIRECT3DTEXTURE9 tex;
 
-#if GN_XENON
+#if GN_XBOX2
         tex = new IDirect3DTexture9;
         TEX_BYTES = XGSetTextureHeader( TEX_SIZE,
                                         TEX_SIZE,
@@ -141,7 +141,7 @@ class TestTextureBandwidth : public BasicTestCase
 
     void destroyTexture( TextureDesc & desc )
     {
-#if GN_XENON
+#if GN_XBOX2
         delete desc.texture.detach();
         desc.texture.clear();
 #else
@@ -154,7 +154,7 @@ class TestTextureBandwidth : public BasicTestCase
         TextureDesc & desc = mTextures[texid];
         const uint8 * data = mMemBuf[memid];
 
-#if GN_XENON
+#if GN_XBOX2
         LPDIRECT3DDEVICE9 dev = (LPDIRECT3DDEVICE9)gRenderer.getD3DDevice();
         if( desc.fence ) dev->BlockOnFence( desc.fence );
         memCopy( desc.baseMap, data, TEX_BYTES );
@@ -176,7 +176,7 @@ class TestTextureBandwidth : public BasicTestCase
         LPDIRECT3DDEVICE9 dev = (LPDIRECT3DDEVICE9)gRenderer.getD3DDevice();
         dev->SetTexture( 0, mTextures[texid].texture );
         mGeometry.draw();
-#if GN_XENON
+#if GN_XBOX2
         mTextures[texid].fence = dev->InsertFence();
 #endif
     }

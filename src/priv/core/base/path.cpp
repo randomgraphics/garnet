@@ -156,7 +156,7 @@ GN_API void GN::fs::relPath( StrA & result, const StrA & path, const StrA & base
     {
         const char * s1 = p.parts[i];
         const char * s2 = b.parts[i];
-#if GN_MSWIN || GN_XENON
+#if GN_MSWIN
         if( 0 != stringCompareI( s1, s2 ) ) break;
 #else
         if( 0 != stringCompare( s1, s2 ) ) break;
@@ -268,9 +268,9 @@ GN_API void GN::fs::splitPath( const StrA & path, StrA & root, StrA & child )
 // -----------------------------------------------------------------------------
 GN_API void GN::fs::getCurrentDir( StrA & result )
 {
-#if GN_XENON
+#if GN_XBOX2
     result = "game:";
-#elif GN_MSWIN
+#elif GN_WINPC
     char buf[MAX_PATH+1];
     char full[MAX_PATH+1];
     GetCurrentDirectoryA( MAX_PATH, buf );
@@ -301,9 +301,9 @@ GN_API void GN::fs::getCurrentDir( StrA & result )
 // -----------------------------------------------------------------------------
 GN_API void GN::fs::getCurrentDrive( StrA & result )
 {
-#if GN_XENON
+#if GN_XBOX2
     result.clear();
-#elif GN_MSWIN
+#elif GN_WINPC
     char buf[MAX_PATH+1];
     char full[MAX_PATH+1];
     GetCurrentDirectoryA( MAX_PATH, buf );

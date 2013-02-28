@@ -1,6 +1,6 @@
 #include "pch.h"
 
-#if GN_MSWIN || GN_XENON
+#if GN_MSWIN
 
 #include <process.h>
 
@@ -185,7 +185,7 @@ public:
 
     virtual void setAffinity( uint32 hardwareThread ) const
     {
-#if GN_XENON
+#if GN_XBOX2
         if( (DWORD)-1 == XSetThreadProcessor( mHandle, hardwareThread ) )
         {
             GN_ERROR(sLogger)( "fail to set thread affinity: %s", getWin32LastErrorInfo() );

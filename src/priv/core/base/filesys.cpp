@@ -8,7 +8,7 @@
 #include <SimpleGlob.h>
 #endif
 
-#if GN_MSWIN
+#if GN_WINPC
 #include <shlwapi.h>
 #if GN_MSVC
 #pragma comment( lib, "shlwapi.lib" )
@@ -74,7 +74,7 @@ static bool sIsAbsPath( const StrA & path )
 // local functions for win32 platform
 // *****************************************************************************
 
-#if GN_MSWIN
+#if GN_WINPC
 
 //
 //
@@ -116,7 +116,7 @@ static bool sIsAbsPath( const StrA & path )
 // local functions for Xenon platform
 // *****************************************************************************
 
-#if GN_XENON
+#if GN_XBOX2
 
 //
 //
@@ -210,7 +210,7 @@ public:
         // normalize path separators
         normalizePathSeparator( tmp, path );
 
-#if GN_XENON
+#if GN_XBOX2
 
         // convert path separators to native format
         for( size_t i = 0; i < tmp.size(); ++i )
@@ -221,7 +221,7 @@ public:
         // currently do nothing
         result = tmp;
 
-#elif GN_MSWIN
+#elif GN_WINPC
         // convert path separators to native format
         for( size_t i = 0; i < tmp.size(); ++i )
         {
@@ -359,9 +359,9 @@ public:
 
     AppFileSystem( NativeFileSystem & nfs ) : mNativeFs( nfs )
     {
-#if GN_XENON
+#if GN_XBOX2
         mRootDir = "game:";
-#elif GN_MSWIN
+#elif GN_WINPC
         char buf[MAX_PATH+1];
         GN_MSW_CHECK( GetModuleFileNameA(0,buf,MAX_PATH) );
         mRootDir = parentPath( buf );
@@ -620,7 +620,7 @@ public:
 
     MediaFileSystem()
     {
-#if GN_XENON
+#if GN_XBOX2
         addRoot( "game:/media" );
 #endif
         addRoot( "startup::media" );
@@ -640,7 +640,7 @@ public:
     FontFileSystem()
     {
         addRoot( "media::font" );
-#if GN_MSWIN
+#if GN_WINPC
         char windir[MAX_PATH+1];
         GetWindowsDirectoryA( windir, MAX_PATH );
         addRoot( joinPath( windir, "fonts" ) );

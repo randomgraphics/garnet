@@ -6,9 +6,9 @@
 /// \author  chenlee (2005.8.26)
 // *****************************************************************************
 
-#if !GN_XENON
+#if !GN_XBOX2
 
-#if GN_MSWIN
+#if GN_WINPC
 #include <windows.h>
 #endif
 

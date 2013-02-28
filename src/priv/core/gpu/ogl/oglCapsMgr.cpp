@@ -105,7 +105,7 @@ static void sGetOpenGLVersion( const char * version, int * major, int * minor, i
 ///
 /// initialize opengl extension
 // ------------------------------------------------------------------------
-#if GN_MSWIN
+#if GN_WINPC
 static bool sGetOGLExtensions( HDC hdc, DynaArray<StrA> & result )
 #else
 static bool sGetOGLExtensions( Display * disp, DynaArray<StrA> & result )
@@ -118,7 +118,7 @@ static bool sGetOGLExtensions( Display * disp, DynaArray<StrA> & result )
     // ∑÷ŒˆOpenGL-Extentions-String
     sGetTokens( result, (const char*)glGetString(GL_EXTENSIONS) );
 
-#if GN_MSWIN
+#if GN_WINPC
     // ∑÷ŒˆWGL Extensions
     PFNWGLGETEXTENSIONSSTRINGARBPROC proc;
     proc = reinterpret_cast<PFNWGLGETEXTENSIONSSTRINGARBPROC>(
@@ -226,7 +226,7 @@ bool GN::gfx::OGLGpu::capsInit()
 
     // output opengl implementation info.
     DynaArray<StrA> glexts;
-#if GN_MSWIN
+#if GN_WINPC
     if( !sGetOGLExtensions( mDeviceContext, glexts ) )
 #else
     if( !sGetOGLExtensions( (Display*)getDispDesc().displayHandle, glexts) )

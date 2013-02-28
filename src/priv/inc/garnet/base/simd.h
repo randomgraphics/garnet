@@ -7,7 +7,7 @@
 // *****************************************************************************
 
 #if GN_PLATFORM_HAS_XNAMATH
-#if GN_XENON
+#if GN_XBOX2
 #include <xtl.h>
 #else
 #include <windows.h>

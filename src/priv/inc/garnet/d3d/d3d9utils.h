@@ -12,10 +12,10 @@
 #define D3D_DEBUG_INFO // Enable "Enhanced D3DDebugging"
 #endif
 
-#if GN_XENON
+#if GN_XBOX2
 #include <xtl.h>
 #include <xgraphics.h>
-#elif GN_MSWIN
+#elif GN_WINPC
 #ifndef NOMINMAX
 #define NOMINMAX ///< This is to disable windows min/max macros
 #endif
@@ -33,7 +33,7 @@
 
 
 // Define constants and types that are missing on Xenon platform.
-#if GN_XENON
+#if GN_XBOX2
 
 #define D3DLOCK_DISCARD 0
 #define D3DUSAGE_DYNAMIC 0
@@ -49,7 +49,7 @@ namespace GN { /* namespace for D3D9 utils */ namespace d3d9
         //@{
         PixPerfScopeEvent( D3DCOLOR color, const char * name )
         {
-#if GN_XENON
+#if GN_XBOX2
             PIXBeginNamedEvent( color, name );
 #else
             D3DPERF_BeginEvent( color, mbs2wcs(name).rawptr() );
@@ -57,7 +57,7 @@ namespace GN { /* namespace for D3D9 utils */ namespace d3d9
         }
         ~PixPerfScopeEvent()
         {
-#if GN_XENON
+#if GN_XBOX2
             PIXEndNamedEvent();
 #else
             D3DPERF_EndEvent();
@@ -238,7 +238,7 @@ namespace GN { /* namespace for D3D9 utils */ namespace d3d9
         };
 
         static const UINT MAX_RS = 256;
-#if !GN_XENON
+#if !GN_XBOX2
         static const UINT MAX_TSS = 64;
 #endif
         static const UINT MAX_SS = 16;
@@ -247,7 +247,7 @@ namespace GN { /* namespace for D3D9 utils */ namespace d3d9
         Logger           * m_Logger;
         IDirect3DDevice9 * m_Device;
         RenderStateItem    m_Rs[MAX_RS];
-#if !GN_XENON
+#if !GN_XBOX2
         RenderStateItem    m_Tss[MAX_STAGES][MAX_TSS];
 #endif
         RenderStateItem    m_Ss[MAX_STAGES][MAX_SS];
@@ -302,7 +302,7 @@ namespace GN { /* namespace for D3D9 utils */ namespace d3d9
             }
         }
 
-#if !GN_XENON
+#if !GN_XBOX2
         void SetTSS( DWORD stage, D3DTEXTURESTAGESTATETYPE type, DWORD value )
         {
             if( NULL == m_Device ) return;
@@ -388,7 +388,7 @@ namespace GN { /* namespace for D3D9 utils */ namespace d3d9
             // restore TSS and SS
             for( UINT s = 0; s < MAX_STAGES; ++s )
             {
-#if !GN_XENON
+#if !GN_XBOX2
                 for( UINT i = 0; i < MAX_TSS; ++i )
                 {
                     if( m_Tss[s][i].got && m_Tss[s][i].currentValue != m_Tss[s][i].oldValue )
