@@ -8,7 +8,7 @@
 
 #include "basicInputMsw.h"
 
-#if GN_MSWIN
+#if GN_WINPC
 
 namespace GN { namespace input
 {

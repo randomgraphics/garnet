@@ -10,7 +10,7 @@ using namespace GN::gfx;
 
 static GN::Logger * sLogger = GN::getLogger("GN.gfx.util.gpu");
 
-#if GN_XENON
+#if GN_XBOX2
 #define D3D_GPU_API     GpuAPI::XENON
 #define D3D_GPU_NAME    "Xenon"
 #define DEFAULT_GPU_API GpuAPI::XENON
@@ -38,7 +38,7 @@ GN_API Gpu * GN::gfx::createOGLGpu( const GpuOptions &, uint32 )
 //
 //
 // -------------------------------------------------------------------------
-#if !GN_PLATFORM_HAS_D3D11 && !GN_XENON
+#if !GN_PLATFORM_HAS_D3D11 && !GN_XBOX2
 GN_API Gpu * GN::gfx::createD3DGpu( const GpuOptions &, uint32 )
 {
     GN_ERROR(sLogger)( D3D_GPU_NAME " renderer is not available." );

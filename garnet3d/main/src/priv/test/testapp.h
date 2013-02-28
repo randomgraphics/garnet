@@ -56,7 +56,7 @@ public:
     // *************************************************************************
 
     /// ctor
-#if GN_XENON
+#if GN_XBOX2
     // Xenon platform does not have command line arguments
     CommandLineArguments( int, const char *[] )
         : applicationName( "xenonapp" )
@@ -215,7 +215,7 @@ private:
                 return SHOW_HELP;
             }
             else if( '-' == *a
-                #if GN_MSWIN || GN_XENON
+                #if GN_MSWIN
                 || '/' == *a
                 #endif
                 )

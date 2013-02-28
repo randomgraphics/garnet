@@ -6,9 +6,9 @@
 
 #include "../gpupch.h"
 
-#if GN_XENON
+#if GN_XBOX2
 #include <xtl.h>
-#elif GN_MSWIN
+#elif GN_WINPC
 #ifndef NOMINMAX
 #define NOMINMAX
 #endif

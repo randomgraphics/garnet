@@ -1,6 +1,6 @@
 #include "pch.h"
 
-#if GN_XENON
+#if GN_XBOX2
 
 #include "dxerr9.h"
 #if GN_MSVC
@@ -104,7 +104,7 @@ GN::internal::handleAssertFailure(
     }
     else
     {
-    #if GN_MSWIN
+    #if GN_WINPC
         char buf[1024];
         stringPrintf( buf, 1024,
             "%s(%d)\n"
@@ -147,7 +147,7 @@ GN_API void GN::breakIntoDebugger()
 #endif
 }
 
-#if GN_MSWIN || GN_XENON
+#if GN_MSWIN
 
 //
 //
@@ -157,7 +157,7 @@ GN::getWin32ErrorInfo( uint32 win32ErrorCode ) throw()
 {
     static char info[4096];
 
-#if GN_XENON
+#if GN_XBOX2
     // TODO: unimplemented
     info[0] = 0;
 #else

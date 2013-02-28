@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "basicInputMsw.h"
 
-#if GN_MSWIN
+#if GN_WINPC
 
 static GN::Logger * sLogger = GN::getLogger("GN.input.BasicInputMsw");
 
@@ -437,4 +437,4 @@ GN::input::BasicInputMsw::sCwpHookProc( int nCode, WPARAM wp, LPARAM lParam )
     GN_UNGUARD;
 }
 
-#endif // GN_MSWIN
+#endif // GN_WINPC

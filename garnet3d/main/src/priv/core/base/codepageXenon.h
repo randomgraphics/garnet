@@ -1,4 +1,4 @@
-#if GN_XENON
+#if GN_XBOX2
 #ifndef __GN_BASE_CODEPAGEXENON_H__
 #define __GN_BASE_CODEPAGEXENON_H__
 // *****************************************************************************
@@ -76,4 +76,4 @@ namespace GN
 //                                     EOF
 // *****************************************************************************
 #endif // __GN_BASE_CODEPAGEXENON_H__
-#endif // GN_XENON
+#endif // GN_XBOX2

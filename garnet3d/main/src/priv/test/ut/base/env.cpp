@@ -6,7 +6,7 @@ public:
 
     void testGetEnv()
     {
-#if !GN_XENON
+#if !GN_XBOX2
         TS_ASSERT( GN::getEnv(0).empty() );
         TS_ASSERT( GN::getEnv("asdfhasdf aslfjoursw").empty() );
         TS_ASSERT( !GN::getEnv("PATH").empty() );
@@ -15,7 +15,7 @@ public:
 
     void testPutEnv()
     {
-#if !GN_XENON
+#if !GN_XBOX2
         // invalid arguments
         GN::putEnv( 0, 0 );
         GN::putEnv( 0, "" );
@@ -47,7 +47,7 @@ public:
 
     void testGetEnvBoolean()
     {
-#if !GN_XENON
+#if !GN_XBOX2
         const char * strangeEnv = "testGetEnvBoolean_asdfyawnwauiynasiur";
 
         // make sure strangeEnv do not exist

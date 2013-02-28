@@ -13,7 +13,7 @@
 ///
 class ConsoleColor
 {
-#if GN_MSWIN
+#if GN_WINPC
     HANDLE       mConsole;
     WORD         mAttrib;
 public:
@@ -108,7 +108,7 @@ public:
     }
 };
 typedef LocalMutexX11 LocalMutex;
-#elif GN_MSWIN || GN_XENON
+#elif GN_MSWIN
 typedef GN::Mutex LocalMutex;
 #else
 #error Unsupported platform
@@ -144,7 +144,7 @@ static GN::StrA sFormatPath( const char * path )
     {
         char c = *path;
 
-    #if GN_MSWIN || GN_XENON
+    #if GN_MSWIN
         s.append( '/' == c ? '\\' : c );
     #else
         s.append( '\\' == c ? '/' : c );
@@ -344,7 +344,7 @@ namespace GN
         };
 
         FileReceiver()
-#if GN_XENON
+#if GN_XBOX2
             : mFileName( "game:\\garnet3d.log.xml" )
 #else
             : mFileName( getEnv("GN_LOG_FILENAME") )
@@ -402,7 +402,7 @@ namespace GN
     {
         virtual void onLog( Logger & logger, const Logger::LogDesc & desc, const char * msg )
         {
-#if GN_MSWIN || GN_XENON
+#if GN_MSWIN
             char buf[16384];
             stringPrintf(
                 buf,
@@ -418,8 +418,7 @@ namespace GN
         }
         virtual void onLog( Logger & logger, const Logger::LogDesc & desc, const wchar_t * msg )
         {
-#if GN_MSWIN || GN_XENON
-
+#if GN_MSWIN
             if( NULL == msg ) msg = L"";
 
             wchar_t buf[16384];
@@ -632,7 +631,7 @@ namespace GN
             // config root logger
             mRootLogger.setLevel( Logger::INFO );
             mRootLogger.setEnabled( true );
-#if !GN_XENON
+#if !GN_XBOX2
             mRootLogger.addReceiver( &mCr );
 #endif
             mRootLogger.addReceiver( &mFr );

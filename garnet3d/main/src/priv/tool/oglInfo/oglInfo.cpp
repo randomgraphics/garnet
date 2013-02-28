@@ -27,7 +27,7 @@ sGetTokens( GN::DynaArray<GN::StrA> & tokens, const char * str )
 ///
 /// initialize opengl extension
 // ------------------------------------------------------------------------
-#if GN_MSWIN
+#if GN_WINPC
 bool sGetOGLExtensions( HDC hdc, GN::DynaArray<GN::StrA> & result )
 #else
 bool sGetOGLExtensions( Display * disp, GN::DynaArray<GN::StrA> & result )
@@ -40,7 +40,7 @@ bool sGetOGLExtensions( Display * disp, GN::DynaArray<GN::StrA> & result )
     // ∑÷ŒˆOpenGL-Extentions-String
     sGetTokens( result, (const char*)glGetString(GL_EXTENSIONS) );
 
-#if GN_MSWIN
+#if GN_WINPC
     // ∑÷ŒˆWGL Extensions
     PFNWGLGETEXTENSIONSSTRINGARBPROC proc;
     proc = reinterpret_cast<PFNWGLGETEXTENSIONSSTRINGARBPROC>(
@@ -120,7 +120,7 @@ void printOglInfo( intptr_t disp, int index )
 }
 
 
-#if GN_MSWIN
+#if GN_WINPC
 
 #if GN_MSVC
 #pragma comment( lib, "opengl32.lib" )

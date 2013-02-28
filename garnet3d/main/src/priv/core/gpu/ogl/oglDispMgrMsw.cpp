@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "oglGpu.h"
 
-#if GN_MSWIN
+#if GN_WINPC
 
 using namespace GN;
 
@@ -604,4 +604,4 @@ void GN::gfx::OGLGpu::msgHook( HWND, UINT msg, WPARAM wp, LPARAM )
     GN_UNGUARD;
 }
 
-#endif // GN_MSWIN
+#endif // GN_WINPC

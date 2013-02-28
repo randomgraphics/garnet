@@ -1,6 +1,6 @@
 #include "../testCommon.h"
 
-#if GN_MSWIN || GN_XENON
+#if GN_MSWIN
 #define PSC '\\'
 #define PSS "\\"
 #else
@@ -8,7 +8,7 @@
 #define PSS "/"
 #endif
 
-#if GN_MSWIN || GN_XENON || GN_CYGWIN
+#if GN_MSWIN || GN_CYGWIN
 #define APPEXT ".exe"
 #else
 #define APPEXT ""
@@ -33,7 +33,7 @@ public:
         TS_ASSERT_EQUALS( d+PSS"a"PSS"b", toNativeDiskFilePath("/a//b/") );
         TS_ASSERT_EQUALS( d+PSS"a"PSS"b", toNativeDiskFilePath("\\a\\\\b\\") );
 
-#if GN_MSWIN || GN_XENON
+#if GN_MSWIN
         TS_ASSERT_EQUALS( "A:"PSS"b", toNativeDiskFilePath("a:b") );
         TS_ASSERT_EQUALS( "A:"PSS, toNativeDiskFilePath("a:") );
         TS_ASSERT_EQUALS( "A:"PSS, toNativeDiskFilePath("a:/") );

@@ -97,7 +97,7 @@ IDirect3DTexture9 * CreateAxisTexture(
     tex->UnlockRect( 0 );
 
     // write text to texture
-#if GN_XENON
+#if GN_XBOX2
     GN_UNIMPL_WARNING();
 #else
     AutoComPtr<IDirect3DSurface9> surf;
@@ -341,7 +341,7 @@ void D3D9OrientationBox::Draw( float x, float y, const XMMATRIX & viewRH )
     stateSaver.SetRS( D3DRS_SRCBLEND, D3DBLEND_SRCALPHA );
     stateSaver.SetRS( D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA );
 
-#if GN_XENON
+#if GN_XBOX2
     GN_UNIMPL_WARNING();
 #else
     m_Device->SetFVF( D3DFVF_XYZRHW | D3DFVF_TEX1 );

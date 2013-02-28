@@ -6,7 +6,7 @@
 /// \author  chenlee (2006.2.23)
 // *****************************************************************************
 
-#if GN_MSWIN
+#if GN_WINPC
 
 namespace GN { namespace win
 {

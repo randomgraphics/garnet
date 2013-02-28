@@ -9,7 +9,7 @@ static GN::Logger * sLogger = GN::getLogger("GN.d3d9.d3d9app");
 // local functions
 // *****************************************************************************
 
-#if !GN_XENON
+#if !GN_XBOX2
 
 //
 //
@@ -176,7 +176,7 @@ sSetupD3dpp( D3DPRESENT_PARAMETERS & d3dpp,
     d3dpp.Flags                 |= D3DPRESENTFLAG_DISCARD_DEPTHSTENCIL;
 
     // set display mode parameters
-#if GN_XENON
+#if GN_XBOX2
     d3dpp.Windowed = false;
     d3dpp.BackBufferCount  = 0;
     // TODO: use HD when available.
@@ -246,7 +246,7 @@ GN_API int GN::d3d9::D3D9Application::run( const D3D9AppOption * )
 
     mRunning = true;
 
-#if GN_XENON
+#if GN_XBOX2
 
     while( mRunning )
     {
@@ -311,7 +311,7 @@ GN_API bool GN::d3d9::D3D9Application::changeOption( const D3D9AppOption & o )
 // -----------------------------------------------------------------------------
 GN_API bool GN::d3d9::D3D9Application::init()
 {
-#if !GN_XENON
+#if !GN_XBOX2
     // get primary monitor
     POINT pt = { LONG_MIN, LONG_MIN };
     mOption.monitor = ::MonitorFromPoint( pt, MONITOR_DEFAULTTOPRIMARY );
@@ -373,7 +373,7 @@ GN_API void GN::d3d9::D3D9Application::quit()
         }
     }
 
-#if !GN_XENON
+#if !GN_XBOX2
     sDestroyWindow( mWindow ); mWindow = 0;
 #endif
 }
@@ -383,7 +383,7 @@ GN_API void GN::d3d9::D3D9Application::quit()
 // -----------------------------------------------------------------------------
 GN_API void GN::d3d9::D3D9Application::onKeyPress( input::KeyEvent ke )
 {
-#if GN_XENON
+#if GN_XBOX2
     GN_UNUSED_PARAM( ke );
 #else
     if( input::KeyCode::ESCAPE == ke.code && !ke.status.down )
@@ -406,11 +406,11 @@ GN_API bool GN::d3d9::D3D9Application::createDevice()
     mAdapter = 0;
 
     mDeviceType = D3DDEVTYPE_HAL;
-    #if !GN_XENON
+    #if !GN_XBOX2
     mDeviceType = mOption.refdev ? D3DDEVTYPE_REF : D3DDEVTYPE_HAL;
     #endif
 
-#if !GN_XENON
+#if !GN_XBOX2
 	// Look for nvidia adapter
     UINT nAdapter = mD3D->GetAdapterCount();
     GN_ASSERT( nAdapter );
@@ -472,7 +472,7 @@ GN_API bool GN::d3d9::D3D9Application::restoreDevice()
 
     GN_ASSERT( mDevice );
 
-#if !GN_XENON
+#if !GN_XBOX2
     uint32 w = mOption.fullscreen ? mOption.fsWidth : mOption.windowedWidth;
     uint32 h = mOption.fullscreen ? mOption.fsHeight : mOption.windowedHeight;
     sAdjustWindow( mWindow, w, h, mOption.fullscreen );

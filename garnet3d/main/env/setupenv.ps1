@@ -303,6 +303,8 @@ if( "mswin" -eq $env:GN_BUILD_TARGET_OS )
     
     if( "" -ne $winsdk_path )
     {
+        "Windows SDK v7l1a found: $winsdk_path"
+        ""
     }
 
 }
@@ -349,7 +351,7 @@ if( "mswin" -eq $env:GN_BUILD_TARGET_OS )
     else
     {
         # Note: Just issue a warning, instead of error, since DXSDK is not required to build garnet application.
-        warn "Environment variable DXSDK_DIR not found. Please install DirectX SDK."
+        warn "DirectX SDK not found (Environment variable DXSDK_DIR does not exist)."
     }
 }
 
@@ -465,11 +467,11 @@ if( "durango" -eq $env:GN_BUILD_TARGET_OS )
         error "Environment DurangoXDK not found. Please install Durango XDK"
     }
 
-    $batch = "$env:DurangoXDK\DurangoVars.cmd"
+    $batch = "$env:DurangoXDK\xdk\DurangoVars.cmd"
 
     if( test-path $batch )
     {
-        catch_batch_env $batch
+        catch_batch_env $batch XDK
     }
     else
     {

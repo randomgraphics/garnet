@@ -1,8 +1,9 @@
 #include "pch.h"
+
+#if GN_WINPC
 #include "codepageMSWIN.h"
 #include <stdlib.h>
-
-#if GN_MSWIN
+#include <windows.h>
 
 static GN::Logger * sLogger = GN::getLogger("GN.base.codepage");
 
@@ -12,26 +13,23 @@ using namespace GN;
 // Local functions
 // *****************************************************************************
 
-static const char * sEncodingToLocal( CharacterEncodingConverter::Encoding e )
+static int sEncodingToCodePage( CharacterEncodingConverter::Encoding e )
 {
-    static const char * TABLE[] =
+    static INT TABLE[] =
     {
-        ".1252",        // ASCII
-        ".1252",        // ISO_8859_1
-
-        // Unicode encodings are set to empty string intentionally.
-        "",             // UTF7
-        "",             // UTF8
-        "",             // UTF16_LE
-        "",             // UTF16_BE
-        "",             // UTF16
-        "",             // UTF32_LE
-        "",             // UTF32_BE
-        "",             // UTF32
-        "",             // WIDECHAR
-
-        "CHS",          // GBK
-        "CHT",          // BIG5
+        437,  // ASCII
+        1252, // ISO_8859_1
+        -1,   // UTF7
+        -1,   // UTF8
+         0,   // UTF16_LE
+        -1,   // UTF16_BE
+         0,   // UTF16
+        -1,   // UTF32_LE
+        -1,   // UTF32_BE
+        -1,   // UTF32
+         0,   // WIDECHAR
+        936,  // GBK
+        950,  // BIG5
     };
     GN_CASSERT( GN_ARRAY_COUNT(TABLE) == CharacterEncodingConverter::NUM_ENCODINGS );
 
@@ -42,7 +40,7 @@ static const char * sEncodingToLocal( CharacterEncodingConverter::Encoding e )
     else
     {
         GN_ERROR(sLogger)( "Invalid character encoding: %d", e );
-        return NULL;
+        return -1;
     }
 }
 
@@ -62,34 +60,17 @@ bool GN::CECImplMSWIN::init(
     // standard init procedure
     GN_STDCLASS_INIT( GN::CECImplMSWIN, () );
 
-    const char * fromstr = sEncodingToLocal( from );
-    if( NULL == fromstr ) return failure();
-    if( 0 != *fromstr )
+    mCodePageFrom = sEncodingToCodePage(from);
+    mCodePageTo = sEncodingToCodePage(to);
+    if( -1 == mCodePageFrom || -1 == mCodePageTo )
     {
-        mLocaleFrom = new std::locale( fromstr );//_create_locale( LC_ALL, fromstr );
-        if( !mLocaleFrom )
-        {
-            GN_ERROR(sLogger)( "_create_locale() failed." );
-            return failure();
-        }
-    }
-
-    const char * tostr = sEncodingToLocal( to );
-    if( NULL == tostr ) return failure();
-    if( 0 != *tostr )
-    {
-        //mLocaleTo = _create_locale( LC_ALL, tostr );
-        mLocaleTo = new std::locale( tostr );
-        if( !mLocaleTo )
-        {
-            GN_ERROR(sLogger)( "_create_locale() failed." );
-            return failure();
-        }
+        GN_ERROR(sLogger)( "Invalid or unsupported encoding." );
+        return failure();
     }
 
     // success
     mEncodingFrom = from;
-    mEncodingTo   = to;
+    mEncodingTo = to;
     return success();
 
     GN_UNGUARD;
@@ -101,9 +82,6 @@ bool GN::CECImplMSWIN::init(
 void GN::CECImplMSWIN::quit()
 {
     GN_GUARD;
-
-    safeDelete( mLocaleFrom );
-    safeDelete( mLocaleTo );
 
     // standard quit procedure
     GN_STDCLASS_QUIT();
@@ -129,102 +107,29 @@ GN::CECImplMSWIN::convert(
 
     // convert from source encoding to widechar encoding
     DynaArray<wchar_t> tempBuffer;
-    if( NULL != mLocaleFrom )
+    if( 0 != mCodePageFrom )
     {
         tempBuffer.resize( sourceBufferSizeInBytes );
 
-        /*errno_t err = ::_mbstowcs_s_l(
-            &converted,
-            tempBuffer.rawptr(),
-            tempBuffer.size(),
-            (const char *)sourceBuffer,
-            sourceBufferSizeInBytes,
-            (_locale_t)mLocaleFrom );*/
-        mbstate_t    state = {0};
-        const char * srcnext;
-        wchar_t    * tempnext;
-        int err = std::use_facet<std::codecvt<wchar_t,char,mbstate_t> >(*mLocaleFrom).in(
-            state,
-            (const char *)sourceBuffer,
-            ((const char *)sourceBuffer)+sourceBufferSizeInBytes,
-            srcnext,
-            tempBuffer.rawptr(),
-            tempBuffer.rawptr() + tempBuffer.size(),
-            tempnext );
-
-        if( std::codecvt_base::error == err )
+        converted = (size_t)::MultiByteToWideChar(mCodePageFrom, 0, (const char*)sourceBuffer, (int)sourceBufferSizeInBytes, tempBuffer.rawptr(), (int)(tempBuffer.size() * sizeof(wchar_t)));
+        if( 0 == converted )
         {
             GN_ERROR(sLogger)( "fail to convert input buffer to UNICODE." );
             return 0;
         }
 
-        converted = tempnext - tempBuffer.rawptr();
-
         sourceBuffer = tempBuffer.rawptr();
         sourceBufferSizeInBytes = converted * sizeof(wchar_t);
     }
-    else if( mEncodingFrom == CharacterEncodingConverter::UTF16 ||
-             mEncodingFrom == CharacterEncodingConverter::UTF16_LE ||
-             mEncodingFrom == CharacterEncodingConverter::WIDECHAR )
-    {
-        // source encoding is already UTF16_LE, do nothing
-    }
-    else
-    {
-        GN_ERROR(sLogger)( "Conversion from encoding \"%d\" is not supported yet.", mEncodingFrom );
-        return 0;
-    }
 
     // convert from widechar encoding to target encoding
-    if( NULL != mLocaleTo )
+    if( 0 != mCodePageTo )
     {
-        converted = 0;
-
-        /*char          * d = (char*)destBuffer;
-        const wchar_t * s = (const wchar_t*)sourceBuffer;
-        for( size_t i = 0; i < sourceBufferSizeInBytes / sizeof(wchar_t); ++i )
-        {
-            int retval;
-            errno_t err = ::_wctomb_s_l(
-                &retval,
-                d,
-                destBufferSizeInBytes,
-                *s,
-                (_locale_t)mLocaleTo );
-
-            if( 0 != err )
-            {
-                GN_ERROR(sLogger)( "fail to convert from UNICODE to target encoding." );
-                return 0;
-            }
-
-            GN_ASSERT( retval > 0 );
-
-            ++s;
-            d += retval;
-
-            converted += (size_t)retval;
-        }*/
-        mbstate_t       state = {0};
-        const wchar_t * srcnext;
-        char          * dstnext;
-        int err = std::use_facet<std::codecvt<wchar_t,char,mbstate_t> >(*mLocaleTo).out(
-            state,
-            (const wchar_t*)sourceBuffer,
-            (const wchar_t*)sourceBuffer + sourceBufferSizeInBytes/sizeof(wchar_t),
-            srcnext,
-            (char *)destBuffer,
-            ((char *)destBuffer)+destBufferSizeInBytes,
-            dstnext );
-
-        if( std::codecvt_base::error == err )
+        converted = (size_t)::WideCharToMultiByte(mCodePageTo, 0, (const wchar_t*)sourceBuffer, (int)(sourceBufferSizeInBytes / sizeof(wchar_t)), (char*)destBuffer, (int)destBufferSizeInBytes, NULL, NULL);
+        if (0 == converted)
         {
             GN_ERROR(sLogger)( "fail to convert from UNICODE to target encoding." );
-            return 0;
         }
-
-        converted = dstnext - (char*)destBuffer;
-
         return converted;
     }
     else if( mEncodingTo == CharacterEncodingConverter::UTF16 ||

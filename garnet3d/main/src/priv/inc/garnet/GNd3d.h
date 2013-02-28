@@ -12,7 +12,7 @@
 #include "d3d/dxgiutils.h"
 #endif
 
-#if GN_PLATFORM_HAS_D3D9 | GN_XENON
+#if GN_PLATFORM_HAS_D3D9 | GN_XBOX2
 #include "d3d/d3d9utils.h"
 #endif
 

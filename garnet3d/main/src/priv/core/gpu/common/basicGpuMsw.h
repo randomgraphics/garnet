@@ -6,7 +6,7 @@
 /// \author  chenlee (2005.10.1)
 // *****************************************************************************
 
-#if GN_MSWIN
+#if GN_WINPC
 
 #include "basicGpu.h"
 #include "renderWindowMsw.h"

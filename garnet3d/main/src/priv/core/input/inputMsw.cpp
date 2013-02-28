@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "inputMsw.h"
 
-#if GN_MSWIN
+#if GN_WINPC
 
 //
 //
@@ -79,4 +79,4 @@ void GN::input::InputMsw::msgHandler( UINT msg, WPARAM wp, LPARAM lp )
     BasicInputMsw::msgHandler( msg, wp, lp );
 }
 
-#endif // GN_MSWIN
+#endif // GN_WINPC

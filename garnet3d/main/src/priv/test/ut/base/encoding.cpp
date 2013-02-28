@@ -1,4 +1,4 @@
-#include "../testCommon.h"
+ï»¿#include "../testCommon.h"
 
 class CharacterEncodingConversionTest : public CxxTest::TestSuite
 {
@@ -47,11 +47,12 @@ public:
 
         size_t converted;
 
-        char gbk[] = "ÄãºÃÂğ";
-        wchar_t wide[4] = { 0xEFFE, 0xEFFE, 0xEFFE, 0xEFFE };
+        unsigned char gbk[] = {0xC4, 0xE3, 0xBA, 0xC3, 0xC2, 0xF0, 0x00}; // "ä½ å¥½å—" in GBK
+        wchar_t wide[] = {2, 2, 2, 2};
+        wchar_t golden[] = L"ä½ å¥½å—";
         converted = c( wide, gbk );
         TS_ASSERT_EQUALS( converted, sizeof(wide) );
-        TS_ASSERT_EQUALS( wide, L"ÄãºÃÂğ" );
+        TS_ASSERT_EQUALS( (const char*)wide, (const char*)golden );
     }
 
     void testWIDECHAR_to_GBK()
@@ -64,11 +65,12 @@ public:
 
         size_t converted;
 
-        wchar_t wide[] = L"ÄãºÃÂğ";
-        char gbk[7] = { -2, -2, -2, -2, -2, -2, -2 };
+        wchar_t wide[] = L"ä½ å¥½å—";
+        unsigned char gbk[7] = { 2, 2, 2, 2, 2, 2, 2 };
+        unsigned char golden[] = {0xC4, 0xE3, 0xBA, 0xC3, 0xC2, 0xF0, 0x00}; // "ä½ å¥½å—" in GBK
         converted = c( gbk, wide );
         TS_ASSERT_EQUALS( converted, sizeof(gbk) );
-        TS_ASSERT_EQUALS( gbk, "ÄãºÃÂğ" );
+        TS_ASSERT_EQUALS( (const char*)gbk, (const char*)golden );
     }
 
     void testBIG5_to_GBK()
@@ -79,11 +81,12 @@ public:
             CharacterEncodingConverter::BIG5,
             CharacterEncodingConverter::GBK );
 
-        unsigned char big5[] = { 0xAF, 0x75, 0xA5, 0xD1, 0xAC, 0xFC, 0x00 }; // "ÕæÓÉÃÀ" in BIG5 encoding
-        char gbk[7] = { -2, -2, -2, -2, -2, -2, -2 };
+        unsigned char big5[] = { 0xAF, 0x75, 0xA5, 0xD1, 0xAC, 0xFC, 0x00 }; // "çœŸç”±ç¾" in BIG5 encoding
+        unsigned char gbk[7] = { 2, 2, 2, 2, 2, 2, 2 };
+        unsigned char golden[] = { 0xD5, 0xE6, 0xD3, 0xC9, 0xC3, 0xC0, 0x00}; // "çœŸç”±ç¾" in GBK encoding
         size_t converted = c( gbk, big5 );
         TS_ASSERT_EQUALS( converted, 7 );
-        TS_ASSERT_EQUALS( gbk, "ÕæÓÉÃÀ" );
+        TS_ASSERT_EQUALS( (const char*)gbk, (const char*)golden );
     }
 
     void testGBK_to_BIG5()
@@ -94,11 +97,11 @@ public:
             CharacterEncodingConverter::GBK,
             CharacterEncodingConverter::BIG5 );
 
-        char gbk[] = "ÕæÓÉÃÀ";
-        char big5[7] = { -2, -2, -2, -2, -2, -2, -2 };
-        unsigned char golden[] = { 0xAF, 0x75, 0xA5, 0xD1, 0xAC, 0xFC, 0x00 }; // "ÕæÓÉÃÀ" in BIG5 encoding
+        unsigned char gbk[] = { 0xD5, 0xE6, 0xD3, 0xC9, 0xC3, 0xC0, 0x00}; // "çœŸç”±ç¾" in GBK encoding
+        unsigned char big5[7] = { 2, 2, 2, 2, 2, 2, 2 };
+        unsigned char golden[] = { 0xAF, 0x75, 0xA5, 0xD1, 0xAC, 0xFC, 0x00 }; // "çœŸç”±ç¾" in BIG5 encoding
         size_t converted = c( big5, gbk );
         TS_ASSERT_EQUALS( converted, 7 );
-        TS_ASSERT_EQUALS( big5, (char*)golden );
+        TS_ASSERT_EQUALS( (const char*)big5, (const char*)golden );
     }
 };

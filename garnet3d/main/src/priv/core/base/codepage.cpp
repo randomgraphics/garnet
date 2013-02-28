@@ -15,11 +15,11 @@ using namespace GN;
 
 typedef GN::CECImplICONV CECImpl;
 
-#elif GN_XENON
+#elif GN_XBOX2
 
 typedef GN::CECImplXenon CECImpl;
 
-#elif GN_MSWIN
+#elif GN_WINPC
 
 typedef GN::CECImplMSWIN CECImpl;
 

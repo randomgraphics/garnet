@@ -52,7 +52,7 @@ inline void GN::gfx::XenonGpu::setD3DSamplerState(
     GN_UNGUARD_SLOW;
 }
 
-#if !GN_XENON
+#if !GN_XBOX2
 
 //
 //
@@ -82,4 +82,4 @@ inline void GN::gfx::XenonGpu::setD3DTextureState(
     GN_UNGUARD_SLOW;
 }
 
-#endif // !GN_XENON
+#endif // !GN_XBOX2

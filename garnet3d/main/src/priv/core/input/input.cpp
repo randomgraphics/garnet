@@ -35,10 +35,10 @@ namespace GN { namespace input
 
 static GN::input::Input * sCreateNativeInputSystem()
 {
-#if GN_XENON
+#if GN_XBOX2
     GN::AutoObjPtr<GN::input::InputXenon> p( new GN::input::InputXenon );
     return p.detach();
-#elif GN_MSWIN
+#elif GN_WINPC
     GN::AutoObjPtr<GN::input::InputMsw> p( new GN::input::InputMsw );
     if( !p->init() ) return 0;
     return p.detach();

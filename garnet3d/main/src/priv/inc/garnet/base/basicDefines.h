@@ -59,35 +59,34 @@
 #endif
 
 // *****************************************************************************
-// 辨识操作系统
+// Detect Target Platform
 // *****************************************************************************
 
-#define GN_MSWIN    0 ///< If 1, means current platform is Microsoft Windows on PC (not Xbox)
-#define GN_XBOX1    0 ///< If 1, means Xbox1
-#define GN_XENON    0 ///< if 1, means Xbox360
+#define GN_MSWIN    0 ///< Windows-based system (PC, Xbox, Phone and etc.)
+#define GN_WINPC    0 ///< If 1, means current platform is Microsoft Windows on PC (not Xbox)
+#define GN_WINRT    0 ///< Windows RT enabled platform (Win8 or Xbox3)
+#define GN_XBOX2    0 ///< If 1, means Xbox360
+#define GN_XBOX3    0 ///< If 1, means Xbox720
 #define GN_POSIX    0 ///< If 1, means POSIX compatible platform, such as linux/unix and Cygwin
 #define GN_CYGWIN   0 ///< If 1, means Cygwin
 
-/// \def GN_OS
-/// Indicate current OS
-
 // Windows platform
 #if defined( _WIN32 )
-#ifdef _XBOX_VER
-#if _XBOX_VER == 200
-#undef GN_XENON
-#define GN_XENON 1
-#undef GN_PLATFORM_NAME
-#define GN_PLATFORM_NAME "xenon"
-#else
-#undef GN_XBOX1
-#define GN_XBOX1 1
-#undef GN_PLATFORM_NAME
-#define GN_PLATFORM_NAME "xbox1"
-#endif
-#else
 #undef GN_MSWIN
 #define GN_MSWIN 1
+#if defined(_XBOX_VER) && _XBOX_VER == 200
+#undef GN_XBOX2
+#define GN_XBOX2 1
+#undef GN_PLATFORM_NAME
+#define GN_PLATFORM_NAME "xbox2"
+#elif defined(_DURANGO)
+#undef GN_XBOX3
+#define GN_XBOX3 1
+#undef GN_PLATFORM_NAME
+#define GN_PLATFORM_NAME "xbox3"
+#else
+#undef GN_WINPC
+#define GN_WINPC 1
 #define GN_PLATFORM_NAME "mswin"
 #endif
 
@@ -131,7 +130,7 @@
 #undef GN_X64
 #define GN_X64 1
 #define GN_CPU "x64"
-#elif defined( _PPC_ ) || GN_XENON
+#elif defined( _PPC_ ) || GN_XBOX2
 #undef GN_PPC
 #define GN_PPC 1
 #define GN_CPU "ppc"
@@ -163,14 +162,14 @@
 // platform specific configurations
 // *****************************************************************************
 
-#if GN_MSWIN
+#if GN_XBOX2
+#   include     "platform.xenon.ppc.h"
+#elif GN_MSWIN
 #   if GN_X64
 #       include "platform.mswin.x64.h"
 #   elif GN_X86
 #       include "platform.mswin.x86.h"
 #   endif
-#elif GN_XENON
-#   include     "platform.xenon.ppc.h"
 #elif GN_POSIX
 #   if GN_CYGWIN
 #       include "platform.cygwin.x86.h"

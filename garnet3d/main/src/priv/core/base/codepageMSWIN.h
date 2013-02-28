@@ -1,4 +1,4 @@
-#if GN_MSWIN
+#if GN_WINPC
 #ifndef __GN_BASE_CODEPAGEMSWIN_H__
 #define __GN_BASE_CODEPAGEMSWIN_H__
 // *****************************************************************************
@@ -37,7 +37,7 @@ namespace GN
         bool init( CharacterEncodingConverter::Encoding from, CharacterEncodingConverter::Encoding to );
         void quit();
     private:
-        void clear() { mLocaleFrom = mLocaleTo = 0; }
+        void clear() { mCodePageFrom = mCodePageTo = -1; }
         //@}
 
         // ********************************
@@ -64,8 +64,8 @@ namespace GN
         CharacterEncodingConverter::Encoding mEncodingFrom;
         CharacterEncodingConverter::Encoding mEncodingTo;
 
-        std::locale * mLocaleFrom;
-        std::locale * mLocaleTo;
+        int mCodePageFrom;
+        int mCodePageTo;
 
         // ********************************
         // private functions
@@ -79,4 +79,4 @@ namespace GN
 //                                     EOF
 // *****************************************************************************
 #endif // __GN_BASE_CODEPAGEMSWIN_H__
-#endif // GN_MSWIN
+#endif // GN_WINPC

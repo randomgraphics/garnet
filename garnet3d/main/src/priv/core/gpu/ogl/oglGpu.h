@@ -25,7 +25,7 @@ namespace GN { namespace gfx
         uint32 maxVertexAttributes; ///< query GL_MAX_VERTEX_ATTRIBS_ARB
     };
 
-#if GN_MSWIN
+#if GN_WINPC
     typedef BasicGpuMsw ParentGpu;
 #else
     typedef BasicGpuX11 ParentGpu;
@@ -87,7 +87,7 @@ namespace GN { namespace gfx
         virtual void * getD3DDevice() const { return 0; }
         virtual void * getOGLRC() const { return mRenderContext; }
 
-#if GN_MSWIN
+#if GN_WINPC
     private :
         bool dispInit();
         void dispQuit();

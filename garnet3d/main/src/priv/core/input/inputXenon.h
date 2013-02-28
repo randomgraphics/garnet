@@ -6,7 +6,7 @@
 /// \author  chenlee (2006.3.13)
 // *****************************************************************************
 
-#if GN_XENON
+#if GN_XBOX2
 
 #include "basicInputXInput.h"
 
