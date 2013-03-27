@@ -282,7 +282,7 @@ namespace GN
                 ::fprintf(
                     stderr,
                     "%s(%d)\n"
-                    "\tname(%s), level(%s)\n"
+                    "\tname=%s, level=%s\n"
                     "\t%s\n\n",
                     sFormatPath(desc.file).rawptr(),
                     desc.line,
@@ -307,7 +307,7 @@ namespace GN
                 ::fprintf(
                     stderr,
                     "%s(%d)\n"
-                    "\tname(%s), level(%s)\n"
+                    "\tname=%s, level=%s\n"
                     "\t%S\n\n",
                     sFormatPath(desc.file).rawptr(),
                     desc.line,

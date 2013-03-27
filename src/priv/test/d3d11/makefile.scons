@@ -2,29 +2,30 @@ Import( 'GN' )
 
 if GN.has_d3d11 and GN.has_d3dx11:
 
-	import string
+    import string
 
-	def Fx2Cpp( target, source, env ):
-		s = open( source[0].path, 'r' )
-		t = open( target[0].path, 'w' )
-		for line in s:
-			t.write( '"%s \\n"\n'%string.strip( line, '\r\n' ) )
-		return None
+    def Fx2Cpp( target, source, env ):
+        s = open( source[0].path, 'r' )
+        t = open( target[0].path, 'w' )
+        for line in s:
+            t.write( '"%s \\n"\n'%string.strip( line, '\r\n' ) )
+        return None
 
-	fxo = Command(
-		'shaders.fxo',
-		'shaders.fx',
-		'"fxc.exe" /T fx_5_0 /Fo $TARGET $SOURCE'
-		)
+    env = GN.NewBuildEnv();
 
-	fxh = Command( 'shaders.h', 'shaders.fx', Fx2Cpp );
+    fxo = env.Command(
+        'shaders.fxo',
+        'shaders.fx',
+        '"fxc.exe" /T fx_5_0 /Fo $TARGET $SOURCE')
 
-	main2 = Command( 'main2.cpp', 'main.cpp', Copy("$TARGET", "$SOURCE") );
+    fxh = env.Command( 'shaders.h', 'shaders.fx', Fx2Cpp );
 
-	Depends( main2, [fxo,fxh] );
+    main2 = env.Command( 'main2.cpp', 'main.cpp', Copy("$TARGET", "$SOURCE") );
 
-	sources = [
-	    "main2.cpp",
+    env.Depends( main2, [fxo,fxh] );
+
+    sources = [
+        "main2.cpp",
         "d3dx11dbg.cpp",
         "d3dxGlobal.cpp",
         "EffectAPI.cpp",
@@ -34,6 +35,6 @@ if GN.has_d3d11 and GN.has_d3dx11:
         "EffectRuntime.cpp",
     ]
 
-	GN.NewDefaultTarget(
-		'GNtestD3D11',
-		GN.BinplaceProgram( GN.BuildProgram( None, 'GNtestD3D11', sources, 'pch.h', 'pch.cpp' ) ) )
+    GN.NewDefaultTarget(
+        'GNtestD3D11',
+        GN.BinplaceProgram( GN.BuildProgram( None, 'GNtestD3D11', sources, 'pch.h', 'pch.cpp' ) ) )

@@ -176,7 +176,7 @@ GN_API ID3D10VertexShader * GN::d3d10::compileAndCreateVS(
 {
     GN_GUARD;
 
-    AutoComPtr<ID3D10Blob> bin( compileShader( profile, source, len, flags, entry ) );
+    AutoComPtr<ID3D10Blob> bin = AutoComPtr<ID3D10Blob>::sAttach(compileShader( profile, source, len, flags, entry ));
     if( !bin ) return NULL;
 
     ID3D10VertexShader * vs = createDumpableVS( dev, bin->GetBufferPointer(), bin->GetBufferSize() );
@@ -203,7 +203,7 @@ GN_API ID3D10GeometryShader * GN::d3d10::compileAndCreateGS(
 {
     GN_GUARD;
 
-    AutoComPtr<ID3D10Blob> bin( compileShader( profile, source, len, flags, entry ) );
+    AutoComPtr<ID3D10Blob> bin = AutoComPtr<ID3D10Blob>::sAttach( compileShader( profile, source, len, flags, entry ) );
     if( !bin ) return NULL;
 
     ID3D10GeometryShader * gs = createDumpableGS( dev, bin->GetBufferPointer(), bin->GetBufferSize() );
@@ -230,7 +230,7 @@ GN_API ID3D10PixelShader * GN::d3d10::compileAndCreatePS(
 {
     GN_GUARD;
 
-    AutoComPtr<ID3D10Blob> bin( compileShader( profile, source, len, flags, entry ) );
+    AutoComPtr<ID3D10Blob> bin = AutoComPtr<ID3D10Blob>::sAttach( compileShader( profile, source, len, flags, entry ) );
     if( !bin ) return NULL;
 
     ID3D10PixelShader * ps = createDumpablePS( dev, bin->GetBufferPointer(), bin->GetBufferSize() );
