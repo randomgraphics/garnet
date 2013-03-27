@@ -188,6 +188,42 @@ GN::getWin32ErrorInfo( uint32 win32ErrorCode ) throw()
 //
 //
 // -----------------------------------------------------------------------------
+GN_API const wchar_t *
+GN::getWin32ErrorInfoW( uint32 win32ErrorCode ) throw()
+{
+    static wchar_t info[4096];
+
+#if GN_XBOX2
+    // TODO: unimplemented
+    info[0] = 0;
+#else
+    ::FormatMessageW(
+        FORMAT_MESSAGE_FROM_SYSTEM |
+        FORMAT_MESSAGE_IGNORE_INSERTS,
+        NULL,
+        win32ErrorCode,
+        MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), // Default language
+        info,
+        4096,
+        NULL );
+    info[4095] = 0;
+
+    // 除去信息末尾多余的回车符
+    size_t n = stringLength(info);
+    while( n > 0 && L'\n' != info[n-1] )
+    {
+        --n;
+    }
+    info[n] = 0;
+#endif
+
+    // success
+    return info;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
 GN_API const char *
 GN::getWin32LastErrorInfo() throw()
 {

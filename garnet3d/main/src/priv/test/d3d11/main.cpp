@@ -64,7 +64,7 @@ public:
         mesh.setTriangles( indices, GN_ARRAY_COUNT(indices)/3 );
 
         // compile effect
-        AutoComPtr<ID3DBlob> binary(compileShader(
+        AutoComPtr<ID3DBlob> binary = AutoComPtr<ID3DBlob>::sAttach(compileShader(
             "fx_5_0",
             fxcode, stringLength(fxcode),
             D3DCOMPILE_PACK_MATRIX_ROW_MAJOR,

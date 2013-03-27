@@ -204,19 +204,23 @@ private:
 };
 
 // -----------------------------------------------------------------------------
-static void sPrintDeviceInfo( const DXGI_SWAP_CHAIN_DESC & scd )
+static void sPrintD3D11DeviceInfo( ID3D11Device * dev, const DXGI_SWAP_CHAIN_DESC & scd )
 {
+    D3D_FEATURE_LEVEL fl = dev->GetFeatureLevel();
+
     GN_INFO(sLogger)(
         "\n\n"
         "===================================================\n"
         "        D3D11 Implementation Information\n"
         "---------------------------------------------------\n"
+        "    Feature Level                  : %d.%d\n"
         "    Backbuffer Size                : %d,%d\n"
         "    Fullscreen                     : %s\n"
         "    MSAA Sample Count              : %d\n"
         "    MSAA Sample Quality            : %d\n"
         "===================================================\n"
         "\n\n",
+        (fl >> 12) & 0xF, (fl>>8) & 0xF,
         scd.BufferDesc.Width,
         scd.BufferDesc.Height,
         scd.Windowed ? "False" : "True",
@@ -400,50 +404,26 @@ bool GN::d3d11::D3D11Application::createDevice()
     mAdapter = nullptr;
 
     // determine creation flags
-    UINT flags = D3D11_CREATE_DEVICE_SINGLETHREADED
-               | D3D11_CREATE_DEVICE_BGRA_SUPPORT
-               ;
-    if( mOption.debug )
-        flags |= D3D11_CREATE_DEVICE_DEBUG;
+    UINT flags = D3D11_CREATE_DEVICE_SINGLETHREADED | D3D11_CREATE_DEVICE_BGRA_SUPPORT;
+    //if( mOption.debug ) flags |= D3D11_CREATE_DEVICE_DEBUG;
 
-    D3D_FEATURE_LEVEL featureLevels[] =
-    {
-#if GN_PLATFORM_HAS_D3D11_1
-        D3D_FEATURE_LEVEL_11_1,
-#endif
-        D3D_FEATURE_LEVEL_11_0,
-    };
-
-    DXGI_SWAP_CHAIN_DESC sd = {0};
-    sd.BufferDesc.Width = mOption.width;
-    sd.BufferDesc.Height = mOption.height;
-    sd.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-    sd.BufferDesc.RefreshRate.Denominator = 0;
-    sd.BufferDesc.RefreshRate.Numerator = 0;
-    sd.BufferDesc.ScanlineOrdering = DXGI_MODE_SCANLINE_ORDER_UNSPECIFIED;
-    sd.SampleDesc = sConstructDXGISampleDesc(*mDevice, mOption.msaa, sd.BufferDesc.Format);
-    sd.BufferDesc.Scaling = DXGI_MODE_SCALING_UNSPECIFIED;
-    sd.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-    sd.BufferCount = 2; // use two buffers to enable flip effect
-    sd.OutputWindow = mWindow->GetHWND();
-    sd.Windowed = !mOption.fullscreen;
-    sd.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;
-    sd.Flags = 0;
-
-    // create device and swap chain
+    // Get the highest feature level
     D3D_FEATURE_LEVEL featureLevel;
-    GN_RETURN_FALSE_ON_HR_FAILED(D3D11CreateDeviceAndSwapChain(
+    GN_RETURN_FALSE_ON_HR_FAILED(D3D11CreateDevice(
+        NULL, D3D_DRIVER_TYPE_HARDWARE, NULL, flags, NULL, 0,
+        D3D11_SDK_VERSION, NULL, &featureLevel, NULL));
+
+    // create device
+    GN_RETURN_FALSE_ON_HR_FAILED(D3D11CreateDevice(
             mAdapter,
             D3D_DRIVER_TYPE_HARDWARE,
-            nullptr,
+            nullptr, // software module
             flags,
-            featureLevels,
-            _countof(featureLevels),
-            D3D11_SDK_VERSION,
-            &sd,
-            &mSwapChain,
-            &mDevice,
             &featureLevel,
+            1,
+            D3D11_SDK_VERSION,
+            &mDevice,
+            nullptr,
             &mContext
             ));
 
@@ -472,6 +452,34 @@ bool GN::d3d11::D3D11Application::createDevice()
             mInfoQueue->AddStorageFilterEntries( &filter );
         }
     }
+
+    AutoComPtr<IDXGIDevice> pDXGIDevice;
+    GN_RETURN_FALSE_ON_HR_FAILED(mDevice->QueryInterface(__uuidof(IDXGIDevice), (void **)&pDXGIDevice));
+
+    AutoComPtr<IDXGIAdapter> pDXGIAdapter;
+    GN_RETURN_FALSE_ON_HR_FAILED(pDXGIDevice->GetParent(__uuidof(IDXGIAdapter), (void **)&pDXGIAdapter));
+
+    AutoComPtr<IDXGIFactory> pIDXGIFactory;
+    GN_RETURN_FALSE_ON_HR_FAILED(pDXGIAdapter->GetParent(__uuidof(IDXGIFactory), (void **)&pIDXGIFactory));
+
+    // create swap chain
+    DXGI_SWAP_CHAIN_DESC sd = {0};
+    sd.BufferDesc.Width = mOption.width;
+    sd.BufferDesc.Height = mOption.height;
+    sd.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+    sd.BufferDesc.RefreshRate.Denominator = 0;
+    sd.BufferDesc.RefreshRate.Numerator = 0;
+    sd.BufferDesc.ScanlineOrdering = DXGI_MODE_SCANLINE_ORDER_UNSPECIFIED;
+    sd.SampleDesc = sConstructDXGISampleDesc(*mDevice, mOption.msaa, sd.BufferDesc.Format);
+    sd.BufferDesc.Scaling = DXGI_MODE_SCALING_UNSPECIFIED;
+    sd.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
+    sd.BufferCount = 2; // use two buffers to enable flip effect
+    sd.OutputWindow = mWindow->GetHWND();
+    sd.Windowed = !mOption.fullscreen;
+    sd.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;
+    sd.Flags = 0;
+
+    GN_RETURN_FALSE_ON_HR_FAILED(pIDXGIFactory->CreateSwapChain(mDevice, &sd, &mSwapChain));
 
 #if GN_PLATFORM_HAS_D3D11_1
     // try query 11.1 interfaces.
@@ -518,7 +526,7 @@ bool GN::d3d11::D3D11Application::createDevice()
     D3D11_VIEWPORT vp = { 0, 0, (float)scdesc.BufferDesc.Width, (float)scdesc.BufferDesc.Height, 0, 1.0f };
     mContext->RSSetViewports( 1, &vp );
 
-    sPrintDeviceInfo( scdesc );
+    sPrintD3D11DeviceInfo( mDevice, scdesc );
 
     // success
     return onCreateDevice();

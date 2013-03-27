@@ -80,9 +80,6 @@ class FunctionSignature:
         else:
             UTIL_warn('"param" is not a FunctionParameter')
 
-    def WriteCID( self, interface_name ):
-        cid_file.write('    CID_' + interface_name + '_' + self._name + ',\n')
-
     def WriteParameterList(self, fp, writeType, writeName, makeRef = False, newLine = False):
         if newLine and len(self._parameter_list):
             fp.write('\n')
@@ -239,6 +236,13 @@ def PARSE_get_func_parameter( line ):
     UTIL_error('Unrecognized function parameter line: ' + line)
     return None
 
+def ParseParentClass(text):
+    m = re.match(r"\w+ : public (\w+)", text)
+    if m is not None:
+        return m.group(1)
+    else:
+        return None
+
 # ------------------------------------------------------------------------------
 # Parse interface definition, generate c++ declarations
 #   interface_name : name of the interface that you want to parse
@@ -255,9 +259,15 @@ def PARSE_interface( interface_name, class_name, include, lines ):
     ended = False
     methods = []
     func_sig = None
+    parent_class = None
 
     for l in lines:
-        if  -1 != l.find(start_line): found = True
+        if  -1 != l.find(start_line):
+            parent_class = ParseParentClass(l)
+            if None != parent_class:
+                if not parent_class in g_interface_to_wrapper:
+                    UTIL_warn('    Parent class ' + parent_class + ' has not been parsed yet.')
+                found = True
         elif found and l == '};': ended = True
         elif found and (not ended):
             temp_func_sig = PARSE_get_interface_method_decl(l)
@@ -293,14 +303,28 @@ def PARSE_interface( interface_name, class_name, include, lines ):
             f.write('#include "pch.h"\n')
             f.write('#include "' + include + '"\n')
             for m in methods: m.WriteImplementationToFile( f, class_name )
-        cid_file.write('\n')
-        cid_file.write('    // CID for ' + interface_name + '\n')
-        cid_file.write('    CID_' + interface_name + '_BASE,\n'),
-        cid_file.write('    CID_' + interface_name + '_COUNT = ' + str(len(methods)) + ',\n'),
-        cid_file.write('    CID_' + interface_name + '_AddRef = CID_' + interface_name + '_BASE,\n'),
-        cid_file.write('    CID_' + interface_name + '_Release,\n'),
-        cid_file.write('    CID_' + interface_name + '_QueryInterface,\n'),
-        for m in methods: m.WriteCID(interface_name)
+        g_cid.BeginInterface(interface_name)
+        """
+        TODO: parent class?
+        g_cid._header.write('    CID_' + interface_name + '_AddRef = CID_' + interface_name + '_BASE,\n')
+        g_cid._header.write('    CID_' + interface_name + '_Release,\n')
+        g_cid._header.write('    CID_' + interface_name + '_QueryInterface,\n')
+        if 'ID3D11DeviceChild' == parent_class:
+            UTIL_info('    Write out extra methods of ' + parent_class)
+            g_cid._header.write('    CID_' + interface_name + '_GetDevice,\n')
+            g_cid._header.write('    CID_' + interface_name + '_GetPrivateData,\n')
+            g_cid._header.write('    CID_' + interface_name + '_SetPrivateData,\n')
+            g_cid._header.write('    CID_' + interface_name + '_SetPrivateDataInterface,\n')
+        elif 'IDXGIObject' == parent_class:
+            UTIL_info('    Write out extra methods of ' + parent_class)
+            g_cid._header.write('    CID_' + interface_name + '_SetPrivateData,\n')
+            g_cid._header.write('    CID_' + interface_name + '_SetPrivateDataInterface,\n')
+            g_cid._header.write('    CID_' + interface_name + '_GetPrivateData,\n')
+            g_cid._header.write('    CID_' + interface_name + '_GetParent,\n')
+        elif 'IUnknown' != parent_class:
+            UTIL_warn('    Unrecoginized parent class: ' + parent_class)
+        """
+        for m in methods: g_cid.WriteMethod(interface_name + '_' + m._name)
         # We have successfully parsed the interface. Put the interface -> wrapp mapping
         # into the global mapping table.
         g_interface_to_wrapper[interface_name] = class_name
@@ -323,28 +347,70 @@ def PARSE_interfaces_from_opened_file(file, common_include_header, interfaces):
     pass
 
 # ------------------------------------------------------------------------------
+# Call ID code generator
+class CallIDCodeGen:
+    def __init__( self ) :
+        self._header = open("d3d11cid_def.h", "w")
+        self._header.write(
+"""// Define call ID for all D3D11 and DXGI methods.
+#pragma once
+
+enum D3D11_CALL_ID
+{
+""")
+        self._source = open("d3d11cid_def.cpp", "w")
+        self._source.write(
+"""#include "pch.h"
+#include "d3d11cid_def.h"
+const char * g_D3D11CallIDText[] =
+{
+""")
+        self._method = []
+        pass
+
+    def BeginInterface(self, interface):
+        self._header.write('\n')
+        self._header.write('    // CID for ' + interface + '\n')
+        self._header.write('    CID_' + interface + '_BASE,\n'),
+        self._source.write('\n')
+        self._source.write('    // CID for ' + interface + '\n')
+
+    def WriteMethod(self, method):
+        self._header.write('    CID_' + method + ',\n')
+        self._source.write('    "CID_' + method + '",\n')
+
+    def Close(self) :
+        self._header.write("""
+    CID_TOTAL_COUNT,
+    CID_INVALID = 0xFFFFFFFF,
+}; // end of enum definition
+
+const char * const g_D3D11CallIDText;
+""")
+        self._header.close();
+        self._source.write('};\n')
+        self._source.close();
+        pass
+
+# ------------------------------------------------------------------------------
 # Start of main procedure
 
 DXSDK_ROOT_PATH = UTIL_getenv("DXSDK_DIR")
 if '' == DXSDK_ROOT_PATH: UTIL_fatal('Environment variable DXSDK_DIR not found. Make sure that DXSDK is properly installed.')
 DXSDK_INC_PATH = os.path.join( DXSDK_ROOT_PATH, 'include')
 
-# open global CID file
-cid_file = open("d3d11cid.h", "w")
-cid_file.write(
-"""// Define call ID for all D3D11 and DXGI methods.
-#pragma once
-
-enum D3D11_CALL_ID
-{""")
+# open global CID files
+g_cid = CallIDCodeGen()
 
 # define the global interface->wrapper mapping
 g_interface_to_wrapper = dict()
+g_interface_to_wrapper['IUnknown'] = 'UnknownHook'
 
 # parse d3d11.h
 with open(os.path.join( DXSDK_INC_PATH, "d3d11.h" )) as f:
     PARSE_interfaces_from_opened_file(f, 'd3d11hook.h', [
         'ID3D11Device',
+        'ID3D11DeviceChild',
         'ID3D11DeviceContext',
     ])
 
@@ -358,12 +424,13 @@ with open(os.path.join( DXSDK_INC_PATH, "d3d11sdklayers.h" )) as f:
 # parse dxgi.h
 with open(os.path.join( DXSDK_INC_PATH, "dxgi.h" )) as f:
     PARSE_interfaces_from_opened_file(f, 'd3d11hook.h', [
+        'IDXGIObject',
+        'IDXGIDeviceSubObject',
         'IDXGIAdapter',
         'IDXGIFactory',
         'IDXGISwapChain',
     ])
 
 
-# close global CID file
-cid_file.write('};\n')
-cid_file.close();
+# close Call ID code gen
+g_cid.Close()

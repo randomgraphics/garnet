@@ -118,6 +118,41 @@ static void sPrintShaderCompileInfoD3D11( const char * hlsl, ID3DBlob * bin )
 // public functions
 // *****************************************************************************
 
+#include <oleauto.h>
+#pragma comment(lib, "OleAut32.lib")
+
+// -----------------------------------------------------------------------------
+GN::StrW GN::d3d11::hresult2string(HRESULT hr)
+{
+    StrW strMessage;
+    WORD facility = HRESULT_FACILITY(hr);
+    AutoComPtr<IErrorInfo> iei;
+    if (S_OK == GetErrorInfo(0, &iei) && iei)
+    {
+        // get the error description from the IErrorInfo
+        BSTR bstr = NULL;
+        if (SUCCEEDED(iei->GetDescription(&bstr)))
+        {
+            // append the description to our label
+            strMessage = bstr;
+
+            // done with BSTR, do manual cleanup
+            SysFreeString(bstr);
+        }
+    }
+    else if (facility == FACILITY_ITF)
+    {
+        // interface specific - no standard mapping available
+        strMessage = L"FACILITY_ITF - This error is interface specific.  No further information is available.";
+    }
+    else
+    {
+        // attempt to treat as a standard, system error, and ask FormatMessage to explain it.
+        strMessage = getWin32ErrorInfoW(hr);
+    }
+    return strMessage;
+}
+
 // -----------------------------------------------------------------------------
 ID3DBlob * GN::d3d11::compileShader(
     const char   * profile,

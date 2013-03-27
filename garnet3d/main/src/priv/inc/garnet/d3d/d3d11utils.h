@@ -25,7 +25,8 @@
         HRESULT __hr = func;                                                                        \
         if (FAILED(__hr))                                                                           \
         {                                                                                           \
-            GN_ERROR(::GN::getLogger("GN.d3d11utils"))("HRESULT failed: 0x%X", __hr);               \
+            GN_ERROR(::GN::getLogger("GN.d3d11utils"))("HRESULT failed: (0x%X) %S",                 \
+                                              __hr, GN::d3d11::hresult2string(__hr).rawptr());      \
             do_something                                                                            \
         }                                                                                           \
     } else void(0)
@@ -51,6 +52,8 @@ namespace GN { /*namespace for D3D11 utils*/ namespace d3d11
         MSAA_DISABLE      = 0,
         MSAA_ENABLE       = 1,
     };
+
+    GN::StrW hresult2string(HRESULT hr);
 
     ///
     /// construct sample descriptor based on MSAA flags
