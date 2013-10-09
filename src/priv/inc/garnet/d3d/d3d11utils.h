@@ -543,89 +543,70 @@ namespace GN { /*namespace for D3D11 utils*/ namespace d3d11
     };
 
     ///
-    /// shader resource wrapper
+    /// A helper class to create D3D11 resources and views.
     ///
-    struct ShaderResource
+    struct D3D11Resource
     {
-        AutoComPtr<ID3D11Resource>           res;
-        AutoComPtr<ID3D11ShaderResourceView> srv;
-        AutoComPtr<ID3D11ShaderResourceView> srv2;
+        AutoComPtr<ID3D11Resource>             resource;
+        AutoComPtr<ID3D11Buffer>               buffer;
+        AutoComPtr<ID3D11Texture1D>            tex1d;
+        AutoComPtr<ID3D11Texture2D>            tex2d;
+        AutoComPtr<ID3D11Texture3D>            tex3d;
+        AutoComPtr<ID3D11ShaderResourceView>   srv1;
+        AutoComPtr<ID3D11ShaderResourceView>   srv2;
+        AutoComPtr<ID3D11RenderTargetView>     rtv;
+        AutoComPtr<ID3D11DepthStencilView>     dsv;
+        AutoComPtr<ID3D11UnorderedAccessView>  uav;
 
-        ShaderResource() {}
+    public:
 
-        void cleanup() { res.clear(); srv.clear(); srv2.clear(); }
-
-        ID3D11Texture2D * asTexture2D() const
+        struct ViewDescriptors
         {
-            ID3D11Resource * p = res;
-            return (ID3D11Texture2D*)p;
-        }
+            const D3D11_SHADER_RESOURCE_VIEW_DESC  * srv1;
+            const D3D11_SHADER_RESOURCE_VIEW_DESC  * srv2;
+            const D3D11_RENDER_TARGET_VIEW_DESC    * rtv;
+            const D3D11_DEPTH_STENCIL_VIEW_DESC    * dsv;
+            const D3D11_UNORDERED_ACCESS_VIEW_DESC * uav;
+        };
 
-        bool create2D(
-            ID3D11Device & dev,
-            UINT width,
-            UINT height,
-            UINT mip,
-            UINT arraySize,
-            DXGI_FORMAT texfmt,
-            DXGI_FORMAT srv1fmt,
-            DXGI_FORMAT srv2fmt,
-            UINT samples,
-            UINT quality,
-            D3D11_USAGE usage,
-            UINT binding,
-            UINT cpuAccess,
-            UINT miscFlags,
-            const D3D11_SUBRESOURCE_DATA * initialData);
+        void clear(); ///< Clear everything.
 
-        bool create2D(
-            ID3D11Device & dev,
-            UINT width,
-            UINT height,
-            DXGI_FORMAT texfmt,
-            DXGI_FORMAT srv1fmt,
-            DXGI_FORMAT srv2fmt,
-            UINT samples = 1,
-            UINT quality = 0,
-            const D3D11_SUBRESOURCE_DATA * initialData = nullptr)
-        {
-            return create2D(
-                dev, width, height,
-                0, // full mipmap chain
-                1, // non-array texture
-                texfmt, srv1fmt, srv2fmt, samples, quality,
-                D3D11_USAGE_DEFAULT,
-                D3D11_BIND_SHADER_RESOURCE,
-                0,
-                0,
-                initialData);
-        }
+        HRESULT createBuffer(
+            ID3D11Device * dev,
+            const D3D11_BUFFER_DESC & bufdesc,
+            const D3D11_SUBRESOURCE_DATA * data = nullptr,
+            const D3D11_SHADER_RESOURCE_VIEW_DESC * srvDesc = nullptr,
+            const D3D11_UNORDERED_ACCESS_VIEW_DESC * uavDesc = nullptr);
 
-        bool create2D(
-            ID3D11Device & dev,
-            UINT width,
-            UINT height,
-            DXGI_FORMAT texfmt,
-            DXGI_FORMAT srvfmt,
-            UINT samples = 1,
-            UINT quality = 0,
-            const D3D11_SUBRESOURCE_DATA * initialData = nullptr )
-        {
-            return create2D( dev, width, height, texfmt, srvfmt, srvfmt, samples, quality, initialData );
-        }
+        HRESULT createTexture(
+            ID3D11Device * dev,
+            const D3D11_TEXTURE1D_DESC & texdesc,
+            const ViewDescriptors & viewDesc);
 
-        bool create2D(
-            ID3D11Device & dev,
-            UINT width,
-            UINT height,
-            DXGI_FORMAT format,
-            UINT samples = 1,
-            UINT quality = 0,
-            const D3D11_SUBRESOURCE_DATA * initialData = nullptr )
-        {
-            return create2D( dev, width, height, format, format, format, samples, quality, initialData );
-        }
+        HRESULT createTexture(
+            ID3D11Device * dev,
+            const D3D11_TEXTURE2D_DESC & texdesc,
+            const ViewDescriptors & viewDesc);
+
+        HRESULT createTexture(
+            ID3D11Device * dev,
+            const D3D11_TEXTURE3D_DESC & texdesc,
+            const ViewDescriptors & viewDesc);
+
+        HRESULT createVB(ID3D11Device * dev, UINT sizeBytes, const void * data = nullptr);
+        HRESULT createIB(ID3D11Device * dev, UINT sizeBytes, const void * data = nullptr);
+        HRESULT createCB(ID3D11Device * dev, UINT sizeBytes, const void * data = nullptr);
+        HRESULT create1D(ID3D11Device * dev, UINT width, DXGI_FORMAT resourceFormat, DXGI_FORMAT srvFormat);
+        HRESULT create2D(ID3D11Device * dev, UINT width, UINT height, DXGI_FORMAT resourceFormat, DXGI_FORMAT srvFormat);
+        HRESULT create3D(ID3D11Device * dev, UINT width, UINT height, UINT depth, DXGI_FORMAT format, DXGI_FORMAT srvFormat);
+        HRESULT createRT(ID3D11Device * dev, UINT width, UINT height, DXGI_FORMAT resourceFormat, DXGI_FORMAT rtvFormat, DXGI_FORMAT srvFormat = DXGI_FORMAT_UNKNOWN);
+        HRESULT createDS(ID3D11Device * dev, UINT width, UINT height, DXGI_FORMAT resourceFormat, DXGI_FORMAT dsvFormat, DXGI_FORMAT srv1Format = DXGI_FORMAT_UNKNOWN, DXGI_FORMAT srv2Format = DXGI_FORMAT_UNKNOWN);
+
+    private:
+
+        HRESULT createViews(ID3D11Device * dev, const ViewDescriptors & viewDesc);
     };
+
 
     /// 2D sprite renderer.
     ///

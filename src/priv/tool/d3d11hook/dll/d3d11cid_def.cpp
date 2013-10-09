@@ -1,3 +1,4 @@
+// (Script generated header. DO NOT EDIT.)
 #include "pch.h"
 #include "d3d11cid_def.h"
 const char * g_D3D11CallIDText[] =

@@ -83,7 +83,7 @@ class GN::d3d11::SpriteRenderer::Impl
         MAX_SPRITES  = 256,
     };
 
-    ShaderResource                 mPureWhiteTexture;
+    D3D11Resource                  mPureWhiteTexture;
     AutoComPtr<ID3D11VertexShader> mVs;
     AutoComPtr<ID3D11PixelShader>  mPs;
     AutoComPtr<ID3D11InputLayout>  mVertexBinding;
@@ -115,10 +115,10 @@ public:
         dev.GetImmediateContext(&cxt);
 
         // create a 2x2 pure white texture
-        if (!mPureWhiteTexture.create2D(dev, 2, 2, DXGI_FORMAT_R8G8B8A8_UNORM)) return false;
+        if (!mPureWhiteTexture.create2D(&dev, 2, 2, DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_FORMAT_R8G8B8A8_UNORM)) return false;
         const UINT PURE_WHITE[] = { 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF } ;
         cxt->UpdateSubresource(
-            mPureWhiteTexture.res,
+            mPureWhiteTexture.resource,
             0,
             nullptr,
             PURE_WHITE,
@@ -191,7 +191,7 @@ public:
         mVertexBinding.clear();
         mVs.clear();
         mPs.clear();
-        mPureWhiteTexture.cleanup();
+        mPureWhiteTexture.clear();
     }
 
     // -----------------------------------------------------------------------------
@@ -204,12 +204,12 @@ public:
         }
 
         // use pure white texture, if input texture is NULL
-        if( NULL == texture ) texture = mPureWhiteTexture.srv;
+        if( NULL == texture ) texture = mPureWhiteTexture.srv1;
 
         // setup parameters that are not affected by options
         UINT stride = sizeof(SpriteVertex);
         UINT offset = 0;
-        cxt.PSSetShaderResources(0, 1, &mPureWhiteTexture.srv);
+        cxt.PSSetShaderResources(0, 1, &mPureWhiteTexture.srv1);
         cxt.IASetInputLayout(mVertexBinding);
         cxt.IASetVertexBuffers(0, 1, &mVertexBuffer, &stride, &offset);
         cxt.IASetIndexBuffer(mIndexBuffer, DXGI_FORMAT_R16_UINT, 0);

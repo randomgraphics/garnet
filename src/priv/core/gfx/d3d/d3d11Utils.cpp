@@ -5,6 +5,10 @@ using namespace GN;
 using namespace GN::d3d11;
 static Logger * sLogger = GN::getLogger("dxutils");
 
+#ifndef IFC
+#define IFC(x) hr = (x); if (FAILED(hr)) { GN_ERROR(sLogger)(#x " Failed: hr=0x%08X", hr); goto Cleanup; }
+#endif
+
 // *****************************************************************************
 // Local utilities
 // *****************************************************************************
@@ -579,90 +583,309 @@ void GN::d3d11::SimpleMesh::drawIndexed() const
     }
 }
 
-//
-//
 // -----------------------------------------------------------------------------
-bool GN::d3d11::ShaderResource::create2D(
-    ID3D11Device & dev,
-    UINT width,
-    UINT height,
-    UINT mip,
-    UINT arraySize,
-    DXGI_FORMAT texfmt,
-    DXGI_FORMAT srv1fmt,
-    DXGI_FORMAT srv2fmt,
-    UINT samples,
-    UINT quality,
-    D3D11_USAGE usage,
-    UINT binding,
-    UINT cpuAccess,
-    UINT miscFlags,
-    const D3D11_SUBRESOURCE_DATA * initialData)
+
+void GN::d3d11::D3D11Resource::clear()
 {
-    cleanup();
-
-    AutoComPtr<ID3D11Texture2D> tex;
-
-    // create texture
-    D3D11_TEXTURE2D_DESC texdesc;
-    texdesc.Width = width;
-    texdesc.Height = height;
-    texdesc.MipLevels = mip;
-    texdesc.ArraySize = arraySize;
-    texdesc.Format = texfmt;
-    texdesc.SampleDesc.Count = samples;
-    texdesc.SampleDesc.Quality = quality;
-    texdesc.Usage = usage;
-    texdesc.BindFlags = binding;
-    texdesc.CPUAccessFlags = cpuAccess;
-    texdesc.MiscFlags = miscFlags;
-    GN_RETURN_FALSE_ON_HR_FAILED( dev.CreateTexture2D(&texdesc, initialData, &tex) );
-
-    // create srv1
-    D3D11_SHADER_RESOURCE_VIEW_DESC srvdesc;
-    ZeroMemory(&srvdesc, sizeof(srvdesc));
-    srvdesc.Format = srv1fmt;
-    if(samples > 1)
-    {
-        if(texdesc.ArraySize > 1)
-        {
-            srvdesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2DMSARRAY;
-            srvdesc.Texture2DMSArray.FirstArraySlice = 0;
-            srvdesc.Texture2DMSArray.ArraySize = texdesc.ArraySize;
-        }
-        else
-        {
-            srvdesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2DMS;
-        }
-    }
-    else if(texdesc.ArraySize > 1)
-    {
-        srvdesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2DARRAY;
-        srvdesc.Texture2DArray.MostDetailedMip = 0;
-        srvdesc.Texture2DArray.MipLevels = (UINT)-1;
-        srvdesc.Texture2DArray.FirstArraySlice = 0;
-        srvdesc.Texture2DArray.ArraySize = texdesc.ArraySize;
-    }
-    else
-    {
-        srvdesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
-        srvdesc.Texture2D.MostDetailedMip = 0;
-        srvdesc.Texture2D.MipLevels = (UINT)-1;
-    }
-    GN_RETURN_FALSE_ON_HR_FAILED( dev.CreateShaderResourceView(tex, &srvdesc, &srv) );
-
-    // create srv2
-    if(srv2fmt == srv1fmt)
-    {
-        srv2 = srv;
-    }
-    else if(srv2fmt != DXGI_FORMAT_UNKNOWN)
-    {
-        srvdesc.Format = srv2fmt;
-        GN_RETURN_FALSE_ON_HR_FAILED( dev.CreateShaderResourceView(tex, &srvdesc, &srv2) );
-    }
-
-    // success
-    this->res = tex;
-    return true;
+    resource = nullptr;
+    buffer = nullptr;
+    tex1d = nullptr;
+    tex2d = nullptr;
+    tex3d = nullptr;
+    srv1 = nullptr;
+    srv2 = nullptr;
+    rtv = nullptr;
+    dsv = nullptr;
+    uav = nullptr;
 }
+
+// -----------------------------------------------------------------------------
+
+HRESULT GN::d3d11::D3D11Resource::createBuffer(
+    ID3D11Device * dev,
+    const D3D11_BUFFER_DESC & bufdesc,
+    const D3D11_SUBRESOURCE_DATA * data,
+    const D3D11_SHADER_RESOURCE_VIEW_DESC * srvDesc,
+    const D3D11_UNORDERED_ACCESS_VIEW_DESC * uavDesc)
+{
+    HRESULT hr = S_OK;
+    ViewDescriptors viewDesc = {};
+    viewDesc.srv1 = srvDesc;
+    viewDesc.uav  = uavDesc;
+    clear();
+    IFC(dev->CreateBuffer(&bufdesc, data, &this->buffer));
+    IFC(createViews(dev, viewDesc));
+Cleanup:
+    return hr;
+}
+
+// -----------------------------------------------------------------------------
+
+HRESULT GN::d3d11::D3D11Resource::createTexture(
+    ID3D11Device * dev,
+    const D3D11_TEXTURE1D_DESC & texdesc,
+    const ViewDescriptors & viewDesc)
+{
+    HRESULT hr = S_OK;
+    clear();
+    IFC(dev->CreateTexture1D(&texdesc, nullptr, &this->tex1d));
+    IFC(this->tex1d.as(&this->resource));
+    IFC(createViews(dev, viewDesc));
+Cleanup:
+    return hr;
+}
+
+// -----------------------------------------------------------------------------
+
+HRESULT GN::d3d11::D3D11Resource::createTexture(
+    ID3D11Device * dev,
+    const D3D11_TEXTURE2D_DESC & texdesc,
+    const ViewDescriptors & viewDesc)
+{
+    HRESULT hr = S_OK;
+    clear();
+    IFC(dev->CreateTexture2D(&texdesc, nullptr, &this->tex2d));
+    IFC(this->tex2d.as(&this->resource));
+    IFC(createViews(dev, viewDesc));
+Cleanup:
+    return hr;
+}
+
+// -----------------------------------------------------------------------------
+
+HRESULT GN::d3d11::D3D11Resource::createTexture(
+    ID3D11Device * dev,
+    const D3D11_TEXTURE3D_DESC & texdesc,
+    const ViewDescriptors & viewDesc)
+{
+    HRESULT hr = S_OK;
+    clear();
+    IFC(dev->CreateTexture3D(&texdesc, nullptr, &this->tex3d));
+    IFC(this->tex3d.as(&this->resource));
+    IFC(createViews(dev, viewDesc));
+Cleanup:
+    return hr;
+}
+
+// -----------------------------------------------------------------------------
+
+HRESULT GN::d3d11::D3D11Resource::createVB(ID3D11Device * dev, UINT sizeBytes, const void * data)
+{
+    HRESULT hr = S_OK;
+    clear();
+    D3D11_BUFFER_DESC desc = {0};
+    desc.Usage = D3D11_USAGE_DEFAULT;
+    desc.ByteWidth = (UINT)sizeBytes;
+    desc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+    D3D11_SUBRESOURCE_DATA sub = {data, (UINT)sizeBytes, (UINT)sizeBytes};
+    IFC(createBuffer(dev, desc, data ? &sub : nullptr));
+Cleanup:
+    return hr;
+}
+
+// -----------------------------------------------------------------------------
+
+HRESULT GN::d3d11::D3D11Resource::createIB(ID3D11Device * dev, UINT sizeBytes, const void * data)
+{
+    HRESULT hr = S_OK;
+    D3D11_BUFFER_DESC desc = {0};
+    desc.Usage = D3D11_USAGE_DEFAULT;
+    desc.ByteWidth = (UINT)sizeBytes;
+    desc.BindFlags = D3D11_BIND_INDEX_BUFFER;
+    D3D11_SUBRESOURCE_DATA sub = {data, (UINT)sizeBytes, (UINT)sizeBytes};
+    IFC(createBuffer(dev, desc, data ? &sub : nullptr));
+Cleanup:
+    return hr;
+}
+
+// -----------------------------------------------------------------------------
+
+HRESULT GN::d3d11::D3D11Resource::createCB(ID3D11Device * dev, UINT sizeBytes, const void * data)
+{
+    HRESULT hr = S_OK;
+    D3D11_BUFFER_DESC desc = {0};
+    desc.Usage = D3D11_USAGE_DEFAULT;
+    desc.ByteWidth = (UINT)sizeBytes;
+    desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+    D3D11_SUBRESOURCE_DATA sub = {data, (UINT)sizeBytes, (UINT)sizeBytes};
+    IFC(createBuffer(dev, desc, data ? &sub : nullptr));
+Cleanup:
+    return hr;
+}
+
+// -----------------------------------------------------------------------------
+
+HRESULT GN::d3d11::D3D11Resource::create1D(ID3D11Device * dev, UINT width, DXGI_FORMAT resourceFormat, DXGI_FORMAT srvFormat)
+{
+    HRESULT hr = S_OK;
+    D3D11_TEXTURE1D_DESC desc = {};
+    desc.Width = width;
+    desc.MipLevels = 0;
+    desc.ArraySize = 1;
+    desc.Format = resourceFormat;
+    desc.Usage = D3D11_USAGE_DEFAULT;
+    desc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+    D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+    srvDesc.Format = srvFormat;
+    srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE1D;
+    srvDesc.Texture1D.MostDetailedMip = 0;
+    srvDesc.Texture1D.MipLevels = (UINT)-1;
+    ViewDescriptors viewDesc;
+    viewDesc.srv1 = &srvDesc;
+    IFC(createTexture(dev, desc, viewDesc));
+Cleanup:
+    return hr;
+}
+
+// -----------------------------------------------------------------------------
+
+HRESULT GN::d3d11::D3D11Resource::create2D(ID3D11Device * dev, UINT width, UINT height, DXGI_FORMAT resourceFormat, DXGI_FORMAT srvFormat)
+{
+    HRESULT hr = S_OK;
+    D3D11_TEXTURE2D_DESC desc = {};
+    desc.Width = width;
+    desc.Height = height;
+    desc.MipLevels = 0;
+    desc.ArraySize = 1;
+    desc.Format = resourceFormat;
+    desc.SampleDesc.Count = 1;
+    desc.SampleDesc.Quality = 0;
+    desc.Usage = D3D11_USAGE_DEFAULT;
+    desc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+    D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+    srvDesc.Format = srvFormat;
+    srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+    srvDesc.Texture2D.MostDetailedMip = 0;
+    srvDesc.Texture2D.MipLevels = (UINT)-1;
+    ViewDescriptors viewDesc = {};
+    viewDesc.srv1 = &srvDesc;
+    IFC(createTexture(dev, desc, viewDesc));
+Cleanup:
+    return hr;
+}
+
+// -----------------------------------------------------------------------------
+HRESULT GN::d3d11::D3D11Resource::create3D(ID3D11Device * dev, UINT width, UINT height, UINT depth, DXGI_FORMAT resourceFormat, DXGI_FORMAT srvFormat)
+{
+    HRESULT hr = S_OK;
+    D3D11_TEXTURE3D_DESC desc = {};
+    desc.Width = width;
+    desc.Height = height;
+    desc.Depth = depth;
+    desc.MipLevels = 0;
+    desc.Format = resourceFormat;
+    desc.Usage = D3D11_USAGE_DEFAULT;
+    desc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+    D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+    srvDesc.Format = srvFormat;
+    srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE3D;
+    srvDesc.Texture3D.MostDetailedMip = 0;
+    srvDesc.Texture3D.MipLevels = (UINT)-1;
+    ViewDescriptors viewDesc = {};
+    viewDesc.srv1 = &srvDesc;
+    IFC(createTexture(dev, desc, viewDesc));
+Cleanup:
+    return hr;
+}
+
+// -----------------------------------------------------------------------------
+
+HRESULT GN::d3d11::D3D11Resource::createRT(ID3D11Device * dev, UINT width, UINT height, DXGI_FORMAT resourceFormat, DXGI_FORMAT rtvFormat, DXGI_FORMAT srvFormat)
+{
+    HRESULT hr = S_OK;
+    D3D11_TEXTURE2D_DESC desc = {};
+    desc.Width = width;
+    desc.Height = height;
+    desc.MipLevels = 0;
+    desc.ArraySize = 1;
+    desc.Format = resourceFormat;
+    desc.SampleDesc.Count = 1;
+    desc.SampleDesc.Quality = 0;
+    desc.Usage = D3D11_USAGE_DEFAULT;
+    desc.BindFlags = D3D11_BIND_RENDER_TARGET | ((DXGI_FORMAT_UNKNOWN != srvFormat) ? D3D11_BIND_SHADER_RESOURCE : 0);
+    D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+    srvDesc.Format = srvFormat;
+    srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+    srvDesc.Texture2D.MostDetailedMip = 0;
+    srvDesc.Texture2D.MipLevels = (UINT)-1;
+    D3D11_RENDER_TARGET_VIEW_DESC rtvdesc = {};
+    rtvdesc.Format = rtvFormat;
+    rtvdesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
+    rtvdesc.Texture2D.MipSlice = 0;
+    ViewDescriptors viewDesc = {};
+    viewDesc.srv1 = (DXGI_FORMAT_UNKNOWN == srvFormat) ? nullptr : &srvDesc;
+    viewDesc.rtv  = (DXGI_FORMAT_UNKNOWN == rtvFormat) ? nullptr : &rtvdesc;
+    IFC(createTexture(dev, desc, viewDesc));
+Cleanup:
+    return hr;
+}
+
+// -----------------------------------------------------------------------------
+
+HRESULT GN::d3d11::D3D11Resource::createDS(ID3D11Device * dev, UINT width, UINT height, DXGI_FORMAT resourceFormat, DXGI_FORMAT dsvFormat, DXGI_FORMAT srv1Format, DXGI_FORMAT srv2Format)
+{
+    HRESULT hr = S_OK;
+    D3D11_TEXTURE2D_DESC desc = {};
+    desc.Width = width;
+    desc.Height = height;
+    desc.MipLevels = 0;
+    desc.ArraySize = 1;
+    desc.Format = resourceFormat;
+    desc.SampleDesc.Count = 1;
+    desc.SampleDesc.Quality = 0;
+    desc.Usage = D3D11_USAGE_DEFAULT;
+    desc.BindFlags = D3D11_BIND_DEPTH_STENCIL
+                   | ((DXGI_FORMAT_UNKNOWN != srv1Format) ? D3D11_BIND_SHADER_RESOURCE : 0)
+                   | ((DXGI_FORMAT_UNKNOWN != srv2Format) ? D3D11_BIND_SHADER_RESOURCE : 0)
+                   ;
+    D3D11_SHADER_RESOURCE_VIEW_DESC srv1Desc = {};
+    srv1Desc.Format = srv1Format;
+    srv1Desc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+    srv1Desc.Texture2D.MostDetailedMip = 0;
+    srv1Desc.Texture2D.MipLevels = (UINT)-1;
+    D3D11_SHADER_RESOURCE_VIEW_DESC srv2Desc = {};
+    srv2Desc.Format = srv1Format;
+    srv2Desc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+    srv2Desc.Texture2D.MostDetailedMip = 0;
+    srv2Desc.Texture2D.MipLevels = (UINT)-1;
+    D3D11_DEPTH_STENCIL_VIEW_DESC dsvdesc = {};
+    dsvdesc.Format = dsvFormat;
+    dsvdesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
+    dsvdesc.Texture2D.MipSlice = 0;
+    ViewDescriptors viewDesc = {};
+    viewDesc.srv1 = (DXGI_FORMAT_UNKNOWN == srv1Format) ? nullptr : &srv1Desc;
+    viewDesc.srv2 = (DXGI_FORMAT_UNKNOWN == srv2Format) ? nullptr : &srv2Desc;
+    viewDesc.dsv  = (DXGI_FORMAT_UNKNOWN == dsvFormat)  ? nullptr : &dsvdesc;
+    IFC(createTexture(dev, desc, viewDesc));
+Cleanup:
+    return hr;
+}
+// -----------------------------------------------------------------------------
+
+HRESULT GN::d3d11::D3D11Resource::createViews(ID3D11Device * dev, const ViewDescriptors & viewDesc)
+{
+    HRESULT hr = S_OK;
+    if (viewDesc.srv1)
+    {
+        IFC(dev->CreateShaderResourceView(this->resource.get(), viewDesc.srv1, &this->srv1));
+    }
+    if (viewDesc.srv2)
+    {
+        IFC(dev->CreateShaderResourceView(this->resource.get(), viewDesc.srv2, &this->srv2));
+    }
+    if (viewDesc.rtv)
+    {
+        IFC(dev->CreateRenderTargetView(this->resource.get(), viewDesc.rtv, &this->rtv));
+    }
+    if (viewDesc.dsv)
+    {
+        IFC(dev->CreateDepthStencilView(this->resource.get(), viewDesc.dsv, &this->dsv));
+    }
+    if (viewDesc.uav)
+    {
+        IFC(dev->CreateUnorderedAccessView(this->resource.get(), viewDesc.uav, &this->uav));
+    }
+Cleanup:
+    return hr;
+}
+

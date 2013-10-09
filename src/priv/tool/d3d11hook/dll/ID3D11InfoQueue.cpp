@@ -3,7 +3,7 @@
 #include "d3d11hook.h"
 // -----------------------------------------------------------------------------
 HRESULT STDMETHODCALLTYPE D3D11InfoQueueHook::SetMessageCountLimit(
-    UINT64 MessageCountLimit)
+    _In_  UINT64 MessageCountLimit)
 {
     if (_SetMessageCountLimit_pre_ptr._value) { (this->*_SetMessageCountLimit_pre_ptr._value)(MessageCountLimit); }
     HRESULT ret = GetRealObj()->SetMessageCountLimit(MessageCountLimit);
@@ -21,9 +21,9 @@ void STDMETHODCALLTYPE D3D11InfoQueueHook::ClearStoredMessages()
 
 // -----------------------------------------------------------------------------
 HRESULT STDMETHODCALLTYPE D3D11InfoQueueHook::GetMessage(
-    UINT64 MessageIndex,
-    D3D11_MESSAGE * pMessage,
-    SIZE_T * pMessageByteLength)
+    _In_  UINT64 MessageIndex,
+    _Out_writes_bytes_opt_(*pMessageByteLength)  D3D11_MESSAGE * pMessage,
+    _Inout_  SIZE_T * pMessageByteLength)
 {
     if (_GetMessage_pre_ptr._value) { (this->*_GetMessage_pre_ptr._value)(MessageIndex, pMessage, pMessageByteLength); }
     HRESULT ret = GetRealObj()->GetMessage(MessageIndex, pMessage, pMessageByteLength);
@@ -87,7 +87,7 @@ UINT64 STDMETHODCALLTYPE D3D11InfoQueueHook::GetMessageCountLimit()
 
 // -----------------------------------------------------------------------------
 HRESULT STDMETHODCALLTYPE D3D11InfoQueueHook::AddStorageFilterEntries(
-    D3D11_INFO_QUEUE_FILTER * pFilter)
+    _In_  D3D11_INFO_QUEUE_FILTER * pFilter)
 {
     if (_AddStorageFilterEntries_pre_ptr._value) { (this->*_AddStorageFilterEntries_pre_ptr._value)(pFilter); }
     HRESULT ret = GetRealObj()->AddStorageFilterEntries(pFilter);
@@ -97,8 +97,8 @@ HRESULT STDMETHODCALLTYPE D3D11InfoQueueHook::AddStorageFilterEntries(
 
 // -----------------------------------------------------------------------------
 HRESULT STDMETHODCALLTYPE D3D11InfoQueueHook::GetStorageFilter(
-    D3D11_INFO_QUEUE_FILTER * pFilter,
-    SIZE_T * pFilterByteLength)
+    _Out_writes_bytes_opt_(*pFilterByteLength)  D3D11_INFO_QUEUE_FILTER * pFilter,
+    _Inout_  SIZE_T * pFilterByteLength)
 {
     if (_GetStorageFilter_pre_ptr._value) { (this->*_GetStorageFilter_pre_ptr._value)(pFilter, pFilterByteLength); }
     HRESULT ret = GetRealObj()->GetStorageFilter(pFilter, pFilterByteLength);
@@ -134,7 +134,7 @@ HRESULT STDMETHODCALLTYPE D3D11InfoQueueHook::PushCopyOfStorageFilter()
 
 // -----------------------------------------------------------------------------
 HRESULT STDMETHODCALLTYPE D3D11InfoQueueHook::PushStorageFilter(
-    D3D11_INFO_QUEUE_FILTER * pFilter)
+    _In_  D3D11_INFO_QUEUE_FILTER * pFilter)
 {
     if (_PushStorageFilter_pre_ptr._value) { (this->*_PushStorageFilter_pre_ptr._value)(pFilter); }
     HRESULT ret = GetRealObj()->PushStorageFilter(pFilter);
@@ -161,7 +161,7 @@ UINT STDMETHODCALLTYPE D3D11InfoQueueHook::GetStorageFilterStackSize()
 
 // -----------------------------------------------------------------------------
 HRESULT STDMETHODCALLTYPE D3D11InfoQueueHook::AddRetrievalFilterEntries(
-    D3D11_INFO_QUEUE_FILTER * pFilter)
+    _In_  D3D11_INFO_QUEUE_FILTER * pFilter)
 {
     if (_AddRetrievalFilterEntries_pre_ptr._value) { (this->*_AddRetrievalFilterEntries_pre_ptr._value)(pFilter); }
     HRESULT ret = GetRealObj()->AddRetrievalFilterEntries(pFilter);
@@ -171,8 +171,8 @@ HRESULT STDMETHODCALLTYPE D3D11InfoQueueHook::AddRetrievalFilterEntries(
 
 // -----------------------------------------------------------------------------
 HRESULT STDMETHODCALLTYPE D3D11InfoQueueHook::GetRetrievalFilter(
-    D3D11_INFO_QUEUE_FILTER * pFilter,
-    SIZE_T * pFilterByteLength)
+    _Out_writes_bytes_opt_(*pFilterByteLength)  D3D11_INFO_QUEUE_FILTER * pFilter,
+    _Inout_  SIZE_T * pFilterByteLength)
 {
     if (_GetRetrievalFilter_pre_ptr._value) { (this->*_GetRetrievalFilter_pre_ptr._value)(pFilter, pFilterByteLength); }
     HRESULT ret = GetRealObj()->GetRetrievalFilter(pFilter, pFilterByteLength);
@@ -208,7 +208,7 @@ HRESULT STDMETHODCALLTYPE D3D11InfoQueueHook::PushCopyOfRetrievalFilter()
 
 // -----------------------------------------------------------------------------
 HRESULT STDMETHODCALLTYPE D3D11InfoQueueHook::PushRetrievalFilter(
-    D3D11_INFO_QUEUE_FILTER * pFilter)
+    _In_  D3D11_INFO_QUEUE_FILTER * pFilter)
 {
     if (_PushRetrievalFilter_pre_ptr._value) { (this->*_PushRetrievalFilter_pre_ptr._value)(pFilter); }
     HRESULT ret = GetRealObj()->PushRetrievalFilter(pFilter);
@@ -235,10 +235,10 @@ UINT STDMETHODCALLTYPE D3D11InfoQueueHook::GetRetrievalFilterStackSize()
 
 // -----------------------------------------------------------------------------
 HRESULT STDMETHODCALLTYPE D3D11InfoQueueHook::AddMessage(
-    D3D11_MESSAGE_CATEGORY Category,
-    D3D11_MESSAGE_SEVERITY Severity,
-    D3D11_MESSAGE_ID ID,
-    LPCSTR pDescription)
+    _In_  D3D11_MESSAGE_CATEGORY Category,
+    _In_  D3D11_MESSAGE_SEVERITY Severity,
+    _In_  D3D11_MESSAGE_ID ID,
+    _In_  LPCSTR pDescription)
 {
     if (_AddMessage_pre_ptr._value) { (this->*_AddMessage_pre_ptr._value)(Category, Severity, ID, pDescription); }
     HRESULT ret = GetRealObj()->AddMessage(Category, Severity, ID, pDescription);
@@ -248,8 +248,8 @@ HRESULT STDMETHODCALLTYPE D3D11InfoQueueHook::AddMessage(
 
 // -----------------------------------------------------------------------------
 HRESULT STDMETHODCALLTYPE D3D11InfoQueueHook::AddApplicationMessage(
-    D3D11_MESSAGE_SEVERITY Severity,
-    LPCSTR pDescription)
+    _In_  D3D11_MESSAGE_SEVERITY Severity,
+    _In_  LPCSTR pDescription)
 {
     if (_AddApplicationMessage_pre_ptr._value) { (this->*_AddApplicationMessage_pre_ptr._value)(Severity, pDescription); }
     HRESULT ret = GetRealObj()->AddApplicationMessage(Severity, pDescription);
@@ -259,8 +259,8 @@ HRESULT STDMETHODCALLTYPE D3D11InfoQueueHook::AddApplicationMessage(
 
 // -----------------------------------------------------------------------------
 HRESULT STDMETHODCALLTYPE D3D11InfoQueueHook::SetBreakOnCategory(
-    D3D11_MESSAGE_CATEGORY Category,
-    BOOL bEnable)
+    _In_  D3D11_MESSAGE_CATEGORY Category,
+    _In_  BOOL bEnable)
 {
     if (_SetBreakOnCategory_pre_ptr._value) { (this->*_SetBreakOnCategory_pre_ptr._value)(Category, bEnable); }
     HRESULT ret = GetRealObj()->SetBreakOnCategory(Category, bEnable);
@@ -270,8 +270,8 @@ HRESULT STDMETHODCALLTYPE D3D11InfoQueueHook::SetBreakOnCategory(
 
 // -----------------------------------------------------------------------------
 HRESULT STDMETHODCALLTYPE D3D11InfoQueueHook::SetBreakOnSeverity(
-    D3D11_MESSAGE_SEVERITY Severity,
-    BOOL bEnable)
+    _In_  D3D11_MESSAGE_SEVERITY Severity,
+    _In_  BOOL bEnable)
 {
     if (_SetBreakOnSeverity_pre_ptr._value) { (this->*_SetBreakOnSeverity_pre_ptr._value)(Severity, bEnable); }
     HRESULT ret = GetRealObj()->SetBreakOnSeverity(Severity, bEnable);
@@ -281,8 +281,8 @@ HRESULT STDMETHODCALLTYPE D3D11InfoQueueHook::SetBreakOnSeverity(
 
 // -----------------------------------------------------------------------------
 HRESULT STDMETHODCALLTYPE D3D11InfoQueueHook::SetBreakOnID(
-    D3D11_MESSAGE_ID ID,
-    BOOL bEnable)
+    _In_  D3D11_MESSAGE_ID ID,
+    _In_  BOOL bEnable)
 {
     if (_SetBreakOnID_pre_ptr._value) { (this->*_SetBreakOnID_pre_ptr._value)(ID, bEnable); }
     HRESULT ret = GetRealObj()->SetBreakOnID(ID, bEnable);
@@ -292,7 +292,7 @@ HRESULT STDMETHODCALLTYPE D3D11InfoQueueHook::SetBreakOnID(
 
 // -----------------------------------------------------------------------------
 BOOL STDMETHODCALLTYPE D3D11InfoQueueHook::GetBreakOnCategory(
-    D3D11_MESSAGE_CATEGORY Category)
+    _In_  D3D11_MESSAGE_CATEGORY Category)
 {
     if (_GetBreakOnCategory_pre_ptr._value) { (this->*_GetBreakOnCategory_pre_ptr._value)(Category); }
     BOOL ret = GetRealObj()->GetBreakOnCategory(Category);
@@ -302,7 +302,7 @@ BOOL STDMETHODCALLTYPE D3D11InfoQueueHook::GetBreakOnCategory(
 
 // -----------------------------------------------------------------------------
 BOOL STDMETHODCALLTYPE D3D11InfoQueueHook::GetBreakOnSeverity(
-    D3D11_MESSAGE_SEVERITY Severity)
+    _In_  D3D11_MESSAGE_SEVERITY Severity)
 {
     if (_GetBreakOnSeverity_pre_ptr._value) { (this->*_GetBreakOnSeverity_pre_ptr._value)(Severity); }
     BOOL ret = GetRealObj()->GetBreakOnSeverity(Severity);
@@ -312,7 +312,7 @@ BOOL STDMETHODCALLTYPE D3D11InfoQueueHook::GetBreakOnSeverity(
 
 // -----------------------------------------------------------------------------
 BOOL STDMETHODCALLTYPE D3D11InfoQueueHook::GetBreakOnID(
-    D3D11_MESSAGE_ID ID)
+    _In_  D3D11_MESSAGE_ID ID)
 {
     if (_GetBreakOnID_pre_ptr._value) { (this->*_GetBreakOnID_pre_ptr._value)(ID); }
     BOOL ret = GetRealObj()->GetBreakOnID(ID);
@@ -322,7 +322,7 @@ BOOL STDMETHODCALLTYPE D3D11InfoQueueHook::GetBreakOnID(
 
 // -----------------------------------------------------------------------------
 void STDMETHODCALLTYPE D3D11InfoQueueHook::SetMuteDebugOutput(
-    BOOL bMute)
+    _In_  BOOL bMute)
 {
     if (_SetMuteDebugOutput_pre_ptr._value) { (this->*_SetMuteDebugOutput_pre_ptr._value)(bMute); }
     GetRealObj()->SetMuteDebugOutput(bMute);

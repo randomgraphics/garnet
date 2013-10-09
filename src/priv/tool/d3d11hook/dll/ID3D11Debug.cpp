@@ -41,7 +41,7 @@ UINT STDMETHODCALLTYPE D3D11DebugHook::GetPresentPerRenderOpDelay()
 
 // -----------------------------------------------------------------------------
 HRESULT STDMETHODCALLTYPE D3D11DebugHook::SetSwapChain(
-    IDXGISwapChain * pSwapChain)
+    _In_opt_  IDXGISwapChain * pSwapChain)
 {
     if (_SetSwapChain_pre_ptr._value) { (this->*_SetSwapChain_pre_ptr._value)(pSwapChain); }
     HRESULT ret = GetRealObj()->SetSwapChain(pSwapChain);
@@ -51,7 +51,7 @@ HRESULT STDMETHODCALLTYPE D3D11DebugHook::SetSwapChain(
 
 // -----------------------------------------------------------------------------
 HRESULT STDMETHODCALLTYPE D3D11DebugHook::GetSwapChain(
-    IDXGISwapChain ** ppSwapChain)
+    _Out_  IDXGISwapChain ** ppSwapChain)
 {
     if (_GetSwapChain_pre_ptr._value) { (this->*_GetSwapChain_pre_ptr._value)(ppSwapChain); }
     HRESULT ret = GetRealObj()->GetSwapChain(ppSwapChain);
@@ -61,7 +61,7 @@ HRESULT STDMETHODCALLTYPE D3D11DebugHook::GetSwapChain(
 
 // -----------------------------------------------------------------------------
 HRESULT STDMETHODCALLTYPE D3D11DebugHook::ValidateContext(
-    ID3D11DeviceContext * pContext)
+    _In_  ID3D11DeviceContext * pContext)
 {
     if (_ValidateContext_pre_ptr._value) { (this->*_ValidateContext_pre_ptr._value)(pContext); }
     HRESULT ret = GetRealObj()->ValidateContext(pContext);
@@ -81,7 +81,7 @@ HRESULT STDMETHODCALLTYPE D3D11DebugHook::ReportLiveDeviceObjects(
 
 // -----------------------------------------------------------------------------
 HRESULT STDMETHODCALLTYPE D3D11DebugHook::ValidateContextForDispatch(
-    ID3D11DeviceContext * pContext)
+    _In_  ID3D11DeviceContext * pContext)
 {
     if (_ValidateContextForDispatch_pre_ptr._value) { (this->*_ValidateContextForDispatch_pre_ptr._value)(pContext); }
     HRESULT ret = GetRealObj()->ValidateContextForDispatch(pContext);

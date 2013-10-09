@@ -15,8 +15,8 @@ HRESULT STDMETHODCALLTYPE DXGISwapChainHook::Present(
 // -----------------------------------------------------------------------------
 HRESULT STDMETHODCALLTYPE DXGISwapChainHook::GetBuffer(
     /* [in] */ UINT Buffer,
-    REFIID riid,
-    void ** ppSurface)
+    _In_  REFIID riid,
+    _Out_  void ** ppSurface)
 {
     if (_GetBuffer_pre_ptr._value) { (this->*_GetBuffer_pre_ptr._value)(Buffer, riid, ppSurface); }
     HRESULT ret = GetRealObj()->GetBuffer(Buffer, riid, ppSurface);
@@ -27,7 +27,7 @@ HRESULT STDMETHODCALLTYPE DXGISwapChainHook::GetBuffer(
 // -----------------------------------------------------------------------------
 HRESULT STDMETHODCALLTYPE DXGISwapChainHook::SetFullscreenState(
     /* [in] */ BOOL Fullscreen,
-    IDXGIOutput * pTarget)
+    _In_opt_  IDXGIOutput * pTarget)
 {
     if (_SetFullscreenState_pre_ptr._value) { (this->*_SetFullscreenState_pre_ptr._value)(Fullscreen, pTarget); }
     HRESULT ret = GetRealObj()->SetFullscreenState(Fullscreen, pTarget);
@@ -37,8 +37,8 @@ HRESULT STDMETHODCALLTYPE DXGISwapChainHook::SetFullscreenState(
 
 // -----------------------------------------------------------------------------
 HRESULT STDMETHODCALLTYPE DXGISwapChainHook::GetFullscreenState(
-    BOOL * pFullscreen,
-    IDXGIOutput ** ppTarget)
+    _Out_opt_  BOOL * pFullscreen,
+    _Out_opt_  IDXGIOutput ** ppTarget)
 {
     if (_GetFullscreenState_pre_ptr._value) { (this->*_GetFullscreenState_pre_ptr._value)(pFullscreen, ppTarget); }
     HRESULT ret = GetRealObj()->GetFullscreenState(pFullscreen, ppTarget);
@@ -48,7 +48,7 @@ HRESULT STDMETHODCALLTYPE DXGISwapChainHook::GetFullscreenState(
 
 // -----------------------------------------------------------------------------
 HRESULT STDMETHODCALLTYPE DXGISwapChainHook::GetDesc(
-    DXGI_SWAP_CHAIN_DESC * pDesc)
+    _Out_  DXGI_SWAP_CHAIN_DESC * pDesc)
 {
     if (_GetDesc_pre_ptr._value) { (this->*_GetDesc_pre_ptr._value)(pDesc); }
     HRESULT ret = GetRealObj()->GetDesc(pDesc);
@@ -72,7 +72,7 @@ HRESULT STDMETHODCALLTYPE DXGISwapChainHook::ResizeBuffers(
 
 // -----------------------------------------------------------------------------
 HRESULT STDMETHODCALLTYPE DXGISwapChainHook::ResizeTarget(
-    const DXGI_MODE_DESC * pNewTargetParameters)
+    _In_  const DXGI_MODE_DESC * pNewTargetParameters)
 {
     if (_ResizeTarget_pre_ptr._value) { (this->*_ResizeTarget_pre_ptr._value)(pNewTargetParameters); }
     HRESULT ret = GetRealObj()->ResizeTarget(pNewTargetParameters);
@@ -82,7 +82,7 @@ HRESULT STDMETHODCALLTYPE DXGISwapChainHook::ResizeTarget(
 
 // -----------------------------------------------------------------------------
 HRESULT STDMETHODCALLTYPE DXGISwapChainHook::GetContainingOutput(
-    IDXGIOutput ** ppOutput)
+    _Out_  IDXGIOutput ** ppOutput)
 {
     if (_GetContainingOutput_pre_ptr._value) { (this->*_GetContainingOutput_pre_ptr._value)(ppOutput); }
     HRESULT ret = GetRealObj()->GetContainingOutput(ppOutput);
@@ -92,7 +92,7 @@ HRESULT STDMETHODCALLTYPE DXGISwapChainHook::GetContainingOutput(
 
 // -----------------------------------------------------------------------------
 HRESULT STDMETHODCALLTYPE DXGISwapChainHook::GetFrameStatistics(
-    DXGI_FRAME_STATISTICS * pStats)
+    _Out_  DXGI_FRAME_STATISTICS * pStats)
 {
     if (_GetFrameStatistics_pre_ptr._value) { (this->*_GetFrameStatistics_pre_ptr._value)(pStats); }
     HRESULT ret = GetRealObj()->GetFrameStatistics(pStats);
@@ -102,7 +102,7 @@ HRESULT STDMETHODCALLTYPE DXGISwapChainHook::GetFrameStatistics(
 
 // -----------------------------------------------------------------------------
 HRESULT STDMETHODCALLTYPE DXGISwapChainHook::GetLastPresentCount(
-    UINT * pLastPresentCount)
+    _Out_  UINT * pLastPresentCount)
 {
     if (_GetLastPresentCount_pre_ptr._value) { (this->*_GetLastPresentCount_pre_ptr._value)(pLastPresentCount); }
     HRESULT ret = GetRealObj()->GetLastPresentCount(pLastPresentCount);

@@ -280,7 +280,7 @@ if( "icl" -eq $env:GN_BUILD_COMPILER )
 # setup Windows SDK environment
 # ==============================================================================
 
-if( "mswin" -eq $env:GN_BUILD_TARGET_OS )
+if(0)# "mswin" -eq $env:GN_BUILD_TARGET_OS )
 {
     ""
     "==============================="
@@ -303,7 +303,7 @@ if( "mswin" -eq $env:GN_BUILD_TARGET_OS )
     
     if( "" -ne $winsdk_path )
     {
-        "Windows SDK v7l1a found: $winsdk_path"
+        "Windows SDK found: $winsdk_path"
         ""
     }
 
@@ -352,6 +352,7 @@ if( "mswin" -eq $env:GN_BUILD_TARGET_OS )
     {
         # Note: Just issue a warning, instead of error, since DXSDK is not required to build garnet application.
         warn "DirectX SDK not found (Environment variable DXSDK_DIR does not exist)."
+		"Note that you may still be able to compile D3D code as long as you have Windows 7/8 SDK installed."
     }
 }
 
