@@ -1,27 +1,27 @@
 // script generated file. DO NOT edit.
 // -----------------------------------------------------------------------------
 virtual HRESULT STDMETHODCALLTYPE SetPrivateData(
-    REFGUID Name,
+    _In_  REFGUID Name,
     /* [in] */ UINT DataSize,
-    const void * pData);
-NullPtr<void (DXGIObjectHook::*)(REFGUID, /* [in] */ UINT &, const void * &)> _SetPrivateData_pre_ptr;
-NullPtr<void (DXGIObjectHook::*)(HRESULT, REFGUID, /* [in] */ UINT, const void *)> _SetPrivateData_post_ptr;
+    _In_reads_bytes_(DataSize)  const void * pData);
+NullPtr<void (DXGIObjectHook::*)(_In_  REFGUID, /* [in] */ UINT &, _In_reads_bytes_(DataSize)  const void * &)> _SetPrivateData_pre_ptr;
+NullPtr<void (DXGIObjectHook::*)(HRESULT, _In_  REFGUID, /* [in] */ UINT, _In_reads_bytes_(DataSize)  const void *)> _SetPrivateData_post_ptr;
 // -----------------------------------------------------------------------------
 virtual HRESULT STDMETHODCALLTYPE SetPrivateDataInterface(
-    REFGUID Name,
-    const IUnknown * pUnknown);
-NullPtr<void (DXGIObjectHook::*)(REFGUID, const IUnknown * &)> _SetPrivateDataInterface_pre_ptr;
-NullPtr<void (DXGIObjectHook::*)(HRESULT, REFGUID, const IUnknown *)> _SetPrivateDataInterface_post_ptr;
+    _In_  REFGUID Name,
+    _In_  const IUnknown * pUnknown);
+NullPtr<void (DXGIObjectHook::*)(_In_  REFGUID, _In_  const IUnknown * &)> _SetPrivateDataInterface_pre_ptr;
+NullPtr<void (DXGIObjectHook::*)(HRESULT, _In_  REFGUID, _In_  const IUnknown *)> _SetPrivateDataInterface_post_ptr;
 // -----------------------------------------------------------------------------
 virtual HRESULT STDMETHODCALLTYPE GetPrivateData(
-    REFGUID Name,
-    UINT * pDataSize,
-    void * pData);
-NullPtr<void (DXGIObjectHook::*)(REFGUID, UINT * &, void * &)> _GetPrivateData_pre_ptr;
-NullPtr<void (DXGIObjectHook::*)(HRESULT, REFGUID, UINT *, void *)> _GetPrivateData_post_ptr;
+    _In_  REFGUID Name,
+    _Inout_  UINT * pDataSize,
+    _Out_writes_bytes_(*pDataSize)  void * pData);
+NullPtr<void (DXGIObjectHook::*)(_In_  REFGUID, _Inout_  UINT * &, _Out_writes_bytes_(*pDataSize)  void * &)> _GetPrivateData_pre_ptr;
+NullPtr<void (DXGIObjectHook::*)(HRESULT, _In_  REFGUID, _Inout_  UINT *, _Out_writes_bytes_(*pDataSize)  void *)> _GetPrivateData_post_ptr;
 // -----------------------------------------------------------------------------
 virtual HRESULT STDMETHODCALLTYPE GetParent(
-    REFIID riid,
-    void ** ppParent);
-NullPtr<void (DXGIObjectHook::*)(REFIID, void ** &)> _GetParent_pre_ptr;
-NullPtr<void (DXGIObjectHook::*)(HRESULT, REFIID, void **)> _GetParent_post_ptr;
+    _In_  REFIID riid,
+    _Out_  void ** ppParent);
+NullPtr<void (DXGIObjectHook::*)(_In_  REFIID, _Out_  void ** &)> _GetParent_pre_ptr;
+NullPtr<void (DXGIObjectHook::*)(HRESULT, _In_  REFIID, _Out_  void **)> _GetParent_post_ptr;

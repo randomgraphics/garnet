@@ -19,19 +19,19 @@ NullPtr<void (D3D11DebugHook::*)()> _GetPresentPerRenderOpDelay_pre_ptr;
 NullPtr<void (D3D11DebugHook::*)(UINT)> _GetPresentPerRenderOpDelay_post_ptr;
 // -----------------------------------------------------------------------------
 virtual HRESULT STDMETHODCALLTYPE SetSwapChain(
-    IDXGISwapChain * pSwapChain);
-NullPtr<void (D3D11DebugHook::*)(IDXGISwapChain * &)> _SetSwapChain_pre_ptr;
-NullPtr<void (D3D11DebugHook::*)(HRESULT, IDXGISwapChain *)> _SetSwapChain_post_ptr;
+    _In_opt_  IDXGISwapChain * pSwapChain);
+NullPtr<void (D3D11DebugHook::*)(_In_opt_  IDXGISwapChain * &)> _SetSwapChain_pre_ptr;
+NullPtr<void (D3D11DebugHook::*)(HRESULT, _In_opt_  IDXGISwapChain *)> _SetSwapChain_post_ptr;
 // -----------------------------------------------------------------------------
 virtual HRESULT STDMETHODCALLTYPE GetSwapChain(
-    IDXGISwapChain ** ppSwapChain);
-NullPtr<void (D3D11DebugHook::*)(IDXGISwapChain ** &)> _GetSwapChain_pre_ptr;
-NullPtr<void (D3D11DebugHook::*)(HRESULT, IDXGISwapChain **)> _GetSwapChain_post_ptr;
+    _Out_  IDXGISwapChain ** ppSwapChain);
+NullPtr<void (D3D11DebugHook::*)(_Out_  IDXGISwapChain ** &)> _GetSwapChain_pre_ptr;
+NullPtr<void (D3D11DebugHook::*)(HRESULT, _Out_  IDXGISwapChain **)> _GetSwapChain_post_ptr;
 // -----------------------------------------------------------------------------
 virtual HRESULT STDMETHODCALLTYPE ValidateContext(
-    ID3D11DeviceContext * pContext);
-NullPtr<void (D3D11DebugHook::*)(ID3D11DeviceContext * &)> _ValidateContext_pre_ptr;
-NullPtr<void (D3D11DebugHook::*)(HRESULT, ID3D11DeviceContext *)> _ValidateContext_post_ptr;
+    _In_  ID3D11DeviceContext * pContext);
+NullPtr<void (D3D11DebugHook::*)(_In_  ID3D11DeviceContext * &)> _ValidateContext_pre_ptr;
+NullPtr<void (D3D11DebugHook::*)(HRESULT, _In_  ID3D11DeviceContext *)> _ValidateContext_post_ptr;
 // -----------------------------------------------------------------------------
 virtual HRESULT STDMETHODCALLTYPE ReportLiveDeviceObjects(
     D3D11_RLDO_FLAGS Flags);
@@ -39,6 +39,6 @@ NullPtr<void (D3D11DebugHook::*)(D3D11_RLDO_FLAGS &)> _ReportLiveDeviceObjects_p
 NullPtr<void (D3D11DebugHook::*)(HRESULT, D3D11_RLDO_FLAGS)> _ReportLiveDeviceObjects_post_ptr;
 // -----------------------------------------------------------------------------
 virtual HRESULT STDMETHODCALLTYPE ValidateContextForDispatch(
-    ID3D11DeviceContext * pContext);
-NullPtr<void (D3D11DebugHook::*)(ID3D11DeviceContext * &)> _ValidateContextForDispatch_pre_ptr;
-NullPtr<void (D3D11DebugHook::*)(HRESULT, ID3D11DeviceContext *)> _ValidateContextForDispatch_post_ptr;
+    _In_  ID3D11DeviceContext * pContext);
+NullPtr<void (D3D11DebugHook::*)(_In_  ID3D11DeviceContext * &)> _ValidateContextForDispatch_pre_ptr;
+NullPtr<void (D3D11DebugHook::*)(HRESULT, _In_  ID3D11DeviceContext *)> _ValidateContextForDispatch_post_ptr;

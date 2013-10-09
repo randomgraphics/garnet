@@ -1,26 +1,26 @@
 // script generated file. DO NOT edit.
 // -----------------------------------------------------------------------------
 virtual void STDMETHODCALLTYPE GetDevice(
-    ID3D11Device ** ppDevice);
-NullPtr<void (D3D11DeviceChildHook::*)(ID3D11Device ** &)> _GetDevice_pre_ptr;
-NullPtr<void (D3D11DeviceChildHook::*)(ID3D11Device **)> _GetDevice_post_ptr;
+    _Out_  ID3D11Device ** ppDevice);
+NullPtr<void (D3D11DeviceChildHook::*)(_Out_  ID3D11Device ** &)> _GetDevice_pre_ptr;
+NullPtr<void (D3D11DeviceChildHook::*)(_Out_  ID3D11Device **)> _GetDevice_post_ptr;
 // -----------------------------------------------------------------------------
 virtual HRESULT STDMETHODCALLTYPE GetPrivateData(
-    REFGUID guid,
-    UINT * pDataSize,
-    void * pData);
-NullPtr<void (D3D11DeviceChildHook::*)(REFGUID, UINT * &, void * &)> _GetPrivateData_pre_ptr;
-NullPtr<void (D3D11DeviceChildHook::*)(HRESULT, REFGUID, UINT *, void *)> _GetPrivateData_post_ptr;
+    _In_  REFGUID guid,
+    _Inout_  UINT * pDataSize,
+    _Out_writes_bytes_opt_( *pDataSize )  void * pData);
+NullPtr<void (D3D11DeviceChildHook::*)(_In_  REFGUID, _Inout_  UINT * &, _Out_writes_bytes_opt_( *pDataSize )  void * &)> _GetPrivateData_pre_ptr;
+NullPtr<void (D3D11DeviceChildHook::*)(HRESULT, _In_  REFGUID, _Inout_  UINT *, _Out_writes_bytes_opt_( *pDataSize )  void *)> _GetPrivateData_post_ptr;
 // -----------------------------------------------------------------------------
 virtual HRESULT STDMETHODCALLTYPE SetPrivateData(
-    REFGUID guid,
-    UINT DataSize,
-    const void * pData);
-NullPtr<void (D3D11DeviceChildHook::*)(REFGUID, UINT &, const void * &)> _SetPrivateData_pre_ptr;
-NullPtr<void (D3D11DeviceChildHook::*)(HRESULT, REFGUID, UINT, const void *)> _SetPrivateData_post_ptr;
+    _In_  REFGUID guid,
+    _In_  UINT DataSize,
+    _In_reads_bytes_opt_( DataSize )  const void * pData);
+NullPtr<void (D3D11DeviceChildHook::*)(_In_  REFGUID, _In_  UINT &, _In_reads_bytes_opt_( DataSize )  const void * &)> _SetPrivateData_pre_ptr;
+NullPtr<void (D3D11DeviceChildHook::*)(HRESULT, _In_  REFGUID, _In_  UINT, _In_reads_bytes_opt_( DataSize )  const void *)> _SetPrivateData_post_ptr;
 // -----------------------------------------------------------------------------
 virtual HRESULT STDMETHODCALLTYPE SetPrivateDataInterface(
-    REFGUID guid,
-    const IUnknown * pData);
-NullPtr<void (D3D11DeviceChildHook::*)(REFGUID, const IUnknown * &)> _SetPrivateDataInterface_pre_ptr;
-NullPtr<void (D3D11DeviceChildHook::*)(HRESULT, REFGUID, const IUnknown *)> _SetPrivateDataInterface_post_ptr;
+    _In_  REFGUID guid,
+    _In_opt_  const IUnknown * pData);
+NullPtr<void (D3D11DeviceChildHook::*)(_In_  REFGUID, _In_opt_  const IUnknown * &)> _SetPrivateDataInterface_pre_ptr;
+NullPtr<void (D3D11DeviceChildHook::*)(HRESULT, _In_  REFGUID, _In_opt_  const IUnknown *)> _SetPrivateDataInterface_post_ptr;

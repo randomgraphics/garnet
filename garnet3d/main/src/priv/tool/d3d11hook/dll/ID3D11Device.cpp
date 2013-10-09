@@ -3,9 +3,9 @@
 #include "d3d11hook.h"
 // -----------------------------------------------------------------------------
 HRESULT STDMETHODCALLTYPE D3D11DeviceHook::CreateBuffer(
-    const D3D11_BUFFER_DESC * pDesc,
-    const D3D11_SUBRESOURCE_DATA * pInitialData,
-    ID3D11Buffer ** ppBuffer)
+    _In_  const D3D11_BUFFER_DESC * pDesc,
+    _In_opt_  const D3D11_SUBRESOURCE_DATA * pInitialData,
+    _Out_opt_  ID3D11Buffer ** ppBuffer)
 {
     if (_CreateBuffer_pre_ptr._value) { (this->*_CreateBuffer_pre_ptr._value)(pDesc, pInitialData, ppBuffer); }
     HRESULT ret = GetRealObj()->CreateBuffer(pDesc, pInitialData, ppBuffer);
@@ -15,9 +15,9 @@ HRESULT STDMETHODCALLTYPE D3D11DeviceHook::CreateBuffer(
 
 // -----------------------------------------------------------------------------
 HRESULT STDMETHODCALLTYPE D3D11DeviceHook::CreateTexture1D(
-    const D3D11_TEXTURE1D_DESC * pDesc,
-    const D3D11_SUBRESOURCE_DATA * pInitialData,
-    ID3D11Texture1D ** ppTexture1D)
+    _In_  const D3D11_TEXTURE1D_DESC * pDesc,
+    _In_reads_opt_(_Inexpressible_(pDesc->MipLevels * pDesc->ArraySize))  const D3D11_SUBRESOURCE_DATA * pInitialData,
+    _Out_opt_  ID3D11Texture1D ** ppTexture1D)
 {
     if (_CreateTexture1D_pre_ptr._value) { (this->*_CreateTexture1D_pre_ptr._value)(pDesc, pInitialData, ppTexture1D); }
     HRESULT ret = GetRealObj()->CreateTexture1D(pDesc, pInitialData, ppTexture1D);
@@ -27,9 +27,9 @@ HRESULT STDMETHODCALLTYPE D3D11DeviceHook::CreateTexture1D(
 
 // -----------------------------------------------------------------------------
 HRESULT STDMETHODCALLTYPE D3D11DeviceHook::CreateTexture2D(
-    const D3D11_TEXTURE2D_DESC * pDesc,
-    const D3D11_SUBRESOURCE_DATA * pInitialData,
-    ID3D11Texture2D ** ppTexture2D)
+    _In_  const D3D11_TEXTURE2D_DESC * pDesc,
+    _In_reads_opt_(_Inexpressible_(pDesc->MipLevels * pDesc->ArraySize))  const D3D11_SUBRESOURCE_DATA * pInitialData,
+    _Out_opt_  ID3D11Texture2D ** ppTexture2D)
 {
     if (_CreateTexture2D_pre_ptr._value) { (this->*_CreateTexture2D_pre_ptr._value)(pDesc, pInitialData, ppTexture2D); }
     HRESULT ret = GetRealObj()->CreateTexture2D(pDesc, pInitialData, ppTexture2D);
@@ -39,9 +39,9 @@ HRESULT STDMETHODCALLTYPE D3D11DeviceHook::CreateTexture2D(
 
 // -----------------------------------------------------------------------------
 HRESULT STDMETHODCALLTYPE D3D11DeviceHook::CreateTexture3D(
-    const D3D11_TEXTURE3D_DESC * pDesc,
-    const D3D11_SUBRESOURCE_DATA * pInitialData,
-    ID3D11Texture3D ** ppTexture3D)
+    _In_  const D3D11_TEXTURE3D_DESC * pDesc,
+    _In_reads_opt_(_Inexpressible_(pDesc->MipLevels))  const D3D11_SUBRESOURCE_DATA * pInitialData,
+    _Out_opt_  ID3D11Texture3D ** ppTexture3D)
 {
     if (_CreateTexture3D_pre_ptr._value) { (this->*_CreateTexture3D_pre_ptr._value)(pDesc, pInitialData, ppTexture3D); }
     HRESULT ret = GetRealObj()->CreateTexture3D(pDesc, pInitialData, ppTexture3D);
@@ -51,9 +51,9 @@ HRESULT STDMETHODCALLTYPE D3D11DeviceHook::CreateTexture3D(
 
 // -----------------------------------------------------------------------------
 HRESULT STDMETHODCALLTYPE D3D11DeviceHook::CreateShaderResourceView(
-    ID3D11Resource * pResource,
-    const D3D11_SHADER_RESOURCE_VIEW_DESC * pDesc,
-    ID3D11ShaderResourceView ** ppSRView)
+    _In_  ID3D11Resource * pResource,
+    _In_opt_  const D3D11_SHADER_RESOURCE_VIEW_DESC * pDesc,
+    _Out_opt_  ID3D11ShaderResourceView ** ppSRView)
 {
     if (_CreateShaderResourceView_pre_ptr._value) { (this->*_CreateShaderResourceView_pre_ptr._value)(pResource, pDesc, ppSRView); }
     HRESULT ret = GetRealObj()->CreateShaderResourceView(pResource, pDesc, ppSRView);
@@ -63,9 +63,9 @@ HRESULT STDMETHODCALLTYPE D3D11DeviceHook::CreateShaderResourceView(
 
 // -----------------------------------------------------------------------------
 HRESULT STDMETHODCALLTYPE D3D11DeviceHook::CreateUnorderedAccessView(
-    ID3D11Resource * pResource,
-    const D3D11_UNORDERED_ACCESS_VIEW_DESC * pDesc,
-    ID3D11UnorderedAccessView ** ppUAView)
+    _In_  ID3D11Resource * pResource,
+    _In_opt_  const D3D11_UNORDERED_ACCESS_VIEW_DESC * pDesc,
+    _Out_opt_  ID3D11UnorderedAccessView ** ppUAView)
 {
     if (_CreateUnorderedAccessView_pre_ptr._value) { (this->*_CreateUnorderedAccessView_pre_ptr._value)(pResource, pDesc, ppUAView); }
     HRESULT ret = GetRealObj()->CreateUnorderedAccessView(pResource, pDesc, ppUAView);
@@ -75,9 +75,9 @@ HRESULT STDMETHODCALLTYPE D3D11DeviceHook::CreateUnorderedAccessView(
 
 // -----------------------------------------------------------------------------
 HRESULT STDMETHODCALLTYPE D3D11DeviceHook::CreateRenderTargetView(
-    ID3D11Resource * pResource,
-    const D3D11_RENDER_TARGET_VIEW_DESC * pDesc,
-    ID3D11RenderTargetView ** ppRTView)
+    _In_  ID3D11Resource * pResource,
+    _In_opt_  const D3D11_RENDER_TARGET_VIEW_DESC * pDesc,
+    _Out_opt_  ID3D11RenderTargetView ** ppRTView)
 {
     if (_CreateRenderTargetView_pre_ptr._value) { (this->*_CreateRenderTargetView_pre_ptr._value)(pResource, pDesc, ppRTView); }
     HRESULT ret = GetRealObj()->CreateRenderTargetView(pResource, pDesc, ppRTView);
@@ -87,9 +87,9 @@ HRESULT STDMETHODCALLTYPE D3D11DeviceHook::CreateRenderTargetView(
 
 // -----------------------------------------------------------------------------
 HRESULT STDMETHODCALLTYPE D3D11DeviceHook::CreateDepthStencilView(
-    ID3D11Resource * pResource,
-    const D3D11_DEPTH_STENCIL_VIEW_DESC * pDesc,
-    ID3D11DepthStencilView ** ppDepthStencilView)
+    _In_  ID3D11Resource * pResource,
+    _In_opt_  const D3D11_DEPTH_STENCIL_VIEW_DESC * pDesc,
+    _Out_opt_  ID3D11DepthStencilView ** ppDepthStencilView)
 {
     if (_CreateDepthStencilView_pre_ptr._value) { (this->*_CreateDepthStencilView_pre_ptr._value)(pResource, pDesc, ppDepthStencilView); }
     HRESULT ret = GetRealObj()->CreateDepthStencilView(pResource, pDesc, ppDepthStencilView);
@@ -99,11 +99,11 @@ HRESULT STDMETHODCALLTYPE D3D11DeviceHook::CreateDepthStencilView(
 
 // -----------------------------------------------------------------------------
 HRESULT STDMETHODCALLTYPE D3D11DeviceHook::CreateInputLayout(
-    const D3D11_INPUT_ELEMENT_DESC * pInputElementDescs,
-    UINT NumElements,
-    const void * pShaderBytecodeWithInputSignature,
-    SIZE_T BytecodeLength,
-    ID3D11InputLayout ** ppInputLayout)
+    _In_reads_(NumElements)  const D3D11_INPUT_ELEMENT_DESC * pInputElementDescs,
+    _In_range_( 0, D3D11_IA_VERTEX_INPUT_STRUCTURE_ELEMENT_COUNT )  UINT NumElements,
+    _In_  const void * pShaderBytecodeWithInputSignature,
+    _In_  SIZE_T BytecodeLength,
+    _Out_opt_  ID3D11InputLayout ** ppInputLayout)
 {
     if (_CreateInputLayout_pre_ptr._value) { (this->*_CreateInputLayout_pre_ptr._value)(pInputElementDescs, NumElements, pShaderBytecodeWithInputSignature, BytecodeLength, ppInputLayout); }
     HRESULT ret = GetRealObj()->CreateInputLayout(pInputElementDescs, NumElements, pShaderBytecodeWithInputSignature, BytecodeLength, ppInputLayout);
@@ -113,10 +113,10 @@ HRESULT STDMETHODCALLTYPE D3D11DeviceHook::CreateInputLayout(
 
 // -----------------------------------------------------------------------------
 HRESULT STDMETHODCALLTYPE D3D11DeviceHook::CreateVertexShader(
-    const void * pShaderBytecode,
-    SIZE_T BytecodeLength,
-    ID3D11ClassLinkage * pClassLinkage,
-    ID3D11VertexShader ** ppVertexShader)
+    _In_  const void * pShaderBytecode,
+    _In_  SIZE_T BytecodeLength,
+    _In_opt_  ID3D11ClassLinkage * pClassLinkage,
+    _Out_opt_  ID3D11VertexShader ** ppVertexShader)
 {
     if (_CreateVertexShader_pre_ptr._value) { (this->*_CreateVertexShader_pre_ptr._value)(pShaderBytecode, BytecodeLength, pClassLinkage, ppVertexShader); }
     HRESULT ret = GetRealObj()->CreateVertexShader(pShaderBytecode, BytecodeLength, pClassLinkage, ppVertexShader);
@@ -126,10 +126,10 @@ HRESULT STDMETHODCALLTYPE D3D11DeviceHook::CreateVertexShader(
 
 // -----------------------------------------------------------------------------
 HRESULT STDMETHODCALLTYPE D3D11DeviceHook::CreateGeometryShader(
-    const void * pShaderBytecode,
-    SIZE_T BytecodeLength,
-    ID3D11ClassLinkage * pClassLinkage,
-    ID3D11GeometryShader ** ppGeometryShader)
+    _In_  const void * pShaderBytecode,
+    _In_  SIZE_T BytecodeLength,
+    _In_opt_  ID3D11ClassLinkage * pClassLinkage,
+    _Out_opt_  ID3D11GeometryShader ** ppGeometryShader)
 {
     if (_CreateGeometryShader_pre_ptr._value) { (this->*_CreateGeometryShader_pre_ptr._value)(pShaderBytecode, BytecodeLength, pClassLinkage, ppGeometryShader); }
     HRESULT ret = GetRealObj()->CreateGeometryShader(pShaderBytecode, BytecodeLength, pClassLinkage, ppGeometryShader);
@@ -139,15 +139,15 @@ HRESULT STDMETHODCALLTYPE D3D11DeviceHook::CreateGeometryShader(
 
 // -----------------------------------------------------------------------------
 HRESULT STDMETHODCALLTYPE D3D11DeviceHook::CreateGeometryShaderWithStreamOutput(
-    const void * pShaderBytecode,
-    SIZE_T BytecodeLength,
-    const D3D11_SO_DECLARATION_ENTRY * pSODeclaration,
-    UINT NumEntries,
-    const UINT * pBufferStrides,
-    UINT NumStrides,
-    UINT RasterizedStream,
-    ID3D11ClassLinkage * pClassLinkage,
-    ID3D11GeometryShader ** ppGeometryShader)
+    _In_  const void * pShaderBytecode,
+    _In_  SIZE_T BytecodeLength,
+    _In_reads_opt_(NumEntries)  const D3D11_SO_DECLARATION_ENTRY * pSODeclaration,
+    _In_range_( 0, D3D11_SO_STREAM_COUNT * D3D11_SO_OUTPUT_COMPONENT_COUNT )  UINT NumEntries,
+    _In_reads_opt_(NumStrides)  const UINT * pBufferStrides,
+    _In_range_( 0, D3D11_SO_BUFFER_SLOT_COUNT )  UINT NumStrides,
+    _In_  UINT RasterizedStream,
+    _In_opt_  ID3D11ClassLinkage * pClassLinkage,
+    _Out_opt_  ID3D11GeometryShader ** ppGeometryShader)
 {
     if (_CreateGeometryShaderWithStreamOutput_pre_ptr._value) { (this->*_CreateGeometryShaderWithStreamOutput_pre_ptr._value)(pShaderBytecode, BytecodeLength, pSODeclaration, NumEntries, pBufferStrides, NumStrides, RasterizedStream, pClassLinkage, ppGeometryShader); }
     HRESULT ret = GetRealObj()->CreateGeometryShaderWithStreamOutput(pShaderBytecode, BytecodeLength, pSODeclaration, NumEntries, pBufferStrides, NumStrides, RasterizedStream, pClassLinkage, ppGeometryShader);
@@ -157,10 +157,10 @@ HRESULT STDMETHODCALLTYPE D3D11DeviceHook::CreateGeometryShaderWithStreamOutput(
 
 // -----------------------------------------------------------------------------
 HRESULT STDMETHODCALLTYPE D3D11DeviceHook::CreatePixelShader(
-    const void * pShaderBytecode,
-    SIZE_T BytecodeLength,
-    ID3D11ClassLinkage * pClassLinkage,
-    ID3D11PixelShader ** ppPixelShader)
+    _In_  const void * pShaderBytecode,
+    _In_  SIZE_T BytecodeLength,
+    _In_opt_  ID3D11ClassLinkage * pClassLinkage,
+    _Out_opt_  ID3D11PixelShader ** ppPixelShader)
 {
     if (_CreatePixelShader_pre_ptr._value) { (this->*_CreatePixelShader_pre_ptr._value)(pShaderBytecode, BytecodeLength, pClassLinkage, ppPixelShader); }
     HRESULT ret = GetRealObj()->CreatePixelShader(pShaderBytecode, BytecodeLength, pClassLinkage, ppPixelShader);
@@ -170,10 +170,10 @@ HRESULT STDMETHODCALLTYPE D3D11DeviceHook::CreatePixelShader(
 
 // -----------------------------------------------------------------------------
 HRESULT STDMETHODCALLTYPE D3D11DeviceHook::CreateHullShader(
-    const void * pShaderBytecode,
-    SIZE_T BytecodeLength,
-    ID3D11ClassLinkage * pClassLinkage,
-    ID3D11HullShader ** ppHullShader)
+    _In_  const void * pShaderBytecode,
+    _In_  SIZE_T BytecodeLength,
+    _In_opt_  ID3D11ClassLinkage * pClassLinkage,
+    _Out_opt_  ID3D11HullShader ** ppHullShader)
 {
     if (_CreateHullShader_pre_ptr._value) { (this->*_CreateHullShader_pre_ptr._value)(pShaderBytecode, BytecodeLength, pClassLinkage, ppHullShader); }
     HRESULT ret = GetRealObj()->CreateHullShader(pShaderBytecode, BytecodeLength, pClassLinkage, ppHullShader);
@@ -183,10 +183,10 @@ HRESULT STDMETHODCALLTYPE D3D11DeviceHook::CreateHullShader(
 
 // -----------------------------------------------------------------------------
 HRESULT STDMETHODCALLTYPE D3D11DeviceHook::CreateDomainShader(
-    const void * pShaderBytecode,
-    SIZE_T BytecodeLength,
-    ID3D11ClassLinkage * pClassLinkage,
-    ID3D11DomainShader ** ppDomainShader)
+    _In_  const void * pShaderBytecode,
+    _In_  SIZE_T BytecodeLength,
+    _In_opt_  ID3D11ClassLinkage * pClassLinkage,
+    _Out_opt_  ID3D11DomainShader ** ppDomainShader)
 {
     if (_CreateDomainShader_pre_ptr._value) { (this->*_CreateDomainShader_pre_ptr._value)(pShaderBytecode, BytecodeLength, pClassLinkage, ppDomainShader); }
     HRESULT ret = GetRealObj()->CreateDomainShader(pShaderBytecode, BytecodeLength, pClassLinkage, ppDomainShader);
@@ -196,10 +196,10 @@ HRESULT STDMETHODCALLTYPE D3D11DeviceHook::CreateDomainShader(
 
 // -----------------------------------------------------------------------------
 HRESULT STDMETHODCALLTYPE D3D11DeviceHook::CreateComputeShader(
-    const void * pShaderBytecode,
-    SIZE_T BytecodeLength,
-    ID3D11ClassLinkage * pClassLinkage,
-    ID3D11ComputeShader ** ppComputeShader)
+    _In_  const void * pShaderBytecode,
+    _In_  SIZE_T BytecodeLength,
+    _In_opt_  ID3D11ClassLinkage * pClassLinkage,
+    _Out_opt_  ID3D11ComputeShader ** ppComputeShader)
 {
     if (_CreateComputeShader_pre_ptr._value) { (this->*_CreateComputeShader_pre_ptr._value)(pShaderBytecode, BytecodeLength, pClassLinkage, ppComputeShader); }
     HRESULT ret = GetRealObj()->CreateComputeShader(pShaderBytecode, BytecodeLength, pClassLinkage, ppComputeShader);
@@ -209,7 +209,7 @@ HRESULT STDMETHODCALLTYPE D3D11DeviceHook::CreateComputeShader(
 
 // -----------------------------------------------------------------------------
 HRESULT STDMETHODCALLTYPE D3D11DeviceHook::CreateClassLinkage(
-    ID3D11ClassLinkage ** ppLinkage)
+    _Out_  ID3D11ClassLinkage ** ppLinkage)
 {
     if (_CreateClassLinkage_pre_ptr._value) { (this->*_CreateClassLinkage_pre_ptr._value)(ppLinkage); }
     HRESULT ret = GetRealObj()->CreateClassLinkage(ppLinkage);
@@ -219,8 +219,8 @@ HRESULT STDMETHODCALLTYPE D3D11DeviceHook::CreateClassLinkage(
 
 // -----------------------------------------------------------------------------
 HRESULT STDMETHODCALLTYPE D3D11DeviceHook::CreateBlendState(
-    const D3D11_BLEND_DESC * pBlendStateDesc,
-    ID3D11BlendState ** ppBlendState)
+    _In_  const D3D11_BLEND_DESC * pBlendStateDesc,
+    _Out_opt_  ID3D11BlendState ** ppBlendState)
 {
     if (_CreateBlendState_pre_ptr._value) { (this->*_CreateBlendState_pre_ptr._value)(pBlendStateDesc, ppBlendState); }
     HRESULT ret = GetRealObj()->CreateBlendState(pBlendStateDesc, ppBlendState);
@@ -230,8 +230,8 @@ HRESULT STDMETHODCALLTYPE D3D11DeviceHook::CreateBlendState(
 
 // -----------------------------------------------------------------------------
 HRESULT STDMETHODCALLTYPE D3D11DeviceHook::CreateDepthStencilState(
-    const D3D11_DEPTH_STENCIL_DESC * pDepthStencilDesc,
-    ID3D11DepthStencilState ** ppDepthStencilState)
+    _In_  const D3D11_DEPTH_STENCIL_DESC * pDepthStencilDesc,
+    _Out_opt_  ID3D11DepthStencilState ** ppDepthStencilState)
 {
     if (_CreateDepthStencilState_pre_ptr._value) { (this->*_CreateDepthStencilState_pre_ptr._value)(pDepthStencilDesc, ppDepthStencilState); }
     HRESULT ret = GetRealObj()->CreateDepthStencilState(pDepthStencilDesc, ppDepthStencilState);
@@ -241,8 +241,8 @@ HRESULT STDMETHODCALLTYPE D3D11DeviceHook::CreateDepthStencilState(
 
 // -----------------------------------------------------------------------------
 HRESULT STDMETHODCALLTYPE D3D11DeviceHook::CreateRasterizerState(
-    const D3D11_RASTERIZER_DESC * pRasterizerDesc,
-    ID3D11RasterizerState ** ppRasterizerState)
+    _In_  const D3D11_RASTERIZER_DESC * pRasterizerDesc,
+    _Out_opt_  ID3D11RasterizerState ** ppRasterizerState)
 {
     if (_CreateRasterizerState_pre_ptr._value) { (this->*_CreateRasterizerState_pre_ptr._value)(pRasterizerDesc, ppRasterizerState); }
     HRESULT ret = GetRealObj()->CreateRasterizerState(pRasterizerDesc, ppRasterizerState);
@@ -252,8 +252,8 @@ HRESULT STDMETHODCALLTYPE D3D11DeviceHook::CreateRasterizerState(
 
 // -----------------------------------------------------------------------------
 HRESULT STDMETHODCALLTYPE D3D11DeviceHook::CreateSamplerState(
-    const D3D11_SAMPLER_DESC * pSamplerDesc,
-    ID3D11SamplerState ** ppSamplerState)
+    _In_  const D3D11_SAMPLER_DESC * pSamplerDesc,
+    _Out_opt_  ID3D11SamplerState ** ppSamplerState)
 {
     if (_CreateSamplerState_pre_ptr._value) { (this->*_CreateSamplerState_pre_ptr._value)(pSamplerDesc, ppSamplerState); }
     HRESULT ret = GetRealObj()->CreateSamplerState(pSamplerDesc, ppSamplerState);
@@ -263,8 +263,8 @@ HRESULT STDMETHODCALLTYPE D3D11DeviceHook::CreateSamplerState(
 
 // -----------------------------------------------------------------------------
 HRESULT STDMETHODCALLTYPE D3D11DeviceHook::CreateQuery(
-    const D3D11_QUERY_DESC * pQueryDesc,
-    ID3D11Query ** ppQuery)
+    _In_  const D3D11_QUERY_DESC * pQueryDesc,
+    _Out_opt_  ID3D11Query ** ppQuery)
 {
     if (_CreateQuery_pre_ptr._value) { (this->*_CreateQuery_pre_ptr._value)(pQueryDesc, ppQuery); }
     HRESULT ret = GetRealObj()->CreateQuery(pQueryDesc, ppQuery);
@@ -274,8 +274,8 @@ HRESULT STDMETHODCALLTYPE D3D11DeviceHook::CreateQuery(
 
 // -----------------------------------------------------------------------------
 HRESULT STDMETHODCALLTYPE D3D11DeviceHook::CreatePredicate(
-    const D3D11_QUERY_DESC * pPredicateDesc,
-    ID3D11Predicate ** ppPredicate)
+    _In_  const D3D11_QUERY_DESC * pPredicateDesc,
+    _Out_opt_  ID3D11Predicate ** ppPredicate)
 {
     if (_CreatePredicate_pre_ptr._value) { (this->*_CreatePredicate_pre_ptr._value)(pPredicateDesc, ppPredicate); }
     HRESULT ret = GetRealObj()->CreatePredicate(pPredicateDesc, ppPredicate);
@@ -285,8 +285,8 @@ HRESULT STDMETHODCALLTYPE D3D11DeviceHook::CreatePredicate(
 
 // -----------------------------------------------------------------------------
 HRESULT STDMETHODCALLTYPE D3D11DeviceHook::CreateCounter(
-    const D3D11_COUNTER_DESC * pCounterDesc,
-    ID3D11Counter ** ppCounter)
+    _In_  const D3D11_COUNTER_DESC * pCounterDesc,
+    _Out_opt_  ID3D11Counter ** ppCounter)
 {
     if (_CreateCounter_pre_ptr._value) { (this->*_CreateCounter_pre_ptr._value)(pCounterDesc, ppCounter); }
     HRESULT ret = GetRealObj()->CreateCounter(pCounterDesc, ppCounter);
@@ -297,7 +297,7 @@ HRESULT STDMETHODCALLTYPE D3D11DeviceHook::CreateCounter(
 // -----------------------------------------------------------------------------
 HRESULT STDMETHODCALLTYPE D3D11DeviceHook::CreateDeferredContext(
     UINT ContextFlags,
-    ID3D11DeviceContext ** ppDeferredContext)
+    _Out_opt_  ID3D11DeviceContext ** ppDeferredContext)
 {
     if (_CreateDeferredContext_pre_ptr._value) { (this->*_CreateDeferredContext_pre_ptr._value)(ContextFlags, ppDeferredContext); }
     HRESULT ret = GetRealObj()->CreateDeferredContext(ContextFlags, ppDeferredContext);
@@ -307,9 +307,9 @@ HRESULT STDMETHODCALLTYPE D3D11DeviceHook::CreateDeferredContext(
 
 // -----------------------------------------------------------------------------
 HRESULT STDMETHODCALLTYPE D3D11DeviceHook::OpenSharedResource(
-    HANDLE hResource,
-    REFIID ReturnedInterface,
-    void ** ppResource)
+    _In_  HANDLE hResource,
+    _In_  REFIID ReturnedInterface,
+    _Out_opt_  void ** ppResource)
 {
     if (_OpenSharedResource_pre_ptr._value) { (this->*_OpenSharedResource_pre_ptr._value)(hResource, ReturnedInterface, ppResource); }
     HRESULT ret = GetRealObj()->OpenSharedResource(hResource, ReturnedInterface, ppResource);
@@ -319,8 +319,8 @@ HRESULT STDMETHODCALLTYPE D3D11DeviceHook::OpenSharedResource(
 
 // -----------------------------------------------------------------------------
 HRESULT STDMETHODCALLTYPE D3D11DeviceHook::CheckFormatSupport(
-    DXGI_FORMAT Format,
-    UINT * pFormatSupport)
+    _In_  DXGI_FORMAT Format,
+    _Out_  UINT * pFormatSupport)
 {
     if (_CheckFormatSupport_pre_ptr._value) { (this->*_CheckFormatSupport_pre_ptr._value)(Format, pFormatSupport); }
     HRESULT ret = GetRealObj()->CheckFormatSupport(Format, pFormatSupport);
@@ -330,9 +330,9 @@ HRESULT STDMETHODCALLTYPE D3D11DeviceHook::CheckFormatSupport(
 
 // -----------------------------------------------------------------------------
 HRESULT STDMETHODCALLTYPE D3D11DeviceHook::CheckMultisampleQualityLevels(
-    DXGI_FORMAT Format,
-    UINT SampleCount,
-    UINT * pNumQualityLevels)
+    _In_  DXGI_FORMAT Format,
+    _In_  UINT SampleCount,
+    _Out_  UINT * pNumQualityLevels)
 {
     if (_CheckMultisampleQualityLevels_pre_ptr._value) { (this->*_CheckMultisampleQualityLevels_pre_ptr._value)(Format, SampleCount, pNumQualityLevels); }
     HRESULT ret = GetRealObj()->CheckMultisampleQualityLevels(Format, SampleCount, pNumQualityLevels);
@@ -342,7 +342,7 @@ HRESULT STDMETHODCALLTYPE D3D11DeviceHook::CheckMultisampleQualityLevels(
 
 // -----------------------------------------------------------------------------
 void STDMETHODCALLTYPE D3D11DeviceHook::CheckCounterInfo(
-    D3D11_COUNTER_INFO * pCounterInfo)
+    _Out_  D3D11_COUNTER_INFO * pCounterInfo)
 {
     if (_CheckCounterInfo_pre_ptr._value) { (this->*_CheckCounterInfo_pre_ptr._value)(pCounterInfo); }
     GetRealObj()->CheckCounterInfo(pCounterInfo);
@@ -351,15 +351,15 @@ void STDMETHODCALLTYPE D3D11DeviceHook::CheckCounterInfo(
 
 // -----------------------------------------------------------------------------
 HRESULT STDMETHODCALLTYPE D3D11DeviceHook::CheckCounter(
-    const D3D11_COUNTER_DESC * pDesc,
-    D3D11_COUNTER_TYPE * pType,
-    UINT * pActiveCounters,
-    LPSTR szName,
-    UINT * pNameLength,
-    LPSTR szUnits,
-    UINT * pUnitsLength,
-    LPSTR szDescription,
-    UINT * pDescriptionLength)
+    _In_  const D3D11_COUNTER_DESC * pDesc,
+    _Out_  D3D11_COUNTER_TYPE * pType,
+    _Out_  UINT * pActiveCounters,
+    _Out_writes_opt_(*pNameLength)  LPSTR szName,
+    _Inout_opt_  UINT * pNameLength,
+    _Out_writes_opt_(*pUnitsLength)  LPSTR szUnits,
+    _Inout_opt_  UINT * pUnitsLength,
+    _Out_writes_opt_(*pDescriptionLength)  LPSTR szDescription,
+    _Inout_opt_  UINT * pDescriptionLength)
 {
     if (_CheckCounter_pre_ptr._value) { (this->*_CheckCounter_pre_ptr._value)(pDesc, pType, pActiveCounters, szName, pNameLength, szUnits, pUnitsLength, szDescription, pDescriptionLength); }
     HRESULT ret = GetRealObj()->CheckCounter(pDesc, pType, pActiveCounters, szName, pNameLength, szUnits, pUnitsLength, szDescription, pDescriptionLength);
@@ -370,7 +370,7 @@ HRESULT STDMETHODCALLTYPE D3D11DeviceHook::CheckCounter(
 // -----------------------------------------------------------------------------
 HRESULT STDMETHODCALLTYPE D3D11DeviceHook::CheckFeatureSupport(
     D3D11_FEATURE Feature,
-    void * pFeatureSupportData,
+    _Out_writes_bytes_(FeatureSupportDataSize)  void * pFeatureSupportData,
     UINT FeatureSupportDataSize)
 {
     if (_CheckFeatureSupport_pre_ptr._value) { (this->*_CheckFeatureSupport_pre_ptr._value)(Feature, pFeatureSupportData, FeatureSupportDataSize); }
@@ -381,9 +381,9 @@ HRESULT STDMETHODCALLTYPE D3D11DeviceHook::CheckFeatureSupport(
 
 // -----------------------------------------------------------------------------
 HRESULT STDMETHODCALLTYPE D3D11DeviceHook::GetPrivateData(
-    REFGUID guid,
-    UINT * pDataSize,
-    void * pData)
+    _In_  REFGUID guid,
+    _Inout_  UINT * pDataSize,
+    _Out_writes_bytes_opt_(*pDataSize)  void * pData)
 {
     if (_GetPrivateData_pre_ptr._value) { (this->*_GetPrivateData_pre_ptr._value)(guid, pDataSize, pData); }
     HRESULT ret = GetRealObj()->GetPrivateData(guid, pDataSize, pData);
@@ -393,9 +393,9 @@ HRESULT STDMETHODCALLTYPE D3D11DeviceHook::GetPrivateData(
 
 // -----------------------------------------------------------------------------
 HRESULT STDMETHODCALLTYPE D3D11DeviceHook::SetPrivateData(
-    REFGUID guid,
-    UINT DataSize,
-    const void * pData)
+    _In_  REFGUID guid,
+    _In_  UINT DataSize,
+    _In_reads_bytes_opt_(DataSize)  const void * pData)
 {
     if (_SetPrivateData_pre_ptr._value) { (this->*_SetPrivateData_pre_ptr._value)(guid, DataSize, pData); }
     HRESULT ret = GetRealObj()->SetPrivateData(guid, DataSize, pData);
@@ -405,8 +405,8 @@ HRESULT STDMETHODCALLTYPE D3D11DeviceHook::SetPrivateData(
 
 // -----------------------------------------------------------------------------
 HRESULT STDMETHODCALLTYPE D3D11DeviceHook::SetPrivateDataInterface(
-    REFGUID guid,
-    const IUnknown * pData)
+    _In_  REFGUID guid,
+    _In_opt_  const IUnknown * pData)
 {
     if (_SetPrivateDataInterface_pre_ptr._value) { (this->*_SetPrivateDataInterface_pre_ptr._value)(guid, pData); }
     HRESULT ret = GetRealObj()->SetPrivateDataInterface(guid, pData);
@@ -443,7 +443,7 @@ HRESULT STDMETHODCALLTYPE D3D11DeviceHook::GetDeviceRemovedReason()
 
 // -----------------------------------------------------------------------------
 void STDMETHODCALLTYPE D3D11DeviceHook::GetImmediateContext(
-    ID3D11DeviceContext ** ppImmediateContext)
+    _Out_  ID3D11DeviceContext ** ppImmediateContext)
 {
     if (_GetImmediateContext_pre_ptr._value) { (this->*_GetImmediateContext_pre_ptr._value)(ppImmediateContext); }
     GetRealObj()->GetImmediateContext(ppImmediateContext);

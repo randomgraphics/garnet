@@ -4,7 +4,7 @@
 // -----------------------------------------------------------------------------
 HRESULT STDMETHODCALLTYPE DXGIFactoryHook::EnumAdapters(
     /* [in] */ UINT Adapter,
-    IDXGIAdapter ** ppAdapter)
+    _Out_  IDXGIAdapter ** ppAdapter)
 {
     if (_EnumAdapters_pre_ptr._value) { (this->*_EnumAdapters_pre_ptr._value)(Adapter, ppAdapter); }
     HRESULT ret = GetRealObj()->EnumAdapters(Adapter, ppAdapter);
@@ -25,7 +25,7 @@ HRESULT STDMETHODCALLTYPE DXGIFactoryHook::MakeWindowAssociation(
 
 // -----------------------------------------------------------------------------
 HRESULT STDMETHODCALLTYPE DXGIFactoryHook::GetWindowAssociation(
-    HWND * pWindowHandle)
+    _Out_  HWND * pWindowHandle)
 {
     if (_GetWindowAssociation_pre_ptr._value) { (this->*_GetWindowAssociation_pre_ptr._value)(pWindowHandle); }
     HRESULT ret = GetRealObj()->GetWindowAssociation(pWindowHandle);
@@ -35,9 +35,9 @@ HRESULT STDMETHODCALLTYPE DXGIFactoryHook::GetWindowAssociation(
 
 // -----------------------------------------------------------------------------
 HRESULT STDMETHODCALLTYPE DXGIFactoryHook::CreateSwapChain(
-    IUnknown * pDevice,
-    DXGI_SWAP_CHAIN_DESC * pDesc,
-    IDXGISwapChain ** ppSwapChain)
+    _In_  IUnknown * pDevice,
+    _In_  DXGI_SWAP_CHAIN_DESC * pDesc,
+    _Out_  IDXGISwapChain ** ppSwapChain)
 {
     if (_CreateSwapChain_pre_ptr._value) { (this->*_CreateSwapChain_pre_ptr._value)(pDevice, pDesc, ppSwapChain); }
     HRESULT ret = GetRealObj()->CreateSwapChain(pDevice, pDesc, ppSwapChain);
@@ -48,7 +48,7 @@ HRESULT STDMETHODCALLTYPE DXGIFactoryHook::CreateSwapChain(
 // -----------------------------------------------------------------------------
 HRESULT STDMETHODCALLTYPE DXGIFactoryHook::CreateSoftwareAdapter(
     /* [in] */ HMODULE Module,
-    IDXGIAdapter ** ppAdapter)
+    _Out_  IDXGIAdapter ** ppAdapter)
 {
     if (_CreateSoftwareAdapter_pre_ptr._value) { (this->*_CreateSoftwareAdapter_pre_ptr._value)(Module, ppAdapter); }
     HRESULT ret = GetRealObj()->CreateSoftwareAdapter(Module, ppAdapter);

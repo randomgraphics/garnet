@@ -3,9 +3,9 @@
 #include "d3d11hook.h"
 // -----------------------------------------------------------------------------
 HRESULT STDMETHODCALLTYPE DXGIObjectHook::SetPrivateData(
-    REFGUID Name,
+    _In_  REFGUID Name,
     /* [in] */ UINT DataSize,
-    const void * pData)
+    _In_reads_bytes_(DataSize)  const void * pData)
 {
     if (_SetPrivateData_pre_ptr._value) { (this->*_SetPrivateData_pre_ptr._value)(Name, DataSize, pData); }
     HRESULT ret = GetRealObj()->SetPrivateData(Name, DataSize, pData);
@@ -15,8 +15,8 @@ HRESULT STDMETHODCALLTYPE DXGIObjectHook::SetPrivateData(
 
 // -----------------------------------------------------------------------------
 HRESULT STDMETHODCALLTYPE DXGIObjectHook::SetPrivateDataInterface(
-    REFGUID Name,
-    const IUnknown * pUnknown)
+    _In_  REFGUID Name,
+    _In_  const IUnknown * pUnknown)
 {
     if (_SetPrivateDataInterface_pre_ptr._value) { (this->*_SetPrivateDataInterface_pre_ptr._value)(Name, pUnknown); }
     HRESULT ret = GetRealObj()->SetPrivateDataInterface(Name, pUnknown);
@@ -26,9 +26,9 @@ HRESULT STDMETHODCALLTYPE DXGIObjectHook::SetPrivateDataInterface(
 
 // -----------------------------------------------------------------------------
 HRESULT STDMETHODCALLTYPE DXGIObjectHook::GetPrivateData(
-    REFGUID Name,
-    UINT * pDataSize,
-    void * pData)
+    _In_  REFGUID Name,
+    _Inout_  UINT * pDataSize,
+    _Out_writes_bytes_(*pDataSize)  void * pData)
 {
     if (_GetPrivateData_pre_ptr._value) { (this->*_GetPrivateData_pre_ptr._value)(Name, pDataSize, pData); }
     HRESULT ret = GetRealObj()->GetPrivateData(Name, pDataSize, pData);
@@ -38,8 +38,8 @@ HRESULT STDMETHODCALLTYPE DXGIObjectHook::GetPrivateData(
 
 // -----------------------------------------------------------------------------
 HRESULT STDMETHODCALLTYPE DXGIObjectHook::GetParent(
-    REFIID riid,
-    void ** ppParent)
+    _In_  REFIID riid,
+    _Out_  void ** ppParent)
 {
     if (_GetParent_pre_ptr._value) { (this->*_GetParent_pre_ptr._value)(riid, ppParent); }
     HRESULT ret = GetRealObj()->GetParent(riid, ppParent);

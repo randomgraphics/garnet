@@ -11,16 +11,16 @@ DEFINE_INTERFACE_METHOD(virtual, HRESULT, STDMETHODCALLTYPE, SetPresentPerRender
 DEFINE_INTERFACE_METHOD(virtual, UINT, STDMETHODCALLTYPE, GetPresentPerRenderOpDelay, PARAMETER_LIST_0())
 // -----------------------------------------------------------------------------
 DEFINE_INTERFACE_METHOD(virtual, HRESULT, STDMETHODCALLTYPE, SetSwapChain, PARAMETER_LIST_1(
-    DEFINE_METHOD_PARAMETER(IDXGISwapChain *, pSwapChain)))
+    DEFINE_METHOD_PARAMETER(_In_opt_  IDXGISwapChain *, pSwapChain)))
 // -----------------------------------------------------------------------------
 DEFINE_INTERFACE_METHOD(virtual, HRESULT, STDMETHODCALLTYPE, GetSwapChain, PARAMETER_LIST_1(
-    DEFINE_METHOD_PARAMETER(IDXGISwapChain **, ppSwapChain)))
+    DEFINE_METHOD_PARAMETER(_Out_  IDXGISwapChain **, ppSwapChain)))
 // -----------------------------------------------------------------------------
 DEFINE_INTERFACE_METHOD(virtual, HRESULT, STDMETHODCALLTYPE, ValidateContext, PARAMETER_LIST_1(
-    DEFINE_METHOD_PARAMETER(ID3D11DeviceContext *, pContext)))
+    DEFINE_METHOD_PARAMETER(_In_  ID3D11DeviceContext *, pContext)))
 // -----------------------------------------------------------------------------
 DEFINE_INTERFACE_METHOD(virtual, HRESULT, STDMETHODCALLTYPE, ReportLiveDeviceObjects, PARAMETER_LIST_1(
     DEFINE_METHOD_PARAMETER(D3D11_RLDO_FLAGS, Flags)))
 // -----------------------------------------------------------------------------
 DEFINE_INTERFACE_METHOD(virtual, HRESULT, STDMETHODCALLTYPE, ValidateContextForDispatch, PARAMETER_LIST_1(
-    DEFINE_METHOD_PARAMETER(ID3D11DeviceContext *, pContext)))
+    DEFINE_METHOD_PARAMETER(_In_  ID3D11DeviceContext *, pContext)))

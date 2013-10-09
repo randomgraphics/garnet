@@ -62,8 +62,8 @@ class FunctionParameter:
 
     def IsRef( self ):
         return '&' == self._type[:-1] or \
-               self._type == 'REFGUID' or \
-               self._type == 'REFIID'
+               self._type.find('REFGUID') >= 0 or \
+               self._type.find('REFIID') >= 0
 
 class FunctionSignature:
     def __init__( self, prefix, return_type, decl, name ) :
@@ -303,7 +303,7 @@ def PARSE_interface( interface_name, class_name, include, lines ):
             f.write('#include "pch.h"\n')
             f.write('#include "' + include + '"\n')
             for m in methods: m.WriteImplementationToFile( f, class_name )
-        g_cid.BeginInterface(interface_name)
+        g_cid.BeginInterface(interface_name, len(methods))
         """
         TODO: parent class?
         g_cid._header.write('    CID_' + interface_name + '_AddRef = CID_' + interface_name + '_BASE,\n')
@@ -324,8 +324,9 @@ def PARSE_interface( interface_name, class_name, include, lines ):
         elif 'IUnknown' != parent_class:
             UTIL_warn('    Unrecoginized parent class: ' + parent_class)
         """
-        for m in methods: g_cid.WriteMethod(interface_name + '_' + m._name)
-        # We have successfully parsed the interface. Put the interface -> wrapp mapping
+        for idx, m in enumerate(methods): g_cid.WriteMethod(interface_name, idx, interface_name + '_' + m._name)
+        
+		# We have successfully parsed the interface. Put the interface -> wrapp mapping
         # into the global mapping table.
         g_interface_to_wrapper[interface_name] = class_name
     elif not found:
@@ -352,7 +353,8 @@ class CallIDCodeGen:
     def __init__( self ) :
         self._header = open("d3d11cid_def.h", "w")
         self._header.write(
-"""// Define call ID for all D3D11 and DXGI methods.
+"""// (Script generated header. DO NOT EDIT.)
+// Define call ID for all D3D11 and DXGI methods.
 #pragma once
 
 enum D3D11_CALL_ID
@@ -360,7 +362,8 @@ enum D3D11_CALL_ID
 """)
         self._source = open("d3d11cid_def.cpp", "w")
         self._source.write(
-"""#include "pch.h"
+"""// (Script generated header. DO NOT EDIT.)
+#include "pch.h"
 #include "d3d11cid_def.h"
 const char * g_D3D11CallIDText[] =
 {
@@ -368,15 +371,16 @@ const char * g_D3D11CallIDText[] =
         self._method = []
         pass
 
-    def BeginInterface(self, interface):
+    def BeginInterface(self, interface, count):
         self._header.write('\n')
         self._header.write('    // CID for ' + interface + '\n')
         self._header.write('    CID_' + interface + '_BASE,\n'),
+        self._header.write('    CID_' + interface + '_COUNT = ' + str(count) + ',\n'),
         self._source.write('\n')
         self._source.write('    // CID for ' + interface + '\n')
-
-    def WriteMethod(self, method):
-        self._header.write('    CID_' + method + ',\n')
+	
+    def WriteMethod(self, interface, index, method):
+        self._header.write('    CID_' + method + ' = CID_' + interface + '_BASE + ' + str(index) + ',\n')
         self._source.write('    "CID_' + method + '",\n')
 
     def Close(self) :
@@ -385,7 +389,7 @@ const char * g_D3D11CallIDText[] =
     CID_INVALID = 0xFFFFFFFF,
 }; // end of enum definition
 
-const char * const g_D3D11CallIDText;
+extern const char * const g_D3D11CallIDText;
 """)
         self._header.close();
         self._source.write('};\n')
@@ -396,8 +400,13 @@ const char * const g_D3D11CallIDText;
 # Start of main procedure
 
 DXSDK_ROOT_PATH = UTIL_getenv("DXSDK_DIR")
-if '' == DXSDK_ROOT_PATH: UTIL_fatal('Environment variable DXSDK_DIR not found. Make sure that DXSDK is properly installed.')
-DXSDK_INC_PATH = os.path.join( DXSDK_ROOT_PATH, 'include')
+WINSDK_ROOT_PATH = UTIL_getenv("WindowsSdkDir")
+if '' != DXSDK_ROOT_PATH:
+	DXSDK_INC_PATH = os.path.join( DXSDK_ROOT_PATH, 'include')
+elif '' != WINSDK_ROOT_PATH:
+	DXSDK_INC_PATH = os.path.join( WINSDK_ROOT_PATH, 'include\um')
+else:
+	UTIL_fatal('DirectX headers are not found.')
 
 # open global CID files
 g_cid = CallIDCodeGen()

@@ -8,27 +8,27 @@ NullPtr<void (DXGISwapChainHook::*)(HRESULT, /* [in] */ UINT, /* [in] */ UINT)> 
 // -----------------------------------------------------------------------------
 virtual HRESULT STDMETHODCALLTYPE GetBuffer(
     /* [in] */ UINT Buffer,
-    REFIID riid,
-    void ** ppSurface);
-NullPtr<void (DXGISwapChainHook::*)(/* [in] */ UINT &, REFIID, void ** &)> _GetBuffer_pre_ptr;
-NullPtr<void (DXGISwapChainHook::*)(HRESULT, /* [in] */ UINT, REFIID, void **)> _GetBuffer_post_ptr;
+    _In_  REFIID riid,
+    _Out_  void ** ppSurface);
+NullPtr<void (DXGISwapChainHook::*)(/* [in] */ UINT &, _In_  REFIID, _Out_  void ** &)> _GetBuffer_pre_ptr;
+NullPtr<void (DXGISwapChainHook::*)(HRESULT, /* [in] */ UINT, _In_  REFIID, _Out_  void **)> _GetBuffer_post_ptr;
 // -----------------------------------------------------------------------------
 virtual HRESULT STDMETHODCALLTYPE SetFullscreenState(
     /* [in] */ BOOL Fullscreen,
-    IDXGIOutput * pTarget);
-NullPtr<void (DXGISwapChainHook::*)(/* [in] */ BOOL &, IDXGIOutput * &)> _SetFullscreenState_pre_ptr;
-NullPtr<void (DXGISwapChainHook::*)(HRESULT, /* [in] */ BOOL, IDXGIOutput *)> _SetFullscreenState_post_ptr;
+    _In_opt_  IDXGIOutput * pTarget);
+NullPtr<void (DXGISwapChainHook::*)(/* [in] */ BOOL &, _In_opt_  IDXGIOutput * &)> _SetFullscreenState_pre_ptr;
+NullPtr<void (DXGISwapChainHook::*)(HRESULT, /* [in] */ BOOL, _In_opt_  IDXGIOutput *)> _SetFullscreenState_post_ptr;
 // -----------------------------------------------------------------------------
 virtual HRESULT STDMETHODCALLTYPE GetFullscreenState(
-    BOOL * pFullscreen,
-    IDXGIOutput ** ppTarget);
-NullPtr<void (DXGISwapChainHook::*)(BOOL * &, IDXGIOutput ** &)> _GetFullscreenState_pre_ptr;
-NullPtr<void (DXGISwapChainHook::*)(HRESULT, BOOL *, IDXGIOutput **)> _GetFullscreenState_post_ptr;
+    _Out_opt_  BOOL * pFullscreen,
+    _Out_opt_  IDXGIOutput ** ppTarget);
+NullPtr<void (DXGISwapChainHook::*)(_Out_opt_  BOOL * &, _Out_opt_  IDXGIOutput ** &)> _GetFullscreenState_pre_ptr;
+NullPtr<void (DXGISwapChainHook::*)(HRESULT, _Out_opt_  BOOL *, _Out_opt_  IDXGIOutput **)> _GetFullscreenState_post_ptr;
 // -----------------------------------------------------------------------------
 virtual HRESULT STDMETHODCALLTYPE GetDesc(
-    DXGI_SWAP_CHAIN_DESC * pDesc);
-NullPtr<void (DXGISwapChainHook::*)(DXGI_SWAP_CHAIN_DESC * &)> _GetDesc_pre_ptr;
-NullPtr<void (DXGISwapChainHook::*)(HRESULT, DXGI_SWAP_CHAIN_DESC *)> _GetDesc_post_ptr;
+    _Out_  DXGI_SWAP_CHAIN_DESC * pDesc);
+NullPtr<void (DXGISwapChainHook::*)(_Out_  DXGI_SWAP_CHAIN_DESC * &)> _GetDesc_pre_ptr;
+NullPtr<void (DXGISwapChainHook::*)(HRESULT, _Out_  DXGI_SWAP_CHAIN_DESC *)> _GetDesc_post_ptr;
 // -----------------------------------------------------------------------------
 virtual HRESULT STDMETHODCALLTYPE ResizeBuffers(
     /* [in] */ UINT BufferCount,
@@ -40,21 +40,21 @@ NullPtr<void (DXGISwapChainHook::*)(/* [in] */ UINT &, /* [in] */ UINT &, /* [in
 NullPtr<void (DXGISwapChainHook::*)(HRESULT, /* [in] */ UINT, /* [in] */ UINT, /* [in] */ UINT, /* [in] */ DXGI_FORMAT, /* [in] */ UINT)> _ResizeBuffers_post_ptr;
 // -----------------------------------------------------------------------------
 virtual HRESULT STDMETHODCALLTYPE ResizeTarget(
-    const DXGI_MODE_DESC * pNewTargetParameters);
-NullPtr<void (DXGISwapChainHook::*)(const DXGI_MODE_DESC * &)> _ResizeTarget_pre_ptr;
-NullPtr<void (DXGISwapChainHook::*)(HRESULT, const DXGI_MODE_DESC *)> _ResizeTarget_post_ptr;
+    _In_  const DXGI_MODE_DESC * pNewTargetParameters);
+NullPtr<void (DXGISwapChainHook::*)(_In_  const DXGI_MODE_DESC * &)> _ResizeTarget_pre_ptr;
+NullPtr<void (DXGISwapChainHook::*)(HRESULT, _In_  const DXGI_MODE_DESC *)> _ResizeTarget_post_ptr;
 // -----------------------------------------------------------------------------
 virtual HRESULT STDMETHODCALLTYPE GetContainingOutput(
-    IDXGIOutput ** ppOutput);
-NullPtr<void (DXGISwapChainHook::*)(IDXGIOutput ** &)> _GetContainingOutput_pre_ptr;
-NullPtr<void (DXGISwapChainHook::*)(HRESULT, IDXGIOutput **)> _GetContainingOutput_post_ptr;
+    _Out_  IDXGIOutput ** ppOutput);
+NullPtr<void (DXGISwapChainHook::*)(_Out_  IDXGIOutput ** &)> _GetContainingOutput_pre_ptr;
+NullPtr<void (DXGISwapChainHook::*)(HRESULT, _Out_  IDXGIOutput **)> _GetContainingOutput_post_ptr;
 // -----------------------------------------------------------------------------
 virtual HRESULT STDMETHODCALLTYPE GetFrameStatistics(
-    DXGI_FRAME_STATISTICS * pStats);
-NullPtr<void (DXGISwapChainHook::*)(DXGI_FRAME_STATISTICS * &)> _GetFrameStatistics_pre_ptr;
-NullPtr<void (DXGISwapChainHook::*)(HRESULT, DXGI_FRAME_STATISTICS *)> _GetFrameStatistics_post_ptr;
+    _Out_  DXGI_FRAME_STATISTICS * pStats);
+NullPtr<void (DXGISwapChainHook::*)(_Out_  DXGI_FRAME_STATISTICS * &)> _GetFrameStatistics_pre_ptr;
+NullPtr<void (DXGISwapChainHook::*)(HRESULT, _Out_  DXGI_FRAME_STATISTICS *)> _GetFrameStatistics_post_ptr;
 // -----------------------------------------------------------------------------
 virtual HRESULT STDMETHODCALLTYPE GetLastPresentCount(
-    UINT * pLastPresentCount);
-NullPtr<void (DXGISwapChainHook::*)(UINT * &)> _GetLastPresentCount_pre_ptr;
-NullPtr<void (DXGISwapChainHook::*)(HRESULT, UINT *)> _GetLastPresentCount_post_ptr;
+    _Out_  UINT * pLastPresentCount);
+NullPtr<void (DXGISwapChainHook::*)(_Out_  UINT * &)> _GetLastPresentCount_pre_ptr;
+NullPtr<void (DXGISwapChainHook::*)(HRESULT, _Out_  UINT *)> _GetLastPresentCount_post_ptr;

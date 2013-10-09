@@ -215,6 +215,11 @@ namespace GN
         AutoComPtr() throw() : mPtr(0) {}
 
         ///
+        /// Default constructor
+        ///
+        AutoComPtr(nullptr_t) throw() : mPtr(0) {}
+
+        ///
         /// Copy constructor
         ///
         AutoComPtr( const AutoComPtr & other ) throw() : mPtr(other)
@@ -340,6 +345,14 @@ namespace GN
         void clear() { if( mPtr ) mPtr->Release(); mPtr = 0; }
 
         ///
+        /// self explain.
+        ///
+        T * get() const throw()
+        {
+            return mPtr;
+        }
+
+        ///
         /// Release existing interface, then hold new interface
         ///
         template<typename T2>
@@ -378,6 +391,29 @@ namespace GN
             T * pt = mPtr;
             mPtr = NULL;
             return pt;
+        }
+
+        ///
+        /// templated QI.
+        ///
+        template<typename T2>
+        long as(T2 ** ppResult) throw()
+        {
+            if (!ppResult)
+            {
+                return 0x80000003; // E_INVALIDARG
+            }
+
+            *ppResult = NULL;
+
+            if (mPtr)
+            {
+                return mPtr->QueryInterface<T2>(ppResult);
+            }
+            else
+            {
+                return 0x80000005; // E_POINTER
+            }
         }
     };
 }
