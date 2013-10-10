@@ -120,10 +120,10 @@ foreach( $a in $args )
         $env:GN_BUILD_TARGET_CPU = "ppc"
     }
 
-    elseif( "durango" -eq $a )
+    elseif( ("durango" -eq $a) -or ("xbox3" -eq $a) )
     {
         $env:GN_BUILD_COMPILER = "vc"
-        $env:GN_BUILD_TARGET_OS = "durango"
+        $env:GN_BUILD_TARGET_OS = "xbox3"
         $env:GN_BUILD_TARGET_CPU = "x64"
     }
 
@@ -137,7 +137,8 @@ foreach( $a in $args )
 # setup Visual Studio environment
 # ==============================================================================
 
-if( "vc" -eq $env:GN_BUILD_COMPILER )
+# skip VS setup on Xbox One platform.
+if( ("vc" -eq $env:GN_BUILD_COMPILER) -and ("xbox3" -ne $env:GN_BUILD_TARGET_OS) )
 {
     ""
     "====================================="
@@ -300,7 +301,7 @@ if(0)# "mswin" -eq $env:GN_BUILD_TARGET_OS )
     {
         "Windows SDK is not insalled."
     }
-    
+
     if( "" -ne $winsdk_path )
     {
         "Windows SDK found: $winsdk_path"
@@ -452,15 +453,15 @@ if( "xenon" -eq $env:GN_BUILD_TARGET_OS )
 }
 
 # ==============================================================================
-# setup Durango build environment
+# setup Xbox One build environment
 # ==============================================================================
 
-if( "durango" -eq $env:GN_BUILD_TARGET_OS )
+if( "xbox3" -eq $env:GN_BUILD_TARGET_OS )
 {
     ""
-	"==============================="
-	"Setup Durango build environment"
-	"==============================="
+	"================================"
+	"Setup Xbox One build environment"
+	"================================"
     ""
 
     if( !$env:DurangoXDK )
@@ -476,7 +477,7 @@ if( "durango" -eq $env:GN_BUILD_TARGET_OS )
     }
     else
     {
-        error "Durango XDK setup script $batch not found."
+        error "XDK setup script $batch not found."
     }
 }
 

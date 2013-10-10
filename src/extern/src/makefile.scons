@@ -13,7 +13,7 @@ if 'icl' == GN.cc :
         ]
     ccflags += ['/W2'] + ['/Qwd%s'%w for w in unimportant_warnings]
     cppdefines += ['_CRT_SECURE_NO_DEPRECATE','_CRT_NONSTDC_NO_DEPRECATE','_SCL_SECURE_NO_WARNINGS']
-elif 'vc100' == GN.cc or 'vc110' == GN.cc:
+elif 'vc100' == GN.cc or 'vc110' == GN.cc or 'vc' == GN.cc:
     ccflags += ['/W3']
     cppdefines += ['_CRT_SECURE_NO_DEPRECATE','_CRT_NONSTDC_NO_DEPRECATE','_SCL_SECURE_NO_WARNINGS']
     unimportant_warnings = [
@@ -27,10 +27,11 @@ elif 'vc100' == GN.cc or 'vc110' == GN.cc:
             ]
     ccflags += ['/wd%s'%w for w in unimportant_warnings]
 elif 'xenon' == GN.cc:
-    cppdefines += ['NO_GETENV'] # Xenon platform does not support getenv()
+    cppdefines += ['NO_GETENV'] # Xbox platform does not support getenv()
 elif 'gcc' == GN.cc:
 	pass
 else:
+	traceback.print_exc()
 	GN.Error( 'Unknown compiler: ' + GN.cc );
 
 # ========================
@@ -44,7 +45,6 @@ conf = conf_env.Configure(
     conf_dir='.',
     log_file='config.log',
     config_h='extern_config.h' )
-#conf = GN.NewConfig( None, 'extern_config.h' )
 
 # TODO: check byte order
 

@@ -113,10 +113,10 @@ static bool sIsAbsPath( const StrA & path )
 #endif
 
 // *****************************************************************************
-// local functions for Xenon platform
+// local functions for Xbox platform
 // *****************************************************************************
 
-#if GN_XBOX2
+#if GN_XBOX2 || GN_XBOX3
 
 //
 //
@@ -210,7 +210,7 @@ public:
         // normalize path separators
         normalizePathSeparator( tmp, path );
 
-#if GN_XBOX2
+#if GN_XBOX2 || GN_XBOX3
 
         // convert path separators to native format
         for( size_t i = 0; i < tmp.size(); ++i )
@@ -359,7 +359,7 @@ public:
 
     AppFileSystem( NativeFileSystem & nfs ) : mNativeFs( nfs )
     {
-#if GN_XBOX2
+#if GN_XBOX2 || GN_XBOX3
         mRootDir = "game:";
 #elif GN_WINPC
         char buf[MAX_PATH+1];
@@ -620,7 +620,7 @@ public:
 
     MediaFileSystem()
     {
-#if GN_XBOX2
+#if GN_XBOX2 || GN_XBOX3
         addRoot( "game:/media" );
 #endif
         addRoot( "startup::media" );
