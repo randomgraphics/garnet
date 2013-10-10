@@ -12,7 +12,7 @@
 
 #if GN_XBOX2
 #include <xtl.h>
-#elif GN_WINPC
+#elif defined(_WIN32)
 #ifndef NOMINMAX
 #define NOMINMAX
 #endif

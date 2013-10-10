@@ -268,7 +268,7 @@ GN_API void GN::fs::splitPath( const StrA & path, StrA & root, StrA & child )
 // -----------------------------------------------------------------------------
 GN_API void GN::fs::getCurrentDir( StrA & result )
 {
-#if GN_XBOX2
+#if GN_XBOX2 || GN_XBOX3
     result = "game:";
 #elif GN_WINPC
     char buf[MAX_PATH+1];
@@ -301,7 +301,7 @@ GN_API void GN::fs::getCurrentDir( StrA & result )
 // -----------------------------------------------------------------------------
 GN_API void GN::fs::getCurrentDrive( StrA & result )
 {
-#if GN_XBOX2
+#if GN_XBOX2 || GN_XBOX3
     result.clear();
 #elif GN_WINPC
     char buf[MAX_PATH+1];

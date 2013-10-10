@@ -65,8 +65,8 @@
 #define GN_MSWIN    0 ///< Windows-based system (PC, Xbox, Phone and etc.)
 #define GN_WINPC    0 ///< If 1, means current platform is Microsoft Windows on PC (not Xbox)
 #define GN_WINRT    0 ///< Windows RT enabled platform (Win8 or Xbox3)
-#define GN_XBOX2    0 ///< If 1, means Xbox360
-#define GN_XBOX3    0 ///< If 1, means Xbox720
+#define GN_XBOX2    0 ///< If 1, means Xbox 360
+#define GN_XBOX3    0 ///< If 1, means Xbox One
 #define GN_POSIX    0 ///< If 1, means POSIX compatible platform, such as linux/unix and Cygwin
 #define GN_CYGWIN   0 ///< If 1, means Cygwin
 
@@ -162,7 +162,9 @@
 // platform specific configurations
 // *****************************************************************************
 
-#if GN_XBOX2
+#if GN_XBOX3
+#   include     "platform.xbox3.x64.h"
+#elif GN_XBOX2
 #   include     "platform.xenon.ppc.h"
 #elif GN_MSWIN
 #   if GN_X64

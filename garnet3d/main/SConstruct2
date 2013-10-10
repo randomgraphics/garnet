@@ -101,7 +101,12 @@ BUILD_ROOT_PATH = 'build.tmp/' + BUILD_TARGET_OS + '.' + BUILD_TARGET_CPU + '.' 
 #
 ################################################################################
 
-def UTIL_new_env_ex( msvcBatchMode ):
+def UTIL_new_env_ex( isConfigEnv ):
+
+    if isConfigEnv:
+        msvcBatchMode = None
+    else:
+        msvcBatchMode = True
 
     if 'xenon' == BUILD_COMPILER:
 
@@ -149,7 +154,7 @@ def UTIL_new_env_ex( msvcBatchMode ):
             if 'x64' == BUILD_TARGET_OS :
                 icl_abi = 'em64t'
                 msvs_platform = 'x64'
-        elif 'durango' == BUILD_TARGET_OS:
+        elif 'xbox3' == BUILD_TARGET_OS:
             msvs_platform = 'Durango'
         elif 'x64' == BUILD_TARGET_CPU :
             msvs_platform = 'x64'
@@ -250,9 +255,14 @@ def UTIL_new_env_ex( msvcBatchMode ):
         libs['profile']       += Split('xapilibi d3d9i d3dx9  xgraphics  xnet  xaudio2  xacti3 vcomp  libcmt')
         libs['retail']        += Split('xapilib  d3d9  d3dx9  xgraphics  xnet  xaudio2  xact3  vcomp  libcmt')
     elif 'mswin' == BUILD_TARGET_OS:
+        ccflags['debug']      += ['/RTCscu']
         libs['common']        += Split('kernel32 user32 gdi32 shlwapi advapi32 shell32')
-    elif 'durango' == BUILD_TARGET_OS:
+    elif 'xbox3' == BUILD_TARGET_OS:
         cppdefines['common']  += [
+        	'__WRL_NO_DEFAULT_LIB__',
+        	'_TITLE',
+        	'_XBOX_ONE',
+        	'_DURANGO',
             'CONDITION_HANDLING=1',
             'WIN32_LEAN_AND_MEAN=1',
             'DEVL=1',
@@ -271,10 +281,24 @@ def UTIL_new_env_ex( msvcBatchMode ):
             '_USE_DECLSPECS_FOR_SAL=1',
             '_ATL_DLL',
             ]
-        libs['common']        += Split('kernel32 user32 gdi32 shlwapi advapi32 shell32')
-        libs['debug']         += Split('dxgii d3d11i')
-        libs['profile']       += Split('dxgii d3d11i')
-        libs['retail']        += Split('dxgi d3d11')
+        # this is to workaround scons bug that config env does not put "" around options.
+        if isConfigEnv:
+            ccflags['common']     += [
+                '/FU"C:\Program Files (x86)\\Microsoft Durango XDK\\xdk\\crt\\platform\\amd64\\platform.winmd"',
+                '/FU"C:\Program Files (x86)\\Microsoft Durango XDK\\xdk\\references\\commonconfiguration\\neutral\\windows.winmd"',
+                '/AI"C:\Program Files (x86)\\Microsoft Durango XDK\\xdk\\references\\commonconfiguration\\neutral"',
+                ]
+        else:
+            ccflags['common']     += [
+                '/FUC:\Program Files (x86)\\Microsoft Durango XDK\\xdk\\crt\\platform\\amd64\\platform.winmd',
+                '/FUC:\Program Files (x86)\\Microsoft Durango XDK\\xdk\\references\\commonconfiguration\\neutral\\windows.winmd',
+                '/AIC:\Program Files (x86)\\Microsoft Durango XDK\\xdk\\references\\commonconfiguration\\neutral',
+                ]
+        linkflags['common']   += ['/NODEFAULTLIB']
+        libs['common']        += Split('kernelx combase dxguid')
+        libs['debug']         += Split('d3d11i msvcrtd')
+        libs['profile']       += Split('d3d11i msvcrt')
+        libs['retail']        += Split('d3d11 msvcrt')
     else:
         cpppath['common']     += Split('/usr/X11R6/include /usr/local/include')
         libpath['common']     += Split('/usr/X11R6/lib /usr/local/lib')
@@ -291,11 +315,11 @@ def UTIL_new_env_ex( msvcBatchMode ):
         cxxflags['common']  += ['/EHa']
 
         ccflags['common']   += ['/W4', '/WX', '/Ot', '/Oi', '/Z7', '/Yd'] # favor speed, enable intrinsic functions.
-        ccflags['debug']    += ['/MTd', '/GR', '/RTCscu']
+        ccflags['debug']    += ['/MTd', '/GR']
         ccflags['profile']  += ['/MT', '/Ox']
         ccflags['retail']   += ['/MT', '/Ox', '/GL']
 
-        linkflags['common']  += ['/MANIFEST', '/NODEFAULTLIB:libcp.lib', '/FIXED:NO'] # this is for vtune and magellan to do instrumentation
+        linkflags['common']  += ['/MANIFEST', '/FIXED:NO'] # this is for vtune and magellan to do instrumentation
         linkflags['profile'] += ['/OPT:REF']
         linkflags['retail']  += ['/OPT:REF']
 
@@ -323,6 +347,7 @@ def UTIL_new_env_ex( msvcBatchMode ):
             cppdefines['common'] += ['WINVER=0x500']
 
     else:
+        traceback.print_exc()
         UTIL_fatal( 'unknown compiler: %s'%env['CC'] )
 
     # apply compiler options based on current build variant
@@ -342,20 +367,20 @@ def UTIL_new_env_ex( msvcBatchMode ):
     # Done.
     return env
 
-DEFAULT_BATCH_ENV     = UTIL_new_env_ex( True )
-DEFAULT_NON_BATCH_ENV = UTIL_new_env_ex( None )
-def UTIL_new_env( msvcBatchMode ):
-    if msvcBatchMode:
-        return DEFAULT_BATCH_ENV.Clone()
+DEFAULT_BUILD_ENV  = UTIL_new_env_ex( None )
+DEFAULT_CONFIG_ENV = UTIL_new_env_ex( True )
+def UTIL_new_env( isConfigEnv = None ):
+    if isConfigEnv:
+        return DEFAULT_CONFIG_ENV.Clone()
     else:
-        return DEFAULT_NON_BATCH_ENV.Clone()
+        return DEFAULT_BUILD_ENV.Clone()
 
 def UTIL_new_config_env():
 
     # Create config environment with "batch" mode disabled,
     # since batch mode triggers scons 1.2.0.d20091224 config
     # code bug.
-    env = UTIL_new_env( msvcBatchMode = None )
+    env = UTIL_new_env( isConfigEnv = True )
 
     # Do NOT treat warning as error
     ccflags = str(env['CCFLAGS'])
@@ -436,9 +461,9 @@ def CheckConfig():
         CONFIG['has_glut'] = False
         CONFIG['glut'] = []
 
-    # =================
-    # Misc. D3D headers
-    # =================
+    # ==========================
+    # Misc. D3D headers and libs
+    # ==========================
     CONFIG['has_dxerr']       = c.CheckCXXHeader( ['windows.h','dxerr.h'] )
 
     CONFIG['has_xnamath']     = c.CheckCXXHeader( ['windows.h','xnamath.h'] ) or \
@@ -447,6 +472,8 @@ def CheckConfig():
     CONFIG['has_directxmath'] = c.CheckCXXHeader( ['xdk.h','directxmath.h'] ) or \
                                 c.CheckCXXHeader( ['windows.h','directxmath.h'] ) or \
                                 c.CheckCXXHeader( ['xtl.h','directxmath.h'] )
+
+    CONFIG['has_dxgi_lib']    = c.CheckLibWithHeader( 'dxgi.lib', 'dxgi.h', 'C++' )
 
     # ====
     # D3D9
@@ -486,12 +513,12 @@ def CheckConfig():
     # ======
     # XInput
     # ======
-    CONFIG['has_xinput'] = c.CheckCHeader( ['windows.h', 'xinput.h'] ) or \
-                           c.CheckCHeader( ['xtl.h', 'xinput.h'] ) or \
-                           c.CheckCHeader( ['xdk.h', 'xinput.h'] )
     CONFIG['has_xinput2'] = c.CheckCHeader( ['windows.h', 'xinput2.h'] ) or \
                             c.CheckCHeader( ['xtl.h', 'xinput2.h'] ) or \
                             c.CheckCHeader( ['xdk.h', 'xinput2.h'] )
+    CONFIG['has_xinput'] = c.CheckCHeader( ['windows.h', 'xinput.h'] ) or \
+                           c.CheckCHeader( ['xtl.h', 'xinput.h'] ) or \
+                           c.CheckCHeader( ['xdk.h', 'xinput.h'] )
 
     # =====
     # cegui
@@ -690,17 +717,13 @@ class GarnetEnv2 :
     # Create new configuration environment
     #
     def NewConfigEnv( self ) :
-        return UTIL_new_config_env()
+        return DEFAULT_CONFIG_ENV.Clone()
 
     #
     # Create new build environment
     #
     def NewBuildEnv( self ) :
-
-        # create default environment
-        env = UTIL_new_env( msvcBatchMode = True )
-
-        return env
+        return DEFAULT_BUILD_ENV.Clone()
 
     #
     # setup environment for build precompiled header, return PCH object file

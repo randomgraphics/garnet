@@ -323,13 +323,13 @@ struct ThreadMsw : public DoubleLink
         // Create native thread.
         // Note that the new thread, if created, will be blocked by the init event #0.
         // That's why we can safely access mNativeHandle and mNativeID here.
-        thread->mNativeHandle = (HANDLE)_beginthreadex(
+        thread->mNativeHandle = CreateThread(
             0, // default security
             0, // default stack size
             sMainThreadProc,
             thread,
             0, // default flag,
-            &thread->mNativeID );
+            (DWORD*)&thread->mNativeID );
         if( 0 == thread->mNativeHandle )
         {
             delete thread;
@@ -371,8 +371,8 @@ private:
 private:
 
     ThreadMsw();
-    static unsigned int __stdcall sMainThreadProc( void * parameter );
-    static void sUtilThreadProc( void * parameter );
+    static DWORD WINAPI sMainThreadProc( void * parameter );
+    static DWORD WINAPI sUtilThreadProc( void * parameter );
 };
 
 //
@@ -603,10 +603,13 @@ Thread::Identifier ThreadMsw::sAttachToCurrentThread()
     }
 
     // create a utility thread that monitors termination of the current thread.
-    if( !_beginthread(
+    if( !CreateThread(
+        0, // default security
+        0, // default stack
         sUtilThreadProc,
-        0, // default stack size
-        thread ) )
+        thread, // parameter
+        0, // no flags
+        0 ) )
     {
         GN_ERROR(sLogger)( "Fail to create utility thread: %s.", getWin32LastErrorInfo() );
         delete thread;
@@ -623,7 +626,7 @@ Thread::Identifier ThreadMsw::sAttachToCurrentThread()
 //
 //
 // -----------------------------------------------------------------------------
-unsigned int __stdcall ThreadMsw::sMainThreadProc( void * parameter )
+DWORD ThreadMsw::sMainThreadProc( void * parameter )
 {
     GN_ASSERT( parameter );
     ThreadMsw * pThis = (ThreadMsw*)parameter;
@@ -657,7 +660,7 @@ unsigned int __stdcall ThreadMsw::sMainThreadProc( void * parameter )
 //
 //
 // -----------------------------------------------------------------------------
-void ThreadMsw::sUtilThreadProc( void * parameter )
+DWORD ThreadMsw::sUtilThreadProc( void * parameter )
 {
     GN_ASSERT( parameter );
 
@@ -682,6 +685,8 @@ void ThreadMsw::sUtilThreadProc( void * parameter )
     {
         // this means that the thread is being killed, or has been killed.
     }
+
+    return 0;
 }
 
 

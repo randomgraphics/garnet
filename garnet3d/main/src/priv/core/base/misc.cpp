@@ -7,7 +7,7 @@ GN_API void GN::putEnv( const char * name, const char * value )
 {
     static GN::Logger * sLogger = GN::getLogger("GN.base.putEnv");
 
-#if GN_XBOX2
+#if GN_XBOX2 || GN_XBOX3
     // Xenon does not support putenv()
     GN_UNUSED_PARAM( name );
     GN_UNUSED_PARAM( value );
@@ -49,8 +49,9 @@ GN_API void GN::putEnv( const char * name, const char * value )
 // -----------------------------------------------------------------------------
 GN_API void GN::getEnv( StrA & result, const char * name )
 {
-#if GN_XBOX2
-    // Xenon does not support getenv()
+#if GN_XBOX2 || GN_XBOX3
+    // Xbox does not support getenv()
+    GN_UNUSED_PARAM(name);
     result.clear();
 #else
     if( stringEmpty(name) )
