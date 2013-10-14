@@ -15,36 +15,29 @@
 #define NOMINMAX
 #endif
 #include <windows.h>
-#include <d3d9.h>
+#include <d3d11.h>
 #endif
 
-#ifndef _In_reads_opt_
+#undef _In_reads_opt_
 #define _In_reads_opt_(x)
-#endif
 
-#ifndef _Inexpressible_
+#undef _Inexpressible_
 #define _Inexpressible_(x)
-#endif
 
-#ifndef _In_reads_
+#undef _In_reads_
 #define _In_reads_(x)
-#endif
 
-#ifndef _Out_writes_opt_
+#undef _Out_writes_opt_
 #define _Out_writes_opt_(x)
-#endif
 
-#ifndef _Out_writes_bytes_
+#undef _Out_writes_bytes_
 #define _Out_writes_bytes_(x)
-#endif
 
-#ifndef _Out_writes_bytes_opt_
+#undef _Out_writes_bytes_opt_
 #define _Out_writes_bytes_opt_(x)
-#endif
 
-#ifndef _In_reads_bytes_opt_
+#undef _In_reads_bytes_opt_
 #define _In_reads_bytes_opt_(x)
-#endif
 
 // *****************************************************************************
 //                                     EOF

@@ -143,7 +143,7 @@ void GN::gfx::D3D11Gpu::present()
 void GN::gfx::D3D11Gpu::clearScreen(
     const GN::Vector4f & c, float z, uint8 s, uint32 flags )
 {
-    PIXPERF_FUNCTION_EVENT();
+    PIXPERF_FUNCTION_EVENT(mDeviceContext);
 
     if( CLEAR_C & flags )
     {
@@ -174,7 +174,7 @@ void GN::gfx::D3D11Gpu::drawIndexed(
     uint32        ,//numvtx,
     uint32        startidx )
 {
-    PIXPERF_FUNCTION_EVENT();
+    PIXPERF_FUNCTION_EVENT(mDeviceContext);
 
     mDeviceContext->IASetPrimitiveTopology( sD3D11PrimMap[prim] );
     mDeviceContext->DrawIndexed(
@@ -191,7 +191,7 @@ void GN::gfx::D3D11Gpu::draw(
     uint32        numvtx,
     uint32        startvtx )
 {
-    PIXPERF_FUNCTION_EVENT();
+    PIXPERF_FUNCTION_EVENT(mDeviceContext);
 
     mDeviceContext->IASetPrimitiveTopology( sD3D11PrimMap[prim] );
     mDeviceContext->Draw( numvtx, startvtx );
@@ -208,7 +208,7 @@ void GN::gfx::D3D11Gpu::drawIndexedUp(
     uint32         strideInBytes,
     const uint16 * indexData )
 {
-    PIXPERF_FUNCTION_EVENT();
+    PIXPERF_FUNCTION_EVENT(mDeviceContext);
 
     if( !sSetupUserD3D11Buffer(
         *mDevice,
@@ -255,7 +255,7 @@ void GN::gfx::D3D11Gpu::drawUp(
     const void *  vertexData,
     uint32        strideInBytes )
 {
-    PIXPERF_FUNCTION_EVENT();
+    PIXPERF_FUNCTION_EVENT(mDeviceContext);
 
     if( !sSetupUserD3D11Buffer(
         *mDevice,
@@ -294,7 +294,7 @@ void GN::gfx::D3D11Gpu::drawLines(
     const Matrix44f & /*view*/,
     const Matrix44f & /*proj*/ )
 {
-    PIXPERF_FUNCTION_EVENT();
+    PIXPERF_FUNCTION_EVENT(mDeviceContext);
 
     GN_UNIMPL_WARNING();
 }
