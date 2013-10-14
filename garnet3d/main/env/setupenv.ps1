@@ -311,7 +311,7 @@ if(0)# "mswin" -eq $env:GN_BUILD_TARGET_OS )
 }
 
 # ==============================================================================
-# setup DirectX environment
+# setup DirectX SDK environment
 # ==============================================================================
 
 if( "mswin" -eq $env:GN_BUILD_TARGET_OS )

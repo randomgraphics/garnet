@@ -36,15 +36,11 @@ bool GN::gfx::D3D11Gpu::dispInit()
     sd.SampleDesc.Quality = 0;
     sd.Windowed = !ro.fullscreen;
 
-    const D3D_FEATURE_LEVEL ALL_FEATURE_LEVELS[]=
-    {
-        D3D_FEATURE_LEVEL_11_0,
-        D3D_FEATURE_LEVEL_10_1,
-        D3D_FEATURE_LEVEL_10_0,
-        D3D_FEATURE_LEVEL_9_3,
-        D3D_FEATURE_LEVEL_9_2,
-        D3D_FEATURE_LEVEL_9_1,
-    };
+    // Get the highest feature level
+    D3D_FEATURE_LEVEL featureLevel;
+    GN_RETURN_FALSE_ON_HR_FAILED(D3D11CreateDevice(
+        NULL, D3D_DRIVER_TYPE_HARDWARE, NULL, flags, NULL, 0,
+        D3D11_SDK_VERSION, NULL, &featureLevel, NULL));
 
     // create device
     GN_DX_CHECK_RETURN(
@@ -53,8 +49,8 @@ bool GN::gfx::D3D11Gpu::dispInit()
             ro.reference ? D3D_DRIVER_TYPE_REFERENCE : D3D_DRIVER_TYPE_HARDWARE,
             NULL, // software module handle
             flags,
-            ALL_FEATURE_LEVELS,
-            GN_ARRAY_COUNT(ALL_FEATURE_LEVELS),
+            &featureLevel,
+            1,
             D3D11_SDK_VERSION,
             &sd,
             &mSwapChain,

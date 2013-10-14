@@ -2,18 +2,6 @@
 #include "d3d11Gpu.h"
 #include <mtgpu.h>
 
-#if GN_MSVC
-
-#pragma comment(lib, "d3d9.lib") // for PIX routines.
-#pragma comment(lib, "d3d11.lib")
-#if GN_ENABLE_DEBUG
-//#pragma comment(lib, "d3dx10d.lib")
-#else
-//#pragma comment(lib, "d3dx10.lib")
-#endif
-
-#endif // GN_MSVC
-
 static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.D3D11");
 
 // *****************************************************************************
