@@ -3,7 +3,6 @@ SConscript( [
 	'd3d10/makefile.scons',
 	'd3d11/makefile.scons',
 	'engine/makefile.scons',
-	'fbx/makefile.scons',
 	'font/makefile.scons',
 	'ft2/makefile.scons',
 	'gpu/makefile.scons',

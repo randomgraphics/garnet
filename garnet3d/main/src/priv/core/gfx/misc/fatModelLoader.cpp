@@ -16,10 +16,9 @@
 # if GN_GCC
 #  pragma GCC diagnostic ignored "-Wunused"
 # endif
+#pragma warning(disable:4996) // 'x' was declared depreciated
+#define FBXSDK_SHARED
 #include <fbxsdk.h>
-#include <fbxfilesdk/kfbxio/kfbximporter.h>
-#include <fbxfilesdk/kfbxplugins/kfbxgeometryconverter.h>
-#include <fbxfilesdk/fbxfilesdk_nsuse.h>
 #endif
 
 using namespace GN;
@@ -366,8 +365,8 @@ class FbxSdkWrapper
 {
 public:
 
-    KFbxSdkManager * manager;
-    KFbxGeometryConverter * converter;
+    FbxManager * manager;
+    FbxGeometryConverter * converter;
 
     StringMap<char,JointLocation> jointMap;
 
@@ -390,24 +389,24 @@ public:
 
     bool init()
     {
-        manager = KFbxSdkManager::Create();
+        manager = FbxManager::Create();
         if( NULL == manager ) return false;
 
     	// create an IOSettings object
-    	KFbxIOSettings * ios = KFbxIOSettings::Create( manager, IOSROOT );
+    	FbxIOSettings * ios = FbxIOSettings::Create( manager, IOSROOT );
     	manager->SetIOSettings(ios);
 
         // create a converter
-        converter = new KFbxGeometryConverter(manager);
+        converter = new FbxGeometryConverter(manager);
 
     	// Load plugins from the executable directory
-    	KString lPath = KFbxGetApplicationDirectory();
-#if defined(KARCH_ENV_WIN)
-    	KString lExtension = "dll";
-#elif defined(KARCH_ENV_MACOSX)
-    	KString lExtension = "dylib";
-#elif defined(KARCH_ENV_LINUX)
-    	KString lExtension = "so";
+    	FbxString lPath = FbxGetApplicationDirectory();
+#if defined(FBXSDK_ENV_WIN)
+    	FbxString lExtension = "dll";
+#elif defined(FBXSDK_ENV_MAC)
+    	FbxString lExtension = "dylib";
+#elif defined(FBXSDK_ENV_LINUX)
+    	FbxString lExtension = "so";
 #endif
     	manager->LoadPluginsDirectory(lPath.Buffer(), lExtension.Buffer());
 
@@ -419,25 +418,25 @@ public:
 //
 //
 // -----------------------------------------------------------------------------
-static const char * sGetTextureFileName( const KFbxSurfaceMaterial * material, const char * textureType )
+static const char * sGetTextureFileName( const FbxSurfaceMaterial * material, const char * textureType )
 {
-    KFbxProperty prop = material->FindProperty( textureType );
+    FbxProperty prop = material->FindProperty( textureType );
     if( !prop.IsValid() ) return NULL;
 
-    int lLayeredTextureCount = prop.GetSrcObjectCount(KFbxLayeredTexture::ClassId);
+    int lLayeredTextureCount = prop.GetSrcObjectCount(FbxLayeredTexture::ClassId);
     if(lLayeredTextureCount > 0 )
     {
         // Layered texture
 
         for(int j=0; j<lLayeredTextureCount; ++j)
         {
-            KFbxLayeredTexture *lLayeredTexture = KFbxCast <KFbxLayeredTexture>(prop.GetSrcObject(KFbxLayeredTexture::ClassId, j));
+            FbxLayeredTexture *lLayeredTexture = FbxCast <FbxLayeredTexture>(prop.GetSrcObject(FbxLayeredTexture::ClassId, j));
 
-            int lNbTextures = lLayeredTexture->GetSrcObjectCount(KFbxTexture::ClassId);
+            int lNbTextures = lLayeredTexture->GetSrcObjectCount(FbxTexture::ClassId);
 
             for(int k =0; k<lNbTextures; ++k)
             {
-                KFbxFileTexture * lTexture = KFbxCast <KFbxFileTexture> (lLayeredTexture->GetSrcObject(KFbxTexture::ClassId,k));
+                FbxFileTexture * lTexture = FbxCast <FbxFileTexture> (lLayeredTexture->GetSrcObject(FbxTexture::ClassId,k));
                 if(lTexture)
                 {
                     return (const char *)lTexture->GetRelativeFileName();
@@ -448,11 +447,11 @@ static const char * sGetTextureFileName( const KFbxSurfaceMaterial * material, c
     else
     {
         // Simple texture
-        int lNbTextures = prop.GetSrcObjectCount(KFbxTexture::ClassId);
+        int lNbTextures = prop.GetSrcObjectCount(FbxTexture::ClassId);
         for(int j =0; j<lNbTextures; ++j)
         {
 
-            KFbxFileTexture* lTexture = KFbxCast <KFbxFileTexture>( prop.GetSrcObject(KFbxTexture::ClassId, j) );
+            FbxFileTexture* lTexture = FbxCast <FbxFileTexture>( prop.GetSrcObject(FbxTexture::ClassId, j) );
             if(lTexture)
             {
                 return (const char *)lTexture->GetRelativeFileName();
@@ -467,17 +466,17 @@ static const char * sGetTextureFileName( const KFbxSurfaceMaterial * material, c
 //
 // -----------------------------------------------------------------------------
 template<typename T>
-static inline int sGetLayerElementIndex( const KFbxLayerElementTemplate<T> * elements, int index )
+static inline int sGetLayerElementIndex( const FbxLayerElementTemplate<T> * elements, int index )
 {
     if( NULL == elements ) return -1;
 
-    KFbxLayerElement::EReferenceMode refmode = elements->GetReferenceMode();
+    FbxLayerElement::EReferenceMode refmode = elements->GetReferenceMode();
 
-    if( KFbxLayerElement::eDIRECT == refmode )
+    if( FbxLayerElement::eDirect == refmode )
     {
         return index;
     }
-    else if( KFbxLayerElement::eINDEX_TO_DIRECT == refmode )
+    else if( FbxLayerElement::eIndexToDirect == refmode )
     {
         return elements->GetIndexArray().GetAt(index);
     }
@@ -493,24 +492,24 @@ static inline int sGetLayerElementIndex( const KFbxLayerElementTemplate<T> * ele
 // -----------------------------------------------------------------------------
 template<typename T>
 static inline int sGetLayerElementIndex(
-    const KFbxLayerElementTemplate<T> * elements,
+    const FbxLayerElementTemplate<T> * elements,
     int vertexIndex,
     int polygonIndex,
     int cornerIndex )
 {
     if( NULL == elements ) return -1;
 
-    KFbxLayerElement::EMappingMode mapmode = elements->GetMappingMode();
+    FbxLayerElement::EMappingMode mapmode = elements->GetMappingMode();
 
-    if( KFbxLayerElement::eBY_CONTROL_POINT == mapmode )
+    if( FbxLayerElement::eByControlPoint == mapmode )
     {
         return sGetLayerElementIndex( elements, vertexIndex );
     }
-    else if( KFbxLayerElement::eBY_POLYGON_VERTEX == mapmode )
+    else if( FbxLayerElement::eByPolygonVertex == mapmode )
     {
         return sGetLayerElementIndex( elements, polygonIndex * 3 + cornerIndex );
     }
-    else if( KFbxLayerElement::eBY_POLYGON == mapmode )
+    else if( FbxLayerElement::eByPolygon == mapmode )
     {
         return sGetLayerElementIndex( elements, polygonIndex );
     }
@@ -523,9 +522,9 @@ static inline int sGetLayerElementIndex(
 
 struct SortPolygonByMaterial
 {
-    KFbxLayerElementMaterial * materials;
+    FbxLayerElementMaterial * materials;
 
-    SortPolygonByMaterial( KFbxLayerElementMaterial * m )
+    SortPolygonByMaterial( FbxLayerElementMaterial * m )
         : materials(m)
     {
     }
@@ -603,7 +602,7 @@ typedef HashMap<
 //
 // Convert FBX matrix (column-major) to Garnet matrix (row-major)
 // -----------------------------------------------------------------------------
-Matrix44f & sFbxMatrix2GarnetMatrix( Matrix44f & gnmat, const KFbxXMatrix & fbxmat )
+Matrix44f & sFbxMatrix2GarnetMatrix( Matrix44f & gnmat, const FbxMatrix & fbxmat )
 {
     const double * d44 = fbxmat;
 
@@ -617,23 +616,23 @@ Matrix44f & sFbxMatrix2GarnetMatrix( Matrix44f & gnmat, const KFbxXMatrix & fbxm
 }
 
 //
-// See if the FBX node contains an eLIMB_NODE skeleton attribute.
+// See if the FBX node contains an eLimbNode skeleton attribute.
 // -----------------------------------------------------------------------------
-static KFbxSkeleton * sFbxNode2LimbNode( KFbxNode * fbxnode )
+static FbxSkeleton * sFbxNode2LimbNode( FbxNode * fbxnode )
 {
     if( NULL == fbxnode )
     {
         return NULL;
     }
 
-    KFbxSkeleton * fbxlimb = fbxnode->GetSkeleton();
+    FbxSkeleton * fbxlimb = fbxnode->GetSkeleton();
 
     if( NULL == fbxlimb )
     {
         return NULL;
     }
 
-    if( fbxlimb->GetSkeletonType() != KFbxSkeleton::eLIMB_NODE )
+    if( fbxlimb->GetSkeletonType() != FbxSkeleton::eLimbNode )
     {
         return NULL;
     }
@@ -649,11 +648,11 @@ sLoadFbxLimbNodes(
     FatSkeleton & fatsk,
     uint32        parent,
     uint32        previousSibling,
-    KFbxNode    * fbxnode )
+    FbxNode    * fbxnode )
 {
     if( NULL == fbxnode ) return;
 
-    KFbxSkeleton * limb = sFbxNode2LimbNode(fbxnode);
+    FbxSkeleton * limb = sFbxNode2LimbNode(fbxnode);
     if( NULL == limb ) return;
 
     FatJoint newjoint;
@@ -696,10 +695,13 @@ sLoadFbxLimbNodes(
     newjoint.bindPose.model2joint.inverse();
 
     // Now get joint local transformations.
-    KFbxXMatrix localTransform = fbxnode->GetScene()->GetEvaluator()->GetNodeLocalTransform( fbxnode );
-    KFbxVector4 t = localTransform.GetT(),
-                r = localTransform.GetR(),
-                s = localTransform.GetS();
+    FbxMatrix localTransform = fbxnode->GetScene()->GetEvaluator()->GetNodeLocalTransform( fbxnode );
+    FbxVector4 t, sh, s;
+    FbxQuaternion r;
+    double sign;
+    localTransform.GetElements(t, r, sh, s, sign);
+    GN_UNUSED_PARAM(sh);
+    GN_UNUSED_PARAM(sign);
     newjoint.bindPose.position.set( (float)t[0], (float)t[1], (float)t[2] );
     newjoint.bindPose.rotation.set( (float)r[0], (float)r[1], (float)r[2], (float)r[3] );
     newjoint.bindPose.scaling.set ( (float)s[0], (float)s[1], (float)s[2] );
@@ -736,7 +738,7 @@ sLoadFbxLimbNodes(
 static void
 sLoadFbxSkeletons(
     FatModel & fatmodel,
-    KFbxNode * fbxnode )
+    FbxNode * fbxnode )
 {
     if( sFbxNode2LimbNode( fbxnode ) )
     {
@@ -779,7 +781,7 @@ sLoadFbxSkeletons(
 /*
 // Search through all skeletons for joint with specific name.
 // -----------------------------------------------------------------------------
-static void sLoadFbxAnimations( FatModel & fatmodel, KFbxScene * fbxscene )
+static void sLoadFbxAnimations( FatModel & fatmodel, FbxScene * fbxscene )
 {
 
 }*/
@@ -792,7 +794,7 @@ sLoadFbxVertexSkinning(
     INOUT uint32         & skeleton, // Index into FatModel::skeleton arrayreturns the skeleton that of the joint
     OUT   Skinning       & sk,
     IN    FbxSdkWrapper  & sdk,
-    IN    const KFbxMesh * fbxmesh,
+    IN    const FbxMesh * fbxmesh,
     IN    int              controlPointIndex,
     IN    bool             firstVertex )
 {
@@ -813,21 +815,21 @@ sLoadFbxVertexSkinning(
     int numdef = fbxmesh->GetDeformerCount();
     for( int iDef = 0; iDef < numdef; ++iDef )
     {
-        KFbxDeformer * def = fbxmesh->GetDeformer( iDef );
-        KFbxDeformer::EDeformerType deftype = def->GetDeformerType();
+        FbxDeformer * def = fbxmesh->GetDeformer( iDef );
+        FbxDeformer::EDeformerType deftype = def->GetDeformerType();
 
         // Ignore the deformer, if it is not a skin.
-        if( KFbxDeformer::eSKIN != deftype ) continue;
+        if( FbxDeformer::eSkin != deftype ) continue;
 
-        KFbxSkin * skin = (KFbxSkin*)def;
+        FbxSkin * skin = (FbxSkin*)def;
 
         // Search through all clusters
         int numclusters = skin->GetClusterCount();
         for( int iCluster = 0; iCluster < numclusters; ++iCluster )
         {
-            KFbxCluster * cl = skin->GetCluster( iCluster );
+            FbxCluster * cl = skin->GetCluster( iCluster );
 
-            KFbxNode * link = cl->GetLink();
+            FbxNode * link = cl->GetLink();
             if( NULL == link ) continue;
 
             uint32 currentSkeleton;
@@ -926,23 +928,21 @@ sLoadFbxVertexSkinning(
 static bool
 sGenerateFatVertices(
     FatMesh               & fatmesh,
-    KFbxNode              * fbxnode,
+    FbxNode              * fbxnode,
     const MeshVertexCache * vertices,
     const MeshVertexKey   * keys,
     uint32                  numkeys )
 {
     // Compute the node's global position.
-    KFbxXMatrix globalTransform = fbxnode->GetScene()->GetEvaluator()->GetNodeGlobalTransform(fbxnode);
+    FbxMatrix globalTransform = fbxnode->GetScene()->GetEvaluator()->GetNodeGlobalTransform(fbxnode);
 
     // Geometry offset is not inherited by the children.
-    KFbxXMatrix geometryOffset;
-    KFbxVector4 lT, lR, lS;
-    lT = fbxnode->GetGeometricTranslation(KFbxNode::eSOURCE_SET);
-    lR = fbxnode->GetGeometricRotation(KFbxNode::eSOURCE_SET);
-    lS = fbxnode->GetGeometricScaling(KFbxNode::eSOURCE_SET);
-    geometryOffset.SetT(lT);
-    geometryOffset.SetR(lR);
-    geometryOffset.SetS(lS);
+    FbxMatrix geometryOffset;
+    FbxVector4 lT, lR, lS;
+    lT = fbxnode->GetGeometricTranslation(FbxNode::eSourcePivot);
+    lR = fbxnode->GetGeometricRotation(FbxNode::eSourcePivot);
+    lS = fbxnode->GetGeometricScaling(FbxNode::eSourcePivot);
+    geometryOffset.SetTRS(lT, lR, lS);
     globalTransform = globalTransform * geometryOffset;
 
     Matrix44f m44;
@@ -1125,9 +1125,9 @@ sLoadFbxMesh(
     FatModel      & fatmodel,
     const StrA    & filename,
     FbxSdkWrapper & sdk,
-    KFbxMesh      * fbxmesh )
+    FbxMesh      * fbxmesh )
 {
-    KFbxNode * fbxnode = fbxmesh->GetNode();
+    FbxNode * fbxnode = fbxmesh->GetNode();
 
     if( !fbxmesh->IsTriangleMesh() )
     {
@@ -1140,7 +1140,7 @@ sLoadFbxMesh(
     }
 
     // For now, we supports layer 0 only.
-    KFbxLayer * layer0 = fbxmesh->GetLayer(0);
+    FbxLayer * layer0 = fbxmesh->GetLayer(0);
     if( NULL == layer0 )
     {
         GN_ERROR(sLogger)( "The fbxmesh does not have a layer: %s", fbxnode->GetName() );
@@ -1153,28 +1153,28 @@ sLoadFbxMesh(
 
     // Get basic fbxmesh properties
     int                         * fbxIndices   = fbxmesh->GetPolygonVertices();
-    const KFbxVector4           * fbxPositions = fbxmesh->GetControlPoints();
-    KFbxLayerElementUV          * fbxUVs       = layer0->GetUVs();
-    KFbxLayerElementNormal      * fbxNormals   = layer0->GetNormals();
-    KFbxLayerElementMaterial    * fbxMaterials = layer0->GetMaterials();
-    //KFbxLayerElementVertexColor * fbxColors    = layer0->GetVertexColors();
-    //KFbxLayerElementTangent     * fbxTangents  = layer0->GetTangents();
-    //KFbxLayerElementBinormal    * fbxBinormals = layer0->GetBinormals();
+    const FbxVector4           * fbxPositions = fbxmesh->GetControlPoints();
+    FbxLayerElementUV          * fbxUVs       = layer0->GetUVs();
+    FbxLayerElementNormal      * fbxNormals   = layer0->GetNormals();
+    FbxLayerElementMaterial    * fbxMaterials = layer0->GetMaterials();
+    //FbxLayerElementVertexColor * fbxColors    = layer0->GetVertexColors();
+    //FbxLayerElementTangent     * fbxTangents  = layer0->GetTangents();
+    //FbxLayerElementBinormal    * fbxBinormals = layer0->GetBinormals();
     int                           numtri       = fbxmesh->GetPolygonCount();
     int                           numidx       = numtri * 3;
 
     // How many materials are there?
     int nummat;
     if( fbxMaterials &&
-        KFbxLayerElement::eBY_POLYGON == fbxMaterials->GetMappingMode() &&
-        KFbxLayerElement::eINDEX_TO_DIRECT == fbxMaterials->GetReferenceMode() )
+        FbxLayerElement::eByPolygon == fbxMaterials->GetMappingMode() &&
+        FbxLayerElement::eIndexToDirect == fbxMaterials->GetReferenceMode() )
     {
         // multiple materials
         nummat = fbxnode->GetMaterialCount();
     }
     else
     {
-        if( fbxMaterials && KFbxLayerElement::eALL_SAME != fbxMaterials->GetMappingMode() )
+        if( fbxMaterials && FbxLayerElement::eAllSame != fbxMaterials->GetMappingMode() )
         {
             GN_WARN(sLogger)("Unsupported FBX material layer: mapping mode=%d, reference mode=%d. It will be treated as eALL_SAME.", fbxMaterials->GetMappingMode(), fbxMaterials->GetReferenceMode() );
         }
@@ -1187,17 +1187,17 @@ sLoadFbxMesh(
     DynaArray<size_t> fatmatIndices( nummat );
     for( int i = 0; i < nummat; ++i )
     {
-        const KFbxSurfaceMaterial * fbxmat = fbxnode->GetMaterial( i );
+        const FbxSurfaceMaterial * fbxmat = fbxnode->GetMaterial( i );
         GN_ASSERT( fbxmat );
 
         FatMaterial fatmat;
         fatmat.name = fbxmat->GetName();
 
         StrA dirname = fs::dirName( filename );
-        const char * texname = sGetTextureFileName( fbxmat, KFbxSurfaceMaterial::sDiffuse );
+        const char * texname = sGetTextureFileName( fbxmat, FbxSurfaceMaterial::sDiffuse );
         if( texname ) fatmat.albedoTexture = fs::resolvePath( dirname, texname );
 
-        texname = sGetTextureFileName( fbxmat, KFbxSurfaceMaterial::sNormalMap );
+        texname = sGetTextureFileName( fbxmat, FbxSurfaceMaterial::sNormalMap );
         if( texname ) fatmat.normalTexture = fs::resolvePath( dirname, texname );
 
         // TODO: get diffuse color.
@@ -1252,7 +1252,7 @@ sLoadFbxMesh(
     }
     for( int i = 0; i < numpos; ++i )
     {
-        const KFbxVector4 & fbxpos = fbxPositions[i];
+        const FbxVector4 & fbxpos = fbxPositions[i];
         vcache[i].pos.set( (float)fbxpos[0], (float)fbxpos[1], (float)fbxpos[2] );
     }
 
@@ -1323,7 +1323,7 @@ sLoadFbxMesh(
 
                 if( -1 != normalIndex )
                 {
-                    const KFbxVector4 & fbxnormal = fbxNormals->GetDirectArray().GetAt(normalIndex);
+                    const FbxVector4 & fbxnormal = fbxNormals->GetDirectArray().GetAt(normalIndex);
                     Vector3f normal( (float)fbxnormal[0], (float)fbxnormal[1], (float)fbxnormal[2] );
                     key.normal = vc.AddAttribute( vc.normals, normal );
                 }
@@ -1336,7 +1336,7 @@ sLoadFbxMesh(
 
                 if( -1 != uvIndex )
                 {
-                    const KFbxVector2 & fbxuv = fbxUVs->GetDirectArray().GetAt(uvIndex);
+                    const FbxVector2 & fbxuv = fbxUVs->GetDirectArray().GetAt(uvIndex);
                     // BUGBUG: for some reason, U coordinates has to be inverted (1.0-v) to make the model look right in the viewer.
                     Vector2f tc0( (float)fbxuv[0], (float)(1.0-fbxuv[1]) );
                     key.tc0 = vc.AddAttribute( vc.tc0, tc0 );
@@ -1437,13 +1437,13 @@ sLoadFbxMeshes(
     FatModel      & fatmodel,
     const StrA    & filename,
     FbxSdkWrapper & sdk,
-    KFbxScene     & scene )
+    FbxScene     & scene )
 {
     // Load meshes
-    int meshCount = KFbxGetSrcCount<KFbxMesh>(&scene);
+    int meshCount = FbxGetSrcCount<FbxMesh>(&scene);
     for( int i=0; i<meshCount; i++ )
     {
-        KFbxMesh * fbxmesh = KFbxGetSrc<KFbxMesh>(&scene, i);
+        FbxMesh * fbxmesh = FbxGetSrc<FbxMesh>(&scene, i);
         sLoadFbxMesh( fatmodel, filename, sdk, fbxmesh );
     }
 }
@@ -1453,8 +1453,8 @@ sLoadFbxMeshes(
 // -----------------------------------------------------------------------------
 static void
 sLoadFbxAnimStack(
-    FatModel      & fatmodel,
-    KFbxAnimStack & fbxanim )
+    FatModel     & fatmodel,
+    FbxAnimStack & fbxanim )
 {
     FatAnimation fatanim;
 
@@ -1462,10 +1462,10 @@ sLoadFbxAnimStack(
     fatanim.name = fbxanim.Description.Get();
 
     // Get animation time.
-    KTimeSpan timespan = fbxanim.GetLocalTimeSpan();
-    //KTime start = timespan.GetStart();
-    //KTime stop  = timespan.GetStop();
-    KTime duration = timespan.GetDuration();
+    FbxTimeSpan timespan = fbxanim.GetLocalTimeSpan();
+    //FbxTime start = timespan.GetStart();
+    //FbxTime stop  = timespan.GetStop();
+    FbxTime duration = timespan.GetDuration();
     fatanim.duration = duration.GetSecondDouble();
 
     // We care about skeleton animations only for now.
@@ -1477,13 +1477,13 @@ sLoadFbxAnimStack(
 static void
 sLoadFbxAnimations(
     FatModel      & fatmodel,
-    KFbxScene     & fbxscene )
+    FbxScene     & fbxscene )
 {
     // Iterate through all animation stacks in the scene. Load them one by one.
-    int animCount = KFbxGetSrcCount<KFbxAnimStack>(&fbxscene);
+    int animCount = FbxGetSrcCount<FbxAnimStack>(&fbxscene);
     for( int i=0; i<animCount; i++ )
     {
-        KFbxAnimStack * fbxanim = KFbxGetSrc<KFbxAnimStack>(&fbxscene, i);
+        FbxAnimStack * fbxanim = FbxGetSrc<FbxAnimStack>(&fbxscene, i);
         sLoadFbxAnimStack( fatmodel, *fbxanim );
     }
 }
@@ -1500,7 +1500,7 @@ sLoadFromFBX( FatModel & fatmodel, File & file, const StrA & filename )
 
     FbxSdkWrapper sdk;
     if( !sdk.init() ) return false;
-    KFbxSdkManager * gSdkManager = sdk.manager;
+    FbxManager * gSdkManager = sdk.manager;
 
     // TODO: setup file system.
 
@@ -1508,46 +1508,46 @@ sLoadFromFBX( FatModel & fatmodel, File & file, const StrA & filename )
 	int lFileFormat = -1;
     if (!gSdkManager->GetIOPluginRegistry()->DetectReaderFileFormat(filename, lFileFormat) )
     {
-        // Unrecognizable file format. Try to fall back to KFbxImporter::eFBX_BINARY
+        // Unrecognizable file format. Try to fall back to FbxImporter::eFBX_BINARY
         lFileFormat = gSdkManager->GetIOPluginRegistry()->FindReaderIDByDescription( "FBX binary (*.fbx)" );;
     }
 
     // Create the importer.
-    KFbxImporter* gImporter = KFbxImporter::Create(gSdkManager,"");
+    FbxImporter* gImporter = FbxImporter::Create(gSdkManager,"");
     if( NULL == gImporter ) return false;
     if(!gImporter->Initialize(filename, lFileFormat))
     {
-        GN_ERROR(sLogger)( gImporter->GetLastErrorString() );
+        GN_ERROR(sLogger)( gImporter->GetStatus().GetErrorString() );
         return false;
     }
 
     // Import the scene
-    KFbxScene * gScene = KFbxScene::Create( gSdkManager, "" );
+    FbxScene * gScene = FbxScene::Create( gSdkManager, "" );
     if( NULL == gScene ) return false;
     if(!gImporter->Import(gScene))
     {
-        GN_ERROR(sLogger)( gImporter->GetLastErrorString() );
+        GN_ERROR(sLogger)( gImporter->GetStatus().GetErrorString() );
         return false;
     }
 
     // Convert Axis System to right handed system, if needed
-    KFbxAxisSystem SceneAxisSystem = gScene->GetGlobalSettings().GetAxisSystem();
-    KFbxAxisSystem OurAxisSystem(KFbxAxisSystem::YAxis, KFbxAxisSystem::ParityOdd, KFbxAxisSystem::RightHanded);
+    FbxAxisSystem SceneAxisSystem = gScene->GetGlobalSettings().GetAxisSystem();
+    FbxAxisSystem OurAxisSystem(FbxAxisSystem::eYAxis, FbxAxisSystem::eParityOdd, FbxAxisSystem::eRightHanded);
     if( SceneAxisSystem != OurAxisSystem )
     {
         OurAxisSystem.ConvertScene(gScene);
     }
 
     // Convert Unit System to 1.0, if needed
-    KFbxSystemUnit SceneSystemUnit = gScene->GetGlobalSettings().GetSystemUnit();
+    FbxSystemUnit SceneSystemUnit = gScene->GetGlobalSettings().GetSystemUnit();
     if( SceneSystemUnit.GetScaleFactor() != 1.0 )
     {
-        KFbxSystemUnit OurSystemUnit(1.0);
+        FbxSystemUnit OurSystemUnit(1.0);
         OurSystemUnit.ConvertScene(gScene);
     }
 
     // preallocate material array.
-    int nummat = KFbxGetSrcCount<KFbxSurfaceMaterial>(gScene);
+    int nummat = FbxGetSrcCount<FbxSurfaceMaterial>(gScene);
     fatmodel.materials.reserve( (size_t)nummat );
     //fatmodel.materials.resize( 1 );
     //fatmodel.materials[0].name = "=[DEFAULT]=";
@@ -1595,18 +1595,18 @@ sPrintFBXNodeHierarchy( StrA & hierarchy, const StrA & filename )
         return;
     }
 
-    KFbxSdkManager * gSdkManager = sdk.manager;
+    FbxManager * gSdkManager = sdk.manager;
 
     // detect file format
 	int lFileFormat = -1;
     if (!gSdkManager->GetIOPluginRegistry()->DetectReaderFileFormat(filename, lFileFormat) )
     {
-        // Unrecognizable file format. Try to fall back to KFbxImporter::eFBX_BINARY
+        // Unrecognizable file format. Try to fall back to FbxImporter::eFBX_BINARY
         lFileFormat = gSdkManager->GetIOPluginRegistry()->FindReaderIDByDescription( "FBX binary (*.fbx)" );;
     }
 
     // Create the importer.
-    KFbxImporter* gImporter = KFbxImporter::Create(gSdkManager,"");
+    FbxImporter* gImporter = FbxImporter::Create(gSdkManager,"");
     if( NULL == gImporter )
     {
         hierarchy = "ERROR: out of memory.";
@@ -1614,12 +1614,12 @@ sPrintFBXNodeHierarchy( StrA & hierarchy, const StrA & filename )
     }
     if(!gImporter->Initialize(filename, lFileFormat))
     {
-        hierarchy = gImporter->GetLastErrorString();
+        hierarchy = gImporter->GetStatus().GetErrorString();
         return;
     }
 
     // Import the scene
-    KFbxScene * gScene = KFbxScene::Create( gSdkManager, "" );
+    FbxScene * gScene = FbxScene::Create( gSdkManager, "" );
     if( NULL == gScene )
     {
         hierarchy = "ERROR: out of memory.";
@@ -1627,13 +1627,13 @@ sPrintFBXNodeHierarchy( StrA & hierarchy, const StrA & filename )
     }
     if(!gImporter->Import(gScene))
     {
-        hierarchy = gImporter->GetLastErrorString();
+        hierarchy = gImporter->GetStatus().GetErrorString();
         return;
     }
 
     struct Local
     {
-        static void sPrintNodeRecursivly( StrA & hierarchy, KFbxNode * node, int depth )
+        static void sPrintNodeRecursivly( StrA & hierarchy, FbxNode * node, int depth )
         {
             if( NULL == node ) return;
 
@@ -1650,7 +1650,7 @@ sPrintFBXNodeHierarchy( StrA & hierarchy, const StrA & filename )
 
             hierarchy += " : ";
 
-            KFbxNodeAttribute * a = node->GetNodeAttribute();
+            FbxNodeAttribute * a = node->GetNodeAttribute();
             if( a )
             {
                 static const char * sAttributeTypeNames[] =
@@ -1678,18 +1678,18 @@ sPrintFBXNodeHierarchy( StrA & hierarchy, const StrA & filename )
                     "eCACHED_EFFECT",
                 };
 
-                KFbxNodeAttribute::EAttributeType atype = a->GetAttributeType();
+                FbxNodeAttribute::EType atype = a->GetAttributeType();
 
-                if( KFbxNodeAttribute::eSKELETON == atype )
+                if( FbxNodeAttribute::eSkeleton == atype )
                 {
-                    KFbxSkeleton::ESkeletonType stype = ((KFbxSkeleton*)a)->GetSkeletonType();
+                    FbxSkeleton::EType stype = ((FbxSkeleton*)a)->GetSkeletonType();
                     switch(stype)
                     {
-                        case KFbxSkeleton::eROOT      : hierarchy += "eSKELETON : eROOT"; break;
-                        case KFbxSkeleton::eLIMB      : hierarchy += "eSKELETON : eLIMB"; break;
-                        case KFbxSkeleton::eLIMB_NODE : hierarchy += "eSKELETON : eLIMB_NODE"; break;
-                        case KFbxSkeleton::eEFFECTOR  : hierarchy += "eSKELETON : eEFFECTOR"; break;
-                        default                       : hierarchy += "eSKELETON : [INVALID TYPE]"; break;
+                        case FbxSkeleton::eRoot     : hierarchy += "eSKELETON : eRoot"; break;
+                        case FbxSkeleton::eLimb     : hierarchy += "eSKELETON : eLimb"; break;
+                        case FbxSkeleton::eLimbNode : hierarchy += "eSKELETON : eLimbNode"; break;
+                        case FbxSkeleton::eEffector : hierarchy += "eSKELETON : eEffector"; break;
+                        default                     : hierarchy += "eSKELETON : [INVALID TYPE]"; break;
                     }
                 }
                 else if( 0 <= atype && atype < (int)GN_ARRAY_COUNT(sAttributeTypeNames) )
