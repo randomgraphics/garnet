@@ -108,7 +108,7 @@ ai_contrib_cluster = GN.BuildObjects( ai_contrib_env, GN.Glob( ['assimp/contrib/
 
 # Others
 misc_env = GN.NewBuildEnv()
-misc_env.Append( CCFLAGS = ccflags, CPPDEFINES = cppdefines )
+misc_env.Append( CCFLAGS = ccflags, CPPDEFINES = cppdefines + ['GLEW_STATIC'] )
 GN.RemoveEnvListItems( misc_env, 'CCFLAGS', ['/W4','/Wcheck','-Wall'] )
 misc_sources = GN.Glob( Split('expat/*.c pcre/*.c* png/*.c zlib/*.c') )
 if 'mingw' != GN.cc: misc_sources += GN.Glob( 'lua/*.c' )

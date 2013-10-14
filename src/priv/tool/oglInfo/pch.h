@@ -16,6 +16,9 @@
 #include <windows.h>
 #endif
 
+#ifndef GLEW_STATIC
+#define GLEW_STATIC
+#endif
 #include <GL/glew.h>
 
 #if GN_WINPC

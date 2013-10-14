@@ -704,34 +704,66 @@ GN::gfx::OGLGpuProgramGLSL::enumParameters()
 bool
 GN::gfx::OGLGpuProgramGLSL::enumAttributes()
 {
-    // get attribute count
-    GLint numAttributes;
-    GN_OGL_CHECK_RV( glGetObjectParameterivARB( mProgram, GL_OBJECT_ACTIVE_ATTRIBUTES_ARB, &numAttributes ), false );
-
-    // get maxinum length of attribute name;
-    GLint maxLength;
-    GN_OGL_CHECK_RV( glGetObjectParameterivARB( mProgram, GL_OBJECT_ACTIVE_ATTRIBUTE_MAX_LENGTH_ARB, &maxLength ), false );
-
-    // enumerate all attributes
-    char * nameptr = (char*)alloca( maxLength+1 );
-    mAttributes.clear();
-    for( GLint i = 0; i < numAttributes; ++i )
+    if (GLEW_ARB_program_interface_query)
     {
-        GLSLAttributeDesc a;
-        GLsizei unusedCount;
-        GLenum unusedType;
-        GLint location;
+        GLint numActiveAttribs = 0;
+        GN_OGL_CHECK_RV( glGetProgramInterfaceiv(mProgram, GL_PROGRAM_INPUT, GL_ACTIVE_RESOURCES, &numActiveAttribs), false );
 
-        GN_OGL_CHECK_RV( glGetActiveAttribARB( mProgram, i, maxLength, NULL, &unusedCount, &unusedType, nameptr ), false );
-        nameptr[maxLength] = 0;
+        GLint maxLength;
+        GN_OGL_CHECK_RV( glGetProgramInterfaceiv( mProgram, GL_PROGRAM_INPUT, GL_MAX_NAME_LENGTH, &maxLength ), false );
 
-        GN_OGL_CHECK_RV( location = glGetAttribLocationARB( mProgram, nameptr ), false );
+        char * nameptr = (char*)alloca( maxLength + 1 );
+        mAttributes.clear();
+        for( GLint i = 0; i < numActiveAttribs; ++i )
+        {
+            GN_OGL_CHECK_RV( glGetProgramResourceName( mProgram, GL_PROGRAM_INPUT, i, maxLength, NULL, nameptr ), false );
+            nameptr[maxLength] = 0;
 
-        if( !sGetOglVertexSemantic( a.semanticName, a.semanticIndex, nameptr, location ) ) return false;
+            GLint location;
+            GN_OGL_CHECK_RV( location = glGetAttribLocationARB( mProgram, nameptr ), false );
 
-        a.name = nameptr;
+            GLSLAttributeDesc a;
+            if( !sGetOglVertexSemantic( a.semanticName, a.semanticIndex, nameptr, location ) ) return false;
 
-        mAttributes.append( a );
+            a.name = nameptr;
+            mAttributes.append( a );
+        }
+    }
+    else
+    {
+        // get attribute count
+        GLint numAttributes;
+        GN_OGL_CHECK_RV( glGetObjectParameterivARB( mProgram, GL_OBJECT_ACTIVE_ATTRIBUTES_ARB, &numAttributes ), false );
+
+        // get maxinum length of attribute name;
+        GLint maxLength;
+        GN_OGL_CHECK_RV( glGetObjectParameterivARB( mProgram, GL_OBJECT_ACTIVE_ATTRIBUTE_MAX_LENGTH_ARB, &maxLength ), false );
+
+        // enumerate all attributes
+        char * nameptr = (char*)alloca( maxLength+1 );
+        mAttributes.clear();
+        for( GLint i = 0; i < numAttributes; ++i )
+        {
+            GLsizei unusedCount;
+            GLenum unusedType;
+            GN_OGL_CHECK_RV( glGetActiveAttribARB( mProgram, i, maxLength, NULL, &unusedCount, &unusedType, nameptr ), false );
+            nameptr[maxLength] = 0;
+            if( 0 == *nameptr)
+            {
+                // ignore non-named attributes.
+                GN_WARN(sLogger)("Attribute %d has no name.", i);
+                continue;
+            }
+
+            GLint location;
+            GN_OGL_CHECK_RV( location = glGetAttribLocationARB( mProgram, nameptr ), false );
+
+            GLSLAttributeDesc a;
+            if( !sGetOglVertexSemantic( a.semanticName, a.semanticIndex, nameptr, location ) ) return false;
+
+            a.name = nameptr;
+            mAttributes.append( a );
+        }
     }
 
     // initialize name and format arrays
@@ -742,10 +774,13 @@ GN::gfx::OGLGpuProgramGLSL::enumAttributes()
     }
 
     // update parameter descriptor
-    mParamDesc.setAttributeArray(
-        &mAttributes[0].desc,
-        (uint32)mAttributes.size(),
-        sizeof(GLSLAttributeDesc) );
+    if (mAttributes.size() > 0)
+    {
+        mParamDesc.setAttributeArray(
+            &mAttributes[0].desc,
+            (uint32)mAttributes.size(),
+            sizeof(GLSLAttributeDesc) );
+    }
 
     return true;
 }

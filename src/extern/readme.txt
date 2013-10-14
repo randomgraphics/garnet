@@ -5,7 +5,7 @@ Assimp      2.0.863
 Cg          3.0 Feb 2011
 Expat       2.0.0
 Freetype    2.4.4 (http://www.freetype.org)
-glew        1.5.5 (http://glew.sourceforge.net)
+glew        1.10.0 (http://glew.sourceforge.net)
 jpeg        jpeg-6b (http://www.ijg.org)
 lua         5.1 (http://www.lua.org)
 pcre        6.4 (http://www.pcre.org/)
