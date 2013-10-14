@@ -157,7 +157,7 @@ void GN::gfx::D3D11Gpu::contextQuit()
 // -----------------------------------------------------------------------------
 bool GN::gfx::D3D11Gpu::bindContextImpl( const GpuContext & newContext, bool skipDirtyCheck )
 {
-    PIXPERF_FUNCTION_EVENT();
+    PIXPERF_FUNCTION_EVENT(mDeviceContext);
 
     if( !bindContextRenderTarget( newContext, skipDirtyCheck ) ) return false;
     if( !bindContextShader( newContext, skipDirtyCheck ) ) return false;
