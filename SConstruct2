@@ -101,9 +101,14 @@ BUILD_ROOT_PATH = 'build.tmp/' + BUILD_TARGET_OS + '.' + BUILD_TARGET_CPU + '.' 
 #
 ################################################################################
 
-def UTIL_new_env_ex( isConfigEnv ):
+def UTIL_new_env_ex( conf ):
+
+    isConfigEnv = None == conf
 
     if isConfigEnv:
+        # Create config environment with "batch" mode disabled,
+        # since batch mode triggers scons 1.2.0.d20091224 config
+        # code bug.
         msvcBatchMode = None
     else:
         msvcBatchMode = True
@@ -245,6 +250,14 @@ def UTIL_new_env_ex( isConfigEnv ):
     cppdefines['profile'] += ['GN_ENABLE_DEBUG=0', 'GN_ENABLE_PROFILING=1', 'NDEBUG']
     cppdefines['retail']  += ['GN_ENABLE_DEBUG=0', 'GN_ENABLE_PROFILING=0', 'NDEBUG']
 
+    # Setup FBX options
+    if (not isConfigEnv) and conf['has_fbx']:
+        cpppath['common']     += conf['fbx_incpath']
+        libpath['debug']      += conf['fbx_libpath']['debug']
+        libpath['retail']     += conf['fbx_libpath']['retail']
+        libpath['profile']    += conf['fbx_libpath']['profile']
+        libs['common']        += conf['fbx_libs']
+
     # Target platform specific options
     if 'xenon' == BUILD_TARGET_OS:
         ccflags['common']     += ['/QVMX128']
@@ -367,20 +380,17 @@ def UTIL_new_env_ex( isConfigEnv ):
     # Done.
     return env
 
-DEFAULT_BUILD_ENV  = UTIL_new_env_ex( None )
-DEFAULT_CONFIG_ENV = UTIL_new_env_ex( True )
-def UTIL_new_env( isConfigEnv = None ):
-    if isConfigEnv:
-        return DEFAULT_CONFIG_ENV.Clone()
-    else:
-        return DEFAULT_BUILD_ENV.Clone()
+################################################################################
+#
+# Configurations (part 2/2): Run SCons configuration script.
+#
+################################################################################
 
+# Define build environment for config
+DEFAULT_CONFIG_ENV = UTIL_new_env_ex( None )
 def UTIL_new_config_env():
 
-    # Create config environment with "batch" mode disabled,
-    # since batch mode triggers scons 1.2.0.d20091224 config
-    # code bug.
-    env = UTIL_new_env( isConfigEnv = True )
+    env = DEFAULT_CONFIG_ENV.Clone()
 
     # Do NOT treat warning as error
     ccflags = str(env['CCFLAGS'])
@@ -395,19 +405,12 @@ def UTIL_new_config_env():
 
     return env;
 
-
-################################################################################
-#
-# Configurations (part 2/2): Run SCons configuration script.
-#
-################################################################################
-
 CONFIG = {}
 
 def CheckConfig():
 
     # Create configuration object
-    env = UTIL_new_config_env()
+    env = DEFAULT_CONFIG_ENV.Clone()
     confdir = '#' + BUILD_ROOT_PATH + 'config'
     c = env.Configure( conf_dir=confdir, log_file=confdir + '/config.log' )
 
@@ -550,20 +553,24 @@ def CheckConfig():
     # FBX
     # ===
 
-    FBX_libname = "fbxsdk-" + UTIL_getenv("FBX_SDK_VERSION") + "-mt";
-    if BUILD_VARIANT == 'debug'   : FBX_libname += 'd'
-
-    FBX_deps = []
-    if HOST_OS == 'mswin' : FBX_deps += ['wininet'];
-
-    env.Append( LIBS = FBX_deps )
-    if c.CheckLibWithHeader( FBX_libname, ['fbxsdk.h','fbxfilesdk/fbxfilesdk_nsuse.h'], 'C++', 'KFbxSdkManager::Create();' ):
-        CONFIG['has_fbx']  = True
-        CONFIG['fbx_libs'] = [FBX_libname] + FBX_deps
+    if 'mswin' == BUILD_TARGET_OS:
+        CONFIG['has_fbx']     = True
+        CONFIG['fbx_incpath'] = ['#src/extern/fbx/2014.1/include'],
+        CONFIG['fbx_libpath'] = {'debug'   : ['#src/extern/fbx/2014.1/lib/vs2010/' + HOST_CPU + '/debug'],
+                                 'profile' : ['#src/extern/fbx/2014.1/lib/vs2010/' + HOST_CPU + '/release'],
+                                 'retail'  : ['#src/extern/fbx/2014.1/lib/vs2010/' + HOST_CPU + '/release'],
+                                }
+        CONFIG['fbx_libs']    = ['libfbxsdk','wininet']
+    elif c.CheckLibWithHeader( 'libfbxsdk', ['fbxsdk.h'], 'C++' ):
+        CONFIG['has_fbx']     = True
+        CONFIG['fbx_incpath'] = [],
+        CONFIG['fbx_libpath'] = {'debug' : [], 'profile' : [], 'retail' : []}
+        CONFIG['fbx_libs']    = ['libfbxsdk']
     else:
-        CONFIG['has_fbx']  = False
-        CONFIG['fbx_libs'] = []
-    for d in FBX_deps: env['LIBS'].remove( d )
+        CONFIG['has_fbx']     = False
+        CONFIG['fbx_incpath'] = [],
+        CONFIG['fbx_libpath'] = {'debug' : [], 'profile' : [], 'retail' : []}
+        CONFIG['fbx_libs']    = []
 
     # =============
     # finish config
@@ -577,6 +584,8 @@ CheckConfig()
 # ∂®“Â GarnetEnv class
 #
 ################################################################################
+
+DEFAULT_BUILD_ENV = UTIL_new_env_ex(CONFIG)
 
 class GarnetEnv2 :
 
@@ -864,6 +873,7 @@ class GarnetEnv2 :
         # setup dependency to other targets
         Depends( program, GN.CollectTargets([
             'GNexternBin',
+            'GNfbxBin',
             'GNmedia',
         ]))
 
