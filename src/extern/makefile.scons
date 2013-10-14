@@ -1,4 +1,5 @@
 SConscript([
-	'src/makefile.scons',
 	'bin/makefile.scons',
+	'fbx/makefile.scons',
+	'src/makefile.scons',
 	])
