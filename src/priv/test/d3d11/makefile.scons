@@ -1,6 +1,6 @@
 Import( 'GN' )
 
-if GN.has_d3d11 and GN.has_d3dx11:
+if GN.has_d3d11:
 
     import string
 
