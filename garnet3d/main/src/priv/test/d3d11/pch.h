@@ -9,7 +9,7 @@
 #include "garnet/GNd3d.h"
 #include "garnet/GNgfx.h"
 #include "garnet/GNutil.h"
-#include <d3dx11.h>
+#include <d3d11.h>
 
 #undef DEFINE_GUID
 #include <INITGUID.h>
@@ -18,6 +18,12 @@
 #define offsetof_fx( a, b ) (UINT)offsetof( a, b )
 
 #define FXDPF // enable debug output of effect library.
+
+#define D3DX11INLINE inline
+
+#ifndef D3DERR_INVALIDCALL
+#define D3DERR_INVALIDCALL 0x8876086c
+#endif
 
 #include "d3dx11effect.h"
 #include "d3dxGlobal.h"
