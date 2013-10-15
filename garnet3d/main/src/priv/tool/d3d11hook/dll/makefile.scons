@@ -3,15 +3,19 @@ Import( 'GN' )
 sources = [
     'd3d11hook.cpp',
     'dxgihook.cpp',
+    'exports.cpp',
     'ID3D11Debug.cpp',
     'ID3D11Device.cpp',
     'ID3D11DeviceContext.cpp',
     'ID3D11InfoQueue.cpp',
     'IDXGIAdapter.cpp',
+    'IDXGIDevice.cpp',
     'IDXGIFactory.cpp',
+    #'IDXGIFactory1.cpp',
 ]
 
 env = GN.NewBuildEnv()
+env.Prepend( CPPPATH = ['d3dheaders'] )
 #env.Append( LINKFLAGS = ['/DEF:%s'%File('myd3d11.def').srcnode().path] )
 
 GN.NewDefaultTarget(

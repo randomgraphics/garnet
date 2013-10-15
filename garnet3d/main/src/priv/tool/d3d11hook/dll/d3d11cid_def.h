@@ -234,6 +234,15 @@ enum D3D11_CALL_ID
     CID_IDXGIDeviceSubObject_COUNT = 1,
     CID_IDXGIDeviceSubObject_GetDevice = CID_IDXGIDeviceSubObject_BASE + 0,
 
+    // CID for IDXGIDevice
+    CID_IDXGIDevice_BASE,
+    CID_IDXGIDevice_COUNT = 5,
+    CID_IDXGIDevice_GetAdapter = CID_IDXGIDevice_BASE + 0,
+    CID_IDXGIDevice_CreateSurface = CID_IDXGIDevice_BASE + 1,
+    CID_IDXGIDevice_QueryResourceResidency = CID_IDXGIDevice_BASE + 2,
+    CID_IDXGIDevice_SetGPUThreadPriority = CID_IDXGIDevice_BASE + 3,
+    CID_IDXGIDevice_GetGPUThreadPriority = CID_IDXGIDevice_BASE + 4,
+
     // CID for IDXGIAdapter
     CID_IDXGIAdapter_BASE,
     CID_IDXGIAdapter_COUNT = 3,
@@ -249,6 +258,12 @@ enum D3D11_CALL_ID
     CID_IDXGIFactory_GetWindowAssociation = CID_IDXGIFactory_BASE + 2,
     CID_IDXGIFactory_CreateSwapChain = CID_IDXGIFactory_BASE + 3,
     CID_IDXGIFactory_CreateSoftwareAdapter = CID_IDXGIFactory_BASE + 4,
+
+    // CID for IDXGIFactory1
+    CID_IDXGIFactory1_BASE,
+    CID_IDXGIFactory1_COUNT = 2,
+    CID_IDXGIFactory1_EnumAdapters1 = CID_IDXGIFactory1_BASE + 0,
+    CID_IDXGIFactory1_IsCurrent = CID_IDXGIFactory1_BASE + 1,
 
     // CID for IDXGISwapChain
     CID_IDXGISwapChain_BASE,

@@ -219,6 +219,13 @@ const char * g_D3D11CallIDText[] =
     // CID for IDXGIDeviceSubObject
     "CID_IDXGIDeviceSubObject_GetDevice",
 
+    // CID for IDXGIDevice
+    "CID_IDXGIDevice_GetAdapter",
+    "CID_IDXGIDevice_CreateSurface",
+    "CID_IDXGIDevice_QueryResourceResidency",
+    "CID_IDXGIDevice_SetGPUThreadPriority",
+    "CID_IDXGIDevice_GetGPUThreadPriority",
+
     // CID for IDXGIAdapter
     "CID_IDXGIAdapter_EnumOutputs",
     "CID_IDXGIAdapter_GetDesc",
@@ -230,6 +237,10 @@ const char * g_D3D11CallIDText[] =
     "CID_IDXGIFactory_GetWindowAssociation",
     "CID_IDXGIFactory_CreateSwapChain",
     "CID_IDXGIFactory_CreateSoftwareAdapter",
+
+    // CID for IDXGIFactory1
+    "CID_IDXGIFactory1_EnumAdapters1",
+    "CID_IDXGIFactory1_IsCurrent",
 
     // CID for IDXGISwapChain
     "CID_IDXGISwapChain_Present",

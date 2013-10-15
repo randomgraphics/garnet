@@ -399,15 +399,6 @@ extern const char * const g_D3D11CallIDText;
 # ------------------------------------------------------------------------------
 # Start of main procedure
 
-DXSDK_ROOT_PATH = UTIL_getenv("DXSDK_DIR")
-WINSDK_ROOT_PATH = UTIL_getenv("WindowsSdkDir")
-if '' != DXSDK_ROOT_PATH:
-	DXSDK_INC_PATH = os.path.join( DXSDK_ROOT_PATH, 'include')
-elif '' != WINSDK_ROOT_PATH:
-	DXSDK_INC_PATH = os.path.join( WINSDK_ROOT_PATH, 'include\um')
-else:
-	UTIL_fatal('DirectX headers are not found.')
-
 # open global CID files
 g_cid = CallIDCodeGen()
 
@@ -416,7 +407,7 @@ g_interface_to_wrapper = dict()
 g_interface_to_wrapper['IUnknown'] = 'UnknownHook'
 
 # parse d3d11.h
-with open(os.path.join( DXSDK_INC_PATH, "d3d11.h" )) as f:
+with open( 'd3d/d3d11.h' ) as f:
     PARSE_interfaces_from_opened_file(f, 'd3d11hook.h', [
         'ID3D11Device',
         'ID3D11DeviceChild',
@@ -424,22 +415,23 @@ with open(os.path.join( DXSDK_INC_PATH, "d3d11.h" )) as f:
     ])
 
 # parse d3d11sdklayer.h
-with open(os.path.join( DXSDK_INC_PATH, "d3d11sdklayers.h" )) as f:
+with open( 'd3d/d3d11sdklayers.h' ) as f:
     PARSE_interfaces_from_opened_file(f, 'd3d11hook.h', [
         'ID3D11Debug',
         'ID3D11InfoQueue',
     ])
 
 # parse dxgi.h
-with open(os.path.join( DXSDK_INC_PATH, "dxgi.h" )) as f:
+with open( 'd3d/dxgi.h' ) as f:
     PARSE_interfaces_from_opened_file(f, 'd3d11hook.h', [
         'IDXGIObject',
         'IDXGIDeviceSubObject',
+        'IDXGIDevice',
         'IDXGIAdapter',
         'IDXGIFactory',
+        'IDXGIFactory1',
         'IDXGISwapChain',
     ])
-
 
 # close Call ID code gen
 g_cid.Close()

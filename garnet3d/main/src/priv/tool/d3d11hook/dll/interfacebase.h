@@ -16,7 +16,7 @@ static const GUID GN_D3D11HOOK_HOOKED_OBJECT_GUID =
 { 0xcf9120c7, 0x4e7a, 0x493a, { 0x96, 0xaa, 0xc, 0x33, 0x58, 0x38, 0x3, 0xf6 } };
 
 
-typedef void* (*WrapRealObjectFuncPtr)(void * realobj);
+typedef void* (*HookFactoryFuncPtr)(void * realobj);
 
 template<class HOOKED_CLASS, class REAL_INTERFACE>
 inline HOOKED_CLASS * GetHookedInstanceFromReal(REAL_INTERFACE * realobj)
@@ -31,45 +31,86 @@ inline HOOKED_CLASS * GetHookedInstanceFromReal(REAL_INTERFACE * realobj)
 }
 
 ///
-/// Wrapper of classes that is directly inherited from IUnknown
+/// Pointer wrapper that'll nullify itself when constructed.
 ///
-template<class WRAP_CLASS, class REAL_INTERFACE, UINT METHOD_COUNT>
+template<typename T>
+struct NullPtr
+{
+    T _value;
+    NullPtr() : _value(NULL) {}
+};
+
+template<typename HOOK_CLASS>
+class UnknownHookBase
+{
+    const size_t MAX_INTERFACES = 16;
+
+    struct InterfaceInfo
+    {
+        IID                iid;
+        HookFactoryFuncPtr createNew;
+    };
+
+    InterfaceInfo _interfaces[MAX_INTERFACES];
+    size_t        _count;
+
+
+public:
+
+    UnknownHookBase() : _count(0)
+    {
+    }
+
+
+
+    void AddInterface(const IID & iid, HookFactoryFuncPtr factory)
+    {
+        if (_count >= MAX_INTERFACES)
+        {
+            // should never happen.
+            DebugBreak();
+            return;
+        }
+
+        if (nullptr == factory)
+        {
+            // should never happen.
+            DebugBreak();
+            return;
+        }
+
+        for(size_t i = 0; i < _count; ++i)
+        {
+            if (_interfaces.iid == iid)
+            {
+                // should never happen.
+                DebugBreak();
+                return;
+            }
+        }
+
+        _interfaces[_count].iid = iid;
+        _interfaces[_count].createNew = factory;
+        ++_count;
+    }
+};
+
+///
+/// Hook class that is directly inherited from IUnknown
+///
+template<class WRAP_CLASS, class REAL_INTERFACE>
 class UnknownHook : public REAL_INTERFACE
 {
-    struct IIDLess
-    {
-        bool operator()( const IID & a, const IID & b ) const
-        {
-            return ::memcmp( &a, &b, sizeof(a) ) < 0;
-        }
-    };
-
-    GN::AutoComPtr<REAL_INTERFACE>               _realobj;
-    CritSec                                      _cs;
-    ULONG                                        _refcount;
-
-    static std::map<IID,WrapRealObjectFuncPtr, IIDLess> s_factory;
+    GN::AutoComPtr<REAL_INTERFACE> _realobj;
+    CritSec                        _cs;
+    ULONG                          _refcount;
+    static std::map<IID,HookFactoryFuncPtr, IIDLess> s_factory;
 
 protected:
-
-    template<typename T>
-    struct NullPtr
-    {
-        T _value;
-
-        NullPtr() : _value(NULL) {}
-    };
-
-    typedef void (WRAP_CLASS::*METHOD_FUNC_PTR)();
-
-    METHOD_FUNC_PTR _preFuncPtr[METHOD_COUNT];
-    METHOD_FUNC_PTR _postFuncPtr[METHOD_COUNT];
 
     UnknownHook(REAL_INTERFACE * realobj) : _refcount(0)
     {
         _realobj.attach(realobj);
-        memset(_preFuncPtr, 0, sizeof(_preFuncPtr));
-        memset(_postFuncPtr, 0, sizeof(_postFuncPtr));
     }
 
     virtual ~UnknownHook()
@@ -168,130 +209,30 @@ public:
 };
 
 ///
-/// Wrapper of classes that is directly inherited from IUnknown
+/// Hook class that is inherited from single COM interface
 ///
-template<class WRAP_CLASS, class REAL_INTERFACE, UINT METHOD_COUNT>
-class D3D11DeviceChildHook : public UnknownHook<WRAP_CLASS, REAL_INTERFACE, METHOD_COUNT>
+template<class WRAP_CLASS, class REAL_INTERFACE>
+class HookBase : public REAL_INTERFACE
 {
+    GN::AutoComPtr<REAL_INTERFACE> _realobj;
+    CritSec                        _cs;
+    ULONG                          _refcount;
 
 protected:
 
-    D3D11DeviceChildHook(REAL_INTERFACE * realobj) : IUNKNOWN_BASE_TYPE(realobj)
+    HookBase(REAL_INTERFACE * realobj) : _refcount(0)
     {
+        _realobj.attach(realobj);
     }
 
-    virtual ~D3D11DeviceChildHook()
+    virtual ~HookBase()
     {
     }
 
 public:
 
-    typedef D3D11DeviceChildHook<WRAP_CLASS, REAL_INTERFACE, METHOD_COUNT> ID3D11DEVICECHILD_BASE_TYPE;
-
-    virtual void STDMETHODCALLTYPE GetDevice(
-        /* [annotation] */
-        __out  ID3D11Device **ppDevice)
-    {
-        if (nullptr == ppDevice) return;
-
-        GN::AutoComPtr<ID3D11Device> pRealDevice;
-        GetRealObj()->GetDevice(&pRealDevice);
-
-        ID3D11Device * pHookedDevice = GetHookedInstanceFromReal<ID3D11Device, ID3D11Device>(pRealDevice);
-        GN_ASSERT(nullptr != pHookedDevice);
-
-        *ppDevice = pHookedDevice;
-    }
-
-    virtual HRESULT STDMETHODCALLTYPE GetPrivateData(
-        /* [annotation] */
-        __in  REFGUID guid,
-        /* [annotation] */
-        __inout  UINT *pDataSize,
-        /* [annotation] */
-        __out_bcount_opt( *pDataSize )  void *pData)
-    {
-        return GetRealObj()->GetPrivateData(guid, pDataSize, pData);
-    }
-
-    virtual HRESULT STDMETHODCALLTYPE SetPrivateData(
-        /* [annotation] */
-        __in  REFGUID guid,
-        /* [annotation] */
-        __in  UINT DataSize,
-        /* [annotation] */
-        __in_bcount_opt( DataSize )  const void *pData)
-    {
-        return GetRealObj()->SetPrivateData(guid, DataSize, pData);
-    }
-
-    virtual HRESULT STDMETHODCALLTYPE SetPrivateDataInterface(
-        /* [annotation] */
-        __in  REFGUID guid,
-        /* [annotation] */
-        __in_opt  const IUnknown *pData)
-    {
-        return GetRealObj()->SetPrivateDataInterface(guid, pData);
-    }
+    typedef HookBase<WRAP_CLASS, REAL_INTERFACE, METHOD_COUNT> BASE_CLASS;
+    typedef REAL_INTERFACE                                        REAL_CLASS;
+    REAL_INTERFACE * GetRealObj() const { GN_ASSERT(_realobj); return _realobj; }
 };
 
-template<class WRAP_CLASS, class REAL_INTERFACE, UINT METHOD_COUNT>
-interface DXGIObjectHook : public UnknownHook<WRAP_CLASS, REAL_INTERFACE, METHOD_COUNT>
-{
-
-protected:
-
-    DXGIObjectHook(REAL_INTERFACE * realobj) : IUNKNOWN_BASE_TYPE(realobj)
-    {
-    }
-
-    virtual ~DXGIObjectHook()
-    {
-    }
-
-public:
-
-    typedef DXGIObjectHook<WRAP_CLASS, REAL_INTERFACE, METHOD_COUNT> IDXGIOBJECT_BASE_TYPE;
-
-    virtual HRESULT STDMETHODCALLTYPE SetPrivateData(
-        /* [annotation][in] */
-        __in  REFGUID Name,
-        /* [in] */ UINT DataSize,
-        /* [annotation][in] */
-        __in_bcount(DataSize)  const void *pData)
-    {
-        return GetRealObj()->SetPrivateData(Name, DataSize, pData);
-    }
-
-    virtual HRESULT STDMETHODCALLTYPE SetPrivateDataInterface(
-        /* [annotation][in] */
-        __in  REFGUID Name,
-        /* [annotation][in] */
-        __in  const IUnknown *pUnknown)
-    {
-        return GetRealObj()->SetPrivateDataInterface(Name, pUnknown);
-    }
-
-    virtual HRESULT STDMETHODCALLTYPE GetPrivateData(
-        /* [annotation][in] */
-        __in  REFGUID Name,
-        /* [annotation][out][in] */
-        __inout  UINT *pDataSize,
-        /* [annotation][out] */
-        __out_bcount(*pDataSize)  void *pData)
-    {
-        return GetRealObj()->GetPrivateData(Name, pDataSize, pData);
-    }
-
-    virtual HRESULT STDMETHODCALLTYPE GetParent(
-        /* [annotation][in] */
-        __in  REFIID riid,
-        /* [annotation][retval][out] */
-        __out  void **ppParent)
-    {
-        // TODO: Need to return the hooked parent object.
-        GN_UNUSED_PARAM(riid);
-        GN_UNUSED_PARAM(ppParent);
-        GN_UNIMPL();
-    }
-};

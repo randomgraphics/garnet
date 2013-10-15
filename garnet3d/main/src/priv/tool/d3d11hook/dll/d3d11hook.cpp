@@ -1,9 +1,20 @@
 #include "pch.h"
 #include "d3d11hook.h"
+#include "dxgihook.h"
 
 using namespace GN;
 
 static GN::Logger * sLogger = GN::getLogger("GN.tool.d3d11hook");
+
+// *****************************************************************************
+// D3D device class
+// *****************************************************************************
+
+class DeviceImpl
+    : D3D11DeviceHook
+    , DXGIDeviceSubObjectHook
+{
+};
 
 // *****************************************************************************
 // Local Utilities
@@ -55,17 +66,24 @@ void * GetRealFunctionPtr(const wchar_t * dllName, const char * functionName)
     return proc;
 }
 
+//
+//
+// -----------------------------------------------------------------------------
+static StrW GetRealD3D11Path()
+{
+    StrW system32 = L"c:\\windows\\system32\\";
+    StrW dllpath = system32 + L"d3d11.dll";
+    return dllpath;
+}
+
 // *****************************************************************************
 // D3D11 global functions
 // *****************************************************************************
 
-extern "C" {
-
 //
 //
 // -----------------------------------------------------------------------------
-GN_EXPORT HRESULT WINAPI
-D3D11CreateDeviceHook(
+HRESULT D3D11CreateDeviceHook(
     __in_opt IDXGIAdapter* pAdapter,
     D3D_DRIVER_TYPE DriverType,
     HMODULE Software,
@@ -77,7 +95,9 @@ D3D11CreateDeviceHook(
     __out_opt D3D_FEATURE_LEVEL* pFeatureLevel,
     __out_opt ID3D11DeviceContext** ppImmediateContext )
 {
-    PFN_D3D11_CREATE_DEVICE realFunc = (PFN_D3D11_CREATE_DEVICE)GetRealFunctionPtr(L"d3d11.dll", "D3D11CreateDevice");
+    PFN_D3D11_CREATE_DEVICE realFunc = (PFN_D3D11_CREATE_DEVICE)GetRealFunctionPtr(
+        GetRealD3D11Path().rawptr(),
+        "D3D11CreateDevice");
     if (nullptr == realFunc) return E_FAIL;
 
     DXGIAdapterHook * hookedAdapter = (DXGIAdapterHook *)pAdapter;
@@ -124,7 +144,7 @@ D3D11CreateDeviceHook(
 //
 //
 // -----------------------------------------------------------------------------
-GN_EXPORT HRESULT WINAPI
+HRESULT
 D3D11CreateDeviceAndSwapChainHook(
     __in_opt IDXGIAdapter* pAdapter,
     D3D_DRIVER_TYPE DriverType,
@@ -139,7 +159,9 @@ D3D11CreateDeviceAndSwapChainHook(
     __out_opt D3D_FEATURE_LEVEL* pFeatureLevel,
     __out_opt ID3D11DeviceContext** ppImmediateContext )
 {
-    PFN_D3D11_CREATE_DEVICE_AND_SWAP_CHAIN realFunc = (PFN_D3D11_CREATE_DEVICE_AND_SWAP_CHAIN)GetRealFunctionPtr(L"d3d11.dll", "D3D11CreateDeviceAndSwapChain");
+    PFN_D3D11_CREATE_DEVICE_AND_SWAP_CHAIN realFunc = (PFN_D3D11_CREATE_DEVICE_AND_SWAP_CHAIN)GetRealFunctionPtr(
+        GetRealD3D11Path().rawptr(),
+        "D3D11CreateDeviceAndSwapChain");
     if (nullptr == realFunc) return E_FAIL;
 
     DXGIAdapterHook * hookedAdapter = (DXGIAdapterHook *)pAdapter;
@@ -197,15 +219,14 @@ D3D11CreateDeviceAndSwapChainHook(
     return S_OK;
 }
 
-} // extern "C"
-
 // *****************************************************************************
 // D3D11 interfaces
 // *****************************************************************************
 
 void STDMETHODCALLTYPE D3D11DeviceHook::CustomCreateBuffer_PRE(
     const D3D11_BUFFER_DESC * &,
-    const D3D11_SUBRESOURCE_DATA * &)
+    const D3D11_SUBRESOURCE_DATA * &,
+    ID3D11Buffer ** &)
 {
     GN_INFO(sLogger)("ID3D11Device::CreateBuffer() is called.");
 }

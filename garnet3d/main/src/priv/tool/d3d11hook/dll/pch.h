@@ -15,7 +15,6 @@
 #define NOMINMAX
 #endif
 #include <windows.h>
-#include <d3d11.h>
 #endif
 
 #undef _In_reads_opt_
