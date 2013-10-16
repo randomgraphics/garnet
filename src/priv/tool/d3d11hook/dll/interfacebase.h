@@ -556,3 +556,48 @@ inline REAL_INTERFACE * HookedToReal(REAL_INTERFACE * hooked)
 
     return ihook->GetRealObj<REAL_INTERFACE>();
 }
+
+// -----------------------------------------------------------------------------
+/// Convert pointer to hooked instance (in real object type though) to pointer
+/// to real D3D object.
+
+template<class REAL_INTERFACE>
+class HookedToRealArray
+{
+    REAL_INTERFACE * _items[128];
+    size_t           _count;
+
+public:
+
+    HookedToRealArray(size_t count, REAL_INTERFACE * const * hooked)
+    {
+        if (count > _countof(_items))
+        {
+            GN_UNEXPECTED();
+            count = _countof(_items);
+        }
+
+        for(size_t i = 0; i < count; ++i)
+        {
+            _items[i] = HookedToReal(hooked[i]);
+        }
+
+        _count = count;
+    }
+
+    ~HookedToRealArray()
+    {
+    }
+
+    operator REAL_INTERFACE** ()
+    {
+        return _items;
+    }
+};
+
+template<class REAL_INTERFACE>
+inline HookedToRealArray<REAL_INTERFACE> HookedToReal(size_t count, REAL_INTERFACE * const * hooked)
+{
+    HookedToRealArray<REAL_INTERFACE> result(count, hooked);
+    return result;
+}
