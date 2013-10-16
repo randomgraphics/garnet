@@ -1,12 +1,15 @@
 // script generated file. DO NOT edit.
+
 #include "pch.h"
-#include "d3d11hook.h"
+#include "hooks.h"
+
 // -----------------------------------------------------------------------------
 HRESULT STDMETHODCALLTYPE DXGIDeviceHook::GetAdapter(
     _Out_  IDXGIAdapter ** pAdapter)
 {
     if (_GetAdapter_pre_ptr._value) { (this->*_GetAdapter_pre_ptr._value)(pAdapter); }
     HRESULT ret = GetRealObj()->GetAdapter(pAdapter);
+    if (pAdapter) *pAdapter = RealToHooked( *pAdapter );
     if (_GetAdapter_post_ptr._value) { (this->*_GetAdapter_post_ptr._value)(ret, pAdapter); }
     return ret;
 }
@@ -21,6 +24,7 @@ HRESULT STDMETHODCALLTYPE DXGIDeviceHook::CreateSurface(
 {
     if (_CreateSurface_pre_ptr._value) { (this->*_CreateSurface_pre_ptr._value)(pDesc, NumSurfaces, Usage, pSharedResource, ppSurface); }
     HRESULT ret = GetRealObj()->CreateSurface(pDesc, NumSurfaces, Usage, pSharedResource, ppSurface);
+    if (ppSurface) *ppSurface = RealToHooked( *ppSurface );
     if (_CreateSurface_post_ptr._value) { (this->*_CreateSurface_post_ptr._value)(ret, pDesc, NumSurfaces, Usage, pSharedResource, ppSurface); }
     return ret;
 }

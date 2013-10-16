@@ -1,6 +1,8 @@
 // script generated file. DO NOT edit.
+
 #include "pch.h"
-#include "d3d11hook.h"
+#include "hooks.h"
+
 // -----------------------------------------------------------------------------
 HRESULT STDMETHODCALLTYPE D3D11DeviceHook::CreateBuffer(
     _In_  const D3D11_BUFFER_DESC * pDesc,
@@ -9,6 +11,7 @@ HRESULT STDMETHODCALLTYPE D3D11DeviceHook::CreateBuffer(
 {
     if (_CreateBuffer_pre_ptr._value) { (this->*_CreateBuffer_pre_ptr._value)(pDesc, pInitialData, ppBuffer); }
     HRESULT ret = GetRealObj()->CreateBuffer(pDesc, pInitialData, ppBuffer);
+    if (ppBuffer) *ppBuffer = RealToHooked( *ppBuffer );
     if (_CreateBuffer_post_ptr._value) { (this->*_CreateBuffer_post_ptr._value)(ret, pDesc, pInitialData, ppBuffer); }
     return ret;
 }
@@ -21,6 +24,7 @@ HRESULT STDMETHODCALLTYPE D3D11DeviceHook::CreateTexture1D(
 {
     if (_CreateTexture1D_pre_ptr._value) { (this->*_CreateTexture1D_pre_ptr._value)(pDesc, pInitialData, ppTexture1D); }
     HRESULT ret = GetRealObj()->CreateTexture1D(pDesc, pInitialData, ppTexture1D);
+    if (ppTexture1D) *ppTexture1D = RealToHooked( *ppTexture1D );
     if (_CreateTexture1D_post_ptr._value) { (this->*_CreateTexture1D_post_ptr._value)(ret, pDesc, pInitialData, ppTexture1D); }
     return ret;
 }
@@ -33,6 +37,7 @@ HRESULT STDMETHODCALLTYPE D3D11DeviceHook::CreateTexture2D(
 {
     if (_CreateTexture2D_pre_ptr._value) { (this->*_CreateTexture2D_pre_ptr._value)(pDesc, pInitialData, ppTexture2D); }
     HRESULT ret = GetRealObj()->CreateTexture2D(pDesc, pInitialData, ppTexture2D);
+    if (ppTexture2D) *ppTexture2D = RealToHooked( *ppTexture2D );
     if (_CreateTexture2D_post_ptr._value) { (this->*_CreateTexture2D_post_ptr._value)(ret, pDesc, pInitialData, ppTexture2D); }
     return ret;
 }
@@ -45,6 +50,7 @@ HRESULT STDMETHODCALLTYPE D3D11DeviceHook::CreateTexture3D(
 {
     if (_CreateTexture3D_pre_ptr._value) { (this->*_CreateTexture3D_pre_ptr._value)(pDesc, pInitialData, ppTexture3D); }
     HRESULT ret = GetRealObj()->CreateTexture3D(pDesc, pInitialData, ppTexture3D);
+    if (ppTexture3D) *ppTexture3D = RealToHooked( *ppTexture3D );
     if (_CreateTexture3D_post_ptr._value) { (this->*_CreateTexture3D_post_ptr._value)(ret, pDesc, pInitialData, ppTexture3D); }
     return ret;
 }
@@ -56,7 +62,8 @@ HRESULT STDMETHODCALLTYPE D3D11DeviceHook::CreateShaderResourceView(
     _Out_opt_  ID3D11ShaderResourceView ** ppSRView)
 {
     if (_CreateShaderResourceView_pre_ptr._value) { (this->*_CreateShaderResourceView_pre_ptr._value)(pResource, pDesc, ppSRView); }
-    HRESULT ret = GetRealObj()->CreateShaderResourceView(pResource, pDesc, ppSRView);
+    HRESULT ret = GetRealObj()->CreateShaderResourceView(HookedToReal(pResource), pDesc, ppSRView);
+    if (ppSRView) *ppSRView = RealToHooked( *ppSRView );
     if (_CreateShaderResourceView_post_ptr._value) { (this->*_CreateShaderResourceView_post_ptr._value)(ret, pResource, pDesc, ppSRView); }
     return ret;
 }
@@ -68,7 +75,8 @@ HRESULT STDMETHODCALLTYPE D3D11DeviceHook::CreateUnorderedAccessView(
     _Out_opt_  ID3D11UnorderedAccessView ** ppUAView)
 {
     if (_CreateUnorderedAccessView_pre_ptr._value) { (this->*_CreateUnorderedAccessView_pre_ptr._value)(pResource, pDesc, ppUAView); }
-    HRESULT ret = GetRealObj()->CreateUnorderedAccessView(pResource, pDesc, ppUAView);
+    HRESULT ret = GetRealObj()->CreateUnorderedAccessView(HookedToReal(pResource), pDesc, ppUAView);
+    if (ppUAView) *ppUAView = RealToHooked( *ppUAView );
     if (_CreateUnorderedAccessView_post_ptr._value) { (this->*_CreateUnorderedAccessView_post_ptr._value)(ret, pResource, pDesc, ppUAView); }
     return ret;
 }
@@ -80,7 +88,8 @@ HRESULT STDMETHODCALLTYPE D3D11DeviceHook::CreateRenderTargetView(
     _Out_opt_  ID3D11RenderTargetView ** ppRTView)
 {
     if (_CreateRenderTargetView_pre_ptr._value) { (this->*_CreateRenderTargetView_pre_ptr._value)(pResource, pDesc, ppRTView); }
-    HRESULT ret = GetRealObj()->CreateRenderTargetView(pResource, pDesc, ppRTView);
+    HRESULT ret = GetRealObj()->CreateRenderTargetView(HookedToReal(pResource), pDesc, ppRTView);
+    if (ppRTView) *ppRTView = RealToHooked( *ppRTView );
     if (_CreateRenderTargetView_post_ptr._value) { (this->*_CreateRenderTargetView_post_ptr._value)(ret, pResource, pDesc, ppRTView); }
     return ret;
 }
@@ -92,7 +101,8 @@ HRESULT STDMETHODCALLTYPE D3D11DeviceHook::CreateDepthStencilView(
     _Out_opt_  ID3D11DepthStencilView ** ppDepthStencilView)
 {
     if (_CreateDepthStencilView_pre_ptr._value) { (this->*_CreateDepthStencilView_pre_ptr._value)(pResource, pDesc, ppDepthStencilView); }
-    HRESULT ret = GetRealObj()->CreateDepthStencilView(pResource, pDesc, ppDepthStencilView);
+    HRESULT ret = GetRealObj()->CreateDepthStencilView(HookedToReal(pResource), pDesc, ppDepthStencilView);
+    if (ppDepthStencilView) *ppDepthStencilView = RealToHooked( *ppDepthStencilView );
     if (_CreateDepthStencilView_post_ptr._value) { (this->*_CreateDepthStencilView_post_ptr._value)(ret, pResource, pDesc, ppDepthStencilView); }
     return ret;
 }
@@ -107,6 +117,7 @@ HRESULT STDMETHODCALLTYPE D3D11DeviceHook::CreateInputLayout(
 {
     if (_CreateInputLayout_pre_ptr._value) { (this->*_CreateInputLayout_pre_ptr._value)(pInputElementDescs, NumElements, pShaderBytecodeWithInputSignature, BytecodeLength, ppInputLayout); }
     HRESULT ret = GetRealObj()->CreateInputLayout(pInputElementDescs, NumElements, pShaderBytecodeWithInputSignature, BytecodeLength, ppInputLayout);
+    if (ppInputLayout) *ppInputLayout = RealToHooked( *ppInputLayout );
     if (_CreateInputLayout_post_ptr._value) { (this->*_CreateInputLayout_post_ptr._value)(ret, pInputElementDescs, NumElements, pShaderBytecodeWithInputSignature, BytecodeLength, ppInputLayout); }
     return ret;
 }
@@ -119,7 +130,8 @@ HRESULT STDMETHODCALLTYPE D3D11DeviceHook::CreateVertexShader(
     _Out_opt_  ID3D11VertexShader ** ppVertexShader)
 {
     if (_CreateVertexShader_pre_ptr._value) { (this->*_CreateVertexShader_pre_ptr._value)(pShaderBytecode, BytecodeLength, pClassLinkage, ppVertexShader); }
-    HRESULT ret = GetRealObj()->CreateVertexShader(pShaderBytecode, BytecodeLength, pClassLinkage, ppVertexShader);
+    HRESULT ret = GetRealObj()->CreateVertexShader(pShaderBytecode, BytecodeLength, HookedToReal(pClassLinkage), ppVertexShader);
+    if (ppVertexShader) *ppVertexShader = RealToHooked( *ppVertexShader );
     if (_CreateVertexShader_post_ptr._value) { (this->*_CreateVertexShader_post_ptr._value)(ret, pShaderBytecode, BytecodeLength, pClassLinkage, ppVertexShader); }
     return ret;
 }
@@ -132,7 +144,8 @@ HRESULT STDMETHODCALLTYPE D3D11DeviceHook::CreateGeometryShader(
     _Out_opt_  ID3D11GeometryShader ** ppGeometryShader)
 {
     if (_CreateGeometryShader_pre_ptr._value) { (this->*_CreateGeometryShader_pre_ptr._value)(pShaderBytecode, BytecodeLength, pClassLinkage, ppGeometryShader); }
-    HRESULT ret = GetRealObj()->CreateGeometryShader(pShaderBytecode, BytecodeLength, pClassLinkage, ppGeometryShader);
+    HRESULT ret = GetRealObj()->CreateGeometryShader(pShaderBytecode, BytecodeLength, HookedToReal(pClassLinkage), ppGeometryShader);
+    if (ppGeometryShader) *ppGeometryShader = RealToHooked( *ppGeometryShader );
     if (_CreateGeometryShader_post_ptr._value) { (this->*_CreateGeometryShader_post_ptr._value)(ret, pShaderBytecode, BytecodeLength, pClassLinkage, ppGeometryShader); }
     return ret;
 }
@@ -150,7 +163,8 @@ HRESULT STDMETHODCALLTYPE D3D11DeviceHook::CreateGeometryShaderWithStreamOutput(
     _Out_opt_  ID3D11GeometryShader ** ppGeometryShader)
 {
     if (_CreateGeometryShaderWithStreamOutput_pre_ptr._value) { (this->*_CreateGeometryShaderWithStreamOutput_pre_ptr._value)(pShaderBytecode, BytecodeLength, pSODeclaration, NumEntries, pBufferStrides, NumStrides, RasterizedStream, pClassLinkage, ppGeometryShader); }
-    HRESULT ret = GetRealObj()->CreateGeometryShaderWithStreamOutput(pShaderBytecode, BytecodeLength, pSODeclaration, NumEntries, pBufferStrides, NumStrides, RasterizedStream, pClassLinkage, ppGeometryShader);
+    HRESULT ret = GetRealObj()->CreateGeometryShaderWithStreamOutput(pShaderBytecode, BytecodeLength, pSODeclaration, NumEntries, pBufferStrides, NumStrides, RasterizedStream, HookedToReal(pClassLinkage), ppGeometryShader);
+    if (ppGeometryShader) *ppGeometryShader = RealToHooked( *ppGeometryShader );
     if (_CreateGeometryShaderWithStreamOutput_post_ptr._value) { (this->*_CreateGeometryShaderWithStreamOutput_post_ptr._value)(ret, pShaderBytecode, BytecodeLength, pSODeclaration, NumEntries, pBufferStrides, NumStrides, RasterizedStream, pClassLinkage, ppGeometryShader); }
     return ret;
 }
@@ -163,7 +177,8 @@ HRESULT STDMETHODCALLTYPE D3D11DeviceHook::CreatePixelShader(
     _Out_opt_  ID3D11PixelShader ** ppPixelShader)
 {
     if (_CreatePixelShader_pre_ptr._value) { (this->*_CreatePixelShader_pre_ptr._value)(pShaderBytecode, BytecodeLength, pClassLinkage, ppPixelShader); }
-    HRESULT ret = GetRealObj()->CreatePixelShader(pShaderBytecode, BytecodeLength, pClassLinkage, ppPixelShader);
+    HRESULT ret = GetRealObj()->CreatePixelShader(pShaderBytecode, BytecodeLength, HookedToReal(pClassLinkage), ppPixelShader);
+    if (ppPixelShader) *ppPixelShader = RealToHooked( *ppPixelShader );
     if (_CreatePixelShader_post_ptr._value) { (this->*_CreatePixelShader_post_ptr._value)(ret, pShaderBytecode, BytecodeLength, pClassLinkage, ppPixelShader); }
     return ret;
 }
@@ -176,7 +191,8 @@ HRESULT STDMETHODCALLTYPE D3D11DeviceHook::CreateHullShader(
     _Out_opt_  ID3D11HullShader ** ppHullShader)
 {
     if (_CreateHullShader_pre_ptr._value) { (this->*_CreateHullShader_pre_ptr._value)(pShaderBytecode, BytecodeLength, pClassLinkage, ppHullShader); }
-    HRESULT ret = GetRealObj()->CreateHullShader(pShaderBytecode, BytecodeLength, pClassLinkage, ppHullShader);
+    HRESULT ret = GetRealObj()->CreateHullShader(pShaderBytecode, BytecodeLength, HookedToReal(pClassLinkage), ppHullShader);
+    if (ppHullShader) *ppHullShader = RealToHooked( *ppHullShader );
     if (_CreateHullShader_post_ptr._value) { (this->*_CreateHullShader_post_ptr._value)(ret, pShaderBytecode, BytecodeLength, pClassLinkage, ppHullShader); }
     return ret;
 }
@@ -189,7 +205,8 @@ HRESULT STDMETHODCALLTYPE D3D11DeviceHook::CreateDomainShader(
     _Out_opt_  ID3D11DomainShader ** ppDomainShader)
 {
     if (_CreateDomainShader_pre_ptr._value) { (this->*_CreateDomainShader_pre_ptr._value)(pShaderBytecode, BytecodeLength, pClassLinkage, ppDomainShader); }
-    HRESULT ret = GetRealObj()->CreateDomainShader(pShaderBytecode, BytecodeLength, pClassLinkage, ppDomainShader);
+    HRESULT ret = GetRealObj()->CreateDomainShader(pShaderBytecode, BytecodeLength, HookedToReal(pClassLinkage), ppDomainShader);
+    if (ppDomainShader) *ppDomainShader = RealToHooked( *ppDomainShader );
     if (_CreateDomainShader_post_ptr._value) { (this->*_CreateDomainShader_post_ptr._value)(ret, pShaderBytecode, BytecodeLength, pClassLinkage, ppDomainShader); }
     return ret;
 }
@@ -202,7 +219,8 @@ HRESULT STDMETHODCALLTYPE D3D11DeviceHook::CreateComputeShader(
     _Out_opt_  ID3D11ComputeShader ** ppComputeShader)
 {
     if (_CreateComputeShader_pre_ptr._value) { (this->*_CreateComputeShader_pre_ptr._value)(pShaderBytecode, BytecodeLength, pClassLinkage, ppComputeShader); }
-    HRESULT ret = GetRealObj()->CreateComputeShader(pShaderBytecode, BytecodeLength, pClassLinkage, ppComputeShader);
+    HRESULT ret = GetRealObj()->CreateComputeShader(pShaderBytecode, BytecodeLength, HookedToReal(pClassLinkage), ppComputeShader);
+    if (ppComputeShader) *ppComputeShader = RealToHooked( *ppComputeShader );
     if (_CreateComputeShader_post_ptr._value) { (this->*_CreateComputeShader_post_ptr._value)(ret, pShaderBytecode, BytecodeLength, pClassLinkage, ppComputeShader); }
     return ret;
 }
@@ -213,6 +231,7 @@ HRESULT STDMETHODCALLTYPE D3D11DeviceHook::CreateClassLinkage(
 {
     if (_CreateClassLinkage_pre_ptr._value) { (this->*_CreateClassLinkage_pre_ptr._value)(ppLinkage); }
     HRESULT ret = GetRealObj()->CreateClassLinkage(ppLinkage);
+    if (ppLinkage) *ppLinkage = RealToHooked( *ppLinkage );
     if (_CreateClassLinkage_post_ptr._value) { (this->*_CreateClassLinkage_post_ptr._value)(ret, ppLinkage); }
     return ret;
 }
@@ -224,6 +243,7 @@ HRESULT STDMETHODCALLTYPE D3D11DeviceHook::CreateBlendState(
 {
     if (_CreateBlendState_pre_ptr._value) { (this->*_CreateBlendState_pre_ptr._value)(pBlendStateDesc, ppBlendState); }
     HRESULT ret = GetRealObj()->CreateBlendState(pBlendStateDesc, ppBlendState);
+    if (ppBlendState) *ppBlendState = RealToHooked( *ppBlendState );
     if (_CreateBlendState_post_ptr._value) { (this->*_CreateBlendState_post_ptr._value)(ret, pBlendStateDesc, ppBlendState); }
     return ret;
 }
@@ -235,6 +255,7 @@ HRESULT STDMETHODCALLTYPE D3D11DeviceHook::CreateDepthStencilState(
 {
     if (_CreateDepthStencilState_pre_ptr._value) { (this->*_CreateDepthStencilState_pre_ptr._value)(pDepthStencilDesc, ppDepthStencilState); }
     HRESULT ret = GetRealObj()->CreateDepthStencilState(pDepthStencilDesc, ppDepthStencilState);
+    if (ppDepthStencilState) *ppDepthStencilState = RealToHooked( *ppDepthStencilState );
     if (_CreateDepthStencilState_post_ptr._value) { (this->*_CreateDepthStencilState_post_ptr._value)(ret, pDepthStencilDesc, ppDepthStencilState); }
     return ret;
 }
@@ -246,6 +267,7 @@ HRESULT STDMETHODCALLTYPE D3D11DeviceHook::CreateRasterizerState(
 {
     if (_CreateRasterizerState_pre_ptr._value) { (this->*_CreateRasterizerState_pre_ptr._value)(pRasterizerDesc, ppRasterizerState); }
     HRESULT ret = GetRealObj()->CreateRasterizerState(pRasterizerDesc, ppRasterizerState);
+    if (ppRasterizerState) *ppRasterizerState = RealToHooked( *ppRasterizerState );
     if (_CreateRasterizerState_post_ptr._value) { (this->*_CreateRasterizerState_post_ptr._value)(ret, pRasterizerDesc, ppRasterizerState); }
     return ret;
 }
@@ -257,6 +279,7 @@ HRESULT STDMETHODCALLTYPE D3D11DeviceHook::CreateSamplerState(
 {
     if (_CreateSamplerState_pre_ptr._value) { (this->*_CreateSamplerState_pre_ptr._value)(pSamplerDesc, ppSamplerState); }
     HRESULT ret = GetRealObj()->CreateSamplerState(pSamplerDesc, ppSamplerState);
+    if (ppSamplerState) *ppSamplerState = RealToHooked( *ppSamplerState );
     if (_CreateSamplerState_post_ptr._value) { (this->*_CreateSamplerState_post_ptr._value)(ret, pSamplerDesc, ppSamplerState); }
     return ret;
 }
@@ -268,6 +291,7 @@ HRESULT STDMETHODCALLTYPE D3D11DeviceHook::CreateQuery(
 {
     if (_CreateQuery_pre_ptr._value) { (this->*_CreateQuery_pre_ptr._value)(pQueryDesc, ppQuery); }
     HRESULT ret = GetRealObj()->CreateQuery(pQueryDesc, ppQuery);
+    if (ppQuery) *ppQuery = RealToHooked( *ppQuery );
     if (_CreateQuery_post_ptr._value) { (this->*_CreateQuery_post_ptr._value)(ret, pQueryDesc, ppQuery); }
     return ret;
 }
@@ -279,6 +303,7 @@ HRESULT STDMETHODCALLTYPE D3D11DeviceHook::CreatePredicate(
 {
     if (_CreatePredicate_pre_ptr._value) { (this->*_CreatePredicate_pre_ptr._value)(pPredicateDesc, ppPredicate); }
     HRESULT ret = GetRealObj()->CreatePredicate(pPredicateDesc, ppPredicate);
+    if (ppPredicate) *ppPredicate = RealToHooked( *ppPredicate );
     if (_CreatePredicate_post_ptr._value) { (this->*_CreatePredicate_post_ptr._value)(ret, pPredicateDesc, ppPredicate); }
     return ret;
 }
@@ -290,6 +315,7 @@ HRESULT STDMETHODCALLTYPE D3D11DeviceHook::CreateCounter(
 {
     if (_CreateCounter_pre_ptr._value) { (this->*_CreateCounter_pre_ptr._value)(pCounterDesc, ppCounter); }
     HRESULT ret = GetRealObj()->CreateCounter(pCounterDesc, ppCounter);
+    if (ppCounter) *ppCounter = RealToHooked( *ppCounter );
     if (_CreateCounter_post_ptr._value) { (this->*_CreateCounter_post_ptr._value)(ret, pCounterDesc, ppCounter); }
     return ret;
 }
@@ -301,6 +327,7 @@ HRESULT STDMETHODCALLTYPE D3D11DeviceHook::CreateDeferredContext(
 {
     if (_CreateDeferredContext_pre_ptr._value) { (this->*_CreateDeferredContext_pre_ptr._value)(ContextFlags, ppDeferredContext); }
     HRESULT ret = GetRealObj()->CreateDeferredContext(ContextFlags, ppDeferredContext);
+    if (ppDeferredContext) *ppDeferredContext = RealToHooked( *ppDeferredContext );
     if (_CreateDeferredContext_post_ptr._value) { (this->*_CreateDeferredContext_post_ptr._value)(ret, ContextFlags, ppDeferredContext); }
     return ret;
 }
@@ -447,6 +474,7 @@ void STDMETHODCALLTYPE D3D11DeviceHook::GetImmediateContext(
 {
     if (_GetImmediateContext_pre_ptr._value) { (this->*_GetImmediateContext_pre_ptr._value)(ppImmediateContext); }
     GetRealObj()->GetImmediateContext(ppImmediateContext);
+    if (ppImmediateContext) *ppImmediateContext = RealToHooked( *ppImmediateContext );
     if (_GetImmediateContext_post_ptr._value) { (this->*_GetImmediateContext_post_ptr._value)(ppImmediateContext); }
 }
 

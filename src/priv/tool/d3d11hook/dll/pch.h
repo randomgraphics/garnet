@@ -26,8 +26,17 @@
 #undef _In_reads_
 #define _In_reads_(x)
 
+#undef _In_reads_bytes_
+#define _In_reads_bytes_(x)
+
+#undef _Out_writes_
+#define _Out_writes_(x)
+
 #undef _Out_writes_opt_
 #define _Out_writes_opt_(x)
+
+#undef _Out_writes_to_opt_
+#define _Out_writes_to_opt_(x,y)
 
 #undef _Out_writes_bytes_
 #define _Out_writes_bytes_(x)

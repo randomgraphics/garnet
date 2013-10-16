@@ -1,4 +1,32 @@
 // script generated file. DO NOT edit.
+
+// ==============================================================================
+// Constructor / Destructor
+// ==============================================================================
+private:
+
+
+protected:
+
+D3D11DebugHook(UnknownBase & unknown, IUnknown * realobj)
+    : BASE_CLASS(unknown, realobj)
+{
+    unknown.AddInterface<ID3D11Debug>(this, realobj);
+    Construct(); 
+}
+
+~D3D11DebugHook() {}
+
+// ==============================================================================
+// Calling to base interfaces
+// ==============================================================================
+public:
+
+// ==============================================================================
+// Method Prototypes
+// ==============================================================================
+public:
+
 // -----------------------------------------------------------------------------
 virtual HRESULT STDMETHODCALLTYPE SetFeatureMask(
     UINT Mask);
@@ -42,3 +70,8 @@ virtual HRESULT STDMETHODCALLTYPE ValidateContextForDispatch(
     _In_  ID3D11DeviceContext * pContext);
 NullPtr<void (D3D11DebugHook::*)(_In_  ID3D11DeviceContext * &)> _ValidateContextForDispatch_pre_ptr;
 NullPtr<void (D3D11DebugHook::*)(HRESULT, _In_  ID3D11DeviceContext *)> _ValidateContextForDispatch_post_ptr;
+
+// ==============================================================================
+// The End
+// ==============================================================================
+private:

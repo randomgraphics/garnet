@@ -1,6 +1,8 @@
 // script generated file. DO NOT edit.
+
 #include "pch.h"
-#include "d3d11hook.h"
+#include "hooks.h"
+
 // -----------------------------------------------------------------------------
 HRESULT STDMETHODCALLTYPE DXGIFactory1Hook::EnumAdapters1(
     /* [in] */ UINT Adapter,
@@ -8,6 +10,7 @@ HRESULT STDMETHODCALLTYPE DXGIFactory1Hook::EnumAdapters1(
 {
     if (_EnumAdapters1_pre_ptr._value) { (this->*_EnumAdapters1_pre_ptr._value)(Adapter, ppAdapter); }
     HRESULT ret = GetRealObj()->EnumAdapters1(Adapter, ppAdapter);
+    if (ppAdapter) *ppAdapter = RealToHooked( *ppAdapter );
     if (_EnumAdapters1_post_ptr._value) { (this->*_EnumAdapters1_post_ptr._value)(ret, Adapter, ppAdapter); }
     return ret;
 }

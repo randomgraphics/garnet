@@ -1,4 +1,63 @@
 // script generated file. DO NOT edit.
+
+// ==============================================================================
+// Constructor / Destructor
+// ==============================================================================
+private:
+
+D3D11DeviceChildHook & _D3D11DeviceChild;
+
+protected:
+
+D3D11DeviceContextHook(UnknownBase & unknown, D3D11DeviceChildHook & D3D11DeviceChild, IUnknown * realobj)
+    : BASE_CLASS(unknown, realobj)
+    , _D3D11DeviceChild(D3D11DeviceChild)
+{
+    unknown.AddInterface<ID3D11DeviceContext>(this, realobj);
+    Construct(); 
+}
+
+~D3D11DeviceContextHook() {}
+
+// ==============================================================================
+// Calling to base interfaces
+// ==============================================================================
+public:
+
+// -----------------------------------------------------------------------------
+void STDMETHODCALLTYPE GetDevice(
+    _Out_  ID3D11Device ** ppDevice)
+{
+    _D3D11DeviceChild.GetDevice(ppDevice);
+}
+// -----------------------------------------------------------------------------
+HRESULT STDMETHODCALLTYPE GetPrivateData(
+    _In_  REFGUID guid,
+    _Inout_  UINT * pDataSize,
+    _Out_writes_bytes_opt_( *pDataSize )  void * pData)
+{
+    _D3D11DeviceChild.GetPrivateData(guid, pDataSize, pData);
+}
+// -----------------------------------------------------------------------------
+HRESULT STDMETHODCALLTYPE SetPrivateData(
+    _In_  REFGUID guid,
+    _In_  UINT DataSize,
+    _In_reads_bytes_opt_( DataSize )  const void * pData)
+{
+    _D3D11DeviceChild.SetPrivateData(guid, DataSize, pData);
+}
+// -----------------------------------------------------------------------------
+HRESULT STDMETHODCALLTYPE SetPrivateDataInterface(
+    _In_  REFGUID guid,
+    _In_opt_  const IUnknown * pData)
+{
+    _D3D11DeviceChild.SetPrivateDataInterface(guid, pData);
+}
+// ==============================================================================
+// Method Prototypes
+// ==============================================================================
+public:
+
 // -----------------------------------------------------------------------------
 virtual void STDMETHODCALLTYPE VSSetConstantBuffers(
     _In_range_( 0, D3D11_COMMONSHADER_CONSTANT_BUFFER_API_SLOT_COUNT - 1 )  UINT StartSlot,
@@ -728,3 +787,8 @@ virtual HRESULT STDMETHODCALLTYPE FinishCommandList(
     _Out_opt_  ID3D11CommandList ** ppCommandList);
 NullPtr<void (D3D11DeviceContextHook::*)(BOOL &, _Out_opt_  ID3D11CommandList ** &)> _FinishCommandList_pre_ptr;
 NullPtr<void (D3D11DeviceContextHook::*)(HRESULT, BOOL, _Out_opt_  ID3D11CommandList **)> _FinishCommandList_post_ptr;
+
+// ==============================================================================
+// The End
+// ==============================================================================
+private:

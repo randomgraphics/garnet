@@ -1,6 +1,8 @@
 // script generated file. DO NOT edit.
+
 #include "pch.h"
-#include "d3d11hook.h"
+#include "hooks.h"
+
 // -----------------------------------------------------------------------------
 HRESULT STDMETHODCALLTYPE D3D11InfoQueueHook::SetMessageCountLimit(
     _In_  UINT64 MessageCountLimit)

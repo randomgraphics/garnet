@@ -1,6 +1,8 @@
 // script generated file. DO NOT edit.
+
 #include "pch.h"
-#include "d3d11hook.h"
+#include "hooks.h"
+
 // -----------------------------------------------------------------------------
 HRESULT STDMETHODCALLTYPE DXGIFactoryHook::EnumAdapters(
     /* [in] */ UINT Adapter,
@@ -8,6 +10,7 @@ HRESULT STDMETHODCALLTYPE DXGIFactoryHook::EnumAdapters(
 {
     if (_EnumAdapters_pre_ptr._value) { (this->*_EnumAdapters_pre_ptr._value)(Adapter, ppAdapter); }
     HRESULT ret = GetRealObj()->EnumAdapters(Adapter, ppAdapter);
+    if (ppAdapter) *ppAdapter = RealToHooked( *ppAdapter );
     if (_EnumAdapters_post_ptr._value) { (this->*_EnumAdapters_post_ptr._value)(ret, Adapter, ppAdapter); }
     return ret;
 }
@@ -41,6 +44,7 @@ HRESULT STDMETHODCALLTYPE DXGIFactoryHook::CreateSwapChain(
 {
     if (_CreateSwapChain_pre_ptr._value) { (this->*_CreateSwapChain_pre_ptr._value)(pDevice, pDesc, ppSwapChain); }
     HRESULT ret = GetRealObj()->CreateSwapChain(pDevice, pDesc, ppSwapChain);
+    if (ppSwapChain) *ppSwapChain = RealToHooked( *ppSwapChain );
     if (_CreateSwapChain_post_ptr._value) { (this->*_CreateSwapChain_post_ptr._value)(ret, pDevice, pDesc, ppSwapChain); }
     return ret;
 }
@@ -52,6 +56,7 @@ HRESULT STDMETHODCALLTYPE DXGIFactoryHook::CreateSoftwareAdapter(
 {
     if (_CreateSoftwareAdapter_pre_ptr._value) { (this->*_CreateSoftwareAdapter_pre_ptr._value)(Module, ppAdapter); }
     HRESULT ret = GetRealObj()->CreateSoftwareAdapter(Module, ppAdapter);
+    if (ppAdapter) *ppAdapter = RealToHooked( *ppAdapter );
     if (_CreateSoftwareAdapter_post_ptr._value) { (this->*_CreateSoftwareAdapter_post_ptr._value)(ret, Module, ppAdapter); }
     return ret;
 }

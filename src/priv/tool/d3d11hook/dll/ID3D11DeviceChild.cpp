@@ -1,12 +1,15 @@
 // script generated file. DO NOT edit.
+
 #include "pch.h"
-#include "d3d11hook.h"
+#include "hooks.h"
+
 // -----------------------------------------------------------------------------
 void STDMETHODCALLTYPE D3D11DeviceChildHook::GetDevice(
     _Out_  ID3D11Device ** ppDevice)
 {
     if (_GetDevice_pre_ptr._value) { (this->*_GetDevice_pre_ptr._value)(ppDevice); }
     GetRealObj()->GetDevice(ppDevice);
+    if (ppDevice) *ppDevice = RealToHooked( *ppDevice );
     if (_GetDevice_post_ptr._value) { (this->*_GetDevice_post_ptr._value)(ppDevice); }
 }
 

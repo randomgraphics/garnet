@@ -2,8 +2,9 @@
 #include <d3dcommon.h>
 
 HRESULT CreateDXGIFactoryHook(
-  _In_   REFIID riid,
-  _Out_  void **ppFactory
+    const char * funcName,
+    const IID & riid,
+    void **ppFactory
 );
 
 extern "C" {
@@ -13,7 +14,7 @@ __declspec(dllexport) HRESULT WINAPI CreateDXGIFactory(
   _Out_  void **ppFactory
 )
 {
-    return CreateDXGIFactoryHook(riid, ppFactory);
+    return CreateDXGIFactoryHook("CreateDXGIFactory", riid, ppFactory);
 }
 
 __declspec(dllexport) HRESULT WINAPI CreateDXGIFactory1(
@@ -21,19 +22,10 @@ __declspec(dllexport) HRESULT WINAPI CreateDXGIFactory1(
   _Out_  void **ppFactory
 )
 {
-    return CreateDXGIFactoryHook(riid, ppFactory);
+    return CreateDXGIFactoryHook("CreateDXGIFactory1", riid, ppFactory);
 }
 
-__declspec(dllexport) HRESULT WINAPI CreateDXGIFactory2(
-  _In_   REFIID riid,
-  _Out_  void **ppFactory
-)
-{
-    return CreateDXGIFactoryHook(riid, ppFactory);
-}
-
-}
-
+} // extern "C"
 
 #include <dxgi.h>
 

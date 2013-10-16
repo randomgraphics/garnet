@@ -1,6 +1,8 @@
 // script generated file. DO NOT edit.
+
 #include "pch.h"
-#include "d3d11hook.h"
+#include "hooks.h"
+
 // -----------------------------------------------------------------------------
 HRESULT STDMETHODCALLTYPE D3D11DebugHook::SetFeatureMask(
     UINT Mask)
@@ -44,7 +46,7 @@ HRESULT STDMETHODCALLTYPE D3D11DebugHook::SetSwapChain(
     _In_opt_  IDXGISwapChain * pSwapChain)
 {
     if (_SetSwapChain_pre_ptr._value) { (this->*_SetSwapChain_pre_ptr._value)(pSwapChain); }
-    HRESULT ret = GetRealObj()->SetSwapChain(pSwapChain);
+    HRESULT ret = GetRealObj()->SetSwapChain(HookedToReal(pSwapChain));
     if (_SetSwapChain_post_ptr._value) { (this->*_SetSwapChain_post_ptr._value)(ret, pSwapChain); }
     return ret;
 }
@@ -55,6 +57,7 @@ HRESULT STDMETHODCALLTYPE D3D11DebugHook::GetSwapChain(
 {
     if (_GetSwapChain_pre_ptr._value) { (this->*_GetSwapChain_pre_ptr._value)(ppSwapChain); }
     HRESULT ret = GetRealObj()->GetSwapChain(ppSwapChain);
+    if (ppSwapChain) *ppSwapChain = RealToHooked( *ppSwapChain );
     if (_GetSwapChain_post_ptr._value) { (this->*_GetSwapChain_post_ptr._value)(ret, ppSwapChain); }
     return ret;
 }
@@ -64,7 +67,7 @@ HRESULT STDMETHODCALLTYPE D3D11DebugHook::ValidateContext(
     _In_  ID3D11DeviceContext * pContext)
 {
     if (_ValidateContext_pre_ptr._value) { (this->*_ValidateContext_pre_ptr._value)(pContext); }
-    HRESULT ret = GetRealObj()->ValidateContext(pContext);
+    HRESULT ret = GetRealObj()->ValidateContext(HookedToReal(pContext));
     if (_ValidateContext_post_ptr._value) { (this->*_ValidateContext_post_ptr._value)(ret, pContext); }
     return ret;
 }
@@ -84,7 +87,7 @@ HRESULT STDMETHODCALLTYPE D3D11DebugHook::ValidateContextForDispatch(
     _In_  ID3D11DeviceContext * pContext)
 {
     if (_ValidateContextForDispatch_pre_ptr._value) { (this->*_ValidateContextForDispatch_pre_ptr._value)(pContext); }
-    HRESULT ret = GetRealObj()->ValidateContextForDispatch(pContext);
+    HRESULT ret = GetRealObj()->ValidateContextForDispatch(HookedToReal(pContext));
     if (_ValidateContextForDispatch_post_ptr._value) { (this->*_ValidateContextForDispatch_post_ptr._value)(ret, pContext); }
     return ret;
 }

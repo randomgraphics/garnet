@@ -1,4 +1,32 @@
 // script generated file. DO NOT edit.
+
+// ==============================================================================
+// Constructor / Destructor
+// ==============================================================================
+private:
+
+
+protected:
+
+D3D11InfoQueueHook(UnknownBase & unknown, IUnknown * realobj)
+    : BASE_CLASS(unknown, realobj)
+{
+    unknown.AddInterface<ID3D11InfoQueue>(this, realobj);
+    Construct(); 
+}
+
+~D3D11InfoQueueHook() {}
+
+// ==============================================================================
+// Calling to base interfaces
+// ==============================================================================
+public:
+
+// ==============================================================================
+// Method Prototypes
+// ==============================================================================
+public:
+
 // -----------------------------------------------------------------------------
 virtual HRESULT STDMETHODCALLTYPE SetMessageCountLimit(
     _In_  UINT64 MessageCountLimit);
@@ -167,3 +195,8 @@ NullPtr<void (D3D11InfoQueueHook::*)(_In_  BOOL)> _SetMuteDebugOutput_post_ptr;
 virtual BOOL STDMETHODCALLTYPE GetMuteDebugOutput();
 NullPtr<void (D3D11InfoQueueHook::*)()> _GetMuteDebugOutput_pre_ptr;
 NullPtr<void (D3D11InfoQueueHook::*)(BOOL)> _GetMuteDebugOutput_post_ptr;
+
+// ==============================================================================
+// The End
+// ==============================================================================
+private:

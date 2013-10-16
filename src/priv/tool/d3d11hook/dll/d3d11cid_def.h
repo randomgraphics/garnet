@@ -229,27 +229,6 @@ enum D3D11_CALL_ID
     CID_IDXGIObject_GetPrivateData = CID_IDXGIObject_BASE + 2,
     CID_IDXGIObject_GetParent = CID_IDXGIObject_BASE + 3,
 
-    // CID for IDXGIDeviceSubObject
-    CID_IDXGIDeviceSubObject_BASE,
-    CID_IDXGIDeviceSubObject_COUNT = 1,
-    CID_IDXGIDeviceSubObject_GetDevice = CID_IDXGIDeviceSubObject_BASE + 0,
-
-    // CID for IDXGIDevice
-    CID_IDXGIDevice_BASE,
-    CID_IDXGIDevice_COUNT = 5,
-    CID_IDXGIDevice_GetAdapter = CID_IDXGIDevice_BASE + 0,
-    CID_IDXGIDevice_CreateSurface = CID_IDXGIDevice_BASE + 1,
-    CID_IDXGIDevice_QueryResourceResidency = CID_IDXGIDevice_BASE + 2,
-    CID_IDXGIDevice_SetGPUThreadPriority = CID_IDXGIDevice_BASE + 3,
-    CID_IDXGIDevice_GetGPUThreadPriority = CID_IDXGIDevice_BASE + 4,
-
-    // CID for IDXGIAdapter
-    CID_IDXGIAdapter_BASE,
-    CID_IDXGIAdapter_COUNT = 3,
-    CID_IDXGIAdapter_EnumOutputs = CID_IDXGIAdapter_BASE + 0,
-    CID_IDXGIAdapter_GetDesc = CID_IDXGIAdapter_BASE + 1,
-    CID_IDXGIAdapter_CheckInterfaceSupport = CID_IDXGIAdapter_BASE + 2,
-
     // CID for IDXGIFactory
     CID_IDXGIFactory_BASE,
     CID_IDXGIFactory_COUNT = 5,
@@ -264,6 +243,55 @@ enum D3D11_CALL_ID
     CID_IDXGIFactory1_COUNT = 2,
     CID_IDXGIFactory1_EnumAdapters1 = CID_IDXGIFactory1_BASE + 0,
     CID_IDXGIFactory1_IsCurrent = CID_IDXGIFactory1_BASE + 1,
+
+    // CID for IDXGIDeviceSubObject
+    CID_IDXGIDeviceSubObject_BASE,
+    CID_IDXGIDeviceSubObject_COUNT = 1,
+    CID_IDXGIDeviceSubObject_GetDevice = CID_IDXGIDeviceSubObject_BASE + 0,
+
+    // CID for IDXGISurface
+    CID_IDXGISurface_BASE,
+    CID_IDXGISurface_COUNT = 3,
+    CID_IDXGISurface_GetDesc = CID_IDXGISurface_BASE + 0,
+    CID_IDXGISurface_Map = CID_IDXGISurface_BASE + 1,
+    CID_IDXGISurface_Unmap = CID_IDXGISurface_BASE + 2,
+
+    // CID for IDXGIOutput
+    CID_IDXGIOutput_BASE,
+    CID_IDXGIOutput_COUNT = 12,
+    CID_IDXGIOutput_GetDesc = CID_IDXGIOutput_BASE + 0,
+    CID_IDXGIOutput_GetDisplayModeList = CID_IDXGIOutput_BASE + 1,
+    CID_IDXGIOutput_FindClosestMatchingMode = CID_IDXGIOutput_BASE + 2,
+    CID_IDXGIOutput_WaitForVBlank = CID_IDXGIOutput_BASE + 3,
+    CID_IDXGIOutput_TakeOwnership = CID_IDXGIOutput_BASE + 4,
+    CID_IDXGIOutput_ReleaseOwnership = CID_IDXGIOutput_BASE + 5,
+    CID_IDXGIOutput_GetGammaControlCapabilities = CID_IDXGIOutput_BASE + 6,
+    CID_IDXGIOutput_SetGammaControl = CID_IDXGIOutput_BASE + 7,
+    CID_IDXGIOutput_GetGammaControl = CID_IDXGIOutput_BASE + 8,
+    CID_IDXGIOutput_SetDisplaySurface = CID_IDXGIOutput_BASE + 9,
+    CID_IDXGIOutput_GetDisplaySurfaceData = CID_IDXGIOutput_BASE + 10,
+    CID_IDXGIOutput_GetFrameStatistics = CID_IDXGIOutput_BASE + 11,
+
+    // CID for IDXGIAdapter
+    CID_IDXGIAdapter_BASE,
+    CID_IDXGIAdapter_COUNT = 3,
+    CID_IDXGIAdapter_EnumOutputs = CID_IDXGIAdapter_BASE + 0,
+    CID_IDXGIAdapter_GetDesc = CID_IDXGIAdapter_BASE + 1,
+    CID_IDXGIAdapter_CheckInterfaceSupport = CID_IDXGIAdapter_BASE + 2,
+
+    // CID for IDXGIAdapter1
+    CID_IDXGIAdapter1_BASE,
+    CID_IDXGIAdapter1_COUNT = 1,
+    CID_IDXGIAdapter1_GetDesc1 = CID_IDXGIAdapter1_BASE + 0,
+
+    // CID for IDXGIDevice
+    CID_IDXGIDevice_BASE,
+    CID_IDXGIDevice_COUNT = 5,
+    CID_IDXGIDevice_GetAdapter = CID_IDXGIDevice_BASE + 0,
+    CID_IDXGIDevice_CreateSurface = CID_IDXGIDevice_BASE + 1,
+    CID_IDXGIDevice_QueryResourceResidency = CID_IDXGIDevice_BASE + 2,
+    CID_IDXGIDevice_SetGPUThreadPriority = CID_IDXGIDevice_BASE + 3,
+    CID_IDXGIDevice_GetGPUThreadPriority = CID_IDXGIDevice_BASE + 4,
 
     // CID for IDXGISwapChain
     CID_IDXGISwapChain_BASE,

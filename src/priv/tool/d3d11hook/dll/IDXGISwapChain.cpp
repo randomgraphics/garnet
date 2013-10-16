@@ -1,6 +1,8 @@
 // script generated file. DO NOT edit.
+
 #include "pch.h"
-#include "d3d11hook.h"
+#include "hooks.h"
+
 // -----------------------------------------------------------------------------
 HRESULT STDMETHODCALLTYPE DXGISwapChainHook::Present(
     /* [in] */ UINT SyncInterval,
@@ -30,7 +32,7 @@ HRESULT STDMETHODCALLTYPE DXGISwapChainHook::SetFullscreenState(
     _In_opt_  IDXGIOutput * pTarget)
 {
     if (_SetFullscreenState_pre_ptr._value) { (this->*_SetFullscreenState_pre_ptr._value)(Fullscreen, pTarget); }
-    HRESULT ret = GetRealObj()->SetFullscreenState(Fullscreen, pTarget);
+    HRESULT ret = GetRealObj()->SetFullscreenState(Fullscreen, HookedToReal(pTarget));
     if (_SetFullscreenState_post_ptr._value) { (this->*_SetFullscreenState_post_ptr._value)(ret, Fullscreen, pTarget); }
     return ret;
 }
@@ -42,6 +44,7 @@ HRESULT STDMETHODCALLTYPE DXGISwapChainHook::GetFullscreenState(
 {
     if (_GetFullscreenState_pre_ptr._value) { (this->*_GetFullscreenState_pre_ptr._value)(pFullscreen, ppTarget); }
     HRESULT ret = GetRealObj()->GetFullscreenState(pFullscreen, ppTarget);
+    if (ppTarget) *ppTarget = RealToHooked( *ppTarget );
     if (_GetFullscreenState_post_ptr._value) { (this->*_GetFullscreenState_post_ptr._value)(ret, pFullscreen, ppTarget); }
     return ret;
 }
@@ -86,6 +89,7 @@ HRESULT STDMETHODCALLTYPE DXGISwapChainHook::GetContainingOutput(
 {
     if (_GetContainingOutput_pre_ptr._value) { (this->*_GetContainingOutput_pre_ptr._value)(ppOutput); }
     HRESULT ret = GetRealObj()->GetContainingOutput(ppOutput);
+    if (ppOutput) *ppOutput = RealToHooked( *ppOutput );
     if (_GetContainingOutput_post_ptr._value) { (this->*_GetContainingOutput_post_ptr._value)(ret, ppOutput); }
     return ret;
 }

@@ -121,8 +121,7 @@ void GN::gfx::D3D11Gpu::debugMarkBegin( const char * markerName )
         size_t len = stringLength( markerName );
         wchar_t * wcs = (wchar_t*)alloca( sizeof(wchar_t) * (len+1) );
         mbs2wcs( wcs, len+1, markerName, len );
-        D3DUdaHelper uda(mDeviceContext);
-        uda.BeginEvent( wcs );
+        PIXPERF_BEGIN_EVENT_EX(mDeviceContext, 0xFFFFFFFF, wcs);
     }
 }
 
@@ -133,8 +132,7 @@ void GN::gfx::D3D11Gpu::debugMarkEnd()
 {
     if( gD3D11EnablePixPerf )
     {
-        D3DUdaHelper uda(mDeviceContext);
-        uda.EndEvent();
+        PIXPERF_END_EVENT(mDeviceContext);
     }
 }
 
@@ -148,7 +146,6 @@ void GN::gfx::D3D11Gpu::debugMarkSet( const char * markerName )
         size_t len = stringLength( markerName );
         wchar_t * wcs = (wchar_t*)alloca( sizeof(wchar_t) * (len+1) );
         mbs2wcs( wcs, len+1, markerName, len );
-        D3DUdaHelper uda(mDeviceContext);
-        uda.SetMarker( wcs );
+        PIXPERF_SET_MARKER_EX(mDeviceContext, 0xFFFFFFFF, wcs);
     }
 }

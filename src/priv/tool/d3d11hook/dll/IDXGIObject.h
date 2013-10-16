@@ -1,4 +1,32 @@
 // script generated file. DO NOT edit.
+
+// ==============================================================================
+// Constructor / Destructor
+// ==============================================================================
+private:
+
+
+protected:
+
+DXGIObjectHook(UnknownBase & unknown, IUnknown * realobj)
+    : BASE_CLASS(unknown, realobj)
+{
+    unknown.AddInterface<IDXGIObject>(this, realobj);
+    Construct(); 
+}
+
+~DXGIObjectHook() {}
+
+// ==============================================================================
+// Calling to base interfaces
+// ==============================================================================
+public:
+
+// ==============================================================================
+// Method Prototypes
+// ==============================================================================
+public:
+
 // -----------------------------------------------------------------------------
 virtual HRESULT STDMETHODCALLTYPE SetPrivateData(
     _In_  REFGUID Name,
@@ -25,3 +53,8 @@ virtual HRESULT STDMETHODCALLTYPE GetParent(
     _Out_  void ** ppParent);
 NullPtr<void (DXGIObjectHook::*)(_In_  REFIID, _Out_  void ** &)> _GetParent_pre_ptr;
 NullPtr<void (DXGIObjectHook::*)(HRESULT, _In_  REFIID, _Out_  void **)> _GetParent_post_ptr;
+
+// ==============================================================================
+// The End
+// ==============================================================================
+private:

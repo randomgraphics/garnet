@@ -1,6 +1,8 @@
 // script generated file. DO NOT edit.
+
 #include "pch.h"
-#include "d3d11hook.h"
+#include "hooks.h"
+
 // -----------------------------------------------------------------------------
 void STDMETHODCALLTYPE D3D11DeviceContextHook::VSSetConstantBuffers(
     _In_range_( 0, D3D11_COMMONSHADER_CONSTANT_BUFFER_API_SLOT_COUNT - 1 )  UINT StartSlot,
@@ -8,7 +10,7 @@ void STDMETHODCALLTYPE D3D11DeviceContextHook::VSSetConstantBuffers(
     _In_reads_opt_(NumBuffers)  ID3D11Buffer *const * ppConstantBuffers)
 {
     if (_VSSetConstantBuffers_pre_ptr._value) { (this->*_VSSetConstantBuffers_pre_ptr._value)(StartSlot, NumBuffers, ppConstantBuffers); }
-    GetRealObj()->VSSetConstantBuffers(StartSlot, NumBuffers, ppConstantBuffers);
+    GetRealObj()->VSSetConstantBuffers(StartSlot, NumBuffers, HookedToReal(ppConstantBuffers));
     if (_VSSetConstantBuffers_post_ptr._value) { (this->*_VSSetConstantBuffers_post_ptr._value)(StartSlot, NumBuffers, ppConstantBuffers); }
 }
 
@@ -19,7 +21,7 @@ void STDMETHODCALLTYPE D3D11DeviceContextHook::PSSetShaderResources(
     _In_reads_opt_(NumViews)  ID3D11ShaderResourceView *const * ppShaderResourceViews)
 {
     if (_PSSetShaderResources_pre_ptr._value) { (this->*_PSSetShaderResources_pre_ptr._value)(StartSlot, NumViews, ppShaderResourceViews); }
-    GetRealObj()->PSSetShaderResources(StartSlot, NumViews, ppShaderResourceViews);
+    GetRealObj()->PSSetShaderResources(StartSlot, NumViews, HookedToReal(ppShaderResourceViews));
     if (_PSSetShaderResources_post_ptr._value) { (this->*_PSSetShaderResources_post_ptr._value)(StartSlot, NumViews, ppShaderResourceViews); }
 }
 
@@ -30,7 +32,7 @@ void STDMETHODCALLTYPE D3D11DeviceContextHook::PSSetShader(
     UINT NumClassInstances)
 {
     if (_PSSetShader_pre_ptr._value) { (this->*_PSSetShader_pre_ptr._value)(pPixelShader, ppClassInstances, NumClassInstances); }
-    GetRealObj()->PSSetShader(pPixelShader, ppClassInstances, NumClassInstances);
+    GetRealObj()->PSSetShader(HookedToReal(pPixelShader), HookedToReal(ppClassInstances), NumClassInstances);
     if (_PSSetShader_post_ptr._value) { (this->*_PSSetShader_post_ptr._value)(pPixelShader, ppClassInstances, NumClassInstances); }
 }
 
@@ -41,7 +43,7 @@ void STDMETHODCALLTYPE D3D11DeviceContextHook::PSSetSamplers(
     _In_reads_opt_(NumSamplers)  ID3D11SamplerState *const * ppSamplers)
 {
     if (_PSSetSamplers_pre_ptr._value) { (this->*_PSSetSamplers_pre_ptr._value)(StartSlot, NumSamplers, ppSamplers); }
-    GetRealObj()->PSSetSamplers(StartSlot, NumSamplers, ppSamplers);
+    GetRealObj()->PSSetSamplers(StartSlot, NumSamplers, HookedToReal(ppSamplers));
     if (_PSSetSamplers_post_ptr._value) { (this->*_PSSetSamplers_post_ptr._value)(StartSlot, NumSamplers, ppSamplers); }
 }
 
@@ -52,7 +54,7 @@ void STDMETHODCALLTYPE D3D11DeviceContextHook::VSSetShader(
     UINT NumClassInstances)
 {
     if (_VSSetShader_pre_ptr._value) { (this->*_VSSetShader_pre_ptr._value)(pVertexShader, ppClassInstances, NumClassInstances); }
-    GetRealObj()->VSSetShader(pVertexShader, ppClassInstances, NumClassInstances);
+    GetRealObj()->VSSetShader(HookedToReal(pVertexShader), HookedToReal(ppClassInstances), NumClassInstances);
     if (_VSSetShader_post_ptr._value) { (this->*_VSSetShader_post_ptr._value)(pVertexShader, ppClassInstances, NumClassInstances); }
 }
 
@@ -86,7 +88,7 @@ HRESULT STDMETHODCALLTYPE D3D11DeviceContextHook::Map(
     _Out_  D3D11_MAPPED_SUBRESOURCE * pMappedResource)
 {
     if (_Map_pre_ptr._value) { (this->*_Map_pre_ptr._value)(pResource, Subresource, MapType, MapFlags, pMappedResource); }
-    HRESULT ret = GetRealObj()->Map(pResource, Subresource, MapType, MapFlags, pMappedResource);
+    HRESULT ret = GetRealObj()->Map(HookedToReal(pResource), Subresource, MapType, MapFlags, pMappedResource);
     if (_Map_post_ptr._value) { (this->*_Map_post_ptr._value)(ret, pResource, Subresource, MapType, MapFlags, pMappedResource); }
     return ret;
 }
@@ -97,7 +99,7 @@ void STDMETHODCALLTYPE D3D11DeviceContextHook::Unmap(
     _In_  UINT Subresource)
 {
     if (_Unmap_pre_ptr._value) { (this->*_Unmap_pre_ptr._value)(pResource, Subresource); }
-    GetRealObj()->Unmap(pResource, Subresource);
+    GetRealObj()->Unmap(HookedToReal(pResource), Subresource);
     if (_Unmap_post_ptr._value) { (this->*_Unmap_post_ptr._value)(pResource, Subresource); }
 }
 
@@ -108,7 +110,7 @@ void STDMETHODCALLTYPE D3D11DeviceContextHook::PSSetConstantBuffers(
     _In_reads_opt_(NumBuffers)  ID3D11Buffer *const * ppConstantBuffers)
 {
     if (_PSSetConstantBuffers_pre_ptr._value) { (this->*_PSSetConstantBuffers_pre_ptr._value)(StartSlot, NumBuffers, ppConstantBuffers); }
-    GetRealObj()->PSSetConstantBuffers(StartSlot, NumBuffers, ppConstantBuffers);
+    GetRealObj()->PSSetConstantBuffers(StartSlot, NumBuffers, HookedToReal(ppConstantBuffers));
     if (_PSSetConstantBuffers_post_ptr._value) { (this->*_PSSetConstantBuffers_post_ptr._value)(StartSlot, NumBuffers, ppConstantBuffers); }
 }
 
@@ -117,7 +119,7 @@ void STDMETHODCALLTYPE D3D11DeviceContextHook::IASetInputLayout(
     _In_opt_  ID3D11InputLayout * pInputLayout)
 {
     if (_IASetInputLayout_pre_ptr._value) { (this->*_IASetInputLayout_pre_ptr._value)(pInputLayout); }
-    GetRealObj()->IASetInputLayout(pInputLayout);
+    GetRealObj()->IASetInputLayout(HookedToReal(pInputLayout));
     if (_IASetInputLayout_post_ptr._value) { (this->*_IASetInputLayout_post_ptr._value)(pInputLayout); }
 }
 
@@ -130,7 +132,7 @@ void STDMETHODCALLTYPE D3D11DeviceContextHook::IASetVertexBuffers(
     _In_reads_opt_(NumBuffers)  const UINT * pOffsets)
 {
     if (_IASetVertexBuffers_pre_ptr._value) { (this->*_IASetVertexBuffers_pre_ptr._value)(StartSlot, NumBuffers, ppVertexBuffers, pStrides, pOffsets); }
-    GetRealObj()->IASetVertexBuffers(StartSlot, NumBuffers, ppVertexBuffers, pStrides, pOffsets);
+    GetRealObj()->IASetVertexBuffers(StartSlot, NumBuffers, HookedToReal(ppVertexBuffers), pStrides, pOffsets);
     if (_IASetVertexBuffers_post_ptr._value) { (this->*_IASetVertexBuffers_post_ptr._value)(StartSlot, NumBuffers, ppVertexBuffers, pStrides, pOffsets); }
 }
 
@@ -141,7 +143,7 @@ void STDMETHODCALLTYPE D3D11DeviceContextHook::IASetIndexBuffer(
     _In_  UINT Offset)
 {
     if (_IASetIndexBuffer_pre_ptr._value) { (this->*_IASetIndexBuffer_pre_ptr._value)(pIndexBuffer, Format, Offset); }
-    GetRealObj()->IASetIndexBuffer(pIndexBuffer, Format, Offset);
+    GetRealObj()->IASetIndexBuffer(HookedToReal(pIndexBuffer), Format, Offset);
     if (_IASetIndexBuffer_post_ptr._value) { (this->*_IASetIndexBuffer_post_ptr._value)(pIndexBuffer, Format, Offset); }
 }
 
@@ -177,7 +179,7 @@ void STDMETHODCALLTYPE D3D11DeviceContextHook::GSSetConstantBuffers(
     _In_reads_opt_(NumBuffers)  ID3D11Buffer *const * ppConstantBuffers)
 {
     if (_GSSetConstantBuffers_pre_ptr._value) { (this->*_GSSetConstantBuffers_pre_ptr._value)(StartSlot, NumBuffers, ppConstantBuffers); }
-    GetRealObj()->GSSetConstantBuffers(StartSlot, NumBuffers, ppConstantBuffers);
+    GetRealObj()->GSSetConstantBuffers(StartSlot, NumBuffers, HookedToReal(ppConstantBuffers));
     if (_GSSetConstantBuffers_post_ptr._value) { (this->*_GSSetConstantBuffers_post_ptr._value)(StartSlot, NumBuffers, ppConstantBuffers); }
 }
 
@@ -188,7 +190,7 @@ void STDMETHODCALLTYPE D3D11DeviceContextHook::GSSetShader(
     UINT NumClassInstances)
 {
     if (_GSSetShader_pre_ptr._value) { (this->*_GSSetShader_pre_ptr._value)(pShader, ppClassInstances, NumClassInstances); }
-    GetRealObj()->GSSetShader(pShader, ppClassInstances, NumClassInstances);
+    GetRealObj()->GSSetShader(HookedToReal(pShader), HookedToReal(ppClassInstances), NumClassInstances);
     if (_GSSetShader_post_ptr._value) { (this->*_GSSetShader_post_ptr._value)(pShader, ppClassInstances, NumClassInstances); }
 }
 
@@ -208,7 +210,7 @@ void STDMETHODCALLTYPE D3D11DeviceContextHook::VSSetShaderResources(
     _In_reads_opt_(NumViews)  ID3D11ShaderResourceView *const * ppShaderResourceViews)
 {
     if (_VSSetShaderResources_pre_ptr._value) { (this->*_VSSetShaderResources_pre_ptr._value)(StartSlot, NumViews, ppShaderResourceViews); }
-    GetRealObj()->VSSetShaderResources(StartSlot, NumViews, ppShaderResourceViews);
+    GetRealObj()->VSSetShaderResources(StartSlot, NumViews, HookedToReal(ppShaderResourceViews));
     if (_VSSetShaderResources_post_ptr._value) { (this->*_VSSetShaderResources_post_ptr._value)(StartSlot, NumViews, ppShaderResourceViews); }
 }
 
@@ -219,7 +221,7 @@ void STDMETHODCALLTYPE D3D11DeviceContextHook::VSSetSamplers(
     _In_reads_opt_(NumSamplers)  ID3D11SamplerState *const * ppSamplers)
 {
     if (_VSSetSamplers_pre_ptr._value) { (this->*_VSSetSamplers_pre_ptr._value)(StartSlot, NumSamplers, ppSamplers); }
-    GetRealObj()->VSSetSamplers(StartSlot, NumSamplers, ppSamplers);
+    GetRealObj()->VSSetSamplers(StartSlot, NumSamplers, HookedToReal(ppSamplers));
     if (_VSSetSamplers_post_ptr._value) { (this->*_VSSetSamplers_post_ptr._value)(StartSlot, NumSamplers, ppSamplers); }
 }
 
@@ -228,7 +230,7 @@ void STDMETHODCALLTYPE D3D11DeviceContextHook::Begin(
     _In_  ID3D11Asynchronous * pAsync)
 {
     if (_Begin_pre_ptr._value) { (this->*_Begin_pre_ptr._value)(pAsync); }
-    GetRealObj()->Begin(pAsync);
+    GetRealObj()->Begin(HookedToReal(pAsync));
     if (_Begin_post_ptr._value) { (this->*_Begin_post_ptr._value)(pAsync); }
 }
 
@@ -237,7 +239,7 @@ void STDMETHODCALLTYPE D3D11DeviceContextHook::End(
     _In_  ID3D11Asynchronous * pAsync)
 {
     if (_End_pre_ptr._value) { (this->*_End_pre_ptr._value)(pAsync); }
-    GetRealObj()->End(pAsync);
+    GetRealObj()->End(HookedToReal(pAsync));
     if (_End_post_ptr._value) { (this->*_End_post_ptr._value)(pAsync); }
 }
 
@@ -249,7 +251,7 @@ HRESULT STDMETHODCALLTYPE D3D11DeviceContextHook::GetData(
     _In_  UINT GetDataFlags)
 {
     if (_GetData_pre_ptr._value) { (this->*_GetData_pre_ptr._value)(pAsync, pData, DataSize, GetDataFlags); }
-    HRESULT ret = GetRealObj()->GetData(pAsync, pData, DataSize, GetDataFlags);
+    HRESULT ret = GetRealObj()->GetData(HookedToReal(pAsync), pData, DataSize, GetDataFlags);
     if (_GetData_post_ptr._value) { (this->*_GetData_post_ptr._value)(ret, pAsync, pData, DataSize, GetDataFlags); }
     return ret;
 }
@@ -260,7 +262,7 @@ void STDMETHODCALLTYPE D3D11DeviceContextHook::SetPredication(
     _In_  BOOL PredicateValue)
 {
     if (_SetPredication_pre_ptr._value) { (this->*_SetPredication_pre_ptr._value)(pPredicate, PredicateValue); }
-    GetRealObj()->SetPredication(pPredicate, PredicateValue);
+    GetRealObj()->SetPredication(HookedToReal(pPredicate), PredicateValue);
     if (_SetPredication_post_ptr._value) { (this->*_SetPredication_post_ptr._value)(pPredicate, PredicateValue); }
 }
 
@@ -271,7 +273,7 @@ void STDMETHODCALLTYPE D3D11DeviceContextHook::GSSetShaderResources(
     _In_reads_opt_(NumViews)  ID3D11ShaderResourceView *const * ppShaderResourceViews)
 {
     if (_GSSetShaderResources_pre_ptr._value) { (this->*_GSSetShaderResources_pre_ptr._value)(StartSlot, NumViews, ppShaderResourceViews); }
-    GetRealObj()->GSSetShaderResources(StartSlot, NumViews, ppShaderResourceViews);
+    GetRealObj()->GSSetShaderResources(StartSlot, NumViews, HookedToReal(ppShaderResourceViews));
     if (_GSSetShaderResources_post_ptr._value) { (this->*_GSSetShaderResources_post_ptr._value)(StartSlot, NumViews, ppShaderResourceViews); }
 }
 
@@ -282,7 +284,7 @@ void STDMETHODCALLTYPE D3D11DeviceContextHook::GSSetSamplers(
     _In_reads_opt_(NumSamplers)  ID3D11SamplerState *const * ppSamplers)
 {
     if (_GSSetSamplers_pre_ptr._value) { (this->*_GSSetSamplers_pre_ptr._value)(StartSlot, NumSamplers, ppSamplers); }
-    GetRealObj()->GSSetSamplers(StartSlot, NumSamplers, ppSamplers);
+    GetRealObj()->GSSetSamplers(StartSlot, NumSamplers, HookedToReal(ppSamplers));
     if (_GSSetSamplers_post_ptr._value) { (this->*_GSSetSamplers_post_ptr._value)(StartSlot, NumSamplers, ppSamplers); }
 }
 
@@ -293,7 +295,7 @@ void STDMETHODCALLTYPE D3D11DeviceContextHook::OMSetRenderTargets(
     _In_opt_  ID3D11DepthStencilView * pDepthStencilView)
 {
     if (_OMSetRenderTargets_pre_ptr._value) { (this->*_OMSetRenderTargets_pre_ptr._value)(NumViews, ppRenderTargetViews, pDepthStencilView); }
-    GetRealObj()->OMSetRenderTargets(NumViews, ppRenderTargetViews, pDepthStencilView);
+    GetRealObj()->OMSetRenderTargets(NumViews, HookedToReal(ppRenderTargetViews), HookedToReal(pDepthStencilView));
     if (_OMSetRenderTargets_post_ptr._value) { (this->*_OMSetRenderTargets_post_ptr._value)(NumViews, ppRenderTargetViews, pDepthStencilView); }
 }
 
@@ -308,7 +310,7 @@ void STDMETHODCALLTYPE D3D11DeviceContextHook::OMSetRenderTargetsAndUnorderedAcc
     _In_reads_opt_(NumUAVs)  const UINT * pUAVInitialCounts)
 {
     if (_OMSetRenderTargetsAndUnorderedAccessViews_pre_ptr._value) { (this->*_OMSetRenderTargetsAndUnorderedAccessViews_pre_ptr._value)(NumRTVs, ppRenderTargetViews, pDepthStencilView, UAVStartSlot, NumUAVs, ppUnorderedAccessViews, pUAVInitialCounts); }
-    GetRealObj()->OMSetRenderTargetsAndUnorderedAccessViews(NumRTVs, ppRenderTargetViews, pDepthStencilView, UAVStartSlot, NumUAVs, ppUnorderedAccessViews, pUAVInitialCounts);
+    GetRealObj()->OMSetRenderTargetsAndUnorderedAccessViews(NumRTVs, HookedToReal(ppRenderTargetViews), HookedToReal(pDepthStencilView), UAVStartSlot, NumUAVs, HookedToReal(ppUnorderedAccessViews), pUAVInitialCounts);
     if (_OMSetRenderTargetsAndUnorderedAccessViews_post_ptr._value) { (this->*_OMSetRenderTargetsAndUnorderedAccessViews_post_ptr._value)(NumRTVs, ppRenderTargetViews, pDepthStencilView, UAVStartSlot, NumUAVs, ppUnorderedAccessViews, pUAVInitialCounts); }
 }
 
@@ -319,7 +321,7 @@ void STDMETHODCALLTYPE D3D11DeviceContextHook::OMSetBlendState(
     _In_  UINT SampleMask)
 {
     if (_OMSetBlendState_pre_ptr._value) { (this->*_OMSetBlendState_pre_ptr._value)(pBlendState, BlendFactor, SampleMask); }
-    GetRealObj()->OMSetBlendState(pBlendState, BlendFactor, SampleMask);
+    GetRealObj()->OMSetBlendState(HookedToReal(pBlendState), BlendFactor, SampleMask);
     if (_OMSetBlendState_post_ptr._value) { (this->*_OMSetBlendState_post_ptr._value)(pBlendState, BlendFactor, SampleMask); }
 }
 
@@ -329,7 +331,7 @@ void STDMETHODCALLTYPE D3D11DeviceContextHook::OMSetDepthStencilState(
     _In_  UINT StencilRef)
 {
     if (_OMSetDepthStencilState_pre_ptr._value) { (this->*_OMSetDepthStencilState_pre_ptr._value)(pDepthStencilState, StencilRef); }
-    GetRealObj()->OMSetDepthStencilState(pDepthStencilState, StencilRef);
+    GetRealObj()->OMSetDepthStencilState(HookedToReal(pDepthStencilState), StencilRef);
     if (_OMSetDepthStencilState_post_ptr._value) { (this->*_OMSetDepthStencilState_post_ptr._value)(pDepthStencilState, StencilRef); }
 }
 
@@ -340,7 +342,7 @@ void STDMETHODCALLTYPE D3D11DeviceContextHook::SOSetTargets(
     _In_reads_opt_(NumBuffers)  const UINT * pOffsets)
 {
     if (_SOSetTargets_pre_ptr._value) { (this->*_SOSetTargets_pre_ptr._value)(NumBuffers, ppSOTargets, pOffsets); }
-    GetRealObj()->SOSetTargets(NumBuffers, ppSOTargets, pOffsets);
+    GetRealObj()->SOSetTargets(NumBuffers, HookedToReal(ppSOTargets), pOffsets);
     if (_SOSetTargets_post_ptr._value) { (this->*_SOSetTargets_post_ptr._value)(NumBuffers, ppSOTargets, pOffsets); }
 }
 
@@ -358,7 +360,7 @@ void STDMETHODCALLTYPE D3D11DeviceContextHook::DrawIndexedInstancedIndirect(
     _In_  UINT AlignedByteOffsetForArgs)
 {
     if (_DrawIndexedInstancedIndirect_pre_ptr._value) { (this->*_DrawIndexedInstancedIndirect_pre_ptr._value)(pBufferForArgs, AlignedByteOffsetForArgs); }
-    GetRealObj()->DrawIndexedInstancedIndirect(pBufferForArgs, AlignedByteOffsetForArgs);
+    GetRealObj()->DrawIndexedInstancedIndirect(HookedToReal(pBufferForArgs), AlignedByteOffsetForArgs);
     if (_DrawIndexedInstancedIndirect_post_ptr._value) { (this->*_DrawIndexedInstancedIndirect_post_ptr._value)(pBufferForArgs, AlignedByteOffsetForArgs); }
 }
 
@@ -368,7 +370,7 @@ void STDMETHODCALLTYPE D3D11DeviceContextHook::DrawInstancedIndirect(
     _In_  UINT AlignedByteOffsetForArgs)
 {
     if (_DrawInstancedIndirect_pre_ptr._value) { (this->*_DrawInstancedIndirect_pre_ptr._value)(pBufferForArgs, AlignedByteOffsetForArgs); }
-    GetRealObj()->DrawInstancedIndirect(pBufferForArgs, AlignedByteOffsetForArgs);
+    GetRealObj()->DrawInstancedIndirect(HookedToReal(pBufferForArgs), AlignedByteOffsetForArgs);
     if (_DrawInstancedIndirect_post_ptr._value) { (this->*_DrawInstancedIndirect_post_ptr._value)(pBufferForArgs, AlignedByteOffsetForArgs); }
 }
 
@@ -389,7 +391,7 @@ void STDMETHODCALLTYPE D3D11DeviceContextHook::DispatchIndirect(
     _In_  UINT AlignedByteOffsetForArgs)
 {
     if (_DispatchIndirect_pre_ptr._value) { (this->*_DispatchIndirect_pre_ptr._value)(pBufferForArgs, AlignedByteOffsetForArgs); }
-    GetRealObj()->DispatchIndirect(pBufferForArgs, AlignedByteOffsetForArgs);
+    GetRealObj()->DispatchIndirect(HookedToReal(pBufferForArgs), AlignedByteOffsetForArgs);
     if (_DispatchIndirect_post_ptr._value) { (this->*_DispatchIndirect_post_ptr._value)(pBufferForArgs, AlignedByteOffsetForArgs); }
 }
 
@@ -398,7 +400,7 @@ void STDMETHODCALLTYPE D3D11DeviceContextHook::RSSetState(
     _In_opt_  ID3D11RasterizerState * pRasterizerState)
 {
     if (_RSSetState_pre_ptr._value) { (this->*_RSSetState_pre_ptr._value)(pRasterizerState); }
-    GetRealObj()->RSSetState(pRasterizerState);
+    GetRealObj()->RSSetState(HookedToReal(pRasterizerState));
     if (_RSSetState_post_ptr._value) { (this->*_RSSetState_post_ptr._value)(pRasterizerState); }
 }
 
@@ -434,7 +436,7 @@ void STDMETHODCALLTYPE D3D11DeviceContextHook::CopySubresourceRegion(
     _In_opt_  const D3D11_BOX * pSrcBox)
 {
     if (_CopySubresourceRegion_pre_ptr._value) { (this->*_CopySubresourceRegion_pre_ptr._value)(pDstResource, DstSubresource, DstX, DstY, DstZ, pSrcResource, SrcSubresource, pSrcBox); }
-    GetRealObj()->CopySubresourceRegion(pDstResource, DstSubresource, DstX, DstY, DstZ, pSrcResource, SrcSubresource, pSrcBox);
+    GetRealObj()->CopySubresourceRegion(HookedToReal(pDstResource), DstSubresource, DstX, DstY, DstZ, HookedToReal(pSrcResource), SrcSubresource, pSrcBox);
     if (_CopySubresourceRegion_post_ptr._value) { (this->*_CopySubresourceRegion_post_ptr._value)(pDstResource, DstSubresource, DstX, DstY, DstZ, pSrcResource, SrcSubresource, pSrcBox); }
 }
 
@@ -444,7 +446,7 @@ void STDMETHODCALLTYPE D3D11DeviceContextHook::CopyResource(
     _In_  ID3D11Resource * pSrcResource)
 {
     if (_CopyResource_pre_ptr._value) { (this->*_CopyResource_pre_ptr._value)(pDstResource, pSrcResource); }
-    GetRealObj()->CopyResource(pDstResource, pSrcResource);
+    GetRealObj()->CopyResource(HookedToReal(pDstResource), HookedToReal(pSrcResource));
     if (_CopyResource_post_ptr._value) { (this->*_CopyResource_post_ptr._value)(pDstResource, pSrcResource); }
 }
 
@@ -458,7 +460,7 @@ void STDMETHODCALLTYPE D3D11DeviceContextHook::UpdateSubresource(
     _In_  UINT SrcDepthPitch)
 {
     if (_UpdateSubresource_pre_ptr._value) { (this->*_UpdateSubresource_pre_ptr._value)(pDstResource, DstSubresource, pDstBox, pSrcData, SrcRowPitch, SrcDepthPitch); }
-    GetRealObj()->UpdateSubresource(pDstResource, DstSubresource, pDstBox, pSrcData, SrcRowPitch, SrcDepthPitch);
+    GetRealObj()->UpdateSubresource(HookedToReal(pDstResource), DstSubresource, pDstBox, pSrcData, SrcRowPitch, SrcDepthPitch);
     if (_UpdateSubresource_post_ptr._value) { (this->*_UpdateSubresource_post_ptr._value)(pDstResource, DstSubresource, pDstBox, pSrcData, SrcRowPitch, SrcDepthPitch); }
 }
 
@@ -469,7 +471,7 @@ void STDMETHODCALLTYPE D3D11DeviceContextHook::CopyStructureCount(
     _In_  ID3D11UnorderedAccessView * pSrcView)
 {
     if (_CopyStructureCount_pre_ptr._value) { (this->*_CopyStructureCount_pre_ptr._value)(pDstBuffer, DstAlignedByteOffset, pSrcView); }
-    GetRealObj()->CopyStructureCount(pDstBuffer, DstAlignedByteOffset, pSrcView);
+    GetRealObj()->CopyStructureCount(HookedToReal(pDstBuffer), DstAlignedByteOffset, HookedToReal(pSrcView));
     if (_CopyStructureCount_post_ptr._value) { (this->*_CopyStructureCount_post_ptr._value)(pDstBuffer, DstAlignedByteOffset, pSrcView); }
 }
 
@@ -479,7 +481,7 @@ void STDMETHODCALLTYPE D3D11DeviceContextHook::ClearRenderTargetView(
     _In_  const FLOAT ColorRGBA[4])
 {
     if (_ClearRenderTargetView_pre_ptr._value) { (this->*_ClearRenderTargetView_pre_ptr._value)(pRenderTargetView, ColorRGBA); }
-    GetRealObj()->ClearRenderTargetView(pRenderTargetView, ColorRGBA);
+    GetRealObj()->ClearRenderTargetView(HookedToReal(pRenderTargetView), ColorRGBA);
     if (_ClearRenderTargetView_post_ptr._value) { (this->*_ClearRenderTargetView_post_ptr._value)(pRenderTargetView, ColorRGBA); }
 }
 
@@ -489,7 +491,7 @@ void STDMETHODCALLTYPE D3D11DeviceContextHook::ClearUnorderedAccessViewUint(
     _In_  const UINT Values[4])
 {
     if (_ClearUnorderedAccessViewUint_pre_ptr._value) { (this->*_ClearUnorderedAccessViewUint_pre_ptr._value)(pUnorderedAccessView, Values); }
-    GetRealObj()->ClearUnorderedAccessViewUint(pUnorderedAccessView, Values);
+    GetRealObj()->ClearUnorderedAccessViewUint(HookedToReal(pUnorderedAccessView), Values);
     if (_ClearUnorderedAccessViewUint_post_ptr._value) { (this->*_ClearUnorderedAccessViewUint_post_ptr._value)(pUnorderedAccessView, Values); }
 }
 
@@ -499,7 +501,7 @@ void STDMETHODCALLTYPE D3D11DeviceContextHook::ClearUnorderedAccessViewFloat(
     _In_  const FLOAT Values[4])
 {
     if (_ClearUnorderedAccessViewFloat_pre_ptr._value) { (this->*_ClearUnorderedAccessViewFloat_pre_ptr._value)(pUnorderedAccessView, Values); }
-    GetRealObj()->ClearUnorderedAccessViewFloat(pUnorderedAccessView, Values);
+    GetRealObj()->ClearUnorderedAccessViewFloat(HookedToReal(pUnorderedAccessView), Values);
     if (_ClearUnorderedAccessViewFloat_post_ptr._value) { (this->*_ClearUnorderedAccessViewFloat_post_ptr._value)(pUnorderedAccessView, Values); }
 }
 
@@ -511,7 +513,7 @@ void STDMETHODCALLTYPE D3D11DeviceContextHook::ClearDepthStencilView(
     _In_  UINT8 Stencil)
 {
     if (_ClearDepthStencilView_pre_ptr._value) { (this->*_ClearDepthStencilView_pre_ptr._value)(pDepthStencilView, ClearFlags, Depth, Stencil); }
-    GetRealObj()->ClearDepthStencilView(pDepthStencilView, ClearFlags, Depth, Stencil);
+    GetRealObj()->ClearDepthStencilView(HookedToReal(pDepthStencilView), ClearFlags, Depth, Stencil);
     if (_ClearDepthStencilView_post_ptr._value) { (this->*_ClearDepthStencilView_post_ptr._value)(pDepthStencilView, ClearFlags, Depth, Stencil); }
 }
 
@@ -520,7 +522,7 @@ void STDMETHODCALLTYPE D3D11DeviceContextHook::GenerateMips(
     _In_  ID3D11ShaderResourceView * pShaderResourceView)
 {
     if (_GenerateMips_pre_ptr._value) { (this->*_GenerateMips_pre_ptr._value)(pShaderResourceView); }
-    GetRealObj()->GenerateMips(pShaderResourceView);
+    GetRealObj()->GenerateMips(HookedToReal(pShaderResourceView));
     if (_GenerateMips_post_ptr._value) { (this->*_GenerateMips_post_ptr._value)(pShaderResourceView); }
 }
 
@@ -530,7 +532,7 @@ void STDMETHODCALLTYPE D3D11DeviceContextHook::SetResourceMinLOD(
     FLOAT MinLOD)
 {
     if (_SetResourceMinLOD_pre_ptr._value) { (this->*_SetResourceMinLOD_pre_ptr._value)(pResource, MinLOD); }
-    GetRealObj()->SetResourceMinLOD(pResource, MinLOD);
+    GetRealObj()->SetResourceMinLOD(HookedToReal(pResource), MinLOD);
     if (_SetResourceMinLOD_post_ptr._value) { (this->*_SetResourceMinLOD_post_ptr._value)(pResource, MinLOD); }
 }
 
@@ -539,7 +541,7 @@ FLOAT STDMETHODCALLTYPE D3D11DeviceContextHook::GetResourceMinLOD(
     _In_  ID3D11Resource * pResource)
 {
     if (_GetResourceMinLOD_pre_ptr._value) { (this->*_GetResourceMinLOD_pre_ptr._value)(pResource); }
-    FLOAT ret = GetRealObj()->GetResourceMinLOD(pResource);
+    FLOAT ret = GetRealObj()->GetResourceMinLOD(HookedToReal(pResource));
     if (_GetResourceMinLOD_post_ptr._value) { (this->*_GetResourceMinLOD_post_ptr._value)(ret, pResource); }
     return ret;
 }
@@ -553,7 +555,7 @@ void STDMETHODCALLTYPE D3D11DeviceContextHook::ResolveSubresource(
     _In_  DXGI_FORMAT Format)
 {
     if (_ResolveSubresource_pre_ptr._value) { (this->*_ResolveSubresource_pre_ptr._value)(pDstResource, DstSubresource, pSrcResource, SrcSubresource, Format); }
-    GetRealObj()->ResolveSubresource(pDstResource, DstSubresource, pSrcResource, SrcSubresource, Format);
+    GetRealObj()->ResolveSubresource(HookedToReal(pDstResource), DstSubresource, HookedToReal(pSrcResource), SrcSubresource, Format);
     if (_ResolveSubresource_post_ptr._value) { (this->*_ResolveSubresource_post_ptr._value)(pDstResource, DstSubresource, pSrcResource, SrcSubresource, Format); }
 }
 
@@ -563,7 +565,7 @@ void STDMETHODCALLTYPE D3D11DeviceContextHook::ExecuteCommandList(
     BOOL RestoreContextState)
 {
     if (_ExecuteCommandList_pre_ptr._value) { (this->*_ExecuteCommandList_pre_ptr._value)(pCommandList, RestoreContextState); }
-    GetRealObj()->ExecuteCommandList(pCommandList, RestoreContextState);
+    GetRealObj()->ExecuteCommandList(HookedToReal(pCommandList), RestoreContextState);
     if (_ExecuteCommandList_post_ptr._value) { (this->*_ExecuteCommandList_post_ptr._value)(pCommandList, RestoreContextState); }
 }
 
@@ -574,7 +576,7 @@ void STDMETHODCALLTYPE D3D11DeviceContextHook::HSSetShaderResources(
     _In_reads_opt_(NumViews)  ID3D11ShaderResourceView *const * ppShaderResourceViews)
 {
     if (_HSSetShaderResources_pre_ptr._value) { (this->*_HSSetShaderResources_pre_ptr._value)(StartSlot, NumViews, ppShaderResourceViews); }
-    GetRealObj()->HSSetShaderResources(StartSlot, NumViews, ppShaderResourceViews);
+    GetRealObj()->HSSetShaderResources(StartSlot, NumViews, HookedToReal(ppShaderResourceViews));
     if (_HSSetShaderResources_post_ptr._value) { (this->*_HSSetShaderResources_post_ptr._value)(StartSlot, NumViews, ppShaderResourceViews); }
 }
 
@@ -585,7 +587,7 @@ void STDMETHODCALLTYPE D3D11DeviceContextHook::HSSetShader(
     UINT NumClassInstances)
 {
     if (_HSSetShader_pre_ptr._value) { (this->*_HSSetShader_pre_ptr._value)(pHullShader, ppClassInstances, NumClassInstances); }
-    GetRealObj()->HSSetShader(pHullShader, ppClassInstances, NumClassInstances);
+    GetRealObj()->HSSetShader(HookedToReal(pHullShader), HookedToReal(ppClassInstances), NumClassInstances);
     if (_HSSetShader_post_ptr._value) { (this->*_HSSetShader_post_ptr._value)(pHullShader, ppClassInstances, NumClassInstances); }
 }
 
@@ -596,7 +598,7 @@ void STDMETHODCALLTYPE D3D11DeviceContextHook::HSSetSamplers(
     _In_reads_opt_(NumSamplers)  ID3D11SamplerState *const * ppSamplers)
 {
     if (_HSSetSamplers_pre_ptr._value) { (this->*_HSSetSamplers_pre_ptr._value)(StartSlot, NumSamplers, ppSamplers); }
-    GetRealObj()->HSSetSamplers(StartSlot, NumSamplers, ppSamplers);
+    GetRealObj()->HSSetSamplers(StartSlot, NumSamplers, HookedToReal(ppSamplers));
     if (_HSSetSamplers_post_ptr._value) { (this->*_HSSetSamplers_post_ptr._value)(StartSlot, NumSamplers, ppSamplers); }
 }
 
@@ -607,7 +609,7 @@ void STDMETHODCALLTYPE D3D11DeviceContextHook::HSSetConstantBuffers(
     _In_reads_opt_(NumBuffers)  ID3D11Buffer *const * ppConstantBuffers)
 {
     if (_HSSetConstantBuffers_pre_ptr._value) { (this->*_HSSetConstantBuffers_pre_ptr._value)(StartSlot, NumBuffers, ppConstantBuffers); }
-    GetRealObj()->HSSetConstantBuffers(StartSlot, NumBuffers, ppConstantBuffers);
+    GetRealObj()->HSSetConstantBuffers(StartSlot, NumBuffers, HookedToReal(ppConstantBuffers));
     if (_HSSetConstantBuffers_post_ptr._value) { (this->*_HSSetConstantBuffers_post_ptr._value)(StartSlot, NumBuffers, ppConstantBuffers); }
 }
 
@@ -618,7 +620,7 @@ void STDMETHODCALLTYPE D3D11DeviceContextHook::DSSetShaderResources(
     _In_reads_opt_(NumViews)  ID3D11ShaderResourceView *const * ppShaderResourceViews)
 {
     if (_DSSetShaderResources_pre_ptr._value) { (this->*_DSSetShaderResources_pre_ptr._value)(StartSlot, NumViews, ppShaderResourceViews); }
-    GetRealObj()->DSSetShaderResources(StartSlot, NumViews, ppShaderResourceViews);
+    GetRealObj()->DSSetShaderResources(StartSlot, NumViews, HookedToReal(ppShaderResourceViews));
     if (_DSSetShaderResources_post_ptr._value) { (this->*_DSSetShaderResources_post_ptr._value)(StartSlot, NumViews, ppShaderResourceViews); }
 }
 
@@ -629,7 +631,7 @@ void STDMETHODCALLTYPE D3D11DeviceContextHook::DSSetShader(
     UINT NumClassInstances)
 {
     if (_DSSetShader_pre_ptr._value) { (this->*_DSSetShader_pre_ptr._value)(pDomainShader, ppClassInstances, NumClassInstances); }
-    GetRealObj()->DSSetShader(pDomainShader, ppClassInstances, NumClassInstances);
+    GetRealObj()->DSSetShader(HookedToReal(pDomainShader), HookedToReal(ppClassInstances), NumClassInstances);
     if (_DSSetShader_post_ptr._value) { (this->*_DSSetShader_post_ptr._value)(pDomainShader, ppClassInstances, NumClassInstances); }
 }
 
@@ -640,7 +642,7 @@ void STDMETHODCALLTYPE D3D11DeviceContextHook::DSSetSamplers(
     _In_reads_opt_(NumSamplers)  ID3D11SamplerState *const * ppSamplers)
 {
     if (_DSSetSamplers_pre_ptr._value) { (this->*_DSSetSamplers_pre_ptr._value)(StartSlot, NumSamplers, ppSamplers); }
-    GetRealObj()->DSSetSamplers(StartSlot, NumSamplers, ppSamplers);
+    GetRealObj()->DSSetSamplers(StartSlot, NumSamplers, HookedToReal(ppSamplers));
     if (_DSSetSamplers_post_ptr._value) { (this->*_DSSetSamplers_post_ptr._value)(StartSlot, NumSamplers, ppSamplers); }
 }
 
@@ -651,7 +653,7 @@ void STDMETHODCALLTYPE D3D11DeviceContextHook::DSSetConstantBuffers(
     _In_reads_opt_(NumBuffers)  ID3D11Buffer *const * ppConstantBuffers)
 {
     if (_DSSetConstantBuffers_pre_ptr._value) { (this->*_DSSetConstantBuffers_pre_ptr._value)(StartSlot, NumBuffers, ppConstantBuffers); }
-    GetRealObj()->DSSetConstantBuffers(StartSlot, NumBuffers, ppConstantBuffers);
+    GetRealObj()->DSSetConstantBuffers(StartSlot, NumBuffers, HookedToReal(ppConstantBuffers));
     if (_DSSetConstantBuffers_post_ptr._value) { (this->*_DSSetConstantBuffers_post_ptr._value)(StartSlot, NumBuffers, ppConstantBuffers); }
 }
 
@@ -662,7 +664,7 @@ void STDMETHODCALLTYPE D3D11DeviceContextHook::CSSetShaderResources(
     _In_reads_opt_(NumViews)  ID3D11ShaderResourceView *const * ppShaderResourceViews)
 {
     if (_CSSetShaderResources_pre_ptr._value) { (this->*_CSSetShaderResources_pre_ptr._value)(StartSlot, NumViews, ppShaderResourceViews); }
-    GetRealObj()->CSSetShaderResources(StartSlot, NumViews, ppShaderResourceViews);
+    GetRealObj()->CSSetShaderResources(StartSlot, NumViews, HookedToReal(ppShaderResourceViews));
     if (_CSSetShaderResources_post_ptr._value) { (this->*_CSSetShaderResources_post_ptr._value)(StartSlot, NumViews, ppShaderResourceViews); }
 }
 
@@ -674,7 +676,7 @@ void STDMETHODCALLTYPE D3D11DeviceContextHook::CSSetUnorderedAccessViews(
     _In_reads_opt_(NumUAVs)  const UINT * pUAVInitialCounts)
 {
     if (_CSSetUnorderedAccessViews_pre_ptr._value) { (this->*_CSSetUnorderedAccessViews_pre_ptr._value)(StartSlot, NumUAVs, ppUnorderedAccessViews, pUAVInitialCounts); }
-    GetRealObj()->CSSetUnorderedAccessViews(StartSlot, NumUAVs, ppUnorderedAccessViews, pUAVInitialCounts);
+    GetRealObj()->CSSetUnorderedAccessViews(StartSlot, NumUAVs, HookedToReal(ppUnorderedAccessViews), pUAVInitialCounts);
     if (_CSSetUnorderedAccessViews_post_ptr._value) { (this->*_CSSetUnorderedAccessViews_post_ptr._value)(StartSlot, NumUAVs, ppUnorderedAccessViews, pUAVInitialCounts); }
 }
 
@@ -685,7 +687,7 @@ void STDMETHODCALLTYPE D3D11DeviceContextHook::CSSetShader(
     UINT NumClassInstances)
 {
     if (_CSSetShader_pre_ptr._value) { (this->*_CSSetShader_pre_ptr._value)(pComputeShader, ppClassInstances, NumClassInstances); }
-    GetRealObj()->CSSetShader(pComputeShader, ppClassInstances, NumClassInstances);
+    GetRealObj()->CSSetShader(HookedToReal(pComputeShader), HookedToReal(ppClassInstances), NumClassInstances);
     if (_CSSetShader_post_ptr._value) { (this->*_CSSetShader_post_ptr._value)(pComputeShader, ppClassInstances, NumClassInstances); }
 }
 
@@ -696,7 +698,7 @@ void STDMETHODCALLTYPE D3D11DeviceContextHook::CSSetSamplers(
     _In_reads_opt_(NumSamplers)  ID3D11SamplerState *const * ppSamplers)
 {
     if (_CSSetSamplers_pre_ptr._value) { (this->*_CSSetSamplers_pre_ptr._value)(StartSlot, NumSamplers, ppSamplers); }
-    GetRealObj()->CSSetSamplers(StartSlot, NumSamplers, ppSamplers);
+    GetRealObj()->CSSetSamplers(StartSlot, NumSamplers, HookedToReal(ppSamplers));
     if (_CSSetSamplers_post_ptr._value) { (this->*_CSSetSamplers_post_ptr._value)(StartSlot, NumSamplers, ppSamplers); }
 }
 
@@ -707,7 +709,7 @@ void STDMETHODCALLTYPE D3D11DeviceContextHook::CSSetConstantBuffers(
     _In_reads_opt_(NumBuffers)  ID3D11Buffer *const * ppConstantBuffers)
 {
     if (_CSSetConstantBuffers_pre_ptr._value) { (this->*_CSSetConstantBuffers_pre_ptr._value)(StartSlot, NumBuffers, ppConstantBuffers); }
-    GetRealObj()->CSSetConstantBuffers(StartSlot, NumBuffers, ppConstantBuffers);
+    GetRealObj()->CSSetConstantBuffers(StartSlot, NumBuffers, HookedToReal(ppConstantBuffers));
     if (_CSSetConstantBuffers_post_ptr._value) { (this->*_CSSetConstantBuffers_post_ptr._value)(StartSlot, NumBuffers, ppConstantBuffers); }
 }
 
@@ -719,6 +721,7 @@ void STDMETHODCALLTYPE D3D11DeviceContextHook::VSGetConstantBuffers(
 {
     if (_VSGetConstantBuffers_pre_ptr._value) { (this->*_VSGetConstantBuffers_pre_ptr._value)(StartSlot, NumBuffers, ppConstantBuffers); }
     GetRealObj()->VSGetConstantBuffers(StartSlot, NumBuffers, ppConstantBuffers);
+    if (ppConstantBuffers) *ppConstantBuffers = RealToHooked( *ppConstantBuffers );
     if (_VSGetConstantBuffers_post_ptr._value) { (this->*_VSGetConstantBuffers_post_ptr._value)(StartSlot, NumBuffers, ppConstantBuffers); }
 }
 
@@ -730,6 +733,7 @@ void STDMETHODCALLTYPE D3D11DeviceContextHook::PSGetShaderResources(
 {
     if (_PSGetShaderResources_pre_ptr._value) { (this->*_PSGetShaderResources_pre_ptr._value)(StartSlot, NumViews, ppShaderResourceViews); }
     GetRealObj()->PSGetShaderResources(StartSlot, NumViews, ppShaderResourceViews);
+    if (ppShaderResourceViews) *ppShaderResourceViews = RealToHooked( *ppShaderResourceViews );
     if (_PSGetShaderResources_post_ptr._value) { (this->*_PSGetShaderResources_post_ptr._value)(StartSlot, NumViews, ppShaderResourceViews); }
 }
 
@@ -741,6 +745,8 @@ void STDMETHODCALLTYPE D3D11DeviceContextHook::PSGetShader(
 {
     if (_PSGetShader_pre_ptr._value) { (this->*_PSGetShader_pre_ptr._value)(ppPixelShader, ppClassInstances, pNumClassInstances); }
     GetRealObj()->PSGetShader(ppPixelShader, ppClassInstances, pNumClassInstances);
+    if (ppPixelShader) *ppPixelShader = RealToHooked( *ppPixelShader );
+    if (ppClassInstances) *ppClassInstances = RealToHooked( *ppClassInstances );
     if (_PSGetShader_post_ptr._value) { (this->*_PSGetShader_post_ptr._value)(ppPixelShader, ppClassInstances, pNumClassInstances); }
 }
 
@@ -752,6 +758,7 @@ void STDMETHODCALLTYPE D3D11DeviceContextHook::PSGetSamplers(
 {
     if (_PSGetSamplers_pre_ptr._value) { (this->*_PSGetSamplers_pre_ptr._value)(StartSlot, NumSamplers, ppSamplers); }
     GetRealObj()->PSGetSamplers(StartSlot, NumSamplers, ppSamplers);
+    if (ppSamplers) *ppSamplers = RealToHooked( *ppSamplers );
     if (_PSGetSamplers_post_ptr._value) { (this->*_PSGetSamplers_post_ptr._value)(StartSlot, NumSamplers, ppSamplers); }
 }
 
@@ -763,6 +770,8 @@ void STDMETHODCALLTYPE D3D11DeviceContextHook::VSGetShader(
 {
     if (_VSGetShader_pre_ptr._value) { (this->*_VSGetShader_pre_ptr._value)(ppVertexShader, ppClassInstances, pNumClassInstances); }
     GetRealObj()->VSGetShader(ppVertexShader, ppClassInstances, pNumClassInstances);
+    if (ppVertexShader) *ppVertexShader = RealToHooked( *ppVertexShader );
+    if (ppClassInstances) *ppClassInstances = RealToHooked( *ppClassInstances );
     if (_VSGetShader_post_ptr._value) { (this->*_VSGetShader_post_ptr._value)(ppVertexShader, ppClassInstances, pNumClassInstances); }
 }
 
@@ -774,6 +783,7 @@ void STDMETHODCALLTYPE D3D11DeviceContextHook::PSGetConstantBuffers(
 {
     if (_PSGetConstantBuffers_pre_ptr._value) { (this->*_PSGetConstantBuffers_pre_ptr._value)(StartSlot, NumBuffers, ppConstantBuffers); }
     GetRealObj()->PSGetConstantBuffers(StartSlot, NumBuffers, ppConstantBuffers);
+    if (ppConstantBuffers) *ppConstantBuffers = RealToHooked( *ppConstantBuffers );
     if (_PSGetConstantBuffers_post_ptr._value) { (this->*_PSGetConstantBuffers_post_ptr._value)(StartSlot, NumBuffers, ppConstantBuffers); }
 }
 
@@ -783,6 +793,7 @@ void STDMETHODCALLTYPE D3D11DeviceContextHook::IAGetInputLayout(
 {
     if (_IAGetInputLayout_pre_ptr._value) { (this->*_IAGetInputLayout_pre_ptr._value)(ppInputLayout); }
     GetRealObj()->IAGetInputLayout(ppInputLayout);
+    if (ppInputLayout) *ppInputLayout = RealToHooked( *ppInputLayout );
     if (_IAGetInputLayout_post_ptr._value) { (this->*_IAGetInputLayout_post_ptr._value)(ppInputLayout); }
 }
 
@@ -796,6 +807,7 @@ void STDMETHODCALLTYPE D3D11DeviceContextHook::IAGetVertexBuffers(
 {
     if (_IAGetVertexBuffers_pre_ptr._value) { (this->*_IAGetVertexBuffers_pre_ptr._value)(StartSlot, NumBuffers, ppVertexBuffers, pStrides, pOffsets); }
     GetRealObj()->IAGetVertexBuffers(StartSlot, NumBuffers, ppVertexBuffers, pStrides, pOffsets);
+    if (ppVertexBuffers) *ppVertexBuffers = RealToHooked( *ppVertexBuffers );
     if (_IAGetVertexBuffers_post_ptr._value) { (this->*_IAGetVertexBuffers_post_ptr._value)(StartSlot, NumBuffers, ppVertexBuffers, pStrides, pOffsets); }
 }
 
@@ -807,6 +819,7 @@ void STDMETHODCALLTYPE D3D11DeviceContextHook::IAGetIndexBuffer(
 {
     if (_IAGetIndexBuffer_pre_ptr._value) { (this->*_IAGetIndexBuffer_pre_ptr._value)(pIndexBuffer, Format, Offset); }
     GetRealObj()->IAGetIndexBuffer(pIndexBuffer, Format, Offset);
+    if (pIndexBuffer) *pIndexBuffer = RealToHooked( *pIndexBuffer );
     if (_IAGetIndexBuffer_post_ptr._value) { (this->*_IAGetIndexBuffer_post_ptr._value)(pIndexBuffer, Format, Offset); }
 }
 
@@ -818,6 +831,7 @@ void STDMETHODCALLTYPE D3D11DeviceContextHook::GSGetConstantBuffers(
 {
     if (_GSGetConstantBuffers_pre_ptr._value) { (this->*_GSGetConstantBuffers_pre_ptr._value)(StartSlot, NumBuffers, ppConstantBuffers); }
     GetRealObj()->GSGetConstantBuffers(StartSlot, NumBuffers, ppConstantBuffers);
+    if (ppConstantBuffers) *ppConstantBuffers = RealToHooked( *ppConstantBuffers );
     if (_GSGetConstantBuffers_post_ptr._value) { (this->*_GSGetConstantBuffers_post_ptr._value)(StartSlot, NumBuffers, ppConstantBuffers); }
 }
 
@@ -829,6 +843,8 @@ void STDMETHODCALLTYPE D3D11DeviceContextHook::GSGetShader(
 {
     if (_GSGetShader_pre_ptr._value) { (this->*_GSGetShader_pre_ptr._value)(ppGeometryShader, ppClassInstances, pNumClassInstances); }
     GetRealObj()->GSGetShader(ppGeometryShader, ppClassInstances, pNumClassInstances);
+    if (ppGeometryShader) *ppGeometryShader = RealToHooked( *ppGeometryShader );
+    if (ppClassInstances) *ppClassInstances = RealToHooked( *ppClassInstances );
     if (_GSGetShader_post_ptr._value) { (this->*_GSGetShader_post_ptr._value)(ppGeometryShader, ppClassInstances, pNumClassInstances); }
 }
 
@@ -849,6 +865,7 @@ void STDMETHODCALLTYPE D3D11DeviceContextHook::VSGetShaderResources(
 {
     if (_VSGetShaderResources_pre_ptr._value) { (this->*_VSGetShaderResources_pre_ptr._value)(StartSlot, NumViews, ppShaderResourceViews); }
     GetRealObj()->VSGetShaderResources(StartSlot, NumViews, ppShaderResourceViews);
+    if (ppShaderResourceViews) *ppShaderResourceViews = RealToHooked( *ppShaderResourceViews );
     if (_VSGetShaderResources_post_ptr._value) { (this->*_VSGetShaderResources_post_ptr._value)(StartSlot, NumViews, ppShaderResourceViews); }
 }
 
@@ -860,6 +877,7 @@ void STDMETHODCALLTYPE D3D11DeviceContextHook::VSGetSamplers(
 {
     if (_VSGetSamplers_pre_ptr._value) { (this->*_VSGetSamplers_pre_ptr._value)(StartSlot, NumSamplers, ppSamplers); }
     GetRealObj()->VSGetSamplers(StartSlot, NumSamplers, ppSamplers);
+    if (ppSamplers) *ppSamplers = RealToHooked( *ppSamplers );
     if (_VSGetSamplers_post_ptr._value) { (this->*_VSGetSamplers_post_ptr._value)(StartSlot, NumSamplers, ppSamplers); }
 }
 
@@ -870,6 +888,7 @@ void STDMETHODCALLTYPE D3D11DeviceContextHook::GetPredication(
 {
     if (_GetPredication_pre_ptr._value) { (this->*_GetPredication_pre_ptr._value)(ppPredicate, pPredicateValue); }
     GetRealObj()->GetPredication(ppPredicate, pPredicateValue);
+    if (ppPredicate) *ppPredicate = RealToHooked( *ppPredicate );
     if (_GetPredication_post_ptr._value) { (this->*_GetPredication_post_ptr._value)(ppPredicate, pPredicateValue); }
 }
 
@@ -881,6 +900,7 @@ void STDMETHODCALLTYPE D3D11DeviceContextHook::GSGetShaderResources(
 {
     if (_GSGetShaderResources_pre_ptr._value) { (this->*_GSGetShaderResources_pre_ptr._value)(StartSlot, NumViews, ppShaderResourceViews); }
     GetRealObj()->GSGetShaderResources(StartSlot, NumViews, ppShaderResourceViews);
+    if (ppShaderResourceViews) *ppShaderResourceViews = RealToHooked( *ppShaderResourceViews );
     if (_GSGetShaderResources_post_ptr._value) { (this->*_GSGetShaderResources_post_ptr._value)(StartSlot, NumViews, ppShaderResourceViews); }
 }
 
@@ -892,6 +912,7 @@ void STDMETHODCALLTYPE D3D11DeviceContextHook::GSGetSamplers(
 {
     if (_GSGetSamplers_pre_ptr._value) { (this->*_GSGetSamplers_pre_ptr._value)(StartSlot, NumSamplers, ppSamplers); }
     GetRealObj()->GSGetSamplers(StartSlot, NumSamplers, ppSamplers);
+    if (ppSamplers) *ppSamplers = RealToHooked( *ppSamplers );
     if (_GSGetSamplers_post_ptr._value) { (this->*_GSGetSamplers_post_ptr._value)(StartSlot, NumSamplers, ppSamplers); }
 }
 
@@ -903,6 +924,8 @@ void STDMETHODCALLTYPE D3D11DeviceContextHook::OMGetRenderTargets(
 {
     if (_OMGetRenderTargets_pre_ptr._value) { (this->*_OMGetRenderTargets_pre_ptr._value)(NumViews, ppRenderTargetViews, ppDepthStencilView); }
     GetRealObj()->OMGetRenderTargets(NumViews, ppRenderTargetViews, ppDepthStencilView);
+    if (ppRenderTargetViews) *ppRenderTargetViews = RealToHooked( *ppRenderTargetViews );
+    if (ppDepthStencilView) *ppDepthStencilView = RealToHooked( *ppDepthStencilView );
     if (_OMGetRenderTargets_post_ptr._value) { (this->*_OMGetRenderTargets_post_ptr._value)(NumViews, ppRenderTargetViews, ppDepthStencilView); }
 }
 
@@ -917,6 +940,9 @@ void STDMETHODCALLTYPE D3D11DeviceContextHook::OMGetRenderTargetsAndUnorderedAcc
 {
     if (_OMGetRenderTargetsAndUnorderedAccessViews_pre_ptr._value) { (this->*_OMGetRenderTargetsAndUnorderedAccessViews_pre_ptr._value)(NumRTVs, ppRenderTargetViews, ppDepthStencilView, UAVStartSlot, NumUAVs, ppUnorderedAccessViews); }
     GetRealObj()->OMGetRenderTargetsAndUnorderedAccessViews(NumRTVs, ppRenderTargetViews, ppDepthStencilView, UAVStartSlot, NumUAVs, ppUnorderedAccessViews);
+    if (ppRenderTargetViews) *ppRenderTargetViews = RealToHooked( *ppRenderTargetViews );
+    if (ppDepthStencilView) *ppDepthStencilView = RealToHooked( *ppDepthStencilView );
+    if (ppUnorderedAccessViews) *ppUnorderedAccessViews = RealToHooked( *ppUnorderedAccessViews );
     if (_OMGetRenderTargetsAndUnorderedAccessViews_post_ptr._value) { (this->*_OMGetRenderTargetsAndUnorderedAccessViews_post_ptr._value)(NumRTVs, ppRenderTargetViews, ppDepthStencilView, UAVStartSlot, NumUAVs, ppUnorderedAccessViews); }
 }
 
@@ -928,6 +954,7 @@ void STDMETHODCALLTYPE D3D11DeviceContextHook::OMGetBlendState(
 {
     if (_OMGetBlendState_pre_ptr._value) { (this->*_OMGetBlendState_pre_ptr._value)(ppBlendState, BlendFactor, pSampleMask); }
     GetRealObj()->OMGetBlendState(ppBlendState, BlendFactor, pSampleMask);
+    if (ppBlendState) *ppBlendState = RealToHooked( *ppBlendState );
     if (_OMGetBlendState_post_ptr._value) { (this->*_OMGetBlendState_post_ptr._value)(ppBlendState, BlendFactor, pSampleMask); }
 }
 
@@ -938,6 +965,7 @@ void STDMETHODCALLTYPE D3D11DeviceContextHook::OMGetDepthStencilState(
 {
     if (_OMGetDepthStencilState_pre_ptr._value) { (this->*_OMGetDepthStencilState_pre_ptr._value)(ppDepthStencilState, pStencilRef); }
     GetRealObj()->OMGetDepthStencilState(ppDepthStencilState, pStencilRef);
+    if (ppDepthStencilState) *ppDepthStencilState = RealToHooked( *ppDepthStencilState );
     if (_OMGetDepthStencilState_post_ptr._value) { (this->*_OMGetDepthStencilState_post_ptr._value)(ppDepthStencilState, pStencilRef); }
 }
 
@@ -948,6 +976,7 @@ void STDMETHODCALLTYPE D3D11DeviceContextHook::SOGetTargets(
 {
     if (_SOGetTargets_pre_ptr._value) { (this->*_SOGetTargets_pre_ptr._value)(NumBuffers, ppSOTargets); }
     GetRealObj()->SOGetTargets(NumBuffers, ppSOTargets);
+    if (ppSOTargets) *ppSOTargets = RealToHooked( *ppSOTargets );
     if (_SOGetTargets_post_ptr._value) { (this->*_SOGetTargets_post_ptr._value)(NumBuffers, ppSOTargets); }
 }
 
@@ -957,6 +986,7 @@ void STDMETHODCALLTYPE D3D11DeviceContextHook::RSGetState(
 {
     if (_RSGetState_pre_ptr._value) { (this->*_RSGetState_pre_ptr._value)(ppRasterizerState); }
     GetRealObj()->RSGetState(ppRasterizerState);
+    if (ppRasterizerState) *ppRasterizerState = RealToHooked( *ppRasterizerState );
     if (_RSGetState_post_ptr._value) { (this->*_RSGetState_post_ptr._value)(ppRasterizerState); }
 }
 
@@ -988,6 +1018,7 @@ void STDMETHODCALLTYPE D3D11DeviceContextHook::HSGetShaderResources(
 {
     if (_HSGetShaderResources_pre_ptr._value) { (this->*_HSGetShaderResources_pre_ptr._value)(StartSlot, NumViews, ppShaderResourceViews); }
     GetRealObj()->HSGetShaderResources(StartSlot, NumViews, ppShaderResourceViews);
+    if (ppShaderResourceViews) *ppShaderResourceViews = RealToHooked( *ppShaderResourceViews );
     if (_HSGetShaderResources_post_ptr._value) { (this->*_HSGetShaderResources_post_ptr._value)(StartSlot, NumViews, ppShaderResourceViews); }
 }
 
@@ -999,6 +1030,8 @@ void STDMETHODCALLTYPE D3D11DeviceContextHook::HSGetShader(
 {
     if (_HSGetShader_pre_ptr._value) { (this->*_HSGetShader_pre_ptr._value)(ppHullShader, ppClassInstances, pNumClassInstances); }
     GetRealObj()->HSGetShader(ppHullShader, ppClassInstances, pNumClassInstances);
+    if (ppHullShader) *ppHullShader = RealToHooked( *ppHullShader );
+    if (ppClassInstances) *ppClassInstances = RealToHooked( *ppClassInstances );
     if (_HSGetShader_post_ptr._value) { (this->*_HSGetShader_post_ptr._value)(ppHullShader, ppClassInstances, pNumClassInstances); }
 }
 
@@ -1010,6 +1043,7 @@ void STDMETHODCALLTYPE D3D11DeviceContextHook::HSGetSamplers(
 {
     if (_HSGetSamplers_pre_ptr._value) { (this->*_HSGetSamplers_pre_ptr._value)(StartSlot, NumSamplers, ppSamplers); }
     GetRealObj()->HSGetSamplers(StartSlot, NumSamplers, ppSamplers);
+    if (ppSamplers) *ppSamplers = RealToHooked( *ppSamplers );
     if (_HSGetSamplers_post_ptr._value) { (this->*_HSGetSamplers_post_ptr._value)(StartSlot, NumSamplers, ppSamplers); }
 }
 
@@ -1021,6 +1055,7 @@ void STDMETHODCALLTYPE D3D11DeviceContextHook::HSGetConstantBuffers(
 {
     if (_HSGetConstantBuffers_pre_ptr._value) { (this->*_HSGetConstantBuffers_pre_ptr._value)(StartSlot, NumBuffers, ppConstantBuffers); }
     GetRealObj()->HSGetConstantBuffers(StartSlot, NumBuffers, ppConstantBuffers);
+    if (ppConstantBuffers) *ppConstantBuffers = RealToHooked( *ppConstantBuffers );
     if (_HSGetConstantBuffers_post_ptr._value) { (this->*_HSGetConstantBuffers_post_ptr._value)(StartSlot, NumBuffers, ppConstantBuffers); }
 }
 
@@ -1032,6 +1067,7 @@ void STDMETHODCALLTYPE D3D11DeviceContextHook::DSGetShaderResources(
 {
     if (_DSGetShaderResources_pre_ptr._value) { (this->*_DSGetShaderResources_pre_ptr._value)(StartSlot, NumViews, ppShaderResourceViews); }
     GetRealObj()->DSGetShaderResources(StartSlot, NumViews, ppShaderResourceViews);
+    if (ppShaderResourceViews) *ppShaderResourceViews = RealToHooked( *ppShaderResourceViews );
     if (_DSGetShaderResources_post_ptr._value) { (this->*_DSGetShaderResources_post_ptr._value)(StartSlot, NumViews, ppShaderResourceViews); }
 }
 
@@ -1043,6 +1079,8 @@ void STDMETHODCALLTYPE D3D11DeviceContextHook::DSGetShader(
 {
     if (_DSGetShader_pre_ptr._value) { (this->*_DSGetShader_pre_ptr._value)(ppDomainShader, ppClassInstances, pNumClassInstances); }
     GetRealObj()->DSGetShader(ppDomainShader, ppClassInstances, pNumClassInstances);
+    if (ppDomainShader) *ppDomainShader = RealToHooked( *ppDomainShader );
+    if (ppClassInstances) *ppClassInstances = RealToHooked( *ppClassInstances );
     if (_DSGetShader_post_ptr._value) { (this->*_DSGetShader_post_ptr._value)(ppDomainShader, ppClassInstances, pNumClassInstances); }
 }
 
@@ -1054,6 +1092,7 @@ void STDMETHODCALLTYPE D3D11DeviceContextHook::DSGetSamplers(
 {
     if (_DSGetSamplers_pre_ptr._value) { (this->*_DSGetSamplers_pre_ptr._value)(StartSlot, NumSamplers, ppSamplers); }
     GetRealObj()->DSGetSamplers(StartSlot, NumSamplers, ppSamplers);
+    if (ppSamplers) *ppSamplers = RealToHooked( *ppSamplers );
     if (_DSGetSamplers_post_ptr._value) { (this->*_DSGetSamplers_post_ptr._value)(StartSlot, NumSamplers, ppSamplers); }
 }
 
@@ -1065,6 +1104,7 @@ void STDMETHODCALLTYPE D3D11DeviceContextHook::DSGetConstantBuffers(
 {
     if (_DSGetConstantBuffers_pre_ptr._value) { (this->*_DSGetConstantBuffers_pre_ptr._value)(StartSlot, NumBuffers, ppConstantBuffers); }
     GetRealObj()->DSGetConstantBuffers(StartSlot, NumBuffers, ppConstantBuffers);
+    if (ppConstantBuffers) *ppConstantBuffers = RealToHooked( *ppConstantBuffers );
     if (_DSGetConstantBuffers_post_ptr._value) { (this->*_DSGetConstantBuffers_post_ptr._value)(StartSlot, NumBuffers, ppConstantBuffers); }
 }
 
@@ -1076,6 +1116,7 @@ void STDMETHODCALLTYPE D3D11DeviceContextHook::CSGetShaderResources(
 {
     if (_CSGetShaderResources_pre_ptr._value) { (this->*_CSGetShaderResources_pre_ptr._value)(StartSlot, NumViews, ppShaderResourceViews); }
     GetRealObj()->CSGetShaderResources(StartSlot, NumViews, ppShaderResourceViews);
+    if (ppShaderResourceViews) *ppShaderResourceViews = RealToHooked( *ppShaderResourceViews );
     if (_CSGetShaderResources_post_ptr._value) { (this->*_CSGetShaderResources_post_ptr._value)(StartSlot, NumViews, ppShaderResourceViews); }
 }
 
@@ -1087,6 +1128,7 @@ void STDMETHODCALLTYPE D3D11DeviceContextHook::CSGetUnorderedAccessViews(
 {
     if (_CSGetUnorderedAccessViews_pre_ptr._value) { (this->*_CSGetUnorderedAccessViews_pre_ptr._value)(StartSlot, NumUAVs, ppUnorderedAccessViews); }
     GetRealObj()->CSGetUnorderedAccessViews(StartSlot, NumUAVs, ppUnorderedAccessViews);
+    if (ppUnorderedAccessViews) *ppUnorderedAccessViews = RealToHooked( *ppUnorderedAccessViews );
     if (_CSGetUnorderedAccessViews_post_ptr._value) { (this->*_CSGetUnorderedAccessViews_post_ptr._value)(StartSlot, NumUAVs, ppUnorderedAccessViews); }
 }
 
@@ -1098,6 +1140,8 @@ void STDMETHODCALLTYPE D3D11DeviceContextHook::CSGetShader(
 {
     if (_CSGetShader_pre_ptr._value) { (this->*_CSGetShader_pre_ptr._value)(ppComputeShader, ppClassInstances, pNumClassInstances); }
     GetRealObj()->CSGetShader(ppComputeShader, ppClassInstances, pNumClassInstances);
+    if (ppComputeShader) *ppComputeShader = RealToHooked( *ppComputeShader );
+    if (ppClassInstances) *ppClassInstances = RealToHooked( *ppClassInstances );
     if (_CSGetShader_post_ptr._value) { (this->*_CSGetShader_post_ptr._value)(ppComputeShader, ppClassInstances, pNumClassInstances); }
 }
 
@@ -1109,6 +1153,7 @@ void STDMETHODCALLTYPE D3D11DeviceContextHook::CSGetSamplers(
 {
     if (_CSGetSamplers_pre_ptr._value) { (this->*_CSGetSamplers_pre_ptr._value)(StartSlot, NumSamplers, ppSamplers); }
     GetRealObj()->CSGetSamplers(StartSlot, NumSamplers, ppSamplers);
+    if (ppSamplers) *ppSamplers = RealToHooked( *ppSamplers );
     if (_CSGetSamplers_post_ptr._value) { (this->*_CSGetSamplers_post_ptr._value)(StartSlot, NumSamplers, ppSamplers); }
 }
 
@@ -1120,6 +1165,7 @@ void STDMETHODCALLTYPE D3D11DeviceContextHook::CSGetConstantBuffers(
 {
     if (_CSGetConstantBuffers_pre_ptr._value) { (this->*_CSGetConstantBuffers_pre_ptr._value)(StartSlot, NumBuffers, ppConstantBuffers); }
     GetRealObj()->CSGetConstantBuffers(StartSlot, NumBuffers, ppConstantBuffers);
+    if (ppConstantBuffers) *ppConstantBuffers = RealToHooked( *ppConstantBuffers );
     if (_CSGetConstantBuffers_post_ptr._value) { (this->*_CSGetConstantBuffers_post_ptr._value)(StartSlot, NumBuffers, ppConstantBuffers); }
 }
 
@@ -1164,6 +1210,7 @@ HRESULT STDMETHODCALLTYPE D3D11DeviceContextHook::FinishCommandList(
 {
     if (_FinishCommandList_pre_ptr._value) { (this->*_FinishCommandList_pre_ptr._value)(RestoreDeferredContextState, ppCommandList); }
     HRESULT ret = GetRealObj()->FinishCommandList(RestoreDeferredContextState, ppCommandList);
+    if (ppCommandList) *ppCommandList = RealToHooked( *ppCommandList );
     if (_FinishCommandList_post_ptr._value) { (this->*_FinishCommandList_post_ptr._value)(ret, RestoreDeferredContextState, ppCommandList); }
     return ret;
 }
