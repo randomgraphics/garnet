@@ -1,6 +1,8 @@
 // script generated file. DO NOT edit.
+
 #include "pch.h"
-#include "d3d11hook.h"
+#include "hooks.h"
+
 // -----------------------------------------------------------------------------
 HRESULT STDMETHODCALLTYPE DXGIDeviceSubObjectHook::GetDevice(
     _In_  REFIID riid,

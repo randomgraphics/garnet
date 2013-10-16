@@ -1,4 +1,5 @@
 // script generated file. DO NOT edit.
+
 // -----------------------------------------------------------------------------
 DEFINE_INTERFACE_METHOD(virtual, HRESULT, STDMETHODCALLTYPE, Present, PARAMETER_LIST_2(
     DEFINE_METHOD_PARAMETER(/* [in] */ UINT, SyncInterval),

@@ -1,6 +1,8 @@
 // script generated file. DO NOT edit.
+
 #include "pch.h"
-#include "d3d11hook.h"
+#include "hooks.h"
+
 // -----------------------------------------------------------------------------
 HRESULT STDMETHODCALLTYPE DXGIAdapterHook::EnumOutputs(
     /* [in] */ UINT Output,
@@ -8,6 +10,7 @@ HRESULT STDMETHODCALLTYPE DXGIAdapterHook::EnumOutputs(
 {
     if (_EnumOutputs_pre_ptr._value) { (this->*_EnumOutputs_pre_ptr._value)(Output, ppOutput); }
     HRESULT ret = GetRealObj()->EnumOutputs(Output, ppOutput);
+    if (ppOutput) *ppOutput = RealToHooked( *ppOutput );
     if (_EnumOutputs_post_ptr._value) { (this->*_EnumOutputs_post_ptr._value)(ret, Output, ppOutput); }
     return ret;
 }

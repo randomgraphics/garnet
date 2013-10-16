@@ -6,18 +6,20 @@
 private:
 
 DXGIObjectHook & _DXGIObject;
+DXGIDeviceSubObjectHook & _DXGIDeviceSubObject;
 
 protected:
 
-DXGIAdapterHook(UnknownBase & unknown, DXGIObjectHook & DXGIObject, IUnknown * realobj)
+DXGISurfaceHook(UnknownBase & unknown, DXGIObjectHook & DXGIObject, DXGIDeviceSubObjectHook & DXGIDeviceSubObject, IUnknown * realobj)
     : BASE_CLASS(unknown, realobj)
     , _DXGIObject(DXGIObject)
+    , _DXGIDeviceSubObject(DXGIDeviceSubObject)
 {
-    unknown.AddInterface<IDXGIAdapter>(this, realobj);
+    unknown.AddInterface<IDXGISurface>(this, realobj);
     Construct(); 
 }
 
-~DXGIAdapterHook() {}
+~DXGISurfaceHook() {}
 
 // ==============================================================================
 // Calling to base interfaces
@@ -54,28 +56,33 @@ HRESULT STDMETHODCALLTYPE GetParent(
 {
     _DXGIObject.GetParent(riid, ppParent);
 }
+// -----------------------------------------------------------------------------
+HRESULT STDMETHODCALLTYPE GetDevice(
+    _In_  REFIID riid,
+    _Out_  void ** ppDevice)
+{
+    _DXGIDeviceSubObject.GetDevice(riid, ppDevice);
+}
 // ==============================================================================
 // Method Prototypes
 // ==============================================================================
 public:
 
 // -----------------------------------------------------------------------------
-virtual HRESULT STDMETHODCALLTYPE EnumOutputs(
-    /* [in] */ UINT Output,
-    _Out_  IDXGIOutput ** ppOutput);
-NullPtr<void (DXGIAdapterHook::*)(/* [in] */ UINT &, _Out_  IDXGIOutput ** &)> _EnumOutputs_pre_ptr;
-NullPtr<void (DXGIAdapterHook::*)(HRESULT, /* [in] */ UINT, _Out_  IDXGIOutput **)> _EnumOutputs_post_ptr;
-// -----------------------------------------------------------------------------
 virtual HRESULT STDMETHODCALLTYPE GetDesc(
-    _Out_  DXGI_ADAPTER_DESC * pDesc);
-NullPtr<void (DXGIAdapterHook::*)(_Out_  DXGI_ADAPTER_DESC * &)> _GetDesc_pre_ptr;
-NullPtr<void (DXGIAdapterHook::*)(HRESULT, _Out_  DXGI_ADAPTER_DESC *)> _GetDesc_post_ptr;
+    _Out_  DXGI_SURFACE_DESC * pDesc);
+NullPtr<void (DXGISurfaceHook::*)(_Out_  DXGI_SURFACE_DESC * &)> _GetDesc_pre_ptr;
+NullPtr<void (DXGISurfaceHook::*)(HRESULT, _Out_  DXGI_SURFACE_DESC *)> _GetDesc_post_ptr;
 // -----------------------------------------------------------------------------
-virtual HRESULT STDMETHODCALLTYPE CheckInterfaceSupport(
-    _In_  REFGUID InterfaceName,
-    _Out_  LARGE_INTEGER * pUMDVersion);
-NullPtr<void (DXGIAdapterHook::*)(_In_  REFGUID, _Out_  LARGE_INTEGER * &)> _CheckInterfaceSupport_pre_ptr;
-NullPtr<void (DXGIAdapterHook::*)(HRESULT, _In_  REFGUID, _Out_  LARGE_INTEGER *)> _CheckInterfaceSupport_post_ptr;
+virtual HRESULT STDMETHODCALLTYPE Map(
+    _Out_  DXGI_MAPPED_RECT * pLockedRect,
+    /* [in] */ UINT MapFlags);
+NullPtr<void (DXGISurfaceHook::*)(_Out_  DXGI_MAPPED_RECT * &, /* [in] */ UINT &)> _Map_pre_ptr;
+NullPtr<void (DXGISurfaceHook::*)(HRESULT, _Out_  DXGI_MAPPED_RECT *, /* [in] */ UINT)> _Map_post_ptr;
+// -----------------------------------------------------------------------------
+virtual HRESULT STDMETHODCALLTYPE Unmap();
+NullPtr<void (DXGISurfaceHook::*)()> _Unmap_pre_ptr;
+NullPtr<void (DXGISurfaceHook::*)(HRESULT)> _Unmap_post_ptr;
 
 // ==============================================================================
 // The End

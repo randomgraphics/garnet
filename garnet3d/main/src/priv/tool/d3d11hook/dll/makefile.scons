@@ -1,17 +1,23 @@
 Import( 'GN' )
 
 sources = [
-    'd3d11hook.cpp',
-    'dxgihook.cpp',
     'exports.cpp',
+    'hooks.cpp',
     'ID3D11Debug.cpp',
     'ID3D11Device.cpp',
+    'ID3D11DeviceChild.cpp',
     'ID3D11DeviceContext.cpp',
-    'ID3D11InfoQueue.cpp',
-    'IDXGIAdapter.cpp',
-    'IDXGIDevice.cpp',
-    'IDXGIFactory.cpp',
-    #'IDXGIFactory1.cpp',
+#    'ID3D11InfoQueue.cpp',
+#    'IDXGIAdapter.cpp',
+#    'IDXGIAdapter1.cpp',
+#    'IDXGIDevice.cpp',
+#    'IDXGIDeviceSubObject.cpp',
+#    'IDXGIFactory.cpp',
+#    'IDXGIFactory1.cpp',
+#    'IDXGIObject.cpp',
+#    'IDXGIOutput.cpp',
+#    'IDXGISurface.cpp',
+#    'IDXGISwapChain.cpp',
 ]
 
 env = GN.NewBuildEnv()

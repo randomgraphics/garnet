@@ -216,21 +216,6 @@ const char * g_D3D11CallIDText[] =
     "CID_IDXGIObject_GetPrivateData",
     "CID_IDXGIObject_GetParent",
 
-    // CID for IDXGIDeviceSubObject
-    "CID_IDXGIDeviceSubObject_GetDevice",
-
-    // CID for IDXGIDevice
-    "CID_IDXGIDevice_GetAdapter",
-    "CID_IDXGIDevice_CreateSurface",
-    "CID_IDXGIDevice_QueryResourceResidency",
-    "CID_IDXGIDevice_SetGPUThreadPriority",
-    "CID_IDXGIDevice_GetGPUThreadPriority",
-
-    // CID for IDXGIAdapter
-    "CID_IDXGIAdapter_EnumOutputs",
-    "CID_IDXGIAdapter_GetDesc",
-    "CID_IDXGIAdapter_CheckInterfaceSupport",
-
     // CID for IDXGIFactory
     "CID_IDXGIFactory_EnumAdapters",
     "CID_IDXGIFactory_MakeWindowAssociation",
@@ -241,6 +226,43 @@ const char * g_D3D11CallIDText[] =
     // CID for IDXGIFactory1
     "CID_IDXGIFactory1_EnumAdapters1",
     "CID_IDXGIFactory1_IsCurrent",
+
+    // CID for IDXGIDeviceSubObject
+    "CID_IDXGIDeviceSubObject_GetDevice",
+
+    // CID for IDXGISurface
+    "CID_IDXGISurface_GetDesc",
+    "CID_IDXGISurface_Map",
+    "CID_IDXGISurface_Unmap",
+
+    // CID for IDXGIOutput
+    "CID_IDXGIOutput_GetDesc",
+    "CID_IDXGIOutput_GetDisplayModeList",
+    "CID_IDXGIOutput_FindClosestMatchingMode",
+    "CID_IDXGIOutput_WaitForVBlank",
+    "CID_IDXGIOutput_TakeOwnership",
+    "CID_IDXGIOutput_ReleaseOwnership",
+    "CID_IDXGIOutput_GetGammaControlCapabilities",
+    "CID_IDXGIOutput_SetGammaControl",
+    "CID_IDXGIOutput_GetGammaControl",
+    "CID_IDXGIOutput_SetDisplaySurface",
+    "CID_IDXGIOutput_GetDisplaySurfaceData",
+    "CID_IDXGIOutput_GetFrameStatistics",
+
+    // CID for IDXGIAdapter
+    "CID_IDXGIAdapter_EnumOutputs",
+    "CID_IDXGIAdapter_GetDesc",
+    "CID_IDXGIAdapter_CheckInterfaceSupport",
+
+    // CID for IDXGIAdapter1
+    "CID_IDXGIAdapter1_GetDesc1",
+
+    // CID for IDXGIDevice
+    "CID_IDXGIDevice_GetAdapter",
+    "CID_IDXGIDevice_CreateSurface",
+    "CID_IDXGIDevice_QueryResourceResidency",
+    "CID_IDXGIDevice_SetGPUThreadPriority",
+    "CID_IDXGIDevice_GetGPUThreadPriority",
 
     // CID for IDXGISwapChain
     "CID_IDXGISwapChain_Present",

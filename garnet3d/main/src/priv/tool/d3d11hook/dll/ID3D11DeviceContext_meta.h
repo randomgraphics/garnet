@@ -1,4 +1,5 @@
 // script generated file. DO NOT edit.
+
 // -----------------------------------------------------------------------------
 DEFINE_INTERFACE_METHOD(virtual, void, STDMETHODCALLTYPE, VSSetConstantBuffers, PARAMETER_LIST_3(
     DEFINE_METHOD_PARAMETER(_In_range_( 0, D3D11_COMMONSHADER_CONSTANT_BUFFER_API_SLOT_COUNT - 1 )  UINT, StartSlot),

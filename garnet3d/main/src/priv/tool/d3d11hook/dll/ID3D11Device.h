@@ -1,4 +1,32 @@
 // script generated file. DO NOT edit.
+
+// ==============================================================================
+// Constructor / Destructor
+// ==============================================================================
+private:
+
+
+protected:
+
+D3D11DeviceHook(UnknownBase & unknown, IUnknown * realobj)
+    : BASE_CLASS(unknown, realobj)
+{
+    unknown.AddInterface<ID3D11Device>(this, realobj);
+    Construct(); 
+}
+
+~D3D11DeviceHook() {}
+
+// ==============================================================================
+// Calling to base interfaces
+// ==============================================================================
+public:
+
+// ==============================================================================
+// Method Prototypes
+// ==============================================================================
+public:
+
 // -----------------------------------------------------------------------------
 virtual HRESULT STDMETHODCALLTYPE CreateBuffer(
     _In_  const D3D11_BUFFER_DESC * pDesc,
@@ -269,3 +297,8 @@ NullPtr<void (D3D11DeviceHook::*)(HRESULT, UINT)> _SetExceptionMode_post_ptr;
 virtual UINT STDMETHODCALLTYPE GetExceptionMode();
 NullPtr<void (D3D11DeviceHook::*)()> _GetExceptionMode_pre_ptr;
 NullPtr<void (D3D11DeviceHook::*)(UINT)> _GetExceptionMode_post_ptr;
+
+// ==============================================================================
+// The End
+// ==============================================================================
+private:
