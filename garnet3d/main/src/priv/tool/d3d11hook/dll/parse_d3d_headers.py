@@ -41,7 +41,7 @@ def UTIL_fatal( msg ):
 # Function classes
 
 class FunctionParameter:
-    def __init__( self, interface_name, method_name, type, name, array_count = 0, defval_ = '' ) :
+    def __init__( self, interface_name, method_name, type, name, immediate_array_count = 0, variant_array_count = None, defval_ = '' ) :
         t = type.strip()
         m = re.match(r"(__\w+\(.+\))\s+(.+$)", t)
         if m is None:
@@ -57,10 +57,11 @@ class FunctionParameter:
         self._method_name = method_name
         self._name = name.strip()
         self._defval = defval_
-        self._array_count = array_count # 0 means non-array parameter
+        self._immediate_array_count = immediate_array_count # 0 means non-array parameter
+        self._variant_array_count = variant_array_count # None means not an variant array.
 
-    def IsArray( self ):
-        return self._array_count > 0
+    def IsImmediateArray( self ):
+        return self._immediate_array_count > 0
 
     def IsRef( self ):
         return '&' == self._type[-1:] or \
@@ -75,8 +76,9 @@ class FunctionParameter:
                None
 
     def IsOutput( self ) :
-        return '_Out_' == self._type[:5] or \
-               '&&' == self._type[-2:] >= 0
+        result = '_Out_' == self._type[:5]
+        #if result: print self._interface_name + '::' + self._method_name, self._type, self._name
+        return result
 
 class FunctionSignature:
     def __init__( self, prefix, return_type, decl, name, interface_name ) :
@@ -104,23 +106,28 @@ class FunctionSignature:
     def WriteParameterList(self, fp, writeType, writeName, makeRef = False, newLine = False, convertHookedPtr = None):
         if newLine and len(self._parameter_list):
             fp.write('\n')
-        for i in range(len(self._parameter_list)):
+        for i, param in enumerate(self._parameter_list):
             if newLine: fp.write('    ')
             if writeType:
-                fp.write(self._parameter_list[i]._type)
-                if makeRef and not self._parameter_list[i].IsRef():
-                    if self._parameter_list[i].IsArray():
+                fp.write(param._type)
+                if makeRef and not param.IsRef():
+                    if param.IsImmediateArray():
                         fp.write(' *')
                     else:
                         fp.write(' &')
             if writeName:
                 if writeType: fp.write(' ')
-                convert = convertHookedPtr and self._parameter_list[i].IsHookedInterface() and (not self._parameter_list[i].IsOutput())
-                if convert: fp.write('HookedToReal(')
-                fp.write(self._parameter_list[i]._name)
+                convert = convertHookedPtr and param.IsHookedInterface() and (not param.IsOutput())
+                if convert:
+                    #if 'ID3D11DeviceContext' == param._interface_name and 'VSSetConstantBuffers' == param._method_name: print param._type
+                    if isinstance(param._variant_array_count, str):
+                        fp.write('HookedToReal(' + param._variant_array_count + ', ')
+                    else:
+                        fp.write('HookedToReal(')
+                fp.write(param._name)
                 if convert: fp.write(')')
-            if writeType and self._parameter_list[i].IsArray() and (not makeRef):
-                fp.write(' [' + self._parameter_list[i]._array_count + ']')
+            if writeType and param.IsImmediateArray() and (not makeRef):
+                fp.write(' [' + param._immediate_array_count + ']')
             if i < (len(self._parameter_list) - 1):
                 if newLine:
                     fp.write(',\n')
@@ -141,8 +148,8 @@ class FunctionSignature:
             fp.write('\n')
             for i in range(len(self._parameter_list)):
                 fp.write('    ' + self._parameter_list[i]._type + ' ' + self._parameter_list[i]._name)
-                if self._parameter_list[i].IsArray():
-                    fp.write('[' + self._parameter_list[i]._array_count + ']')
+                if self._parameter_list[i].IsImmediateArray():
+                    fp.write('[' + self._parameter_list[i]._immediate_array_count + ']')
                 if i < (len(self._parameter_list) - 1):
                     fp.write(',\n')
                 else:
@@ -188,8 +195,8 @@ class FunctionSignature:
         if len(self._parameter_list) > 0:
             fp.write('\n')
             for i in range(len(self._parameter_list)):
-                if self._parameter_list[i].IsArray():
-                    fp.write('    DEFINE_METHOD_ARRAY_PARAMETER(' + self._parameter_list[i]._type + ', ' + self._parameter_list[i]._name + ', ' + self._parameter_list[i]._array_count + ')')
+                if self._parameter_list[i].IsImmediateArray():
+                    fp.write('    DEFINE_METHOD_ARRAY_PARAMETER(' + self._parameter_list[i]._type + ', ' + self._parameter_list[i]._name + ', ' + self._parameter_list[i]._immediate_array_count + ')')
                 else:
                     fp.write('    DEFINE_METHOD_PARAMETER(' + self._parameter_list[i]._type + ', ' + self._parameter_list[i]._name + ')')
                 if i < (len(self._parameter_list) - 1):
@@ -224,7 +231,7 @@ class FunctionSignature:
             fp.write('\n')
             for i in range(len(self._parameter_list)):
                 fp.write('    ' + self._parameter_list[i]._type + ' ' + self._parameter_list[i]._name)
-                if self._parameter_list[i].IsArray():
+                if self._parameter_list[i].IsImmediateArray():
                     fp.write('[' + self._parameter_list[i]._array_count + ']')
                 if i < (len(self._parameter_list) - 1):
                     fp.write(',\n')
@@ -271,25 +278,47 @@ def PARSE_get_func_parameter( interface_name, method_name, line ):
     m = re.match(r"(.+[^\w])(\w+),$", line)
     if m is not None:
         #print 'm[1] = "',m.group(1),'" m[2] = "',m.group(2),'"'
-        return FunctionParameter(interface_name, method_name, m.group(1), m.group(2))
+        type = m.group(1)
+        name = m.group(2)
+        count = None
+        if type.find('_In_reads') >= 0:
+            # the parameter is an input array, like: __In_reads_opt_(xxxx) ....
+            m = re.match(r"_In_reads\w+\(\s*(\w+)\s*\)", line)
+            if m is not None:
+                count = m.group(1)
+                #print type
+                #print interface_name + '::' + method_name, name, m.group(1)
+        return FunctionParameter(interface_name, method_name, type, name, variant_array_count=count)
 
     # __in  const UINT Value) = 0;
     m = re.match(r"(.+[^\w])(\w+)\) = 0;$", line)
     if m is not None:
-        #print 'm[1] = "',m.group(1),'" m[2] = "',m.group(2),'"'
-        return FunctionParameter(interface_name, method_name, m.group(1), m.group(2))
+        type = m.group(1)
+        name = m.group(2)
+        count = None
+        #if 'ID3D11DeviceContext' == interface_name and 'VSSetConstantBuffers' == method_name: print m
+        if type.find('_In_reads') >= 0:
+            # the parameter is an input array, like: __In_reads_opt_(xxxx) ....
+            m = re.match(r"_In_reads\w+\(\s*(\w+)\s*\)", line)
+            count = m.group(1)
+            #print type
+            #print interface_name + '::' + method_name, name, m.group(1)
+        return FunctionParameter(interface_name, method_name, type, name, variant_array_count=count)
 
     # __in_opt  const FLOAT BlendFactor[ 4 ],
     m = re.match(r"(.+[^\w])(\w+)\[\s*(\w+)\s*\],$", line)
     if m is not None:
-        #print 'm[1] = "',m.group(1),'" m[2] = "',m.group(2),'" m[3] = "',m.group(3),'"'
-        return FunctionParameter(interface_name, method_name, m.group(1), m.group(2), array_count=m.group(3))
+        type = m.group(1)
+        name = m.group(2)
+        count = m.group(3)
+        #print interface_name + '::' + method_name, type, name, count
+        return FunctionParameter(interface_name, method_name, type, name, immediate_array_count=count)
 
     #  __in  const FLOAT ColorRGBA[ 4 ]) = 0;
     m = re.match(r"(.+[^\w])(\w+)\[\s*(\w+)\s*\]\) = 0;$", line)
     if m is not None:
         #print 'm[1] = "',m.group(1),'" m[2] = "',m.group(2),'" m[3] = "',m.group(3),'"'
-        return FunctionParameter(interface_name, method_name, m.group(1), m.group(2), array_count=m.group(3))
+        return FunctionParameter(interface_name, method_name, m.group(1), m.group(2), immediate_array_count=m.group(3))
 
     # comment line
     m = re.match(r"/\*.*", line)
