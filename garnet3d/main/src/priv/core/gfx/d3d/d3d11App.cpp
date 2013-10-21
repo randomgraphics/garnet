@@ -400,12 +400,12 @@ bool GN::d3d11::D3D11Application::createDevice()
     RenderWindow::Option o = {mOption.width, mOption.height, mOption.fullscreen};
     if (!mWindow->AdjustWindow(o)) return false;
 
-  // use default adapter
+    // use default adapter
     mAdapter = nullptr;
 
     // determine creation flags
     UINT flags = D3D11_CREATE_DEVICE_SINGLETHREADED | D3D11_CREATE_DEVICE_BGRA_SUPPORT;
-    //if( mOption.debug ) flags |= D3D11_CREATE_DEVICE_DEBUG;
+    if( mOption.debug ) flags |= D3D11_CREATE_DEVICE_DEBUG;
 
     // Get the highest feature level
     D3D_FEATURE_LEVEL featureLevel;
