@@ -156,7 +156,7 @@ def UTIL_new_env_ex( conf ):
         msvs_platform = 'x86'
         if 'icl' == BUILD_COMPILER:
             tools += ['intelc']
-            if 'x64' == BUILD_TARGET_OS :
+            if 'x64' == BUILD_TARGET_CPU :
                 icl_abi = 'em64t'
                 msvs_platform = 'x64'
         elif 'xbox3' == BUILD_TARGET_OS:
@@ -172,6 +172,10 @@ def UTIL_new_env_ex( conf ):
             MSVS8_PLATFORM = msvs_platform,
             MSVC_BATCH     = msvcBatchMode,
             )
+
+        # 64-bit ASM compiler
+        if 'x64' == BUILD_TARGET_CPU:
+            env['AS'] = 'ml64'
 
         # Import environment variables that are used by C/C++ compiler.
         env['ENV']['PATH']     = UTIL_getenv('PATH');
@@ -786,7 +790,7 @@ class GarnetEnv2 :
     # Build list of static object files from list of sources
     #
     def BuildObjects( self, env, sources, pchHeader=None, pchSource=None ):
-        if not env: env = self.NewBuildEnv()
+    	env = env.Clone() if env else self.NewBuildEnv()
         pchobj = self._BuildSetupPCH( env, pchHeader, pchSource )
         return Flatten( [env.Object(x) for x in sources] ) + pchobj
 
@@ -794,25 +798,26 @@ class GarnetEnv2 :
     # Build static library from list of objects
     #
     def BuildLib( self, env, target, objects, pdb=None ):
-        if not env: env = self.NewBuildEnv()
+    	env = env.Clone() if env else self.NewBuildEnv()
         self._BuildSetupPDB( env, target, pdb )
         return env.Library( target, objects )
 
     #
     # Build DLL
     #
-    def BuildDLL( self, env, target, sources, pchHeader=None, pchSource=None, pdb=None ):
-        if not env: env = self.NewBuildEnv()
+    def BuildDLL( self, env, target, sources, pchHeader=None, pchSource=None, pdb=None, defFile=None ):
+    	env = env.Clone() if env else self.NewBuildEnv()
         objects = self.BuildObjects( env, sources, pchHeader, pchSource )
         self._BuildSetupPDB( env, target, pdb )
         self._BuildSetupLibs( env )
+        if defFile: objects += [defFile]
         return env.SharedLibrary( target, objects )
 
     #
     # Build executable
     #
     def BuildProgram( self, env, target, sources, pchHeader=None, pchSource=None, pdb=None ):
-        if not env: env = self.NewBuildEnv()
+    	env = env.Clone() if env else self.NewBuildEnv()
         objects = self.BuildObjects( env, sources, pchHeader, pchSource )
         self._BuildSetupPDB( env, target, pdb )
         self._BuildSetupLibs( env )
@@ -843,7 +848,7 @@ class GarnetEnv2 :
     #
     # Binplace DLL and its export library.
     #
-    def BinplaceDLL( self, dll ):
+    def BinplaceDLL( self, dll, rename=None, extraDependencies=[] ):
 
         # split DLL binaries and libraries
         bins = []
@@ -856,7 +861,7 @@ class GarnetEnv2 :
                 bins += [x]
 
         # binplace binaries
-        bins = self.BinplaceProgram( bins )
+        bins = self.BinplaceProgram( bins, rename, extraDependencies )
 
         # TODO: copy libs
 
@@ -865,10 +870,13 @@ class GarnetEnv2 :
     #
     # Binplace program to bin folder.
     #
-    def BinplaceProgram( self, program ):
+    def BinplaceProgram( self, program, rename=None, extraDependencies=[] ):
 
         # copy to bin folder
-        program = Install( '#' + BUILD_ROOT_PATH + 'bin/', program )
+        if rename:
+            program = InstallAs( '#' + BUILD_ROOT_PATH + 'bin/' + rename, program )
+      	else:
+	        program = Install( '#' + BUILD_ROOT_PATH + 'bin/', program )
 
         # setup dependency to other targets
         Depends( program, GN.CollectTargets([
@@ -876,6 +884,8 @@ class GarnetEnv2 :
             'GNfbxBin',
             'GNmedia',
         ]))
+
+        Depends( program, extraDependencies )
 
         # Make program depend on its by-products, such as manifest and PDB,
         # to make sure those files are always up to date.
@@ -908,6 +918,8 @@ class GarnetEnv2 :
     # Create alias for a build target. So that it can be
     # referenced easily in makefiles.
     #
+    # TODO: support mutiple targets within one name.
+    #
     def NewTarget( self, name, target ):
 
         # See if the alias has existed already.
@@ -926,6 +938,8 @@ class GarnetEnv2 :
 
     #
     # Create alias for a build target. Also add it into default target list.
+    #
+    # TODO: support mutiple targets within one alias
     #
     def NewDefaultTarget( self, name, target ):
         self.NewTarget( name, target )

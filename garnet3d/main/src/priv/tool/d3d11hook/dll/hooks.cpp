@@ -2,6 +2,9 @@
 #include "hooks.h"
 #include "implementations.h"
 
+#define INSIDE_D3D11_HOOK
+#include "hookapi.h"
+
 using namespace GN;
 
 static GN::Logger * sLogger = GN::getLogger("GN.d3d11hook");
@@ -81,12 +84,15 @@ typedef HRESULT (WINAPI * PFN_CREATE_DXGI_FACTORY)(const IID & riid, void **ppFa
 //
 //
 // -----------------------------------------------------------------------------
-HRESULT CreateDXGIFactoryHook(
+HOOK_API HRESULT WINAPI
+CreateDXGIFactoryHook(
     const char * funcName,
     const IID & riid,
     void **ppFactory
 )
 {
+    GN_INFO(sLogger)("%s is called.", funcName);
+
     PFN_CREATE_DXGI_FACTORY realFunc = (PFN_CREATE_DXGI_FACTORY)GetRealFunctionPtr(
         GetRealDllPath(L"dxgi.dll").rawptr(),
         funcName);
@@ -99,14 +105,15 @@ HRESULT CreateDXGIFactoryHook(
     }
 
     // success
-    if( ppFactory ) *ppFactory = DXGIRealToHooked(riid, *ppFactory);
+    //if( ppFactory ) *ppFactory = DXGIRealToHooked(riid, *ppFactory);
     return S_OK;
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-HRESULT D3D11CreateDeviceHook(
+HOOK_API HRESULT WINAPI
+D3D11CreateDeviceHook(
     __in_opt IDXGIAdapter* pAdapter,
     D3D_DRIVER_TYPE DriverType,
     HMODULE Software,
@@ -118,11 +125,21 @@ HRESULT D3D11CreateDeviceHook(
     __out_opt D3D_FEATURE_LEVEL* pFeatureLevel,
     __out_opt ID3D11DeviceContext** ppImmediateContext )
 {
+    GN_INFO(sLogger)("D3D11CreateDevice is called.");
+
     PFN_D3D11_CREATE_DEVICE realFunc = (PFN_D3D11_CREATE_DEVICE)GetRealFunctionPtr(
         GetRealDllPath(L"d3d11.dll").rawptr(),
         "D3D11CreateDevice");
     if (nullptr == realFunc) return E_FAIL;
 
+    #if 1
+    return realFunc(
+        pAdapter,
+        DriverType, Software, Flags, pFeatureLevels, FeatureLevels, SDKVersion,
+        ppDevice,
+        pFeatureLevel,
+        ppImmediateContext);
+    #else
     HRESULT hr = realFunc(
         HookedToReal(pAdapter),
         DriverType, Software, Flags, pFeatureLevels, FeatureLevels, SDKVersion,
@@ -138,12 +155,13 @@ HRESULT D3D11CreateDeviceHook(
     if( ppDevice ) *ppDevice = RealToHooked(*ppDevice);
     if( ppImmediateContext ) *ppImmediateContext = RealToHooked(*ppImmediateContext);
     return S_OK;
+    #endif
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-HRESULT
+HOOK_API HRESULT WINAPI
 D3D11CreateDeviceAndSwapChainHook(
     __in_opt IDXGIAdapter* pAdapter,
     D3D_DRIVER_TYPE DriverType,
@@ -158,11 +176,23 @@ D3D11CreateDeviceAndSwapChainHook(
     __out_opt D3D_FEATURE_LEVEL* pFeatureLevel,
     __out_opt ID3D11DeviceContext** ppImmediateContext )
 {
+    GN_INFO(sLogger)("D3D11CreateDeviceAndSwapChain is called.");
+
     PFN_D3D11_CREATE_DEVICE_AND_SWAP_CHAIN realFunc = (PFN_D3D11_CREATE_DEVICE_AND_SWAP_CHAIN)GetRealFunctionPtr(
         GetRealDllPath(L"d3d11.dll").rawptr(),
         "D3D11CreateDeviceAndSwapChain");
     if (nullptr == realFunc) return E_FAIL;
 
+    #if 1
+    return realFunc(
+        pAdapter,
+        DriverType, Software, Flags, pFeatureLevels, FeatureLevels, SDKVersion,
+        pSwapChainDesc,
+        ppSwapChain,
+        ppDevice,
+        pFeatureLevel,
+        ppImmediateContext);
+    #else
     HRESULT hr = realFunc(
         HookedToReal(pAdapter),
         DriverType, Software, Flags, pFeatureLevels, FeatureLevels, SDKVersion,
@@ -180,6 +210,33 @@ D3D11CreateDeviceAndSwapChainHook(
     if( ppSwapChain ) *ppSwapChain = RealToHooked(*ppSwapChain);
     if( ppDevice ) *ppDevice = RealToHooked(*ppDevice);
     if( ppImmediateContext ) *ppImmediateContext = RealToHooked(*ppImmediateContext);
+    return S_OK;
+    #endif
+}
+
+
+//
+//
+// -----------------------------------------------------------------------------
+extern "C" HRESULT WINAPI CreateDXGIFactory_wrapper(
+    const char * funcName,
+    const IID & riid,
+    void **ppFactory
+)
+{
+    PFN_CREATE_DXGI_FACTORY realFunc = (PFN_CREATE_DXGI_FACTORY)GetRealFunctionPtr(
+        GetRealDllPath(L"dxgi.dll").rawptr(),
+        funcName);
+    if (nullptr == realFunc) return E_FAIL;
+
+    HRESULT hr = realFunc(riid, ppFactory);
+    if( FAILED(hr) )
+    {
+        return hr;
+    }
+
+    // success
+    //if( ppFactory ) *ppFactory = DXGIRealToHooked(riid, *ppFactory);
     return S_OK;
 }
 
