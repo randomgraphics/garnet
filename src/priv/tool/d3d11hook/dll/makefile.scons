@@ -1,29 +1,48 @@
 Import( 'GN' )
 
-sources = [
-    'exports.cpp',
-    'hooks.cpp',
-    'ID3D11Debug.cpp',
-    'ID3D11Device.cpp',
-    'ID3D11DeviceChild.cpp',
-    'ID3D11DeviceContext.cpp',
-#    'ID3D11InfoQueue.cpp',
-#    'IDXGIAdapter.cpp',
-#    'IDXGIAdapter1.cpp',
-#    'IDXGIDevice.cpp',
-#    'IDXGIDeviceSubObject.cpp',
-#    'IDXGIFactory.cpp',
-#    'IDXGIFactory1.cpp',
-#    'IDXGIObject.cpp',
-#    'IDXGIOutput.cpp',
-#    'IDXGISurface.cpp',
-#    'IDXGISwapChain.cpp',
-]
-
 env = GN.NewBuildEnv()
 env.Prepend( CPPPATH = ['d3dheaders'] )
 #env.Append( LINKFLAGS = ['/DEF:%s'%File('myd3d11.def').srcnode().path] )
 
+hookdll = GN.BinplaceDLL( GN.BuildDLL( env, 'GNd3d11Hook',
+	[
+	    'hooks.cpp',
+	    'ID3D11Debug.cpp',
+	    'ID3D11Device.cpp',
+	    'ID3D11DeviceChild.cpp',
+	    'ID3D11DeviceContext.cpp',
+#	    'ID3D11InfoQueue.cpp',
+#	    'IDXGIAdapter.cpp',
+#	    'IDXGIAdapter1.cpp',
+#	    'IDXGIDevice.cpp',
+#	    'IDXGIDeviceSubObject.cpp',
+#	    'IDXGIFactory.cpp',
+#	    'IDXGIFactory1.cpp',
+#	    'IDXGIObject.cpp',
+#	    'IDXGIOutput.cpp',
+#	    'IDXGISurface.cpp',
+#	    'IDXGISwapChain.cpp',
+	],
+	'pch.h', 'pch.cpp' ) )
+
+GN.NewDefaultTarget( 'GNd3d11Hook', hookdll )
+
+wrapper_env = env.Clone()
+wrapper_env.Append( LIBPATH = ['.'], LIBS = ['GNd3d11Hook'] )
 GN.NewDefaultTarget(
-	'GNtoolD3D11Hook',
-	GN.BinplaceDLL( GN.BuildDLL( env, 'GNtoolD3D11Hook', sources, 'pch.h', 'pch.cpp' ) ) )
+	'd3d11',
+	GN.BinplaceDLL( GN.BuildDLL( wrapper_env, 'd3d11wrapper',
+	[
+	    'exports_d3d11.cpp',
+	    'exports_d3d11_asm.asm',
+	],
+	defFile='exports_d3d11.def' ), rename='d3d11.dll', extraDependencies=hookdll ) )
+
+GN.NewDefaultTarget(
+	'dxgi',
+	GN.BinplaceDLL( GN.BuildDLL( wrapper_env, 'dxgiwrapper',
+	[
+	    'exports_dxgi.cpp',
+	    'exports_dxgi_asm.asm',
+	],
+	defFile='exports_dxgi.def' ), rename='dxgi.dll', extraDependencies=hookdll ) )
