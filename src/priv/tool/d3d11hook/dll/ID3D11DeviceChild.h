@@ -11,11 +11,32 @@ protected:
 D3D11DeviceChildHook(UnknownBase & unknown, IUnknown * realobj)
     : BASE_CLASS(unknown, realobj)
 {
-    unknown.AddInterface<ID3D11DeviceChild>(this, realobj);
     Construct(); 
 }
 
 ~D3D11DeviceChildHook() {}
+
+// ==============================================================================
+// Factory Utilities
+// ==============================================================================
+public:
+
+static IUnknown * sNewInstance(void * context, UnknownBase & unknown, IUnknown * realobj)
+{
+    UNREFERENCED_PARAMETER(context);
+
+    try
+    {
+        IUnknown * result = (UnknownBase*)new D3D11DeviceChildHook(unknown, realobj);
+        result->AddRef();
+        return result;
+    }
+    catch(std::bad_alloc&)
+    {
+        GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
+        return nullptr;
+    }
+}
 
 // ==============================================================================
 // Calling to base interfaces

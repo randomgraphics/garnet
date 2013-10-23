@@ -13,11 +13,35 @@ DXGIDeviceHook(UnknownBase & unknown, DXGIObjectHook & DXGIObject, IUnknown * re
     : BASE_CLASS(unknown, realobj)
     , _DXGIObject(DXGIObject)
 {
-    unknown.AddInterface<IDXGIDevice>(this, realobj);
     Construct(); 
 }
 
 ~DXGIDeviceHook() {}
+
+// ==============================================================================
+// Factory Utilities
+// ==============================================================================
+public:
+
+static IUnknown * sNewInstance(void * context, UnknownBase & unknown, IUnknown * realobj)
+{
+    UNREFERENCED_PARAMETER(context);
+
+    DXGIObjectHook * DXGIObject = (DXGIObjectHook *)unknown.GetHookedObj(__uuidof(IDXGIObject));
+    if (nullptr == DXGIObject) return nullptr;
+
+    try
+    {
+        IUnknown * result = (UnknownBase*)new DXGIDeviceHook(unknown, *DXGIObject, realobj);
+        result->AddRef();
+        return result;
+    }
+    catch(std::bad_alloc&)
+    {
+        GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
+        return nullptr;
+    }
+}
 
 // ==============================================================================
 // Calling to base interfaces

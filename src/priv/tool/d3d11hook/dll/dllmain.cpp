@@ -4,7 +4,7 @@
 BOOL WINAPI DllMain( HINSTANCE, DWORD fdwReason, LPVOID ) {
 	if ( fdwReason == DLL_PROCESS_ATTACH )
     {
-        HookedClassFactory::GetInstance().RegisterAllDefaultFactories();
+        HookedClassFactory::sGetInstance().registerAll();
 	} else if ( fdwReason == DLL_PROCESS_DETACH )
 	{
         // TODO: cleanup.

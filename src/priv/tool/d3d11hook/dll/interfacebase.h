@@ -11,31 +11,6 @@
 #include <d3d11.h>
 
 // -----------------------------------------------------------------------------
-/// GUID for IHooked
-const GUID GN_IID_IHook =
-{ 0xad5d67ab, 0xc12b, 0x4194, { 0xb5, 0xe8, 0x2f, 0x89, 0x1f, 0x22, 0x12, 0xe6 } };
-
-
-// -----------------------------------------------------------------------------
-/// convert GUID to string
-inline const char * GUID_to_str(const IID & iid)
-{
-    return ((GN::Guid*)&iid)->toStr();
-}
-
-// -----------------------------------------------------------------------------
-/// IHooked interface
-MIDL_INTERFACE("AD5D67AB-C12B-4194-B5E8-2F891F2212E6")
-IHooked : public IUnknown
-{
-    // No AddRef()
-    virtual void * STDMETHODCALLTYPE GetRealObj(const IID & iid) = 0;
-    virtual void * STDMETHODCALLTYPE GetHookedObj(const IID & iid) = 0;
-    template<class T> T * GetRealObj() { return (T*)GetRealObj(__uuidof(T)); }
-    template<class T> T * GetHookedObj() { return (T*)GetHookedObj(__uuidof(T)); }
-};
-
-// -----------------------------------------------------------------------------
 template<class QI_CLASS, class CURRENT_CLASS>
 inline GN::AutoComPtr<QI_CLASS> Qi(CURRENT_CLASS * ptr)
 {
@@ -45,22 +20,6 @@ inline GN::AutoComPtr<QI_CLASS> Qi(CURRENT_CLASS * ptr)
         result = nullptr;
     }
     return result;
-}
-
-// -----------------------------------------------------------------------------
-/// Check if the pointer is pointing to a hooked instance.
-inline bool IsHooked(IUnknown * ptr)
-{
-    GN_ASSERT(ptr);
-    GN::AutoComPtr<IHooked> ihook = Qi<IHooked>(ptr);
-    return nullptr != ihook;
-}
-
-// -----------------------------------------------------------------------------
-/// Check if the pointer is pointing to a real (non-hooked) instance.
-inline bool IsReal(IUnknown * ptr)
-{
-    return !IsHooked(ptr);
 }
 
 // -----------------------------------------------------------------------------
@@ -160,38 +119,175 @@ private:
 };
 
 // -----------------------------------------------------------------------------
+/// Descriptor of an interface
+struct InterfaceDesc
+{
+    IID             iid;
+    const char    * name;
+    const wchar_t * namew;
+
+    static const InterfaceDesc * sGetDescFromIID(const IID &);
+
+    static inline const char * sIIDToInterfaceName(const IID & iid)
+    {
+        const InterfaceDesc * id = sGetDescFromIID(iid);
+        return id ? id->name : ((GN::Guid*)&iid)->toStr();
+    }
+};
+
+class UnknownBase;
+
+// -----------------------------------------------------------------------------
+/// Factory to create hooked instance from real object pointer.
+class HookedClassFactory
+{
+public:
+
+    typedef IUnknown * (*FactoryFunc)(void * context, UnknownBase & base, IUnknown * realobj);
+
+    static HookedClassFactory & sGetInstance() { return s_instance; }
+
+    void registerAll(); // implementation of this method script generated
+
+    IUnknown * createNew(UnknownBase & base, const IID & iid, IUnknown * realobj)
+    {
+        FactoryMap::iterator iter = _factories.find(iid);
+        if (iter == _factories.end())
+        {
+            GN_ERROR(GN::getLogger("GN.d3d11hook"))("Class factory for interface %s is not registered.", InterfaceDesc::sIIDToInterfaceName(iid));
+            return nullptr;
+        }
+        FactoryInfo & fi = iter->second;
+
+        //LONG currentCount = realobj->AddRef();
+        //realobj->Release();
+
+        IUnknown * hooked = fi.createNew(fi.context, base, realobj);
+        //if (hooked)
+        //{
+        //    LONG newCount = realobj->AddRef();
+        //    realobj->Release();
+        //    GN_ASSERT(newCount == (currentCount + 1));
+        //}
+
+        return hooked;
+    }
+
+    template<class REAL_CLASS>
+    REAL_CLASS * createNew(UnknownBase & base, REAL_CLASS * realobj)
+    {
+        return (REAL_CLASS*)createNew(UnknownBase & base, __uuidof(REAL_CLASS), realobj);
+    }
+
+private:
+
+    void registerFactory(const IID & iid, FactoryFunc createNew, void * context)
+    {
+        FactoryInfo fi;
+        fi.context = context;
+        fi.createNew = createNew;
+
+        std::pair<FactoryMap::iterator, bool> result = _factories.insert(std::make_pair(iid, fi));
+
+        if (!result.second)
+        {
+            GN_UNEXPECTED_EX("The factory has been registered.");
+        }
+    }
+
+    template<class REAL_CLASS>
+    void registerFactory(FactoryFunc factory, void * context)
+    {
+        return registerFactory(__uuidof(REAL_CLASS), factory, context);
+    }
+
+private:
+
+    static HookedClassFactory s_instance;
+
+    struct IIDLess
+    {
+        bool operator()( const IID & a, const IID & b ) const
+        {
+            const UINT64 * u1 = (UINT64*)&a;
+            const UINT64 * u2 = (UINT64*)&b;
+            if (u1[0] < u2[0])
+                return true;
+            else if (u1[0] > u2[0])
+                return false;
+            else
+                return u1[1] < u2[1];
+        }
+    };
+
+    struct FactoryInfo
+    {
+        void *      context;
+        FactoryFunc createNew;
+    };
+
+    typedef std::map<IID, FactoryInfo, IIDLess> FactoryMap;
+    FactoryMap _factories;
+};
+
+// -----------------------------------------------------------------------------
+/// Struct that contains all global varialbes used in this library.
+struct Global
+{
+    HookedClassFactory hookedClassFactory;
+};
+
+// -----------------------------------------------------------------------------
+/// IHooked interface
+MIDL_INTERFACE("AD5D67AB-C12B-4194-B5E8-2F891F2212E6")
+IHooked : public IUnknown
+{
+    // No AddRef()
+    virtual IUnknown * STDMETHODCALLTYPE GetRealObj(const IID & iid) = 0;
+    virtual IUnknown * STDMETHODCALLTYPE GetHookedObj(const IID & iid) = 0;
+    template<class T> T * GetRealObj() { return (T*)GetRealObj(__uuidof(T)); }
+};
+
+// -----------------------------------------------------------------------------
+/// Check if the pointer is pointing to a hooked instance.
+inline bool IsHooked(IUnknown * ptr)
+{
+    GN_ASSERT(ptr);
+    GN::AutoComPtr<IHooked> ihook = Qi<IHooked>(ptr);
+    return nullptr != ihook;
+}
+
+// -----------------------------------------------------------------------------
+/// Check if the pointer is pointing to a real (non-hooked) instance.
+inline bool IsReal(IUnknown * ptr)
+{
+    return !IsHooked(ptr);
+}
+
+// -----------------------------------------------------------------------------
 /// Implementation of IUnknown and IHooked
-class UnknownBase : public IHooked
+class UnknownBase : public IHooked, public GN::WeakObject
 {
     struct InterfaceInfo
     {
-        IID    iid;
-        void * hooked;
-        void * real;
+        IID                      iid;
+        GN::AutoComPtr<IUnknown> hooked;
+        GN::AutoComPtr<IUnknown> real;
     };
 
     static const UINT MAX_INTERFACES = 16;
 
     CritSec                  _cs;
     ULONG                    _refCount;
-    GN::AutoComPtr<IUnknown> _realUnknown;
     InterfaceInfo            _interfaces[MAX_INTERFACES];
     UINT                     _interfaceCount;
+    IUnknown *               _realUnknown;
 
-protected:
-
-    UnknownBase() : _refCount(0), _interfaceCount(0)
+    UnknownBase() : _refCount(0), _interfaceCount(0), _realUnknown(0)
     {
     }
 
-    virtual ~UnknownBase()
-    {
-        GN_ASSERT(0 == _refCount);
-    }
-
-public:
-
-    void AddInterface(const IID & iid, void * hooked, IUnknown * realUnknown, void * real)
+    void addInterface(const IID & iid, IUnknown * hooked, IUnknown * real)
     {
         if (_interfaceCount >= MAX_INTERFACES)
         {
@@ -200,7 +296,7 @@ public:
             return;
         }
 
-        if (!realUnknown || !hooked)
+        if (!hooked || !real)
         {
             // should never happen.
             GN_UNEXPECTED();
@@ -218,45 +314,83 @@ public:
             }
         }
 
-        if (!real)
-        {
-            // this is unusual, but expected.
-            return;
-        }
-
-        // remember real unknown pointer
-        if (!_realUnknown)
-        {
-            _realUnknown.set( realUnknown );
-        }
-        else if (realUnknown != _realUnknown)
-        {
-            // should never happen.
-            GN_UNEXPECTED();
-            return;
-        }
-
-        _interfaces[_interfaceCount].iid    = iid;
-        _interfaces[_interfaceCount].hooked = hooked;
-        _interfaces[_interfaceCount].real   = real;
+        _interfaces[_interfaceCount].iid = iid;
+        _interfaces[_interfaceCount].hooked.set(hooked);
+        _interfaces[_interfaceCount].real.set(real);
         ++_interfaceCount;
     }
 
     template<class T>
-    void AddInterface(void * hooked, IUnknown * real)
+    void addInterface(IUnknown * hooked, IUnknown * real)
     {
-        AddInterface(__uuidof(T), hooked, Qi<IUnknown>(real), Qi<T>(real));
+        addInterface(__uuidof(T), hooked, Qi<T>(real));
     }
 
-
-    // No AddRef()
-    virtual void * STDMETHODCALLTYPE GetRealObj(const IID & iid)
+    IUnknown * getHookedInternal(const IID & iid)
     {
-        if (iid == __uuidof(IUnknown*))
+        for(size_t i = 0; i < _interfaceCount; ++i)
         {
-            return _realUnknown;
+            if (_interfaces[i].iid == iid)
+            {
+                return _interfaces[i].hooked;
+            }
         }
 
+        GN::AutoComPtr<IUnknown> real;
+        if (FAILED(_realUnknown->QueryInterface( iid, (void**)&real )))
+        {
+            return nullptr;
+        }
+
+        GN::AutoComPtr<IUnknown> hooked;
+        hooked.attach(HookedClassFactory::sGetInstance().createNew(*this, iid, real));
+        if (hooked)
+        {
+            addInterface( iid, hooked, real);
+            return hooked;
+        }
+        else
+        {
+            GN_ERROR(GN::getLogger("GN.d3d11hook"))(
+                "%s is supported by real D3D interface, but _NOT_ in our hooked system.",
+                InterfaceDesc::sIIDToInterfaceName(iid));
+            return nullptr;
+        }
+    }
+
+protected:
+
+    virtual ~UnknownBase()
+    {
+        GN_ASSERT(0 == _refCount);
+    }
+
+public:
+
+    static GN::AutoComPtr<UnknownBase> sCreateNew(IUnknown * realobj)
+    {
+        GN_ASSERT(realobj);
+        GN::AutoComPtr<UnknownBase> p;
+        try
+        {
+            p.set(new UnknownBase());
+        }
+        catch(std::bad_alloc&)
+        {
+            GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory");
+        }
+        if (p)
+        {
+            GN::AutoComPtr<IUnknown> realUnknown = Qi<IUnknown>(realobj);
+            p->addInterface(__uuidof(IUnknown), p, realUnknown);
+            p->_realUnknown = realUnknown;
+        }
+        return p;
+    }
+
+    // No AddRef()
+    virtual IUnknown * STDMETHODCALLTYPE GetRealObj(const IID & iid)
+    {
         for(size_t i = 0; i < _interfaceCount; ++i)
         {
             if (_interfaces[i].iid == iid)
@@ -269,17 +403,14 @@ public:
     }
 
     // No AddRef()
-    virtual void * STDMETHODCALLTYPE GetHookedObj(const IID & iid)
+    virtual IUnknown * STDMETHODCALLTYPE GetHookedObj(const IID & iid)
     {
-        for(size_t i = 0; i < _interfaceCount; ++i)
+        IUnknown * hooked = getHookedInternal(iid);
+        if (nullptr == hooked)
         {
-            if (_interfaces[i].iid == iid)
-            {
-                return _interfaces[i].hooked;
-            }
+            GN_UNEXPECTED();
         }
-        GN_UNEXPECTED();
-        return nullptr;
+        return hooked;
     }
 
     virtual ULONG STDMETHODCALLTYPE AddRef()
@@ -309,42 +440,21 @@ public:
     {
         if( 0 == ppvObject ) return E_INVALIDARG;
 
-        if (iid == __uuidof(IUnknown))
-        {
-            *ppvObject = _realUnknown;
-            AddRef();
-            return S_OK;
-        }
-
         if (iid == __uuidof(IHooked))
         {
             *ppvObject = this;
             AddRef();
             return S_OK;
         }
-
-        for(UINT i = 0; i < _interfaceCount; ++i)
+        else
         {
-            const InterfaceInfo & ii = _interfaces[i];
-            if (*(UINT64*)&iid == *(UINT64*)&ii.iid)
+            IUnknown * hooked = getHookedInternal(iid);
+            if (hooked)
             {
-                GN_ASSERT(ii.real);
-                *ppvObject = ii.hooked;
+                *ppvObject = hooked;
                 AddRef();
                 return S_OK;
             }
-        }
-
-        // If we reach here, it means the IID is not supported by the hooked interface.
-        // So we need to make sure that the IID is not supported by the real one either.
-        IUnknown * real;
-        if (SUCCEEDED(_realUnknown->QueryInterface( iid, (void**)&real )))
-        {
-            real->Release();
-            GN_ERROR(GN::getLogger("GN.d3d11hook"))(
-                "%s is supported by real D3D interface, but not our hooked version.",
-                GUID_to_str(iid));
-            //GN_UNEXPECTED();
         }
 
         return E_NOINTERFACE;
@@ -352,6 +462,72 @@ public:
 
     //@}
 };
+
+// -----------------------------------------------------------------------------
+/// Weak refernce to UnknownBase
+class WeakUnknownRef : public IUnknown
+{
+    ULONG                    _refCount;
+    GN::WeakRef<UnknownBase> _base;
+    CritSec                  _cs;
+
+public:
+
+    WeakUnknownRef()
+    {
+    }
+
+    virtual ULONG STDMETHODCALLTYPE AddRef()
+    {
+        _cs.Enter();
+        ULONG c = ++_refCount;
+        _cs.Leave();
+        return c;
+    }
+
+    virtual ULONG STDMETHODCALLTYPE Release()
+    {
+        _cs.Enter();
+        GN_ASSERT(_refCount > 0);
+        ULONG c = --_refCount;
+        _cs.Leave();
+
+        if( 0 == c )
+        {
+            delete this;
+        }
+
+        return c;
+    }
+
+    virtual HRESULT STDMETHODCALLTYPE QueryInterface(const IID & iid, void **ppvObject)
+    {
+        if( 0 == ppvObject ) return E_INVALIDARG;
+        if (__uuidof(IUnknown) == iid)
+        {
+            *ppvObject = this;
+            return S_OK;
+        }
+        else
+        {
+            GN_UNEXPECTED(); // should never reach here.
+            return E_NOINTERFACE;
+        }
+    }
+
+    void setBase(const GN::AutoComPtr<UnknownBase> & base)
+    {
+        _base.set(base);
+    }
+
+    GN::AutoComPtr<UnknownBase> getBase()
+    {
+        GN::AutoComPtr<UnknownBase> result;
+        result.set(_base.rawptr());
+        return result;
+    }
+};
+
 
 // -----------------------------------------------------------------------------
 /// Hook class that is inherited from single COM interface
@@ -400,96 +576,6 @@ public:
 };
 
 // -----------------------------------------------------------------------------
-/// Factory to create hooked instance from real object pointer.
-class HookedClassFactory
-{
-public:
-
-    typedef IUnknown * (*FactoryFunc)(void * context, IUnknown * realobj);
-
-    static HookedClassFactory & GetInstance() { return s_instance; }
-
-    void RegisterAllDefaultFactories(); // script generated
-
-    void Register(const IID & iid, FactoryFunc createNew, void * context)
-    {
-        FactoryInfo fi;
-        fi.context = context;
-        fi.createNew = createNew;
-
-        std::pair<FactoryMap::iterator, bool> result = _factories.insert(std::make_pair(iid, fi));
-
-        if (!result.second)
-        {
-            GN_UNEXPECTED_EX("The factory has been registered.");
-        }
-    }
-
-    template<class REAL_CLASS>
-    void Register(FactoryFunc factory, void * context)
-    {
-        return Register(__uuidof(REAL_CLASS), factory, context);
-    }
-
-    void * CreateNew(const IID & iid, IUnknown * realobj)
-    {
-        FactoryMap::iterator iter = _factories.find(iid);
-        if (iter == _factories.end())
-        {
-            GN_ERROR(GN::getLogger("GN.d3d11hook"))("Class factory for interface %s is not registered.", GUID_to_str(iid));
-            return nullptr;
-        }
-        FactoryInfo & fi = iter->second;
-
-        LONG currentCount = realobj->AddRef();
-        realobj->Release();
-
-        IUnknown * hooked = fi.createNew(fi.context, realobj);
-        if (hooked)
-        {
-            LONG newCount = realobj->AddRef();
-            realobj->Release();
-            GN_ASSERT(newCount > currentCount);
-
-            IUnknown * typed = nullptr;
-            hooked->QueryInterface(iid, (void**)&typed);
-            GN_ASSERT(typed);
-            hooked->Release();
-            hooked = typed;
-        }
-
-        return hooked;
-    }
-
-    template<class REAL_CLASS>
-    REAL_CLASS * CreateNew(REAL_CLASS * realobj)
-    {
-        return (REAL_CLASS*)CreateNew(__uuidof(REAL_CLASS), realobj);
-    }
-
-private:
-
-    static HookedClassFactory s_instance;
-
-    struct IIDLess
-    {
-        bool operator()( const IID & a, const IID & b ) const
-        {
-            return *(UINT64*)&a < *(UINT64*)&b;
-        }
-    };
-
-    struct FactoryInfo
-    {
-        void *      context;
-        FactoryFunc createNew;
-    };
-
-    typedef std::map<IID, FactoryInfo, IIDLess> FactoryMap;
-    FactoryMap _factories;
-};
-
-// -----------------------------------------------------------------------------
 // {CF9120C7-4E7A-493A-96AA-0C33583803F6}
 /// GUID that is used to attach hooked object pointer to real interface.
 static const GUID GN_D3D11HOOK_HOOKED_OBJECT_GUID =
@@ -497,8 +583,8 @@ static const GUID GN_D3D11HOOK_HOOKED_OBJECT_GUID =
 
 // -----------------------------------------------------------------------------
 /// Retrieve hooked ojbect pointer that is embedded in real D3D object.
-template<class REAL_INTERFACE>
-inline REAL_INTERFACE * RealToHooked(REAL_INTERFACE * realobj)
+template<class INPUT_TYPE>
+inline IUnknown * RealToHooked(const IID & realIId, INPUT_TYPE * realobj)
 {
     if (nullptr == realobj)
     {
@@ -512,87 +598,53 @@ inline REAL_INTERFACE * RealToHooked(REAL_INTERFACE * realobj)
         return realobj;
     }
 
-    IHooked * ihooked;
-    UINT size = (UINT)sizeof(ihooked);
+    GN::AutoComPtr<UnknownBase> base;
+    GN::AutoComPtr<WeakUnknownRef> unknownRef;
+    UINT size = (UINT)sizeof(unknownRef);
     HRESULT hr = realobj->GetPrivateData(
         GN_D3D11HOOK_HOOKED_OBJECT_GUID,
         &size,
-        &ihooked);
-    REAL_INTERFACE * hooked;
+        &unknownRef);
     if (SUCCEEDED(hr))
     {
-        hooked = ihooked->GetHookedObj<REAL_INTERFACE>();
-        hooked->AddRef();
+        base = unknownRef->getBase();
+    }
+
+    if (!base)
+    {
+        base = UnknownBase::sCreateNew(realobj);
+        unknownRef.set(new WeakUnknownRef());
+        unknownRef->setBase(base);
+        realobj->SetPrivateDataInterface(GN_D3D11HOOK_HOOKED_OBJECT_GUID, unknownRef);
+    }
+
+    GN::AutoComPtr<IUnknown> hooked;
+    if (SUCCEEDED(base->QueryInterface(realIId, (void**)&hooked)))
+    {
+        GN_ASSERT(hooked);
         realobj->Release();
+        return hooked;
     }
     else
     {
-        // This is a new D3D object that we never saw before. Create a new
-        // hooked object for it.
-        hooked = HookedClassFactory::GetInstance().CreateNew<REAL_INTERFACE>(realobj);
-
-        // Fall back to real object, if hooked object creation is failed.
-        if (nullptr == hooked)
-        {
-            hooked = realobj;
-        }
-        else
-        {
-            realobj->Release();
-        }
+        // Fall back to real object.
+        return realobj;
     }
+}
 
-    return hooked;
+// -----------------------------------------------------------------------------
+/// Retrieve hooked ojbect pointer that is embedded in real D3D object.
+template<class REAL_INTERFACE>
+inline REAL_INTERFACE * RealToHooked(REAL_INTERFACE * realobj)
+{
+    return (REAL_INTERFACE*)RealToHooked(__uuidof(REAL_INTERFACE), realobj);
 }
 
 // -----------------------------------------------------------------------------
 /// Convert real object poiner to hooked ojbect pointer
 inline void* DXGIRealToHooked(const IID & iid, void * realobj)
 {
-    if (nullptr == realobj)
-    {
-        return nullptr;
-    }
-
-    if (IsHooked((IUnknown*)realobj))
-    {
-        // Expecting a realobj, not a hooked object.
-        GN_UNEXPECTED();
-        return realobj;
-    }
-
-    GN::AutoComPtr<IDXGIObject> dxgiobj = Qi<IDXGIObject>((IUnknown*)realobj);
-
-    // Note: this has to be an weakref to ihooked.
-    IHooked * ihooked;
-    UINT size = (UINT)sizeof(ihooked);
-    HRESULT hr = dxgiobj->GetPrivateData(
-        GN_D3D11HOOK_HOOKED_OBJECT_GUID,
-        &size,
-        &ihooked);
-    void *hooked;
-    if (SUCCEEDED(hr))
-    {
-        hooked = ihooked->GetHookedObj(iid);
-        ((IUnknown*)hooked)->AddRef();
-        ((IUnknown*)realobj)->Release();
-    }
-    else
-    {
-        hooked = HookedClassFactory::GetInstance().CreateNew(iid, (IUnknown*)realobj);
-
-        // Fall back to real object, if hooked object creation is failed.
-        if (nullptr == hooked)
-        {
-            hooked = realobj;
-        }
-        else
-        {
-            ((IUnknown*)realobj)->Release();
-        }
-    }
-
-    return hooked;
+    return RealToHooked(iid, (IDXGIObject*)realobj);
 }
 
 // -----------------------------------------------------------------------------

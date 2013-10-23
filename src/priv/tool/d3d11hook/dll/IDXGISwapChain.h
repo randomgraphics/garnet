@@ -15,11 +15,38 @@ DXGISwapChainHook(UnknownBase & unknown, DXGIObjectHook & DXGIObject, DXGIDevice
     , _DXGIObject(DXGIObject)
     , _DXGIDeviceSubObject(DXGIDeviceSubObject)
 {
-    unknown.AddInterface<IDXGISwapChain>(this, realobj);
     Construct(); 
 }
 
 ~DXGISwapChainHook() {}
+
+// ==============================================================================
+// Factory Utilities
+// ==============================================================================
+public:
+
+static IUnknown * sNewInstance(void * context, UnknownBase & unknown, IUnknown * realobj)
+{
+    UNREFERENCED_PARAMETER(context);
+
+    DXGIObjectHook * DXGIObject = (DXGIObjectHook *)unknown.GetHookedObj(__uuidof(IDXGIObject));
+    if (nullptr == DXGIObject) return nullptr;
+
+    DXGIDeviceSubObjectHook * DXGIDeviceSubObject = (DXGIDeviceSubObjectHook *)unknown.GetHookedObj(__uuidof(IDXGIDeviceSubObject));
+    if (nullptr == DXGIDeviceSubObject) return nullptr;
+
+    try
+    {
+        IUnknown * result = (UnknownBase*)new DXGISwapChainHook(unknown, *DXGIObject, *DXGIDeviceSubObject, realobj);
+        result->AddRef();
+        return result;
+    }
+    catch(std::bad_alloc&)
+    {
+        GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
+        return nullptr;
+    }
+}
 
 // ==============================================================================
 // Calling to base interfaces

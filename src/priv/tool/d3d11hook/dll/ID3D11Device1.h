@@ -13,11 +13,35 @@ D3D11Device1Hook(UnknownBase & unknown, D3D11DeviceHook & D3D11Device, IUnknown 
     : BASE_CLASS(unknown, realobj)
     , _D3D11Device(D3D11Device)
 {
-    unknown.AddInterface<ID3D11Device1>(this, realobj);
     Construct(); 
 }
 
 ~D3D11Device1Hook() {}
+
+// ==============================================================================
+// Factory Utilities
+// ==============================================================================
+public:
+
+static IUnknown * sNewInstance(void * context, UnknownBase & unknown, IUnknown * realobj)
+{
+    UNREFERENCED_PARAMETER(context);
+
+    D3D11DeviceHook * D3D11Device = (D3D11DeviceHook *)unknown.GetHookedObj(__uuidof(ID3D11Device));
+    if (nullptr == D3D11Device) return nullptr;
+
+    try
+    {
+        IUnknown * result = (UnknownBase*)new D3D11Device1Hook(unknown, *D3D11Device, realobj);
+        result->AddRef();
+        return result;
+    }
+    catch(std::bad_alloc&)
+    {
+        GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
+        return nullptr;
+    }
+}
 
 // ==============================================================================
 // Calling to base interfaces

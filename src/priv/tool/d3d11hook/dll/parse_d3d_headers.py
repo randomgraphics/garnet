@@ -371,11 +371,40 @@ def WriteStandardHookMethodsToFile(f, interface_name, class_name):
     for p in parents:
         f.write('    , _' + p[1:] + '(' + p[1:] + ')\n')
     f.write('{\n' \
-            '    unknown.AddInterface<' + interface_name + '>(this, realobj);\n' \
             '    Construct(); \n'
             '}\n\n' \
             '~' + class_name + '() {}\n\n'
-            );
+            '// ==============================================================================\n' \
+            '// Factory Utilities\n' \
+            '// ==============================================================================\n' \
+            'public:\n\n'
+            'static IUnknown * sNewInstance(void * context, UnknownBase & unknown, IUnknown * realobj)\n'
+            '{\n'
+            '    UNREFERENCED_PARAMETER(context);\n\n')
+    for p in parents:
+        ii = g_interfaces[p]
+        hookedType = ii._hookedClassName
+        interfaceType = ii._name
+        objectName = ii._name[1:]
+        f.write('    ' + hookedType + ' * ' + objectName + ' = (' + hookedType + ' *)unknown.GetHookedObj(__uuidof(' + interfaceType + '));\n'
+                '    if (nullptr == ' + objectName + ') return nullptr;\n\n')
+    f.write('    try\n'
+            '    {\n'
+            '        IUnknown * result = (UnknownBase*)new ' + class_name + '(unknown')
+    for p in parents:
+        ii = g_interfaces[p]
+        objectName = ii._name[1:]
+        f.write(', *' + objectName)
+    f.write(', realobj);\n'
+            '        result->AddRef();\n'
+            '        return result;\n'
+            '    }\n'
+            '    catch(std::bad_alloc&)\n'
+            '    {\n'
+            '        GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");\n'
+            '        return nullptr;\n'
+            '    }\n'
+            '}\n\n')
     pass
 
 # ------------------------------------------------------------------------------
@@ -486,7 +515,7 @@ def PARSE_interface( interface_name, include, lines ):
         """
         for idx, m in enumerate(methods): g_cid.WriteMethod(interface_name, idx, interface_name + '_' + m._name)
 
-		# We have successfully parsed the interface. Put the interface -> wrapp mapping
+        # We have successfully parsed the interface. Put the interface -> wrapp mapping
         # into the global mapping table.
         g_interfaces[interface_name] = InterfaceSigature(interface_name, class_name, methods)
     elif not found:
@@ -501,74 +530,15 @@ def PARSE_interface( interface_name, include, lines ):
 # Parse a list of interfaces in an opened file
 def PARSE_interfaces_from_opened_file(file, common_include_header, interfaces):
     UTIL_info( 'Parse ' + file.name);
+
     lines = [line.strip() for line in file.readlines()]
+
+    all = g_interfaceNameFile.Gather(lines, file.name)
+
+    if 0 == len(interfaces): interfaces = all
+
     for interface_name in interfaces:
         PARSE_interface(interface_name, common_include_header, lines)
-    pass
-
-# ------------------------------------------------------------------------------
-# Get list of interface that an interface can QI (not including parent interfaces)
-def GetQIList(interface_name):
-    for l in g_qi :
-        for i in l :
-            if i == interface_name:
-                return l
-    return [interface_name]
-
-# ------------------------------------------------------------------------------
-# Generate implementation class for a interface
-#  f         : file
-#  interface : the interface
-def WriteImplClass(f, interface):
-    if 'IUnknown' == interface._name : return
-
-    interface_names = []
-    qi      = GetQIList(interface._name)
-    for q in qi:
-        parents = GetParentInterfaceList(q)
-        for p in parents:
-            if 0 == interface_names.count(p):
-                interface_names.append(p)
-        if 0 == interface_names.count(q) : interface_names.append(q)
-    implClassName = interface._name[1:] + 'Impl'
-    f.write('// -----------------------------------------------------------------------------\n' \
-            'class ' + implClassName + '\n'
-            '    : public UnknownBase\n')
-    for p in interface_names:
-        f.write('    , public ' + g_interfaces[p]._hookedClassName + '\n')
-    f.write('{\n'
-            '    ' + implClassName + '(IUnknown * realobj)\n')
-    for index, name in enumerate(interface_names):
-        f.write('        ' + (':' if 0 == index else ',') + ' ' + g_interfaces[name]._hookedClassName + '(*(UnknownBase*)this')
-        parents = GetParentInterfaceList(name);
-        for p in parents:
-            f.write( ', *(' + g_interfaces[p]._hookedClassName + '*)this')
-        f.write(', realobj)\n')
-    f.write('    {\n'
-            '    }\n'
-            '    ~' + implClassName + '()\n'
-            '    {\n'
-            '    }\n'
-            'public:\n'
-            '    static IUnknown * NewInstance(void * context, IUnknown * realobj)\n'
-		    '    {\n'
-		    '        UNREFERENCED_PARAMETER(context);\n'
-		    '        try\n'
-		    '        {\n'
-		    '            IUnknown * result = (UnknownBase*)new ' + implClassName + '(realobj);\n'
-            '            UINT count = result->AddRef();\n'
-            '            count;\n'
-            '            GN_ASSERT(1 == count);\n'
-            '            return result;\n'
-		    '        }\n'
-		    '        catch(std::bad_alloc&)\n'
-		    '        {\n'
-		    '            GN_ERROR(sLogger)("Out of memory.");\n'
-		    '            return nullptr;\n'
-		    '        }\n'
-		    '    }\n'
-            '};\n\n'
-            )
     pass
 
 # ------------------------------------------------------------------------------
@@ -621,6 +591,30 @@ extern const char * const g_D3D11CallIDText;
         pass
 
 
+
+
+# ------------------------------------------------------------------------------
+# Gather all interfaces defined in an opened file.
+class InterfaceNameFile :
+    def __init__( self ) :
+        self._file = open("d3d11interfaces_meta.h", "w")
+        self._file.write('// Script generated. DO NOT EDIT.)\n')
+
+    def Close(self):
+        self._file.close();
+        self._file = None;
+
+    def Gather(self, lines, sourceFileName):
+        interfaces = []
+        for l in lines:
+            m = re.match(r"(\w+) : public (\w+)", l)
+            if m is None: continue
+            interfaces += [m.group(1)]
+        self._file.write('\n// ' + sourceFileName + '\n')
+        for i in interfaces:
+            self._file.write('DECLARE_D3D11_INTERFACE( ' + i + ' )\n')
+        return interfaces
+
 # ------------------------------------------------------------------------------
 # Start of main procedure
 
@@ -635,20 +629,11 @@ g_interfaces['IUnknown'] = InterfaceSigature('IUnknown', 'UnknownHook', [])
 g_parents = dict()
 g_parents['IUnknown'] = None
 
-# list of interfaces that could QI among them
-g_qi = [
-    ['IDXGIDevice','ID3D11Device','ID3D11Debug','ID3D11InfoQueue'],
-]
-
-# define the
+g_interfaceNameFile = InterfaceNameFile()
 
 # parse d3d11.h
 with open( 'd3d/d3d11.h' ) as f:
-    PARSE_interfaces_from_opened_file(f, 'hooks.h', [
-        'ID3D11Device',
-        'ID3D11DeviceChild',
-        'ID3D11DeviceContext',
-    ])
+    PARSE_interfaces_from_opened_file(f, 'hooks.h', [])
 
 # parse d3d11_1.h
 with open( 'd3d/d3d11_1.h' ) as f:
@@ -658,48 +643,31 @@ with open( 'd3d/d3d11_1.h' ) as f:
 
 # parse d3d11sdklayer.h
 with open( 'd3d/d3d11sdklayers.h' ) as f:
-    PARSE_interfaces_from_opened_file(f, 'hooks.h', [
-        'ID3D11Debug',
-        'ID3D11InfoQueue',
-    ])
+    PARSE_interfaces_from_opened_file(f, 'hooks.h', [])
 
 # parse dxgi.h
 with open( 'd3d/dxgi.h' ) as f:
-    PARSE_interfaces_from_opened_file(f, 'hooks.h', [
-        'IDXGIObject',
-        'IDXGIFactory',
-        'IDXGIFactory1',
-        'IDXGIDeviceSubObject',
-        'IDXGISurface',
-        'IDXGIOutput',
-        'IDXGIAdapter',
-        'IDXGIAdapter1',
-        'IDXGIDevice',
-        'IDXGISwapChain',
-    ])
+    PARSE_interfaces_from_opened_file(f, 'hooks.h', [])
 
-# Generate implementation classes
-with open("implementations.h", "w") as f:
-    f.write('// script generated file. DO NOT edit.\n\n'
-            '#include "pch.h"\n'
-            '#include "hooks.h"\n'
-            '#pragma warning(disable: 4355) // \'this\' : used in base member initializer list\n'
-			'static GN::Logger * sLogger = GN::getLogger("GN.d3d11hook");\n\n'
-            )
-    for k,v in g_interfaces.iteritems(): WriteImplClass(f, v)
+# parse dxgi1_2.h
+with open( 'd3d/dxgi1_2.h' ) as f:
+    PARSE_interfaces_from_opened_file(f, 'hooks.h', [])
 
 # Register all factories
 with open("factories.cpp", "w") as f:
+    hooks_h = ''
+    with open("hooks.h", "r") as f2: hooks_h = f2.read()
     f.write('// script generated file. DO NOT edit.\n\n'
-			'#include "pch.h"\n'
-			'#include "implementations.h"\n\n'
-			'void HookedClassFactory::RegisterAllDefaultFactories()\n'
-			'{\n')
+            '#include "pch.h"\n'
+            '#include "hooks.h"\n\n'
+            'void HookedClassFactory::registerAll()\n'
+            '{\n')
     for interfaceName, v in g_interfaces.iteritems():
-        if 'IUnknown' != interfaceName:
-            implClassName = interfaceName[1:] + 'Impl'
-            f.write('    Register<' + interfaceName + '>(' + implClassName + '::NewInstance, nullptr);\n')
+        if ('IUnknown' != interfaceName) and (hooks_h.find(v._hookedClassName) >= 0):
+            f.write('    registerFactory<' + interfaceName + '>(' + v._hookedClassName + '::sNewInstance, nullptr);\n')
     f.write('}\n')
+
+g_interfaceNameFile.Close()
 
 # close Call ID code gen
 g_cid.Close()

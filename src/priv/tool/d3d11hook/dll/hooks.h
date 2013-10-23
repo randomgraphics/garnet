@@ -147,6 +147,14 @@ class DXGISwapChainHook : public HookBase<IDXGISwapChain>
     void Construct() {}
 };
 
+// -----------------------------------------------------------------------------
+class DXGISwapChain1Hook : public HookBase<IDXGISwapChain1>
+{
+#include "IDXGISwapChain1.h"
+
+    void Construct() {}
+};
+
 // *****************************************************************************
 // D3D11 hook classes
 // *****************************************************************************
@@ -205,6 +213,22 @@ class D3D11DeviceChildHook : public HookBase<ID3D11DeviceChild>
 class D3D11DeviceContextHook : public HookBase<ID3D11DeviceContext>
 {
 #include "ID3D11DeviceContext.h"
+
+    void Construct() {}
+};
+
+// -----------------------------------------------------------------------------
+class D3D11ViewHook : public HookBase<ID3D11View>
+{
+#include "ID3D11View.h"
+
+    void Construct() {}
+};
+
+// -----------------------------------------------------------------------------
+class D3D11RenderTargetViewHook : public HookBase<ID3D11RenderTargetView>
+{
+#include "ID3D11RenderTargetView.h"
 
     void Construct() {}
 };
