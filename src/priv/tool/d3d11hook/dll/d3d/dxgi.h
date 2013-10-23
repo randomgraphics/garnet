@@ -151,7 +151,7 @@ extern "C"{
 /* interface __MIDL_itf_dxgi_0000_0000 */
 /* [local] */ 
 
-#include <winapifamily.h>
+#include "winapifamily.h"
 #define DXGI_CPU_ACCESS_NONE    ( 0 )
 #define DXGI_CPU_ACCESS_DYNAMIC    ( 1 )
 #define DXGI_CPU_ACCESS_READ_WRITE    ( 2 )
