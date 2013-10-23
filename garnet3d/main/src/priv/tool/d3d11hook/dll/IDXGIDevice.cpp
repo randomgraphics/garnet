@@ -7,6 +7,7 @@
 HRESULT STDMETHODCALLTYPE DXGIDeviceHook::GetAdapter(
     _Out_  IDXGIAdapter ** pAdapter)
 {
+    calltrace::AutoTrace trace(L"DXGIDeviceHook::GetAdapter");
     if (_GetAdapter_pre_ptr._value) { (this->*_GetAdapter_pre_ptr._value)(pAdapter); }
     HRESULT ret = GetRealObj()->GetAdapter(pAdapter);
     if (pAdapter) *pAdapter = RealToHooked( *pAdapter );
@@ -22,6 +23,7 @@ HRESULT STDMETHODCALLTYPE DXGIDeviceHook::CreateSurface(
     _In_opt_  const DXGI_SHARED_RESOURCE * pSharedResource,
     _Out_  IDXGISurface ** ppSurface)
 {
+    calltrace::AutoTrace trace(L"DXGIDeviceHook::CreateSurface");
     if (_CreateSurface_pre_ptr._value) { (this->*_CreateSurface_pre_ptr._value)(pDesc, NumSurfaces, Usage, pSharedResource, ppSurface); }
     HRESULT ret = GetRealObj()->CreateSurface(pDesc, NumSurfaces, Usage, pSharedResource, ppSurface);
     if (ppSurface) *ppSurface = RealToHooked( *ppSurface );
@@ -35,6 +37,7 @@ HRESULT STDMETHODCALLTYPE DXGIDeviceHook::QueryResourceResidency(
     _Out_writes_(NumResources)  DXGI_RESIDENCY * pResidencyStatus,
     /* [in] */ UINT NumResources)
 {
+    calltrace::AutoTrace trace(L"DXGIDeviceHook::QueryResourceResidency");
     if (_QueryResourceResidency_pre_ptr._value) { (this->*_QueryResourceResidency_pre_ptr._value)(ppResources, pResidencyStatus, NumResources); }
     HRESULT ret = GetRealObj()->QueryResourceResidency(ppResources, pResidencyStatus, NumResources);
     if (_QueryResourceResidency_post_ptr._value) { (this->*_QueryResourceResidency_post_ptr._value)(ret, ppResources, pResidencyStatus, NumResources); }
@@ -45,6 +48,7 @@ HRESULT STDMETHODCALLTYPE DXGIDeviceHook::QueryResourceResidency(
 HRESULT STDMETHODCALLTYPE DXGIDeviceHook::SetGPUThreadPriority(
     /* [in] */ INT Priority)
 {
+    calltrace::AutoTrace trace(L"DXGIDeviceHook::SetGPUThreadPriority");
     if (_SetGPUThreadPriority_pre_ptr._value) { (this->*_SetGPUThreadPriority_pre_ptr._value)(Priority); }
     HRESULT ret = GetRealObj()->SetGPUThreadPriority(Priority);
     if (_SetGPUThreadPriority_post_ptr._value) { (this->*_SetGPUThreadPriority_post_ptr._value)(ret, Priority); }
@@ -55,6 +59,7 @@ HRESULT STDMETHODCALLTYPE DXGIDeviceHook::SetGPUThreadPriority(
 HRESULT STDMETHODCALLTYPE DXGIDeviceHook::GetGPUThreadPriority(
     _Out_  INT * pPriority)
 {
+    calltrace::AutoTrace trace(L"DXGIDeviceHook::GetGPUThreadPriority");
     if (_GetGPUThreadPriority_pre_ptr._value) { (this->*_GetGPUThreadPriority_pre_ptr._value)(pPriority); }
     HRESULT ret = GetRealObj()->GetGPUThreadPriority(pPriority);
     if (_GetGPUThreadPriority_post_ptr._value) { (this->*_GetGPUThreadPriority_post_ptr._value)(ret, pPriority); }

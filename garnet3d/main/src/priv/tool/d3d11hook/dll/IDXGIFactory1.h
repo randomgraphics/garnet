@@ -32,14 +32,14 @@ HRESULT STDMETHODCALLTYPE SetPrivateData(
     /* [in] */ UINT DataSize,
     _In_reads_bytes_(DataSize)  const void * pData)
 {
-    _DXGIObject.SetPrivateData(Name, DataSize, pData);
+    return _DXGIObject.SetPrivateData(Name, DataSize, pData);
 }
 // -----------------------------------------------------------------------------
 HRESULT STDMETHODCALLTYPE SetPrivateDataInterface(
     _In_  REFGUID Name,
     _In_  const IUnknown * pUnknown)
 {
-    _DXGIObject.SetPrivateDataInterface(Name, pUnknown);
+    return _DXGIObject.SetPrivateDataInterface(Name, pUnknown);
 }
 // -----------------------------------------------------------------------------
 HRESULT STDMETHODCALLTYPE GetPrivateData(
@@ -47,34 +47,34 @@ HRESULT STDMETHODCALLTYPE GetPrivateData(
     _Inout_  UINT * pDataSize,
     _Out_writes_bytes_(*pDataSize)  void * pData)
 {
-    _DXGIObject.GetPrivateData(Name, pDataSize, pData);
+    return _DXGIObject.GetPrivateData(Name, pDataSize, pData);
 }
 // -----------------------------------------------------------------------------
 HRESULT STDMETHODCALLTYPE GetParent(
     _In_  REFIID riid,
     _Out_  void ** ppParent)
 {
-    _DXGIObject.GetParent(riid, ppParent);
+    return _DXGIObject.GetParent(riid, ppParent);
 }
 // -----------------------------------------------------------------------------
 HRESULT STDMETHODCALLTYPE EnumAdapters(
     /* [in] */ UINT Adapter,
     _Out_  IDXGIAdapter ** ppAdapter)
 {
-    _DXGIFactory.EnumAdapters(Adapter, ppAdapter);
+    return _DXGIFactory.EnumAdapters(Adapter, ppAdapter);
 }
 // -----------------------------------------------------------------------------
 HRESULT STDMETHODCALLTYPE MakeWindowAssociation(
     HWND WindowHandle,
     UINT Flags)
 {
-    _DXGIFactory.MakeWindowAssociation(WindowHandle, Flags);
+    return _DXGIFactory.MakeWindowAssociation(WindowHandle, Flags);
 }
 // -----------------------------------------------------------------------------
 HRESULT STDMETHODCALLTYPE GetWindowAssociation(
     _Out_  HWND * pWindowHandle)
 {
-    _DXGIFactory.GetWindowAssociation(pWindowHandle);
+    return _DXGIFactory.GetWindowAssociation(pWindowHandle);
 }
 // -----------------------------------------------------------------------------
 HRESULT STDMETHODCALLTYPE CreateSwapChain(
@@ -82,14 +82,14 @@ HRESULT STDMETHODCALLTYPE CreateSwapChain(
     _In_  DXGI_SWAP_CHAIN_DESC * pDesc,
     _Out_  IDXGISwapChain ** ppSwapChain)
 {
-    _DXGIFactory.CreateSwapChain(pDevice, pDesc, ppSwapChain);
+    return _DXGIFactory.CreateSwapChain(pDevice, pDesc, ppSwapChain);
 }
 // -----------------------------------------------------------------------------
 HRESULT STDMETHODCALLTYPE CreateSoftwareAdapter(
     /* [in] */ HMODULE Module,
     _Out_  IDXGIAdapter ** ppAdapter)
 {
-    _DXGIFactory.CreateSoftwareAdapter(Module, ppAdapter);
+    return _DXGIFactory.CreateSoftwareAdapter(Module, ppAdapter);
 }
 // ==============================================================================
 // Method Prototypes

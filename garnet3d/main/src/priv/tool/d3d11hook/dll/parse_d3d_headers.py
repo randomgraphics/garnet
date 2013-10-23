@@ -73,6 +73,7 @@ class FunctionParameter:
                self._type.find(' IDXGI') >= 0 or \
                'IDXGIOutput' == self._interface_name and 'FindClosestMatchingMode' == self._method_name and 'pConcernedDevice' == self._name or \
                'IDXGIOutput' == self._interface_name and 'TakeOwnership' == self._method_name and 'pDevice' == self._name or \
+               'IDXGIFactory' == self._interface_name and 'CreateSwapChain' == self._method_name and 'pDevice' == self._name or \
                None
 
     def IsOutput( self ) :
@@ -158,6 +159,9 @@ class FunctionSignature:
             fp.write(')\n')
         fp.write('{\n')
 
+        # call CallTrace.enter()
+        fp.write('    calltrace::AutoTrace trace(L"' + class_name + '::' + self._name + '");\n');
+
         # call _xxx_pre_ptr(...)
         fp.write('    if (_' + self._name + '_pre_ptr._value) { (this->*_' + self._name + '_pre_ptr._value)(')
         self.WriteParameterNameList(fp)
@@ -242,7 +246,7 @@ class FunctionSignature:
         fp.write('{\n')
 
         # call base method
-        fp.write('    _' + interface_name[1:] + '.' + self._name + '(')
+        fp.write('    return _' + interface_name[1:] + '.' + self._name + '(')
         self.WriteParameterNameList(fp)
         fp.write(');\n')
 
@@ -533,7 +537,6 @@ def WriteImplClass(f, interface):
     for p in interface_names:
         f.write('    , public ' + g_interfaces[p]._hookedClassName + '\n')
     f.write('{\n'
-            'public:\n'
             '    ' + implClassName + '(IUnknown * realobj)\n')
     for index, name in enumerate(interface_names):
         f.write('        ' + (':' if 0 == index else ',') + ' ' + g_interfaces[name]._hookedClassName + '(*(UnknownBase*)this')
@@ -543,6 +546,27 @@ def WriteImplClass(f, interface):
         f.write(', realobj)\n')
     f.write('    {\n'
             '    }\n'
+            '    ~' + implClassName + '()\n'
+            '    {\n'
+            '    }\n'
+            'public:\n'
+            '    static IUnknown * NewInstance(void * context, IUnknown * realobj)\n'
+		    '    {\n'
+		    '        UNREFERENCED_PARAMETER(context);\n'
+		    '        try\n'
+		    '        {\n'
+		    '            IUnknown * result = (UnknownBase*)new ' + implClassName + '(realobj);\n'
+            '            UINT count = result->AddRef();\n'
+            '            count;\n'
+            '            GN_ASSERT(1 == count);\n'
+            '            return result;\n'
+		    '        }\n'
+		    '        catch(std::bad_alloc&)\n'
+		    '        {\n'
+		    '            GN_ERROR(sLogger)("Out of memory.");\n'
+		    '            return nullptr;\n'
+		    '        }\n'
+		    '    }\n'
             '};\n\n'
             )
     pass
@@ -626,6 +650,12 @@ with open( 'd3d/d3d11.h' ) as f:
         'ID3D11DeviceContext',
     ])
 
+# parse d3d11_1.h
+with open( 'd3d/d3d11_1.h' ) as f:
+    PARSE_interfaces_from_opened_file(f, 'hooks.h', [
+        'ID3D11Device1',
+    ])
+
 # parse d3d11sdklayer.h
 with open( 'd3d/d3d11sdklayers.h' ) as f:
     PARSE_interfaces_from_opened_file(f, 'hooks.h', [
@@ -653,10 +683,23 @@ with open("implementations.h", "w") as f:
     f.write('// script generated file. DO NOT edit.\n\n'
             '#include "pch.h"\n'
             '#include "hooks.h"\n'
-            '#pragma warning(disable: 4355) // \'this\' : used in base member initializer list\n\n'
+            '#pragma warning(disable: 4355) // \'this\' : used in base member initializer list\n'
+			'static GN::Logger * sLogger = GN::getLogger("GN.d3d11hook");\n\n'
             )
-
     for k,v in g_interfaces.iteritems(): WriteImplClass(f, v)
+
+# Register all factories
+with open("factories.cpp", "w") as f:
+    f.write('// script generated file. DO NOT edit.\n\n'
+			'#include "pch.h"\n'
+			'#include "implementations.h"\n\n'
+			'void HookedClassFactory::RegisterAllDefaultFactories()\n'
+			'{\n')
+    for interfaceName, v in g_interfaces.iteritems():
+        if 'IUnknown' != interfaceName:
+            implClassName = interfaceName[1:] + 'Impl'
+            f.write('    Register<' + interfaceName + '>(' + implClassName + '::NewInstance, nullptr);\n')
+    f.write('}\n')
 
 # close Call ID code gen
 g_cid.Close()

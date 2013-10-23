@@ -8,6 +8,7 @@ HRESULT STDMETHODCALLTYPE DXGIFactory1Hook::EnumAdapters1(
     /* [in] */ UINT Adapter,
     _Out_  IDXGIAdapter1 ** ppAdapter)
 {
+    calltrace::AutoTrace trace(L"DXGIFactory1Hook::EnumAdapters1");
     if (_EnumAdapters1_pre_ptr._value) { (this->*_EnumAdapters1_pre_ptr._value)(Adapter, ppAdapter); }
     HRESULT ret = GetRealObj()->EnumAdapters1(Adapter, ppAdapter);
     if (ppAdapter) *ppAdapter = RealToHooked( *ppAdapter );
@@ -18,6 +19,7 @@ HRESULT STDMETHODCALLTYPE DXGIFactory1Hook::EnumAdapters1(
 // -----------------------------------------------------------------------------
 BOOL STDMETHODCALLTYPE DXGIFactory1Hook::IsCurrent()
 {
+    calltrace::AutoTrace trace(L"DXGIFactory1Hook::IsCurrent");
     if (_IsCurrent_pre_ptr._value) { (this->*_IsCurrent_pre_ptr._value)(); }
     BOOL ret = GetRealObj()->IsCurrent();
     if (_IsCurrent_post_ptr._value) { (this->*_IsCurrent_post_ptr._value)(ret); }

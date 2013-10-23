@@ -15,6 +15,14 @@
 const GUID GN_IID_IHook =
 { 0xad5d67ab, 0xc12b, 0x4194, { 0xb5, 0xe8, 0x2f, 0x89, 0x1f, 0x22, 0x12, 0xe6 } };
 
+
+// -----------------------------------------------------------------------------
+/// convert GUID to string
+inline const char * GUID_to_str(const IID & iid)
+{
+    return ((GN::Guid*)&iid)->toStr();
+}
+
 // -----------------------------------------------------------------------------
 /// IHooked interface
 MIDL_INTERFACE("AD5D67AB-C12B-4194-B5E8-2F891F2212E6")
@@ -244,6 +252,11 @@ public:
     // No AddRef()
     virtual void * STDMETHODCALLTYPE GetRealObj(const IID & iid)
     {
+        if (iid == __uuidof(IUnknown*))
+        {
+            return _realUnknown;
+        }
+
         for(size_t i = 0; i < _interfaceCount; ++i)
         {
             if (_interfaces[i].iid == iid)
@@ -299,12 +312,14 @@ public:
         if (iid == __uuidof(IUnknown))
         {
             *ppvObject = _realUnknown;
+            AddRef();
             return S_OK;
         }
 
         if (iid == __uuidof(IHooked))
         {
             *ppvObject = this;
+            AddRef();
             return S_OK;
         }
 
@@ -315,16 +330,21 @@ public:
             {
                 GN_ASSERT(ii.real);
                 *ppvObject = ii.hooked;
+                AddRef();
                 return S_OK;
             }
         }
 
-        // Double check that all supported interface are added to interface table.
+        // If we reach here, it means the IID is not supported by the hooked interface.
+        // So we need to make sure that the IID is not supported by the real one either.
         IUnknown * real;
-        if (SUCCEEDED(_realUnknown->QueryInterface( iid, (void**)ppvObject )))
+        if (SUCCEEDED(_realUnknown->QueryInterface( iid, (void**)&real )))
         {
             real->Release();
-            GN_UNEXPECTED();
+            GN_ERROR(GN::getLogger("GN.d3d11hook"))(
+                "%s is supported by real D3D interface, but not our hooked version.",
+                GUID_to_str(iid));
+            //GN_UNEXPECTED();
         }
 
         return E_NOINTERFACE;
@@ -385,9 +405,11 @@ class HookedClassFactory
 {
 public:
 
-    typedef IUnknown * (*FactoryFunc)(void * context, void * realobj);
+    typedef IUnknown * (*FactoryFunc)(void * context, IUnknown * realobj);
 
     static HookedClassFactory & GetInstance() { return s_instance; }
+
+    void RegisterAllDefaultFactories(); // script generated
 
     void Register(const IID & iid, FactoryFunc createNew, void * context)
     {
@@ -409,20 +431,38 @@ public:
         return Register(__uuidof(REAL_CLASS), factory, context);
     }
 
-    void * CreateNew(const IID & iid, void * realobj)
+    void * CreateNew(const IID & iid, IUnknown * realobj)
     {
         FactoryMap::iterator iter = _factories.find(iid);
         if (iter == _factories.end())
         {
-            GN_UNEXPECTED();
+            GN_ERROR(GN::getLogger("GN.d3d11hook"))("Class factory for interface %s is not registered.", GUID_to_str(iid));
             return nullptr;
         }
         FactoryInfo & fi = iter->second;
-        return fi.createNew(fi.context, realobj);
+
+        LONG currentCount = realobj->AddRef();
+        realobj->Release();
+
+        IUnknown * hooked = fi.createNew(fi.context, realobj);
+        if (hooked)
+        {
+            LONG newCount = realobj->AddRef();
+            realobj->Release();
+            GN_ASSERT(newCount > currentCount);
+
+            IUnknown * typed = nullptr;
+            hooked->QueryInterface(iid, (void**)&typed);
+            GN_ASSERT(typed);
+            hooked->Release();
+            hooked = typed;
+        }
+
+        return hooked;
     }
 
     template<class REAL_CLASS>
-    REAL_CLASS * CreateNew(void * realobj)
+    REAL_CLASS * CreateNew(REAL_CLASS * realobj)
     {
         return (REAL_CLASS*)CreateNew(__uuidof(REAL_CLASS), realobj);
     }
@@ -482,16 +522,26 @@ inline REAL_INTERFACE * RealToHooked(REAL_INTERFACE * realobj)
     if (SUCCEEDED(hr))
     {
         hooked = ihooked->GetHookedObj<REAL_INTERFACE>();
+        hooked->AddRef();
+        realobj->Release();
     }
     else
     {
         // This is a new D3D object that we never saw before. Create a new
         // hooked object for it.
         hooked = HookedClassFactory::GetInstance().CreateNew<REAL_INTERFACE>(realobj);
+
+        // Fall back to real object, if hooked object creation is failed.
+        if (nullptr == hooked)
+        {
+            hooked = realobj;
+        }
+        else
+        {
+            realobj->Release();
+        }
     }
 
-    hooked->AddRef();
-    realobj->Release();
     return hooked;
 }
 
@@ -523,14 +573,23 @@ inline void* DXGIRealToHooked(const IID & iid, void * realobj)
     if (SUCCEEDED(hr))
     {
         hooked = ihooked->GetHookedObj(iid);
+        ((IUnknown*)hooked)->AddRef();
+        ((IUnknown*)realobj)->Release();
     }
     else
     {
-        hooked = HookedClassFactory::GetInstance().CreateNew(iid, realobj);
-    }
+        hooked = HookedClassFactory::GetInstance().CreateNew(iid, (IUnknown*)realobj);
 
-    ((IUnknown*)hooked)->AddRef();
-    ((IUnknown*)realobj)->Release();
+        // Fall back to real object, if hooked object creation is failed.
+        if (nullptr == hooked)
+        {
+            hooked = realobj;
+        }
+        else
+        {
+            ((IUnknown*)realobj)->Release();
+        }
+    }
 
     return hooked;
 }
@@ -550,7 +609,7 @@ inline REAL_INTERFACE * HookedToReal(REAL_INTERFACE * hooked)
     if (nullptr == ihook)
     {
         // hooked is pointing to real object.
-        GN_UNEXPECTED();
+        //GN_UNEXPECTED();
         return hooked;
     }
 

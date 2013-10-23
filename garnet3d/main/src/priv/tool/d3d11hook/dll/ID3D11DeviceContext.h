@@ -28,7 +28,7 @@ public:
 void STDMETHODCALLTYPE GetDevice(
     _Out_  ID3D11Device ** ppDevice)
 {
-    _D3D11DeviceChild.GetDevice(ppDevice);
+    return _D3D11DeviceChild.GetDevice(ppDevice);
 }
 // -----------------------------------------------------------------------------
 HRESULT STDMETHODCALLTYPE GetPrivateData(
@@ -36,7 +36,7 @@ HRESULT STDMETHODCALLTYPE GetPrivateData(
     _Inout_  UINT * pDataSize,
     _Out_writes_bytes_opt_( *pDataSize )  void * pData)
 {
-    _D3D11DeviceChild.GetPrivateData(guid, pDataSize, pData);
+    return _D3D11DeviceChild.GetPrivateData(guid, pDataSize, pData);
 }
 // -----------------------------------------------------------------------------
 HRESULT STDMETHODCALLTYPE SetPrivateData(
@@ -44,14 +44,14 @@ HRESULT STDMETHODCALLTYPE SetPrivateData(
     _In_  UINT DataSize,
     _In_reads_bytes_opt_( DataSize )  const void * pData)
 {
-    _D3D11DeviceChild.SetPrivateData(guid, DataSize, pData);
+    return _D3D11DeviceChild.SetPrivateData(guid, DataSize, pData);
 }
 // -----------------------------------------------------------------------------
 HRESULT STDMETHODCALLTYPE SetPrivateDataInterface(
     _In_  REFGUID guid,
     _In_opt_  const IUnknown * pData)
 {
-    _D3D11DeviceChild.SetPrivateDataInterface(guid, pData);
+    return _D3D11DeviceChild.SetPrivateDataInterface(guid, pData);
 }
 // ==============================================================================
 // Method Prototypes

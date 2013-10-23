@@ -169,6 +169,17 @@ enum D3D11_CALL_ID
     CID_ID3D11DeviceContext_GetContextFlags = CID_ID3D11DeviceContext_BASE + 106,
     CID_ID3D11DeviceContext_FinishCommandList = CID_ID3D11DeviceContext_BASE + 107,
 
+    // CID for ID3D11Device1
+    CID_ID3D11Device1_BASE,
+    CID_ID3D11Device1_COUNT = 7,
+    CID_ID3D11Device1_GetImmediateContext1 = CID_ID3D11Device1_BASE + 0,
+    CID_ID3D11Device1_CreateDeferredContext1 = CID_ID3D11Device1_BASE + 1,
+    CID_ID3D11Device1_CreateBlendState1 = CID_ID3D11Device1_BASE + 2,
+    CID_ID3D11Device1_CreateRasterizerState1 = CID_ID3D11Device1_BASE + 3,
+    CID_ID3D11Device1_CreateDeviceContextState = CID_ID3D11Device1_BASE + 4,
+    CID_ID3D11Device1_OpenSharedResource1 = CID_ID3D11Device1_BASE + 5,
+    CID_ID3D11Device1_OpenSharedResourceByName = CID_ID3D11Device1_BASE + 6,
+
     // CID for ID3D11Debug
     CID_ID3D11Debug_BASE,
     CID_ID3D11Debug_COUNT = 9,
