@@ -993,7 +993,7 @@ namespace GN { namespace gfx
         ///
         /// Get default texture format.
         ///
-        /// \param usage        Combination of TextureUsage
+        /// \param usages       Combination of TextureUsage
         ///
         /// \return             Return ColorFormat::UNKNOWN, if the usage is not supported by current renderer.
         ///

@@ -219,6 +219,7 @@ namespace GN { namespace gfx
 
         //@{
     public:
+        /// Initialize BitmapFont class
         /// \param sr           Pointer to sprite renderer
         /// \param ff           Pointer to the font face object. Its reference count will be increased by one after this function call.
         /// \param maxchars     Maxinum different characters allowed.
