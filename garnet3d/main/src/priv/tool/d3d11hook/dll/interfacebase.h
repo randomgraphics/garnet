@@ -563,6 +563,7 @@ inline void* DXGIRealToHooked(const IID & iid, void * realobj)
 
     GN::AutoComPtr<IDXGIObject> dxgiobj = Qi<IDXGIObject>((IUnknown*)realobj);
 
+    // Note: this has to be an weakref to ihooked.
     IHooked * ihooked;
     UINT size = (UINT)sizeof(ihooked);
     HRESULT hr = dxgiobj->GetPrivateData(

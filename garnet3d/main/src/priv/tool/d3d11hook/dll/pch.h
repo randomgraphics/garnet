@@ -29,11 +29,23 @@
 #undef _In_reads_bytes_
 #define _In_reads_bytes_(x)
 
+#undef _In_reads_bytes_opt_
+#define _In_reads_bytes_opt_(x)
+
+#undef _Inout_updates_bytes_
+#define _Inout_updates_bytes_(x)
+
 #undef _Out_writes_
 #define _Out_writes_(x)
 
 #undef _Out_writes_opt_
 #define _Out_writes_opt_(x)
+
+#undef _Out_writes_bytes_to_
+#define _Out_writes_bytes_to_(x,y)
+
+#undef _Out_writes_all_opt_
+#define _Out_writes_all_opt_(x)
 
 #undef _Out_writes_to_opt_
 #define _Out_writes_to_opt_(x,y)
@@ -44,8 +56,8 @@
 #undef _Out_writes_bytes_opt_
 #define _Out_writes_bytes_opt_(x)
 
-#undef _In_reads_bytes_opt_
-#define _In_reads_bytes_opt_(x)
+#undef _Outptr_
+#define _Outptr_
 
 // *****************************************************************************
 //                                     EOF

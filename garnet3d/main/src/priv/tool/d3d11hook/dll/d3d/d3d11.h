@@ -13365,7 +13365,7 @@ EXTERN_C const IID IID_ID3D11VideoDevice;
 /* interface __MIDL_itf_d3d11_0000_0040 */
 /* [local] */ 
 
-#include <winapifamily.h>
+#include "winapifamily.h"
 
 
 extern RPC_IF_HANDLE __MIDL_itf_d3d11_0000_0040_v0_0_c_ifspec;
