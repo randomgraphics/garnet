@@ -11,11 +11,32 @@ protected:
 DXGIObjectHook(UnknownBase & unknown, IUnknown * realobj)
     : BASE_CLASS(unknown, realobj)
 {
-    unknown.AddInterface<IDXGIObject>(this, realobj);
     Construct(); 
 }
 
 ~DXGIObjectHook() {}
+
+// ==============================================================================
+// Factory Utilities
+// ==============================================================================
+public:
+
+static IUnknown * sNewInstance(void * context, UnknownBase & unknown, IUnknown * realobj)
+{
+    UNREFERENCED_PARAMETER(context);
+
+    try
+    {
+        IUnknown * result = (UnknownBase*)new DXGIObjectHook(unknown, realobj);
+        result->AddRef();
+        return result;
+    }
+    catch(std::bad_alloc&)
+    {
+        GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
+        return nullptr;
+    }
+}
 
 // ==============================================================================
 // Calling to base interfaces
