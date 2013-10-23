@@ -211,6 +211,7 @@ namespace GN { namespace gfx
         /// \param slicePitch       Slice pitch in bytes of the data
         /// \param data             The data buffer that holds data that are going to be copied to texture.
         ///                         The data must be the same format as the texture.
+        /// \param flag             Updte flag. Must be one of SurfaceUpdateFlag.
         ///
         virtual void updateMipmap(
             uint32              face,
