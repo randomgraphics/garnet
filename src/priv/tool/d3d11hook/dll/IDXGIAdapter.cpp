@@ -8,6 +8,7 @@ HRESULT STDMETHODCALLTYPE DXGIAdapterHook::EnumOutputs(
     /* [in] */ UINT Output,
     _Out_  IDXGIOutput ** ppOutput)
 {
+    calltrace::AutoTrace trace(L"DXGIAdapterHook::EnumOutputs");
     if (_EnumOutputs_pre_ptr._value) { (this->*_EnumOutputs_pre_ptr._value)(Output, ppOutput); }
     HRESULT ret = GetRealObj()->EnumOutputs(Output, ppOutput);
     if (ppOutput) *ppOutput = RealToHooked( *ppOutput );
@@ -19,6 +20,7 @@ HRESULT STDMETHODCALLTYPE DXGIAdapterHook::EnumOutputs(
 HRESULT STDMETHODCALLTYPE DXGIAdapterHook::GetDesc(
     _Out_  DXGI_ADAPTER_DESC * pDesc)
 {
+    calltrace::AutoTrace trace(L"DXGIAdapterHook::GetDesc");
     if (_GetDesc_pre_ptr._value) { (this->*_GetDesc_pre_ptr._value)(pDesc); }
     HRESULT ret = GetRealObj()->GetDesc(pDesc);
     if (_GetDesc_post_ptr._value) { (this->*_GetDesc_post_ptr._value)(ret, pDesc); }
@@ -30,6 +32,7 @@ HRESULT STDMETHODCALLTYPE DXGIAdapterHook::CheckInterfaceSupport(
     _In_  REFGUID InterfaceName,
     _Out_  LARGE_INTEGER * pUMDVersion)
 {
+    calltrace::AutoTrace trace(L"DXGIAdapterHook::CheckInterfaceSupport");
     if (_CheckInterfaceSupport_pre_ptr._value) { (this->*_CheckInterfaceSupport_pre_ptr._value)(InterfaceName, pUMDVersion); }
     HRESULT ret = GetRealObj()->CheckInterfaceSupport(InterfaceName, pUMDVersion);
     if (_CheckInterfaceSupport_post_ptr._value) { (this->*_CheckInterfaceSupport_post_ptr._value)(ret, InterfaceName, pUMDVersion); }

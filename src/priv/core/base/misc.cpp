@@ -81,7 +81,7 @@ GN_API void GN::getEnv( StrA & result, const char * name )
 GN_API const char * GN::Guid::toStr() const
 {
     // GUID as string: {xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx}
-    static char str[1+8+1+4+1+4+1+4+1+12+1];
+    __declspec(thread) static char str[1+8+1+4+1+4+1+4+1+12+1+1];
 
     stringPrintf(
         str,

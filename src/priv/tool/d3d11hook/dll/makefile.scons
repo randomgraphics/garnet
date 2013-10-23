@@ -6,22 +6,25 @@ env.Prepend( CPPPATH = ['d3dheaders'] )
 
 hookdll = GN.BinplaceDLL( GN.BuildDLL( env, 'GNd3d11Hook',
 	[
+        'dllmain.cpp',
+		'factories.cpp',
 	    'hooks.cpp',
 	    'ID3D11Debug.cpp',
 	    'ID3D11Device.cpp',
+	    'ID3D11Device1.cpp',
 	    'ID3D11DeviceChild.cpp',
 	    'ID3D11DeviceContext.cpp',
-#	    'ID3D11InfoQueue.cpp',
-#	    'IDXGIAdapter.cpp',
-#	    'IDXGIAdapter1.cpp',
-#	    'IDXGIDevice.cpp',
-#	    'IDXGIDeviceSubObject.cpp',
-#	    'IDXGIFactory.cpp',
-#	    'IDXGIFactory1.cpp',
-#	    'IDXGIObject.cpp',
-#	    'IDXGIOutput.cpp',
-#	    'IDXGISurface.cpp',
-#	    'IDXGISwapChain.cpp',
+	    'ID3D11InfoQueue.cpp',
+	    'IDXGIAdapter.cpp',
+	    'IDXGIAdapter1.cpp',
+	    'IDXGIDevice.cpp',
+	    'IDXGIDeviceSubObject.cpp',
+	    'IDXGIFactory.cpp',
+	    'IDXGIFactory1.cpp',
+	    'IDXGIObject.cpp',
+	    'IDXGIOutput.cpp',
+	    'IDXGISurface.cpp',
+	    'IDXGISwapChain.cpp',
 	],
 	'pch.h', 'pch.cpp' ) )
 
@@ -38,11 +41,11 @@ GN.NewDefaultTarget(
 	],
 	defFile='exports_d3d11.def' ), rename='d3d11.dll', extraDependencies=hookdll ) )
 
-GN.NewDefaultTarget(
+"""GN.NewDefaultTarget(
 	'dxgi',
 	GN.BinplaceDLL( GN.BuildDLL( wrapper_env, 'dxgiwrapper',
 	[
 	    'exports_dxgi.cpp',
 	    'exports_dxgi_asm.asm',
 	],
-	defFile='exports_dxgi.def' ), rename='dxgi.dll', extraDependencies=hookdll ) )
+	defFile='exports_dxgi.def' ), rename='dxgi.dll', extraDependencies=hookdll ) )"""

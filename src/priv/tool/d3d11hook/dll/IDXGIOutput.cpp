@@ -7,6 +7,7 @@
 HRESULT STDMETHODCALLTYPE DXGIOutputHook::GetDesc(
     _Out_  DXGI_OUTPUT_DESC * pDesc)
 {
+    calltrace::AutoTrace trace(L"DXGIOutputHook::GetDesc");
     if (_GetDesc_pre_ptr._value) { (this->*_GetDesc_pre_ptr._value)(pDesc); }
     HRESULT ret = GetRealObj()->GetDesc(pDesc);
     if (_GetDesc_post_ptr._value) { (this->*_GetDesc_post_ptr._value)(ret, pDesc); }
@@ -20,6 +21,7 @@ HRESULT STDMETHODCALLTYPE DXGIOutputHook::GetDisplayModeList(
     _Inout_  UINT * pNumModes,
     _Out_writes_to_opt_(*pNumModes,*pNumModes)  DXGI_MODE_DESC * pDesc)
 {
+    calltrace::AutoTrace trace(L"DXGIOutputHook::GetDisplayModeList");
     if (_GetDisplayModeList_pre_ptr._value) { (this->*_GetDisplayModeList_pre_ptr._value)(EnumFormat, Flags, pNumModes, pDesc); }
     HRESULT ret = GetRealObj()->GetDisplayModeList(EnumFormat, Flags, pNumModes, pDesc);
     if (_GetDisplayModeList_post_ptr._value) { (this->*_GetDisplayModeList_post_ptr._value)(ret, EnumFormat, Flags, pNumModes, pDesc); }
@@ -32,6 +34,7 @@ HRESULT STDMETHODCALLTYPE DXGIOutputHook::FindClosestMatchingMode(
     _Out_  DXGI_MODE_DESC * pClosestMatch,
     _In_opt_  IUnknown * pConcernedDevice)
 {
+    calltrace::AutoTrace trace(L"DXGIOutputHook::FindClosestMatchingMode");
     if (_FindClosestMatchingMode_pre_ptr._value) { (this->*_FindClosestMatchingMode_pre_ptr._value)(pModeToMatch, pClosestMatch, pConcernedDevice); }
     HRESULT ret = GetRealObj()->FindClosestMatchingMode(pModeToMatch, pClosestMatch, HookedToReal(pConcernedDevice));
     if (_FindClosestMatchingMode_post_ptr._value) { (this->*_FindClosestMatchingMode_post_ptr._value)(ret, pModeToMatch, pClosestMatch, pConcernedDevice); }
@@ -41,6 +44,7 @@ HRESULT STDMETHODCALLTYPE DXGIOutputHook::FindClosestMatchingMode(
 // -----------------------------------------------------------------------------
 HRESULT STDMETHODCALLTYPE DXGIOutputHook::WaitForVBlank()
 {
+    calltrace::AutoTrace trace(L"DXGIOutputHook::WaitForVBlank");
     if (_WaitForVBlank_pre_ptr._value) { (this->*_WaitForVBlank_pre_ptr._value)(); }
     HRESULT ret = GetRealObj()->WaitForVBlank();
     if (_WaitForVBlank_post_ptr._value) { (this->*_WaitForVBlank_post_ptr._value)(ret); }
@@ -52,6 +56,7 @@ HRESULT STDMETHODCALLTYPE DXGIOutputHook::TakeOwnership(
     _In_  IUnknown * pDevice,
     BOOL Exclusive)
 {
+    calltrace::AutoTrace trace(L"DXGIOutputHook::TakeOwnership");
     if (_TakeOwnership_pre_ptr._value) { (this->*_TakeOwnership_pre_ptr._value)(pDevice, Exclusive); }
     HRESULT ret = GetRealObj()->TakeOwnership(HookedToReal(pDevice), Exclusive);
     if (_TakeOwnership_post_ptr._value) { (this->*_TakeOwnership_post_ptr._value)(ret, pDevice, Exclusive); }
@@ -61,6 +66,7 @@ HRESULT STDMETHODCALLTYPE DXGIOutputHook::TakeOwnership(
 // -----------------------------------------------------------------------------
 void STDMETHODCALLTYPE DXGIOutputHook::ReleaseOwnership()
 {
+    calltrace::AutoTrace trace(L"DXGIOutputHook::ReleaseOwnership");
     if (_ReleaseOwnership_pre_ptr._value) { (this->*_ReleaseOwnership_pre_ptr._value)(); }
     GetRealObj()->ReleaseOwnership();
     if (_ReleaseOwnership_post_ptr._value) { (this->*_ReleaseOwnership_post_ptr._value)(); }
@@ -70,6 +76,7 @@ void STDMETHODCALLTYPE DXGIOutputHook::ReleaseOwnership()
 HRESULT STDMETHODCALLTYPE DXGIOutputHook::GetGammaControlCapabilities(
     _Out_  DXGI_GAMMA_CONTROL_CAPABILITIES * pGammaCaps)
 {
+    calltrace::AutoTrace trace(L"DXGIOutputHook::GetGammaControlCapabilities");
     if (_GetGammaControlCapabilities_pre_ptr._value) { (this->*_GetGammaControlCapabilities_pre_ptr._value)(pGammaCaps); }
     HRESULT ret = GetRealObj()->GetGammaControlCapabilities(pGammaCaps);
     if (_GetGammaControlCapabilities_post_ptr._value) { (this->*_GetGammaControlCapabilities_post_ptr._value)(ret, pGammaCaps); }
@@ -80,6 +87,7 @@ HRESULT STDMETHODCALLTYPE DXGIOutputHook::GetGammaControlCapabilities(
 HRESULT STDMETHODCALLTYPE DXGIOutputHook::SetGammaControl(
     _In_  const DXGI_GAMMA_CONTROL * pArray)
 {
+    calltrace::AutoTrace trace(L"DXGIOutputHook::SetGammaControl");
     if (_SetGammaControl_pre_ptr._value) { (this->*_SetGammaControl_pre_ptr._value)(pArray); }
     HRESULT ret = GetRealObj()->SetGammaControl(pArray);
     if (_SetGammaControl_post_ptr._value) { (this->*_SetGammaControl_post_ptr._value)(ret, pArray); }
@@ -90,6 +98,7 @@ HRESULT STDMETHODCALLTYPE DXGIOutputHook::SetGammaControl(
 HRESULT STDMETHODCALLTYPE DXGIOutputHook::GetGammaControl(
     _Out_  DXGI_GAMMA_CONTROL * pArray)
 {
+    calltrace::AutoTrace trace(L"DXGIOutputHook::GetGammaControl");
     if (_GetGammaControl_pre_ptr._value) { (this->*_GetGammaControl_pre_ptr._value)(pArray); }
     HRESULT ret = GetRealObj()->GetGammaControl(pArray);
     if (_GetGammaControl_post_ptr._value) { (this->*_GetGammaControl_post_ptr._value)(ret, pArray); }
@@ -100,6 +109,7 @@ HRESULT STDMETHODCALLTYPE DXGIOutputHook::GetGammaControl(
 HRESULT STDMETHODCALLTYPE DXGIOutputHook::SetDisplaySurface(
     _In_  IDXGISurface * pScanoutSurface)
 {
+    calltrace::AutoTrace trace(L"DXGIOutputHook::SetDisplaySurface");
     if (_SetDisplaySurface_pre_ptr._value) { (this->*_SetDisplaySurface_pre_ptr._value)(pScanoutSurface); }
     HRESULT ret = GetRealObj()->SetDisplaySurface(HookedToReal(pScanoutSurface));
     if (_SetDisplaySurface_post_ptr._value) { (this->*_SetDisplaySurface_post_ptr._value)(ret, pScanoutSurface); }
@@ -110,6 +120,7 @@ HRESULT STDMETHODCALLTYPE DXGIOutputHook::SetDisplaySurface(
 HRESULT STDMETHODCALLTYPE DXGIOutputHook::GetDisplaySurfaceData(
     _In_  IDXGISurface * pDestination)
 {
+    calltrace::AutoTrace trace(L"DXGIOutputHook::GetDisplaySurfaceData");
     if (_GetDisplaySurfaceData_pre_ptr._value) { (this->*_GetDisplaySurfaceData_pre_ptr._value)(pDestination); }
     HRESULT ret = GetRealObj()->GetDisplaySurfaceData(HookedToReal(pDestination));
     if (_GetDisplaySurfaceData_post_ptr._value) { (this->*_GetDisplaySurfaceData_post_ptr._value)(ret, pDestination); }
@@ -120,6 +131,7 @@ HRESULT STDMETHODCALLTYPE DXGIOutputHook::GetDisplaySurfaceData(
 HRESULT STDMETHODCALLTYPE DXGIOutputHook::GetFrameStatistics(
     _Out_  DXGI_FRAME_STATISTICS * pStats)
 {
+    calltrace::AutoTrace trace(L"DXGIOutputHook::GetFrameStatistics");
     if (_GetFrameStatistics_pre_ptr._value) { (this->*_GetFrameStatistics_pre_ptr._value)(pStats); }
     HRESULT ret = GetRealObj()->GetFrameStatistics(pStats);
     if (_GetFrameStatistics_post_ptr._value) { (this->*_GetFrameStatistics_post_ptr._value)(ret, pStats); }

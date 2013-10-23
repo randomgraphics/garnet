@@ -162,6 +162,15 @@ const char * g_D3D11CallIDText[] =
     "CID_ID3D11DeviceContext_GetContextFlags",
     "CID_ID3D11DeviceContext_FinishCommandList",
 
+    // CID for ID3D11Device1
+    "CID_ID3D11Device1_GetImmediateContext1",
+    "CID_ID3D11Device1_CreateDeferredContext1",
+    "CID_ID3D11Device1_CreateBlendState1",
+    "CID_ID3D11Device1_CreateRasterizerState1",
+    "CID_ID3D11Device1_CreateDeviceContextState",
+    "CID_ID3D11Device1_OpenSharedResource1",
+    "CID_ID3D11Device1_OpenSharedResourceByName",
+
     // CID for ID3D11Debug
     "CID_ID3D11Debug_SetFeatureMask",
     "CID_ID3D11Debug_GetFeatureMask",

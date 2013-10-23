@@ -1,16 +1,14 @@
 #include "pch.h"
 #include "hooks.h"
-#include "implementations.h"
-
 #define INSIDE_D3D11_HOOK
 #include "hookapi.h"
 
 using namespace GN;
-
 static GN::Logger * sLogger = GN::getLogger("GN.d3d11hook");
 
+
 // *****************************************************************************
-// Class factories
+// Class Factory
 // *****************************************************************************
 
 HookedClassFactory HookedClassFactory::s_instance;
@@ -19,20 +17,63 @@ HookedClassFactory HookedClassFactory::s_instance;
 // DLL loading utilities
 // *****************************************************************************
 
-struct DllDictionary
+namespace calltrace
 {
-    std::map<StrW, HMODULE> handles;
-
-    ~DllDictionary()
+    class CallTrace
     {
-        for(auto iter = handles.begin(); iter != handles.end(); ++iter)
-        {
-            ::FreeLibrary(iter->second);
-        }
-    }
-};
+        int    _level;
 
-static DllDictionary g_dlls;
+    public:
+
+        CallTrace() : _level(0)
+        {
+        }
+
+        ~CallTrace()
+        {
+        }
+
+        void enter(const wchar_t * text)
+        {
+            wprintf(L"%*s", _level, L"");
+            wprintf(L"%s\n", text);
+            ++_level;
+        }
+
+        void enter(const char * text)
+        {
+            printf("%*s", _level, "");
+            printf("%s\n", text);
+            ++_level;
+        }
+
+        void leave()
+        {
+            --_level;
+        }
+    };
+
+    CallTrace g_callTrace;
+
+    void enter(const wchar_t * text)
+    {
+        return g_callTrace.enter( text );
+    }
+
+    void enter(const char * text)
+    {
+        return g_callTrace.enter( text );
+    }
+
+    void leave()
+    {
+        g_callTrace.leave();
+    }
+}
+
+// *****************************************************************************
+// DLL loading utilities
+// *****************************************************************************
 
 //
 //
@@ -40,20 +81,12 @@ static DllDictionary g_dlls;
 void * GetRealFunctionPtr(const wchar_t * dllName, const char * functionName)
 {
     HMODULE dll;
-    auto iter = g_dlls.handles.find(dllName);
-    if (iter != g_dlls.handles.end())
+
+    dll = ::LoadLibraryW(dllName);
+    if (0 == dll)
     {
-        dll = iter->second;
-    }
-    else
-    {
-        dll = ::LoadLibraryW(dllName);
-        if (0 == dll)
-        {
-            GN_ERROR(sLogger)("Can't load dll: %S", dllName);
-            return nullptr;
-        }
-        g_dlls.handles[dllName] = dll;
+        GN_ERROR(sLogger)("Can't load dll: %S", dllName);
+        return nullptr;
     }
 
     void * proc = ::GetProcAddress(dll, functionName);
@@ -79,6 +112,8 @@ static StrW GetRealDllPath(const wchar_t * dllName)
 // D3D11 global functions
 // *****************************************************************************
 
+#define HOOK_ENABLED 1
+
 typedef HRESULT (WINAPI * PFN_CREATE_DXGI_FACTORY)(const IID & riid, void **ppFactory);
 
 //
@@ -91,7 +126,7 @@ CreateDXGIFactoryHook(
     void **ppFactory
 )
 {
-    GN_INFO(sLogger)("%s is called.", funcName);
+    calltrace::AutoTrace trace(funcName);
 
     PFN_CREATE_DXGI_FACTORY realFunc = (PFN_CREATE_DXGI_FACTORY)GetRealFunctionPtr(
         GetRealDllPath(L"dxgi.dll").rawptr(),
@@ -99,14 +134,14 @@ CreateDXGIFactoryHook(
     if (nullptr == realFunc) return E_FAIL;
 
     HRESULT hr = realFunc(riid, ppFactory);
-    if( FAILED(hr) )
+#if HOOK_ENABLED
+    if( SUCCEEDED(hr) )
     {
-        return hr;
+        if( ppFactory ) *ppFactory = DXGIRealToHooked(riid, *ppFactory);
     }
-
+#endif
     // success
-    //if( ppFactory ) *ppFactory = DXGIRealToHooked(riid, *ppFactory);
-    return S_OK;
+    return hr;
 }
 
 //
@@ -125,37 +160,36 @@ D3D11CreateDeviceHook(
     __out_opt D3D_FEATURE_LEVEL* pFeatureLevel,
     __out_opt ID3D11DeviceContext** ppImmediateContext )
 {
-    GN_INFO(sLogger)("D3D11CreateDevice is called.");
+    calltrace::AutoTrace trace("D3D11CreateDevice");
 
     PFN_D3D11_CREATE_DEVICE realFunc = (PFN_D3D11_CREATE_DEVICE)GetRealFunctionPtr(
         GetRealDllPath(L"d3d11.dll").rawptr(),
         "D3D11CreateDevice");
     if (nullptr == realFunc) return E_FAIL;
 
-    #if 1
+#if !HOOK_ENABLED
     return realFunc(
         pAdapter,
         DriverType, Software, Flags, pFeatureLevels, FeatureLevels, SDKVersion,
         ppDevice,
         pFeatureLevel,
         ppImmediateContext);
-    #else
+#else
     HRESULT hr = realFunc(
         HookedToReal(pAdapter),
         DriverType, Software, Flags, pFeatureLevels, FeatureLevels, SDKVersion,
         ppDevice,
         pFeatureLevel,
         ppImmediateContext);
-    if( FAILED(hr) )
+
+    if( SUCCEEDED(hr) )
     {
-        return hr;
+        if( ppDevice ) *ppDevice = RealToHooked(*ppDevice);
+        if( ppImmediateContext ) *ppImmediateContext = RealToHooked(*ppImmediateContext);
     }
 
-    // success
-    if( ppDevice ) *ppDevice = RealToHooked(*ppDevice);
-    if( ppImmediateContext ) *ppImmediateContext = RealToHooked(*ppImmediateContext);
-    return S_OK;
-    #endif
+    return hr;
+#endif
 }
 
 //
@@ -176,14 +210,14 @@ D3D11CreateDeviceAndSwapChainHook(
     __out_opt D3D_FEATURE_LEVEL* pFeatureLevel,
     __out_opt ID3D11DeviceContext** ppImmediateContext )
 {
-    GN_INFO(sLogger)("D3D11CreateDeviceAndSwapChain is called.");
+    calltrace::AutoTrace trace("D3D11CreateDeviceAndSwapChain");
 
     PFN_D3D11_CREATE_DEVICE_AND_SWAP_CHAIN realFunc = (PFN_D3D11_CREATE_DEVICE_AND_SWAP_CHAIN)GetRealFunctionPtr(
         GetRealDllPath(L"d3d11.dll").rawptr(),
         "D3D11CreateDeviceAndSwapChain");
     if (nullptr == realFunc) return E_FAIL;
 
-    #if 1
+#if !HOOK_ENABLED
     return realFunc(
         pAdapter,
         DriverType, Software, Flags, pFeatureLevels, FeatureLevels, SDKVersion,
@@ -192,7 +226,7 @@ D3D11CreateDeviceAndSwapChainHook(
         ppDevice,
         pFeatureLevel,
         ppImmediateContext);
-    #else
+#else
     HRESULT hr = realFunc(
         HookedToReal(pAdapter),
         DriverType, Software, Flags, pFeatureLevels, FeatureLevels, SDKVersion,
@@ -201,43 +235,16 @@ D3D11CreateDeviceAndSwapChainHook(
         ppDevice,
         pFeatureLevel,
         ppImmediateContext);
-    if( FAILED(hr) )
+
+    if( SUCCEEDED(hr) )
     {
-        return hr;
+        if( ppSwapChain ) *ppSwapChain = RealToHooked(*ppSwapChain);
+        if( ppDevice ) *ppDevice = RealToHooked(*ppDevice);
+        if( ppImmediateContext ) *ppImmediateContext = RealToHooked(*ppImmediateContext);
     }
 
-    // success
-    if( ppSwapChain ) *ppSwapChain = RealToHooked(*ppSwapChain);
-    if( ppDevice ) *ppDevice = RealToHooked(*ppDevice);
-    if( ppImmediateContext ) *ppImmediateContext = RealToHooked(*ppImmediateContext);
-    return S_OK;
-    #endif
-}
-
-
-//
-//
-// -----------------------------------------------------------------------------
-extern "C" HRESULT WINAPI CreateDXGIFactory_wrapper(
-    const char * funcName,
-    const IID & riid,
-    void **ppFactory
-)
-{
-    PFN_CREATE_DXGI_FACTORY realFunc = (PFN_CREATE_DXGI_FACTORY)GetRealFunctionPtr(
-        GetRealDllPath(L"dxgi.dll").rawptr(),
-        funcName);
-    if (nullptr == realFunc) return E_FAIL;
-
-    HRESULT hr = realFunc(riid, ppFactory);
-    if( FAILED(hr) )
-    {
-        return hr;
-    }
-
-    // success
-    //if( ppFactory ) *ppFactory = DXGIRealToHooked(riid, *ppFactory);
-    return S_OK;
+    return hr;
+#endif
 }
 
 // *****************************************************************************
@@ -249,5 +256,4 @@ void STDMETHODCALLTYPE D3D11DeviceHook::CreateBuffer_PRE(
     const D3D11_SUBRESOURCE_DATA * &,
     ID3D11Buffer ** &)
 {
-    GN_INFO(sLogger)("ID3D11Device::CreateBuffer() is called.");
 }

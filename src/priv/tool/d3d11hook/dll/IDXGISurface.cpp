@@ -7,6 +7,7 @@
 HRESULT STDMETHODCALLTYPE DXGISurfaceHook::GetDesc(
     _Out_  DXGI_SURFACE_DESC * pDesc)
 {
+    calltrace::AutoTrace trace(L"DXGISurfaceHook::GetDesc");
     if (_GetDesc_pre_ptr._value) { (this->*_GetDesc_pre_ptr._value)(pDesc); }
     HRESULT ret = GetRealObj()->GetDesc(pDesc);
     if (_GetDesc_post_ptr._value) { (this->*_GetDesc_post_ptr._value)(ret, pDesc); }
@@ -18,6 +19,7 @@ HRESULT STDMETHODCALLTYPE DXGISurfaceHook::Map(
     _Out_  DXGI_MAPPED_RECT * pLockedRect,
     /* [in] */ UINT MapFlags)
 {
+    calltrace::AutoTrace trace(L"DXGISurfaceHook::Map");
     if (_Map_pre_ptr._value) { (this->*_Map_pre_ptr._value)(pLockedRect, MapFlags); }
     HRESULT ret = GetRealObj()->Map(pLockedRect, MapFlags);
     if (_Map_post_ptr._value) { (this->*_Map_post_ptr._value)(ret, pLockedRect, MapFlags); }
@@ -27,6 +29,7 @@ HRESULT STDMETHODCALLTYPE DXGISurfaceHook::Map(
 // -----------------------------------------------------------------------------
 HRESULT STDMETHODCALLTYPE DXGISurfaceHook::Unmap()
 {
+    calltrace::AutoTrace trace(L"DXGISurfaceHook::Unmap");
     if (_Unmap_pre_ptr._value) { (this->*_Unmap_pre_ptr._value)(); }
     HRESULT ret = GetRealObj()->Unmap();
     if (_Unmap_post_ptr._value) { (this->*_Unmap_post_ptr._value)(ret); }

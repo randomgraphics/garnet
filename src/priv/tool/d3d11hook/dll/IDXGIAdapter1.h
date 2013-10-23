@@ -32,14 +32,14 @@ HRESULT STDMETHODCALLTYPE SetPrivateData(
     /* [in] */ UINT DataSize,
     _In_reads_bytes_(DataSize)  const void * pData)
 {
-    _DXGIObject.SetPrivateData(Name, DataSize, pData);
+    return _DXGIObject.SetPrivateData(Name, DataSize, pData);
 }
 // -----------------------------------------------------------------------------
 HRESULT STDMETHODCALLTYPE SetPrivateDataInterface(
     _In_  REFGUID Name,
     _In_  const IUnknown * pUnknown)
 {
-    _DXGIObject.SetPrivateDataInterface(Name, pUnknown);
+    return _DXGIObject.SetPrivateDataInterface(Name, pUnknown);
 }
 // -----------------------------------------------------------------------------
 HRESULT STDMETHODCALLTYPE GetPrivateData(
@@ -47,34 +47,34 @@ HRESULT STDMETHODCALLTYPE GetPrivateData(
     _Inout_  UINT * pDataSize,
     _Out_writes_bytes_(*pDataSize)  void * pData)
 {
-    _DXGIObject.GetPrivateData(Name, pDataSize, pData);
+    return _DXGIObject.GetPrivateData(Name, pDataSize, pData);
 }
 // -----------------------------------------------------------------------------
 HRESULT STDMETHODCALLTYPE GetParent(
     _In_  REFIID riid,
     _Out_  void ** ppParent)
 {
-    _DXGIObject.GetParent(riid, ppParent);
+    return _DXGIObject.GetParent(riid, ppParent);
 }
 // -----------------------------------------------------------------------------
 HRESULT STDMETHODCALLTYPE EnumOutputs(
     /* [in] */ UINT Output,
     _Out_  IDXGIOutput ** ppOutput)
 {
-    _DXGIAdapter.EnumOutputs(Output, ppOutput);
+    return _DXGIAdapter.EnumOutputs(Output, ppOutput);
 }
 // -----------------------------------------------------------------------------
 HRESULT STDMETHODCALLTYPE GetDesc(
     _Out_  DXGI_ADAPTER_DESC * pDesc)
 {
-    _DXGIAdapter.GetDesc(pDesc);
+    return _DXGIAdapter.GetDesc(pDesc);
 }
 // -----------------------------------------------------------------------------
 HRESULT STDMETHODCALLTYPE CheckInterfaceSupport(
     _In_  REFGUID InterfaceName,
     _Out_  LARGE_INTEGER * pUMDVersion)
 {
-    _DXGIAdapter.CheckInterfaceSupport(InterfaceName, pUMDVersion);
+    return _DXGIAdapter.CheckInterfaceSupport(InterfaceName, pUMDVersion);
 }
 // ==============================================================================
 // Method Prototypes

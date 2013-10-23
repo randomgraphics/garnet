@@ -7,10 +7,42 @@
 // *****************************************************************************
 
 #include <garnet/GNbase.h>
-#include <d3d11.h>
-#include <dxgi.h>
+#include "d3d/d3d11.h"
+#include "d3d/d3d11_1.h"
+#include "d3d/dxgi.h"
 #include "d3d11cid.h"
 #include "interfacebase.h"
+
+// *****************************************************************************
+// Utilities
+// *****************************************************************************
+
+namespace calltrace
+{
+    void enter(const wchar_t * text);
+    void enter(const char * text);
+    void leave();
+
+    class AutoTrace
+    {
+    public:
+
+        AutoTrace(const wchar_t * text)
+        {
+            enter(text);
+        }
+
+        AutoTrace(const char * text)
+        {
+            enter(text);
+        }
+
+        ~AutoTrace()
+        {
+            leave();
+        }
+    };
+};
 
 // *****************************************************************************
 // DXGI hook classes
@@ -138,11 +170,21 @@ class D3D11DeviceHook : public HookBase<ID3D11Device>
 };
 
 // -----------------------------------------------------------------------------
+class D3D11Device1Hook : public HookBase<ID3D11Device1>
+{
+#include "ID3D11Device1.h"
+
+    void Construct()
+    {
+    }
+};
+
+// -----------------------------------------------------------------------------
 class D3D11DebugHook : public HookBase<ID3D11Debug>
 {
 #include "ID3D11Debug.h"
 
-    void Construct();
+    void Construct() {}
 };
 
 // -----------------------------------------------------------------------------
@@ -150,7 +192,7 @@ class D3D11InfoQueueHook : public HookBase<ID3D11InfoQueue>
 {
 #include "ID3D11InfoQueue.h"
 
-    void Construct();
+    void Construct() {}
 };
 
 // -----------------------------------------------------------------------------
@@ -158,7 +200,7 @@ class D3D11DeviceChildHook : public HookBase<ID3D11DeviceChild>
 {
 #include "ID3D11DeviceChild.h"
 
-    void Construct();
+    void Construct() {}
 };
 
 // -----------------------------------------------------------------------------
@@ -166,7 +208,7 @@ class D3D11DeviceContextHook : public HookBase<ID3D11DeviceContext>
 {
 #include "ID3D11DeviceContext.h"
 
-    void Construct();
+    void Construct() {}
 };
 
 // *****************************************************************************

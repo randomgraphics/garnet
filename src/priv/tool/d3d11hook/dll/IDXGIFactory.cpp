@@ -8,6 +8,7 @@ HRESULT STDMETHODCALLTYPE DXGIFactoryHook::EnumAdapters(
     /* [in] */ UINT Adapter,
     _Out_  IDXGIAdapter ** ppAdapter)
 {
+    calltrace::AutoTrace trace(L"DXGIFactoryHook::EnumAdapters");
     if (_EnumAdapters_pre_ptr._value) { (this->*_EnumAdapters_pre_ptr._value)(Adapter, ppAdapter); }
     HRESULT ret = GetRealObj()->EnumAdapters(Adapter, ppAdapter);
     if (ppAdapter) *ppAdapter = RealToHooked( *ppAdapter );
@@ -20,6 +21,7 @@ HRESULT STDMETHODCALLTYPE DXGIFactoryHook::MakeWindowAssociation(
     HWND WindowHandle,
     UINT Flags)
 {
+    calltrace::AutoTrace trace(L"DXGIFactoryHook::MakeWindowAssociation");
     if (_MakeWindowAssociation_pre_ptr._value) { (this->*_MakeWindowAssociation_pre_ptr._value)(WindowHandle, Flags); }
     HRESULT ret = GetRealObj()->MakeWindowAssociation(WindowHandle, Flags);
     if (_MakeWindowAssociation_post_ptr._value) { (this->*_MakeWindowAssociation_post_ptr._value)(ret, WindowHandle, Flags); }
@@ -30,6 +32,7 @@ HRESULT STDMETHODCALLTYPE DXGIFactoryHook::MakeWindowAssociation(
 HRESULT STDMETHODCALLTYPE DXGIFactoryHook::GetWindowAssociation(
     _Out_  HWND * pWindowHandle)
 {
+    calltrace::AutoTrace trace(L"DXGIFactoryHook::GetWindowAssociation");
     if (_GetWindowAssociation_pre_ptr._value) { (this->*_GetWindowAssociation_pre_ptr._value)(pWindowHandle); }
     HRESULT ret = GetRealObj()->GetWindowAssociation(pWindowHandle);
     if (_GetWindowAssociation_post_ptr._value) { (this->*_GetWindowAssociation_post_ptr._value)(ret, pWindowHandle); }
@@ -42,8 +45,9 @@ HRESULT STDMETHODCALLTYPE DXGIFactoryHook::CreateSwapChain(
     _In_  DXGI_SWAP_CHAIN_DESC * pDesc,
     _Out_  IDXGISwapChain ** ppSwapChain)
 {
+    calltrace::AutoTrace trace(L"DXGIFactoryHook::CreateSwapChain");
     if (_CreateSwapChain_pre_ptr._value) { (this->*_CreateSwapChain_pre_ptr._value)(pDevice, pDesc, ppSwapChain); }
-    HRESULT ret = GetRealObj()->CreateSwapChain(pDevice, pDesc, ppSwapChain);
+    HRESULT ret = GetRealObj()->CreateSwapChain(HookedToReal(pDevice), pDesc, ppSwapChain);
     if (ppSwapChain) *ppSwapChain = RealToHooked( *ppSwapChain );
     if (_CreateSwapChain_post_ptr._value) { (this->*_CreateSwapChain_post_ptr._value)(ret, pDevice, pDesc, ppSwapChain); }
     return ret;
@@ -54,6 +58,7 @@ HRESULT STDMETHODCALLTYPE DXGIFactoryHook::CreateSoftwareAdapter(
     /* [in] */ HMODULE Module,
     _Out_  IDXGIAdapter ** ppAdapter)
 {
+    calltrace::AutoTrace trace(L"DXGIFactoryHook::CreateSoftwareAdapter");
     if (_CreateSoftwareAdapter_pre_ptr._value) { (this->*_CreateSoftwareAdapter_pre_ptr._value)(Module, ppAdapter); }
     HRESULT ret = GetRealObj()->CreateSoftwareAdapter(Module, ppAdapter);
     if (ppAdapter) *ppAdapter = RealToHooked( *ppAdapter );
