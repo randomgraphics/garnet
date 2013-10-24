@@ -403,7 +403,7 @@ class D3D11HooksFile:
                 'public:\n\n'
                 '    static IUnknown * sNewInstance(void * context, UnknownBase & unknown, IUnknown * realobj)\n'
                 '    {\n'
-                '        UNREFERENCED_PARAMETER(context);\n\n')
+                '        UNREFERENCED_PARAMETER(context);\n')
         for p in parents:
             ii = g_interfaces[p]
             hookedType = ii._hookedClassName
@@ -413,21 +413,26 @@ class D3D11HooksFile:
                     '        if (nullptr == ' + objectName + ') return nullptr;\n\n')
         f.write('        try\n'
                 '        {\n'
-                '            IUnknown * result = (UnknownBase*)new ' + class_name + '(unknown')
+                '            return new ' + class_name + '(unknown')
         for p in parents:
             ii = g_interfaces[p]
             objectName = ii._name[1:]
             f.write(', *' + objectName)
         f.write(', realobj);\n'
-                '            result->AddRef();\n'
-                '            return result;\n'
                 '        }\n'
                 '        catch(std::bad_alloc&)\n'
                 '        {\n'
                 '            GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");\n'
                 '            return nullptr;\n'
                 '        }\n'
-                '    }\n\n')
+                '    }\n\n'
+                '    static void sDeleteInstance(void * context, void * ptr)\n'
+                '    {\n'
+                '        UNREFERENCED_PARAMETER(context);\n'
+                '        ' + class_name + ' * typedPtr = (' + class_name + ' *)ptr;\n'
+                '        delete typedPtr;\n'
+                '    }\n\n'
+                )
         pass
 
     # ------------------------------------------------------------------------------
@@ -642,7 +647,7 @@ with open("d3d11factories.cpp", "w") as f:
             '{\n')
     for interfaceName, v in g_interfaces.iteritems():
         if ('IUnknown' != interfaceName):
-            f.write('    registerFactory<' + interfaceName + '>(' + v._hookedClassName + '::sNewInstance, nullptr);\n')
+            f.write('    registerFactory<' + interfaceName + '>(' + v._hookedClassName + '::sNewInstance, ' + v._hookedClassName + '::sDeleteInstance, nullptr);\n')
     f.write('}\n')
 
 g_interfaceNameFile.Close()

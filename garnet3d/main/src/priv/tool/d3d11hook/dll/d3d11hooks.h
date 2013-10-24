@@ -20,18 +20,22 @@ public:
     static IUnknown * sNewInstance(void * context, UnknownBase & unknown, IUnknown * realobj)
     {
         UNREFERENCED_PARAMETER(context);
-
         try
         {
-            IUnknown * result = (UnknownBase*)new D3D11DeviceChildHook(unknown, realobj);
-            result->AddRef();
-            return result;
+            return new D3D11DeviceChildHook(unknown, realobj);
         }
         catch(std::bad_alloc&)
         {
             GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
             return nullptr;
         }
+    }
+
+    static void sDeleteInstance(void * context, void * ptr)
+    {
+        UNREFERENCED_PARAMETER(context);
+        D3D11DeviceChildHook * typedPtr = (D3D11DeviceChildHook *)ptr;
+        delete typedPtr;
     }
 
     // -----------------------------------------------------------------------------
@@ -78,21 +82,25 @@ public:
     static IUnknown * sNewInstance(void * context, UnknownBase & unknown, IUnknown * realobj)
     {
         UNREFERENCED_PARAMETER(context);
-
         D3D11DeviceChildHook * D3D11DeviceChild = (D3D11DeviceChildHook *)unknown.GetHookedObj(__uuidof(ID3D11DeviceChild));
         if (nullptr == D3D11DeviceChild) return nullptr;
 
         try
         {
-            IUnknown * result = (UnknownBase*)new D3D11DepthStencilStateHook(unknown, *D3D11DeviceChild, realobj);
-            result->AddRef();
-            return result;
+            return new D3D11DepthStencilStateHook(unknown, *D3D11DeviceChild, realobj);
         }
         catch(std::bad_alloc&)
         {
             GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
             return nullptr;
         }
+    }
+
+    static void sDeleteInstance(void * context, void * ptr)
+    {
+        UNREFERENCED_PARAMETER(context);
+        D3D11DepthStencilStateHook * typedPtr = (D3D11DepthStencilStateHook *)ptr;
+        delete typedPtr;
     }
 
     // -----------------------------------------------------------------------------
@@ -148,21 +156,25 @@ public:
     static IUnknown * sNewInstance(void * context, UnknownBase & unknown, IUnknown * realobj)
     {
         UNREFERENCED_PARAMETER(context);
-
         D3D11DeviceChildHook * D3D11DeviceChild = (D3D11DeviceChildHook *)unknown.GetHookedObj(__uuidof(ID3D11DeviceChild));
         if (nullptr == D3D11DeviceChild) return nullptr;
 
         try
         {
-            IUnknown * result = (UnknownBase*)new D3D11BlendStateHook(unknown, *D3D11DeviceChild, realobj);
-            result->AddRef();
-            return result;
+            return new D3D11BlendStateHook(unknown, *D3D11DeviceChild, realobj);
         }
         catch(std::bad_alloc&)
         {
             GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
             return nullptr;
         }
+    }
+
+    static void sDeleteInstance(void * context, void * ptr)
+    {
+        UNREFERENCED_PARAMETER(context);
+        D3D11BlendStateHook * typedPtr = (D3D11BlendStateHook *)ptr;
+        delete typedPtr;
     }
 
     // -----------------------------------------------------------------------------
@@ -218,21 +230,25 @@ public:
     static IUnknown * sNewInstance(void * context, UnknownBase & unknown, IUnknown * realobj)
     {
         UNREFERENCED_PARAMETER(context);
-
         D3D11DeviceChildHook * D3D11DeviceChild = (D3D11DeviceChildHook *)unknown.GetHookedObj(__uuidof(ID3D11DeviceChild));
         if (nullptr == D3D11DeviceChild) return nullptr;
 
         try
         {
-            IUnknown * result = (UnknownBase*)new D3D11RasterizerStateHook(unknown, *D3D11DeviceChild, realobj);
-            result->AddRef();
-            return result;
+            return new D3D11RasterizerStateHook(unknown, *D3D11DeviceChild, realobj);
         }
         catch(std::bad_alloc&)
         {
             GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
             return nullptr;
         }
+    }
+
+    static void sDeleteInstance(void * context, void * ptr)
+    {
+        UNREFERENCED_PARAMETER(context);
+        D3D11RasterizerStateHook * typedPtr = (D3D11RasterizerStateHook *)ptr;
+        delete typedPtr;
     }
 
     // -----------------------------------------------------------------------------
@@ -288,21 +304,25 @@ public:
     static IUnknown * sNewInstance(void * context, UnknownBase & unknown, IUnknown * realobj)
     {
         UNREFERENCED_PARAMETER(context);
-
         D3D11DeviceChildHook * D3D11DeviceChild = (D3D11DeviceChildHook *)unknown.GetHookedObj(__uuidof(ID3D11DeviceChild));
         if (nullptr == D3D11DeviceChild) return nullptr;
 
         try
         {
-            IUnknown * result = (UnknownBase*)new D3D11ResourceHook(unknown, *D3D11DeviceChild, realobj);
-            result->AddRef();
-            return result;
+            return new D3D11ResourceHook(unknown, *D3D11DeviceChild, realobj);
         }
         catch(std::bad_alloc&)
         {
             GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
             return nullptr;
         }
+    }
+
+    static void sDeleteInstance(void * context, void * ptr)
+    {
+        UNREFERENCED_PARAMETER(context);
+        D3D11ResourceHook * typedPtr = (D3D11ResourceHook *)ptr;
+        delete typedPtr;
     }
 
     // -----------------------------------------------------------------------------
@@ -370,7 +390,6 @@ public:
     static IUnknown * sNewInstance(void * context, UnknownBase & unknown, IUnknown * realobj)
     {
         UNREFERENCED_PARAMETER(context);
-
         D3D11DeviceChildHook * D3D11DeviceChild = (D3D11DeviceChildHook *)unknown.GetHookedObj(__uuidof(ID3D11DeviceChild));
         if (nullptr == D3D11DeviceChild) return nullptr;
 
@@ -379,15 +398,20 @@ public:
 
         try
         {
-            IUnknown * result = (UnknownBase*)new D3D11BufferHook(unknown, *D3D11DeviceChild, *D3D11Resource, realobj);
-            result->AddRef();
-            return result;
+            return new D3D11BufferHook(unknown, *D3D11DeviceChild, *D3D11Resource, realobj);
         }
         catch(std::bad_alloc&)
         {
             GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
             return nullptr;
         }
+    }
+
+    static void sDeleteInstance(void * context, void * ptr)
+    {
+        UNREFERENCED_PARAMETER(context);
+        D3D11BufferHook * typedPtr = (D3D11BufferHook *)ptr;
+        delete typedPtr;
     }
 
     // -----------------------------------------------------------------------------
@@ -463,7 +487,6 @@ public:
     static IUnknown * sNewInstance(void * context, UnknownBase & unknown, IUnknown * realobj)
     {
         UNREFERENCED_PARAMETER(context);
-
         D3D11DeviceChildHook * D3D11DeviceChild = (D3D11DeviceChildHook *)unknown.GetHookedObj(__uuidof(ID3D11DeviceChild));
         if (nullptr == D3D11DeviceChild) return nullptr;
 
@@ -472,15 +495,20 @@ public:
 
         try
         {
-            IUnknown * result = (UnknownBase*)new D3D11Texture1DHook(unknown, *D3D11DeviceChild, *D3D11Resource, realobj);
-            result->AddRef();
-            return result;
+            return new D3D11Texture1DHook(unknown, *D3D11DeviceChild, *D3D11Resource, realobj);
         }
         catch(std::bad_alloc&)
         {
             GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
             return nullptr;
         }
+    }
+
+    static void sDeleteInstance(void * context, void * ptr)
+    {
+        UNREFERENCED_PARAMETER(context);
+        D3D11Texture1DHook * typedPtr = (D3D11Texture1DHook *)ptr;
+        delete typedPtr;
     }
 
     // -----------------------------------------------------------------------------
@@ -556,7 +584,6 @@ public:
     static IUnknown * sNewInstance(void * context, UnknownBase & unknown, IUnknown * realobj)
     {
         UNREFERENCED_PARAMETER(context);
-
         D3D11DeviceChildHook * D3D11DeviceChild = (D3D11DeviceChildHook *)unknown.GetHookedObj(__uuidof(ID3D11DeviceChild));
         if (nullptr == D3D11DeviceChild) return nullptr;
 
@@ -565,15 +592,20 @@ public:
 
         try
         {
-            IUnknown * result = (UnknownBase*)new D3D11Texture2DHook(unknown, *D3D11DeviceChild, *D3D11Resource, realobj);
-            result->AddRef();
-            return result;
+            return new D3D11Texture2DHook(unknown, *D3D11DeviceChild, *D3D11Resource, realobj);
         }
         catch(std::bad_alloc&)
         {
             GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
             return nullptr;
         }
+    }
+
+    static void sDeleteInstance(void * context, void * ptr)
+    {
+        UNREFERENCED_PARAMETER(context);
+        D3D11Texture2DHook * typedPtr = (D3D11Texture2DHook *)ptr;
+        delete typedPtr;
     }
 
     // -----------------------------------------------------------------------------
@@ -649,7 +681,6 @@ public:
     static IUnknown * sNewInstance(void * context, UnknownBase & unknown, IUnknown * realobj)
     {
         UNREFERENCED_PARAMETER(context);
-
         D3D11DeviceChildHook * D3D11DeviceChild = (D3D11DeviceChildHook *)unknown.GetHookedObj(__uuidof(ID3D11DeviceChild));
         if (nullptr == D3D11DeviceChild) return nullptr;
 
@@ -658,15 +689,20 @@ public:
 
         try
         {
-            IUnknown * result = (UnknownBase*)new D3D11Texture3DHook(unknown, *D3D11DeviceChild, *D3D11Resource, realobj);
-            result->AddRef();
-            return result;
+            return new D3D11Texture3DHook(unknown, *D3D11DeviceChild, *D3D11Resource, realobj);
         }
         catch(std::bad_alloc&)
         {
             GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
             return nullptr;
         }
+    }
+
+    static void sDeleteInstance(void * context, void * ptr)
+    {
+        UNREFERENCED_PARAMETER(context);
+        D3D11Texture3DHook * typedPtr = (D3D11Texture3DHook *)ptr;
+        delete typedPtr;
     }
 
     // -----------------------------------------------------------------------------
@@ -740,21 +776,25 @@ public:
     static IUnknown * sNewInstance(void * context, UnknownBase & unknown, IUnknown * realobj)
     {
         UNREFERENCED_PARAMETER(context);
-
         D3D11DeviceChildHook * D3D11DeviceChild = (D3D11DeviceChildHook *)unknown.GetHookedObj(__uuidof(ID3D11DeviceChild));
         if (nullptr == D3D11DeviceChild) return nullptr;
 
         try
         {
-            IUnknown * result = (UnknownBase*)new D3D11ViewHook(unknown, *D3D11DeviceChild, realobj);
-            result->AddRef();
-            return result;
+            return new D3D11ViewHook(unknown, *D3D11DeviceChild, realobj);
         }
         catch(std::bad_alloc&)
         {
             GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
             return nullptr;
         }
+    }
+
+    static void sDeleteInstance(void * context, void * ptr)
+    {
+        UNREFERENCED_PARAMETER(context);
+        D3D11ViewHook * typedPtr = (D3D11ViewHook *)ptr;
+        delete typedPtr;
     }
 
     // -----------------------------------------------------------------------------
@@ -812,7 +852,6 @@ public:
     static IUnknown * sNewInstance(void * context, UnknownBase & unknown, IUnknown * realobj)
     {
         UNREFERENCED_PARAMETER(context);
-
         D3D11DeviceChildHook * D3D11DeviceChild = (D3D11DeviceChildHook *)unknown.GetHookedObj(__uuidof(ID3D11DeviceChild));
         if (nullptr == D3D11DeviceChild) return nullptr;
 
@@ -821,15 +860,20 @@ public:
 
         try
         {
-            IUnknown * result = (UnknownBase*)new D3D11ShaderResourceViewHook(unknown, *D3D11DeviceChild, *D3D11View, realobj);
-            result->AddRef();
-            return result;
+            return new D3D11ShaderResourceViewHook(unknown, *D3D11DeviceChild, *D3D11View, realobj);
         }
         catch(std::bad_alloc&)
         {
             GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
             return nullptr;
         }
+    }
+
+    static void sDeleteInstance(void * context, void * ptr)
+    {
+        UNREFERENCED_PARAMETER(context);
+        D3D11ShaderResourceViewHook * typedPtr = (D3D11ShaderResourceViewHook *)ptr;
+        delete typedPtr;
     }
 
     // -----------------------------------------------------------------------------
@@ -893,7 +937,6 @@ public:
     static IUnknown * sNewInstance(void * context, UnknownBase & unknown, IUnknown * realobj)
     {
         UNREFERENCED_PARAMETER(context);
-
         D3D11DeviceChildHook * D3D11DeviceChild = (D3D11DeviceChildHook *)unknown.GetHookedObj(__uuidof(ID3D11DeviceChild));
         if (nullptr == D3D11DeviceChild) return nullptr;
 
@@ -902,15 +945,20 @@ public:
 
         try
         {
-            IUnknown * result = (UnknownBase*)new D3D11RenderTargetViewHook(unknown, *D3D11DeviceChild, *D3D11View, realobj);
-            result->AddRef();
-            return result;
+            return new D3D11RenderTargetViewHook(unknown, *D3D11DeviceChild, *D3D11View, realobj);
         }
         catch(std::bad_alloc&)
         {
             GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
             return nullptr;
         }
+    }
+
+    static void sDeleteInstance(void * context, void * ptr)
+    {
+        UNREFERENCED_PARAMETER(context);
+        D3D11RenderTargetViewHook * typedPtr = (D3D11RenderTargetViewHook *)ptr;
+        delete typedPtr;
     }
 
     // -----------------------------------------------------------------------------
@@ -974,7 +1022,6 @@ public:
     static IUnknown * sNewInstance(void * context, UnknownBase & unknown, IUnknown * realobj)
     {
         UNREFERENCED_PARAMETER(context);
-
         D3D11DeviceChildHook * D3D11DeviceChild = (D3D11DeviceChildHook *)unknown.GetHookedObj(__uuidof(ID3D11DeviceChild));
         if (nullptr == D3D11DeviceChild) return nullptr;
 
@@ -983,15 +1030,20 @@ public:
 
         try
         {
-            IUnknown * result = (UnknownBase*)new D3D11DepthStencilViewHook(unknown, *D3D11DeviceChild, *D3D11View, realobj);
-            result->AddRef();
-            return result;
+            return new D3D11DepthStencilViewHook(unknown, *D3D11DeviceChild, *D3D11View, realobj);
         }
         catch(std::bad_alloc&)
         {
             GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
             return nullptr;
         }
+    }
+
+    static void sDeleteInstance(void * context, void * ptr)
+    {
+        UNREFERENCED_PARAMETER(context);
+        D3D11DepthStencilViewHook * typedPtr = (D3D11DepthStencilViewHook *)ptr;
+        delete typedPtr;
     }
 
     // -----------------------------------------------------------------------------
@@ -1055,7 +1107,6 @@ public:
     static IUnknown * sNewInstance(void * context, UnknownBase & unknown, IUnknown * realobj)
     {
         UNREFERENCED_PARAMETER(context);
-
         D3D11DeviceChildHook * D3D11DeviceChild = (D3D11DeviceChildHook *)unknown.GetHookedObj(__uuidof(ID3D11DeviceChild));
         if (nullptr == D3D11DeviceChild) return nullptr;
 
@@ -1064,15 +1115,20 @@ public:
 
         try
         {
-            IUnknown * result = (UnknownBase*)new D3D11UnorderedAccessViewHook(unknown, *D3D11DeviceChild, *D3D11View, realobj);
-            result->AddRef();
-            return result;
+            return new D3D11UnorderedAccessViewHook(unknown, *D3D11DeviceChild, *D3D11View, realobj);
         }
         catch(std::bad_alloc&)
         {
             GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
             return nullptr;
         }
+    }
+
+    static void sDeleteInstance(void * context, void * ptr)
+    {
+        UNREFERENCED_PARAMETER(context);
+        D3D11UnorderedAccessViewHook * typedPtr = (D3D11UnorderedAccessViewHook *)ptr;
+        delete typedPtr;
     }
 
     // -----------------------------------------------------------------------------
@@ -1134,21 +1190,25 @@ public:
     static IUnknown * sNewInstance(void * context, UnknownBase & unknown, IUnknown * realobj)
     {
         UNREFERENCED_PARAMETER(context);
-
         D3D11DeviceChildHook * D3D11DeviceChild = (D3D11DeviceChildHook *)unknown.GetHookedObj(__uuidof(ID3D11DeviceChild));
         if (nullptr == D3D11DeviceChild) return nullptr;
 
         try
         {
-            IUnknown * result = (UnknownBase*)new D3D11VertexShaderHook(unknown, *D3D11DeviceChild, realobj);
-            result->AddRef();
-            return result;
+            return new D3D11VertexShaderHook(unknown, *D3D11DeviceChild, realobj);
         }
         catch(std::bad_alloc&)
         {
             GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
             return nullptr;
         }
+    }
+
+    static void sDeleteInstance(void * context, void * ptr)
+    {
+        UNREFERENCED_PARAMETER(context);
+        D3D11VertexShaderHook * typedPtr = (D3D11VertexShaderHook *)ptr;
+        delete typedPtr;
     }
 
     // -----------------------------------------------------------------------------
@@ -1199,21 +1259,25 @@ public:
     static IUnknown * sNewInstance(void * context, UnknownBase & unknown, IUnknown * realobj)
     {
         UNREFERENCED_PARAMETER(context);
-
         D3D11DeviceChildHook * D3D11DeviceChild = (D3D11DeviceChildHook *)unknown.GetHookedObj(__uuidof(ID3D11DeviceChild));
         if (nullptr == D3D11DeviceChild) return nullptr;
 
         try
         {
-            IUnknown * result = (UnknownBase*)new D3D11HullShaderHook(unknown, *D3D11DeviceChild, realobj);
-            result->AddRef();
-            return result;
+            return new D3D11HullShaderHook(unknown, *D3D11DeviceChild, realobj);
         }
         catch(std::bad_alloc&)
         {
             GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
             return nullptr;
         }
+    }
+
+    static void sDeleteInstance(void * context, void * ptr)
+    {
+        UNREFERENCED_PARAMETER(context);
+        D3D11HullShaderHook * typedPtr = (D3D11HullShaderHook *)ptr;
+        delete typedPtr;
     }
 
     // -----------------------------------------------------------------------------
@@ -1264,21 +1328,25 @@ public:
     static IUnknown * sNewInstance(void * context, UnknownBase & unknown, IUnknown * realobj)
     {
         UNREFERENCED_PARAMETER(context);
-
         D3D11DeviceChildHook * D3D11DeviceChild = (D3D11DeviceChildHook *)unknown.GetHookedObj(__uuidof(ID3D11DeviceChild));
         if (nullptr == D3D11DeviceChild) return nullptr;
 
         try
         {
-            IUnknown * result = (UnknownBase*)new D3D11DomainShaderHook(unknown, *D3D11DeviceChild, realobj);
-            result->AddRef();
-            return result;
+            return new D3D11DomainShaderHook(unknown, *D3D11DeviceChild, realobj);
         }
         catch(std::bad_alloc&)
         {
             GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
             return nullptr;
         }
+    }
+
+    static void sDeleteInstance(void * context, void * ptr)
+    {
+        UNREFERENCED_PARAMETER(context);
+        D3D11DomainShaderHook * typedPtr = (D3D11DomainShaderHook *)ptr;
+        delete typedPtr;
     }
 
     // -----------------------------------------------------------------------------
@@ -1329,21 +1397,25 @@ public:
     static IUnknown * sNewInstance(void * context, UnknownBase & unknown, IUnknown * realobj)
     {
         UNREFERENCED_PARAMETER(context);
-
         D3D11DeviceChildHook * D3D11DeviceChild = (D3D11DeviceChildHook *)unknown.GetHookedObj(__uuidof(ID3D11DeviceChild));
         if (nullptr == D3D11DeviceChild) return nullptr;
 
         try
         {
-            IUnknown * result = (UnknownBase*)new D3D11GeometryShaderHook(unknown, *D3D11DeviceChild, realobj);
-            result->AddRef();
-            return result;
+            return new D3D11GeometryShaderHook(unknown, *D3D11DeviceChild, realobj);
         }
         catch(std::bad_alloc&)
         {
             GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
             return nullptr;
         }
+    }
+
+    static void sDeleteInstance(void * context, void * ptr)
+    {
+        UNREFERENCED_PARAMETER(context);
+        D3D11GeometryShaderHook * typedPtr = (D3D11GeometryShaderHook *)ptr;
+        delete typedPtr;
     }
 
     // -----------------------------------------------------------------------------
@@ -1394,21 +1466,25 @@ public:
     static IUnknown * sNewInstance(void * context, UnknownBase & unknown, IUnknown * realobj)
     {
         UNREFERENCED_PARAMETER(context);
-
         D3D11DeviceChildHook * D3D11DeviceChild = (D3D11DeviceChildHook *)unknown.GetHookedObj(__uuidof(ID3D11DeviceChild));
         if (nullptr == D3D11DeviceChild) return nullptr;
 
         try
         {
-            IUnknown * result = (UnknownBase*)new D3D11PixelShaderHook(unknown, *D3D11DeviceChild, realobj);
-            result->AddRef();
-            return result;
+            return new D3D11PixelShaderHook(unknown, *D3D11DeviceChild, realobj);
         }
         catch(std::bad_alloc&)
         {
             GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
             return nullptr;
         }
+    }
+
+    static void sDeleteInstance(void * context, void * ptr)
+    {
+        UNREFERENCED_PARAMETER(context);
+        D3D11PixelShaderHook * typedPtr = (D3D11PixelShaderHook *)ptr;
+        delete typedPtr;
     }
 
     // -----------------------------------------------------------------------------
@@ -1459,21 +1535,25 @@ public:
     static IUnknown * sNewInstance(void * context, UnknownBase & unknown, IUnknown * realobj)
     {
         UNREFERENCED_PARAMETER(context);
-
         D3D11DeviceChildHook * D3D11DeviceChild = (D3D11DeviceChildHook *)unknown.GetHookedObj(__uuidof(ID3D11DeviceChild));
         if (nullptr == D3D11DeviceChild) return nullptr;
 
         try
         {
-            IUnknown * result = (UnknownBase*)new D3D11ComputeShaderHook(unknown, *D3D11DeviceChild, realobj);
-            result->AddRef();
-            return result;
+            return new D3D11ComputeShaderHook(unknown, *D3D11DeviceChild, realobj);
         }
         catch(std::bad_alloc&)
         {
             GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
             return nullptr;
         }
+    }
+
+    static void sDeleteInstance(void * context, void * ptr)
+    {
+        UNREFERENCED_PARAMETER(context);
+        D3D11ComputeShaderHook * typedPtr = (D3D11ComputeShaderHook *)ptr;
+        delete typedPtr;
     }
 
     // -----------------------------------------------------------------------------
@@ -1524,21 +1604,25 @@ public:
     static IUnknown * sNewInstance(void * context, UnknownBase & unknown, IUnknown * realobj)
     {
         UNREFERENCED_PARAMETER(context);
-
         D3D11DeviceChildHook * D3D11DeviceChild = (D3D11DeviceChildHook *)unknown.GetHookedObj(__uuidof(ID3D11DeviceChild));
         if (nullptr == D3D11DeviceChild) return nullptr;
 
         try
         {
-            IUnknown * result = (UnknownBase*)new D3D11InputLayoutHook(unknown, *D3D11DeviceChild, realobj);
-            result->AddRef();
-            return result;
+            return new D3D11InputLayoutHook(unknown, *D3D11DeviceChild, realobj);
         }
         catch(std::bad_alloc&)
         {
             GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
             return nullptr;
         }
+    }
+
+    static void sDeleteInstance(void * context, void * ptr)
+    {
+        UNREFERENCED_PARAMETER(context);
+        D3D11InputLayoutHook * typedPtr = (D3D11InputLayoutHook *)ptr;
+        delete typedPtr;
     }
 
     // -----------------------------------------------------------------------------
@@ -1589,21 +1673,25 @@ public:
     static IUnknown * sNewInstance(void * context, UnknownBase & unknown, IUnknown * realobj)
     {
         UNREFERENCED_PARAMETER(context);
-
         D3D11DeviceChildHook * D3D11DeviceChild = (D3D11DeviceChildHook *)unknown.GetHookedObj(__uuidof(ID3D11DeviceChild));
         if (nullptr == D3D11DeviceChild) return nullptr;
 
         try
         {
-            IUnknown * result = (UnknownBase*)new D3D11SamplerStateHook(unknown, *D3D11DeviceChild, realobj);
-            result->AddRef();
-            return result;
+            return new D3D11SamplerStateHook(unknown, *D3D11DeviceChild, realobj);
         }
         catch(std::bad_alloc&)
         {
             GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
             return nullptr;
         }
+    }
+
+    static void sDeleteInstance(void * context, void * ptr)
+    {
+        UNREFERENCED_PARAMETER(context);
+        D3D11SamplerStateHook * typedPtr = (D3D11SamplerStateHook *)ptr;
+        delete typedPtr;
     }
 
     // -----------------------------------------------------------------------------
@@ -1659,21 +1747,25 @@ public:
     static IUnknown * sNewInstance(void * context, UnknownBase & unknown, IUnknown * realobj)
     {
         UNREFERENCED_PARAMETER(context);
-
         D3D11DeviceChildHook * D3D11DeviceChild = (D3D11DeviceChildHook *)unknown.GetHookedObj(__uuidof(ID3D11DeviceChild));
         if (nullptr == D3D11DeviceChild) return nullptr;
 
         try
         {
-            IUnknown * result = (UnknownBase*)new D3D11AsynchronousHook(unknown, *D3D11DeviceChild, realobj);
-            result->AddRef();
-            return result;
+            return new D3D11AsynchronousHook(unknown, *D3D11DeviceChild, realobj);
         }
         catch(std::bad_alloc&)
         {
             GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
             return nullptr;
         }
+    }
+
+    static void sDeleteInstance(void * context, void * ptr)
+    {
+        UNREFERENCED_PARAMETER(context);
+        D3D11AsynchronousHook * typedPtr = (D3D11AsynchronousHook *)ptr;
+        delete typedPtr;
     }
 
     // -----------------------------------------------------------------------------
@@ -1731,7 +1823,6 @@ public:
     static IUnknown * sNewInstance(void * context, UnknownBase & unknown, IUnknown * realobj)
     {
         UNREFERENCED_PARAMETER(context);
-
         D3D11DeviceChildHook * D3D11DeviceChild = (D3D11DeviceChildHook *)unknown.GetHookedObj(__uuidof(ID3D11DeviceChild));
         if (nullptr == D3D11DeviceChild) return nullptr;
 
@@ -1740,15 +1831,20 @@ public:
 
         try
         {
-            IUnknown * result = (UnknownBase*)new D3D11QueryHook(unknown, *D3D11DeviceChild, *D3D11Asynchronous, realobj);
-            result->AddRef();
-            return result;
+            return new D3D11QueryHook(unknown, *D3D11DeviceChild, *D3D11Asynchronous, realobj);
         }
         catch(std::bad_alloc&)
         {
             GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
             return nullptr;
         }
+    }
+
+    static void sDeleteInstance(void * context, void * ptr)
+    {
+        UNREFERENCED_PARAMETER(context);
+        D3D11QueryHook * typedPtr = (D3D11QueryHook *)ptr;
+        delete typedPtr;
     }
 
     // -----------------------------------------------------------------------------
@@ -1814,7 +1910,6 @@ public:
     static IUnknown * sNewInstance(void * context, UnknownBase & unknown, IUnknown * realobj)
     {
         UNREFERENCED_PARAMETER(context);
-
         D3D11DeviceChildHook * D3D11DeviceChild = (D3D11DeviceChildHook *)unknown.GetHookedObj(__uuidof(ID3D11DeviceChild));
         if (nullptr == D3D11DeviceChild) return nullptr;
 
@@ -1826,15 +1921,20 @@ public:
 
         try
         {
-            IUnknown * result = (UnknownBase*)new D3D11PredicateHook(unknown, *D3D11DeviceChild, *D3D11Asynchronous, *D3D11Query, realobj);
-            result->AddRef();
-            return result;
+            return new D3D11PredicateHook(unknown, *D3D11DeviceChild, *D3D11Asynchronous, *D3D11Query, realobj);
         }
         catch(std::bad_alloc&)
         {
             GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
             return nullptr;
         }
+    }
+
+    static void sDeleteInstance(void * context, void * ptr)
+    {
+        UNREFERENCED_PARAMETER(context);
+        D3D11PredicateHook * typedPtr = (D3D11PredicateHook *)ptr;
+        delete typedPtr;
     }
 
     // -----------------------------------------------------------------------------
@@ -1899,7 +1999,6 @@ public:
     static IUnknown * sNewInstance(void * context, UnknownBase & unknown, IUnknown * realobj)
     {
         UNREFERENCED_PARAMETER(context);
-
         D3D11DeviceChildHook * D3D11DeviceChild = (D3D11DeviceChildHook *)unknown.GetHookedObj(__uuidof(ID3D11DeviceChild));
         if (nullptr == D3D11DeviceChild) return nullptr;
 
@@ -1908,15 +2007,20 @@ public:
 
         try
         {
-            IUnknown * result = (UnknownBase*)new D3D11CounterHook(unknown, *D3D11DeviceChild, *D3D11Asynchronous, realobj);
-            result->AddRef();
-            return result;
+            return new D3D11CounterHook(unknown, *D3D11DeviceChild, *D3D11Asynchronous, realobj);
         }
         catch(std::bad_alloc&)
         {
             GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
             return nullptr;
         }
+    }
+
+    static void sDeleteInstance(void * context, void * ptr)
+    {
+        UNREFERENCED_PARAMETER(context);
+        D3D11CounterHook * typedPtr = (D3D11CounterHook *)ptr;
+        delete typedPtr;
     }
 
     // -----------------------------------------------------------------------------
@@ -1978,21 +2082,25 @@ public:
     static IUnknown * sNewInstance(void * context, UnknownBase & unknown, IUnknown * realobj)
     {
         UNREFERENCED_PARAMETER(context);
-
         D3D11DeviceChildHook * D3D11DeviceChild = (D3D11DeviceChildHook *)unknown.GetHookedObj(__uuidof(ID3D11DeviceChild));
         if (nullptr == D3D11DeviceChild) return nullptr;
 
         try
         {
-            IUnknown * result = (UnknownBase*)new D3D11ClassInstanceHook(unknown, *D3D11DeviceChild, realobj);
-            result->AddRef();
-            return result;
+            return new D3D11ClassInstanceHook(unknown, *D3D11DeviceChild, realobj);
         }
         catch(std::bad_alloc&)
         {
             GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
             return nullptr;
         }
+    }
+
+    static void sDeleteInstance(void * context, void * ptr)
+    {
+        UNREFERENCED_PARAMETER(context);
+        D3D11ClassInstanceHook * typedPtr = (D3D11ClassInstanceHook *)ptr;
+        delete typedPtr;
     }
 
     // -----------------------------------------------------------------------------
@@ -2063,21 +2171,25 @@ public:
     static IUnknown * sNewInstance(void * context, UnknownBase & unknown, IUnknown * realobj)
     {
         UNREFERENCED_PARAMETER(context);
-
         D3D11DeviceChildHook * D3D11DeviceChild = (D3D11DeviceChildHook *)unknown.GetHookedObj(__uuidof(ID3D11DeviceChild));
         if (nullptr == D3D11DeviceChild) return nullptr;
 
         try
         {
-            IUnknown * result = (UnknownBase*)new D3D11ClassLinkageHook(unknown, *D3D11DeviceChild, realobj);
-            result->AddRef();
-            return result;
+            return new D3D11ClassLinkageHook(unknown, *D3D11DeviceChild, realobj);
         }
         catch(std::bad_alloc&)
         {
             GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
             return nullptr;
         }
+    }
+
+    static void sDeleteInstance(void * context, void * ptr)
+    {
+        UNREFERENCED_PARAMETER(context);
+        D3D11ClassLinkageHook * typedPtr = (D3D11ClassLinkageHook *)ptr;
+        delete typedPtr;
     }
 
     // -----------------------------------------------------------------------------
@@ -2138,21 +2250,25 @@ public:
     static IUnknown * sNewInstance(void * context, UnknownBase & unknown, IUnknown * realobj)
     {
         UNREFERENCED_PARAMETER(context);
-
         D3D11DeviceChildHook * D3D11DeviceChild = (D3D11DeviceChildHook *)unknown.GetHookedObj(__uuidof(ID3D11DeviceChild));
         if (nullptr == D3D11DeviceChild) return nullptr;
 
         try
         {
-            IUnknown * result = (UnknownBase*)new D3D11CommandListHook(unknown, *D3D11DeviceChild, realobj);
-            result->AddRef();
-            return result;
+            return new D3D11CommandListHook(unknown, *D3D11DeviceChild, realobj);
         }
         catch(std::bad_alloc&)
         {
             GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
             return nullptr;
         }
+    }
+
+    static void sDeleteInstance(void * context, void * ptr)
+    {
+        UNREFERENCED_PARAMETER(context);
+        D3D11CommandListHook * typedPtr = (D3D11CommandListHook *)ptr;
+        delete typedPtr;
     }
 
     // -----------------------------------------------------------------------------
@@ -2208,21 +2324,25 @@ public:
     static IUnknown * sNewInstance(void * context, UnknownBase & unknown, IUnknown * realobj)
     {
         UNREFERENCED_PARAMETER(context);
-
         D3D11DeviceChildHook * D3D11DeviceChild = (D3D11DeviceChildHook *)unknown.GetHookedObj(__uuidof(ID3D11DeviceChild));
         if (nullptr == D3D11DeviceChild) return nullptr;
 
         try
         {
-            IUnknown * result = (UnknownBase*)new D3D11DeviceContextHook(unknown, *D3D11DeviceChild, realobj);
-            result->AddRef();
-            return result;
+            return new D3D11DeviceContextHook(unknown, *D3D11DeviceChild, realobj);
         }
         catch(std::bad_alloc&)
         {
             GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
             return nullptr;
         }
+    }
+
+    static void sDeleteInstance(void * context, void * ptr)
+    {
+        UNREFERENCED_PARAMETER(context);
+        D3D11DeviceContextHook * typedPtr = (D3D11DeviceContextHook *)ptr;
+        delete typedPtr;
     }
 
     // -----------------------------------------------------------------------------
@@ -2813,21 +2933,25 @@ public:
     static IUnknown * sNewInstance(void * context, UnknownBase & unknown, IUnknown * realobj)
     {
         UNREFERENCED_PARAMETER(context);
-
         D3D11DeviceChildHook * D3D11DeviceChild = (D3D11DeviceChildHook *)unknown.GetHookedObj(__uuidof(ID3D11DeviceChild));
         if (nullptr == D3D11DeviceChild) return nullptr;
 
         try
         {
-            IUnknown * result = (UnknownBase*)new D3D11VideoDecoderHook(unknown, *D3D11DeviceChild, realobj);
-            result->AddRef();
-            return result;
+            return new D3D11VideoDecoderHook(unknown, *D3D11DeviceChild, realobj);
         }
         catch(std::bad_alloc&)
         {
             GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
             return nullptr;
         }
+    }
+
+    static void sDeleteInstance(void * context, void * ptr)
+    {
+        UNREFERENCED_PARAMETER(context);
+        D3D11VideoDecoderHook * typedPtr = (D3D11VideoDecoderHook *)ptr;
+        delete typedPtr;
     }
 
     // -----------------------------------------------------------------------------
@@ -2888,21 +3012,25 @@ public:
     static IUnknown * sNewInstance(void * context, UnknownBase & unknown, IUnknown * realobj)
     {
         UNREFERENCED_PARAMETER(context);
-
         D3D11DeviceChildHook * D3D11DeviceChild = (D3D11DeviceChildHook *)unknown.GetHookedObj(__uuidof(ID3D11DeviceChild));
         if (nullptr == D3D11DeviceChild) return nullptr;
 
         try
         {
-            IUnknown * result = (UnknownBase*)new D3D11VideoProcessorEnumeratorHook(unknown, *D3D11DeviceChild, realobj);
-            result->AddRef();
-            return result;
+            return new D3D11VideoProcessorEnumeratorHook(unknown, *D3D11DeviceChild, realobj);
         }
         catch(std::bad_alloc&)
         {
             GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
             return nullptr;
         }
+    }
+
+    static void sDeleteInstance(void * context, void * ptr)
+    {
+        UNREFERENCED_PARAMETER(context);
+        D3D11VideoProcessorEnumeratorHook * typedPtr = (D3D11VideoProcessorEnumeratorHook *)ptr;
+        delete typedPtr;
     }
 
     // -----------------------------------------------------------------------------
@@ -2983,21 +3111,25 @@ public:
     static IUnknown * sNewInstance(void * context, UnknownBase & unknown, IUnknown * realobj)
     {
         UNREFERENCED_PARAMETER(context);
-
         D3D11DeviceChildHook * D3D11DeviceChild = (D3D11DeviceChildHook *)unknown.GetHookedObj(__uuidof(ID3D11DeviceChild));
         if (nullptr == D3D11DeviceChild) return nullptr;
 
         try
         {
-            IUnknown * result = (UnknownBase*)new D3D11VideoProcessorHook(unknown, *D3D11DeviceChild, realobj);
-            result->AddRef();
-            return result;
+            return new D3D11VideoProcessorHook(unknown, *D3D11DeviceChild, realobj);
         }
         catch(std::bad_alloc&)
         {
             GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
             return nullptr;
         }
+    }
+
+    static void sDeleteInstance(void * context, void * ptr)
+    {
+        UNREFERENCED_PARAMETER(context);
+        D3D11VideoProcessorHook * typedPtr = (D3D11VideoProcessorHook *)ptr;
+        delete typedPtr;
     }
 
     // -----------------------------------------------------------------------------
@@ -3058,21 +3190,25 @@ public:
     static IUnknown * sNewInstance(void * context, UnknownBase & unknown, IUnknown * realobj)
     {
         UNREFERENCED_PARAMETER(context);
-
         D3D11DeviceChildHook * D3D11DeviceChild = (D3D11DeviceChildHook *)unknown.GetHookedObj(__uuidof(ID3D11DeviceChild));
         if (nullptr == D3D11DeviceChild) return nullptr;
 
         try
         {
-            IUnknown * result = (UnknownBase*)new D3D11AuthenticatedChannelHook(unknown, *D3D11DeviceChild, realobj);
-            result->AddRef();
-            return result;
+            return new D3D11AuthenticatedChannelHook(unknown, *D3D11DeviceChild, realobj);
         }
         catch(std::bad_alloc&)
         {
             GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
             return nullptr;
         }
+    }
+
+    static void sDeleteInstance(void * context, void * ptr)
+    {
+        UNREFERENCED_PARAMETER(context);
+        D3D11AuthenticatedChannelHook * typedPtr = (D3D11AuthenticatedChannelHook *)ptr;
+        delete typedPtr;
     }
 
     // -----------------------------------------------------------------------------
@@ -3138,21 +3274,25 @@ public:
     static IUnknown * sNewInstance(void * context, UnknownBase & unknown, IUnknown * realobj)
     {
         UNREFERENCED_PARAMETER(context);
-
         D3D11DeviceChildHook * D3D11DeviceChild = (D3D11DeviceChildHook *)unknown.GetHookedObj(__uuidof(ID3D11DeviceChild));
         if (nullptr == D3D11DeviceChild) return nullptr;
 
         try
         {
-            IUnknown * result = (UnknownBase*)new D3D11CryptoSessionHook(unknown, *D3D11DeviceChild, realobj);
-            result->AddRef();
-            return result;
+            return new D3D11CryptoSessionHook(unknown, *D3D11DeviceChild, realobj);
         }
         catch(std::bad_alloc&)
         {
             GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
             return nullptr;
         }
+    }
+
+    static void sDeleteInstance(void * context, void * ptr)
+    {
+        UNREFERENCED_PARAMETER(context);
+        D3D11CryptoSessionHook * typedPtr = (D3D11CryptoSessionHook *)ptr;
+        delete typedPtr;
     }
 
     // -----------------------------------------------------------------------------
@@ -3230,7 +3370,6 @@ public:
     static IUnknown * sNewInstance(void * context, UnknownBase & unknown, IUnknown * realobj)
     {
         UNREFERENCED_PARAMETER(context);
-
         D3D11DeviceChildHook * D3D11DeviceChild = (D3D11DeviceChildHook *)unknown.GetHookedObj(__uuidof(ID3D11DeviceChild));
         if (nullptr == D3D11DeviceChild) return nullptr;
 
@@ -3239,15 +3378,20 @@ public:
 
         try
         {
-            IUnknown * result = (UnknownBase*)new D3D11VideoDecoderOutputViewHook(unknown, *D3D11DeviceChild, *D3D11View, realobj);
-            result->AddRef();
-            return result;
+            return new D3D11VideoDecoderOutputViewHook(unknown, *D3D11DeviceChild, *D3D11View, realobj);
         }
         catch(std::bad_alloc&)
         {
             GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
             return nullptr;
         }
+    }
+
+    static void sDeleteInstance(void * context, void * ptr)
+    {
+        UNREFERENCED_PARAMETER(context);
+        D3D11VideoDecoderOutputViewHook * typedPtr = (D3D11VideoDecoderOutputViewHook *)ptr;
+        delete typedPtr;
     }
 
     // -----------------------------------------------------------------------------
@@ -3311,7 +3455,6 @@ public:
     static IUnknown * sNewInstance(void * context, UnknownBase & unknown, IUnknown * realobj)
     {
         UNREFERENCED_PARAMETER(context);
-
         D3D11DeviceChildHook * D3D11DeviceChild = (D3D11DeviceChildHook *)unknown.GetHookedObj(__uuidof(ID3D11DeviceChild));
         if (nullptr == D3D11DeviceChild) return nullptr;
 
@@ -3320,15 +3463,20 @@ public:
 
         try
         {
-            IUnknown * result = (UnknownBase*)new D3D11VideoProcessorInputViewHook(unknown, *D3D11DeviceChild, *D3D11View, realobj);
-            result->AddRef();
-            return result;
+            return new D3D11VideoProcessorInputViewHook(unknown, *D3D11DeviceChild, *D3D11View, realobj);
         }
         catch(std::bad_alloc&)
         {
             GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
             return nullptr;
         }
+    }
+
+    static void sDeleteInstance(void * context, void * ptr)
+    {
+        UNREFERENCED_PARAMETER(context);
+        D3D11VideoProcessorInputViewHook * typedPtr = (D3D11VideoProcessorInputViewHook *)ptr;
+        delete typedPtr;
     }
 
     // -----------------------------------------------------------------------------
@@ -3392,7 +3540,6 @@ public:
     static IUnknown * sNewInstance(void * context, UnknownBase & unknown, IUnknown * realobj)
     {
         UNREFERENCED_PARAMETER(context);
-
         D3D11DeviceChildHook * D3D11DeviceChild = (D3D11DeviceChildHook *)unknown.GetHookedObj(__uuidof(ID3D11DeviceChild));
         if (nullptr == D3D11DeviceChild) return nullptr;
 
@@ -3401,15 +3548,20 @@ public:
 
         try
         {
-            IUnknown * result = (UnknownBase*)new D3D11VideoProcessorOutputViewHook(unknown, *D3D11DeviceChild, *D3D11View, realobj);
-            result->AddRef();
-            return result;
+            return new D3D11VideoProcessorOutputViewHook(unknown, *D3D11DeviceChild, *D3D11View, realobj);
         }
         catch(std::bad_alloc&)
         {
             GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
             return nullptr;
         }
+    }
+
+    static void sDeleteInstance(void * context, void * ptr)
+    {
+        UNREFERENCED_PARAMETER(context);
+        D3D11VideoProcessorOutputViewHook * typedPtr = (D3D11VideoProcessorOutputViewHook *)ptr;
+        delete typedPtr;
     }
 
     // -----------------------------------------------------------------------------
@@ -3471,21 +3623,25 @@ public:
     static IUnknown * sNewInstance(void * context, UnknownBase & unknown, IUnknown * realobj)
     {
         UNREFERENCED_PARAMETER(context);
-
         D3D11DeviceChildHook * D3D11DeviceChild = (D3D11DeviceChildHook *)unknown.GetHookedObj(__uuidof(ID3D11DeviceChild));
         if (nullptr == D3D11DeviceChild) return nullptr;
 
         try
         {
-            IUnknown * result = (UnknownBase*)new D3D11VideoContextHook(unknown, *D3D11DeviceChild, realobj);
-            result->AddRef();
-            return result;
+            return new D3D11VideoContextHook(unknown, *D3D11DeviceChild, realobj);
         }
         catch(std::bad_alloc&)
         {
             GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
             return nullptr;
         }
+    }
+
+    static void sDeleteInstance(void * context, void * ptr)
+    {
+        UNREFERENCED_PARAMETER(context);
+        D3D11VideoContextHook * typedPtr = (D3D11VideoContextHook *)ptr;
+        delete typedPtr;
     }
 
     // -----------------------------------------------------------------------------
@@ -3824,18 +3980,22 @@ public:
     static IUnknown * sNewInstance(void * context, UnknownBase & unknown, IUnknown * realobj)
     {
         UNREFERENCED_PARAMETER(context);
-
         try
         {
-            IUnknown * result = (UnknownBase*)new D3D11VideoDeviceHook(unknown, realobj);
-            result->AddRef();
-            return result;
+            return new D3D11VideoDeviceHook(unknown, realobj);
         }
         catch(std::bad_alloc&)
         {
             GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
             return nullptr;
         }
+    }
+
+    static void sDeleteInstance(void * context, void * ptr)
+    {
+        UNREFERENCED_PARAMETER(context);
+        D3D11VideoDeviceHook * typedPtr = (D3D11VideoDeviceHook *)ptr;
+        delete typedPtr;
     }
 
     // -----------------------------------------------------------------------------
@@ -3945,18 +4105,22 @@ public:
     static IUnknown * sNewInstance(void * context, UnknownBase & unknown, IUnknown * realobj)
     {
         UNREFERENCED_PARAMETER(context);
-
         try
         {
-            IUnknown * result = (UnknownBase*)new D3D11DeviceHook(unknown, realobj);
-            result->AddRef();
-            return result;
+            return new D3D11DeviceHook(unknown, realobj);
         }
         catch(std::bad_alloc&)
         {
             GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
             return nullptr;
         }
+    }
+
+    static void sDeleteInstance(void * context, void * ptr)
+    {
+        UNREFERENCED_PARAMETER(context);
+        D3D11DeviceHook * typedPtr = (D3D11DeviceHook *)ptr;
+        delete typedPtr;
     }
 
     // -----------------------------------------------------------------------------
@@ -4185,7 +4349,6 @@ public:
     static IUnknown * sNewInstance(void * context, UnknownBase & unknown, IUnknown * realobj)
     {
         UNREFERENCED_PARAMETER(context);
-
         D3D11DeviceChildHook * D3D11DeviceChild = (D3D11DeviceChildHook *)unknown.GetHookedObj(__uuidof(ID3D11DeviceChild));
         if (nullptr == D3D11DeviceChild) return nullptr;
 
@@ -4194,15 +4357,20 @@ public:
 
         try
         {
-            IUnknown * result = (UnknownBase*)new D3D11BlendState1Hook(unknown, *D3D11DeviceChild, *D3D11BlendState, realobj);
-            result->AddRef();
-            return result;
+            return new D3D11BlendState1Hook(unknown, *D3D11DeviceChild, *D3D11BlendState, realobj);
         }
         catch(std::bad_alloc&)
         {
             GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
             return nullptr;
         }
+    }
+
+    static void sDeleteInstance(void * context, void * ptr)
+    {
+        UNREFERENCED_PARAMETER(context);
+        D3D11BlendState1Hook * typedPtr = (D3D11BlendState1Hook *)ptr;
+        delete typedPtr;
     }
 
     // -----------------------------------------------------------------------------
@@ -4266,7 +4434,6 @@ public:
     static IUnknown * sNewInstance(void * context, UnknownBase & unknown, IUnknown * realobj)
     {
         UNREFERENCED_PARAMETER(context);
-
         D3D11DeviceChildHook * D3D11DeviceChild = (D3D11DeviceChildHook *)unknown.GetHookedObj(__uuidof(ID3D11DeviceChild));
         if (nullptr == D3D11DeviceChild) return nullptr;
 
@@ -4275,15 +4442,20 @@ public:
 
         try
         {
-            IUnknown * result = (UnknownBase*)new D3D11RasterizerState1Hook(unknown, *D3D11DeviceChild, *D3D11RasterizerState, realobj);
-            result->AddRef();
-            return result;
+            return new D3D11RasterizerState1Hook(unknown, *D3D11DeviceChild, *D3D11RasterizerState, realobj);
         }
         catch(std::bad_alloc&)
         {
             GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
             return nullptr;
         }
+    }
+
+    static void sDeleteInstance(void * context, void * ptr)
+    {
+        UNREFERENCED_PARAMETER(context);
+        D3D11RasterizerState1Hook * typedPtr = (D3D11RasterizerState1Hook *)ptr;
+        delete typedPtr;
     }
 
     // -----------------------------------------------------------------------------
@@ -4345,21 +4517,25 @@ public:
     static IUnknown * sNewInstance(void * context, UnknownBase & unknown, IUnknown * realobj)
     {
         UNREFERENCED_PARAMETER(context);
-
         D3D11DeviceChildHook * D3D11DeviceChild = (D3D11DeviceChildHook *)unknown.GetHookedObj(__uuidof(ID3D11DeviceChild));
         if (nullptr == D3D11DeviceChild) return nullptr;
 
         try
         {
-            IUnknown * result = (UnknownBase*)new D3DDeviceContextStateHook(unknown, *D3D11DeviceChild, realobj);
-            result->AddRef();
-            return result;
+            return new D3DDeviceContextStateHook(unknown, *D3D11DeviceChild, realobj);
         }
         catch(std::bad_alloc&)
         {
             GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
             return nullptr;
         }
+    }
+
+    static void sDeleteInstance(void * context, void * ptr)
+    {
+        UNREFERENCED_PARAMETER(context);
+        D3DDeviceContextStateHook * typedPtr = (D3DDeviceContextStateHook *)ptr;
+        delete typedPtr;
     }
 
     // -----------------------------------------------------------------------------
@@ -4412,7 +4588,6 @@ public:
     static IUnknown * sNewInstance(void * context, UnknownBase & unknown, IUnknown * realobj)
     {
         UNREFERENCED_PARAMETER(context);
-
         D3D11DeviceChildHook * D3D11DeviceChild = (D3D11DeviceChildHook *)unknown.GetHookedObj(__uuidof(ID3D11DeviceChild));
         if (nullptr == D3D11DeviceChild) return nullptr;
 
@@ -4421,15 +4596,20 @@ public:
 
         try
         {
-            IUnknown * result = (UnknownBase*)new D3D11DeviceContext1Hook(unknown, *D3D11DeviceChild, *D3D11DeviceContext, realobj);
-            result->AddRef();
-            return result;
+            return new D3D11DeviceContext1Hook(unknown, *D3D11DeviceChild, *D3D11DeviceContext, realobj);
         }
         catch(std::bad_alloc&)
         {
             GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
             return nullptr;
         }
+    }
+
+    static void sDeleteInstance(void * context, void * ptr)
+    {
+        UNREFERENCED_PARAMETER(context);
+        D3D11DeviceContext1Hook * typedPtr = (D3D11DeviceContext1Hook *)ptr;
+        delete typedPtr;
     }
 
     // -----------------------------------------------------------------------------
@@ -5223,21 +5403,25 @@ public:
     static IUnknown * sNewInstance(void * context, UnknownBase & unknown, IUnknown * realobj)
     {
         UNREFERENCED_PARAMETER(context);
-
         D3D11DeviceHook * D3D11Device = (D3D11DeviceHook *)unknown.GetHookedObj(__uuidof(ID3D11Device));
         if (nullptr == D3D11Device) return nullptr;
 
         try
         {
-            IUnknown * result = (UnknownBase*)new D3D11Device1Hook(unknown, *D3D11Device, realobj);
-            result->AddRef();
-            return result;
+            return new D3D11Device1Hook(unknown, *D3D11Device, realobj);
         }
         catch(std::bad_alloc&)
         {
             GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
             return nullptr;
         }
+    }
+
+    static void sDeleteInstance(void * context, void * ptr)
+    {
+        UNREFERENCED_PARAMETER(context);
+        D3D11Device1Hook * typedPtr = (D3D11Device1Hook *)ptr;
+        delete typedPtr;
     }
 
     // -----------------------------------------------------------------------------
@@ -5537,18 +5721,22 @@ public:
     static IUnknown * sNewInstance(void * context, UnknownBase & unknown, IUnknown * realobj)
     {
         UNREFERENCED_PARAMETER(context);
-
         try
         {
-            IUnknown * result = (UnknownBase*)new D3DUserDefinedAnnotationHook(unknown, realobj);
-            result->AddRef();
-            return result;
+            return new D3DUserDefinedAnnotationHook(unknown, realobj);
         }
         catch(std::bad_alloc&)
         {
             GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
             return nullptr;
         }
+    }
+
+    static void sDeleteInstance(void * context, void * ptr)
+    {
+        UNREFERENCED_PARAMETER(context);
+        D3DUserDefinedAnnotationHook * typedPtr = (D3DUserDefinedAnnotationHook *)ptr;
+        delete typedPtr;
     }
 
     // -----------------------------------------------------------------------------
@@ -5593,18 +5781,22 @@ public:
     static IUnknown * sNewInstance(void * context, UnknownBase & unknown, IUnknown * realobj)
     {
         UNREFERENCED_PARAMETER(context);
-
         try
         {
-            IUnknown * result = (UnknownBase*)new D3D11DebugHook(unknown, realobj);
-            result->AddRef();
-            return result;
+            return new D3D11DebugHook(unknown, realobj);
         }
         catch(std::bad_alloc&)
         {
             GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
             return nullptr;
         }
+    }
+
+    static void sDeleteInstance(void * context, void * ptr)
+    {
+        UNREFERENCED_PARAMETER(context);
+        D3D11DebugHook * typedPtr = (D3D11DebugHook *)ptr;
+        delete typedPtr;
     }
 
     // -----------------------------------------------------------------------------
@@ -5674,18 +5866,22 @@ public:
     static IUnknown * sNewInstance(void * context, UnknownBase & unknown, IUnknown * realobj)
     {
         UNREFERENCED_PARAMETER(context);
-
         try
         {
-            IUnknown * result = (UnknownBase*)new D3D11SwitchToRefHook(unknown, realobj);
-            result->AddRef();
-            return result;
+            return new D3D11SwitchToRefHook(unknown, realobj);
         }
         catch(std::bad_alloc&)
         {
             GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
             return nullptr;
         }
+    }
+
+    static void sDeleteInstance(void * context, void * ptr)
+    {
+        UNREFERENCED_PARAMETER(context);
+        D3D11SwitchToRefHook * typedPtr = (D3D11SwitchToRefHook *)ptr;
+        delete typedPtr;
     }
 
     // -----------------------------------------------------------------------------
@@ -5720,18 +5916,22 @@ public:
     static IUnknown * sNewInstance(void * context, UnknownBase & unknown, IUnknown * realobj)
     {
         UNREFERENCED_PARAMETER(context);
-
         try
         {
-            IUnknown * result = (UnknownBase*)new D3D11TracingDeviceHook(unknown, realobj);
-            result->AddRef();
-            return result;
+            return new D3D11TracingDeviceHook(unknown, realobj);
         }
         catch(std::bad_alloc&)
         {
             GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
             return nullptr;
         }
+    }
+
+    static void sDeleteInstance(void * context, void * ptr)
+    {
+        UNREFERENCED_PARAMETER(context);
+        D3D11TracingDeviceHook * typedPtr = (D3D11TracingDeviceHook *)ptr;
+        delete typedPtr;
     }
 
     // -----------------------------------------------------------------------------
@@ -5766,18 +5966,22 @@ public:
     static IUnknown * sNewInstance(void * context, UnknownBase & unknown, IUnknown * realobj)
     {
         UNREFERENCED_PARAMETER(context);
-
         try
         {
-            IUnknown * result = (UnknownBase*)new D3D11RefTrackingOptionsHook(unknown, realobj);
-            result->AddRef();
-            return result;
+            return new D3D11RefTrackingOptionsHook(unknown, realobj);
         }
         catch(std::bad_alloc&)
         {
             GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
             return nullptr;
         }
+    }
+
+    static void sDeleteInstance(void * context, void * ptr)
+    {
+        UNREFERENCED_PARAMETER(context);
+        D3D11RefTrackingOptionsHook * typedPtr = (D3D11RefTrackingOptionsHook *)ptr;
+        delete typedPtr;
     }
 
     // -----------------------------------------------------------------------------
@@ -5807,18 +6011,22 @@ public:
     static IUnknown * sNewInstance(void * context, UnknownBase & unknown, IUnknown * realobj)
     {
         UNREFERENCED_PARAMETER(context);
-
         try
         {
-            IUnknown * result = (UnknownBase*)new D3D11RefDefaultTrackingOptionsHook(unknown, realobj);
-            result->AddRef();
-            return result;
+            return new D3D11RefDefaultTrackingOptionsHook(unknown, realobj);
         }
         catch(std::bad_alloc&)
         {
             GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
             return nullptr;
         }
+    }
+
+    static void sDeleteInstance(void * context, void * ptr)
+    {
+        UNREFERENCED_PARAMETER(context);
+        D3D11RefDefaultTrackingOptionsHook * typedPtr = (D3D11RefDefaultTrackingOptionsHook *)ptr;
+        delete typedPtr;
     }
 
     // -----------------------------------------------------------------------------
@@ -5848,18 +6056,22 @@ public:
     static IUnknown * sNewInstance(void * context, UnknownBase & unknown, IUnknown * realobj)
     {
         UNREFERENCED_PARAMETER(context);
-
         try
         {
-            IUnknown * result = (UnknownBase*)new D3D11InfoQueueHook(unknown, realobj);
-            result->AddRef();
-            return result;
+            return new D3D11InfoQueueHook(unknown, realobj);
         }
         catch(std::bad_alloc&)
         {
             GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
             return nullptr;
         }
+    }
+
+    static void sDeleteInstance(void * context, void * ptr)
+    {
+        UNREFERENCED_PARAMETER(context);
+        D3D11InfoQueueHook * typedPtr = (D3D11InfoQueueHook *)ptr;
+        delete typedPtr;
     }
 
     // -----------------------------------------------------------------------------
@@ -6059,18 +6271,22 @@ public:
     static IUnknown * sNewInstance(void * context, UnknownBase & unknown, IUnknown * realobj)
     {
         UNREFERENCED_PARAMETER(context);
-
         try
         {
-            IUnknown * result = (UnknownBase*)new DXGIObjectHook(unknown, realobj);
-            result->AddRef();
-            return result;
+            return new DXGIObjectHook(unknown, realobj);
         }
         catch(std::bad_alloc&)
         {
             GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
             return nullptr;
         }
+    }
+
+    static void sDeleteInstance(void * context, void * ptr)
+    {
+        UNREFERENCED_PARAMETER(context);
+        DXGIObjectHook * typedPtr = (DXGIObjectHook *)ptr;
+        delete typedPtr;
     }
 
     // -----------------------------------------------------------------------------
@@ -6117,21 +6333,25 @@ public:
     static IUnknown * sNewInstance(void * context, UnknownBase & unknown, IUnknown * realobj)
     {
         UNREFERENCED_PARAMETER(context);
-
         DXGIObjectHook * DXGIObject = (DXGIObjectHook *)unknown.GetHookedObj(__uuidof(IDXGIObject));
         if (nullptr == DXGIObject) return nullptr;
 
         try
         {
-            IUnknown * result = (UnknownBase*)new DXGIDeviceSubObjectHook(unknown, *DXGIObject, realobj);
-            result->AddRef();
-            return result;
+            return new DXGIDeviceSubObjectHook(unknown, *DXGIObject, realobj);
         }
         catch(std::bad_alloc&)
         {
             GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
             return nullptr;
         }
+    }
+
+    static void sDeleteInstance(void * context, void * ptr)
+    {
+        UNREFERENCED_PARAMETER(context);
+        DXGIDeviceSubObjectHook * typedPtr = (DXGIDeviceSubObjectHook *)ptr;
+        delete typedPtr;
     }
 
     // -----------------------------------------------------------------------------
@@ -6189,7 +6409,6 @@ public:
     static IUnknown * sNewInstance(void * context, UnknownBase & unknown, IUnknown * realobj)
     {
         UNREFERENCED_PARAMETER(context);
-
         DXGIObjectHook * DXGIObject = (DXGIObjectHook *)unknown.GetHookedObj(__uuidof(IDXGIObject));
         if (nullptr == DXGIObject) return nullptr;
 
@@ -6198,15 +6417,20 @@ public:
 
         try
         {
-            IUnknown * result = (UnknownBase*)new DXGIResourceHook(unknown, *DXGIObject, *DXGIDeviceSubObject, realobj);
-            result->AddRef();
-            return result;
+            return new DXGIResourceHook(unknown, *DXGIObject, *DXGIDeviceSubObject, realobj);
         }
         catch(std::bad_alloc&)
         {
             GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
             return nullptr;
         }
+    }
+
+    static void sDeleteInstance(void * context, void * ptr)
+    {
+        UNREFERENCED_PARAMETER(context);
+        DXGIResourceHook * typedPtr = (DXGIResourceHook *)ptr;
+        delete typedPtr;
     }
 
     // -----------------------------------------------------------------------------
@@ -6285,7 +6509,6 @@ public:
     static IUnknown * sNewInstance(void * context, UnknownBase & unknown, IUnknown * realobj)
     {
         UNREFERENCED_PARAMETER(context);
-
         DXGIObjectHook * DXGIObject = (DXGIObjectHook *)unknown.GetHookedObj(__uuidof(IDXGIObject));
         if (nullptr == DXGIObject) return nullptr;
 
@@ -6294,15 +6517,20 @@ public:
 
         try
         {
-            IUnknown * result = (UnknownBase*)new DXGIKeyedMutexHook(unknown, *DXGIObject, *DXGIDeviceSubObject, realobj);
-            result->AddRef();
-            return result;
+            return new DXGIKeyedMutexHook(unknown, *DXGIObject, *DXGIDeviceSubObject, realobj);
         }
         catch(std::bad_alloc&)
         {
             GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
             return nullptr;
         }
+    }
+
+    static void sDeleteInstance(void * context, void * ptr)
+    {
+        UNREFERENCED_PARAMETER(context);
+        DXGIKeyedMutexHook * typedPtr = (DXGIKeyedMutexHook *)ptr;
+        delete typedPtr;
     }
 
     // -----------------------------------------------------------------------------
@@ -6371,7 +6599,6 @@ public:
     static IUnknown * sNewInstance(void * context, UnknownBase & unknown, IUnknown * realobj)
     {
         UNREFERENCED_PARAMETER(context);
-
         DXGIObjectHook * DXGIObject = (DXGIObjectHook *)unknown.GetHookedObj(__uuidof(IDXGIObject));
         if (nullptr == DXGIObject) return nullptr;
 
@@ -6380,15 +6607,20 @@ public:
 
         try
         {
-            IUnknown * result = (UnknownBase*)new DXGISurfaceHook(unknown, *DXGIObject, *DXGIDeviceSubObject, realobj);
-            result->AddRef();
-            return result;
+            return new DXGISurfaceHook(unknown, *DXGIObject, *DXGIDeviceSubObject, realobj);
         }
         catch(std::bad_alloc&)
         {
             GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
             return nullptr;
         }
+    }
+
+    static void sDeleteInstance(void * context, void * ptr)
+    {
+        UNREFERENCED_PARAMETER(context);
+        DXGISurfaceHook * typedPtr = (DXGISurfaceHook *)ptr;
+        delete typedPtr;
     }
 
     // -----------------------------------------------------------------------------
@@ -6464,7 +6696,6 @@ public:
     static IUnknown * sNewInstance(void * context, UnknownBase & unknown, IUnknown * realobj)
     {
         UNREFERENCED_PARAMETER(context);
-
         DXGIObjectHook * DXGIObject = (DXGIObjectHook *)unknown.GetHookedObj(__uuidof(IDXGIObject));
         if (nullptr == DXGIObject) return nullptr;
 
@@ -6476,15 +6707,20 @@ public:
 
         try
         {
-            IUnknown * result = (UnknownBase*)new DXGISurface1Hook(unknown, *DXGIObject, *DXGIDeviceSubObject, *DXGISurface, realobj);
-            result->AddRef();
-            return result;
+            return new DXGISurface1Hook(unknown, *DXGIObject, *DXGIDeviceSubObject, *DXGISurface, realobj);
         }
         catch(std::bad_alloc&)
         {
             GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
             return nullptr;
         }
+    }
+
+    static void sDeleteInstance(void * context, void * ptr)
+    {
+        UNREFERENCED_PARAMETER(context);
+        DXGISurface1Hook * typedPtr = (DXGISurface1Hook *)ptr;
+        delete typedPtr;
     }
 
     // -----------------------------------------------------------------------------
@@ -6569,21 +6805,25 @@ public:
     static IUnknown * sNewInstance(void * context, UnknownBase & unknown, IUnknown * realobj)
     {
         UNREFERENCED_PARAMETER(context);
-
         DXGIObjectHook * DXGIObject = (DXGIObjectHook *)unknown.GetHookedObj(__uuidof(IDXGIObject));
         if (nullptr == DXGIObject) return nullptr;
 
         try
         {
-            IUnknown * result = (UnknownBase*)new DXGIAdapterHook(unknown, *DXGIObject, realobj);
-            result->AddRef();
-            return result;
+            return new DXGIAdapterHook(unknown, *DXGIObject, realobj);
         }
         catch(std::bad_alloc&)
         {
             GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
             return nullptr;
         }
+    }
+
+    static void sDeleteInstance(void * context, void * ptr)
+    {
+        UNREFERENCED_PARAMETER(context);
+        DXGIAdapterHook * typedPtr = (DXGIAdapterHook *)ptr;
+        delete typedPtr;
     }
 
     // -----------------------------------------------------------------------------
@@ -6649,21 +6889,25 @@ public:
     static IUnknown * sNewInstance(void * context, UnknownBase & unknown, IUnknown * realobj)
     {
         UNREFERENCED_PARAMETER(context);
-
         DXGIObjectHook * DXGIObject = (DXGIObjectHook *)unknown.GetHookedObj(__uuidof(IDXGIObject));
         if (nullptr == DXGIObject) return nullptr;
 
         try
         {
-            IUnknown * result = (UnknownBase*)new DXGIOutputHook(unknown, *DXGIObject, realobj);
-            result->AddRef();
-            return result;
+            return new DXGIOutputHook(unknown, *DXGIObject, realobj);
         }
         catch(std::bad_alloc&)
         {
             GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
             return nullptr;
         }
+    }
+
+    static void sDeleteInstance(void * context, void * ptr)
+    {
+        UNREFERENCED_PARAMETER(context);
+        DXGIOutputHook * typedPtr = (DXGIOutputHook *)ptr;
+        delete typedPtr;
     }
 
     // -----------------------------------------------------------------------------
@@ -6776,7 +7020,6 @@ public:
     static IUnknown * sNewInstance(void * context, UnknownBase & unknown, IUnknown * realobj)
     {
         UNREFERENCED_PARAMETER(context);
-
         DXGIObjectHook * DXGIObject = (DXGIObjectHook *)unknown.GetHookedObj(__uuidof(IDXGIObject));
         if (nullptr == DXGIObject) return nullptr;
 
@@ -6785,15 +7028,20 @@ public:
 
         try
         {
-            IUnknown * result = (UnknownBase*)new DXGISwapChainHook(unknown, *DXGIObject, *DXGIDeviceSubObject, realobj);
-            result->AddRef();
-            return result;
+            return new DXGISwapChainHook(unknown, *DXGIObject, *DXGIDeviceSubObject, realobj);
         }
         catch(std::bad_alloc&)
         {
             GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
             return nullptr;
         }
+    }
+
+    static void sDeleteInstance(void * context, void * ptr)
+    {
+        UNREFERENCED_PARAMETER(context);
+        DXGISwapChainHook * typedPtr = (DXGISwapChainHook *)ptr;
+        delete typedPtr;
     }
 
     // -----------------------------------------------------------------------------
@@ -6900,21 +7148,25 @@ public:
     static IUnknown * sNewInstance(void * context, UnknownBase & unknown, IUnknown * realobj)
     {
         UNREFERENCED_PARAMETER(context);
-
         DXGIObjectHook * DXGIObject = (DXGIObjectHook *)unknown.GetHookedObj(__uuidof(IDXGIObject));
         if (nullptr == DXGIObject) return nullptr;
 
         try
         {
-            IUnknown * result = (UnknownBase*)new DXGIFactoryHook(unknown, *DXGIObject, realobj);
-            result->AddRef();
-            return result;
+            return new DXGIFactoryHook(unknown, *DXGIObject, realobj);
         }
         catch(std::bad_alloc&)
         {
             GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
             return nullptr;
         }
+    }
+
+    static void sDeleteInstance(void * context, void * ptr)
+    {
+        UNREFERENCED_PARAMETER(context);
+        DXGIFactoryHook * typedPtr = (DXGIFactoryHook *)ptr;
+        delete typedPtr;
     }
 
     // -----------------------------------------------------------------------------
@@ -6990,21 +7242,25 @@ public:
     static IUnknown * sNewInstance(void * context, UnknownBase & unknown, IUnknown * realobj)
     {
         UNREFERENCED_PARAMETER(context);
-
         DXGIObjectHook * DXGIObject = (DXGIObjectHook *)unknown.GetHookedObj(__uuidof(IDXGIObject));
         if (nullptr == DXGIObject) return nullptr;
 
         try
         {
-            IUnknown * result = (UnknownBase*)new DXGIDeviceHook(unknown, *DXGIObject, realobj);
-            result->AddRef();
-            return result;
+            return new DXGIDeviceHook(unknown, *DXGIObject, realobj);
         }
         catch(std::bad_alloc&)
         {
             GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
             return nullptr;
         }
+    }
+
+    static void sDeleteInstance(void * context, void * ptr)
+    {
+        UNREFERENCED_PARAMETER(context);
+        DXGIDeviceHook * typedPtr = (DXGIDeviceHook *)ptr;
+        delete typedPtr;
     }
 
     // -----------------------------------------------------------------------------
@@ -7082,7 +7338,6 @@ public:
     static IUnknown * sNewInstance(void * context, UnknownBase & unknown, IUnknown * realobj)
     {
         UNREFERENCED_PARAMETER(context);
-
         DXGIObjectHook * DXGIObject = (DXGIObjectHook *)unknown.GetHookedObj(__uuidof(IDXGIObject));
         if (nullptr == DXGIObject) return nullptr;
 
@@ -7091,15 +7346,20 @@ public:
 
         try
         {
-            IUnknown * result = (UnknownBase*)new DXGIFactory1Hook(unknown, *DXGIObject, *DXGIFactory, realobj);
-            result->AddRef();
-            return result;
+            return new DXGIFactory1Hook(unknown, *DXGIObject, *DXGIFactory, realobj);
         }
         catch(std::bad_alloc&)
         {
             GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
             return nullptr;
         }
+    }
+
+    static void sDeleteInstance(void * context, void * ptr)
+    {
+        UNREFERENCED_PARAMETER(context);
+        DXGIFactory1Hook * typedPtr = (DXGIFactory1Hook *)ptr;
+        delete typedPtr;
     }
 
     // -----------------------------------------------------------------------------
@@ -7192,7 +7452,6 @@ public:
     static IUnknown * sNewInstance(void * context, UnknownBase & unknown, IUnknown * realobj)
     {
         UNREFERENCED_PARAMETER(context);
-
         DXGIObjectHook * DXGIObject = (DXGIObjectHook *)unknown.GetHookedObj(__uuidof(IDXGIObject));
         if (nullptr == DXGIObject) return nullptr;
 
@@ -7201,15 +7460,20 @@ public:
 
         try
         {
-            IUnknown * result = (UnknownBase*)new DXGIAdapter1Hook(unknown, *DXGIObject, *DXGIAdapter, realobj);
-            result->AddRef();
-            return result;
+            return new DXGIAdapter1Hook(unknown, *DXGIObject, *DXGIAdapter, realobj);
         }
         catch(std::bad_alloc&)
         {
             GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
             return nullptr;
         }
+    }
+
+    static void sDeleteInstance(void * context, void * ptr)
+    {
+        UNREFERENCED_PARAMETER(context);
+        DXGIAdapter1Hook * typedPtr = (DXGIAdapter1Hook *)ptr;
+        delete typedPtr;
     }
 
     // -----------------------------------------------------------------------------
@@ -7285,7 +7549,6 @@ public:
     static IUnknown * sNewInstance(void * context, UnknownBase & unknown, IUnknown * realobj)
     {
         UNREFERENCED_PARAMETER(context);
-
         DXGIObjectHook * DXGIObject = (DXGIObjectHook *)unknown.GetHookedObj(__uuidof(IDXGIObject));
         if (nullptr == DXGIObject) return nullptr;
 
@@ -7294,15 +7557,20 @@ public:
 
         try
         {
-            IUnknown * result = (UnknownBase*)new DXGIDevice1Hook(unknown, *DXGIObject, *DXGIDevice, realobj);
-            result->AddRef();
-            return result;
+            return new DXGIDevice1Hook(unknown, *DXGIObject, *DXGIDevice, realobj);
         }
         catch(std::bad_alloc&)
         {
             GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
             return nullptr;
         }
+    }
+
+    static void sDeleteInstance(void * context, void * ptr)
+    {
+        UNREFERENCED_PARAMETER(context);
+        DXGIDevice1Hook * typedPtr = (DXGIDevice1Hook *)ptr;
+        delete typedPtr;
     }
 
     // -----------------------------------------------------------------------------
@@ -7391,18 +7659,22 @@ public:
     static IUnknown * sNewInstance(void * context, UnknownBase & unknown, IUnknown * realobj)
     {
         UNREFERENCED_PARAMETER(context);
-
         try
         {
-            IUnknown * result = (UnknownBase*)new DXGIDisplayControlHook(unknown, realobj);
-            result->AddRef();
-            return result;
+            return new DXGIDisplayControlHook(unknown, realobj);
         }
         catch(std::bad_alloc&)
         {
             GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
             return nullptr;
         }
+    }
+
+    static void sDeleteInstance(void * context, void * ptr)
+    {
+        UNREFERENCED_PARAMETER(context);
+        DXGIDisplayControlHook * typedPtr = (DXGIDisplayControlHook *)ptr;
+        delete typedPtr;
     }
 
     // -----------------------------------------------------------------------------
@@ -7439,21 +7711,25 @@ public:
     static IUnknown * sNewInstance(void * context, UnknownBase & unknown, IUnknown * realobj)
     {
         UNREFERENCED_PARAMETER(context);
-
         DXGIObjectHook * DXGIObject = (DXGIObjectHook *)unknown.GetHookedObj(__uuidof(IDXGIObject));
         if (nullptr == DXGIObject) return nullptr;
 
         try
         {
-            IUnknown * result = (UnknownBase*)new DXGIOutputDuplicationHook(unknown, *DXGIObject, realobj);
-            result->AddRef();
-            return result;
+            return new DXGIOutputDuplicationHook(unknown, *DXGIObject, realobj);
         }
         catch(std::bad_alloc&)
         {
             GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
             return nullptr;
         }
+    }
+
+    static void sDeleteInstance(void * context, void * ptr)
+    {
+        UNREFERENCED_PARAMETER(context);
+        DXGIOutputDuplicationHook * typedPtr = (DXGIOutputDuplicationHook *)ptr;
+        delete typedPtr;
     }
 
     // -----------------------------------------------------------------------------
@@ -7550,7 +7826,6 @@ public:
     static IUnknown * sNewInstance(void * context, UnknownBase & unknown, IUnknown * realobj)
     {
         UNREFERENCED_PARAMETER(context);
-
         DXGIObjectHook * DXGIObject = (DXGIObjectHook *)unknown.GetHookedObj(__uuidof(IDXGIObject));
         if (nullptr == DXGIObject) return nullptr;
 
@@ -7565,15 +7840,20 @@ public:
 
         try
         {
-            IUnknown * result = (UnknownBase*)new DXGISurface2Hook(unknown, *DXGIObject, *DXGIDeviceSubObject, *DXGISurface, *DXGISurface1, realobj);
-            result->AddRef();
-            return result;
+            return new DXGISurface2Hook(unknown, *DXGIObject, *DXGIDeviceSubObject, *DXGISurface, *DXGISurface1, realobj);
         }
         catch(std::bad_alloc&)
         {
             GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
             return nullptr;
         }
+    }
+
+    static void sDeleteInstance(void * context, void * ptr)
+    {
+        UNREFERENCED_PARAMETER(context);
+        DXGISurface2Hook * typedPtr = (DXGISurface2Hook *)ptr;
+        delete typedPtr;
     }
 
     // -----------------------------------------------------------------------------
@@ -7669,7 +7949,6 @@ public:
     static IUnknown * sNewInstance(void * context, UnknownBase & unknown, IUnknown * realobj)
     {
         UNREFERENCED_PARAMETER(context);
-
         DXGIObjectHook * DXGIObject = (DXGIObjectHook *)unknown.GetHookedObj(__uuidof(IDXGIObject));
         if (nullptr == DXGIObject) return nullptr;
 
@@ -7681,15 +7960,20 @@ public:
 
         try
         {
-            IUnknown * result = (UnknownBase*)new DXGIResource1Hook(unknown, *DXGIObject, *DXGIDeviceSubObject, *DXGIResource, realobj);
-            result->AddRef();
-            return result;
+            return new DXGIResource1Hook(unknown, *DXGIObject, *DXGIDeviceSubObject, *DXGIResource, realobj);
         }
         catch(std::bad_alloc&)
         {
             GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
             return nullptr;
         }
+    }
+
+    static void sDeleteInstance(void * context, void * ptr)
+    {
+        UNREFERENCED_PARAMETER(context);
+        DXGIResource1Hook * typedPtr = (DXGIResource1Hook *)ptr;
+        delete typedPtr;
     }
 
     // -----------------------------------------------------------------------------
@@ -7784,7 +8068,6 @@ public:
     static IUnknown * sNewInstance(void * context, UnknownBase & unknown, IUnknown * realobj)
     {
         UNREFERENCED_PARAMETER(context);
-
         DXGIObjectHook * DXGIObject = (DXGIObjectHook *)unknown.GetHookedObj(__uuidof(IDXGIObject));
         if (nullptr == DXGIObject) return nullptr;
 
@@ -7796,15 +8079,20 @@ public:
 
         try
         {
-            IUnknown * result = (UnknownBase*)new DXGIDevice2Hook(unknown, *DXGIObject, *DXGIDevice, *DXGIDevice1, realobj);
-            result->AddRef();
-            return result;
+            return new DXGIDevice2Hook(unknown, *DXGIObject, *DXGIDevice, *DXGIDevice1, realobj);
         }
         catch(std::bad_alloc&)
         {
             GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
             return nullptr;
         }
+    }
+
+    static void sDeleteInstance(void * context, void * ptr)
+    {
+        UNREFERENCED_PARAMETER(context);
+        DXGIDevice2Hook * typedPtr = (DXGIDevice2Hook *)ptr;
+        delete typedPtr;
     }
 
     // -----------------------------------------------------------------------------
@@ -7916,7 +8204,6 @@ public:
     static IUnknown * sNewInstance(void * context, UnknownBase & unknown, IUnknown * realobj)
     {
         UNREFERENCED_PARAMETER(context);
-
         DXGIObjectHook * DXGIObject = (DXGIObjectHook *)unknown.GetHookedObj(__uuidof(IDXGIObject));
         if (nullptr == DXGIObject) return nullptr;
 
@@ -7928,15 +8215,20 @@ public:
 
         try
         {
-            IUnknown * result = (UnknownBase*)new DXGISwapChain1Hook(unknown, *DXGIObject, *DXGIDeviceSubObject, *DXGISwapChain, realobj);
-            result->AddRef();
-            return result;
+            return new DXGISwapChain1Hook(unknown, *DXGIObject, *DXGIDeviceSubObject, *DXGISwapChain, realobj);
         }
         catch(std::bad_alloc&)
         {
             GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
             return nullptr;
         }
+    }
+
+    static void sDeleteInstance(void * context, void * ptr)
+    {
+        UNREFERENCED_PARAMETER(context);
+        DXGISwapChain1Hook * typedPtr = (DXGISwapChain1Hook *)ptr;
+        delete typedPtr;
     }
 
     // -----------------------------------------------------------------------------
@@ -8112,7 +8404,6 @@ public:
     static IUnknown * sNewInstance(void * context, UnknownBase & unknown, IUnknown * realobj)
     {
         UNREFERENCED_PARAMETER(context);
-
         DXGIObjectHook * DXGIObject = (DXGIObjectHook *)unknown.GetHookedObj(__uuidof(IDXGIObject));
         if (nullptr == DXGIObject) return nullptr;
 
@@ -8124,15 +8415,20 @@ public:
 
         try
         {
-            IUnknown * result = (UnknownBase*)new DXGIFactory2Hook(unknown, *DXGIObject, *DXGIFactory, *DXGIFactory1, realobj);
-            result->AddRef();
-            return result;
+            return new DXGIFactory2Hook(unknown, *DXGIObject, *DXGIFactory, *DXGIFactory1, realobj);
         }
         catch(std::bad_alloc&)
         {
             GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
             return nullptr;
         }
+    }
+
+    static void sDeleteInstance(void * context, void * ptr)
+    {
+        UNREFERENCED_PARAMETER(context);
+        DXGIFactory2Hook * typedPtr = (DXGIFactory2Hook *)ptr;
+        delete typedPtr;
     }
 
     // -----------------------------------------------------------------------------
@@ -8284,7 +8580,6 @@ public:
     static IUnknown * sNewInstance(void * context, UnknownBase & unknown, IUnknown * realobj)
     {
         UNREFERENCED_PARAMETER(context);
-
         DXGIObjectHook * DXGIObject = (DXGIObjectHook *)unknown.GetHookedObj(__uuidof(IDXGIObject));
         if (nullptr == DXGIObject) return nullptr;
 
@@ -8296,15 +8591,20 @@ public:
 
         try
         {
-            IUnknown * result = (UnknownBase*)new DXGIAdapter2Hook(unknown, *DXGIObject, *DXGIAdapter, *DXGIAdapter1, realobj);
-            result->AddRef();
-            return result;
+            return new DXGIAdapter2Hook(unknown, *DXGIObject, *DXGIAdapter, *DXGIAdapter1, realobj);
         }
         catch(std::bad_alloc&)
         {
             GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
             return nullptr;
         }
+    }
+
+    static void sDeleteInstance(void * context, void * ptr)
+    {
+        UNREFERENCED_PARAMETER(context);
+        DXGIAdapter2Hook * typedPtr = (DXGIAdapter2Hook *)ptr;
+        delete typedPtr;
     }
 
     // -----------------------------------------------------------------------------
@@ -8386,7 +8686,6 @@ public:
     static IUnknown * sNewInstance(void * context, UnknownBase & unknown, IUnknown * realobj)
     {
         UNREFERENCED_PARAMETER(context);
-
         DXGIObjectHook * DXGIObject = (DXGIObjectHook *)unknown.GetHookedObj(__uuidof(IDXGIObject));
         if (nullptr == DXGIObject) return nullptr;
 
@@ -8395,15 +8694,20 @@ public:
 
         try
         {
-            IUnknown * result = (UnknownBase*)new DXGIOutput1Hook(unknown, *DXGIObject, *DXGIOutput, realobj);
-            result->AddRef();
-            return result;
+            return new DXGIOutput1Hook(unknown, *DXGIObject, *DXGIOutput, realobj);
         }
         catch(std::bad_alloc&)
         {
             GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
             return nullptr;
         }
+    }
+
+    static void sDeleteInstance(void * context, void * ptr)
+    {
+        UNREFERENCED_PARAMETER(context);
+        DXGIOutput1Hook * typedPtr = (DXGIOutput1Hook *)ptr;
+        delete typedPtr;
     }
 
     // -----------------------------------------------------------------------------

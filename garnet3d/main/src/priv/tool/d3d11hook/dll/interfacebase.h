@@ -143,7 +143,8 @@ class HookedClassFactory
 {
 public:
 
-    typedef IUnknown * (*FactoryFunc)(void * context, UnknownBase & base, IUnknown * realobj);
+    typedef IUnknown * (*NewInstanceFunc)(void * context, UnknownBase & base, IUnknown * realobj);
+    typedef void  (*DeleteInstanceFunc)(void * context, void * ptr);
 
     static HookedClassFactory & sGetInstance() { return s_instance; }
 
@@ -159,18 +160,22 @@ public:
         }
         FactoryInfo & fi = iter->second;
 
-        //LONG currentCount = realobj->AddRef();
-        //realobj->Release();
+        return fi.createFunc(fi.context, base, realobj);
+    }
 
-        IUnknown * hooked = fi.createNew(fi.context, base, realobj);
-        //if (hooked)
-        //{
-        //    LONG newCount = realobj->AddRef();
-        //    realobj->Release();
-        //    GN_ASSERT(newCount == (currentCount + 1));
-        //}
-
-        return hooked;
+    void deleteOld(const IID & iid, void * ptr)
+    {
+        FactoryMap::iterator iter = _factories.find(iid);
+        if (iter == _factories.end())
+        {
+            // should never reach here
+            GN_UNEXPECTED();
+        }
+        else
+        {
+            FactoryInfo & fi = iter->second;
+            fi.deleteFunc(fi.context, ptr);
+        }
     }
 
     template<class REAL_CLASS>
@@ -181,11 +186,12 @@ public:
 
 private:
 
-    void registerFactory(const IID & iid, FactoryFunc createNew, void * context)
+    void registerFactory(const IID & iid, NewInstanceFunc createFunc, DeleteInstanceFunc deleteFunc, void * context)
     {
         FactoryInfo fi;
         fi.context = context;
-        fi.createNew = createNew;
+        fi.createFunc = createFunc;
+        fi.deleteFunc = deleteFunc;
 
         std::pair<FactoryMap::iterator, bool> result = _factories.insert(std::make_pair(iid, fi));
 
@@ -196,9 +202,9 @@ private:
     }
 
     template<class REAL_CLASS>
-    void registerFactory(FactoryFunc factory, void * context)
+    void registerFactory(NewInstanceFunc createFunc, DeleteInstanceFunc deleteFunc, void * context)
     {
-        return registerFactory(__uuidof(REAL_CLASS), factory, context);
+        return registerFactory(__uuidof(REAL_CLASS), createFunc, deleteFunc, context);
     }
 
 private:
@@ -222,8 +228,9 @@ private:
 
     struct FactoryInfo
     {
-        void *      context;
-        FactoryFunc createNew;
+        void *             context;
+        NewInstanceFunc    createFunc;
+        DeleteInstanceFunc deleteFunc;
     };
 
     typedef std::map<IID, FactoryInfo, IIDLess> FactoryMap;
@@ -270,9 +277,9 @@ class UnknownBase : public IHooked, public GN::WeakObject
 {
     struct InterfaceInfo
     {
-        IID                      iid;
-        GN::AutoComPtr<IUnknown> hooked;
-        GN::AutoComPtr<IUnknown> real;
+        IID        iid;
+        IUnknown * hooked;
+        IUnknown * real;
     };
 
     static const UINT MAX_INTERFACES = 16;
@@ -281,9 +288,9 @@ class UnknownBase : public IHooked, public GN::WeakObject
     ULONG                    _refCount;
     InterfaceInfo            _interfaces[MAX_INTERFACES];
     UINT                     _interfaceCount;
-    IUnknown *               _realUnknown;
+    GN::AutoComPtr<IUnknown> _realUnknown;
 
-    UnknownBase() : _refCount(0), _interfaceCount(0), _realUnknown(0)
+    UnknownBase() : _refCount(0), _interfaceCount(0)
     {
     }
 
@@ -315,8 +322,8 @@ class UnknownBase : public IHooked, public GN::WeakObject
         }
 
         _interfaces[_interfaceCount].iid = iid;
-        _interfaces[_interfaceCount].hooked.set(hooked);
-        _interfaces[_interfaceCount].real.set(real);
+        _interfaces[_interfaceCount].hooked = hooked;
+        _interfaces[_interfaceCount].real = real;
         ++_interfaceCount;
     }
 
@@ -328,6 +335,8 @@ class UnknownBase : public IHooked, public GN::WeakObject
 
     IUnknown * getHookedInternal(const IID & iid)
     {
+        if (iid == __uuidof(IUnknown)) return this;
+
         for(size_t i = 0; i < _interfaceCount; ++i)
         {
             if (_interfaces[i].iid == iid)
@@ -342,8 +351,7 @@ class UnknownBase : public IHooked, public GN::WeakObject
             return nullptr;
         }
 
-        GN::AutoComPtr<IUnknown> hooked;
-        hooked.attach(HookedClassFactory::sGetInstance().createNew(*this, iid, real));
+        IUnknown * hooked = HookedClassFactory::sGetInstance().createNew(*this, iid, real);
         if (hooked)
         {
             addInterface( iid, hooked, real);
@@ -363,6 +371,11 @@ protected:
     virtual ~UnknownBase()
     {
         GN_ASSERT(0 == _refCount);
+
+        for(UINT i = 0; i < _interfaceCount; ++i)
+        {
+            HookedClassFactory::sGetInstance().deleteOld( _interfaces[i].iid, _interfaces[i].hooked );
+        }
     }
 
 public:
@@ -381,9 +394,7 @@ public:
         }
         if (p)
         {
-            GN::AutoComPtr<IUnknown> realUnknown = Qi<IUnknown>(realobj);
-            p->addInterface(__uuidof(IUnknown), p, realUnknown);
-            p->_realUnknown = realUnknown;
+            p->_realUnknown = Qi<IUnknown>(realobj);
         }
         return p;
     }
@@ -391,6 +402,10 @@ public:
     // No AddRef()
     virtual IUnknown * STDMETHODCALLTYPE GetRealObj(const IID & iid)
     {
+        if (__uuidof(IUnknown) == iid)
+        {
+            return _realUnknown;
+        }
         for(size_t i = 0; i < _interfaceCount; ++i)
         {
             if (_interfaces[i].iid == iid)
@@ -531,6 +546,9 @@ public:
 
 // -----------------------------------------------------------------------------
 /// Hook class that is inherited from single COM interface
+///
+/// Note: although it is inherited from IUnknown, life time of this class is _NOT_
+/// tracked by reference counting.
 template<class REAL_INTERFACE>
 class HookBase : public REAL_INTERFACE
 {
@@ -618,7 +636,7 @@ inline IUnknown * RealToHooked(const IID & realIId, INPUT_TYPE * realobj)
         realobj->SetPrivateDataInterface(GN_D3D11HOOK_HOOKED_OBJECT_GUID, unknownRef);
     }
 
-    GN::AutoComPtr<IUnknown> hooked;
+    IUnknown * hooked;
     if (SUCCEEDED(base->QueryInterface(realIId, (void**)&hooked)))
     {
         GN_ASSERT(hooked);
