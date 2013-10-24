@@ -246,14 +246,3 @@ D3D11CreateDeviceAndSwapChainHook(
     return hr;
 #endif
 }
-
-// *****************************************************************************
-// D3D11 interfaces
-// *****************************************************************************
-
-void STDMETHODCALLTYPE D3D11DeviceHook::CreateBuffer_PRE(
-    const D3D11_BUFFER_DESC * &,
-    const D3D11_SUBRESOURCE_DATA * &,
-    ID3D11Buffer ** &)
-{
-}

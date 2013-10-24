@@ -443,6 +443,43 @@ enum D3D11_CALL_ID
     CID_ID3D11Device_SetExceptionMode = CID_ID3D11Device_BASE + 38,
     CID_ID3D11Device_GetExceptionMode = CID_ID3D11Device_BASE + 39,
 
+    // CID for ID3D11BlendState1
+    CID_ID3D11BlendState1_BASE,
+    CID_ID3D11BlendState1_COUNT = 1,
+    CID_ID3D11BlendState1_GetDesc1 = CID_ID3D11BlendState1_BASE + 0,
+
+    // CID for ID3D11RasterizerState1
+    CID_ID3D11RasterizerState1_BASE,
+    CID_ID3D11RasterizerState1_COUNT = 1,
+    CID_ID3D11RasterizerState1_GetDesc1 = CID_ID3D11RasterizerState1_BASE + 0,
+
+    // CID for ID3DDeviceContextState
+    CID_ID3DDeviceContextState_BASE,
+    CID_ID3DDeviceContextState_COUNT = 0,
+
+    // CID for ID3D11DeviceContext1
+    CID_ID3D11DeviceContext1_BASE,
+    CID_ID3D11DeviceContext1_COUNT = 19,
+    CID_ID3D11DeviceContext1_CopySubresourceRegion1 = CID_ID3D11DeviceContext1_BASE + 0,
+    CID_ID3D11DeviceContext1_UpdateSubresource1 = CID_ID3D11DeviceContext1_BASE + 1,
+    CID_ID3D11DeviceContext1_DiscardResource = CID_ID3D11DeviceContext1_BASE + 2,
+    CID_ID3D11DeviceContext1_DiscardView = CID_ID3D11DeviceContext1_BASE + 3,
+    CID_ID3D11DeviceContext1_VSSetConstantBuffers1 = CID_ID3D11DeviceContext1_BASE + 4,
+    CID_ID3D11DeviceContext1_HSSetConstantBuffers1 = CID_ID3D11DeviceContext1_BASE + 5,
+    CID_ID3D11DeviceContext1_DSSetConstantBuffers1 = CID_ID3D11DeviceContext1_BASE + 6,
+    CID_ID3D11DeviceContext1_GSSetConstantBuffers1 = CID_ID3D11DeviceContext1_BASE + 7,
+    CID_ID3D11DeviceContext1_PSSetConstantBuffers1 = CID_ID3D11DeviceContext1_BASE + 8,
+    CID_ID3D11DeviceContext1_CSSetConstantBuffers1 = CID_ID3D11DeviceContext1_BASE + 9,
+    CID_ID3D11DeviceContext1_VSGetConstantBuffers1 = CID_ID3D11DeviceContext1_BASE + 10,
+    CID_ID3D11DeviceContext1_HSGetConstantBuffers1 = CID_ID3D11DeviceContext1_BASE + 11,
+    CID_ID3D11DeviceContext1_DSGetConstantBuffers1 = CID_ID3D11DeviceContext1_BASE + 12,
+    CID_ID3D11DeviceContext1_GSGetConstantBuffers1 = CID_ID3D11DeviceContext1_BASE + 13,
+    CID_ID3D11DeviceContext1_PSGetConstantBuffers1 = CID_ID3D11DeviceContext1_BASE + 14,
+    CID_ID3D11DeviceContext1_CSGetConstantBuffers1 = CID_ID3D11DeviceContext1_BASE + 15,
+    CID_ID3D11DeviceContext1_SwapDeviceContextState = CID_ID3D11DeviceContext1_BASE + 16,
+    CID_ID3D11DeviceContext1_ClearView = CID_ID3D11DeviceContext1_BASE + 17,
+    CID_ID3D11DeviceContext1_DiscardView1 = CID_ID3D11DeviceContext1_BASE + 18,
+
     // CID for ID3D11Device1
     CID_ID3D11Device1_BASE,
     CID_ID3D11Device1_COUNT = 7,
@@ -453,6 +490,14 @@ enum D3D11_CALL_ID
     CID_ID3D11Device1_CreateDeviceContextState = CID_ID3D11Device1_BASE + 4,
     CID_ID3D11Device1_OpenSharedResource1 = CID_ID3D11Device1_BASE + 5,
     CID_ID3D11Device1_OpenSharedResourceByName = CID_ID3D11Device1_BASE + 6,
+
+    // CID for ID3DUserDefinedAnnotation
+    CID_ID3DUserDefinedAnnotation_BASE,
+    CID_ID3DUserDefinedAnnotation_COUNT = 4,
+    CID_ID3DUserDefinedAnnotation_BeginEvent = CID_ID3DUserDefinedAnnotation_BASE + 0,
+    CID_ID3DUserDefinedAnnotation_EndEvent = CID_ID3DUserDefinedAnnotation_BASE + 1,
+    CID_ID3DUserDefinedAnnotation_SetMarker = CID_ID3DUserDefinedAnnotation_BASE + 2,
+    CID_ID3DUserDefinedAnnotation_GetStatus = CID_ID3DUserDefinedAnnotation_BASE + 3,
 
     // CID for ID3D11Debug
     CID_ID3D11Debug_BASE,

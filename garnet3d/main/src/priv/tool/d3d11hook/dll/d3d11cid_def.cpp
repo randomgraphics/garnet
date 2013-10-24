@@ -360,6 +360,35 @@ const char * g_D3D11CallIDText[] =
     "CID_ID3D11Device_SetExceptionMode",
     "CID_ID3D11Device_GetExceptionMode",
 
+    // CID for ID3D11BlendState1
+    "CID_ID3D11BlendState1_GetDesc1",
+
+    // CID for ID3D11RasterizerState1
+    "CID_ID3D11RasterizerState1_GetDesc1",
+
+    // CID for ID3DDeviceContextState
+
+    // CID for ID3D11DeviceContext1
+    "CID_ID3D11DeviceContext1_CopySubresourceRegion1",
+    "CID_ID3D11DeviceContext1_UpdateSubresource1",
+    "CID_ID3D11DeviceContext1_DiscardResource",
+    "CID_ID3D11DeviceContext1_DiscardView",
+    "CID_ID3D11DeviceContext1_VSSetConstantBuffers1",
+    "CID_ID3D11DeviceContext1_HSSetConstantBuffers1",
+    "CID_ID3D11DeviceContext1_DSSetConstantBuffers1",
+    "CID_ID3D11DeviceContext1_GSSetConstantBuffers1",
+    "CID_ID3D11DeviceContext1_PSSetConstantBuffers1",
+    "CID_ID3D11DeviceContext1_CSSetConstantBuffers1",
+    "CID_ID3D11DeviceContext1_VSGetConstantBuffers1",
+    "CID_ID3D11DeviceContext1_HSGetConstantBuffers1",
+    "CID_ID3D11DeviceContext1_DSGetConstantBuffers1",
+    "CID_ID3D11DeviceContext1_GSGetConstantBuffers1",
+    "CID_ID3D11DeviceContext1_PSGetConstantBuffers1",
+    "CID_ID3D11DeviceContext1_CSGetConstantBuffers1",
+    "CID_ID3D11DeviceContext1_SwapDeviceContextState",
+    "CID_ID3D11DeviceContext1_ClearView",
+    "CID_ID3D11DeviceContext1_DiscardView1",
+
     // CID for ID3D11Device1
     "CID_ID3D11Device1_GetImmediateContext1",
     "CID_ID3D11Device1_CreateDeferredContext1",
@@ -368,6 +397,12 @@ const char * g_D3D11CallIDText[] =
     "CID_ID3D11Device1_CreateDeviceContextState",
     "CID_ID3D11Device1_OpenSharedResource1",
     "CID_ID3D11Device1_OpenSharedResourceByName",
+
+    // CID for ID3DUserDefinedAnnotation
+    "CID_ID3DUserDefinedAnnotation_BeginEvent",
+    "CID_ID3DUserDefinedAnnotation_EndEvent",
+    "CID_ID3DUserDefinedAnnotation_SetMarker",
+    "CID_ID3DUserDefinedAnnotation_GetStatus",
 
     // CID for ID3D11Debug
     "CID_ID3D11Debug_SetFeatureMask",
