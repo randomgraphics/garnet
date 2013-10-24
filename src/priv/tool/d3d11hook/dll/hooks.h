@@ -18,28 +18,34 @@
 
 namespace calltrace
 {
-    void enter(const wchar_t * text);
-    void enter(const char * text);
+    /// return call level (including current call)
+    int enter(const wchar_t * text);
+
+    /// return call level (including current call)
+    int enter(const char * text);
+
     void leave();
 
     class AutoTrace
     {
+        int _level;
+
     public:
 
-        AutoTrace(const wchar_t * text)
+        AutoTrace(const wchar_t * text) : _level(enter(text))
         {
-            enter(text);
         }
 
-        AutoTrace(const char * text)
+        AutoTrace(const char * text) : _level(enter(text))
         {
-            enter(text);
         }
 
         ~AutoTrace()
         {
             leave();
         }
+
+        int getCurrentLevel() const { return _level; }
     };
 };
 /*

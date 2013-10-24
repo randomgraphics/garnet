@@ -21,7 +21,7 @@ namespace calltrace
 {
     class CallTrace
     {
-        int    _level;
+        int _level;
 
     public:
 
@@ -33,18 +33,18 @@ namespace calltrace
         {
         }
 
-        void enter(const wchar_t * text)
+        int enter(const wchar_t * text)
         {
             wprintf(L"%*s", _level, L"");
             wprintf(L"%s\n", text);
-            ++_level;
+            return ++_level;
         }
 
-        void enter(const char * text)
+        int enter(const char * text)
         {
             printf("%*s", _level, "");
             printf("%s\n", text);
-            ++_level;
+            return ++_level;
         }
 
         void leave()
@@ -55,12 +55,12 @@ namespace calltrace
 
     CallTrace g_callTrace;
 
-    void enter(const wchar_t * text)
+    int enter(const wchar_t * text)
     {
         return g_callTrace.enter( text );
     }
 
-    void enter(const char * text)
+    int enter(const char * text)
     {
         return g_callTrace.enter( text );
     }
@@ -135,7 +135,7 @@ CreateDXGIFactoryHook(
 
     HRESULT hr = realFunc(riid, ppFactory);
 #if HOOK_ENABLED
-    if( SUCCEEDED(hr) )
+    if( SUCCEEDED(hr) && 1 == trace.getCurrentLevel() )
     {
         if( ppFactory ) *ppFactory = DXGIRealToHooked(riid, *ppFactory);
     }
@@ -182,7 +182,7 @@ D3D11CreateDeviceHook(
         pFeatureLevel,
         ppImmediateContext);
 
-    if( SUCCEEDED(hr) )
+    if( SUCCEEDED(hr) && 1 == trace.getCurrentLevel() )
     {
         if( ppDevice ) *ppDevice = RealToHooked(*ppDevice);
         if( ppImmediateContext ) *ppImmediateContext = RealToHooked(*ppImmediateContext);
@@ -236,7 +236,7 @@ D3D11CreateDeviceAndSwapChainHook(
         pFeatureLevel,
         ppImmediateContext);
 
-    if( SUCCEEDED(hr) )
+    if( SUCCEEDED(hr) && 1 == trace.getCurrentLevel() )
     {
         if( ppSwapChain ) *ppSwapChain = RealToHooked(*ppSwapChain);
         if( ppDevice ) *ppDevice = RealToHooked(*ppDevice);
