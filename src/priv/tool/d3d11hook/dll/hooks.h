@@ -10,6 +10,7 @@
 #include "d3d/d3d11_1.h"
 #include "d3d11cid.h"
 #include "interfacebase.h"
+#include "d3d11hooks.h"
 
 // *****************************************************************************
 // Utilities
@@ -41,13 +42,13 @@ namespace calltrace
         }
     };
 };
-
+/*
 // *****************************************************************************
 // DXGI hook classes
 // *****************************************************************************
 
 // -----------------------------------------------------------------------------
-interface DXGIObjectHook : public HookBase<IDXGIObject>
+class DXGIObjectHook : public HookBase<IDXGIObject>
 {
 #include "IDXGIObject.h"
 
@@ -58,10 +59,7 @@ interface DXGIObjectHook : public HookBase<IDXGIObject>
 
     void GetParent_Post(HRESULT hr, const IID & riid, void ** ppParent)
     {
-        if (SUCCEEDED(hr) && *ppParent)
-        {
-            *ppParent = DXGIRealToHooked(riid, *ppParent);
-        }
+        if (SUCCEEDED(hr) && *ppParent) DXGIRealToHooked(riid, *ppParent);
     }
 };
 
@@ -231,7 +229,7 @@ class D3D11RenderTargetViewHook : public HookBase<ID3D11RenderTargetView>
 #include "ID3D11RenderTargetView.h"
 
     void Construct() {}
-};
+};*/
 
 // *****************************************************************************
 //                                     EOF
