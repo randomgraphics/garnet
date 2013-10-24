@@ -35,15 +35,33 @@ namespace calltrace
 
         int enter(const wchar_t * text)
         {
-            wprintf(L"%*s", _level, L"");
-            wprintf(L"%s\n", text);
+            wchar_t buf[256];
+            int i;
+            for(i = 0; i < _level && i < _countof(buf); ++i)
+            {
+                buf[i] = L' ';
+            }
+            swprintf_s(&buf[i], (_countof(buf) - i), L"%s\n", text);
+            if (IsDebuggerPresent())
+            {
+                OutputDebugStringW(buf);
+            }
             return ++_level;
         }
 
         int enter(const char * text)
         {
-            printf("%*s", _level, "");
-            printf("%s\n", text);
+            char buf[256];
+            int i;
+            for(i = 0; i < _level && i < _countof(buf); ++i)
+            {
+                buf[i] = ' ';
+            }
+            sprintf_s(&buf[i], (_countof(buf) - i), "%s\n", text);
+            if (IsDebuggerPresent())
+            {
+                OutputDebugStringA(buf);
+            }
             return ++_level;
         }
 
