@@ -485,7 +485,8 @@ def CheckConfig():
     # ====
     # D3D9
     # ====
-    CONFIG['has_d3d9'] = ('xenon' == BUILD_TARGET_OS) or ( CONFIG['has_dxerr'] and c.CheckCXXHeader( 'd3d9.h' ) and c.CheckCXXHeader( 'd3dx9.h' ) )
+    CONFIG['has_d3d9_h'] = ('xenon' == BUILD_TARGET_OS) or c.CheckCXXHeader( 'd3d9.h' )
+    CONFIG['has_d3d9']   = ('xenon' == BUILD_TARGET_OS) or ( CONFIG['has_dxerr'] and c.CheckCXXHeader( 'd3d9.h' ) and c.CheckCXXHeader( 'd3dx9.h' ) )
 
     # Detect if current OS is Windows Vista or newer.
     def IsVistaOrNewer( env ):
@@ -609,6 +610,7 @@ class GarnetEnv2 :
         self.has_cg_d3d9      = CONFIG['has_cg_d3d9']
         self.has_cg_d3d10     = CONFIG['has_cg_d3d10']
         self.has_cg_d3d11     = CONFIG['has_cg_d3d11']
+        self.has_d3d9_h       = CONFIG['has_d3d9_h']
         self.has_d3d9         = CONFIG['has_d3d9']
         self.has_d3d10        = CONFIG['has_d3d10']
         self.has_d3d11        = CONFIG['has_d3d11']
@@ -736,7 +738,8 @@ class GarnetEnv2 :
     # Create new build environment
     #
     def NewBuildEnv( self ) :
-        return DEFAULT_BUILD_ENV.Clone()
+        env = DEFAULT_BUILD_ENV.Clone()
+        return env
 
     #
     # setup environment for build precompiled header, return PCH object file
@@ -918,42 +921,32 @@ class GarnetEnv2 :
     # Create alias for a build target. So that it can be
     # referenced easily in makefiles.
     #
-    # TODO: support mutiple targets within one name.
-    #
     def NewTarget( self, name, target ):
-
-        # See if the alias has existed already.
-        if self.FindTarget(name, warnForNonExistTarget = False):
-            self.Error( 'Alias %s has existed.'%(name) )
-            return
-
-        # Create scons alias.
-        Alias( name, target )
-
-        # Add to SCons's default list
-        Default( name )
-
-        # Add to target list
-        self.targets[name] = target
+        if not self.__FindTarget(name, warnForNonExistTarget = False):
+            Alias( name, target )
+            Default( name )
+            self.targets[name] = []
+        self.targets[name] += Flatten([target])
+        return target
 
     #
     # Create alias for a build target. Also add it into default target list.
     #
-    # TODO: support mutiple targets within one alias
-    #
     def NewDefaultTarget( self, name, target ):
         self.NewTarget( name, target )
-        self.defaults += [name];
+        if not name in self.defaults:
+            self.defaults += [name]
+        return target
 
     #
     # Find one target by name.
     #
-    def FindTarget( self, name, warnForNonExistTarget = True ):
+    def __FindTarget( self, name, warnForNonExistTarget = True ):
         if name in self.targets:
             return self.targets[name]
         else:
             if warnForNonExistTarget: self.Warn( 'Target %s does not exist.'%(name) )
-            return None
+            return []
 
     #
     # Generate target list from names
@@ -961,8 +954,7 @@ class GarnetEnv2 :
     def CollectTargets( self, names, warnForNonExistTarget = True ):
         targets = []
         for name in names:
-            t = self.FindTarget( name, warnForNonExistTarget )
-            if t: targets += [t]
+            targets += self.__FindTarget( name, warnForNonExistTarget )
         return targets
 
 # Create garnet build environment (singleton)

@@ -1,7 +1,7 @@
 #include <windows.h>
-#include <dxgi.h>
 #include <stdio.h>
-#include "hookapi.h"
+#include "d3d11hooks_exports.h"
+
 HINSTANCE mHinst = 0, mHinstDLL = 0;
 extern "C" UINT_PTR mProcs[50] = {0};
 

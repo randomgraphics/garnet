@@ -1,5 +1,5 @@
 #include "pch.h"
-#include "interfacebase.h"
+#include "hooks.h"
 #include "d3d/d3d11_1.h"
 
 static const InterfaceDesc sAllD3D11Interfaces[] =

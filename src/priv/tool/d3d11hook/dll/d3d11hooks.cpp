@@ -1,7 +1,7 @@
 // script generated file. Do _NOT_ edit.
 
 #include "pch.h"
-#include "hooks.h"
+#include "d3d11hooks.h"
 
 // -----------------------------------------------------------------------------
 void STDMETHODCALLTYPE D3D11DeviceChildHook::GetDevice(
@@ -4397,7 +4397,7 @@ HRESULT STDMETHODCALLTYPE DXGIObjectHook::GetParent(
     calltrace::AutoTrace trace(L"DXGIObjectHook::GetParent");
     if (_GetParent_pre_ptr._value) { (this->*_GetParent_pre_ptr._value)(riid, ppParent); }
     HRESULT ret = GetRealObj()->GetParent(riid, ppParent);
-    if (SUCCEEDED(ret)) { *ppParent = DXGIRealToHooked(riid, *ppParent ); }
+    if (SUCCEEDED(ret)) { *ppParent = RealToHooked(riid, (IDXGIObject*)*ppParent ); }
     if (_GetParent_post_ptr._value) { (this->*_GetParent_post_ptr._value)(ret, riid, ppParent); }
     return ret;
 }
@@ -4410,7 +4410,7 @@ HRESULT STDMETHODCALLTYPE DXGIDeviceSubObjectHook::GetDevice(
     calltrace::AutoTrace trace(L"DXGIDeviceSubObjectHook::GetDevice");
     if (_GetDevice_pre_ptr._value) { (this->*_GetDevice_pre_ptr._value)(riid, ppDevice); }
     HRESULT ret = GetRealObj()->GetDevice(riid, ppDevice);
-    if (SUCCEEDED(ret)) { *ppDevice = DXGIRealToHooked(riid, *ppDevice ); }
+    if (SUCCEEDED(ret)) { *ppDevice = RealToHooked(riid, (IDXGIObject*)*ppDevice ); }
     if (_GetDevice_post_ptr._value) { (this->*_GetDevice_post_ptr._value)(ret, riid, ppDevice); }
     return ret;
 }

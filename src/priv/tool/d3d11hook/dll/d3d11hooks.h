@@ -1,5 +1,8 @@
 // script generated file. Do _NOT_ edit.
 
+#include "hooks.h"
+#include "d3d/d3d11_1.h"
+
 // ==============================================================================
 // ID3D11DeviceChild
 // ==============================================================================
@@ -26,7 +29,7 @@ public:
         }
         catch(std::bad_alloc&)
         {
-            GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
+            HOOK_ERROR_LOG("Out of memory.");
             return nullptr;
         }
     }
@@ -91,7 +94,7 @@ public:
         }
         catch(std::bad_alloc&)
         {
-            GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
+            HOOK_ERROR_LOG("Out of memory.");
             return nullptr;
         }
     }
@@ -165,7 +168,7 @@ public:
         }
         catch(std::bad_alloc&)
         {
-            GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
+            HOOK_ERROR_LOG("Out of memory.");
             return nullptr;
         }
     }
@@ -239,7 +242,7 @@ public:
         }
         catch(std::bad_alloc&)
         {
-            GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
+            HOOK_ERROR_LOG("Out of memory.");
             return nullptr;
         }
     }
@@ -313,7 +316,7 @@ public:
         }
         catch(std::bad_alloc&)
         {
-            GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
+            HOOK_ERROR_LOG("Out of memory.");
             return nullptr;
         }
     }
@@ -402,7 +405,7 @@ public:
         }
         catch(std::bad_alloc&)
         {
-            GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
+            HOOK_ERROR_LOG("Out of memory.");
             return nullptr;
         }
     }
@@ -499,7 +502,7 @@ public:
         }
         catch(std::bad_alloc&)
         {
-            GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
+            HOOK_ERROR_LOG("Out of memory.");
             return nullptr;
         }
     }
@@ -596,7 +599,7 @@ public:
         }
         catch(std::bad_alloc&)
         {
-            GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
+            HOOK_ERROR_LOG("Out of memory.");
             return nullptr;
         }
     }
@@ -693,7 +696,7 @@ public:
         }
         catch(std::bad_alloc&)
         {
-            GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
+            HOOK_ERROR_LOG("Out of memory.");
             return nullptr;
         }
     }
@@ -785,7 +788,7 @@ public:
         }
         catch(std::bad_alloc&)
         {
-            GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
+            HOOK_ERROR_LOG("Out of memory.");
             return nullptr;
         }
     }
@@ -864,7 +867,7 @@ public:
         }
         catch(std::bad_alloc&)
         {
-            GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
+            HOOK_ERROR_LOG("Out of memory.");
             return nullptr;
         }
     }
@@ -949,7 +952,7 @@ public:
         }
         catch(std::bad_alloc&)
         {
-            GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
+            HOOK_ERROR_LOG("Out of memory.");
             return nullptr;
         }
     }
@@ -1034,7 +1037,7 @@ public:
         }
         catch(std::bad_alloc&)
         {
-            GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
+            HOOK_ERROR_LOG("Out of memory.");
             return nullptr;
         }
     }
@@ -1119,7 +1122,7 @@ public:
         }
         catch(std::bad_alloc&)
         {
-            GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
+            HOOK_ERROR_LOG("Out of memory.");
             return nullptr;
         }
     }
@@ -1199,7 +1202,7 @@ public:
         }
         catch(std::bad_alloc&)
         {
-            GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
+            HOOK_ERROR_LOG("Out of memory.");
             return nullptr;
         }
     }
@@ -1268,7 +1271,7 @@ public:
         }
         catch(std::bad_alloc&)
         {
-            GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
+            HOOK_ERROR_LOG("Out of memory.");
             return nullptr;
         }
     }
@@ -1337,7 +1340,7 @@ public:
         }
         catch(std::bad_alloc&)
         {
-            GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
+            HOOK_ERROR_LOG("Out of memory.");
             return nullptr;
         }
     }
@@ -1406,7 +1409,7 @@ public:
         }
         catch(std::bad_alloc&)
         {
-            GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
+            HOOK_ERROR_LOG("Out of memory.");
             return nullptr;
         }
     }
@@ -1475,7 +1478,7 @@ public:
         }
         catch(std::bad_alloc&)
         {
-            GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
+            HOOK_ERROR_LOG("Out of memory.");
             return nullptr;
         }
     }
@@ -1544,7 +1547,7 @@ public:
         }
         catch(std::bad_alloc&)
         {
-            GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
+            HOOK_ERROR_LOG("Out of memory.");
             return nullptr;
         }
     }
@@ -1613,7 +1616,7 @@ public:
         }
         catch(std::bad_alloc&)
         {
-            GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
+            HOOK_ERROR_LOG("Out of memory.");
             return nullptr;
         }
     }
@@ -1682,7 +1685,7 @@ public:
         }
         catch(std::bad_alloc&)
         {
-            GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
+            HOOK_ERROR_LOG("Out of memory.");
             return nullptr;
         }
     }
@@ -1756,7 +1759,7 @@ public:
         }
         catch(std::bad_alloc&)
         {
-            GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
+            HOOK_ERROR_LOG("Out of memory.");
             return nullptr;
         }
     }
@@ -1835,7 +1838,7 @@ public:
         }
         catch(std::bad_alloc&)
         {
-            GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
+            HOOK_ERROR_LOG("Out of memory.");
             return nullptr;
         }
     }
@@ -1925,7 +1928,7 @@ public:
         }
         catch(std::bad_alloc&)
         {
-            GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
+            HOOK_ERROR_LOG("Out of memory.");
             return nullptr;
         }
     }
@@ -2011,7 +2014,7 @@ public:
         }
         catch(std::bad_alloc&)
         {
-            GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
+            HOOK_ERROR_LOG("Out of memory.");
             return nullptr;
         }
     }
@@ -2091,7 +2094,7 @@ public:
         }
         catch(std::bad_alloc&)
         {
-            GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
+            HOOK_ERROR_LOG("Out of memory.");
             return nullptr;
         }
     }
@@ -2180,7 +2183,7 @@ public:
         }
         catch(std::bad_alloc&)
         {
-            GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
+            HOOK_ERROR_LOG("Out of memory.");
             return nullptr;
         }
     }
@@ -2259,7 +2262,7 @@ public:
         }
         catch(std::bad_alloc&)
         {
-            GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
+            HOOK_ERROR_LOG("Out of memory.");
             return nullptr;
         }
     }
@@ -2333,7 +2336,7 @@ public:
         }
         catch(std::bad_alloc&)
         {
-            GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
+            HOOK_ERROR_LOG("Out of memory.");
             return nullptr;
         }
     }
@@ -2942,7 +2945,7 @@ public:
         }
         catch(std::bad_alloc&)
         {
-            GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
+            HOOK_ERROR_LOG("Out of memory.");
             return nullptr;
         }
     }
@@ -3021,7 +3024,7 @@ public:
         }
         catch(std::bad_alloc&)
         {
-            GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
+            HOOK_ERROR_LOG("Out of memory.");
             return nullptr;
         }
     }
@@ -3120,7 +3123,7 @@ public:
         }
         catch(std::bad_alloc&)
         {
-            GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
+            HOOK_ERROR_LOG("Out of memory.");
             return nullptr;
         }
     }
@@ -3199,7 +3202,7 @@ public:
         }
         catch(std::bad_alloc&)
         {
-            GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
+            HOOK_ERROR_LOG("Out of memory.");
             return nullptr;
         }
     }
@@ -3283,7 +3286,7 @@ public:
         }
         catch(std::bad_alloc&)
         {
-            GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
+            HOOK_ERROR_LOG("Out of memory.");
             return nullptr;
         }
     }
@@ -3382,7 +3385,7 @@ public:
         }
         catch(std::bad_alloc&)
         {
-            GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
+            HOOK_ERROR_LOG("Out of memory.");
             return nullptr;
         }
     }
@@ -3467,7 +3470,7 @@ public:
         }
         catch(std::bad_alloc&)
         {
-            GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
+            HOOK_ERROR_LOG("Out of memory.");
             return nullptr;
         }
     }
@@ -3552,7 +3555,7 @@ public:
         }
         catch(std::bad_alloc&)
         {
-            GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
+            HOOK_ERROR_LOG("Out of memory.");
             return nullptr;
         }
     }
@@ -3632,7 +3635,7 @@ public:
         }
         catch(std::bad_alloc&)
         {
-            GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
+            HOOK_ERROR_LOG("Out of memory.");
             return nullptr;
         }
     }
@@ -3986,7 +3989,7 @@ public:
         }
         catch(std::bad_alloc&)
         {
-            GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
+            HOOK_ERROR_LOG("Out of memory.");
             return nullptr;
         }
     }
@@ -4111,7 +4114,7 @@ public:
         }
         catch(std::bad_alloc&)
         {
-            GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
+            HOOK_ERROR_LOG("Out of memory.");
             return nullptr;
         }
     }
@@ -4361,7 +4364,7 @@ public:
         }
         catch(std::bad_alloc&)
         {
-            GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
+            HOOK_ERROR_LOG("Out of memory.");
             return nullptr;
         }
     }
@@ -4446,7 +4449,7 @@ public:
         }
         catch(std::bad_alloc&)
         {
-            GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
+            HOOK_ERROR_LOG("Out of memory.");
             return nullptr;
         }
     }
@@ -4526,7 +4529,7 @@ public:
         }
         catch(std::bad_alloc&)
         {
-            GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
+            HOOK_ERROR_LOG("Out of memory.");
             return nullptr;
         }
     }
@@ -4600,7 +4603,7 @@ public:
         }
         catch(std::bad_alloc&)
         {
-            GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
+            HOOK_ERROR_LOG("Out of memory.");
             return nullptr;
         }
     }
@@ -5412,7 +5415,7 @@ public:
         }
         catch(std::bad_alloc&)
         {
-            GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
+            HOOK_ERROR_LOG("Out of memory.");
             return nullptr;
         }
     }
@@ -5727,7 +5730,7 @@ public:
         }
         catch(std::bad_alloc&)
         {
-            GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
+            HOOK_ERROR_LOG("Out of memory.");
             return nullptr;
         }
     }
@@ -5787,7 +5790,7 @@ public:
         }
         catch(std::bad_alloc&)
         {
-            GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
+            HOOK_ERROR_LOG("Out of memory.");
             return nullptr;
         }
     }
@@ -5872,7 +5875,7 @@ public:
         }
         catch(std::bad_alloc&)
         {
-            GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
+            HOOK_ERROR_LOG("Out of memory.");
             return nullptr;
         }
     }
@@ -5922,7 +5925,7 @@ public:
         }
         catch(std::bad_alloc&)
         {
-            GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
+            HOOK_ERROR_LOG("Out of memory.");
             return nullptr;
         }
     }
@@ -5972,7 +5975,7 @@ public:
         }
         catch(std::bad_alloc&)
         {
-            GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
+            HOOK_ERROR_LOG("Out of memory.");
             return nullptr;
         }
     }
@@ -6017,7 +6020,7 @@ public:
         }
         catch(std::bad_alloc&)
         {
-            GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
+            HOOK_ERROR_LOG("Out of memory.");
             return nullptr;
         }
     }
@@ -6062,7 +6065,7 @@ public:
         }
         catch(std::bad_alloc&)
         {
-            GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
+            HOOK_ERROR_LOG("Out of memory.");
             return nullptr;
         }
     }
@@ -6277,7 +6280,7 @@ public:
         }
         catch(std::bad_alloc&)
         {
-            GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
+            HOOK_ERROR_LOG("Out of memory.");
             return nullptr;
         }
     }
@@ -6342,7 +6345,7 @@ public:
         }
         catch(std::bad_alloc&)
         {
-            GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
+            HOOK_ERROR_LOG("Out of memory.");
             return nullptr;
         }
     }
@@ -6421,7 +6424,7 @@ public:
         }
         catch(std::bad_alloc&)
         {
-            GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
+            HOOK_ERROR_LOG("Out of memory.");
             return nullptr;
         }
     }
@@ -6521,7 +6524,7 @@ public:
         }
         catch(std::bad_alloc&)
         {
-            GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
+            HOOK_ERROR_LOG("Out of memory.");
             return nullptr;
         }
     }
@@ -6611,7 +6614,7 @@ public:
         }
         catch(std::bad_alloc&)
         {
-            GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
+            HOOK_ERROR_LOG("Out of memory.");
             return nullptr;
         }
     }
@@ -6711,7 +6714,7 @@ public:
         }
         catch(std::bad_alloc&)
         {
-            GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
+            HOOK_ERROR_LOG("Out of memory.");
             return nullptr;
         }
     }
@@ -6814,7 +6817,7 @@ public:
         }
         catch(std::bad_alloc&)
         {
-            GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
+            HOOK_ERROR_LOG("Out of memory.");
             return nullptr;
         }
     }
@@ -6898,7 +6901,7 @@ public:
         }
         catch(std::bad_alloc&)
         {
-            GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
+            HOOK_ERROR_LOG("Out of memory.");
             return nullptr;
         }
     }
@@ -7032,7 +7035,7 @@ public:
         }
         catch(std::bad_alloc&)
         {
-            GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
+            HOOK_ERROR_LOG("Out of memory.");
             return nullptr;
         }
     }
@@ -7157,7 +7160,7 @@ public:
         }
         catch(std::bad_alloc&)
         {
-            GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
+            HOOK_ERROR_LOG("Out of memory.");
             return nullptr;
         }
     }
@@ -7251,7 +7254,7 @@ public:
         }
         catch(std::bad_alloc&)
         {
-            GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
+            HOOK_ERROR_LOG("Out of memory.");
             return nullptr;
         }
     }
@@ -7350,7 +7353,7 @@ public:
         }
         catch(std::bad_alloc&)
         {
-            GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
+            HOOK_ERROR_LOG("Out of memory.");
             return nullptr;
         }
     }
@@ -7464,7 +7467,7 @@ public:
         }
         catch(std::bad_alloc&)
         {
-            GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
+            HOOK_ERROR_LOG("Out of memory.");
             return nullptr;
         }
     }
@@ -7561,7 +7564,7 @@ public:
         }
         catch(std::bad_alloc&)
         {
-            GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
+            HOOK_ERROR_LOG("Out of memory.");
             return nullptr;
         }
     }
@@ -7665,7 +7668,7 @@ public:
         }
         catch(std::bad_alloc&)
         {
-            GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
+            HOOK_ERROR_LOG("Out of memory.");
             return nullptr;
         }
     }
@@ -7720,7 +7723,7 @@ public:
         }
         catch(std::bad_alloc&)
         {
-            GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
+            HOOK_ERROR_LOG("Out of memory.");
             return nullptr;
         }
     }
@@ -7844,7 +7847,7 @@ public:
         }
         catch(std::bad_alloc&)
         {
-            GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
+            HOOK_ERROR_LOG("Out of memory.");
             return nullptr;
         }
     }
@@ -7964,7 +7967,7 @@ public:
         }
         catch(std::bad_alloc&)
         {
-            GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
+            HOOK_ERROR_LOG("Out of memory.");
             return nullptr;
         }
     }
@@ -8083,7 +8086,7 @@ public:
         }
         catch(std::bad_alloc&)
         {
-            GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
+            HOOK_ERROR_LOG("Out of memory.");
             return nullptr;
         }
     }
@@ -8219,7 +8222,7 @@ public:
         }
         catch(std::bad_alloc&)
         {
-            GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
+            HOOK_ERROR_LOG("Out of memory.");
             return nullptr;
         }
     }
@@ -8419,7 +8422,7 @@ public:
         }
         catch(std::bad_alloc&)
         {
-            GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
+            HOOK_ERROR_LOG("Out of memory.");
             return nullptr;
         }
     }
@@ -8595,7 +8598,7 @@ public:
         }
         catch(std::bad_alloc&)
         {
-            GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
+            HOOK_ERROR_LOG("Out of memory.");
             return nullptr;
         }
     }
@@ -8698,7 +8701,7 @@ public:
         }
         catch(std::bad_alloc&)
         {
-            GN_ERROR(GN::getLogger("GN.d3d11hook"))("Out of memory.");
+            HOOK_ERROR_LOG("Out of memory.");
             return nullptr;
         }
     }

@@ -1,6 +1,5 @@
 #include <windows.h>
-#include <d3d11.h>
-#include <dxgi.h>
+#include "d3d/d3d11_1.h"
 
 #ifdef INSIDE_D3D11_HOOK
 #define HOOK_API __declspec(dllexport)

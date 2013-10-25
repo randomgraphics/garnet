@@ -2,21 +2,23 @@
 #define __GN_PCH_H__
 // *****************************************************************************
 // \file    pch.h
-// \brief   Precompiled header
-// \author  chenlee (2005.8.7)
+// \brief   PCH header
+// \author  chenlee (2005.10.1)
 // *****************************************************************************
 
-#include "garnet/GNbase.h"
+#include "garnet/GNengine.h"
+#include "garnet/GNutil.h"
 
-#if GN_XBOX2
+#if GN_XENON
 #include <xtl.h>
-#elif GN_WINPC
+#elif GN_MSWIN
 #ifndef NOMINMAX
 #define NOMINMAX
 #endif
 #include <windows.h>
-#include <d3d9.h>
 #endif
+
+#include <d3d9.h>
 
 // *****************************************************************************
 //                                     EOF
