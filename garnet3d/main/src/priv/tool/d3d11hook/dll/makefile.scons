@@ -1,37 +1,62 @@
 Import( 'GN' )
 
 env = GN.NewBuildEnv()
-env.Prepend( CPPPATH = ['d3dheaders'] )
-#env.Append( LINKFLAGS = ['/DEF:%s'%File('myd3d11.def').srcnode().path] )
 
-hookdll = GN.BinplaceDLL( GN.BuildDLL( env, 'GNd3d11Hook',
-	[
-        'dllmain.cpp',
-	    'hooks.cpp',
-        'd3d11interfaces.cpp',
+# ------------------------------------------------------------------------------
+# D3D11 hooks
+# ------------------------------------------------------------------------------
+
+d3d11hookdll = GN.BinplaceDLL( GN.BuildDLL( env, 'GNd3d11Hook',
+    [
+        'd3d11hooks_main.cpp',
+        'd3d11factories.cpp',
         'd3d11hooks.cpp',
-		'd3d11factories.cpp',
-	],
-	'pch.h', 'pch.cpp' ) )
+        'd3d11interfaces.cpp',
+    ],
+    'pch.h', 'd3d11_pch.cpp' ) )
 
-GN.NewDefaultTarget( 'GNd3d11Hook', hookdll )
+d3d11_env = env.Clone()
+d3d11_env.Append( LIBPATH = ['.'], LIBS = ['GNd3d11Hook'] )
 
-wrapper_env = env.Clone()
-wrapper_env.Append( LIBPATH = ['.'], LIBS = ['GNd3d11Hook'] )
-GN.NewDefaultTarget(
-	'd3d11',
-	GN.BinplaceDLL( GN.BuildDLL( wrapper_env, 'd3d11wrapper',
-	[
-	    'exports_d3d11.cpp',
-	    'exports_d3d11_asm.asm',
-	],
-	defFile='exports_d3d11.def' ), rename='d3d11.dll', extraDependencies=hookdll ) )
+d3d11dll = GN.BinplaceDLL( GN.BuildDLL( d3d11_env, 'd3d11wrapper',
+    [
+        'd3d11.cpp',
+        'd3d11_asm.asm',
+    ],
+    defFile='d3d11.def' ), rename='d3d11.dll', extraDependencies=d3d11hookdll )
 
-GN.NewDefaultTarget(
-	'dxgi',
-	GN.BinplaceDLL( GN.BuildDLL( wrapper_env, 'dxgiwrapper',
-	[
-	    'exports_dxgi.cpp',
-	    'exports_dxgi_asm.asm',
-	],
-	defFile='exports_dxgi.def' ), rename='dxgi.dll', extraDependencies=hookdll ) )
+dxgidll = GN.BinplaceDLL( GN.BuildDLL( d3d11_env, 'dxgiwrapper',
+    [
+        'dxgi.cpp',
+        'dxgi_asm.asm',
+    ],
+    defFile='dxgi.def' ), rename='dxgi.dll', extraDependencies=d3d11hookdll )
+
+d3d11_targets = GN.NewDefaultTarget( 'GNd3d11Hook', [d3d11hookdll, d3d11dll, dxgidll] )
+
+# ------------------------------------------------------------------------------
+# D3D9 hooks
+# ------------------------------------------------------------------------------
+
+d3d9hookdll = GN.BinplaceDLL( GN.BuildDLL( env, 'GNd3d9Hook',
+    [
+        'd3d9hooks_main.cpp',
+        'd3d9factories.cpp',
+        'd3d9hooks.cpp',
+        'd3d9interfaces.cpp',
+    ],
+    'pch.h', 'd3d9_pch.cpp' ) )
+
+d3d9_env = env.Clone()
+d3d9_env.Append( LIBPATH = ['.'], LIBS = ['GNd3d9Hook'] )
+
+d3d9dll = GN.BinplaceDLL( GN.BuildDLL( d3d9_env, 'd3d9wrapper',
+    [
+        'd3d9.cpp',
+        'd3d9_asm.asm',
+    ],
+    defFile='d3d9.def' ), rename='d3d9.dll', extraDependencies=d3d9hookdll )
+
+d3d9_targets = GN.NewDefaultTarget( 'GNd3d9Hook', [d3d9hookdll, d3d9dll] )
+
+GN.NewDefaultTarget( 'GNd3dHook', d3d11_targets + d3d9_targets )

@@ -1,93 +1,8 @@
 #include "pch.h"
-#include "hooks.h"
+#include "hooks_shared_impl.cpp"
 #define INSIDE_D3D11_HOOK
-#include "hookapi.h"
-
+#include "d3d11hooks_exports.h"
 using namespace GN;
-static GN::Logger * sLogger = GN::getLogger("GN.d3d11hook");
-
-
-// *****************************************************************************
-// Class Factory
-// *****************************************************************************
-
-HookedClassFactory HookedClassFactory::s_instance;
-
-// *****************************************************************************
-// DLL loading utilities
-// *****************************************************************************
-
-namespace calltrace
-{
-    class CallTrace
-    {
-        int _level;
-
-    public:
-
-        CallTrace() : _level(0)
-        {
-        }
-
-        ~CallTrace()
-        {
-        }
-
-        int enter(const wchar_t * text)
-        {
-            wchar_t buf[256];
-            int i;
-            for(i = 0; i < _level && i < _countof(buf); ++i)
-            {
-                buf[i] = L' ';
-            }
-            swprintf_s(&buf[i], (_countof(buf) - i), L"%s\n", text);
-            if (IsDebuggerPresent())
-            {
-                OutputDebugStringW(buf);
-            }
-            return ++_level;
-        }
-
-        int enter(const char * text)
-        {
-            char buf[256];
-            int i;
-            for(i = 0; i < _level && i < _countof(buf); ++i)
-            {
-                buf[i] = ' ';
-            }
-            sprintf_s(&buf[i], (_countof(buf) - i), "%s\n", text);
-            if (IsDebuggerPresent())
-            {
-                OutputDebugStringA(buf);
-            }
-            return ++_level;
-        }
-
-        void leave()
-        {
-            --_level;
-        }
-    };
-
-    CallTrace g_callTrace;
-
-    int enter(const wchar_t * text)
-    {
-        return g_callTrace.enter( text );
-    }
-
-    int enter(const char * text)
-    {
-        return g_callTrace.enter( text );
-    }
-
-    void leave()
-    {
-        g_callTrace.leave();
-    }
-}
 
 // *****************************************************************************
 // DLL loading utilities
@@ -96,21 +11,21 @@ namespace calltrace
 //
 //
 // -----------------------------------------------------------------------------
-void * GetRealFunctionPtr(const wchar_t * dllName, const char * functionName)
+static void * GetRealFunctionPtr(const wchar_t * dllName, const char * functionName)
 {
     HMODULE dll;
 
     dll = ::LoadLibraryW(dllName);
     if (0 == dll)
     {
-        GN_ERROR(sLogger)("Can't load dll: %S", dllName);
+        HOOK_ERROR_LOG("Can't load dll: %S", dllName);
         return nullptr;
     }
 
     void * proc = ::GetProcAddress(dll, functionName);
     if(0 == proc)
     {
-        GN_ERROR(sLogger)("Can't get proc address: dllName=%S, functionName=%s", dllName, functionName);
+        HOOK_ERROR_LOG("Can't get proc address: dllName=%S, functionName=%s", dllName, functionName);
     }
 
     return proc;
@@ -155,7 +70,7 @@ CreateDXGIFactoryHook(
 #if HOOK_ENABLED
     if( SUCCEEDED(hr) && 1 == trace.getCurrentLevel() )
     {
-        if( ppFactory ) *ppFactory = DXGIRealToHooked(riid, *ppFactory);
+        if( ppFactory ) *ppFactory = RealToHooked(riid, (IDXGIObject*)*ppFactory);
     }
 #endif
     // success
@@ -263,4 +178,20 @@ D3D11CreateDeviceAndSwapChainHook(
 
     return hr;
 #endif
+}
+
+// -----------------------------------------------------------------------------
+// DLL Entry Point
+// -----------------------------------------------------------------------------
+
+BOOL WINAPI DllMain( HINSTANCE, DWORD fdwReason, LPVOID )
+{
+	if ( fdwReason == DLL_PROCESS_ATTACH )
+    {
+        HookedClassFactory::sGetInstance().registerAll();
+	} else if ( fdwReason == DLL_PROCESS_DETACH )
+	{
+        // TODO: cleanup.
+	}
+	return TRUE;
 }
