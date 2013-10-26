@@ -1,7 +1,6 @@
 // script generated file. Do _NOT_ edit.
 
-#include "hooks.h"
-#include "d3d/d3d11_1.h"
+#include "hooks11.h"
 
 // ==============================================================================
 // ID3D11DeviceChild

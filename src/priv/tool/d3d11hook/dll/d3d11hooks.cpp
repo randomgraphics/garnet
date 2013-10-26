@@ -10,7 +10,7 @@ void STDMETHODCALLTYPE D3D11DeviceChildHook::GetDevice(
     calltrace::AutoTrace trace(L"D3D11DeviceChildHook::GetDevice");
     if (_GetDevice_pre_ptr._value) { (this->*_GetDevice_pre_ptr._value)(ppDevice); }
     GetRealObj()->GetDevice(ppDevice);
-    if ( ppDevice && *ppDevice) { *ppDevice = RealToHooked( *ppDevice ); }
+    if ( ppDevice && *ppDevice) { *ppDevice = RealToHooked11( *ppDevice ); }
     if (_GetDevice_post_ptr._value) { (this->*_GetDevice_post_ptr._value)(ppDevice); }
 }
 
@@ -159,7 +159,7 @@ void STDMETHODCALLTYPE D3D11ViewHook::GetResource(
     calltrace::AutoTrace trace(L"D3D11ViewHook::GetResource");
     if (_GetResource_pre_ptr._value) { (this->*_GetResource_pre_ptr._value)(ppResource); }
     GetRealObj()->GetResource(ppResource);
-    if ( ppResource && *ppResource) { *ppResource = RealToHooked( *ppResource ); }
+    if ( ppResource && *ppResource) { *ppResource = RealToHooked11( *ppResource ); }
     if (_GetResource_post_ptr._value) { (this->*_GetResource_post_ptr._value)(ppResource); }
 }
 
@@ -250,7 +250,7 @@ void STDMETHODCALLTYPE D3D11ClassInstanceHook::GetClassLinkage(
     calltrace::AutoTrace trace(L"D3D11ClassInstanceHook::GetClassLinkage");
     if (_GetClassLinkage_pre_ptr._value) { (this->*_GetClassLinkage_pre_ptr._value)(ppLinkage); }
     GetRealObj()->GetClassLinkage(ppLinkage);
-    if ( ppLinkage && *ppLinkage) { *ppLinkage = RealToHooked( *ppLinkage ); }
+    if ( ppLinkage && *ppLinkage) { *ppLinkage = RealToHooked11( *ppLinkage ); }
     if (_GetClassLinkage_post_ptr._value) { (this->*_GetClassLinkage_post_ptr._value)(ppLinkage); }
 }
 
@@ -295,7 +295,7 @@ HRESULT STDMETHODCALLTYPE D3D11ClassLinkageHook::GetClassInstance(
     calltrace::AutoTrace trace(L"D3D11ClassLinkageHook::GetClassInstance");
     if (_GetClassInstance_pre_ptr._value) { (this->*_GetClassInstance_pre_ptr._value)(pClassInstanceName, InstanceIndex, ppInstance); }
     HRESULT ret = GetRealObj()->GetClassInstance(pClassInstanceName, InstanceIndex, ppInstance);
-    if ( ppInstance && *ppInstance) { *ppInstance = RealToHooked( *ppInstance ); }
+    if ( ppInstance && *ppInstance) { *ppInstance = RealToHooked11( *ppInstance ); }
     if (_GetClassInstance_post_ptr._value) { (this->*_GetClassInstance_post_ptr._value)(ret, pClassInstanceName, InstanceIndex, ppInstance); }
     return ret;
 }
@@ -312,7 +312,7 @@ HRESULT STDMETHODCALLTYPE D3D11ClassLinkageHook::CreateClassInstance(
     calltrace::AutoTrace trace(L"D3D11ClassLinkageHook::CreateClassInstance");
     if (_CreateClassInstance_pre_ptr._value) { (this->*_CreateClassInstance_pre_ptr._value)(pClassTypeName, ConstantBufferOffset, ConstantVectorOffset, TextureOffset, SamplerOffset, ppInstance); }
     HRESULT ret = GetRealObj()->CreateClassInstance(pClassTypeName, ConstantBufferOffset, ConstantVectorOffset, TextureOffset, SamplerOffset, ppInstance);
-    if ( ppInstance && *ppInstance) { *ppInstance = RealToHooked( *ppInstance ); }
+    if ( ppInstance && *ppInstance) { *ppInstance = RealToHooked11( *ppInstance ); }
     if (_CreateClassInstance_post_ptr._value) { (this->*_CreateClassInstance_post_ptr._value)(ret, pClassTypeName, ConstantBufferOffset, ConstantVectorOffset, TextureOffset, SamplerOffset, ppInstance); }
     return ret;
 }
@@ -1111,7 +1111,7 @@ void STDMETHODCALLTYPE D3D11DeviceContextHook::VSGetConstantBuffers(
     calltrace::AutoTrace trace(L"D3D11DeviceContextHook::VSGetConstantBuffers");
     if (_VSGetConstantBuffers_pre_ptr._value) { (this->*_VSGetConstantBuffers_pre_ptr._value)(StartSlot, NumBuffers, ppConstantBuffers); }
     GetRealObj()->VSGetConstantBuffers(StartSlot, NumBuffers, ppConstantBuffers);
-    if ( ppConstantBuffers && *ppConstantBuffers) { *ppConstantBuffers = RealToHooked( *ppConstantBuffers ); }
+    if ( ppConstantBuffers && *ppConstantBuffers) { *ppConstantBuffers = RealToHooked11( *ppConstantBuffers ); }
     if (_VSGetConstantBuffers_post_ptr._value) { (this->*_VSGetConstantBuffers_post_ptr._value)(StartSlot, NumBuffers, ppConstantBuffers); }
 }
 
@@ -1124,7 +1124,7 @@ void STDMETHODCALLTYPE D3D11DeviceContextHook::PSGetShaderResources(
     calltrace::AutoTrace trace(L"D3D11DeviceContextHook::PSGetShaderResources");
     if (_PSGetShaderResources_pre_ptr._value) { (this->*_PSGetShaderResources_pre_ptr._value)(StartSlot, NumViews, ppShaderResourceViews); }
     GetRealObj()->PSGetShaderResources(StartSlot, NumViews, ppShaderResourceViews);
-    if ( ppShaderResourceViews && *ppShaderResourceViews) { *ppShaderResourceViews = RealToHooked( *ppShaderResourceViews ); }
+    if ( ppShaderResourceViews && *ppShaderResourceViews) { *ppShaderResourceViews = RealToHooked11( *ppShaderResourceViews ); }
     if (_PSGetShaderResources_post_ptr._value) { (this->*_PSGetShaderResources_post_ptr._value)(StartSlot, NumViews, ppShaderResourceViews); }
 }
 
@@ -1137,8 +1137,8 @@ void STDMETHODCALLTYPE D3D11DeviceContextHook::PSGetShader(
     calltrace::AutoTrace trace(L"D3D11DeviceContextHook::PSGetShader");
     if (_PSGetShader_pre_ptr._value) { (this->*_PSGetShader_pre_ptr._value)(ppPixelShader, ppClassInstances, pNumClassInstances); }
     GetRealObj()->PSGetShader(ppPixelShader, ppClassInstances, pNumClassInstances);
-    if ( ppPixelShader && *ppPixelShader) { *ppPixelShader = RealToHooked( *ppPixelShader ); }
-    if ( ppClassInstances && *ppClassInstances) { *ppClassInstances = RealToHooked( *ppClassInstances ); }
+    if ( ppPixelShader && *ppPixelShader) { *ppPixelShader = RealToHooked11( *ppPixelShader ); }
+    if ( ppClassInstances && *ppClassInstances) { *ppClassInstances = RealToHooked11( *ppClassInstances ); }
     if (_PSGetShader_post_ptr._value) { (this->*_PSGetShader_post_ptr._value)(ppPixelShader, ppClassInstances, pNumClassInstances); }
 }
 
@@ -1151,7 +1151,7 @@ void STDMETHODCALLTYPE D3D11DeviceContextHook::PSGetSamplers(
     calltrace::AutoTrace trace(L"D3D11DeviceContextHook::PSGetSamplers");
     if (_PSGetSamplers_pre_ptr._value) { (this->*_PSGetSamplers_pre_ptr._value)(StartSlot, NumSamplers, ppSamplers); }
     GetRealObj()->PSGetSamplers(StartSlot, NumSamplers, ppSamplers);
-    if ( ppSamplers && *ppSamplers) { *ppSamplers = RealToHooked( *ppSamplers ); }
+    if ( ppSamplers && *ppSamplers) { *ppSamplers = RealToHooked11( *ppSamplers ); }
     if (_PSGetSamplers_post_ptr._value) { (this->*_PSGetSamplers_post_ptr._value)(StartSlot, NumSamplers, ppSamplers); }
 }
 
@@ -1164,8 +1164,8 @@ void STDMETHODCALLTYPE D3D11DeviceContextHook::VSGetShader(
     calltrace::AutoTrace trace(L"D3D11DeviceContextHook::VSGetShader");
     if (_VSGetShader_pre_ptr._value) { (this->*_VSGetShader_pre_ptr._value)(ppVertexShader, ppClassInstances, pNumClassInstances); }
     GetRealObj()->VSGetShader(ppVertexShader, ppClassInstances, pNumClassInstances);
-    if ( ppVertexShader && *ppVertexShader) { *ppVertexShader = RealToHooked( *ppVertexShader ); }
-    if ( ppClassInstances && *ppClassInstances) { *ppClassInstances = RealToHooked( *ppClassInstances ); }
+    if ( ppVertexShader && *ppVertexShader) { *ppVertexShader = RealToHooked11( *ppVertexShader ); }
+    if ( ppClassInstances && *ppClassInstances) { *ppClassInstances = RealToHooked11( *ppClassInstances ); }
     if (_VSGetShader_post_ptr._value) { (this->*_VSGetShader_post_ptr._value)(ppVertexShader, ppClassInstances, pNumClassInstances); }
 }
 
@@ -1178,7 +1178,7 @@ void STDMETHODCALLTYPE D3D11DeviceContextHook::PSGetConstantBuffers(
     calltrace::AutoTrace trace(L"D3D11DeviceContextHook::PSGetConstantBuffers");
     if (_PSGetConstantBuffers_pre_ptr._value) { (this->*_PSGetConstantBuffers_pre_ptr._value)(StartSlot, NumBuffers, ppConstantBuffers); }
     GetRealObj()->PSGetConstantBuffers(StartSlot, NumBuffers, ppConstantBuffers);
-    if ( ppConstantBuffers && *ppConstantBuffers) { *ppConstantBuffers = RealToHooked( *ppConstantBuffers ); }
+    if ( ppConstantBuffers && *ppConstantBuffers) { *ppConstantBuffers = RealToHooked11( *ppConstantBuffers ); }
     if (_PSGetConstantBuffers_post_ptr._value) { (this->*_PSGetConstantBuffers_post_ptr._value)(StartSlot, NumBuffers, ppConstantBuffers); }
 }
 
@@ -1189,7 +1189,7 @@ void STDMETHODCALLTYPE D3D11DeviceContextHook::IAGetInputLayout(
     calltrace::AutoTrace trace(L"D3D11DeviceContextHook::IAGetInputLayout");
     if (_IAGetInputLayout_pre_ptr._value) { (this->*_IAGetInputLayout_pre_ptr._value)(ppInputLayout); }
     GetRealObj()->IAGetInputLayout(ppInputLayout);
-    if ( ppInputLayout && *ppInputLayout) { *ppInputLayout = RealToHooked( *ppInputLayout ); }
+    if ( ppInputLayout && *ppInputLayout) { *ppInputLayout = RealToHooked11( *ppInputLayout ); }
     if (_IAGetInputLayout_post_ptr._value) { (this->*_IAGetInputLayout_post_ptr._value)(ppInputLayout); }
 }
 
@@ -1204,7 +1204,7 @@ void STDMETHODCALLTYPE D3D11DeviceContextHook::IAGetVertexBuffers(
     calltrace::AutoTrace trace(L"D3D11DeviceContextHook::IAGetVertexBuffers");
     if (_IAGetVertexBuffers_pre_ptr._value) { (this->*_IAGetVertexBuffers_pre_ptr._value)(StartSlot, NumBuffers, ppVertexBuffers, pStrides, pOffsets); }
     GetRealObj()->IAGetVertexBuffers(StartSlot, NumBuffers, ppVertexBuffers, pStrides, pOffsets);
-    if ( ppVertexBuffers && *ppVertexBuffers) { *ppVertexBuffers = RealToHooked( *ppVertexBuffers ); }
+    if ( ppVertexBuffers && *ppVertexBuffers) { *ppVertexBuffers = RealToHooked11( *ppVertexBuffers ); }
     if (_IAGetVertexBuffers_post_ptr._value) { (this->*_IAGetVertexBuffers_post_ptr._value)(StartSlot, NumBuffers, ppVertexBuffers, pStrides, pOffsets); }
 }
 
@@ -1217,7 +1217,7 @@ void STDMETHODCALLTYPE D3D11DeviceContextHook::IAGetIndexBuffer(
     calltrace::AutoTrace trace(L"D3D11DeviceContextHook::IAGetIndexBuffer");
     if (_IAGetIndexBuffer_pre_ptr._value) { (this->*_IAGetIndexBuffer_pre_ptr._value)(pIndexBuffer, Format, Offset); }
     GetRealObj()->IAGetIndexBuffer(pIndexBuffer, Format, Offset);
-    if ( pIndexBuffer && *pIndexBuffer) { *pIndexBuffer = RealToHooked( *pIndexBuffer ); }
+    if ( pIndexBuffer && *pIndexBuffer) { *pIndexBuffer = RealToHooked11( *pIndexBuffer ); }
     if (_IAGetIndexBuffer_post_ptr._value) { (this->*_IAGetIndexBuffer_post_ptr._value)(pIndexBuffer, Format, Offset); }
 }
 
@@ -1230,7 +1230,7 @@ void STDMETHODCALLTYPE D3D11DeviceContextHook::GSGetConstantBuffers(
     calltrace::AutoTrace trace(L"D3D11DeviceContextHook::GSGetConstantBuffers");
     if (_GSGetConstantBuffers_pre_ptr._value) { (this->*_GSGetConstantBuffers_pre_ptr._value)(StartSlot, NumBuffers, ppConstantBuffers); }
     GetRealObj()->GSGetConstantBuffers(StartSlot, NumBuffers, ppConstantBuffers);
-    if ( ppConstantBuffers && *ppConstantBuffers) { *ppConstantBuffers = RealToHooked( *ppConstantBuffers ); }
+    if ( ppConstantBuffers && *ppConstantBuffers) { *ppConstantBuffers = RealToHooked11( *ppConstantBuffers ); }
     if (_GSGetConstantBuffers_post_ptr._value) { (this->*_GSGetConstantBuffers_post_ptr._value)(StartSlot, NumBuffers, ppConstantBuffers); }
 }
 
@@ -1243,8 +1243,8 @@ void STDMETHODCALLTYPE D3D11DeviceContextHook::GSGetShader(
     calltrace::AutoTrace trace(L"D3D11DeviceContextHook::GSGetShader");
     if (_GSGetShader_pre_ptr._value) { (this->*_GSGetShader_pre_ptr._value)(ppGeometryShader, ppClassInstances, pNumClassInstances); }
     GetRealObj()->GSGetShader(ppGeometryShader, ppClassInstances, pNumClassInstances);
-    if ( ppGeometryShader && *ppGeometryShader) { *ppGeometryShader = RealToHooked( *ppGeometryShader ); }
-    if ( ppClassInstances && *ppClassInstances) { *ppClassInstances = RealToHooked( *ppClassInstances ); }
+    if ( ppGeometryShader && *ppGeometryShader) { *ppGeometryShader = RealToHooked11( *ppGeometryShader ); }
+    if ( ppClassInstances && *ppClassInstances) { *ppClassInstances = RealToHooked11( *ppClassInstances ); }
     if (_GSGetShader_post_ptr._value) { (this->*_GSGetShader_post_ptr._value)(ppGeometryShader, ppClassInstances, pNumClassInstances); }
 }
 
@@ -1267,7 +1267,7 @@ void STDMETHODCALLTYPE D3D11DeviceContextHook::VSGetShaderResources(
     calltrace::AutoTrace trace(L"D3D11DeviceContextHook::VSGetShaderResources");
     if (_VSGetShaderResources_pre_ptr._value) { (this->*_VSGetShaderResources_pre_ptr._value)(StartSlot, NumViews, ppShaderResourceViews); }
     GetRealObj()->VSGetShaderResources(StartSlot, NumViews, ppShaderResourceViews);
-    if ( ppShaderResourceViews && *ppShaderResourceViews) { *ppShaderResourceViews = RealToHooked( *ppShaderResourceViews ); }
+    if ( ppShaderResourceViews && *ppShaderResourceViews) { *ppShaderResourceViews = RealToHooked11( *ppShaderResourceViews ); }
     if (_VSGetShaderResources_post_ptr._value) { (this->*_VSGetShaderResources_post_ptr._value)(StartSlot, NumViews, ppShaderResourceViews); }
 }
 
@@ -1280,7 +1280,7 @@ void STDMETHODCALLTYPE D3D11DeviceContextHook::VSGetSamplers(
     calltrace::AutoTrace trace(L"D3D11DeviceContextHook::VSGetSamplers");
     if (_VSGetSamplers_pre_ptr._value) { (this->*_VSGetSamplers_pre_ptr._value)(StartSlot, NumSamplers, ppSamplers); }
     GetRealObj()->VSGetSamplers(StartSlot, NumSamplers, ppSamplers);
-    if ( ppSamplers && *ppSamplers) { *ppSamplers = RealToHooked( *ppSamplers ); }
+    if ( ppSamplers && *ppSamplers) { *ppSamplers = RealToHooked11( *ppSamplers ); }
     if (_VSGetSamplers_post_ptr._value) { (this->*_VSGetSamplers_post_ptr._value)(StartSlot, NumSamplers, ppSamplers); }
 }
 
@@ -1292,7 +1292,7 @@ void STDMETHODCALLTYPE D3D11DeviceContextHook::GetPredication(
     calltrace::AutoTrace trace(L"D3D11DeviceContextHook::GetPredication");
     if (_GetPredication_pre_ptr._value) { (this->*_GetPredication_pre_ptr._value)(ppPredicate, pPredicateValue); }
     GetRealObj()->GetPredication(ppPredicate, pPredicateValue);
-    if ( ppPredicate && *ppPredicate) { *ppPredicate = RealToHooked( *ppPredicate ); }
+    if ( ppPredicate && *ppPredicate) { *ppPredicate = RealToHooked11( *ppPredicate ); }
     if (_GetPredication_post_ptr._value) { (this->*_GetPredication_post_ptr._value)(ppPredicate, pPredicateValue); }
 }
 
@@ -1305,7 +1305,7 @@ void STDMETHODCALLTYPE D3D11DeviceContextHook::GSGetShaderResources(
     calltrace::AutoTrace trace(L"D3D11DeviceContextHook::GSGetShaderResources");
     if (_GSGetShaderResources_pre_ptr._value) { (this->*_GSGetShaderResources_pre_ptr._value)(StartSlot, NumViews, ppShaderResourceViews); }
     GetRealObj()->GSGetShaderResources(StartSlot, NumViews, ppShaderResourceViews);
-    if ( ppShaderResourceViews && *ppShaderResourceViews) { *ppShaderResourceViews = RealToHooked( *ppShaderResourceViews ); }
+    if ( ppShaderResourceViews && *ppShaderResourceViews) { *ppShaderResourceViews = RealToHooked11( *ppShaderResourceViews ); }
     if (_GSGetShaderResources_post_ptr._value) { (this->*_GSGetShaderResources_post_ptr._value)(StartSlot, NumViews, ppShaderResourceViews); }
 }
 
@@ -1318,7 +1318,7 @@ void STDMETHODCALLTYPE D3D11DeviceContextHook::GSGetSamplers(
     calltrace::AutoTrace trace(L"D3D11DeviceContextHook::GSGetSamplers");
     if (_GSGetSamplers_pre_ptr._value) { (this->*_GSGetSamplers_pre_ptr._value)(StartSlot, NumSamplers, ppSamplers); }
     GetRealObj()->GSGetSamplers(StartSlot, NumSamplers, ppSamplers);
-    if ( ppSamplers && *ppSamplers) { *ppSamplers = RealToHooked( *ppSamplers ); }
+    if ( ppSamplers && *ppSamplers) { *ppSamplers = RealToHooked11( *ppSamplers ); }
     if (_GSGetSamplers_post_ptr._value) { (this->*_GSGetSamplers_post_ptr._value)(StartSlot, NumSamplers, ppSamplers); }
 }
 
@@ -1331,8 +1331,8 @@ void STDMETHODCALLTYPE D3D11DeviceContextHook::OMGetRenderTargets(
     calltrace::AutoTrace trace(L"D3D11DeviceContextHook::OMGetRenderTargets");
     if (_OMGetRenderTargets_pre_ptr._value) { (this->*_OMGetRenderTargets_pre_ptr._value)(NumViews, ppRenderTargetViews, ppDepthStencilView); }
     GetRealObj()->OMGetRenderTargets(NumViews, ppRenderTargetViews, ppDepthStencilView);
-    if ( ppRenderTargetViews && *ppRenderTargetViews) { *ppRenderTargetViews = RealToHooked( *ppRenderTargetViews ); }
-    if ( ppDepthStencilView && *ppDepthStencilView) { *ppDepthStencilView = RealToHooked( *ppDepthStencilView ); }
+    if ( ppRenderTargetViews && *ppRenderTargetViews) { *ppRenderTargetViews = RealToHooked11( *ppRenderTargetViews ); }
+    if ( ppDepthStencilView && *ppDepthStencilView) { *ppDepthStencilView = RealToHooked11( *ppDepthStencilView ); }
     if (_OMGetRenderTargets_post_ptr._value) { (this->*_OMGetRenderTargets_post_ptr._value)(NumViews, ppRenderTargetViews, ppDepthStencilView); }
 }
 
@@ -1348,9 +1348,9 @@ void STDMETHODCALLTYPE D3D11DeviceContextHook::OMGetRenderTargetsAndUnorderedAcc
     calltrace::AutoTrace trace(L"D3D11DeviceContextHook::OMGetRenderTargetsAndUnorderedAccessViews");
     if (_OMGetRenderTargetsAndUnorderedAccessViews_pre_ptr._value) { (this->*_OMGetRenderTargetsAndUnorderedAccessViews_pre_ptr._value)(NumRTVs, ppRenderTargetViews, ppDepthStencilView, UAVStartSlot, NumUAVs, ppUnorderedAccessViews); }
     GetRealObj()->OMGetRenderTargetsAndUnorderedAccessViews(NumRTVs, ppRenderTargetViews, ppDepthStencilView, UAVStartSlot, NumUAVs, ppUnorderedAccessViews);
-    if ( ppRenderTargetViews && *ppRenderTargetViews) { *ppRenderTargetViews = RealToHooked( *ppRenderTargetViews ); }
-    if ( ppDepthStencilView && *ppDepthStencilView) { *ppDepthStencilView = RealToHooked( *ppDepthStencilView ); }
-    if ( ppUnorderedAccessViews && *ppUnorderedAccessViews) { *ppUnorderedAccessViews = RealToHooked( *ppUnorderedAccessViews ); }
+    if ( ppRenderTargetViews && *ppRenderTargetViews) { *ppRenderTargetViews = RealToHooked11( *ppRenderTargetViews ); }
+    if ( ppDepthStencilView && *ppDepthStencilView) { *ppDepthStencilView = RealToHooked11( *ppDepthStencilView ); }
+    if ( ppUnorderedAccessViews && *ppUnorderedAccessViews) { *ppUnorderedAccessViews = RealToHooked11( *ppUnorderedAccessViews ); }
     if (_OMGetRenderTargetsAndUnorderedAccessViews_post_ptr._value) { (this->*_OMGetRenderTargetsAndUnorderedAccessViews_post_ptr._value)(NumRTVs, ppRenderTargetViews, ppDepthStencilView, UAVStartSlot, NumUAVs, ppUnorderedAccessViews); }
 }
 
@@ -1363,7 +1363,7 @@ void STDMETHODCALLTYPE D3D11DeviceContextHook::OMGetBlendState(
     calltrace::AutoTrace trace(L"D3D11DeviceContextHook::OMGetBlendState");
     if (_OMGetBlendState_pre_ptr._value) { (this->*_OMGetBlendState_pre_ptr._value)(ppBlendState, BlendFactor, pSampleMask); }
     GetRealObj()->OMGetBlendState(ppBlendState, BlendFactor, pSampleMask);
-    if ( ppBlendState && *ppBlendState) { *ppBlendState = RealToHooked( *ppBlendState ); }
+    if ( ppBlendState && *ppBlendState) { *ppBlendState = RealToHooked11( *ppBlendState ); }
     if (_OMGetBlendState_post_ptr._value) { (this->*_OMGetBlendState_post_ptr._value)(ppBlendState, BlendFactor, pSampleMask); }
 }
 
@@ -1375,7 +1375,7 @@ void STDMETHODCALLTYPE D3D11DeviceContextHook::OMGetDepthStencilState(
     calltrace::AutoTrace trace(L"D3D11DeviceContextHook::OMGetDepthStencilState");
     if (_OMGetDepthStencilState_pre_ptr._value) { (this->*_OMGetDepthStencilState_pre_ptr._value)(ppDepthStencilState, pStencilRef); }
     GetRealObj()->OMGetDepthStencilState(ppDepthStencilState, pStencilRef);
-    if ( ppDepthStencilState && *ppDepthStencilState) { *ppDepthStencilState = RealToHooked( *ppDepthStencilState ); }
+    if ( ppDepthStencilState && *ppDepthStencilState) { *ppDepthStencilState = RealToHooked11( *ppDepthStencilState ); }
     if (_OMGetDepthStencilState_post_ptr._value) { (this->*_OMGetDepthStencilState_post_ptr._value)(ppDepthStencilState, pStencilRef); }
 }
 
@@ -1387,7 +1387,7 @@ void STDMETHODCALLTYPE D3D11DeviceContextHook::SOGetTargets(
     calltrace::AutoTrace trace(L"D3D11DeviceContextHook::SOGetTargets");
     if (_SOGetTargets_pre_ptr._value) { (this->*_SOGetTargets_pre_ptr._value)(NumBuffers, ppSOTargets); }
     GetRealObj()->SOGetTargets(NumBuffers, ppSOTargets);
-    if ( ppSOTargets && *ppSOTargets) { *ppSOTargets = RealToHooked( *ppSOTargets ); }
+    if ( ppSOTargets && *ppSOTargets) { *ppSOTargets = RealToHooked11( *ppSOTargets ); }
     if (_SOGetTargets_post_ptr._value) { (this->*_SOGetTargets_post_ptr._value)(NumBuffers, ppSOTargets); }
 }
 
@@ -1398,7 +1398,7 @@ void STDMETHODCALLTYPE D3D11DeviceContextHook::RSGetState(
     calltrace::AutoTrace trace(L"D3D11DeviceContextHook::RSGetState");
     if (_RSGetState_pre_ptr._value) { (this->*_RSGetState_pre_ptr._value)(ppRasterizerState); }
     GetRealObj()->RSGetState(ppRasterizerState);
-    if ( ppRasterizerState && *ppRasterizerState) { *ppRasterizerState = RealToHooked( *ppRasterizerState ); }
+    if ( ppRasterizerState && *ppRasterizerState) { *ppRasterizerState = RealToHooked11( *ppRasterizerState ); }
     if (_RSGetState_post_ptr._value) { (this->*_RSGetState_post_ptr._value)(ppRasterizerState); }
 }
 
@@ -1433,7 +1433,7 @@ void STDMETHODCALLTYPE D3D11DeviceContextHook::HSGetShaderResources(
     calltrace::AutoTrace trace(L"D3D11DeviceContextHook::HSGetShaderResources");
     if (_HSGetShaderResources_pre_ptr._value) { (this->*_HSGetShaderResources_pre_ptr._value)(StartSlot, NumViews, ppShaderResourceViews); }
     GetRealObj()->HSGetShaderResources(StartSlot, NumViews, ppShaderResourceViews);
-    if ( ppShaderResourceViews && *ppShaderResourceViews) { *ppShaderResourceViews = RealToHooked( *ppShaderResourceViews ); }
+    if ( ppShaderResourceViews && *ppShaderResourceViews) { *ppShaderResourceViews = RealToHooked11( *ppShaderResourceViews ); }
     if (_HSGetShaderResources_post_ptr._value) { (this->*_HSGetShaderResources_post_ptr._value)(StartSlot, NumViews, ppShaderResourceViews); }
 }
 
@@ -1446,8 +1446,8 @@ void STDMETHODCALLTYPE D3D11DeviceContextHook::HSGetShader(
     calltrace::AutoTrace trace(L"D3D11DeviceContextHook::HSGetShader");
     if (_HSGetShader_pre_ptr._value) { (this->*_HSGetShader_pre_ptr._value)(ppHullShader, ppClassInstances, pNumClassInstances); }
     GetRealObj()->HSGetShader(ppHullShader, ppClassInstances, pNumClassInstances);
-    if ( ppHullShader && *ppHullShader) { *ppHullShader = RealToHooked( *ppHullShader ); }
-    if ( ppClassInstances && *ppClassInstances) { *ppClassInstances = RealToHooked( *ppClassInstances ); }
+    if ( ppHullShader && *ppHullShader) { *ppHullShader = RealToHooked11( *ppHullShader ); }
+    if ( ppClassInstances && *ppClassInstances) { *ppClassInstances = RealToHooked11( *ppClassInstances ); }
     if (_HSGetShader_post_ptr._value) { (this->*_HSGetShader_post_ptr._value)(ppHullShader, ppClassInstances, pNumClassInstances); }
 }
 
@@ -1460,7 +1460,7 @@ void STDMETHODCALLTYPE D3D11DeviceContextHook::HSGetSamplers(
     calltrace::AutoTrace trace(L"D3D11DeviceContextHook::HSGetSamplers");
     if (_HSGetSamplers_pre_ptr._value) { (this->*_HSGetSamplers_pre_ptr._value)(StartSlot, NumSamplers, ppSamplers); }
     GetRealObj()->HSGetSamplers(StartSlot, NumSamplers, ppSamplers);
-    if ( ppSamplers && *ppSamplers) { *ppSamplers = RealToHooked( *ppSamplers ); }
+    if ( ppSamplers && *ppSamplers) { *ppSamplers = RealToHooked11( *ppSamplers ); }
     if (_HSGetSamplers_post_ptr._value) { (this->*_HSGetSamplers_post_ptr._value)(StartSlot, NumSamplers, ppSamplers); }
 }
 
@@ -1473,7 +1473,7 @@ void STDMETHODCALLTYPE D3D11DeviceContextHook::HSGetConstantBuffers(
     calltrace::AutoTrace trace(L"D3D11DeviceContextHook::HSGetConstantBuffers");
     if (_HSGetConstantBuffers_pre_ptr._value) { (this->*_HSGetConstantBuffers_pre_ptr._value)(StartSlot, NumBuffers, ppConstantBuffers); }
     GetRealObj()->HSGetConstantBuffers(StartSlot, NumBuffers, ppConstantBuffers);
-    if ( ppConstantBuffers && *ppConstantBuffers) { *ppConstantBuffers = RealToHooked( *ppConstantBuffers ); }
+    if ( ppConstantBuffers && *ppConstantBuffers) { *ppConstantBuffers = RealToHooked11( *ppConstantBuffers ); }
     if (_HSGetConstantBuffers_post_ptr._value) { (this->*_HSGetConstantBuffers_post_ptr._value)(StartSlot, NumBuffers, ppConstantBuffers); }
 }
 
@@ -1486,7 +1486,7 @@ void STDMETHODCALLTYPE D3D11DeviceContextHook::DSGetShaderResources(
     calltrace::AutoTrace trace(L"D3D11DeviceContextHook::DSGetShaderResources");
     if (_DSGetShaderResources_pre_ptr._value) { (this->*_DSGetShaderResources_pre_ptr._value)(StartSlot, NumViews, ppShaderResourceViews); }
     GetRealObj()->DSGetShaderResources(StartSlot, NumViews, ppShaderResourceViews);
-    if ( ppShaderResourceViews && *ppShaderResourceViews) { *ppShaderResourceViews = RealToHooked( *ppShaderResourceViews ); }
+    if ( ppShaderResourceViews && *ppShaderResourceViews) { *ppShaderResourceViews = RealToHooked11( *ppShaderResourceViews ); }
     if (_DSGetShaderResources_post_ptr._value) { (this->*_DSGetShaderResources_post_ptr._value)(StartSlot, NumViews, ppShaderResourceViews); }
 }
 
@@ -1499,8 +1499,8 @@ void STDMETHODCALLTYPE D3D11DeviceContextHook::DSGetShader(
     calltrace::AutoTrace trace(L"D3D11DeviceContextHook::DSGetShader");
     if (_DSGetShader_pre_ptr._value) { (this->*_DSGetShader_pre_ptr._value)(ppDomainShader, ppClassInstances, pNumClassInstances); }
     GetRealObj()->DSGetShader(ppDomainShader, ppClassInstances, pNumClassInstances);
-    if ( ppDomainShader && *ppDomainShader) { *ppDomainShader = RealToHooked( *ppDomainShader ); }
-    if ( ppClassInstances && *ppClassInstances) { *ppClassInstances = RealToHooked( *ppClassInstances ); }
+    if ( ppDomainShader && *ppDomainShader) { *ppDomainShader = RealToHooked11( *ppDomainShader ); }
+    if ( ppClassInstances && *ppClassInstances) { *ppClassInstances = RealToHooked11( *ppClassInstances ); }
     if (_DSGetShader_post_ptr._value) { (this->*_DSGetShader_post_ptr._value)(ppDomainShader, ppClassInstances, pNumClassInstances); }
 }
 
@@ -1513,7 +1513,7 @@ void STDMETHODCALLTYPE D3D11DeviceContextHook::DSGetSamplers(
     calltrace::AutoTrace trace(L"D3D11DeviceContextHook::DSGetSamplers");
     if (_DSGetSamplers_pre_ptr._value) { (this->*_DSGetSamplers_pre_ptr._value)(StartSlot, NumSamplers, ppSamplers); }
     GetRealObj()->DSGetSamplers(StartSlot, NumSamplers, ppSamplers);
-    if ( ppSamplers && *ppSamplers) { *ppSamplers = RealToHooked( *ppSamplers ); }
+    if ( ppSamplers && *ppSamplers) { *ppSamplers = RealToHooked11( *ppSamplers ); }
     if (_DSGetSamplers_post_ptr._value) { (this->*_DSGetSamplers_post_ptr._value)(StartSlot, NumSamplers, ppSamplers); }
 }
 
@@ -1526,7 +1526,7 @@ void STDMETHODCALLTYPE D3D11DeviceContextHook::DSGetConstantBuffers(
     calltrace::AutoTrace trace(L"D3D11DeviceContextHook::DSGetConstantBuffers");
     if (_DSGetConstantBuffers_pre_ptr._value) { (this->*_DSGetConstantBuffers_pre_ptr._value)(StartSlot, NumBuffers, ppConstantBuffers); }
     GetRealObj()->DSGetConstantBuffers(StartSlot, NumBuffers, ppConstantBuffers);
-    if ( ppConstantBuffers && *ppConstantBuffers) { *ppConstantBuffers = RealToHooked( *ppConstantBuffers ); }
+    if ( ppConstantBuffers && *ppConstantBuffers) { *ppConstantBuffers = RealToHooked11( *ppConstantBuffers ); }
     if (_DSGetConstantBuffers_post_ptr._value) { (this->*_DSGetConstantBuffers_post_ptr._value)(StartSlot, NumBuffers, ppConstantBuffers); }
 }
 
@@ -1539,7 +1539,7 @@ void STDMETHODCALLTYPE D3D11DeviceContextHook::CSGetShaderResources(
     calltrace::AutoTrace trace(L"D3D11DeviceContextHook::CSGetShaderResources");
     if (_CSGetShaderResources_pre_ptr._value) { (this->*_CSGetShaderResources_pre_ptr._value)(StartSlot, NumViews, ppShaderResourceViews); }
     GetRealObj()->CSGetShaderResources(StartSlot, NumViews, ppShaderResourceViews);
-    if ( ppShaderResourceViews && *ppShaderResourceViews) { *ppShaderResourceViews = RealToHooked( *ppShaderResourceViews ); }
+    if ( ppShaderResourceViews && *ppShaderResourceViews) { *ppShaderResourceViews = RealToHooked11( *ppShaderResourceViews ); }
     if (_CSGetShaderResources_post_ptr._value) { (this->*_CSGetShaderResources_post_ptr._value)(StartSlot, NumViews, ppShaderResourceViews); }
 }
 
@@ -1552,7 +1552,7 @@ void STDMETHODCALLTYPE D3D11DeviceContextHook::CSGetUnorderedAccessViews(
     calltrace::AutoTrace trace(L"D3D11DeviceContextHook::CSGetUnorderedAccessViews");
     if (_CSGetUnorderedAccessViews_pre_ptr._value) { (this->*_CSGetUnorderedAccessViews_pre_ptr._value)(StartSlot, NumUAVs, ppUnorderedAccessViews); }
     GetRealObj()->CSGetUnorderedAccessViews(StartSlot, NumUAVs, ppUnorderedAccessViews);
-    if ( ppUnorderedAccessViews && *ppUnorderedAccessViews) { *ppUnorderedAccessViews = RealToHooked( *ppUnorderedAccessViews ); }
+    if ( ppUnorderedAccessViews && *ppUnorderedAccessViews) { *ppUnorderedAccessViews = RealToHooked11( *ppUnorderedAccessViews ); }
     if (_CSGetUnorderedAccessViews_post_ptr._value) { (this->*_CSGetUnorderedAccessViews_post_ptr._value)(StartSlot, NumUAVs, ppUnorderedAccessViews); }
 }
 
@@ -1565,8 +1565,8 @@ void STDMETHODCALLTYPE D3D11DeviceContextHook::CSGetShader(
     calltrace::AutoTrace trace(L"D3D11DeviceContextHook::CSGetShader");
     if (_CSGetShader_pre_ptr._value) { (this->*_CSGetShader_pre_ptr._value)(ppComputeShader, ppClassInstances, pNumClassInstances); }
     GetRealObj()->CSGetShader(ppComputeShader, ppClassInstances, pNumClassInstances);
-    if ( ppComputeShader && *ppComputeShader) { *ppComputeShader = RealToHooked( *ppComputeShader ); }
-    if ( ppClassInstances && *ppClassInstances) { *ppClassInstances = RealToHooked( *ppClassInstances ); }
+    if ( ppComputeShader && *ppComputeShader) { *ppComputeShader = RealToHooked11( *ppComputeShader ); }
+    if ( ppClassInstances && *ppClassInstances) { *ppClassInstances = RealToHooked11( *ppClassInstances ); }
     if (_CSGetShader_post_ptr._value) { (this->*_CSGetShader_post_ptr._value)(ppComputeShader, ppClassInstances, pNumClassInstances); }
 }
 
@@ -1579,7 +1579,7 @@ void STDMETHODCALLTYPE D3D11DeviceContextHook::CSGetSamplers(
     calltrace::AutoTrace trace(L"D3D11DeviceContextHook::CSGetSamplers");
     if (_CSGetSamplers_pre_ptr._value) { (this->*_CSGetSamplers_pre_ptr._value)(StartSlot, NumSamplers, ppSamplers); }
     GetRealObj()->CSGetSamplers(StartSlot, NumSamplers, ppSamplers);
-    if ( ppSamplers && *ppSamplers) { *ppSamplers = RealToHooked( *ppSamplers ); }
+    if ( ppSamplers && *ppSamplers) { *ppSamplers = RealToHooked11( *ppSamplers ); }
     if (_CSGetSamplers_post_ptr._value) { (this->*_CSGetSamplers_post_ptr._value)(StartSlot, NumSamplers, ppSamplers); }
 }
 
@@ -1592,7 +1592,7 @@ void STDMETHODCALLTYPE D3D11DeviceContextHook::CSGetConstantBuffers(
     calltrace::AutoTrace trace(L"D3D11DeviceContextHook::CSGetConstantBuffers");
     if (_CSGetConstantBuffers_pre_ptr._value) { (this->*_CSGetConstantBuffers_pre_ptr._value)(StartSlot, NumBuffers, ppConstantBuffers); }
     GetRealObj()->CSGetConstantBuffers(StartSlot, NumBuffers, ppConstantBuffers);
-    if ( ppConstantBuffers && *ppConstantBuffers) { *ppConstantBuffers = RealToHooked( *ppConstantBuffers ); }
+    if ( ppConstantBuffers && *ppConstantBuffers) { *ppConstantBuffers = RealToHooked11( *ppConstantBuffers ); }
     if (_CSGetConstantBuffers_post_ptr._value) { (this->*_CSGetConstantBuffers_post_ptr._value)(StartSlot, NumBuffers, ppConstantBuffers); }
 }
 
@@ -1642,7 +1642,7 @@ HRESULT STDMETHODCALLTYPE D3D11DeviceContextHook::FinishCommandList(
     calltrace::AutoTrace trace(L"D3D11DeviceContextHook::FinishCommandList");
     if (_FinishCommandList_pre_ptr._value) { (this->*_FinishCommandList_pre_ptr._value)(RestoreDeferredContextState, ppCommandList); }
     HRESULT ret = GetRealObj()->FinishCommandList(RestoreDeferredContextState, ppCommandList);
-    if ( ppCommandList && *ppCommandList) { *ppCommandList = RealToHooked( *ppCommandList ); }
+    if ( ppCommandList && *ppCommandList) { *ppCommandList = RealToHooked11( *ppCommandList ); }
     if (_FinishCommandList_post_ptr._value) { (this->*_FinishCommandList_post_ptr._value)(ret, RestoreDeferredContextState, ppCommandList); }
     return ret;
 }
@@ -2644,7 +2644,7 @@ HRESULT STDMETHODCALLTYPE D3D11VideoDeviceHook::CreateVideoDecoder(
     calltrace::AutoTrace trace(L"D3D11VideoDeviceHook::CreateVideoDecoder");
     if (_CreateVideoDecoder_pre_ptr._value) { (this->*_CreateVideoDecoder_pre_ptr._value)(pVideoDesc, pConfig, ppDecoder); }
     HRESULT ret = GetRealObj()->CreateVideoDecoder(pVideoDesc, pConfig, ppDecoder);
-    if ( ppDecoder && *ppDecoder) { *ppDecoder = RealToHooked( *ppDecoder ); }
+    if ( ppDecoder && *ppDecoder) { *ppDecoder = RealToHooked11( *ppDecoder ); }
     if (_CreateVideoDecoder_post_ptr._value) { (this->*_CreateVideoDecoder_post_ptr._value)(ret, pVideoDesc, pConfig, ppDecoder); }
     return ret;
 }
@@ -2658,7 +2658,7 @@ HRESULT STDMETHODCALLTYPE D3D11VideoDeviceHook::CreateVideoProcessor(
     calltrace::AutoTrace trace(L"D3D11VideoDeviceHook::CreateVideoProcessor");
     if (_CreateVideoProcessor_pre_ptr._value) { (this->*_CreateVideoProcessor_pre_ptr._value)(pEnum, RateConversionIndex, ppVideoProcessor); }
     HRESULT ret = GetRealObj()->CreateVideoProcessor(HookedToReal(pEnum), RateConversionIndex, ppVideoProcessor);
-    if ( ppVideoProcessor && *ppVideoProcessor) { *ppVideoProcessor = RealToHooked( *ppVideoProcessor ); }
+    if ( ppVideoProcessor && *ppVideoProcessor) { *ppVideoProcessor = RealToHooked11( *ppVideoProcessor ); }
     if (_CreateVideoProcessor_post_ptr._value) { (this->*_CreateVideoProcessor_post_ptr._value)(ret, pEnum, RateConversionIndex, ppVideoProcessor); }
     return ret;
 }
@@ -2671,7 +2671,7 @@ HRESULT STDMETHODCALLTYPE D3D11VideoDeviceHook::CreateAuthenticatedChannel(
     calltrace::AutoTrace trace(L"D3D11VideoDeviceHook::CreateAuthenticatedChannel");
     if (_CreateAuthenticatedChannel_pre_ptr._value) { (this->*_CreateAuthenticatedChannel_pre_ptr._value)(ChannelType, ppAuthenticatedChannel); }
     HRESULT ret = GetRealObj()->CreateAuthenticatedChannel(ChannelType, ppAuthenticatedChannel);
-    if ( ppAuthenticatedChannel && *ppAuthenticatedChannel) { *ppAuthenticatedChannel = RealToHooked( *ppAuthenticatedChannel ); }
+    if ( ppAuthenticatedChannel && *ppAuthenticatedChannel) { *ppAuthenticatedChannel = RealToHooked11( *ppAuthenticatedChannel ); }
     if (_CreateAuthenticatedChannel_post_ptr._value) { (this->*_CreateAuthenticatedChannel_post_ptr._value)(ret, ChannelType, ppAuthenticatedChannel); }
     return ret;
 }
@@ -2686,7 +2686,7 @@ HRESULT STDMETHODCALLTYPE D3D11VideoDeviceHook::CreateCryptoSession(
     calltrace::AutoTrace trace(L"D3D11VideoDeviceHook::CreateCryptoSession");
     if (_CreateCryptoSession_pre_ptr._value) { (this->*_CreateCryptoSession_pre_ptr._value)(pCryptoType, pDecoderProfile, pKeyExchangeType, ppCryptoSession); }
     HRESULT ret = GetRealObj()->CreateCryptoSession(pCryptoType, pDecoderProfile, pKeyExchangeType, ppCryptoSession);
-    if ( ppCryptoSession && *ppCryptoSession) { *ppCryptoSession = RealToHooked( *ppCryptoSession ); }
+    if ( ppCryptoSession && *ppCryptoSession) { *ppCryptoSession = RealToHooked11( *ppCryptoSession ); }
     if (_CreateCryptoSession_post_ptr._value) { (this->*_CreateCryptoSession_post_ptr._value)(ret, pCryptoType, pDecoderProfile, pKeyExchangeType, ppCryptoSession); }
     return ret;
 }
@@ -2700,7 +2700,7 @@ HRESULT STDMETHODCALLTYPE D3D11VideoDeviceHook::CreateVideoDecoderOutputView(
     calltrace::AutoTrace trace(L"D3D11VideoDeviceHook::CreateVideoDecoderOutputView");
     if (_CreateVideoDecoderOutputView_pre_ptr._value) { (this->*_CreateVideoDecoderOutputView_pre_ptr._value)(pResource, pDesc, ppVDOVView); }
     HRESULT ret = GetRealObj()->CreateVideoDecoderOutputView(HookedToReal(pResource), pDesc, ppVDOVView);
-    if ( ppVDOVView && *ppVDOVView) { *ppVDOVView = RealToHooked( *ppVDOVView ); }
+    if ( ppVDOVView && *ppVDOVView) { *ppVDOVView = RealToHooked11( *ppVDOVView ); }
     if (_CreateVideoDecoderOutputView_post_ptr._value) { (this->*_CreateVideoDecoderOutputView_post_ptr._value)(ret, pResource, pDesc, ppVDOVView); }
     return ret;
 }
@@ -2715,7 +2715,7 @@ HRESULT STDMETHODCALLTYPE D3D11VideoDeviceHook::CreateVideoProcessorInputView(
     calltrace::AutoTrace trace(L"D3D11VideoDeviceHook::CreateVideoProcessorInputView");
     if (_CreateVideoProcessorInputView_pre_ptr._value) { (this->*_CreateVideoProcessorInputView_pre_ptr._value)(pResource, pEnum, pDesc, ppVPIView); }
     HRESULT ret = GetRealObj()->CreateVideoProcessorInputView(HookedToReal(pResource), HookedToReal(pEnum), pDesc, ppVPIView);
-    if ( ppVPIView && *ppVPIView) { *ppVPIView = RealToHooked( *ppVPIView ); }
+    if ( ppVPIView && *ppVPIView) { *ppVPIView = RealToHooked11( *ppVPIView ); }
     if (_CreateVideoProcessorInputView_post_ptr._value) { (this->*_CreateVideoProcessorInputView_post_ptr._value)(ret, pResource, pEnum, pDesc, ppVPIView); }
     return ret;
 }
@@ -2730,7 +2730,7 @@ HRESULT STDMETHODCALLTYPE D3D11VideoDeviceHook::CreateVideoProcessorOutputView(
     calltrace::AutoTrace trace(L"D3D11VideoDeviceHook::CreateVideoProcessorOutputView");
     if (_CreateVideoProcessorOutputView_pre_ptr._value) { (this->*_CreateVideoProcessorOutputView_pre_ptr._value)(pResource, pEnum, pDesc, ppVPOView); }
     HRESULT ret = GetRealObj()->CreateVideoProcessorOutputView(HookedToReal(pResource), HookedToReal(pEnum), pDesc, ppVPOView);
-    if ( ppVPOView && *ppVPOView) { *ppVPOView = RealToHooked( *ppVPOView ); }
+    if ( ppVPOView && *ppVPOView) { *ppVPOView = RealToHooked11( *ppVPOView ); }
     if (_CreateVideoProcessorOutputView_post_ptr._value) { (this->*_CreateVideoProcessorOutputView_post_ptr._value)(ret, pResource, pEnum, pDesc, ppVPOView); }
     return ret;
 }
@@ -2743,7 +2743,7 @@ HRESULT STDMETHODCALLTYPE D3D11VideoDeviceHook::CreateVideoProcessorEnumerator(
     calltrace::AutoTrace trace(L"D3D11VideoDeviceHook::CreateVideoProcessorEnumerator");
     if (_CreateVideoProcessorEnumerator_pre_ptr._value) { (this->*_CreateVideoProcessorEnumerator_pre_ptr._value)(pDesc, ppEnum); }
     HRESULT ret = GetRealObj()->CreateVideoProcessorEnumerator(pDesc, ppEnum);
-    if ( ppEnum && *ppEnum) { *ppEnum = RealToHooked( *ppEnum ); }
+    if ( ppEnum && *ppEnum) { *ppEnum = RealToHooked11( *ppEnum ); }
     if (_CreateVideoProcessorEnumerator_post_ptr._value) { (this->*_CreateVideoProcessorEnumerator_post_ptr._value)(ret, pDesc, ppEnum); }
     return ret;
 }
@@ -2869,7 +2869,7 @@ HRESULT STDMETHODCALLTYPE D3D11DeviceHook::CreateBuffer(
     calltrace::AutoTrace trace(L"D3D11DeviceHook::CreateBuffer");
     if (_CreateBuffer_pre_ptr._value) { (this->*_CreateBuffer_pre_ptr._value)(pDesc, pInitialData, ppBuffer); }
     HRESULT ret = GetRealObj()->CreateBuffer(pDesc, pInitialData, ppBuffer);
-    if ( ppBuffer && *ppBuffer) { *ppBuffer = RealToHooked( *ppBuffer ); }
+    if ( ppBuffer && *ppBuffer) { *ppBuffer = RealToHooked11( *ppBuffer ); }
     if (_CreateBuffer_post_ptr._value) { (this->*_CreateBuffer_post_ptr._value)(ret, pDesc, pInitialData, ppBuffer); }
     return ret;
 }
@@ -2883,7 +2883,7 @@ HRESULT STDMETHODCALLTYPE D3D11DeviceHook::CreateTexture1D(
     calltrace::AutoTrace trace(L"D3D11DeviceHook::CreateTexture1D");
     if (_CreateTexture1D_pre_ptr._value) { (this->*_CreateTexture1D_pre_ptr._value)(pDesc, pInitialData, ppTexture1D); }
     HRESULT ret = GetRealObj()->CreateTexture1D(pDesc, pInitialData, ppTexture1D);
-    if ( ppTexture1D && *ppTexture1D) { *ppTexture1D = RealToHooked( *ppTexture1D ); }
+    if ( ppTexture1D && *ppTexture1D) { *ppTexture1D = RealToHooked11( *ppTexture1D ); }
     if (_CreateTexture1D_post_ptr._value) { (this->*_CreateTexture1D_post_ptr._value)(ret, pDesc, pInitialData, ppTexture1D); }
     return ret;
 }
@@ -2897,7 +2897,7 @@ HRESULT STDMETHODCALLTYPE D3D11DeviceHook::CreateTexture2D(
     calltrace::AutoTrace trace(L"D3D11DeviceHook::CreateTexture2D");
     if (_CreateTexture2D_pre_ptr._value) { (this->*_CreateTexture2D_pre_ptr._value)(pDesc, pInitialData, ppTexture2D); }
     HRESULT ret = GetRealObj()->CreateTexture2D(pDesc, pInitialData, ppTexture2D);
-    if ( ppTexture2D && *ppTexture2D) { *ppTexture2D = RealToHooked( *ppTexture2D ); }
+    if ( ppTexture2D && *ppTexture2D) { *ppTexture2D = RealToHooked11( *ppTexture2D ); }
     if (_CreateTexture2D_post_ptr._value) { (this->*_CreateTexture2D_post_ptr._value)(ret, pDesc, pInitialData, ppTexture2D); }
     return ret;
 }
@@ -2911,7 +2911,7 @@ HRESULT STDMETHODCALLTYPE D3D11DeviceHook::CreateTexture3D(
     calltrace::AutoTrace trace(L"D3D11DeviceHook::CreateTexture3D");
     if (_CreateTexture3D_pre_ptr._value) { (this->*_CreateTexture3D_pre_ptr._value)(pDesc, pInitialData, ppTexture3D); }
     HRESULT ret = GetRealObj()->CreateTexture3D(pDesc, pInitialData, ppTexture3D);
-    if ( ppTexture3D && *ppTexture3D) { *ppTexture3D = RealToHooked( *ppTexture3D ); }
+    if ( ppTexture3D && *ppTexture3D) { *ppTexture3D = RealToHooked11( *ppTexture3D ); }
     if (_CreateTexture3D_post_ptr._value) { (this->*_CreateTexture3D_post_ptr._value)(ret, pDesc, pInitialData, ppTexture3D); }
     return ret;
 }
@@ -2925,7 +2925,7 @@ HRESULT STDMETHODCALLTYPE D3D11DeviceHook::CreateShaderResourceView(
     calltrace::AutoTrace trace(L"D3D11DeviceHook::CreateShaderResourceView");
     if (_CreateShaderResourceView_pre_ptr._value) { (this->*_CreateShaderResourceView_pre_ptr._value)(pResource, pDesc, ppSRView); }
     HRESULT ret = GetRealObj()->CreateShaderResourceView(HookedToReal(pResource), pDesc, ppSRView);
-    if ( ppSRView && *ppSRView) { *ppSRView = RealToHooked( *ppSRView ); }
+    if ( ppSRView && *ppSRView) { *ppSRView = RealToHooked11( *ppSRView ); }
     if (_CreateShaderResourceView_post_ptr._value) { (this->*_CreateShaderResourceView_post_ptr._value)(ret, pResource, pDesc, ppSRView); }
     return ret;
 }
@@ -2939,7 +2939,7 @@ HRESULT STDMETHODCALLTYPE D3D11DeviceHook::CreateUnorderedAccessView(
     calltrace::AutoTrace trace(L"D3D11DeviceHook::CreateUnorderedAccessView");
     if (_CreateUnorderedAccessView_pre_ptr._value) { (this->*_CreateUnorderedAccessView_pre_ptr._value)(pResource, pDesc, ppUAView); }
     HRESULT ret = GetRealObj()->CreateUnorderedAccessView(HookedToReal(pResource), pDesc, ppUAView);
-    if ( ppUAView && *ppUAView) { *ppUAView = RealToHooked( *ppUAView ); }
+    if ( ppUAView && *ppUAView) { *ppUAView = RealToHooked11( *ppUAView ); }
     if (_CreateUnorderedAccessView_post_ptr._value) { (this->*_CreateUnorderedAccessView_post_ptr._value)(ret, pResource, pDesc, ppUAView); }
     return ret;
 }
@@ -2953,7 +2953,7 @@ HRESULT STDMETHODCALLTYPE D3D11DeviceHook::CreateRenderTargetView(
     calltrace::AutoTrace trace(L"D3D11DeviceHook::CreateRenderTargetView");
     if (_CreateRenderTargetView_pre_ptr._value) { (this->*_CreateRenderTargetView_pre_ptr._value)(pResource, pDesc, ppRTView); }
     HRESULT ret = GetRealObj()->CreateRenderTargetView(HookedToReal(pResource), pDesc, ppRTView);
-    if ( ppRTView && *ppRTView) { *ppRTView = RealToHooked( *ppRTView ); }
+    if ( ppRTView && *ppRTView) { *ppRTView = RealToHooked11( *ppRTView ); }
     if (_CreateRenderTargetView_post_ptr._value) { (this->*_CreateRenderTargetView_post_ptr._value)(ret, pResource, pDesc, ppRTView); }
     return ret;
 }
@@ -2967,7 +2967,7 @@ HRESULT STDMETHODCALLTYPE D3D11DeviceHook::CreateDepthStencilView(
     calltrace::AutoTrace trace(L"D3D11DeviceHook::CreateDepthStencilView");
     if (_CreateDepthStencilView_pre_ptr._value) { (this->*_CreateDepthStencilView_pre_ptr._value)(pResource, pDesc, ppDepthStencilView); }
     HRESULT ret = GetRealObj()->CreateDepthStencilView(HookedToReal(pResource), pDesc, ppDepthStencilView);
-    if ( ppDepthStencilView && *ppDepthStencilView) { *ppDepthStencilView = RealToHooked( *ppDepthStencilView ); }
+    if ( ppDepthStencilView && *ppDepthStencilView) { *ppDepthStencilView = RealToHooked11( *ppDepthStencilView ); }
     if (_CreateDepthStencilView_post_ptr._value) { (this->*_CreateDepthStencilView_post_ptr._value)(ret, pResource, pDesc, ppDepthStencilView); }
     return ret;
 }
@@ -2983,7 +2983,7 @@ HRESULT STDMETHODCALLTYPE D3D11DeviceHook::CreateInputLayout(
     calltrace::AutoTrace trace(L"D3D11DeviceHook::CreateInputLayout");
     if (_CreateInputLayout_pre_ptr._value) { (this->*_CreateInputLayout_pre_ptr._value)(pInputElementDescs, NumElements, pShaderBytecodeWithInputSignature, BytecodeLength, ppInputLayout); }
     HRESULT ret = GetRealObj()->CreateInputLayout(pInputElementDescs, NumElements, pShaderBytecodeWithInputSignature, BytecodeLength, ppInputLayout);
-    if ( ppInputLayout && *ppInputLayout) { *ppInputLayout = RealToHooked( *ppInputLayout ); }
+    if ( ppInputLayout && *ppInputLayout) { *ppInputLayout = RealToHooked11( *ppInputLayout ); }
     if (_CreateInputLayout_post_ptr._value) { (this->*_CreateInputLayout_post_ptr._value)(ret, pInputElementDescs, NumElements, pShaderBytecodeWithInputSignature, BytecodeLength, ppInputLayout); }
     return ret;
 }
@@ -2998,7 +2998,7 @@ HRESULT STDMETHODCALLTYPE D3D11DeviceHook::CreateVertexShader(
     calltrace::AutoTrace trace(L"D3D11DeviceHook::CreateVertexShader");
     if (_CreateVertexShader_pre_ptr._value) { (this->*_CreateVertexShader_pre_ptr._value)(pShaderBytecode, BytecodeLength, pClassLinkage, ppVertexShader); }
     HRESULT ret = GetRealObj()->CreateVertexShader(pShaderBytecode, BytecodeLength, HookedToReal(pClassLinkage), ppVertexShader);
-    if ( ppVertexShader && *ppVertexShader) { *ppVertexShader = RealToHooked( *ppVertexShader ); }
+    if ( ppVertexShader && *ppVertexShader) { *ppVertexShader = RealToHooked11( *ppVertexShader ); }
     if (_CreateVertexShader_post_ptr._value) { (this->*_CreateVertexShader_post_ptr._value)(ret, pShaderBytecode, BytecodeLength, pClassLinkage, ppVertexShader); }
     return ret;
 }
@@ -3013,7 +3013,7 @@ HRESULT STDMETHODCALLTYPE D3D11DeviceHook::CreateGeometryShader(
     calltrace::AutoTrace trace(L"D3D11DeviceHook::CreateGeometryShader");
     if (_CreateGeometryShader_pre_ptr._value) { (this->*_CreateGeometryShader_pre_ptr._value)(pShaderBytecode, BytecodeLength, pClassLinkage, ppGeometryShader); }
     HRESULT ret = GetRealObj()->CreateGeometryShader(pShaderBytecode, BytecodeLength, HookedToReal(pClassLinkage), ppGeometryShader);
-    if ( ppGeometryShader && *ppGeometryShader) { *ppGeometryShader = RealToHooked( *ppGeometryShader ); }
+    if ( ppGeometryShader && *ppGeometryShader) { *ppGeometryShader = RealToHooked11( *ppGeometryShader ); }
     if (_CreateGeometryShader_post_ptr._value) { (this->*_CreateGeometryShader_post_ptr._value)(ret, pShaderBytecode, BytecodeLength, pClassLinkage, ppGeometryShader); }
     return ret;
 }
@@ -3033,7 +3033,7 @@ HRESULT STDMETHODCALLTYPE D3D11DeviceHook::CreateGeometryShaderWithStreamOutput(
     calltrace::AutoTrace trace(L"D3D11DeviceHook::CreateGeometryShaderWithStreamOutput");
     if (_CreateGeometryShaderWithStreamOutput_pre_ptr._value) { (this->*_CreateGeometryShaderWithStreamOutput_pre_ptr._value)(pShaderBytecode, BytecodeLength, pSODeclaration, NumEntries, pBufferStrides, NumStrides, RasterizedStream, pClassLinkage, ppGeometryShader); }
     HRESULT ret = GetRealObj()->CreateGeometryShaderWithStreamOutput(pShaderBytecode, BytecodeLength, pSODeclaration, NumEntries, pBufferStrides, NumStrides, RasterizedStream, HookedToReal(pClassLinkage), ppGeometryShader);
-    if ( ppGeometryShader && *ppGeometryShader) { *ppGeometryShader = RealToHooked( *ppGeometryShader ); }
+    if ( ppGeometryShader && *ppGeometryShader) { *ppGeometryShader = RealToHooked11( *ppGeometryShader ); }
     if (_CreateGeometryShaderWithStreamOutput_post_ptr._value) { (this->*_CreateGeometryShaderWithStreamOutput_post_ptr._value)(ret, pShaderBytecode, BytecodeLength, pSODeclaration, NumEntries, pBufferStrides, NumStrides, RasterizedStream, pClassLinkage, ppGeometryShader); }
     return ret;
 }
@@ -3048,7 +3048,7 @@ HRESULT STDMETHODCALLTYPE D3D11DeviceHook::CreatePixelShader(
     calltrace::AutoTrace trace(L"D3D11DeviceHook::CreatePixelShader");
     if (_CreatePixelShader_pre_ptr._value) { (this->*_CreatePixelShader_pre_ptr._value)(pShaderBytecode, BytecodeLength, pClassLinkage, ppPixelShader); }
     HRESULT ret = GetRealObj()->CreatePixelShader(pShaderBytecode, BytecodeLength, HookedToReal(pClassLinkage), ppPixelShader);
-    if ( ppPixelShader && *ppPixelShader) { *ppPixelShader = RealToHooked( *ppPixelShader ); }
+    if ( ppPixelShader && *ppPixelShader) { *ppPixelShader = RealToHooked11( *ppPixelShader ); }
     if (_CreatePixelShader_post_ptr._value) { (this->*_CreatePixelShader_post_ptr._value)(ret, pShaderBytecode, BytecodeLength, pClassLinkage, ppPixelShader); }
     return ret;
 }
@@ -3063,7 +3063,7 @@ HRESULT STDMETHODCALLTYPE D3D11DeviceHook::CreateHullShader(
     calltrace::AutoTrace trace(L"D3D11DeviceHook::CreateHullShader");
     if (_CreateHullShader_pre_ptr._value) { (this->*_CreateHullShader_pre_ptr._value)(pShaderBytecode, BytecodeLength, pClassLinkage, ppHullShader); }
     HRESULT ret = GetRealObj()->CreateHullShader(pShaderBytecode, BytecodeLength, HookedToReal(pClassLinkage), ppHullShader);
-    if ( ppHullShader && *ppHullShader) { *ppHullShader = RealToHooked( *ppHullShader ); }
+    if ( ppHullShader && *ppHullShader) { *ppHullShader = RealToHooked11( *ppHullShader ); }
     if (_CreateHullShader_post_ptr._value) { (this->*_CreateHullShader_post_ptr._value)(ret, pShaderBytecode, BytecodeLength, pClassLinkage, ppHullShader); }
     return ret;
 }
@@ -3078,7 +3078,7 @@ HRESULT STDMETHODCALLTYPE D3D11DeviceHook::CreateDomainShader(
     calltrace::AutoTrace trace(L"D3D11DeviceHook::CreateDomainShader");
     if (_CreateDomainShader_pre_ptr._value) { (this->*_CreateDomainShader_pre_ptr._value)(pShaderBytecode, BytecodeLength, pClassLinkage, ppDomainShader); }
     HRESULT ret = GetRealObj()->CreateDomainShader(pShaderBytecode, BytecodeLength, HookedToReal(pClassLinkage), ppDomainShader);
-    if ( ppDomainShader && *ppDomainShader) { *ppDomainShader = RealToHooked( *ppDomainShader ); }
+    if ( ppDomainShader && *ppDomainShader) { *ppDomainShader = RealToHooked11( *ppDomainShader ); }
     if (_CreateDomainShader_post_ptr._value) { (this->*_CreateDomainShader_post_ptr._value)(ret, pShaderBytecode, BytecodeLength, pClassLinkage, ppDomainShader); }
     return ret;
 }
@@ -3093,7 +3093,7 @@ HRESULT STDMETHODCALLTYPE D3D11DeviceHook::CreateComputeShader(
     calltrace::AutoTrace trace(L"D3D11DeviceHook::CreateComputeShader");
     if (_CreateComputeShader_pre_ptr._value) { (this->*_CreateComputeShader_pre_ptr._value)(pShaderBytecode, BytecodeLength, pClassLinkage, ppComputeShader); }
     HRESULT ret = GetRealObj()->CreateComputeShader(pShaderBytecode, BytecodeLength, HookedToReal(pClassLinkage), ppComputeShader);
-    if ( ppComputeShader && *ppComputeShader) { *ppComputeShader = RealToHooked( *ppComputeShader ); }
+    if ( ppComputeShader && *ppComputeShader) { *ppComputeShader = RealToHooked11( *ppComputeShader ); }
     if (_CreateComputeShader_post_ptr._value) { (this->*_CreateComputeShader_post_ptr._value)(ret, pShaderBytecode, BytecodeLength, pClassLinkage, ppComputeShader); }
     return ret;
 }
@@ -3105,7 +3105,7 @@ HRESULT STDMETHODCALLTYPE D3D11DeviceHook::CreateClassLinkage(
     calltrace::AutoTrace trace(L"D3D11DeviceHook::CreateClassLinkage");
     if (_CreateClassLinkage_pre_ptr._value) { (this->*_CreateClassLinkage_pre_ptr._value)(ppLinkage); }
     HRESULT ret = GetRealObj()->CreateClassLinkage(ppLinkage);
-    if ( ppLinkage && *ppLinkage) { *ppLinkage = RealToHooked( *ppLinkage ); }
+    if ( ppLinkage && *ppLinkage) { *ppLinkage = RealToHooked11( *ppLinkage ); }
     if (_CreateClassLinkage_post_ptr._value) { (this->*_CreateClassLinkage_post_ptr._value)(ret, ppLinkage); }
     return ret;
 }
@@ -3118,7 +3118,7 @@ HRESULT STDMETHODCALLTYPE D3D11DeviceHook::CreateBlendState(
     calltrace::AutoTrace trace(L"D3D11DeviceHook::CreateBlendState");
     if (_CreateBlendState_pre_ptr._value) { (this->*_CreateBlendState_pre_ptr._value)(pBlendStateDesc, ppBlendState); }
     HRESULT ret = GetRealObj()->CreateBlendState(pBlendStateDesc, ppBlendState);
-    if ( ppBlendState && *ppBlendState) { *ppBlendState = RealToHooked( *ppBlendState ); }
+    if ( ppBlendState && *ppBlendState) { *ppBlendState = RealToHooked11( *ppBlendState ); }
     if (_CreateBlendState_post_ptr._value) { (this->*_CreateBlendState_post_ptr._value)(ret, pBlendStateDesc, ppBlendState); }
     return ret;
 }
@@ -3131,7 +3131,7 @@ HRESULT STDMETHODCALLTYPE D3D11DeviceHook::CreateDepthStencilState(
     calltrace::AutoTrace trace(L"D3D11DeviceHook::CreateDepthStencilState");
     if (_CreateDepthStencilState_pre_ptr._value) { (this->*_CreateDepthStencilState_pre_ptr._value)(pDepthStencilDesc, ppDepthStencilState); }
     HRESULT ret = GetRealObj()->CreateDepthStencilState(pDepthStencilDesc, ppDepthStencilState);
-    if ( ppDepthStencilState && *ppDepthStencilState) { *ppDepthStencilState = RealToHooked( *ppDepthStencilState ); }
+    if ( ppDepthStencilState && *ppDepthStencilState) { *ppDepthStencilState = RealToHooked11( *ppDepthStencilState ); }
     if (_CreateDepthStencilState_post_ptr._value) { (this->*_CreateDepthStencilState_post_ptr._value)(ret, pDepthStencilDesc, ppDepthStencilState); }
     return ret;
 }
@@ -3144,7 +3144,7 @@ HRESULT STDMETHODCALLTYPE D3D11DeviceHook::CreateRasterizerState(
     calltrace::AutoTrace trace(L"D3D11DeviceHook::CreateRasterizerState");
     if (_CreateRasterizerState_pre_ptr._value) { (this->*_CreateRasterizerState_pre_ptr._value)(pRasterizerDesc, ppRasterizerState); }
     HRESULT ret = GetRealObj()->CreateRasterizerState(pRasterizerDesc, ppRasterizerState);
-    if ( ppRasterizerState && *ppRasterizerState) { *ppRasterizerState = RealToHooked( *ppRasterizerState ); }
+    if ( ppRasterizerState && *ppRasterizerState) { *ppRasterizerState = RealToHooked11( *ppRasterizerState ); }
     if (_CreateRasterizerState_post_ptr._value) { (this->*_CreateRasterizerState_post_ptr._value)(ret, pRasterizerDesc, ppRasterizerState); }
     return ret;
 }
@@ -3157,7 +3157,7 @@ HRESULT STDMETHODCALLTYPE D3D11DeviceHook::CreateSamplerState(
     calltrace::AutoTrace trace(L"D3D11DeviceHook::CreateSamplerState");
     if (_CreateSamplerState_pre_ptr._value) { (this->*_CreateSamplerState_pre_ptr._value)(pSamplerDesc, ppSamplerState); }
     HRESULT ret = GetRealObj()->CreateSamplerState(pSamplerDesc, ppSamplerState);
-    if ( ppSamplerState && *ppSamplerState) { *ppSamplerState = RealToHooked( *ppSamplerState ); }
+    if ( ppSamplerState && *ppSamplerState) { *ppSamplerState = RealToHooked11( *ppSamplerState ); }
     if (_CreateSamplerState_post_ptr._value) { (this->*_CreateSamplerState_post_ptr._value)(ret, pSamplerDesc, ppSamplerState); }
     return ret;
 }
@@ -3170,7 +3170,7 @@ HRESULT STDMETHODCALLTYPE D3D11DeviceHook::CreateQuery(
     calltrace::AutoTrace trace(L"D3D11DeviceHook::CreateQuery");
     if (_CreateQuery_pre_ptr._value) { (this->*_CreateQuery_pre_ptr._value)(pQueryDesc, ppQuery); }
     HRESULT ret = GetRealObj()->CreateQuery(pQueryDesc, ppQuery);
-    if ( ppQuery && *ppQuery) { *ppQuery = RealToHooked( *ppQuery ); }
+    if ( ppQuery && *ppQuery) { *ppQuery = RealToHooked11( *ppQuery ); }
     if (_CreateQuery_post_ptr._value) { (this->*_CreateQuery_post_ptr._value)(ret, pQueryDesc, ppQuery); }
     return ret;
 }
@@ -3183,7 +3183,7 @@ HRESULT STDMETHODCALLTYPE D3D11DeviceHook::CreatePredicate(
     calltrace::AutoTrace trace(L"D3D11DeviceHook::CreatePredicate");
     if (_CreatePredicate_pre_ptr._value) { (this->*_CreatePredicate_pre_ptr._value)(pPredicateDesc, ppPredicate); }
     HRESULT ret = GetRealObj()->CreatePredicate(pPredicateDesc, ppPredicate);
-    if ( ppPredicate && *ppPredicate) { *ppPredicate = RealToHooked( *ppPredicate ); }
+    if ( ppPredicate && *ppPredicate) { *ppPredicate = RealToHooked11( *ppPredicate ); }
     if (_CreatePredicate_post_ptr._value) { (this->*_CreatePredicate_post_ptr._value)(ret, pPredicateDesc, ppPredicate); }
     return ret;
 }
@@ -3196,7 +3196,7 @@ HRESULT STDMETHODCALLTYPE D3D11DeviceHook::CreateCounter(
     calltrace::AutoTrace trace(L"D3D11DeviceHook::CreateCounter");
     if (_CreateCounter_pre_ptr._value) { (this->*_CreateCounter_pre_ptr._value)(pCounterDesc, ppCounter); }
     HRESULT ret = GetRealObj()->CreateCounter(pCounterDesc, ppCounter);
-    if ( ppCounter && *ppCounter) { *ppCounter = RealToHooked( *ppCounter ); }
+    if ( ppCounter && *ppCounter) { *ppCounter = RealToHooked11( *ppCounter ); }
     if (_CreateCounter_post_ptr._value) { (this->*_CreateCounter_post_ptr._value)(ret, pCounterDesc, ppCounter); }
     return ret;
 }
@@ -3209,7 +3209,7 @@ HRESULT STDMETHODCALLTYPE D3D11DeviceHook::CreateDeferredContext(
     calltrace::AutoTrace trace(L"D3D11DeviceHook::CreateDeferredContext");
     if (_CreateDeferredContext_pre_ptr._value) { (this->*_CreateDeferredContext_pre_ptr._value)(ContextFlags, ppDeferredContext); }
     HRESULT ret = GetRealObj()->CreateDeferredContext(ContextFlags, ppDeferredContext);
-    if ( ppDeferredContext && *ppDeferredContext) { *ppDeferredContext = RealToHooked( *ppDeferredContext ); }
+    if ( ppDeferredContext && *ppDeferredContext) { *ppDeferredContext = RealToHooked11( *ppDeferredContext ); }
     if (_CreateDeferredContext_post_ptr._value) { (this->*_CreateDeferredContext_post_ptr._value)(ret, ContextFlags, ppDeferredContext); }
     return ret;
 }
@@ -3369,7 +3369,7 @@ void STDMETHODCALLTYPE D3D11DeviceHook::GetImmediateContext(
     calltrace::AutoTrace trace(L"D3D11DeviceHook::GetImmediateContext");
     if (_GetImmediateContext_pre_ptr._value) { (this->*_GetImmediateContext_pre_ptr._value)(ppImmediateContext); }
     GetRealObj()->GetImmediateContext(ppImmediateContext);
-    if ( ppImmediateContext && *ppImmediateContext) { *ppImmediateContext = RealToHooked( *ppImmediateContext ); }
+    if ( ppImmediateContext && *ppImmediateContext) { *ppImmediateContext = RealToHooked11( *ppImmediateContext ); }
     if (_GetImmediateContext_post_ptr._value) { (this->*_GetImmediateContext_post_ptr._value)(ppImmediateContext); }
 }
 
@@ -3563,7 +3563,7 @@ void STDMETHODCALLTYPE D3D11DeviceContext1Hook::VSGetConstantBuffers1(
     calltrace::AutoTrace trace(L"D3D11DeviceContext1Hook::VSGetConstantBuffers1");
     if (_VSGetConstantBuffers1_pre_ptr._value) { (this->*_VSGetConstantBuffers1_pre_ptr._value)(StartSlot, NumBuffers, ppConstantBuffers, pFirstConstant, pNumConstants); }
     GetRealObj()->VSGetConstantBuffers1(StartSlot, NumBuffers, ppConstantBuffers, pFirstConstant, pNumConstants);
-    if ( ppConstantBuffers && *ppConstantBuffers) { *ppConstantBuffers = RealToHooked( *ppConstantBuffers ); }
+    if ( ppConstantBuffers && *ppConstantBuffers) { *ppConstantBuffers = RealToHooked11( *ppConstantBuffers ); }
     if (_VSGetConstantBuffers1_post_ptr._value) { (this->*_VSGetConstantBuffers1_post_ptr._value)(StartSlot, NumBuffers, ppConstantBuffers, pFirstConstant, pNumConstants); }
 }
 
@@ -3578,7 +3578,7 @@ void STDMETHODCALLTYPE D3D11DeviceContext1Hook::HSGetConstantBuffers1(
     calltrace::AutoTrace trace(L"D3D11DeviceContext1Hook::HSGetConstantBuffers1");
     if (_HSGetConstantBuffers1_pre_ptr._value) { (this->*_HSGetConstantBuffers1_pre_ptr._value)(StartSlot, NumBuffers, ppConstantBuffers, pFirstConstant, pNumConstants); }
     GetRealObj()->HSGetConstantBuffers1(StartSlot, NumBuffers, ppConstantBuffers, pFirstConstant, pNumConstants);
-    if ( ppConstantBuffers && *ppConstantBuffers) { *ppConstantBuffers = RealToHooked( *ppConstantBuffers ); }
+    if ( ppConstantBuffers && *ppConstantBuffers) { *ppConstantBuffers = RealToHooked11( *ppConstantBuffers ); }
     if (_HSGetConstantBuffers1_post_ptr._value) { (this->*_HSGetConstantBuffers1_post_ptr._value)(StartSlot, NumBuffers, ppConstantBuffers, pFirstConstant, pNumConstants); }
 }
 
@@ -3593,7 +3593,7 @@ void STDMETHODCALLTYPE D3D11DeviceContext1Hook::DSGetConstantBuffers1(
     calltrace::AutoTrace trace(L"D3D11DeviceContext1Hook::DSGetConstantBuffers1");
     if (_DSGetConstantBuffers1_pre_ptr._value) { (this->*_DSGetConstantBuffers1_pre_ptr._value)(StartSlot, NumBuffers, ppConstantBuffers, pFirstConstant, pNumConstants); }
     GetRealObj()->DSGetConstantBuffers1(StartSlot, NumBuffers, ppConstantBuffers, pFirstConstant, pNumConstants);
-    if ( ppConstantBuffers && *ppConstantBuffers) { *ppConstantBuffers = RealToHooked( *ppConstantBuffers ); }
+    if ( ppConstantBuffers && *ppConstantBuffers) { *ppConstantBuffers = RealToHooked11( *ppConstantBuffers ); }
     if (_DSGetConstantBuffers1_post_ptr._value) { (this->*_DSGetConstantBuffers1_post_ptr._value)(StartSlot, NumBuffers, ppConstantBuffers, pFirstConstant, pNumConstants); }
 }
 
@@ -3608,7 +3608,7 @@ void STDMETHODCALLTYPE D3D11DeviceContext1Hook::GSGetConstantBuffers1(
     calltrace::AutoTrace trace(L"D3D11DeviceContext1Hook::GSGetConstantBuffers1");
     if (_GSGetConstantBuffers1_pre_ptr._value) { (this->*_GSGetConstantBuffers1_pre_ptr._value)(StartSlot, NumBuffers, ppConstantBuffers, pFirstConstant, pNumConstants); }
     GetRealObj()->GSGetConstantBuffers1(StartSlot, NumBuffers, ppConstantBuffers, pFirstConstant, pNumConstants);
-    if ( ppConstantBuffers && *ppConstantBuffers) { *ppConstantBuffers = RealToHooked( *ppConstantBuffers ); }
+    if ( ppConstantBuffers && *ppConstantBuffers) { *ppConstantBuffers = RealToHooked11( *ppConstantBuffers ); }
     if (_GSGetConstantBuffers1_post_ptr._value) { (this->*_GSGetConstantBuffers1_post_ptr._value)(StartSlot, NumBuffers, ppConstantBuffers, pFirstConstant, pNumConstants); }
 }
 
@@ -3623,7 +3623,7 @@ void STDMETHODCALLTYPE D3D11DeviceContext1Hook::PSGetConstantBuffers1(
     calltrace::AutoTrace trace(L"D3D11DeviceContext1Hook::PSGetConstantBuffers1");
     if (_PSGetConstantBuffers1_pre_ptr._value) { (this->*_PSGetConstantBuffers1_pre_ptr._value)(StartSlot, NumBuffers, ppConstantBuffers, pFirstConstant, pNumConstants); }
     GetRealObj()->PSGetConstantBuffers1(StartSlot, NumBuffers, ppConstantBuffers, pFirstConstant, pNumConstants);
-    if ( ppConstantBuffers && *ppConstantBuffers) { *ppConstantBuffers = RealToHooked( *ppConstantBuffers ); }
+    if ( ppConstantBuffers && *ppConstantBuffers) { *ppConstantBuffers = RealToHooked11( *ppConstantBuffers ); }
     if (_PSGetConstantBuffers1_post_ptr._value) { (this->*_PSGetConstantBuffers1_post_ptr._value)(StartSlot, NumBuffers, ppConstantBuffers, pFirstConstant, pNumConstants); }
 }
 
@@ -3638,7 +3638,7 @@ void STDMETHODCALLTYPE D3D11DeviceContext1Hook::CSGetConstantBuffers1(
     calltrace::AutoTrace trace(L"D3D11DeviceContext1Hook::CSGetConstantBuffers1");
     if (_CSGetConstantBuffers1_pre_ptr._value) { (this->*_CSGetConstantBuffers1_pre_ptr._value)(StartSlot, NumBuffers, ppConstantBuffers, pFirstConstant, pNumConstants); }
     GetRealObj()->CSGetConstantBuffers1(StartSlot, NumBuffers, ppConstantBuffers, pFirstConstant, pNumConstants);
-    if ( ppConstantBuffers && *ppConstantBuffers) { *ppConstantBuffers = RealToHooked( *ppConstantBuffers ); }
+    if ( ppConstantBuffers && *ppConstantBuffers) { *ppConstantBuffers = RealToHooked11( *ppConstantBuffers ); }
     if (_CSGetConstantBuffers1_post_ptr._value) { (this->*_CSGetConstantBuffers1_post_ptr._value)(StartSlot, NumBuffers, ppConstantBuffers, pFirstConstant, pNumConstants); }
 }
 
@@ -3685,7 +3685,7 @@ void STDMETHODCALLTYPE D3D11Device1Hook::GetImmediateContext1(
     calltrace::AutoTrace trace(L"D3D11Device1Hook::GetImmediateContext1");
     if (_GetImmediateContext1_pre_ptr._value) { (this->*_GetImmediateContext1_pre_ptr._value)(ppImmediateContext); }
     GetRealObj()->GetImmediateContext1(ppImmediateContext);
-    if ( ppImmediateContext && *ppImmediateContext) { *ppImmediateContext = RealToHooked( *ppImmediateContext ); }
+    if ( ppImmediateContext && *ppImmediateContext) { *ppImmediateContext = RealToHooked11( *ppImmediateContext ); }
     if (_GetImmediateContext1_post_ptr._value) { (this->*_GetImmediateContext1_post_ptr._value)(ppImmediateContext); }
 }
 
@@ -3697,7 +3697,7 @@ HRESULT STDMETHODCALLTYPE D3D11Device1Hook::CreateDeferredContext1(
     calltrace::AutoTrace trace(L"D3D11Device1Hook::CreateDeferredContext1");
     if (_CreateDeferredContext1_pre_ptr._value) { (this->*_CreateDeferredContext1_pre_ptr._value)(ContextFlags, ppDeferredContext); }
     HRESULT ret = GetRealObj()->CreateDeferredContext1(ContextFlags, ppDeferredContext);
-    if ( ppDeferredContext && *ppDeferredContext) { *ppDeferredContext = RealToHooked( *ppDeferredContext ); }
+    if ( ppDeferredContext && *ppDeferredContext) { *ppDeferredContext = RealToHooked11( *ppDeferredContext ); }
     if (_CreateDeferredContext1_post_ptr._value) { (this->*_CreateDeferredContext1_post_ptr._value)(ret, ContextFlags, ppDeferredContext); }
     return ret;
 }
@@ -3710,7 +3710,7 @@ HRESULT STDMETHODCALLTYPE D3D11Device1Hook::CreateBlendState1(
     calltrace::AutoTrace trace(L"D3D11Device1Hook::CreateBlendState1");
     if (_CreateBlendState1_pre_ptr._value) { (this->*_CreateBlendState1_pre_ptr._value)(pBlendStateDesc, ppBlendState); }
     HRESULT ret = GetRealObj()->CreateBlendState1(pBlendStateDesc, ppBlendState);
-    if ( ppBlendState && *ppBlendState) { *ppBlendState = RealToHooked( *ppBlendState ); }
+    if ( ppBlendState && *ppBlendState) { *ppBlendState = RealToHooked11( *ppBlendState ); }
     if (_CreateBlendState1_post_ptr._value) { (this->*_CreateBlendState1_post_ptr._value)(ret, pBlendStateDesc, ppBlendState); }
     return ret;
 }
@@ -3723,7 +3723,7 @@ HRESULT STDMETHODCALLTYPE D3D11Device1Hook::CreateRasterizerState1(
     calltrace::AutoTrace trace(L"D3D11Device1Hook::CreateRasterizerState1");
     if (_CreateRasterizerState1_pre_ptr._value) { (this->*_CreateRasterizerState1_pre_ptr._value)(pRasterizerDesc, ppRasterizerState); }
     HRESULT ret = GetRealObj()->CreateRasterizerState1(pRasterizerDesc, ppRasterizerState);
-    if ( ppRasterizerState && *ppRasterizerState) { *ppRasterizerState = RealToHooked( *ppRasterizerState ); }
+    if ( ppRasterizerState && *ppRasterizerState) { *ppRasterizerState = RealToHooked11( *ppRasterizerState ); }
     if (_CreateRasterizerState1_post_ptr._value) { (this->*_CreateRasterizerState1_post_ptr._value)(ret, pRasterizerDesc, ppRasterizerState); }
     return ret;
 }
@@ -3873,7 +3873,7 @@ HRESULT STDMETHODCALLTYPE D3D11DebugHook::GetSwapChain(
     calltrace::AutoTrace trace(L"D3D11DebugHook::GetSwapChain");
     if (_GetSwapChain_pre_ptr._value) { (this->*_GetSwapChain_pre_ptr._value)(ppSwapChain); }
     HRESULT ret = GetRealObj()->GetSwapChain(ppSwapChain);
-    if ( ppSwapChain && *ppSwapChain) { *ppSwapChain = RealToHooked( *ppSwapChain ); }
+    if ( ppSwapChain && *ppSwapChain) { *ppSwapChain = RealToHooked11( *ppSwapChain ); }
     if (_GetSwapChain_post_ptr._value) { (this->*_GetSwapChain_post_ptr._value)(ret, ppSwapChain); }
     return ret;
 }
@@ -4397,7 +4397,7 @@ HRESULT STDMETHODCALLTYPE DXGIObjectHook::GetParent(
     calltrace::AutoTrace trace(L"DXGIObjectHook::GetParent");
     if (_GetParent_pre_ptr._value) { (this->*_GetParent_pre_ptr._value)(riid, ppParent); }
     HRESULT ret = GetRealObj()->GetParent(riid, ppParent);
-    if (SUCCEEDED(ret)) { *ppParent = RealToHooked(riid, (IDXGIObject*)*ppParent ); }
+    if (SUCCEEDED(ret)) { *ppParent = RealToHooked11(riid, (IDXGIObject*)*ppParent ); }
     if (_GetParent_post_ptr._value) { (this->*_GetParent_post_ptr._value)(ret, riid, ppParent); }
     return ret;
 }
@@ -4410,7 +4410,7 @@ HRESULT STDMETHODCALLTYPE DXGIDeviceSubObjectHook::GetDevice(
     calltrace::AutoTrace trace(L"DXGIDeviceSubObjectHook::GetDevice");
     if (_GetDevice_pre_ptr._value) { (this->*_GetDevice_pre_ptr._value)(riid, ppDevice); }
     HRESULT ret = GetRealObj()->GetDevice(riid, ppDevice);
-    if (SUCCEEDED(ret)) { *ppDevice = RealToHooked(riid, (IDXGIObject*)*ppDevice ); }
+    if (SUCCEEDED(ret)) { *ppDevice = RealToHooked11(riid, (IDXGIObject*)*ppDevice ); }
     if (_GetDevice_post_ptr._value) { (this->*_GetDevice_post_ptr._value)(ret, riid, ppDevice); }
     return ret;
 }
@@ -4546,7 +4546,7 @@ HRESULT STDMETHODCALLTYPE DXGIAdapterHook::EnumOutputs(
     calltrace::AutoTrace trace(L"DXGIAdapterHook::EnumOutputs");
     if (_EnumOutputs_pre_ptr._value) { (this->*_EnumOutputs_pre_ptr._value)(Output, ppOutput); }
     HRESULT ret = GetRealObj()->EnumOutputs(Output, ppOutput);
-    if ( ppOutput && *ppOutput) { *ppOutput = RealToHooked( *ppOutput ); }
+    if ( ppOutput && *ppOutput) { *ppOutput = RealToHooked11( *ppOutput ); }
     if (_EnumOutputs_post_ptr._value) { (this->*_EnumOutputs_post_ptr._value)(ret, Output, ppOutput); }
     return ret;
 }
@@ -4754,7 +4754,7 @@ HRESULT STDMETHODCALLTYPE DXGISwapChainHook::GetFullscreenState(
     calltrace::AutoTrace trace(L"DXGISwapChainHook::GetFullscreenState");
     if (_GetFullscreenState_pre_ptr._value) { (this->*_GetFullscreenState_pre_ptr._value)(pFullscreen, ppTarget); }
     HRESULT ret = GetRealObj()->GetFullscreenState(pFullscreen, ppTarget);
-    if ( ppTarget && *ppTarget) { *ppTarget = RealToHooked( *ppTarget ); }
+    if ( ppTarget && *ppTarget) { *ppTarget = RealToHooked11( *ppTarget ); }
     if (_GetFullscreenState_post_ptr._value) { (this->*_GetFullscreenState_post_ptr._value)(ret, pFullscreen, ppTarget); }
     return ret;
 }
@@ -4803,7 +4803,7 @@ HRESULT STDMETHODCALLTYPE DXGISwapChainHook::GetContainingOutput(
     calltrace::AutoTrace trace(L"DXGISwapChainHook::GetContainingOutput");
     if (_GetContainingOutput_pre_ptr._value) { (this->*_GetContainingOutput_pre_ptr._value)(ppOutput); }
     HRESULT ret = GetRealObj()->GetContainingOutput(ppOutput);
-    if ( ppOutput && *ppOutput) { *ppOutput = RealToHooked( *ppOutput ); }
+    if ( ppOutput && *ppOutput) { *ppOutput = RealToHooked11( *ppOutput ); }
     if (_GetContainingOutput_post_ptr._value) { (this->*_GetContainingOutput_post_ptr._value)(ret, ppOutput); }
     return ret;
 }
@@ -4838,7 +4838,7 @@ HRESULT STDMETHODCALLTYPE DXGIFactoryHook::EnumAdapters(
     calltrace::AutoTrace trace(L"DXGIFactoryHook::EnumAdapters");
     if (_EnumAdapters_pre_ptr._value) { (this->*_EnumAdapters_pre_ptr._value)(Adapter, ppAdapter); }
     HRESULT ret = GetRealObj()->EnumAdapters(Adapter, ppAdapter);
-    if ( ppAdapter && *ppAdapter) { *ppAdapter = RealToHooked( *ppAdapter ); }
+    if ( ppAdapter && *ppAdapter) { *ppAdapter = RealToHooked11( *ppAdapter ); }
     if (_EnumAdapters_post_ptr._value) { (this->*_EnumAdapters_post_ptr._value)(ret, Adapter, ppAdapter); }
     return ret;
 }
@@ -4875,7 +4875,7 @@ HRESULT STDMETHODCALLTYPE DXGIFactoryHook::CreateSwapChain(
     calltrace::AutoTrace trace(L"DXGIFactoryHook::CreateSwapChain");
     if (_CreateSwapChain_pre_ptr._value) { (this->*_CreateSwapChain_pre_ptr._value)(pDevice, pDesc, ppSwapChain); }
     HRESULT ret = GetRealObj()->CreateSwapChain(HookedToReal(pDevice), pDesc, ppSwapChain);
-    if ( ppSwapChain && *ppSwapChain) { *ppSwapChain = RealToHooked( *ppSwapChain ); }
+    if ( ppSwapChain && *ppSwapChain) { *ppSwapChain = RealToHooked11( *ppSwapChain ); }
     if (_CreateSwapChain_post_ptr._value) { (this->*_CreateSwapChain_post_ptr._value)(ret, pDevice, pDesc, ppSwapChain); }
     return ret;
 }
@@ -4888,7 +4888,7 @@ HRESULT STDMETHODCALLTYPE DXGIFactoryHook::CreateSoftwareAdapter(
     calltrace::AutoTrace trace(L"DXGIFactoryHook::CreateSoftwareAdapter");
     if (_CreateSoftwareAdapter_pre_ptr._value) { (this->*_CreateSoftwareAdapter_pre_ptr._value)(Module, ppAdapter); }
     HRESULT ret = GetRealObj()->CreateSoftwareAdapter(Module, ppAdapter);
-    if ( ppAdapter && *ppAdapter) { *ppAdapter = RealToHooked( *ppAdapter ); }
+    if ( ppAdapter && *ppAdapter) { *ppAdapter = RealToHooked11( *ppAdapter ); }
     if (_CreateSoftwareAdapter_post_ptr._value) { (this->*_CreateSoftwareAdapter_post_ptr._value)(ret, Module, ppAdapter); }
     return ret;
 }
@@ -4900,7 +4900,7 @@ HRESULT STDMETHODCALLTYPE DXGIDeviceHook::GetAdapter(
     calltrace::AutoTrace trace(L"DXGIDeviceHook::GetAdapter");
     if (_GetAdapter_pre_ptr._value) { (this->*_GetAdapter_pre_ptr._value)(pAdapter); }
     HRESULT ret = GetRealObj()->GetAdapter(pAdapter);
-    if ( pAdapter && *pAdapter) { *pAdapter = RealToHooked( *pAdapter ); }
+    if ( pAdapter && *pAdapter) { *pAdapter = RealToHooked11( *pAdapter ); }
     if (_GetAdapter_post_ptr._value) { (this->*_GetAdapter_post_ptr._value)(ret, pAdapter); }
     return ret;
 }
@@ -4916,7 +4916,7 @@ HRESULT STDMETHODCALLTYPE DXGIDeviceHook::CreateSurface(
     calltrace::AutoTrace trace(L"DXGIDeviceHook::CreateSurface");
     if (_CreateSurface_pre_ptr._value) { (this->*_CreateSurface_pre_ptr._value)(pDesc, NumSurfaces, Usage, pSharedResource, ppSurface); }
     HRESULT ret = GetRealObj()->CreateSurface(pDesc, NumSurfaces, Usage, pSharedResource, ppSurface);
-    if ( ppSurface && *ppSurface) { *ppSurface = RealToHooked( *ppSurface ); }
+    if ( ppSurface && *ppSurface) { *ppSurface = RealToHooked11( *ppSurface ); }
     if (_CreateSurface_post_ptr._value) { (this->*_CreateSurface_post_ptr._value)(ret, pDesc, NumSurfaces, Usage, pSharedResource, ppSurface); }
     return ret;
 }
@@ -4964,7 +4964,7 @@ HRESULT STDMETHODCALLTYPE DXGIFactory1Hook::EnumAdapters1(
     calltrace::AutoTrace trace(L"DXGIFactory1Hook::EnumAdapters1");
     if (_EnumAdapters1_pre_ptr._value) { (this->*_EnumAdapters1_pre_ptr._value)(Adapter, ppAdapter); }
     HRESULT ret = GetRealObj()->EnumAdapters1(Adapter, ppAdapter);
-    if ( ppAdapter && *ppAdapter) { *ppAdapter = RealToHooked( *ppAdapter ); }
+    if ( ppAdapter && *ppAdapter) { *ppAdapter = RealToHooked11( *ppAdapter ); }
     if (_EnumAdapters1_post_ptr._value) { (this->*_EnumAdapters1_post_ptr._value)(ret, Adapter, ppAdapter); }
     return ret;
 }
@@ -5051,7 +5051,7 @@ HRESULT STDMETHODCALLTYPE DXGIOutputDuplicationHook::AcquireNextFrame(
     calltrace::AutoTrace trace(L"DXGIOutputDuplicationHook::AcquireNextFrame");
     if (_AcquireNextFrame_pre_ptr._value) { (this->*_AcquireNextFrame_pre_ptr._value)(TimeoutInMilliseconds, pFrameInfo, ppDesktopResource); }
     HRESULT ret = GetRealObj()->AcquireNextFrame(TimeoutInMilliseconds, pFrameInfo, ppDesktopResource);
-    if ( ppDesktopResource && *ppDesktopResource) { *ppDesktopResource = RealToHooked( *ppDesktopResource ); }
+    if ( ppDesktopResource && *ppDesktopResource) { *ppDesktopResource = RealToHooked11( *ppDesktopResource ); }
     if (_AcquireNextFrame_post_ptr._value) { (this->*_AcquireNextFrame_post_ptr._value)(ret, TimeoutInMilliseconds, pFrameInfo, ppDesktopResource); }
     return ret;
 }
@@ -5148,7 +5148,7 @@ HRESULT STDMETHODCALLTYPE DXGIResource1Hook::CreateSubresourceSurface(
     calltrace::AutoTrace trace(L"DXGIResource1Hook::CreateSubresourceSurface");
     if (_CreateSubresourceSurface_pre_ptr._value) { (this->*_CreateSubresourceSurface_pre_ptr._value)(index, ppSurface); }
     HRESULT ret = GetRealObj()->CreateSubresourceSurface(index, ppSurface);
-    if ( ppSurface && *ppSurface) { *ppSurface = RealToHooked( *ppSurface ); }
+    if ( ppSurface && *ppSurface) { *ppSurface = RealToHooked11( *ppSurface ); }
     if (_CreateSubresourceSurface_post_ptr._value) { (this->*_CreateSubresourceSurface_post_ptr._value)(ret, index, ppSurface); }
     return ret;
 }
@@ -5279,7 +5279,7 @@ HRESULT STDMETHODCALLTYPE DXGISwapChain1Hook::GetRestrictToOutput(
     calltrace::AutoTrace trace(L"DXGISwapChain1Hook::GetRestrictToOutput");
     if (_GetRestrictToOutput_pre_ptr._value) { (this->*_GetRestrictToOutput_pre_ptr._value)(ppRestrictToOutput); }
     HRESULT ret = GetRealObj()->GetRestrictToOutput(ppRestrictToOutput);
-    if ( ppRestrictToOutput && *ppRestrictToOutput) { *ppRestrictToOutput = RealToHooked( *ppRestrictToOutput ); }
+    if ( ppRestrictToOutput && *ppRestrictToOutput) { *ppRestrictToOutput = RealToHooked11( *ppRestrictToOutput ); }
     if (_GetRestrictToOutput_post_ptr._value) { (this->*_GetRestrictToOutput_post_ptr._value)(ret, ppRestrictToOutput); }
     return ret;
 }
@@ -5350,7 +5350,7 @@ HRESULT STDMETHODCALLTYPE DXGIFactory2Hook::CreateSwapChainForHwnd(
     calltrace::AutoTrace trace(L"DXGIFactory2Hook::CreateSwapChainForHwnd");
     if (_CreateSwapChainForHwnd_pre_ptr._value) { (this->*_CreateSwapChainForHwnd_pre_ptr._value)(pDevice, hWnd, pDesc, pFullscreenDesc, pRestrictToOutput, ppSwapChain); }
     HRESULT ret = GetRealObj()->CreateSwapChainForHwnd(pDevice, hWnd, pDesc, pFullscreenDesc, HookedToReal(pRestrictToOutput), ppSwapChain);
-    if ( ppSwapChain && *ppSwapChain) { *ppSwapChain = RealToHooked( *ppSwapChain ); }
+    if ( ppSwapChain && *ppSwapChain) { *ppSwapChain = RealToHooked11( *ppSwapChain ); }
     if (_CreateSwapChainForHwnd_post_ptr._value) { (this->*_CreateSwapChainForHwnd_post_ptr._value)(ret, pDevice, hWnd, pDesc, pFullscreenDesc, pRestrictToOutput, ppSwapChain); }
     return ret;
 }
@@ -5366,7 +5366,7 @@ HRESULT STDMETHODCALLTYPE DXGIFactory2Hook::CreateSwapChainForCoreWindow(
     calltrace::AutoTrace trace(L"DXGIFactory2Hook::CreateSwapChainForCoreWindow");
     if (_CreateSwapChainForCoreWindow_pre_ptr._value) { (this->*_CreateSwapChainForCoreWindow_pre_ptr._value)(pDevice, pWindow, pDesc, pRestrictToOutput, ppSwapChain); }
     HRESULT ret = GetRealObj()->CreateSwapChainForCoreWindow(pDevice, pWindow, pDesc, HookedToReal(pRestrictToOutput), ppSwapChain);
-    if ( ppSwapChain && *ppSwapChain) { *ppSwapChain = RealToHooked( *ppSwapChain ); }
+    if ( ppSwapChain && *ppSwapChain) { *ppSwapChain = RealToHooked11( *ppSwapChain ); }
     if (_CreateSwapChainForCoreWindow_post_ptr._value) { (this->*_CreateSwapChainForCoreWindow_post_ptr._value)(ret, pDevice, pWindow, pDesc, pRestrictToOutput, ppSwapChain); }
     return ret;
 }
@@ -5463,7 +5463,7 @@ HRESULT STDMETHODCALLTYPE DXGIFactory2Hook::CreateSwapChainForComposition(
     calltrace::AutoTrace trace(L"DXGIFactory2Hook::CreateSwapChainForComposition");
     if (_CreateSwapChainForComposition_pre_ptr._value) { (this->*_CreateSwapChainForComposition_pre_ptr._value)(pDevice, pDesc, pRestrictToOutput, ppSwapChain); }
     HRESULT ret = GetRealObj()->CreateSwapChainForComposition(pDevice, pDesc, HookedToReal(pRestrictToOutput), ppSwapChain);
-    if ( ppSwapChain && *ppSwapChain) { *ppSwapChain = RealToHooked( *ppSwapChain ); }
+    if ( ppSwapChain && *ppSwapChain) { *ppSwapChain = RealToHooked11( *ppSwapChain ); }
     if (_CreateSwapChainForComposition_post_ptr._value) { (this->*_CreateSwapChainForComposition_post_ptr._value)(ret, pDevice, pDesc, pRestrictToOutput, ppSwapChain); }
     return ret;
 }
@@ -5525,7 +5525,7 @@ HRESULT STDMETHODCALLTYPE DXGIOutput1Hook::DuplicateOutput(
     calltrace::AutoTrace trace(L"DXGIOutput1Hook::DuplicateOutput");
     if (_DuplicateOutput_pre_ptr._value) { (this->*_DuplicateOutput_pre_ptr._value)(pDevice, ppOutputDuplication); }
     HRESULT ret = GetRealObj()->DuplicateOutput(pDevice, ppOutputDuplication);
-    if ( ppOutputDuplication && *ppOutputDuplication) { *ppOutputDuplication = RealToHooked( *ppOutputDuplication ); }
+    if ( ppOutputDuplication && *ppOutputDuplication) { *ppOutputDuplication = RealToHooked11( *ppOutputDuplication ); }
     if (_DuplicateOutput_post_ptr._value) { (this->*_DuplicateOutput_post_ptr._value)(ret, pDevice, ppOutputDuplication); }
     return ret;
 }

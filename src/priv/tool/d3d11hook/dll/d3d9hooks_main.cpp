@@ -1,4 +1,5 @@
 #include "pch.h"
+#include "hooks9.h"
 #include "hooks_shared_impl.cpp"
 #define INSIDE_D3D9_HOOK
 #include "d3d9hooks_exports.h"

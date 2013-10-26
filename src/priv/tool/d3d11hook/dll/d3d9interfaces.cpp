@@ -1,6 +1,5 @@
 #include "pch.h"
-#include "hooks.h"
-#include "d3d/d3d9.h"
+#include "hooks9.h"
 
 static const InterfaceDesc sAllD3D9Interfaces[] =
 {

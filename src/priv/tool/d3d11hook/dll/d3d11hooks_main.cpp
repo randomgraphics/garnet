@@ -1,4 +1,5 @@
 #include "pch.h"
+#include "hooks11.h"
 #include "hooks_shared_impl.cpp"
 #define INSIDE_D3D11_HOOK
 #include "d3d11hooks_exports.h"
@@ -70,7 +71,7 @@ CreateDXGIFactoryHook(
 #if HOOK_ENABLED
     if( SUCCEEDED(hr) && 1 == trace.getCurrentLevel() )
     {
-        if( ppFactory ) *ppFactory = RealToHooked(riid, (IDXGIObject*)*ppFactory);
+        if( ppFactory ) *ppFactory = RealToHooked11(riid, (IDXGIObject*)*ppFactory);
     }
 #endif
     // success
@@ -117,8 +118,8 @@ D3D11CreateDeviceHook(
 
     if( SUCCEEDED(hr) && 1 == trace.getCurrentLevel() )
     {
-        if( ppDevice ) *ppDevice = RealToHooked(*ppDevice);
-        if( ppImmediateContext ) *ppImmediateContext = RealToHooked(*ppImmediateContext);
+        if( ppDevice ) *ppDevice = RealToHooked11(*ppDevice);
+        if( ppImmediateContext ) *ppImmediateContext = RealToHooked11(*ppImmediateContext);
     }
 
     return hr;
@@ -171,9 +172,9 @@ D3D11CreateDeviceAndSwapChainHook(
 
     if( SUCCEEDED(hr) && 1 == trace.getCurrentLevel() )
     {
-        if( ppSwapChain ) *ppSwapChain = RealToHooked(*ppSwapChain);
-        if( ppDevice ) *ppDevice = RealToHooked(*ppDevice);
-        if( ppImmediateContext ) *ppImmediateContext = RealToHooked(*ppImmediateContext);
+        if( ppSwapChain ) *ppSwapChain = RealToHooked11(*ppSwapChain);
+        if( ppDevice ) *ppDevice = RealToHooked11(*ppDevice);
+        if( ppImmediateContext ) *ppImmediateContext = RealToHooked11(*ppImmediateContext);
     }
 
     return hr;

@@ -69,16 +69,11 @@ class FunctionParameter:
                self._type.find('REFIID') >= 0
 
     def IsHookedInterface( self ):
-        return self._type.find(' ID3D9') >= 0 or \
-               self._type.find(' IDXGI') >= 0 or \
-               'IDXGIOutput' == self._interface_name and 'FindClosestMatchingMode' == self._method_name and 'pConcernedDevice' == self._name or \
-               'IDXGIOutput' == self._interface_name and 'TakeOwnership' == self._method_name and 'pDevice' == self._name or \
-               'IDXGIFactory' == self._interface_name and 'CreateSwapChain' == self._method_name and 'pDevice' == self._name or \
+        return self._type.find('IDirect3D') >= 0 or \
                None
 
     def IsOutput( self ) :
-        result = '_Out' == self._type[:4]
-        #if result: print self._interface_name + '::' + self._method_name, self._type, self._name
+        result = '**' == self._type[-2:]
         return result
 
 class FunctionSignature:
@@ -102,7 +97,7 @@ class FunctionSignature:
         for i in range(len(self._parameter_list)):
             p = self._parameter_list[i]
             if p.IsHookedInterface() and p.IsOutput():
-                fp.write('    if ( ' + p._name + ' && *' + p._name + ') { *' + p._name + ' = RealToHooked( *' + p._name + ' ); }\n')
+                fp.write('    if ( ' + p._name + ' && *' + p._name + ') { *' + p._name + ' = RealToHooked9( *' + p._name + ' ); }\n')
             # special case for IDXGIObject.GetParent()
             elif 'IDXGIObject' == p._interface_name and 'GetParent' == p._method_name and 'ppParent' == p._name or \
                  'IDXGIDeviceSubObject' == p._interface_name and 'GetDevice' == p._method_name and 'ppDevice' == p._name:
@@ -272,72 +267,42 @@ class InterfaceSigature:
 # ------------------------------------------------------------------------------
 # Returns instance of FunctionSignature or None
 def PARSE_get_interface_method_decl( interface_name, line ):
-    m = re.match(r"virtual (\w+) STDMETHODCALLTYPE (\w+)", line)
+    m = re.match(r"STDMETHOD\((\w+)\)", line)
     if m is not None:
-        #print 'm = ', m.group(0)
-        return FunctionSignature('virtual', m.group(1), 'STDMETHODCALLTYPE', m.group(2), interface_name)
+        return FunctionSignature('virtual', 'HRESULT', 'STDMETHODCALLTYPE', m.group(1), interface_name)
     else:
-        return None
+        m = re.match(r"STDMETHOD_\((\w+), (\w+)\)", line)
+        if m is not None:
+            return FunctionSignature('virtual', m.group(1), 'STDMETHODCALLTYPE', m.group(2), interface_name)
+    return None
 
 # ------------------------------------------------------------------------------
 # Returns FunctionParameter or None
-def PARSE_get_func_parameter( interface_name, method_name, line ):
-    # __in_opt  const FLOAT parameter,
-    m = re.match(r"(.+[^\w])(\w+),$", line)
-    if m is not None:
-        #print 'm[1] = "',m.group(1),'" m[2] = "',m.group(2),'"'
-        type = m.group(1)
-        name = m.group(2)
-        count = None
-        if type.find('_In_reads') >= 0:
-            # the parameter is an input array, like: __In_reads_opt_(xxxx) ....
-            m = re.match(r"_In_reads\w+\(\s*(\w+)\s*\)", line)
-            if m is not None:
-                count = m.group(1)
-                #print type
-                #print interface_name + '::' + method_name, name, m.group(1)
-        return FunctionParameter(interface_name, method_name, type, name, variant_array_count=count)
-
-    # __in  const UINT Value) = 0;
-    m = re.match(r"(.+[^\w])(\w+)\) = 0;$", line)
-    if m is not None:
-        type = m.group(1)
-        name = m.group(2)
-        count = None
-        #if 'ID3D9DeviceContext' == interface_name and 'VSSetConstantBuffers' == method_name: print m
-        if type.find('_In_reads') >= 0:
-            # the parameter is an input array, like: __In_reads_opt_(xxxx) ....
-            m = re.match(r"_In_reads\w+\(\s*(\w+)\s*\)", line)
-            count = m.group(1)
-            #print type
-            #print interface_name + '::' + method_name, name, m.group(1)
-        return FunctionParameter(interface_name, method_name, type, name, variant_array_count=count)
-
-    # __in_opt  const FLOAT BlendFactor[ 4 ],
-    m = re.match(r"(.+[^\w])(\w+)\[\s*(\w+)\s*\],$", line)
-    if m is not None:
-        type = m.group(1)
-        name = m.group(2)
-        count = m.group(3)
-        #print interface_name + '::' + method_name, type, name, count
-        return FunctionParameter(interface_name, method_name, type, name, immediate_array_count=count)
-
-    #  __in  const FLOAT ColorRGBA[ 4 ]) = 0;
-    m = re.match(r"(.+[^\w])(\w+)\[\s*(\w+)\s*\]\) = 0;$", line)
-    if m is not None:
-        #print 'm[1] = "',m.group(1),'" m[2] = "',m.group(2),'" m[3] = "',m.group(3),'"'
-        return FunctionParameter(interface_name, method_name, m.group(1), m.group(2), immediate_array_count=m.group(3))
-
-    # comment line
-    m = re.match(r"/\*.*", line)
-    if m is not None:
-        return None
-
-    UTIL_error('Unrecognized function parameter line: ' + line)
-    return None
+def PARSE_get_func_parameters( interface_name, method_name, line ):
+    m = re.match(r".+\(THIS_ (.+)\)|.+\(THIS()\)", line)
+    if not m:
+        UTIL_error('unrecognized line: ' + line)
+        return []
+    if not m.group(1):
+        # this is expected. Means no arguments
+        return []
+    result = []
+    param_list = m.groups(1)[0].strip()
+    for p in param_list.split(','):
+        i1 = p.rfind(' ')
+        i2 = p.rfind('*')
+        i3 = p.rfind('&')
+        i = max(i1,max(i2,i3))
+        if i < 0 or '&' == p[-1:] or '*' == p[-1:]:
+            UTIL_error('parameter name is missing: ' + line)
+        ptype = p[:i+1].strip()
+        pname = p[i+1:]
+        result.append(FunctionParameter(interface_name, method_name, ptype, pname))
+        pass
+    return result
 
 def PARSE_get_parent_class(text):
-    m = re.match(r"\w+ : public (\w+)", text)
+    m = re.match(r"DECLARE_INTERFACE_\(\w+, (\w+)", text)
     if m is not None:
         return m.group(1)
     else:
@@ -357,11 +322,13 @@ def GetParentInterfaceList(interface_name):
 class D3D9HooksFile:
     def __init__(self):
         self._header = open('d3d9hooks.h', 'w')
-        self._header.write('// script generated file. Do _NOT_ edit.\n\n')
+        self._header.write('// script generated file. Do _NOT_ edit.\n\n'
+                           '#include "hooks9.h"\n'
+                           '\n')
         self._cpp = open('d3d9hooks.cpp', 'w')
         self._cpp.write('// script generated file. Do _NOT_ edit.\n\n')
         self._cpp.write('#include "pch.h"\n')
-        self._cpp.write('#include "hooks.h"\n\n')
+        self._cpp.write('#include "d3d9hooks.h"\n\n')
 
     def WriteHookDecl(self, interface_name, class_name, methods):
         f = self._header
@@ -393,7 +360,7 @@ class D3D9HooksFile:
                 '    ' + class_name + '(UnknownBase & unknown, ');
         for p in parents:
             f.write(g_interfaces[p]._hookedClassName + ' & ' + p[1:] + ', ')
-        f.write('    IUnknown * realobj)\n' \
+        f.write('IUnknown * realobj)\n' \
                 '        : BASE_CLASS(unknown, realobj)\n')
         for p in parents:
             f.write('        , _' + p[1:] + '(' + p[1:] + ')\n')
@@ -455,45 +422,40 @@ def PARSE_interface( interface_name, lines ):
 
     class_name = interface_name[1:] + 'Hook' # name of the hook class
 
-    start_line = interface_name + ' : public'
+    start_line = 'DECLARE_INTERFACE_(' + interface_name + ','
     found = False
     ended = False
     methods = []
-    func_sig = None
+    parent_class_name = None
     parent_class = None
 
     for l in lines:
         if  -1 != l.find(start_line):
-            parent_class = PARSE_get_parent_class(l)
-            if None != parent_class:
-                if not parent_class in g_interfaces:
-                    UTIL_warn('    Parent class ' + parent_class + ' has not been parsed yet.')
+            parent_class_name = PARSE_get_parent_class(l)
+            if None != parent_class_name:
+                if not parent_class_name in g_interfaces:
+                    UTIL_warn('    Parent class ' + parent_class_name + ' has not been parsed yet.')
+                parent_class = g_interfaces[parent_class_name]
                 found = True
         elif found and l == '};': ended = True
         elif found and (not ended):
-            temp_func_sig = PARSE_get_interface_method_decl(interface_name, l)
-            if temp_func_sig is not None:
-                # write function parameter, if it is not written yet.
-                if func_sig is not None: methods.append(func_sig)
-                func_sig = temp_func_sig
-            elif (func_sig is not None) and len(l) > 0:
-                func_param = PARSE_get_func_parameter(interface_name, func_sig._name, l)
-                if func_param is not None:
-                    func_sig.AddParameter(func_param)
-            elif (func_sig is not None):
+            func_sig = PARSE_get_interface_method_decl(interface_name, l)
+            parent_methods = []
+            ancestor = parent_class;
+            while ancestor:
+                for m in ancestor._methods:
+                    parent_methods.append(m._name)
+                aname = g_parents[ancestor._name];
+                ancestor = g_interfaces[aname] if aname else None
+            if func_sig and ('QueryInterface' != func_sig._name) and (not func_sig._name in parent_methods):
+                func_params = PARSE_get_func_parameters(interface_name, func_sig._name, l)
+                for p in func_params: func_sig.AddParameter(p)
                 methods.append(func_sig)
-                func_sig = None
-            pass
         pass # end-of-for
-
-    # Handle the last methd.
-    if func_sig is not None:
-        methods.append(func_sig)
-        func_sig = None
 
     # write methods to file
     if found and ended:
-        g_parents[interface_name] = parent_class;
+        g_parents[interface_name] = parent_class_name;
         """generate meta file
         with open(interface_name + "_meta.h", "w") as f:
             f.write('// script generated file. DO NOT edit.\n\n')
@@ -579,7 +541,7 @@ extern const char * const g_D3D9CallIDText;
         pass
 
 # ------------------------------------------------------------------------------
-# Gather all interfaces defined in an opened file.
+# a file that list all known D3D9 interfaces
 class InterfaceNameFile :
     def __init__( self ) :
         self._file = open("d3d9interfaces_meta.h", "w")
@@ -589,10 +551,11 @@ class InterfaceNameFile :
         self._file.close();
         self._file = None;
 
+    # Gather all interfaces defined in an opened file.
     def Gather(self, lines, sourceFileName):
         interfaces = []
         for l in lines:
-            m = re.match(r"(\w+) : public (\w+)", l)
+            m = re.match(r"DECLARE_INTERFACE_\((\w+)\s*,\s*(\w+)\)", l)
             if m is None: continue
             interfaces += [m.group(1)]
         self._file.write('\n// ' + sourceFileName + '\n')
@@ -626,7 +589,7 @@ with open( 'd3d/d3d9.h' ) as f:
 with open("d3d9factories.cpp", "w") as f:
     f.write('// script generated file. DO NOT edit.\n\n'
             '#include "pch.h"\n'
-            '#include "hooks.h"\n\n'
+            '#include "d3d9hooks.h"\n\n'
             'void HookedClassFactory::registerAll()\n'
             '{\n')
     for interfaceName, v in g_interfaces.iteritems():
