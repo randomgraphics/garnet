@@ -1,5 +1,4 @@
-#include <windows.h>
-#include <stdio.h>
+#include "pch.h"
 #include "d3d11hooks_exports.h"
 
 HINSTANCE mHinst = 0, mHinstDLL = 0;
