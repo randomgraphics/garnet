@@ -1,8 +1,6 @@
 // Do _NOT_ compile this file directly. Instead, include this file as part of
 // API specific cpp file, to avoid compile confliction
 
-#include "hooks.h"
-
 // *****************************************************************************
 // Class Factory
 // *****************************************************************************

@@ -102,11 +102,11 @@ class FunctionSignature:
         for i in range(len(self._parameter_list)):
             p = self._parameter_list[i]
             if p.IsHookedInterface() and p.IsOutput():
-                fp.write('    if ( ' + p._name + ' && *' + p._name + ') { *' + p._name + ' = RealToHooked( *' + p._name + ' ); }\n')
+                fp.write('    if ( ' + p._name + ' && *' + p._name + ') { *' + p._name + ' = RealToHooked11( *' + p._name + ' ); }\n')
             # special case for IDXGIObject.GetParent()
             elif 'IDXGIObject' == p._interface_name and 'GetParent' == p._method_name and 'ppParent' == p._name or \
                  'IDXGIDeviceSubObject' == p._interface_name and 'GetDevice' == p._method_name and 'ppDevice' == p._name:
-                fp.write('    if (SUCCEEDED(ret)) { *' + p._name + ' = RealToHooked(riid, (IDXGIObject*)*' + p._name + ' ); }\n')
+                fp.write('    if (SUCCEEDED(ret)) { *' + p._name + ' = RealToHooked11(riid, (IDXGIObject*)*' + p._name + ' ); }\n')
         pass; # end-of-for
 
     def WriteParameterList(self, fp, writeType, writeName, makeRef = False, newLine = False, convertHookedPtr = None):
@@ -358,8 +358,7 @@ class D3D11HooksFile:
     def __init__(self):
         self._header = open('d3d11hooks.h', 'w')
         self._header.write('// script generated file. Do _NOT_ edit.\n\n'
-                           '#include "hooks.h"\n'
-                           '#include "d3d/d3d11_1.h"\n'
+                           '#include "hooks11.h"\n'
                            '\n')
         self._cpp = open('d3d11hooks.cpp', 'w')
         self._cpp.write('// script generated file. Do _NOT_ edit.\n\n'
