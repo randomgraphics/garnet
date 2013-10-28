@@ -466,7 +466,7 @@ void GN::gfx::XenonGpuProgramHLSL::enumerateAttributes( ID3DXBuffer & shaderBina
     mAttributes.resize( count );
     for( size_t i = 0; i < count; ++i )
     {
-        mAttributes[i].namestr = stringFormat( "%s%d", sD3DDeclUsage2String(semantics[i].Usage), semantics[i].UsageIndex );
+        mAttributes[i].namestr = str::format( "%s%d", sD3DDeclUsage2String(semantics[i].Usage), semantics[i].UsageIndex );
         mAttributes[i].usage = semantics[i].Usage;
         mAttributes[i].usageIndex = semantics[i].UsageIndex;
     }

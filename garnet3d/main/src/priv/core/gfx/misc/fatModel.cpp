@@ -53,7 +53,7 @@ GN::gfx::FatVertexBuffer::Semantic GN::gfx::FatVertexBuffer::sString2Semantic( c
 {
     for( int i = 0; i < (int)NUM_SEMANTICS; ++i )
     {
-        if( 0 == stringCompare( s, SEMANTIC_NAMES[i] ) )
+        if( 0 == str::compare( s, SEMANTIC_NAMES[i] ) )
         {
             return (Semantic)i;
         }
@@ -197,7 +197,7 @@ bool GN::gfx::FatVertexBuffer::GenerateVertexStream(
     for( size_t i = 0; i < mvf.numElements; ++i )
     {
         const char * s = mvf.elements[i].semantic;
-        if( stringEmpty(s) )
+        if( str::isEmpty(s) )
         {
             s = "[EMPTY]";
             semantics[i] = INVALID;
@@ -300,7 +300,7 @@ static void sPrintFatJointRecursivly( StrA & s, const FatJoint * joints, uint32 
 
     if( root < count )
     {
-        s += stringFormat( "(%d) %s\n", depth, joints[root].name.rawptr() );
+        s += str::format( "(%d) %s\n", depth, joints[root].name.rawptr() );
 
         for( uint32 i = joints[root].child; i != FatJoint::NO_JOINT; i = joints[i].sibling )
         {
@@ -309,7 +309,7 @@ static void sPrintFatJointRecursivly( StrA & s, const FatJoint * joints, uint32 
     }
     else
     {
-        s += stringFormat( "(%d) ERROR: joint index out of range: %d\n", depth, root );
+        s += str::format( "(%d) ERROR: joint index out of range: %d\n", depth, root );
     }
 }
 

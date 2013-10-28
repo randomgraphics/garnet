@@ -127,7 +127,7 @@ bool GN::gfx::OglShaderCg::queryDeviceUniform(
 {
     GN_GUARD;
 
-    GN_ASSERT( !stringEmpty(name) );
+    GN_ASSERT( !str::isEmpty(name) );
 
     CGparameter param = mShader.getUniformHandle( name );
     if( 0 == param ) return false;

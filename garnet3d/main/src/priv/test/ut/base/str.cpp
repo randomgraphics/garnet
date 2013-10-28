@@ -36,31 +36,31 @@ public:
         char buf1[5] = { '\0', '\0', '\0', '4', '5' };
         char * s1 = buf1;
 
-        GN::stringPrintf( s1, 3, "a" );
+        GN::str::formatTo( s1, 3, "a" );
         TS_ASSERT_EQUALS( s1, "a" );
 
-        GN::stringPrintf( s1, 3, "aa" );
+        GN::str::formatTo( s1, 3, "aa" );
         TS_ASSERT_EQUALS( s1, "aa" );
 
-        GN::stringPrintf( s1, 3, "aaa" );
+        GN::str::formatTo( s1, 3, "aaa" );
         TS_ASSERT_EQUALS( s1, "aa" );
 
-        GN::stringPrintf( s1, 3, "aaaa" );
+        GN::str::formatTo( s1, 3, "aaaa" );
         TS_ASSERT_EQUALS( s1, "aa" );
 
         wchar_t buf2[5] = { L'\0', L'\0', L'\0', L'4', L'5' };
         wchar_t * s2 = buf2;
 
-        GN::stringPrintf( s2, 3, L"a" );
+        GN::str::formatTo( s2, 3, L"a" );
         TS_ASSERT_EQUALS( s2, L"a" );
 
-        GN::stringPrintf( s2, 3, L"aa" );
+        GN::str::formatTo( s2, 3, L"aa" );
         TS_ASSERT_EQUALS( s2, L"aa" );
 
-        GN::stringPrintf( s2, 3, L"aaa" );
+        GN::str::formatTo( s2, 3, L"aaa" );
         TS_ASSERT_EQUALS( s2, L"aa" );
 
-        GN::stringPrintf( s2, 3, L"aaaa" );
+        GN::str::formatTo( s2, 3, L"aaaa" );
         TS_ASSERT_EQUALS( s2, L"aa" );
     }
 
@@ -292,30 +292,30 @@ public:
         s4 = L"Hehe";
         s5 = L"Hehe__";
 
-        TS_ASSERT_EQUALS(  0, GN::stringCompare<wchar_t>(0,0) );
-        TS_ASSERT_EQUALS( -1, GN::stringCompare<wchar_t>(0,L"") );
-        TS_ASSERT_EQUALS(  1, GN::stringCompare<wchar_t>(L"",0) );
-        TS_ASSERT_EQUALS(  0, GN::stringCompare(L"",L"") );
-        TS_ASSERT_EQUALS(  0, GN::stringCompare(L"abc",L"abc") );
-        TS_ASSERT_EQUALS( -1, GN::stringCompare(L"ABC",L"abc") );
-        TS_ASSERT_EQUALS(  1, GN::stringCompare(L"abcd",L"abc") );
-        TS_ASSERT_EQUALS(  1, GN::stringCompare(L"abc",L"ABC") );
-        TS_ASSERT_EQUALS( -1, GN::stringCompare(L"abc",L"abcd") );
+        TS_ASSERT_EQUALS(  0, GN::str::compare<wchar_t>(0,0) );
+        TS_ASSERT_EQUALS( -1, GN::str::compare<wchar_t>(0,L"") );
+        TS_ASSERT_EQUALS(  1, GN::str::compare<wchar_t>(L"",0) );
+        TS_ASSERT_EQUALS(  0, GN::str::compare(L"",L"") );
+        TS_ASSERT_EQUALS(  0, GN::str::compare(L"abc",L"abc") );
+        TS_ASSERT_EQUALS( -1, GN::str::compare(L"ABC",L"abc") );
+        TS_ASSERT_EQUALS(  1, GN::str::compare(L"abcd",L"abc") );
+        TS_ASSERT_EQUALS(  1, GN::str::compare(L"abc",L"ABC") );
+        TS_ASSERT_EQUALS( -1, GN::str::compare(L"abc",L"abcd") );
 
-        TS_ASSERT_EQUALS(  0, GN::stringCompare( s1.rawptr(), s2.rawptr(), 0 ) );
-        TS_ASSERT_EQUALS(  0, GN::stringCompare( s1.rawptr(), s2.rawptr(), 1 ) );
-        TS_ASSERT_EQUALS( -1, GN::stringCompare( s1.rawptr(), s2.rawptr(), 2 ) );
-        TS_ASSERT_EQUALS(  0, GN::stringCompare( s4.rawptr(), s5.rawptr(), 4 ) );
-        TS_ASSERT_EQUALS( -1, GN::stringCompare( s4.rawptr(), s5.rawptr(), 5 ) );
+        TS_ASSERT_EQUALS(  0, GN::str::compare( s1.rawptr(), s2.rawptr(), 0 ) );
+        TS_ASSERT_EQUALS(  0, GN::str::compare( s1.rawptr(), s2.rawptr(), 1 ) );
+        TS_ASSERT_EQUALS( -1, GN::str::compare( s1.rawptr(), s2.rawptr(), 2 ) );
+        TS_ASSERT_EQUALS(  0, GN::str::compare( s4.rawptr(), s5.rawptr(), 4 ) );
+        TS_ASSERT_EQUALS( -1, GN::str::compare( s4.rawptr(), s5.rawptr(), 5 ) );
 
-        TS_ASSERT( -1 == GN::stringCompareI<wchar_t>( 0, s1.rawptr() ) );
-        TS_ASSERT( 1 == GN::stringCompareI<wchar_t>( s1.rawptr(), 0 ) );
-        TS_ASSERT( 1 == GN::stringCompareI( s5.rawptr(), s3.rawptr() ) );
-        TS_ASSERT( 0 == GN::stringCompareI( s4.rawptr(), s4.rawptr() ) );
-        TS_ASSERT( 0 == GN::stringCompareI( s2.rawptr(), s4.rawptr() ) );
-        TS_ASSERT( 0 == GN::stringCompareI( s4.rawptr(), s2.rawptr() ) );
-        TS_ASSERT( -1 == GN::stringCompareI( s1.rawptr(), s4.rawptr() ) );
-        TS_ASSERT( 1 == GN::stringCompareI( s4.rawptr(), s1.rawptr() ) );
+        TS_ASSERT( -1 == GN::str::compareI<wchar_t>( 0, s1.rawptr() ) );
+        TS_ASSERT( 1 == GN::str::compareI<wchar_t>( s1.rawptr(), 0 ) );
+        TS_ASSERT( 1 == GN::str::compareI( s5.rawptr(), s3.rawptr() ) );
+        TS_ASSERT( 0 == GN::str::compareI( s4.rawptr(), s4.rawptr() ) );
+        TS_ASSERT( 0 == GN::str::compareI( s2.rawptr(), s4.rawptr() ) );
+        TS_ASSERT( 0 == GN::str::compareI( s4.rawptr(), s2.rawptr() ) );
+        TS_ASSERT( -1 == GN::str::compareI( s1.rawptr(), s4.rawptr() ) );
+        TS_ASSERT( 1 == GN::str::compareI( s4.rawptr(), s1.rawptr() ) );
 
     }
 
@@ -343,30 +343,30 @@ public:
         using namespace GN;
 
         uint8 u8 = 123;
-        TS_ASSERT( !string2Integer( u8, "-1" ) );
-        TS_ASSERT( string2Integer( u8, "0" ) ); TS_ASSERT_EQUALS( u8, 0 );
-        TS_ASSERT( string2Integer( u8, "255" ) ); TS_ASSERT_EQUALS( u8, 255 );
-        TS_ASSERT( !string2Integer( u8, "256" ) );
+        TS_ASSERT( !str::toInetger( u8, "-1" ) );
+        TS_ASSERT( str::toInetger( u8, "0" ) ); TS_ASSERT_EQUALS( u8, 0 );
+        TS_ASSERT( str::toInetger( u8, "255" ) ); TS_ASSERT_EQUALS( u8, 255 );
+        TS_ASSERT( !str::toInetger( u8, "256" ) );
 
         sint8 s8 = 123;
-        TS_ASSERT( !string2Integer( s8, "-129" ) );
-        TS_ASSERT( string2Integer( s8, "-128" ) ); TS_ASSERT_EQUALS( s8, -128 );
-        TS_ASSERT( string2Integer( s8, "127" ) ); TS_ASSERT_EQUALS( s8, 127 );
-        TS_ASSERT( !string2Integer( s8, "128" ) );
+        TS_ASSERT( !str::toInetger( s8, "-129" ) );
+        TS_ASSERT( str::toInetger( s8, "-128" ) ); TS_ASSERT_EQUALS( s8, -128 );
+        TS_ASSERT( str::toInetger( s8, "127" ) ); TS_ASSERT_EQUALS( s8, 127 );
+        TS_ASSERT( !str::toInetger( s8, "128" ) );
 
         uint64 u64 = 123;
-        TS_ASSERT( !string2Integer( u64, "-1" ) );
-        TS_ASSERT( string2Integer( u64, "0" ) ); TS_ASSERT_EQUALS( u64, 0 );
-        TS_ASSERT( string2Integer( u64, "0xFFFFFFFFFFFFFFFF", 16 ) ); TS_ASSERT_EQUALS( u64, 0xFFFFFFFFFFFFFFFFLL );
-        TS_ASSERT( !string2Integer( u64, "0x10000000000000000", 16 ) );
+        TS_ASSERT( !str::toInetger( u64, "-1" ) );
+        TS_ASSERT( str::toInetger( u64, "0" ) ); TS_ASSERT_EQUALS( u64, 0 );
+        TS_ASSERT( str::toInetger( u64, "0xFFFFFFFFFFFFFFFF", 16 ) ); TS_ASSERT_EQUALS( u64, 0xFFFFFFFFFFFFFFFFLL );
+        TS_ASSERT( !str::toInetger( u64, "0x10000000000000000", 16 ) );
 
 
         const sint64 i64min = (-0x7fffffffffffffffLL - 1);
         const sint64 i64max = 0x7fffffffffffffffLL; // Note: 0x7FFFFFFFFFFFFFFF = 9223372036854775807
         sint64 s64 = 123;
-        TS_ASSERT( !string2Integer( s64, "-9223372036854775809" ) );
-        TS_ASSERT( string2Integer( s64, "-9223372036854775808" ) ); TS_ASSERT_EQUALS( s64, i64min );
-        TS_ASSERT( string2Integer( s64, "9223372036854775807" ) ); TS_ASSERT_EQUALS( s64, i64max );
-        TS_ASSERT( !string2Integer( s64, "9223372036854775808" ) );
+        TS_ASSERT( !str::toInetger( s64, "-9223372036854775809" ) );
+        TS_ASSERT( str::toInetger( s64, "-9223372036854775808" ) ); TS_ASSERT_EQUALS( s64, i64min );
+        TS_ASSERT( str::toInetger( s64, "9223372036854775807" ) ); TS_ASSERT_EQUALS( s64, i64max );
+        TS_ASSERT( !str::toInetger( s64, "9223372036854775808" ) );
     }
 };

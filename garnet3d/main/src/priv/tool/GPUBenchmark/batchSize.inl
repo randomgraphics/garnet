@@ -174,7 +174,7 @@ public:
 
     StrA BasicTestCase::printResult(void)
     {
-        return stringFormat( "batchSize(%d) batches/frame(%d) batches/sec(%f)",
+        return str::format( "batchSize(%d) batches/frame(%d) batches/sec(%f)",
             BATCH_SIZE,
             mGeometry.PRIM_COUNT / BATCH_SIZE,
             mBatchesPerSecond.getAverageValue() );

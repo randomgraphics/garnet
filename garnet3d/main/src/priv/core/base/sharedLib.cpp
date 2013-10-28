@@ -36,7 +36,7 @@ GN_API bool GN::SharedLib::load( const char * libName )
     unload();
 
     // check parameter
-    if( stringEmpty(libName) )
+    if( str::isEmpty(libName) )
     {
         GN_ERROR(sLogger)( "Library name can't be empty!" );
         return false;
@@ -96,7 +96,7 @@ GN_API void * GN::SharedLib::getSymbol( const char * symbol )
         return 0;
     }
 
-    if( stringEmpty(symbol) )
+    if( str::isEmpty(symbol) )
     {
         GN_ERROR(sLogger)( "Symbol name can't be empty!" );
         return 0;

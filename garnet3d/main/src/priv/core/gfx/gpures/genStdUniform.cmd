@@ -82,7 +82,7 @@ echo.        {>>%header%
 echo.            for( int i = 0; i ^< Index::NUM_STANDARD_UNIFORMS; ++i )>>%header%
 echo.            {>>%header%
 echo.                const Desc * d = sIndex2Desc( i );>>%header%
-echo.                if( 0 == stringCompare( d-^>name, name ) ) return d;>>%header%
+echo.                if( 0 == str::compare( d-^>name, name ) ) return d;>>%header%
 echo.            }>>%header%
 echo.            return NULL;>>%header%
 echo.        }>>%header%

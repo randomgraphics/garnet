@@ -157,9 +157,9 @@ GN_API void GN::fs::relPath( StrA & result, const StrA & path, const StrA & base
         const char * s1 = p.parts[i];
         const char * s2 = b.parts[i];
 #if GN_MSWIN
-        if( 0 != stringCompareI( s1, s2 ) ) break;
+        if( 0 != str::compareI( s1, s2 ) ) break;
 #else
-        if( 0 != stringCompare( s1, s2 ) ) break;
+        if( 0 != str::compare( s1, s2 ) ) break;
 #endif
     }
     // here, "i" should point to the first different part.

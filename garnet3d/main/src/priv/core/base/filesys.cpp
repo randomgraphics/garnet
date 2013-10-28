@@ -368,7 +368,7 @@ public:
 #elif GN_POSIX
         char linkName[PATH_MAX+1];
         char realPath[PATH_MAX+1];
-        stringPrintf( linkName, PATH_MAX, "/proc/%d/exe", getpid() );
+        str::formatTo( linkName, PATH_MAX, "/proc/%d/exe", getpid() );
         if( 0 == realpath( linkName, realPath) )
         {
             GN_ERROR(sLogger)( "Fail to get real path of file '%s'.", linkName );

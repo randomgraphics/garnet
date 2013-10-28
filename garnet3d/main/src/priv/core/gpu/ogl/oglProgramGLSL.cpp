@@ -64,7 +64,7 @@ static GN::StrA sAddLineCount( const GN::StrA & in )
     {
         if( '\n' == *s )
         {
-            out.append( stringFormat( "\n(%3d) : ", ++line ) );
+            out.append( str::format( "\n(%3d) : ", ++line ) );
         }
         else
         {
@@ -268,62 +268,62 @@ static bool sGetOglVertexSemantic( OGLVertexSemantic & semanticName, uint8 & sem
 {
     semanticIndex = 0;
 
-    if( 0 == stringCompare( "gl_Vertex", attributeName ) )
+    if( 0 == str::compare( "gl_Vertex", attributeName ) )
     {
         semanticName = VERTEX_SEMANTIC_VERTEX;
     }
-    else if( 0 == stringCompare( "gl_Normal", attributeName ) )
+    else if( 0 == str::compare( "gl_Normal", attributeName ) )
     {
         semanticName = VERTEX_SEMANTIC_NORMAL;
     }
-    else if( 0 == stringCompare( "gl_Color", attributeName ) )
+    else if( 0 == str::compare( "gl_Color", attributeName ) )
     {
         semanticName = VERTEX_SEMANTIC_COLOR;
     }
-    else if( 0 == stringCompare( "gl_SecondaryColor", attributeName ) )
+    else if( 0 == str::compare( "gl_SecondaryColor", attributeName ) )
     {
         semanticName  = VERTEX_SEMANTIC_COLOR;
         semanticIndex = 1;
     }
-    else if( 0 == stringCompare( "gl_FogCoord", attributeName ) )
+    else if( 0 == str::compare( "gl_FogCoord", attributeName ) )
     {
         semanticName = VERTEX_SEMANTIC_FOG;
     }
-    else if( 0 == stringCompare( "gl_MultiTexCoord0", attributeName ) )
+    else if( 0 == str::compare( "gl_MultiTexCoord0", attributeName ) )
     {
         semanticName = VERTEX_SEMANTIC_TEXCOORD;
     }
-    else if( 0 == stringCompare( "gl_MultiTexCoord1", attributeName ) )
+    else if( 0 == str::compare( "gl_MultiTexCoord1", attributeName ) )
     {
         semanticName = VERTEX_SEMANTIC_TEXCOORD;
         semanticIndex    = 1;
     }
-    else if( 0 == stringCompare( "gl_MultiTexCoord2", attributeName ) )
+    else if( 0 == str::compare( "gl_MultiTexCoord2", attributeName ) )
     {
         semanticName  = VERTEX_SEMANTIC_TEXCOORD;
         semanticIndex = 2;
     }
-    else if( 0 == stringCompare( "gl_MultiTexCoord3", attributeName ) )
+    else if( 0 == str::compare( "gl_MultiTexCoord3", attributeName ) )
     {
         semanticName  = VERTEX_SEMANTIC_TEXCOORD;
         semanticIndex = 3;
     }
-    else if( 0 == stringCompare( "gl_MultiTexCoord4", attributeName ) )
+    else if( 0 == str::compare( "gl_MultiTexCoord4", attributeName ) )
     {
         semanticName  = VERTEX_SEMANTIC_TEXCOORD;
         semanticIndex = 4;
     }
-    else if( 0 == stringCompare( "gl_MultiTexCoord5", attributeName ) )
+    else if( 0 == str::compare( "gl_MultiTexCoord5", attributeName ) )
     {
         semanticName  = VERTEX_SEMANTIC_TEXCOORD;
         semanticIndex = 5;
     }
-    else if( 0 == stringCompare( "gl_MultiTexCoord6", attributeName ) )
+    else if( 0 == str::compare( "gl_MultiTexCoord6", attributeName ) )
     {
         semanticName  = VERTEX_SEMANTIC_TEXCOORD;
         semanticIndex = 6;
     }
-    else if( 0 == stringCompare( "gl_MultiTexCoord7", attributeName ) )
+    else if( 0 == str::compare( "gl_MultiTexCoord7", attributeName ) )
     {
         semanticName  = VERTEX_SEMANTIC_TEXCOORD;
         semanticIndex = 7;

@@ -4,7 +4,8 @@ TODO
 - 程序中标注TODO的地方
 
 - p0
-  - move string utils into string namespace
+  - add json support
+  - thread safe weak ref object.
   - thread and sync objects unit tests.
   - massive 3D scene explorer.
     - importer/exporter

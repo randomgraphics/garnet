@@ -393,7 +393,7 @@ void GN::gfx::D3D11GpuProgramCG::enumCgParameters( CGprogram prog, CGenum name_s
             attr.handles.append( param );
             attr.name = name;//cgGetResourceString( cgGetParameterResource( param ) );
             const char * semantic = cgGetParameterSemantic( param );
-            size_t len = stringLength( semantic );
+            size_t len = str::length( semantic );
             if( '0' <= semantic[len-1] && semantic[len-1] <= '9' )
             {
                 mStringPool.append( (char*)HeapMemory::alloc(len+1) );

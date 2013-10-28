@@ -49,13 +49,13 @@ namespace GN { namespace gfx
         /// convert from string
         static PrimitiveType sFromString( const char * s )
         {
-            if( 0 == stringCompareI( "POINT_LIST", s ) ) return POINT_LIST;
-            else if( 0 == stringCompareI( "LINE_LIST", s ) ) return LINE_LIST;
-            else if( 0 == stringCompareI( "LINE_STRIP", s ) ) return LINE_STRIP;
-            else if( 0 == stringCompareI( "TRIANGLE_LIST", s ) ) return TRIANGLE_LIST;
-            else if( 0 == stringCompareI( "TRIANGLE_STRIP", s ) ) return TRIANGLE_STRIP;
-            else if( 0 == stringCompareI( "QUAD_LIST", s ) ) return QUAD_LIST;
-            else if( 0 == stringCompareI( "RECT_LIST", s ) ) return RECT_LIST;
+            if( 0 == str::compareI( "POINT_LIST", s ) ) return POINT_LIST;
+            else if( 0 == str::compareI( "LINE_LIST", s ) ) return LINE_LIST;
+            else if( 0 == str::compareI( "LINE_STRIP", s ) ) return LINE_STRIP;
+            else if( 0 == str::compareI( "TRIANGLE_LIST", s ) ) return TRIANGLE_LIST;
+            else if( 0 == str::compareI( "TRIANGLE_STRIP", s ) ) return TRIANGLE_STRIP;
+            else if( 0 == str::compareI( "QUAD_LIST", s ) ) return QUAD_LIST;
+            else if( 0 == str::compareI( "RECT_LIST", s ) ) return RECT_LIST;
             else return INVALID;
         }
 

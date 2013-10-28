@@ -41,7 +41,7 @@ static const char * sD3D11CloneString( const char * str )
 {
     if( NULL == str ) return NULL;
 
-    size_t n = GN::stringLength( str ) + 1;
+    size_t n = GN::str::length( str ) + 1;
 
     char * clone = (char*)GN::HeapMemory::alloc( n );
     if( NULL == clone )
@@ -81,7 +81,7 @@ public:
 
     bool operator()( const T & t ) const
     {
-        return 0 == stringCompare( t.name, mName );
+        return 0 == str::compare( t.name, mName );
     }
 };
 
@@ -622,7 +622,7 @@ bool GN::gfx::D3D11GpuProgramHLSL::initShader(
     uint32                            compileFlags )
 {
     // do nothing for empty shader code
-    if( stringEmpty( code.source ) ) return true;
+    if( str::isEmpty( code.source ) ) return true;
 
     // define shader type traits
     typedef D3D11ShaderTypeTraits<SHADER_STAGE> Traits;
@@ -678,7 +678,7 @@ bool GN::gfx::D3D11GpuProgramHLSL::initShader(
             D3D11AttributeParameterDesc a;
             a.semanticName  = sig.SemanticName;
             a.semanticIndex = sig.SemanticIndex;
-            a.name          = sD3D11CloneString( stringFormat( "%s%d", sig.SemanticName, sig.SemanticIndex ) );
+            a.name          = sD3D11CloneString( str::format( "%s%d", sig.SemanticName, sig.SemanticIndex ) );
 
             // append to attribute array
             paramDesc.addAttribute( a );

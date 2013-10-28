@@ -112,7 +112,7 @@ template<typename T>
 static bool sGetNumericAttr( const XmlElement & node, const StrA & attrname, T & result )
 {
     const XmlAttrib * a = node.findAttrib( attrname );
-    if ( !a || !string2Number<T>( result, a->value.rawptr() ) )
+    if ( !a || !str::toNumber<T>( result, a->value.rawptr() ) )
     {
         GN_ERROR(sLogger)("%s : attribute '%s' is missing!", node.getLocation(), attrname.rawptr() );
         return false;
@@ -1226,8 +1226,8 @@ int main( int argc, const char * argv [] )
     }
     else
     {
-        opt.ref = ( 0 == stringCompareI( "ref", argv[1] ) ) || ( 0 == stringCompareI( "refd", argv[1] ) );
-        opt.debug = ( 0 == stringCompareI( "hald", argv[1] ) ) || ( 0 == stringCompareI( "refd", argv[1] ) );
+        opt.ref = ( 0 == str::compareI( "ref", argv[1] ) ) || ( 0 == str::compareI( "refd", argv[1] ) );
+        opt.debug = ( 0 == str::compareI( "hald", argv[1] ) ) || ( 0 == str::compareI( "refd", argv[1] ) );
         sDumpFileName = argv[2];
     }
 

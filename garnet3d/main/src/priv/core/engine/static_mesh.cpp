@@ -173,7 +173,7 @@ bool GN::engine::StaticMesh::loadFromFatModel( const GN::gfx::FatModel & fatmode
 
         const FatMesh & fatmesh = *fatmodel.meshes[i];
 
-        StrA meshName = stringFormat( "%s.mesh.%d", fatmodel.name.rawptr(), i );
+        StrA meshName = str::format( "%s.mesh.%d", fatmodel.name.rawptr(), i );
 
         // use exising mesh, if possible
         AutoRef<MeshResource> mesh = gdb.findResource<MeshResource>( meshName );

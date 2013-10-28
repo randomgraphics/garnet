@@ -119,7 +119,7 @@ void GN::gfx::BitmapFont::drawText( const TextDesc & td )
 {
     GN_GUARD_SLOW;
 
-    if( stringEmpty(td.text) ) return; // skip empty text.
+    if( str::isEmpty(td.text) ) return; // skip empty text.
 
     GN_ASSERT( mFont );
 

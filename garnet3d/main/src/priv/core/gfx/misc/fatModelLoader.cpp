@@ -262,17 +262,17 @@ sLoadFromASE( FatModel & fatmodel, File & file, const StrA & filename )
         for( uint32 e = 0; e < src.vtxfmt.numElements; ++e )
         {
             const MeshVertexElement & mve = src.vtxfmt.elements[e];
-            if( 0 == stringCompare( "POSITION", mve.semantic ) )
+            if( 0 == str::compare( "POSITION", mve.semantic ) )
             {
                 position = &mve;
                 vtxfmt |= 1 << FatVertexBuffer::POSITION;
             }
-            else if( 0 == stringCompare( "NORMAL", mve.semantic ) )
+            else if( 0 == str::compare( "NORMAL", mve.semantic ) )
             {
                 normal = &mve;
                 vtxfmt |= 1 << FatVertexBuffer::NORMAL;
             }
-            else if( 0 == stringCompare( "TEXCOORD", mve.semantic ) )
+            else if( 0 == str::compare( "TEXCOORD", mve.semantic ) )
             {
                 texcoord = &mve;
                 vtxfmt |= 1 << FatVertexBuffer::TEXCOORD0;
@@ -1642,11 +1642,11 @@ sPrintFBXNodeHierarchy( StrA & hierarchy, const StrA & filename )
                 hierarchy += "  ";
             }
 
-            hierarchy += stringFormat( "(%d) ", depth );
+            hierarchy += str::format( "(%d) ", depth );
 
             const char * name = node->GetName();
 
-            hierarchy += stringEmpty(name) ? "[UNNAMED]" : name;
+            hierarchy += str::isEmpty(name) ? "[UNNAMED]" : name;
 
             hierarchy += " : ";
 
@@ -1698,7 +1698,7 @@ sPrintFBXNodeHierarchy( StrA & hierarchy, const StrA & filename )
                 }
                 else
                 {
-                    hierarchy += stringFormat("[INVALID:%d]", atype);
+                    hierarchy += str::format("[INVALID:%d]", atype);
                 }
             }
             else
@@ -2616,11 +2616,11 @@ sPrintAiNodeHierarchy( StrA & hierarchy, const StrA & filename )
                 hierarchy += "  ";
             }
 
-            hierarchy += stringFormat( "(%d) ", depth );
+            hierarchy += str::format( "(%d) ", depth );
 
             const char * name = node->mName.data;
 
-            hierarchy += stringEmpty(name) ? "[UNNAMED]" : name;
+            hierarchy += str::isEmpty(name) ? "[UNNAMED]" : name;
 
             hierarchy += "\n";
 
@@ -2677,7 +2677,7 @@ static bool sCheckFileExtension( const char * filename, const char * extension )
 
     filename = filename + n1 - n2;
 
-    return 0 == stringCompareI( filename, extension );
+    return 0 == str::compareI( filename, extension );
 }
 
 //

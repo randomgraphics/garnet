@@ -284,7 +284,7 @@ GN::gfx::ColorFormat::sFromString( ColorFormat & result, const char * str )
     {
         const ColorFormatName & n = TABLE[i];
 
-        if( 0 == stringCompareI( n.name, str ) )
+        if( 0 == str::compareI( n.name, str ) )
         {
             result = n.format;
             return true;
@@ -389,7 +389,7 @@ GN_API void GN::gfx::ColorFormat::toString( GN::StrA & s ) const
         }
     };
 
-    s = stringFormat(
+    s = str::format(
         "%s-sign012(%s)-sign3(%s)-%s%s%s%s",
         Local::layout2str(layout),
         Local::sign2str(sign012),

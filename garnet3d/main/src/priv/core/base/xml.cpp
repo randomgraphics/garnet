@@ -319,7 +319,7 @@ static GN::XmlNode * sNewNode( ParseTracer * tracer, GN::XmlNodeType type )
     {
         sParseFail(
             tracer,
-            GN::stringFormat( "Fail to create node with type of '%d'", type ).rawptr() );
+            GN::str::format( "Fail to create node with type of '%d'", type ).rawptr() );
         return NULL;
     }
 
@@ -504,8 +504,8 @@ static int XMLCALL sEncodingHandler(
 
     GN_UNUSED_PARAM( encodingHandlerData );
 
-    if( 0 == stringCompareI( "gbk", name ) ||
-        0 == stringCompareI( "gb2312", name ) )
+    if( 0 == str::compareI( "gbk", name ) ||
+        0 == str::compareI( "gb2312", name ) )
     {
         info->convert = &sDummyConvert;
         info->release = NULL;
@@ -695,7 +695,7 @@ GN_API bool GN::XmlDocument::parse(
     xml_document<> doc;
     try
     {
-        if( 0 == length ) length = stringLength( content );
+        if( 0 == length ) length = str::length( content );
         char * buf = doc.allocate_string( NULL, length + 1 );
         memcpy( buf, content, length );
         buf[length] = 0;

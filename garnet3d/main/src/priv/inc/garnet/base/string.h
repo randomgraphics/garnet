@@ -11,228 +11,227 @@
 #include <string.h>
 namespace GN
 {
-    /// define enumerations for string compare
-    struct StringCompareCase
+    /// name space for string utilities.
+    namespace str
     {
-        enum ENUM
+        /// define enumerations for string compare
+        enum CompareCase
         {
             INSENSITIVE, // case insensitive comparision
             SENSITIVE,   // case sensitive comparision
         };
 
-        GN_DEFINE_ENUM_CLASS_HELPERS( StringCompareCase, ENUM );
+        ///
+        /// Get string length.
+        ///
+        /// if maxLen > 0, then return math::getmin(maxLen,realLength).
+        ///
+        template<typename CHAR>
+        inline size_t length( const CHAR * s, size_t maxLen = 0 )
+        {
+            if( 0 == s ) return 0;
+            size_t l = 0;
+            if( maxLen > 0 )
+            {
+                while( 0 != *s && l < maxLen )
+                {
+                    ++l;
+                    ++s;
+                }
+            }
+            else
+            {
+                while( 0 != *s )
+                {
+                    ++l;
+                    ++s;
+                }
+            }
+            return l;
+        }
+
+        ///
+        /// string comparison (case sensitive)
+        ///
+        template<typename CHAR>
+        inline int compare( const CHAR * s1, const CHAR * s2 )
+        {
+            if( s1 == s2 ) return 0;
+            if( 0 == s1 ) return -1;
+            if( 0 == s2 ) return 1;
+            while( *s1 && *s2 )
+            {
+                if( *s1 < *s2 ) return -1;
+                if( *s1 > *s2 ) return 1;
+                ++s1;
+                ++s2;
+            }
+            if( 0 != *s1 ) return 1;
+            if( 0 != *s2 ) return -1;
+            return 0;
+        }
+
+        ///
+        /// string comparison, case sensitive, with limited length
+        ///
+        template<typename CHAR>
+        inline int compare( const CHAR * s1, const CHAR * s2, size_t maxLength )
+        {
+            if( s1 == s2 ) return 0;
+            if( 0 == s1 ) return -1;
+            if( 0 == s2 ) return 1;
+            size_t len = 0;
+            while( *s1 && *s2 && len < maxLength )
+            {
+                if( *s1 < *s2 ) return -1;
+                if( *s1 > *s2 ) return 1;
+                ++s1;
+                ++s2;
+                ++len;
+            }
+            if( len == maxLength ) return 0;
+            if( 0 != *s1 ) return 1;
+            if( 0 != *s2 ) return -1;
+            return 0;
+        }
+
+        ///
+        /// string comparison (case insensitive)
+        ///
+        template<typename CHAR>
+        inline int compareI( const CHAR * s1, const CHAR * s2 )
+        {
+            if( s1 == s2 ) return 0;
+            if( 0 == s1 ) return -1;
+            if( 0 == s2 ) return 1;
+            int a, b;
+            while( *s1 && *s2 )
+            {
+                a = (int)*s1;
+                b = (int)*s2;
+                if( 'a' <= a && a <= 'z' ) a += 'A'-'a';
+                if( 'a' <= b && b <= 'z' ) b += 'A'-'a';
+                if( a < b ) return -1;
+                if( a > b ) return 1;
+                ++s1;
+                ++s2;
+            }
+            if( 0 != *s1 ) return 1;
+            if( 0 != *s2 ) return -1;
+            return 0;
+        }
+
+        ///
+        /// string comparison (case insensitive), with limited length
+        ///
+        template<typename CHAR>
+        inline int compareI( const CHAR * s1, const CHAR * s2, size_t maxLength )
+        {
+            if( s1 == s2 ) return 0;
+            if( 0 == s1 ) return -1;
+            if( 0 == s2 ) return 1;
+            size_t len = 0;
+            int a, b;
+            while( *s1 && *s2 && len < maxLength )
+            {
+                a = (int)*s1;
+                b = (int)*s2;
+                if( 'a' <= a && a <= 'z' ) a += 'A'-'a';
+                if( 'a' <= b && b <= 'z' ) b += 'A'-'a';
+                if( a < b ) return -1;
+                if( a > b ) return 1;
+                ++s1;
+                ++s2;
+                ++len;
+            }
+            if( len == maxLength ) return 0;
+            if( 0 != *s1 ) return 1;
+            if( 0 != *s2 ) return -1;
+            return 0;
+        }
+
+        ///
+        /// check for empty string, including NULL.
+        ///
+        template<typename CHAR>
+        inline bool isEmpty( const CHAR * s )
+        {
+            return 0 == s || 0 == s[0];
+        }
+
+        ///
+        /// safe sprintf. This function always outputs null-terminated string,
+        /// like StringCchPrintf(...)
+        ///
+        GN_API void
+        formatTo(
+            char *       buf,
+            size_t       bufSizeInChar,
+            const char * fmt,
+            ... );
+
+        ///
+        /// safe sprintf. This function always outputs null-terminated string,
+        /// like StringCchPrintf(...)
+        ///
+        GN_API void
+        formatTo(
+            wchar_t *       buf,
+            size_t          bufSizeInWchar,
+            const wchar_t * fmt,
+            ... );
+
+        ///
+        /// safe sprintf. This function always outputs null-terminated string,
+        /// like StringCchPrintf(...)
+        ///
+        GN_API void
+        formatvTo(
+            char *       buf,
+            size_t       bufSizeInChar,
+            const char * fmt,
+            va_list      args );
+
+        ///
+        /// printf-like format string (wide-char)
+        ///
+        GN_API void
+        formatvTo(
+            wchar_t *       buf,
+            size_t          bufSizeInWchar,
+            const wchar_t * fmt,
+            va_list         args );
+
+        ///
+        /// string hash function
+        ///
+        /// set to length to 0 to hash NULL terminated string.
+        ///
+        template<typename CHAR>
+        inline uint64 hash( const CHAR * s, size_t length = 0 )
+        {
+            unsigned long h = 5381;
+
+            if( length > 0 )
+            {
+                for( size_t i = 0; i < length; ++i )
+                {
+                    h = ((h << 5) + h) + *s; /* h * 33 + c */
+                    ++s;
+                }
+            }
+            else
+            {
+                while( *s )
+                {
+                    h = ((h << 5) + h) + *s; /* h * 33 + c */
+                    ++s;
+                }
+            }
+
+            return h;
+        }
     };
-
-    ///
-    /// Get string length.
-    ///
-    /// if maxLen > 0, then return math::getmin(maxLen,realLength).
-    ///
-    template<typename CHAR>
-    inline size_t stringLength( const CHAR * s, size_t maxLen = 0 )
-    {
-        if( 0 == s ) return 0;
-        size_t l = 0;
-        if( maxLen > 0 )
-        {
-            while( 0 != *s && l < maxLen )
-            {
-                ++l;
-                ++s;
-            }
-        }
-        else
-        {
-            while( 0 != *s )
-            {
-                ++l;
-                ++s;
-            }
-        }
-        return l;
-    }
-
-    ///
-    /// string comparison (case sensitive)
-    ///
-    template<typename CHAR>
-    inline int stringCompare( const CHAR * s1, const CHAR * s2 )
-    {
-        if( s1 == s2 ) return 0;
-        if( 0 == s1 ) return -1;
-        if( 0 == s2 ) return 1;
-        while( *s1 && *s2 )
-        {
-            if( *s1 < *s2 ) return -1;
-            if( *s1 > *s2 ) return 1;
-            ++s1;
-            ++s2;
-        }
-        if( 0 != *s1 ) return 1;
-        if( 0 != *s2 ) return -1;
-        return 0;
-    }
-
-    ///
-    /// string comparison, case sensitive, with limited length
-    ///
-    template<typename CHAR>
-    inline int stringCompare( const CHAR * s1, const CHAR * s2, size_t maxLength )
-    {
-        if( s1 == s2 ) return 0;
-        if( 0 == s1 ) return -1;
-        if( 0 == s2 ) return 1;
-        size_t len = 0;
-        while( *s1 && *s2 && len < maxLength )
-        {
-            if( *s1 < *s2 ) return -1;
-            if( *s1 > *s2 ) return 1;
-            ++s1;
-            ++s2;
-            ++len;
-        }
-        if( len == maxLength ) return 0;
-        if( 0 != *s1 ) return 1;
-        if( 0 != *s2 ) return -1;
-        return 0;
-    }
-
-    ///
-    /// string comparison (case insensitive)
-    ///
-    template<typename CHAR>
-    inline int stringCompareI( const CHAR * s1, const CHAR * s2 )
-    {
-        if( s1 == s2 ) return 0;
-        if( 0 == s1 ) return -1;
-        if( 0 == s2 ) return 1;
-        int a, b;
-        while( *s1 && *s2 )
-        {
-            a = (int)*s1;
-            b = (int)*s2;
-            if( 'a' <= a && a <= 'z' ) a += 'A'-'a';
-            if( 'a' <= b && b <= 'z' ) b += 'A'-'a';
-            if( a < b ) return -1;
-            if( a > b ) return 1;
-            ++s1;
-            ++s2;
-        }
-        if( 0 != *s1 ) return 1;
-        if( 0 != *s2 ) return -1;
-        return 0;
-    }
-
-    ///
-    /// string comparison (case insensitive), with limited length
-    ///
-    template<typename CHAR>
-    inline int stringCompareI( const CHAR * s1, const CHAR * s2, size_t maxLength )
-    {
-        if( s1 == s2 ) return 0;
-        if( 0 == s1 ) return -1;
-        if( 0 == s2 ) return 1;
-        size_t len = 0;
-        int a, b;
-        while( *s1 && *s2 && len < maxLength )
-        {
-            a = (int)*s1;
-            b = (int)*s2;
-            if( 'a' <= a && a <= 'z' ) a += 'A'-'a';
-            if( 'a' <= b && b <= 'z' ) b += 'A'-'a';
-            if( a < b ) return -1;
-            if( a > b ) return 1;
-            ++s1;
-            ++s2;
-            ++len;
-        }
-        if( len == maxLength ) return 0;
-        if( 0 != *s1 ) return 1;
-        if( 0 != *s2 ) return -1;
-        return 0;
-    }
-
-    ///
-    /// check for empty string, including NULL.
-    ///
-    template<typename CHAR>
-    inline bool stringEmpty( const CHAR * s )
-    {
-        return 0 == s || 0 == s[0];
-    }
-
-    ///
-    /// safe sprintf. This function always outputs null-terminated string,
-    /// like StringCchPrintf(...)
-    ///
-    GN_API void
-    stringPrintf(
-        char *       buf,
-        size_t       bufSizeInChar,
-        const char * fmt,
-        ... );
-
-    ///
-    /// safe sprintf. This function always outputs null-terminated string,
-    /// like StringCchPrintf(...)
-    ///
-    GN_API void
-    stringPrintf(
-        wchar_t *       buf,
-        size_t          bufSizeInWchar,
-        const wchar_t * fmt,
-        ... );
-
-    ///
-    /// safe sprintf. This function always outputs null-terminated string,
-    /// like StringCchPrintf(...)
-    ///
-    GN_API void
-    stringVarPrintf(
-        char *       buf,
-        size_t       bufSizeInChar,
-        const char * fmt,
-        va_list      args );
-
-    ///
-    /// printf-like format string (wide-char)
-    ///
-    GN_API void
-    stringVarPrintf(
-        wchar_t *       buf,
-        size_t          bufSizeInWchar,
-        const wchar_t * fmt,
-        va_list         args );
-
-    ///
-    /// string hash function
-    ///
-    /// set to length to 0 to hash NULL terminated string.
-    ///
-    template<typename CHAR>
-    inline uint64 stringHash( const CHAR * s, size_t length = 0 )
-    {
-        unsigned long hash = 5381;
-
-        if( length > 0 )
-        {
-            for( size_t i = 0; i < length; ++i )
-            {
-                hash = ((hash << 5) + hash) + *s; /* hash * 33 + c */
-                ++s;
-            }
-        }
-        else
-        {
-            while( *s )
-            {
-                hash = ((hash << 5) + hash) + *s; /* hash * 33 + c */
-                ++s;
-            }
-        }
-
-        return hash;
-    }
 
     ///
     /// Custom string class. CHAR type must be POD type.
@@ -288,7 +287,7 @@ namespace GN
             }
             else
             {
-                l = stringLength<CharType>(s,l);
+                l = str::length<CharType>(s,l);
                 setCaps( l );
                 ::memcpy( mPtr, s, l*sizeof(CharType) );
                 mPtr[l] = 0;
@@ -310,7 +309,7 @@ namespace GN
         void append( const CharType * s, size_t l = 0 )
         {
             if( 0 == s ) return;
-            l = stringLength<CharType>(s,l);
+            l = str::length<CharType>(s,l);
             if( 0 == l ) return;
             size_t oldsize = size();
             size_t newsize = oldsize + l;
@@ -362,7 +361,7 @@ namespace GN
             }
             else
             {
-                l = stringLength<CharType>(s,l);
+                l = str::length<CharType>(s,l);
                 setCaps( l );
                 ::memcpy( mPtr, s, l*sizeof(CharType) );
                 mPtr[l] = 0;
@@ -516,18 +515,18 @@ namespace GN
         }
 
         ///
-        /// printf-like string formatting(2)
+        /// printf-like string formatting
         ///
         const CharType * formatv( const CharType * fmt, va_list args )
         {
-            if( stringEmpty(fmt) )
+            if( str::isEmpty(fmt) )
             {
                 clear();
             }
             else
             {
                 CharType buf[16384];  // 16k should be enough in most cases
-                stringVarPrintf( buf, 16384, fmt, args );
+                str::formatvTo( buf, 16384, fmt, args );
                 buf[16383] = 0;
                 assign( buf );
             }
@@ -553,7 +552,7 @@ namespace GN
         ///
         /// string hash
         ///
-        uint64 hash() const { return stringHash( mPtr, size() ); }
+        uint64 hash() const { return str::hash( mPtr, size() ); }
 
         ///
         /// Insert a character at specific position
@@ -731,7 +730,7 @@ namespace GN
         void trim( const CharType * ch, size_t len = 0 )
         {
             if( 0 == ch ) return;
-            if( 0 == len ) len = stringLength( ch );
+            if( 0 == len ) len = str::length( ch );
             trimRight( ch, len );
             trimLeft( ch, len );
         }
@@ -747,7 +746,7 @@ namespace GN
         void trimLeft( const CharType * ch, size_t len = 0 )
         {
             if( 0 == ch ) return;
-            if( 0 == len ) len = stringLength( ch );
+            if( 0 == len ) len = str::length( ch );
             if( 0 == len ) return;
             CharType * p = mPtr;
             CharType * e = mPtr+size();
@@ -785,7 +784,7 @@ namespace GN
         {
             if( 0 == size() ) return;
             if( 0 == ch ) return;
-            if( 0 == len ) len = stringLength( ch );
+            if( 0 == len ) len = str::length( ch );
             if( 0 == len ) return;
             CharType * p = mPtr + size() - 1;
             while( p >= mPtr )
@@ -851,7 +850,7 @@ namespace GN
         ///
         Str & operator = ( const CharType * s )
         {
-            assign( s, stringLength<CharType>(s) );
+            assign( s, str::length<CharType>(s) );
             return *this;
         }
 
@@ -896,7 +895,7 @@ namespace GN
         ///
         friend bool operator == ( const CharType * s1, const Str & s2 )
         {
-            return 0 == stringCompare( s1, s2.mPtr );
+            return 0 == str::compare( s1, s2.mPtr );
         }
 
         ///
@@ -904,7 +903,7 @@ namespace GN
         ///
         friend bool operator == ( const Str & s1, const CharType * s2 )
         {
-            return 0 == stringCompare( s1.mPtr, s2 );
+            return 0 == str::compare( s1.mPtr, s2 );
         }
 
         ///
@@ -912,7 +911,7 @@ namespace GN
         ///
         friend bool operator == ( const Str & s1, const Str & s2 )
         {
-            return 0 == stringCompare( s1.mPtr, s2.mPtr );
+            return 0 == str::compare( s1.mPtr, s2.mPtr );
         }
 
         ///
@@ -920,7 +919,7 @@ namespace GN
         ///
         friend bool operator != ( const CharType * s1, const Str & s2 )
         {
-            return 0 != stringCompare( s1, s2.mPtr );
+            return 0 != str::compare( s1, s2.mPtr );
         }
 
         ///
@@ -928,7 +927,7 @@ namespace GN
         ///
         friend bool operator != ( const Str & s1, const CharType * s2 )
         {
-            return 0 != stringCompare( s1.mPtr, s2 );
+            return 0 != str::compare( s1.mPtr, s2 );
         }
 
         ///
@@ -936,7 +935,7 @@ namespace GN
         ///
         friend bool operator != ( const Str & s1, const Str & s2 )
         {
-            return 0 != stringCompare( s1.mPtr, s2.mPtr );
+            return 0 != str::compare( s1.mPtr, s2.mPtr );
         }
 
         ///
@@ -944,7 +943,7 @@ namespace GN
         ///
         friend bool operator < ( const CharType * s1, const Str & s2 )
         {
-            return -1 == stringCompare( s1, s2.mPtr );
+            return -1 == str::compare( s1, s2.mPtr );
         }
 
         ///
@@ -952,7 +951,7 @@ namespace GN
         ///
         friend bool operator < ( const Str & s1, const CharType * s2 )
         {
-            return -1 == stringCompare( s1.mPtr, s2 );
+            return -1 == str::compare( s1.mPtr, s2 );
         }
 
         ///
@@ -960,7 +959,7 @@ namespace GN
         ///
         friend bool operator < ( const Str & s1, const Str & s2 )
         {
-            return -1 == stringCompare( s1.mPtr, s2.mPtr );
+            return -1 == str::compare( s1.mPtr, s2.mPtr );
         }
 
 
@@ -1030,7 +1029,7 @@ namespace GN
         {
             uint64 operator()( const Str & s ) const
             {
-                return stringHash( s.mPtr, s.size() );
+                return str::hash( s.mPtr, s.size() );
             }
         };
 
@@ -1127,7 +1126,7 @@ namespace GN
             }
             else
             {
-                if( 0 == l ) l = stringLength( s );
+                if( 0 == l ) l = str::length( s );
                 memcpy( mBuf, s, sValidateLength(l) * sizeof(CHAR) );
             }
         }
@@ -1154,7 +1153,7 @@ namespace GN
     //
     // TODO: sorted leaf list
     //
-    template<class CHAR, class T, StringCompareCase::ENUM CASE_COMPARE = StringCompareCase::SENSITIVE>
+    template<class CHAR, class T, str::CompareCase COMPARE_CASE = str::SENSITIVE>
     class StringMap
     {
         // *****************************
@@ -1400,7 +1399,7 @@ namespace GN
             {
                 int d;
 
-                if( StringCompareCase::INSENSITIVE == CASE_COMPARE )
+                if( str::INSENSITIVE == COMPARE_CASE )
                 {
                     // conver both to upper case
                     CHAR t = *text;
@@ -1465,7 +1464,7 @@ namespace GN
             {
                 int d;
 
-                if( StringCompareCase::INSENSITIVE == CASE_COMPARE )
+                if( str::INSENSITIVE == COMPARE_CASE )
                 {
                     // conver both to upper case
                     CHAR t = *text;
@@ -1657,106 +1656,104 @@ namespace GN
         }
     }; // End of StringMap class
 
-    /// \name string -> number conversion
-    ///
-    ///  Returns number of characters that are sucessfully converted. Return 0 for failure.
-    //@{
-
-    GN_API size_t string2SignedInteger( sint64 & result, int bits, int base, const char * s );
-    GN_API size_t string2UnsignedInteger( uint64 & result, int bits, int base, const char * s );
-
-    template<typename T> inline size_t string2Integer( T & i, const char * s, int base = 10 )
+    namespace str
     {
-        size_t n;
-
-        if( SignedType<T>::value )
+        ///
+        /// printf-like string format function.
+        ///
+        template<typename CHAR>
+        inline Str<CHAR> format( const CHAR * fmt, ... )
         {
-            sint64 s64;
-            n = string2SignedInteger( s64, sizeof(T)*8, base, s );
-            if( n > 0 ) i = (T)s64;
-        }
-        else
-        {
-            uint64 u64;
-            n = string2UnsignedInteger( u64, sizeof(T)*8, base, s );
-            if( n > 0 ) i = (T)u64;
+            Str<CHAR> s;
+            va_list arglist;
+            va_start( arglist, fmt );
+            s.formatv( fmt, arglist );
+            va_end( arglist );
+            return s;
         }
 
-        return n;
-    }
-
-    template<typename T> T string2Integer( const char * s, T defaultValue, int base = 10 )
-    {
-        T result;
-        if( 0 == string2Integer<T>( result, s, base ) )
+        ///
+        /// printf-like string format function.
+        ///
+        template<typename CHAR>
+        inline Str<CHAR> formatv( const CHAR * fmt, va_list args )
         {
-            return defaultValue;
+            Str<CHAR> s;
+            s.formatv( fmt, args );
+            return s;
         }
-        else
+
+        /// \name string -> number conversion
+        ///
+        ///  Returns number of characters that are sucessfully converted. Return 0 for failure.
+        //@{
+
+        GN_API size_t toSignedInteger( sint64 & result, int bits, int base, const char * s );
+        GN_API size_t toUnsignedInteger( uint64 & result, int bits, int base, const char * s );
+
+        template<typename T> inline size_t toInetger( T & i, const char * s, int base = 10 )
         {
-            return result;
+            size_t n;
+
+            if( SignedType<T>::value )
+            {
+                sint64 s64;
+                n = toSignedInteger( s64, sizeof(T)*8, base, s );
+                if( n > 0 ) i = (T)s64;
+            }
+            else
+            {
+                uint64 u64;
+                n = toUnsignedInteger( u64, sizeof(T)*8, base, s );
+                if( n > 0 ) i = (T)u64;
+            }
+
+            return n;
         }
-    }
 
-    GN_API size_t string2Float( float & i, const char * s );
+        template<typename T> T toInetger( const char * s, T defaultValue, int base = 10 )
+        {
+            T result;
+            if( 0 == toInetger<T>( result, s, base ) )
+            {
+                return defaultValue;
+            }
+            else
+            {
+                return result;
+            }
+        }
 
-    GN_API size_t string2Double( double & i, const char * s );
+        GN_API size_t toFloat( float & i, const char * s );
 
-    template<typename T> inline size_t string2Number( T & i, const char * s ) { return string2Integer<T>( i, s, 10 ); }
-    template<> inline size_t string2Number<float>( float & i, const char * s ) { return string2Float( i, s ); }
-    template<> inline size_t string2Number<double>( double & i, const char * s ) { return string2Double( i, s ); }
-    template<typename T> T string2Number( const char * s, T defaultValue )
-    {
-        T result;
-        if( string2Number<T>( result, s ) )
-            return result;
-        else
-            return defaultValue;
-    }
+        GN_API size_t toDouble( double & i, const char * s );
 
-    ///
-    /// Convert string to float array. String should be in format like:
-    ///    float1, float2, float3, ...
-    /// or:
-    ///    float1 float2 float3 ...
-    ///
-    /// \return
-    ///     Return count of floating filled into target buffer.
-    ///
-    ///     REVIEW: this function returns number of floats, while other function returns number of characters.
-    ///
-    GN_API size_t string2FloatArray( float * buffer, size_t maxCount, const char * str, size_t stringLength = 0 );
+        template<typename T> inline size_t toNumber( T & i, const char * s ) { return toInetger<T>( i, s, 10 ); }
+        template<> inline size_t toNumber<float>( float & i, const char * s ) { return toFloat( i, s ); }
+        template<> inline size_t toNumber<double>( double & i, const char * s ) { return toDouble( i, s ); }
+        template<typename T> T toNumber( const char * s, T defaultValue )
+        {
+            T result;
+            if( toNumber<T>( result, s ) )
+                return result;
+            else
+                return defaultValue;
+        }
 
-    //@}
+        ///
+        /// Convert string to float array. String should be in format like:
+        ///    float1, float2, float3, ...
+        /// or:
+        ///    float1 float2 float3 ...
+        ///
+        /// \return
+        ///     Return count of floating filled into target buffer.
+        ///
+        ///     REVIEW: this function returns number of floats, while other function returns number of characters.
+        ///
+        GN_API size_t toFloatArray( float * buffer, size_t maxCount, const char * string, size_t stringLength = 0 );
 
-    ///
-    /// printf-like string format function.
-    ///
-    /// Similar as stringPrintf(...), but returns a string object
-    ///
-    inline StrA stringFormat( const char * fmt, ... )
-    {
-        StrA s;
-        va_list arglist;
-        va_start( arglist, fmt );
-        s.formatv( fmt, arglist );
-        va_end( arglist );
-        return s;
-    }
-
-    ///
-    /// printf-like string format function (wide-char version)
-    ///
-    /// Similar as stringPrintf(...), but returns a string object
-    ///
-    inline StrW stringFormat( const wchar_t * fmt, ... )
-    {
-        StrW s;
-        va_list arglist;
-        va_start( arglist, fmt );
-        s.formatv( fmt, arglist );
-        va_end( arglist );
-        return s;
+        //@}
     }
 }
 

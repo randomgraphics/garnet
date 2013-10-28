@@ -375,7 +375,7 @@ GN_API bool GN::d3d10::D3D10Application::createDevice()
 
         GN_TRACE(sLogger)( "Enumerating D3D adapters: %S", adaptDesc.Description );
 
-		if( 0 == stringCompare( adaptDesc.Description, L"NVIDIA PerfHUD" ) )
+		if( 0 == str::compare( adaptDesc.Description, L"NVIDIA PerfHUD" ) )
 		{
 			GN_INFO(sLogger)( "USE NVPerfHUD device." );
 			perfhud = true;

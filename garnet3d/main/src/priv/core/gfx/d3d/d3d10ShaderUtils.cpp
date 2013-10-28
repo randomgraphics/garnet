@@ -25,7 +25,7 @@ static GN::StrA sAddLineCountD3D10( const GN::StrA & in )
     {
         if( '\n' == *s )
         {
-            out.append( stringFormat( "\n(%3d) : ", ++line ) );
+            out.append( GN::str::format( "\n(%3d) : ", ++line ) );
         }
         else
         {
@@ -122,7 +122,7 @@ GN_API ID3D10Blob * GN::d3d10::compileShader(
     }
 
     // determine source length
-    if( 0 == len ) len = stringLength(source);
+    if( 0 == len ) len = str::length(source);
 
     // generate temporary file to store shader source
     StrA filename;

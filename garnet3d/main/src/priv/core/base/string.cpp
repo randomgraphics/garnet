@@ -4,11 +4,11 @@
 //
 // -----------------------------------------------------------------------------
 GN_API void
-GN::stringPrintf( char * buf, size_t bufSize, const char * fmt, ... )
+GN::str::formatTo( char * buf, size_t bufSize, const char * fmt, ... )
 {
     va_list arglist;
     va_start( arglist, fmt );
-    stringVarPrintf( buf, bufSize, fmt, arglist );
+    str::formatvTo( buf, bufSize, fmt, arglist );
     va_end( arglist );
 }
 
@@ -16,11 +16,11 @@ GN::stringPrintf( char * buf, size_t bufSize, const char * fmt, ... )
 //
 // -----------------------------------------------------------------------------
 GN_API void
-GN::stringPrintf( wchar_t * buf, size_t bufSize, const wchar_t * fmt, ... )
+GN::str::formatTo( wchar_t * buf, size_t bufSize, const wchar_t * fmt, ... )
 {
     va_list arglist;
     va_start( arglist, fmt );
-    stringVarPrintf( buf, bufSize, fmt, arglist );
+    str::formatvTo( buf, bufSize, fmt, arglist );
     va_end( arglist );
 }
 
@@ -28,7 +28,7 @@ GN::stringPrintf( wchar_t * buf, size_t bufSize, const wchar_t * fmt, ... )
 //
 // -----------------------------------------------------------------------------
 GN_API void
-GN::stringVarPrintf( char * buf, size_t bufSize, const char * fmt, va_list args )
+GN::str::formatvTo( char * buf, size_t bufSize, const char * fmt, va_list args )
 {
     if ( buf && bufSize )
     {
@@ -47,7 +47,7 @@ GN::stringVarPrintf( char * buf, size_t bufSize, const char * fmt, va_list args 
 //
 // -----------------------------------------------------------------------------
 GN_API void
-GN::stringVarPrintf( wchar_t * buf, size_t bufSize, const wchar_t * fmt, va_list args )
+GN::str::formatvTo( wchar_t * buf, size_t bufSize, const wchar_t * fmt, va_list args )
 {
     if ( buf && bufSize )
     {
@@ -72,12 +72,12 @@ GN::stringVarPrintf( wchar_t * buf, size_t bufSize, const wchar_t * fmt, va_list
 //
 // -----------------------------------------------------------------------------
 GN_API size_t
-GN::string2SignedInteger( sint64 & result, int bits, int base, const char * s )
+GN::str::toSignedInteger( sint64 & result, int bits, int base, const char * s )
 {
     // check invalid parameters
     if( bits < 2 && bits > 64 ) return 0;
     if( base < 2 ) return 0;
-    if( stringEmpty(s) ) return 0;
+    if( isEmpty(s) ) return 0;
 
     errno = 0;
 
@@ -105,12 +105,12 @@ GN::string2SignedInteger( sint64 & result, int bits, int base, const char * s )
 //
 // -----------------------------------------------------------------------------
 GN_API size_t
-GN::string2UnsignedInteger( uint64 & result, int bits, int base, const char * s )
+GN::str::toUnsignedInteger( uint64 & result, int bits, int base, const char * s )
 {
     // check invalid parameters
     if( bits < 2 && bits > 64 ) return 0;
     if( base < 2 ) return 0;
-    if( stringEmpty(s) ) return 0;
+    if( isEmpty(s) ) return 0;
 
     errno = 0;
 
@@ -141,10 +141,10 @@ GN::string2UnsignedInteger( uint64 & result, int bits, int base, const char * s 
 //
 // -----------------------------------------------------------------------------
 GN_API size_t
-GN::string2Float( float & i, const char * s )
+GN::str::toFloat( float & i, const char * s )
 {
     double d;
-    size_t n = string2Double( d, s );
+    size_t n = toDouble( d, s );
 
     if( 0 == n ) return 0;
 
@@ -159,9 +159,9 @@ GN::string2Float( float & i, const char * s )
 //
 // -----------------------------------------------------------------------------
 GN_API size_t
-GN::string2Double( double & i, const char * s )
+GN::str::toDouble( double & i, const char * s )
 {
-    if( stringEmpty(s) ) return 0;
+    if( isEmpty(s) ) return 0;
 
     char * e;
     double d = strtod( s, &e );
@@ -181,10 +181,10 @@ GN::string2Double( double & i, const char * s )
 //
 // -----------------------------------------------------------------------------
 GN_API size_t
-GN::string2FloatArray( float * buffer, size_t maxCount, const char * str, size_t length )
+GN::str::toFloatArray( float * buffer, size_t maxCount, const char * str, size_t length )
 {
     if( NULL == buffer ) return 0;
-    if( stringEmpty(str) ) return 0;
+    if( isEmpty(str) ) return 0;
 
     if( 0 == length ) length = strlen( str );
 
@@ -194,7 +194,7 @@ GN::string2FloatArray( float * buffer, size_t maxCount, const char * str, size_t
 
     while( buffer < bufend && str < strend )
     {
-        size_t n = string2Float( *buffer, str );
+        size_t n = toFloat( *buffer, str );
 
         if( 0 == n ) break;
 

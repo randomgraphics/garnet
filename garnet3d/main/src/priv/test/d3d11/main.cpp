@@ -66,7 +66,7 @@ public:
         // compile effect
         AutoComPtr<ID3DBlob> binary = AutoComPtr<ID3DBlob>::sAttach(compileShader(
             "fx_5_0",
-            fxcode, stringLength(fxcode),
+            fxcode, str::length(fxcode),
             D3DCOMPILE_PACK_MATRIX_ROW_MAJOR,
             NULL )); // entry
         if (nullptr == binary) return false;

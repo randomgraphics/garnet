@@ -161,11 +161,11 @@ const MeshVertexElement * sFindPositionElement( const MeshVertexFormat & vf )
     {
         const MeshVertexElement & e = vf.elements[i];
 
-        if( 0 == stringCompareI( "position", e.semantic ) ||
-            0 == stringCompareI( "position0", e.semantic ) ||
-            0 == stringCompareI( "pos", e.semantic ) ||
-            0 == stringCompareI( "pos0", e.semantic ) ||
-            0 == stringCompareI( "gl_vertex", e.semantic ) )
+        if( 0 == str::compareI( "position", e.semantic ) ||
+            0 == str::compareI( "position0", e.semantic ) ||
+            0 == str::compareI( "pos", e.semantic ) ||
+            0 == str::compareI( "pos0", e.semantic ) ||
+            0 == str::compareI( "gl_vertex", e.semantic ) )
         {
             return &e;
         }
@@ -245,7 +245,7 @@ MeshFileType sDetermineMeshFileType( File & fp )
     {
         return MESH_FILE_BIN;
     }
-    else if( 0 == stringCompareI( buf, "<?xml", 5 ) )
+    else if( 0 == str::compareI( buf, "<?xml", 5 ) )
     {
         return MESH_FILE_XML;
     }
@@ -358,7 +358,7 @@ template<typename T>
 static bool sGetIntAttrib( T & result, const XmlElement & node, const char * attribName )
 {
     const XmlAttrib * a = node.findAttrib( attribName );
-    return a && 0 != string2Integer<T>( result, a->value.rawptr() );
+    return a && 0 != str::toInetger<T>( result, a->value.rawptr() );
 }
 
 //
@@ -382,7 +382,7 @@ template<typename T>
 static bool sGetRequiredIntAttrib( T & result, const XmlElement & node, const char * attribName )
 {
     const XmlAttrib * a = node.findAttrib( attribName );
-    if( !a || 0 == string2Integer<T>( result, a->value.rawptr() ) )
+    if( !a || 0 == str::toInetger<T>( result, a->value.rawptr() ) )
     {
         GN_ERROR(sLogger)(
             "Element <%s>: attribute \"%s\" is missing or is not a valid integer.",
@@ -404,13 +404,13 @@ static bool sGetBoolAttrib( const XmlElement & node, const char * attribName, bo
     const XmlAttrib * a = node.findAttrib( attribName );
     if( !a ) return defaultValue;
 
-    if( 0 == stringCompareI( "1", a->value.rawptr() ) ||
-        0 == stringCompareI( "true", a->value.rawptr() ) )
+    if( 0 == str::compareI( "1", a->value.rawptr() ) ||
+        0 == str::compareI( "true", a->value.rawptr() ) )
     {
         return true;
     }
-    else if( 0 == stringCompareI( "0", a->value.rawptr() ) ||
-             0 == stringCompareI( "false", a->value.rawptr() ) )
+    else if( 0 == str::compareI( "0", a->value.rawptr() ) ||
+             0 == str::compareI( "false", a->value.rawptr() ) )
     {
         return false;
     }

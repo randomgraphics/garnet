@@ -41,7 +41,7 @@ static bool sParseEnum(
 
     while( table->name )
     {
-        if( 0 == stringCompareI( name, table->name ) )
+        if( 0 == str::compareI( name, table->name ) )
         {
             result = (RESULT_TYPE)table->value;
             return true;
@@ -125,7 +125,7 @@ static T sGetIntAttrib( const XmlElement & node, const char * attribName, T defa
 
     T result;
 
-    if( !a || 0 == string2Integer<T>( result, a->value.rawptr() ) )
+    if( !a || 0 == str::toInetger<T>( result, a->value.rawptr() ) )
         return defaultValue;
     else
         return result;
@@ -139,13 +139,13 @@ static bool sGetBoolAttrib( const XmlElement & node, const char * attribName, bo
     const XmlAttrib * a = node.findAttrib( attribName );
     if( !a ) return defaultValue;
 
-    if( 0 == stringCompareI( "1", a->value.rawptr() ) ||
-        0 == stringCompareI( "true", a->value.rawptr() ) )
+    if( 0 == str::compareI( "1", a->value.rawptr() ) ||
+        0 == str::compareI( "true", a->value.rawptr() ) )
     {
         return true;
     }
-    else if( 0 == stringCompareI( "0", a->value.rawptr() ) ||
-             0 == stringCompareI( "false", a->value.rawptr() ) )
+    else if( 0 == str::compareI( "0", a->value.rawptr() ) ||
+             0 == str::compareI( "false", a->value.rawptr() ) )
     {
         return false;
     }
@@ -163,7 +163,7 @@ static const char * sGetItemName( const XmlElement & node, const char * nodeType
     XmlAttrib * a = node.findAttrib( "name" );
     if( !a )
     {
-        sPostError( node, stringFormat("Unnamed %s node. Ignored.", nodeType) );
+        sPostError( node, str::format("Unnamed %s node. Ignored.", nodeType) );
         return 0;
     }
     return a->value.rawptr();
@@ -196,13 +196,13 @@ static void sParseTexture( EffectResourceDesc & desc, const XmlElement & node )
 
     SamplerDesc & sampler = texdesc.sampler;
 
-    const XmlAttrib * a = node.findAttrib( "addressU", StringCompareCase::INSENSITIVE );
+    const XmlAttrib * a = node.findAttrib( "addressU", str::INSENSITIVE );
     if( a ) sampler.addressU = sParseEnum( a->value, ADDRESS_MODE_TABLE, SamplerDesc::ADDRESS_REPEAT );
 
-    a = node.findAttrib( "addressV", StringCompareCase::INSENSITIVE );
+    a = node.findAttrib( "addressV", str::INSENSITIVE );
     if( a ) sampler.addressV = sParseEnum( a->value, ADDRESS_MODE_TABLE, SamplerDesc::ADDRESS_REPEAT );
 
-    a = node.findAttrib( "addressW", StringCompareCase::INSENSITIVE );
+    a = node.findAttrib( "addressW", str::INSENSITIVE );
     if( a ) sampler.addressW = sParseEnum( a->value, ADDRESS_MODE_TABLE, SamplerDesc::ADDRESS_REPEAT );
 
     GN_TODO( "more samplers fields." );
@@ -225,26 +225,26 @@ static void sParseUniform( EffectResourceDesc & desc, const XmlElement & node )
     }
     else
     {
-        if( 0 == stringCompareI( "matrix", type ) ||
-            0 == stringCompareI( "matrix4x4", type ) ||
-            0 == stringCompareI( "matrix44", type ) ||
-            0 == stringCompareI( "matrix4", type ) ||
-            0 == stringCompareI( "mat4", type ) ||
-            0 == stringCompareI( "float4x4", type ) )
+        if( 0 == str::compareI( "matrix", type ) ||
+            0 == str::compareI( "matrix4x4", type ) ||
+            0 == str::compareI( "matrix44", type ) ||
+            0 == str::compareI( "matrix4", type ) ||
+            0 == str::compareI( "mat4", type ) ||
+            0 == str::compareI( "float4x4", type ) )
         {
             ud.size = sizeof(Matrix44f);
         }
         else if(
-            0 == stringCompareI( "vector", type ) ||
-            0 == stringCompareI( "vec4", type ) ||
-            0 == stringCompareI( "vector4", type ) ||
-            0 == stringCompareI( "float4", type ) )
+            0 == str::compareI( "vector", type ) ||
+            0 == str::compareI( "vec4", type ) ||
+            0 == str::compareI( "vector4", type ) ||
+            0 == str::compareI( "float4", type ) )
         {
             ud.size = sizeof(float)*4;
         }
         else
         {
-            sPostError( node, stringFormat( "Unrecognized uniform type: %s", type ) );
+            sPostError( node, str::format( "Unrecognized uniform type: %s", type ) );
             ud.size = 0;
         }
     }
@@ -275,7 +275,7 @@ static void sParseParameters( EffectResourceDesc & desc, const XmlNode & root )
         if( "texture" == e->name ) sParseTexture( desc, *e );
         else if( "uniform" == e->name ) sParseUniform( desc, *e );
         else if( "attribute" == e->name ) sParseAttribute( desc, *e );
-        else sPostError( *e, stringFormat( "Unknown parameter '%s'. Ignored", e->name.rawptr() ) );
+        else sPostError( *e, str::format( "Unknown parameter '%s'. Ignored", e->name.rawptr() ) );
     }
 }
 
@@ -355,7 +355,7 @@ static void sParseCode( EffectGpuProgramDesc & sd, ShaderCode & code, const XmlE
     if( entry )
     {
         size_t offset = sd.shaderSourceBuffer.size();
-        sd.shaderSourceBuffer.append( entry, stringLength(entry) + 1 );
+        sd.shaderSourceBuffer.append( entry, str::length(entry) + 1 );
         code.entry = (const char *)offset;
     }
     else
@@ -386,7 +386,7 @@ static void sParseGpuProgram( EffectResourceDesc & desc, const XmlElement & node
     sd.gpd.lang = GpuProgramLanguage::sFromString( lang );
     if( !sd.gpd.lang.valid() )
     {
-        sPostError( node, stringFormat("invalid shading language: %s",lang?lang:"<NULL>") );
+        sPostError( node, str::format("invalid shading language: %s",lang?lang:"<NULL>") );
         return;
     }
 
@@ -424,14 +424,14 @@ static void sParseGpuProgram( EffectResourceDesc & desc, const XmlElement & node
                 GN_UNEXPECTED();
                 break;
         };
-        sPostWarning( node, stringFormat( "shaderModel attribute is missing. Assume: %s", ShaderModel::sToString(sd.gpd.shaderModels).rawptr() ) );
+        sPostWarning( node, str::format( "shaderModel attribute is missing. Assume: %s", ShaderModel::sToString(sd.gpd.shaderModels).rawptr() ) );
     }
     else
     {
         sd.gpd.shaderModels = ShaderModel::sFromString( models );
         if( 0 == sd.gpd.shaderModels )
         {
-            sPostError( node, stringFormat( "Invalid shaderModel attribute: %s", models ) );
+            sPostError( node, str::format( "Invalid shaderModel attribute: %s", models ) );
             return;
         }
     }
@@ -506,7 +506,7 @@ static void sParseRenderStates( EffectResourceDesc::EffectRenderStateDesc & rsde
         const char * rsname = a->name.rawptr();
         const char * rsvalue = a->value.rawptr();
 
-        if( 0 == stringCompareI( "CULL_MODE", rsname ) )
+        if( 0 == str::compareI( "CULL_MODE", rsname ) )
         {
             rsdesc.cullMode = sParseEnum( rsvalue, CULL_MODE_TABLE, GpuContext::CULL_BACK );
         }

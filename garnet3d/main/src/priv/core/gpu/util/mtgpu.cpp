@@ -598,7 +598,7 @@ void GN::gfx::MultiThreadGpu::debugDumpNextFrame( uint32 startBatchIndex, uint32
 // -----------------------------------------------------------------------------
 void GN::gfx::MultiThreadGpu::debugMarkBegin( const char * markerName )
 {
-    uint32 len = (uint32)stringLength( markerName ) + 1;
+    uint32 len = (uint32)str::length( markerName ) + 1;
     if( len < 1 || len > 1024 ) return;
 
     CommandBuffer::Token token;
@@ -625,7 +625,7 @@ void GN::gfx::MultiThreadGpu::debugMarkEnd()
 // -----------------------------------------------------------------------------
 void GN::gfx::MultiThreadGpu::debugMarkSet( const char * markerName )
 {
-    uint32 len = (uint32)stringLength( markerName ) + 1;
+    uint32 len = (uint32)str::length( markerName ) + 1;
     if( len < 1 || len > 1024 ) return;
 
     CommandBuffer::Token token;

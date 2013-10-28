@@ -378,11 +378,11 @@ bool GN::gfx::OGLBasicShaderARB::queryDeviceUniform( const char * name, intptr_t
 {
     GN_GUARD;
 
-    GN_ASSERT( !stringEmpty(name) );
+    GN_ASSERT( !str::isEmpty(name) );
 
     // get uniform index
     unsigned int index;
-    if( 0 == string2Integer<unsigned int>( index, name+1 ) )
+    if( 0 == str::toInetger<unsigned int>( index, name+1 ) )
     {
         GN_ERROR(sLogger)(
             "Invalid parameter name: %s. It must be Exxx, exxx, Lxxx or lxxx. \n"

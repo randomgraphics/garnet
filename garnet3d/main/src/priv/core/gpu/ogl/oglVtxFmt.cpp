@@ -371,29 +371,29 @@ bool GN::gfx::OGLVtxFmt::getStandardVertexBindingDesc(
     uint32 maxAttributes = getGpu().getOGLCaps().maxVertexAttributes;
     uint32 maxTextures = getGpu().caps().maxTextures;
 
-    if( ( 0 == stringCompareI( "position", bindingName ) ||
-          0 == stringCompareI( "pos", bindingName ) ||
-          0 == stringCompareI( "gl_vertex", bindingName ) )
+    if( ( 0 == str::compareI( "position", bindingName ) ||
+          0 == str::compareI( "pos", bindingName ) ||
+          0 == str::compareI( "gl_vertex", bindingName ) )
         &&
         0 == bindingIndex )
     {
         vbd.semantic = VERTEX_SEMANTIC_VERTEX;
         vbd.index = 0;
     }
-    else if( ( 0 == stringCompareI( "attribute", bindingName ) ||
-               0 == stringCompareI( "VertexArrribute", bindingName ) )
+    else if( ( 0 == str::compareI( "attribute", bindingName ) ||
+               0 == str::compareI( "VertexArrribute", bindingName ) )
              &&
              bindingIndex < maxAttributes )
     {
         vbd.semantic = VERTEX_SEMANTIC_ATTRIBUTE;
         vbd.index = bindingIndex;
     }
-    else if( (0 == stringCompareI( "normal", bindingName ) || 0 == stringCompareI( "nml", bindingName ) ) && 0 == bindingIndex )
+    else if( (0 == str::compareI( "normal", bindingName ) || 0 == str::compareI( "nml", bindingName ) ) && 0 == bindingIndex )
     {
         vbd.semantic = VERTEX_SEMANTIC_NORMAL;
         vbd.index = 0;
     }
-    else if( 0 == stringCompareI( "color", bindingName ) )
+    else if( 0 == str::compareI( "color", bindingName ) )
     {
         if( 0 == bindingIndex )
         {
@@ -410,12 +410,12 @@ bool GN::gfx::OGLVtxFmt::getStandardVertexBindingDesc(
             return false;
         }
     }
-    else if( 0 == stringCompareI( "fog", bindingName ) && GLEW_EXT_fog_coord )
+    else if( 0 == str::compareI( "fog", bindingName ) && GLEW_EXT_fog_coord )
     {
         vbd.semantic = VERTEX_SEMANTIC_FOG;
         vbd.index = 0;
     }
-    else if( 0 == stringCompareI( "texcoord", bindingName ) && bindingIndex < maxTextures )
+    else if( 0 == str::compareI( "texcoord", bindingName ) && bindingIndex < maxTextures )
     {
         vbd.semantic = VERTEX_SEMANTIC_TEXCOORD;
         vbd.index = bindingIndex;

@@ -198,19 +198,19 @@ sCheckShaderUniforms(
 static bool sAttributeNameEqual( const char * name1, const char * name2 )
 {
     // Treat name like 'POSITION0' as 'POSITION'
-    size_t len1 = stringLength( name1 );
+    size_t len1 = str::length( name1 );
     if( len1 >= 2 && '0' == name1[len1-1] && ( name1[len1-2] < '0' || name1[len1-2] > '9' ) )
     {
         len1--;
     }
 
-    size_t len2 = stringLength( name2 );
+    size_t len2 = str::length( name2 );
     if( len2 >= 2 && '0' == name2[len2-1] && ( name2[len2-2] < '0' || name2[len2-2] > '9' ) )
     {
         len2--;
     }
 
-    return len1 == len2 && 0 == stringCompareI( name1, name2, len1 );
+    return len1 == len2 && 0 == str::compareI( name1, name2, len1 );
 }
 
 // *****************************************************************************

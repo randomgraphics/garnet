@@ -61,12 +61,12 @@ namespace GN { namespace gfx
         /// convert string to from string
         static GpuProgramLanguage sFromString( const char * s )
         {
-                 if( 0 == stringCompareI( s, "HLSL9" ) )     return HLSL9;
-            else if( 0 == stringCompareI( s, "HLSL10" ) )    return HLSL10;
-            else if( 0 == stringCompareI( s, "MICROCODE" ) ) return MICROCODE;
-            else if( 0 == stringCompareI( s, "ARB1" ) )      return ARB1;
-            else if( 0 == stringCompareI( s, "GLSL" ) )      return GLSL;
-            else if( 0 == stringCompareI( s, "CG" ) )        return CG;
+                 if( 0 == str::compareI( s, "HLSL9" ) )     return HLSL9;
+            else if( 0 == str::compareI( s, "HLSL10" ) )    return HLSL10;
+            else if( 0 == str::compareI( s, "MICROCODE" ) ) return MICROCODE;
+            else if( 0 == str::compareI( s, "ARB1" ) )      return ARB1;
+            else if( 0 == str::compareI( s, "GLSL" ) )      return GLSL;
+            else if( 0 == str::compareI( s, "CG" ) )        return CG;
             else                                             return INVALID;
         }
 
@@ -134,16 +134,16 @@ namespace GN { namespace gfx
 
                 size_t len = t-s+1;
 
-                     if( 0 == stringCompareI( "SM_2_0",    s, len ) ) flags |= SM_2_0;
-                else if( 0 == stringCompareI( "SM_3_0",    s, len ) ) flags |= SM_3_0;
-                else if( 0 == stringCompareI( "SM_3_X"   , s, len ) ) flags |= SM_3_X;
-                else if( 0 == stringCompareI( "SM_4_0",    s, len ) ) flags |= SM_4_0;
-                else if( 0 == stringCompareI( "SM_5_0",    s, len ) ) flags |= SM_5_0;
-                else if( 0 == stringCompareI( "ARB1",      s, len ) ) flags |= ARB1;
-                else if( 0 == stringCompareI( "GLSL_1_00", s, len ) ) flags |= GLSL_1_00;
-                else if( 0 == stringCompareI( "GLSL_1_20", s, len ) ) flags |= GLSL_1_20;
-                else if( 0 == stringCompareI( "GLSL_1_30", s, len ) ) flags |= GLSL_1_30;
-                else if( 0 == stringCompareI( "GLSL_1_50", s, len ) ) flags |= GLSL_1_50;
+                     if( 0 == str::compareI( "SM_2_0",    s, len ) ) flags |= SM_2_0;
+                else if( 0 == str::compareI( "SM_3_0",    s, len ) ) flags |= SM_3_0;
+                else if( 0 == str::compareI( "SM_3_X"   , s, len ) ) flags |= SM_3_X;
+                else if( 0 == str::compareI( "SM_4_0",    s, len ) ) flags |= SM_4_0;
+                else if( 0 == str::compareI( "SM_5_0",    s, len ) ) flags |= SM_5_0;
+                else if( 0 == str::compareI( "ARB1",      s, len ) ) flags |= ARB1;
+                else if( 0 == str::compareI( "GLSL_1_00", s, len ) ) flags |= GLSL_1_00;
+                else if( 0 == str::compareI( "GLSL_1_20", s, len ) ) flags |= GLSL_1_20;
+                else if( 0 == str::compareI( "GLSL_1_30", s, len ) ) flags |= GLSL_1_30;
+                else if( 0 == str::compareI( "GLSL_1_50", s, len ) ) flags |= GLSL_1_50;
 
                 GN_ASSERT( '|' == *e || 0 == *e );
                 str = e;
@@ -171,7 +171,7 @@ namespace GN { namespace gfx
             if( flags )
             {
                 if(!str.empty()) str += "|";
-                str += stringFormat( "0x%X", flags );
+                str += str::format( "0x%X", flags );
             }
 
             return str;
@@ -340,7 +340,7 @@ namespace GN { namespace gfx
                 /// Assume that the first member of PARAMETER_DESC_CLASS is always parameter name
                 const char * paramName = *(const char * const *)p;
 
-                if( 0 == stringCompare( name, paramName ) )
+                if( 0 == str::compare( name, paramName ) )
                 {
                     // got you!
                     return (uint16)i;

@@ -77,7 +77,7 @@ template<typename T>
 static bool sGetRequiredIntAttrib( T & result, const XmlElement & node, const char * attribName )
 {
     const XmlAttrib * a = node.findAttrib( attribName );
-    if( !a || 0 == string2Integer<T>( result, a->value.rawptr() ) )
+    if( !a || 0 == str::toInetger<T>( result, a->value.rawptr() ) )
     {
         GN_ERROR(sLogger)( "Integer attribute \"%s\" of element <%s> is either missing or invalid.",
             attribName, node.name.rawptr() );
@@ -307,7 +307,7 @@ bool GN::gfx::ModelResourceDesc::loadFromXml( const XmlNode & root, const char *
                 GN_ERROR(sLogger)( "\"size\" attribute of <uniform> element is missing." );
                 return false;
             }
-            if( 0 == string2Integer( ud.size, a->value ) )
+            if( 0 == str::toInetger( ud.size, a->value ) )
             {
                 GN_ERROR(sLogger)( "\"size\" attribute of <uniform> element is not a valid integer." );
                 return false;
@@ -396,19 +396,19 @@ XmlElement * GN::gfx::ModelResourceDesc::saveToXml( XmlNode & root, const char *
     {
         XmlAttrib * a = doc.createAttrib( subsetNode );
         a->name = "basevtx";
-        a->value = stringFormat( "%u", subset.basevtx );
+        a->value = str::format( "%u", subset.basevtx );
 
         a = doc.createAttrib( subsetNode );
         a->name = "numvtx";
-        a->value = stringFormat( "%u", subset.numvtx );
+        a->value = str::format( "%u", subset.numvtx );
 
         a = doc.createAttrib( subsetNode );
         a->name = "startidx";
-        a->value = stringFormat( "%u", subset.startidx );
+        a->value = str::format( "%u", subset.startidx );
 
         a = doc.createAttrib( subsetNode );
         a->name = "numidx";
-        a->value = stringFormat( "%u", subset.numidx );
+        a->value = str::format( "%u", subset.numidx );
     }
 
     // create texture nodes
@@ -458,7 +458,7 @@ XmlElement * GN::gfx::ModelResourceDesc::saveToXml( XmlNode & root, const char *
         {
             a = doc.createAttrib( uniformNode );
             a->name = "size";
-            a->value = stringFormat( "%u", unidesc.size );
+            a->value = str::format( "%u", unidesc.size );
 
             if( !unidesc.initialValue.empty() )
             {
@@ -947,7 +947,7 @@ bool GN::gfx::ModelResource::Impl::setEffectResource( GpuResource * resource )
         if( !texres )
         {
             const EffectResource::TextureProperties & tp = mEffectResource->textureProperties( i );
-            StrA texname = stringFormat( "%s.texture.%s", getModelName(), tp.parameterName.rawptr() );
+            StrA texname = str::format( "%s.texture.%s", getModelName(), tp.parameterName.rawptr() );
             texres = getGdb().findOrCreateResource<TextureResource>( texname );
             if( !texres ) return false;
         }
@@ -968,7 +968,7 @@ bool GN::gfx::ModelResource::Impl::setEffectResource( GpuResource * resource )
         if( !unires )
         {
             const EffectResource::UniformProperties & up = mEffectResource->uniformProperties( i );
-            StrA uniname = stringFormat( "%s.uniform.%s", getModelName(), up.parameterName.rawptr() );
+            StrA uniname = str::format( "%s.uniform.%s", getModelName(), up.parameterName.rawptr() );
             unires = getGdb().findOrCreateResource<UniformResource>( uniname );
             if( !unires ) return false;
             AutoRef<Uniform> u = unires->uniform();
@@ -1025,7 +1025,7 @@ void GN::gfx::ModelResource::Impl::draw() const
     }
 
     // draw
-    GN_GPU_DEBUG_MARK_BEGIN( &g, stringFormat( "ModelResource::draw : %s (%s)",
+    GN_GPU_DEBUG_MARK_BEGIN( &g, str::format( "ModelResource::draw : %s (%s)",
         mOwner.name().rawptr(),
         (fs::baseName(mMeshResource->name()) + fs::extName(mMeshResource->name())).rawptr() ) );
     for( size_t i = 0; i < mPasses.size(); ++i )
@@ -1119,7 +1119,7 @@ bool GN::gfx::ModelResource::Impl::fromDesc( const ModelResourceDesc & desc )
             }
             else
             {
-                StrA texname = stringFormat( "%s.texture.%s", getModelName(), tp.parameterName.rawptr() );
+                StrA texname = str::format( "%s.texture.%s", getModelName(), tp.parameterName.rawptr() );
                 texres = db.findOrCreateResource<TextureResource>( texname );
                 if( texres ) texres->reset( &td->desc );
             }
@@ -1164,7 +1164,7 @@ bool GN::gfx::ModelResource::Impl::fromDesc( const ModelResourceDesc & desc )
             }
             else
             {
-                StrA uniname = stringFormat( "%s.uniform.%s", getModelName(), up.parameterName.rawptr() );
+                StrA uniname = str::format( "%s.uniform.%s", getModelName(), up.parameterName.rawptr() );
 
                 const void * initialValue = ud->initialValue.rawptr();
                 if( !ud->initialValue.empty() && ud->initialValue.size() != ud->size )

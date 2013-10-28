@@ -106,7 +106,7 @@ GN::internal::handleAssertFailure(
     {
     #if GN_WINPC
         char buf[1024];
-        stringPrintf( buf, 1024,
+        str::formatTo( buf, 1024,
             "%s(%d)\n"
             "%s\n\n"
             "Break into debugger?\n"
@@ -173,7 +173,7 @@ GN::getWin32ErrorInfo( uint32 win32ErrorCode ) throw()
     info[4095] = 0;
 
     // 除去信息末尾多余的回车符
-    size_t n = stringLength(info);
+    size_t n = str::length(info);
     while( n > 0 && '\n' != info[n-1] )
     {
         --n;
@@ -209,7 +209,7 @@ GN::getWin32ErrorInfoW( uint32 win32ErrorCode ) throw()
     info[4095] = 0;
 
     // 除去信息末尾多余的回车符
-    size_t n = stringLength(info);
+    size_t n = str::length(info);
     while( n > 0 && L'\n' != info[n-1] )
     {
         --n;

@@ -234,11 +234,11 @@ struct AseFile
                 ++str;
             }
 
-            if( expectedValue && 0 != stringCompare( expectedValue, r ) )
+            if( expectedValue && 0 != str::compare( expectedValue, r ) )
             {
                 if( !option.silence )
                 {
-                    err( stringFormat( "expect '%s', but found '%s'.", expectedValue, r ) );
+                    err( str::format( "expect '%s', but found '%s'.", expectedValue, r ) );
                 }
                 return 0;
             }
@@ -260,11 +260,11 @@ struct AseFile
 
             if( 0 != *str ) *str = 0, ++str; // point to start of next token
 
-            if( expectedValue && 0 != stringCompare( expectedValue, r ) )
+            if( expectedValue && 0 != str::compare( expectedValue, r ) )
             {
                 if( !option.silence )
                 {
-                    err( stringFormat( "expect '%s', but found '%s'.", expectedValue, r ) );
+                    err( str::format( "expect '%s', but found '%s'.", expectedValue, r ) );
                 }
                 return 0;
             }
@@ -278,7 +278,7 @@ struct AseFile
     ///
     bool skipUntil( const char * endtoken, ScanOption option = 0 )
     {
-        GN_ASSERT( !stringEmpty( endtoken ) );
+        GN_ASSERT( !str::isEmpty( endtoken ) );
 
         const char * token;
         int level = 0;
@@ -286,24 +286,24 @@ struct AseFile
         {
             token = next();
 
-            if( 0 == stringCompare( "{", token ) ) ++level;
-            else if( 0 == stringCompare( "}", token ) ) --level;
+            if( 0 == str::compare( "{", token ) ) ++level;
+            else if( 0 == str::compare( "}", token ) ) --level;
 
             if( IN_CURRENT_BLOCK == option.scope && level > 0 ) continue; // skip sub levels
 
             if( IN_CURRENT_AND_CHILD_BLOCKS == option.scope && level < 0 )
             {
-                if( !option.silence ) err( stringFormat( "token '%s' not found inside current block!", endtoken ) );
+                if( !option.silence ) err( str::format( "token '%s' not found inside current block!", endtoken ) );
                 return false;
             }
 
             if( 0 == token )
             {
-                if( !option.silence ) err( stringFormat( "token '%s' not found!", endtoken ) );
+                if( !option.silence ) err( str::format( "token '%s' not found!", endtoken ) );
                 return false;
             }
 
-            if( 0 == stringCompare( endtoken, token ) ) return true;
+            if( 0 == str::compare( endtoken, token ) ) return true;
         }
     }
 
@@ -346,7 +346,7 @@ struct AseFile
     {
         const char * token = next( 0, option );
         if( !token ) return false;
-        GN_ASSERT( !stringEmpty( token ) );
+        GN_ASSERT( !str::isEmpty( token ) );
 
         if( '*' != *token )
         {
@@ -365,7 +365,7 @@ struct AseFile
     {
         char * token = const_cast<char*>( next( 0, option ) );
         if( !token ) return false;
-        GN_ASSERT( !stringEmpty( token ) );
+        GN_ASSERT( !str::isEmpty( token ) );
 
         if( '"' != *token )
         {
@@ -419,7 +419,7 @@ struct AseFile
         }
         else
         {
-            err( stringFormat( "Expect a symbol (start with [_a-zA-Z]), but met: %s", s ) );
+            err( str::format( "Expect a symbol (start with [_a-zA-Z]), but met: %s", s ) );
             return false;
         }
     }
@@ -431,12 +431,12 @@ struct AseFile
     {
         const char * token = next( 0, option );
 
-        if( string2Float( result, token ) ) return true;
-        else if( 0 == stringCompare( "1.#QNB", token ) ) { result = 1.0f; return true; }
-        else if( 0 == stringCompare( "-1.#QNB", token ) ) { result = -1.0f; return true; }
+        if( str::toFloat( result, token ) ) return true;
+        else if( 0 == str::compare( "1.#QNB", token ) ) { result = 1.0f; return true; }
+        else if( 0 == str::compare( "-1.#QNB", token ) ) { result = -1.0f; return true; }
         else
         {
-            if( !option.silence ) err( stringFormat( "Not valid float : %s", token ) );
+            if( !option.silence ) err( str::format( "Not valid float : %s", token ) );
             return false;
         }
     }
@@ -450,9 +450,9 @@ struct AseFile
         const char * token = next( 0, option );
         if( 0 == token ) return false;
 
-        if( 0 == string2Integer<INT_TYPE>( result, token ) )
+        if( 0 == str::toInetger<INT_TYPE>( result, token ) )
         {
-            if( !option.silence ) err( stringFormat( "Not valid integer : %s", token ) );
+            if( !option.silence ) err( str::format( "Not valid integer : %s", token ) );
             return false;
         }
 
@@ -484,9 +484,9 @@ struct AseFile
     // -----------------------------------------------------------------------------
     bool readIndexedVector3Node( const char * nodename, uint32 index, Vector3f & result, ScanOption option = 0  )
     {
-        GN_ASSERT( !stringEmpty(nodename) );
+        GN_ASSERT( !str::isEmpty(nodename) );
         return next( nodename, option )
-            && next( stringFormat( "%d", index ).rawptr(), option )
+            && next( str::format( "%d", index ).rawptr(), option )
             && readVector3( result, option );
     }
 };
@@ -504,92 +504,92 @@ static bool sReadMap( AseMap & m, AseFile & ase )
 
     while( 0 != ( token = ase.next() ) )
     {
-        if( 0 == stringCompare( token, "*MAP_NAME" ) )
+        if( 0 == str::compare( token, "*MAP_NAME" ) )
         {
             if( !ase.readString( m.name ) ) return false;
         }
-        else if( 0 == stringCompare( token, "*MAP_CLASS" ) )
+        else if( 0 == str::compare( token, "*MAP_CLASS" ) )
         {
             if( !ase.readString( m.class_ ) ) return false;
         }
-        else if( 0 == stringCompare( token, "*MAP_SUBNO" ) )
+        else if( 0 == str::compare( token, "*MAP_SUBNO" ) )
         {
             if( !ase.readInt( m.subno ) ) return false;
         }
-        else if( 0 == stringCompare( token, "*MAP_AMOUNT" ) )
+        else if( 0 == str::compare( token, "*MAP_AMOUNT" ) )
         {
             if( !ase.readFloat( m.amount ) ) return false;
         }
-        else if( 0 == stringCompare( token, "*BITMAP" ) )
+        else if( 0 == str::compare( token, "*BITMAP" ) )
         {
             if( !ase.readAndResolveRelativePath( m.bitmap ) ) return false;
         }
-        else if( 0 == stringCompare( token, "*MAP_TYPE" ) )
+        else if( 0 == str::compare( token, "*MAP_TYPE" ) )
         {
             if( !ase.readSymbol( m.type ) ) return false;
         }
-        else if( 0 == stringCompare( token, "*UVW_U_OFFSET" ) )
+        else if( 0 == str::compare( token, "*UVW_U_OFFSET" ) )
         {
             if( !ase.readFloat( m.offset.u ) ) return false;
         }
-        else if( 0 == stringCompare( token, "*UVW_V_OFFSET" ) )
+        else if( 0 == str::compare( token, "*UVW_V_OFFSET" ) )
         {
             if( !ase.readFloat( m.offset.v ) ) return false;
         }
-        else if( 0 == stringCompare( token, "*UVW_U_TILING" ) )
+        else if( 0 == str::compare( token, "*UVW_U_TILING" ) )
         {
             if( !ase.readFloat( m.tiling.u ) ) return false;
         }
-        else if( 0 == stringCompare( token, "*UVW_V_TILING" ) )
+        else if( 0 == str::compare( token, "*UVW_V_TILING" ) )
         {
             if( !ase.readFloat( m.tiling.v ) ) return false;
         }
-        else if( 0 == stringCompare( token, "*UVW_ANGLE" ) )
+        else if( 0 == str::compare( token, "*UVW_ANGLE" ) )
         {
             if( !ase.readFloat( m.angle ) ) return false;
         }
-        else if( 0 == stringCompare( token, "*UVW_BLUR" ) )
+        else if( 0 == str::compare( token, "*UVW_BLUR" ) )
         {
             if( !ase.readFloat( m.blur ) ) return false;
         }
-        else if( 0 == stringCompare( token, "*UVW_BLUR_OFFSET" ) )
+        else if( 0 == str::compare( token, "*UVW_BLUR_OFFSET" ) )
         {
             if( !ase.readFloat( m.blur_offset ) ) return false;
         }
         // Note: this is 3dsmax ASE exporter bug. Should be MAP_NOISE_AMT
-        else if( 0 == stringCompare( token, "*UVW_NOUSE_AMT" ) )
+        else if( 0 == str::compare( token, "*UVW_NOUSE_AMT" ) )
         {
             if( !ase.readFloat( m.noise_amt ) ) return false;
         }
-        else if( 0 == stringCompare( token, "*UVW_NOISE_SIZE" ) )
+        else if( 0 == str::compare( token, "*UVW_NOISE_SIZE" ) )
         {
             if( !ase.readFloat( m.noise_size ) ) return false;
         }
-        else if( 0 == stringCompare( token, "*UVW_NOISE_LEVEL" ) )
+        else if( 0 == str::compare( token, "*UVW_NOISE_LEVEL" ) )
         {
             if( !ase.readInt( m.noise_level ) ) return false;
         }
-        else if( 0 == stringCompare( token, "*UVW_NOISE_PHASE" ) )
+        else if( 0 == str::compare( token, "*UVW_NOISE_PHASE" ) )
         {
             if( !ase.readFloat( m.noise_phase ) ) return false;
         }
-        else if( 0 == stringCompare( token, "*BITMAP_FILTER" ) )
+        else if( 0 == str::compare( token, "*BITMAP_FILTER" ) )
         {
             if( !ase.readSymbol( m.filter ) ) return false;
         }
         else if( '*' == *token )
         {
-            ase.verbose( stringFormat( "skip node %s", token ) );
+            ase.verbose( str::format( "skip node %s", token ) );
             if( !ase.skipNode() ) return false;
         }
-        else if( 0 == stringCompare( token, "}" ) )
+        else if( 0 == str::compare( token, "}" ) )
         {
             // end of the block
             return true;
         }
         else
         {
-            ase.err( stringFormat( "expecting node or close-brace, but met '%s'!", token ).rawptr() );
+            ase.err( str::format( "expecting node or close-brace, but met '%s'!", token ).rawptr() );
             return false;
         }
     }
@@ -613,82 +613,82 @@ static bool sReadMaterial( AseMaterialInternal & m, AseFile & ase )
 
     while( 0 != ( token = ase.next() ) )
     {
-        GN_ASSERT( !stringEmpty( token ) );
+        GN_ASSERT( !str::isEmpty( token ) );
 
-        if( 0 == stringCompare( token, "*MATERIAL_NAME" ) )
+        if( 0 == str::compare( token, "*MATERIAL_NAME" ) )
         {
             if( !ase.readString( m.name ) ) return false;
         }
-        else if( 0 == stringCompare( token, "*MATERIAL_CLASS" ) )
+        else if( 0 == str::compare( token, "*MATERIAL_CLASS" ) )
         {
             if( !ase.readString( m.class_ ) ) return false;
         }
-        else if( 0 == stringCompare( token, "*MATERIAL_AMBIENT" ) )
+        else if( 0 == str::compare( token, "*MATERIAL_AMBIENT" ) )
         {
             if( !ase.readVector3( m.ambient ) ) return false;
         }
-        else if( 0 == stringCompare( token, "*MATERIAL_DIFFUSE" ) )
+        else if( 0 == str::compare( token, "*MATERIAL_DIFFUSE" ) )
         {
             if( !ase.readVector3( m.diffuse ) ) return false;
         }
-        else if( 0 == stringCompare( token, "*MATERIAL_SPECULAR" ) )
+        else if( 0 == str::compare( token, "*MATERIAL_SPECULAR" ) )
         {
             if( !ase.readVector3( m.specular ) ) return false;
         }
-        else if( 0 == stringCompare( token, "*MATERIAL_SHINE" ) )
+        else if( 0 == str::compare( token, "*MATERIAL_SHINE" ) )
         {
             if( !ase.readFloat( m.shine ) ) return false;
         }
-        else if( 0 == stringCompare( token, "*MATERIAL_SHINESTRENGTH" ) )
+        else if( 0 == str::compare( token, "*MATERIAL_SHINESTRENGTH" ) )
         {
             if( !ase.readFloat( m.shinestrength ) ) return false;
         }
-        else if( 0 == stringCompare( token, "*MATERIAL_TRANSPARENCY" ) )
+        else if( 0 == str::compare( token, "*MATERIAL_TRANSPARENCY" ) )
         {
             if( !ase.readFloat( m.transparency ) ) return false;
         }
-        else if( 0 == stringCompare( token, "*MATERIAL_WIRESIZE" ) )
+        else if( 0 == str::compare( token, "*MATERIAL_WIRESIZE" ) )
         {
             if( !ase.readFloat( m.wiresize ) ) return false;
         }
-        else if( 0 == stringCompare( token, "*MATERIAL_SHADING" ) )
+        else if( 0 == str::compare( token, "*MATERIAL_SHADING" ) )
         {
             if( !ase.readSymbol( m.shading ) ) return false;
         }
-        else if( 0 == stringCompare( token, "*MATERIAL_XP_FALLOFF" ) )
+        else if( 0 == str::compare( token, "*MATERIAL_XP_FALLOFF" ) )
         {
             if( !ase.readFloat( m.xp_falloff ) ) return false;
         }
-        else if( 0 == stringCompare( token, "*MATERIAL_SELFILLUM" ) )
+        else if( 0 == str::compare( token, "*MATERIAL_SELFILLUM" ) )
         {
             if( !ase.readFloat( m.selfillum ) ) return false;
         }
-        else if( 0 == stringCompare( token, "*MATERIAL_FALLOFF" ) )
+        else if( 0 == str::compare( token, "*MATERIAL_FALLOFF" ) )
         {
             if( !ase.readSymbol( m.falloff ) ) return false;
         }
-        else if( 0 == stringCompare( token, "*MATERIAL_XP_TYPE" ) )
+        else if( 0 == str::compare( token, "*MATERIAL_XP_TYPE" ) )
         {
             if( !ase.readSymbol( m.xp_type ) ) return false;
         }
-        else if( 0 == stringCompare( token, "*MAP_", 5 ) )
+        else if( 0 == str::compare( token, "*MAP_", 5 ) )
         {
             const char * map = token + 5;
-            if( 0 == stringCompare( map, "DIFFUSE" ) )
+            if( 0 == str::compare( map, "DIFFUSE" ) )
             {
                 if( !sReadMap( m.mapdiff, ase ) ) return false;
             }
-            else if( 0 == stringCompare( map, "BUMP" ) )
+            else if( 0 == str::compare( map, "BUMP" ) )
             {
                 if( !sReadMap( m.mapbump, ase ) ) return false;
             }
             else
             {
-                ase.verbose( stringFormat( "skip unsupport map %s", token ) );
+                ase.verbose( str::format( "skip unsupport map %s", token ) );
                 if( !ase.skipNode() ) return false;
             }
         }
-        else if( 0 == stringCompare( token, "*NUMSUBMTLS" ) )
+        else if( 0 == str::compare( token, "*NUMSUBMTLS" ) )
         {
             uint32 count;
             if( !ase.readInt( count ) ) return false;
@@ -698,23 +698,23 @@ static bool sReadMaterial( AseMaterialInternal & m, AseFile & ase )
             for( uint32 i = 0; i < count; ++i )
             {
                 if( !ase.next( "*SUBMATERIAL" ) ) return false;
-                if( !ase.next( stringFormat("%d",i).rawptr() ) ) return false;
+                if( !ase.next( str::format("%d",i).rawptr() ) ) return false;
                 if( !sReadMaterial( m.submaterials[i], ase ) ) return false;
             }
         }
         else if( '*' == *token )
         {
-            ase.verbose( stringFormat( "skip node %s", token ) );
+            ase.verbose( str::format( "skip node %s", token ) );
             if( !ase.skipNode() ) return false;
         }
-        else if( 0 == stringCompare( token, "}" ) )
+        else if( 0 == str::compare( token, "}" ) )
         {
             // end of the block
             return true;
         }
         else
         {
-            ase.err( stringFormat( "expecting node or close-brace, but met '%s'!", token ).rawptr() );
+            ase.err( str::format( "expecting node or close-brace, but met '%s'!", token ).rawptr() );
             return false;
         }
     }
@@ -746,7 +746,7 @@ static bool sReadMaterials( AseSceneInternal & scene, AseFile & ase )
     for( uint32 i = 0; i < matcount; ++i )
     {
         if( !ase.next( "*MATERIAL" ) ) return false;
-        if( !ase.next( stringFormat("%d",i).rawptr() ) ) return false;
+        if( !ase.next( str::format("%d",i).rawptr() ) ) return false;
         if( !sReadMaterial( scene.materials[i], ase ) ) return false;
     }
 
@@ -800,7 +800,7 @@ static bool sReadMesh( AseMeshInternal & m, const Matrix44f & transform, AseFile
         AseFace & f = m.faces[i];
         int dummy;
         if( !ase.next( "*MESH_FACE" ) ) return false;
-        if( !ase.next( stringFormat( "%d:", i ).rawptr() ) ) return false;
+        if( !ase.next( str::format( "%d:", i ).rawptr() ) ) return false;
         if( !ase.next( "A:" ) || !ase.readInt( f.v[0] ) ) return false;
         if( !ase.next( "B:" ) || !ase.readInt( f.v[1] ) ) return false;
         if( !ase.next( "C:" ) || !ase.readInt( f.v[2] ) ) return false;
@@ -842,14 +842,14 @@ static bool sReadMesh( AseMeshInternal & m, const Matrix44f & transform, AseFile
         if( !ase.readBlockEnd() ) return false;
 
         // read tface list
-        if( !ase.next( "*MESH_NUMTVFACES" ) || !ase.next( stringFormat( "%d", numface ).rawptr() ) ) return false;
+        if( !ase.next( "*MESH_NUMTVFACES" ) || !ase.next( str::format( "%d", numface ).rawptr() ) ) return false;
         if( !ase.next( "*MESH_TFACELIST" ) || !ase.readBlockStart() ) return false;
         for( uint32 i = 0; i < numface; ++i )
         {
             AseFace & f = m.faces[i];
 
             if( !ase.next( "*MESH_TFACE" ) ) return false;
-            if( !ase.next( stringFormat( "%d", i ).rawptr() ) ) return false;
+            if( !ase.next( str::format( "%d", i ).rawptr() ) ) return false;
 
             // for each vertex in the face
             for( uint32 i = 0; i < 3; ++i )
@@ -941,7 +941,7 @@ static bool sReadNode( AseNode & n, AseFile & ase )
     while( 0 != ( token = ase.next() ) )
     {
         if( 0 ) {}
-        else if( 0 == stringCompare( "*TM_ROW0", token ) )
+        else if( 0 == str::compare( "*TM_ROW0", token ) )
         {
             Vector3f v;
             if( !ase.readVector3( v ) ) return false;
@@ -949,7 +949,7 @@ static bool sReadNode( AseNode & n, AseFile & ase )
             n.transform[1][0] = v.y;
             n.transform[2][0] = v.z;
         }
-        else if( 0 == stringCompare( "*TM_ROW1", token ) )
+        else if( 0 == str::compare( "*TM_ROW1", token ) )
         {
             Vector3f v;
             if( !ase.readVector3( v ) ) return false;
@@ -957,7 +957,7 @@ static bool sReadNode( AseNode & n, AseFile & ase )
             n.transform[1][1] = v.y;
             n.transform[2][1] = v.z;
         }
-        else if( 0 == stringCompare( "*TM_ROW2", token ) )
+        else if( 0 == str::compare( "*TM_ROW2", token ) )
         {
             Vector3f v;
             if( !ase.readVector3( v ) ) return false;
@@ -965,7 +965,7 @@ static bool sReadNode( AseNode & n, AseFile & ase )
             n.transform[1][2] = v.y;
             n.transform[2][2] = v.z;
         }
-        else if( 0 == stringCompare( "*TM_ROW3", token ) )
+        else if( 0 == str::compare( "*TM_ROW3", token ) )
         {
             Vector3f v;
             if( !ase.readVector3( v ) ) return false;
@@ -973,28 +973,28 @@ static bool sReadNode( AseNode & n, AseFile & ase )
             n.transform[1][3] = v.y;
             n.transform[2][3] = v.z;
         }
-        else if( 0 == stringCompare( "*TM_POS", token ) )
+        else if( 0 == str::compare( "*TM_POS", token ) )
         {
             if( !ase.readVector3( n.pos ) ) return false;
         }
-        else if( 0 == stringCompare( "*TM_ROTAXIS", token ) )
+        else if( 0 == str::compare( "*TM_ROTAXIS", token ) )
         {
             if( !ase.readVector3( n.rotaxis ) ) return false;
         }
-        else if( 0 == stringCompare( "*TM_ROTANGLE", token ) )
+        else if( 0 == str::compare( "*TM_ROTANGLE", token ) )
         {
             if( !ase.readFloat( n.rotangle ) ) return false;
         }
-        else if( 0 == stringCompare( "*TM_SCALE", token ) )
+        else if( 0 == str::compare( "*TM_SCALE", token ) )
         {
             if( !ase.readVector3( n.scale ) ) return false;
         }
         else if( '*' == *token )
         {
-            ase.verbose( stringFormat( "skip node %s", token ) );
+            ase.verbose( str::format( "skip node %s", token ) );
             if( !ase.skipNode() ) return false;
         }
-        else if( 0 == stringCompare( token, "}" ) )
+        else if( 0 == str::compare( token, "}" ) )
         {
             // end of the block. done.
             return true;
@@ -1025,7 +1025,7 @@ static bool sReadGeomObject( AseSceneInternal & scene, AseFile & ase )
     const char * token;
     while( 0 != ( token = ase.next() ) )
     {
-        if( 0 == stringCompare( token, "*NODE_NAME" ) )
+        if( 0 == str::compare( token, "*NODE_NAME" ) )
         {
             o.node.name = ase.readString();
             if( o.node.name.empty() )
@@ -1033,21 +1033,21 @@ static bool sReadGeomObject( AseSceneInternal & scene, AseFile & ase )
                 ase.err( "Node name can't be empty!" );
                 return false;
             }
-            ase.verbose( stringFormat( "read geometry object '%s' ...", o.node.name.rawptr() ) );
+            ase.verbose( str::format( "read geometry object '%s' ...", o.node.name.rawptr() ) );
         }
-        else if( 0 == stringCompare( token, "*NODE_PARENT" ) )
+        else if( 0 == str::compare( token, "*NODE_PARENT" ) )
         {
             o.node.parent = ase.readString();
         }
-        else if( 0 == stringCompare( token, "*NODE_TM" ) )
+        else if( 0 == str::compare( token, "*NODE_TM" ) )
         {
             if( !sReadNode( o.node, ase ) ) return false;
         }
-        else if( 0 == stringCompare( token, "*MESH" ) )
+        else if( 0 == str::compare( token, "*MESH" ) )
         {
             if( !sReadMesh( o.mesh, o.node.transform, ase ) ) return false;
         }
-        else if( 0 == stringCompare( token, "*MATERIAL_REF" ) )
+        else if( 0 == str::compare( token, "*MATERIAL_REF" ) )
         {
             if( !ase.readInt( o.matid ) ) return false;
             if( o.matid >= scene.materials.size() )
@@ -1059,10 +1059,10 @@ static bool sReadGeomObject( AseSceneInternal & scene, AseFile & ase )
         }
         else if( '*' == *token )
         {
-            ase.verbose( stringFormat( "skip node %s", token ) );
+            ase.verbose( str::format( "skip node %s", token ) );
             if( !ase.skipNode() ) return false;
         }
-        else if( 0 == stringCompare( token, "}" ) )
+        else if( 0 == str::compare( token, "}" ) )
         {
             // end of the block. do some post processing.
 
@@ -1070,7 +1070,7 @@ static bool sReadGeomObject( AseSceneInternal & scene, AseFile & ase )
 
             if( !hasMaterial )
             {
-                ase.warn( stringFormat( "object '%s' has no material. Using default one.", o.node.name.rawptr() ) );
+                ase.warn( str::format( "object '%s' has no material. Using default one.", o.node.name.rawptr() ) );
                 o.matid = 0;
             }
 
@@ -1121,7 +1121,7 @@ static bool sReadGeomObject( AseSceneInternal & scene, AseFile & ase )
         }
         else
         {
-            ase.err( stringFormat( "expecting node or close-brace, but met '%s'!", token ).rawptr() );
+            ase.err( str::format( "expecting node or close-brace, but met '%s'!", token ).rawptr() );
             return false;
         }
     }
@@ -1147,27 +1147,27 @@ static bool sReadGroup( AseSceneInternal & scene, AseFile & ase )
     while( 0 != ( token = ase.next() ) )
     {
         if( 0 ) {}
-        //else if( 0 == stringCompare( token, "*SCENE" ) )
+        //else if( 0 == str::compare( token, "*SCENE" ) )
         //{
         //    ...
         //}
-        else if( 0 == stringCompare( token, "*GEOMOBJECT" ) )
+        else if( 0 == str::compare( token, "*GEOMOBJECT" ) )
         {
             if( !sReadGeomObject( scene, ase ) ) return false;
         }
         else if( '*' == *token )
         {
-            ase.verbose( stringFormat( "skip node %s", token ) );
+            ase.verbose( str::format( "skip node %s", token ) );
             if( !ase.skipNode() ) return false;
         }
-        else if( 0 == stringCompare( token, "}" ) )
+        else if( 0 == str::compare( token, "}" ) )
         {
             // end of the block.
             return true;
         }
         else
         {
-            ase.err( stringFormat( "expecting node token, but met '%s'.", token ) );
+            ase.err( str::format( "expecting node token, but met '%s'.", token ) );
             return false;
         }
     }
@@ -1204,31 +1204,31 @@ static bool sReadAse( AseSceneInternal & scene, File & file )
     while( 0 != ( token = ase.next() ) )
     {
         if( 0 ) {}
-        //else if( 0 == stringCompare( token, "*SCENE" ) )
+        //else if( 0 == str::compare( token, "*SCENE" ) )
         //{
         //    ...
         //}
-        else if( 0 == stringCompare( token, "*MATERIAL_LIST" ) )
+        else if( 0 == str::compare( token, "*MATERIAL_LIST" ) )
         {
             if( !sReadMaterials( scene, ase ) ) return false;
         }
-        else if( 0 == stringCompare( token, "*GROUP" ) )
+        else if( 0 == str::compare( token, "*GROUP" ) )
         {
             if( !ase.readString() ) return false; // skip group name
             if( !sReadGroup( scene, ase ) ) return false;
         }
-        else if( 0 == stringCompare( token, "*GEOMOBJECT" ) )
+        else if( 0 == str::compare( token, "*GEOMOBJECT" ) )
         {
             if( !sReadGeomObject( scene, ase ) ) return false;
         }
         else if( '*' == *token )
         {
-            ase.verbose( stringFormat( "skip node %s", token ) );
+            ase.verbose( str::format( "skip node %s", token ) );
             if( !ase.skipNode() ) return false;
         }
         else
         {
-            ase.err( stringFormat( "expecting node token, but met '%s'.", token ) );
+            ase.err( str::format( "expecting node token, but met '%s'.", token ) );
             return false;
         }
     }
@@ -1290,7 +1290,7 @@ static bool sBuildNodeTree( AseSceneInternal & scene )
     // make sure all objects are linked into the tree.
     GN_ASSERT_EX(
         scene.root.calcChildrenCount() == scene.objects.size(),
-        stringFormat( "numchildren=%d, numobjects=%d",
+        str::format( "numchildren=%d, numobjects=%d",
             scene.root.calcChildrenCount(), scene.objects.size() ).rawptr() );
 
     // calculate bounding box for each node, in post order
@@ -1327,7 +1327,7 @@ static bool sBuildNodeTree( AseSceneInternal & scene )
         StrA s( "    " );
 
         for( int i = 0; i < level; ++i ) s += "- ";
-        s += stringFormat(
+        s += str::format(
             "%s : bbox_pos(%f,%f,%f), bbox_size(%f,%f,%f)",
             n->node.name.rawptr(),
             n->node.selfbbox.pos().x,

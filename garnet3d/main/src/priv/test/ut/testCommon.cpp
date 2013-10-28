@@ -31,12 +31,12 @@ int myInit( int argc, const char * argv[] )
             #endif
             )
         {
-            if( 0 == GN::stringCompareI( a+1, "h" ) )
+            if( 0 == GN::str::compareI( a+1, "h" ) )
             {
                 sPrintUsage();
                 exit(-1);
             }
-            else if( 0 == GN::stringCompareI( a+1, "v" ) )
+            else if( 0 == GN::str::compareI( a+1, "v" ) )
             {
                 verbose = true;
             }

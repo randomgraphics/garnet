@@ -23,7 +23,7 @@ class InputTest
 
     bool createInput( const char * api )
     {
-        if( !GN::input::initializeInputSystem( 0 == GN::stringCompare("DI",api) ? GN::input::InputAPI::DINPUT : GN::input::InputAPI::NATIVE ) )
+        if( !GN::input::initializeInputSystem( 0 == GN::str::compare("DI",api) ? GN::input::InputAPI::DINPUT : GN::input::InputAPI::NATIVE ) )
             return false;
         if( !gInputPtr->attachToWindow( 0, mWin->getWindowHandle() ) )
             return false;
