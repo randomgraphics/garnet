@@ -45,7 +45,7 @@ static bool sStrEndWithI( const char * string, const char * suffix )
 
     string = string + n1 - n2;
 
-    return 0 == stringCompareI( string, suffix );
+    return 0 == str::compareI( string, suffix );
 }
 
 // *****************************************************************************
@@ -325,7 +325,7 @@ sLoadModelHierarchyFromASE( ModelHierarchyDesc & desc, File & file )
     }
     filename = fs::resolvePath( fs::getCurrentDir(), filename );
 
-#define FULL_MESH_NAME( n ) stringFormat("%s.%s",filename.rawptr(),n.rawptr())
+#define FULL_MESH_NAME( n ) str::format("%s.%s",filename.rawptr(),n.rawptr())
 
     // copy meshes. create nodes as well, since in ASE scene, one mesh is one node.
     for( size_t i = 0; i < ase.meshes.size(); ++i )
@@ -384,7 +384,7 @@ sLoadModelHierarchyFromASE( ModelHierarchyDesc & desc, File & file )
         }
 
         // add the model to model list
-        StrA modelname = stringFormat( "%s.%u", asemesh.name.rawptr(), i );
+        StrA modelname = str::format( "%s.%u", asemesh.name.rawptr(), i );
         GN_ASSERT( NULL == desc.models.find( modelname ) );
         desc.models[modelname] = model;
 
@@ -893,7 +893,7 @@ sLoadFbxMesh(
         // skip empty models.
         if( model.effect.empty() ) continue;
 
-        StrA modelName = stringFormat( "%s.%d", meshName, i );
+        StrA modelName = str::format( "%s.%d", meshName, i );
         desc.models[modelName] = model;
         gnnode.models.append( modelName );
     }
@@ -1241,28 +1241,28 @@ sParseNode( ModelHierarchyDesc & desc, XmlElement & root )
     if( a ) node.parent = a->value;
 
     a = root.findAttrib( "position" );
-    if( !a || 3 != string2FloatArray( (float*)&node.position, 3, a->value ) )
+    if( !a || 3 != str::toFloatArray( (float*)&node.position, 3, a->value ) )
     {
         sPostXMLError( root, "Invalid position" );
         node.position.set( 0, 0, 0 );
     }
 
     a = root.findAttrib( "orientation" );
-    if( !a || 4 != string2FloatArray( (float*)&node.orientation, 4, a->value ) )
+    if( !a || 4 != str::toFloatArray( (float*)&node.orientation, 4, a->value ) )
     {
         sPostXMLError( root, "Invalid orientation" );
         node.orientation.set( 0, 0, 0, 1 );
     }
 
     a = root.findAttrib( "scaling" );
-    if( !a || 3 != string2FloatArray( (float*)&node.scaling, 3, a->value ) )
+    if( !a || 3 != str::toFloatArray( (float*)&node.scaling, 3, a->value ) )
     {
         sPostXMLError( root, "Invalid scaling" );
         node.scaling.set( 1, 1, 1 );
     }
 
     a = root.findAttrib( "bbox" );
-    if( !a || 6 != string2FloatArray( (float*)&node.bbox, 6, a->value ) )
+    if( !a || 6 != str::toFloatArray( (float*)&node.bbox, 6, a->value ) )
     {
         sPostXMLError( root, "Invalid bounding box" );
         node.bbox = Boxf( 0, 0, 0, 0, 0, 0 );
@@ -1290,7 +1290,7 @@ sParseNode( ModelHierarchyDesc & desc, XmlElement & root )
             }
             else
             {
-                sPostXMLError( *e, stringFormat( "Unknown element: <%s>", e->name.rawptr() ) );
+                sPostXMLError( *e, str::format( "Unknown element: <%s>", e->name.rawptr() ) );
             }
         }
     }
@@ -1335,7 +1335,7 @@ sLoadModelHierarchyFromXML( ModelHierarchyDesc & desc, File & file )
 
 #if ROOT_BBOX
     XmlAttrib * bboxAttr = root->findAttrib( "bbox" );
-    if( !bboxAttr || 6 != string2FloatArray( (float*)&desc.bbox, 6, bboxAttr->value ) )
+    if( !bboxAttr || 6 != str::toFloatArray( (float*)&desc.bbox, 6, bboxAttr->value ) )
     {
         sPostXMLError( *root, "Invalid bbox attribute." );
         return false;
@@ -1360,7 +1360,7 @@ sLoadModelHierarchyFromXML( ModelHierarchyDesc & desc, File & file )
         }
         else
         {
-            sPostXMLError( *e, stringFormat( "Ignore unknowned element: <%s>", e->name.rawptr() ) );
+            sPostXMLError( *e, str::format( "Ignore unknowned element: <%s>", e->name.rawptr() ) );
         }
     }
 
@@ -1382,7 +1382,7 @@ sLoadModelHierarchyFromXML( ModelHierarchyDesc & desc, File & file )
         }
         else
         {
-            sPostXMLError( *e, stringFormat( "Ignore unknowned element: <%s>", e->name.rawptr() ) );
+            sPostXMLError( *e, str::format( "Ignore unknowned element: <%s>", e->name.rawptr() ) );
         }
     }
 
@@ -1425,7 +1425,7 @@ sSaveModelHierarchyToXML( const ModelHierarchyDesc & desc, const char * filename
         const StrA & oldMeshName = i->key;
         const MeshResourceDesc & mesh = i->value;
 
-        StrA newMeshName = stringFormat( "%s.%d.mesh.bin", basename.rawptr(), meshindex );
+        StrA newMeshName = str::format( "%s.%d.mesh.bin", basename.rawptr(), meshindex );
 
         if( !mesh.saveToFile( dirname + "\\" + newMeshName ) ) return false;
 
@@ -1472,7 +1472,7 @@ sSaveModelHierarchyToXML( const ModelHierarchyDesc & desc, const char * filename
     {
         const StrA & nodeName = i->key;
 
-        entityNameMap[nodeName] = stringFormat( "%d", ++entityIndex );
+        entityNameMap[nodeName] = str::format( "%d", ++entityIndex );
     }
 
     // write nodes
@@ -1506,14 +1506,14 @@ sSaveModelHierarchyToXML( const ModelHierarchyDesc & desc, const char * filename
 
         a = xmldoc.createAttrib( node );
         a->name  = "position";
-        a->value = stringFormat( "%f,%f,%f",
+        a->value = str::format( "%f,%f,%f",
             nodeDesc.position.x,
             nodeDesc.position.y,
             nodeDesc.position.z );
 
         a = xmldoc.createAttrib( node );
         a->name  = "orientation";
-        a->value = stringFormat( "%f,%f,%f,%f",
+        a->value = str::format( "%f,%f,%f,%f",
             nodeDesc.orientation.v.x,
             nodeDesc.orientation.v.y,
             nodeDesc.orientation.v.z,
@@ -1521,14 +1521,14 @@ sSaveModelHierarchyToXML( const ModelHierarchyDesc & desc, const char * filename
 
         a = xmldoc.createAttrib( node );
         a->name  = "scaling";
-        a->value = stringFormat( "%f,%f,%f",
+        a->value = str::format( "%f,%f,%f",
             nodeDesc.scaling.x,
             nodeDesc.scaling.y,
             nodeDesc.scaling.z );
 
         a = xmldoc.createAttrib( node );
         a->name  = "bbox";
-        a->value = stringFormat( "%f,%f,%f,%f,%f,%f",
+        a->value = str::format( "%f,%f,%f,%f,%f,%f",
             nodeDesc.bbox.x,
             nodeDesc.bbox.y,
             nodeDesc.bbox.z,
@@ -1553,7 +1553,7 @@ sSaveModelHierarchyToXML( const ModelHierarchyDesc & desc, const char * filename
     // write scene bounding box
     XmlAttrib * a = xmldoc.createAttrib( root->toElement() );
     a->name  = "bbox";
-    a->value = stringFormat( "%f,%f,%f,%f,%f,%f",
+    a->value = str::format( "%f,%f,%f,%f,%f,%f",
             desc.bbox.x,
             desc.bbox.y,
             desc.bbox.z,

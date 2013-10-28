@@ -187,7 +187,7 @@ public:
         drawXYZCoordinateAxes( camera.proj * camera.view * arcball.getRotationMatrix44() );
 
         engine::getDefaultFontRenderer()->drawText(
-            stringFormat(
+            str::format(
                 L"position : %f,\n"
                 L"           %f,\n"
                 L"           %f\n"
@@ -217,7 +217,7 @@ public:
             return false;
         }
 
-        if( argc >= 2 && ( 0 == stringCompare( argv[0], "-print" ) || 0 == stringCompare( argv[0], "--print" ) ) )
+        if( argc >= 2 && ( 0 == str::compare( argv[0], "-print" ) || 0 == str::compare( argv[0], "--print" ) ) )
         {
             StrA s;
             printModelFileNodeHierarchy( s, argv[1] );

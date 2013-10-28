@@ -29,7 +29,7 @@ public:
         // load caustic textures
         for( int i = 0; i < 32; ++i )
         {
-            mCaustics[i] = TextureResource::loadFromFile( gdb, stringFormat("media::dolphin/caust%02d.tga",i) );
+            mCaustics[i] = TextureResource::loadFromFile( gdb, str::format("media::dolphin/caust%02d.tga",i) );
             if( 0 == mCaustics[i] ) return false;
         }
 

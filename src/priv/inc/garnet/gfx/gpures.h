@@ -151,7 +151,7 @@ namespace GN { namespace gfx
         /// Set vertex element semantic.
         void setSemantic( const char * s )
         {
-            size_t len = stringLength( s );
+            size_t len = str::length( s );
             if( 0 == len )
             {
                 GN_ERROR(getLogger("GN.gfx.gpu"))( "Empty semantic string is not allowed." );
@@ -174,7 +174,7 @@ namespace GN { namespace gfx
             return format == rhs.format
                 && stream == rhs.stream
                 && offset == rhs.offset
-                && 0 == stringCompare( semantic, rhs.semantic, sizeof(semantic) );
+                && 0 == str::compare( semantic, rhs.semantic, sizeof(semantic) );
         }
 
         /// equality check
@@ -272,7 +272,7 @@ namespace GN { namespace gfx
         {
             for( uint32 i = 0; i < numElements; ++i )
             {
-                if( 0 == stringCompareI( elements[i].semantic, semantic ) )
+                if( 0 == str::compareI( elements[i].semantic, semantic ) )
                 {
                     if( NULL != elementIndex ) *elementIndex = i;
                     return true;

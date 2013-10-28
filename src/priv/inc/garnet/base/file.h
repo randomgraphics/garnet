@@ -171,8 +171,8 @@ namespace GN
     inline File & operator<<( File & fp, int i )
     {
         char buf[256];
-        stringPrintf( buf, 256, "%d", i );
-        fp.write( buf, stringLength(buf), 0 );
+        str::formatTo( buf, 256, "%d", i );
+        fp.write( buf, str::length(buf), 0 );
         return fp;
     }
 
@@ -182,8 +182,8 @@ namespace GN
     inline File & operator<<( File & fp, size_t s )
     {
         char buf[256];
-        stringPrintf( buf, 256, "%Iu", s );
-        fp.write( buf, stringLength(buf), 0 );
+        str::formatTo( buf, 256, "%Iu", s );
+        fp.write( buf, str::length(buf), 0 );
         return fp;
     }
 
@@ -193,7 +193,7 @@ namespace GN
     inline File & operator<<( File & fp, const char * s )
     {
         if( 0 == s ) return fp;
-        fp.write( s, stringLength(s), 0 );
+        fp.write( s, str::length(s), 0 );
         return fp;
     }
 
@@ -225,7 +225,7 @@ namespace GN
             if( stdin == fp ) setName( "stdin" );
             else if( stdout == fp ) setName( "stdout" );
             else if( stderr == fp ) setName( "stderr" );
-            else setName( stringFormat( "#%p", fp ) );
+            else setName( str::format( "#%p", fp ) );
         }
 
     public :

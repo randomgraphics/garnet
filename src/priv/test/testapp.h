@@ -135,19 +135,19 @@ private:
     {
         using namespace GN;
 
-        if( 0 == stringCompareI( "on", value ) ||
-            0 == stringCompareI( "yes", value ) ||
-            0 == stringCompareI( "true", value ) ||
-            0 == stringCompareI( "1", value ) )
+        if( 0 == str::compareI( "on", value ) ||
+            0 == str::compareI( "yes", value ) ||
+            0 == str::compareI( "true", value ) ||
+            0 == str::compareI( "1", value ) )
         {
             result = true;
             return true;
         }
         else if(
-            0 == stringCompareI( "off", value ) ||
-            0 == stringCompareI( "no", value ) ||
-            0 == stringCompareI( "false", value ) ||
-            0 == stringCompareI( "0", value ) )
+            0 == str::compareI( "off", value ) ||
+            0 == str::compareI( "no", value ) ||
+            0 == str::compareI( "false", value ) ||
+            0 == str::compareI( "0", value ) )
         {
             result = false;
             return true;
@@ -166,15 +166,15 @@ private:
         using namespace GN;
         using namespace GN::gfx;
 
-        if( 0 == stringCompareI( "auto", value ) )
+        if( 0 == str::compareI( "auto", value ) )
         {
             result = GpuAPI::AUTO;
         }
-        else if( 0 == stringCompareI( "ogl", value ) )
+        else if( 0 == str::compareI( "ogl", value ) )
         {
             result = GpuAPI::OGL;
         }
-        else if( 0 == stringCompareI( "d3d11", value ) )
+        else if( 0 == str::compareI( "d3d11", value ) )
         {
             result = GpuAPI::D3D11;
         }
@@ -206,11 +206,11 @@ private:
         {
             const char * a = argv[i];
 
-            if( 0 == stringCompareI( "-h", a ) ||
-                0 == stringCompareI( "/h", a ) ||
-                0 == stringCompareI( "-?", a ) ||
-                0 == stringCompareI( "/?", a ) ||
-                0 == stringCompareI( "--help", a ) )
+            if( 0 == str::compareI( "-h", a ) ||
+                0 == str::compareI( "/h", a ) ||
+                0 == str::compareI( "-?", a ) ||
+                0 == str::compareI( "/?", a ) ||
+                0 == str::compareI( "--help", a ) )
             {
                 return SHOW_HELP;
             }
@@ -222,7 +222,7 @@ private:
             {
                 // this is a command line option name
 
-                if( 0 == stringCompareI( "fs", a+1 ) )
+                if( 0 == str::compareI( "fs", a+1 ) )
                 {
                     const char * value = getOptionValue( argc, argv, i );
                     if( NULL == value ) return INVALID_COMMAND_LINE;
@@ -230,7 +230,7 @@ private:
                     if( !parseBool( rendererOptions.fullscreen, a, value ) )
                         return INVALID_COMMAND_LINE;
                 }
-                else if( 0 == stringCompareI( "mt", a+1 ) )
+                else if( 0 == str::compareI( "mt", a+1 ) )
                 {
                     const char * value = getOptionValue( argc, argv, i );
                     if( NULL == value ) return INVALID_COMMAND_LINE;
@@ -238,7 +238,7 @@ private:
                     if( !parseBool( useMultiThreadGpu, a, value ) )
                         return INVALID_COMMAND_LINE;
                 }
-                else if( 0 == stringCompareI( "gpu", a+1 ) )
+                else if( 0 == str::compareI( "gpu", a+1 ) )
                 {
                     const char * value = getOptionValue( argc, argv, i );
                     if( NULL == value ) return INVALID_COMMAND_LINE;
@@ -246,7 +246,7 @@ private:
                     if( !parseGpuAPI( rendererOptions.api, value ) )
                         return INVALID_COMMAND_LINE;
                 }
-                else if( 0 == stringCompareI( "vsync", a+1 ) )
+                else if( 0 == str::compareI( "vsync", a+1 ) )
                 {
                     const char * value = getOptionValue( argc, argv, i );
                     if( NULL == value || !parseBool( rendererOptions.vsync, a, value ) )

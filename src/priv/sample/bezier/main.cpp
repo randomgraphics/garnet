@@ -397,7 +397,7 @@ class BezierApp : public SampleApp
         drawCoords();
 
         engine::getDefaultFontRenderer()->drawText(
-            stringFormat(
+            str::format(
                 L"position : %f, %f, %f\n"
                 L"radius   : %f",
                 position.x, position.y, position.z,

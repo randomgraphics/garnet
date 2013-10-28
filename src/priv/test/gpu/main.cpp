@@ -236,7 +236,7 @@ int main( int argc, const char * argv[] )
 
     for( size_t i = 0; i < cmdargs.extraArgc; ++i )
     {
-        if( 0 == stringCompareI( "-b", cmdargs.extraArgv[i] ) )
+        if( 0 == str::compareI( "-b", cmdargs.extraArgv[i] ) )
         {
             blankScreen = true;
         }

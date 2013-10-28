@@ -141,7 +141,7 @@ GN_API GN::CharacterEncodingConverter::Encoding GN::getCurrentSystemEncoding()
 GN_API void GN::wcs2mbs( StrA & o, const wchar_t * i, size_t l )
 {
     if ( 0 == i ) { o.clear(); return; }
-    if ( 0 == l ) l = stringLength(i);
+    if ( 0 == l ) l = str::length(i);
 
     o.setCaps( l + 1 );
 #if GN_MSVC8
@@ -203,7 +203,7 @@ GN_API size_t GN::mbs2wcs( wchar_t * o, size_t os, const char * i, size_t is )
 GN_API void GN::mbs2wcs( StrW & o, const char * i, size_t l )
 {
     if ( 0 == i ) { o.clear(); return; }
-    if ( 0 == l ) l = stringLength(i);
+    if ( 0 == l ) l = str::length(i);
 
     o.setCaps( l + 1 );
 #if GN_MSVC8

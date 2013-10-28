@@ -11,7 +11,7 @@ class StringMapTest : public CxxTest::TestSuite
     {
         uint64 operator()( const std::string & s ) const
         {
-            return GN::stringHash( s.c_str() );
+            return GN::str::hash( s.c_str() );
         }
     };
 
@@ -304,7 +304,7 @@ public:
     {
         using namespace GN;
 
-        StringMap<char,int,StringCompareCase::INSENSITIVE> m;
+        StringMap<char,int,str::INSENSITIVE> m;
 
         m["a,b,c"] = 1;
         m["a,B,c"] = 2;

@@ -575,7 +575,7 @@ private:
     static bool sGetNumericAttr( const XmlElement & node, const StrA & attrname, T & result )
     {
         const XmlAttrib * a = node.findAttrib( attrname );
-        if ( !a || !string2Number<T>( result, a->value.rawptr() ) )
+        if ( !a || !str::toNumber<T>( result, a->value.rawptr() ) )
         {
             GN_ERROR(sLogger)("%s : attribute '%s' is missing!", node.getLocation(), attrname.rawptr() );
             return false;

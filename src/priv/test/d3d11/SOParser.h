@@ -194,7 +194,7 @@ lExit:
 
         D3DXASSERT( pSemantic );
 
-        pSemantic = strchr( pSemantic, '.' ); 
+        pSemantic = strchr( pSemantic, '.' );
 
         if( pSemantic == NULL )
         {
@@ -240,7 +240,7 @@ lExit:
         D3DXASSERT( ppSemantic && *ppSemantic );
 
         HRESULT hr = S_OK;
-        LPSTR pColon = strchr( *ppSemantic, ':' ); 
+        LPSTR pColon = strchr( *ppSemantic, ':' );
 
         if( pColon == NULL )
             return S_OK;
@@ -297,7 +297,7 @@ lExit:
         {
             m_newEntry.SemanticIndex = atoi( pSemantic + uLen );
             pSemantic[uLen] = '\0';
-        } 
+        }
         else
         {
             m_newEntry.SemanticIndex = 0;

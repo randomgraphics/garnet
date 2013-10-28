@@ -83,7 +83,7 @@ public:
         // create texture
         for( uint32 i = 0; i < mInitTexCount; ++i )
         {
-            mTextures[i].attach( re.create2DTexture( stringFormat("TestFillrate::mTexture[%d]",i), 2, 2, 1, FMT_RGBA32, TEXUSAGE_TILED ) );
+            mTextures[i].attach( re.create2DTexture( str::format("TestFillrate::mTexture[%d]",i), 2, 2, 1, FMT_RGBA32, TEXUSAGE_TILED ) );
             if( !mTextures[i] ) return false;
             GraphicsResourceLoader * loader = new TexLoader;
             re.updateResource( mTextures[i], 0, loader );
@@ -176,6 +176,6 @@ public:
 
     StrA printResult()
     {
-        return stringFormat( "fillrate(%f)", mFillrate.getAverageValue() );
+        return str::format( "fillrate(%f)", mFillrate.getAverageValue() );
     }
 };

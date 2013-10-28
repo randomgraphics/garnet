@@ -58,7 +58,7 @@ public:
         AutoComPtr<ID3D10Blob> err;
         GN_DX_CHECK_RETURN(
             D3DX10CreateEffectFromMemory(
-                fxcode, stringLength(fxcode),
+                fxcode, str::length(fxcode),
                 "effect.h",
                 0, 0,
                 "fx_4_0",

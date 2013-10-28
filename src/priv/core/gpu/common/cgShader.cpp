@@ -16,7 +16,7 @@ static GN::StrA sAddLineCountCG( const GN::StrA & in )
     {
         if( '\n' == *s )
         {
-            out.append( stringFormat( "\n(%3d) : ", ++line ) );
+            out.append( str::format( "\n(%3d) : ", ++line ) );
         }
         else
         {

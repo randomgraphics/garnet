@@ -253,7 +253,7 @@ struct TexturedEffect : public BasicEffect
         if( !vs ) return false;
 
         // create PS
-        const StrA pscode = stringFormat(
+        const StrA pscode = str::format(
             "#define TEX_COUNT %d                                \n"
             "sampler ss[TEX_COUNT] : register(s0);               \n"
             "float4 main( in float2 uv : TEXCOORD0 ) : COLOR0    \n"

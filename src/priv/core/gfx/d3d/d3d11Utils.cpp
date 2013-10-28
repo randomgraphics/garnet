@@ -62,7 +62,7 @@ static std::string sAddLineCountD3D11( const char * source )
         {
             if( '\n' == *s )
             {
-                out += (char*)stringFormat( "\n(%3d) : ", ++line );
+                out += (char*)GN::str::format( "\n(%3d) : ", ++line );
             }
             else
             {

@@ -127,7 +127,7 @@ static inline GN::StrA sLevel2Str( int level )
         case GN::Logger::INFO     : return "INFO";
         case GN::Logger::VERBOSE  : return "VERBOSE";
         case GN::Logger::VVERBOSE : return "VERY_VERBOSE";
-        default                   : return GN::stringFormat( "%d", level );
+        default                   : return GN::str::format( "%d", level );
     }
 }
 
@@ -404,7 +404,7 @@ namespace GN
         {
 #if GN_MSWIN
             char buf[16384];
-            stringPrintf(
+            str::formatTo(
                 buf,
                 16384,
                 "%s(%d) : name(%s), level(%s) : %s\n",
@@ -422,7 +422,7 @@ namespace GN
             if( NULL == msg ) msg = L"";
 
             wchar_t buf[16384];
-            stringPrintf(
+            str::formatTo(
                 buf,
                 16384,
                 L"%S(%d) : name(%S), level(%S) : %s\n",
@@ -589,7 +589,7 @@ namespace GN
     class LoggerContainer
     {
         // Note: Logger map is case "insensitive"
-        typedef GN::StringMap<char,LoggerImpl*,GN::StringCompareCase::INSENSITIVE> LoggerMap;
+        typedef GN::StringMap<char,LoggerImpl*,GN::str::INSENSITIVE> LoggerMap;
 
         ConsoleReceiver mCr;
         FileReceiver    mFr;
@@ -613,7 +613,7 @@ namespace GN
         {
             // print itself
             for( int i = 0; i < level; ++i ) str.append( "  " );
-            str.append( stringFormat( "%s\n", logger.getName() ) );
+            str.append( str::format( "%s\n", logger.getName() ) );
 
             // print children
             LoggerImpl * c = logger.firstChild();
@@ -664,7 +664,7 @@ namespace GN
             n.trim( '.' );
 
             // shortcut for root logger
-            if( n.empty() || 0 == stringCompareI( "ROOT", n.rawptr() ) ) return &mRootLogger;
+            if( n.empty() || 0 == str::compareI( "ROOT", n.rawptr() ) ) return &mRootLogger;
 
             // find for existing logger
             LoggerImpl ** pplogger = mLoggers.find( n );

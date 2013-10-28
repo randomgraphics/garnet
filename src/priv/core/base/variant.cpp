@@ -40,19 +40,19 @@ GN_API bool GN::Variant::getb( bool & b ) const
 {
     int i;
     float f;
-    if( 0 == stringCompareI( "yes", mValue.rawptr() ) ||
-        0 == stringCompareI( "true", mValue.rawptr() ) ||
-        0 == stringCompareI( "on", mValue.rawptr() ) ||
-        0 == stringCompare( "1", mValue.rawptr() ) )
+    if( 0 == str::compareI( "yes", mValue.rawptr() ) ||
+        0 == str::compareI( "true", mValue.rawptr() ) ||
+        0 == str::compareI( "on", mValue.rawptr() ) ||
+        0 == str::compare( "1", mValue.rawptr() ) )
     {
         b = true;
         return true;
     }
     else if(
-        0 == stringCompareI( "no", mValue.rawptr() ) ||
-        0 == stringCompareI( "false", mValue.rawptr() ) ||
-        0 == stringCompareI( "off", mValue.rawptr() ) ||
-        0 == stringCompare( "0", mValue.rawptr() ) )
+        0 == str::compareI( "no", mValue.rawptr() ) ||
+        0 == str::compareI( "false", mValue.rawptr() ) ||
+        0 == str::compareI( "off", mValue.rawptr() ) ||
+        0 == str::compare( "0", mValue.rawptr() ) )
     {
         b = false;
         return true;
@@ -76,29 +76,29 @@ GN_API bool GN::Variant::getb( bool & b ) const
 //
 GN_API bool GN::Variant::geti( int & i ) const
 {
-    return 0 != string2Integer<int>( i, mValue.rawptr() );
+    return 0 != str::toInetger<int>( i, mValue.rawptr() );
 }
 //
 GN_API bool GN::Variant::getf( float & f ) const
 {
-    return 0 != string2Float( f, mValue.rawptr() );
+    return 0 != str::toFloat( f, mValue.rawptr() );
 }
 //
 GN_API bool GN::Variant::getp( void * & p ) const
 {
-    bool b = 0 != string2Integer<size_t>( (size_t&)p, mValue.rawptr() );
+    bool b = 0 != str::toInetger<size_t>( (size_t&)p, mValue.rawptr() );
     if( !b ) p = NULL;
     return b;
 }
 //
 GN_API bool GN::Variant::getv( Vector4f & v ) const
 {
-    return 4 == string2FloatArray( v, 4, mValue.rawptr(), mValue.size() );
+    return 4 == str::toFloatArray( v, 4, mValue.rawptr(), mValue.size() );
 }
 //
 GN_API bool GN::Variant::getm( Matrix44f & m ) const
 {
-    return 16 == string2FloatArray( m[0], 16, mValue.rawptr(), mValue.size() );
+    return 16 == str::toFloatArray( m[0], 16, mValue.rawptr(), mValue.size() );
 }
 
 // *****************************************************************************

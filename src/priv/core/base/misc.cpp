@@ -12,7 +12,7 @@ GN_API void GN::putEnv( const char * name, const char * value )
     GN_UNUSED_PARAM( name );
     GN_UNUSED_PARAM( value );
 #else
-    if( stringEmpty(name) )
+    if( str::isEmpty(name) )
     {
         GN_ERROR(sLogger)( "Environment variable name can't be empty!" );
         return;
@@ -27,7 +27,7 @@ GN_API void GN::putEnv( const char * name, const char * value )
     }
 #else
     StrA s;
-    if( stringEmpty(value) )
+    if( str::isEmpty(value) )
     {
         s.format( "%s=", name );
     }
@@ -54,7 +54,7 @@ GN_API void GN::getEnv( StrA & result, const char * name )
     GN_UNUSED_PARAM(name);
     result.clear();
 #else
-    if( stringEmpty(name) )
+    if( str::isEmpty(name) )
     {
         result.clear();
     }
@@ -83,7 +83,7 @@ GN_API const char * GN::Guid::toStr() const
     // GUID as string: {xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx}
     __declspec(thread) static char str[1+8+1+4+1+4+1+4+1+12+1+1];
 
-    stringPrintf(
+    str::formatTo(
         str,
         sizeof(str),
         "{%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x}",

@@ -16,7 +16,7 @@ static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.OGL");
 static void
 sGetTokens( DynaArray<StrA> & tokens, const char * str )
 {
-    if( stringEmpty(str) ) return;
+    if( str::isEmpty(str) ) return;
     const char * p1 = str;
     const char * p2 = p1;
 
@@ -80,13 +80,13 @@ static void sGetOpenGLVersion( const char * version, int * major, int * minor, i
     // get major version
     const char * p = version;
     while( '.' != *p ) ++p;
-    if( major ) *major = string2Integer<int>( StrA(version, p-version).rawptr(), 0 );
+    if( major ) *major = str::toInetger<int>( StrA(version, p-version).rawptr(), 0 );
 
     // get minor version
     version = p + 1;
     p = version;
     while( *p && '.' != *p && ' ' != *p ) ++p;
-    if( minor ) *minor = string2Integer<int>( StrA(version, p-version).rawptr(), 0 );
+    if( minor ) *minor = str::toInetger<int>( StrA(version, p-version).rawptr(), 0 );
 
     // get release version
     if( *p && '.' == *p )
@@ -94,7 +94,7 @@ static void sGetOpenGLVersion( const char * version, int * major, int * minor, i
         version = p + 1;
         p = version;
         while( *p && ' ' != *p ) ++p;
-        if( release ) *release = string2Integer<int>( StrA(version, p-version).rawptr(), 0 );
+        if( release ) *release = str::toInetger<int>( StrA(version, p-version).rawptr(), 0 );
     }
     else
     {
@@ -161,7 +161,7 @@ static void sOutputOGLInfo( intptr_t disp, const DynaArray<StrA> & glexts )
         glsl = (const char*)glGetString( GL_SHADING_LANGUAGE_VERSION );
     }
 
-    info = GN::stringFormat(
+    info = GN::str::format(
         "\n\n"
         "===================================================\n"
         "        OpenGL Implementation Informations\n"
@@ -179,7 +179,7 @@ static void sOutputOGLInfo( intptr_t disp, const DynaArray<StrA> & glexts )
         GN_OGL_CHECK( glGetIntegerv( GL_MAX_TEXTURE_UNITS_ARB, &tu ) );
     else
         tu = 1;
-    info += stringFormat(
+    info += str::format(
         "---------------------------------------------------\n"
         "    Max size of texture             :    %d\n"
         "    Max number of texture stages    :    %d\n"

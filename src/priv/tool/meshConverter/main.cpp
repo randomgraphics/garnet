@@ -128,7 +128,7 @@ int FbxBin2Ascii( int argc, const char * argv[] )
 int main( int argc, const char * argv[] )
 {
 #ifdef HAS_FBX
-    if( argc > 2 && 0 == stringCompareI( argv[1], "-fbx" ) )
+    if( argc > 2 && 0 == str::compareI( argv[1], "-fbx" ) )
     {
         return FbxBin2Ascii( argc, argv );
     }
@@ -151,7 +151,7 @@ int main( int argc, const char * argv[] )
     }
     else
     {
-        outputFile = stringFormat( "startup::%s.scene.xml", fs::baseName( inputFile ).rawptr() );
+        outputFile = str::format( "startup::%s.scene.xml", fs::baseName( inputFile ).rawptr() );
     }
 
     ModelHierarchyDesc mhd;

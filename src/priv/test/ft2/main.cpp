@@ -298,8 +298,8 @@ int main ( int argc, char** argv )   // Create Main Function For Bringing It All
     {
         font_face = argv[1];
         ascii_font = argv[2];
-        font_width = GN::string2Integer( argv[3], font_width );
-        font_height = GN::string2Integer( argv[4], font_height );
+        font_width = GN::str::toInetger( argv[3], font_width );
+        font_height = GN::str::toInetger( argv[4], font_height );
     }
 
     glutInit            ( &argc, argv ); // Erm Just Write It =)

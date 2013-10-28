@@ -331,6 +331,6 @@ public:
 
     StrA printResult()
     {
-        return stringFormat( "throughput(%f)", mThroughput.getAverageValue() );
+        return str::format( "throughput(%f)", mThroughput.getAverageValue() );
     }
 };

@@ -100,7 +100,7 @@ namespace GN { namespace gfx
 
             for( uint32 i = 0; i < GN_ARRAY_COUNT(TABLE); ++i )
             {
-                if( 0 == stringCompare( s, TABLE[i].name ) )
+                if( 0 == str::compare( s, TABLE[i].name ) )
                 {
                     return TABLE[i].value;
                 }

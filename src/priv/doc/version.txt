@@ -29,7 +29,7 @@
   - custom array template
   - BMP image loader
   - endian swap util functions
-  - string2Integer() functions
+  - str::toInetger() functions
 - improve
   - user-supplied hints to shader creation
   - call convension support to functor

@@ -137,7 +137,7 @@ namespace GN { namespace gfx
             for( int i = 0; i < Index::NUM_STANDARD_UNIFORMS; ++i )
             {
                 const Desc * d = sIndex2Desc( i );
-                if( 0 == stringCompare( d->name, name ) ) return d;
+                if( 0 == str::compare( d->name, name ) ) return d;
             }
             return NULL;
         }

@@ -178,6 +178,7 @@ GN::CommandBuffer::beginProduce(
         // cache read/write tokenID to local variable
         size_t rc = m_ReadenCursor;
         size_t wc = m_WrittenCursor;
+        GN_ASSERT(rc >= 0 && wc >= 0);
         memoryBarrier();
 
         size_t usedBytes = wc - rc;
@@ -232,6 +233,7 @@ void GN::CommandBuffer::endProduce()
     {
         GN_ASSERT( m_WrittenCursor + m_WritingToken->parameterSize + sizeof(TokenInternal) == m_WritingToken->endOffset );
         m_WrittenCursor = m_WritingToken->endOffset;
+        GN_ASSERT(m_WrittenCursor >= 0);
         m_WritingToken = NULL;
         m_NotEmpty.signal();
     }

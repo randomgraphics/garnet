@@ -181,17 +181,17 @@ namespace GN
         ///
         /// find specific attribute of element
         ///
-        XmlAttrib * findAttrib( const StrA & name, StringCompareCase scc = StringCompareCase::SENSITIVE ) const
+        XmlAttrib * findAttrib( const StrA & name, str::CompareCase scc = str::SENSITIVE ) const
         {
             for( XmlAttrib * a = firsta; a; a = a->next )
             {
-                if( StringCompareCase::SENSITIVE == scc )
+                if( str::SENSITIVE == scc )
                 {
                     if( name == a->name ) return a;
                 }
                 else
                 {
-                    if( 0 == stringCompareI( name.rawptr(), a->name.rawptr() ) ) return a;
+                    if( 0 == str::compareI( name.rawptr(), a->name.rawptr() ) ) return a;
                 }
             }
             return NULL;
@@ -200,20 +200,20 @@ namespace GN
         ///
         /// find specific firstc of element
         ///
-        XmlElement * findChildElement( const StrA & name, StringCompareCase scc = StringCompareCase::SENSITIVE ) const
+        XmlElement * findChildElement( const StrA & name, str::CompareCase scc = str::SENSITIVE ) const
         {
             for( XmlNode * n = firstc; n; n = n->nexts )
             {
                 XmlElement * e = n->toElement();
                 if( !e ) continue;
 
-                if( StringCompareCase::SENSITIVE == scc )
+                if( str::SENSITIVE == scc )
                 {
                     if( name == e->name ) return e;
                 }
                 else
                 {
-                    if( 0 == stringCompareI( name.rawptr(), e->name.rawptr() ) ) return e;
+                    if( 0 == str::compareI( name.rawptr(), e->name.rawptr() ) ) return e;
                 }
             }
             return NULL;

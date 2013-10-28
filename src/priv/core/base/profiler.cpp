@@ -7,15 +7,15 @@ static GN::StrA sTime2Str( double time )
 
     if( time < 0.000001 )
     {
-        return stringFormat( "%fus", time * 1000000 );
+        return str::format( "%fus", time * 1000000 );
     }
     else if( time < 0.001 )
     {
-        return stringFormat( "%fms", time * 1000 );
+        return str::format( "%fms", time * 1000 );
     }
     else
     {
-        return stringFormat( "%fs", time );
+        return str::format( "%fs", time );
     }
 }
 
@@ -101,7 +101,7 @@ GN_API void GN::ProfilerManager::toString( GN::StrA & rval ) const
     for( i = mTimers.first(); i != NULL; i = mTimers.next( i ) )
     {
         const ProfilerTimerImpl & t = i->value;
-        rval += GN::stringFormat(
+        rval += GN::str::format(
             "    %s :\n"
             "        count(%d), sum(%s), ave(%s), min(%s), max(%s)\n"
             "\n",

@@ -108,8 +108,8 @@ namespace GN
         StrA result;
         getEnv( result, name );
         return "1" == result ||
-               0 == stringCompareI( "yes", result.rawptr() ) ||
-               0 == stringCompareI( "true", result.rawptr() );
+               0 == str::compareI( "yes", result.rawptr() ) ||
+               0 == str::compareI( "true", result.rawptr() );
     }
 
     ///
