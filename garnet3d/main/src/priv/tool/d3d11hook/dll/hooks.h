@@ -147,12 +147,13 @@ class HookedClassFactory
 public:
 
     typedef IUnknown * (*NewInstanceFunc)(void * context, UnknownBase & base, IUnknown * realobj);
-    typedef void  (*DeleteInstanceFunc)(void * context, void * ptr);
+    typedef void  (*DeleteInstanceFunc)(void * context, IUnknown * realUnknown, void * ptr);
 
     static HookedClassFactory & sGetInstance() { return s_instance; }
 
     void registerAll(); // implementation of this method script generated
 
+    // Create new hooked instance for a particular real object.
     IUnknown * createNew(UnknownBase & base, const IID & iid, IUnknown * realobj)
     {
         FactoryMap::iterator iter = _factories.find(iid);
@@ -166,7 +167,7 @@ public:
         return fi.createFunc(fi.context, base, realobj);
     }
 
-    void deleteOld(const IID & iid, void * ptr)
+    void deleteOld(const IID & iid, IUnknown * realUnknown, void * ptr)
     {
         FactoryMap::iterator iter = _factories.find(iid);
         if (iter == _factories.end())
@@ -177,7 +178,7 @@ public:
         else
         {
             FactoryInfo & fi = iter->second;
-            fi.deleteFunc(fi.context, ptr);
+            fi.deleteFunc(fi.context, realUnknown, ptr);
         }
     }
 
@@ -269,9 +270,11 @@ inline bool IsReal(IUnknown * ptr)
 
 // -----------------------------------------------------------------------------
 /// The lock object for thread safe reference management.
-struct WeakRefLock : GN::RefCounter
+struct WeakRefTracker : GN::RefCounter
 {
-    CritSec lock;
+    GN::Mutex       lock;
+    UnknownBase *   base;     // pointer to the object that we are referencing to
+    GN::DoubleLink  weakRefs; // double linked list of all weak references.
 };
 
 // -----------------------------------------------------------------------------
@@ -294,14 +297,12 @@ class UnknownBase : public IHooked
     GN::AutoComPtr<IUnknown> _realUnknown;
 
     // For weak references
-    mutable GN::AutoRef<WeakRefLock> _weakLock;
-    mutable GN::DoubleLink           _weakRefs;
+    GN::AutoRef<WeakRefTracker> _weakRefTracker;
 
     UnknownBase() : _refCount(0), _interfaceCount(0)
     {
-        // This context pointer is never used.
-        _weakRefs.context = (void*)0xbadbeef;
-        _weakLock = new WeakRefLock();
+        _weakRefTracker = GN::referenceTo(new WeakRefTracker());
+        _weakRefTracker->base = this;
     }
 
     void addInterface(const IID & iid, IUnknown * hooked, IUnknown * real)
@@ -383,10 +384,12 @@ protected:
     virtual ~UnknownBase()
     {
         GN_ASSERT(0 == _refCount);
-
+        GN_ASSERT(0 == _weakRefTracker->base);
+        GN_ASSERT(0 == _weakRefTracker->weakRefs.next);
+        GN_ASSERT(0 == _weakRefTracker->weakRefs.prev);
         for(UINT i = 0; i < _interfaceCount; ++i)
         {
-            HookedClassFactory::sGetInstance().deleteOld( _interfaces[i].iid, _interfaces[i].hooked );
+            HookedClassFactory::sGetInstance().deleteOld( _interfaces[i].iid, _realUnknown, _interfaces[i].hooked );
         }
     }
 
@@ -411,8 +414,7 @@ public:
         return p;
     }
 
-    void lockEnter() const { return _cs.Enter(); }
-    void lockLeave() const { return _cs.Leave(); }
+    GN::AutoRef<WeakRefTracker> getWeakRefTracker() const { return _weakRefTracker; }
 
     // No AddRef()
     virtual IUnknown * STDMETHODCALLTYPE GetRealObj(const IID & iid)
@@ -454,13 +456,15 @@ public:
     virtual ULONG STDMETHODCALLTYPE Release()
     {
         _cs.Enter();
+        _weakRefTracker->lock.lock();
         GN_ASSERT(_refCount > 0);
         ULONG c = --_refCount;
-        // within the _cs lock, we need to invalidate all weak references, if refcount reaches zero.
+        // within the locks, we need to invalidate all weak references, if refcount reaches zero.
         if( 0 == c )
         {
             invalidateAllWeakRefs();
         }
+        _weakRefTracker->lock.unlock();
         _cs.Leave();
 
         if( 0 == c )
@@ -505,32 +509,18 @@ class WeakUnknownRef : public IUnknown
     ULONG                        _refCount;
     CritSec                      _cs;
 
-    volatile const UnknownBase * _base;
+    GN::AutoRef<WeakRefTracker>  _tracker;
     GN::DoubleLink               _link;
-
-    void detach()
-    {
-        GN::AutoComPtr<UnknownBase> strongRef = promote();
-        if( strongRef )
-        {
-            _base->lockEnter();
-            _link.detach();
-            _base->lockLeave();
-        }
-        _base = nullptr;
-        _link.prev = NULL;
-        _link.next = NULL;
-    }
 
 public:
 
-    WeakUnknownRef() : _refCount(0), _base(nullptr)
+    WeakUnknownRef() : _refCount(0)
     {
     }
 
     ~WeakUnknownRef()
     {
-        attach(nullptr);
+        detach();
     }
 
     virtual ULONG STDMETHODCALLTYPE AddRef()
@@ -571,24 +561,45 @@ public:
         }
     }
 
-    void attach(const GN::AutoComPtr<UnknownBase> & base)
+    void attach(UnknownBase * base)
     {
         detach();
         if( base )
         {
-            base->lockEnter();
-            _link.linkAfter( &base->_weakRefs );
-            base->lockLeave();
-            _base = base;
+            _tracker = base->getWeakRefTracker();
+            GN_ASSERT(_tracker->base == base);
+            _tracker->lock.lock();
+            _link.linkAfter( &_tracker->weakRefs );
+            _link.context = this;
+            _tracker->lock.unlock();
         }
+    }
+
+    void detach()
+    {
+        if( _tracker )
+        {
+            _tracker->lock.lock();
+            _link.detach();
+            _tracker->lock.unlock();
+            _tracker.clear();
+        }
+        GN_ASSERT( NULL == _tracker );
+        GN_ASSERT( NULL == _link.prev );
+        GN_ASSERT( NULL == _link.next );
     }
 
     // Promote weak reference to strong reference (might return null)
     GN::AutoComPtr<UnknownBase> promote()
     {
-        //GN::AutoComPtr<UnknownBase> result;
-        //result.set(_base.rawptr());
-        //return result;
+        GN::AutoComPtr<UnknownBase> result;
+        if( _tracker )
+        {
+            _tracker->lock.lock();      // this lock prevents base from being released.
+            result.set(_tracker->base); // this will increase base ref count by one.
+            _tracker->lock.unlock();
+        }
+        return result;
     }
 };
 
@@ -599,11 +610,12 @@ inline void UnknownBase::invalidateAllWeakRefs()
 {
     GN::DoubleLink * next;
     WeakUnknownRef * ref;
-    while( NULL != (next = _weakRefs.next) )
+    while( NULL != (next = _weakRefTracker->weakRefs.next) )
     {
         ref = (WeakUnknownRef*)next->context;
-        ref->attach(nullptr);
+        ref->detach();
     }
+    _weakRefTracker->base = nullptr;
 }
 
 // -----------------------------------------------------------------------------

@@ -136,10 +136,7 @@ private:
         {
             sLib = new Ft2Library();
         }
-        else
-        {
-            sLib->incref();
-        }
+        sLib->incref();
     }
 
     // shutdown FT2 library

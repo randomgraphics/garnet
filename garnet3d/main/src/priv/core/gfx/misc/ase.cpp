@@ -1597,7 +1597,7 @@ static bool sWriteGeoObject( AseScene & dst, const AseSceneInternal & src, const
     if( vc.size() > 0x10000 )
     {
         // 32bit index buffer
-        blob.attach( new SimpleBlob((uint32)(sizeof(uint32) * ib.size())) );
+        blob = referenceTo( new SimpleBlob((uint32)(sizeof(uint32) * ib.size())) );
         memcpy( blob->data(), ib.rawptr(), blob->size() );
         dstmesh.idx32 = true;
         dstmesh.indices = blob->data();
@@ -1606,7 +1606,7 @@ static bool sWriteGeoObject( AseScene & dst, const AseSceneInternal & src, const
     else
     {
         // 16bit index buffer
-        blob.attach( new SimpleBlob((uint32)(sizeof(uint16) * ib.size())) );
+        blob = referenceTo( new SimpleBlob((uint32)(sizeof(uint16) * ib.size())) );
         uint16 * idx16 = (uint16*)blob->data();
         for( size_t i = 0; i < ib.size(); ++i )
         {
