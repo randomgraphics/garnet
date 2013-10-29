@@ -485,8 +485,8 @@ def CheckConfig():
     # ====
     # D3D9
     # ====
-    CONFIG['has_d3d9_h'] = ('xenon' == BUILD_TARGET_OS) or c.CheckCXXHeader( 'd3d9.h' )
-    CONFIG['has_d3d9']   = ('xenon' == BUILD_TARGET_OS) or ( CONFIG['has_dxerr'] and c.CheckCXXHeader( 'd3d9.h' ) and c.CheckCXXHeader( 'd3dx9.h' ) )
+    CONFIG['has_d3d9_h'] = ('cygwin' != BUILD_TARGET_OS) and (('xenon' == BUILD_TARGET_OS ) or c.CheckCXXHeader( 'd3d9.h' ))
+    CONFIG['has_d3d9']   = ('cygwin' != BUILD_TARGET_OS) and (('xenon' == BUILD_TARGET_OS) or ( CONFIG['has_dxerr'] and c.CheckCXXHeader( 'd3d9.h' ) and c.CheckCXXHeader( 'd3dx9.h' ) ))
 
     # Detect if current OS is Windows Vista or newer.
     def IsVistaOrNewer( env ):
@@ -516,17 +516,19 @@ def CheckConfig():
     # ===========
     # DirectInput
     # ===========
-    CONFIG['has_dinput'] = c.CheckCHeader( ['windows.h', 'dxerr.h', 'dinput.h'] )
+    CONFIG['has_dinput'] = ('cygwin' != BUILD_TARGET_OS) and ( c.CheckCHeader( ['windows.h', 'dxerr.h', 'dinput.h'] ) )
 
     # ======
     # XInput
     # ======
-    CONFIG['has_xinput2'] = c.CheckCHeader( ['windows.h', 'xinput2.h'] ) or \
+    CONFIG['has_xinput2'] = ('cygwin' != BUILD_TARGET_OS) and ( \
+                            c.CheckCHeader( ['windows.h', 'xinput2.h'] ) or \
                             c.CheckCHeader( ['xtl.h', 'xinput2.h'] ) or \
-                            c.CheckCHeader( ['xdk.h', 'xinput2.h'] )
-    CONFIG['has_xinput'] = c.CheckCHeader( ['windows.h', 'xinput.h'] ) or \
+                            c.CheckCHeader( ['xdk.h', 'xinput2.h'] ) )
+    CONFIG['has_xinput'] = ('cygwin' != BUILD_TARGET_OS) and ( \
+                           c.CheckCHeader( ['windows.h', 'xinput.h'] ) or \
                            c.CheckCHeader( ['xtl.h', 'xinput.h'] ) or \
-                           c.CheckCHeader( ['xdk.h', 'xinput.h'] )
+                           c.CheckCHeader( ['xdk.h', 'xinput.h'] ) )
 
     # =====
     # cegui
@@ -966,7 +968,7 @@ GN = GarnetEnv2()
 #
 ################################################################################
 Export( 'GN' )
-SConscript( 'src/makefile.scons', variant_dir=BUILD_ROOT_PATH, duplicate=1)
+SConscript( 'src/makefile.scons', variant_dir=BUILD_ROOT_PATH)
 
 # Create pseudo target in root folder for all default targets.
 # So that they can be built automatically when invok SCons from root directory.

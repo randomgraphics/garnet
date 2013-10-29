@@ -19,7 +19,7 @@ export GN_BUILD_VARIANT=debug
 # ===========
 # setup scons
 # ===========
-SCONS_ROOT=${GARNET_ROOT}/env/scons/2.1.0.alpha.20101125
+SCONS_ROOT=${GARNET_ROOT}/env/scons/2.2.0
 SCONS_LIB_DIR=${SCONS_ROOT}/engine
 export SCONS_ROOT
 export PATH SCONS_LIB_DIR
@@ -37,7 +37,7 @@ alias v='ls -l'
 alias gnroot="cd ${GARNET_ROOT}/"
 alias gnbld="cd ${GARNET_ROOT}/build.tmp/${GN_BUILD_TARGET_OS}.${GN_BUILD_TARGET_CPU}.${GN_BUILD_COMPILER}.${GN_BUILD_VARIANT}/bin/"
 alias gnsrc="cd ${GARNET_ROOT}/src/"
-alias gnextern="cd ${GARNET_ROOT}/src/extern/"
+alias gnext="cd ${GARNET_ROOT}/src/extern/"
 alias gnpriv="cd ${GARNET_ROOT}/src/priv/"
 alias gninc="cd ${GARNET_ROOT}/src/priv/inc/garnet/"
 alias gncore="cd ${GARNET_ROOT}/src/priv/core/"

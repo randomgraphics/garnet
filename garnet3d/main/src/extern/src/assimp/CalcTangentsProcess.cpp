@@ -151,8 +151,8 @@ bool CalcTangentsProcess::ProcessMesh( aiMesh* pMesh, unsigned int meshIndex)
 			{
 				register unsigned int idx = face.mIndices[i];
 				vertexDone  [idx] = true;
-				meshTang    [idx] = qnan;
-				meshBitang  [idx] = qnan;
+				meshTang    [idx] = aiVector3D(qnan, qnan, qnan);
+				meshBitang  [idx] = aiVector3D(qnan, qnan, qnan);
 			}
 
 			continue;

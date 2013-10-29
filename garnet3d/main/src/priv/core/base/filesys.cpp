@@ -291,7 +291,7 @@ public:
         StrA nativeName;
         toNativeDiskFilePath( nativeName, name );
         AutoObjPtr<DiskFile> fp( new DiskFile );
-        if( !fp->open( nativeName, mode ) ) return false;
+        if( !fp->open( nativeName, mode ) ) return NULL;
         return fp.detach();
      }
 

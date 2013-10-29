@@ -62,7 +62,7 @@ struct aiVector3D
 #ifdef __cplusplus
 	aiVector3D () : x(0.0f), y(0.0f), z(0.0f) {}
 	aiVector3D (float _x, float _y, float _z) : x(_x), y(_y), z(_z) {}
-	aiVector3D (float _xyz) : x(_xyz), y(_xyz), z(_xyz) {}
+	//explicit aiVector3D (float _xyz) : x(_xyz), y(_xyz), z(_xyz) {}
 	aiVector3D (const aiVector3D& o) : x(o.x), y(o.y), z(o.z) {}
 
 public:

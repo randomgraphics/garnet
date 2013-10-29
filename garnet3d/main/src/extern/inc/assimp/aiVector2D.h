@@ -60,7 +60,7 @@ struct aiVector2D
 #ifdef __cplusplus
 	aiVector2D () : x(0.0f), y(0.0f) {}
 	aiVector2D (float _x, float _y) : x(_x), y(_y) {}
-	aiVector2D (float _xyz) : x(_xyz), y(_xyz) {}
+	//explicit aiVector2D (float _xyz) : x(_xyz), y(_xyz) {}
 	aiVector2D (const aiVector2D& o) : x(o.x), y(o.y) {}
 
 	void Set( float pX, float pY) { 
@@ -108,9 +108,9 @@ struct aiVector2D
 		return x != other.x || y != other.y;
 	}
 
-	aiVector2D& operator= (float f)	{
+	/*aiVector2D& operator= (float f)	{
 		x = y = f;return *this;
-	}
+	}*/
 
 	const aiVector2D SymMul(const aiVector2D& o) {
 		return aiVector2D(x*o.x,y*o.y);

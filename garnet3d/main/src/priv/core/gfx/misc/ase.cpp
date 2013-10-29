@@ -345,7 +345,7 @@ struct AseFile
     const char * readNode( ScanOption option = 0  )
     {
         const char * token = next( 0, option );
-        if( !token ) return false;
+        if( !token ) return NULL;
         GN_ASSERT( !str::isEmpty( token ) );
 
         if( '*' != *token )
@@ -364,7 +364,7 @@ struct AseFile
     const char * readString( ScanOption option = 0  )
     {
         char * token = const_cast<char*>( next( 0, option ) );
-        if( !token ) return false;
+        if( !token ) return NULL;
         GN_ASSERT( !str::isEmpty( token ) );
 
         if( '"' != *token )

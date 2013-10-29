@@ -418,15 +418,17 @@ bool GN::gfx::ThickLineRenderer::init( Gpu & g )
 
         uint16 v = i * 6;
 
-        // v1-v2
-        // |   \
-        // v0   \
-        //  \    \
-        //   \    \
-        //    \    \
-        //     \    v3
-        //      \   |
-        //       v5-v4
+        /*
+         v1-v2
+         |   \
+         v0   \
+          \    \
+           \    \
+            \    \
+             \    v3
+              \   |
+               v5-v4
+        */
 
         *p++ = v + 0;
         *p++ = v + 1;
@@ -570,13 +572,16 @@ void GN::gfx::ThickLineRenderer::line( const ThickLineVertex & v0, const ThickLi
         {
             // e1 in quadrant 2
 
-            // ----
-            // |e1 \
-            // \    \
-            //  \    \
-            //   \    \
-            //    \ e0|
-            //     ----
+            /*
+
+            ----
+             |e1 \
+             \    \
+              \    \
+               \    \
+                \ e0|
+                 ----
+            */
 
             e0.topRight( v++ );
             e0.bottomRight( v++ );
@@ -592,13 +597,17 @@ void GN::gfx::ThickLineRenderer::line( const ThickLineVertex & v0, const ThickLi
         {
             // e1 in quadrant 4
 
-            // ----
-            // |e0 \
-            // \    \
-            //  \    \
-            //   \    \
-            //    \ e1|
-            //     ----
+            /*
+
+             ----
+             |e0 \
+             \    \
+              \    \
+               \    \
+                \ e1|
+                 ----
+            
+            */
 
             e0.bottomLeft( v++ );
             e0.topLeft( v++ );

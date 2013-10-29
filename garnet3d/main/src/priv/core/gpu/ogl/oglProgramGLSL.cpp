@@ -328,7 +328,7 @@ static bool sGetOglVertexSemantic( OGLVertexSemantic & semanticName, uint8 & sem
         semanticName  = VERTEX_SEMANTIC_TEXCOORD;
         semanticIndex = 7;
     }
-    else if( -1 != attributeLocation )
+    else if( (GLuint)-1 != attributeLocation )
     {
         // this is general vertex attribute
         semanticName  = VERTEX_SEMANTIC_ATTRIBUTE;
