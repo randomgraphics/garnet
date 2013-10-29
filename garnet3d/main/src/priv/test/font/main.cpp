@@ -13,7 +13,7 @@ wchar_t              textw[256];
 bool initTTF()
 {
     // create font
-    AutoRef<FontFace> ff( createFontFace(ffc) );
+    AutoRef<FontFace> ff = attachTo( createFontFace(ffc) );
     if( !ff ) return false;
 
     // initialize bitmap font renderer
@@ -28,7 +28,7 @@ bool init( Gpu & gpu )
     if( !sr->init() ) return false;
 
     // initialize ascii font
-    AutoRef<FontFace> ff( createSimpleAsciiFontFace() );
+    AutoRef<FontFace> ff = attachTo( createSimpleAsciiFontFace() );
     if( !ff ) return false;
     if( !ascii.init( sr, ff ) ) return false;
 

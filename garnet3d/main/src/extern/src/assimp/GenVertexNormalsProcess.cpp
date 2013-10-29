@@ -7,8 +7,8 @@ Copyright (c) 2006-2010, ASSIMP Development Team
 
 All rights reserved.
 
-Redistribution and use of this software in source and binary forms, 
-with or without modification, are permitted provided that the following 
+Redistribution and use of this software in source and binary forms,
+with or without modification, are permitted provided that the following
 conditions are met:
 
 * Redistributions of source code must retain the above
@@ -25,16 +25,16 @@ conditions are met:
   derived from this software without specific prior
   written permission of the ASSIMP Development Team.
 
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS 
-"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT 
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
 LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT 
+A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
 OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT 
+SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
 LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY 
-THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT 
-(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE 
+DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ---------------------------------------------------------------------------
 */
@@ -133,7 +133,7 @@ bool GenVertexNormalsProcess::GenMeshVertexNormals (aiMesh* pMesh, unsigned int 
 		{
 			// either a point or a line -> no normal vector
 			for (unsigned int i = 0;i < face.mNumIndices;++i)
-				pMesh->mNormals[face.mIndices[i]] = qnan;
+				pMesh->mNormals[face.mIndices[i]] = aiVector3D(qnan, qnan, qnan);
 			continue;
 		}
 
@@ -180,7 +180,7 @@ bool GenVertexNormalsProcess::GenMeshVertexNormals (aiMesh* pMesh, unsigned int 
 			// Get all vertices that share this one ...
 			vertexFinder->FindPositions( pMesh->mVertices[i], posEpsilon, verticesFound);
 
-			aiVector3D pcNor; 
+			aiVector3D pcNor;
 			for (unsigned int a = 0; a < verticesFound.size(); ++a)	{
 				const aiVector3D& v = pMesh->mNormals[verticesFound[a]];
 				if (is_not_qnan(v.x))pcNor += v;
@@ -199,19 +199,19 @@ bool GenVertexNormalsProcess::GenMeshVertexNormals (aiMesh* pMesh, unsigned int 
 	// Slower code path if a smooth angle is set. There are many ways to achieve
 	// the effect, this one is the most straightforward one.
 	else	{
-		const float fLimit = ::cos(configMaxAngle); 
+		const float fLimit = ::cos(configMaxAngle);
 		for (unsigned int i = 0; i < pMesh->mNumVertices;++i)	{
 			// Get all vertices that share this one ...
 			vertexFinder->FindPositions( pMesh->mVertices[i] , posEpsilon, verticesFound);
 
-			aiVector3D pcNor; 
+			aiVector3D pcNor;
 			for (unsigned int a = 0; a < verticesFound.size(); ++a)	{
 				const aiVector3D& v = pMesh->mNormals[verticesFound[a]];
 
 				// check whether the angle between the two normals is not too large
 				// HACK: if v.x is qnan the dot product will become qnan, too
 				//   therefore the comparison against fLimit should be false
-				//   in every case. 
+				//   in every case.
 				if (v * pMesh->mNormals[i] < fLimit)
 					continue;
 

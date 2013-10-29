@@ -21,7 +21,7 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        SimpleWireframeModel( GpuResourceDatabase & db ) : mDatabase(db), mModel(NULL) { clear(); }
+        SimpleWireframeModel( GpuResourceDatabase & db ) : mDatabase(db) { clear(); }
         virtual ~SimpleWireframeModel() { quit(); }
         //@}
 
@@ -86,7 +86,7 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        SimpleDiffuseModel( GpuResourceDatabase & db ) : mDatabase(db), mModel(NULL) { clear(); }
+        SimpleDiffuseModel( GpuResourceDatabase & db ) : mDatabase(db) { clear(); }
         virtual ~SimpleDiffuseModel() { quit(); }
         //@}
 
@@ -158,7 +158,7 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        SimpleNormalMapModel( GpuResourceDatabase & db ) : mDatabase(db), mModel(NULL) { clear(); }
+        SimpleNormalMapModel( GpuResourceDatabase & db ) : mDatabase(db) { clear(); }
         virtual ~SimpleNormalMapModel() { quit(); }
         //@}
 

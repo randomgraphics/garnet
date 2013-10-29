@@ -21,7 +21,7 @@ public:
 
     void testCopyCtor()
     {
-        MyRefObj2Ptr p2( new MyRefObj2 );
+        MyRefObj2Ptr p2 = GN::referenceTo( new MyRefObj2 );
         TS_ASSERT_EQUALS( p2->getref(), 1 );
 
         MyRefObjPtr p1( p2 );
@@ -33,7 +33,7 @@ public:
 
     void testAssignment()
     {
-        MyRefObjPtr p2( new MyRefObj2 );
+        MyRefObjPtr p2 = GN::referenceTo( new MyRefObj2 );
         TS_ASSERT_EQUALS( p2->getref(), 1 );
 
         MyRefObjPtr p1a, p1b;

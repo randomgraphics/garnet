@@ -26,7 +26,7 @@ bool GN::gfx::UniformResource::reset(
     uint32                length,
     const void          * initialData )
 {
-    AutoRef<Uniform> u( getGdb().getGpu().createUniform( length ) );
+    AutoRef<Uniform> u = attachTo( getGdb().getGpu().createUniform( length ) );
     if( !u ) return false;
 
     if( initialData ) u->update( 0, length, initialData );
@@ -74,7 +74,9 @@ class UniformResourceInternal : public UniformResource
     // -----------------------------------------------------------------------------
     static GpuResource * sCreateInstance( GpuResourceDatabase & db )
     {
-        return new UniformResourceInternal( db );
+        GpuResource * res = new UniformResourceInternal( db );
+        res->incref();
+        return res;
     }
 
 public:

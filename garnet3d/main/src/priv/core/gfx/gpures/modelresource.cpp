@@ -806,7 +806,7 @@ GN::gfx::ModelResource::Impl::uniformResource( const char * effectParameterName 
         {
             GN_ERROR(sLogger)( "Model %s is not referencing any effect!", getModelName() );
             dummy = getGdb().createResource<UniformResource>( NULL );
-            AutoRef<Uniform> u( getGdb().getGpu().createUniform( sizeof(float) ) );
+            AutoRef<Uniform> u = attachTo( getGdb().getGpu().createUniform( sizeof(float) ) );
             dummy->setUniform( u );
         }
 
@@ -821,7 +821,7 @@ GN::gfx::ModelResource::Impl::uniformResource( const char * effectParameterName 
         {
             GN_ERROR(sLogger)( "%s is not a valid uniform name for model %s!", effectParameterName?effectParameterName:"<NULL name>", getModelName() );
             dummy = getGdb().createResource<UniformResource>( NULL );
-            AutoRef<Uniform> u( getGdb().getGpu().createUniform( sizeof(float) ) );
+            AutoRef<Uniform> u = attachTo( getGdb().getGpu().createUniform( sizeof(float) ) );
             dummy->setUniform( u );
         }
         return dummy;
@@ -1354,7 +1354,9 @@ public:
     static GpuResource *
     sCreateInstance( GpuResourceDatabase & db )
     {
-        return new ModelResourceInternal( db );
+        GpuResource * res = new ModelResourceInternal( db );
+        res->incref();
+        return res;
     }
 };
 

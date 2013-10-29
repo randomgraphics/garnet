@@ -725,7 +725,9 @@ public:
     static GpuResource *
     sCreateInstance( GpuResourceDatabase & db )
     {
-        return new EffectResourceInternal( db );
+        GpuResource * res = new EffectResourceInternal( db );
+        res->incref();
+        return res;
     }
 };
 

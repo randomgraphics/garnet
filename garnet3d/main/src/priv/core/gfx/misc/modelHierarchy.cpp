@@ -703,7 +703,7 @@ sLoadFbxMesh(
     }
 
     // Create vertex blob that stores the final vertex buffer.
-    AutoRef<DynaArrayBlob<MeshVertex> > vertexBlob( new DynaArrayBlob<MeshVertex> );
+    AutoRef<DynaArrayBlob<MeshVertex> > vertexBlob = referenceTo( new DynaArrayBlob<MeshVertex> );
     if( !vertexBlob->array().reserve( numidx ) )
     {
         GN_ERROR(sLogger)( "Fail to load FBX mesh: out of memory." );
@@ -711,7 +711,7 @@ sLoadFbxMesh(
     }
 
     // Create index blob that stores the index buffer (assume 32-bit indices)
-    AutoRef<SimpleBlob> indexBlob( new SimpleBlob(numidx * sizeof(uint32) ) );
+    AutoRef<SimpleBlob> indexBlob = referenceTo( new SimpleBlob(numidx * sizeof(uint32) ) );
     if( 0 == indexBlob->size() )
     {
         GN_ERROR(sLogger)( "Fail to load FBX mesh: out of memory." );
@@ -833,7 +833,7 @@ sLoadFbxMesh(
     // Compress index buffer to 16 bits, if possible.
     if( vertexBlob->array().size() <= 0x10000 )
     {
-        AutoRef<SimpleBlob> ib16( new SimpleBlob (numidx * sizeof(uint16) ) );
+        AutoRef<SimpleBlob> ib16 = referenceTo( new SimpleBlob (numidx * sizeof(uint16) ) );
         if( 0 == ib16->size() )
         {
             GN_ERROR(sLogger)( "Fail to load FBX mesh: out of memory." );

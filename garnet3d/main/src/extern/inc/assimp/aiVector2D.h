@@ -7,8 +7,8 @@ Copyright (c) 2006-2010, ASSIMP Development Team
 
 All rights reserved.
 
-Redistribution and use of this software in source and binary forms, 
-with or without modification, are permitted provided that the following 
+Redistribution and use of this software in source and binary forms,
+with or without modification, are permitted provided that the following
 conditions are met:
 
 * Redistributions of source code must retain the above
@@ -25,16 +25,16 @@ conditions are met:
   derived from this software without specific prior
   written permission of the ASSIMP Development Team.
 
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS 
-"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT 
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
 LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT 
+A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
 OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT 
+SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
 LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY 
-THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT 
-(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE 
+DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ---------------------------------------------------------------------------
 */
@@ -53,7 +53,7 @@ extern "C" {
 #include "./Compiler/pushpack1.h"
 
 // ----------------------------------------------------------------------------------
-/** Represents a two-dimensional vector. 
+/** Represents a two-dimensional vector.
  */
 struct aiVector2D
 {
@@ -63,33 +63,33 @@ struct aiVector2D
 	//explicit aiVector2D (float _xyz) : x(_xyz), y(_xyz) {}
 	aiVector2D (const aiVector2D& o) : x(o.x), y(o.y) {}
 
-	void Set( float pX, float pY) { 
+	void Set( float pX, float pY) {
 		x = pX; y = pY;
 	}
-	
+
 	float SquareLength() const {
-		return x*x + y*y; 
+		return x*x + y*y;
 	}
-	
+
 	float Length() const {
 		return ::sqrt( SquareLength());
 	}
 
-	aiVector2D& Normalize() { 
+	aiVector2D& Normalize() {
 		*this /= Length(); return *this;
 	}
 
 	const aiVector2D& operator += (const aiVector2D& o) {
-		x += o.x; y += o.y;  return *this; 
+		x += o.x; y += o.y;  return *this;
 	}
 	const aiVector2D& operator -= (const aiVector2D& o) {
-		x -= o.x; y -= o.y;  return *this; 
+		x -= o.x; y -= o.y;  return *this;
 	}
-	const aiVector2D& operator *= (float f) { 
-		x *= f; y *= f;  return *this; 
+	const aiVector2D& operator *= (float f) {
+		x *= f; y *= f;  return *this;
 	}
 	const aiVector2D& operator /= (float f) {
-		x /= f; y /= f;  return *this; 
+		x /= f; y /= f;  return *this;
 	}
 
 	float operator[](unsigned int i) const {
@@ -118,7 +118,7 @@ struct aiVector2D
 
 #endif // __cplusplus
 
-	float x, y;	
+	float x, y;
 } PACK_STRUCT;
 
 #include "./Compiler/poppack1.h"
@@ -132,12 +132,28 @@ inline aiVector2D operator + (const aiVector2D& v1, const aiVector2D& v2)
 {
 	return aiVector2D( v1.x + v2.x, v1.y + v2.y);
 }
+inline aiVector2D operator + (const aiVector2D& v1, float f)
+{
+	return aiVector2D( v1.x + f, v1.y + f);
+}
+inline aiVector2D operator + (float f, const aiVector2D& v1)
+{
+	return aiVector2D( v1.x + f, v1.y + f);
+}
 
 // ----------------------------------------------------------------------------------
 // symmetric subtraction
 inline aiVector2D operator - (const aiVector2D& v1, const aiVector2D& v2)
 {
 	return aiVector2D( v1.x - v2.x, v1.y - v2.y);
+}
+inline aiVector2D operator - (const aiVector2D& v1, float f)
+{
+	return aiVector2D( v1.x - f, v1.y - f);
+}
+inline aiVector2D operator - (float f, const aiVector2D& v2)
+{
+	return aiVector2D( f - v2.x, f - v2.y);
 }
 
 // ----------------------------------------------------------------------------------
@@ -165,8 +181,11 @@ inline aiVector2D operator * ( const aiVector2D& v, float f)
 // scalar division
 inline aiVector2D operator / ( const aiVector2D& v, float f)
 {
-	
 	return v * (1/f);
+}
+inline aiVector2D operator / ( float f, const aiVector2D& v)
+{
+	return aiVector2D(f / v.x, f / v.y);
 }
 
 // ----------------------------------------------------------------------------------

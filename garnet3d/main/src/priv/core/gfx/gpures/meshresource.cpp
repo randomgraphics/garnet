@@ -235,7 +235,9 @@ public:
     static GpuResource *
     sCreateInstance( GpuResourceDatabase & db )
     {
-        return new MeshResourceInternal( db );
+        GpuResource * res = new MeshResourceInternal( db );
+        res->incref();
+        return res;
     }
 };
 

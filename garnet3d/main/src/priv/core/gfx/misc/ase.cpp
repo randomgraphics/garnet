@@ -1571,7 +1571,7 @@ static bool sWriteGeoObject( AseScene & dst, const AseSceneInternal & src, const
     }
 
     // copy vertices into destination scene
-    AutoRef<Blob> blob( new SimpleBlob((uint32)(sizeof(OutputVertex) * vc.size())) );
+    AutoRef<Blob> blob = referenceTo( new SimpleBlob((uint32)(sizeof(OutputVertex) * vc.size())) );
     OutputVertex * vertices = (OutputVertex*)blob->data();
     if( NULL == vertices ) return false;
     for( size_t i = 0; i < vc.size(); ++i )

@@ -282,7 +282,7 @@ namespace GN
         ///
         /// Constructor
         ///
-        RefCounter() : mRef(1) {}
+        RefCounter() : mRef(0) {}
 
         ///
         /// Destructor
@@ -321,7 +321,7 @@ namespace GN
     ///
     /// 配合 RefCounter 使用的自动指针类
     // -------------------------------------------------------------------------
-    template <class X, class MUTEX=SingleThreadMutex> class AutoRef
+    template <class X> class AutoRef
     {
         ///
         /// pointer to class X
@@ -342,9 +342,9 @@ namespace GN
         ///
         /// Instance of empty/null reference pointer
         ///
-        static AutoRef<X,MUTEX> NULLREF;
+        static AutoRef<X> NULLREF;
 
-        ///
+        #if 0
         /// construct from a normal pointer
         ///
         explicit AutoRef( XPTR p = 0 ) throw() : mPtr(p)
@@ -352,23 +352,34 @@ namespace GN
             // make sure sizeof(AutoRef) == sizeof(XPTR), which ensures that an array of autoref
             // can always be used as array of native pointer.
             GN_CASSERT( sizeof(AutoRef) == sizeof(XPTR) );
+
+            if( p ) p->incref();
         }
+        #else
+        // default ctor
+        AutoRef() throw() : mPtr(NULL)
+        {
+            // make sure sizeof(AutoRef) == sizeof(XPTR), which ensures that an array of autoref
+            // can always be used as array of native pointer.
+            GN_CASSERT( sizeof(AutoRef) == sizeof(XPTR) );
+        }
+        #endif
 
         ///
         /// copy constructor
         ///
         AutoRef( const AutoRef & p ) throw() : mPtr( p )
         {
-            if(mPtr) mPtr->incref();
+            if( mPtr ) mPtr->incref();
         }
 
         ///
         /// copy constructor
         ///
-        template <class Y,class MUTEX2>
-        AutoRef( const AutoRef<Y,MUTEX2> & p ) throw() : mPtr( p )
+        template <class Y>
+        AutoRef( const AutoRef<Y> & p ) throw() : mPtr( p )
         {
-            if(mPtr) mPtr->incref();
+            if( mPtr ) mPtr->incref();
         }
 
         ///
@@ -376,7 +387,7 @@ namespace GN
         ///
         ~AutoRef()
         {
-            if(mPtr) mPtr->decref();
+            if( mPtr ) mPtr->decref();
         }
 
         ///
@@ -391,8 +402,8 @@ namespace GN
         ///
         /// 赋值语句
         ///
-        template <class Y,class MUTEX2>
-        AutoRef & operator = ( const AutoRef<Y,MUTEX2> & rhs )
+        template <class Y>
+        AutoRef & operator = ( const AutoRef<Y> & rhs )
         {
             set( rhs );
             return *this;
@@ -470,12 +481,8 @@ namespace GN
         ///
         void clear()
         {
-            MUTEX m;
-            m.lock();
-
-            if( mPtr ) mPtr->decref(); mPtr = 0;
-
-            m.unlock();
+            if( mPtr ) mPtr->decref();
+            mPtr = 0;
         }
 
         ///
@@ -486,14 +493,9 @@ namespace GN
         ///
         void set( XPTR p )
         {
-            MUTEX m;
-            m.lock();
-
             if( p ) p->incref();
             if( mPtr ) mPtr->decref();
             mPtr = p;
-
-            m.unlock();
         }
 
         ///
@@ -504,14 +506,8 @@ namespace GN
         void attach( XPTR ptr )
         {
             if( ptr == mPtr ) return;
-
-            MUTEX m;
-            m.lock();
-
             if( mPtr ) mPtr->decref();
             mPtr = ptr;
-
-            m.unlock();
         }
 
         ///
@@ -521,19 +517,36 @@ namespace GN
         ///
         XPTR detach() throw()
         {
-            MUTEX m;
-            m.lock();
-
             XPTR tmp = mPtr;
             mPtr = 0;
-
-            m.unlock();
-
             return tmp;
         }
     };
 
-    template<typename X,typename M> AutoRef<X,M> AutoRef<X,M>::NULLREF;
+    template<typename X> AutoRef<X> AutoRef<X>::NULLREF;
+
+    ///
+    /// Attach to a C pointer without increasing its reference count.
+    ///
+    template<typename T>
+    inline AutoRef<T> attachTo(T * ptr)
+    {
+        AutoRef<T> result;
+        result.attach(ptr);
+        return result;
+    }
+
+    ///
+    /// Reference a C refcount pointer. Increase its ref count by one.
+    ///
+    template<typename T>
+    inline AutoRef<T> referenceTo(T * ptr)
+    {
+        AutoRef<T> result;
+        result.attach(ptr);
+        result->incref();
+        return result;
+    }
 
     ///
     /// This is used to create referenced counted class on stack (or as a member of another class)

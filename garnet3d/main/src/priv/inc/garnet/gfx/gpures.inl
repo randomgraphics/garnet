@@ -72,7 +72,7 @@ template<class T> inline GN::AutoRef<T>
 GN::gfx::GpuResourceDatabase::createResource( const char * name )
 {
     GpuResource * res = createResource( T::guid(), name ).detach();
-    return AutoRef<T>( GpuResource::castTo<T>(res) );
+    return attachTo( GpuResource::castTo<T>(res) );
 }
 
 //
@@ -82,7 +82,7 @@ template<class T> inline GN::AutoRef<T>
 GN::gfx::GpuResourceDatabase::findResource( const char * name ) const
 {
     GpuResource * res = findResource( T::guid(), name ).detach();
-    return AutoRef<T>( GpuResource::castTo<T>(res) );
+    return attachTo( GpuResource::castTo<T>(res) );
 }
 
 //
@@ -92,5 +92,5 @@ template<class T> inline GN::AutoRef<T>
 GN::gfx::GpuResourceDatabase::findOrCreateResource( const char * name, bool * isExistingResource )
 {
     GpuResource * res = findOrCreateResource( T::guid(), name, isExistingResource ).detach();
-    return AutoRef<T>( GpuResource::castTo<T>(res) );
+    return attachTo( GpuResource::castTo<T>(res) );
 }

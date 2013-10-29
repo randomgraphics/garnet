@@ -18,7 +18,7 @@ GN::gfx::loadTextureFromFile( Gpu & gpu, const char * filename )
     // create texture
     TextureDesc td;
     td.fromImageDesc( id );
-    AutoRef<Texture> tex( gpu.createTexture( td ) );
+    AutoRef<Texture> tex = attachTo( gpu.createTexture( td ) );
     if( !tex ) return 0;
 
     // update texture content
