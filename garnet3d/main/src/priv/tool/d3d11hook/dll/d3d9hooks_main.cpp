@@ -111,7 +111,7 @@ static StrW GetRealDllPath(const wchar_t * dllName)
 // D3D9 global functions
 // *****************************************************************************
 
-#define HOOK_ENABLED 0
+#define HOOK_ENABLED 1
 
 typedef IDirect3D9 * (WINAPI * PFN_DIRECT3D_CREATE_9)(UINT SDKVersion);
 typedef HRESULT (WINAPI * PFN_DIRECT3D_CREATE_9_EX)(UINT SDKVersion, IDirect3D9Ex **ppD3D);
@@ -132,7 +132,7 @@ D3D9_HOOK_API IDirect3D9 * WINAPI Direct3DCreate9Hook(UINT SDKVersion)
 #if HOOK_ENABLED
     if( nullptr != d3d9 && 1 == trace.getCurrentLevel() )
     {
-        d3d9 = RealToHooked(d3d9);
+        d3d9 = RealToHooked9(d3d9);
     }
 #endif
 
@@ -157,7 +157,7 @@ D3D9_HOOK_API HRESULT Direct3DCreate9ExHook(UINT SDKVersion, IDirect3D9Ex **ppD3
 #if HOOK_ENABLED
     if( SUCCEEDED(hr) && 1 == trace.getCurrentLevel() )
     {
-        if( ppD3D ) *ppD3D = RealToHooked(*ppD3D);
+        if( ppD3D ) *ppD3D = RealToHooked9(*ppD3D);
     }
 #endif
 
