@@ -28,8 +28,8 @@ elif 'vc100' == GN.cc or 'vc110' == GN.cc or 'vc' == GN.cc:
     ccflags += ['/wd%s'%w for w in unimportant_warnings]
 elif 'xenon' == GN.cc:
     cppdefines += ['NO_GETENV'] # Xbox platform does not support getenv()
-elif 'gcc' == GN.cc:
-	pass
+elif 'gcc' == GN.cc or 'mingw' == GN.cc:
+    ccflags += ['-Wno-error=unused-but-set-variable']
 else:
 	traceback.print_exc()
 	GN.Error( 'Unknown compiler: ' + GN.cc );
@@ -94,7 +94,7 @@ ai_env.Append(
 	CPPDEFINES = cppdefines + ['ASSIMP_BUILD_BOOST_WORKAROUND','ASSIMP_BUILD_NO_OWN_ZLIB'] )
 GN.RemoveEnvListItems( ai_env, 'CCFLAGS', ['/W4','/Wcheck','-Wall'] )
 assimp_sources = GN.Glob( 'assimp/*.cpp' )
-assimp_sources.remove('assimp\\AssimpPCH.cpp')
+assimp_sources.remove('assimp/AssimpPCH.cpp')
 ai_cluster = GN.BuildObjects( ai_env, assimp_sources, 'AssimpPCH.h', 'assimp/AssimpPCH.cpp' )
 
 # assimp contrib

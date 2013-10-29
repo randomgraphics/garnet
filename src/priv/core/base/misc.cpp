@@ -80,6 +80,9 @@ GN_API void GN::getEnv( StrA & result, const char * name )
 // -----------------------------------------------------------------------------
 GN_API const char * GN::Guid::toStr() const
 {
+#if GN_CYGWIN
+    return "<ERROR: mingw does not support TLS>";
+#else
     // GUID as string: {xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx}
     __declspec(thread) static char str[1+8+1+4+1+4+1+4+1+12+1+1];
 
@@ -100,4 +103,5 @@ GN_API const char * GN::Guid::toStr() const
         data4[7] );
 
     return str;
+#endif
 }

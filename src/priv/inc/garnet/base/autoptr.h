@@ -214,10 +214,12 @@ namespace GN
         ///
         AutoComPtr() throw() : mPtr(0) {}
 
+#if GN_MSVC
         ///
         /// Default constructor
         ///
         AutoComPtr(nullptr_t) throw() : mPtr(0) {}
+#endif
 
         ///
         /// Copy constructor
@@ -393,6 +395,7 @@ namespace GN
             return pt;
         }
 
+#if !GN_GCC
         ///
         /// templated QI.
         ///
@@ -415,6 +418,7 @@ namespace GN
                 return 0x80000005; // E_POINTER
             }
         }
+#endif
     };
 }
 

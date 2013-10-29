@@ -282,7 +282,7 @@ GN::gfx::BitmapFont::createSlot( wchar_t ch )
     {
         wchar_t s[] = { ch, L'\0' };
         GN_ERROR(sLogger)( L"fail to get font bitmap for character '%s'!", s );
-        return false;
+        return NULL;
     }
 
     // update slot fields

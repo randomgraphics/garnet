@@ -168,11 +168,11 @@ GN_API void GN::gfx::createBox(
     if( tangents )
     {
         Vector3f px = Vector3f(  1,  0,  0 );
-        Vector3f nx = Vector3f( -1,  0,  0 );
-        Vector3f py = Vector3f(  0,  1,  0 );
-        Vector3f ny = Vector3f(  0, -1,  0 );
+      //Vector3f nx = Vector3f( -1,  0,  0 );
+      //Vector3f py = Vector3f(  0,  1,  0 );
+      //Vector3f ny = Vector3f(  0, -1,  0 );
         Vector3f pz = Vector3f(  0,  0,  1 );
-        Vector3f nz = Vector3f(  0,  0, -1 );
+      //Vector3f nz = Vector3f(  0,  0, -1 );
         #define VERTEX( index ) (*(Vector3f*)(((uint8*)tangents) + tangStride*index))
 
         VERTEX( 0) = px;
@@ -214,8 +214,8 @@ GN_API void GN::gfx::createBox(
         Vector3f nx = Vector3f( -1,  0,  0 );
         Vector3f py = Vector3f(  0,  1,  0 );
         Vector3f ny = Vector3f(  0, -1,  0 );
-        Vector3f pz = Vector3f(  0,  0,  1 );
-        Vector3f nz = Vector3f(  0,  0, -1 );
+      //Vector3f pz = Vector3f(  0,  0,  1 );
+      //Vector3f nz = Vector3f(  0,  0, -1 );
         #define VERTEX( index ) (*(Vector3f*)(((uint8*)binormals) + n2Stride*index))
 
         VERTEX( 0) = py;

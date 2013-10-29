@@ -13,9 +13,9 @@
 #include "dxerr.h"
 #define DXERR_FUNC DXGetErrorDescriptionA
 
-#else
+#elif GN_MSWIN
 
-static const char * DXERR_FUNC( sint32 error)
+static const char * DXERR_FUNC( sint32 error )
 {
     __declspec(thread) static char * text = "0x12345678";
     for(int i = 0; i < 8; ++i)
@@ -25,10 +25,17 @@ static const char * DXERR_FUNC( sint32 error)
     return text;
 }
 
+#else
+
+static const char * DXERR_FUNC( sint32 )
+{
+    return "";
+}
+
 #endif
 
 
-// Runtime assert behavior flag.
+// Runtime assert behaviour flag.
 static GN::RuntimeAssertBehavior sRuntimeAssertBehavior = GN::RAB_BREAK_ALWAYS;
 
 // Assert failure routine
