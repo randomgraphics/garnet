@@ -34,14 +34,14 @@ inline IUnknown * RealToHooked11(const IID & realIId, INPUT_TYPE * realobj)
         &unknownRef);
     if (SUCCEEDED(hr))
     {
-        base = unknownRef->getBase();
+        base = unknownRef->promote();
     }
 
     if (!base)
     {
         base = UnknownBase::sCreateNew(realobj);
         unknownRef.set(new WeakUnknownRef());
-        unknownRef->setBase(base);
+        unknownRef->attach(base);
         realobj->SetPrivateDataInterface(HOOKED_OBJECT_GUID, unknownRef);
     }
 

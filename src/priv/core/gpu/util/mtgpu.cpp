@@ -232,7 +232,7 @@ GpuProgram * GN::gfx::MultiThreadGpu::createGpuProgram( const void * compiledGpu
     waitForIdle();
     if( NULL == gp ) return NULL;
 
-    AutoRef<MultiThreadGpuProgram> mtgp( new MultiThreadGpuProgram(*this) );
+    AutoRef<MultiThreadGpuProgram> mtgp = referenceTo( new MultiThreadGpuProgram(*this) );
     if( !mtgp->init( gp ) ) return NULL;
 
     return mtgp.detach();
@@ -248,7 +248,7 @@ Uniform * GN::gfx::MultiThreadGpu::createUniform( uint32 size )
     waitForIdle();
     if( NULL == uni ) return NULL;
 
-    AutoRef<MultiThreadUniform> mu( new MultiThreadUniform(*this) );
+    AutoRef<MultiThreadUniform> mu = referenceTo( new MultiThreadUniform(*this) );
     if( !mu->init( uni ) ) return NULL;
 
     return mu.detach();
@@ -264,7 +264,7 @@ Texture * GN::gfx::MultiThreadGpu::createTexture( const TextureDesc & desc )
     waitForIdle();
     if( NULL == tex ) return NULL;
 
-    AutoRef<MultiThreadTexture> mtt( new MultiThreadTexture(*this) );
+    AutoRef<MultiThreadTexture> mtt = referenceTo( new MultiThreadTexture(*this) );
     if( !mtt->init( tex ) ) return NULL;
 
     return mtt.detach();
@@ -280,7 +280,7 @@ VtxBuf * GN::gfx::MultiThreadGpu::createVtxBuf( const VtxBufDesc & desc )
     waitForIdle();
     if( NULL == vb ) return NULL;
 
-    AutoRef<MultiThreadVtxBuf> mtvb( new MultiThreadVtxBuf(*this) );
+    AutoRef<MultiThreadVtxBuf> mtvb = referenceTo( new MultiThreadVtxBuf(*this) );
     if( !mtvb->init( vb ) ) return NULL;
 
     return mtvb.detach();
@@ -296,7 +296,7 @@ IdxBuf * GN::gfx::MultiThreadGpu::createIdxBuf( const IdxBufDesc & desc )
     waitForIdle();
     if( NULL == ib ) return NULL;
 
-    AutoRef<MultiThreadIdxBuf> mtib( new MultiThreadIdxBuf(*this) );
+    AutoRef<MultiThreadIdxBuf> mtib = referenceTo( new MultiThreadIdxBuf(*this) );
     if( !mtib->init( ib ) ) return NULL;
 
     return mtib.detach();

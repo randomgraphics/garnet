@@ -1027,7 +1027,7 @@ namespace GN { namespace gfx
         GpuProgram *
         createGpuProgram( const GpuProgramDesc & desc )
         {
-            AutoRef<Blob> bin( compileGpuProgram( desc ) );
+            AutoRef<Blob> bin = attachTo( compileGpuProgram( desc ) );
             if( !bin ) return NULL;
             return createGpuProgram( bin->data(), bin->size() );
         }

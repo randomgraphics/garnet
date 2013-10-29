@@ -98,11 +98,11 @@ public:
 
         TS_ASSERT( pathExist("/") );
         TS_ASSERT( !pathExist("haha,heihei,hoho,huhu,mama,papa") );
-        TS_ASSERT( pathExist("SConstruct") );
+        TS_ASSERT( pathExist("SConstruct2") );
 
-        TS_ASSERT( pathExist("startup::\\SConstruct") );
-        TS_ASSERT( pathExist("startup::/SConstruct") );
-        TS_ASSERT( pathExist("startup::SConstruct") );
+        TS_ASSERT( pathExist("startup::\\SConstruct2") );
+        TS_ASSERT( pathExist("startup::/SConstruct2") );
+        TS_ASSERT( pathExist("startup::SConstruct2") );
 
         TS_ASSERT( pathExist("app::GNut"APPEXT) );
         TS_ASSERT( pathExist("app::/GNut"APPEXT) );
@@ -132,7 +132,7 @@ public:
         using namespace GN;
         using namespace GN::fs;
 
-        TS_ASSERT( isFile("startup::\\SConstruct") );
+        TS_ASSERT( isFile("startup::\\SConstruct2") );
         TS_ASSERT( isFile("app::GNut"APPEXT) );
         TS_ASSERT( !isFile("startup::") );
         TS_ASSERT( !isFile("app::") );

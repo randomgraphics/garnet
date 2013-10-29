@@ -75,7 +75,7 @@ public:
             {
                 const MixedFontCreationDesc & cd = additionalFonts[i];
 
-                AutoRef<FontFace> ff( createFontFace( cd.font ) );
+                AutoRef<FontFace> ff = attachTo( createFontFace( cd.font ) );
 
                 if( ff )
                 {
@@ -89,7 +89,7 @@ public:
         }
 
         // default font
-        AutoRef<FontFace> df( createFontFace( defaultFont ) );
+        AutoRef<FontFace> df = attachTo( createFontFace( defaultFont ) );
         if( NULL == df ) return failure();
         FontRange fr;
         fr.font = df;
@@ -181,7 +181,7 @@ GN::gfx::createMixedFontFace(
         return createFontFace( defaultFont );
     }
 
-    AutoRef<MixedFontFace> font( new MixedFontFace );
+    AutoRef<MixedFontFace> font = referenceTo( new MixedFontFace );
 
     if( !font->init( defaultFont, additionalFonts, numAdditionalFonts ) ) return 0;
 

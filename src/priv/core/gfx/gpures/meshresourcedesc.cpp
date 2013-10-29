@@ -291,7 +291,7 @@ AutoRef<Blob> sLoadFromMeshBinaryFile( File & fp, MeshResourceDesc & desc )
     if( !vfp.analyze( header.vtxfmt ) ) return AutoRef<Blob>::NULLREF;
 
     // read mesh data
-    AutoRef<Blob> blob( new SimpleBlob(header.bytes) );
+    AutoRef<Blob> blob = referenceTo( new SimpleBlob(header.bytes) );
     if( !fp.read( blob->data(), header.bytes, NULL ) )
     {
         GN_ERROR(sLogger)( "fail to read mesh data." );
@@ -589,7 +589,7 @@ AutoRef<Blob> sLoadFromMeshXMLFile( File & fp, MeshResourceDesc & desc )
         }
     }
 
-    AutoRef<SimpleBlob> blob( new SimpleBlob(meshDataSize) );
+    AutoRef<SimpleBlob> blob = referenceTo( new SimpleBlob(meshDataSize) );
     if( !blob )
     {
         GN_ERROR(sLogger)( "Out of memory" );

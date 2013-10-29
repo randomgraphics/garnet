@@ -7,8 +7,8 @@ Copyright (c) 2006-2010, ASSIMP Development Team
 
 All rights reserved.
 
-Redistribution and use of this software in source and binary forms, 
-with or without modification, are permitted provided that the following 
+Redistribution and use of this software in source and binary forms,
+with or without modification, are permitted provided that the following
 conditions are met:
 
 * Redistributions of source code must retain the above
@@ -25,16 +25,16 @@ conditions are met:
   derived from this software without specific prior
   written permission of the ASSIMP Development Team.
 
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS 
-"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT 
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
 LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT 
+A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
 OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT 
+SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
 LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY 
-THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT 
-(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE 
+DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ---------------------------------------------------------------------------
 */
@@ -70,24 +70,24 @@ inline aiVector3D operator * (const aiMatrix4x4& pMatrix, const aiVector3D& pVec
 	return res;
 }
 // ------------------------------------------------------------------------------------------------
-AI_FORCE_INLINE void aiVector3D::Set( float pX, float pY, float pZ) { 
-	x = pX; y = pY; z = pZ; 
+AI_FORCE_INLINE void aiVector3D::Set( float pX, float pY, float pZ) {
+	x = pX; y = pY; z = pZ;
 }
 // ------------------------------------------------------------------------------------------------
 AI_FORCE_INLINE float aiVector3D::SquareLength() const {
-	return x*x + y*y + z*z; 
+	return x*x + y*y + z*z;
 }
 // ------------------------------------------------------------------------------------------------
 AI_FORCE_INLINE float aiVector3D::Length() const {
-	return sqrt( SquareLength()); 
+	return sqrt( SquareLength());
 }
 // ------------------------------------------------------------------------------------------------
-AI_FORCE_INLINE aiVector3D& aiVector3D::Normalize() { 
+AI_FORCE_INLINE aiVector3D& aiVector3D::Normalize() {
 	*this /= Length(); return *this;
 }
 // ------------------------------------------------------------------------------------------------
 AI_FORCE_INLINE const aiVector3D& aiVector3D::operator += (const aiVector3D& o) {
-	x += o.x; y += o.y; z += o.z; return *this; 
+	x += o.x; y += o.y; z += o.z; return *this;
 }
 // ------------------------------------------------------------------------------------------------
 AI_FORCE_INLINE const aiVector3D& aiVector3D::operator -= (const aiVector3D& o) {
@@ -95,11 +95,11 @@ AI_FORCE_INLINE const aiVector3D& aiVector3D::operator -= (const aiVector3D& o) 
 }
 // ------------------------------------------------------------------------------------------------
 AI_FORCE_INLINE const aiVector3D& aiVector3D::operator *= (float f) {
-	x *= f; y *= f; z *= f; return *this; 
+	x *= f; y *= f; z *= f; return *this;
 }
 // ------------------------------------------------------------------------------------------------
 AI_FORCE_INLINE const aiVector3D& aiVector3D::operator /= (float f) {
-	x /= f; y /= f; z /= f; return *this; 
+	x /= f; y /= f; z /= f; return *this;
 }
 // ------------------------------------------------------------------------------------------------
 AI_FORCE_INLINE aiVector3D& aiVector3D::operator *= (const aiMatrix3x3& mat){
@@ -134,10 +134,22 @@ AI_FORCE_INLINE const aiVector3D aiVector3D::SymMul(const aiVector3D& o) {
 AI_FORCE_INLINE aiVector3D operator + (const aiVector3D& v1, const aiVector3D& v2)	{
 	return aiVector3D( v1.x + v2.x, v1.y + v2.y, v1.z + v2.z);
 }
+AI_FORCE_INLINE aiVector3D operator + (const aiVector3D& v1, float f)	{
+	return aiVector3D( v1.x + f, v1.y + f, v1.z + f);
+}
+AI_FORCE_INLINE aiVector3D operator + (float f, const aiVector3D& v1)	{
+	return aiVector3D( v1.x + f, v1.y + f, v1.z + f);
+}
 // ------------------------------------------------------------------------------------------------
 // symmetric subtraction
 AI_FORCE_INLINE aiVector3D operator - (const aiVector3D& v1, const aiVector3D& v2)	{
 	return aiVector3D( v1.x - v2.x, v1.y - v2.y, v1.z - v2.z);
+}
+AI_FORCE_INLINE aiVector3D operator - (const aiVector3D& v1, float f)	{
+	return aiVector3D( v1.x - f, v1.y - f, v1.z - f);
+}
+AI_FORCE_INLINE aiVector3D operator - (float f, const aiVector3D& v2)	{
+	return aiVector3D( f - v2.x, f - v2.y, f - v2.z);
 }
 // ------------------------------------------------------------------------------------------------
 // scalar product
@@ -158,6 +170,9 @@ AI_FORCE_INLINE  aiVector3D operator * ( const aiVector3D& v, float f)	{
 // scalar division
 AI_FORCE_INLINE  aiVector3D operator / ( const aiVector3D& v, float f)	{
 	return v * (1/f);
+}
+AI_FORCE_INLINE  aiVector3D operator / ( float f, const aiVector3D& v)	{
+	return aiVector3D(f / v.x, f / v.y, f / v.z);
 }
 // ------------------------------------------------------------------------------------------------
 // vector division

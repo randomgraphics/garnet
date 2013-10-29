@@ -120,7 +120,7 @@ static bool sGfxInitInternal( const GfxInitOptions & o )
     mfcd.font = o.defaultAsciiFont;
     mfcd.firstChar = 0;
     mfcd.numChars = 127;
-    AutoRef<FontFace> ff( createMixedFontFace(o.defaultNonAsciiFont, &mfcd, 1) );
+    AutoRef<FontFace> ff = attachTo( createMixedFontFace(o.defaultNonAsciiFont, &mfcd, 1) );
     if( !ff )
     {
         // if failed, fallback to simple ASCII font face

@@ -448,7 +448,7 @@ GN::gfx::createFontFace( const FontFaceCreationDesc & cd )
 {
     GN_GUARD;
 
-    AutoRef<FontFaceFt2> font( new FontFaceFt2 );
+    AutoRef<FontFaceFt2> font = referenceTo( new FontFaceFt2 );
 
     if( !font->init( cd ) ) return 0;
 

@@ -6,6 +6,60 @@
 using namespace GN;
 
 // *****************************************************************************
+// Object Table
+// *****************************************************************************
+
+struct ObjectTable
+{
+    CritSec cs;
+    std::unordered_map<intptr_t, GN::WeakRef<UnknownBase>> objects;
+};
+
+static ObjectTable g_table;
+
+//
+//
+// -----------------------------------------------------------------------------
+void HookedObjectTable::AddHooked(IUnknown * realobj, UnknownBase * hooked)
+{
+    CritSec::AutoLock lock(g_table.cs);
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+void HookedObjectTable::DelHooked(UnknownBase * hooked)
+{
+    CritSec::AutoLock lock(g_table.cs);
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+GN::AutoComPtr<UnknownBase>
+HookedObjectTable::GetHooked(IUnknown * realobj)
+{
+    CritSec::AutoLock lock(g_table.cs);
+
+    GN::AutoComPtr<IUnknown> realUnknown = Qi<IUnknown>(realobj);
+
+    ObjectTable::const_iterator iter = g_table.objects.find((intptr_t)realUnknown.get());
+    if( iter == g_table.objects.end())
+    {
+        return nullptr;
+    }
+    else
+    {
+        GN::AutoComPtr<UnknownBase> result;
+        GN::WeakRef<UnknownBase> & weaklyHooked = iter->second;
+        weaklyHooked.lockEnter();
+        result.set(weaklyHooked.rawptr());
+        weaklyHooked.lockLeave();
+        return result;
+    }
+}
+
+// *****************************************************************************
 // DLL loading utilities
 // *****************************************************************************
 

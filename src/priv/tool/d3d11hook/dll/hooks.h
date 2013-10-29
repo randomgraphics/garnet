@@ -241,13 +241,6 @@ private:
 };
 
 // -----------------------------------------------------------------------------
-/// Struct that contains all global varialbes used in this library.
-struct Global
-{
-    HookedClassFactory hookedClassFactory;
-};
-
-// -----------------------------------------------------------------------------
 /// IHooked interface
 MIDL_INTERFACE("AD5D67AB-C12B-4194-B5E8-2F891F2212E6")
 IHooked : public IUnknown
@@ -275,8 +268,15 @@ inline bool IsReal(IUnknown * ptr)
 }
 
 // -----------------------------------------------------------------------------
+/// The lock object for thread safe reference management.
+struct WeakRefLock : GN::RefCounter
+{
+    CritSec lock;
+};
+
+// -----------------------------------------------------------------------------
 /// Implementation of IUnknown and IHooked
-class UnknownBase : public IHooked, public GN::WeakObject
+class UnknownBase : public IHooked
 {
     struct InterfaceInfo
     {
@@ -293,8 +293,15 @@ class UnknownBase : public IHooked, public GN::WeakObject
     UINT                     _interfaceCount;
     GN::AutoComPtr<IUnknown> _realUnknown;
 
+    // For weak references
+    mutable GN::AutoRef<WeakRefLock> _weakLock;
+    mutable GN::DoubleLink           _weakRefs;
+
     UnknownBase() : _refCount(0), _interfaceCount(0)
     {
+        // This context pointer is never used.
+        _weakRefs.context = (void*)0xbadbeef;
+        _weakLock = new WeakRefLock();
     }
 
     void addInterface(const IID & iid, IUnknown * hooked, IUnknown * real)
@@ -369,6 +376,8 @@ class UnknownBase : public IHooked, public GN::WeakObject
         }
     }
 
+    void invalidateAllWeakRefs();
+
 protected:
 
     virtual ~UnknownBase()
@@ -401,6 +410,9 @@ public:
         }
         return p;
     }
+
+    void lockEnter() const { return _cs.Enter(); }
+    void lockLeave() const { return _cs.Leave(); }
 
     // No AddRef()
     virtual IUnknown * STDMETHODCALLTYPE GetRealObj(const IID & iid)
@@ -444,6 +456,11 @@ public:
         _cs.Enter();
         GN_ASSERT(_refCount > 0);
         ULONG c = --_refCount;
+        // within the _cs lock, we need to invalidate all weak references, if refcount reaches zero.
+        if( 0 == c )
+        {
+            invalidateAllWeakRefs();
+        }
         _cs.Leave();
 
         if( 0 == c )
@@ -485,14 +502,35 @@ public:
 /// Weak refernce to UnknownBase
 class WeakUnknownRef : public IUnknown
 {
-    ULONG                    _refCount;
-    GN::WeakRef<UnknownBase> _base;
-    CritSec                  _cs;
+    ULONG                        _refCount;
+    CritSec                      _cs;
+
+    volatile const UnknownBase * _base;
+    GN::DoubleLink               _link;
+
+    void detach()
+    {
+        GN::AutoComPtr<UnknownBase> strongRef = promote();
+        if( strongRef )
+        {
+            _base->lockEnter();
+            _link.detach();
+            _base->lockLeave();
+        }
+        _base = nullptr;
+        _link.prev = NULL;
+        _link.next = NULL;
+    }
 
 public:
 
-    WeakUnknownRef()
+    WeakUnknownRef() : _refCount(0), _base(nullptr)
     {
+    }
+
+    ~WeakUnknownRef()
+    {
+        attach(nullptr);
     }
 
     virtual ULONG STDMETHODCALLTYPE AddRef()
@@ -533,19 +571,40 @@ public:
         }
     }
 
-    void setBase(const GN::AutoComPtr<UnknownBase> & base)
+    void attach(const GN::AutoComPtr<UnknownBase> & base)
     {
-        _base.set(base);
+        detach();
+        if( base )
+        {
+            base->lockEnter();
+            _link.linkAfter( &base->_weakRefs );
+            base->lockLeave();
+            _base = base;
+        }
     }
 
-    GN::AutoComPtr<UnknownBase> getBase()
+    // Promote weak reference to strong reference (might return null)
+    GN::AutoComPtr<UnknownBase> promote()
     {
-        GN::AutoComPtr<UnknownBase> result;
-        result.set(_base.rawptr());
-        return result;
+        //GN::AutoComPtr<UnknownBase> result;
+        //result.set(_base.rawptr());
+        //return result;
     }
 };
 
+//
+//
+// -----------------------------------------------------------------------------
+inline void UnknownBase::invalidateAllWeakRefs()
+{
+    GN::DoubleLink * next;
+    WeakUnknownRef * ref;
+    while( NULL != (next = _weakRefs.next) )
+    {
+        ref = (WeakUnknownRef*)next->context;
+        ref->attach(nullptr);
+    }
+}
 
 // -----------------------------------------------------------------------------
 /// Hook class that is inherited from single COM interface

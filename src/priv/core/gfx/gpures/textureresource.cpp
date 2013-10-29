@@ -60,7 +60,7 @@ GN::gfx::TextureResource::loadFromFile(
     // create texture
     TextureDesc td;
     td.fromImageDesc( id );
-    AutoRef<Texture> tex( db.getGpu().createTexture( td ) );
+    AutoRef<Texture> tex = attachTo( db.getGpu().createTexture( td ) );
     if( !tex ) return AutoRef<TextureResource>::NULLREF;
 
     // update texture content
@@ -139,9 +139,10 @@ class TextureResourceInternal : public TextureResource
     // -----------------------------------------------------------------------------
     static GpuResource * sCreateInstance( GpuResourceDatabase & db )
     {
-        return new TextureResourceInternal( db );
+        GpuResource * res = new TextureResourceInternal( db );
+        res->incref();
+        return res;
     }
-
 
 public:
 
