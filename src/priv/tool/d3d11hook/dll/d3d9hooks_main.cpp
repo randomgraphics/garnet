@@ -3,16 +3,20 @@
 #include "hooks_shared_impl.cpp"
 #define INSIDE_D3D9_HOOK
 #include "d3d9hooks_exports.h"
+#include <unordered_map>
+
 using namespace GN;
 
 // *****************************************************************************
 // Object Table
 // *****************************************************************************
 
+typedef std::unordered_map<intptr_t, GN::AutoComPtr<WeakUnknownRef>> ObjectMap;
+
 struct ObjectTable
 {
-    CritSec cs;
-    std::unordered_map<intptr_t, GN::WeakRef<UnknownBase>> objects;
+    CritSec   cs;
+    ObjectMap objects;
 };
 
 static ObjectTable g_table;
@@ -23,14 +27,26 @@ static ObjectTable g_table;
 void HookedObjectTable::AddHooked(IUnknown * realobj, UnknownBase * hooked)
 {
     CritSec::AutoLock lock(g_table.cs);
+    GN::AutoComPtr<IUnknown> realUnknown = Qi<IUnknown>(realobj);
+    GN_ASSERT(g_table.objects.end() == g_table.objects.find((intptr_t)realUnknown.get()));
+    AutoComPtr<WeakUnknownRef> ref;
+    ref.set(new WeakUnknownRef);
+    GN_ASSERT(hooked);
+    ref->attach(hooked);
+    g_table.objects[(intptr_t)realUnknown.get()] = ref;
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-void HookedObjectTable::DelHooked(UnknownBase * hooked)
+void HookedObjectTable::DelHooked(IUnknown * realUnknown)
 {
     CritSec::AutoLock lock(g_table.cs);
+    GN_ASSERT(Qi<IUnknown>(realUnknown) == realUnknown);
+    ObjectMap::const_iterator iter = g_table.objects.find((intptr_t)realUnknown);
+    GN_ASSERT(g_table.objects.end() != iter);
+    GN_ASSERT(!iter->second->promote());
+    g_table.objects.erase(iter);
 }
 
 //
@@ -43,19 +59,14 @@ HookedObjectTable::GetHooked(IUnknown * realobj)
 
     GN::AutoComPtr<IUnknown> realUnknown = Qi<IUnknown>(realobj);
 
-    ObjectTable::const_iterator iter = g_table.objects.find((intptr_t)realUnknown.get());
+    ObjectMap::const_iterator iter = g_table.objects.find((intptr_t)realUnknown.get());
     if( iter == g_table.objects.end())
     {
         return nullptr;
     }
     else
     {
-        GN::AutoComPtr<UnknownBase> result;
-        GN::WeakRef<UnknownBase> & weaklyHooked = iter->second;
-        weaklyHooked.lockEnter();
-        result.set(weaklyHooked.rawptr());
-        weaklyHooked.lockLeave();
-        return result;
+        return iter->second->promote();
     }
 }
 

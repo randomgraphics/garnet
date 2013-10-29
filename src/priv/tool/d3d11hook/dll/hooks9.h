@@ -6,7 +6,7 @@
 struct HookedObjectTable
 {
     static void                        AddHooked(IUnknown * realobj, UnknownBase * hooked);
-    static void                        DelHooked(UnknownBase * hooked);
+    static void                        DelHooked(IUnknown * realUnknown);
     static GN::AutoComPtr<UnknownBase> GetHooked(IUnknown * realobj);
 };
 
@@ -26,8 +26,6 @@ inline IUnknown * RealToHooked9(const IID & realiid, INPUT_TYPE * realobj)
         GN_UNEXPECTED();
         return realobj;
     }
-
-    GN_ASSERT(Qi<INPUT_TYPE>(realobj) == realobj));
 
     GN::AutoComPtr<UnknownBase> base = HookedObjectTable::GetHooked(realobj);
     if (!base)
@@ -54,6 +52,7 @@ inline IUnknown * RealToHooked9(const IID & realiid, INPUT_TYPE * realobj)
     }
 }
 
+#if 0
 // -----------------------------------------------------------------------------
 /// Retrieve hooked ojbect pointer that is embedded in real D3D object, using
 /// GetPrivateData and SetPrivateData
@@ -109,6 +108,7 @@ inline IUnknown * RealToHooked9<IDirect3DResource9>(const IID & realiid, IDirect
         return realobj;
     }
 }
+#endif
 
 // -----------------------------------------------------------------------------
 /// Retrieve hooked ojbect pointer that is embedded in real D3D object.

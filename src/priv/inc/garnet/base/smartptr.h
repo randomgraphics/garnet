@@ -8,6 +8,8 @@
 
 namespace GN
 {
+    // TODO: make weakref object thread safe.
+
     ///
     /// Base class that support weak referencing
     // -------------------------------------------------------------------------
@@ -344,7 +346,7 @@ namespace GN
         ///
         static AutoRef<X> NULLREF;
 
-        #if 0
+        #if 1
         /// construct from a normal pointer
         ///
         explicit AutoRef( XPTR p = 0 ) throw() : mPtr(p)
@@ -396,6 +398,15 @@ namespace GN
         AutoRef & operator = ( const AutoRef & rhs )
         {
             set( rhs );
+            return *this;
+        }
+
+        ///
+        /// ¸³ÖµÓï¾ä
+        ///
+        AutoRef & operator = ( XPTR ptr )
+        {
+            set( ptr );
             return *this;
         }
 
