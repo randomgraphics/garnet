@@ -37,8 +37,9 @@ static void * GetRealFunctionPtr(const wchar_t * dllName, const char * functionN
 // -----------------------------------------------------------------------------
 static StrW GetRealDllPath(const wchar_t * dllName)
 {
-    StrW system32 = L"c:\\windows\\system32\\";
-    StrW dllpath = system32 + dllName;
+    wchar_t system32[256];
+    GetSystemDirectoryW(system32, _countof(system32));
+    StrW dllpath = StrW(system32) + L"\\" + dllName;
     return dllpath;
 }
 
