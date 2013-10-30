@@ -186,7 +186,7 @@ public:
     // -----------------------------------------------------------------------------
     // IDWriteTextRenderer
 
-    virtual HRESULT DrawGlyphRun(
+    virtual HRESULT STDMETHODCALLTYPE DrawGlyphRun(
         void * clientDrawingContext,
         FLOAT  baselineOriginX,
         FLOAT  baselineOriginY,
@@ -199,7 +199,7 @@ public:
         return S_OK;
     }
 
-    virtual HRESULT DrawInlineObject(
+    virtual HRESULT STDMETHODCALLTYPE DrawInlineObject(
         void * clientDrawingContext,
         FLOAT  originX,
         FLOAT  originY,
@@ -213,7 +213,7 @@ public:
         return S_OK;
     }
 
-    virtual HRESULT DrawStrikethrough(
+    virtual HRESULT STDMETHODCALLTYPE DrawStrikethrough(
         void * clientDrawingContext,
         FLOAT  baselineOriginX,
         FLOAT  baselineOriginY,
@@ -225,7 +225,7 @@ public:
         return S_OK;
     }
 
-    virtual HRESULT DrawUnderline(
+    virtual HRESULT STDMETHODCALLTYPE DrawUnderline(
         void * clientDrawingContext,
         FLOAT  baselineOriginX,
         FLOAT  baselineOriginY,
