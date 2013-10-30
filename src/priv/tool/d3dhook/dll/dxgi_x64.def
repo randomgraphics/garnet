@@ -1,4 +1,3 @@
-LIBRARY dxgi.dll
 EXPORTS
 	CheckETWTLS=CheckETWTLS_wrapper @1
 	CompatString=CompatString_wrapper @2
