@@ -8,7 +8,7 @@
 using namespace GN;
 
 // *****************************************************************************
-// Object Table
+// UnknownBase Table
 // *****************************************************************************
 
 typedef std::unordered_map<intptr_t, GN::AutoComPtr<WeakUnknownRef>> ObjectMap;
@@ -24,7 +24,26 @@ static ObjectTable g_table;
 //
 //
 // -----------------------------------------------------------------------------
-void HookedObjectTable::AddHooked(IUnknown * realobj, UnknownBase * hooked)
+static void UnknownBaseDestructNotif(UnknownBase * base, void *)
+{
+    IUnknown * realUnknown = base->GetRealObj(__uuidof(IUnknown));
+    CritSec::AutoLock lock(g_table.cs);
+    ObjectMap::const_iterator iter = g_table.objects.find((intptr_t)realUnknown);
+    if( g_table.objects.end() != iter )
+    {
+        GN_ASSERT(!iter->second->promote());
+        g_table.objects.erase(iter);
+    }
+    else
+    {
+        GN_UNEXPECTED();
+    }
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+void UnknownBaseTable::add(IUnknown * realobj, UnknownBase * hooked)
 {
     CritSec::AutoLock lock(g_table.cs);
     GN::AutoComPtr<IUnknown> realUnknown = Qi<IUnknown>(realobj);
@@ -33,27 +52,15 @@ void HookedObjectTable::AddHooked(IUnknown * realobj, UnknownBase * hooked)
     ref.set(new WeakUnknownRef);
     GN_ASSERT(hooked);
     ref->attach(hooked);
+    hooked->setDestructNotif(UnknownBaseDestructNotif, nullptr);
     g_table.objects[(intptr_t)realUnknown.get()] = ref;
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-void HookedObjectTable::DelHooked(IUnknown * realUnknown)
-{
-    CritSec::AutoLock lock(g_table.cs);
-    GN_ASSERT(Qi<IUnknown>(realUnknown) == realUnknown);
-    ObjectMap::const_iterator iter = g_table.objects.find((intptr_t)realUnknown);
-    GN_ASSERT(g_table.objects.end() != iter);
-    GN_ASSERT(!iter->second->promote());
-    g_table.objects.erase(iter);
-}
-
-//
-//
-// -----------------------------------------------------------------------------
 GN::AutoComPtr<UnknownBase>
-HookedObjectTable::GetHooked(IUnknown * realobj)
+UnknownBaseTable::get(IUnknown * realobj)
 {
     CritSec::AutoLock lock(g_table.cs);
 

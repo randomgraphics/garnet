@@ -376,7 +376,7 @@ class D3D9HooksFile:
             hookedType = ii._hookedClassName
             interfaceType = ii._name
             objectName = ii._name[1:]
-            f.write('        ' + hookedType + ' * ' + objectName + ' = (' + hookedType + ' *)unknown.GetHookedObj(__uuidof(' + interfaceType + '));\n'
+            f.write('        ' + hookedType + ' * ' + objectName + ' = (' + hookedType + ' *)unknown.GetHookedParent(__uuidof(' + interfaceType + '), realobj);\n'
                     '        if (nullptr == ' + objectName + ') return nullptr;\n\n')
         f.write('        try\n'
                 '        {\n'
@@ -393,10 +393,9 @@ class D3D9HooksFile:
                 '            return nullptr;\n'
                 '        }\n'
                 '    }\n\n'
-                '    static void sDeleteInstance(void * context, IUnknown * realUnknown, void * ptr)\n'
+                '    static void sDeleteInstance(void * context, void * ptr)\n'
                 '    {\n'
                 '        UNREFERENCED_PARAMETER(context);\n'
-                '        HookedObjectTable::DelHooked(realUnknown);\n'
                 '        ' + class_name + ' * typedPtr = (' + class_name + ' *)ptr;\n'
                 '        delete typedPtr;\n'
                 '    }\n\n'

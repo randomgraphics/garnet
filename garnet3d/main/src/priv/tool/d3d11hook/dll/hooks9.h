@@ -3,11 +3,10 @@
 #include "d3d/d3d9.h"
 
 // -----------------------------------------------------------------------------
-struct HookedObjectTable
+struct UnknownBaseTable
 {
-    static void                        AddHooked(IUnknown * realobj, UnknownBase * hooked);
-    static void                        DelHooked(IUnknown * realUnknown);
-    static GN::AutoComPtr<UnknownBase> GetHooked(IUnknown * realobj);
+    static void                        add(IUnknown * realobj, UnknownBase * hooked);
+    static GN::AutoComPtr<UnknownBase> get(IUnknown * realobj);
 };
 
 // -----------------------------------------------------------------------------
@@ -27,10 +26,11 @@ inline IUnknown * RealToHooked9(const IID & realiid, INPUT_TYPE * realobj)
         return realobj;
     }
 
-    GN::AutoComPtr<UnknownBase> base = HookedObjectTable::GetHooked(realobj);
+    GN::AutoComPtr<UnknownBase> base = UnknownBaseTable::get(realobj);
     if (!base)
     {
         base = UnknownBase::sCreateNew(realobj);
+        UnknownBaseTable::add(realobj, base);
     }
     if (!base)
     {
@@ -42,7 +42,6 @@ inline IUnknown * RealToHooked9(const IID & realiid, INPUT_TYPE * realobj)
     if (SUCCEEDED(base->QueryInterface(realiid, (void**)&hooked)))
     {
         GN_ASSERT(hooked);
-        HookedObjectTable::AddHooked(realobj, base);
         realobj->Release();
         return hooked;
     }

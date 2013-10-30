@@ -33,10 +33,9 @@ public:
         }
     }
 
-    static void sDeleteInstance(void * context, IUnknown * realUnknown, void * ptr)
+    static void sDeleteInstance(void * context, void * ptr)
     {
         UNREFERENCED_PARAMETER(context);
-        HookedObjectTable::DelHooked(realUnknown);
         Direct3D9Hook * typedPtr = (Direct3D9Hook *)ptr;
         delete typedPtr;
     }
@@ -144,10 +143,9 @@ public:
         }
     }
 
-    static void sDeleteInstance(void * context, IUnknown * realUnknown, void * ptr)
+    static void sDeleteInstance(void * context, void * ptr)
     {
         UNREFERENCED_PARAMETER(context);
-        HookedObjectTable::DelHooked(realUnknown);
         Direct3DDevice9Hook * typedPtr = (Direct3DDevice9Hook *)ptr;
         delete typedPtr;
     }
@@ -765,10 +763,9 @@ public:
         }
     }
 
-    static void sDeleteInstance(void * context, IUnknown * realUnknown, void * ptr)
+    static void sDeleteInstance(void * context, void * ptr)
     {
         UNREFERENCED_PARAMETER(context);
-        HookedObjectTable::DelHooked(realUnknown);
         Direct3DStateBlock9Hook * typedPtr = (Direct3DStateBlock9Hook *)ptr;
         delete typedPtr;
     }
@@ -821,10 +818,9 @@ public:
         }
     }
 
-    static void sDeleteInstance(void * context, IUnknown * realUnknown, void * ptr)
+    static void sDeleteInstance(void * context, void * ptr)
     {
         UNREFERENCED_PARAMETER(context);
-        HookedObjectTable::DelHooked(realUnknown);
         Direct3DSwapChain9Hook * typedPtr = (Direct3DSwapChain9Hook *)ptr;
         delete typedPtr;
     }
@@ -897,10 +893,9 @@ public:
         }
     }
 
-    static void sDeleteInstance(void * context, IUnknown * realUnknown, void * ptr)
+    static void sDeleteInstance(void * context, void * ptr)
     {
         UNREFERENCED_PARAMETER(context);
-        HookedObjectTable::DelHooked(realUnknown);
         Direct3DResource9Hook * typedPtr = (Direct3DResource9Hook *)ptr;
         delete typedPtr;
     }
@@ -978,10 +973,9 @@ public:
         }
     }
 
-    static void sDeleteInstance(void * context, IUnknown * realUnknown, void * ptr)
+    static void sDeleteInstance(void * context, void * ptr)
     {
         UNREFERENCED_PARAMETER(context);
-        HookedObjectTable::DelHooked(realUnknown);
         Direct3DVertexDeclaration9Hook * typedPtr = (Direct3DVertexDeclaration9Hook *)ptr;
         delete typedPtr;
     }
@@ -1029,10 +1023,9 @@ public:
         }
     }
 
-    static void sDeleteInstance(void * context, IUnknown * realUnknown, void * ptr)
+    static void sDeleteInstance(void * context, void * ptr)
     {
         UNREFERENCED_PARAMETER(context);
-        HookedObjectTable::DelHooked(realUnknown);
         Direct3DVertexShader9Hook * typedPtr = (Direct3DVertexShader9Hook *)ptr;
         delete typedPtr;
     }
@@ -1080,10 +1073,9 @@ public:
         }
     }
 
-    static void sDeleteInstance(void * context, IUnknown * realUnknown, void * ptr)
+    static void sDeleteInstance(void * context, void * ptr)
     {
         UNREFERENCED_PARAMETER(context);
-        HookedObjectTable::DelHooked(realUnknown);
         Direct3DPixelShader9Hook * typedPtr = (Direct3DPixelShader9Hook *)ptr;
         delete typedPtr;
     }
@@ -1122,7 +1114,7 @@ public:
     static IUnknown * sNewInstance(void * context, UnknownBase & unknown, IUnknown * realobj)
     {
         UNREFERENCED_PARAMETER(context);
-        Direct3DResource9Hook * Direct3DResource9 = (Direct3DResource9Hook *)unknown.GetHookedObj(__uuidof(IDirect3DResource9));
+        Direct3DResource9Hook * Direct3DResource9 = (Direct3DResource9Hook *)unknown.GetHookedParent(__uuidof(IDirect3DResource9), realobj);
         if (nullptr == Direct3DResource9) return nullptr;
 
         try
@@ -1136,10 +1128,9 @@ public:
         }
     }
 
-    static void sDeleteInstance(void * context, IUnknown * realUnknown, void * ptr)
+    static void sDeleteInstance(void * context, void * ptr)
     {
         UNREFERENCED_PARAMETER(context);
-        HookedObjectTable::DelHooked(realUnknown);
         Direct3DBaseTexture9Hook * typedPtr = (Direct3DBaseTexture9Hook *)ptr;
         delete typedPtr;
     }
@@ -1248,10 +1239,10 @@ public:
     static IUnknown * sNewInstance(void * context, UnknownBase & unknown, IUnknown * realobj)
     {
         UNREFERENCED_PARAMETER(context);
-        Direct3DResource9Hook * Direct3DResource9 = (Direct3DResource9Hook *)unknown.GetHookedObj(__uuidof(IDirect3DResource9));
+        Direct3DResource9Hook * Direct3DResource9 = (Direct3DResource9Hook *)unknown.GetHookedParent(__uuidof(IDirect3DResource9), realobj);
         if (nullptr == Direct3DResource9) return nullptr;
 
-        Direct3DBaseTexture9Hook * Direct3DBaseTexture9 = (Direct3DBaseTexture9Hook *)unknown.GetHookedObj(__uuidof(IDirect3DBaseTexture9));
+        Direct3DBaseTexture9Hook * Direct3DBaseTexture9 = (Direct3DBaseTexture9Hook *)unknown.GetHookedParent(__uuidof(IDirect3DBaseTexture9), realobj);
         if (nullptr == Direct3DBaseTexture9) return nullptr;
 
         try
@@ -1265,10 +1256,9 @@ public:
         }
     }
 
-    static void sDeleteInstance(void * context, IUnknown * realUnknown, void * ptr)
+    static void sDeleteInstance(void * context, void * ptr)
     {
         UNREFERENCED_PARAMETER(context);
-        HookedObjectTable::DelHooked(realUnknown);
         Direct3DTexture9Hook * typedPtr = (Direct3DTexture9Hook *)ptr;
         delete typedPtr;
     }
@@ -1408,10 +1398,10 @@ public:
     static IUnknown * sNewInstance(void * context, UnknownBase & unknown, IUnknown * realobj)
     {
         UNREFERENCED_PARAMETER(context);
-        Direct3DResource9Hook * Direct3DResource9 = (Direct3DResource9Hook *)unknown.GetHookedObj(__uuidof(IDirect3DResource9));
+        Direct3DResource9Hook * Direct3DResource9 = (Direct3DResource9Hook *)unknown.GetHookedParent(__uuidof(IDirect3DResource9), realobj);
         if (nullptr == Direct3DResource9) return nullptr;
 
-        Direct3DBaseTexture9Hook * Direct3DBaseTexture9 = (Direct3DBaseTexture9Hook *)unknown.GetHookedObj(__uuidof(IDirect3DBaseTexture9));
+        Direct3DBaseTexture9Hook * Direct3DBaseTexture9 = (Direct3DBaseTexture9Hook *)unknown.GetHookedParent(__uuidof(IDirect3DBaseTexture9), realobj);
         if (nullptr == Direct3DBaseTexture9) return nullptr;
 
         try
@@ -1425,10 +1415,9 @@ public:
         }
     }
 
-    static void sDeleteInstance(void * context, IUnknown * realUnknown, void * ptr)
+    static void sDeleteInstance(void * context, void * ptr)
     {
         UNREFERENCED_PARAMETER(context);
-        HookedObjectTable::DelHooked(realUnknown);
         Direct3DVolumeTexture9Hook * typedPtr = (Direct3DVolumeTexture9Hook *)ptr;
         delete typedPtr;
     }
@@ -1568,10 +1557,10 @@ public:
     static IUnknown * sNewInstance(void * context, UnknownBase & unknown, IUnknown * realobj)
     {
         UNREFERENCED_PARAMETER(context);
-        Direct3DResource9Hook * Direct3DResource9 = (Direct3DResource9Hook *)unknown.GetHookedObj(__uuidof(IDirect3DResource9));
+        Direct3DResource9Hook * Direct3DResource9 = (Direct3DResource9Hook *)unknown.GetHookedParent(__uuidof(IDirect3DResource9), realobj);
         if (nullptr == Direct3DResource9) return nullptr;
 
-        Direct3DBaseTexture9Hook * Direct3DBaseTexture9 = (Direct3DBaseTexture9Hook *)unknown.GetHookedObj(__uuidof(IDirect3DBaseTexture9));
+        Direct3DBaseTexture9Hook * Direct3DBaseTexture9 = (Direct3DBaseTexture9Hook *)unknown.GetHookedParent(__uuidof(IDirect3DBaseTexture9), realobj);
         if (nullptr == Direct3DBaseTexture9) return nullptr;
 
         try
@@ -1585,10 +1574,9 @@ public:
         }
     }
 
-    static void sDeleteInstance(void * context, IUnknown * realUnknown, void * ptr)
+    static void sDeleteInstance(void * context, void * ptr)
     {
         UNREFERENCED_PARAMETER(context);
-        HookedObjectTable::DelHooked(realUnknown);
         Direct3DCubeTexture9Hook * typedPtr = (Direct3DCubeTexture9Hook *)ptr;
         delete typedPtr;
     }
@@ -1726,7 +1714,7 @@ public:
     static IUnknown * sNewInstance(void * context, UnknownBase & unknown, IUnknown * realobj)
     {
         UNREFERENCED_PARAMETER(context);
-        Direct3DResource9Hook * Direct3DResource9 = (Direct3DResource9Hook *)unknown.GetHookedObj(__uuidof(IDirect3DResource9));
+        Direct3DResource9Hook * Direct3DResource9 = (Direct3DResource9Hook *)unknown.GetHookedParent(__uuidof(IDirect3DResource9), realobj);
         if (nullptr == Direct3DResource9) return nullptr;
 
         try
@@ -1740,10 +1728,9 @@ public:
         }
     }
 
-    static void sDeleteInstance(void * context, IUnknown * realUnknown, void * ptr)
+    static void sDeleteInstance(void * context, void * ptr)
     {
         UNREFERENCED_PARAMETER(context);
-        HookedObjectTable::DelHooked(realUnknown);
         Direct3DVertexBuffer9Hook * typedPtr = (Direct3DVertexBuffer9Hook *)ptr;
         delete typedPtr;
     }
@@ -1835,7 +1822,7 @@ public:
     static IUnknown * sNewInstance(void * context, UnknownBase & unknown, IUnknown * realobj)
     {
         UNREFERENCED_PARAMETER(context);
-        Direct3DResource9Hook * Direct3DResource9 = (Direct3DResource9Hook *)unknown.GetHookedObj(__uuidof(IDirect3DResource9));
+        Direct3DResource9Hook * Direct3DResource9 = (Direct3DResource9Hook *)unknown.GetHookedParent(__uuidof(IDirect3DResource9), realobj);
         if (nullptr == Direct3DResource9) return nullptr;
 
         try
@@ -1849,10 +1836,9 @@ public:
         }
     }
 
-    static void sDeleteInstance(void * context, IUnknown * realUnknown, void * ptr)
+    static void sDeleteInstance(void * context, void * ptr)
     {
         UNREFERENCED_PARAMETER(context);
-        HookedObjectTable::DelHooked(realUnknown);
         Direct3DIndexBuffer9Hook * typedPtr = (Direct3DIndexBuffer9Hook *)ptr;
         delete typedPtr;
     }
@@ -1944,7 +1930,7 @@ public:
     static IUnknown * sNewInstance(void * context, UnknownBase & unknown, IUnknown * realobj)
     {
         UNREFERENCED_PARAMETER(context);
-        Direct3DResource9Hook * Direct3DResource9 = (Direct3DResource9Hook *)unknown.GetHookedObj(__uuidof(IDirect3DResource9));
+        Direct3DResource9Hook * Direct3DResource9 = (Direct3DResource9Hook *)unknown.GetHookedParent(__uuidof(IDirect3DResource9), realobj);
         if (nullptr == Direct3DResource9) return nullptr;
 
         try
@@ -1958,10 +1944,9 @@ public:
         }
     }
 
-    static void sDeleteInstance(void * context, IUnknown * realUnknown, void * ptr)
+    static void sDeleteInstance(void * context, void * ptr)
     {
         UNREFERENCED_PARAMETER(context);
-        HookedObjectTable::DelHooked(realUnknown);
         Direct3DSurface9Hook * typedPtr = (Direct3DSurface9Hook *)ptr;
         delete typedPtr;
     }
@@ -2077,10 +2062,9 @@ public:
         }
     }
 
-    static void sDeleteInstance(void * context, IUnknown * realUnknown, void * ptr)
+    static void sDeleteInstance(void * context, void * ptr)
     {
         UNREFERENCED_PARAMETER(context);
-        HookedObjectTable::DelHooked(realUnknown);
         Direct3DVolume9Hook * typedPtr = (Direct3DVolume9Hook *)ptr;
         delete typedPtr;
     }
@@ -2158,10 +2142,9 @@ public:
         }
     }
 
-    static void sDeleteInstance(void * context, IUnknown * realUnknown, void * ptr)
+    static void sDeleteInstance(void * context, void * ptr)
     {
         UNREFERENCED_PARAMETER(context);
-        HookedObjectTable::DelHooked(realUnknown);
         Direct3DQuery9Hook * typedPtr = (Direct3DQuery9Hook *)ptr;
         delete typedPtr;
     }
@@ -2215,7 +2198,7 @@ public:
     static IUnknown * sNewInstance(void * context, UnknownBase & unknown, IUnknown * realobj)
     {
         UNREFERENCED_PARAMETER(context);
-        Direct3D9Hook * Direct3D9 = (Direct3D9Hook *)unknown.GetHookedObj(__uuidof(IDirect3D9));
+        Direct3D9Hook * Direct3D9 = (Direct3D9Hook *)unknown.GetHookedParent(__uuidof(IDirect3D9), realobj);
         if (nullptr == Direct3D9) return nullptr;
 
         try
@@ -2229,10 +2212,9 @@ public:
         }
     }
 
-    static void sDeleteInstance(void * context, IUnknown * realUnknown, void * ptr)
+    static void sDeleteInstance(void * context, void * ptr)
     {
         UNREFERENCED_PARAMETER(context);
-        HookedObjectTable::DelHooked(realUnknown);
         Direct3D9ExHook * typedPtr = (Direct3D9ExHook *)ptr;
         delete typedPtr;
     }
@@ -2370,7 +2352,7 @@ public:
     static IUnknown * sNewInstance(void * context, UnknownBase & unknown, IUnknown * realobj)
     {
         UNREFERENCED_PARAMETER(context);
-        Direct3DDevice9Hook * Direct3DDevice9 = (Direct3DDevice9Hook *)unknown.GetHookedObj(__uuidof(IDirect3DDevice9));
+        Direct3DDevice9Hook * Direct3DDevice9 = (Direct3DDevice9Hook *)unknown.GetHookedParent(__uuidof(IDirect3DDevice9), realobj);
         if (nullptr == Direct3DDevice9) return nullptr;
 
         try
@@ -2384,10 +2366,9 @@ public:
         }
     }
 
-    static void sDeleteInstance(void * context, IUnknown * realUnknown, void * ptr)
+    static void sDeleteInstance(void * context, void * ptr)
     {
         UNREFERENCED_PARAMETER(context);
-        HookedObjectTable::DelHooked(realUnknown);
         Direct3DDevice9ExHook * typedPtr = (Direct3DDevice9ExHook *)ptr;
         delete typedPtr;
     }
@@ -3187,7 +3168,7 @@ public:
     static IUnknown * sNewInstance(void * context, UnknownBase & unknown, IUnknown * realobj)
     {
         UNREFERENCED_PARAMETER(context);
-        Direct3DSwapChain9Hook * Direct3DSwapChain9 = (Direct3DSwapChain9Hook *)unknown.GetHookedObj(__uuidof(IDirect3DSwapChain9));
+        Direct3DSwapChain9Hook * Direct3DSwapChain9 = (Direct3DSwapChain9Hook *)unknown.GetHookedParent(__uuidof(IDirect3DSwapChain9), realobj);
         if (nullptr == Direct3DSwapChain9) return nullptr;
 
         try
@@ -3201,10 +3182,9 @@ public:
         }
     }
 
-    static void sDeleteInstance(void * context, IUnknown * realUnknown, void * ptr)
+    static void sDeleteInstance(void * context, void * ptr)
     {
         UNREFERENCED_PARAMETER(context);
-        HookedObjectTable::DelHooked(realUnknown);
         Direct3DSwapChain9ExHook * typedPtr = (Direct3DSwapChain9ExHook *)ptr;
         delete typedPtr;
     }
@@ -3299,10 +3279,9 @@ public:
         }
     }
 
-    static void sDeleteInstance(void * context, IUnknown * realUnknown, void * ptr)
+    static void sDeleteInstance(void * context, void * ptr)
     {
         UNREFERENCED_PARAMETER(context);
-        HookedObjectTable::DelHooked(realUnknown);
         Direct3D9ExOverlayExtensionHook * typedPtr = (Direct3D9ExOverlayExtensionHook *)ptr;
         delete typedPtr;
     }
@@ -3345,10 +3324,9 @@ public:
         }
     }
 
-    static void sDeleteInstance(void * context, IUnknown * realUnknown, void * ptr)
+    static void sDeleteInstance(void * context, void * ptr)
     {
         UNREFERENCED_PARAMETER(context);
-        HookedObjectTable::DelHooked(realUnknown);
         Direct3DDevice9VideoHook * typedPtr = (Direct3DDevice9VideoHook *)ptr;
         delete typedPtr;
     }
@@ -3401,10 +3379,9 @@ public:
         }
     }
 
-    static void sDeleteInstance(void * context, IUnknown * realUnknown, void * ptr)
+    static void sDeleteInstance(void * context, void * ptr)
     {
         UNREFERENCED_PARAMETER(context);
-        HookedObjectTable::DelHooked(realUnknown);
         Direct3DAuthenticatedChannel9Hook * typedPtr = (Direct3DAuthenticatedChannel9Hook *)ptr;
         delete typedPtr;
     }
@@ -3467,10 +3444,9 @@ public:
         }
     }
 
-    static void sDeleteInstance(void * context, IUnknown * realUnknown, void * ptr)
+    static void sDeleteInstance(void * context, void * ptr)
     {
         UNREFERENCED_PARAMETER(context);
-        HookedObjectTable::DelHooked(realUnknown);
         Direct3DCryptoSession9Hook * typedPtr = (Direct3DCryptoSession9Hook *)ptr;
         delete typedPtr;
     }

@@ -33,10 +33,9 @@ public:
         }
     }
 
-    static void sDeleteInstance(void * context, IUnknown * realUnknown, void * ptr)
+    static void sDeleteInstance(void * context, void * ptr)
     {
         UNREFERENCED_PARAMETER(context);
-        UNREFERENCED_PARAMETER(realUnknown);
         D3D11DeviceChildHook * typedPtr = (D3D11DeviceChildHook *)ptr;
         delete typedPtr;
     }
@@ -99,10 +98,9 @@ public:
         }
     }
 
-    static void sDeleteInstance(void * context, IUnknown * realUnknown, void * ptr)
+    static void sDeleteInstance(void * context, void * ptr)
     {
         UNREFERENCED_PARAMETER(context);
-        UNREFERENCED_PARAMETER(realUnknown);
         D3D11DepthStencilStateHook * typedPtr = (D3D11DepthStencilStateHook *)ptr;
         delete typedPtr;
     }
@@ -174,10 +172,9 @@ public:
         }
     }
 
-    static void sDeleteInstance(void * context, IUnknown * realUnknown, void * ptr)
+    static void sDeleteInstance(void * context, void * ptr)
     {
         UNREFERENCED_PARAMETER(context);
-        UNREFERENCED_PARAMETER(realUnknown);
         D3D11BlendStateHook * typedPtr = (D3D11BlendStateHook *)ptr;
         delete typedPtr;
     }
@@ -249,10 +246,9 @@ public:
         }
     }
 
-    static void sDeleteInstance(void * context, IUnknown * realUnknown, void * ptr)
+    static void sDeleteInstance(void * context, void * ptr)
     {
         UNREFERENCED_PARAMETER(context);
-        UNREFERENCED_PARAMETER(realUnknown);
         D3D11RasterizerStateHook * typedPtr = (D3D11RasterizerStateHook *)ptr;
         delete typedPtr;
     }
@@ -324,10 +320,9 @@ public:
         }
     }
 
-    static void sDeleteInstance(void * context, IUnknown * realUnknown, void * ptr)
+    static void sDeleteInstance(void * context, void * ptr)
     {
         UNREFERENCED_PARAMETER(context);
-        UNREFERENCED_PARAMETER(realUnknown);
         D3D11ResourceHook * typedPtr = (D3D11ResourceHook *)ptr;
         delete typedPtr;
     }
@@ -414,10 +409,9 @@ public:
         }
     }
 
-    static void sDeleteInstance(void * context, IUnknown * realUnknown, void * ptr)
+    static void sDeleteInstance(void * context, void * ptr)
     {
         UNREFERENCED_PARAMETER(context);
-        UNREFERENCED_PARAMETER(realUnknown);
         D3D11BufferHook * typedPtr = (D3D11BufferHook *)ptr;
         delete typedPtr;
     }
@@ -512,10 +506,9 @@ public:
         }
     }
 
-    static void sDeleteInstance(void * context, IUnknown * realUnknown, void * ptr)
+    static void sDeleteInstance(void * context, void * ptr)
     {
         UNREFERENCED_PARAMETER(context);
-        UNREFERENCED_PARAMETER(realUnknown);
         D3D11Texture1DHook * typedPtr = (D3D11Texture1DHook *)ptr;
         delete typedPtr;
     }
@@ -610,10 +603,9 @@ public:
         }
     }
 
-    static void sDeleteInstance(void * context, IUnknown * realUnknown, void * ptr)
+    static void sDeleteInstance(void * context, void * ptr)
     {
         UNREFERENCED_PARAMETER(context);
-        UNREFERENCED_PARAMETER(realUnknown);
         D3D11Texture2DHook * typedPtr = (D3D11Texture2DHook *)ptr;
         delete typedPtr;
     }
@@ -708,10 +700,9 @@ public:
         }
     }
 
-    static void sDeleteInstance(void * context, IUnknown * realUnknown, void * ptr)
+    static void sDeleteInstance(void * context, void * ptr)
     {
         UNREFERENCED_PARAMETER(context);
-        UNREFERENCED_PARAMETER(realUnknown);
         D3D11Texture3DHook * typedPtr = (D3D11Texture3DHook *)ptr;
         delete typedPtr;
     }
@@ -801,10 +792,9 @@ public:
         }
     }
 
-    static void sDeleteInstance(void * context, IUnknown * realUnknown, void * ptr)
+    static void sDeleteInstance(void * context, void * ptr)
     {
         UNREFERENCED_PARAMETER(context);
-        UNREFERENCED_PARAMETER(realUnknown);
         D3D11ViewHook * typedPtr = (D3D11ViewHook *)ptr;
         delete typedPtr;
     }
@@ -881,10 +871,9 @@ public:
         }
     }
 
-    static void sDeleteInstance(void * context, IUnknown * realUnknown, void * ptr)
+    static void sDeleteInstance(void * context, void * ptr)
     {
         UNREFERENCED_PARAMETER(context);
-        UNREFERENCED_PARAMETER(realUnknown);
         D3D11ShaderResourceViewHook * typedPtr = (D3D11ShaderResourceViewHook *)ptr;
         delete typedPtr;
     }
@@ -967,10 +956,9 @@ public:
         }
     }
 
-    static void sDeleteInstance(void * context, IUnknown * realUnknown, void * ptr)
+    static void sDeleteInstance(void * context, void * ptr)
     {
         UNREFERENCED_PARAMETER(context);
-        UNREFERENCED_PARAMETER(realUnknown);
         D3D11RenderTargetViewHook * typedPtr = (D3D11RenderTargetViewHook *)ptr;
         delete typedPtr;
     }
@@ -1053,10 +1041,9 @@ public:
         }
     }
 
-    static void sDeleteInstance(void * context, IUnknown * realUnknown, void * ptr)
+    static void sDeleteInstance(void * context, void * ptr)
     {
         UNREFERENCED_PARAMETER(context);
-        UNREFERENCED_PARAMETER(realUnknown);
         D3D11DepthStencilViewHook * typedPtr = (D3D11DepthStencilViewHook *)ptr;
         delete typedPtr;
     }
@@ -1139,10 +1126,9 @@ public:
         }
     }
 
-    static void sDeleteInstance(void * context, IUnknown * realUnknown, void * ptr)
+    static void sDeleteInstance(void * context, void * ptr)
     {
         UNREFERENCED_PARAMETER(context);
-        UNREFERENCED_PARAMETER(realUnknown);
         D3D11UnorderedAccessViewHook * typedPtr = (D3D11UnorderedAccessViewHook *)ptr;
         delete typedPtr;
     }
@@ -1220,10 +1206,9 @@ public:
         }
     }
 
-    static void sDeleteInstance(void * context, IUnknown * realUnknown, void * ptr)
+    static void sDeleteInstance(void * context, void * ptr)
     {
         UNREFERENCED_PARAMETER(context);
-        UNREFERENCED_PARAMETER(realUnknown);
         D3D11VertexShaderHook * typedPtr = (D3D11VertexShaderHook *)ptr;
         delete typedPtr;
     }
@@ -1290,10 +1275,9 @@ public:
         }
     }
 
-    static void sDeleteInstance(void * context, IUnknown * realUnknown, void * ptr)
+    static void sDeleteInstance(void * context, void * ptr)
     {
         UNREFERENCED_PARAMETER(context);
-        UNREFERENCED_PARAMETER(realUnknown);
         D3D11HullShaderHook * typedPtr = (D3D11HullShaderHook *)ptr;
         delete typedPtr;
     }
@@ -1360,10 +1344,9 @@ public:
         }
     }
 
-    static void sDeleteInstance(void * context, IUnknown * realUnknown, void * ptr)
+    static void sDeleteInstance(void * context, void * ptr)
     {
         UNREFERENCED_PARAMETER(context);
-        UNREFERENCED_PARAMETER(realUnknown);
         D3D11DomainShaderHook * typedPtr = (D3D11DomainShaderHook *)ptr;
         delete typedPtr;
     }
@@ -1430,10 +1413,9 @@ public:
         }
     }
 
-    static void sDeleteInstance(void * context, IUnknown * realUnknown, void * ptr)
+    static void sDeleteInstance(void * context, void * ptr)
     {
         UNREFERENCED_PARAMETER(context);
-        UNREFERENCED_PARAMETER(realUnknown);
         D3D11GeometryShaderHook * typedPtr = (D3D11GeometryShaderHook *)ptr;
         delete typedPtr;
     }
@@ -1500,10 +1482,9 @@ public:
         }
     }
 
-    static void sDeleteInstance(void * context, IUnknown * realUnknown, void * ptr)
+    static void sDeleteInstance(void * context, void * ptr)
     {
         UNREFERENCED_PARAMETER(context);
-        UNREFERENCED_PARAMETER(realUnknown);
         D3D11PixelShaderHook * typedPtr = (D3D11PixelShaderHook *)ptr;
         delete typedPtr;
     }
@@ -1570,10 +1551,9 @@ public:
         }
     }
 
-    static void sDeleteInstance(void * context, IUnknown * realUnknown, void * ptr)
+    static void sDeleteInstance(void * context, void * ptr)
     {
         UNREFERENCED_PARAMETER(context);
-        UNREFERENCED_PARAMETER(realUnknown);
         D3D11ComputeShaderHook * typedPtr = (D3D11ComputeShaderHook *)ptr;
         delete typedPtr;
     }
@@ -1640,10 +1620,9 @@ public:
         }
     }
 
-    static void sDeleteInstance(void * context, IUnknown * realUnknown, void * ptr)
+    static void sDeleteInstance(void * context, void * ptr)
     {
         UNREFERENCED_PARAMETER(context);
-        UNREFERENCED_PARAMETER(realUnknown);
         D3D11InputLayoutHook * typedPtr = (D3D11InputLayoutHook *)ptr;
         delete typedPtr;
     }
@@ -1710,10 +1689,9 @@ public:
         }
     }
 
-    static void sDeleteInstance(void * context, IUnknown * realUnknown, void * ptr)
+    static void sDeleteInstance(void * context, void * ptr)
     {
         UNREFERENCED_PARAMETER(context);
-        UNREFERENCED_PARAMETER(realUnknown);
         D3D11SamplerStateHook * typedPtr = (D3D11SamplerStateHook *)ptr;
         delete typedPtr;
     }
@@ -1785,10 +1763,9 @@ public:
         }
     }
 
-    static void sDeleteInstance(void * context, IUnknown * realUnknown, void * ptr)
+    static void sDeleteInstance(void * context, void * ptr)
     {
         UNREFERENCED_PARAMETER(context);
-        UNREFERENCED_PARAMETER(realUnknown);
         D3D11AsynchronousHook * typedPtr = (D3D11AsynchronousHook *)ptr;
         delete typedPtr;
     }
@@ -1865,10 +1842,9 @@ public:
         }
     }
 
-    static void sDeleteInstance(void * context, IUnknown * realUnknown, void * ptr)
+    static void sDeleteInstance(void * context, void * ptr)
     {
         UNREFERENCED_PARAMETER(context);
-        UNREFERENCED_PARAMETER(realUnknown);
         D3D11QueryHook * typedPtr = (D3D11QueryHook *)ptr;
         delete typedPtr;
     }
@@ -1956,10 +1932,9 @@ public:
         }
     }
 
-    static void sDeleteInstance(void * context, IUnknown * realUnknown, void * ptr)
+    static void sDeleteInstance(void * context, void * ptr)
     {
         UNREFERENCED_PARAMETER(context);
-        UNREFERENCED_PARAMETER(realUnknown);
         D3D11PredicateHook * typedPtr = (D3D11PredicateHook *)ptr;
         delete typedPtr;
     }
@@ -2043,10 +2018,9 @@ public:
         }
     }
 
-    static void sDeleteInstance(void * context, IUnknown * realUnknown, void * ptr)
+    static void sDeleteInstance(void * context, void * ptr)
     {
         UNREFERENCED_PARAMETER(context);
-        UNREFERENCED_PARAMETER(realUnknown);
         D3D11CounterHook * typedPtr = (D3D11CounterHook *)ptr;
         delete typedPtr;
     }
@@ -2124,10 +2098,9 @@ public:
         }
     }
 
-    static void sDeleteInstance(void * context, IUnknown * realUnknown, void * ptr)
+    static void sDeleteInstance(void * context, void * ptr)
     {
         UNREFERENCED_PARAMETER(context);
-        UNREFERENCED_PARAMETER(realUnknown);
         D3D11ClassInstanceHook * typedPtr = (D3D11ClassInstanceHook *)ptr;
         delete typedPtr;
     }
@@ -2214,10 +2187,9 @@ public:
         }
     }
 
-    static void sDeleteInstance(void * context, IUnknown * realUnknown, void * ptr)
+    static void sDeleteInstance(void * context, void * ptr)
     {
         UNREFERENCED_PARAMETER(context);
-        UNREFERENCED_PARAMETER(realUnknown);
         D3D11ClassLinkageHook * typedPtr = (D3D11ClassLinkageHook *)ptr;
         delete typedPtr;
     }
@@ -2294,10 +2266,9 @@ public:
         }
     }
 
-    static void sDeleteInstance(void * context, IUnknown * realUnknown, void * ptr)
+    static void sDeleteInstance(void * context, void * ptr)
     {
         UNREFERENCED_PARAMETER(context);
-        UNREFERENCED_PARAMETER(realUnknown);
         D3D11CommandListHook * typedPtr = (D3D11CommandListHook *)ptr;
         delete typedPtr;
     }
@@ -2369,10 +2340,9 @@ public:
         }
     }
 
-    static void sDeleteInstance(void * context, IUnknown * realUnknown, void * ptr)
+    static void sDeleteInstance(void * context, void * ptr)
     {
         UNREFERENCED_PARAMETER(context);
-        UNREFERENCED_PARAMETER(realUnknown);
         D3D11DeviceContextHook * typedPtr = (D3D11DeviceContextHook *)ptr;
         delete typedPtr;
     }
@@ -2979,10 +2949,9 @@ public:
         }
     }
 
-    static void sDeleteInstance(void * context, IUnknown * realUnknown, void * ptr)
+    static void sDeleteInstance(void * context, void * ptr)
     {
         UNREFERENCED_PARAMETER(context);
-        UNREFERENCED_PARAMETER(realUnknown);
         D3D11VideoDecoderHook * typedPtr = (D3D11VideoDecoderHook *)ptr;
         delete typedPtr;
     }
@@ -3059,10 +3028,9 @@ public:
         }
     }
 
-    static void sDeleteInstance(void * context, IUnknown * realUnknown, void * ptr)
+    static void sDeleteInstance(void * context, void * ptr)
     {
         UNREFERENCED_PARAMETER(context);
-        UNREFERENCED_PARAMETER(realUnknown);
         D3D11VideoProcessorEnumeratorHook * typedPtr = (D3D11VideoProcessorEnumeratorHook *)ptr;
         delete typedPtr;
     }
@@ -3159,10 +3127,9 @@ public:
         }
     }
 
-    static void sDeleteInstance(void * context, IUnknown * realUnknown, void * ptr)
+    static void sDeleteInstance(void * context, void * ptr)
     {
         UNREFERENCED_PARAMETER(context);
-        UNREFERENCED_PARAMETER(realUnknown);
         D3D11VideoProcessorHook * typedPtr = (D3D11VideoProcessorHook *)ptr;
         delete typedPtr;
     }
@@ -3239,10 +3206,9 @@ public:
         }
     }
 
-    static void sDeleteInstance(void * context, IUnknown * realUnknown, void * ptr)
+    static void sDeleteInstance(void * context, void * ptr)
     {
         UNREFERENCED_PARAMETER(context);
-        UNREFERENCED_PARAMETER(realUnknown);
         D3D11AuthenticatedChannelHook * typedPtr = (D3D11AuthenticatedChannelHook *)ptr;
         delete typedPtr;
     }
@@ -3324,10 +3290,9 @@ public:
         }
     }
 
-    static void sDeleteInstance(void * context, IUnknown * realUnknown, void * ptr)
+    static void sDeleteInstance(void * context, void * ptr)
     {
         UNREFERENCED_PARAMETER(context);
-        UNREFERENCED_PARAMETER(realUnknown);
         D3D11CryptoSessionHook * typedPtr = (D3D11CryptoSessionHook *)ptr;
         delete typedPtr;
     }
@@ -3424,10 +3389,9 @@ public:
         }
     }
 
-    static void sDeleteInstance(void * context, IUnknown * realUnknown, void * ptr)
+    static void sDeleteInstance(void * context, void * ptr)
     {
         UNREFERENCED_PARAMETER(context);
-        UNREFERENCED_PARAMETER(realUnknown);
         D3D11VideoDecoderOutputViewHook * typedPtr = (D3D11VideoDecoderOutputViewHook *)ptr;
         delete typedPtr;
     }
@@ -3510,10 +3474,9 @@ public:
         }
     }
 
-    static void sDeleteInstance(void * context, IUnknown * realUnknown, void * ptr)
+    static void sDeleteInstance(void * context, void * ptr)
     {
         UNREFERENCED_PARAMETER(context);
-        UNREFERENCED_PARAMETER(realUnknown);
         D3D11VideoProcessorInputViewHook * typedPtr = (D3D11VideoProcessorInputViewHook *)ptr;
         delete typedPtr;
     }
@@ -3596,10 +3559,9 @@ public:
         }
     }
 
-    static void sDeleteInstance(void * context, IUnknown * realUnknown, void * ptr)
+    static void sDeleteInstance(void * context, void * ptr)
     {
         UNREFERENCED_PARAMETER(context);
-        UNREFERENCED_PARAMETER(realUnknown);
         D3D11VideoProcessorOutputViewHook * typedPtr = (D3D11VideoProcessorOutputViewHook *)ptr;
         delete typedPtr;
     }
@@ -3677,10 +3639,9 @@ public:
         }
     }
 
-    static void sDeleteInstance(void * context, IUnknown * realUnknown, void * ptr)
+    static void sDeleteInstance(void * context, void * ptr)
     {
         UNREFERENCED_PARAMETER(context);
-        UNREFERENCED_PARAMETER(realUnknown);
         D3D11VideoContextHook * typedPtr = (D3D11VideoContextHook *)ptr;
         delete typedPtr;
     }
@@ -4032,10 +3993,9 @@ public:
         }
     }
 
-    static void sDeleteInstance(void * context, IUnknown * realUnknown, void * ptr)
+    static void sDeleteInstance(void * context, void * ptr)
     {
         UNREFERENCED_PARAMETER(context);
-        UNREFERENCED_PARAMETER(realUnknown);
         D3D11VideoDeviceHook * typedPtr = (D3D11VideoDeviceHook *)ptr;
         delete typedPtr;
     }
@@ -4158,10 +4118,9 @@ public:
         }
     }
 
-    static void sDeleteInstance(void * context, IUnknown * realUnknown, void * ptr)
+    static void sDeleteInstance(void * context, void * ptr)
     {
         UNREFERENCED_PARAMETER(context);
-        UNREFERENCED_PARAMETER(realUnknown);
         D3D11DeviceHook * typedPtr = (D3D11DeviceHook *)ptr;
         delete typedPtr;
     }
@@ -4409,10 +4368,9 @@ public:
         }
     }
 
-    static void sDeleteInstance(void * context, IUnknown * realUnknown, void * ptr)
+    static void sDeleteInstance(void * context, void * ptr)
     {
         UNREFERENCED_PARAMETER(context);
-        UNREFERENCED_PARAMETER(realUnknown);
         D3D11BlendState1Hook * typedPtr = (D3D11BlendState1Hook *)ptr;
         delete typedPtr;
     }
@@ -4495,10 +4453,9 @@ public:
         }
     }
 
-    static void sDeleteInstance(void * context, IUnknown * realUnknown, void * ptr)
+    static void sDeleteInstance(void * context, void * ptr)
     {
         UNREFERENCED_PARAMETER(context);
-        UNREFERENCED_PARAMETER(realUnknown);
         D3D11RasterizerState1Hook * typedPtr = (D3D11RasterizerState1Hook *)ptr;
         delete typedPtr;
     }
@@ -4576,10 +4533,9 @@ public:
         }
     }
 
-    static void sDeleteInstance(void * context, IUnknown * realUnknown, void * ptr)
+    static void sDeleteInstance(void * context, void * ptr)
     {
         UNREFERENCED_PARAMETER(context);
-        UNREFERENCED_PARAMETER(realUnknown);
         D3DDeviceContextStateHook * typedPtr = (D3DDeviceContextStateHook *)ptr;
         delete typedPtr;
     }
@@ -4651,10 +4607,9 @@ public:
         }
     }
 
-    static void sDeleteInstance(void * context, IUnknown * realUnknown, void * ptr)
+    static void sDeleteInstance(void * context, void * ptr)
     {
         UNREFERENCED_PARAMETER(context);
-        UNREFERENCED_PARAMETER(realUnknown);
         D3D11DeviceContext1Hook * typedPtr = (D3D11DeviceContext1Hook *)ptr;
         delete typedPtr;
     }
@@ -5464,10 +5419,9 @@ public:
         }
     }
 
-    static void sDeleteInstance(void * context, IUnknown * realUnknown, void * ptr)
+    static void sDeleteInstance(void * context, void * ptr)
     {
         UNREFERENCED_PARAMETER(context);
-        UNREFERENCED_PARAMETER(realUnknown);
         D3D11Device1Hook * typedPtr = (D3D11Device1Hook *)ptr;
         delete typedPtr;
     }
@@ -5780,10 +5734,9 @@ public:
         }
     }
 
-    static void sDeleteInstance(void * context, IUnknown * realUnknown, void * ptr)
+    static void sDeleteInstance(void * context, void * ptr)
     {
         UNREFERENCED_PARAMETER(context);
-        UNREFERENCED_PARAMETER(realUnknown);
         D3DUserDefinedAnnotationHook * typedPtr = (D3DUserDefinedAnnotationHook *)ptr;
         delete typedPtr;
     }
@@ -5841,10 +5794,9 @@ public:
         }
     }
 
-    static void sDeleteInstance(void * context, IUnknown * realUnknown, void * ptr)
+    static void sDeleteInstance(void * context, void * ptr)
     {
         UNREFERENCED_PARAMETER(context);
-        UNREFERENCED_PARAMETER(realUnknown);
         D3D11DebugHook * typedPtr = (D3D11DebugHook *)ptr;
         delete typedPtr;
     }
@@ -5927,10 +5879,9 @@ public:
         }
     }
 
-    static void sDeleteInstance(void * context, IUnknown * realUnknown, void * ptr)
+    static void sDeleteInstance(void * context, void * ptr)
     {
         UNREFERENCED_PARAMETER(context);
-        UNREFERENCED_PARAMETER(realUnknown);
         D3D11SwitchToRefHook * typedPtr = (D3D11SwitchToRefHook *)ptr;
         delete typedPtr;
     }
@@ -5978,10 +5929,9 @@ public:
         }
     }
 
-    static void sDeleteInstance(void * context, IUnknown * realUnknown, void * ptr)
+    static void sDeleteInstance(void * context, void * ptr)
     {
         UNREFERENCED_PARAMETER(context);
-        UNREFERENCED_PARAMETER(realUnknown);
         D3D11TracingDeviceHook * typedPtr = (D3D11TracingDeviceHook *)ptr;
         delete typedPtr;
     }
@@ -6029,10 +5979,9 @@ public:
         }
     }
 
-    static void sDeleteInstance(void * context, IUnknown * realUnknown, void * ptr)
+    static void sDeleteInstance(void * context, void * ptr)
     {
         UNREFERENCED_PARAMETER(context);
-        UNREFERENCED_PARAMETER(realUnknown);
         D3D11RefTrackingOptionsHook * typedPtr = (D3D11RefTrackingOptionsHook *)ptr;
         delete typedPtr;
     }
@@ -6075,10 +6024,9 @@ public:
         }
     }
 
-    static void sDeleteInstance(void * context, IUnknown * realUnknown, void * ptr)
+    static void sDeleteInstance(void * context, void * ptr)
     {
         UNREFERENCED_PARAMETER(context);
-        UNREFERENCED_PARAMETER(realUnknown);
         D3D11RefDefaultTrackingOptionsHook * typedPtr = (D3D11RefDefaultTrackingOptionsHook *)ptr;
         delete typedPtr;
     }
@@ -6121,10 +6069,9 @@ public:
         }
     }
 
-    static void sDeleteInstance(void * context, IUnknown * realUnknown, void * ptr)
+    static void sDeleteInstance(void * context, void * ptr)
     {
         UNREFERENCED_PARAMETER(context);
-        UNREFERENCED_PARAMETER(realUnknown);
         D3D11InfoQueueHook * typedPtr = (D3D11InfoQueueHook *)ptr;
         delete typedPtr;
     }
@@ -6337,10 +6284,9 @@ public:
         }
     }
 
-    static void sDeleteInstance(void * context, IUnknown * realUnknown, void * ptr)
+    static void sDeleteInstance(void * context, void * ptr)
     {
         UNREFERENCED_PARAMETER(context);
-        UNREFERENCED_PARAMETER(realUnknown);
         DXGIObjectHook * typedPtr = (DXGIObjectHook *)ptr;
         delete typedPtr;
     }
@@ -6403,10 +6349,9 @@ public:
         }
     }
 
-    static void sDeleteInstance(void * context, IUnknown * realUnknown, void * ptr)
+    static void sDeleteInstance(void * context, void * ptr)
     {
         UNREFERENCED_PARAMETER(context);
-        UNREFERENCED_PARAMETER(realUnknown);
         DXGIDeviceSubObjectHook * typedPtr = (DXGIDeviceSubObjectHook *)ptr;
         delete typedPtr;
     }
@@ -6483,10 +6428,9 @@ public:
         }
     }
 
-    static void sDeleteInstance(void * context, IUnknown * realUnknown, void * ptr)
+    static void sDeleteInstance(void * context, void * ptr)
     {
         UNREFERENCED_PARAMETER(context);
-        UNREFERENCED_PARAMETER(realUnknown);
         DXGIResourceHook * typedPtr = (DXGIResourceHook *)ptr;
         delete typedPtr;
     }
@@ -6584,10 +6528,9 @@ public:
         }
     }
 
-    static void sDeleteInstance(void * context, IUnknown * realUnknown, void * ptr)
+    static void sDeleteInstance(void * context, void * ptr)
     {
         UNREFERENCED_PARAMETER(context);
-        UNREFERENCED_PARAMETER(realUnknown);
         DXGIKeyedMutexHook * typedPtr = (DXGIKeyedMutexHook *)ptr;
         delete typedPtr;
     }
@@ -6675,10 +6618,9 @@ public:
         }
     }
 
-    static void sDeleteInstance(void * context, IUnknown * realUnknown, void * ptr)
+    static void sDeleteInstance(void * context, void * ptr)
     {
         UNREFERENCED_PARAMETER(context);
-        UNREFERENCED_PARAMETER(realUnknown);
         DXGISurfaceHook * typedPtr = (DXGISurfaceHook *)ptr;
         delete typedPtr;
     }
@@ -6776,10 +6718,9 @@ public:
         }
     }
 
-    static void sDeleteInstance(void * context, IUnknown * realUnknown, void * ptr)
+    static void sDeleteInstance(void * context, void * ptr)
     {
         UNREFERENCED_PARAMETER(context);
-        UNREFERENCED_PARAMETER(realUnknown);
         DXGISurface1Hook * typedPtr = (DXGISurface1Hook *)ptr;
         delete typedPtr;
     }
@@ -6880,10 +6821,9 @@ public:
         }
     }
 
-    static void sDeleteInstance(void * context, IUnknown * realUnknown, void * ptr)
+    static void sDeleteInstance(void * context, void * ptr)
     {
         UNREFERENCED_PARAMETER(context);
-        UNREFERENCED_PARAMETER(realUnknown);
         DXGIAdapterHook * typedPtr = (DXGIAdapterHook *)ptr;
         delete typedPtr;
     }
@@ -6965,10 +6905,9 @@ public:
         }
     }
 
-    static void sDeleteInstance(void * context, IUnknown * realUnknown, void * ptr)
+    static void sDeleteInstance(void * context, void * ptr)
     {
         UNREFERENCED_PARAMETER(context);
-        UNREFERENCED_PARAMETER(realUnknown);
         DXGIOutputHook * typedPtr = (DXGIOutputHook *)ptr;
         delete typedPtr;
     }
@@ -7100,10 +7039,9 @@ public:
         }
     }
 
-    static void sDeleteInstance(void * context, IUnknown * realUnknown, void * ptr)
+    static void sDeleteInstance(void * context, void * ptr)
     {
         UNREFERENCED_PARAMETER(context);
-        UNREFERENCED_PARAMETER(realUnknown);
         DXGISwapChainHook * typedPtr = (DXGISwapChainHook *)ptr;
         delete typedPtr;
     }
@@ -7226,10 +7164,9 @@ public:
         }
     }
 
-    static void sDeleteInstance(void * context, IUnknown * realUnknown, void * ptr)
+    static void sDeleteInstance(void * context, void * ptr)
     {
         UNREFERENCED_PARAMETER(context);
-        UNREFERENCED_PARAMETER(realUnknown);
         DXGIFactoryHook * typedPtr = (DXGIFactoryHook *)ptr;
         delete typedPtr;
     }
@@ -7321,10 +7258,9 @@ public:
         }
     }
 
-    static void sDeleteInstance(void * context, IUnknown * realUnknown, void * ptr)
+    static void sDeleteInstance(void * context, void * ptr)
     {
         UNREFERENCED_PARAMETER(context);
-        UNREFERENCED_PARAMETER(realUnknown);
         DXGIDeviceHook * typedPtr = (DXGIDeviceHook *)ptr;
         delete typedPtr;
     }
@@ -7421,10 +7357,9 @@ public:
         }
     }
 
-    static void sDeleteInstance(void * context, IUnknown * realUnknown, void * ptr)
+    static void sDeleteInstance(void * context, void * ptr)
     {
         UNREFERENCED_PARAMETER(context);
-        UNREFERENCED_PARAMETER(realUnknown);
         DXGIFactory1Hook * typedPtr = (DXGIFactory1Hook *)ptr;
         delete typedPtr;
     }
@@ -7536,10 +7471,9 @@ public:
         }
     }
 
-    static void sDeleteInstance(void * context, IUnknown * realUnknown, void * ptr)
+    static void sDeleteInstance(void * context, void * ptr)
     {
         UNREFERENCED_PARAMETER(context);
-        UNREFERENCED_PARAMETER(realUnknown);
         DXGIAdapter1Hook * typedPtr = (DXGIAdapter1Hook *)ptr;
         delete typedPtr;
     }
@@ -7634,10 +7568,9 @@ public:
         }
     }
 
-    static void sDeleteInstance(void * context, IUnknown * realUnknown, void * ptr)
+    static void sDeleteInstance(void * context, void * ptr)
     {
         UNREFERENCED_PARAMETER(context);
-        UNREFERENCED_PARAMETER(realUnknown);
         DXGIDevice1Hook * typedPtr = (DXGIDevice1Hook *)ptr;
         delete typedPtr;
     }
@@ -7739,10 +7672,9 @@ public:
         }
     }
 
-    static void sDeleteInstance(void * context, IUnknown * realUnknown, void * ptr)
+    static void sDeleteInstance(void * context, void * ptr)
     {
         UNREFERENCED_PARAMETER(context);
-        UNREFERENCED_PARAMETER(realUnknown);
         DXGIDisplayControlHook * typedPtr = (DXGIDisplayControlHook *)ptr;
         delete typedPtr;
     }
@@ -7795,10 +7727,9 @@ public:
         }
     }
 
-    static void sDeleteInstance(void * context, IUnknown * realUnknown, void * ptr)
+    static void sDeleteInstance(void * context, void * ptr)
     {
         UNREFERENCED_PARAMETER(context);
-        UNREFERENCED_PARAMETER(realUnknown);
         DXGIOutputDuplicationHook * typedPtr = (DXGIOutputDuplicationHook *)ptr;
         delete typedPtr;
     }
@@ -7920,10 +7851,9 @@ public:
         }
     }
 
-    static void sDeleteInstance(void * context, IUnknown * realUnknown, void * ptr)
+    static void sDeleteInstance(void * context, void * ptr)
     {
         UNREFERENCED_PARAMETER(context);
-        UNREFERENCED_PARAMETER(realUnknown);
         DXGISurface2Hook * typedPtr = (DXGISurface2Hook *)ptr;
         delete typedPtr;
     }
@@ -8041,10 +7971,9 @@ public:
         }
     }
 
-    static void sDeleteInstance(void * context, IUnknown * realUnknown, void * ptr)
+    static void sDeleteInstance(void * context, void * ptr)
     {
         UNREFERENCED_PARAMETER(context);
-        UNREFERENCED_PARAMETER(realUnknown);
         DXGIResource1Hook * typedPtr = (DXGIResource1Hook *)ptr;
         delete typedPtr;
     }
@@ -8161,10 +8090,9 @@ public:
         }
     }
 
-    static void sDeleteInstance(void * context, IUnknown * realUnknown, void * ptr)
+    static void sDeleteInstance(void * context, void * ptr)
     {
         UNREFERENCED_PARAMETER(context);
-        UNREFERENCED_PARAMETER(realUnknown);
         DXGIDevice2Hook * typedPtr = (DXGIDevice2Hook *)ptr;
         delete typedPtr;
     }
@@ -8298,10 +8226,9 @@ public:
         }
     }
 
-    static void sDeleteInstance(void * context, IUnknown * realUnknown, void * ptr)
+    static void sDeleteInstance(void * context, void * ptr)
     {
         UNREFERENCED_PARAMETER(context);
-        UNREFERENCED_PARAMETER(realUnknown);
         DXGISwapChain1Hook * typedPtr = (DXGISwapChain1Hook *)ptr;
         delete typedPtr;
     }
@@ -8499,10 +8426,9 @@ public:
         }
     }
 
-    static void sDeleteInstance(void * context, IUnknown * realUnknown, void * ptr)
+    static void sDeleteInstance(void * context, void * ptr)
     {
         UNREFERENCED_PARAMETER(context);
-        UNREFERENCED_PARAMETER(realUnknown);
         DXGIFactory2Hook * typedPtr = (DXGIFactory2Hook *)ptr;
         delete typedPtr;
     }
@@ -8676,10 +8602,9 @@ public:
         }
     }
 
-    static void sDeleteInstance(void * context, IUnknown * realUnknown, void * ptr)
+    static void sDeleteInstance(void * context, void * ptr)
     {
         UNREFERENCED_PARAMETER(context);
-        UNREFERENCED_PARAMETER(realUnknown);
         DXGIAdapter2Hook * typedPtr = (DXGIAdapter2Hook *)ptr;
         delete typedPtr;
     }
@@ -8780,10 +8705,9 @@ public:
         }
     }
 
-    static void sDeleteInstance(void * context, IUnknown * realUnknown, void * ptr)
+    static void sDeleteInstance(void * context, void * ptr)
     {
         UNREFERENCED_PARAMETER(context);
-        UNREFERENCED_PARAMETER(realUnknown);
         DXGIOutput1Hook * typedPtr = (DXGIOutput1Hook *)ptr;
         delete typedPtr;
     }

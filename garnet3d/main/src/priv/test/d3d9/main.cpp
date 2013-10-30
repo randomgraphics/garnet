@@ -63,6 +63,23 @@ HRESULT InitD3D( HWND hWnd )
         return E_FAIL;
     }
 
+    // Test code for d3d9hook
+    IDirect3DSurface9* backBuffer;
+    if (SUCCEEDED(g_pd3dDevice->GetBackBuffer(0, 0, D3DBACKBUFFER_TYPE_MONO, &backBuffer)))
+    {
+        IDirect3DResource9 * res;
+        if (SUCCEEDED(backBuffer->QueryInterface(__uuidof(IDirect3DResource9), (void**)&res)))
+        {
+            res->Release();
+        }
+        backBuffer->Release();
+    }
+    IDirect3D9 * d3d9;
+    if (SUCCEEDED(g_pd3dDevice->GetDirect3D(&d3d9)))
+    {
+        d3d9->Release();
+    }
+
     // Device state would normally be set here
 
     return S_OK;

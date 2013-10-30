@@ -147,7 +147,7 @@ class HookedClassFactory
 public:
 
     typedef IUnknown * (*NewInstanceFunc)(void * context, UnknownBase & base, IUnknown * realobj);
-    typedef void  (*DeleteInstanceFunc)(void * context, IUnknown * realUnknown, void * ptr);
+    typedef void  (*DeleteInstanceFunc)(void * context, void * ptr);
 
     static HookedClassFactory & sGetInstance() { return s_instance; }
 
@@ -167,7 +167,7 @@ public:
         return fi.createFunc(fi.context, base, realobj);
     }
 
-    void deleteOld(const IID & iid, IUnknown * realUnknown, void * ptr)
+    void deleteOld(const IID & iid, void * ptr)
     {
         FactoryMap::iterator iter = _factories.find(iid);
         if (iter == _factories.end())
@@ -178,7 +178,7 @@ public:
         else
         {
             FactoryInfo & fi = iter->second;
-            fi.deleteFunc(fi.context, realUnknown, ptr);
+            fi.deleteFunc(fi.context, ptr);
         }
     }
 
@@ -281,104 +281,6 @@ struct WeakRefTracker : GN::RefCounter
 /// Implementation of IUnknown and IHooked
 class UnknownBase : public IHooked
 {
-    struct InterfaceInfo
-    {
-        IID        iid;
-        IUnknown * hooked;
-        IUnknown * real;
-    };
-
-    static const UINT MAX_INTERFACES = 16;
-
-    CritSec                  _cs;
-    ULONG                    _refCount;
-    InterfaceInfo            _interfaces[MAX_INTERFACES];
-    UINT                     _interfaceCount;
-    GN::AutoComPtr<IUnknown> _realUnknown;
-
-    // For weak references
-    GN::AutoRef<WeakRefTracker> _weakRefTracker;
-
-    UnknownBase() : _refCount(0), _interfaceCount(0)
-    {
-        _weakRefTracker = GN::referenceTo(new WeakRefTracker());
-        _weakRefTracker->base = this;
-    }
-
-    void addInterface(const IID & iid, IUnknown * hooked, IUnknown * real)
-    {
-        if (_interfaceCount >= MAX_INTERFACES)
-        {
-            // should never happen.
-            GN_UNEXPECTED();
-            return;
-        }
-
-        if (!hooked || !real)
-        {
-            // should never happen.
-            GN_UNEXPECTED();
-            return;
-        }
-
-        // check if the inteface has been added already.
-        for(size_t i = 0; i < _interfaceCount; ++i)
-        {
-            if (_interfaces[i].iid == iid)
-            {
-                // should never happen.
-                GN_UNEXPECTED();
-                return;
-            }
-        }
-
-        _interfaces[_interfaceCount].iid = iid;
-        _interfaces[_interfaceCount].hooked = hooked;
-        _interfaces[_interfaceCount].real = real;
-        ++_interfaceCount;
-    }
-
-    template<class T>
-    void addInterface(IUnknown * hooked, IUnknown * real)
-    {
-        addInterface(__uuidof(T), hooked, Qi<T>(real));
-    }
-
-    IUnknown * getHookedInternal(const IID & iid)
-    {
-        if (iid == __uuidof(IUnknown)) return this;
-
-        for(size_t i = 0; i < _interfaceCount; ++i)
-        {
-            if (_interfaces[i].iid == iid)
-            {
-                return _interfaces[i].hooked;
-            }
-        }
-
-        GN::AutoComPtr<IUnknown> real;
-        if (FAILED(_realUnknown->QueryInterface( iid, (void**)&real )))
-        {
-            return nullptr;
-        }
-
-        IUnknown * hooked = HookedClassFactory::sGetInstance().createNew(*this, iid, real);
-        if (hooked)
-        {
-            addInterface( iid, hooked, real);
-            return hooked;
-        }
-        else
-        {
-            HOOK_ERROR_LOG(
-                "%s is supported by real D3D interface, but _NOT_ in our hooked system.",
-                InterfaceDesc::sIIDToInterfaceName(iid));
-            return nullptr;
-        }
-    }
-
-    void invalidateAllWeakRefs();
-
 protected:
 
     virtual ~UnknownBase()
@@ -389,7 +291,11 @@ protected:
         GN_ASSERT(0 == _weakRefTracker->weakRefs.prev);
         for(UINT i = 0; i < _interfaceCount; ++i)
         {
-            HookedClassFactory::sGetInstance().deleteOld( _interfaces[i].iid, _realUnknown, _interfaces[i].hooked );
+            HookedClassFactory::sGetInstance().deleteOld( _interfaces[i].iid, _interfaces[i].hooked );
+        }
+        if (_destructNotif)
+        {
+            _destructNotif(this, _destructNotifContext);
         }
     }
 
@@ -414,6 +320,14 @@ public:
         return p;
     }
 
+    typedef void (*DestructNotif)(UnknownBase * base, void * context);
+
+    void setDestructNotif(DestructNotif notif, void * context)
+    {
+        _destructNotif = notif;
+        _destructNotifContext = context;
+    }
+
     GN::AutoRef<WeakRefTracker> getWeakRefTracker() const { return _weakRefTracker; }
 
     // No AddRef()
@@ -432,6 +346,23 @@ public:
         }
         GN_UNEXPECTED();
         return nullptr;
+    }
+
+    /// This method is doing basically samething as GetHookedObj(), expect that it passes in
+    /// the real D3D object pointer. This is to support scenario that sometimes, a D3D9
+    /// interface A, although it is inherited from B, does not actually support QI of B. When
+    /// it happens, getHookedInternal() will use the passed-in pointer, instead of the one from
+    /// QI.
+    ///
+    /// This happens for the BackBuffer object returned by IDirect3DDevice9::GetBackbuffer().
+    IUnknown * GetHookedParent(const IID & iid, IUnknown * real)
+    {
+        IUnknown * hooked = getHookedInternal(iid, real);
+        if (nullptr == hooked)
+        {
+            GN_UNEXPECTED();
+        }
+        return hooked;
     }
 
     // No AddRef()
@@ -500,6 +431,118 @@ public:
     }
 
     //@}
+
+private:
+
+    struct InterfaceInfo
+    {
+        IID        iid;
+        IUnknown * hooked;
+        IUnknown * real;
+    };
+
+    static const UINT MAX_INTERFACES = 16;
+
+    CritSec                  _cs;
+    ULONG                    _refCount;
+    InterfaceInfo            _interfaces[MAX_INTERFACES];
+    UINT                     _interfaceCount;
+    GN::AutoComPtr<IUnknown> _realUnknown;
+    DestructNotif            _destructNotif;
+    void *                   _destructNotifContext;
+
+    // For weak references
+    GN::AutoRef<WeakRefTracker> _weakRefTracker;
+
+private:
+
+    UnknownBase() : _refCount(0), _interfaceCount(0), _destructNotif(nullptr)
+    {
+        _weakRefTracker = GN::referenceTo(new WeakRefTracker());
+        _weakRefTracker->base = this;
+    }
+
+    void addInterface(const IID & iid, IUnknown * hooked, IUnknown * real)
+    {
+        if (_interfaceCount >= MAX_INTERFACES)
+        {
+            // should never happen.
+            GN_UNEXPECTED();
+            return;
+        }
+
+        if (!hooked || !real)
+        {
+            // should never happen.
+            GN_UNEXPECTED();
+            return;
+        }
+
+        // check if the inteface has been added already.
+        for(size_t i = 0; i < _interfaceCount; ++i)
+        {
+            if (_interfaces[i].iid == iid)
+            {
+                // should never happen.
+                GN_UNEXPECTED();
+                return;
+            }
+        }
+
+        _interfaces[_interfaceCount].iid = iid;
+        _interfaces[_interfaceCount].hooked = hooked;
+        _interfaces[_interfaceCount].real = real;
+        ++_interfaceCount;
+    }
+
+    template<class T>
+    void addInterface(IUnknown * hooked, IUnknown * real)
+    {
+        addInterface(__uuidof(T), hooked, Qi<T>(real));
+    }
+
+    IUnknown * getHookedInternal(const IID & iid, IUnknown * useThisPointerWhenQiFromRealUnknownFailed = nullptr)
+    {
+        if (iid == __uuidof(IUnknown)) return this;
+
+        for(size_t i = 0; i < _interfaceCount; ++i)
+        {
+            if (_interfaces[i].iid == iid)
+            {
+                return _interfaces[i].hooked;
+            }
+        }
+
+        GN::AutoComPtr<IUnknown> real;
+        if (FAILED(_realUnknown->QueryInterface( iid, (void**)&real )))
+        {
+            if (useThisPointerWhenQiFromRealUnknownFailed)
+            {
+                real.set(useThisPointerWhenQiFromRealUnknownFailed);
+            }
+            else
+            {
+                return nullptr;
+            }
+        }
+
+        IUnknown * hooked = HookedClassFactory::sGetInstance().createNew(*this, iid, real);
+        if (hooked)
+        {
+            addInterface( iid, hooked, real);
+            return hooked;
+        }
+        else
+        {
+            HOOK_ERROR_LOG(
+                "%s is supported by real D3D interface, but _NOT_ in our hooked system.",
+                InterfaceDesc::sIIDToInterfaceName(iid));
+            return nullptr;
+        }
+    }
+
+    void invalidateAllWeakRefs();
+
 };
 
 // -----------------------------------------------------------------------------
