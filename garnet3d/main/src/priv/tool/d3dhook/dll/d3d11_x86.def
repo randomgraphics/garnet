@@ -1,4 +1,3 @@
-LIBRARY .\d3d11.dll
 EXPORTS
 	D3D11CoreCreateDevice=D3D11CoreCreateDevice_wrapper @14
 	D3D11CoreCreateLayeredDevice=D3D11CoreCreateLayeredDevice_wrapper @15

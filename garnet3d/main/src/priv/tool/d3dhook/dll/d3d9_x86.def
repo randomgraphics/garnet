@@ -1,4 +1,3 @@
-LIBRARY .\d3d9.dll
 EXPORTS
 	D3DPERF_BeginEvent=D3DPERF_BeginEvent_wrapper @4
 	D3DPERF_EndEvent=D3DPERF_EndEvent_wrapper @5
