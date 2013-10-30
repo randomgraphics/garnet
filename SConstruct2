@@ -563,9 +563,9 @@ def CheckConfig():
     if 'mswin' == BUILD_TARGET_OS:
         CONFIG['has_fbx']     = True
         CONFIG['fbx_incpath'] = ['#src/extern/fbx/2014.1/include'],
-        CONFIG['fbx_libpath'] = {'debug'   : ['#src/extern/fbx/2014.1/lib/vs2010/' + HOST_CPU + '/debug'],
-                                 'profile' : ['#src/extern/fbx/2014.1/lib/vs2010/' + HOST_CPU + '/release'],
-                                 'retail'  : ['#src/extern/fbx/2014.1/lib/vs2010/' + HOST_CPU + '/release'],
+        CONFIG['fbx_libpath'] = {'debug'   : ['#src/extern/fbx/2014.1/lib/vs2010/' + BUILD_TARGET_CPU + '/debug'],
+                                 'profile' : ['#src/extern/fbx/2014.1/lib/vs2010/' + BUILD_TARGET_CPU + '/release'],
+                                 'retail'  : ['#src/extern/fbx/2014.1/lib/vs2010/' + BUILD_TARGET_CPU + '/release'],
                                 }
         CONFIG['fbx_libs']    = ['libfbxsdk','wininet']
     elif c.CheckLibWithHeader( 'libfbxsdk', ['fbxsdk.h'], 'C++' ):

@@ -9,8 +9,11 @@ LPCSTR mImportNames[] = {"D3DPERF_BeginEvent", "D3DPERF_EndEvent", "D3DPERF_GetS
 BOOL WINAPI DllMain( HINSTANCE hinstDLL, DWORD fdwReason, LPVOID )
 {
 	mHinst = hinstDLL;
+    wchar_t dllpath[256];
+    GetSystemDirectoryW(dllpath, _countof(dllpath));
+    wcscat_s(dllpath, L"\\d3d9.dll");
 	if ( fdwReason == DLL_PROCESS_ATTACH ) {
-		mHinstDLL = LoadLibraryW( L"c:\\windows\\system32\\d3d9.dll" );
+		mHinstDLL = LoadLibraryW( dllpath );
 		if ( !mHinstDLL )
 			return ( FALSE );
 		for ( int i = 0; i < 15; i++ )

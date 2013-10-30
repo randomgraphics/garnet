@@ -109,8 +109,9 @@ static void * GetRealFunctionPtr(const wchar_t * dllName, const char * functionN
 // -----------------------------------------------------------------------------
 static StrW GetRealDllPath(const wchar_t * dllName)
 {
-    StrW system32 = L"c:\\windows\\system32\\";
-    StrW dllpath = system32 + dllName;
+    wchar_t system32[256];
+    GetSystemDirectoryW(system32, _countof(system32));
+    StrW dllpath = StrW(system32) + L"\\" + dllName;
     return dllpath;
 }
 
@@ -149,7 +150,7 @@ D3D9_HOOK_API IDirect3D9 * WINAPI Direct3DCreate9Hook(UINT SDKVersion)
 //
 //
 // -----------------------------------------------------------------------------
-D3D9_HOOK_API HRESULT Direct3DCreate9ExHook(UINT SDKVersion, IDirect3D9Ex **ppD3D)
+D3D9_HOOK_API HRESULT WINAPI Direct3DCreate9ExHook(UINT SDKVersion, IDirect3D9Ex **ppD3D)
 {
     calltrace::AutoTrace trace("Direct3DCreate9Ex");
 
