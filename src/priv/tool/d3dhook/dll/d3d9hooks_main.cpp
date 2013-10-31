@@ -104,17 +104,6 @@ static void * GetRealFunctionPtr(const wchar_t * dllName, const char * functionN
     return proc;
 }
 
-//
-//
-// -----------------------------------------------------------------------------
-static StrW GetRealDllPath(const wchar_t * dllName)
-{
-    wchar_t system32[256];
-    GetSystemDirectoryW(system32, _countof(system32));
-    StrW dllpath = StrW(system32) + L"\\" + dllName;
-    return dllpath;
-}
-
 // *****************************************************************************
 // D3D9 global functions
 // *****************************************************************************
@@ -132,7 +121,8 @@ D3D9_HOOK_API IDirect3D9 * WINAPI Direct3DCreate9Hook(UINT SDKVersion)
     calltrace::AutoTrace trace("Direct3DCreate9");
 
     PFN_DIRECT3D_CREATE_9 realFunc = (PFN_DIRECT3D_CREATE_9)GetRealFunctionPtr(
-        GetRealDllPath(L"d3d9.dll").rawptr(), "Direct3DCreate9");
+        GetRealDllPath(L"d3d9.dll"),
+        "Direct3DCreate9");
     if (nullptr == realFunc) return nullptr;
 
     IDirect3D9 * d3d9 = realFunc(SDKVersion);
@@ -155,7 +145,7 @@ D3D9_HOOK_API HRESULT WINAPI Direct3DCreate9ExHook(UINT SDKVersion, IDirect3D9Ex
     calltrace::AutoTrace trace("Direct3DCreate9Ex");
 
     PFN_DIRECT3D_CREATE_9_EX realFunc = (PFN_DIRECT3D_CREATE_9_EX)GetRealFunctionPtr(
-        GetRealDllPath(L"d3d11.dll").rawptr(),
+        GetRealDllPath(L"d3d11.dll"),
         "Direct3DCreate9Ex");
 
     if (nullptr == realFunc) return E_FAIL;

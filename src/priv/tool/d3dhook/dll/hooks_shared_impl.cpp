@@ -13,72 +13,40 @@ HookedClassFactory HookedClassFactory::s_instance;
 
 namespace calltrace
 {
-    class CallTrace
-    {
-        int _level;
-
-    public:
-
-        CallTrace() : _level(0)
-        {
-        }
-
-        ~CallTrace()
-        {
-        }
-
-        int enter(const wchar_t * text)
-        {
-            wchar_t buf[256];
-            int i;
-            for(i = 0; i < _level && i < _countof(buf); ++i)
-            {
-                buf[i] = L' ';
-            }
-            swprintf_s(&buf[i], (_countof(buf) - i), L"%s\n", text);
-            if (IsDebuggerPresent())
-            {
-                OutputDebugStringW(buf);
-            }
-            return ++_level;
-        }
-
-        int enter(const char * text)
-        {
-            char buf[256];
-            int i;
-            for(i = 0; i < _level && i < _countof(buf); ++i)
-            {
-                buf[i] = ' ';
-            }
-            sprintf_s(&buf[i], (_countof(buf) - i), "%s\n", text);
-            if (IsDebuggerPresent())
-            {
-                OutputDebugStringA(buf);
-            }
-            return ++_level;
-        }
-
-        void leave()
-        {
-            --_level;
-        }
-    };
-
-    CallTrace g_callTrace;
+    __declspec(thread) int g_level = 0;
 
     int enter(const wchar_t * text)
     {
-        return g_callTrace.enter( text );
+        wchar_t ident[256] = {};
+        for(int i = 0; i < g_level && i < _countof(ident); ++i)
+        {
+            ident[i] = L' ';
+        }
+
+        wchar_t buf[256] = {};
+        swprintf_s(buf, L"{%d}", GetCurrentThreadId());
+        wcscat_s(buf, ident);
+        wcscat_s(buf, text);
+        wcscat_s(buf, L"\n");
+
+        if (IsDebuggerPresent())
+        {
+            OutputDebugStringW(buf);
+        }
+
+        return ++g_level;
     }
 
     int enter(const char * text)
     {
-        return g_callTrace.enter( text );
+        wchar_t textw[256];
+        swprintf_s(textw, L"%S", text);
+        return enter(textw);
     }
 
     void leave()
     {
-        g_callTrace.leave();
+        --g_level;
     }
 }
+
