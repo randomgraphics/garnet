@@ -70,6 +70,10 @@ HRESULT InitD3D( HWND hWnd )
         IDirect3DResource9 * res;
         if (SUCCEEDED(backBuffer->QueryInterface(__uuidof(IDirect3DResource9), (void**)&res)))
         {
+            IDirect3DDevice9 * dev;
+            res->GetDevice(&dev);
+            GN_ASSERT(dev == g_pd3dDevice);
+            dev->Release();
             res->Release();
         }
         backBuffer->Release();
