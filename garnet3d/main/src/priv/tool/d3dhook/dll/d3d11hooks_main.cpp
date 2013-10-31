@@ -32,17 +32,6 @@ static void * GetRealFunctionPtr(const wchar_t * dllName, const char * functionN
     return proc;
 }
 
-//
-//
-// -----------------------------------------------------------------------------
-static StrW GetRealDllPath(const wchar_t * dllName)
-{
-    wchar_t system32[256];
-    GetSystemDirectoryW(system32, _countof(system32));
-    StrW dllpath = StrW(system32) + L"\\" + dllName;
-    return dllpath;
-}
-
 // *****************************************************************************
 // D3D11 global functions
 // *****************************************************************************
@@ -64,7 +53,7 @@ CreateDXGIFactoryHook(
     calltrace::AutoTrace trace(funcName);
 
     PFN_CREATE_DXGI_FACTORY realFunc = (PFN_CREATE_DXGI_FACTORY)GetRealFunctionPtr(
-        GetRealDllPath(L"dxgi.dll").rawptr(),
+        GetRealDllPath(L"dxgi.dll"),
         funcName);
     if (nullptr == realFunc) return E_FAIL;
 
@@ -98,7 +87,7 @@ D3D11CreateDeviceHook(
     calltrace::AutoTrace trace("D3D11CreateDevice");
 
     PFN_D3D11_CREATE_DEVICE realFunc = (PFN_D3D11_CREATE_DEVICE)GetRealFunctionPtr(
-        GetRealDllPath(L"d3d11.dll").rawptr(),
+        GetRealDllPath(L"d3d11.dll"),
         "D3D11CreateDevice");
     if (nullptr == realFunc) return E_FAIL;
 
@@ -148,7 +137,7 @@ D3D11CreateDeviceAndSwapChainHook(
     calltrace::AutoTrace trace("D3D11CreateDeviceAndSwapChain");
 
     PFN_D3D11_CREATE_DEVICE_AND_SWAP_CHAIN realFunc = (PFN_D3D11_CREATE_DEVICE_AND_SWAP_CHAIN)GetRealFunctionPtr(
-        GetRealDllPath(L"d3d11.dll").rawptr(),
+        GetRealDllPath(L"d3d11.dll"),
         "D3D11CreateDeviceAndSwapChain");
     if (nullptr == realFunc) return E_FAIL;
 

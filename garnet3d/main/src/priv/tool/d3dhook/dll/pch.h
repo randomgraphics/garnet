@@ -16,6 +16,19 @@
 #endif
 #include <windows.h>
 #endif
+#include <stdio.h>
+
+//
+//
+// -----------------------------------------------------------------------------
+inline const wchar_t * GetRealDllPath(const wchar_t * dllName)
+{
+    static __declspec(thread) wchar_t dllpath[256];
+    GetSystemDirectoryW(dllpath, _countof(dllpath));
+    wcscat_s(dllpath, L"\\");
+    wcscat_s(dllpath, dllName);
+    return dllpath;
+}
 
 #undef _In_reads_opt_
 #define _In_reads_opt_(x)

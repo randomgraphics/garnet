@@ -1,5 +1,4 @@
-#include <windows.h>
-#include <stdio.h>
+#include "pch.h"
 #include "d3d9hooks_exports.h"
 
 HINSTANCE mHinst = 0, mHinstDLL = 0;
@@ -9,11 +8,8 @@ LPCSTR mImportNames[] = {"D3DPERF_BeginEvent", "D3DPERF_EndEvent", "D3DPERF_GetS
 BOOL WINAPI DllMain( HINSTANCE hinstDLL, DWORD fdwReason, LPVOID )
 {
 	mHinst = hinstDLL;
-    wchar_t dllpath[256];
-    GetSystemDirectoryW(dllpath, _countof(dllpath));
-    wcscat_s(dllpath, L"\\d3d9.dll");
 	if ( fdwReason == DLL_PROCESS_ATTACH ) {
-		mHinstDLL = LoadLibraryW( dllpath );
+		mHinstDLL = LoadLibraryW( GetRealDllPath(L"d3d9.dll") );
 		if ( !mHinstDLL )
 			return ( FALSE );
 		for ( int i = 0; i < 15; i++ )

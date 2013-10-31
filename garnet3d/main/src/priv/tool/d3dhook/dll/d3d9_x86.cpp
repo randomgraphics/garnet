@@ -7,11 +7,8 @@ UINT_PTR mProcs[15] = {0};
 LPCSTR mImportNames[] = {"D3DPERF_BeginEvent", "D3DPERF_EndEvent", "D3DPERF_GetStatus", "D3DPERF_QueryRepeatFrame", "D3DPERF_SetMarker", "D3DPERF_SetOptions", "D3DPERF_SetRegion", "DebugSetLevel", "DebugSetMute", "Direct3D9EnableMaximizedWindowedModeShim", "Direct3DCreate9", "Direct3DCreate9Ex", "Direct3DShaderValidatorCreate9", "PSGPError", "PSGPSampleTexture"};
 BOOL WINAPI DllMain( HINSTANCE hinstDLL, DWORD fdwReason, LPVOID ) {
 	mHinst = hinstDLL;
-    wchar_t dllpath[256];
-    GetSystemDirectoryW(dllpath, _countof(dllpath));
-    wcscat_s(dllpath, L"\\d3d9.dll");
 	if ( fdwReason == DLL_PROCESS_ATTACH ) {
-		mHinstDLL = LoadLibraryW( dllpath );
+		mHinstDLL = LoadLibraryW( GetRealDllPath(L"d3d9.dll") );
 		if ( !mHinstDLL )
 			return ( FALSE );
 		for ( int i = 0; i < 15; i++ )
