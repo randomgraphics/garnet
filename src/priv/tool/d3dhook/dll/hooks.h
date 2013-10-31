@@ -683,7 +683,7 @@ protected:
         }
         else
         {
-            _realPtr = Qi<REAL_INTERFACE>(realobj);
+            _realPtr.set((REAL_INTERFACE*)realobj);
         }
     }
 

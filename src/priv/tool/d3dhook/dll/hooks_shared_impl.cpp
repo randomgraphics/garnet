@@ -15,33 +15,44 @@ namespace calltrace
 {
     __declspec(thread) int g_level = 0;
 
+    bool g_printCall = false;
+
     int enter(const wchar_t * text)
     {
-        wchar_t ident[256] = {};
-        for(int i = 0; i < g_level && i < _countof(ident); ++i)
+        if (g_printCall)
         {
-            ident[i] = L' ';
+            wchar_t ident[256] = {};
+            for(int i = 0; i < g_level && i < _countof(ident); ++i)
+            {
+                ident[i] = L' ';
+            }
+
+            wchar_t buf[256] = {};
+            swprintf_s(buf, L"{%d}", GetCurrentThreadId());
+            wcscat_s(buf, ident);
+            wcscat_s(buf, text);
+            wcscat_s(buf, L"\n");
+
+            if (IsDebuggerPresent())
+            {
+                OutputDebugStringW(buf);
+            }
         }
-
-        wchar_t buf[256] = {};
-        swprintf_s(buf, L"{%d}", GetCurrentThreadId());
-        wcscat_s(buf, ident);
-        wcscat_s(buf, text);
-        wcscat_s(buf, L"\n");
-
-        if (IsDebuggerPresent())
-        {
-            OutputDebugStringW(buf);
-        }
-
         return ++g_level;
     }
 
     int enter(const char * text)
     {
-        wchar_t textw[256];
-        swprintf_s(textw, L"%S", text);
-        return enter(textw);
+        if (g_printCall)
+        {
+            wchar_t textw[256];
+            swprintf_s(textw, L"%S", text);
+            return enter(textw);
+        }
+        else
+        {
+            return enter(L"");
+        }
     }
 
     void leave()
