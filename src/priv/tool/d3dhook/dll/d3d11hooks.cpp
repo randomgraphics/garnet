@@ -3223,6 +3223,7 @@ HRESULT STDMETHODCALLTYPE D3D11DeviceHook::OpenSharedResource(
     calltrace::AutoTrace trace(L"D3D11DeviceHook::OpenSharedResource");
     if (_OpenSharedResource_pre_ptr._value) { (this->*_OpenSharedResource_pre_ptr._value)(hResource, ReturnedInterface, ppResource); }
     HRESULT ret = GetRealObj()->OpenSharedResource(hResource, ReturnedInterface, ppResource);
+    if (SUCCEEDED(ret)) { *ppResource = RealToHooked11(ReturnedInterface, (IDXGIResource*)*ppResource ); }
     if (_OpenSharedResource_post_ptr._value) { (this->*_OpenSharedResource_post_ptr._value)(ret, hResource, ReturnedInterface, ppResource); }
     return ret;
 }
@@ -3649,7 +3650,8 @@ void STDMETHODCALLTYPE D3D11DeviceContext1Hook::SwapDeviceContextState(
 {
     calltrace::AutoTrace trace(L"D3D11DeviceContext1Hook::SwapDeviceContextState");
     if (_SwapDeviceContextState_pre_ptr._value) { (this->*_SwapDeviceContextState_pre_ptr._value)(pState, ppPreviousState); }
-    GetRealObj()->SwapDeviceContextState(pState, ppPreviousState);
+    GetRealObj()->SwapDeviceContextState(HookedToReal(pState), ppPreviousState);
+    if ( ppPreviousState && *ppPreviousState) { *ppPreviousState = RealToHooked11( *ppPreviousState ); }
     if (_SwapDeviceContextState_post_ptr._value) { (this->*_SwapDeviceContextState_post_ptr._value)(pState, ppPreviousState); }
 }
 
@@ -3741,6 +3743,7 @@ HRESULT STDMETHODCALLTYPE D3D11Device1Hook::CreateDeviceContextState(
     calltrace::AutoTrace trace(L"D3D11Device1Hook::CreateDeviceContextState");
     if (_CreateDeviceContextState_pre_ptr._value) { (this->*_CreateDeviceContextState_pre_ptr._value)(Flags, pFeatureLevels, FeatureLevels, SDKVersion, EmulatedInterface, pChosenFeatureLevel, ppContextState); }
     HRESULT ret = GetRealObj()->CreateDeviceContextState(Flags, pFeatureLevels, FeatureLevels, SDKVersion, EmulatedInterface, pChosenFeatureLevel, ppContextState);
+    if ( ppContextState && *ppContextState) { *ppContextState = RealToHooked11( *ppContextState ); }
     if (_CreateDeviceContextState_post_ptr._value) { (this->*_CreateDeviceContextState_post_ptr._value)(ret, Flags, pFeatureLevels, FeatureLevels, SDKVersion, EmulatedInterface, pChosenFeatureLevel, ppContextState); }
     return ret;
 }
@@ -3754,6 +3757,7 @@ HRESULT STDMETHODCALLTYPE D3D11Device1Hook::OpenSharedResource1(
     calltrace::AutoTrace trace(L"D3D11Device1Hook::OpenSharedResource1");
     if (_OpenSharedResource1_pre_ptr._value) { (this->*_OpenSharedResource1_pre_ptr._value)(hResource, returnedInterface, ppResource); }
     HRESULT ret = GetRealObj()->OpenSharedResource1(hResource, returnedInterface, ppResource);
+    if (SUCCEEDED(ret)) { *ppResource = RealToHooked11(returnedInterface, (IDXGIResource*)*ppResource ); }
     if (_OpenSharedResource1_post_ptr._value) { (this->*_OpenSharedResource1_post_ptr._value)(ret, hResource, returnedInterface, ppResource); }
     return ret;
 }
@@ -3768,6 +3772,7 @@ HRESULT STDMETHODCALLTYPE D3D11Device1Hook::OpenSharedResourceByName(
     calltrace::AutoTrace trace(L"D3D11Device1Hook::OpenSharedResourceByName");
     if (_OpenSharedResourceByName_pre_ptr._value) { (this->*_OpenSharedResourceByName_pre_ptr._value)(lpName, dwDesiredAccess, returnedInterface, ppResource); }
     HRESULT ret = GetRealObj()->OpenSharedResourceByName(lpName, dwDesiredAccess, returnedInterface, ppResource);
+    if (SUCCEEDED(ret)) { *ppResource = RealToHooked11(returnedInterface, (IDXGIResource*)*ppResource ); }
     if (_OpenSharedResourceByName_post_ptr._value) { (this->*_OpenSharedResourceByName_post_ptr._value)(ret, lpName, dwDesiredAccess, returnedInterface, ppResource); }
     return ret;
 }
@@ -3951,7 +3956,7 @@ HRESULT STDMETHODCALLTYPE D3D11TracingDeviceHook::SetShaderTrackingOptions(
 {
     calltrace::AutoTrace trace(L"D3D11TracingDeviceHook::SetShaderTrackingOptions");
     if (_SetShaderTrackingOptions_pre_ptr._value) { (this->*_SetShaderTrackingOptions_pre_ptr._value)(pShader, Options); }
-    HRESULT ret = GetRealObj()->SetShaderTrackingOptions(pShader, Options);
+    HRESULT ret = GetRealObj()->SetShaderTrackingOptions(HookedToReal(pShader), Options);
     if (_SetShaderTrackingOptions_post_ptr._value) { (this->*_SetShaderTrackingOptions_post_ptr._value)(ret, pShader, Options); }
     return ret;
 }
@@ -4929,7 +4934,7 @@ HRESULT STDMETHODCALLTYPE DXGIDeviceHook::QueryResourceResidency(
 {
     calltrace::AutoTrace trace(L"DXGIDeviceHook::QueryResourceResidency");
     if (_QueryResourceResidency_pre_ptr._value) { (this->*_QueryResourceResidency_pre_ptr._value)(ppResources, pResidencyStatus, NumResources); }
-    HRESULT ret = GetRealObj()->QueryResourceResidency(ppResources, pResidencyStatus, NumResources);
+    HRESULT ret = GetRealObj()->QueryResourceResidency(HookedToReal(NumResources, ppResources), pResidencyStatus, NumResources);
     if (_QueryResourceResidency_post_ptr._value) { (this->*_QueryResourceResidency_post_ptr._value)(ret, ppResources, pResidencyStatus, NumResources); }
     return ret;
 }
@@ -5349,7 +5354,7 @@ HRESULT STDMETHODCALLTYPE DXGIFactory2Hook::CreateSwapChainForHwnd(
 {
     calltrace::AutoTrace trace(L"DXGIFactory2Hook::CreateSwapChainForHwnd");
     if (_CreateSwapChainForHwnd_pre_ptr._value) { (this->*_CreateSwapChainForHwnd_pre_ptr._value)(pDevice, hWnd, pDesc, pFullscreenDesc, pRestrictToOutput, ppSwapChain); }
-    HRESULT ret = GetRealObj()->CreateSwapChainForHwnd(pDevice, hWnd, pDesc, pFullscreenDesc, HookedToReal(pRestrictToOutput), ppSwapChain);
+    HRESULT ret = GetRealObj()->CreateSwapChainForHwnd(HookedToReal(pDevice), hWnd, pDesc, pFullscreenDesc, HookedToReal(pRestrictToOutput), ppSwapChain);
     if ( ppSwapChain && *ppSwapChain) { *ppSwapChain = RealToHooked11( *ppSwapChain ); }
     if (_CreateSwapChainForHwnd_post_ptr._value) { (this->*_CreateSwapChainForHwnd_post_ptr._value)(ret, pDevice, hWnd, pDesc, pFullscreenDesc, pRestrictToOutput, ppSwapChain); }
     return ret;
@@ -5365,7 +5370,7 @@ HRESULT STDMETHODCALLTYPE DXGIFactory2Hook::CreateSwapChainForCoreWindow(
 {
     calltrace::AutoTrace trace(L"DXGIFactory2Hook::CreateSwapChainForCoreWindow");
     if (_CreateSwapChainForCoreWindow_pre_ptr._value) { (this->*_CreateSwapChainForCoreWindow_pre_ptr._value)(pDevice, pWindow, pDesc, pRestrictToOutput, ppSwapChain); }
-    HRESULT ret = GetRealObj()->CreateSwapChainForCoreWindow(pDevice, pWindow, pDesc, HookedToReal(pRestrictToOutput), ppSwapChain);
+    HRESULT ret = GetRealObj()->CreateSwapChainForCoreWindow(HookedToReal(pDevice), pWindow, pDesc, HookedToReal(pRestrictToOutput), ppSwapChain);
     if ( ppSwapChain && *ppSwapChain) { *ppSwapChain = RealToHooked11( *ppSwapChain ); }
     if (_CreateSwapChainForCoreWindow_post_ptr._value) { (this->*_CreateSwapChainForCoreWindow_post_ptr._value)(ret, pDevice, pWindow, pDesc, pRestrictToOutput, ppSwapChain); }
     return ret;
@@ -5462,7 +5467,7 @@ HRESULT STDMETHODCALLTYPE DXGIFactory2Hook::CreateSwapChainForComposition(
 {
     calltrace::AutoTrace trace(L"DXGIFactory2Hook::CreateSwapChainForComposition");
     if (_CreateSwapChainForComposition_pre_ptr._value) { (this->*_CreateSwapChainForComposition_pre_ptr._value)(pDevice, pDesc, pRestrictToOutput, ppSwapChain); }
-    HRESULT ret = GetRealObj()->CreateSwapChainForComposition(pDevice, pDesc, HookedToReal(pRestrictToOutput), ppSwapChain);
+    HRESULT ret = GetRealObj()->CreateSwapChainForComposition(HookedToReal(pDevice), pDesc, HookedToReal(pRestrictToOutput), ppSwapChain);
     if ( ppSwapChain && *ppSwapChain) { *ppSwapChain = RealToHooked11( *ppSwapChain ); }
     if (_CreateSwapChainForComposition_post_ptr._value) { (this->*_CreateSwapChainForComposition_post_ptr._value)(ret, pDevice, pDesc, pRestrictToOutput, ppSwapChain); }
     return ret;
@@ -5501,7 +5506,7 @@ HRESULT STDMETHODCALLTYPE DXGIOutput1Hook::FindClosestMatchingMode1(
 {
     calltrace::AutoTrace trace(L"DXGIOutput1Hook::FindClosestMatchingMode1");
     if (_FindClosestMatchingMode1_pre_ptr._value) { (this->*_FindClosestMatchingMode1_pre_ptr._value)(pModeToMatch, pClosestMatch, pConcernedDevice); }
-    HRESULT ret = GetRealObj()->FindClosestMatchingMode1(pModeToMatch, pClosestMatch, pConcernedDevice);
+    HRESULT ret = GetRealObj()->FindClosestMatchingMode1(pModeToMatch, pClosestMatch, HookedToReal(pConcernedDevice));
     if (_FindClosestMatchingMode1_post_ptr._value) { (this->*_FindClosestMatchingMode1_post_ptr._value)(ret, pModeToMatch, pClosestMatch, pConcernedDevice); }
     return ret;
 }
@@ -5524,9 +5529,449 @@ HRESULT STDMETHODCALLTYPE DXGIOutput1Hook::DuplicateOutput(
 {
     calltrace::AutoTrace trace(L"DXGIOutput1Hook::DuplicateOutput");
     if (_DuplicateOutput_pre_ptr._value) { (this->*_DuplicateOutput_pre_ptr._value)(pDevice, ppOutputDuplication); }
-    HRESULT ret = GetRealObj()->DuplicateOutput(pDevice, ppOutputDuplication);
+    HRESULT ret = GetRealObj()->DuplicateOutput(HookedToReal(pDevice), ppOutputDuplication);
     if ( ppOutputDuplication && *ppOutputDuplication) { *ppOutputDuplication = RealToHooked11( *ppOutputDuplication ); }
     if (_DuplicateOutput_post_ptr._value) { (this->*_DuplicateOutput_post_ptr._value)(ret, pDevice, ppOutputDuplication); }
+    return ret;
+}
+
+// -----------------------------------------------------------------------------
+HRESULT STDMETHODCALLTYPE DXGIInfoQueueHook::SetMessageCountLimit(
+    _In_  DXGI_DEBUG_ID Producer,
+    _In_  UINT64 MessageCountLimit)
+{
+    calltrace::AutoTrace trace(L"DXGIInfoQueueHook::SetMessageCountLimit");
+    if (_SetMessageCountLimit_pre_ptr._value) { (this->*_SetMessageCountLimit_pre_ptr._value)(Producer, MessageCountLimit); }
+    HRESULT ret = GetRealObj()->SetMessageCountLimit(Producer, MessageCountLimit);
+    if (_SetMessageCountLimit_post_ptr._value) { (this->*_SetMessageCountLimit_post_ptr._value)(ret, Producer, MessageCountLimit); }
+    return ret;
+}
+
+// -----------------------------------------------------------------------------
+void STDMETHODCALLTYPE DXGIInfoQueueHook::ClearStoredMessages(
+    _In_  DXGI_DEBUG_ID Producer)
+{
+    calltrace::AutoTrace trace(L"DXGIInfoQueueHook::ClearStoredMessages");
+    if (_ClearStoredMessages_pre_ptr._value) { (this->*_ClearStoredMessages_pre_ptr._value)(Producer); }
+    GetRealObj()->ClearStoredMessages(Producer);
+    if (_ClearStoredMessages_post_ptr._value) { (this->*_ClearStoredMessages_post_ptr._value)(Producer); }
+}
+
+// -----------------------------------------------------------------------------
+HRESULT STDMETHODCALLTYPE DXGIInfoQueueHook::GetMessage(
+    _In_  DXGI_DEBUG_ID Producer,
+    _In_  UINT64 MessageIndex,
+    _Out_writes_bytes_opt_(*pMessageByteLength)  DXGI_INFO_QUEUE_MESSAGE * pMessage,
+    _Inout_  SIZE_T * pMessageByteLength)
+{
+    calltrace::AutoTrace trace(L"DXGIInfoQueueHook::GetMessage");
+    if (_GetMessage_pre_ptr._value) { (this->*_GetMessage_pre_ptr._value)(Producer, MessageIndex, pMessage, pMessageByteLength); }
+    HRESULT ret = GetRealObj()->GetMessage(Producer, MessageIndex, pMessage, pMessageByteLength);
+    if (_GetMessage_post_ptr._value) { (this->*_GetMessage_post_ptr._value)(ret, Producer, MessageIndex, pMessage, pMessageByteLength); }
+    return ret;
+}
+
+// -----------------------------------------------------------------------------
+UINT64 STDMETHODCALLTYPE DXGIInfoQueueHook::GetNumStoredMessagesAllowedByRetrievalFilters(
+    _In_  DXGI_DEBUG_ID Producer)
+{
+    calltrace::AutoTrace trace(L"DXGIInfoQueueHook::GetNumStoredMessagesAllowedByRetrievalFilters");
+    if (_GetNumStoredMessagesAllowedByRetrievalFilters_pre_ptr._value) { (this->*_GetNumStoredMessagesAllowedByRetrievalFilters_pre_ptr._value)(Producer); }
+    UINT64 ret = GetRealObj()->GetNumStoredMessagesAllowedByRetrievalFilters(Producer);
+    if (_GetNumStoredMessagesAllowedByRetrievalFilters_post_ptr._value) { (this->*_GetNumStoredMessagesAllowedByRetrievalFilters_post_ptr._value)(ret, Producer); }
+    return ret;
+}
+
+// -----------------------------------------------------------------------------
+UINT64 STDMETHODCALLTYPE DXGIInfoQueueHook::GetNumStoredMessages(
+    _In_  DXGI_DEBUG_ID Producer)
+{
+    calltrace::AutoTrace trace(L"DXGIInfoQueueHook::GetNumStoredMessages");
+    if (_GetNumStoredMessages_pre_ptr._value) { (this->*_GetNumStoredMessages_pre_ptr._value)(Producer); }
+    UINT64 ret = GetRealObj()->GetNumStoredMessages(Producer);
+    if (_GetNumStoredMessages_post_ptr._value) { (this->*_GetNumStoredMessages_post_ptr._value)(ret, Producer); }
+    return ret;
+}
+
+// -----------------------------------------------------------------------------
+UINT64 STDMETHODCALLTYPE DXGIInfoQueueHook::GetNumMessagesDiscardedByMessageCountLimit(
+    _In_  DXGI_DEBUG_ID Producer)
+{
+    calltrace::AutoTrace trace(L"DXGIInfoQueueHook::GetNumMessagesDiscardedByMessageCountLimit");
+    if (_GetNumMessagesDiscardedByMessageCountLimit_pre_ptr._value) { (this->*_GetNumMessagesDiscardedByMessageCountLimit_pre_ptr._value)(Producer); }
+    UINT64 ret = GetRealObj()->GetNumMessagesDiscardedByMessageCountLimit(Producer);
+    if (_GetNumMessagesDiscardedByMessageCountLimit_post_ptr._value) { (this->*_GetNumMessagesDiscardedByMessageCountLimit_post_ptr._value)(ret, Producer); }
+    return ret;
+}
+
+// -----------------------------------------------------------------------------
+UINT64 STDMETHODCALLTYPE DXGIInfoQueueHook::GetMessageCountLimit(
+    _In_  DXGI_DEBUG_ID Producer)
+{
+    calltrace::AutoTrace trace(L"DXGIInfoQueueHook::GetMessageCountLimit");
+    if (_GetMessageCountLimit_pre_ptr._value) { (this->*_GetMessageCountLimit_pre_ptr._value)(Producer); }
+    UINT64 ret = GetRealObj()->GetMessageCountLimit(Producer);
+    if (_GetMessageCountLimit_post_ptr._value) { (this->*_GetMessageCountLimit_post_ptr._value)(ret, Producer); }
+    return ret;
+}
+
+// -----------------------------------------------------------------------------
+UINT64 STDMETHODCALLTYPE DXGIInfoQueueHook::GetNumMessagesAllowedByStorageFilter(
+    _In_  DXGI_DEBUG_ID Producer)
+{
+    calltrace::AutoTrace trace(L"DXGIInfoQueueHook::GetNumMessagesAllowedByStorageFilter");
+    if (_GetNumMessagesAllowedByStorageFilter_pre_ptr._value) { (this->*_GetNumMessagesAllowedByStorageFilter_pre_ptr._value)(Producer); }
+    UINT64 ret = GetRealObj()->GetNumMessagesAllowedByStorageFilter(Producer);
+    if (_GetNumMessagesAllowedByStorageFilter_post_ptr._value) { (this->*_GetNumMessagesAllowedByStorageFilter_post_ptr._value)(ret, Producer); }
+    return ret;
+}
+
+// -----------------------------------------------------------------------------
+UINT64 STDMETHODCALLTYPE DXGIInfoQueueHook::GetNumMessagesDeniedByStorageFilter(
+    _In_  DXGI_DEBUG_ID Producer)
+{
+    calltrace::AutoTrace trace(L"DXGIInfoQueueHook::GetNumMessagesDeniedByStorageFilter");
+    if (_GetNumMessagesDeniedByStorageFilter_pre_ptr._value) { (this->*_GetNumMessagesDeniedByStorageFilter_pre_ptr._value)(Producer); }
+    UINT64 ret = GetRealObj()->GetNumMessagesDeniedByStorageFilter(Producer);
+    if (_GetNumMessagesDeniedByStorageFilter_post_ptr._value) { (this->*_GetNumMessagesDeniedByStorageFilter_post_ptr._value)(ret, Producer); }
+    return ret;
+}
+
+// -----------------------------------------------------------------------------
+HRESULT STDMETHODCALLTYPE DXGIInfoQueueHook::AddStorageFilterEntries(
+    _In_  DXGI_DEBUG_ID Producer,
+    _In_  DXGI_INFO_QUEUE_FILTER * pFilter)
+{
+    calltrace::AutoTrace trace(L"DXGIInfoQueueHook::AddStorageFilterEntries");
+    if (_AddStorageFilterEntries_pre_ptr._value) { (this->*_AddStorageFilterEntries_pre_ptr._value)(Producer, pFilter); }
+    HRESULT ret = GetRealObj()->AddStorageFilterEntries(Producer, pFilter);
+    if (_AddStorageFilterEntries_post_ptr._value) { (this->*_AddStorageFilterEntries_post_ptr._value)(ret, Producer, pFilter); }
+    return ret;
+}
+
+// -----------------------------------------------------------------------------
+HRESULT STDMETHODCALLTYPE DXGIInfoQueueHook::GetStorageFilter(
+    _In_  DXGI_DEBUG_ID Producer,
+    _Out_writes_bytes_opt_(*pFilterByteLength)  DXGI_INFO_QUEUE_FILTER * pFilter,
+    _Inout_  SIZE_T * pFilterByteLength)
+{
+    calltrace::AutoTrace trace(L"DXGIInfoQueueHook::GetStorageFilter");
+    if (_GetStorageFilter_pre_ptr._value) { (this->*_GetStorageFilter_pre_ptr._value)(Producer, pFilter, pFilterByteLength); }
+    HRESULT ret = GetRealObj()->GetStorageFilter(Producer, pFilter, pFilterByteLength);
+    if (_GetStorageFilter_post_ptr._value) { (this->*_GetStorageFilter_post_ptr._value)(ret, Producer, pFilter, pFilterByteLength); }
+    return ret;
+}
+
+// -----------------------------------------------------------------------------
+void STDMETHODCALLTYPE DXGIInfoQueueHook::ClearStorageFilter(
+    _In_  DXGI_DEBUG_ID Producer)
+{
+    calltrace::AutoTrace trace(L"DXGIInfoQueueHook::ClearStorageFilter");
+    if (_ClearStorageFilter_pre_ptr._value) { (this->*_ClearStorageFilter_pre_ptr._value)(Producer); }
+    GetRealObj()->ClearStorageFilter(Producer);
+    if (_ClearStorageFilter_post_ptr._value) { (this->*_ClearStorageFilter_post_ptr._value)(Producer); }
+}
+
+// -----------------------------------------------------------------------------
+HRESULT STDMETHODCALLTYPE DXGIInfoQueueHook::PushEmptyStorageFilter(
+    _In_  DXGI_DEBUG_ID Producer)
+{
+    calltrace::AutoTrace trace(L"DXGIInfoQueueHook::PushEmptyStorageFilter");
+    if (_PushEmptyStorageFilter_pre_ptr._value) { (this->*_PushEmptyStorageFilter_pre_ptr._value)(Producer); }
+    HRESULT ret = GetRealObj()->PushEmptyStorageFilter(Producer);
+    if (_PushEmptyStorageFilter_post_ptr._value) { (this->*_PushEmptyStorageFilter_post_ptr._value)(ret, Producer); }
+    return ret;
+}
+
+// -----------------------------------------------------------------------------
+HRESULT STDMETHODCALLTYPE DXGIInfoQueueHook::PushDenyAllStorageFilter(
+    _In_  DXGI_DEBUG_ID Producer)
+{
+    calltrace::AutoTrace trace(L"DXGIInfoQueueHook::PushDenyAllStorageFilter");
+    if (_PushDenyAllStorageFilter_pre_ptr._value) { (this->*_PushDenyAllStorageFilter_pre_ptr._value)(Producer); }
+    HRESULT ret = GetRealObj()->PushDenyAllStorageFilter(Producer);
+    if (_PushDenyAllStorageFilter_post_ptr._value) { (this->*_PushDenyAllStorageFilter_post_ptr._value)(ret, Producer); }
+    return ret;
+}
+
+// -----------------------------------------------------------------------------
+HRESULT STDMETHODCALLTYPE DXGIInfoQueueHook::PushCopyOfStorageFilter(
+    _In_  DXGI_DEBUG_ID Producer)
+{
+    calltrace::AutoTrace trace(L"DXGIInfoQueueHook::PushCopyOfStorageFilter");
+    if (_PushCopyOfStorageFilter_pre_ptr._value) { (this->*_PushCopyOfStorageFilter_pre_ptr._value)(Producer); }
+    HRESULT ret = GetRealObj()->PushCopyOfStorageFilter(Producer);
+    if (_PushCopyOfStorageFilter_post_ptr._value) { (this->*_PushCopyOfStorageFilter_post_ptr._value)(ret, Producer); }
+    return ret;
+}
+
+// -----------------------------------------------------------------------------
+HRESULT STDMETHODCALLTYPE DXGIInfoQueueHook::PushStorageFilter(
+    _In_  DXGI_DEBUG_ID Producer,
+    _In_  DXGI_INFO_QUEUE_FILTER * pFilter)
+{
+    calltrace::AutoTrace trace(L"DXGIInfoQueueHook::PushStorageFilter");
+    if (_PushStorageFilter_pre_ptr._value) { (this->*_PushStorageFilter_pre_ptr._value)(Producer, pFilter); }
+    HRESULT ret = GetRealObj()->PushStorageFilter(Producer, pFilter);
+    if (_PushStorageFilter_post_ptr._value) { (this->*_PushStorageFilter_post_ptr._value)(ret, Producer, pFilter); }
+    return ret;
+}
+
+// -----------------------------------------------------------------------------
+void STDMETHODCALLTYPE DXGIInfoQueueHook::PopStorageFilter(
+    _In_  DXGI_DEBUG_ID Producer)
+{
+    calltrace::AutoTrace trace(L"DXGIInfoQueueHook::PopStorageFilter");
+    if (_PopStorageFilter_pre_ptr._value) { (this->*_PopStorageFilter_pre_ptr._value)(Producer); }
+    GetRealObj()->PopStorageFilter(Producer);
+    if (_PopStorageFilter_post_ptr._value) { (this->*_PopStorageFilter_post_ptr._value)(Producer); }
+}
+
+// -----------------------------------------------------------------------------
+UINT STDMETHODCALLTYPE DXGIInfoQueueHook::GetStorageFilterStackSize(
+    _In_  DXGI_DEBUG_ID Producer)
+{
+    calltrace::AutoTrace trace(L"DXGIInfoQueueHook::GetStorageFilterStackSize");
+    if (_GetStorageFilterStackSize_pre_ptr._value) { (this->*_GetStorageFilterStackSize_pre_ptr._value)(Producer); }
+    UINT ret = GetRealObj()->GetStorageFilterStackSize(Producer);
+    if (_GetStorageFilterStackSize_post_ptr._value) { (this->*_GetStorageFilterStackSize_post_ptr._value)(ret, Producer); }
+    return ret;
+}
+
+// -----------------------------------------------------------------------------
+HRESULT STDMETHODCALLTYPE DXGIInfoQueueHook::AddRetrievalFilterEntries(
+    _In_  DXGI_DEBUG_ID Producer,
+    _In_  DXGI_INFO_QUEUE_FILTER * pFilter)
+{
+    calltrace::AutoTrace trace(L"DXGIInfoQueueHook::AddRetrievalFilterEntries");
+    if (_AddRetrievalFilterEntries_pre_ptr._value) { (this->*_AddRetrievalFilterEntries_pre_ptr._value)(Producer, pFilter); }
+    HRESULT ret = GetRealObj()->AddRetrievalFilterEntries(Producer, pFilter);
+    if (_AddRetrievalFilterEntries_post_ptr._value) { (this->*_AddRetrievalFilterEntries_post_ptr._value)(ret, Producer, pFilter); }
+    return ret;
+}
+
+// -----------------------------------------------------------------------------
+HRESULT STDMETHODCALLTYPE DXGIInfoQueueHook::GetRetrievalFilter(
+    _In_  DXGI_DEBUG_ID Producer,
+    _Out_writes_bytes_opt_(*pFilterByteLength)  DXGI_INFO_QUEUE_FILTER * pFilter,
+    _Inout_  SIZE_T * pFilterByteLength)
+{
+    calltrace::AutoTrace trace(L"DXGIInfoQueueHook::GetRetrievalFilter");
+    if (_GetRetrievalFilter_pre_ptr._value) { (this->*_GetRetrievalFilter_pre_ptr._value)(Producer, pFilter, pFilterByteLength); }
+    HRESULT ret = GetRealObj()->GetRetrievalFilter(Producer, pFilter, pFilterByteLength);
+    if (_GetRetrievalFilter_post_ptr._value) { (this->*_GetRetrievalFilter_post_ptr._value)(ret, Producer, pFilter, pFilterByteLength); }
+    return ret;
+}
+
+// -----------------------------------------------------------------------------
+void STDMETHODCALLTYPE DXGIInfoQueueHook::ClearRetrievalFilter(
+    _In_  DXGI_DEBUG_ID Producer)
+{
+    calltrace::AutoTrace trace(L"DXGIInfoQueueHook::ClearRetrievalFilter");
+    if (_ClearRetrievalFilter_pre_ptr._value) { (this->*_ClearRetrievalFilter_pre_ptr._value)(Producer); }
+    GetRealObj()->ClearRetrievalFilter(Producer);
+    if (_ClearRetrievalFilter_post_ptr._value) { (this->*_ClearRetrievalFilter_post_ptr._value)(Producer); }
+}
+
+// -----------------------------------------------------------------------------
+HRESULT STDMETHODCALLTYPE DXGIInfoQueueHook::PushEmptyRetrievalFilter(
+    _In_  DXGI_DEBUG_ID Producer)
+{
+    calltrace::AutoTrace trace(L"DXGIInfoQueueHook::PushEmptyRetrievalFilter");
+    if (_PushEmptyRetrievalFilter_pre_ptr._value) { (this->*_PushEmptyRetrievalFilter_pre_ptr._value)(Producer); }
+    HRESULT ret = GetRealObj()->PushEmptyRetrievalFilter(Producer);
+    if (_PushEmptyRetrievalFilter_post_ptr._value) { (this->*_PushEmptyRetrievalFilter_post_ptr._value)(ret, Producer); }
+    return ret;
+}
+
+// -----------------------------------------------------------------------------
+HRESULT STDMETHODCALLTYPE DXGIInfoQueueHook::PushDenyAllRetrievalFilter(
+    _In_  DXGI_DEBUG_ID Producer)
+{
+    calltrace::AutoTrace trace(L"DXGIInfoQueueHook::PushDenyAllRetrievalFilter");
+    if (_PushDenyAllRetrievalFilter_pre_ptr._value) { (this->*_PushDenyAllRetrievalFilter_pre_ptr._value)(Producer); }
+    HRESULT ret = GetRealObj()->PushDenyAllRetrievalFilter(Producer);
+    if (_PushDenyAllRetrievalFilter_post_ptr._value) { (this->*_PushDenyAllRetrievalFilter_post_ptr._value)(ret, Producer); }
+    return ret;
+}
+
+// -----------------------------------------------------------------------------
+HRESULT STDMETHODCALLTYPE DXGIInfoQueueHook::PushCopyOfRetrievalFilter(
+    _In_  DXGI_DEBUG_ID Producer)
+{
+    calltrace::AutoTrace trace(L"DXGIInfoQueueHook::PushCopyOfRetrievalFilter");
+    if (_PushCopyOfRetrievalFilter_pre_ptr._value) { (this->*_PushCopyOfRetrievalFilter_pre_ptr._value)(Producer); }
+    HRESULT ret = GetRealObj()->PushCopyOfRetrievalFilter(Producer);
+    if (_PushCopyOfRetrievalFilter_post_ptr._value) { (this->*_PushCopyOfRetrievalFilter_post_ptr._value)(ret, Producer); }
+    return ret;
+}
+
+// -----------------------------------------------------------------------------
+HRESULT STDMETHODCALLTYPE DXGIInfoQueueHook::PushRetrievalFilter(
+    _In_  DXGI_DEBUG_ID Producer,
+    _In_  DXGI_INFO_QUEUE_FILTER * pFilter)
+{
+    calltrace::AutoTrace trace(L"DXGIInfoQueueHook::PushRetrievalFilter");
+    if (_PushRetrievalFilter_pre_ptr._value) { (this->*_PushRetrievalFilter_pre_ptr._value)(Producer, pFilter); }
+    HRESULT ret = GetRealObj()->PushRetrievalFilter(Producer, pFilter);
+    if (_PushRetrievalFilter_post_ptr._value) { (this->*_PushRetrievalFilter_post_ptr._value)(ret, Producer, pFilter); }
+    return ret;
+}
+
+// -----------------------------------------------------------------------------
+void STDMETHODCALLTYPE DXGIInfoQueueHook::PopRetrievalFilter(
+    _In_  DXGI_DEBUG_ID Producer)
+{
+    calltrace::AutoTrace trace(L"DXGIInfoQueueHook::PopRetrievalFilter");
+    if (_PopRetrievalFilter_pre_ptr._value) { (this->*_PopRetrievalFilter_pre_ptr._value)(Producer); }
+    GetRealObj()->PopRetrievalFilter(Producer);
+    if (_PopRetrievalFilter_post_ptr._value) { (this->*_PopRetrievalFilter_post_ptr._value)(Producer); }
+}
+
+// -----------------------------------------------------------------------------
+UINT STDMETHODCALLTYPE DXGIInfoQueueHook::GetRetrievalFilterStackSize(
+    _In_  DXGI_DEBUG_ID Producer)
+{
+    calltrace::AutoTrace trace(L"DXGIInfoQueueHook::GetRetrievalFilterStackSize");
+    if (_GetRetrievalFilterStackSize_pre_ptr._value) { (this->*_GetRetrievalFilterStackSize_pre_ptr._value)(Producer); }
+    UINT ret = GetRealObj()->GetRetrievalFilterStackSize(Producer);
+    if (_GetRetrievalFilterStackSize_post_ptr._value) { (this->*_GetRetrievalFilterStackSize_post_ptr._value)(ret, Producer); }
+    return ret;
+}
+
+// -----------------------------------------------------------------------------
+HRESULT STDMETHODCALLTYPE DXGIInfoQueueHook::AddMessage(
+    _In_  DXGI_DEBUG_ID Producer,
+    _In_  DXGI_INFO_QUEUE_MESSAGE_CATEGORY Category,
+    _In_  DXGI_INFO_QUEUE_MESSAGE_SEVERITY Severity,
+    _In_  DXGI_INFO_QUEUE_MESSAGE_ID ID,
+    _In_  LPCSTR pDescription)
+{
+    calltrace::AutoTrace trace(L"DXGIInfoQueueHook::AddMessage");
+    if (_AddMessage_pre_ptr._value) { (this->*_AddMessage_pre_ptr._value)(Producer, Category, Severity, ID, pDescription); }
+    HRESULT ret = GetRealObj()->AddMessage(Producer, Category, Severity, ID, pDescription);
+    if (_AddMessage_post_ptr._value) { (this->*_AddMessage_post_ptr._value)(ret, Producer, Category, Severity, ID, pDescription); }
+    return ret;
+}
+
+// -----------------------------------------------------------------------------
+HRESULT STDMETHODCALLTYPE DXGIInfoQueueHook::AddApplicationMessage(
+    _In_  DXGI_INFO_QUEUE_MESSAGE_SEVERITY Severity,
+    _In_  LPCSTR pDescription)
+{
+    calltrace::AutoTrace trace(L"DXGIInfoQueueHook::AddApplicationMessage");
+    if (_AddApplicationMessage_pre_ptr._value) { (this->*_AddApplicationMessage_pre_ptr._value)(Severity, pDescription); }
+    HRESULT ret = GetRealObj()->AddApplicationMessage(Severity, pDescription);
+    if (_AddApplicationMessage_post_ptr._value) { (this->*_AddApplicationMessage_post_ptr._value)(ret, Severity, pDescription); }
+    return ret;
+}
+
+// -----------------------------------------------------------------------------
+HRESULT STDMETHODCALLTYPE DXGIInfoQueueHook::SetBreakOnCategory(
+    _In_  DXGI_DEBUG_ID Producer,
+    _In_  DXGI_INFO_QUEUE_MESSAGE_CATEGORY Category,
+    _In_  BOOL bEnable)
+{
+    calltrace::AutoTrace trace(L"DXGIInfoQueueHook::SetBreakOnCategory");
+    if (_SetBreakOnCategory_pre_ptr._value) { (this->*_SetBreakOnCategory_pre_ptr._value)(Producer, Category, bEnable); }
+    HRESULT ret = GetRealObj()->SetBreakOnCategory(Producer, Category, bEnable);
+    if (_SetBreakOnCategory_post_ptr._value) { (this->*_SetBreakOnCategory_post_ptr._value)(ret, Producer, Category, bEnable); }
+    return ret;
+}
+
+// -----------------------------------------------------------------------------
+HRESULT STDMETHODCALLTYPE DXGIInfoQueueHook::SetBreakOnSeverity(
+    _In_  DXGI_DEBUG_ID Producer,
+    _In_  DXGI_INFO_QUEUE_MESSAGE_SEVERITY Severity,
+    _In_  BOOL bEnable)
+{
+    calltrace::AutoTrace trace(L"DXGIInfoQueueHook::SetBreakOnSeverity");
+    if (_SetBreakOnSeverity_pre_ptr._value) { (this->*_SetBreakOnSeverity_pre_ptr._value)(Producer, Severity, bEnable); }
+    HRESULT ret = GetRealObj()->SetBreakOnSeverity(Producer, Severity, bEnable);
+    if (_SetBreakOnSeverity_post_ptr._value) { (this->*_SetBreakOnSeverity_post_ptr._value)(ret, Producer, Severity, bEnable); }
+    return ret;
+}
+
+// -----------------------------------------------------------------------------
+HRESULT STDMETHODCALLTYPE DXGIInfoQueueHook::SetBreakOnID(
+    _In_  DXGI_DEBUG_ID Producer,
+    _In_  DXGI_INFO_QUEUE_MESSAGE_ID ID,
+    _In_  BOOL bEnable)
+{
+    calltrace::AutoTrace trace(L"DXGIInfoQueueHook::SetBreakOnID");
+    if (_SetBreakOnID_pre_ptr._value) { (this->*_SetBreakOnID_pre_ptr._value)(Producer, ID, bEnable); }
+    HRESULT ret = GetRealObj()->SetBreakOnID(Producer, ID, bEnable);
+    if (_SetBreakOnID_post_ptr._value) { (this->*_SetBreakOnID_post_ptr._value)(ret, Producer, ID, bEnable); }
+    return ret;
+}
+
+// -----------------------------------------------------------------------------
+BOOL STDMETHODCALLTYPE DXGIInfoQueueHook::GetBreakOnCategory(
+    _In_  DXGI_DEBUG_ID Producer,
+    _In_  DXGI_INFO_QUEUE_MESSAGE_CATEGORY Category)
+{
+    calltrace::AutoTrace trace(L"DXGIInfoQueueHook::GetBreakOnCategory");
+    if (_GetBreakOnCategory_pre_ptr._value) { (this->*_GetBreakOnCategory_pre_ptr._value)(Producer, Category); }
+    BOOL ret = GetRealObj()->GetBreakOnCategory(Producer, Category);
+    if (_GetBreakOnCategory_post_ptr._value) { (this->*_GetBreakOnCategory_post_ptr._value)(ret, Producer, Category); }
+    return ret;
+}
+
+// -----------------------------------------------------------------------------
+BOOL STDMETHODCALLTYPE DXGIInfoQueueHook::GetBreakOnSeverity(
+    _In_  DXGI_DEBUG_ID Producer,
+    _In_  DXGI_INFO_QUEUE_MESSAGE_SEVERITY Severity)
+{
+    calltrace::AutoTrace trace(L"DXGIInfoQueueHook::GetBreakOnSeverity");
+    if (_GetBreakOnSeverity_pre_ptr._value) { (this->*_GetBreakOnSeverity_pre_ptr._value)(Producer, Severity); }
+    BOOL ret = GetRealObj()->GetBreakOnSeverity(Producer, Severity);
+    if (_GetBreakOnSeverity_post_ptr._value) { (this->*_GetBreakOnSeverity_post_ptr._value)(ret, Producer, Severity); }
+    return ret;
+}
+
+// -----------------------------------------------------------------------------
+BOOL STDMETHODCALLTYPE DXGIInfoQueueHook::GetBreakOnID(
+    _In_  DXGI_DEBUG_ID Producer,
+    _In_  DXGI_INFO_QUEUE_MESSAGE_ID ID)
+{
+    calltrace::AutoTrace trace(L"DXGIInfoQueueHook::GetBreakOnID");
+    if (_GetBreakOnID_pre_ptr._value) { (this->*_GetBreakOnID_pre_ptr._value)(Producer, ID); }
+    BOOL ret = GetRealObj()->GetBreakOnID(Producer, ID);
+    if (_GetBreakOnID_post_ptr._value) { (this->*_GetBreakOnID_post_ptr._value)(ret, Producer, ID); }
+    return ret;
+}
+
+// -----------------------------------------------------------------------------
+void STDMETHODCALLTYPE DXGIInfoQueueHook::SetMuteDebugOutput(
+    _In_  DXGI_DEBUG_ID Producer,
+    _In_  BOOL bMute)
+{
+    calltrace::AutoTrace trace(L"DXGIInfoQueueHook::SetMuteDebugOutput");
+    if (_SetMuteDebugOutput_pre_ptr._value) { (this->*_SetMuteDebugOutput_pre_ptr._value)(Producer, bMute); }
+    GetRealObj()->SetMuteDebugOutput(Producer, bMute);
+    if (_SetMuteDebugOutput_post_ptr._value) { (this->*_SetMuteDebugOutput_post_ptr._value)(Producer, bMute); }
+}
+
+// -----------------------------------------------------------------------------
+BOOL STDMETHODCALLTYPE DXGIInfoQueueHook::GetMuteDebugOutput(
+    _In_  DXGI_DEBUG_ID Producer)
+{
+    calltrace::AutoTrace trace(L"DXGIInfoQueueHook::GetMuteDebugOutput");
+    if (_GetMuteDebugOutput_pre_ptr._value) { (this->*_GetMuteDebugOutput_pre_ptr._value)(Producer); }
+    BOOL ret = GetRealObj()->GetMuteDebugOutput(Producer);
+    if (_GetMuteDebugOutput_post_ptr._value) { (this->*_GetMuteDebugOutput_post_ptr._value)(ret, Producer); }
+    return ret;
+}
+
+// -----------------------------------------------------------------------------
+HRESULT STDMETHODCALLTYPE DXGIDebugHook::ReportLiveObjects(
+    GUID apiid,
+    DXGI_DEBUG_RLO_FLAGS flags)
+{
+    calltrace::AutoTrace trace(L"DXGIDebugHook::ReportLiveObjects");
+    if (_ReportLiveObjects_pre_ptr._value) { (this->*_ReportLiveObjects_pre_ptr._value)(apiid, flags); }
+    HRESULT ret = GetRealObj()->ReportLiveObjects(apiid, flags);
+    if (_ReportLiveObjects_post_ptr._value) { (this->*_ReportLiveObjects_post_ptr._value)(ret, apiid, flags); }
     return ret;
 }
 

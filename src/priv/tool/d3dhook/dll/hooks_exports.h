@@ -1,7 +1,8 @@
 #include <windows.h>
 #include "d3d/d3d11_1.h"
+#include "d3d/d3d9.h"
 
-#ifdef INSIDE_D3D11_HOOK
+#ifdef INSIDE_HOOK_DLL
 #define HOOK_API __declspec(dllexport)
 #else
 #define HOOK_API __declspec(dllimport)
@@ -49,3 +50,13 @@ D3D11CreateDeviceAndSwapChainHook(
     __out_opt ID3D11Device** ppDevice,
     __out_opt D3D_FEATURE_LEVEL* pFeatureLevel,
     __out_opt ID3D11DeviceContext** ppImmediateContext );
+
+//
+//
+// -----------------------------------------------------------------------------
+HOOK_API IDirect3D9 * WINAPI Direct3DCreate9Hook(UINT SDKVersion);
+
+//
+//
+// -----------------------------------------------------------------------------
+HOOK_API HRESULT WINAPI Direct3DCreate9ExHook(UINT SDKVersion, IDirect3D9Ex **ppD3D);

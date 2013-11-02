@@ -1,5 +1,5 @@
 #include "pch.h"
-#include "d3d9hooks_exports.h"
+#include "hooks_exports.h"
 
 HINSTANCE mHinst = 0, mHinstDLL = 0;
 extern "C" UINT_PTR mProcs[15] = {0};
