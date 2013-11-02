@@ -151,7 +151,7 @@ public:
 
     static HookedClassFactory & sGetInstance() { return s_instance; }
 
-    void registerAll(); // implementation of this method script generated
+    void registerAll();
 
     // Create new hooked instance for a particular real object.
     IUnknown * createNew(UnknownBase & base, const IID & iid, IUnknown * realobj)
@@ -239,6 +239,14 @@ private:
 
     typedef std::map<IID, FactoryInfo, IIDLess> FactoryMap;
     FactoryMap _factories;
+};
+
+// -----------------------------------------------------------------------------
+// global UnknownBase look-up table.
+struct UnknownBaseTable
+{
+    static void                        add(IUnknown * realobj, UnknownBase * hooked);
+    static GN::AutoComPtr<UnknownBase> get(IUnknown * realobj);
 };
 
 // -----------------------------------------------------------------------------

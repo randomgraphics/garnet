@@ -5,78 +5,58 @@ env = GN.NewBuildEnv()
 cpu = GN.target_cpu
 
 # ------------------------------------------------------------------------------
-# D3D11 hooks
+# Hook DLL
 # ------------------------------------------------------------------------------
 
-d3d11hookdll = GN.BinplaceDLL( GN.BuildDLL( env, 'GNd3d11Hook_' + cpu,
+hookdll = GN.BinplaceDLL( GN.BuildDLL( env, 'GNdxHook_' + cpu,
     [
-        'd3d11hooks_main.cpp',
-        'd3d11factories.cpp',
+        'hooks_main.cpp',
         'd3d11hooks.cpp',
-        'd3d11interfaces.cpp',
+        'd3d9hooks.cpp',
     ],
-    'pch.h', 'd3d11_pch.cpp' ) )
+    'pch.h', 'pch.cpp' ) )
 
-d3d11_env = env.Clone()
-d3d11_env.Append( LIBPATH = ['.'], LIBS = ['GNd3d11Hook_' + cpu] )
+# ------------------------------------------------------------------------------
+# wrapper DLLs
+# ------------------------------------------------------------------------------
+
+wrapper_env = env.Clone()
+wrapper_env.Append( LIBPATH = ['.'], LIBS = ['GNdxHook_' + cpu] )
 
 if 'x64' == cpu:
-    d3d11dll = GN.BinplaceDLL( GN.BuildDLL( d3d11_env, 'd3d11wrapper',
+    d3d11dll = GN.BinplaceDLL( GN.BuildDLL( wrapper_env, 'd3d11wrapper',
         [
             'd3d11_x64.cpp',
             'd3d11_x64_asm.asm',
         ],
-        defFile='d3d11_x64.def' ), rename='d3d11.dll', extraDependencies=d3d11hookdll )
-    dxgidll = GN.BinplaceDLL( GN.BuildDLL( d3d11_env, 'dxgiwrapper',
+        defFile='d3d11_x64.def' ), rename='d3d11.dll', extraDependencies=hookdll )
+    dxgidll = GN.BinplaceDLL( GN.BuildDLL( wrapper_env, 'dxgiwrapper',
         [
             'dxgi_x64.cpp',
             'dxgi_x64_asm.asm',
         ],
-        defFile='dxgi_x64.def' ), rename='dxgi.dll', extraDependencies=d3d11hookdll )
-else:
-    d3d11dll = GN.BinplaceDLL( GN.BuildDLL( d3d11_env, 'd3d11wrapper',
-        [
-            'd3d11_x86.cpp',
-        ],
-        defFile='d3d11_x64.def' ), rename='d3d11.dll', extraDependencies=d3d11hookdll )
-    dxgidll = GN.BinplaceDLL( GN.BuildDLL( d3d11_env, 'dxgiwrapper',
-        [
-            'dxgi_x86.cpp',
-        ],
-        defFile='dxgi_x86.def' ), rename='dxgi.dll', extraDependencies=d3d11hookdll )
-
-d3d11_targets = GN.NewDefaultTarget( 'GNd3d11Hook', [d3d11hookdll, d3d11dll, dxgidll] )
-
-# ------------------------------------------------------------------------------
-# D3D9 hooks
-# ------------------------------------------------------------------------------
-
-d3d9hookdll = GN.BinplaceDLL( GN.BuildDLL( env, 'GNd3d9Hook_' + cpu,
-    [
-        'd3d9hooks_main.cpp',
-        'd3d9factories.cpp',
-        'd3d9hooks.cpp',
-        'd3d9interfaces.cpp',
-    ],
-    'pch.h', 'd3d9_pch.cpp' ) )
-
-d3d9_env = env.Clone()
-d3d9_env.Append( LIBPATH = ['.'], LIBS = ['GNd3d9Hook_' + cpu] )
-
-if 'x64' == cpu:
-    d3d9dll = GN.BinplaceDLL( GN.BuildDLL( d3d9_env, 'd3d9wrapper',
+        defFile='dxgi_x64.def' ), rename='dxgi.dll', extraDependencies=hookdll )
+    d3d9dll = GN.BinplaceDLL( GN.BuildDLL( wrapper_env, 'd3d9wrapper',
         [
             'd3d9_x64.cpp',
             'd3d9_x64_asm.asm',
         ],
-        defFile='d3d9_x64.def' ), rename='d3d9.dll', extraDependencies=d3d9hookdll )
+        defFile='d3d9_x64.def' ), rename='d3d9.dll', extraDependencies=hookdll )
 else:
-    d3d9dll = GN.BinplaceDLL( GN.BuildDLL( d3d9_env, 'd3d9wrapper',
+    d3d11dll = GN.BinplaceDLL( GN.BuildDLL( wrapper_env, 'd3d11wrapper',
+        [
+            'd3d11_x86.cpp',
+        ],
+        defFile='d3d11_x64.def' ), rename='d3d11.dll', extraDependencies=hookdll )
+    dxgidll = GN.BinplaceDLL( GN.BuildDLL( wrapper_env, 'dxgiwrapper',
+        [
+            'dxgi_x86.cpp',
+        ],
+        defFile='dxgi_x86.def' ), rename='dxgi.dll', extraDependencies=hookdll )
+    d3d9dll = GN.BinplaceDLL( GN.BuildDLL( wrapper_env, 'd3d9wrapper',
         [
             'd3d9_x86.cpp',
         ],
-        defFile='d3d9_x86.def' ), rename='d3d9.dll', extraDependencies=d3d9hookdll )
+        defFile='d3d9_x86.def' ), rename='d3d9.dll', extraDependencies=hookdll )
 
-d3d9_targets = GN.NewDefaultTarget( 'GNd3d9Hook', [d3d9hookdll, d3d9dll] )
-
-GN.NewDefaultTarget( 'GNd3dHook', d3d11_targets + d3d9_targets )
+GN.NewDefaultTarget( 'GNdxHook', [hookdll, d3d11dll, dxgidll, d3d9dll] )

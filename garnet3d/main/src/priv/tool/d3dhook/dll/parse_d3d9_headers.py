@@ -321,10 +321,8 @@ def GetParentInterfaceList(interface_name):
 
 class D3D9HooksFile:
     def __init__(self):
-        self._header = open('d3d9hooks.h', 'w')
-        self._header.write('// script generated file. Do _NOT_ edit.\n\n'
-                           '#include "hooks9.h"\n'
-                           '\n')
+        self._header = open('d3d9hooks.inl', 'w')
+        self._header.write('// script generated file. Do _NOT_ edit.\n\n')
         self._cpp = open('d3d9hooks.cpp', 'w')
         self._cpp.write('// script generated file. Do _NOT_ edit.\n\n')
         self._cpp.write('#include "pch.h"\n')
@@ -544,7 +542,7 @@ extern const char * const g_D3D9CallIDText;
 # a file that list all known D3D9 interfaces
 class InterfaceNameFile :
     def __init__( self ) :
-        self._file = open("d3d9interfaces_meta.h", "w")
+        self._file = open("d3d9interfaces.inl", "w")
         self._file.write('// Script generated. DO NOT EDIT.)\n')
 
     def Close(self):
@@ -586,16 +584,11 @@ with open( 'd3d/d3d9.h' ) as f:
     PARSE_interfaces_from_opened_file(f, [])
 
 # Register all factories
-with open("d3d9factories.cpp", "w") as f:
-    f.write('// script generated file. DO NOT edit.\n\n'
-            '#include "pch.h"\n'
-            '#include "d3d9hooks.h"\n\n'
-            'void HookedClassFactory::registerAll()\n'
-            '{\n')
+with open("d3d9factories.inl", "w") as f:
+    f.write('// script generated file. DO NOT edit.\n\n')
     for interfaceName, v in g_interfaces.iteritems():
         if ('IUnknown' != interfaceName):
-            f.write('    registerFactory<' + interfaceName + '>(' + v._hookedClassName + '::sNewInstance, ' + v._hookedClassName + '::sDeleteInstance, nullptr);\n')
-    f.write('}\n')
+            f.write('registerFactory<' + interfaceName + '>(' + v._hookedClassName + '::sNewInstance, ' + v._hookedClassName + '::sDeleteInstance, nullptr);\n')
 
 g_interfaceNameFile.Close()
 

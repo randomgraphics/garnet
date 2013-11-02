@@ -68,13 +68,30 @@ class FunctionParameter:
                self._type.find('REFGUID') >= 0 or \
                self._type.find('REFIID') >= 0
 
+    # list parameters that we know we don't need to hook
+    def __KnownUninterestedInterfaceParameter( self ):
+        result = 'SetPrivateDataInterface' == self._method_name or \
+                 'IDXGIFactory2' == self._interface_name and 'CreateSwapChainForCoreWindow' == self._method_name and 'pWindow' == self._name or \
+                 None
+        return result
+
     def IsHookedInterface( self ):
-        return self._type.find(' ID3D11') >= 0 or \
-               self._type.find(' IDXGI') >= 0 or \
-               'IDXGIOutput' == self._interface_name and 'FindClosestMatchingMode' == self._method_name and 'pConcernedDevice' == self._name or \
-               'IDXGIOutput' == self._interface_name and 'TakeOwnership' == self._method_name and 'pDevice' == self._name or \
-               'IDXGIFactory' == self._interface_name and 'CreateSwapChain' == self._method_name and 'pDevice' == self._name or \
-               None
+        result = self._type.find(' ID3D') >= 0 or \
+                 self._type.find(' IDXGI') >= 0 or \
+                 'ID3D11TracingDevice' == self._interface_name and 'SetShaderTrackingOptions' == self._method_name and 'pShader' == self._name or \
+                 'IDXGIDevice' == self._interface_name and 'QueryResourceResidency' == self._method_name and 'ppResources' == self._name or \
+                 'IDXGIOutput' == self._interface_name and 'FindClosestMatchingMode' == self._method_name and 'pConcernedDevice' == self._name or \
+                 'IDXGIOutput' == self._interface_name and 'TakeOwnership' == self._method_name and 'pDevice' == self._name or \
+                 'IDXGIOutput1' == self._interface_name and 'FindClosestMatchingMode1' == self._method_name and 'pConcernedDevice' == self._name or \
+                 'IDXGIOutput1' == self._interface_name and 'DuplicateOutput' == self._method_name and 'pDevice' == self._name or \
+                 'IDXGIFactory' == self._interface_name and 'CreateSwapChain' == self._method_name and 'pDevice' == self._name or \
+                 'IDXGIFactory2' == self._interface_name and 'CreateSwapChainForHwnd' == self._method_name and 'pDevice' == self._name or \
+                 'IDXGIFactory2' == self._interface_name and 'CreateSwapChainForCoreWindow' == self._method_name and 'pDevice' == self._name or \
+                 'IDXGIFactory2' == self._interface_name and 'CreateSwapChainForComposition' == self._method_name and 'pDevice' == self._name or \
+                 None
+        if (not result) and (not self.__KnownUninterestedInterfaceParameter()) and self._type.find('IUnknown') >= 0:
+            UTIL_warn('Possible undetected interface parameter: ' + self._interface_name + '::' + self._method_name + '(' + self._name + ')');
+        return result
 
     def IsOutput( self ) :
         result = '_Out' == self._type[:4]
@@ -107,6 +124,12 @@ class FunctionSignature:
             elif 'IDXGIObject' == p._interface_name and 'GetParent' == p._method_name and 'ppParent' == p._name or \
                  'IDXGIDeviceSubObject' == p._interface_name and 'GetDevice' == p._method_name and 'ppDevice' == p._name:
                 fp.write('    if (SUCCEEDED(ret)) { *' + p._name + ' = RealToHooked11(riid, (IDXGIObject*)*' + p._name + ' ); }\n')
+            # special case for OpenSharedResource
+            elif 'ID3D11Device' == p._interface_name and 'OpenSharedResource' == p._method_name and 'ppResource' == p._name :
+                fp.write('    if (SUCCEEDED(ret)) { *' + p._name + ' = RealToHooked11(ReturnedInterface, (IDXGIResource*)*' + p._name + ' ); }\n')
+            elif 'ID3D11Device1' == p._interface_name and 'OpenSharedResource1' == p._method_name and 'ppResource' == p._name or \
+                 'ID3D11Device1' == p._interface_name and 'OpenSharedResourceByName' == p._method_name and 'ppResource' == p._name :
+                fp.write('    if (SUCCEEDED(ret)) { *' + p._name + ' = RealToHooked11(returnedInterface, (IDXGIResource*)*' + p._name + ' ); }\n')
         pass; # end-of-for
 
     def WriteParameterList(self, fp, writeType, writeName, makeRef = False, newLine = False, convertHookedPtr = None):
@@ -237,17 +260,8 @@ class FunctionSignature:
         fp.write('    // -----------------------------------------------------------------------------\n'
                  '    ' + self._return_type + ' ' + self._decl + ' ' + self._name + '(')
         self.WriteParameterList(fp, True, True)
-        '''if len(self._parameter_list) > 0:
-            for i in range(len(self._parameter_list)):
-                fp.write('    ' + self._parameter_list[i]._type + ' ' + self._parameter_list[i]._name)
-                if self._parameter_list[i].IsImmediateArray():
-                    fp.write('[' + self._parameter_list[i]._array_count + ']')
-                if i < (len(self._parameter_list) - 1):
-                    fp.write(',\n')
-                else:
-                    fp.write(')\n')'''
-        fp.write(')\n')
-        fp.write('    {\n')
+        fp.write(')\n'
+                 '    {\n')
 
         # call base method
         fp.write('        return _' + interface_name[1:] + '.' + self._name + '(')
@@ -356,9 +370,8 @@ def GetParentInterfaceList(interface_name):
 
 class D3D11HooksFile:
     def __init__(self):
-        self._header = open('d3d11hooks.h', 'w')
+        self._header = open('d3d11hooks.inl', 'w')
         self._header.write('// script generated file. Do _NOT_ edit.\n\n'
-                           '#include "hooks11.h"\n'
                            '\n')
         self._cpp = open('d3d11hooks.cpp', 'w')
         self._cpp.write('// script generated file. Do _NOT_ edit.\n\n'
@@ -584,7 +597,7 @@ extern const char * const g_D3D11CallIDText;
 # Gather all interfaces defined in an opened file.
 class InterfaceNameFile :
     def __init__( self ) :
-        self._file = open("d3d11interfaces_meta.h", "w")
+        self._file = open("d3d11interfaces.inl", "w")
         self._file.write('// Script generated. DO NOT EDIT.)\n')
 
     def Close(self):
@@ -640,17 +653,16 @@ with open( 'd3d/dxgi.h' ) as f:
 with open( 'd3d/dxgi1_2.h' ) as f:
     PARSE_interfaces_from_opened_file(f, [])
 
+# parse dxgidebug.h
+with open( 'd3d/dxgidebug.h' ) as f:
+    PARSE_interfaces_from_opened_file(f, [])
+
 # Register all factories
-with open("d3d11factories.cpp", "w") as f:
-    f.write('// script generated file. DO NOT edit.\n\n'
-            '#include "pch.h"\n'
-            '#include "d3d11hooks.h"\n\n'
-            'void HookedClassFactory::registerAll()\n'
-            '{\n')
+with open("d3d11factories.inl", "w") as f:
+    f.write('// script generated file. DO NOT edit.\n\n')
     for interfaceName, v in g_interfaces.iteritems():
         if ('IUnknown' != interfaceName):
-            f.write('    registerFactory<' + interfaceName + '>(' + v._hookedClassName + '::sNewInstance, ' + v._hookedClassName + '::sDeleteInstance, nullptr);\n')
-    f.write('}\n')
+            f.write('registerFactory<' + interfaceName + '>(' + v._hookedClassName + '::sNewInstance, ' + v._hookedClassName + '::sDeleteInstance, nullptr);\n')
 
 g_interfaceNameFile.Close()
 
