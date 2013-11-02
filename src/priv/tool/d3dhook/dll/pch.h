@@ -51,6 +51,9 @@ inline const wchar_t * GetRealDllPath(const wchar_t * dllName)
 #undef _Out_writes_
 #define _Out_writes_(x)
 
+#undef _Out_writes_to_
+#define _Out_writes_to_(x,y)
+
 #undef _Out_writes_opt_
 #define _Out_writes_opt_(x)
 
@@ -69,8 +72,41 @@ inline const wchar_t * GetRealDllPath(const wchar_t * dllName)
 #undef _Out_writes_bytes_opt_
 #define _Out_writes_bytes_opt_(x)
 
+#undef _Out_writes_z_
+#define _Out_writes_z_(x)
+
 #undef _Outptr_
 #define _Outptr_
+
+#undef _Outptr_opt_
+#define _Outptr_opt_
+
+#undef _Outptr_result_bytebuffer_
+#define _Outptr_result_bytebuffer_(x)
+
+#define _Outptr_result_maybenull_
+#define _Outptr_result_maybenull_
+
+#undef _Outptr_result_buffer_
+#define _Outptr_result_buffer_(x)
+
+#undef _Outptr_result_z_
+#define _Outptr_result_z_
+
+#undef _Field_z_
+#define _Field_z_
+
+#undef _Field_size_
+#define _Field_size_(x)
+
+#undef _Field_size_opt_
+#define _Field_size_opt_(x)
+
+#undef _Notnull_
+#define _Notnull_
+
+#include "d3d/d3d11_1.h"
+#include "d3d/d2d1_1.h"
 
 // *****************************************************************************
 //                                     EOF

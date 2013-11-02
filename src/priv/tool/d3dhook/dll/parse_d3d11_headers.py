@@ -41,7 +41,7 @@ def UTIL_fatal( msg ):
 # Function classes
 
 class FunctionParameter:
-    def __init__( self, interface_name, method_name, type, name, immediate_array_count = 0, variant_array_count = None, defval_ = '' ) :
+    def __init__( self, interface_name, method_name, type, name, immediate_array_count = 0, variant_array_count = None) :
         t = type.strip()
         m = re.match(r"(__\w+\(.+\))\s+(.+$)", t)
         if m is None:
@@ -56,7 +56,6 @@ class FunctionParameter:
         self._interface_name = interface_name
         self._method_name = method_name
         self._name = name.strip()
-        self._defval = defval_
         self._immediate_array_count = immediate_array_count # 0 means non-array parameter
         self._variant_array_count = variant_array_count # None means not an variant array.
 
