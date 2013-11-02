@@ -8,7 +8,7 @@ cpu = GN.target_cpu
 # Hook DLL
 # ------------------------------------------------------------------------------
 
-hookdll = GN.BinplaceDLL( GN.BuildDLL( env, 'GNdxHook_' + cpu,
+hookdll = GN.BinplaceDLL( GN.BuildDLL( env, 'GNd3dHook-' + cpu,
     [
         'hooks_main.cpp',
         'd3d11hooks.cpp',
@@ -21,7 +21,7 @@ hookdll = GN.BinplaceDLL( GN.BuildDLL( env, 'GNdxHook_' + cpu,
 # ------------------------------------------------------------------------------
 
 wrapper_env = env.Clone()
-wrapper_env.Append( LIBPATH = ['.'], LIBS = ['GNdxHook_' + cpu] )
+wrapper_env.Append( LIBPATH = ['.'], LIBS = ['GNd3dHook-' + cpu] )
 
 if 'x64' == cpu:
     d3d11dll = GN.BinplaceDLL( GN.BuildDLL( wrapper_env, 'd3d11wrapper',
@@ -59,4 +59,4 @@ else:
         ],
         defFile='d3d9_x86.def' ), rename='d3d9.dll', extraDependencies=hookdll )
 
-GN.NewDefaultTarget( 'GNdxHook', [hookdll, d3d11dll, dxgidll, d3d9dll] )
+GN.NewDefaultTarget( 'GNd3dHook', [hookdll, d3d11dll, dxgidll, d3d9dll] )
