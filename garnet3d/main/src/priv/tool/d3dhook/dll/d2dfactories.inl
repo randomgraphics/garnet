@@ -1,0 +1,31 @@
+// script generated file. DO NOT edit.
+
+registerFactory<ID2D1RoundedRectangleGeometry>(D2D1RoundedRectangleGeometryHook::sNewInstance, D2D1RoundedRectangleGeometryHook::sDeleteInstance, nullptr);
+registerFactory<ID2D1LinearGradientBrush>(D2D1LinearGradientBrushHook::sNewInstance, D2D1LinearGradientBrushHook::sDeleteInstance, nullptr);
+registerFactory<ID2D1RenderTarget>(D2D1RenderTargetHook::sNewInstance, D2D1RenderTargetHook::sDeleteInstance, nullptr);
+registerFactory<ID2D1RectangleGeometry>(D2D1RectangleGeometryHook::sNewInstance, D2D1RectangleGeometryHook::sDeleteInstance, nullptr);
+registerFactory<ID2D1HwndRenderTarget>(D2D1HwndRenderTargetHook::sNewInstance, D2D1HwndRenderTargetHook::sDeleteInstance, nullptr);
+registerFactory<ID2D1StrokeStyle>(D2D1StrokeStyleHook::sNewInstance, D2D1StrokeStyleHook::sDeleteInstance, nullptr);
+registerFactory<ID2D1GdiInteropRenderTarget>(D2D1GdiInteropRenderTargetHook::sNewInstance, D2D1GdiInteropRenderTargetHook::sDeleteInstance, nullptr);
+registerFactory<ID2D1EllipseGeometry>(D2D1EllipseGeometryHook::sNewInstance, D2D1EllipseGeometryHook::sDeleteInstance, nullptr);
+registerFactory<ID2D1Brush>(D2D1BrushHook::sNewInstance, D2D1BrushHook::sDeleteInstance, nullptr);
+registerFactory<ID2D1TessellationSink>(D2D1TessellationSinkHook::sNewInstance, D2D1TessellationSinkHook::sDeleteInstance, nullptr);
+registerFactory<ID2D1DCRenderTarget>(D2D1DCRenderTargetHook::sNewInstance, D2D1DCRenderTargetHook::sDeleteInstance, nullptr);
+registerFactory<ID2D1GeometrySink>(D2D1GeometrySinkHook::sNewInstance, D2D1GeometrySinkHook::sDeleteInstance, nullptr);
+registerFactory<ID2D1DrawingStateBlock>(D2D1DrawingStateBlockHook::sNewInstance, D2D1DrawingStateBlockHook::sDeleteInstance, nullptr);
+registerFactory<ID2D1Bitmap>(D2D1BitmapHook::sNewInstance, D2D1BitmapHook::sDeleteInstance, nullptr);
+registerFactory<ID2D1GeometryGroup>(D2D1GeometryGroupHook::sNewInstance, D2D1GeometryGroupHook::sDeleteInstance, nullptr);
+registerFactory<ID2D1BitmapBrush>(D2D1BitmapBrushHook::sNewInstance, D2D1BitmapBrushHook::sDeleteInstance, nullptr);
+registerFactory<ID2D1Image>(D2D1ImageHook::sNewInstance, D2D1ImageHook::sDeleteInstance, nullptr);
+registerFactory<ID2D1SolidColorBrush>(D2D1SolidColorBrushHook::sNewInstance, D2D1SolidColorBrushHook::sDeleteInstance, nullptr);
+registerFactory<ID2D1RadialGradientBrush>(D2D1RadialGradientBrushHook::sNewInstance, D2D1RadialGradientBrushHook::sDeleteInstance, nullptr);
+registerFactory<ID2D1PathGeometry>(D2D1PathGeometryHook::sNewInstance, D2D1PathGeometryHook::sDeleteInstance, nullptr);
+registerFactory<ID2D1GradientStopCollection>(D2D1GradientStopCollectionHook::sNewInstance, D2D1GradientStopCollectionHook::sDeleteInstance, nullptr);
+registerFactory<ID2D1Resource>(D2D1ResourceHook::sNewInstance, D2D1ResourceHook::sDeleteInstance, nullptr);
+registerFactory<ID2D1Factory>(D2D1FactoryHook::sNewInstance, D2D1FactoryHook::sDeleteInstance, nullptr);
+registerFactory<ID2D1Layer>(D2D1LayerHook::sNewInstance, D2D1LayerHook::sDeleteInstance, nullptr);
+registerFactory<ID2D1SimplifiedGeometrySink>(D2D1SimplifiedGeometrySinkHook::sNewInstance, D2D1SimplifiedGeometrySinkHook::sDeleteInstance, nullptr);
+registerFactory<ID2D1Mesh>(D2D1MeshHook::sNewInstance, D2D1MeshHook::sDeleteInstance, nullptr);
+registerFactory<ID2D1BitmapRenderTarget>(D2D1BitmapRenderTargetHook::sNewInstance, D2D1BitmapRenderTargetHook::sDeleteInstance, nullptr);
+registerFactory<ID2D1Geometry>(D2D1GeometryHook::sNewInstance, D2D1GeometryHook::sDeleteInstance, nullptr);
+registerFactory<ID2D1TransformedGeometry>(D2D1TransformedGeometryHook::sNewInstance, D2D1TransformedGeometryHook::sDeleteInstance, nullptr);

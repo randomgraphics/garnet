@@ -1,4 +1,5 @@
 #include "pch.h"
+#include "d2dhooks.h"
 #include "d3d11hooks.h"
 #include "d3d9hooks.h"
 #define INSIDE_HOOK_DLL
@@ -35,6 +36,34 @@ static void * GetRealFunctionPtr(const wchar_t * dllName, const char * functionN
 }
 
 // *****************************************************************************
+// InterfaceDesc
+// *****************************************************************************
+
+static const InterfaceDesc sAllInterfaces[] =
+{
+    { __uuidof(IUnknown), "IUnknown", L"IUnknown" },
+
+#define DECLARE_D3D9_INTERFACE(x) { __uuidof(x), #x, L#x },
+#include "d3d9interfaces.inl"
+
+#define DECLARE_D3D11_INTERFACE(x) { __uuidof(x), #x, L#x },
+#include "d3d11interfaces.inl"
+
+#define DECLARE_D2D_INTERFACE(x) { __uuidof(x), #x, L#x },
+#include "d2dinterfaces.inl"
+};
+
+const InterfaceDesc * InterfaceDesc::sGetDescFromIID(const IID & iid)
+{
+    for(size_t i = 0; i < _countof(sAllInterfaces); ++i)
+    {
+        const InterfaceDesc & id = sAllInterfaces[i];
+        if (id.iid == iid) return &id;
+    }
+    return nullptr;
+}
+
+// *****************************************************************************
 // Class Factory
 // *****************************************************************************
 
@@ -44,6 +73,7 @@ void HookedClassFactory::registerAll()
 {
 #include "d3d11factories.inl"
 #include "d3d9factories.inl"
+#include "d2dfactories.inl"
 }
 
 // *****************************************************************************
@@ -168,32 +198,6 @@ UnknownBaseTable::get(IUnknown * realobj)
     {
         return iter->second->promote();
     }
-}
-
-// *****************************************************************************
-// InterfaceDesc
-// *****************************************************************************
-
-static const InterfaceDesc sAllInterfaces[] =
-{
-    { __uuidof(IUnknown), "IUnknown", L"IUnknown" },
-
-#define DECLARE_D3D9_INTERFACE(x) { __uuidof(x), #x, L#x },
-#include "d3d9interfaces.inl"
-
-#define DECLARE_D3D11_INTERFACE(x) { __uuidof(x), #x, L#x },
-#include "d3d11interfaces.inl"
-
-};
-
-const InterfaceDesc * InterfaceDesc::sGetDescFromIID(const IID & iid)
-{
-    for(size_t i = 0; i < _countof(sAllInterfaces); ++i)
-    {
-        const InterfaceDesc & id = sAllInterfaces[i];
-        if (id.iid == iid) return &id;
-    }
-    return nullptr;
 }
 
 // *****************************************************************************
