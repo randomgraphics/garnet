@@ -13,12 +13,12 @@ if 'icl' == GN.cc :
         ]
     ccflags += ['/W2'] + ['/Qwd%s'%w for w in unimportant_warnings]
     cppdefines += ['_CRT_SECURE_NO_DEPRECATE','_CRT_NONSTDC_NO_DEPRECATE','_SCL_SECURE_NO_WARNINGS']
-elif 'vc100' == GN.cc or 'vc110' == GN.cc or 'vc' == GN.cc:
+elif 'vc' == GN.cc[:2]:
     ccflags += ['/W3']
     cppdefines += ['_CRT_SECURE_NO_DEPRECATE','_CRT_NONSTDC_NO_DEPRECATE','_SCL_SECURE_NO_WARNINGS']
     unimportant_warnings = [
-    	'4146', # unary minus operator applied to unsigned type, result still unsigned
-    	]
+        '4146', # unary minus operator applied to unsigned type, result still unsigned
+        ]
     if 'x64' == GN.target_cpu:
         unimportant_warnings += [
             '4334', # 32-bit shift convert to 64-bit
@@ -31,8 +31,9 @@ elif 'xenon' == GN.cc:
 elif 'gcc' == GN.cc or 'mingw' == GN.cc:
     ccflags += ['-Wno-error=unused-but-set-variable']
 else:
-	traceback.print_exc()
-	GN.Error( 'Unknown compiler: ' + GN.cc );
+    import traceback
+    traceback.print_exc()
+    GN.Error( 'Unknown compiler: ' + GN.cc );
 
 # ========================
 # generate configurations
@@ -89,9 +90,9 @@ ft2_cluster = GN.BuildObjects( ft2_env, ft2_sources )
 # assimp
 ai_env = GN.NewBuildEnv()
 ai_env.Append(
-	CPPPATH=['#src/extern/inc/assimp','assimp/BoostWorkaround'],
-	CCFLAGS = ccflags,
-	CPPDEFINES = cppdefines + ['ASSIMP_BUILD_BOOST_WORKAROUND','ASSIMP_BUILD_NO_OWN_ZLIB'] )
+    CPPPATH=['#src/extern/inc/assimp','assimp/BoostWorkaround'],
+    CCFLAGS = ccflags,
+    CPPDEFINES = cppdefines + ['ASSIMP_BUILD_BOOST_WORKAROUND','ASSIMP_BUILD_NO_OWN_ZLIB'] )
 GN.RemoveEnvListItems( ai_env, 'CCFLAGS', ['/W4','/Wcheck','-Wall'] )
 assimp_sources = GN.Glob( 'assimp/*.cpp' )
 assimp_sources.remove(os.path.normpath('assimp/AssimpPCH.cpp'))
@@ -100,9 +101,9 @@ ai_cluster = GN.BuildObjects( ai_env, assimp_sources, 'AssimpPCH.h', 'assimp/Ass
 # assimp contrib
 ai_contrib_env = GN.NewBuildEnv()
 ai_contrib_env.Append(
-	CPPPATH=['#src/extern/inc/assimp','assimp/BoostWorkaround','assimp'],
-	CCFLAGS = ccflags,
-	CPPDEFINES = cppdefines + ['ASSIMP_BUILD_BOOST_WORKAROUND','ASSIMP_BUILD_NO_OWN_ZLIB'] )
+    CPPPATH=['#src/extern/inc/assimp','assimp/BoostWorkaround','assimp'],
+    CCFLAGS = ccflags,
+    CPPDEFINES = cppdefines + ['ASSIMP_BUILD_BOOST_WORKAROUND','ASSIMP_BUILD_NO_OWN_ZLIB'] )
 GN.RemoveEnvListItems( ai_contrib_env, 'CCFLAGS', ['/W4','/Wcheck','-Wall'] )
 ai_contrib_cluster = GN.BuildObjects( ai_contrib_env, GN.Glob( ['assimp/contrib/*.c','assimp/contrib/*.cpp'], True ) )
 
@@ -119,11 +120,11 @@ misc_cluster = GN.BuildObjects( misc_env, misc_sources )
 # Build the external lib
 # **********************
 objects = Flatten([
-	jpeg_cluster,
-	ft2_cluster,
-	ai_cluster,
-	ai_contrib_cluster,
-	misc_cluster
+    jpeg_cluster,
+    ft2_cluster,
+    ai_cluster,
+    ai_contrib_cluster,
+    misc_cluster
 ])
 GN.NewTarget( 'GNexternObjects', objects  )
 GN.NewTarget( 'GNexternLib', GN.BuildLib( None, 'GNextern', objects ) )

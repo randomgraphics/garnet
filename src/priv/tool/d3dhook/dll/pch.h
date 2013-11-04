@@ -84,7 +84,7 @@ inline const wchar_t * GetRealDllPath(const wchar_t * dllName)
 #undef _Outptr_result_bytebuffer_
 #define _Outptr_result_bytebuffer_(x)
 
-#define _Outptr_result_maybenull_
+#undef _Outptr_result_maybenull_
 #define _Outptr_result_maybenull_
 
 #undef _Outptr_result_buffer_
