@@ -24,6 +24,8 @@ if GN.has_d3d11:
 
     env.Depends( main2, [fxo,fxh] );
 
+    env.Append(LIBS = ['d2d1.lib', 'dwrite.lib'])
+
     sources = [
         "main2.cpp",
         "d3dx11dbg.cpp",
@@ -37,4 +39,4 @@ if GN.has_d3d11:
 
     GN.NewDefaultTarget(
         'GNtestD3D11',
-        GN.BinplaceProgram( GN.BuildProgram( None, 'GNtestD3D11', sources, 'pch.h', 'pch.cpp' ) ) )
+        GN.BinplaceProgram( GN.BuildProgram( env, 'GNtestD3D11', sources, 'pch.h', 'pch.cpp' ) ) )

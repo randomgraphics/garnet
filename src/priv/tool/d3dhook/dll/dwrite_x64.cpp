@@ -1,9 +1,12 @@
 #include "pch.h"
+#include "hooks_exports.h"
+
 HINSTANCE mHinst = 0, mHinstDLL = 0;
 extern "C" UINT_PTR mProcs[1] = {0};
 
 LPCSTR mImportNames[] = {"DWriteCreateFactory"};
-BOOL WINAPI DllMain( HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved ) {
+BOOL WINAPI DllMain( HINSTANCE hinstDLL, DWORD fdwReason, LPVOID )
+{
 	mHinst = hinstDLL;
 	if ( fdwReason == DLL_PROCESS_ATTACH ) {
 		mHinstDLL = LoadLibraryW( GetRealDllPath(L"dwrite.dll") );
