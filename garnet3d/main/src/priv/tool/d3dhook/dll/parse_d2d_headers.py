@@ -19,21 +19,23 @@ def UTIL_info( msg ): print '[INFO] %s'%msg
 
 # ------------------------------------------------------------------------------
 def UTIL_warn( msg ):
+    print
     print '===================================================================='
-    print '[WARN] %s'%msg
+    print '[WARN] ' + msg
     print '===================================================================='
+    print
 
 # ------------------------------------------------------------------------------
 def UTIL_error( msg ):
     print '===================================================================='
-    print '[ERROR] %s'%msg
+    print '[ERROR] ' + msg
     print '===================================================================='
 
 # ------------------------------------------------------------------------------
 # Fatal Error. Need to halt.
 def UTIL_fatal( msg ):
     print '===================================================================='
-    print '[FATAL] %s'%msg
+    print '[FATAL] ' + msg
     print '===================================================================='
     Exit(-1)
 
@@ -66,7 +68,8 @@ class FunctionParameter:
     def IsRef( self ):
         return '&' == self._type[-1:] or \
                self._type.find('REFGUID') >= 0 or \
-               self._type.find('REFIID') >= 0
+               self._type.find('REFIID') >= 0 or \
+               self._type.find('REFCLSID') >= 0
 
     # list parameters that we know we don't need to hook
     def __KnownUninterestedInterfaceParameter( self ):
@@ -365,9 +368,9 @@ def PARSE_get_func_parameter( interface_name, method_name, original_line ):
 # ------------------------------------------------------------------------------
 # Detect end of function decl
 def PARSE_is_end_of_function( line ):
-    if ') PURE;' == line:
+    if ') PURE;' == line[-7:]:
         return 'haha'
-    elif ') CONST PURE;' == line:
+    elif ') CONST PURE;' == line[-13:]:
         return 'const'
     else:
         return None
@@ -511,28 +514,26 @@ def PARSE_interface( interface_name, lines ):
         elif found and l[:2] == '};':
             ended = True
         elif found and (not ended):
-            if func_sig and len(l) > 0:
-                p = PARSE_get_func_parameter(interface_name, func_sig._name, l)
+            if func_sig:
+                if len(l) > 0:
+                    p = PARSE_get_func_parameter(interface_name, func_sig._name, l)
+                    fend = PARSE_is_end_of_function(l);
+                    if p:
+                        func_sig.AddParameter(p)
+                    if fend:
+                        if 'const' == fend: func_sig.SetConst(True)
+                        methods.append(func_sig)
+                        func_sig = None
+            else:
+                func_sig = PARSE_get_interface_method_decl(interface_name, l)
                 fend = PARSE_is_end_of_function(l);
-                if p:
-                    func_sig.AddParameter(p)
-                if fend:
+                if func_sig and fend:
+                    # this is an one-line function with no parameters
                     if 'const' == fend: func_sig.SetConst(True)
                     methods.append(func_sig)
                     func_sig = None
-            else:
-                f = PARSE_get_interface_method_decl(interface_name, l)
-                if f:
-                    # write function parameter, if it is not written yet.
-                    if func_sig is not None: methods.append(func_sig)
-                    func_sig = f
             pass
         pass # end-of-for
-
-    # Handle the last methd.
-    if func_sig is not None:
-        methods.append(func_sig)
-        func_sig = None
 
     # write methods to file
     if found and ended:
@@ -665,13 +666,13 @@ g_interfaceNameFile = InterfaceNameFile()
 with open( 'd3d/d2d1.h' ) as f:
     PARSE_interfaces_from_opened_file(f, [])
 
-'''# parse d2d1_1.h
+# parse d2d1_1.h
 with open( 'd3d/d2d1_1.h' ) as f:
     PARSE_interfaces_from_opened_file(f, [])
 
 # parse dwrite.h
 with open( 'd3d/dwrite.h' ) as f:
-    PARSE_interfaces_from_opened_file(f, [])'''
+    PARSE_interfaces_from_opened_file(f, [])
 
 # Register all factories
 with open("d2dfactories.inl", "w") as f:

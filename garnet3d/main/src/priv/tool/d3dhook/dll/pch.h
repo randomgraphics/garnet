@@ -105,8 +105,12 @@ inline const wchar_t * GetRealDllPath(const wchar_t * dllName)
 #undef _Notnull_
 #define _Notnull_
 
+#include "d3d/dxgi1_2.h"
+#include "d3d/dxgidebug.h"
 #include "d3d/d3d11_1.h"
+#include "d3d/d3d9.h"
 #include "d3d/d2d1_1.h"
+#include "d3d/dwrite.h"
 
 // *****************************************************************************
 //                                     EOF
