@@ -27,6 +27,7 @@ class MyApp : public D3D11Application
     AutoComPtr<ID3DX11Effect> effect;
     ArcBall                   arcball;
     Matrix44f                 world, view, proj;
+    TextRenderer              tr;
 
 public:
 
@@ -87,6 +88,13 @@ public:
         arcball.connectToInput();
         arcball.setMouseMoveWindow( 0, 0, (int)option.width, (int)option.height );
 
+        // initialize text renderer
+        TextRenderer::FontDesc fd;
+        fd.face   = L"simsun";
+        fd.width  = 32;
+        fd.height = 32;
+        if (!tr.initialize(dev, fd)) return false;
+
         // success
         return true;
 
@@ -95,6 +103,7 @@ public:
 
     void onDestroyDevice()
     {
+        tr.shutdown();
         effect.clear();
         mesh.quit();
 #if RENDER_TO_TEXTURE
@@ -134,6 +143,7 @@ public:
         resetToDefaultRenderTargets();
         quad.drawTexed( rtt.getColorBuffer(0).srv );
 #endif
+        tr.draw2DText(cxt, L"Simple D2D test app.", 10, 10, 0xFFFFFFFF);
     }
 };
 

@@ -498,7 +498,8 @@ def CheckConfig():
         vista = string.find( str, "6.0" ) >= 0
         win7  = string.find( str, "6.1" ) >= 0
         win8  = string.find( str, "6.2" ) >= 0
-        return  vista or win7 or win8
+        win81 = string.find( str, "6.3" ) >= 0
+        return  vista or win7 or win8 or win81
 
     # =====
     # D3D10

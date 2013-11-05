@@ -1,3 +1,2 @@
-LIBRARY .\dwrite.dll
 EXPORTS
 	DWriteCreateFactory=DWriteCreateFactory_wrapper @1

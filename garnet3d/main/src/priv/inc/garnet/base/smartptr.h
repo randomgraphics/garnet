@@ -558,29 +558,6 @@ namespace GN
         result->incref();
         return result;
     }
-
-    ///
-    /// This is used to create referenced counted class on stack (or as a member of another class)
-    // -------------------------------------------------------------------------
-    template<class REF_COUNTED_CLASS>
-    class StackRefCounter : public REF_COUNTED_CLASS
-    {
-    public:
-
-        /// Destructor
-        virtual ~StackRefCounter()
-        {
-            REF_COUNTED_CLASS::decref();
-        }
-
-    protected:
-
-        /// Do nothing for self destruction
-        virtual void selfDestruct() const
-        {
-            // do nothing here.
-        }
-    };
 }
 
 // *****************************************************************************
