@@ -9,9 +9,11 @@
 #include <garnet/GNbase.h>
 #include <map>
 
-#define HOOK_ERROR_LOG GN_ERROR(GN::getLogger("GN.d3dhook"))
-#define HOOK_INFO_LOG  GN_INFO(GN::getLogger("GN.d3dhook"))
-#define HOOK_WARN_LOG  GN_WARN(GN::getLogger("GN.d3dhook"))
+#define HOOK_ERROR_LOG(...) GN_ERROR(GN::getLogger("GN.d3dhook"))(__VA_ARGS__)
+#define HOOK_INFO_LOG(...)  GN_INFO(GN::getLogger("GN.d3dhook"))(__VA_ARGS__)
+#define HOOK_WARN_LOG(...)  GN_WARN(GN::getLogger("GN.d3dhook"))(__VA_ARGS__)
+#define HOOK_ASSERT(x)      GN_ASSERT(x)
+#define HOOK_RIP()          GN_UNEXPECTED()
 
 // -----------------------------------------------------------------------------
 template<class QI_CLASS, class CURRENT_CLASS>
@@ -173,7 +175,7 @@ public:
         if (iter == _factories.end())
         {
             // should never reach here
-            GN_UNEXPECTED();
+            HOOK_RIP();
         }
         else
         {
@@ -201,7 +203,8 @@ private:
 
         if (!result.second)
         {
-            GN_UNEXPECTED_EX("The factory has been registered.");
+            //The factory has been registered.
+            HOOK_RIP();
         }
     }
 
@@ -264,7 +267,7 @@ IHooked : public IUnknown
 /// Check if the pointer is pointing to a hooked instance.
 inline bool IsHooked(IUnknown * ptr)
 {
-    GN_ASSERT(ptr);
+    HOOK_ASSERT(ptr);
     GN::AutoComPtr<IHooked> ihook = Qi<IHooked>(ptr);
     return nullptr != ihook;
 }
@@ -293,10 +296,10 @@ protected:
 
     virtual ~UnknownBase()
     {
-        GN_ASSERT(0 == _refCount);
-        GN_ASSERT(0 == _weakRefTracker->base);
-        GN_ASSERT(0 == _weakRefTracker->weakRefs.next);
-        GN_ASSERT(0 == _weakRefTracker->weakRefs.prev);
+        HOOK_ASSERT(0 == _refCount);
+        HOOK_ASSERT(0 == _weakRefTracker->base);
+        HOOK_ASSERT(0 == _weakRefTracker->weakRefs.next);
+        HOOK_ASSERT(0 == _weakRefTracker->weakRefs.prev);
         for(UINT i = 0; i < _interfaceCount; ++i)
         {
             HookedClassFactory::sGetInstance().deleteOld( _interfaces[i].iid, _interfaces[i].hooked );
@@ -311,7 +314,7 @@ public:
 
     static GN::AutoComPtr<UnknownBase> sCreateNew(IUnknown * realobj)
     {
-        GN_ASSERT(realobj);
+        HOOK_ASSERT(realobj);
         GN::AutoComPtr<UnknownBase> p;
         try
         {
@@ -352,7 +355,7 @@ public:
                 return _interfaces[i].real;
             }
         }
-        GN_UNEXPECTED();
+        HOOK_RIP();
         return nullptr;
     }
 
@@ -368,7 +371,7 @@ public:
         IUnknown * hooked = getHookedInternal(iid, real);
         if (nullptr == hooked)
         {
-            GN_UNEXPECTED();
+            HOOK_RIP();
         }
         return hooked;
     }
@@ -379,7 +382,7 @@ public:
         IUnknown * hooked = getHookedInternal(iid);
         if (nullptr == hooked)
         {
-            GN_UNEXPECTED();
+            HOOK_RIP();
         }
         return hooked;
     }
@@ -396,7 +399,7 @@ public:
     {
         _cs.Enter();
         _weakRefTracker->lock.lock();
-        GN_ASSERT(_refCount > 0);
+        HOOK_ASSERT(_refCount > 0);
         ULONG c = --_refCount;
         // within the locks, we need to invalidate all weak references, if refcount reaches zero.
         if( 0 == c )
@@ -475,14 +478,14 @@ private:
         if (_interfaceCount >= MAX_INTERFACES)
         {
             // should never happen.
-            GN_UNEXPECTED();
+            HOOK_RIP();
             return;
         }
 
         if (!hooked || !real)
         {
             // should never happen.
-            GN_UNEXPECTED();
+            HOOK_RIP();
             return;
         }
 
@@ -492,7 +495,7 @@ private:
             if (_interfaces[i].iid == iid)
             {
                 // should never happen.
-                GN_UNEXPECTED();
+                HOOK_RIP();
                 return;
             }
         }
@@ -585,7 +588,7 @@ public:
     virtual ULONG STDMETHODCALLTYPE Release()
     {
         _cs.Enter();
-        GN_ASSERT(_refCount > 0);
+        HOOK_ASSERT(_refCount > 0);
         ULONG c = --_refCount;
         _cs.Leave();
 
@@ -607,7 +610,7 @@ public:
         }
         else
         {
-            GN_UNEXPECTED(); // should never reach here.
+            HOOK_RIP(); // should never reach here.
             return E_NOINTERFACE;
         }
     }
@@ -618,7 +621,7 @@ public:
         if( base )
         {
             _tracker = base->getWeakRefTracker();
-            GN_ASSERT(_tracker->base == base);
+            HOOK_ASSERT(_tracker->base == base);
             _tracker->lock.lock();
             _link.linkAfter( &_tracker->weakRefs );
             _link.context = this;
@@ -635,9 +638,9 @@ public:
             _tracker->lock.unlock();
             _tracker.clear();
         }
-        GN_ASSERT( NULL == _tracker );
-        GN_ASSERT( NULL == _link.prev );
-        GN_ASSERT( NULL == _link.next );
+        HOOK_ASSERT( NULL == _tracker );
+        HOOK_ASSERT( NULL == _link.prev );
+        HOOK_ASSERT( NULL == _link.next );
     }
 
     // Promote weak reference to strong reference (might return null)
@@ -687,7 +690,7 @@ protected:
     {
         if (IsHooked(realobj))
         {
-            GN_UNEXPECTED();
+            HOOK_RIP();
         }
         else
         {
@@ -707,7 +710,7 @@ public:
     // No AddRef()
     REAL_INTERFACE * GetRealObj() const
     {
-        GN_ASSERT(_realPtr);
+        HOOK_ASSERT(_realPtr);
         return _realPtr;
     }
 
@@ -733,7 +736,7 @@ inline REAL_INTERFACE * HookedToReal(REAL_INTERFACE * hooked)
     if (nullptr == ihook)
     {
         // hooked is pointing to real object.
-        //GN_UNEXPECTED();
+        //HOOK_RIP();
         return hooked;
     }
 
@@ -756,7 +759,7 @@ public:
     {
         if (count > _countof(_items))
         {
-            GN_UNEXPECTED();
+            HOOK_RIP();
             count = _countof(_items);
         }
 

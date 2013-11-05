@@ -16,7 +16,7 @@ inline IUnknown * RealToHooked_D2D(const IID & realiid, INPUT_TYPE * realobj)
     if (IsHooked(realobj))
     {
         // Expecting a realobj, not a hooked object.
-        GN_UNEXPECTED();
+        HOOK_ASSERT(false);
         return realobj;
     }
 
@@ -35,7 +35,7 @@ inline IUnknown * RealToHooked_D2D(const IID & realiid, INPUT_TYPE * realobj)
     IUnknown * hooked;
     if (SUCCEEDED(base->QueryInterface(realiid, (void**)&hooked)))
     {
-        GN_ASSERT(hooked);
+        HOOK_ASSERT(hooked);
         realobj->Release();
         return hooked;
     }
