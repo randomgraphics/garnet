@@ -1,5 +1,4 @@
-#include <windows.h>
-#include <stdio.h>
+#include "pch.h"
 HINSTANCE mHinst = 0, mHinstDLL = 0;
 extern "C" UINT_PTR mProcs[1] = {0};
 
@@ -7,7 +6,7 @@ LPCSTR mImportNames[] = {"DWriteCreateFactory"};
 BOOL WINAPI DllMain( HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved ) {
 	mHinst = hinstDLL;
 	if ( fdwReason == DLL_PROCESS_ATTACH ) {
-		mHinstDLL = LoadLibrary( "ori_.\dwrite.dll" );
+		mHinstDLL = LoadLibraryW( GetRealDllPath(L"dwrite.dll") );
 		if ( !mHinstDLL )
 			return ( FALSE );
 		for ( int i = 0; i < 1; i++ )
@@ -18,4 +17,12 @@ BOOL WINAPI DllMain( HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved ) {
 	return ( TRUE );
 }
 
-extern "C" void DWriteCreateFactory_wrapper();
+//extern "C" void DWriteCreateFactory_wrapper();
+extern "C" HRESULT WINAPI DWriteCreateFactory_wrapper(
+    _In_ DWRITE_FACTORY_TYPE factoryType,
+    _In_ REFIID iid,
+    _Out_ IUnknown **factory
+    )
+{
+    return DWriteCreateFactoryHook(factoryType, iid, factory);
+}

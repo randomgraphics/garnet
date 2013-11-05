@@ -1,15 +1,13 @@
-#include <windows.h>
-#include "d3d/d3d11_1.h"
-#include "d3d/d3d9.h"
-
 #ifdef INSIDE_HOOK_DLL
 #define HOOK_API __declspec(dllexport)
 #else
 #define HOOK_API __declspec(dllimport)
 #endif
 
-//
-//
+// *****************************************************************************
+// DXGI
+// *****************************************************************************
+
 // -----------------------------------------------------------------------------
 HOOK_API HRESULT WINAPI CreateDXGIFactoryHook(
     const char * funcName,
@@ -17,8 +15,10 @@ HOOK_API HRESULT WINAPI CreateDXGIFactoryHook(
     void **ppFactory
 );
 
-//
-//
+// *****************************************************************************
+// D3D11
+// *****************************************************************************
+
 // -----------------------------------------------------------------------------
 HOOK_API HRESULT WINAPI
 D3D11CreateDeviceHook(
@@ -33,8 +33,6 @@ D3D11CreateDeviceHook(
     __out_opt D3D_FEATURE_LEVEL* pFeatureLevel,
     __out_opt ID3D11DeviceContext** ppImmediateContext );
 
-//
-//
 // -----------------------------------------------------------------------------
 HOOK_API HRESULT WINAPI
 D3D11CreateDeviceAndSwapChainHook(
@@ -51,12 +49,54 @@ D3D11CreateDeviceAndSwapChainHook(
     __out_opt D3D_FEATURE_LEVEL* pFeatureLevel,
     __out_opt ID3D11DeviceContext** ppImmediateContext );
 
-//
-//
+// *****************************************************************************
+// D3D9
+// *****************************************************************************
+
 // -----------------------------------------------------------------------------
 HOOK_API IDirect3D9 * WINAPI Direct3DCreate9Hook(UINT SDKVersion);
+
+// -----------------------------------------------------------------------------
+HOOK_API HRESULT WINAPI Direct3DCreate9ExHook(UINT SDKVersion, IDirect3D9Ex **ppD3D);
+
+// *****************************************************************************
+// D2D1
+// *****************************************************************************
+
+// -----------------------------------------------------------------------------
+HOOK_API HRESULT WINAPI
+D2D1CreateDeviceHook(
+    _In_ IDXGIDevice *dxgiDevice,
+    _In_opt_ CONST D2D1_CREATION_PROPERTIES *creationProperties,
+    _Outptr_ ID2D1Device **d2dDevice
+);
+
+// -----------------------------------------------------------------------------
+HOOK_API HRESULT WINAPI
+D2D1CreateDeviceContextHook(
+    _In_ IDXGISurface *dxgiSurface,
+    _In_opt_ CONST D2D1_CREATION_PROPERTIES *creationProperties,
+    _Outptr_ ID2D1DeviceContext **d2dDeviceContext
+);
 
 //
 //
 // -----------------------------------------------------------------------------
-HOOK_API HRESULT WINAPI Direct3DCreate9ExHook(UINT SDKVersion, IDirect3D9Ex **ppD3D);
+HOOK_API HRESULT WINAPI
+D2D1CreateFactoryHook(
+    _In_ D2D1_FACTORY_TYPE factoryType,
+    _In_ REFIID riid,
+    _In_opt_ CONST D2D1_FACTORY_OPTIONS *pFactoryOptions,
+    _Out_ void **ppIFactory
+);
+
+// *****************************************************************************
+// DWRITE
+// *****************************************************************************
+
+// -----------------------------------------------------------------------------
+HOOK_API HRESULT WINAPI DWriteCreateFactoryHook(
+    _In_ DWRITE_FACTORY_TYPE factoryType,
+    _In_ REFIID iid,
+    _Out_ IUnknown **factory
+);

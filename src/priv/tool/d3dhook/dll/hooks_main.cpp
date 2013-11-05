@@ -36,6 +36,22 @@ static void * GetRealFunctionPtr(const wchar_t * dllName, const char * functionN
 }
 
 // *****************************************************************************
+// Global options
+// *****************************************************************************
+
+struct Options
+{
+    bool enabled; // global switch to enable/disable the hooked libarary.
+
+    Options()
+    {
+        ZeroMemory(this, sizeof(*this));
+        enabled = true;
+    }
+};
+static Options g_options;
+
+// *****************************************************************************
 // InterfaceDesc
 // *****************************************************************************
 
@@ -204,8 +220,6 @@ UnknownBaseTable::get(IUnknown * realobj)
 // D3D11 global functions
 // *****************************************************************************
 
-#define HOOK_ENABLED 1
-
 typedef HRESULT (WINAPI * PFN_CREATE_DXGI_FACTORY)(const IID & riid, void **ppFactory);
 
 //
@@ -226,13 +240,11 @@ CreateDXGIFactoryHook(
     if (nullptr == realFunc) return E_FAIL;
 
     HRESULT hr = realFunc(riid, ppFactory);
-#if HOOK_ENABLED
-    if( SUCCEEDED(hr) && 1 == trace.getCurrentLevel() )
+    if( g_options.enabled && SUCCEEDED(hr) && 1 == trace.getCurrentLevel() )
     {
         if( ppFactory ) *ppFactory = RealToHooked11(riid, (IDXGIObject*)*ppFactory);
     }
-#endif
-    // success
+
     return hr;
 }
 
@@ -259,14 +271,6 @@ D3D11CreateDeviceHook(
         "D3D11CreateDevice");
     if (nullptr == realFunc) return E_FAIL;
 
-#if !HOOK_ENABLED
-    return realFunc(
-        pAdapter,
-        DriverType, Software, Flags, pFeatureLevels, FeatureLevels, SDKVersion,
-        ppDevice,
-        pFeatureLevel,
-        ppImmediateContext);
-#else
     HRESULT hr = realFunc(
         HookedToReal(pAdapter),
         DriverType, Software, Flags, pFeatureLevels, FeatureLevels, SDKVersion,
@@ -274,14 +278,13 @@ D3D11CreateDeviceHook(
         pFeatureLevel,
         ppImmediateContext);
 
-    if( SUCCEEDED(hr) && 1 == trace.getCurrentLevel() )
+    if( g_options.enabled && SUCCEEDED(hr) && 1 == trace.getCurrentLevel() )
     {
         if( ppDevice ) *ppDevice = RealToHooked11(*ppDevice);
         if( ppImmediateContext ) *ppImmediateContext = RealToHooked11(*ppImmediateContext);
     }
 
     return hr;
-#endif
 }
 
 //
@@ -309,16 +312,6 @@ D3D11CreateDeviceAndSwapChainHook(
         "D3D11CreateDeviceAndSwapChain");
     if (nullptr == realFunc) return E_FAIL;
 
-#if !HOOK_ENABLED
-    return realFunc(
-        pAdapter,
-        DriverType, Software, Flags, pFeatureLevels, FeatureLevels, SDKVersion,
-        pSwapChainDesc,
-        ppSwapChain,
-        ppDevice,
-        pFeatureLevel,
-        ppImmediateContext);
-#else
     HRESULT hr = realFunc(
         HookedToReal(pAdapter),
         DriverType, Software, Flags, pFeatureLevels, FeatureLevels, SDKVersion,
@@ -328,7 +321,7 @@ D3D11CreateDeviceAndSwapChainHook(
         pFeatureLevel,
         ppImmediateContext);
 
-    if( SUCCEEDED(hr) && 1 == trace.getCurrentLevel() )
+    if( g_options.enabled && SUCCEEDED(hr) && 1 == trace.getCurrentLevel() )
     {
         if( ppSwapChain ) *ppSwapChain = RealToHooked11(*ppSwapChain);
         if( ppDevice ) *ppDevice = RealToHooked11(*ppDevice);
@@ -336,7 +329,6 @@ D3D11CreateDeviceAndSwapChainHook(
     }
 
     return hr;
-#endif
 }
 
 // *****************************************************************************
@@ -360,12 +352,10 @@ HOOK_API IDirect3D9 * WINAPI Direct3DCreate9Hook(UINT SDKVersion)
 
     IDirect3D9 * d3d9 = realFunc(SDKVersion);
 
-#if HOOK_ENABLED
-    if( nullptr != d3d9 && 1 == trace.getCurrentLevel() )
+    if( g_options.enabled && nullptr != d3d9 && 1 == trace.getCurrentLevel() )
     {
         d3d9 = RealToHooked9(d3d9);
     }
-#endif
 
     return d3d9;
 }
@@ -385,12 +375,161 @@ HOOK_API HRESULT WINAPI Direct3DCreate9ExHook(UINT SDKVersion, IDirect3D9Ex **pp
 
     HRESULT hr = realFunc(SDKVersion, ppD3D);
 
-#if HOOK_ENABLED
-    if( SUCCEEDED(hr) && 1 == trace.getCurrentLevel() )
+    if( g_options.enabled && SUCCEEDED(hr) && 1 == trace.getCurrentLevel() )
     {
         if( ppD3D ) *ppD3D = RealToHooked9(*ppD3D);
     }
-#endif
+
+    return hr;
+}
+
+// *****************************************************************************
+// D2D1
+// *****************************************************************************
+
+typedef HRESULT (WINAPI * PFN_D2D1_CREATE_DEVICE)(
+    _In_ IDXGIDevice *dxgiDevice,
+    _In_opt_ CONST D2D1_CREATION_PROPERTIES *creationProperties,
+    _Outptr_ ID2D1Device **d2dDevice);
+
+typedef HRESULT (WINAPI * PFN_D2D1_CREATE_DEVICE_CONTEXT)(
+    _In_ IDXGISurface *dxgiSurface,
+    _In_opt_ CONST D2D1_CREATION_PROPERTIES *creationProperties,
+    _Outptr_ ID2D1DeviceContext **d2dDeviceContext
+);
+
+typedef HRESULT (WINAPI * PFN_D2D1_CREATE_FACTORY)(
+    _In_ D2D1_FACTORY_TYPE factoryType,
+    _In_ REFIID riid,
+    _In_opt_ CONST D2D1_FACTORY_OPTIONS *pFactoryOptions,
+    _Out_ void **ppIFactory
+);
+
+// -----------------------------------------------------------------------------
+HOOK_API HRESULT WINAPI
+D2D1CreateDeviceHook(
+    _In_ IDXGIDevice *dxgiDevice,
+    _In_opt_ CONST D2D1_CREATION_PROPERTIES *creationProperties,
+    _Outptr_ ID2D1Device **d2dDevice
+)
+{
+    calltrace::AutoTrace trace("D2D1CreateDevice");
+
+    PFN_D2D1_CREATE_DEVICE realFunc = (PFN_D2D1_CREATE_DEVICE)GetRealFunctionPtr(
+        GetRealDllPath(L"d2d1.dll"),
+        "D2D1CreateDevice");
+
+    if (nullptr == realFunc) return E_FAIL;
+
+    HRESULT hr = realFunc(
+        1 == trace.getCurrentLevel() ? HookedToReal(dxgiDevice) : dxgiDevice,
+        creationProperties,
+        d2dDevice);
+
+    if( g_options.enabled && SUCCEEDED(hr) && 1 == trace.getCurrentLevel() )
+    {
+        if( d2dDevice ) *d2dDevice = RealToHooked_D2D(*d2dDevice);
+    }
+
+    return hr;
+}
+
+// -----------------------------------------------------------------------------
+HOOK_API HRESULT WINAPI
+D2D1CreateDeviceContextHook(
+    _In_ IDXGISurface *dxgiSurface,
+    _In_opt_ CONST D2D1_CREATION_PROPERTIES *creationProperties,
+    _Outptr_ ID2D1DeviceContext **d2dDeviceContext
+)
+{
+    calltrace::AutoTrace trace("D2D1CreateDeviceContext");
+
+    PFN_D2D1_CREATE_DEVICE_CONTEXT realFunc = (PFN_D2D1_CREATE_DEVICE_CONTEXT)GetRealFunctionPtr(
+        GetRealDllPath(L"d2d1.dll"),
+        "D2D1CreateDeviceContext");
+
+    if (nullptr == realFunc) return E_FAIL;
+
+    HRESULT hr = realFunc(
+        1 == trace.getCurrentLevel() ? HookedToReal(dxgiSurface) : dxgiSurface,
+        creationProperties,
+        d2dDeviceContext);
+
+    if( g_options.enabled && SUCCEEDED(hr) && 1 == trace.getCurrentLevel() )
+    {
+        if( d2dDeviceContext ) *d2dDeviceContext = RealToHooked_D2D(*d2dDeviceContext);
+    }
+
+    return hr;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+HOOK_API HRESULT WINAPI
+D2D1CreateFactoryHook(
+    _In_ D2D1_FACTORY_TYPE factoryType,
+    _In_ REFIID riid,
+    _In_opt_ CONST D2D1_FACTORY_OPTIONS *pFactoryOptions,
+    _Out_ void **ppIFactory
+)
+{
+    calltrace::AutoTrace trace("D2D1CreateFactory");
+
+    PFN_D2D1_CREATE_FACTORY realFunc = (PFN_D2D1_CREATE_FACTORY)GetRealFunctionPtr(
+        GetRealDllPath(L"d2d1.dll"),
+        "D2D1CreateFactory");
+
+    if (nullptr == realFunc) return E_FAIL;
+
+    HRESULT hr = realFunc(
+        factoryType,
+        riid,
+        pFactoryOptions,
+        ppIFactory);
+
+    if( g_options.enabled && SUCCEEDED(hr) && 1 == trace.getCurrentLevel() )
+    {
+        if( ppIFactory ) *ppIFactory = RealToHooked_D2D(riid, (IUnknown*)*ppIFactory);
+    }
+
+    return hr;
+}
+
+// *****************************************************************************
+// DWRITE
+// *****************************************************************************
+
+typedef HRESULT (WINAPI * PFN_DWRITE_CREATE_FACTORY)(
+    _In_ DWRITE_FACTORY_TYPE factoryType,
+    _In_ REFIID iid,
+    _Out_ IUnknown **factory
+);
+
+// -----------------------------------------------------------------------------
+HOOK_API HRESULT WINAPI DWriteCreateFactoryHook(
+    _In_ DWRITE_FACTORY_TYPE factoryType,
+    _In_ REFIID iid,
+    _Out_ IUnknown **factory
+)
+{
+    calltrace::AutoTrace trace("DWriteCreateFactory");
+
+    PFN_DWRITE_CREATE_FACTORY realFunc = (PFN_DWRITE_CREATE_FACTORY)GetRealFunctionPtr(
+        GetRealDllPath(L"dwrite.dll"),
+        "DWriteCreateFactory");
+
+    if (nullptr == realFunc) return E_FAIL;
+
+    HRESULT hr = realFunc(
+        factoryType,
+        iid,
+        factory);
+
+    if( g_options.enabled && SUCCEEDED(hr) && 1 == trace.getCurrentLevel() )
+    {
+        if( factory ) *factory = RealToHooked_D2D(iid, (IUnknown*)*factory);
+    }
 
     return hr;
 }
