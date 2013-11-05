@@ -58,22 +58,22 @@ public:
         DeleteCriticalSection(&_cs);
     }
 
-    CRITICAL_SECTION * GetRawCS() const
+    CRITICAL_SECTION * rawCS() const
     {
         return &_cs;
     }
 
-    BOOL TryEnter() const
+    BOOL tryEnter() const
     {
         return TryEnterCriticalSection(&_cs);
     }
 
-    void Enter() const
+    void enter() const
     {
         EnterCriticalSection(&_cs);
     }
 
-    void Leave() const
+    void leave() const
     {
         LeaveCriticalSection(&_cs);
     }
@@ -95,7 +95,7 @@ public:
         }
 
         explicit AutoLock(CritSec & cs)
-            : _pcs(cs.GetRawCS())
+            : _pcs(cs.rawCS())
         {
             if(NULL != _pcs)
             {
@@ -105,10 +105,10 @@ public:
 
         ~AutoLock()
         {
-            Unlock();
+            unlock();
         }
 
-        void Unlock()
+        void unlock()
         {
             if (NULL != _pcs)
             {
@@ -283,7 +283,7 @@ inline bool IsReal(IUnknown * ptr)
 /// The lock object for thread safe reference management.
 struct WeakRefTracker : GN::RefCounter
 {
-    GN::Mutex       lock;
+    CritSec         lock;
     UnknownBase *   base;     // pointer to the object that we are referencing to
     GN::DoubleLink  weakRefs; // double linked list of all weak references.
 };
@@ -389,16 +389,16 @@ public:
 
     virtual ULONG STDMETHODCALLTYPE AddRef()
     {
-        _cs.Enter();
+        _cs.enter();
         ULONG c = ++_refCount;
-        _cs.Leave();
+        _cs.leave();
         return c;
     }
 
     virtual ULONG STDMETHODCALLTYPE Release()
     {
-        _cs.Enter();
-        _weakRefTracker->lock.lock();
+        _cs.enter();
+        _weakRefTracker->lock.enter();
         HOOK_ASSERT(_refCount > 0);
         ULONG c = --_refCount;
         // within the locks, we need to invalidate all weak references, if refcount reaches zero.
@@ -406,8 +406,8 @@ public:
         {
             invalidateAllWeakRefs();
         }
-        _weakRefTracker->lock.unlock();
-        _cs.Leave();
+        _weakRefTracker->lock.leave();
+        _cs.leave();
 
         if( 0 == c )
         {
@@ -579,18 +579,18 @@ public:
 
     virtual ULONG STDMETHODCALLTYPE AddRef()
     {
-        _cs.Enter();
+        _cs.enter();
         ULONG c = ++_refCount;
-        _cs.Leave();
+        _cs.leave();
         return c;
     }
 
     virtual ULONG STDMETHODCALLTYPE Release()
     {
-        _cs.Enter();
+        _cs.enter();
         HOOK_ASSERT(_refCount > 0);
         ULONG c = --_refCount;
-        _cs.Leave();
+        _cs.leave();
 
         if( 0 == c )
         {
@@ -622,10 +622,10 @@ public:
         {
             _tracker = base->getWeakRefTracker();
             HOOK_ASSERT(_tracker->base == base);
-            _tracker->lock.lock();
+            _tracker->lock.enter();
             _link.linkAfter( &_tracker->weakRefs );
             _link.context = this;
-            _tracker->lock.unlock();
+            _tracker->lock.leave();
         }
     }
 
@@ -633,9 +633,9 @@ public:
     {
         if( _tracker )
         {
-            _tracker->lock.lock();
+            _tracker->lock.enter();
             _link.detach();
-            _tracker->lock.unlock();
+            _tracker->lock.leave();
             _tracker.clear();
         }
         HOOK_ASSERT( NULL == _tracker );
@@ -649,9 +649,9 @@ public:
         GN::AutoComPtr<UnknownBase> result;
         if( _tracker )
         {
-            _tracker->lock.lock();      // this lock prevents base from being released.
+            _tracker->lock.enter();      // this lock prevents base from being released.
             result.set(_tracker->base); // this will increase base ref count by one.
-            _tracker->lock.unlock();
+            _tracker->lock.leave();
         }
         return result;
     }
