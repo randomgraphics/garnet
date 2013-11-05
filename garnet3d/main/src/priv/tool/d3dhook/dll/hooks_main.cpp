@@ -170,12 +170,12 @@ static void UnknownBaseDestructNotif(UnknownBase * base, void *)
     ObjectMap::const_iterator iter = g_table.objects.find((intptr_t)realUnknown);
     if( g_table.objects.end() != iter )
     {
-        GN_ASSERT(!iter->second->promote());
+        HOOK_ASSERT(!iter->second->promote());
         g_table.objects.erase(iter);
     }
     else
     {
-        GN_UNEXPECTED();
+        HOOK_RIP();
     }
 }
 
@@ -186,10 +186,10 @@ void UnknownBaseTable::add(IUnknown * realobj, UnknownBase * hooked)
 {
     CritSec::AutoLock lock(g_table.cs);
     GN::AutoComPtr<IUnknown> realUnknown = Qi<IUnknown>(realobj);
-    GN_ASSERT(g_table.objects.end() == g_table.objects.find((intptr_t)realUnknown.get()));
+    HOOK_ASSERT(g_table.objects.end() == g_table.objects.find((intptr_t)realUnknown.get()));
     AutoComPtr<WeakUnknownRef> ref;
     ref.set(new WeakUnknownRef);
-    GN_ASSERT(hooked);
+    HOOK_ASSERT(hooked);
     ref->attach(hooked);
     hooked->setDestructNotif(UnknownBaseDestructNotif, nullptr);
     g_table.objects[(intptr_t)realUnknown.get()] = ref;
