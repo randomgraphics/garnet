@@ -124,6 +124,12 @@ namespace GN
         void lock();
         void unlock();
         //@}
+
+        //@{
+        bool tryEnter() { return trylock(); }
+        void enter() { return lock(); }
+        void leave() { return unlock(); }
+        //@}
     };
 
     ///
