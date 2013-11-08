@@ -52,6 +52,11 @@ typedef struct ID3D11DeviceChildVtbl
     END_INTERFACE
 } ID3D11DeviceChildVtbl;
 
+extern ID3D11DeviceChildVtbl ID3D11DeviceChild_Original;
+extern ID3D11DeviceChildVtbl ID3D11DeviceChild_Hooked;
+extern ID3D11DeviceChildVtbl ID3D11DeviceChild_JumpToOrignal;
+extern ID3D11DeviceChildVtbl ID3D11DeviceChild_CallTrace;
+
 // -----------------------------------------------------------------------------
 // ID3D11DepthStencilState
 // -----------------------------------------------------------------------------
@@ -108,6 +113,11 @@ typedef struct ID3D11DepthStencilStateVtbl
 
     END_INTERFACE
 } ID3D11DepthStencilStateVtbl;
+
+extern ID3D11DepthStencilStateVtbl ID3D11DepthStencilState_Original;
+extern ID3D11DepthStencilStateVtbl ID3D11DepthStencilState_Hooked;
+extern ID3D11DepthStencilStateVtbl ID3D11DepthStencilState_JumpToOrignal;
+extern ID3D11DepthStencilStateVtbl ID3D11DepthStencilState_CallTrace;
 
 // -----------------------------------------------------------------------------
 // ID3D11BlendState
@@ -166,6 +176,11 @@ typedef struct ID3D11BlendStateVtbl
     END_INTERFACE
 } ID3D11BlendStateVtbl;
 
+extern ID3D11BlendStateVtbl ID3D11BlendState_Original;
+extern ID3D11BlendStateVtbl ID3D11BlendState_Hooked;
+extern ID3D11BlendStateVtbl ID3D11BlendState_JumpToOrignal;
+extern ID3D11BlendStateVtbl ID3D11BlendState_CallTrace;
+
 // -----------------------------------------------------------------------------
 // ID3D11RasterizerState
 // -----------------------------------------------------------------------------
@@ -222,6 +237,11 @@ typedef struct ID3D11RasterizerStateVtbl
 
     END_INTERFACE
 } ID3D11RasterizerStateVtbl;
+
+extern ID3D11RasterizerStateVtbl ID3D11RasterizerState_Original;
+extern ID3D11RasterizerStateVtbl ID3D11RasterizerState_Hooked;
+extern ID3D11RasterizerStateVtbl ID3D11RasterizerState_JumpToOrignal;
+extern ID3D11RasterizerStateVtbl ID3D11RasterizerState_CallTrace;
 
 // -----------------------------------------------------------------------------
 // ID3D11Resource
@@ -287,6 +307,11 @@ typedef struct ID3D11ResourceVtbl
 
     END_INTERFACE
 } ID3D11ResourceVtbl;
+
+extern ID3D11ResourceVtbl ID3D11Resource_Original;
+extern ID3D11ResourceVtbl ID3D11Resource_Hooked;
+extern ID3D11ResourceVtbl ID3D11Resource_JumpToOrignal;
+extern ID3D11ResourceVtbl ID3D11Resource_CallTrace;
 
 // -----------------------------------------------------------------------------
 // ID3D11Buffer
@@ -358,6 +383,11 @@ typedef struct ID3D11BufferVtbl
     END_INTERFACE
 } ID3D11BufferVtbl;
 
+extern ID3D11BufferVtbl ID3D11Buffer_Original;
+extern ID3D11BufferVtbl ID3D11Buffer_Hooked;
+extern ID3D11BufferVtbl ID3D11Buffer_JumpToOrignal;
+extern ID3D11BufferVtbl ID3D11Buffer_CallTrace;
+
 // -----------------------------------------------------------------------------
 // ID3D11Texture1D
 // -----------------------------------------------------------------------------
@@ -427,6 +457,11 @@ typedef struct ID3D11Texture1DVtbl
 
     END_INTERFACE
 } ID3D11Texture1DVtbl;
+
+extern ID3D11Texture1DVtbl ID3D11Texture1D_Original;
+extern ID3D11Texture1DVtbl ID3D11Texture1D_Hooked;
+extern ID3D11Texture1DVtbl ID3D11Texture1D_JumpToOrignal;
+extern ID3D11Texture1DVtbl ID3D11Texture1D_CallTrace;
 
 // -----------------------------------------------------------------------------
 // ID3D11Texture2D
@@ -498,6 +533,11 @@ typedef struct ID3D11Texture2DVtbl
     END_INTERFACE
 } ID3D11Texture2DVtbl;
 
+extern ID3D11Texture2DVtbl ID3D11Texture2D_Original;
+extern ID3D11Texture2DVtbl ID3D11Texture2D_Hooked;
+extern ID3D11Texture2DVtbl ID3D11Texture2D_JumpToOrignal;
+extern ID3D11Texture2DVtbl ID3D11Texture2D_CallTrace;
+
 // -----------------------------------------------------------------------------
 // ID3D11Texture3D
 // -----------------------------------------------------------------------------
@@ -568,6 +608,11 @@ typedef struct ID3D11Texture3DVtbl
     END_INTERFACE
 } ID3D11Texture3DVtbl;
 
+extern ID3D11Texture3DVtbl ID3D11Texture3D_Original;
+extern ID3D11Texture3DVtbl ID3D11Texture3D_Hooked;
+extern ID3D11Texture3DVtbl ID3D11Texture3D_JumpToOrignal;
+extern ID3D11Texture3DVtbl ID3D11Texture3D_CallTrace;
+
 // -----------------------------------------------------------------------------
 // ID3D11View
 // -----------------------------------------------------------------------------
@@ -624,6 +669,11 @@ typedef struct ID3D11ViewVtbl
 
     END_INTERFACE
 } ID3D11ViewVtbl;
+
+extern ID3D11ViewVtbl ID3D11View_Original;
+extern ID3D11ViewVtbl ID3D11View_Hooked;
+extern ID3D11ViewVtbl ID3D11View_JumpToOrignal;
+extern ID3D11ViewVtbl ID3D11View_CallTrace;
 
 // -----------------------------------------------------------------------------
 // ID3D11ShaderResourceView
@@ -687,6 +737,11 @@ typedef struct ID3D11ShaderResourceViewVtbl
     END_INTERFACE
 } ID3D11ShaderResourceViewVtbl;
 
+extern ID3D11ShaderResourceViewVtbl ID3D11ShaderResourceView_Original;
+extern ID3D11ShaderResourceViewVtbl ID3D11ShaderResourceView_Hooked;
+extern ID3D11ShaderResourceViewVtbl ID3D11ShaderResourceView_JumpToOrignal;
+extern ID3D11ShaderResourceViewVtbl ID3D11ShaderResourceView_CallTrace;
+
 // -----------------------------------------------------------------------------
 // ID3D11RenderTargetView
 // -----------------------------------------------------------------------------
@@ -748,6 +803,11 @@ typedef struct ID3D11RenderTargetViewVtbl
 
     END_INTERFACE
 } ID3D11RenderTargetViewVtbl;
+
+extern ID3D11RenderTargetViewVtbl ID3D11RenderTargetView_Original;
+extern ID3D11RenderTargetViewVtbl ID3D11RenderTargetView_Hooked;
+extern ID3D11RenderTargetViewVtbl ID3D11RenderTargetView_JumpToOrignal;
+extern ID3D11RenderTargetViewVtbl ID3D11RenderTargetView_CallTrace;
 
 // -----------------------------------------------------------------------------
 // ID3D11DepthStencilView
@@ -811,6 +871,11 @@ typedef struct ID3D11DepthStencilViewVtbl
     END_INTERFACE
 } ID3D11DepthStencilViewVtbl;
 
+extern ID3D11DepthStencilViewVtbl ID3D11DepthStencilView_Original;
+extern ID3D11DepthStencilViewVtbl ID3D11DepthStencilView_Hooked;
+extern ID3D11DepthStencilViewVtbl ID3D11DepthStencilView_JumpToOrignal;
+extern ID3D11DepthStencilViewVtbl ID3D11DepthStencilView_CallTrace;
+
 // -----------------------------------------------------------------------------
 // ID3D11UnorderedAccessView
 // -----------------------------------------------------------------------------
@@ -873,6 +938,11 @@ typedef struct ID3D11UnorderedAccessViewVtbl
     END_INTERFACE
 } ID3D11UnorderedAccessViewVtbl;
 
+extern ID3D11UnorderedAccessViewVtbl ID3D11UnorderedAccessView_Original;
+extern ID3D11UnorderedAccessViewVtbl ID3D11UnorderedAccessView_Hooked;
+extern ID3D11UnorderedAccessViewVtbl ID3D11UnorderedAccessView_JumpToOrignal;
+extern ID3D11UnorderedAccessViewVtbl ID3D11UnorderedAccessView_CallTrace;
+
 // -----------------------------------------------------------------------------
 // ID3D11VertexShader
 // -----------------------------------------------------------------------------
@@ -924,6 +994,11 @@ typedef struct ID3D11VertexShaderVtbl
 
     END_INTERFACE
 } ID3D11VertexShaderVtbl;
+
+extern ID3D11VertexShaderVtbl ID3D11VertexShader_Original;
+extern ID3D11VertexShaderVtbl ID3D11VertexShader_Hooked;
+extern ID3D11VertexShaderVtbl ID3D11VertexShader_JumpToOrignal;
+extern ID3D11VertexShaderVtbl ID3D11VertexShader_CallTrace;
 
 // -----------------------------------------------------------------------------
 // ID3D11HullShader
@@ -977,6 +1052,11 @@ typedef struct ID3D11HullShaderVtbl
     END_INTERFACE
 } ID3D11HullShaderVtbl;
 
+extern ID3D11HullShaderVtbl ID3D11HullShader_Original;
+extern ID3D11HullShaderVtbl ID3D11HullShader_Hooked;
+extern ID3D11HullShaderVtbl ID3D11HullShader_JumpToOrignal;
+extern ID3D11HullShaderVtbl ID3D11HullShader_CallTrace;
+
 // -----------------------------------------------------------------------------
 // ID3D11DomainShader
 // -----------------------------------------------------------------------------
@@ -1028,6 +1108,11 @@ typedef struct ID3D11DomainShaderVtbl
 
     END_INTERFACE
 } ID3D11DomainShaderVtbl;
+
+extern ID3D11DomainShaderVtbl ID3D11DomainShader_Original;
+extern ID3D11DomainShaderVtbl ID3D11DomainShader_Hooked;
+extern ID3D11DomainShaderVtbl ID3D11DomainShader_JumpToOrignal;
+extern ID3D11DomainShaderVtbl ID3D11DomainShader_CallTrace;
 
 // -----------------------------------------------------------------------------
 // ID3D11GeometryShader
@@ -1081,6 +1166,11 @@ typedef struct ID3D11GeometryShaderVtbl
     END_INTERFACE
 } ID3D11GeometryShaderVtbl;
 
+extern ID3D11GeometryShaderVtbl ID3D11GeometryShader_Original;
+extern ID3D11GeometryShaderVtbl ID3D11GeometryShader_Hooked;
+extern ID3D11GeometryShaderVtbl ID3D11GeometryShader_JumpToOrignal;
+extern ID3D11GeometryShaderVtbl ID3D11GeometryShader_CallTrace;
+
 // -----------------------------------------------------------------------------
 // ID3D11PixelShader
 // -----------------------------------------------------------------------------
@@ -1132,6 +1222,11 @@ typedef struct ID3D11PixelShaderVtbl
 
     END_INTERFACE
 } ID3D11PixelShaderVtbl;
+
+extern ID3D11PixelShaderVtbl ID3D11PixelShader_Original;
+extern ID3D11PixelShaderVtbl ID3D11PixelShader_Hooked;
+extern ID3D11PixelShaderVtbl ID3D11PixelShader_JumpToOrignal;
+extern ID3D11PixelShaderVtbl ID3D11PixelShader_CallTrace;
 
 // -----------------------------------------------------------------------------
 // ID3D11ComputeShader
@@ -1185,6 +1280,11 @@ typedef struct ID3D11ComputeShaderVtbl
     END_INTERFACE
 } ID3D11ComputeShaderVtbl;
 
+extern ID3D11ComputeShaderVtbl ID3D11ComputeShader_Original;
+extern ID3D11ComputeShaderVtbl ID3D11ComputeShader_Hooked;
+extern ID3D11ComputeShaderVtbl ID3D11ComputeShader_JumpToOrignal;
+extern ID3D11ComputeShaderVtbl ID3D11ComputeShader_CallTrace;
+
 // -----------------------------------------------------------------------------
 // ID3D11InputLayout
 // -----------------------------------------------------------------------------
@@ -1236,6 +1336,11 @@ typedef struct ID3D11InputLayoutVtbl
 
     END_INTERFACE
 } ID3D11InputLayoutVtbl;
+
+extern ID3D11InputLayoutVtbl ID3D11InputLayout_Original;
+extern ID3D11InputLayoutVtbl ID3D11InputLayout_Hooked;
+extern ID3D11InputLayoutVtbl ID3D11InputLayout_JumpToOrignal;
+extern ID3D11InputLayoutVtbl ID3D11InputLayout_CallTrace;
 
 // -----------------------------------------------------------------------------
 // ID3D11SamplerState
@@ -1294,6 +1399,11 @@ typedef struct ID3D11SamplerStateVtbl
     END_INTERFACE
 } ID3D11SamplerStateVtbl;
 
+extern ID3D11SamplerStateVtbl ID3D11SamplerState_Original;
+extern ID3D11SamplerStateVtbl ID3D11SamplerState_Hooked;
+extern ID3D11SamplerStateVtbl ID3D11SamplerState_JumpToOrignal;
+extern ID3D11SamplerStateVtbl ID3D11SamplerState_CallTrace;
+
 // -----------------------------------------------------------------------------
 // ID3D11Asynchronous
 // -----------------------------------------------------------------------------
@@ -1348,6 +1458,11 @@ typedef struct ID3D11AsynchronousVtbl
 
     END_INTERFACE
 } ID3D11AsynchronousVtbl;
+
+extern ID3D11AsynchronousVtbl ID3D11Asynchronous_Original;
+extern ID3D11AsynchronousVtbl ID3D11Asynchronous_Hooked;
+extern ID3D11AsynchronousVtbl ID3D11Asynchronous_JumpToOrignal;
+extern ID3D11AsynchronousVtbl ID3D11Asynchronous_CallTrace;
 
 // -----------------------------------------------------------------------------
 // ID3D11Query
@@ -1409,6 +1524,11 @@ typedef struct ID3D11QueryVtbl
     END_INTERFACE
 } ID3D11QueryVtbl;
 
+extern ID3D11QueryVtbl ID3D11Query_Original;
+extern ID3D11QueryVtbl ID3D11Query_Hooked;
+extern ID3D11QueryVtbl ID3D11Query_JumpToOrignal;
+extern ID3D11QueryVtbl ID3D11Query_CallTrace;
+
 // -----------------------------------------------------------------------------
 // ID3D11Predicate
 // -----------------------------------------------------------------------------
@@ -1469,6 +1589,11 @@ typedef struct ID3D11PredicateVtbl
     END_INTERFACE
 } ID3D11PredicateVtbl;
 
+extern ID3D11PredicateVtbl ID3D11Predicate_Original;
+extern ID3D11PredicateVtbl ID3D11Predicate_Hooked;
+extern ID3D11PredicateVtbl ID3D11Predicate_JumpToOrignal;
+extern ID3D11PredicateVtbl ID3D11Predicate_CallTrace;
+
 // -----------------------------------------------------------------------------
 // ID3D11Counter
 // -----------------------------------------------------------------------------
@@ -1528,6 +1653,11 @@ typedef struct ID3D11CounterVtbl
 
     END_INTERFACE
 } ID3D11CounterVtbl;
+
+extern ID3D11CounterVtbl ID3D11Counter_Original;
+extern ID3D11CounterVtbl ID3D11Counter_Hooked;
+extern ID3D11CounterVtbl ID3D11Counter_JumpToOrignal;
+extern ID3D11CounterVtbl ID3D11Counter_CallTrace;
 
 // -----------------------------------------------------------------------------
 // ID3D11ClassInstance
@@ -1605,6 +1735,11 @@ typedef struct ID3D11ClassInstanceVtbl
     END_INTERFACE
 } ID3D11ClassInstanceVtbl;
 
+extern ID3D11ClassInstanceVtbl ID3D11ClassInstance_Original;
+extern ID3D11ClassInstanceVtbl ID3D11ClassInstance_Hooked;
+extern ID3D11ClassInstanceVtbl ID3D11ClassInstance_JumpToOrignal;
+extern ID3D11ClassInstanceVtbl ID3D11ClassInstance_CallTrace;
+
 // -----------------------------------------------------------------------------
 // ID3D11ClassLinkage
 // -----------------------------------------------------------------------------
@@ -1681,6 +1816,11 @@ typedef struct ID3D11ClassLinkageVtbl
     END_INTERFACE
 } ID3D11ClassLinkageVtbl;
 
+extern ID3D11ClassLinkageVtbl ID3D11ClassLinkage_Original;
+extern ID3D11ClassLinkageVtbl ID3D11ClassLinkage_Hooked;
+extern ID3D11ClassLinkageVtbl ID3D11ClassLinkage_JumpToOrignal;
+extern ID3D11ClassLinkageVtbl ID3D11ClassLinkage_CallTrace;
+
 // -----------------------------------------------------------------------------
 // ID3D11CommandList
 // -----------------------------------------------------------------------------
@@ -1735,6 +1875,11 @@ typedef struct ID3D11CommandListVtbl
 
     END_INTERFACE
 } ID3D11CommandListVtbl;
+
+extern ID3D11CommandListVtbl ID3D11CommandList_Original;
+extern ID3D11CommandListVtbl ID3D11CommandList_Hooked;
+extern ID3D11CommandListVtbl ID3D11CommandList_JumpToOrignal;
+extern ID3D11CommandListVtbl ID3D11CommandList_CallTrace;
 
 // -----------------------------------------------------------------------------
 // ID3D11DeviceContext
@@ -2697,6 +2842,11 @@ typedef struct ID3D11DeviceContextVtbl
     END_INTERFACE
 } ID3D11DeviceContextVtbl;
 
+extern ID3D11DeviceContextVtbl ID3D11DeviceContext_Original;
+extern ID3D11DeviceContextVtbl ID3D11DeviceContext_Hooked;
+extern ID3D11DeviceContextVtbl ID3D11DeviceContext_JumpToOrignal;
+extern ID3D11DeviceContextVtbl ID3D11DeviceContext_CallTrace;
+
 // -----------------------------------------------------------------------------
 // ID3D11VideoDecoder
 // -----------------------------------------------------------------------------
@@ -2760,6 +2910,11 @@ typedef struct ID3D11VideoDecoderVtbl
 
     END_INTERFACE
 } ID3D11VideoDecoderVtbl;
+
+extern ID3D11VideoDecoderVtbl ID3D11VideoDecoder_Original;
+extern ID3D11VideoDecoderVtbl ID3D11VideoDecoder_Hooked;
+extern ID3D11VideoDecoderVtbl ID3D11VideoDecoder_JumpToOrignal;
+extern ID3D11VideoDecoderVtbl ID3D11VideoDecoder_CallTrace;
 
 // -----------------------------------------------------------------------------
 // ID3D11VideoProcessorEnumerator
@@ -2853,6 +3008,11 @@ typedef struct ID3D11VideoProcessorEnumeratorVtbl
     END_INTERFACE
 } ID3D11VideoProcessorEnumeratorVtbl;
 
+extern ID3D11VideoProcessorEnumeratorVtbl ID3D11VideoProcessorEnumerator_Original;
+extern ID3D11VideoProcessorEnumeratorVtbl ID3D11VideoProcessorEnumerator_Hooked;
+extern ID3D11VideoProcessorEnumeratorVtbl ID3D11VideoProcessorEnumerator_JumpToOrignal;
+extern ID3D11VideoProcessorEnumeratorVtbl ID3D11VideoProcessorEnumerator_CallTrace;
+
 // -----------------------------------------------------------------------------
 // ID3D11VideoProcessor
 // -----------------------------------------------------------------------------
@@ -2914,6 +3074,11 @@ typedef struct ID3D11VideoProcessorVtbl
 
     END_INTERFACE
 } ID3D11VideoProcessorVtbl;
+
+extern ID3D11VideoProcessorVtbl ID3D11VideoProcessor_Original;
+extern ID3D11VideoProcessorVtbl ID3D11VideoProcessor_Hooked;
+extern ID3D11VideoProcessorVtbl ID3D11VideoProcessor_JumpToOrignal;
+extern ID3D11VideoProcessorVtbl ID3D11VideoProcessor_CallTrace;
 
 // -----------------------------------------------------------------------------
 // ID3D11AuthenticatedChannel
@@ -2983,6 +3148,11 @@ typedef struct ID3D11AuthenticatedChannelVtbl
 
     END_INTERFACE
 } ID3D11AuthenticatedChannelVtbl;
+
+extern ID3D11AuthenticatedChannelVtbl ID3D11AuthenticatedChannel_Original;
+extern ID3D11AuthenticatedChannelVtbl ID3D11AuthenticatedChannel_Hooked;
+extern ID3D11AuthenticatedChannelVtbl ID3D11AuthenticatedChannel_JumpToOrignal;
+extern ID3D11AuthenticatedChannelVtbl ID3D11AuthenticatedChannel_CallTrace;
 
 // -----------------------------------------------------------------------------
 // ID3D11CryptoSession
@@ -3063,6 +3233,11 @@ typedef struct ID3D11CryptoSessionVtbl
     END_INTERFACE
 } ID3D11CryptoSessionVtbl;
 
+extern ID3D11CryptoSessionVtbl ID3D11CryptoSession_Original;
+extern ID3D11CryptoSessionVtbl ID3D11CryptoSession_Hooked;
+extern ID3D11CryptoSessionVtbl ID3D11CryptoSession_JumpToOrignal;
+extern ID3D11CryptoSessionVtbl ID3D11CryptoSession_CallTrace;
+
 // -----------------------------------------------------------------------------
 // ID3D11VideoDecoderOutputView
 // -----------------------------------------------------------------------------
@@ -3124,6 +3299,11 @@ typedef struct ID3D11VideoDecoderOutputViewVtbl
 
     END_INTERFACE
 } ID3D11VideoDecoderOutputViewVtbl;
+
+extern ID3D11VideoDecoderOutputViewVtbl ID3D11VideoDecoderOutputView_Original;
+extern ID3D11VideoDecoderOutputViewVtbl ID3D11VideoDecoderOutputView_Hooked;
+extern ID3D11VideoDecoderOutputViewVtbl ID3D11VideoDecoderOutputView_JumpToOrignal;
+extern ID3D11VideoDecoderOutputViewVtbl ID3D11VideoDecoderOutputView_CallTrace;
 
 // -----------------------------------------------------------------------------
 // ID3D11VideoProcessorInputView
@@ -3187,6 +3367,11 @@ typedef struct ID3D11VideoProcessorInputViewVtbl
     END_INTERFACE
 } ID3D11VideoProcessorInputViewVtbl;
 
+extern ID3D11VideoProcessorInputViewVtbl ID3D11VideoProcessorInputView_Original;
+extern ID3D11VideoProcessorInputViewVtbl ID3D11VideoProcessorInputView_Hooked;
+extern ID3D11VideoProcessorInputViewVtbl ID3D11VideoProcessorInputView_JumpToOrignal;
+extern ID3D11VideoProcessorInputViewVtbl ID3D11VideoProcessorInputView_CallTrace;
+
 // -----------------------------------------------------------------------------
 // ID3D11VideoProcessorOutputView
 // -----------------------------------------------------------------------------
@@ -3248,6 +3433,11 @@ typedef struct ID3D11VideoProcessorOutputViewVtbl
 
     END_INTERFACE
 } ID3D11VideoProcessorOutputViewVtbl;
+
+extern ID3D11VideoProcessorOutputViewVtbl ID3D11VideoProcessorOutputView_Original;
+extern ID3D11VideoProcessorOutputViewVtbl ID3D11VideoProcessorOutputView_Hooked;
+extern ID3D11VideoProcessorOutputViewVtbl ID3D11VideoProcessorOutputView_JumpToOrignal;
+extern ID3D11VideoProcessorOutputViewVtbl ID3D11VideoProcessorOutputView_CallTrace;
 
 // -----------------------------------------------------------------------------
 // ID3D11VideoContext
@@ -3915,6 +4105,11 @@ typedef struct ID3D11VideoContextVtbl
     END_INTERFACE
 } ID3D11VideoContextVtbl;
 
+extern ID3D11VideoContextVtbl ID3D11VideoContext_Original;
+extern ID3D11VideoContextVtbl ID3D11VideoContext_Hooked;
+extern ID3D11VideoContextVtbl ID3D11VideoContext_JumpToOrignal;
+extern ID3D11VideoContextVtbl ID3D11VideoContext_CallTrace;
+
 // -----------------------------------------------------------------------------
 // ID3D11VideoDevice
 // -----------------------------------------------------------------------------
@@ -4081,6 +4276,11 @@ typedef struct ID3D11VideoDeviceVtbl
 
     END_INTERFACE
 } ID3D11VideoDeviceVtbl;
+
+extern ID3D11VideoDeviceVtbl ID3D11VideoDevice_Original;
+extern ID3D11VideoDeviceVtbl ID3D11VideoDevice_Hooked;
+extern ID3D11VideoDeviceVtbl ID3D11VideoDevice_JumpToOrignal;
+extern ID3D11VideoDeviceVtbl ID3D11VideoDevice_CallTrace;
 
 // -----------------------------------------------------------------------------
 // ID3D11Device
@@ -4440,6 +4640,11 @@ typedef struct ID3D11DeviceVtbl
     END_INTERFACE
 } ID3D11DeviceVtbl;
 
+extern ID3D11DeviceVtbl ID3D11Device_Original;
+extern ID3D11DeviceVtbl ID3D11Device_Hooked;
+extern ID3D11DeviceVtbl ID3D11Device_JumpToOrignal;
+extern ID3D11DeviceVtbl ID3D11Device_CallTrace;
+
 // -----------------------------------------------------------------------------
 // ID3D11BlendState1
 // -----------------------------------------------------------------------------
@@ -4501,6 +4706,11 @@ typedef struct ID3D11BlendState1Vtbl
 
     END_INTERFACE
 } ID3D11BlendState1Vtbl;
+
+extern ID3D11BlendState1Vtbl ID3D11BlendState1_Original;
+extern ID3D11BlendState1Vtbl ID3D11BlendState1_Hooked;
+extern ID3D11BlendState1Vtbl ID3D11BlendState1_JumpToOrignal;
+extern ID3D11BlendState1Vtbl ID3D11BlendState1_CallTrace;
 
 // -----------------------------------------------------------------------------
 // ID3D11RasterizerState1
@@ -4564,6 +4774,11 @@ typedef struct ID3D11RasterizerState1Vtbl
     END_INTERFACE
 } ID3D11RasterizerState1Vtbl;
 
+extern ID3D11RasterizerState1Vtbl ID3D11RasterizerState1_Original;
+extern ID3D11RasterizerState1Vtbl ID3D11RasterizerState1_Hooked;
+extern ID3D11RasterizerState1Vtbl ID3D11RasterizerState1_JumpToOrignal;
+extern ID3D11RasterizerState1Vtbl ID3D11RasterizerState1_CallTrace;
+
 // -----------------------------------------------------------------------------
 // ID3DDeviceContextState
 // -----------------------------------------------------------------------------
@@ -4615,6 +4830,11 @@ typedef struct ID3DDeviceContextStateVtbl
 
     END_INTERFACE
 } ID3DDeviceContextStateVtbl;
+
+extern ID3DDeviceContextStateVtbl ID3DDeviceContextState_Original;
+extern ID3DDeviceContextStateVtbl ID3DDeviceContextState_Hooked;
+extern ID3DDeviceContextStateVtbl ID3DDeviceContextState_JumpToOrignal;
+extern ID3DDeviceContextStateVtbl ID3DDeviceContextState_CallTrace;
 
 // -----------------------------------------------------------------------------
 // ID3D11DeviceContext1
@@ -5806,6 +6026,11 @@ typedef struct ID3D11DeviceContext1Vtbl
     END_INTERFACE
 } ID3D11DeviceContext1Vtbl;
 
+extern ID3D11DeviceContext1Vtbl ID3D11DeviceContext1_Original;
+extern ID3D11DeviceContext1Vtbl ID3D11DeviceContext1_Hooked;
+extern ID3D11DeviceContext1Vtbl ID3D11DeviceContext1_JumpToOrignal;
+extern ID3D11DeviceContext1Vtbl ID3D11DeviceContext1_CallTrace;
+
 // -----------------------------------------------------------------------------
 // ID3D11Device1
 // -----------------------------------------------------------------------------
@@ -6222,6 +6447,11 @@ typedef struct ID3D11Device1Vtbl
     END_INTERFACE
 } ID3D11Device1Vtbl;
 
+extern ID3D11Device1Vtbl ID3D11Device1_Original;
+extern ID3D11Device1Vtbl ID3D11Device1_Hooked;
+extern ID3D11Device1Vtbl ID3D11Device1_JumpToOrignal;
+extern ID3D11Device1Vtbl ID3D11Device1_CallTrace;
+
 // -----------------------------------------------------------------------------
 // ID3DUserDefinedAnnotation
 // -----------------------------------------------------------------------------
@@ -6259,6 +6489,11 @@ typedef struct ID3DUserDefinedAnnotationVtbl
 
     END_INTERFACE
 } ID3DUserDefinedAnnotationVtbl;
+
+extern ID3DUserDefinedAnnotationVtbl ID3DUserDefinedAnnotation_Original;
+extern ID3DUserDefinedAnnotationVtbl ID3DUserDefinedAnnotation_Hooked;
+extern ID3DUserDefinedAnnotationVtbl ID3DUserDefinedAnnotation_JumpToOrignal;
+extern ID3DUserDefinedAnnotationVtbl ID3DUserDefinedAnnotation_CallTrace;
 
 // -----------------------------------------------------------------------------
 // ID3D11Debug
@@ -6320,6 +6555,11 @@ typedef struct ID3D11DebugVtbl
     END_INTERFACE
 } ID3D11DebugVtbl;
 
+extern ID3D11DebugVtbl ID3D11Debug_Original;
+extern ID3D11DebugVtbl ID3D11Debug_Hooked;
+extern ID3D11DebugVtbl ID3D11Debug_JumpToOrignal;
+extern ID3D11DebugVtbl ID3D11Debug_CallTrace;
+
 // -----------------------------------------------------------------------------
 // ID3D11SwitchToRef
 // -----------------------------------------------------------------------------
@@ -6348,6 +6588,11 @@ typedef struct ID3D11SwitchToRefVtbl
 
     END_INTERFACE
 } ID3D11SwitchToRefVtbl;
+
+extern ID3D11SwitchToRefVtbl ID3D11SwitchToRef_Original;
+extern ID3D11SwitchToRefVtbl ID3D11SwitchToRef_Hooked;
+extern ID3D11SwitchToRefVtbl ID3D11SwitchToRef_JumpToOrignal;
+extern ID3D11SwitchToRefVtbl ID3D11SwitchToRef_CallTrace;
 
 // -----------------------------------------------------------------------------
 // ID3D11TracingDevice
@@ -6385,6 +6630,11 @@ typedef struct ID3D11TracingDeviceVtbl
     END_INTERFACE
 } ID3D11TracingDeviceVtbl;
 
+extern ID3D11TracingDeviceVtbl ID3D11TracingDevice_Original;
+extern ID3D11TracingDeviceVtbl ID3D11TracingDevice_Hooked;
+extern ID3D11TracingDeviceVtbl ID3D11TracingDevice_JumpToOrignal;
+extern ID3D11TracingDeviceVtbl ID3D11TracingDevice_CallTrace;
+
 // -----------------------------------------------------------------------------
 // ID3D11RefTrackingOptions
 // -----------------------------------------------------------------------------
@@ -6410,6 +6660,11 @@ typedef struct ID3D11RefTrackingOptionsVtbl
 
     END_INTERFACE
 } ID3D11RefTrackingOptionsVtbl;
+
+extern ID3D11RefTrackingOptionsVtbl ID3D11RefTrackingOptions_Original;
+extern ID3D11RefTrackingOptionsVtbl ID3D11RefTrackingOptions_Hooked;
+extern ID3D11RefTrackingOptionsVtbl ID3D11RefTrackingOptions_JumpToOrignal;
+extern ID3D11RefTrackingOptionsVtbl ID3D11RefTrackingOptions_CallTrace;
 
 // -----------------------------------------------------------------------------
 // ID3D11RefDefaultTrackingOptions
@@ -6437,6 +6692,11 @@ typedef struct ID3D11RefDefaultTrackingOptionsVtbl
 
     END_INTERFACE
 } ID3D11RefDefaultTrackingOptionsVtbl;
+
+extern ID3D11RefDefaultTrackingOptionsVtbl ID3D11RefDefaultTrackingOptions_Original;
+extern ID3D11RefDefaultTrackingOptionsVtbl ID3D11RefDefaultTrackingOptions_Hooked;
+extern ID3D11RefDefaultTrackingOptionsVtbl ID3D11RefDefaultTrackingOptions_JumpToOrignal;
+extern ID3D11RefDefaultTrackingOptionsVtbl ID3D11RefDefaultTrackingOptions_CallTrace;
 
 // -----------------------------------------------------------------------------
 // ID3D11InfoQueue
@@ -6621,6 +6881,11 @@ typedef struct ID3D11InfoQueueVtbl
     END_INTERFACE
 } ID3D11InfoQueueVtbl;
 
+extern ID3D11InfoQueueVtbl ID3D11InfoQueue_Original;
+extern ID3D11InfoQueueVtbl ID3D11InfoQueue_Hooked;
+extern ID3D11InfoQueueVtbl ID3D11InfoQueue_JumpToOrignal;
+extern ID3D11InfoQueueVtbl ID3D11InfoQueue_CallTrace;
+
 // -----------------------------------------------------------------------------
 // IDXGIObject
 // -----------------------------------------------------------------------------
@@ -6673,6 +6938,11 @@ typedef struct IDXGIObjectVtbl
 
     END_INTERFACE
 } IDXGIObjectVtbl;
+
+extern IDXGIObjectVtbl IDXGIObject_Original;
+extern IDXGIObjectVtbl IDXGIObject_Hooked;
+extern IDXGIObjectVtbl IDXGIObject_JumpToOrignal;
+extern IDXGIObjectVtbl IDXGIObject_CallTrace;
 
 // -----------------------------------------------------------------------------
 // IDXGIDeviceSubObject
@@ -6733,6 +7003,11 @@ typedef struct IDXGIDeviceSubObjectVtbl
 
     END_INTERFACE
 } IDXGIDeviceSubObjectVtbl;
+
+extern IDXGIDeviceSubObjectVtbl IDXGIDeviceSubObject_Original;
+extern IDXGIDeviceSubObjectVtbl IDXGIDeviceSubObject_Hooked;
+extern IDXGIDeviceSubObjectVtbl IDXGIDeviceSubObject_JumpToOrignal;
+extern IDXGIDeviceSubObjectVtbl IDXGIDeviceSubObject_CallTrace;
 
 // -----------------------------------------------------------------------------
 // IDXGIResource
@@ -6813,6 +7088,11 @@ typedef struct IDXGIResourceVtbl
     END_INTERFACE
 } IDXGIResourceVtbl;
 
+extern IDXGIResourceVtbl IDXGIResource_Original;
+extern IDXGIResourceVtbl IDXGIResource_Hooked;
+extern IDXGIResourceVtbl IDXGIResource_JumpToOrignal;
+extern IDXGIResourceVtbl IDXGIResource_CallTrace;
+
 // -----------------------------------------------------------------------------
 // IDXGIKeyedMutex
 // -----------------------------------------------------------------------------
@@ -6881,6 +7161,11 @@ typedef struct IDXGIKeyedMutexVtbl
 
     END_INTERFACE
 } IDXGIKeyedMutexVtbl;
+
+extern IDXGIKeyedMutexVtbl IDXGIKeyedMutex_Original;
+extern IDXGIKeyedMutexVtbl IDXGIKeyedMutex_Hooked;
+extern IDXGIKeyedMutexVtbl IDXGIKeyedMutex_JumpToOrignal;
+extern IDXGIKeyedMutexVtbl IDXGIKeyedMutex_CallTrace;
 
 // -----------------------------------------------------------------------------
 // IDXGISurface
@@ -6955,6 +7240,11 @@ typedef struct IDXGISurfaceVtbl
 
     END_INTERFACE
 } IDXGISurfaceVtbl;
+
+extern IDXGISurfaceVtbl IDXGISurface_Original;
+extern IDXGISurfaceVtbl IDXGISurface_Hooked;
+extern IDXGISurfaceVtbl IDXGISurface_JumpToOrignal;
+extern IDXGISurfaceVtbl IDXGISurface_CallTrace;
 
 // -----------------------------------------------------------------------------
 // IDXGISurface1
@@ -7041,6 +7331,11 @@ typedef struct IDXGISurface1Vtbl
     END_INTERFACE
 } IDXGISurface1Vtbl;
 
+extern IDXGISurface1Vtbl IDXGISurface1_Original;
+extern IDXGISurface1Vtbl IDXGISurface1_Hooked;
+extern IDXGISurface1Vtbl IDXGISurface1_JumpToOrignal;
+extern IDXGISurface1Vtbl IDXGISurface1_CallTrace;
+
 // -----------------------------------------------------------------------------
 // IDXGIAdapter
 // -----------------------------------------------------------------------------
@@ -7111,6 +7406,11 @@ typedef struct IDXGIAdapterVtbl
 
     END_INTERFACE
 } IDXGIAdapterVtbl;
+
+extern IDXGIAdapterVtbl IDXGIAdapter_Original;
+extern IDXGIAdapterVtbl IDXGIAdapter_Hooked;
+extern IDXGIAdapterVtbl IDXGIAdapter_JumpToOrignal;
+extern IDXGIAdapterVtbl IDXGIAdapter_CallTrace;
 
 // -----------------------------------------------------------------------------
 // IDXGIOutput
@@ -7229,6 +7529,11 @@ typedef struct IDXGIOutputVtbl
 
     END_INTERFACE
 } IDXGIOutputVtbl;
+
+extern IDXGIOutputVtbl IDXGIOutput_Original;
+extern IDXGIOutputVtbl IDXGIOutput_Hooked;
+extern IDXGIOutputVtbl IDXGIOutput_JumpToOrignal;
+extern IDXGIOutputVtbl IDXGIOutput_CallTrace;
 
 // -----------------------------------------------------------------------------
 // IDXGISwapChain
@@ -7349,6 +7654,11 @@ typedef struct IDXGISwapChainVtbl
     END_INTERFACE
 } IDXGISwapChainVtbl;
 
+extern IDXGISwapChainVtbl IDXGISwapChain_Original;
+extern IDXGISwapChainVtbl IDXGISwapChain_Hooked;
+extern IDXGISwapChainVtbl IDXGISwapChain_JumpToOrignal;
+extern IDXGISwapChainVtbl IDXGISwapChain_CallTrace;
+
 // -----------------------------------------------------------------------------
 // IDXGIFactory
 // -----------------------------------------------------------------------------
@@ -7432,6 +7742,11 @@ typedef struct IDXGIFactoryVtbl
 
     END_INTERFACE
 } IDXGIFactoryVtbl;
+
+extern IDXGIFactoryVtbl IDXGIFactory_Original;
+extern IDXGIFactoryVtbl IDXGIFactory_Hooked;
+extern IDXGIFactoryVtbl IDXGIFactory_JumpToOrignal;
+extern IDXGIFactoryVtbl IDXGIFactory_CallTrace;
 
 // -----------------------------------------------------------------------------
 // IDXGIDevice
@@ -7518,6 +7833,11 @@ typedef struct IDXGIDeviceVtbl
 
     END_INTERFACE
 } IDXGIDeviceVtbl;
+
+extern IDXGIDeviceVtbl IDXGIDevice_Original;
+extern IDXGIDeviceVtbl IDXGIDevice_Hooked;
+extern IDXGIDeviceVtbl IDXGIDevice_JumpToOrignal;
+extern IDXGIDeviceVtbl IDXGIDevice_CallTrace;
 
 // -----------------------------------------------------------------------------
 // IDXGIFactory1
@@ -7612,6 +7932,11 @@ typedef struct IDXGIFactory1Vtbl
     END_INTERFACE
 } IDXGIFactory1Vtbl;
 
+extern IDXGIFactory1Vtbl IDXGIFactory1_Original;
+extern IDXGIFactory1Vtbl IDXGIFactory1_Hooked;
+extern IDXGIFactory1Vtbl IDXGIFactory1_JumpToOrignal;
+extern IDXGIFactory1Vtbl IDXGIFactory1_CallTrace;
+
 // -----------------------------------------------------------------------------
 // IDXGIAdapter1
 // -----------------------------------------------------------------------------
@@ -7687,6 +8012,11 @@ typedef struct IDXGIAdapter1Vtbl
 
     END_INTERFACE
 } IDXGIAdapter1Vtbl;
+
+extern IDXGIAdapter1Vtbl IDXGIAdapter1_Original;
+extern IDXGIAdapter1Vtbl IDXGIAdapter1_Hooked;
+extern IDXGIAdapter1Vtbl IDXGIAdapter1_JumpToOrignal;
+extern IDXGIAdapter1Vtbl IDXGIAdapter1_CallTrace;
 
 // -----------------------------------------------------------------------------
 // IDXGIDevice1
@@ -7783,6 +8113,11 @@ typedef struct IDXGIDevice1Vtbl
     END_INTERFACE
 } IDXGIDevice1Vtbl;
 
+extern IDXGIDevice1Vtbl IDXGIDevice1_Original;
+extern IDXGIDevice1Vtbl IDXGIDevice1_Hooked;
+extern IDXGIDevice1Vtbl IDXGIDevice1_JumpToOrignal;
+extern IDXGIDevice1Vtbl IDXGIDevice1_CallTrace;
+
 // -----------------------------------------------------------------------------
 // IDXGIDisplayControl
 // -----------------------------------------------------------------------------
@@ -7811,6 +8146,11 @@ typedef struct IDXGIDisplayControlVtbl
 
     END_INTERFACE
 } IDXGIDisplayControlVtbl;
+
+extern IDXGIDisplayControlVtbl IDXGIDisplayControl_Original;
+extern IDXGIDisplayControlVtbl IDXGIDisplayControl_Hooked;
+extern IDXGIDisplayControlVtbl IDXGIDisplayControl_JumpToOrignal;
+extern IDXGIDisplayControlVtbl IDXGIDisplayControl_CallTrace;
 
 // -----------------------------------------------------------------------------
 // IDXGIOutputDuplication
@@ -7919,6 +8259,11 @@ typedef struct IDXGIOutputDuplicationVtbl
     END_INTERFACE
 } IDXGIOutputDuplicationVtbl;
 
+extern IDXGIOutputDuplicationVtbl IDXGIOutputDuplication_Original;
+extern IDXGIOutputDuplicationVtbl IDXGIOutputDuplication_Hooked;
+extern IDXGIOutputDuplicationVtbl IDXGIOutputDuplication_JumpToOrignal;
+extern IDXGIOutputDuplicationVtbl IDXGIOutputDuplication_CallTrace;
+
 // -----------------------------------------------------------------------------
 // IDXGISurface2
 // -----------------------------------------------------------------------------
@@ -8012,6 +8357,11 @@ typedef struct IDXGISurface2Vtbl
 
     END_INTERFACE
 } IDXGISurface2Vtbl;
+
+extern IDXGISurface2Vtbl IDXGISurface2_Original;
+extern IDXGISurface2Vtbl IDXGISurface2_Hooked;
+extern IDXGISurface2Vtbl IDXGISurface2_JumpToOrignal;
+extern IDXGISurface2Vtbl IDXGISurface2_CallTrace;
 
 // -----------------------------------------------------------------------------
 // IDXGIResource1
@@ -8108,6 +8458,11 @@ typedef struct IDXGIResource1Vtbl
 
     END_INTERFACE
 } IDXGIResource1Vtbl;
+
+extern IDXGIResource1Vtbl IDXGIResource1_Original;
+extern IDXGIResource1Vtbl IDXGIResource1_Hooked;
+extern IDXGIResource1Vtbl IDXGIResource1_JumpToOrignal;
+extern IDXGIResource1Vtbl IDXGIResource1_CallTrace;
 
 // -----------------------------------------------------------------------------
 // IDXGIDevice2
@@ -8226,6 +8581,11 @@ typedef struct IDXGIDevice2Vtbl
 
     END_INTERFACE
 } IDXGIDevice2Vtbl;
+
+extern IDXGIDevice2Vtbl IDXGIDevice2_Original;
+extern IDXGIDevice2Vtbl IDXGIDevice2_Hooked;
+extern IDXGIDevice2Vtbl IDXGIDevice2_JumpToOrignal;
+extern IDXGIDevice2Vtbl IDXGIDevice2_CallTrace;
 
 // -----------------------------------------------------------------------------
 // IDXGISwapChain1
@@ -8402,6 +8762,11 @@ typedef struct IDXGISwapChain1Vtbl
 
     END_INTERFACE
 } IDXGISwapChain1Vtbl;
+
+extern IDXGISwapChain1Vtbl IDXGISwapChain1_Original;
+extern IDXGISwapChain1Vtbl IDXGISwapChain1_Hooked;
+extern IDXGISwapChain1Vtbl IDXGISwapChain1_JumpToOrignal;
+extern IDXGISwapChain1Vtbl IDXGISwapChain1_CallTrace;
 
 // -----------------------------------------------------------------------------
 // IDXGIFactory2
@@ -8587,6 +8952,11 @@ typedef struct IDXGIFactory2Vtbl
     END_INTERFACE
 } IDXGIFactory2Vtbl;
 
+extern IDXGIFactory2Vtbl IDXGIFactory2_Original;
+extern IDXGIFactory2Vtbl IDXGIFactory2_Hooked;
+extern IDXGIFactory2Vtbl IDXGIFactory2_JumpToOrignal;
+extern IDXGIFactory2Vtbl IDXGIFactory2_CallTrace;
+
 // -----------------------------------------------------------------------------
 // IDXGIAdapter2
 // -----------------------------------------------------------------------------
@@ -8667,6 +9037,11 @@ typedef struct IDXGIAdapter2Vtbl
 
     END_INTERFACE
 } IDXGIAdapter2Vtbl;
+
+extern IDXGIAdapter2Vtbl IDXGIAdapter2_Original;
+extern IDXGIAdapter2Vtbl IDXGIAdapter2_Hooked;
+extern IDXGIAdapter2Vtbl IDXGIAdapter2_JumpToOrignal;
+extern IDXGIAdapter2Vtbl IDXGIAdapter2_CallTrace;
 
 // -----------------------------------------------------------------------------
 // IDXGIOutput1
@@ -8815,6 +9190,11 @@ typedef struct IDXGIOutput1Vtbl
 
     END_INTERFACE
 } IDXGIOutput1Vtbl;
+
+extern IDXGIOutput1Vtbl IDXGIOutput1_Original;
+extern IDXGIOutput1Vtbl IDXGIOutput1_Hooked;
+extern IDXGIOutput1Vtbl IDXGIOutput1_JumpToOrignal;
+extern IDXGIOutput1Vtbl IDXGIOutput1_CallTrace;
 
 // -----------------------------------------------------------------------------
 // IDXGIInfoQueue
@@ -9077,6 +9457,11 @@ typedef struct IDXGIInfoQueueVtbl
     END_INTERFACE
 } IDXGIInfoQueueVtbl;
 
+extern IDXGIInfoQueueVtbl IDXGIInfoQueue_Original;
+extern IDXGIInfoQueueVtbl IDXGIInfoQueue_Hooked;
+extern IDXGIInfoQueueVtbl IDXGIInfoQueue_JumpToOrignal;
+extern IDXGIInfoQueueVtbl IDXGIInfoQueue_CallTrace;
+
 // -----------------------------------------------------------------------------
 // IDXGIDebug
 // -----------------------------------------------------------------------------
@@ -9103,4 +9488,9 @@ typedef struct IDXGIDebugVtbl
 
     END_INTERFACE
 } IDXGIDebugVtbl;
+
+extern IDXGIDebugVtbl IDXGIDebug_Original;
+extern IDXGIDebugVtbl IDXGIDebug_Hooked;
+extern IDXGIDebugVtbl IDXGIDebug_JumpToOrignal;
+extern IDXGIDebugVtbl IDXGIDebug_CallTrace;
 
