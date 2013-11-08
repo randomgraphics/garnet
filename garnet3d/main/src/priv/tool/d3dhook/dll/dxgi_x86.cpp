@@ -4,7 +4,7 @@
 HINSTANCE mHinst = 0, mHinstDLL = 0;
 UINT_PTR mProcs[50] = {0};
 
-LPCSTR mImportNames[] = {"CheckETWTLS", "CompatString", "CompatValue", "CreateDXGIFactory", "CreateDXGIFactory1", "D3DKMTCloseAdapter", "D3DKMTCreateAllocation", "D3DKMTCreateContext", "D3DKMTCreateDevice", "D3DKMTCreateSynchronizationObject", "D3DKMTDestroyAllocation", "D3DKMTDestroyContext", "D3DKMTDestroyDevice", "D3DKMTDestroySynchronizationObject", "D3DKMTEscape", "D3DKMTGetContextSchedulingPriority", "D3DKMTGetDeviceState", "D3DKMTGetDisplayModeList", "D3DKMTGetMultisampleMethodList", "D3DKMTGetRuntimeData", "D3DKMTGetSharedPrimaryHandle", "D3DKMTLock", "D3DKMTOpenAdapterFromHdc", "D3DKMTOpenResource", "D3DKMTPresent", "D3DKMTQueryAdapterInfo", "D3DKMTQueryAllocationResidency", "D3DKMTQueryResourceInfo", "D3DKMTRender", "D3DKMTSetAllocationPriority", "D3DKMTSetContextSchedulingPriority", "D3DKMTSetDisplayMode", "D3DKMTSetDisplayPrivateDriverFormat", "D3DKMTSetGammaRamp", "D3DKMTSetVidPnSourceOwner", "D3DKMTSignalSynchronizationObject", "D3DKMTUnlock", "D3DKMTWaitForSynchronizationObject", "D3DKMTWaitForVerticalBlankEvent", "DXGID3D10CreateDevice", "DXGID3D10CreateLayeredDevice", "DXGID3D10ETWRundown", "DXGID3D10GetLayeredDeviceSize", "DXGID3D10RegisterLayers", "DXGIDumpJournal", "DXGIReportAdapterConfiguration", "DXGIRevertToSxS", "OpenAdapter10", "OpenAdapter10_2", "SetAppCompatStringPointer"};
+LPCSTR mImportNames[] = {"CompatString", "CompatValue", "CreateDXGIFactory", "CreateDXGIFactory1", "CreateDXGIFactory2", "D3DKMTCloseAdapter", "D3DKMTCreateAllocation", "D3DKMTCreateContext", "D3DKMTCreateDevice", "D3DKMTCreateSynchronizationObject", "D3DKMTDestroyAllocation", "D3DKMTDestroyContext", "D3DKMTDestroyDevice", "D3DKMTDestroySynchronizationObject", "D3DKMTEscape", "D3DKMTGetContextSchedulingPriority", "D3DKMTGetDeviceState", "D3DKMTGetDisplayModeList", "D3DKMTGetMultisampleMethodList", "D3DKMTGetRuntimeData", "D3DKMTGetSharedPrimaryHandle", "D3DKMTLock", "D3DKMTOpenAdapterFromHdc", "D3DKMTOpenResource", "D3DKMTPresent", "D3DKMTQueryAdapterInfo", "D3DKMTQueryAllocationResidency", "D3DKMTQueryResourceInfo", "D3DKMTRender", "D3DKMTSetAllocationPriority", "D3DKMTSetContextSchedulingPriority", "D3DKMTSetDisplayMode", "D3DKMTSetDisplayPrivateDriverFormat", "D3DKMTSetGammaRamp", "D3DKMTSetVidPnSourceOwner", "D3DKMTSignalSynchronizationObject", "D3DKMTUnlock", "D3DKMTWaitForSynchronizationObject", "D3DKMTWaitForVerticalBlankEvent", "DXGID3D10CreateDevice", "DXGID3D10CreateLayeredDevice", "DXGID3D10ETWRundown", "DXGID3D10GetLayeredDeviceSize", "DXGID3D10RegisterLayers", "DXGIDumpJournal", "DXGIGetDebugInterface1", "DXGIReportAdapterConfiguration", "DXGIRevertToSxS", "OpenAdapter10", "OpenAdapter10_2", "SetAppCompatStringPointer"};
 BOOL WINAPI DllMain( HINSTANCE hinstDLL, DWORD fdwReason, LPVOID ) {
 	mHinst = hinstDLL;
 	if ( fdwReason == DLL_PROCESS_ATTACH ) {
@@ -19,12 +19,12 @@ BOOL WINAPI DllMain( HINSTANCE hinstDLL, DWORD fdwReason, LPVOID ) {
 	return ( TRUE );
 }
 
-extern "C" __declspec(naked) void __stdcall CheckETWTLS_wrapper(){__asm{jmp mProcs[0*4]}}
-extern "C" __declspec(naked) void __stdcall CompatString_wrapper(){__asm{jmp mProcs[1*4]}}
-extern "C" __declspec(naked) void __stdcall CompatValue_wrapper(){__asm{jmp mProcs[2*4]}}
+extern "C" __declspec(naked) void __stdcall CompatString_wrapper(){__asm{jmp mProcs[0*4]}}
+extern "C" __declspec(naked) void __stdcall CompatValue_wrapper(){__asm{jmp mProcs[1*4]}}
 #if 0
-extern "C" __declspec(naked) void __stdcall CreateDXGIFactory_wrapper(){__asm{jmp mProcs[3*4]}}
-extern "C" __declspec(naked) void __stdcall CreateDXGIFactory1_wrapper(){__asm{jmp mProcs[4*4]}}
+extern "C" __declspec(naked) void __stdcall CreateDXGIFactory_wrapper(){__asm{jmp mProcs[2*4]}}
+extern "C" __declspec(naked) void __stdcall CreateDXGIFactory1_wrapper(){__asm{jmp mProcs[3*4]}}
+extern "C" __declspec(naked) void __stdcall CreateDXGIFactory2_wrapper(){__asm{jmp mProcs[4*4]}}
 #else
 extern "C" HRESULT WINAPI CreateDXGIFactory_wrapper(
     const IID & riid,
@@ -35,13 +35,22 @@ extern "C" HRESULT WINAPI CreateDXGIFactory_wrapper(
         riid,
         ppFactory);
 }
-
 extern "C" HRESULT WINAPI CreateDXGIFactory1_wrapper(
     const IID & riid,
     void **ppFactory)
 {
     return CreateDXGIFactoryHook(
         "CreateDXGIFactory1",
+        riid,
+        ppFactory);
+}
+extern "C" HRESULT WINAPI CreateDXGIFactory2_wrapper(
+    UINT flags,
+    const IID & riid,
+    void **ppFactory)
+{
+    return CreateDXGIFactory2Hook(
+        UINT flags,
         riid,
         ppFactory);
 }
@@ -86,8 +95,9 @@ extern "C" __declspec(naked) void __stdcall DXGID3D10ETWRundown_wrapper(){__asm{
 extern "C" __declspec(naked) void __stdcall DXGID3D10GetLayeredDeviceSize_wrapper(){__asm{jmp mProcs[42*4]}}
 extern "C" __declspec(naked) void __stdcall DXGID3D10RegisterLayers_wrapper(){__asm{jmp mProcs[43*4]}}
 extern "C" __declspec(naked) void __stdcall DXGIDumpJournal_wrapper(){__asm{jmp mProcs[44*4]}}
-extern "C" __declspec(naked) void __stdcall DXGIReportAdapterConfiguration_wrapper(){__asm{jmp mProcs[45*4]}}
-extern "C" __declspec(naked) void __stdcall DXGIRevertToSxS_wrapper(){__asm{jmp mProcs[46*4]}}
-extern "C" __declspec(naked) void __stdcall OpenAdapter10_wrapper(){__asm{jmp mProcs[47*4]}}
-extern "C" __declspec(naked) void __stdcall OpenAdapter10_2_wrapper(){__asm{jmp mProcs[48*4]}}
-extern "C" __declspec(naked) void __stdcall SetAppCompatStringPointer_wrapper(){__asm{jmp mProcs[49*4]}}
+extern "C" __declspec(naked) void __stdcall DXGIGetDebugInterface1_wrapper(){__asm{jmp mProcs[45*4]}}
+extern "C" __declspec(naked) void __stdcall DXGIReportAdapterConfiguration_wrapper(){__asm{jmp mProcs[46*4]}}
+extern "C" __declspec(naked) void __stdcall DXGIRevertToSxS_wrapper(){__asm{jmp mProcs[47*4]}}
+extern "C" __declspec(naked) void __stdcall OpenAdapter10_wrapper(){__asm{jmp mProcs[48*4]}}
+extern "C" __declspec(naked) void __stdcall OpenAdapter10_2_wrapper(){__asm{jmp mProcs[49*4]}}
+extern "C" __declspec(naked) void __stdcall SetAppCompatStringPointer_wrapper(){__asm{jmp mProcs[50*4]}}

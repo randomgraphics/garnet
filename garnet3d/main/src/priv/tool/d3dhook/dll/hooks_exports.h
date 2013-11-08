@@ -15,6 +15,13 @@ HOOK_API HRESULT WINAPI CreateDXGIFactoryHook(
     void **ppFactory
 );
 
+// -----------------------------------------------------------------------------
+HOOK_API HRESULT WINAPI CreateDXGIFactory2Hook(
+    UINT flag,
+    const IID & riid,
+    void **ppFactory
+);
+
 // *****************************************************************************
 // D3D11
 // *****************************************************************************
