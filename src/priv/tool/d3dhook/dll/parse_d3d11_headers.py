@@ -528,6 +528,62 @@ def PARSE_interface( interface_name, lines ):
     # end of the function
     pass
 
+class D3D11VtableFile:
+    def __init__(self):
+        self._header = open('d3d11vtable.inl', 'w')
+        self._header.write('// script generated file. Do _NOT_ edit.\n\n')
+
+    def WriteInterface( self, interface_name, lines ):
+        self._header.write('// -----------------------------------------------------------------------------\n'
+                           '// ' + interface_name + '\n'
+                           '// -----------------------------------------------------------------------------\n')
+        for i, l in enumerate(lines):
+            if (0 == len(l)) or (0 == i) or (1 == i) or (i == (len(lines)-1)):
+                ident = ''
+            elif 'BEGIN_INTERFACE' == l or 'END_INTERFACE' == l or -1 != l.find('STDMETHODCALLTYPE'):
+                ident = '    '
+            else:
+                ident = '        '
+            self._header.write(ident + l + '\n')
+        self._header.write('\n')
+        pass
+
+# ------------------------------------------------------------------------------
+# Parse interface definition, generate c++ declarations
+#   interface_name : name of the interface that you want to parse
+#   include        : include this header file in generated .h file
+#   lines          : the source code that you want to parse.
+def PARSE_vtable( interface_name, lines ):
+    start_line = 'typedef struct ' + interface_name + 'Vtbl'
+    end_line = '} ' + interface_name + 'Vtbl;'
+    found = None
+    ended = None
+
+    vtable = []
+
+    for l in lines:
+        if not found:
+            if  -1 != l.find(start_line):
+                found = True
+                vtable += [l]
+        else:
+            vtable += [l]
+            if -1 != l.find(end_line):
+                ended = True
+                break
+        pass # end-of-for
+
+    # write vtable to file
+    if found and ended:
+        g_d3d11vtables.WriteInterface(interface_name, vtable)
+    elif not found:
+        UTIL_error(interface_name + ' not found!')
+    else:
+        UTIL_error('The end of ' + interface_name + ' not found: ' + end_line)
+
+    # end of the function
+    pass
+
 # ------------------------------------------------------------------------------
 # Parse a list of interfaces in an opened file
 def PARSE_interfaces_from_opened_file(file, interfaces):
@@ -541,6 +597,7 @@ def PARSE_interfaces_from_opened_file(file, interfaces):
 
     for interface_name in interfaces:
         PARSE_interface(interface_name, lines)
+        PARSE_vtable(interface_name, lines)
     pass
 
 # ------------------------------------------------------------------------------
@@ -618,6 +675,8 @@ class InterfaceNameFile :
 # Start of main procedure
 
 g_d3d11hooks = D3D11HooksFile()
+
+g_d3d11vtables = D3D11VtableFile()
 
 # open global CID files
 g_cid = CallIDCodeGen()

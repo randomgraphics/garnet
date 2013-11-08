@@ -6,6 +6,8 @@
 #include "hooks_exports.h"
 #include <unordered_map>
 
+#include "d3d11vtable.h"
+
 using namespace GN;
 
 // *****************************************************************************
@@ -46,7 +48,7 @@ struct Options
     Options()
     {
         ZeroMemory(this, sizeof(*this));
-        enabled = true;
+        enabled = false;
     }
 };
 static Options g_options;
@@ -248,6 +250,29 @@ CreateDXGIFactoryHook(
     return hr;
 }
 
+typedef HRESULT ( STDMETHODCALLTYPE *ID3D11Device_CreateBuffer )(
+    ID3D11Device * This,
+    /* [annotation] */
+    _In_  const D3D11_BUFFER_DESC *pDesc,
+    /* [annotation] */
+    _In_opt_  const D3D11_SUBRESOURCE_DATA *pInitialData,
+    /* [annotation] */
+    _Out_opt_  ID3D11Buffer **ppBuffer);
+
+ID3D11Device_CreateBuffer ID3D11Device_CreateBuffer_Original;
+HRESULT STDMETHODCALLTYPE ID3D11Device_CreateBuffer_Hook(
+    ID3D11Device * This,
+    /* [annotation] */
+    _In_  const D3D11_BUFFER_DESC *pDesc,
+    /* [annotation] */
+    _In_opt_  const D3D11_SUBRESOURCE_DATA *pInitialData,
+    /* [annotation] */
+    _Out_opt_  ID3D11Buffer **ppBuffer)
+{
+    OutputDebugStringA("ID3D11Device::CreateBuffer\n");
+    return ID3D11Device_CreateBuffer_Original(This, pDesc, pInitialData, ppBuffer);
+}
+
 //
 //
 // -----------------------------------------------------------------------------
@@ -278,10 +303,26 @@ D3D11CreateDeviceHook(
         pFeatureLevel,
         ppImmediateContext);
 
-    if( g_options.enabled && SUCCEEDED(hr) && 1 == trace.getCurrentLevel() )
+    if (g_options.enabled)
     {
-        if( ppDevice ) *ppDevice = RealToHooked11(*ppDevice);
-        if( ppImmediateContext ) *ppImmediateContext = RealToHooked11(*ppImmediateContext);
+        if (SUCCEEDED(hr) && 1 == trace.getCurrentLevel())
+        {
+            if (ppDevice) *ppDevice = RealToHooked11(*ppDevice);
+            if (ppImmediateContext) *ppImmediateContext = RealToHooked11(*ppImmediateContext);
+        }
+    }
+    else if (SUCCEEDED(hr) && ppDevice)
+    {
+        // test code for vtable hook
+        ID3D11DeviceVtbl * vtable = *(ID3D11DeviceVtbl**)*ppDevice;
+        HANDLE process = ::GetCurrentProcess();
+        DWORD oldProtection;
+        if (::VirtualProtectEx( process, vtable, sizeof(*vtable), PAGE_READWRITE, &oldProtection ))
+        {
+            ID3D11Device_CreateBuffer_Original = vtable->CreateBuffer;
+            vtable->CreateBuffer = ID3D11Device_CreateBuffer_Hook;
+            ::VirtualProtectEx( process, vtable, sizeof(*vtable), oldProtection, &oldProtection );
+        }
     }
 
     return hr;
