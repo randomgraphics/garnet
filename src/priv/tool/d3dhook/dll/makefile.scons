@@ -13,6 +13,7 @@ hookdll = GN.BinplaceDLL( GN.BuildDLL( env, 'GNd3dHook-' + cpu,
     [
         'hooks_main.cpp',
         'd3d11hooks.cpp',
+        'd3d11vtable.cpp',
         'd3d9hooks.cpp',
         'd2dhooks.cpp',
     ],

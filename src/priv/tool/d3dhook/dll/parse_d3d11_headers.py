@@ -537,9 +537,30 @@ class D3D11VtableFile:
                         '#include "pch.h"\n'
                         '#include "d3d11vtable.h"\n\n')
         self._asm = open('d3d11vtable_asm.asm', 'w')
-        self._asm.write(';;script generated file. Do _NOT_ edit.\n\n')
+        self._asm.write(';;script generated file. Do _NOT_ edit.\n\n'
+                        '.code\n\n')
+
+    def Close(self):
+        self._header.close()
+        self._header = None
+        self._cpp.close()
+        self._cpp = None
+        self._asm.write('\nend')
+        self._asm.close()
+        self._asm = None
+
+    def _ParseMethodNames( self, interface_name, lines ):
+        names = []
+        for l in lines:
+            if -1 != l.find('STDMETHODCALLTYPE'):
+                m = re.match(r".+STDMETHODCALLTYPE \*(\w+)", l)
+                names += [m.group(1)]
+        return names
 
     def WriteInterface( self, interface_name, lines ):
+
+        methods = self._ParseMethodNames( interface_name, lines )
+
         #generate header file
         self._header.write('// -----------------------------------------------------------------------------\n'
                            '// ' + interface_name + '\n'
@@ -558,26 +579,69 @@ class D3D11VtableFile:
                            'extern ' + interface_name + 'Vtbl ' + interface_name + '_Hooked;\n'
                            'extern ' + interface_name + 'Vtbl ' + interface_name + '_JumpToOrignal;\n'
                            'extern ' + interface_name + 'Vtbl ' + interface_name + '_CallTrace;\n'
+                           '\n'
+                           'inline void hook_' + interface_name + '_vtable(' + interface_name + ' * p)\n'
+                           '{\n'
+                           '    ' + interface_name + 'Vtbl * vtable = *(' + interface_name + 'Vtbl **)p;\n'
+                           '    if (!p) return;\n'
+                           '\n'
+                           '    HANDLE process = ::GetCurrentProcess();\n'
+                           '    DWORD oldProtection;\n'
+                           '    if (!::VirtualProtectEx( process, vtable, sizeof(*vtable), PAGE_READWRITE, &oldProtection ))\n'
+                           '    {\n'
+                           '        HOOK_ERROR_LOG("Failed to update ' + interface_name + ' vtable: changing page protection failed.");\n'
+                           '        return; \n'
+                           '    }\n'
+                           '\n'
+                           '    if (!*(void**)&' + interface_name + '_Original)\n'
+                           '    {\n')
+        for m in methods:
+            self._header.write('        ' + interface_name + '_Original.' + m + ' = vtable->' + m + ';\n'
+                               '        if (!' + interface_name + '_Hooked.' + m + ') ' + interface_name + '_Hooked.' + m + ' = vtable->' + m + ';\n'                               '\n')
+        self._header.write('    }\n'
+                           '    else\n'
+                           '    {\n'
+                           '        GN_ASSERT( 0 == memcmp(vtable, &' + interface_name + '_Original, sizeof(' + interface_name + '_Original)) );\n'
+                           '        *vtable = ' + interface_name + '_Hooked;\n'
+                           '    }\n'
+                           '    \n'
+                           '    ::VirtualProtectEx( process, vtable, sizeof(*vtable), oldProtection, &oldProtection );\n'
+                           '}\n'
                            '\n')
 
-        # generate asm64 file
-        interface = g_interfaces[interface_name];
-        self._asm.write('.code\n'
-                        'extern ' + interface_name + 'Vtbl ' + interface_name + '_JumpToOrignal;\n')
-        for i, m in enumerate(interface._methods):
-            self._asm.write('-----------------------------------------------------------\n'
-                            '' + interface_name + '_' + m._name + '_JumpToOriginal proc\n'
-                            'IFDEF X64\n'
-                            '    jmp ' + interface_name + '_JumpToOrignal[' + str(i) + '*8]\n'
-                            'ELSE\n'
-                            '    jmp ' + interface_name + '_JumpToOrignal[' + str(i) + '*4]\n'
-                            'ENDIF\n'
-                            '' + interface_name + '_' + m._name + '_JumpToOriginal endp\n'
+        # generate asm file
+        self._asm.write(';; -----------------------------------------------------------\n'
+                        'extern ' + interface_name + '_Orignal:QWORD\n')
+        for i, m in enumerate(methods):
+            self._asm.write('' + interface_name + '_' + m + '_JumpToOriginal proc\n'
+                            '    jmp ' + interface_name + '_Orignal[' + str(i) + '*8]\n'
+                            '' + interface_name + '_' + m + '_JumpToOriginal endp\n'
                             '\n')
             pass
 
         #generate cpp file
-        pass
+        self._cpp.write('// -----------------------------------------------------------------------------\n'
+                        '// ' + interface_name + '\n'
+                        '// -----------------------------------------------------------------------------\n\n'
+                        '' + interface_name + 'Vtbl ' + interface_name + '_Original = {};\n'
+                        '' + interface_name + 'Vtbl ' + interface_name + '_Hooked = {};\n'
+                        '' + interface_name + 'Vtbl ' + interface_name + '_JumpToOriginal = {};\n'
+                        '' + interface_name + 'Vtbl ' + interface_name + '_CallTrace = {};\n'
+                        '\n')
+        """
+                        '#if defined( _WIN64 ) || defined( WIN64 ) || defined(__amd64__) || defined(_M_AMD64) || defined(_AMD64_)\n'
+                        )
+        for i, m in enumerate(methods):
+            self._cpp.write('extern "C" void ' + interface_name + '_' + m + '_JumpToOriginal();\n')
+        self._cpp.write('#else\n')
+        for i, m in enumerate(methods):
+            self._cpp.write('static __declspec(naked) void __stdcall ' + interface_name + '_' + m + '_JumpToOriginal() { __asm{ jmp ' + interface_name + '_Original.' + m + ';\n')
+        self._cpp.write('#endif\n\n'
+                        'static void ' + interface_name + '_init()\n'
+                        '{\n')
+        for m in methods:
+            self._cpp.write('    ' + interface_name + '_HookedJumpToOrignal.' + m + ' = ' + interface_name + '_' + m + '_JumpToOriginal;\n')
+        self._cpp.write('}\n\n')"""
 
 # ------------------------------------------------------------------------------
 # Parse interface definition, generate c++ declarations
@@ -753,7 +817,7 @@ with open("d3d11factories.inl", "w") as f:
         if ('IUnknown' != interfaceName):
             f.write('registerFactory<' + interfaceName + '>(' + v._hookedClassName + '::sNewInstance, ' + v._hookedClassName + '::sDeleteInstance, nullptr);\n')
 
+# close opened files
 g_interfaceNameFile.Close()
-
-# close Call ID code gen
+g_d3d11vtables.Close();
 g_cid.Close()

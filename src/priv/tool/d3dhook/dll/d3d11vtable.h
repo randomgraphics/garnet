@@ -1,4 +1,5 @@
 #pragma once
+#include "hooks.h"
 #include "d3d/d3d11_1.h"
 #include "d3d/dxgidebug.h"
 
