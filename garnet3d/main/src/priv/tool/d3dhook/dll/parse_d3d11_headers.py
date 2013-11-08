@@ -532,8 +532,15 @@ class D3D11VtableFile:
     def __init__(self):
         self._header = open('d3d11vtable.inl', 'w')
         self._header.write('// script generated file. Do _NOT_ edit.\n\n')
+        self._cpp = open('d3d11vtable.cpp', 'w')
+        self._cpp.write('// script generated file. Do _NOT_ edit.\n\n'
+                        '#include "pch.h"\n'
+                        '#include "d3d11vtable.h"\n\n')
+        self._asm = open('d3d11vtable_asm.asm', 'w')
+        self._asm.write(';;script generated file. Do _NOT_ edit.\n\n')
 
     def WriteInterface( self, interface_name, lines ):
+        #generate header file
         self._header.write('// -----------------------------------------------------------------------------\n'
                            '// ' + interface_name + '\n'
                            '// -----------------------------------------------------------------------------\n')
@@ -545,7 +552,31 @@ class D3D11VtableFile:
             else:
                 ident = '        '
             self._header.write(ident + l + '\n')
-        self._header.write('\n')
+
+        self._header.write('\n'
+                           'extern ' + interface_name + 'Vtbl ' + interface_name + '_Original;\n'
+                           'extern ' + interface_name + 'Vtbl ' + interface_name + '_Hooked;\n'
+                           'extern ' + interface_name + 'Vtbl ' + interface_name + '_JumpToOrignal;\n'
+                           'extern ' + interface_name + 'Vtbl ' + interface_name + '_CallTrace;\n'
+                           '\n')
+
+        # generate asm64 file
+        interface = g_interfaces[interface_name];
+        self._asm.write('.code\n'
+                        'extern ' + interface_name + 'Vtbl ' + interface_name + '_JumpToOrignal;\n')
+        for i, m in enumerate(interface._methods):
+            self._asm.write('-----------------------------------------------------------\n'
+                            '' + interface_name + '_' + m._name + '_JumpToOriginal proc\n'
+                            'IFDEF X64\n'
+                            '    jmp ' + interface_name + '_JumpToOrignal[' + str(i) + '*8]\n'
+                            'ELSE\n'
+                            '    jmp ' + interface_name + '_JumpToOrignal[' + str(i) + '*4]\n'
+                            'ENDIF\n'
+                            '' + interface_name + '_' + m._name + '_JumpToOriginal endp\n'
+                            '\n')
+            pass
+
+        #generate cpp file
         pass
 
 # ------------------------------------------------------------------------------
