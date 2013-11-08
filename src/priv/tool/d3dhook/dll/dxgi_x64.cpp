@@ -4,7 +4,7 @@
 HINSTANCE mHinst = 0, mHinstDLL = 0;
 extern "C" UINT_PTR mProcs[50] = {0};
 
-LPCSTR mImportNames[] = {"CheckETWTLS", "CompatString", "CompatValue", "CreateDXGIFactory", "CreateDXGIFactory1", "D3DKMTCloseAdapter", "D3DKMTCreateAllocation", "D3DKMTCreateContext", "D3DKMTCreateDevice", "D3DKMTCreateSynchronizationObject", "D3DKMTDestroyAllocation", "D3DKMTDestroyContext", "D3DKMTDestroyDevice", "D3DKMTDestroySynchronizationObject", "D3DKMTEscape", "D3DKMTGetContextSchedulingPriority", "D3DKMTGetDeviceState", "D3DKMTGetDisplayModeList", "D3DKMTGetMultisampleMethodList", "D3DKMTGetRuntimeData", "D3DKMTGetSharedPrimaryHandle", "D3DKMTLock", "D3DKMTOpenAdapterFromHdc", "D3DKMTOpenResource", "D3DKMTPresent", "D3DKMTQueryAdapterInfo", "D3DKMTQueryAllocationResidency", "D3DKMTQueryResourceInfo", "D3DKMTRender", "D3DKMTSetAllocationPriority", "D3DKMTSetContextSchedulingPriority", "D3DKMTSetDisplayMode", "D3DKMTSetDisplayPrivateDriverFormat", "D3DKMTSetGammaRamp", "D3DKMTSetVidPnSourceOwner", "D3DKMTSignalSynchronizationObject", "D3DKMTUnlock", "D3DKMTWaitForSynchronizationObject", "D3DKMTWaitForVerticalBlankEvent", "DXGID3D10CreateDevice", "DXGID3D10CreateLayeredDevice", "DXGID3D10ETWRundown", "DXGID3D10GetLayeredDeviceSize", "DXGID3D10RegisterLayers", "DXGIDumpJournal", "DXGIReportAdapterConfiguration", "DXGIRevertToSxS", "OpenAdapter10", "OpenAdapter10_2", "SetAppCompatStringPointer"};
+LPCSTR mImportNames[] = {"CompatString", "CompatValue", "CreateDXGIFactory", "CreateDXGIFactory1", "CreateDXGIFactory2", "D3DKMTCloseAdapter", "D3DKMTCreateAllocation", "D3DKMTCreateContext", "D3DKMTCreateDevice", "D3DKMTCreateSynchronizationObject", "D3DKMTDestroyAllocation", "D3DKMTDestroyContext", "D3DKMTDestroyDevice", "D3DKMTDestroySynchronizationObject", "D3DKMTEscape", "D3DKMTGetContextSchedulingPriority", "D3DKMTGetDeviceState", "D3DKMTGetDisplayModeList", "D3DKMTGetMultisampleMethodList", "D3DKMTGetRuntimeData", "D3DKMTGetSharedPrimaryHandle", "D3DKMTLock", "D3DKMTOpenAdapterFromHdc", "D3DKMTOpenResource", "D3DKMTPresent", "D3DKMTQueryAdapterInfo", "D3DKMTQueryAllocationResidency", "D3DKMTQueryResourceInfo", "D3DKMTRender", "D3DKMTSetAllocationPriority", "D3DKMTSetContextSchedulingPriority", "D3DKMTSetDisplayMode", "D3DKMTSetDisplayPrivateDriverFormat", "D3DKMTSetGammaRamp", "D3DKMTSetVidPnSourceOwner", "D3DKMTSignalSynchronizationObject", "D3DKMTUnlock", "D3DKMTWaitForSynchronizationObject", "D3DKMTWaitForVerticalBlankEvent", "DXGID3D10CreateDevice", "DXGID3D10CreateLayeredDevice", "DXGID3D10ETWRundown", "DXGID3D10GetLayeredDeviceSize", "DXGID3D10RegisterLayers", "DXGIDumpJournal", "DXGIGetDebugInterface1", "DXGIReportAdapterConfiguration", "DXGIRevertToSxS", "OpenAdapter10", "OpenAdapter10_2", "SetAppCompatStringPointer"};
 BOOL WINAPI DllMain( HINSTANCE hinstDLL, DWORD fdwReason, LPVOID ) {
 	mHinst = hinstDLL;
 	if ( fdwReason == DLL_PROCESS_ATTACH ) {
@@ -19,13 +19,13 @@ BOOL WINAPI DllMain( HINSTANCE hinstDLL, DWORD fdwReason, LPVOID ) {
 	return ( TRUE );
 }
 
-extern "C" void CheckETWTLS_wrapper();
 extern "C" void CompatString_wrapper();
 extern "C" void CompatValue_wrapper();
 
 #if 0
 extern "C" void CreateDXGIFactory_wrapper();
 extern "C" void CreateDXGIFactory1_wrapper();
+extern "C" void CreateDXGIFactory2_wrapper();
 #else
 extern "C" HRESULT WINAPI CreateDXGIFactory_wrapper(
     const IID & riid,
@@ -36,13 +36,22 @@ extern "C" HRESULT WINAPI CreateDXGIFactory_wrapper(
         riid,
         ppFactory);
 }
-
 extern "C" HRESULT WINAPI CreateDXGIFactory1_wrapper(
     const IID & riid,
     void **ppFactory)
 {
     return CreateDXGIFactoryHook(
         "CreateDXGIFactory1",
+        riid,
+        ppFactory);
+}
+extern "C" HRESULT WINAPI CreateDXGIFactory2_wrapper(
+    UINT flags,
+    const IID & riid,
+    void **ppFactory)
+{
+    return CreateDXGIFactory2Hook(
+        flags,
         riid,
         ppFactory);
 }
@@ -88,6 +97,7 @@ extern "C" void DXGID3D10ETWRundown_wrapper();
 extern "C" void DXGID3D10GetLayeredDeviceSize_wrapper();
 extern "C" void DXGID3D10RegisterLayers_wrapper();
 extern "C" void DXGIDumpJournal_wrapper();
+extern "C" void DXGIGetDebugInterface1_wrapper();
 extern "C" void DXGIReportAdapterConfiguration_wrapper();
 extern "C" void DXGIRevertToSxS_wrapper();
 extern "C" void OpenAdapter10_wrapper();
