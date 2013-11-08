@@ -1,5 +1,6 @@
 #include "../testCommon.h"
 
+#if 0
 namespace GN2
 {
     ///
@@ -22,7 +23,7 @@ namespace GN2
     };
 
     // -------------------------------------------------------------------------
-    class RefCounter : public NoCopy
+    class RefCounter : public GN::NoCopy
     {
         // ********************************
         //       reference management
@@ -42,7 +43,7 @@ namespace GN2
             GN_ASSERT( mRef > 0 );
 
             mWeakLock.enter();
-            if (mWeakObj && mWeakObj->deref(mWeakLink);
+            if (mWeakObj && mWeakObj->deref(mWeakLink))
             {
                 delete mWeakObj;
                 mWeakObj = NULL;
@@ -451,6 +452,7 @@ namespace GN2
         }
     };
 }
+#endif
 
 class RefPtrTest : public CxxTest::TestSuite
 {
