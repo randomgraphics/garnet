@@ -264,6 +264,14 @@ class InterfaceSigature:
         self._hookedClassName = hooked_class_name
         self._methods = methods
 
+    def FindMethod(self, name, searchParents = True):
+        for m in self._methods:
+            if m._name == name: return m
+        if searchParents and g_parents[self._name]:
+            parent = g_interfaces[g_parents[self._name]]
+            if parent: return parent.FindMethod( name, searchParents = True )
+        return None
+
 # ------------------------------------------------------------------------------
 # Returns instance of FunctionSignature or None
 def PARSE_get_interface_method_decl( interface_name, line ):
@@ -474,6 +482,230 @@ def PARSE_interface( interface_name, lines ):
     # end of the function
     pass
 
+class D3D9VTable:
+    def __init__(self, interface_name, lines):
+        self._name = interface_name
+        self._code = lines
+        self._methods = self._ParseMethodName( interface_name, lines )
+
+    def _ParseMethodName( self, interface_name, lines ):
+        names = []
+        for l in lines:
+            if -1 !=  l.find('STDMETHOD_'):
+                m = re.match(r"STDMETHOD_\(\w+,\s*(\w+)\)", l)
+                names += [m.group(1)]
+            elif -1 != l.find('STDMETHOD'):
+                m = re.match(r"STDMETHOD\((\w+)\)", l)
+                names += [m.group(1)]
+        return names
+
+class D3D9VTableFile:
+    def __init__(self):
+        self._header = open('d3d9vtable.inl', 'w')
+        self._header.write('// script generated file. Do _NOT_ edit.\n\n')
+        self._cpp = open('d3d9vtable.cpp', 'w')
+        self._cpp.write('// script generated file. Do _NOT_ edit.\n\n'
+                        '#include "pch.h"\n'
+                        '#include "d3d9vtable.h"\n\n'
+                        'D3D9VTables g_D3D9OriginVTables;\n'
+                        'D3D9VTables g_D3D9HookedVTables;\n'
+                        '\n')
+        self._vtables = []
+
+    def _WriteRealToHookFunc(self, fp, vtable ):
+        interface_name = vtable._name
+        methods = vtable._methods
+        vtable_name = interface_name + 'Vtbl'
+        fp.write('// -----------------------------------------------------------------------------\n'
+                 'inline void RealToHooked9_' + interface_name + '(' + interface_name + ' * p)\n'
+                 '{\n'
+                 '    if (p) RealToHooked_General(**(' + vtable_name + '**)p, g_D3D9OriginVTables._' + interface_name + ', g_D3D9HookedVTables._' + interface_name + ', "' + interface_name + '");\n'
+                 '}\n'
+                 'template <> inline void RealToHooked9<' + interface_name + '>(' + interface_name + ' * p)\n'
+                 '{\n'
+                 '    return RealToHooked9_' + interface_name + '( p );\n'
+                 '}\n'
+                 '\n')
+        pass # end of function
+
+    def _WriteAddRef( self, fp, interface_name ):
+        fp.write('// -----------------------------------------------------------------------------\n'
+                 'template<UINT INDEX> static ULONG STDMETHODCALLTYPE ' + interface_name + '_AddRef_Hooked(' + interface_name + ' * ptr)\n'
+                 '{\n'
+                 '    calltrace::AutoTrace trace("' + interface_name + '::AddRef");\n'
+                 '    return g_D3D9OriginVTables._' + interface_name + '.tables[INDEX].AddRef(ptr);\n'
+                 '}\n\n');
+        pass
+
+    def _WriteRelease( self, fp, interface_name ):
+        fp.write('// -----------------------------------------------------------------------------\n'
+                 'template<UINT INDEX> static ULONG STDMETHODCALLTYPE ' + interface_name + '_Release_Hooked(' + interface_name + ' * ptr)\n'
+                 '{\n'
+                 '    calltrace::AutoTrace trace("' + interface_name + '::Release");\n'
+                 '    return g_D3D9OriginVTables._' + interface_name + '.tables[INDEX].Release(ptr);\n'
+                 '}\n\n');
+
+    def _WriteQI( self, fp, interface_name ):
+        fp.write('// -----------------------------------------------------------------------------\n'
+                 'template<UINT INDEX> static HRESULT STDMETHODCALLTYPE ' + interface_name + '_QueryInterface_Hooked(' + interface_name + ' * ptr, const IID & iid, void ** pp)\n'
+                 '{\n'
+                 '    calltrace::AutoTrace trace("' + interface_name + '::QueryInterface");\n'
+                 '    return g_D3D9OriginVTables._' + interface_name + '.tables[INDEX].QueryInterface(ptr, iid, pp);\n'
+                 '}\n\n');
+
+    def _WriteHookMethod( self, fp, interface_name, method_name ):
+        if 'AddRef' == method_name:
+            self._WriteAddRef(fp, interface_name)
+        elif 'Release' == method_name:
+            self._WriteRelease(fp, interface_name)
+        elif 'QueryInterface' == method_name:
+            self._WriteQI(fp, interface_name)
+        else:
+            m = g_interfaces[interface_name].FindMethod(method_name)
+            fp.write('// -----------------------------------------------------------------------------\n'
+                     'template<UINT INDEX> static ' + m._return_type + ' ' + m._decl + ' ' + interface_name + '_' + m._name + '_Hooked(' + interface_name + ' * ptr')
+            if len(m._parameter_list) > 0: fp.write(', ')
+            m.WriteParameterList(fp, writeType=True, writeName=True)
+            fp.write(')\n'
+                     '{\n'
+                     '    calltrace::AutoTrace trace("' + interface_name + '::' + m._name + '");\n'
+                     '    return g_D3D9OriginVTables._' + interface_name + '.tables[INDEX].' + m._name + '(ptr')
+            if len(m._parameter_list) > 0: fp.write(', ')
+            m.WriteParameterNameList(fp)
+            fp.write(');\n'
+                               '}\n'
+                               '\n');
+
+
+    def Close(self):
+        # write to header file
+        self._header.write('// -----------------------------------------------------------------------------\n'
+                           '// Global vtables for all D3D9/DXGI classes\n'
+                           '// -----------------------------------------------------------------------------\n'
+                           '\n'
+                           'struct D3D9VTables\n'
+                           '{\n')
+        for vt in self._vtables:
+            self._header.write('    VTable<' + vt._name + 'Vtbl> _' + vt._name + ';\n')
+        self._header.write('};\n\n'
+                           'extern D3D9VTables g_D3D9OriginVTables;\n'
+                           'extern D3D9VTables g_D3D9HookedVTables;\n'
+                           '\n'
+                           '// -----------------------------------------------------------------------------\n'
+                           '// Real -> Hook Functions\n'
+                           '// -----------------------------------------------------------------------------\n'
+                           '\n')
+        for vt in self._vtables:
+            self._WriteRealToHookFunc(self._header, vt)
+        self._header.close()
+        self._header = None
+
+        # write to cpp file
+        self._cpp.write('// -----------------------------------------------------------------------------\n'
+                        'void RealToHooked9(const IID & iid, void * p)\n'
+                        '{\n'
+                        '    if (false) {}\n')
+        for vt in self._vtables:
+            self._cpp.write('    else if (__uuidof(' + vt._name + ') == iid) RealToHooked9_' + vt._name + '((' + vt._name + '*)p);\n')
+        self._cpp.write('    else\n'
+                        '    {\n'
+                        '        HOOK_WARN_LOG("unrecognized interface UUID: <xxxx-xxxx-xxxxx...>");\n'
+                        '    }\n'
+                        '}\n'
+                        '\n'
+                        '// -----------------------------------------------------------------------------\n'
+                        'template<UINT INDEX> static void SetupD3D9HookedVTables()\n'
+                        '{\n');
+        for vt in self._vtables:
+            for m in vt._methods:
+                self._cpp.write('    g_D3D9HookedVTables._' + vt._name + '.tables[INDEX].' + m + ' = ' + vt._name + '_' + m + '_Hooked<INDEX>;\n')
+        self._cpp.write('}\n\n'
+                        '// -----------------------------------------------------------------------------\n'
+                        'void SetupD3D9HookedVTables()\n'
+                        '{\n')
+        for i in range(16):
+            self._cpp.write('    SetupD3D9HookedVTables<' + str(i) + '>();\n')
+        self._cpp.write('}\n')
+        self._cpp.close()
+        self._cpp = None
+        pass
+
+    def WriteVtable( self, interface_name, lines ):
+
+        # parse vtable definition
+        vtable = D3D9VTable(interface_name, lines)
+        methods = vtable._methods
+        self._vtables.append( vtable )
+
+        # generate vtable decl
+        self._header.write('// -----------------------------------------------------------------------------\n'
+                           '// ' + interface_name + '\n'
+                           '// -----------------------------------------------------------------------------\n'
+                           'struct ' + interface_name + 'Vtbl\n'
+                           '{\n')
+        for l in lines:
+            if -1 != l.find('STDMETHOD_'):
+                m = re.match(r"STDMETHOD_\((\w+),\s*(\w+)\)", l)
+                l = m.group(1) + ' (STDMETHODCALLTYPE *' + m.group(2) + ')' + l[m.end(0):]
+            elif -1 != l.find('STDMETHOD'):
+                m = re.match(r"STDMETHOD\((\w+)\)", l)
+                l = 'HRESULT (STDMETHODCALLTYPE *' + m.group(1) + ')' + l[m.end(0):]
+            else:
+                continue
+            l = l.replace('THIS_', interface_name + ' * this_, ')
+            l = l.replace('THIS', interface_name + ' * this_')
+            l = l.replace('PURE;', ';')
+            l = l.strip()
+            self._header.write('    ' + l + '\n')
+        self._header.write('};\n\n')
+
+        # individula hook methods
+        self._cpp.write('// -----------------------------------------------------------------------------\n'
+                        '// ' + interface_name + '\n'
+                        '// -----------------------------------------------------------------------------\n'
+                        '\n')
+        for m in methods:
+            self._WriteHookMethod(self._cpp, interface_name, m)
+
+        # end of function
+        pass
+
+# ------------------------------------------------------------------------------
+# Parse interface vtable, generate c++ declarations
+#   interface_name : name of the interface that you want to parse
+#   include        : include this header file in generated .h file
+#   lines          : the source code that you want to parse.
+def PARSE_d3d9_vtable( interface_name, lines ):
+    start_line = 'DECLARE_INTERFACE_(' + interface_name;
+    end_line = '};'
+    found = None
+    ended = None
+
+    definition = []
+
+    for l in lines:
+        if not found:
+            if  -1 != l.find(start_line):
+                found = True
+                definition += [l]
+        else:
+            definition += [l]
+            if -1 != l.find(end_line):
+                ended = True
+                break
+        pass # end-of-for
+
+    # write vtable to file
+    if found and ended:
+        g_d3d9vtables.WriteVtable(interface_name, definition)
+    elif not found:
+        UTIL_error(interface_name + ' not found!')
+    else:
+        UTIL_error('The end of ' + interface_name + ' not found: ' + end_line)
+
+    # end of the function
+    pass
+
 # ------------------------------------------------------------------------------
 # Parse a list of interfaces in an opened file
 def PARSE_interfaces_from_opened_file(file, interfaces):
@@ -487,6 +719,7 @@ def PARSE_interfaces_from_opened_file(file, interfaces):
 
     for interface_name in interfaces:
         PARSE_interface(interface_name, lines)
+        PARSE_d3d9_vtable(interface_name, lines)
     pass
 
 # ------------------------------------------------------------------------------
@@ -565,6 +798,7 @@ class InterfaceNameFile :
 # Start of main procedure
 
 g_d3d9hooks = D3D9HooksFile()
+g_d3d9vtables = D3D9VTableFile()
 
 # open global CID files
 g_cid = CallIDCodeGen()
@@ -590,7 +824,7 @@ with open("d3d9factories.inl", "w") as f:
         if ('IUnknown' != interfaceName):
             f.write('registerFactory<' + interfaceName + '>(' + v._hookedClassName + '::sNewInstance, ' + v._hookedClassName + '::sDeleteInstance, nullptr);\n')
 
+# close opened files
 g_interfaceNameFile.Close()
-
-# close Call ID code gen
+g_d3d9vtables.Close()
 g_cid.Close()

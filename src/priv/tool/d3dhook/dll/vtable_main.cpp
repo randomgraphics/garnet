@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "d3d11vtable.h"
+#include "d3d9vtable.h"
 
 #define INSIDE_HOOK_DLL
 #include "hooks_exports.h"
@@ -73,11 +74,11 @@ namespace calltrace
         wcscat_s(buf, text);
         wcscat_s(buf, L"\n");
 
-        if (IsDebuggerPresent())
-        {
-            OutputDebugStringW(buf);
-        }
-        else
+        //if (IsDebuggerPresent())
+        //{
+        //    OutputDebugStringW(buf);
+        //}
+        //else
         {
             wprintf(L"%s", buf);
         }
@@ -126,9 +127,7 @@ CreateDXGIFactoryHook(
 
     if (g_options.enabled && SUCCEEDED(hr) && ppFactory)
     {
-        // TODO: need to handle the case that same interface could have multiple
-        //       original vtables.
-        //RealToHooked11(riid, *ppFactory);
+        RealToHooked11(riid, *ppFactory);
     }
 
     return hr;
@@ -155,9 +154,7 @@ CreateDXGIFactory2Hook(
 
     if (g_options.enabled && SUCCEEDED(hr) && ppFactory)
     {
-        // TODO: need to handle the case that same interface could have multiple
-        //       original vtables.
-        //RealToHooked11(riid, *ppFactory);
+        RealToHooked11(riid, *ppFactory);
     }
 
     return hr;
@@ -271,6 +268,11 @@ HOOK_API IDirect3D9 * WINAPI Direct3DCreate9Hook(UINT SDKVersion)
 
     IDirect3D9 * d3d9 = realFunc(SDKVersion);
 
+    if( g_options.enabled && d3d9 )
+    {
+        RealToHooked9(d3d9);
+    }
+
     return d3d9;
 }
 
@@ -288,6 +290,11 @@ HOOK_API HRESULT WINAPI Direct3DCreate9ExHook(UINT SDKVersion, IDirect3D9Ex **pp
     if (nullptr == realFunc) return E_FAIL;
 
     HRESULT hr = realFunc(SDKVersion, ppD3D);
+
+    if( g_options.enabled && SUCCEEDED(hr) && ppD3D && *ppD3D )
+    {
+        //RealToHooked9(*ppD3D);
+    }
 
     return hr;
 }
@@ -432,6 +439,7 @@ BOOL WINAPI DllMain( HINSTANCE, DWORD fdwReason, LPVOID )
 	if ( fdwReason == DLL_PROCESS_ATTACH )
     {
         SetupD3D11HookedVTables();
+        SetupD3D9HookedVTables();
 	} else if ( fdwReason == DLL_PROCESS_DETACH )
 	{
         // TODO: cleanup.
