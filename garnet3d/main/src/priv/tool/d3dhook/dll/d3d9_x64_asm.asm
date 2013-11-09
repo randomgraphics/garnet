@@ -45,4 +45,7 @@ PSGPError_wrapper endp
 PSGPSampleTexture_wrapper proc
 	jmp mProcs[14*8]
 PSGPSampleTexture_wrapper endp
+ExportByOrdinal16 proc
+	jmp mProcs[15*8]
+ExportByOrdinal16 endp
 end
