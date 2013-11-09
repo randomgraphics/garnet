@@ -124,6 +124,13 @@ CreateDXGIFactoryHook(
 
     HRESULT hr = realFunc(riid, ppFactory);
 
+    if (g_options.enabled && SUCCEEDED(hr) && ppFactory)
+    {
+        // TODO: need to handle the case that same interface could have multiple
+        //       original vtables.
+        //RealToHooked11(riid, *ppFactory);
+    }
+
     return hr;
 }
 
@@ -145,6 +152,13 @@ CreateDXGIFactory2Hook(
     if (nullptr == realFunc) return E_FAIL;
 
     HRESULT hr = realFunc(flags, riid, ppFactory);
+
+    if (g_options.enabled && SUCCEEDED(hr) && ppFactory)
+    {
+        // TODO: need to handle the case that same interface could have multiple
+        //       original vtables.
+        //RealToHooked11(riid, *ppFactory);
+    }
 
     return hr;
 }
