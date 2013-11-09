@@ -19247,6 +19247,94 @@ static inline HRESULT STDMETHODCALLTYPE IDXGIDebug_ReportLiveObjects_Hooked(IDXG
 }
 
 // -----------------------------------------------------------------------------
+inline void RealToHooked11(const IID & iid, void * p)
+{
+    if (false) {}
+    else if (__uuidof(ID3D11DeviceChild) == iid) RealToHooked11_ID3D11DeviceChild((ID3D11DeviceChild*)p);
+    else if (__uuidof(ID3D11DepthStencilState) == iid) RealToHooked11_ID3D11DepthStencilState((ID3D11DepthStencilState*)p);
+    else if (__uuidof(ID3D11BlendState) == iid) RealToHooked11_ID3D11BlendState((ID3D11BlendState*)p);
+    else if (__uuidof(ID3D11RasterizerState) == iid) RealToHooked11_ID3D11RasterizerState((ID3D11RasterizerState*)p);
+    else if (__uuidof(ID3D11Resource) == iid) RealToHooked11_ID3D11Resource((ID3D11Resource*)p);
+    else if (__uuidof(ID3D11Buffer) == iid) RealToHooked11_ID3D11Buffer((ID3D11Buffer*)p);
+    else if (__uuidof(ID3D11Texture1D) == iid) RealToHooked11_ID3D11Texture1D((ID3D11Texture1D*)p);
+    else if (__uuidof(ID3D11Texture2D) == iid) RealToHooked11_ID3D11Texture2D((ID3D11Texture2D*)p);
+    else if (__uuidof(ID3D11Texture3D) == iid) RealToHooked11_ID3D11Texture3D((ID3D11Texture3D*)p);
+    else if (__uuidof(ID3D11View) == iid) RealToHooked11_ID3D11View((ID3D11View*)p);
+    else if (__uuidof(ID3D11ShaderResourceView) == iid) RealToHooked11_ID3D11ShaderResourceView((ID3D11ShaderResourceView*)p);
+    else if (__uuidof(ID3D11RenderTargetView) == iid) RealToHooked11_ID3D11RenderTargetView((ID3D11RenderTargetView*)p);
+    else if (__uuidof(ID3D11DepthStencilView) == iid) RealToHooked11_ID3D11DepthStencilView((ID3D11DepthStencilView*)p);
+    else if (__uuidof(ID3D11UnorderedAccessView) == iid) RealToHooked11_ID3D11UnorderedAccessView((ID3D11UnorderedAccessView*)p);
+    else if (__uuidof(ID3D11VertexShader) == iid) RealToHooked11_ID3D11VertexShader((ID3D11VertexShader*)p);
+    else if (__uuidof(ID3D11HullShader) == iid) RealToHooked11_ID3D11HullShader((ID3D11HullShader*)p);
+    else if (__uuidof(ID3D11DomainShader) == iid) RealToHooked11_ID3D11DomainShader((ID3D11DomainShader*)p);
+    else if (__uuidof(ID3D11GeometryShader) == iid) RealToHooked11_ID3D11GeometryShader((ID3D11GeometryShader*)p);
+    else if (__uuidof(ID3D11PixelShader) == iid) RealToHooked11_ID3D11PixelShader((ID3D11PixelShader*)p);
+    else if (__uuidof(ID3D11ComputeShader) == iid) RealToHooked11_ID3D11ComputeShader((ID3D11ComputeShader*)p);
+    else if (__uuidof(ID3D11InputLayout) == iid) RealToHooked11_ID3D11InputLayout((ID3D11InputLayout*)p);
+    else if (__uuidof(ID3D11SamplerState) == iid) RealToHooked11_ID3D11SamplerState((ID3D11SamplerState*)p);
+    else if (__uuidof(ID3D11Asynchronous) == iid) RealToHooked11_ID3D11Asynchronous((ID3D11Asynchronous*)p);
+    else if (__uuidof(ID3D11Query) == iid) RealToHooked11_ID3D11Query((ID3D11Query*)p);
+    else if (__uuidof(ID3D11Predicate) == iid) RealToHooked11_ID3D11Predicate((ID3D11Predicate*)p);
+    else if (__uuidof(ID3D11Counter) == iid) RealToHooked11_ID3D11Counter((ID3D11Counter*)p);
+    else if (__uuidof(ID3D11ClassInstance) == iid) RealToHooked11_ID3D11ClassInstance((ID3D11ClassInstance*)p);
+    else if (__uuidof(ID3D11ClassLinkage) == iid) RealToHooked11_ID3D11ClassLinkage((ID3D11ClassLinkage*)p);
+    else if (__uuidof(ID3D11CommandList) == iid) RealToHooked11_ID3D11CommandList((ID3D11CommandList*)p);
+    else if (__uuidof(ID3D11DeviceContext) == iid) RealToHooked11_ID3D11DeviceContext((ID3D11DeviceContext*)p);
+    else if (__uuidof(ID3D11VideoDecoder) == iid) RealToHooked11_ID3D11VideoDecoder((ID3D11VideoDecoder*)p);
+    else if (__uuidof(ID3D11VideoProcessorEnumerator) == iid) RealToHooked11_ID3D11VideoProcessorEnumerator((ID3D11VideoProcessorEnumerator*)p);
+    else if (__uuidof(ID3D11VideoProcessor) == iid) RealToHooked11_ID3D11VideoProcessor((ID3D11VideoProcessor*)p);
+    else if (__uuidof(ID3D11AuthenticatedChannel) == iid) RealToHooked11_ID3D11AuthenticatedChannel((ID3D11AuthenticatedChannel*)p);
+    else if (__uuidof(ID3D11CryptoSession) == iid) RealToHooked11_ID3D11CryptoSession((ID3D11CryptoSession*)p);
+    else if (__uuidof(ID3D11VideoDecoderOutputView) == iid) RealToHooked11_ID3D11VideoDecoderOutputView((ID3D11VideoDecoderOutputView*)p);
+    else if (__uuidof(ID3D11VideoProcessorInputView) == iid) RealToHooked11_ID3D11VideoProcessorInputView((ID3D11VideoProcessorInputView*)p);
+    else if (__uuidof(ID3D11VideoProcessorOutputView) == iid) RealToHooked11_ID3D11VideoProcessorOutputView((ID3D11VideoProcessorOutputView*)p);
+    else if (__uuidof(ID3D11VideoContext) == iid) RealToHooked11_ID3D11VideoContext((ID3D11VideoContext*)p);
+    else if (__uuidof(ID3D11VideoDevice) == iid) RealToHooked11_ID3D11VideoDevice((ID3D11VideoDevice*)p);
+    else if (__uuidof(ID3D11Device) == iid) RealToHooked11_ID3D11Device((ID3D11Device*)p);
+    else if (__uuidof(ID3D11BlendState1) == iid) RealToHooked11_ID3D11BlendState1((ID3D11BlendState1*)p);
+    else if (__uuidof(ID3D11RasterizerState1) == iid) RealToHooked11_ID3D11RasterizerState1((ID3D11RasterizerState1*)p);
+    else if (__uuidof(ID3DDeviceContextState) == iid) RealToHooked11_ID3DDeviceContextState((ID3DDeviceContextState*)p);
+    else if (__uuidof(ID3D11DeviceContext1) == iid) RealToHooked11_ID3D11DeviceContext1((ID3D11DeviceContext1*)p);
+    else if (__uuidof(ID3D11Device1) == iid) RealToHooked11_ID3D11Device1((ID3D11Device1*)p);
+    else if (__uuidof(ID3DUserDefinedAnnotation) == iid) RealToHooked11_ID3DUserDefinedAnnotation((ID3DUserDefinedAnnotation*)p);
+    else if (__uuidof(ID3D11Debug) == iid) RealToHooked11_ID3D11Debug((ID3D11Debug*)p);
+    else if (__uuidof(ID3D11SwitchToRef) == iid) RealToHooked11_ID3D11SwitchToRef((ID3D11SwitchToRef*)p);
+    else if (__uuidof(ID3D11TracingDevice) == iid) RealToHooked11_ID3D11TracingDevice((ID3D11TracingDevice*)p);
+    else if (__uuidof(ID3D11RefTrackingOptions) == iid) RealToHooked11_ID3D11RefTrackingOptions((ID3D11RefTrackingOptions*)p);
+    else if (__uuidof(ID3D11RefDefaultTrackingOptions) == iid) RealToHooked11_ID3D11RefDefaultTrackingOptions((ID3D11RefDefaultTrackingOptions*)p);
+    else if (__uuidof(ID3D11InfoQueue) == iid) RealToHooked11_ID3D11InfoQueue((ID3D11InfoQueue*)p);
+    else if (__uuidof(IDXGIObject) == iid) RealToHooked11_IDXGIObject((IDXGIObject*)p);
+    else if (__uuidof(IDXGIDeviceSubObject) == iid) RealToHooked11_IDXGIDeviceSubObject((IDXGIDeviceSubObject*)p);
+    else if (__uuidof(IDXGIResource) == iid) RealToHooked11_IDXGIResource((IDXGIResource*)p);
+    else if (__uuidof(IDXGIKeyedMutex) == iid) RealToHooked11_IDXGIKeyedMutex((IDXGIKeyedMutex*)p);
+    else if (__uuidof(IDXGISurface) == iid) RealToHooked11_IDXGISurface((IDXGISurface*)p);
+    else if (__uuidof(IDXGISurface1) == iid) RealToHooked11_IDXGISurface1((IDXGISurface1*)p);
+    else if (__uuidof(IDXGIAdapter) == iid) RealToHooked11_IDXGIAdapter((IDXGIAdapter*)p);
+    else if (__uuidof(IDXGIOutput) == iid) RealToHooked11_IDXGIOutput((IDXGIOutput*)p);
+    else if (__uuidof(IDXGISwapChain) == iid) RealToHooked11_IDXGISwapChain((IDXGISwapChain*)p);
+    else if (__uuidof(IDXGIFactory) == iid) RealToHooked11_IDXGIFactory((IDXGIFactory*)p);
+    else if (__uuidof(IDXGIDevice) == iid) RealToHooked11_IDXGIDevice((IDXGIDevice*)p);
+    else if (__uuidof(IDXGIFactory1) == iid) RealToHooked11_IDXGIFactory1((IDXGIFactory1*)p);
+    else if (__uuidof(IDXGIAdapter1) == iid) RealToHooked11_IDXGIAdapter1((IDXGIAdapter1*)p);
+    else if (__uuidof(IDXGIDevice1) == iid) RealToHooked11_IDXGIDevice1((IDXGIDevice1*)p);
+    else if (__uuidof(IDXGIDisplayControl) == iid) RealToHooked11_IDXGIDisplayControl((IDXGIDisplayControl*)p);
+    else if (__uuidof(IDXGIOutputDuplication) == iid) RealToHooked11_IDXGIOutputDuplication((IDXGIOutputDuplication*)p);
+    else if (__uuidof(IDXGISurface2) == iid) RealToHooked11_IDXGISurface2((IDXGISurface2*)p);
+    else if (__uuidof(IDXGIResource1) == iid) RealToHooked11_IDXGIResource1((IDXGIResource1*)p);
+    else if (__uuidof(IDXGIDevice2) == iid) RealToHooked11_IDXGIDevice2((IDXGIDevice2*)p);
+    else if (__uuidof(IDXGISwapChain1) == iid) RealToHooked11_IDXGISwapChain1((IDXGISwapChain1*)p);
+    else if (__uuidof(IDXGIFactory2) == iid) RealToHooked11_IDXGIFactory2((IDXGIFactory2*)p);
+    else if (__uuidof(IDXGIAdapter2) == iid) RealToHooked11_IDXGIAdapter2((IDXGIAdapter2*)p);
+    else if (__uuidof(IDXGIOutput1) == iid) RealToHooked11_IDXGIOutput1((IDXGIOutput1*)p);
+    else if (__uuidof(IDXGIInfoQueue) == iid) RealToHooked11_IDXGIInfoQueue((IDXGIInfoQueue*)p);
+    else if (__uuidof(IDXGIDebug) == iid) RealToHooked11_IDXGIDebug((IDXGIDebug*)p);
+    else
+    {
+        HOOK_WARN_LOG("unrecognized interface UUID: <xxxx-xxxx-xxxxx...>");
+    }
+}
+
+// -----------------------------------------------------------------------------
 inline void SetupD3D11HookedVTables()
 {
     g_D3D11HookedVTables._ID3D11DeviceChild.QueryInterface = ID3D11DeviceChild_QueryInterface_Hooked;

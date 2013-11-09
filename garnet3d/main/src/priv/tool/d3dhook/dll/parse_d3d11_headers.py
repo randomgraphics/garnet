@@ -694,6 +694,19 @@ class D3D11VtableFile:
             for m in vt._methods:
                 self._WriteHookMethod(self._header, vt._name, m)
 
+        # function that replace vtable based on iid.
+        self._header.write('// -----------------------------------------------------------------------------\n'
+                           'inline void RealToHooked11(const IID & iid, void * p)\n'
+                           '{\n'
+                           '    if (false) {}\n')
+        for vt in self._vtables:
+            self._header.write('    else if (__uuidof(' + vt._name + ') == iid) RealToHooked11_' + vt._name + '((' + vt._name + '*)p);\n')
+        self._header.write('    else\n'
+                           '    {\n'
+                           '        HOOK_WARN_LOG("unrecognized interface UUID: <xxxx-xxxx-xxxxx...>");\n'
+                           '    }\n'
+                           '}\n\n')
+
         # generate global hooked vtable init function.
         self._header.write('// -----------------------------------------------------------------------------\n'
                            'inline void SetupD3D11HookedVTables()\n'
