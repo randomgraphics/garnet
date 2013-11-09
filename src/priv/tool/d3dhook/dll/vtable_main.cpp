@@ -1,11 +1,8 @@
 #include "pch.h"
+#include "d3d11vtable.h"
 
-#include "d2dhooks.h"
-#include "d3d11hooks.h"
-#include "d3d9hooks.h"
 #define INSIDE_HOOK_DLL
 #include "hooks_exports.h"
-#include <unordered_map>
 
 using namespace GN;
 
@@ -53,47 +50,6 @@ struct Options
 static Options g_options;
 
 // *****************************************************************************
-// InterfaceDesc
-// *****************************************************************************
-
-static const InterfaceDesc sAllInterfaces[] =
-{
-    { __uuidof(IUnknown), "IUnknown", L"IUnknown" },
-
-#define DECLARE_D3D9_INTERFACE(x) { __uuidof(x), #x, L#x },
-#include "d3d9interfaces.inl"
-
-#define DECLARE_D3D11_INTERFACE(x) { __uuidof(x), #x, L#x },
-#include "d3d11interfaces.inl"
-
-#define DECLARE_D2D_INTERFACE(x) { __uuidof(x), #x, L#x },
-#include "d2dinterfaces.inl"
-};
-
-const InterfaceDesc * InterfaceDesc::sGetDescFromIID(const IID & iid)
-{
-    for(size_t i = 0; i < _countof(sAllInterfaces); ++i)
-    {
-        const InterfaceDesc & id = sAllInterfaces[i];
-        if (id.iid == iid) return &id;
-    }
-    return nullptr;
-}
-
-// *****************************************************************************
-// Class Factory
-// *****************************************************************************
-
-HookedClassFactory HookedClassFactory::s_instance;
-
-void HookedClassFactory::registerAll()
-{
-#include "d3d11factories.inl"
-#include "d3d9factories.inl"
-#include "d2dfactories.inl"
-}
-
-// *****************************************************************************
 // Call Trace
 // *****************************************************************************
 
@@ -101,7 +57,7 @@ namespace calltrace
 {
     __declspec(thread) int g_level = 0;
 
-    bool g_printCall = false;
+    bool g_printCall = true;
 
     int enter(const wchar_t * text)
     {
@@ -122,6 +78,10 @@ namespace calltrace
             if (IsDebuggerPresent())
             {
                 OutputDebugStringW(buf);
+            }
+            else
+            {
+                wprintf(L"%s", buf);
             }
         }
         return ++g_level;
@@ -145,76 +105,28 @@ namespace calltrace
     {
         --g_level;
     }
-}
 
-// *****************************************************************************
-// UnknownBase Table
-// *****************************************************************************
-
-typedef std::unordered_map<intptr_t, GN::AutoComPtr<WeakUnknownRef>> ObjectMap;
-
-struct ObjectTable
-{
-    CritSec   cs;
-    ObjectMap objects;
-};
-
-static ObjectTable g_table;
-
-//
-//
-// -----------------------------------------------------------------------------
-static void UnknownBaseDestructNotif(UnknownBase * base, void *)
-{
-    IUnknown * realUnknown = base->GetRealObj(__uuidof(IUnknown));
-    CritSec::AutoLock lock(g_table.cs);
-    ObjectMap::const_iterator iter = g_table.objects.find((intptr_t)realUnknown);
-    if( g_table.objects.end() != iter )
+    class AutoTrace
     {
-        HOOK_ASSERT(!iter->second->promote());
-        g_table.objects.erase(iter);
-    }
-    else
-    {
-        HOOK_RIP();
-    }
-}
+        int _level;
 
-//
-//
-// -----------------------------------------------------------------------------
-void UnknownBaseTable::add(IUnknown * realobj, UnknownBase * hooked)
-{
-    CritSec::AutoLock lock(g_table.cs);
-    GN::AutoComPtr<IUnknown> realUnknown = Qi<IUnknown>(realobj);
-    HOOK_ASSERT(g_table.objects.end() == g_table.objects.find((intptr_t)realUnknown.get()));
-    AutoComPtr<WeakUnknownRef> ref;
-    ref.set(new WeakUnknownRef);
-    HOOK_ASSERT(hooked);
-    ref->attach(hooked);
-    hooked->setDestructNotif(UnknownBaseDestructNotif, nullptr);
-    g_table.objects[(intptr_t)realUnknown.get()] = ref;
-}
+    public:
 
-//
-//
-// -----------------------------------------------------------------------------
-GN::AutoComPtr<UnknownBase>
-UnknownBaseTable::get(IUnknown * realobj)
-{
-    CritSec::AutoLock lock(g_table.cs);
+        AutoTrace(const wchar_t * text) : _level(enter(text))
+        {
+        }
 
-    GN::AutoComPtr<IUnknown> realUnknown = Qi<IUnknown>(realobj);
+        AutoTrace(const char * text) : _level(enter(text))
+        {
+        }
 
-    ObjectMap::const_iterator iter = g_table.objects.find((intptr_t)realUnknown.get());
-    if( iter == g_table.objects.end())
-    {
-        return nullptr;
-    }
-    else
-    {
-        return iter->second->promote();
-    }
+        ~AutoTrace()
+        {
+            leave();
+        }
+
+        int getCurrentLevel() const { return _level; }
+    };
 }
 
 // *****************************************************************************
@@ -242,10 +154,6 @@ CreateDXGIFactoryHook(
     if (nullptr == realFunc) return E_FAIL;
 
     HRESULT hr = realFunc(riid, ppFactory);
-    if( g_options.enabled && SUCCEEDED(hr) && 1 == trace.getCurrentLevel() )
-    {
-        if( ppFactory ) *ppFactory = RealToHooked11(riid, (IDXGIObject*)*ppFactory);
-    }
 
     return hr;
 }
@@ -268,10 +176,6 @@ CreateDXGIFactory2Hook(
     if (nullptr == realFunc) return E_FAIL;
 
     HRESULT hr = realFunc(flags, riid, ppFactory);
-    if( g_options.enabled && SUCCEEDED(hr) && 1 == trace.getCurrentLevel() )
-    {
-        if( ppFactory ) *ppFactory = RealToHooked11(riid, (IDXGIObject*)*ppFactory);
-    }
 
     return hr;
 }
@@ -304,16 +208,16 @@ D3D11CreateDeviceHook(
     if (nullptr == realFunc) return E_FAIL;
 
     HRESULT hr = realFunc(
-        HookedToReal(pAdapter),
+        pAdapter,
         DriverType, Software, Flags, pFeatureLevels, FeatureLevels, SDKVersion,
         ppDevice,
         pFeatureLevel,
         ppImmediateContext);
 
-    if (g_options.enabled && SUCCEEDED(hr) && 1 == trace.getCurrentLevel())
+    if (g_options.enabled && SUCCEEDED(hr))
     {
-        if (ppDevice) *ppDevice = RealToHooked11(*ppDevice);
-        if (ppImmediateContext) *ppImmediateContext = RealToHooked11(*ppImmediateContext);
+        if (ppDevice) RealToHooked11(*ppDevice);
+        if (ppImmediateContext) RealToHooked11(*ppImmediateContext);
     }
 
     return hr;
@@ -345,7 +249,7 @@ D3D11CreateDeviceAndSwapChainHook(
     if (nullptr == realFunc) return E_FAIL;
 
     HRESULT hr = realFunc(
-        HookedToReal(pAdapter),
+        pAdapter,
         DriverType, Software, Flags, pFeatureLevels, FeatureLevels, SDKVersion,
         pSwapChainDesc,
         ppSwapChain,
@@ -355,9 +259,9 @@ D3D11CreateDeviceAndSwapChainHook(
 
     if( g_options.enabled && SUCCEEDED(hr) && 1 == trace.getCurrentLevel() )
     {
-        if( ppSwapChain ) *ppSwapChain = RealToHooked11(*ppSwapChain);
-        if( ppDevice ) *ppDevice = RealToHooked11(*ppDevice);
-        if( ppImmediateContext ) *ppImmediateContext = RealToHooked11(*ppImmediateContext);
+        if( ppSwapChain ) RealToHooked11(*ppSwapChain);
+        if( ppDevice ) RealToHooked11(*ppDevice);
+        if( ppImmediateContext ) RealToHooked11(*ppImmediateContext);
     }
 
     return hr;
@@ -384,11 +288,6 @@ HOOK_API IDirect3D9 * WINAPI Direct3DCreate9Hook(UINT SDKVersion)
 
     IDirect3D9 * d3d9 = realFunc(SDKVersion);
 
-    if( g_options.enabled && nullptr != d3d9 && 1 == trace.getCurrentLevel() )
-    {
-        d3d9 = RealToHooked9(d3d9);
-    }
-
     return d3d9;
 }
 
@@ -406,11 +305,6 @@ HOOK_API HRESULT WINAPI Direct3DCreate9ExHook(UINT SDKVersion, IDirect3D9Ex **pp
     if (nullptr == realFunc) return E_FAIL;
 
     HRESULT hr = realFunc(SDKVersion, ppD3D);
-
-    if( g_options.enabled && SUCCEEDED(hr) && 1 == trace.getCurrentLevel() )
-    {
-        if( ppD3D ) *ppD3D = RealToHooked9(*ppD3D);
-    }
 
     return hr;
 }
@@ -454,14 +348,9 @@ D2D1CreateDeviceHook(
     if (nullptr == realFunc) return E_FAIL;
 
     HRESULT hr = realFunc(
-        1 == trace.getCurrentLevel() ? HookedToReal(dxgiDevice) : dxgiDevice,
+        dxgiDevice,
         creationProperties,
         d2dDevice);
-
-    if( g_options.enabled && SUCCEEDED(hr) && 1 == trace.getCurrentLevel() )
-    {
-        if( d2dDevice ) *d2dDevice = RealToHooked_D2D(*d2dDevice);
-    }
 
     return hr;
 }
@@ -483,14 +372,9 @@ D2D1CreateDeviceContextHook(
     if (nullptr == realFunc) return E_FAIL;
 
     HRESULT hr = realFunc(
-        1 == trace.getCurrentLevel() ? HookedToReal(dxgiSurface) : dxgiSurface,
+        dxgiSurface,
         creationProperties,
         d2dDeviceContext);
-
-    if( g_options.enabled && SUCCEEDED(hr) && 1 == trace.getCurrentLevel() )
-    {
-        if( d2dDeviceContext ) *d2dDeviceContext = RealToHooked_D2D(*d2dDeviceContext);
-    }
 
     return hr;
 }
@@ -519,11 +403,6 @@ D2D1CreateFactoryHook(
         riid,
         pFactoryOptions,
         ppIFactory);
-
-    if( g_options.enabled && SUCCEEDED(hr) && 1 == trace.getCurrentLevel() )
-    {
-        if( ppIFactory ) *ppIFactory = RealToHooked_D2D(riid, (IUnknown*)*ppIFactory);
-    }
 
     return hr;
 }
@@ -558,11 +437,6 @@ HOOK_API HRESULT WINAPI DWriteCreateFactoryHook(
         iid,
         factory);
 
-    if( g_options.enabled && SUCCEEDED(hr) && 1 == trace.getCurrentLevel() )
-    {
-        if( factory ) *factory = RealToHooked_D2D(iid, (IUnknown*)*factory);
-    }
-
     return hr;
 }
 
@@ -574,7 +448,7 @@ BOOL WINAPI DllMain( HINSTANCE, DWORD fdwReason, LPVOID )
 {
 	if ( fdwReason == DLL_PROCESS_ATTACH )
     {
-        HookedClassFactory::sGetInstance().registerAll();
+        // TODO: initial setup
 	} else if ( fdwReason == DLL_PROCESS_DETACH )
 	{
         // TODO: cleanup.

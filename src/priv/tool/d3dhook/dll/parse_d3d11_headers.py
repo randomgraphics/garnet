@@ -528,26 +528,24 @@ def PARSE_interface( interface_name, lines ):
     # end of the function
     pass
 
+class D1D11Vtable:
+    def __init__(self, interface_name, method_names, lines):
+        self._name = interface_name
+        self._methods = method_names
+        self._code = lines
+
 class D3D11VtableFile:
     def __init__(self):
         self._header = open('d3d11vtable.inl', 'w')
         self._header.write('// script generated file. Do _NOT_ edit.\n\n')
-        self._cpp = open('d3d11vtable.cpp', 'w')
-        self._cpp.write('// script generated file. Do _NOT_ edit.\n\n'
-                        '#include "pch.h"\n'
-                        '#include "d3d11vtable.h"\n\n')
-        self._asm = open('d3d11vtable_asm.asm', 'w')
-        self._asm.write(';;script generated file. Do _NOT_ edit.\n\n'
-                        '.code\n\n')
-
-    def Close(self):
-        self._header.close()
-        self._header = None
-        self._cpp.close()
-        self._cpp = None
-        self._asm.write('\nend')
-        self._asm.close()
-        self._asm = None
+        #self._cpp = open('d3d11vtable.cpp', 'w')
+        #self._cpp.write('// script generated file. Do _NOT_ edit.\n\n'
+        #                '#include "pch.h"\n'
+        #                '#include "d3d11vtable.h"\n\n')
+        #self._asm = open('d3d11vtable_asm.asm', 'w')
+        #self._asm.write(';;script generated file. Do _NOT_ edit.\n\n'
+        #                '.code\n\n')
+        self._vtables = []
 
     def _ParseMethodNames( self, interface_name, lines ):
         names = []
@@ -556,6 +554,107 @@ class D3D11VtableFile:
                 m = re.match(r".+STDMETHODCALLTYPE \*(\w+)", l)
                 names += [m.group(1)]
         return names
+
+    def _WriteRealToHookFunc1( self, vtable ):
+        interface_name = vtable._name
+        methods = vtable._methods
+        self._header.write('// -----------------------------------------------------------------------------\n'
+                           'inline void RealToHooked_' + interface_name + '(' + interface_name + ' * p)\n'
+                           '{\n'
+                           '    ' + interface_name + 'Vtbl * vtable = *(' + interface_name + 'Vtbl **)p;\n'
+                           '    if (!p) return;\n'
+                           '\n'
+                           '    HANDLE process = ::GetCurrentProcess();\n'
+                           '    DWORD oldProtection;\n'
+                           '    if (!::VirtualProtectEx( process, vtable, sizeof(*vtable), PAGE_READWRITE, &oldProtection ))\n'
+                           '    {\n'
+                           '        HOOK_ERROR_LOG("Failed to update ' + interface_name + ' vtable: changing page protection failed.");\n'
+                           '        return; \n'
+                           '    }\n'
+                           '\n'
+                           '    if (!*(void**)&g_D3D11OriginVTables._' + interface_name + ')\n'
+                           '    {\n')
+        for m in methods:
+            self._header.write('        g_D3D11OriginVTables._' + interface_name + '.' + m + ' = vtable->' + m + ';\n'
+                               '        if (!g_D3D11HookedVTables._' + interface_name + '.' + m + ') g_D3D11HookedVTables._' + interface_name + '.' + m + ' = vtable->' + m + ';\n'
+                               '\n')
+        self._header.write('    }\n'
+                           '    else\n'
+                           '    {\n'
+                           '        HOOK_ASSERT( 0 == memcmp(vtable, &g_D3D11OriginVTables._' + interface_name + ', sizeof(g_D3D11OriginVTables._' + interface_name + ')) );\n'
+                           '        *vtable = g_D3D11HookedVTables._' + interface_name + ';\n'
+                           '    }\n'
+                           '    \n'
+                           '    ::VirtualProtectEx( process, vtable, sizeof(*vtable), oldProtection, &oldProtection );\n'
+                           '}\n'
+                           'template <> inline void RealToHooked11<' + interface_name + '>(' + interface_name + ' * p)\n'
+                           '{\n'
+                           '    return RealToHooked_' + interface_name + '( p );\n'
+                           '}\n'
+                           '\n')
+        pass # end of function
+
+    def _WriteRealToHookFunc2( self, vtable ):
+        interface_name = vtable._name
+        methods = vtable._methods
+        self._header.write('// -----------------------------------------------------------------------------\n'
+                           'inline void RealToHooked11_' + interface_name + '(' + interface_name + ' * p)\n'
+                           '{\n'
+                           '    if (!p) return;\n'
+                           '    const size_t COUNT = sizeof(' + interface_name + 'Vtbl) / sizeof(void*);\n'
+                           '    void** vtable = *(void***)p;\n'
+                           '    void** origin = (void**)&(g_D3D11OriginVTables._' + interface_name + ');\n'
+                           '    void** hooked = (void**)&(g_D3D11HookedVTables._' + interface_name + ');\n'
+                           '    return RealToHooked11_General<COUNT>(vtable, origin, hooked, "' + interface_name + '");\n'
+                           '}\n'
+                           'template <> inline void RealToHooked11<' + interface_name + '>(' + interface_name + ' * p)\n'
+                           '{\n'
+                           '    return RealToHooked11_' + interface_name + '( p );\n'
+                           '}\n'
+                           '\n')
+        pass # end of function
+
+
+    def Close(self):
+        # generate hook function structure
+        self._header.write('// -----------------------------------------------------------------------------\n'
+                           '// Global vtables for all D3D11/DXGI classes\n'
+                           '// -----------------------------------------------------------------------------\n'
+                           '\n'
+                           'struct D3D11VTables\n'
+                           '{\n')
+        for ii in self._vtables:
+            self._header.write('    ' + ii._name + 'Vtbl _' + ii._name + ';\n')
+        self._header.write('};\n')
+
+        # generate individual real to hooked functions
+        self._header.write('\n'
+                           '// -----------------------------------------------------------------------------\n'
+                           '// Real to hooked function for all D3D11/DXGI classes\n'
+                           '// -----------------------------------------------------------------------------\n'
+                           '\n'
+                           )
+        for ii in self._vtables: self._WriteRealToHookFunc2(ii)
+
+        # done with header file
+        self._header.close()
+        self._header = None
+
+        """# write cpp file
+        self._cpp.write('// -----------------------------------------------------------------------------\n'
+                        '// Global vtables for all D3D11/DXGI classes\n'
+                        '// -----------------------------------------------------------------------------\n'
+                        '\n'
+                        'D3D11VTables g_D3D11OriginVTables;\n'
+                        'D3D11VTables g_D3D11HookedVTables;\n'
+                        '\n')
+        self._cpp.close()
+        self._cpp = None"""
+
+        #self._asm.write('\nend')
+        #self._asm.close()
+        #self._asm = None
+        pass
 
     def WriteInterface( self, interface_name, lines ):
 
@@ -573,75 +672,40 @@ class D3D11VtableFile:
             else:
                 ident = '        '
             self._header.write(ident + l + '\n')
-
-        self._header.write('\n'
-                           'extern ' + interface_name + 'Vtbl ' + interface_name + '_Original;\n'
-                           'extern ' + interface_name + 'Vtbl ' + interface_name + '_Hooked;\n'
-                           'extern ' + interface_name + 'Vtbl ' + interface_name + '_JumpToOrignal;\n'
-                           'extern ' + interface_name + 'Vtbl ' + interface_name + '_CallTrace;\n'
-                           '\n'
-                           'inline void hook_' + interface_name + '_vtable(' + interface_name + ' * p)\n'
-                           '{\n'
-                           '    ' + interface_name + 'Vtbl * vtable = *(' + interface_name + 'Vtbl **)p;\n'
-                           '    if (!p) return;\n'
-                           '\n'
-                           '    HANDLE process = ::GetCurrentProcess();\n'
-                           '    DWORD oldProtection;\n'
-                           '    if (!::VirtualProtectEx( process, vtable, sizeof(*vtable), PAGE_READWRITE, &oldProtection ))\n'
-                           '    {\n'
-                           '        HOOK_ERROR_LOG("Failed to update ' + interface_name + ' vtable: changing page protection failed.");\n'
-                           '        return; \n'
-                           '    }\n'
-                           '\n'
-                           '    if (!*(void**)&' + interface_name + '_Original)\n'
-                           '    {\n')
-        for m in methods:
-            self._header.write('        ' + interface_name + '_Original.' + m + ' = vtable->' + m + ';\n'
-                               '        if (!' + interface_name + '_Hooked.' + m + ') ' + interface_name + '_Hooked.' + m + ' = vtable->' + m + ';\n'                               '\n')
-        self._header.write('    }\n'
-                           '    else\n'
-                           '    {\n'
-                           '        GN_ASSERT( 0 == memcmp(vtable, &' + interface_name + '_Original, sizeof(' + interface_name + '_Original)) );\n'
-                           '        *vtable = ' + interface_name + '_Hooked;\n'
-                           '    }\n'
-                           '    \n'
-                           '    ::VirtualProtectEx( process, vtable, sizeof(*vtable), oldProtection, &oldProtection );\n'
-                           '}\n'
-                           '\n')
+        self._header.write('\n')
 
         # generate asm file
-        self._asm.write(';; -----------------------------------------------------------\n'
-                        'extern ' + interface_name + '_Orignal:QWORD\n')
-        for i, m in enumerate(methods):
-            self._asm.write('' + interface_name + '_' + m + '_JumpToOriginal proc\n'
-                            '    jmp ' + interface_name + '_Orignal[' + str(i) + '*8]\n'
-                            '' + interface_name + '_' + m + '_JumpToOriginal endp\n'
-                            '\n')
-            pass
+        #self._asm.write(';; -----------------------------------------------------------\n'
+        #                'extern ' + interface_name + '_Orignal:QWORD\n')
+        #for i, m in enumerate(methods):
+        #    self._asm.write('' + interface_name + '_' + m + '_JumpToOriginal proc\n'
+        #                    '    jmp ' + interface_name + '_Orignal[' + str(i) + '*8]\n'
+        #                    '' + interface_name + '_' + m + '_JumpToOriginal endp\n'
+        #                    '\n')
+        #    pass
 
-        #generate cpp file
+        """#generate cpp file
         self._cpp.write('// -----------------------------------------------------------------------------\n'
                         '// ' + interface_name + '\n'
                         '// -----------------------------------------------------------------------------\n\n'
                         '' + interface_name + 'Vtbl ' + interface_name + '_Original = {};\n'
                         '' + interface_name + 'Vtbl ' + interface_name + '_Hooked = {};\n'
-                        '' + interface_name + 'Vtbl ' + interface_name + '_JumpToOriginal = {};\n'
                         '' + interface_name + 'Vtbl ' + interface_name + '_CallTrace = {};\n'
                         '\n')
-        """
-                        '#if defined( _WIN64 ) || defined( WIN64 ) || defined(__amd64__) || defined(_M_AMD64) || defined(_AMD64_)\n'
-                        )
         for i, m in enumerate(methods):
-            self._cpp.write('extern "C" void ' + interface_name + '_' + m + '_JumpToOriginal();\n')
-        self._cpp.write('#else\n')
-        for i, m in enumerate(methods):
-            self._cpp.write('static __declspec(naked) void __stdcall ' + interface_name + '_' + m + '_JumpToOriginal() { __asm{ jmp ' + interface_name + '_Original.' + m + ';\n')
+            self._cpp.write('static void __stdcall ' + interface_name + '_' + m + '_JumpToOriginal() { __asm{ jmp ' + interface_name + '_Original.' + m + ';\n')
         self._cpp.write('#endif\n\n'
                         'static void ' + interface_name + '_init()\n'
                         '{\n')
         for m in methods:
             self._cpp.write('    ' + interface_name + '_HookedJumpToOrignal.' + m + ' = ' + interface_name + '_' + m + '_JumpToOriginal;\n')
         self._cpp.write('}\n\n')"""
+
+        #add interface to interface colloction
+        self._vtables.append( D1D11Vtable(interface_name, methods, lines) )
+
+        # end of function
+        pass
 
 # ------------------------------------------------------------------------------
 # Parse interface definition, generate c++ declarations
