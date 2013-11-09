@@ -282,6 +282,14 @@ class InterfaceSigature:
         self._hookedClassName = hooked_class_name
         self._methods = methods
 
+    def FindMethod(self, name, searchParents = True):
+        for m in self._methods:
+            if m._name == name: return m
+        if searchParents and g_parents[self._name]:
+            parent = g_interfaces[g_parents[self._name]]
+            if parent: return parent.FindMethod( name, searchParents = True )
+        return None
+
 # ------------------------------------------------------------------------------
 # Returns instance of FunctionSignature or None
 def PARSE_get_interface_method_decl( interface_name, line ):
@@ -529,10 +537,18 @@ def PARSE_interface( interface_name, lines ):
     pass
 
 class D1D11Vtable:
-    def __init__(self, interface_name, method_names, lines):
+    def __init__(self, interface_name, lines):
         self._name = interface_name
-        self._methods = method_names
         self._code = lines
+        self._methods = self._ParseMethodName( interface_name, lines )
+
+    def _ParseMethodName( self, interface_name, lines ):
+        names = []
+        for l in lines:
+            if -1 != l.find('STDMETHODCALLTYPE'):
+                m = re.match(r".+STDMETHODCALLTYPE \*(\w+)", l)
+                names += [m.group(1)]
+        return names
 
 class D3D11VtableFile:
     def __init__(self):
@@ -546,14 +562,6 @@ class D3D11VtableFile:
         #self._asm.write(';;script generated file. Do _NOT_ edit.\n\n'
         #                '.code\n\n')
         self._vtables = []
-
-    def _ParseMethodNames( self, interface_name, lines ):
-        names = []
-        for l in lines:
-            if -1 != l.find('STDMETHODCALLTYPE'):
-                m = re.match(r".+STDMETHODCALLTYPE \*(\w+)", l)
-                names += [m.group(1)]
-        return names
 
     def _WriteRealToHookFunc1( self, vtable ):
         interface_name = vtable._name
@@ -614,6 +622,54 @@ class D3D11VtableFile:
                            '\n')
         pass # end of function
 
+    def _WriteAddRef( self, fp, interface_name ):
+        self._header.write('// -----------------------------------------------------------------------------\n'
+                           'static inline ULONG STDMETHODCALLTYPE ' + interface_name + '_AddRef_Hooked(' + interface_name + ' * ptr)\n'
+                           '{\n'
+                           '    calltrace::AutoTrace trace("' + interface_name + '::AddRef");\n'
+                           '    return g_D3D11OriginVTables._' + interface_name + '.AddRef(ptr);\n'
+                           '}\n\n');
+        pass
+
+    def _WriteRelease( self, fp, interface_name ):
+        self._header.write('// -----------------------------------------------------------------------------\n'
+                           'static inline ULONG STDMETHODCALLTYPE ' + interface_name + '_Release_Hooked(' + interface_name + ' * ptr)\n'
+                           '{\n'
+                           '    calltrace::AutoTrace trace("' + interface_name + '::Release");\n'
+                           '    return g_D3D11OriginVTables._' + interface_name + '.Release(ptr);\n'
+                           '}\n\n');
+
+    def _WriteQI( self, fp, interface_name ):
+        self._header.write('// -----------------------------------------------------------------------------\n'
+                           'static inline HRESULT STDMETHODCALLTYPE ' + interface_name + '_QueryInterface_Hooked(' + interface_name + ' * ptr, const IID & iid, void ** pp)\n'
+                           '{\n'
+                           '    calltrace::AutoTrace trace("' + interface_name + '::QueryInterface");\n'
+                           '    return g_D3D11OriginVTables._' + interface_name + '.QueryInterface(ptr, iid, pp);\n'
+                           '}\n\n');
+
+    def _WriteHookMethod( self, fp, interface_name, method_name ):
+        if 'AddRef' == method_name:
+            self._WriteAddRef(self._header, interface_name)
+        elif 'Release' == method_name:
+            self._WriteRelease(self._header, interface_name)
+        elif 'QueryInterface' == method_name:
+            self._WriteQI(self._header, interface_name)
+        else:
+            m = g_interfaces[interface_name].FindMethod(method_name)
+            self._header.write('// -----------------------------------------------------------------------------\n'
+                               'static inline ' + m._return_type + ' ' + m._decl + ' ' + interface_name + '_' + m._name + '_Hooked(' + interface_name + ' * ptr')
+            if len(m._parameter_list) > 0: self._header.write(', ')
+            m.WriteParameterList(self._header, writeType=True, writeName=True)
+            self._header.write(')\n'
+                               '{\n'
+                               '    calltrace::AutoTrace trace("' + interface_name + '::' + m._name + '");\n'
+                               '    return g_D3D11OriginVTables._' + interface_name + '.' + m._name + '(ptr')
+            if len(m._parameter_list) > 0: self._header.write(', ')
+            m.WriteParameterNameList(self._header)
+            self._header.write(');\n'
+                               '}\n'
+                               '\n');
+
 
     def Close(self):
         # generate hook function structure
@@ -623,44 +679,42 @@ class D3D11VtableFile:
                            '\n'
                            'struct D3D11VTables\n'
                            '{\n')
-        for ii in self._vtables:
-            self._header.write('    ' + ii._name + 'Vtbl _' + ii._name + ';\n')
+        for vt in self._vtables:
+            self._header.write('    ' + vt._name + 'Vtbl _' + vt._name + ';\n')
         self._header.write('};\n')
 
         # generate individual real to hooked functions
-        self._header.write('\n'
-                           '// -----------------------------------------------------------------------------\n'
-                           '// Real to hooked function for all D3D11/DXGI classes\n'
-                           '// -----------------------------------------------------------------------------\n'
-                           '\n'
-                           )
-        for ii in self._vtables: self._WriteRealToHookFunc2(ii)
+        for vt in self._vtables:
+            self._header.write('// -----------------------------------------------------------------------------\n'
+                               '// ' + vt._name + 'Hook Functions\n'
+                               '// -----------------------------------------------------------------------------\n'
+                               '\n'
+                               )
+            self._WriteRealToHookFunc2(vt)
+            for m in vt._methods:
+                self._WriteHookMethod(self._header, vt._name, m)
+
+        # generate global hooked vtable init function.
+        self._header.write('// -----------------------------------------------------------------------------\n'
+                           'inline void SetupD3D11HookedVTables()\n'
+                           '{\n');
+        for vt in self._vtables:
+            for m in vt._methods:
+                self._header.write('    g_D3D11HookedVTables._' + vt._name + '.' + m + ' = ' + vt._name + '_' + m + '_Hooked;\n')
+        self._header.write('}\n');
 
         # done with header file
         self._header.close()
         self._header = None
-
-        """# write cpp file
-        self._cpp.write('// -----------------------------------------------------------------------------\n'
-                        '// Global vtables for all D3D11/DXGI classes\n'
-                        '// -----------------------------------------------------------------------------\n'
-                        '\n'
-                        'D3D11VTables g_D3D11OriginVTables;\n'
-                        'D3D11VTables g_D3D11HookedVTables;\n'
-                        '\n')
-        self._cpp.close()
-        self._cpp = None"""
-
-        #self._asm.write('\nend')
-        #self._asm.close()
-        #self._asm = None
         pass
 
-    def WriteInterface( self, interface_name, lines ):
+    def WriteVtable( self, interface_name, lines ):
 
-        methods = self._ParseMethodNames( interface_name, lines )
+        # parse vtable definition
+        vtable = D1D11Vtable(interface_name, lines)
+        methods = vtable._methods
 
-        #generate header file
+        # generate vtable decl
         self._header.write('// -----------------------------------------------------------------------------\n'
                            '// ' + interface_name + '\n'
                            '// -----------------------------------------------------------------------------\n')
@@ -674,35 +728,8 @@ class D3D11VtableFile:
             self._header.write(ident + l + '\n')
         self._header.write('\n')
 
-        # generate asm file
-        #self._asm.write(';; -----------------------------------------------------------\n'
-        #                'extern ' + interface_name + '_Orignal:QWORD\n')
-        #for i, m in enumerate(methods):
-        #    self._asm.write('' + interface_name + '_' + m + '_JumpToOriginal proc\n'
-        #                    '    jmp ' + interface_name + '_Orignal[' + str(i) + '*8]\n'
-        #                    '' + interface_name + '_' + m + '_JumpToOriginal endp\n'
-        #                    '\n')
-        #    pass
-
-        """#generate cpp file
-        self._cpp.write('// -----------------------------------------------------------------------------\n'
-                        '// ' + interface_name + '\n'
-                        '// -----------------------------------------------------------------------------\n\n'
-                        '' + interface_name + 'Vtbl ' + interface_name + '_Original = {};\n'
-                        '' + interface_name + 'Vtbl ' + interface_name + '_Hooked = {};\n'
-                        '' + interface_name + 'Vtbl ' + interface_name + '_CallTrace = {};\n'
-                        '\n')
-        for i, m in enumerate(methods):
-            self._cpp.write('static void __stdcall ' + interface_name + '_' + m + '_JumpToOriginal() { __asm{ jmp ' + interface_name + '_Original.' + m + ';\n')
-        self._cpp.write('#endif\n\n'
-                        'static void ' + interface_name + '_init()\n'
-                        '{\n')
-        for m in methods:
-            self._cpp.write('    ' + interface_name + '_HookedJumpToOrignal.' + m + ' = ' + interface_name + '_' + m + '_JumpToOriginal;\n')
-        self._cpp.write('}\n\n')"""
-
         #add interface to interface colloction
-        self._vtables.append( D1D11Vtable(interface_name, methods, lines) )
+        self._vtables.append( vtable )
 
         # end of function
         pass
@@ -734,7 +761,7 @@ def PARSE_vtable( interface_name, lines ):
 
     # write vtable to file
     if found and ended:
-        g_d3d11vtables.WriteInterface(interface_name, vtable)
+        g_d3d11vtables.WriteVtable(interface_name, vtable)
     elif not found:
         UTIL_error(interface_name + ' not found!')
     else:

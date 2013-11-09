@@ -57,76 +57,45 @@ namespace calltrace
 {
     __declspec(thread) int g_level = 0;
 
-    bool g_printCall = true;
+    bool g_callTraceEnabled = true;
 
     int enter(const wchar_t * text)
     {
-        if (g_printCall)
+        wchar_t ident[256] = {};
+        for(int i = 0; i < g_level && i < _countof(ident); ++i)
         {
-            wchar_t ident[256] = {};
-            for(int i = 0; i < g_level && i < _countof(ident); ++i)
-            {
-                ident[i] = L' ';
-            }
-
-            wchar_t buf[256] = {};
-            swprintf_s(buf, L"{%d}", GetCurrentThreadId());
-            wcscat_s(buf, ident);
-            wcscat_s(buf, text);
-            wcscat_s(buf, L"\n");
-
-            if (IsDebuggerPresent())
-            {
-                OutputDebugStringW(buf);
-            }
-            else
-            {
-                wprintf(L"%s", buf);
-            }
+            ident[i] = L' ';
         }
+
+        wchar_t buf[256] = {};
+        swprintf_s(buf, L"{%d}", GetCurrentThreadId());
+        wcscat_s(buf, ident);
+        wcscat_s(buf, text);
+        wcscat_s(buf, L"\n");
+
+        if (IsDebuggerPresent())
+        {
+            OutputDebugStringW(buf);
+        }
+        else
+        {
+            wprintf(L"%s", buf);
+        }
+
         return ++g_level;
     }
 
     int enter(const char * text)
     {
-        if (g_printCall)
-        {
-            wchar_t textw[256];
-            swprintf_s(textw, L"%S", text);
-            return enter(textw);
-        }
-        else
-        {
-            return enter(L"");
-        }
+        wchar_t textw[256];
+        swprintf_s(textw, L"%S", text);
+        return enter(textw);
     }
 
     void leave()
     {
         --g_level;
     }
-
-    class AutoTrace
-    {
-        int _level;
-
-    public:
-
-        AutoTrace(const wchar_t * text) : _level(enter(text))
-        {
-        }
-
-        AutoTrace(const char * text) : _level(enter(text))
-        {
-        }
-
-        ~AutoTrace()
-        {
-            leave();
-        }
-
-        int getCurrentLevel() const { return _level; }
-    };
 }
 
 // *****************************************************************************
@@ -257,7 +226,7 @@ D3D11CreateDeviceAndSwapChainHook(
         pFeatureLevel,
         ppImmediateContext);
 
-    if( g_options.enabled && SUCCEEDED(hr) && 1 == trace.getCurrentLevel() )
+    if( g_options.enabled && SUCCEEDED(hr) )
     {
         if( ppSwapChain ) RealToHooked11(*ppSwapChain);
         if( ppDevice ) RealToHooked11(*ppDevice);
@@ -448,7 +417,7 @@ BOOL WINAPI DllMain( HINSTANCE, DWORD fdwReason, LPVOID )
 {
 	if ( fdwReason == DLL_PROCESS_ATTACH )
     {
-        // TODO: initial setup
+        SetupD3D11HookedVTables();
 	} else if ( fdwReason == DLL_PROCESS_DETACH )
 	{
         // TODO: cleanup.
