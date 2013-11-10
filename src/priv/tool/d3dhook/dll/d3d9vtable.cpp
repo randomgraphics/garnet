@@ -35,98 +35,113 @@ template<UINT INDEX> static ULONG STDMETHODCALLTYPE IDirect3D9_Release_Hooked(ID
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3D9_RegisterSoftwareDevice_Hooked(IDirect3D9 * ptr, void* pInitializeFunction)
 {
     calltrace::AutoTrace trace("IDirect3D9::RegisterSoftwareDevice");
-    return g_D3D9OriginVTables._IDirect3D9.tables[INDEX].RegisterSoftwareDevice(ptr, pInitializeFunction);
+    HRESULT result = g_D3D9OriginVTables._IDirect3D9.tables[INDEX].RegisterSoftwareDevice(ptr, pInitializeFunction);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static UINT STDMETHODCALLTYPE IDirect3D9_GetAdapterCount_Hooked(IDirect3D9 * ptr)
 {
     calltrace::AutoTrace trace("IDirect3D9::GetAdapterCount");
-    return g_D3D9OriginVTables._IDirect3D9.tables[INDEX].GetAdapterCount(ptr);
+    UINT result = g_D3D9OriginVTables._IDirect3D9.tables[INDEX].GetAdapterCount(ptr);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3D9_GetAdapterIdentifier_Hooked(IDirect3D9 * ptr, UINT Adapter, DWORD Flags, D3DADAPTER_IDENTIFIER9* pIdentifier)
 {
     calltrace::AutoTrace trace("IDirect3D9::GetAdapterIdentifier");
-    return g_D3D9OriginVTables._IDirect3D9.tables[INDEX].GetAdapterIdentifier(ptr, Adapter, Flags, pIdentifier);
+    HRESULT result = g_D3D9OriginVTables._IDirect3D9.tables[INDEX].GetAdapterIdentifier(ptr, Adapter, Flags, pIdentifier);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static UINT STDMETHODCALLTYPE IDirect3D9_GetAdapterModeCount_Hooked(IDirect3D9 * ptr, UINT Adapter, D3DFORMAT Format)
 {
     calltrace::AutoTrace trace("IDirect3D9::GetAdapterModeCount");
-    return g_D3D9OriginVTables._IDirect3D9.tables[INDEX].GetAdapterModeCount(ptr, Adapter, Format);
+    UINT result = g_D3D9OriginVTables._IDirect3D9.tables[INDEX].GetAdapterModeCount(ptr, Adapter, Format);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3D9_EnumAdapterModes_Hooked(IDirect3D9 * ptr, UINT Adapter, D3DFORMAT Format, UINT Mode, D3DDISPLAYMODE* pMode)
 {
     calltrace::AutoTrace trace("IDirect3D9::EnumAdapterModes");
-    return g_D3D9OriginVTables._IDirect3D9.tables[INDEX].EnumAdapterModes(ptr, Adapter, Format, Mode, pMode);
+    HRESULT result = g_D3D9OriginVTables._IDirect3D9.tables[INDEX].EnumAdapterModes(ptr, Adapter, Format, Mode, pMode);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3D9_GetAdapterDisplayMode_Hooked(IDirect3D9 * ptr, UINT Adapter, D3DDISPLAYMODE* pMode)
 {
     calltrace::AutoTrace trace("IDirect3D9::GetAdapterDisplayMode");
-    return g_D3D9OriginVTables._IDirect3D9.tables[INDEX].GetAdapterDisplayMode(ptr, Adapter, pMode);
+    HRESULT result = g_D3D9OriginVTables._IDirect3D9.tables[INDEX].GetAdapterDisplayMode(ptr, Adapter, pMode);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3D9_CheckDeviceType_Hooked(IDirect3D9 * ptr, UINT Adapter, D3DDEVTYPE DevType, D3DFORMAT AdapterFormat, D3DFORMAT BackBufferFormat, BOOL bWindowed)
 {
     calltrace::AutoTrace trace("IDirect3D9::CheckDeviceType");
-    return g_D3D9OriginVTables._IDirect3D9.tables[INDEX].CheckDeviceType(ptr, Adapter, DevType, AdapterFormat, BackBufferFormat, bWindowed);
+    HRESULT result = g_D3D9OriginVTables._IDirect3D9.tables[INDEX].CheckDeviceType(ptr, Adapter, DevType, AdapterFormat, BackBufferFormat, bWindowed);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3D9_CheckDeviceFormat_Hooked(IDirect3D9 * ptr, UINT Adapter, D3DDEVTYPE DeviceType, D3DFORMAT AdapterFormat, DWORD Usage, D3DRESOURCETYPE RType, D3DFORMAT CheckFormat)
 {
     calltrace::AutoTrace trace("IDirect3D9::CheckDeviceFormat");
-    return g_D3D9OriginVTables._IDirect3D9.tables[INDEX].CheckDeviceFormat(ptr, Adapter, DeviceType, AdapterFormat, Usage, RType, CheckFormat);
+    HRESULT result = g_D3D9OriginVTables._IDirect3D9.tables[INDEX].CheckDeviceFormat(ptr, Adapter, DeviceType, AdapterFormat, Usage, RType, CheckFormat);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3D9_CheckDeviceMultiSampleType_Hooked(IDirect3D9 * ptr, UINT Adapter, D3DDEVTYPE DeviceType, D3DFORMAT SurfaceFormat, BOOL Windowed, D3DMULTISAMPLE_TYPE MultiSampleType, DWORD* pQualityLevels)
 {
     calltrace::AutoTrace trace("IDirect3D9::CheckDeviceMultiSampleType");
-    return g_D3D9OriginVTables._IDirect3D9.tables[INDEX].CheckDeviceMultiSampleType(ptr, Adapter, DeviceType, SurfaceFormat, Windowed, MultiSampleType, pQualityLevels);
+    HRESULT result = g_D3D9OriginVTables._IDirect3D9.tables[INDEX].CheckDeviceMultiSampleType(ptr, Adapter, DeviceType, SurfaceFormat, Windowed, MultiSampleType, pQualityLevels);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3D9_CheckDepthStencilMatch_Hooked(IDirect3D9 * ptr, UINT Adapter, D3DDEVTYPE DeviceType, D3DFORMAT AdapterFormat, D3DFORMAT RenderTargetFormat, D3DFORMAT DepthStencilFormat)
 {
     calltrace::AutoTrace trace("IDirect3D9::CheckDepthStencilMatch");
-    return g_D3D9OriginVTables._IDirect3D9.tables[INDEX].CheckDepthStencilMatch(ptr, Adapter, DeviceType, AdapterFormat, RenderTargetFormat, DepthStencilFormat);
+    HRESULT result = g_D3D9OriginVTables._IDirect3D9.tables[INDEX].CheckDepthStencilMatch(ptr, Adapter, DeviceType, AdapterFormat, RenderTargetFormat, DepthStencilFormat);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3D9_CheckDeviceFormatConversion_Hooked(IDirect3D9 * ptr, UINT Adapter, D3DDEVTYPE DeviceType, D3DFORMAT SourceFormat, D3DFORMAT TargetFormat)
 {
     calltrace::AutoTrace trace("IDirect3D9::CheckDeviceFormatConversion");
-    return g_D3D9OriginVTables._IDirect3D9.tables[INDEX].CheckDeviceFormatConversion(ptr, Adapter, DeviceType, SourceFormat, TargetFormat);
+    HRESULT result = g_D3D9OriginVTables._IDirect3D9.tables[INDEX].CheckDeviceFormatConversion(ptr, Adapter, DeviceType, SourceFormat, TargetFormat);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3D9_GetDeviceCaps_Hooked(IDirect3D9 * ptr, UINT Adapter, D3DDEVTYPE DeviceType, D3DCAPS9* pCaps)
 {
     calltrace::AutoTrace trace("IDirect3D9::GetDeviceCaps");
-    return g_D3D9OriginVTables._IDirect3D9.tables[INDEX].GetDeviceCaps(ptr, Adapter, DeviceType, pCaps);
+    HRESULT result = g_D3D9OriginVTables._IDirect3D9.tables[INDEX].GetDeviceCaps(ptr, Adapter, DeviceType, pCaps);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HMONITOR STDMETHODCALLTYPE IDirect3D9_GetAdapterMonitor_Hooked(IDirect3D9 * ptr, UINT Adapter)
 {
     calltrace::AutoTrace trace("IDirect3D9::GetAdapterMonitor");
-    return g_D3D9OriginVTables._IDirect3D9.tables[INDEX].GetAdapterMonitor(ptr, Adapter);
+    HMONITOR result = g_D3D9OriginVTables._IDirect3D9.tables[INDEX].GetAdapterMonitor(ptr, Adapter);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3D9_CreateDevice_Hooked(IDirect3D9 * ptr, UINT Adapter, D3DDEVTYPE DeviceType, HWND hFocusWindow, DWORD BehaviorFlags, D3DPRESENT_PARAMETERS* pPresentationParameters, IDirect3DDevice9** ppReturnedDeviceInterface)
 {
     calltrace::AutoTrace trace("IDirect3D9::CreateDevice");
-    return g_D3D9OriginVTables._IDirect3D9.tables[INDEX].CreateDevice(ptr, Adapter, DeviceType, hFocusWindow, BehaviorFlags, pPresentationParameters, ppReturnedDeviceInterface);
+    HRESULT result = g_D3D9OriginVTables._IDirect3D9.tables[INDEX].CreateDevice(ptr, Adapter, DeviceType, hFocusWindow, BehaviorFlags, pPresentationParameters, ppReturnedDeviceInterface);
+    if (ppReturnedDeviceInterface && *ppReturnedDeviceInterface) { RealToHooked9( *ppReturnedDeviceInterface ); }
+    return result;
 }
 
 // -----------------------------------------------------------------------------
@@ -158,812 +173,951 @@ template<UINT INDEX> static ULONG STDMETHODCALLTYPE IDirect3DDevice9_Release_Hoo
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9_TestCooperativeLevel_Hooked(IDirect3DDevice9 * ptr)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9::TestCooperativeLevel");
-    return g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].TestCooperativeLevel(ptr);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].TestCooperativeLevel(ptr);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static UINT STDMETHODCALLTYPE IDirect3DDevice9_GetAvailableTextureMem_Hooked(IDirect3DDevice9 * ptr)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9::GetAvailableTextureMem");
-    return g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].GetAvailableTextureMem(ptr);
+    UINT result = g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].GetAvailableTextureMem(ptr);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9_EvictManagedResources_Hooked(IDirect3DDevice9 * ptr)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9::EvictManagedResources");
-    return g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].EvictManagedResources(ptr);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].EvictManagedResources(ptr);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9_GetDirect3D_Hooked(IDirect3DDevice9 * ptr, IDirect3D9** ppD3D9)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9::GetDirect3D");
-    return g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].GetDirect3D(ptr, ppD3D9);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].GetDirect3D(ptr, ppD3D9);
+    if (ppD3D9 && *ppD3D9) { RealToHooked9( *ppD3D9 ); }
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9_GetDeviceCaps_Hooked(IDirect3DDevice9 * ptr, D3DCAPS9* pCaps)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9::GetDeviceCaps");
-    return g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].GetDeviceCaps(ptr, pCaps);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].GetDeviceCaps(ptr, pCaps);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9_GetDisplayMode_Hooked(IDirect3DDevice9 * ptr, UINT iSwapChain, D3DDISPLAYMODE* pMode)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9::GetDisplayMode");
-    return g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].GetDisplayMode(ptr, iSwapChain, pMode);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].GetDisplayMode(ptr, iSwapChain, pMode);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9_GetCreationParameters_Hooked(IDirect3DDevice9 * ptr, D3DDEVICE_CREATION_PARAMETERS * pParameters)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9::GetCreationParameters");
-    return g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].GetCreationParameters(ptr, pParameters);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].GetCreationParameters(ptr, pParameters);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9_SetCursorProperties_Hooked(IDirect3DDevice9 * ptr, UINT XHotSpot, UINT YHotSpot, IDirect3DSurface9* pCursorBitmap)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9::SetCursorProperties");
-    return g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].SetCursorProperties(ptr, XHotSpot, YHotSpot, pCursorBitmap);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].SetCursorProperties(ptr, XHotSpot, YHotSpot, pCursorBitmap);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static void STDMETHODCALLTYPE IDirect3DDevice9_SetCursorPosition_Hooked(IDirect3DDevice9 * ptr, int X, int Y, DWORD Flags)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9::SetCursorPosition");
-    return g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].SetCursorPosition(ptr, X, Y, Flags);
+    g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].SetCursorPosition(ptr, X, Y, Flags);
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static BOOL STDMETHODCALLTYPE IDirect3DDevice9_ShowCursor_Hooked(IDirect3DDevice9 * ptr, BOOL bShow)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9::ShowCursor");
-    return g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].ShowCursor(ptr, bShow);
+    BOOL result = g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].ShowCursor(ptr, bShow);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9_CreateAdditionalSwapChain_Hooked(IDirect3DDevice9 * ptr, D3DPRESENT_PARAMETERS* pPresentationParameters, IDirect3DSwapChain9** ppSwapChain)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9::CreateAdditionalSwapChain");
-    return g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].CreateAdditionalSwapChain(ptr, pPresentationParameters, ppSwapChain);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].CreateAdditionalSwapChain(ptr, pPresentationParameters, ppSwapChain);
+    if (ppSwapChain && *ppSwapChain) { RealToHooked9( *ppSwapChain ); }
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9_GetSwapChain_Hooked(IDirect3DDevice9 * ptr, UINT iSwapChain, IDirect3DSwapChain9** ppSwapChain)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9::GetSwapChain");
-    return g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].GetSwapChain(ptr, iSwapChain, ppSwapChain);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].GetSwapChain(ptr, iSwapChain, ppSwapChain);
+    if (ppSwapChain && *ppSwapChain) { RealToHooked9( *ppSwapChain ); }
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static UINT STDMETHODCALLTYPE IDirect3DDevice9_GetNumberOfSwapChains_Hooked(IDirect3DDevice9 * ptr)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9::GetNumberOfSwapChains");
-    return g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].GetNumberOfSwapChains(ptr);
+    UINT result = g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].GetNumberOfSwapChains(ptr);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9_Reset_Hooked(IDirect3DDevice9 * ptr, D3DPRESENT_PARAMETERS* pPresentationParameters)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9::Reset");
-    return g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].Reset(ptr, pPresentationParameters);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].Reset(ptr, pPresentationParameters);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9_Present_Hooked(IDirect3DDevice9 * ptr, CONST RECT* pSourceRect, CONST RECT* pDestRect, HWND hDestWindowOverride, CONST RGNDATA* pDirtyRegion)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9::Present");
-    return g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].Present(ptr, pSourceRect, pDestRect, hDestWindowOverride, pDirtyRegion);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].Present(ptr, pSourceRect, pDestRect, hDestWindowOverride, pDirtyRegion);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9_GetBackBuffer_Hooked(IDirect3DDevice9 * ptr, UINT iSwapChain, UINT iBackBuffer, D3DBACKBUFFER_TYPE Type, IDirect3DSurface9** ppBackBuffer)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9::GetBackBuffer");
-    return g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].GetBackBuffer(ptr, iSwapChain, iBackBuffer, Type, ppBackBuffer);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].GetBackBuffer(ptr, iSwapChain, iBackBuffer, Type, ppBackBuffer);
+    if (ppBackBuffer && *ppBackBuffer) { RealToHooked9( *ppBackBuffer ); }
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9_GetRasterStatus_Hooked(IDirect3DDevice9 * ptr, UINT iSwapChain, D3DRASTER_STATUS* pRasterStatus)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9::GetRasterStatus");
-    return g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].GetRasterStatus(ptr, iSwapChain, pRasterStatus);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].GetRasterStatus(ptr, iSwapChain, pRasterStatus);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9_SetDialogBoxMode_Hooked(IDirect3DDevice9 * ptr, BOOL bEnableDialogs)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9::SetDialogBoxMode");
-    return g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].SetDialogBoxMode(ptr, bEnableDialogs);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].SetDialogBoxMode(ptr, bEnableDialogs);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static void STDMETHODCALLTYPE IDirect3DDevice9_SetGammaRamp_Hooked(IDirect3DDevice9 * ptr, UINT iSwapChain, DWORD Flags, CONST D3DGAMMARAMP* pRamp)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9::SetGammaRamp");
-    return g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].SetGammaRamp(ptr, iSwapChain, Flags, pRamp);
+    g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].SetGammaRamp(ptr, iSwapChain, Flags, pRamp);
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static void STDMETHODCALLTYPE IDirect3DDevice9_GetGammaRamp_Hooked(IDirect3DDevice9 * ptr, UINT iSwapChain, D3DGAMMARAMP* pRamp)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9::GetGammaRamp");
-    return g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].GetGammaRamp(ptr, iSwapChain, pRamp);
+    g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].GetGammaRamp(ptr, iSwapChain, pRamp);
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9_CreateTexture_Hooked(IDirect3DDevice9 * ptr, UINT Width, UINT Height, UINT Levels, DWORD Usage, D3DFORMAT Format, D3DPOOL Pool, IDirect3DTexture9** ppTexture, HANDLE* pSharedHandle)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9::CreateTexture");
-    return g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].CreateTexture(ptr, Width, Height, Levels, Usage, Format, Pool, ppTexture, pSharedHandle);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].CreateTexture(ptr, Width, Height, Levels, Usage, Format, Pool, ppTexture, pSharedHandle);
+    if (ppTexture && *ppTexture) { RealToHooked9( *ppTexture ); }
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9_CreateVolumeTexture_Hooked(IDirect3DDevice9 * ptr, UINT Width, UINT Height, UINT Depth, UINT Levels, DWORD Usage, D3DFORMAT Format, D3DPOOL Pool, IDirect3DVolumeTexture9** ppVolumeTexture, HANDLE* pSharedHandle)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9::CreateVolumeTexture");
-    return g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].CreateVolumeTexture(ptr, Width, Height, Depth, Levels, Usage, Format, Pool, ppVolumeTexture, pSharedHandle);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].CreateVolumeTexture(ptr, Width, Height, Depth, Levels, Usage, Format, Pool, ppVolumeTexture, pSharedHandle);
+    if (ppVolumeTexture && *ppVolumeTexture) { RealToHooked9( *ppVolumeTexture ); }
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9_CreateCubeTexture_Hooked(IDirect3DDevice9 * ptr, UINT EdgeLength, UINT Levels, DWORD Usage, D3DFORMAT Format, D3DPOOL Pool, IDirect3DCubeTexture9** ppCubeTexture, HANDLE* pSharedHandle)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9::CreateCubeTexture");
-    return g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].CreateCubeTexture(ptr, EdgeLength, Levels, Usage, Format, Pool, ppCubeTexture, pSharedHandle);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].CreateCubeTexture(ptr, EdgeLength, Levels, Usage, Format, Pool, ppCubeTexture, pSharedHandle);
+    if (ppCubeTexture && *ppCubeTexture) { RealToHooked9( *ppCubeTexture ); }
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9_CreateVertexBuffer_Hooked(IDirect3DDevice9 * ptr, UINT Length, DWORD Usage, DWORD FVF, D3DPOOL Pool, IDirect3DVertexBuffer9** ppVertexBuffer, HANDLE* pSharedHandle)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9::CreateVertexBuffer");
-    return g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].CreateVertexBuffer(ptr, Length, Usage, FVF, Pool, ppVertexBuffer, pSharedHandle);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].CreateVertexBuffer(ptr, Length, Usage, FVF, Pool, ppVertexBuffer, pSharedHandle);
+    if (ppVertexBuffer && *ppVertexBuffer) { RealToHooked9( *ppVertexBuffer ); }
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9_CreateIndexBuffer_Hooked(IDirect3DDevice9 * ptr, UINT Length, DWORD Usage, D3DFORMAT Format, D3DPOOL Pool, IDirect3DIndexBuffer9** ppIndexBuffer, HANDLE* pSharedHandle)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9::CreateIndexBuffer");
-    return g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].CreateIndexBuffer(ptr, Length, Usage, Format, Pool, ppIndexBuffer, pSharedHandle);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].CreateIndexBuffer(ptr, Length, Usage, Format, Pool, ppIndexBuffer, pSharedHandle);
+    if (ppIndexBuffer && *ppIndexBuffer) { RealToHooked9( *ppIndexBuffer ); }
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9_CreateRenderTarget_Hooked(IDirect3DDevice9 * ptr, UINT Width, UINT Height, D3DFORMAT Format, D3DMULTISAMPLE_TYPE MultiSample, DWORD MultisampleQuality, BOOL Lockable, IDirect3DSurface9** ppSurface, HANDLE* pSharedHandle)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9::CreateRenderTarget");
-    return g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].CreateRenderTarget(ptr, Width, Height, Format, MultiSample, MultisampleQuality, Lockable, ppSurface, pSharedHandle);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].CreateRenderTarget(ptr, Width, Height, Format, MultiSample, MultisampleQuality, Lockable, ppSurface, pSharedHandle);
+    if (ppSurface && *ppSurface) { RealToHooked9( *ppSurface ); }
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9_CreateDepthStencilSurface_Hooked(IDirect3DDevice9 * ptr, UINT Width, UINT Height, D3DFORMAT Format, D3DMULTISAMPLE_TYPE MultiSample, DWORD MultisampleQuality, BOOL Discard, IDirect3DSurface9** ppSurface, HANDLE* pSharedHandle)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9::CreateDepthStencilSurface");
-    return g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].CreateDepthStencilSurface(ptr, Width, Height, Format, MultiSample, MultisampleQuality, Discard, ppSurface, pSharedHandle);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].CreateDepthStencilSurface(ptr, Width, Height, Format, MultiSample, MultisampleQuality, Discard, ppSurface, pSharedHandle);
+    if (ppSurface && *ppSurface) { RealToHooked9( *ppSurface ); }
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9_UpdateSurface_Hooked(IDirect3DDevice9 * ptr, IDirect3DSurface9* pSourceSurface, CONST RECT* pSourceRect, IDirect3DSurface9* pDestinationSurface, CONST POINT* pDestPoint)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9::UpdateSurface");
-    return g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].UpdateSurface(ptr, pSourceSurface, pSourceRect, pDestinationSurface, pDestPoint);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].UpdateSurface(ptr, pSourceSurface, pSourceRect, pDestinationSurface, pDestPoint);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9_UpdateTexture_Hooked(IDirect3DDevice9 * ptr, IDirect3DBaseTexture9* pSourceTexture, IDirect3DBaseTexture9* pDestinationTexture)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9::UpdateTexture");
-    return g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].UpdateTexture(ptr, pSourceTexture, pDestinationTexture);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].UpdateTexture(ptr, pSourceTexture, pDestinationTexture);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9_GetRenderTargetData_Hooked(IDirect3DDevice9 * ptr, IDirect3DSurface9* pRenderTarget, IDirect3DSurface9* pDestSurface)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9::GetRenderTargetData");
-    return g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].GetRenderTargetData(ptr, pRenderTarget, pDestSurface);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].GetRenderTargetData(ptr, pRenderTarget, pDestSurface);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9_GetFrontBufferData_Hooked(IDirect3DDevice9 * ptr, UINT iSwapChain, IDirect3DSurface9* pDestSurface)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9::GetFrontBufferData");
-    return g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].GetFrontBufferData(ptr, iSwapChain, pDestSurface);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].GetFrontBufferData(ptr, iSwapChain, pDestSurface);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9_StretchRect_Hooked(IDirect3DDevice9 * ptr, IDirect3DSurface9* pSourceSurface, CONST RECT* pSourceRect, IDirect3DSurface9* pDestSurface, CONST RECT* pDestRect, D3DTEXTUREFILTERTYPE Filter)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9::StretchRect");
-    return g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].StretchRect(ptr, pSourceSurface, pSourceRect, pDestSurface, pDestRect, Filter);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].StretchRect(ptr, pSourceSurface, pSourceRect, pDestSurface, pDestRect, Filter);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9_ColorFill_Hooked(IDirect3DDevice9 * ptr, IDirect3DSurface9* pSurface, CONST RECT* pRect, D3DCOLOR color)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9::ColorFill");
-    return g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].ColorFill(ptr, pSurface, pRect, color);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].ColorFill(ptr, pSurface, pRect, color);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9_CreateOffscreenPlainSurface_Hooked(IDirect3DDevice9 * ptr, UINT Width, UINT Height, D3DFORMAT Format, D3DPOOL Pool, IDirect3DSurface9** ppSurface, HANDLE* pSharedHandle)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9::CreateOffscreenPlainSurface");
-    return g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].CreateOffscreenPlainSurface(ptr, Width, Height, Format, Pool, ppSurface, pSharedHandle);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].CreateOffscreenPlainSurface(ptr, Width, Height, Format, Pool, ppSurface, pSharedHandle);
+    if (ppSurface && *ppSurface) { RealToHooked9( *ppSurface ); }
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9_SetRenderTarget_Hooked(IDirect3DDevice9 * ptr, DWORD RenderTargetIndex, IDirect3DSurface9* pRenderTarget)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9::SetRenderTarget");
-    return g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].SetRenderTarget(ptr, RenderTargetIndex, pRenderTarget);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].SetRenderTarget(ptr, RenderTargetIndex, pRenderTarget);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9_GetRenderTarget_Hooked(IDirect3DDevice9 * ptr, DWORD RenderTargetIndex, IDirect3DSurface9** ppRenderTarget)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9::GetRenderTarget");
-    return g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].GetRenderTarget(ptr, RenderTargetIndex, ppRenderTarget);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].GetRenderTarget(ptr, RenderTargetIndex, ppRenderTarget);
+    if (ppRenderTarget && *ppRenderTarget) { RealToHooked9( *ppRenderTarget ); }
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9_SetDepthStencilSurface_Hooked(IDirect3DDevice9 * ptr, IDirect3DSurface9* pNewZStencil)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9::SetDepthStencilSurface");
-    return g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].SetDepthStencilSurface(ptr, pNewZStencil);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].SetDepthStencilSurface(ptr, pNewZStencil);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9_GetDepthStencilSurface_Hooked(IDirect3DDevice9 * ptr, IDirect3DSurface9** ppZStencilSurface)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9::GetDepthStencilSurface");
-    return g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].GetDepthStencilSurface(ptr, ppZStencilSurface);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].GetDepthStencilSurface(ptr, ppZStencilSurface);
+    if (ppZStencilSurface && *ppZStencilSurface) { RealToHooked9( *ppZStencilSurface ); }
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9_BeginScene_Hooked(IDirect3DDevice9 * ptr)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9::BeginScene");
-    return g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].BeginScene(ptr);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].BeginScene(ptr);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9_EndScene_Hooked(IDirect3DDevice9 * ptr)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9::EndScene");
-    return g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].EndScene(ptr);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].EndScene(ptr);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9_Clear_Hooked(IDirect3DDevice9 * ptr, DWORD Count, CONST D3DRECT* pRects, DWORD Flags, D3DCOLOR Color, float Z, DWORD Stencil)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9::Clear");
-    return g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].Clear(ptr, Count, pRects, Flags, Color, Z, Stencil);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].Clear(ptr, Count, pRects, Flags, Color, Z, Stencil);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9_SetTransform_Hooked(IDirect3DDevice9 * ptr, D3DTRANSFORMSTATETYPE State, CONST D3DMATRIX* pMatrix)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9::SetTransform");
-    return g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].SetTransform(ptr, State, pMatrix);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].SetTransform(ptr, State, pMatrix);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9_GetTransform_Hooked(IDirect3DDevice9 * ptr, D3DTRANSFORMSTATETYPE State, D3DMATRIX* pMatrix)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9::GetTransform");
-    return g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].GetTransform(ptr, State, pMatrix);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].GetTransform(ptr, State, pMatrix);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9_MultiplyTransform_Hooked(IDirect3DDevice9 * ptr, D3DTRANSFORMSTATETYPE TransformType, CONST D3DMATRIX* Value)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9::MultiplyTransform");
-    return g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].MultiplyTransform(ptr, TransformType, Value);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].MultiplyTransform(ptr, TransformType, Value);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9_SetViewport_Hooked(IDirect3DDevice9 * ptr, CONST D3DVIEWPORT9* pViewport)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9::SetViewport");
-    return g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].SetViewport(ptr, pViewport);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].SetViewport(ptr, pViewport);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9_GetViewport_Hooked(IDirect3DDevice9 * ptr, D3DVIEWPORT9* pViewport)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9::GetViewport");
-    return g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].GetViewport(ptr, pViewport);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].GetViewport(ptr, pViewport);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9_SetMaterial_Hooked(IDirect3DDevice9 * ptr, CONST D3DMATERIAL9* pMaterial)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9::SetMaterial");
-    return g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].SetMaterial(ptr, pMaterial);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].SetMaterial(ptr, pMaterial);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9_GetMaterial_Hooked(IDirect3DDevice9 * ptr, D3DMATERIAL9* pMaterial)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9::GetMaterial");
-    return g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].GetMaterial(ptr, pMaterial);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].GetMaterial(ptr, pMaterial);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9_SetLight_Hooked(IDirect3DDevice9 * ptr, DWORD Index, CONST D3DLIGHT9* pLight)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9::SetLight");
-    return g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].SetLight(ptr, Index, pLight);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].SetLight(ptr, Index, pLight);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9_GetLight_Hooked(IDirect3DDevice9 * ptr, DWORD Index, D3DLIGHT9* pLight)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9::GetLight");
-    return g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].GetLight(ptr, Index, pLight);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].GetLight(ptr, Index, pLight);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9_LightEnable_Hooked(IDirect3DDevice9 * ptr, DWORD Index, BOOL Enable)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9::LightEnable");
-    return g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].LightEnable(ptr, Index, Enable);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].LightEnable(ptr, Index, Enable);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9_GetLightEnable_Hooked(IDirect3DDevice9 * ptr, DWORD Index, BOOL* pEnable)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9::GetLightEnable");
-    return g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].GetLightEnable(ptr, Index, pEnable);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].GetLightEnable(ptr, Index, pEnable);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9_SetClipPlane_Hooked(IDirect3DDevice9 * ptr, DWORD Index, CONST float* pPlane)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9::SetClipPlane");
-    return g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].SetClipPlane(ptr, Index, pPlane);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].SetClipPlane(ptr, Index, pPlane);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9_GetClipPlane_Hooked(IDirect3DDevice9 * ptr, DWORD Index, float* pPlane)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9::GetClipPlane");
-    return g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].GetClipPlane(ptr, Index, pPlane);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].GetClipPlane(ptr, Index, pPlane);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9_SetRenderState_Hooked(IDirect3DDevice9 * ptr, D3DRENDERSTATETYPE State, DWORD Value)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9::SetRenderState");
-    return g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].SetRenderState(ptr, State, Value);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].SetRenderState(ptr, State, Value);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9_GetRenderState_Hooked(IDirect3DDevice9 * ptr, D3DRENDERSTATETYPE State, DWORD* pValue)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9::GetRenderState");
-    return g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].GetRenderState(ptr, State, pValue);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].GetRenderState(ptr, State, pValue);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9_CreateStateBlock_Hooked(IDirect3DDevice9 * ptr, D3DSTATEBLOCKTYPE Type, IDirect3DStateBlock9** ppSB)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9::CreateStateBlock");
-    return g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].CreateStateBlock(ptr, Type, ppSB);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].CreateStateBlock(ptr, Type, ppSB);
+    if (ppSB && *ppSB) { RealToHooked9( *ppSB ); }
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9_BeginStateBlock_Hooked(IDirect3DDevice9 * ptr)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9::BeginStateBlock");
-    return g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].BeginStateBlock(ptr);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].BeginStateBlock(ptr);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9_EndStateBlock_Hooked(IDirect3DDevice9 * ptr, IDirect3DStateBlock9** ppSB)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9::EndStateBlock");
-    return g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].EndStateBlock(ptr, ppSB);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].EndStateBlock(ptr, ppSB);
+    if (ppSB && *ppSB) { RealToHooked9( *ppSB ); }
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9_SetClipStatus_Hooked(IDirect3DDevice9 * ptr, CONST D3DCLIPSTATUS9* pClipStatus)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9::SetClipStatus");
-    return g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].SetClipStatus(ptr, pClipStatus);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].SetClipStatus(ptr, pClipStatus);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9_GetClipStatus_Hooked(IDirect3DDevice9 * ptr, D3DCLIPSTATUS9* pClipStatus)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9::GetClipStatus");
-    return g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].GetClipStatus(ptr, pClipStatus);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].GetClipStatus(ptr, pClipStatus);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9_GetTexture_Hooked(IDirect3DDevice9 * ptr, DWORD Stage, IDirect3DBaseTexture9** ppTexture)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9::GetTexture");
-    return g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].GetTexture(ptr, Stage, ppTexture);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].GetTexture(ptr, Stage, ppTexture);
+    if (ppTexture && *ppTexture) { RealToHooked9( *ppTexture ); }
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9_SetTexture_Hooked(IDirect3DDevice9 * ptr, DWORD Stage, IDirect3DBaseTexture9* pTexture)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9::SetTexture");
-    return g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].SetTexture(ptr, Stage, pTexture);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].SetTexture(ptr, Stage, pTexture);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9_GetTextureStageState_Hooked(IDirect3DDevice9 * ptr, DWORD Stage, D3DTEXTURESTAGESTATETYPE Type, DWORD* pValue)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9::GetTextureStageState");
-    return g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].GetTextureStageState(ptr, Stage, Type, pValue);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].GetTextureStageState(ptr, Stage, Type, pValue);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9_SetTextureStageState_Hooked(IDirect3DDevice9 * ptr, DWORD Stage, D3DTEXTURESTAGESTATETYPE Type, DWORD Value)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9::SetTextureStageState");
-    return g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].SetTextureStageState(ptr, Stage, Type, Value);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].SetTextureStageState(ptr, Stage, Type, Value);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9_GetSamplerState_Hooked(IDirect3DDevice9 * ptr, DWORD Sampler, D3DSAMPLERSTATETYPE Type, DWORD* pValue)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9::GetSamplerState");
-    return g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].GetSamplerState(ptr, Sampler, Type, pValue);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].GetSamplerState(ptr, Sampler, Type, pValue);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9_SetSamplerState_Hooked(IDirect3DDevice9 * ptr, DWORD Sampler, D3DSAMPLERSTATETYPE Type, DWORD Value)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9::SetSamplerState");
-    return g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].SetSamplerState(ptr, Sampler, Type, Value);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].SetSamplerState(ptr, Sampler, Type, Value);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9_ValidateDevice_Hooked(IDirect3DDevice9 * ptr, DWORD* pNumPasses)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9::ValidateDevice");
-    return g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].ValidateDevice(ptr, pNumPasses);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].ValidateDevice(ptr, pNumPasses);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9_SetPaletteEntries_Hooked(IDirect3DDevice9 * ptr, UINT PaletteNumber, CONST PALETTEENTRY* pEntries)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9::SetPaletteEntries");
-    return g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].SetPaletteEntries(ptr, PaletteNumber, pEntries);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].SetPaletteEntries(ptr, PaletteNumber, pEntries);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9_GetPaletteEntries_Hooked(IDirect3DDevice9 * ptr, UINT PaletteNumber, PALETTEENTRY* pEntries)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9::GetPaletteEntries");
-    return g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].GetPaletteEntries(ptr, PaletteNumber, pEntries);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].GetPaletteEntries(ptr, PaletteNumber, pEntries);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9_SetCurrentTexturePalette_Hooked(IDirect3DDevice9 * ptr, UINT PaletteNumber)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9::SetCurrentTexturePalette");
-    return g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].SetCurrentTexturePalette(ptr, PaletteNumber);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].SetCurrentTexturePalette(ptr, PaletteNumber);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9_GetCurrentTexturePalette_Hooked(IDirect3DDevice9 * ptr, UINT * PaletteNumber)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9::GetCurrentTexturePalette");
-    return g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].GetCurrentTexturePalette(ptr, PaletteNumber);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].GetCurrentTexturePalette(ptr, PaletteNumber);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9_SetScissorRect_Hooked(IDirect3DDevice9 * ptr, CONST RECT* pRect)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9::SetScissorRect");
-    return g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].SetScissorRect(ptr, pRect);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].SetScissorRect(ptr, pRect);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9_GetScissorRect_Hooked(IDirect3DDevice9 * ptr, RECT* pRect)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9::GetScissorRect");
-    return g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].GetScissorRect(ptr, pRect);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].GetScissorRect(ptr, pRect);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9_SetSoftwareVertexProcessing_Hooked(IDirect3DDevice9 * ptr, BOOL bSoftware)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9::SetSoftwareVertexProcessing");
-    return g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].SetSoftwareVertexProcessing(ptr, bSoftware);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].SetSoftwareVertexProcessing(ptr, bSoftware);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static BOOL STDMETHODCALLTYPE IDirect3DDevice9_GetSoftwareVertexProcessing_Hooked(IDirect3DDevice9 * ptr)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9::GetSoftwareVertexProcessing");
-    return g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].GetSoftwareVertexProcessing(ptr);
+    BOOL result = g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].GetSoftwareVertexProcessing(ptr);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9_SetNPatchMode_Hooked(IDirect3DDevice9 * ptr, float nSegments)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9::SetNPatchMode");
-    return g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].SetNPatchMode(ptr, nSegments);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].SetNPatchMode(ptr, nSegments);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static float STDMETHODCALLTYPE IDirect3DDevice9_GetNPatchMode_Hooked(IDirect3DDevice9 * ptr)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9::GetNPatchMode");
-    return g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].GetNPatchMode(ptr);
+    float result = g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].GetNPatchMode(ptr);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9_DrawPrimitive_Hooked(IDirect3DDevice9 * ptr, D3DPRIMITIVETYPE PrimitiveType, UINT StartVertex, UINT PrimitiveCount)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9::DrawPrimitive");
-    return g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].DrawPrimitive(ptr, PrimitiveType, StartVertex, PrimitiveCount);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].DrawPrimitive(ptr, PrimitiveType, StartVertex, PrimitiveCount);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9_DrawIndexedPrimitive_Hooked(IDirect3DDevice9 * ptr, D3DPRIMITIVETYPE PrimitiveType, INT BaseVertexIndex, UINT MinVertexIndex, UINT NumVertices, UINT startIndex, UINT primCount)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9::DrawIndexedPrimitive");
-    return g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].DrawIndexedPrimitive(ptr, PrimitiveType, BaseVertexIndex, MinVertexIndex, NumVertices, startIndex, primCount);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].DrawIndexedPrimitive(ptr, PrimitiveType, BaseVertexIndex, MinVertexIndex, NumVertices, startIndex, primCount);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9_DrawPrimitiveUP_Hooked(IDirect3DDevice9 * ptr, D3DPRIMITIVETYPE PrimitiveType, UINT PrimitiveCount, CONST void* pVertexStreamZeroData, UINT VertexStreamZeroStride)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9::DrawPrimitiveUP");
-    return g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].DrawPrimitiveUP(ptr, PrimitiveType, PrimitiveCount, pVertexStreamZeroData, VertexStreamZeroStride);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].DrawPrimitiveUP(ptr, PrimitiveType, PrimitiveCount, pVertexStreamZeroData, VertexStreamZeroStride);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9_DrawIndexedPrimitiveUP_Hooked(IDirect3DDevice9 * ptr, D3DPRIMITIVETYPE PrimitiveType, UINT MinVertexIndex, UINT NumVertices, UINT PrimitiveCount, CONST void* pIndexData, D3DFORMAT IndexDataFormat, CONST void* pVertexStreamZeroData, UINT VertexStreamZeroStride)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9::DrawIndexedPrimitiveUP");
-    return g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].DrawIndexedPrimitiveUP(ptr, PrimitiveType, MinVertexIndex, NumVertices, PrimitiveCount, pIndexData, IndexDataFormat, pVertexStreamZeroData, VertexStreamZeroStride);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].DrawIndexedPrimitiveUP(ptr, PrimitiveType, MinVertexIndex, NumVertices, PrimitiveCount, pIndexData, IndexDataFormat, pVertexStreamZeroData, VertexStreamZeroStride);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9_ProcessVertices_Hooked(IDirect3DDevice9 * ptr, UINT SrcStartIndex, UINT DestIndex, UINT VertexCount, IDirect3DVertexBuffer9* pDestBuffer, IDirect3DVertexDeclaration9* pVertexDecl, DWORD Flags)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9::ProcessVertices");
-    return g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].ProcessVertices(ptr, SrcStartIndex, DestIndex, VertexCount, pDestBuffer, pVertexDecl, Flags);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].ProcessVertices(ptr, SrcStartIndex, DestIndex, VertexCount, pDestBuffer, pVertexDecl, Flags);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9_CreateVertexDeclaration_Hooked(IDirect3DDevice9 * ptr, CONST D3DVERTEXELEMENT9* pVertexElements, IDirect3DVertexDeclaration9** ppDecl)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9::CreateVertexDeclaration");
-    return g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].CreateVertexDeclaration(ptr, pVertexElements, ppDecl);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].CreateVertexDeclaration(ptr, pVertexElements, ppDecl);
+    if (ppDecl && *ppDecl) { RealToHooked9( *ppDecl ); }
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9_SetVertexDeclaration_Hooked(IDirect3DDevice9 * ptr, IDirect3DVertexDeclaration9* pDecl)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9::SetVertexDeclaration");
-    return g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].SetVertexDeclaration(ptr, pDecl);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].SetVertexDeclaration(ptr, pDecl);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9_GetVertexDeclaration_Hooked(IDirect3DDevice9 * ptr, IDirect3DVertexDeclaration9** ppDecl)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9::GetVertexDeclaration");
-    return g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].GetVertexDeclaration(ptr, ppDecl);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].GetVertexDeclaration(ptr, ppDecl);
+    if (ppDecl && *ppDecl) { RealToHooked9( *ppDecl ); }
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9_SetFVF_Hooked(IDirect3DDevice9 * ptr, DWORD FVF)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9::SetFVF");
-    return g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].SetFVF(ptr, FVF);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].SetFVF(ptr, FVF);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9_GetFVF_Hooked(IDirect3DDevice9 * ptr, DWORD* pFVF)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9::GetFVF");
-    return g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].GetFVF(ptr, pFVF);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].GetFVF(ptr, pFVF);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9_CreateVertexShader_Hooked(IDirect3DDevice9 * ptr, CONST DWORD* pFunction, IDirect3DVertexShader9** ppShader)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9::CreateVertexShader");
-    return g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].CreateVertexShader(ptr, pFunction, ppShader);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].CreateVertexShader(ptr, pFunction, ppShader);
+    if (ppShader && *ppShader) { RealToHooked9( *ppShader ); }
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9_SetVertexShader_Hooked(IDirect3DDevice9 * ptr, IDirect3DVertexShader9* pShader)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9::SetVertexShader");
-    return g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].SetVertexShader(ptr, pShader);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].SetVertexShader(ptr, pShader);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9_GetVertexShader_Hooked(IDirect3DDevice9 * ptr, IDirect3DVertexShader9** ppShader)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9::GetVertexShader");
-    return g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].GetVertexShader(ptr, ppShader);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].GetVertexShader(ptr, ppShader);
+    if (ppShader && *ppShader) { RealToHooked9( *ppShader ); }
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9_SetVertexShaderConstantF_Hooked(IDirect3DDevice9 * ptr, UINT StartRegister, CONST float* pConstantData, UINT Vector4fCount)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9::SetVertexShaderConstantF");
-    return g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].SetVertexShaderConstantF(ptr, StartRegister, pConstantData, Vector4fCount);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].SetVertexShaderConstantF(ptr, StartRegister, pConstantData, Vector4fCount);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9_GetVertexShaderConstantF_Hooked(IDirect3DDevice9 * ptr, UINT StartRegister, float* pConstantData, UINT Vector4fCount)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9::GetVertexShaderConstantF");
-    return g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].GetVertexShaderConstantF(ptr, StartRegister, pConstantData, Vector4fCount);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].GetVertexShaderConstantF(ptr, StartRegister, pConstantData, Vector4fCount);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9_SetVertexShaderConstantI_Hooked(IDirect3DDevice9 * ptr, UINT StartRegister, CONST int* pConstantData, UINT Vector4iCount)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9::SetVertexShaderConstantI");
-    return g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].SetVertexShaderConstantI(ptr, StartRegister, pConstantData, Vector4iCount);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].SetVertexShaderConstantI(ptr, StartRegister, pConstantData, Vector4iCount);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9_GetVertexShaderConstantI_Hooked(IDirect3DDevice9 * ptr, UINT StartRegister, int* pConstantData, UINT Vector4iCount)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9::GetVertexShaderConstantI");
-    return g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].GetVertexShaderConstantI(ptr, StartRegister, pConstantData, Vector4iCount);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].GetVertexShaderConstantI(ptr, StartRegister, pConstantData, Vector4iCount);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9_SetVertexShaderConstantB_Hooked(IDirect3DDevice9 * ptr, UINT StartRegister, CONST BOOL* pConstantData, UINT BoolCount)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9::SetVertexShaderConstantB");
-    return g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].SetVertexShaderConstantB(ptr, StartRegister, pConstantData, BoolCount);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].SetVertexShaderConstantB(ptr, StartRegister, pConstantData, BoolCount);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9_GetVertexShaderConstantB_Hooked(IDirect3DDevice9 * ptr, UINT StartRegister, BOOL* pConstantData, UINT BoolCount)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9::GetVertexShaderConstantB");
-    return g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].GetVertexShaderConstantB(ptr, StartRegister, pConstantData, BoolCount);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].GetVertexShaderConstantB(ptr, StartRegister, pConstantData, BoolCount);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9_SetStreamSource_Hooked(IDirect3DDevice9 * ptr, UINT StreamNumber, IDirect3DVertexBuffer9* pStreamData, UINT OffsetInBytes, UINT Stride)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9::SetStreamSource");
-    return g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].SetStreamSource(ptr, StreamNumber, pStreamData, OffsetInBytes, Stride);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].SetStreamSource(ptr, StreamNumber, pStreamData, OffsetInBytes, Stride);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9_GetStreamSource_Hooked(IDirect3DDevice9 * ptr, UINT StreamNumber, IDirect3DVertexBuffer9** ppStreamData, UINT* pOffsetInBytes, UINT* pStride)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9::GetStreamSource");
-    return g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].GetStreamSource(ptr, StreamNumber, ppStreamData, pOffsetInBytes, pStride);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].GetStreamSource(ptr, StreamNumber, ppStreamData, pOffsetInBytes, pStride);
+    if (ppStreamData && *ppStreamData) { RealToHooked9( *ppStreamData ); }
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9_SetStreamSourceFreq_Hooked(IDirect3DDevice9 * ptr, UINT StreamNumber, UINT Setting)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9::SetStreamSourceFreq");
-    return g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].SetStreamSourceFreq(ptr, StreamNumber, Setting);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].SetStreamSourceFreq(ptr, StreamNumber, Setting);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9_GetStreamSourceFreq_Hooked(IDirect3DDevice9 * ptr, UINT StreamNumber, UINT* pSetting)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9::GetStreamSourceFreq");
-    return g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].GetStreamSourceFreq(ptr, StreamNumber, pSetting);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].GetStreamSourceFreq(ptr, StreamNumber, pSetting);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9_SetIndices_Hooked(IDirect3DDevice9 * ptr, IDirect3DIndexBuffer9* pIndexData)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9::SetIndices");
-    return g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].SetIndices(ptr, pIndexData);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].SetIndices(ptr, pIndexData);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9_GetIndices_Hooked(IDirect3DDevice9 * ptr, IDirect3DIndexBuffer9** ppIndexData)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9::GetIndices");
-    return g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].GetIndices(ptr, ppIndexData);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].GetIndices(ptr, ppIndexData);
+    if (ppIndexData && *ppIndexData) { RealToHooked9( *ppIndexData ); }
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9_CreatePixelShader_Hooked(IDirect3DDevice9 * ptr, CONST DWORD* pFunction, IDirect3DPixelShader9** ppShader)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9::CreatePixelShader");
-    return g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].CreatePixelShader(ptr, pFunction, ppShader);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].CreatePixelShader(ptr, pFunction, ppShader);
+    if (ppShader && *ppShader) { RealToHooked9( *ppShader ); }
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9_SetPixelShader_Hooked(IDirect3DDevice9 * ptr, IDirect3DPixelShader9* pShader)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9::SetPixelShader");
-    return g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].SetPixelShader(ptr, pShader);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].SetPixelShader(ptr, pShader);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9_GetPixelShader_Hooked(IDirect3DDevice9 * ptr, IDirect3DPixelShader9** ppShader)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9::GetPixelShader");
-    return g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].GetPixelShader(ptr, ppShader);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].GetPixelShader(ptr, ppShader);
+    if (ppShader && *ppShader) { RealToHooked9( *ppShader ); }
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9_SetPixelShaderConstantF_Hooked(IDirect3DDevice9 * ptr, UINT StartRegister, CONST float* pConstantData, UINT Vector4fCount)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9::SetPixelShaderConstantF");
-    return g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].SetPixelShaderConstantF(ptr, StartRegister, pConstantData, Vector4fCount);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].SetPixelShaderConstantF(ptr, StartRegister, pConstantData, Vector4fCount);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9_GetPixelShaderConstantF_Hooked(IDirect3DDevice9 * ptr, UINT StartRegister, float* pConstantData, UINT Vector4fCount)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9::GetPixelShaderConstantF");
-    return g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].GetPixelShaderConstantF(ptr, StartRegister, pConstantData, Vector4fCount);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].GetPixelShaderConstantF(ptr, StartRegister, pConstantData, Vector4fCount);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9_SetPixelShaderConstantI_Hooked(IDirect3DDevice9 * ptr, UINT StartRegister, CONST int* pConstantData, UINT Vector4iCount)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9::SetPixelShaderConstantI");
-    return g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].SetPixelShaderConstantI(ptr, StartRegister, pConstantData, Vector4iCount);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].SetPixelShaderConstantI(ptr, StartRegister, pConstantData, Vector4iCount);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9_GetPixelShaderConstantI_Hooked(IDirect3DDevice9 * ptr, UINT StartRegister, int* pConstantData, UINT Vector4iCount)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9::GetPixelShaderConstantI");
-    return g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].GetPixelShaderConstantI(ptr, StartRegister, pConstantData, Vector4iCount);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].GetPixelShaderConstantI(ptr, StartRegister, pConstantData, Vector4iCount);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9_SetPixelShaderConstantB_Hooked(IDirect3DDevice9 * ptr, UINT StartRegister, CONST BOOL* pConstantData, UINT BoolCount)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9::SetPixelShaderConstantB");
-    return g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].SetPixelShaderConstantB(ptr, StartRegister, pConstantData, BoolCount);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].SetPixelShaderConstantB(ptr, StartRegister, pConstantData, BoolCount);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9_GetPixelShaderConstantB_Hooked(IDirect3DDevice9 * ptr, UINT StartRegister, BOOL* pConstantData, UINT BoolCount)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9::GetPixelShaderConstantB");
-    return g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].GetPixelShaderConstantB(ptr, StartRegister, pConstantData, BoolCount);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].GetPixelShaderConstantB(ptr, StartRegister, pConstantData, BoolCount);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9_DrawRectPatch_Hooked(IDirect3DDevice9 * ptr, UINT Handle, CONST float* pNumSegs, CONST D3DRECTPATCH_INFO* pRectPatchInfo)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9::DrawRectPatch");
-    return g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].DrawRectPatch(ptr, Handle, pNumSegs, pRectPatchInfo);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].DrawRectPatch(ptr, Handle, pNumSegs, pRectPatchInfo);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9_DrawTriPatch_Hooked(IDirect3DDevice9 * ptr, UINT Handle, CONST float* pNumSegs, CONST D3DTRIPATCH_INFO* pTriPatchInfo)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9::DrawTriPatch");
-    return g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].DrawTriPatch(ptr, Handle, pNumSegs, pTriPatchInfo);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].DrawTriPatch(ptr, Handle, pNumSegs, pTriPatchInfo);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9_DeletePatch_Hooked(IDirect3DDevice9 * ptr, UINT Handle)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9::DeletePatch");
-    return g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].DeletePatch(ptr, Handle);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].DeletePatch(ptr, Handle);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9_CreateQuery_Hooked(IDirect3DDevice9 * ptr, D3DQUERYTYPE Type, IDirect3DQuery9** ppQuery)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9::CreateQuery");
-    return g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].CreateQuery(ptr, Type, ppQuery);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].CreateQuery(ptr, Type, ppQuery);
+    if (ppQuery && *ppQuery) { RealToHooked9( *ppQuery ); }
+    return result;
 }
 
 // -----------------------------------------------------------------------------
@@ -995,21 +1149,25 @@ template<UINT INDEX> static ULONG STDMETHODCALLTYPE IDirect3DStateBlock9_Release
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DStateBlock9_GetDevice_Hooked(IDirect3DStateBlock9 * ptr, IDirect3DDevice9** ppDevice)
 {
     calltrace::AutoTrace trace("IDirect3DStateBlock9::GetDevice");
-    return g_D3D9OriginVTables._IDirect3DStateBlock9.tables[INDEX].GetDevice(ptr, ppDevice);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DStateBlock9.tables[INDEX].GetDevice(ptr, ppDevice);
+    if (ppDevice && *ppDevice) { RealToHooked9( *ppDevice ); }
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DStateBlock9_Capture_Hooked(IDirect3DStateBlock9 * ptr)
 {
     calltrace::AutoTrace trace("IDirect3DStateBlock9::Capture");
-    return g_D3D9OriginVTables._IDirect3DStateBlock9.tables[INDEX].Capture(ptr);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DStateBlock9.tables[INDEX].Capture(ptr);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DStateBlock9_Apply_Hooked(IDirect3DStateBlock9 * ptr)
 {
     calltrace::AutoTrace trace("IDirect3DStateBlock9::Apply");
-    return g_D3D9OriginVTables._IDirect3DStateBlock9.tables[INDEX].Apply(ptr);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DStateBlock9.tables[INDEX].Apply(ptr);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
@@ -1041,49 +1199,58 @@ template<UINT INDEX> static ULONG STDMETHODCALLTYPE IDirect3DSwapChain9_Release_
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DSwapChain9_Present_Hooked(IDirect3DSwapChain9 * ptr, CONST RECT* pSourceRect, CONST RECT* pDestRect, HWND hDestWindowOverride, CONST RGNDATA* pDirtyRegion, DWORD dwFlags)
 {
     calltrace::AutoTrace trace("IDirect3DSwapChain9::Present");
-    return g_D3D9OriginVTables._IDirect3DSwapChain9.tables[INDEX].Present(ptr, pSourceRect, pDestRect, hDestWindowOverride, pDirtyRegion, dwFlags);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DSwapChain9.tables[INDEX].Present(ptr, pSourceRect, pDestRect, hDestWindowOverride, pDirtyRegion, dwFlags);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DSwapChain9_GetFrontBufferData_Hooked(IDirect3DSwapChain9 * ptr, IDirect3DSurface9* pDestSurface)
 {
     calltrace::AutoTrace trace("IDirect3DSwapChain9::GetFrontBufferData");
-    return g_D3D9OriginVTables._IDirect3DSwapChain9.tables[INDEX].GetFrontBufferData(ptr, pDestSurface);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DSwapChain9.tables[INDEX].GetFrontBufferData(ptr, pDestSurface);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DSwapChain9_GetBackBuffer_Hooked(IDirect3DSwapChain9 * ptr, UINT iBackBuffer, D3DBACKBUFFER_TYPE Type, IDirect3DSurface9** ppBackBuffer)
 {
     calltrace::AutoTrace trace("IDirect3DSwapChain9::GetBackBuffer");
-    return g_D3D9OriginVTables._IDirect3DSwapChain9.tables[INDEX].GetBackBuffer(ptr, iBackBuffer, Type, ppBackBuffer);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DSwapChain9.tables[INDEX].GetBackBuffer(ptr, iBackBuffer, Type, ppBackBuffer);
+    if (ppBackBuffer && *ppBackBuffer) { RealToHooked9( *ppBackBuffer ); }
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DSwapChain9_GetRasterStatus_Hooked(IDirect3DSwapChain9 * ptr, D3DRASTER_STATUS* pRasterStatus)
 {
     calltrace::AutoTrace trace("IDirect3DSwapChain9::GetRasterStatus");
-    return g_D3D9OriginVTables._IDirect3DSwapChain9.tables[INDEX].GetRasterStatus(ptr, pRasterStatus);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DSwapChain9.tables[INDEX].GetRasterStatus(ptr, pRasterStatus);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DSwapChain9_GetDisplayMode_Hooked(IDirect3DSwapChain9 * ptr, D3DDISPLAYMODE* pMode)
 {
     calltrace::AutoTrace trace("IDirect3DSwapChain9::GetDisplayMode");
-    return g_D3D9OriginVTables._IDirect3DSwapChain9.tables[INDEX].GetDisplayMode(ptr, pMode);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DSwapChain9.tables[INDEX].GetDisplayMode(ptr, pMode);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DSwapChain9_GetDevice_Hooked(IDirect3DSwapChain9 * ptr, IDirect3DDevice9** ppDevice)
 {
     calltrace::AutoTrace trace("IDirect3DSwapChain9::GetDevice");
-    return g_D3D9OriginVTables._IDirect3DSwapChain9.tables[INDEX].GetDevice(ptr, ppDevice);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DSwapChain9.tables[INDEX].GetDevice(ptr, ppDevice);
+    if (ppDevice && *ppDevice) { RealToHooked9( *ppDevice ); }
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DSwapChain9_GetPresentParameters_Hooked(IDirect3DSwapChain9 * ptr, D3DPRESENT_PARAMETERS* pPresentationParameters)
 {
     calltrace::AutoTrace trace("IDirect3DSwapChain9::GetPresentParameters");
-    return g_D3D9OriginVTables._IDirect3DSwapChain9.tables[INDEX].GetPresentParameters(ptr, pPresentationParameters);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DSwapChain9.tables[INDEX].GetPresentParameters(ptr, pPresentationParameters);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
@@ -1115,56 +1282,64 @@ template<UINT INDEX> static ULONG STDMETHODCALLTYPE IDirect3DResource9_Release_H
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DResource9_GetDevice_Hooked(IDirect3DResource9 * ptr, IDirect3DDevice9** ppDevice)
 {
     calltrace::AutoTrace trace("IDirect3DResource9::GetDevice");
-    return g_D3D9OriginVTables._IDirect3DResource9.tables[INDEX].GetDevice(ptr, ppDevice);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DResource9.tables[INDEX].GetDevice(ptr, ppDevice);
+    if (ppDevice && *ppDevice) { RealToHooked9( *ppDevice ); }
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DResource9_SetPrivateData_Hooked(IDirect3DResource9 * ptr, REFGUID refguid, CONST void* pData, DWORD SizeOfData, DWORD Flags)
 {
     calltrace::AutoTrace trace("IDirect3DResource9::SetPrivateData");
-    return g_D3D9OriginVTables._IDirect3DResource9.tables[INDEX].SetPrivateData(ptr, refguid, pData, SizeOfData, Flags);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DResource9.tables[INDEX].SetPrivateData(ptr, refguid, pData, SizeOfData, Flags);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DResource9_GetPrivateData_Hooked(IDirect3DResource9 * ptr, REFGUID refguid, void* pData, DWORD* pSizeOfData)
 {
     calltrace::AutoTrace trace("IDirect3DResource9::GetPrivateData");
-    return g_D3D9OriginVTables._IDirect3DResource9.tables[INDEX].GetPrivateData(ptr, refguid, pData, pSizeOfData);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DResource9.tables[INDEX].GetPrivateData(ptr, refguid, pData, pSizeOfData);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DResource9_FreePrivateData_Hooked(IDirect3DResource9 * ptr, REFGUID refguid)
 {
     calltrace::AutoTrace trace("IDirect3DResource9::FreePrivateData");
-    return g_D3D9OriginVTables._IDirect3DResource9.tables[INDEX].FreePrivateData(ptr, refguid);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DResource9.tables[INDEX].FreePrivateData(ptr, refguid);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static DWORD STDMETHODCALLTYPE IDirect3DResource9_SetPriority_Hooked(IDirect3DResource9 * ptr, DWORD PriorityNew)
 {
     calltrace::AutoTrace trace("IDirect3DResource9::SetPriority");
-    return g_D3D9OriginVTables._IDirect3DResource9.tables[INDEX].SetPriority(ptr, PriorityNew);
+    DWORD result = g_D3D9OriginVTables._IDirect3DResource9.tables[INDEX].SetPriority(ptr, PriorityNew);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static DWORD STDMETHODCALLTYPE IDirect3DResource9_GetPriority_Hooked(IDirect3DResource9 * ptr)
 {
     calltrace::AutoTrace trace("IDirect3DResource9::GetPriority");
-    return g_D3D9OriginVTables._IDirect3DResource9.tables[INDEX].GetPriority(ptr);
+    DWORD result = g_D3D9OriginVTables._IDirect3DResource9.tables[INDEX].GetPriority(ptr);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static void STDMETHODCALLTYPE IDirect3DResource9_PreLoad_Hooked(IDirect3DResource9 * ptr)
 {
     calltrace::AutoTrace trace("IDirect3DResource9::PreLoad");
-    return g_D3D9OriginVTables._IDirect3DResource9.tables[INDEX].PreLoad(ptr);
+    g_D3D9OriginVTables._IDirect3DResource9.tables[INDEX].PreLoad(ptr);
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static D3DRESOURCETYPE STDMETHODCALLTYPE IDirect3DResource9_GetType_Hooked(IDirect3DResource9 * ptr)
 {
     calltrace::AutoTrace trace("IDirect3DResource9::GetType");
-    return g_D3D9OriginVTables._IDirect3DResource9.tables[INDEX].GetType(ptr);
+    D3DRESOURCETYPE result = g_D3D9OriginVTables._IDirect3DResource9.tables[INDEX].GetType(ptr);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
@@ -1196,14 +1371,17 @@ template<UINT INDEX> static ULONG STDMETHODCALLTYPE IDirect3DVertexDeclaration9_
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DVertexDeclaration9_GetDevice_Hooked(IDirect3DVertexDeclaration9 * ptr, IDirect3DDevice9** ppDevice)
 {
     calltrace::AutoTrace trace("IDirect3DVertexDeclaration9::GetDevice");
-    return g_D3D9OriginVTables._IDirect3DVertexDeclaration9.tables[INDEX].GetDevice(ptr, ppDevice);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DVertexDeclaration9.tables[INDEX].GetDevice(ptr, ppDevice);
+    if (ppDevice && *ppDevice) { RealToHooked9( *ppDevice ); }
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DVertexDeclaration9_GetDeclaration_Hooked(IDirect3DVertexDeclaration9 * ptr, D3DVERTEXELEMENT9* pElement, UINT* pNumElements)
 {
     calltrace::AutoTrace trace("IDirect3DVertexDeclaration9::GetDeclaration");
-    return g_D3D9OriginVTables._IDirect3DVertexDeclaration9.tables[INDEX].GetDeclaration(ptr, pElement, pNumElements);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DVertexDeclaration9.tables[INDEX].GetDeclaration(ptr, pElement, pNumElements);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
@@ -1235,14 +1413,17 @@ template<UINT INDEX> static ULONG STDMETHODCALLTYPE IDirect3DVertexShader9_Relea
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DVertexShader9_GetDevice_Hooked(IDirect3DVertexShader9 * ptr, IDirect3DDevice9** ppDevice)
 {
     calltrace::AutoTrace trace("IDirect3DVertexShader9::GetDevice");
-    return g_D3D9OriginVTables._IDirect3DVertexShader9.tables[INDEX].GetDevice(ptr, ppDevice);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DVertexShader9.tables[INDEX].GetDevice(ptr, ppDevice);
+    if (ppDevice && *ppDevice) { RealToHooked9( *ppDevice ); }
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DVertexShader9_GetFunction_Hooked(IDirect3DVertexShader9 * ptr, void* pFunction, UINT* pSizeOfData)
 {
     calltrace::AutoTrace trace("IDirect3DVertexShader9::GetFunction");
-    return g_D3D9OriginVTables._IDirect3DVertexShader9.tables[INDEX].GetFunction(ptr, pFunction, pSizeOfData);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DVertexShader9.tables[INDEX].GetFunction(ptr, pFunction, pSizeOfData);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
@@ -1274,14 +1455,17 @@ template<UINT INDEX> static ULONG STDMETHODCALLTYPE IDirect3DPixelShader9_Releas
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DPixelShader9_GetDevice_Hooked(IDirect3DPixelShader9 * ptr, IDirect3DDevice9** ppDevice)
 {
     calltrace::AutoTrace trace("IDirect3DPixelShader9::GetDevice");
-    return g_D3D9OriginVTables._IDirect3DPixelShader9.tables[INDEX].GetDevice(ptr, ppDevice);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DPixelShader9.tables[INDEX].GetDevice(ptr, ppDevice);
+    if (ppDevice && *ppDevice) { RealToHooked9( *ppDevice ); }
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DPixelShader9_GetFunction_Hooked(IDirect3DPixelShader9 * ptr, void* pFunction, UINT* pSizeOfData)
 {
     calltrace::AutoTrace trace("IDirect3DPixelShader9::GetFunction");
-    return g_D3D9OriginVTables._IDirect3DPixelShader9.tables[INDEX].GetFunction(ptr, pFunction, pSizeOfData);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DPixelShader9.tables[INDEX].GetFunction(ptr, pFunction, pSizeOfData);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
@@ -1313,98 +1497,111 @@ template<UINT INDEX> static ULONG STDMETHODCALLTYPE IDirect3DBaseTexture9_Releas
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DBaseTexture9_GetDevice_Hooked(IDirect3DBaseTexture9 * ptr, IDirect3DDevice9** ppDevice)
 {
     calltrace::AutoTrace trace("IDirect3DBaseTexture9::GetDevice");
-    return g_D3D9OriginVTables._IDirect3DBaseTexture9.tables[INDEX].GetDevice(ptr, ppDevice);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DBaseTexture9.tables[INDEX].GetDevice(ptr, ppDevice);
+    if (ppDevice && *ppDevice) { RealToHooked9( *ppDevice ); }
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DBaseTexture9_SetPrivateData_Hooked(IDirect3DBaseTexture9 * ptr, REFGUID refguid, CONST void* pData, DWORD SizeOfData, DWORD Flags)
 {
     calltrace::AutoTrace trace("IDirect3DBaseTexture9::SetPrivateData");
-    return g_D3D9OriginVTables._IDirect3DBaseTexture9.tables[INDEX].SetPrivateData(ptr, refguid, pData, SizeOfData, Flags);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DBaseTexture9.tables[INDEX].SetPrivateData(ptr, refguid, pData, SizeOfData, Flags);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DBaseTexture9_GetPrivateData_Hooked(IDirect3DBaseTexture9 * ptr, REFGUID refguid, void* pData, DWORD* pSizeOfData)
 {
     calltrace::AutoTrace trace("IDirect3DBaseTexture9::GetPrivateData");
-    return g_D3D9OriginVTables._IDirect3DBaseTexture9.tables[INDEX].GetPrivateData(ptr, refguid, pData, pSizeOfData);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DBaseTexture9.tables[INDEX].GetPrivateData(ptr, refguid, pData, pSizeOfData);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DBaseTexture9_FreePrivateData_Hooked(IDirect3DBaseTexture9 * ptr, REFGUID refguid)
 {
     calltrace::AutoTrace trace("IDirect3DBaseTexture9::FreePrivateData");
-    return g_D3D9OriginVTables._IDirect3DBaseTexture9.tables[INDEX].FreePrivateData(ptr, refguid);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DBaseTexture9.tables[INDEX].FreePrivateData(ptr, refguid);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static DWORD STDMETHODCALLTYPE IDirect3DBaseTexture9_SetPriority_Hooked(IDirect3DBaseTexture9 * ptr, DWORD PriorityNew)
 {
     calltrace::AutoTrace trace("IDirect3DBaseTexture9::SetPriority");
-    return g_D3D9OriginVTables._IDirect3DBaseTexture9.tables[INDEX].SetPriority(ptr, PriorityNew);
+    DWORD result = g_D3D9OriginVTables._IDirect3DBaseTexture9.tables[INDEX].SetPriority(ptr, PriorityNew);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static DWORD STDMETHODCALLTYPE IDirect3DBaseTexture9_GetPriority_Hooked(IDirect3DBaseTexture9 * ptr)
 {
     calltrace::AutoTrace trace("IDirect3DBaseTexture9::GetPriority");
-    return g_D3D9OriginVTables._IDirect3DBaseTexture9.tables[INDEX].GetPriority(ptr);
+    DWORD result = g_D3D9OriginVTables._IDirect3DBaseTexture9.tables[INDEX].GetPriority(ptr);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static void STDMETHODCALLTYPE IDirect3DBaseTexture9_PreLoad_Hooked(IDirect3DBaseTexture9 * ptr)
 {
     calltrace::AutoTrace trace("IDirect3DBaseTexture9::PreLoad");
-    return g_D3D9OriginVTables._IDirect3DBaseTexture9.tables[INDEX].PreLoad(ptr);
+    g_D3D9OriginVTables._IDirect3DBaseTexture9.tables[INDEX].PreLoad(ptr);
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static D3DRESOURCETYPE STDMETHODCALLTYPE IDirect3DBaseTexture9_GetType_Hooked(IDirect3DBaseTexture9 * ptr)
 {
     calltrace::AutoTrace trace("IDirect3DBaseTexture9::GetType");
-    return g_D3D9OriginVTables._IDirect3DBaseTexture9.tables[INDEX].GetType(ptr);
+    D3DRESOURCETYPE result = g_D3D9OriginVTables._IDirect3DBaseTexture9.tables[INDEX].GetType(ptr);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static DWORD STDMETHODCALLTYPE IDirect3DBaseTexture9_SetLOD_Hooked(IDirect3DBaseTexture9 * ptr, DWORD LODNew)
 {
     calltrace::AutoTrace trace("IDirect3DBaseTexture9::SetLOD");
-    return g_D3D9OriginVTables._IDirect3DBaseTexture9.tables[INDEX].SetLOD(ptr, LODNew);
+    DWORD result = g_D3D9OriginVTables._IDirect3DBaseTexture9.tables[INDEX].SetLOD(ptr, LODNew);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static DWORD STDMETHODCALLTYPE IDirect3DBaseTexture9_GetLOD_Hooked(IDirect3DBaseTexture9 * ptr)
 {
     calltrace::AutoTrace trace("IDirect3DBaseTexture9::GetLOD");
-    return g_D3D9OriginVTables._IDirect3DBaseTexture9.tables[INDEX].GetLOD(ptr);
+    DWORD result = g_D3D9OriginVTables._IDirect3DBaseTexture9.tables[INDEX].GetLOD(ptr);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static DWORD STDMETHODCALLTYPE IDirect3DBaseTexture9_GetLevelCount_Hooked(IDirect3DBaseTexture9 * ptr)
 {
     calltrace::AutoTrace trace("IDirect3DBaseTexture9::GetLevelCount");
-    return g_D3D9OriginVTables._IDirect3DBaseTexture9.tables[INDEX].GetLevelCount(ptr);
+    DWORD result = g_D3D9OriginVTables._IDirect3DBaseTexture9.tables[INDEX].GetLevelCount(ptr);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DBaseTexture9_SetAutoGenFilterType_Hooked(IDirect3DBaseTexture9 * ptr, D3DTEXTUREFILTERTYPE FilterType)
 {
     calltrace::AutoTrace trace("IDirect3DBaseTexture9::SetAutoGenFilterType");
-    return g_D3D9OriginVTables._IDirect3DBaseTexture9.tables[INDEX].SetAutoGenFilterType(ptr, FilterType);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DBaseTexture9.tables[INDEX].SetAutoGenFilterType(ptr, FilterType);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static D3DTEXTUREFILTERTYPE STDMETHODCALLTYPE IDirect3DBaseTexture9_GetAutoGenFilterType_Hooked(IDirect3DBaseTexture9 * ptr)
 {
     calltrace::AutoTrace trace("IDirect3DBaseTexture9::GetAutoGenFilterType");
-    return g_D3D9OriginVTables._IDirect3DBaseTexture9.tables[INDEX].GetAutoGenFilterType(ptr);
+    D3DTEXTUREFILTERTYPE result = g_D3D9OriginVTables._IDirect3DBaseTexture9.tables[INDEX].GetAutoGenFilterType(ptr);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static void STDMETHODCALLTYPE IDirect3DBaseTexture9_GenerateMipSubLevels_Hooked(IDirect3DBaseTexture9 * ptr)
 {
     calltrace::AutoTrace trace("IDirect3DBaseTexture9::GenerateMipSubLevels");
-    return g_D3D9OriginVTables._IDirect3DBaseTexture9.tables[INDEX].GenerateMipSubLevels(ptr);
+    g_D3D9OriginVTables._IDirect3DBaseTexture9.tables[INDEX].GenerateMipSubLevels(ptr);
 }
 
 // -----------------------------------------------------------------------------
@@ -1436,133 +1633,152 @@ template<UINT INDEX> static ULONG STDMETHODCALLTYPE IDirect3DTexture9_Release_Ho
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DTexture9_GetDevice_Hooked(IDirect3DTexture9 * ptr, IDirect3DDevice9** ppDevice)
 {
     calltrace::AutoTrace trace("IDirect3DTexture9::GetDevice");
-    return g_D3D9OriginVTables._IDirect3DTexture9.tables[INDEX].GetDevice(ptr, ppDevice);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DTexture9.tables[INDEX].GetDevice(ptr, ppDevice);
+    if (ppDevice && *ppDevice) { RealToHooked9( *ppDevice ); }
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DTexture9_SetPrivateData_Hooked(IDirect3DTexture9 * ptr, REFGUID refguid, CONST void* pData, DWORD SizeOfData, DWORD Flags)
 {
     calltrace::AutoTrace trace("IDirect3DTexture9::SetPrivateData");
-    return g_D3D9OriginVTables._IDirect3DTexture9.tables[INDEX].SetPrivateData(ptr, refguid, pData, SizeOfData, Flags);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DTexture9.tables[INDEX].SetPrivateData(ptr, refguid, pData, SizeOfData, Flags);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DTexture9_GetPrivateData_Hooked(IDirect3DTexture9 * ptr, REFGUID refguid, void* pData, DWORD* pSizeOfData)
 {
     calltrace::AutoTrace trace("IDirect3DTexture9::GetPrivateData");
-    return g_D3D9OriginVTables._IDirect3DTexture9.tables[INDEX].GetPrivateData(ptr, refguid, pData, pSizeOfData);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DTexture9.tables[INDEX].GetPrivateData(ptr, refguid, pData, pSizeOfData);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DTexture9_FreePrivateData_Hooked(IDirect3DTexture9 * ptr, REFGUID refguid)
 {
     calltrace::AutoTrace trace("IDirect3DTexture9::FreePrivateData");
-    return g_D3D9OriginVTables._IDirect3DTexture9.tables[INDEX].FreePrivateData(ptr, refguid);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DTexture9.tables[INDEX].FreePrivateData(ptr, refguid);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static DWORD STDMETHODCALLTYPE IDirect3DTexture9_SetPriority_Hooked(IDirect3DTexture9 * ptr, DWORD PriorityNew)
 {
     calltrace::AutoTrace trace("IDirect3DTexture9::SetPriority");
-    return g_D3D9OriginVTables._IDirect3DTexture9.tables[INDEX].SetPriority(ptr, PriorityNew);
+    DWORD result = g_D3D9OriginVTables._IDirect3DTexture9.tables[INDEX].SetPriority(ptr, PriorityNew);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static DWORD STDMETHODCALLTYPE IDirect3DTexture9_GetPriority_Hooked(IDirect3DTexture9 * ptr)
 {
     calltrace::AutoTrace trace("IDirect3DTexture9::GetPriority");
-    return g_D3D9OriginVTables._IDirect3DTexture9.tables[INDEX].GetPriority(ptr);
+    DWORD result = g_D3D9OriginVTables._IDirect3DTexture9.tables[INDEX].GetPriority(ptr);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static void STDMETHODCALLTYPE IDirect3DTexture9_PreLoad_Hooked(IDirect3DTexture9 * ptr)
 {
     calltrace::AutoTrace trace("IDirect3DTexture9::PreLoad");
-    return g_D3D9OriginVTables._IDirect3DTexture9.tables[INDEX].PreLoad(ptr);
+    g_D3D9OriginVTables._IDirect3DTexture9.tables[INDEX].PreLoad(ptr);
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static D3DRESOURCETYPE STDMETHODCALLTYPE IDirect3DTexture9_GetType_Hooked(IDirect3DTexture9 * ptr)
 {
     calltrace::AutoTrace trace("IDirect3DTexture9::GetType");
-    return g_D3D9OriginVTables._IDirect3DTexture9.tables[INDEX].GetType(ptr);
+    D3DRESOURCETYPE result = g_D3D9OriginVTables._IDirect3DTexture9.tables[INDEX].GetType(ptr);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static DWORD STDMETHODCALLTYPE IDirect3DTexture9_SetLOD_Hooked(IDirect3DTexture9 * ptr, DWORD LODNew)
 {
     calltrace::AutoTrace trace("IDirect3DTexture9::SetLOD");
-    return g_D3D9OriginVTables._IDirect3DTexture9.tables[INDEX].SetLOD(ptr, LODNew);
+    DWORD result = g_D3D9OriginVTables._IDirect3DTexture9.tables[INDEX].SetLOD(ptr, LODNew);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static DWORD STDMETHODCALLTYPE IDirect3DTexture9_GetLOD_Hooked(IDirect3DTexture9 * ptr)
 {
     calltrace::AutoTrace trace("IDirect3DTexture9::GetLOD");
-    return g_D3D9OriginVTables._IDirect3DTexture9.tables[INDEX].GetLOD(ptr);
+    DWORD result = g_D3D9OriginVTables._IDirect3DTexture9.tables[INDEX].GetLOD(ptr);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static DWORD STDMETHODCALLTYPE IDirect3DTexture9_GetLevelCount_Hooked(IDirect3DTexture9 * ptr)
 {
     calltrace::AutoTrace trace("IDirect3DTexture9::GetLevelCount");
-    return g_D3D9OriginVTables._IDirect3DTexture9.tables[INDEX].GetLevelCount(ptr);
+    DWORD result = g_D3D9OriginVTables._IDirect3DTexture9.tables[INDEX].GetLevelCount(ptr);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DTexture9_SetAutoGenFilterType_Hooked(IDirect3DTexture9 * ptr, D3DTEXTUREFILTERTYPE FilterType)
 {
     calltrace::AutoTrace trace("IDirect3DTexture9::SetAutoGenFilterType");
-    return g_D3D9OriginVTables._IDirect3DTexture9.tables[INDEX].SetAutoGenFilterType(ptr, FilterType);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DTexture9.tables[INDEX].SetAutoGenFilterType(ptr, FilterType);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static D3DTEXTUREFILTERTYPE STDMETHODCALLTYPE IDirect3DTexture9_GetAutoGenFilterType_Hooked(IDirect3DTexture9 * ptr)
 {
     calltrace::AutoTrace trace("IDirect3DTexture9::GetAutoGenFilterType");
-    return g_D3D9OriginVTables._IDirect3DTexture9.tables[INDEX].GetAutoGenFilterType(ptr);
+    D3DTEXTUREFILTERTYPE result = g_D3D9OriginVTables._IDirect3DTexture9.tables[INDEX].GetAutoGenFilterType(ptr);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static void STDMETHODCALLTYPE IDirect3DTexture9_GenerateMipSubLevels_Hooked(IDirect3DTexture9 * ptr)
 {
     calltrace::AutoTrace trace("IDirect3DTexture9::GenerateMipSubLevels");
-    return g_D3D9OriginVTables._IDirect3DTexture9.tables[INDEX].GenerateMipSubLevels(ptr);
+    g_D3D9OriginVTables._IDirect3DTexture9.tables[INDEX].GenerateMipSubLevels(ptr);
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DTexture9_GetLevelDesc_Hooked(IDirect3DTexture9 * ptr, UINT Level, D3DSURFACE_DESC * pDesc)
 {
     calltrace::AutoTrace trace("IDirect3DTexture9::GetLevelDesc");
-    return g_D3D9OriginVTables._IDirect3DTexture9.tables[INDEX].GetLevelDesc(ptr, Level, pDesc);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DTexture9.tables[INDEX].GetLevelDesc(ptr, Level, pDesc);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DTexture9_GetSurfaceLevel_Hooked(IDirect3DTexture9 * ptr, UINT Level, IDirect3DSurface9** ppSurfaceLevel)
 {
     calltrace::AutoTrace trace("IDirect3DTexture9::GetSurfaceLevel");
-    return g_D3D9OriginVTables._IDirect3DTexture9.tables[INDEX].GetSurfaceLevel(ptr, Level, ppSurfaceLevel);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DTexture9.tables[INDEX].GetSurfaceLevel(ptr, Level, ppSurfaceLevel);
+    if (ppSurfaceLevel && *ppSurfaceLevel) { RealToHooked9( *ppSurfaceLevel ); }
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DTexture9_LockRect_Hooked(IDirect3DTexture9 * ptr, UINT Level, D3DLOCKED_RECT* pLockedRect, CONST RECT* pRect, DWORD Flags)
 {
     calltrace::AutoTrace trace("IDirect3DTexture9::LockRect");
-    return g_D3D9OriginVTables._IDirect3DTexture9.tables[INDEX].LockRect(ptr, Level, pLockedRect, pRect, Flags);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DTexture9.tables[INDEX].LockRect(ptr, Level, pLockedRect, pRect, Flags);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DTexture9_UnlockRect_Hooked(IDirect3DTexture9 * ptr, UINT Level)
 {
     calltrace::AutoTrace trace("IDirect3DTexture9::UnlockRect");
-    return g_D3D9OriginVTables._IDirect3DTexture9.tables[INDEX].UnlockRect(ptr, Level);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DTexture9.tables[INDEX].UnlockRect(ptr, Level);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DTexture9_AddDirtyRect_Hooked(IDirect3DTexture9 * ptr, CONST RECT* pDirtyRect)
 {
     calltrace::AutoTrace trace("IDirect3DTexture9::AddDirtyRect");
-    return g_D3D9OriginVTables._IDirect3DTexture9.tables[INDEX].AddDirtyRect(ptr, pDirtyRect);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DTexture9.tables[INDEX].AddDirtyRect(ptr, pDirtyRect);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
@@ -1594,133 +1810,152 @@ template<UINT INDEX> static ULONG STDMETHODCALLTYPE IDirect3DVolumeTexture9_Rele
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DVolumeTexture9_GetDevice_Hooked(IDirect3DVolumeTexture9 * ptr, IDirect3DDevice9** ppDevice)
 {
     calltrace::AutoTrace trace("IDirect3DVolumeTexture9::GetDevice");
-    return g_D3D9OriginVTables._IDirect3DVolumeTexture9.tables[INDEX].GetDevice(ptr, ppDevice);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DVolumeTexture9.tables[INDEX].GetDevice(ptr, ppDevice);
+    if (ppDevice && *ppDevice) { RealToHooked9( *ppDevice ); }
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DVolumeTexture9_SetPrivateData_Hooked(IDirect3DVolumeTexture9 * ptr, REFGUID refguid, CONST void* pData, DWORD SizeOfData, DWORD Flags)
 {
     calltrace::AutoTrace trace("IDirect3DVolumeTexture9::SetPrivateData");
-    return g_D3D9OriginVTables._IDirect3DVolumeTexture9.tables[INDEX].SetPrivateData(ptr, refguid, pData, SizeOfData, Flags);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DVolumeTexture9.tables[INDEX].SetPrivateData(ptr, refguid, pData, SizeOfData, Flags);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DVolumeTexture9_GetPrivateData_Hooked(IDirect3DVolumeTexture9 * ptr, REFGUID refguid, void* pData, DWORD* pSizeOfData)
 {
     calltrace::AutoTrace trace("IDirect3DVolumeTexture9::GetPrivateData");
-    return g_D3D9OriginVTables._IDirect3DVolumeTexture9.tables[INDEX].GetPrivateData(ptr, refguid, pData, pSizeOfData);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DVolumeTexture9.tables[INDEX].GetPrivateData(ptr, refguid, pData, pSizeOfData);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DVolumeTexture9_FreePrivateData_Hooked(IDirect3DVolumeTexture9 * ptr, REFGUID refguid)
 {
     calltrace::AutoTrace trace("IDirect3DVolumeTexture9::FreePrivateData");
-    return g_D3D9OriginVTables._IDirect3DVolumeTexture9.tables[INDEX].FreePrivateData(ptr, refguid);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DVolumeTexture9.tables[INDEX].FreePrivateData(ptr, refguid);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static DWORD STDMETHODCALLTYPE IDirect3DVolumeTexture9_SetPriority_Hooked(IDirect3DVolumeTexture9 * ptr, DWORD PriorityNew)
 {
     calltrace::AutoTrace trace("IDirect3DVolumeTexture9::SetPriority");
-    return g_D3D9OriginVTables._IDirect3DVolumeTexture9.tables[INDEX].SetPriority(ptr, PriorityNew);
+    DWORD result = g_D3D9OriginVTables._IDirect3DVolumeTexture9.tables[INDEX].SetPriority(ptr, PriorityNew);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static DWORD STDMETHODCALLTYPE IDirect3DVolumeTexture9_GetPriority_Hooked(IDirect3DVolumeTexture9 * ptr)
 {
     calltrace::AutoTrace trace("IDirect3DVolumeTexture9::GetPriority");
-    return g_D3D9OriginVTables._IDirect3DVolumeTexture9.tables[INDEX].GetPriority(ptr);
+    DWORD result = g_D3D9OriginVTables._IDirect3DVolumeTexture9.tables[INDEX].GetPriority(ptr);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static void STDMETHODCALLTYPE IDirect3DVolumeTexture9_PreLoad_Hooked(IDirect3DVolumeTexture9 * ptr)
 {
     calltrace::AutoTrace trace("IDirect3DVolumeTexture9::PreLoad");
-    return g_D3D9OriginVTables._IDirect3DVolumeTexture9.tables[INDEX].PreLoad(ptr);
+    g_D3D9OriginVTables._IDirect3DVolumeTexture9.tables[INDEX].PreLoad(ptr);
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static D3DRESOURCETYPE STDMETHODCALLTYPE IDirect3DVolumeTexture9_GetType_Hooked(IDirect3DVolumeTexture9 * ptr)
 {
     calltrace::AutoTrace trace("IDirect3DVolumeTexture9::GetType");
-    return g_D3D9OriginVTables._IDirect3DVolumeTexture9.tables[INDEX].GetType(ptr);
+    D3DRESOURCETYPE result = g_D3D9OriginVTables._IDirect3DVolumeTexture9.tables[INDEX].GetType(ptr);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static DWORD STDMETHODCALLTYPE IDirect3DVolumeTexture9_SetLOD_Hooked(IDirect3DVolumeTexture9 * ptr, DWORD LODNew)
 {
     calltrace::AutoTrace trace("IDirect3DVolumeTexture9::SetLOD");
-    return g_D3D9OriginVTables._IDirect3DVolumeTexture9.tables[INDEX].SetLOD(ptr, LODNew);
+    DWORD result = g_D3D9OriginVTables._IDirect3DVolumeTexture9.tables[INDEX].SetLOD(ptr, LODNew);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static DWORD STDMETHODCALLTYPE IDirect3DVolumeTexture9_GetLOD_Hooked(IDirect3DVolumeTexture9 * ptr)
 {
     calltrace::AutoTrace trace("IDirect3DVolumeTexture9::GetLOD");
-    return g_D3D9OriginVTables._IDirect3DVolumeTexture9.tables[INDEX].GetLOD(ptr);
+    DWORD result = g_D3D9OriginVTables._IDirect3DVolumeTexture9.tables[INDEX].GetLOD(ptr);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static DWORD STDMETHODCALLTYPE IDirect3DVolumeTexture9_GetLevelCount_Hooked(IDirect3DVolumeTexture9 * ptr)
 {
     calltrace::AutoTrace trace("IDirect3DVolumeTexture9::GetLevelCount");
-    return g_D3D9OriginVTables._IDirect3DVolumeTexture9.tables[INDEX].GetLevelCount(ptr);
+    DWORD result = g_D3D9OriginVTables._IDirect3DVolumeTexture9.tables[INDEX].GetLevelCount(ptr);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DVolumeTexture9_SetAutoGenFilterType_Hooked(IDirect3DVolumeTexture9 * ptr, D3DTEXTUREFILTERTYPE FilterType)
 {
     calltrace::AutoTrace trace("IDirect3DVolumeTexture9::SetAutoGenFilterType");
-    return g_D3D9OriginVTables._IDirect3DVolumeTexture9.tables[INDEX].SetAutoGenFilterType(ptr, FilterType);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DVolumeTexture9.tables[INDEX].SetAutoGenFilterType(ptr, FilterType);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static D3DTEXTUREFILTERTYPE STDMETHODCALLTYPE IDirect3DVolumeTexture9_GetAutoGenFilterType_Hooked(IDirect3DVolumeTexture9 * ptr)
 {
     calltrace::AutoTrace trace("IDirect3DVolumeTexture9::GetAutoGenFilterType");
-    return g_D3D9OriginVTables._IDirect3DVolumeTexture9.tables[INDEX].GetAutoGenFilterType(ptr);
+    D3DTEXTUREFILTERTYPE result = g_D3D9OriginVTables._IDirect3DVolumeTexture9.tables[INDEX].GetAutoGenFilterType(ptr);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static void STDMETHODCALLTYPE IDirect3DVolumeTexture9_GenerateMipSubLevels_Hooked(IDirect3DVolumeTexture9 * ptr)
 {
     calltrace::AutoTrace trace("IDirect3DVolumeTexture9::GenerateMipSubLevels");
-    return g_D3D9OriginVTables._IDirect3DVolumeTexture9.tables[INDEX].GenerateMipSubLevels(ptr);
+    g_D3D9OriginVTables._IDirect3DVolumeTexture9.tables[INDEX].GenerateMipSubLevels(ptr);
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DVolumeTexture9_GetLevelDesc_Hooked(IDirect3DVolumeTexture9 * ptr, UINT Level, D3DVOLUME_DESC * pDesc)
 {
     calltrace::AutoTrace trace("IDirect3DVolumeTexture9::GetLevelDesc");
-    return g_D3D9OriginVTables._IDirect3DVolumeTexture9.tables[INDEX].GetLevelDesc(ptr, Level, pDesc);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DVolumeTexture9.tables[INDEX].GetLevelDesc(ptr, Level, pDesc);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DVolumeTexture9_GetVolumeLevel_Hooked(IDirect3DVolumeTexture9 * ptr, UINT Level, IDirect3DVolume9** ppVolumeLevel)
 {
     calltrace::AutoTrace trace("IDirect3DVolumeTexture9::GetVolumeLevel");
-    return g_D3D9OriginVTables._IDirect3DVolumeTexture9.tables[INDEX].GetVolumeLevel(ptr, Level, ppVolumeLevel);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DVolumeTexture9.tables[INDEX].GetVolumeLevel(ptr, Level, ppVolumeLevel);
+    if (ppVolumeLevel && *ppVolumeLevel) { RealToHooked9( *ppVolumeLevel ); }
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DVolumeTexture9_LockBox_Hooked(IDirect3DVolumeTexture9 * ptr, UINT Level, D3DLOCKED_BOX* pLockedVolume, CONST D3DBOX* pBox, DWORD Flags)
 {
     calltrace::AutoTrace trace("IDirect3DVolumeTexture9::LockBox");
-    return g_D3D9OriginVTables._IDirect3DVolumeTexture9.tables[INDEX].LockBox(ptr, Level, pLockedVolume, pBox, Flags);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DVolumeTexture9.tables[INDEX].LockBox(ptr, Level, pLockedVolume, pBox, Flags);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DVolumeTexture9_UnlockBox_Hooked(IDirect3DVolumeTexture9 * ptr, UINT Level)
 {
     calltrace::AutoTrace trace("IDirect3DVolumeTexture9::UnlockBox");
-    return g_D3D9OriginVTables._IDirect3DVolumeTexture9.tables[INDEX].UnlockBox(ptr, Level);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DVolumeTexture9.tables[INDEX].UnlockBox(ptr, Level);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DVolumeTexture9_AddDirtyBox_Hooked(IDirect3DVolumeTexture9 * ptr, CONST D3DBOX* pDirtyBox)
 {
     calltrace::AutoTrace trace("IDirect3DVolumeTexture9::AddDirtyBox");
-    return g_D3D9OriginVTables._IDirect3DVolumeTexture9.tables[INDEX].AddDirtyBox(ptr, pDirtyBox);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DVolumeTexture9.tables[INDEX].AddDirtyBox(ptr, pDirtyBox);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
@@ -1752,133 +1987,152 @@ template<UINT INDEX> static ULONG STDMETHODCALLTYPE IDirect3DCubeTexture9_Releas
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DCubeTexture9_GetDevice_Hooked(IDirect3DCubeTexture9 * ptr, IDirect3DDevice9** ppDevice)
 {
     calltrace::AutoTrace trace("IDirect3DCubeTexture9::GetDevice");
-    return g_D3D9OriginVTables._IDirect3DCubeTexture9.tables[INDEX].GetDevice(ptr, ppDevice);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DCubeTexture9.tables[INDEX].GetDevice(ptr, ppDevice);
+    if (ppDevice && *ppDevice) { RealToHooked9( *ppDevice ); }
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DCubeTexture9_SetPrivateData_Hooked(IDirect3DCubeTexture9 * ptr, REFGUID refguid, CONST void* pData, DWORD SizeOfData, DWORD Flags)
 {
     calltrace::AutoTrace trace("IDirect3DCubeTexture9::SetPrivateData");
-    return g_D3D9OriginVTables._IDirect3DCubeTexture9.tables[INDEX].SetPrivateData(ptr, refguid, pData, SizeOfData, Flags);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DCubeTexture9.tables[INDEX].SetPrivateData(ptr, refguid, pData, SizeOfData, Flags);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DCubeTexture9_GetPrivateData_Hooked(IDirect3DCubeTexture9 * ptr, REFGUID refguid, void* pData, DWORD* pSizeOfData)
 {
     calltrace::AutoTrace trace("IDirect3DCubeTexture9::GetPrivateData");
-    return g_D3D9OriginVTables._IDirect3DCubeTexture9.tables[INDEX].GetPrivateData(ptr, refguid, pData, pSizeOfData);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DCubeTexture9.tables[INDEX].GetPrivateData(ptr, refguid, pData, pSizeOfData);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DCubeTexture9_FreePrivateData_Hooked(IDirect3DCubeTexture9 * ptr, REFGUID refguid)
 {
     calltrace::AutoTrace trace("IDirect3DCubeTexture9::FreePrivateData");
-    return g_D3D9OriginVTables._IDirect3DCubeTexture9.tables[INDEX].FreePrivateData(ptr, refguid);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DCubeTexture9.tables[INDEX].FreePrivateData(ptr, refguid);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static DWORD STDMETHODCALLTYPE IDirect3DCubeTexture9_SetPriority_Hooked(IDirect3DCubeTexture9 * ptr, DWORD PriorityNew)
 {
     calltrace::AutoTrace trace("IDirect3DCubeTexture9::SetPriority");
-    return g_D3D9OriginVTables._IDirect3DCubeTexture9.tables[INDEX].SetPriority(ptr, PriorityNew);
+    DWORD result = g_D3D9OriginVTables._IDirect3DCubeTexture9.tables[INDEX].SetPriority(ptr, PriorityNew);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static DWORD STDMETHODCALLTYPE IDirect3DCubeTexture9_GetPriority_Hooked(IDirect3DCubeTexture9 * ptr)
 {
     calltrace::AutoTrace trace("IDirect3DCubeTexture9::GetPriority");
-    return g_D3D9OriginVTables._IDirect3DCubeTexture9.tables[INDEX].GetPriority(ptr);
+    DWORD result = g_D3D9OriginVTables._IDirect3DCubeTexture9.tables[INDEX].GetPriority(ptr);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static void STDMETHODCALLTYPE IDirect3DCubeTexture9_PreLoad_Hooked(IDirect3DCubeTexture9 * ptr)
 {
     calltrace::AutoTrace trace("IDirect3DCubeTexture9::PreLoad");
-    return g_D3D9OriginVTables._IDirect3DCubeTexture9.tables[INDEX].PreLoad(ptr);
+    g_D3D9OriginVTables._IDirect3DCubeTexture9.tables[INDEX].PreLoad(ptr);
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static D3DRESOURCETYPE STDMETHODCALLTYPE IDirect3DCubeTexture9_GetType_Hooked(IDirect3DCubeTexture9 * ptr)
 {
     calltrace::AutoTrace trace("IDirect3DCubeTexture9::GetType");
-    return g_D3D9OriginVTables._IDirect3DCubeTexture9.tables[INDEX].GetType(ptr);
+    D3DRESOURCETYPE result = g_D3D9OriginVTables._IDirect3DCubeTexture9.tables[INDEX].GetType(ptr);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static DWORD STDMETHODCALLTYPE IDirect3DCubeTexture9_SetLOD_Hooked(IDirect3DCubeTexture9 * ptr, DWORD LODNew)
 {
     calltrace::AutoTrace trace("IDirect3DCubeTexture9::SetLOD");
-    return g_D3D9OriginVTables._IDirect3DCubeTexture9.tables[INDEX].SetLOD(ptr, LODNew);
+    DWORD result = g_D3D9OriginVTables._IDirect3DCubeTexture9.tables[INDEX].SetLOD(ptr, LODNew);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static DWORD STDMETHODCALLTYPE IDirect3DCubeTexture9_GetLOD_Hooked(IDirect3DCubeTexture9 * ptr)
 {
     calltrace::AutoTrace trace("IDirect3DCubeTexture9::GetLOD");
-    return g_D3D9OriginVTables._IDirect3DCubeTexture9.tables[INDEX].GetLOD(ptr);
+    DWORD result = g_D3D9OriginVTables._IDirect3DCubeTexture9.tables[INDEX].GetLOD(ptr);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static DWORD STDMETHODCALLTYPE IDirect3DCubeTexture9_GetLevelCount_Hooked(IDirect3DCubeTexture9 * ptr)
 {
     calltrace::AutoTrace trace("IDirect3DCubeTexture9::GetLevelCount");
-    return g_D3D9OriginVTables._IDirect3DCubeTexture9.tables[INDEX].GetLevelCount(ptr);
+    DWORD result = g_D3D9OriginVTables._IDirect3DCubeTexture9.tables[INDEX].GetLevelCount(ptr);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DCubeTexture9_SetAutoGenFilterType_Hooked(IDirect3DCubeTexture9 * ptr, D3DTEXTUREFILTERTYPE FilterType)
 {
     calltrace::AutoTrace trace("IDirect3DCubeTexture9::SetAutoGenFilterType");
-    return g_D3D9OriginVTables._IDirect3DCubeTexture9.tables[INDEX].SetAutoGenFilterType(ptr, FilterType);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DCubeTexture9.tables[INDEX].SetAutoGenFilterType(ptr, FilterType);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static D3DTEXTUREFILTERTYPE STDMETHODCALLTYPE IDirect3DCubeTexture9_GetAutoGenFilterType_Hooked(IDirect3DCubeTexture9 * ptr)
 {
     calltrace::AutoTrace trace("IDirect3DCubeTexture9::GetAutoGenFilterType");
-    return g_D3D9OriginVTables._IDirect3DCubeTexture9.tables[INDEX].GetAutoGenFilterType(ptr);
+    D3DTEXTUREFILTERTYPE result = g_D3D9OriginVTables._IDirect3DCubeTexture9.tables[INDEX].GetAutoGenFilterType(ptr);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static void STDMETHODCALLTYPE IDirect3DCubeTexture9_GenerateMipSubLevels_Hooked(IDirect3DCubeTexture9 * ptr)
 {
     calltrace::AutoTrace trace("IDirect3DCubeTexture9::GenerateMipSubLevels");
-    return g_D3D9OriginVTables._IDirect3DCubeTexture9.tables[INDEX].GenerateMipSubLevels(ptr);
+    g_D3D9OriginVTables._IDirect3DCubeTexture9.tables[INDEX].GenerateMipSubLevels(ptr);
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DCubeTexture9_GetLevelDesc_Hooked(IDirect3DCubeTexture9 * ptr, UINT Level, D3DSURFACE_DESC * pDesc)
 {
     calltrace::AutoTrace trace("IDirect3DCubeTexture9::GetLevelDesc");
-    return g_D3D9OriginVTables._IDirect3DCubeTexture9.tables[INDEX].GetLevelDesc(ptr, Level, pDesc);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DCubeTexture9.tables[INDEX].GetLevelDesc(ptr, Level, pDesc);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DCubeTexture9_GetCubeMapSurface_Hooked(IDirect3DCubeTexture9 * ptr, D3DCUBEMAP_FACES FaceType, UINT Level, IDirect3DSurface9** ppCubeMapSurface)
 {
     calltrace::AutoTrace trace("IDirect3DCubeTexture9::GetCubeMapSurface");
-    return g_D3D9OriginVTables._IDirect3DCubeTexture9.tables[INDEX].GetCubeMapSurface(ptr, FaceType, Level, ppCubeMapSurface);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DCubeTexture9.tables[INDEX].GetCubeMapSurface(ptr, FaceType, Level, ppCubeMapSurface);
+    if (ppCubeMapSurface && *ppCubeMapSurface) { RealToHooked9( *ppCubeMapSurface ); }
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DCubeTexture9_LockRect_Hooked(IDirect3DCubeTexture9 * ptr, D3DCUBEMAP_FACES FaceType, UINT Level, D3DLOCKED_RECT* pLockedRect, CONST RECT* pRect, DWORD Flags)
 {
     calltrace::AutoTrace trace("IDirect3DCubeTexture9::LockRect");
-    return g_D3D9OriginVTables._IDirect3DCubeTexture9.tables[INDEX].LockRect(ptr, FaceType, Level, pLockedRect, pRect, Flags);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DCubeTexture9.tables[INDEX].LockRect(ptr, FaceType, Level, pLockedRect, pRect, Flags);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DCubeTexture9_UnlockRect_Hooked(IDirect3DCubeTexture9 * ptr, D3DCUBEMAP_FACES FaceType, UINT Level)
 {
     calltrace::AutoTrace trace("IDirect3DCubeTexture9::UnlockRect");
-    return g_D3D9OriginVTables._IDirect3DCubeTexture9.tables[INDEX].UnlockRect(ptr, FaceType, Level);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DCubeTexture9.tables[INDEX].UnlockRect(ptr, FaceType, Level);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DCubeTexture9_AddDirtyRect_Hooked(IDirect3DCubeTexture9 * ptr, D3DCUBEMAP_FACES FaceType, CONST RECT* pDirtyRect)
 {
     calltrace::AutoTrace trace("IDirect3DCubeTexture9::AddDirtyRect");
-    return g_D3D9OriginVTables._IDirect3DCubeTexture9.tables[INDEX].AddDirtyRect(ptr, FaceType, pDirtyRect);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DCubeTexture9.tables[INDEX].AddDirtyRect(ptr, FaceType, pDirtyRect);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
@@ -1910,77 +2164,88 @@ template<UINT INDEX> static ULONG STDMETHODCALLTYPE IDirect3DVertexBuffer9_Relea
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DVertexBuffer9_GetDevice_Hooked(IDirect3DVertexBuffer9 * ptr, IDirect3DDevice9** ppDevice)
 {
     calltrace::AutoTrace trace("IDirect3DVertexBuffer9::GetDevice");
-    return g_D3D9OriginVTables._IDirect3DVertexBuffer9.tables[INDEX].GetDevice(ptr, ppDevice);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DVertexBuffer9.tables[INDEX].GetDevice(ptr, ppDevice);
+    if (ppDevice && *ppDevice) { RealToHooked9( *ppDevice ); }
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DVertexBuffer9_SetPrivateData_Hooked(IDirect3DVertexBuffer9 * ptr, REFGUID refguid, CONST void* pData, DWORD SizeOfData, DWORD Flags)
 {
     calltrace::AutoTrace trace("IDirect3DVertexBuffer9::SetPrivateData");
-    return g_D3D9OriginVTables._IDirect3DVertexBuffer9.tables[INDEX].SetPrivateData(ptr, refguid, pData, SizeOfData, Flags);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DVertexBuffer9.tables[INDEX].SetPrivateData(ptr, refguid, pData, SizeOfData, Flags);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DVertexBuffer9_GetPrivateData_Hooked(IDirect3DVertexBuffer9 * ptr, REFGUID refguid, void* pData, DWORD* pSizeOfData)
 {
     calltrace::AutoTrace trace("IDirect3DVertexBuffer9::GetPrivateData");
-    return g_D3D9OriginVTables._IDirect3DVertexBuffer9.tables[INDEX].GetPrivateData(ptr, refguid, pData, pSizeOfData);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DVertexBuffer9.tables[INDEX].GetPrivateData(ptr, refguid, pData, pSizeOfData);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DVertexBuffer9_FreePrivateData_Hooked(IDirect3DVertexBuffer9 * ptr, REFGUID refguid)
 {
     calltrace::AutoTrace trace("IDirect3DVertexBuffer9::FreePrivateData");
-    return g_D3D9OriginVTables._IDirect3DVertexBuffer9.tables[INDEX].FreePrivateData(ptr, refguid);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DVertexBuffer9.tables[INDEX].FreePrivateData(ptr, refguid);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static DWORD STDMETHODCALLTYPE IDirect3DVertexBuffer9_SetPriority_Hooked(IDirect3DVertexBuffer9 * ptr, DWORD PriorityNew)
 {
     calltrace::AutoTrace trace("IDirect3DVertexBuffer9::SetPriority");
-    return g_D3D9OriginVTables._IDirect3DVertexBuffer9.tables[INDEX].SetPriority(ptr, PriorityNew);
+    DWORD result = g_D3D9OriginVTables._IDirect3DVertexBuffer9.tables[INDEX].SetPriority(ptr, PriorityNew);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static DWORD STDMETHODCALLTYPE IDirect3DVertexBuffer9_GetPriority_Hooked(IDirect3DVertexBuffer9 * ptr)
 {
     calltrace::AutoTrace trace("IDirect3DVertexBuffer9::GetPriority");
-    return g_D3D9OriginVTables._IDirect3DVertexBuffer9.tables[INDEX].GetPriority(ptr);
+    DWORD result = g_D3D9OriginVTables._IDirect3DVertexBuffer9.tables[INDEX].GetPriority(ptr);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static void STDMETHODCALLTYPE IDirect3DVertexBuffer9_PreLoad_Hooked(IDirect3DVertexBuffer9 * ptr)
 {
     calltrace::AutoTrace trace("IDirect3DVertexBuffer9::PreLoad");
-    return g_D3D9OriginVTables._IDirect3DVertexBuffer9.tables[INDEX].PreLoad(ptr);
+    g_D3D9OriginVTables._IDirect3DVertexBuffer9.tables[INDEX].PreLoad(ptr);
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static D3DRESOURCETYPE STDMETHODCALLTYPE IDirect3DVertexBuffer9_GetType_Hooked(IDirect3DVertexBuffer9 * ptr)
 {
     calltrace::AutoTrace trace("IDirect3DVertexBuffer9::GetType");
-    return g_D3D9OriginVTables._IDirect3DVertexBuffer9.tables[INDEX].GetType(ptr);
+    D3DRESOURCETYPE result = g_D3D9OriginVTables._IDirect3DVertexBuffer9.tables[INDEX].GetType(ptr);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DVertexBuffer9_Lock_Hooked(IDirect3DVertexBuffer9 * ptr, UINT OffsetToLock, UINT SizeToLock, void** ppbData, DWORD Flags)
 {
     calltrace::AutoTrace trace("IDirect3DVertexBuffer9::Lock");
-    return g_D3D9OriginVTables._IDirect3DVertexBuffer9.tables[INDEX].Lock(ptr, OffsetToLock, SizeToLock, ppbData, Flags);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DVertexBuffer9.tables[INDEX].Lock(ptr, OffsetToLock, SizeToLock, ppbData, Flags);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DVertexBuffer9_Unlock_Hooked(IDirect3DVertexBuffer9 * ptr)
 {
     calltrace::AutoTrace trace("IDirect3DVertexBuffer9::Unlock");
-    return g_D3D9OriginVTables._IDirect3DVertexBuffer9.tables[INDEX].Unlock(ptr);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DVertexBuffer9.tables[INDEX].Unlock(ptr);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DVertexBuffer9_GetDesc_Hooked(IDirect3DVertexBuffer9 * ptr, D3DVERTEXBUFFER_DESC * pDesc)
 {
     calltrace::AutoTrace trace("IDirect3DVertexBuffer9::GetDesc");
-    return g_D3D9OriginVTables._IDirect3DVertexBuffer9.tables[INDEX].GetDesc(ptr, pDesc);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DVertexBuffer9.tables[INDEX].GetDesc(ptr, pDesc);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
@@ -2012,77 +2277,88 @@ template<UINT INDEX> static ULONG STDMETHODCALLTYPE IDirect3DIndexBuffer9_Releas
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DIndexBuffer9_GetDevice_Hooked(IDirect3DIndexBuffer9 * ptr, IDirect3DDevice9** ppDevice)
 {
     calltrace::AutoTrace trace("IDirect3DIndexBuffer9::GetDevice");
-    return g_D3D9OriginVTables._IDirect3DIndexBuffer9.tables[INDEX].GetDevice(ptr, ppDevice);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DIndexBuffer9.tables[INDEX].GetDevice(ptr, ppDevice);
+    if (ppDevice && *ppDevice) { RealToHooked9( *ppDevice ); }
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DIndexBuffer9_SetPrivateData_Hooked(IDirect3DIndexBuffer9 * ptr, REFGUID refguid, CONST void* pData, DWORD SizeOfData, DWORD Flags)
 {
     calltrace::AutoTrace trace("IDirect3DIndexBuffer9::SetPrivateData");
-    return g_D3D9OriginVTables._IDirect3DIndexBuffer9.tables[INDEX].SetPrivateData(ptr, refguid, pData, SizeOfData, Flags);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DIndexBuffer9.tables[INDEX].SetPrivateData(ptr, refguid, pData, SizeOfData, Flags);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DIndexBuffer9_GetPrivateData_Hooked(IDirect3DIndexBuffer9 * ptr, REFGUID refguid, void* pData, DWORD* pSizeOfData)
 {
     calltrace::AutoTrace trace("IDirect3DIndexBuffer9::GetPrivateData");
-    return g_D3D9OriginVTables._IDirect3DIndexBuffer9.tables[INDEX].GetPrivateData(ptr, refguid, pData, pSizeOfData);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DIndexBuffer9.tables[INDEX].GetPrivateData(ptr, refguid, pData, pSizeOfData);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DIndexBuffer9_FreePrivateData_Hooked(IDirect3DIndexBuffer9 * ptr, REFGUID refguid)
 {
     calltrace::AutoTrace trace("IDirect3DIndexBuffer9::FreePrivateData");
-    return g_D3D9OriginVTables._IDirect3DIndexBuffer9.tables[INDEX].FreePrivateData(ptr, refguid);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DIndexBuffer9.tables[INDEX].FreePrivateData(ptr, refguid);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static DWORD STDMETHODCALLTYPE IDirect3DIndexBuffer9_SetPriority_Hooked(IDirect3DIndexBuffer9 * ptr, DWORD PriorityNew)
 {
     calltrace::AutoTrace trace("IDirect3DIndexBuffer9::SetPriority");
-    return g_D3D9OriginVTables._IDirect3DIndexBuffer9.tables[INDEX].SetPriority(ptr, PriorityNew);
+    DWORD result = g_D3D9OriginVTables._IDirect3DIndexBuffer9.tables[INDEX].SetPriority(ptr, PriorityNew);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static DWORD STDMETHODCALLTYPE IDirect3DIndexBuffer9_GetPriority_Hooked(IDirect3DIndexBuffer9 * ptr)
 {
     calltrace::AutoTrace trace("IDirect3DIndexBuffer9::GetPriority");
-    return g_D3D9OriginVTables._IDirect3DIndexBuffer9.tables[INDEX].GetPriority(ptr);
+    DWORD result = g_D3D9OriginVTables._IDirect3DIndexBuffer9.tables[INDEX].GetPriority(ptr);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static void STDMETHODCALLTYPE IDirect3DIndexBuffer9_PreLoad_Hooked(IDirect3DIndexBuffer9 * ptr)
 {
     calltrace::AutoTrace trace("IDirect3DIndexBuffer9::PreLoad");
-    return g_D3D9OriginVTables._IDirect3DIndexBuffer9.tables[INDEX].PreLoad(ptr);
+    g_D3D9OriginVTables._IDirect3DIndexBuffer9.tables[INDEX].PreLoad(ptr);
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static D3DRESOURCETYPE STDMETHODCALLTYPE IDirect3DIndexBuffer9_GetType_Hooked(IDirect3DIndexBuffer9 * ptr)
 {
     calltrace::AutoTrace trace("IDirect3DIndexBuffer9::GetType");
-    return g_D3D9OriginVTables._IDirect3DIndexBuffer9.tables[INDEX].GetType(ptr);
+    D3DRESOURCETYPE result = g_D3D9OriginVTables._IDirect3DIndexBuffer9.tables[INDEX].GetType(ptr);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DIndexBuffer9_Lock_Hooked(IDirect3DIndexBuffer9 * ptr, UINT OffsetToLock, UINT SizeToLock, void** ppbData, DWORD Flags)
 {
     calltrace::AutoTrace trace("IDirect3DIndexBuffer9::Lock");
-    return g_D3D9OriginVTables._IDirect3DIndexBuffer9.tables[INDEX].Lock(ptr, OffsetToLock, SizeToLock, ppbData, Flags);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DIndexBuffer9.tables[INDEX].Lock(ptr, OffsetToLock, SizeToLock, ppbData, Flags);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DIndexBuffer9_Unlock_Hooked(IDirect3DIndexBuffer9 * ptr)
 {
     calltrace::AutoTrace trace("IDirect3DIndexBuffer9::Unlock");
-    return g_D3D9OriginVTables._IDirect3DIndexBuffer9.tables[INDEX].Unlock(ptr);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DIndexBuffer9.tables[INDEX].Unlock(ptr);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DIndexBuffer9_GetDesc_Hooked(IDirect3DIndexBuffer9 * ptr, D3DINDEXBUFFER_DESC * pDesc)
 {
     calltrace::AutoTrace trace("IDirect3DIndexBuffer9::GetDesc");
-    return g_D3D9OriginVTables._IDirect3DIndexBuffer9.tables[INDEX].GetDesc(ptr, pDesc);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DIndexBuffer9.tables[INDEX].GetDesc(ptr, pDesc);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
@@ -2114,98 +2390,112 @@ template<UINT INDEX> static ULONG STDMETHODCALLTYPE IDirect3DSurface9_Release_Ho
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DSurface9_GetDevice_Hooked(IDirect3DSurface9 * ptr, IDirect3DDevice9** ppDevice)
 {
     calltrace::AutoTrace trace("IDirect3DSurface9::GetDevice");
-    return g_D3D9OriginVTables._IDirect3DSurface9.tables[INDEX].GetDevice(ptr, ppDevice);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DSurface9.tables[INDEX].GetDevice(ptr, ppDevice);
+    if (ppDevice && *ppDevice) { RealToHooked9( *ppDevice ); }
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DSurface9_SetPrivateData_Hooked(IDirect3DSurface9 * ptr, REFGUID refguid, CONST void* pData, DWORD SizeOfData, DWORD Flags)
 {
     calltrace::AutoTrace trace("IDirect3DSurface9::SetPrivateData");
-    return g_D3D9OriginVTables._IDirect3DSurface9.tables[INDEX].SetPrivateData(ptr, refguid, pData, SizeOfData, Flags);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DSurface9.tables[INDEX].SetPrivateData(ptr, refguid, pData, SizeOfData, Flags);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DSurface9_GetPrivateData_Hooked(IDirect3DSurface9 * ptr, REFGUID refguid, void* pData, DWORD* pSizeOfData)
 {
     calltrace::AutoTrace trace("IDirect3DSurface9::GetPrivateData");
-    return g_D3D9OriginVTables._IDirect3DSurface9.tables[INDEX].GetPrivateData(ptr, refguid, pData, pSizeOfData);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DSurface9.tables[INDEX].GetPrivateData(ptr, refguid, pData, pSizeOfData);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DSurface9_FreePrivateData_Hooked(IDirect3DSurface9 * ptr, REFGUID refguid)
 {
     calltrace::AutoTrace trace("IDirect3DSurface9::FreePrivateData");
-    return g_D3D9OriginVTables._IDirect3DSurface9.tables[INDEX].FreePrivateData(ptr, refguid);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DSurface9.tables[INDEX].FreePrivateData(ptr, refguid);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static DWORD STDMETHODCALLTYPE IDirect3DSurface9_SetPriority_Hooked(IDirect3DSurface9 * ptr, DWORD PriorityNew)
 {
     calltrace::AutoTrace trace("IDirect3DSurface9::SetPriority");
-    return g_D3D9OriginVTables._IDirect3DSurface9.tables[INDEX].SetPriority(ptr, PriorityNew);
+    DWORD result = g_D3D9OriginVTables._IDirect3DSurface9.tables[INDEX].SetPriority(ptr, PriorityNew);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static DWORD STDMETHODCALLTYPE IDirect3DSurface9_GetPriority_Hooked(IDirect3DSurface9 * ptr)
 {
     calltrace::AutoTrace trace("IDirect3DSurface9::GetPriority");
-    return g_D3D9OriginVTables._IDirect3DSurface9.tables[INDEX].GetPriority(ptr);
+    DWORD result = g_D3D9OriginVTables._IDirect3DSurface9.tables[INDEX].GetPriority(ptr);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static void STDMETHODCALLTYPE IDirect3DSurface9_PreLoad_Hooked(IDirect3DSurface9 * ptr)
 {
     calltrace::AutoTrace trace("IDirect3DSurface9::PreLoad");
-    return g_D3D9OriginVTables._IDirect3DSurface9.tables[INDEX].PreLoad(ptr);
+    g_D3D9OriginVTables._IDirect3DSurface9.tables[INDEX].PreLoad(ptr);
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static D3DRESOURCETYPE STDMETHODCALLTYPE IDirect3DSurface9_GetType_Hooked(IDirect3DSurface9 * ptr)
 {
     calltrace::AutoTrace trace("IDirect3DSurface9::GetType");
-    return g_D3D9OriginVTables._IDirect3DSurface9.tables[INDEX].GetType(ptr);
+    D3DRESOURCETYPE result = g_D3D9OriginVTables._IDirect3DSurface9.tables[INDEX].GetType(ptr);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DSurface9_GetContainer_Hooked(IDirect3DSurface9 * ptr, REFIID riid, void** ppContainer)
 {
     calltrace::AutoTrace trace("IDirect3DSurface9::GetContainer");
-    return g_D3D9OriginVTables._IDirect3DSurface9.tables[INDEX].GetContainer(ptr, riid, ppContainer);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DSurface9.tables[INDEX].GetContainer(ptr, riid, ppContainer);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DSurface9_GetDesc_Hooked(IDirect3DSurface9 * ptr, D3DSURFACE_DESC * pDesc)
 {
     calltrace::AutoTrace trace("IDirect3DSurface9::GetDesc");
-    return g_D3D9OriginVTables._IDirect3DSurface9.tables[INDEX].GetDesc(ptr, pDesc);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DSurface9.tables[INDEX].GetDesc(ptr, pDesc);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DSurface9_LockRect_Hooked(IDirect3DSurface9 * ptr, D3DLOCKED_RECT* pLockedRect, CONST RECT* pRect, DWORD Flags)
 {
     calltrace::AutoTrace trace("IDirect3DSurface9::LockRect");
-    return g_D3D9OriginVTables._IDirect3DSurface9.tables[INDEX].LockRect(ptr, pLockedRect, pRect, Flags);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DSurface9.tables[INDEX].LockRect(ptr, pLockedRect, pRect, Flags);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DSurface9_UnlockRect_Hooked(IDirect3DSurface9 * ptr)
 {
     calltrace::AutoTrace trace("IDirect3DSurface9::UnlockRect");
-    return g_D3D9OriginVTables._IDirect3DSurface9.tables[INDEX].UnlockRect(ptr);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DSurface9.tables[INDEX].UnlockRect(ptr);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DSurface9_GetDC_Hooked(IDirect3DSurface9 * ptr, HDC * phdc)
 {
     calltrace::AutoTrace trace("IDirect3DSurface9::GetDC");
-    return g_D3D9OriginVTables._IDirect3DSurface9.tables[INDEX].GetDC(ptr, phdc);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DSurface9.tables[INDEX].GetDC(ptr, phdc);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DSurface9_ReleaseDC_Hooked(IDirect3DSurface9 * ptr, HDC hdc)
 {
     calltrace::AutoTrace trace("IDirect3DSurface9::ReleaseDC");
-    return g_D3D9OriginVTables._IDirect3DSurface9.tables[INDEX].ReleaseDC(ptr, hdc);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DSurface9.tables[INDEX].ReleaseDC(ptr, hdc);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
@@ -2237,56 +2527,65 @@ template<UINT INDEX> static ULONG STDMETHODCALLTYPE IDirect3DVolume9_Release_Hoo
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DVolume9_GetDevice_Hooked(IDirect3DVolume9 * ptr, IDirect3DDevice9** ppDevice)
 {
     calltrace::AutoTrace trace("IDirect3DVolume9::GetDevice");
-    return g_D3D9OriginVTables._IDirect3DVolume9.tables[INDEX].GetDevice(ptr, ppDevice);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DVolume9.tables[INDEX].GetDevice(ptr, ppDevice);
+    if (ppDevice && *ppDevice) { RealToHooked9( *ppDevice ); }
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DVolume9_SetPrivateData_Hooked(IDirect3DVolume9 * ptr, REFGUID refguid, CONST void* pData, DWORD SizeOfData, DWORD Flags)
 {
     calltrace::AutoTrace trace("IDirect3DVolume9::SetPrivateData");
-    return g_D3D9OriginVTables._IDirect3DVolume9.tables[INDEX].SetPrivateData(ptr, refguid, pData, SizeOfData, Flags);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DVolume9.tables[INDEX].SetPrivateData(ptr, refguid, pData, SizeOfData, Flags);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DVolume9_GetPrivateData_Hooked(IDirect3DVolume9 * ptr, REFGUID refguid, void* pData, DWORD* pSizeOfData)
 {
     calltrace::AutoTrace trace("IDirect3DVolume9::GetPrivateData");
-    return g_D3D9OriginVTables._IDirect3DVolume9.tables[INDEX].GetPrivateData(ptr, refguid, pData, pSizeOfData);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DVolume9.tables[INDEX].GetPrivateData(ptr, refguid, pData, pSizeOfData);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DVolume9_FreePrivateData_Hooked(IDirect3DVolume9 * ptr, REFGUID refguid)
 {
     calltrace::AutoTrace trace("IDirect3DVolume9::FreePrivateData");
-    return g_D3D9OriginVTables._IDirect3DVolume9.tables[INDEX].FreePrivateData(ptr, refguid);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DVolume9.tables[INDEX].FreePrivateData(ptr, refguid);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DVolume9_GetContainer_Hooked(IDirect3DVolume9 * ptr, REFIID riid, void** ppContainer)
 {
     calltrace::AutoTrace trace("IDirect3DVolume9::GetContainer");
-    return g_D3D9OriginVTables._IDirect3DVolume9.tables[INDEX].GetContainer(ptr, riid, ppContainer);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DVolume9.tables[INDEX].GetContainer(ptr, riid, ppContainer);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DVolume9_GetDesc_Hooked(IDirect3DVolume9 * ptr, D3DVOLUME_DESC * pDesc)
 {
     calltrace::AutoTrace trace("IDirect3DVolume9::GetDesc");
-    return g_D3D9OriginVTables._IDirect3DVolume9.tables[INDEX].GetDesc(ptr, pDesc);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DVolume9.tables[INDEX].GetDesc(ptr, pDesc);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DVolume9_LockBox_Hooked(IDirect3DVolume9 * ptr, D3DLOCKED_BOX * pLockedVolume, CONST D3DBOX* pBox, DWORD Flags)
 {
     calltrace::AutoTrace trace("IDirect3DVolume9::LockBox");
-    return g_D3D9OriginVTables._IDirect3DVolume9.tables[INDEX].LockBox(ptr, pLockedVolume, pBox, Flags);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DVolume9.tables[INDEX].LockBox(ptr, pLockedVolume, pBox, Flags);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DVolume9_UnlockBox_Hooked(IDirect3DVolume9 * ptr)
 {
     calltrace::AutoTrace trace("IDirect3DVolume9::UnlockBox");
-    return g_D3D9OriginVTables._IDirect3DVolume9.tables[INDEX].UnlockBox(ptr);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DVolume9.tables[INDEX].UnlockBox(ptr);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
@@ -2318,35 +2617,41 @@ template<UINT INDEX> static ULONG STDMETHODCALLTYPE IDirect3DQuery9_Release_Hook
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DQuery9_GetDevice_Hooked(IDirect3DQuery9 * ptr, IDirect3DDevice9** ppDevice)
 {
     calltrace::AutoTrace trace("IDirect3DQuery9::GetDevice");
-    return g_D3D9OriginVTables._IDirect3DQuery9.tables[INDEX].GetDevice(ptr, ppDevice);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DQuery9.tables[INDEX].GetDevice(ptr, ppDevice);
+    if (ppDevice && *ppDevice) { RealToHooked9( *ppDevice ); }
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static D3DQUERYTYPE STDMETHODCALLTYPE IDirect3DQuery9_GetType_Hooked(IDirect3DQuery9 * ptr)
 {
     calltrace::AutoTrace trace("IDirect3DQuery9::GetType");
-    return g_D3D9OriginVTables._IDirect3DQuery9.tables[INDEX].GetType(ptr);
+    D3DQUERYTYPE result = g_D3D9OriginVTables._IDirect3DQuery9.tables[INDEX].GetType(ptr);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static DWORD STDMETHODCALLTYPE IDirect3DQuery9_GetDataSize_Hooked(IDirect3DQuery9 * ptr)
 {
     calltrace::AutoTrace trace("IDirect3DQuery9::GetDataSize");
-    return g_D3D9OriginVTables._IDirect3DQuery9.tables[INDEX].GetDataSize(ptr);
+    DWORD result = g_D3D9OriginVTables._IDirect3DQuery9.tables[INDEX].GetDataSize(ptr);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DQuery9_Issue_Hooked(IDirect3DQuery9 * ptr, DWORD dwIssueFlags)
 {
     calltrace::AutoTrace trace("IDirect3DQuery9::Issue");
-    return g_D3D9OriginVTables._IDirect3DQuery9.tables[INDEX].Issue(ptr, dwIssueFlags);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DQuery9.tables[INDEX].Issue(ptr, dwIssueFlags);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DQuery9_GetData_Hooked(IDirect3DQuery9 * ptr, void* pData, DWORD dwSize, DWORD dwGetDataFlags)
 {
     calltrace::AutoTrace trace("IDirect3DQuery9::GetData");
-    return g_D3D9OriginVTables._IDirect3DQuery9.tables[INDEX].GetData(ptr, pData, dwSize, dwGetDataFlags);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DQuery9.tables[INDEX].GetData(ptr, pData, dwSize, dwGetDataFlags);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
@@ -2378,126 +2683,146 @@ template<UINT INDEX> static ULONG STDMETHODCALLTYPE IDirect3D9Ex_Release_Hooked(
 template<UINT INDEX> static UINT STDMETHODCALLTYPE IDirect3D9Ex_GetAdapterCount_Hooked(IDirect3D9Ex * ptr)
 {
     calltrace::AutoTrace trace("IDirect3D9Ex::GetAdapterCount");
-    return g_D3D9OriginVTables._IDirect3D9Ex.tables[INDEX].GetAdapterCount(ptr);
+    UINT result = g_D3D9OriginVTables._IDirect3D9Ex.tables[INDEX].GetAdapterCount(ptr);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3D9Ex_GetAdapterIdentifier_Hooked(IDirect3D9Ex * ptr, UINT Adapter, DWORD Flags, D3DADAPTER_IDENTIFIER9* pIdentifier)
 {
     calltrace::AutoTrace trace("IDirect3D9Ex::GetAdapterIdentifier");
-    return g_D3D9OriginVTables._IDirect3D9Ex.tables[INDEX].GetAdapterIdentifier(ptr, Adapter, Flags, pIdentifier);
+    HRESULT result = g_D3D9OriginVTables._IDirect3D9Ex.tables[INDEX].GetAdapterIdentifier(ptr, Adapter, Flags, pIdentifier);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static UINT STDMETHODCALLTYPE IDirect3D9Ex_GetAdapterModeCount_Hooked(IDirect3D9Ex * ptr, UINT Adapter, D3DFORMAT Format)
 {
     calltrace::AutoTrace trace("IDirect3D9Ex::GetAdapterModeCount");
-    return g_D3D9OriginVTables._IDirect3D9Ex.tables[INDEX].GetAdapterModeCount(ptr, Adapter, Format);
+    UINT result = g_D3D9OriginVTables._IDirect3D9Ex.tables[INDEX].GetAdapterModeCount(ptr, Adapter, Format);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3D9Ex_EnumAdapterModes_Hooked(IDirect3D9Ex * ptr, UINT Adapter, D3DFORMAT Format, UINT Mode, D3DDISPLAYMODE* pMode)
 {
     calltrace::AutoTrace trace("IDirect3D9Ex::EnumAdapterModes");
-    return g_D3D9OriginVTables._IDirect3D9Ex.tables[INDEX].EnumAdapterModes(ptr, Adapter, Format, Mode, pMode);
+    HRESULT result = g_D3D9OriginVTables._IDirect3D9Ex.tables[INDEX].EnumAdapterModes(ptr, Adapter, Format, Mode, pMode);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3D9Ex_GetAdapterDisplayMode_Hooked(IDirect3D9Ex * ptr, UINT Adapter, D3DDISPLAYMODE* pMode)
 {
     calltrace::AutoTrace trace("IDirect3D9Ex::GetAdapterDisplayMode");
-    return g_D3D9OriginVTables._IDirect3D9Ex.tables[INDEX].GetAdapterDisplayMode(ptr, Adapter, pMode);
+    HRESULT result = g_D3D9OriginVTables._IDirect3D9Ex.tables[INDEX].GetAdapterDisplayMode(ptr, Adapter, pMode);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3D9Ex_CheckDeviceType_Hooked(IDirect3D9Ex * ptr, UINT Adapter, D3DDEVTYPE DevType, D3DFORMAT AdapterFormat, D3DFORMAT BackBufferFormat, BOOL bWindowed)
 {
     calltrace::AutoTrace trace("IDirect3D9Ex::CheckDeviceType");
-    return g_D3D9OriginVTables._IDirect3D9Ex.tables[INDEX].CheckDeviceType(ptr, Adapter, DevType, AdapterFormat, BackBufferFormat, bWindowed);
+    HRESULT result = g_D3D9OriginVTables._IDirect3D9Ex.tables[INDEX].CheckDeviceType(ptr, Adapter, DevType, AdapterFormat, BackBufferFormat, bWindowed);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3D9Ex_CheckDeviceFormat_Hooked(IDirect3D9Ex * ptr, UINT Adapter, D3DDEVTYPE DeviceType, D3DFORMAT AdapterFormat, DWORD Usage, D3DRESOURCETYPE RType, D3DFORMAT CheckFormat)
 {
     calltrace::AutoTrace trace("IDirect3D9Ex::CheckDeviceFormat");
-    return g_D3D9OriginVTables._IDirect3D9Ex.tables[INDEX].CheckDeviceFormat(ptr, Adapter, DeviceType, AdapterFormat, Usage, RType, CheckFormat);
+    HRESULT result = g_D3D9OriginVTables._IDirect3D9Ex.tables[INDEX].CheckDeviceFormat(ptr, Adapter, DeviceType, AdapterFormat, Usage, RType, CheckFormat);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3D9Ex_CheckDeviceMultiSampleType_Hooked(IDirect3D9Ex * ptr, UINT Adapter, D3DDEVTYPE DeviceType, D3DFORMAT SurfaceFormat, BOOL Windowed, D3DMULTISAMPLE_TYPE MultiSampleType, DWORD* pQualityLevels)
 {
     calltrace::AutoTrace trace("IDirect3D9Ex::CheckDeviceMultiSampleType");
-    return g_D3D9OriginVTables._IDirect3D9Ex.tables[INDEX].CheckDeviceMultiSampleType(ptr, Adapter, DeviceType, SurfaceFormat, Windowed, MultiSampleType, pQualityLevels);
+    HRESULT result = g_D3D9OriginVTables._IDirect3D9Ex.tables[INDEX].CheckDeviceMultiSampleType(ptr, Adapter, DeviceType, SurfaceFormat, Windowed, MultiSampleType, pQualityLevels);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3D9Ex_CheckDepthStencilMatch_Hooked(IDirect3D9Ex * ptr, UINT Adapter, D3DDEVTYPE DeviceType, D3DFORMAT AdapterFormat, D3DFORMAT RenderTargetFormat, D3DFORMAT DepthStencilFormat)
 {
     calltrace::AutoTrace trace("IDirect3D9Ex::CheckDepthStencilMatch");
-    return g_D3D9OriginVTables._IDirect3D9Ex.tables[INDEX].CheckDepthStencilMatch(ptr, Adapter, DeviceType, AdapterFormat, RenderTargetFormat, DepthStencilFormat);
+    HRESULT result = g_D3D9OriginVTables._IDirect3D9Ex.tables[INDEX].CheckDepthStencilMatch(ptr, Adapter, DeviceType, AdapterFormat, RenderTargetFormat, DepthStencilFormat);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3D9Ex_CheckDeviceFormatConversion_Hooked(IDirect3D9Ex * ptr, UINT Adapter, D3DDEVTYPE DeviceType, D3DFORMAT SourceFormat, D3DFORMAT TargetFormat)
 {
     calltrace::AutoTrace trace("IDirect3D9Ex::CheckDeviceFormatConversion");
-    return g_D3D9OriginVTables._IDirect3D9Ex.tables[INDEX].CheckDeviceFormatConversion(ptr, Adapter, DeviceType, SourceFormat, TargetFormat);
+    HRESULT result = g_D3D9OriginVTables._IDirect3D9Ex.tables[INDEX].CheckDeviceFormatConversion(ptr, Adapter, DeviceType, SourceFormat, TargetFormat);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3D9Ex_GetDeviceCaps_Hooked(IDirect3D9Ex * ptr, UINT Adapter, D3DDEVTYPE DeviceType, D3DCAPS9* pCaps)
 {
     calltrace::AutoTrace trace("IDirect3D9Ex::GetDeviceCaps");
-    return g_D3D9OriginVTables._IDirect3D9Ex.tables[INDEX].GetDeviceCaps(ptr, Adapter, DeviceType, pCaps);
+    HRESULT result = g_D3D9OriginVTables._IDirect3D9Ex.tables[INDEX].GetDeviceCaps(ptr, Adapter, DeviceType, pCaps);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HMONITOR STDMETHODCALLTYPE IDirect3D9Ex_GetAdapterMonitor_Hooked(IDirect3D9Ex * ptr, UINT Adapter)
 {
     calltrace::AutoTrace trace("IDirect3D9Ex::GetAdapterMonitor");
-    return g_D3D9OriginVTables._IDirect3D9Ex.tables[INDEX].GetAdapterMonitor(ptr, Adapter);
+    HMONITOR result = g_D3D9OriginVTables._IDirect3D9Ex.tables[INDEX].GetAdapterMonitor(ptr, Adapter);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3D9Ex_CreateDevice_Hooked(IDirect3D9Ex * ptr, UINT Adapter, D3DDEVTYPE DeviceType, HWND hFocusWindow, DWORD BehaviorFlags, D3DPRESENT_PARAMETERS* pPresentationParameters, IDirect3DDevice9** ppReturnedDeviceInterface)
 {
     calltrace::AutoTrace trace("IDirect3D9Ex::CreateDevice");
-    return g_D3D9OriginVTables._IDirect3D9Ex.tables[INDEX].CreateDevice(ptr, Adapter, DeviceType, hFocusWindow, BehaviorFlags, pPresentationParameters, ppReturnedDeviceInterface);
+    HRESULT result = g_D3D9OriginVTables._IDirect3D9Ex.tables[INDEX].CreateDevice(ptr, Adapter, DeviceType, hFocusWindow, BehaviorFlags, pPresentationParameters, ppReturnedDeviceInterface);
+    if (ppReturnedDeviceInterface && *ppReturnedDeviceInterface) { RealToHooked9( *ppReturnedDeviceInterface ); }
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static UINT STDMETHODCALLTYPE IDirect3D9Ex_GetAdapterModeCountEx_Hooked(IDirect3D9Ex * ptr, UINT Adapter, CONST D3DDISPLAYMODEFILTER* pFilter)
 {
     calltrace::AutoTrace trace("IDirect3D9Ex::GetAdapterModeCountEx");
-    return g_D3D9OriginVTables._IDirect3D9Ex.tables[INDEX].GetAdapterModeCountEx(ptr, Adapter, pFilter);
+    UINT result = g_D3D9OriginVTables._IDirect3D9Ex.tables[INDEX].GetAdapterModeCountEx(ptr, Adapter, pFilter);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3D9Ex_EnumAdapterModesEx_Hooked(IDirect3D9Ex * ptr, UINT Adapter, CONST D3DDISPLAYMODEFILTER* pFilter, UINT Mode, D3DDISPLAYMODEEX* pMode)
 {
     calltrace::AutoTrace trace("IDirect3D9Ex::EnumAdapterModesEx");
-    return g_D3D9OriginVTables._IDirect3D9Ex.tables[INDEX].EnumAdapterModesEx(ptr, Adapter, pFilter, Mode, pMode);
+    HRESULT result = g_D3D9OriginVTables._IDirect3D9Ex.tables[INDEX].EnumAdapterModesEx(ptr, Adapter, pFilter, Mode, pMode);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3D9Ex_GetAdapterDisplayModeEx_Hooked(IDirect3D9Ex * ptr, UINT Adapter, D3DDISPLAYMODEEX* pMode, D3DDISPLAYROTATION* pRotation)
 {
     calltrace::AutoTrace trace("IDirect3D9Ex::GetAdapterDisplayModeEx");
-    return g_D3D9OriginVTables._IDirect3D9Ex.tables[INDEX].GetAdapterDisplayModeEx(ptr, Adapter, pMode, pRotation);
+    HRESULT result = g_D3D9OriginVTables._IDirect3D9Ex.tables[INDEX].GetAdapterDisplayModeEx(ptr, Adapter, pMode, pRotation);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3D9Ex_CreateDeviceEx_Hooked(IDirect3D9Ex * ptr, UINT Adapter, D3DDEVTYPE DeviceType, HWND hFocusWindow, DWORD BehaviorFlags, D3DPRESENT_PARAMETERS* pPresentationParameters, D3DDISPLAYMODEEX* pFullscreenDisplayMode, IDirect3DDevice9Ex** ppReturnedDeviceInterface)
 {
     calltrace::AutoTrace trace("IDirect3D9Ex::CreateDeviceEx");
-    return g_D3D9OriginVTables._IDirect3D9Ex.tables[INDEX].CreateDeviceEx(ptr, Adapter, DeviceType, hFocusWindow, BehaviorFlags, pPresentationParameters, pFullscreenDisplayMode, ppReturnedDeviceInterface);
+    HRESULT result = g_D3D9OriginVTables._IDirect3D9Ex.tables[INDEX].CreateDeviceEx(ptr, Adapter, DeviceType, hFocusWindow, BehaviorFlags, pPresentationParameters, pFullscreenDisplayMode, ppReturnedDeviceInterface);
+    if (ppReturnedDeviceInterface && *ppReturnedDeviceInterface) { RealToHooked9( *ppReturnedDeviceInterface ); }
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3D9Ex_GetAdapterLUID_Hooked(IDirect3D9Ex * ptr, UINT Adapter, LUID * pLUID)
 {
     calltrace::AutoTrace trace("IDirect3D9Ex::GetAdapterLUID");
-    return g_D3D9OriginVTables._IDirect3D9Ex.tables[INDEX].GetAdapterLUID(ptr, Adapter, pLUID);
+    HRESULT result = g_D3D9OriginVTables._IDirect3D9Ex.tables[INDEX].GetAdapterLUID(ptr, Adapter, pLUID);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
@@ -2529,917 +2854,1075 @@ template<UINT INDEX> static ULONG STDMETHODCALLTYPE IDirect3DDevice9Ex_Release_H
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9Ex_TestCooperativeLevel_Hooked(IDirect3DDevice9Ex * ptr)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9Ex::TestCooperativeLevel");
-    return g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].TestCooperativeLevel(ptr);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].TestCooperativeLevel(ptr);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static UINT STDMETHODCALLTYPE IDirect3DDevice9Ex_GetAvailableTextureMem_Hooked(IDirect3DDevice9Ex * ptr)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9Ex::GetAvailableTextureMem");
-    return g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].GetAvailableTextureMem(ptr);
+    UINT result = g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].GetAvailableTextureMem(ptr);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9Ex_EvictManagedResources_Hooked(IDirect3DDevice9Ex * ptr)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9Ex::EvictManagedResources");
-    return g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].EvictManagedResources(ptr);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].EvictManagedResources(ptr);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9Ex_GetDirect3D_Hooked(IDirect3DDevice9Ex * ptr, IDirect3D9** ppD3D9)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9Ex::GetDirect3D");
-    return g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].GetDirect3D(ptr, ppD3D9);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].GetDirect3D(ptr, ppD3D9);
+    if (ppD3D9 && *ppD3D9) { RealToHooked9( *ppD3D9 ); }
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9Ex_GetDeviceCaps_Hooked(IDirect3DDevice9Ex * ptr, D3DCAPS9* pCaps)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9Ex::GetDeviceCaps");
-    return g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].GetDeviceCaps(ptr, pCaps);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].GetDeviceCaps(ptr, pCaps);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9Ex_GetDisplayMode_Hooked(IDirect3DDevice9Ex * ptr, UINT iSwapChain, D3DDISPLAYMODE* pMode)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9Ex::GetDisplayMode");
-    return g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].GetDisplayMode(ptr, iSwapChain, pMode);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].GetDisplayMode(ptr, iSwapChain, pMode);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9Ex_GetCreationParameters_Hooked(IDirect3DDevice9Ex * ptr, D3DDEVICE_CREATION_PARAMETERS * pParameters)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9Ex::GetCreationParameters");
-    return g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].GetCreationParameters(ptr, pParameters);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].GetCreationParameters(ptr, pParameters);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9Ex_SetCursorProperties_Hooked(IDirect3DDevice9Ex * ptr, UINT XHotSpot, UINT YHotSpot, IDirect3DSurface9* pCursorBitmap)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9Ex::SetCursorProperties");
-    return g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].SetCursorProperties(ptr, XHotSpot, YHotSpot, pCursorBitmap);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].SetCursorProperties(ptr, XHotSpot, YHotSpot, pCursorBitmap);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static void STDMETHODCALLTYPE IDirect3DDevice9Ex_SetCursorPosition_Hooked(IDirect3DDevice9Ex * ptr, int X, int Y, DWORD Flags)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9Ex::SetCursorPosition");
-    return g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].SetCursorPosition(ptr, X, Y, Flags);
+    g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].SetCursorPosition(ptr, X, Y, Flags);
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static BOOL STDMETHODCALLTYPE IDirect3DDevice9Ex_ShowCursor_Hooked(IDirect3DDevice9Ex * ptr, BOOL bShow)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9Ex::ShowCursor");
-    return g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].ShowCursor(ptr, bShow);
+    BOOL result = g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].ShowCursor(ptr, bShow);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9Ex_CreateAdditionalSwapChain_Hooked(IDirect3DDevice9Ex * ptr, D3DPRESENT_PARAMETERS* pPresentationParameters, IDirect3DSwapChain9** ppSwapChain)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9Ex::CreateAdditionalSwapChain");
-    return g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].CreateAdditionalSwapChain(ptr, pPresentationParameters, ppSwapChain);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].CreateAdditionalSwapChain(ptr, pPresentationParameters, ppSwapChain);
+    if (ppSwapChain && *ppSwapChain) { RealToHooked9( *ppSwapChain ); }
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9Ex_GetSwapChain_Hooked(IDirect3DDevice9Ex * ptr, UINT iSwapChain, IDirect3DSwapChain9** ppSwapChain)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9Ex::GetSwapChain");
-    return g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].GetSwapChain(ptr, iSwapChain, ppSwapChain);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].GetSwapChain(ptr, iSwapChain, ppSwapChain);
+    if (ppSwapChain && *ppSwapChain) { RealToHooked9( *ppSwapChain ); }
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static UINT STDMETHODCALLTYPE IDirect3DDevice9Ex_GetNumberOfSwapChains_Hooked(IDirect3DDevice9Ex * ptr)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9Ex::GetNumberOfSwapChains");
-    return g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].GetNumberOfSwapChains(ptr);
+    UINT result = g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].GetNumberOfSwapChains(ptr);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9Ex_Reset_Hooked(IDirect3DDevice9Ex * ptr, D3DPRESENT_PARAMETERS* pPresentationParameters)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9Ex::Reset");
-    return g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].Reset(ptr, pPresentationParameters);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].Reset(ptr, pPresentationParameters);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9Ex_Present_Hooked(IDirect3DDevice9Ex * ptr, CONST RECT* pSourceRect, CONST RECT* pDestRect, HWND hDestWindowOverride, CONST RGNDATA* pDirtyRegion)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9Ex::Present");
-    return g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].Present(ptr, pSourceRect, pDestRect, hDestWindowOverride, pDirtyRegion);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].Present(ptr, pSourceRect, pDestRect, hDestWindowOverride, pDirtyRegion);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9Ex_GetBackBuffer_Hooked(IDirect3DDevice9Ex * ptr, UINT iSwapChain, UINT iBackBuffer, D3DBACKBUFFER_TYPE Type, IDirect3DSurface9** ppBackBuffer)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9Ex::GetBackBuffer");
-    return g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].GetBackBuffer(ptr, iSwapChain, iBackBuffer, Type, ppBackBuffer);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].GetBackBuffer(ptr, iSwapChain, iBackBuffer, Type, ppBackBuffer);
+    if (ppBackBuffer && *ppBackBuffer) { RealToHooked9( *ppBackBuffer ); }
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9Ex_GetRasterStatus_Hooked(IDirect3DDevice9Ex * ptr, UINT iSwapChain, D3DRASTER_STATUS* pRasterStatus)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9Ex::GetRasterStatus");
-    return g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].GetRasterStatus(ptr, iSwapChain, pRasterStatus);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].GetRasterStatus(ptr, iSwapChain, pRasterStatus);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9Ex_SetDialogBoxMode_Hooked(IDirect3DDevice9Ex * ptr, BOOL bEnableDialogs)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9Ex::SetDialogBoxMode");
-    return g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].SetDialogBoxMode(ptr, bEnableDialogs);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].SetDialogBoxMode(ptr, bEnableDialogs);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static void STDMETHODCALLTYPE IDirect3DDevice9Ex_SetGammaRamp_Hooked(IDirect3DDevice9Ex * ptr, UINT iSwapChain, DWORD Flags, CONST D3DGAMMARAMP* pRamp)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9Ex::SetGammaRamp");
-    return g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].SetGammaRamp(ptr, iSwapChain, Flags, pRamp);
+    g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].SetGammaRamp(ptr, iSwapChain, Flags, pRamp);
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static void STDMETHODCALLTYPE IDirect3DDevice9Ex_GetGammaRamp_Hooked(IDirect3DDevice9Ex * ptr, UINT iSwapChain, D3DGAMMARAMP* pRamp)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9Ex::GetGammaRamp");
-    return g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].GetGammaRamp(ptr, iSwapChain, pRamp);
+    g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].GetGammaRamp(ptr, iSwapChain, pRamp);
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9Ex_CreateTexture_Hooked(IDirect3DDevice9Ex * ptr, UINT Width, UINT Height, UINT Levels, DWORD Usage, D3DFORMAT Format, D3DPOOL Pool, IDirect3DTexture9** ppTexture, HANDLE* pSharedHandle)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9Ex::CreateTexture");
-    return g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].CreateTexture(ptr, Width, Height, Levels, Usage, Format, Pool, ppTexture, pSharedHandle);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].CreateTexture(ptr, Width, Height, Levels, Usage, Format, Pool, ppTexture, pSharedHandle);
+    if (ppTexture && *ppTexture) { RealToHooked9( *ppTexture ); }
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9Ex_CreateVolumeTexture_Hooked(IDirect3DDevice9Ex * ptr, UINT Width, UINT Height, UINT Depth, UINT Levels, DWORD Usage, D3DFORMAT Format, D3DPOOL Pool, IDirect3DVolumeTexture9** ppVolumeTexture, HANDLE* pSharedHandle)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9Ex::CreateVolumeTexture");
-    return g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].CreateVolumeTexture(ptr, Width, Height, Depth, Levels, Usage, Format, Pool, ppVolumeTexture, pSharedHandle);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].CreateVolumeTexture(ptr, Width, Height, Depth, Levels, Usage, Format, Pool, ppVolumeTexture, pSharedHandle);
+    if (ppVolumeTexture && *ppVolumeTexture) { RealToHooked9( *ppVolumeTexture ); }
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9Ex_CreateCubeTexture_Hooked(IDirect3DDevice9Ex * ptr, UINT EdgeLength, UINT Levels, DWORD Usage, D3DFORMAT Format, D3DPOOL Pool, IDirect3DCubeTexture9** ppCubeTexture, HANDLE* pSharedHandle)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9Ex::CreateCubeTexture");
-    return g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].CreateCubeTexture(ptr, EdgeLength, Levels, Usage, Format, Pool, ppCubeTexture, pSharedHandle);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].CreateCubeTexture(ptr, EdgeLength, Levels, Usage, Format, Pool, ppCubeTexture, pSharedHandle);
+    if (ppCubeTexture && *ppCubeTexture) { RealToHooked9( *ppCubeTexture ); }
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9Ex_CreateVertexBuffer_Hooked(IDirect3DDevice9Ex * ptr, UINT Length, DWORD Usage, DWORD FVF, D3DPOOL Pool, IDirect3DVertexBuffer9** ppVertexBuffer, HANDLE* pSharedHandle)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9Ex::CreateVertexBuffer");
-    return g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].CreateVertexBuffer(ptr, Length, Usage, FVF, Pool, ppVertexBuffer, pSharedHandle);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].CreateVertexBuffer(ptr, Length, Usage, FVF, Pool, ppVertexBuffer, pSharedHandle);
+    if (ppVertexBuffer && *ppVertexBuffer) { RealToHooked9( *ppVertexBuffer ); }
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9Ex_CreateIndexBuffer_Hooked(IDirect3DDevice9Ex * ptr, UINT Length, DWORD Usage, D3DFORMAT Format, D3DPOOL Pool, IDirect3DIndexBuffer9** ppIndexBuffer, HANDLE* pSharedHandle)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9Ex::CreateIndexBuffer");
-    return g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].CreateIndexBuffer(ptr, Length, Usage, Format, Pool, ppIndexBuffer, pSharedHandle);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].CreateIndexBuffer(ptr, Length, Usage, Format, Pool, ppIndexBuffer, pSharedHandle);
+    if (ppIndexBuffer && *ppIndexBuffer) { RealToHooked9( *ppIndexBuffer ); }
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9Ex_CreateRenderTarget_Hooked(IDirect3DDevice9Ex * ptr, UINT Width, UINT Height, D3DFORMAT Format, D3DMULTISAMPLE_TYPE MultiSample, DWORD MultisampleQuality, BOOL Lockable, IDirect3DSurface9** ppSurface, HANDLE* pSharedHandle)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9Ex::CreateRenderTarget");
-    return g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].CreateRenderTarget(ptr, Width, Height, Format, MultiSample, MultisampleQuality, Lockable, ppSurface, pSharedHandle);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].CreateRenderTarget(ptr, Width, Height, Format, MultiSample, MultisampleQuality, Lockable, ppSurface, pSharedHandle);
+    if (ppSurface && *ppSurface) { RealToHooked9( *ppSurface ); }
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9Ex_CreateDepthStencilSurface_Hooked(IDirect3DDevice9Ex * ptr, UINT Width, UINT Height, D3DFORMAT Format, D3DMULTISAMPLE_TYPE MultiSample, DWORD MultisampleQuality, BOOL Discard, IDirect3DSurface9** ppSurface, HANDLE* pSharedHandle)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9Ex::CreateDepthStencilSurface");
-    return g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].CreateDepthStencilSurface(ptr, Width, Height, Format, MultiSample, MultisampleQuality, Discard, ppSurface, pSharedHandle);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].CreateDepthStencilSurface(ptr, Width, Height, Format, MultiSample, MultisampleQuality, Discard, ppSurface, pSharedHandle);
+    if (ppSurface && *ppSurface) { RealToHooked9( *ppSurface ); }
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9Ex_UpdateSurface_Hooked(IDirect3DDevice9Ex * ptr, IDirect3DSurface9* pSourceSurface, CONST RECT* pSourceRect, IDirect3DSurface9* pDestinationSurface, CONST POINT* pDestPoint)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9Ex::UpdateSurface");
-    return g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].UpdateSurface(ptr, pSourceSurface, pSourceRect, pDestinationSurface, pDestPoint);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].UpdateSurface(ptr, pSourceSurface, pSourceRect, pDestinationSurface, pDestPoint);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9Ex_UpdateTexture_Hooked(IDirect3DDevice9Ex * ptr, IDirect3DBaseTexture9* pSourceTexture, IDirect3DBaseTexture9* pDestinationTexture)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9Ex::UpdateTexture");
-    return g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].UpdateTexture(ptr, pSourceTexture, pDestinationTexture);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].UpdateTexture(ptr, pSourceTexture, pDestinationTexture);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9Ex_GetRenderTargetData_Hooked(IDirect3DDevice9Ex * ptr, IDirect3DSurface9* pRenderTarget, IDirect3DSurface9* pDestSurface)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9Ex::GetRenderTargetData");
-    return g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].GetRenderTargetData(ptr, pRenderTarget, pDestSurface);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].GetRenderTargetData(ptr, pRenderTarget, pDestSurface);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9Ex_GetFrontBufferData_Hooked(IDirect3DDevice9Ex * ptr, UINT iSwapChain, IDirect3DSurface9* pDestSurface)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9Ex::GetFrontBufferData");
-    return g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].GetFrontBufferData(ptr, iSwapChain, pDestSurface);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].GetFrontBufferData(ptr, iSwapChain, pDestSurface);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9Ex_StretchRect_Hooked(IDirect3DDevice9Ex * ptr, IDirect3DSurface9* pSourceSurface, CONST RECT* pSourceRect, IDirect3DSurface9* pDestSurface, CONST RECT* pDestRect, D3DTEXTUREFILTERTYPE Filter)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9Ex::StretchRect");
-    return g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].StretchRect(ptr, pSourceSurface, pSourceRect, pDestSurface, pDestRect, Filter);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].StretchRect(ptr, pSourceSurface, pSourceRect, pDestSurface, pDestRect, Filter);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9Ex_ColorFill_Hooked(IDirect3DDevice9Ex * ptr, IDirect3DSurface9* pSurface, CONST RECT* pRect, D3DCOLOR color)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9Ex::ColorFill");
-    return g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].ColorFill(ptr, pSurface, pRect, color);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].ColorFill(ptr, pSurface, pRect, color);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9Ex_CreateOffscreenPlainSurface_Hooked(IDirect3DDevice9Ex * ptr, UINT Width, UINT Height, D3DFORMAT Format, D3DPOOL Pool, IDirect3DSurface9** ppSurface, HANDLE* pSharedHandle)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9Ex::CreateOffscreenPlainSurface");
-    return g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].CreateOffscreenPlainSurface(ptr, Width, Height, Format, Pool, ppSurface, pSharedHandle);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].CreateOffscreenPlainSurface(ptr, Width, Height, Format, Pool, ppSurface, pSharedHandle);
+    if (ppSurface && *ppSurface) { RealToHooked9( *ppSurface ); }
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9Ex_SetRenderTarget_Hooked(IDirect3DDevice9Ex * ptr, DWORD RenderTargetIndex, IDirect3DSurface9* pRenderTarget)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9Ex::SetRenderTarget");
-    return g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].SetRenderTarget(ptr, RenderTargetIndex, pRenderTarget);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].SetRenderTarget(ptr, RenderTargetIndex, pRenderTarget);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9Ex_GetRenderTarget_Hooked(IDirect3DDevice9Ex * ptr, DWORD RenderTargetIndex, IDirect3DSurface9** ppRenderTarget)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9Ex::GetRenderTarget");
-    return g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].GetRenderTarget(ptr, RenderTargetIndex, ppRenderTarget);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].GetRenderTarget(ptr, RenderTargetIndex, ppRenderTarget);
+    if (ppRenderTarget && *ppRenderTarget) { RealToHooked9( *ppRenderTarget ); }
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9Ex_SetDepthStencilSurface_Hooked(IDirect3DDevice9Ex * ptr, IDirect3DSurface9* pNewZStencil)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9Ex::SetDepthStencilSurface");
-    return g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].SetDepthStencilSurface(ptr, pNewZStencil);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].SetDepthStencilSurface(ptr, pNewZStencil);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9Ex_GetDepthStencilSurface_Hooked(IDirect3DDevice9Ex * ptr, IDirect3DSurface9** ppZStencilSurface)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9Ex::GetDepthStencilSurface");
-    return g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].GetDepthStencilSurface(ptr, ppZStencilSurface);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].GetDepthStencilSurface(ptr, ppZStencilSurface);
+    if (ppZStencilSurface && *ppZStencilSurface) { RealToHooked9( *ppZStencilSurface ); }
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9Ex_BeginScene_Hooked(IDirect3DDevice9Ex * ptr)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9Ex::BeginScene");
-    return g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].BeginScene(ptr);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].BeginScene(ptr);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9Ex_EndScene_Hooked(IDirect3DDevice9Ex * ptr)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9Ex::EndScene");
-    return g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].EndScene(ptr);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].EndScene(ptr);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9Ex_Clear_Hooked(IDirect3DDevice9Ex * ptr, DWORD Count, CONST D3DRECT* pRects, DWORD Flags, D3DCOLOR Color, float Z, DWORD Stencil)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9Ex::Clear");
-    return g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].Clear(ptr, Count, pRects, Flags, Color, Z, Stencil);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].Clear(ptr, Count, pRects, Flags, Color, Z, Stencil);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9Ex_SetTransform_Hooked(IDirect3DDevice9Ex * ptr, D3DTRANSFORMSTATETYPE State, CONST D3DMATRIX* pMatrix)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9Ex::SetTransform");
-    return g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].SetTransform(ptr, State, pMatrix);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].SetTransform(ptr, State, pMatrix);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9Ex_GetTransform_Hooked(IDirect3DDevice9Ex * ptr, D3DTRANSFORMSTATETYPE State, D3DMATRIX* pMatrix)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9Ex::GetTransform");
-    return g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].GetTransform(ptr, State, pMatrix);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].GetTransform(ptr, State, pMatrix);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9Ex_MultiplyTransform_Hooked(IDirect3DDevice9Ex * ptr, D3DTRANSFORMSTATETYPE TransformType, CONST D3DMATRIX* Value)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9Ex::MultiplyTransform");
-    return g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].MultiplyTransform(ptr, TransformType, Value);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].MultiplyTransform(ptr, TransformType, Value);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9Ex_SetViewport_Hooked(IDirect3DDevice9Ex * ptr, CONST D3DVIEWPORT9* pViewport)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9Ex::SetViewport");
-    return g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].SetViewport(ptr, pViewport);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].SetViewport(ptr, pViewport);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9Ex_GetViewport_Hooked(IDirect3DDevice9Ex * ptr, D3DVIEWPORT9* pViewport)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9Ex::GetViewport");
-    return g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].GetViewport(ptr, pViewport);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].GetViewport(ptr, pViewport);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9Ex_SetMaterial_Hooked(IDirect3DDevice9Ex * ptr, CONST D3DMATERIAL9* pMaterial)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9Ex::SetMaterial");
-    return g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].SetMaterial(ptr, pMaterial);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].SetMaterial(ptr, pMaterial);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9Ex_GetMaterial_Hooked(IDirect3DDevice9Ex * ptr, D3DMATERIAL9* pMaterial)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9Ex::GetMaterial");
-    return g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].GetMaterial(ptr, pMaterial);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].GetMaterial(ptr, pMaterial);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9Ex_SetLight_Hooked(IDirect3DDevice9Ex * ptr, DWORD Index, CONST D3DLIGHT9* pLight)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9Ex::SetLight");
-    return g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].SetLight(ptr, Index, pLight);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].SetLight(ptr, Index, pLight);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9Ex_GetLight_Hooked(IDirect3DDevice9Ex * ptr, DWORD Index, D3DLIGHT9* pLight)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9Ex::GetLight");
-    return g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].GetLight(ptr, Index, pLight);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].GetLight(ptr, Index, pLight);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9Ex_LightEnable_Hooked(IDirect3DDevice9Ex * ptr, DWORD Index, BOOL Enable)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9Ex::LightEnable");
-    return g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].LightEnable(ptr, Index, Enable);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].LightEnable(ptr, Index, Enable);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9Ex_GetLightEnable_Hooked(IDirect3DDevice9Ex * ptr, DWORD Index, BOOL* pEnable)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9Ex::GetLightEnable");
-    return g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].GetLightEnable(ptr, Index, pEnable);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].GetLightEnable(ptr, Index, pEnable);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9Ex_SetClipPlane_Hooked(IDirect3DDevice9Ex * ptr, DWORD Index, CONST float* pPlane)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9Ex::SetClipPlane");
-    return g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].SetClipPlane(ptr, Index, pPlane);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].SetClipPlane(ptr, Index, pPlane);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9Ex_GetClipPlane_Hooked(IDirect3DDevice9Ex * ptr, DWORD Index, float* pPlane)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9Ex::GetClipPlane");
-    return g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].GetClipPlane(ptr, Index, pPlane);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].GetClipPlane(ptr, Index, pPlane);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9Ex_SetRenderState_Hooked(IDirect3DDevice9Ex * ptr, D3DRENDERSTATETYPE State, DWORD Value)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9Ex::SetRenderState");
-    return g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].SetRenderState(ptr, State, Value);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].SetRenderState(ptr, State, Value);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9Ex_GetRenderState_Hooked(IDirect3DDevice9Ex * ptr, D3DRENDERSTATETYPE State, DWORD* pValue)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9Ex::GetRenderState");
-    return g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].GetRenderState(ptr, State, pValue);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].GetRenderState(ptr, State, pValue);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9Ex_CreateStateBlock_Hooked(IDirect3DDevice9Ex * ptr, D3DSTATEBLOCKTYPE Type, IDirect3DStateBlock9** ppSB)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9Ex::CreateStateBlock");
-    return g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].CreateStateBlock(ptr, Type, ppSB);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].CreateStateBlock(ptr, Type, ppSB);
+    if (ppSB && *ppSB) { RealToHooked9( *ppSB ); }
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9Ex_BeginStateBlock_Hooked(IDirect3DDevice9Ex * ptr)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9Ex::BeginStateBlock");
-    return g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].BeginStateBlock(ptr);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].BeginStateBlock(ptr);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9Ex_EndStateBlock_Hooked(IDirect3DDevice9Ex * ptr, IDirect3DStateBlock9** ppSB)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9Ex::EndStateBlock");
-    return g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].EndStateBlock(ptr, ppSB);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].EndStateBlock(ptr, ppSB);
+    if (ppSB && *ppSB) { RealToHooked9( *ppSB ); }
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9Ex_SetClipStatus_Hooked(IDirect3DDevice9Ex * ptr, CONST D3DCLIPSTATUS9* pClipStatus)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9Ex::SetClipStatus");
-    return g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].SetClipStatus(ptr, pClipStatus);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].SetClipStatus(ptr, pClipStatus);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9Ex_GetClipStatus_Hooked(IDirect3DDevice9Ex * ptr, D3DCLIPSTATUS9* pClipStatus)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9Ex::GetClipStatus");
-    return g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].GetClipStatus(ptr, pClipStatus);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].GetClipStatus(ptr, pClipStatus);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9Ex_GetTexture_Hooked(IDirect3DDevice9Ex * ptr, DWORD Stage, IDirect3DBaseTexture9** ppTexture)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9Ex::GetTexture");
-    return g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].GetTexture(ptr, Stage, ppTexture);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].GetTexture(ptr, Stage, ppTexture);
+    if (ppTexture && *ppTexture) { RealToHooked9( *ppTexture ); }
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9Ex_SetTexture_Hooked(IDirect3DDevice9Ex * ptr, DWORD Stage, IDirect3DBaseTexture9* pTexture)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9Ex::SetTexture");
-    return g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].SetTexture(ptr, Stage, pTexture);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].SetTexture(ptr, Stage, pTexture);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9Ex_GetTextureStageState_Hooked(IDirect3DDevice9Ex * ptr, DWORD Stage, D3DTEXTURESTAGESTATETYPE Type, DWORD* pValue)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9Ex::GetTextureStageState");
-    return g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].GetTextureStageState(ptr, Stage, Type, pValue);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].GetTextureStageState(ptr, Stage, Type, pValue);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9Ex_SetTextureStageState_Hooked(IDirect3DDevice9Ex * ptr, DWORD Stage, D3DTEXTURESTAGESTATETYPE Type, DWORD Value)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9Ex::SetTextureStageState");
-    return g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].SetTextureStageState(ptr, Stage, Type, Value);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].SetTextureStageState(ptr, Stage, Type, Value);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9Ex_GetSamplerState_Hooked(IDirect3DDevice9Ex * ptr, DWORD Sampler, D3DSAMPLERSTATETYPE Type, DWORD* pValue)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9Ex::GetSamplerState");
-    return g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].GetSamplerState(ptr, Sampler, Type, pValue);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].GetSamplerState(ptr, Sampler, Type, pValue);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9Ex_SetSamplerState_Hooked(IDirect3DDevice9Ex * ptr, DWORD Sampler, D3DSAMPLERSTATETYPE Type, DWORD Value)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9Ex::SetSamplerState");
-    return g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].SetSamplerState(ptr, Sampler, Type, Value);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].SetSamplerState(ptr, Sampler, Type, Value);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9Ex_ValidateDevice_Hooked(IDirect3DDevice9Ex * ptr, DWORD* pNumPasses)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9Ex::ValidateDevice");
-    return g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].ValidateDevice(ptr, pNumPasses);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].ValidateDevice(ptr, pNumPasses);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9Ex_SetPaletteEntries_Hooked(IDirect3DDevice9Ex * ptr, UINT PaletteNumber, CONST PALETTEENTRY* pEntries)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9Ex::SetPaletteEntries");
-    return g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].SetPaletteEntries(ptr, PaletteNumber, pEntries);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].SetPaletteEntries(ptr, PaletteNumber, pEntries);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9Ex_GetPaletteEntries_Hooked(IDirect3DDevice9Ex * ptr, UINT PaletteNumber, PALETTEENTRY* pEntries)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9Ex::GetPaletteEntries");
-    return g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].GetPaletteEntries(ptr, PaletteNumber, pEntries);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].GetPaletteEntries(ptr, PaletteNumber, pEntries);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9Ex_SetCurrentTexturePalette_Hooked(IDirect3DDevice9Ex * ptr, UINT PaletteNumber)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9Ex::SetCurrentTexturePalette");
-    return g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].SetCurrentTexturePalette(ptr, PaletteNumber);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].SetCurrentTexturePalette(ptr, PaletteNumber);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9Ex_GetCurrentTexturePalette_Hooked(IDirect3DDevice9Ex * ptr, UINT * PaletteNumber)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9Ex::GetCurrentTexturePalette");
-    return g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].GetCurrentTexturePalette(ptr, PaletteNumber);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].GetCurrentTexturePalette(ptr, PaletteNumber);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9Ex_SetScissorRect_Hooked(IDirect3DDevice9Ex * ptr, CONST RECT* pRect)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9Ex::SetScissorRect");
-    return g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].SetScissorRect(ptr, pRect);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].SetScissorRect(ptr, pRect);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9Ex_GetScissorRect_Hooked(IDirect3DDevice9Ex * ptr, RECT* pRect)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9Ex::GetScissorRect");
-    return g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].GetScissorRect(ptr, pRect);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].GetScissorRect(ptr, pRect);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9Ex_SetSoftwareVertexProcessing_Hooked(IDirect3DDevice9Ex * ptr, BOOL bSoftware)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9Ex::SetSoftwareVertexProcessing");
-    return g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].SetSoftwareVertexProcessing(ptr, bSoftware);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].SetSoftwareVertexProcessing(ptr, bSoftware);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static BOOL STDMETHODCALLTYPE IDirect3DDevice9Ex_GetSoftwareVertexProcessing_Hooked(IDirect3DDevice9Ex * ptr)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9Ex::GetSoftwareVertexProcessing");
-    return g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].GetSoftwareVertexProcessing(ptr);
+    BOOL result = g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].GetSoftwareVertexProcessing(ptr);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9Ex_SetNPatchMode_Hooked(IDirect3DDevice9Ex * ptr, float nSegments)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9Ex::SetNPatchMode");
-    return g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].SetNPatchMode(ptr, nSegments);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].SetNPatchMode(ptr, nSegments);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static float STDMETHODCALLTYPE IDirect3DDevice9Ex_GetNPatchMode_Hooked(IDirect3DDevice9Ex * ptr)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9Ex::GetNPatchMode");
-    return g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].GetNPatchMode(ptr);
+    float result = g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].GetNPatchMode(ptr);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9Ex_DrawPrimitive_Hooked(IDirect3DDevice9Ex * ptr, D3DPRIMITIVETYPE PrimitiveType, UINT StartVertex, UINT PrimitiveCount)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9Ex::DrawPrimitive");
-    return g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].DrawPrimitive(ptr, PrimitiveType, StartVertex, PrimitiveCount);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].DrawPrimitive(ptr, PrimitiveType, StartVertex, PrimitiveCount);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9Ex_DrawIndexedPrimitive_Hooked(IDirect3DDevice9Ex * ptr, D3DPRIMITIVETYPE PrimitiveType, INT BaseVertexIndex, UINT MinVertexIndex, UINT NumVertices, UINT startIndex, UINT primCount)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9Ex::DrawIndexedPrimitive");
-    return g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].DrawIndexedPrimitive(ptr, PrimitiveType, BaseVertexIndex, MinVertexIndex, NumVertices, startIndex, primCount);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].DrawIndexedPrimitive(ptr, PrimitiveType, BaseVertexIndex, MinVertexIndex, NumVertices, startIndex, primCount);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9Ex_DrawPrimitiveUP_Hooked(IDirect3DDevice9Ex * ptr, D3DPRIMITIVETYPE PrimitiveType, UINT PrimitiveCount, CONST void* pVertexStreamZeroData, UINT VertexStreamZeroStride)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9Ex::DrawPrimitiveUP");
-    return g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].DrawPrimitiveUP(ptr, PrimitiveType, PrimitiveCount, pVertexStreamZeroData, VertexStreamZeroStride);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].DrawPrimitiveUP(ptr, PrimitiveType, PrimitiveCount, pVertexStreamZeroData, VertexStreamZeroStride);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9Ex_DrawIndexedPrimitiveUP_Hooked(IDirect3DDevice9Ex * ptr, D3DPRIMITIVETYPE PrimitiveType, UINT MinVertexIndex, UINT NumVertices, UINT PrimitiveCount, CONST void* pIndexData, D3DFORMAT IndexDataFormat, CONST void* pVertexStreamZeroData, UINT VertexStreamZeroStride)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9Ex::DrawIndexedPrimitiveUP");
-    return g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].DrawIndexedPrimitiveUP(ptr, PrimitiveType, MinVertexIndex, NumVertices, PrimitiveCount, pIndexData, IndexDataFormat, pVertexStreamZeroData, VertexStreamZeroStride);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].DrawIndexedPrimitiveUP(ptr, PrimitiveType, MinVertexIndex, NumVertices, PrimitiveCount, pIndexData, IndexDataFormat, pVertexStreamZeroData, VertexStreamZeroStride);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9Ex_ProcessVertices_Hooked(IDirect3DDevice9Ex * ptr, UINT SrcStartIndex, UINT DestIndex, UINT VertexCount, IDirect3DVertexBuffer9* pDestBuffer, IDirect3DVertexDeclaration9* pVertexDecl, DWORD Flags)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9Ex::ProcessVertices");
-    return g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].ProcessVertices(ptr, SrcStartIndex, DestIndex, VertexCount, pDestBuffer, pVertexDecl, Flags);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].ProcessVertices(ptr, SrcStartIndex, DestIndex, VertexCount, pDestBuffer, pVertexDecl, Flags);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9Ex_CreateVertexDeclaration_Hooked(IDirect3DDevice9Ex * ptr, CONST D3DVERTEXELEMENT9* pVertexElements, IDirect3DVertexDeclaration9** ppDecl)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9Ex::CreateVertexDeclaration");
-    return g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].CreateVertexDeclaration(ptr, pVertexElements, ppDecl);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].CreateVertexDeclaration(ptr, pVertexElements, ppDecl);
+    if (ppDecl && *ppDecl) { RealToHooked9( *ppDecl ); }
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9Ex_SetVertexDeclaration_Hooked(IDirect3DDevice9Ex * ptr, IDirect3DVertexDeclaration9* pDecl)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9Ex::SetVertexDeclaration");
-    return g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].SetVertexDeclaration(ptr, pDecl);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].SetVertexDeclaration(ptr, pDecl);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9Ex_GetVertexDeclaration_Hooked(IDirect3DDevice9Ex * ptr, IDirect3DVertexDeclaration9** ppDecl)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9Ex::GetVertexDeclaration");
-    return g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].GetVertexDeclaration(ptr, ppDecl);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].GetVertexDeclaration(ptr, ppDecl);
+    if (ppDecl && *ppDecl) { RealToHooked9( *ppDecl ); }
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9Ex_SetFVF_Hooked(IDirect3DDevice9Ex * ptr, DWORD FVF)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9Ex::SetFVF");
-    return g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].SetFVF(ptr, FVF);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].SetFVF(ptr, FVF);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9Ex_GetFVF_Hooked(IDirect3DDevice9Ex * ptr, DWORD* pFVF)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9Ex::GetFVF");
-    return g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].GetFVF(ptr, pFVF);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].GetFVF(ptr, pFVF);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9Ex_CreateVertexShader_Hooked(IDirect3DDevice9Ex * ptr, CONST DWORD* pFunction, IDirect3DVertexShader9** ppShader)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9Ex::CreateVertexShader");
-    return g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].CreateVertexShader(ptr, pFunction, ppShader);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].CreateVertexShader(ptr, pFunction, ppShader);
+    if (ppShader && *ppShader) { RealToHooked9( *ppShader ); }
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9Ex_SetVertexShader_Hooked(IDirect3DDevice9Ex * ptr, IDirect3DVertexShader9* pShader)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9Ex::SetVertexShader");
-    return g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].SetVertexShader(ptr, pShader);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].SetVertexShader(ptr, pShader);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9Ex_GetVertexShader_Hooked(IDirect3DDevice9Ex * ptr, IDirect3DVertexShader9** ppShader)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9Ex::GetVertexShader");
-    return g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].GetVertexShader(ptr, ppShader);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].GetVertexShader(ptr, ppShader);
+    if (ppShader && *ppShader) { RealToHooked9( *ppShader ); }
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9Ex_SetVertexShaderConstantF_Hooked(IDirect3DDevice9Ex * ptr, UINT StartRegister, CONST float* pConstantData, UINT Vector4fCount)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9Ex::SetVertexShaderConstantF");
-    return g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].SetVertexShaderConstantF(ptr, StartRegister, pConstantData, Vector4fCount);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].SetVertexShaderConstantF(ptr, StartRegister, pConstantData, Vector4fCount);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9Ex_GetVertexShaderConstantF_Hooked(IDirect3DDevice9Ex * ptr, UINT StartRegister, float* pConstantData, UINT Vector4fCount)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9Ex::GetVertexShaderConstantF");
-    return g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].GetVertexShaderConstantF(ptr, StartRegister, pConstantData, Vector4fCount);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].GetVertexShaderConstantF(ptr, StartRegister, pConstantData, Vector4fCount);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9Ex_SetVertexShaderConstantI_Hooked(IDirect3DDevice9Ex * ptr, UINT StartRegister, CONST int* pConstantData, UINT Vector4iCount)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9Ex::SetVertexShaderConstantI");
-    return g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].SetVertexShaderConstantI(ptr, StartRegister, pConstantData, Vector4iCount);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].SetVertexShaderConstantI(ptr, StartRegister, pConstantData, Vector4iCount);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9Ex_GetVertexShaderConstantI_Hooked(IDirect3DDevice9Ex * ptr, UINT StartRegister, int* pConstantData, UINT Vector4iCount)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9Ex::GetVertexShaderConstantI");
-    return g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].GetVertexShaderConstantI(ptr, StartRegister, pConstantData, Vector4iCount);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].GetVertexShaderConstantI(ptr, StartRegister, pConstantData, Vector4iCount);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9Ex_SetVertexShaderConstantB_Hooked(IDirect3DDevice9Ex * ptr, UINT StartRegister, CONST BOOL* pConstantData, UINT BoolCount)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9Ex::SetVertexShaderConstantB");
-    return g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].SetVertexShaderConstantB(ptr, StartRegister, pConstantData, BoolCount);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].SetVertexShaderConstantB(ptr, StartRegister, pConstantData, BoolCount);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9Ex_GetVertexShaderConstantB_Hooked(IDirect3DDevice9Ex * ptr, UINT StartRegister, BOOL* pConstantData, UINT BoolCount)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9Ex::GetVertexShaderConstantB");
-    return g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].GetVertexShaderConstantB(ptr, StartRegister, pConstantData, BoolCount);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].GetVertexShaderConstantB(ptr, StartRegister, pConstantData, BoolCount);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9Ex_SetStreamSource_Hooked(IDirect3DDevice9Ex * ptr, UINT StreamNumber, IDirect3DVertexBuffer9* pStreamData, UINT OffsetInBytes, UINT Stride)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9Ex::SetStreamSource");
-    return g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].SetStreamSource(ptr, StreamNumber, pStreamData, OffsetInBytes, Stride);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].SetStreamSource(ptr, StreamNumber, pStreamData, OffsetInBytes, Stride);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9Ex_GetStreamSource_Hooked(IDirect3DDevice9Ex * ptr, UINT StreamNumber, IDirect3DVertexBuffer9** ppStreamData, UINT* pOffsetInBytes, UINT* pStride)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9Ex::GetStreamSource");
-    return g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].GetStreamSource(ptr, StreamNumber, ppStreamData, pOffsetInBytes, pStride);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].GetStreamSource(ptr, StreamNumber, ppStreamData, pOffsetInBytes, pStride);
+    if (ppStreamData && *ppStreamData) { RealToHooked9( *ppStreamData ); }
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9Ex_SetStreamSourceFreq_Hooked(IDirect3DDevice9Ex * ptr, UINT StreamNumber, UINT Setting)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9Ex::SetStreamSourceFreq");
-    return g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].SetStreamSourceFreq(ptr, StreamNumber, Setting);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].SetStreamSourceFreq(ptr, StreamNumber, Setting);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9Ex_GetStreamSourceFreq_Hooked(IDirect3DDevice9Ex * ptr, UINT StreamNumber, UINT* pSetting)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9Ex::GetStreamSourceFreq");
-    return g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].GetStreamSourceFreq(ptr, StreamNumber, pSetting);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].GetStreamSourceFreq(ptr, StreamNumber, pSetting);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9Ex_SetIndices_Hooked(IDirect3DDevice9Ex * ptr, IDirect3DIndexBuffer9* pIndexData)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9Ex::SetIndices");
-    return g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].SetIndices(ptr, pIndexData);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].SetIndices(ptr, pIndexData);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9Ex_GetIndices_Hooked(IDirect3DDevice9Ex * ptr, IDirect3DIndexBuffer9** ppIndexData)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9Ex::GetIndices");
-    return g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].GetIndices(ptr, ppIndexData);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].GetIndices(ptr, ppIndexData);
+    if (ppIndexData && *ppIndexData) { RealToHooked9( *ppIndexData ); }
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9Ex_CreatePixelShader_Hooked(IDirect3DDevice9Ex * ptr, CONST DWORD* pFunction, IDirect3DPixelShader9** ppShader)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9Ex::CreatePixelShader");
-    return g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].CreatePixelShader(ptr, pFunction, ppShader);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].CreatePixelShader(ptr, pFunction, ppShader);
+    if (ppShader && *ppShader) { RealToHooked9( *ppShader ); }
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9Ex_SetPixelShader_Hooked(IDirect3DDevice9Ex * ptr, IDirect3DPixelShader9* pShader)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9Ex::SetPixelShader");
-    return g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].SetPixelShader(ptr, pShader);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].SetPixelShader(ptr, pShader);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9Ex_GetPixelShader_Hooked(IDirect3DDevice9Ex * ptr, IDirect3DPixelShader9** ppShader)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9Ex::GetPixelShader");
-    return g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].GetPixelShader(ptr, ppShader);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].GetPixelShader(ptr, ppShader);
+    if (ppShader && *ppShader) { RealToHooked9( *ppShader ); }
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9Ex_SetPixelShaderConstantF_Hooked(IDirect3DDevice9Ex * ptr, UINT StartRegister, CONST float* pConstantData, UINT Vector4fCount)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9Ex::SetPixelShaderConstantF");
-    return g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].SetPixelShaderConstantF(ptr, StartRegister, pConstantData, Vector4fCount);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].SetPixelShaderConstantF(ptr, StartRegister, pConstantData, Vector4fCount);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9Ex_GetPixelShaderConstantF_Hooked(IDirect3DDevice9Ex * ptr, UINT StartRegister, float* pConstantData, UINT Vector4fCount)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9Ex::GetPixelShaderConstantF");
-    return g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].GetPixelShaderConstantF(ptr, StartRegister, pConstantData, Vector4fCount);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].GetPixelShaderConstantF(ptr, StartRegister, pConstantData, Vector4fCount);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9Ex_SetPixelShaderConstantI_Hooked(IDirect3DDevice9Ex * ptr, UINT StartRegister, CONST int* pConstantData, UINT Vector4iCount)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9Ex::SetPixelShaderConstantI");
-    return g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].SetPixelShaderConstantI(ptr, StartRegister, pConstantData, Vector4iCount);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].SetPixelShaderConstantI(ptr, StartRegister, pConstantData, Vector4iCount);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9Ex_GetPixelShaderConstantI_Hooked(IDirect3DDevice9Ex * ptr, UINT StartRegister, int* pConstantData, UINT Vector4iCount)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9Ex::GetPixelShaderConstantI");
-    return g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].GetPixelShaderConstantI(ptr, StartRegister, pConstantData, Vector4iCount);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].GetPixelShaderConstantI(ptr, StartRegister, pConstantData, Vector4iCount);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9Ex_SetPixelShaderConstantB_Hooked(IDirect3DDevice9Ex * ptr, UINT StartRegister, CONST BOOL* pConstantData, UINT BoolCount)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9Ex::SetPixelShaderConstantB");
-    return g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].SetPixelShaderConstantB(ptr, StartRegister, pConstantData, BoolCount);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].SetPixelShaderConstantB(ptr, StartRegister, pConstantData, BoolCount);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9Ex_GetPixelShaderConstantB_Hooked(IDirect3DDevice9Ex * ptr, UINT StartRegister, BOOL* pConstantData, UINT BoolCount)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9Ex::GetPixelShaderConstantB");
-    return g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].GetPixelShaderConstantB(ptr, StartRegister, pConstantData, BoolCount);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].GetPixelShaderConstantB(ptr, StartRegister, pConstantData, BoolCount);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9Ex_DrawRectPatch_Hooked(IDirect3DDevice9Ex * ptr, UINT Handle, CONST float* pNumSegs, CONST D3DRECTPATCH_INFO* pRectPatchInfo)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9Ex::DrawRectPatch");
-    return g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].DrawRectPatch(ptr, Handle, pNumSegs, pRectPatchInfo);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].DrawRectPatch(ptr, Handle, pNumSegs, pRectPatchInfo);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9Ex_DrawTriPatch_Hooked(IDirect3DDevice9Ex * ptr, UINT Handle, CONST float* pNumSegs, CONST D3DTRIPATCH_INFO* pTriPatchInfo)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9Ex::DrawTriPatch");
-    return g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].DrawTriPatch(ptr, Handle, pNumSegs, pTriPatchInfo);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].DrawTriPatch(ptr, Handle, pNumSegs, pTriPatchInfo);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9Ex_DeletePatch_Hooked(IDirect3DDevice9Ex * ptr, UINT Handle)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9Ex::DeletePatch");
-    return g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].DeletePatch(ptr, Handle);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].DeletePatch(ptr, Handle);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9Ex_CreateQuery_Hooked(IDirect3DDevice9Ex * ptr, D3DQUERYTYPE Type, IDirect3DQuery9** ppQuery)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9Ex::CreateQuery");
-    return g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].CreateQuery(ptr, Type, ppQuery);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].CreateQuery(ptr, Type, ppQuery);
+    if (ppQuery && *ppQuery) { RealToHooked9( *ppQuery ); }
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9Ex_SetConvolutionMonoKernel_Hooked(IDirect3DDevice9Ex * ptr, UINT width, UINT height, float* rows, float* columns)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9Ex::SetConvolutionMonoKernel");
-    return g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].SetConvolutionMonoKernel(ptr, width, height, rows, columns);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].SetConvolutionMonoKernel(ptr, width, height, rows, columns);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9Ex_ComposeRects_Hooked(IDirect3DDevice9Ex * ptr, IDirect3DSurface9* pSrc, IDirect3DSurface9* pDst, IDirect3DVertexBuffer9* pSrcRectDescs, UINT NumRects, IDirect3DVertexBuffer9* pDstRectDescs, D3DCOMPOSERECTSOP Operation, int Xoffset, int Yoffset)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9Ex::ComposeRects");
-    return g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].ComposeRects(ptr, pSrc, pDst, pSrcRectDescs, NumRects, pDstRectDescs, Operation, Xoffset, Yoffset);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].ComposeRects(ptr, pSrc, pDst, pSrcRectDescs, NumRects, pDstRectDescs, Operation, Xoffset, Yoffset);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9Ex_PresentEx_Hooked(IDirect3DDevice9Ex * ptr, CONST RECT* pSourceRect, CONST RECT* pDestRect, HWND hDestWindowOverride, CONST RGNDATA* pDirtyRegion, DWORD dwFlags)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9Ex::PresentEx");
-    return g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].PresentEx(ptr, pSourceRect, pDestRect, hDestWindowOverride, pDirtyRegion, dwFlags);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].PresentEx(ptr, pSourceRect, pDestRect, hDestWindowOverride, pDirtyRegion, dwFlags);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9Ex_GetGPUThreadPriority_Hooked(IDirect3DDevice9Ex * ptr, INT* pPriority)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9Ex::GetGPUThreadPriority");
-    return g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].GetGPUThreadPriority(ptr, pPriority);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].GetGPUThreadPriority(ptr, pPriority);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9Ex_SetGPUThreadPriority_Hooked(IDirect3DDevice9Ex * ptr, INT Priority)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9Ex::SetGPUThreadPriority");
-    return g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].SetGPUThreadPriority(ptr, Priority);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].SetGPUThreadPriority(ptr, Priority);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9Ex_WaitForVBlank_Hooked(IDirect3DDevice9Ex * ptr, UINT iSwapChain)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9Ex::WaitForVBlank");
-    return g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].WaitForVBlank(ptr, iSwapChain);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].WaitForVBlank(ptr, iSwapChain);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9Ex_CheckResourceResidency_Hooked(IDirect3DDevice9Ex * ptr, IDirect3DResource9** pResourceArray, UINT32 NumResources)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9Ex::CheckResourceResidency");
-    return g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].CheckResourceResidency(ptr, pResourceArray, NumResources);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].CheckResourceResidency(ptr, pResourceArray, NumResources);
+    if (pResourceArray && *pResourceArray) { RealToHooked9( *pResourceArray ); }
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9Ex_SetMaximumFrameLatency_Hooked(IDirect3DDevice9Ex * ptr, UINT MaxLatency)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9Ex::SetMaximumFrameLatency");
-    return g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].SetMaximumFrameLatency(ptr, MaxLatency);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].SetMaximumFrameLatency(ptr, MaxLatency);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9Ex_GetMaximumFrameLatency_Hooked(IDirect3DDevice9Ex * ptr, UINT* pMaxLatency)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9Ex::GetMaximumFrameLatency");
-    return g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].GetMaximumFrameLatency(ptr, pMaxLatency);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].GetMaximumFrameLatency(ptr, pMaxLatency);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9Ex_CheckDeviceState_Hooked(IDirect3DDevice9Ex * ptr, HWND hDestinationWindow)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9Ex::CheckDeviceState");
-    return g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].CheckDeviceState(ptr, hDestinationWindow);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].CheckDeviceState(ptr, hDestinationWindow);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9Ex_CreateRenderTargetEx_Hooked(IDirect3DDevice9Ex * ptr, UINT Width, UINT Height, D3DFORMAT Format, D3DMULTISAMPLE_TYPE MultiSample, DWORD MultisampleQuality, BOOL Lockable, IDirect3DSurface9** ppSurface, HANDLE* pSharedHandle, DWORD Usage)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9Ex::CreateRenderTargetEx");
-    return g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].CreateRenderTargetEx(ptr, Width, Height, Format, MultiSample, MultisampleQuality, Lockable, ppSurface, pSharedHandle, Usage);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].CreateRenderTargetEx(ptr, Width, Height, Format, MultiSample, MultisampleQuality, Lockable, ppSurface, pSharedHandle, Usage);
+    if (ppSurface && *ppSurface) { RealToHooked9( *ppSurface ); }
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9Ex_CreateOffscreenPlainSurfaceEx_Hooked(IDirect3DDevice9Ex * ptr, UINT Width, UINT Height, D3DFORMAT Format, D3DPOOL Pool, IDirect3DSurface9** ppSurface, HANDLE* pSharedHandle, DWORD Usage)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9Ex::CreateOffscreenPlainSurfaceEx");
-    return g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].CreateOffscreenPlainSurfaceEx(ptr, Width, Height, Format, Pool, ppSurface, pSharedHandle, Usage);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].CreateOffscreenPlainSurfaceEx(ptr, Width, Height, Format, Pool, ppSurface, pSharedHandle, Usage);
+    if (ppSurface && *ppSurface) { RealToHooked9( *ppSurface ); }
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9Ex_CreateDepthStencilSurfaceEx_Hooked(IDirect3DDevice9Ex * ptr, UINT Width, UINT Height, D3DFORMAT Format, D3DMULTISAMPLE_TYPE MultiSample, DWORD MultisampleQuality, BOOL Discard, IDirect3DSurface9** ppSurface, HANDLE* pSharedHandle, DWORD Usage)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9Ex::CreateDepthStencilSurfaceEx");
-    return g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].CreateDepthStencilSurfaceEx(ptr, Width, Height, Format, MultiSample, MultisampleQuality, Discard, ppSurface, pSharedHandle, Usage);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].CreateDepthStencilSurfaceEx(ptr, Width, Height, Format, MultiSample, MultisampleQuality, Discard, ppSurface, pSharedHandle, Usage);
+    if (ppSurface && *ppSurface) { RealToHooked9( *ppSurface ); }
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9Ex_ResetEx_Hooked(IDirect3DDevice9Ex * ptr, D3DPRESENT_PARAMETERS* pPresentationParameters, D3DDISPLAYMODEEX * pFullscreenDisplayMode)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9Ex::ResetEx");
-    return g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].ResetEx(ptr, pPresentationParameters, pFullscreenDisplayMode);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].ResetEx(ptr, pPresentationParameters, pFullscreenDisplayMode);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9Ex_GetDisplayModeEx_Hooked(IDirect3DDevice9Ex * ptr, UINT iSwapChain, D3DDISPLAYMODEEX* pMode, D3DDISPLAYROTATION* pRotation)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9Ex::GetDisplayModeEx");
-    return g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].GetDisplayModeEx(ptr, iSwapChain, pMode, pRotation);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].GetDisplayModeEx(ptr, iSwapChain, pMode, pRotation);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
@@ -3471,70 +3954,82 @@ template<UINT INDEX> static ULONG STDMETHODCALLTYPE IDirect3DSwapChain9Ex_Releas
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DSwapChain9Ex_Present_Hooked(IDirect3DSwapChain9Ex * ptr, CONST RECT* pSourceRect, CONST RECT* pDestRect, HWND hDestWindowOverride, CONST RGNDATA* pDirtyRegion, DWORD dwFlags)
 {
     calltrace::AutoTrace trace("IDirect3DSwapChain9Ex::Present");
-    return g_D3D9OriginVTables._IDirect3DSwapChain9Ex.tables[INDEX].Present(ptr, pSourceRect, pDestRect, hDestWindowOverride, pDirtyRegion, dwFlags);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DSwapChain9Ex.tables[INDEX].Present(ptr, pSourceRect, pDestRect, hDestWindowOverride, pDirtyRegion, dwFlags);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DSwapChain9Ex_GetFrontBufferData_Hooked(IDirect3DSwapChain9Ex * ptr, IDirect3DSurface9* pDestSurface)
 {
     calltrace::AutoTrace trace("IDirect3DSwapChain9Ex::GetFrontBufferData");
-    return g_D3D9OriginVTables._IDirect3DSwapChain9Ex.tables[INDEX].GetFrontBufferData(ptr, pDestSurface);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DSwapChain9Ex.tables[INDEX].GetFrontBufferData(ptr, pDestSurface);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DSwapChain9Ex_GetBackBuffer_Hooked(IDirect3DSwapChain9Ex * ptr, UINT iBackBuffer, D3DBACKBUFFER_TYPE Type, IDirect3DSurface9** ppBackBuffer)
 {
     calltrace::AutoTrace trace("IDirect3DSwapChain9Ex::GetBackBuffer");
-    return g_D3D9OriginVTables._IDirect3DSwapChain9Ex.tables[INDEX].GetBackBuffer(ptr, iBackBuffer, Type, ppBackBuffer);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DSwapChain9Ex.tables[INDEX].GetBackBuffer(ptr, iBackBuffer, Type, ppBackBuffer);
+    if (ppBackBuffer && *ppBackBuffer) { RealToHooked9( *ppBackBuffer ); }
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DSwapChain9Ex_GetRasterStatus_Hooked(IDirect3DSwapChain9Ex * ptr, D3DRASTER_STATUS* pRasterStatus)
 {
     calltrace::AutoTrace trace("IDirect3DSwapChain9Ex::GetRasterStatus");
-    return g_D3D9OriginVTables._IDirect3DSwapChain9Ex.tables[INDEX].GetRasterStatus(ptr, pRasterStatus);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DSwapChain9Ex.tables[INDEX].GetRasterStatus(ptr, pRasterStatus);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DSwapChain9Ex_GetDisplayMode_Hooked(IDirect3DSwapChain9Ex * ptr, D3DDISPLAYMODE* pMode)
 {
     calltrace::AutoTrace trace("IDirect3DSwapChain9Ex::GetDisplayMode");
-    return g_D3D9OriginVTables._IDirect3DSwapChain9Ex.tables[INDEX].GetDisplayMode(ptr, pMode);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DSwapChain9Ex.tables[INDEX].GetDisplayMode(ptr, pMode);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DSwapChain9Ex_GetDevice_Hooked(IDirect3DSwapChain9Ex * ptr, IDirect3DDevice9** ppDevice)
 {
     calltrace::AutoTrace trace("IDirect3DSwapChain9Ex::GetDevice");
-    return g_D3D9OriginVTables._IDirect3DSwapChain9Ex.tables[INDEX].GetDevice(ptr, ppDevice);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DSwapChain9Ex.tables[INDEX].GetDevice(ptr, ppDevice);
+    if (ppDevice && *ppDevice) { RealToHooked9( *ppDevice ); }
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DSwapChain9Ex_GetPresentParameters_Hooked(IDirect3DSwapChain9Ex * ptr, D3DPRESENT_PARAMETERS* pPresentationParameters)
 {
     calltrace::AutoTrace trace("IDirect3DSwapChain9Ex::GetPresentParameters");
-    return g_D3D9OriginVTables._IDirect3DSwapChain9Ex.tables[INDEX].GetPresentParameters(ptr, pPresentationParameters);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DSwapChain9Ex.tables[INDEX].GetPresentParameters(ptr, pPresentationParameters);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DSwapChain9Ex_GetLastPresentCount_Hooked(IDirect3DSwapChain9Ex * ptr, UINT* pLastPresentCount)
 {
     calltrace::AutoTrace trace("IDirect3DSwapChain9Ex::GetLastPresentCount");
-    return g_D3D9OriginVTables._IDirect3DSwapChain9Ex.tables[INDEX].GetLastPresentCount(ptr, pLastPresentCount);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DSwapChain9Ex.tables[INDEX].GetLastPresentCount(ptr, pLastPresentCount);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DSwapChain9Ex_GetPresentStats_Hooked(IDirect3DSwapChain9Ex * ptr, D3DPRESENTSTATS* pPresentationStatistics)
 {
     calltrace::AutoTrace trace("IDirect3DSwapChain9Ex::GetPresentStats");
-    return g_D3D9OriginVTables._IDirect3DSwapChain9Ex.tables[INDEX].GetPresentStats(ptr, pPresentationStatistics);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DSwapChain9Ex.tables[INDEX].GetPresentStats(ptr, pPresentationStatistics);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DSwapChain9Ex_GetDisplayModeEx_Hooked(IDirect3DSwapChain9Ex * ptr, D3DDISPLAYMODEEX* pMode, D3DDISPLAYROTATION* pRotation)
 {
     calltrace::AutoTrace trace("IDirect3DSwapChain9Ex::GetDisplayModeEx");
-    return g_D3D9OriginVTables._IDirect3DSwapChain9Ex.tables[INDEX].GetDisplayModeEx(ptr, pMode, pRotation);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DSwapChain9Ex.tables[INDEX].GetDisplayModeEx(ptr, pMode, pRotation);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
@@ -3566,7 +4061,8 @@ template<UINT INDEX> static ULONG STDMETHODCALLTYPE IDirect3D9ExOverlayExtension
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3D9ExOverlayExtension_CheckDeviceOverlayType_Hooked(IDirect3D9ExOverlayExtension * ptr, UINT Adapter, D3DDEVTYPE DevType, UINT OverlayWidth, UINT OverlayHeight, D3DFORMAT OverlayFormat, D3DDISPLAYMODEEX* pDisplayMode, D3DDISPLAYROTATION DisplayRotation, D3DOVERLAYCAPS* pOverlayCaps)
 {
     calltrace::AutoTrace trace("IDirect3D9ExOverlayExtension::CheckDeviceOverlayType");
-    return g_D3D9OriginVTables._IDirect3D9ExOverlayExtension.tables[INDEX].CheckDeviceOverlayType(ptr, Adapter, DevType, OverlayWidth, OverlayHeight, OverlayFormat, pDisplayMode, DisplayRotation, pOverlayCaps);
+    HRESULT result = g_D3D9OriginVTables._IDirect3D9ExOverlayExtension.tables[INDEX].CheckDeviceOverlayType(ptr, Adapter, DevType, OverlayWidth, OverlayHeight, OverlayFormat, pDisplayMode, DisplayRotation, pOverlayCaps);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
@@ -3598,21 +4094,26 @@ template<UINT INDEX> static ULONG STDMETHODCALLTYPE IDirect3DDevice9Video_Releas
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9Video_GetContentProtectionCaps_Hooked(IDirect3DDevice9Video * ptr, CONST GUID* pCryptoType, CONST GUID* pDecodeProfile, D3DCONTENTPROTECTIONCAPS* pCaps)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9Video::GetContentProtectionCaps");
-    return g_D3D9OriginVTables._IDirect3DDevice9Video.tables[INDEX].GetContentProtectionCaps(ptr, pCryptoType, pDecodeProfile, pCaps);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9Video.tables[INDEX].GetContentProtectionCaps(ptr, pCryptoType, pDecodeProfile, pCaps);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9Video_CreateAuthenticatedChannel_Hooked(IDirect3DDevice9Video * ptr, D3DAUTHENTICATEDCHANNELTYPE ChannelType, IDirect3DAuthenticatedChannel9** ppAuthenticatedChannel, HANDLE* pChannelHandle)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9Video::CreateAuthenticatedChannel");
-    return g_D3D9OriginVTables._IDirect3DDevice9Video.tables[INDEX].CreateAuthenticatedChannel(ptr, ChannelType, ppAuthenticatedChannel, pChannelHandle);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9Video.tables[INDEX].CreateAuthenticatedChannel(ptr, ChannelType, ppAuthenticatedChannel, pChannelHandle);
+    if (ppAuthenticatedChannel && *ppAuthenticatedChannel) { RealToHooked9( *ppAuthenticatedChannel ); }
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DDevice9Video_CreateCryptoSession_Hooked(IDirect3DDevice9Video * ptr, CONST GUID* pCryptoType, CONST GUID* pDecodeProfile, IDirect3DCryptoSession9** ppCryptoSession, HANDLE* pCryptoHandle)
 {
     calltrace::AutoTrace trace("IDirect3DDevice9Video::CreateCryptoSession");
-    return g_D3D9OriginVTables._IDirect3DDevice9Video.tables[INDEX].CreateCryptoSession(ptr, pCryptoType, pDecodeProfile, ppCryptoSession, pCryptoHandle);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9Video.tables[INDEX].CreateCryptoSession(ptr, pCryptoType, pDecodeProfile, ppCryptoSession, pCryptoHandle);
+    if (ppCryptoSession && *ppCryptoSession) { RealToHooked9( *ppCryptoSession ); }
+    return result;
 }
 
 // -----------------------------------------------------------------------------
@@ -3644,35 +4145,40 @@ template<UINT INDEX> static ULONG STDMETHODCALLTYPE IDirect3DAuthenticatedChanne
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DAuthenticatedChannel9_GetCertificateSize_Hooked(IDirect3DAuthenticatedChannel9 * ptr, UINT* pCertificateSize)
 {
     calltrace::AutoTrace trace("IDirect3DAuthenticatedChannel9::GetCertificateSize");
-    return g_D3D9OriginVTables._IDirect3DAuthenticatedChannel9.tables[INDEX].GetCertificateSize(ptr, pCertificateSize);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DAuthenticatedChannel9.tables[INDEX].GetCertificateSize(ptr, pCertificateSize);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DAuthenticatedChannel9_GetCertificate_Hooked(IDirect3DAuthenticatedChannel9 * ptr, UINT CertifacteSize, BYTE* ppCertificate)
 {
     calltrace::AutoTrace trace("IDirect3DAuthenticatedChannel9::GetCertificate");
-    return g_D3D9OriginVTables._IDirect3DAuthenticatedChannel9.tables[INDEX].GetCertificate(ptr, CertifacteSize, ppCertificate);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DAuthenticatedChannel9.tables[INDEX].GetCertificate(ptr, CertifacteSize, ppCertificate);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DAuthenticatedChannel9_NegotiateKeyExchange_Hooked(IDirect3DAuthenticatedChannel9 * ptr, UINT DataSize, VOID* pData)
 {
     calltrace::AutoTrace trace("IDirect3DAuthenticatedChannel9::NegotiateKeyExchange");
-    return g_D3D9OriginVTables._IDirect3DAuthenticatedChannel9.tables[INDEX].NegotiateKeyExchange(ptr, DataSize, pData);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DAuthenticatedChannel9.tables[INDEX].NegotiateKeyExchange(ptr, DataSize, pData);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DAuthenticatedChannel9_Query_Hooked(IDirect3DAuthenticatedChannel9 * ptr, UINT InputSize, CONST VOID* pInput, UINT OutputSize, VOID* pOutput)
 {
     calltrace::AutoTrace trace("IDirect3DAuthenticatedChannel9::Query");
-    return g_D3D9OriginVTables._IDirect3DAuthenticatedChannel9.tables[INDEX].Query(ptr, InputSize, pInput, OutputSize, pOutput);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DAuthenticatedChannel9.tables[INDEX].Query(ptr, InputSize, pInput, OutputSize, pOutput);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DAuthenticatedChannel9_Configure_Hooked(IDirect3DAuthenticatedChannel9 * ptr, UINT InputSize, CONST VOID* pInput, D3DAUTHENTICATEDCHANNEL_CONFIGURE_OUTPUT* pOutput)
 {
     calltrace::AutoTrace trace("IDirect3DAuthenticatedChannel9::Configure");
-    return g_D3D9OriginVTables._IDirect3DAuthenticatedChannel9.tables[INDEX].Configure(ptr, InputSize, pInput, pOutput);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DAuthenticatedChannel9.tables[INDEX].Configure(ptr, InputSize, pInput, pOutput);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
@@ -3704,63 +4210,72 @@ template<UINT INDEX> static ULONG STDMETHODCALLTYPE IDirect3DCryptoSession9_Rele
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DCryptoSession9_GetCertificateSize_Hooked(IDirect3DCryptoSession9 * ptr, UINT* pCertificateSize)
 {
     calltrace::AutoTrace trace("IDirect3DCryptoSession9::GetCertificateSize");
-    return g_D3D9OriginVTables._IDirect3DCryptoSession9.tables[INDEX].GetCertificateSize(ptr, pCertificateSize);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DCryptoSession9.tables[INDEX].GetCertificateSize(ptr, pCertificateSize);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DCryptoSession9_GetCertificate_Hooked(IDirect3DCryptoSession9 * ptr, UINT CertifacteSize, BYTE* ppCertificate)
 {
     calltrace::AutoTrace trace("IDirect3DCryptoSession9::GetCertificate");
-    return g_D3D9OriginVTables._IDirect3DCryptoSession9.tables[INDEX].GetCertificate(ptr, CertifacteSize, ppCertificate);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DCryptoSession9.tables[INDEX].GetCertificate(ptr, CertifacteSize, ppCertificate);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DCryptoSession9_NegotiateKeyExchange_Hooked(IDirect3DCryptoSession9 * ptr, UINT DataSize, VOID* pData)
 {
     calltrace::AutoTrace trace("IDirect3DCryptoSession9::NegotiateKeyExchange");
-    return g_D3D9OriginVTables._IDirect3DCryptoSession9.tables[INDEX].NegotiateKeyExchange(ptr, DataSize, pData);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DCryptoSession9.tables[INDEX].NegotiateKeyExchange(ptr, DataSize, pData);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DCryptoSession9_EncryptionBlt_Hooked(IDirect3DCryptoSession9 * ptr, IDirect3DSurface9* pSrcSurface, IDirect3DSurface9* pDstSurface, UINT DstSurfaceSize, VOID* pIV)
 {
     calltrace::AutoTrace trace("IDirect3DCryptoSession9::EncryptionBlt");
-    return g_D3D9OriginVTables._IDirect3DCryptoSession9.tables[INDEX].EncryptionBlt(ptr, pSrcSurface, pDstSurface, DstSurfaceSize, pIV);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DCryptoSession9.tables[INDEX].EncryptionBlt(ptr, pSrcSurface, pDstSurface, DstSurfaceSize, pIV);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DCryptoSession9_DecryptionBlt_Hooked(IDirect3DCryptoSession9 * ptr, IDirect3DSurface9* pSrcSurface, IDirect3DSurface9* pDstSurface, UINT SrcSurfaceSize, D3DENCRYPTED_BLOCK_INFO* pEncryptedBlockInfo, VOID* pContentKey, VOID* pIV)
 {
     calltrace::AutoTrace trace("IDirect3DCryptoSession9::DecryptionBlt");
-    return g_D3D9OriginVTables._IDirect3DCryptoSession9.tables[INDEX].DecryptionBlt(ptr, pSrcSurface, pDstSurface, SrcSurfaceSize, pEncryptedBlockInfo, pContentKey, pIV);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DCryptoSession9.tables[INDEX].DecryptionBlt(ptr, pSrcSurface, pDstSurface, SrcSurfaceSize, pEncryptedBlockInfo, pContentKey, pIV);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DCryptoSession9_GetSurfacePitch_Hooked(IDirect3DCryptoSession9 * ptr, IDirect3DSurface9* pSrcSurface, UINT* pSurfacePitch)
 {
     calltrace::AutoTrace trace("IDirect3DCryptoSession9::GetSurfacePitch");
-    return g_D3D9OriginVTables._IDirect3DCryptoSession9.tables[INDEX].GetSurfacePitch(ptr, pSrcSurface, pSurfacePitch);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DCryptoSession9.tables[INDEX].GetSurfacePitch(ptr, pSrcSurface, pSurfacePitch);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DCryptoSession9_StartSessionKeyRefresh_Hooked(IDirect3DCryptoSession9 * ptr, VOID* pRandomNumber, UINT RandomNumberSize)
 {
     calltrace::AutoTrace trace("IDirect3DCryptoSession9::StartSessionKeyRefresh");
-    return g_D3D9OriginVTables._IDirect3DCryptoSession9.tables[INDEX].StartSessionKeyRefresh(ptr, pRandomNumber, RandomNumberSize);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DCryptoSession9.tables[INDEX].StartSessionKeyRefresh(ptr, pRandomNumber, RandomNumberSize);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DCryptoSession9_FinishSessionKeyRefresh_Hooked(IDirect3DCryptoSession9 * ptr)
 {
     calltrace::AutoTrace trace("IDirect3DCryptoSession9::FinishSessionKeyRefresh");
-    return g_D3D9OriginVTables._IDirect3DCryptoSession9.tables[INDEX].FinishSessionKeyRefresh(ptr);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DCryptoSession9.tables[INDEX].FinishSessionKeyRefresh(ptr);
+    return result;
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX> static HRESULT STDMETHODCALLTYPE IDirect3DCryptoSession9_GetEncryptionBltKey_Hooked(IDirect3DCryptoSession9 * ptr, VOID* pReadbackKey, UINT KeySize)
 {
     calltrace::AutoTrace trace("IDirect3DCryptoSession9::GetEncryptionBltKey");
-    return g_D3D9OriginVTables._IDirect3DCryptoSession9.tables[INDEX].GetEncryptionBltKey(ptr, pReadbackKey, KeySize);
+    HRESULT result = g_D3D9OriginVTables._IDirect3DCryptoSession9.tables[INDEX].GetEncryptionBltKey(ptr, pReadbackKey, KeySize);
+    return result;
 }
 
 // -----------------------------------------------------------------------------

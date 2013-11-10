@@ -98,10 +98,6 @@ class FunctionSignature:
             p = self._parameter_list[i]
             if p.IsHookedInterface() and p.IsOutput():
                 fp.write('    if ( ' + p._name + ' && *' + p._name + ') { *' + p._name + ' = RealToHooked9( *' + p._name + ' ); }\n')
-            # special case for IDXGIObject.GetParent()
-            elif 'IDXGIObject' == p._interface_name and 'GetParent' == p._method_name and 'ppParent' == p._name or \
-                 'IDXGIDeviceSubObject' == p._interface_name and 'GetDevice' == p._method_name and 'ppDevice' == p._name:
-                fp.write('    if (SUCCEEDED(ret)) { *' + p._name + ' = DXGIRealToHooked(riid, *' + p._name + ' ); }\n')
         pass; # end-of-for
 
     def WriteParameterList(self, fp, writeType, writeName, makeRef = False, newLine = False, convertHookedPtr = None):
@@ -566,15 +562,21 @@ class D3D9VTableFile:
                      'template<UINT INDEX> static ' + m._return_type + ' ' + m._decl + ' ' + interface_name + '_' + m._name + '_Hooked(' + interface_name + ' * ptr')
             if len(m._parameter_list) > 0: fp.write(', ')
             m.WriteParameterList(fp, writeType=True, writeName=True)
+            decl_return = '' if 'void' == m._return_type else (m._return_type + ' result = ')
+            func_return = '' if 'void' == m._return_type else '    return result;\n'
             fp.write(')\n'
                      '{\n'
                      '    calltrace::AutoTrace trace("' + interface_name + '::' + m._name + '");\n'
-                     '    return g_D3D9OriginVTables._' + interface_name + '.tables[INDEX].' + m._name + '(ptr')
+                     '    ' + decl_return + 'g_D3D9OriginVTables._' + interface_name + '.tables[INDEX].' + m._name + '(ptr')
             if len(m._parameter_list) > 0: fp.write(', ')
             m.WriteParameterNameList(fp)
-            fp.write(');\n'
-                               '}\n'
-                               '\n');
+            fp.write(');\n')
+            for p in m._parameter_list:
+                if p.IsHookedInterface() and p.IsOutput():
+                    fp.write('    if (' + p._name + ' && *' + p._name + ') { RealToHooked9( *' + p._name + ' ); }\n')
+            fp.write(func_return +
+                     '}\n'
+                     '\n');
 
 
     def Close(self):
