@@ -57,6 +57,7 @@ static Options g_options;
 namespace calltrace
 {
     __declspec(thread) int g_level = 0;
+    volatile LONG g_count = 0;
 
     bool g_callTraceEnabled = true;
 
@@ -69,7 +70,7 @@ namespace calltrace
         }
 
         wchar_t buf[256] = {};
-        swprintf_s(buf, L"{%d}", GetCurrentThreadId());
+        swprintf_s(buf, L"{thread:%d}[%d]", GetCurrentThreadId(), InterlockedIncrement(&g_count));
         wcscat_s(buf, ident);
         wcscat_s(buf, text);
         wcscat_s(buf, L"\n");

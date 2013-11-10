@@ -617,15 +617,21 @@ class D3D11VTableFile:
                      'template<UINT INDEX> static ' + m._return_type + ' ' + m._decl + ' ' + interface_name + '_' + m._name + '_Hooked(' + interface_name + ' * ptr')
             if len(m._parameter_list) > 0: fp.write(', ')
             m.WriteParameterList(fp, writeType=True, writeName=True)
+            decl_return = '' if 'void' == m._return_type else (m._return_type + ' result = ')
+            func_return = '' if 'void' == m._return_type else '    return result;\n'
             fp.write(')\n'
                      '{\n'
                      '    calltrace::AutoTrace trace("' + interface_name + '::' + m._name + '");\n'
-                     '    return g_D3D11OriginVTables._' + interface_name + '.tables[INDEX].' + m._name + '(ptr')
+                     '    ' + decl_return + 'g_D3D11OriginVTables._' + interface_name + '.tables[INDEX].' + m._name + '(ptr')
             if len(m._parameter_list) > 0: fp.write(', ')
             m.WriteParameterNameList(fp)
-            fp.write(');\n'
-                               '}\n'
-                               '\n');
+            fp.write(');\n')
+            for p in m._parameter_list:
+                if p.IsHookedInterface() and p.IsOutput():
+                    fp.write('    if (' + p._name + ' && *' + p._name + ') { RealToHooked11( *' + p._name + ' ); }\n')
+            fp.write(func_return +
+                     '}\n'
+                     '\n');
 
 
     def Close(self):
