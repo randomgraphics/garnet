@@ -55,6 +55,7 @@ if 'x64' == cpu:
             'dwrite_x64_asm.asm',
         ],
         defFile='dwrite_x64.def' ), rename='dwrite.dll', extraDependencies=hookdll )
+    GN.NewDefaultTarget( 'GNd3dHook', [hookdll, d3d11dll, dxgidll, d3d9dll, d2d1dll, dwritedll] )
 else:
     d3d11dll = GN.BinplaceDLL( GN.BuildDLL( wrapper_env, 'd3d11wrapper',
         [
@@ -83,5 +84,4 @@ else:
             'dwrite_x86_asm.asm',
         ],
         defFile='dwrite_x86.def' ), rename='dwrite.dll', extraDependencies=hookdll )"""
-
-GN.NewDefaultTarget( 'GNd3dHook', [hookdll, d3d11dll, dxgidll, d3d9dll, d2d1dll, dwritedll] )
+    GN.NewDefaultTarget( 'GNd3dHook', [hookdll, d3d11dll, dxgidll, d3d9dll] )

@@ -2,7 +2,7 @@
 #include "hooks_exports.h"
 
 HINSTANCE mHinst = 0, mHinstDLL = 0;
-UINT_PTR mProcs[50] = {0};
+UINT_PTR mProcs[51] = {0};
 
 LPCSTR mImportNames[] = {"CompatString", "CompatValue", "CreateDXGIFactory", "CreateDXGIFactory1", "CreateDXGIFactory2", "D3DKMTCloseAdapter", "D3DKMTCreateAllocation", "D3DKMTCreateContext", "D3DKMTCreateDevice", "D3DKMTCreateSynchronizationObject", "D3DKMTDestroyAllocation", "D3DKMTDestroyContext", "D3DKMTDestroyDevice", "D3DKMTDestroySynchronizationObject", "D3DKMTEscape", "D3DKMTGetContextSchedulingPriority", "D3DKMTGetDeviceState", "D3DKMTGetDisplayModeList", "D3DKMTGetMultisampleMethodList", "D3DKMTGetRuntimeData", "D3DKMTGetSharedPrimaryHandle", "D3DKMTLock", "D3DKMTOpenAdapterFromHdc", "D3DKMTOpenResource", "D3DKMTPresent", "D3DKMTQueryAdapterInfo", "D3DKMTQueryAllocationResidency", "D3DKMTQueryResourceInfo", "D3DKMTRender", "D3DKMTSetAllocationPriority", "D3DKMTSetContextSchedulingPriority", "D3DKMTSetDisplayMode", "D3DKMTSetDisplayPrivateDriverFormat", "D3DKMTSetGammaRamp", "D3DKMTSetVidPnSourceOwner", "D3DKMTSignalSynchronizationObject", "D3DKMTUnlock", "D3DKMTWaitForSynchronizationObject", "D3DKMTWaitForVerticalBlankEvent", "DXGID3D10CreateDevice", "DXGID3D10CreateLayeredDevice", "DXGID3D10ETWRundown", "DXGID3D10GetLayeredDeviceSize", "DXGID3D10RegisterLayers", "DXGIDumpJournal", "DXGIGetDebugInterface1", "DXGIReportAdapterConfiguration", "DXGIRevertToSxS", "OpenAdapter10", "OpenAdapter10_2", "SetAppCompatStringPointer"};
 BOOL WINAPI DllMain( HINSTANCE hinstDLL, DWORD fdwReason, LPVOID ) {
@@ -11,7 +11,7 @@ BOOL WINAPI DllMain( HINSTANCE hinstDLL, DWORD fdwReason, LPVOID ) {
 		mHinstDLL = LoadLibraryW( GetRealDllPath(L"dxgi.dll") );
 		if ( !mHinstDLL )
 			return ( FALSE );
-		for ( int i = 0; i < 50; i++ )
+		for ( int i = 0; i < 51; i++ )
 			mProcs[ i ] = (UINT_PTR)GetProcAddress( mHinstDLL, mImportNames[ i ] );
 	} else if ( fdwReason == DLL_PROCESS_DETACH ) {
 		FreeLibrary( mHinstDLL );
@@ -50,7 +50,7 @@ extern "C" HRESULT WINAPI CreateDXGIFactory2_wrapper(
     void **ppFactory)
 {
     return CreateDXGIFactory2Hook(
-        UINT flags,
+        flags,
         riid,
         ppFactory);
 }

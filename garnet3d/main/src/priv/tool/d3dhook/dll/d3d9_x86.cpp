@@ -1,17 +1,17 @@
 #include "pch.h"
-#include "d3d9hooks_exports.h"
+#include "hooks_exports.h"
 
 HINSTANCE mHinst = 0, mHinstDLL = 0;
-UINT_PTR mProcs[15] = {0};
+UINT_PTR mProcs[16] = {0};
 
-LPCSTR mImportNames[] = {"D3DPERF_BeginEvent", "D3DPERF_EndEvent", "D3DPERF_GetStatus", "D3DPERF_QueryRepeatFrame", "D3DPERF_SetMarker", "D3DPERF_SetOptions", "D3DPERF_SetRegion", "DebugSetLevel", "DebugSetMute", "Direct3D9EnableMaximizedWindowedModeShim", "Direct3DCreate9", "Direct3DCreate9Ex", "Direct3DShaderValidatorCreate9", "PSGPError", "PSGPSampleTexture"};
+LPCSTR mImportNames[] = {"D3DPERF_BeginEvent", "D3DPERF_EndEvent", "D3DPERF_GetStatus", "D3DPERF_QueryRepeatFrame", "D3DPERF_SetMarker", "D3DPERF_SetOptions", "D3DPERF_SetRegion", "DebugSetLevel", "DebugSetMute", "Direct3D9EnableMaximizedWindowedModeShim", "Direct3DCreate9", "Direct3DCreate9Ex", "Direct3DShaderValidatorCreate9", "PSGPError", "PSGPSampleTexture", (LPCSTR)16};
 BOOL WINAPI DllMain( HINSTANCE hinstDLL, DWORD fdwReason, LPVOID ) {
 	mHinst = hinstDLL;
 	if ( fdwReason == DLL_PROCESS_ATTACH ) {
 		mHinstDLL = LoadLibraryW( GetRealDllPath(L"d3d9.dll") );
 		if ( !mHinstDLL )
 			return ( FALSE );
-		for ( int i = 0; i < 15; i++ )
+		for ( int i = 0; i < 16; i++ )
 			mProcs[ i ] = (UINT_PTR)GetProcAddress( mHinstDLL, mImportNames[ i ] );
 	} else if ( fdwReason == DLL_PROCESS_DETACH ) {
 		FreeLibrary( mHinstDLL );
@@ -45,3 +45,4 @@ extern "C" HRESULT WINAPI Direct3DCreate9Ex_wrapper(UINT SDKVersion, IDirect3D9E
 extern "C" __declspec(naked) void __stdcall Direct3DShaderValidatorCreate9_wrapper(){__asm{jmp mProcs[12*4]}}
 extern "C" __declspec(naked) void __stdcall PSGPError_wrapper(){__asm{jmp mProcs[13*4]}}
 extern "C" __declspec(naked) void __stdcall PSGPSampleTexture_wrapper(){__asm{jmp mProcs[14*4]}}
+extern "C" __declspec(naked) void __stdcall ExportByOrdinal16(){__asm{jmp mProcs[15*4]}}
