@@ -27,7 +27,7 @@ inline void RealToHooked_General(
     VTABLE_STRUCT &         vtable,
     VTable<VTABLE_STRUCT> & origin,
     VTable<VTABLE_STRUCT> & hooked,
-    const char *                 interfaceName)
+    const char *            interfaceName)
 {
     HANDLE process = ::GetCurrentProcess();
     DWORD oldProtection;
@@ -62,6 +62,11 @@ inline void RealToHooked_General(
     o = vtable;
     vtable = h;
     ++origin.count;
+
+    if (!::VirtualProtectEx( process, &vtable, sizeof(vtable), oldProtection, &oldProtection ))
+    {
+        HOOK_ERROR_LOG("Failed to restore %s vtable page protection.", interfaceName);
+    }
 }
 
 // -----------------------------------------------------------------------------
