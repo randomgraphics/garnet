@@ -215,10 +215,8 @@ LRESULT WINAPI MsgProc( HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam )
 // Name: wWinMain()
 // Desc: The application's entry point
 //-----------------------------------------------------------------------------
-INT WINAPI wWinMain( HINSTANCE hInst, HINSTANCE, LPWSTR, INT )
+int main()
 {
-    UNREFERENCED_PARAMETER( hInst );
-
     // Register the window class
     WNDCLASSEX wc =
     {
