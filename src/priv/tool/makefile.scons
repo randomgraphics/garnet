@@ -1,4 +1,3 @@
 Import( 'GN' )
-if 'mswin' == GN.target_os: SConscript( ['d3dhook/makefile.scons'] )
+SConscript( ['d3dhook/makefile.scons'] )
 SConscript( 'meshViewer/makefile.scons' )
-SConscript( 'skyrim/makefile.scons' )

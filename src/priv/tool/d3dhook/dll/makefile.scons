@@ -1,87 +1,87 @@
 Import( 'GN' )
+if 'mswin' == GN.target_os:
+    env = GN.NewBuildEnv()
+    env.Prepend( CPPPATH=['d3d'] )
 
-env = GN.NewBuildEnv()
-env.Prepend( CPPPATH=['d3d'] )
+    cpu = GN.target_cpu
 
-cpu = GN.target_cpu
+    # ------------------------------------------------------------------------------
+    # Hook DLL
+    # ------------------------------------------------------------------------------
 
-# ------------------------------------------------------------------------------
-# Hook DLL
-# ------------------------------------------------------------------------------
+    hookdll = GN.BinplaceDLL( GN.BuildDLL( env, 'GNd3dHook-' + cpu,
+        [
+            'vtable_main.cpp',
+            'd3d11vtable.cpp',
+            'd3d9vtable.cpp',
+        ],
+        'pch.h', 'pch.cpp' ) )
 
-hookdll = GN.BinplaceDLL( GN.BuildDLL( env, 'GNd3dHook-' + cpu,
-    [
-        'vtable_main.cpp',
-        'd3d11vtable.cpp',
-        'd3d9vtable.cpp',
-    ],
-    'pch.h', 'pch.cpp' ) )
+    # ------------------------------------------------------------------------------
+    # wrapper DLLs
+    # ------------------------------------------------------------------------------
 
-# ------------------------------------------------------------------------------
-# wrapper DLLs
-# ------------------------------------------------------------------------------
+    wrapper_env = env.Clone()
+    wrapper_env.Append( LIBPATH = ['.'], LIBS = ['GNd3dHook-' + cpu] )
 
-wrapper_env = env.Clone()
-wrapper_env.Append( LIBPATH = ['.'], LIBS = ['GNd3dHook-' + cpu] )
-
-if 'x64' == cpu:
-    d3d11dll = GN.BinplaceDLL( GN.BuildDLL( wrapper_env, 'd3d11wrapper',
-        [
-            'd3d11_x64.cpp',
-            'd3d11_x64_asm.asm',
-        ],
-        defFile='d3d11_x64.def' ), rename='d3d11.dll', extraDependencies=hookdll )
-    dxgidll = GN.BinplaceDLL( GN.BuildDLL( wrapper_env, 'dxgiwrapper',
-        [
-            'dxgi_x64.cpp',
-            'dxgi_x64_asm.asm',
-        ],
-        defFile='dxgi_x64.def' ), rename='dxgi.dll', extraDependencies=hookdll )
-    d3d9dll = GN.BinplaceDLL( GN.BuildDLL( wrapper_env, 'd3d9wrapper',
-        [
-            'd3d9_x64.cpp',
-            'd3d9_x64_asm.asm',
-        ],
-        defFile='d3d9_x64.def' ), rename='d3d9.dll', extraDependencies=hookdll )
-    d2d1dll = GN.BinplaceDLL( GN.BuildDLL( wrapper_env, 'd2d1wrapper',
-        [
-            'd2d1_x64.cpp',
-            'd2d1_x64_asm.asm',
-        ],
-        defFile='d2d1_x64.def' ), rename='d2d1.dll', extraDependencies=hookdll )
-    dwritedll = GN.BinplaceDLL( GN.BuildDLL( wrapper_env, 'dwritewrapper',
-        [
-            'dwrite_x64.cpp',
-            'dwrite_x64_asm.asm',
-        ],
-        defFile='dwrite_x64.def' ), rename='dwrite.dll', extraDependencies=hookdll )
-    GN.NewDefaultTarget( 'GNd3dHook', [hookdll, d3d11dll, dxgidll, d3d9dll, d2d1dll, dwritedll] )
-else:
-    d3d11dll = GN.BinplaceDLL( GN.BuildDLL( wrapper_env, 'd3d11wrapper',
-        [
-            'd3d11_x86.cpp',
-        ],
-        defFile='d3d11_x64.def' ), rename='d3d11.dll', extraDependencies=hookdll )
-    dxgidll = GN.BinplaceDLL( GN.BuildDLL( wrapper_env, 'dxgiwrapper',
-        [
-            'dxgi_x86.cpp',
-        ],
-        defFile='dxgi_x86.def' ), rename='dxgi.dll', extraDependencies=hookdll )
-    d3d9dll = GN.BinplaceDLL( GN.BuildDLL( wrapper_env, 'd3d9wrapper',
-        [
-            'd3d9_x86.cpp',
-        ],
-        defFile='d3d9_x86.def' ), rename='d3d9.dll', extraDependencies=hookdll )
-    """d2d1dll = GN.BinplaceDLL( GN.BuildDLL( wrapper_env, 'd2d1wrapper',
-        [
-            'd2d1_x86.cpp',
-            'd2d1_x86_asm.asm',
-        ],
-        defFile='d2d1_x86.def' ), rename='d2d1.dll', extraDependencies=hookdll )
-    dwritedll = GN.BinplaceDLL( GN.BuildDLL( wrapper_env, 'dwritewrapper',
-        [
-            'dwrite_x86.cpp',
-            'dwrite_x86_asm.asm',
-        ],
-        defFile='dwrite_x86.def' ), rename='dwrite.dll', extraDependencies=hookdll )"""
-    GN.NewDefaultTarget( 'GNd3dHook', [hookdll, d3d11dll, dxgidll, d3d9dll] )
+    if 'x64' == cpu:
+        d3d11dll = GN.BinplaceDLL( GN.BuildDLL( wrapper_env, 'd3d11wrapper',
+            [
+                'd3d11_x64.cpp',
+                'd3d11_x64_asm.asm',
+            ],
+            defFile='d3d11_x64.def' ), rename='d3d11.dll', extraDependencies=hookdll )
+        dxgidll = GN.BinplaceDLL( GN.BuildDLL( wrapper_env, 'dxgiwrapper',
+            [
+                'dxgi_x64.cpp',
+                'dxgi_x64_asm.asm',
+            ],
+            defFile='dxgi_x64.def' ), rename='dxgi.dll', extraDependencies=hookdll )
+        d3d9dll = GN.BinplaceDLL( GN.BuildDLL( wrapper_env, 'd3d9wrapper',
+            [
+                'd3d9_x64.cpp',
+                'd3d9_x64_asm.asm',
+            ],
+            defFile='d3d9_x64.def' ), rename='d3d9.dll', extraDependencies=hookdll )
+        d2d1dll = GN.BinplaceDLL( GN.BuildDLL( wrapper_env, 'd2d1wrapper',
+            [
+                'd2d1_x64.cpp',
+                'd2d1_x64_asm.asm',
+            ],
+            defFile='d2d1_x64.def' ), rename='d2d1.dll', extraDependencies=hookdll )
+        dwritedll = GN.BinplaceDLL( GN.BuildDLL( wrapper_env, 'dwritewrapper',
+            [
+                'dwrite_x64.cpp',
+                'dwrite_x64_asm.asm',
+            ],
+            defFile='dwrite_x64.def' ), rename='dwrite.dll', extraDependencies=hookdll )
+        GN.NewDefaultTarget( 'GNd3dHook', [hookdll, d3d11dll, dxgidll, d3d9dll, d2d1dll, dwritedll] )
+    else:
+        d3d11dll = GN.BinplaceDLL( GN.BuildDLL( wrapper_env, 'd3d11wrapper',
+            [
+                'd3d11_x86.cpp',
+            ],
+            defFile='d3d11_x64.def' ), rename='d3d11.dll', extraDependencies=hookdll )
+        dxgidll = GN.BinplaceDLL( GN.BuildDLL( wrapper_env, 'dxgiwrapper',
+            [
+                'dxgi_x86.cpp',
+            ],
+            defFile='dxgi_x86.def' ), rename='dxgi.dll', extraDependencies=hookdll )
+        d3d9dll = GN.BinplaceDLL( GN.BuildDLL( wrapper_env, 'd3d9wrapper',
+            [
+                'd3d9_x86.cpp',
+            ],
+            defFile='d3d9_x86.def' ), rename='d3d9.dll', extraDependencies=hookdll )
+        """d2d1dll = GN.BinplaceDLL( GN.BuildDLL( wrapper_env, 'd2d1wrapper',
+            [
+                'd2d1_x86.cpp',
+                'd2d1_x86_asm.asm',
+            ],
+            defFile='d2d1_x86.def' ), rename='d2d1.dll', extraDependencies=hookdll )
+        dwritedll = GN.BinplaceDLL( GN.BuildDLL( wrapper_env, 'dwritewrapper',
+            [
+                'dwrite_x86.cpp',
+                'dwrite_x86_asm.asm',
+            ],
+            defFile='dwrite_x86.def' ), rename='dwrite.dll', extraDependencies=hookdll )"""
+        GN.NewDefaultTarget( 'GNd3dHook', [hookdll, d3d11dll, dxgidll, d3d9dll] )
