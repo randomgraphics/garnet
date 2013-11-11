@@ -36,7 +36,7 @@
 
 #else
 
-#define GN_DEFINE_STATIC_PROFILER( name )
+#define GN_DEFINE_STATIC_PROFILER( name, desc )
 #define GN_START_PROFILER( name )
 #define GN_STOP_PROFILER( name )
 #define GN_SCOPE_PROFILER( name, desc )
