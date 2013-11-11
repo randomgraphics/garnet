@@ -75,13 +75,13 @@ namespace calltrace
         wcscat_s(buf, text);
         wcscat_s(buf, L"\n");
 
-        //if (IsDebuggerPresent())
-        //{
-        //    OutputDebugStringW(buf);
-        //}
-        //else
+        if (IsWindow(GetConsoleWindow()))
         {
             wprintf(L"%s", buf);
+        }
+        else if (IsDebuggerPresent())
+        {
+            OutputDebugStringW(buf);
         }
 
         return ++g_level;

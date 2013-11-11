@@ -19,45 +19,61 @@
 template<typename T>
 struct VTable
 {
-    T    tables[VTABLE_MAX_COUNT];
-    UINT count;
+    CRITICAL_SECTION cs;
+    T                tables[VTABLE_MAX_COUNT];
+    UINT             count;
+
     VTable() : count(0)
     {
+        InitializeCriticalSection(&cs);
+    }
+
+    ~VTable()
+    {
+        DeleteCriticalSection(&cs);
     }
 };
 
 template<SIZE_T SIZE>
-struct UpdatePageProtection
+class UpdatePageProtection
 {
-    void * address;
-    HANDLE process;
-    DWORD  oldProtection;
-    bool   succeeded;
-    const char * interfaceName;
+    CRITICAL_SECTION * _cs;
+    void *             _address;
+    HANDLE             _process;
+    DWORD              _oldProtection;
+    const char *       _interfaceName;
+    bool               _succeeded;
 
-    UpdatePageProtection(void * addr_, const char * interfaceName_)
-        : address(addr_)
-        , succeeded(false)
-        , interfaceName(interfaceName_)
+public:
+
+    UpdatePageProtection(CRITICAL_SECTION * cs, void * addr_, const char * interfaceName_)
+        : _cs(cs)
+        , _address(addr_)
+        , _interfaceName(interfaceName_)
+        , _succeeded(false)
     {
-        process = ::GetCurrentProcess();
-        if (::VirtualProtectEx( process, addr_, SIZE, PAGE_READWRITE, &oldProtection ))
+        EnterCriticalSection(_cs);
+        _process = ::GetCurrentProcess();
+        if (::VirtualProtectEx( _process, addr_, SIZE, PAGE_READWRITE, &_oldProtection ))
         {
-            succeeded = true;
+            _succeeded = true;
         }
         else
         {
-            HOOK_ERROR_LOG("Failed to update %s vtable: changing page protection failed.", interfaceName);
+            HOOK_ERROR_LOG("Failed to update %s vtable: changing page protection failed.", _interfaceName);
         }
     }
 
     ~UpdatePageProtection()
     {
-        if (succeeded && !::VirtualProtectEx( process, address, SIZE, oldProtection, &oldProtection ))
+        if (_succeeded && !::VirtualProtectEx( _process, _address, SIZE, _oldProtection, &_oldProtection ))
         {
-            HOOK_ERROR_LOG("Failed to restore %s vtable page protection.", interfaceName);
+            HOOK_ERROR_LOG("Failed to restore %s vtable page protection.", _interfaceName);
         }
+        LeaveCriticalSection(_cs);
     }
+
+    bool Succeeded() const { return _succeeded; }
 };
 
 // -----------------------------------------------------------------------------
@@ -68,8 +84,8 @@ inline void RealToHooked_General(
     VTable<VTABLE_STRUCT> & hooked,
     const char *            interfaceName)
 {
-    UpdatePageProtection<sizeof(VTABLE_STRUCT)> upp(&vtable, interfaceName);
-    if (!upp.succeeded) return;
+    UpdatePageProtection<sizeof(VTABLE_STRUCT)> upp(&origin.cs, &vtable, interfaceName);
+    if (!upp.Succeeded()) return;
 
     for (UINT t = 0; t < origin.count; ++t)
     {
