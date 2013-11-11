@@ -61,37 +61,77 @@ namespace calltrace
 
     bool g_callTraceEnabled = true;
 
-    int enter(const wchar_t * text)
+    enum TraceTarget
     {
-        wchar_t ident[256] = {};
-        for(int i = 0; i < g_level && i < _countof(ident); ++i)
-        {
-            ident[i] = L' ';
-        }
+        DISABLED     = 0,
+        TO_CONSOLE   = 1,
+        TO_DEBUGGER  = 2,
+        TO_BOTH      = 3,
+    };
 
-        wchar_t buf[256] = {};
-        swprintf_s(buf, L"{thread:%d}[%d]", GetCurrentThreadId(), InterlockedIncrement(&g_count));
-        wcscat_s(buf, ident);
-        wcscat_s(buf, text);
-        wcscat_s(buf, L"\n");
-
+    TraceTarget getTT()
+    {
         if (IsWindow(GetConsoleWindow()))
         {
-            wprintf(L"%s", buf);
+            return TO_CONSOLE;
         }
-        else if (IsDebuggerPresent())
+        else if(IsDebuggerPresent())
         {
-            OutputDebugStringW(buf);
+            return TO_DEBUGGER;
         }
+        else
+        {
+            return DISABLED;
+        }
+    }
 
+    int doEnter(const wchar_t * text, TraceTarget tt)
+    {
+        if (DISABLED != tt)
+        {
+            wchar_t ident[256] = {};
+            wchar_t buf[256] = {};
+
+            for(int i = 0; i < g_level && i < _countof(ident); ++i)
+            {
+                ident[i] = L' ';
+            }
+            swprintf_s(buf, L"{thread:%d}[%d]", GetCurrentThreadId(), InterlockedIncrement(&g_count));
+            wcscat_s(buf, ident);
+            wcscat_s(buf, text);
+            wcscat_s(buf, L"\n");
+
+            if (TO_CONSOLE & tt)
+            {
+                wprintf(L"%s", buf);
+            }
+
+            if (TO_DEBUGGER & tt)
+            {
+                OutputDebugStringW(buf);
+            }
+        }
         return ++g_level;
+    }
+
+    int enter(const wchar_t * text)
+    {
+        return doEnter(text, getTT());
     }
 
     int enter(const char * text)
     {
-        wchar_t textw[256];
-        swprintf_s(textw, L"%S", text);
-        return enter(textw);
+        TraceTarget tt = getTT();
+        if (DISABLED != tt)
+        {
+            wchar_t textw[256];
+            swprintf_s(textw, L"%S", text);
+            return doEnter(textw, tt);
+        }
+        else
+        {
+            return doEnter(L"", tt);
+        }
     }
 
     void leave()
