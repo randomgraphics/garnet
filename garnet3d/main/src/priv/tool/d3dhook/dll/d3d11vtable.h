@@ -3,11 +3,6 @@
 #include "d3d/d3d11_1.h"
 #include "d3d/dxgidebug.h"
 
-#ifndef BEGIN_INTERFACE
-#define BEGIN_INTERFACE
-#define END_INTERFACE
-#endif
-
 /// update real vtable to hooked vtable
 template<typename T> void RealToHooked11(T * p);
 

@@ -9,6 +9,11 @@
 #define HOOK_ASSERT(x)        GN_ASSERT(x)
 #define HOOK_RIP()            GN_UNEXPECTED()
 
+#undef  BEGIN_INTERFACE
+#undef  END_INTERFACE
+#define BEGIN_INTERFACE  union { struct {
+#define END_INTERFACE    }; void * method0; };
+
 // -----------------------------------------------------------------------------
 #define VTABLE_MAX_COUNT 16
 template<typename T>
@@ -21,6 +26,40 @@ struct VTable
     }
 };
 
+template<SIZE_T SIZE>
+struct UpdatePageProtection
+{
+    void * address;
+    HANDLE process;
+    DWORD  oldProtection;
+    bool   succeeded;
+    const char * interfaceName;
+
+    UpdatePageProtection(void * addr_, const char * interfaceName_)
+        : address(addr_)
+        , succeeded(false)
+        , interfaceName(interfaceName_)
+    {
+        process = ::GetCurrentProcess();
+        if (::VirtualProtectEx( process, addr_, SIZE, PAGE_READWRITE, &oldProtection ))
+        {
+            succeeded = true;
+        }
+        else
+        {
+            HOOK_ERROR_LOG("Failed to update %s vtable: changing page protection failed.", interfaceName);
+        }
+    }
+
+    ~UpdatePageProtection()
+    {
+        if (succeeded && !::VirtualProtectEx( process, address, SIZE, oldProtection, &oldProtection ))
+        {
+            HOOK_ERROR_LOG("Failed to restore %s vtable page protection.", interfaceName);
+        }
+    }
+};
+
 // -----------------------------------------------------------------------------
 template<typename VTABLE_STRUCT>
 inline void RealToHooked_General(
@@ -29,13 +68,8 @@ inline void RealToHooked_General(
     VTable<VTABLE_STRUCT> & hooked,
     const char *            interfaceName)
 {
-    HANDLE process = ::GetCurrentProcess();
-    DWORD oldProtection;
-    if (!::VirtualProtectEx( process, &vtable, sizeof(vtable), PAGE_READWRITE, &oldProtection ))
-    {
-        HOOK_ERROR_LOG("Failed to update %s vtable: changing page protection failed.", interfaceName);
-        return;
-    }
+    UpdatePageProtection<sizeof(VTABLE_STRUCT)> upp(&vtable, interfaceName);
+    if (!upp.succeeded) return;
 
     for (UINT t = 0; t < origin.count; ++t)
     {
@@ -46,10 +80,15 @@ inline void RealToHooked_General(
             vtable = h;
             return;
         }
+        if (0 == memcmp(&vtable, &h, sizeof(vtable)))
+        {
+            // already hooked
+            return;
+        }
     }
 
     // This is a new vtable for this class that we never seen before. Need to remember it.
-    HOOK_VERBOSE_LOG("New vtable (%d) for interface: %s", origin.count+1, interfaceName);
+    HOOK_INFO_LOG("New vtable (%d) for interface: %s", origin.count+1, interfaceName);
 
     if (origin.count >= VTABLE_MAX_COUNT)
     {
@@ -62,11 +101,6 @@ inline void RealToHooked_General(
     o = vtable;
     vtable = h;
     ++origin.count;
-
-    if (!::VirtualProtectEx( process, &vtable, sizeof(vtable), oldProtection, &oldProtection ))
-    {
-        HOOK_ERROR_LOG("Failed to restore %s vtable page protection.", interfaceName);
-    }
 }
 
 // -----------------------------------------------------------------------------

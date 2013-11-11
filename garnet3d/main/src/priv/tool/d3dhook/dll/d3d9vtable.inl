@@ -5,6 +5,7 @@
 // -----------------------------------------------------------------------------
 struct IDirect3D9Vtbl
 {
+    BEGIN_INTERFACE
     HRESULT (STDMETHODCALLTYPE *QueryInterface)(IDirect3D9 * this_,  REFIID riid, void** ppvObj) ;
     ULONG (STDMETHODCALLTYPE *AddRef)(IDirect3D9 * this_) ;
     ULONG (STDMETHODCALLTYPE *Release)(IDirect3D9 * this_) ;
@@ -22,6 +23,7 @@ struct IDirect3D9Vtbl
     HRESULT (STDMETHODCALLTYPE *GetDeviceCaps)(IDirect3D9 * this_,  UINT Adapter,D3DDEVTYPE DeviceType,D3DCAPS9* pCaps) ;
     HMONITOR (STDMETHODCALLTYPE *GetAdapterMonitor)(IDirect3D9 * this_,  UINT Adapter) ;
     HRESULT (STDMETHODCALLTYPE *CreateDevice)(IDirect3D9 * this_,  UINT Adapter,D3DDEVTYPE DeviceType,HWND hFocusWindow,DWORD BehaviorFlags,D3DPRESENT_PARAMETERS* pPresentationParameters,IDirect3DDevice9** ppReturnedDeviceInterface) ;
+    END_INTERFACE
 };
 
 // -----------------------------------------------------------------------------
@@ -29,6 +31,7 @@ struct IDirect3D9Vtbl
 // -----------------------------------------------------------------------------
 struct IDirect3DDevice9Vtbl
 {
+    BEGIN_INTERFACE
     HRESULT (STDMETHODCALLTYPE *QueryInterface)(IDirect3DDevice9 * this_,  REFIID riid, void** ppvObj) ;
     ULONG (STDMETHODCALLTYPE *AddRef)(IDirect3DDevice9 * this_) ;
     ULONG (STDMETHODCALLTYPE *Release)(IDirect3DDevice9 * this_) ;
@@ -148,6 +151,7 @@ struct IDirect3DDevice9Vtbl
     HRESULT (STDMETHODCALLTYPE *DrawTriPatch)(IDirect3DDevice9 * this_,  UINT Handle,CONST float* pNumSegs,CONST D3DTRIPATCH_INFO* pTriPatchInfo) ;
     HRESULT (STDMETHODCALLTYPE *DeletePatch)(IDirect3DDevice9 * this_,  UINT Handle) ;
     HRESULT (STDMETHODCALLTYPE *CreateQuery)(IDirect3DDevice9 * this_,  D3DQUERYTYPE Type,IDirect3DQuery9** ppQuery) ;
+    END_INTERFACE
 };
 
 // -----------------------------------------------------------------------------
@@ -155,12 +159,14 @@ struct IDirect3DDevice9Vtbl
 // -----------------------------------------------------------------------------
 struct IDirect3DStateBlock9Vtbl
 {
+    BEGIN_INTERFACE
     HRESULT (STDMETHODCALLTYPE *QueryInterface)(IDirect3DStateBlock9 * this_,  REFIID riid, void** ppvObj) ;
     ULONG (STDMETHODCALLTYPE *AddRef)(IDirect3DStateBlock9 * this_) ;
     ULONG (STDMETHODCALLTYPE *Release)(IDirect3DStateBlock9 * this_) ;
     HRESULT (STDMETHODCALLTYPE *GetDevice)(IDirect3DStateBlock9 * this_,  IDirect3DDevice9** ppDevice) ;
     HRESULT (STDMETHODCALLTYPE *Capture)(IDirect3DStateBlock9 * this_) ;
     HRESULT (STDMETHODCALLTYPE *Apply)(IDirect3DStateBlock9 * this_) ;
+    END_INTERFACE
 };
 
 // -----------------------------------------------------------------------------
@@ -168,6 +174,7 @@ struct IDirect3DStateBlock9Vtbl
 // -----------------------------------------------------------------------------
 struct IDirect3DSwapChain9Vtbl
 {
+    BEGIN_INTERFACE
     HRESULT (STDMETHODCALLTYPE *QueryInterface)(IDirect3DSwapChain9 * this_,  REFIID riid, void** ppvObj) ;
     ULONG (STDMETHODCALLTYPE *AddRef)(IDirect3DSwapChain9 * this_) ;
     ULONG (STDMETHODCALLTYPE *Release)(IDirect3DSwapChain9 * this_) ;
@@ -178,6 +185,7 @@ struct IDirect3DSwapChain9Vtbl
     HRESULT (STDMETHODCALLTYPE *GetDisplayMode)(IDirect3DSwapChain9 * this_,  D3DDISPLAYMODE* pMode) ;
     HRESULT (STDMETHODCALLTYPE *GetDevice)(IDirect3DSwapChain9 * this_,  IDirect3DDevice9** ppDevice) ;
     HRESULT (STDMETHODCALLTYPE *GetPresentParameters)(IDirect3DSwapChain9 * this_,  D3DPRESENT_PARAMETERS* pPresentationParameters) ;
+    END_INTERFACE
 };
 
 // -----------------------------------------------------------------------------
@@ -185,6 +193,7 @@ struct IDirect3DSwapChain9Vtbl
 // -----------------------------------------------------------------------------
 struct IDirect3DResource9Vtbl
 {
+    BEGIN_INTERFACE
     HRESULT (STDMETHODCALLTYPE *QueryInterface)(IDirect3DResource9 * this_,  REFIID riid, void** ppvObj) ;
     ULONG (STDMETHODCALLTYPE *AddRef)(IDirect3DResource9 * this_) ;
     ULONG (STDMETHODCALLTYPE *Release)(IDirect3DResource9 * this_) ;
@@ -196,6 +205,7 @@ struct IDirect3DResource9Vtbl
     DWORD (STDMETHODCALLTYPE *GetPriority)(IDirect3DResource9 * this_) ;
     void (STDMETHODCALLTYPE *PreLoad)(IDirect3DResource9 * this_) ;
     D3DRESOURCETYPE (STDMETHODCALLTYPE *GetType)(IDirect3DResource9 * this_) ;
+    END_INTERFACE
 };
 
 // -----------------------------------------------------------------------------
@@ -203,11 +213,13 @@ struct IDirect3DResource9Vtbl
 // -----------------------------------------------------------------------------
 struct IDirect3DVertexDeclaration9Vtbl
 {
+    BEGIN_INTERFACE
     HRESULT (STDMETHODCALLTYPE *QueryInterface)(IDirect3DVertexDeclaration9 * this_,  REFIID riid, void** ppvObj) ;
     ULONG (STDMETHODCALLTYPE *AddRef)(IDirect3DVertexDeclaration9 * this_) ;
     ULONG (STDMETHODCALLTYPE *Release)(IDirect3DVertexDeclaration9 * this_) ;
     HRESULT (STDMETHODCALLTYPE *GetDevice)(IDirect3DVertexDeclaration9 * this_,  IDirect3DDevice9** ppDevice) ;
     HRESULT (STDMETHODCALLTYPE *GetDeclaration)(IDirect3DVertexDeclaration9 * this_,  D3DVERTEXELEMENT9* pElement,UINT* pNumElements) ;
+    END_INTERFACE
 };
 
 // -----------------------------------------------------------------------------
@@ -215,11 +227,13 @@ struct IDirect3DVertexDeclaration9Vtbl
 // -----------------------------------------------------------------------------
 struct IDirect3DVertexShader9Vtbl
 {
+    BEGIN_INTERFACE
     HRESULT (STDMETHODCALLTYPE *QueryInterface)(IDirect3DVertexShader9 * this_,  REFIID riid, void** ppvObj) ;
     ULONG (STDMETHODCALLTYPE *AddRef)(IDirect3DVertexShader9 * this_) ;
     ULONG (STDMETHODCALLTYPE *Release)(IDirect3DVertexShader9 * this_) ;
     HRESULT (STDMETHODCALLTYPE *GetDevice)(IDirect3DVertexShader9 * this_,  IDirect3DDevice9** ppDevice) ;
     HRESULT (STDMETHODCALLTYPE *GetFunction)(IDirect3DVertexShader9 * this_,  void* pFunction,UINT* pSizeOfData) ;
+    END_INTERFACE
 };
 
 // -----------------------------------------------------------------------------
@@ -227,11 +241,13 @@ struct IDirect3DVertexShader9Vtbl
 // -----------------------------------------------------------------------------
 struct IDirect3DPixelShader9Vtbl
 {
+    BEGIN_INTERFACE
     HRESULT (STDMETHODCALLTYPE *QueryInterface)(IDirect3DPixelShader9 * this_,  REFIID riid, void** ppvObj) ;
     ULONG (STDMETHODCALLTYPE *AddRef)(IDirect3DPixelShader9 * this_) ;
     ULONG (STDMETHODCALLTYPE *Release)(IDirect3DPixelShader9 * this_) ;
     HRESULT (STDMETHODCALLTYPE *GetDevice)(IDirect3DPixelShader9 * this_,  IDirect3DDevice9** ppDevice) ;
     HRESULT (STDMETHODCALLTYPE *GetFunction)(IDirect3DPixelShader9 * this_,  void* pFunction,UINT* pSizeOfData) ;
+    END_INTERFACE
 };
 
 // -----------------------------------------------------------------------------
@@ -239,6 +255,7 @@ struct IDirect3DPixelShader9Vtbl
 // -----------------------------------------------------------------------------
 struct IDirect3DBaseTexture9Vtbl
 {
+    BEGIN_INTERFACE
     HRESULT (STDMETHODCALLTYPE *QueryInterface)(IDirect3DBaseTexture9 * this_,  REFIID riid, void** ppvObj) ;
     ULONG (STDMETHODCALLTYPE *AddRef)(IDirect3DBaseTexture9 * this_) ;
     ULONG (STDMETHODCALLTYPE *Release)(IDirect3DBaseTexture9 * this_) ;
@@ -256,6 +273,7 @@ struct IDirect3DBaseTexture9Vtbl
     HRESULT (STDMETHODCALLTYPE *SetAutoGenFilterType)(IDirect3DBaseTexture9 * this_,  D3DTEXTUREFILTERTYPE FilterType) ;
     D3DTEXTUREFILTERTYPE (STDMETHODCALLTYPE *GetAutoGenFilterType)(IDirect3DBaseTexture9 * this_) ;
     void (STDMETHODCALLTYPE *GenerateMipSubLevels)(IDirect3DBaseTexture9 * this_) ;
+    END_INTERFACE
 };
 
 // -----------------------------------------------------------------------------
@@ -263,6 +281,7 @@ struct IDirect3DBaseTexture9Vtbl
 // -----------------------------------------------------------------------------
 struct IDirect3DTexture9Vtbl
 {
+    BEGIN_INTERFACE
     HRESULT (STDMETHODCALLTYPE *QueryInterface)(IDirect3DTexture9 * this_,  REFIID riid, void** ppvObj) ;
     ULONG (STDMETHODCALLTYPE *AddRef)(IDirect3DTexture9 * this_) ;
     ULONG (STDMETHODCALLTYPE *Release)(IDirect3DTexture9 * this_) ;
@@ -285,6 +304,7 @@ struct IDirect3DTexture9Vtbl
     HRESULT (STDMETHODCALLTYPE *LockRect)(IDirect3DTexture9 * this_,  UINT Level,D3DLOCKED_RECT* pLockedRect,CONST RECT* pRect,DWORD Flags) ;
     HRESULT (STDMETHODCALLTYPE *UnlockRect)(IDirect3DTexture9 * this_,  UINT Level) ;
     HRESULT (STDMETHODCALLTYPE *AddDirtyRect)(IDirect3DTexture9 * this_,  CONST RECT* pDirtyRect) ;
+    END_INTERFACE
 };
 
 // -----------------------------------------------------------------------------
@@ -292,6 +312,7 @@ struct IDirect3DTexture9Vtbl
 // -----------------------------------------------------------------------------
 struct IDirect3DVolumeTexture9Vtbl
 {
+    BEGIN_INTERFACE
     HRESULT (STDMETHODCALLTYPE *QueryInterface)(IDirect3DVolumeTexture9 * this_,  REFIID riid, void** ppvObj) ;
     ULONG (STDMETHODCALLTYPE *AddRef)(IDirect3DVolumeTexture9 * this_) ;
     ULONG (STDMETHODCALLTYPE *Release)(IDirect3DVolumeTexture9 * this_) ;
@@ -314,6 +335,7 @@ struct IDirect3DVolumeTexture9Vtbl
     HRESULT (STDMETHODCALLTYPE *LockBox)(IDirect3DVolumeTexture9 * this_,  UINT Level,D3DLOCKED_BOX* pLockedVolume,CONST D3DBOX* pBox,DWORD Flags) ;
     HRESULT (STDMETHODCALLTYPE *UnlockBox)(IDirect3DVolumeTexture9 * this_,  UINT Level) ;
     HRESULT (STDMETHODCALLTYPE *AddDirtyBox)(IDirect3DVolumeTexture9 * this_,  CONST D3DBOX* pDirtyBox) ;
+    END_INTERFACE
 };
 
 // -----------------------------------------------------------------------------
@@ -321,6 +343,7 @@ struct IDirect3DVolumeTexture9Vtbl
 // -----------------------------------------------------------------------------
 struct IDirect3DCubeTexture9Vtbl
 {
+    BEGIN_INTERFACE
     HRESULT (STDMETHODCALLTYPE *QueryInterface)(IDirect3DCubeTexture9 * this_,  REFIID riid, void** ppvObj) ;
     ULONG (STDMETHODCALLTYPE *AddRef)(IDirect3DCubeTexture9 * this_) ;
     ULONG (STDMETHODCALLTYPE *Release)(IDirect3DCubeTexture9 * this_) ;
@@ -343,6 +366,7 @@ struct IDirect3DCubeTexture9Vtbl
     HRESULT (STDMETHODCALLTYPE *LockRect)(IDirect3DCubeTexture9 * this_,  D3DCUBEMAP_FACES FaceType,UINT Level,D3DLOCKED_RECT* pLockedRect,CONST RECT* pRect,DWORD Flags) ;
     HRESULT (STDMETHODCALLTYPE *UnlockRect)(IDirect3DCubeTexture9 * this_,  D3DCUBEMAP_FACES FaceType,UINT Level) ;
     HRESULT (STDMETHODCALLTYPE *AddDirtyRect)(IDirect3DCubeTexture9 * this_,  D3DCUBEMAP_FACES FaceType,CONST RECT* pDirtyRect) ;
+    END_INTERFACE
 };
 
 // -----------------------------------------------------------------------------
@@ -350,6 +374,7 @@ struct IDirect3DCubeTexture9Vtbl
 // -----------------------------------------------------------------------------
 struct IDirect3DVertexBuffer9Vtbl
 {
+    BEGIN_INTERFACE
     HRESULT (STDMETHODCALLTYPE *QueryInterface)(IDirect3DVertexBuffer9 * this_,  REFIID riid, void** ppvObj) ;
     ULONG (STDMETHODCALLTYPE *AddRef)(IDirect3DVertexBuffer9 * this_) ;
     ULONG (STDMETHODCALLTYPE *Release)(IDirect3DVertexBuffer9 * this_) ;
@@ -364,6 +389,7 @@ struct IDirect3DVertexBuffer9Vtbl
     HRESULT (STDMETHODCALLTYPE *Lock)(IDirect3DVertexBuffer9 * this_,  UINT OffsetToLock,UINT SizeToLock,void** ppbData,DWORD Flags) ;
     HRESULT (STDMETHODCALLTYPE *Unlock)(IDirect3DVertexBuffer9 * this_) ;
     HRESULT (STDMETHODCALLTYPE *GetDesc)(IDirect3DVertexBuffer9 * this_,  D3DVERTEXBUFFER_DESC *pDesc) ;
+    END_INTERFACE
 };
 
 // -----------------------------------------------------------------------------
@@ -371,6 +397,7 @@ struct IDirect3DVertexBuffer9Vtbl
 // -----------------------------------------------------------------------------
 struct IDirect3DIndexBuffer9Vtbl
 {
+    BEGIN_INTERFACE
     HRESULT (STDMETHODCALLTYPE *QueryInterface)(IDirect3DIndexBuffer9 * this_,  REFIID riid, void** ppvObj) ;
     ULONG (STDMETHODCALLTYPE *AddRef)(IDirect3DIndexBuffer9 * this_) ;
     ULONG (STDMETHODCALLTYPE *Release)(IDirect3DIndexBuffer9 * this_) ;
@@ -385,6 +412,7 @@ struct IDirect3DIndexBuffer9Vtbl
     HRESULT (STDMETHODCALLTYPE *Lock)(IDirect3DIndexBuffer9 * this_,  UINT OffsetToLock,UINT SizeToLock,void** ppbData,DWORD Flags) ;
     HRESULT (STDMETHODCALLTYPE *Unlock)(IDirect3DIndexBuffer9 * this_) ;
     HRESULT (STDMETHODCALLTYPE *GetDesc)(IDirect3DIndexBuffer9 * this_,  D3DINDEXBUFFER_DESC *pDesc) ;
+    END_INTERFACE
 };
 
 // -----------------------------------------------------------------------------
@@ -392,6 +420,7 @@ struct IDirect3DIndexBuffer9Vtbl
 // -----------------------------------------------------------------------------
 struct IDirect3DSurface9Vtbl
 {
+    BEGIN_INTERFACE
     HRESULT (STDMETHODCALLTYPE *QueryInterface)(IDirect3DSurface9 * this_,  REFIID riid, void** ppvObj) ;
     ULONG (STDMETHODCALLTYPE *AddRef)(IDirect3DSurface9 * this_) ;
     ULONG (STDMETHODCALLTYPE *Release)(IDirect3DSurface9 * this_) ;
@@ -409,6 +438,7 @@ struct IDirect3DSurface9Vtbl
     HRESULT (STDMETHODCALLTYPE *UnlockRect)(IDirect3DSurface9 * this_) ;
     HRESULT (STDMETHODCALLTYPE *GetDC)(IDirect3DSurface9 * this_,  HDC *phdc) ;
     HRESULT (STDMETHODCALLTYPE *ReleaseDC)(IDirect3DSurface9 * this_,  HDC hdc) ;
+    END_INTERFACE
 };
 
 // -----------------------------------------------------------------------------
@@ -416,6 +446,7 @@ struct IDirect3DSurface9Vtbl
 // -----------------------------------------------------------------------------
 struct IDirect3DVolume9Vtbl
 {
+    BEGIN_INTERFACE
     HRESULT (STDMETHODCALLTYPE *QueryInterface)(IDirect3DVolume9 * this_,  REFIID riid, void** ppvObj) ;
     ULONG (STDMETHODCALLTYPE *AddRef)(IDirect3DVolume9 * this_) ;
     ULONG (STDMETHODCALLTYPE *Release)(IDirect3DVolume9 * this_) ;
@@ -427,6 +458,7 @@ struct IDirect3DVolume9Vtbl
     HRESULT (STDMETHODCALLTYPE *GetDesc)(IDirect3DVolume9 * this_,  D3DVOLUME_DESC *pDesc) ;
     HRESULT (STDMETHODCALLTYPE *LockBox)(IDirect3DVolume9 * this_,  D3DLOCKED_BOX * pLockedVolume,CONST D3DBOX* pBox,DWORD Flags) ;
     HRESULT (STDMETHODCALLTYPE *UnlockBox)(IDirect3DVolume9 * this_) ;
+    END_INTERFACE
 };
 
 // -----------------------------------------------------------------------------
@@ -434,6 +466,7 @@ struct IDirect3DVolume9Vtbl
 // -----------------------------------------------------------------------------
 struct IDirect3DQuery9Vtbl
 {
+    BEGIN_INTERFACE
     HRESULT (STDMETHODCALLTYPE *QueryInterface)(IDirect3DQuery9 * this_,  REFIID riid, void** ppvObj) ;
     ULONG (STDMETHODCALLTYPE *AddRef)(IDirect3DQuery9 * this_) ;
     ULONG (STDMETHODCALLTYPE *Release)(IDirect3DQuery9 * this_) ;
@@ -442,6 +475,7 @@ struct IDirect3DQuery9Vtbl
     DWORD (STDMETHODCALLTYPE *GetDataSize)(IDirect3DQuery9 * this_) ;
     HRESULT (STDMETHODCALLTYPE *Issue)(IDirect3DQuery9 * this_,  DWORD dwIssueFlags) ;
     HRESULT (STDMETHODCALLTYPE *GetData)(IDirect3DQuery9 * this_,  void* pData,DWORD dwSize,DWORD dwGetDataFlags) ;
+    END_INTERFACE
 };
 
 // -----------------------------------------------------------------------------
@@ -449,6 +483,7 @@ struct IDirect3DQuery9Vtbl
 // -----------------------------------------------------------------------------
 struct IDirect3D9ExVtbl
 {
+    BEGIN_INTERFACE
     HRESULT (STDMETHODCALLTYPE *QueryInterface)(IDirect3D9Ex * this_,  REFIID riid, void** ppvObj) ;
     ULONG (STDMETHODCALLTYPE *AddRef)(IDirect3D9Ex * this_) ;
     ULONG (STDMETHODCALLTYPE *Release)(IDirect3D9Ex * this_) ;
@@ -470,6 +505,7 @@ struct IDirect3D9ExVtbl
     HRESULT (STDMETHODCALLTYPE *GetAdapterDisplayModeEx)(IDirect3D9Ex * this_,  UINT Adapter,D3DDISPLAYMODEEX* pMode,D3DDISPLAYROTATION* pRotation) ;
     HRESULT (STDMETHODCALLTYPE *CreateDeviceEx)(IDirect3D9Ex * this_,  UINT Adapter,D3DDEVTYPE DeviceType,HWND hFocusWindow,DWORD BehaviorFlags,D3DPRESENT_PARAMETERS* pPresentationParameters,D3DDISPLAYMODEEX* pFullscreenDisplayMode,IDirect3DDevice9Ex** ppReturnedDeviceInterface) ;
     HRESULT (STDMETHODCALLTYPE *GetAdapterLUID)(IDirect3D9Ex * this_,  UINT Adapter,LUID * pLUID) ;
+    END_INTERFACE
 };
 
 // -----------------------------------------------------------------------------
@@ -477,6 +513,7 @@ struct IDirect3D9ExVtbl
 // -----------------------------------------------------------------------------
 struct IDirect3DDevice9ExVtbl
 {
+    BEGIN_INTERFACE
     HRESULT (STDMETHODCALLTYPE *QueryInterface)(IDirect3DDevice9Ex * this_,  REFIID riid, void** ppvObj) ;
     ULONG (STDMETHODCALLTYPE *AddRef)(IDirect3DDevice9Ex * this_) ;
     ULONG (STDMETHODCALLTYPE *Release)(IDirect3DDevice9Ex * this_) ;
@@ -611,6 +648,7 @@ struct IDirect3DDevice9ExVtbl
     HRESULT (STDMETHODCALLTYPE *CreateDepthStencilSurfaceEx)(IDirect3DDevice9Ex * this_,  UINT Width,UINT Height,D3DFORMAT Format,D3DMULTISAMPLE_TYPE MultiSample,DWORD MultisampleQuality,BOOL Discard,IDirect3DSurface9** ppSurface,HANDLE* pSharedHandle,DWORD Usage) ;
     HRESULT (STDMETHODCALLTYPE *ResetEx)(IDirect3DDevice9Ex * this_,  D3DPRESENT_PARAMETERS* pPresentationParameters,D3DDISPLAYMODEEX *pFullscreenDisplayMode) ;
     HRESULT (STDMETHODCALLTYPE *GetDisplayModeEx)(IDirect3DDevice9Ex * this_,  UINT iSwapChain,D3DDISPLAYMODEEX* pMode,D3DDISPLAYROTATION* pRotation) ;
+    END_INTERFACE
 };
 
 // -----------------------------------------------------------------------------
@@ -618,6 +656,7 @@ struct IDirect3DDevice9ExVtbl
 // -----------------------------------------------------------------------------
 struct IDirect3DSwapChain9ExVtbl
 {
+    BEGIN_INTERFACE
     HRESULT (STDMETHODCALLTYPE *QueryInterface)(IDirect3DSwapChain9Ex * this_,  REFIID riid, void** ppvObj) ;
     ULONG (STDMETHODCALLTYPE *AddRef)(IDirect3DSwapChain9Ex * this_) ;
     ULONG (STDMETHODCALLTYPE *Release)(IDirect3DSwapChain9Ex * this_) ;
@@ -631,6 +670,7 @@ struct IDirect3DSwapChain9ExVtbl
     HRESULT (STDMETHODCALLTYPE *GetLastPresentCount)(IDirect3DSwapChain9Ex * this_,  UINT* pLastPresentCount) ;
     HRESULT (STDMETHODCALLTYPE *GetPresentStats)(IDirect3DSwapChain9Ex * this_,  D3DPRESENTSTATS* pPresentationStatistics) ;
     HRESULT (STDMETHODCALLTYPE *GetDisplayModeEx)(IDirect3DSwapChain9Ex * this_,  D3DDISPLAYMODEEX* pMode,D3DDISPLAYROTATION* pRotation) ;
+    END_INTERFACE
 };
 
 // -----------------------------------------------------------------------------
@@ -638,10 +678,12 @@ struct IDirect3DSwapChain9ExVtbl
 // -----------------------------------------------------------------------------
 struct IDirect3D9ExOverlayExtensionVtbl
 {
+    BEGIN_INTERFACE
     HRESULT (STDMETHODCALLTYPE *QueryInterface)(IDirect3D9ExOverlayExtension * this_,  REFIID riid, void** ppvObj) ;
     ULONG (STDMETHODCALLTYPE *AddRef)(IDirect3D9ExOverlayExtension * this_) ;
     ULONG (STDMETHODCALLTYPE *Release)(IDirect3D9ExOverlayExtension * this_) ;
     HRESULT (STDMETHODCALLTYPE *CheckDeviceOverlayType)(IDirect3D9ExOverlayExtension * this_,  UINT Adapter,D3DDEVTYPE DevType,UINT OverlayWidth,UINT OverlayHeight,D3DFORMAT OverlayFormat,D3DDISPLAYMODEEX* pDisplayMode,D3DDISPLAYROTATION DisplayRotation,D3DOVERLAYCAPS* pOverlayCaps) ;
+    END_INTERFACE
 };
 
 // -----------------------------------------------------------------------------
@@ -649,12 +691,14 @@ struct IDirect3D9ExOverlayExtensionVtbl
 // -----------------------------------------------------------------------------
 struct IDirect3DDevice9VideoVtbl
 {
+    BEGIN_INTERFACE
     HRESULT (STDMETHODCALLTYPE *QueryInterface)(IDirect3DDevice9Video * this_,  REFIID riid, void** ppvObj) ;
     ULONG (STDMETHODCALLTYPE *AddRef)(IDirect3DDevice9Video * this_) ;
     ULONG (STDMETHODCALLTYPE *Release)(IDirect3DDevice9Video * this_) ;
     HRESULT (STDMETHODCALLTYPE *GetContentProtectionCaps)(IDirect3DDevice9Video * this_,  CONST GUID* pCryptoType,CONST GUID* pDecodeProfile,D3DCONTENTPROTECTIONCAPS* pCaps) ;
     HRESULT (STDMETHODCALLTYPE *CreateAuthenticatedChannel)(IDirect3DDevice9Video * this_,  D3DAUTHENTICATEDCHANNELTYPE ChannelType,IDirect3DAuthenticatedChannel9** ppAuthenticatedChannel,HANDLE* pChannelHandle) ;
     HRESULT (STDMETHODCALLTYPE *CreateCryptoSession)(IDirect3DDevice9Video * this_,  CONST GUID* pCryptoType,CONST GUID* pDecodeProfile,IDirect3DCryptoSession9** ppCryptoSession,HANDLE* pCryptoHandle) ;
+    END_INTERFACE
 };
 
 // -----------------------------------------------------------------------------
@@ -662,6 +706,7 @@ struct IDirect3DDevice9VideoVtbl
 // -----------------------------------------------------------------------------
 struct IDirect3DAuthenticatedChannel9Vtbl
 {
+    BEGIN_INTERFACE
     HRESULT (STDMETHODCALLTYPE *QueryInterface)(IDirect3DAuthenticatedChannel9 * this_,  REFIID riid, void** ppvObj) ;
     ULONG (STDMETHODCALLTYPE *AddRef)(IDirect3DAuthenticatedChannel9 * this_) ;
     ULONG (STDMETHODCALLTYPE *Release)(IDirect3DAuthenticatedChannel9 * this_) ;
@@ -670,6 +715,7 @@ struct IDirect3DAuthenticatedChannel9Vtbl
     HRESULT (STDMETHODCALLTYPE *NegotiateKeyExchange)(IDirect3DAuthenticatedChannel9 * this_,  UINT DataSize,VOID* pData) ;
     HRESULT (STDMETHODCALLTYPE *Query)(IDirect3DAuthenticatedChannel9 * this_,  UINT InputSize,CONST VOID* pInput,UINT OutputSize,VOID* pOutput) ;
     HRESULT (STDMETHODCALLTYPE *Configure)(IDirect3DAuthenticatedChannel9 * this_,  UINT InputSize,CONST VOID* pInput,D3DAUTHENTICATEDCHANNEL_CONFIGURE_OUTPUT* pOutput) ;
+    END_INTERFACE
 };
 
 // -----------------------------------------------------------------------------
@@ -677,6 +723,7 @@ struct IDirect3DAuthenticatedChannel9Vtbl
 // -----------------------------------------------------------------------------
 struct IDirect3DCryptoSession9Vtbl
 {
+    BEGIN_INTERFACE
     HRESULT (STDMETHODCALLTYPE *QueryInterface)(IDirect3DCryptoSession9 * this_,  REFIID riid, void** ppvObj) ;
     ULONG (STDMETHODCALLTYPE *AddRef)(IDirect3DCryptoSession9 * this_) ;
     ULONG (STDMETHODCALLTYPE *Release)(IDirect3DCryptoSession9 * this_) ;
@@ -689,6 +736,7 @@ struct IDirect3DCryptoSession9Vtbl
     HRESULT (STDMETHODCALLTYPE *StartSessionKeyRefresh)(IDirect3DCryptoSession9 * this_,  VOID* pRandomNumber,UINT RandomNumberSize) ;
     HRESULT (STDMETHODCALLTYPE *FinishSessionKeyRefresh)(IDirect3DCryptoSession9 * this_) ;
     HRESULT (STDMETHODCALLTYPE *GetEncryptionBltKey)(IDirect3DCryptoSession9 * this_,  VOID* pReadbackKey,UINT KeySize) ;
+    END_INTERFACE
 };
 
 // -----------------------------------------------------------------------------
