@@ -644,7 +644,8 @@ class D3D9VTableFile:
                            '// ' + interface_name + '\n'
                            '// -----------------------------------------------------------------------------\n'
                            'struct ' + interface_name + 'Vtbl\n'
-                           '{\n')
+                           '{\n'
+                           '    BEGIN_INTERFACE\n')
         for l in lines:
             if -1 != l.find('STDMETHOD_'):
                 m = re.match(r"STDMETHOD_\((\w+),\s*(\w+)\)", l)
@@ -659,7 +660,8 @@ class D3D9VTableFile:
             l = l.replace('PURE;', ';')
             l = l.strip()
             self._header.write('    ' + l + '\n')
-        self._header.write('};\n\n')
+        self._header.write('    END_INTERFACE\n'
+                           '};\n\n')
 
         # individula hook methods
         self._cpp.write('// -----------------------------------------------------------------------------\n'
