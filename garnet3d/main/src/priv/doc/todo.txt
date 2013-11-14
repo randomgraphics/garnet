@@ -4,13 +4,12 @@ TODO
 - 程序中标注TODO的地方
 
 - p0
-  - add json support
+  - constant/uniform buffer object for opengl.
   - thread safe weak ref object.
-  - thread and sync objects unit tests.
   - massive 3D scene explorer.
     - importer/exporter
     - scene graph / spacial organization.
-    - shader llibrary
+    - shader library
   - scene import/export
     - fatmodel XML/BIN loader and saver.
     - load skeleton animation from FBX.
@@ -34,9 +33,10 @@ TODO
     - Compiled from effect files.
     - Precompile GPU shaders when possible to catch compile errors at build time.
     - Generated from shader components
-  - anti-alias demo.
 
 - p1
+  - anti-alias demo.
+  - thread and sync objects unit tests.
   - update skinned mesh bounding box with animation
   - unit test:
     - DynaArray<???,uint8>
@@ -112,6 +112,7 @@ TODO
   - replace FBX test app with something else (not owned by Autodesk).
 
 - Backlog
+  - add json support
   - Code tree reorg
     - Flatten code tree
     - Try Re-enable "non-static" build
