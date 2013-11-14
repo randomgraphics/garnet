@@ -1,6 +1,6 @@
 #include "../testCommon.h"
 
-#if 0
+#if 1
 namespace GN2
 {
     ///
@@ -12,6 +12,7 @@ namespace GN2
         GN::Mutex      lock;
         GN::DoubleLink references;
 
+        // return true, only when reference list is empty
         bool deref(GN::DoubleLink & l)
         {
             lock.enter();
@@ -33,7 +34,7 @@ namespace GN2
         ///
         /// increase reference counter
         ///
-        sint32 incref() const  throw() { return atomInc32(&mRef); }
+        sint32 incref() const  throw() { return GN::atomInc32(&mRef); }
 
         ///
         /// decrease reference counter, delete the object, if reference count reaches zero.
@@ -43,12 +44,20 @@ namespace GN2
             GN_ASSERT( mRef > 0 );
 
             mWeakLock.enter();
-            if (mWeakObj && mWeakObj->deref(mWeakLink))
+            sint32 ref = GN::atomDec32( &mRef ) ;
+            if (0 == ref && mWeakObj)
             {
-                delete mWeakObj;
+                mWeakObj->lock.enter();
+                mWeakLink.detach();
+                mWeakObj->ptr = NULL;
+                bool timeToDelete = !mWeakObj->references.prev && !mWeakObj->references.next;
+                mWeakObj->lock.leave();
+                if (timeToDelete)
+                {
+                    delete mWeakObj;
+                }
                 mWeakObj = NULL;
             }
-            sint32 ref = atomDec32( &mRef ) ;
             mWeakLock.leave();
 
             if( 0 == ref )
@@ -62,16 +71,19 @@ namespace GN2
         ///
         /// get current reference counter value
         ///
-        sint32 getref() const throw() { return atomGet32(&mRef); }
+        sint32 getref() const throw() { return GN::atomGet32(&mRef); }
 
+        ///
+        /// Return the weak object associated with this reference counted object.
+        ///
         WeakObject * getWeakObj() const
         {
             mWeakLock.enter();
             if (!mWeakObj)
             {
                 mWeakObj = new WeakObject();
-                mWeakObj->ptr = this;
-                mWeakLink.linkAfter(&mWeakObj);
+                mWeakObj->ptr = (void*)this;
+                mWeakLink.linkAfter(&mWeakObj->references);
             }
             mWeakLock.leave();
             return mWeakObj;
@@ -342,14 +354,16 @@ namespace GN2
         WeakObject   * mObj;
         GN::DoubleLink mLink;
 
+        typedef AutoRef<X> StrongRef;
+
     public:
 
         ///
         /// constructor
         ///
-        WeakRef( const AutoRef<XPTR> & ref ) : mObj(NULL)
+        WeakRef( XPTR ptr = NULL ) : mObj(NULL)
         {
-            set( ref );
+            set( ptr );
         }
 
         ///
@@ -380,22 +394,34 @@ namespace GN2
             mObj = NULL;
         }
 
+        bool empty() const
+        {
+            bool result = true;
+            if (mObj)
+            {
+                mObj->lock.enter();
+                result = NULL == mObj->ptr;
+                mObj->lock.leave();
+            }
+            return result;
+        }
+
         ///
         /// set/reset the pointer. Null pointer is allowed.
         ///
-        void set( const AutoRef<XPTR> & ref )
+        void set( XPTR ptr )
         {
-            if (!ref)
+            if (!ptr)
             {
                 clear();
             }
             else
             {
-                WeakObject * obj = ref->getWeakObj();
+                WeakObject * obj = ptr->getWeakObj();
                 if (obj != mObj)
                 {
                     obj->lock.enter();
-                    mLink.linkAfter( &obj->refs );
+                    mLink.linkAfter( &obj->references );
                     mLink.context = this;
                     obj->lock.leave();
                     mObj = obj;
@@ -426,6 +452,8 @@ namespace GN2
             set( rhs.promote() ); // TODO: we might be able to do it slightly faster.
             return *this;
         }
+
+        bool operator !() const { return empty(); }
 
         ///
         /// ±È½Ï²Ù×÷
@@ -499,25 +527,32 @@ public:
         TS_ASSERT_EQUALS( p1b->getref(), 3 );
     }
 
-    void testWeakRef()
+    void testWeakRef1()
     {
-        using namespace GN;
+        struct Ref2 : public GN2::RefCounter
+        {
+        };
 
-        WeakObject * o = new WeakObject;
+        GN2::AutoRef<Ref2> p( new Ref2() );
+        TS_ASSERT(1 == p->getref());
 
-        WeakRef<WeakObject> w1( o );
-        WeakRef<WeakObject> w2;
-        WeakRef<WeakObject> w3( w1 );
+        GN2::WeakRef<Ref2> w1(p);
+        GN2::WeakRef<Ref2> w2(w1);
+        GN2::WeakRef<Ref2> w3;
 
-        w2.set( o );
+        // weak reference should not affect strong reference counter
+        TS_ASSERT(1 == p->getref());
 
+        // test assignment
+        w3 = w1;
         TS_ASSERT( w1 );
         TS_ASSERT( w2 );
         TS_ASSERT( w3 );
         TS_ASSERT( w1 == w2 );
         TS_ASSERT( w1 == w3 );
+        TS_ASSERT( w2 == w3 );
 
-        delete o;
+        p = NULL;
 
         TS_ASSERT( !w1 );
         TS_ASSERT( !w2 );
