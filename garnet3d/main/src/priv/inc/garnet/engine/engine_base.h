@@ -21,28 +21,224 @@
 
 namespace GN { namespace engine
 {
-    /// Define entity type class
-    typedef Guid EntityType;
-
     ///
-    /// Entity refernce class
-    ///
-    template<typename T>
-    class EntityRef : public WeakRef<T>
+    /// Base class of entity object that supports weak referencing
+    // -------------------------------------------------------------------------
+    class EntityBase
     {
     public:
 
-        ///
-        /// Destructor (non virtual)
-        ///
-        ~EntityRef()
+        mutable DoubleLink mRefs;
+
+        /// Default constructor
+        EntityBase()
         {
-            WeakRef<T>::clear();
+            // This context pointer is never used.
+            mRefs.context = (void*)0xbadbeef;
+        }
+
+        /// Copy constructor
+        EntityBase( const EntityBase & )
+        {
+            // Nothing to copy
+            mRefs.context = (void*)0xbadbeef;
+        }
+
+        /// Destructor
+        virtual ~EntityBase();
+
+        /// Copy operator
+        EntityBase & operator=( const EntityBase & )
+        {
+            // Nothing to copy.
+            return *this;
         }
     };
 
+    ///
+    /// Base class of weak referencing pointer. This class is a building
+    /// block of weak-ref pointer. It should not be used directly by
+    /// client code.
+    // -------------------------------------------------------------------------
+    class EntityRefBase
+    {
+    public:
+
+        const EntityBase * mPtr;
+        DoubleLink         mLink;
+
+        /// Constructor
+        EntityRefBase( const EntityBase * ptr ) : mPtr(ptr)
+        {
+            mLink.context = this;
+            if( ptr ) mLink.linkAfter( &ptr->mRefs );
+        }
+
+        /// copy constructor
+        EntityRefBase( const EntityRefBase & ref ) : mPtr(ref.mPtr)
+        {
+            mLink.context = this;
+            if( mPtr ) mLink.linkAfter( &mPtr->mRefs );
+        }
+
+        /// non virtual destructor
+        ~EntityRefBase()
+        {
+        }
+
+        /// Attach to a new weak object (detach from current one)
+        void attachTo( const EntityBase * ptr )
+        {
+            if( mPtr == ptr ) return;
+
+            // detach from current object
+            mLink.detach();
+
+            // attach to new object
+            if( ptr ) mLink.linkAfter( &ptr->mRefs );
+            mPtr = ptr;
+         }
+    };
+
+    ///
+    /// Weak object destructor
+    // -------------------------------------------------------------------------
+    inline EntityBase::~EntityBase()
+    {
+        // Loop through reference list. Clear them all.
+        DoubleLink * next;
+        EntityRefBase * ref;
+        while( NULL != (next = mRefs.next) )
+        {
+            ref = (EntityRefBase*)next->context;
+            ref->mPtr = NULL;
+            next->detach();
+        }
+    }
+
+    ///
+    /// Weak reference to entity object
+    // -------------------------------------------------------------------------
+    template<typename X>
+    class EntityRef : private EntityRefBase
+    {
+        typedef X * XPTR;
+        typedef X & XREF;
+
+    public:
+
+        ///
+        /// constructor
+        ///
+        EntityRef( XPTR ptr = NULL ) : EntityRefBase(ptr)
+        {
+        }
+
+        ///
+        /// copy constructor
+        ///
+        EntityRef( const EntityRef & ref ) : EntityRefBase(ref)
+        {
+            attachTo( ref.mPtr );
+        }
+
+        ///
+        /// Destructor
+        ///
+        ~EntityRef()
+        {
+            clear();
+        }
+
+        ///
+        /// clear the reference
+        ///
+        void clear()
+        {
+            mLink.detach();
+            mPtr = NULL;
+        }
+
+        ///
+        /// get the raw pointer
+        ///
+        XPTR rawptr() const { return (XPTR)mPtr; }
+
+        ///
+        /// check for empty reference
+        ///
+        bool empty() const { return NULL == mPtr; }
+
+        ///
+        /// set/reset the pointer. Null pointer is allowed.
+        ///
+        void set( XPTR ptr )
+        {
+            if( mPtr == ptr ) return;
+            attachTo( ptr );
+        }
+
+        ///
+        /// copy operator
+        ///
+        EntityRef & operator = ( const EntityRef & rhs )
+        {
+            attachTo( rhs.mPtr );
+            return *this;
+        }
+
+        ///
+        /// Convert to XPTR
+        ///
+        operator XPTR () const { return (XPTR)mPtr; }
+
+        ///
+        /// 比较操作
+        ///
+        bool operator == ( const EntityRef & rhs ) const throw()
+        {
+            return mPtr == rhs.mPtr;
+        }
+
+        ///
+        /// 比较操作
+        ///
+        bool operator != ( const EntityRef & rhs ) const throw()
+        {
+            return mPtr != rhs.mPtr;
+        }
+
+        ///
+        /// 比较操作
+        ///
+        bool operator < ( const EntityRef & rhs ) const throw()
+        {
+            return mPtr < rhs.mPtr;
+        }
+
+        ///
+        /// NOT operator
+        ///
+        bool operator !() const throw() { return !mPtr; }
+
+        ///
+        /// dereference operator.
+        ///
+        /// TODO: is this thread safe?
+        ///
+        XREF operator *() const throw()  { GN_ASSERT(mPtr); return *mPtr; }
+
+        ///
+        /// arrow operator
+        ///
+        XPTR operator->() const throw()  { GN_ASSERT(mPtr); return  mPtr; }
+    };
+
+    /// Define entity type class
+    typedef Guid EntityType;
+
     /// Entity class. Root class of game play object that could be placed into game world.
-    class Entity : public WeakObject, public NoCopy
+    class Entity : public EntityBase, public NoCopy
     {
     protected:
 
