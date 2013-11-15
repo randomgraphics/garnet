@@ -479,6 +479,9 @@ BOOL WINAPI DllMain( HINSTANCE, DWORD fdwReason, LPVOID )
 {
 	if ( fdwReason == DLL_PROCESS_ATTACH )
     {
+        g_options.enabled = fs::isFile("__d3dhook_hook_enabled");
+        calltrace::g_callTraceEnabled = fs::isFile("__d3dhook_call_trace_enabled");;
+
         SetupD3D11HookedVTables();
         SetupD3D9HookedVTables();
 	} else if ( fdwReason == DLL_PROCESS_DETACH )
