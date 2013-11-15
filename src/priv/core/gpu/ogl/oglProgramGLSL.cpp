@@ -638,6 +638,13 @@ GN::gfx::OGLGpuProgramGLSL::enumParameters()
         GN_OGL_CHECK_RV( glGetActiveUniformARB( mProgram, i, maxLength, NULL, &u.count, &u.type, nameptr ), false );
         nameptr[maxLength] = 0;
 
+        // remove "[0]" suffix from array uniform
+        size_t namelen = str::length(nameptr);
+        if( namelen > 3 && 0 == str::compare( "[0]", &nameptr[namelen-3] ) )
+        {
+            nameptr[namelen-3] = 0;
+        }
+
         GN_VTRACE(sLogger)( "Found GLSL uniform: %s", nameptr );
 
         GN_OGL_CHECK_RV( u.location = glGetUniformLocationARB( mProgram, nameptr ), false );
