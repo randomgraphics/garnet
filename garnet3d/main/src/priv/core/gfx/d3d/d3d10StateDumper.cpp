@@ -480,8 +480,12 @@ static StrA sDumpResource( ID3D10Device & device, const char * prefix, ID3D10Res
     }
     else
     {
+#if GN_PLATFORM_HAS_D3DX10
         sprintf_s( fname, "%s_texture.dds", prefix );
         D3DX10SaveTextureToFileA( res, D3DX10_IFF_DDS, fname );
+#else
+        GN_ERROR(sLogger)("Can't save texture to DDS file without D3DX10 support.");
+#endif
     }
 
     return fname;

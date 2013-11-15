@@ -8,6 +8,10 @@
 
 #include "GNbase.h"
 
+#if GN_PLATFORM_HAS_D3DCOMPILER
+#include <d3dcompiler.h>
+#endif
+
 #if GN_PLATFORM_HAS_D3D10 | GN_PLATFORM_HAS_D3D11
 #include "d3d/dxgiutils.h"
 #endif
