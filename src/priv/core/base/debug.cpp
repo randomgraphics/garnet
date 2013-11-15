@@ -17,10 +17,11 @@
 
 static const char * DXERR_FUNC( sint32 error )
 {
-    __declspec(thread) static char * text = "0x12345678";
+    __declspec(thread) static char text[] = "0x12345678";
     for(int i = 0; i < 8; ++i)
     {
-        text[2+i] = (error >> (28-i*4)) & 0xF;
+        char ch = '0' + ((error >> (28-i*4)) & 0xF);
+        text[2+i] = ch;
     }
     return text;
 }
