@@ -2,6 +2,7 @@
 #include "ase.h"
 #include <garnet/gfx/fatModel.h>
 #include <set>
+#include <map>
 
 #if GN_MSVC
 #pragma warning(disable:4100) // unreferenced formal parameter
@@ -786,31 +787,24 @@ static void sLoadFbxAnimations( FatModel & fatmodel, FbxScene * fbxscene )
 
 }*/
 
+struct SkinningWeight
+{
+    uint32 skeleton;
+    uint32 joint;
+    double weight;
+};
+
+typedef std::map<uint32, GN::DynaArray<SkinningWeight>> SkinningMap;
+
 //
 // Get vertex skinning information for the vertex specified by controlPointIndex.
 // -----------------------------------------------------------------------------
 static void
-sLoadFbxVertexSkinning(
-    INOUT uint32         & skeleton, // Index into FatModel::skeleton arrayreturns the skeleton that of the joint
-    OUT   Skinning       & sk,
-    IN    FbxSdkWrapper  & sdk,
-    IN    const FbxMesh * fbxmesh,
-    IN    int              controlPointIndex,
-    IN    bool             firstVertex )
+sBuildSkinningMap(
+    OUT   SkinningMap   & sm,
+    IN    FbxSdkWrapper & sdk,
+    IN    const FbxMesh * fbxmesh )
 {
-    // Initialize the global skeleton value for the first vertex.
-    if( firstVertex )
-    {
-        skeleton = FatMesh::NO_SKELETON;
-    }
-
-    // set the default binding: bind to nothing.
-    for( size_t i = 0; i < GN_ARRAY_COUNT(sk.joints); ++i )
-    {
-        sk.joints[i]  = FatJoint::NO_JOINT;
-        sk.weights[i] = 0;
-    }
-
     // Search through all deformers
     int numdef = fbxmesh->GetDeformerCount();
     for( int iDef = 0; iDef < numdef; ++iDef )
@@ -832,11 +826,10 @@ sLoadFbxVertexSkinning(
             FbxNode * link = cl->GetLink();
             if( NULL == link ) continue;
 
-            uint32 currentSkeleton;
-            uint32 currentJoint;
+            SkinningWeight sw;
             if( !sSearchForNamedJoint(
-                currentSkeleton,
-                currentJoint,
+                sw.skeleton,
+                sw.joint,
                 sdk.jointMap,
                 link->GetName() ) )
             {
@@ -847,76 +840,109 @@ sLoadFbxVertexSkinning(
                 continue;
             }
 
+            // Search through all control points of the current cluster.
+            int cpicount = cl->GetControlPointIndicesCount();
+            const int * cpindices = cl->GetControlPointIndices();
+            const double * weights = cl->GetControlPointWeights();
+            for( int iCpi = 0; iCpi < cpicount; ++iCpi )
+            {
+                uint32 cpi = (uint32)cpindices[iCpi];
+                sw.weight = weights[iCpi];
+                if( sw.weight > 0 )
+                {
+                    sm[cpi].append(sw);
+                }
+            }
+            // Done with the current cluster. Loop to next one.
+        }
+        // Done with the current deformer. Loop to next one.
+    }
+}
+
+//
+// Get vertex skinning information for the vertex specified by controlPointIndex.
+// -----------------------------------------------------------------------------
+static void
+sLoadFbxVertexSkinning(
+    INOUT uint32         & skeleton, // Index into FatModel::skeleton arrayreturns the skeleton that of the joint
+    OUT   Skinning       & sk,
+    IN    SkinningMap    & sm,
+    IN    int              controlPointIndex,
+    IN    bool             firstVertex )
+{
+    if( firstVertex )
+    {
+        // Initialize the global skeleton value for the first vertex.
+        skeleton = FatMesh::NO_SKELETON;
+    }
+    else if (FatMesh::NO_SKELETON == skeleton)
+    {
+        return;
+    }
+
+    // set the default binding: bind to nothing.
+    for( size_t i = 0; i < GN_ARRAY_COUNT(sk.joints); ++i )
+    {
+        sk.joints[i]  = FatJoint::NO_JOINT;
+        sk.weights[i] = 0;
+    }
+
+    auto iter = sm.find(controlPointIndex);
+    if (sm.end() != iter)
+    {
+        const DynaArray<SkinningWeight> & weights = iter->second;
+        for(size_t i = 0; i < weights.size(); ++i)
+        {
+            const SkinningWeight & w = weights[i];
             // See if the cluster is linking to the same skeleton as what is linking to
             // the first vertex.
-            if( firstVertex )
+            if( firstVertex && 0 == i )
             {
-                // This is the first vertex. Update the "global" skeleton.
-                skeleton = currentSkeleton;
+                // This is the first weight for the first vertex. Update the "global" skeleton.
+                skeleton = w.skeleton;
             }
-            else if( skeleton != currentSkeleton )
+            else if( skeleton != w.skeleton )
             {
                 // The cluster is linking to a skeleton other than the skeleton linked to vertex #0.
                 // We support at most one skeleton per mesh. So this cluster will be ignored, with warning.
                 GN_ERROR(sLogger)( "Cluster is ignored, because it is linking to another skeleton." );
                 continue;
             }
-
-            // Search through all control points of the current cluster.
-            int cpicount = cl->GetControlPointIndicesCount();
-            const int * cpi = cl->GetControlPointIndices();
-            const double * weights = cl->GetControlPointWeights();
-            for( int iCpi = 0; iCpi < cpicount; ++iCpi )
-            {
-                // Search though until we found the index that we are looking for.
-                if( cpi[iCpi] != controlPointIndex ) continue;
-
-                // So, we found it. This cluster is affecting the vertex. But if
-                // the weight is zero, we still need to ignore it.
-                float currentWeight = (float)weights[iCpi];
-                if( 0 == currentWeight ) continue;
-
-                // Add the new binding information to the skinning structure.
-                sAddNewBone<GN_ARRAY_COUNT(sk.joints)>( sk.joints, sk.weights, currentJoint, currentWeight, controlPointIndex, skeleton );
-
-                // We've assigned the joint linked to the cluster to the vertex. So break out of this
-                // loop and contineu with next cluster.
-                break;
-            }
-
-            // Done with the current cluster. Loop to next one.
-        }
-
-        // Done with the current deformer. Loop to next one.
-    }
-
-    // Get sum of all weights.
-    float sum = 0.0f;
-    for( size_t i = 0; i < GN_ARRAY_COUNT(sk.joints); ++i )
-    {
-        if( FatJoint::NO_JOINT != sk.joints[i] )
-        {
-            sum += sk.weights[i];
+            // Add the new binding information to the skinning structure.
+            sAddNewBone<GN_ARRAY_COUNT(sk.joints)>( sk.joints, sk.weights, w.joint, (float)w.weight, controlPointIndex, skeleton );
         }
     }
 
-    // If the vertex does not linked to any joints, or the weight sum is zero,
-    // then fallback to the root joint.
-    if( FatJoint::NO_JOINT == sk.joints[0] || 0.0f == sum )
+    if (FatMesh::NO_SKELETON != skeleton)
     {
-        sk.joints[0] = 0;
-        sk.weights[0] = 1.0;
-    }
-    else
-    {
-        // We might have dropped some joints, because we have limit of 4 joints per vertex.
-        // So we need to renormalize the joint weight, to keep sum of all weights 1.0.
-        float invsum = 1.0f / sum;
+        // Get sum of all weights.
+        float sum = 0.0f;
         for( size_t i = 0; i < GN_ARRAY_COUNT(sk.joints); ++i )
         {
             if( FatJoint::NO_JOINT != sk.joints[i] )
             {
-                sk.weights[i] *= invsum;
+                sum += sk.weights[i];
+            }
+        }
+
+        // If the vertex does not linked to any joints, or the weight sum is zero,
+        // then fallback to the root joint.
+        if( FatJoint::NO_JOINT == sk.joints[0] || 0.0f == sum )
+        {
+            sk.joints[0] = 0;
+            sk.weights[0] = 1.0;
+        }
+        else
+        {
+            // We might have dropped some joints, because we have limit of 4 joints per vertex.
+            // So we need to renormalize the joint weight, to keep sum of all weights 1.0.
+            float invsum = 1.0f / sum;
+            for( size_t i = 0; i < GN_ARRAY_COUNT(sk.joints); ++i )
+            {
+                if( FatJoint::NO_JOINT != sk.joints[i] )
+                {
+                    sk.weights[i] *= invsum;
+                }
             }
         }
     }
@@ -1270,6 +1296,10 @@ sLoadFbxMesh(
     // Initialize skeleton index of the mesh to default value.
     fatmesh.skeleton = FatMesh::NO_SKELETON;
 
+    // build skinning map (to accelarate skin loading)
+    SkinningMap sm;
+    sBuildSkinningMap(sm, sdk, fbxmesh);
+
     // Split the FBX fbxmesh into multiple models, one material one model.
     int uvIndex = 0;
     int normalIndex = 0;
@@ -1346,19 +1376,7 @@ sLoadFbxMesh(
             // get skinning information.
             bool firstVertex = ( 0 == polygonIndex && 0 == i );
             Skinning sk;
-            if( firstVertex )
-            {
-                // Always load skinning information for the first vertex.
-                // The function will also determine of the mesh is binding to a skeleton or not, by
-                // updating fatmesh.skeleton.
-                sLoadFbxVertexSkinning( fatmesh.skeleton, sk, sdk, fbxmesh, posIndex, firstVertex );
-            }
-            else if( fatmesh.skeleton != FatMesh::NO_SKELETON )
-            {
-                // Load skinning information for the following vertices, only when the mesh is binding
-                // to a skeleton.
-                sLoadFbxVertexSkinning( fatmesh.skeleton, sk, sdk, fbxmesh, posIndex, firstVertex );
-            }
+            sLoadFbxVertexSkinning( fatmesh.skeleton, sk, sm, posIndex, firstVertex );
             if( fatmesh.skeleton != FatMesh::NO_SKELETON )
             {
                 // Sanity check
