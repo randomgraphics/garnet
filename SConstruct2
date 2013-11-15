@@ -472,7 +472,6 @@ def CheckConfig():
     # Misc. D3D headers and libs
     # ==========================
     CONFIG['has_dxerr']       = c.CheckCXXHeader( ['windows.h','dxerr.h'] )
-
     CONFIG['has_xnamath']     = c.CheckCXXHeader( ['windows.h','xnamath.h'] ) or \
                                 c.CheckCXXHeader( ['xtl.h','xnamath.h'] )
 
@@ -481,12 +480,13 @@ def CheckConfig():
                                 c.CheckCXXHeader( ['xtl.h','directxmath.h'] )
 
     CONFIG['has_dxgi_lib']    = c.CheckLibWithHeader( 'dxgi.lib', 'dxgi.h', 'C++' )
+    CONFIG['has_d3dcompiler'] = c.CheckLibWithHeader( 'D3dcompiler.lib', 'D3Dcompiler.h', 'C++' )
 
     # ====
     # D3D9
     # ====
-    CONFIG['has_d3d9_h'] = ('cygwin' != BUILD_TARGET_OS) and (('xenon' == BUILD_TARGET_OS ) or c.CheckCXXHeader( 'd3d9.h' ))
-    CONFIG['has_d3d9']   = ('cygwin' != BUILD_TARGET_OS) and (('xenon' == BUILD_TARGET_OS) or ( CONFIG['has_dxerr'] and c.CheckCXXHeader( 'd3d9.h' ) and c.CheckCXXHeader( 'd3dx9.h' ) ))
+    CONFIG['has_d3d9']   = ('cygwin' != BUILD_TARGET_OS) and (('xenon' == BUILD_TARGET_OS) or c.CheckCXXHeader( 'd3d9.h' ))
+    CONFIG['has_d3dx9']  = ('cygwin' != BUILD_TARGET_OS) and (('xenon' == BUILD_TARGET_OS) or c.CheckCXXHeader( 'd3dx9.h' ))
 
     # Detect if current OS is Windows Vista or newer.
     def IsVistaOrNewer( env ):
@@ -504,7 +504,8 @@ def CheckConfig():
     # =====
     # D3D10
     # =====
-    CONFIG['has_d3d10']     = CONFIG['has_dxerr'] and CONFIG['has_d3d9'] and c.CheckLibWithHeader( 'd3d10.lib', 'd3d10.h', 'C++' ) and IsVistaOrNewer(env);
+    CONFIG['has_d3d10']  = CONFIG['has_d3d9'] and c.CheckLibWithHeader( 'd3d10.lib',  'd3d10.h',  'C++' ) and IsVistaOrNewer(env);
+    CONFIG['has_d3dx10'] = CONFIG['has_d3d9'] and c.CheckLibWithHeader( 'd3d10x.lib', 'd3d10x.h', 'C++' ) and IsVistaOrNewer(env);
 
     # =====
     # D3D11
@@ -613,9 +614,11 @@ class GarnetEnv2 :
         self.has_cg_d3d9      = CONFIG['has_cg_d3d9']
         self.has_cg_d3d10     = CONFIG['has_cg_d3d10']
         self.has_cg_d3d11     = CONFIG['has_cg_d3d11']
-        self.has_d3d9_h       = CONFIG['has_d3d9_h']
+        self.has_d3dcompiler  = CONFIG['has_d3dcompiler']
         self.has_d3d9         = CONFIG['has_d3d9']
+        self.has_d3dx9        = CONFIG['has_d3dx9']
         self.has_d3d10        = CONFIG['has_d3d10']
+        self.has_d3dx10       = CONFIG['has_d3dx10']
         self.has_d3d11        = CONFIG['has_d3d11']
         self.has_d3d11_1      = CONFIG['has_d3d11_1']
         self.has_d3dx11       = CONFIG['has_d3dx11']
@@ -783,13 +786,17 @@ class GarnetEnv2 :
         libs += CONFIG['iconv_lib']
         dbg = ( BUILD_VARIANT == "debug" )
         if CONFIG['has_d3d9'] and ('xenon' != BUILD_TARGET_OS) :
-            libs += ['d3d9.lib', 'd3dx9d.lib'] if dbg else ['d3d9.lib', 'd3dx9.lib']
+            libs += ['d3d9.lib'] if dbg else ['d3d9.lib']
+        if CONFIG['has_d3dx9'] and ('xenon' != BUILD_TARGET_OS) :
+            libs += ['d3dx9d.lib'] if dbg else ['d3dx9.lib']
         if CONFIG['has_d3d11']:
-            libs += ['dxgi.lib', 'dxguid.lib', 'd3d11.lib', 'd3dcompiler.lib']
+            libs += ['dxgi.lib', 'dxguid.lib', 'd3d11.lib']
         if CONFIG['has_d3dx11']:
             libs += ['d3dx11d.lib'] if dbg else ['d3dx11.lib']
         if CONFIG['has_dxerr']:
         	libs += ['dxerr.lib']
+        if CONFIG['has_d3dcompiler']:
+        	libs += ['d3dcompiler.lib']
         env.Prepend( LIBS = libs )
 
     #

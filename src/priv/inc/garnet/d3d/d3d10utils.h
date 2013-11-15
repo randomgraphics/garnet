@@ -12,7 +12,6 @@
 #include <windows.h>
 #include <d3d9.h>
 #include <d3d10_1.h>
-#include <d3dx10.h>
 
 namespace GN { /*namespace for D3D10 utils*/ namespace d3d10
 {

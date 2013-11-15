@@ -186,7 +186,12 @@ bool D3D9OrientationBox::OnDeviceCreate( IDirect3DDevice9 * dev )
     }
 
     // initialize shaders
-    m_Vs = GN::d3d9::compileAndCreateVS( dev, vscode, 0, D3DXSHADER_PACKMATRIX_ROWMAJOR );
+    #if GN_PLATFORM_HAS_D3DCOMPILER
+    UINT flag = D3DCOMPILE_PACK_MATRIX_ROW_MAJOR;
+    #else
+    UINT flag = D3DXSHADER_PACKMATRIX_ROWMAJOR;
+    #endif
+    m_Vs = GN::d3d9::compileAndCreateVS( dev, vscode, 0, flag );
     m_Ps = GN::d3d9::compileAndCreatePS( dev, pscode );
     if( NULL == m_Vs || NULL == m_Ps ) return false;
 
@@ -270,6 +275,8 @@ void D3D9OrientationBox::OnDeviceDelete()
     m_Device = 0;
 }
 
+Matrix44f ToMatrix44f( CXMMATRIX m );
+
 //
 //
 // -----------------------------------------------------------------------------
@@ -300,7 +307,7 @@ void D3D9OrientationBox::Draw( float x, float y, const XMMATRIX & viewRH )
     XMMATRIX world = XMMatrixRotationQuaternion( rotation );
     XMMATRIX view  = XMMatrixTranslation( 0, 0, -distance );
     XMMATRIX proj  = XMMatrixPerspectiveRH( 2.0f, 2.0f, distance - 4.0f, distance + 4.0f );
-    XMMATRIX transform = world * view * proj;
+    Matrix44f transform = ToMatrix44f(world * view * proj);
 
     // draw the box to private render target
     stateSaver.SetRS( D3DRS_CULLMODE, D3DCULL_NONE );
@@ -308,7 +315,7 @@ void D3D9OrientationBox::Draw( float x, float y, const XMMATRIX & viewRH )
     stateSaver.SetRS( D3DRS_ZFUNC, D3DCMP_LESSEQUAL );
 
     m_Device->SetFVF( D3DFVF_XYZ | D3DFVF_DIFFUSE | D3DFVF_TEX1 );
-    m_Device->SetVertexShaderConstantF( 0, (const float*)transform.m, 4 );
+    m_Device->SetVertexShaderConstantF( 0, (const float*)transform.rows, 4 );
     m_Device->SetVertexShader( m_Vs );
 
     m_Device->SetPixelShader( m_Ps );

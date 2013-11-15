@@ -12,20 +12,36 @@ static GN::Logger * sLogger = GN::getLogger("GN.sample.thickline");
 
 static XMMATRIX ToXMMatrix( const Matrix44f & m )
 {
+#if GN_PLATFORM_HAS_DIRECTXMATH
+    return XMMATRIX(
+        m[0][0], m[0][1], m[0][2], m[0][3],
+        m[1][0], m[1][1], m[1][2], m[1][3],
+        m[2][0], m[2][1], m[2][2], m[2][3],
+        m[3][0], m[3][1], m[3][2], m[3][3] );
+#else
     return XMMatrixSet(
         m[0][0], m[0][1], m[0][2], m[0][3],
         m[1][0], m[1][1], m[1][2], m[1][3],
         m[2][0], m[2][1], m[2][2], m[2][3],
         m[3][0], m[3][1], m[3][2], m[3][3] );
+#endif
 }
 
-static Matrix44f ToMatrix44f( CXMMATRIX m )
+Matrix44f ToMatrix44f( CXMMATRIX m )
 {
+#if GN_PLATFORM_HAS_DIRECTXMATH
+    return Matrix44f(
+        XMVectorGetX(m.r[0]), XMVectorGetY(m.r[0]), XMVectorGetZ(m.r[0]), XMVectorGetW(m.r[0]),
+        XMVectorGetX(m.r[1]), XMVectorGetY(m.r[1]), XMVectorGetZ(m.r[1]), XMVectorGetW(m.r[1]),
+        XMVectorGetX(m.r[2]), XMVectorGetY(m.r[2]), XMVectorGetZ(m.r[2]), XMVectorGetW(m.r[2]),
+        XMVectorGetX(m.r[3]), XMVectorGetY(m.r[3]), XMVectorGetZ(m.r[3]), XMVectorGetW(m.r[3]) );
+#else
     return Matrix44f(
         m.m[0][0], m.m[0][1], m.m[0][2], m.m[0][3],
         m.m[1][0], m.m[1][1], m.m[1][2], m.m[1][3],
         m.m[2][0], m.m[2][1], m.m[2][2], m.m[2][3],
         m.m[3][0], m.m[3][1], m.m[3][2], m.m[3][3] );
+#endif
 }
 
 class ThickLineDemo : public D3D9Application

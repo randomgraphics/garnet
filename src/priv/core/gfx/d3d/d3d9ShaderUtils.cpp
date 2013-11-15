@@ -1,5 +1,7 @@
 #include "pch.h"
 
+using namespace GN;
+
 static GN::Logger * sLogger = GN::getLogger("GN.d3d9.d3d9ShaderUtils");
 
 //
@@ -33,7 +35,11 @@ static GN::StrA sAddLineCountD3D9( const GN::StrA & in )
 static uint32 sRefineFlagsD3D9( uint32 flags )
 {
 #if GN_ENABLE_DEBUG
+#if GN_PLATFORM_HAS_D3DCOMPILER
+    flags |= D3DCOMPILE_DEBUG;
+#elif GN_PLATFORM_HAS_D3DX9
     flags |= D3DXSHADER_DEBUG;
+#endif
 #endif
     return flags;
 }
@@ -67,12 +73,11 @@ static void sPrintShaderCompileInfoD3D9( const char * hlsl, ID3DXBuffer * bin )
 {
     GN_GUARD;
 
-    GN_ASSERT( hlsl && bin );
-
-    using namespace GN;
-
+#if GN_PLATFORM_HAS_D3DX9
     // get ASM code
     AutoComPtr<ID3DXBuffer> asm_;
+
+    GN_ASSERT( hlsl && bin );
 
     D3DXDisassembleShader(
         (const DWORD*)bin->GetBufferPointer(),
@@ -88,6 +93,18 @@ static void sPrintShaderCompileInfoD3D9( const char * hlsl, ID3DXBuffer * bin )
         "\n=========================================================\n",
         sAddLineCountD3D9(hlsl).rawptr(),
         sAddLineCountD3D9((const char*)asm_->GetBufferPointer()).rawptr() );
+#else
+
+    GN_ASSERT( hlsl );
+    GN_UNUSED_PARAM( bin );
+
+    GN_VTRACE(sLogger)(
+        "\n================== Shader compile success ===============\n"
+        "%s\n"
+        "\n=========================================================\n",
+        sAddLineCountD3D9(hlsl).rawptr() );
+
+#endif
 
     GN_UNGUARD;
 }
@@ -141,6 +158,7 @@ GN_API LPDIRECT3DVERTEXSHADER9 GN::d3d9::compileAndCreateVS( LPDIRECT3DDEVICE9 d
     AutoComPtr<ID3DXBuffer> bin;
     AutoComPtr<ID3DXBuffer> err;
     HRESULT hr;
+#if GN_PLATFORM_HAS_D3D9X
     if( FAILED(hr = D3DXCompileShader(
             code, (UINT)( len ? len : str::length(code) ),
             NULL, NULL, // no macros, no includes,
@@ -150,6 +168,19 @@ GN_API LPDIRECT3DVERTEXSHADER9 GN::d3d9::compileAndCreateVS( LPDIRECT3DDEVICE9 d
             &bin,
             &err,
             constTable )) )
+#else
+    GN_UNUSED_PARAM( constTable );
+    if( FAILED(hr = D3DCompile(
+            code, (UINT)( len ? len : str::length(code) ),
+            "", // source name
+            NULL, NULL, // no macros, no includes,
+            entry,
+            str::isEmpty(profile) ? "ps_2_0" : profile,
+            sRefineFlagsD3D9(flags),
+            0, // flags2
+            &bin,
+            &err )) )
+#endif
     {
         sPrintShaderCompileErrorD3D9( hr, code, err );
         return 0;
@@ -177,7 +208,7 @@ GN_API LPDIRECT3DVERTEXSHADER9 GN::d3d9::compileAndCreateVS( LPDIRECT3DDEVICE9 d
 //
 //
 // -----------------------------------------------------------------------------
-GN_API LPDIRECT3DVERTEXSHADER9 GN::d3d9::compileAndCreateVSFromFile( LPDIRECT3DDEVICE9 dev, const char * file, uint32 flags, const char * entry, const char * profile, LPD3DXCONSTANTTABLE * constTable, LPD3DXBUFFER * binary )
+GN_API LPDIRECT3DPIXELSHADER9 GN::d3d9::compileAndCreatePS( LPDIRECT3DDEVICE9 dev, const char * code, size_t len, uint32 flags, const char * entry, const char * profile, LPD3DXCONSTANTTABLE * constTable )
 {
     GN_GUARD;
 
@@ -187,38 +218,52 @@ GN_API LPDIRECT3DVERTEXSHADER9 GN::d3d9::compileAndCreateVSFromFile( LPDIRECT3DD
     AutoComPtr<ID3DXBuffer> bin;
     AutoComPtr<ID3DXBuffer> err;
     HRESULT hr;
-    if( FAILED(hr = D3DXCompileShaderFromFileA(
-            fs::toNativeDiskFilePath(file).rawptr(),
+#if GN_PLATFORM_HAS_D3D9X
+    if( FAILED(hr = D3DXCompileShader(
+            code, (UINT)( len ? len : str::length(code) ),
             NULL, NULL, // no macros, no includes,
             entry,
-            str::isEmpty(profile) ? D3DXGetVertexShaderProfile( dev ) : profile,
+            str::isEmpty(profile) ? D3DXGetPixelShaderProfile( dev ) : profile,
             sRefineFlagsD3D9(flags),
             &bin,
             &err,
             constTable )) )
+#else
+    GN_UNUSED_PARAM( constTable );
+    if( FAILED(hr = D3DCompile(
+            code, (UINT)( len ? len : str::length(code) ),
+            "", // source name
+            NULL, NULL, // no macros, no includes,
+            entry,
+            str::isEmpty(profile) ? "ps_2_0" : profile,
+            sRefineFlagsD3D9(flags),
+            0, // flags2
+            &bin,
+            &err )) )
+#endif
     {
-        sPrintShaderCompileErrorD3D9( hr, file, err );
+        sPrintShaderCompileErrorD3D9( hr, code, err );
         return 0;
-    }
+    };
 
     // print compile info
-    sPrintShaderCompileInfoD3D9( file, bin );
+    sPrintShaderCompileInfoD3D9( code, bin );
 
     // Create shader
-    LPDIRECT3DVERTEXSHADER9 result;
+    LPDIRECT3DPIXELSHADER9 result;
     GN_DX_CHECK_RETURN(
-        dev->CreateVertexShader(
+        dev->CreatePixelShader(
             (const DWORD*)bin->GetBufferPointer(),
             &result ),
         NULL );
-
-    if( binary ) *binary = bin.detach();
 
     // success
     return result;
 
     GN_UNGUARD;
 }
+
+#if GN_PLATFORM_HAS_D3DX9
 
 //
 //
@@ -261,134 +306,6 @@ GN_API LPDIRECT3DVERTEXSHADER9 GN::d3d9::assembleAndCreateVS( LPDIRECT3DDEVICE9 
         NULL );
 
     if( binary ) *binary = bin.detach();
-
-    // success
-    return result;
-
-    GN_UNGUARD;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-GN_API LPDIRECT3DVERTEXSHADER9 GN::d3d9::assembleAndCreateVSFromFile( LPDIRECT3DDEVICE9 dev, const char * file, uint32 flags, LPD3DXBUFFER * binary )
-{
-    GN_GUARD;
-
-    GN_ASSERT( dev );
-
-    // Assemble shader.
-    AutoComPtr<ID3DXBuffer> bin;
-    AutoComPtr<ID3DXBuffer> err;
-    HRESULT hr;
-    if( FAILED(hr = D3DXAssembleShaderFromFileA(
-            fs::toNativeDiskFilePath(file).rawptr(),
-            NULL, NULL, // no macros, no includes,
-            sRefineFlagsD3D9(flags),
-            &bin,
-            &err )) )
-    {
-        sPrintShaderCompileErrorD3D9( hr, file, err );
-        return 0;
-    }
-
-    // Create shader
-    LPDIRECT3DVERTEXSHADER9 result;
-    GN_DX_CHECK_RETURN(
-        dev->CreateVertexShader(
-            (const DWORD*)bin->GetBufferPointer(),
-            &result ),
-        NULL );
-
-    if( binary ) *binary = bin.detach();
-
-    // success
-    return result;
-
-    GN_UNGUARD;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-GN_API LPDIRECT3DPIXELSHADER9 GN::d3d9::compileAndCreatePS( LPDIRECT3DDEVICE9 dev, const char * code, size_t len, uint32 flags, const char * entry, const char * profile, LPD3DXCONSTANTTABLE * constTable )
-{
-    GN_GUARD;
-
-    GN_ASSERT( dev );
-
-    // Compile shader.
-    AutoComPtr<ID3DXBuffer> bin;
-    AutoComPtr<ID3DXBuffer> err;
-    HRESULT hr;
-    if( FAILED(hr = D3DXCompileShader(
-            code, (UINT)( len ? len : str::length(code) ),
-            NULL, NULL, // no macros, no includes,
-            entry,
-            str::isEmpty(profile) ? D3DXGetPixelShaderProfile( dev ) : profile,
-            sRefineFlagsD3D9(flags),
-            &bin,
-            &err,
-            constTable )) )
-    {
-        sPrintShaderCompileErrorD3D9( hr, code, err );
-        return 0;
-    };
-
-    // print compile info
-    sPrintShaderCompileInfoD3D9( code, bin );
-
-    // Create shader
-    LPDIRECT3DPIXELSHADER9 result;
-    GN_DX_CHECK_RETURN(
-        dev->CreatePixelShader(
-            (const DWORD*)bin->GetBufferPointer(),
-            &result ),
-        NULL );
-
-    // success
-    return result;
-
-    GN_UNGUARD;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-GN_API LPDIRECT3DPIXELSHADER9 GN::d3d9::compileAndCreatePSFromFile( LPDIRECT3DDEVICE9 dev, const char * file, uint32 flags, const char * entry, const char * profile, LPD3DXCONSTANTTABLE * constTable )
-{
-    GN_GUARD;
-
-    GN_ASSERT( dev );
-
-    // Compile shader.
-    AutoComPtr<ID3DXBuffer> bin;
-    AutoComPtr<ID3DXBuffer> err;
-    HRESULT hr;
-    if( FAILED(hr = D3DXCompileShaderFromFileA(
-            fs::toNativeDiskFilePath(file).rawptr(),
-            NULL, NULL, // no macros, no includes,
-            entry,
-            str::isEmpty(profile) ? D3DXGetPixelShaderProfile( dev ) : profile,
-            sRefineFlagsD3D9(flags),
-            &bin,
-            &err,
-            constTable )) )
-    {
-        sPrintShaderCompileErrorD3D9( hr, file, err );
-        return 0;
-    };
-
-    // print compile info
-    sPrintShaderCompileInfoD3D9( file, bin );
-
-    // Create shader
-    LPDIRECT3DPIXELSHADER9 result;
-    GN_DX_CHECK_RETURN(
-        dev->CreatePixelShader(
-            (const DWORD*)bin->GetBufferPointer(),
-            &result ),
-        NULL );
 
     // success
     return result;
@@ -442,75 +359,4 @@ GN_API LPDIRECT3DPIXELSHADER9 GN::d3d9::assembleAndCreatePS( LPDIRECT3DDEVICE9 d
     GN_UNGUARD;
 }
 
-//
-//
-// -----------------------------------------------------------------------------
-GN_API LPDIRECT3DPIXELSHADER9 GN::d3d9::assembleAndCreatePSFromFile( LPDIRECT3DDEVICE9 dev, const char * file, uint32 flags )
-{
-    GN_GUARD;
-
-    GN_ASSERT( dev );
-
-    // Assemble shader.
-    AutoComPtr<ID3DXBuffer> bin;
-    AutoComPtr<ID3DXBuffer> err;
-    HRESULT hr;
-    if( FAILED(hr = D3DXAssembleShaderFromFileA(
-            fs::toNativeDiskFilePath(file).rawptr(),
-            NULL, NULL, // no macros, no includes,
-            sRefineFlagsD3D9(flags),
-            &bin,
-            &err )) )
-    {
-        sPrintShaderCompileErrorD3D9( hr, file, err );
-        return 0;
-    };
-
-    // Create shader
-    LPDIRECT3DPIXELSHADER9 result;
-    GN_DX_CHECK_RETURN(
-        dev->CreatePixelShader(
-            (const DWORD*)bin->GetBufferPointer(),
-            &result ),
-        NULL );
-
-    // success
-    return result;
-
-    GN_UNGUARD;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-GN_API LPD3DXEFFECT GN::d3d9::compileAndCreateEffect( LPDIRECT3DDEVICE9 dev, const char * code, size_t len, uint32 flags, LPD3DXEFFECTPOOL pool )
-{
-    GN_GUARD;
-
-    GN_ASSERT( dev );
-
-    //StrA tmpfile = sSaveCodeToTemporaryFile( code, len );
-    //if( tmpfile.empty() ) return 0;
-
-    LPD3DXEFFECT result;
-    AutoComPtr<ID3DXBuffer> err;
-
-    HRESULT hr;
-    if( FAILED(hr = D3DXCreateEffect(
-            dev,
-            code, (UINT)(len?len:str::length(code)), //tmpfile.rawptr(),
-            NULL, NULL, // no macros, no includes,
-            sRefineFlagsD3D9(flags),
-            pool,
-            &result,
-            &err )) )
-    {
-        sPrintShaderCompileErrorD3D9( hr, code, err );
-        return 0;
-    };
-
-    // success
-    return result;
-
-    GN_UNGUARD;
-}
+#endif

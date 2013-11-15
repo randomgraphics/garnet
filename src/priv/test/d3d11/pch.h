@@ -6,6 +6,7 @@
 // \author  chenlee (2005.10.1)
 // *****************************************************************************
 
+#define NOMINMAX
 #include "garnet/GNd3d.h"
 #include "garnet/GNgfx.h"
 #include "garnet/GNutil.h"
