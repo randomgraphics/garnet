@@ -175,7 +175,7 @@ GN_API LPDIRECT3DVERTEXSHADER9 GN::d3d9::compileAndCreateVS( LPDIRECT3DDEVICE9 d
             "", // source name
             NULL, NULL, // no macros, no includes,
             entry,
-            str::isEmpty(profile) ? "ps_2_0" : profile,
+            str::isEmpty(profile) ? "vs_2_0" : profile,
             sRefineFlagsD3D9(flags),
             0, // flags2
             &bin,
