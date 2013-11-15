@@ -1516,6 +1516,8 @@ sLoadFromFBX( FatModel & fatmodel, File & file, const StrA & filename )
 {
 #ifdef HAS_FBX
 
+    GN_INFO(sLogger)("Load FBX model from file: %s", filename);
+
     FbxSdkWrapper sdk;
     if( !sdk.init() ) return false;
     FbxManager * gSdkManager = sdk.manager;
@@ -1538,6 +1540,11 @@ sLoadFromFBX( FatModel & fatmodel, File & file, const StrA & filename )
         GN_ERROR(sLogger)( gImporter->GetStatus().GetErrorString() );
         return false;
     }
+
+    // Check file version
+    int vmajor, vminor, vrev;
+    gImporter->GetFileVersion(vmajor, vminor, vrev);
+    GN_INFO(sLogger)("FBX model version = %d.%d.%d", vmajor, vminor, vrev);
 
     // Import the scene
     FbxScene * gScene = FbxScene::Create( gSdkManager, "" );
