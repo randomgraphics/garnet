@@ -11,6 +11,7 @@ if 'mswin' == GN.target_os:
 
     hookdll = GN.BinplaceDLL( GN.BuildDLL( env, 'GNd3dHook-' + cpu,
         [
+            'inifile.cpp',
             'vtable_main.cpp',
             'd3d11vtable.cpp',
             'd3d9vtable.cpp',

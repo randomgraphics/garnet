@@ -56,17 +56,48 @@ static Options g_options;
 
 namespace calltrace
 {
+    struct AutoFile
+    {
+        FILE * fp;
+        bool   tried;
+
+        AutoFile() : fp(nullptr), tried(false)
+        {
+        }
+
+        ~AutoFile()
+        {
+            Close();
+        }
+
+        bool Open(const wchar_t * filename, const wchar_t * mode)
+        {
+            Close();
+            int result = _wfopen_s(&fp, filename, mode);
+            tried = true;
+            return 0 == result;
+        }
+
+        void Close()
+        {
+            if(fp) fclose(fp), fp = 0;
+            tried = false;
+        }
+    };
+
+    AutoFile g_logFile;
+
     __declspec(thread) int g_level = 0;
     volatile LONG g_count = 0;
 
-    bool g_callTraceEnabled = true;
+    bool g_callTraceEnabled = false;
 
     enum TraceTarget
     {
         DISABLED     = 0,
         TO_CONSOLE   = 1,
         TO_DEBUGGER  = 2,
-        TO_BOTH      = 3,
+        TO_FILE      = 4,
     };
 
     TraceTarget getTT()
@@ -78,6 +109,10 @@ namespace calltrace
         else if(IsDebuggerPresent())
         {
             return TO_DEBUGGER;
+        }
+        else if (g_logFile.fp || (!g_logFile.tried && g_logFile.Open(L"d3dhook_trace_log.txt", L"wt")))
+        {
+            return TO_FILE;
         }
         else
         {
@@ -109,6 +144,12 @@ namespace calltrace
             if (TO_DEBUGGER & tt)
             {
                 OutputDebugStringW(buf);
+            }
+
+            if (TO_FILE & tt)
+            {
+                fwprintf(g_logFile.fp, L"%s", buf);
+                fflush(g_logFile.fp);
             }
         }
         return ++g_level;
@@ -479,7 +520,7 @@ BOOL WINAPI DllMain( HINSTANCE, DWORD fdwReason, LPVOID )
 {
 	if ( fdwReason == DLL_PROCESS_ATTACH )
     {
-        g_options.enabled = fs::isFile("__d3dhook_hook_enabled");
+        g_options.enabled = fs::isFile("__d3dhook_enabled");
         calltrace::g_callTraceEnabled = fs::isFile("__d3dhook_call_trace_enabled");;
 
         SetupD3D11HookedVTables();
