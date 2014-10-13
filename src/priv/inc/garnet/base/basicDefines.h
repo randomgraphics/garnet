@@ -277,6 +277,8 @@
 // Misc.
 // *****************************************************************************
 
+#define GN_FASTEST_BUILD (!GN_ENABLE_DEBUG && !GN_ENABLE_PROFILING)
+
 ///
 /// Define helper data and member methods, that ease defining of a "enum-like" class
 ///
