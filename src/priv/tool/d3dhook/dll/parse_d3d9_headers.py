@@ -301,7 +301,7 @@ class D3D9VTableFile:
         fp.write('// -----------------------------------------------------------------------------\n'
                  'template<UINT INDEX> static ULONG STDMETHODCALLTYPE ' + interface_name + '_AddRef_Hooked(' + interface_name + ' * ptr)\n'
                  '{\n'
-                 '    calltrace::AutoTrace trace("' + interface_name + '::AddRef");\n'
+                 '    GN_D3DHOOK_CALLTRACE("' + interface_name + '::AddRef");\n'
                  '    return g_D3D9OriginVTables._' + interface_name + '.tables[INDEX].AddRef(ptr);\n'
                  '}\n\n');
         pass
@@ -310,7 +310,7 @@ class D3D9VTableFile:
         fp.write('// -----------------------------------------------------------------------------\n'
                  'template<UINT INDEX> static ULONG STDMETHODCALLTYPE ' + interface_name + '_Release_Hooked(' + interface_name + ' * ptr)\n'
                  '{\n'
-                 '    calltrace::AutoTrace trace("' + interface_name + '::Release");\n'
+                 '    GN_D3DHOOK_CALLTRACE("' + interface_name + '::Release");\n'
                  '    return g_D3D9OriginVTables._' + interface_name + '.tables[INDEX].Release(ptr);\n'
                  '}\n\n');
 
@@ -318,7 +318,7 @@ class D3D9VTableFile:
         fp.write('// -----------------------------------------------------------------------------\n'
                  'template<UINT INDEX> static HRESULT STDMETHODCALLTYPE ' + interface_name + '_QueryInterface_Hooked(' + interface_name + ' * ptr, const IID & iid, void ** pp)\n'
                  '{\n'
-                 '    calltrace::AutoTrace trace("' + interface_name + '::QueryInterface");\n'
+                 '    GN_D3DHOOK_CALLTRACE("' + interface_name + '::QueryInterface");\n'
                  '    return g_D3D9OriginVTables._' + interface_name + '.tables[INDEX].QueryInterface(ptr, iid, pp);\n'
                  '}\n\n');
 
@@ -339,7 +339,7 @@ class D3D9VTableFile:
             func_return = '' if 'void' == m._return_type else '    return result;\n'
             fp.write(')\n'
                      '{\n'
-                     '    calltrace::AutoTrace trace("' + interface_name + '::' + m._name + '");\n'
+                     '    GN_D3DHOOK_CALLTRACE("' + interface_name + '::' + m._name + '");\n'
                      '    ' + decl_return + 'g_D3D9OriginVTables._' + interface_name + '.tables[INDEX].' + m._name + '(ptr')
             if len(m._parameter_list) > 0: fp.write(', ')
             m.WriteParameterNameList(fp)

@@ -198,7 +198,7 @@ CreateDXGIFactoryHook(
     void **ppFactory
 )
 {
-    calltrace::AutoTrace trace(funcName);
+    GN_D3DHOOK_CALLTRACE(funcName);
 
     PFN_CREATE_DXGI_FACTORY realFunc = (PFN_CREATE_DXGI_FACTORY)GetRealFunctionPtr(
         GetRealDllPath(L"dxgi.dll"),
@@ -225,7 +225,7 @@ CreateDXGIFactory2Hook(
     void **ppFactory
 )
 {
-    calltrace::AutoTrace trace("CreateDXGIFactory2");
+    GN_D3DHOOK_CALLTRACE("CreateDXGIFactory2");
 
     PFN_CREATE_DXGI_FACTORY2 realFunc = (PFN_CREATE_DXGI_FACTORY2)GetRealFunctionPtr(
         GetRealDllPath(L"dxgi.dll"),
@@ -262,7 +262,7 @@ D3D11CreateDeviceHook(
     __out_opt D3D_FEATURE_LEVEL* pFeatureLevel,
     __out_opt ID3D11DeviceContext** ppImmediateContext )
 {
-    calltrace::AutoTrace trace("D3D11CreateDevice");
+    GN_D3DHOOK_CALLTRACE("D3D11CreateDevice");
 
     PFN_D3D11_CREATE_DEVICE realFunc = (PFN_D3D11_CREATE_DEVICE)GetRealFunctionPtr(
         GetRealDllPath(L"d3d11.dll"),
@@ -303,7 +303,7 @@ D3D11CreateDeviceAndSwapChainHook(
     __out_opt D3D_FEATURE_LEVEL* pFeatureLevel,
     __out_opt ID3D11DeviceContext** ppImmediateContext )
 {
-    calltrace::AutoTrace trace("D3D11CreateDeviceAndSwapChain");
+    GN_D3DHOOK_CALLTRACE("D3D11CreateDeviceAndSwapChain");
 
     PFN_D3D11_CREATE_DEVICE_AND_SWAP_CHAIN realFunc = (PFN_D3D11_CREATE_DEVICE_AND_SWAP_CHAIN)GetRealFunctionPtr(
         GetRealDllPath(L"d3d11.dll"),
@@ -341,7 +341,7 @@ typedef HRESULT (WINAPI * PFN_DIRECT3D_CREATE_9_EX)(UINT SDKVersion, IDirect3D9E
 // -----------------------------------------------------------------------------
 HOOK_API IDirect3D9 * WINAPI Direct3DCreate9Hook(UINT SDKVersion)
 {
-    calltrace::AutoTrace trace("Direct3DCreate9");
+    GN_D3DHOOK_CALLTRACE("Direct3DCreate9");
 
     PFN_DIRECT3D_CREATE_9 realFunc = (PFN_DIRECT3D_CREATE_9)GetRealFunctionPtr(
         GetRealDllPath(L"d3d9.dll"),
@@ -363,7 +363,7 @@ HOOK_API IDirect3D9 * WINAPI Direct3DCreate9Hook(UINT SDKVersion)
 // -----------------------------------------------------------------------------
 HOOK_API HRESULT WINAPI Direct3DCreate9ExHook(UINT SDKVersion, IDirect3D9Ex **ppD3D)
 {
-    calltrace::AutoTrace trace("Direct3DCreate9Ex");
+    GN_D3DHOOK_CALLTRACE("Direct3DCreate9Ex");
 
     PFN_DIRECT3D_CREATE_9_EX realFunc = (PFN_DIRECT3D_CREATE_9_EX)GetRealFunctionPtr(
         GetRealDllPath(L"d3d11.dll"),
@@ -375,7 +375,7 @@ HOOK_API HRESULT WINAPI Direct3DCreate9ExHook(UINT SDKVersion, IDirect3D9Ex **pp
 
     if( g_options.enabled && SUCCEEDED(hr) && ppD3D && *ppD3D )
     {
-        //RealToHooked9(*ppD3D);
+        RealToHooked9(*ppD3D);
     }
 
     return hr;
@@ -411,7 +411,7 @@ D2D1CreateDeviceHook(
     _Outptr_ ID2D1Device **d2dDevice
 )
 {
-    calltrace::AutoTrace trace("D2D1CreateDevice");
+    GN_D3DHOOK_CALLTRACE("D2D1CreateDevice");
 
     PFN_D2D1_CREATE_DEVICE realFunc = (PFN_D2D1_CREATE_DEVICE)GetRealFunctionPtr(
         GetRealDllPath(L"d2d1.dll"),
@@ -435,7 +435,7 @@ D2D1CreateDeviceContextHook(
     _Outptr_ ID2D1DeviceContext **d2dDeviceContext
 )
 {
-    calltrace::AutoTrace trace("D2D1CreateDeviceContext");
+    GN_D3DHOOK_CALLTRACE("D2D1CreateDeviceContext");
 
     PFN_D2D1_CREATE_DEVICE_CONTEXT realFunc = (PFN_D2D1_CREATE_DEVICE_CONTEXT)GetRealFunctionPtr(
         GetRealDllPath(L"d2d1.dll"),
@@ -462,7 +462,7 @@ D2D1CreateFactoryHook(
     _Out_ void **ppIFactory
 )
 {
-    calltrace::AutoTrace trace("D2D1CreateFactory");
+    GN_D3DHOOK_CALLTRACE("D2D1CreateFactory");
 
     PFN_D2D1_CREATE_FACTORY realFunc = (PFN_D2D1_CREATE_FACTORY)GetRealFunctionPtr(
         GetRealDllPath(L"d2d1.dll"),
@@ -496,7 +496,7 @@ HOOK_API HRESULT WINAPI DWriteCreateFactoryHook(
     _Out_ IUnknown **factory
 )
 {
-    calltrace::AutoTrace trace("DWriteCreateFactory");
+    GN_D3DHOOK_CALLTRACE("DWriteCreateFactory");
 
     PFN_DWRITE_CREATE_FACTORY realFunc = (PFN_DWRITE_CREATE_FACTORY)GetRealFunctionPtr(
         GetRealDllPath(L"dwrite.dll"),

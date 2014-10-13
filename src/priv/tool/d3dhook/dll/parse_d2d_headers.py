@@ -202,7 +202,7 @@ class FunctionSignature:
                  '{\n')
 
         # call CallTrace.enter()
-        fp.write('    calltrace::AutoTrace trace(L"' + class_name + '::' + self._name + '");\n');
+        fp.write('    GN_D3DHOOK_CALLTRACE(L"' + class_name + '::' + self._name + '");\n');
 
         # call _xxx_pre_ptr(...)
         fp.write('    if (_' + self._name + '_pre_ptr._value) { (this->*_' + self._name + '_pre_ptr._value)(')
