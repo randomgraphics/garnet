@@ -123,6 +123,14 @@ inline void RealToHooked_General(
 // common call trace utilities
 // -----------------------------------------------------------------------------
 
+#ifndef GN_D3DHOOK_CALLTRACE
+#if GN_FASTEST_BUILD
+#define GN_D3DHOOK_CALLTRACE(x) void(0)
+#else
+#define GN_D3DHOOK_CALLTRACE(x) calltrace::AutoTrace trace(x)
+#endif
+#endif
+
 namespace calltrace
 {
     /// Global switch to turn on/off call tracking
