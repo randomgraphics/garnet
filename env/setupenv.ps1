@@ -286,33 +286,48 @@ if( "icl" -eq $env:GN_BUILD_COMPILER )
 # setup Windows SDK environment
 # ==============================================================================
 
-if(0)# "mswin" -eq $env:GN_BUILD_TARGET_OS )
+function LookForWindowsSDK($version)
+{
+    $result = ""
+    if( test-path "${env:ProgramFiles}\Microsoft SDKs\Windows\v${version}\Include" )
+    {
+        $result = "${env:ProgramFiles}\Microsoft SDKs\Windows\v${version}"
+    }
+    elseif( test-path "${env:ProgramFiles(x86)}\Microsoft SDKs\Windows\v${version}\Include" )
+    {
+        $result = "${env:ProgramFiles(x86)}\Microsoft SDKs\Windows\v${version}"
+    }
+    return $result
+}
+
+if( "mswin" -eq $env:GN_BUILD_TARGET_OS )
 {
     ""
     "==============================="
     "Setup Windows SDK environment"
     "==============================="
     ""
-    $winsdk_path = ""
-    if( test-path "${env:ProgramFiles}\Microsoft SDKs\Windows\v7.1A\Include" )
+    $winsdk_root = LookForWindowsSDK("7.1A");
+
+    if( "" -ne $winsdk_root )
     {
-        $winsdk_path = "${env:ProgramFiles}\Microsoft SDKs\Windows\v7.1A"
-    }
-    elseif( test-path "${env:ProgramFiles(x86)}\Microsoft SDKs\Windows\v7.1A\Include" )
-    {
-        $winsdk_path = "${env:ProgramFiles(x86)}\Microsoft SDKs\Windows\v7.1A"
+        "Windows SDK found: $winsdk_root"
+        ""
+        ${env:INCLUDE} = "${env:INCLUDE};$winsdk_root\Include"
+        if( "x86" -eq $env:GN_BUILD_TARGET_CPU )
+        {
+            ${env:LIB} = "${env:LIB};$winsdk_root\Lib"
+        }
+        elseif( "x64" -eq $env:GN_BUILD_TARGET_CPU )
+        {
+            ${env:LIB} = "${env:LIB};$winsdk_root\Lib\x64"
+        }
     }
     else
     {
         "Windows SDK is not insalled."
-    }
-
-    if( "" -ne $winsdk_path )
-    {
-        "Windows SDK found: $winsdk_path"
         ""
     }
-
 }
 
 # ==============================================================================
