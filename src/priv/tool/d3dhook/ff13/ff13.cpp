@@ -3,14 +3,14 @@
 
 using namespace GN;
 
-static GN::Logger * sLogger = GN::getLogger("GN::ff13");
+static GN::Logger * sLogger = GN::getLogger("GN.d3dhook.ff13");
 
 int main( int argc, const char * argv[] )
 {
     GN_UNUSED_PARAM(argc);
     GN_UNUSED_PARAM(argv);
 
-    HMODULE dll = LoadLibraryA("GNff13.dll");
+    HMODULE dll = LoadLibraryA("GNff13dll.dll");
 
     if (0 == dll)
     {
@@ -18,7 +18,7 @@ int main( int argc, const char * argv[] )
         return -1;
     }
 
-    HOOKPROC proc = (HOOKPROC)GetProcAddress(dll, "HookProc");
+    HOOKPROC proc = (HOOKPROC)GetProcAddress(dll, "CBTHookProc");
     if (0 == proc)
     {
         GN_ERROR(sLogger)("Failed to get address of HookProc: %s", getWin32LastErrorInfo());
@@ -39,6 +39,7 @@ int main( int argc, const char * argv[] )
     {
         ch = toupper(_getch());
     } while( ch != 'Q');
+    _cputs("\n");
 
     // done
     UnhookWindowsHookEx(hook);
