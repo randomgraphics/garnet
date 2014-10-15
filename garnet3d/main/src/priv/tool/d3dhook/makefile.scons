@@ -1,2 +1,3 @@
 Import( 'GN' )
-SConscript( ['dll/makefile.scons'] )
+SConscript(['dll/makefile.scons'])
+SConscript(['ff13/makefile.scons'])

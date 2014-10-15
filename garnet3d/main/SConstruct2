@@ -750,7 +750,7 @@ class GarnetEnv2 :
     #
     # setup environment for build precompiled header, return PCH object file
     #
-    def _BuildSetupPCH( self, env, pchHeader, pchSource ):
+    def BuildPCH( self, env, pchHeader, pchSource ):
         if 'PCH' in env['BUILDERS'] and pchSource:
             pch = env.PCH(pchSource)
             env['PCH'] = pch[0]
@@ -804,7 +804,7 @@ class GarnetEnv2 :
     #
     def BuildObjects( self, env, sources, pchHeader=None, pchSource=None ):
     	env = env.Clone() if env else self.NewBuildEnv()
-        pchobj = self._BuildSetupPCH( env, pchHeader, pchSource )
+        pchobj = self.BuildPCH( env, pchHeader, pchSource )
         return Flatten( [env.Object(x) for x in sources] ) + pchobj
 
     #
@@ -818,9 +818,9 @@ class GarnetEnv2 :
     #
     # Build DLL
     #
-    def BuildDLL( self, env, target, sources, pchHeader=None, pchSource=None, pdb=None, defFile=None ):
+    def BuildDLL( self, env, target, sources, pchHeader=None, pchSource=None, pdb=None, defFile=None, extraObjects=[] ):
     	env = env.Clone() if env else self.NewBuildEnv()
-        objects = self.BuildObjects( env, sources, pchHeader, pchSource )
+        objects = self.BuildObjects( env, sources, pchHeader, pchSource ) + extraObjects
         self._BuildSetupPDB( env, target, pdb )
         self._BuildSetupLibs( env )
         if defFile: objects += [defFile]
@@ -829,9 +829,9 @@ class GarnetEnv2 :
     #
     # Build executable
     #
-    def BuildProgram( self, env, target, sources, pchHeader=None, pchSource=None, pdb=None ):
+    def BuildProgram( self, env, target, sources, pchHeader=None, pchSource=None, pdb=None, extraObjects=[] ):
     	env = env.Clone() if env else self.NewBuildEnv()
-        objects = self.BuildObjects( env, sources, pchHeader, pchSource )
+        objects = self.BuildObjects( env, sources, pchHeader, pchSource ) + extraObjects
         self._BuildSetupPDB( env, target, pdb )
         self._BuildSetupLibs( env )
         return env.Program( target, objects )
