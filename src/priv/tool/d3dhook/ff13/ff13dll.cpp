@@ -177,7 +177,8 @@ static IDirect3D9 * Direct3DCreate9Hook(UINT SDKVersion)
 
     IDirect3D9 * d3d9 = realFunc(SDKVersion);
 
-    /*if (d3d9)
+#if 0
+    if (d3d9)
     {
         IDirect3D9Vtbl * vtable = *(IDirect3D9Vtbl**)d3d9;
         HANDLE process = ::GetCurrentProcess();
@@ -192,7 +193,8 @@ static IDirect3D9 * Direct3DCreate9Hook(UINT SDKVersion)
         {
             GN_ERROR(sLogger)("Failed to change vtable page protection for interface IDirect3D9.");
         }
-    }*/
+    }
+#endif
 
     return d3d9;
 }
@@ -209,7 +211,8 @@ static HRESULT Direct3DCreate9ExHook(UINT SDKVersion, IDirect3D9Ex **ppD3D)
 
     HRESULT hr = realFunc(SDKVersion, ppD3D);
 
-    /*if (SUCCEEDED(hr))
+#if 0
+    if (SUCCEEDED(hr))
     {
         IDirect3D9ExVtbl * vtable = *(IDirect3D9ExVtbl**)(*ppD3D);
         HANDLE process = ::GetCurrentProcess();
@@ -225,7 +228,8 @@ static HRESULT Direct3DCreate9ExHook(UINT SDKVersion, IDirect3D9Ex **ppD3D)
         {
             GN_ERROR(sLogger)("Failed to change vtable page protection for interface IDirect3D9.");
         }
-    }*/
+    }
+#endif
 
     return hr;
 }
@@ -233,11 +237,12 @@ static HRESULT Direct3DCreate9ExHook(UINT SDKVersion, IDirect3D9Ex **ppD3D)
 // -----------------------------------------------------------------------------
 extern "C"
 {
-__declspec(dllexport) LRESULT CBTHookProc(int code, WPARAM wp, LPARAM lp)
+__declspec(dllexport) LRESULT CALLBACK CBTHookProc(int code, WPARAM wp, LPARAM lp)
 {
-    #if GN_ENABLE_DEBUG
-    OutputDebugStringA(GN::str::format("CBT hook: code=%d, wp=0x%X, lparam=0x%X\n", code, wp, lp));
-    #endif
+    if (code >= 0)
+    {
+        // do your own work here.
+    }
 
     // The hook itself does nothing. It's solo purpose is to inject the DLL into the target process.
     return CallNextHookEx(0, code, wp, lp);
@@ -245,7 +250,7 @@ __declspec(dllexport) LRESULT CBTHookProc(int code, WPARAM wp, LPARAM lp)
 }
 
 // -----------------------------------------------------------------------------
-BOOL APIENTRY DllMain( HINSTANCE hModule, DWORD fdwReason, LPVOID)
+BOOL APIENTRY DllMain(HINSTANCE hModule, DWORD fdwReason, LPVOID)
 {
     if ( fdwReason == DLL_PROCESS_ATTACH )  // When initializing....
     {
