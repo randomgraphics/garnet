@@ -18,7 +18,7 @@ int main( int argc, const char * argv[] )
         return -1;
     }
 
-    HOOKPROC proc = (HOOKPROC)GetProcAddress(dll, "CBTHookProc");
+    HOOKPROC proc = (HOOKPROC)GetProcAddress(dll, "_CBTHookProc@12");
     if (0 == proc)
     {
         GN_ERROR(sLogger)("Failed to get address of HookProc: %s", getWin32LastErrorInfo());
