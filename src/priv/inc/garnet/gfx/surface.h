@@ -401,7 +401,7 @@ namespace GN { namespace gfx
             NUM_USAGES,     ///< number of usage flags
         };
 
-        GN_DEFINE_ENUM_CLASS_HELPERS( TextureUsage, Enum );
+        GN_DEFINE_ENUM_CLASS_HELPERS( BufferUsage, Enum );
     };
     GN_CASSERT( sizeof(TextureUsage) == sizeof(uint32) );
 
@@ -416,7 +416,7 @@ namespace GN { namespace gfx
         ///
         /// Get descriptor
         ///
-        const IdxBufDesc & getDesc() const { return mDesc; }
+        const BufferDesc & getDesc() const { return mDesc; }
 
         ///
         /// update index buffer content
@@ -435,7 +435,6 @@ namespace GN { namespace gfx
         ///
         void setDesc( const BufferDesc & desc )
         {
-            GN_ASSERT( desc.numidx > 0 );
             mDesc = desc;
         }
 
