@@ -319,10 +319,10 @@ if( "mswin" -eq $env:GN_BUILD_TARGET_OS )
     "Setup Windows SDK environment"
     "==============================="
     ""
-    $winsdk_root = LookForWindowsSDK("v7.1A");
+    $winsdk_root = LookForWindowsSDK("8.1");
     if( "" -eq $winsdk_root )
     {
-        $winsdk_root = LookForWindowsSDK("8.1");
+        $winsdk_root = LookForWindowsSDK("v7.1A");
     }
 
     if( "" -ne $winsdk_root )

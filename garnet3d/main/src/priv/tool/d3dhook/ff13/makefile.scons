@@ -1,6 +1,6 @@
 Import( 'GN' )
 
-if 'mswin' == GN.target_os:
+if 'mswin' == GN.target_os and 'x86' == GN.target_cpu:
     env  = GN.NewBuildEnv()
     pch = GN.BuildPCH(env, 'pch.h', 'pch.cpp');
     dll  = GN.BinplaceDLL(GN.BuildDLL(env, 'GNff13dll', ['ff13dll.cpp', '..\\apihijack.cpp'], extraObjects=pch))
