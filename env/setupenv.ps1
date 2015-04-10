@@ -289,14 +289,26 @@ if( "icl" -eq $env:GN_BUILD_COMPILER )
 function LookForWindowsSDK($version)
 {
     $result = ""
-    if( test-path "${env:ProgramFiles}\Microsoft SDKs\Windows\v${version}\Include" )
+
+    $program = ""
+    if( "" -ne "${env:ProgramFiles(x86)}" )
     {
-        $result = "${env:ProgramFiles}\Microsoft SDKs\Windows\v${version}"
+        $program = "${env:ProgramFiles(x86)}"
     }
-    elseif( test-path "${env:ProgramFiles(x86)}\Microsoft SDKs\Windows\v${version}\Include" )
+    else
     {
-        $result = "${env:ProgramFiles(x86)}\Microsoft SDKs\Windows\v${version}"
+        $program = "${env:ProgramFiles}"
     }
+    
+    if( test-path "$program\Windows Kits\${version}\Include" )
+    {
+        $result = "$program\Windows Kits\${version}"
+    }
+    elseif( test-path "$program\Microsoft SDKs\Windows\${version}\Include" )
+    {
+        $result = "$program\Microsoft SDKs\Windows\${version}"
+    }
+
     return $result
 }
 
@@ -307,7 +319,11 @@ if( "mswin" -eq $env:GN_BUILD_TARGET_OS )
     "Setup Windows SDK environment"
     "==============================="
     ""
-    $winsdk_root = LookForWindowsSDK("7.1A");
+    $winsdk_root = LookForWindowsSDK("v7.1A");
+    if( "" -eq $winsdk_root )
+    {
+        $winsdk_root = LookForWindowsSDK("8.1");
+    }
 
     if( "" -ne $winsdk_root )
     {
