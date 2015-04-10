@@ -60,28 +60,26 @@ struct IDirect3D9ExVtbl
 // -----------------------------------------------------------------------------
 static void AdjustPP(HWND hFocusWindow, D3DPRESENT_PARAMETERS * pp)
 {
-    if (pp && pp->Windowed)
+    if (pp)
     {
-        HWND window = pp->hDeviceWindow ? pp->hDeviceWindow : hFocusWindow;
-        if (IsWindow(window))
+        if (pp->Windowed)
         {
-            // remove window border, make it full screen.
-        	DWORD style = GetWindowLongA(window, GWL_STYLE);
-        	style &= ~(WS_CAPTION | WS_BORDER | WS_THICKFRAME);
-            style |= WS_POPUP;
-        	SetWindowLongA(window, GWL_STYLE, style);
-        	ShowWindow(window, SW_MAXIMIZE);
-        	UpdateWindow(window);
-
-            // adjust backbuffer size to match window size
-            RECT rc;
-            GetClientRect(window, &rc);
-            pp->BackBufferWidth = rc.right - rc.left;
-            pp->BackBufferHeight = rc.bottom - rc.top;
+            HWND window = pp->hDeviceWindow ? pp->hDeviceWindow : hFocusWindow;
+            if (IsWindow(window))
+            {
+                GN_INFO(sLogger)("Maximize the D3D window and make it borderless");
+        		DWORD style = GetWindowLongA(window, GWL_STYLE);
+        		style &= ~(WS_CAPTION | WS_BORDER | WS_THICKFRAME);
+        		style |= WS_POPUP;
+        		SetWindowLongA(window, GWL_STYLE, style);
+        		UpdateWindow(window);
+        		ShowWindow(window, SW_MAXIMIZE);
+            }
         }
+
+        // disable vsync
+        pp->PresentationInterval = D3DPRESENT_INTERVAL_IMMEDIATE;
     }
-
-
 }
 
 // -----------------------------------------------------------------------------
@@ -177,9 +175,10 @@ static IDirect3D9 * Direct3DCreate9Hook(UINT SDKVersion)
 
     IDirect3D9 * d3d9 = realFunc(SDKVersion);
 
-#if 0
+#if 1
     if (d3d9)
     {
+        GN_INFO(sLogger)("Patch IDirect3D9 vtable.");
         IDirect3D9Vtbl * vtable = *(IDirect3D9Vtbl**)d3d9;
         HANDLE process = ::GetCurrentProcess();
         DWORD oldProtection;
@@ -211,9 +210,10 @@ static HRESULT Direct3DCreate9ExHook(UINT SDKVersion, IDirect3D9Ex **ppD3D)
 
     HRESULT hr = realFunc(SDKVersion, ppD3D);
 
-#if 0
+#if 1
     if (SUCCEEDED(hr))
     {
+        GN_INFO(sLogger)("Patch IDirect3D9Ex vtable.");
         IDirect3D9ExVtbl * vtable = *(IDirect3D9ExVtbl**)(*ppD3D);
         HANDLE process = ::GetCurrentProcess();
         DWORD oldProtection;
@@ -264,7 +264,9 @@ BOOL APIENTRY DllMain(HINSTANCE hModule, DWORD fdwReason, LPVOID)
         GetModuleFileNameA( GetModuleHandle( NULL ), Work, sizeof(Work) );
         PathStripPathA( Work );
 
-        if ( 0 == _stricmp( Work, "ffxiiiimg.exe" ) )
+        if (0 == _stricmp( Work, "gntestd3d9.exe") ||
+            0 == _stricmp( Work, "ffxiiiimg.exe") ||
+            0 == _stricmp( Work, "ffxiii2img.exe"))
         {
             HookAPICalls( &D3DHook );
         }
