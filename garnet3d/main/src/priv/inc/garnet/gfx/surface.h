@@ -389,6 +389,60 @@ namespace GN { namespace gfx
 
         IdxBufDesc mDesc;
     };
+
+    struct BufferUsage
+    {
+        enum Enum
+        {
+            UNIFORM,        ///< uniform buffer
+            VERTEX,         ///< vertex buffer
+            INDEX,          ///< index buffer
+            FAST_CPU_WRITE, ///< Allow fast CPU write, in exchange of GPU rendering speed
+            NUM_USAGES,     ///< number of usage flags
+        };
+
+        GN_DEFINE_ENUM_CLASS_HELPERS( TextureUsage, Enum );
+    };
+    GN_CASSERT( sizeof(TextureUsage) == sizeof(uint32) );
+
+    struct BufferDesc
+    {
+        uint32 sizeInBytes;
+        uint32 usages; // combination of BufferUsage flags.
+    };
+
+    struct Buffer : public RefCounter
+    {
+        ///
+        /// Get descriptor
+        ///
+        const IdxBufDesc & getDesc() const { return mDesc; }
+
+        ///
+        /// update index buffer content
+        ///
+        virtual void update( uint32 startidx, uint32 numidx, const void * data) = 0;
+
+        ///
+        /// Read buffer content.
+        ///
+        virtual void readback( DynaArray<uint8> & data ) = 0;
+
+    protected:
+
+        ///
+        /// Set buffer properties
+        ///
+        void setDesc( const BufferDesc & desc )
+        {
+            GN_ASSERT( desc.numidx > 0 );
+            mDesc = desc;
+        }
+
+    private:
+
+        BufferDesc mDesc;
+    };
 }}
 
 // *****************************************************************************

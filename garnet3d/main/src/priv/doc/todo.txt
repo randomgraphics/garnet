@@ -5,6 +5,7 @@ TODO
 
 - p0
   - constant/uniform buffer object for opengl.
+  - D3D12 friendly resource binding:
   - thread safe weak ref object.
   - massive 3D scene explorer.
     - importer/exporter
