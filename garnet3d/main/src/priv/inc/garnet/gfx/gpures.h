@@ -61,7 +61,7 @@ namespace GN { namespace gfx
     ///
     /// Texture resource
     ///
-    class TextureResource : public GpuResource
+    class GN_API TextureResource : public GpuResource
     {
     public:
 
@@ -460,7 +460,7 @@ namespace GN { namespace gfx
     ///
     /// Mesh resource
     ///
-    class MeshResource : public GpuResource
+    class GN_API MeshResource : public GpuResource
     {
     public:
 
@@ -503,7 +503,7 @@ namespace GN { namespace gfx
     ///
     /// Effect resource description
     ///
-    struct EffectResourceDesc
+    struct GN_API EffectResourceDesc
     {
         // *****************************
         // types
@@ -557,7 +557,7 @@ namespace GN { namespace gfx
         ///
         /// Shader descriptor
         ///
-        struct EffectGpuProgramDesc
+        struct GN_API EffectGpuProgramDesc
         {
             ShaderPrerequisites  prerequisites;      ///< prerequisites of the shader.
             GpuProgramDesc       gpd;                ///< GPU Program descriptor
@@ -712,7 +712,7 @@ namespace GN { namespace gfx
     /// Effect defines GPU program and render states, and how textures,
     /// uniforms and render targets are binded to GPU context.
     ///
-    class EffectResource : public GpuResource
+    class GN_API EffectResource : public GpuResource
     {
 
         /// ctor / dtor
@@ -843,7 +843,7 @@ namespace GN { namespace gfx
     ///
     /// Model resource descriptor
     ///
-    struct ModelResourceDesc
+    struct GN_API ModelResourceDesc
     {
         //@{
 
@@ -912,7 +912,7 @@ namespace GN { namespace gfx
     ///
     /// Model resource, the basic class used for rendering: myModel->render(...);
     ///
-    class ModelResource : public GpuResource
+    class GN_API ModelResource : public GpuResource
     {
         // ********************************
         // ctor/dtor
@@ -982,7 +982,7 @@ namespace GN { namespace gfx
     ///
     /// Note that resource name is optional
     ///
-    class GpuResourceDatabase : public NoCopy
+    class GN_API GpuResourceDatabase : public NoCopy
     {
         friend class GpuResource;
 

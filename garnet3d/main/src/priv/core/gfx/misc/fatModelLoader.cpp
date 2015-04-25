@@ -2821,7 +2821,7 @@ bool GN::gfx::FatModel::loadFromFile( const StrA & filename )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::printModelFileNodeHierarchy( StrA & hierarchy, const StrA & filename )
+GN_API void GN::gfx::printModelFileNodeHierarchy( StrA & hierarchy, const StrA & filename )
 {
     StrA fullFileName = fs::resolvePath( fs::getCurrentDir(), filename );
 

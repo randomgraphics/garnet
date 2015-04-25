@@ -195,21 +195,21 @@ namespace GN
         ///
         GN_API void joinPath2(
             StrA & result,
-            const StrA & path1 = StrA::EMPTYSTR,
-            const StrA & path2 = StrA::EMPTYSTR,
-            const StrA & path3 = StrA::EMPTYSTR,
-            const StrA & path4 = StrA::EMPTYSTR,
-            const StrA & path5 = StrA::EMPTYSTR );
+            const StrA & path1 = StrA::EMPTYSTR(),
+            const StrA & path2 = StrA::EMPTYSTR(),
+            const StrA & path3 = StrA::EMPTYSTR(),
+            const StrA & path4 = StrA::EMPTYSTR(),
+            const StrA & path5 = StrA::EMPTYSTR() );
 
         ///
         /// Join path
         ///
         inline StrA joinPath(
-            const StrA & path1 = StrA::EMPTYSTR,
-            const StrA & path2 = StrA::EMPTYSTR,
-            const StrA & path3 = StrA::EMPTYSTR,
-            const StrA & path4 = StrA::EMPTYSTR,
-            const StrA & path5 = StrA::EMPTYSTR )
+            const StrA & path1 = StrA::EMPTYSTR(),
+            const StrA & path2 = StrA::EMPTYSTR(),
+            const StrA & path3 = StrA::EMPTYSTR(),
+            const StrA & path4 = StrA::EMPTYSTR(),
+            const StrA & path5 = StrA::EMPTYSTR() )
         {
             StrA ret;
             joinPath2( ret, path1, path2, path3, path4, path5 );

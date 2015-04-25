@@ -11,7 +11,7 @@ namespace GN { namespace gfx
     ///
     /// Colored line renderer
     ///
-    class LineRenderer : public StdClass
+    class GN_API LineRenderer : public StdClass
     {
         GN_DECLARE_STDCLASS( LineRenderer, StdClass );
 

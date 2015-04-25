@@ -64,9 +64,9 @@ namespace GN
 
         //@{
 
-        DebugVar( const StrA & name = StrA::EMPTYSTR );
+        DebugVar( const StrA & name = StrA::EMPTYSTR() );
 
-        DebugVar( const T &, const StrA & name = StrA::EMPTYSTR );
+        DebugVar( const T &, const StrA & name = StrA::EMPTYSTR() );
 
         //@}
 

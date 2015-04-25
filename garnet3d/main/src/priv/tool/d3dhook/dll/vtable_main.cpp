@@ -520,9 +520,12 @@ BOOL WINAPI DllMain( HINSTANCE, DWORD fdwReason, LPVOID )
 {
 	if ( fdwReason == DLL_PROCESS_ATTACH )
     {
+#if GN_PLATFORM_IS_STATIC
         g_options.enabled = fs::isFile("__d3dhook_enabled");
         calltrace::g_callTraceEnabled = fs::isFile("__d3dhook_call_trace_enabled");;
-
+#else
+        // fs::isFile() throws exceptions in non-static build.
+#endif
         SetupD3D11HookedVTables();
         SetupD3D9HookedVTables();
 	} else if ( fdwReason == DLL_PROCESS_DETACH )

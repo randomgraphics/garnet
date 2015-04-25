@@ -1,6 +1,6 @@
 #include "pch.h"
 
-const size_t
+GN_API const size_t
 GN::HASH_MAP_PRIMARY_ARRAY[28] = {
     17,             /* 0 */
     37,             /* 1 */

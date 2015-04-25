@@ -124,20 +124,20 @@ static GN::StrA sSaveCodeToTemporaryFile( const char * code, size_t len )
     if( 0 != _mktemp_s( fname, 13 ) )
     {
         GN_ERROR(sLogger)( "fail to generate temporary file name" );
-        return StrA::EMPTYSTR;
+        return StrA::EMPTYSTR();
     }
 
     AutoObjPtr<File> fp( core::openFile( fname, "wt" ) );
     if( 0 == fp )
     {
         GN_ERROR(sLogger)( "fail to open temporary file." );
-        return StrA::EMPTYSTR;
+        return StrA::EMPTYSTR();
     }
 
     if( !fp->write( code, len ? len : str::length(code), 0 ) )
     {
         GN_ERROR(sLogger)( "fail to write to temporary file." );
-        return StrA::EMPTYSTR;
+        return StrA::EMPTYSTR();
     }
 
     GN_INFO(sLogger)( "save shader code to file '%s'", fname );

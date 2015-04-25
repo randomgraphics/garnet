@@ -233,6 +233,8 @@ namespace GN
         }
     };
 
+    extern GN_API void * EMPTY_STRING_INSTANCE;
+
     ///
     /// Custom string class. CHAR type must be POD type.
     ///
@@ -248,7 +250,10 @@ namespace GN
         ///
         /// Instance of empty string
         ///
-        static Str EMPTYSTR;
+        static const Str & EMPTYSTR()
+        {
+            return *(Str*)EMPTY_STRING_INSTANCE;
+        }
 
         ///
         /// indicate serach failure.
@@ -1085,9 +1090,6 @@ namespace GN
         friend GN_API void wcs2mbs( Str<char> &, const wchar_t *, size_t );
         friend GN_API void mbs2wcs( Str<wchar_t> &, const char *, size_t );
     };
-
-    // Implement static data member
-    template <typename CHAR, typename ALLOC> Str<CHAR,ALLOC> Str<CHAR,ALLOC>::EMPTYSTR;
 
     ///
     /// multi-byte string class

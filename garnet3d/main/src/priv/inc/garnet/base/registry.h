@@ -84,7 +84,7 @@ namespace GN
         ///
         const StrA & key2Name( ItemKey key ) const
         {
-            return mItems.validHandle( key ) ? mItems[key].name : StrA::EMPTYSTR;
+             return mItems.validHandle( key ) ? mItems[key].name : StrA::EMPTYSTR();
         }
 
         /// set registry value by name

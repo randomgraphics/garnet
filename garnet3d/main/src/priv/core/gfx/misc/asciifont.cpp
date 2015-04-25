@@ -93,7 +93,7 @@ public:
 //
 //
 // -----------------------------------------------------------------------------
-GN::gfx::FontFace *
+GN_API GN::gfx::FontFace *
 GN::gfx::createSimpleAsciiFontFace()
 {
     return new AsciiFontFace;

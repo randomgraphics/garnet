@@ -9,7 +9,7 @@
 namespace GN { namespace engine
 {
     /// Physics component. Define object location, shape and other physical properties.
-    class SpacialComponent : public Entity
+    class GN_API SpacialComponent : public Entity
     {
         GN_ENGINE_DECLARE_ENTITY( SpacialComponent, Entity );
 

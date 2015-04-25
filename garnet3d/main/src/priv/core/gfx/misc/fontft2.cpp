@@ -440,7 +440,7 @@ void FontFaceFt2::getKerning( int & dx, int & dy, wchar_t ch1, wchar_t ch2 )
 //
 //
 // -----------------------------------------------------------------------------
-GN::gfx::FontFace *
+GN_API GN::gfx::FontFace *
 GN::gfx::createFontFace( const FontFaceCreationDesc & cd )
 {
     GN_GUARD;

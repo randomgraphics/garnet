@@ -11,7 +11,7 @@ namespace GN { namespace engine
     ///
     /// Component that renders object onto screen
     ///
-    class VisualComponent : public Entity
+    class GN_API VisualComponent : public Entity
     {
         GN_ENGINE_DECLARE_ENTITY( VisualComponent, Entity );
 

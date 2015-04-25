@@ -238,7 +238,7 @@ namespace GN { namespace engine
     typedef Guid EntityType;
 
     /// Entity class. Root class of game play object that could be placed into game world.
-    class Entity : public EntityBase, public NoCopy
+    class GN_API Entity : public EntityBase, public NoCopy
     {
     protected:
 
@@ -291,10 +291,10 @@ namespace GN { namespace engine
     //@{
 
     // Initialize basic systems (file, memory, thread and etc.)
-    bool initialize();
+    GN_API bool initialize();
 
     // shutdown everthing.
-    void shutdown();
+    GN_API void shutdown();
 
     /// Graphics initialization options
     struct GfxInitOptions
@@ -305,11 +305,11 @@ namespace GN { namespace engine
         gfx::FontFaceCreationDesc defaultNonAsciiFont; ///< default non-ascii font face creation descriptor
     };
 
-    bool inputInitialize( input::InputAPI );
-    void inputShutdown();
+    GN_API bool inputInitialize( input::InputAPI );
+    GN_API void inputShutdown();
 
-    bool gfxInitialize( const GfxInitOptions & );
-    void gfxShutdown();
+    GN_API bool gfxInitialize( const GfxInitOptions & );
+    GN_API void gfxShutdown();
 
     //bool soundInitialize();
     //void soundShutdown();
@@ -318,14 +318,14 @@ namespace GN { namespace engine
     //void networkShutdown();
 
     // Graphics stuff
-    gfx::Gpu                 * getGpu();
-    gfx::SpriteRenderer      * getSpriteRenderer();
-    gfx::LineRenderer        * getLineRenderer();
-    gfx::BitmapFont          * getDefaultFontRenderer();
-    gfx::GpuResourceDatabase * getGdb();
+    GN_API gfx::Gpu                 * getGpu();
+    GN_API gfx::SpriteRenderer      * getSpriteRenderer();
+    GN_API gfx::LineRenderer        * getLineRenderer();
+    GN_API gfx::BitmapFont          * getDefaultFontRenderer();
+    GN_API gfx::GpuResourceDatabase * getGdb();
 
     // Entity management
-    Entity * findEntity( int id );
+    GN_API Entity * findEntity( int id );
 
     /// Functions in this namespace are reserved for engine module itself,
     /// and should not be called by engine clients or entity/component developers.
@@ -333,8 +333,8 @@ namespace GN { namespace engine
     {
         /// Entity management
         //@{
-        int  onEntityCtor( Entity * );
-        void onEntityDtor( int );
+        GN_API int  onEntityCtor( Entity * );
+        GN_API void onEntityDtor( int );
         //@}
     }
 

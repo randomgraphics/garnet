@@ -16,7 +16,7 @@ def GenConfigHeader( target, source, env ):
 		'//\n'
 		'\n'
 		'// Garnet is build as static or dynamic library.\n'
-		'#define GN_PLATFORM_IS_STATIC '       + bool2str( GN.static_build    ) + '\n'
+		'#define GN_PLATFORM_IS_STATIC '       + bool2str( GN.static_link     ) + '\n'
 		'\n'
 		'// Has OpenGL\n'
 		'#define GN_PLATFORM_HAS_OGL   '       + bool2str( GN.has_ogl         ) + '\n'

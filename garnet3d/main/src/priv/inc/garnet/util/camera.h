@@ -114,7 +114,7 @@ namespace GN { namespace util
     ///
     /// Arcball that normally used to rotate a 3D model.
     ///
-    class ArcBall : public SlotBase
+    class GN_API ArcBall : public SlotBase
     {
         Vector3f    mTranslation;
         Quaternionf mQuat;

@@ -303,7 +303,7 @@ namespace GN
                 GN_ASSERT( mResHandles.get(handle) );
                 return mResHandles.get(handle)->name;
             }
-            else return StrA::EMPTYSTR;
+            else return StrA::EMPTYSTR();
             GN_UNGUARD_SLOW;
         }
 

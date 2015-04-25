@@ -10,7 +10,7 @@
 
 namespace GN { namespace gfx
 {
-    class FatVertexBuffer
+    class GN_API FatVertexBuffer
     {
     public:
 
@@ -261,7 +261,7 @@ namespace GN { namespace gfx
         FatJointBindPose   bindPose; //< Bind pose transformation.
     };
 
-    struct FatSkeleton
+    struct GN_API FatSkeleton
     {
         StrA                       name;           //< name of the skeleton.
         DynaArray<FatJoint,uint32> joints;         //< Joint array.
@@ -293,7 +293,7 @@ namespace GN { namespace gfx
         DynaArray<DynaArray<FatJointAnimation> > skeletonAnimations; //< 2D array that stores animations of each joint indexed by [skeletonIndex][jointIndex]
     };
 
-    struct FatModel : public NoCopy
+    struct GN_API FatModel : public NoCopy
     {
         StrA                           name;       //< name of the model. Usually the filename which the model is loaded from.
         DynaArray<FatMesh*,uint32>     meshes;     //< Mesh array. Use FatMesh* to avoid expensive copy opertaion when the array is resized.
@@ -344,7 +344,7 @@ namespace GN { namespace gfx
     ///
     /// Print module file node hierarchy
     ///w
-    void printModelFileNodeHierarchy( StrA & hierarchy, const StrA & filename );
+    GN_API void printModelFileNodeHierarchy( StrA & hierarchy, const StrA & filename );
 
     //@}
  }}
