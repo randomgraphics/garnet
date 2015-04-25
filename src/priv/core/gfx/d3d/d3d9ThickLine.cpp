@@ -356,7 +356,7 @@ GN_API void GN::d3d9::D3D9ThickLineRenderer::lineList( const ThickLineVertex * v
 //
 //
 // -----------------------------------------------------------------------------
-GN_API GN::d3d9::D3D9ThickLineRenderer::PrivateVertex *
+GN::d3d9::D3D9ThickLineRenderer::PrivateVertex *
 GN::d3d9::D3D9ThickLineRenderer::EndPoint::topLeft( PrivateVertex * v )
 {
     v->position = XMVectorSet( posl, post, posz, posw );
@@ -369,7 +369,7 @@ GN::d3d9::D3D9ThickLineRenderer::EndPoint::topLeft( PrivateVertex * v )
 //
 //
 // -----------------------------------------------------------------------------
-GN_API GN::d3d9::D3D9ThickLineRenderer::PrivateVertex *
+GN::d3d9::D3D9ThickLineRenderer::PrivateVertex *
 GN::d3d9::D3D9ThickLineRenderer::EndPoint::topRight( PrivateVertex * v )
 {
     v->position = XMVectorSet( posr, post, posz, posw );
@@ -382,7 +382,7 @@ GN::d3d9::D3D9ThickLineRenderer::EndPoint::topRight( PrivateVertex * v )
 //
 //
 // -----------------------------------------------------------------------------
-GN_API GN::d3d9::D3D9ThickLineRenderer::PrivateVertex *
+GN::d3d9::D3D9ThickLineRenderer::PrivateVertex *
 GN::d3d9::D3D9ThickLineRenderer::EndPoint::bottomLeft( PrivateVertex * v )
 {
     v->position = XMVectorSet( posl, posb, posz, posw );
@@ -395,7 +395,7 @@ GN::d3d9::D3D9ThickLineRenderer::EndPoint::bottomLeft( PrivateVertex * v )
 //
 //
 // -----------------------------------------------------------------------------
-GN_API GN::d3d9::D3D9ThickLineRenderer::PrivateVertex *
+GN::d3d9::D3D9ThickLineRenderer::PrivateVertex *
 GN::d3d9::D3D9ThickLineRenderer::EndPoint::bottomRight( PrivateVertex * v )
 {
     v->position = XMVectorSet( posr, posb, posz, posw );

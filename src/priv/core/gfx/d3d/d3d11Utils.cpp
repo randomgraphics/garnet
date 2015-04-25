@@ -126,7 +126,7 @@ static void sPrintShaderCompileInfoD3D11( const char * hlsl, ID3DBlob * bin )
 #pragma comment(lib, "OleAut32.lib")
 
 // -----------------------------------------------------------------------------
-GN::StrW GN::d3d11::hresult2string(HRESULT hr)
+GN_API GN::StrW GN::d3d11::hresult2string(HRESULT hr)
 {
     StrW strMessage;
     WORD facility = HRESULT_FACILITY(hr);
@@ -158,7 +158,7 @@ GN::StrW GN::d3d11::hresult2string(HRESULT hr)
 }
 
 // -----------------------------------------------------------------------------
-ID3DBlob * GN::d3d11::compileShader(
+GN_API ID3DBlob * GN::d3d11::compileShader(
     const char   * profile,
     const char   * source,
     size_t         len,
@@ -213,7 +213,7 @@ ID3DBlob * GN::d3d11::compileShader(
 }
 
 // -----------------------------------------------------------------------------
-ID3D11DeviceChild * GN::d3d11::createShader(
+GN_API ID3D11DeviceChild * GN::d3d11::createShader(
     ID3D11Device & dev,
     ShaderType     type,
     const char   * source,
@@ -293,7 +293,7 @@ ID3D11DeviceChild * GN::d3d11::createShader(
 }
 
 // -----------------------------------------------------------------------------
-ID3D11DeviceChild * GN::d3d11::loadShaderFromFile(
+GN_API ID3D11DeviceChild * GN::d3d11::loadShaderFromFile(
     ID3D11Device  & dev,
     ShaderType      type,
     const wchar_t * fileName,

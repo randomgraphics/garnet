@@ -124,7 +124,7 @@ namespace GN
         ///
         /// doLog helper
         ///
-        struct LogHelper
+        struct GN_API LogHelper
         {
             Logger * mLogger; ///< Logger instance pointer
             LogDesc  mDesc;   ///< Logging descriptor

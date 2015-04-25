@@ -93,6 +93,8 @@ BUILD_TARGET_OS = UTIL_getenv('GN_BUILD_TARGET_OS', HOST_OS )
 
 BUILD_TARGET_CPU = UTIL_getenv('GN_BUILD_TARGET_CPU', HOST_CPU )
 
+BUILD_STATIC_LINK = False
+
 BUILD_ROOT_PATH = 'build.tmp/' + BUILD_TARGET_OS + '.' + BUILD_TARGET_CPU + '.' + BUILD_COMPILER + '.' + BUILD_VARIANT + "/"
 
 ################################################################################
@@ -276,10 +278,10 @@ def UTIL_new_env_ex( conf ):
         libs['common']        += Split('kernel32 user32 gdi32 shlwapi advapi32 shell32')
     elif 'xbox3' == BUILD_TARGET_OS:
         cppdefines['common']  += [
-        	'__WRL_NO_DEFAULT_LIB__',
-        	'_TITLE',
-        	'_XBOX_ONE',
-        	'_DURANGO',
+            '__WRL_NO_DEFAULT_LIB__',
+            '_TITLE',
+            '_XBOX_ONE',
+            '_DURANGO',
             'CONDITION_HANDLING=1',
             'WIN32_LEAN_AND_MEAN=1',
             'DEVL=1',
@@ -332,9 +334,17 @@ def UTIL_new_env_ex( conf ):
         cxxflags['common']  += ['/EHa']
 
         ccflags['common']   += ['/W4', '/WX', '/Ot', '/Oi', '/Z7', '/Yd'] # favor speed, enable intrinsic functions.
-        ccflags['debug']    += ['/MTd', '/GR']
-        ccflags['profile']  += ['/MT', '/Ox']
-        ccflags['retail']   += ['/MT', '/Ox', '/GL']
+        ccflags['debug']    += ['/GR']
+        ccflags['profile']  += ['/Ox']
+        ccflags['retail']   += ['/Ox', '/GL']
+        if BUILD_STATIC_LINK:
+            ccflags['debug']    += ['/MTd']
+            ccflags['profile']  += ['/MT']
+            ccflags['retail']   += ['/MT']
+        else:
+            ccflags['debug']    += ['/MDd']
+            ccflags['profile']  += ['/MD']
+            ccflags['retail']   += ['/MD']
 
         linkflags['common']  += ['/MANIFEST', '/FIXED:NO'] # this is for vtune and magellan to do instrumentation
         linkflags['profile'] += ['/OPT:REF']
@@ -342,9 +352,17 @@ def UTIL_new_env_ex( conf ):
 
     elif 'icl' == env['CC']:
         ccflags['common']  += ['/W3','/WX','/Wcheck','/Qpchi-','/Zc:forScope','/Zi','/debug:full']
-        ccflags['debug']   += ['/MTd','/GR','/Ge','/traceback']
-        ccflags['profile'] += ['/O2','/MT']
-        ccflags['retail']  += ['/O2','/MT']
+        ccflags['debug']   += ['/GR','/Ge','/traceback']
+        ccflags['profile'] += ['/O2']
+        ccflags['retail']  += ['/O2']
+        if BUILD_STATIC_LINK:
+            ccflags['debug']    += ['/MTd']
+            ccflags['profile']  += ['/MT']
+            ccflags['retail']   += ['/MT']
+        else:
+            ccflags['debug']    += ['/MDd']
+            ccflags['profile']  += ['/MD']
+            ccflags['retail']   += ['/MD']
 
         # Enable C++ EH (no SEH exceptions)
         cxxflags['common'] += ['/EHs']
@@ -515,6 +533,12 @@ def CheckConfig():
     CONFIG['has_d3d11_1'] = c.CheckLibWithHeader( 'd3d11.lib', 'd3d11_1.h', 'C++' ) and IsVistaOrNewer(env)
     CONFIG['has_d3dx11']  = c.CheckLibWithHeader( 'd3dx11.lib', 'd3dx11.h', 'C++' ) and IsVistaOrNewer(env)
 
+    # ==============
+    # D2D and DWrite
+    # ==============
+    CONFIG['has_d2d']     = c.CheckLibWithHeader( 'd2d1.lib',   'd2d1.h',   'C++' ) and IsVistaOrNewer(env);
+    CONFIG['has_dwrite']  = c.CheckLibWithHeader( 'dwrite.lib', 'dwrite.h', 'C++' ) and IsVistaOrNewer(env);
+
     # ===========
     # DirectInput
     # ===========
@@ -608,7 +632,7 @@ class GarnetEnv2 :
         self.cc               = BUILD_COMPILER
         self.variant          = BUILD_VARIANT
         self.host_os          = HOST_OS
-        self.static_build     = True # TODO: run platform detector
+        self.static_link      = BUILD_STATIC_LINK
         self.has_cg           = CONFIG['has_cg']
         self.has_cg_ogl       = CONFIG['has_cg_ogl']
         self.has_cg_d3d9      = CONFIG['has_cg_d3d9']
@@ -778,7 +802,12 @@ class GarnetEnv2 :
 
         # Add external libraries as needed. Note that
         # when using gcc, the library order matters.
-        libs = self.CollectTargets( ['GNcore'] )
+        core = self.CollectTargets( ['GNcore'] )
+        if (len(core) > 2):
+            libs = [core[2]]
+        else:
+            libs = core
+        libs += self.CollectTargets( ['GNexternLib'] )
         libs += CONFIG['cg_libs']
         libs += CONFIG['glut']
         libs += CONFIG['ogl_libs']
@@ -789,21 +818,25 @@ class GarnetEnv2 :
             libs += ['d3d9.lib'] if dbg else ['d3d9.lib']
         if CONFIG['has_d3dx9'] and ('xenon' != BUILD_TARGET_OS) :
             libs += ['d3dx9d.lib'] if dbg else ['d3dx9.lib']
+        if CONFIG['has_d3d10']:
+            libs += ['d3d10.lib']
         if CONFIG['has_d3d11']:
             libs += ['dxgi.lib', 'dxguid.lib', 'd3d11.lib']
-        if CONFIG['has_d3dx11']:
-            libs += ['d3dx11d.lib'] if dbg else ['d3dx11.lib']
+        if CONFIG['has_d2d']:
+            libs += ['d2d1.lib']
+        if CONFIG['has_dwrite']:
+            libs += ['dwrite.lib']
         if CONFIG['has_dxerr']:
-        	libs += ['dxerr.lib']
+            libs += ['dxerr.lib']
         if CONFIG['has_d3dcompiler']:
-        	libs += ['d3dcompiler.lib']
+            libs += ['d3dcompiler.lib']
         env.Prepend( LIBS = libs )
 
     #
     # Build list of static object files from list of sources
     #
     def BuildObjects( self, env, sources, pchHeader=None, pchSource=None ):
-    	env = env.Clone() if env else self.NewBuildEnv()
+        env = env.Clone() if env else self.NewBuildEnv()
         pchobj = self.BuildPCH( env, pchHeader, pchSource )
         return Flatten( [env.Object(x) for x in sources] ) + pchobj
 
@@ -811,16 +844,15 @@ class GarnetEnv2 :
     # Build static library from list of objects
     #
     def BuildLib( self, env, target, objects, pdb=None ):
-    	env = env.Clone() if env else self.NewBuildEnv()
+        env = env.Clone() if env else self.NewBuildEnv()
         self._BuildSetupPDB( env, target, pdb )
         return env.Library( target, objects )
 
     #
     # Build DLL
     #
-    def BuildDLL( self, env, target, sources, pchHeader=None, pchSource=None, pdb=None, defFile=None, extraObjects=[] ):
-    	env = env.Clone() if env else self.NewBuildEnv()
-        objects = self.BuildObjects( env, sources, pchHeader, pchSource ) + extraObjects
+    def BuildDLL( self, env, target, objects, pchHeader=None, pchSource=None, pdb=None, defFile=None ):
+        env = env.Clone() if env else self.NewBuildEnv()
         self._BuildSetupPDB( env, target, pdb )
         self._BuildSetupLibs( env )
         if defFile: objects += [defFile]
@@ -830,7 +862,7 @@ class GarnetEnv2 :
     # Build executable
     #
     def BuildProgram( self, env, target, sources, pchHeader=None, pchSource=None, pdb=None, extraObjects=[] ):
-    	env = env.Clone() if env else self.NewBuildEnv()
+        env = env.Clone() if env else self.NewBuildEnv()
         objects = self.BuildObjects( env, sources, pchHeader, pchSource ) + extraObjects
         self._BuildSetupPDB( env, target, pdb )
         self._BuildSetupLibs( env )
@@ -888,11 +920,12 @@ class GarnetEnv2 :
         # copy to bin folder
         if rename:
             program = InstallAs( '#' + BUILD_ROOT_PATH + 'bin/' + rename, program )
-      	else:
-	        program = Install( '#' + BUILD_ROOT_PATH + 'bin/', program )
+        else:
+            program = Install( '#' + BUILD_ROOT_PATH + 'bin/', program )
 
         # setup dependency to other targets
         Depends( program, GN.CollectTargets([
+            'GNcore',
             'GNexternBin',
             'GNfbxBin',
             'GNmedia',

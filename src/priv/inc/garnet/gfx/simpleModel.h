@@ -11,7 +11,7 @@ namespace GN { namespace gfx
     ///
     /// simple wireframe model (no lighting, requires position only)
     ///
-    class SimpleWireframeModel : public StdClass
+    class GN_API SimpleWireframeModel : public StdClass
     {
         GN_DECLARE_STDCLASS( SimpleWireframeModel, StdClass );
 
@@ -76,7 +76,7 @@ namespace GN { namespace gfx
     ///     - one texture, one color, diffuse lighting
     ///     - mesh must have position, normal and texcoord
     ///
-    class SimpleDiffuseModel : public StdClass
+    class GN_API SimpleDiffuseModel : public StdClass
     {
         GN_DECLARE_STDCLASS( SimpleDiffuseModel, StdClass );
 
@@ -148,7 +148,7 @@ namespace GN { namespace gfx
     ///
     /// simple normal map effect
     ///
-    class SimpleNormalMapModel : public StdClass
+    class GN_API SimpleNormalMapModel : public StdClass
     {
         GN_DECLARE_STDCLASS( SimpleNormalMapModel, StdClass );
 

@@ -53,7 +53,7 @@ namespace GN { /*namespace for D3D11 utils*/ namespace d3d11
         MSAA_ENABLE       = 1,
     };
 
-    GN::StrW hresult2string(HRESULT hr);
+    GN_API GN::StrW hresult2string(HRESULT hr);
 
     ///
     /// construct sample descriptor based on MSAA flags
@@ -205,14 +205,14 @@ namespace GN { /*namespace for D3D11 utils*/ namespace d3d11
         SHADER_TYPE_COUNT,
     };
 
-    ID3DBlob * compileShader(
+    GN_API ID3DBlob * compileShader(
         const char   * profile,
         const char   * code,
         size_t         len = 0,
         UINT           flags = 0,
         const char   * entry = "main" );
 
-    ID3D11DeviceChild * createShader(
+    GN_API ID3D11DeviceChild * createShader(
         ID3D11Device & dev,
         ShaderType     type,
         const char   * code,
@@ -222,7 +222,7 @@ namespace GN { /*namespace for D3D11 utils*/ namespace d3d11
         const char   * profile = nullptr, // null means using default profile
         ID3DBlob    ** signature = 0 );
 
-    ID3D11DeviceChild * loadShaderFromFile(
+    GN_API ID3D11DeviceChild * loadShaderFromFile(
         ID3D11Device  & dev,
         ShaderType      type,
         const wchar_t * fileName,
@@ -396,7 +396,7 @@ namespace GN { /*namespace for D3D11 utils*/ namespace d3d11
 ///
     /// simple D3D mesh
     ///
-    class SimpleMesh
+    class GN_API SimpleMesh
     {
     public:
 
@@ -545,7 +545,7 @@ namespace GN { /*namespace for D3D11 utils*/ namespace d3d11
     ///
     /// A helper class to create D3D11 resources and views.
     ///
-    struct D3D11Resource
+    struct GN_API D3D11Resource
     {
         AutoComPtr<ID3D11Resource>             resource;
         AutoComPtr<ID3D11Buffer>               buffer;
@@ -615,7 +615,7 @@ namespace GN { /*namespace for D3D11 utils*/ namespace d3d11
     ///     - X is leftward
     ///     - Y is downward
     ///     - length unit is pixel
-    class SpriteRenderer
+    class GN_API SpriteRenderer
     {
         class Impl;
         Impl * _impl;
@@ -723,7 +723,7 @@ namespace GN { /*namespace for D3D11 utils*/ namespace d3d11
         }
     };
 
-    class TextRenderer
+    class GN_API TextRenderer
     {
         class Impl;
 
@@ -975,7 +975,7 @@ namespace GN { /*namespace for D3D11 utils*/ namespace d3d11
     ///
     /// D3D11 application framework
     ///
-    class D3D11Application
+    class GN_API D3D11Application
     {
     public:
 

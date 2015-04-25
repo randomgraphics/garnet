@@ -83,9 +83,6 @@ sGetCurrentDisplayMode(
     GN_MSW_CHECK_RETURN( ::GetMonitorInfoA( (HMONITOR)monitor, &mi ), false );
     GN_MSW_CHECK_RETURN( ::EnumDisplaySettingsA( mi.szDevice, ENUM_CURRENT_SETTINGS, &windm ), false );
 
-    GN_ASSERT( (uint32) ( mi.rcMonitor.right - mi.rcMonitor.left ) == windm.dmPelsWidth );
-    GN_ASSERT( (uint32) (mi.rcMonitor.bottom - mi.rcMonitor.top ) == windm.dmPelsHeight );
-
     dm.width = windm.dmPelsWidth;
     dm.height = windm.dmPelsHeight;
     dm.depth = windm.dmBitsPerPel;

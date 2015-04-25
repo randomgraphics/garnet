@@ -179,7 +179,7 @@ Engine::Engine()
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::engine::initialize()
+GN_API bool GN::engine::initialize()
 {
     return true;
 }
@@ -187,7 +187,7 @@ bool GN::engine::initialize()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::engine::shutdown()
+GN_API void GN::engine::shutdown()
 {
     // shutdown subsystems.
     gfxShutdown();
@@ -200,7 +200,7 @@ void GN::engine::shutdown()
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::engine::inputInitialize( input::InputAPI api )
+GN_API bool GN::engine::inputInitialize( input::InputAPI api )
 {
     using namespace GN::input;
 
@@ -227,7 +227,7 @@ bool GN::engine::inputInitialize( input::InputAPI api )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::engine::inputShutdown()
+GN_API void GN::engine::inputShutdown()
 {
     GN::input::shutdownInputSystem();
 }
@@ -235,7 +235,7 @@ void GN::engine::inputShutdown()
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::engine::gfxInitialize( const GfxInitOptions & o )
+GN_API bool GN::engine::gfxInitialize( const GfxInitOptions & o )
 {
     bool result = sGfxInitInternal( o );
     if( !result ) gfxShutdown();
@@ -245,7 +245,7 @@ bool GN::engine::gfxInitialize( const GfxInitOptions & o )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::engine::gfxShutdown()
+GN_API void GN::engine::gfxShutdown()
 {
     safeDelete( s_engine.gdb );
     safeDelete( s_engine.fontRenderer );
@@ -259,7 +259,7 @@ void GN::engine::gfxShutdown()
 //
 //
 // -----------------------------------------------------------------------------
-GN::gfx::Gpu * GN::engine::getGpu()
+GN_API GN::gfx::Gpu * GN::engine::getGpu()
 {
     return s_engine.gpu;
 }
@@ -267,7 +267,7 @@ GN::gfx::Gpu * GN::engine::getGpu()
 //
 //
 // -----------------------------------------------------------------------------
-GN::gfx::SpriteRenderer * GN::engine::getSpriteRenderer()
+GN_API GN::gfx::SpriteRenderer * GN::engine::getSpriteRenderer()
 {
     return s_engine.spriteRenderer;
 }
@@ -275,7 +275,7 @@ GN::gfx::SpriteRenderer * GN::engine::getSpriteRenderer()
 //
 //
 // -----------------------------------------------------------------------------
-GN::gfx::LineRenderer * GN::engine::getLineRenderer()
+GN_API GN::gfx::LineRenderer * GN::engine::getLineRenderer()
 {
     return s_engine.lineRenderer;
 }
@@ -283,7 +283,7 @@ GN::gfx::LineRenderer * GN::engine::getLineRenderer()
 //
 //
 // -----------------------------------------------------------------------------
-GN::gfx::BitmapFont * GN::engine::getDefaultFontRenderer()
+GN_API GN::gfx::BitmapFont * GN::engine::getDefaultFontRenderer()
 {
     return s_engine.fontRenderer;
 }
@@ -291,7 +291,7 @@ GN::gfx::BitmapFont * GN::engine::getDefaultFontRenderer()
 //
 //
 // -----------------------------------------------------------------------------
-GN::gfx::GpuResourceDatabase * GN::engine::getGdb()
+GN_API GN::gfx::GpuResourceDatabase * GN::engine::getGdb()
 {
     return s_engine.gdb;
 }
@@ -299,7 +299,7 @@ GN::gfx::GpuResourceDatabase * GN::engine::getGdb()
 //
 //
 // -----------------------------------------------------------------------------
-GN::engine::Entity * GN::engine::findEntity( int id )
+GN_API GN::engine::Entity * GN::engine::findEntity( int id )
 {
     ScopeMutex<> lock( s_engine.entityLock );
 
@@ -316,7 +316,7 @@ GN::engine::Entity * GN::engine::findEntity( int id )
 //
 //
 // -----------------------------------------------------------------------------
-int GN::engine::impl::onEntityCtor( Entity * e )
+GN_API int GN::engine::impl::onEntityCtor( Entity * e )
 {
     GN_ASSERT( e );
 
@@ -328,7 +328,7 @@ int GN::engine::impl::onEntityCtor( Entity * e )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::engine::impl::onEntityDtor( int id )
+GN_API void GN::engine::impl::onEntityDtor( int id )
 {
     ScopeMutex<> lock( s_engine.entityLock );
 

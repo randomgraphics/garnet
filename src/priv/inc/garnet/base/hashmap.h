@@ -8,7 +8,7 @@
 
 namespace GN
 {
-    extern const size_t HASH_MAP_PRIMARY_ARRAY[28];
+    extern GN_API const size_t HASH_MAP_PRIMARY_ARRAY[28];
 
     namespace HashMapUtils
     {

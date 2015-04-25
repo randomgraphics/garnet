@@ -13,7 +13,7 @@ namespace GN { namespace util
     ///
     /// Sample application framework
     ///
-    class SampleApp : public SlotBase
+    class GN_API SampleApp : public SlotBase
     {
         // ********************************
         // ctor/dtor

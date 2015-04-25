@@ -168,7 +168,7 @@ public:
 //
 //
 // -----------------------------------------------------------------------------
-GN::gfx::FontFace *
+GN_API GN::gfx::FontFace *
 GN::gfx::createMixedFontFace(
     const FontFaceCreationDesc  & defaultFont,
     const MixedFontCreationDesc * additionalFonts,

@@ -14,7 +14,7 @@ namespace GN { namespace engine
     ///
     /// Static mesh entity
     ///
-    class StaticMesh : public Entity
+    class GN_API StaticMesh : public Entity
     {
         GN_ENGINE_DECLARE_ENTITY( StaticMesh, Entity );
 
@@ -62,7 +62,7 @@ namespace GN { namespace engine
     ///
     /// Skinned Mesh Entity
     ///
-    class SkinnedMesh : public Entity
+    class GN_API SkinnedMesh : public Entity
     {
         GN_ENGINE_DECLARE_ENTITY( SkinnedMesh, Entity );
 

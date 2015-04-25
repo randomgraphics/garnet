@@ -142,7 +142,7 @@ namespace GN { namespace gfx
     ///
     /// create font face from a font file
     ///
-    FontFace * createFontFace( const FontFaceCreationDesc & cd );
+    GN_API FontFace * createFontFace( const FontFaceCreationDesc & cd );
 
     ///
     /// Mixed font face creation descriptor
@@ -157,7 +157,7 @@ namespace GN { namespace gfx
     ///
     /// Create font face with mixed font face
     ///
-    FontFace * createMixedFontFace(
+    GN_API FontFace * createMixedFontFace(
         const FontFaceCreationDesc  & defaultFont,
         const MixedFontCreationDesc * additionalFonts,
         size_t                        numAdditionalFonts );
@@ -165,7 +165,7 @@ namespace GN { namespace gfx
     ///
     /// create simple ASCII only font with size of 8x16, without external font file dependency.
     ///
-    FontFace * createSimpleAsciiFontFace();
+    GN_API FontFace * createSimpleAsciiFontFace();
 
     ///
     /// text descriptor
@@ -199,7 +199,7 @@ namespace GN { namespace gfx
     ///
     /// bitmap font renderer.
     ///
-    class BitmapFont : public StdClass
+    class GN_API BitmapFont : public StdClass
     {
         GN_DECLARE_STDCLASS( BitmapFont, StdClass );
 

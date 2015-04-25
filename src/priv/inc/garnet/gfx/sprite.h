@@ -17,7 +17,7 @@ namespace GN { namespace gfx
     ///     - Y is downward
     ///     - length unit is pixel
     ///
-    class SpriteRenderer : public StdClass
+    class GN_API SpriteRenderer : public StdClass
     {
         GN_DECLARE_STDCLASS( SpriteRenderer, StdClass );
 

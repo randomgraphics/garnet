@@ -11,8 +11,8 @@ objects += SConscript( 'input/makefile.scons' )
 objects += SConscript( 'util/makefile.scons' )
 objects += SConscript( 'win/makefile.scons' )
 
-if GN.static_build:
+if GN.static_link:
 	GN.NewTarget( 'GNcore', GN.BuildLib( None, 'GNcore', objects ) )
 else:
 	env = GN.NewBuildEnv()
-	GN.NewTarget( 'GNcore', env.SharedLibrary( 'GNcore', objects ) )
+	GN.NewTarget( 'GNcore', GN.BinplaceDLL( GN.BuildDLL( None, 'GNcore', objects ) ) )
