@@ -181,17 +181,17 @@ namespace GN
         ///
         /// find specific attribute of element
         ///
-        XmlAttrib * findAttrib( const StrA & name, str::CompareCase scc = str::SENSITIVE ) const
+        XmlAttrib * findAttrib( const StrA & name_, str::CompareCase scc = str::SENSITIVE ) const
         {
             for( XmlAttrib * a = firsta; a; a = a->next )
             {
                 if( str::SENSITIVE == scc )
                 {
-                    if( name == a->name ) return a;
+                    if( name_ == a->name ) return a;
                 }
                 else
                 {
-                    if( 0 == str::compareI( name.rawptr(), a->name.rawptr() ) ) return a;
+                    if( 0 == str::compareI( name_.rawptr(), a->name.rawptr() ) ) return a;
                 }
             }
             return NULL;
@@ -200,7 +200,7 @@ namespace GN
         ///
         /// find specific firstc of element
         ///
-        XmlElement * findChildElement( const StrA & name, str::CompareCase scc = str::SENSITIVE ) const
+        XmlElement * findChildElement( const StrA & name_, str::CompareCase scc = str::SENSITIVE ) const
         {
             for( XmlNode * n = firstc; n; n = n->nexts )
             {
@@ -209,11 +209,11 @@ namespace GN
 
                 if( str::SENSITIVE == scc )
                 {
-                    if( name == e->name ) return e;
+                    if( name_ == e->name ) return e;
                 }
                 else
                 {
-                    if( 0 == str::compareI( name.rawptr(), e->name.rawptr() ) ) return e;
+                    if( 0 == str::compareI( name_.rawptr(), e->name.rawptr() ) ) return e;
                 }
             }
             return NULL;

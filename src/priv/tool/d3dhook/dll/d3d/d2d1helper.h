@@ -656,16 +656,16 @@ namespace D2D1
 
         D2D1FORCEINLINE
         ColorF(
-            FLOAT r,
-            FLOAT g,
-            FLOAT b,
-            FLOAT a = 1.0
+            FLOAT r_,
+            FLOAT g_,
+            FLOAT b_,
+            FLOAT a_ = 1.0
             )
         {
-            this->r = r;
-            this->g = g;
-            this->b = b;
-            this->a = a;
+            this->r = r_;
+            this->g = g_;
+            this->b = b_;
+            this->a = a_;
         }
 
     private:
@@ -674,13 +674,13 @@ namespace D2D1
         void
         Init(
             UINT32 rgb,
-            FLOAT a
+            FLOAT a_
             )
         {
             this->r = static_cast<FLOAT>((rgb & sc_redMask) >> sc_redShift) / 255.f;
             this->g = static_cast<FLOAT>((rgb & sc_greenMask) >> sc_greenShift) / 255.f;
             this->b = static_cast<FLOAT>((rgb & sc_blueMask) >> sc_blueShift) / 255.f;
-            this->a = a;
+            this->a = a_;
         }
 
         static const UINT32 sc_redShift   = 16;

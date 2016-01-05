@@ -17,9 +17,6 @@ bool GN::gfx::D3D11Gpu::dispInit()
     const GpuOptions & ro = getOptions();
     const DispDesc & dd = getDispDesc();
 
-    UINT flags = D3D11_CREATE_DEVICE_SINGLETHREADED;
-    if( ro.debug ) flags |= D3D11_CREATE_DEVICE_DEBUG;
-
     // setup swap chain descriptor
     GN_CASSERT( D3D11_SDK_VERSION >= 7 );
     DXGI_SWAP_CHAIN_DESC sd;
@@ -39,12 +36,13 @@ bool GN::gfx::D3D11Gpu::dispInit()
     // Get the highest feature level
     D3D_FEATURE_LEVEL featureLevel;
     GN_RETURN_FALSE_ON_HR_FAILED(D3D11CreateDevice(
-        NULL, D3D_DRIVER_TYPE_HARDWARE, NULL, flags, NULL, 0,
+        NULL, D3D_DRIVER_TYPE_HARDWARE, NULL, 0, NULL, 0,
         D3D11_SDK_VERSION, NULL, &featureLevel, NULL));
 
     // create device
-    GN_DX_CHECK_RETURN(
-        D3D11CreateDeviceAndSwapChain(
+    UINT flags = D3D11_CREATE_DEVICE_SINGLETHREADED;
+    if( ro.debug ) flags |= D3D11_CREATE_DEVICE_DEBUG;
+    HRESULT firstTry = D3D11CreateDeviceAndSwapChain(
             mAdapter,
             ro.reference ? D3D_DRIVER_TYPE_REFERENCE : D3D_DRIVER_TYPE_HARDWARE,
             NULL, // software module handle
@@ -56,8 +54,26 @@ bool GN::gfx::D3D11Gpu::dispInit()
             &mSwapChain,
             &mDevice,
             NULL, // feature level
-            &mDeviceContext ),
-        false );
+            &mDeviceContext );
+    if (FAILED(firstTry) && ro.debug)
+    {
+        // remove debug flag and try again
+        flags &= ~D3D11_CREATE_DEVICE_DEBUG;
+        GN_RETURN_FALSE_ON_HR_FAILED( D3D11CreateDeviceAndSwapChain(
+            mAdapter,
+            ro.reference ? D3D_DRIVER_TYPE_REFERENCE : D3D_DRIVER_TYPE_HARDWARE,
+            NULL, // software module handle
+            flags,
+            &featureLevel,
+            1,
+            D3D11_SDK_VERSION,
+            &sd,
+            &mSwapChain,
+            &mDevice,
+            NULL, // feature level
+            &mDeviceContext ) );
+        GN_WARN(sLogger)("D3D device created w/o debug layer.");
+    }
 
     mDevice->QueryInterface( IID_ID3D11Debug, (void**)&mD3D11Debug );
 

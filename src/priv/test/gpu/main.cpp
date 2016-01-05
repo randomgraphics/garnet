@@ -252,6 +252,10 @@ int main( int argc, const char * argv[] )
         createGpu( cmdargs.rendererOptions, cmdargs.useMultiThreadGpu ? GPU_CREATION_MULTIPLE_THREADS : 0 );
         //createOGLGpu( cmdargs.rendererOptions, cmdargs.useMultiThreadGpu ? GPU_CREATION_MULTIPLE_THREADS : 0 );
         //createD3DGpu( cmdargs.rendererOptions, cmdargs.useMultiThreadGpu ? GPU_CREATION_MULTIPLE_THREADS : 0 );
+    if (nullptr == r)
+    {
+        return -1;
+    }
 
     InputInitiator ii(*r);
 

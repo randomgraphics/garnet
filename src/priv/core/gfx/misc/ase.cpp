@@ -852,16 +852,16 @@ static bool sReadMesh( AseMeshInternal & m, const Matrix44f & transform, AseFile
             if( !ase.next( str::format( "%d", i ).rawptr() ) ) return false;
 
             // for each vertex in the face
-            for( uint32 i = 0; i < 3; ++i )
+            for( uint32 j = 0; j < 3; ++j )
             {
-                AseVertex & v = m.vertices[ f.v[i] ];
+                AseVertex & v = m.vertices[ f.v[j] ];
 
                 // get the index into texcoord array
                 uint32 t;
                 if( !ase.readInt( t ) ) return false;
 
                 // add to vertex's texcoord array, store index in the face.
-                f.t[i] = v.addTexcoord( texcoords[t] );
+                f.t[j] = v.addTexcoord( texcoords[t] );
             }
         }
         if( !ase.readBlockEnd() ) return false;
@@ -903,7 +903,7 @@ static bool sReadMesh( AseMeshInternal & m, const Matrix44f & transform, AseFile
         AseFace & f = m.faces[i];
         if( !ase.readIndexedVector3Node( "*MESH_FACENORMAL", i, f.fn ) ) return false;
 
-        for( uint32 i = 0; i < 3; ++i )
+        for( uint32 j = 0; j < 3; ++j )
         {
             if( !ase.next( "*MESH_VERTEXNORMAL" ) ) return false;
 
@@ -915,7 +915,7 @@ static bool sReadMesh( AseMeshInternal & m, const Matrix44f & transform, AseFile
             Vector3f n;
             if( !ase.readVector3( n ) ) return false;
 
-            f.vn[i] = v.addNormal( it.transformVector( n ) );
+            f.vn[j] = v.addNormal( it.transformVector( n ) );
         }
     }
     if( !ase.readBlockEnd() ) return false;
@@ -1531,7 +1531,6 @@ static bool sWriteGeoObject( AseScene & dst, const AseSceneInternal & src, const
 
     // generate mesh
     VertexCollection  vc( obj.mesh.faces.size() * 3 );
-    VertexSelector    vs;
     DynaArray<uint32> ib; // index into vertex collection
     for( size_t i = 0; i < obj.mesh.chunks.size(); ++i )
     {
@@ -1548,15 +1547,16 @@ static bool sWriteGeoObject( AseScene & dst, const AseSceneInternal & src, const
         uint32 minidx = 0xFFFFFFFF;
         uint32 maxidx = 0;
 
-        for( size_t i = 0; i < c.faces.size(); ++i )
+        for( size_t j = 0; j < c.faces.size(); ++j )
         {
-            const AseFace & f = obj.mesh.faces[c.faces[i]];
+            const AseFace & f = obj.mesh.faces[c.faces[j]];
 
-            for( size_t i = 0; i < 3; ++i )
+            for( size_t k = 0; k < 3; ++k )
             {
-                vs.p = f.v[i];
-                vs.t = f.t[i];
-                vs.n = f.vn[i];
+                VertexSelector vs;
+                vs.p = f.v[k];
+                vs.t = f.t[k];
+                vs.n = f.vn[k];
 
                 uint32 idx = vc.add( vs );
                 ib.append( idx );

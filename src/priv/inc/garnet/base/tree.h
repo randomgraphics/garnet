@@ -80,14 +80,14 @@ namespace GN
         {
             if( (T*)this == p )
             {
-                static Logger * sLogger = getLogger("GN.base.TreeNode");
-                GN_ERROR(sLogger)( "can't set itself as parent" );
+                static Logger * logger = getLogger("GN.base.TreeNode");
+                GN_ERROR(logger)( "can't set itself as parent" );
                 return false;
             }
             if( isDescendant( p ) )
             {
-                static Logger * sLogger = getLogger("GN.base.TreeNode");
-                GN_ERROR(sLogger)( "can't descendant as parent" );
+                static Logger * logger = getLogger("GN.base.TreeNode");
+                GN_ERROR(logger)( "can't descendant as parent" );
                 return false;
             }
             // TODO: traverse child tree to make sure 'p' is not in it.
@@ -103,8 +103,8 @@ namespace GN
 
             if( (T*)this == prev )
             {
-                static Logger * sLogger = getLogger("GN.base.TreeNode");
-                GN_ERROR(sLogger)( "can't set itself as prev node" );
+                static Logger * logger = getLogger("GN.base.TreeNode");
+                GN_ERROR(logger)( "can't set itself as prev node" );
                 return false;
             }
 
@@ -112,8 +112,8 @@ namespace GN
 
             if( prev->mParent != parent )
             {
-                static Logger * sLogger = getLogger("GN.base.TreeNode");
-                GN_ERROR(sLogger)( "prev node belongs to another parent." );
+                static Logger * logger = getLogger("GN.base.TreeNode");
+                GN_ERROR(logger)( "prev node belongs to another parent." );
                 return false;
             }
 
@@ -151,8 +151,8 @@ namespace GN
                     }
                     if( 0 == c )
                     {
-                        static Logger * sLogger = getLogger("GN.base.TreeNode");
-                        GN_ERROR(sLogger)( "newPrev is not direct child of newParent!" );
+                        static Logger * logger = getLogger("GN.base.TreeNode");
+                        GN_ERROR(logger)( "newPrev is not direct child of newParent!" );
                         GN_UNEXPECTED();
                     }
                 }

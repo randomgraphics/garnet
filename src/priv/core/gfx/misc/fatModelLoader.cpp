@@ -1121,7 +1121,7 @@ sBuildFatMeshSubsetJointList( FatMesh & mesh )
         }
 
 
-        // We have looped through all verties in the subset and gathered
+        // We have looped through all vertices in the subset and gathered
         // all joints that are used in this subset. Now build subset
         // joint array.
 
@@ -1133,10 +1133,10 @@ sBuildFatMeshSubsetJointList( FatMesh & mesh )
         }
 
         // Copy joints from set to array. Not that joints in set are already sorted.
-        uint32 i = 0;
-        for( std::set<uint32>::const_iterator iter = accumulatedJoints.begin(); iter != accumulatedJoints.end(); ++iter, ++i )
+        uint32 j = 0;
+        for( std::set<uint32>::const_iterator iter = accumulatedJoints.begin(); iter != accumulatedJoints.end(); ++iter, ++j )
         {
-            subset.joints[i] = *iter;
+            subset.joints[j] = *iter;
         }
     }
 

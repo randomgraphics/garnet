@@ -333,6 +333,9 @@ def UTIL_new_env_ex( conf ):
         # Enable C++ EH (with SEH exceptions)
         cxxflags['common']  += ['/EHa']
 
+        # compile in backcompat mode (vs2015 only)
+        cxxflags['common']  += ['/Wv:18']
+        
         ccflags['common']   += ['/W4', '/WX', '/Ot', '/Oi', '/Z7', '/Yd'] # favor speed, enable intrinsic functions.
         ccflags['debug']    += ['/GR']
         ccflags['profile']  += ['/Ox']
@@ -517,7 +520,8 @@ def CheckConfig():
         win7  = string.find( str, "6.1" ) >= 0
         win8  = string.find( str, "6.2" ) >= 0
         win81 = string.find( str, "6.3" ) >= 0
-        return  vista or win7 or win8 or win81
+        win10 = string.find( str, "10.0" ) >= 0
+        return  vista or win7 or win8 or win81 or win10
 
     # =====
     # D3D10

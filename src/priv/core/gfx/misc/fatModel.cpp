@@ -392,10 +392,10 @@ static bool sSplitFatMeshSubsets( FatMesh & mesh, uint32 maxJointsPerSubset )
     // split into smaller pieces to meet the joint number threshold. All
     // newly created subsets are stored in array "newSubsets".
     //
-    for( uint32 i = 0; i < mesh.subsets.size(); ++i )
+    for( uint32 s = 0; s < mesh.subsets.size(); ++s )
     {
         // This is the subset that we're currently looping through
-        FatMeshSubset & subset = mesh.subsets[i];
+        FatMeshSubset & subset = mesh.subsets[s];
 
         // This is to see if we have created a new subset.
         FatMeshSubset * newsub = NULL;

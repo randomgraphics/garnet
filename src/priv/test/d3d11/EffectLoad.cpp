@@ -753,7 +753,7 @@ HRESULT CEffectLoader::LoadEffect(CEffect *pEffect, CONST void *pEffectBuffer, U
     // Begin effect load
     VN( m_pEffect->m_pTypePool = NEW CEffect::CTypeHashTable );
     VN( m_pEffect->m_pStringPool = NEW CEffect::CStringHashTable );
-    VN( m_pEffect->m_pPooledHeap = NEW CDataBlockStore );
+    VN( m_pEffect->m_pPooledHeap = PRIVATENEW CDataBlockStore );
     m_pEffect->m_pPooledHeap->EnableAlignment();
     m_pEffect->m_pTypePool->SetPrivateHeap(m_pEffect->m_pPooledHeap);
     m_pEffect->m_pStringPool->SetPrivateHeap(m_pEffect->m_pPooledHeap);
@@ -804,7 +804,7 @@ HRESULT CEffectLoader::LoadEffect(CEffect *pEffect, CONST void *pEffectBuffer, U
     VHD( chkVariables.GetValue(&cMemberDataBlocks), "Overflow: too many Effect variables." );
 
     // Allocate effect resources
-    VN( m_pEffect->m_pCBs = PRIVATENEW SConstantBuffer[m_pHeader->Effect.cCBs] );
+    VN( m_pEffect->m_pCBs = NEW SConstantBuffer[m_pHeader->Effect.cCBs] );
     VN( m_pEffect->m_pDepthStencilBlocks = PRIVATENEW SDepthStencilBlock[m_pHeader->cDepthStencilBlocks] );
     VN( m_pEffect->m_pRasterizerBlocks = PRIVATENEW SRasterizerBlock[m_pHeader->cRasterizerStateBlocks] );
     VN( m_pEffect->m_pBlendBlocks = PRIVATENEW SBlendBlock[m_pHeader->cBlendStateBlocks] );
