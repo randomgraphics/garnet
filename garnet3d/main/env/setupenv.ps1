@@ -146,9 +146,14 @@ if( ("vc" -eq $env:GN_BUILD_COMPILER) -and ("xbox3" -ne $env:GN_BUILD_TARGET_OS)
     "====================================="
     ""
 
-    # locate vsvarall.bat, prefer vs2012 over others
+    # locate vsvarall.bat
     $vcvarbat=$false
-    if( $env:VS120COMNTOOLS -and ( test-path $env:VS120COMNTOOLS ) )
+    if( $env:VS140COMNTOOLS -and ( test-path $env:VS140COMNTOOLS ) )
+    {
+        $vcvarbat="$env:VS140COMNTOOLS..\..\VC\vcvarsall.bat"
+        $env:GN_BUILD_COMPILER="vc140";
+    }
+    elseif( $env:VS120COMNTOOLS -and ( test-path $env:VS120COMNTOOLS ) )
     {
         $vcvarbat="$env:VS120COMNTOOLS..\..\VC\vcvarsall.bat"
         $env:GN_BUILD_COMPILER="vc120";

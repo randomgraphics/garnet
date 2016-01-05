@@ -218,7 +218,7 @@ void GN::gfx::BitmapFont::drawText( const TextDesc & td )
 
         ci = mCharList[i];
 
-        for( size_t i = 0; i < numchars; ++i, ++ci )
+        for( size_t c = 0; c < numchars; ++c, ++ci )
         {
             mSpriteRenderer->drawTextured(
                 ci->x, ci->y, ci->fs->w, ci->fs->h,

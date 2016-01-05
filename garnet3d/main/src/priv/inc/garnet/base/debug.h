@@ -118,15 +118,15 @@
 ///
 /// check return value of Windows function (general version)
 ///
-#define GN_MSW_CHECK_DO( func, something )                                   \
-    if( true ) {                                                             \
-        intptr_t rr = (intptr_t)(func);                                        \
-        if( 0 == rr )                                                        \
-        {                                                                    \
-            static GN::Logger * sLogger = GN::getLogger("GN.base.MSWError"); \
-            GN_ERROR(sLogger)( ::GN::getWin32LastErrorInfo() );              \
-            something                                                        \
-        }                                                                    \
+#define GN_MSW_CHECK_DO( func, something )                                      \
+    if( true ) {                                                                \
+        intptr_t rr = (intptr_t)(func);                                         \
+        if( 0 == rr )                                                           \
+        {                                                                       \
+            static GN::Logger * sMswLogger = GN::getLogger("GN.base.MSWError"); \
+            GN_ERROR(sMswLogger)( ::GN::getWin32LastErrorInfo() );              \
+            something                                                           \
+        }                                                                       \
     } else void(0)
 
 ///
@@ -154,15 +154,15 @@
 #ifdef D3DCOMPILE_USEVOIDS
 #define GN_DX_CHECK_DO( func, something ) func
 #else
-#define GN_DX_CHECK_DO( func, something )                                   \
-    if( true ) {                                                            \
-        HRESULT hr = func;                                                  \
-        if( FAILED(hr) )                                                    \
-        {                                                                   \
-            static GN::Logger * sLogger = GN::getLogger("GN.gfx.DXError");  \
-            GN_ERROR(sLogger)( GN::getDXErrorInfo(hr) );                    \
-            something                                                       \
-        }                                                                   \
+#define GN_DX_CHECK_DO( func, something )                                     \
+    if( true ) {                                                              \
+        HRESULT hr = func;                                                    \
+        if( FAILED(hr) )                                                      \
+        {                                                                     \
+            static GN::Logger * sDxLogger = GN::getLogger("GN.gfx.DXError");  \
+            GN_ERROR(sDxLogger)( GN::getDXErrorInfo(hr) );                    \
+            something                                                         \
+        }                                                                     \
     } else void(0)
 #endif // D3DCOMPILE_USEVOIDS
 
@@ -193,8 +193,8 @@
         Status rr = (func);                                 \
         if( 0 == rr )                                       \
         {                                                   \
-            static GN::Logger * sLogger = GN::getLogger("GN.gfx.XLibError"); \
-            GN_ERROR(sLogger)( "XLib function %s failed: return(0x%X).", #func, rr );  \
+            static GN::Logger * sXLogger = GN::getLogger("GN.gfx.XLibError"); \
+            GN_ERROR(sXLogger)( "XLib function %s failed: return(0x%X).", #func, rr );  \
             something                                       \
         }                                                   \
     } else void(0)

@@ -260,7 +260,7 @@ namespace GN { /* namespace for D3D9 utils */ namespace d3d9
         {
             if( NULL == m_Device ) return;
 
-            if( type >= MAX_RS )
+            if( (UINT)type >= MAX_RS )
             {
                 // Must be an invalid D3D9 render state type.
                 GN_ERROR(m_Logger)( "Invalid D3D render state: %d", type );
@@ -295,7 +295,7 @@ namespace GN { /* namespace for D3D9 utils */ namespace d3d9
         {
             if( NULL == m_Device ) return;
 
-            if( stage >= MAX_STAGES || type >= MAX_TSS )
+            if( stage >= MAX_STAGES || (UINT)type >= MAX_TSS )
             {
                 GN_ERROR(m_Logger)( "Invalid D3D texture stage state: stage(%d), type(%d)", stage, type );
                 return;
@@ -329,7 +329,7 @@ namespace GN { /* namespace for D3D9 utils */ namespace d3d9
         {
             if( NULL == m_Device ) return;
 
-            if( stage >= MAX_STAGES || type >= MAX_SS )
+            if( stage >= MAX_STAGES || (UINT)type >= MAX_SS )
             {
                 GN_ERROR(m_Logger)( "Invalid D3D sampler state: stage(%d), type(%d)", stage, type );
                 return;

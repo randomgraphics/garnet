@@ -350,8 +350,8 @@ namespace GN
             {
                 // Uninvertible matrix is rare used in 3D graphics, and usually
                 // means error. So we output a warning message here.
-                static Logger * sLogger = getLogger("GN.base.Matrix44");
-                GN_WARN(sLogger)( "Matrix is un-invertable!" );
+                static Logger * logger = getLogger("GN.base.Matrix44");
+                GN_WARN(logger)( "Matrix is un-invertable!" );
                 return identity();
             }
 

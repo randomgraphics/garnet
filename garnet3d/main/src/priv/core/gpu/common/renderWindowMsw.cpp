@@ -270,7 +270,7 @@ GN::gfx::RenderWindowMsw::createWindow( HWND parent, HMONITOR monitor, uint32 wi
     GN_MSW_CHECK_RETURN( GetMonitorInfoW( monitor, &mi ), false );
 
     // calculate window size
-    RECT rc = { 0, 0, width, height };
+    RECT rc = { 0, 0, (LONG)width, (LONG)height };
     ::AdjustWindowRectEx( &rc, style, 0, exStyle );
 
     // create window
