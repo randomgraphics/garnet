@@ -420,6 +420,12 @@ inline bool GN::gfx::D3D11Gpu::bindContextResource(
             buf[i]     = b.vtxbuf ? safeCastPtr<const D3D11VtxBuf>(b.vtxbuf.rawptr())->getD3DBuffer() : NULL;
             strides[i] = b.stride;
             offsets[i] = b.offset;
+
+            if (0 == b.stride && b.vtxbuf)
+            {
+                const VertexElement & e = newContext.vtxbind[i];
+                strides[i] = e.format.getBytesPerBlock();
+            }
         }
         mDeviceContext->IASetVertexBuffers( 0, GpuContext::MAX_VERTEX_BUFFERS, buf, strides, offsets );
     }

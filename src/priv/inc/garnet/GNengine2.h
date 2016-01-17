@@ -25,23 +25,74 @@ namespace GN { namespace e2
         // basic properties
         uint64          _id;
         StrA            _name;
+    };
 
+    class SpacialEntity : public Entity
+    {
         // spacial properties
         WeakRef<Entity> _spacialParent;
         Position        _worldPosition;  // only when _spacialParent is empty.
         Spheref         _boundingSphere;
-        Transformation  _trahsformation; // local to parent transformation
+        Transformation  _transformation; // local to parent transformation
     };
 
-    class Scene : public StdClass
+    class VisualEntity : SpacialEntity
+    {
+    public:
+        virtual void RenderPass0();
+        virtual void RenderPass1();
+        virtual void RenderPass2();
+    };
+
+    // Camera object
+    class Camera : public VisualEntity
+    {
+    };
+
+    // The geometry object that never changes
+    class ImmutableGeometry : public VisualEntity
+    {
+    };
+
+    class SceneGraph
     {
     public:
 
-        uint64 GetUniqueId();
-
+        void AddEntity(SpacialEntity *);
+        void RemoveEntity(uint64 id);
     };
 
-    extern Scene gScene; ///< global scene instance
+    class AsyncNofitication : RefCounter
+    {
+    public:
+
+        enum Status
+        {
+            PENDING = -2,
+            ABORT   = -1,
+            FAILED  = 0,
+            DONE    = 1,
+        };
+
+        void   Notify(OperationResult);
+        Status Pool();
+        void   WaitForFinish();
+    };
+
+    // self contained world object.
+    class World
+    {
+    public:
+        void LoadAsync(File &);
+        void SaveAsync(File &);
+        void PurgeAsync();
+        void Render(UINT pass);
+    };
+
+    class Universe
+    {
+        uint64 GenerateUniqueId();
+    };
 }}
 
 // *****************************************************************************
