@@ -476,7 +476,7 @@ if( "xenon" -eq $env:GN_BUILD_COMPILER )
 }
 else
 {
-    $SCONS_DIR= "$GARNET_ROOT\env\scons\2.2.0"
+    $SCONS_DIR= "$GARNET_ROOT\env\scons\2.4.1"
     $env:SCONS_LIB_DIR    = "$SCONS_DIR\engine"
     $env:SCONS_SCRIPT_DIR = "$SCONS_DIR\script\"
 }
