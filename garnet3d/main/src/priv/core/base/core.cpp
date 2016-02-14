@@ -33,7 +33,7 @@ namespace GN
     // -----------------------------------------------------------------------------
     GN_API void * HeapMemory::alloc( size_t sz )
     {
-        return HeapMemory::alignedAlloc( sz, 1 );
+        return HeapMemory::alignedAlloc( sz, 0 );
     }
 
     //
@@ -41,7 +41,7 @@ namespace GN
     // -----------------------------------------------------------------------------
     GN_API void * HeapMemory::realloc( void * ptr, size_t sz )
     {
-        return HeapMemory::alignedRealloc( ptr, sz, 1 );
+        return HeapMemory::alignedRealloc( ptr, sz, 0 );
     }
 
     //
@@ -49,7 +49,7 @@ namespace GN
     // -----------------------------------------------------------------------------
     GN_API void * HeapMemory::alignedAlloc( size_t sizeInBytes, size_t alignment )
     {
-        if( 0 == alignment ) alignment = 1;
+        if( 0 == alignment ) alignment = sizeof(size_t);
 #if GN_POSIX
         void * ptr = memalign( alignment, sizeInBytes );
 #else
@@ -67,7 +67,7 @@ namespace GN
     // -----------------------------------------------------------------------------
     GN_API void * HeapMemory::alignedRealloc( void * ptr, size_t sizeInBytes, size_t alignment )
     {
-        if( 0 == alignment ) alignment = 1;
+        if( 0 == alignment ) alignment = sizeof(size_t);
 #if GN_POSIX
         ptr = realloc( ptr, sizeInBytes );
 #else
