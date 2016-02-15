@@ -18,6 +18,6 @@ sources = [
     'xenonVtxBuf.cpp',
 ]
 env = GN.NewBuildEnv()
-env.Append( CPPPATH = ['#src/priv/core/gpu/util'] )
+env.Append( CPPPATH = ['#src/private/core/gpu/util'] )
 objects = GN.BuildObjects( env, sources, 'pch.h', 'pch.cpp' )
 Return( 'objects' )

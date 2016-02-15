@@ -91,7 +91,7 @@ ft2_cluster = GN.BuildObjects( ft2_env, ft2_sources )
 # assimp
 ai_env = GN.NewBuildEnv()
 ai_env.Append(
-    CPPPATH=['#src/extern/inc/assimp','assimp/BoostWorkaround'],
+    CPPPATH=['#src/contrib/inc/assimp','assimp/BoostWorkaround'],
     CCFLAGS = ccflags,
     CPPDEFINES = cppdefines + ['ASSIMP_BUILD_BOOST_WORKAROUND','ASSIMP_BUILD_NO_OWN_ZLIB'] )
 GN.RemoveEnvListItems( ai_env, 'CCFLAGS', ['/W4','/Wcheck','-Wall'] )
@@ -102,7 +102,7 @@ ai_cluster = GN.BuildObjects( ai_env, assimp_sources, 'AssimpPCH.h', 'assimp/Ass
 # assimp contrib
 ai_contrib_env = GN.NewBuildEnv()
 ai_contrib_env.Append(
-    CPPPATH=['#src/extern/inc/assimp','assimp/BoostWorkaround','assimp'],
+    CPPPATH=['#src/contrib/inc/assimp','assimp/BoostWorkaround','assimp'],
     CCFLAGS = ccflags,
     CPPDEFINES = cppdefines + ['ASSIMP_BUILD_BOOST_WORKAROUND','ASSIMP_BUILD_NO_OWN_ZLIB'] )
 GN.RemoveEnvListItems( ai_contrib_env, 'CCFLAGS', ['/W4','/Wcheck','-Wall'] )
