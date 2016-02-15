@@ -1,4 +1,4 @@
 SConscript( [
-	'extern/makefile.scons',
-	'priv/makefile.scons'
+	'contrib/makefile.scons',
+	'private/makefile.scons'
 	] )

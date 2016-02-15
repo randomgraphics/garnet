@@ -18,7 +18,7 @@ sources = [
 	'd3d11VtxLayout.cpp',
 ]
 env = GN.NewBuildEnv()
-env.Append( CPPPATH = ['#src/priv/core/gpu/util'] )
+env.Append( CPPPATH = ['#src/private/core/gpu/util'] )
 if GN.has_cg_d3d11 :
     env.Append( CPPDEFINES = ['HAS_CG=1','HAS_CG_D3D=1'] )
 objects = GN.BuildObjects( env, sources, 'pch.h', 'pch.cpp' )

@@ -229,9 +229,9 @@ def UTIL_new_env_ex( conf ):
     # Set standard include path
     env.Append(
         CPPPATH = [
-            '#src/extern/inc',
-            '#' + BUILD_ROOT_PATH + 'priv/inc',
-            '#src/priv/inc',
+            '#src/contrib/inc',
+            '#' + BUILD_ROOT_PATH + 'private/inc',
+            '#src/private/inc',
             ],
         )
 
@@ -246,11 +246,11 @@ def UTIL_new_env_ex( conf ):
     linkflags  = generate_empty_options()
 
     # Setup standard options
-    cpppath['common']     += [  '#src/extern/inc',
-                                '#' + BUILD_ROOT_PATH + 'priv/inc',
-                                '#src/priv/inc',
+    cpppath['common']     += [  '#src/contrib/inc',
+                                '#' + BUILD_ROOT_PATH + 'private/inc',
+                                '#src/private/inc',
                                 ];
-    libpath['common']     += ['#src/extern/lib/' + HOST_OS + '.' + HOST_CPU]
+    libpath['common']     += ['#src/contrib/lib/' + HOST_OS + '.' + HOST_CPU]
     cppdefines['common']  += ['UNICODE', '_UNICODE']
     cppdefines['debug']   += ['GN_ENABLE_DEBUG=1', 'GN_ENABLE_PROFILING=1', '_DEBUG']
     cppdefines['profile'] += ['GN_ENABLE_DEBUG=0', 'GN_ENABLE_PROFILING=1', 'NDEBUG']
@@ -592,10 +592,10 @@ def CheckConfig():
 
     if 'mswin' == BUILD_TARGET_OS:
         CONFIG['has_fbx']     = True
-        CONFIG['fbx_incpath'] = ['#src/extern/fbx/2014.1/include'],
-        CONFIG['fbx_libpath'] = {'debug'   : ['#src/extern/fbx/2014.1/lib/vs2010/' + BUILD_TARGET_CPU + '/debug'],
-                                 'profile' : ['#src/extern/fbx/2014.1/lib/vs2010/' + BUILD_TARGET_CPU + '/release'],
-                                 'retail'  : ['#src/extern/fbx/2014.1/lib/vs2010/' + BUILD_TARGET_CPU + '/release'],
+        CONFIG['fbx_incpath'] = ['#src/contrib/fbx/2014.1/include'],
+        CONFIG['fbx_libpath'] = {'debug'   : ['#src/contrib/fbx/2014.1/lib/vs2010/' + BUILD_TARGET_CPU + '/debug'],
+                                 'profile' : ['#src/contrib/fbx/2014.1/lib/vs2010/' + BUILD_TARGET_CPU + '/release'],
+                                 'retail'  : ['#src/contrib/fbx/2014.1/lib/vs2010/' + BUILD_TARGET_CPU + '/release'],
                                 }
         CONFIG['fbx_libs']    = ['libfbxsdk','wininet']
     elif c.CheckLibWithHeader( 'libfbxsdk', ['fbxsdk.h'], 'C++' ):
