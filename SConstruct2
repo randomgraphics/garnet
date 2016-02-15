@@ -335,8 +335,8 @@ def UTIL_new_env_ex( conf ):
 
         # compile in backcompat mode (vs2015 only)
         cxxflags['common']  += ['/Wv:18']
-        
-        ccflags['common']   += ['/W4', '/WX', '/Ot', '/Oi', '/Z7', '/Yd'] # favor speed, enable intrinsic functions.
+
+        ccflags['common']   += ['/W4', '/WX', '/Ot', '/Oi', '/Z7'] # favor speed, enable intrinsic functions.
         ccflags['debug']    += ['/GR']
         ccflags['profile']  += ['/Ox']
         ccflags['retail']   += ['/Ox', '/GL']
@@ -1013,7 +1013,7 @@ GN = GarnetEnv2()
 #
 ################################################################################
 Export( 'GN' )
-SConscript( 'src/makefile.scons', variant_dir=BUILD_ROOT_PATH)
+SConscript( 'src/makefile.scons', variant_dir=BUILD_ROOT_PATH )
 
 # Create pseudo target in root folder for all default targets.
 # So that they can be built automatically when invok SCons from root directory.
@@ -1021,3 +1021,10 @@ for d in GN.defaults:
     name = '__default__' + d
     Alias( name, d )
     Default( name )
+
+################################################################################
+#
+# Run scons tests
+#
+################################################################################
+SConscript('sconstest/makefile.scons')
