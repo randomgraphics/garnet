@@ -1,9 +1,11 @@
 Introduction
 ============
 
-Garnet 3D is an open source 3D engine. It is:
-  - cross platform : win32, win64, Xbox360, cygwin, unix
-  - API independent: D3D9, D3D10, Xbox360, OpenGL
+Garnet 3D is lightweight crossplatform 3D rendering library.
+It currently supports the following systems:
+  win32/64, Xbox360, cygwin and linux
+And the following rendering APIs:
+  - D3D11, D3D11X (for Xbox360) and OpenGL
 
 Directory Structure
 ===================
