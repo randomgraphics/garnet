@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "imageBMP.h"
 
-static GN::Logger * sLogger = GN::getLogger("GN.gfx.base.image");
+static GN::Logger * sLogger = GN::GetLogger("GN.gfx.base.image");
 
 // *****************************************************************************
 // public functions
@@ -132,7 +132,7 @@ bool BMPReader::readImage( void * o_data ) const
                 for( size_t y = 0; y < height; ++y )
                 {
 #if GN_PPC
-                    GN::swap8in16( dst, src, width );
+                    GN::Swap8In16( dst, src, width );
 #else
                     memcpy( dst, src, width * 2 );
 #endif
@@ -145,7 +145,7 @@ bool BMPReader::readImage( void * o_data ) const
                 for( size_t y = 0; y < height; ++y )
                 {
 #if GN_PPC
-                    GN::swap8in16( dst, src, width );
+                    GN::Swap8In16( dst, src, width );
 #else
                     memcpy( dst, src, width * 2 );
 #endif

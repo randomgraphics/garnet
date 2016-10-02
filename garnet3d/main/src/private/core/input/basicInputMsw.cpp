@@ -3,7 +3,7 @@
 
 #if GN_WINPC
 
-static GN::Logger * sLogger = GN::getLogger("GN.input.BasicInputMsw");
+static GN::Logger * sLogger = GN::GetLogger("GN.input.BasicInputMsw");
 
 // *****************************************************************************
 //    init / quit functions
@@ -331,7 +331,7 @@ bool GN::input::BasicInputMsw::setupWindowHooks( HWND hwnd )
         threadID );
     if( 0 == mMsgHook || 0 == mCwpHook )
     {
-        GN_ERROR(sLogger)( getWin32LastErrorInfo() );
+        GN_ERROR(sLogger)( GetWin32LastErrorInfo() );
         return false;
     }
 

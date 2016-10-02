@@ -5,7 +5,7 @@
 
 using namespace GN;
 
-static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.OGL");
+static GN::Logger * sLogger = GN::GetLogger("GN.gfx.gpu.OGL");
 
 // ****************************************************************************
 // local functions
@@ -711,7 +711,7 @@ void GN::gfx::OGLGpu::restoreDisplayMode()
         // restore display mode
         if( DISP_CHANGE_SUCCESSFUL != ::ChangeDisplaySettings(0, 0) )
         {
-            GN_ERROR(sLogger)( "Failed to restore display mode: %s!", getWin32LastErrorInfo() );
+            GN_ERROR(sLogger)( "Failed to restore display mode: %s!", GetWin32LastErrorInfo() );
         }
 
         GN_INFO(sLogger)( "Display mode restored." );

@@ -4,7 +4,7 @@
 using namespace GN;
 using namespace GN::gfx;
 
-static GN::Logger * sLogger = GN::getLogger("GN.util.ase");
+static GN::Logger * sLogger = GN::GetLogger("GN.util.ase");
 
 ///
 /// raw ASE material (has sub material information)

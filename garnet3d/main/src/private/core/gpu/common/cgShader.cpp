@@ -3,7 +3,7 @@
 
 #ifdef HAS_CG
 
-static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.cg");
+static GN::Logger * sLogger = GN::GetLogger("GN.gfx.gpu.cg");
 
 static GN::StrA sAddLineCountCG( const GN::StrA & in )
 {

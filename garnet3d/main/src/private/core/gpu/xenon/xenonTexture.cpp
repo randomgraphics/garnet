@@ -2,7 +2,7 @@
 #include "xenonGpu.h"
 #include "xenonTexture.h"
 
-static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.xenon");
+static GN::Logger * sLogger = GN::GetLogger("GN.gfx.gpu.xenon");
 
 // *****************************************************************************
 // local functions
@@ -179,7 +179,7 @@ void GN::gfx::XenonTexture::quit()
     GN_ASSERT( NULL == mD3DTexture || !mD3DTexture->IsSet( &getGpu().getDeviceInlined() ) );
 
     // Delete the D3D texture instance.
-    safeRelease( mD3DTexture );
+    SafeRelease( mD3DTexture );
 
     // standard quit procedure
     GN_STDCLASS_QUIT();

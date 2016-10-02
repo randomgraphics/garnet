@@ -3,7 +3,7 @@
 using namespace GN;
 using namespace GN::gfx;
 
-static GN::Logger * sLogger = GN::getLogger("GN.util.BitmapFont");
+static GN::Logger * sLogger = GN::GetLogger("GN.util.BitmapFont");
 
 //
 //
@@ -90,11 +90,11 @@ void GN::gfx::BitmapFont::quit()
     // delete character array
     for( int i = 0; i < MAX_TEXTURES; ++i )
     {
-        safeDeleteArray( mCharList[i] );
+        SafeDeleteArray( mCharList[i] );
     }
 
     // delete font map array
-    safeDeleteArray( mFontSlots );
+    SafeDeleteArray( mFontSlots );
 
     // delete per-texture resources
     mTextures.clear();

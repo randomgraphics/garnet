@@ -13,7 +13,7 @@
 using namespace GN;
 using namespace GN::gfx;
 
-static GN::Logger * sLogger = GN::getLogger("GN.gfx.FontFt2");
+static GN::Logger * sLogger = GN::GetLogger("GN.gfx.FontFt2");
 
 // *****************************************************************************
 // local functions
@@ -125,7 +125,7 @@ private:
     {
         GN_ASSERT( stream->descriptor.pointer );
         File * fp = (File*)stream->descriptor.pointer;
-        safeDelete( fp );
+        SafeDelete( fp );
         stream->descriptor.pointer = 0;
     }
 
@@ -143,7 +143,7 @@ private:
     static void sQuitLib()
     {
         GN_ASSERT( sLib );
-        if( 0 == sLib->decref() ) sLib = 0;
+        if( 0 == sLib->DecRef() ) sLib = 0;
     }
 };
 Ft2Library * FontFaceFt2::sLib = 0;

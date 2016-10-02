@@ -346,7 +346,7 @@ namespace GN { namespace gfx
                     return (uint16)i;
                 }
             }
-            GN_ERROR(getLogger("GN.gfx.GpuProgram.GpuProgramParameterDesc"))(
+            GN_ERROR(GetLogger("GN.gfx.GpuProgram.GpuProgramParameterDesc"))(
                 "Invalid GPU program parameter name: %s", name?name:"<NULLPTR>" );
             return (uint16)GPU_PROGRAM_PARAMETER_NOT_FOUND;
         }

@@ -1,6 +1,6 @@
 #include "pch.h"
 
-static GN::Logger * sLogger = GN::getLogger("GN.gfx.util.misc");
+static GN::Logger * sLogger = GN::GetLogger("GN.gfx.util.misc");
 
 //
 //

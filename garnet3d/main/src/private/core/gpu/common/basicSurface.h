@@ -35,7 +35,7 @@ namespace GN { namespace gfx
             // check face
             if( face >= getDesc().faces )
             {
-                static Logger * sLogger = getLogger("GN.gfx.gpu.common.BasicTexture");
+                static Logger * sLogger = GetLogger("GN.gfx.gpu.common.BasicTexture");
                 GN_ERROR(sLogger)( "invalid lock face : %d", face );
                 return false;
             }
@@ -43,7 +43,7 @@ namespace GN { namespace gfx
             // check level
             if( level >= getDesc().levels )
             {
-                static Logger * sLogger = getLogger("GN.gfx.gpu.common.BasicTexture");
+                static Logger * sLogger = GetLogger("GN.gfx.gpu.common.BasicTexture");
                 GN_ERROR(sLogger)( "invalid lock level : %d", level );
                 return false;
             }
@@ -51,7 +51,7 @@ namespace GN { namespace gfx
             // check flag
             if( flag >= SurfaceUpdateFlag::NUM_FLAGS )
             {
-                static Logger * sLogger = getLogger("GN.gfx.gpu.common.BasicTexture");
+                static Logger * sLogger = GetLogger("GN.gfx.gpu.common.BasicTexture");
                 GN_ERROR(sLogger)( "invalid lock flag : %d", flag.toRawEnum() );
                 return false;
             }
@@ -98,7 +98,7 @@ namespace GN { namespace gfx
         {
             if( offset >= maxLength )
             {
-                static Logger * sLogger = getLogger("GN.gfx.gpu.common.BasicTexture");
+                static Logger * sLogger = GetLogger("GN.gfx.gpu.common.BasicTexture");
                 GN_ERROR(sLogger)( "offset is beyond the end of valid range." );
                 return false;
             }
@@ -136,21 +136,21 @@ namespace GN { namespace gfx
 
             if( NULL == data )
             {
-                static Logger * sLogger = getLogger("GN.gfx.gpu.common.BasicVtxBuffer");
+                static Logger * sLogger = GetLogger("GN.gfx.gpu.common.BasicVtxBuffer");
                 GN_ERROR(sLogger)( "NULL data pointer!" );
                 return false;
             }
 
             if( flag >= SurfaceUpdateFlag::NUM_FLAGS )
             {
-                static Logger * sLogger = getLogger("GN.gfx.gpu.common.BasicVtxBuffer");
+                static Logger * sLogger = GetLogger("GN.gfx.gpu.common.BasicVtxBuffer");
                 GN_ERROR(sLogger)( "Invalid update flag: %d.", flag.toRawEnum() );
                 return false;
             }
 
             if( offset >= vbd.length )
             {
-                static Logger * sLogger = getLogger("GN.gfx.gpu.common.BasicVtxBuffer");
+                static Logger * sLogger = GetLogger("GN.gfx.gpu.common.BasicVtxBuffer");
                 GN_ERROR(sLogger)( "offset is beyond the end of vertex buffer!" );
                 return false;
             }
@@ -204,21 +204,21 @@ namespace GN { namespace gfx
 
             if( NULL == data )
             {
-                static Logger * sLogger = getLogger("GN.gfx.gpu.common.BasicIdxBuffer");
+                static Logger * sLogger = GetLogger("GN.gfx.gpu.common.BasicIdxBuffer");
                 GN_ERROR(sLogger)( "NULL data pointer!" );
                 return false;
             }
 
             if( flag >= SurfaceUpdateFlag::NUM_FLAGS )
             {
-                static Logger * sLogger = getLogger("GN.gfx.gpu.common.BasicIdxBuffer");
+                static Logger * sLogger = GetLogger("GN.gfx.gpu.common.BasicIdxBuffer");
                 GN_ERROR(sLogger)( "Invalid update flag: %d.", flag.toRawEnum() );
                 return false;
             }
 
             if( startidx >= ibd.numidx )
             {
-                static Logger * sLogger = getLogger("GN.gfx.gpu.common.BasicIdxBuffer");
+                static Logger * sLogger = GetLogger("GN.gfx.gpu.common.BasicIdxBuffer");
                 GN_ERROR(sLogger)( "startidx is beyond the end of index buffer!" );
                 return false;
             }

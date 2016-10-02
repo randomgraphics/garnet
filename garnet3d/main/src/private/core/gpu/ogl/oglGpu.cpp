@@ -2,7 +2,7 @@
 #include "oglGpu.h"
 #include <mtgpu.h>
 
-GN::Logger * GN::gfx::OGLGpu::sLogger = GN::getLogger("GN.gfx.gpu.OGL");
+GN::Logger * GN::gfx::OGLGpu::sLogger = GN::GetLogger("GN.gfx.gpu.OGL");
 
 // *****************************************************************************
 // GPU creator

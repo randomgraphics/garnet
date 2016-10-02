@@ -86,7 +86,7 @@ namespace GN { namespace gfx
             // check format
             if( !format.valid() )
             {
-                static Logger * sLogger = getLogger("GN.gfx.TextureDesc");
+                static Logger * sLogger = GetLogger("GN.gfx.TextureDesc");
                 GN_ERROR(sLogger)( "invalid texture format: %s", format.toString().rawptr() );
                 return false;
             }
@@ -94,7 +94,7 @@ namespace GN { namespace gfx
             // check usage
             if( usage < 0 && usage >= TextureUsage::NUM_USAGES )
             {
-                static Logger * sLogger = getLogger("GN.gfx.TextureDesc");
+                static Logger * sLogger = GetLogger("GN.gfx.TextureDesc");
                 GN_ERROR(sLogger)( "invalid texture usage: %d", usage.toRawEnum() );
                 return false;
             }

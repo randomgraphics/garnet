@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "d3d11Gpu.h"
 
-static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.D3D11");
+static GN::Logger * sLogger = GN::GetLogger("GN.gfx.gpu.D3D11");
 
 // *****************************************************************************
 // device management
@@ -119,11 +119,11 @@ void GN::gfx::D3D11Gpu::dispQuit()
         mSwapChain->SetFullscreenState( FALSE, NULL );
     }
 
-    safeRelease( mD3D11Debug );
-    safeRelease( mDeviceContext );
-    safeRelease( mSwapChain );
-    safeRelease( mDevice );
-    safeRelease( mAdapter );
+    SafeRelease( mD3D11Debug );
+    SafeRelease( mDeviceContext );
+    SafeRelease( mSwapChain );
+    SafeRelease( mDevice );
+    SafeRelease( mAdapter );
 
     GN_UNGUARD;
 }

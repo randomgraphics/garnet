@@ -1,6 +1,6 @@
 #include "pch.h"
 
-static GN::Logger * sLogger = GN::getLogger("GN.d3d10.statedumper");
+static GN::Logger * sLogger = GN::GetLogger("GN.d3d10.statedumper");
 
 using namespace GN;
 
@@ -537,7 +537,7 @@ static void sDumpVsSrv( ID3D10Device & device, FILE * fp )
 
     sDumpShaderResources( device, fp, "vs", srv, 128 );
 
-    for( int i = 0; i < 128; ++i ) safeRelease( srv[i] );
+    for( int i = 0; i < 128; ++i ) SafeRelease( srv[i] );
 }
 
 //
@@ -551,7 +551,7 @@ static void sDumpGsSrv( ID3D10Device & device, FILE * fp )
 
     sDumpShaderResources( device, fp, "gs", srv, 128 );
 
-    for( int i = 0; i < 128; ++i ) safeRelease( srv[i] );
+    for( int i = 0; i < 128; ++i ) SafeRelease( srv[i] );
 }
 
 //
@@ -565,7 +565,7 @@ static void sDumpPsSrv( ID3D10Device & device, FILE * fp )
 
     sDumpShaderResources( device, fp, "ps", srv, 128 );
 
-    for( int i = 0; i < 128; ++i ) safeRelease( srv[i] );
+    for( int i = 0; i < 128; ++i ) SafeRelease( srv[i] );
 }
 
 //

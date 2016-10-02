@@ -174,7 +174,7 @@ namespace GN
     };
 
     ///
-    /// Automatic C-style array created by HeapMemory::alloc. Can NOT be used in STL containers.
+    /// Automatic C-style array created by HeapMemory::Alloc. Can NOT be used in STL containers.
     ///
     template<typename T>
     class AutoHeapPtr : public detail::BaseAutoPtr< T, AutoHeapPtr<T> >
@@ -188,7 +188,7 @@ namespace GN
 
         static void sDoRelease( T * p )
         {
-            if( p ) HeapMemory::dealloc((void*)p);
+            if( p ) HeapMemory::Dealloc((void*)p);
         }
 
     public:

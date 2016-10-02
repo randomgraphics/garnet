@@ -1,6 +1,6 @@
 #include "pch.h"
 
-static GN::Logger * sLogger = GN::getLogger("GN.d3d11utils.SpriteRenderer");
+static GN::Logger * sLogger = GN::GetLogger("GN.d3d11utils.SpriteRenderer");
 
 static const char * hlslvscode=
     "struct VSOUT { \n"

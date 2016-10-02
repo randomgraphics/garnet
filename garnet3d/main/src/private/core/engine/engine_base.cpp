@@ -3,7 +3,7 @@
 using namespace GN;
 using namespace GN::engine;
 
-GN::Logger * sLogger = GN::getLogger("GN.engine");
+GN::Logger * sLogger = GN::GetLogger("GN.engine");
 
 // *****************************************************************************
 // Entity
@@ -247,10 +247,10 @@ GN_API bool GN::engine::gfxInitialize( const GfxInitOptions & o )
 // -----------------------------------------------------------------------------
 GN_API void GN::engine::gfxShutdown()
 {
-    safeDelete( s_engine.gdb );
-    safeDelete( s_engine.fontRenderer );
-    safeDelete( s_engine.lineRenderer );
-    safeDelete( s_engine.spriteRenderer );
+    SafeDelete( s_engine.gdb );
+    SafeDelete( s_engine.fontRenderer );
+    SafeDelete( s_engine.lineRenderer );
+    SafeDelete( s_engine.spriteRenderer );
     gfx::deleteGpu( s_engine.gpu ); s_engine.gpu = NULL;
 
     sGfxClearInternal();

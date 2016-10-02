@@ -15,14 +15,14 @@ public:
     /*MapKey( TypeTraits & tt )
         : mTraits(tt)
         // TODO: use stack memory, when size is small
-        , mData( HeapMemory::alloc(tt.size) )
+        , mData( HeapMemory::Alloc(tt.size) )
     {
         mTraits.ctor( mData );
     }*/
 
     MapKey( const MapKey & t )
         : mTraits( t.mTraits )
-        , mData( HeapMemory::alloc(t.mTraits.size) )
+        , mData( HeapMemory::Alloc(t.mTraits.size) )
     {
         mTraits.cctor( mData, t.mData );
     }
@@ -30,7 +30,7 @@ public:
     ~MapKey()
     {
         mTraits.dtor( mData );
-        GN::HeapMemory::dealloc( mData );
+        GN::HeapMemory::Dealloc( mData );
     }
 
     void * data() const { return mData; }
@@ -59,7 +59,7 @@ public:
     MapValue( TypeTraits & tt )
         : mTraits(tt)
         // TODO: use stack memory, when size is small
-        , mData( HeapMemory::alloc(tt.size) )
+        , mData( HeapMemory::Alloc(tt.size) )
     {
         // This should only be used when FindOrCreate() is called.
         mTraits.ctor( mData );
@@ -67,7 +67,7 @@ public:
 
     MapValue( const MapValue & t )
         : mTraits( t.mTraits )
-        , mData( HeapMemory::alloc(t.mTraits.size) )
+        , mData( HeapMemory::Alloc(t.mTraits.size) )
     {
         mTraits.cctor( mData, t.mData );
     }
@@ -75,7 +75,7 @@ public:
     ~MapValue()
     {
         mTraits.dtor( mData );
-        GN::HeapMemory::dealloc( mData );
+        GN::HeapMemory::Dealloc( mData );
     }
 
     void * data() const { return mData; }

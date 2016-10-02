@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "garnet/GNutil.h"
 
-static GN::Logger * sLogger = GN::getLogger("GN.util.ArcBall");
+static GN::Logger * sLogger = GN::GetLogger("GN.util.ArcBall");
 
 // *****************************************************************************
 // local functions

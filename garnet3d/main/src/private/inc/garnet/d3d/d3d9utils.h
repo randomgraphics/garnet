@@ -243,7 +243,7 @@ namespace GN { /* namespace for D3D9 utils */ namespace d3d9
     public:
 
         D3D9RenderStateSaver( IDirect3DDevice9 * dev )
-            : m_Logger(getLogger("GN.d3d9"))
+            : m_Logger(GetLogger("GN.d3d9"))
         {
             ::memset( this, 0, sizeof(*this) );
             m_Device = dev;

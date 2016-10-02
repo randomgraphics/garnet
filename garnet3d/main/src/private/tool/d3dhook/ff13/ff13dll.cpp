@@ -3,7 +3,7 @@
 #include <shlwapi.h>
 #include "../apihijack.h"
 
-static GN::Logger * sLogger = GN::getLogger("GN.d3dhook.ff13");
+static GN::Logger * sLogger = GN::GetLogger("GN.d3dhook.ff13");
 
 // -----------------------------------------------------------------------------
 // IDirect3D9
