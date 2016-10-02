@@ -45,7 +45,7 @@ namespace GN
 
         const void * getValue() const { return mValue.rawptr(); }
 
-        const StrA & getName() const { return mName; }
+        const StrA & GetName() const { return mName; }
 
         const StrA & getType() const { return mType; }
 

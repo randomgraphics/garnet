@@ -3,7 +3,7 @@
 
 using namespace GN;
 
-static GN::Logger * sLogger = GN::getLogger("GN.d3dhook.ff13");
+static GN::Logger * sLogger = GN::GetLogger("GN.d3dhook.ff13");
 
 int main( int argc, const char * argv[] )
 {
@@ -14,21 +14,21 @@ int main( int argc, const char * argv[] )
 
     if (0 == dll)
     {
-        GN_ERROR(sLogger)("Failed to load GNff13.dll: %s", getWin32LastErrorInfo());
+        GN_ERROR(sLogger)("Failed to load GNff13.dll: %s", GetWin32LastErrorInfo());
         return -1;
     }
 
     HOOKPROC proc = (HOOKPROC)GetProcAddress(dll, "_CBTHookProc@12");
     if (0 == proc)
     {
-        GN_ERROR(sLogger)("Failed to get address of HookProc: %s", getWin32LastErrorInfo());
+        GN_ERROR(sLogger)("Failed to get address of HookProc: %s", GetWin32LastErrorInfo());
         return -1;
     }
 
     HHOOK hook = SetWindowsHookEx(WH_CBT, proc, dll, 0);
     if (0 == hook)
     {
-        GN_ERROR(sLogger)("Failed to get address of HookProc: %s", getWin32LastErrorInfo());
+        GN_ERROR(sLogger)("Failed to get address of HookProc: %s", GetWin32LastErrorInfo());
         return -1;
     }
 

@@ -154,13 +154,13 @@ namespace GN { namespace gfx
             size_t len = str::length( s );
             if( 0 == len )
             {
-                GN_ERROR(getLogger("GN.gfx.gpu"))( "Empty semantic string is not allowed." );
+                GN_ERROR(GetLogger("GN.gfx.gpu"))( "Empty semantic string is not allowed." );
                 return;
             }
 
             if( len >= GN_ARRAY_COUNT(semantic) )
             {
-                GN_ERROR(getLogger("GN.gfx.gpu"))(
+                GN_ERROR(GetLogger("GN.gfx.gpu"))(
                     "Semantic string (%s) is too long. Maxinum length is 16 characters including ending NULL.",
                     s );
             }

@@ -27,7 +27,7 @@ using namespace GN::gfx;
 
 #define ROOT_BBOX 1
 
-static GN::Logger * sLogger = GN::getLogger("GN.gfx.FatModel");
+static GN::Logger * sLogger = GN::GetLogger("GN.gfx.FatModel");
 
 
 #ifndef IN

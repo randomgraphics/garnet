@@ -2,7 +2,7 @@
 #include "mtshader.h"
 #include "mtgpuCmd.h"
 
-//static GN::Logger * sLogger = GN::getLogger("GN.gfx.util.gpu.mtshader");
+//static GN::Logger * sLogger = GN::GetLogger("GN.gfx.util.gpu.mtshader");
 
 using namespace GN::gfx;
 
@@ -48,7 +48,7 @@ bool GN::gfx::MultiThreadUniform::init( Uniform * uni )
 
     mUniform = uni;
     mSize    = uni->size();
-    mFrontEndData = (uint8*)HeapMemory::alloc(mSize);
+    mFrontEndData = (uint8*)HeapMemory::Alloc(mSize);
     if( NULL == mFrontEndData ) return failure();
 
     // success
@@ -70,7 +70,7 @@ void GN::gfx::MultiThreadUniform::quit()
         mUniform = NULL;
     }
 
-    safeHeapDealloc( mFrontEndData );
+    SafeHeapDealloc( mFrontEndData );
 
     // standard quit procedure
     GN_STDCLASS_QUIT();
@@ -85,12 +85,12 @@ void GN::gfx::MultiThreadUniform::update( uint32 offset, uint32 length, const vo
 {
     if( offset >= mSize || (offset+length) > mSize )
     {
-        GN_ERROR(getLogger("GN.gfx.Uniform"))( "Out of range!" );
+        GN_ERROR(GetLogger("GN.gfx.Uniform"))( "Out of range!" );
         return;
     }
     if( NULL == data )
     {
-        GN_ERROR(getLogger("GN.gfx.Uniform"))( "Null pointer!" );
+        GN_ERROR(GetLogger("GN.gfx.Uniform"))( "Null pointer!" );
         return;
     }
 
@@ -179,7 +179,7 @@ namespace GN { namespace gfx
     void func_GPU_PROGRAM_DESTROY( Gpu &, void * p, uint32 )
     {
         GpuProgram & gp = **(GpuProgram**)p;
-        gp.decref();
+        gp.DecRef();
     }
 
     //
@@ -197,7 +197,7 @@ namespace GN { namespace gfx
     void func_UNIFORM_DESTROY( Gpu &, void * p, uint32 )
     {
         Uniform & u = **(Uniform**)p;
-        u.decref();
+        u.DecRef();
     }
 
     //

@@ -45,7 +45,7 @@ namespace GN
         ///
         /// decrease reference counter, delete the object, if reference count reaches zero.
         ///
-        sint32 decref() const
+        sint32 DecRef() const
         {
             GN_ASSERT( mRef > 0 );
 
@@ -211,7 +211,7 @@ namespace GN
         ///
         ~AutoRef()
         {
-            if( mPtr ) mPtr->decref();
+            if( mPtr ) mPtr->DecRef();
         }
 
         ///
@@ -314,7 +314,7 @@ namespace GN
         ///
         void clear()
         {
-            if( mPtr ) mPtr->decref();
+            if( mPtr ) mPtr->DecRef();
             mPtr = 0;
         }
 
@@ -327,7 +327,7 @@ namespace GN
         void set( XPTR p )
         {
             if( p ) p->incref();
-            if( mPtr ) mPtr->decref();
+            if( mPtr ) mPtr->DecRef();
             mPtr = p;
         }
 
@@ -339,7 +339,7 @@ namespace GN
         void attach( XPTR ptr )
         {
             if( ptr == mPtr ) return;
-            if( mPtr ) mPtr->decref();
+            if( mPtr ) mPtr->DecRef();
             mPtr = ptr;
         }
 

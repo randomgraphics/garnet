@@ -22,7 +22,7 @@
 using namespace GN;
 using namespace GN::gfx;
 
-static GN::Logger * sLogger = GN::getLogger("GN.gfx.util.misc");
+static GN::Logger * sLogger = GN::GetLogger("GN.gfx.util.misc");
 
 #define ROOT_BBOX 1
 
@@ -128,9 +128,9 @@ sLoadXprSceneFromFile( XPRScene & xpr, File & file )
     }
 
     // swap header to little endian
-    header.size1 = swap8in32( header.size1 );
-    header.size2 = swap8in32( header.size2 );
-    header.numObjects = swap8in32( header.numObjects );
+    header.size1 = Swap8In32( header.size1 );
+    header.size2 = Swap8In32( header.size2 );
+    header.numObjects = Swap8In32( header.numObjects );
 
     // read scene data
     size_t dataSize = header.size1 + header.size2 + 12 - sizeof(header);
@@ -148,9 +148,9 @@ sLoadXprSceneFromFile( XPRScene & xpr, File & file )
         XPRObjectHeader & o = objects[i];
 
         // do endian swap
-        o.offset = swap8in32( o.offset );
-        o.size   = swap8in32( o.size );
-        o.unknown = swap8in32( o.unknown );
+        o.offset = Swap8In32( o.offset );
+        o.size   = Swap8In32( o.size );
+        o.unknown = Swap8In32( o.unknown );
 
         size_t offset = o.offset - sizeof(header) + 12;
         void * desc   = &xpr.sceneData[offset];
@@ -165,7 +165,7 @@ sLoadXprSceneFromFile( XPRScene & xpr, File & file )
                     GN_ERROR(sLogger)( "object size is invalid." );
                     return false;
                 }
-                swap8in32( vbdesc->dwords, vbdesc->dwords, sizeof(*vbdesc)/4 );
+                Swap8In32( vbdesc->dwords, vbdesc->dwords, sizeof(*vbdesc)/4 );
                 xpr.vbDescs.append( vbdesc );
                 break;
             }
@@ -178,7 +178,7 @@ sLoadXprSceneFromFile( XPRScene & xpr, File & file )
                     GN_ERROR(sLogger)( "object size is invalid." );
                     return false;
                 }
-                swap8in32( ibdesc->dwords, ibdesc->dwords, sizeof(*ibdesc)/4 );
+                Swap8In32( ibdesc->dwords, ibdesc->dwords, sizeof(*ibdesc)/4 );
                 xpr.ibDescs.append( ibdesc );
                 break;
             }
@@ -191,7 +191,7 @@ sLoadXprSceneFromFile( XPRScene & xpr, File & file )
                     GN_ERROR(sLogger)( "object size is invalid." );
                     return false;
                 }
-                swap8in32( texdesc->dwords, texdesc->dwords, sizeof(*texdesc)/4 );
+                Swap8In32( texdesc->dwords, texdesc->dwords, sizeof(*texdesc)/4 );
                 xpr.texDescs.append( texdesc );
                 break;
             }
@@ -1310,7 +1310,7 @@ sLoadModelHierarchyFromXML( ModelHierarchyDesc & desc, File & file )
     XmlParseResult xpr;
     if( !doc.parse( xpr, file ) )
     {
-        static Logger * sLogger = getLogger( "GN.base.xml" );
+        static Logger * sLogger = GetLogger( "GN.base.xml" );
         GN_ERROR(sLogger)(
             "Fail to parse XML file (%s):\n"
             "    line   : %d\n"

@@ -7,8 +7,8 @@ Copyright (c) 2006-2010, ASSIMP Development Team
 
 All rights reserved.
 
-Redistribution and use of this software in source and binary forms, 
-with or without modification, are permitted provided that the following 
+Redistribution and use of this software in source and binary forms,
+with or without modification, are permitted provided that the following
 conditions are met:
 
 * Redistributions of source code must retain the above
@@ -25,16 +25,16 @@ conditions are met:
   derived from this software without specific prior
   written permission of the ASSIMP Development Team.
 
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS 
-"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT 
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
 LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT 
+A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
 OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT 
+SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
 LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY 
-THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT 
-(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE 
+DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ---------------------------------------------------------------------------
 */
@@ -51,7 +51,7 @@ namespace Assimp	{
 
 // -------------------------------------------------------------------
 //	Constructor
-ObjFileMtlImporter::ObjFileMtlImporter( std::vector<char> &buffer, 
+ObjFileMtlImporter::ObjFileMtlImporter( std::vector<char> &buffer,
 									   const std::string & /*strAbsPath*/,
 									   ObjFile::Model *pModel ) :
 	m_DataIt( buffer.begin() ),
@@ -81,7 +81,7 @@ ObjFileMtlImporter::ObjFileMtlImporter(const ObjFileMtlImporter & /* rOther */ )
 {
 	// empty
 }
-	
+
 // -------------------------------------------------------------------
 //	Private copy constructor
 ObjFileMtlImporter &ObjFileMtlImporter::operator = ( const ObjFileMtlImporter & /*rOther */ )
@@ -133,13 +133,13 @@ void ObjFileMtlImporter::load()
 		case 'N':	// Shineness
 			{
 				++m_DataIt;
-				switch(*m_DataIt) 
+				switch(*m_DataIt)
 				{
 				case 's':
 					++m_DataIt;
 					getFloatValue(m_pModel->m_pCurrentMaterial->shineness);
 					break;
-				case 'i': //Index Of refraction 
+				case 'i': //Index Of refraction
 					++m_DataIt;
 					getFloatValue(m_pModel->m_pCurrentMaterial->ior);
 					break;
@@ -148,7 +148,7 @@ void ObjFileMtlImporter::load()
 				break;
 			}
 			break;
-		
+
 
 		case 'm':	// Texture
 		case 'b':   // quick'n'dirty - for 'bump' sections
@@ -187,11 +187,11 @@ void ObjFileMtlImporter::load()
 void ObjFileMtlImporter::getColorRGBA( aiColor3D *pColor )
 {
 	ai_assert( NULL != pColor );
-	
+
 	float r, g, b;
 	m_DataIt = getFloat<DataArrayIt>( m_DataIt, m_DataItEnd, r );
 	pColor->r = r;
-	
+
 	m_DataIt = getFloat<DataArrayIt>( m_DataIt, m_DataItEnd, g );
 	pColor->g = g;
 
@@ -208,7 +208,7 @@ void ObjFileMtlImporter::getIlluminationModel( int &illum_model )
 }
 
 // -------------------------------------------------------------------
-//	Loads a single float value. 
+//	Loads a single float value.
 void ObjFileMtlImporter::getFloatValue( float &value )
 {
 	m_DataIt = CopyNextWord<DataArrayIt>( m_DataIt, m_DataItEnd, m_buffer, BUFFERSIZE );
@@ -218,9 +218,9 @@ void ObjFileMtlImporter::getFloatValue( float &value )
 // -------------------------------------------------------------------
 //	Creates a material from loaded data.
 void ObjFileMtlImporter::createMaterial()
-{	
+{
 	std::string strName( "" );
-	m_DataIt = getName<DataArrayIt>( m_DataIt, m_DataItEnd, strName );
+	m_DataIt = GetName<DataArrayIt>( m_DataIt, m_DataItEnd, strName );
 	if ( m_DataItEnd == m_DataIt )
 		return;
 
@@ -228,7 +228,7 @@ void ObjFileMtlImporter::createMaterial()
 	if ( m_pModel->m_MaterialMap.end() == it)
 	{
 		// New Material created
-		m_pModel->m_pCurrentMaterial = new ObjFile::Material();	
+		m_pModel->m_pCurrentMaterial = new ObjFile::Material();
 		m_pModel->m_pCurrentMaterial->MaterialName.Set( strName );
 		m_pModel->m_MaterialLib.push_back( strName );
 		m_pModel->m_MaterialMap[ strName ] = m_pModel->m_pCurrentMaterial;
@@ -283,7 +283,7 @@ void ObjFileMtlImporter::getTexture()
 	}
 
 	std::string strTexture;
-	m_DataIt = getName<DataArrayIt>( m_DataIt, m_DataItEnd, strTexture );
+	m_DataIt = GetName<DataArrayIt>( m_DataIt, m_DataItEnd, strTexture );
 	out->Set( strTexture );
 }
 

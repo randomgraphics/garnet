@@ -4,7 +4,7 @@
 #include "xenonGpu.h"
 #include "garnet/GNd3d.h"
 
-static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.xenon");
+static GN::Logger * sLogger = GN::GetLogger("GN.gfx.gpu.xenon");
 
 using namespace GN::gfx;
 
@@ -151,10 +151,10 @@ void GN::gfx::XenonGpuProgramHLSL::quit()
 {
     GN_GUARD;
 
-    safeRelease( mVs );
-    safeRelease( mVsConsts );
-    safeRelease( mPs );
-    safeRelease( mPsConsts );
+    SafeRelease( mVs );
+    SafeRelease( mVsConsts );
+    SafeRelease( mPs );
+    SafeRelease( mPsConsts );
 
     mUniforms.clear();
     mTextures.clear();

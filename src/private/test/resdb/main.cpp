@@ -147,8 +147,8 @@ void quit( Gpu & )
 {
     tex[0].clear();
     tex[1].clear();
-    safeDecref( model );
-    safeDelete( db );
+    SafeDecref( model );
+    SafeDelete( db );
 }
 
 void update( Input & in )
@@ -180,7 +180,7 @@ int run( Gpu & gpu )
     bool gogogo = true;
 
     FpsCalculator fps;
-    getLogger("GN.util.fps")->setLevel( Logger::VERBOSE ); // enable FPS logger
+    GetLogger("GN.util.fps")->SetLevel( Logger::VERBOSE ); // enable FPS logger
 
     while( gogogo )
     {
@@ -226,7 +226,7 @@ struct InputInitiator
 
 int main( int argc, const char * argv[] )
 {
-    enableCRTMemoryCheck();
+    EnableCRTMemoryCheck();
 
     CommandLineArguments cmdargs( argc, argv );
     switch( cmdargs.status )

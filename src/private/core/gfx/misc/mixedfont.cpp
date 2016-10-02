@@ -10,7 +10,7 @@
 using namespace GN;
 using namespace GN::gfx;
 
-//static GN::Logger * sLogger = GN::getLogger("GN.gfx.MixedFont");
+//static GN::Logger * sLogger = GN::GetLogger("GN.gfx.MixedFont");
 
 // *****************************************************************************
 // local functions

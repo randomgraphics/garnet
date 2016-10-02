@@ -346,7 +346,7 @@ namespace GN { namespace gfx
             mTail.next = NULL;
             mTail.object = 0;
             mCount = 0;
-            mLogger = getLogger( "GN.gfx.gpu.D3D11.D3D11StateObjectCache" );
+            mLogger = GetLogger( "GN.gfx.gpu.D3D11.D3D11StateObjectCache" );
 
             // initialize free item list
             mNextFreeItem = &mPool[0];
@@ -377,7 +377,7 @@ namespace GN { namespace gfx
             StateObjectItem * item = mHead;
             while( item != &mTail )
             {
-                safeRelease( item->object );
+                SafeRelease( item->object );
                 item = item->next;
             }
 
@@ -429,7 +429,7 @@ namespace GN { namespace gfx
                     GN_ASSERT( item && item != mHead );
 
                     // delete the state object object
-                    safeRelease( item->object );
+                    SafeRelease( item->object );
 
                     // remove from hash
                     mHashTable.remove( item->desc );

@@ -5,7 +5,7 @@ using namespace GN::gfx;
 using namespace GN::util;
 using namespace GN::input;
 
-static GN::Logger * sLogger = GN::getLogger( "GN.test.RenderToTexture" );
+static GN::Logger * sLogger = GN::GetLogger( "GN.test.RenderToTexture" );
 
 float RT_WIDTH  = 256.0f;
 float RT_HEIGHT = 256.0f;
@@ -192,7 +192,7 @@ int run( Gpu & gpu )
     bool gogogo = true;
 
     FpsCalculator fps;
-    getLogger("GN.util.fps")->setLevel( Logger::VERBOSE ); // enable FPS logger
+    GetLogger("GN.util.fps")->SetLevel( Logger::VERBOSE ); // enable FPS logger
 
     while( gogogo )
     {
@@ -234,7 +234,7 @@ struct InputInitiator
 
 int main( int argc, const char * argv[] )
 {
-    enableCRTMemoryCheck();
+    EnableCRTMemoryCheck();
 
     CommandLineArguments cmdargs( argc, argv );
     switch( cmdargs.status )

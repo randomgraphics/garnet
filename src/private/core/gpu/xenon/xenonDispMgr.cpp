@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "xenonGpu.h"
 
-static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.xenon");
+static GN::Logger * sLogger = GN::GetLogger("GN.gfx.gpu.xenon");
 
 ///
 /// 根据显示模式和option设定present parameters
@@ -116,8 +116,8 @@ void GN::gfx::XenonGpu::dispQuit()
 
     PIXPERF_FUNCTION_EVENT();
 
-    safeRelease( mDevice );
-    safeRelease( mD3D );
+    SafeRelease( mDevice );
+    SafeRelease( mD3D );
 
     GN_UNGUARD;
 }

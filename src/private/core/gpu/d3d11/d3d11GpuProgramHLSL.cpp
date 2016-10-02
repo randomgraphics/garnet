@@ -4,7 +4,7 @@
 #include "d3d11Texture.h"
 #include "d3d11ShaderTypeTraits.h"
 
-static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.D3D11");
+static GN::Logger * sLogger = GN::GetLogger("GN.gfx.gpu.D3D11");
 
 using namespace GN;
 using namespace GN::gfx;
@@ -43,7 +43,7 @@ static const char * sD3D11CloneString( const char * str )
 
     size_t n = GN::str::length( str ) + 1;
 
-    char * clone = (char*)GN::HeapMemory::alloc( n );
+    char * clone = (char*)GN::HeapMemory::Alloc( n );
     if( NULL == clone )
     {
         GN_GPU_RIP( "Out of memory!" );
@@ -61,7 +61,7 @@ static const char * sD3D11CloneString( const char * str )
 template<class T>
 static void sD3D11FreeNameString( T & t )
 {
-    HeapMemory::dealloc( (void*)t.name );
+    HeapMemory::Dealloc( (void*)t.name );
     t.name = NULL;
 }
 

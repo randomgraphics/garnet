@@ -7,7 +7,7 @@
 
 using namespace GN::gfx;
 
-static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.D3D11");
+static GN::Logger * sLogger = GN::GetLogger("GN.gfx.gpu.D3D11");
 
 // *****************************************************************************
 // Local utilities
@@ -168,7 +168,7 @@ void GN::gfx::D3D11GpuProgramCG::quit()
     // clear string pool
     for( size_t i = 0; i < mStringPool.size(); ++i )
     {
-        HeapMemory::dealloc( mStringPool[i] );
+        HeapMemory::Dealloc( mStringPool[i] );
     }
     mStringPool.clear();
 
@@ -396,7 +396,7 @@ void GN::gfx::D3D11GpuProgramCG::enumCgParameters( CGprogram prog, CGenum name_s
             size_t len = str::length( semantic );
             if( '0' <= semantic[len-1] && semantic[len-1] <= '9' )
             {
-                mStringPool.append( (char*)HeapMemory::alloc(len+1) );
+                mStringPool.append( (char*)HeapMemory::Alloc(len+1) );
                 char * p = mStringPool.back();
                 memcpy( p, semantic, len+1 );
                 while( len > 0 && '0' <= p[len-1] && p[len-1] <= '9' )

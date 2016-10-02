@@ -24,14 +24,14 @@ namespace GN { namespace gfx
         {
             if( 0 != sc.source && ( sc.source < begin || sc.source >= end ) )
             {
-                static Logger * sLogger = getLogger("GN.gfx.gpu.common");
+                static Logger * sLogger = GetLogger("GN.gfx.gpu.common");
                 GN_ERROR(sLogger)( "invalid %s shader source pointer.", type );
                 return false;
             }
 
             if( 0 != sc.entry && ( sc.entry < begin || sc.entry >= end ) )
             {
-                static Logger * sLogger = getLogger("GN.gfx.gpu.common");
+                static Logger * sLogger = GetLogger("GN.gfx.gpu.common");
                 GN_ERROR(sLogger)( "invalid %s shader entry pointer.", type );
                 return false;
             }
@@ -114,7 +114,7 @@ namespace GN { namespace gfx
             // check GPU program language
             if( !desc.lang.valid() )
             {
-                static Logger * sLogger = getLogger("GN.gfx.gpu.common");
+                static Logger * sLogger = GetLogger("GN.gfx.gpu.common");
                 GN_ERROR(sLogger)( "invalid GPU program language: %d", desc.lang.toRawEnum() );
                 return false;
             }
@@ -124,7 +124,7 @@ namespace GN { namespace gfx
                 !sCheckShaderCode( "geometry", desc.gs, start, end ) ||
                 !sCheckShaderCode( "pixel", desc.ps, start, end ) )
             {
-                static Logger * sLogger = getLogger("GN.gfx.gpu.common");
+                static Logger * sLogger = GetLogger("GN.gfx.gpu.common");
                 GN_ERROR(sLogger)( "Invalid shader binary." );
                 return false;
             }
@@ -153,12 +153,12 @@ namespace GN { namespace gfx
         SysMemUniform( uint32 sz )
             : mSize(0==sz?1:sz)
             , mTimeStamp(0)
-            , mData( HeapMemory::alloc(mSize) )
+            , mData( HeapMemory::Alloc(mSize) )
         {
         }
 
         /// dtor
-        ~SysMemUniform() { HeapMemory::dealloc(mData); }
+        ~SysMemUniform() { HeapMemory::Dealloc(mData); }
 
         /// get parameter size
         virtual uint32 size() const { return mSize; }
@@ -171,12 +171,12 @@ namespace GN { namespace gfx
         {
             if( offset >= mSize || (offset+length) > mSize )
             {
-                GN_ERROR(getLogger("GN.gfx.Uniform"))( "Out of range!" );
+                GN_ERROR(GetLogger("GN.gfx.Uniform"))( "Out of range!" );
                 return;
             }
             if( NULL == data )
             {
-                GN_ERROR(getLogger("GN.gfx.Uniform"))( "Null pointer!" );
+                GN_ERROR(GetLogger("GN.gfx.Uniform"))( "Null pointer!" );
                 return;
             }
             memcpy( (uint8*)mData + offset, data, length );

@@ -4,7 +4,7 @@
 #include "inputDInput.h"
 #include "inputX11.h"
 
-static GN::Logger * sLogger = GN::getLogger("GN.input");
+static GN::Logger * sLogger = GN::GetLogger("GN.input");
 
 // *****************************************************************************
 // Fake input system

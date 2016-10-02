@@ -14,7 +14,7 @@
 using namespace GN;
 using namespace GN::gfx;
 
-static GN::Logger * sLogger = GN::getLogger("GN.tool.meshConverter");
+static GN::Logger * sLogger = GN::GetLogger("GN.tool.meshConverter");
 
 void printHelp( const char * exepath )
 {

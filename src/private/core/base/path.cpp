@@ -281,7 +281,7 @@ GN_API void GN::fs::getCurrentDir( StrA & result )
     char buf[FILENAME_MAX+1];
     if( NULL == getcwd( buf, FILENAME_MAX ) )
     {
-        static Logger * sLogger = getLogger( "GN.base.path" );
+        static Logger * sLogger = GetLogger( "GN.base.path" );
         GN_ERROR(sLogger)( "getcwd() failed: fail to get current directory." );
         result = "";
     }

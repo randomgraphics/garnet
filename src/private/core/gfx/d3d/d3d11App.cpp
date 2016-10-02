@@ -4,7 +4,7 @@
 using namespace GN;
 using namespace GN::d3d11;
 
-static Logger * sLogger = GN::getLogger("GN.d3d11.D3D11Application");
+static Logger * sLogger = GN::GetLogger("GN.d3d11.D3D11Application");
 
 class D3D11Application::RenderWindow
 {
@@ -386,7 +386,7 @@ void GN::d3d11::D3D11Application::cleanup()
 {
     onCleanup();
     destroyDevice();
-    safeDelete(mWindow);
+    SafeDelete(mWindow);
     GN::input::shutdownInputSystem();
 }
 
@@ -541,17 +541,17 @@ void GN::d3d11::D3D11Application::destroyDevice()
         onDestroyDevice();
     }
 
-    safeRelease( mBackBuf );
-    safeRelease( mBackRTV );
-    safeRelease( mDepthBuf );
-    safeRelease( mDepthDSV );
+    SafeRelease( mBackBuf );
+    SafeRelease( mBackRTV );
+    SafeRelease( mDepthBuf );
+    SafeRelease( mDepthDSV );
 #if GN_PLATFORM_HAS_D3D11_1
-    safeRelease( mSwapChain1 );
-    safeRelease( mContext1 );
-    safeRelease( mDevice1 );
+    SafeRelease( mSwapChain1 );
+    SafeRelease( mContext1 );
+    SafeRelease( mDevice1 );
 #endif
-    safeRelease( mSwapChain );
-    safeRelease( mContext );
-    safeRelease( mDevice );
-    safeRelease( mAdapter );
+    SafeRelease( mSwapChain );
+    SafeRelease( mContext );
+    SafeRelease( mDevice );
+    SafeRelease( mAdapter );
 }

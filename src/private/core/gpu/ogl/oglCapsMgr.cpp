@@ -4,7 +4,7 @@
 
 using namespace GN;
 
-static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.OGL");
+static GN::Logger * sLogger = GN::GetLogger("GN.gfx.gpu.OGL");
 
 // ****************************************************************************
 // local types/variables/functions

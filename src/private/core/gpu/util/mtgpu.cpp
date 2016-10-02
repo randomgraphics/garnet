@@ -6,7 +6,7 @@
 #include "mtidxbuf.h"
 #include "mtgpuCmd.h"
 
-static GN::Logger * sLogger = GN::getLogger("GN.gfx.util.gpu.mtgpu");
+static GN::Logger * sLogger = GN::GetLogger("GN.gfx.util.gpu.mtgpu");
 
 using namespace GN;
 using namespace GN::gfx;
@@ -454,7 +454,7 @@ void GN::gfx::MultiThreadGpu::drawIndexedUp(
     uint32 vbsize = numvtx * strideInBytes;
     uint32 ibsize = numidx * 2;
 
-    void * tmpvb = HeapMemory::alloc( vbsize );
+    void * tmpvb = HeapMemory::Alloc( vbsize );
     if( NULL == tmpvb )
     {
         GN_ERROR(sLogger)( "Fail to allocate temporary vertex buffer." );
@@ -462,11 +462,11 @@ void GN::gfx::MultiThreadGpu::drawIndexedUp(
     }
     memcpy( tmpvb, vertexData, vbsize );
 
-    void * tmpib = HeapMemory::alloc( ibsize );
+    void * tmpib = HeapMemory::Alloc( ibsize );
     if( NULL == tmpib )
     {
         GN_ERROR(sLogger)( "Fail to allocate temporary index buffer." );
-        HeapMemory::dealloc( tmpvb );
+        HeapMemory::Dealloc( tmpvb );
         return;
     }
     memcpy( tmpib, indexData, ibsize );
@@ -484,7 +484,7 @@ void GN::gfx::MultiThreadGpu::drawUp(
     uint32        strideInBytes )
 {
     uint32 sz = strideInBytes * numvtx;
-    void * vb = HeapMemory::alloc( sz );
+    void * vb = HeapMemory::Alloc( sz );
     if( NULL == vb )
     {
         GN_ERROR(sLogger)( "fail to allocate temporary vertex buffer." );
@@ -510,7 +510,7 @@ GN::gfx::MultiThreadGpu::drawLines(
 {
     uint32 length = stride * numpoints;
 
-    void * tmpbuf = HeapMemory::alloc( length );
+    void * tmpbuf = HeapMemory::Alloc( length );
     if( NULL == tmpbuf )
     {
         GN_ERROR(sLogger)( "fail to allocate temporary buffer." );
@@ -959,8 +959,8 @@ namespace GN { namespace gfx
 
         r.drawIndexedUp( diup->prim, diup->numidx, diup->numvtx, diup->vertexData, diup->strideInBytes, diup->indexData );
 
-        HeapMemory::dealloc( diup->vertexData );
-        HeapMemory::dealloc( diup->indexData );
+        HeapMemory::Dealloc( diup->vertexData );
+        HeapMemory::Dealloc( diup->indexData );
     }
 
     //
@@ -979,7 +979,7 @@ namespace GN { namespace gfx
 #pragma pack( pop )
         DrawUpParam * dup = (DrawUpParam*)p;
         r.drawUp( dup->prim, dup->numvtx, dup->vertexData, dup->strideInBytes );
-        HeapMemory::dealloc( dup->vertexData );
+        HeapMemory::Dealloc( dup->vertexData );
     }
 
     //
@@ -999,7 +999,7 @@ namespace GN { namespace gfx
             dlp->view,
             dlp->proj );
 
-        HeapMemory::dealloc( dlp->positions );
+        HeapMemory::Dealloc( dlp->positions );
     }
 
     //

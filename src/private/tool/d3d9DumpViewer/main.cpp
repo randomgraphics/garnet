@@ -9,7 +9,7 @@ using namespace GN::d3d9;
 ///
 #define RENDER_TO_BACKBUF 0
 
-static GN::Logger * sLogger = GN::getLogger("GN.tool.D3D9DumpViewer");
+static GN::Logger * sLogger = GN::GetLogger("GN.tool.D3D9DumpViewer");
 
 static StrA sDumpFileName;
 

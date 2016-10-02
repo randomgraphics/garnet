@@ -1271,7 +1271,7 @@ namespace GN
             DoubleLink link;
 
             Leaf( StringMap & owner_, const CHAR * text, size_t textlen, const T & v )
-                : KeyValuePair( (const char*)HeapMemory::alloc(textlen+1), v )
+                : KeyValuePair( (const char*)HeapMemory::Alloc(textlen+1), v )
                 , owner(owner_)
             {
                 if( NULL != KeyValuePair::key )
@@ -1284,7 +1284,7 @@ namespace GN
 
             ~Leaf()
             {
-                HeapMemory::dealloc( (void*)KeyValuePair::key );
+                HeapMemory::Dealloc( (void*)KeyValuePair::key );
             }
         };
 
@@ -1318,24 +1318,24 @@ namespace GN
 
         Node * allocNode()
         {
-            return (Node*)mNodePool.alloc();
+            return (Node*)mNodePool.Alloc();
         }
 
         void freeNode( Node * n )
         {
-            mNodePool.dealloc( n );
+            mNodePool.Dealloc( n );
         }
 
         Leaf * allocLeaf( const CHAR * text, size_t textlen, const T & value )
         {
-            Leaf * p = mLeafPool.allocUnconstructed();
+            Leaf * p = mLeafPool.AllocUnconstructed();
             if( NULL == p ) return NULL;
 
             // call in-place new to construct the leaf
             new (p) Leaf( *this, text, textlen, value );
             if( NULL == p->key )
             {
-                mLeafPool.freeWithoutDeconstruct( p );
+                mLeafPool.FreeOnlyNoDestruct( p );
                 return NULL;
             }
 
@@ -1346,7 +1346,7 @@ namespace GN
         {
             GN_ASSERT( l && this == &l->owner );
             l->link.detach();
-            mLeafPool.deconstructAndFree( l );
+            mLeafPool.DestructAndFree( l );
         }
 
         /// clear the whole map container
@@ -1354,8 +1354,8 @@ namespace GN
         {
             mRoot = NULL;
             mCount = 0;
-            mNodePool.freeAll();
-            mLeafPool.deconstructAndFreeAll();
+            mNodePool.FreeAll();
+            mLeafPool.DestructAndFreeAll();
 
             // All leaves have been destructed already. So there's no
             // need to call detach() at all. Just clear the prev and
@@ -1391,7 +1391,7 @@ namespace GN
             // check for NULL text pointer
             if( NULL == text )
             {
-                static Logger * sLogger = getLogger("GN.base.StringMap");
+                static Logger * sLogger = GetLogger("GN.base.StringMap");
                 GN_WARN(sLogger)( "StringMap finding warning: NULL text!" );
                 return NULL;
             }
@@ -1451,7 +1451,7 @@ namespace GN
             // check for NULL text pointer
             if( NULL == text )
             {
-                static Logger * sLogger = getLogger("GN.base.StringMap");
+                static Logger * sLogger = GetLogger("GN.base.StringMap");
                 GN_WARN(sLogger)( "Null text is not allowed!" );
                 return NULL;
             }
@@ -1517,7 +1517,7 @@ namespace GN
                 Node * newNode = allocNode();
                 if( NULL == newNode )
                 {
-                    static Logger * sLogger = getLogger("GN.base.StringMap");
+                    static Logger * sLogger = GetLogger("GN.base.StringMap");
                     GN_ERROR(sLogger)( "out of memory!" );
                     return NULL;
                 }
@@ -1529,7 +1529,7 @@ namespace GN
                     newNode->leaf = allocLeaf( inputText, text - inputText, value );
                     if( NULL == newNode->leaf )
                     {
-                        static Logger * sLogger = getLogger("GN.base.StringMap");
+                        static Logger * sLogger = GetLogger("GN.base.StringMap");
                         GN_ERROR(sLogger)( "out of memory!" );
                         return NULL;
                     }
@@ -1588,7 +1588,7 @@ namespace GN
 
             if( &leaf->owner != this )
             {
-                static Logger * sLogger = getLogger("GN.base.StringMap");
+                static Logger * sLogger = GetLogger("GN.base.StringMap");
                 GN_ERROR(sLogger)( "Input pointer does not belong to this string map." );
                 return NULL;
             }
@@ -1649,7 +1649,7 @@ namespace GN
             // check for NULL text pointer
             if( NULL == text )
             {
-                static Logger * sLogger = getLogger("GN.base.StringMap");
+                static Logger * sLogger = GetLogger("GN.base.StringMap");
                 GN_WARN(sLogger)( "StringMap erasing warning: NULL text!" );
                 return;
             }

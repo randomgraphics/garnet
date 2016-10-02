@@ -9,7 +9,7 @@ using namespace GN::util;
 const uint32 GN::util::SampleApp::UPDATE_FREQUENCY = 60;
 const float  GN::util::SampleApp::UPDATE_INTERVAL = 1.0f / (float)GN::util::SampleApp::UPDATE_FREQUENCY;
 
-static GN::Logger * sLogger = GN::getLogger("GN.util");
+static GN::Logger * sLogger = GN::GetLogger("GN.util");
 
 // *****************************************************************************
 // command line parser
@@ -124,7 +124,7 @@ GN::util::SampleApp::SampleApp()
     , mShowHUD(true)
     , mShowHelp(false)
 {
-    enableCRTMemoryCheck();
+    EnableCRTMemoryCheck();
     mFps.reset();
 }
 
@@ -492,7 +492,7 @@ bool GN::util::SampleApp::checkCmdLine( int argc, const char * const argv[] )
                     int level;
                     if( !name.empty() && 0 != str::toInetger( level, leveltok.rawptr() ) )
                     {
-                        getLogger( name.rawptr() )->setLevel( level );
+                        GetLogger( name.rawptr() )->SetLevel( level );
                     }
                     else
                     {

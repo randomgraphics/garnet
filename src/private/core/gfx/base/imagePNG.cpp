@@ -5,7 +5,7 @@
 #pragma warning(disable:4611) // interaction between 'function' and C++ object destruction is non-portable
 #endif
 
-static GN::Logger * sLogger = GN::getLogger("GN.gfx.base.image.PNG");
+static GN::Logger * sLogger = GN::GetLogger("GN.gfx.base.image.PNG");
 
 // *****************************************************************************
 // local functions
@@ -200,7 +200,7 @@ bool PNGReader::readImage( void * o_data )
     for( uint32 y = 0; y < mInfo->height; ++y )
     {
         uint32 * p = (uint32*)rows[y];
-        GN::swap8in32( p, p, mRowPitch / 4 );
+        GN::Swap8In32( p, p, mRowPitch / 4 );
     }
 
 #endif

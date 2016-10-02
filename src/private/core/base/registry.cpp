@@ -1,6 +1,6 @@
 #include "pch.h"
 
-GN::Logger * GN::Registry::sLogger = GN::getLogger( "GN.base.Registry" );
+GN::Logger * GN::Registry::sLogger = GN::GetLogger( "GN.base.Registry" );
 
 // *****************************************************************************
 // public methods

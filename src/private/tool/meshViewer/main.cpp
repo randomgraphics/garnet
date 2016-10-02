@@ -7,7 +7,7 @@ using namespace GN::input;
 using namespace GN::engine;
 using namespace GN::util;
 
-static GN::Logger * sLogger = GN::getLogger("GN.tool.meshViewer");
+static GN::Logger * sLogger = GN::GetLogger("GN.tool.meshViewer");
 
 #define USE_ENTITY 1
 

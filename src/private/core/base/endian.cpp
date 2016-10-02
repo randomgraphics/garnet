@@ -9,7 +9,7 @@
 //
 //
 // ----------------------------------------------------------------------------
-GN_API void GN::swap8in16( void * outvoid, const void * invoid, size_t count )
+GN_API void GN::Swap8In16( void * outvoid, const void * invoid, size_t count )
 {
     union Local
     {
@@ -39,7 +39,7 @@ GN_API void GN::swap8in16( void * outvoid, const void * invoid, size_t count )
 //
 //
 // ----------------------------------------------------------------------------
-GN_API void GN::swap8in32( void * outvoid, const void * invoid, size_t count )
+GN_API void GN::Swap8In32( void * outvoid, const void * invoid, size_t count )
 {
     union Local
     {
@@ -71,7 +71,7 @@ GN_API void GN::swap8in32( void * outvoid, const void * invoid, size_t count )
 //
 //
 // ----------------------------------------------------------------------------
-GN_API void GN::swap8in64( void * outvoid, const void * invoid, size_t count )
+GN_API void GN::Swap8In64( void * outvoid, const void * invoid, size_t count )
 {
     union Local
     {
@@ -104,7 +104,7 @@ GN_API void GN::swap8in64( void * outvoid, const void * invoid, size_t count )
 //
 //
 // ----------------------------------------------------------------------------
-GN_API void GN::swap16in32( void * outvoid, const void * invoid, size_t count )
+GN_API void GN::Swap16In32( void * outvoid, const void * invoid, size_t count )
 {
     union Local
     {

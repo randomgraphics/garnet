@@ -18,7 +18,7 @@
 #include <windows.h>
 #endif
 
-static GN::Logger * sLogger = GN::getLogger("GN.gfx.test.UT");
+static GN::Logger * sLogger = GN::GetLogger("GN.gfx.test.UT");
 
 ///
 /// namespace of CxxTest framework

@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <windows.h>
 
-static GN::Logger * sLogger = GN::getLogger("GN.base.codepage");
+static GN::Logger * sLogger = GN::GetLogger("GN.base.codepage");
 
 using namespace GN;
 

@@ -1514,7 +1514,7 @@ namespace GN
                 }
                 else
                 {
-                    static Logger * logger = getLogger("GN.base.Matrix44");
+                    static Logger * logger = GetLogger("GN.base.Matrix44");
                     GN_WARN(logger)( "the vertex is transformed to infinite place" );
                 }
             }

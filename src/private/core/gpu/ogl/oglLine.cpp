@@ -2,7 +2,7 @@
 #include "oglLine.h"
 #include "oglGpu.h"
 
-static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.OGL");
+static GN::Logger * sLogger = GN::GetLogger("GN.gfx.gpu.OGL");
 
 // *****************************************************************************
 // Initialize and shutdown
@@ -20,7 +20,7 @@ bool GN::gfx::OGLLine::init()
 
     // create vertex buffer
     GN_ASSERT( !mVtxBuf );
-    mVtxBuf = (LineVertex*)HeapMemory::alloc( sizeof(LineVertex) * MAX_LINES * 2 );
+    mVtxBuf = (LineVertex*)HeapMemory::Alloc( sizeof(LineVertex) * MAX_LINES * 2 );
     if( !mVtxBuf )
     {
         GN_ERROR(sLogger)( "out of memory!" );
@@ -40,7 +40,7 @@ void GN::gfx::OGLLine::quit()
 {
     GN_GUARD;
 
-    safeHeapDealloc( mVtxBuf );
+    SafeHeapDealloc( mVtxBuf );
 
     // standard quit procedure
     GN_STDCLASS_QUIT();

@@ -3,7 +3,7 @@
 
 using namespace GN;
 
-static GN::Logger * sLogger = GN::getLogger("GN.d3d9.d3d9app");
+static GN::Logger * sLogger = GN::GetLogger("GN.d3d9.d3d9app");
 
 // *****************************************************************************
 // local functions
@@ -67,7 +67,7 @@ static HWND sCreateWindow( HWND parent, HMONITOR monitor, uint32 width, uint32 h
     wcex.hIconSm        = LoadIcon( 0, IDI_APPLICATION );
     if( 0 == ::RegisterClassExW(&wcex) )
     {
-        GN_ERROR(sLogger)( "fail to register window class, %s!", getWin32LastErrorInfo() );
+        GN_ERROR(sLogger)( "fail to register window class, %s!", GetWin32LastErrorInfo() );
         return 0;
     }
 
@@ -98,7 +98,7 @@ static HWND sCreateWindow( HWND parent, HMONITOR monitor, uint32 width, uint32 h
         0 );
     if( 0 == hwnd )
     {
-        GN_ERROR(sLogger)( "fail to create window, %s!", getWin32LastErrorInfo() );
+        GN_ERROR(sLogger)( "fail to create window, %s!", GetWin32LastErrorInfo() );
         return false;
     }
 
@@ -359,7 +359,7 @@ GN_API void GN::d3d9::D3D9Application::quit()
 
     onQuit();
 
-    safeRelease( mD3D );
+    SafeRelease( mD3D );
 
     if( gInputPtr )
     {

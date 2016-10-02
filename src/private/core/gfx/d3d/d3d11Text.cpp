@@ -6,7 +6,7 @@ using namespace GN;
 
 #pragma warning(disable:4100)  // unreferenced formal parameter
 
-static Logger * sLogger = GN::getLogger("GN.d3d11.TextRenderer");
+static Logger * sLogger = GN::GetLogger("GN.d3d11.TextRenderer");
 
 class GN::d3d11::TextRenderer::Impl : public IDWriteTextRenderer
 {

@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "oglIdxBuf.h"
 
-static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.OGL.IdxBuf");
+static GN::Logger * sLogger = GN::GetLogger("GN.gfx.gpu.OGL.IdxBuf");
 
 // *****************************************************************************
 // Initialize and shutdown
@@ -27,7 +27,7 @@ bool GN::gfx::OGLIdxBuf::init( const IdxBufDesc & desc )
     setDesc( desc );
 
     mBytesPerIndex = desc.bits32 ? 4 : 2;
-    mBuffer = (uint8*)HeapMemory::alloc( desc.numidx * mBytesPerIndex );
+    mBuffer = (uint8*)HeapMemory::Alloc( desc.numidx * mBytesPerIndex );
 
     // success
     return success();
@@ -42,7 +42,7 @@ void GN::gfx::OGLIdxBuf::quit()
 {
     GN_GUARD;
 
-    safeHeapDealloc(mBuffer);
+    SafeHeapDealloc(mBuffer);
 
     // standard quit procedure
     GN_STDCLASS_QUIT();

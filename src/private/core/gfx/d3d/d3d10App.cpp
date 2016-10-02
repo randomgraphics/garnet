@@ -3,7 +3,7 @@
 
 using namespace GN;
 
-static GN::Logger * sLogger = GN::getLogger("GN.d3d10.d3d10app");
+static GN::Logger * sLogger = GN::GetLogger("GN.d3d10.d3d10app");
 
 
 // *****************************************************************************
@@ -73,7 +73,7 @@ static HWND sCreateWindow( HWND parent, HMONITOR monitor, uint32 width, uint32 h
     wcex.hIconSm        = LoadIcon( 0, IDI_APPLICATION );
     if( 0 == ::RegisterClassExW(&wcex) )
     {
-        GN_ERROR(sLogger)( "fail to register window class, %s!", getWin32LastErrorInfo() );
+        GN_ERROR(sLogger)( "fail to register window class, %s!", GetWin32LastErrorInfo() );
         return 0;
     }
 
@@ -104,7 +104,7 @@ static HWND sCreateWindow( HWND parent, HMONITOR monitor, uint32 width, uint32 h
         0 );
     if( 0 == hwnd )
     {
-        GN_ERROR(sLogger)( "fail to create window, %s!", getWin32LastErrorInfo() );
+        GN_ERROR(sLogger)( "fail to create window, %s!", GetWin32LastErrorInfo() );
         return false;
     }
 
@@ -371,11 +371,11 @@ GN_API bool GN::d3d10::D3D10Application::createDevice()
 			break;
 		}
 
-		safeRelease( mAdapter );
+		SafeRelease( mAdapter );
 
 		++nadapter;
 	}
-	if( !perfhud ) safeRelease( mAdapter );
+	if( !perfhud ) SafeRelease( mAdapter );
 
     // determine driver type
     D3D10_DRIVER_TYPE driverType;
@@ -490,13 +490,13 @@ GN_API void GN::d3d10::D3D10Application::destroyDevice()
         onDestroy();
     }
 
-	safeRelease( mInfoQueue );
-	safeRelease( mDebug );
-    safeRelease( mBackBuf );
-    safeRelease( mBackRTV );
-    safeRelease( mDepthBuf );
-    safeRelease( mDepthDSV );
-	safeRelease( mSwapChain );
-	safeRelease( mDevice );
-	safeRelease( mAdapter );
+	SafeRelease( mInfoQueue );
+	SafeRelease( mDebug );
+    SafeRelease( mBackBuf );
+    SafeRelease( mBackRTV );
+    SafeRelease( mDepthBuf );
+    SafeRelease( mDepthDSV );
+	SafeRelease( mSwapChain );
+	SafeRelease( mDevice );
+	SafeRelease( mAdapter );
 }

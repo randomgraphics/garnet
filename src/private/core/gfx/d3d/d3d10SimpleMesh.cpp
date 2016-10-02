@@ -1,6 +1,6 @@
 #include "pch.h"
 
-static GN::Logger * sLogger = GN::getLogger("GN.d3d10.SimpleMesh");
+static GN::Logger * sLogger = GN::GetLogger("GN.d3d10.SimpleMesh");
 
 // *****************************************************************************
 // Initialize and shutdown
@@ -58,9 +58,9 @@ GN_API void GN::d3d10::SimpleMesh::quit()
 {
     GN_GUARD;
 
-    safeRelease( mLayout );
-    safeRelease( mVtxBuf );
-    safeRelease( mIdxBuf );
+    SafeRelease( mLayout );
+    SafeRelease( mVtxBuf );
+    SafeRelease( mIdxBuf );
 
     // standard quit procedure
     GN_STDCLASS_QUIT();
@@ -124,7 +124,7 @@ GN_API void GN::d3d10::SimpleMesh::endVertices()
 
     if( mVtxBufCapacity < mVertices.size() )
     {
-        safeRelease( mVtxBuf );
+        SafeRelease( mVtxBuf );
         mVtxBufCapacity = 0;
 
         D3D10_BUFFER_DESC desc = {
@@ -190,7 +190,7 @@ GN_API void GN::d3d10::SimpleMesh::endTriangles()
 
     if( mIdxBufCapacity < mIndices.size() )
     {
-        safeRelease( mIdxBuf );
+        SafeRelease( mIdxBuf );
         mIdxBufCapacity = 0;
 
         D3D10_BUFFER_DESC desc = {

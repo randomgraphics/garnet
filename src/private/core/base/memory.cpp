@@ -5,7 +5,7 @@
 // -----------------------------------------------------------------------------
 #if GN_MSVC
 #include <crtdbg.h>
-GN_API void GN::enableCRTMemoryCheck( long breakOnAllocID )
+GN_API void GN::EnableCRTMemoryCheck( long breakOnAllocID )
 {
     int tmpDbgFlag;
     tmpDbgFlag = _CrtSetDbgFlag(_CRTDBG_REPORT_FLAG);
@@ -18,5 +18,5 @@ GN_API void GN::enableCRTMemoryCheck( long breakOnAllocID )
     }
 }
 #else
-GN_API void GN::enableCRTMemoryCheck( long ) {}
+GN_API void GN::EnableCRTMemoryCheck( long ) {}
 #endif

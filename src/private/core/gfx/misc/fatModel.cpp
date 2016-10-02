@@ -5,7 +5,7 @@
 using namespace GN;
 using namespace GN::gfx;
 
-static GN::Logger * sLogger = GN::getLogger("GN.gfx.FatModel");
+static GN::Logger * sLogger = GN::GetLogger("GN.gfx.FatModel");
 
 // *****************************************************************************
 // FatVertexBuffer
@@ -80,7 +80,7 @@ bool GN::gfx::FatVertexBuffer::resize( uint32 layout, uint32 count )
     {
         if( (1<<i) & layout )
         {
-            vertices[i] = HeapMemory::alignedAlloc( count * 128, ELEMENT_SIZE );
+            vertices[i] = HeapMemory::AlignedAlloc( count * 128, ELEMENT_SIZE );
             if( NULL == vertices[i] )
             {
                 outofmem = true;
@@ -92,7 +92,7 @@ bool GN::gfx::FatVertexBuffer::resize( uint32 layout, uint32 count )
     {
         for( int i = 0; i < (int)NUM_SEMANTICS; ++i )
         {
-            safeHeapDealloc( vertices[i] );
+            SafeHeapDealloc( vertices[i] );
         }
         GN_ERROR(sLogger)( "Fail to resize fat vertex buffer: out of memory." );
         return false;
@@ -105,12 +105,12 @@ bool GN::gfx::FatVertexBuffer::resize( uint32 layout, uint32 count )
         {
             GN_ASSERT( vertices[i] );
             memcpy( vertices[i], mElements[i], math::getmin<>(count,mCount) );
-            safeHeapDealloc( mElements[i] );
+            SafeHeapDealloc( mElements[i] );
             mElements[i] = vertices[i];
         }
         else
         {
-            safeHeapDealloc( mElements[i] );
+            SafeHeapDealloc( mElements[i] );
         }
 
         // clear both new and unused formats

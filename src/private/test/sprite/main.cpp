@@ -24,7 +24,7 @@ bool init( Gpu & gpu )
 
 void quit( Gpu & )
 {
-    safeDelete( sr );
+    SafeDelete( sr );
     tex.clear();
 }
 
@@ -72,7 +72,7 @@ int run( Gpu & gpu )
     bool gogogo = true;
 
     FpsCalculator fps;
-    getLogger("GN.util.fps")->setLevel( Logger::VERBOSE ); // enable FPS logger
+    GetLogger("GN.util.fps")->SetLevel( Logger::VERBOSE ); // enable FPS logger
 
     while( gogogo )
     {
@@ -118,7 +118,7 @@ struct InputInitiator
 
 int main( int argc, const char * argv[] )
 {
-    enableCRTMemoryCheck();
+    EnableCRTMemoryCheck();
 
     CommandLineArguments cmdargs( argc, argv );
     switch( cmdargs.status )

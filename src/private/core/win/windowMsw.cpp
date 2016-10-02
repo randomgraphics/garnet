@@ -5,7 +5,7 @@
 
 GN::Dictionary<void*,GN::win::WindowMsw*> GN::win::WindowMsw::msInstanceMap;
 
-static GN::Logger * sLogger = GN::getLogger("GN.win.MSW");
+static GN::Logger * sLogger = GN::GetLogger("GN.win.MSW");
 
 // *****************************************************************************
 // Initialize and shutdown
@@ -230,7 +230,7 @@ bool GN::win::WindowMsw::createWindow( const WindowCreationParams & wcp )
     wcex.hIconSm        = LoadIcon(0, IDI_APPLICATION);
     if( 0 == ::RegisterClassExW(&wcex) )
     {
-        GN_ERROR(sLogger)( "fail to register window class, %s!", getWin32LastErrorInfo() );
+        GN_ERROR(sLogger)( "fail to register window class, %s!", GetWin32LastErrorInfo() );
         return false;
     }
     GN_TRACE(sLogger)( "Register window class: %S (module handle: 0x%X)", mClassName.rawptr(), mModuleInstance );
@@ -270,7 +270,7 @@ bool GN::win::WindowMsw::createWindow( const WindowCreationParams & wcp )
         0 );
     if( 0 == mWindow )
     {
-        GN_ERROR(sLogger)( "fail to create window, %s!", getWin32LastErrorInfo() );
+        GN_ERROR(sLogger)( "fail to create window, %s!", GetWin32LastErrorInfo() );
         return false;
     }
     GN_TRACE(sLogger)( "Create window (handle: 0x%X)", mWindow );

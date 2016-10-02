@@ -314,7 +314,7 @@ namespace GN
         static Logger * sLogger;
 
     public:
-        
+
         const static DELEGATE_NAME NULL_DELEGATE;
 
         ///
@@ -553,7 +553,7 @@ namespace GN
     //template<typename R PARAM_COMMA PARAM_TEMPLS>
     //const DELEGATE_NAME<R PARAM_COMMA PARAM_TYPES> DELEGATE_NAME<R PARAM_COMMA PARAM_TYPES>::NULL_DELEGATE = DELEGATE_NAME<R PARAM_COMMA PARAM_TYPES>();
 
-    template<typename R PARAM_COMMA PARAM_TEMPLS> Logger * DELEGATE_NAME<R PARAM_COMMA PARAM_TYPES>::sLogger = getLogger("GN.base.Delegate");
+    template<typename R PARAM_COMMA PARAM_TEMPLS> Logger * DELEGATE_NAME<R PARAM_COMMA PARAM_TYPES>::sLogger = GetLogger("GN.base.Delegate");
 
 #define MAKE_FREEDELEGATE( CALL_CONVENSION, DUMMY )       \
     template<typename R PARAM_COMMA PARAM_TEMPLS>         \
