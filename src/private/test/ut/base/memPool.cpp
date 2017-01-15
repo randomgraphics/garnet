@@ -25,7 +25,7 @@ public:
     void testObjectPoolWithPOD()
     {
         GN::ObjectPool<char> a;
-        a.AllocConstructed();
+        a.allocConstructed();
     }
 
     void testClassAllocator()
@@ -44,10 +44,10 @@ public:
 
         FixSizedRawMemoryPool<12,8,2> a;
 
-        void * p0 = a.Alloc();
-        void * p1 = a.Alloc();
-        void * p2 = a.Alloc();
-        void * p3 = a.Alloc();
+        void * p0 = a.alloc();
+        void * p1 = a.alloc();
+        void * p2 = a.alloc();
+        void * p3 = a.alloc();
 
 #if GN_X64
         TS_ASSERT_EQUALS( 40, (uint8*)p0 - (uint8*)p1 );
@@ -66,7 +66,7 @@ public:
 
         for( int i = 0; i < 100000; ++i )
         {
-            a.Alloc();
+            a.alloc();
         }
     }
 
@@ -77,11 +77,11 @@ public:
 
         for( int i = 0; i < 100000; ++i )
         {
-            a.Alloc();
+            a.alloc();
         }
     }
 };
 
-inline void * MemPoolTest::Test::operator new( size_t ) { return MemPoolTest::sPool.AllocUnconstructed(); }
-inline void   MemPoolTest::Test::operator delete( void * p ) { MemPoolTest::sPool.FreeOnlyNoDestruct(p); }
+inline void * MemPoolTest::Test::operator new( size_t ) { return MemPoolTest::sPool.allocUnconstructed(); }
+inline void   MemPoolTest::Test::operator delete( void * p ) { MemPoolTest::sPool.freeWithoutDeconstruct(p); }
 GN::ObjectPool<MemPoolTest::Test> MemPoolTest::sPool;

@@ -4,7 +4,7 @@
 // utilities
 // *****************************************************************************
 
-static GN::Logger * sLogger = GN::GetLogger("GN.d3d9.thickline");
+static GN::Logger * sLogger = GN::getLogger("GN.d3d9.thickline");
 
 //
 //

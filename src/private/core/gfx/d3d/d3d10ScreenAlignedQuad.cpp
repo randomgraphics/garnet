@@ -1,6 +1,6 @@
 #include "pch.h"
 
-static GN::Logger * sLogger = GN::GetLogger("GN.d3d10.ScreenAlignedQuad");
+static GN::Logger * sLogger = GN::getLogger("GN.d3d10.ScreenAlignedQuad");
 
 // *****************************************************************************
 // local functions
@@ -98,10 +98,10 @@ GN_API void GN::d3d10::ScreenAlignedQuad::quit()
 {
     GN_GUARD;
 
-    SafeRelease( mDepthStencilState );
-    SafeRelease( mVs );
-    SafeRelease( mPsTexed );
-    SafeRelease( mPsSolid );
+    safeRelease( mDepthStencilState );
+    safeRelease( mVs );
+    safeRelease( mPsTexed );
+    safeRelease( mPsSolid );
 
     mMesh.quit();
 

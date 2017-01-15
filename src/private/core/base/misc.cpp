@@ -5,7 +5,7 @@
 // -----------------------------------------------------------------------------
 GN_API void GN::putEnv( const char * name, const char * value )
 {
-    static GN::Logger * sLogger = GN::GetLogger("GN.base.putEnv");
+    static GN::Logger * sLogger = GN::getLogger("GN.base.putEnv");
 
 #if GN_XBOX2 || GN_XBOX3
     // Xenon does not support putenv()

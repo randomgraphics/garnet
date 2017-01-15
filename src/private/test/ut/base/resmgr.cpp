@@ -664,7 +664,7 @@ namespace GN
     };
 
     template<typename RES, typename HANDLE, bool SINGLETON>
-    GN::Logger * ResourceManagerTempl<RES,HANDLE,SINGLETON>::sLogger = GetLogger("GN.base.ResourceManagerTempl");
+    GN::Logger * ResourceManagerTempl<RES,HANDLE,SINGLETON>::sLogger = getLogger("GN.base.ResourceManagerTempl");
 
 }
 

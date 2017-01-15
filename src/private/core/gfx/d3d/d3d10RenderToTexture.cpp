@@ -1,6 +1,6 @@
 #include "pch.h"
 
-static GN::Logger * sLogger = GN::GetLogger("GN.d3d10.RenderToTexture");
+static GN::Logger * sLogger = GN::getLogger("GN.d3d10.RenderToTexture");
 
 // *****************************************************************************
 // local functions

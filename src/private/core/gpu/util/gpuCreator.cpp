@@ -8,7 +8,7 @@ using namespace GN::gfx;
 // local functions
 // *************************************************************************
 
-static GN::Logger * sLogger = GN::GetLogger("GN.gfx.util.gpu");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.util.gpu");
 
 #if GN_XBOX2
 #define D3D_GPU_API     GpuAPI::XENON

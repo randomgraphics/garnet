@@ -1,6 +1,6 @@
 #include "pch.h"
 
-static GN::Logger * sLogger = GN::GetLogger("GN.gfx.util.SpriteRenderer");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.util.SpriteRenderer");
 
 static const char * glslvscode=
     "varying vec4 color; \n"
@@ -160,7 +160,7 @@ bool GN::gfx::SpriteRenderer::init()
 
 
     // create pending vertex buffer
-    mSprites = (Sprite*)HeapMemory::Alloc( VTXBUF_SIZE );
+    mSprites = (Sprite*)HeapMemory::alloc( VTXBUF_SIZE );
     if( NULL == mSprites ) return failure();
 
     // initialize other member variables
@@ -181,7 +181,7 @@ void GN::gfx::SpriteRenderer::quit()
 {
     GN_GUARD;
 
-    HeapMemory::Dealloc( mSprites );
+    HeapMemory::dealloc( mSprites );
     mContext.clear();
     mIndexBuffer.clear();
     mVertexBuffer.clear();

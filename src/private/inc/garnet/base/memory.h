@@ -30,27 +30,27 @@ namespace GN
         ///
         /// Allocate memory from heap. Can cross DLL boundary.
         ///
-        GN_API void * Alloc( size_t sizeInBytes );
+        GN_API void * alloc( size_t sizeInBytes );
 
         ///
         /// Re-allocate memory from heap. Can cross DLL boundary.
         ///
-        GN_API void * Realloc( void * ptr, size_t sizeInBytes );
+        GN_API void * realloc( void * ptr, size_t sizeInBytes );
 
         ///
         /// Allocate aligned memory from heap. Can cross DLL boundary
         ///
-        GN_API void * AlignedAlloc( size_t sizeInBytes, size_t alignment );
+        GN_API void * alignedAlloc( size_t sizeInBytes, size_t alignment );
 
         ///
         /// Re-allocate aligned memory from heap. Can cross DLL boundary
         ///
-        GN_API void * AlignedRealloc( void * ptr, size_t sizeInBytes, size_t alignment );
+        GN_API void * alignedRealloc( void * ptr, size_t sizeInBytes, size_t alignment );
 
         ///
         /// Free heap-allocated memory (aligned or unaligned). Can cross DLL boundary.
         ///
-        GN_API void Dealloc( void * ptr );
+        GN_API void dealloc( void * ptr );
     };
 }
 
@@ -66,10 +66,10 @@ namespace GN
 /// \name overloaded global new and delete operators
 //@{
 // TODO: more standard conforming implementation.
-inline void * operator new( size_t s ) GN_THROW_BADALLOC() { return ::GN::HeapMemory::Alloc( s ); }
-inline void * operator new[]( size_t s ) GN_THROW_BADALLOC() { return ::GN::HeapMemory::Alloc( s ); }
-inline void operator delete( void* p ) GN_NOTHROW() { ::GN::HeapMemory::Dealloc( p ); }
-inline void operator delete[]( void* p ) GN_NOTHROW() { ::GN::HeapMemory::Dealloc( p ); }
+inline void * operator new( size_t s ) GN_THROW_BADALLOC() { return ::GN::HeapMemory::alloc( s ); }
+inline void * operator new[]( size_t s ) GN_THROW_BADALLOC() { return ::GN::HeapMemory::alloc( s ); }
+inline void operator delete( void* p ) GN_NOTHROW() { ::GN::HeapMemory::dealloc( p ); }
+inline void operator delete[]( void* p ) GN_NOTHROW() { ::GN::HeapMemory::dealloc( p ); }
 //@}
 
 #if GN_ICL
@@ -86,17 +86,17 @@ namespace GN
     /// enable CRT memory leak checking. Currently only work for MSVC compiler
     ///
     /// \param breakOnAllocID       Set allocation ID for "break-on-memory-allocation". Set to 0 to disable it.
-    GN_API void EnableCRTMemoryCheck( long breakOnAllocID = 0 );
+    GN_API void enableCRTMemoryCheck( long breakOnAllocID = 0 );
 
     ///
     /// free heap memory pointer allocated using GN::HeapMemory functions
     // ------------------------------------------------------------------------
     template < typename T >
-    GN_FORCE_INLINE void SafeHeapDealloc( T * & ptr )
+    GN_FORCE_INLINE void safeHeapDealloc( T * & ptr )
     {
         if( ptr )
         {
-            HeapMemory::Dealloc( ptr );
+            HeapMemory::dealloc( ptr );
             ptr = 0;
         }
     }
@@ -105,7 +105,7 @@ namespace GN
     /// delete one object
     // ------------------------------------------------------------------------
     template < typename T >
-    GN_FORCE_INLINE void SafeDelete( T * & ptr )
+    GN_FORCE_INLINE void safeDelete( T * & ptr )
     {
         if( ptr )
         {
@@ -118,7 +118,7 @@ namespace GN
     /// delete object array
     // ------------------------------------------------------------------------
     template < typename T >
-    GN_FORCE_INLINE void SafeDeleteArray( T * & ptr )
+    GN_FORCE_INLINE void safeDeleteArray( T * & ptr )
     {
         if( ptr )
         {
@@ -131,7 +131,7 @@ namespace GN
     /// Safe release COM interface
     ///
     template < typename T >
-    GN_FORCE_INLINE void SafeRelease( T * & ptr )
+    GN_FORCE_INLINE void safeRelease( T * & ptr )
     {
         if( ptr )
         {
@@ -144,11 +144,11 @@ namespace GN
     /// Safe release RefCounter class
     ///
     template < typename T >
-    GN_FORCE_INLINE void SafeDecref( T * & ptr )
+    GN_FORCE_INLINE void safeDecref( T * & ptr )
     {
         if( ptr )
         {
-            ptr->DecRef();
+            ptr->decref();
             ptr = 0;
         }
     }
@@ -167,13 +167,13 @@ namespace GN
         /// Allocate raw memory from heap
         static inline void * sAllocate( size_t sizeInBytes, size_t alignmentInBytes )
         {
-            return HeapMemory::AlignedAlloc( sizeInBytes, alignmentInBytes );
+            return HeapMemory::alignedAlloc( sizeInBytes, alignmentInBytes );
         }
 
         /// Deallocate raw memory buffer.
         static inline void sDeallocate( void * ptr )
         {
-            HeapMemory::Dealloc( ptr );
+            HeapMemory::dealloc( ptr );
         }
     };
 
@@ -271,7 +271,7 @@ namespace GN
 
         pointer allocate( size_type count )
         {
-            void * p = HeapMemory::AlignedAlloc( count * sizeof(T), DefaultMemoryAlignment<sizeof(T)>::VALUE );
+            void * p = HeapMemory::alignedAlloc( count * sizeof(T), DefaultMemoryAlignment<sizeof(T)>::VALUE );
 
             // Note: here we are different from standard STL allocator. We return
             // NULL pointer instead of throw std::bad_alloc() pointer.
@@ -280,7 +280,7 @@ namespace GN
 
         void deallocate( pointer ptr, size_type )
         {
-            HeapMemory::Dealloc( ptr );
+            HeapMemory::dealloc( ptr );
         }
 
         void construct( pointer ptr, const_reference x )
@@ -380,13 +380,13 @@ namespace GN
         ///
         ~FixSizedRawMemoryPool()
         {
-            FreeAll();
+            freeAll();
         }
 
         ///
         /// make sure a valid pointer belongs to this pool
         ///
-        bool Check( const void * p ) const
+        bool check( const void * p ) const
         {
             if( 0 == p ) return false;
 
@@ -398,28 +398,28 @@ namespace GN
         ///
         /// Allocate raw memory for one item
         ///
-        void * Alloc()
+        void * alloc()
         {
             if( MAX_ITEMS > 0 && mItemCount == MAX_ITEMS )
             {
-                GN_ERROR(GetLogger("FixSizedRawMemoryPool"))( "out of pool memory!" );
+                GN_ERROR(getLogger("FixSizedRawMemoryPool"))( "out of pool memory!" );
                 return 0;
             }
 
             if( 0 == mFreeItems )
             {
                 // no free items. create new block
-                Block * b = (Block*)HeapMemory::Alloc( sizeof(Block) );
+                Block * b = (Block*)HeapMemory::alloc( sizeof(Block) );
                 if( 0 == b )
                 {
-                    GN_ERROR(GetLogger("FixSizedRawMemoryPool"))( "out of heap memory!" );
+                    GN_ERROR(getLogger("FixSizedRawMemoryPool"))( "out of heap memory!" );
                     return 0;
                 }
-                b->items = (Item*)HeapMemory::AlignedAlloc( sizeof(Item) * mNewBlockSize, ALIGNMENT );
+                b->items = (Item*)HeapMemory::alignedAlloc( sizeof(Item) * mNewBlockSize, ALIGNMENT );
                 if( 0 == b->items )
                 {
-                    GN_ERROR(GetLogger("FixSizedRawMemoryPool"))( "out of heap memory!" );
-                    HeapMemory::Dealloc( b );
+                    GN_ERROR(getLogger("FixSizedRawMemoryPool"))( "out of heap memory!" );
+                    HeapMemory::dealloc( b );
                     return 0;
                 }
                 b->count = mNewBlockSize;
@@ -456,20 +456,20 @@ namespace GN
         ///
         /// Deallocate
         ///
-        void Dealloc( void * p )
+        void dealloc( void * p )
         {
             if( 0 == p ) return;
 
             Item * i = (Item*)p;
-            if( !Check(p) )
+            if( !check(p) )
             {
-                GN_ERROR(GetLogger("FixSizedRawMemoryPool"))( "invalid pointer!" );
+                GN_ERROR(getLogger("FixSizedRawMemoryPool"))( "invalid pointer!" );
                 return;
             }
 
             if( 0 == mItemCount )
             {
-                GN_ERROR(GetLogger("FixSizedRawMemoryPool"))( "input pointer is not belong to this pool!" );
+                GN_ERROR(getLogger("FixSizedRawMemoryPool"))( "input pointer is not belong to this pool!" );
                 return;
             }
 
@@ -488,15 +488,15 @@ namespace GN
         ///
         /// free all items
         ///
-        void FreeAll()
+        void freeAll()
         {
             Block * p;
             while( mBlocks )
             {
                 p = mBlocks;
                 mBlocks = mBlocks->next;
-                HeapMemory::Dealloc( p->items );
-                HeapMemory::Dealloc( p );
+                HeapMemory::dealloc( p->items );
+                HeapMemory::dealloc( p );
             }
             mBlocks = 0;
             mItems = 0;
@@ -508,12 +508,12 @@ namespace GN
         ///
         /// get first item in allocator
         ///
-        void * GetFirst() const { return mItems; }
+        void * getFirst() const { return mItems; }
 
         ///
         /// get next item in allocator
         ///
-        void * GetNext( const void * p ) const { GN_ASSERT(p); return ((Item*)p)->next; }
+        void * getNext( const void * p ) const { GN_ASSERT(p); return ((Item*)p)->next; }
     };
 
     ///
@@ -526,9 +526,9 @@ namespace GN
     {
         RAW_MEMORY_POOL mRawMem;
 
-        T * DoAlloc()
+        T * doAlloc()
         {
-            T * p = (T*)mRawMem.Alloc();
+            T * p = (T*)mRawMem.alloc();
             if( 0 == p ) return 0;
 
             // construct the object, using defualt constructor
@@ -538,7 +538,7 @@ namespace GN
             return p;
         }
 
-        void DoDealloc( T * p )
+        void doDealloc( T * p )
         {
             if( 0 == p ) return;
 
@@ -546,19 +546,19 @@ namespace GN
             p->T::~T();
 
             // free p
-            mRawMem.Dealloc( p );
+            mRawMem.dealloc( p );
         }
 
-        void DoFreeAll()
+        void doFreeAll()
         {
             // destruct all objects
-            for( T * p = (T*)mRawMem.GetFirst(); 0 != p; p = (T*)mRawMem.GetNext(p) )
+            for( T * p = (T*)mRawMem.getFirst(); 0 != p; p = (T*)mRawMem.getNext(p) )
             {
                 p->T::~T();
             }
 
             // free memory
-            mRawMem.FreeAll();
+            mRawMem.freeAll();
         }
 
     public:
@@ -567,19 +567,19 @@ namespace GN
 
         ObjectPool() {}
 
-        ~ObjectPool() { DestructAndFreeAll(); }
+        ~ObjectPool() { deconstructAndFreeAll(); }
 
         //@}
 
         //@{
-        T  * AllocConstructed() { return DoAlloc(); }
-        T  * AllocUnconstructed() { return (T*)mRawMem.Alloc(); }
-        void DestructAndFree( void * p ) { DoDealloc( (T*)p ); }
-        void FreeOnlyNoDestruct( void * p ) { mRawMem.Dealloc( p ); }
-        void DestructAndFreeAll() { DoFreeAll(); }
-        bool Check( const T * p ) const { return mRawMem.Check( p ); }
-        T  * GetFirst() const { return (T*)mRawMem.GetFirst(); }
-        T  * GetNext( const T * p ) const { return (T*)mRawMem.GetNext(p); }
+        T  * allocConstructed() { return doAlloc(); }
+        T  * allocUnconstructed() { return (T*)mRawMem.alloc(); }
+        void deconstructAndFree( void * p ) { doDealloc( (T*)p ); }
+        void freeWithoutDeconstruct( void * p ) { mRawMem.dealloc( p ); }
+        void deconstructAndFreeAll() { doFreeAll(); }
+        bool check( const T * p ) const { return mRawMem.check( p ); }
+        T  * getFirst() const { return (T*)mRawMem.getFirst(); }
+        T  * getNext( const T * p ) const { return (T*)mRawMem.getNext(p); }
         //@}
     };
 }

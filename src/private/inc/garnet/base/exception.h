@@ -84,7 +84,7 @@ namespace GN
         const char * file,
         int          line )
     {
-        GN_LOG_EX( GetLogger("GN.base.exception"), Logger::FATAL, func, file, line )( msg );
+        GN_LOG_EX( getLogger("GN.base.exception"), Logger::FATAL, func, file, line )( msg );
     }
 
     ///

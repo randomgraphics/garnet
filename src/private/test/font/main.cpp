@@ -46,7 +46,7 @@ void quit( Gpu & )
 {
     ascii.quit();
     ttf.quit();
-    SafeDelete( sr );
+    safeDelete( sr );
 }
 
 void onKeyPress( KeyEvent ke )
@@ -110,7 +110,7 @@ int run( Gpu & gpu )
     bool gogogo = true;
 
     FpsCalculator fps;
-    GetLogger("GN.util.fps")->SetLevel( Logger::VERBOSE ); // enable FPS logger
+    getLogger("GN.util.fps")->setLevel( Logger::VERBOSE ); // enable FPS logger
 
     while( gogogo )
     {
@@ -155,7 +155,7 @@ struct InputInitiator
 
 int main( int argc, const char * argv[] )
 {
-    EnableCRTMemoryCheck();
+    enableCRTMemoryCheck();
 
     CommandLineArguments cmdargs( argc, argv );
     switch( cmdargs.status )

@@ -15,7 +15,6 @@ namespace GN
 ///
 namespace gfx2
 {
-
 class GpuBlob : public RefCounter
 {
 };
@@ -50,29 +49,30 @@ struct GpuDrawParameters
 class GpuCommandList : public RefCounter
 {
 public:
-    virtual void   Update(GpuResource * resource, UINT subResourceId, ...) = 0;
-    virtual void   Copy(GpuResource * source, UINT sourceSubResId, GpuResource * target, UINT targetSubResId, ...) = 0;
-    virtual void   Bind(GpuResourceTable * resources) = 0;
-    virtual void   Draw(GpuPipeline * pipeline, const GpuDrawParameters * dp) = 0;
-    virtual uint64 Mark() = 0;
-    virtual void   Wait(uint64 fence) = 0; // insert a wait-for-fence into command list
+    virtual void   update(GpuResource * resource, UINT subResourceId, ...) = 0;
+    virtual void   copy(GpuResource * source, UINT sourceSubResId, GpuResource * target, UINT targetSubResId, ...) = 0;
+    virtual void   bind(GpuResourceTable * resources) = 0;
+    virtual void   draw(GpuPipeline * pipeline, const GpuDrawParameters * dp) = 0;
+    virtual uint64 mark() = 0; // insert a new fence into command list, returns fence id.
+    virtual void   wait(uint64 fence) = 0; // insert a wait-for-fence into command list
 };
 
 class Gpu : public RefCounter
 {
 public:
-    virtual AutoRef<GpuCommandList> CreateCommandList(...) = 0;
-    virtual AutoRef<GpuResource>    CreateResource(...) = 0;
-    virtual AutoRef<GpuRenderState> CreateRenderState(...) = 0;
-    virtual AutoRef<GpuPipeline>    CreatePipeline(GpuProgram * program, GpuRenderState * state) = 0;
-    virtual AutoRef<GpuProgram>     CreateProgram(const void * compiledBlob, size_t sizeInBytes) = 0;
-    virtual AutoRef<GpuBlob>        CompileProgram(...) = 0;
-    virtual void                    Run(GpuCommandList *) = 0;
-    virtual int                     Present(...) = 0; // returns a fence that marks completion of the present.
-    virtual void                    Wait(int fence) = 0; // block caller thread until the fence completes.
+    virtual AutoRef<GpuBlob>        compileProgram(...) = 0;
+    virtual AutoRef<GpuCommandList> createCommandList(...) = 0;
+    virtual AutoRef<GpuResource>    createResource(...) = 0;
+    virtual AutoRef<GpuRenderState> createRenderState(...) = 0;
+    virtual AutoRef<GpuPipeline>    createPipeline(GpuProgram * program, GpuRenderState * state) = 0;
+    virtual AutoRef<GpuProgram>     createProgram(const void * compiledBlob, size_t sizeInBytes) = 0;
+    virtual void                    submitCommandList(...) = 0;
+    virtual int                     present(...) = 0; // returns a fence that marks completion of the present.
+    virtual void                    wait(int fence) = 0; // block caller thread until the fence completes.
 };
 
 AutoRef<Gpu> createGpu(...);
+
 
 } // end of namespace gfx2
 } // end of namespace GN

@@ -1,6 +1,6 @@
 #include "pch.h"
 
-static GN::Logger * sLogger = GN::GetLogger("GN.gfx.util.LineRenderer");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.util.LineRenderer");
 
 // *****************************************************************************
 // Initialize and shutdown
@@ -137,7 +137,7 @@ bool GN::gfx::LineRenderer::init()
     mContext.vtxbufs[0].stride = sizeof(LineVertex);
 
     // create line buffer
-    mLines = (Line*)HeapMemory::Alloc( MAX_LINES * sizeof(Line) );
+    mLines = (Line*)HeapMemory::alloc( MAX_LINES * sizeof(Line) );
     if( NULL == mLines ) return failure();
     mNextPendingLine = mLines;
     mNextFreeLine = mLines;
@@ -155,7 +155,7 @@ void GN::gfx::LineRenderer::quit()
 {
     GN_GUARD;
 
-    HeapMemory::Dealloc( mLines ); mLines = NULL;
+    HeapMemory::dealloc( mLines ); mLines = NULL;
     mContext.clear();
 
     // standard quit procedure
@@ -606,7 +606,7 @@ void GN::gfx::ThickLineRenderer::line( const ThickLineVertex & v0, const ThickLi
                \    \
                 \ e1|
                  ----
-
+            
             */
 
             e0.bottomLeft( v++ );

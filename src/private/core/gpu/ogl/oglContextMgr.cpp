@@ -124,7 +124,7 @@ void GN::gfx::OGLGpu::contextQuit()
     mVertexFormats.clear();
 
     // delete render target manager
-    SafeDelete( mRTMgr );
+    safeDelete( mRTMgr );
 }
 
 // *****************************************************************************

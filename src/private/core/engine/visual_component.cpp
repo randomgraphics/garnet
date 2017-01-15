@@ -4,7 +4,7 @@ using namespace GN;
 using namespace GN::gfx;
 using namespace GN::engine;
 
-static GN::Logger * sLogger = GN::GetLogger("GN.engine");
+static GN::Logger * sLogger = GN::getLogger("GN.engine");
 
 // *****************************************************************************
 // Local functions

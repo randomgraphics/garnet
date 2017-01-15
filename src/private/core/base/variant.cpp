@@ -6,7 +6,7 @@
 
 #define ENCODE_KEY(from,to) ( ((((sint16)from) & 0xFF) << 8) | (((sint16)to) & 0xFF) )
 
-static GN::Logger * sLogger = GN::GetLogger("GN.base.Variant");
+static GN::Logger * sLogger = GN::getLogger("GN.base.Variant");
 
 // *****************************************************************************
 // public methods

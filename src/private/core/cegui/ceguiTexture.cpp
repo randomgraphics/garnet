@@ -4,7 +4,7 @@
 
 #ifdef HAS_CEGUI
 
-static GN::Logger * sLogger = GN::GetLogger("GN.util.cegui");
+static GN::Logger * sLogger = GN::getLogger("GN.util.cegui");
 
 // *****************************************************************************
 // from Renderer
@@ -19,7 +19,7 @@ void CEGUI::GarnetTexture::loadFromFile( const CEGUI::String & filename, const C
 
     mFileName = filename;
     mGroup = group;
-    GN::SafeHeapDealloc( mMemBuffer );
+    GN::safeHeapDealloc( mMemBuffer );
 
     if( !reload() )
     {
@@ -36,11 +36,11 @@ void CEGUI::GarnetTexture::loadFromMemory(const void* buffPtr, uint buffWidth, u
 {
     GN_GUARD;
 
-    GN::SafeHeapDealloc( mMemBuffer );
+    GN::safeHeapDealloc( mMemBuffer );
 
     // store memory buffer
     GN_ASSERT( 0 == mMemBuffer );
-    mMemBuffer = GN::HeapMemory::Alloc( buffWidth * buffHeight * 4 );
+    mMemBuffer = GN::HeapMemory::alloc( buffWidth * buffHeight * 4 );
     if( 0 == mMemBuffer )
     {
 		GN_THROW_EX( RendererException(

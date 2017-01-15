@@ -126,13 +126,13 @@ namespace GN
 
             if( N == mCount )
             {
-                GN_ERROR(GetLogger("GN.base.StackArray"))( "Can't insert more. Stack array is full already!" );
+                GN_ERROR(getLogger("GN.base.StackArray"))( "Can't insert more. Stack array is full already!" );
                 return;
             }
 
             if( position > mCount )
             {
-                GN_ERROR(GetLogger("GN.base.StackArray"))( "invalid insert position." );
+                GN_ERROR(getLogger("GN.base.StackArray"))( "invalid insert position." );
                 return;
             }
 
@@ -157,7 +157,7 @@ namespace GN
         {
             if( position >= mCount )
             {
-                GN_ERROR(GetLogger("GN.base.StackArray"))( "Invalid eraseIdx position" );
+                GN_ERROR(getLogger("GN.base.StackArray"))( "Invalid eraseIdx position" );
                 return;
             }
 
@@ -181,7 +181,7 @@ namespace GN
 
             if( count > N )
             {
-                GN_ERROR(GetLogger("GN.base.StackArray"))("count is too large!");
+                GN_ERROR(getLogger("GN.base.StackArray"))("count is too large!");
                 return;
             }
 
@@ -314,7 +314,7 @@ namespace GN
 
             if( 0 == p )
             {
-                GN_ERROR(GetLogger("GN.base.DynaArray"))("non-zero count with NULL pointer is not allowed!");
+                GN_ERROR(getLogger("GN.base.DynaArray"))("non-zero count with NULL pointer is not allowed!");
                 return false;
             }
 
@@ -377,7 +377,7 @@ namespace GN
         {
             if( position > mCount )
             {
-                GN_WARN(GetLogger("GN.base.DynaArray"))("invalid insert position");
+                GN_WARN(getLogger("GN.base.DynaArray"))("invalid insert position");
                 return false;
             }
 
@@ -397,7 +397,7 @@ namespace GN
         {
             if( position >= mCount )
             {
-                GN_ERROR(GetLogger("GN.base.DynaArray"))("invalid erase position");
+                GN_ERROR(getLogger("GN.base.DynaArray"))("invalid erase position");
                 return;
             }
 
@@ -439,7 +439,7 @@ namespace GN
             T * newBuf = OBJECT_ALLOCATOR::sAllocate( (SIZE_TYPE)newCap );
             if( NULL == newBuf )
             {
-                GN_ERROR(GetLogger("GN.base.DynaArray"))("out of memory!");
+                GN_ERROR(getLogger("GN.base.DynaArray"))("out of memory!");
                 return false;
             }
 

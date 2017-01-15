@@ -5,7 +5,7 @@
 #include "imageJPG.h"
 #include "imageTGA.h"
 
-static GN::Logger * sLogger = GN::GetLogger("GN.gfx.base.image");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.base.image");
 
 // *****************************************************************************
 // ImageDesc

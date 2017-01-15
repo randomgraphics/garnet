@@ -6,7 +6,7 @@ using namespace GN::input;
 using namespace GN::util;
 using namespace GN::util;
 
-static GN::Logger * sLogger = GN::GetLogger("GN.tool.meshViewer");
+static GN::Logger * sLogger = GN::getLogger("GN.tool.meshViewer");
 
 class MyApp : public SampleApp
 {
@@ -127,7 +127,7 @@ public:
 
     void onQuit()
     {
-        SafeDelete( mSprite );
+        safeDelete( mSprite );
         mContext.clear();
     }
 

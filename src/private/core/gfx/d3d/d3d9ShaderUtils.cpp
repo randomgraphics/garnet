@@ -2,7 +2,7 @@
 
 using namespace GN;
 
-static GN::Logger * sLogger = GN::GetLogger("GN.d3d9.d3d9ShaderUtils");
+static GN::Logger * sLogger = GN::getLogger("GN.d3d9.d3d9ShaderUtils");
 
 //
 //
@@ -60,7 +60,7 @@ static void sPrintShaderCompileErrorD3D9( HRESULT hr, const char * code, LPD3DXB
         "%s\n"
         "\n=========================================================\n",
         code ? sAddLineCountD3D9(code).rawptr() : "Shader code: <EMPTY>",
-        hr, GN::GetDXErrorInfo(hr),
+        hr, GN::getDXErrorInfo(hr),
         err ? (const char*)err->GetBufferPointer() : "Error: <EMPTY>" );
 
     GN_UNGUARD;

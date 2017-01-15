@@ -36,11 +36,15 @@ namespace GN
         {
         };
 
+
+
+
+
         class Entity : public NoCopy
         {
         };
 
-        /// Static mesh in the world
+        /// Static mesh in the wolrd
         /// It has physical, visual nodes
         class StaticMesh : public Entity
         {

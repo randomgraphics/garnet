@@ -4,7 +4,7 @@
 using namespace GN;
 using namespace GN::gfx;
 
-static GN::Logger * sLogger = GN::GetLogger("GN.gfx.gpures");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpures");
 
 // *****************************************************************************
 // Local stuff
@@ -95,15 +95,15 @@ void sSwapVertexEndianInplace(
                 case ColorFormat::LAYOUT_5_5_5_1 :
                 case ColorFormat::LAYOUT_5_6_5 :
                 case ColorFormat::LAYOUT_16 :
-                    Swap8In16( p, p, 1 );
+                    swap8in16( p, p, 1 );
                     break;
 
                 case ColorFormat::LAYOUT_16_16 :
-                    Swap8In16( p, p, 2 );
+                    swap8in16( p, p, 2 );
                     break;
 
                 case ColorFormat::LAYOUT_16_16_16_16 :
-                    Swap8In16( p, p, 4 );
+                    swap8in16( p, p, 4 );
                     break;
 
                 // 32 bits
@@ -111,19 +111,19 @@ void sSwapVertexEndianInplace(
                 case ColorFormat::LAYOUT_11_11_10 :
                 case ColorFormat::LAYOUT_10_10_10_2 :
                 case ColorFormat::LAYOUT_32 :
-                    Swap8In32( p, p, 1 );
+                    swap8in32( p, p, 1 );
                     break;
 
                 case ColorFormat::LAYOUT_32_32 :
-                    Swap8In32( p, p, 2 );
+                    swap8in32( p, p, 2 );
                     break;
 
                 case ColorFormat::LAYOUT_32_32_32 :
-                    Swap8In32( p, p, 3 );
+                    swap8in32( p, p, 3 );
                     break;
 
                 case ColorFormat::LAYOUT_32_32_32_32 :
-                    Swap8In32( p, p, 4 );
+                    swap8in32( p, p, 4 );
                     break;
 
                 // other cases
@@ -144,11 +144,11 @@ void sSwapIndexEndianInplace(
 {
     if( idx32 )
     {
-        Swap8In32( buffer, buffer, bufferSize / 4 );
+        swap8in32( buffer, buffer, bufferSize / 4 );
     }
     else
     {
-        Swap8In16( buffer, buffer, bufferSize / 2 );
+        swap8in16( buffer, buffer, bufferSize / 2 );
     }
 }
 

@@ -293,7 +293,7 @@ void arrow_keys ( int a_keys, int x, int y )  // Create Special Function (requir
 
 int main ( int argc, char** argv )   // Create Main Function For Bringing It All Together
 {
-    EnableCRTMemoryCheck();
+    enableCRTMemoryCheck();
     if( argc > 4 )
     {
         font_face = argv[1];

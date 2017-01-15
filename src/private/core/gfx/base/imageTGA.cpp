@@ -44,7 +44,7 @@ struct TGA_HEADER
 #pragma pack(pop)
 GN_CASSERT( sizeof(TGA_HEADER) == 18 );
 
-static GN::Logger * sLogger = GN::GetLogger("GN.gfx.base.image.TGA");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.base.image.TGA");
 
 // *****************************************************************************
 // local functions

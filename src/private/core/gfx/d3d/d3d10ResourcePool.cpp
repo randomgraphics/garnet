@@ -1,6 +1,6 @@
 #include "pch.h"
 
-static GN::Logger * sLogger = GN::GetLogger("GN.d3d10.ResourcePool");
+static GN::Logger * sLogger = GN::getLogger("GN.d3d10.ResourcePool");
 
 static const GUID POOL_PTR_GUID = { 0xc6f87514, 0x48b1, 0x4e3c, { 0x97, 0x6a, 0x20, 0xd4, 0xb4, 0x74, 0xe4, 0x34 } };
 

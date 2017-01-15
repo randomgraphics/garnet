@@ -75,7 +75,7 @@ namespace GN
             {
                 GN_ASSERT( mItems[i] );
                 if( mItems[i]->occupied ) mItems[i]->dtor();
-                mPool.Dealloc( mItems[i] );
+                mPool.dealloc( mItems[i] );
             }
             mItems.clear();
             mFreeList.clear();
@@ -144,10 +144,10 @@ namespace GN
         {
             if( mFreeList.empty() )
             {
-                Item * newItem = (Item*)mPool.Alloc();
+                Item * newItem = (Item*)mPool.alloc();
                 if( 0 == newItem )
                 {
-                    GN_ERROR(GetLogger("GN.base.HandleManager"))( "out of memory" );
+                    GN_ERROR(getLogger("GN.base.HandleManager"))( "out of memory" );
                     return 0;
                 }
                 newItem->occupied = false;
@@ -172,10 +172,10 @@ namespace GN
         {
             if( mFreeList.empty() )
             {
-                Item * newItem = (Item*)mPool.Alloc();
+                Item * newItem = (Item*)mPool.alloc();
                 if( 0 == newItem )
                 {
-                    GN_ERROR(GetLogger("GN.base.HandleManager"))( "out of memory" );
+                    GN_ERROR(getLogger("GN.base.HandleManager"))( "out of memory" );
                     return 0;
                 }
                 newItem->occupied = false;
@@ -200,7 +200,7 @@ namespace GN
         {
             if( !validHandle(h) )
             {
-                GN_ERROR(GetLogger("GN.base.HandleManager"))( "Invalid handle!" );
+                GN_ERROR(getLogger("GN.base.HandleManager"))( "Invalid handle!" );
                 return false;
             }
             else
@@ -308,7 +308,7 @@ namespace GN
         {
             for( H i = mItems.first(); i != 0; i = mItems.next( i ) )
             {
-                mPool.DestructAndFree( mItems[i] );
+                mPool.deconstructAndFree( mItems[i] );
             }
             mItems.clear();
             mNames.clear();
@@ -354,12 +354,12 @@ namespace GN
 
             if( NULL != mNames.find( name ) )
             {
-                GN_ERROR(GetLogger("GN.base.NamedHandleManager"))( "name '%s' is not unique.", name.rawptr() );
+                GN_ERROR(getLogger("GN.base.NamedHandleManager"))( "name '%s' is not unique.", name.rawptr() );
                 return 0;
             }
 
             // create new item
-            NamedItem * p = mPool.AllocUnconstructed();
+            NamedItem * p = mPool.allocUnconstructed();
             if( 0 == p ) return 0;
 
             H handle = mItems.newHandle();
@@ -386,11 +386,11 @@ namespace GN
 
             if( NULL != mNames.find( name ) )
             {
-                GN_ERROR(GetLogger("GN.base.NamedHandleManager"))( "name '%s' is not unique.", name.rawptr() );
+                GN_ERROR(getLogger("GN.base.NamedHandleManager"))( "name '%s' is not unique.", name.rawptr() );
                 return 0;
             }
 
-            NamedItem * p = mPool.AllocUnconstructed();
+            NamedItem * p = mPool.allocUnconstructed();
             if( 0 == p ) return 0;
 
             H handle = mItems.newHandle();
@@ -409,7 +409,7 @@ namespace GN
         {
             if( !validHandle( h ) )
             {
-                GN_ERROR(GetLogger("GN.base.NamedHandleManager"))( "invalid handle : %d.", h );
+                GN_ERROR(getLogger("GN.base.NamedHandleManager"))( "invalid handle : %d.", h );
                 return;
             }
 
@@ -420,7 +420,7 @@ namespace GN
 
             mItems.remove( item->handle );
 
-            mPool.DestructAndFree( item );
+            mPool.deconstructAndFree( item );
         }
 
         void remove( const StrA & name )
@@ -432,7 +432,7 @@ namespace GN
 
             if( !validName( name ) )
             {
-                GN_ERROR(GetLogger("GN.base.NamedHandleManager"))( "invalid name: %s.", name.rawptr() );
+                GN_ERROR(getLogger("GN.base.NamedHandleManager"))( "invalid name: %s.", name.rawptr() );
                 return;
             }
 
@@ -444,7 +444,7 @@ namespace GN
 
             mItems.remove( handle );
 
-            mPool.DestructAndFree( item );
+            mPool.deconstructAndFree( item );
         }
 
         bool validHandle( H h ) const

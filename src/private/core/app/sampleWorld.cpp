@@ -6,7 +6,7 @@ using namespace GN::gfx;
 using namespace GN::engine;
 using namespace GN::util;
 
-static GN::Logger * sLogger = GN::GetLogger("GN.util");
+static GN::Logger * sLogger = GN::getLogger("GN.util");
 
 // *****************************************************************************
 // Local Stuff
@@ -25,7 +25,7 @@ public:
 
     ~SampleSpacialEntity()
     {
-        SafeDecref( mComp );
+        safeDecref( mComp );
     }
 
     engine::SpacialComponent * spacial() const { return mComp; }
@@ -44,7 +44,7 @@ public:
 
     ~SampleVisualEntity()
     {
-        SafeDecref( mComp );
+        safeDecref( mComp );
     }
 
     engine::VisualComponent * visual() const { return mComp; }
@@ -181,7 +181,7 @@ void GN::util::SampleWorld::clear()
         delete i->value;
     }
     mEntities.clear();
-    SafeDelete( mRoot );
+    safeDelete( mRoot );
 }
 
 //

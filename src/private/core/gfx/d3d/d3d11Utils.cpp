@@ -3,7 +3,7 @@
 
 using namespace GN;
 using namespace GN::d3d11;
-static Logger * sLogger = GN::GetLogger("dxutils");
+static Logger * sLogger = GN::getLogger("dxutils");
 
 #ifndef IFC
 #define IFC(x) hr = (x); if (FAILED(hr)) { GN_ERROR(sLogger)(#x " Failed: hr=0x%08X", hr); goto Cleanup; }
@@ -152,7 +152,7 @@ GN_API GN::StrW GN::d3d11::hresult2string(HRESULT hr)
     else
     {
         // attempt to treat as a standard, system error, and ask FormatMessage to explain it.
-        strMessage = GetWin32ErrorInfoW(hr);
+        strMessage = getWin32ErrorInfoW(hr);
     }
     return strMessage;
 }
@@ -392,11 +392,11 @@ bool GN::d3d11::SimpleMesh::init( ID3D11DeviceContext & cxt )
 // -----------------------------------------------------------------------------
 void GN::d3d11::SimpleMesh::quit()
 {
-    SafeRelease( mDevice );
-    SafeRelease( mContext );
-    SafeRelease( mLayout );
-    SafeRelease( mVtxBuf );
-    SafeRelease( mIdxBuf );
+    safeRelease( mDevice );
+    safeRelease( mContext );
+    safeRelease( mLayout );
+    safeRelease( mVtxBuf );
+    safeRelease( mIdxBuf );
     clear();
 }
 // -----------------------------------------------------------------------------
@@ -457,7 +457,7 @@ void GN::d3d11::SimpleMesh::endVertices()
 
     if( mVtxBufCapacity < mVertices.size() )
     {
-        SafeRelease( mVtxBuf );
+        safeRelease( mVtxBuf );
         mVtxBufCapacity = 0;
 
         D3D11_BUFFER_DESC desc = {
@@ -516,7 +516,7 @@ void GN::d3d11::SimpleMesh::endTopology()
 
     if( mIdxBufCapacity < mIndices.size() )
     {
-        SafeRelease( mIdxBuf );
+        safeRelease( mIdxBuf );
         mIdxBufCapacity = 0;
 
         D3D11_BUFFER_DESC desc = {

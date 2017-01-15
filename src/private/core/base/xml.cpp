@@ -9,7 +9,7 @@
 #include <expat.h>
 #endif
 
-static GN::Logger * sLogger = GN::GetLogger("GN.base.xml");
+static GN::Logger * sLogger = GN::getLogger("GN.base.xml");
 
 // *****************************************************************************
 // XML print utilities
@@ -294,9 +294,9 @@ struct ParseTracer
 //
 //
 // -----------------------------------------------------------------------------
-static void * sXmlMalloc( size_t sz ) { return GN::HeapMemory::Alloc( sz ); }
-static void * sXmlRealloc( void * p, size_t sz ) { return GN::HeapMemory::Realloc( p, sz ); }
-static void sXmlFree( void * p ) { return GN::HeapMemory::Dealloc( p ); }
+static void * sXmlMalloc( size_t sz ) { return GN::HeapMemory::alloc( sz ); }
+static void * sXmlRealloc( void * p, size_t sz ) { return GN::HeapMemory::realloc( p, sz ); }
+static void sXmlFree( void * p ) { return GN::HeapMemory::dealloc( p ); }
 
 //
 //

@@ -3,7 +3,7 @@
 #include "xenonGpu.h"
 #include "garnet/GNd3d.h"
 
-static GN::Logger * sLogger = GN::GetLogger("GN.gfx.gpu.xenon");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.xenon");
 
 // *****************************************************************************
 // Initialize and shutdown
@@ -51,8 +51,8 @@ void GN::gfx::XenonGpuProgramASM::quit()
 {
     GN_GUARD;
 
-    SafeRelease( mVs );
-    SafeRelease( mPs );
+    safeRelease( mVs );
+    safeRelease( mPs );
 
     // standard quit procedure
     GN_STDCLASS_QUIT();

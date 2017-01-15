@@ -139,8 +139,8 @@ void GN::gfx::D3D11Gpu::contextQuit()
 
     mCurrentVertexLayout = NULL;
 
-    SafeDelete( mRTMgr );
-    SafeDelete( mSOMgr );
+    safeDelete( mRTMgr );
+    safeDelete( mSOMgr );
 
     mDefaultSampler.clear();
     mVertexLayouts.clear();

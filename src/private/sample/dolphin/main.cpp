@@ -6,7 +6,7 @@ using namespace GN::util;
 
 static const Vector4f WATER_COLOR( 0.0f, 0.25f, 0.5f, 1.0f );
 
-static GN::Logger * sLogger = GN::GetLogger("GN.sample.dolphin");
+static GN::Logger * sLogger = GN::getLogger("GN.sample.dolphin");
 
 class TestScene
 {
@@ -148,7 +148,7 @@ public:
 
     void onQuit()
     {
-        SafeDelete( scene );
+        safeDelete( scene );
     }
 
     void onKeyPress( input::KeyEvent key )

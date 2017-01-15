@@ -4,7 +4,7 @@
 
 #if HAS_ICONV
 
-static GN::Logger * sLogger = GN::GetLogger("GN.base.codepage");
+static GN::Logger * sLogger = GN::getLogger("GN.base.codepage");
 
 using namespace GN;
 
@@ -97,7 +97,7 @@ bool GN::CECImplICONV::init(
                 break;
 
             default:
-                GN_ERROR(sLogger)( "iconv_open() failed: errno=%d (%s).", err, ErrNo2Str(err) );
+                GN_ERROR(sLogger)( "iconv_open() failed: errno=%d (%s).", err, errno2str(err) );
                 break;
         };
 
@@ -179,7 +179,7 @@ GN::CECImplICONV::convert(
                 break;
 
             default :
-                reason = ErrNo2Str( err );
+                reason = errno2str( err );
                 break;
         }
 

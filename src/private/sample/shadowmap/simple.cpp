@@ -4,7 +4,7 @@
 using namespace GN::gfx;
 using namespace GN::util;
 
-static GN::Logger * sLogger = GN::GetLogger("GN.sample.ShadowMap");
+static GN::Logger * sLogger = GN::getLogger("GN.sample.ShadowMap");
 
 // *****************************************************************************
 // Initialize and shutdown

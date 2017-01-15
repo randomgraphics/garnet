@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "cmdbuf.h"
 
-static GN::Logger * sLogger = GN::GetLogger("GN.base.RingBuffer");
+static GN::Logger * sLogger = GN::getLogger("GN.base.RingBuffer");
 
 // *****************************************************************************
 // GN::CommandBuffer - Initialize and shutdown
@@ -26,7 +26,7 @@ bool GN::CommandBuffer::init( size_t bufferSize )
     }
 
     // allocate 16 byte aligned ring buffer (double sized, to handle rewind issue)
-    m_Buffer = (uint8*)HeapMemory::AlignedAlloc( bufferSize * 2, 16 );
+    m_Buffer = (uint8*)HeapMemory::alignedAlloc( bufferSize * 2, 16 );
     if( NULL == m_Buffer ) return failure();
     m_Size = bufferSize;
 
@@ -49,7 +49,7 @@ bool GN::CommandBuffer::init( size_t bufferSize )
 #if GN_COMMAND_BUFFER_BUILT_IN_FENCE
     // initialize fence array
     size_t maxFenceCount = m_Size / 16;
-    m_Fences = (FenceInternal*)HeapMemory::Alloc( maxFenceCount * sizeof(FenceInternal) );
+    m_Fences = (FenceInternal*)HeapMemory::alloc( maxFenceCount * sizeof(FenceInternal) );
     if( NULL == m_Fences ) return failure();
     for( size_t i = 0; i < maxFenceCount; ++i )
     {
@@ -87,7 +87,7 @@ void GN::CommandBuffer::quit()
     //  - Clear initialize flag
 
     // deallocate ring buffer
-	SafeHeapDealloc( m_Buffer );
+	safeHeapDealloc( m_Buffer );
 
 #if GN_COMMAND_BUFFER_BUILT_IN_FENCE
     // deallocate fence array
@@ -96,9 +96,9 @@ void GN::CommandBuffer::quit()
         size_t maxFenceCount = m_Size / 16;
         for( size_t i = 0; i < maxFenceCount; ++i )
         {
-            SafeDelete( m_Fences[i].event );
+            safeDelete( m_Fences[i].event );
         }
-        HeapMemory::Dealloc( m_Fences );
+        HeapMemory::dealloc( m_Fences );
         m_Fences = NULL;
         m_NextFreeFence = NULL;
     }

@@ -14,10 +14,10 @@ namespace GN
         template <typename T>
         struct IsClassHelper
         {
-            template <class U> static long IsClassTester(void(U::*)(void));
-            template <class U> static char IsClassTester(...);
+            template <class U> static long isClassTester(void(U::*)(void));
+            template <class U> static char isClassTester(...);
 
-            static const bool value = sizeof(IsClassTester<T>(0)) == sizeof(long);
+            static const bool value = sizeof(isClassTester<T>(0)) == sizeof(long);
         };
 
         template <typename FROM,typename TO>
@@ -32,12 +32,12 @@ namespace GN
             template <typename T> struct AddRef<T&> {typedef T & type; };
 
             static typename AddRef<FROM>::type mFrom;
-            static long IsConvertibleTester( typename NonRefToConstRef<TO>::type );
-            static char IsConvertibleTester(...);
+            static long isConvertibleTester( typename NonRefToConstRef<TO>::type );
+            static char isConvertibleTester(...);
 #if GN_ICL
 #pragma warning(disable:1595) // non-POD class type passed through ellipsis
 #endif
-            static const bool value = sizeof(IsConvertibleTester(mFrom)) == sizeof(long);
+            static const bool value = sizeof(isConvertibleTester(mFrom)) == sizeof(long);
 #if GN_ICL
 #pragma warning(default:1595)
 #endif

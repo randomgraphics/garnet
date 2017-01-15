@@ -4,7 +4,7 @@
 
 #if GN_WINPC
 
-static GN::Logger * sLogger = GN::GetLogger("GN.gfx.gpu.common");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.common");
 
 //
 //

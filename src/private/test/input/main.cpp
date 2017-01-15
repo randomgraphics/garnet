@@ -1,6 +1,6 @@
 #include "pch.h"
 
-static GN::Logger * sLogger = GN::GetLogger("GN.gfx.test.input");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.test.input");
 
 ///
 /// input module test application

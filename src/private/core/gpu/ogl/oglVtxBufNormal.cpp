@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "oglVtxBuf.h"
 
-static GN::Logger * sLogger = GN::GetLogger("GN.gfx.gpu.OGL.VtxBuf");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.OGL.VtxBuf");
 
 // *****************************************************************************
 // Initialize and shutdown
@@ -26,7 +26,7 @@ bool GN::gfx::OGLVtxBufNormal::init( const VtxBufDesc & desc )
     // store descriptor
     setDesc( desc );
 
-    mBuffer = (uint8*)HeapMemory::Alloc( desc.length );
+    mBuffer = (uint8*)HeapMemory::alloc( desc.length );
 
     // success
     return success();
@@ -41,7 +41,7 @@ void GN::gfx::OGLVtxBufNormal::quit()
 {
     GN_GUARD;
 
-    SafeHeapDealloc( mBuffer );
+    safeHeapDealloc( mBuffer );
 
     // standard quit procedure
     GN_STDCLASS_QUIT();

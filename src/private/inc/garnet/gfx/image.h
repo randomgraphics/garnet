@@ -77,7 +77,7 @@ namespace GN { namespace gfx
         //@{
 
         ImageDesc() : mipmaps(0) {}
-        ~ImageDesc() { SafeHeapDealloc( mipmaps ); }
+        ~ImageDesc() { safeHeapDealloc( mipmaps ); }
 
         //@}
 

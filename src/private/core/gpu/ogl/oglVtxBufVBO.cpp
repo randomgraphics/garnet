@@ -2,7 +2,7 @@
 #include "oglVtxBuf.h"
 #include "oglGpu.h"
 
-static GN::Logger * sLogger = GN::GetLogger("GN.gfx.gpu.OGL");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.OGL");
 
 // *****************************************************************************
 // Initialize and shutdown

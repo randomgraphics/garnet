@@ -2,7 +2,7 @@
 #include "mtvtxbuf.h"
 #include "mtgpuCmd.h"
 
-static GN::Logger * sLogger = GN::GetLogger("GN.gfx.util.gpu.mtvtxbuf");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.util.gpu.mtvtxbuf");
 
 // *****************************************************************************
 // Initialize and shutdown
@@ -72,7 +72,7 @@ void GN::gfx::MultiThreadVtxBuf::update( uint32 offset, uint32 length, const voi
     if( offset >= d.length ) return;
     if( 0 == length ) length = d.length - offset;
 
-    void * tmpbuf = HeapMemory::Alloc( length );
+    void * tmpbuf = HeapMemory::alloc( length );
     if( NULL == tmpbuf )
     {
         GN_ERROR(sLogger)( "fail to allocate temporary buffer." );
@@ -103,7 +103,7 @@ namespace GN { namespace gfx
     void func_VTXBUF_DESTROY( Gpu &, void * p, uint32 )
     {
         VtxBuf * vb = *(VtxBuf**)p;
-        vb->DecRef();
+        vb->decref();
     }
 
     //
@@ -124,7 +124,7 @@ namespace GN { namespace gfx
 
         vbup->vtxbuf->update( vbup->offset, vbup->length, vbup->data, vbup->flag );
 
-        HeapMemory::Dealloc( vbup->data );
+        HeapMemory::dealloc( vbup->data );
     }
 
     //

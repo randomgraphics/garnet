@@ -2,7 +2,7 @@
 #include "d3d11Gpu.h"
 #include "d3d11Texture.h"
 
-static GN::Logger * sLogger = GN::GetLogger("GN.gfx.gpu.D3D11");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.D3D11");
 
 // *****************************************************************************
 // local functions
@@ -113,7 +113,7 @@ void GN::gfx::D3D11Texture::quit()
     mSRViews.clear();
     mRTViews.clear();
     mDSViews.clear();
-    SafeRelease( mTexture );
+    safeRelease( mTexture );
 
     // standard quit procedure
     GN_STDCLASS_QUIT();

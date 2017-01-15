@@ -5,7 +5,7 @@
 #define SHLIB_LOAD( libName )          ((void*)LoadLibraryA(libName))
 #define SHLIB_UNLOAD( lib )            (!!FreeLibrary(HMODULE(lib)))
 #define SHLIB_LOAD_SYMBOL( lib, symb ) ((void*)GetProcAddress(HMODULE(lib), symb))
-#define SHLIB_ERROR()                  ::GN::GetWin32LastErrorInfo()
+#define SHLIB_ERROR()                  ::GN::getWin32LastErrorInfo()
 #define SHLIB_EXT                      ".dll"
 #elif GN_POSIX
 #include <dlfcn.h>
@@ -23,7 +23,7 @@
 #error "Unknown platform!"
 #endif
 
-static GN::Logger * sLogger = GN::GetLogger("GN.base.SharedLib");
+static GN::Logger * sLogger = GN::getLogger("GN.base.SharedLib");
 
 //
 //

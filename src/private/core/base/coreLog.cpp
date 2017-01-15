@@ -266,7 +266,7 @@ namespace GN
     ///
     struct ConsoleReceiver : public Logger::Receiver
     {
-        virtual void OnLog( Logger & logger, const Logger::LogDesc & desc, const char * msg )
+        virtual void onLog( Logger & logger, const Logger::LogDesc & desc, const char * msg )
         {
             if( getEnvBoolean( "GN_LOG_QUIET" ) ) return;
 
@@ -286,12 +286,12 @@ namespace GN
                     "\t%s\n\n",
                     sFormatPath(desc.file).rawptr(),
                     desc.line,
-                    logger.GetName(),
+                    logger.getName(),
                     sLevel2Str(desc.level).rawptr(),
                     msg );
             }
         };
-        virtual void OnLog( Logger & logger, const Logger::LogDesc & desc, const wchar_t * msg )
+        virtual void onLog( Logger & logger, const Logger::LogDesc & desc, const wchar_t * msg )
         {
             if( getEnvBoolean( "GN_LOG_QUIET" ) ) return;
 
@@ -311,7 +311,7 @@ namespace GN
                     "\t%S\n\n",
                     sFormatPath(desc.file).rawptr(),
                     desc.line,
-                    logger.GetName(),
+                    logger.getName(),
                     sLevel2Str(desc.level).rawptr(),
                     msg );
             }
@@ -363,7 +363,7 @@ namespace GN
             ::fprintf( af.fp, "</srlog>\n" );
         }
 
-        virtual void OnLog( Logger & logger, const Logger::LogDesc & desc, const char * msg )
+        virtual void onLog( Logger & logger, const Logger::LogDesc & desc, const char * msg )
         {
             AutoFile af( mFileName );
             if( !af.fp ) return;
@@ -374,11 +374,11 @@ namespace GN
                 "<log file=\"%s\" line=\"%d\" name=\"%s\" level=\"%s\"><![CDATA[%s]]></log>\n",
                 sFormatPath(desc.file).rawptr(),
                 desc.line,
-                logger.GetName(),
+                logger.getName(),
                 sLevel2Str(desc.level).rawptr(),
                 msg );
         }
-        virtual void OnLog( Logger & logger, const Logger::LogDesc & desc, const wchar_t * msg )
+        virtual void onLog( Logger & logger, const Logger::LogDesc & desc, const wchar_t * msg )
         {
             AutoFile af( mFileName );
             if( !af.fp ) return;
@@ -389,7 +389,7 @@ namespace GN
                 "<log file=\"%s\" line=\"%d\" name=\"%s\" level=\"%s\"><![CDATA[%S]]></log>\n",
                 sFormatPath(desc.file).rawptr(),
                 desc.line,
-                logger.GetName(),
+                logger.getName(),
                 sLevel2Str(desc.level).rawptr(),
                 msg );
         }
@@ -400,7 +400,7 @@ namespace GN
     ///
     class DebugReceiver : public Logger::Receiver
     {
-        virtual void OnLog( Logger & logger, const Logger::LogDesc & desc, const char * msg )
+        virtual void onLog( Logger & logger, const Logger::LogDesc & desc, const char * msg )
         {
 #if GN_MSWIN
             char buf[16384];
@@ -410,13 +410,13 @@ namespace GN
                 "%s(%d) : name(%s), level(%s) : %s\n",
                 sFormatPath(desc.file).rawptr(),
                 desc.line,
-                logger.GetName(),
+                logger.getName(),
                 sLevel2Str(desc.level).rawptr(),
                 msg );
             ::OutputDebugStringA( buf );
 #endif
         }
-        virtual void OnLog( Logger & logger, const Logger::LogDesc & desc, const wchar_t * msg )
+        virtual void onLog( Logger & logger, const Logger::LogDesc & desc, const wchar_t * msg )
         {
 #if GN_MSWIN
             if( NULL == msg ) msg = L"";
@@ -428,7 +428,7 @@ namespace GN
                 L"%S(%d) : name(%S), level(%S) : %s\n",
                 sFormatPath(desc.file).rawptr(),
                 desc.line,
-                logger.GetName(),
+                logger.getName(),
                 sLevel2Str(desc.level).rawptr(),
                 msg );
             ::OutputDebugStringW( buf );
@@ -451,63 +451,63 @@ namespace GN
 
         ~LoggerImpl()
         {
-            const char * name = GetName();
+            const char * name = getName();
 
             if( NULL != name && 0 != *name )
             {
-                GN::HeapMemory::Dealloc( (void*)name );
+                GN::HeapMemory::dealloc( (void*)name );
             }
         }
 
         void reapplyAttributes()
         {
-            recursiveUpdateLevel( GetLevel() );
-            recursiveUpdateEnabled( IsEnabled() );
+            recursiveUpdateLevel( getLevel() );
+            recursiveUpdateEnabled( isEnabled() );
         }
 
     public:
 
-        virtual void SetLevel( int level )
+        virtual void setLevel( int level )
         {
             ScopeMutex<LocalMutex> m(mGlobalMutex);
             recursiveUpdateLevel( level );
             mInheritLevel = false;
         }
 
-        virtual void SetEnabled( bool enabled )
+        virtual void setEnabled( bool enabled )
         {
             ScopeMutex<LocalMutex> m(mGlobalMutex);
             recursiveUpdateEnabled( enabled );
             mInheritEnabled = false;
         }
 
-        virtual void DoLog( const LogDesc & desc, const char * msg )
+        virtual void doLog( const LogDesc & desc, const char * msg )
         {
             ScopeMutex<LocalMutex> m(mGlobalMutex);
             recursiveLog( *this, desc, msg );
         }
 
-        virtual void DoLog( const LogDesc & desc, const wchar_t * msg )
+        virtual void doLog( const LogDesc & desc, const wchar_t * msg )
         {
             ScopeMutex<LocalMutex> m(mGlobalMutex);
             recursiveLog( *this, desc, msg );
         }
 
-        virtual void AddReceiver( Receiver * r )
+        virtual void addReceiver( Receiver * r )
         {
             ScopeMutex<LocalMutex> m(mGlobalMutex);
             if( 0 == r ) return;
             mReceivers.insert( r );
         }
 
-        virtual void RemoveReceiver( Receiver * r )
+        virtual void removeReceiver( Receiver * r )
         {
             ScopeMutex<LocalMutex> m(mGlobalMutex);
             if( 0 == r ) return;
             mReceivers.erase( r );
         }
 
-        virtual void RemoveAllReceivers()
+        virtual void removeAllReceivers()
         {
             ScopeMutex<LocalMutex> m(mGlobalMutex);
             mReceivers.clear();
@@ -531,7 +531,7 @@ namespace GN
             {
                 size_t n = strlen( name );
 
-                char * p = (char*)HeapMemory::Alloc( n + 1 );
+                char * p = (char*)HeapMemory::alloc( n + 1 );
 
                 if( p )
                 {
@@ -556,7 +556,7 @@ namespace GN
             // send msg to receivers
             for( std::set<Receiver*>::const_iterator i = mReceivers.begin(); i != mReceivers.end(); ++i )
             {
-                (*i)->OnLog( logger, desc, msg );
+                (*i)->onLog( logger, desc, msg );
             }
         }
 
@@ -606,14 +606,14 @@ namespace GN
             GN_ASSERT( n > 0 );
             StrA parent = name.subString( 0, n );
 
-            return GetLogger( parent.rawptr() );
+            return getLogger( parent.rawptr() );
         }
 
         void printLoggerTree( StrA & str, int level, LoggerImpl & logger )
         {
             // print itself
             for( int i = 0; i < level; ++i ) str.append( "  " );
-            str.append( str::format( "%s\n", logger.GetName() ) );
+            str.append( str::format( "%s\n", logger.getName() ) );
 
             // print children
             LoggerImpl * c = logger.firstChild();
@@ -629,18 +629,18 @@ namespace GN
         LoggerContainer() : mRootLogger("ROOT",mMutex)
         {
             // config root logger
-            mRootLogger.SetLevel( Logger::INFO );
-            mRootLogger.SetEnabled( true );
+            mRootLogger.setLevel( Logger::INFO );
+            mRootLogger.setEnabled( true );
 #if !GN_XBOX2
-            mRootLogger.AddReceiver( &mCr );
+            mRootLogger.addReceiver( &mCr );
 #endif
-            mRootLogger.AddReceiver( &mFr );
-            mRootLogger.AddReceiver( &mDr );
+            mRootLogger.addReceiver( &mFr );
+            mRootLogger.addReceiver( &mDr );
         }
 
         ~LoggerContainer()
         {
-            static Logger * sLogger = GetLogger("GN.core.LoggerContainer");
+            static Logger * sLogger = getLogger("GN.core.LoggerContainer");
             StrA loggerTree;
             GN_VERBOSE(sLogger)(
                 "\n"
@@ -655,7 +655,7 @@ namespace GN
             }
         }
 
-        LoggerImpl * GetLogger( const char * name )
+        LoggerImpl * getLogger( const char * name )
         {
             ScopeMutex<LocalMutex> m( mMutex );
 
@@ -700,9 +700,9 @@ namespace GN
     //
     // Implement global log function.
     // -------------------------------------------------------------------------
-    GN_API Logger * GetLogger( const char * name )
+    GN_API Logger * getLogger( const char * name )
     {
         LoggerContainer & lc = sGetLoggerContainer();
-        return lc.GetLogger( name );
+        return lc.getLogger( name );
     }
 }

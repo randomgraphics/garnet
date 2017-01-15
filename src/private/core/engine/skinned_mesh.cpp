@@ -5,7 +5,7 @@ using namespace GN;
 using namespace GN::gfx;
 using namespace GN::engine;
 
-static GN::Logger * sLogger = GN::GetLogger("GN.engine");
+static GN::Logger * sLogger = GN::getLogger("GN.engine");
 
 // *****************************************************************************
 // Local Stuff
@@ -633,16 +633,16 @@ void GN::engine::SkinnedMesh::clear()
     for( size_t i = 0; i < mSkeletons.size(); ++i )
     {
         Skeleton & sk = mSkeletons[i];
-        SafeHeapDealloc( sk.hierarchy );
+        safeHeapDealloc( sk.hierarchy );
         for( size_t j = 0; j < sk.jointCount; ++j )
         {
-            SafeDelete( sk.spacials[j] );
+            safeDelete( sk.spacials[j] );
         }
-        SafeHeapDealloc( sk.spacials );
-        SafeHeapDealloc( sk.bindPose );
-        SafeHeapDealloc( sk.invRestPose );
-        SafeHeapDealloc( sk.bind2rest );
-        SafeDecref( sk.matrices );
+        safeHeapDealloc( sk.spacials );
+        safeHeapDealloc( sk.bindPose );
+        safeHeapDealloc( sk.invRestPose );
+        safeHeapDealloc( sk.bind2rest );
+        safeDecref( sk.matrices );
     }
     mSkeletons.clear();
 
@@ -826,11 +826,11 @@ bool GN::engine::SkinnedMesh::loadFromFatModel( const GN::gfx::FatModel & fatmod
 
         Skeleton & dest = mSkeletons[i];
         dest.jointCount = source.joints.size();
-        dest.hierarchy = (JointHierarchy*)HeapMemory::Alloc( sizeof(JointHierarchy) * dest.jointCount );
-        dest.spacials = (SpacialComponent**)HeapMemory::Alloc( sizeof(void*) * dest.jointCount );
-        dest.bindPose = (JointBindPose*)HeapMemory::Alloc( sizeof(JointBindPose) * dest.jointCount );
-        dest.invRestPose = (Matrix44f*)HeapMemory::Alloc( sizeof(Matrix44f) * dest.jointCount );
-        dest.bind2rest = (Matrix44f*)HeapMemory::Alloc( sizeof(Matrix44f) * dest.jointCount );
+        dest.hierarchy = (JointHierarchy*)HeapMemory::alloc( sizeof(JointHierarchy) * dest.jointCount );
+        dest.spacials = (SpacialComponent**)HeapMemory::alloc( sizeof(void*) * dest.jointCount );
+        dest.bindPose = (JointBindPose*)HeapMemory::alloc( sizeof(JointBindPose) * dest.jointCount );
+        dest.invRestPose = (Matrix44f*)HeapMemory::alloc( sizeof(Matrix44f) * dest.jointCount );
+        dest.bind2rest = (Matrix44f*)HeapMemory::alloc( sizeof(Matrix44f) * dest.jointCount );
         if( !dest.hierarchy || !dest.spacials || !dest.bindPose || !dest.invRestPose || !dest.bind2rest )
         {
             GN_ERROR(sLogger)( "Fail to load skinned mesh from FatModel: out of memory." );

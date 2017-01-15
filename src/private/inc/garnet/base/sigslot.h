@@ -265,7 +265,7 @@ namespace GN
         }
     };
 
-    template<typename R PARAM_COMMA PARAM_TEMPLS> GN::Logger * SIGNAL_NAME<R PARAM_COMMA PARAM_TYPES>::sLogger = GetLogger("GN.base.Sigslot");
+    template<typename R PARAM_COMMA PARAM_TEMPLS> GN::Logger * SIGNAL_NAME<R PARAM_COMMA PARAM_TYPES>::sLogger = getLogger("GN.base.Sigslot");
 }
 
 #undef PARAM_TEMPLS_0

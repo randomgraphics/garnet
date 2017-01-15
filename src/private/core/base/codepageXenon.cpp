@@ -3,7 +3,7 @@
 
 #if GN_XBOX2
 
-static GN::Logger * sLogger = GN::GetLogger("GN.base.codepage");
+static GN::Logger * sLogger = GN::getLogger("GN.base.codepage");
 
 using namespace GN;
 

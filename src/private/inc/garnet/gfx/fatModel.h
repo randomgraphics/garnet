@@ -92,7 +92,7 @@ namespace GN { namespace gfx
             {
                 if( mElements[i] )
                 {
-                    HeapMemory::Dealloc( mElements[i] );
+                    HeapMemory::dealloc( mElements[i] );
                     mElements[i] = NULL;
                 }
             }

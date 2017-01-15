@@ -39,9 +39,9 @@ bool init()
 
 void quit()
 {
-    SafeDelete( box );
-    SafeDelete( robot );
-    SafeDelete( root );
+    safeDelete( box );
+    safeDelete( robot );
+    safeDelete( root );
 }
 
 void draw()
@@ -56,7 +56,7 @@ bool run()
     bool gogogo = true;
 
     FpsCalculator fps;
-    GetLogger("GN.util.fps")->SetLevel( Logger::VERBOSE ); // enable FPS logger
+    getLogger("GN.util.fps")->setLevel( Logger::VERBOSE ); // enable FPS logger
 
     while( gogogo )
     {
@@ -85,7 +85,7 @@ bool run()
 
 int main( int argc, const char * argv[] )
 {
-    EnableCRTMemoryCheck();
+    enableCRTMemoryCheck();
 
     CommandLineArguments cmdargs( argc, argv );
     switch( cmdargs.status )

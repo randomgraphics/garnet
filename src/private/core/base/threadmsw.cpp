@@ -4,7 +4,7 @@
 
 #include <process.h>
 
-static GN::Logger * sLogger = GN::GetLogger("GN.base.Thread");
+static GN::Logger * sLogger = GN::getLogger("GN.base.Thread");
 
 using namespace GN;
 
@@ -188,12 +188,12 @@ public:
 #if GN_XBOX2
         if( (DWORD)-1 == XSetThreadProcessor( mHandle, hardwareThread ) )
         {
-            GN_ERROR(sLogger)( "fail to set thread affinity: %s", GetWin32LastErrorInfo() );
+            GN_ERROR(sLogger)( "fail to set thread affinity: %s", getWin32LastErrorInfo() );
         }
 #else
         if( (DWORD)-1 == SetThreadIdealProcessor( mHandle, hardwareThread ) )
         {
-            GN_ERROR(sLogger)( "fail to set thread affinity: %s", GetWin32LastErrorInfo() );
+            GN_ERROR(sLogger)( "fail to set thread affinity: %s", getWin32LastErrorInfo() );
         }
 #endif
     }
@@ -230,7 +230,7 @@ public:
         else
         {
             // The thread is killed before the thread procedure returns.
-            GN_ERROR(sLogger)( GetWin32LastErrorInfo() );
+            GN_ERROR(sLogger)( getWin32LastErrorInfo() );
             return WaitResult::KILLED;
         }
     }
@@ -315,7 +315,7 @@ struct ThreadMsw : public DoubleLink
             if( !thread->mInitEvents[i] )
             {
                 delete thread;
-                GN_ERROR(sLogger)( "Fail to create init event for the thread: %s.", GetWin32LastErrorInfo() );
+                GN_ERROR(sLogger)( "Fail to create init event for the thread: %s.", getWin32LastErrorInfo() );
                 return 0;
             }
         }
@@ -333,7 +333,7 @@ struct ThreadMsw : public DoubleLink
         if( 0 == thread->mNativeHandle )
         {
             delete thread;
-            GN_ERROR(sLogger)( "_beginthreadex() failed: %s.", GetWin32LastErrorInfo() );
+            GN_ERROR(sLogger)( "_beginthreadex() failed: %s.", getWin32LastErrorInfo() );
             return 0;
         }
 
@@ -588,7 +588,7 @@ Thread::Identifier ThreadMsw::sAttachToCurrentThread()
     thread->mInitEvents[0] = ::CreateEvent( NULL, FALSE, FALSE, NULL );
     if( !thread->mInitEvents[0] )
     {
-        GN_ERROR(sLogger)( "Fail to create init event for the thread: %s.", GetWin32LastErrorInfo() );
+        GN_ERROR(sLogger)( "Fail to create init event for the thread: %s.", getWin32LastErrorInfo() );
         delete thread;
         return 0;
     }
@@ -597,7 +597,7 @@ Thread::Identifier ThreadMsw::sAttachToCurrentThread()
     thread->mNativeHandle = OpenThread( SYNCHRONIZE | THREAD_TERMINATE, FALSE, thread->mNativeID );
     if( !thread->mNativeHandle )
     {
-        GN_ERROR(sLogger)( "Fail to open thread %d: %s", thread->mNativeID, GetWin32LastErrorInfo() );
+        GN_ERROR(sLogger)( "Fail to open thread %d: %s", thread->mNativeID, getWin32LastErrorInfo() );
         delete thread;
         return 0;
     }
@@ -611,7 +611,7 @@ Thread::Identifier ThreadMsw::sAttachToCurrentThread()
         0, // no flags
         0 ) )
     {
-        GN_ERROR(sLogger)( "Fail to create utility thread: %s.", GetWin32LastErrorInfo() );
+        GN_ERROR(sLogger)( "Fail to create utility thread: %s.", getWin32LastErrorInfo() );
         delete thread;
         return 0;
     }
@@ -745,7 +745,7 @@ GN_API GN::WaitResult GN::Thread::sWaitForTermination(
     }
     else
     {
-        GN_ERROR(sLogger)( GetWin32LastErrorInfo() );
+        GN_ERROR(sLogger)( getWin32LastErrorInfo() );
         return WaitResult::FAILED;
     }
 }

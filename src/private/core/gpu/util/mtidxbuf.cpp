@@ -2,7 +2,7 @@
 #include "mtidxbuf.h"
 #include "mtgpuCmd.h"
 
-static GN::Logger * sLogger = GN::GetLogger("GN.gfx.util.gpu.mtidxbuf");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.util.gpu.mtidxbuf");
 
 // *****************************************************************************
 // Initialize and shutdown
@@ -74,7 +74,7 @@ void GN::gfx::MultiThreadIdxBuf::update( uint32 startidx, uint32 numidx, const v
 
     uint32 length = numidx * (d.bits32?4:2);
 
-    void * tmpbuf = HeapMemory::Alloc( length );
+    void * tmpbuf = HeapMemory::alloc( length );
     if( NULL == tmpbuf )
     {
         GN_ERROR(sLogger)( "fail to allocate temporary buffer." );
@@ -105,7 +105,7 @@ namespace GN { namespace gfx
     void func_IDXBUF_DESTROY( Gpu &, void * p, uint32 )
     {
         IdxBuf * ib = *(IdxBuf**)p;
-        ib->DecRef();
+        ib->decref();
     }
 
     //
@@ -126,7 +126,7 @@ namespace GN { namespace gfx
 
         vbup->idxbuf->update( vbup->offset, vbup->length, vbup->data, vbup->flag );
 
-        HeapMemory::Dealloc( vbup->data );
+        HeapMemory::dealloc( vbup->data );
     }
 
     //

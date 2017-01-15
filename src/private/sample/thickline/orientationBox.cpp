@@ -9,7 +9,7 @@ using namespace GN::d3d9;
 // utilities
 // *****************************************************************************
 
-static GN::Logger * sLogger = GN::GetLogger("GN.gfx.orientationbox");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.orientationbox");
 
 //
 //

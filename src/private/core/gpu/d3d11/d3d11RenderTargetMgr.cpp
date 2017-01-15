@@ -3,7 +3,7 @@
 #include "d3d11RenderTargetMgr.h"
 #include "d3d11Texture.h"
 
-static GN::Logger * sLogger = GN::GetLogger("GN.gfx.gpu.D3D11");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.D3D11");
 
 // *****************************************************************************
 // Initialize and shutdown
@@ -68,9 +68,9 @@ void GN::gfx::D3D11RTMgr::quit()
 {
     GN_GUARD;
 
-    SafeRelease( mAutoColor0 );
-    SafeRelease( mAutoDepthTexture );
-    SafeRelease( mAutoDepth );
+    safeRelease( mAutoColor0 );
+    safeRelease( mAutoDepthTexture );
+    safeRelease( mAutoDepth );
 
     // standard quit procedure
     GN_STDCLASS_QUIT();

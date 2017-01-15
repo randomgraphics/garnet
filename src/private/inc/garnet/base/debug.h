@@ -13,7 +13,7 @@
     if( true ) {                                                 \
         static bool sIgnoredForever = false;                     \
         if( !sIgnoredForever ) {                                 \
-            GN::internal::HandleAssertFailure(                   \
+            GN::internal::handleAssertFailure(                   \
                 desc, __FILE__, __LINE__, &sIgnoredForever );    \
         }                                                        \
     } else void(0)
@@ -73,12 +73,12 @@
 ///
 /// Output a warning message for unimplemented functionality
 ///
-#define GN_UNIMPL_WARNING() GN_DO_ONCE( GN_WARN(GN::GetLogger("GN.base.todo"))( "TODO: function %s is not implmented yet.", GN_FUNCTION ) );
+#define GN_UNIMPL_WARNING() GN_DO_ONCE( GN_WARN(GN::getLogger("GN.base.todo"))( "TODO: function %s is not implmented yet.", GN_FUNCTION ) );
 
 ///
 /// Output a todo message.
 ///
-#define GN_TODO(msg) GN_DO_ONCE( GN_WARN(GN::GetLogger("GN.base.todo"))( "TODO: %s", msg ) );
+#define GN_TODO(msg) GN_DO_ONCE( GN_WARN(GN::getLogger("GN.base.todo"))( "TODO: %s", msg ) );
 
 // *****************************************************************************
 /// \name error check macros
@@ -92,7 +92,7 @@
         GLenum err = glGetError();                                          \
         if( GL_NO_ERROR != err )                                            \
         {                                                                   \
-            static GN::Logger * sLogger = GN::GetLogger("GN.gfx.OGLError"); \
+            static GN::Logger * sLogger = GN::getLogger("GN.gfx.OGLError"); \
             GN_ERROR(sLogger)( "%s%s!", errDesc,                            \
                 (const char*)::gluErrorString(err) );                       \
             GN_UNEXPECTED();                                                \
@@ -123,8 +123,8 @@
         intptr_t rr = (intptr_t)(func);                                         \
         if( 0 == rr )                                                           \
         {                                                                       \
-            static GN::Logger * sMswLogger = GN::GetLogger("GN.base.MSWError"); \
-            GN_ERROR(sMswLogger)( ::GN::GetWin32LastErrorInfo() );              \
+            static GN::Logger * sMswLogger = GN::getLogger("GN.base.MSWError"); \
+            GN_ERROR(sMswLogger)( ::GN::getWin32LastErrorInfo() );              \
             something                                                           \
         }                                                                       \
     } else void(0)
@@ -159,8 +159,8 @@
         HRESULT hr = func;                                                    \
         if( FAILED(hr) )                                                      \
         {                                                                     \
-            static GN::Logger * sDxLogger = GN::GetLogger("GN.gfx.DXError");  \
-            GN_ERROR(sDxLogger)( GN::GetDXErrorInfo(hr) );                    \
+            static GN::Logger * sDxLogger = GN::getLogger("GN.gfx.DXError");  \
+            GN_ERROR(sDxLogger)( GN::getDXErrorInfo(hr) );                    \
             something                                                         \
         }                                                                     \
     } else void(0)
@@ -193,7 +193,7 @@
         Status rr = (func);                                 \
         if( 0 == rr )                                       \
         {                                                   \
-            static GN::Logger * sXLogger = GN::GetLogger("GN.gfx.XLibError"); \
+            static GN::Logger * sXLogger = GN::getLogger("GN.gfx.XLibError"); \
             GN_ERROR(sXLogger)( "XLib function %s failed: return(0x%X).", #func, rr );  \
             something                                       \
         }                                                   \
@@ -253,12 +253,12 @@ namespace GN
     /// \return
     ///     Return old behavior.
     ///
-    GN_API RuntimeAssertBehavior SetRuntimeAssertBehavior( RuntimeAssertBehavior );
+    GN_API RuntimeAssertBehavior setRuntimeAssertBehavior( RuntimeAssertBehavior );
 
     ///
     /// Set the assert failure routine. Return the current routine.
     ///
-    GN_API void SetAssertFailerUserRoutine(
+    GN_API void setAssertFailerUserRoutine(
         AssertFailuerUserRoutine   newRoutine,
         void                     * newUserContext,
         AssertFailuerUserRoutine * oldRoutine = NULL,
@@ -267,36 +267,36 @@ namespace GN
 	///
 	/// Debug break function
 	///
-	GN_API void BreakIntoDebugger();
+	GN_API void breakIntoDebugger();
 
 #if GN_MSWIN
 
     ///
     /// get OS error info (Windows specific)
     ///
-    GN_API const char * GetWin32ErrorInfo( uint32 win32ErrorCode ) throw();
+    GN_API const char * getWin32ErrorInfo( uint32 win32ErrorCode ) throw();
 
     ///
     /// get OS error info (Windows specific)
     ///
-    GN_API const wchar_t * GetWin32ErrorInfoW( uint32 win32ErrorCode ) throw();
+    GN_API const wchar_t * getWin32ErrorInfoW( uint32 win32ErrorCode ) throw();
 
     ///
     /// get OS error info (Windows specific)
     ///
-    GN_API const char * GetWin32LastErrorInfo() throw();
+    GN_API const char * getWin32LastErrorInfo() throw();
 
 #endif
 
     ///
     /// get DX error string
     ///
-    GN_API const char * GetDXErrorInfo( sint32 hr ) throw();
+    GN_API const char * getDXErrorInfo( sint32 hr ) throw();
 
     ///
     /// convert errno value to string
     ///
-    GN_API const char * ErrNo2Str( int );
+    GN_API const char * errno2str( int );
 
     namespace internal
     {
@@ -304,7 +304,7 @@ namespace GN
         /// Handle assert failure
         ///
         GN_API void
-        HandleAssertFailure(
+        handleAssertFailure(
             const char * msg,
             const char * file,
             int          line,

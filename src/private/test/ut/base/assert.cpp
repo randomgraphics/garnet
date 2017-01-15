@@ -27,8 +27,8 @@ public:
         GN::AssertFailuerUserRoutine oldr;
         void                       * oldc;
 
-        oldb = GN::SetRuntimeAssertBehavior( GN::RAB_CALL_USER_ROUTINE );
-        GN::SetAssertFailerUserRoutine( OnAssertFail, this, &oldr, &oldc );
+        oldb = GN::setRuntimeAssertBehavior( GN::RAB_CALL_USER_ROUTINE );
+        GN::setAssertFailerUserRoutine( OnAssertFail, this, &oldr, &oldc );
 
         context = NULL;
 
@@ -36,7 +36,7 @@ public:
 
         TS_ASSERT_EQUALS( context, this );
 
-        GN::SetRuntimeAssertBehavior( oldb );
-        GN::SetAssertFailerUserRoutine( oldr, oldc );
+        GN::setRuntimeAssertBehavior( oldb );
+        GN::setAssertFailerUserRoutine( oldr, oldc );
     }
 };

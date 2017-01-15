@@ -6,7 +6,7 @@ using namespace GN;
 using namespace GN::input;
 using namespace GN::util;
 
-static GN::Logger * sLogger = GN::GetLogger("GN.util.FirstPersonCamera");
+static GN::Logger * sLogger = GN::getLogger("GN.util.FirstPersonCamera");
 
 // *****************************************************************************
 // local functions

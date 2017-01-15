@@ -2,7 +2,7 @@
 #include "mttexture.h"
 #include "mtgpuCmd.h"
 
-static GN::Logger * sLogger = GN::GetLogger("GN.gfx.util.gpu.mttexture");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.util.gpu.mttexture");
 
 using namespace GN;
 using namespace GN::gfx;
@@ -101,7 +101,7 @@ void GN::gfx::MultiThreadTexture::updateMipmap(
 
     uint32 dataSize = slicePitch * mipsize.z;
 
-    void * tmpbuf = HeapMemory::Alloc( dataSize );
+    void * tmpbuf = HeapMemory::alloc( dataSize );
     if( NULL == tmpbuf )
     {
         GN_ERROR(sLogger)( "fail to allocate temporary data buffer." );
@@ -189,7 +189,7 @@ namespace GN { namespace gfx
     void func_TEXTURE_DESTROY( Gpu &, void * p, uint32 )
     {
         Texture ** tex = (Texture**)p;
-        (*tex)->DecRef();
+        (*tex)->decref();
     }
 
     //
@@ -208,7 +208,7 @@ namespace GN { namespace gfx
             ump->data,
             ump->flag );
 
-        HeapMemory::Dealloc( ump->data );
+        HeapMemory::dealloc( ump->data );
     }
 
     //

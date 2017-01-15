@@ -7,7 +7,7 @@ GN_IMPLEMENT_CROSS_DLL_SINGLETON( GN::input::Input )
 
 namespace GN
 {
-    static Logger * sHeapLogger = GetLogger("GN.core.heapAllocation");
+    static Logger * sHeapLogger = getLogger("GN.core.heapAllocation");
 
     const char TAG[] = "garnet3d_memory";
     GN_CASSERT( sizeof(TAG) == 16 );
@@ -31,23 +31,23 @@ namespace GN
     //
     //
     // -----------------------------------------------------------------------------
-    GN_API void * HeapMemory::Alloc( size_t sz )
+    GN_API void * HeapMemory::alloc( size_t sz )
     {
-        return HeapMemory::AlignedAlloc( sz, 0 );
+        return HeapMemory::alignedAlloc( sz, 0 );
     }
 
     //
     //
     // -----------------------------------------------------------------------------
-    GN_API void * HeapMemory::Realloc( void * ptr, size_t sz )
+    GN_API void * HeapMemory::realloc( void * ptr, size_t sz )
     {
-        return HeapMemory::AlignedRealloc( ptr, sz, 0 );
+        return HeapMemory::alignedRealloc( ptr, sz, 0 );
     }
 
     //
     //
     // -----------------------------------------------------------------------------
-    GN_API void * HeapMemory::AlignedAlloc( size_t sizeInBytes, size_t alignment )
+    GN_API void * HeapMemory::alignedAlloc( size_t sizeInBytes, size_t alignment )
     {
         if( 0 == alignment ) alignment = sizeof(size_t);
 #if GN_POSIX
@@ -65,7 +65,7 @@ namespace GN
     //
     //
     // -----------------------------------------------------------------------------
-    GN_API void * HeapMemory::AlignedRealloc( void * ptr, size_t sizeInBytes, size_t alignment )
+    GN_API void * HeapMemory::alignedRealloc( void * ptr, size_t sizeInBytes, size_t alignment )
     {
         if( 0 == alignment ) alignment = sizeof(size_t);
 #if GN_POSIX
@@ -80,7 +80,7 @@ namespace GN
     //
     //
     // -----------------------------------------------------------------------------
-    GN_API void HeapMemory::Dealloc( void * ptr )
+    GN_API void HeapMemory::dealloc( void * ptr )
     {
 #if GN_POSIX
         return ::free( ptr );

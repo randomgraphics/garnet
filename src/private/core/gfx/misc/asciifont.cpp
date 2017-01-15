@@ -4,7 +4,7 @@
 using namespace GN;
 using namespace GN::gfx;
 
-static GN::Logger * sLogger = GN::GetLogger("GN.gfx.AsciiFont");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.AsciiFont");
 
 // *****************************************************************************
 // ascii font face class

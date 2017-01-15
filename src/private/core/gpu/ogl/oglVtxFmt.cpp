@@ -5,7 +5,7 @@
 
 using namespace GN::gfx;
 
-static GN::Logger * sLogger = GN::GetLogger("GN.gfx.gpu.OGL.VtxFmt");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.OGL.VtxFmt");
 
 // *****************************************************************************
 // Initialize and shutdown

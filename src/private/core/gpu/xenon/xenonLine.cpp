@@ -22,7 +22,7 @@ static const D3DVERTEXELEMENT9 sDecl[] =
     D3DDECL_END()
 };
 
-static GN::Logger * sLogger = GN::GetLogger("GN.gfx.gpu.xenon");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.xenon");
 
 // *****************************************************************************
 // Initialize and shutdown
@@ -89,10 +89,10 @@ void GN::gfx::XenonLine::quit()
 {
     GN_GUARD;
 
-    SafeRelease( mVtxBuf );
-    SafeRelease( mDecl );
-    SafeRelease( mVtxShader );
-    SafeRelease( mPxlShader );
+    safeRelease( mVtxBuf );
+    safeRelease( mDecl );
+    safeRelease( mVtxShader );
+    safeRelease( mPxlShader );
 
     // standard quit procedure
     GN_STDCLASS_QUIT();

@@ -56,7 +56,7 @@ void GN::gfx::XenonGpu::contextQuit()
     mVertexFormats.clear();
     mCurrentDecl = 0;
 
-    //SafeDelete( mRTMgr );
+    //safeDelete( mRTMgr );
 
     GN_UNGUARD;
 }

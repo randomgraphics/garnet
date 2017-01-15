@@ -4,7 +4,7 @@
 using namespace GN;
 using namespace GN::gfx;
 
-//static GN::Logger * sLogger = GN::GetLogger("GN.gfx.gpures");
+//static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpures");
 
 // *****************************************************************************
 // GN::gfx::UniformResource

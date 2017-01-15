@@ -99,8 +99,8 @@ public:
         mDevcxt.IASetVertexBuffers( 0, 1, &mOldVB, &mOldStride, &mOldVBOffset );
         mDevcxt.IASetIndexBuffer( mOldIB, mOldFormat, mOldIBOffset );
 
-        GN::SafeRelease( mOldVB );
-        GN::SafeRelease( mOldIB );
+        GN::safeRelease( mOldVB );
+        GN::safeRelease( mOldIB );
     }
 };
 
@@ -121,8 +121,8 @@ bool GN::gfx::D3D11Gpu::drawInit()
 // -----------------------------------------------------------------------------
 void GN::gfx::D3D11Gpu::drawQuit()
 {
-    SafeRelease( mUserVB );
-    SafeRelease( mUserIB );
+    safeRelease( mUserVB );
+    safeRelease( mUserIB );
 }
 
 // *****************************************************************************

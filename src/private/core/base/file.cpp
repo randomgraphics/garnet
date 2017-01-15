@@ -2,7 +2,7 @@
 
 using namespace GN;
 
-static Logger * sLogger = GetLogger("GN.base.File");
+static Logger * sLogger = getLogger("GN.base.File");
 
 static FILE * sOpenFile( const char * filename, const char * mode )
 {
@@ -20,7 +20,7 @@ static FILE * sOpenFile( const char * filename, const char * mode )
             "fopen() fail to open file '%s' with mode '%s' : %s.",
             filename,
             mode,
-            GN::ErrNo2Str( errno ) );
+            GN::errno2str( errno ) );
     }
 
     return fp;
@@ -374,7 +374,7 @@ GN_API bool GN::TempFile::open( const StrA & prefix, const StrA & mode, Behavior
     if( 0 == fp )
     {
         GN_ERROR(sLogger)( "fail to open file '%s' with mode '%s' : %s",
-            fileNameTempl.rawptr(), mode.rawptr(), ErrNo2Str( errno ) );
+            fileNameTempl.rawptr(), mode.rawptr(), errno2str( errno ) );
         close();
         return false;
     }

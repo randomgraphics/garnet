@@ -37,14 +37,14 @@ namespace GN
         /// ctor
         explicit SimpleBlob( uint32 sz )
         {
-            mBuffer = HeapMemory::AlignedAlloc( sz, 16 );
+            mBuffer = HeapMemory::alignedAlloc( sz, 16 );
             mSize = (NULL != mBuffer) ? sz : 0;
         }
 
         /// dtor
         virtual ~SimpleBlob()
         {
-           HeapMemory::Dealloc( mBuffer );
+           HeapMemory::dealloc( mBuffer );
            mBuffer = 0;
            mSize = 0;
         }

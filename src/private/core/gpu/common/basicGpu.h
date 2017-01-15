@@ -207,7 +207,7 @@ namespace GN { namespace gfx
             {
                 if( !colortargets[i].texture )
                 {
-                    GN_ERROR(GN::GetLogger("GN.gfx"))(
+                    GN_ERROR(GN::getLogger("GN.gfx"))(
                         "NULL color render targets in render target array is not allowed." );
                     return false;
                 }

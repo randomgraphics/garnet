@@ -2,7 +2,7 @@
 #include "d3d11Gpu.h"
 #include <mtgpu.h>
 
-static GN::Logger * sLogger = GN::GetLogger("GN.gfx.gpu.D3D11");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.D3D11");
 
 // *****************************************************************************
 // GPU creator

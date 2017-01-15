@@ -64,7 +64,7 @@ public:
         , status( CONTINUE_EXECUTION )
         , extraArgc(0)
         , extraArgv(NULL)
-        , logger(GN::GetLogger( "GN.test.CommandLineArguments" ))
+        , logger(GN::getLogger( "GN.test.CommandLineArguments" ))
     {
     }
 #else
@@ -74,7 +74,7 @@ public:
         , status( INVALID_COMMAND_LINE )
         , extraArgc(0)
         , extraArgv(NULL)
-        , logger(GN::GetLogger( "GN.test.CommandLineArguments" ))
+        , logger(GN::getLogger( "GN.test.CommandLineArguments" ))
     {
         status = parseCommandLine( argc, argv );
 

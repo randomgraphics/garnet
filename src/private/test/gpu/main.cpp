@@ -160,7 +160,7 @@ int run( Gpu & gpu )
     bool gogogo = true;
 
     FpsCalculator fps;
-    GetLogger("GN.util.fps")->SetLevel( Logger::VERBOSE ); // enable FPS logger
+    getLogger("GN.util.fps")->setLevel( Logger::VERBOSE ); // enable FPS logger
 
     while( gogogo )
     {
@@ -213,7 +213,7 @@ void showHelp( CommandLineArguments & ca )
 
 int main( int argc, const char * argv[] )
 {
-    EnableCRTMemoryCheck();
+    enableCRTMemoryCheck();
 
     CommandLineArguments cmdargs( argc, argv );
     switch( cmdargs.status )

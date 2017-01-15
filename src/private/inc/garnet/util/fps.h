@@ -71,7 +71,7 @@ namespace GN { namespace util
                 mFpsString.format( mFormatString.rawptr(), mFpsValue );
                 mLastCheckPoint = mCurrentTime;
                 mFrameCounter = 0;
-                static Logger * sLogger = GetLogger("GN.util.fps");
+                static Logger * sLogger = getLogger("GN.util.fps");
                 GN_VERBOSE(sLogger)( "FPS: %f", mFpsValue );
             }
             else if( mBeforeFirstUpdate )
