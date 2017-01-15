@@ -274,7 +274,7 @@ def UTIL_new_env_ex( conf ):
         libs['profile']       += Split('xapilibi d3d9i d3dx9  xgraphics  xnet  xaudio2  xacti3 vcomp  libcmt')
         libs['retail']        += Split('xapilib  d3d9  d3dx9  xgraphics  xnet  xaudio2  xact3  vcomp  libcmt')
     elif 'mswin' == BUILD_TARGET_OS:
-        ccflags['debug']      += ['/RTCscu']
+        ccflags['debug']      += ['/RTCsu']
         libs['common']        += Split('kernel32 user32 gdi32 shlwapi advapi32 shell32')
     elif 'xbox3' == BUILD_TARGET_OS:
         cppdefines['common']  += [
