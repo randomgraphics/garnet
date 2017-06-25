@@ -1,8 +1,8 @@
-#!/usr/bin/bash
+#!/bin/bash
 # ======================================
 # detect garnet root directory
 # ======================================
-GARNET_ROOT=$(cd $(dirname $(dirname ${BASH_SOURCE[0]})); pwd)
+GARNET_ROOT=$(cd $(dirname $(pwd)/${BASH_SOURCE[0]})/..; pwd)
 
 # ===========================
 # setup build variants
@@ -12,14 +12,15 @@ if [ ${OSTYPE} = "cygwin" ] ; then
 else
     export GN_BUILD_TARGET_OS=posix
 fi
-export GN_BUILD_TARGET_CPU=x86
+# TODO: parse command line arguments
+export GN_BUILD_TARGET_CPU=x64
 export GN_BUILD_COMPILER=gcc
 export GN_BUILD_VARIANT=debug
 
 # ===========
 # setup scons
 # ===========
-SCONS_ROOT=${GARNET_ROOT}/env/scons/2.2.0
+SCONS_ROOT=${GARNET_ROOT}/env/scons/2.4.1
 SCONS_LIB_DIR=${SCONS_ROOT}/engine
 export SCONS_ROOT
 export PATH SCONS_LIB_DIR
@@ -29,31 +30,22 @@ echo SCons Directory: ${SCONS_ROOT}
 # ===========
 # setup alias
 # ===========
+while read -r line
+do
+    line="${line/\$\*/}"  # remove $*
+    line="${line//\\/\/}"  # replace "\" with "/"
+    line="${line/cd \/d/cd}" # replace "cd /d" with "cd"
 
-alias ls='ls --color=auto -F'
-alias dir='ls'
-alias ll='ls -l'
-alias v='ls -l'
-alias gnroot="cd ${GARNET_ROOT}/"
-alias gnbld="cd ${GARNET_ROOT}/build.tmp/${GN_BUILD_TARGET_OS}.${GN_BUILD_TARGET_CPU}.${GN_BUILD_COMPILER}.${GN_BUILD_VARIANT}/bin/"
-alias gnsrc="cd ${GARNET_ROOT}/src/"
-alias gnext="cd ${GARNET_ROOT}/src/extern/"
-alias gnpriv="cd ${GARNET_ROOT}/src/priv/"
-alias gninc="cd ${GARNET_ROOT}/src/priv/inc/garnet/"
-alias gncore="cd ${GARNET_ROOT}/src/priv/core/"
-alias gnbase="cd ${GARNET_ROOT}/src/priv/core/base/"
-alias gneng="cd ${GARNET_ROOT}/src/priv/core/engine/"
-alias gnutil="cd ${GARNET_ROOT}/src/priv/core/util/"
-alias gngfx="cd ${GARNET_ROOT}/src/priv/gfx/"
-alias gngpu="cd ${GARNET_ROOT}/src/priv/gpu/"
-alias gnmedia="cd ${GARNET_ROOT}/src/priv/media/"
-alias gnmisc="cd ${GARNET_ROOT}/src/priv/misc/"
-alias gnsample="cd ${GARNET_ROOT}/src/priv/sample/"
-alias gntest="cd ${GARNET_ROOT}/src/priv/test/"
-alias gntool="cd ${GARNET_ROOT}/src/priv/tool/"
-alias gndoc="cd ${GARNET_ROOT}/src/priv/doc/"
-alias gnmsvc="cd ${GARNET_ROOT}/msvc"
-alias gnenv="cd ${GARNET_ROOT}/env/"
+    # replace all %..% with ${..}
+    line2="${line/\%/\$\{}" && line3="${line2/\%/\}}"
+    while [ "${line}" != "${line3}" ]; do
+        line="${line3}"
+        line2="${line/\%/\$\{}" && line3="${line2/\%/\}}" #replace one pair of %...%
+    done
+
+    eval x=($line) # split line into array of words. x[0] is alias name, x[1] is alias value
+    alias ${x[0]}="${x[1]}"
+done < ${GARNET_ROOT}/env/alias.txt
 
 # =====
 # Misc.
