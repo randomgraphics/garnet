@@ -34,11 +34,7 @@ GN_CASSERT( sizeof(uint32) == 4 );
 ///
 /// unsigned 64 bit integer
 ///
-#if GN_MSVC
-typedef unsigned __int64 uint64;
-#else
 typedef unsigned long long uint64;
-#endif
 GN_CASSERT( sizeof(uint64) == 8 );
 
 ///
@@ -59,11 +55,7 @@ typedef signed int sint32;
 ///
 /// signed 64 bit integer
 ///
-#if GN_MSVC
-typedef signed __int64 sint64;
-#else
 typedef signed long long sint64;
-#endif
 
 ///
 /// signed integer type that can hold a pointer
