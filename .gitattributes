@@ -1,15 +1,17 @@
 # set the default test behavior
 * text auto
 
-*.asm text
-*.c text
-*.cpp text
-*.h text
-*.hpp text
-*.inl text
-*.inc text
-*.py text
-*.scons text
-*.sh text
-*.txt text
-SConstruct2 text
+# specify true binary files here
+*.bmp binary
+*.dds binary
+*.dll binary
+*.exe binary
+*.fbx binary
+*.jpg binary
+*.lib binary
+*.max binary
+*.pdb binary
+*.png binary
+*.rtf binary
+*.ttc binary
+*.ttf binary
