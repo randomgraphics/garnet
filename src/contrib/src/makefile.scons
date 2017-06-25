@@ -31,6 +31,7 @@ elif 'xenon' == GN.cc:
     cppdefines += ['NO_GETENV'] # Xbox platform does not support getenv()
 elif 'gcc' == GN.cc or 'mingw' == GN.cc:
     ccflags += ['-Wno-error=unused-but-set-variable']
+    ccflags += ['-Wno-error=misleading-indentation']
 else:
     import traceback
     traceback.print_exc()

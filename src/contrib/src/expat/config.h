@@ -45,3 +45,8 @@
 
 /* Define to `unsigned' if <sys/types.h> does not define. */
 /* #undef size_t */
+
+#ifndef HAVE_MEMMOVE
+#define HAVE_MEMMOVE 1
+#endif
+

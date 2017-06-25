@@ -52,6 +52,7 @@ namespace GN
         template<> struct NumericProperties<uint32>{ static const bool isSigned = false; };
         template<> struct NumericProperties<sint64>{ static const bool isSigned = true; };
         template<> struct NumericProperties<uint64>{ static const bool isSigned = false; };
+        template<> struct NumericProperties<size_t>{ static const bool isSigned = false; };
         template<> struct NumericProperties<float>{ static const bool isSigned = true; };
         template<> struct NumericProperties<double>{ static const bool isSigned = true; };
     }

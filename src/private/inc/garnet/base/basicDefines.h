@@ -340,9 +340,16 @@ template<int>    struct COMPILE_TIME_ASSERT_TEST {};
 ///
 /// Compile time assert
 ///
-#define GN_CASSERT( exp ) \
-    typedef COMPILE_TIME_ASSERT_TEST<sizeof(COMPILE_TIME_ASSERT_FAILURE<exp>::value)> \
-    GN_JOIN(__GN_cassert_,__LINE__)
+#define GN_CASSERT( exp ) static_assert(exp, "")
+
+///
+/// thread local storage
+///
+#ifdef GN_GCC
+#define GN_TLS __thread
+#else
+#define GN_TLS __declspec(thread)
+#endif
 
 ///
 /// define handle type
