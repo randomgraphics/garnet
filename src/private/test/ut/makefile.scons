@@ -1,11 +1,15 @@
 Import( 'GN' )
 
-import sys
+import sys, os.path
 
 # build case list
 cases = []
 cases += GN.Glob( 'base/*.cpp' )
 cases += GN.Glob( 'gfx/*.cpp' )
+
+# remove encoding.cpp when compiling with gcc, since gcc can't
+# parse GBK strings in the file.
+if 'gcc' == GN.cc: cases.remove(os.path.normpath('base/encoding.cpp'))
 
 # generate cxxtest glue file.
 cxxtest = Command(

@@ -30,23 +30,23 @@ public:
         TS_ASSERT_EQUALS( d+PSS, toNativeDiskFilePath("/") );
         TS_ASSERT_EQUALS( d+PSS, toNativeDiskFilePath("\\") );
 
-        TS_ASSERT_EQUALS( d+PSS"a"PSS"b", toNativeDiskFilePath("/a//b/") );
-        TS_ASSERT_EQUALS( d+PSS"a"PSS"b", toNativeDiskFilePath("\\a\\\\b\\") );
+        TS_ASSERT_EQUALS( d+PSS "a" PSS "b", toNativeDiskFilePath("/a//b/") );
+        TS_ASSERT_EQUALS( d+PSS "a" PSS "b", toNativeDiskFilePath("\\a\\\\b\\") );
 
 #if GN_MSWIN
-        TS_ASSERT_EQUALS( "A:"PSS"b", toNativeDiskFilePath("a:b") );
-        TS_ASSERT_EQUALS( "A:"PSS, toNativeDiskFilePath("a:") );
-        TS_ASSERT_EQUALS( "A:"PSS, toNativeDiskFilePath("a:/") );
-        TS_ASSERT_EQUALS( "A:"PSS, toNativeDiskFilePath("a:\\") );
+        TS_ASSERT_EQUALS( "A:" PSS "b", toNativeDiskFilePath("a:b") );
+        TS_ASSERT_EQUALS( "A:" PSS,     toNativeDiskFilePath("a:") );
+        TS_ASSERT_EQUALS( "A:" PSS,     toNativeDiskFilePath("a:/") );
+        TS_ASSERT_EQUALS( "A:" PSS,     toNativeDiskFilePath("a:\\") );
 #elif GN_POSIX
-        TS_ASSERT_EQUALS( pwd+PSS"a:b", toNativeDiskFilePath("a:b") );
-        TS_ASSERT_EQUALS( pwd+PSS"a:", toNativeDiskFilePath("a:") );
-        TS_ASSERT_EQUALS( pwd+PSS"a:", toNativeDiskFilePath("a:/") );
-        TS_ASSERT_EQUALS( pwd+PSS"a:", toNativeDiskFilePath("a:\\") );
+        TS_ASSERT_EQUALS( pwd+PSS "a:b", toNativeDiskFilePath("a:b") );
+        TS_ASSERT_EQUALS( pwd+PSS "a:", toNativeDiskFilePath("a:") );
+        TS_ASSERT_EQUALS( pwd+PSS "a:", toNativeDiskFilePath("a:/") );
+        TS_ASSERT_EQUALS( pwd+PSS "a:", toNativeDiskFilePath("a:\\") );
 #endif
 
-        TS_ASSERT_EQUALS( pwd+PSS"a"PSS":", toNativeDiskFilePath("a/:") );
-        TS_ASSERT_EQUALS( pwd+PSS"a"PSS":", toNativeDiskFilePath("a\\:") );
+        TS_ASSERT_EQUALS( pwd+PSS "a" PSS ":", toNativeDiskFilePath("a/:") );
+        TS_ASSERT_EQUALS( pwd+PSS "a" PSS ":", toNativeDiskFilePath("a\\:") );
     }
 
     void testJoin()
@@ -104,9 +104,9 @@ public:
         TS_ASSERT( pathExist("startup::/SConstruct2") );
         TS_ASSERT( pathExist("startup::SConstruct2") );
 
-        TS_ASSERT( pathExist("app::GNut"APPEXT) );
-        TS_ASSERT( pathExist("app::/GNut"APPEXT) );
-        TS_ASSERT( pathExist("app::\\GNut"APPEXT) );
+        TS_ASSERT( pathExist("app::GNut" APPEXT) );
+        TS_ASSERT( pathExist("app::/GNut" APPEXT) );
+        TS_ASSERT( pathExist("app::\\GNut" APPEXT) );
     }
 
     void testIsDir()
@@ -133,7 +133,7 @@ public:
         using namespace GN::fs;
 
         TS_ASSERT( isFile("startup::\\SConstruct2") );
-        TS_ASSERT( isFile("app::GNut"APPEXT) );
+        TS_ASSERT( isFile("app::GNut" APPEXT) );
         TS_ASSERT( !isFile("startup::") );
         TS_ASSERT( !isFile("app::") );
         TS_ASSERT( !isFile("haha,heihei,hoho,huhu,mama,papa") );

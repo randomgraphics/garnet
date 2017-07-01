@@ -191,7 +191,7 @@ class StringMapTest : public CxxTest::TestSuite
     {
         using namespace GN;
 
-        printf( "num words = %d\n", count );
+        printf( "num words = %zd\n", count );
 
         WordTable w = words();
 
@@ -370,7 +370,7 @@ public:
     {
         srand( (int)(0xFFFFFFFF & GN::Clock::sGetSystemCycleCount()) );
         WordTable w = words();
-        printf( "num words = %d\n", w.count );
+        printf( "num words = %zd\n", w.count );
         doPerfTest( w );
     }
 
