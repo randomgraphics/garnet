@@ -87,13 +87,13 @@ if None == BUILD_COMPILER:
     else:
         BUILD_COMPILER = 'gcc'
 
-BUILD_VARIANT = UTIL_getenv('GN_BUILD_VARIANT', 'debug')
+BUILD_VARIANT = UTIL_getenv( 'GN_BUILD_VARIANT', 'debug' )
 
-BUILD_TARGET_OS = UTIL_getenv('GN_BUILD_TARGET_OS', HOST_OS )
+BUILD_TARGET_OS = UTIL_getenv( 'GN_BUILD_TARGET_OS', HOST_OS )
 
-BUILD_TARGET_CPU = UTIL_getenv('GN_BUILD_TARGET_CPU', HOST_CPU )
+BUILD_TARGET_CPU = UTIL_getenv( 'GN_BUILD_TARGET_CPU', HOST_CPU )
 
-BUILD_STATIC_LINK = False
+BUILD_STATIC_LINK = UTIL_getenv( 'GN_BUILD_STATIC_LINK', False )
 
 BUILD_ROOT_PATH = 'build.tmp/' + BUILD_TARGET_OS + '.' + BUILD_TARGET_CPU + '.' + BUILD_COMPILER + '.' + BUILD_VARIANT + "/"
 
@@ -377,12 +377,13 @@ def UTIL_new_env_ex( conf ):
         linkflags['retail']  += ['/OPT:REF']
 
     elif 'gcc' == env['CC']:
-        ccflags['common']  += ['-Wall','-Werror', '-finput-charset=GBK', '-fexec-charset=GBK']
+        ccflags['common']  += ['-pthread', '-Wall','-Werror', '-finput-charset=GBK', '-fexec-charset=GBK']
         ccflags['debug']   += ['-g']
         ccflags['profile'] += ['-O3']
         ccflags['retail']  += ['-O3']
         if 'mingw' == BUILD_COMPILER:
             cppdefines['common'] += ['WINVER=0x500']
+        libs['common']     += ['pthread']
 
     else:
         traceback.print_exc()
@@ -608,7 +609,7 @@ def CheckConfig():
         CONFIG['fbx_incpath'] = [],
         CONFIG['fbx_libpath'] = {'debug' : [], 'profile' : [], 'retail' : []}
         CONFIG['fbx_libs']    = []
-
+        
     # =============
     # finish config
     # =============
@@ -817,6 +818,8 @@ class GarnetEnv2 :
         libs += CONFIG['ogl_libs']
         libs += CONFIG['fbx_libs']
         libs += CONFIG['iconv_lib']
+        if 'posix' == BUILD_TARGET_OS:
+            libs += ['X11']
         dbg = ( BUILD_VARIANT == "debug" )
         if CONFIG['has_d3d9'] and ('xenon' != BUILD_TARGET_OS) :
             libs += ['d3d9.lib'] if dbg else ['d3d9.lib']

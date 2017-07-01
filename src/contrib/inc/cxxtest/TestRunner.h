@@ -5,14 +5,14 @@
 // TestRunner is the class that runs all the tests.
 // To use it, create an object that implements the TestListener
 // interface and call TestRunner::runAllTests( myListener );
-// 
+//
 
 #include <cxxtest/TestListener.h>
 #include <cxxtest/RealDescriptions.h>
 #include <cxxtest/TestSuite.h>
 #include <cxxtest/TestTracker.h>
 
-namespace CxxTest 
+namespace CxxTest
 {
     class TestRunner
     {
@@ -30,22 +30,32 @@ namespace CxxTest
         {
             RealWorldDescription wd;
             WorldGuard sg;
-            
+
             tracker().enterWorld( wd );
             if ( wd.setUp() ) {
                 for ( SuiteDescription *sd = wd.firstSuite(); sd; sd = sd->next() )
                     if ( sd->active() )
                         runSuite( *sd, pattern );
-            
+
                 wd.tearDown();
             }
             tracker().leaveWorld( wd );
         }
-    
+
         void runSuite( SuiteDescription &sd, const char * pattern )
         {
+            if (nullptr != pattern)
+            {
+                std::string s = sd.suiteName();
+                std::string p = pattern;
+                if (nullptr != ::strstr(s.c_str(), p.c_str()))
+                {
+                    pattern = nullptr;
+                }
+            }
+
             StateGuard sg;
-            
+
             tracker().enterSuite( sd );
             if ( sd.setUp() ) {
                 for ( TestDescription *td = sd.firstTest(); td; td = td->next() )
@@ -57,10 +67,25 @@ namespace CxxTest
             tracker().leaveSuite( sd );
         }
 
-        void runTest( TestDescription &td, const char * /*pattern*/ )
+        void runTest( TestDescription &td, const char * pattern )
         {
+            if (nullptr != pattern)
+            {
+                std::string s = td.suiteName();
+                std::string n = td.testName();
+                std::string p = pattern;
+                std::transform(s.begin(), s.end(), s.begin(), ::tolower);
+                std::transform(n.begin(), n.end(), n.begin(), ::tolower);
+                std::transform(p.begin(), p.end(), p.begin(), ::tolower);
+                if (nullptr == ::strstr(s.c_str(), p.c_str()) &&
+                    nullptr == ::strstr(n.c_str(), p.c_str()))
+                {
+                    return;
+                }
+            }
+
             StateGuard sg;
-            
+
             tracker().enterTest( td );
             if ( td.setUp() ) {
                 td.run();
@@ -68,14 +93,14 @@ namespace CxxTest
             }
             tracker().leaveTest( td );
         }
-        
+
         class StateGuard
         {
 #ifdef _CXXTEST_HAVE_EH
             bool _abortTestOnFail;
 #endif // _CXXTEST_HAVE_EH
             unsigned _maxDumpSize;
-            
+
         public:
             StateGuard()
             {
@@ -84,7 +109,7 @@ namespace CxxTest
 #endif // _CXXTEST_HAVE_EH
                 _maxDumpSize = maxDumpSize();
             }
-            
+
             ~StateGuard()
             {
 #ifdef _CXXTEST_HAVE_EH

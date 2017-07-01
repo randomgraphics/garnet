@@ -1,7 +1,8 @@
 #include "pch.h"
 
-void main()
+int main()
 {
     foo1();
     foo2();
+    return 0;
 }

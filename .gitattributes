@@ -1,9 +1,6 @@
 # set the default test behavior
 * text auto
 
-# specify text files for normalized line ending
-*.scons text
-
 # specify true binary files here
 *.bmp binary
 *.dds binary
