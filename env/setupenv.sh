@@ -16,6 +16,7 @@ fi
 export GN_BUILD_TARGET_CPU=x64
 export GN_BUILD_COMPILER=gcc
 export GN_BUILD_VARIANT=debug
+export GN_BUILD_STATIC_LINK=1
 
 # ===========
 # setup scons
@@ -71,9 +72,10 @@ cd ${GARNET_ROOT}
 # ================================================
 # Garnet build environment setup done successfully
 # ================================================
-echo USERNAME            = $USER
-echo GARNET_ROOT         = $GARNET_ROOT
-echo GN_BUILD_COMPILER   = $GN_BUILD_COMPILER
-echo GN_BUILD_VARIANT    = $GN_BUILD_VARIANT
-echo GN_BUILD_TARGET_OS  = $GN_BUILD_TARGET_OS
-echo GN_BUILD_TARGET_CPU = $GN_BUILD_TARGET_CPU
+echo USERNAME             = $USER
+echo GARNET_ROOT          = $GARNET_ROOT
+echo GN_BUILD_COMPILER    = $GN_BUILD_COMPILER
+echo GN_BUILD_VARIANT     = $GN_BUILD_VARIANT
+echo GN_BUILD_TARGET_OS   = $GN_BUILD_TARGET_OS
+echo GN_BUILD_TARGET_CPU  = $GN_BUILD_TARGET_CPU
+echo GN_BUILD_STATIC_LINK = $GN_BUILD_STATIC_LINK
