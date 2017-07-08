@@ -8,15 +8,15 @@ GARNET_ROOT=$(cd $(dirname $(pwd)/${BASH_SOURCE[0]})/..; pwd)
 # setup default build variants
 # ===========================
 if [ ${OSTYPE} = "cygwin" ] ; then
-    export GN_BUILD_TARGET_OS=cygwin
-    export GN_BUILD_TARGET_CPU=x86
+    GN_BUILD_TARGET_OS=cygwin
+    GN_BUILD_TARGET_CPU=x86
 else
-    export GN_BUILD_TARGET_OS=posix
-    export GN_BUILD_TARGET_CPU=x64
+    GN_BUILD_TARGET_OS=posix
+    GN_BUILD_TARGET_CPU=x64
 fi
-export GN_BUILD_COMPILER=gcc
-export GN_BUILD_VARIANT=retail
-export GN_BUILD_STATIC_LINK=1
+GN_BUILD_COMPILER=gcc
+GN_BUILD_VARIANT=retail
+GN_BUILD_STATIC_LINK=1
 
 # ======================================
 # parse command line arguments
@@ -44,6 +44,15 @@ do
         ;;
     esac
 done
+
+# ===========================
+# export build variants
+# ===========================
+export GN_BUILD_TARGET_OS
+export GN_BUILD_TARGET_CPU
+export GN_BUILD_COMPILER
+export GN_BUILD_VARIANT
+export GN_BUILD_STATIC_LINK
 
 # ===========
 # setup scons
