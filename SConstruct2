@@ -250,7 +250,7 @@ def UTIL_new_env_ex( conf ):
                                 '#' + BUILD_ROOT_PATH + 'private/inc',
                                 '#src/private/inc',
                                 ];
-    libpath['common']     += ['#src/contrib/lib/' + HOST_OS + '.' + HOST_CPU]
+    libpath['common']     += ['#src/contrib/lib/' + BUILD_TARGET_OS + '.' + BUILD_TARGET_CPU]
     cppdefines['common']  += ['UNICODE', '_UNICODE']
     cppdefines['debug']   += ['GN_ENABLE_DEBUG=1', 'GN_ENABLE_PROFILING=1', '_DEBUG']
     cppdefines['profile'] += ['GN_ENABLE_DEBUG=0', 'GN_ENABLE_PROFILING=1', 'NDEBUG']
