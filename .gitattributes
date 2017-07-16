@@ -7,11 +7,14 @@
 *.dll binary
 *.exe binary
 *.fbx binary
+*.ib  binary
 *.jpg binary
 *.lib binary
 *.max binary
 *.pdb binary
 *.png binary
 *.rtf binary
+*.tga binary
 *.ttc binary
 *.ttf binary
+*.vb  binary
