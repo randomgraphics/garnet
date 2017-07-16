@@ -331,7 +331,7 @@ def UTIL_new_env_ex( conf ):
         env['ENV']['USERPROFILE'] = os.environ['USERPROFILE']
 
         # Enable C++ EH (with SEH exceptions)
-        cxxflags['common']  += ['/EHa']
+        cxxflags['common']  += ['/EHa', '/utf-8']
 
         # compile in backcompat mode (vs2015 only)
         cxxflags['common']  += ['/Wv:18']
