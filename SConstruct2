@@ -1,5 +1,5 @@
-#!/usr/bin/python
-# -*- coding: GB18030 -*-
+ï»¿#!/usr/bin/python
+# -*- coding: utf-8 -*-
 
 import sys, os, os.path, re, fnmatch
 
@@ -9,28 +9,28 @@ import sys, os, os.path, re, fnmatch
 #
 ################################################################################
 
-# ¶ÁÈ¡»·¾³±äÁ¿
+# è¯»å–çŽ¯å¢ƒå˜é‡
 def UTIL_getenv( name, defval = '' ):
     if name in os.environ: return os.environ[name]
     else: return defval
 
-# Êä³öµ÷ÊÔÐÅÏ¢
+# è¾“å‡ºè°ƒè¯•ä¿¡æ¯
 def UTIL_trace( level, msg ):
     level = float(level)
     assert( 0 != level )
     if ( CONF_trace > 0 and level <= CONF_trace ) or ( CONF_trace < 0 and level == -CONF_trace ):
         print 'TRACE(%d) : %s'%(level,msg)
 
-# Êä³öÌáÊ¾ÐÅÏ¢
+# è¾“å‡ºæç¤ºä¿¡æ¯
 def UTIL_info( msg ): print 'INFO : %s'%msg
 
-# Êä³ö¾¯¸æÐÅÏ¢
+# è¾“å‡ºè­¦å‘Šä¿¡æ¯
 def UTIL_warn( msg ):
     #print '===================================================================='
     print 'WARNING : %s'%msg
     #print '===================================================================='
 
-# Êä³ö´íÎóÐÅÏ¢
+# è¾“å‡ºé”™è¯¯ä¿¡æ¯
 def UTIL_error( msg ):
     print '===================================================================='
     print 'ERROR : %s'%msg
@@ -619,7 +619,7 @@ CheckConfig()
 
 ################################################################################
 #
-# ¶¨Òå GarnetEnv class
+# å®šä¹‰ GarnetEnv class
 #
 ################################################################################
 
@@ -687,7 +687,7 @@ class GarnetEnv2 :
     def GetEnv( self, name, defaultValue = '' ): return UTIL_getenv( name, defaultValue )
 
     #
-    # Éú³É´Ótargetµ½baseµÄÏà¶ÔÂ·¾¶
+    # ç”Ÿæˆä»Žtargetåˆ°baseçš„ç›¸å¯¹è·¯å¾„
     #
     def RelativePath( self, target, base ):
         """
@@ -716,7 +716,7 @@ class GarnetEnv2 :
         return os.path.join(*rel_list)
 
     #
-    # ²éÕÒÖ¸¶¨Ä¿Â¼ÏÂµÄÎÄ¼þ
+    # æŸ¥æ‰¾æŒ‡å®šç›®å½•ä¸‹çš„æ–‡ä»¶
     #
     def Glob( self, patterns, recursive = False ):
         def do_glob( pattern, dir, recursive ):
