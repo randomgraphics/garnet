@@ -374,10 +374,10 @@ bool GN::util::SampleApp::init( int argc, const char * const argv[] )
     static const char helpUTF8[] =
         "ESC/XB360 BTN X : 退出";
     wchar_t helpUCS[sizeof(helpUTF8)];
-    CharacterEncodingConverter cec( CharacterEncodingConverter::GBK, CharacterEncodingConverter::WIDECHAR );
+    CharacterEncodingConverter cec( CharacterEncodingConverter::UTF8, CharacterEncodingConverter::WIDECHAR );
     if( 0 == cec( helpUCS, helpUTF8 ) )
     {
-        GN_ERROR(sLogger)( "Fail to convert help text from GBK to UNICODE." );
+        GN_ERROR(sLogger)( "Fail to convert help text from UTF8 to UNICODE." );
         return false;
     }
     mHelpText = helpUCS;

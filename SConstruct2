@@ -377,13 +377,13 @@ def UTIL_new_env_ex( conf ):
         linkflags['retail']  += ['/OPT:REF']
 
     elif 'gcc' == env['CC']:
-        ccflags['common']  += ['-pthread', '-Wall','-Werror', '-finput-charset=GBK', '-fexec-charset=GBK']
+        ccflags['common']  += ['-pthread', '-Wall','-Werror', '-fno-strict-aliasing']
         ccflags['debug']   += ['-g']
         ccflags['profile'] += ['-O3']
         ccflags['retail']  += ['-O3']
         if 'mingw' == BUILD_COMPILER:
             cppdefines['common'] += ['WINVER=0x500']
-        libs['common']     += ['pthread']
+        libs['common']     += ['pthread', 'dl']
 
     else:
         traceback.print_exc()
