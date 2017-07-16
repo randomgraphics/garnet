@@ -19,15 +19,15 @@ static int sEncodingToCodePage( CharacterEncodingConverter::Encoding e )
     {
         437,  // ASCII
         1252, // ISO_8859_1
-        -1,   // UTF7
-        -1,   // UTF8
-         0,   // UTF16_LE
-        -1,   // UTF16_BE
-         0,   // UTF16
-        -1,   // UTF32_LE
-        -1,   // UTF32_BE
-        -1,   // UTF32
-         0,   // WIDECHAR
+        65000,// UTF7
+        65001,// UTF8
+            0,   // UTF16_LE
+        1201, // UTF16_BE
+            0,   // UTF16
+        12000,// UTF32_LE
+        12001,// UTF32_BE
+        12000,// UTF32
+        0,    // WIDECHAR
         936,  // GBK
         950,  // BIG5
     };
