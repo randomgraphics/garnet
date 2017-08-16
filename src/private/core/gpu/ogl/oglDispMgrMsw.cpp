@@ -124,10 +124,10 @@ static bool sSetupPixelFormat( HDC hdc )
 {
     GN_GUARD;
 
-    // ×¢£ºÊÂÊµÉÏpfdÕâ¸ö±äÁ¿ÍêÈ«Ã»ÓÐ±ØÒª³õÊ¼»¯£¬ÒòÎªÔÚ³ÌÐòÖÐËüÖ»ÊÇÓÃÀ´½ÓÊÕ
-    //     SetupPixelFormat(..)º¯ÊýËù·µ»ØµÄÐÅÏ¢ÓÃµÄ¡£
-    //     Õâ¶Î´úÂëµÄÖ÷ÒªÄ¿µÄÊÇÎªÁË±íÃ÷pfdÖÐ¸÷¸öÏîµÄº¬Òå£¬ÒÔ¼°ËüÃÇÍ¨³£Çé¿ö
-    //     ÏÂµÄÈ¡Öµ
+    // ×¢ï¿½ï¿½ï¿½ï¿½Êµï¿½ï¿½pfdï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È«Ã»ï¿½Ð±ï¿½Òªï¿½ï¿½Ê¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Îªï¿½Ú³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+    //     SetupPixelFormat(..)ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Øµï¿½ï¿½ï¿½Ï¢ï¿½ÃµÄ¡ï¿½
+    //     ï¿½ï¿½Î´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ÒªÄ¿ï¿½ï¿½ï¿½ï¿½Îªï¿½Ë±ï¿½ï¿½ï¿½pfdï¿½Ð¸ï¿½ï¿½ï¿½ï¿½ï¿½Äºï¿½ï¿½å£¬ï¿½Ô¼ï¿½ï¿½ï¿½ï¿½ï¿½Í¨ï¿½ï¿½ï¿½ï¿½ï¿½
+    //     ï¿½Âµï¿½È¡Öµ
     PIXELFORMATDESCRIPTOR pfd = {
         sizeof(PIXELFORMATDESCRIPTOR),  //  size of this pfd
             1,                     // version number
@@ -349,8 +349,8 @@ class OGLDebugOutputARB
         GLuint id,
         GLenum severity,
         GLsizei length,
-        const GLchar * message,
-        GLvoid * userParam )
+        const GLchar* message,
+        const void* userParam)
     {
         GN_UNUSED_PARAM( length );
         GN_UNUSED_PARAM( userParam );
@@ -396,6 +396,10 @@ class OGLDebugOutputARB
                         break;
 
                     case GL_DEBUG_SEVERITY_LOW_ARB    :
+                        logLevel = Logger::VERBOSE;
+                        break;
+
+                    case GL_DEBUG_SEVERITY_NOTIFICATION:
                         logLevel = Logger::VVERBOSE;
                         break;
 
