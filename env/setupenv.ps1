@@ -148,7 +148,12 @@ if( ("vc" -eq $env:GN_BUILD_COMPILER) -and ("xbox3" -ne $env:GN_BUILD_TARGET_OS)
 
     # locate vsvarall.bat
     $vcvarbat=$false
-    if( $env:VS140COMNTOOLS -and ( test-path $env:VS140COMNTOOLS ) )
+    if( test-path "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvarsall.bat" )
+    {
+        $vcvarbat="C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvarsall.bat"
+        $env:GN_BUILD_COMPILER="vc150";
+    }
+    elseif( $env:VS140COMNTOOLS -and ( test-path $env:VS140COMNTOOLS ) )
     {
         $vcvarbat="$env:VS140COMNTOOLS..\..\VC\vcvarsall.bat"
         $env:GN_BUILD_COMPILER="vc140";
@@ -397,6 +402,38 @@ if( "mswin" -eq $env:GN_BUILD_TARGET_OS )
 		"Note that you may still be able to compile D3D code as long as you have Windows 7/8 SDK installed."
     }
 }
+
+# ==============================================================================
+# setup Vulkan SDK
+# ==============================================================================
+
+if( "mswin" -eq $env:GN_BUILD_TARGET_OS )
+{
+    ""
+    "==============================="
+    "Setup Vulkan build environment"
+    "==============================="
+    ""
+
+    if( $env:VULKAN_SDK -and ( test-path $env:VULKAN_SDK ) )
+    {
+        "Vulkan SDK found: $env:VULKAN_SDK"
+        ${env:INCLUDE} = "${env:INCLUDE};${env:VULKAN_SDK}\Include"
+        if( "x86" -eq $env:GN_BUILD_TARGET_CPU )
+        {
+            ${env:LIB} = "${env:LIB};${env:VULKAN_SDK}\Lib32"
+        }
+        elseif( "x64" -eq $env:GN_BUILD_TARGET_CPU )
+        {
+            ${env:LIB} = "${env:LIB};${env:VULKAN_SDK}\Lib"
+        }
+    }
+    else
+    {
+        warn "Environment variable VULKAN_SDK is not defined or pointing to invalid directory."
+    }
+}
+
 
 # ==============================================================================
 # setup XDK build environment
