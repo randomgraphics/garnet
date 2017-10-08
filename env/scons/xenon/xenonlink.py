@@ -54,7 +54,7 @@ def win32LibEmitter(target, source, env):
     no_import_lib = env.get('no_import_lib', 0)
 
     if not dll:
-        raise SCons.Errors.UserError, "A shared library should have exactly one target with the suffix: %s" % env.subst("$SHLIBSUFFIX")
+        raise SCons.Errors.UserError("A shared library should have exactly one target with the suffix: %s" % env.subst("$SHLIBSUFFIX"))
 
     if env.get("WIN32_INSERT_DEF", 0) and \
        not env.FindIxes(source, "WIN32DEFPREFIX", "WIN32DEFSUFFIX"):
@@ -95,9 +95,9 @@ def RegServerFunc(target, source, env):
     if env.has_key('register') and env['register']:
         ret = regServerAction([target[0]], [source[0]], env)
         if ret:
-            raise SCons.Errors.UserError, "Unable to register %s" % target[0]
+            raise SCons.Errors.UserError("Unable to register %s" % target[0])
         else:
-            print "Registered %s sucessfully" % target[0]
+            print("Registered %s sucessfully" % target[0])
         return ret
     return 0
 

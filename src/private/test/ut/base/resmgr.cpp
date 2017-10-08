@@ -1,4 +1,4 @@
-#include "../testCommon.h"
+ï»¿#include "../testCommon.h"
 
 namespace GN
 {
@@ -31,36 +31,36 @@ namespace GN
     ///
     /// RES must support default constructor and assignment operation.
     ///
-    /// ×ÊÔ´¹ÜÀíÆ÷Ê¹ÓÃ4¸ö»Øµ÷º¯ÊýÀ´¹ÜÀí×ÊÔ´µÄ´´½¨ºÍÉ¾³ý:
-    /// - Creator: ´´½¨º¯Êý
-    ///   - ÓÃÀ´´´½¨×ÊÔ´ÊµÀý. ¹ÜÀíÆ÷ÓÐÒ»¸öÈ«¾ÖµÄ´´½¨º¯Êý, ¹©ËùÓÐµÄ×ÊÔ´Ê¹ÓÃ. Í¬Ê±, Ã¿¸ö×ÊÔ´
-    ///     Ò²¿ÉÒÔÓµÓÐ×Ô¼ºÌØ¶¨µÄ´´½¨º¯Êý.
-    /// - Deletor: É¾³ýº¯Êý
-    ///   - ÓÃÀ´É¾³ý×ÊÔ´ÊµÀý. ¹ÜÀíÆ÷ÓÐÇÒ½öÓÐÒ»¸öÈ«¾ÖµÄÉ¾³ýº¯Êý, ¹©ËùÓÐ×ÊÔ´Ê¹ÓÃ.
-    /// - Nullor: ¿Õº¯Êý
-    ///   - µ±×ÊÔ´´´½¨Ê§°Ü(Creator·µ»Ønull)Ê±, ¹ÜÀíÆ÷»áµ÷ÓÃNullorÀ´´´½¨Ò»¸öËùÎ½µÄ"¿Õ"¶ÔÏó,
-    ///     ÓÃÀ´Ìæ´úÄÇ¸öÊ§°ÜµÄ×ÊÔ´.
-    ///   - ºÍCreatorÀàËÆ, ¹ÜÀíÆ÷ÓÐÒ»¸öÈ«¾ÖµÄ¿Õº¯Êý, ¹©ËùÓÐ×ÊÔ´Ê¹ÓÃ. Í¬Ê±, Ã¿¸ö×ÊÔ´Ò²¿ÉÒÔÓÐ
-    ///     ×Ô¼ºÌØ¶¨µÄ¿Õº¯Êý.
-    ///   - Ê¹ÓÃ¿Õ¶ÔÏóµÄÄ¿µÄ¾ÍÊÇ: ±£Ö¤×ÊÔ´¹ÜÀíÆ÷×ÜÊÇ»á·µ»ØÓÐÐ§µÄ×ÊÔ´ÊµÀý. ÕâÑùÔÚÊ¹ÓÃÕßµÄ´úÂëÖÐ
-    ///     ¾Í¿ÉÒÔ±ÜÃâÈçÏÂµÄ´úÂë:
+    /// èµ„æºç®¡ç†å™¨ä½¿ç”¨4ä¸ªå›žè°ƒå‡½æ•°æ¥ç®¡ç†èµ„æºçš„åˆ›å»ºå’Œåˆ é™¤:
+    /// - Creator: åˆ›å»ºå‡½æ•°
+    ///   - ç”¨æ¥åˆ›å»ºèµ„æºå®žä¾‹. ç®¡ç†å™¨æœ‰ä¸€ä¸ªå…¨å±€çš„åˆ›å»ºå‡½æ•°, ä¾›æ‰€æœ‰çš„èµ„æºä½¿ç”¨. åŒæ—¶, æ¯ä¸ªèµ„æº
+    ///     ä¹Ÿå¯ä»¥æ‹¥æœ‰è‡ªå·±ç‰¹å®šçš„åˆ›å»ºå‡½æ•°.
+    /// - Deletor: åˆ é™¤å‡½æ•°
+    ///   - ç”¨æ¥åˆ é™¤èµ„æºå®žä¾‹. ç®¡ç†å™¨æœ‰ä¸”ä»…æœ‰ä¸€ä¸ªå…¨å±€çš„åˆ é™¤å‡½æ•°, ä¾›æ‰€æœ‰èµ„æºä½¿ç”¨.
+    /// - Nullor: ç©ºå‡½æ•°
+    ///   - å½“èµ„æºåˆ›å»ºå¤±è´¥(Creatorè¿”å›žnull)æ—¶, ç®¡ç†å™¨ä¼šè°ƒç”¨Nulloræ¥åˆ›å»ºä¸€ä¸ªæ‰€è°“çš„"ç©º"å¯¹è±¡,
+    ///     ç”¨æ¥æ›¿ä»£é‚£ä¸ªå¤±è´¥çš„èµ„æº.
+    ///   - å’ŒCreatorç±»ä¼¼, ç®¡ç†å™¨æœ‰ä¸€ä¸ªå…¨å±€çš„ç©ºå‡½æ•°, ä¾›æ‰€æœ‰èµ„æºä½¿ç”¨. åŒæ—¶, æ¯ä¸ªèµ„æºä¹Ÿå¯ä»¥æœ‰
+    ///     è‡ªå·±ç‰¹å®šçš„ç©ºå‡½æ•°.
+    ///   - ä½¿ç”¨ç©ºå¯¹è±¡çš„ç›®çš„å°±æ˜¯: ä¿è¯èµ„æºç®¡ç†å™¨æ€»æ˜¯ä¼šè¿”å›žæœ‰æ•ˆçš„èµ„æºå®žä¾‹. è¿™æ ·åœ¨ä½¿ç”¨è€…çš„ä»£ç ä¸­
+    ///     å°±å¯ä»¥é¿å…å¦‚ä¸‹çš„ä»£ç :
     ///         MyResource * ptr = myResourceMgr.getResource( theHandle );
     ///         if( ptr )
     ///             do_something_normal();
     ///         else
     ///             report_error();
-    ///   - ¿Õ¶ÔÏóÓ¦¾¡Á¿ÈÝÒ×ÒýÆðÊ¹ÓÃÕßµÄ×¢Òâ, ÇÒ²»»áÒýÆð³ÌÐò±ÀÀ£.
-    ///     - ±ÈÈç¿ÉÒÔÓÃ´¿ºìÉ«µÄ1x1ÌùÍ¼×÷Îª¿ÕÌùÍ¼, ÓÃÒ»¸ö´ó·½¿é×÷Îª¿Õmesh.
+    ///   - ç©ºå¯¹è±¡åº”å°½é‡å®¹æ˜“å¼•èµ·ä½¿ç”¨è€…çš„æ³¨æ„, ä¸”ä¸ä¼šå¼•èµ·ç¨‹åºå´©æºƒ.
+    ///     - æ¯”å¦‚å¯ä»¥ç”¨çº¯çº¢è‰²çš„1x1è´´å›¾ä½œä¸ºç©ºè´´å›¾, ç”¨ä¸€ä¸ªå¤§æ–¹å—ä½œä¸ºç©ºmesh.
     /// - NameResolver:
     ///   - A single resource may have several different names (a.k.a aliases). Name resolver is responsible
     ///     for converting aliase to real resource name.
     ///   - A example of name resolver is resolving relative resource path into absolute resource path.
     ///   - By default, name resolver does nothing.
-    /// - NameChecker: Ãû×Ö¼ì²éº¯Êý
-    ///   - µ±ÓÃ»§ÊÔÍ¼ÓÃÃû×ÖÒýÓÃÒ»¸ö²»´æÔÚµÄ×ÊÔ´Ê±, ¹ÜÀíÆ÷»áµ÷ÓÃNameChekerÀ´¼ì²éÕâ¸öÃû×ÖµÄÓÐÐ§ÐÔ,
-    ///     ²¢°ÑÓÐÐ§µÄÃû×Ö×Ô¶¯¼ÓÈë×ÊÔ´¹ÜÀíÆ÷ÖÐ(²Î¼ûgetResourceHandle()µÄ´úÂë).
-    ///   - Ò»¸ö³£ÓÃµÄNameChecker¾ÍÊÇ¼ì²é¸ÃÃû×ÖÊÇ·ñ¶ÔÓ¦Ò»¸öÓÐÐ§µÄ´ÅÅÌÎÄ¼þ. ÕâÑù, µ±ÓÃ»§ÊÔÍ¼·ÃÎÊÒ»¸ö
-    ///     ²»ÔÚ×ÊÔ´¹ÜÀíÆ÷ÄÚ, µ«´æÔÚÓÚ´ÅÅÌÉÏµÄ×ÊÔ´Ê±, ¸Ã×ÊÔ´¾Í»á±»×Ô¶¯¼ÓÈë×ÊÔ´¹ÜÀíÆ÷.
+    /// - NameChecker: åå­—æ£€æŸ¥å‡½æ•°
+    ///   - å½“ç”¨æˆ·è¯•å›¾ç”¨åå­—å¼•ç”¨ä¸€ä¸ªä¸å­˜åœ¨çš„èµ„æºæ—¶, ç®¡ç†å™¨ä¼šè°ƒç”¨NameChekeræ¥æ£€æŸ¥è¿™ä¸ªåå­—çš„æœ‰æ•ˆæ€§,
+    ///     å¹¶æŠŠæœ‰æ•ˆçš„åå­—è‡ªåŠ¨åŠ å…¥èµ„æºç®¡ç†å™¨ä¸­(å‚è§getResourceHandle()çš„ä»£ç ).
+    ///   - ä¸€ä¸ªå¸¸ç”¨çš„NameCheckerå°±æ˜¯æ£€æŸ¥è¯¥åå­—æ˜¯å¦å¯¹åº”ä¸€ä¸ªæœ‰æ•ˆçš„ç£ç›˜æ–‡ä»¶. è¿™æ ·, å½“ç”¨æˆ·è¯•å›¾è®¿é—®ä¸€ä¸ª
+    ///     ä¸åœ¨èµ„æºç®¡ç†å™¨å†…, ä½†å­˜åœ¨äºŽç£ç›˜ä¸Šçš„èµ„æºæ—¶, è¯¥èµ„æºå°±ä¼šè¢«è‡ªåŠ¨åŠ å…¥èµ„æºç®¡ç†å™¨.
     ///
     template<typename RES, typename HANDLE=uint32, bool SINGLETON=false>
     class ResourceManagerTempl : public detail::SingletonSelector<ResourceManagerTempl<RES,HANDLE,SINGLETON>,SINGLETON>::type

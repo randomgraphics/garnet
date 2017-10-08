@@ -25,6 +25,8 @@
 			#define SIZE_OF_STDSTRING 28
 		#elif _MSC_VER == 1900
 			#define SIZE_OF_STDSTRING 28 // TODO: need verification
+		#elif _MSC_VER == 1911
+			#define SIZE_OF_STDSTRING 28
 		#endif
 	#elif defined(FBXSDK_CPU_64)
 		#if _MSC_VER <= 1600
@@ -35,6 +37,8 @@
 			#define SIZE_OF_STDSTRING 40
 		#elif _MSC_VER == 1900
 			#define SIZE_OF_STDSTRING 40 // TODO: need verification
+		#elif _MSC_VER == 1911
+			#define SIZE_OF_STDSTRING 40
 		#endif
 	#endif
 #elif defined(FBXSDK_COMPILER_GNU)

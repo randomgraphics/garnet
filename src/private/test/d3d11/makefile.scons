@@ -2,13 +2,11 @@ Import( 'GN' )
 
 if GN.has_d3d11:
 
-    import string
-
     def Fx2Cpp( target, source, env ):
         s = open( source[0].path, 'r' )
         t = open( target[0].path, 'w' )
         for line in s:
-            t.write( '"%s \\n"\n'%string.strip( line, '\r\n' ) )
+            t.write( '"%s \\n"\n'%line.strip( '\r\n' ) )
         return None
 
     env = GN.NewBuildEnv();

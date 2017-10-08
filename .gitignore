@@ -1,4 +1,5 @@
 *.pyo
 *.pyc
+.vscode
 build.tmp
 Thumbs.db

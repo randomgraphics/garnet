@@ -67,6 +67,8 @@ namespace CxxTest
             tracker().leaveSuite( sd );
         }
 
+        static inline char toLowerChar(char ch) { return (char)::tolower(ch); }
+
         void runTest( TestDescription &td, const char * pattern )
         {
             if (nullptr != pattern)
@@ -74,9 +76,9 @@ namespace CxxTest
                 std::string s = td.suiteName();
                 std::string n = td.testName();
                 std::string p = pattern;
-                std::transform(s.begin(), s.end(), s.begin(), ::tolower);
-                std::transform(n.begin(), n.end(), n.begin(), ::tolower);
-                std::transform(p.begin(), p.end(), p.begin(), ::tolower);
+                std::transform(s.begin(), s.end(), s.begin(), toLowerChar);
+                std::transform(n.begin(), n.end(), n.begin(), toLowerChar);
+                std::transform(p.begin(), p.end(), p.begin(), toLowerChar);
                 if (nullptr == ::strstr(s.c_str(), p.c_str()) &&
                     nullptr == ::strstr(n.c_str(), p.c_str()))
                 {

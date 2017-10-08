@@ -1,4 +1,4 @@
-#ifndef __GN_BASE_STDCLASS_H__
+ï»¿#ifndef __GN_BASE_STDCLASS_H__
 #define __GN_BASE_STDCLASS_H__
 // *****************************************************************************
 /// \file
@@ -7,28 +7,28 @@
 // *****************************************************************************
 
 ///
-/// ÉùÃ÷stdclassÀàÐÍ
+/// å£°æ˜Žstdclassç±»åž‹
 ///
-/// \param self    ´ýÉùÃ÷ÀàµÄÃû×Ö
-/// \param parent  ´ýÉùÃ÷ÀàµÄ¸¸ÀàµÄÃû×Ö
-/// \note ÔÚËùÓÐ»ùÓÚstdclassÀàÐÍµÄÉùÃ÷ÖÐÊ¹ÓÃÕâ¸öºê
+/// \param self    å¾…å£°æ˜Žç±»çš„åå­—
+/// \param parent  å¾…å£°æ˜Žç±»çš„çˆ¶ç±»çš„åå­—
+/// \note åœ¨æ‰€æœ‰åŸºäºŽstdclassç±»åž‹çš„å£°æ˜Žä¸­ä½¿ç”¨è¿™ä¸ªå®
 ///
-/// Õâ¸öºêÉùÃ÷ÁËÁ½¸ö±ðÃû£ºMySelfºÍMyParent
+/// è¿™ä¸ªå®å£°æ˜Žäº†ä¸¤ä¸ªåˆ«åï¼šMySelfå’ŒMyParent
 ///
 #define GN_DECLARE_STDCLASS(self, parent) \
             private : typedef self MySelf; typedef parent MyParent;
 
 
 ///
-/// stdclassÀàÐÍµÄ±ê×¼³õÊ¼»¯¹ý³Ì¡£
+/// stdclassç±»åž‹çš„æ ‡å‡†åˆå§‹åŒ–è¿‡ç¨‹ã€‚
 ///
-/// \param class_name µ±Ç°º¯ÊýËùÊôµÄÀàÃû
-/// \param param_list ÐÎÈç£º(param1, param2, param3,...)µÄ£¬
-///                   ÇÒ·ûºÏ¸¸Ààinit()ÒªÇóµÄ²ÎÊýÁÐ±í£¨À¨ºÅ²»ÄÜÊ¡ÂÔ£©
-/// \note ÔÚËùÓÐ»ùÓÚstdclassÀàÐÍµÄinitº¯ÊýÖÐÊ¹ÓÃÕâ¸öºê
+/// \param class_name å½“å‰å‡½æ•°æ‰€å±žçš„ç±»å
+/// \param param_list å½¢å¦‚ï¼š(param1, param2, param3,...)çš„ï¼Œ
+///                   ä¸”ç¬¦åˆçˆ¶ç±»init()è¦æ±‚çš„å‚æ•°åˆ—è¡¨ï¼ˆæ‹¬å·ä¸èƒ½çœç•¥ï¼‰
+/// \note åœ¨æ‰€æœ‰åŸºäºŽstdclassç±»åž‹çš„initå‡½æ•°ä¸­ä½¿ç”¨è¿™ä¸ªå®
 ///
-/// ÀýÈç£ºGN_STDCLASS_INIT( myobject_c, (param1, param2) );
-/// ¸ü¶àÐÅÏ¢²Î¼ûÏÂÃæµÄÀý×Ó
+/// ä¾‹å¦‚ï¼šGN_STDCLASS_INIT( myobject_c, (param1, param2) );
+/// æ›´å¤šä¿¡æ¯å‚è§ä¸‹é¢çš„ä¾‹å­
 #if GN_ENABLE_DEBUG
 #define GN_STDCLASS_INIT( class_name, param_list )                               \
     /* call parent's init() */                                                   \
@@ -44,11 +44,11 @@
 #endif
 
 ///
-/// stdclassÀàÐÍµÄ±ê×¼ÍË³ö¹ý³Ì
+/// stdclassç±»åž‹çš„æ ‡å‡†é€€å‡ºè¿‡ç¨‹
 ///
-/// \note ÔÚËùÓÐ»ùÓÚstdclassÀàÐÍµÄquit()º¯ÊýÖÐÊ¹ÓÃÕâ¸öºê
+/// \note åœ¨æ‰€æœ‰åŸºäºŽstdclassç±»åž‹çš„quit()å‡½æ•°ä¸­ä½¿ç”¨è¿™ä¸ªå®
 ///
-/// Ê¹ÓÃ·½·¨²Î¼ûÏÂÃæµÄÀý×Ó
+/// ä½¿ç”¨æ–¹æ³•å‚è§ä¸‹é¢çš„ä¾‹å­
 #define GN_STDCLASS_QUIT()  { clear(); MyParent::quit(); }
 
 namespace GN
@@ -57,34 +57,34 @@ namespace GN
     /// standard class
     ///
     /// \par
-    /// ¹ØÓÚ StdClass µÄÊ¹ÓÃËµÃ÷ÒÔ¼°Ò»Ð©×¢ÒâÊÂÏî£¬¼ûÏÂÃæ´úÂëÖÐµÄ×¢ÊÍ¡£
+    /// å…³äºŽ StdClass çš„ä½¿ç”¨è¯´æ˜Žä»¥åŠä¸€äº›æ³¨æ„äº‹é¡¹ï¼Œè§ä¸‹é¢ä»£ç ä¸­çš„æ³¨é‡Šã€‚
     /// \par
-    /// ÈÎºÎÐèÒªÐèÒª³õÊ¼»¯/ÍË³ö²Ù×÷µÄÀà¶¼Ó¦µ±´Ó StdClass ¼Ì³Ð¡£
+    /// ä»»ä½•éœ€è¦éœ€è¦åˆå§‹åŒ–/é€€å‡ºæ“ä½œçš„ç±»éƒ½åº”å½“ä»Ž StdClass ç»§æ‰¿ã€‚
     /// \par
-    /// StdClassÊµÏÖÁË±ê×¼µÄinit/quit½Ó¿Ú£¬Õâ¸ö½Ó¿Ú°üÀ¨6¸ö±ê×¼º¯Êý£º\n
-    /// - StdClass()  : ¹¹Ôìº¯Êý¡£
-    ///   - Í¨¹ýclear()½«Ë½ÓÐ±äÁ¿ÇåÁã
-    ///   - Ò»°ãÇé¿öÏÂ£¬³ýÁË clear() ÒÔÍâ£¬¹¹Ôìº¯ÊýÖÐÔÙ²»Ó¦°üº¬ÆäËû´úÂë£¬
-    ///   - ÈÎºÎÓÐ¿ÉÄÜÊ§°ÜµÄ³õÊ¼»¯´úÂë¶¼Ó¦·Åµ½ init() ÖÐ¡£
+    /// StdClasså®žçŽ°äº†æ ‡å‡†çš„init/quitæŽ¥å£ï¼Œè¿™ä¸ªæŽ¥å£åŒ…æ‹¬6ä¸ªæ ‡å‡†å‡½æ•°ï¼š\n
+    /// - StdClass()  : æž„é€ å‡½æ•°ã€‚
+    ///   - é€šè¿‡clear()å°†ç§æœ‰å˜é‡æ¸…é›¶
+    ///   - ä¸€èˆ¬æƒ…å†µä¸‹ï¼Œé™¤äº† clear() ä»¥å¤–ï¼Œæž„é€ å‡½æ•°ä¸­å†ä¸åº”åŒ…å«å…¶ä»–ä»£ç ï¼Œ
+    ///   - ä»»ä½•æœ‰å¯èƒ½å¤±è´¥çš„åˆå§‹åŒ–ä»£ç éƒ½åº”æ”¾åˆ° init() ä¸­ã€‚
     /// \n
-    /// - ~StdClass() : ÐéÎö¹¹º¯Êý¡£
-    ///   - µ÷ÓÃ quit() ÊÍ·Å×ÊÔ´¡£
+    /// - ~StdClass() : è™šæžæž„å‡½æ•°ã€‚
+    ///   - è°ƒç”¨ quit() é‡Šæ”¾èµ„æºã€‚
     /// \n
-    /// - init()      : ³õÊ¼»¯º¯Êý¡£
-    ///   - ³É¹¦Ôò·µ»Øtrue£¬·ñÔò·µ»Øfalse¡£
+    /// - init()      : åˆå§‹åŒ–å‡½æ•°ã€‚
+    ///   - æˆåŠŸåˆ™è¿”å›žtrueï¼Œå¦åˆ™è¿”å›žfalseã€‚
     /// \n
-    /// - quit()      : Ðéº¯Êý¡£
-    ///   - ÊÍ·ÅËùÓÐµÄ×ÊÔ´£¬Í¬Ê±½«Ë½ÓÐ±äÁ¿ÇåÁã£¨Í¨¹ýµ÷ÓÃ clear() £©¡£
-    ///   - µ±ÀàµÄÊµÀý±»deleteÊ±£¬Îö¹¹º¯Êý½«×Ô¶¯µ÷ÓÃ quit() ¡£
-    ///   - quit() º¯ÊýÓ¦µ±¿ÉÒÔ±»°²È«µÄ¡¢¶à´ÎµÄµ÷ÓÃ£¬Ò²¾ÍÊÇËµ£¬
-    ///   - ÔÚÊÍ·Å×ÊÔ´Ê±±ØÐëÊ×ÏÈ¼ì²é×ÊÔ´µÄÓÐÐ§ÐÔ¡£
+    /// - quit()      : è™šå‡½æ•°ã€‚
+    ///   - é‡Šæ”¾æ‰€æœ‰çš„èµ„æºï¼ŒåŒæ—¶å°†ç§æœ‰å˜é‡æ¸…é›¶ï¼ˆé€šè¿‡è°ƒç”¨ clear() ï¼‰ã€‚
+    ///   - å½“ç±»çš„å®žä¾‹è¢«deleteæ—¶ï¼Œæžæž„å‡½æ•°å°†è‡ªåŠ¨è°ƒç”¨ quit() ã€‚
+    ///   - quit() å‡½æ•°åº”å½“å¯ä»¥è¢«å®‰å…¨çš„ã€å¤šæ¬¡çš„è°ƒç”¨ï¼Œä¹Ÿå°±æ˜¯è¯´ï¼Œ
+    ///   - åœ¨é‡Šæ”¾èµ„æºæ—¶å¿…é¡»é¦–å…ˆæ£€æŸ¥èµ„æºçš„æœ‰æ•ˆæ€§ã€‚
     /// \n
-    /// - ok()        : ¼ì²âº¯Êý¡£
-    ///   - ÓÃÀ´¼ì²éÊÇ·ñÒÑ¾­³õÊ¼»¯¹ý¡£³É¹¦µ÷ÓÃ init() ºó·µ»Øtrue£¬
-    ///     µ÷ÓÃ quit() ºó·µ»Øfalse¡£
+    /// - ok()        : æ£€æµ‹å‡½æ•°ã€‚
+    ///   - ç”¨æ¥æ£€æŸ¥æ˜¯å¦å·²ç»åˆå§‹åŒ–è¿‡ã€‚æˆåŠŸè°ƒç”¨ init() åŽè¿”å›žtrueï¼Œ
+    ///     è°ƒç”¨ quit() åŽè¿”å›žfalseã€‚
     /// \n
-    /// - clear()     : Ë½ÓÐº¯Êý¡£
-    ///   - ÓÃÓÚ½«Ë½ÓÐ³ÉÔ±±äÁ¿ÇåÁã£¬±»¹¹Ôìº¯ÊýºÍ quit() µ÷ÓÃ
+    /// - clear()     : ç§æœ‰å‡½æ•°ã€‚
+    ///   - ç”¨äºŽå°†ç§æœ‰æˆå‘˜å˜é‡æ¸…é›¶ï¼Œè¢«æž„é€ å‡½æ•°å’Œ quit() è°ƒç”¨
     ///
     class StdClass
     {
@@ -105,7 +105,7 @@ namespace GN
     public :
 
         ///
-        /// ³õÊ¼»¯º¯Êý
+        /// åˆå§‹åŒ–å‡½æ•°
         ///
         bool init()
         {
@@ -119,12 +119,12 @@ namespace GN
         }
 
         ///
-        /// ÍË³öº¯Êý
+        /// é€€å‡ºå‡½æ•°
         ///
         virtual void quit() { clear(); }
 
         ///
-        /// ÊÇ·ñ³õÊ¼»¯¹ý£¿
+        /// æ˜¯å¦åˆå§‹åŒ–è¿‡ï¼Ÿ
         ///
         bool ok() const { return IS_SUCCESS == mOK; }
 

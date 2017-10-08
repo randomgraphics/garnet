@@ -38,7 +38,7 @@ def get_compiler_path(env, path):
     elif 'path' == path:
         return os.path.join( root, 'bin', 'win32' )
 
-    raise SCons.Errors.InternalError, "The %s path was not found."%path
+    raise SCons.Errors.InternalError("The %s path was not found."%path)
 
 def get_xenon_paths(env):
     """Return a 3-tuple of (INCLUDE, LIB, PATH) as the values
@@ -63,9 +63,9 @@ def validate_vars(env):
     """Validate the PCH and PCHSTOP construction variables."""
     if env.has_key('PCH') and env['PCH']:
         if not env.has_key('PCHSTOP'):
-            raise SCons.Errors.UserError, "The PCHSTOP construction must be defined if PCH is defined."
+            raise SCons.Errors.UserError("The PCHSTOP construction must be defined if PCH is defined.")
         if not SCons.Util.is_String(env['PCHSTOP']):
-            raise SCons.Errors.UserError, "The PCHSTOP construction variable must be a string: %r"%env['PCHSTOP']
+            raise SCons.Errors.UserError("The PCHSTOP construction variable must be a string: %r"%env['PCHSTOP'])
 
 def pch_emitter(target, source, env):
     """Adds the object file target."""

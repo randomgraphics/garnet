@@ -24,7 +24,6 @@ import re
 import sys
 import getopt
 import glob
-import string
 
 # Global variables
 suites = []
@@ -57,7 +56,7 @@ def main():
 def usage( problem = None ):
     '''Print usage info and exit'''
     if problem is None:
-        print usageString()
+        print(usageString())
         sys.exit(0)
     else:
         sys.stderr.write( usageString() )
@@ -82,7 +81,7 @@ def parseCommandline():
                                             'error-printer', 'abort-on-fail', 'have-std', 'no-std',
                                             'have-eh', 'no-eh', 'template=', 'include=',
                                             'root', 'part', 'no-static-init', 'factor', 'longlong='] )
-    except getopt.error, problem:
+    except(getopt.error, problem):
         usage( problem )
     setOptions( options )
     return setFiles( patterns )
@@ -174,7 +173,8 @@ def scanInputFiles(files):
 
 def scanInputFile(fileName):
     '''Scan single input file for test suites'''
-    file = open(fileName)
+    #print("[cxxtestgen] Scan %s for test suites..."%fileName)
+    file = open(fileName, encoding='utf-8')
     lineNo = 0
     while 1:
         line = file.readline()
@@ -315,12 +315,12 @@ def scanLineForDestroy( suite, lineNo, line ):
 
 def cptr( str ):
     '''Convert a string to its C representation'''
-    return '"' + string.replace( str, '\\', '\\\\' ) + '"'
+    return '"' + str.replace( '\\', '\\\\' ) + '"'
 
 
 def addSuiteCreateDestroy( suite, which, line ):
     '''Add createSuite()/destroySuite() to current suite'''
-    if suite.has_key(which):
+    if which in suite:
         abort( '%s:%s: %sSuite() already declared' % ( suite['file'], str(line), which ) )
     suite[which] = line
 
@@ -335,10 +335,10 @@ def closeSuite():
 
 def verifySuite(suite):
     '''Verify current suite is legal'''
-    if suite.has_key('create') and not suite.has_key('destroy'):
+    if ('create' in suite) and not ('destory' in suite):
         abort( '%s:%s: Suite %s has createSuite() but no destroySuite()' %
                (suite['file'], suite['create'], suite['name']) )
-    if suite.has_key('destroy') and not suite.has_key('create'):
+    if ('destory' in suite) and not ('create' in suite):
         abort( '%s:%s: Suite %s has destroySuite() but no createSuite()' %
                (suite['file'], suite['destroy'], suite['name']) )
 
@@ -472,7 +472,7 @@ def isGenerated(suite):
 
 def isDynamic(suite):
     '''Checks whether a suite is dynamic'''
-    return suite.has_key('create')
+    return 'create' in suite
 
 lastIncluded = ''
 def writeInclude(output, file):

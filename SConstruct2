@@ -19,28 +19,28 @@ def UTIL_trace( level, msg ):
     level = float(level)
     assert( 0 != level )
     if ( CONF_trace > 0 and level <= CONF_trace ) or ( CONF_trace < 0 and level == -CONF_trace ):
-        print 'TRACE(%d) : %s'%(level,msg)
+        print('TRACE(%d) : %s' % (level, msg))
 
 # 输出提示信息
-def UTIL_info( msg ): print 'INFO : %s'%msg
+def UTIL_info( msg ): print('INFO : %s'%msg)
 
 # 输出警告信息
 def UTIL_warn( msg ):
-    #print '===================================================================='
-    print 'WARNING : %s'%msg
-    #print '===================================================================='
+    #print('====================================================================')
+    print('WARNING : %s'%msg)
+    #print('====================================================================')
 
 # 输出错误信息
 def UTIL_error( msg ):
-    print '===================================================================='
-    print 'ERROR : %s'%msg
-    print '===================================================================='
+    print('====================================================================')
+    print('ERROR : %s'%msg)
+    print('====================================================================')
 
 # Fatal Error. Need to halt building
 def UTIL_fatal( msg ):
-    print '===================================================================='
-    print 'FATAL : %s'%msg
-    print '===================================================================='
+    print('====================================================================')
+    print('FATAL : %s'%msg)
+    print('====================================================================')
     Exit(-1)
 
 ################################################################################
@@ -66,7 +66,7 @@ elif 'posix' == LOCAL_ENV['PLATFORM']:
     HOST_OS = 'posix'
     HOST_CPU = 'x86'
 else:
-    print 'FATAL: Unknown platform:', LOCAL_ENV['PLATFORM']
+    print('FATAL: Unknown platform:', LOCAL_ENV['PLATFORM'])
     Exit(-1)
 
 # try import xenon extension for SCons
@@ -76,7 +76,7 @@ try:
     import xenon
     BUILD_HAS_XENON_EXTENSION = True
 except ImportError:
-    print "no xenon extension for scons found."
+    print("no xenon extension for scons found.")
 
 BUILD_COMPILER = UTIL_getenv('GN_BUILD_COMPILER', None )
 if None == BUILD_COMPILER:
@@ -516,12 +516,11 @@ def CheckConfig():
         stdout = os.popen( "ver" )
         str = stdout.read()
         stdout.close()
-        import string
-        vista = string.find( str, "6.0" ) >= 0
-        win7  = string.find( str, "6.1" ) >= 0
-        win8  = string.find( str, "6.2" ) >= 0
-        win81 = string.find( str, "6.3" ) >= 0
-        win10 = string.find( str, "10.0" ) >= 0
+        vista = str.find( "6.0" ) >= 0
+        win7  = str.find( "6.1" ) >= 0
+        win8  = str.find( "6.2" ) >= 0
+        win81 = str.find( "6.3" ) >= 0
+        win10 = str.find( "10.0" ) >= 0
         return  vista or win7 or win8 or win81 or win10
 
     # =====
@@ -699,13 +698,13 @@ class GarnetEnv2 :
         target_list = (os.path.abspath(target)).split(os.sep)
 
         # On the windows platform the target may be on a completely different drive from the base.
-        if os.name in ['nt','dos','os2'] and base_list[0] <> target_list[0]:
-            raise OSError, 'Target is on a different drive to base. Target: '+target_list[0].upper()+', base: '+base_list[0].upper()
+        if os.name in ['nt','dos','os2'] and (base_list[0] != target_list[0]):
+            raise OSError('Target is on a different drive to base. Target: ' + target_list[0].upper() + ', base: ' + base_list[0].upper())
 
         # Starting from the filepath root, work out how much of the filepath is
         # shared by base and target.
         for i in range(min(len(base_list), len(target_list))):
-            if base_list[i] <> target_list[i]: break
+            if base_list[i] != target_list[i]: break
         else:
             # If we broke out of the loop, i is pointing to the first differing path elements.
             # If we didn't break out of the loop, i is pointing to identical path elements.
