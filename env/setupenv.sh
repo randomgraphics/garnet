@@ -57,7 +57,7 @@ export GN_BUILD_STATIC_LINK
 # ===========
 # setup scons
 # ===========
-SCONS_ROOT=${GARNET_ROOT}/env/scons/2.4.1
+SCONS_ROOT=${GARNET_ROOT}/env/scons/3.0.0
 SCONS_LIB_DIR=${SCONS_ROOT}/engine
 export SCONS_ROOT
 export PATH SCONS_LIB_DIR
