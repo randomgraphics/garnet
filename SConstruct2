@@ -802,15 +802,17 @@ class GarnetEnv2 :
     # Setup libraries. Note that this is a private methods that should only
     # be used inside GarnetEnv class.
     #
-    def _BuildSetupLibs( self, env ):
+    def _BuildSetupLibs( self, env, extraLibs = [] ):
+
+        libs = extraLibs;
 
         # Add external libraries as needed. Note that
         # when using gcc, the library order matters.
         core = self.CollectTargets( ['GNcore'] )
         if (len(core) > 2):
-            libs = [core[2]]
+            libs += [core[2]]
         else:
-            libs = core
+            libs += core
         libs += self.CollectTargets( ['GNexternLib'] )
         libs += CONFIG['cg_libs']
         libs += CONFIG['glut']
@@ -867,11 +869,11 @@ class GarnetEnv2 :
     #
     # Build executable
     #
-    def BuildProgram( self, env, target, sources, pchHeader=None, pchSource=None, pdb=None, extraObjects=[] ):
+    def BuildProgram( self, env, target, sources, pchHeader=None, pchSource=None, pdb=None, extraObjects=[], extraLibs=[] ):
         env = env.Clone() if env else self.NewBuildEnv()
         objects = self.BuildObjects( env, sources, pchHeader, pchSource ) + extraObjects
         self._BuildSetupPDB( env, target, pdb )
-        self._BuildSetupLibs( env )
+        self._BuildSetupLibs( env, extraLibs )
         return env.Program( target, objects )
 
     #
