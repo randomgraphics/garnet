@@ -116,6 +116,7 @@ GN.RemoveEnvListItems( misc_env, 'CCFLAGS', ['/W4','/Wcheck','-Wall'] )
 misc_sources = GN.Glob( Split('expat/*.c pcre/*.c* png/*.c zlib/*.c') )
 if 'mingw' != GN.cc: misc_sources += GN.Glob( 'lua/*.c' )
 if GN.has_ogl: misc_sources += GN.Glob( 'glew/*.c' )
+if GN.has_vulkan: misc_sources += GN.Glob( 'vkel/*.c' )
 misc_cluster = GN.BuildObjects( misc_env, misc_sources )
 
 # **********************

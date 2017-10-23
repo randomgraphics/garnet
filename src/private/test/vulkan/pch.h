@@ -8,7 +8,7 @@
 
 #include "garnet/GNbase.h"
 #include "garnet/GNwin.h"
-#include <vulkan/vulkan.h>
+#include <vkel.h>
 
 // *****************************************************************************
 //                                     EOF

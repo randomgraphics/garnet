@@ -28,6 +28,9 @@ struct App {
             true, true, false, true
         });
 
+        // Initialize VKEL
+        CHECK_VK(vkelInit());
+
         // query layers
         uint32 layerCount;
         vkEnumerateInstanceLayerProperties(&layerCount, nullptr);
@@ -38,7 +41,7 @@ struct App {
             s += str::format("\t%s\n", l.layerName);
         }
         GN_INFO(sLogger)(s);
-    
+
         // query extensions
         uint32 extensionCount = 0;
         vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, nullptr);
@@ -49,7 +52,7 @@ struct App {
             s += str::format("\t%s\n", e.extensionName);
         }
         GN_INFO(sLogger)(s);
-        
+
         // create VK instance
         std::vector<const char*> layers = {
             "VK_LAYER_LUNARG_standard_validation"
@@ -66,38 +69,24 @@ struct App {
             (uint32)extensions.size(), extensions.data()
         };
         CHECK_VK(vkCreateInstance(&ci, nullptr, &vkInst));
+        vkelInit();
 
         // setup debug callback
         VkDebugReportCallbackCreateInfoEXT createInfo = {};
         createInfo.sType = VK_STRUCTURE_TYPE_DEBUG_REPORT_CALLBACK_CREATE_INFO_EXT;
         createInfo.flags = VK_DEBUG_REPORT_ERROR_BIT_EXT | VK_DEBUG_REPORT_WARNING_BIT_EXT;
         createInfo.pfnCallback = debugCallback;
-        CHECK_VK(CreateDebugReportCallbackEXT(vkInst, &createInfo, nullptr, &vkDebugReport));
+        CHECK_VK(vkCreateDebugReportCallbackEXT(vkInst, &createInfo, nullptr, &vkDebugReport));
 
         // done
         success = true;
     }
 
     ~App() {
-        if (vkDebugReport) DestroyDebugReportCallbackEXT(vkInst, vkDebugReport, nullptr);
+        if (vkDebugReport) vkDestroyDebugReportCallbackEXT(vkInst, vkDebugReport, nullptr);
         if (vkInst) vkDestroyInstance(vkInst, nullptr);
+        vkelUninit();
         if (win) delete win;
-    }
-
-    VkResult CreateDebugReportCallbackEXT(VkInstance instance, const VkDebugReportCallbackCreateInfoEXT* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkDebugReportCallbackEXT* pCallback) {
-        auto func = (PFN_vkCreateDebugReportCallbackEXT) vkGetInstanceProcAddr(instance, "vkCreateDebugReportCallbackEXT");
-        if (func != nullptr) {
-            return func(instance, pCreateInfo, pAllocator, pCallback);
-        } else {
-            return VK_ERROR_EXTENSION_NOT_PRESENT;
-        }
-    }
-
-    void DestroyDebugReportCallbackEXT(VkInstance instance, VkDebugReportCallbackEXT callback, const VkAllocationCallbacks* pAllocator) {
-        auto func = (PFN_vkDestroyDebugReportCallbackEXT) vkGetInstanceProcAddr(instance, "vkDestroyDebugReportCallbackEXT");
-        if (func != nullptr) {
-            func(instance, callback, pAllocator);
-        }
     }
 
     static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(

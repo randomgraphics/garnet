@@ -490,6 +490,16 @@ def CheckConfig():
         CONFIG['has_glut'] = False
         CONFIG['glut'] = []
 
+    # ======
+    # Vulkan
+    # ======
+    if c.CheckLibWithHeader( 'vulkan-1', ['vulkan/vulkan.h'], 'C', 'vkCreateInstance(0,0,0);' ) :
+        CONFIG['has_vulkan'] = True
+        CONFIG['vk_libs'] = ['vulkan-1']
+    else :
+        CONFIG['has_vulkan'] = False
+        CONFIG['vk_libs'] = []
+
     # ==========================
     # Misc. D3D headers and libs
     # ==========================
@@ -657,6 +667,7 @@ class GarnetEnv2 :
         self.has_glut         = CONFIG['has_glut']
         self.has_iconv        = CONFIG['has_iconv']
         self.has_ogl          = CONFIG['has_ogl']
+        self.has_vulkan       = CONFIG['has_vulkan']
         self.has_xinput       = CONFIG['has_xinput']
         self.has_xinput2      = CONFIG['has_xinput2']
         self.has_xnamath      = CONFIG['has_xnamath']
@@ -818,6 +829,7 @@ class GarnetEnv2 :
         libs += CONFIG['glut']
         libs += CONFIG['ogl_libs']
         libs += CONFIG['fbx_libs']
+        libs += CONFIG['vk_libs']
         libs += CONFIG['iconv_lib']
         if 'posix' == BUILD_TARGET_OS:
             libs += ['X11']

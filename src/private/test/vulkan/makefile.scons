@@ -1,3 +1,4 @@
 Import( 'GN' )
-name = 'GNtestVulkan'
-GN.NewDefaultTarget( name, GN.BinplaceProgram( GN.BuildProgram( None, name, ['main.cpp'], 'pch.h', 'pch.cpp', extraLibs=['vulkan-1'] ) ) )
+if GN.has_vulkan:
+    name = 'GNtestVulkan'
+    GN.NewDefaultTarget( name, GN.BinplaceProgram( GN.BuildProgram( None, name, ['main.cpp'], 'pch.h', 'pch.cpp', extraLibs=['vulkan-1'] ) ) )
