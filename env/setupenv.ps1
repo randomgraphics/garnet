@@ -309,7 +309,7 @@ function LookForWindowsSDK($version)
     {
         $program = "${env:ProgramFiles}"
     }
-    
+
     if( test-path "$program\Windows Kits\${version}\Include" )
     {
         $result = "$program\Windows Kits\${version}"
@@ -563,11 +563,14 @@ if( "x64" -eq $current_cpu )
 }
 $env:Path = "$GARNET_ROOT\env\bin\mswin\cmd;$MY_BIN_PATH;$env:Path"
 
+$env:GN_BUILD_TAG = "$env:GN_BUILD_TARGET_OS.$env:GN_BUILD_TARGET_CPU.$env:GN_BUILD_COMPILER.$env:GN_BUILD_VARIANT"
+$env:GN_BUILD_DIR = "$GARNET_ROOT\build.tmp\$env:GN_BUILD_TAG"
+
 # update title
-$Host.UI.RawUI.WindowTitle = "garnet3d ( $GARNET_ROOT $env:GN_BUILD_COMPILER-$env:GN_BUILD_TARGET_OS-$env:GN_BUILD_TARGET_CPU $env:GN_BUILD_VARIANT )"
+$Host.UI.RawUI.WindowTitle = "garnet3d ( $GARNET_ROOT $env:GN_BUILD_TAG )"
 
 # change current location
-cd $GARNET_ROOT
+set-location $GARNET_ROOT
 
 # ==============================================================================
 # call user specific setup script
@@ -592,4 +595,5 @@ GN_BUILD_COMPILER   = $env:GN_BUILD_COMPILER
 GN_BUILD_VARIANT    = $env:GN_BUILD_VARIANT
 GN_BUILD_TARGET_OS  = $env:GN_BUILD_TARGET_OS
 GN_BUILD_TARGET_CPU = $env:GN_BUILD_TARGET_CPU
+GN_BUILD_DIR        = $env:GN_BUILD_DIR
 "

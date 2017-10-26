@@ -48,11 +48,15 @@ done
 # ===========================
 # export build variants
 # ===========================
+GN_BUILD_TAG=${GN_BUILD_TARGET_OS}.${GN_BUILD_TARGET_CPU}.${GN_BUILD_COMPILER}.${GN_BUILD_VARIANT}
+GN_BUILD_DIR=${GARNET_ROOT}/build.tmp/${GN_BUILD_TAG}
 export GN_BUILD_TARGET_OS
 export GN_BUILD_TARGET_CPU
 export GN_BUILD_COMPILER
 export GN_BUILD_VARIANT
 export GN_BUILD_STATIC_LINK
+export GN_BUILD_TAG
+export GN_BUILD_DIR
 
 # ===========
 # setup scons
