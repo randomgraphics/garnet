@@ -31,6 +31,7 @@ namespace GN
             virtual intptr_t getDisplayHandle() const = 0;
             virtual intptr_t getMonitorHandle() const = 0;
             virtual intptr_t getWindowHandle() const = 0;
+            virtual intptr_t getModuleHandle() const = 0;
             virtual Vector2<size_t> getClientSize() const = 0;
 
             //@}
@@ -56,7 +57,9 @@ namespace GN
             ///
             /// Run the application while there's events in event queue.
             ///
-            virtual void runUntilNoNewEvents() = 0;
+            /// Returns false when the Window system received request to quit the application.
+            ///
+            virtual bool runUntilNoNewEvents() = 0;
 
             ///
             /// Step one event. Block the application if there's no event.
@@ -118,7 +121,9 @@ namespace GN
         ///
         /// Process windows messages. No effects on platform other than MS Windows.
         ///
-        GN_API void processWindowMessages( intptr_t window, bool blockWhileMinized );
+        /// \return Returns false, when the Window system receives quit request.
+        ///
+        GN_API bool processWindowMessages( intptr_t window, bool blockWhileMinized );
     }
 }
 

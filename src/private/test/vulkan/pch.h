@@ -8,7 +8,9 @@
 
 #include "garnet/GNbase.h"
 #include "garnet/GNwin.h"
-#include <vkel.h>
+//#include <vkel.h>
+#define VK_USE_PLATFORM_WIN32_KHR
+#include <vulkan/vulkan.h>
 
 // *****************************************************************************
 //                                     EOF

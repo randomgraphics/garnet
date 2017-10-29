@@ -32,7 +32,7 @@ namespace GN { namespace win
         void setClientSize( size_t, size_t ) {}
         void repaint() {}
         void run() {}
-        void runUntilNoNewEvents() {}
+        bool runUntilNoNewEvents() { return false; }
         void stepOneEvent() {}
         void attachEventHandler( const StrA &, const WindowEventHandler & ) {}
         void removeEventHandler( const StrA &, const WindowEventHandler & ) {}
@@ -160,7 +160,7 @@ namespace GN { namespace win
     //
     // -------------------------------------------------------------------------
 #if GN_WINPC
-    GN_API void processWindowMessages( intptr_t window, bool blockWhileMinized )
+    GN_API bool processWindowMessages( intptr_t window, bool blockWhileMinized )
     {
         GN_GUARD_SLOW;
 
@@ -173,7 +173,7 @@ namespace GN { namespace win
             {
                 if( WM_QUIT == msg.message )
                 {
-                    return;
+                    return false;
                 }
                 ::TranslateMessage( &msg );
                 ::DispatchMessage(&msg);
@@ -183,7 +183,7 @@ namespace GN { namespace win
                 GN_TRACE(sLogger)( "Wait for window messages..." );
                 ::WaitMessage();
             }
-            else return; // Idle time
+            else return true; // Idle time
         }
 
         GN_UNGUARD_SLOW;

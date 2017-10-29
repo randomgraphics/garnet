@@ -1,6 +1,14 @@
 {
     "files.associations": {
-        "*.scons": "python"
+        "*.scons": "python",
+        "deque": "cpp",
+        "list": "cpp",
+        "vector": "cpp",
+        "xstring": "cpp",
+        "xhash": "cpp",
+        "xtree": "cpp",
+        "xutility": "cpp",
+        "utility": "cpp"
     },
     "files.exclude": {
         "**/.git": true,
