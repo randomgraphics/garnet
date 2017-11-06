@@ -506,6 +506,7 @@ bool GN::util::SampleApp::checkCmdLine( int argc, const char * const argv[] )
                 if( value.empty() ) return false;
 
                 if( !sParseInteger( mInitParam.ro.windowedWidth, a, value ) ) return false;
+                mInitParam.ro.displayMode.width = mInitParam.ro.windowedWidth;
             }
             else if( 0 == str::compareI( "wh", a+1 ) )
             {
@@ -513,6 +514,7 @@ bool GN::util::SampleApp::checkCmdLine( int argc, const char * const argv[] )
                 if( value.empty() ) return false;
 
                 if( !sParseInteger( mInitParam.ro.windowedHeight, a, value ) ) return false;
+                mInitParam.ro.displayMode.height = mInitParam.ro.windowedHeight;
             }
             else if( 0 == str::compareI( "vsync", a+1 ) )
             {

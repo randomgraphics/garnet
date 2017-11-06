@@ -8,7 +8,11 @@
         "xhash": "cpp",
         "xtree": "cpp",
         "xutility": "cpp",
-        "utility": "cpp"
+        "utility": "cpp",
+        "ios": "cpp",
+        "xlocale": "cpp",
+        "xiosbase": "cpp",
+        "system_error": "cpp"
     },
     "files.exclude": {
         "**/.git": true,

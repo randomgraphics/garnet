@@ -9,7 +9,6 @@
 #if GN_WINPC
 
 #include "basicGpu.h"
-#include "renderWindowMsw.h"
 
 namespace GN { namespace gfx
 {
@@ -38,7 +37,7 @@ namespace GN { namespace gfx
     public:
         bool init( const GpuOptions & );
         void quit();
-    private :
+    private:
         void clear()
         {
             dispClear();
@@ -53,28 +52,29 @@ namespace GN { namespace gfx
 
         //@{
 
-    public:
-
-        virtual const GpuOptions & getOptions() const { return mOptions; }
-        virtual const DispDesc        & getDispDesc() const { return mDispDesc; }
-
-    private:
-        bool dispInit( const GpuOptions & );
-        void dispQuit();
-        void dispClear() {}
-
     protected:
+        virtual intptr_t getDefaultDisplay() { return 1; }
+        virtual intptr_t determineMonitor(const GpuOptions & go, intptr_t display);
+        virtual bool getCurrentDisplayMode(DisplayMode & dm, intptr_t display, intptr_t monitor);
 
-        virtual void handleRenderWindowSizeMove();
+        ///
+        /// This signal will be triggered, whenever the render window receive a message.
+        ///
+        Signal4<void,HWND,UINT,WPARAM,LPARAM> sigMessage;
 
-        RenderWindowMsw & getRenderWindow() { return mWindow; }
+    private:
+        bool dispInit();
+        void dispQuit();
+        void dispClear() { mHook = 0; }
+
+        static  LRESULT CALLBACK staticHookProc( int code, WPARAM wp, LPARAM lp );
 
     private:
 
-        GpuOptions   mOptions;
-        DispDesc          mDispDesc;
-        RenderWindowMsw   mWindow;  ///< Render window instance.
-        WinProp           mWinProp; ///< Render window properites.
+        HHOOK mHook;
+
+        typedef Dictionary<intptr_t,BasicGpuMsw*> WindowMap;
+        static WindowMap msInstanceMap;
 
         //@}
 
@@ -127,8 +127,6 @@ namespace GN { namespace gfx
         //@{
 
     public:
-
-        virtual void processRenderWindowMessages( bool blockWhileMinimized );
 
         //@}
     };

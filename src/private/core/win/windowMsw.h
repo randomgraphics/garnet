@@ -33,10 +33,11 @@ namespace GN { namespace win
 
         //@{
     public:
-        bool init( const WindowCreationParams & );
+        bool init( const WindowCreationParameters & );
+        bool init( const WindowAttachingParameters & );
         void quit();
     private:
-        void clear() { mClassName.clear(); mModuleInstance = 0; mWindow = 0; }
+        void clear() { mClassName.clear(); mModuleInstance = 0; mWindow = 0; mHook = 0; }
         //@}
 
         // ********************************
@@ -57,10 +58,7 @@ namespace GN { namespace win
         void setClientSize( size_t, size_t );
         void repaint();
         void run();
-        bool runUntilNoNewEvents() { return processWindowMessages((intptr_t)mWindow,false); }
-        void stepOneEvent() { GN_UNIMPL_WARNING(); }
-        void attachEventHandler( const StrA &, const WindowEventHandler & ) { GN_UNIMPL_WARNING(); }
-        void removeEventHandler( const StrA &, const WindowEventHandler & ) { GN_UNIMPL_WARNING(); }
+        bool runUntilNoNewEvents(bool blockWhenMinimized);
 
         //@}
 
@@ -69,9 +67,12 @@ namespace GN { namespace win
         // ********************************
     private:
 
-        StrW mClassName;
+        StrW      mClassName;
         HINSTANCE mModuleInstance;
-        HWND mWindow;
+        HWND      mWindow;
+        HHOOK     mHook;
+        bool      mIsExternal;
+        bool      mInsideSizeMove;
 
         static Dictionary<void*,WindowMsw*> msInstanceMap;
 
@@ -79,10 +80,11 @@ namespace GN { namespace win
         // private functions
         // ********************************
     private:
-        bool createWindow( const WindowCreationParams & wcp );
-
+        bool createWindow( const WindowCreationParameters & wcp );
+        void handleMessage( HWND wnd, UINT msg, WPARAM wp, LPARAM lp );
         LRESULT windowProc( HWND wnd, UINT msg, WPARAM wp, LPARAM lp );
         static LRESULT CALLBACK staticWindowProc( HWND wnd, UINT msg, WPARAM wp, LPARAM lp );
+        static LRESULT CALLBACK staticHookProc( int code, WPARAM wp, LPARAM lp );
     };
 }}
 

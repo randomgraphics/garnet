@@ -1,4 +1,4 @@
-#include "pch.h"
+﻿#include "pch.h"
 #include "windowMsw.h"
 
 #if GN_WINPC
@@ -14,7 +14,7 @@ static GN::Logger * sLogger = GN::getLogger("GN.win.MSW");
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::win::WindowMsw::init( const WindowCreationParams & wcp )
+bool GN::win::WindowMsw::init( const WindowCreationParameters & wcp )
 {
     GN_GUARD;
 
@@ -22,6 +22,47 @@ bool GN::win::WindowMsw::init( const WindowCreationParams & wcp )
     GN_STDCLASS_INIT( GN::win::WindowMsw, () );
 
     if( !createWindow( wcp ) ) return failure();
+
+    mIsExternal = false;
+
+    // success
+    return success();
+
+    GN_UNGUARD;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+bool GN::win::WindowMsw::init( const WindowAttachingParameters & wap )
+{
+    GN_GUARD;
+
+    // standard init procedure
+    GN_STDCLASS_INIT( GN::win::WindowMsw, () );
+
+    if( !::IsWindow( (HWND)wap.window ) )
+    {
+        GN_ERROR(sLogger)( "External render window handle must be valid." );
+        return failure();
+    }
+
+    if( NULL != msInstanceMap.find( (HWND)wap.window ) )
+    {
+        GN_ERROR(sLogger)( "You can't create multiple render window instance for single window handle." );
+        return failure();
+    }
+
+    // register a message hook to render window.
+    mHook = ::SetWindowsHookEx( WH_CALLWNDPROC, &staticHookProc, 0, GetCurrentThreadId() );
+    if( 0 == mHook )
+    {
+        GN_ERROR(sLogger)( "Fail to setup message hook : %s", getWin32LastErrorInfo() );
+        return failure();
+    }
+
+    mWindow     = (HWND)wap.window;
+    mIsExternal = true;
 
     // success
     return success();
@@ -36,11 +77,19 @@ void GN::win::WindowMsw::quit()
 {
     GN_GUARD;
 
+    // delete hook
+    if( mHook ) ::UnhookWindowsHookEx( mHook ), mHook = 0;
+
+     ::DestroyWindow( mWindow );
+
     // destroy window
     if( ::IsWindow( mWindow ) )
     {
-        GN_TRACE(sLogger)( "Destroy window (handle: 0x%X)", mWindow );
-        ::DestroyWindow( mWindow );
+        if( !mIsExternal )
+        {
+            GN_TRACE(sLogger)( "Destroy window (handle: 0x%X)", mWindow );
+            ::DestroyWindow( mWindow );
+        }
 
         // remove itself from instance map
         GN_ASSERT( NULL != msInstanceMap.find(mWindow) );
@@ -188,6 +237,38 @@ void GN::win::WindowMsw::run()
     GN_UNGUARD_ALWAYS;
 }
 
+//
+//
+// -------------------------------------------------------------------------
+bool GN::win::WindowMsw::runUntilNoNewEvents( bool blockWhileMinized )
+{
+    GN_GUARD_SLOW;
+
+    GN_ASSERT( ::IsWindow( (HWND)mWindow ) );
+
+    MSG msg;
+    while( true )
+    {
+        if( ::PeekMessage(&msg, NULL, 0, 0, PM_REMOVE) )
+        {
+            if( WM_QUIT == msg.message )
+            {
+                return false;
+            }
+            ::TranslateMessage( &msg );
+            ::DispatchMessage(&msg);
+        }
+        else if( ::IsIconic( (HWND)mWindow ) && blockWhileMinized )
+        {
+            GN_TRACE(sLogger)( "Wait for window messages..." );
+            ::WaitMessage();
+        }
+        else return true; // Idle time
+    }
+
+    GN_UNGUARD_SLOW;
+}
+
 // *****************************************************************************
 // Private methods
 // *****************************************************************************
@@ -195,7 +276,7 @@ void GN::win::WindowMsw::run()
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::win::WindowMsw::createWindow( const WindowCreationParams & wcp )
+bool GN::win::WindowMsw::createWindow( const WindowCreationParameters & wcp )
 {
     GN_GUARD;
 
@@ -331,6 +412,32 @@ GN::win::WindowMsw::staticWindowProc( HWND wnd, UINT msg, WPARAM wp, LPARAM lp )
         GN_ASSERT( *ppwindow );
         return (*ppwindow)->windowProc( wnd, msg, wp, lp );
     }
+
+    GN_UNGUARD;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+LRESULT CALLBACK
+GN::win::WindowMsw::staticHookProc( int code, WPARAM wp, LPARAM lp )
+{
+    GN_GUARD;
+
+    //GN_TRACE( "wnd=0x%X, msg=%s", wnd, win::msg2str(msg) );
+
+    WindowMsw ** ppwnd = msInstanceMap.find( ((CWPSTRUCT*)lp)->hwnd );
+
+    if( NULL != ppwnd )
+    {
+        // TODO: process window messages here.
+        // CWPSTRUCT * cwp = (CWPSTRUCT*)lp;
+        // WindowMsw * wnd = *ppwnd;
+        // GN_ASSERT( cwp && wnd );
+        // ProcessMessage( cwp->hwnd, cwp->message, cwp->wParam, cwp->lParam );
+    }
+
+    return ::CallNextHookEx( 0, code, wp, lp );
 
     GN_UNGUARD;
 }

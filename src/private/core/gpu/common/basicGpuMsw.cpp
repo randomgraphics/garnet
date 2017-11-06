@@ -4,134 +4,9 @@
 
 #if GN_WINPC
 
+GN::gfx::BasicGpuMsw::WindowMap GN::gfx::BasicGpuMsw::msInstanceMap;
+
 static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.common");
-
-//
-//
-// -----------------------------------------------------------------------------
-static bool
-sGetClientSize( HWND win, uint32 * width, uint32 * height )
-{
-    GN_GUARD;
-
-    RECT rc;
-
-    GN_MSW_CHECK_RETURN( ::GetClientRect( win, &rc ), false );
-
-    if( width ) *width = (uint32)(rc.right - rc.left);
-
-    if( height ) *height = (uint32)(rc.bottom - rc.top);
-
-    return true;
-
-    GN_UNGUARD;
-}
-
-///
-/// Determine monitor handle that render window should stay in.
-// ----------------------------------------------------------------------------
-static intptr_t
-sDetermineMonitorHandle( const GN::gfx::GpuOptions & ro )
-{
-    if( 0 == ro.monitorHandle )
-    {
-        HMONITOR monitor;
-        if( !::IsWindow( (HWND)ro.parentWindow ) )
-        {
-            POINT pt = { LONG_MIN, LONG_MIN }; // Make sure primary monitor are returned.
-            monitor = ::MonitorFromPoint( pt, MONITOR_DEFAULTTOPRIMARY );
-            if( 0 == monitor )
-            {
-                GN_ERROR(sLogger)( "Fail to get primary monitor handle." );
-                return 0;
-            }
-        }
-        else
-        {
-            monitor = ::MonitorFromWindow( (HWND)ro.renderWindow, MONITOR_DEFAULTTONEAREST );
-        }
-        GN_ASSERT( monitor );
-        return (intptr_t)monitor;
-    }
-    else
-    {
-        return ro.monitorHandle;
-    }
-}
-
-///
-/// get current display mode
-// ----------------------------------------------------------------------------
-static bool
-sGetCurrentDisplayMode(
-    const GN::gfx::GpuOptions & ro,
-    GN::gfx::DisplayMode      & dm )
-{
-    GN_GUARD;
-
-    // determine the monitor
-    intptr_t monitor = sDetermineMonitorHandle( ro );
-    if( 0 == monitor ) return false;
-
-    MONITORINFOEXA mi;
-    DEVMODEA windm;
-
-    mi.cbSize = sizeof(mi);
-    windm.dmSize = sizeof(windm);
-    windm.dmDriverExtra = 0;
-
-    GN_MSW_CHECK_RETURN( ::GetMonitorInfoA( (HMONITOR)monitor, &mi ), false );
-    GN_MSW_CHECK_RETURN( ::EnumDisplaySettingsA( mi.szDevice, ENUM_CURRENT_SETTINGS, &windm ), false );
-
-    dm.width = windm.dmPelsWidth;
-    dm.height = windm.dmPelsHeight;
-    dm.depth = windm.dmBitsPerPel;
-    dm.refrate = windm.dmDisplayFrequency;
-
-    // success
-    return true;
-
-    GN_UNGUARD;
-}
-
-///
-/// Determine render window size
-// ----------------------------------------------------------------------------
-static bool
-sDetermineWindowSize(
-    const GN::gfx::GpuOptions & ro,
-    const GN::gfx::DisplayMode & currentDisplayMode,
-    uint32 & width,
-    uint32 & height )
-{
-    GN_GUARD;
-
-    if( ro.useExternalWindow )
-    {
-        return sGetClientSize( (HWND)ro.renderWindow, &width, &height );
-    }
-    else
-    {
-        if( ro.fullscreen )
-        {
-            // In fullscreen mode, default window size is determined by current display mode.
-            const GN::gfx::DisplayMode & dm = ro.displayMode;
-            width = dm.width ? dm.width : currentDisplayMode.width;
-            height = dm.height ? dm.height : currentDisplayMode.height;
-        }
-        else
-        {
-            // In windowed mode, default window size is 640x480
-            width = ro.windowedWidth ? ro.windowedWidth : 640;
-            height = ro.windowedHeight ? ro.windowedHeight : 480;
-        }
-
-        // success
-        return true;
-    }
-
-    GN_UNGUARD;
-}
 
 // *****************************************************************************
 //                         BasicGpuMsw init / quit functions
@@ -148,7 +23,7 @@ bool GN::gfx::BasicGpuMsw::init( const GpuOptions & o )
     GN_STDCLASS_INIT( BasicGpuMsw, (o) );
 
     // initialize sub-components one by one
-    if( !dispInit(o) ) return failure();
+    if( !dispInit() ) return failure();
 
     // success
     return success();
@@ -173,95 +48,120 @@ void GN::gfx::BasicGpuMsw::quit()
 }
 
 // *****************************************************************************
-// from Gpu
+//                         From BasicGpu
 // *****************************************************************************
 
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::BasicGpuMsw::processRenderWindowMessages( bool blockWhileMinimized )
+intptr_t GN::gfx::BasicGpuMsw::determineMonitor(const GpuOptions & go, intptr_t display)
 {
-    GN::win::processWindowMessages( mDispDesc.windowHandle, blockWhileMinimized );
-}
-
-// ****************************************************************************
-// from BasicGpu
-// ****************************************************************************
-
-//
-//
-// ----------------------------------------------------------------------------
-void
-GN::gfx::BasicGpuMsw::handleRenderWindowSizeMove()
-{
-    mWindow.handleSizeMove();
-}
-
-// *****************************************************************************
-// private function
-// *****************************************************************************
-
-//
-//
-// ----------------------------------------------------------------------------
-bool GN::gfx::BasicGpuMsw::dispInit( const GpuOptions & ro )
-{
-    DispDesc desc;
-
-    // determine monitor handle
-    desc.monitorHandle = sDetermineMonitorHandle( ro );
-    if( 0 == desc.monitorHandle ) return false;
-
-    // setup display mode
-    DisplayMode dm;
-    if( !sGetCurrentDisplayMode( ro, dm ) ) return false;
-    if( ro.fullscreen )
+    GN_UNUSED_PARAM(display);
+    HMONITOR monitor;
+    if( !::IsWindow( (HWND)go.parentWindow ) )
     {
-        desc.width = (0==ro.displayMode.width) ? dm.width : ro.displayMode.width;
-        desc.height = (0==ro.displayMode.height) ? dm.height : ro.displayMode.height;
-        desc.depth = (0==ro.displayMode.depth) ? dm.depth : ro.displayMode.depth;
-        desc.refrate = (0==ro.displayMode.refrate) ? 0 : ro.displayMode.refrate;
+        POINT pt = { LONG_MIN, LONG_MIN }; // Make sure primary monitor are returned.
+        monitor = ::MonitorFromPoint( pt, MONITOR_DEFAULTTOPRIMARY );
+        if( 0 == monitor )
+        {
+            GN_ERROR(sLogger)( "Fail to get primary monitor handle." );
+            return 0;
+        }
     }
     else
     {
-        uint32 w, h;
-        if( !sDetermineWindowSize( ro, dm, w, h ) ) return false;
-        desc.width = ro.windowedWidth ? ro.windowedWidth : w;
-        desc.height = ro.windowedHeight ? ro.windowedHeight : h;
-        desc.depth = dm.depth;
-        desc.refrate = 0;
+        monitor = ::MonitorFromWindow( (HWND)go.parentWindow, MONITOR_DEFAULTTONEAREST );
     }
-    GN_ASSERT( desc.width && desc.height && desc.depth );
+    GN_ASSERT( monitor );
+    return (intptr_t)monitor;
+}
 
-    if( getOptions().fullscreen && !ro.fullscreen ) mWinProp.restore();
-    if( ro.useExternalWindow )
-    {
-        if( !mWindow.initExternalWindow( this, ro.renderWindow ) ) return false;
-    }
-    else
-    {
-        if( !mWindow.initInternalWindow( this, ro.parentWindow, desc.monitorHandle, desc.width, desc.height ) ) return false;
-    }
-    if( !ro.fullscreen && !mWinProp.save( mWindow.getWindowHandle() ) ) return false;
-    desc.displayHandle = 0;
-    desc.windowHandle  = (intptr_t)mWindow.getWindowHandle();
+//
+//
+// -----------------------------------------------------------------------------
+bool GN::gfx::BasicGpuMsw::getCurrentDisplayMode(DisplayMode & dm, intptr_t display, intptr_t monitor)
+{
+    GN_GUARD;
 
-    GN_ASSERT_EX(
-        desc.windowHandle && desc.monitorHandle,
-        str::format( "win(0x%X), monitor(0x%X)", desc.windowHandle, desc.monitorHandle ).rawptr() );
+    GN_UNUSED_PARAM(display);
+
+    MONITORINFOEXA mi;
+    DEVMODEA windm;
+
+    mi.cbSize = sizeof(mi);
+    windm.dmSize = sizeof(windm);
+    windm.dmDriverExtra = 0;
+
+    GN_MSW_CHECK_RETURN( ::GetMonitorInfoA( (HMONITOR)monitor, &mi ), false );
+    GN_MSW_CHECK_RETURN( ::EnumDisplaySettingsA( mi.szDevice, ENUM_CURRENT_SETTINGS, &windm ), false );
+
+    dm.width = windm.dmPelsWidth;
+    dm.height = windm.dmPelsHeight;
+    dm.depth = windm.dmBitsPerPel;
+    dm.refrate = windm.dmDisplayFrequency;
 
     // success
-    mOptions = ro;
-    mDispDesc = desc;
+    return true;
+
+    GN_UNGUARD;
+}
+
+// *****************************************************************************
+//                         Private Methods
+// *****************************************************************************
+
+//
+//
+// -----------------------------------------------------------------------------
+bool GN::gfx::BasicGpuMsw::dispInit()
+{
+    msInstanceMap[getRenderWindow().getWindowHandle()] = this;
+
+    // register a message hook to render window.
+    mHook = ::SetWindowsHookEx( WH_CALLWNDPROC, &staticHookProc, 0, GetCurrentThreadId() );
+    if( 0 == mHook )
+    {
+        GN_ERROR(sLogger)( "Fail to setup message hook : %s", getWin32LastErrorInfo() );
+        return false;
+    }
+
     return true;
 }
 
 //
 //
-// ----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 void GN::gfx::BasicGpuMsw::dispQuit()
 {
-    mWindow.quit();
+    // delete hook
+    if( mHook ) ::UnhookWindowsHookEx( mHook ), mHook = 0;
+
+    msInstanceMap.remove(getRenderWindow().getWindowHandle());
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+LRESULT CALLBACK
+GN::gfx::BasicGpuMsw::staticHookProc( int code, WPARAM wp, LPARAM lp )
+{
+    GN_GUARD;
+
+    //GN_TRACE( "wnd=0x%X, msg=%s", wnd, win::msg2str(msg) );
+
+    BasicGpuMsw ** pp = msInstanceMap.find( (intptr_t)((CWPSTRUCT*)lp)->hwnd );
+
+    if( NULL != pp )
+    {
+        // trigger render window message signal.
+        CWPSTRUCT * cwp = (CWPSTRUCT*)lp;
+        GN_ASSERT( cwp && (*pp) );
+        (*pp)->sigMessage( cwp->hwnd, cwp->message, cwp->wParam, cwp->lParam );
+    }
+
+    return ::CallNextHookEx( 0, code, wp, lp );
+
+    GN_UNGUARD;
 }
 
 #endif

@@ -46,10 +46,14 @@ bool GN::gfx::BasicGpu::init( const GpuOptions & o )
         GN_WARN(sLogger)( "GN::gfx::GpuContext is huge! (%u bytes)", sizeof(GpuContext) );
     }
 
+    // TODO: remove Cg support
 #ifdef HAS_CG
     // Initialize Cg context
-    if( !mCgContext.init() ) return false;
+    if( !mCgContext.init() ) return failure();
 #endif
+
+    // initialize sub-components one by one
+    if( !dispInit(o) ) return failure();
 
     // success
     return success();
@@ -186,4 +190,118 @@ const void * GN::gfx::BasicGpu::getUserData( const Guid & id, uint32 * length ) 
 bool GN::gfx::BasicGpu::hasUserData( const Guid & id ) const
 {
     return NULL != mUserData.find( id );
+}
+
+// *****************************************************************************
+// private function
+// *****************************************************************************
+
+//
+//
+// ----------------------------------------------------------------------------
+bool GN::gfx::BasicGpu::dispInit( const GpuOptions & ro )
+{
+    DispDesc desc = {};
+
+    // determine display
+    desc.displayHandle = ro.displayHandle;
+    if( 0 == desc.displayHandle ) {
+        desc.displayHandle = getDefaultDisplay();
+        if( 0 == desc.displayHandle ) return false;
+    }
+    GN_ASSERT( desc.displayHandle );
+
+    // determine monitor handle
+    desc.monitorHandle = ro.monitorHandle;
+    if (0 == desc.monitorHandle) {
+        desc.monitorHandle = determineMonitor(ro, desc.displayHandle);
+        if( 0 == desc.monitorHandle ) return false;
+    }
+
+    // initialize external window
+    if (ro.useExternalWindow) {
+        GN::win::WindowAttachingParameters wap = {};
+        wap.display = desc.displayHandle;
+        wap.window = ro.renderWindow;
+        mWindow = GN::win::attachToExistingWindow(wap);
+        if (0 == mWindow) return false;
+    }
+
+    // determine display mode and size
+    DisplayMode dm;
+    if( !getCurrentDisplayMode( dm, desc.displayHandle, desc.monitorHandle ) ) return false;
+    if( ro.fullscreen ) {
+        desc.width   = (0==ro.displayMode.width)   ? dm.width  : ro.displayMode.width;
+        desc.height  = (0==ro.displayMode.height)  ? dm.height : ro.displayMode.height;
+        desc.depth   = (0==ro.displayMode.depth)   ? dm.depth  : ro.displayMode.depth;
+        desc.refrate = (0==ro.displayMode.refrate) ? 0         : ro.displayMode.refrate;
+    } else {
+        auto defaultSize = ro.useExternalWindow ? mWindow->getClientSize() : Vector2<size_t>(640, 480);
+        desc.width = ro.windowedWidth   ? ro.windowedWidth  : (uint32)defaultSize.x;
+        desc.height = ro.windowedHeight ? ro.windowedHeight : (uint32)defaultSize.y;
+        desc.depth = dm.depth;
+        desc.refrate = 0;
+    }
+    GN_ASSERT( desc.width && desc.height && desc.depth );
+
+    // create internal render window
+    if (!ro.useExternalWindow) {
+        GN::win::WindowCreationParameters wcp = {};
+        wcp.caption = "Garnet 3D"; // TODO: make it a parameter.
+        wcp.display = desc.displayHandle;
+        wcp.parent = ro.parentWindow;
+        wcp.clientWidth = desc.width;
+        wcp.clientHeight = desc.height;
+        wcp.hasBorder = !ro.fullscreen;
+        wcp.hasTitleBar = !ro.fullscreen;
+        wcp.topMost = false;
+        wcp.closebox = true;
+        mWindow = GN::win::createWindow(wcp);
+        if (!mWindow) return false;
+    }
+
+    desc.windowHandle  = mWindow->getWindowHandle();
+    GN_ASSERT_EX(
+        desc.windowHandle && desc.monitorHandle,
+        str::format( "win(0x%X), monitor(0x%X)", desc.windowHandle, desc.monitorHandle ).rawptr() );
+
+    // success
+    mOptions = ro;
+    mDispDesc = desc;
+    mWindow->show();
+    return true;
+}
+
+//
+//
+// ----------------------------------------------------------------------------
+void GN::gfx::BasicGpu::dispQuit()
+{
+    safeDelete(mWindow);
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::gfx::BasicGpu::handleRenderWindowSizeMove()
+{
+    GN_GUARD;
+
+    // do nothing if in full screen mode
+    if( mOptions.fullscreen ) return;
+
+    // get client window size
+    auto s = mWindow->getClientSize();
+    auto m = mWindow->getMonitorHandle();
+
+    // compare with old window properties
+    if( s != mOldWindowSize || m != mOldMonitor) {
+        mOldWindowSize = s;
+        mOldMonitor = m;
+
+        // trigger renderer signal when window size is changed or window is moved to another monitor
+        getSignals().rendererWindowSizeMove( m, (uint32)s.x, (uint32)s.y );
+    }
+
+    GN_UNGUARD;
 }

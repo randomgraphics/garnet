@@ -1,4 +1,4 @@
-#ifndef __GN_GFX_GPU_H__
+ï»¿#ifndef __GN_GFX_GPU_H__
 #define __GN_GFX_GPU_H__
 // *****************************************************************************
 /// \file
@@ -136,7 +136,7 @@ namespace GN { namespace gfx
 
         ///
         /// Handle of external render window.
-        /// È±Ê¡Îª0.
+        /// ç¼ºçœä¸º0.
         ///
         /// \note Effective only if useExternalWindow is true.
         ///
@@ -158,7 +158,7 @@ namespace GN { namespace gfx
         /// - Should be HMONITOR on MS Window or pointer to Screen structure on X Windows.
         /// - 0 means using the monitor where parent and/or render window stays in.
         ///   If monitorHandle and parent window are both zero, primary monitor will be used.
-        /// - È±Ê¡Îª0.
+        /// - ç¼ºçœä¸º0.
         ///
         intptr_t monitorHandle;
 
@@ -182,7 +182,7 @@ namespace GN { namespace gfx
         /// Backbuffer height for windowed mode. Ignored in fullscreen mode.
         /// Default value is 0, which means using client height of render window.
         /// If render window is also not avaiable, default height 480 will be used.
-        /// È±Ê¡Îª0.
+        /// ç¼ºçœä¸º0.
         ///
         uint32 windowedHeight;
 
@@ -193,18 +193,18 @@ namespace GN { namespace gfx
 
         ///
         /// Use external render window or not.
-        /// È±Ê¡Îªfalse.
+        /// ç¼ºçœä¸ºfalse.
         ///
         bool useExternalWindow;
 
         ///
         /// fullscreen or windowed mode.
-        /// È±Ê¡Îªfalse.
+        /// ç¼ºçœä¸ºfalse.
         ///
         bool fullscreen;
 
         ///
-        /// ÊÇ·ñÍ¬²½Ë¢ĞÂ. È±Ê¡Îªfalse.
+        /// æ˜¯å¦åŒæ­¥åˆ·æ–°. ç¼ºçœä¸ºfalse.
         ///
         bool vsync;
 
@@ -219,7 +219,7 @@ namespace GN { namespace gfx
         //@{
 
         ///
-        /// use reference device. È±Ê¡Îªfalse.
+        /// use reference device. ç¼ºçœä¸ºfalse.
         ///
         bool reference;
 
@@ -231,7 +231,7 @@ namespace GN { namespace gfx
         ///
         /// Restore display mode while render window is deactivated.
         ///
-        /// È±Ê¡Îªtrue.
+        /// ç¼ºçœä¸ºtrue.
         ///
         /// Note that this is a OGL only parameter. For D3D, you may use
         /// "Enable Multi-mon Debugging" option in DirectX control panel.
@@ -854,7 +854,7 @@ namespace GN { namespace gfx
     };
 
     ///
-    /// ÇåÆÁ±êÖ¾
+    /// æ¸…å±æ ‡å¿—
     ///
     enum ScreenCleanFlag
     {
@@ -899,14 +899,14 @@ namespace GN { namespace gfx
         /// Happens when render windows is resized or moved to another monitor.
         ///
         /// The 3 parameters are:
-        ///  - intptr_t monior       : monitor handle that render window stays in
+        ///  - intptr_t monior     : monitor handle that render window stays in
         ///  - uint32 clientWidth  : width of client area of render window
         ///  - uint32 clientHeight : height of client area of render window
         ///
         Signal3<void, intptr_t, uint32, uint32> rendererWindowSizeMove;
 
         ///
-        /// µ±ÓÃ»§ÊÔÍ¼¹Ø±ÕäÖÈ¾´°¿ÚÊ±±»´¥·¢£¬Èçµã»÷´°¿ÚµÄ¹Ø±Õ°´Å¥»òÕß°´ALT-F4¡£
+        /// å½“ç”¨æˆ·è¯•å›¾å…³é—­æ¸²æŸ“çª—å£æ—¶è¢«è§¦å‘ï¼Œå¦‚ç‚¹å‡»çª—å£çš„å…³é—­æŒ‰é’®æˆ–è€…æŒ‰ALT-F4ã€‚
         ///
         /// This signal is useful when you want your application to quit when
         /// user click close button or press ALT-F4, while using internal
@@ -925,7 +925,7 @@ namespace GN { namespace gfx
     };
 
     ///
-    /// äÖÈ¾Æ÷Ä£¿éµÄÖ÷½Ó¿ÚÀà
+    /// æ¸²æŸ“å™¨æ¨¡å—çš„ä¸»æ¥å£ç±»
     ///
     /// \nosubgrouping
     ///
@@ -1240,17 +1240,17 @@ namespace GN { namespace gfx
         //@{
 
         ///
-        /// ½áÊøÒ»Ö¡µÄ»æÍ¼²Ù×÷
+        /// ç»“æŸä¸€å¸§çš„ç»˜å›¾æ“ä½œ
         ///
         virtual void present() = 0;
 
         ///
-        /// ÇåÆÁ²Ù×÷
+        /// æ¸…å±æ“ä½œ
         ///
-        /// \param flags ÇåÆÁ±êÖ¾, see ScreenCleanFlag
-        /// \param c     ±³¾°É«
-        /// \param z     Éî¶ÈÖµ
-        /// \param s     Ä£°åÖµ
+        /// \param flags æ¸…å±æ ‡å¿—, see ScreenCleanFlag
+        /// \param c     èƒŒæ™¯è‰²
+        /// \param z     æ·±åº¦å€¼
+        /// \param s     æ¨¡æ¿å€¼
         ///
         virtual void
         clearScreen( const Vector4f & c = Vector4f(0,0,0,1),
@@ -1315,10 +1315,10 @@ namespace GN { namespace gfx
         /// Draw line segments
         ///
         /// \param options
-        ///     äÖÈ¾Ñ¡Ïî£¬Ïê¼û DrawLineOptions¡£Set to 0 to use default options
+        ///     æ¸²æŸ“é€‰é¡¹ï¼Œè¯¦è§ DrawLineOptionsã€‚Set to 0 to use default options
         /// \param positions
-        ///     ¶¥µã×ø±êÊı¾İ£¬ÓÉÒ»ÏµÁĞµÄ3D¶¥µã×é³É¡£2¸ö¶¥µã±íÊ¾Ò»ÌõÏß¶Î¡£
-        ///     Ñ¡Ïî DL_WINDOW_SPACE»áÓ°Ïì×ø±êµÄº¬Òå¡£
+        ///     é¡¶ç‚¹åæ ‡æ•°æ®ï¼Œç”±ä¸€ç³»åˆ—çš„3Dé¡¶ç‚¹ç»„æˆã€‚2ä¸ªé¡¶ç‚¹è¡¨ç¤ºä¸€æ¡çº¿æ®µã€‚
+        ///     é€‰é¡¹ DL_WINDOW_SPACEä¼šå½±å“åæ ‡çš„å«ä¹‰ã€‚
         /// \param stride
         ///     stride of one vertex.
         /// \param numpoints
