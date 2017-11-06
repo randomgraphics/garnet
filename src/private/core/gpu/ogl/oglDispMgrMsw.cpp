@@ -548,7 +548,7 @@ bool GN::gfx::OGLGpu::dispInit()
     }
 
     // modify fullscreen render window properties
-    if( ro.fullscreen )
+    if( DisplayMode::FULL_SCREEN == ro.displayMode.mode )
     {
         // activate display mode
         if( !activateDisplayMode() ) return false;
@@ -651,7 +651,7 @@ bool GN::gfx::OGLGpu::activateDisplayMode()
     if( mDisplayModeActivated ) return true;
 
     // only change display mode if we are in fullscreen mode
-    if( !getOptions().fullscreen ) return true;
+    if( DisplayMode::FULL_SCREEN != getOptions().displayMode.mode ) return true;
 
     const DispDesc & dd = getDispDesc();
 
@@ -733,7 +733,7 @@ void GN::gfx::OGLGpu::msgHook( HWND, UINT msg, WPARAM wp, LPARAM )
 
     //GN_TRACE( "Message(%s), wp(0x%X)", win::msg2str(msg), wp );
 
-    if( !getOptions().fullscreen ) return;
+    if( DisplayMode::FULL_SCREEN != getOptions().displayMode.mode ) return;
 
     if( WM_ACTIVATEAPP == msg && !mIgnoreMsgHook )
     {

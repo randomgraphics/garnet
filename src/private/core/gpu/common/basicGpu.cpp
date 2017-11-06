@@ -230,18 +230,16 @@ bool GN::gfx::BasicGpu::dispInit( const GpuOptions & ro )
     // determine display mode and size
     DisplayMode dm;
     if( !getCurrentDisplayMode( dm, desc.displayHandle, desc.monitorHandle ) ) return false;
-    if( ro.fullscreen ) {
-        desc.width   = (0==ro.displayMode.width)   ? dm.width  : ro.displayMode.width;
-        desc.height  = (0==ro.displayMode.height)  ? dm.height : ro.displayMode.height;
-        desc.depth   = (0==ro.displayMode.depth)   ? dm.depth  : ro.displayMode.depth;
-        desc.refrate = (0==ro.displayMode.refrate) ? 0         : ro.displayMode.refrate;
-    } else {
+    if( DisplayMode::FULL_SCREEN != ro.displayMode.mode ) {
         auto defaultSize = ro.useExternalWindow ? mWindow->getClientSize() : Vector2<size_t>(640, 480);
-        desc.width = ro.windowedWidth   ? ro.windowedWidth  : (uint32)defaultSize.x;
-        desc.height = ro.windowedHeight ? ro.windowedHeight : (uint32)defaultSize.y;
-        desc.depth = dm.depth;
-        desc.refrate = 0;
+        dm.width = (uint32)defaultSize.x;
+        dm.height = (uint32)defaultSize.y;
+        dm.refrate = 0;
     }
+    desc.width   = (0==ro.displayMode.width)   ? dm.width   : ro.displayMode.width;
+    desc.height  = (0==ro.displayMode.height)  ? dm.height  : ro.displayMode.height;
+    desc.depth   = (0==ro.displayMode.depth)   ? dm.depth   : ro.displayMode.depth;
+    desc.refrate = (0==ro.displayMode.refrate) ? dm.refrate : ro.displayMode.refrate;
     GN_ASSERT( desc.width && desc.height && desc.depth );
 
     // create internal render window
@@ -252,8 +250,8 @@ bool GN::gfx::BasicGpu::dispInit( const GpuOptions & ro )
         wcp.parent = ro.parentWindow;
         wcp.clientWidth = desc.width;
         wcp.clientHeight = desc.height;
-        wcp.hasBorder = !ro.fullscreen;
-        wcp.hasTitleBar = !ro.fullscreen;
+        wcp.hasBorder = ro.displayMode.mode == DisplayMode::WINDOWED;
+        wcp.hasTitleBar = ro.displayMode.mode == DisplayMode::WINDOWED;
         wcp.topMost = false;
         wcp.closebox = true;
         mWindow = GN::win::createWindow(wcp);
@@ -288,7 +286,7 @@ void GN::gfx::BasicGpu::handleRenderWindowSizeMove()
     GN_GUARD;
 
     // do nothing if in full screen mode
-    if( mOptions.fullscreen ) return;
+    if( mOptions.displayMode.mode == DisplayMode::FULL_SCREEN ) return;
 
     // get client window size
     auto s = mWindow->getClientSize();

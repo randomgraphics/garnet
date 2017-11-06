@@ -13,17 +13,24 @@ namespace GN { namespace gfx
     ///
     struct DisplayMode
     {
-        uint32 width;   ///< Screen width. Zero means using current screen width. Default value is zero.
-        uint32 height;  ///< Screen height. Zero means using current screen height. Defualt value is zero.
-        uint32 depth;   ///< Color depth. Zero means using current color depth. Default value is zero.
-        uint32 refrate; ///< Referesh rate. Zero means using adapter default rate. Default value is zero.
+        enum Mode {
+            FULL_SCREEN, ///< true/exclusive full screen mode.
+            BORDERLESS,  ///< borderless mode.
+            WINDOWED,    ///< true windowed mode with title bar and sizeable border.
+        };
+
+        Mode   mode;    ///< display mode;
+        uint32 width;   ///< Screen width.
+        uint32 height;  ///< Screen height.
+        uint32 depth;   ///< Color depth.
+        uint32 refrate; ///< Referesh rate.
 
         ///
         /// Set display mode parameters
         ///
-        void set( uint32 w, uint32 h, uint32 d, uint32 r )
+        void set( Mode m, uint32 w, uint32 h, uint32 d, uint32 r )
         {
-            width = w; height = h; depth = d; refrate = r;
+            mode = m; width = w; height = h; depth = d; refrate = r;
         }
     };
 
@@ -165,26 +172,9 @@ namespace GN { namespace gfx
         //@}
 
         ///
-        /// Display mode for fullscreen mode. Ignored in windowed mode.
-        ///
-        /// \note For field equals zero, current display setting will be used.
+        /// Display mode. Default value is (windowed, 0, 0, 0, 0).
         ///
         DisplayMode displayMode;
-
-        ///
-        /// Backbuffer width for windowed mode. Ignored in fullscreen mode.
-        /// Default is zero, which means using client width of render window.
-        /// If render window is also not avaiable, 640 will be used.
-        ///
-        uint32 windowedWidth;
-
-        ///
-        /// Backbuffer height for windowed mode. Ignored in fullscreen mode.
-        /// Default value is 0, which means using client height of render window.
-        /// If render window is also not avaiable, default height 480 will be used.
-        /// 缺省为0.
-        ///
-        uint32 windowedHeight;
 
         ///
         /// Backbuffer MSAA type. Default value is MsaaType::NONE
@@ -196,12 +186,6 @@ namespace GN { namespace gfx
         /// 缺省为false.
         ///
         bool useExternalWindow;
-
-        ///
-        /// fullscreen or windowed mode.
-        /// 缺省为false.
-        ///
-        bool fullscreen;
 
         ///
         /// 是否同步刷新. 缺省为false.
@@ -249,17 +233,14 @@ namespace GN { namespace gfx
             , renderWindow(0)
             , parentWindow(0)
             , monitorHandle(0)
-            , windowedWidth(0)
-            , windowedHeight(0)
             , msaa(MsaaType::NONE)
             , useExternalWindow(false)
-            , fullscreen(false)
             , vsync(false)
             , debug( GN_ENABLE_DEBUG )
             , reference(false)
             , autoRestore(true)
         {
-            displayMode.set(0,0,0,0);
+            displayMode.set(DisplayMode::WINDOWED, 0, 0, 0, 0);
         }
     };
 

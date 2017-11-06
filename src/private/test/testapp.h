@@ -92,16 +92,16 @@ public:
         GN_INFO(logger)(
             "Standard command line options:\n"
             "\n"
-            "   -fs   [on|off]          Full screen rendering. Default is off.\n"
+            "   -dm   [f|b|w]          Set Display Mode: fullscreen|borderless|windowed. Default is windowed.\n"
             "\n"
             "   -h\n"
-            "   -?                      Show help.\n"
+            "   -?                     Show help.\n"
             "\n"
-            "   -mt   [on|off]          Use multithread renderer. Default is on.\n"
+            "   -mt   [on|off]         Use multithread renderer. Default is on.\n"
             "\n"
-            "   -gpu [auto|ogl|d3d10]  Choose GPU API. Default is AUTO.\n"
+            "   -gpu [auto|ogl|d3d11]  Choose GPU API. Default is AUTO.\n"
             "\n"
-            "   -vsync [on|off]         Enable/Disable vsync. Default is off.\n"
+            "   -vsync [on|off]        Enable/Disable vsync. Default is off.\n"
             );
     }
 
@@ -159,6 +159,20 @@ private:
                 value, option );
             return false;
         }
+    }
+
+    int parseStrings(const char * option, const char * value, const char * strings[], size_t count )
+    {
+        using namespace GN;
+
+        for(size_t i = 0; i < count; ++i) {
+            if( 0 == str::compareI( strings[i], value ) ) return (int)i;
+        }
+
+        GN_ERROR(logger)(
+            "Invalid argument value (%s) for option %s",
+            value, option );
+        return -1;
     }
 
     bool parseGpuAPI( GN::gfx::GpuAPI & result, const char * value )
@@ -222,12 +236,14 @@ private:
             {
                 // this is a command line option name
 
-                if( 0 == str::compareI( "fs", a+1 ) )
+                if( 0 == str::compareI( "dm", a+1 ) )
                 {
                     const char * value = getOptionValue( argc, argv, i );
                     if( NULL == value ) return INVALID_COMMAND_LINE;
 
-                    if( !parseBool( rendererOptions.fullscreen, a, value ) )
+                    const char * MODES[] = { "f", "b", "w" };
+                    rendererOptions.displayMode.mode = (gfx::DisplayMode::Mode)parseStrings(a, value, MODES, _countof(MODES));
+                    if( rendererOptions.displayMode.mode < 0)
                         return INVALID_COMMAND_LINE;
                 }
                 else if( 0 == str::compareI( "mt", a+1 ) )

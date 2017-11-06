@@ -35,6 +35,24 @@ sGetOptionValue( int argc, const char * const * argv, int & i )
 //
 //
 // -----------------------------------------------------------------------------
+static int
+sParseStrings(const char * option, const char * value, const char * strings[], size_t count )
+{
+    using namespace GN;
+
+    for(size_t i = 0; i < count; ++i) {
+        if( 0 == str::compareI( strings[i], value ) ) return (int)i;
+    }
+
+    GN_ERROR(sLogger)(
+        "Invalid argument value (%s) for option %s",
+        value, option );
+    return -1;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
 static bool
 sParseBool( bool & result, const char * option, const char * value )
 {
@@ -320,7 +338,7 @@ void GN::util::SampleApp::printStandardCommandLineOptions()
     printf(
         "Standard command line options:\n"
         "\n"
-        "   -fs   [on|off]          Full screen rendering. Default is off.\n"
+        "   -dm   [f|b|w]           Display Mode: fullscreen|borderless|windowed. Default is windowed.\n"
         "\n"
         "   -? -h --help            Show help.\n"
         "\n"
@@ -417,8 +435,8 @@ bool GN::util::SampleApp::checkCmdLine( int argc, const char * const argv[] )
     mInitParam.asciiFont.width = 16;
     mInitParam.asciiFont.height = 16;
     mInitParam.asciiFont.quality = FontFaceDesc::ANTIALIASED;
-    mInitParam.ro.windowedWidth = 800;
-    mInitParam.ro.windowedHeight = 600;
+    mInitParam.ro.displayMode.width = 800;
+    mInitParam.ro.displayMode.height = 600;
 
 #if GN_XBOX2
 
@@ -451,12 +469,14 @@ bool GN::util::SampleApp::checkCmdLine( int argc, const char * const argv[] )
             #endif
             )
         {
-            if( 0 == str::compareI( "fs", a+1 ) )
+            if( 0 == str::compareI( "dm", a+1 ) )
             {
                 const char * value = sGetOptionValue( argc, argv, i );
                 if( NULL == value ) return false;
 
-                if( !sParseBool( mInitParam.ro.fullscreen, a, value ) )
+                const char * MODES[] = { "f", "b", "w" };
+                mInitParam.ro.displayMode.mode = (gfx::DisplayMode::Mode)sParseStrings(a, value, MODES, _countof(MODES));
+                if( mInitParam.ro.displayMode.mode < 0)
                     return false;
             }
             else if( 0 == str::compareI( "mt", a+1 ) )
@@ -505,16 +525,14 @@ bool GN::util::SampleApp::checkCmdLine( int argc, const char * const argv[] )
                 StrA value = sGetOptionValue( argc, argv, i );
                 if( value.empty() ) return false;
 
-                if( !sParseInteger( mInitParam.ro.windowedWidth, a, value ) ) return false;
-                mInitParam.ro.displayMode.width = mInitParam.ro.windowedWidth;
+                if( !sParseInteger( mInitParam.ro.displayMode.width, a, value ) ) return false;
             }
             else if( 0 == str::compareI( "wh", a+1 ) )
             {
                 StrA value = sGetOptionValue( argc, argv, i );
                 if( value.empty() ) return false;
 
-                if( !sParseInteger( mInitParam.ro.windowedHeight, a, value ) ) return false;
-                mInitParam.ro.displayMode.height = mInitParam.ro.windowedHeight;
+                if( !sParseInteger( mInitParam.ro.displayMode.height, a, value ) ) return false;
             }
             else if( 0 == str::compareI( "vsync", a+1 ) )
             {

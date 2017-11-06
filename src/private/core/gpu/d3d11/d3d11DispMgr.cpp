@@ -31,7 +31,7 @@ bool GN::gfx::D3D11Gpu::dispInit()
     sd.OutputWindow = (HWND)dd.windowHandle;
     sd.SampleDesc.Count = 1;
     sd.SampleDesc.Quality = 0;
-    sd.Windowed = !ro.fullscreen;
+    sd.Windowed = ro.displayMode.mode != DisplayMode::FULL_SCREEN;
 
     // Get the highest feature level
     D3D_FEATURE_LEVEL featureLevel;
@@ -114,7 +114,7 @@ void GN::gfx::D3D11Gpu::dispQuit()
     GN_GUARD;
 
     // switch back to windowed mode, before destroy the swap chain.
-    if( mSwapChain && getOptions().fullscreen )
+    if( mSwapChain && getOptions().displayMode.mode == DisplayMode::FULL_SCREEN )
     {
         mSwapChain->SetFullscreenState( FALSE, NULL );
     }
