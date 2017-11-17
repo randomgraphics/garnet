@@ -17,10 +17,6 @@
 #include <X11/Xlib.h>
 #endif
 
-#ifdef HAS_CG
-#include <Cg/cg.h>
-#endif
-
 #include <exception>
 #include <stdlib.h>
 

@@ -56,18 +56,6 @@ public:
     // *************************************************************************
 
     /// ctor
-#if GN_XBOX2
-    // Xenon platform does not have command line arguments
-    CommandLineArguments( int, const char *[] )
-        : applicationName( "xenonapp" )
-        , useMultiThreadGpu( true )
-        , status( CONTINUE_EXECUTION )
-        , extraArgc(0)
-        , extraArgv(NULL)
-        , logger(GN::getLogger( "GN.test.CommandLineArguments" ))
-    {
-    }
-#else
     CommandLineArguments( int argc, const char * argv[] )
         : applicationName( argv[0] )
         , useMultiThreadGpu( !GN_POSIX )
@@ -84,7 +72,6 @@ public:
             extraArgv = mExtraArgs.rawptr();
         }
     }
-#endif
 
     /// show command line options
     void showStandardCommandLineOptions() const
@@ -99,7 +86,7 @@ public:
             "\n"
             "   -mt   [on|off]          Use multithread renderer. Default is on.\n"
             "\n"
-            "   -gpu [auto|ogl|d3d10]  Choose GPU API. Default is AUTO.\n"
+            "   -gpu [auto|ogl|d3d11]  Choose GPU API. Default is AUTO.\n"
             "\n"
             "   -vsync [on|off]         Enable/Disable vsync. Default is off.\n"
             );

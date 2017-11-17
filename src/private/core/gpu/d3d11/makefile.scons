@@ -6,7 +6,6 @@ sources = [
 	'd3d11DispMgr.cpp',
 	'd3d11DrawMgr.cpp',
 	'd3d11GpuProgramHLSL.cpp',
-	'd3d11GpuProgramCG.cpp',
 	'd3d11IdxBuf.cpp',
 	'd3d11Gpu.cpp',
 	'd3d11Resource.cpp',
@@ -19,7 +18,5 @@ sources = [
 ]
 env = GN.NewBuildEnv()
 env.Append( CPPPATH = ['#src/private/core/gpu/util'] )
-if GN.has_cg_d3d11 :
-    env.Append( CPPDEFINES = ['HAS_CG=1','HAS_CG_D3D=1'] )
 objects = GN.BuildObjects( env, sources, 'pch.h', 'pch.cpp' )
 Return( 'objects' )

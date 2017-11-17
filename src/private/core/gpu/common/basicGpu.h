@@ -6,8 +6,6 @@
 /// \author  chenlee (2005.10.1)
 // *****************************************************************************
 
-#include "cgShader.h"
-
 ///
 /// Rest-in-peace macro
 ///
@@ -87,19 +85,6 @@ namespace GN { namespace gfx
         // *****************************************************************************
 
         //@{
-
-#if HAS_CG
-
-    public:
-
-        /// get global Cg context
-        CGcontext getCgContext() const { return mCgContext; }
-
-    private :
-
-        CgContextWrapper mCgContext;
-
-#endif
 
         //@}
 

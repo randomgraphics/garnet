@@ -46,11 +46,6 @@ bool GN::gfx::BasicGpu::init( const GpuOptions & o )
         GN_WARN(sLogger)( "GN::gfx::GpuContext is huge! (%u bytes)", sizeof(GpuContext) );
     }
 
-#ifdef HAS_CG
-    // Initialize Cg context
-    if( !mCgContext.init() ) return false;
-#endif
-
     // success
     return success();
 
@@ -63,11 +58,6 @@ bool GN::gfx::BasicGpu::init( const GpuOptions & o )
 void GN::gfx::BasicGpu::quit()
 {
     GN_GUARD;
-
-#ifdef HAS_CG
-    // clear Cg context
-    mCgContext.quit();
-#endif
 
     // standard quit procedure
     GN_STDCLASS_QUIT();

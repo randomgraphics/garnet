@@ -17,17 +17,13 @@ namespace GN { namespace gfx
         {
             INVALID = 0,    ///< Indicate invalid language
 
-            HLSL9,          ///< HLSL for D3D9 and Xenon
+            HLSL9,          ///< HLSL for D3D9
 
             HLSL10,         ///< HLSL for D3D10+
-
-            MICROCODE,      ///< Xenon microcode shader
 
             ARB1,           ///< OpenGL ARB1 shading language
 
             GLSL,           ///< OpenGL Shading language
-
-            CG,             ///< Nvidia Cg
 
             COUNT,          ///< Number of GPU program languages
         };
@@ -37,10 +33,8 @@ namespace GN { namespace gfx
         {
             return HLSL9 == *this
                 || HLSL10 == *this
-                || MICROCODE == *this
                 || ARB1 == *this
-                || GLSL == *this
-                || CG == *this;
+                || GLSL == *this;
         }
 
         /// convert to string
@@ -50,10 +44,8 @@ namespace GN { namespace gfx
             {
                 case HLSL9     : return "HLSL9";
                 case HLSL10    : return "HLSL10";
-                case MICROCODE : return "MICROCODE";
                 case ARB1      : return "ARB1";
                 case GLSL      : return "GLSL";
-                case CG        : return "CG";
                 default        : return "INVALID_GPU_PROGRAM_LANGUAGE";
             };
         }
@@ -63,10 +55,8 @@ namespace GN { namespace gfx
         {
                  if( 0 == str::compareI( s, "HLSL9" ) )     return HLSL9;
             else if( 0 == str::compareI( s, "HLSL10" ) )    return HLSL10;
-            else if( 0 == str::compareI( s, "MICROCODE" ) ) return MICROCODE;
             else if( 0 == str::compareI( s, "ARB1" ) )      return ARB1;
             else if( 0 == str::compareI( s, "GLSL" ) )      return GLSL;
-            else if( 0 == str::compareI( s, "CG" ) )        return CG;
             else                                             return INVALID;
         }
 

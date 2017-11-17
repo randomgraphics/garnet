@@ -54,7 +54,6 @@ namespace GN { namespace gfx
         {
             OGL,      ///< OpenGL
             D3D11,    ///< D3D11
-            XENON,    ///< Xenon
             FAKE,     ///< Fake API
             NUM_APIs, ///< Number of avaliable APIs.
             AUTO,     ///< determine rendering API automatically.
@@ -68,7 +67,6 @@ namespace GN { namespace gfx
             {
                 "OGL",
                 "D3D11",
-                "XENON",
                 "FAKE",
                 "INVALID_GPU_API",
                 "AUTO"
@@ -93,7 +91,6 @@ namespace GN { namespace gfx
             {
                 { OGL, "OGL" },
                 { D3D11, "D3D11" },
-                { XENON, "XENON" },
                 { FAKE, "FAKE" },
                 { AUTO, "AUTO" },
             };
@@ -204,7 +201,7 @@ namespace GN { namespace gfx
         bool fullscreen;
 
         ///
-        /// ÊÇ·ñÍ¬²½Ë¢ÐÂ. È±Ê¡Îªfalse.
+        /// ï¿½Ç·ï¿½Í¬ï¿½ï¿½Ë¢ï¿½ï¿½. È±Ê¡Îªfalse.
         ///
         bool vsync;
 
@@ -306,7 +303,6 @@ namespace GN { namespace gfx
         uint32        maxTextures;           ///< max number of simutaneous textures
         uint32        maxColorRenderTargets; ///< max number of simutaneous render targets
         uint32        shaderModels;          ///< shader models supported by the GPU.
-        bool          cg;                    ///< Support Cg language or not.
     };
 
     ///
@@ -854,7 +850,7 @@ namespace GN { namespace gfx
     };
 
     ///
-    /// ÇåÆÁ±êÖ¾
+    /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö¾
     ///
     enum ScreenCleanFlag
     {
@@ -906,7 +902,7 @@ namespace GN { namespace gfx
         Signal3<void, intptr_t, uint32, uint32> rendererWindowSizeMove;
 
         ///
-        /// µ±ÓÃ»§ÊÔÍ¼¹Ø±ÕäÖÈ¾´°¿ÚÊ±±»´¥·¢£¬Èçµã»÷´°¿ÚµÄ¹Ø±Õ°´Å¥»òÕß°´ALT-F4¡£
+        /// ï¿½ï¿½ï¿½Ã»ï¿½ï¿½ï¿½Í¼ï¿½Ø±ï¿½ï¿½ï¿½È¾ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ÚµÄ¹Ø±Õ°ï¿½Å¥ï¿½ï¿½ï¿½ß°ï¿½ALT-F4ï¿½ï¿½
         ///
         /// This signal is useful when you want your application to quit when
         /// user click close button or press ALT-F4, while using internal
@@ -925,7 +921,7 @@ namespace GN { namespace gfx
     };
 
     ///
-    /// äÖÈ¾Æ÷Ä£¿éµÄÖ÷½Ó¿ÚÀà
+    /// ï¿½ï¿½È¾ï¿½ï¿½Ä£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ó¿ï¿½ï¿½ï¿½
     ///
     /// \nosubgrouping
     ///
@@ -1240,17 +1236,17 @@ namespace GN { namespace gfx
         //@{
 
         ///
-        /// ½áÊøÒ»Ö¡µÄ»æÍ¼²Ù×÷
+        /// ï¿½ï¿½ï¿½ï¿½Ò»Ö¡ï¿½Ä»ï¿½Í¼ï¿½ï¿½ï¿½ï¿½
         ///
         virtual void present() = 0;
 
         ///
-        /// ÇåÆÁ²Ù×÷
+        /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         ///
-        /// \param flags ÇåÆÁ±êÖ¾, see ScreenCleanFlag
-        /// \param c     ±³¾°É«
-        /// \param z     Éî¶ÈÖµ
-        /// \param s     Ä£°åÖµ
+        /// \param flags ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö¾, see ScreenCleanFlag
+        /// \param c     ï¿½ï¿½ï¿½ï¿½É«
+        /// \param z     ï¿½ï¿½ï¿½Öµ
+        /// \param s     Ä£ï¿½ï¿½Öµ
         ///
         virtual void
         clearScreen( const Vector4f & c = Vector4f(0,0,0,1),
@@ -1315,10 +1311,10 @@ namespace GN { namespace gfx
         /// Draw line segments
         ///
         /// \param options
-        ///     äÖÈ¾Ñ¡Ïî£¬Ïê¼û DrawLineOptions¡£Set to 0 to use default options
+        ///     ï¿½ï¿½È¾Ñ¡ï¿½î£¬ï¿½ï¿½ï¿½ DrawLineOptionsï¿½ï¿½Set to 0 to use default options
         /// \param positions
-        ///     ¶¥µã×ø±êÊý¾Ý£¬ÓÉÒ»ÏµÁÐµÄ3D¶¥µã×é³É¡£2¸ö¶¥µã±íÊ¾Ò»ÌõÏß¶Î¡£
-        ///     Ñ¡Ïî DL_WINDOW_SPACE»áÓ°Ïì×ø±êµÄº¬Òå¡£
+        ///     ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ý£ï¿½ï¿½ï¿½Ò»Ïµï¿½Ðµï¿½3Dï¿½ï¿½ï¿½ï¿½ï¿½ï¿½É¡ï¿½2ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê¾Ò»ï¿½ï¿½ï¿½ß¶Î¡ï¿½
+        ///     Ñ¡ï¿½ï¿½ DL_WINDOW_SPACEï¿½ï¿½Ó°ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Äºï¿½ï¿½å¡£
         /// \param stride
         ///     stride of one vertex.
         /// \param numpoints

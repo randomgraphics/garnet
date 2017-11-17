@@ -8,16 +8,7 @@
 
 #include "garnet/GNengine.h"
 #include "garnet/GNutil.h"
-
-#if GN_XENON
-#include <xtl.h>
-#elif GN_MSWIN
-#ifndef NOMINMAX
-#define NOMINMAX
-#endif
 #include <windows.h>
-#endif
-
 #include <d3d9.h>
 
 // *****************************************************************************

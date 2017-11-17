@@ -1,5 +1,4 @@
 #include "pch.h"
-#include "xenonFormat.h"
 
 ///
 /// D3D9 format definition (from d3d9types.h)
@@ -192,7 +191,6 @@ struct ColorFormatConvert
     GN::gfx::ColorFormat gnfmt;
     D3D9_FORMAT          dx9fmt;
     DXGI_FORMAT          dxgifmt;
-    XENON_FORMAT         xefmt;
 };
 
 static const ColorFormatConvert s_ColorFormatConvertTable[] =
@@ -202,7 +200,6 @@ static const ColorFormatConvert s_ColorFormatConvertTable[] =
             GN::gfx::ColorFormat::gn, \
             D3D9_FORMAT_##dx9, \
             DXGI_FORMAT_##dxgi, \
-            XENON_FORMAT_##dx9 \
         },
     #include "colorFormatConvertMeta.h"
     #undef GN_DEFINE_COLOR_FORMAT_CONVERTION
@@ -489,15 +486,6 @@ GN_API const char * GN::gfx::d3d9Format2Str( int d3d9fmt )
 //
 //
 // -----------------------------------------------------------------------------
-GN_API const char * GN::gfx::xenonFormat2Str( int xefmt )
-{
-    GN_UNUSED_PARAM(xefmt);
-    return "NOT IMPLEMENTED";
-}
-
-//
-//
-// -----------------------------------------------------------------------------
 GN_API const char * GN::gfx::dxgiFormat2Str( int dxgifmt )
 {
     struct Item { int fmt; const char * str; };
@@ -625,32 +613,6 @@ GN_API int GN::gfx::colorFormat2D3D9Format( ColorFormat clrfmt )
             return s_ColorFormatConvertTable[i].dx9fmt;
     }
     return D3D9_FORMAT_UNKNOWN;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-GN_API GN::gfx::ColorFormat GN::gfx::xenonFormat2ColorFormat( int xefmt )
-{
-    for( size_t i = 0; i < COLOR_FORMAT_CONVERT_TABLE_SIZE; ++i )
-    {
-        if( xefmt == (int)s_ColorFormatConvertTable[i].xefmt )
-            return s_ColorFormatConvertTable[i].gnfmt;
-    }
-    return ColorFormat::UNKNOWN;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-GN_API uint32 GN::gfx::colorFormat2XenonFormat( ColorFormat clrfmt )
-{
-    for( size_t i = 0; i < COLOR_FORMAT_CONVERT_TABLE_SIZE; ++i )
-    {
-        if( clrfmt == s_ColorFormatConvertTable[i].gnfmt )
-            return s_ColorFormatConvertTable[i].xefmt;
-    }
-    return (uint32)XENON_FORMAT_UNKNOWN;
 }
 
 //

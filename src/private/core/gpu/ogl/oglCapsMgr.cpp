@@ -115,17 +115,17 @@ static bool sGetOGLExtensions( Display * disp, DynaArray<StrA> & result )
 
     result.clear();
 
-    // ·ÖÎöOpenGL-Extentions-String
+    // ï¿½ï¿½ï¿½ï¿½OpenGL-Extentions-String
     sGetTokens( result, (const char*)glGetString(GL_EXTENSIONS) );
 
 #if GN_WINPC
-    // ·ÖÎöWGL Extensions
+    // ï¿½ï¿½ï¿½ï¿½WGL Extensions
     PFNWGLGETEXTENSIONSSTRINGARBPROC proc;
     proc = reinterpret_cast<PFNWGLGETEXTENSIONSSTRINGARBPROC>(
         ::wglGetProcAddress("wglGetExtensionsStringARB") );
     if( proc ) sGetTokens( result, (const char *)proc(hdc) );
 #elif GN_POSIX
-    // ·ÖÎöGLX Extensions
+    // ï¿½ï¿½ï¿½ï¿½GLX Extensions
     // TODO: query server extension string
     sGetTokens( result, (const char*)glXGetClientString( disp, GLX_EXTENSIONS) );
 #endif
@@ -304,10 +304,6 @@ bool GN::gfx::OGLGpu::capsInit()
             mCaps.shaderModels |= ShaderModel::GLSL_1_50;
         }
     }
-
-#ifdef HAS_CG_OGL
-    mCaps.cg = 1;
-#endif
 
     // success;
     return true;

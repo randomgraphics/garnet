@@ -1,4 +1,5 @@
 {
+    "C_Cpp.intelliSenseEngine" : "Default",
     "files.associations": {
         "*.scons": "python",
         "deque": "cpp",
@@ -8,7 +9,9 @@
         "xhash": "cpp",
         "xtree": "cpp",
         "xutility": "cpp",
-        "utility": "cpp"
+        "utility": "cpp",
+        "map": "cpp",
+        "unordered_map": "cpp"
     },
     "files.exclude": {
         "**/.git": true,

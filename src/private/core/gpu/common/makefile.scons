@@ -2,14 +2,11 @@ Import( 'GN' )
 sources = [
     'basicGpu.cpp',
     'basicGpuMsw.cpp',
-    'basicGpuXenon.cpp',
     'basicGpuX11.cpp',
     'basicSurface.cpp',
-    'cgShader.cpp',
     'renderWindowMsw.cpp',
     'renderWindowX11.cpp',
 ]
 env = GN.NewBuildEnv()
-if GN.has_cg : env.Append( CPPDEFINES = ['HAS_CG=1'] )
 objects = GN.BuildObjects( env, sources, 'pch.h', 'pch.cpp' )
 Return( 'objects' )

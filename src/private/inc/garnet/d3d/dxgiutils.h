@@ -10,7 +10,7 @@
 #define NOMINMAX
 #endif
 #include <windows.h>
-#include <d3d10_1.h>
+#include <dxgiformat.h>
 #include <DXGI.h>
 
 namespace GN{ /** namespace for DXGI utilities */ namespace dxgi

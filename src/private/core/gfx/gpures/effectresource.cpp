@@ -35,12 +35,6 @@ sCheckGpuCaps( Gpu & r, const EffectGpuProgramDesc & desc )
         return false;
     }
 
-    // check Cg language support.
-    if( GpuProgramLanguage::CG == desc.gpd.lang && !caps.cg )
-    {
-        return false;
-    }
-
     /* check vertex shader
     if( desc.gpd.vs.source && !caps.gpuProgramLanguage[ShaderStage::VS][desc.gpd.lang] )
     {

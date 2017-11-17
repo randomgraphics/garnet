@@ -26,11 +26,6 @@
 #endif
 #include <GL/glu.h>
 
-#ifdef HAS_CG_OGL
-#include <Cg/cg.h>
-#include <Cg/cgGL.h>
-#endif
-
 // Note: redefine GN_OGL_CHECK macro to do nothing.
 #undef GN_OGL_CHECK
 #define GN_OGL_CHECK(X) X

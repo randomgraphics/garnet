@@ -1,7 +1,6 @@
 SConscript( [
 	'assimp/makefile.scons',
 	'd3d9/makefile.scons',
-	'd3d10/makefile.scons',
 	'd3d11/makefile.scons',
 	'engine/makefile.scons',
 	'font/makefile.scons',
@@ -15,6 +14,5 @@ SConscript( [
 	'sprite/makefile.scons',
 	'ut/makefile.scons',
 	'vulkan/makefile.scons',
-#	'xenon/makefile.scons',
 	'xml/makefile.scons',
 ])
