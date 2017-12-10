@@ -73,15 +73,15 @@ echo SCons Directory: ${SCONS_ROOT}
 # ===========
 while read -r line
 do
-    line="${line/\$\*/}"  # remove $*
-    line="${line//\\/\/}"  # replace "\" with "/"
-    line="${line/cd \/d/cd}" # replace "cd /d" with "cd"
+    line=${line/\$\*/}  # remove $*
+    line=${line//\\/\/}  # replace "\" with "/"
+    line=${line/cd \/d/cd} # replace "cd /d" with "cd"
 
     # replace all %..% with ${..}
-    line2="${line/\%/\$\{}" && line3="${line2/\%/\}}"
+    line2=${line/\%/\$\{} && line3=${line2/\%/\}}
     while [ "${line}" != "${line3}" ]; do
-        line="${line3}"
-        line2="${line/\%/\$\{}" && line3="${line2/\%/\}}" #replace one pair of %...%
+        line=${line3}
+        line2=${line/\%/\$\{} && line3=${line2/\%/\}} #replace one pair of %...%
     done
 
     eval x=($line) # split line into array of words. x[0] is alias name, x[1] is alias value
