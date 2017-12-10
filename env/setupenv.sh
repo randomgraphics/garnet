@@ -76,6 +76,7 @@ do
     line=${line/\$\*/}  # remove $*
     line=${line//\\/\/}  # replace "\" with "/"
     line=${line/cd \/d/cd} # replace "cd /d" with "cd"
+    line=${line/% \"/\"} # remove trailing space
 
     # replace all %..% with ${..}
     line2=${line/\%/\$\{} && line3=${line2/\%/\}}
