@@ -89,6 +89,9 @@ namespace GN
         static T * sGetInstancePtr() { return msInstancePtr; }
     };
 
+#if GN_PLATFORM_IS_STATIC
+    template<typename T> T * CrossDllSingleton<T>::msInstancePtr;
+#endif
 }
 
 // *****************************************************************************

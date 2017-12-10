@@ -2,8 +2,10 @@
 #include "garnet/GNinput.h"
 #include <stdlib.h>
 
+#if !#if GN_PLATFORM_IS_STATIC
 // implement global singletons
 GN_IMPLEMENT_CROSS_DLL_SINGLETON( GN::input::Input )
+#endif
 
 namespace GN
 {

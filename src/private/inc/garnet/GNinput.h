@@ -1,4 +1,4 @@
-#ifndef __GN_INPUT_GNINPUT_H__
+ï»¿#ifndef __GN_INPUT_GNINPUT_H__
 #define __GN_INPUT_GNINPUT_H__
 // *****************************************************************************
 /// \file
@@ -36,7 +36,7 @@ namespace GN
             enum Enum
             {
                 ///
-                /// ¿ÕÂë ( normally indicate a error )
+                /// ç©ºç  ( normally indicate a error )
                 ///
                 NONE = 0,
 
@@ -110,7 +110,7 @@ namespace GN
         // TODO: joystick support
 
         ///
-        /// ¶¨Òå°´¼üµÄ×´Ì¬, used by struct KeyEvent
+        /// å®šä¹‰æŒ‰é”®çš„çŠ¶æ€, used by struct KeyEvent
         ///
         struct KeyState
         {
@@ -174,8 +174,8 @@ namespace GN
         ///
         /// key event structure
         ///
-        /// Ò»¸ökeyevent_sÊµ¼ÊÉÏ¾ÍÊÇÒ»¸öuint16_tÀàĞÍµÄÕûÊı£¬
-        /// ÆäµÍ8Î»ÊÇkey code£¬¸ß8Î»ÊÇkey state
+        /// ä¸€ä¸ªkeyevent_så®é™…ä¸Šå°±æ˜¯ä¸€ä¸ªuint16_tç±»å‹çš„æ•´æ•°ï¼Œ
+        /// å…¶ä½8ä½æ˜¯key codeï¼Œé«˜8ä½æ˜¯key state
         ///
         union KeyEvent
         {
@@ -255,7 +255,7 @@ namespace GN
             ///
             /// triggered when mouse/wheel/joystick moving/scrolling
             ///
-            /// \note  ²ÎÊı2ÖĞ·µ»ØµÄÊÇÏà¶ÔÎ»ÒÆ
+            /// \note  å‚æ•°2ä¸­è¿”å›çš„æ˜¯ç›¸å¯¹ä½ç§»
             ///
             Signal2<void,Axis,int> sigAxisMove;
 
@@ -273,7 +273,7 @@ namespace GN
             virtual bool attachToWindow( intptr_t displayHandle, intptr_t windowHandle ) = 0;
 
             ///
-            /// »ñÈ¡²¢´¦Àí×îĞÂµÄÊäÈëÊÂ¼ş
+            /// è·å–å¹¶å¤„ç†æœ€æ–°çš„è¾“å…¥äº‹ä»¶
             ///
             virtual void processInputEvents() = 0;
 
@@ -309,7 +309,7 @@ namespace GN
             virtual const int * getAxisStatus() const = 0;
 
             ///
-            /// µÃµ½µ±Ç°Êó±êµÄÎ»ÖÃ£¨Ïà¶Ô´°¿ÚµÄ×óÉÏ½Ç£©
+            /// å¾—åˆ°å½“å‰é¼ æ ‡çš„ä½ç½®ï¼ˆç›¸å¯¹çª—å£çš„å·¦ä¸Šè§’ï¼‰
             ///
             virtual void getMousePosition( int & x, int & y ) const = 0;
         };
@@ -357,15 +357,15 @@ namespace GN
         ///
         /// convert string to keycode
         ///
-        /// \return Ê§°ÜÊ±·µ»Ø KeyCode::NONE
+        /// \return å¤±è´¥æ—¶è¿”å› KeyCode::NONE
         ///
         inline KeyCode str2kc( const char * );
 
         ///
         /// convert keycode to string
         ///
-        /// \return  Ê§°ÜÊ±·µ»Ø¿Õ×Ö´®£¨×¢Òâ£¬ÊÇ¿Õ×Ö´®""£¬²»ÊÇNULL£¬
-        ///          Äã¿ÉÒÔÓÃ GN::str::isEmpty() À´¼ì²â·µ»ØÖµ
+        /// \return  å¤±è´¥æ—¶è¿”å›ç©ºå­—ä¸²ï¼ˆæ³¨æ„ï¼Œæ˜¯ç©ºå­—ä¸²""ï¼Œä¸æ˜¯NULLï¼Œ
+        ///          ä½ å¯ä»¥ç”¨ GN::str::isEmpty() æ¥æ£€æµ‹è¿”å›å€¼
         ///
         inline const char * keyCode2String( int );
 
