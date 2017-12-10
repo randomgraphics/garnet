@@ -78,6 +78,12 @@ public:
         GN::HeapMemory::dealloc( mData );
     }
 
+    MapValue & operator=( const MapValue & rhs)
+    {
+        mTraits.assign(  mData, rhs.mData );
+        return *this;
+    }
+
     void * data() const { return mData; }
 };
 
@@ -100,6 +106,7 @@ struct TypeProxy
 };
 
 typedef std::map<MapKey, MapValue> MapType;
+typedef std::map<MapKey, MapValue>::iterator MapIterator;
 typedef TypeProxy<MapKey> KeyProxy;
 typedef TypeProxy<MapValue> ValueProxy;
 
@@ -135,7 +142,7 @@ GN_API GN::TypelessDict::Iterator::Iterator( const Iterator & i )
 // -----------------------------------------------------------------------------
 GN_API GN::TypelessDict::Iterator::~Iterator()
 {
-    ((MapType::iterator*)mBuf)->MapType::iterator::~iterator();
+    ((MapType::iterator*)mBuf)->MapIterator::~MapIterator();
 }
 
 //
