@@ -101,8 +101,8 @@
 
 #define GN_PLATFORM_NAME "cygwin"
 
-// unix platform
-#elif defined( __unix ) || defined( __unix__ )
+// unix/linux platform
+#elif defined( __unix ) || defined( __unix__ ) || defined( __APPLE__ )
 
 #undef GN_POSIX
 #define GN_POSIX 1

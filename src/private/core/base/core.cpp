@@ -1,6 +1,6 @@
 #include "pch.h"
 #include "garnet/GNinput.h"
-#include <malloc.h>
+#include <stdlib.h>
 
 // implement global singletons
 GN_IMPLEMENT_CROSS_DLL_SINGLETON( GN::input::Input )

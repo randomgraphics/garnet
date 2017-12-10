@@ -1,4 +1,4 @@
-// *****************************************************************************
+ï»¿// *****************************************************************************
 /// \file
 /// \brief   Define global compiler pragma
 /// \author  chenlee (2005.7.28)
@@ -24,16 +24,16 @@
 // *****************************************************************************
 
 #if GN_MSVC && !GN_ICL
-#pragma warning( disable : 4127 ) // Ìõ¼ş±í´ïÊ½ÊÇ³£Êı
+#pragma warning( disable : 4127 ) // æ¡ä»¶è¡¨è¾¾å¼æ˜¯å¸¸æ•°
 #pragma warning( disable : 4201 ) // nameless struct/union
 #pragma warning( disable : 4251 ) // struct 'xxx' needs to have dll-interface to be used by clients of 'xxx'
 #pragma warning( disable : 4275 ) // non dll-interface struct 'xxx' used as base for dll-interface class 'xxx'
 #pragma warning( disable : 4511 ) // can't generate copy constructor
 #pragma warning( disable : 4512 ) // can't generate assignment operator
-//#pragma warning( disable : 4714 ) // ±ê¼ÇÎª __forceinline µÄº¯ÊıÎ´ÄÚÁª
+//#pragma warning( disable : 4714 ) // æ ‡è®°ä¸º __forceinline çš„å‡½æ•°æœªå†…è”
 #pragma warning( disable : 4786 ) // symbol trunc to 255 ...
 #if defined(NDEBUG)
-#pragma warning( disable : 4702 ) // ÎŞ·¨·ÃÎÊµÄ´úÂë2
+#pragma warning( disable : 4702 ) // æ— æ³•è®¿é—®çš„ä»£ç 2
 #endif
 #endif
 

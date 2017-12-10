@@ -1,5 +1,11 @@
 #include "pch.h"
 
+// TODO: more standard conforming implementation.
+void * operator new( size_t s ) GN_THROW_BADALLOC() { return ::GN::HeapMemory::alloc( s ); }
+void * operator new[]( size_t s ) GN_THROW_BADALLOC() { return ::GN::HeapMemory::alloc( s ); }
+void operator delete( void* p ) GN_NOTHROW() { ::GN::HeapMemory::dealloc( p ); }
+void operator delete[]( void* p ) GN_NOTHROW() { ::GN::HeapMemory::dealloc( p ); }
+
 //
 //
 // -----------------------------------------------------------------------------

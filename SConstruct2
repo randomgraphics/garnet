@@ -62,11 +62,11 @@ if 'win32' == LOCAL_ENV['PLATFORM']:
 elif 'cygwin' == LOCAL_ENV['PLATFORM']:
     HOST_OS = 'cygwin'
     HOST_CPU = 'x86'
-elif 'posix' == LOCAL_ENV['PLATFORM']:
+elif 'posix' == LOCAL_ENV['PLATFORM'] or 'darwin' == LOCAL_ENV['PLATFORM']:
     HOST_OS = 'posix'
     HOST_CPU = 'x86'
 else:
-    print('FATAL: Unknown platform:', LOCAL_ENV['PLATFORM'])
+    UTIL_fatal('Unknown platform: %s'%LOCAL_ENV['PLATFORM'])
     Exit(-1)
 
 BUILD_COMPILER = UTIL_getenv('GN_BUILD_COMPILER', None )

@@ -1,4 +1,4 @@
-#ifndef __GN_BASE_SINGLETON_H__
+ï»¿#ifndef __GN_BASE_SINGLETON_H__
 #define __GN_BASE_SINGLETON_H__
 // *****************************************************************************
 /// \file
@@ -7,19 +7,19 @@
 // *****************************************************************************
 
 ///
-/// ÊµÏÖ¿çÄ£¿éµ¥¼şÖĞµÄ¾²Ì¬±äÁ¿
+/// å®ç°è·¨æ¨¡å—å•ä»¶ä¸­çš„é™æ€å˜é‡
 ///
 #define GN_IMPLEMENT_CROSS_DLL_SINGLETON(T) template<> GN_API T * ::GN::CrossDllSingleton< T >::msInstancePtr = 0;
 
 namespace GN
 {
     ///
-    /// ÓÃÓÚÄ£¿éÄÚ²¿Ê¹ÓÃµÄµ¥¼şÀà£¬ÎŞ·¨¿çDLLÊ¹ÓÃ¡£
+    /// ç”¨äºæ¨¡å—å†…éƒ¨ä½¿ç”¨çš„å•ä»¶ç±»ï¼Œæ— æ³•è·¨DLLä½¿ç”¨ã€‚
     ///
     template<typename T>
     class Singleton
     {
-        static T * msInstancePtr; ///< Ö¸ÏòsingletonµÄÊµÀı
+        static T * msInstancePtr; ///< æŒ‡å‘singletonçš„å®ä¾‹
 
     public:
 
@@ -58,7 +58,7 @@ namespace GN
     template<typename T>
     class CrossDllSingleton
     {
-        static GN_API T * msInstancePtr; ///< Ö¸ÏòsingletonµÄÊµÀı
+        static GN_API T * msInstancePtr; ///< æŒ‡å‘singletonçš„å®ä¾‹
 
     public:
 

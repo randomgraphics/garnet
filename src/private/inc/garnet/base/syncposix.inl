@@ -1,13 +1,11 @@
 #if GN_POSIX
 
-#include <ext/atomicity.h>
-
 //
 //
 // -----------------------------------------------------------------------------
 inline void GN::memoryBarrier()
 {
-     _GLIBCXX_READ_MEM_BARRIER;
+    __sync_synchronize();
 }
 
 //
