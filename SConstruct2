@@ -62,9 +62,12 @@ if 'win32' == LOCAL_ENV['PLATFORM']:
 elif 'cygwin' == LOCAL_ENV['PLATFORM']:
     HOST_OS = 'cygwin'
     HOST_CPU = 'x86'
-elif 'posix' == LOCAL_ENV['PLATFORM'] or 'darwin' == LOCAL_ENV['PLATFORM']:
+elif 'posix' == LOCAL_ENV['PLATFORM']:
     HOST_OS = 'posix'
     HOST_CPU = 'x86'
+elif 'darwin' == LOCAL_ENV['PLATFORM']:
+    HOST_OS = 'darwin'
+    HOST_CPU = 'x64'
 else:
     UTIL_fatal('Unknown platform: %s'%LOCAL_ENV['PLATFORM'])
     Exit(-1)
@@ -115,14 +118,14 @@ def UTIL_new_env_ex( conf ):
     msvs_platform = 'x86'
     if 'icl' == BUILD_COMPILER:
         tools += ['intelc']
-        if 'x64' == BUILD_TARGET_CPU :
+        if 'x64' == BUILD_TARGET_CPU:
             icl_abi = 'em64t'
             msvs_platform = 'x64'
     elif 'xbox3' == BUILD_TARGET_OS:
         msvs_platform = 'Durango'
-    elif 'x64' == BUILD_TARGET_CPU :
+    elif 'x64' == BUILD_TARGET_CPU:
         msvs_platform = 'x64'
-    elif 'mingw' == BUILD_COMPILER :
+    elif 'mingw' == BUILD_COMPILER:
         tools = ['mingw']
 
     # create new environment
@@ -326,7 +329,7 @@ def UTIL_new_env_ex( conf ):
         linkflags['retail']  += ['/OPT:REF']
 
     elif 'gcc' == env['CC']:
-        ccflags['common']  += ['-pthread', '-Wall','-Werror', '-fno-strict-aliasing']
+        ccflags['common']  += ['-std=c++14', '-pthread', '-Wall','-Werror', '-fno-strict-aliasing']
         ccflags['debug']   += ['-g']
         ccflags['profile'] += ['-O3']
         ccflags['retail']  += ['-O3']
