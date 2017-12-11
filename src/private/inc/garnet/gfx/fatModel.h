@@ -140,7 +140,7 @@ namespace GN { namespace gfx
         void * getTexcoord( size_t stage ) const
         {
             size_t semantic = TEXCOORD0+stage;
-            if( 0 <= semantic && semantic <= TEXCOORD_LAST )
+            if( semantic <= TEXCOORD_LAST )
             {
                 return mElements[semantic];
             }
