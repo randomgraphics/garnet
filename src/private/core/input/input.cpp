@@ -1,5 +1,4 @@
 #include "pch.h"
-#include "inputXenon.h"
 #include "inputMsw.h"
 #include "inputDInput.h"
 #include "inputX11.h"
@@ -11,7 +10,7 @@ static GN::Logger * sLogger = GN::getLogger("GN.input");
 // *****************************************************************************
 
 #if GN_MSVC
-#pragma warning(disable:4100) // Î´ÒýÓÃµÄÐÎ²Î
+#pragma warning(disable:4100) // Î´ï¿½ï¿½ï¿½Ãµï¿½ï¿½Î²ï¿½
 #endif
 
 namespace GN { namespace input

@@ -56,18 +56,6 @@ public:
     // *************************************************************************
 
     /// ctor
-#if GN_XBOX2
-    // Xenon platform does not have command line arguments
-    CommandLineArguments( int, const char *[] )
-        : applicationName( "xenonapp" )
-        , useMultiThreadGpu( true )
-        , status( CONTINUE_EXECUTION )
-        , extraArgc(0)
-        , extraArgv(NULL)
-        , logger(GN::getLogger( "GN.test.CommandLineArguments" ))
-    {
-    }
-#else
     CommandLineArguments( int argc, const char * argv[] )
         : applicationName( argv[0] )
         , useMultiThreadGpu( !GN_POSIX )
@@ -84,7 +72,6 @@ public:
             extraArgv = mExtraArgs.rawptr();
         }
     }
-#endif
 
     /// show command line options
     void showStandardCommandLineOptions() const

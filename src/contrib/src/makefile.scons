@@ -27,8 +27,6 @@ elif 'vc' == GN.cc[:2]:
             '4244', # conversion from 'type1' to 'type2', possible loss of data
             ]
     ccflags += ['/wd%s'%w for w in unimportant_warnings]
-elif 'xenon' == GN.cc:
-    cppdefines += ['NO_GETENV'] # Xbox platform does not support getenv()
 elif 'gcc' == GN.cc or 'mingw' == GN.cc:
     ccflags += ['-Wno-error=unused-but-set-variable']
     ccflags += ['-Wno-error=misleading-indentation']

@@ -1,22 +1,6 @@
 #include "pch.h"
 
-#if GN_XENON
- #if GN_BUILD_DEBUG
-  #pragma comment(lib, "d3d9d.lib")
-  #pragma comment( lib, "xgraphicsd.lib" )
-  #pragma comment(lib, "xapilibd.lib")
- #elif GN_BUILD_PROFILE
-  #pragma comment(lib, "d3d9i.lib")
-  #pragma comment( lib, "xgraphics.lib" )
-  #pragma comment(lib, "xapilibi.lib")
- #else
-  #pragma comment(lib, "d3d9.lib")
-  #pragma comment( lib, "xgraphics.lib" )
-  #pragma comment(lib, "xapilib.lib")
- #endif
-#else
- #pragma comment(lib, "d3d9.lib")
-#endif
+#pragma comment(lib, "d3d9.lib")
 
 //-----------------------------------------------------------------------------
 // Global variables

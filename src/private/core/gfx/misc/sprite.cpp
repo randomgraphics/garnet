@@ -290,16 +290,7 @@ void GN::gfx::SpriteRenderer::drawBegin( Texture * texture, uint32 options )
         mContext.rs.depthWriteEnabled = false;
     }
 
-    // Note: D3D9 and Xenon needs -0.5f vertex shift
-    if( mGpu.getOptions().api == GpuAPI::XENON )
-    {
-        mVertexShift = -0.5f;
-    }
-    else
-    {
-        mVertexShift = 0;
-    }
-
+    mVertexShift = 0;
     mDrawBegun = true;
     mOptions   = options;
 }

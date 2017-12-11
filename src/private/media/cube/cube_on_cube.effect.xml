@@ -71,36 +71,6 @@ void main()
 			</ps>
 		</gpuprogram>
 
-		<!-- Cg shaders -->
-		<gpuprogram name="cg" lang="CG">
-			<uniref uniform="pvw" shaderParameter="pvw"/>
-			<texref texture="cube" shaderParameter="s0"/>
-			<attref attribute="POSITION0" shaderParameter="POSITION"/>
-			<vs entry="main">
-<![CDATA[
-uniform float4x4 pvw : register(c0);
-void main(
-	in  float4 ipos : POSITION,
-	out float4 opos : POSITION,
-	out float3 otex : TEXCOORD0 )
-{
-	opos = mul( pvw, ipos );
-	otex = sign( ipos.xyz ); // Note: Cg 1.5 has bug to compile this statement to vs_3_0 assembly.
-}
-]]>
-			</vs>
-
-			<ps>
-<![CDATA[
-sampler s0 : register(s0);
-float4 main( in float3 itex : TEXCOORD0 ) : COLOR0
-{
-	return texCUBE( s0, itex );
-}
-]]>
-			</ps>
-		</gpuprogram>
-
 	</gpuprograms>
 
 	<!--
@@ -118,9 +88,6 @@ float4 main( in float3 itex : TEXCOORD0 ) : COLOR0
 		</technique>
 		<technique name="glsl">
 			<pass gpuprogram="glsl"/>
-		</technique>
-		<technique name="cg">
-			<pass gpuprogram="cg"/>
 		</technique>
 	</techniques>
 </effect>

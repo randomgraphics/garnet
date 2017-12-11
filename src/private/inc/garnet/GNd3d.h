@@ -12,19 +12,12 @@
 #include <d3dcompiler.h>
 #endif
 
-#if GN_PLATFORM_HAS_D3D10 | GN_PLATFORM_HAS_D3D11
-#include "d3d/dxgiutils.h"
-#endif
-
-#if GN_PLATFORM_HAS_D3D9 | GN_XBOX2
+#if GN_PLATFORM_HAS_D3D9
 #include "d3d/d3d9utils.h"
 #endif
 
-#if GN_PLATFORM_HAS_D3D10
-#include "d3d/d3d10utils.h"
-#endif
-
 #if GN_PLATFORM_HAS_D3D11
+#include "d3d/dxgiutils.h"
 #include "d3d/d3d11utils.h"
 #endif
 

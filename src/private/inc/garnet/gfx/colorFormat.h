@@ -506,11 +506,6 @@ namespace GN { namespace gfx
     GN_API const char * d3d9Format2Str( int );
 
     ///
-    /// Xenon texture format to string. Return "INVALID Xenon FORMAT" if failed.
-    ///
-    GN_API const char * xenonFormat2Str( int );
-
-    ///
     /// DXGI_FORMAT to string. Return "INVALID DXGI_FORMAT" if failed.
     ///
     GN_API const char * dxgiFormat2Str( int );
@@ -524,18 +519,6 @@ namespace GN { namespace gfx
     /// Convert ColorFormat to D3D9 format. Return D3DFMT_UNKNOWN if failed.
     ///
     GN_API int colorFormat2D3D9Format( ColorFormat );
-
-    ///
-    /// Convert Xenon texture format to ColorFormat. Return ColorFormat::UNKNOWN if failed.
-    ///
-    GN_API ColorFormat xenonFormat2ColorFormat( int );
-
-    ///
-    /// Convert ColorFormat to Xenon texture format. Return D3DFMT_UNKNOWN if failed.
-    ///
-    /// \note this function always return tiled format.
-    ///
-    GN_API uint32 colorFormat2XenonFormat( ColorFormat );
 
     ///
     /// Convert DXGI_FORMAT to ColorFormat. Return DXGI_FORMAT_UNKNOWN if failed.

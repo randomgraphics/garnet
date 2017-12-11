@@ -404,20 +404,12 @@ static void sParseGpuProgram( EffectResourceDesc & desc, const XmlElement & node
                 sd.gpd.shaderModels = ShaderModel::SM_4_0;
                 break;
 
-            case GpuProgramLanguage::MICROCODE:
-                sd.gpd.shaderModels = ShaderModel::SM_3_0;
-                break;
-
             case GpuProgramLanguage::ARB1:
                 sd.gpd.shaderModels = ShaderModel::ARB1;
                 break;
 
             case GpuProgramLanguage::GLSL:
                 sd.gpd.shaderModels = ShaderModel::GLSL_1_00;
-                break;
-
-            case GpuProgramLanguage::CG:
-                sd.gpd.shaderModels = ShaderModel::GLSL_1_00 | ShaderModel::SM_2_0;
                 break;
 
             default:

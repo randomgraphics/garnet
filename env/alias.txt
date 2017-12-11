@@ -1,6 +1,5 @@
 b           "scons $*"
 g           "git $*"
-glog        "git log --oneline --graph --decorate $*"
 gnroot      "cd /d %GARNET_ROOT%\$*"
 gnbld       "cd /d %GARNET_ROOT%\build.tmp\%GN_BUILD_TARGET_OS%.%GN_BUILD_TARGET_CPU%.%GN_BUILD_COMPILER%.%GN_BUILD_VARIANT%\bin\$*"
 gnsdk       "cd /d %GARNET_ROOT%\build.bin\sdk\$*"

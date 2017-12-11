@@ -251,127 +251,6 @@ void main()
 			</ps>
 		</gpuprogram>
 
-		<!-- Cg program -->
-
-		<gpuprogram name="cg" lang="CG" shaderModel="ARB1|GLSL_1_00|SM_2_0">
-			<uniref uniform="pvw"       shaderParameter="g_matWorldViewProj"/>
-			<uniref uniform="viewworld" shaderParameter="g_matWorldView"/>
-			<uniref uniform="weights"   shaderParameter="g_vBlendWeights"/>
-			<texref texture="skin"      shaderParameter="DiffuseSampler"/>
-			<texref texture="caustic"   shaderParameter="CausticsSampler"/>
-			<attref attribute="position0" shaderParameter="vPosition0"/>
-			<attref attribute="normal0"   shaderParameter="vNormal0"/>
-			<attref attribute="position1" shaderParameter="vPosition1"/>
-			<attref attribute="normal1"   shaderParameter="vNormal1"/>
-			<attref attribute="position2" shaderParameter="vPosition2"/>
-			<attref attribute="normal2"   shaderParameter="vNormal2"/>
-			<attref attribute="texcoord"  shaderParameter="vBaseTexCoords"/>
-			<vs entry="main">
-<![CDATA[
-uniform float3   g_vBlendWeights     ;  // ( fWeight1, fWeight2, fWeight3, 0 )
-uniform float4x4 g_matWorldViewProj  ;  // world-view-projection matrix
-uniform float4x4 g_matWorldView      ;  // world-view matrix
-
-struct VSOUT
-{
-    float4 vPosition         : POSITION;
-    float4 vMisc             : TEXCOORD0;     // x = light, y = fog, zw = opos.zw
-    float2 vBaseTexCoords    : TEXCOORD1;
-    float2 vCausticTexCoords : TEXCOORD2;
-};
-
-VSOUT main(
-	const float3 vPosition0     : POSITION,
-	const float3 vNormal0       : NORMAL,
-	const float2 vBaseTexCoords : TEXCOORD0,
-	const float3 vPosition1     : TEXCOORD1,
-	const float3 vNormal1       : TEXCOORD2,
-	const float3 vPosition2     : TEXCOORD3,
-	const float3 vNormal2       : TEXCOORD4 )
-{
-	const   float4   g_vZero = {0,0,0,0};
-	const   float4   g_vConstants = { 1, 0.5, 0, 0 };
-	const   float3   g_vDolphinLightDir = { 0, 1, 0 };
-	const   float4   g_vFogRange = { 0.5,50.0, 1.0/(50.0-1.0), 0 }; // ( x, fog_end, (1/(fog_end-fog_start)), x )
-
-	// Tween the 3 positions (v0,v1,v2) into one position
-	float4 vModelPosition = float4( vPosition0 * g_vBlendWeights.x + vPosition1 * g_vBlendWeights.y + vPosition2 * g_vBlendWeights.z, 1.0f );
-
-	// Transform position to the clipping space
-	float4 vOutputPosition = mul( g_matWorldViewProj, vModelPosition );
-
-	// Transform position to the camera space
-	float4 vViewPosition = mul( g_matWorldView, vModelPosition );
-
-	// Tween the 3 normals (v3,v4,v5) into one normal
-	float3 vModelNormal = vNormal0 * g_vBlendWeights.x + vNormal1 * g_vBlendWeights.y + vNormal2 * g_vBlendWeights.z;
-
-	// Do the lighting calculation
-	float fLightValue = max( dot( vModelNormal, g_vDolphinLightDir ), g_vZero.x );
-
-	// Generate water caustic tex coords from vertex xz position
-	float2 vCausticTexCoords = g_vConstants.yy * vViewPosition.xz;
-
-	// Fog calculation:
-	float fFogValue = clamp( (g_vFogRange.y - vViewPosition.z) * g_vFogRange.z, g_vZero.x, g_vConstants.x );
-
-	// Compress output values
-	VSOUT  Output;
-	Output.vPosition         = vOutputPosition;
-	Output.vMisc.x           = fLightValue;
-	Output.vMisc.y           = fFogValue;
-	Output.vMisc.zw          = vOutputPosition.zw;
-	Output.vBaseTexCoords    = vBaseTexCoords;
-	Output.vCausticTexCoords = vCausticTexCoords;
-	return Output;
-}
-]]>
-			</vs>
-			<ps entry="main">
-<![CDATA[
-
-struct VSOUT
-{
-    float4 vPosition         : POSITION;
-    float4 vMisc             : TEXCOORD0; // x = light, y = fog, zw = pos.zw
-    float2 vBaseTexCoords    : TEXCOORD1;
-    float2 vCausticTexCoords : TEXCOORD2;
-};
-
-sampler2D   DiffuseSampler  : register(s0);
-sampler2D   CausticsSampler : register(s1);
-
-void main(
-	VSOUT Input,
-	out float4 oC0 : COLOR0,
-	out float4 oC1 : COLOR1 )
-{
-	const float4 g_vFogColor = { 0.0f, 0.25f, 0.5f, 1.0f };
-	const float4 g_vAmbient  = { 0.25f, 0.25f, 0.25f, 0.25f };
-
-	// Decompress input values
-	float3 vLightColor       = Input.vMisc.xxx;
-	float  fFogValue         = Input.vMisc.y;
-	float2 vBaseTexCoords    = Input.vBaseTexCoords.xy;
-	float2 vCausticTexCoords = Input.vCausticTexCoords.xy;
-
-	// Fetch from the textures
-	float4 vDiffuse  = tex2D( DiffuseSampler,  vBaseTexCoords );
-	float4 vCaustics = tex2D( CausticsSampler, vCausticTexCoords );
-
-	// Combine lighting, base texture and water caustics texture
-	float4 PixelColor0 = vDiffuse  * float4( vLightColor + g_vAmbient.xyz, 1 );
-	float4 PixelColor1 = vCaustics * float4( vLightColor, 1 );
-
-	// Return color blended with fog
-	oC0 = lerp( g_vFogColor, PixelColor0 + PixelColor1, fFogValue );
-
-	// Return depth to the second render target
-	oC1 = Input.vMisc.z / Input.vMisc.w;
-}
-]]>
-			</ps>
-		</gpuprogram>
 	</gpuprograms>
 
 	<!--
@@ -384,9 +263,6 @@ void main(
 		<renderstates
 			CULL_MODE="CULL_NONE"
 		/>
-		<technique name="cg">
-			<pass gpuprogram="cg"/>
-		</technique>
 		<technique name="hlsl9">
 			<pass gpuprogram="hlsl9"/>
 		</technique>

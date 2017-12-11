@@ -61,7 +61,6 @@ namespace GN { namespace gfx
         {
             OGL,      ///< OpenGL
             D3D11,    ///< D3D11
-            XENON,    ///< Xenon
             FAKE,     ///< Fake API
             NUM_APIs, ///< Number of avaliable APIs.
             AUTO,     ///< determine rendering API automatically.
@@ -75,7 +74,6 @@ namespace GN { namespace gfx
             {
                 "OGL",
                 "D3D11",
-                "XENON",
                 "FAKE",
                 "INVALID_GPU_API",
                 "AUTO"
@@ -100,7 +98,6 @@ namespace GN { namespace gfx
             {
                 { OGL, "OGL" },
                 { D3D11, "D3D11" },
-                { XENON, "XENON" },
                 { FAKE, "FAKE" },
                 { AUTO, "AUTO" },
             };
@@ -188,7 +185,17 @@ namespace GN { namespace gfx
         bool useExternalWindow;
 
         ///
+<<<<<<< HEAD
         /// 是否同步刷新. 缺省为false.
+=======
+        /// fullscreen or windowed mode.
+        /// ȱʡΪfalse.
+        ///
+        bool fullscreen;
+
+        ///
+        /// �Ƿ�ͬ��ˢ��. ȱʡΪfalse.
+>>>>>>> master
         ///
         bool vsync;
 
@@ -287,7 +294,6 @@ namespace GN { namespace gfx
         uint32        maxTextures;           ///< max number of simutaneous textures
         uint32        maxColorRenderTargets; ///< max number of simutaneous render targets
         uint32        shaderModels;          ///< shader models supported by the GPU.
-        bool          cg;                    ///< Support Cg language or not.
     };
 
     ///
@@ -835,7 +841,11 @@ namespace GN { namespace gfx
     };
 
     ///
+<<<<<<< HEAD
     /// 清屏标志
+=======
+    /// ������־
+>>>>>>> master
     ///
     enum ScreenCleanFlag
     {
@@ -887,7 +897,11 @@ namespace GN { namespace gfx
         Signal3<void, intptr_t, uint32, uint32> rendererWindowSizeMove;
 
         ///
+<<<<<<< HEAD
         /// 当用户试图关闭渲染窗口时被触发，如点击窗口的关闭按钮或者按ALT-F4。
+=======
+        /// ���û���ͼ�ر���Ⱦ����ʱ���������������ڵĹرհ�ť���߰�ALT-F4��
+>>>>>>> master
         ///
         /// This signal is useful when you want your application to quit when
         /// user click close button or press ALT-F4, while using internal
@@ -906,7 +920,11 @@ namespace GN { namespace gfx
     };
 
     ///
+<<<<<<< HEAD
     /// 渲染器模块的主接口类
+=======
+    /// ��Ⱦ��ģ������ӿ���
+>>>>>>> master
     ///
     /// \nosubgrouping
     ///
@@ -1221,17 +1239,30 @@ namespace GN { namespace gfx
         //@{
 
         ///
+<<<<<<< HEAD
         /// 结束一帧的绘图操作
+=======
+        /// ����һ֡�Ļ�ͼ����
+>>>>>>> master
         ///
         virtual void present() = 0;
 
         ///
+<<<<<<< HEAD
         /// 清屏操作
         ///
         /// \param flags 清屏标志, see ScreenCleanFlag
         /// \param c     背景色
         /// \param z     深度值
         /// \param s     模板值
+=======
+        /// ��������
+        ///
+        /// \param flags ������־, see ScreenCleanFlag
+        /// \param c     ����ɫ
+        /// \param z     ���ֵ
+        /// \param s     ģ��ֵ
+>>>>>>> master
         ///
         virtual void
         clearScreen( const Vector4f & c = Vector4f(0,0,0,1),
@@ -1296,10 +1327,17 @@ namespace GN { namespace gfx
         /// Draw line segments
         ///
         /// \param options
+<<<<<<< HEAD
         ///     渲染选项，详见 DrawLineOptions。Set to 0 to use default options
         /// \param positions
         ///     顶点坐标数据，由一系列的3D顶点组成。2个顶点表示一条线段。
         ///     选项 DL_WINDOW_SPACE会影响坐标的含义。
+=======
+        ///     ��Ⱦѡ���� DrawLineOptions��Set to 0 to use default options
+        /// \param positions
+        ///     �����������ݣ���һϵ�е�3D������ɡ�2�������ʾһ���߶Ρ�
+        ///     ѡ�� DL_WINDOW_SPACE��Ӱ������ĺ��塣
+>>>>>>> master
         /// \param stride
         ///     stride of one vertex.
         /// \param numpoints

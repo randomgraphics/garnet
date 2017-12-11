@@ -359,7 +359,7 @@ void GN::util::SampleApp::printStandardCommandLineOptions()
         "\n"
         "   -mt   [on|off]          Use multithread renderer. Default is on.\n"
         "\n"
-        "   -gpu [auto|ogl|d3d10]   Choose GPU API. Default is AUTO.\n"
+        "   -gpu [auto|ogl|d3d11]   Choose GPU API. Default is AUTO.\n"
         "\n"
         "   -ww [num]               Windows width. Default is 800.\n"
         "\n"
@@ -437,14 +437,6 @@ bool GN::util::SampleApp::checkCmdLine( int argc, const char * const argv[] )
     mInitParam.asciiFont.quality = FontFaceDesc::ANTIALIASED;
     mInitParam.ro.displayMode.width = 800;
     mInitParam.ro.displayMode.height = 600;
-
-#if GN_XBOX2
-
-    // Xenon platform has no command line at all.
-    GN_UNUSED_PARAM( argc );
-    GN_UNUSED_PARAM( argv );
-
-#else
 
     DynaArray<const char*> unknownArgs;
 
@@ -556,8 +548,6 @@ bool GN::util::SampleApp::checkCmdLine( int argc, const char * const argv[] )
 
     // handle unrecoganized arguments
     if( !onCheckExtraCmdlineArguments( argv[0], (int)unknownArgs.size(), unknownArgs.rawptr() ) ) return false;
-
-#endif
 
     // success
     return true;

@@ -93,7 +93,7 @@ foreach( $a in $args )
     {
         $name = $MyInvocation.InvocationName | split-path -leaf
 
-        "Usage: $name [/h|/?] [vc|icl|mingw] [x86|x64|xenon] [debug|profile|retail]"
+        "Usage: $name [/h|/?] [vc|icl|mingw] [x86|x64] [debug|profile|retail]"
     }
 
     elseif( ("vc" -eq $a) -or ("icl" -eq $a) )
@@ -111,13 +111,6 @@ foreach( $a in $args )
             ("retail" -eq $a) )
     {
         $env:GN_BUILD_VARIANT = $a
-    }
-
-    elseif( "xenon" -eq $a )
-    {
-        $env:GN_BUILD_COMPILER = "xenon"
-        $env:GN_BUILD_TARGET_OS = "xenon"
-        $env:GN_BUILD_TARGET_CPU = "ppc"
     }
 
     elseif( ("durango" -eq $a) -or ("xbox3" -eq $a) )
@@ -357,53 +350,6 @@ if( "mswin" -eq $env:GN_BUILD_TARGET_OS )
 }
 
 # ==============================================================================
-# setup DirectX SDK environment
-# ==============================================================================
-
-if( "mswin" -eq $env:GN_BUILD_TARGET_OS )
-{
-    ""
-    "==============================="
-    "Setup DirectX build environment"
-    "==============================="
-    ""
-
-    if( $env:DXSDK_DIR -and ( test-path $env:DXSDK_DIR ) )
-    {
-        $batch = "${env:DXSDK_DIR}Utilities\Bin\dx_setenv.cmd"
-
-        if( test-path -path $batch )
-        {
-            $target = ""
-
-            if( "x64" -eq $env:GN_BUILD_TARGET_CPU )
-            {
-                $target = "amd64"
-            }
-            else
-            {
-                $target = $env:GN_BUILD_TARGET_CPU
-            }
-
-        	"Run DirectX SDK setup script: $batch $target"
-            ""
-
-            catch_batch_env $batch $target
-        }
-        else
-        {
-            warn "DiretX build environment setup failed: file $batch not found."
-        }
-    }
-    else
-    {
-        # Note: Just issue a warning, instead of error, since DXSDK is not required to build garnet application.
-        warn "DirectX SDK not found (Environment variable DXSDK_DIR does not exist)."
-		"Note that you may still be able to compile D3D code as long as you have Windows 7/8 SDK installed."
-    }
-}
-
-# ==============================================================================
 # setup Vulkan SDK
 # ==============================================================================
 
@@ -434,35 +380,6 @@ if( "mswin" -eq $env:GN_BUILD_TARGET_OS )
     }
 }
 
-
-# ==============================================================================
-# setup XDK build environment
-# ==============================================================================
-
-if( "xenon" -eq $env:GN_BUILD_TARGET_OS )
-{
-    ""
-	"============================="
-	"Setup Xenon build environment"
-	"============================="
-    ""
-
-    if( !$env:XEDK )
-    {
-        error "Environment XEDK not found. Please install XDK"
-    }
-
-    $batch = "$env:XEDK\bin\win32\xdkvars.bat"
-
-    if( test-path $batch )
-    {
-        catch_batch_env $batch
-    }
-    else
-    {
-        error "XDK setup script $batch not found."
-    }
-}
 
 # ==============================================================================
 # setup Xbox One build environment
@@ -503,20 +420,9 @@ Setup SCONS build environment
 =============================
 "
 
-if( "xenon" -eq $env:GN_BUILD_COMPILER )
-{
-    # SCons 2.1.0.alpha doesn't build Assimp directory on Xenon when PCH is used.
-    # So we need to keep SCons 1.2.0 for xenon build.
-    $SCONS_DIR= "$GARNET_ROOT\env\scons\1.2.0"
-    $env:SCONS_LIB_DIR    = "$SCONS_DIR\lib"
-    $env:SCONS_SCRIPT_DIR = "$SCONS_DIR\scripts\"
-}
-else
-{
-    $SCONS_DIR= "$GARNET_ROOT\env\scons\3.0.0"
-    $env:SCONS_LIB_DIR    = "$SCONS_DIR\engine"
-    $env:SCONS_SCRIPT_DIR = "$SCONS_DIR\script\"
-}
+$SCONS_DIR= "$GARNET_ROOT\env\scons\3.0.0"
+$env:SCONS_LIB_DIR    = "$SCONS_DIR\engine"
+$env:SCONS_SCRIPT_DIR = "$SCONS_DIR\script\"
 $env:SCONSFLAGS="-U"
 
 "SCons Directory : $SCONS_DIR"

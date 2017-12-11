@@ -69,20 +69,9 @@ else:
     print('FATAL: Unknown platform:', LOCAL_ENV['PLATFORM'])
     Exit(-1)
 
-# try import xenon extension for SCons
-BUILD_HAS_XENON_EXTENSION = False
-try:
-    sys.path.append( "env/scons/xenon" )
-    import xenon
-    BUILD_HAS_XENON_EXTENSION = True
-except ImportError:
-    print("no xenon extension for scons found.")
-
 BUILD_COMPILER = UTIL_getenv('GN_BUILD_COMPILER', None )
 if None == BUILD_COMPILER:
-    if BUILD_HAS_XENON_EXTENSION and xenon.exists( LOCAL_ENV ):
-        BUILD_COMPILER = 'xenon'
-    elif 'mswin' == HOST_OS:
+    if 'mswin' == HOST_OS:
         BUILD_COMPILER = 'vc100'
     else:
         BUILD_COMPILER = 'gcc'
@@ -115,80 +104,48 @@ def UTIL_new_env_ex( conf ):
     else:
         msvcBatchMode = True
 
-    if 'xenon' == BUILD_COMPILER:
+    # construct build environment
 
-        # construct empty environment for xenon platform
-        env = Environment(
-            tools          = [],
-            MSVC_VERSION   = "8.0",
-            MSVS8_PLATFORM = 'Xbox 360',
-            ENV            = {
-                                # Required by Xenon C++ compiler version 15.00.8153.
-                                # Or else the compiler will report error D8037
-                                'SystemDrive' : UTIL_getenv('SystemDrive'),
-                                'SystemRoot'  : UTIL_getenv('SystemRoot'),
-                }
-            )
-
-        # Setup standard XDK header and library path
-        xedk = UTIL_getenv('XEDK');
-        inc = os.path.join( xedk, "include" ) + ";" + os.path.join( xedk, "include\\sys" );
-        lib = os.path.join( xedk, "lib\\xbox" );
-
-        # Import environment variables that are used by C/C++ compiler.
-        env.PrependENVPath( 'PATH'     , UTIL_getenv('PATH') );
-        env.PrependENVPath( 'INCLUDE'  , inc );
-        env.PrependENVPath( 'LIB'      , lib );
-        env['ENV']['LANG']     = UTIL_getenv('LANG');
-        env['ENV']['LANGUAGE'] = UTIL_getenv('LANGUAGE');
-
-        # attach xenon build tools to the environment
-        xenon.generate( env )
-
+    if 'mswin' == HOST_OS:
+        tools = ['msvc','mslink','mslib','msvs','masm']
     else:
+        tools = ['default']
 
-        # construct build environment for other platforms
-
-        if 'mswin' == HOST_OS:
-            tools = ['msvc','mslink','mslib','msvs','masm']
-        else:
-            tools = ['default']
-
-        # determine msvs platform
-        msvs_platform = 'x86'
-        if 'icl' == BUILD_COMPILER:
-            tools += ['intelc']
-            if 'x64' == BUILD_TARGET_CPU :
-                icl_abi = 'em64t'
-                msvs_platform = 'x64'
-        elif 'xbox3' == BUILD_TARGET_OS:
-            msvs_platform = 'Durango'
-        elif 'x64' == BUILD_TARGET_CPU :
+    # determine msvs platform
+    msvs_platform = 'x86'
+    if 'icl' == BUILD_COMPILER:
+        tools += ['intelc']
+        if 'x64' == BUILD_TARGET_CPU :
+            icl_abi = 'em64t'
             msvs_platform = 'x64'
-        elif 'mingw' == BUILD_COMPILER :
-            tools = ['mingw']
+    elif 'xbox3' == BUILD_TARGET_OS:
+        msvs_platform = 'Durango'
+    elif 'x64' == BUILD_TARGET_CPU :
+        msvs_platform = 'x64'
+    elif 'mingw' == BUILD_COMPILER :
+        tools = ['mingw']
 
-        # create new environment
-        env = Environment(
-            tools          = tools,
-            MSVS8_PLATFORM = msvs_platform,
-            MSVC_BATCH     = msvcBatchMode,
-            )
+    # create new environment
+    env = Environment(
+        tools          = tools,
+        MSVS8_PLATFORM = msvs_platform,
+        MSVC_BATCH     = msvcBatchMode,
+        )
 
-        # 64-bit ASM compiler
-        if 'x64' == BUILD_TARGET_CPU:
-            env['AS'] = 'ml64'
+    # 64-bit ASM compiler
+    if 'x64' == BUILD_TARGET_CPU:
+        env['AS'] = 'ml64'
 
-        # Import environment variables that are used by C/C++ compiler.
-        env['ENV']['PATH']     = UTIL_getenv('PATH');
-        env['ENV']['INCLUDE']  = UTIL_getenv('INCLUDE');
-        env['ENV']['LIB']      = UTIL_getenv('LIB');
-        env['ENV']['LANG']     = UTIL_getenv('LANG');
-        env['ENV']['LANGUAGE'] = UTIL_getenv('LANGUAGE');
+    # Import environment variables that are used by C/C++ compiler.
+    env['ENV']['PATH']     = UTIL_getenv('PATH');
+    env['ENV']['INCLUDE']  = UTIL_getenv('INCLUDE');
+    env['ENV']['LIB']      = UTIL_getenv('LIB');
+    env['ENV']['LANG']     = UTIL_getenv('LANG');
+    env['ENV']['LANGUAGE'] = UTIL_getenv('LANGUAGE');
 
-        # --- test code ---
-        #print env['ENV']['INCLUDE']
-        #print env['ENV']['LIB']
+    # --- test code ---
+    #print env['ENV']['INCLUDE']
+    #print env['ENV']['LIB']
 
     # cache implicit dependencies
     env.SetOption( 'implicit_cache', int(UTIL_getenv('SCONS_CACHE_IMPLICIT_DEPS', 1)) )
@@ -265,15 +222,7 @@ def UTIL_new_env_ex( conf ):
         libs['common']        += conf['fbx_libs']
 
     # Target platform specific options
-    if 'xenon' == BUILD_TARGET_OS:
-        ccflags['common']     += ['/QVMX128']
-        cppdefines['profile'] += ['PROFILE']
-        linkflags['profile']  += ['/NODEFAULTLIB:xapilib.lib']
-        libs['common']        += Split('xboxkrnl xbdm dxerr9')
-        libs['debug']         += Split('xapilibd d3d9d d3dx9d xgraphicsd xnetd xaudiod2 xactd3 vcompd libcmtd')
-        libs['profile']       += Split('xapilibi d3d9i d3dx9  xgraphics  xnet  xaudio2  xacti3 vcomp  libcmt')
-        libs['retail']        += Split('xapilib  d3d9  d3dx9  xgraphics  xnet  xaudio2  xact3  vcomp  libcmt')
-    elif 'mswin' == BUILD_TARGET_OS:
+    if 'mswin' == BUILD_TARGET_OS:
         ccflags['debug']      += ['/RTCsu']
         libs['common']        += Split('kernel32 user32 gdi32 shlwapi advapi32 shell32')
     elif 'xbox3' == BUILD_TARGET_OS:
@@ -440,28 +389,6 @@ def CheckConfig():
     confdir = '#' + BUILD_ROOT_PATH + 'config'
     c = env.Configure( conf_dir=confdir, log_file=confdir + '/config.log' )
 
-    # =========
-    # Cg shader
-    # =========
-    CONFIG['cg_libs'] = []
-    if False : # CONF_enableCg :
-        CONFIG['has_cg']       = c.CheckLibWithHeader( 'cg', ['Cg/cg.h'], 'C', 'cgCreateContext();' )
-        CONFIG['has_cg_ogl']   = c.CheckLibWithHeader( 'cgGL', ['Cg/cg.h','Cg/cgGL.h'], 'C', "cgGLRegisterStates(0);" )
-        CONFIG['has_cg_d3d9']  = c.CheckLibWithHeader( 'cgD3D9', ['Cg/cg.h','Cg/cgD3D9.h'], 'C', "cgD3D9SetDevice(0);" )
-        CONFIG['has_cg_d3d10'] = c.CheckLibWithHeader( 'cgD3D10', ['Cg/cg.h','Cg/cgD3D10.h'], 'C', "cgD3D10SetDevice(0,0);" )
-        CONFIG['has_cg_d3d11'] = c.CheckLibWithHeader( 'cgD3D11', ['Cg/cg.h','Cg/cgD3D11.h'], 'C', "cgD3D11SetDevice(0,0);" )
-        if CONFIG['has_cg_ogl']   : CONFIG['cg_libs'] += ['cgGL']
-        if CONFIG['has_cg_d3d9']  : CONFIG['cg_libs'] += ['cgD3D9']
-        if CONFIG['has_cg_d3d10'] : CONFIG['cg_libs'] += ['cgD3D10']
-        if CONFIG['has_cg_d3d11'] : CONFIG['cg_libs'] += ['cgD3D11']
-        if CONFIG['has_cg']       : CONFIG['cg_libs'] += ['cg']
-    else:
-        CONFIG['has_cg']       = 0
-        CONFIG['has_cg_ogl']   = 0
-        CONFIG['has_cg_d3d9']  = 0
-        CONFIG['has_cg_d3d10'] = 0
-        CONFIG['has_cg_d3d11'] = 0
-
     # ======
     # OpenGL
     # ======
@@ -517,8 +444,8 @@ def CheckConfig():
     # ====
     # D3D9
     # ====
-    CONFIG['has_d3d9']   = ('cygwin' != BUILD_TARGET_OS) and (('xenon' == BUILD_TARGET_OS) or c.CheckCXXHeader( 'd3d9.h' ))
-    CONFIG['has_d3dx9']  = ('cygwin' != BUILD_TARGET_OS) and (('xenon' == BUILD_TARGET_OS) or c.CheckCXXHeader( 'd3dx9.h' ))
+    CONFIG['has_d3d9']   = ('cygwin' != BUILD_TARGET_OS) and c.CheckCXXHeader( 'd3d9.h' )
+    CONFIG['has_d3dx9']  = ('cygwin' != BUILD_TARGET_OS) and c.CheckCXXHeader( 'd3dx9.h' )
 
     # Detect if current OS is Windows Vista or newer.
     def IsVistaOrNewer( env ):
@@ -532,12 +459,6 @@ def CheckConfig():
         win81 = str.find( "6.3" ) >= 0
         win10 = str.find( "10.0" ) >= 0
         return  vista or win7 or win8 or win81 or win10
-
-    # =====
-    # D3D10
-    # =====
-    CONFIG['has_d3d10']  = CONFIG['has_d3d9'] and c.CheckLibWithHeader( 'd3d10.lib',  'd3d10.h',  'C++' ) and IsVistaOrNewer(env);
-    CONFIG['has_d3dx10'] = CONFIG['has_d3d9'] and c.CheckLibWithHeader( 'd3d10x.lib', 'd3d10x.h', 'C++' ) and IsVistaOrNewer(env);
 
     # =====
     # D3D11
@@ -647,16 +568,9 @@ class GarnetEnv2 :
         self.variant          = BUILD_VARIANT
         self.host_os          = HOST_OS
         self.static_link      = BUILD_STATIC_LINK
-        self.has_cg           = CONFIG['has_cg']
-        self.has_cg_ogl       = CONFIG['has_cg_ogl']
-        self.has_cg_d3d9      = CONFIG['has_cg_d3d9']
-        self.has_cg_d3d10     = CONFIG['has_cg_d3d10']
-        self.has_cg_d3d11     = CONFIG['has_cg_d3d11']
         self.has_d3dcompiler  = CONFIG['has_d3dcompiler']
         self.has_d3d9         = CONFIG['has_d3d9']
         self.has_d3dx9        = CONFIG['has_d3dx9']
-        self.has_d3d10        = CONFIG['has_d3d10']
-        self.has_d3dx10       = CONFIG['has_d3dx10']
         self.has_d3d11        = CONFIG['has_d3d11']
         self.has_d3d11_1      = CONFIG['has_d3d11_1']
         self.has_d3dx11       = CONFIG['has_d3dx11']
@@ -671,8 +585,7 @@ class GarnetEnv2 :
         self.has_xinput       = CONFIG['has_xinput']
         self.has_xinput2      = CONFIG['has_xinput2']
         self.has_xnamath      = CONFIG['has_xnamath']
-        self.has_xtl          = 'xenon' == BUILD_TARGET_OS
-
+        
         #
         # Dictionary of known targets that are created by NewTarget method
         #
@@ -825,7 +738,6 @@ class GarnetEnv2 :
         else:
             libs += core
         libs += self.CollectTargets( ['GNexternLib'] )
-        libs += CONFIG['cg_libs']
         libs += CONFIG['glut']
         libs += CONFIG['ogl_libs']
         libs += CONFIG['fbx_libs']
@@ -834,12 +746,10 @@ class GarnetEnv2 :
         if 'posix' == BUILD_TARGET_OS:
             libs += ['X11']
         dbg = ( BUILD_VARIANT == "debug" )
-        if CONFIG['has_d3d9'] and ('xenon' != BUILD_TARGET_OS) :
+        if CONFIG['has_d3d9'] :
             libs += ['d3d9.lib'] if dbg else ['d3d9.lib']
-        if CONFIG['has_d3dx9'] and ('xenon' != BUILD_TARGET_OS) :
+        if CONFIG['has_d3dx9'] :
             libs += ['d3dx9d.lib'] if dbg else ['d3dx9.lib']
-        if CONFIG['has_d3d10']:
-            libs += ['d3d10.lib']
         if CONFIG['has_d3d11']:
             libs += ['dxgi.lib', 'dxguid.lib', 'd3d11.lib']
         if CONFIG['has_d2d']:
@@ -958,27 +868,7 @@ class GarnetEnv2 :
         for x in program[1:] :
             Depends( program[0], x )
 
-        # Deploy to devkit
-        AddPostAction( program, self.CopyToDevkit( '', program ) )
-
         return program
-
-    #
-    # Copy one file to Xenon devkit
-    #
-    def CopyToDevkit( self, destdir, sources ):
-        if 'xenon' == BUILD_TARGET_OS:
-            if '' == destdir: destdir='.'
-            for s in sources:
-                xedk=UTIL_getenv("XEDK")
-                # Note: xbcp.exe requires environment variable "SystemRoot".
-                cmdline = 'set PATH="%s"&set SystemRoot=%s&xbcp.exe /Q /D /Y /T "%s" %s'%(
-                    xedk + "\\bin\\win32",
-                    UTIL_getenv("SystemRoot"),
-                    File(s).abspath,
-                    'xe:\\garnet3d\\%s\\%s\\'%(BUILD_VARIANT,destdir))
-                Execute( cmdline )
-        return []
 
     #
     # Create alias for a build target. So that it can be
