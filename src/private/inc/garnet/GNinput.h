@@ -234,8 +234,46 @@ namespace GN
         ///
         /// main interface of input module (singleton)
         ///
-        struct Input : public CrossDllSingleton<Input>, public NoCopy
+        struct Input : public NoCopy
         {
+            // ************************************************************************
+            //      Singleton
+            // ************************************************************************
+
+            //@{
+
+        private:
+
+            static GN_API Input * msInstancePtr; ///< 指向singleton的实例
+
+        protected:
+
+            ///
+            /// Constructor
+            ///
+            Input()
+            {
+                GN_ASSERT( 0 == msInstancePtr );
+                msInstancePtr = this;
+            }
+
+        public:
+
+            ///
+            /// Destructor
+            ///
+            virtual ~Input() { GN_ASSERT(msInstancePtr); msInstancePtr = 0; }
+
+            ///
+            /// Get the instance
+            ///
+            static Input & sGetInstance() { GN_ASSERT(msInstancePtr); return *msInstancePtr; }
+
+            ///
+            /// Get the instance pointer (might be NULL)
+            ///
+            static Input * sGetInstancePtr() { return msInstancePtr; }
+            
             // ************************************************************************
             //      input sinals
             // ************************************************************************

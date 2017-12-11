@@ -2,30 +2,6 @@
 
 namespace GN
 {
-    namespace detail
-    {
-        ///
-        /// Singleton selector
-        ///
-        template<class C, int>
-        struct SingletonSelector
-        {
-            typedef Singleton<C> type; ///< singleton type
-        };
-
-        ///
-        /// Singleton selector
-        ///
-        template<class C>
-        struct SingletonSelector<C,0>
-        {
-            ///
-            /// non-singleton type
-            ///
-            struct type {};
-        };
-    }
-
     ///
     /// Resource manager template. Used to do mapping among name and ID and instance.
     ///
@@ -62,8 +38,8 @@ namespace GN
     ///   - 一个常用的NameChecker就是检查该名字是否对应一个有效的磁盘文件. 这样, 当用户试图访问一个
     ///     不在资源管理器内, 但存在于磁盘上的资源时, 该资源就会被自动加入资源管理器.
     ///
-    template<typename RES, typename HANDLE=uint32, bool SINGLETON=false>
-    class ResourceManagerTempl : public detail::SingletonSelector<ResourceManagerTempl<RES,HANDLE,SINGLETON>,SINGLETON>::type
+    template<typename RES, typename HANDLE=uint32>
+    class ResourceManagerTempl
     {
     public:
 
@@ -663,9 +639,8 @@ namespace GN
         }
     };
 
-    template<typename RES, typename HANDLE, bool SINGLETON>
-    GN::Logger * ResourceManagerTempl<RES,HANDLE,SINGLETON>::sLogger = getLogger("GN.base.ResourceManagerTempl");
-
+    template<typename RES, typename HANDLE>
+    GN::Logger * ResourceManagerTempl<RES,HANDLE>::sLogger = getLogger("GN.base.ResourceManagerTempl");
 }
 
 typedef GN::ResourceManagerTempl<int> ResMgr;

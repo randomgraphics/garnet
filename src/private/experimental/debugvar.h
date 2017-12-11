@@ -85,9 +85,9 @@ namespace GN
     DebugVar<Vector3f> v;
 
     ///
-    /// debug variable manager (singleton)
+    /// debug variable manager
     ///
-    class DebugVarManager : public CrossDllSingleton<DebugVarManager>
+    class DebugVarManager
     {
     public:
 
