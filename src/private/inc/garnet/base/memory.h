@@ -9,15 +9,8 @@
 #include <new>
 
 /// \name macro to exception throw
-//@{
-#if GN_GCC
-#define GN_THROW_BADALLOC() throw(std::bad_alloc)
+#define GN_THROW_BADALLOC() //throw(std::bad_alloc)
 #define GN_NOTHROW() throw()
-#else
-#define GN_THROW_BADALLOC()
-#define GN_NOTHROW() throw()
-#endif
-//@}
 
 // *****************************************************************************
 // Basic memory allocation/deallocation routines

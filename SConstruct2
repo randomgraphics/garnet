@@ -331,8 +331,8 @@ def UTIL_new_env_ex( conf ):
     elif 'gcc' == env['CC']:
         ccflags['common']  += ['-pthread', '-Wall','-Werror', '-fno-strict-aliasing']
         ccflags['debug']   += ['-g']
-        ccflags['profile'] += ['-O3']
-        ccflags['retail']  += ['-O3']
+        ccflags['profile'] += ['-O3', '-Wno-error=unused-variable']
+        ccflags['retail']  += ['-O3', '-Wno-error=unused-variable']
         cxxflags['common'] += ['-std=c++14']
         if 'mingw' == BUILD_COMPILER:
             cppdefines['common'] += ['WINVER=0x500']
