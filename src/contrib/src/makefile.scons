@@ -1,3 +1,5 @@
+from distutils.version import LooseVersion
+
 Import( 'GN' )
 
 # ******************
@@ -29,7 +31,8 @@ elif 'vc' == GN.cc[:2]:
     ccflags += ['/wd%s'%w for w in unimportant_warnings]
 elif 'gcc' == GN.cc:
     ccflags += ['-Wno-error=unused-but-set-variable']
-    ccflags += ['-Wno-error=misleading-indentation']
+    if LooseVersion(GN.ccversion) >= LooseVersion('6.0.0'):
+        ccflags += ['-Wno-error=misleading-indentation']
 else:
     import traceback
     traceback.print_exc()

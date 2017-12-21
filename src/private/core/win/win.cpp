@@ -24,6 +24,7 @@ namespace GN { namespace win
         intptr_t getDisplayHandle() const { return (intptr_t)1; }
         intptr_t getMonitorHandle() const { return (intptr_t)1; }
         intptr_t getWindowHandle() const { return (intptr_t)1; }
+        intptr_t getModuleHandle() const { return (intptr_t)1; }
         Vector2<size_t> getClientSize() const { return Vector2<size_t>(640,480); }
         void show() {}
         void hide() {}
@@ -189,6 +190,6 @@ namespace GN { namespace win
         GN_UNGUARD_SLOW;
     }
 #else
-    GN_API void processWindowMessages( intptr_t, bool ) {}
+    GN_API bool  processWindowMessages( intptr_t, bool ) { return false; }
 #endif
 }}

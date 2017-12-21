@@ -329,10 +329,11 @@ def UTIL_new_env_ex( conf ):
         linkflags['retail']  += ['/OPT:REF']
 
     elif 'gcc' == env['CC']:
-        ccflags['common']  += ['-std=c++14', '-pthread', '-Wall','-Werror', '-fno-strict-aliasing']
+        ccflags['common']  += ['-pthread', '-Wall','-Werror', '-fno-strict-aliasing']
         ccflags['debug']   += ['-g']
         ccflags['profile'] += ['-O3']
         ccflags['retail']  += ['-O3']
+        cxxflags['common'] += ['-std=c++14']
         if 'mingw' == BUILD_COMPILER:
             cppdefines['common'] += ['WINVER=0x500']
         libs['common']     += ['pthread', 'dl']
@@ -366,22 +367,6 @@ def UTIL_new_env_ex( conf ):
 
 # Define build environment for config
 DEFAULT_CONFIG_ENV = UTIL_new_env_ex( None )
-def UTIL_new_config_env():
-
-    env = DEFAULT_CONFIG_ENV.Clone()
-
-    # Do NOT treat warning as error
-    ccflags = str(env['CCFLAGS'])
-    ccflags = ccflags.replace( '/WX', '' )
-    ccflags = ccflags.replace( '/W4', '/W3' )
-    ccflags = ccflags.replace( '-Werror', '')
-
-    # -- test code --
-    #ccflags += ' -showIncludes'
-
-    env.Replace( CCFLAGS = Split( ccflags ) )
-
-    return env;
 
 CONFIG = {}
 
@@ -542,7 +527,7 @@ def CheckConfig():
         CONFIG['fbx_incpath'] = [],
         CONFIG['fbx_libpath'] = {'debug' : [], 'profile' : [], 'retail' : []}
         CONFIG['fbx_libs']    = []
-        
+
     # =============
     # finish config
     # =============
@@ -568,6 +553,7 @@ class GarnetEnv2 :
         self.target_os        = BUILD_TARGET_OS
         self.target_cpu       = BUILD_TARGET_CPU
         self.cc               = BUILD_COMPILER
+        self.ccversion        = DEFAULT_BUILD_ENV['CCVERSION']
         self.variant          = BUILD_VARIANT
         self.host_os          = HOST_OS
         self.static_link      = BUILD_STATIC_LINK
