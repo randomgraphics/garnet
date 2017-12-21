@@ -42,8 +42,10 @@ namespace GN
         if( 0 == alignment ) alignment = sizeof(size_t);
 #if GN_POSIX
         void * ptr;
-        if (posix_memalign( &ptr, alignment, sizeInBytes ))
-            ptr = nullptr;
+        if (1 == alignment)
+            ptr = malloc(sizeInBytes);
+        else
+            ptr = aligned_alloc(alignment, sizeInBytes);
 #else
         void * ptr = _aligned_malloc( sizeInBytes, alignment );
 #endif

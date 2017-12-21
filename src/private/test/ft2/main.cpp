@@ -1,4 +1,4 @@
-#include "pch.h"
+ï»¿#include "pch.h"
 
 using namespace GN;
 using namespace GN::gfx;
@@ -54,7 +54,7 @@ public:
 
 	void load( const char * font_file1, const char * font_file2, int _w , int _h )
 	{
-		//¼ÓÔØÒ»¸ö×ÖÌå,È¡Ä¬ÈÏµÄFace,Ò»°ãÎªRegualer
+		//åŠ è½½ä¸€ä¸ªå­—ä½“,å–é»˜è®¤çš„Face,ä¸€èˆ¬ä¸ºRegualer
         FontFaceCreationDesc defaultFont;
         defaultFont.fontname = font_file1;
         defaultFont.width = (uint16)_w;
@@ -81,13 +81,13 @@ public:
 
         xCharTexture& charTex = g_TexID[ch];
 
-		//È¡µÀÎ»Í¼Êý¾Ý
+		//å–é“ä½å›¾æ•°æ®
 		FontImage fbm;
         if( !mFace->loadFontImage( fbm, ch ) ) exit(-1);
 
         //imdebug( "rgba b=8 w=%d h=%d %p", bitmap.width, bitmap.rows, bitmap.buffer );
 
-		//°ÑÎ»Í¼Êý¾Ý¿½±´×Ô¼º¶¨ÒåµÄÊý¾ÝÇøÀï.ÕâÑù¾É¿ÉÒÔ»­µ½ÐèÒªµÄ¶«Î÷ÉÏÃæÁË¡£
+		//æŠŠä½å›¾æ•°æ®æ‹·è´è‡ªå·±å®šä¹‰çš„æ•°æ®åŒºé‡Œ.è¿™æ ·æ—§å¯ä»¥ç”»åˆ°éœ€è¦çš„ä¸œè¥¿ä¸Šé¢äº†ã€‚
 		int width  =  fbm.width;
 		int height =  fbm.height;
 
@@ -148,12 +148,12 @@ xCharTexture* getTextChar(wchar_t ch)
 
 
 GN::StrW g_text(
-    L"ÎÄ¼þ¸ñÊ½£º\n"
-    L"Èô²»Ã÷È·¾Í±êÎªÎ´Öª\n"
-    L"±íÑÝÕß£º	Èô²»Ã÷È·¾Í±êÎªÎ´Öª\n"
-    L"×¨¼­£º		Èô²»Ã÷È·¾Í±êÎªÎ´Öª\n"
-    L"³ÖÐøÊ±¼ä£º01:01:00³¬¹ý1Ð¡Ê±£»\n"
-    L"09:09²»×ãÐ¡Ê±£»00:09²»×ã1·ÖÖÓ\n"
+    L"æ–‡ä»¶æ ¼å¼ï¼š\n"
+    L"è‹¥ä¸æ˜Žç¡®å°±æ ‡ä¸ºæœªçŸ¥\n"
+    L"è¡¨æ¼”è€…ï¼š	è‹¥ä¸æ˜Žç¡®å°±æ ‡ä¸ºæœªçŸ¥\n"
+    L"ä¸“è¾‘ï¼š		è‹¥ä¸æ˜Žç¡®å°±æ ‡ä¸ºæœªçŸ¥\n"
+    L"æŒç»­æ—¶é—´ï¼š01:01:00è¶…è¿‡1å°æ—¶ï¼›\n"
+    L"09:09ä¸è¶³å°æ—¶ï¼›00:09ä¸è¶³1åˆ†é’Ÿ\n"
     L"   glBindTexture(GL_TEXTURE_2D,pCharTex->m_texID);\n"
     L"   glTexParameteri ( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );\n"
     L"   glTexParameteri ( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );\n"
