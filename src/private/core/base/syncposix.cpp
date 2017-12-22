@@ -2,10 +2,12 @@
 
 #if GN_POSIX
 
+#include <mutex>
+
 GN::TimeInNanoSecond const GN::INFINITE_TIME = (GN::TimeInNanoSecond)-1;
 GN::TimeInNanoSecond const GN::ONE_SECOND_IN_NS = 1000000000; // 10^9
 
-static GN::Logger * sLogger = GN::getLogger("GN.base.Sync");
+//static GN::Logger * sLogger = GN::getLogger("GN.base.Sync");
 
 using namespace GN;
 
@@ -13,15 +15,17 @@ using namespace GN;
 // mutex class
 // *****************************************************************************
 
+typedef std::recursive_mutex stdmutex;
+
 //
 //
 // -----------------------------------------------------------------------------
 GN::Mutex::Mutex()
 {
     // initiialize a recursive mutex (same behavior as mutex on MSWIN)
-    GN_CASSERT( sizeof(pthread_mutex_t) <= sizeof(mInternal) );
-    pthread_mutex_t m = PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP;
-    memcpy( mInternal, &m, sizeof(m) );
+    GN_CASSERT( sizeof(stdmutex) <= sizeof(mInternal) );
+    stdmutex * p = (stdmutex*)this;
+    new (p) stdmutex();
 }
 
 //
@@ -29,7 +33,8 @@ GN::Mutex::Mutex()
 // -----------------------------------------------------------------------------
 GN::Mutex::~Mutex()
 {
-    pthread_mutex_destroy( (pthread_mutex_t*)mInternal );
+    stdmutex * p = (stdmutex*)this;
+    p->stdmutex::~stdmutex();
 }
 
 //
@@ -37,7 +42,8 @@ GN::Mutex::~Mutex()
 // -----------------------------------------------------------------------------
 bool GN::Mutex::trylock()
 {
-    return 0 == pthread_mutex_trylock( (pthread_mutex_t*)mInternal );
+    stdmutex * p = (stdmutex*)this;
+    return p->try_lock();
 }
 
 //
@@ -45,7 +51,8 @@ bool GN::Mutex::trylock()
 // -----------------------------------------------------------------------------
 void GN::Mutex::lock()
 {
-    pthread_mutex_lock( (pthread_mutex_t*)mInternal );
+    stdmutex * p = (stdmutex*)this;
+    p->lock();
 }
 
 //
@@ -53,7 +60,8 @@ void GN::Mutex::lock()
 // -----------------------------------------------------------------------------
 void GN::Mutex::unlock()
 {
-    pthread_mutex_unlock( (pthread_mutex_t*)mInternal );
+    stdmutex * p = (stdmutex*)this;
+    p->unlock();
 }
 
 // *****************************************************************************

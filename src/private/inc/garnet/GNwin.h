@@ -52,7 +52,7 @@ namespace GN
             ///
             /// Returns false when the Window system received request to quit the application.
             ///
-            virtual bool runUntilNoNewEvents( bool blockCallerWhenMinimized ) = 0;
+            virtual bool runUntilNoNewEvents( bool blockCallerWhenMinimized = false ) = 0;
 
             //@}
         };

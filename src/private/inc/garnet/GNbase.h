@@ -92,7 +92,6 @@ namespace GN
 // misc.
 #include "base/blob.h"
 #include "base/stdClass.h"
-#include "base/singleton.h"
 #include "base/sharedLib.h"
 
 // file system

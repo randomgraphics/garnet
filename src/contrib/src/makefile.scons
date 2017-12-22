@@ -1,3 +1,5 @@
+from distutils.version import LooseVersion
+
 Import( 'GN' )
 
 # ******************
@@ -27,9 +29,10 @@ elif 'vc' == GN.cc[:2]:
             '4244', # conversion from 'type1' to 'type2', possible loss of data
             ]
     ccflags += ['/wd%s'%w for w in unimportant_warnings]
-elif 'gcc' == GN.cc or 'mingw' == GN.cc:
+elif 'gcc' == GN.cc:
     ccflags += ['-Wno-error=unused-but-set-variable']
-    ccflags += ['-Wno-error=misleading-indentation']
+    if LooseVersion(GN.ccversion) >= LooseVersion('6.0.0'):
+        ccflags += ['-Wno-error=misleading-indentation']
 else:
     import traceback
     traceback.print_exc()
@@ -76,7 +79,7 @@ conf.Finish()
 # JPEG
 jpeg_env = GN.NewBuildEnv()
 jpeg_env.Append( CPPPATH=['jpeg'], CCFLAGS = ccflags, CPPDEFINES = cppdefines )
-if 'gcc' == GN.cc or 'mingw' == GN.cc: jpeg_env.Append( CCFLAGS = ['-Wno-main'] )
+if 'gcc' == GN.cc: jpeg_env.Append( CCFLAGS = ['-Wno-main'] )
 GN.RemoveEnvListItems( jpeg_env, 'CCFLAGS', ['/W4','/Wcheck','-Wall'] )
 jpeg_cluster = GN.BuildObjects( jpeg_env, GN.Glob( 'jpeg/*.c' ) )
 
@@ -112,7 +115,7 @@ misc_env = GN.NewBuildEnv()
 misc_env.Append( CCFLAGS = ccflags, CPPDEFINES = cppdefines + ['GLEW_STATIC'] )
 GN.RemoveEnvListItems( misc_env, 'CCFLAGS', ['/W4','/Wcheck','-Wall'] )
 misc_sources = GN.Glob( Split('expat/*.c pcre/*.c* png/*.c zlib/*.c') )
-if 'mingw' != GN.cc: misc_sources += GN.Glob( 'lua/*.c' )
+misc_sources += GN.Glob( 'lua/*.c' )
 if GN.has_ogl: misc_sources += GN.Glob( 'glew/*.c' )
 misc_cluster = GN.BuildObjects( misc_env, misc_sources )
 

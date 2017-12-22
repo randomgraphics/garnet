@@ -15,7 +15,18 @@
         "xiosbase": "cpp",
         "system_error": "cpp",
         "map": "cpp",
-        "unordered_map": "cpp"
+        "unordered_map": "cpp",
+        "__bit_reference": "cpp",
+        "algorithm": "cpp",
+        "iterator": "cpp",
+        "__hash_table": "cpp",
+        "__split_buffer": "cpp",
+        "__tree": "cpp",
+        "bitset": "cpp",
+        "initializer_list": "cpp",
+        "set": "cpp",
+        "string": "cpp",
+        "string_view": "cpp"
     },
     "files.exclude": {
         "**/.git": true,

@@ -1,23 +1,13 @@
 #include "pch.h"
 #include "garnet/GNinput.h"
-#include <malloc.h>
+#include <stdlib.h>
 
-// implement global singletons
-GN_IMPLEMENT_CROSS_DLL_SINGLETON( GN::input::Input )
+// GN::input::Input singletons
+GN_API GN::input::Input * GN::input::Input::msInstancePtr = 0;
 
 namespace GN
 {
     static Logger * sHeapLogger = getLogger("GN.core.heapAllocation");
-
-    const char TAG[] = "garnet3d_memory";
-    GN_CASSERT( sizeof(TAG) == 16 );
-
-    struct MemoryHeader
-    {
-        char   tag[16];  // special memory tag.
-        uint32 alignment;
-        uint32 offset;
-    };
 
     //
     //
@@ -51,7 +41,11 @@ namespace GN
     {
         if( 0 == alignment ) alignment = sizeof(size_t);
 #if GN_POSIX
-        void * ptr = memalign( alignment, sizeInBytes );
+        void * ptr;
+        if (1 == alignment)
+            ptr = malloc(sizeInBytes);
+        else
+            ptr = aligned_alloc(alignment, sizeInBytes);
 #else
         void * ptr = _aligned_malloc( sizeInBytes, alignment );
 #endif

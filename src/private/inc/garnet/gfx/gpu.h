@@ -14,13 +14,13 @@ namespace GN { namespace gfx
     struct DisplayMode
     {
         enum Mode {
-            FULL_SCREEN, ///< true/exclusive full screen mode.
-            BORDERLESS,  ///< borderless mode.
             WINDOWED,    ///< true windowed mode with title bar and sizeable border.
+            BORDERLESS,  ///< borderless mode.
+            FULL_SCREEN, ///< true/exclusive full screen mode.
         };
 
-        Mode   mode;    ///< display mode;
-        uint32 width;   ///< Screen width.
+        Mode   mode;    ///< display mode.
+        uint32 width;   ///< Screen width. 0: current display 
         uint32 height;  ///< Screen height.
         uint32 depth;   ///< Color depth.
         uint32 refrate; ///< Referesh rate.

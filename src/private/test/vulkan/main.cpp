@@ -569,7 +569,7 @@ struct App {
 
     int run() {
         mWin->show();
-        while(mWin->runUntilNoNewEvents(false)) {
+        while(mWin->runUntilNoNewEvents()) {
             // acquire back buffer
             uint32_t imageIndex;
             vkAcquireNextImageKHR(mDevice, mSwapchain, (uint64_t)-1, mBackBufferAvailableSemaphore, VK_NULL_HANDLE, &imageIndex); // TODO: handle errors

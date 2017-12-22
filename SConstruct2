@@ -65,8 +65,11 @@ elif 'cygwin' == LOCAL_ENV['PLATFORM']:
 elif 'posix' == LOCAL_ENV['PLATFORM']:
     HOST_OS = 'posix'
     HOST_CPU = 'x86'
+elif 'darwin' == LOCAL_ENV['PLATFORM']:
+    HOST_OS = 'darwin'
+    HOST_CPU = 'x64'
 else:
-    print('FATAL: Unknown platform:', LOCAL_ENV['PLATFORM'])
+    UTIL_fatal('Unknown platform: %s'%LOCAL_ENV['PLATFORM'])
     Exit(-1)
 
 BUILD_COMPILER = UTIL_getenv('GN_BUILD_COMPILER', None )
@@ -115,14 +118,14 @@ def UTIL_new_env_ex( conf ):
     msvs_platform = 'x86'
     if 'icl' == BUILD_COMPILER:
         tools += ['intelc']
-        if 'x64' == BUILD_TARGET_CPU :
+        if 'x64' == BUILD_TARGET_CPU:
             icl_abi = 'em64t'
             msvs_platform = 'x64'
     elif 'xbox3' == BUILD_TARGET_OS:
         msvs_platform = 'Durango'
-    elif 'x64' == BUILD_TARGET_CPU :
+    elif 'x64' == BUILD_TARGET_CPU:
         msvs_platform = 'x64'
-    elif 'mingw' == BUILD_COMPILER :
+    elif 'mingw' == BUILD_COMPILER:
         tools = ['mingw']
 
     # create new environment
@@ -328,8 +331,9 @@ def UTIL_new_env_ex( conf ):
     elif 'gcc' == env['CC']:
         ccflags['common']  += ['-pthread', '-Wall','-Werror', '-fno-strict-aliasing']
         ccflags['debug']   += ['-g']
-        ccflags['profile'] += ['-O3']
-        ccflags['retail']  += ['-O3']
+        ccflags['profile'] += ['-O3', '-Wno-error=unused-variable']
+        ccflags['retail']  += ['-O3', '-Wno-error=unused-variable']
+        cxxflags['common'] += ['-std=c++14']
         if 'mingw' == BUILD_COMPILER:
             cppdefines['common'] += ['WINVER=0x500']
         libs['common']     += ['pthread', 'dl']
@@ -363,22 +367,6 @@ def UTIL_new_env_ex( conf ):
 
 # Define build environment for config
 DEFAULT_CONFIG_ENV = UTIL_new_env_ex( None )
-def UTIL_new_config_env():
-
-    env = DEFAULT_CONFIG_ENV.Clone()
-
-    # Do NOT treat warning as error
-    ccflags = str(env['CCFLAGS'])
-    ccflags = ccflags.replace( '/WX', '' )
-    ccflags = ccflags.replace( '/W4', '/W3' )
-    ccflags = ccflags.replace( '-Werror', '')
-
-    # -- test code --
-    #ccflags += ' -showIncludes'
-
-    env.Replace( CCFLAGS = Split( ccflags ) )
-
-    return env;
 
 CONFIG = {}
 
@@ -539,7 +527,7 @@ def CheckConfig():
         CONFIG['fbx_incpath'] = [],
         CONFIG['fbx_libpath'] = {'debug' : [], 'profile' : [], 'retail' : []}
         CONFIG['fbx_libs']    = []
-        
+
     # =============
     # finish config
     # =============
@@ -565,6 +553,7 @@ class GarnetEnv2 :
         self.target_os        = BUILD_TARGET_OS
         self.target_cpu       = BUILD_TARGET_CPU
         self.cc               = BUILD_COMPILER
+        self.ccversion        = DEFAULT_BUILD_ENV['CCVERSION'] if DEFAULT_CONFIG_ENV.has_key('CCVERSION') else "<Unknown>"
         self.variant          = BUILD_VARIANT
         self.host_os          = HOST_OS
         self.static_link      = BUILD_STATIC_LINK

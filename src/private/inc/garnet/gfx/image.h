@@ -1,4 +1,4 @@
-#ifndef __GN_GFX_IMAGE_H__
+ï»¿#ifndef __GN_GFX_IMAGE_H__
 #define __GN_GFX_IMAGE_H__
 // *****************************************************************************
 /// \file
@@ -13,8 +13,8 @@ namespace GN { namespace gfx
     ///
     /// \note
     /// - for 2D and cube texture, depth is always 1
-    /// - slicePitch ºÍ levelPitch ¿ÉÒÔÍ¨¹ýmipmapµÄÆäËû²ÎÊý¼ÆËã³öÀ´¡£
-    ///   ÕâÀïÁÐ³öÕâÁ½¸öÖµ½ö½öÊÇÎªÁË±ÜÃâÖØ¸´¼ÆËã£¬·½±ãÊ¹ÓÃ¡£
+    /// - slicePitch å’Œ levelPitch å¯ä»¥é€šè¿‡mipmapçš„å…¶ä»–å‚æ•°è®¡ç®—å‡ºæ¥ã€‚
+    ///   è¿™é‡Œåˆ—å‡ºè¿™ä¸¤ä¸ªå€¼ä»…ä»…æ˜¯ä¸ºäº†é¿å…é‡å¤è®¡ç®—ï¼Œæ–¹ä¾¿ä½¿ç”¨ã€‚
     ///
     struct MipmapDesc
     {
@@ -93,7 +93,7 @@ namespace GN { namespace gfx
             , numLevels( d.numLevels )
             , mipmaps( 0 )
         {
-            if( d.mipmaps > 0 )
+            if( d.mipmaps != 0 )
             {
                 setFaceAndLevel( numFaces, numLevels );
                 uint32 mipCount = numFaces * numLevels;
@@ -106,7 +106,7 @@ namespace GN { namespace gfx
             format = rhs.format;
             numFaces = rhs.numFaces;
             numLevels = rhs.numLevels;
-            if( rhs.mipmaps > 0 )
+            if( rhs.mipmaps != 0 )
             {
                 setFaceAndLevel( numFaces, numLevels );
                 uint32 mipCount = numFaces * numLevels;

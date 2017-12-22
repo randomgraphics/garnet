@@ -1,4 +1,4 @@
-#include "pch.h"
+ï»¿#include "pch.h"
 #include "garnet/base/clock.h"
 #if GN_POSIX
 #include <pthread.h>
@@ -12,7 +12,7 @@
 static GN::Logger * sLogger = GN::getLogger("GN.base.Clock");
 
 ///
-/// »ñµÃ¼ÆÊıÆ÷µÄÖ÷Æµ
+/// è·å¾—è®¡æ•°å™¨çš„ä¸»é¢‘
 // -----------------------------------------------------------------------------
 static GN::Clock::CycleType sGetSystemCycleFrequency()
 {
@@ -25,9 +25,10 @@ static GN::Clock::CycleType sGetSystemCycleFrequency()
     {
         GN_TRACE(sLogger)( "Current system do NOT support high-res "
             "performance counter, use getTickCount()!" );
-        r = 1000;  // getTickCount()·µ»ØµÄÊÇºÁÃë
+        r = 1000;  // getTickCount()è¿”å›çš„æ˜¯æ¯«ç§’
     }
 #else
+    GN_UNUSED_PARAM(sLogger);
     r = 1000;
 #endif
 
@@ -74,7 +75,7 @@ GN_API GN::Clock::CycleType GN::Clock::sGetSystemCycleCount()
 }
 
 //
-// ¼ÆÊ±Æ÷¸´Î»
+// è®¡æ—¶å™¨å¤ä½
 // -----------------------------------------------------------------------------
 GN_API void GN::Clock::reset()
 {
@@ -86,7 +87,7 @@ GN_API void GN::Clock::reset()
 }
 
 //
-// ¼ÆÊ±Æ÷ÔİÍ£
+// è®¡æ—¶å™¨æš‚åœ
 // -----------------------------------------------------------------------------
 GN_API void GN::Clock::pause()
 {
@@ -99,7 +100,7 @@ GN_API void GN::Clock::pause()
 }
 
 //
-// ¼ÆÊ±Æ÷»Ö¸´
+// è®¡æ—¶å™¨æ¢å¤
 // -----------------------------------------------------------------------------
 GN_API void GN::Clock::resume()
 {

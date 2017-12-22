@@ -9,15 +9,8 @@
 #include <new>
 
 /// \name macro to exception throw
-//@{
-#if GN_GCC
-#define GN_THROW_BADALLOC() throw(std::bad_alloc)
+#define GN_THROW_BADALLOC() //throw(std::bad_alloc)
 #define GN_NOTHROW() throw()
-#else
-#define GN_THROW_BADALLOC()
-#define GN_NOTHROW() throw()
-#endif
-//@}
 
 // *****************************************************************************
 // Basic memory allocation/deallocation routines
@@ -65,11 +58,10 @@ namespace GN
 
 /// \name overloaded global new and delete operators
 //@{
-// TODO: more standard conforming implementation.
-inline void * operator new( size_t s ) GN_THROW_BADALLOC() { return ::GN::HeapMemory::alloc( s ); }
-inline void * operator new[]( size_t s ) GN_THROW_BADALLOC() { return ::GN::HeapMemory::alloc( s ); }
-inline void operator delete( void* p ) GN_NOTHROW() { ::GN::HeapMemory::dealloc( p ); }
-inline void operator delete[]( void* p ) GN_NOTHROW() { ::GN::HeapMemory::dealloc( p ); }
+void * operator new( size_t s ) GN_THROW_BADALLOC();
+void * operator new[]( size_t s ) GN_THROW_BADALLOC();
+void operator delete( void* p ) GN_NOTHROW();
+void operator delete[]( void* p ) GN_NOTHROW();
 //@}
 
 #if GN_ICL
