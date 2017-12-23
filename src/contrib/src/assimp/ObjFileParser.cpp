@@ -262,7 +262,7 @@ void ObjFileParser::getFace()
 	char *pPtr = m_buffer;
 	char *pEnd = &pPtr[BUFFERSIZE];
 	pPtr = getNextToken<char*>(pPtr, pEnd);
-	if (pPtr == '\0')
+	if (pPtr == 0 || *pPtr == 0)
 		return;
 
 	std::vector<unsigned int> *pIndices = new std::vector<unsigned int>;

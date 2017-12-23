@@ -67,7 +67,8 @@
 #define GN_WINRT    0 ///< Windows RT enabled platform (Win8 or Xbox3)
 #define GN_XBOX2    0 ///< If 1, means Xbox 360
 #define GN_XBOX3    0 ///< If 1, means Xbox One
-#define GN_POSIX    0 ///< If 1, means POSIX compatible platform, such as linux/unix and Cygwin
+#define GN_POSIX    0 ///< If 1, means POSIX compatible platform, such as linux/mac/unix and Cygwin
+#define GN_DARWIN   0 ///< true when running on mac os.
 #define GN_CYGWIN   0 ///< If 1, means Cygwin
 
 // Windows platform
@@ -78,41 +79,43 @@
 #undef GN_XBOX2
 #define GN_XBOX2 1
 #undef GN_PLATFORM_NAME
-#define GN_PLATFORM_NAME "xbox2"
+#define GN_PLATFORM_NAME xbox2
 #elif defined(_DURANGO)
 #undef GN_XBOX3
 #define GN_XBOX3 1
 #undef GN_PLATFORM_NAME
-#define GN_PLATFORM_NAME "xbox3"
+#define GN_PLATFORM_NAME xbox3
 #else
 #undef GN_WINPC
 #define GN_WINPC 1
-#define GN_PLATFORM_NAME "mswin"
+#define GN_PLATFORM_NAME mswin
 #endif
 
 // Cygwin platform
 #elif defined(__CYGWIN__)
-
 #undef GN_CYGWIN
 #define GN_CYGWIN 1
-
 #undef GN_POSIX
 #define GN_POSIX  1 // cygwin also provides some posix compabilities
+#define GN_PLATFORM_NAME cygwin
 
-#define GN_PLATFORM_NAME "cygwin"
-
-// unix/linux platform
-#elif defined( __unix ) || defined( __unix__ ) || defined( __APPLE__ )
-
+// Mac OS
+#elif defined(__APPLE__)
 #undef GN_POSIX
 #define GN_POSIX 1
+#undef GN_DARWIN
+#define GN_DARWIN 1
+#define GN_PLATFORM_NAME darwin
 
-#define GN_PLATFORM_NAME "posix"
+// other unix/linux platform
+#elif defined( __unix ) || defined( __unix__ )
+#undef GN_POSIX
+#define GN_POSIX 1
+#define GN_PLATFORM_NAME posix
 
 // error: unknown platform
 #else
 #error "unknown platform!"
-#define GN_PLATFORM_NAME "unknown"
 #endif
 
 // *****************************************************************************
@@ -129,15 +132,15 @@
 #if defined( _WIN64 ) || defined( WIN64 ) || defined(__amd64__) || defined(_M_AMD64) || defined(_AMD64_)
 #undef GN_X64
 #define GN_X64 1
-#define GN_CPU "x64"
+#define GN_CPU x64
 #elif defined( _PPC_ ) || GN_XBOX2
 #undef GN_PPC
 #define GN_PPC 1
-#define GN_CPU "ppc"
+#define GN_CPU ppc
 #elif defined(_M_IX86) || defined(_X86_) || defined(i386) || defined(__i386__)
 #undef GN_X86
 #define GN_X86 1
-#define GN_CPU "x86"
+#define GN_CPU x86
 #else
 #error "Unknown CPU"
 #endif
@@ -162,6 +165,7 @@
 // platform specific configurations
 // *****************************************************************************
 
+#if 1
 #if GN_XBOX3
 #   include     "platform.xbox3.x64.h"
 #elif GN_MSWIN
@@ -173,6 +177,8 @@
 #elif GN_POSIX
 #   if GN_CYGWIN
 #       include "platform.cygwin.x86.h"
+#   elif GN_DARWIN
+#       include "platform.darwin.x64.h"
 #   elif GN_X64
 #       include "platform.posix.x64.h"
 #   elif GN_PPC
@@ -180,6 +186,9 @@
 #   elif GN_X86
 #       include "platform.posix.x86.h"
 #   endif
+#endif
+#else
+#include GN_STR(GN_JOIN5(platform_, GN_PLATFORM_NAME, _, GN_CPU, _.h))
 #endif
 
 // *****************************************************************************
@@ -301,10 +310,11 @@
 #define GN_FUNCTION          ""
 #endif
 
-#define GN_JOIN(s1, s2)          GN_JOIN_DIRECT(s1, s2) ///< join 2 symbols
-#define GN_JOIN3(s1, s2, s3)     GN_JOIN( GN_JOIN( s1, s2 ), s3 ) ///< join 3 symbols
-#define GN_JOIN4(s1, s2, s3, s4) GN_JOIN( GN_JOIN3( s1, s2, s3 ), s4 ) ///< join 4 symbols
-#define GN_JOIN_DIRECT(s1, s2)   s1##s2 ///< Auxillary macro used by GN_JOIN
+#define GN_JOIN(s1, s2)              GN_JOIN_DIRECT(s1, s2) ///< join 2 symbols
+#define GN_JOIN3(s1, s2, s3)         GN_JOIN( GN_JOIN( s1, s2 ), s3 ) ///< join 3 symbols
+#define GN_JOIN4(s1, s2, s3, s4)     GN_JOIN( GN_JOIN3( s1, s2, s3 ), s4 ) ///< join 4 symbols
+#define GN_JOIN5(s1, s2, s3, s4, s5) GN_JOIN( GN_JOIN4( s1, s2, s3, s4 ), s5 ) ///< join 5 symbols
+#define GN_JOIN_DIRECT(s1, s2)       s1##s2 ///< Auxillary macro used by GN_JOIN'
 
 ///
 /// Make wide-char string

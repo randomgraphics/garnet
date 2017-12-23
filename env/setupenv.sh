@@ -10,9 +10,9 @@ GARNET_ROOT=$(cd $(dirname $(pwd)/${BASH_SOURCE[0]})/..; pwd)
 if [ ${OSTYPE} = "cygwin" ] ; then
     GN_BUILD_TARGET_OS=cygwin
     GN_BUILD_TARGET_CPU=x86
-# elif [ ${OSTYPE:0:6} = "darwin" ] ; then
-#     GN_BUILD_TARGET_OS=darwin
-#     GN_BUILD_TARGET_CPU=x64
+elif [ ${OSTYPE:0:6} = "darwin" ] ; then
+     GN_BUILD_TARGET_OS=darwin
+     GN_BUILD_TARGET_CPU=x64
 else
     GN_BUILD_TARGET_OS=posix
     GN_BUILD_TARGET_CPU=x64

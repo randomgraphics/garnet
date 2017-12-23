@@ -29,7 +29,7 @@ struct CECImpl
 {
     bool init( CharacterEncodingConverter::Encoding, CharacterEncodingConverter::Encoding )
     {
-        GN_ERROR(sLogger)( "Character encoding class is not implemented on " GN_PLATFORM_NAME "." );
+        GN_ERROR(sLogger)( "Character encoding class is not implemented on current platform." );
         return false;
     }
 

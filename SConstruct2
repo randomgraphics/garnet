@@ -732,7 +732,7 @@ class GarnetEnv2 :
         libs += CONFIG['fbx_libs']
         libs += CONFIG['vk_libs']
         libs += CONFIG['iconv_lib']
-        if 'posix' == BUILD_TARGET_OS:
+        if 'posix' == BUILD_TARGET_OS or 'darwin' == BUILD_TARGET_OS:
             libs += ['X11']
         dbg = ( BUILD_VARIANT == "debug" )
         if CONFIG['has_d3d9'] :

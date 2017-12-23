@@ -30,9 +30,18 @@ elif 'vc' == GN.cc[:2]:
             ]
     ccflags += ['/wd%s'%w for w in unimportant_warnings]
 elif 'gcc' == GN.cc:
-    ccflags += ['-Wno-error=unused-but-set-variable']
-    if LooseVersion(GN.ccversion) >= LooseVersion('6.0.0'):
-        ccflags += ['-Wno-error=misleading-indentation']
+    if 'darwin' == GN.host_os:
+        ccflags += [
+            '-Wno-error=address-of-packed-member',
+            '-Wno-error=shift-negative-value',
+            '-Wno-error=deprecated-declarations',
+            '-Wno-error=pointer-bool-conversion',
+            '-Wno-error=parentheses-equality',
+            '-Wno-error=deprecated-register']
+    else:
+        ccflags += ['-Wno-error=unused-but-set-variable']
+        if LooseVersion(GN.ccversion) >= LooseVersion('6.0.0'):
+            ccflags += ['-Wno-error=misleading-indentation']
 else:
     import traceback
     traceback.print_exc()
@@ -87,7 +96,7 @@ jpeg_cluster = GN.BuildObjects( jpeg_env, GN.Glob( 'jpeg/*.c' ) )
 ft2_sources = SConscript( "freetype-2.4.4/makefile.scons" )
 ft2_env = GN.NewBuildEnv()
 ft2_env.Append( CCFLAGS = ccflags, CPPDEFINES = cppdefines + ['FT2_BUILD_LIBRARY'] )
-GN.RemoveEnvListItems( ft2_env, 'CCFLAGS', ['/W4'] )
+GN.RemoveEnvListItems( ft2_env, 'CCFLAGS', ['/W4', '-Wall'] )
 ft2_cluster = GN.BuildObjects( ft2_env, ft2_sources )
 
 # assimp
@@ -96,7 +105,7 @@ ai_env.Append(
     CPPPATH=['#src/contrib/inc/assimp','assimp/BoostWorkaround'],
     CCFLAGS = ccflags,
     CPPDEFINES = cppdefines + ['ASSIMP_BUILD_BOOST_WORKAROUND','ASSIMP_BUILD_NO_OWN_ZLIB'] )
-GN.RemoveEnvListItems( ai_env, 'CCFLAGS', ['/W4','/Wcheck','-Wall'] )
+GN.RemoveEnvListItems( ai_env, 'CCFLAGS', ['/W4','/Wcheck','-Wall', '-Werror'] )
 assimp_sources = GN.Glob( 'assimp/*.cpp' )
 #assimp_sources.remove(os.path.normpath('assimp/pch.cpp'))
 ai_cluster = GN.BuildObjects( ai_env, assimp_sources, 'AssimpPCH.h', 'assimp/pch.cpp' )
@@ -113,7 +122,7 @@ ai_contrib_cluster = GN.BuildObjects( ai_contrib_env, GN.Glob( ['assimp/contrib/
 # Others
 misc_env = GN.NewBuildEnv()
 misc_env.Append( CCFLAGS = ccflags, CPPDEFINES = cppdefines + ['GLEW_STATIC'] )
-GN.RemoveEnvListItems( misc_env, 'CCFLAGS', ['/W4','/Wcheck','-Wall'] )
+GN.RemoveEnvListItems( misc_env, 'CCFLAGS', ['/W4','/Wcheck','-Wall', '-Werror'] )
 misc_sources = GN.Glob( Split('expat/*.c pcre/*.c* png/*.c zlib/*.c') )
 misc_sources += GN.Glob( 'lua/*.c' )
 if GN.has_ogl: misc_sources += GN.Glob( 'glew/*.c' )
