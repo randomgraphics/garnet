@@ -15,6 +15,7 @@
 #define GN_ICL   0 ///< If 1, means current compiler is intel c++ compiler
 #define GN_MINGW 0 ///< If 1, means current compiler is MingW
 #define GN_GCC   0 ///< If 1, means current compiler is gcc/g++
+#define GN_CLANG 0 ///< C++ compiler on mac os
 #define GN_BCB   0 ///< If 1, means current compiler is boland c++ compiler
 
 /// \def GN_COMPILER
@@ -25,7 +26,7 @@
 #undef GN_MSVC8
 #define GN_MSVC 1
 #define GN_MSVC8 (_MSC_VER >= 1400)
-#define GN_COMPILER "msvc"
+#define GN_COMPILER msvc
 
 #elif defined(__ICL)
 #undef GN_ICL
@@ -34,28 +35,34 @@
 #define GN_ICL  1
 #define GN_MSVC 1                  // treat intel compiler as VC compiler
 #define GN_MSVC8 (_MSC_VER >= 1400)
-#define GN_COMPILER "icl"
+#define GN_COMPILER icl
 
 #elif defined(__GNUC__) && defined(_WIN32)
 #undef GN_MINGW
 #undef GN_GCC
 #define GN_MINGW 1
 #define GN_GCC 1
-#define GN_COMPILER "mingw"
+#define GN_COMPILER mingw
 
 #elif defined(__BORLANDC__)
 #undef GN_BCB
 #define GN_BCB 1
-#define GN_COMPILER "bcb"
+#define GN_COMPILER bcb
+
+#elif defined(__clang__)
+#undef GN_GCC
+#undef GN_CLANG
+#define GN_GCC 1
+#define GN_CLANG 1
+#define GN_COMPILER clang
 
 #elif defined(__GNUC__)
 #undef GN_GCC
 #define GN_GCC 1
-#define GN_COMPILER "gcc"
+#define GN_COMPILER gcc
 
 #else
 #error "Unknown compiler!"
-#define GN_COMPILER "unknown"
 #endif
 
 // *****************************************************************************

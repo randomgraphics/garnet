@@ -30,18 +30,17 @@ elif 'vc' == GN.cc[:2]:
             ]
     ccflags += ['/wd%s'%w for w in unimportant_warnings]
 elif 'gcc' == GN.cc:
-    if 'darwin' == GN.host_os:
-        ccflags += [
-            '-Wno-error=address-of-packed-member',
-            '-Wno-error=shift-negative-value',
-            '-Wno-error=deprecated-declarations',
-            '-Wno-error=pointer-bool-conversion',
-            '-Wno-error=parentheses-equality',
-            '-Wno-error=deprecated-register']
-    else:
-        ccflags += ['-Wno-error=unused-but-set-variable']
-        if LooseVersion(GN.ccversion) >= LooseVersion('6.0.0'):
-            ccflags += ['-Wno-error=misleading-indentation']
+    ccflags += ['-Wno-error=unused-but-set-variable']
+    if LooseVersion(GN.ccversion) >= LooseVersion('6.0.0'):
+        ccflags += ['-Wno-error=misleading-indentation']
+elif 'clang' == GN.cc:
+    ccflags += [
+        '-Wno-error=address-of-packed-member',
+        '-Wno-error=shift-negative-value',
+        '-Wno-error=deprecated-declarations',
+        '-Wno-error=pointer-bool-conversion',
+        '-Wno-error=parentheses-equality',
+        '-Wno-error=deprecated-register']
 else:
     import traceback
     traceback.print_exc()
