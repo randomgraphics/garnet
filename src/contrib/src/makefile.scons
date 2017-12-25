@@ -92,7 +92,7 @@ GN.RemoveEnvListItems( jpeg_env, 'CCFLAGS', ['/W4','/Wcheck','-Wall'] )
 jpeg_cluster = GN.BuildObjects( jpeg_env, GN.Glob( 'jpeg/*.c' ) )
 
 # FREETYPE
-ft2_sources = SConscript( "freetype-2.4.4/makefile.scons" )
+ft2_sources = SConscript( "freetype-2.8.1/makefile.scons" )
 ft2_env = GN.NewBuildEnv()
 ft2_env.Append( CCFLAGS = ccflags, CPPDEFINES = cppdefines + ['FT2_BUILD_LIBRARY'] )
 GN.RemoveEnvListItems( ft2_env, 'CCFLAGS', ['/W4', '-Wall'] )
