@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "basicInputXInput.h"
 
-#if defined(HAS_XINPUT) || GN_XBOX2
+#if defined(HAS_XINPUT) ||  defined(HAS_XINPUT2)
 
 typedef DWORD (WINAPI*XInputGetStateFuncPtr)(DWORD dwUserIndex,XINPUT_STATE* pState);
 
@@ -50,12 +50,5 @@ void GN::input::BasicXInput::processInputEvents()
 
     GN_UNGUARD;
 }
-
-#else
-
-//
-//
-// -----------------------------------------------------------------------------
-void GN::input::BasicXInput::processInputEvents() {}
 
 #endif
