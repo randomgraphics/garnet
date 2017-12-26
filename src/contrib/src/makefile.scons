@@ -19,6 +19,7 @@ elif 'vc' == GN.cc[:2]:
     ccflags += ['/W3']
     cppdefines += ['_CRT_SECURE_NO_DEPRECATE','_CRT_NONSTDC_NO_DEPRECATE','_SCL_SECURE_NO_WARNINGS']
     unimportant_warnings = [
+        '4018', # signed/unsigned mismatch'
         '4146', # unary minus operator applied to unsigned type, result still unsigned
         ]
     if 'x64' == GN.target_cpu:

@@ -558,7 +558,7 @@ class GarnetEnv2 :
         self.target_os        = BUILD_TARGET_OS
         self.target_cpu       = BUILD_TARGET_CPU
         self.cc               = BUILD_COMPILER
-        self.ccversion        = DEFAULT_BUILD_ENV['CCVERSION']
+        self.ccversion        = DEFAULT_BUILD_ENV['CCVERSION'] if DEFAULT_BUILD_ENV.has_key('CCVERSION') else '<Unknown>'
         self.variant          = BUILD_VARIANT
         self.host_os          = HOST_OS
         self.static_link      = BUILD_STATIC_LINK
