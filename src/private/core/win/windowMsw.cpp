@@ -353,17 +353,19 @@ bool GN::win::WindowMsw::createWindow( const WindowCreationParameters & wcp ) {
     GN_TRACE(sLogger)( "Register window class: %S (module handle: 0x%X)", mClassName.rawptr(), mModuleInstance );
 
     // setup window style
-    DWORD exStyle = parent ? WS_EX_TOOLWINDOW : 0;
+    DWORD exStyle = 0;
     DWORD style = 0;
     if( parent ) {
         style |= WS_CHILD;
         exStyle |= WS_EX_TOOLWINDOW;
     } else {
-        style |=  WS_OVERLAPPED;
+        if( wcp.hasBorder ) style |= WS_BORDER | WS_THICKFRAME;
+        if( wcp.hasTitleBar )
+            style |= WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX | WS_MAXIMIZEBOX;
+        else
+            style |= WS_POPUP;
+        if( wcp.topMost ) exStyle |= WS_EX_TOPMOST;
     }
-    if( wcp.hasBorder ) style |= WS_BORDER | WS_THICKFRAME;
-    if( wcp.hasTitleBar ) style |= WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX | WS_MAXIMIZEBOX;
-    if( wcp.topMost ) exStyle |= WS_EX_TOPMOST;
 
     // calculate window size
     GN_ASSERT(width > 0 && height > 0);

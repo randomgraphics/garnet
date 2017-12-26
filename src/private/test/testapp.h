@@ -148,12 +148,12 @@ private:
         }
     }
 
-    int parseStrings(const char * option, const char * value, const char * strings[], size_t count )
-    {
+    int parseStrings(const char * option, const char * value, const char * strings[], size_t count ) {
         using namespace GN;
 
-        for(size_t i = 0; i < count; ++i) {
-            if( 0 == str::compareI( strings[i], value ) ) return (int)i;
+        for ( size_t i = 0; i < count; ++i ) {
+            if ( 0 == str::compareI( strings[i], value ) )
+                return (int)i;
         }
 
         GN_ERROR(logger)(
@@ -228,7 +228,7 @@ private:
                     const char * value = getOptionValue( argc, argv, i );
                     if( NULL == value ) return INVALID_COMMAND_LINE;
 
-                    const char * MODES[] = { "f", "b", "w" };
+                    const char * MODES[] = { "w", "b", "f" };
                     rendererOptions.displayMode.mode = (gfx::DisplayMode::Mode)parseStrings(a, value, MODES, _countof(MODES));
                     if( rendererOptions.displayMode.mode < 0)
                         return INVALID_COMMAND_LINE;
