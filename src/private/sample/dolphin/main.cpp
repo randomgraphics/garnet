@@ -10,15 +10,13 @@ static GN::Logger * sLogger = GN::getLogger("GN.sample.dolphin");
 
 class TestScene
 {
-    GN::util::SampleApp & mApp;
-
     AutoRef<TextureResource> mCaustics[32];
 
     AutoRef<ModelResource> mDolphin, mSeafloor;
 
 public:
 
-     TestScene( GN::util::SampleApp & app ) : mApp(app) {}
+     TestScene( GN::util::SampleApp &) {}
 
     ~TestScene() { }
 

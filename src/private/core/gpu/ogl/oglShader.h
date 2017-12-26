@@ -202,7 +202,7 @@ namespace GN { namespace gfx
             StrA                               name;         ///< uniform name
             mutable WeakRef<const Uniform>     lastUniform;  ///< pointer to last uniform parameter
             mutable sint32                     lastStamp;    ///< update time stamp of the last uniform parameter
-            mutable AutoInitializer<uint32,-1> lastTexStage; ///< last texture stage associated to this parameter
+            mutable AutoInitializer<uint32,(uint32)-1> lastTexStage; ///< last texture stage associated to this parameter
         };
 
         ///

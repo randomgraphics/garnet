@@ -93,8 +93,7 @@
         if( GL_NO_ERROR != err )                                            \
         {                                                                   \
             static GN::Logger * sLogger = GN::getLogger("GN.gfx.OGLError"); \
-            GN_ERROR(sLogger)( "%s%s!", errDesc,                            \
-                (const char*)::gluErrorString(err) );                       \
+            GN_ERROR(sLogger)( "%s (error=0x%x)", errDesc, err );           \
             GN_UNEXPECTED();                                                \
             something                                                       \
         }                                                                   \
