@@ -56,13 +56,15 @@ namespace GN
 #pragma warning(disable:522) // inline function is declared after being used.
 #endif
 
+#if GN_CLANG
 /// \name overloaded global new and delete operators
 //@{
-void * operator new( size_t s ) GN_THROW_BADALLOC();
-void * operator new[]( size_t s ) GN_THROW_BADALLOC();
-void operator delete( void* p ) GN_NOTHROW();
-void operator delete[]( void* p ) GN_NOTHROW();
+void * operator new( size_t s ) GN_THROW_BADALLOC() { return ::GN::HeapMemory::alloc( s ); }
+void * operator new[]( size_t s ) GN_THROW_BADALLOC() { return ::GN::HeapMemory::alloc( s ); }
+void operator delete( void* p ) GN_NOTHROW() { ::GN::HeapMemory::dealloc( p ); }
+void operator delete[]( void* p ) GN_NOTHROW() { ::GN::HeapMemory::dealloc( p ); }
 //@}
+#endif
 
 #if GN_ICL
 #pragma warning(pop)
