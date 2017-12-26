@@ -6,8 +6,7 @@
 /// \author  chenlee (2005.10.2)
 // *****************************************************************************
 
-#include "../common/basicGpuX11.h"
-#include "../common/basicGpuMsw.h"
+#include "../common/basicGpu.h"
 
 namespace GN { namespace gfx
 {
@@ -25,18 +24,12 @@ namespace GN { namespace gfx
         uint32 maxVertexAttributes; ///< query GL_MAX_VERTEX_ATTRIBS_ARB
     };
 
-#if GN_WINPC
-    typedef BasicGpuMsw ParentGpu;
-#else
-    typedef BasicGpuX11 ParentGpu;
-#endif
-
     ///
     /// OGL GPU class
     ///
-    class OGLGpu : public ParentGpu
+    class OGLGpu : public BasicGpu
     {
-        GN_DECLARE_STDCLASS(OGLGpu, ParentGpu);
+        GN_DECLARE_STDCLASS(OGLGpu, BasicGpu);
 
         static Logger * sLogger;
 
@@ -95,6 +88,7 @@ namespace GN { namespace gfx
         {
             mDeviceContext = 0;
             mRenderContext = 0;
+            mHook = 0;
             mDisplayModeActivated = false;
             mIgnoreMsgHook = false;
         }
@@ -102,11 +96,16 @@ namespace GN { namespace gfx
         bool activateDisplayMode();
         void restoreDisplayMode();
         void msgHook( HWND hwnd, UINT msg, WPARAM wp, LPARAM lp );
+        static LRESULT CALLBACK staticHookProc( int code, WPARAM wp, LPARAM lp );
 
-    private :
+    private:
+
+        typedef Dictionary<intptr_t, OGLGpu*> WindowMap;
+        static WindowMap msInstanceMap;
 
         HDC     mDeviceContext;
         HGLRC   mRenderContext;
+        HHOOK   mHook;
         bool    mDisplayModeActivated;
         bool    mIgnoreMsgHook;
 

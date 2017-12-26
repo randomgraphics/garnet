@@ -6,7 +6,7 @@
 /// \author  chenlee (2005.10.2)
 // *****************************************************************************
 
-#include "../common/basicGpuMsw.h"
+#include "../common/basicGpu.h"
 
 #pragma warning(disable:4100) // unreferenced formal parameters
 
@@ -42,9 +42,9 @@ namespace GN { namespace gfx
     ///
     /// D3D11 GPU class
     ///
-    class D3D11Gpu : public BasicGpuMsw
+    class D3D11Gpu : public BasicGpu
     {
-        GN_DECLARE_STDCLASS(D3D11Gpu, BasicGpuMsw);
+        GN_DECLARE_STDCLASS(D3D11Gpu, BasicGpu);
 
         // ********************************
         // ctor/dtor

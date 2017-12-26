@@ -73,11 +73,6 @@ namespace GN { namespace gfx
 
         void handleRenderWindowSizeMove();
 
-        // platform specfic code called by dispInit()
-        virtual intptr_t getDefaultDisplay() = 0;
-        virtual intptr_t determineMonitor(const GpuOptions & go, intptr_t display) = 0;
-        virtual bool getCurrentDisplayMode(DisplayMode & dm, intptr_t display, intptr_t monitor) = 0;
-
     private:
         bool dispInit( const GpuOptions & );
         void dispQuit();
@@ -89,7 +84,7 @@ namespace GN { namespace gfx
         DispDesc          mDispDesc;
         GN::win::Window * mWindow;
         intptr_t          mOldMonitor;
-        Vector2<size_t>   mOldWindowSize;
+        Vector2<uint32_t> mOldWindowSize;
 
         //@}
 

@@ -30,7 +30,7 @@ namespace GN
             virtual intptr_t getMonitorHandle() const = 0;
             virtual intptr_t getWindowHandle() const = 0;
             virtual intptr_t getModuleHandle() const = 0;
-            virtual Vector2<size_t> getClientSize() const = 0;
+            virtual Vector2<uint32_t> getClientSize() const = 0;
 
             //@}
 
@@ -63,10 +63,11 @@ namespace GN
         struct WindowCreationParameters
         {
             StrA     caption;      ///< window title text.
-            intptr_t display;      ///< display handle (X windows only)
-            intptr_t parent;       ///< Parent window
-            size_t   clientWidth;  ///< client width. 0 means default width
-            size_t   clientHeight; ///< client height. 0 means default height
+            intptr_t display;      ///< display handle. X windows only. 0 means using default display handle.
+            intptr_t monitor;      ///< Monitor handle. 0 means default monitor.
+            intptr_t parent;       ///< Parent window.
+            size_t   clientWidth;  ///< client width. 0 means current display width.
+            size_t   clientHeight; ///< client height. 0 means current display height.
             bool     hasBorder;    ///< has border or not
             bool     hasTitleBar;  ///< has title bar or not
             bool     topMost;      ///< top-most(always on top) or not

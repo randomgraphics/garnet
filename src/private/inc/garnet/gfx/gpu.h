@@ -209,16 +209,6 @@ namespace GN { namespace gfx
         /// \name OGL only parameters
         //@{
 
-        ///
-        /// Restore display mode while render window is deactivated.
-        ///
-        /// 缺省为true.
-        ///
-        /// Note that this is a OGL only parameter. For D3D, you may use
-        /// "Enable Multi-mon Debugging" option in DirectX control panel.
-        ///
-        bool autoRestore;
-
         //@}
 
         ///
@@ -235,7 +225,6 @@ namespace GN { namespace gfx
             , vsync(false)
             , debug( GN_ENABLE_DEBUG )
             , reference(false)
-            , autoRestore(true)
         {
             displayMode.set(DisplayMode::WINDOWED, 0, 0, 0, 0);
         }

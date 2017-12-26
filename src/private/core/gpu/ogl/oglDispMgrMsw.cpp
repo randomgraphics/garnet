@@ -485,6 +485,8 @@ public:
 // device management
 // *****************************************************************************
 
+GN::gfx::OGLGpu::WindowMap GN::gfx::OGLGpu::msInstanceMap;
+
 //
 //
 // -----------------------------------------------------------------------------
@@ -584,12 +586,6 @@ bool GN::gfx::OGLGpu::dispInit()
         GN_MSW_CHECK( ::UpdateWindow( hwnd ) );
     }
 
-    // setup message hook
-    if( ro.autoRestore )
-    {
-        sigMessage.connect( this, &OGLGpu::msgHook );
-    }
-
     // set swap interval
     if( WGLEW_EXT_swap_control )
     {
@@ -597,6 +593,15 @@ bool GN::gfx::OGLGpu::dispInit()
         {
             GN_WARN(sLogger)( "Fail to adjust SGI swap control" );
         }
+    }
+
+    // setup message hook
+    msInstanceMap[getRenderWindow().getWindowHandle()] = this;
+    mHook = ::SetWindowsHookExW( WH_CALLWNDPROC, &staticHookProc, 0, GetCurrentThreadId() );
+    if( 0 == mHook )
+    {
+        GN_ERROR(sLogger)( "Fail to setup message hook : %s", getWin32LastErrorInfo() );
+        return false;
     }
 
     // successful
@@ -613,7 +618,8 @@ void GN::gfx::OGLGpu::dispQuit()
     GN_GUARD;
 
     // remove message hook
-    sigMessage.disconnect( this );
+    if( mHook ) ::UnhookWindowsHookEx( mHook ), mHook = 0;
+    msInstanceMap.remove(getRenderWindow().getWindowHandle());
 
     // restore display mode
     restoreDisplayMode();
@@ -748,6 +754,31 @@ void GN::gfx::OGLGpu::msgHook( HWND, UINT msg, WPARAM wp, LPARAM )
             restoreDisplayMode();
         }
     }
+
+    GN_UNGUARD;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+LRESULT CALLBACK
+GN::gfx::OGLGpu::staticHookProc( int code, WPARAM wp, LPARAM lp )
+{
+    GN_GUARD;
+
+    //GN_TRACE( "wnd=0x%X, msg=%s", wnd, win::msg2str(msg) );
+
+    OGLGpu ** pp = msInstanceMap.find( (intptr_t)((CWPSTRUCT*)lp)->hwnd );
+
+    if( NULL != pp )
+    {
+        // trigger render window message signal.
+        CWPSTRUCT * cwp = (CWPSTRUCT*)lp;
+        GN_ASSERT( cwp && (*pp) );
+        (*pp)->msgHook( cwp->hwnd, cwp->message, cwp->wParam, cwp->lParam );
+    }
+
+    return ::CallNextHookEx( 0, code, wp, lp );
 
     GN_UNGUARD;
 }

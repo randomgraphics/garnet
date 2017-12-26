@@ -1,8 +1,6 @@
 Import( 'GN' )
 sources = [
     'basicGpu.cpp',
-    'basicGpuMsw.cpp',
-    'basicGpuX11.cpp',
     'basicSurface.cpp',
 ]
 env = GN.NewBuildEnv()

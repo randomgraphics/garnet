@@ -7,6 +7,26 @@ GN::Dictionary<void*,GN::win::WindowMsw*> GN::win::WindowMsw::msInstanceMap;
 
 static GN::Logger * sLogger = GN::getLogger("GN.win.MSW");
 
+//
+//
+// -----------------------------------------------------------------------------
+static HMONITOR sGetWindowMonitor(HWND window) {
+    HMONITOR monitor;
+    if ( ::IsWindow( window ) ) {
+        monitor = ::MonitorFromWindow( window, MONITOR_DEFAULTTONEAREST );
+    } else {
+        // return primary monitor
+        POINT pt = { LONG_MIN, LONG_MIN };
+        monitor = ::MonitorFromPoint( pt, MONITOR_DEFAULTTOPRIMARY );
+        if ( 0 == monitor ) {
+            GN_ERROR(sLogger)( "Fail to get primary monitor handle." );
+            return 0;
+        }
+    }
+    GN_ASSERT( monitor );
+    return monitor;
+}
+
 // *****************************************************************************
 // Initialize and shutdown
 // *****************************************************************************
@@ -122,24 +142,22 @@ intptr_t GN::win::WindowMsw::getMonitorHandle() const
 {
     GN_GUARD;
     GN_ASSERT( ::IsWindow( mWindow ) );
-    HMONITOR m = ::MonitorFromWindow( mWindow, MONITOR_DEFAULTTONEAREST );
-    if( 0 == m ) GN_ERROR(sLogger)( "Fail to get monitor handle from window!" );
-    return (intptr_t)m;
+    return (intptr_t)sGetWindowMonitor(mWindow);
     GN_UNGUARD;
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-GN::Vector2<size_t> GN::win::WindowMsw::getClientSize() const
+GN::Vector2<uint32_t> GN::win::WindowMsw::getClientSize() const
 {
     GN_GUARD;
     GN_ASSERT( ::IsWindow( mWindow ) );
-    Vector2<size_t> sz(0,0);
+    Vector2<uint32_t> sz(0,0);
     RECT rc;
     GN_MSW_CHECK_RETURN( ::GetClientRect( mWindow, &rc ), sz );
-    sz.x = (size_t)(rc.right - rc.left);
-    sz.y = (size_t)(rc.bottom - rc.top);
+    sz.x = (uint32_t)(rc.right - rc.left);
+    sz.y = (uint32_t)(rc.bottom - rc.top);
     return sz;
     GN_UNGUARD;
 }
@@ -276,8 +294,7 @@ bool GN::win::WindowMsw::runUntilNoNewEvents( bool blockWhileMinized )
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::win::WindowMsw::createWindow( const WindowCreationParameters & wcp )
-{
+bool GN::win::WindowMsw::createWindow( const WindowCreationParameters & wcp ) {
     GN_GUARD;
 
     // check parent
@@ -288,11 +305,31 @@ bool GN::win::WindowMsw::createWindow( const WindowCreationParameters & wcp )
     mModuleInstance = (HINSTANCE)GetModuleHandleA(0);
     GN_ASSERT( 0 != mModuleInstance );
 
-    WNDCLASSEXW wcex;
+    // determine monitor handle
+    auto monitor = (HMONITOR)wcp.monitor;
+    if (0 == monitor) {
+        monitor = sGetWindowMonitor(parent);
+        if( 0 == monitor ) return false;
+    }
+
+    // determine client size
+    auto width = wcp.clientWidth;
+    auto height = wcp.clientHeight;
+    if (0 == width || 0 == height) {
+        MONITORINFOEXA mi;
+        DEVMODEA windm;
+        mi.cbSize = sizeof(mi);
+        windm.dmSize = sizeof(windm);
+        windm.dmDriverExtra = 0;
+        GN_MSW_CHECK_RETURN( ::GetMonitorInfoA( monitor, &mi ), false );
+        GN_MSW_CHECK_RETURN( ::EnumDisplaySettingsA( mi.szDevice, ENUM_CURRENT_SETTINGS, &windm ), false );
+        if (0 == width) width = windm.dmPelsWidth;
+        if (0 == height) height = windm.dmPelsHeight;
+    }
 
     // generate an unique window class name
-    do
-    {
+    WNDCLASSEXW wcex = {};
+    do {
         mClassName.format( L"GNwindowMsw_%d", rand() );
     } while( ::GetClassInfoExW( mModuleInstance, mClassName.rawptr(), &wcex ) );
 
@@ -309,8 +346,7 @@ bool GN::win::WindowMsw::createWindow( const WindowCreationParameters & wcp )
     wcex.lpszMenuName   = 0;
     wcex.lpszClassName  = mClassName.rawptr();
     wcex.hIconSm        = LoadIcon(0, IDI_APPLICATION);
-    if( 0 == ::RegisterClassExW(&wcex) )
-    {
+    if( 0 == ::RegisterClassExW(&wcex) ) {
         GN_ERROR(sLogger)( "fail to register window class, %s!", getWin32LastErrorInfo() );
         return false;
     }
@@ -319,13 +355,10 @@ bool GN::win::WindowMsw::createWindow( const WindowCreationParameters & wcp )
     // setup window style
     DWORD exStyle = parent ? WS_EX_TOOLWINDOW : 0;
     DWORD style = 0;
-    if( parent )
-    {
+    if( parent ) {
         style |= WS_CHILD;
         exStyle |= WS_EX_TOOLWINDOW;
-    }
-    else
-    {
+    } else {
         style |=  WS_OVERLAPPED;
     }
     if( wcp.hasBorder ) style |= WS_BORDER | WS_THICKFRAME;
@@ -333,8 +366,9 @@ bool GN::win::WindowMsw::createWindow( const WindowCreationParameters & wcp )
     if( wcp.topMost ) exStyle |= WS_EX_TOPMOST;
 
     // calculate window size
-    RECT rc = { 0, 0, (int)wcp.clientWidth, (int)wcp.clientHeight };
-    ::AdjustWindowRectEx( &rc, style, 0, exStyle );
+    GN_ASSERT(width > 0 && height > 0);
+    RECT rc = { 0, 0, (int)width, (int)height };
+    GN_MSW_CHECK_RETURN(::AdjustWindowRectEx( &rc, style, 0, exStyle ), false);
 
     // create window
     mWindow = ::CreateWindowExW(
@@ -343,14 +377,13 @@ bool GN::win::WindowMsw::createWindow( const WindowCreationParameters & wcp )
         mbs2wcs(wcp.caption).rawptr(),
         style,
         CW_USEDEFAULT, CW_USEDEFAULT,
-        wcp.clientWidth ? (rc.right - rc.left) : CW_USEDEFAULT,
-        wcp.clientHeight ? (rc.bottom - rc.top) : CW_USEDEFAULT,
+        rc.right - rc.left,
+        rc.bottom - rc.top,
         parent,
         0, // no menu
         mModuleInstance,
         0 );
-    if( 0 == mWindow )
-    {
+    if( 0 == mWindow ) {
         GN_ERROR(sLogger)( "fail to create window, %s!", getWin32LastErrorInfo() );
         return false;
     }

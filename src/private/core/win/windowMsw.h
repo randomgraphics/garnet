@@ -50,7 +50,7 @@ namespace GN { namespace win
         intptr_t getMonitorHandle() const;
         intptr_t getWindowHandle() const { return (intptr_t)mWindow; }
         intptr_t getModuleHandle() const { return (intptr_t)mModuleInstance; }
-        Vector2<size_t> getClientSize() const;
+        Vector2<uint32_t> getClientSize() const;
         void show();
         void hide();
         void minimize() { GN_UNIMPL_WARNING(); }

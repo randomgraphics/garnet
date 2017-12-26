@@ -25,7 +25,7 @@ namespace GN { namespace win
         intptr_t getMonitorHandle() const { return (intptr_t)1; }
         intptr_t getWindowHandle() const { return (intptr_t)1; }
         intptr_t getModuleHandle() const { return (intptr_t)1; }
-        Vector2<size_t> getClientSize() const { return Vector2<size_t>(640,480); }
+        Vector2<uint32_t> getClientSize() const { return Vector2<uint32_t>(640,480); }
         void show() {}
         void hide() {}
         void minimize() {}
