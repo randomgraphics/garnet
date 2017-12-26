@@ -119,9 +119,8 @@ namespace GN { namespace gfx
         // ********************************
     private:
 
-        MultiThreadGpu           & mGpu;
+        MultiThreadGpu                & mGpu;
         GpuProgram                    * mGpuProgram;
-        uint32                          mNumParams;
         const GpuProgramParameterDesc * mParamDesc;
 
         // ********************************

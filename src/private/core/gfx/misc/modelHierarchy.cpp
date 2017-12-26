@@ -3,6 +3,9 @@
 
 #if GN_MSVC
 #pragma warning(disable:4100) // unreferenced formal parameter
+#elif GN_CLANG
+#pragma clang diagnostic ignored "-Waddress-of-packed-member"
+#pragma clang diagnostic ignored "-Woverloaded-virtual"
 #endif
 #include <assimp/assimp.hpp>
 #include <assimp/aiScene.h>       // Output data structure
@@ -218,7 +221,7 @@ sLoadModelHierarchyFromXPR( ModelHierarchyDesc & desc, File & file )
 {
     // load XPR file
     XPRScene xpr;
-    if( !sLoadXprSceneFromFile( xpr, file ) ) return NULL;
+    if( !sLoadXprSceneFromFile( xpr, file ) ) return false;
 
     GN_UNUSED_PARAM( desc );
     GN_UNIMPL_WARNING();

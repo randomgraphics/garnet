@@ -494,13 +494,13 @@ def CheckConfig():
     # =====
     if c.CheckLibWithHeader( 'iconv', 'iconv.h', 'c', 'iconv_open(0,0);' ):
         CONFIG['has_iconv'] = True
-        CONFIG['iconv_lib'] = 'iconv'
+        CONFIG['iconv_lib'] = ['iconv']
     elif c.CheckLibWithHeader( 'libiconv', 'iconv.h', 'c', 'iconv_open(0,0);' ):
         CONFIG['has_iconv'] = True
-        CONFIG['iconv_lib'] = 'libiconv'
+        CONFIG['iconv_lib'] = ['libiconv']
     elif c.CheckLibWithHeader( 'c', 'iconv.h', 'c', 'iconv_open(0,0);' ):
         CONFIG['has_iconv'] = True
-        CONFIG['iconv_lib'] = 'c'
+        CONFIG['iconv_lib'] = ['c']
     else :
         CONFIG['has_iconv'] = False
         CONFIG['iconv_lib'] = []
@@ -732,7 +732,7 @@ class GarnetEnv2 :
         libs += CONFIG['fbx_libs']
         libs += CONFIG['vk_libs']
         libs += CONFIG['iconv_lib']
-        if 'posix' == BUILD_TARGET_OS:
+        if 'posix' == BUILD_TARGET_OS or 'darwin' == BUILD_TARGET_OS:
             libs += ['X11']
         dbg = ( BUILD_VARIANT == "debug" )
         if CONFIG['has_d3d9'] :

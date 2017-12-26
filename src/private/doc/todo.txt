@@ -1,9 +1,10 @@
-TODO
+ï»¿TODO
 ====
 
-- ³ÌĞòÖĞ±ê×¢TODOµÄµØ·½
+- ç¨‹åºä¸­æ ‡æ³¨TODOçš„åœ°æ–¹
 
 - p0
+  - upgrade assimp
   - constant/uniform buffer object for opengl.
   - D3D12 friendly resource binding:
   - thread safe weak ref object.

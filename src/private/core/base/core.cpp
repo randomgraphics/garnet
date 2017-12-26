@@ -40,7 +40,11 @@ namespace GN
     GN_API void * HeapMemory::alignedAlloc( size_t sizeInBytes, size_t alignment )
     {
         if( 0 == alignment ) alignment = sizeof(size_t);
-#if GN_POSIX
+#if GN_DARWIN
+        void * ptr;
+        if (posix_memalign(&ptr, sizeInBytes, alignment))
+            ptr = nullptr;
+#elif GN_POSIX
         void * ptr;
         if (1 == alignment)
             ptr = malloc(sizeInBytes);

@@ -6,6 +6,9 @@
 
 #if GN_MSVC
 #pragma warning(disable:4100) // unreferenced formal parameter
+#elif GN_CLANG
+#pragma clang diagnostic ignored "-Waddress-of-packed-member"
+#pragma clang diagnostic ignored "-Woverloaded-virtual"
 #endif
 #include <assimp/assimp.h>
 #include <assimp/aiScene.h>       // Output data structure
@@ -16,8 +19,9 @@
 #ifdef HAS_FBX
 # if GN_GCC
 #  pragma GCC diagnostic ignored "-Wunused"
+# elif GN_MSVC
+#  pragma warning(disable:4996) // 'x' was declared depreciated
 # endif
-#pragma warning(disable:4996) // 'x' was declared depreciated
 #define FBXSDK_SHARED
 #include <fbxsdk.h>
 #endif

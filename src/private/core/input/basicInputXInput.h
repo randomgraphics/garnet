@@ -6,6 +6,8 @@
 /// \author  chenlee (2006.3.13)
 // *****************************************************************************
 
+#if defined(HAS_XINPUT) || defined(HAS_XINPUT2)
+
 #include "basicInput.h"
 
 #if defined(HAS_XINPUT)
@@ -41,6 +43,8 @@ namespace GN { namespace input
 
     };
 }}
+
+#endif
 
 // *****************************************************************************
 //                                     EOF
