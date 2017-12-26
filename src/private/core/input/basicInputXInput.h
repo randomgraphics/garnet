@@ -23,6 +23,7 @@ namespace GN { namespace input
     ///
     class BasicXInput : public BasicInput
     {
+        bool   mCoInit;
         uint32 mXInputPacketNumber;
 
     protected:
@@ -34,7 +35,16 @@ namespace GN { namespace input
         ///
         /// Constructor
         ///
-        BasicXInput() : mXInputPacketNumber(0), mXInputGetState(0) {}
+        BasicXInput() : mXInputPacketNumber(0), mXInputGetState(0) {
+            mCoInit = (S_OK == CoInitializeEx(nullptr, COINIT_MULTITHREADED));
+        }
+
+        ///
+        /// Destructor
+        ///
+        ~BasicXInput() {
+            if (mCoInit) CoUninitialize();
+        }
 
         //
         // inherited from Input

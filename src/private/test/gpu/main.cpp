@@ -153,8 +153,25 @@ void draw( Gpu & r )
     r.drawIndexed( PrimitiveType::TRIANGLE_STRIP, 4, 0, 0, 4, 0 );
 }
 
+struct InputInitiator
+{
+    InputInitiator( Gpu & r )
+    {
+        initializeInputSystem( InputAPI::NATIVE );
+        const DispDesc & dd = r.getDispDesc();
+        gInput.attachToWindow( dd.displayHandle, dd.windowHandle );
+    }
+
+    ~InputInitiator()
+    {
+        shutdownInputSystem();
+    }
+};
+
 int run( Gpu & gpu )
 {
+    InputInitiator ii(gpu);
+    
     if( !init( gpu ) ) { quit( gpu ); return -1; }
 
     bool gogogo = true;
@@ -186,21 +203,6 @@ int run( Gpu & gpu )
 
     return 0;
 }
-
-struct InputInitiator
-{
-    InputInitiator( Gpu & r )
-    {
-        initializeInputSystem( InputAPI::NATIVE );
-        const DispDesc & dd = r.getDispDesc();
-        gInput.attachToWindow( dd.displayHandle, dd.windowHandle );
-    }
-
-    ~InputInitiator()
-    {
-        shutdownInputSystem();
-    }
-};
 
 void showHelp( CommandLineArguments & ca )
 {
@@ -256,8 +258,6 @@ int main( int argc, const char * argv[] )
     {
         return -1;
     }
-
-    InputInitiator ii(*r);
 
     int result = run( *r );
 
