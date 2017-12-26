@@ -62,6 +62,8 @@ void GN::gfx::BasicGpu::quit()
 {
     GN_GUARD;
 
+    dispQuit();
+
     // standard quit procedure
     GN_STDCLASS_QUIT();
 
