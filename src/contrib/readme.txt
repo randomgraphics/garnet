@@ -4,7 +4,7 @@ List of 3rd party libraries that are included here:
 Assimp      2.0.863
 Expat       2.0.0
 FBX         2014.1
-Freetype    2.4.4 (http://www.freetype.org)
+Freetype    2.8.1 (http://www.freetype.org)
 glew        2.1.0 (http://glew.sourceforge.net)
 jpeg        jpeg-6b (http://www.ijg.org)
 lua         5.1 (http://www.lua.org)

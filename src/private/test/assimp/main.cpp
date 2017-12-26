@@ -17,11 +17,11 @@
 #include <GL/glut.h>
 
 // assimp include files. These three are usually needed.
-#if GN_MSVC
+#if defined(_MSC_VER)
 #pragma warning(disable:4100) // unreferenced formal parameter
 #pragma warning(disable:4057)
 #pragma warning(disable:4018) // '<' : signed/unsigned mismatch
-#elif GN_CLANG
+#elif defined(__clang__)
 #pragma clang diagnostic ignored "-Waddress-of-packed-member"
 #pragma clang diagnostic ignored "-Woverloaded-virtual"
 #endif

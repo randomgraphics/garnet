@@ -270,6 +270,10 @@ def UTIL_new_env_ex( conf ):
         libs['debug']         += Split('d3d11i msvcrtd')
         libs['profile']       += Split('d3d11i msvcrt')
         libs['retail']        += Split('d3d11 msvcrt')
+    elif 'darwin' == BUILD_TARGET_OS:
+        cpppath['common']     += Split('/usr/X11R6/include /usr/local/include')
+        libpath['common']     += Split('/usr/X11R6/lib /usr/local/lib')
+        linkflags['common']   += Split('-framework OpenGL')
     else:
         cpppath['common']     += Split('/usr/X11R6/include /usr/local/include')
         libpath['common']     += Split('/usr/X11R6/lib /usr/local/lib')
@@ -384,10 +388,11 @@ def CheckConfig():
         c.CheckLibWithHeader( 'glu32', ['GL/glew.h','GL/glu.h'], 'C', 'gluOrtho2D(0,0,0,0);' ) :
         CONFIG['has_ogl'] = True
         CONFIG['ogl_libs'] = ['opengl32','glu32']
-    elif c.CheckLibWithHeader( 'GL', ['GL/glew.h'], 'C', 'glVertex3f(0,0,0);' ) and \
-        c.CheckLibWithHeader( 'GLU', ['GL/glew.h','GL/glu.h'], 'C', 'gluOrtho2D(0,0,0,0);' ) :
+    elif c.CheckLibWithHeader( 'GL', ['GL/glew.h'], 'C', 'glVertex3f(0,0,0);' ) :
         CONFIG['has_ogl'] = True
-        CONFIG['ogl_libs'] = ['GL','GLU']
+        CONFIG['ogl_libs'] = ['GL']
+        if c.CheckLibWithHeader( 'GLU', ['GL/glew.h'], 'C', 'gluOrtho2D(0,0,0,0);' ) :
+            CONFIG['ogl_libs'] += ['GLU']
     else :
         CONFIG['has_ogl'] = False
         CONFIG['ogl_libs'] = []
@@ -553,7 +558,7 @@ class GarnetEnv2 :
         self.target_os        = BUILD_TARGET_OS
         self.target_cpu       = BUILD_TARGET_CPU
         self.cc               = BUILD_COMPILER
-        self.ccversion        = DEFAULT_BUILD_ENV['CCVERSION'] if DEFAULT_CONFIG_ENV.has_key('CCVERSION') else "<Unknown>"
+        self.ccversion        = DEFAULT_BUILD_ENV['CCVERSION'] if DEFAULT_BUILD_ENV.has_key('CCVERSION') else '<Unknown>'
         self.variant          = BUILD_VARIANT
         self.host_os          = HOST_OS
         self.static_link      = BUILD_STATIC_LINK
