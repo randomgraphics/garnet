@@ -2,6 +2,7 @@ Import( 'GN' )
 sources = [
     'win.cpp',
     'windowMsw.cpp',
+    'windowX11.cpp',
 ]
 r = GN.BuildObjects( None, sources, 'pch.h', 'pch.cpp' )
 Return( 'r' )

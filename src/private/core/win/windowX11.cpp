@@ -1,13 +1,9 @@
 #include "pch.h"
-#include "renderWindowX11.h"
-#include "basicGpu.h"
+#include "windowX11.h"
 
 #if GN_POSIX
 
-#include <GL/glew.h>
-#include <GL/glxew.h>
-
-static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.common.renderWindow.X11");
+static GN::Logger * sLogger = GN::getLogger("GN.core.win");
 
 // *****************************************************************************
 // local functions
@@ -73,11 +69,7 @@ static int sGetScreenNumber( Display * disp, Screen * screen )
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::RenderWindowX11::initExternalRenderWindow(
-    Gpu     * gpu,
-    Display * display,
-    Window    externalWindow )
-{
+bool GN::win::WindowX11::init(const WindowAttachingParameters & wap) {
     GN_GUARD;
 
     mGpu = gpu;
@@ -103,20 +95,8 @@ bool GN::gfx::RenderWindowX11::initExternalRenderWindow(
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::RenderWindowX11::initInternalRenderWindow(
-    Gpu * gpu,
-    Display  * display,
-    Window     parentWindow,
-    Screen   * monitor,
-    uint32     width,
-    uint32     height )
-{
+bool GN::win::WindowX11::init(const WindowCreationParameters & wcp) {
     GN_GUARD;
-
-    GN_ASSERT( width > 0 && height > 0 && display && monitor );
-
-    // remember renderer pointer
-    mGpu = gpu;
 
     // remember screen/monitor pointer
     mScreen = monitor;
@@ -207,7 +187,7 @@ bool GN::gfx::RenderWindowX11::initInternalRenderWindow(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::RenderWindowX11::quit()
+void GN::win::WindowX11::quit()
 {
     GN_GUARD;
 
@@ -228,17 +208,19 @@ void GN::gfx::RenderWindowX11::quit()
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::RenderWindowX11::getClientSize( uint32 & width, uint32 & height ) const
+GN::Vector2<uint32_t> GN::win::WindowX11::getClientSize() const
 {
     GN_GUARD;
 
     GN_ASSERT( sIsWindow( mDisplay, mWindow ) );
 
-    XWindowAttributes attr;
-    GN_X_CHECK_RETURN( XGetWindowAttributes( mDisplay, mWindow, &attr ), false );
+    GN::Vector2<uint32_t> size(0, 0);
 
-    width = (uint32)attr.width;
-    height = (uint32)attr.height;
+    XWindowAttributes attr;
+    GN_X_CHECK_RETURN( XGetWindowAttributes( mDisplay, mWindow, &attr ), size );
+
+    size.x = (uint32_t)attr.width;
+    size.y = (uint32_t)attr.height;
 
     // success
     return true;
@@ -249,7 +231,7 @@ bool GN::gfx::RenderWindowX11::getClientSize( uint32 & width, uint32 & height ) 
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::RenderWindowX11::handleSizeMove()
+void GN::win::WindowX11::handleSizeMove()
 {
     GN_UNIMPL_WARNING();
 }
@@ -261,7 +243,7 @@ void GN::gfx::RenderWindowX11::handleSizeMove()
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::RenderWindowX11::initDisplay( Display * display )
+bool GN::win::WindowX11::initDisplay( Display * display )
 {
     GN_GUARD;
 
