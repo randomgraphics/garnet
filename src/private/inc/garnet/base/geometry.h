@@ -1,4 +1,4 @@
-#ifndef __GN_BASE_GEOMETRY_H__
+ï»¿#ifndef __GN_BASE_GEOMETRY_H__
 #define __GN_BASE_GEOMETRY_H__
 // *****************************************************************************
 /// \file
@@ -30,7 +30,7 @@ namespace GN
     }
 
     ///
-    /// ±íÊ¾Ò»¸ö¶şÎ¬Ê¸Á¿£¨±ÈÈçÌùÍ¼×ø±ê£©¡£
+    /// è¡¨ç¤ºä¸€ä¸ªäºŒç»´çŸ¢é‡ï¼ˆæ¯”å¦‚è´´å›¾åæ ‡ï¼‰ã€‚
     ///
     template < typename T >
     class Vector2
@@ -315,7 +315,7 @@ namespace GN
     };
 
     ///
-    /// ±íÊ¾Ò»¸öÊ¸Á¿£¬»òÊÇ¿Õ¼äÖĞµÄÒ»¸öµã¡£
+    /// è¡¨ç¤ºä¸€ä¸ªçŸ¢é‡ï¼Œæˆ–æ˜¯ç©ºé—´ä¸­çš„ä¸€ä¸ªç‚¹ã€‚
     ///
     template < typename T >
     class Vector3
@@ -566,7 +566,7 @@ namespace GN
     };
 
     ///
-    /// ËÄÎ¬×ø±ê£¨ÈıÎ¬Æë´Î×ø±ê£©
+    /// å››ç»´åæ ‡ï¼ˆä¸‰ç»´é½æ¬¡åæ ‡ï¼‰
     ///
     template < typename T >
     class Vector4
@@ -820,7 +820,7 @@ namespace GN
     };
 
     ///
-    /// 3x3¾ØÕó ( row major )
+    /// 3x3çŸ©é˜µ ( row major )
     ///
     template< typename T >
     class Matrix33
@@ -1040,7 +1040,7 @@ namespace GN
             return *this;
         }
         ///
-        /// ÇóĞı×ª¾ØÕó. Angle is in radius
+        /// æ±‚æ—‹è½¬çŸ©é˜µ. Angle is in radius
         ///
         Matrix33 & rotateX( T angle );
         Matrix33 & rotateY( T angle );
@@ -1058,7 +1058,7 @@ namespace GN
         }
 
         ///
-        /// ´òÓ¡¾ØÕóÄÚÈİµ½×Ö·û´®ÖĞ, mainly for debug purpose.
+        /// æ‰“å°çŸ©é˜µå†…å®¹åˆ°å­—ç¬¦ä¸²ä¸­, mainly for debug purpose.
         ///
         void print( StrA & ) const;
 
@@ -1358,7 +1358,7 @@ namespace GN
             return r;
         }
         ///
-        /// ÇóĞı×ª¾ØÕó. Angle is in radians.
+        /// æ±‚æ—‹è½¬çŸ©é˜µ. Angle is in radians.
         ///
         Matrix44 & rotateX( T angle );
         Matrix44 & rotateY( T angle );
@@ -1403,20 +1403,20 @@ namespace GN
 #endif
         }
         ///
-        /// Çó×óÊÖÕı½»Í¶Ó°¾ØÕó
+        /// æ±‚å·¦æ‰‹æ­£äº¤æŠ•å½±çŸ©é˜µ
         ///
-        /// ´ËÍ¶Ó°¾ØÕó½«ÆÁÄ»×óÏÂ½ÇÓ³ÉäÎªÔ­µã(left, bottom)£¬ÓÒÉÏ½ÇÎª(right, top)
-        /// ZÖá·¶Î§£ºznearµ½zfar
-        /// left²»ÄÜµÈÓÚright, bottom²»ÄÜµÈÓÚtop, znear²»ÄÜµÈÓÚzfar£¬·ñÔò»á
-        /// ÒıÆğ³ı0´íÎó¡£
+        /// æ­¤æŠ•å½±çŸ©é˜µå°†å±å¹•å·¦ä¸‹è§’æ˜ å°„ä¸ºåŸç‚¹(left, bottom)ï¼Œå³ä¸Šè§’ä¸º(right, top)
+        /// Zè½´èŒƒå›´ï¼šznearåˆ°zfar
+        /// leftä¸èƒ½ç­‰äºright, bottomä¸èƒ½ç­‰äºtop, znearä¸èƒ½ç­‰äºzfarï¼Œå¦åˆ™ä¼š
+        /// å¼•èµ·é™¤0é”™è¯¯ã€‚
         ///
         /// \note
-        ///     ÔÚ±ê×¼µÄÓÒÊÖ3Î¬Í¼ĞÎÑ§ÖĞ£¬Í¶Ó°±ä»»ºóZÖáµÄ·¶Î§Ó¦¸ÃÊÇ[1, -1]£¬
-        ///     ¶ødirectxºÍopengl·Ö±ğÊ¹ÓÃµÄÊÇ[0, 1]ºÍ[-1, 1]¡£
-        ///     Òò´Ë£¬Í¼ĞÎÑ§½Ì¿ÆÊéÖĞ¸ø³öµÄ±ê×¼Í¶Ó°±ä»»¾ØÕóÎŞ·¨ÔÚopenglºÍdirectx
-        ///     ÖĞÊ¹ÓÃ£»ÇÒ¶ÔÓÚÍ¬ÑùµÄÍ¶Ó°±ä»»Ğ§¹û£¬ÔÚdirectxºÍopenglÖĞ±ØĞëÊ¹ÓÃ²»
-        ///     Í¬µÄ±ä»»¾ØÕó¡£ Òò´ËÌØ±ğÉèÖÃÁËÁ½Ì×·Ö±ğÊÊÓÃÓÚopenglºÍdirectxµÄ¼ÆËã
-        ///     Í¶Ó°¾ØÕóµÄº¯Êı¡£
+        ///     åœ¨æ ‡å‡†çš„å³æ‰‹3ç»´å›¾å½¢å­¦ä¸­ï¼ŒæŠ•å½±å˜æ¢åZè½´çš„èŒƒå›´åº”è¯¥æ˜¯[1, -1]ï¼Œ
+        ///     è€Œdirectxå’Œopenglåˆ†åˆ«ä½¿ç”¨çš„æ˜¯[0, 1]å’Œ[-1, 1]ã€‚
+        ///     å› æ­¤ï¼Œå›¾å½¢å­¦æ•™ç§‘ä¹¦ä¸­ç»™å‡ºçš„æ ‡å‡†æŠ•å½±å˜æ¢çŸ©é˜µæ— æ³•åœ¨openglå’Œdirectx
+        ///     ä¸­ä½¿ç”¨ï¼›ä¸”å¯¹äºåŒæ ·çš„æŠ•å½±å˜æ¢æ•ˆæœï¼Œåœ¨directxå’Œopenglä¸­å¿…é¡»ä½¿ç”¨ä¸
+        ///     åŒçš„å˜æ¢çŸ©é˜µã€‚ å› æ­¤ç‰¹åˆ«è®¾ç½®äº†ä¸¤å¥—åˆ†åˆ«é€‚ç”¨äºopenglå’Œdirectxçš„è®¡ç®—
+        ///     æŠ•å½±çŸ©é˜µçš„å‡½æ•°ã€‚
         ///
         Matrix44 & orthoOGLLh( T left, T right,
                                T bottom, T top,
@@ -1453,13 +1453,13 @@ namespace GN
 #endif
         }
         ///
-        /// Çó×óÊÖÍ¸ÊÓÍ¶Ó°¾ØÕó
+        /// æ±‚å·¦æ‰‹é€è§†æŠ•å½±çŸ©é˜µ
         ///
-        /// \param fovy        ´¹Ö±·½ÏòÉÏµÄÊÓ½Ç´óĞ¡£¬ÒÔ»¡¶ÈÎªµ¥Î»
-        /// \param ratio       ÊÓ³¡µÄ¿í¶ÈºÍ¸ß¶ÈµÄ±ÈÖµ
-        /// \param znear, zfar ¿É¼ûµÄZÖá·¶Î§
+        /// \param fovy        å‚ç›´æ–¹å‘ä¸Šçš„è§†è§’å¤§å°ï¼Œä»¥å¼§åº¦ä¸ºå•ä½
+        /// \param ratio       è§†åœºçš„å®½åº¦å’Œé«˜åº¦çš„æ¯”å€¼
+        /// \param znear, zfar å¯è§çš„Zè½´èŒƒå›´
         ///
-        /// \note fovyºÍratio²»ÄÜÎª0£¬znear²»ÄÜµÈÓÚzfar£¬·ñÔò»áÒıÆğ³ı0´íÎó¡£
+        /// \note fovyå’Œratioä¸èƒ½ä¸º0ï¼Œznearä¸èƒ½ç­‰äºzfarï¼Œå¦åˆ™ä¼šå¼•èµ·é™¤0é”™è¯¯ã€‚
         ///
         Matrix44 & perspectiveOGLLh( T fovy, T ratio,
                                      T znear, T zfar );
@@ -1566,7 +1566,7 @@ namespace GN
     };
 
     ///
-    /// ËÄÔªÊı
+    /// å››å…ƒæ•°
     ///
     template < typename T >
     class Quaternion
@@ -1683,7 +1683,7 @@ namespace GN
             w   = (T)w_;
         }
 
-        /// ¹éÒ»»¯
+        /// å½’ä¸€åŒ–
         Quaternion & identity()
         {
             w = ((T)1.0); v.set(0, 0, 0); return *this;
@@ -1733,7 +1733,7 @@ namespace GN
             return r;
         }
         ///
-        /// conjugate (¹²¶ó)
+        /// conjugate (å…±æ‰¼)
         ///
         Quaternion & conjugate()
         {
@@ -2075,7 +2075,7 @@ namespace GN
     ///
     /// rectangle structure
     ///
-    /// \note  Õâ¸ö¾ØĞÎµÄ¶¨ÒåºÍWindowsÖĞµÄ¾ØĞÎRECT²»Í¬
+    /// \note  è¿™ä¸ªçŸ©å½¢çš„å®šä¹‰å’ŒWindowsä¸­çš„çŸ©å½¢RECTä¸åŒ
     ///
     template < typename T >
     class Rect
@@ -2621,3 +2621,4 @@ namespace GN
 //                                     EOF
 // *****************************************************************************
 #endif // __GN_BASE_GEOMETRY_H__
+
