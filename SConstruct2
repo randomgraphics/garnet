@@ -538,7 +538,7 @@ def CheckConfig():
     # ==
     if c.CheckLibWithHeader('Qt5Gui', ['QtGui/QWindow.h'], 'C++') :
         CONFIG['has_qt5'] = True
-        CONFIG['qt5_libs'] = ['Qt5Core', 'Qt5Qui']
+        CONFIG['qt5_libs'] = ['Qt5Core', 'Qt5Gui', 'Qt5Widgets']
     else:
         CONFIG['has_qt5'] = False
         CONFIG['qt5_libs'] = []

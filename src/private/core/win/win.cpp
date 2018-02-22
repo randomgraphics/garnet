@@ -1,5 +1,8 @@
 #include "pch.h"
 #include "windowMsw.h"
+#ifdef HAS_QT5
+#include "windowQt.h"
+#endif
 
 namespace GN { namespace win
 {
@@ -31,7 +34,6 @@ namespace GN { namespace win
         void minimize() {}
         void moveTo( int, int ) {}
         void setClientSize( size_t, size_t ) {}
-        void repaint() {}
         bool runUntilNoNewEvents(bool) { return false; }
 
         //@}
@@ -141,45 +143,4 @@ namespace GN { namespace win
 
         GN_UNGUARD;
     }
-
-    //
-    //
-    // -------------------------------------------------------------------------
-#if GN_XBOX2
-    GN_API intptr_t getMonitorByIndex( size_t ) { return (intptr_t)1; }
-#elif GN_WINPC
-    struct MonitorEnumInfo
-    {
-        HMONITOR handle;
-        size_t   targetIndex;
-        size_t   currentIndex;
-    };
-    static BOOL CALLBACK sMonitorEnumProc( HMONITOR hMonitor, HDC, LPRECT, LPARAM dwData )
-    {
-        MonitorEnumInfo * mei = (MonitorEnumInfo*)dwData;
-        if( mei->currentIndex == mei->targetIndex )
-        {
-            mei->handle = hMonitor;
-            return FALSE;
-        }
-        else
-        {
-            ++mei->currentIndex;
-            return TRUE;
-        }
-    }
-    GN_API intptr_t getMonitorByIndex( size_t i )
-    {
-        MonitorEnumInfo mei = { 0, i, 0 };
-        ::EnumDisplayMonitors( 0, 0, &sMonitorEnumProc, (LPARAM)&mei );
-        return (intptr_t)mei.handle;
-    }
-#else
-    GN_API intptr_t getMonitorByIndex( size_t )
-    {
-        GN_UNIMPL();
-        return 0;
-    }
-#endif
-
 }}

@@ -27,6 +27,35 @@ static HMONITOR sGetWindowMonitor(HWND window) {
     return monitor;
 }
 
+#if 0
+struct MonitorEnumInfo
+{
+    HMONITOR handle;
+    size_t   targetIndex;
+    size_t   currentIndex;
+};
+static BOOL CALLBACK sMonitorEnumProc( HMONITOR hMonitor, HDC, LPRECT, LPARAM dwData )
+{
+    MonitorEnumInfo * mei = (MonitorEnumInfo*)dwData;
+    if( mei->currentIndex == mei->targetIndex )
+    {
+        mei->handle = hMonitor;
+        return FALSE;
+    }
+    else
+    {
+        ++mei->currentIndex;
+        return TRUE;
+    }
+}
+static HMONITOR getMonitorByIndex( size_t i )
+{
+    MonitorEnumInfo mei = { 0, i, 0 };
+    ::EnumDisplayMonitors( 0, 0, &sMonitorEnumProc, (LPARAM)&mei );
+    return mei.handle;
+}
+#endif
+
 // *****************************************************************************
 // Initialize and shutdown
 // *****************************************************************************
@@ -220,19 +249,6 @@ void GN::win::WindowMsw::setClientSize( size_t w, size_t h )
         0, 0, // x, y
         rc.right - rc.left, rc.bottom - rc.top,
         SWP_NOMOVE | SWP_NOOWNERZORDER | SWP_NOZORDER ) );
-    GN_UNGUARD;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-void GN::win::WindowMsw::repaint()
-{
-    GN_GUARD;
-    GN_MSW_CHECK( ::RedrawWindow(
-        mWindow,
-        NULL, NULL, // rc, rgn
-        RDW_ERASE | RDW_FRAME | RDW_INTERNALPAINT | RDW_INVALIDATE | RDW_ALLCHILDREN ) );
     GN_UNGUARD;
 }
 

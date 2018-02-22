@@ -56,7 +56,6 @@ namespace GN { namespace win
         void minimize() { GN_UNIMPL_WARNING(); }
         void moveTo( int, int );
         void setClientSize( size_t, size_t );
-        void repaint();
         void run();
         bool runUntilNoNewEvents(bool blockWhenMinimized);
 

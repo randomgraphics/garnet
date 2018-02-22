@@ -13,17 +13,18 @@ namespace GN { namespace gfx
     ///
     struct DisplayMode
     {
-        enum Mode {
+        enum Mode
+        {
             WINDOWED,    ///< true windowed mode with title bar and sizeable border.
             BORDERLESS,  ///< borderless mode.
             FULL_SCREEN, ///< true/exclusive full screen mode.
         };
 
-        Mode   mode;    ///< display mode.
-        uint32 width;   ///< Screen width. 0: current display 
-        uint32 height;  ///< Screen height.
-        uint32 depth;   ///< Color depth.
-        uint32 refrate; ///< Referesh rate.
+        Mode   mode;    ///< Display mode.
+        uint32 width;   ///< Screen width.  0 means current screen width.
+        uint32 height;  ///< Screen height. 0 means current screen height.
+        uint32 depth;   ///< Color depth.   0 means current screen color depth. FULL_SCREEN only.
+        uint32 refrate; ///< Referesh rate. 0 means current screen refresh rate. FULL_SCREEN only.
 
         ///
         /// Set display mode parameters
@@ -37,19 +38,14 @@ namespace GN { namespace gfx
     ///
     /// Msaa type
     ///
-    struct MsaaType
+    enum class MsaaType
     {
-        enum Enum
-        {
-            NONE,      ///< No MSAA
-            LOW,       ///< low quality MSAA
-            MEDIUM,    ///< medium quality MSAA
-            HIGH,      ///< high quality MSAA
-            ULTRA,     ///< ultra quality MSAA
-            NUM_TYPES, ///< number of MSAA types
-        };
-
-        GN_DEFINE_ENUM_CLASS_HELPERS( MsaaType, Enum )
+        NONE,      ///< No MSAA
+        LOW,       ///< low quality MSAA
+        MEDIUM,    ///< medium quality MSAA
+        HIGH,      ///< high quality MSAA
+        ULTRA,     ///< ultra quality MSAA
+        NUM_TYPES, ///< number of MSAA types
     };
 
     ///
@@ -237,9 +233,9 @@ namespace GN { namespace gfx
     ///
     struct DispDesc
     {
-        intptr_t displayHandle;    ///< Display handle. For X Window only.
-        intptr_t monitorHandle;    ///< Monitor handle.
-        intptr_t windowHandle;     ///< Render window handle
+        intptr_t displayHandle;  ///< Native Display handle. For X Window only.
+        intptr_t monitorHandle;  ///< Native Monitor/Screen handle.
+        intptr_t windowHandle;   ///< Native Render window handle
         uint32 width;            ///< Back buffer width
         uint32 height;           ///< Back buffer height
         uint32 depth;            ///< Back buffer color depth in bits

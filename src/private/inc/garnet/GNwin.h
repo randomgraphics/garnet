@@ -41,7 +41,6 @@ namespace GN
             virtual void minimize() = 0;
             virtual void moveTo( int x, int y ) = 0;
             virtual void setClientSize( size_t clientWidth, size_t clientHeight ) = 0;
-            virtual void repaint() = 0;
             //@}
 
             /// \name window events

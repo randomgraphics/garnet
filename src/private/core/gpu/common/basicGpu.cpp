@@ -202,13 +202,12 @@ bool GN::gfx::BasicGpu::dispInit( const GpuOptions & ro )
     } else {
         auto w = ro.displayMode.width;
         auto h = ro.displayMode.height;
-        if (ro.displayMode.mode == DisplayMode::WINDOWED)
-        {
+        if (ro.displayMode.mode == DisplayMode::WINDOWED) {
             if (0 == w) w = 1280;
             if (0 == h) h = 720;
         }
         GN::win::WindowCreationParameters wcp = {};
-        wcp.caption = "Garnet 3D"; // TODO: make it a parameter.
+        wcp.caption = "Garnet 3D"; // make it a parameter?
         wcp.display = ro.displayHandle;
         wcp.monitor = ro.monitorHandle;
         wcp.parent = ro.parentWindow;
