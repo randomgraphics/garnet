@@ -37,7 +37,7 @@ namespace GN { namespace win
         bool init( const WindowAttachingParameters & );
         void quit();
     private:
-        void clear() { mUseExternalWindow = false; mDisplay = 0; mScreen = 0; mScreenNumber = 0; mWindow = 0; }
+        void clear() { mDisplayCreated = false; mUseExternalWindow = false; m mDisplay = 0; mScreen = 0; mScreenNumber = 0; mWindow = 0; }
         //@}
 
         // ********************************
@@ -65,6 +65,7 @@ namespace GN { namespace win
         // ********************************
     private:
 
+        bool            mUseExternalDisplay;
         bool            mUseExternalWindow;
         Display       * mDisplay;
         Screen        * mScreen;
@@ -73,7 +74,7 @@ namespace GN { namespace win
 
         bool createExternalRenderWindow( const WindowAttachingParameters & );
         bool createInternalRenderWindow( const WindowCreationParameters & );
-        bool initDisplay( Display * display );
+        bool initDisplay( intptr_t handle );
     };
 }}
 

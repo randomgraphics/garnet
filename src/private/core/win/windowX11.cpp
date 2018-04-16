@@ -75,9 +75,9 @@ static int sGetScreenNumber( Display * disp, Screen * screen )
 bool GN::win::WindowX11::init(const WindowAttachingParameters & wap) {
     GN_GUARD;
 
-    if( !initDisplay( (Display*)wap.display ) ) return false;
+    if( !initDisplay( wap.display ) ) return false;
 
-    if( !sIsWindow( (Display*)wap.display, (::Window)wap.window ) )
+    if( !sIsWindow( mDisplay, (::Window)wap.window ) )
     {
         GN_ERROR(sLogger)( "External render window is invalid!" );
         return false;
@@ -99,7 +99,6 @@ bool GN::win::WindowX11::init(const WindowAttachingParameters & wap) {
 bool GN::win::WindowX11::init(const WindowCreationParameters & wcp) {
     GN_GUARD;
 
-    auto display = (Display*)wcp.display;
     auto monitor = (Screen*)wcp.monitor;
     auto parent  = (::Window)wcp.parent;
     auto width = wcp.clientWidth;
@@ -109,10 +108,10 @@ bool GN::win::WindowX11::init(const WindowCreationParameters & wcp) {
     mScreen = monitor;
 
     // initialize display
-    if( !initDisplay(display) ) return false;
+    if( !initDisplay(wcp.display) ) return false;
 
     // get screen number
-    mScreenNumber = sGetScreenNumber( display, monitor );
+    mScreenNumber = sGetScreenNumber( mDisplay, monitor );
     if( mScreenNumber < 0 ) return false;
 
     // Choose an appropriate visual
@@ -122,7 +121,7 @@ bool GN::win::WindowX11::init(const WindowCreationParameters & wcp) {
         GLX_STENCIL_SIZE, 8,
         None
     };
-    AutoXPtr<XVisualInfo> vi( glXChooseVisual( display, mScreenNumber, attributeList ) );
+    AutoXPtr<XVisualInfo> vi( glXChooseVisual( mDisplay, mScreenNumber, attributeList ) );
     if( 0 == vi )
     {
         GN_ERROR(sLogger)( "Cannot find visual with desired attributes." );
@@ -132,7 +131,7 @@ bool GN::win::WindowX11::init(const WindowCreationParameters & wcp) {
     // determine parent window
     if( 0 == parent )
     {
-        parent = XDefaultRootWindow( display );
+        parent = XDefaultRootWindow( mDisplay );
         if( 0 == parent )
         {
             GN_ERROR(sLogger)( "Fail to get default root window." );
@@ -141,7 +140,7 @@ bool GN::win::WindowX11::init(const WindowCreationParameters & wcp) {
     }
 
     // create a colormap
-    Colormap cmap = XCreateColormap( display, parent, vi->visual, AllocNone );
+    Colormap cmap = XCreateColormap( mDisplay, parent, vi->visual, AllocNone );
     if( 0 == cmap )
     {
         GN_ERROR(sLogger)( "Cannot allocate colormap." );
@@ -152,12 +151,12 @@ bool GN::win::WindowX11::init(const WindowCreationParameters & wcp) {
     XSetWindowAttributes swa;
     swa.colormap = cmap;
     swa.event_mask = ExposureMask | StructureNotifyMask;
-    swa.border_pixel = BlackPixel( display, mScreenNumber );
-    swa.background_pixel = BlackPixel( display, mScreenNumber );
+    swa.border_pixel = BlackPixel( mDisplay, mScreenNumber );
+    swa.background_pixel = BlackPixel( mDisplay, mScreenNumber );
 
     // create the render window.
     mWindow = XCreateWindow(
-        display,
+        mDisplay,
         parent,
         0, 0, width, height, // position and size
         0, // border
@@ -173,12 +172,12 @@ bool GN::win::WindowX11::init(const WindowCreationParameters & wcp) {
     }
 
     // map window
-    GN_X_CHECK_RETURN( XSelectInput( display, mWindow, StructureNotifyMask ), false );
+    GN_X_CHECK_RETURN( XSelectInput( mDisplay, mWindow, StructureNotifyMask ), false );
     XEvent e;
-    XMapWindow( display, mWindow );
+    XMapWindow( mDisplay, mWindow );
     for(;;)
     {
-        XNextEvent( display, &e );
+        XNextEvent( mDisplay, &e );
         if( e.type == MapNotify && e.xmap.window == mWindow ) break;
     }
 
@@ -199,15 +198,17 @@ void GN::win::WindowX11::quit()
     GN_GUARD;
 
     // Destroy window
-    if( mWindow && !mUseExternalWindow )
-    {
+    if( mWindow && !mUseExternalWindow ) {
         GN_ASSERT( mDisplay );
         XDestroyWindow( mDisplay, mWindow );
         mWindow = 0;
     }
 
     // clear display
-    mDisplay = 0;
+    if (mDisplay && !mUseExternalDisplay) {
+        XCloseDisplay(mDisplay);
+        mDisplay = 0;
+    }
 
     GN_UNGUARD;
 }
@@ -242,12 +243,26 @@ GN::Vector2<uint32_t> GN::win::WindowX11::getClientSize() const
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::win::WindowX11::initDisplay( Display * display )
+bool GN::win::WindowX11::initDisplay( intptr_t handle )
 {
     GN_GUARD;
 
-    // store display pointer
-    mDisplay = display;
+    if( 0 == handle )
+    {
+        StrA dispStr = getEnv("DISPLAY");
+        mDisplay = XOpenDisplay( dispStr.rawptr() );
+        if( 0 == mDisplay )
+        {
+            GN_ERROR(sLogger)( "Fail to open display '%s'.", dispStr.rawptr() );
+            return false;
+        }
+        mUseExternalDisplay = false;
+    }
+    else
+    {
+        mDisplay = (Display*)handle;
+        mUseExternalDisplay = true;
+    }
 
 #if GN_ENABLE_DEBUG
     // Trun on synchronous behavior for debug build.
