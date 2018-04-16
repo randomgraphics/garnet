@@ -37,7 +37,7 @@ namespace GN { namespace win
         bool init( const WindowAttachingParameters & );
         void quit();
     private:
-        void clear() { mDisplayCreated = false; mUseExternalWindow = false; m mDisplay = 0; mScreen = 0; mScreenNumber = 0; mWindow = 0; }
+        void clear() { mUseExternalDisplay = false; mUseExternalWindow = false; mDisplay = 0; mScreen = 0; mScreenNumber = 0; mWindow = 0; }
         //@}
 
         // ********************************
@@ -51,12 +51,12 @@ namespace GN { namespace win
         intptr_t getWindowHandle() const { return (intptr_t)mWindow; }
         intptr_t getModuleHandle() const { return (intptr_t)1; }
         Vector2<uint32_t> getClientSize() const;
-        void show();
-        void hide();
+        void show() { GN_UNIMPL_WARNING(); }
+        void hide() { GN_UNIMPL_WARNING(); }
         void minimize() { GN_UNIMPL_WARNING(); }
-        void moveTo( int, int );
-        void setClientSize( size_t, size_t );
-        bool runUntilNoNewEvents(bool blockWhenMinimized);
+        void moveTo( int, int ) { GN_UNIMPL_WARNING(); }
+        void setClientSize( size_t, size_t ) { GN_UNIMPL_WARNING(); }
+        bool runUntilNoNewEvents(bool) { return true; } // do nothing
 
         //@}
 

@@ -9,23 +9,6 @@ static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.OGL");
 // local functions
 // ****************************************************************************
 
-//
-//
-// -----------------------------------------------------------------------------
-static int sGetScreenNumber( Display * disp, Screen * screen )
-{
-    GN_ASSERT( disp && screen );
-
-    int n = ScreenCount(disp);
-    for( int i = 0; i < n; ++i )
-    {
-        if( screen == ScreenOfDisplay( disp, i ) ) return i;
-    }
-
-    GN_ERROR(sLogger)( "Fail to get screen number out of screen pointer." );
-    return -1;
-}
-
 // *****************************************************************************
 // device management
 // *****************************************************************************
@@ -52,7 +35,7 @@ bool GN::gfx::OGLGpu::dispInit()
     XVisualInfo vi;
     vi.visual = wa.visual;
     vi.visualid = wa.visual->visualid;
-    vi.screen = sGetScreenNumber(disp, (Screen*)rw.getMonitorHandle());
+    vi.screen = rw.getMonitorHandle();
     vi.depth = wa.depth;
     vi.c_class = wa.visual->c_class;
     vi.red_mask = wa.visual->red_mask;

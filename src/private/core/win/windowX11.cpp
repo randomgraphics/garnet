@@ -65,6 +65,25 @@ static int sGetScreenNumber( Display * disp, Screen * screen )
     return -1;
 }
 
+///
+/// Determine monitor handle that render window should stay in.
+// ----------------------------------------------------------------------------
+static Screen *
+sDetermineScreen( Display * disp, intptr_t handle )
+{
+    if( 0 == handle )
+    {
+        Screen * scr = DefaultScreenOfDisplay( disp );
+        GN_ASSERT( scr );
+        return scr;
+    }
+    else
+    {
+        // TODO: verify that screen pointer is valid.
+        return (Screen*)handle;
+    }
+}
+
 // *****************************************************************************
 // public functions
 // *****************************************************************************
@@ -99,19 +118,18 @@ bool GN::win::WindowX11::init(const WindowAttachingParameters & wap) {
 bool GN::win::WindowX11::init(const WindowCreationParameters & wcp) {
     GN_GUARD;
 
-    auto monitor = (Screen*)wcp.monitor;
+    // initialize display
+    if( !initDisplay(wcp.display) ) return false;
+
+    // initialize monitor
+    mScreen = sDetermineScreen(mDisplay, wcp.monitor);
+
     auto parent  = (::Window)wcp.parent;
     auto width = wcp.clientWidth;
     auto height = wcp.clientHeight;
 
-    // remember screen/monitor pointer
-    mScreen = monitor;
-
-    // initialize display
-    if( !initDisplay(wcp.display) ) return false;
-
     // get screen number
-    mScreenNumber = sGetScreenNumber( mDisplay, monitor );
+    mScreenNumber = sGetScreenNumber( mDisplay, mScreen );
     if( mScreenNumber < 0 ) return false;
 
     // Choose an appropriate visual
@@ -273,6 +291,7 @@ bool GN::win::WindowX11::initDisplay( intptr_t handle )
     XSetErrorHandler( &sXErrorHandler );
 
     // success
+    GN_ASSERT(mDisplay);
     return true;
 
     GN_UNGUARD;
