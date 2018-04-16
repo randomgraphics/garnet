@@ -3,6 +3,9 @@
 
 #if GN_POSIX
 
+#include <X11/Xlib.h>
+#include <GL/glx.h>
+
 static GN::Logger * sLogger = GN::getLogger("GN.core.win");
 
 // *****************************************************************************
@@ -72,17 +75,15 @@ static int sGetScreenNumber( Display * disp, Screen * screen )
 bool GN::win::WindowX11::init(const WindowAttachingParameters & wap) {
     GN_GUARD;
 
-    mGpu = gpu;
+    if( !initDisplay( (Display*)wap.display ) ) return false;
 
-    if( !initDisplay( display ) ) return false;
-
-    if( !sIsWindow( display, externalWindow ) )
+    if( !sIsWindow( (Display*)wap.display, (::Window)wap.window ) )
     {
         GN_ERROR(sLogger)( "External render window is invalid!" );
         return false;
     }
 
-    mWindow = externalWindow;
+    mWindow = (::Window)wap.window;
     mUseExternalWindow = true;
 
     // success
@@ -97,6 +98,12 @@ bool GN::win::WindowX11::init(const WindowAttachingParameters & wap) {
 // -----------------------------------------------------------------------------
 bool GN::win::WindowX11::init(const WindowCreationParameters & wcp) {
     GN_GUARD;
+
+    auto display = (Display*)wcp.display;
+    auto monitor = (Screen*)wcp.monitor;
+    auto parent  = (::Window)wcp.parent;
+    auto width = wcp.clientWidth;
+    auto height = wcp.clientHeight;
 
     // remember screen/monitor pointer
     mScreen = monitor;
@@ -123,10 +130,10 @@ bool GN::win::WindowX11::init(const WindowCreationParameters & wcp) {
     }
 
     // determine parent window
-    if( 0 == parentWindow )
+    if( 0 == parent )
     {
-        parentWindow = XDefaultRootWindow( display );
-        if( 0 == parentWindow )
+        parent = XDefaultRootWindow( display );
+        if( 0 == parent )
         {
             GN_ERROR(sLogger)( "Fail to get default root window." );
             return false;
@@ -134,7 +141,7 @@ bool GN::win::WindowX11::init(const WindowCreationParameters & wcp) {
     }
 
     // create a colormap
-    Colormap cmap = XCreateColormap( display, parentWindow, vi->visual, AllocNone );
+    Colormap cmap = XCreateColormap( display, parent, vi->visual, AllocNone );
     if( 0 == cmap )
     {
         GN_ERROR(sLogger)( "Cannot allocate colormap." );
@@ -151,7 +158,7 @@ bool GN::win::WindowX11::init(const WindowCreationParameters & wcp) {
     // create the render window.
     mWindow = XCreateWindow(
         display,
-        parentWindow,
+        parent,
         0, 0, width, height, // position and size
         0, // border
         vi->depth,
@@ -223,17 +230,9 @@ GN::Vector2<uint32_t> GN::win::WindowX11::getClientSize() const
     size.y = (uint32_t)attr.height;
 
     // success
-    return true;
+    return size;
 
     GN_UNGUARD;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-void GN::win::WindowX11::handleSizeMove()
-{
-    GN_UNIMPL_WARNING();
 }
 
 // *****************************************************************************

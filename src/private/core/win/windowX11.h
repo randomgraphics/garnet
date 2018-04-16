@@ -37,7 +37,7 @@ namespace GN { namespace win
         bool init( const WindowAttachingParameters & );
         void quit();
     private:
-        void clear() { mUseExternalWindow - false; mDisplay = 0; mScreen = 0; mScreenNumber = 0; mWindow = 0; }
+        void clear() { mUseExternalWindow = false; mDisplay = 0; mScreen = 0; mScreenNumber = 0; mWindow = 0; }
         //@}
 
         // ********************************
@@ -56,7 +56,6 @@ namespace GN { namespace win
         void minimize() { GN_UNIMPL_WARNING(); }
         void moveTo( int, int );
         void setClientSize( size_t, size_t );
-        void run();
         bool runUntilNoNewEvents(bool blockWhenMinimized);
 
         //@}
@@ -70,10 +69,10 @@ namespace GN { namespace win
         Display       * mDisplay;
         Screen        * mScreen;
         int             mScreenNumber;
-        Window          mWindow;
+        ::Window        mWindow;
 
         bool createExternalRenderWindow( const WindowAttachingParameters & );
-        bool createInternalRenderWindow( cosnt WindowCreationParameters & );
+        bool createInternalRenderWindow( const WindowCreationParameters & );
         bool initDisplay( Display * display );
     };
 }}
