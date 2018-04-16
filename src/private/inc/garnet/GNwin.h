@@ -109,11 +109,6 @@ namespace GN
         /// Create a wrapper class on top of existing native window handle.
         ///
         GN_API Window * attachToExistingWindow( const WindowAttachingParameters & );
-
-        ///
-        /// Get monitor handle by index. 0 is always primary screen. Return 0 for invalid index.
-        ///
-        GN_API intptr_t getMonitorByIndex( size_t );
     }
 }
 

@@ -318,9 +318,9 @@ function LookForWindowsSDK($version)
 if( "mswin" -eq $env:GN_BUILD_TARGET_OS )
 {
     ""
-    "==============================="
+    "============================="
     "Setup Windows SDK environment"
-    "==============================="
+    "============================="
     ""
     $winsdk_root = LookForWindowsSDK("8.1");
     if( "" -eq $winsdk_root )
@@ -356,9 +356,9 @@ if( "mswin" -eq $env:GN_BUILD_TARGET_OS )
 if( "mswin" -eq $env:GN_BUILD_TARGET_OS )
 {
     ""
-    "==============================="
+    "=============================="
     "Setup Vulkan build environment"
-    "==============================="
+    "=============================="
     ""
 
     if( $env:VULKAN_SDK -and ( test-path $env:VULKAN_SDK ) )
@@ -387,9 +387,9 @@ if( "mswin" -eq $env:GN_BUILD_TARGET_OS )
 if( "mswin" -eq $env:GN_BUILD_TARGET_OS )
 {
     ""
-    "==============================="
+    "=========================="
     "Setup Qt build environment"
-    "==============================="
+    "=========================="
     ""
     # TODO: search for Qt
     $qt=""

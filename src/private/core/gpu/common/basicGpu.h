@@ -71,6 +71,8 @@ namespace GN { namespace gfx
 
         GN::win::Window & getRenderWindow() const { GN_ASSERT(mWindow); return *mWindow; }
 
+        intptr_t getRenderWindowHandle() const { return mWindow ? mWindow->getWindowHandle() : 0; }
+
         void handleRenderWindowSizeMove();
 
     private:

@@ -49,7 +49,7 @@ namespace GN { namespace win
         //@{
         intptr_t getDisplayHandle() const { return (intptr_t)1; }
         intptr_t getMonitorHandle() const;
-        intptr_t getWindowHandle() const { return (intptr_t)mWindow->handle(); }
+        intptr_t getWindowHandle() const { return (intptr_t)mWindow->winId(); }
         intptr_t getModuleHandle() const { return (intptr_t)1; }
         Vector2<uint32_t> getClientSize() const;
         void show();

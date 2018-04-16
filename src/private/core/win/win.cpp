@@ -93,7 +93,13 @@ namespace GN { namespace win
     {
         GN_GUARD;
 
-#if GN_XBOX2
+#ifdef HAS_QT5
+
+        AutoObjPtr<WindowQt> p( new WindowQt );
+        if( !p->init( wcp ) ) return 0;
+        return p.detach();
+
+#elif GN_XBOX2
 
         GN_UNUSED_PARAM( wcp );
         return new FakeWindow;
@@ -122,7 +128,13 @@ namespace GN { namespace win
     {
         GN_GUARD;
 
-#if GN_XBOX2
+#ifdef HAS_QT5
+
+        AutoObjPtr<WindowQt> p( new WindowQt );
+        if( !p->init( wap ) ) return 0;
+        return p.detach();
+
+#elif GN_XBOX2
 
         GN_UNUSED_PARAM( wap );
         return new FakeWindow;

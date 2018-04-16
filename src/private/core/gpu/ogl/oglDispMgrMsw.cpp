@@ -496,7 +496,7 @@ bool GN::gfx::OGLGpu::dispInit()
 
     GN_ASSERT( !mRenderContext && !mDeviceContext );
 
-    HWND hwnd = (HWND)getDispDesc().windowHandle;
+    HWND hwnd = (HWND)getRenderWindowHandle();
     if( !::IsWindow(hwnd) )
     {
         GN_ERROR(sLogger)( "Invalid render window handle!" );
@@ -585,7 +585,7 @@ bool GN::gfx::OGLGpu::dispInit()
     }
 
     // setup message hook
-    msInstanceMap[getRenderWindow().getWindowHandle()] = this;
+    msInstanceMap[getRenderWindowHandle()] = this;
     mHook = ::SetWindowsHookExW( WH_CALLWNDPROC, &staticHookProc, 0, GetCurrentThreadId() );
     if( 0 == mHook )
     {
@@ -608,7 +608,7 @@ void GN::gfx::OGLGpu::dispQuit()
 
     // remove message hook
     if( mHook ) ::UnhookWindowsHookEx( mHook ), mHook = 0;
-    msInstanceMap.remove(getRenderWindow().getWindowHandle());
+    msInstanceMap.remove(getRenderWindowHandle());
 
     // restore display mode
     restoreDisplayMode();
