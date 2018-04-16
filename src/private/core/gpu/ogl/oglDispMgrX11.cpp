@@ -3,9 +3,28 @@
 
 #if GN_POSIX
 
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.OGL");
+
 // ****************************************************************************
 // local functions
 // ****************************************************************************
+
+//
+//
+// -----------------------------------------------------------------------------
+static int sGetScreenNumber( Display * disp, Screen * screen )
+{
+    GN_ASSERT( disp && screen );
+
+    int n = ScreenCount(disp);
+    for( int i = 0; i < n; ++i )
+    {
+        if( screen == ScreenOfDisplay( disp, i ) ) return i;
+    }
+
+    GN_ERROR(sLogger)( "Fail to get screen number out of screen pointer." );
+    return -1;
+}
 
 // *****************************************************************************
 // device management
@@ -20,8 +39,9 @@ bool GN::gfx::OGLGpu::dispInit()
 
     GN_ASSERT( !mRenderContext );
 
-    Display * disp = (Display*)getDispDesc().displayHandle;
-    Window win = (Window)getDispDesc().windowHandle;
+    auto & rw = getRenderWindow();
+    auto disp = (Display*)rw.getDisplayHandle();
+    auto win = (::Window)rw.getWindowHandle();
     GN_ASSERT( disp && win );
 
     // get window attributes
@@ -32,7 +52,7 @@ bool GN::gfx::OGLGpu::dispInit()
     XVisualInfo vi;
     vi.visual = wa.visual;
     vi.visualid = wa.visual->visualid;
-    vi.screen = getRenderWindow().getScreenNumber();
+    vi.screen = sGetScreenNumber(disp, (Screen*)rw.getMonitorHandle());
     vi.depth = wa.depth;
     vi.c_class = wa.visual->c_class;
     vi.red_mask = wa.visual->red_mask;
@@ -40,6 +60,7 @@ bool GN::gfx::OGLGpu::dispInit()
     vi.blue_mask = wa.visual->blue_mask;
     vi.colormap_size = wa.visual->map_entries;
     vi.bits_per_rgb = wa.visual->bits_per_rgb;
+    GN_ASSERT(vi.screen >= 0);
 
     // create a GLX context
     mRenderContext = glXCreateContext(
@@ -88,7 +109,7 @@ void GN::gfx::OGLGpu::dispQuit()
 
     if( mRenderContext )
     {
-        Display * disp = (Display*)getDispDesc().displayHandle;
+        auto disp = (Display*)getRenderWindow().getDisplayHandle();
         GN_ASSERT( disp );
         glXMakeCurrent( disp, 0, 0 );
         glXDestroyContext( disp, mRenderContext );
