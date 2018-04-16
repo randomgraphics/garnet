@@ -467,7 +467,7 @@ bool GN::util::SampleApp::checkCmdLine( int argc, const char * const argv[] )
                 if( NULL == value ) return false;
 
                 const char * MODES[] = { "f", "b", "w" };
-                mInitParam.ro.displayMode.mode = (gfx::DisplayMode::Mode)sParseStrings(a, value, MODES, _countof(MODES));
+                mInitParam.ro.displayMode.mode = (gfx::DisplayMode::Mode)sParseStrings(a, value, MODES, countof(MODES));
                 if( mInitParam.ro.displayMode.mode < 0)
                     return false;
             }

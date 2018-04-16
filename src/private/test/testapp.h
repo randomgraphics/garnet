@@ -229,7 +229,7 @@ private:
                     if( NULL == value ) return INVALID_COMMAND_LINE;
 
                     const char * MODES[] = { "w", "b", "f" };
-                    rendererOptions.displayMode.mode = (gfx::DisplayMode::Mode)parseStrings(a, value, MODES, _countof(MODES));
+                    rendererOptions.displayMode.mode = (gfx::DisplayMode::Mode)parseStrings(a, value, MODES, countof(MODES));
                     if( rendererOptions.displayMode.mode < 0)
                         return INVALID_COMMAND_LINE;
                 }

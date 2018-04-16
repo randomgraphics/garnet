@@ -127,7 +127,7 @@ namespace calltrace
             wchar_t ident[256] = {};
             wchar_t buf[256] = {};
 
-            for(int i = 0; i < g_level && i < _countof(ident); ++i)
+            for(int i = 0; i < g_level && i < countof(ident); ++i)
             {
                 ident[i] = L' ';
             }
