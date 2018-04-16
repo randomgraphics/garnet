@@ -447,7 +447,7 @@ bool GN::d3d11::D3D11Application::createDevice()
                 };
             D3D11_INFO_QUEUE_FILTER filter;
             memset( &filter, 0, sizeof(filter) );
-            filter.DenyList.NumIDs = _countof(denied);
+            filter.DenyList.NumIDs = (uint32_t)countof(denied);
             filter.DenyList.pIDList = denied;
             mInfoQueue->AddStorageFilterEntries( &filter );
         }

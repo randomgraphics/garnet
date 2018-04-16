@@ -15,7 +15,10 @@
 
 #include <fbxsdk/fbxsdk_def.h>
 
-#if defined(FBXSDK_COMPILER_MSC)
+#if 1
+	#include <string>
+	#define SIZE_OF_STDSTRING sizeof(std::string)
+#elif defined(FBXSDK_COMPILER_MSC)
 	#if defined(FBXSDK_CPU_32)
 		#if _MSC_VER <= 1600
 			#define SIZE_OF_STDSTRING 32

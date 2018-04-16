@@ -318,9 +318,9 @@ function LookForWindowsSDK($version)
 if( "mswin" -eq $env:GN_BUILD_TARGET_OS )
 {
     ""
-    "==============================="
+    "============================="
     "Setup Windows SDK environment"
-    "==============================="
+    "============================="
     ""
     $winsdk_root = LookForWindowsSDK("8.1");
     if( "" -eq $winsdk_root )
@@ -356,9 +356,9 @@ if( "mswin" -eq $env:GN_BUILD_TARGET_OS )
 if( "mswin" -eq $env:GN_BUILD_TARGET_OS )
 {
     ""
-    "==============================="
+    "=============================="
     "Setup Vulkan build environment"
-    "==============================="
+    "=============================="
     ""
 
     if( $env:VULKAN_SDK -and ( test-path $env:VULKAN_SDK ) )
@@ -380,6 +380,36 @@ if( "mswin" -eq $env:GN_BUILD_TARGET_OS )
     }
 }
 
+# ==============================================================================
+# setup Qt build environment
+# ==============================================================================
+
+if( "mswin" -eq $env:GN_BUILD_TARGET_OS )
+{
+    ""
+    "=========================="
+    "Setup Qt build environment"
+    "=========================="
+    ""
+    # TODO: search for Qt
+    $qt=""
+    if( (test-path "C:\Qt\5.10.0\msvc2017_64") -and ("x64" -eq $env:GN_BUILD_TARGET_CPU ) )
+    {
+        "Qt runtime found: C:\Qt\5.10.0\msvc2017_64"
+        $qt = "C:\Qt\5.10.0\msvc2017_64"
+    }
+    else
+    {
+        warn "No Qt runtime found."
+    }
+
+    if( "" -ne $qt )
+    {
+        ${env:INCLUDE} = "${env:INCLUDE};$qt\Include"
+        ${env:LIB} = "${env:LIB};$qt\Lib"
+        ${env:Path} = "${env:Path};$qt\Bin"
+    }
+}
 
 # ==============================================================================
 # setup Xbox One build environment

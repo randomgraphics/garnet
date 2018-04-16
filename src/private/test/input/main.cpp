@@ -36,6 +36,13 @@ class InputTest
         return true;
     }
 
+    void RepainWindow() {
+        // ::RedrawWindow(
+        //     mWindow,
+        //     NULL, NULL, // rc, rgn
+        //     RDW_ERASE | RDW_FRAME | RDW_INTERNALPAINT | RDW_INVALIDATE | RDW_ALLCHILDREN );
+    }
+
     /*LRESULT winProc( HWND hwnd, UINT msg, WPARAM wp, LPARAM lp )
     {
         switch(msg)
@@ -77,7 +84,7 @@ class InputTest
     void onKeyPress( GN::input::KeyEvent ke )
     {
         mLastKeyEvent = ke;
-        mWin->repaint();
+        RepainWindow();
         if( !ke.status.down )
         {
             if( GN::input::KeyCode::ESCAPE == ke.code ) mDone = true;
@@ -90,7 +97,7 @@ class InputTest
 
     void onAxisMove( GN::input::Axis, int  )
     {
-        mWin->repaint();
+        RepainWindow();
     }
 
 public:

@@ -6,6 +6,8 @@
 /// \author  chenlee (2005.10.1)
 // *****************************************************************************
 
+#include <garnet/GNwin.h>
+
 ///
 /// Rest-in-peace macro
 ///
@@ -46,6 +48,7 @@ namespace GN { namespace gfx
     private :
         void clear()
         {
+            dispClear();
             contextClear();
             miscClear();
         }
@@ -59,12 +62,31 @@ namespace GN { namespace gfx
 
         //@{
 
-     protected:
+    public:
 
-        ///
-        /// Called by sub class to respond to render window resizing/moving
-        ///
-        virtual void handleRenderWindowSizeMove() = 0;
+        virtual const GpuOptions & getOptions() const { return mOptions; }
+        virtual const DispDesc   & getDispDesc() const { return mDispDesc; }
+
+    protected:
+
+        GN::win::Window & getRenderWindow() const { GN_ASSERT(mWindow); return *mWindow; }
+
+        intptr_t getRenderWindowHandle() const { return mWindow ? mWindow->getWindowHandle() : 0; }
+
+        void handleRenderWindowSizeMove();
+
+    private:
+        bool dispInit( const GpuOptions & );
+        void dispQuit();
+        void dispClear() { mWindow = 0; mOldMonitor = 0; mOldWindowSize.set(0, 0); }
+
+    private:
+
+        GpuOptions        mOptions;
+        DispDesc          mDispDesc;
+        GN::win::Window * mWindow;
+        intptr_t          mOldMonitor;
+        Vector2<uint32_t> mOldWindowSize;
 
         //@}
 
@@ -137,6 +159,7 @@ namespace GN { namespace gfx
 
     public:
 
+        virtual void         processRenderWindowMessages( bool blockWhileMinimized ) { mWindow->runUntilNoNewEvents(blockWhileMinimized); }
         virtual GpuSignals & getSignals() { return mSignals; }
         virtual void         getBackBufferContent( BackBufferContent & );
         virtual void         setUserData( const Guid & id, const void * data, uint32 length );

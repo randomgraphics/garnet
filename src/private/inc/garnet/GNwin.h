@@ -13,8 +13,6 @@ namespace GN
     ///
     namespace win
     {
-        typedef Delegate2<void,void*,bool&> WindowEventHandler; ///< Window event handler.
-
         ///
         /// General window class
         ///
@@ -32,7 +30,7 @@ namespace GN
             virtual intptr_t getMonitorHandle() const = 0;
             virtual intptr_t getWindowHandle() const = 0;
             virtual intptr_t getModuleHandle() const = 0;
-            virtual Vector2<size_t> getClientSize() const = 0;
+            virtual Vector2<uint32_t> getClientSize() const = 0;
 
             //@}
 
@@ -43,31 +41,17 @@ namespace GN
             virtual void minimize() = 0;
             virtual void moveTo( int x, int y ) = 0;
             virtual void setClientSize( size_t clientWidth, size_t clientHeight ) = 0;
-            virtual void repaint() = 0;
             //@}
 
             /// \name window events
             //@{
 
             ///
-            /// Run the application until the window is closed.
-            ///
-            virtual void run() = 0;
-
-            ///
             /// Run the application while there's events in event queue.
             ///
             /// Returns false when the Window system received request to quit the application.
             ///
-            virtual bool runUntilNoNewEvents() = 0;
-
-            ///
-            /// Step one event. Block the application if there's no event.
-            ///
-            virtual void stepOneEvent() = 0;
-
-            virtual void attachEventHandler( const StrA & eventName, const WindowEventHandler & ) = 0;
-            virtual void removeEventHandler( const StrA & eventName, const WindowEventHandler & ) = 0;
+            virtual bool runUntilNoNewEvents( bool blockCallerWhenMinimized = false ) = 0;
 
             //@}
         };
@@ -75,16 +59,24 @@ namespace GN
         ///
         /// Window creation parameters
         ///
-        struct WindowCreationParams
+        struct WindowCreationParameters
         {
-            StrA   caption;      ///< window title text.
-            intptr_t parent;       ///< Parent window
-            size_t clientWidth;  ///< client width. 0 means default width
-            size_t clientHeight; ///< client height. 0 means default height
-            bool   hasBorder;    ///< has border or not
-            bool   hasTitleBar;  ///< has title bar or not
-            bool   topMost;      ///< top-most(always on top) or not
-            bool   closebox;     ///< close box is enabled.
+            StrA     caption;      ///< window title text.
+            intptr_t display;      ///< display handle. X windows only. 0 means using default display handle.
+            intptr_t monitor;      ///< Monitor handle. 0 means default monitor.
+            intptr_t parent;       ///< Parent window.
+            size_t   clientWidth;  ///< client width. 0 means current display width.
+            size_t   clientHeight; ///< client height. 0 means current display height.
+            bool     hasBorder;    ///< has border or not
+            bool     hasTitleBar;  ///< has title bar or not
+            bool     topMost;      ///< top-most(always on top) or not
+            bool     closebox;     ///< close box is enabled.
+        };
+
+        struct WindowAttachingParameters
+        {
+            intptr_t display; ///< display handle. X windows only. Ingored on other platforms.
+            intptr_t window;  ///< the external window handle.
         };
 
         ///
@@ -92,38 +84,31 @@ namespace GN
         ///
         /// border, title, no parent, default size
         ///
-        extern GN_API const WindowCreationParams WCP_APPLICATION_WINDOW;
+        extern GN_API const WindowCreationParameters WCP_APPLICATION_WINDOW;
 
         ///
         /// Default parameters to create main render window.
         ///
         /// border, title, no parent, 640x480
         ///
-        extern GN_API const WindowCreationParams WCP_WINDOWED_RENDER_WINDOW;
+        extern GN_API const WindowCreationParameters WCP_WINDOWED_RENDER_WINDOW;
 
         ///
         /// Default parameters to create main render window.
         ///
         /// no border, no title, no parent, topmost, 640x480
         ///
-        extern GN_API const WindowCreationParams WCP_FULLSCREEN_RENDER_WINDOW;
+        extern GN_API const WindowCreationParameters WCP_FULLSCREEN_RENDER_WINDOW;
 
         ///
         /// Create window instance
         ///
-        GN_API Window * createWindow( const WindowCreationParams & );
+        GN_API Window * createWindow( const WindowCreationParameters & );
 
         ///
-        /// Get monitor handle by index. 0 is always primary screen. Return 0 for invalid index.
+        /// Create a wrapper class on top of existing native window handle.
         ///
-        GN_API intptr_t getMonitorByIndex( size_t );
-
-        ///
-        /// Process windows messages. No effects on platform other than MS Windows.
-        ///
-        /// \return Returns false, when the Window system receives quit request.
-        ///
-        GN_API bool processWindowMessages( intptr_t window, bool blockWhileMinized );
+        GN_API Window * attachToExistingWindow( const WindowAttachingParameters & );
     }
 }
 

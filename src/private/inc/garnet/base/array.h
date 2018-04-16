@@ -345,6 +345,17 @@ namespace GN
             mCount = 0;
         }
 
+        void moveFrom( DynaArray & other )
+        {
+            sDestroyAll( mElements, mCount );
+            mCapacity = other.mCapacity;
+            mElements = other.mElements;
+            mCount = other.mCount;
+            other.mCapacity = 0;
+            other.mElements = 0;
+            other.mCount = 0;
+        }
+
         bool copyFrom( const DynaArray & other )
         {
             if( !doReserve( other.mCount ) ) return false;
@@ -564,6 +575,11 @@ namespace GN
         DynaArray( const DynaArray & other ) : mElements(0), mCount(0), mCapacity(0) { copyFrom( other ); }
 
         ///
+        /// move constructor
+        ///
+        DynaArray( DynaArray && other ) : mElements(0), mCount(0), mCapacity(0) { moveFrom( other ); }
+
+        ///
         /// destructor
         ///
         ~DynaArray() { sDestroyAll( mElements, mCount ); }
@@ -580,7 +596,7 @@ namespace GN
         T       * begin() { return mElements; }
         SIZE_TYPE capacity() const { return mCapacity; }
         void      clear() { doClear(); }
-        const T * rawptr() const { return mElements; }
+        const T * rawptr() const { return mElements; } // TODO: maybe rename it to data()?
         T       * rawptr() { return mElements; }
         bool      empty() const { return 0 == mCount; }
         const T * end() const { return mElements + mCount; }
@@ -609,6 +625,7 @@ namespace GN
         ///
         //@{
         DynaArray & operator=( const DynaArray & other ) { copyFrom(other); return *this; }
+        DynaArray & operator=( DynaArray && other ) { moveFrom(other); return *this; }
         bool        operator==( const DynaArray & other ) const { return equal(other); }
         bool        operator!=( const DynaArray & other ) const { return !equal(other); }
         T         & operator[]( SIZE_TYPE i ) { GN_ASSERT( i < mCount ); return mElements[i]; }
@@ -682,6 +699,12 @@ namespace GN
 
         //@}
     };
+
+    template <typename T, std::size_t N>
+    constexpr std::size_t countof(T const (&)[N]) noexcept
+    {
+        return N;
+    }
 }
 
 // *****************************************************************************

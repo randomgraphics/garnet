@@ -227,7 +227,7 @@ def UTIL_new_env_ex( conf ):
     # Target platform specific options
     if 'mswin' == BUILD_TARGET_OS:
         ccflags['debug']      += ['/RTCsu']
-        libs['common']        += Split('kernel32 user32 gdi32 shlwapi advapi32 shell32')
+        libs['common']        += Split('kernel32 user32 gdi32 shlwapi advapi32 shell32 ole32')
     elif 'xbox3' == BUILD_TARGET_OS:
         cppdefines['common']  += [
             '__WRL_NO_DEFAULT_LIB__',
@@ -533,6 +533,16 @@ def CheckConfig():
         CONFIG['fbx_libpath'] = {'debug' : [], 'profile' : [], 'retail' : []}
         CONFIG['fbx_libs']    = []
 
+    # ==
+    # Qt
+    # ==
+    if c.CheckLibWithHeader('Qt5Gui', ['QtGui/QWindow.h'], 'C++') :
+        CONFIG['has_qt5'] = True
+        CONFIG['qt5_libs'] = ['Qt5Core', 'Qt5Gui', 'Qt5Widgets']
+    else:
+        CONFIG['has_qt5'] = False
+        CONFIG['qt5_libs'] = []
+
     # =============
     # finish config
     # =============
@@ -579,6 +589,7 @@ class GarnetEnv2 :
         self.has_xinput       = CONFIG['has_xinput']
         self.has_xinput2      = CONFIG['has_xinput2']
         self.has_xnamath      = CONFIG['has_xnamath']
+        self.has_qt5          = CONFIG['has_qt5']
         
         #
         # Dictionary of known targets that are created by NewTarget method
@@ -737,6 +748,7 @@ class GarnetEnv2 :
         libs += CONFIG['fbx_libs']
         libs += CONFIG['vk_libs']
         libs += CONFIG['iconv_lib']
+        libs += CONFIG['qt5_libs']
         if 'posix' == BUILD_TARGET_OS or 'darwin' == BUILD_TARGET_OS:
             libs += ['X11']
         dbg = ( BUILD_VARIANT == "debug" )

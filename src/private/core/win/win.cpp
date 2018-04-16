@@ -1,5 +1,9 @@
 #include "pch.h"
 #include "windowMsw.h"
+#include "windowX11.h"
+#ifdef HAS_QT5
+#include "windowQt.h"
+#endif
 
 namespace GN { namespace win
 {
@@ -25,18 +29,13 @@ namespace GN { namespace win
         intptr_t getMonitorHandle() const { return (intptr_t)1; }
         intptr_t getWindowHandle() const { return (intptr_t)1; }
         intptr_t getModuleHandle() const { return (intptr_t)1; }
-        Vector2<size_t> getClientSize() const { return Vector2<size_t>(640,480); }
+        Vector2<uint32_t> getClientSize() const { return Vector2<uint32_t>(640,480); }
         void show() {}
         void hide() {}
         void minimize() {}
         void moveTo( int, int ) {}
         void setClientSize( size_t, size_t ) {}
-        void repaint() {}
-        void run() {}
-        bool runUntilNoNewEvents() { return false; }
-        void stepOneEvent() {}
-        void attachEventHandler( const StrA &, const WindowEventHandler & ) {}
-        void removeEventHandler( const StrA &, const WindowEventHandler & ) {}
+        bool runUntilNoNewEvents(bool) { return false; }
 
         //@}
 
@@ -55,7 +54,7 @@ namespace GN { namespace win
     // Public functions
     // *************************************************************************
 
-    GN_API const WindowCreationParams WCP_APPLICATION_WINDOW =
+    GN_API const WindowCreationParameters WCP_APPLICATION_WINDOW =
     {
         StrA("Garnet Application"),
         0,     // no parent
@@ -66,7 +65,7 @@ namespace GN { namespace win
         true,  // has close box
     };
 
-    GN_API const WindowCreationParams WCP_WINDOWED_RENDER_WINDOW =
+    GN_API const WindowCreationParameters WCP_WINDOWED_RENDER_WINDOW =
     {
         StrA("Garnet Application"),
         0, // no parent
@@ -77,7 +76,7 @@ namespace GN { namespace win
         false, // no close box
     };
 
-    GN_API const WindowCreationParams WCP_FULLSCREEN_RENDER_WINDOW =
+    GN_API const WindowCreationParameters WCP_FULLSCREEN_RENDER_WINDOW =
     {
         StrA(""),
         0, // no parent
@@ -91,11 +90,17 @@ namespace GN { namespace win
     //
     //
     // -------------------------------------------------------------------------
-    GN_API Window * createWindow( const WindowCreationParams & wcp )
+    GN_API Window * createWindow( const WindowCreationParameters & wcp )
     {
         GN_GUARD;
 
-#if GN_XBOX2
+#ifdef HAS_QT5
+
+        AutoObjPtr<WindowQt> p( new WindowQt );
+        if( !p->init( wcp ) ) return 0;
+        return p.detach();
+
+#elif GN_XBOX2
 
         GN_UNUSED_PARAM( wcp );
         return new FakeWindow;
@@ -103,6 +108,12 @@ namespace GN { namespace win
 #elif GN_WINPC
 
         AutoObjPtr<WindowMsw> p( new WindowMsw );
+        if( !p->init( wcp ) ) return 0;
+        return p.detach();
+
+#elif GN_POSIX
+
+        AutoObjPtr<WindowX11> p( new WindowX11 );
         if( !p->init( wcp ) ) return 0;
         return p.detach();
 
@@ -120,76 +131,35 @@ namespace GN { namespace win
     //
     //
     // -------------------------------------------------------------------------
-#if GN_XBOX2
-    GN_API intptr_t getMonitorByIndex( size_t ) { return (intptr_t)1; }
+    GN_API Window * attachToExistingWindow( const WindowAttachingParameters & wap )
+    {
+        GN_GUARD;
+
+#ifdef HAS_QT5
+
+        AutoObjPtr<WindowQt> p( new WindowQt );
+        if( !p->init( wap ) ) return 0;
+        return p.detach();
+
+#elif GN_XBOX2
+
+        GN_UNUSED_PARAM( wap );
+        return new FakeWindow;
+
 #elif GN_WINPC
-    struct MonitorEnumInfo
-    {
-        HMONITOR handle;
-        size_t   targetIndex;
-        size_t   currentIndex;
-    };
-    static BOOL CALLBACK sMonitorEnumProc( HMONITOR hMonitor, HDC, LPRECT, LPARAM dwData )
-    {
-        MonitorEnumInfo * mei = (MonitorEnumInfo*)dwData;
-        if( mei->currentIndex == mei->targetIndex )
-        {
-            mei->handle = hMonitor;
-            return FALSE;
-        }
-        else
-        {
-            ++mei->currentIndex;
-            return TRUE;
-        }
-    }
-    GN_API intptr_t getMonitorByIndex( size_t i )
-    {
-        MonitorEnumInfo mei = { 0, i, 0 };
-        ::EnumDisplayMonitors( 0, 0, &sMonitorEnumProc, (LPARAM)&mei );
-        return (intptr_t)mei.handle;
-    }
+
+        AutoObjPtr<WindowMsw> p( new WindowMsw );
+        if( !p->init( wap ) ) return 0;
+        return p.detach();
+
 #else
-    GN_API intptr_t getMonitorByIndex( size_t )
-    {
-        GN_UNIMPL();
-        return 0;
-    }
+
+        GN_UNUSED_PARAM( wap );
+        GN_WARN(sLogger)( "No window class implementation on current platform." );
+        return new FakeWindow;
+
 #endif
 
-    //
-    //
-    // -------------------------------------------------------------------------
-#if GN_WINPC
-    GN_API bool processWindowMessages( intptr_t window, bool blockWhileMinized )
-    {
-        GN_GUARD_SLOW;
-
-        GN_ASSERT( ::IsWindow( (HWND)window ) );
-
-        MSG msg;
-        while( true )
-        {
-            if( ::PeekMessage(&msg, NULL, 0, 0, PM_REMOVE) )
-            {
-                if( WM_QUIT == msg.message )
-                {
-                    return false;
-                }
-                ::TranslateMessage( &msg );
-                ::DispatchMessage(&msg);
-            }
-            else if( ::IsIconic( (HWND)window ) && blockWhileMinized )
-            {
-                GN_TRACE(sLogger)( "Wait for window messages..." );
-                ::WaitMessage();
-            }
-            else return true; // Idle time
-        }
-
-        GN_UNGUARD_SLOW;
+        GN_UNGUARD;
     }
-#else
-    GN_API bool  processWindowMessages( intptr_t, bool ) { return false; }
-#endif
 }}

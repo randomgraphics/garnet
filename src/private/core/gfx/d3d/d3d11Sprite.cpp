@@ -138,7 +138,7 @@ public:
             { "COLOR",    0, DXGI_FORMAT_R8G8B8A8_UNORM,  FIELD_OFFSET(SpriteVertex, clr) , 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
             { "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT,    FIELD_OFFSET(SpriteVertex, tex) , 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
         };
-        GN_RETURN_FALSE_ON_HR_FAILED(dev.CreateInputLayout(elements, _countof(elements), signature->GetBufferPointer(), signature->GetBufferSize(), &mVertexBinding));
+        GN_RETURN_FALSE_ON_HR_FAILED(dev.CreateInputLayout(elements, (uint32_t)countof(elements), signature->GetBufferPointer(), signature->GetBufferSize(), &mVertexBinding));
 
         // create vertex buffer
         D3D11_BUFFER_DESC bufdesc =

@@ -1,4 +1,4 @@
-#ifndef __GN_GFX_GPU_H__
+﻿#ifndef __GN_GFX_GPU_H__
 #define __GN_GFX_GPU_H__
 // *****************************************************************************
 /// \file
@@ -13,36 +13,39 @@ namespace GN { namespace gfx
     ///
     struct DisplayMode
     {
-        uint32 width;   ///< Screen width. Zero means using current screen width. Default value is zero.
-        uint32 height;  ///< Screen height. Zero means using current screen height. Defualt value is zero.
-        uint32 depth;   ///< Color depth. Zero means using current color depth. Default value is zero.
-        uint32 refrate; ///< Referesh rate. Zero means using adapter default rate. Default value is zero.
+        enum Mode
+        {
+            WINDOWED,    ///< true windowed mode with title bar and sizeable border.
+            BORDERLESS,  ///< borderless mode.
+            FULL_SCREEN, ///< true/exclusive full screen mode.
+        };
+
+        Mode   mode;    ///< Display mode.
+        uint32 width;   ///< Screen width.  0 means current screen width.
+        uint32 height;  ///< Screen height. 0 means current screen height.
+        uint32 depth;   ///< Color depth.   0 means current screen color depth. FULL_SCREEN only.
+        uint32 refrate; ///< Referesh rate. 0 means current screen refresh rate. FULL_SCREEN only.
 
         ///
         /// Set display mode parameters
         ///
-        void set( uint32 w, uint32 h, uint32 d, uint32 r )
+        void set( Mode m, uint32 w, uint32 h, uint32 d, uint32 r )
         {
-            width = w; height = h; depth = d; refrate = r;
+            mode = m; width = w; height = h; depth = d; refrate = r;
         }
     };
 
     ///
     /// Msaa type
     ///
-    struct MsaaType
+    enum class MsaaType
     {
-        enum Enum
-        {
-            NONE,      ///< No MSAA
-            LOW,       ///< low quality MSAA
-            MEDIUM,    ///< medium quality MSAA
-            HIGH,      ///< high quality MSAA
-            ULTRA,     ///< ultra quality MSAA
-            NUM_TYPES, ///< number of MSAA types
-        };
-
-        GN_DEFINE_ENUM_CLASS_HELPERS( MsaaType, Enum )
+        NONE,      ///< No MSAA
+        LOW,       ///< low quality MSAA
+        MEDIUM,    ///< medium quality MSAA
+        HIGH,      ///< high quality MSAA
+        ULTRA,     ///< ultra quality MSAA
+        NUM_TYPES, ///< number of MSAA types
     };
 
     ///
@@ -133,7 +136,7 @@ namespace GN { namespace gfx
 
         ///
         /// Handle of external render window.
-        /// ȱʡΪ0.
+        /// 缺省为0.
         ///
         /// \note Effective only if useExternalWindow is true.
         ///
@@ -155,33 +158,16 @@ namespace GN { namespace gfx
         /// - Should be HMONITOR on MS Window or pointer to Screen structure on X Windows.
         /// - 0 means using the monitor where parent and/or render window stays in.
         ///   If monitorHandle and parent window are both zero, primary monitor will be used.
-        /// - ȱʡΪ0.
+        /// - 缺省为0.
         ///
         intptr_t monitorHandle;
 
         //@}
 
         ///
-        /// Display mode for fullscreen mode. Ignored in windowed mode.
-        ///
-        /// \note For field equals zero, current display setting will be used.
+        /// Display mode. Default value is (windowed, 0, 0, 0, 0).
         ///
         DisplayMode displayMode;
-
-        ///
-        /// Backbuffer width for windowed mode. Ignored in fullscreen mode.
-        /// Default is zero, which means using client width of render window.
-        /// If render window is also not avaiable, 640 will be used.
-        ///
-        uint32 windowedWidth;
-
-        ///
-        /// Backbuffer height for windowed mode. Ignored in fullscreen mode.
-        /// Default value is 0, which means using client height of render window.
-        /// If render window is also not avaiable, default height 480 will be used.
-        /// ȱʡΪ0.
-        ///
-        uint32 windowedHeight;
 
         ///
         /// Backbuffer MSAA type. Default value is MsaaType::NONE
@@ -190,18 +176,12 @@ namespace GN { namespace gfx
 
         ///
         /// Use external render window or not.
-        /// ȱʡΪfalse.
+        /// 缺省为false.
         ///
         bool useExternalWindow;
 
         ///
-        /// fullscreen or windowed mode.
-        /// ȱʡΪfalse.
-        ///
-        bool fullscreen;
-
-        ///
-        /// �Ƿ�ͬ��ˢ��. ȱʡΪfalse.
+        /// 是否同步刷新. 缺省为false.
         ///
         bool vsync;
 
@@ -216,7 +196,7 @@ namespace GN { namespace gfx
         //@{
 
         ///
-        /// use reference device. ȱʡΪfalse.
+        /// use reference device. 缺省为false.
         ///
         bool reference;
 
@@ -224,16 +204,6 @@ namespace GN { namespace gfx
 
         /// \name OGL only parameters
         //@{
-
-        ///
-        /// Restore display mode while render window is deactivated.
-        ///
-        /// ȱʡΪtrue.
-        ///
-        /// Note that this is a OGL only parameter. For D3D, you may use
-        /// "Enable Multi-mon Debugging" option in DirectX control panel.
-        ///
-        bool autoRestore;
 
         //@}
 
@@ -246,17 +216,13 @@ namespace GN { namespace gfx
             , renderWindow(0)
             , parentWindow(0)
             , monitorHandle(0)
-            , windowedWidth(0)
-            , windowedHeight(0)
             , msaa(MsaaType::NONE)
             , useExternalWindow(false)
-            , fullscreen(false)
             , vsync(false)
             , debug( GN_ENABLE_DEBUG )
             , reference(false)
-            , autoRestore(true)
         {
-            displayMode.set(0,0,0,0);
+            displayMode.set(DisplayMode::WINDOWED, 0, 0, 0, 0);
         }
     };
 
@@ -267,9 +233,9 @@ namespace GN { namespace gfx
     ///
     struct DispDesc
     {
-        intptr_t displayHandle;    ///< Display handle. For X Window only.
-        intptr_t monitorHandle;    ///< Monitor handle.
-        intptr_t windowHandle;     ///< Render window handle
+        intptr_t displayHandle;  ///< Native Display handle. For X Window only.
+        intptr_t monitorHandle;  ///< Native Monitor/Screen handle.
+        intptr_t windowHandle;   ///< Native Render window handle
         uint32 width;            ///< Back buffer width
         uint32 height;           ///< Back buffer height
         uint32 depth;            ///< Back buffer color depth in bits
@@ -850,7 +816,7 @@ namespace GN { namespace gfx
     };
 
     ///
-    /// ������־
+    /// 清屏标志
     ///
     enum ScreenCleanFlag
     {
@@ -895,14 +861,14 @@ namespace GN { namespace gfx
         /// Happens when render windows is resized or moved to another monitor.
         ///
         /// The 3 parameters are:
-        ///  - intptr_t monior       : monitor handle that render window stays in
+        ///  - intptr_t monior     : monitor handle that render window stays in
         ///  - uint32 clientWidth  : width of client area of render window
         ///  - uint32 clientHeight : height of client area of render window
         ///
         Signal3<void, intptr_t, uint32, uint32> rendererWindowSizeMove;
 
         ///
-        /// ���û���ͼ�ر���Ⱦ����ʱ���������������ڵĹرհ�ť���߰�ALT-F4��
+        /// 当用户试图关闭渲染窗口时被触发，如点击窗口的关闭按钮或者按ALT-F4。
         ///
         /// This signal is useful when you want your application to quit when
         /// user click close button or press ALT-F4, while using internal
@@ -921,7 +887,7 @@ namespace GN { namespace gfx
     };
 
     ///
-    /// ��Ⱦ��ģ������ӿ���
+    /// 渲染器模块的主接口类
     ///
     /// \nosubgrouping
     ///
@@ -1236,17 +1202,17 @@ namespace GN { namespace gfx
         //@{
 
         ///
-        /// ����һ֡�Ļ�ͼ����
+        /// 结束一帧的绘图操作
         ///
         virtual void present() = 0;
 
         ///
-        /// ��������
+        /// 清屏操作
         ///
-        /// \param flags ������־, see ScreenCleanFlag
-        /// \param c     ����ɫ
-        /// \param z     ���ֵ
-        /// \param s     ģ��ֵ
+        /// \param flags 清屏标志, see ScreenCleanFlag
+        /// \param c     背景色
+        /// \param z     深度值
+        /// \param s     模板值
         ///
         virtual void
         clearScreen( const Vector4f & c = Vector4f(0,0,0,1),
@@ -1311,10 +1277,10 @@ namespace GN { namespace gfx
         /// Draw line segments
         ///
         /// \param options
-        ///     ��Ⱦѡ���� DrawLineOptions��Set to 0 to use default options
+        ///     渲染选项，详见 DrawLineOptions。Set to 0 to use default options
         /// \param positions
-        ///     �����������ݣ���һϵ�е�3D������ɡ�2�������ʾһ���߶Ρ�
-        ///     ѡ�� DL_WINDOW_SPACE��Ӱ������ĺ��塣
+        ///     顶点坐标数据，由一系列的3D顶点组成。2个顶点表示一条线段。
+        ///     选项 DL_WINDOW_SPACE会影响坐标的含义。
         /// \param stride
         ///     stride of one vertex.
         /// \param numpoints

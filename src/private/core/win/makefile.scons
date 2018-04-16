@@ -1,7 +1,15 @@
 Import( 'GN' )
+
 sources = [
     'win.cpp',
     'windowMsw.cpp',
+    'windowX11.cpp',
 ]
-r = GN.BuildObjects( None, sources, 'pch.h', 'pch.cpp' )
+
+env = GN.NewBuildEnv()
+if GN.has_qt5:
+    sources += ['windowQt.cpp']
+    env.Append( CPPDEFINES = 'HAS_QT5=1' )
+
+r = GN.BuildObjects( env, sources, 'pch.h', 'pch.cpp' )
 Return( 'r' )

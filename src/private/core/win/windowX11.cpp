@@ -1,13 +1,12 @@
 #include "pch.h"
-#include "renderWindowX11.h"
-#include "basicGpu.h"
+#include "windowX11.h"
 
 #if GN_POSIX
 
-#include <GL/glew.h>
-#include <GL/glxew.h>
+#include <X11/Xlib.h>
+#include <GL/glx.h>
 
-static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.common.renderWindow.X11");
+static GN::Logger * sLogger = GN::getLogger("GN.core.win");
 
 // *****************************************************************************
 // local functions
@@ -66,6 +65,25 @@ static int sGetScreenNumber( Display * disp, Screen * screen )
     return -1;
 }
 
+///
+/// Determine monitor handle that render window should stay in.
+// ----------------------------------------------------------------------------
+static Screen *
+sDetermineScreen( Display * disp, intptr_t handle )
+{
+    if( 0 == handle )
+    {
+        Screen * scr = DefaultScreenOfDisplay( disp );
+        GN_ASSERT( scr );
+        return scr;
+    }
+    else
+    {
+        // TODO: verify that screen pointer is valid.
+        return (Screen*)handle;
+    }
+}
+
 // *****************************************************************************
 // public functions
 // *****************************************************************************
@@ -73,24 +91,18 @@ static int sGetScreenNumber( Display * disp, Screen * screen )
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::RenderWindowX11::initExternalRenderWindow(
-    Gpu     * gpu,
-    Display * display,
-    Window    externalWindow )
-{
+bool GN::win::WindowX11::init(const WindowAttachingParameters & wap) {
     GN_GUARD;
 
-    mGpu = gpu;
+    if( !initDisplay( wap.display ) ) return false;
 
-    if( !initDisplay( display ) ) return false;
-
-    if( !sIsWindow( display, externalWindow ) )
+    if( !sIsWindow( mDisplay, (::Window)wap.window ) )
     {
         GN_ERROR(sLogger)( "External render window is invalid!" );
         return false;
     }
 
-    mWindow = externalWindow;
+    mWindow = (::Window)wap.window;
     mUseExternalWindow = true;
 
     // success
@@ -103,29 +115,21 @@ bool GN::gfx::RenderWindowX11::initExternalRenderWindow(
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::RenderWindowX11::initInternalRenderWindow(
-    Gpu * gpu,
-    Display  * display,
-    Window     parentWindow,
-    Screen   * monitor,
-    uint32     width,
-    uint32     height )
-{
+bool GN::win::WindowX11::init(const WindowCreationParameters & wcp) {
     GN_GUARD;
 
-    GN_ASSERT( width > 0 && height > 0 && display && monitor );
-
-    // remember renderer pointer
-    mGpu = gpu;
-
-    // remember screen/monitor pointer
-    mScreen = monitor;
-
     // initialize display
-    if( !initDisplay(display) ) return false;
+    if( !initDisplay(wcp.display) ) return false;
+
+    // initialize monitor
+    mScreen = sDetermineScreen(mDisplay, wcp.monitor);
+
+    auto parent  = (::Window)wcp.parent;
+    auto width = wcp.clientWidth;
+    auto height = wcp.clientHeight;
 
     // get screen number
-    mScreenNumber = sGetScreenNumber( display, monitor );
+    mScreenNumber = sGetScreenNumber( mDisplay, mScreen );
     if( mScreenNumber < 0 ) return false;
 
     // Choose an appropriate visual
@@ -135,7 +139,7 @@ bool GN::gfx::RenderWindowX11::initInternalRenderWindow(
         GLX_STENCIL_SIZE, 8,
         None
     };
-    AutoXPtr<XVisualInfo> vi( glXChooseVisual( display, mScreenNumber, attributeList ) );
+    AutoXPtr<XVisualInfo> vi( glXChooseVisual( mDisplay, mScreenNumber, attributeList ) );
     if( 0 == vi )
     {
         GN_ERROR(sLogger)( "Cannot find visual with desired attributes." );
@@ -143,10 +147,10 @@ bool GN::gfx::RenderWindowX11::initInternalRenderWindow(
     }
 
     // determine parent window
-    if( 0 == parentWindow )
+    if( 0 == parent )
     {
-        parentWindow = XDefaultRootWindow( display );
-        if( 0 == parentWindow )
+        parent = XDefaultRootWindow( mDisplay );
+        if( 0 == parent )
         {
             GN_ERROR(sLogger)( "Fail to get default root window." );
             return false;
@@ -154,7 +158,7 @@ bool GN::gfx::RenderWindowX11::initInternalRenderWindow(
     }
 
     // create a colormap
-    Colormap cmap = XCreateColormap( display, parentWindow, vi->visual, AllocNone );
+    Colormap cmap = XCreateColormap( mDisplay, parent, vi->visual, AllocNone );
     if( 0 == cmap )
     {
         GN_ERROR(sLogger)( "Cannot allocate colormap." );
@@ -165,13 +169,13 @@ bool GN::gfx::RenderWindowX11::initInternalRenderWindow(
     XSetWindowAttributes swa;
     swa.colormap = cmap;
     swa.event_mask = ExposureMask | StructureNotifyMask;
-    swa.border_pixel = BlackPixel( display, mScreenNumber );
-    swa.background_pixel = BlackPixel( display, mScreenNumber );
+    swa.border_pixel = BlackPixel( mDisplay, mScreenNumber );
+    swa.background_pixel = BlackPixel( mDisplay, mScreenNumber );
 
     // create the render window.
     mWindow = XCreateWindow(
-        display,
-        parentWindow,
+        mDisplay,
+        parent,
         0, 0, width, height, // position and size
         0, // border
         vi->depth,
@@ -186,12 +190,12 @@ bool GN::gfx::RenderWindowX11::initInternalRenderWindow(
     }
 
     // map window
-    GN_X_CHECK_RETURN( XSelectInput( display, mWindow, StructureNotifyMask ), false );
+    GN_X_CHECK_RETURN( XSelectInput( mDisplay, mWindow, StructureNotifyMask ), false );
     XEvent e;
-    XMapWindow( display, mWindow );
+    XMapWindow( mDisplay, mWindow );
     for(;;)
     {
-        XNextEvent( display, &e );
+        XNextEvent( mDisplay, &e );
         if( e.type == MapNotify && e.xmap.window == mWindow ) break;
     }
 
@@ -207,20 +211,22 @@ bool GN::gfx::RenderWindowX11::initInternalRenderWindow(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::RenderWindowX11::quit()
+void GN::win::WindowX11::quit()
 {
     GN_GUARD;
 
     // Destroy window
-    if( mWindow && !mUseExternalWindow )
-    {
+    if( mWindow && !mUseExternalWindow ) {
         GN_ASSERT( mDisplay );
         XDestroyWindow( mDisplay, mWindow );
         mWindow = 0;
     }
 
     // clear display
-    mDisplay = 0;
+    if (mDisplay && !mUseExternalDisplay) {
+        XCloseDisplay(mDisplay);
+        mDisplay = 0;
+    }
 
     GN_UNGUARD;
 }
@@ -228,30 +234,24 @@ void GN::gfx::RenderWindowX11::quit()
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::RenderWindowX11::getClientSize( uint32 & width, uint32 & height ) const
+GN::Vector2<uint32_t> GN::win::WindowX11::getClientSize() const
 {
     GN_GUARD;
 
     GN_ASSERT( sIsWindow( mDisplay, mWindow ) );
 
-    XWindowAttributes attr;
-    GN_X_CHECK_RETURN( XGetWindowAttributes( mDisplay, mWindow, &attr ), false );
+    GN::Vector2<uint32_t> size(0, 0);
 
-    width = (uint32)attr.width;
-    height = (uint32)attr.height;
+    XWindowAttributes attr;
+    GN_X_CHECK_RETURN( XGetWindowAttributes( mDisplay, mWindow, &attr ), size );
+
+    size.x = (uint32_t)attr.width;
+    size.y = (uint32_t)attr.height;
 
     // success
-    return true;
+    return size;
 
     GN_UNGUARD;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-void GN::gfx::RenderWindowX11::handleSizeMove()
-{
-    GN_UNIMPL_WARNING();
 }
 
 // *****************************************************************************
@@ -261,12 +261,26 @@ void GN::gfx::RenderWindowX11::handleSizeMove()
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::RenderWindowX11::initDisplay( Display * display )
+bool GN::win::WindowX11::initDisplay( intptr_t handle )
 {
     GN_GUARD;
 
-    // store display pointer
-    mDisplay = display;
+    if( 0 == handle )
+    {
+        StrA dispStr = getEnv("DISPLAY");
+        mDisplay = XOpenDisplay( dispStr.rawptr() );
+        if( 0 == mDisplay )
+        {
+            GN_ERROR(sLogger)( "Fail to open display '%s'.", dispStr.rawptr() );
+            return false;
+        }
+        mUseExternalDisplay = false;
+    }
+    else
+    {
+        mDisplay = (Display*)handle;
+        mUseExternalDisplay = true;
+    }
 
 #if GN_ENABLE_DEBUG
     // Trun on synchronous behavior for debug build.
@@ -277,6 +291,7 @@ bool GN::gfx::RenderWindowX11::initDisplay( Display * display )
     XSetErrorHandler( &sXErrorHandler );
 
     // success
+    GN_ASSERT(mDisplay);
     return true;
 
     GN_UNGUARD;

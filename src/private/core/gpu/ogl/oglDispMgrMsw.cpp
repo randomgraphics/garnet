@@ -485,6 +485,8 @@ public:
 // device management
 // *****************************************************************************
 
+GN::gfx::OGLGpu::WindowMap GN::gfx::OGLGpu::msInstanceMap;
+
 //
 //
 // -----------------------------------------------------------------------------
@@ -494,7 +496,7 @@ bool GN::gfx::OGLGpu::dispInit()
 
     GN_ASSERT( !mRenderContext && !mDeviceContext );
 
-    HWND hwnd = (HWND)getDispDesc().windowHandle;
+    HWND hwnd = (HWND)getRenderWindowHandle();
     if( !::IsWindow(hwnd) )
     {
         GN_ERROR(sLogger)( "Invalid render window handle!" );
@@ -548,46 +550,29 @@ bool GN::gfx::OGLGpu::dispInit()
     }
 
     // modify fullscreen render window properties
-    if( ro.fullscreen )
-    {
+    if( DisplayMode::FULL_SCREEN == ro.displayMode.mode ) {
         // activate display mode
         if( !activateDisplayMode() ) return false;
 
         const DispDesc & dd = getDispDesc();
-
         HWND hwnd = (HWND)dd.windowHandle;
         HMONITOR hmonitor = (HMONITOR)dd.monitorHandle;
-
-        // modify window style
-        GN_MSW_CHECK( ::SetParent( hwnd, 0 ) );
-        GN_MSW_CHECK( ::SetMenu( hwnd, 0 ) );
-        GN_MSW_CHECK( ::SetWindowLong( hwnd, GWL_STYLE, WS_POPUP|WS_VISIBLE ) );
-        if( ::IsIconic(hwnd) )
-        {
-            GN_MSW_CHECK( ::ShowWindow( hwnd, SW_SHOWNORMAL ) );
-        }
 
         // get monitor information
         MONITORINFOEXA mi;
         mi.cbSize = sizeof(mi);
         GN_MSW_CHECK_RETURN( ::GetMonitorInfoA( hmonitor, &mi ), false );
 
-        // move window to left-top of the monitor, and set it as TOPMOST window.
+        // move window to left-top of the monitor.
         GN_TRACE(sLogger)( "Move window to %d, %d", mi.rcWork.left,mi.rcWork.top );
         GN_MSW_CHECK( ::SetWindowPos(
-            hwnd, HWND_TOPMOST,
-            mi.rcWork.left, mi.rcWork.top,
-            dd.width, dd.height,
-            SWP_FRAMECHANGED | SWP_SHOWWINDOW ) );
+            hwnd, HWND_TOP,
+            mi.rcMonitor.left, mi.rcMonitor.top,
+            0, 0,
+            SWP_NOSIZE ) );
 
         // trigger a redraw operation
         GN_MSW_CHECK( ::UpdateWindow( hwnd ) );
-    }
-
-    // setup message hook
-    if( ro.autoRestore )
-    {
-        getRenderWindow().sigMessage.connect( this, &OGLGpu::msgHook );
     }
 
     // set swap interval
@@ -597,6 +582,15 @@ bool GN::gfx::OGLGpu::dispInit()
         {
             GN_WARN(sLogger)( "Fail to adjust SGI swap control" );
         }
+    }
+
+    // setup message hook
+    msInstanceMap[getRenderWindowHandle()] = this;
+    mHook = ::SetWindowsHookExW( WH_CALLWNDPROC, &staticHookProc, 0, GetCurrentThreadId() );
+    if( 0 == mHook )
+    {
+        GN_ERROR(sLogger)( "Fail to setup message hook : %s", getWin32LastErrorInfo() );
+        return false;
     }
 
     // successful
@@ -613,7 +607,8 @@ void GN::gfx::OGLGpu::dispQuit()
     GN_GUARD;
 
     // remove message hook
-    getRenderWindow().sigMessage.disconnect( this );
+    if( mHook ) ::UnhookWindowsHookEx( mHook ), mHook = 0;
+    msInstanceMap.remove(getRenderWindowHandle());
 
     // restore display mode
     restoreDisplayMode();
@@ -651,7 +646,7 @@ bool GN::gfx::OGLGpu::activateDisplayMode()
     if( mDisplayModeActivated ) return true;
 
     // only change display mode if we are in fullscreen mode
-    if( !getOptions().fullscreen ) return true;
+    if( DisplayMode::FULL_SCREEN != getOptions().displayMode.mode ) return true;
 
     const DispDesc & dd = getDispDesc();
 
@@ -665,14 +660,16 @@ bool GN::gfx::OGLGpu::activateDisplayMode()
 
     // change display mode
     DEVMODEA dm;
-    memset(&dm, 0, sizeof(dm));
+    memset( &dm, 0, sizeof(dm) );
     dm.dmSize             = sizeof(dm);
     dm.dmPelsWidth        = dd.width;
     dm.dmPelsHeight       = dd.height;
-    dm.dmBitsPerPel       = dd.depth;
-    dm.dmFields           = DM_PELSWIDTH | DM_PELSHEIGHT | DM_BITSPERPEL;
-    if( dd.refrate != 0 )
-    {
+    dm.dmFields           = DM_PELSWIDTH | DM_PELSHEIGHT;
+    if( 0 != dd.depth ) {
+        dm.dmFields |= DM_BITSPERPEL;
+        dm.dmBitsPerPel = dd.depth;
+    }
+    if( 0 != dd.refrate ) {
         dm.dmFields |= DM_DISPLAYFREQUENCY;
         dm.dmDisplayFrequency = dd.refrate;
     }
@@ -682,8 +679,7 @@ bool GN::gfx::OGLGpu::activateDisplayMode()
         &dm,
         NULL,
         CDS_FULLSCREEN,
-        NULL ) )
-    {
+        NULL ) ) {
         GN_ERROR(sLogger)( "Failed to change to specified full screen mode!" );
         return false;
     }
@@ -733,7 +729,7 @@ void GN::gfx::OGLGpu::msgHook( HWND, UINT msg, WPARAM wp, LPARAM )
 
     //GN_TRACE( "Message(%s), wp(0x%X)", win::msg2str(msg), wp );
 
-    if( !getOptions().fullscreen ) return;
+    if( DisplayMode::FULL_SCREEN != getOptions().displayMode.mode ) return;
 
     if( WM_ACTIVATEAPP == msg && !mIgnoreMsgHook )
     {
@@ -748,6 +744,31 @@ void GN::gfx::OGLGpu::msgHook( HWND, UINT msg, WPARAM wp, LPARAM )
             restoreDisplayMode();
         }
     }
+
+    GN_UNGUARD;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+LRESULT CALLBACK
+GN::gfx::OGLGpu::staticHookProc( int code, WPARAM wp, LPARAM lp )
+{
+    GN_GUARD;
+
+    //GN_TRACE( "wnd=0x%X, msg=%s", wnd, win::msg2str(msg) );
+
+    OGLGpu ** pp = msInstanceMap.find( (intptr_t)((CWPSTRUCT*)lp)->hwnd );
+
+    if( NULL != pp )
+    {
+        // trigger render window message signal.
+        CWPSTRUCT * cwp = (CWPSTRUCT*)lp;
+        GN_ASSERT( cwp && (*pp) );
+        (*pp)->msgHook( cwp->hwnd, cwp->message, cwp->wParam, cwp->lParam );
+    }
+
+    return ::CallNextHookEx( 0, code, wp, lp );
 
     GN_UNGUARD;
 }
