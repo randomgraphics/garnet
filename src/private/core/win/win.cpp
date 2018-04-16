@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "windowMsw.h"
+#include "windowX11.h"
 #ifdef HAS_QT5
 #include "windowQt.h"
 #endif
@@ -107,6 +108,12 @@ namespace GN { namespace win
 #elif GN_WINPC
 
         AutoObjPtr<WindowMsw> p( new WindowMsw );
+        if( !p->init( wcp ) ) return 0;
+        return p.detach();
+
+#elif GN_POSIX
+
+        AutoObjPtr<WindowX11> p( new WindowX11 );
         if( !p->init( wcp ) ) return 0;
         return p.detach();
 
