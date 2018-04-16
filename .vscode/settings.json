@@ -26,7 +26,10 @@
         "initializer_list": "cpp",
         "set": "cpp",
         "string": "cpp",
-        "string_view": "cpp"
+        "string_view": "cpp",
+        "atomic": "cpp",
+        "chrono": "cpp",
+        "mutex": "cpp"
     },
     "files.exclude": {
         "**/.git": true,

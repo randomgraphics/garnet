@@ -6,6 +6,8 @@
 /// \author  chenli@@REDMOND (2009.1.2)
 // *****************************************************************************
 
+#if 0 // disabled for now
+
 #include "../../gpu/gpupch.h"
 #include "cmdbuf.h"
 
@@ -214,7 +216,28 @@ namespace GN { namespace gfx
         return r;
         GN_UNGUARD;
     }
+}}3
+
+#else
+
+namespace GN { namespace gfx
+{
+    ///
+    /// Function type to create renderer.
+    ///
+    typedef GN::gfx::Gpu * (*CreateSingleThreadFunc)( const GN::gfx::GpuOptions & options, void * context );
+
+    ///
+    /// Create multi-threads GPU
+    // -------------------------------------------------------------------------
+    inline Gpu * createMultiThreadGpu( const GpuOptions & go, CreateSingleThreadFunc creator, void * context )
+    {
+        return creator(go, context);
+    }
+    
 }}
+
+#endif
 
 // *****************************************************************************
 //                                     EOF

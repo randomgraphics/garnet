@@ -224,7 +224,7 @@ int GN::util::SampleApp::run( int argc, const char * const argv[] )
             // Put some idle time in.
             while (scheduledEndTime - clock.getCycleCount() > 50)
             {
-                Thread::sSleepCurrentThread(0);
+                std::this_thread::sleep_for(std::chrono::microseconds::min());
             }
         }
         else if (0 == skipRendering)

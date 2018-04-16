@@ -6,9 +6,14 @@
 /// \author  chen@@CHENLI-HOMEPC (2007.4.8)
 // *****************************************************************************
 
+#include <atomic>
+#include <mutex>
+#include <thread>
+#include <chrono>
+
 namespace GN
 {
-    // Wait time definition
+    /* Wait time definition
     //@{
 
     /// Define wait time, in 10^(-9) seconds
@@ -62,94 +67,55 @@ namespace GN
     ///
     /// Full memory barrier. currently implemented on MS Windows platform only.
     ///
-    inline void memoryBarrier();
+    inline void memoryBarrier(); */
 
     //@}
 
     ///
     /// Spinloop lock
     ///
-    class SpinLoop
+    class SpinLoop : NoCopy
     {
-        volatile sint32 mLock;
-
+        std::atomic_flag mLock;
     public:
-
-        ///
-        /// volatile type traits
-        ///
-        template <typename T>
-        struct VolatileType
+        //@{
+        bool tryLock() { return mLock.test_and_set(); }
+        void lock()
         {
-            typedef volatile T type; ///< ...
-        };
-
-        //@{
-        SpinLoop() : mLock(0) {}
-        ~SpinLoop() {}
-        //@}
-
-        //@{
-        bool trylock() { return 0 == atomCmpXchg32( &mLock, 1, 0 ); }
-        void lock();
-        void unlock() { atomSet32( &mLock, 0 ); }
+            size_t i = 0;
+            while( !mLock.test_and_set() )
+            {
+                ++i;
+                if( i > 1000000 )
+                {
+                    std::this_thread::sleep_for( std::chrono::microseconds::min() );
+                    i = 0;
+                }
+            }
+        }
+        void unlock() { mLock.clear(); }
         //@}
     };
 
     ///
     /// Mutex lock.
     ///
-    class GN_API Mutex
+    class Mutex
     {
-        uint32 mInternal[16]; ///< store platform dependata data here, no runtime heap allocation
+        std::recursive_mutex mMutex;
 
     public:
 
-        ///
-        /// volatile type traits
-        ///
-        template <typename T>
-        struct VolatileType
-        {
-            typedef volatile T type; ///< ...
-        };
-
         //@{
-        Mutex();
-        ~Mutex();
-        //@}
-
-        //@{
-        bool trylock();
-        void lock();
-        void unlock();
+        bool trylock() { return mMutex.try_lock(); }
+        void lock()    { return mMutex.lock(); }
+        void unlock()  { return mMutex.unlock(); }
         //@}
 
         //@{
         bool tryEnter() { return trylock(); }
         void enter() { return lock(); }
         void leave() { return unlock(); }
-        //@}
-    };
-
-    ///
-    /// this is a "fake" mutex to ease using mutex in template
-    ///
-    struct SingleThreadMutex
-    {
-        ///
-        /// volatile type traits
-        ///
-        template <typename T>
-        struct VolatileType
-        {
-            typedef T type; ///< ...
-        };
-
-        //@{
-        bool trylock() { return true; }
-        void lock()    {}
-        void unlock()  {}
         //@}
     };
 
@@ -167,6 +133,7 @@ namespace GN
         //@}
     };
 
+    /*
     ///
     /// sync event
     ///
@@ -248,16 +215,8 @@ namespace GN
     private:
         class Impl;
         Impl * mImpl;
-    };
+    };*/
 }
-
-#if GN_MSWIN
-#include "syncmsw.inl"
-#elif GN_POSIX
-#include "syncposix.inl"
-#else
-#error unsupport platform
-#endif
 
 // *****************************************************************************
 //                                     EOF

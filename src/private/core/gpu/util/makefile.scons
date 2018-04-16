@@ -1,13 +1,13 @@
 Import( 'GN' )
 
 sources = [
-	'cmdbuf.cpp',
-	'mtidxbuf.cpp',
-	'mtgpu.cpp',
-	'mtgpuCmd.cpp',
-	'mtshader.cpp',
-	'mttexture.cpp',
-	'mtvtxbuf.cpp',
+	#'cmdbuf.cpp',
+	#'mtidxbuf.cpp',
+	#'mtgpu.cpp',
+	#'mtgpuCmd.cpp',
+	#'mtshader.cpp',
+	#'mttexture.cpp',
+	#'mtvtxbuf.cpp',
 	'gpuCreator.cpp',
 	'gpuDeletor.cpp',
 ]

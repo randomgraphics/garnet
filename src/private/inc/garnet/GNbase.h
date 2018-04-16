@@ -116,9 +116,6 @@ namespace GN
 // XML parser
 #include "base/xml.h"
 
-// thread routines
-#include "base/thread.h"
-
 // codepage
 #include "base/codepage.h"
 

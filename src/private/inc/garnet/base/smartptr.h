@@ -1,4 +1,4 @@
-#ifndef __GN_BASE_SMARTPTR_H__
+ï»¿#ifndef __GN_BASE_SMARTPTR_H__
 #define __GN_BASE_SMARTPTR_H__
 // *****************************************************************************
 /// \file
@@ -40,7 +40,7 @@ namespace GN
         ///
         /// increase reference counter
         ///
-        sint32 incref() const  throw() { return GN::atomInc32(&mRef); }
+        sint32 incref() const  throw() { return mRef.fetch_add(1) - 1; }
 
         ///
         /// decrease reference counter, delete the object, if reference count reaches zero.
@@ -49,10 +49,10 @@ namespace GN
         {
             GN_ASSERT( mRef > 0 );
 
-            mWeakLock.enter();
-            sint32 ref = GN::atomDec32( &mRef ) ;
+            int ref = mRef.fetch_sub(1) - 1;// GN::atomDec32( &mRef ) ;
             if (0 == ref && mWeakObj)
             {
+                mWeakLock.enter();
                 mWeakObj->lock.enter();
                 mWeakLink.detach();
                 mWeakObj->ptr = NULL;
@@ -63,8 +63,8 @@ namespace GN
                     delete mWeakObj;
                 }
                 mWeakObj = NULL;
+                mWeakLock.leave();
             }
-            mWeakLock.leave();
 
             if( 0 == ref )
             {
@@ -77,7 +77,7 @@ namespace GN
         ///
         /// get current reference counter value
         ///
-        sint32 getref() const throw() { return GN::atomGet32(&mRef); }
+        int getref() const throw() { return mRef; }
 
         ///
         /// Return the weak object associated with this reference counted object.
@@ -136,14 +136,14 @@ namespace GN
         ///
         /// reference counter
         ///
-        mutable volatile sint32 mRef;
+        mutable std::atomic_int mRef;
         mutable GN::Mutex       mWeakLock;
         mutable WeakObject *    mWeakObj;
         mutable GN::DoubleLink  mWeakLink;
     };
 
     ///
-    /// ÅäºÏ RefCounter Ê¹ÓÃµÄ×Ô¶¯Ö¸ÕëÀà
+    /// é…åˆ RefCounter ä½¿ç”¨çš„è‡ªåŠ¨æŒ‡é’ˆç±»
     // -------------------------------------------------------------------------
     template <class X> class AutoRef
     {
@@ -215,7 +215,7 @@ namespace GN
         }
 
         ///
-        /// ¸³ÖµÓï¾ä
+        /// èµ‹å€¼è¯­å¥
         ///
         AutoRef & operator = ( const AutoRef & rhs )
         {
@@ -224,7 +224,7 @@ namespace GN
         }
 
         ///
-        /// ¸³ÖµÓï¾ä
+        /// èµ‹å€¼è¯­å¥
         ///
         AutoRef & operator = ( XPTR ptr )
         {
@@ -233,7 +233,7 @@ namespace GN
         }
 
         ///
-        /// ¸³ÖµÓï¾ä
+        /// èµ‹å€¼è¯­å¥
         ///
         template <class Y>
         AutoRef & operator = ( const AutoRef<Y> & rhs )
@@ -248,7 +248,7 @@ namespace GN
         operator XPTR () const { return mPtr; }
 
         ///
-        /// ±È½Ï²Ù×÷
+        /// æ¯”è¾ƒæ“ä½œ
         ///
         bool operator == ( const AutoRef & rhs ) const throw()
         {
@@ -256,7 +256,7 @@ namespace GN
         }
 
         ///
-        /// ±È½Ï²Ù×÷
+        /// æ¯”è¾ƒæ“ä½œ
         ///
         bool operator != ( const AutoRef & rhs ) const throw()
         {
@@ -264,7 +264,7 @@ namespace GN
         }
 
         ///
-        /// ±È½Ï²Ù×÷
+        /// æ¯”è¾ƒæ“ä½œ
         ///
         bool operator < ( const AutoRef & rhs ) const throw()
         {
@@ -296,8 +296,8 @@ namespace GN
         ///
         /// get address of internal pointer.
         ///
-        /// Õâ¸öº¯ÊıÖ÷ÒªÓÃÓÚ½«Ö¸ÏòAutoRefµÄÖ¸Õë±ä³ÉÖ¸ÏòXPTRµÄÖ¸Õë£¨ËûÃÇÔÚÄÚ´æÖĞµÄÓ³ÏñÆäÊµÊÇÒ»ÑùµÄ£©¡£
-        /// Äã¿ÉÒÔÓÃÇ¿ÖÆÀàĞÍ×ª»»´ïÍ¬ÑùµÄÄ¿µÄ£¬²»¹ıÓÃÕâ¸öº¯Êı»á¸ü¼ò½àÒ»Ğ©¡£
+        /// è¿™ä¸ªå‡½æ•°ä¸»è¦ç”¨äºå°†æŒ‡å‘AutoRefçš„æŒ‡é’ˆå˜æˆæŒ‡å‘XPTRçš„æŒ‡é’ˆï¼ˆä»–ä»¬åœ¨å†…å­˜ä¸­çš„æ˜ åƒå…¶å®æ˜¯ä¸€æ ·çš„ï¼‰ã€‚
+        /// ä½ å¯ä»¥ç”¨å¼ºåˆ¶ç±»å‹è½¬æ¢è¾¾åŒæ ·çš„ç›®çš„ï¼Œä¸è¿‡ç”¨è¿™ä¸ªå‡½æ•°ä¼šæ›´ç®€æ´ä¸€äº›ã€‚
         ///
         XPTR const * addr() const throw() { return &mPtr; }
 
@@ -495,7 +495,7 @@ namespace GN
         bool operator !() const { return empty(); }
 
         ///
-        /// ±È½Ï²Ù×÷
+        /// æ¯”è¾ƒæ“ä½œ
         ///
         bool operator == ( const WeakRef & rhs ) const throw()
         {
@@ -503,7 +503,7 @@ namespace GN
         }
 
         ///
-        /// ±È½Ï²Ù×÷
+        /// æ¯”è¾ƒæ“ä½œ
         ///
         bool operator == ( XPTR ptr ) const throw()
         {
@@ -511,7 +511,7 @@ namespace GN
         }
 
         ///
-        /// ±È½Ï²Ù×÷
+        /// æ¯”è¾ƒæ“ä½œ
         ///
         friend inline bool operator == ( XPTR ptr, const WeakRef & rhs ) throw()
         {
@@ -519,7 +519,7 @@ namespace GN
         }
 
         ///
-        /// ±È½Ï²Ù×÷
+        /// æ¯”è¾ƒæ“ä½œ
         ///
         bool operator != ( const WeakRef & rhs ) const throw()
         {
@@ -527,7 +527,7 @@ namespace GN
         }
 
         ///
-        /// ±È½Ï²Ù×÷
+        /// æ¯”è¾ƒæ“ä½œ
         ///
         bool operator < ( const WeakRef & rhs ) const throw()
         {

@@ -22,12 +22,7 @@ sources = [
 	'profiler.cpp',
 	'registry.cpp',
 	'sharedLib.cpp',
-	'spinloop.cpp',
 	'string.cpp',
-	'syncmsw.cpp',
-	'syncposix.cpp',
-	'threadmsw.cpp',
-	'threadposix.cpp',
 	'variant.cpp',
 	'xml.cpp',
 ]

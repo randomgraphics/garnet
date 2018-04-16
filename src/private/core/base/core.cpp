@@ -14,7 +14,7 @@ namespace GN
     // -----------------------------------------------------------------------------
     GN_API ProfilerManager & ProfilerManager::sGetGlobalInstance()
     {
-        static ProfilerManager sInstance = ProfilerManager();
+        static ProfilerManager sInstance;
         return sInstance;
     }
 
