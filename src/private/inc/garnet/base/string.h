@@ -280,6 +280,15 @@ namespace GN
         }
 
         ///
+        /// move constructor
+        ///
+        Str( Str && s )
+            : mPtr(s.mPtr)
+        {
+            if (&s != this) s.mPtr = sEmptyPtr();
+        }
+
+        ///
         /// copy constructor from c-style string
         ///
         Str( const CharType * s, size_t l = 0 ) : mPtr(NULL)
@@ -305,7 +314,7 @@ namespace GN
         ///
         ~Str()
         {
-            dealloc( mPtr );
+            sDealloc( mPtr );
         }
 
         ///
@@ -394,9 +403,14 @@ namespace GN
         }
 
         ///
-        /// return c-style const char pointer
+        /// return c-style const char pointer [[depreciated]]
         ///
         const CharType * rawptr() const { return mPtr; }
+
+        ///
+        /// return c-style const char pointer
+        ///
+        const CharType * data() const { return mPtr; }
 
         ///
         /// empty string or not?
@@ -630,7 +644,7 @@ namespace GN
             if( NULL == mPtr )
             {
                 newCaps = calcCaps( newCaps );
-                mPtr = alloc( newCaps + 1 );
+                mPtr = sAlloc( newCaps + 1 );
                 mPtr[0] = 0;
                 StringHeader * h = ((StringHeader*)mPtr) - 1;
                 h->caps = newCaps;
@@ -644,7 +658,7 @@ namespace GN
                 size_t oldsize = size();
 
                 newCaps = calcCaps( newCaps );
-                mPtr = alloc( newCaps + 1 );
+                mPtr = sAlloc( newCaps + 1 );
 
                 StringHeader * h = ((StringHeader*)mPtr) - 1;
                 h->caps = newCaps;
@@ -652,7 +666,7 @@ namespace GN
 
                 ::memcpy( mPtr, oldptr, (oldsize + 1)*sizeof(CharType) );
 
-                dealloc( oldptr );
+                sDealloc( oldptr );
             }
         }
 
@@ -856,6 +870,19 @@ namespace GN
         Str & operator = ( const CharType * s )
         {
             assign( s, str::length<CharType>(s) );
+            return *this;
+        }
+
+        ///
+        /// move operator
+        ///
+        Str & operator = ( Str && s )
+        {
+            if (&s != this) {
+                sDealloc(mPtr);
+                mPtr = s.mPtr;
+                s.mPtr = sEmptyPtr();
+            }
             return *this;
         }
 
@@ -1067,20 +1094,24 @@ namespace GN
             return count;
         }
 
+        // Returns a static pointer for empty string
+        static CharType * sEmptyPtr() { static CharType c = 0; return &c; }
+
         // Allocate a memory buffer that can hold at least 'count' characters, and one extra '\0'.
-        static CharType * alloc( size_t count )
+        static CharType * sAlloc( size_t count )
         {
+            if (1 == count) return sEmptyPtr();
             // ALLOCATOR:sAllocate only allocates raw memory buffer. No constuctors are invoked.
             // This is safe, as long as CharType is POD type.
             StringHeader * ptr = (StringHeader*)RAW_MEMORY_ALLOCATOR::sAllocate( sizeof(StringHeader) + sizeof(CharType) * (count + 1), sizeof(size_t) );
             return (CharType*)(ptr + 1);
         }
 
-        static void dealloc( CharType * ptr )
+        static void sDealloc( CharType * ptr )
         {
             // ALLOCATOR:sDeallocate frees memory without calling destructors.
             // This is safe, as long as CharType is POD type.
-            if( ptr )
+            if( ptr && ptr != sEmptyPtr() )
             {
                 StringHeader * p = (StringHeader*)ptr;
                 RAW_MEMORY_ALLOCATOR::sDeallocate( p - 1 );

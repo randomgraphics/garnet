@@ -369,4 +369,48 @@ public:
         TS_ASSERT( str::toInetger( s64, "9223372036854775807" ) ); TS_ASSERT_EQUALS( s64, i64max );
         TS_ASSERT( !str::toInetger( s64, "9223372036854775808" ) );
     }
+
+    void testMove()
+    {
+        struct TestAllocator
+        {
+            static size_t & allocated() { static size_t i = 0; return i; }
+
+            /// Allocate raw memory from heap
+            static inline void * sAllocate( size_t sizeInBytes, size_t alignmentInBytes )
+            {
+                allocated() += sizeInBytes;
+                return GN::HeapMemory::alignedAlloc( sizeInBytes, alignmentInBytes );
+            }
+
+            /// Deallocate raw memory buffer.
+            static inline void sDeallocate( void * ptr )
+            {
+                GN::HeapMemory::dealloc( ptr );
+            }
+        };
+
+        typedef GN::Str<char, TestAllocator> S;
+
+        {
+            S s1("haha");
+            auto a = TestAllocator::allocated();
+            auto s2 = std::move(s1);
+            TS_ASSERT_EQUALS(s1.data(), "");
+            TS_ASSERT_EQUALS(s2.data(), "haha");
+            TS_ASSERT_EQUALS(TestAllocator::allocated(), a);
+            S s3; s3 = std::move(s2);
+            TS_ASSERT_EQUALS(s2.data(), "");
+            TS_ASSERT_EQUALS(s3.data(), "haha");
+            TS_ASSERT_EQUALS(TestAllocator::allocated(), a);
+        }
+        {
+            size_t a = 0;
+            auto foo = [&]() -> S { S s("haha"); a = TestAllocator::allocated(); return s; };
+            auto s1 = foo();
+            S s2;
+            s2 = foo();
+            TS_ASSERT_EQUALS(TestAllocator::allocated(), a);
+        }
+    }
 };

@@ -161,7 +161,7 @@ GN_API void GN::breakIntoDebugger()
 GN_API void GN::printToDebugger(const char * message)
 {
 #if GN_MSWIN
-	::OutputDebugString(message);
+	::OutputDebugStringA(message);
 #else
     fprintf(stderr, "%s", message);
 #endif
