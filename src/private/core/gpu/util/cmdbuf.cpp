@@ -219,7 +219,7 @@ void GN::CommandBuffer::endProduce()
 {
     // Enter production lock again, which prevents all thread except the one
     // who calls beginProduce().
-    ScopeMutex<Mutex> lock( m_ProducerLock );
+    std::lock_guard<Mutex> lock( m_ProducerLock );
 
     if( NULL == m_WritingToken )
     {
@@ -336,7 +336,7 @@ void GN::CommandBuffer::endConsume()
 {
     // Enter consumer lock again here, to prevent all thread other than the
     // one that calls beginConsume()
-    ScopeMutex<Mutex>lock( m_ConsumerLock );
+    std::lock_guard<Mutex>lock( m_ConsumerLock );
 
     if( NULL == m_ReadingToken )
     {

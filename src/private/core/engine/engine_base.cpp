@@ -301,7 +301,7 @@ GN_API GN::gfx::GpuResourceDatabase * GN::engine::getGdb()
 // -----------------------------------------------------------------------------
 GN_API GN::engine::Entity * GN::engine::findEntity( int id )
 {
-    ScopeMutex<> lock( s_engine.entityLock );
+    std::lock_guard<std::mutex> lock( s_engine.entityLock );
 
     if( s_engine.entities.validHandle( id ) )
     {
@@ -320,7 +320,7 @@ GN_API int GN::engine::impl::onEntityCtor( Entity * e )
 {
     GN_ASSERT( e );
 
-    ScopeMutex<> lock( s_engine.entityLock );
+    std::lock_guard<std::mutex> lock( s_engine.entityLock );
 
     return s_engine.entities.add( e );
 }
@@ -330,7 +330,7 @@ GN_API int GN::engine::impl::onEntityCtor( Entity * e )
 // -----------------------------------------------------------------------------
 GN_API void GN::engine::impl::onEntityDtor( int id )
 {
-    ScopeMutex<> lock( s_engine.entityLock );
+    std::lock_guard<std::mutex> lock( s_engine.entityLock );
 
     GN_VERIFY( s_engine.entities.remove( id ) );
 }

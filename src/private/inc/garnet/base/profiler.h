@@ -114,7 +114,7 @@ namespace GN
         ///
         void reset()
         {
-            ScopeMutex<SpinLoop> lock( mMutex );
+            std::lock_guard<SpinLoop> lock( mMutex );
             mTimers.clear();
             mClock.reset();
         }
@@ -136,7 +136,7 @@ namespace GN
         {
             GN_ASSERT( !name.empty() );
 
-            ScopeMutex<SpinLoop> lock( mMutex );
+            std::lock_guard<SpinLoop> lock( mMutex );
 
             ProfilerTimerImpl * p = mTimers.find( name );
             if( NULL != p ) return *p;

@@ -24,10 +24,10 @@ namespace GN
             // return true, only when reference list is empty
             bool deref(GN::DoubleLink & l)
             {
-                lock.enter();
+                lock.lock();
                 l.detach();
                 bool timeToDelete = !references.prev && !references.next;
-                lock.leave();
+                lock.unlock();
                 return timeToDelete;
             }
         };
@@ -52,18 +52,18 @@ namespace GN
             int ref = mRef.fetch_sub(1) - 1;// GN::atomDec32( &mRef ) ;
             if (0 == ref && mWeakObj)
             {
-                mWeakLock.enter();
-                mWeakObj->lock.enter();
+                mWeakLock.lock();
+                mWeakObj->lock.lock();
                 mWeakLink.detach();
                 mWeakObj->ptr = NULL;
                 bool timeToDelete = !mWeakObj->references.prev && !mWeakObj->references.next;
-                mWeakObj->lock.leave();
+                mWeakObj->lock.unlock();
                 if (timeToDelete)
                 {
                     delete mWeakObj;
                 }
                 mWeakObj = NULL;
-                mWeakLock.leave();
+                mWeakLock.unlock();
             }
 
             if( 0 == ref )
@@ -84,14 +84,14 @@ namespace GN
         ///
         WeakObject * getWeakObj() const
         {
-            mWeakLock.enter();
+            mWeakLock.lock();
             if (!mWeakObj)
             {
                 mWeakObj = new WeakObject();
                 mWeakObj->ptr = (void*)this;
                 mWeakLink.linkAfter(&mWeakObj->references);
             }
-            mWeakLock.leave();
+            mWeakLock.unlock();
             return mWeakObj;
         }
 
@@ -438,9 +438,9 @@ namespace GN
             bool result = true;
             if (mObj)
             {
-                mObj->lock.enter();
+                mObj->lock.lock();
                 result = NULL == mObj->ptr;
-                mObj->lock.leave();
+                mObj->lock.unlock();
             }
             return result;
         }
@@ -459,10 +459,10 @@ namespace GN
                 RefCounter::WeakObject * obj = ptr->getWeakObj();
                 if (obj != mObj)
                 {
-                    obj->lock.enter();
+                    obj->lock.lock();
                     mLink.linkAfter( &obj->references );
                     mLink.context = this;
-                    obj->lock.leave();
+                    obj->lock.unlock();
                     mObj = obj;
                 }
             }
@@ -476,9 +476,9 @@ namespace GN
             AutoRef<X> result;
             if (mObj)
             {
-                mObj->lock.enter();
+                mObj->lock.lock();
                 result.set((XPTR)mObj->ptr);
-                mObj->lock.leave();
+                mObj->lock.unlock();
             }
             return result;
         }

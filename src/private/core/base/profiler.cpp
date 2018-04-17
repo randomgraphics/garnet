@@ -87,7 +87,7 @@ GN_API GN::ProfilerManager::~ProfilerManager()
 // -----------------------------------------------------------------------------
 GN_API void GN::ProfilerManager::toString( GN::StrA & rval ) const
 {
-    ScopeMutex<SpinLoop> lock( mMutex );
+    std::lock_guard<SpinLoop> lock( mMutex );
 
     if( mTimers.empty() ) { rval = ""; return; }
 

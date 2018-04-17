@@ -466,47 +466,47 @@ namespace GN
 
         virtual void setLevel( int level )
         {
-            ScopeMutex<LocalMutex> m(mGlobalMutex);
+            std::lock_guard<LocalMutex> m(mGlobalMutex);
             recursiveUpdateLevel( level );
             mInheritLevel = false;
         }
 
         virtual void setEnabled( bool enabled )
         {
-            ScopeMutex<LocalMutex> m(mGlobalMutex);
+            std::lock_guard<LocalMutex> m(mGlobalMutex);
             recursiveUpdateEnabled( enabled );
             mInheritEnabled = false;
         }
 
         virtual void doLog( const LogDesc & desc, const char * msg )
         {
-            ScopeMutex<LocalMutex> m(mGlobalMutex);
+            std::lock_guard<LocalMutex> m(mGlobalMutex);
             recursiveLog( *this, desc, msg );
         }
 
         virtual void doLog( const LogDesc & desc, const wchar_t * msg )
         {
-            ScopeMutex<LocalMutex> m(mGlobalMutex);
+            std::lock_guard<LocalMutex> m(mGlobalMutex);
             recursiveLog( *this, desc, msg );
         }
 
         virtual void addReceiver( Receiver * r )
         {
-            ScopeMutex<LocalMutex> m(mGlobalMutex);
+            std::lock_guard<LocalMutex> m(mGlobalMutex);
             if( 0 == r ) return;
             mReceivers.insert( r );
         }
 
         virtual void removeReceiver( Receiver * r )
         {
-            ScopeMutex<LocalMutex> m(mGlobalMutex);
+            std::lock_guard<LocalMutex> m(mGlobalMutex);
             if( 0 == r ) return;
             mReceivers.erase( r );
         }
 
         virtual void removeAllReceivers()
         {
-            ScopeMutex<LocalMutex> m(mGlobalMutex);
+            std::lock_guard<LocalMutex> m(mGlobalMutex);
             mReceivers.clear();
         }
 
@@ -654,7 +654,7 @@ namespace GN
 
         LoggerImpl * getLogger( const char * name )
         {
-            ScopeMutex<LocalMutex> m( mMutex );
+            std::lock_guard<LocalMutex> m( mMutex );
 
             // trip leading and trailing dots
             StrA n(name);
