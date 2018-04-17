@@ -102,7 +102,7 @@ namespace GN
     ///
     class Mutex
     {
-        std::recursive_mutex mMutex;
+        std::mutex mMutex;
 
     public:
 

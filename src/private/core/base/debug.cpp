@@ -155,6 +155,18 @@ GN_API void GN::breakIntoDebugger()
 #endif
 }
 
+//
+//
+// -----------------------------------------------------------------------------
+GN_API void GN::printToDebugger(const char * message)
+{
+#if GN_MSWIN
+	::OutputDebugString(message);
+#else
+    fprintf(stderr, "%s", message);
+#endif
+}
+
 #if GN_MSWIN
 
 //
@@ -180,7 +192,7 @@ GN::getWin32ErrorInfo( uint32 win32ErrorCode ) throw()
         NULL );
     info[4095] = 0;
 
-    // 除去信息末尾多余的回车符
+    // 闄ゅ幓淇℃伅鏈熬澶氫綑鐨勫洖杞︾
     size_t n = str::length(info);
     while( n > 0 && '\n' != info[n-1] )
     {
@@ -216,7 +228,7 @@ GN::getWin32ErrorInfoW( uint32 win32ErrorCode ) throw()
         NULL );
     info[4095] = 0;
 
-    // 除去信息末尾多余的回车符
+    // 闄ゅ幓淇℃伅鏈熬澶氫綑鐨勫洖杞︾
     size_t n = str::length(info);
     while( n > 0 && L'\n' != info[n-1] )
     {

@@ -268,6 +268,11 @@ namespace GN
 	///
 	GN_API void breakIntoDebugger();
 
+    ///
+    /// Print to debugger
+    ///
+    GN_API void printToDebugger(const char *);
+
 #if GN_MSWIN
 
     ///

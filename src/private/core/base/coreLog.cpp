@@ -72,14 +72,14 @@ public:
 ///
 /// local mutex class on X11 platform (to avoid referencing GN::LocalMutex)
 ///
-class LocalMutexX11
+class LocalMutex
 {
     pthread_mutex_t mMutex;
 
 public:
 
     /// ctor
-    LocalMutexX11()
+    LocalMutex()
     {
         // initiialize a recursive mutex (same behavior as mutex on MSWIN)
         pthread_mutexattr_t mta;
@@ -90,7 +90,7 @@ public:
     }
 
     /// dtor
-    ~LocalMutexX11()
+    ~LocalMutex()
     {
         pthread_mutex_destroy( &mMutex );
     }
@@ -107,11 +107,8 @@ public:
         pthread_mutex_unlock( &mMutex );
     }
 };
-typedef LocalMutexX11 LocalMutex;
-#elif GN_MSWIN
-typedef GN::Mutex LocalMutex;
 #else
-#error Unsupported platform
+typedef std::recursive_mutex LocalMutex;
 #endif
 
 //
