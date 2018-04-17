@@ -38,8 +38,6 @@ namespace GN
         void unlock() { mLock.clear(); }
         //@}
     };
-
-    typedef std::mutex Mutex;
 }
 
 // *****************************************************************************

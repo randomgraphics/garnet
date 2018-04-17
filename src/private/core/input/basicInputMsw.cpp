@@ -64,7 +64,7 @@ void GN::input::BasicInputMsw::processInputEvents()
 {
     BasicXInput::processInputEvents();
 
-    std::lock_guard<Mutex> mutex( mEventQueueMutex );
+    std::lock_guard<std::mutex> mutex( mEventQueueMutex );
 
     while( !mInputEvents.empty() )
     {
@@ -218,7 +218,7 @@ void GN::input::BasicInputMsw::pushKeyPress( KeyCode key, bool keydown )
     e.key.code = key;
     e.key.down = keydown;
 
-    std::lock_guard<Mutex> mutex( mEventQueueMutex );
+    std::lock_guard<std::mutex> mutex( mEventQueueMutex );
     if( mInputEvents.size() >= EVENT_QUEUE_SIZE )
     {
         mInputEvents.pop();
@@ -235,7 +235,7 @@ void GN::input::BasicInputMsw::pushCharPress( char ch )
     e.type = 1;
     e.ch = ch;
 
-    std::lock_guard<Mutex> mutex( mEventQueueMutex );
+    std::lock_guard<std::mutex> mutex( mEventQueueMutex );
     if( mInputEvents.size() >= EVENT_QUEUE_SIZE )
     {
         mInputEvents.pop();
@@ -253,7 +253,7 @@ void GN::input::BasicInputMsw::pushAxisMove( Axis axis, int distance )
     e.axis.a = axis;
     e.axis.d = distance;
 
-    std::lock_guard<Mutex> mutex( mEventQueueMutex );
+    std::lock_guard<std::mutex> mutex( mEventQueueMutex );
     if( mInputEvents.size() >= EVENT_QUEUE_SIZE )
     {
         mInputEvents.pop();
@@ -271,7 +271,7 @@ void GN::input::BasicInputMsw::pushAxisAbs( Axis axis, int pos )
     e.axis.a = axis;
     e.axis.d = pos;
 
-    std::lock_guard<Mutex> mutex( mEventQueueMutex );
+    std::lock_guard<std::mutex> mutex( mEventQueueMutex );
     if( mInputEvents.size() >= EVENT_QUEUE_SIZE )
     {
         mInputEvents.pop();

@@ -13,7 +13,7 @@
 namespace GN { namespace input
 {
     ///
-    /// Basic input system for MS windows. 实现windows系统下输入系统的基本功能.
+    /// Basic input system for MS windows.
     ///
     class BasicInputMsw : public BasicXInput, public StdClass
     {
@@ -105,7 +105,7 @@ namespace GN { namespace input
         HWND    mWindow;
 
         std::queue<InputEvent> mInputEvents;
-        Mutex                  mEventQueueMutex;
+        std::mutex             mEventQueueMutex;
 
         // ********************************
         // private functions

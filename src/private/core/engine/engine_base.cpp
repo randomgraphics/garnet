@@ -69,7 +69,7 @@ struct Engine
     // Entity manager
     //@{
     typedef HandleManager<engine::Entity*,int> EntityHandleManager;
-    Mutex               entityLock;
+    std::mutex          entityLock;
     EntityHandleManager entities;
     //@}
 

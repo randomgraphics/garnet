@@ -18,7 +18,7 @@ namespace GN
         struct WeakObject
         {
             void      *    ptr; // pointer to RefCounter object
-            GN::Mutex      lock;
+            std::mutex     lock;
             GN::DoubleLink references;
 
             // return true, only when reference list is empty
@@ -137,7 +137,7 @@ namespace GN
         /// reference counter
         ///
         mutable std::atomic_int mRef;
-        mutable GN::Mutex       mWeakLock;
+        mutable std::mutex      mWeakLock;
         mutable WeakObject *    mWeakObj;
         mutable GN::DoubleLink  mWeakLink;
     };
