@@ -396,12 +396,12 @@ public:
             S s1("haha");
             auto a = TestAllocator::allocated();
             auto s2 = std::move(s1);
-            TS_ASSERT_EQUALS(s1.data(), "");
-            TS_ASSERT_EQUALS(s2.data(), "haha");
+            TS_ASSERT_EQUALS(s1.rawptr(), "");
+            TS_ASSERT_EQUALS(s2.rawptr(), "haha");
             TS_ASSERT_EQUALS(TestAllocator::allocated(), a);
             S s3; s3 = std::move(s2);
-            TS_ASSERT_EQUALS(s2.data(), "");
-            TS_ASSERT_EQUALS(s3.data(), "haha");
+            TS_ASSERT_EQUALS(s2.rawptr(), "");
+            TS_ASSERT_EQUALS(s3.rawptr(), "haha");
             TS_ASSERT_EQUALS(TestAllocator::allocated(), a);
         }
         {
