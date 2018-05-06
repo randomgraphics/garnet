@@ -226,7 +226,6 @@ def UTIL_new_env_ex( conf ):
 
     # Target platform specific options
     if 'mswin' == BUILD_TARGET_OS:
-        ccflags['debug']      += ['/RTCsu']
         libs['common']        += Split('kernel32 user32 gdi32 shlwapi advapi32 shell32 ole32')
     elif 'xbox3' == BUILD_TARGET_OS:
         cppdefines['common']  += [
@@ -285,6 +284,9 @@ def UTIL_new_env_ex( conf ):
         # or else, link.exe will report error: cannot open file 'TEMPFILE'
         #
         env['ENV']['USERPROFILE'] = os.environ['USERPROFILE']
+
+        ccflags['common']   += ['/std:c++17'] # enable c++17 standard.
+        ccflags['debug']    += ['/RTCsu']
 
         # Enable C++ EH (with SEH exceptions)
         cxxflags['common']  += ['/EHa', '/utf-8']

@@ -1,4 +1,4 @@
-#ifndef __GN_CORE_FILESYS_H__
+ï»¿#ifndef __GN_CORE_FILESYS_H__
 #define __GN_CORE_FILESYS_H__
 // *****************************************************************************
 /// \file
@@ -19,7 +19,7 @@ namespace GN
         struct FileSystem : public NoCopy
         {
             ///
-            /// Â·¾¶ÊÇ·ñ´æÔÚ
+            /// è·¯å¾„æ˜¯å¦å­˜åœ¨
             ///
             virtual bool exist( const StrA & ) = 0;
 
@@ -63,14 +63,14 @@ namespace GN
             }
 
             ///
-            /// ²éÕÒÖ¸¶¨ÎÄ¼ş
+            /// æŸ¥æ‰¾æŒ‡å®šæ–‡ä»¶
             ///
-            /// \param result     ·µ»ØËÑË÷½á¹û
-            /// \param dirName    ÔÚÊ²Ã´Ä¿Â¼ÏÂ
-            /// \param pattern    ËÑË÷Ê²Ã´ÎÄ¼ş
-            /// \param recursive  ÊÇ·ñµİ¹éËÑË÷×ÓÄ¿Â¼
-            /// \param useRegex   ÊÇ·ñÊ¹ÓÃÕıÔòÆ¥Åä
-            /// \return           ·µ»Ø²ÎÊı result
+            /// \param result     è¿”å›æœç´¢ç»“æœ
+            /// \param dirName    åœ¨ä»€ä¹ˆç›®å½•ä¸‹
+            /// \param pattern    æœç´¢ä»€ä¹ˆæ–‡ä»¶
+            /// \param recursive  æ˜¯å¦é€’å½’æœç´¢å­ç›®å½•
+            /// \param useRegex   æ˜¯å¦ä½¿ç”¨æ­£åˆ™åŒ¹é…
+            /// \return           è¿”å›å‚æ•° result
             ///
             virtual DynaArray<StrA> &
             glob(
