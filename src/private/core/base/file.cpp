@@ -182,7 +182,7 @@ GN_API bool GN::StdFile::seek( size_t offset, FileSeek origin )
         return false;
     }
 
-    if( 0 != ::fseek( mFile, (int)offset, seek_table[origin] ) )
+    if( 0 != ::fseek( mFile, (int)offset, seek_table[(int)origin] ) )
     {
         GN_ERROR(sLogger)( "%s : fseek() failed!", name().rawptr() );
         return false;
@@ -284,14 +284,14 @@ GN_API bool GN::DiskFile::open( const StrA & filename, const StrA & mode )
         close(); return false;
     }
 
-    // 打开文件
+    // 锟斤拷锟侥硷拷
     FILE * fp = sOpenFile( filename.rawptr(), mode.rawptr() );
     if( 0 == fp )
     {
         close(); return false;
     }
 
-    // 得到文件大小
+    // 锟矫碉拷锟侥硷拷锟斤拷小
     ::fseek( fp, 0, SEEK_END );
     mSize = ::ftell( fp );
     ::fseek( fp, 0, SEEK_SET );

@@ -96,6 +96,7 @@ namespace GN
 
 // file system
 #include "base/file.h"
+#include "base/path.h"
 #include "base/filesys.h"
 
 // a general tree structure

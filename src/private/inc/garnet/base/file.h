@@ -1,4 +1,4 @@
-#ifndef __GN_BASE_FILE_H__
+Ôªø#ifndef __GN_BASE_FILE_H__
 #define __GN_BASE_FILE_H__
 // *****************************************************************************
 /// \file
@@ -11,19 +11,14 @@
 namespace GN
 {
     ///
-    /// Œƒº˛∂®Œªƒ£ Ω
+    /// Êñá‰ª∂ÂÆö‰ΩçÊ®°Âºè
     ///
-    struct FileSeek
+    enum class FileSeek
     {
-        enum ENUM
-        {
-            CUR,       ///< same as standard SEEK_CUR
-            END,       ///< same as standard SEEK_END
-            SET,       ///< same as standard SEEK_SET
-            NUM_MODES, ///< number of avaliable seeking modes
-        };
-
-        GN_DEFINE_ENUM_CLASS_HELPERS( FileSeek, ENUM );
+        CUR,       ///< same as standard SEEK_CUR
+        END,       ///< same as standard SEEK_END
+        SET,       ///< same as standard SEEK_SET
+        NUM_MODES, ///< number of avaliable seeking modes
     };
 
     ///
@@ -49,7 +44,7 @@ namespace GN
     ///
     /// basic file interface used throughout of the garnet system
     ///
-    /// ”√ªß µœ÷∏√Œƒº˛¿‡ ±£¨≤ª“ª∂®“™ µœ÷œ¬√ÊµƒÀ˘”–≤Ÿ◊˜°£
+    /// Áî®Êà∑ÂÆûÁé∞ËØ•Êñá‰ª∂Á±ªÊó∂Ôºå‰∏ç‰∏ÄÂÆöË¶ÅÂÆûÁé∞‰∏ãÈù¢ÁöÑÊâÄÊúâÊìç‰Ωú„ÄÇ
     ///
     /// TODO: replace size_t with uint64 or sint64, to support large file on x86 system
     ///
@@ -61,19 +56,19 @@ namespace GN
         const FileOperationCaps & caps() const { return mCaps; }
 
         ///
-        /// ∂¡»°size∏ˆ◊÷Ω⁄µΩbuffer÷–
+        /// ËØªÂèñsize‰∏™Â≠óËäÇÂà∞buffer‰∏≠
         ///
         virtual bool read( void * /*buffer*/, size_t /*size*/, size_t * /*readen*/ ) = 0;
 
         ///
-        /// œÚŒƒº˛÷––¥»Îsize∏ˆ◊÷Ω⁄
+        /// ÂêëÊñá‰ª∂‰∏≠ÂÜôÂÖ•size‰∏™Â≠óËäÇ
         ///
         /// \return   -1 means failed
         ///
         virtual bool write( const void * /*buffer*/, size_t /*size*/, size_t * /*written*/ ) = 0;
 
         ///
-        ///  «∑Ò“—æ≠µΩŒƒº˛Ω·Œ≤. Return true, if something goes wrong.
+        /// ÊòØÂê¶Â∑≤ÁªèÂà∞Êñá‰ª∂ÁªìÂ∞æ. Return true, if failed or not supported.
         ///
         virtual bool eof() const = 0;
 
@@ -96,24 +91,24 @@ namespace GN
         }
 
         ///
-        /// …Ë∂®Œƒº˛∂¡–¥”Œ±ÍµƒŒª÷√
+        /// ËÆæÂÆöÊñá‰ª∂ËØªÂÜôÊ∏∏Ê†áÁöÑ‰ΩçÁΩÆ
         ///
-        /// \return   return false if error
+        /// \return return false if failed or not supported.
         ///
         virtual bool seek( size_t /*offset*/, FileSeek /*origin*/ ) = 0;
 
         ///
-        /// ∑µªÿµ±«∞Œƒº˛∂¡–¥”Œ±ÍµƒŒª÷√. Return -1 if something goes wrong.
+        /// ËøîÂõûÂΩìÂâçÊñá‰ª∂ËØªÂÜôÊ∏∏Ê†áÁöÑ‰ΩçÁΩÆ. Return -1 if failed or not supported.
         ///
         virtual size_t tell() const = 0;
 
         ///
-        /// ∑µªÿŒƒº˛µƒ◊‹≥§∂». Return 0 if something goes wrong.
+        /// ËøîÂõûÊñá‰ª∂ÁöÑÊÄªÈïøÂ∫¶. Return 0 if failed or not supported.
         ///
         virtual size_t size() const = 0;
 
         ///
-        /// get memory mapping of the file content. Return NULL if failed.
+        /// get memory mapping of the file content. Return NULL if not supported or failed.
         ///
         virtual void * map( size_t offset, size_t length, bool readonly ) = 0;
 
@@ -208,7 +203,7 @@ namespace GN
     }
 
     ///
-    /// ”√File∞¸◊∞µƒstandard file stream
+    /// Áî®FileÂåÖË£ÖÁöÑstandard file stream
     ///
     class GN_API StdFile : public File
     {
