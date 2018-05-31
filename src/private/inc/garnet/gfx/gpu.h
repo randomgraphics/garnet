@@ -1362,6 +1362,21 @@ namespace GN { namespace gfx
         /// This function is provided because different API has different ways
         /// to compose projection matrix.
         ///
+        Matrix44f
+        composePerspectiveMatrix( float fovy,
+                                  float ratio,
+                                  float znear,
+                                  float zfar ) const
+        {
+            Matrix44f m;
+            composePerspectiveMatrix(m, fovy, ratio, znear, zfar);
+            return m;
+        }
+
+        ///
+        /// This function is provided because different API has different ways
+        /// to compose projection matrix.
+        ///
         Matrix44f &
         composeOrthoMatrix( Matrix44f & result,
                             float left,

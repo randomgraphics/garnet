@@ -132,7 +132,7 @@ namespace GN { namespace gfx
     ///
     /// think line renderer
     ///
-    class ThickLineRenderer : public StdClass
+    class GN_API ThickLineRenderer : public StdClass
     {
         GN_DECLARE_STDCLASS( ThickLineRenderer, StdClass );
 

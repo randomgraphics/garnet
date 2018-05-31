@@ -1,57 +1,59 @@
 #include "pch.h"
-#include "garnet/GNd3d.h"
-#include "orientationBox.h"
-#include "viewfrustum.h"
+#include "garnet/GNgfx.h"
+#include "garnet/util/sampleApp.h"
+//#include "orientationBox.h"
+//#include "viewfrustum.h"
 
 using namespace GN;
 using namespace GN::gfx;
 using namespace GN::util;
-using namespace GN::d3d9;
 
 static GN::Logger * sLogger = GN::getLogger("GN.sample.thickline");
 
-static XMMATRIX ToXMMatrix( const Matrix44f & m )
-{
-#if GN_PLATFORM_HAS_DIRECTXMATH
-    return XMMATRIX(
-        m[0][0], m[0][1], m[0][2], m[0][3],
-        m[1][0], m[1][1], m[1][2], m[1][3],
-        m[2][0], m[2][1], m[2][2], m[2][3],
-        m[3][0], m[3][1], m[3][2], m[3][3] );
-#else
-    return XMMatrixSet(
-        m[0][0], m[0][1], m[0][2], m[0][3],
-        m[1][0], m[1][1], m[1][2], m[1][3],
-        m[2][0], m[2][1], m[2][2], m[2][3],
-        m[3][0], m[3][1], m[3][2], m[3][3] );
-#endif
-}
+// static XMMATRIX ToXMMatrix( const Matrix44f & m )
+// {
+// #if GN_PLATFORM_HAS_DIRECTXMATH
+//     return XMMATRIX(
+//         m[0][0], m[0][1], m[0][2], m[0][3],
+//         m[1][0], m[1][1], m[1][2], m[1][3],
+//         m[2][0], m[2][1], m[2][2], m[2][3],
+//         m[3][0], m[3][1], m[3][2], m[3][3] );
+// #else
+//     return XMMatrixSet(
+//         m[0][0], m[0][1], m[0][2], m[0][3],
+//         m[1][0], m[1][1], m[1][2], m[1][3],
+//         m[2][0], m[2][1], m[2][2], m[2][3],
+//         m[3][0], m[3][1], m[3][2], m[3][3] );
+// #endif
+// }
 
-Matrix44f ToMatrix44f( CXMMATRIX m )
-{
-#if GN_PLATFORM_HAS_DIRECTXMATH
-    return Matrix44f(
-        XMVectorGetX(m.r[0]), XMVectorGetY(m.r[0]), XMVectorGetZ(m.r[0]), XMVectorGetW(m.r[0]),
-        XMVectorGetX(m.r[1]), XMVectorGetY(m.r[1]), XMVectorGetZ(m.r[1]), XMVectorGetW(m.r[1]),
-        XMVectorGetX(m.r[2]), XMVectorGetY(m.r[2]), XMVectorGetZ(m.r[2]), XMVectorGetW(m.r[2]),
-        XMVectorGetX(m.r[3]), XMVectorGetY(m.r[3]), XMVectorGetZ(m.r[3]), XMVectorGetW(m.r[3]) );
-#else
-    return Matrix44f(
-        m.m[0][0], m.m[0][1], m.m[0][2], m.m[0][3],
-        m.m[1][0], m.m[1][1], m.m[1][2], m.m[1][3],
-        m.m[2][0], m.m[2][1], m.m[2][2], m.m[2][3],
-        m.m[3][0], m.m[3][1], m.m[3][2], m.m[3][3] );
-#endif
-}
+// Matrix44f ToMatrix44f( CXMMATRIX m )
+// {
+// #if GN_PLATFORM_HAS_DIRECTXMATH
+//     return Matrix44f(
+//         XMVectorGetX(m.r[0]), XMVectorGetY(m.r[0]), XMVectorGetZ(m.r[0]), XMVectorGetW(m.r[0]),
+//         XMVectorGetX(m.r[1]), XMVectorGetY(m.r[1]), XMVectorGetZ(m.r[1]), XMVectorGetW(m.r[1]),
+//         XMVectorGetX(m.r[2]), XMVectorGetY(m.r[2]), XMVectorGetZ(m.r[2]), XMVectorGetW(m.r[2]),
+//         XMVectorGetX(m.r[3]), XMVectorGetY(m.r[3]), XMVectorGetZ(m.r[3]), XMVectorGetW(m.r[3]) );
+// #else
+//     return Matrix44f(
+//         m.m[0][0], m.m[0][1], m.m[0][2], m.m[0][3],
+//         m.m[1][0], m.m[1][1], m.m[1][2], m.m[1][3],
+//         m.m[2][0], m.m[2][1], m.m[2][2], m.m[2][3],
+//         m.m[3][0], m.m[3][1], m.m[3][2], m.m[3][3] );
+// #endif
+// }
 
-class ThickLineDemo : public D3D9Application
+class ThickLineDemo : public SampleApp
 {
-    D3D9ThickLineRenderer rndr;
-    D3D9OrientationBox orientation;
+    using ThickLineVertex = GN::gfx::ThickLineRenderer::ThickLineVertex;
 
-    float    radius;
-    ArcBall  arcball;
-    XMMATRIX proj, view;
+    GN::gfx::ThickLineRenderer rndr;
+    //D3D9OrientationBox orientation;
+
+    float     radius;
+    ArcBall   arcball;
+    Matrix44f proj, view;
 
     int activeScene;
 
@@ -60,28 +62,29 @@ class ThickLineDemo : public D3D9Application
     uint16          m_BoxIndices[36];
 
     // view frustum scene
-    D3D9ViewFrustum viewFrustum;
+    //D3D9ViewFrustum viewFrustum;
 
     void updateRadius()
     {
-        IDirect3DDevice9 & dev = d3d9dev();
-        D3DVIEWPORT9 vp;
-        dev.GetViewport( &vp );
+        auto gpu = engine::getGpu();
+        const auto & gc = gpu->getContext();
+        const auto & vp = gc.rs.viewport;
 
         // setup transformation matrices
-        view = XMMatrixLookAtRH( XMVectorSet(0,0,radius,1), XMVectorSet(0,0,0,1), XMVectorSet(0,1,0,0) );
-        proj = XMMatrixPerspectiveFovRH( GN_PI/3.0f, (float)vp.Width/vp.Height, radius / 100.0f, radius * 2.0f );
+        Matrix44f view, proj;
+        view.lookAt( GN::Vector3f(0, 0, radius), GN::Vector3f(0, 0, 0), GN::Vector3f(0, 1, 0) );
+        proj = gpu->composePerspectiveMatrix( GN_PI/3.0f, (float)vp.w / vp.h, radius / 100.0f, radius * 2.0f );
 
         // setup arcball
         float h = tan( 0.5f ) * radius * 2.0f;
-        arcball.setMouseMoveWindow( 0, 0, (int)vp.Width, (int)vp.Height );
-        arcball.setViewMatrix( ToMatrix44f(XMMatrixTranspose(view)) );
-        arcball.setTranslationSpeed( h / vp.Height );
+        arcball.setMouseMoveWindow( 0, 0, (int)vp.w, (int)vp.h );
+        arcball.setViewMatrix( view );
+        arcball.setTranslationSpeed( h / vp.h );
     }
 
 public:
 
-    ThickLineDemo() : orientation(64.0f)
+    ThickLineDemo() //: orientation(64.0f)
     {
         activeScene = 1;
 
@@ -101,45 +104,34 @@ public:
             m_Box[i].color = 0xFFFFFFFF;
         }
 
-        // create viewfrustum geometry
-        viewFrustum.UpdateViewFrustumRH(
-            XMVectorSet( 5, 0, 0, 1 ), // eye
-            XMVectorSet( 0, 0, 0, 1 ), // at
-            XMVectorSet( 0, 1, 0, 0 ), // up
-            XM_PI / 3.0f, // fovy
-            4.0f / 3.0f, // ratio
-            1.0f, // near
-            10.0f ); // far
+        // // create viewfrustum geometry
+        // viewFrustum.UpdateViewFrustumRH(
+        //     XMVectorSet( 5, 0, 0, 1 ), // eye
+        //     XMVectorSet( 0, 0, 0, 1 ), // at
+        //     XMVectorSet( 0, 1, 0, 0 ), // up
+        //     XM_PI / 3.0f, // fovy
+        //     4.0f / 3.0f, // ratio
+        //     1.0f, // near
+        //     10.0f ); // far
     }
 
     ~ThickLineDemo()
     {
     }
 
-    bool onCreate()
+    bool onInit() override
     {
-        IDirect3DDevice9 & dev = d3d9dev();
+        auto gpu = engine::getGpu();
 
-        if( !rndr.onDeviceCreate( &dev ) ) return false;
-        if( !orientation.OnDeviceCreate( &dev ) ) return false;
-        if( !viewFrustum.OnDeviceCreate( &dev ) ) return false;
+        if( !rndr.init( *gpu ) ) return false;
+        // if( !orientation.OnDeviceCreate( &dev ) ) return false;
+        // if( !orientation.OnDeviceRestore() ) return false;
+        // if( !viewFrustum.OnDeviceCreate( &dev ) ) return false;
+        // if( !viewFrustum.OnDeviceRestore() ) return false;
 
         // setup arcball
         arcball.setHandness( util::RIGHT_HAND );
         arcball.connectToInput();
-
-        return true;
-    }
-
-    bool onRestore()
-    {
-        if( !rndr.onDeviceRestore() ) return false;
-        if( !orientation.OnDeviceRestore() ) return false;
-        if( !viewFrustum.OnDeviceRestore() ) return false;
-
-        IDirect3DDevice9 & dev = d3d9dev();
-        D3DVIEWPORT9 vp;
-        dev.GetViewport( &vp );
 
         radius = 15.0f;
         updateRadius();
@@ -147,22 +139,19 @@ public:
         return true;
     }
 
-    void onDispose()
+    void onQuit() override
     {
-        rndr.onDeviceDispose();
-        orientation.OnDeviceDispose();
-        viewFrustum.OnDeviceDispose();
+        rndr.quit();
+        // orientation.OnDeviceDispose();
+        // orientation.OnDeviceDelete();
+        // viewFrustum.OnDeviceDispose();
+        // viewFrustum.OnDeviceDelete();
     }
 
-    void onDestroy()
+    void onKeyPress( input::KeyEvent ke ) override
     {
-        rndr.onDeviceDelete();
-        orientation.OnDeviceDelete();
-        viewFrustum.OnDeviceDelete();
-    }
+        SampleApp::onKeyPress(ke);
 
-    void onKeyPress( input::KeyEvent ke )
-    {
         if( input::KeyCode::SPACEBAR == ke.code && ke.status.down )
         {
             const int NUM_SCENES = 2;
@@ -170,7 +159,7 @@ public:
         }
     }
 
-    void onAxisMove( GN::input::Axis a, int d )
+    void onAxisMove( GN::input::Axis a, int d ) override
     {
         if( GN::input::Axis::MOUSE_WHEEL_0 == a )
         {
@@ -181,18 +170,16 @@ public:
         }
     }
 
-    void DrawBoxScene( CXMMATRIX world )
+    void DrawBoxScene( const Matrix44f & world )
     {
-        IDirect3DDevice9 & dev = d3d9dev();
-
-        ThickLineParameters p;
+        GN::gfx::ThickLineRenderer::ThickLineParameters p;
         p.worldview = world * view;
         p.proj = proj;
         p.width = 0.1f;
         p.widthInScreenSpace = false;
         if( rndr.drawBegin( p ) )
         {
-            dev.SetRenderState( D3DRS_FILLMODE, D3DFILL_SOLID );
+            //dev.SetRenderState( D3DRS_FILLMODE, D3DFILL_SOLID );
 
             for( size_t i = 0; i < GN_ARRAY_COUNT(m_BoxIndices)/3; ++i )
             {
@@ -205,45 +192,34 @@ public:
         }
     }
 
-    void DrawViewFrustumScene( CXMMATRIX world )
+    void onUpdate() override
     {
-        viewFrustum.DrawRH( world * view, proj );
     }
 
-    void onDraw()
+    void onRender() override
     {
-        IDirect3DDevice9 & dev = d3d9dev();
+        auto gpu = engine::getGpu();
 
-        dev.Clear( 0, NULL, D3DCLEAR_TARGET|D3DCLEAR_ZBUFFER|D3DCLEAR_STENCIL, 0, 1.0f, 0 );
+        gpu->clearScreen();
 
-        if( SUCCEEDED( dev.BeginScene() ) )
+        auto r = arcball.getRotationMatrix44();
+        auto t = Matrix44f::sTranslate( arcball.getTranslation() );
+        auto world = t * r;
+
+        // draw box frame
+        switch( activeScene )
         {
-            Matrix44f r = arcball.getRotationMatrix44();
-            Matrix44f t = Matrix44f::sTranslate( arcball.getTranslation() );
-            XMMATRIX world = XMMatrixTranspose( ToXMMatrix(t * r) );
-
-            // draw box frame
-            switch( activeScene )
-            {
-                case 0: DrawBoxScene( world ); break;
-                case 1: DrawViewFrustumScene( world ); break;
-            }
-
-            // draw orientation box
-            orientation.Draw( 32, 32, XMMatrixTranspose(ToXMMatrix(r)) );
-
-            dev.EndScene();
+            case 0: DrawBoxScene( world ); break;
+            // case 1: viewFrustum.DrawRH( world * view, proj ); break;
         }
 
-        dev.Present( 0, 0, 0, 0 );
+        // draw orientation box
+        //orientation.Draw( 32, 32, XMMatrixTranspose(ToXMMatrix(r)) );
     }
 };
 
-int main()
+int main(int argc, const char * argv[])
 {
-    D3D9AppOption opt;
-    //opt.refdev = true;
-
     ThickLineDemo app;
-    return app.run( &opt );
+    return app.run(argc, argv);
 }

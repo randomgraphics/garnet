@@ -354,6 +354,7 @@ bool GN::gfx::ThickLineRenderer::init( Gpu & g )
 
         const GpuProgramParameterDesc & gppd = mContext.gpuProgram->getParameterDesc();
 
+        mContext.vtxbind.resize(3);
         mContext.vtxbind[0].attribute = gppd.attributes["POSITION0"];
         mContext.vtxbind[1].attribute = gppd.attributes["COLOR0"];
         mContext.vtxbind[2].attribute = gppd.attributes["TEXCOORD0"];
@@ -386,6 +387,7 @@ bool GN::gfx::ThickLineRenderer::init( Gpu & g )
 
         const GpuProgramParameterDesc & gppd = mContext.gpuProgram->getParameterDesc();
 
+        mContext.vtxbind.resize(3);
         mContext.vtxbind[0].attribute = gppd.attributes["gl_Vertex"];
         mContext.vtxbind[1].attribute = gppd.attributes["gl_Color"];
         mContext.vtxbind[2].attribute = gppd.attributes["gl_MultiTexCoord0"];
