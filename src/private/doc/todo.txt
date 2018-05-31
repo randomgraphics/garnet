@@ -3,11 +3,14 @@
 
 - 程序中标注TODO的地方
 
-- p(-1)
-  - disalbe render window "close" button.
-  - replace filesystem with "std::filesystem"
-
 - p0
+  - port thick line sample to use GN::gfx::ThickLineRenderer
+  - port useful stuffs from old garnet library (0.7.0a):
+    - gui system
+    - bump demo
+    - portal demo
+    - application task scheduler.
+  - disalbe render window "close" button.
   - upgrade assimp
   - constant/uniform buffer object for opengl.
   - D3D12 friendly resource binding:
@@ -46,11 +49,6 @@
   - update skinned mesh bounding box with animation
   - unit test:
     - DynaArray<???,uint8>
-  - port useful stuffs from old garnet library (0.7.0a):
-    - gui system
-    - bump demo
-    - portal demo
-    - application task scheduler.
   - New Engine module entity class
     - loop through all entities
     - loop through entities of specific type
@@ -76,7 +74,6 @@
         - output: color
       - final shader = diffuse shader + skinning shader + texturing shader.
     - See if there's existing (open source) code
-  - Winphone 7 integration
   - Cuda or OpenCL integration
   - runtime tweakable parameters: client/server communication
     - basic features:
