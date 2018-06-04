@@ -126,9 +126,9 @@ static bool flatten_point_in_polygon( const POINT & point,
 //
 // check if the point is inside the 3D plane
 // ----------------------------------------------------------------------------
-static bool point_in_polygon( const vec3_c & point,
-                              const plane3_c & p,      // 多边形所在平面
-                              const vec3_c * verts,    // 多边形顶点列表
+static bool point_in_polygon( const Vector3f & point,
+                              const Plane3f & p,      // 多边形所在平面
+                              const Vector3f * verts,    // 多边形顶点列表
                               size_t        numvert )  // 多边形顶点数目
 {
     GN_ASSERT( 0 == classify(p, point) );
@@ -177,12 +177,12 @@ static bool point_in_polygon( const vec3_c & point,
 //
 // 平面多边形和线段的交点
 // ----------------------------------------------------------------------------
-bool intersection_polygon_segment( vec3_c & ipoint,         // 返回交点
-                                   const plane3_c & p,       // 多边形所在平面
-                                   const vec3_c * verts,    // 多边形顶点列表
+bool intersection_polygon_segment( Vector3f & ipoint,         // 返回交点
+                                   const Plane3f & p,       // 多边形所在平面
+                                   const Vector3f * verts,    // 多边形顶点列表
                                    size_t        numvert,   // 多边形顶点数目
-                                   const vec3_c & start,    // 线段起点
-                                   const vec3_c & end )     // 线段终点
+                                   const Vector3f & start,    // 线段起点
+                                   const Vector3f & end )     // 线段终点
 {
     GN_GUARD_SLOW;
 
@@ -198,12 +198,12 @@ bool intersection_polygon_segment( vec3_c & ipoint,         // 返回交点
 //
 // 平面多边形和射线的交点
 // ----------------------------------------------------------------------------
-bool intersection_polygon_ray( vec3_c & ipoint,         // 返回交点
-                               const plane3_c & p,      // 多边形所在平面
-                               const vec3_c * verts,    // 多边形顶点列表
+bool intersection_polygon_ray( Vector3f & ipoint,         // 返回交点
+                               const Plane3f & p,      // 多边形所在平面
+                               const Vector3f * verts,    // 多边形顶点列表
                                size_t     numvert,      // 多边形顶点数目
-                               const vec3_c & start,    // 射线起点
-                               const vec3_c & dir )     // 射线方向
+                               const Vector3f & start,    // 射线起点
+                               const Vector3f & dir )     // 射线方向
 {
     GN_GUARD_SLOW;
 
@@ -218,12 +218,12 @@ bool intersection_polygon_ray( vec3_c & ipoint,         // 返回交点
 //
 // 平面多边形和直线的交点
 // ----------------------------------------------------------------------------
-bool intersection_polygon_line( vec3_c & ipoint,        // 返回交点
-                                const plane3_c & p,     // 多边形所在平面
-                                const vec3_c * verts,   // 多边形顶点列表
+bool intersection_polygon_line( Vector3f & ipoint,        // 返回交点
+                                const Plane3f & p,     // 多边形所在平面
+                                const Vector3f * verts,   // 多边形顶点列表
                                 size_t numvert,         // 多边形顶点数目
-                                const vec3_c & point,   // 直线上一点
-                                const vec3_c & dir )    // 直线方向
+                                const Vector3f & point,   // 直线上一点
+                                const Vector3f & dir )    // 直线方向
 {
     GN_GUARD_SLOW;
 

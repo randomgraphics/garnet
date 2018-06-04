@@ -43,13 +43,13 @@ public :
 
     // 与射线的碰撞检测
     bool collide_with_radial( collideinfo_s &,
-                              const vec3_c & start,
-                              const vec3_c & dir ) const;
+                              const Vector3f & start,
+                              const Vector3f & dir ) const;
 
     // 与线段的碰撞检测
     bool collide_with_segment( collideinfo_s &,
-                               const vec3_c & start,
-                               const vec3_c & end ) const;
+                               const Vector3f & start,
+                               const Vector3f & end ) const;
 
 
     // check if the point is in solid space of the sector
@@ -57,7 +57,7 @@ public :
     //   -1 : solid space
     //    0 : 正好落在边界上
     //    1 : else
-    int in_solid( const vec3_c & v ) const
+    int in_solid( const Vector3f & v ) const
     {
         return bsptree.in_solid( v );
     }

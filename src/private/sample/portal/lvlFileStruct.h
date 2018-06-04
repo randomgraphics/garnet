@@ -177,9 +177,9 @@ struct lvlPortal
     char                name[64];            //关卡编辑器中的名字，用来与脚本连接
     uint                frontSectorID;        //portal面对连接的sector
     uint                backSectorID;        //portal背对连接的sector
-    plane3_c                plane;                //所在平面
+    Plane3f                plane;                //所在平面
     uint                numVert;            //多边形顶点数量
-    vec3_c                *vList;                //多边形顶点列表
+    Vector3f                *vList;                //多边形顶点列表
     char                scriptName[64];        //脚本文件名
     char                reserve[LVL_FILE_DEFAULT_RESERVE];
 
@@ -190,9 +190,9 @@ struct lvlPortal
         fwrite( name, sizeof(char), 64, fp );
         fwrite( &frontSectorID, sizeof(int), 1, fp );
         fwrite( &backSectorID, sizeof(int), 1, fp );
-        fwrite( &plane, sizeof(plane3_c), 1, fp);
+        fwrite( &plane, sizeof(Plane3f), 1, fp);
         fwrite( &numVert, sizeof(int), 1, fp );
-        fwrite( vList, sizeof(vec3_c), numVert, fp);
+        fwrite( vList, sizeof(Vector3f), numVert, fp);
         fwrite( scriptName, sizeof(char), 64, fp );
         fwrite( reserve, sizeof(char), LVL_FILE_DEFAULT_RESERVE, fp );
         return true;
@@ -207,10 +207,10 @@ struct lvlPortal
         fread( name, sizeof(char), 64, fp );
         fread( &frontSectorID, sizeof(int), 1, fp );
         fread( &backSectorID, sizeof(int), 1, fp );
-        fread( &plane, sizeof(plane3_c), 1, fp );
+        fread( &plane, sizeof(Plane3f), 1, fp );
         fread( &numVert, sizeof(int), 1, fp );
-        vList = new vec3_c[numVert];
-        fread( vList, sizeof(vec3_c), numVert, fp );
+        vList = new Vector3f[numVert];
+        fread( vList, sizeof(Vector3f), numVert, fp );
         fread( scriptName, sizeof(char), 64, fp );
         fread( reserve, sizeof(char), LVL_FILE_DEFAULT_RESERVE, fp );
         return true;
@@ -234,7 +234,7 @@ struct lvlPortal
 
 struct lvlFace
 {
-    plane3_c                plane;                //face所在的平面
+    Plane3f                plane;                //face所在的平面
 
     unsigned int        texId;                //face的贴图在材质库中的索引，前16位表示class，后16位表示id
 
@@ -244,7 +244,7 @@ struct lvlFace
 
     unsigned int        property;            //面属性
 
-    vec3_c                faceClr;            //面光源的颜色
+    Vector3f                faceClr;            //面光源的颜色
 
     char                scriptName[64];        //脚本文件名
 
@@ -287,7 +287,7 @@ struct lvlDrawFace
 
     uint                num_vert;            //polygon的顶点数
 
-    vec3_c                *vList;                //顶点列表
+    Vector3f                *vList;                //顶点列表
 
     vec2_c                *uvList;            //对应的uv列表
 
@@ -301,7 +301,7 @@ struct lvlDrawFace
 
         fwrite( &faceId, sizeof(int), 1, fp );
         fwrite( &num_vert, sizeof(int), 1, fp );
-        fwrite( vList, sizeof(vec3_c), num_vert, fp );
+        fwrite( vList, sizeof(Vector3f), num_vert, fp );
         fwrite( uvList, sizeof(vec2_c), num_vert, fp );
         fwrite( luvList, sizeof(vec2_c), num_vert, fp );
         fwrite( reserve, sizeof(char), LVL_FILE_DEFAULT_RESERVE, fp );
@@ -316,10 +316,10 @@ struct lvlDrawFace
 
         fread( &faceId, sizeof(int), 1, fp );
         fread( &num_vert, sizeof(int), 1, fp );
-        vList = new vec3_c[num_vert];
+        vList = new Vector3f[num_vert];
         uvList = new vec2_c[num_vert];
         luvList = new vec2_c[num_vert];
-        fread( vList, sizeof(vec3_c), num_vert, fp );
+        fread( vList, sizeof(Vector3f), num_vert, fp );
         fread( uvList, sizeof(vec2_c), num_vert, fp );
         fread( luvList, sizeof(vec2_c), num_vert, fp );
         fread( reserve, sizeof(char), LVL_FILE_DEFAULT_RESERVE, fp );
@@ -349,7 +349,7 @@ struct lvlCollideFace
 
     uint                num_vert;            //polygon的顶点数
 
-    vec3_c                *vList;                //顶点列表
+    Vector3f                *vList;                //顶点列表
 
     char                reserve[LVL_FILE_DEFAULT_RESERVE];
 
@@ -360,7 +360,7 @@ struct lvlCollideFace
         fwrite( &faceId, sizeof(int), 1, fp );
         fwrite( &portalId, sizeof(int), 1, fp );
         fwrite( &num_vert, sizeof(int), 1, fp );
-        fwrite( vList, sizeof(vec3_c), num_vert, fp );
+        fwrite( vList, sizeof(Vector3f), num_vert, fp );
         fwrite( reserve, sizeof(char), LVL_FILE_DEFAULT_RESERVE, fp );
         return true;
 
@@ -374,8 +374,8 @@ struct lvlCollideFace
         fread( &faceId, sizeof(int), 1, fp );
         fread( &portalId, sizeof(int), 1, fp );
         fread( &num_vert, sizeof(int), 1, fp );
-        vList = new vec3_c[num_vert];
-        fread( vList, sizeof(vec3_c), num_vert, fp );
+        vList = new Vector3f[num_vert];
+        fread( vList, sizeof(Vector3f), num_vert, fp );
         fread( reserve, sizeof(char), LVL_FILE_DEFAULT_RESERVE, fp );
         return true;
 
@@ -398,7 +398,7 @@ struct lvlNonStructFace
 
     uint                num_vert;            //polygon的顶点数
 
-    vec3_c                *vList;                //顶点列表
+    Vector3f                *vList;                //顶点列表
 
     char                reserve[LVL_FILE_DEFAULT_RESERVE];
 
@@ -409,7 +409,7 @@ struct lvlNonStructFace
         fwrite( &type, sizeof(unsigned int), 1, fp );
         fwrite( &texId, sizeof(unsigned int), 1, fp );
         fwrite( &num_vert, sizeof(int), 1, fp );
-        fwrite( vList, sizeof(vec3_c), num_vert, fp );
+        fwrite( vList, sizeof(Vector3f), num_vert, fp );
         fwrite( reserve, sizeof(char), LVL_FILE_DEFAULT_RESERVE, fp );
         return true;
 
@@ -423,8 +423,8 @@ struct lvlNonStructFace
         fread( &type, sizeof(int), 1, fp );
         fread( &texId, sizeof(unsigned int), 1, fp );
         fread( &num_vert, sizeof(int), 1, fp );
-        vList = new vec3_c[num_vert];
-        fread( vList, sizeof(vec3_c), num_vert, fp );
+        vList = new Vector3f[num_vert];
+        fread( vList, sizeof(Vector3f), num_vert, fp );
         fread( reserve, sizeof(char), LVL_FILE_DEFAULT_RESERVE, fp );
         return true;
 
@@ -441,7 +441,7 @@ struct lvlNonStructFace
 //----------------------------------------------------------------------------------
 struct lvlBspNode
 {
-    plane3_c                plane;                //node的平面
+    Plane3f                plane;                //node的平面
 
     uint                num_face;            //lvlCollideFace的数量
 
@@ -455,7 +455,7 @@ struct lvlBspNode
     {
         GN_GUARD;
 
-        fwrite( &plane, sizeof(plane3_c), 1, fp );
+        fwrite( &plane, sizeof(Plane3f), 1, fp );
         fwrite( &num_face, sizeof(int), 1, fp );
         fwrite( faceId, sizeof(int), num_face, fp);
         fwrite( &parent, sizeof(int), 1, fp );
@@ -470,7 +470,7 @@ struct lvlBspNode
     {
         GN_GUARD;
 
-        fread( &plane, sizeof(plane3_c), 1, fp );
+        fread( &plane, sizeof(Plane3f), 1, fp );
         fread( &num_face, sizeof(int), 1, fp );
         faceId = new uint[num_face];
         fread( faceId, sizeof(int), num_face, fp );
@@ -501,19 +501,19 @@ struct lvlCurve
 
     uint                numCtrlPtW, numCtrlPtH;//控制点数量
 
-    vec3_c *            ctrlPtList;            //控制点列表，按行排列
+    Vector3f *            ctrlPtList;            //控制点列表，按行排列
 
     uint                numSampleW, numSampleH;//采样点数量，不是采样率
 
-    vec3_c *            sampleClrList;        //采样点颜色列表，按行排列
+    Vector3f *            sampleClrList;        //采样点颜色列表，按行排列
 
     vec2_c *            sampleUVList;        //采样点uv列表，按行排列
 
     unsigned int        property;            //face light....
 
-    vec3_c                color;                //face light color
+    Vector3f                color;                //face light color
 
-    vec3_c                center;                //center of the curve
+    Vector3f                center;                //center of the curve
 
     char                reserve[LVL_FILE_DEFAULT_RESERVE];
 
@@ -526,16 +526,16 @@ struct lvlCurve
 
         fwrite( &numCtrlPtW, sizeof(int), 1, fp );
         fwrite( &numCtrlPtH, sizeof(int), 1, fp );
-        fwrite( ctrlPtList, sizeof(vec3_c), numCtrlPtW*numCtrlPtH, fp );
+        fwrite( ctrlPtList, sizeof(Vector3f), numCtrlPtW*numCtrlPtH, fp );
 
         fwrite( &numSampleW, sizeof(int), 1, fp );
         fwrite( &numSampleH, sizeof(int), 1, fp );
-        fwrite( sampleClrList, sizeof(vec3_c), numSampleW*numSampleH, fp );
+        fwrite( sampleClrList, sizeof(Vector3f), numSampleW*numSampleH, fp );
         fwrite( sampleUVList, sizeof(vec2_c), numSampleW*numSampleH, fp );
 
         fwrite( &property, sizeof(int), 1, fp );
-        fwrite( &color, sizeof(vec3_c), 1, fp );
-        fwrite( &center, sizeof(vec3_c), 1, fp );
+        fwrite( &color, sizeof(Vector3f), 1, fp );
+        fwrite( &center, sizeof(Vector3f), 1, fp );
         fwrite( reserve, sizeof(char), LVL_FILE_DEFAULT_RESERVE, fp );
         return true;
 
@@ -551,19 +551,19 @@ struct lvlCurve
 
         fread( &numCtrlPtW, sizeof(int), 1, fp );
         fread( &numCtrlPtH, sizeof(int), 1, fp );
-        ctrlPtList = new vec3_c[numCtrlPtW*numCtrlPtH];
-        fread( ctrlPtList, sizeof(vec3_c), numCtrlPtW*numCtrlPtH, fp );
+        ctrlPtList = new Vector3f[numCtrlPtW*numCtrlPtH];
+        fread( ctrlPtList, sizeof(Vector3f), numCtrlPtW*numCtrlPtH, fp );
 
         fread( &numSampleW, sizeof(int), 1, fp );
         fread( &numSampleH, sizeof(int), 1, fp );
-        sampleClrList = new vec3_c[numSampleW*numSampleH];
+        sampleClrList = new Vector3f[numSampleW*numSampleH];
         sampleUVList = new vec2_c[numSampleW*numSampleH];
-        fread( sampleClrList, sizeof(vec3_c), numSampleW*numSampleH, fp );
+        fread( sampleClrList, sizeof(Vector3f), numSampleW*numSampleH, fp );
         fread( sampleUVList, sizeof(vec2_c), numSampleW*numSampleH, fp );
 
         fread( &property, sizeof(int), 1, fp );
-        fread( &color, sizeof(vec3_c), 1, fp );
-        fread( &center, sizeof(vec3_c), 1, fp );
+        fread( &color, sizeof(Vector3f), 1, fp );
+        fread( &center, sizeof(Vector3f), 1, fp );
         fread( reserve, sizeof(char), LVL_FILE_DEFAULT_RESERVE, fp );
         return true;
 
@@ -588,13 +588,13 @@ struct lvlModel
 
     uint                modelNameId;        //模型文件名列表的id
 
-    vec3_c                trans;                //平移
+    Vector3f                trans;                //平移
 
-    vec3_c                rotate;                //旋转
+    Vector3f                rotate;                //旋转
 
     uint                num_vert;            //模型的顶点数
 
-    vec3_c*            vClrList;            //顶点颜色列表
+    Vector3f*            vClrList;            //顶点颜色列表
 
     char                scriptName[64];        //脚本文件名
 
@@ -607,10 +607,10 @@ struct lvlModel
 
         fwrite( name, sizeof(char), 64, fp );
         fwrite( &modelNameId, sizeof(int), 1, fp );
-        fwrite( &trans, sizeof(vec3_c), 1, fp );
-        fwrite( &rotate, sizeof(vec3_c), 1, fp );
+        fwrite( &trans, sizeof(Vector3f), 1, fp );
+        fwrite( &rotate, sizeof(Vector3f), 1, fp );
         fwrite( &num_vert, sizeof(int), 1, fp );
-        fwrite( vClrList, sizeof(vec3_c), num_vert, fp );
+        fwrite( vClrList, sizeof(Vector3f), num_vert, fp );
         fwrite( &scriptName, sizeof(char), 64, fp );
         fwrite( reserve, sizeof(char), LVL_FILE_DEFAULT_RESERVE, fp );
         return true;
@@ -624,11 +624,11 @@ struct lvlModel
 
         fread( name, sizeof(char), 64, fp );
         fread( &modelNameId, sizeof(int), 1, fp );
-        fread( &trans, sizeof(vec3_c), 1, fp );
-        fread( &rotate, sizeof(vec3_c), 1, fp );
+        fread( &trans, sizeof(Vector3f), 1, fp );
+        fread( &rotate, sizeof(Vector3f), 1, fp );
         fread( &num_vert, sizeof(int), 1, fp );
-        vClrList = new vec3_c[num_vert];
-        fread( vClrList, sizeof(vec3_c), num_vert, fp );
+        vClrList = new Vector3f[num_vert];
+        fread( vClrList, sizeof(Vector3f), num_vert, fp );
         fread( &scriptName, sizeof(char), 64, fp );
         fread( reserve, sizeof(char), LVL_FILE_DEFAULT_RESERVE, fp );
         return true;
@@ -646,11 +646,11 @@ struct lvlModel
 //----------------------------------------------------------------------------------
 struct lvlPointLight
 {
-    vec3_c                pos;
+    Vector3f                pos;
 
     float                dist;
 
-    vec3_c                color;
+    Vector3f                color;
 
     unsigned int        property;
 
@@ -684,15 +684,15 @@ struct lvlPointLight
 //----------------------------------------------------------------------------------
 struct lvlSpotLight
 {
-    vec3_c                pos;
+    Vector3f                pos;
 
-    vec3_c                dir;
+    Vector3f                dir;
 
     float                dist;
 
     int                    fov;            //fov in degree;
 
-    vec3_c                color;
+    Vector3f                color;
 
     unsigned int        property;
 
@@ -731,7 +731,7 @@ struct lvlEntity
     // sector id [9/11/2002]
     uint                sectorId;
 
-    vec3_c                pos;
+    Vector3f                pos;
 
     //defined by game
     char                userData[ENTITY_USERDATA_SIZE];
@@ -743,7 +743,7 @@ struct lvlEntity
 
         fwrite( &id, sizeof(int), 1, fp );
         fwrite( &sectorId, sizeof(int), 1, fp );
-        fwrite( &pos, sizeof(vec3_c), 1, fp );
+        fwrite( &pos, sizeof(Vector3f), 1, fp );
         fwrite( &userDataSize, sizeof(int), 1, fp );
         if( userDataSize ) fwrite( userData, sizeof(char), userDataSize, fp );
 
@@ -758,7 +758,7 @@ struct lvlEntity
 
         fread( &id, sizeof(int), 1, fp );
         fread( &sectorId, sizeof(int), 1, fp );
-        fread( &pos, sizeof(vec3_c), 1, fp );
+        fread( &pos, sizeof(Vector3f), 1, fp );
         fread( &userDataSize, sizeof(int), 1, fp );
         if( userDataSize ) fread( userData, sizeof(char), userDataSize, fp );
 
@@ -779,7 +779,7 @@ struct lvlSpace
 
     uint                num_plane;        //
 
-    plane3_c                *planeList;
+    Plane3f                *planeList;
 
     char                scriptName[64];        //脚本文件名
 
@@ -791,7 +791,7 @@ struct lvlSpace
 
         fwrite( &type, sizeof(int), 1, fp );
         fwrite( &num_plane, sizeof(int), 1, fp );
-        fwrite( planeList, sizeof(plane3_c), num_plane, fp );
+        fwrite( planeList, sizeof(Plane3f), num_plane, fp );
         fwrite( scriptName, sizeof(char), 64, fp );
         fwrite( reserve, sizeof(char), LVL_FILE_DEFAULT_RESERVE, fp );
         return true;
@@ -805,8 +805,8 @@ struct lvlSpace
 
         fread( &type, sizeof(int), 1, fp );
         fread( &num_plane, sizeof(int), 1, fp );
-        planeList = new plane3_c[num_plane];
-        fread( planeList, sizeof(plane3_c), num_plane, fp );
+        planeList = new Plane3f[num_plane];
+        fread( planeList, sizeof(Plane3f), num_plane, fp );
         fread( scriptName, sizeof(char), 64, fp );
         fread( reserve, sizeof(char), LVL_FILE_DEFAULT_RESERVE, fp );
         return true;

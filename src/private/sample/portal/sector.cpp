@@ -7,14 +7,14 @@
 //
 // ----------------------------------------------------------------------------
 bool sector_c::collide_with_radial( collideinfo_s & cinfo,
-                                    const vec3_c & start,
-                                    const vec3_c & dir ) const
+                                    const Vector3f & start,
+                                    const Vector3f & dir ) const
 {
     // make sure start point is in myself
     GN_ASSERT( -1 != in_solid(start) );
 
     // find the portal which the ray going through
-    vec3_c ipoint;
+    Vector3f ipoint;
     portal_list_c::const_iterator pi = portals.begin(),
         pe = portals.end();
     for ( ; pi != pe; ++pi )
@@ -79,8 +79,8 @@ extern bool halt;
 //
 // ----------------------------------------------------------------------------
 bool sector_c::collide_with_segment( collideinfo_s & cinfo,
-                                     const vec3_c & start,
-                                     const vec3_c & end ) const
+                                     const Vector3f & start,
+                                     const Vector3f & end ) const
 {
     // make sure start point is in myself
     // GN_ASSERT( -1 != in_solid(start) );
@@ -91,7 +91,7 @@ bool sector_c::collide_with_segment( collideinfo_s & cinfo,
     }
 
     // find the portal which the ray going through
-    vec3_c ipoint;
+    Vector3f ipoint;
     portal_list_c::const_iterator pi = portals.begin(),
         pe = portals.end();
     for ( ; pi != pe; ++pi )

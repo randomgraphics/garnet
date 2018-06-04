@@ -11,13 +11,13 @@ bool portaldemo_c::on_initialize()
     GN_GUARD;
 
     // initialize overview camera
-    get_camctrl().lookat( vec3_c(1000.0f, 1000.0f, 1000.0f),
-                          vec3_c(0.0f, 0.0f, 0.0f),
-                          vec3_c(0.0f, 1.0f, 0.0f) );
+    get_camctrl().lookat( Vector3f(1000.0f, 1000.0f, 1000.0f),
+                          Vector3f(0.0f, 0.0f, 0.0f),
+                          Vector3f(0.0f, 1.0f, 0.0f) );
     get_camctrl().set_move_speed( 500.0f );
 
     // initialize camera 2 stuff
-    m_camctrl2.set_position( vec3_c(-1205.96f,243.55f,954.04f) );
+    m_camctrl2.set_position( Vector3f(-1205.96f,243.55f,954.04f) );
     m_camctrl2.set_orientation( quaternion_c::IDENTITY );
     m_camctrl2.set_move_speed( 200.0f );
     input_i::keycode_t keys[] = {
@@ -128,7 +128,7 @@ void portaldemo_c::on_frame_update( float elapsed_time )
     // update portal clipping camera stuff
     if ( !halt ) m_camctrl2.update( elapsed_time );
 
-    m_camframe2.set_l2p( matrix44_c(
+    m_camframe2.set_l2p( Matrix44f(
         m_camctrl2.get_orientation().to_matrix33(),
         m_camctrl2.get_position() ) );
 
@@ -158,12 +158,12 @@ void portaldemo_c::on_frame_render()
     // draw level
     if ( m_level.isok() )
     {
-        g_render.set_world( matrix44_c::IDENTITY );
+        g_render.set_world( Matrix44f::IDENTITY );
 
         float fo,ra,zn,zf;
         get_camera().get_frustum( fo, ra, zn, zf );
         zf /= 2.0f;
-        matrix44_c proj;
+        Matrix44f proj;
         g_render.compute_perspective_matrix( proj, fo, ra, zn, zf );
         m_level.draw( proj, m_camframe2.get_r2l() );
     }
@@ -174,7 +174,7 @@ void portaldemo_c::on_frame_render()
     draw_statistics( 10.0f, sd.height-80.0f );
 
     // write camera 2 info. on screen
-    const vec3_c & c_pos = m_camctrl2.get_position();
+    const Vector3f & c_pos = m_camctrl2.get_position();
     string_wc str = GN_formatwcs(
         L"Camera 2 : (%.2f,%.2f,%.2f)",
         c_pos.x, c_pos.y, c_pos.z );

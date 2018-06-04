@@ -27,8 +27,8 @@ struct portal_s
 public :
     string_c            name;        // 关卡编辑器中的名字，用来与脚本连接
     uint                sector_to;   // 本portal通向哪个sector
-    plane3_c             plane;       // 所在平面
-    std::vector<vec3_c> verts;       // 多边形顶点列表
+    Plane3f             plane;       // 所在平面
+    std::vector<Vector3f> verts;       // 多边形顶点列表
     string_c            script_name; // 脚本文件名
 
     // ***********************************

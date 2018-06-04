@@ -120,7 +120,7 @@ void level_c::quit()
 //
 //
 // ----------------------------------------------------------------------------
-void level_c::draw( const matrix44_c & proj, const matrix44_c & view )
+void level_c::draw( const Matrix44f & proj, const Matrix44f & view )
 {
     GN_GUARD;
 
@@ -162,9 +162,9 @@ void level_c::draw( const matrix44_c & proj, const matrix44_c & view )
     g_im3drender.set_effect( g_efflib.find(GN_T("portaldemo_nolight.gfx")) );
     collideinfo_s cinfo;
     cinfo.sector_id = -1;
-    matrix44_c iview = matrix44_c::invert( view );
-    vec3_c start = ( iview * vec4_c(0,0,0,1) ).to_vec3();
-    vec3_c end   = ( iview * vec4_c(0,0,-5000,1) ).to_vec3();
+    Matrix44f iview = Matrix44f::invert( view );
+    Vector3f start = ( iview * vec4_c(0,0,0,1) ).to_vec3();
+    Vector3f end   = ( iview * vec4_c(0,0,-5000,1) ).to_vec3();
     if ( collide_with_segment( cinfo, start, end ) )
     {
         g_im3drender.draw_begin( GNgfx::LINE_LIST, GNgfx::float4_c(1,1,1,1) );

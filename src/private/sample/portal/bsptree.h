@@ -18,6 +18,8 @@
 
 # include "math.h"
 
+using namespace GN;
+
 struct lvlBspNode;
 class bsptree_c
 {
@@ -27,7 +29,7 @@ class bsptree_c
 public :
     struct bspnode_s
     {
-        plane3_c    plane;     // node的平面
+        Plane3f    plane;     // node的平面
         int        parent;    // 父节点索引，-1表示根节点
         int        child[2];  // 前后子节点索引，-1表示空
     };
@@ -45,7 +47,7 @@ public :
     //   -1 : solid space
     //    0 : 正好落在边界上
     //    1 : else
-    int in_solid( const vec3_c & v, int root_index = 0 ) const;
+    int in_solid( const Vector3f & v, int root_index = 0 ) const;
 
     //
     // 检查点v1和点v2间是否可见（或者说是否与bsptree有交点），并在cldinfo
@@ -58,16 +60,16 @@ public :
     //
     struct cldinfo_s
     {
-        vec3_c ipoint;   // 与bsp树的交点
+        Vector3f ipoint;   // 与bsp树的交点
         int    inodeidx; // 与bsp树的交平面的序号
     };
     bool check_segment( cldinfo_s * cldinfo,
-                        const vec3_c & v1, const vec3_c & v2,
+                        const Vector3f & v1, const Vector3f & v2,
                         uint root_index = 0 ) const;
 
     // 检查射线start-direction是否与bsp树相交
     bool check_radial( cldinfo_s * cldinfo,
-                       const vec3_c & start, const vec3_c & direction,
+                       const Vector3f & start, const Vector3f & direction,
                        uint root_index = 0 ) const;
 
     // get bspnode list

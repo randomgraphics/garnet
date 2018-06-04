@@ -5,8 +5,8 @@
 //
 //
 // ----------------------------------------------------------------------------
-void level_c::update_visinfo( const matrix44_c & proj,
-                              const matrix44_c & view )
+void level_c::update_visinfo( const Matrix44f & proj,
+                              const Matrix44f & view )
 {
     GN_GUARD;
 
@@ -24,7 +24,7 @@ void level_c::update_visinfo( const matrix44_c & proj,
     // TODO : may cache last camera sector to avoid searching each time.
     //
     int camera_sector = -1;
-    vec3_c o = ( matrix44_c::invert(view) * vec4_c(0,0,0,1) ).to_vec3();
+    Vector3f o = ( Matrix44f::invert(view) * vec4_c(0,0,0,1) ).to_vec3();
     for ( uint i = 0; i < m_sectors.size(); ++i )
     {
         if ( -1 != m_sectors[i].in_solid(o) )
@@ -97,12 +97,12 @@ void level_c::check_sector( uint sector_id, clipfrustum_c & cf )
             if ( -1 == v )
             {
                 // 如果eye_point没有落在portal内，则该portal一定不可见
-                vec3_c ipoint;
+                Vector3f ipoint;
                 if ( !intersection_polygon_line(ipoint, p.plane, &p.verts[0],
                     p.verts.size(), cf.eye_point, cf.eye_direction) )
                     continue;
 
-                float k = vec3_c::dot( cf.eye_direction, p.plane.n );
+                float k = Vector3f::dot( cf.eye_direction, p.plane.n );
                 GN_ASSERT( k != 0.0f );
                 // eyepoint正好落在portal上，且视线方向正好透过portal，
                 // so we treat this portal visble.
@@ -126,7 +126,7 @@ void level_c::check_sector( uint sector_id, clipfrustum_c & cf )
         {
             // portal is partially visible, so we have to
             // clip it with frustum.
-            std::vector<vec3_c> clipresult;
+            std::vector<Vector3f> clipresult;
             clip_polygon_with_plane_list( clipresult, &p.verts[0],
                 p.verts.size(), cf.planes, cf.num_planes );
             if ( clipresult.size() < 3 ) continue;
@@ -157,7 +157,7 @@ void level_c::check_sector( uint sector_id, clipfrustum_c & cf )
 // ----------------------------------------------------------------------------
 bool level_c::bsptree_check_poly( uint /*section_id*/,
                                   const clipfrustum_c & /*cf*/,
-                                  const vec3_c * /*vlist*/,
+                                  const Vector3f * /*vlist*/,
                                   size_t /*numvert*/ )
 {
     GN_GUARD_SLOW;
@@ -184,7 +184,7 @@ bool level_c::bsptree_check_poly( uint /*section_id*/,
         for ( uint i = 0; i < numvert; ++i, ++vlist )
         {
             // get intersection of near-plane and [eyepoint,*vlist]
-            vec3_c v;
+            Vector3f v;
             GN_VERIFY( intersection_plane_segment(v, cf.planes[0],
                 cf.eye_point, *vlist) );
 

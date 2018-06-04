@@ -25,8 +25,8 @@
 struct collideinfo_s
 {
     int     sector_id; // which sector intersected point at.
-    vec3_c  ipoint;    // intersection point.
-    plane3_c iplane;    // intersection plane.
+    Vector3f  ipoint;    // intersection point.
+    Plane3f iplane;    // intersection plane.
 };
 
 //
@@ -81,12 +81,12 @@ public:
     // NOTE : 调用此函数时，collideinfo_s中的section_id应当为start点所在的
     //        sector，或者-1
     //
-    bool collide_with_radial( collideinfo_s &, const vec3_c & start,
-                              const vec3_c & end ) const;
-    bool collide_with_segment( collideinfo_s &, const vec3_c & start,
-                               const vec3_c & end ) const;
+    bool collide_with_radial( collideinfo_s &, const Vector3f & start,
+                              const Vector3f & end ) const;
+    bool collide_with_segment( collideinfo_s &, const Vector3f & start,
+                               const Vector3f & end ) const;
 
-    void draw( const matrix44_c & proj, const matrix44_c & view );
+    void draw( const Matrix44f & proj, const Matrix44f & view );
 
     // 得到sector的列表
     const sector_c * get_sector_list() const
@@ -116,8 +116,8 @@ private:
 private:
 
     // update level's visibility information
-    void update_visinfo( const matrix44_c & proj,
-                         const matrix44_c & view );
+    void update_visinfo( const Matrix44f & proj,
+                         const Matrix44f & view );
 
     // recursive check visiblity of all sectors
     void check_sector( uint sector_id, clipfrustum_c & );
@@ -125,7 +125,7 @@ private:
     // 在一个section中用BSP树检查多边形在view-frustum中的可见性
     bool bsptree_check_poly( uint sector_id,
                              const clipfrustum_c & cf,
-                             const vec3_c * vlist, size_t numvert );
+                             const Vector3f * vlist, size_t numvert );
 };
 
 /*****************************************************************************\

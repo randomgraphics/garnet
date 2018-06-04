@@ -2,7 +2,6 @@
 # include "bsptree.h"
 # include "lvlFileStruct.h"
 
-
 //
 //
 // ----------------------------------------------------------------------------
@@ -24,7 +23,7 @@ void bsptree_c::initialize( lvlBspNode * root, uint numnodes )
 //
 //
 // ----------------------------------------------------------------------------
-int bsptree_c::in_solid( const vec3_c & v, int root_index ) const
+int bsptree_c::in_solid( const Vector3f & v, int root_index ) const
 {
     GN_ASSERT( root_index >= 0 );
 
@@ -86,7 +85,7 @@ int bsptree_c::in_solid( const vec3_c & v, int root_index ) const
 //
 // ----------------------------------------------------------------------------
 bool bsptree_c::check_segment( cldinfo_s * cinfo,
-                               const vec3_c & start, const vec3_c & end,
+                               const Vector3f & start, const Vector3f & end,
                                uint root_index ) const
 {
     GN_GUARD_SLOW;
@@ -116,7 +115,7 @@ bool bsptree_c::check_segment( cldinfo_s * cinfo,
                     {
                         // start is in sub-space so we need to check it to
                         // get the correct collide information
-                        vec3_c i = cinfo->ipoint;
+                        Vector3f i = cinfo->ipoint;
                         check_segment( cinfo, start, i, root.child[0] );
                     }
                 }
@@ -126,7 +125,7 @@ bool bsptree_c::check_segment( cldinfo_s * cinfo,
             {
                 // start point is in leaf root, but end point need further
                 // check, so :
-                vec3_c i;
+                Vector3f i;
                 GN_VERIFY( intersection_plane_segment(i, root.plane, start, end) );
                 return check_segment( cinfo, i, end, root.child[1] );
             }
@@ -134,7 +133,7 @@ bool bsptree_c::check_segment( cldinfo_s * cinfo,
             {
                 GN_ASSERT( root.child[0] > 0 && root.child[1] > 0 );
                 // check sub nodes for visibility
-                vec3_c i;
+                Vector3f i;
                 GN_VERIFY( intersection_plane_segment(i, root.plane, start, end) );
                 return check_segment( cinfo, start, i, root.child[0] )
                     || check_segment( cinfo, i, end, root.child[1] );
@@ -172,14 +171,14 @@ bool bsptree_c::check_segment( cldinfo_s * cinfo,
             {
                 // end point is in leaf root, but start point need further
                 // check, so :
-                vec3_c i;
+                Vector3f i;
                 GN_VERIFY( intersection_plane_segment(i, root.plane, start, end) );
                 return check_segment( cinfo, start, i, root.child[1] );
             }
             else
             {
                 // check sub nodes for collision
-                vec3_c i;
+                Vector3f i;
                 GN_VERIFY( intersection_plane_segment(i, root.plane, start, end) );
                 return check_segment( cinfo, start, i, root.child[1] )
                     || check_segment( cinfo, i, end, root.child[0] );
@@ -256,8 +255,8 @@ bool bsptree_c::check_segment( cldinfo_s * cinfo,
 //
 // ----------------------------------------------------------------------------
 bool bsptree_c::check_radial( cldinfo_s * /*cinfo*/,
-                              const vec3_c & /*start*/,
-                              const vec3_c & /*dir*/,
+                              const Vector3f & /*start*/,
+                              const Vector3f & /*dir*/,
                               uint root_index ) const
 {
     GN_GUARD_SLOW;
@@ -289,7 +288,7 @@ bool bsptree_c::check_radial( cldinfo_s * /*cinfo*/,
         else if ( sd < 0.0f ) // start在前，dir与面反向
         {
             // get intersection point with current code
-            vec3_c i;
+            Vector3f i;
             GN_VERIFY( intersection_plane_ray( i, root.plane, start, dir ) );
 
             if ( root.child[0] > 0 )

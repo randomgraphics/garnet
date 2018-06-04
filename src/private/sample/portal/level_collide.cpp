@@ -6,8 +6,8 @@
 //
 // ----------------------------------------------------------------------------
 bool level_c::collide_with_radial( collideinfo_s & cinfo,
-                                   const vec3_c & start,
-                                   const vec3_c & end ) const
+                                   const Vector3f & start,
+                                   const Vector3f & end ) const
 {
     GN_GUARD_SLOW;
 
@@ -43,8 +43,8 @@ bool level_c::collide_with_radial( collideinfo_s & cinfo,
 //
 // ----------------------------------------------------------------------------
 bool level_c::collide_with_segment( collideinfo_s & cinfo,
-                                    const vec3_c & start,
-                                    const vec3_c & end ) const
+                                    const Vector3f & start,
+                                    const Vector3f & end ) const
 {
     GN_GUARD_SLOW;
 

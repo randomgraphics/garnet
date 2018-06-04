@@ -3,7 +3,7 @@
 //
 //
 // ----------------------------------------------------------------------------
-GN_INLINE int classify( const plane3_c & p, const vec3_c & v )
+inline int classify( const Plane3f & p, const Vector3f & v )
 {
     float d = v * p;
     if ( -PLANE_HALF_THICKNESS > d ) return -1;
@@ -15,10 +15,10 @@ GN_INLINE int classify( const plane3_c & p, const vec3_c & v )
 //
 //
 // ----------------------------------------------------------------------------
-GN_INLINE bool intersection_plane_segment( vec3_c & ipoint,
-                                           const plane3_c & plane,
-                                           const vec3_c & start,
-                                           const vec3_c & end )
+inline bool intersection_plane_segment( Vector3f & ipoint,
+                                           const Plane3f & plane,
+                                           const Vector3f & start,
+                                           const Vector3f & end )
 {
     float ds = plane * start;
     float de = plane * end;
@@ -52,13 +52,13 @@ GN_INLINE bool intersection_plane_segment( vec3_c & ipoint,
 //
 //
 // ----------------------------------------------------------------------------
-GN_INLINE bool intersection_plane_ray( vec3_c & ipoint,
-                                       const plane3_c & plane,
-                                       const vec3_c & start,
-                                       const vec3_c & direction )
+inline bool intersection_plane_ray( Vector3f & ipoint,
+                                       const Plane3f & plane,
+                                       const Vector3f & start,
+                                       const Vector3f & direction )
 {
     float ds    = plane * start;
-    float dd    = vec3_c::dot( -plane.n, direction);
+    float dd    = Vector3f::dot( -plane.n, direction);
 
     // check if start is on the plane
     if ( -PLANE_HALF_THICKNESS < ds && ds < PLANE_HALF_THICKNESS )
@@ -80,14 +80,14 @@ GN_INLINE bool intersection_plane_ray( vec3_c & ipoint,
 //
 //
 // ----------------------------------------------------------------------------
-GN_INLINE bool intersection_plane_ray( vec3_c & ipoint,
+inline bool intersection_plane_ray( Vector3f & ipoint,
                                        float  & ratio,
-                                       const plane3_c & plane,
-                                       const vec3_c & start,
-                                       const vec3_c & direction )
+                                       const Plane3f & plane,
+                                       const Vector3f & start,
+                                       const Vector3f & direction )
 {
     float ds    = plane * start;
-    float dd    = vec3_c::dot( -plane.n, direction );
+    float dd    = Vector3f::dot( -plane.n, direction );
 
     // check if start is on the plane
     if ( -PLANE_HALF_THICKNESS < ds && ds < PLANE_HALF_THICKNESS )
@@ -109,13 +109,13 @@ GN_INLINE bool intersection_plane_ray( vec3_c & ipoint,
 //
 //
 // ----------------------------------------------------------------------------
-GN_INLINE bool intersection_plane_line( vec3_c & ipoint,
-                                        const plane3_c & plane,
-                                        const vec3_c & point,
-                                        const vec3_c & dir )
+inline bool intersection_plane_line( Vector3f & ipoint,
+                                        const Plane3f & plane,
+                                        const Vector3f & point,
+                                        const Vector3f & dir )
 {
     float ds    = plane * point;
-    float dd    = vec3_c::dot( -plane.n, dir );
+    float dd    = Vector3f::dot( -plane.n, dir );
 
     // check parallel
     if ( 0.0f == dd ) return false;

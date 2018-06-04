@@ -5,29 +5,29 @@
 //
 //
 // ----------------------------------------------------------------------------
-void clipfrustum_c::from_projview( const matrix44_c & proj,
-                                   const matrix44_c & view )
+void clipfrustum_c::from_projview( const Matrix44f & proj,
+                                   const Matrix44f & view )
 {
     GN_GUARD_SLOW;
 
     // store eye position
     use_near_verts = false;
     vec4_c tmp;
-    matrix44_c iview = matrix44_c::invert( view );
+    Matrix44f iview = Matrix44f::invert( view );
     tmp = iview*vec4_c(0,0,0,1);
     eye_point     = tmp.to_vec3();
     tmp = iview * vec4_c( 0,0,-1, 0 );
     eye_direction.set( tmp.x, tmp.y, tmp.z );
 
     // get inversion of projection and view tranformation
-    matrix44_c m = proj * view;
+    Matrix44f m = proj * view;
     m.invert();
 
     // calculate far vectors
-    far_verts[0] = m.transform_point( vec3_c(-1.0f,-1.0f,1.0f) );
-    far_verts[1] = m.transform_point( vec3_c( 1.0f,-1.0f,1.0f) );
-    far_verts[2] = m.transform_point( vec3_c( 1.0f, 1.0f,1.0f) );
-    far_verts[3] = m.transform_point( vec3_c(-1.0f, 1.0f,1.0f) );
+    far_verts[0] = m.transform_point( Vector3f(-1.0f,-1.0f,1.0f) );
+    far_verts[1] = m.transform_point( Vector3f( 1.0f,-1.0f,1.0f) );
+    far_verts[2] = m.transform_point( Vector3f( 1.0f, 1.0f,1.0f) );
+    far_verts[3] = m.transform_point( Vector3f(-1.0f, 1.0f,1.0f) );
 
     // build near/far planes
     planes[1].from_3points( far_verts[0], far_verts[1], far_verts[2] );
@@ -53,8 +53,8 @@ void clipfrustum_c::from_projview( const matrix44_c & proj,
 //
 // ----------------------------------------------------------------------------
 void clipfrustum_c::clip_by_polygon( clipfrustum_c & result,
-                                     const vec3_c * verts, size_t numvert,
-                                     const plane3_c & plane ) const
+                                     const Vector3f * verts, size_t numvert,
+                                     const Plane3f & plane ) const
 {
     GN_GUARD_SLOW;
 
@@ -80,15 +80,15 @@ void clipfrustum_c::clip_by_polygon( clipfrustum_c & result,
         result.use_near_verts = false;
 
         // clip far vertices by the plane
-        std::vector<vec3_c> varray;
-        if ( vec3_c::dot( eye_direction, plane.n ) >= 0.0f )
+        std::vector<Vector3f> varray;
+        if ( Vector3f::dot( eye_direction, plane.n ) >= 0.0f )
         {
             clip_polygon_with_plane_list(varray, far_verts,
                 num_planes - 2, &plane, 1 );
         }
         else
         {
-            plane3_c reverse_plane = -plane;
+            Plane3f reverse_plane = -plane;
             clip_polygon_with_plane_list(varray, far_verts,
                 num_planes - 2, &reverse_plane, 1 );
         }
@@ -96,7 +96,7 @@ void clipfrustum_c::clip_by_polygon( clipfrustum_c & result,
         numvert = varray.size();
         if ( numvert > 0 )
         {
-            memcpy( result.far_verts, &varray[0], sizeof(vec3_c)*numvert );
+            memcpy( result.far_verts, &varray[0], sizeof(Vector3f)*numvert );
         }
 
         // copy near/far planes from source frustum
@@ -107,7 +107,7 @@ void clipfrustum_c::clip_by_polygon( clipfrustum_c & result,
     {
         // calculate near/far vertices of result frustum
         result.use_near_verts = true;
-        vec3_c dir;
+        Vector3f dir;
         for ( i = 0; i < numvert; ++i )
         {
             result.near_verts[i] = verts[i];
@@ -155,9 +155,9 @@ void clipfrustum_c::clip_by_polygon( clipfrustum_c & result,
 // the polygon must be fully visible, else it's partially visibile.
 //
 // ----------------------------------------------------------------------------
-int clipfrustum_c::check_poly_visibility( const vec3_c * verts,
+int clipfrustum_c::check_poly_visibility( const Vector3f * verts,
                                           size_t numvert,
-                                          const plane3_c & plane ) const
+                                          const Plane3f & plane ) const
 {
     GN_GUARD_SLOW;
 
@@ -172,11 +172,11 @@ int clipfrustum_c::check_poly_visibility( const vec3_c * verts,
     if ( eye_side != 0 )
     {
         // 检查多边形是否完全处于某一剪裁平面的外侧，或者完全被frustum包围
-        const plane3_c * p = planes;
+        const Plane3f * p = planes;
         bool fully_visible = true;
         for ( i = 0; i < num_planes; ++i, ++p )
         {
-            const vec3_c * v = verts;
+            const Vector3f * v = verts;
             uint counter = 0;
             for ( uint j = 0; j < numvert; ++j, ++v )
             {
