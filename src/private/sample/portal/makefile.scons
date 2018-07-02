@@ -1,0 +1,17 @@
+Import( 'GN' )
+name = 'GNsamplePortal'
+sources = [
+    'bsptree.cpp',
+    'clipfrustum.cpp',
+    'level.cpp',
+    'level_collide.cpp',
+    'level_pvs.cpp',
+    'lvlFileStruct.cpp',
+    'math_clip.cpp',
+    'math_intersection.cpp',
+    'pch.cpp',
+    'portal.cpp',
+    'portaldemo.cpp',
+    'sector.cpp',
+]
+GN.NewDefaultTarget( name, GN.BinplaceProgram( GN.BuildProgram( None, name, sources, 'pch.h', 'pch.cpp' ) ) )

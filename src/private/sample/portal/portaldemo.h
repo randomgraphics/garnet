@@ -7,22 +7,23 @@
   description       :
 \*****************************************************************************/
 
-# include "level.h"
+#include <garnet/GNutil.h>
+#include "level.h"
 
 // main class
-class portaldemo_c : public SampleApp
+class portaldemo_c : public GN::util::SampleApp
 {
     //*********************************
     // from demotask_c
     //*********************************
 protected :
 
-    bool on_initialize();
-    void on_finalize();
-    void on_frame_update( float );
-    void on_frame_render();
-    bool on_key_press( input_i::keyevent_s );
-    void on_axis_move( input_i::axis_t, int );
+    bool onInit(); override;
+    void onQuit(); override;
+    void onUpdate() override;
+    void onRender() override;
+    void onKeyPress( input::KeyEvent ) override;
+    void onAxisMove( input::Axis, int ) override;
 
     //*********************************
     //    private variables
@@ -30,10 +31,10 @@ protected :
 private:
 
     //! \brief portal clipping camera stuff
-    camctrl_c                m_camctrl2;
-    frame_c                  m_camframe2;
+    //camctrl_c                m_camctrl2;
+    //frame_c                  m_camframe2;
 
-    render_i::light_s        m_light0; //! \brief light0
+    //render_i::light_s        m_light0; //! \brief light0
 
     //! \brief level data
     level_c                  m_level;

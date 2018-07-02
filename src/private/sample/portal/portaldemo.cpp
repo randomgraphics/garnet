@@ -6,7 +6,7 @@ bool halt = false;
 //
 // initialization
 // ----------------------------------------------------------------------------
-bool portaldemo_c::on_initialize()
+bool portaldemo_c::onInit()
 {
     GN_GUARD;
 
@@ -20,21 +20,21 @@ bool portaldemo_c::on_initialize()
     m_camctrl2.set_position( Vector3f(-1205.96f,243.55f,954.04f) );
     m_camctrl2.set_orientation( quaternion_c::IDENTITY );
     m_camctrl2.set_move_speed( 200.0f );
-    input_i::keycode_t keys[] = {
-        input_i::KEY_I,
-        input_i::KEY_K,
-        input_i::KEY_J,
-        input_i::KEY_L,
-        input_i::KEY_INSERT,
-        input_i::KEY_DELETE,
-        input_i::KEY_NUMPAD_5,
-        input_i::KEY_NUMPAD_8,
-        input_i::KEY_NUMPAD_4,
-        input_i::KEY_NUMPAD_6,
-        input_i::KEY_NONE,
-        input_i::KEY_NONE,
-        input_i::KEY_MOUSEBTN_1,
-        input_i::KEY_MOUSEBTN_2,
+    input::KeyCode keys[] = {
+        input::KeyCode::I,
+        input::KeyCode::K,
+        input::KeyCode::J,
+        input::KeyCode::L,
+        input::KeyCode::INSERT,
+        input::KeyCode::_DELETE,
+        input::KeyCode::NUMPAD_5,
+        input::KeyCode::NUMPAD_8,
+        input::KeyCode::NUMPAD_4,
+        input::KeyCode::NUMPAD_6,
+        input::KeyCode::NONE,
+        input::KeyCode::NONE,
+        input::KeyCode::MOUSEBTN_1,
+        input::KeyCode::MOUSEBTN_2,
     };
     m_camctrl2.bind_all(keys);
 
