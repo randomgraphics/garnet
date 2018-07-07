@@ -563,12 +563,12 @@ void GN::gfx::ThickLineRenderer::line( const ThickLineVertex & v0, const ThickLi
             // |e0 /
             // ----
 
-            e0.bottomRight( v++ );
-            e0.bottomLeft( v++ );
             e0.topLeft( v++ );
-            e1.topLeft( v++ );
-            e1.topRight( v++ );
+            e0.bottomLeft( v++ );
+            e0.bottomRight( v++ );
             e1.bottomRight( v++ );
+            e1.topRight( v++ );
+            e1.topLeft( v++ );
         }
         else
         {
@@ -576,7 +576,7 @@ void GN::gfx::ThickLineRenderer::line( const ThickLineVertex & v0, const ThickLi
 
             /*
 
-            ----
+             ----
              |e1 \
              \    \
               \    \
@@ -585,12 +585,12 @@ void GN::gfx::ThickLineRenderer::line( const ThickLineVertex & v0, const ThickLi
                  ----
             */
 
-            e0.topRight( v++ );
-            e0.bottomRight( v++ );
             e0.bottomLeft( v++ );
-            e1.bottomLeft( v++ );
-            e1.topLeft( v++ );
+            e0.bottomRight( v++ );
+            e0.topRight( v++ );
             e1.topRight( v++ );
+            e1.topLeft( v++ );
+            e1.bottomLeft( v++ );
         }
     }
     else
@@ -611,12 +611,12 @@ void GN::gfx::ThickLineRenderer::line( const ThickLineVertex & v0, const ThickLi
             
             */
 
-            e0.bottomLeft( v++ );
-            e0.topLeft( v++ );
             e0.topRight( v++ );
-            e1.topRight( v++ );
-            e1.bottomRight( v++ );
+            e0.topLeft( v++ );
+            e0.bottomLeft( v++ );
             e1.bottomLeft( v++ );
+            e1.bottomRight( v++ );
+            e1.topRight( v++ );
         }
         else
         {
@@ -630,12 +630,12 @@ void GN::gfx::ThickLineRenderer::line( const ThickLineVertex & v0, const ThickLi
             // |e1 /
             // ----
 
-            e0.topLeft( v++ );
-            e0.topRight( v++ );
             e0.bottomRight( v++ );
-            e1.bottomRight( v++ );
-            e1.bottomLeft( v++ );
+            e0.topRight( v++ );
+            e0.topLeft( v++ );
             e1.topLeft( v++ );
+            e1.bottomLeft( v++ );
+            e1.bottomRight( v++ );
         }
     }
 }
@@ -758,7 +758,7 @@ void GN::gfx::ThickLineRenderer::flush()
     {
         // update vertex buffer
         uint32 vbsize = (uint32)sizeof(PrivateVertex) * m_NumVertices;
-        mContext.vtxbufs[0].vtxbuf->update(0, vbsize, m_Vertices);
+        mContext.vtxbufs[0].vtxbuf->update(0, vbsize, m_Vertices, gfx::SurfaceUpdateFlag::DISCARD);
 
         // do rendering
         mGpu->bindContext(mContext);

@@ -160,7 +160,7 @@ namespace GN { namespace gfx
     };
 
     ///
-    /// ÌùÍ¼¶ÔÏó
+    /// GPU texture class
     ///
     struct Texture : public RefCounter
     {

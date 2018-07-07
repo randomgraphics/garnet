@@ -51,11 +51,13 @@ class ThickLineDemo : public SampleApp
     GN::gfx::ThickLineRenderer rndr;
     //D3D9OrientationBox orientation;
 
-    float     radius;
-    ArcBall   arcball;
-    Matrix44f proj, view;
+    const float BOX_SIZE = 400.0f;
+    float     m_Radius = BOX_SIZE * 1.5f;
+    ArcBall   m_Arcball;
+    Matrix44f m_Proj, m_View;
 
-    int activeScene;
+    int m_ActiveScene = 0;
+    bool m_LineWidthInScreenSpace = false;
 
     // box scene
     ThickLineVertex m_Box[24];
@@ -64,33 +66,54 @@ class ThickLineDemo : public SampleApp
     // view frustum scene
     //D3D9ViewFrustum viewFrustum;
 
-    void updateRadius()
+    Rect<uint32_t> getViewport()
     {
         auto gpu = engine::getGpu();
         const auto & gc = gpu->getContext();
-        const auto & vp = gc.rs.viewport;
+        auto vp = gc.rs.viewport;
+        if (0 == vp.w || 0 == vp.h) {
+            uint32_t w, h;
+            if (gc.colortargets.size() > 0) {
+                const auto & size = gc.colortargets[0].texture->getMipSize(gc.colortargets[0].level);
+                w = size[0];
+                h = size[1];
+            } else if (gc.depthstencil.texture) {
+                const auto & size = gc.depthstencil.texture->getMipSize(gc.depthstencil.level);
+                w = size[0];
+                h = size[1];
+            } else {
+                const auto & dd = gpu->getDispDesc();
+                w = dd.width;
+                h = dd.height;
+            }
+            if (0 == vp.w) vp.w = w;
+            if (0 == vp.h) vp.h = h;
+        }
+        return vp;
+    }
 
+    void updateRadius()
+    {
         // setup transformation matrices
-        Matrix44f view, proj;
-        view.lookAt( GN::Vector3f(0, 0, radius), GN::Vector3f(0, 0, 0), GN::Vector3f(0, 1, 0) );
-        proj = gpu->composePerspectiveMatrix( GN_PI/3.0f, (float)vp.w / vp.h, radius / 100.0f, radius * 2.0f );
+        m_View.lookAt( GN::Vector3f(0, 0, m_Radius), GN::Vector3f(0, 0, 0), GN::Vector3f(0, 1, 0) );
+        auto vp = getViewport();
+        auto gpu = engine::getGpu();
+        m_Proj = gpu->composePerspectiveMatrix( GN_PI/3.0f, (float)vp.w / vp.h, m_Radius / 100.0f, m_Radius * 2.0f );
 
         // setup arcball
-        float h = tan( 0.5f ) * radius * 2.0f;
-        arcball.setMouseMoveWindow( 0, 0, (int)vp.w, (int)vp.h );
-        arcball.setViewMatrix( view );
-        arcball.setTranslationSpeed( h / vp.h );
+        float h = tan( 0.5f ) * m_Radius * 2.0f;
+        m_Arcball.setMouseMoveWindow( 0, 0, (int)vp.w, (int)vp.h );
+        m_Arcball.setViewMatrix( m_View );
+        m_Arcball.setTranslationSpeed( h / vp.h );
     }
 
 public:
 
     ThickLineDemo() //: orientation(64.0f)
     {
-        activeScene = 1;
-
         // create box geometry
         createBox(
-            10.0f, 10.0f, 10.0f,
+            BOX_SIZE, BOX_SIZE, BOX_SIZE,
             &m_Box[0].x, sizeof(ThickLineVertex),
             &m_Box[0].u, sizeof(ThickLineVertex),
             0, 0, // normals
@@ -130,10 +153,9 @@ public:
         // if( !viewFrustum.OnDeviceRestore() ) return false;
 
         // setup arcball
-        arcball.setHandness( util::RIGHT_HAND );
-        arcball.connectToInput();
+        m_Arcball.setHandness( util::RIGHT_HAND );
+        m_Arcball.connectToInput();
 
-        radius = 15.0f;
         updateRadius();
 
         return true;
@@ -154,8 +176,9 @@ public:
 
         if( input::KeyCode::SPACEBAR == ke.code && ke.status.down )
         {
-            const int NUM_SCENES = 2;
-            activeScene = (activeScene + 1) % NUM_SCENES;
+            // const int NUM_SCENES = 2;
+            // m_ActiveScene = (m_ActiveScene + 1) % NUM_SCENES;
+            m_LineWidthInScreenSpace = !m_LineWidthInScreenSpace;
         }
     }
 
@@ -163,9 +186,9 @@ public:
     {
         if( GN::input::Axis::MOUSE_WHEEL_0 == a )
         {
-            float speed = radius / 100.0f;
-            radius -= speed * d;
-            if( radius < 0.1f ) radius = 0.1f;
+            float speed = m_Radius / 100.0f;
+            m_Radius -= speed * d;
+            if( m_Radius < 0.1f ) m_Radius = 0.1f;
             updateRadius();
         }
     }
@@ -173,10 +196,10 @@ public:
     void DrawBoxScene( const Matrix44f & world )
     {
         GN::gfx::ThickLineRenderer::ThickLineParameters p;
-        p.worldview = world * view;
-        p.proj = proj;
-        p.width = 0.1f;
-        p.widthInScreenSpace = false;
+        p.worldview = m_View * world;
+        p.proj = m_Proj;
+        p.width = BOX_SIZE / 100.0f;
+        p.widthInScreenSpace = m_LineWidthInScreenSpace;
         if( rndr.drawBegin( p ) )
         {
             //dev.SetRenderState( D3DRS_FILLMODE, D3DFILL_SOLID );
@@ -202,12 +225,12 @@ public:
 
         gpu->clearScreen();
 
-        auto r = arcball.getRotationMatrix44();
-        auto t = Matrix44f::sTranslate( arcball.getTranslation() );
+        auto r = m_Arcball.getRotationMatrix44();
+        auto t = Matrix44f::sTranslate( m_Arcball.getTranslation() );
         auto world = t * r;
 
         // draw box frame
-        switch( activeScene )
+        switch( m_ActiveScene )
         {
             case 0: DrawBoxScene( world ); break;
             // case 1: viewFrustum.DrawRH( world * view, proj ); break;
