@@ -1,4 +1,4 @@
-#ifndef __GN_UTIL_CAMERA_H__
+ï»¿#ifndef __GN_UTIL_CAMERA_H__
 #define __GN_UTIL_CAMERA_H__
 // *****************************************************************************
 /// \file
@@ -20,7 +20,7 @@ namespace GN { namespace util
     };
 
     ///
-    /// ÏßĞÔ²åÖµÆ÷
+    /// çº¿æ€§æ’å€¼å™¨
     ///
     template <class T>
     class LinearInterpolator
@@ -46,14 +46,14 @@ namespace GN { namespace util
         }
 
         ///
-        /// ÖØÖÃÏßĞÔ²åÖµÆ÷
+        /// é‡ç½®çº¿æ€§æ’å€¼å™¨
         ///
         /// \param from  Start point of interpolation
         /// \param to    End point of interpolation
         /// \param time  estimated time of interpolation
         ///
-        /// ÖØÖÃºó£¬²åÖµÆ÷½«ÔÚ time Ê±¼äÄÚ£¬Íê³É´Ó from µ½ to µÄÏßĞÔ²åÖµ¹ı³Ì¡£
-        /// £¨µ÷ÓÃ update() ¸üĞÂ²åÖµÆ÷µÄ×´Ì¬£©
+        /// é‡ç½®åï¼Œæ’å€¼å™¨å°†åœ¨ time æ—¶é—´å†…ï¼Œå®Œæˆä» from åˆ° to çš„çº¿æ€§æ’å€¼è¿‡ç¨‹ã€‚
+        /// ï¼ˆè°ƒç”¨ update() æ›´æ–°æ’å€¼å™¨çš„çŠ¶æ€ï¼‰
         ///
         void reset( const T & from, const T & to, float time )
         {
