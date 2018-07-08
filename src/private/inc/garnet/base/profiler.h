@@ -12,7 +12,7 @@
 /// \name prof macros
 //@{
 
-#if GN_ENABLE_PROFILING
+#if GN_BUILD_PROFILING_ENABLED
 
 ///
 /// define a static instance of the timer

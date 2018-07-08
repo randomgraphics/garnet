@@ -1,4 +1,4 @@
-#ifndef __GN_BASE_MISC_H__
+ï»¿#ifndef __GN_BASE_MISC_H__
 #define __GN_BASE_MISC_H__
 // *****************************************************************************
 /// \file
@@ -33,7 +33,7 @@
     } else void(0)
 
 ///
-/// Do something only once. Í¨³£ÓÃÀ´ÔÚÄÚ²ãÑ­»·ÖĞÊä³öÒ»Ğ©µ÷ÊÔºÍ´íÎóĞÅÏ¢¡£
+/// Do something only once. é€šå¸¸ç”¨æ¥åœ¨å†…å±‚å¾ªç¯ä¸­è¾“å‡ºä¸€äº›è°ƒè¯•å’Œé”™è¯¯ä¿¡æ¯ã€‚
 ///
 #define GN_DO_ONCE(X) GN_DO_LIMITED_TIMES(1,X)
 
@@ -52,7 +52,7 @@ namespace GN
     template < class TO, class FROM >
     GN_FORCE_INLINE TO & safeCastRef( FROM & from )
     {
-    #if GN_ENABLE_DEBUG && ( !GN_MSVC || defined(_CPPRTTI) )
+    #if GN_BUILD_DEBUG_ENABLED && ( !GN_MSVC || defined(_CPPRTTI) )
         return dynamic_cast<TO&>(from);
     #else
         return reinterpret_cast<TO&>(from);
@@ -67,7 +67,7 @@ namespace GN
     template < class TO, class FROM >
     GN_FORCE_INLINE TO * safeCastPtr( FROM * from )
     {
-    #if GN_ENABLE_DEBUG && ( !GN_MSVC || defined(_CPPRTTI) )
+    #if GN_BUILD_DEBUG_ENABLED && ( !GN_MSVC || defined(_CPPRTTI) )
         TO * to = dynamic_cast<TO*>(from);
     #else
         TO * to = reinterpret_cast<TO*>(from);

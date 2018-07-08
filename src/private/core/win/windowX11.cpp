@@ -282,7 +282,7 @@ bool GN::win::WindowX11::initDisplay( intptr_t handle )
         mUseExternalDisplay = true;
     }
 
-#if GN_ENABLE_DEBUG
+#if GN_BUILD_DEBUG_ENABLED
     // Trun on synchronous behavior for debug build.
     XSynchronize( mDisplay, true );
 #endif

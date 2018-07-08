@@ -169,36 +169,6 @@
 #endif
 
 // *****************************************************************************
-// platform specific configurations
-// *****************************************************************************
-
-#if 1
-#if GN_XBOX3
-#   include     "platform.xbox3.x64.h"
-#elif GN_MSWIN
-#   if GN_X64
-#       include "platform.mswin.x64.h"
-#   elif GN_X86
-#       include "platform.mswin.x86.h"
-#   endif
-#elif GN_POSIX
-#   if GN_CYGWIN
-#       include "platform.cygwin.x86.h"
-#   elif GN_DARWIN
-#       include "platform.darwin.x64.h"
-#   elif GN_X64
-#       include "platform.posix.x64.h"
-#   elif GN_PPC
-#       include "platform.posix.ppc.h"
-#   elif GN_X86
-#       include "platform.posix.x86.h"
-#   endif
-#endif
-#else
-#include GN_STR(GN_JOIN5(platform_, GN_PLATFORM_NAME, _, GN_CPU, _.h))
-#endif
-
-// *****************************************************************************
 // 定义函数和变量声明
 // *****************************************************************************
 
@@ -234,7 +204,7 @@
 ///
 /// Any public functions and classes, unless fully defined in header, should have this tag.
 ///
-#if GN_PLATFORM_IS_STATIC
+#if GN_BUILD_IS_STATIC
 #define GN_API
 #elif defined(GN_CORE_INTERNAL)
 #define GN_API       GN_EXPORT

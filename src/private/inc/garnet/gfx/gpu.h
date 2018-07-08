@@ -219,7 +219,7 @@ namespace GN { namespace gfx
             , msaa(MsaaType::NONE)
             , useExternalWindow(false)
             , vsync(false)
-            , debug( GN_ENABLE_DEBUG )
+            , debug( GN_BUILD_DEBUG_ENABLED )
             , reference(false)
         {
             displayMode.set(DisplayMode::WINDOWED, 0, 0, 0, 0);

@@ -10,7 +10,7 @@
 #define NOMINMAX
 #endif
 #include <windows.h>
-#if GN_PLATFORM_HAS_D3D11_1
+#if GN_BUILD_HAS_D3D11_1
 #include <d3d11_1.h>
 #else
 #include <d3d11.h>
@@ -30,7 +30,7 @@
             do_something                                                                            \
         }                                                                                           \
     } else void(0)
-#if GN_ENABLE_DEBUG
+#if GN_BUILD_DEBUG_ENABLED
 #define GN_CHECK_HR( func )         GN_DO_ON_HR_FAILED( func, )
 #else
 #define GN_CHECK_HR( func )         func
@@ -937,7 +937,7 @@ namespace GN { /*namespace for D3D11 utils*/ namespace d3d11
         /// Construct with default options.
         D3D11AppOption()
             : ref(false)
-            , debug(!!GN_ENABLE_DEBUG)
+            , debug(!!GN_BUILD_DEBUG_ENABLED)
             , vsync(false)
             , fullscreen(false)
             , width(1280)
@@ -986,7 +986,7 @@ namespace GN { /*namespace for D3D11 utils*/ namespace d3d11
 
         ID3D11Device           & device() const { GN_ASSERT( mDevice ); return *mDevice; }
         ID3D11DeviceContext    & context() const { GN_ASSERT( mContext ); return *mContext; }
-#if GN_PLATFORM_HAS_D3D11_1
+#if GN_BUILD_HAS_D3D11_1
         ID3D11Device1          & device1() const { GN_ASSERT( mDevice1 ); return *mDevice1; }
         ID3D11DeviceContext1   & context1() const { GN_ASSERT( mContext1 ); return *mContext1; }
 #endif
@@ -1038,7 +1038,7 @@ namespace GN { /*namespace for D3D11 utils*/ namespace d3d11
         ID3D11Device           * mDevice;
         ID3D11DeviceContext    * mContext;
         IDXGISwapChain         * mSwapChain;
-#if GN_PLATFORM_HAS_D3D11_1
+#if GN_BUILD_HAS_D3D11_1
         ID3D11Device1          * mDevice1;
         ID3D11DeviceContext1   * mContext1;
         IDXGISwapChain1        * mSwapChain1;

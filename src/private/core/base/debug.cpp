@@ -8,7 +8,7 @@
 #endif
 #define DXERR_FUNC DXGetErrorDescription9A
 
-#elif GN_PLATFORM_HAS_DXERR
+#elif GN_BUILD_HAS_DXERR
 
 #include "dxerr.h"
 #define DXERR_FUNC DXGetErrorDescriptionA

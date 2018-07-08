@@ -6,7 +6,7 @@
 /// \author  chen@@CHENLI-OLDPC (2011.2.24)
 // *****************************************************************************
 
-#if GN_PLATFORM_HAS_XNAMATH
+#if GN_BUILD_HAS_XNAMATH
 #if GN_XBOX2
 #include <xtl.h>
 #else
@@ -46,7 +46,7 @@ namespace GN
 
         uint32 isCPUSupportSIMD();
 
-    #if GN_PLATFORM_HAS_XNAMATH
+    #if GN_BUILD_HAS_XNAMATH
         typedef XMVECTOR     vec4;
         typedef const vec4   cvec4;
     #else
@@ -81,7 +81,7 @@ namespace GN
 
         inline float getx( cvec4 v )
         {
-        #if GN_PLATFORM_HAS_XNAMATH
+        #if GN_BUILD_HAS_XNAMATH
             return XMVectorGetX( v );
         #else
             return v.x;
@@ -90,7 +90,7 @@ namespace GN
 
         inline float gety( cvec4 v )
         {
-        #if GN_PLATFORM_HAS_XNAMATH
+        #if GN_BUILD_HAS_XNAMATH
             return XMVectorGetY( v );
         #else
             return v.y;
@@ -99,7 +99,7 @@ namespace GN
 
         inline float getz( cvec4 v )
         {
-        #if GN_PLATFORM_HAS_XNAMATH
+        #if GN_BUILD_HAS_XNAMATH
             return XMVectorGetZ( v );
         #else
             return v.z;
@@ -108,7 +108,7 @@ namespace GN
 
         inline float getw( cvec4 v )
         {
-        #if GN_PLATFORM_HAS_XNAMATH
+        #if GN_BUILD_HAS_XNAMATH
             return XMVectorGetW( v );
         #else
             return v.w;
@@ -117,7 +117,7 @@ namespace GN
 
         inline vec4 setf4( float x, float y, float z, float w )
         {
-        #if GN_PLATFORM_HAS_XNAMATH
+        #if GN_BUILD_HAS_XNAMATH
             return XMVectorSet( x, y, z, w );
         #else
             vec4 v = { { { x, y, z, w } } };

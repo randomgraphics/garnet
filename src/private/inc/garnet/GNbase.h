@@ -18,7 +18,10 @@ namespace GN
     namespace internal {}
 }
 
-// user configurable configurations
+// garnet build specific defines.
+#include "base/build.h"
+
+// build specific defines.
 #include "base/config.h"
 
 // basic defines

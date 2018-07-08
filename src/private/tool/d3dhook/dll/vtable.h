@@ -124,7 +124,7 @@ inline void RealToHooked_General(
 // -----------------------------------------------------------------------------
 
 #ifndef GN_D3DHOOK_CALLTRACE
-#if GN_ENABLE_DEBUG || GN_ENABLE_PROFILING
+#if GN_BUILD_DEBUG_ENABLED || GN_BUILD_PROFILING_ENABLED
 #define GN_D3DHOOK_CALLTRACE(x) calltrace::AutoTrace trace(x)
 #else
 #define GN_D3DHOOK_CALLTRACE(x) void(0)

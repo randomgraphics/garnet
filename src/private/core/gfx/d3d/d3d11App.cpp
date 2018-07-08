@@ -269,7 +269,7 @@ GN::d3d11::D3D11Application::D3D11Application()
     , mDevice(0)
     , mContext(0)
     , mSwapChain(0)
-#if GN_PLATFORM_HAS_D3D11_1
+#if GN_BUILD_HAS_D3D11_1
     , mDevice1(0)
     , mContext1(0)
     , mSwapChain1(0)
@@ -481,7 +481,7 @@ bool GN::d3d11::D3D11Application::createDevice()
 
     GN_RETURN_FALSE_ON_HR_FAILED(pIDXGIFactory->CreateSwapChain(mDevice, &sd, &mSwapChain));
 
-#if GN_PLATFORM_HAS_D3D11_1
+#if GN_BUILD_HAS_D3D11_1
     // try query 11.1 interfaces.
     mDevice->QueryInterface<ID3D11Device1>(&mDevice1);
     mContext->QueryInterface<ID3D11DeviceContext1>(&mContext1);
@@ -545,7 +545,7 @@ void GN::d3d11::D3D11Application::destroyDevice()
     safeRelease( mBackRTV );
     safeRelease( mDepthBuf );
     safeRelease( mDepthDSV );
-#if GN_PLATFORM_HAS_D3D11_1
+#if GN_BUILD_HAS_D3D11_1
     safeRelease( mSwapChain1 );
     safeRelease( mContext1 );
     safeRelease( mDevice1 );

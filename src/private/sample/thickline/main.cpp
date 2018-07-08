@@ -12,7 +12,7 @@ static GN::Logger * sLogger = GN::getLogger("GN.sample.thickline");
 
 // static XMMATRIX ToXMMatrix( const Matrix44f & m )
 // {
-// #if GN_PLATFORM_HAS_DIRECTXMATH
+// #if GN_BUILD_HAS_DIRECTXMATH
 //     return XMMATRIX(
 //         m[0][0], m[0][1], m[0][2], m[0][3],
 //         m[1][0], m[1][1], m[1][2], m[1][3],
@@ -29,7 +29,7 @@ static GN::Logger * sLogger = GN::getLogger("GN.sample.thickline");
 
 // Matrix44f ToMatrix44f( CXMMATRIX m )
 // {
-// #if GN_PLATFORM_HAS_DIRECTXMATH
+// #if GN_BUILD_HAS_DIRECTXMATH
 //     return Matrix44f(
 //         XMVectorGetX(m.r[0]), XMVectorGetY(m.r[0]), XMVectorGetZ(m.r[0]), XMVectorGetW(m.r[0]),
 //         XMVectorGetX(m.r[1]), XMVectorGetY(m.r[1]), XMVectorGetZ(m.r[1]), XMVectorGetW(m.r[1]),

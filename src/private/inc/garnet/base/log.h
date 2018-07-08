@@ -58,7 +58,7 @@
 /// Debug only log macros (no effect to non-debug build)
 ///
 //@{
-#if GN_ENABLE_DEBUG
+#if GN_BUILD_DEBUG_ENABLED
 #define GN_TRACE( logger )   GN_INFO( logger )
 #define GN_VTRACE( logger )  GN_VERBOSE( logger )
 #define GN_VVTRACE( logger ) GN_VVERBOSE( logger )
