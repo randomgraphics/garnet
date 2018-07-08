@@ -1,0 +1,5 @@
+project(sconstest)
+add_library(sconstest_foo1 foo1.cpp)
+add_library(sconstest_foo2 foo2.cpp)
+add_executable(sconstest hello.cpp)
+target_link_libraries(sconstest sconstest_foo1 sconstest_foo2)
