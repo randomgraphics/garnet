@@ -186,7 +186,7 @@ bool D3D9OrientationBox::OnDeviceCreate( IDirect3DDevice9 * dev )
     }
 
     // initialize shaders
-    #if GN_PLATFORM_HAS_D3DCOMPILER
+    #if GN_BUILD_HAS_D3DCOMPILER
     UINT flag = D3DCOMPILE_PACK_MATRIX_ROW_MAJOR;
     #else
     UINT flag = D3DXSHADER_PACKMATRIX_ROWMAJOR;

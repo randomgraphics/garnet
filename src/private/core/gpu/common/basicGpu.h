@@ -178,7 +178,7 @@ namespace GN { namespace gfx
 
         void miscClear()
         {
-            mParamCheckEnabled = GN_ENABLE_DEBUG;
+            mParamCheckEnabled = GN_BUILD_DEBUG_ENABLED;
             mUserData.clear();
         }
 

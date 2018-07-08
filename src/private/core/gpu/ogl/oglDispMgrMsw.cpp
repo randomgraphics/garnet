@@ -287,7 +287,7 @@ public:
 
     static void initialize()
     {
-#if GN_ENABLE_DEBUG
+#if GN_BUILD_DEBUG_ENABLED
 
         // setup the callback
         glDebugMessageCallbackAMD( &messageCallback, NULL );
@@ -429,7 +429,7 @@ public:
 
     static void initialize()
     {
-#if GN_ENABLE_DEBUG
+#if GN_BUILD_DEBUG_ENABLED
 
         // setup the callback
         glDebugMessageCallbackARB( &messageCallback, NULL );

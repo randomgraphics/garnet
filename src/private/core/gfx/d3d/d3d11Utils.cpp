@@ -179,7 +179,7 @@ GN_API ID3DBlob * GN::d3d11::compileShader(
 #if 0
     // TODO: generate temporary file to store shader source
     StrA filename;
-#if GN_ENABLE_DEBUG
+#if GN_BUILD_DEBUG_ENABLED
     TempFile file;
     if( file.open( "D3D11_shader_source", "wt", TempFile::MANUAL_DELETE ) )
     {

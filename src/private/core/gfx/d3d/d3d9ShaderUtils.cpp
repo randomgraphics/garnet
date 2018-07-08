@@ -34,10 +34,10 @@ static GN::StrA sAddLineCountD3D9( const GN::StrA & in )
 // -----------------------------------------------------------------------------
 static uint32 sRefineFlagsD3D9( uint32 flags )
 {
-#if GN_ENABLE_DEBUG
-#if GN_PLATFORM_HAS_D3DCOMPILER
+#if GN_BUILD_DEBUG_ENABLED
+#if GN_BUILD_HAS_D3DCOMPILER
     flags |= D3DCOMPILE_DEBUG;
-#elif GN_PLATFORM_HAS_D3DX9
+#elif GN_BUILD_HAS_D3DX9
     flags |= D3DXSHADER_DEBUG;
 #endif
 #endif
@@ -73,7 +73,7 @@ static void sPrintShaderCompileInfoD3D9( const char * hlsl, ID3DXBuffer * bin )
 {
     GN_GUARD;
 
-#if GN_PLATFORM_HAS_D3DX9
+#if GN_BUILD_HAS_D3DX9
     // get ASM code
     AutoComPtr<ID3DXBuffer> asm_;
 
@@ -263,7 +263,7 @@ GN_API LPDIRECT3DPIXELSHADER9 GN::d3d9::compileAndCreatePS( LPDIRECT3DDEVICE9 de
     GN_UNGUARD;
 }
 
-#if GN_PLATFORM_HAS_D3DX9
+#if GN_BUILD_HAS_D3DX9
 
 //
 //

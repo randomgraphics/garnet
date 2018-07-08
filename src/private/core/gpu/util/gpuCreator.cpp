@@ -21,7 +21,7 @@ static GN::Logger * sLogger = GN::getLogger("GN.gfx.util.gpu");
 //
 //
 // -------------------------------------------------------------------------
-#if !GN_PLATFORM_HAS_OGL
+#if !GN_BUILD_HAS_OGL
 GN_API Gpu * GN::gfx::createOGLGpu( const GpuOptions &, uint32 )
 {
     GN_ERROR(sLogger)( "OpenGL renderer is not available." );
@@ -32,7 +32,7 @@ GN_API Gpu * GN::gfx::createOGLGpu( const GpuOptions &, uint32 )
 //
 //
 // -------------------------------------------------------------------------
-#if !GN_PLATFORM_HAS_D3D11 && !GN_XBOX2
+#if !GN_BUILD_HAS_D3D11 && !GN_XBOX2
 GN_API Gpu * GN::gfx::createD3DGpu( const GpuOptions &, uint32 )
 {
     GN_ERROR(sLogger)( D3D_GPU_NAME " renderer is not available." );

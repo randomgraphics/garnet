@@ -8,7 +8,7 @@
 
 #include "../GNinput.h"
 
-#if GN_ENABLE_DEBUG
+#if GN_BUILD_DEBUG_ENABLED
 #define D3D_DEBUG_INFO // Enable "Enhanced D3DDebugging"
 #endif
 
@@ -24,17 +24,17 @@
 
 #include <d3d9.h>
 
-#if GN_PLATFORM_HAS_D3DX9
+#if GN_BUILD_HAS_D3DX9
 #include <d3dx9.h>
-#elif GN_PLATFORM_HAS_D3DCOMPILER
+#elif GN_BUILD_HAS_D3DCOMPILER
 typedef ID3DBlob   ID3DXBuffer;
 typedef ID3DBlob * LPD3DXBUFFER;
 typedef void *     LPD3DXCONSTANTTABLE;
 #endif
 
-#if GN_PLATFORM_HAS_XNAMATH
+#if GN_BUILD_HAS_XNAMATH
 #include <xnamath.h>
-#elif GN_PLATFORM_HAS_DIRECTXMATH
+#elif GN_BUILD_HAS_DIRECTXMATH
 #include <directxmath.h>
 using namespace DirectX;
 #endif
@@ -89,7 +89,7 @@ namespace GN { /* namespace for D3D9 utils */ namespace d3d9
     ///
     GN_API LPDIRECT3DPIXELSHADER9 compileAndCreatePS( LPDIRECT3DDEVICE9 dev, const char * code, size_t len = 0, uint32 flags = 0, const char * entryFunc = "main", const char * profile = 0, LPD3DXCONSTANTTABLE * constTable = 0 );
 
-#if GN_PLATFORM_HAS_D3DX9
+#if GN_BUILD_HAS_D3DX9
     ///
     /// Assemble vertex shader from string
     ///
