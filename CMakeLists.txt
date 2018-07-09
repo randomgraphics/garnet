@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.11)
+cmake_minimum_required(VERSION 3.9)
 project(garnet)
 
 include(CMakeDependentOption)
@@ -17,7 +17,23 @@ message("GN_BUILD_PROFILING_ENABLED=${GN_BUILD_PROFILING_ENABLED}")
 option(GN_BUILD_IS_STATIC "Set to ON|OFF to build GNcore as static|shared library." OFF)
 message("GN_BUILD_IS_STATIC=${GN_BUILD_IS_STATIC}")
 
-# print options summary
+# =============================
+# search commonly used packages
+# =============================
+
+# OpenGL
+find_package(OpenGL)
+set(GN_BUILD_HAS_OGL ${OPENGL_FOUND})
+
+# TODO: DirectX
+set(GN_BUILD_HAS_D3D9 OFF)
+set(GN_BUILD_HAS_D3D11 OFF)
+set(GN_BUILD_HAS_D3D11_1 OFF)
+set(GN_BUILD_HAS_D3DX9 OFF)
+set(GN_BUILD_HAS_DXERR OFF)
+set(GN_BUILD_HAS_D3DCOMPILER OFF)
+set(GN_BUILD_HAS_XNAMATH OFF)
+set(GN_BUILD_HAS_DIRECTXMATH OFF)
 
 # =============================
 # define global build variables
@@ -25,6 +41,12 @@ message("GN_BUILD_IS_STATIC=${GN_BUILD_IS_STATIC}")
 
 set(GN_ROOT_DIR ${PROJECT_SOURCE_DIR})
 set(GN_BUILD_ROOT_DIR ${PROJECT_BINARY_DIR})
+
+# ============================
+# search common compiler flags
+# ============================
+
+set(CMAKE_CXX_STANDARD 17)
 
 # configure build variant
 #set(CMAKE_BUILD_TYPE debug)
