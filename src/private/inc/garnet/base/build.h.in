@@ -1,0 +1,35 @@
+// Garnet is build with debug code enabled.
+#cmakedefine01 GN_BUILD_DEBUG_ENABLED
+
+// Garnet is build with profiling code enabled.
+#cmakedefine01 GN_BUILD_PROFILING_ENABLED
+
+// Garnet is build as static or dynamic libraries.
+#cmakedefine01 GN_BUILD_IS_STATIC
+
+// Garnet is build with OpenGL enabled
+#define GN_BUILD_HAS_OGL @GN_BUILD_HAS_OGL@
+
+// Garnet is build with D3D9 enabled
+#define GN_BUILD_HAS_D3D9 @GN_BUILD_HAS_D3D9@
+
+// Garnet is build with D3D11.0 enabled
+#define GN_BUILD_HAS_D3D11 @GN_BUILD_HAS_D3D11@
+
+// Garnet is build with D3D11.1 enabled
+#define GN_BUILD_HAS_D3D11_1 @GN_BUILD_HAS_D3D11_1@
+
+// Has xnamath.h
+#define GN_BUILD_HAS_XNAMATH @GN_BUILD_HAS_XNAMATH@
+
+// Has directxmath.h
+#define GN_BUILD_HAS_DIRECTXMATH @GN_BUILD_HAS_DIRECTXMATH@
+
+// Garnet is build with Has dxerr.h
+#define GN_BUILD_HAS_DXERR @GN_BUILD_HAS_DXERR@
+
+// Garnet is d3dcompiler.h
+#define GN_BUILD_HAS_D3DCOMPILER @GN_BUILD_HAS_D3DCOMPILER@
+
+// Garnet is build with D3D9X
+#define GN_BUILD_HAS_D3DX9 @GN_BUILD_HAS_D3DX9@
