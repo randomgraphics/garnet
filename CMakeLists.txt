@@ -49,7 +49,8 @@ set(GN_BUILD_ROOT_DIR ${PROJECT_BINARY_DIR})
 set(CMAKE_CXX_STANDARD 17)
 
 if (MSVC)
-    set(CMAKE_CXX_FLAGS "/utf-8 /EHsc /W4 /WX /Zi")
+    set(CMAKE_C_FLAGS "/utf-8 /EHsc /W4 /WX /Zi /MP")
+    set(CMAKE_CXX_FLAGS "/utf-8 /EHsc /W4 /WX /Zi /MP")
 endif()
 
 # ===================
