@@ -1417,8 +1417,8 @@ namespace GN
             // check for NULL text pointer
             if( NULL == text )
             {
-                static Logger * sLogger = getLogger("GN.base.StringMap");
-                GN_WARN(sLogger)( "StringMap finding warning: NULL text!" );
+                static Logger * sLocalLogger = getLogger("GN.base.StringMap");
+                GN_WARN(sLocalLogger)( "StringMap finding warning: NULL text!" );
                 return NULL;
             }
 
@@ -1477,8 +1477,8 @@ namespace GN
             // check for NULL text pointer
             if( NULL == text )
             {
-                static Logger * sLogger = getLogger("GN.base.StringMap");
-                GN_WARN(sLogger)( "Null text is not allowed!" );
+                static Logger * sLocalLogger = getLogger("GN.base.StringMap");
+                GN_WARN(sLocalLogger)( "Null text is not allowed!" );
                 return NULL;
             }
 
@@ -1543,8 +1543,8 @@ namespace GN
                 Node * newNode = allocNode();
                 if( NULL == newNode )
                 {
-                    static Logger * sLogger = getLogger("GN.base.StringMap");
-                    GN_ERROR(sLogger)( "out of memory!" );
+                    static Logger * sLocalLogger = getLogger("GN.base.StringMap");
+                    GN_ERROR(sLocalLogger)( "out of memory!" );
                     return NULL;
                 }
 
@@ -1555,8 +1555,8 @@ namespace GN
                     newNode->leaf = allocLeaf( inputText, text - inputText, value );
                     if( NULL == newNode->leaf )
                     {
-                        static Logger * sLogger = getLogger("GN.base.StringMap");
-                        GN_ERROR(sLogger)( "out of memory!" );
+                        static Logger * sLocalLogger = getLogger("GN.base.StringMap");
+                        GN_ERROR(sLocalLogger)( "out of memory!" );
                         return NULL;
                     }
 
@@ -1614,8 +1614,8 @@ namespace GN
 
             if( &leaf->owner != this )
             {
-                static Logger * sLogger = getLogger("GN.base.StringMap");
-                GN_ERROR(sLogger)( "Input pointer does not belong to this string map." );
+                static Logger * sLocalLogger = getLogger("GN.base.StringMap");
+                GN_ERROR(sLocalLogger)( "Input pointer does not belong to this string map." );
                 return NULL;
             }
 
@@ -1675,8 +1675,8 @@ namespace GN
             // check for NULL text pointer
             if( NULL == text )
             {
-                static Logger * sLogger = getLogger("GN.base.StringMap");
-                GN_WARN(sLogger)( "StringMap erasing warning: NULL text!" );
+                static Logger * sLocalLogger = getLogger("GN.base.StringMap");
+                GN_WARN(sLocalLogger)( "StringMap erasing warning: NULL text!" );
                 return;
             }
 

@@ -28,6 +28,7 @@
 #pragma warning( disable : 4201 ) // nameless struct/union
 #pragma warning( disable : 4251 ) // struct 'xxx' needs to have dll-interface to be used by clients of 'xxx'
 #pragma warning( disable : 4275 ) // non dll-interface struct 'xxx' used as base for dll-interface class 'xxx'
+#pragma warning( disable : 4456 ) // declaration of 'xxx' hides previous local declaration
 #pragma warning( disable : 4511 ) // can't generate copy constructor
 #pragma warning( disable : 4512 ) // can't generate assignment operator
 //#pragma warning( disable : 4714 ) // 标记为 __forceinline 的函数未内联

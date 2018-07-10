@@ -9,7 +9,7 @@
 namespace GN { namespace gfx
 {
     ///
-    /// »æÍ¼Ô­Óï
+    /// Geometry primitive type
     ///
     struct PrimitiveType
     {
@@ -87,8 +87,8 @@ namespace GN { namespace gfx
             case PrimitiveType::RECT_LIST      : return (numvert >= 3) ? numvert / 3 : 0;
             default             :
                 {
-                    static Logger * sLogger = getLogger("GN.gfx.misc");
-                    GN_ERROR(sLogger)( "Invalid primitive type!" );
+                    static Logger * sLocalLogger = getLogger("GN.gfx.misc");
+                    GN_ERROR(sLocalLogger)( "Invalid primitive type!" );
                 }
                 return 0;
         }
@@ -116,8 +116,8 @@ namespace GN { namespace gfx
             case PrimitiveType::RECT_LIST      : return numprim * 3;
             default :
                 {
-                    static Logger * sLogger = getLogger("GN.gfx.misc");
-                    GN_ERROR(sLogger)( "Invalid primitive type!" );
+                    static Logger * sLocalLogger = getLogger("GN.gfx.misc");
+                    GN_ERROR(sLocalLogger)( "Invalid primitive type!" );
                 }
                 return 0;
         }

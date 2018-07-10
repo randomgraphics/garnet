@@ -48,9 +48,9 @@ set(GN_BUILD_ROOT_DIR ${PROJECT_BINARY_DIR})
 
 set(CMAKE_CXX_STANDARD 17)
 
-# configure build variant
-#set(CMAKE_BUILD_TYPE debug)
-#set(CMAKE_BUILD_DIRECTORY build.tmp/${CMAKE_SYSTEM_NAME}.${CMAKE_SYSTEM_PROCESSOR}.${COMPILERNAME}${COMPILER_VERSION}.${CMAKE_BUILD_TYPE})
+if (MSVC)
+    set(CMAKE_CXX_FLAGS "/utf-8 /EHsc /W4 /WX /Zi")
+endif()
 
 # ===================
 # call subdirectories

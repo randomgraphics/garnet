@@ -9,7 +9,7 @@
 namespace GN
 {
     ///
-    /// ◊¢≤·±Ì¿‡–Õ.
+    /// Search-able dictionary of name value pairs.
     ///
     class GN_API Registry
     {

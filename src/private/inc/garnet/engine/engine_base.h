@@ -1,4 +1,4 @@
-#ifndef __GN_ENGINE_ENGINE_BASE_H__
+ï»¿#ifndef __GN_ENGINE_ENGINE_BASE_H__
 #define __GN_ENGINE_ENGINE_BASE_H__
 // *****************************************************************************
 /// \file
@@ -193,7 +193,7 @@ namespace GN { namespace engine
         operator XPTR () const { return (XPTR)mPtr; }
 
         ///
-        /// ±È½Ï²Ù×÷
+        /// æ¯”è¾ƒæ“ä½œ
         ///
         bool operator == ( const EntityRef & rhs ) const throw()
         {
@@ -201,7 +201,7 @@ namespace GN { namespace engine
         }
 
         ///
-        /// ±È½Ï²Ù×÷
+        /// æ¯”è¾ƒæ“ä½œ
         ///
         bool operator != ( const EntityRef & rhs ) const throw()
         {
@@ -209,7 +209,7 @@ namespace GN { namespace engine
         }
 
         ///
-        /// ±È½Ï²Ù×÷
+        /// æ¯”è¾ƒæ“ä½œ
         ///
         bool operator < ( const EntityRef & rhs ) const throw()
         {

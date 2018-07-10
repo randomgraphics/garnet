@@ -1,4 +1,4 @@
-namespace GN
+ï»¿namespace GN
 {
     // *************************************************************************
     // 3x3 matrix
@@ -257,7 +257,7 @@ namespace GN
 
 
     //
-    // ½«¾ØÕóµÄÄÚÈİ´òÓ¡µ½×Ö·û´®ÖĞ
+    // å°†çŸ©é˜µçš„å†…å®¹æ‰“å°åˆ°å­—ç¬¦ä¸²ä¸­
     // -------------------------------------------------------------------------
     template < typename T >
     void Matrix33<T>::print( StrA & s ) const
@@ -607,7 +607,7 @@ namespace GN
     }
 
     //
-    // ¼ÆËãopenglµÄÕı½»Í¶Ó°¾ØÕó
+    // è®¡ç®—openglçš„æ­£äº¤æŠ•å½±çŸ©é˜µ
     // -------------------------------------------------------------------------
     template < typename T >
     Matrix44<T> &
@@ -624,17 +624,17 @@ namespace GN
         identity();
         rows[0][0] = 2.0f / w;
         rows[1][1] = 2.0f / h;
-        rows[2][2] = 2.0f / d;                  // ´Ë´¦ºÍdirectx²»Í¬
+        rows[2][2] = 2.0f / d;                  // æ­¤å¤„å’Œdirectxä¸åŒ
         rows[0][3] = - (left + right) / w;
         rows[1][3] = - (bottom + top) / h;
-        rows[2][3] = - (znear + zfar) / d;      // ´Ë´¦ºÍdirectx²»Í¬
+        rows[2][3] = - (znear + zfar) / d;      // æ­¤å¤„å’Œdirectxä¸åŒ
         rows[3][3] = 1.0f;
 
         return *this;
     }
 
     //
-    // ¼ÆËãopenglµÄÕı½»Í¶Ó°¾ØÕó
+    // è®¡ç®—openglçš„æ­£äº¤æŠ•å½±çŸ©é˜µ
     // -------------------------------------------------------------------------
     template < typename T >
     Matrix44<T> &
@@ -651,17 +651,17 @@ namespace GN
         identity();
         rows[0][0] = 2.0f / w;
         rows[1][1] = 2.0f / h;
-        rows[2][2] = -2.0f / d;                 // ´Ë´¦ºÍdirectx²»Í¬
+        rows[2][2] = -2.0f / d;                 // æ­¤å¤„å’Œdirectxä¸åŒ
         rows[0][3] = - (left + right) / w;
         rows[1][3] = - (bottom + top) / h;
-        rows[2][3] = - (znear + zfar) / d;      // ´Ë´¦ºÍdirectx²»Í¬
+        rows[2][3] = - (znear + zfar) / d;      // æ­¤å¤„å’Œdirectxä¸åŒ
         rows[3][3] = 1.0f;
 
         return *this;
     }
 
     //
-    // ¼ÆËãdirectxµÄÕı½»Í¶Ó°¾ØÕó
+    // è®¡ç®—directxçš„æ­£äº¤æŠ•å½±çŸ©é˜µ
     // -------------------------------------------------------------------------
     template < typename T >
     Matrix44<T> &
@@ -678,17 +678,17 @@ namespace GN
         identity();
         rows[0][0] = 2.0f / w;
         rows[1][1] = 2.0f / h;
-        rows[2][2] = 1.0f / d;                  // ´Ë´¦ºÍopengl²»Í¬
+        rows[2][2] = 1.0f / d;                  // æ­¤å¤„å’Œopenglä¸åŒ
         rows[0][3] = - (left + right) / w;
         rows[1][3] = - (bottom + top) / h;
-        rows[2][3] = - znear / d;               // ´Ë´¦ºÍopengl²»Í¬
+        rows[2][3] = - znear / d;               // æ­¤å¤„å’Œopenglä¸åŒ
         rows[3][3] = 1.0f;
 
         return *this;
     }
 
     //
-    // ¼ÆËãdirectxµÄÕı½»Í¶Ó°¾ØÕó
+    // è®¡ç®—directxçš„æ­£äº¤æŠ•å½±çŸ©é˜µ
     // -------------------------------------------------------------------------
     template < typename T >
     Matrix44<T> &
@@ -705,17 +705,17 @@ namespace GN
         identity();
         rows[0][0] = 2.0f / w;
         rows[1][1] = 2.0f / h;
-        rows[2][2] = -1.0f / d;                 // ´Ë´¦ºÍopengl²»Í¬
+        rows[2][2] = -1.0f / d;                 // æ­¤å¤„å’Œopenglä¸åŒ
         rows[0][3] = - (left + right) / w;
         rows[1][3] = - (bottom + top) / h;
-        rows[2][3] = - znear / d;               // ´Ë´¦ºÍopengl²»Í¬
+        rows[2][3] = - znear / d;               // æ­¤å¤„å’Œopenglä¸åŒ
         rows[3][3] = 1.0f;
 
         return *this;
     }
 
     //
-    // ¼ÆËãopenglµÄÍ¸ÊÓÍ¶Ó°¾ØÕó
+    // è®¡ç®—openglçš„é€è§†æŠ•å½±çŸ©é˜µ
     // -------------------------------------------------------------------------
     template < typename T >
     Matrix44<T> &
@@ -731,16 +731,16 @@ namespace GN
         identity();
         rows[0][0] = 2.0f * znear / w;
         rows[1][1] = 2.0f * znear / h;
-        rows[2][2] = (znear + zfar) / d;        // ´Ë´¦ºÍdirectx²»Í¬
+        rows[2][2] = (znear + zfar) / d;        // æ­¤å¤„å’Œdirectxä¸åŒ
         rows[3][2] = 1.0f;
-        rows[2][3] = -2.0f * znear * zfar / d;  // ´Ë´¦ºÍdirectx²»Í¬
+        rows[2][3] = -2.0f * znear * zfar / d;  // æ­¤å¤„å’Œdirectxä¸åŒ
         rows[3][3] = 0.0f;
 
         return *this;
     }
 
     //
-    // ¼ÆËãopenglµÄÍ¸ÊÓÍ¶Ó°¾ØÕó
+    // è®¡ç®—openglçš„é€è§†æŠ•å½±çŸ©é˜µ
     // -------------------------------------------------------------------------
     template < typename T >
     Matrix44<T> &
@@ -756,16 +756,16 @@ namespace GN
         identity();
         rows[0][0] = 2.0f * znear / w;
         rows[1][1] = 2.0f * znear / h;
-        rows[2][2] = -(znear + zfar) / d;       // ´Ë´¦ºÍdirectx²»Í¬
+        rows[2][2] = -(znear + zfar) / d;       // æ­¤å¤„å’Œdirectxä¸åŒ
         rows[3][2] = -1.0f;
-        rows[2][3] = -2.0f * znear * zfar / d;  // ´Ë´¦ºÍdirectx²»Í¬
+        rows[2][3] = -2.0f * znear * zfar / d;  // æ­¤å¤„å’Œdirectxä¸åŒ
         rows[3][3] = 0.0f;
 
         return *this;
     }
 
     //
-    // ¼ÆËãdirectxµÄÍ¸ÊÓÍ¶Ó°¾ØÕó
+    // è®¡ç®—directxçš„é€è§†æŠ•å½±çŸ©é˜µ
     // -------------------------------------------------------------------------
     template < typename T >
     Matrix44<T> &
@@ -781,16 +781,16 @@ namespace GN
         identity();
         rows[0][0] = 2.0f * znear / w;
         rows[1][1] = 2.0f * znear / h;
-        rows[2][2] = zfar / d;                  // ´Ë´¦ºÍopengl²»Í¬
+        rows[2][2] = zfar / d;                  // æ­¤å¤„å’Œopenglä¸åŒ
         rows[3][2] = 1.0f;
-        rows[2][3] = -zfar * znear / d;         // ´Ë´¦ºÍopengl²»Í¬
+        rows[2][3] = -zfar * znear / d;         // æ­¤å¤„å’Œopenglä¸åŒ
         rows[3][3] = 0.0f;
 
         return *this;
     }
 
     //
-    // ¼ÆËãdirectxµÄÍ¸ÊÓÍ¶Ó°¾ØÕó
+    // è®¡ç®—directxçš„é€è§†æŠ•å½±çŸ©é˜µ
     // -------------------------------------------------------------------------
     template < typename T >
     Matrix44<T> &
@@ -806,16 +806,16 @@ namespace GN
         identity();
         rows[0][0] = 2.0f * znear / w;
         rows[1][1] = 2.0f * znear / h;
-        rows[2][2] = -zfar / d;                 // ´Ë´¦ºÍopengl²»Í¬
+        rows[2][2] = -zfar / d;                 // æ­¤å¤„å’Œopenglä¸åŒ
         rows[3][2] = -1.0f;
-        rows[2][3] = -zfar * znear / d;         // ´Ë´¦ºÍopengl²»Í¬
+        rows[2][3] = -zfar * znear / d;         // æ­¤å¤„å’Œopenglä¸åŒ
         rows[3][3] = 0.0f;
 
         return *this;
     }
 
     //
-    //  ½«¾ØÕóµÄÄÚÈİ´òÓ¡µ½×Ö·û´®ÖĞ
+    //  å°†çŸ©é˜µçš„å†…å®¹æ‰“å°åˆ°å­—ç¬¦ä¸²ä¸­
     // -------------------------------------------------------------------------
     template < typename T >
     void Matrix44<T>::print( StrA & s ) const

@@ -1,4 +1,4 @@
-#ifndef __GN_BASE_TYPETRAITS_H__
+ï»¿#ifndef __GN_BASE_TYPETRAITS_H__
 #define __GN_BASE_TYPETRAITS_H__
 // *****************************************************************************
 /// \file
@@ -66,7 +66,7 @@ namespace GN
     template <typename T1, typename T2>
     struct IsSameType
     {
-        static const bool value = false; ///< ÈçÌâ.
+        static const bool value = false; ///< å¦‚é¢˜.
     };
 
     ///
@@ -75,7 +75,7 @@ namespace GN
     template <typename T>
     struct IsSameType<T,T>
     {
-        static const bool value = true; ///< ÈçÌâ.
+        static const bool value = true; ///< å¦‚é¢˜.
     };
 
     ///
@@ -84,7 +84,7 @@ namespace GN
     template <typename T>
     struct IsConst
     {
-        static const bool value = false; ///< ÈçÌâ.
+        static const bool value = false; ///< å¦‚é¢˜.
     };
 
     ///
@@ -93,7 +93,7 @@ namespace GN
     template <typename T>
     struct IsConst<const T>
     {
-        static const bool value = true; ///< ÈçÌâ.
+        static const bool value = true; ///< å¦‚é¢˜.
     };
 
     ///
@@ -102,7 +102,7 @@ namespace GN
     template <typename T>
     struct IsClass
     {
-        static const bool value = detail::IsClassHelper<T>::value; ///< ÈçÌâ.
+        static const bool value = detail::IsClassHelper<T>::value; ///< å¦‚é¢˜.
     };
 
     ///
@@ -111,7 +111,7 @@ namespace GN
     template <typename FROM, typename TO>
     struct IsConvertible
     {
-        static const bool value = detail::IsConvertibleHelper<FROM,TO>::value; ///< ÈçÌâ.
+        static const bool value = detail::IsConvertibleHelper<FROM,TO>::value; ///< å¦‚é¢˜.
     };
 
     ///
@@ -121,7 +121,7 @@ namespace GN
     struct IsBaseAndDerived
     {
         ///
-        /// ÈçÌâ.
+        /// å¦‚é¢˜.
         ///
         static const bool value =
             IsClass<B>::value && IsClass<D>::value && IsConvertible<D,B>::value;

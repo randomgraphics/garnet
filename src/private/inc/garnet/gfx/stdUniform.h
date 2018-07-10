@@ -7,12 +7,12 @@
 // *****************************************************************************
 /// \file
 /// \brief   Define standard uniform resources
-/// \author  chenli@@REDMOND (2011/05/02 ÷‹“ª)
+/// \author  chenli@@REDMOND (2011/05/02)
 // *****************************************************************************
 
 namespace GN { namespace gfx
 {
-    /// Standard uniform defintion
+    /// Standard uniform definition
     struct StandardUniform
     {
         /// Standard Uniform Index

@@ -1,4 +1,4 @@
-/*
+Ôªø/*
  * This file use to define key-codes
  *
  * NOTE : internelly used by input module, do NOT include it directly in your
@@ -9,10 +9,10 @@
  *
  */
 
-//                      ∞¥º¸√˚≥∆               DInputº¸¬Î          …®√Ë¬Î        Windows–Èƒ‚º¸¬Î      X11 KeySym
+//                      ÊåâÈîÆÂêçÁß∞               DInputÈîÆÁ†Å          Êâ´ÊèèÁ†Å        WindowsËôöÊãüÈîÆÁ†Å      X11 KeySym
 //                      key name               dinput keycode      scan code     windows vkey code
 
-// øÿ÷∆º¸
+// ÊéßÂà∂ÈîÆ
 GNINPUT_DEFINE_KEYCODE( ESCAPE               , DIK_ESCAPE        , 0x01         , VK_ESCAPE         , NoSymbol )
 GNINPUT_DEFINE_KEYCODE( BACKSPACE            , DIK_BACK          , 0x0E         , VK_BACK           , NoSymbol )
 GNINPUT_DEFINE_KEYCODE( TAB                  , DIK_TAB           , 0x0F         , VK_TAB            , NoSymbol )
@@ -41,7 +41,7 @@ GNINPUT_DEFINE_KEYCODE( UP                   , DIK_UP            , 0x148        
 GNINPUT_DEFINE_KEYCODE( RIGHT                , DIK_RIGHT         , 0x14D        , VK_RIGHT          , NoSymbol )
 GNINPUT_DEFINE_KEYCODE( DOWN                 , DIK_DOWN          , 0x150        , VK_DOWN           , NoSymbol )
 
-//  ˝◊÷º¸
+// Êï∞Â≠óÈîÆ
 GNINPUT_DEFINE_KEYCODE( _0                   , DIK_0             , 0x2          , '0'               , NoSymbol )
 GNINPUT_DEFINE_KEYCODE( _1                   , DIK_1             , 0x3          , '1'               , NoSymbol )
 GNINPUT_DEFINE_KEYCODE( _2                   , DIK_2             , 0x4          , '2'               , NoSymbol )
@@ -53,7 +53,7 @@ GNINPUT_DEFINE_KEYCODE( _7                   , DIK_7             , 0x9          
 GNINPUT_DEFINE_KEYCODE( _8                   , DIK_8             , 0xA          , '8'               , NoSymbol )
 GNINPUT_DEFINE_KEYCODE( _9                   , DIK_9             , 0xB          , '9'               , NoSymbol )
 
-// ◊÷ƒ∏º¸
+// Â≠óÊØçÈîÆ
 GNINPUT_DEFINE_KEYCODE( A                    , DIK_A             , 0x1E         , 'A'               , NoSymbol )
 GNINPUT_DEFINE_KEYCODE( B                    , DIK_B             , 0x30         , 'B'               , NoSymbol )
 GNINPUT_DEFINE_KEYCODE( C                    , DIK_C             , 0x2E         , 'C'               , NoSymbol )
@@ -81,7 +81,7 @@ GNINPUT_DEFINE_KEYCODE( X                    , DIK_X             , 0x2D         
 GNINPUT_DEFINE_KEYCODE( Y                    , DIK_Y             , 0x15         , 'Y'               , NoSymbol )
 GNINPUT_DEFINE_KEYCODE( Z                    , DIK_Z             , 0x2C         , 'Z'               , NoSymbol )
 
-// ±Íµ„∫Õ∑˚∫≈º¸
+// Ê†áÁÇπÂíåÁ¨¶Âè∑ÈîÆ
 GNINPUT_DEFINE_KEYCODE( MINUS                , DIK_MINUS         , 0x0C         , VK_OEM_MINUS      , NoSymbol ) // -
 GNINPUT_DEFINE_KEYCODE( EQUALS               , DIK_EQUALS        , 0x0D         , VK_OEM_PLUS       , NoSymbol ) // =
 GNINPUT_DEFINE_KEYCODE( LBRACKET             , DIK_LBRACKET      , 0x1A         , VK_OEM_4          , NoSymbol ) // [
@@ -89,12 +89,12 @@ GNINPUT_DEFINE_KEYCODE( RBRACKET             , DIK_RBRACKET      , 0x1B         
 GNINPUT_DEFINE_KEYCODE( SEMICOLON            , DIK_SEMICOLON     , 0x27         , VK_OEM_1          , NoSymbol ) // ;
 GNINPUT_DEFINE_KEYCODE( APOSTROPHE           , DIK_APOSTROPHE    , 0x28         , VK_OEM_7          , NoSymbol ) // '
 GNINPUT_DEFINE_KEYCODE( GRAVE                , DIK_GRAVE         , 0x29         , VK_OEM_3          , NoSymbol ) // `
-GNINPUT_DEFINE_KEYCODE( BACKSLASH            , DIK_BACKSLASH     , 0x2B         , VK_OEM_5          , NoSymbol ) // \ (∑¥–±œﬂ)
+GNINPUT_DEFINE_KEYCODE( BACKSLASH            , DIK_BACKSLASH     , 0x2B         , VK_OEM_5          , NoSymbol ) // \ (ÂèçÊñúÁ∫ø)
 GNINPUT_DEFINE_KEYCODE( COMMA                , DIK_COMMA         , 0x33         , VK_OEM_COMMA      , NoSymbol ) // ,
 GNINPUT_DEFINE_KEYCODE( PERIOD               , DIK_PERIOD        , 0x34         , VK_OEM_PERIOD     , NoSymbol ) // .
-GNINPUT_DEFINE_KEYCODE( SLASH                , DIK_SLASH         , 0x35         , VK_OEM_2          , NoSymbol ) // / (’˝–±œﬂ)
+GNINPUT_DEFINE_KEYCODE( SLASH                , DIK_SLASH         , 0x35         , VK_OEM_2          , NoSymbol ) // / (Ê≠£ÊñúÁ∫ø)
 
-//  ˝◊÷–°º¸≈Ã
+// Êï∞Â≠óÂ∞èÈîÆÁõò
 GNINPUT_DEFINE_KEYCODE( NUMPAD_0             , DIK_NUMPAD0       , 0x52         , VK_NUMPAD0        , NoSymbol )
 GNINPUT_DEFINE_KEYCODE( NUMPAD_1             , DIK_NUMPAD1       , 0x4F         , VK_NUMPAD1        , NoSymbol )
 GNINPUT_DEFINE_KEYCODE( NUMPAD_2             , DIK_NUMPAD2       , 0x50         , VK_NUMPAD2        , NoSymbol )
@@ -109,11 +109,11 @@ GNINPUT_DEFINE_KEYCODE( NUMPAD_MULTIPLY      , DIK_MULTIPLY      , 0x37         
 GNINPUT_DEFINE_KEYCODE( NUMPAD_ADD           , DIK_ADD           , 0x4E         , VK_ADD            , NoSymbol ) // +
 GNINPUT_DEFINE_KEYCODE( NUMPAD_SUBTRACT      , DIK_SUBTRACT      , 0x4A         , VK_SUBTRACT       , NoSymbol ) // -
 GNINPUT_DEFINE_KEYCODE( NUMPAD_DECIMAL       , DIK_DECIMAL       , 0x53         , VK_DECIMAL        , NoSymbol ) // .
-GNINPUT_DEFINE_KEYCODE( NUMPAD_DIVIDE        , DIK_DIVIDE        , 0x135        , VK_DIVIDE         , NoSymbol ) // / (’˝–±œﬂ)
+GNINPUT_DEFINE_KEYCODE( NUMPAD_DIVIDE        , DIK_DIVIDE        , 0x135        , VK_DIVIDE         , NoSymbol ) // / (Ê≠£ÊñúÁ∫ø)
 GNINPUT_DEFINE_KEYCODE( NUMPAD_ENTER         , DIK_NUMPADENTER   , 0x11C        , VK_SEPARATOR      , NoSymbol )
 GNINPUT_DEFINE_KEYCODE( NUMPAD_NUMLOCK       , DIK_NUMLOCK       , 0x145        , VK_NUMLOCK        , NoSymbol )
 
-// π¶ƒ‹º¸
+// ÂäüËÉΩÈîÆ
 GNINPUT_DEFINE_KEYCODE( F1                   , DIK_F1            , 0x3B         , VK_F1             , NoSymbol )
 GNINPUT_DEFINE_KEYCODE( F2                   , DIK_F2            , 0x3C         , VK_F2             , NoSymbol )
 GNINPUT_DEFINE_KEYCODE( F3                   , DIK_F3            , 0x3D         , VK_F3             , NoSymbol )
@@ -127,12 +127,12 @@ GNINPUT_DEFINE_KEYCODE( F10                  , DIK_F10           , 0x44         
 GNINPUT_DEFINE_KEYCODE( F11                  , DIK_F11           , 0x57         , VK_F11            , NoSymbol )
 GNINPUT_DEFINE_KEYCODE( F12                  , DIK_F12           , 0x58         , VK_F12            , NoSymbol )
 
-// ∆‰À˚
+// ÂÖ∂‰ªñ
 GNINPUT_DEFINE_KEYCODE( SYSRQ                , DIK_SYSRQ         , 0x137        , VK_PRINT          , NoSymbol )
 GNINPUT_DEFINE_KEYCODE( SCROLL               , DIK_SCROLL        , 0x46         , VK_SCROLL         , NoSymbol )
 GNINPUT_DEFINE_KEYCODE( PAUSE                , DIK_PAUSE         , 0x45         , VK_PAUSE          , NoSymbol )
 
-//  Û±Íº¸
+// Èº†Ê†áÈîÆ
 GNINPUT_DEFINE_KEYCODE( MOUSEBTN_0           , 0                 , 0            , 0                 , NoSymbol )
 GNINPUT_DEFINE_KEYCODE( MOUSEBTN_1           , 0                 , 0            , 0                 , NoSymbol )
 GNINPUT_DEFINE_KEYCODE( MOUSEBTN_2           , 0                 , 0            , 0                 , NoSymbol )
@@ -142,7 +142,7 @@ GNINPUT_DEFINE_KEYCODE( MOUSEBTN_5           , 0                 , 0            
 GNINPUT_DEFINE_KEYCODE( MOUSEBTN_6           , 0                 , 0            , 0                 , NoSymbol )
 GNINPUT_DEFINE_KEYCODE( MOUSEBTN_7           , 0                 , 0            , 0                 , NoSymbol )
 
-// Xbox360”Œœ∑øÿ÷∆∆˜
+// Xbox360Ê∏∏ÊàèÊéßÂà∂Âô®
 GNINPUT_DEFINE_KEYCODE( XB360_UP             , 0                 , 0            , 0                 , NoSymbol )
 GNINPUT_DEFINE_KEYCODE( XB360_DOWN           , 0                 , 0            , 0                 , NoSymbol )
 GNINPUT_DEFINE_KEYCODE( XB360_LEFT           , 0                 , 0            , 0                 , NoSymbol )
