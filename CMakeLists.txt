@@ -3,19 +3,11 @@ project(garnet)
 
 include(CMakeDependentOption)
 
-# ===========================
-# define global build options
-# ===========================
-
-option(GN_BUILD_DEBUG_ENABLED "Set to ON|OFF to enable|disable debug build." ON)
-message("GN_BUILD_DEBUG_ENABLED=${GN_BUILD_DEBUG_ENABLED}")
-
-# todo: force it on, if debug is on
-option(GN_BUILD_PROFILING_ENABLED "Set to ON|OFF to enable|disable profile build." ON)
-message("GN_BUILD_PROFILING_ENABLED=${GN_BUILD_PROFILING_ENABLED}")
+# ============================
+# define global config options
+# ============================
 
 option(GN_BUILD_IS_STATIC "Set to ON|OFF to build GNcore as static|shared library." OFF)
-message("GN_BUILD_IS_STATIC=${GN_BUILD_IS_STATIC}")
 
 # =============================
 # search commonly used packages
@@ -35,26 +27,39 @@ set(GN_BUILD_HAS_D3DCOMPILER OFF)
 set(GN_BUILD_HAS_XNAMATH OFF)
 set(GN_BUILD_HAS_DIRECTXMATH OFF)
 
-# =============================
-# define global build variables
-# =============================
+# =======================
+# define global constants
+# =======================
+
+if ("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
+    set(GN_BUILD_DEBUG_ENABLED ON)
+    set(GN_BUILD_PROFILING_ENABLED ON)
+elseif ("${CMAKE_BUILD_TYPE}" STREQUAL "RelWithDebInfo")
+    set(GN_BUILD_DEBUG_ENABLED OFF)
+    set(GN_BUILD_PROFILING_ENABLED ON)
+else()
+    set(GN_BUILD_DEBUG_ENABLED OFF)
+    set(GN_BUILD_PROFILING_ENABLED OFF)
+endif()
 
 set(GN_ROOT_DIR ${PROJECT_SOURCE_DIR})
 set(GN_BUILD_ROOT_DIR ${PROJECT_BINARY_DIR})
 
-# ============================
-# search common compiler flags
-# ============================
-
-set(CMAKE_CXX_STANDARD 17)
-
-if (MSVC)
-    set(CMAKE_C_FLAGS "/utf-8 /EHsc /W4 /WX /Zi /MP")
-    set(CMAKE_CXX_FLAGS "/utf-8 /EHsc /W4 /WX /Zi /MP")
-endif()
-
 # ===================
 # call subdirectories
 # ===================
+add_subdirectory(src/contrib/src)
 add_subdirectory(src/private/core)
 add_subdirectory(sconstest)
+
+# =======================
+# print configure summary
+# =======================
+message("CMAKE_BUILD_TYPE           = ${CMAKE_BUILD_TYPE}")
+message("GN_BUILD_IS_STATIC         = ${GN_BUILD_IS_STATIC}")
+message("GN_BUILD_DEBUG_ENABLED     = ${GN_BUILD_DEBUG_ENABLED}")
+message("GN_BUILD_PROFILING_ENABLED = ${GN_BUILD_PROFILING_ENABLED}")
+message("GN_BUILD_HAS_OGL           = ${GN_BUILD_HAS_OGL}")
+message("GN_BUILD_HAS_D3D9          = ${GN_BUILD_HAS_D3D9}")
+message("GN_BUILD_HAS_D3D11         = ${GN_BUILD_HAS_D3D11}")
+message("GN_BUILD_HAS_D3D11_1       = ${GN_BUILD_HAS_D3D11_1}")
