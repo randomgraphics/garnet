@@ -1,8 +1,8 @@
-#ifndef __GN_INPUT_INPUTMSW_H__
+ï»¿#ifndef __GN_INPUT_INPUTMSW_H__
 #define __GN_INPUT_INPUTMSW_H__
 // *****************************************************************************
 /// \file
-/// \brief   Ê¹ÓÃWindowsµÄ±ê×¼ÏûÏ¢»úÖÆµÄÊäÈëÄ£¿é
+/// \brief   ä½¿ç”¨Windowsçš„æ ‡å‡†æ¶ˆæ¯æœºåˆ¶çš„è¾“å…¥æ¨¡å—
 /// \author  chenlee (2005.10.25)
 // *****************************************************************************
 
@@ -13,7 +13,7 @@
 namespace GN { namespace input
 {
     ///
-    /// Ê¹ÓÃWindowsµÄ±ê×¼ÏûÏ¢»úÖÆµÄÊäÈëÄ£¿é
+    /// ä½¿ç”¨Windowsçš„æ ‡å‡†æ¶ˆæ¯æœºåˆ¶çš„è¾“å…¥æ¨¡å—
     ///
     class InputMsw : public BasicInputMsw
     {

@@ -1,8 +1,8 @@
-#ifndef __GN_INPUT_BASICINPUT_H__
+ï»¿#ifndef __GN_INPUT_BASICINPUT_H__
 #define __GN_INPUT_BASICINPUT_H__
 // *****************************************************************************
 /// \file
-/// \brief   ÊµÏÖinputÄ£¿éµÄÍ¨ÓÃ»ùÀà
+/// \brief   å®ç°inputæ¨¡å—çš„é€šç”¨åŸºç±»
 /// \author  chenlee (2005.10.24)
 // *****************************************************************************
 
@@ -12,7 +12,7 @@
 namespace GN { namespace input
 {
     ///
-    /// inputÄ£¿éµÄ»ùÀà£¬ÊµÏÖÁËinputÄ£¿éµÄÍ¨ÓÃ¹¦ÄÜ.
+    /// inputæ¨¡å—çš„åŸºç±»ï¼Œå®ç°äº†inputæ¨¡å—çš„é€šç”¨åŠŸèƒ½.
     ///
     class BasicInput : public Input
     {
@@ -96,7 +96,7 @@ namespace GN { namespace input
         SpinLoop             mKeyEventQueueMutex;
 
         ///
-        /// ¼ÇÂ¼¼üÅÌµÄ×´Ì¬£¬ÓÃÀ´¹ıÂË/ĞŞÕı²»Æ¥ÅäµÄ°´¼ü²Ù×÷
+        /// è®°å½•é”®ç›˜çš„çŠ¶æ€ï¼Œç”¨æ¥è¿‡æ»¤/ä¿®æ­£ä¸åŒ¹é…çš„æŒ‰é”®æ“ä½œ
         ///
         KeyStatus mKeyboardStatus[KeyCode::NUM_KEYS];
 
@@ -106,17 +106,17 @@ namespace GN { namespace input
         int mAxisStatus[Axis::NUM_AXISES];
 
         ///
-        /// ¼ÇÂ¼ÁËCTRL/ALT/SHIFTµÄ×´Ì¬
+        /// è®°å½•äº†CTRL/ALT/SHIFTçš„çŠ¶æ€
         ///
         KeyStatus mKeyFlags;
 
         ///
-        /// True£¬±íÃ÷ÒÑ¾­²åÈëÁË°ë¸öUNICODE×Ö·û£¬ÕıÔÚµÈ´ıÏÂ°ë¸ö×Ö·û¡£
+        /// Trueï¼Œè¡¨æ˜å·²ç»æ’å…¥äº†åŠä¸ªUNICODEå­—ç¬¦ï¼Œæ­£åœ¨ç­‰å¾…ä¸‹åŠä¸ªå­—ç¬¦ã€‚
         ///
         bool mHalfWideChar;
 
         ///
-        /// Ôİ´æ´ı²åÈëµÄ°ë¸öUNICODE×Ö·û
+        /// æš‚å­˜å¾…æ’å…¥çš„åŠä¸ªUNICODEå­—ç¬¦
         ///
         char mHalfBytes[2];
     };

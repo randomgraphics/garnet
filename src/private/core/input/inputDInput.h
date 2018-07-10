@@ -1,8 +1,8 @@
-#ifndef __GN_INPUT_DIINPUT_H__
+ï»¿#ifndef __GN_INPUT_DIINPUT_H__
 #define __GN_INPUT_DIINPUT_H__
 // *****************************************************************************
 /// \file
-/// \brief   Ê¹ÓÃDirectInputµÄÊäÈëÄ£¿é
+/// \brief   ä½¿ç”¨DirectInputçš„è¾“å…¥æ¨¡å—
 /// \author  chenlee (2005.10.29)
 // *****************************************************************************
 
@@ -15,7 +15,7 @@
 namespace GN { namespace input
 {
     ///
-    /// Ê¹ÓÃDirectInputµÄÊäÈëÏµÍ³
+    /// ä½¿ç”¨DirectInputçš„è¾“å…¥ç³»ç»Ÿ
     ///
     class InputDInput : public BasicInputMsw
     {

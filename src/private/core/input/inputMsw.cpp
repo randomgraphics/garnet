@@ -1,4 +1,4 @@
-#include "pch.h"
+ï»¿#include "pch.h"
 #include "inputMsw.h"
 
 #if GN_WINPC
@@ -31,7 +31,7 @@ void GN::input::InputMsw::msgHandler( UINT msg, WPARAM wp, LPARAM lp )
         case WM_KEYUP :
         case WM_SYSKEYUP :
             {
-                bool down = !(lp&0x80000000); // ×î¸ßÎ»±íÊ¾¸Ã¼üÊÇ·ñ°´ÏÂ£¨0£º°´ÏÂ£¬1£ºÌ§Æğ£©
+                bool down = !(lp&0x80000000); // æœ€é«˜ä½è¡¨ç¤ºè¯¥é”®æ˜¯å¦æŒ‰ä¸‹ï¼ˆ0ï¼šæŒ‰ä¸‹ï¼Œ1ï¼šæŠ¬èµ·ï¼‰
                 if( VK_MENU == wp )
                 {
                     pushKeyPress( KeyCode::LALT, down );

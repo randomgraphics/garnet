@@ -1,4 +1,4 @@
-#include "pch.h"
+ï»¿#include "pch.h"
 #include "basicInput.h"
 #include <algorithm>
 
@@ -46,7 +46,7 @@ void GN::input::BasicInput::triggerKeyPress( KeyCode code, bool keydown )
 
     //GN_TRACE( "Key press: %s %s", keyCode2String(code), keydown?"down":"up" );
 
-    // ¸üĞÂ×´Ì¬¼üµÄ±êÖ¾
+    // æ›´æ–°çŠ¶æ€é”®çš„æ ‡å¿—
     mKeyFlags.down = keydown;
     if     ( KeyCode::LCTRL  == code ) mKeyFlags.lctrl  = keydown;
     else if( KeyCode::RCTRL  == code ) mKeyFlags.rctrl  = keydown;
@@ -57,7 +57,7 @@ void GN::input::BasicInput::triggerKeyPress( KeyCode code, bool keydown )
 
     KeyEvent k( code, mKeyFlags );
 
-    // ¸üĞÂ¼üÅÌ×´Ì¬Êı×é
+    // æ›´æ–°é”®ç›˜çŠ¶æ€æ•°ç»„
     mKeyboardStatus[code] = k.status;
 
     //update last key event
@@ -69,7 +69,7 @@ void GN::input::BasicInput::triggerKeyPress( KeyCode code, bool keydown )
     mKeyEventQueue.push( k );
     mKeyEventQueueMutex.unlock();
 
-    // ´¥·¢°´¼üĞÅºÅ
+    // è§¦å‘æŒ‰é”®ä¿¡å·
     sigKeyPress( k );
 
     GN_UNGUARD;
@@ -97,7 +97,7 @@ void GN::input::BasicInput::triggerCharPress( char ch )
         //GN_TRACE( "Char press: %s", StrA(mHalfBytes,2).rawptr() );
         sigCharPress( wch[0] );
 
-        // Çå³ı¡°°ë×Ö·û¡±±êÖ¾
+        // æ¸…é™¤â€œåŠå­—ç¬¦â€æ ‡å¿—
         mHalfWideChar = false;
     }
     else

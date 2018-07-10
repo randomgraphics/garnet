@@ -6,15 +6,9 @@
 /// \author  chenlee (2006.3.13)
 // *****************************************************************************
 
-#if defined(HAS_XINPUT) || defined(HAS_XINPUT2)
-
 #include "basicInput.h"
 
-#if defined(HAS_XINPUT)
-#include <xinput.h>
-#elif defined(HAS_XINPUT2)
-#include <xinput2.h>
-#endif
+#if GN_WINPC
 
 namespace GN { namespace input
 {
