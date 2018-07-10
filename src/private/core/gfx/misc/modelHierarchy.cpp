@@ -1313,7 +1313,6 @@ sLoadModelHierarchyFromXML( ModelHierarchyDesc & desc, File & file )
     XmlParseResult xpr;
     if( !doc.parse( xpr, file ) )
     {
-        static Logger * sLogger = getLogger( "GN.base.xml" );
         GN_ERROR(sLogger)(
             "Fail to parse XML file (%s):\n"
             "    line   : %d\n"

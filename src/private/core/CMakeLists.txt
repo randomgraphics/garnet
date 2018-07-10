@@ -17,6 +17,10 @@ file(GLOB sources
     app/SampleApp.cpp
     base/*.cpp base/*.h
     engine/*.cpp engine/*.h
+    gfx/base/*.cpp gfx/base/*.h
+    #gfx/d3d/*.cpp gfx/d3d/*.h
+    gfx/gpures/*.cpp gfx/gpures/*.h
+    gfx/misc/*.cpp gfx/misc/*.h
     input/*.cpp input/*.h
     util/*.cpp util/*.h
     win/*.cpp win/*.h
@@ -59,6 +63,6 @@ target_link_libraries(GNcore PUBLIC GNextern)
 target_compile_features(GNcore PUBLIC cxx_std_11)
 
 if (MSVC)
-    target_compile_options(GNcore PUBLIC /utf-8 /EHsc)
-    target_compile_options(GNcore PRIVATE /W4 /WX /Zi /MP)
+    target_compile_options(GNcore PUBLIC /EHa /MP)
+    target_compile_options(GNcore PRIVATE /utf-8 /W4 /WX)
 endif()

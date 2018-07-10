@@ -330,8 +330,8 @@ namespace GN
         XmlParseResult xpr;
         if( !doc.parse( xpr, fp ) )
         {
-            static Logger * sLogger = getLogger( "GN.base.xml" );
-            GN_ERROR(sLogger)(
+            static Logger * sLocalLogger = getLogger( "GN.base.xml" );
+            GN_ERROR(sLocalLogger)(
                 "Fail to parse XML file (%s):\n"
                 "    line   : %d\n"
                 "    column : %d\n"
@@ -356,8 +356,8 @@ namespace GN
     {
         GN_GUARD;
 
-        static Logger * sLogger = getLogger( "GN.base.xml" );
-        GN_INFO(sLogger)( "Load '%s'", filename.rawptr() );
+        static Logger * sLocalLogger = getLogger( "GN.base.xml" );
+        GN_INFO(sLocalLogger)( "Load '%s'", filename.rawptr() );
 
         AutoObjPtr<File> fp( fs::openFile( filename, "rt" ) );
         if( !fp ) return false;

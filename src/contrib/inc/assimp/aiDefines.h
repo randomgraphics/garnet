@@ -1,4 +1,4 @@
-/*
+Ôªø/*
 ---------------------------------------------------------------------------
 Open Asset Import Library (ASSIMP)
 ---------------------------------------------------------------------------
@@ -181,7 +181,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #if (defined(__BORLANDC__) || defined (__BCPLUSPLUS__))
 #error Currently, Borland is unsupported. Feel free to port Assimp.
 
-// "W8059 Packgrˆﬂe der Struktur ge‰ndert"
+// "W8059 Packgr√∂√üe der Struktur ge√§ndert"
 
 #endif
 	//////////////////////////////////////////////////////////////////////////

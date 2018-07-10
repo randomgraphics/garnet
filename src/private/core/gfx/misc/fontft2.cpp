@@ -1,4 +1,4 @@
-#include "pch.h"
+ï»¿#include "pch.h"
 #include <ft2build.h>
 #include FT_FREETYPE_H
 #include FT_LCD_FILTER_H
@@ -291,7 +291,7 @@ bool FontFaceFt2::loadFontImage( FontImage & result, wchar_t ch )
 	size_t      height = (size_t)bitmap.rows;
     size_t       pitch = (size_t)abs(bitmap.pitch);
 
-    //È¡µÀÎ»Í¼Êı¾İ
+    //å–é“ä½å›¾æ•°æ®
 #if SUBPIXEL_RENDERING
     mBitmapBuffer.resize( width * height * 4 );
     uint8 * buf = mBitmapBuffer.rawptr();

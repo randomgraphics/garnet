@@ -81,9 +81,14 @@ target_compile_definitions(GNextern PRIVATE
     ASSIMP_BUILD_NO_OWN_ZLIB
     FT2_BUILD_LIBRARY
     GLEW_STATIC
+    _SCL_SECURE_NO_WARNINGS # disable MSVC security warnings
 )
 target_include_directories(GNextern PUBLIC  ${GN_ROOT_DIR}/src/contrib/inc)
 target_include_directories(GNextern PRIVATE ${GN_ROOT_DIR}/src/contrib/inc/assimp assimp/BoostWorkaround)
 if (MSVC)
-    target_compile_options(GNextern PRIVATE /w) # don't care about warnings in 3rd party sources.
+    target_compile_options(GNextern PRIVATE
+        /w # don't care about warnings in 3rd party sources.
+        /EHa
+        /MP # enable parallel build.
+    ) 
 endif()
