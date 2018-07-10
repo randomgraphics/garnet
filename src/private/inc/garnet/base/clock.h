@@ -1,4 +1,4 @@
-#ifndef __GN_BASE_CLOCK_H__
+ï»¿#ifndef __GN_BASE_CLOCK_H__
 #define __GN_BASE_CLOCK_H__
 // *****************************************************************************
 /// \file
@@ -34,10 +34,10 @@ namespace GN
         typedef sint64 CycleType;
 
         ///
-        /// Ò»¸ö¸ß¾«¶ÈµÄ¼ÆÊ±º¯Êı
+        /// ä¸€ä¸ªé«˜ç²¾åº¦çš„è®¡æ—¶å‡½æ•°
         ///
-        /// ·µ»Ø´Ó¿ª»úµ½ÏÖÔÚ¼ÆÊ±Æ÷¾­¹ıµÄcycleÊı£¬
-        /// ÓÃ·µ»ØÖµ³ıÒÔ¼ÆÊ±Æ÷µÄÖ÷Æµ£¬¾Í¿ÉÒÔ»»Ëã³ÉÃë¡£
+        /// è¿”å›ä»å¼€æœºåˆ°ç°åœ¨è®¡æ—¶å™¨ç»è¿‡çš„cycleæ•°ï¼Œ
+        /// ç”¨è¿”å›å€¼é™¤ä»¥è®¡æ—¶å™¨çš„ä¸»é¢‘ï¼Œå°±å¯ä»¥æ¢ç®—æˆç§’ã€‚
         ///
         static CycleType sGetSystemCycleCount();
 
@@ -47,7 +47,7 @@ namespace GN
         static CycleType sGetSystemCycleFrequency() { return msSystemCycleFrequency; }
 
         ///
-        /// »ñµÃµ±Ç°Ê±¼ä¼ÆÊı
+        /// è·å¾—å½“å‰æ—¶é—´è®¡æ•°
         ///
         CycleType getCycleCount() const
         {
@@ -55,7 +55,7 @@ namespace GN
         }
 
         ///
-        /// »ñµÃµ±Ç°Ê±¼ä, in seconds
+        /// è·å¾—å½“å‰æ—¶é—´, in seconds
         ///
         double getTimeD() const
         {
@@ -65,7 +65,7 @@ namespace GN
         }
 
         ///
-        /// »ñµÃµ±Ç°Ê±¼ä, in seconds
+        /// è·å¾—å½“å‰æ—¶é—´, in seconds
         ///
         float getTimef() const
         {
@@ -73,22 +73,22 @@ namespace GN
         }
 
         ///
-        /// ÖØÖÃÊ±ÖÓµ½³õÊ¼×´Ì¬
+        /// é‡ç½®æ—¶é’Ÿåˆ°åˆå§‹çŠ¶æ€
         ///
         void reset();
 
         ///
-        /// »Ö¸´Ê±ÖÓÔËĞĞ
+        /// æ¢å¤æ—¶é’Ÿè¿è¡Œ
         ///
         void resume();
 
         ///
-        /// ÔİÍ£Ê±ÖÓ
+        /// æš‚åœæ—¶é’Ÿ
         ///
         void pause();
 
         ///
-        /// µ±Ç°Ê±ÖÓÊÇ·ñÔİÍ£
+        /// å½“å‰æ—¶é’Ÿæ˜¯å¦æš‚åœ
         ///
         bool paused() const { return mPaused; }
 
@@ -97,12 +97,12 @@ namespace GN
         // ********************************
     private:
 
-        CycleType mResetTime;    ///< ¼ÆÊ±Æ÷¸´Î»Ê±µÄcycleÊı
-        CycleType mPauseTime;    ///< ¼ÆÊ±Æ÷ÔİÍ£Ê±µÄcycleÊı
-        CycleType mPauseElapsed; ///< ¼ÆÊ±Æ÷×Ü¼ÆÔİÍ£µÄcycleÊı
-        bool      mPaused;       ///< ¼ÆÊ±Æ÷ÊÇ·ñÔİÍ£
+        CycleType mResetTime;    ///< è®¡æ—¶å™¨å¤ä½æ—¶çš„cycleæ•°
+        CycleType mPauseTime;    ///< è®¡æ—¶å™¨æš‚åœæ—¶çš„cycleæ•°
+        CycleType mPauseElapsed; ///< è®¡æ—¶å™¨æ€»è®¡æš‚åœçš„cycleæ•°
+        bool      mPaused;       ///< è®¡æ—¶å™¨æ˜¯å¦æš‚åœ
 
-        ///< ÏµÍ³¼ÆÊ±Æ÷µÄÆµÂÊ£¨Ã¿ÃëÖÓµÄcycleÊı£©
+        ///< ç³»ç»Ÿè®¡æ—¶å™¨çš„é¢‘ç‡ï¼ˆæ¯ç§’é’Ÿçš„cycleæ•°ï¼‰
         static CycleType msSystemCycleFrequency;
 
         // ********************************
@@ -111,7 +111,7 @@ namespace GN
     private:
 
         ///
-        /// µÃµ½´ÓÉÏ´Î¼ÆÊ±Æ÷¸´Î»µ½ÏÖÔÚÇÒÈ¥³ıÔİÍ£Ê±¼äºóËùÊµ¼Ê¾­¹ıµÄ¾»cycleÊı
+        /// å¾—åˆ°ä»ä¸Šæ¬¡è®¡æ—¶å™¨å¤ä½åˆ°ç°åœ¨ä¸”å»é™¤æš‚åœæ—¶é—´åæ‰€å®é™…ç»è¿‡çš„å‡€cycleæ•°
         ///
         CycleType getCleanCycleCount() const
         {
