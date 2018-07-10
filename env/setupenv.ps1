@@ -141,39 +141,19 @@ if( ("vc" -eq $env:GN_BUILD_COMPILER) -and ("xbox3" -ne $env:GN_BUILD_TARGET_OS)
 
     # locate vsvarall.bat
     $vcvarbat=$false
-    if( test-path "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvarsall.bat" )
+    if( test-path "C:\Program Files (x86)\Microsoft Visual Studio\2017\Professional\VC\Auxiliary\Build\vcvarsall.bat" )
+    {
+        $vcvarbat="C:\Program Files (x86)\Microsoft Visual Studio\2017\Professional\VC\Auxiliary\Build\vcvarsall.bat"
+        $env:GN_BUILD_COMPILER="vc150";
+    }
+    elseif( test-path "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvarsall.bat" )
     {
         $vcvarbat="C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvarsall.bat"
         $env:GN_BUILD_COMPILER="vc150";
     }
-    elseif( $env:VS140COMNTOOLS -and ( test-path $env:VS140COMNTOOLS ) )
-    {
-        $vcvarbat="$env:VS140COMNTOOLS..\..\VC\vcvarsall.bat"
-        $env:GN_BUILD_COMPILER="vc140";
-    }
-    elseif( $env:VS120COMNTOOLS -and ( test-path $env:VS120COMNTOOLS ) )
-    {
-        $vcvarbat="$env:VS120COMNTOOLS..\..\VC\vcvarsall.bat"
-        $env:GN_BUILD_COMPILER="vc120";
-    }
-    elseif( $env:VS110COMNTOOLS -and ( test-path $env:VS110COMNTOOLS ) )
-    {
-        $vcvarbat="$env:VS110COMNTOOLS..\..\VC\vcvarsall.bat"
-        $env:GN_BUILD_COMPILER="vc110";
-    }
-    elseif( $env:VS100COMNTOOLS -and ( test-path $env:VS100COMNTOOLS ) )
-    {
-        $vcvarbat="$env:VS100COMNTOOLS..\..\VC\vcvarsall.bat"
-        $env:GN_BUILD_COMPILER="vc100";
-    }
-    elseif( $env:VS90COMNTOOLS -and ( test-path $env:VS90COMNTOOLS ) )
-    {
-        $vcvarbat="$env:VS90COMNTOOLS..\..\VC\vcvarsall.bat"
-        $env:GN_BUILD_COMPILER="vc90";
-    }
     else
     {
-        error "VS110COMNTOOLS\VS100COMNTOOLS\VS90COMNTOOLS not found. Please install VS2012\2010\2008"
+        error "Visual Studio 2017 Community/Professional is required."
     }
 
     # run vsvarall.bat, catch all environments
