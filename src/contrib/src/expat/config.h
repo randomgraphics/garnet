@@ -1,4 +1,4 @@
-#include "../extern_config.h"
+#include "expat_build.h"
 
 /* 1234 = LIL_ENDIAN, 4321 = BIGENDIAN */
 #define BYTEORDER 1234

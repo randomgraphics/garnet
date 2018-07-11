@@ -3,6 +3,8 @@
 # ==============================
 
 configure_file(../inc/garnet/base/build.h.in ../inc/garnet/base/build.h)
+set(BUILD_INC ${CMAKE_CURRENT_BINARY_DIR}/../inc/garnet)
+set(BUILD_H ${BUILD_INC}/base/build.h)
 
 # ====================
 # Collect source files
@@ -41,9 +43,9 @@ source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} PREFIX "Source Files" FILES ${sour
 # ====================
 
 if (GN_BUILD_IS_STATIC)
-	add_library(GNcore ${sources} ${garnet_headers} ${GN_BUILD_ROOT_DIR}/src/private/inc/garnet/base/build.h)
+	add_library(GNcore ${sources} ${garnet_headers} ${BUILD_H})
 else()
-	add_library(GNcore SHARED ${sources} ${garnet_headers} ${GN_BUILD_ROOT_DIR}/src/private/inc/garnet/base/build.h)
+	add_library(GNcore SHARED ${sources} ${garnet_headers} ${BUILD_H})
 endif()
 
 if (GN_BUILD_HAS_XINPUT)
@@ -56,7 +58,7 @@ if (GN_BUILD_HAS_DINPUT)
     target_compile_definitions(GNcore PRIVATE HAS_DINPUT)
 endif()
 
-target_include_directories(GNcore PUBLIC ${GN_ROOT_DIR}/src/private/inc ${GN_BUILD_ROOT_DIR}/src/private/inc/garnet)
+target_include_directories(GNcore PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../inc ${BUILD_INC})
 
 target_link_libraries(GNcore PUBLIC GNextern)
 

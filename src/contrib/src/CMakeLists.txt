@@ -1,11 +1,33 @@
-# TODO: Generate private config header
+# ==================================
+# Generate expat build config header
+# ==================================
+
+INCLUDE(CheckIncludeFile)
+INCLUDE(CheckFunctionExists)
+
+check_function_exists(memmove HAVE_MEMMOVE)
+check_function_exists(bcopy HAVE_BCOPY)
+check_function_exists(mmap HAVE_MMAP)
+check_function_exists(getpagesize HAVE_GETPAGESIZE)
+check_include_file(dlfcn.h HAVE_FCNTL_H)
+check_include_file(inttypes.h HAVE_INTTYPES_H)
+check_include_file(memory.h HAVE_MEMORY_H)
+check_include_file(stdint.h HAVE_STDINT_H)
+check_include_file(stdlib.h HAVE_STDLIB_H)
+check_include_file(strings.h HAVE_STRINGS_H)
+check_include_file(string.h HAVE_STRING_H)
+check_include_file(sys/stat.h HAVE_SYS_STAT_H)
+check_include_file(sys/types.h HAVE_SYS_TYPES_H)
+check_include_file(unistd.h HAVE_UNISTD_H)
+
+configure_file(expat_build.h.in expat/expat_build.h)
 
 # ====================
 # Collect source files
 # ====================
 file(GLOB sources
     assimp/*.cpp # TODO: assimp compilation is slow like ass! Enable pch!
-    #expat/*.c
+    expat/*.c
     jpeg/*.c
     lua/*.c
 	pcre/*.c
@@ -70,12 +92,11 @@ list(APPEND sources
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} PREFIX "Source Files" FILES ${sources})
 
 
-
 # =================
 # Build the library
 # =================
 
-add_library(GNextern ${sources})
+add_library(GNextern ${sources} expat_build.h.in ${CMAKE_CURRENT_BINARY_DIR}/expat/expat_build.h)
 target_compile_definitions(GNextern PRIVATE
     ASSIMP_BUILD_BOOST_WORKAROUND
     ASSIMP_BUILD_NO_OWN_ZLIB
@@ -83,8 +104,12 @@ target_compile_definitions(GNextern PRIVATE
     GLEW_STATIC
     _SCL_SECURE_NO_WARNINGS # disable MSVC security warnings
 )
-target_include_directories(GNextern PUBLIC  ${GN_ROOT_DIR}/src/contrib/inc)
-target_include_directories(GNextern PRIVATE ${GN_ROOT_DIR}/src/contrib/inc/assimp assimp/BoostWorkaround)
+target_include_directories(GNextern PUBLIC  ${CMAKE_CURRENT_SOURCE_DIR}/../inc)
+target_include_directories(GNextern PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/../inc/assimp
+    assimp/BoostWorkaround
+    ${CMAKE_CURRENT_BINARY_DIR}/expat # for expat_build.h
+)
 if (MSVC)
     target_compile_options(GNextern PRIVATE
         /w # don't care about warnings in 3rd party sources.

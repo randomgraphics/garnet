@@ -45,9 +45,6 @@ else()
     set(GN_BUILD_PROFILING_ENABLED OFF)
 endif()
 
-set(GN_ROOT_DIR ${PROJECT_SOURCE_DIR})
-set(GN_BUILD_ROOT_DIR ${PROJECT_BINARY_DIR})
-
 # ===================
 # call subdirectories
 # ===================
