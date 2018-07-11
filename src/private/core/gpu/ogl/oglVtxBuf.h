@@ -1,4 +1,4 @@
-#ifndef __GN_GFXOGL_OGLVTXBUF_H__
+ï»¿#ifndef __GN_GFXOGL_OGLVTXBUF_H__
 #define __GN_GFXOGL_OGLVTXBUF_H__
 // *****************************************************************************
 /// \file
@@ -17,7 +17,7 @@ namespace GN { namespace gfx
     struct OGLBasicVtxBuf : public BasicVtxBuf, public OGLResource
     {
         ///
-        /// ·µ»ØÖ¸Ïò¶¥µãÊı¾İµÄÖ¸Õë
+        /// è¿”å›æŒ‡å‘é¡¶ç‚¹æ•°æ®çš„æŒ‡é’ˆ
         ///
         virtual const void * getVtxData() const = 0;
 

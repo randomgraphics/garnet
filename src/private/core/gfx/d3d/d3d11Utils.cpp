@@ -1,4 +1,7 @@
 #include "pch.h"
+
+#if GN_BUILD_HAS_D3D11
+
 #include <d3dcompiler.h>
 
 using namespace GN;
@@ -889,3 +892,4 @@ Cleanup:
     return hr;
 }
 
+#endif // GN_BUILD_HAS_D3D11

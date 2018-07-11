@@ -1,5 +1,7 @@
 #include "pch.h"
 
+#if GN_BUILD_HAS_D3D11
+
 static GN::Logger * sLogger = GN::getLogger("GN.d3d11utils.SpriteRenderer");
 
 static const char * hlslvscode=
@@ -477,3 +479,5 @@ void GN::d3d11::SpriteRenderer::drawSolidSprite(const SolidSprite & ss)
         _impl->DrawSolidSprite(ss);
     }
 }
+
+#endif // GN_BUILD_HAS_D3D11

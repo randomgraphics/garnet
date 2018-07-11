@@ -9,7 +9,7 @@
 namespace GN { namespace gfx
 {
     ///
-    /// 贴图类的基类
+    /// basic texture implementation class
     ///
     class BasicTexture : public Texture
     {
@@ -98,8 +98,8 @@ namespace GN { namespace gfx
         {
             if( offset >= maxLength )
             {
-                static Logger * sLogger = getLogger("GN.gfx.gpu.common.BasicTexture");
-                GN_ERROR(sLogger)( "offset is beyond the end of valid range." );
+                static Logger * sLocalLogger = getLogger("GN.gfx.gpu.common.BasicTexture");
+                GN_ERROR(sLocalLogger)( "offset is beyond the end of valid range." );
                 return false;
             }
             if( 0 == length ) length = maxLength;

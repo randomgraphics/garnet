@@ -1,5 +1,7 @@
 #include "pch.h"
 
+#if GN_BUILD_HAS_D3D11
+
 static GN::Logger * sLogger = GN::getLogger("GN.d3d11.statedumper");
 
 using namespace GN;
@@ -853,3 +855,5 @@ GN_API void GN::d3d11::dumpDrawIndexed( ID3D11DeviceContext & devcxt, uint32 ind
 
     sDumpD3D11States( devcxt, file.fp );
 }
+
+#endif // GN_BUILD_HAS_D3D11

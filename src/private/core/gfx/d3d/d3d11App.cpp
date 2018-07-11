@@ -1,6 +1,8 @@
 #include "pch.h"
 #include <garnet/GNinput.h>
 
+#if GN_BUILD_HAS_D3D11
+
 using namespace GN;
 using namespace GN::d3d11;
 
@@ -555,3 +557,5 @@ void GN::d3d11::D3D11Application::destroyDevice()
     safeRelease( mDevice );
     safeRelease( mAdapter );
 }
+
+#endif // GN_BUILD_HAS_D3D11

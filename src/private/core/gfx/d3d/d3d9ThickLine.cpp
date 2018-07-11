@@ -1,5 +1,7 @@
 #include "pch.h"
 
+#if GN_BUILD_HAS_D3D9
+
 // *****************************************************************************
 // utilities
 // *****************************************************************************
@@ -540,3 +542,5 @@ GN_API void GN::d3d9::D3D9ThickLineRenderer::flush()
 
     m_NumVertices = 0;
 }
+
+#endif // GN_BUILD_HAS_D3D9

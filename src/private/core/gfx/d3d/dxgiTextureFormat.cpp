@@ -1,4 +1,7 @@
 #include "pch.h"
+
+#if GN_BUILD_HAS_D3D11
+
 #include <garnet/d3d/dxgiutils.h>
 
 static GN::Logger * sLogger = GN::getLogger("GN.gfx.d3d");
@@ -111,3 +114,6 @@ GN::dxgi::getDXGIFormatDesc( DXGI_FORMAT dxfmt )
 	GN_ASSERT( 0 <= dxfmt &&  dxfmt < GN_ARRAY_COUNT(sFormatTable) );
 	return sFormatTable[dxfmt];
 }
+
+#endif // GN_BUILD_HAS_D3D11
+

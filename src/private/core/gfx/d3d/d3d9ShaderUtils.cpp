@@ -1,5 +1,7 @@
 #include "pch.h"
 
+#if GN_BUILD_HAS_D3D9
+
 using namespace GN;
 
 static GN::Logger * sLogger = GN::getLogger("GN.d3d9.d3d9ShaderUtils");
@@ -360,3 +362,5 @@ GN_API LPDIRECT3DPIXELSHADER9 GN::d3d9::assembleAndCreatePS( LPDIRECT3DDEVICE9 d
 }
 
 #endif
+
+#endif // GN_BUILD_HAS_D3D9

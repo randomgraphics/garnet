@@ -1,4 +1,7 @@
 #include "pch.h"
+
+#if GN_BUILD_HAS_D3D11
+
 #include <dwrite.h>
 #include <d2d1.h>
 
@@ -337,3 +340,5 @@ void GN::d3d11::TextRenderer::draw2DText(ID3D11DeviceContext & cxt, const TextDe
         _impl->Draw2DText(cxt, text);
     }
 }
+
+#endif // GN_BUILD_HAS_D3D11

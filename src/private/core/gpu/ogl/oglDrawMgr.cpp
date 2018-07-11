@@ -1,4 +1,4 @@
-#include "pch.h"
+Ôªø#include "pch.h"
 #include "oglGpu.h"
 #include "oglLine.h"
 #include "oglVtxFmt.h"
@@ -115,7 +115,7 @@ void GN::gfx::OGLGpu::clearScreen(
     {
         glflag |= GL_COLOR_BUFFER_BIT;
         glClearColor( c.r, c.g, c.b, c.a );
-        glColorMask( 1,1,1,1 );       // »∑±£COLOR BUFFERø…–¥
+        glColorMask( 1,1,1,1 );       // Á°Æ‰øùCOLOR BUFFERÂèØÂÜô
     }
 
     // clean z-buffer
@@ -123,7 +123,7 @@ void GN::gfx::OGLGpu::clearScreen(
     {
         glflag |= GL_DEPTH_BUFFER_BIT;
         glClearDepth( z );
-        glDepthMask( 1 );             // »∑±£Z-BUFFERø…–¥
+        glDepthMask( 1 );             // Á°Æ‰øùZ-BUFFERÂèØÂÜô
     }
 
     // clearn stencil buffer
@@ -131,7 +131,7 @@ void GN::gfx::OGLGpu::clearScreen(
     {
         glflag |= GL_STENCIL_BUFFER_BIT;
         glClearStencil( s );
-        glStencilMask( 0xFFFFFFFF );  // »∑±£STENCIL BUFFERø…–¥
+        glStencilMask( 0xFFFFFFFF );  // Á°Æ‰øùSTENCIL BUFFERÂèØÂÜô
     }
 
     // do clear

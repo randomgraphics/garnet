@@ -10,23 +10,49 @@ set(BUILD_H ${BUILD_INC}/base/build.h)
 # Collect source files
 # ====================
 
-# headers
+# gather headers
 file(GLOB_RECURSE garnet_headers ../inc/*.h ../inc/*.inl ../inc/*.in)
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR}/../inc PREFIX "Header Files" FILES ${garnet_headers})
 
-# Sources
-file(GLOB sources
-    app/SampleApp.cpp
-    base/*.cpp base/*.h
-    engine/*.cpp engine/*.h
-    gfx/base/*.cpp gfx/base/*.h
-    #gfx/d3d/*.cpp gfx/d3d/*.h
-    gfx/gpures/*.cpp gfx/gpures/*.h
-    gfx/misc/*.cpp gfx/misc/*.h
-    input/*.cpp input/*.h
-    util/*.cpp util/*.h
-    win/*.cpp win/*.h
-)
+# utilities to glob cxx source files
+function(add_headers result folder)
+    set(input ${${result}})
+    file(GLOB sources ${folder}/*.hpp ${folder}/*.h ${folder}/*.h.in ${folder}/*.inl)
+    set(${result} ${input} ${sources} PARENT_SCOPE)
+endfunction()
+
+function(add_sources result folder)
+    set(input ${${result}})
+    file(GLOB sources ${folder}/*.cpp ${folder}/*.c ${folder}/*.cxx ${folder}/*.hpp ${folder}/*.h ${folder}/*.h.in ${folder}/*.inl)
+    set(${result} ${input} ${sources} PARENT_SCOPE)
+endfunction()
+
+function(add_files result pattern)
+    set(input ${${result}})
+    file(GLOB sources ${pattern})
+    message(${sources})
+    set(${result} ${input} ${sources} PARENT_SCOPE)
+endfunction()
+
+# gather sources
+set(sources app/SampleApp.cpp)
+add_sources(sources base)
+add_sources(sources engine)
+add_sources(sources gfx/base)
+add_sources(sources gfx/d3d)
+add_sources(sources gfx/gpures)
+add_sources(sources gfx/misc)
+add_sources(sources gpu/common)
+add_headers(sources gpu/util)
+add_files  (sources gpu/util/gpu*.cpp)
+add_sources(sources input)
+add_sources(sources util)
+add_sources(sources win)
+
+# OpenGL GPU Sources
+if (GN_BUILD_HAS_OGL)
+    add_sources(sources gpu/ogl)
+endif()
 
 # Qt5
 find_package(Qt5 COMPONENTS Core Widgets)
@@ -41,6 +67,8 @@ source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} PREFIX "Source Files" FILES ${sour
 # ====================
 # Build GNcore library
 # ====================
+
+# TODO: Gather libraries that GNcore or its dependents need to link to
 
 if (GN_BUILD_IS_STATIC)
 	add_library(GNcore ${sources} ${garnet_headers} ${BUILD_H})

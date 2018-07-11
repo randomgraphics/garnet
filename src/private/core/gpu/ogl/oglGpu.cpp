@@ -1,6 +1,6 @@
 #include "pch.h"
 #include "oglGpu.h"
-#include <mtgpu.h>
+#include "../util/mtgpu.h"
 
 GN::Logger * GN::gfx::OGLGpu::sLogger = GN::getLogger("GN.gfx.gpu.OGL");
 
