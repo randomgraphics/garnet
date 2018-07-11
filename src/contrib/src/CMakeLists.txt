@@ -25,6 +25,7 @@ configure_file(expat_build.h.in expat/expat_build.h)
 # ====================
 # Collect source files
 # ====================
+
 file(GLOB sources
     assimp/*.cpp # TODO: assimp compilation is slow like ass! Enable pch!
     expat/*.c
@@ -38,6 +39,10 @@ file(GLOB sources
 if (${GN_BUILD_HAS_OGL})
     list(APPEND sources glew/glew.c)
 endif()
+
+# additional assimp sources
+file(GLOB_RECURSE assimp_contrib_sources assimp/contrib/*.c assimp/contrib/*.cpp)
+list(APPEND sources ${assimp_contrib_sources})
 
 # freetype sources. Copied from <freetype_package>/doc/INSTALL.ANY
 list(APPEND sources
@@ -104,9 +109,10 @@ target_compile_definitions(GNextern PRIVATE
     GLEW_STATIC
     _SCL_SECURE_NO_WARNINGS # disable MSVC security warnings
 )
-target_include_directories(GNextern PUBLIC  ${CMAKE_CURRENT_SOURCE_DIR}/../inc)
+target_include_directories(GNextern PUBLIC  ../inc)
 target_include_directories(GNextern PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}/../inc/assimp
+    ../inc/assimp
+    assimp
     assimp/BoostWorkaround
     ${CMAKE_CURRENT_BINARY_DIR}/expat # for expat_build.h
 )

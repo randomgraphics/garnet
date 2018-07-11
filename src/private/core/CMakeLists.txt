@@ -58,7 +58,7 @@ if (GN_BUILD_HAS_DINPUT)
     target_compile_definitions(GNcore PRIVATE HAS_DINPUT)
 endif()
 
-target_include_directories(GNcore PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../inc ${BUILD_INC})
+target_include_directories(GNcore PUBLIC ../inc ${BUILD_INC})
 
 target_link_libraries(GNcore PUBLIC GNextern)
 
