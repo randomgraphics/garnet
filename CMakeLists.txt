@@ -1,15 +1,9 @@
 cmake_minimum_required(VERSION 3.9)
 project(garnet)
 
-# ============================
-# define global config options
-# ============================
-
-option(GN_BUILD_IS_STATIC "Set to ON|OFF to build GNcore as static|shared library." OFF)
-
-# =======================
-# define global functions
-# =======================
+# ==================
+# utillity functions
+# ==================
 
 # Append source files from specific folder to list specified by parameter 'result'
 # Setup PCH if specified.
@@ -64,10 +58,11 @@ function(add_sources result folder)
     set(${result} ${input} ${sources} ${headers} ${arg_PCH_SOURCE} PARENT_SCOPE)
 endfunction()
 
+# ==============================
+# Config Options and Build Flags
+# ==============================
 
-# =============================
-# search commonly used packages
-# =============================
+option(GN_BUILD_IS_STATIC "Set to ON|OFF to build GNcore as static|shared library." OFF)
 
 # OpenGL
 find_package(OpenGL)
@@ -86,10 +81,7 @@ set(GN_BUILD_HAS_XINPUT OFF)
 set(GN_BUILD_HAS_XINPUT2 OFF)
 set(GN_BUILD_HAS_DINPUT OFF)
 
-# =======================
-# define global constants
-# =======================
-
+# check build type
 if ("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
     set(GN_BUILD_DEBUG_ENABLED ON)
     set(GN_BUILD_PROFILING_ENABLED ON)
@@ -100,6 +92,16 @@ else()
     set(GN_BUILD_DEBUG_ENABLED OFF)
     set(GN_BUILD_PROFILING_ENABLED OFF)
 endif()
+
+# print summary
+message("GN_BUILD_IS_STATIC         = ${GN_BUILD_IS_STATIC}")
+message("CMAKE_BUILD_TYPE           = ${CMAKE_BUILD_TYPE}")
+message("GN_BUILD_DEBUG_ENABLED     = ${GN_BUILD_DEBUG_ENABLED}")
+message("GN_BUILD_PROFILING_ENABLED = ${GN_BUILD_PROFILING_ENABLED}")
+message("GN_BUILD_HAS_OGL           = ${GN_BUILD_HAS_OGL}")
+message("GN_BUILD_HAS_D3D9          = ${GN_BUILD_HAS_D3D9}")
+message("GN_BUILD_HAS_D3D11         = ${GN_BUILD_HAS_D3D11}")
+message("GN_BUILD_HAS_D3D11_1       = ${GN_BUILD_HAS_D3D11_1}")
 
 # ===================
 # call subdirectories

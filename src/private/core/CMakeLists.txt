@@ -2,46 +2,9 @@
 # generate configuration headers
 # ==============================
 
-# Build type
-if ("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
-    set(GN_BUILD_DEBUG_ENABLED ON)
-    set(GN_BUILD_PROFILING_ENABLED ON)
-elseif ("${CMAKE_BUILD_TYPE}" STREQUAL "RelWithDebInfo")
-    set(GN_BUILD_DEBUG_ENABLED OFF)
-    set(GN_BUILD_PROFILING_ENABLED ON)
-else()
-    set(GN_BUILD_DEBUG_ENABLED OFF)
-    set(GN_BUILD_PROFILING_ENABLED OFF)
-endif()
-
-# OpenGL
-find_package(OpenGL)
-set(GN_BUILD_HAS_OGL ${OPENGL_FOUND})
-
-# TODO: DirectX
-set(GN_BUILD_HAS_D3D9 OFF)
-set(GN_BUILD_HAS_D3D11 OFF)
-set(GN_BUILD_HAS_D3D11_1 OFF)
-set(GN_BUILD_HAS_D3DX9 OFF)
-set(GN_BUILD_HAS_DXERR OFF)
-set(GN_BUILD_HAS_D3DCOMPILER OFF)
-set(GN_BUILD_HAS_XNAMATH OFF)
-set(GN_BUILD_HAS_DIRECTXMATH OFF)
-set(GN_BUILD_HAS_XINPUT OFF)
-set(GN_BUILD_HAS_XINPUT2 OFF)
-set(GN_BUILD_HAS_DINPUT OFF)
-
 configure_file(../inc/garnet/base/build.h.in ../inc/garnet/base/build.h)
 set(BUILD_INC ${CMAKE_CURRENT_BINARY_DIR}/../inc/garnet)
 set(BUILD_H ${BUILD_INC}/base/build.h)
-
-message("CMAKE_BUILD_TYPE = ${CMAKE_BUILD_TYPE}")
-message("GN_BUILD_DEBUG_ENABLED = ${GN_BUILD_DEBUG_ENABLED}")
-message("GN_BUILD_PROFILING_ENABLED = ${GN_BUILD_PROFILING_ENABLED}")
-message("GN_BUILD_HAS_OGL = ${GN_BUILD_HAS_OGL}")
-message("GN_BUILD_HAS_D3D9 = ${GN_BUILD_HAS_D3D9}")
-message("GN_BUILD_HAS_D3D11 = ${GN_BUILD_HAS_D3D11}")
-message("GN_BUILD_HAS_D3D11_1 = ${GN_BUILD_HAS_D3D11_1}")
 
 # ====================
 # Collect source files
