@@ -27,7 +27,6 @@ configure_file(expat_build.h.in expat/expat_build.h)
 # ====================
 
 file(GLOB sources
-    assimp/*.cpp # TODO: assimp compilation is slow like ass! Enable pch!
     expat/*.c
     jpeg/*.c
     lua/*.c
@@ -40,7 +39,8 @@ if (${GN_BUILD_HAS_OGL})
     list(APPEND sources glew/glew.c)
 endif()
 
-# additional assimp sources
+# collect assimp sources
+add_sources(sources assimp PCH_SOURCE assimp/AssimpPCH.cpp PCH_HEADER AssimpPCH.h)
 file(GLOB_RECURSE assimp_contrib_sources assimp/contrib/*.c assimp/contrib/*.cpp)
 list(APPEND sources ${assimp_contrib_sources})
 

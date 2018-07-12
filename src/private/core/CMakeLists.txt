@@ -14,44 +14,23 @@ set(BUILD_H ${BUILD_INC}/base/build.h)
 file(GLOB_RECURSE garnet_headers ../inc/*.h ../inc/*.inl ../inc/*.in)
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR}/../inc PREFIX "Header Files" FILES ${garnet_headers})
 
-# utilities to glob cxx source files
-function(add_headers result folder)
-    set(input ${${result}})
-    file(GLOB sources ${folder}/*.hpp ${folder}/*.h ${folder}/*.h.in ${folder}/*.inl)
-    set(${result} ${input} ${sources} PARENT_SCOPE)
-endfunction()
-
-function(add_sources result folder)
-    set(input ${${result}})
-    file(GLOB sources ${folder}/*.cpp ${folder}/*.c ${folder}/*.cxx ${folder}/*.hpp ${folder}/*.h ${folder}/*.h.in ${folder}/*.inl)
-    set(${result} ${input} ${sources} PARENT_SCOPE)
-endfunction()
-
-function(add_files result pattern)
-    set(input ${${result}})
-    file(GLOB sources ${pattern})
-    message(${sources})
-    set(${result} ${input} ${sources} PARENT_SCOPE)
-endfunction()
-
 # gather sources
 set(sources app/SampleApp.cpp)
-add_sources(sources base)
-add_sources(sources engine)
-add_sources(sources gfx/base)
-add_sources(sources gfx/d3d)
-add_sources(sources gfx/gpures)
-add_sources(sources gfx/misc)
-add_sources(sources gpu/common)
-add_headers(sources gpu/util)
-add_files  (sources gpu/util/gpu*.cpp)
-add_sources(sources input)
-add_sources(sources util)
-add_sources(sources win)
+add_sources(sources base PCH_SOURCE base/pch.cpp)
+add_sources(sources engine PCH_SOURCE engine/pch.cpp)
+add_sources(sources gfx/base PCH_SOURCE gfx/base/pch.cpp)
+add_sources(sources gfx/d3d PCH_SOURCE gfx/d3d/pch.cpp)
+add_sources(sources gfx/gpures PCH_SOURCE gfx/gpures/pch.cpp)
+add_sources(sources gfx/misc PCH_SOURCE gfx/misc/pch.cpp)
+add_sources(sources gpu/common PCH_SOURCE gpu/common/pch.cpp)
+add_sources(sources gpu/util PCH_SOURCE gpu/util/pch.cpp SOURCE_WILDCARDS gpu*.cpp)
+add_sources(sources input PCH_SOURCE input/pch.cpp)
+add_sources(sources util PCH_SOURCE util/pch.cpp)
+add_sources(sources win PCH_SOURCE win/pch.cpp)
 
 # OpenGL GPU Sources
 if (GN_BUILD_HAS_OGL)
-    add_sources(sources gpu/ogl)
+    add_sources(sources gpu/ogl PCH_SOURCE gpu/ogl/pch.cpp)
 endif()
 
 # Qt5
@@ -68,31 +47,40 @@ source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} PREFIX "Source Files" FILES ${sour
 # Build GNcore library
 # ====================
 
-# TODO: Gather libraries that GNcore or its dependents need to link to
+# initialize local compile properties.
+# this is to ensures we are not accidentally inheriting them from outer cmake files.
+set(private_incs)
+set(public_incs ../inc ${BUILD_INC})
+set(private_libs)
+set(public_libs GNextern)
+set(private_defs)
+set(public_defs)
 
-if (GN_BUILD_IS_STATIC)
-	add_library(GNcore ${sources} ${garnet_headers} ${BUILD_H})
-else()
-	add_library(GNcore SHARED ${sources} ${garnet_headers} ${BUILD_H})
-endif()
-
+# check xinput/dinput
 if (GN_BUILD_HAS_XINPUT)
-    target_compile_definitions(GNcore PRIVATE HAS_INPUT)
+    list(APPEND private_defs HAS_INPUT=1)
 endif()
 if (GN_BUILD_HAS_XINPUT2)
-    target_compile_definitions(GNcore PRIVATE HAS_INPUT2)
+    list(APPEND private_defs HAS_INPUT2=1)
 endif()
 if (GN_BUILD_HAS_DINPUT)
-    target_compile_definitions(GNcore PRIVATE HAS_DINPUT)
+    list(APPEND private_defs HAS_DINPUT=1)
 endif()
 
-target_include_directories(GNcore PUBLIC ../inc ${BUILD_INC})
+# build the library
+if (GN_BUILD_IS_STATIC)
+	add_library(GNcore ${sources} ${garnet_headers} ${BUILD_H})
+    list(APPEND public_libs ${OPENGL_LIBRARIES})
+else()
+	add_library(GNcore SHARED ${sources} ${garnet_headers} ${BUILD_H})
+    list(APPEND private_libs ${OPENGL_LIBRARIES})
+endif()
 
-target_link_libraries(GNcore PUBLIC GNextern)
-
-target_compile_features(GNcore PUBLIC cxx_std_11)
-
+# setup compile properties
+target_compile_definitions(GNcore PUBLIC ${public_defs} PRIVATE ${private_defs})
+target_include_directories(GNcore PUBLIC ${public_incs} PRIVATE ${private_incs})
+target_link_libraries     (GNcore PUBLIC ${public_libs} PRIVATE ${private_libs})
+target_compile_features   (GNcore PUBLIC cxx_std_11)
 if (MSVC)
-    target_compile_options(GNcore PUBLIC /EHa /MP)
-    target_compile_options(GNcore PRIVATE /utf-8 /W4 /WX)
+    target_compile_options(GNcore PUBLIC /EHa /MP PRIVATE /utf-8 /W4 /WX)
 endif()
