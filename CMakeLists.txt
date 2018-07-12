@@ -107,15 +107,3 @@ endif()
 add_subdirectory(src/contrib/src)
 add_subdirectory(src/private/core)
 add_subdirectory(sconstest)
-
-# =======================
-# print configure summary
-# =======================
-message("CMAKE_BUILD_TYPE           = ${CMAKE_BUILD_TYPE}")
-message("GN_BUILD_IS_STATIC         = ${GN_BUILD_IS_STATIC}")
-message("GN_BUILD_DEBUG_ENABLED     = ${GN_BUILD_DEBUG_ENABLED}")
-message("GN_BUILD_PROFILING_ENABLED = ${GN_BUILD_PROFILING_ENABLED}")
-message("GN_BUILD_HAS_OGL           = ${GN_BUILD_HAS_OGL}")
-message("GN_BUILD_HAS_D3D9          = ${GN_BUILD_HAS_D3D9}")
-message("GN_BUILD_HAS_D3D11         = ${GN_BUILD_HAS_D3D11}")
-message("GN_BUILD_HAS_D3D11_1       = ${GN_BUILD_HAS_D3D11_1}")
