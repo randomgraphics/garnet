@@ -37,11 +37,7 @@ static GN::StrA sAddLineCountD3D9( const GN::StrA & in )
 static uint32 sRefineFlagsD3D9( uint32 flags )
 {
 #if GN_BUILD_DEBUG_ENABLED
-#if GN_BUILD_HAS_D3DCOMPILER
     flags |= D3DCOMPILE_DEBUG;
-#elif GN_BUILD_HAS_D3DX9
-    flags |= D3DXSHADER_DEBUG;
-#endif
 #endif
     return flags;
 }
@@ -75,28 +71,6 @@ static void sPrintShaderCompileInfoD3D9( const char * hlsl, ID3DXBuffer * bin )
 {
     GN_GUARD;
 
-#if GN_BUILD_HAS_D3DX9
-    // get ASM code
-    AutoComPtr<ID3DXBuffer> asm_;
-
-    GN_ASSERT( hlsl && bin );
-
-    D3DXDisassembleShader(
-        (const DWORD*)bin->GetBufferPointer(),
-        false,
-        NULL,
-        &asm_ );
-
-    GN_VTRACE(sLogger)(
-        "\n================== Shader compile success ===============\n"
-        "%s\n"
-        "\n---------------------------------------------------------\n"
-        "%s\n"
-        "\n=========================================================\n",
-        sAddLineCountD3D9(hlsl).rawptr(),
-        sAddLineCountD3D9((const char*)asm_->GetBufferPointer()).rawptr() );
-#else
-
     GN_ASSERT( hlsl );
     GN_UNUSED_PARAM( bin );
 
@@ -105,8 +79,6 @@ static void sPrintShaderCompileInfoD3D9( const char * hlsl, ID3DXBuffer * bin )
         "%s\n"
         "\n=========================================================\n",
         sAddLineCountD3D9(hlsl).rawptr() );
-
-#endif
 
     GN_UNGUARD;
 }
@@ -264,103 +236,5 @@ GN_API LPDIRECT3DPIXELSHADER9 GN::d3d9::compileAndCreatePS( LPDIRECT3DDEVICE9 de
 
     GN_UNGUARD;
 }
-
-#if GN_BUILD_HAS_D3DX9
-
-//
-//
-// -----------------------------------------------------------------------------
-GN_API LPDIRECT3DVERTEXSHADER9 GN::d3d9::assembleAndCreateVS( LPDIRECT3DDEVICE9 dev, const char * code, size_t len, uint32 flags, LPD3DXBUFFER * binary )
-{
-    GN_GUARD;
-
-    GN_ASSERT( dev );
-
-    // trim leading spaces in shader code
-    if( 0 == len ) len = str::length( code );
-    while( len > 0 && ( ' '==*code || '\t' == *code || '\n' == *code ) )
-    {
-        ++code;
-        --len;
-    }
-
-    // Assemble shader.
-    AutoComPtr<ID3DXBuffer> bin;
-    AutoComPtr<ID3DXBuffer> err;
-    HRESULT hr;
-    if( FAILED(hr = D3DXAssembleShader(
-            code, (UINT)len,
-            NULL, NULL, // no macros, no includes,
-            sRefineFlagsD3D9(flags),
-            &bin,
-            &err )) )
-    {
-        sPrintShaderCompileErrorD3D9( hr, code, err );
-        return 0;
-    }
-
-    // Create shader
-    LPDIRECT3DVERTEXSHADER9 result;
-    GN_DX_CHECK_RETURN(
-        dev->CreateVertexShader(
-            (const DWORD*)bin->GetBufferPointer(),
-            &result ),
-        NULL );
-
-    if( binary ) *binary = bin.detach();
-
-    // success
-    return result;
-
-    GN_UNGUARD;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-GN_API LPDIRECT3DPIXELSHADER9 GN::d3d9::assembleAndCreatePS( LPDIRECT3DDEVICE9 dev, const char * code, size_t len, uint32 flags )
-{
-    GN_GUARD;
-
-    GN_ASSERT( dev );
-
-    // trim leading spaces in shader code
-    if( 0 == len ) len = str::length( code );
-    while( len > 0 && ( ' '==*code || '\t' == *code || '\n' == *code ) )
-    {
-        ++code;
-        --len;
-    }
-
-    // Assemble shader.
-    AutoComPtr<ID3DXBuffer> bin;
-    AutoComPtr<ID3DXBuffer> err;
-    HRESULT hr;
-    if( FAILED(hr = D3DXAssembleShader(
-            code, (UINT)len,
-            NULL, NULL, // no macros, no includes,
-            sRefineFlagsD3D9(flags),
-            &bin,
-            &err )) )
-    {
-        sPrintShaderCompileErrorD3D9( hr, code, err );
-        return 0;
-    };
-
-    // Create shader
-    LPDIRECT3DPIXELSHADER9 result;
-    GN_DX_CHECK_RETURN(
-        dev->CreatePixelShader(
-            (const DWORD*)bin->GetBufferPointer(),
-            &result ),
-        NULL );
-
-    // success
-    return result;
-
-    GN_UNGUARD;
-}
-
-#endif
 
 #endif // GN_BUILD_HAS_D3D9

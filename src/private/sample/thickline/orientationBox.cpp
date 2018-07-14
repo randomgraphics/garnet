@@ -186,11 +186,7 @@ bool D3D9OrientationBox::OnDeviceCreate( IDirect3DDevice9 * dev )
     }
 
     // initialize shaders
-    #if GN_BUILD_HAS_D3DCOMPILER
     UINT flag = D3DCOMPILE_PACK_MATRIX_ROW_MAJOR;
-    #else
-    UINT flag = D3DXSHADER_PACKMATRIX_ROWMAJOR;
-    #endif
     m_Vs = GN::d3d9::compileAndCreateVS( dev, vscode, 0, flag );
     m_Ps = GN::d3d9::compileAndCreatePS( dev, pscode );
     if( NULL == m_Vs || NULL == m_Ps ) return false;

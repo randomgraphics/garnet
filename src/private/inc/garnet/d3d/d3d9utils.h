@@ -15,28 +15,19 @@
 #if GN_XBOX2
 #include <xtl.h>
 #include <xgraphics.h>
+#include <d3dx9.h>
+#include <xnamath.h>
 #elif GN_WINPC
 #ifndef NOMINMAX
 #define NOMINMAX ///< This is to disable windows min/max macros
 #endif
 #include <windows.h>
-#endif
-
 #include <d3d9.h>
-
-#if GN_BUILD_HAS_D3DX9
-#include <d3dx9.h>
-#elif GN_BUILD_HAS_D3DCOMPILER
+#include <directxmath.h>
+using namespace DirectX;
 typedef ID3DBlob   ID3DXBuffer;
 typedef ID3DBlob * LPD3DXBUFFER;
 typedef void *     LPD3DXCONSTANTTABLE;
-#endif
-
-#if GN_BUILD_HAS_XNAMATH
-#include <xnamath.h>
-#elif GN_BUILD_HAS_DIRECTXMATH
-#include <directxmath.h>
-using namespace DirectX;
 #endif
 
 // Check d3d version

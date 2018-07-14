@@ -278,12 +278,12 @@ namespace GN
     ///
     /// get OS error info (Windows specific)
     ///
-    GN_API const char * getWin32ErrorInfo( uint32 win32ErrorCode ) throw();
+    GN_API const char * getWin32ErrorInfo( sint32 win32ErrorCode ) throw();
 
     ///
     /// get OS error info (Windows specific)
     ///
-    GN_API const wchar_t * getWin32ErrorInfoW( uint32 win32ErrorCode ) throw();
+    GN_API const wchar_t * getWin32ErrorInfoW( sint32 win32ErrorCode ) throw();
 
     ///
     /// get OS error info (Windows specific)

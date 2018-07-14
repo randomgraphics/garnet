@@ -29,7 +29,8 @@
         "string_view": "cpp",
         "atomic": "cpp",
         "chrono": "cpp",
-        "mutex": "cpp"
+        "mutex": "cpp",
+        "*.rh": "cpp"
     },
     "files.exclude": {
         "**/.git": true,

@@ -1,38 +1,8 @@
 #include "pch.h"
 
 #if GN_XBOX2
-
 #include "dxerr9.h"
-#if GN_MSVC
 #pragma comment( lib, "dxerr9.lib" )
-#endif
-#define DXERR_FUNC DXGetErrorDescription9A
-
-#elif GN_BUILD_HAS_DXERR
-
-#include "dxerr.h"
-#define DXERR_FUNC DXGetErrorDescriptionA
-
-#elif GN_MSWIN
-
-static const char * DXERR_FUNC( sint32 error )
-{
-    __declspec(thread) static char text[] = "0x12345678";
-    for(int i = 0; i < 8; ++i)
-    {
-        char ch = '0' + ((error >> (28-i*4)) & 0xF);
-        text[2+i] = ch;
-    }
-    return text;
-}
-
-#else
-
-static const char * DXERR_FUNC( sint32 )
-{
-    return "";
-}
-
 #endif
 
 
@@ -173,7 +143,7 @@ GN_API void GN::printToDebugger(const char * message)
 //
 // -----------------------------------------------------------------------------
 GN_API const char *
-GN::getWin32ErrorInfo( uint32 win32ErrorCode ) throw()
+GN::getWin32ErrorInfo( sint32 win32ErrorCode ) throw()
 {
     static char info[4096];
 
@@ -209,7 +179,7 @@ GN::getWin32ErrorInfo( uint32 win32ErrorCode ) throw()
 //
 // -----------------------------------------------------------------------------
 GN_API const wchar_t *
-GN::getWin32ErrorInfoW( uint32 win32ErrorCode ) throw()
+GN::getWin32ErrorInfoW( sint32 win32ErrorCode ) throw()
 {
     static wchar_t info[4096];
 
@@ -259,7 +229,20 @@ GN::getWin32LastErrorInfo() throw()
 GN_API const char *
 GN::getDXErrorInfo( sint32 hr ) throw()
 {
-    return DXERR_FUNC( hr );
+#if GN_XBOX2
+    return DXGetErrorDescription9A(hr);
+#elif GN_MSWIN
+    // starting from win8, FormatMessage() handles DX errors.
+    return getWin32ErrorInfo(hr);
+#else
+    __declspec(thread) static char text[] = "0x12345678";
+    for(int i = 0; i < 8; ++i)
+    {
+        char ch = '0' + ((error >> (28-i*4)) & 0xF);
+        text[2+i] = ch;
+    }
+    return text;
+#endif
 }
 
 //

@@ -62,14 +62,9 @@ set(private_defs)
 set(public_defs)
 
 # check xinput/dinput
-if (GN_BUILD_HAS_XINPUT)
+if (D3D11_FOUND)
     list(APPEND private_defs HAS_INPUT=1)
-endif()
-if (GN_BUILD_HAS_XINPUT2)
     list(APPEND private_defs HAS_INPUT2=1)
-endif()
-if (GN_BUILD_HAS_DINPUT)
-    list(APPEND private_defs HAS_DINPUT=1)
 endif()
 
 # build the library
