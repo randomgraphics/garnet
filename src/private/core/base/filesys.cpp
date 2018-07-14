@@ -625,7 +625,10 @@ public:
 #endif
         addRoot( "startup::media" );
         addRoot( "app::media" );
-        addRoot( "app::../media" );
+        auto gnroot = getEnv("GARNET_ROOT");
+        if (!gnroot.empty()) {
+            addRoot(str::format("native::%s/src/private/media", gnroot.rawptr()));
+        }
     }
 };
 

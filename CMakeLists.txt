@@ -104,5 +104,5 @@ message("GN_BUILD_HAS_D3D11_1       = ${GN_BUILD_HAS_D3D11_1}")
 # call subdirectories
 # ===================
 add_subdirectory(src/contrib/src)
-add_subdirectory(src/private/core)
+add_subdirectory(src/private)
 add_subdirectory(sconstest)
