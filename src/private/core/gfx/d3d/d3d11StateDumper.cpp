@@ -686,7 +686,7 @@ static void sDumpRenderStates( ID3D11DeviceContext & devcxt, FILE * fp )
     devcxt.RSGetViewports( &vpcount, &vp );
     fprintf(
         fp,
-        "\t<viewport x=\"%d\" y=\"%d\" w=\"%u\" h=\"%u\" zmin=\"%f\" zmax=\"%f\"/>\n",
+        "\t<viewport x=\"%f\" y=\"%f\" w=\"%f\" h=\"%f\" zmin=\"%f\" zmax=\"%f\"/>\n",
         vp.TopLeftX, vp.TopLeftY, vp.Width, vp.Height, vp.MinDepth, vp.MaxDepth );
 
     // scissor

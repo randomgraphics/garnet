@@ -105,7 +105,7 @@ private:
         DWORD exStyle = parent ? WS_EX_TOOLWINDOW : 0;
 
         // calculate window size
-        RECT rc = { 0, 0, width, height };
+        RECT rc = { 0, 0, (LONG)width, (LONG)height };
         ::AdjustWindowRectEx( &rc, style, 0, exStyle );
 
         // create window
@@ -144,7 +144,7 @@ private:
         SetWindowLong( window, GWL_STYLE, style );
 
         // calculate boundary size
-        RECT rc = { 0, 0, width, height };
+        RECT rc = { 0, 0, (LONG)width, (LONG)height };
         if(!::AdjustWindowRectEx(
                 &rc,
                 style,

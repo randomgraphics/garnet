@@ -33,6 +33,11 @@ if (GN_BUILD_HAS_OGL)
     add_sources(sources gpu/ogl PCH_SOURCE gpu/ogl/pch.cpp)
 endif()
 
+# D3D GPU Sources
+if (GN_BUILD_HAS_D3D11)
+    add_sources(sources gpu/d3d11 PCH_SOURCE gpu/d3d11/pch.cpp)
+endif()
+
 # Qt5
 find_package(Qt5 COMPONENTS Core Widgets)
 if (NOT HAS_QT5_Widgets)
@@ -70,10 +75,10 @@ endif()
 # build the library
 if (GN_BUILD_IS_STATIC)
 	add_library(GNcore ${sources} ${garnet_headers} ${BUILD_H})
-    list(APPEND public_libs ${OPENGL_LIBRARIES})
+    list(APPEND public_libs ${OPENGL_LIBRARIES} ${DIRECTX_LIBRARIES})
 else()
 	add_library(GNcore SHARED ${sources} ${garnet_headers} ${BUILD_H})
-    list(APPEND private_libs ${OPENGL_LIBRARIES})
+    list(APPEND private_libs ${OPENGL_LIBRARIES} ${DIRECTX_LIBRARIES})
 endif()
 
 # setup compile properties

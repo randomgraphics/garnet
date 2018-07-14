@@ -83,7 +83,7 @@ static HWND sCreateWindow( HWND parent, HMONITOR monitor, uint32 width, uint32 h
     GN_MSW_CHECK_RETURN( GetMonitorInfoW( monitor, &mi ), false );
 
     // calculate window size
-    RECT rc = { 0, 0, width, height };
+    RECT rc = { 0, 0, (LONG)width, (LONG)height };
     ::AdjustWindowRectEx( &rc, style, 0, exStyle );
 
     // create window
@@ -124,7 +124,7 @@ static bool sAdjustWindow( HWND window, uint32 width, uint32 height, bool fullsc
     SetWindowLong( window, GWL_STYLE, style );
 
     // calculate boundary size
-    RECT rc = { 0, 0, width, height };
+    RECT rc = { 0, 0, (LONG)width, (LONG)height };
     GN_MSW_CHECK_RETURN(
         ::AdjustWindowRectEx(
             &rc,
