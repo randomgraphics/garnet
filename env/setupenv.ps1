@@ -72,6 +72,8 @@ elseif( "ia64" -ieq $env:PROCESSOR_ARCHITECTURE )
     $current_cpu="ia64"
 }
 
+<# not needed for cmake to work
+
 # ==============================================================================
 # setup build variant
 # ==============================================================================
@@ -437,6 +439,7 @@ $env:SCONSFLAGS="-U"
 
 "SCons Directory : $SCONS_DIR"
 
+#>
 
 # ==============================================================================
 # setup aliases
@@ -479,11 +482,8 @@ if( "x64" -eq $current_cpu )
 }
 $env:Path = "$GARNET_ROOT\env\bin\mswin\cmd;$MY_BIN_PATH;$env:Path"
 
-$env:GN_BUILD_TAG = "$env:GN_BUILD_TARGET_OS.$env:GN_BUILD_TARGET_CPU.$env:GN_BUILD_COMPILER.$env:GN_BUILD_VARIANT"
-$env:GN_BUILD_DIR = "$GARNET_ROOT\build.tmp\$env:GN_BUILD_TAG"
-
 # update title
-$Host.UI.RawUI.WindowTitle = "garnet3d ( $GARNET_ROOT $env:GN_BUILD_TAG )"
+$Host.UI.RawUI.WindowTitle = "garnet3d ( $GARNET_ROOT )"
 
 # change current location
 set-location $GARNET_ROOT
@@ -507,9 +507,4 @@ Garnet build environment setup done successfully
 ================================================
 USERNAME            = $env:USERNAME
 GARNET_ROOT         = $GARNET_ROOT
-GN_BUILD_COMPILER   = $env:GN_BUILD_COMPILER
-GN_BUILD_VARIANT    = $env:GN_BUILD_VARIANT
-GN_BUILD_TARGET_OS  = $env:GN_BUILD_TARGET_OS
-GN_BUILD_TARGET_CPU = $env:GN_BUILD_TARGET_CPU
-GN_BUILD_DIR        = $env:GN_BUILD_DIR
 "

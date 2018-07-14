@@ -1,9 +1,9 @@
 cmake_minimum_required(VERSION 3.9)
 project(garnet)
 
-# ==================
-# utillity functions
-# ==================
+# =================
+# utility functions
+# =================
 
 # Append source files from specific folder to list specified by parameter 'result'
 # Setup PCH if specified.
@@ -58,9 +58,9 @@ function(add_sources result folder)
     set(${result} ${input} ${sources} ${headers} ${arg_PCH_SOURCE} PARENT_SCOPE)
 endfunction()
 
-# ==============================
-# Config Options and Build Flags
-# ==============================
+# =================================
+# Configure Options and Build Flags
+# =================================
 
 option(GN_BUILD_IS_STATIC "Set to ON|OFF to build GNcore as static|shared library." OFF)
 
