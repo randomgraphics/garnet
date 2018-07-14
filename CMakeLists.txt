@@ -1,8 +1,6 @@
 cmake_minimum_required(VERSION 3.9)
 project(garnet)
-
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/env/cmake)
-message(${CMAKE_MODULE_PATH})
 
 # =================
 # utility functions
@@ -89,6 +87,11 @@ else()
     set(GN_BUILD_DEBUG_ENABLED OFF)
     set(GN_BUILD_PROFILING_ENABLED OFF)
 endif()
+
+# runtime output directory
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/bin)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/bin)
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/lib)
 
 # print summary
 message("GN_BUILD_IS_STATIC         = ${GN_BUILD_IS_STATIC}")
