@@ -6,7 +6,7 @@
 /// \author  chenlee (2005.11.10)
 // *****************************************************************************
 
-#if GN_POSIX
+#if HAS_X11
 
 #include "basicInput.h"
 #include <X11/Xlib.h>

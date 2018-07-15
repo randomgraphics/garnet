@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "inputX11.h"
 
-#if GN_POSIX
+#if HAS_X11
 
 static const int INTERESTED_EVENTS = PointerMotionMask | ButtonMotionMask // | PointerMotionHintMask
                                    | KeyPressMask | KeyReleaseMask

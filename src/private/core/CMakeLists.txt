@@ -54,7 +54,7 @@ source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} PREFIX "Source Files" FILES ${sour
 
 # initialize local compile properties.
 # this is to ensures we are not accidentally inheriting them from outer cmake files.
-set(private_incs)
+set(private_incs ../../contrib/inc)
 set(public_incs ../inc ${BUILD_INC})
 set(private_libs)
 set(public_libs GNextern)
@@ -67,19 +67,29 @@ if (D3D11_FOUND)
     list(APPEND private_defs HAS_INPUT2=1)
 endif()
 
+#check X11
+find_package(X11)
+if (X11_FOUND)
+    message("X11_INCLUDE_DIR = ${X11_INCLUDE_DIR}")
+    message("X11_LIBRARIES   = ${X11_LIBRARIES}")
+    list(APPEND private_incs ${X11_INCLUDE_DIR})
+    list(APPEND private_defs HAS_X11=1)
+endif()
+
 # build the library
+set(deps )
 if (GN_BUILD_IS_STATIC)
 	add_library(GNcore ${sources} ${garnet_headers} ${BUILD_H})
-    list(APPEND public_libs ${OPENGL_LIBRARIES} ${DIRECTX_LIBRARIES})
+    list(APPEND public_libs ${OPENGL_LIBRARIES} ${DIRECTX_LIBRARIES} ${X11_LIBRARIES})
 else()
 	add_library(GNcore SHARED ${sources} ${garnet_headers} ${BUILD_H})
-    list(APPEND private_libs ${OPENGL_LIBRARIES} ${DIRECTX_LIBRARIES})
+    list(APPEND private_libs ${OPENGL_LIBRARIES} ${DIRECTX_LIBRARIES} ${X11_LIBRARIES})
 endif()
 
 # setup compile properties
-target_compile_definitions(GNcore PUBLIC ${public_defs} PRIVATE ${private_defs})
-target_include_directories(GNcore PUBLIC ${public_incs} PRIVATE ${private_incs})
-target_link_libraries     (GNcore PUBLIC ${public_libs} PRIVATE ${private_libs})
+target_compile_definitions(GNcore PRIVATE ${private_defs} PUBLIC ${public_defs})
+target_include_directories(GNcore PRIVATE ${private_incs} PUBLIC ${public_incs})
+target_link_libraries     (GNcore PRIVATE ${private_libs} PUBLIC ${public_libs})
 target_compile_features   (GNcore PUBLIC cxx_std_11)
 if (MSVC)
     target_compile_options(GNcore PUBLIC /EHa /MP PRIVATE /utf-8 /W4 /WX)

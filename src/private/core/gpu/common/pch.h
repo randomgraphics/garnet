@@ -13,7 +13,7 @@
 #define NOMINMAX
 #endif
 #include <windows.h>
-#elif GN_POSIX
+#elif HAS_X11
 #include <X11/Xlib.h>
 #endif
 

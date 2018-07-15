@@ -41,10 +41,13 @@ static GN::input::Input * sCreateNativeInputSystem()
     GN::AutoObjPtr<GN::input::InputMsw> p( new GN::input::InputMsw );
     if( !p->init() ) return 0;
     return p.detach();
-#else
+#elif defined(HAS_X11)
     GN::AutoObjPtr<GN::input::InputX11> p( new GN::input::InputX11 );
     if( !p->init() ) return 0;
     return p.detach();
+#else
+    GN_ERROR(sLogger)("No input system available.");
+    return nullptr;
 #endif
 }
 
