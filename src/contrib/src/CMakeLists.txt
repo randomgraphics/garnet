@@ -112,6 +112,7 @@ target_compile_definitions(GNextern PRIVATE
 target_include_directories(GNextern PUBLIC  ../inc)
 target_include_directories(GNextern PRIVATE
     ../inc/assimp
+    jpeg
     assimp
     assimp/BoostWorkaround
     ${CMAKE_CURRENT_BINARY_DIR}/expat # for expat_build.h
@@ -121,5 +122,12 @@ if (MSVC)
         /w # don't care about warnings in 3rd party sources.
         /EHa
         /MP # enable parallel build.
-    ) 
+    )
+else()
+    message("Current compiler is: ${CMAKE_CXX_COMPILER_ID}")
+    target_compile_options(GNextern PRIVATE
+        -w # disable all warnings
+    )
 endif()
+
+target_compile_features(GNextern PRIVATE cxx_std_11)

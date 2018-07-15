@@ -235,13 +235,8 @@ GN::getDXErrorInfo( sint32 hr ) throw()
     // starting from win8, FormatMessage() handles DX errors.
     return getWin32ErrorInfo(hr);
 #else
-    __declspec(thread) static char text[] = "0x12345678";
-    for(int i = 0; i < 8; ++i)
-    {
-        char ch = '0' + ((error >> (28-i*4)) & 0xF);
-        text[2+i] = ch;
-    }
-    return text;
+    GN_UNUSED_PARAM(hr);
+    return "who cares...";
 #endif
 }
 
