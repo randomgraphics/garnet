@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "windowX11.h"
 
-#if GN_POSIX
+#if HAS_X11
 
 #include <X11/Xlib.h>
 #include <GL/glx.h>

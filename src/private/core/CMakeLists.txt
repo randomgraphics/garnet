@@ -15,7 +15,7 @@ file(GLOB_RECURSE garnet_headers ../inc/*.h ../inc/*.inl ../inc/*.in)
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR}/../inc PREFIX "Header Files" FILES ${garnet_headers})
 
 # gather sources
-set(sources app/SampleApp.cpp)
+set(sources app/sampleApp.cpp)
 add_sources(sources base PCH_SOURCE base/pch.cpp)
 add_sources(sources engine PCH_SOURCE engine/pch.cpp)
 add_sources(sources gfx/base PCH_SOURCE gfx/base/pch.cpp)
@@ -27,7 +27,6 @@ add_sources(sources gpu/util PCH_SOURCE gpu/util/pch.cpp SOURCE_WILDCARDS gpu*.c
 add_sources(sources input PCH_SOURCE input/pch.cpp)
 add_sources(sources util PCH_SOURCE util/pch.cpp)
 add_sources(sources win PCH_SOURCE win/pch.cpp)
-
 # OpenGL GPU Sources
 if (GN_BUILD_HAS_OGL)
     add_sources(sources gpu/ogl PCH_SOURCE gpu/ogl/pch.cpp)
@@ -74,16 +73,21 @@ if (X11_FOUND)
     message("X11_LIBRARIES   = ${X11_LIBRARIES}")
     list(APPEND private_incs ${X11_INCLUDE_DIR})
     list(APPEND private_defs HAS_X11=1)
+else()
+    message("X11 not found.")
 endif()
 
+#check thread libraries
+find_package(Threads REQUIRED)
+
 # build the library
-set(deps )
+set(dependencies ${OPENGL_LIBRARIES} ${DIRECTX_LIBRARIES} ${X11_LIBRARIES} ${CMAKE_DL_LIBS} Threads::Threads)
 if (GN_BUILD_IS_STATIC)
-	add_library(GNcore ${sources} ${garnet_headers} ${BUILD_H})
-    list(APPEND public_libs ${OPENGL_LIBRARIES} ${DIRECTX_LIBRARIES} ${X11_LIBRARIES})
+    add_library(GNcore ${sources} ${garnet_headers} ${BUILD_H})
+    list(APPEND public_libs ${dependencies})
 else()
-	add_library(GNcore SHARED ${sources} ${garnet_headers} ${BUILD_H})
-    list(APPEND private_libs ${OPENGL_LIBRARIES} ${DIRECTX_LIBRARIES} ${X11_LIBRARIES})
+    add_library(GNcore SHARED ${sources} ${garnet_headers} ${BUILD_H})
+    list(APPEND private_libs ${dependencies})
 endif()
 
 # setup compile properties

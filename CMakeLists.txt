@@ -64,6 +64,9 @@ endfunction()
 # =================================
 
 option(GN_BUILD_IS_STATIC "Set to ON|OFF to build GNcore as static|shared library." OFF)
+if (NOT GN_BUILD_IS_STATIC)
+    set(CMAKE_POSITION_INDEPENDENT_CODE TRUE)
+endif()
 
 # OpenGL
 find_package(OpenGL)

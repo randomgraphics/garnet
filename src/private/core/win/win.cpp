@@ -111,7 +111,7 @@ namespace GN { namespace win
         if( !p->init( wcp ) ) return 0;
         return p.detach();
 
-#elif GN_POSIX
+#elif HAS_X11
 
         AutoObjPtr<WindowX11> p( new WindowX11 );
         if( !p->init( wcp ) ) return 0;

@@ -6,7 +6,7 @@
 /// \author  chenlee (2005.10.4)
 // *****************************************************************************
 
-#if GN_POSIX
+#if HAS_X11
 
 namespace GN { namespace win
 {

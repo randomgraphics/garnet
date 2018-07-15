@@ -18,7 +18,7 @@
 #endif
 #include <windows.h>
 #include <zmouse.h>  // for WM_MOUSEWHEEL
-#elif GN_POSIX
+#elif HAS_X11
 #include <X11/Xlib.h>
 #endif
 

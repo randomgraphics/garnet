@@ -195,6 +195,8 @@
 /// Import function tag
 #if GN_MSVC
 #define GN_EXPORT       __declspec(dllexport)
+#elif GN_GNUC && __GNUC__ >= 4
+#define GN_EXPORT       __attribute__ ((visibility("default"))
 #else
 #define GN_EXPORT
 #endif
