@@ -2,5 +2,6 @@
 build.tmp/
 *.pyo
 *.pyc
+*.swp
 Thumbs.db
 .DS_store
