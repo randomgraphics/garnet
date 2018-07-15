@@ -1,6 +1,6 @@
+.vscode/
+build.tmp/
 *.pyo
 *.pyc
-.vscode
-build.tmp
 Thumbs.db
 .DS_store
