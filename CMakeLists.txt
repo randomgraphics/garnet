@@ -6,17 +6,19 @@ list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/env/cmake)
 # utility functions
 # =================
 
-function(GN_setup_pch sources)
+function(GN_setup_pch)
     set(oneValueArgs PCH_SOURCE PCH_HEADER)
     cmake_parse_arguments(arg "" "${oneValueArgs}" "" ${ARGN})
-    if (arg_PCH_SOURCE)
+    if (arg_UNPARSED_ARGUMENTS AND arg_PCH_SOURCE)
         if (NOT arg_PCH_HEADER)
             set(arg_PCH_HEADER pch.h)
         endif()
-        list(REMOVE_ITEM sources ${CMAKE_CURRENT_SOURCE_DIR}/${arg_PCH_SOURCE})
+        # remove PCH_SOURCE from source list
+        list(REMOVE_ITEM arg_UNPARSED_ARGUMENTS ${CMAKE_CURRENT_SOURCE_DIR}/${arg_PCH_SOURCE})
+        list(REMOVE_ITEM arg_UNPARSED_ARGUMENTS ${arg_PCH_SOURCE})
         if (MSVC)
             set(pch_output ${CMAKE_CURRENT_BINARY_DIR}/${arg_PCH_SOURCE}.pch)
-            set_property(SOURCE ${sources} APPEND_STRING PROPERTY COMPILE_FLAGS "/Yu${arg_PCH_HEADER} /Fp${pch_output}")
+            set_property(SOURCE ${arg_UNPARSED_ARGUMENTS} APPEND_STRING PROPERTY COMPILE_FLAGS "/Yu${arg_PCH_HEADER} /Fp${pch_output}")
             set_property(SOURCE ${arg_PCH_SOURCE} APPEND_STRING PROPERTY COMPILE_FLAGS "/Yc${arg_PCH_HEADER} /Fp${pch_output}")
         else()
             # todo: gcc support
@@ -52,17 +54,8 @@ function(add_sources result folder)
 
     # setup PCH if specified
     if (arg_PCH_SOURCE)
-        if (NOT arg_PCH_HEADER)
-            set(arg_PCH_HEADER pch.h)
-        endif()
         list(REMOVE_ITEM sources ${CMAKE_CURRENT_SOURCE_DIR}/${arg_PCH_SOURCE})
-        if (MSVC)
-            set(pch_output ${CMAKE_CURRENT_BINARY_DIR}/${arg_PCH_SOURCE}.pch)
-            set_property(SOURCE ${sources} APPEND_STRING PROPERTY COMPILE_FLAGS "/Yu${arg_PCH_HEADER} /Fp${pch_output}")
-            set_property(SOURCE ${arg_PCH_SOURCE} APPEND_STRING PROPERTY COMPILE_FLAGS "/Yc${arg_PCH_HEADER} /Fp${pch_output}")
-        else()
-            # todo: gcc support
-        endif()
+		GN_setup_pch(${sources} PCH_SOURCE ${arg_PCH_SOURCE} PCH_HEADER ${arg_PCH_HEADER})
     endif()
 
     # glob headers
