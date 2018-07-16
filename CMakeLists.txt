@@ -10,7 +10,7 @@ list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/env/cmake)
 # Setup PCH if specified.
 #
 # Usage:
-#     add_sources(sources_list folder <pch_source> <pch_header>=pch.h)
+#     add_sources(sources_list folder <SOURCE_WILDCARDS ...> <HEADER_WILDCARDS ...> <PCH_SOURCE ...> <PCH_HEADER ...>)
 # ------------------------------------------------------------------------------
 function(add_sources result folder)
     set(input ${${result}})
