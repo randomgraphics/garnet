@@ -6,6 +6,24 @@ list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/env/cmake)
 # utility functions
 # =================
 
+function(GN_setup_pch sources)
+    set(oneValueArgs PCH_SOURCE PCH_HEADER)
+    cmake_parse_arguments(arg "" "${oneValueArgs}" "" ${ARGN})
+    if (arg_PCH_SOURCE)
+        if (NOT arg_PCH_HEADER)
+            set(arg_PCH_HEADER pch.h)
+        endif()
+        list(REMOVE_ITEM sources ${CMAKE_CURRENT_SOURCE_DIR}/${arg_PCH_SOURCE})
+        if (MSVC)
+            set(pch_output ${CMAKE_CURRENT_BINARY_DIR}/${arg_PCH_SOURCE}.pch)
+            set_property(SOURCE ${sources} APPEND_STRING PROPERTY COMPILE_FLAGS "/Yu${arg_PCH_HEADER} /Fp${pch_output}")
+            set_property(SOURCE ${arg_PCH_SOURCE} APPEND_STRING PROPERTY COMPILE_FLAGS "/Yc${arg_PCH_HEADER} /Fp${pch_output}")
+        else()
+            # todo: gcc support
+        endif()
+    endif()
+endfunction()
+
 # Append source files from specific folder to list specified by parameter 'result'
 # Setup PCH if specified.
 #
@@ -33,8 +51,6 @@ function(add_sources result folder)
     file(GLOB sources ${source_patterns})
 
     # setup PCH if specified
-    #list(LENGTH ARGN len_argn)
-    #if (len_argn GREATER_EQUAL 1)
     if (arg_PCH_SOURCE)
         if (NOT arg_PCH_HEADER)
             set(arg_PCH_HEADER pch.h)
