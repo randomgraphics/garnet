@@ -2,7 +2,7 @@
 # ======================================
 # detect garnet root directory
 # ======================================
-GARNET_ROOT=$(cd $(dirname $(pwd)/${BASH_SOURCE[0]})/..; pwd)
+export GARNET_ROOT=$(cd $(dirname $(pwd)/${BASH_SOURCE[0]})/..; pwd)
 
 # ===========
 # setup alias
