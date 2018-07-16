@@ -1,13 +1,7 @@
 #include "pch.h"
 #include "basicInputXInput.h"
 
-#if GN_WINPC
-
-#if defined(HAS_XINPUT)
-#include <xinput.h>
-#elif defined(HAS_XINPUT2)
-#include <xinput2.h>
-#endif
+#ifdef HAS_XINPUT
 
 //
 //
@@ -17,8 +11,6 @@ void GN::input::BasicXInput::processInputEvents()
     GN_GUARD;
 
     if( !mXInputGetState ) return;
-
-#if defined(HAS_XINPUT) ||  defined(HAS_XINPUT2)
 
     typedef DWORD(WINAPI*XInputGetStateFuncPtr)(DWORD dwUserIndex, XINPUT_STATE* pState);
 
@@ -55,8 +47,6 @@ void GN::input::BasicXInput::processInputEvents()
         triggerAxisMoveAbs( Axis::XB360_THUMB_RX      , (int)pad.sThumbRX, XINPUT_GAMEPAD_RIGHT_THUMB_DEADZONE );
         triggerAxisMoveAbs( Axis::XB360_THUMB_RY      , (int)pad.sThumbRY, XINPUT_GAMEPAD_RIGHT_THUMB_DEADZONE );
     }
-
-#endif
 
     GN_UNGUARD;
 }

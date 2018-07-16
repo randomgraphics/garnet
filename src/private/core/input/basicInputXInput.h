@@ -8,7 +8,8 @@
 
 #include "basicInput.h"
 
-#if GN_WINPC
+#ifdef HAS_XINPUT
+#include <xinput.h>
 
 namespace GN { namespace input
 {

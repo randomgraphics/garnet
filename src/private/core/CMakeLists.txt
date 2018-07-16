@@ -79,7 +79,7 @@ target_compile_features   (GNcore PUBLIC cxx_std_11)
 
 # directx
 if (D3D11_FOUND)
-    target_compile_definitions(GNcore PRIVATE HAS_XINPUT=1 HAS_XINPUT2=1)
+    target_compile_definitions(GNcore PRIVATE HAS_XINPUT=1)
 endif()
 
 # X11

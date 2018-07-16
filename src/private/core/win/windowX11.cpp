@@ -4,6 +4,7 @@
 #if HAS_X11
 
 #include <X11/Xlib.h>
+#define GLEW_STATIC
 #include <GL/glew.h>
 #include <GL/glxew.h>
 
