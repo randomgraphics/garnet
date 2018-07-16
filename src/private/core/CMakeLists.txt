@@ -29,25 +29,25 @@ source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR}/../inc PREFIX "Header Files" FILES
 
 # gather sources
 set(sources app/sampleApp.cpp)
-add_sources(sources base PCH_SOURCE base/pch.cpp)
-add_sources(sources engine PCH_SOURCE engine/pch.cpp)
-add_sources(sources gfx/base PCH_SOURCE gfx/base/pch.cpp)
-add_sources(sources gfx/d3d PCH_SOURCE gfx/d3d/pch.cpp)
-add_sources(sources gfx/gpures PCH_SOURCE gfx/gpures/pch.cpp)
-add_sources(sources gfx/misc PCH_SOURCE gfx/misc/pch.cpp)
-add_sources(sources gpu/common PCH_SOURCE gpu/common/pch.cpp)
-add_sources(sources gpu/util PCH_SOURCE gpu/util/pch.cpp SOURCE_WILDCARDS gpu*.cpp)
-add_sources(sources input PCH_SOURCE input/pch.cpp)
-add_sources(sources util PCH_SOURCE util/pch.cpp)
-add_sources(sources win PCH_SOURCE win/pch.cpp)
+GN_add_source_folder(sources base PCH_SOURCE base/pch.cpp)
+GN_add_source_folder(sources engine PCH_SOURCE engine/pch.cpp)
+GN_add_source_folder(sources gfx/base PCH_SOURCE gfx/base/pch.cpp)
+GN_add_source_folder(sources gfx/d3d PCH_SOURCE gfx/d3d/pch.cpp)
+GN_add_source_folder(sources gfx/gpures PCH_SOURCE gfx/gpures/pch.cpp)
+GN_add_source_folder(sources gfx/misc PCH_SOURCE gfx/misc/pch.cpp)
+GN_add_source_folder(sources gpu/common PCH_SOURCE gpu/common/pch.cpp)
+GN_add_source_folder(sources gpu/util PCH_SOURCE gpu/util/pch.cpp SOURCE_WILDCARDS gpu*.cpp)
+GN_add_source_folder(sources input PCH_SOURCE input/pch.cpp)
+GN_add_source_folder(sources util PCH_SOURCE util/pch.cpp)
+GN_add_source_folder(sources win PCH_SOURCE win/pch.cpp)
 # OpenGL GPU Sources
 if (OPENGL_FOUND)
-    add_sources(sources gpu/ogl PCH_SOURCE gpu/ogl/pch.cpp)
+    GN_add_source_folder(sources gpu/ogl PCH_SOURCE gpu/ogl/pch.cpp)
 endif()
 
 # D3D GPU Sources
 if (GN_BUILD_HAS_D3D11)
-    add_sources(sources gpu/d3d11 PCH_SOURCE gpu/d3d11/pch.cpp)
+    GN_add_source_folder(sources gpu/d3d11 PCH_SOURCE gpu/d3d11/pch.cpp)
 endif()
 
 # Qt5

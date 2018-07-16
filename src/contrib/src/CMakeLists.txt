@@ -41,7 +41,7 @@ if (${OPENGL_FOUND})
 endif()
 
 # collect assimp sources
-add_sources(sources assimp PCH_SOURCE assimp/AssimpPCH.cpp PCH_HEADER AssimpPCH.h)
+GN_add_source_folder(sources assimp PCH_SOURCE assimp/AssimpPCH.cpp PCH_HEADER AssimpPCH.h)
 file(GLOB_RECURSE assimp_contrib_sources assimp/contrib/*.c assimp/contrib/*.cpp)
 list(APPEND sources ${assimp_contrib_sources})
 

@@ -30,9 +30,9 @@ endfunction()
 # Setup PCH if specified.
 #
 # Usage:
-#     add_sources(sources_list folder <SOURCE_WILDCARDS ...> <HEADER_WILDCARDS ...> <PCH_SOURCE ...> <PCH_HEADER ...>)
+#     GN_add_source_folder(sources_list folder <SOURCE_WILDCARDS ...> <HEADER_WILDCARDS ...> <PCH_SOURCE ...> <PCH_HEADER ...>)
 # ------------------------------------------------------------------------------
-function(add_sources result folder)
+function(GN_add_source_folder result folder)
     set(input ${${result}})
 
     # parse optional parameters
