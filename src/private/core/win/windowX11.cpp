@@ -4,7 +4,8 @@
 #if HAS_X11
 
 #include <X11/Xlib.h>
-#include <GL/glx.h>
+#include <GL/glew.h>
+#include <GL/glxew.h>
 
 static GN::Logger * sLogger = GN::getLogger("GN.core.win");
 

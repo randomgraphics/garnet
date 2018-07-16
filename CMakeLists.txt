@@ -68,17 +68,6 @@ if (NOT GN_BUILD_IS_STATIC)
     set(CMAKE_POSITION_INDEPENDENT_CODE TRUE)
 endif()
 
-# OpenGL
-find_package(OpenGL)
-set(GN_BUILD_HAS_OGL ${OPENGL_FOUND})
-
-# DirectX
-find_package(DirectX)
-set(GN_BUILD_HAS_D3D9 ${D3D9_FOUND})
-set(GN_BUILD_HAS_D3D11 ${D3D11_FOUND})
-set(GN_BUILD_HAS_D3D11_1 ${D3D11_FOUND})
-set(GN_BUILD_HAS_XNAMATH OFF) # this is legacy flag that is available on pre-vista OS and Xbox2
-
 # check build type
 if ("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
     set(GN_BUILD_DEBUG_ENABLED ON)
@@ -101,10 +90,11 @@ message("GN_BUILD_IS_STATIC         = ${GN_BUILD_IS_STATIC}")
 message("CMAKE_BUILD_TYPE           = ${CMAKE_BUILD_TYPE}")
 message("GN_BUILD_DEBUG_ENABLED     = ${GN_BUILD_DEBUG_ENABLED}")
 message("GN_BUILD_PROFILING_ENABLED = ${GN_BUILD_PROFILING_ENABLED}")
-message("GN_BUILD_HAS_OGL           = ${GN_BUILD_HAS_OGL}")
-message("GN_BUILD_HAS_D3D9          = ${GN_BUILD_HAS_D3D9}")
-message("GN_BUILD_HAS_D3D11         = ${GN_BUILD_HAS_D3D11}")
-message("GN_BUILD_HAS_D3D11_1       = ${GN_BUILD_HAS_D3D11_1}")
+
+# search commonly used packages
+find_package(OpenGL)
+find_package(DirectX)
+find_package(X11)
 
 # ===================
 # call subdirectories

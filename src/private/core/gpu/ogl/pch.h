@@ -15,16 +15,12 @@
 #include <windows.h>
 #endif
 
-#ifndef GLEW_STATIC
-#define GLEW_STATIC
-#endif
 #include <GL/glew.h>
 #if GN_WINPC
 #include <GL/wglew.h>
 #elif GN_POSIX
 #include <GL/glxew.h>
 #endif
-#include <GL/glu.h>
 
 // Note: redefine GN_OGL_CHECK macro to do nothing.
 #undef GN_OGL_CHECK

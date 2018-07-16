@@ -35,7 +35,8 @@ file(GLOB sources
     tinyxml/*.c
     zlib/*.c
 )
-if (${GN_BUILD_HAS_OGL})
+
+if (${OPENGL_FOUND})
     list(APPEND sources glew/glew.c)
 endif()
 
@@ -96,12 +97,12 @@ list(APPEND sources
 # split sources into groups
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} PREFIX "Source Files" FILES ${sources})
 
-
 # =================
 # Build the library
 # =================
 
 add_library(GNextern ${sources} expat_build.h.in ${CMAKE_CURRENT_BINARY_DIR}/expat/expat_build.h)
+
 target_compile_definitions(GNextern PRIVATE
     ASSIMP_BUILD_BOOST_WORKAROUND
     ASSIMP_BUILD_NO_OWN_ZLIB
@@ -117,6 +118,8 @@ target_include_directories(GNextern PRIVATE
     assimp/BoostWorkaround
     ${CMAKE_CURRENT_BINARY_DIR}/expat # for expat_build.h
 )
+
+# compiler specific options
 if (MSVC)
     target_compile_options(GNextern PRIVATE
         /w # don't care about warnings in 3rd party sources.
@@ -131,3 +134,23 @@ else()
 endif()
 
 target_compile_features(GNextern PRIVATE cxx_std_11)
+
+# OpenGL and X11 options
+if (${OPENGL_FOUND})
+    target_link_libraries(GNextern PUBLIC ${OPENGL_LIBRARIES})
+    if (${X11_FOUND})
+        message("X11_INCLUDE_DIR = ${X11_INCLUDE_DIR}")
+        message("X11_LIBRARIES   = ${X11_LIBRARIES}")
+        # note: this x11 folder needs to be included after ../inc to ensure
+        # local headers (like png.h and jpeg.h) are included over system
+        # installed headers with same names.
+        target_include_directories(GNextern PUBLIC ${X11_INCLUDE_DIR})
+        target_link_libraries(GNextern PUBLIC ${X11_LIBRARIES})
+    else()
+        message("X11 not found.")
+    endif()
+    if (NOT ${OPENGL_GLU_FOUND})
+        message("GLEW is compiled w/o GLU support.")	
+        target_compile_definitions(GNextern PUBLIC GLEW_NO_GLU)
+    endif()
+endif()
