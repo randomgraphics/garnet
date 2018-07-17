@@ -74,6 +74,7 @@ endif()
 # setup GNcore properties
 # =======================
 
+set(libs) # initialize an empty library list
 target_include_directories(GNcore PUBLIC ${BUILD_INC} ../inc)
 target_compile_features   (GNcore PUBLIC cxx_std_11)
 
@@ -87,11 +88,26 @@ if (X11_FOUND)
     target_compile_definitions(GNcore PRIVATE HAS_X11=1)
 endif()
 
+# FBX
+if (WIN32)
+	set(fbx_win_root_dir ${CMAKE_CURRENT_SOURCE_DIR}/../../contrib/fbx/2014.1)
+	if (8 EQUAL ${CMAKE_SIZEOF_VOID_P})
+		set(fbx_win_lib_dir ${fbx_win_root_dir}/lib/vs2010/x64/release)
+	else()
+		set(fbx_win_lib_dir ${fbx_win_root_dir}/lib/vs2010/x86/release)
+	endif()
+	target_include_directories(GNcore PRIVATE ${fbx_win_root_dir}/include)
+    target_compile_definitions(GNcore PRIVATE HAS_FBX=1)
+	list(APPEND libs ${fbx_win_lib_dir}/libfbxsdk.lib)
+	file(COPY ${fbx_win_lib_dir}/libfbxsdk.dll DESTINATION "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/Debug")
+	file(COPY ${fbx_win_lib_dir}/libfbxsdk.dll DESTINATION "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/Release")
+endif()
+
 #check thread libraries
 find_package(Threads REQUIRED)
 
 # link libraries
-set(libs GNextern ${DIRECTX_LIBRARIES} ${CMAKE_DL_LIBS} Threads::Threads)
+list(APPEND libs GNextern ${DIRECTX_LIBRARIES} ${CMAKE_DL_LIBS} Threads::Threads)
 if (GN_BUILD_IS_STATIC)
     target_link_libraries(GNcore PUBLIC ${libs})
 else()

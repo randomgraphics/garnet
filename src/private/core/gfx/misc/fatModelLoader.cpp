@@ -1520,7 +1520,7 @@ sLoadFromFBX( FatModel & fatmodel, File & file, const StrA & filename )
 {
 #ifdef HAS_FBX
 
-    GN_INFO(sLogger)("Load FBX model from file: %s", filename);
+    GN_INFO(sLogger)("Load FBX model from file: %s", filename.rawptr());
 
     FbxSdkWrapper sdk;
     if( !sdk.init() ) return false;

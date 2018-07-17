@@ -4,6 +4,12 @@
 - 程序中标注TODO的地方
 
 - p0
+  - reorg folder structure:
+    - rename contrib to 3rdparty
+	- remove private
+  - folder jump command for easy jumping to both source and build folder:
+    - js core: jump to GNcore source folder
+	- jb core: jump to GNcore build folder
   - port thick line sample to use GN::gfx::ThickLineRenderer
   - port useful stuffs from old garnet library (0.7.0a):
     - gui system
