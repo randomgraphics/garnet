@@ -1478,6 +1478,12 @@ sLoadFbxAnimStack(
     FatModel     & fatmodel,
     FbxAnimStack & fbxanim )
 {
+#if 1
+    GN_UNUSED_PARAM(fatmodel);
+    GN_UNUSED_PARAM(fbxanim);
+#else
+    // the following code is disabled since it triggers crash in fbxsdk.
+    
     FatAnimation fatanim;
 
     // store animation name
@@ -1491,6 +1497,7 @@ sLoadFbxAnimStack(
     fatanim.duration = duration.GetSecondDouble();
 
     // We care about skeleton animations only for now.
+#endif
 }
 
 //
@@ -1498,8 +1505,8 @@ sLoadFbxAnimStack(
 // -----------------------------------------------------------------------------
 static void
 sLoadFbxAnimations(
-    FatModel      & fatmodel,
-    FbxScene     & fbxscene )
+    FatModel & fatmodel,
+    FbxScene & fbxscene )
 {
     // Iterate through all animation stacks in the scene. Load them one by one.
     int animCount = FbxGetSrcCount<FbxAnimStack>(&fbxscene);
