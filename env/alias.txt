@@ -1,4 +1,3 @@
-b           "scons $*"
 g           "git $*"
 gnroot      "cd /d %GARNET_ROOT%\$*"
 gnbld       "cd /d %GARNET_ROOT%\build.tmp\$*"

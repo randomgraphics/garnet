@@ -202,18 +202,18 @@ LRESULT WINAPI MsgProc( HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam )
 int main()
 {
     // Register the window class
-    WNDCLASSEX wc =
+    WNDCLASSEXW wc =
     {
         sizeof( WNDCLASSEX ), CS_CLASSDC, MsgProc, 0L, 0L,
         GetModuleHandle( NULL ), NULL, NULL, NULL, NULL,
         L"D3D Tutorial", NULL
     };
-    RegisterClassEx( &wc );
+    RegisterClassExW( &wc );
 
     // Create the application's window
-    HWND hWnd = CreateWindow( L"D3D Tutorial", L"D3D Tutorial 02: Vertices",
-                              WS_OVERLAPPEDWINDOW, 100, 100, 300, 300,
-                              NULL, NULL, wc.hInstance, NULL );
+    HWND hWnd = CreateWindowW( L"D3D Tutorial", L"D3D Tutorial 02: Vertices",
+                               WS_OVERLAPPEDWINDOW, 100, 100, 300, 300,
+                               NULL, NULL, wc.hInstance, NULL );
 
     // Initialize Direct3D
     if( SUCCEEDED( InitD3D( hWnd ) ) )
@@ -241,6 +241,6 @@ int main()
         }
     }
 
-    UnregisterClass( L"D3D Tutorial", wc.hInstance );
+    UnregisterClassW( L"D3D Tutorial", wc.hInstance );
     return 0;
 }
