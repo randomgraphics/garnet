@@ -107,7 +107,8 @@ endif()
 find_package(Threads REQUIRED)
 
 # link libraries
-list(APPEND libs GNextern ${DIRECTX_LIBRARIES} ${CMAKE_DL_LIBS} Threads::Threads)
+target_link_libraries(GNcore PUBLIC GNextern)
+list(APPEND libs ${DIRECTX_LIBRARIES} ${CMAKE_DL_LIBS} Threads::Threads)
 if (GN_BUILD_IS_STATIC)
     target_link_libraries(GNcore PUBLIC ${libs})
 else()
