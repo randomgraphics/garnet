@@ -1,4 +1,36 @@
 #add_subdirectory(assimp)
 #add_subdirectory(d3d11)
-add_subdirectory(d3d9)
 add_subdirectory(ut)
+
+function(add_simple_test_ex folder test_name)
+    GN_setup_pch(${folder}/main.cpp PCH_SOURCE ${folder}/pch.cpp)
+    string(CONCAT target_name GNtest ${test_name})
+    add_executable(${target_name} ${folder}/main.cpp ${folder}/pch.cpp ${folder}/pch.h)
+    target_link_libraries(${target_name} GNcore)
+endfunction()
+
+function(add_simple_test folder)
+    # create default test name
+    string(SUBSTRING ${folder} 0 1 first_char)
+    string(TOUPPER ${first_char} first_char_upper_case)
+    string(SUBSTRING ${folder} 1 -1 remaining)
+    string(CONCAT test_name ${first_char_upper_case} ${remaining})
+
+    add_simple_test_ex(${folder} ${test_name})
+endfunction()
+
+if (D3D9_FOUND)
+    add_simple_test_ex(d3d9 D3D9)
+endif()
+
+add_simple_test(engine)
+add_simple_test(font)
+if (GLUT_FOUND)
+    add_simple_test_ex(ft2 FT2)
+endif()
+add_simple_test(input)
+#add_simple_test_ex(pcre PCRE) (TODO: link error)
+add_simple_test(renderToTexture)
+add_simple_test_ex(resdb ResDB)
+add_simple_test_ex(simd SIMD)
+add_simple_test(sprite)

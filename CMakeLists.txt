@@ -12,6 +12,7 @@ list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/env/cmake)
 #    GN_setup_pch(source1 [source2 ...] PCH_SOURCE pch_source [PCH_HEADER pch_header])
 #
 # Default pch header is pch.h, if not specified.
+# ------------------------------------------------------------------------------
 function(GN_setup_pch)
     set(oneValueArgs PCH_SOURCE PCH_HEADER)
     cmake_parse_arguments(arg "" "${oneValueArgs}" "" ${ARGN})
