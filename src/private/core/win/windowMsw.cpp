@@ -241,7 +241,7 @@ void GN::win::WindowMsw::setClientSize( size_t w, size_t h )
     GN_MSW_CHECK_RETURN_VOID( ::AdjustWindowRectEx(
         &rc,
         (DWORD)::GetWindowLong( mWindow, GWL_STYLE ),
-        (BOOL)::GetMenu( mWindow ),
+        0 != ::GetMenu( mWindow ),
         (DWORD)::GetWindowLong( mWindow, GWL_EXSTYLE ) ) );
     GN_MSW_CHECK( ::SetWindowPos(
         mWindow,

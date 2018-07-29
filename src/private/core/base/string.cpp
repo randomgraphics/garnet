@@ -1,9 +1,10 @@
 #include "pch.h"
 
-// this is to workaround template static member limitation.
-static sint64 sEmptyStringPlaceholder = 0;
-static void * sEmptyStringPtr = &sEmptyStringPlaceholder;
-GN_API void * GN::EMPTY_STRING_INSTANCE = &sEmptyStringPtr;
+static sint64 sEmptyStringBuffer = 0;
+GN_API void * GN::internal::EMPTY_STRING_POINTER = &sEmptyStringBuffer;
+
+static GN::StrA sEmptyString;
+GN_API void * GN::internal::EMPTY_STRING_INSTANCE = (void*)&sEmptyString;
 
 //
 //

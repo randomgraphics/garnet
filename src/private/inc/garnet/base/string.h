@@ -233,8 +233,10 @@ namespace GN
         }
     };
 
-    extern GN_API void * EMPTY_STRING_INSTANCE;
-
+	namespace internal {
+		extern GN_API void * EMPTY_STRING_POINTER;
+		extern GN_API void * EMPTY_STRING_INSTANCE;
+	}
     ///
     /// Custom string class. CHAR type must be POD type.
     ///
@@ -252,7 +254,7 @@ namespace GN
         ///
         static const Str & EMPTYSTR()
         {
-            return *(Str*)EMPTY_STRING_INSTANCE;
+            return *(Str*)internal::EMPTY_STRING_INSTANCE;
         }
 
         ///
@@ -1090,7 +1092,7 @@ namespace GN
         }
 
         // Returns a static pointer for empty string
-        static CharType * sEmptyPtr() { static CharType c = 0; return &c; }
+        static CharType * sEmptyPtr() { return (CharType*)internal::EMPTY_STRING_POINTER; }
 
         // Allocate a memory buffer that can hold at least 'count' characters, and one extra '\0'.
         static CharType * sAlloc( size_t count )
