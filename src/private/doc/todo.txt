@@ -4,6 +4,8 @@
 - 程序中标注TODO的地方
 
 - p0
+  - fix crashes:
+    - bin\debug\GNtoolMeshViewer.exe ..\src\private\media\model\R.F.R01\a01.ase
   - reorg folder structure:
     - rename contrib to 3rdparty
 	- remove private
