@@ -18,10 +18,10 @@ namespace GN
     namespace internal {}
 }
 
-// garnet build specific defines.
-#include "base/build.h"
+// defines features that are the garnet library was built with.
+#include "base/features.h"
 
-// build specific defines.
+// config flags that garnet library user can override at compile time.
 #include "base/config.h"
 
 // basic defines

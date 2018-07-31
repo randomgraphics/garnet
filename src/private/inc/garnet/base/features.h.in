@@ -1,3 +1,9 @@
+// ****************************************************
+//
+// Defines features that garnet library was built with.
+//
+// ****************************************************
+
 // Garnet is build with debug code enabled.
 #cmakedefine01 GN_BUILD_DEBUG_ENABLED
 

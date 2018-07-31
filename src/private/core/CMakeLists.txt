@@ -1,6 +1,6 @@
-# ==============================
-# generate configuration headers
-# ==============================
+# =======================
+# generate feature header
+# =======================
 
 set(GN_BUILD_HAS_OGL ${OPENGL_FOUND})
 set(GN_BUILD_HAS_D3D9 ${D3D9_FOUND})
@@ -8,10 +8,9 @@ set(GN_BUILD_HAS_D3D11 ${D3D11_FOUND})
 set(GN_BUILD_HAS_D3D11_1 ${D3D11_FOUND})
 set(GN_BUILD_HAS_XNAMATH OFF) # this is legacy flag that is available on pre-vista OS and Xbox2
 
-configure_file(../inc/garnet/base/build.h.in ../inc/garnet/base/build.h)
+configure_file(../inc/garnet/base/features.h.in ../inc/garnet/base/features.h)
 
-set(BUILD_INC ${CMAKE_CURRENT_BINARY_DIR}/../inc/garnet)
-set(BUILD_H ${BUILD_INC}/base/build.h)
+set(BUILD_HEADER_INC ${CMAKE_CURRENT_BINARY_DIR}/../inc/garnet)
 
 # print configuration summary
 message("GN_BUILD_HAS_OGL     = ${GN_BUILD_HAS_OGL}")
@@ -26,6 +25,7 @@ message("GN_BUILD_HAS_D3D11_1 = ${GN_BUILD_HAS_D3D11_1}")
 # gather headers
 file(GLOB_RECURSE garnet_headers ../inc/*.h ../inc/*.inl ../inc/*.in)
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR}/../inc PREFIX "Header Files" FILES ${garnet_headers})
+list(APPEND garnet_headers ${BUILD_HEADER_INC}/base/features.h)
 
 # gather sources
 set(sources app/sampleApp.cpp)
@@ -65,9 +65,9 @@ source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} PREFIX "Source Files" FILES ${sour
 # ====================
 
 if (GN_BUILD_IS_STATIC)
-    add_library(GNcore ${sources} ${garnet_headers} ${BUILD_H})
+    add_library(GNcore ${sources} ${garnet_headers})
 else()
-    add_library(GNcore SHARED ${sources} ${garnet_headers} ${BUILD_H})
+    add_library(GNcore SHARED ${sources} ${garnet_headers})
 endif()
 
 # =======================
@@ -82,7 +82,7 @@ function(add_core_libs)
     endif()
 endfunction()
 
-target_include_directories(GNcore PUBLIC ${BUILD_INC} ../inc)
+target_include_directories(GNcore PUBLIC ${BUILD_HEADER_INC} ../inc)
 target_compile_features   (GNcore PUBLIC cxx_std_11)
 target_link_libraries     (GNcore PUBLIC GNextern)
 
