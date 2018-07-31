@@ -1,4 +1,0 @@
-SConscript( [
-	'contrib/makefile.scons',
-	'private/makefile.scons'
-	] )

@@ -1,5 +1,0 @@
-Import( 'GN' )
-
-if GN.has_d3d9:
-    GN.NewDefaultTarget( 'GNtestD3D9', GN.BinplaceProgram( GN.BuildProgram(
-        None, 'GNtestD3D9', ['main.cpp'], 'pch.h', 'pch.cpp' ) ) )

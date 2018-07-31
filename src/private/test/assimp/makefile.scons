@@ -1,4 +1,0 @@
-Import( 'GN' )
-if GN.has_glut :
-	name = 'GNtestAssimp'
-	GN.NewDefaultTarget( name, GN.BinplaceProgram( GN.BuildProgram( None, name, ['main.cpp'] ) ) )

@@ -10,10 +10,10 @@
 // have this configuration built.
 // ----------------------------------------------------------------------------
 
-#define _CRT_SECURE_NO_WARNINGS
+#include "pch.h"
+
 #include <stdlib.h>
 
-#define GLUT_DISABLE_ATEXIT_HACK
 #include <GL/glut.h>
 
 // assimp include files. These three are usually needed.
@@ -28,8 +28,6 @@
 #include <assimp/assimp.h>
 #include <assimp/aiPostProcess.h>
 #include <assimp/aiScene.h>
-
-#include <garnet/GNbase.h>
 
 // the global Assimp scene object
 const struct aiScene* scene = NULL;

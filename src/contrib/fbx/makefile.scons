@@ -1,7 +1,0 @@
-Import( 'GN' )
-
-path = '2014.1/lib/vs2010/' + GN.target_cpu + ('/debug' if ('/debug' == GN.variant) else '/release' )
-dlls = GN.Glob( path + '/*.dll', True )
-pdbs = GN.Glob( path + '/*.pdb', True )
-
-GN.NewTarget( 'GNfbxBin', GN.PlaceFiles( 'bin', dlls + pdbs ) )
