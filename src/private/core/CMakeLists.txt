@@ -74,13 +74,22 @@ endif()
 # setup GNcore properties
 # =======================
 
-set(libs) # initialize an empty library list
+function(add_core_libs)
+    if (GN_BUILD_IS_STATIC)
+        target_link_libraries(GNcore PUBLIC ${ARGN})
+    else()
+        target_link_libraries(GNcore PRIVATE ${ARGN})
+    endif()
+endfunction()
+
 target_include_directories(GNcore PUBLIC ${BUILD_INC} ../inc)
 target_compile_features   (GNcore PUBLIC cxx_std_11)
+target_link_libraries     (GNcore PUBLIC GNextern)
 
 # directx
 if (D3D11_FOUND)
     target_compile_definitions(GNcore PRIVATE HAS_XINPUT=1)
+    add_core_libs(${DIRECTX_LIBRARIES})
 endif()
 
 # X11
@@ -90,30 +99,22 @@ endif()
 
 # FBX
 if (WIN32)
-	set(fbx_win_root_dir ${CMAKE_CURRENT_SOURCE_DIR}/../../contrib/fbx/2014.1)
-	if (8 EQUAL ${CMAKE_SIZEOF_VOID_P})
-		set(fbx_win_lib_dir ${fbx_win_root_dir}/lib/vs2010/x64/release)
-	else()
-		set(fbx_win_lib_dir ${fbx_win_root_dir}/lib/vs2010/x86/release)
-	endif()
-	target_include_directories(GNcore PRIVATE ${fbx_win_root_dir}/include)
+    set(fbx_win_root_dir ${CMAKE_CURRENT_SOURCE_DIR}/../../contrib/fbx/2014.1)
+    if (8 EQUAL ${CMAKE_SIZEOF_VOID_P})
+        set(fbx_win_lib_dir ${fbx_win_root_dir}/lib/vs2010/x64/release)
+    else()
+        set(fbx_win_lib_dir ${fbx_win_root_dir}/lib/vs2010/x86/release)
+    endif()
+    target_include_directories(GNcore PRIVATE ${fbx_win_root_dir}/include)
     target_compile_definitions(GNcore PRIVATE HAS_FBX=1)
-	list(APPEND libs ${fbx_win_lib_dir}/libfbxsdk.lib)
-	file(COPY ${fbx_win_lib_dir}/libfbxsdk.dll DESTINATION "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/Debug")
-	file(COPY ${fbx_win_lib_dir}/libfbxsdk.dll DESTINATION "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/Release")
+    add_core_libs(${fbx_win_lib_dir}/libfbxsdk.lib)
+    file(COPY ${fbx_win_lib_dir}/libfbxsdk.dll DESTINATION "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/Debug")
+    file(COPY ${fbx_win_lib_dir}/libfbxsdk.dll DESTINATION "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/Release")
 endif()
 
-#check thread libraries
+# thread libraries
 find_package(Threads REQUIRED)
-
-# link libraries
-target_link_libraries(GNcore PUBLIC GNextern)
-list(APPEND libs ${DIRECTX_LIBRARIES} ${CMAKE_DL_LIBS} Threads::Threads)
-if (GN_BUILD_IS_STATIC)
-    target_link_libraries(GNcore PUBLIC ${libs})
-else()
-    target_link_libraries(GNcore PRIVATE ${libs})
-endif()
+add_core_libs(${CMAKE_DL_LIBS} Threads::Threads)
 
 # compiler specific setup
 if (MSVC)
