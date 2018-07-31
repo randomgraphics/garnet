@@ -54,21 +54,21 @@ struct App {
     VkAllocationCallbacks * mAllocator = nullptr;
     win::Window *  mWin = nullptr;
     VkInstance     mInstance = nullptr;
-    VkDebugReportCallbackEXT mDebugReport = nullptr;
-    VkSurfaceKHR   mSurface = nullptr;
+    VkDebugReportCallbackEXT mDebugReport = 0;
+    VkSurfaceKHR   mSurface = 0;
     VkDevice       mDevice = nullptr;
     VkQueue        mGraphicsQueue = nullptr, mPresentQueue = nullptr;
-    VkSwapchainKHR mSwapchain = nullptr;
+    VkSwapchainKHR mSwapchain = 0;
     std::vector<VkImageView> mBackBuffers;
-    VkSemaphore    mBackBufferAvailableSemaphore = nullptr;
-    VkSemaphore    mRenderFinishedSemaphore = nullptr;
+    VkSemaphore    mBackBufferAvailableSemaphore = 0;
+    VkSemaphore    mRenderFinishedSemaphore = 0;
 
-    VkRenderPass     mRenderPass = nullptr;
-    VkPipelineLayout mPipelineLayout = nullptr;
-    VkPipeline       mPipeline = nullptr;
+    VkRenderPass     mRenderPass = 0;
+    VkPipelineLayout mPipelineLayout = 0;
+    VkPipeline       mPipeline = 0;
     std::vector<VkFramebuffer> mFramebuffers;
 
-    VkCommandPool    mCommandPool = nullptr;
+    VkCommandPool    mCommandPool = 0;
     std::vector<VkCommandBuffer> mCommandBuffers;
 
     App() {
@@ -267,7 +267,7 @@ struct App {
             VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR,
             VK_PRESENT_MODE_FIFO_KHR, // mailbox?
             true, // clipped.
-            nullptr, // old swap chain
+            0, // old swap chain
         };
         CHECK_VK(vkCreateSwapchainKHR(mDevice, &swapChainCreateInfo, mAllocator, &mSwapchain));
 
