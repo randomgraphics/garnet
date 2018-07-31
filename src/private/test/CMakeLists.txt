@@ -28,7 +28,7 @@ if (GLUT_FOUND)
 endif()
 add_simple_test_ex(gpu GPU)
 add_simple_test(input)
-#add_simple_test_ex(pcre PCRE) link error
+add_simple_test_ex(pcre PCRE)
 add_simple_test(renderToTexture)
 add_simple_test_ex(resdb ResDB)
 add_simple_test_ex(simd SIMD)

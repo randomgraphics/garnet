@@ -30,7 +30,8 @@ file(GLOB sources
     expat/*.c
     jpeg/*.c
     lua/*.c
-	pcre/*.c
+    pcre/*.c
+    pcre/*.cc
     png/*.c
     tinyxml/*.c
     zlib/*.c
