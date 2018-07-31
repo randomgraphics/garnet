@@ -45,7 +45,7 @@ StrA VkResultToString(VkResult error)
     return str::format("Unrecognized VkResult 0x%08X", error);
 }
 
-#define CHECK_VK(x) if (1) { auto result__ = (x); if (VK_SUCCESS != (result__)) { GN_ERROR(sLogger)("%s failed: %s", #x, VkResultToString(result__).rawptr()); return false; } } else void(0)
+#define CHECK_VK(x) if (1) { auto result__ = (x); if ((result__) < 0) { GN_ERROR(sLogger)("%s failed: %s", #x, VkResultToString(result__).rawptr()); return false; } } else void(0)
 
 #define CHECK_BOOL(x) if (!(x)) { GN_ERROR(sLogger)("%s returned false.", #x); return false; } else void(0)
 
@@ -145,10 +145,16 @@ struct App {
         const uint32 HEIGHT = 1080;
         mWin = win::createWindow(win::WindowCreationParameters{
             "vulkan test",
+            0, // diplay
+            0, // monitor
             0, // parent
             WIDTH, HEIGHT,
-            true, true, false, true
+            true, // border
+            true, // title
+            false, // top most
+            true // close box
         });
+        mWin->show();
 
         // create a surface
         VkWin32SurfaceCreateInfoKHR surfaceCreateInfo = {};
@@ -157,7 +163,7 @@ struct App {
         surfaceCreateInfo.hinstance = (HINSTANCE)mWin->getModuleHandle();
         CHECK_VK(vkCreateWin32SurfaceKHR(mInstance, &surfaceCreateInfo, mAllocator, &mSurface));
 
-        // enumverate physical device
+        // enumerate physical device
         CHECK_VK(vkEnumeratePhysicalDevices(mInstance, &count, nullptr));
         std::vector<VkPhysicalDevice> devices(count);
         CHECK_VK(vkEnumeratePhysicalDevices(mInstance, &count, devices.data()));
@@ -567,12 +573,30 @@ struct App {
         }
     }
 
+    bool HandleWindowResize(VkResult vr)
+    {
+        if (VK_ERROR_OUT_OF_DATE_KHR == vr || VK_SUBOPTIMAL_KHR == vr) {
+            // TODO: window size changed, try recreate swap chain.
+            CHECK_VK(vkDeviceWaitIdle(mDevice));
+            //CleanupSwapchain();
+            //CreateSwapchain();
+            GN_ERROR(sLogger)("Render window size is changed.");
+            return false;
+        }
+        CHECK_VK(vr);
+        return true;
+    }
+
     int run() {
         mWin->show();
         while(mWin->runUntilNoNewEvents()) {
             // acquire back buffer
             uint32_t imageIndex;
-            vkAcquireNextImageKHR(mDevice, mSwapchain, (uint64_t)-1, mBackBufferAvailableSemaphore, VK_NULL_HANDLE, &imageIndex); // TODO: handle errors
+            auto vr = VK_SUCCESS;
+            do {
+                if (!HandleWindowResize(vr)) return -1;
+                vr = vkAcquireNextImageKHR(mDevice, mSwapchain, (uint64_t)-1, mBackBufferAvailableSemaphore, VK_NULL_HANDLE, &imageIndex);
+            } while (VK_ERROR_OUT_OF_DATE_KHR == vr);
 
             // submit the command buffer
             VkSubmitInfo submitInfo = {};
@@ -597,7 +621,7 @@ struct App {
             presentInfo.pSwapchains = &mSwapchain;
             presentInfo.pImageIndices = &imageIndex;
             presentInfo.pResults = nullptr; // Optional
-            vkQueuePresentKHR(mPresentQueue, &presentInfo); // TODO: handle errors
+            if (!HandleWindowResize(vkQueuePresentKHR(mPresentQueue, &presentInfo))) return -1;
         }
         vkDeviceWaitIdle(mDevice);
         return 0;
