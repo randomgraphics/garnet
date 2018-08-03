@@ -1,6 +1,6 @@
 g           "git $*"
 gnroot      "cd /d %GARNET_ROOT%\$*"
-gnbld       "cd /d %GARNET_ROOT%\build.tmp\$*"
+gnbld       "cd /d %GARNET_ROOT%\%GN_BUILD_DIR%\$*"
 gnsdk       "cd /d %GARNET_ROOT%\build.bin\sdk\$*"
 gnenv       "cd /d %GARNET_ROOT%\env\$*"
 gnmsvc      "cd /d %GARNET_ROOT%\msvc\$*"

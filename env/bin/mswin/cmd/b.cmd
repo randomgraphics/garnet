@@ -1,2 +1,2 @@
-cd %GARNET_ROOT%\build.tmp
+cd %GARNET_ROOT%\%GN_BUILD_DIR%
 cmake --build . %*

@@ -72,19 +72,15 @@ elseif( "ia64" -ieq $env:PROCESSOR_ARCHITECTURE )
     $current_cpu="ia64"
 }
 
-<# not needed for cmake to work
-
 # ==============================================================================
 # setup build variant
 # ==============================================================================
 
 # setup default build variants
-$env:GN_BUILD_COMPILER="vc"
-$env:GN_BUILD_VARIANT="debug"
-$env:GN_BUILD_TARGET_OS="mswin"
+$env:GN_BUILD_CMAKE_GENERATOR=""
 $env:GN_BUILD_TARGET_CPU=$current_cpu
 
-# TODO: Parse command line (modify build variant according to command line)
+# Parse command line
 foreach( $a in $args )
 {
     if( ("/h" -eq $a ) -or
@@ -95,31 +91,17 @@ foreach( $a in $args )
     {
         $name = $MyInvocation.InvocationName | split-path -leaf
 
-        "Usage: $name [/h|/?] [vc|icl|mingw] [x86|x64] [debug|profile|retail]"
+        "Usage: $name [/h|/?] [ninja] [x86|x64]"
     }
 
-    elseif( ("vc" -eq $a) -or ("icl" -eq $a) )
+    elseif( "ninja" -eq $a )
     {
-        $env:GN_BUILD_COMPILER = $a
+        $env:GN_BUILD_CMAKE_GENERATOR = "Ninja"
     }
 
     elseif( ("x86" -eq $a) -or ("x64" -eq $a) )
     {
         $env:GN_BUILD_TARGET_CPU = $a
-    }
-
-    elseif( ("debug" -eq $a) -or
-            ("profile" -eq $a) -or
-            ("retail" -eq $a) )
-    {
-        $env:GN_BUILD_VARIANT = $a
-    }
-
-    elseif( ("durango" -eq $a) -or ("xbox3" -eq $a) )
-    {
-        $env:GN_BUILD_COMPILER = "vc"
-        $env:GN_BUILD_TARGET_OS = "xbox3"
-        $env:GN_BUILD_TARGET_CPU = "x64"
     }
 
     else
@@ -128,12 +110,21 @@ foreach( $a in $args )
     }
 }
 
+if ( "" -eq "$env:GN_BUILD_CMAKE_GENERATOR" )
+{
+    $env:GN_BUILD_DIR="build.tmp\msbuild.$env:GN_BUILD_TARGET_CPU"
+}
+else
+{
+    $env:GN_BUILD_DIR="build.tmp\$env:GN_BUILD_CMAKE_GENERATOR.$env:GN_BUILD_TARGET_CPU"
+}
+
 # ==============================================================================
 # setup Visual Studio environment
 # ==============================================================================
 
-# skip VS setup on Xbox One platform.
-if( ("vc" -eq $env:GN_BUILD_COMPILER) -and ("xbox3" -ne $env:GN_BUILD_TARGET_OS) )
+# Setup VS environment only when generating ninja build.
+if( "Ninja" -eq $env:GN_BUILD_CMAKE_GENERATOR )
 {
     ""
     "====================================="
@@ -206,6 +197,8 @@ if( ("vc" -eq $env:GN_BUILD_COMPILER) -and ("xbox3" -ne $env:GN_BUILD_TARGET_OS)
         error "File $vcvarbat not found."
     }
 }
+
+<# not needed for cmake to work
 
 # ==============================================================================
 # setup Intel C++ Compiler environment
@@ -505,6 +498,9 @@ write-host -ForegroundColor green "
 ================================================
 Garnet build environment setup done successfully
 ================================================
-USERNAME            = $env:USERNAME
-GARNET_ROOT         = $GARNET_ROOT
+USERNAME                 = $env:USERNAME
+GARNET_ROOT              = $env:GARNET_ROOT
+GN_BUILD_CMAKE_GENERATOR = $env:GN_BUILD_CMAKE_GENERATOR
+GN_BUILD_TARGET_CPU      = $env:GN_BUILD_TARGET_CPU
+GN_BUILD_DIR             = $env:GN_BUILD_DIR
 "

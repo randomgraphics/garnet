@@ -14,8 +14,9 @@ list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/env/cmake)
 # Default pch header is pch.h, if not specified.
 # ------------------------------------------------------------------------------
 function(GN_setup_pch)
-    if (MSVC)
-        set(oneValueArgs PCH_SOURCE PCH_HEADER)
+    string(FIND ${CMAKE_MAKE_PROGRAM} MSBuild isMsBuild)
+    if (${isMsBuild} GREATER 0)
+        set(oneValueArgs GREATERPCH_SOURCE PCH_HEADER)
         cmake_parse_arguments(arg "" "${oneValueArgs}" "" ${ARGN})
         if (arg_UNPARSED_ARGUMENTS AND arg_PCH_SOURCE)
             if (NOT arg_PCH_HEADER)
@@ -104,6 +105,7 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/bin)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/lib)
 
 # print summary
+message("CMAKE_MAKE_PROGRAM         = ${CMAKE_MAKE_PROGRAM}")
 message("CMAKE_BUILD_TYPE           = ${CMAKE_BUILD_TYPE}")
 message("CMAKE_SIZEOF_VOID_P        = ${CMAKE_SIZEOF_VOID_P}")
 message("GN_BUILD_IS_STATIC         = ${GN_BUILD_IS_STATIC}")
