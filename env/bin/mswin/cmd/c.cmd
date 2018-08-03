@@ -1,2 +1,2 @@
 cd %GARNET_ROOT%\build.tmp
-cmake .. %*
+cmake .. -DCMAKE_BUILD_TYPE=Debug -DCMAKE_GENERATOR_PLATFORM=x64 %*
