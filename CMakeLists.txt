@@ -120,6 +120,4 @@ find_package(X11)
 # ===================
 # call subdirectories
 # ===================
-add_subdirectory(src/contrib/src)
-add_subdirectory(src/private)
-add_subdirectory(sconstest)
+add_subdirectory(src)

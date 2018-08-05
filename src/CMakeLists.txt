@@ -1,3 +1,4 @@
+add_subdirectory(3rdparty/src)
 add_subdirectory(core)
 add_subdirectory(sample)
 add_subdirectory(tool)
