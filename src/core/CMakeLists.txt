@@ -99,7 +99,7 @@ endif()
 
 # FBX
 if (WIN32)
-    set(fbx_win_root_dir ${CMAKE_CURRENT_SOURCE_DIR}/../../contrib/fbx/2014.1)
+    set(fbx_win_root_dir ${CMAKE_CURRENT_SOURCE_DIR}/../3rdparty/fbx/2014.1)
     if (8 EQUAL ${CMAKE_SIZEOF_VOID_P})
         set(fbx_win_lib_dir ${fbx_win_root_dir}/lib/vs2010/x64/release)
     else()
