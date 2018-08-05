@@ -14,7 +14,7 @@ void level_c::update_visinfo( const Matrix44f & proj,
     m_visible_sectors.clear();
 
     // clear all visibility checking flags
-    for ( uint i = 0; i < m_sectors.size(); ++i )
+    for ( uint32 i = 0; i < m_sectors.size(); ++i )
     {
         m_sectors[i].vischeck = false;
     }
@@ -24,8 +24,8 @@ void level_c::update_visinfo( const Matrix44f & proj,
     // TODO : may cache last camera sector to avoid searching each time.
     //
     int camera_sector = -1;
-    Vector3f o = ( Matrix44f::invert(view) * vec4_c(0,0,0,1) ).to_vec3();
-    for ( uint i = 0; i < m_sectors.size(); ++i )
+    Vector3f o = ( Matrix44f::invert(view) * GN::Vector4f(0,0,0,1) ).to_vec3();
+    for ( uint32 i = 0; i < m_sectors.size(); ++i )
     {
         if ( -1 != m_sectors[i].in_solid(o) )
         {
@@ -53,7 +53,7 @@ void level_c::update_visinfo( const Matrix44f & proj,
     if ( -1 == camera_sector )
     {
         m_visible_sectors.resize( m_sectors.size() );
-        for( uint i = 0; i < m_sectors.size(); ++i )
+        for( uint32 i = 0; i < m_sectors.size(); ++i )
             m_visible_sectors[i] = i;
         return;
     }
@@ -67,7 +67,7 @@ void level_c::update_visinfo( const Matrix44f & proj,
 //
 // recursive finding all visible sectors
 // ----------------------------------------------------------------------------
-void level_c::check_sector( uint sector_id, clipfrustum_c & cf )
+void level_c::check_sector( uint32 sector_id, clipfrustum_c & cf )
 {
     GN_GUARD_SLOW;
 
@@ -82,7 +82,7 @@ void level_c::check_sector( uint sector_id, clipfrustum_c & cf )
 //    else return;
 
     // check visibiliy of all portals in this sector
-    for ( uint i = 0; i < s.portals.size(); ++i )
+    for ( uint32 i = 0; i < s.portals.size(); ++i )
     {
         const portal_s & p = s.portals[i];
         // jump off portal which eye point lay behind of
@@ -155,7 +155,7 @@ void level_c::check_sector( uint sector_id, clipfrustum_c & cf )
 //
 //
 // ----------------------------------------------------------------------------
-bool level_c::bsptree_check_poly( uint /*section_id*/,
+bool level_c::bsptree_check_poly( uint32 /*section_id*/,
                                   const clipfrustum_c & /*cf*/,
                                   const Vector3f * /*vlist*/,
                                   size_t /*numvert*/ )
@@ -181,7 +181,7 @@ bool level_c::bsptree_check_poly( uint /*section_id*/,
 
     if ( cf._use_near_verts )
     {
-        for ( uint i = 0; i < numvert; ++i, ++vlist )
+        for ( uint32 i = 0; i < numvert; ++i, ++vlist )
         {
             // get intersection of near-plane and [eyepoint,*vlist]
             Vector3f v;
@@ -194,7 +194,7 @@ bool level_c::bsptree_check_poly( uint /*section_id*/,
     }
     else
     {
-        for ( uint i = 0; i < numvert; ++i, ++vlist )
+        for ( uint32 i = 0; i < numvert; ++i, ++vlist )
         {
             // 直接检查视点和目标多边形间的可见性
             if ( !bt.check_segment(0, cf.eye_point, *vlist) )

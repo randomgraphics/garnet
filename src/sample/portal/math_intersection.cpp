@@ -101,7 +101,7 @@ static bool flatten_point_in_polygon( const POINT & point,
     // then check if the point is on the same side.
     // the point is in the polygon only if the point lies on the same side of
     // the center respect to each edge.
-    uint inside = 0;
+    uint32 inside = 0;
     e = edges;
     float x = point.x, y = point.y;
     for ( size_t i = 0; i < numvert; ++i, ++e )

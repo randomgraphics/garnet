@@ -5,7 +5,7 @@
 //
 //
 // ----------------------------------------------------------------------------
-void bsptree_c::initialize( lvlBspNode * root, uint numnodes )
+void bsptree_c::initialize( lvlBspNode * root, uint32 numnodes )
 {
     GN_ASSERT( root && numnodes );
     m_bsproot.resize( numnodes );
@@ -86,7 +86,7 @@ int bsptree_c::in_solid( const Vector3f & v, int root_index ) const
 // ----------------------------------------------------------------------------
 bool bsptree_c::check_segment( cldinfo_s * cinfo,
                                const Vector3f & start, const Vector3f & end,
-                               uint root_index ) const
+                               uint32 root_index ) const
 {
     GN_GUARD_SLOW;
 
@@ -257,7 +257,7 @@ bool bsptree_c::check_segment( cldinfo_s * cinfo,
 bool bsptree_c::check_radial( cldinfo_s * /*cinfo*/,
                               const Vector3f & /*start*/,
                               const Vector3f & /*dir*/,
-                              uint root_index ) const
+                              uint32 root_index ) const
 {
     GN_GUARD_SLOW;
 

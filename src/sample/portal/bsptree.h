@@ -41,7 +41,7 @@ public :
 public :
 
     // initialize from lvlBspNode list
-    void initialize( lvlBspNode * root, uint numnodes );
+    void initialize( lvlBspNode * root, uint32 numnodes );
 
     // check if the point is in solid space of the sector
     //   -1 : solid space
@@ -65,12 +65,12 @@ public :
     };
     bool check_segment( cldinfo_s * cldinfo,
                         const Vector3f & v1, const Vector3f & v2,
-                        uint root_index = 0 ) const;
+                        uint32 root_index = 0 ) const;
 
     // 检查射线start-direction是否与bsp树相交
     bool check_radial( cldinfo_s * cldinfo,
                        const Vector3f & start, const Vector3f & direction,
-                       uint root_index = 0 ) const;
+                       uint32 root_index = 0 ) const;
 
     // get bspnode list
     const bspnode_s * get_node_list() const

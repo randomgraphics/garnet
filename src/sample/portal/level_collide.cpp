@@ -31,7 +31,7 @@ bool level_c::collide_with_radial( collideinfo_s & cinfo,
     }
     else
     {
-        GN_ASSERT( uint(cinfo.sector_id) < m_sectors.size() );
+        GN_ASSERT( uint32(cinfo.sector_id) < m_sectors.size() );
         return m_sectors[cinfo.sector_id].collide_with_radial(
            cinfo, start, end );
     }
@@ -68,7 +68,7 @@ bool level_c::collide_with_segment( collideinfo_s & cinfo,
     }
     else
     {
-        GN_ASSERT( uint(cinfo.sector_id) < m_sectors.size() );
+        GN_ASSERT( uint32(cinfo.sector_id) < m_sectors.size() );
         return m_sectors[cinfo.sector_id].collide_with_segment(
             cinfo, start, end );
     }

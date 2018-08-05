@@ -4,6 +4,8 @@
 # include "math.inl"
 # endif
 
+using namespace GN;
+
 /*****************************************************************************\
                               private functions
 \*****************************************************************************/
@@ -88,7 +90,7 @@ void clip_polygon_with_plane_list( std::vector<Vector3f> & result,
     GN_ASSERT( verts && numvert >= 3 );
     GN_ASSERT( planes && numplane > 0 );
 
-    uint i, j;
+    uint32 i, j;
     Vector3f tmp1[MAX_VERTS];
     Vector3f tmp2[MAX_VERTS];
     const Vector3f * input = verts;

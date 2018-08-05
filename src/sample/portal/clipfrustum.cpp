@@ -12,11 +12,11 @@ void clipfrustum_c::from_projview( const Matrix44f & proj,
 
     // store eye position
     use_near_verts = false;
-    vec4_c tmp;
-    Matrix44f iview = Matrix44f::invert( view );
-    tmp = iview*vec4_c(0,0,0,1);
+    GN::Vector4f tmp;
+    Matrix44f iview = Matrix44f::sInvert( view );
+    tmp = iview*GN::Vector4f(0,0,0,1);
     eye_point     = tmp.to_vec3();
-    tmp = iview * vec4_c( 0,0,-1, 0 );
+    tmp = iview * GN::Vector4f( 0,0,-1, 0 );
     eye_direction.set( tmp.x, tmp.y, tmp.z );
 
     // get inversion of projection and view tranformation
@@ -177,8 +177,8 @@ int clipfrustum_c::check_poly_visibility( const Vector3f * verts,
         for ( i = 0; i < num_planes; ++i, ++p )
         {
             const Vector3f * v = verts;
-            uint counter = 0;
-            for ( uint j = 0; j < numvert; ++j, ++v )
+            uint32 counter = 0;
+            for ( uint32 j = 0; j < numvert; ++j, ++v )
             {
                 if ( 1 == classify(*p, *v) ) ++counter;
             }
@@ -251,7 +251,7 @@ void clipfrustum_c::draw()
     g_im3drender.draw_begin( GNgfx::LINE_LIST, GNgfx::float4_c(1,1,0,1) );
         GN_ASSERT( num_planes >= 5 );
         size_t numvert = num_planes - 2;
-        for ( uint i = 0; i < numvert; ++i )
+        for ( uint32 i = 0; i < numvert; ++i )
         {
             // side planes
             g_im3drender.coord( eye_point );

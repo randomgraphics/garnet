@@ -12,6 +12,7 @@
 
 # include "math.h"
 
+using namespace GN;
 
 #define LVL_FILE_VERSION        100
 
@@ -27,7 +28,7 @@
 template< typename T >
 struct lvlTypeArray
 {
-    uint length;
+    uint32 length;
     T  * data;
 
     bool Write( FILE * fp )
@@ -66,7 +67,7 @@ typedef lvlTypeArray<char> lvlCharArray;
 template< class T>
 struct lvlStructArray
 {
-    uint length;
+    uint32 length;
     T  * data;
 
     bool Write( FILE * fp )
@@ -75,7 +76,7 @@ struct lvlStructArray
 
         fwrite( &length, sizeof(int), 1, fp );
         T * p = data;
-        for ( uint i = 0; i < length; ++p, ++i ) p->Write(fp);
+        for ( uint32 i = 0; i < length; ++p, ++i ) p->Write(fp);
         return true;
 
         GN_UNGUARD;
@@ -87,7 +88,7 @@ struct lvlStructArray
 
         fread( &length, sizeof(int), 1, fp );
         T * p = data = new T[length];
-        for ( uint i = 0; i < length; ++p, ++i ) p->Read(fp);
+        for ( uint32 i = 0; i < length; ++p, ++i ) p->Read(fp);
         return true;
 
         GN_UNGUARD;
@@ -159,7 +160,7 @@ struct lvlHdr
         fread( this, sizeof(lvlHdr), 1, fp );
         if ( LVL_FILE_VERSION != version )
         {
-            GN_ERROR( GN_T("incorrect level version!") );
+            //GN_ERROR(sLogger)("incorrect level version!");
             return false;
         }
         return true;
@@ -175,10 +176,10 @@ struct lvlHdr
 struct lvlPortal
 {
     char                name[64];            //关卡编辑器中的名字，用来与脚本连接
-    uint                frontSectorID;        //portal面对连接的sector
-    uint                backSectorID;        //portal背对连接的sector
+    uint32                frontSectorID;        //portal面对连接的sector
+    uint32                backSectorID;        //portal背对连接的sector
     Plane3f                plane;                //所在平面
-    uint                numVert;            //多边形顶点数量
+    uint32                numVert;            //多边形顶点数量
     Vector3f                *vList;                //多边形顶点列表
     char                scriptName[64];        //脚本文件名
     char                reserve[LVL_FILE_DEFAULT_RESERVE];
@@ -283,15 +284,15 @@ struct lvlFace
 
 struct lvlDrawFace
 {
-    uint                faceId;                //所属的lvlFace的列表id
+    uint32                faceId;                //所属的lvlFace的列表id
 
-    uint                num_vert;            //polygon的顶点数
+    uint32                num_vert;            //polygon的顶点数
 
     Vector3f                *vList;                //顶点列表
 
-    vec2_c                *uvList;            //对应的uv列表
+    GN::Vector2f                *uvList;            //对应的uv列表
 
-    vec2_c                *luvList;            //对应的lightmap的uv列表
+    GN::Vector2f                *luvList;            //对应的lightmap的uv列表
 
     char                reserve[LVL_FILE_DEFAULT_RESERVE];
 
@@ -302,8 +303,8 @@ struct lvlDrawFace
         fwrite( &faceId, sizeof(int), 1, fp );
         fwrite( &num_vert, sizeof(int), 1, fp );
         fwrite( vList, sizeof(Vector3f), num_vert, fp );
-        fwrite( uvList, sizeof(vec2_c), num_vert, fp );
-        fwrite( luvList, sizeof(vec2_c), num_vert, fp );
+        fwrite( uvList, sizeof(GN::Vector2f), num_vert, fp );
+        fwrite( luvList, sizeof(GN::Vector2f), num_vert, fp );
         fwrite( reserve, sizeof(char), LVL_FILE_DEFAULT_RESERVE, fp );
         return true;
 
@@ -316,12 +317,12 @@ struct lvlDrawFace
 
         fread( &faceId, sizeof(int), 1, fp );
         fread( &num_vert, sizeof(int), 1, fp );
-        vList = new Vector3f[num_vert];
-        uvList = new vec2_c[num_vert];
-        luvList = new vec2_c[num_vert];
-        fread( vList, sizeof(Vector3f), num_vert, fp );
-        fread( uvList, sizeof(vec2_c), num_vert, fp );
-        fread( luvList, sizeof(vec2_c), num_vert, fp );
+        vList = new GN::Vector3f[num_vert];
+        uvList = new GN::Vector2f[num_vert];
+        luvList = new GN::Vector2f[num_vert];
+        fread( vList, sizeof(GN::Vector3f), num_vert, fp );
+        fread( uvList, sizeof(GN::Vector2f), num_vert, fp );
+        fread( luvList, sizeof(GN::Vector2f), num_vert, fp );
         fread( reserve, sizeof(char), LVL_FILE_DEFAULT_RESERVE, fp );
         return true;
 
@@ -345,9 +346,9 @@ struct lvlCollideFace
 {
     int                    faceId;                //所属的lvlFace的列表id
 
-    uint                portalId;            //如果faceId为-1，表示此表面源于portal，portalId表示portal id
+    uint32                portalId;            //如果faceId为-1，表示此表面源于portal，portalId表示portal id
 
-    uint                num_vert;            //polygon的顶点数
+    uint32                num_vert;            //polygon的顶点数
 
     Vector3f                *vList;                //顶点列表
 
@@ -396,7 +397,7 @@ struct lvlNonStructFace
 
     unsigned int        texId;                //face的贴图在材质库中的索引，前16位表示class，后16位表示id
 
-    uint                num_vert;            //polygon的顶点数
+    uint32                num_vert;            //polygon的顶点数
 
     Vector3f                *vList;                //顶点列表
 
@@ -423,8 +424,8 @@ struct lvlNonStructFace
         fread( &type, sizeof(int), 1, fp );
         fread( &texId, sizeof(unsigned int), 1, fp );
         fread( &num_vert, sizeof(int), 1, fp );
-        vList = new Vector3f[num_vert];
-        fread( vList, sizeof(Vector3f), num_vert, fp );
+        vList = new GN::Vector3f[num_vert];
+        fread( vList, sizeof(GN::Vector3f), num_vert, fp );
         fread( reserve, sizeof(char), LVL_FILE_DEFAULT_RESERVE, fp );
         return true;
 
@@ -443,9 +444,9 @@ struct lvlBspNode
 {
     Plane3f                plane;                //node的平面
 
-    uint                num_face;            //lvlCollideFace的数量
+    uint32                num_face;            //lvlCollideFace的数量
 
-    uint                *faceId;            //lvlCollideFace的id
+    uint32                *faceId;            //lvlCollideFace的id
 
     int                    parent;                //父节点索引，-1表示根节点
 
@@ -472,7 +473,7 @@ struct lvlBspNode
 
         fread( &plane, sizeof(Plane3f), 1, fp );
         fread( &num_face, sizeof(int), 1, fp );
-        faceId = new uint[num_face];
+        faceId = new uint32[num_face];
         fread( faceId, sizeof(int), num_face, fp );
         fread( &parent, sizeof(int), 1, fp );
         fread( &child, sizeof(int), 2, fp );
@@ -499,15 +500,15 @@ struct lvlCurve
 
     unsigned int        texId;                //face的贴图在材质库中的索引
 
-    uint                numCtrlPtW, numCtrlPtH;//控制点数量
+    uint32                numCtrlPtW, numCtrlPtH;//控制点数量
 
     Vector3f *            ctrlPtList;            //控制点列表，按行排列
 
-    uint                numSampleW, numSampleH;//采样点数量，不是采样率
+    uint32                numSampleW, numSampleH;//采样点数量，不是采样率
 
     Vector3f *            sampleClrList;        //采样点颜色列表，按行排列
 
-    vec2_c *            sampleUVList;        //采样点uv列表，按行排列
+    GN::Vector2f *            sampleUVList;        //采样点uv列表，按行排列
 
     unsigned int        property;            //face light....
 
@@ -531,7 +532,7 @@ struct lvlCurve
         fwrite( &numSampleW, sizeof(int), 1, fp );
         fwrite( &numSampleH, sizeof(int), 1, fp );
         fwrite( sampleClrList, sizeof(Vector3f), numSampleW*numSampleH, fp );
-        fwrite( sampleUVList, sizeof(vec2_c), numSampleW*numSampleH, fp );
+        fwrite( sampleUVList, sizeof(GN::Vector2f), numSampleW*numSampleH, fp );
 
         fwrite( &property, sizeof(int), 1, fp );
         fwrite( &color, sizeof(Vector3f), 1, fp );
@@ -557,9 +558,9 @@ struct lvlCurve
         fread( &numSampleW, sizeof(int), 1, fp );
         fread( &numSampleH, sizeof(int), 1, fp );
         sampleClrList = new Vector3f[numSampleW*numSampleH];
-        sampleUVList = new vec2_c[numSampleW*numSampleH];
+        sampleUVList = new GN::Vector2f[numSampleW*numSampleH];
         fread( sampleClrList, sizeof(Vector3f), numSampleW*numSampleH, fp );
-        fread( sampleUVList, sizeof(vec2_c), numSampleW*numSampleH, fp );
+        fread( sampleUVList, sizeof(GN::Vector2f), numSampleW*numSampleH, fp );
 
         fread( &property, sizeof(int), 1, fp );
         fread( &color, sizeof(Vector3f), 1, fp );
@@ -586,13 +587,13 @@ struct lvlModel
 {
     char                name[64];            //关卡编辑器中的名字，用来与脚本连接
 
-    uint                modelNameId;        //模型文件名列表的id
+    uint32                modelNameId;        //模型文件名列表的id
 
     Vector3f                trans;                //平移
 
     Vector3f                rotate;                //旋转
 
-    uint                num_vert;            //模型的顶点数
+    uint32                num_vert;            //模型的顶点数
 
     Vector3f*            vClrList;            //顶点颜色列表
 
@@ -726,10 +727,10 @@ struct lvlEntity
 {
     //  [9/11/2002]
     //entity type id, defined by game
-    uint                id;
+    uint32                id;
 
     // sector id [9/11/2002]
-    uint                sectorId;
+    uint32                sectorId;
 
     Vector3f                pos;
 
@@ -777,7 +778,7 @@ struct lvlSpace
 {
     int                    type;            //fog, water, user......
 
-    uint                num_plane;        //
+    uint32                num_plane;        //
 
     Plane3f                *planeList;
 
@@ -861,8 +862,8 @@ struct lvlFileStruct
     lvlStructArray<lvlSpace>         spaces;
     lvlStructArray<lvlPortal>        portals;
     lvlStructArray<lvlSector>        sectors;
-    uint                             lmap_num;
-    uint                             lmap_width, lmap_height;
+    uint32                             lmap_num;
+    uint32                             lmap_width, lmap_height;
     std::vector<uint8_t>               lightmaps;
 
     bool Write( FILE * fp );

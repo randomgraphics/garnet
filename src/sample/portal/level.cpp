@@ -39,16 +39,16 @@ bool level_c::init( const char * filename )
     // check parameter
     if ( !filename )
     {
-        GN_ERROR( GN_T("NULL filename!") );
-        quit(); return ISOK();
+        return failure();
+        //GN_ERROR( GN_T("NULL filename!") );
     }
 
     // open file
     FILE * fp = fopen( filename, "rb" );
     if ( !fp )
     {
-        GN_ERROR( GN_formatstr( GN_T("fail to open file %s!"), filename ) );
-        quit(); return ISOK();
+        //GN_ERROR( GN_formatstr( GN_T("fail to open file %s!"), filename ) );
+        return failure();
     }
     autofile_c autofile(fp);
 
@@ -56,13 +56,13 @@ bool level_c::init( const char * filename )
     m_lvlfile = new lvlFileStruct;
     if ( !m_lvlfile->Read( fp ) )
     {
-        GN_ERROR( GN_formatstr( GN_T("fail to read file %s!"), filename ) );
-        quit(); return ISOK();
+        //GN_ERROR( GN_formatstr( GN_T("fail to read file %s!"), filename ) );
+        return failure();
     }
 
     // initiate sector list
     m_sectors.resize( m_lvlfile->sectors.length );
-    for ( uint i = 0; i < m_sectors.size(); ++i )
+    for ( uint32 i = 0; i < m_sectors.size(); ++i )
     {
         m_sectors[i].level = this;
 
@@ -72,7 +72,7 @@ bool level_c::init( const char * filename )
             s.bspNodeList.data, s.bspNodeList.length );
 
         // setup sector portal list
-        uint j, k;
+        uint32 j, k;
         m_sectors[i].portals.resize(
             s.frontPortalIDList.length + s.backPortalIDList.length );
         k = 0;
@@ -92,7 +92,7 @@ bool level_c::init( const char * filename )
     m_visible_sectors.reserve( m_lvlfile->sectors.length );
 
     // success
-    return ISOK();
+    return success();
 
     GN_UNGUARD;
 }
@@ -128,7 +128,7 @@ void level_c::draw( const Matrix44f & proj, const Matrix44f & view )
     g_im3drender.set_effect( g_efflib.find(GN_T("portaldemo_light.gfx")) );
 
     //for ( int i = 0; i < m_lvlfile->sectors.length; ++i )
-    for ( uint i = 0; i < m_visible_sectors.size(); ++i )
+    for ( uint32 i = 0; i < m_visible_sectors.size(); ++i )
     {
         // lvlSector & s = m_lvlfile->sectors.data[i];
         GN_ASSERT( m_visible_sectors[i] < m_lvlfile->sectors.length );
@@ -137,9 +137,9 @@ void level_c::draw( const Matrix44f & proj, const Matrix44f & view )
         // draw all drawfaces
         g_render.set_diffuse( GNgfx::float4_c(0 == (i%3), 1 == (i%3), 2 == (i%3), 0.4f) );
         g_im3drender.draw_begin( GNgfx::TRIANGLE_LIST );
-        for ( uint j = 0; j < s.drawFaceIDList.length; ++j )
+        for ( uint32 j = 0; j < s.drawFaceIDList.length; ++j )
         {
-            uint id = s.drawFaceIDList.data[j];
+            uint32 id = s.drawFaceIDList.data[j];
             GN_ASSERT( id < m_lvlfile->drawfaces.length );
             lvlDrawFace & f = m_lvlfile->drawfaces.data[id];
             GN_ASSERT( f.faceId < m_lvlfile->faces.length );
@@ -147,7 +147,7 @@ void level_c::draw( const Matrix44f & proj, const Matrix44f & view )
 
             // draw one face
             GN_ASSERT( f.num_vert >= 3 );
-            for( uint i = 1; i < f.num_vert-1; ++i )
+            for( uint32 i = 1; i < f.num_vert-1; ++i )
             {
                 g_im3drender.normal( brush.plane.n );
                 g_im3drender.coord( f.vList[0] );
@@ -162,12 +162,12 @@ void level_c::draw( const Matrix44f & proj, const Matrix44f & view )
     g_im3drender.set_effect( g_efflib.find(GN_T("portaldemo_nolight.gfx")) );
     collideinfo_s cinfo;
     cinfo.sector_id = -1;
-    Matrix44f iview = Matrix44f::invert( view );
-    Vector3f start = ( iview * vec4_c(0,0,0,1) ).to_vec3();
-    Vector3f end   = ( iview * vec4_c(0,0,-5000,1) ).to_vec3();
+    Matrix44f iview = Matrix44f::sInvert( view );
+    Vector3f start = ( iview * GN::Vector4f(0,0,0,1) ).to_vec3();
+    Vector3f end   = ( iview * GN::Vector4f(0,0,-5000,1) ).to_vec3();
     if ( collide_with_segment( cinfo, start, end ) )
     {
-        g_im3drender.draw_begin( GNgfx::LINE_LIST, GNgfx::float4_c(1,1,1,1) );
+        g_im3drender.draw_begin( GN::gfx::LINE_LIST, GNgfx::float4_c(1,1,1,1) );
             g_im3drender.coord( start );
             g_im3drender.coord( cinfo.ipoint );
         g_im3drender.draw_end();

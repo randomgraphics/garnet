@@ -25,11 +25,11 @@ struct portal_s
     //   public data members
     // ***********************************
 public :
-    string_c            name;        // 关卡编辑器中的名字，用来与脚本连接
-    uint                sector_to;   // 本portal通向哪个sector
-    Plane3f             plane;       // 所在平面
+    GN::StrA              name;        // 关卡编辑器中的名字，用来与脚本连接
+    uint32                sector_to;   // 本portal通向哪个sector
+    Plane3f               plane;       // 所在平面
     std::vector<Vector3f> verts;       // 多边形顶点列表
-    string_c            script_name; // 脚本文件名
+    GN::StrA              script_name; // 脚本文件名
 
     // ***********************************
     //   public operations

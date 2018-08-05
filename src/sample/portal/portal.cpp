@@ -10,7 +10,7 @@ void portal_s::initialize( const lvlPortal & p, bool is_back_portal )
     {
         sector_to = p.frontSectorID;
         plane     = -p.plane;
-        for ( uint i = 0; i < p.numVert; ++i )
+        for ( uint32 i = 0; i < p.numVert; ++i )
         {
             verts[p.numVert-1-i] = p.vList[i];
         }
@@ -19,7 +19,7 @@ void portal_s::initialize( const lvlPortal & p, bool is_back_portal )
     {
         sector_to = p.backSectorID;
         plane     = p.plane;
-        for ( uint i = 0; i < p.numVert; ++i )
+        for ( uint32 i = 0; i < p.numVert; ++i )
         {
             verts[i] = p.vList[i];
         }

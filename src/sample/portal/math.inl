@@ -58,7 +58,7 @@ inline bool intersection_plane_ray( Vector3f & ipoint,
                                        const Vector3f & direction )
 {
     float ds    = plane * start;
-    float dd    = Vector3f::dot( -plane.n, direction);
+    float dd    = Vector3f::sDot( -plane.n, direction);
 
     // check if start is on the plane
     if ( -PLANE_HALF_THICKNESS < ds && ds < PLANE_HALF_THICKNESS )
@@ -87,7 +87,7 @@ inline bool intersection_plane_ray( Vector3f & ipoint,
                                        const Vector3f & direction )
 {
     float ds    = plane * start;
-    float dd    = Vector3f::dot( -plane.n, direction );
+    float dd    = Vector3f::sDot( -plane.n, direction );
 
     // check if start is on the plane
     if ( -PLANE_HALF_THICKNESS < ds && ds < PLANE_HALF_THICKNESS )
@@ -115,7 +115,7 @@ inline bool intersection_plane_line( Vector3f & ipoint,
                                         const Vector3f & dir )
 {
     float ds    = plane * point;
-    float dd    = Vector3f::dot( -plane.n, dir );
+    float dd    = Vector3f::sDot( -plane.n, dir );
 
     // check parallel
     if ( 0.0f == dd ) return false;

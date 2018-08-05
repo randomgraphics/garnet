@@ -24,9 +24,9 @@
 //
 struct collideinfo_s
 {
-    int     sector_id; // which sector intersected point at.
-    Vector3f  ipoint;    // intersection point.
-    Plane3f iplane;    // intersection plane.
+    int      sector_id; // which sector intersected point at.
+    Vector3f ipoint;    // intersection point.
+    Plane3f  iplane;    // intersection plane.
 };
 
 //
@@ -39,9 +39,9 @@ class  camera_c;
 class  clipfrustum_c;
 struct lvlFileStruct;
 struct lvlBspNode;
-class level_c : public stdclass_c
+class level_c : public StdClass
 {
-    GN_DECLARE_STDCLASS( level_c, stdclass_c )
+    GN_DECLARE_STDCLASS( level_c, StdClass )
 
     // ********************************
     //    local type definitions
@@ -61,7 +61,6 @@ public:
 public:
     bool init( const char * filename );
     void quit();
-    bool isok() const { return myparent_c::isok(); }
 private:
     void clear()
     {
@@ -108,7 +107,7 @@ private:
     sector_list_c m_sectors;
 
     // visible sector list
-    std::vector<uint> m_visible_sectors;
+    std::vector<uint32> m_visible_sectors;
 
     // ********************************
     //         Private functions
@@ -120,10 +119,10 @@ private:
                          const Matrix44f & view );
 
     // recursive check visiblity of all sectors
-    void check_sector( uint sector_id, clipfrustum_c & );
+    void check_sector( uint32 sector_id, clipfrustum_c & );
 
     // 在一个section中用BSP树检查多边形在view-frustum中的可见性
-    bool bsptree_check_poly( uint sector_id,
+    bool bsptree_check_poly( uint32 sector_id,
                              const clipfrustum_c & cf,
                              const Vector3f * vlist, size_t numvert );
 };
