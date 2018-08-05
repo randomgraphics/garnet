@@ -2,76 +2,7 @@
 # ======================================
 # detect garnet root directory
 # ======================================
-GARNET_ROOT=$(cd $(dirname $(pwd)/${BASH_SOURCE[0]})/..; pwd)
-
-# ===========================
-# setup default build variants
-# ===========================
-if [ ${OSTYPE} = "cygwin" ] ; then
-    GN_BUILD_TARGET_OS=cygwin
-    GN_BUILD_TARGET_CPU=x86
-    GN_BUILD_COMPILER=mingw
-elif [ ${OSTYPE:0:6} = "darwin" ] ; then
-     GN_BUILD_TARGET_OS=darwin
-     GN_BUILD_TARGET_CPU=x64
-    GN_BUILD_COMPILER=clang
-else
-    GN_BUILD_TARGET_OS=posix
-    GN_BUILD_TARGET_CPU=x64
-    GN_BUILD_COMPILER=gcc
-fi
-GN_BUILD_VARIANT=retail
-GN_BUILD_STATIC_LINK=1
-
-# ======================================
-# parse command line arguments
-# ======================================
-while [[ $# -gt 0 ]]
-do
-    case "$1" in
-    debug)
-        GN_BUILD_VARIANT=debug
-        shift
-        ;;
-    retail)
-        GN_BUILD_VARIANT=retail
-        shift
-        ;;
-    x86)
-        GN_BUILD_TARGET_OS=x86
-        shift
-        ;;
-    x64)
-        GN_BUILD_TARGET_OS=x64
-        shift
-        ;;
-    *) # default
-        ;;
-    esac
-done
-
-# ===========================
-# export build variants
-# ===========================
-GN_BUILD_TAG=${GN_BUILD_TARGET_OS}.${GN_BUILD_TARGET_CPU}.${GN_BUILD_COMPILER}.${GN_BUILD_VARIANT}
-GN_BUILD_DIR=${GARNET_ROOT}/build.tmp/${GN_BUILD_TAG}
-export GN_BUILD_TARGET_OS
-export GN_BUILD_TARGET_CPU
-export GN_BUILD_COMPILER
-export GN_BUILD_VARIANT
-export GN_BUILD_STATIC_LINK
-export GN_BUILD_TAG
-export GN_BUILD_DIR
-
-# ===========
-# setup scons
-# ===========
-SCONS_ROOT=${GARNET_ROOT}/env/scons/3.0.0
-SCONS_LIB_DIR=${SCONS_ROOT}/engine
-export SCONS_ROOT
-export PATH SCONS_LIB_DIR
-export SCONSFLAGS=-U
-echo SCons Directory: ${SCONS_ROOT}
+export GARNET_ROOT=$(cd $(dirname $(pwd)/${BASH_SOURCE[0]})/..; pwd)
 
 # ===========
 # setup alias
@@ -120,9 +51,3 @@ cd ${GARNET_ROOT}
 # ================================================
 echo USERNAME             = $USER
 echo GARNET_ROOT          = $GARNET_ROOT
-echo GN_BUILD_COMPILER    = $GN_BUILD_COMPILER
-echo GN_BUILD_VARIANT     = $GN_BUILD_VARIANT
-echo GN_BUILD_TARGET_OS   = $GN_BUILD_TARGET_OS
-echo GN_BUILD_TARGET_CPU  = $GN_BUILD_TARGET_CPU
-echo GN_BUILD_STATIC_LINK = $GN_BUILD_STATIC_LINK
-echo GN_BUILD_DIR         = $GN_BUILD_DIR

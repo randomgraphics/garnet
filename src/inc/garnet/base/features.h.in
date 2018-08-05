@@ -1,0 +1,29 @@
+// ****************************************************
+//
+// Defines features that garnet library was built with.
+//
+// ****************************************************
+
+// Garnet is build with debug code enabled.
+#cmakedefine01 GN_BUILD_DEBUG_ENABLED
+
+// Garnet is build with profiling code enabled.
+#cmakedefine01 GN_BUILD_PROFILING_ENABLED
+
+// Garnet is build as static or dynamic libraries.
+#cmakedefine01 GN_BUILD_IS_STATIC
+
+// Garnet is build with OpenGL enabled
+#cmakedefine01 GN_BUILD_HAS_OGL
+
+// Garnet is build with D3D9 enabled
+#cmakedefine01 GN_BUILD_HAS_D3D9
+
+// Garnet is build with D3D11.0 enabled
+#cmakedefine01 GN_BUILD_HAS_D3D11
+
+// Garnet is build with D3D11.1 enabled
+#cmakedefine01 GN_BUILD_HAS_D3D11_1
+
+// Has xnamath.h (legacy flag for Xbox only)
+#cmakedefine01 GN_BUILD_HAS_XNAMATH

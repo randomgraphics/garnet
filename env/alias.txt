@@ -1,7 +1,6 @@
-b           "scons $*"
 g           "git $*"
 gnroot      "cd /d %GARNET_ROOT%\$*"
-gnbld       "cd /d %GARNET_ROOT%\build.tmp\%GN_BUILD_TARGET_OS%.%GN_BUILD_TARGET_CPU%.%GN_BUILD_COMPILER%.%GN_BUILD_VARIANT%\bin\$*"
+gnbld       "cd /d %GARNET_ROOT%\%GN_BUILD_DIR%\$*"
 gnsdk       "cd /d %GARNET_ROOT%\build.bin\sdk\$*"
 gnenv       "cd /d %GARNET_ROOT%\env\$*"
 gnmsvc      "cd /d %GARNET_ROOT%\msvc\$*"

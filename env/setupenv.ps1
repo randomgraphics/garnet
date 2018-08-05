@@ -77,12 +77,10 @@ elseif( "ia64" -ieq $env:PROCESSOR_ARCHITECTURE )
 # ==============================================================================
 
 # setup default build variants
-$env:GN_BUILD_COMPILER="vc"
-$env:GN_BUILD_VARIANT="debug"
-$env:GN_BUILD_TARGET_OS="mswin"
+$env:GN_BUILD_CMAKE_GENERATOR=""
 $env:GN_BUILD_TARGET_CPU=$current_cpu
 
-# TODO: Parse command line (modify build variant according to command line)
+# Parse command line
 foreach( $a in $args )
 {
     if( ("/h" -eq $a ) -or
@@ -93,31 +91,17 @@ foreach( $a in $args )
     {
         $name = $MyInvocation.InvocationName | split-path -leaf
 
-        "Usage: $name [/h|/?] [vc|icl|mingw] [x86|x64] [debug|profile|retail]"
+        "Usage: $name [/h|/?] [ninja] [x86|x64]"
     }
 
-    elseif( ("vc" -eq $a) -or ("icl" -eq $a) )
+    elseif( "ninja" -eq $a )
     {
-        $env:GN_BUILD_COMPILER = $a
+        $env:GN_BUILD_CMAKE_GENERATOR = "Ninja"
     }
 
     elseif( ("x86" -eq $a) -or ("x64" -eq $a) )
     {
         $env:GN_BUILD_TARGET_CPU = $a
-    }
-
-    elseif( ("debug" -eq $a) -or
-            ("profile" -eq $a) -or
-            ("retail" -eq $a) )
-    {
-        $env:GN_BUILD_VARIANT = $a
-    }
-
-    elseif( ("durango" -eq $a) -or ("xbox3" -eq $a) )
-    {
-        $env:GN_BUILD_COMPILER = "vc"
-        $env:GN_BUILD_TARGET_OS = "xbox3"
-        $env:GN_BUILD_TARGET_CPU = "x64"
     }
 
     else
@@ -126,12 +110,21 @@ foreach( $a in $args )
     }
 }
 
+if ( "" -eq "$env:GN_BUILD_CMAKE_GENERATOR" )
+{
+    $env:GN_BUILD_DIR="build.tmp\msbuild.$env:GN_BUILD_TARGET_CPU"
+}
+else
+{
+    $env:GN_BUILD_DIR="build.tmp\$env:GN_BUILD_CMAKE_GENERATOR.$env:GN_BUILD_TARGET_CPU"
+}
+
 # ==============================================================================
 # setup Visual Studio environment
 # ==============================================================================
 
-# skip VS setup on Xbox One platform.
-if( ("vc" -eq $env:GN_BUILD_COMPILER) -and ("xbox3" -ne $env:GN_BUILD_TARGET_OS) )
+# Setup VS environment only when generating ninja build.
+if( "Ninja" -eq $env:GN_BUILD_CMAKE_GENERATOR )
 {
     ""
     "====================================="
@@ -141,39 +134,19 @@ if( ("vc" -eq $env:GN_BUILD_COMPILER) -and ("xbox3" -ne $env:GN_BUILD_TARGET_OS)
 
     # locate vsvarall.bat
     $vcvarbat=$false
-    if( test-path "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvarsall.bat" )
+    if( test-path "C:\Program Files (x86)\Microsoft Visual Studio\2017\Professional\VC\Auxiliary\Build\vcvarsall.bat" )
+    {
+        $vcvarbat="C:\Program Files (x86)\Microsoft Visual Studio\2017\Professional\VC\Auxiliary\Build\vcvarsall.bat"
+        $env:GN_BUILD_COMPILER="vc150";
+    }
+    elseif( test-path "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvarsall.bat" )
     {
         $vcvarbat="C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvarsall.bat"
         $env:GN_BUILD_COMPILER="vc150";
     }
-    elseif( $env:VS140COMNTOOLS -and ( test-path $env:VS140COMNTOOLS ) )
-    {
-        $vcvarbat="$env:VS140COMNTOOLS..\..\VC\vcvarsall.bat"
-        $env:GN_BUILD_COMPILER="vc140";
-    }
-    elseif( $env:VS120COMNTOOLS -and ( test-path $env:VS120COMNTOOLS ) )
-    {
-        $vcvarbat="$env:VS120COMNTOOLS..\..\VC\vcvarsall.bat"
-        $env:GN_BUILD_COMPILER="vc120";
-    }
-    elseif( $env:VS110COMNTOOLS -and ( test-path $env:VS110COMNTOOLS ) )
-    {
-        $vcvarbat="$env:VS110COMNTOOLS..\..\VC\vcvarsall.bat"
-        $env:GN_BUILD_COMPILER="vc110";
-    }
-    elseif( $env:VS100COMNTOOLS -and ( test-path $env:VS100COMNTOOLS ) )
-    {
-        $vcvarbat="$env:VS100COMNTOOLS..\..\VC\vcvarsall.bat"
-        $env:GN_BUILD_COMPILER="vc100";
-    }
-    elseif( $env:VS90COMNTOOLS -and ( test-path $env:VS90COMNTOOLS ) )
-    {
-        $vcvarbat="$env:VS90COMNTOOLS..\..\VC\vcvarsall.bat"
-        $env:GN_BUILD_COMPILER="vc90";
-    }
     else
     {
-        error "VS110COMNTOOLS\VS100COMNTOOLS\VS90COMNTOOLS not found. Please install VS2012\2010\2008"
+        error "Visual Studio 2017 Community/Professional is required."
     }
 
     # run vsvarall.bat, catch all environments
@@ -224,6 +197,8 @@ if( ("vc" -eq $env:GN_BUILD_COMPILER) -and ("xbox3" -ne $env:GN_BUILD_TARGET_OS)
         error "File $vcvarbat not found."
     }
 }
+
+<# not needed for cmake to work
 
 # ==============================================================================
 # setup Intel C++ Compiler environment
@@ -457,6 +432,7 @@ $env:SCONSFLAGS="-U"
 
 "SCons Directory : $SCONS_DIR"
 
+#>
 
 # ==============================================================================
 # setup aliases
@@ -499,11 +475,8 @@ if( "x64" -eq $current_cpu )
 }
 $env:Path = "$GARNET_ROOT\env\bin\mswin\cmd;$MY_BIN_PATH;$env:Path"
 
-$env:GN_BUILD_TAG = "$env:GN_BUILD_TARGET_OS.$env:GN_BUILD_TARGET_CPU.$env:GN_BUILD_COMPILER.$env:GN_BUILD_VARIANT"
-$env:GN_BUILD_DIR = "$GARNET_ROOT\build.tmp\$env:GN_BUILD_TAG"
-
 # update title
-$Host.UI.RawUI.WindowTitle = "garnet3d ( $GARNET_ROOT $env:GN_BUILD_TAG )"
+$Host.UI.RawUI.WindowTitle = "garnet3d ( $GARNET_ROOT )"
 
 # change current location
 set-location $GARNET_ROOT
@@ -525,11 +498,9 @@ write-host -ForegroundColor green "
 ================================================
 Garnet build environment setup done successfully
 ================================================
-USERNAME            = $env:USERNAME
-GARNET_ROOT         = $GARNET_ROOT
-GN_BUILD_COMPILER   = $env:GN_BUILD_COMPILER
-GN_BUILD_VARIANT    = $env:GN_BUILD_VARIANT
-GN_BUILD_TARGET_OS  = $env:GN_BUILD_TARGET_OS
-GN_BUILD_TARGET_CPU = $env:GN_BUILD_TARGET_CPU
-GN_BUILD_DIR        = $env:GN_BUILD_DIR
+USERNAME                 = $env:USERNAME
+GARNET_ROOT              = $env:GARNET_ROOT
+GN_BUILD_CMAKE_GENERATOR = $env:GN_BUILD_CMAKE_GENERATOR
+GN_BUILD_TARGET_CPU      = $env:GN_BUILD_TARGET_CPU
+GN_BUILD_DIR             = $env:GN_BUILD_DIR
 "

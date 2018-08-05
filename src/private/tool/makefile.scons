@@ -1,3 +1,0 @@
-Import( 'GN' )
-SConscript( ['d3dhook/makefile.scons'] )
-SConscript( 'meshViewer/makefile.scons' )

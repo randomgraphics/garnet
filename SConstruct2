@@ -212,9 +212,9 @@ def UTIL_new_env_ex( conf ):
                                 ];
     libpath['common']     += ['#src/contrib/lib/' + BUILD_TARGET_OS + '.' + BUILD_TARGET_CPU]
     cppdefines['common']  += ['UNICODE', '_UNICODE']
-    cppdefines['debug']   += ['GN_ENABLE_DEBUG=1', 'GN_ENABLE_PROFILING=1', '_DEBUG']
-    cppdefines['profile'] += ['GN_ENABLE_DEBUG=0', 'GN_ENABLE_PROFILING=1', 'NDEBUG']
-    cppdefines['retail']  += ['GN_ENABLE_DEBUG=0', 'GN_ENABLE_PROFILING=0', 'NDEBUG']
+    cppdefines['debug']   += ['_DEBUG']
+    cppdefines['profile'] += ['NDEBUG']
+    cppdefines['retail']  += ['NDEBUG']
 
     # Setup FBX options
     if (not isConfigEnv) and conf['has_fbx']:

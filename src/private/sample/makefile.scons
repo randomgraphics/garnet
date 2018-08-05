@@ -1,7 +1,0 @@
-SConscript( [
-#	'bezier',
-	'dolphin/makefile.scons',
-	'ripple/makefile.scons',
-	'renderToCube/makefile.scons',
-	'thickline/makefile.scons',
-	] )

@@ -1,0 +1,241 @@
+﻿TODO
+====
+
+- 程序中标注TODO的地方
+
+- p0
+  - fix crashes:
+    - bin\debug\GNtoolMeshViewer.exe ..\src\private\media\model\R.F.R01\a01.ase
+  - reorg folder structure:
+    - rename contrib to 3rdparty
+	- remove private
+  - folder jump command for easy jumping to both source and build folder:
+    - js core: jump to GNcore source folder
+	- jb core: jump to GNcore build folder
+  - port thick line sample to use GN::gfx::ThickLineRenderer
+  - port useful stuffs from old garnet library (0.7.0a):
+    - gui system
+    - bump demo
+    - portal demo
+    - application task scheduler.
+  - disalbe render window "close" button.
+  - upgrade assimp
+  - constant/uniform buffer object for opengl.
+  - D3D12 friendly resource binding:
+  - thread safe weak ref object.
+  - massive 3D scene explorer.
+    - importer/exporter
+    - scene graph / spacial organization.
+    - shader library
+  - scene import/export
+    - fatmodel XML/BIN loader and saver.
+    - load skeleton animation from FBX.
+    - Import large scale game scene
+  - spacial organization:
+    - octree
+    - volumn hierarchy
+    - bsp
+    - pvs
+    - portal
+    - view frustum culling
+  - more entities
+    - terrain
+    - tree
+    - grass
+    - particle system
+    - light and shadow
+    - multi-camera support
+  - Shader Library
+    - DLL or resource file that defines common shaders.
+    - Compiled from effect files.
+    - Precompile GPU shaders when possible to catch compile errors at build time.
+    - Generated from shader components
+
+- p1
+  - anti-alias demo.
+  - thread and sync objects unit tests.
+  - update skinned mesh bounding box with animation
+  - unit test:
+    - DynaArray<???,uint8>
+  - New Engine module entity class
+    - loop through all entities
+    - loop through entities of specific type
+    - loop through entities that are referenced by another entity
+  - Compositable shader component:
+    - What about existing shader authoring tool?
+      - there's no tools that is simply good enough.
+        - RenderMonkey has dead for a long time.
+        - FxCompose is too FX centric. It does not support GLSL.
+    - It is a standalone offline toolset that generates EffectDescriptor or XML file.
+    - It is not meant for runtime use.
+    - features
+      - optional shader parameter
+    - example:
+      - diffuse light shader:
+        - input: position, normal, color(optional)
+        - output: color
+      - skinning shader:
+        - input: position, normal(optional), binormal(optional), skinning(bones+weights)
+        - output: position, normal(optional), binormal(optional)
+      - texturing:
+        - input texcoord, color(optional)
+        - output: color
+      - final shader = diffuse shader + skinning shader + texturing shader.
+    - See if there's existing (open source) code
+  - Cuda or OpenCL integration
+  - runtime tweakable parameters: client/server communication
+    - basic features:
+      - NOT for fast changing variables.
+      - numeric types: float, integer, enumeration, boolean
+        - application defined range or value set
+      - geometric types: vec2, vec3, vec4, mat4x4, mat3x3
+      - dual way variable changing notification
+      - compile time switch to remove tweakable code entirely
+      - separate client (tuner) and server (variables)
+  - replace STL containers:
+  	- deque, list, set
+  - Fix Feb 2011 Cg issues:
+	- GNsampleDolphin crashes with D3D11 gpu.
+    - D3D resource leak in GNtestEngine and GNsampleDolphin
+  - Special "use current" tag in GpuContext for color and depth render target.
+  - Optimized vector and matrix library using SIMD instructions. (simd.h)
+  - Unit test for the CommandBuffer class.
+  - New build system:
+    - based on GNU make.
+    - refine SCons script
+    - avoid using /Yd in build script for cl.exe
+  - Runtime option managers that could be modified by:
+    - Environment variable
+    - Registry
+    - Config file
+    - Command line arguments
+  - Scene framework:
+    - add light entity to SimpleWorldDesc
+    - experiment with scene framework that supports ultra large world
+      - spatial management
+      - resource streaming
+  - A coordinate basis renderer (like Maya)
+  - Renderer unit test framework
+  - Enable ETW in profiler
+  - GPU resouce aliasing
+  - runtime call-stack dump
+  - in game GUI:
+  - replace FBX test app with something else (not owned by Autodesk).
+
+- Backlog
+  - add json support
+  - Code tree reorg
+    - Flatten code tree
+    - Try Re-enable "non-static" build
+  - Use Windows font engine (Direct2D?)
+  - refine PCH builder to generate PCH out of "pch.h" directly, instead of from "pch.cpp".
+    so that the PCH builder works the same way in gcc and vstudio.
+  - Refine uniform loading from XML
+  - A half-edge mesh for complex mesh algorithm
+  - DDS viewer plugin
+  	- don't write full viewer from scratch.
+  	- just provide a plugin for existing picture viewers like acdsee or something.
+  - PCXS2 GPU plugin:
+    - move operations to GPU as much as possible
+    - model beautifier
+      - add bump map and tessellation to PS2 model if possible.
+      - implement a CPU based prototype first.
+  - sigslot class:
+    - allow any type of functor
+    - check behavior of redundant slot functors.
+  - refine Delegate performance: avoid virtual functions
+  - memory-mapped IO.
+  - A boost style smart pointer template that do not require inheritence form
+    GN::RefCounter.
+  - Custom sscanf(...)
+  - cross-platform window util functions:
+    - set window title
+    - change window size
+    - ...
+    - use wxWidgets?
+  - make sure OGL resource creation/deletion do not affect renderer states
+    - depends on OGL renderer state dumper
+  - script layer
+  - network layer
+  - multi-window rendering
+  - image format conversion
+  - a ray tracer (for self-learning purpose)
+
+RESOLVE ISSUES
+==============
+
+- FontFace unit should be integer or float?
+  - RESOLVED: float.
+  - Keep it float in case for 3D texture rendering.
+  - For 2D rendering, the renderer could round the float to integer.
+
+- Capital function name or not?
+  - RESOLVED: No. Function/Method name starts with lower case character.
+  - pros:
+    - function/method name is never same as type name: Gpu & gpu()
+    - won't conflict with Windows API macro like CreateFile.
+  - cons: more renaming works when porting other codes into garnet library.
+
+- Could mesh be a first class parameter of GPU, like texture?
+  - RESOLVED: No, since that would make resource aliasing very hard, if not impossible.
+
+- Unified interface for different APIs is too difficult, and maybe pointless.
+  How about a higher level abstraction: material/effect system?
+  - RESOLVED: we need both
+    - They stay at different levels and serve for different purposes.
+      - Unified API is easy for prototyping, and simplify tasks like clearing
+        screen, presenting, switching display mode, handling device lost.
+      - Material/effect system is required to build complex rendering framework.
+        It could be built upon unified API, or not.
+
+- Custom string class or std::string?
+  - RESOLVED: custom string class.
+  - WHY?
+    - std::string can't accept NULL pointer as valid input.
+    - std::char_trait<wchar_t> is not well supported on cygwin.
+
+- TinyXml, RapidXml or Expat?
+  - RESOLVED: expat.
+  	- TinyXml is too slow.
+    - RapidXml does not support encoding right. It always read text as single
+      byte char*, which means it might confuse the second byte of a multi-byte
+      character with a ascii character.
+    - Custom DOM wrapper fits our requirement better, and is pretty easy to implement.
+
+- What file format should we support:
+  - RESOLVED: FBX, COLLADA and garnet native format.
+    - FBX
+      - binary format get loaded fast.
+      - free SDK.
+      - but, no xbox support
+    - COLLADA:
+      - need to get a good loader for that.
+      - format is open, which mean it could be supported on all platforms.
+      - but, ascii format get loaded slowly.
+    - ASE
+      - does not support skeleton animation. It can't be imported back to 3ds max.
+    - ma (maya ascii):
+      - need to write my own loader.
+    - assimp:
+      - promising candidate. Investe more.
+
+- Do we need to separate shading language enum and shader model enum?
+  - RESOLVED: Yes.
+    - One shading language, like Cg, could be compiled into multiple shader models; and vice versa.
+    - Shader model enum is used to determine the GPU hardware caps.
+    - Shading language enum is used to choose the shader compiler.
+
+OPEN ISSUES
+===========
+
+- Embbed buffer for short string?
+
+- Possible engine module features:
+  - build visual component by combining several existing visual components.
+  - entity embeded in another entity.
+
+DROPPED TASKS
+=============
+- runtime configuable profilers, like loggers
+  - WHY: profiler has to be light-weight and fast. Logger style configuration
+         is too heavy.
