@@ -486,7 +486,7 @@ struct App {
         };
         VkPipelineDynamicStateCreateInfo dynamicState = {
             VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO, nullptr, 0,
-            countof(dynamicStates),
+            (uint32_t)countof(dynamicStates),
             dynamicStates,
         };
 
