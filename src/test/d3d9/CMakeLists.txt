@@ -1,5 +1,0 @@
-if (D3D9_FOUND)
-    GN_setup_pch(main.cpp PCH_SOURCE pch.cpp)
-    add_executable(GNtestD3D9 main.cpp pch.cpp pch.h)
-    target_link_libraries(GNtestD3D9 GNcore)
-endif()
