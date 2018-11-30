@@ -44,7 +44,7 @@ function global:ccc { cmd.exe /c $args }
 # redefine prompt function
 function global:prompt()
 {
-	write-host -ForegroundColor Magenta "=== GARNET $env:GN_BUILD_COMPILER-$env:GN_BUILD_TARGET_OS-$env:GN_BUILD_TARGET_CPU $env:GN_BUILD_VARIANT ===="
+	write-host -ForegroundColor Magenta "=== GARNET ===="
 	write-host -ForegroundColor Magenta "[$(get-location)]"
 	return ">"
 }
