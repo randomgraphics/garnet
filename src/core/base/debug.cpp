@@ -114,6 +114,18 @@ GN::internal::handleAssertFailure(
 //
 //
 // -----------------------------------------------------------------------------
+GN_API bool GN::isDebuggerAttached()
+{
+#if GN_MSWIN
+    return ::IsDebuggerPresent();
+#else
+    return false;
+#endif
+}
+
+//
+//
+// -----------------------------------------------------------------------------
 GN_API void GN::breakIntoDebugger()
 {
 #if GN_MSVC

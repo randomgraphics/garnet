@@ -629,6 +629,9 @@ public:
         if (!gnroot.empty()) {
             addRoot(str::format("native::%s/media", gnroot.rawptr()));
         }
+        else {
+            addRoot("app::../../../../media");
+        }
     }
 };
 

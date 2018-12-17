@@ -263,10 +263,15 @@ namespace GN
         AssertFailuerUserRoutine * oldRoutine = NULL,
         void                    ** oldUserContext = NULL );
 
-	///
-	/// Debug break function
-	///
-	GN_API void breakIntoDebugger();
+    ///
+    /// check if there's debugger attached to current process.
+    ///
+    GN_API bool isDebuggerAttached();
+
+    ///
+    /// Debug break function
+    ///
+    GN_API void breakIntoDebugger();
 
     ///
     /// Print to debugger
