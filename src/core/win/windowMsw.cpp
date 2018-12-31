@@ -129,8 +129,6 @@ void GN::win::WindowMsw::quit()
     // delete hook
     if( mHook ) ::UnhookWindowsHookEx( mHook ), mHook = 0;
 
-     ::DestroyWindow( mWindow );
-
     // destroy window
     if( ::IsWindow( mWindow ) )
     {
