@@ -2,7 +2,9 @@
 # ======================================
 # detect garnet root directory
 # ======================================
-export GARNET_ROOT=$(cd $(dirname $(pwd)/${BASH_SOURCE[0]})/..; pwd)
+export GARNET_ROOT=$(cd $(dirname $(realpath ${BASH_SOURCE[0]}))/..; pwd)
+
+export GN_BUILD_DIR=build.tmp/linux.x64
 
 # ===========
 # setup alias
@@ -38,7 +40,7 @@ PATH=${GARNET_ROOT}/env/bin/bash:${PATH}
 # End of setup
 # ============
 
-cd ${GARNET_ROOT}
+#cd ${GARNET_ROOT}
 
 # =========================
 # Call user specific script
