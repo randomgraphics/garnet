@@ -1,4 +1,4 @@
-#ifndef __GN_BASE_BASICDEFINES_H__
+﻿#ifndef __GN_BASE_BASICDEFINES_H__
 #define __GN_BASE_BASICDEFINES_H__
 // *****************************************************************************
 /// \file
