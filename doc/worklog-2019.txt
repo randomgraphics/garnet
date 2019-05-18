@@ -1,0 +1,6 @@
+- 2019.05.18
+  - Added Eigen to code base as 3rd party SIMD vector math library: 
+    - Candidates: DirectXMath, Eigen, GLM.
+    - DirectXMath is the fastest one. But it is Windows only.
+    - Eigen is the second best speed wise (1:4 comparing with DirectXMath).
+    - GLM is the slowest among these 3 libraries: about 1:8 of DirectXMath.
