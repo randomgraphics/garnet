@@ -1,3 +1,5 @@
+#include <vector>
+
 namespace GN
 {
 ///
@@ -7,6 +9,37 @@ namespace gfx
 {
     struct Gpu2 : public RefCounter
     {
+        //@{
+        enum class GraphicsAPI
+        {
+            AUTO,
+            D3D12,
+            VULKAN,
+        };
+        struct CreationParameters
+        {
+            //Window *    window;
+            GraphicsAPI api;
+            uint32_t    width, height; // back buffer size. set to 0 to use window size.
+            bool        fullscreen;
+        };
+        AutoRef<Gpu2> createGpu2(const CreationParameters &);
+        //@}
+
+        /// GPU pipeline
+        //@{
+        struct PipelineCreationParameters
+        {
+            const uint8_t * compiledGpuProgramBinary;
+            uint64_t        compiledGpuProgramSizeInBytes;
+            const char * states; // pipeline state defined in JSON format.
+        };
+        struct Pipeline : public RefCounter
+        {
+        };
+        virtual std::vector<Pipeline> createPipelineObjects(const PipelineCreationParameters *, size_t) = 0;
+        //@}
+
         /// GPU command list
         //@{
         struct CopyParameters
@@ -18,11 +51,11 @@ namespace gfx
         };
         struct DrawParameters
         {
-            const GpuPipeline * pipeline;
-            uint32_t            indexcount;
-            uint32_t            basevertex;
-            uint32_t            baseindex;
-            uint32_t            primitive;
+            const Pipeline * pipeline;
+            uint32_t         indexcount;
+            uint32_t         basevertex;
+            uint32_t         baseindex;
+            uint32_t         primitive;
         };
         struct CommandListCreationParameters
         {
@@ -102,20 +135,6 @@ namespace gfx
         virtual AutoRef<Resource> createResource(const ResourceCreationParameters &) = 0;
         //@}
 
-        /// GPU pipeline
-        //@{
-        struct PipelineCreationParameters
-        {
-            const uint8_t * compiledGpuProgramBinary;
-            uint64_t        compiledGpuProgramSizeInBytes;
-            const char *    states; // render states defined in json format.
-        };
-        struct Pipeline : public RefCounter
-        {
-        };
-        virtual AutoRef<GpuPipeline> createPipeline(const GpuPipelineCreationParameters &) = 0;
-        //@}
-
         //@{
         struct QueryCreationParameters
         {
@@ -132,13 +151,14 @@ namespace gfx
         {
 
         };
-        virtual void                 present(const PresentParameters &) = 0;
+        virtual void present(const PresentParameters &) = 0;
         //@}
 
-        virtual void                 wait(uint64_t fence) = 0; ///< block caller thread until the fence completes.
-        virtual bool                 testFence(uint64_t fence) = 0;
+        /// misc
+        //@{
+        virtual void wait(uint64_t fence) = 0; ///< block caller thread until the fence completes.
+        virtual bool testFence(uint64_t fence) = 0;
+        //}
     };
-
-    AutoRef<Gpu2> createGpu2(...);
 } // end of namespace gfx
 } // end of namespace GN

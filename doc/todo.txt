@@ -1,7 +1,13 @@
 ﻿TODO
 ====
 
-- 程序中标注TODO的地方
+- create a real time rendering system
+  - Using new gpu2 interface
+
+
+# ============================================================
+# The following are achieved TODO list from long long time ago
+# ============================================================
 
 - p0
   - fix crashes:

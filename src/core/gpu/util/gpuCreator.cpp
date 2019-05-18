@@ -10,10 +10,6 @@ using namespace GN::gfx;
 
 static GN::Logger * sLogger = GN::getLogger("GN.gfx.util.gpu");
 
-#define D3D_GPU_API     GpuAPI::D3D11
-#define D3D_GPU_NAME    "D3D11"
-#define DEFAULT_GPU_API GpuAPI::OGL;
-
 // ***********************************************************************
 // Public functions
 // ***********************************************************************
@@ -32,13 +28,24 @@ GN_API Gpu * GN::gfx::createOGLGpu( const GpuOptions &, uint32 )
 //
 //
 // -------------------------------------------------------------------------
-#if !GN_BUILD_HAS_D3D11 && !GN_XBOX2
+#if !GN_BUILD_HAS_D3D11
 GN_API Gpu * GN::gfx::createD3DGpu( const GpuOptions &, uint32 )
 {
-    GN_ERROR(sLogger)( D3D_GPU_NAME " renderer is not available." );
+    GN_ERROR(sLogger)( "D3D11 renderer is not available." );
     return 0;
 }
 #endif
+
+//
+//
+// -------------------------------------------------------------------------
+//#if !GN_BUILD_HAS_D3D12
+//GN_API Gpu2 * GN::gfx::Gpu2::createD3D12Gpu2(const CreationParameters &)
+//{
+//    GN_ERROR(sLogger)( " D3D12 renderer is not available." );
+//    return 0;
+//}
+//#endif
 
 //
 //
@@ -47,7 +54,7 @@ GN_API Gpu * GN::gfx::createGpu( const GpuOptions & inputOptions, uint32 creatio
 {
     GpuOptions ro = inputOptions;
 
-    if( GpuAPI::AUTO == ro.api ) ro.api = DEFAULT_GPU_API;
+    if( GpuAPI::AUTO == ro.api ) ro.api = GpuAPI::OGL;
 
     switch( ro.api )
     {
@@ -57,3 +64,17 @@ GN_API Gpu * GN::gfx::createGpu( const GpuOptions & inputOptions, uint32 creatio
         default : GN_ERROR(sLogger)( "Invalid API(%d)", ro.api.toRawEnum() ); return 0;
     }
 }
+
+/*
+//
+// -------------------------------------------------------------------------
+GN_API Gpu2 * GN::gfx::Gpu2::createGpu2(const CreationParameters & cp)
+{
+    switch( cp.api )
+    {
+        case GraphicsAPI::AUTO :
+        case GraphicsAPI::D3D12 : return createD3D12Gpu2(cp);
+        case GraphicsAPI::VULKAN :
+        default : GN_UNIMPL(); return nullptr;
+    }
+}*/

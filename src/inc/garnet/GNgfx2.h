@@ -12,6 +12,7 @@
 #include "gfx/shape.h"
 #include "gfx/primitive.h"
 #include "gfx/gpu2.h"
+//#include "gfx/rt.h"
 
 // *****************************************************************************
 //                         END of GNgfx2.h

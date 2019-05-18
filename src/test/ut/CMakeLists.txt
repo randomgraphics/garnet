@@ -1,7 +1,7 @@
 find_package(Python3)
 
-if (NOT Python3_INTERP_FOUND)
-    message(WARNING "Python interpolator is required to generate unit tests.")
+if (NOT Python3_FOUND)
+    message(WARNING "Python3 is required to generate unit tests.")
     return()
 endif()
 

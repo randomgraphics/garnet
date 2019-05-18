@@ -34,12 +34,18 @@
 ///
 #define GN_SCOPE_PROFILER( name, desc ) GN_DEFINE_STATIC_PROFILER( name, desc ); GN::ScopeTimer GN_JOIN(__GN_scope_profiler,name)( &GN_JOIN(__GN_profiler_,name) )
 
+///
+/// function profiler
+///
+#define GN_FUNCTION_PROFILER() GN_SCOPE_PROFILER(_LINE__, GN_FUNCTION)
+
 #else
 
 #define GN_DEFINE_STATIC_PROFILER( name, desc )
 #define GN_START_PROFILER( name )
 #define GN_STOP_PROFILER( name )
 #define GN_SCOPE_PROFILER( name, desc )
+#define GN_FUNCTION_PROFILER()
 
 #endif
 //@}

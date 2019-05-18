@@ -28,7 +28,7 @@ namespace GN
 // cross API GPU interface
 #include "gfx/surface.h"  // GPU resources (texture, vertex/index buffer)
 #include "gfx/shader.h"   // GPU program
-#include "gfx/gpu.h" // main GPU interface
+#include "gfx/gpu.h"      // main GPU interface
 
 // GPU resource database
 #include "gfx/stdUniform.h"
