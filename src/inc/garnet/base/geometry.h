@@ -50,7 +50,6 @@ namespace GN
         union
         {
             struct { T x, y; };
-            struct { T u, v; };
             struct { T s, t; };
             struct { T width, height; };
         };
@@ -620,9 +619,9 @@ namespace GN
 
         operator T *() { return &x; }
         operator const T *() const { return &x; }
-        bool operator < ( const Vector4 & a ) const
+        bool operator < ( const Vector4 & v ) const
         {
-            return x < a.x || y < a.y || z < a.z || w < a.w;
+            return x < v.x || y < v.y || z < v.z || w < v.w;
         }
         Vector4 & operator += ( const Vector4 & v )
         {

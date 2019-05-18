@@ -127,7 +127,8 @@ class StringMapTest : public CxxTest::TestSuite
             t = c.getCycleCount();
             for( size_t i = 0; i < strings.size(); ++i )
             {
-                stlmap.find( strings[i] );
+                auto aaa = stlmap.find( strings[i] );
+                (void)aaa;
             }
             perfs.stlmap.find += c.getCycleCount() - t;
 

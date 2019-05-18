@@ -530,19 +530,19 @@ static bool sReadMap( AseMap & m, AseFile & ase )
         }
         else if( 0 == str::compare( token, "*UVW_U_OFFSET" ) )
         {
-            if( !ase.readFloat( m.offset.u ) ) return false;
+            if( !ase.readFloat( m.offset.s ) ) return false;
         }
         else if( 0 == str::compare( token, "*UVW_V_OFFSET" ) )
         {
-            if( !ase.readFloat( m.offset.v ) ) return false;
+            if( !ase.readFloat( m.offset.t ) ) return false;
         }
         else if( 0 == str::compare( token, "*UVW_U_TILING" ) )
         {
-            if( !ase.readFloat( m.tiling.u ) ) return false;
+            if( !ase.readFloat( m.tiling.s ) ) return false;
         }
         else if( 0 == str::compare( token, "*UVW_V_TILING" ) )
         {
-            if( !ase.readFloat( m.tiling.v ) ) return false;
+            if( !ase.readFloat( m.tiling.t ) ) return false;
         }
         else if( 0 == str::compare( token, "*UVW_ANGLE" ) )
         {

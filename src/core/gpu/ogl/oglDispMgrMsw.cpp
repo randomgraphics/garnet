@@ -124,10 +124,6 @@ static bool sSetupPixelFormat( HDC hdc )
 {
     GN_GUARD;
 
-    // ע����ʵ��pfd���������ȫû�б�Ҫ��ʼ������Ϊ�ڳ�������ֻ����������
-    //     SetupPixelFormat(..)���������ص���Ϣ�õġ�
-    //     ��δ������ҪĿ����Ϊ�˱���pfd�и�����ĺ��壬�Լ�����ͨ�����
-    //     �µ�ȡֵ
     PIXELFORMATDESCRIPTOR pfd = {
         sizeof(PIXELFORMATDESCRIPTOR),  //  size of this pfd
             1,                     // version number
