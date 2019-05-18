@@ -1,3 +1,4 @@
+#include "../GNwin.h"
 #include <vector>
 
 namespace GN
@@ -18,10 +19,10 @@ namespace gfx
         };
         struct CreationParameters
         {
-            //Window *    window;
-            GraphicsAPI api;
-            uint32_t    width, height; // back buffer size. set to 0 to use window size.
-            bool        fullscreen;
+            win::Window * window;
+            GraphicsAPI   api;
+            uint32_t      width, height; // back buffer size. set to 0 to use window size.
+            bool          fullscreen;
         };
         AutoRef<Gpu2> createGpu2(const CreationParameters &);
         //@}
@@ -40,14 +41,16 @@ namespace gfx
         virtual std::vector<Pipeline> createPipelineObjects(const PipelineCreationParameters *, size_t) = 0;
         //@}
 
+        struct Surface;
+
         /// GPU command list
         //@{
         struct CopyParameters
         {
-            GpuResource * source;
-            uint32_t      sourceSubresourceId;
-            GpuResource * dest;
-            uint32_t      destSubresourceId;
+            Surface * source;
+            uint32_t  sourceSubresourceId;
+            Surface * dest;
+            uint32_t  destSubresourceId;
         };
         struct DrawParameters
         {
@@ -107,32 +110,32 @@ namespace gfx
         virtual std::vector<uint8> compileProgram(const ProgramSource &) = 0;
         //@}
 
-        /// GPU resource
+        /// GPU surface
         //@{
-        struct ResourceCreationParameters
+        struct SurfaceCreationParameters
         {
             union
             {
                 struct TextureDesc
                 {
-
-                };
+                    uint32_t w, h, d, a, l;
+                } t;
 
                 struct BufferDesc
                 {
-
-                };
+                    uint32_t bytes;
+                } b;
             };
             MemPool * pool = nullptr;
             uint64_t     offset = 0; // ignored if pool is null.
         };
         /// this could be a texture or a buffer.
-        struct Resource : public RefCounter
+        struct Surface : public RefCounter
         {
             /// For immediate update, no dealy, no async. do hazard tracking yourself.
-            virtual void * getDirectPointer(uint32_t subResourceId, uint32_t * pRowPitch, uint32_t * pSlicePitch) = 0;
+            virtual void * getPersistentPointer(uint32_t subResourceId, uint32_t * pRowPitch, uint32_t * pSlicePitch) = 0;
         };
-        virtual AutoRef<Resource> createResource(const ResourceCreationParameters &) = 0;
+        virtual AutoRef<Surface> createSurface(const SurfaceCreationParameters &) = 0;
         //@}
 
         //@{
