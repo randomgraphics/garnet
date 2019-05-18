@@ -39,11 +39,7 @@
 ///
 /// Verification macro with description
 ///
-#if GN_ENABLE_ASSERT
 #define GN_VERIFY_EX( exp, desc ) GN_DO_ASSERT( exp, desc )
-#else
-#define GN_VERIFY_EX( exp, desc ) (exp)
-#endif
 
 ///
 /// assert macro
@@ -51,7 +47,7 @@
 #define GN_ASSERT( exp ) GN_ASSERT_EX( exp, #exp )
 
 ///
-/// verify macro
+/// verify macro (do check even in release build.)
 ///
 #define GN_VERIFY( exp ) GN_VERIFY_EX( exp, #exp )
 
