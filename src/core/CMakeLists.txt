@@ -48,12 +48,12 @@ if (OPENGL_FOUND)
 endif()
 
 # D3D11 GPU Sources
-if (GN_BUILD_HAS_D3D11)
+if (D3D11_FOUND)
     GN_add_source_folder(sources gpu/d3d11 PCH_SOURCE gpu/d3d11/pch.cpp)
 endif()
 
 # D3D12 GPU Sources
-if (GN_BUILD_HAS_D3D12)
+if (D3D12_FOUND)
     GN_add_source_folder(sources gpu2/d3d12 PCH_SOURCE gpu2/d3d12/pch.cpp)
 endif()
 
