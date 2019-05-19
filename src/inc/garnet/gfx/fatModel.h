@@ -278,9 +278,9 @@ namespace GN { namespace gfx
         T     value; //< The value at the specified time.
     };
 
-    struct FatJointAnimation
+    struct FatRigidAnimation
     {
-        // joint space -> parent space transform = T * R * S;
+        // local space -> parent space = T * R * S;
         DynaArray<FatKeyFrame<Vector3f> >    positions;
         DynaArray<FatKeyFrame<Quaternionf> > rotations;
         DynaArray<FatKeyFrame<Vector3f> >    scalings;
@@ -290,7 +290,7 @@ namespace GN { namespace gfx
     {
         StrA                                     name;               //< Name of the animation.
         double                                   duration;           //< Duration of the animation.
-        DynaArray<DynaArray<FatJointAnimation> > skeletonAnimations; //< 2D array that stores animations of each joint indexed by [skeletonIndex][jointIndex]
+        DynaArray<DynaArray<FatRigidAnimation> > skeletonAnimations; //< 2D array that stores animations of each joint indexed by [skeletonIndex][jointIndex]
     };
 
     struct GN_API FatModel : public NoCopy
@@ -299,7 +299,7 @@ namespace GN { namespace gfx
         DynaArray<FatMesh*,uint32>     meshes;     //< Mesh array. Use FatMesh* to avoid expensive copy opertaion when the array is resized.
         DynaArray<FatMaterial,uint32>  materials;
         DynaArray<FatSkeleton,uint32>  skeletons;
-        DynaArray<FatAnimation,uint32> animations;
+        DynaArray<FatAnimation,uint32> skinAnimations;
         Boxf                           bbox;
 
         /// destructor
@@ -318,7 +318,7 @@ namespace GN { namespace gfx
             meshes.clear();
             materials.clear();
             skeletons.clear();
-            animations.clear();
+            skinAnimations.clear();
             bbox.clear();
         }
 

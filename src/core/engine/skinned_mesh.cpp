@@ -728,7 +728,7 @@ void GN::engine::SkinnedMesh::setAnimation( size_t animationIndex, float seconds
 
         for( uint32 skeletonIndex = 0; skeletonIndex < fatanim.skeletonAnimations.size(); ++skeletonIndex )
         {
-            const DynaArray<FatJointAnimation> & skanim = fatanim.skeletonAnimations[skeletonIndex];
+            const auto & skanim = fatanim.skeletonAnimations[skeletonIndex];
 
             Skeleton & sk = mSkeletons[skeletonIndex];
 
@@ -738,7 +738,7 @@ void GN::engine::SkinnedMesh::setAnimation( size_t animationIndex, float seconds
             // the rest pose transformation.
             for( uint32 jointIndex = 0; jointIndex < sk.jointCount; ++jointIndex )
             {
-                const FatJointAnimation & jointanim = skanim[jointIndex];
+                const auto & jointanim = skanim[jointIndex];
 
                 SpacialComponent * spacial = sk.spacials[jointIndex];
 
@@ -1022,12 +1022,12 @@ bool GN::engine::SkinnedMesh::loadFromFatModel( const GN::gfx::FatModel & fatmod
     }
 
     // loading all animations
-    if( mAnimations.resize( fatmodel.animations.size() ) )
+    if( mAnimations.resize( fatmodel.skinAnimations.size() ) )
     {
-        for( uint32 i = 0; i < fatmodel.animations.size(); ++i )
+        for( uint32 i = 0; i < fatmodel.skinAnimations.size(); ++i )
         {
             mAnimations[i] = new SkinnedAnimation;
-            const FatAnimation & src = fatmodel.animations[i];
+            const FatAnimation & src = fatmodel.skinAnimations[i];
             FatAnimation & dst = *(FatAnimation*)mAnimations[i];
             dst = src;
             GN_ASSERT( dst.duration == src.duration );

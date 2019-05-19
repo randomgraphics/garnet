@@ -2495,7 +2495,7 @@ static bool sLoadAiJointAnimation(
 
         // Reference the fat joint animation object that was preallocated at the beginning
         // of the function.
-        FatJointAnimation & fatJointAnim = fatanim.skeletonAnimations[skeletonIndex][jointIndex];
+        auto & fatJointAnim = fatanim.skeletonAnimations[skeletonIndex][jointIndex];
 
         // Allocate fat key frames
         if( !fatJointAnim.positions.resize(aina.mNumPositionKeys) ||
@@ -2551,7 +2551,7 @@ static void sLoadAiAnimations( FatModel & fatmodel, const aiScene & aiscene )
     sBuildJointMapFromSkeletons( jointMap, fatmodel.skeletons );
 
     // Preallocate animation array
-    if( !fatmodel.animations.reserve( aiscene.mNumAnimations ) )
+    if( !fatmodel.skinAnimations.reserve( aiscene.mNumAnimations ) )
     {
         GN_ERROR(sLogger)( "Fail to preallocate fat animation array: out of memory." );
         return;
@@ -2565,14 +2565,14 @@ static void sLoadAiAnimations( FatModel & fatmodel, const aiScene & aiscene )
         const aiAnimation & aianim = *aiscene.mAnimations[a];
 
         // Create a new Fat animation object.
-        fatmodel.animations.resize( fatmodel.animations.size() + 1 );
-        FatAnimation & fatanim = fatmodel.animations.back();
+        fatmodel.skinAnimations.resize( fatmodel.skinAnimations.size() + 1 );
+        FatAnimation & fatanim = fatmodel.skinAnimations.back();
 
         if( !sLoadAiJointAnimation( fatmodel, fatanim, jointMap, aianim ) )
         {
             // Animation loading failed. Destroy the fat animation object
             // that was just created.
-            fatmodel.animations.popBack();
+            fatmodel.skinAnimations.popBack();
         }
     } // end of for each animation
 }
