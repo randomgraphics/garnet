@@ -748,10 +748,7 @@ namespace GN { namespace gfx
                 scissorRect.set( 0, 0, 0, 0 );
             }
         };
-#if GN_MSVC
-        // Note: GCC does not allow GN_FIELD_OFFSET macro (containing & and ->) to be used in constant expression.
-        GN_CASSERT( GN_FIELD_OFFSET( RenderStates, independentAlphaBlending ) == 8 );
-#endif
+        static_assert( offsetof( RenderStates, independentAlphaBlending ) == 8 );
 
         /// render state bit flags
         RenderStates rs;

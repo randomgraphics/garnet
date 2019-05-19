@@ -334,6 +334,32 @@ namespace GN
             return true;
         }
 
+        bool doMoveAppend( T * p, SIZE_TYPE count )
+        {
+            if( 0 == count ) return true;
+
+            if( 0 == p )
+            {
+                GN_ERROR(getLogger("GN.base.DynaArray"))("non-zero count with NULL pointer is not allowed!");
+                return false;
+            }
+
+            // reserve memory
+            if( !doReserve( mCount + count ) ) return false;
+
+            // copy-construct new elements
+            T * dst = mElements + mCount;
+            for( SIZE_TYPE i = 0; i < count; ++i, ++dst, ++p )
+            {
+                OBJECT_ALLOCATOR::sConstruct( dst, std::move(*p) );
+            }
+
+            // update count
+            mCount += count;
+
+            return true;
+        }
+
         void doClear()
         {
             // Destruct all objects, but do not free memory.
@@ -592,6 +618,7 @@ namespace GN
         ///
         //@{
         bool      append( const T & t ) { return doAppend( &t, 1 ); }
+        bool      append( T && t ) { return doMoveAppend( &t, 1 ); }
         bool      append( const T * p, SIZE_TYPE count ) { return doAppend( p, count ); }
         bool      append( const DynaArray & a ) { return doAppend( a.mElements, a.mCount ); }
         const T & back() const { GN_ASSERT( mCount > 0 ); return mElements[mCount-1]; }

@@ -65,24 +65,34 @@ namespace GN { namespace gfx
             memset( &mFormats, 0, sizeof(mFormats) );
         }
 
-        FatVertexBuffer( const FatVertexBuffer & fvb )
-            : mCount(0)
-            , mLayout(0)
-        {
-            memset( &mElements, 0, sizeof(mElements) );
-            memset( &mFormats, 0, sizeof(mFormats) );
+        GN_NO_COPY(FatVertexBuffer);
 
-            copyFrom( fvb );
-        }
+        // FatVertexBuffer( const FatVertexBuffer & fvb )
+        //     : mCount(0)
+        //     , mLayout(0)
+        // {
+        //     memset( &mElements, 0, sizeof(mElements) );
+        //     memset( &mFormats, 0, sizeof(mFormats) );
+
+        //     copyFrom( fvb );
+        // }
+
+        FatVertexBuffer( FatVertexBuffer && fvb ) { moveFrom(fvb); }
 
         ~FatVertexBuffer()
         {
             clear();
         }
 
-        FatVertexBuffer & operator=( const FatVertexBuffer & rhs )
+        // FatVertexBuffer & operator=( const FatVertexBuffer & rhs )
+        // {
+        //     copyFrom( rhs );
+        //     return *this;
+        // }
+
+        FatVertexBuffer & operator=( FatVertexBuffer && rhs )
         {
-            copyFrom( rhs );
+            moveFrom( rhs );
             return *this;
         }
 
@@ -180,6 +190,16 @@ namespace GN { namespace gfx
         uint32      mLayout;
 
         bool copyFrom( const FatVertexBuffer & other );
+        void moveFrom(FatVertexBuffer & other)
+        {
+            if (this == &other) return;
+            for(size_t i = 0; i < NUM_SEMANTICS; ++i) {
+                mElements[i] = other.mElements[i]; other.mElements[i] = nullptr;
+                mFormats[i] = other.mFormats[i]; other.mFormats[i] = 0;
+            }
+            mCount = other.mCount; other.mCount = 0;
+            mLayout = other.mLayout; other.mLayout = 0;
+        }
     };
 
     struct FatMeshSubset
@@ -218,6 +238,10 @@ namespace GN { namespace gfx
         DynaArray<FatMeshSubset> subsets;
         uint32                   skeleton; ///< index into FatModel::skeletons, or NO_SKELETON if the mesh has no skeleton.
         Boxf                     bbox;
+
+        GN_NO_COPY(FatMesh);
+        GN_DEFAULT_MOVE(FatMesh);
+        FatMesh() {};
     };
 
     struct FatMaterial
@@ -296,11 +320,18 @@ namespace GN { namespace gfx
     struct GN_API FatModel : public NoCopy
     {
         StrA                           name;       //< name of the model. Usually the filename which the model is loaded from.
-        DynaArray<FatMesh*,uint32>     meshes;     //< Mesh array. Use FatMesh* to avoid expensive copy opertaion when the array is resized.
+        DynaArray<FatMesh,uint32>      meshes;     //< Mesh array. Use FatMesh* to avoid expensive copy opertaion when the array is resized.
         DynaArray<FatMaterial,uint32>  materials;
         DynaArray<FatSkeleton,uint32>  skeletons;
         DynaArray<FatAnimation,uint32> skinAnimations;
         Boxf                           bbox;
+
+        GN_NO_COPY(FatModel);
+        GN_DEFAULT_MOVE(FatModel);
+
+        FatModel()
+        {
+        }
 
         /// destructor
         ~FatModel()
@@ -311,10 +342,6 @@ namespace GN { namespace gfx
         /// clear the model
         void clear()
         {
-            for( uint32 i = 0; i < meshes.size(); ++i )
-            {
-                delete meshes[i];
-            }
             meshes.clear();
             materials.clear();
             skeletons.clear();

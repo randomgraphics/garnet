@@ -254,10 +254,9 @@ sLoadFromASE( FatModel & fatmodel, File & file, const StrA & filename )
     fatmodel.meshes.resize( (uint32)ase.meshes.size() );
     for( uint32 i = 0; i < ase.meshes.size(); ++i )
     {
-        fatmodel.meshes[i] = NULL;
-
         const AseMesh & src = ase.meshes[i];
-        AutoObjPtr<FatMesh> dst( new FatMesh );
+
+        FatMesh dst;
 
         // determine vertex format
         const MeshVertexElement * position = NULL;
@@ -285,68 +284,64 @@ sLoadFromASE( FatModel & fatmodel, File & file, const StrA & filename )
         }
 
         // copy vertex buffer.
-        if( !dst->vertices.resize( vtxfmt, src.numvtx ) )
+        if( !dst.vertices.resize( vtxfmt, src.numvtx ) )
         {
             GN_ERROR(sLogger)( "Out of memory." );
             return false;
         }
         if( position )
         {
-            sCopyVertexElement<Vector3f>( dst->vertices.getPosition(), src, *position );
-            dst->vertices.setElementFormat( FatVertexBuffer::POSITION, ColorFormat::FLOAT3 );
+            sCopyVertexElement<Vector3f>( dst.vertices.getPosition(), src, *position );
+            dst.vertices.setElementFormat( FatVertexBuffer::POSITION, ColorFormat::FLOAT3 );
         }
         if( normal )
         {
-            sCopyVertexElement<Vector3f>( dst->vertices.getNormal(), src, *normal );
-            dst->vertices.setElementFormat( FatVertexBuffer::NORMAL, ColorFormat::FLOAT3 );
+            sCopyVertexElement<Vector3f>( dst.vertices.getNormal(), src, *normal );
+            dst.vertices.setElementFormat( FatVertexBuffer::NORMAL, ColorFormat::FLOAT3 );
         }
         if( texcoord )
         {
-            sCopyVertexElement<Vector2f>( dst->vertices.getTexcoord(0), src, *texcoord );
-            dst->vertices.setElementFormat( FatVertexBuffer::TEXCOORD0, ColorFormat::FLOAT2 );
+            sCopyVertexElement<Vector2f>( dst.vertices.getTexcoord(0), src, *texcoord );
+            dst.vertices.setElementFormat( FatVertexBuffer::TEXCOORD0, ColorFormat::FLOAT2 );
         }
 
         // copy index buffer
-        if( !dst->indices.resize( src.numidx ) )
+        if( !dst.indices.resize( src.numidx ) )
         {
             GN_ERROR(sLogger)( "Out of memory." );
             return false;
         }
         if( src.idx32 )
         {
-            memcpy( dst->indices.rawptr(), src.indices, src.numidx * 4 );
+            memcpy( dst.indices.rawptr(), src.indices, src.numidx * 4 );
         }
         else
         {
             const uint16 * s = (const uint16*)src.indices;
-            uint32 * d = dst->indices.rawptr();
+            uint32 * d = dst.indices.rawptr();
             for( size_t i = 0; i < src.numidx; ++i, ++s, ++d )
             {
                 *d = *s;
             }
         }
-        dst->primitive = PrimitiveType::TRIANGLE_LIST;
+        dst.primitive = PrimitiveType::TRIANGLE_LIST;
 
-        dst->bbox = src.selfbbox;
+        dst.bbox = src.selfbbox;
 
-        fatmodel.meshes[i] = dst.detach();
+        fatmodel.meshes[i] = std::move(dst);
     }
 
     // copy subsets
     for( size_t i = 0; i < ase.subsets.size(); ++i )
     {
         const AseMeshSubset & src = ase.subsets[i];
-
-        if( fatmodel.meshes[src.meshid] )
-        {
-            FatMeshSubset dst;
-            dst.material = src.matid;
-            dst.basevtx = src.basevtx;
-            dst.numvtx = src.numvtx;
-            dst.startidx = src.startidx;
-            dst.numidx = src.numidx;
-            fatmodel.meshes[src.meshid]->subsets.append( dst );
-        }
+        FatMeshSubset dst;
+        dst.material = src.matid;
+        dst.basevtx = src.basevtx;
+        dst.numvtx = src.numvtx;
+        dst.startidx = src.startidx;
+        dst.numidx = src.numidx;
+        fatmodel.meshes[src.meshid].subsets.append( dst );
     }
 
     // copy bounding box of the whole scene
@@ -1257,13 +1252,7 @@ sLoadFbxMesh(
     }
 
     // Create the mesh object
-    AutoObjPtr<FatMesh> fatMeshAutoPtr( new FatMesh );
-    if( NULL == fatMeshAutoPtr )
-    {
-        GN_ERROR(sLogger)( "Fail to load FBX mesh: out of memory." );
-        return;
-    }
-    FatMesh & fatmesh = *fatMeshAutoPtr;
+    FatMesh fatmesh;
 
     // Allocate index buffer
     if( !fatmesh.indices.resize( (uint32)numidx ) )
@@ -1448,7 +1437,7 @@ sLoadFbxMesh(
         fatmesh.indices.size() );
 
     // finally, add the fatmesh to fatmodel. And we are done!
-    fatmodel.meshes.append( fatMeshAutoPtr.detach() );
+    fatmodel.meshes.append(std::move(fatmesh));
 }
 
 //
@@ -2390,8 +2379,7 @@ static void sLoadAiNodeRecursivly(
         const aiMesh * aimesh = aiscene->mMeshes[ainode->mMeshes[i]];
 
         // create a new fat mesh instance
-        AutoObjPtr<FatMesh> fatmeshAutoPtr( new FatMesh );
-        FatMesh & fatmesh = *fatmeshAutoPtr;
+        FatMesh fatmesh;
 
         // Load skeleton
         sLoadAiMeshSkeleton( fatmodel, fatmesh, *aiscene, *aimesh, myTransform );
@@ -2420,8 +2408,7 @@ static void sLoadAiNodeRecursivly(
         }
 
         // Add the mesh to fat model.
-        fatmodel.meshes.append( &fatmesh );
-        fatmeshAutoPtr.detach();
+        fatmodel.meshes.append( std::move(fatmesh) );
     }
 
     for( uint32 i = 0; i < ainode->mNumChildren; ++i )
@@ -2812,12 +2799,9 @@ bool GN::gfx::FatModel::loadFromFile( const StrA & filename )
         size_t totalFaces = 0;
         for( uint32 i = 0; i < this->meshes.size(); ++i )
         {
-            const FatMesh * m = this->meshes[i];
-            if( m )
-            {
-                totalVerts += m->vertices.getVertexCount();
-                totalFaces += m->indices.size() / 3;
-            }
+            const auto & m = this->meshes[i];
+            totalVerts += m.vertices.getVertexCount();
+            totalFaces += m.indices.size() / 3;
         }
         GN_INFO(sLogger)( "Total vertices: %d, faces: %d", totalVerts, totalFaces );
     }

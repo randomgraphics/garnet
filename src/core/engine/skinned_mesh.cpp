@@ -896,9 +896,7 @@ bool GN::engine::SkinnedMesh::loadFromFatModel( const GN::gfx::FatModel & fatmod
     // Load all meshes
     for( uint32 mi = 0; mi < fatmodel.meshes.size(); ++mi )
     {
-        if( NULL == fatmodel.meshes[mi] ) continue;
-
-        const FatMesh & fatmesh = *fatmodel.meshes[mi];
+        const auto & fatmesh = fatmodel.meshes[mi];
 
         StrA meshName = str::format( "%s.mesh.%d", fatmodel.name.rawptr(), mi );
 

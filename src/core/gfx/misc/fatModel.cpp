@@ -726,8 +726,7 @@ void GN::gfx::FatModel::calcBoundingBox()
     bbox.clear();
     for( uint32 i = 0; i < meshes.size(); ++i )
     {
-        GN_ASSERT( meshes[i] );
-        Boxf::sGetUnion( bbox, bbox, meshes[i]->bbox );
+        Boxf::sGetUnion( bbox, bbox, meshes[i].bbox );
     }
 }
 
@@ -749,7 +748,7 @@ bool GN::gfx::FatModel::splitSkinnedMesh( uint32 maxJointsPerSubset )
     //
     for( uint32 i = 0; i < meshes.size(); ++i )
     {
-        FatMesh & mesh = *meshes[i];
+        auto & mesh = meshes[i];
 
         // Split subsets in the mesh to ensure that every subset uses no more than
         // specific number of joints. Create new subsets when necessary.

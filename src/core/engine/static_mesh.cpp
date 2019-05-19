@@ -169,9 +169,7 @@ bool GN::engine::StaticMesh::loadFromFatModel( const GN::gfx::FatModel & fatmode
 
     for( uint32 i = 0; i < fatmodel.meshes.size(); ++i )
     {
-        if( NULL == fatmodel.meshes[i] ) continue;
-
-        const FatMesh & fatmesh = *fatmodel.meshes[i];
+        const auto & fatmesh = fatmodel.meshes[i];
 
         StrA meshName = str::format( "%s.mesh.%d", fatmodel.name.rawptr(), i );
 
