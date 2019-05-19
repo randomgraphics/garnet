@@ -42,6 +42,16 @@
 ///
 #define GN_UNUSED_PARAM(X) ((void)(X))
 
+///
+/// Delete copy methods of a class.
+///
+#define GN_NO_COPY(x) x(const x &) = delete; x & operator=(const x &) = delete
+
+///
+/// Define default move methods
+///
+#define GN_DEFAULT_MOVE(x) x(x&&) = default; x & operator=(x&&) = default
+
 namespace GN
 {
     ///

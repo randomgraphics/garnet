@@ -201,6 +201,12 @@ namespace GN
             new (ptr) T(x);
         }
 
+        /// Move construct the object on existing memory buffer.
+        static inline void sConstruct( T * ptr, T && x )
+        {
+            new (ptr) T(std::move(x));
+        }
+
         /// Destruct the object, but do not free the memory buffer.
         static inline void sDestruct( T * ptr )
         {

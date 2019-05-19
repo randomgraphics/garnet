@@ -396,9 +396,10 @@ namespace GN
 
             for( SIZE_TYPE i = mCount-1; i > position; --i )
             {
-                mElements[i] = mElements[i-1];
+                mElements[i] = std::move(mElements[i-1]);
             }
 
+            // TODO: make this a move too.
             mElements[position] = t;
 
             return true;
@@ -454,10 +455,13 @@ namespace GN
                 return false;
             }
 
-            // copy construct new buffer
             for( SIZE_TYPE i = 0; i < mCount; ++i )
             {
-                OBJECT_ALLOCATOR::sConstruct( newBuf + i, mElements[i] );
+                if constexpr (std::is_move_constructible<T>::value) {
+                    OBJECT_ALLOCATOR::sConstruct( newBuf + i, std::move(mElements[i]) );
+                } else {
+                    OBJECT_ALLOCATOR::sConstruct( newBuf + i, mElements[i] );
+                }
             }
 
             // deallocate old buffer
