@@ -2,6 +2,7 @@ List of 3rd party libraries that are included here:
 (Note: all libraries are free to use in commercial/non-OSS products)
 
 Assimp      2.0.863
+CLI11       1.7.1 (https://github.com/CLIUtils/CLI11)
 Eigen       3.3.7 (http://eigen.tuxfamily.org)
 Expat       2.0.0
 FBX         2014.1
