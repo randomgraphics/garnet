@@ -20,11 +20,11 @@ namespace gfx
         struct CreationParameters
         {
             win::Window * window;
-            GraphicsAPI   api;
-            uint32_t      width, height; // back buffer size. set to 0 to use window size.
-            bool          fullscreen;
+            GraphicsAPI   api = GraphicsAPI::AUTO;
+            uint32_t      width = 0, height = 0; // back buffer size. set to 0 to use window size.
+            bool          fullscreen = false;
         };
-        AutoRef<Gpu2> createGpu2(const CreationParameters &);
+        static GN_API AutoRef<Gpu2> createGpu2(const CreationParameters &);
         //@}
 
         /// GPU pipeline

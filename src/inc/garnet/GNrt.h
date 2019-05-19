@@ -6,7 +6,7 @@
 /// \author  chenlee(2019.05.17)
 // *****************************************************************************
 
-#include "GNgfx.h"
+#include "GNgfx2.h"
 #include <Eigen/Eigen>
 
 namespace GN { namespace rt
@@ -215,21 +215,6 @@ namespace GN { namespace rt
     private:
         std::vector<Node*> _nodes;
         size_t CountLeafNodes() const;
-    };
-
-    // currently, rect light only
-    struct Light
-    {
-        Vec4 position;
-        Vec4 edges[2];
-    };
-
-    struct  Scene
-    {
-        std::vector<Vec4>  positions; // w channel is primitive ID
-        std::vector<Vec4>  normals;   // w channel is material ID
-        std::vector<AABB>  bvh;
-        std::vector<Light> lights;
     };
 }}
 

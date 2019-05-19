@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "mtgpu.h"
+#include <garnet/GNgfx2.h>
 
 using namespace GN;
 using namespace GN::gfx;
@@ -39,17 +40,6 @@ GN_API Gpu * GN::gfx::createD3DGpu( const GpuOptions &, uint32 )
 //
 //
 // -------------------------------------------------------------------------
-//#if !GN_BUILD_HAS_D3D12
-//GN_API Gpu2 * GN::gfx::Gpu2::createD3D12Gpu2(const CreationParameters &)
-//{
-//    GN_ERROR(sLogger)( " D3D12 renderer is not available." );
-//    return 0;
-//}
-//#endif
-
-//
-//
-// -------------------------------------------------------------------------
 GN_API Gpu * GN::gfx::createGpu( const GpuOptions & inputOptions, uint32 creationFlags )
 {
     GpuOptions ro = inputOptions;
@@ -64,17 +54,3 @@ GN_API Gpu * GN::gfx::createGpu( const GpuOptions & inputOptions, uint32 creatio
         default : GN_ERROR(sLogger)( "Invalid API(%d)", ro.api.toRawEnum() ); return 0;
     }
 }
-
-/*
-//
-// -------------------------------------------------------------------------
-GN_API Gpu2 * GN::gfx::Gpu2::createGpu2(const CreationParameters & cp)
-{
-    switch( cp.api )
-    {
-        case GraphicsAPI::AUTO :
-        case GraphicsAPI::D3D12 : return createD3D12Gpu2(cp);
-        case GraphicsAPI::VULKAN :
-        default : GN_UNIMPL(); return nullptr;
-    }
-}*/

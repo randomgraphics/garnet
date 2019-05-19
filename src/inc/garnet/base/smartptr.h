@@ -168,26 +168,20 @@ namespace GN
         ///
         static AutoRef<X> NULLREF;
 
-        #if 1
-        /// construct from a normal pointer
-        ///
-        explicit AutoRef( XPTR p = 0 ) throw() : mPtr(p)
-        {
-            // make sure sizeof(AutoRef) == sizeof(XPTR), which ensures that an array of autoref
-            // can always be used as array of native pointer.
-            GN_CASSERT( sizeof(AutoRef) == sizeof(XPTR) );
-
-            if( p ) p->incref();
-        }
-        #else
         // default ctor
         AutoRef() throw() : mPtr(NULL)
         {
             // make sure sizeof(AutoRef) == sizeof(XPTR), which ensures that an array of autoref
             // can always be used as array of native pointer.
-            GN_CASSERT( sizeof(AutoRef) == sizeof(XPTR) );
+            static_assert(sizeof(AutoRef) == sizeof(XPTR));
         }
-        #endif
+
+        /// construct from a normal pointer
+        ///
+        explicit AutoRef(XPTR p) throw() : mPtr(p)
+        {
+            if (p) p->incref();
+        }
 
         ///
         /// copy constructor
