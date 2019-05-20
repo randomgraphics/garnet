@@ -293,43 +293,20 @@ namespace GN
     template<class T, typename SIZE_TYPE = size_t, class OBJECT_ALLOCATOR = CxxObjectAllocator<T> >
     class DynaArray
     {
-        struct Header
-        {
-            SIZE_TYPE count;
-            SIZE_TYPE capacity;
-        };
-
-        T * mElements = nullptr;
-        // SIZE_TYPE        mCount;
-        // SIZE_TYPE        mCapacity;
+        T              * mElements;
+        SIZE_TYPE        mCount;
+        SIZE_TYPE        mCapacity;
 
         /// Destruct all objects, and free the memory.
-        void destroyAll()
+        static inline void sDestroyAll( T * ptr, size_t count )
         {
-            if (!mElements) return;
-            Header & h = GetHeader();
-            T * end = mElements + h.count;
-            for( T * p = mElements; p < end; ++p )
+            T * end = ptr + count;
+            for( T * p = ptr; p < end; ++p )
             {
                 OBJECT_ALLOCATOR::sDestruct( p );
             }
-            OBJECT_ALLOCATOR::sDeallocate( (void*)&h );
-            mElements = nullptr;
+            OBJECT_ALLOCATOR::sDeallocate( ptr );
         }
-
-        Header & GetHeader()
-        {
-            GN_ASSERT(mElements);
-            return *(((Header*)mElements) - 1);
-        }
-
-        const Header & GetHeader() const
-        {
-            GN_ASSERT(mElements);
-            return *(((const Header*)mElements) - 1);
-        }
-
-        SIZE_TYPE GetCount() const { return mElements ? GetHeader().count : 0; }
 
         bool doAppend( const T * p, SIZE_TYPE count )
         {
@@ -342,18 +319,17 @@ namespace GN
             }
 
             // reserve memory
-            if( !doReserve( GetCount() + count ) ) return false;
+            if( !doReserve( mCount + count ) ) return false;
 
             // copy-construct new elements
-            auto & h = GetHeader();
-            T * dst = mElements + h.count;
+            T * dst = mElements + mCount;
             for( SIZE_TYPE i = 0; i < count; ++i, ++dst, ++p )
             {
                 OBJECT_ALLOCATOR::sConstruct( dst, *p );
             }
 
             // update count
-            h.count += count;
+            mCount += count;
 
             return true;
         }
@@ -369,18 +345,17 @@ namespace GN
             }
 
             // reserve memory
-            if( !doReserve( GetCount() + count ) ) return false;
+            if( !doReserve( mCount + count ) ) return false;
 
             // copy-construct new elements
-            auto & h = GetHeader();
-            T * dst = mElements + h.count;
+            T * dst = mElements + mCount;
             for( SIZE_TYPE i = 0; i < count; ++i, ++dst, ++p )
             {
                 OBJECT_ALLOCATOR::sConstruct( dst, std::move(*p) );
             }
 
             // update count
-            h.count += count;
+            mCount += count;
 
             return true;
         }
@@ -388,70 +363,64 @@ namespace GN
         void doClear()
         {
             // Destruct all objects, but do not free memory.
-            if (!mElements) return;
             T * p = mElements;
-            auto & h = GetHeader();
-            auto count = GetCount();
-            for( SIZE_TYPE i = 0; i < count; ++i, ++p )
+            for( SIZE_TYPE i = 0; i < mCount; ++i, ++p )
             {
                 OBJECT_ALLOCATOR::sDestruct( p );
             }
-            h.count = 0;
+            mCount = 0;
         }
 
         void moveFrom( DynaArray & other )
         {
-            destroyAll();
+            sDestroyAll( mElements, mCount );
+            mCapacity = other.mCapacity;
             mElements = other.mElements;
-            other.mElements = nullptr;
+            mCount = other.mCount;
+            other.mCapacity = 0;
+            other.mElements = 0;
+            other.mCount = 0;
         }
 
         bool copyFrom( const DynaArray & other )
         {
-            if( !doReserve( other.GetCount() ) ) return false;
+            if( !doReserve( other.mCount ) ) return false;
 
-            auto myCount = GetCount();
-            auto othersCount = other.GetCount();
-
-            SIZE_TYPE mincount = math::getmin<SIZE_TYPE>( myCount, othersCount );
+            SIZE_TYPE mincount = math::getmin<SIZE_TYPE>( mCount, other.mCount );
 
             for( SIZE_TYPE i = 0; i < mincount; ++i )
             {
                 mElements[i] = other.mElements[i];
             }
 
-            // destruct extra objects, only when other.h.count < h.count
-            for( SIZE_TYPE i = othersCount; i < myCount; ++i )
+            // destruct extra objects, only when other.mCount < mCount
+            for( SIZE_TYPE i = other.mCount; i < mCount; ++i )
             {
                 OBJECT_ALLOCATOR::sDestruct( mElements + i );
             }
 
-            // copy-construct new objects, only when h.count < other.h.count
-            for( SIZE_TYPE i = myCount; i < othersCount; ++i )
+            // copy-construct new objects, only when mCount < other.mCount
+            for( SIZE_TYPE i = mCount; i < other.mCount; ++i )
             {
                 OBJECT_ALLOCATOR::sConstruct( mElements + i, other.mElements[i] );
             }
 
-            if (othersCount > 0) {
-                GetHeader().count = othersCount;
-            }
+            mCount = other.mCount;
 
             return true;
         }
 
         bool doInsert( SIZE_TYPE position, const T & t )
         {
-            auto count = GetCount();
-
-            if( position > count )
+            if( position > mCount )
             {
                 GN_WARN(getLogger("GN.base.DynaArray"))("invalid insert position");
                 return false;
             }
 
-            if( !doResize( count + 1 ) ) return false;
+            if( !doResize( mCount + 1 ) ) return false;
 
-            for( SIZE_TYPE i = count - 1; i > position; --i )
+            for( SIZE_TYPE i = mCount-1; i > position; --i )
             {
                 mElements[i] = std::move(mElements[i-1]);
             }
@@ -464,37 +433,31 @@ namespace GN
 
         void doErase( SIZE_TYPE position )
         {
-            if( position >= GetCount() )
+            if( position >= mCount )
             {
                 GN_ERROR(getLogger("GN.base.DynaArray"))("invalid erase position");
                 return;
             }
 
-            auto & h = GetHeader();
-
-            --h.count;
+            --mCount;
 
             // move elements forward
-            for( SIZE_TYPE i = position; i < h.count; ++i )
+            for( SIZE_TYPE i = position; i < mCount; ++i )
             {
                 mElements[i] = mElements[i+1];
             }
 
             // then destruct the last element
-            OBJECT_ALLOCATOR::sDestruct( mElements + h.count );
+            OBJECT_ALLOCATOR::sDestruct( mElements + mCount );
         }
 
         bool doReserve( SIZE_TYPE count )
         {
-            const Header * oldHeader = mElements ? &GetHeader() : nullptr;
-            SIZE_TYPE oldCap = oldHeader ? oldHeader->capacity : 0;
-            if (oldCap >= count) return true;
+            if( mCapacity >= count ) return true;
 
-            SIZE_TYPE oldCount = oldHeader ? oldHeader->count : 0;
-            GN_ASSERT( count > oldCount );
+            GN_ASSERT( count > mCount );
 
             // align caps to next power of 2
-            GN_ASSERT(count > 0);
             uint64 newCap = count - 1;
             newCap |= newCap >> 32;
             newCap |= newCap >> 16;
@@ -511,17 +474,14 @@ namespace GN
             GN_ASSERT( count <= MAX_CAPS );
 
             // allocate new buffer (unconstructed raw memory)
-            Header * newHeader = (Header*)OBJECT_ALLOCATOR::sAllocate( (SIZE_TYPE)(newCap + sizeof(Header)) );
-            if( NULL == newHeader )
+            T * newBuf = OBJECT_ALLOCATOR::sAllocate( (SIZE_TYPE)newCap );
+            if( NULL == newBuf )
             {
                 GN_ERROR(getLogger("GN.base.DynaArray"))("out of memory!");
                 return false;
             }
-            newHeader->capacity = (SIZE_TYPE)newCap;
-            newHeader->count = oldCount;
 
-            T * newBuf = (T*)(newHeader + 1);
-            for( SIZE_TYPE i = 0; i < oldCount; ++i )
+            for( SIZE_TYPE i = 0; i < mCount; ++i )
             {
                 if constexpr (std::is_move_constructible<T>::value) {
                     OBJECT_ALLOCATOR::sConstruct( newBuf + i, std::move(mElements[i]) );
@@ -531,78 +491,81 @@ namespace GN
             }
 
             // deallocate old buffer
-            destroyAll();
+            sDestroyAll( mElements, mCount );
 
-            // done
             mElements = newBuf;
+            mCapacity = (SIZE_TYPE)newCap;
+
             return true;
         }
 
         bool doResize( SIZE_TYPE count )
         {
-            auto oldCount = GetCount();
-            
-            if( oldCount == count ) return true; // shortcut for redundant call
+            if( count == mCount ) return true; // shortcut for redundant call
 
             // reserve memory
             if( !doReserve( count ) ) return false;
 
-            // destruct extra objects, only when count < h.count
-            for( SIZE_TYPE i = count; i < oldCount; ++i )
+            // destruct extra objects, only when count < mCount
+            for( SIZE_TYPE i = count; i < mCount; ++i )
             {
                 OBJECT_ALLOCATOR::sDestruct( mElements + i );
             }
 
-            // construct new objects, only when h.count < count
-            for( SIZE_TYPE i = oldCount; i < count; ++i )
+            // construct new objects, only when mCount < count
+            for( SIZE_TYPE i = mCount; i < count; ++i )
             {
                 OBJECT_ALLOCATOR::sConstruct( mElements + i );
             }
 
-            if (mElements) GetHeader().count = count;
+            mCount = count;
 
             return true;
         }
 
         bool doResize( SIZE_TYPE count, const T & t )
         {
-            auto oldCount = GetCount();
-            
-            if( count == oldCount ) return true; // shortcut for redundant call
+            if( count == mCount ) return true; // shortcut for redundant call
 
             // reserve memory
             if( !doReserve( count ) ) return false;
 
-            // destruct extra objects, only when count < h.count
-            for( SIZE_TYPE i = count; i < oldCount; ++i )
+            // destruct extra objects, only when count < mCount
+            for( SIZE_TYPE i = count; i < mCount; ++i )
             {
                 OBJECT_ALLOCATOR::sDestruct( mElements + i );
             }
 
-            // copy-construct new objects, only when h.count < count
-            for( SIZE_TYPE i = oldCount; i < count; ++i )
+            // copy-construct new objects, only when mCount < count
+            for( SIZE_TYPE i = mCount; i < count; ++i )
             {
                 OBJECT_ALLOCATOR::sConstruct( mElements + i, t );
             }
 
-            if (mElements) GetHeader().count = count;
+            mCount = count;
 
             return true;
         }
 
         void doSwap( DynaArray & another )
         {
-            T * p = mElements;
+            T *       p = mElements;
+            SIZE_TYPE n = mCount;
+            SIZE_TYPE c = mCapacity;
+
             mElements = another.mElements;
+            mCount    = another.mCount;
+            mCapacity = another.mCapacity;
+
             another.mElements = p;
+            another.mCount    = n;
+            another.mCapacity = c;
         }
 
         bool equal( const DynaArray & other ) const
         {
-            auto c1 = GetCount();
-            auto c2 = other.GetCount();
-            if( c1 != c2 ) return false;
-            for( SIZE_TYPE i = 0; i < c1; ++i )
+            if( mCount != other.mCount ) return false;
+            for( SIZE_TYPE i = 0; i < mCount; ++i )
             {
                 if( mElements[i] != other.mElements[i] ) return false;
             }
@@ -619,37 +582,37 @@ namespace GN
         ///
         /// default constructor
         ///
-        DynaArray() : mElements(0) {}
+        DynaArray() : mElements(0), mCount(0), mCapacity(0) {}
 
         ///
         /// constructor with user-defined count.
         ///
-        explicit DynaArray( SIZE_TYPE count ) : mElements(0) { doResize( count ); }
+        explicit DynaArray( SIZE_TYPE count ) : mElements(0), mCount(0), mCapacity(0) { doResize( count ); }
 
         ///
         /// constructor with user-defined count and value.
         ///
-        DynaArray( SIZE_TYPE count, const T & t ) : mElements(0) { doResize( count, t ); }
+        DynaArray( SIZE_TYPE count, const T & t ) : mElements(0), mCount(0), mCapacity(0) { doResize( count, t ); }
 
         ///
         /// construct from conventional C array
         ///
-        DynaArray( const T * p, SIZE_TYPE count ) : mElements(0) { doAppend( p, count ); }
+        DynaArray( const T * p, SIZE_TYPE count ) : mElements(0), mCount(0), mCapacity(0) { doAppend( p, count ); }
 
         ///
         /// copy constructor
         ///
-        DynaArray( const DynaArray & other ) : mElements(0) { copyFrom( other ); }
+        DynaArray( const DynaArray & other ) : mElements(0), mCount(0), mCapacity(0) { copyFrom( other ); }
 
         ///
         /// move constructor
         ///
-        DynaArray( DynaArray && other ) : mElements(0) { moveFrom( other ); }
+        DynaArray( DynaArray && other ) : mElements(0), mCount(0), mCapacity(0) { moveFrom( other ); }
 
         ///
         /// destructor
         ///
-        ~DynaArray() { destroyAll(); }
+        ~DynaArray() { sDestroyAll( mElements, mCount ); }
 
         /// \name Common array operations.
         ///
@@ -657,35 +620,35 @@ namespace GN
         bool      append( const T & t ) { return doAppend( &t, 1 ); }
         bool      append( T && t ) { return doMoveAppend( &t, 1 ); }
         bool      append( const T * p, SIZE_TYPE count ) { return doAppend( p, count ); }
-        bool      append( const DynaArray & a ) { return doAppend( a.mElements, a.size() ); }
-        const T & back() const { auto & h = GetHeader(); GN_ASSERT( h.count > 0 ); return mElements[h.count-1]; }
-        T       & back() { auto & h = GetHeader(); GN_ASSERT( h.count > 0 ); return mElements[h.count-1]; }
+        bool      append( const DynaArray & a ) { return doAppend( a.mElements, a.mCount ); }
+        const T & back() const { GN_ASSERT( mCount > 0 ); return mElements[mCount-1]; }
+        T       & back() { GN_ASSERT( mCount > 0 ); return mElements[mCount-1]; }
         const T * begin() const { return mElements; }
         T       * begin() { return mElements; }
-        SIZE_TYPE capacity() const { mElements ? GetHeader().capacity : 0; }
+        SIZE_TYPE capacity() const { return mCapacity; }
         void      clear() { doClear(); }
         const T * rawptr() const { return mElements; } // TODO: maybe rename it to data()?
         T       * rawptr() { return mElements; }
-        bool      empty() const { return 0 == GetCount(); }
-        const T * end() const { return mElements + GetCount(); }
-        T       * end() { return mElements + GetCount(); }
+        bool      empty() const { return 0 == mCount; }
+        const T * end() const { return mElements + mCount; }
+        T       * end() { return mElements + mCount; }
         /** do nothing if position is invalid */
         void      eraseIdx( SIZE_TYPE position ) { return doErase( position ); }
         void      erasePtr( const T * p ) { return doErase( p - mElements ); }
         const T * first() const { return mElements; }
         T       * first() { return mElements; }
-        const T & front() const { GN_ASSERT(GetCount() > 0); return mElements[0]; }
-        T       & front() { GN_ASSERT(GetCount() > 0); return mElements[0]; }
+        const T & front() const { GN_ASSERT( mCount > 0 ); return mElements[0]; }
+        T       & front() { GN_ASSERT( mCount > 0 ); return mElements[0]; }
         /** do nothing if position is invalid */
         bool      insert( SIZE_TYPE position, const T & t ) { return doInsert( position, t ); }
-        //const T * next( const T * t ) const { return ( mCount > 0 && mElements <= t && t < (mElements+mCount-1) ) ? ( t + 1 ) : NULL; }
-        //T       * next( const T * t ) { return ( mCount > 0 && mElements <= t && t < (mElements+mCount-1) ) ? ( t + 1 ) : NULL; }
+        const T * next( const T * t ) const { return ( mCount > 0 && mElements <= t && t < (mElements+mCount-1) ) ? ( t + 1 ) : NULL; }
+        T       * next( const T * t ) { return ( mCount > 0 && mElements <= t && t < (mElements+mCount-1) ) ? ( t + 1 ) : NULL; }
         bool      reserve( SIZE_TYPE count ) { return doReserve( count ); }
         bool      resize( SIZE_TYPE count ) { return doResize( count ); }
-        void      popBack() { GN_ASSERT(GetCount() > 0); doErase( GetCount() - 1 ); }
+        void      popBack() { doErase( mCount - 1 ); }
         /** clear array as well as release memory */
-        void      purge() { destroyAll(); GN_ASSERT(nullptr == mElements); }
-        SIZE_TYPE size() const { return GetCount(); }
+        void      purge() { sDestroyAll( mElements, mCount ); mCount = 0; mCapacity = 0; mElements = 0; }
+        SIZE_TYPE size() const { return mCount; }
         void      swap( DynaArray & another ) { doSwap( another ); } ///< swap data with another array
         //@}
 
@@ -696,8 +659,8 @@ namespace GN
         DynaArray & operator=( DynaArray && other ) { moveFrom(other); return *this; }
         bool        operator==( const DynaArray & other ) const { return equal(other); }
         bool        operator!=( const DynaArray & other ) const { return !equal(other); }
-        T         & operator[]( SIZE_TYPE i ) { GN_ASSERT( i < GetCount() ); return mElements[i]; }
-        const T   & operator[]( SIZE_TYPE i ) const { GN_ASSERT( i < GetCount() ); return mElements[i]; }
+        T         & operator[]( SIZE_TYPE i ) { GN_ASSERT( i < mCount ); return mElements[i]; }
+        const T   & operator[]( SIZE_TYPE i ) const { GN_ASSERT( i < mCount ); return mElements[i]; }
         //@}
     };
 
