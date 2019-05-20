@@ -1,12 +1,98 @@
 #include "pch.h"
 #include <garnet/GNrt.h>
 #include <garnet/GNutil.h>
+#include <garnet/gfx/fatModel.h>
 #include <cli/CLI.hpp>
 #include <chrono>
 
 using namespace GN;
 using namespace GN::gfx;
 using namespace GN::rt;
+
+struct SceneDesc
+{
+    struct Material
+    {
+        float albedo[3] = {.0f, .0f, .0f};
+        float roughness = .0f;
+        float emmisive[3] = {.0f, .0f, .0f};
+        float refindex = .0f;
+    };
+
+    std::vector<FatModel> models;
+    std::vector<Material> materials = {
+        {{1.0, 1.0, 1.0}}, // white
+        {{1.0, 0.0, 0.0}}, // red
+        {{0.0, 1.0, 0.0}}, // green
+        {{0.0, 0.0, 1.0}}, // blue
+        {{1.0, 1.0, 0.0}}, // yellow
+    };
+
+    enum BuiltInMaterial
+    {
+        LAMBERT_WHITE,
+        LAMBERT_RED,
+        LAMBERT_GREEN,
+        LAMBERT_BLUE,
+        LAMBERT_YELLOW,
+    };
+
+    SceneDesc()
+    {
+        materials.push_back({{1., 1., 1.}});
+        materials.push_back({{1., 0., 0.}});
+    }
+
+    void Load(const std::string &)
+    {
+        LoadSimpleCornellBox();
+    }
+
+    void LoadSimpleCornellBox()
+    {
+       
+    }
+
+    /*FatModel CreateCornellBox(float dimension)
+    {
+        float l = -dimension / 2.0f; // left
+        float r = +dimension / 2.0f; // right
+        float t = +dimension / 2.0f; // top
+        float b = -dimension / 2.0f; // bottom
+        float f = +dimension / 2.0f; // front
+        float k = -dimension / 2.0f; // back
+        Eigen::Vector3f v[] = {
+            { l, b, f },
+            { r, b, f },
+            { r, t, f },
+            { l, t, f },
+            { l, b, k },
+            { r, b, k },
+            { r, t, k },
+            { l, t, k },
+        };
+        FatModel m;
+        AddRectFace(m, v, 5, 4, 7, 6, { 0, 0, 1 }, LAMBERT_WHITE); // back
+        AddRectFace(m, v, 3, 2, 6, 7, { 0,-1, 0 }, LAMBERT_WHITE); // top
+        AddRectFace(m, v, 4, 5, 1, 0, { 0, 1, 0 }, LAMBERT_WHITE); // bottom
+        AddRectFace(m, v, 4, 0, 3, 7, { 1, 0, 0 }, LAMBERT_RED);   // left
+        AddRectFace(m, v, 1, 5, 6, 2, {-1, 0, 0 }, LAMBERT_GREEN); // right
+        return std::move(m);
+    }
+
+    static void AddRectFace(FatModel & m, const Eigen::Vector3f * v, int a, int b, int c, int d, const Eigen::Vector3f & normal, int material)
+    {
+        // if (m.meshes.empty()) {
+        //     m.meshes.resize(1);
+        //     //m.meshes[0].vertices.resize();
+        // }
+        // auto & mesh = m.meshes[0];
+        // mesh.vertices.
+        // m.meshes.resize
+        // buffer.push_back({ {{v[a], 0.0, normal, 0.0},{v[b], 1.0, normal, 0.0},{v[c], 1.0, normal, 1.0}}, material });
+        // buffer.push_back({ {{v[a], 0.0, normal, 0.0},{v[c], 1.0, normal, 1.0},{v[d], 0.0, normal, 1.0}}, material });
+    };*/
+};
 
 struct Scene
 {
@@ -53,7 +139,7 @@ struct Scene
 
     void DrawFrame(const DrawFrameParameters &)
     {
-        
+
     }
 };
 
