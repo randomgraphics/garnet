@@ -541,7 +541,6 @@ public:
 
     void testMove()
     {
-        // make sure erased item is destructed
         using namespace GN;
         Element::clear();
 
@@ -549,12 +548,54 @@ public:
         a.append({ 2 });
         TS_ASSERT_EQUALS(1, Element::count);
         TS_ASSERT_EQUALS(1, Element::mctor);
+        TS_ASSERT_EQUALS(0, Element::mop);
 
         DynaArray<Element> b = std::move(a);
         TS_ASSERT_EQUALS(0, a.size());
         TS_ASSERT_EQUALS(1, b.size());
         TS_ASSERT_EQUALS(1, Element::count);
-        TS_ASSERT_EQUALS(2, Element::mop);
+        TS_ASSERT_EQUALS(1, Element::mctor);
+        TS_ASSERT_EQUALS(0, Element::mop);
+    }
+
+    void testMove2()
+    {
+        using namespace GN;
+        Element::clear();
+
+        struct Stuff : public RefCounter
+        {
+            int * _i;
+            Stuff(int i)
+            {
+                _i = new int;
+                *_i = i;
+            }
+            ~Stuff()
+            {
+                delete _i;
+            }
+        };
+        
+        {
+            DynaArray<AutoRef<Stuff>> a;
+            a.append(AutoRef<Stuff>{ new Stuff(0) });
+            a.append(AutoRef<Stuff>{ new Stuff(1) });
+
+            DynaArray<AutoRef<Stuff>> b = a;
+            a.clear();
+            b.clear();
+        }
+
+        {
+            DynaArray<AutoRef<Stuff>> a;
+            a.append(AutoRef<Stuff>{ new Stuff(0) });
+            a.append(AutoRef<Stuff>{ new Stuff(1) });
+
+            DynaArray<AutoRef<Stuff>> b = std::move(a);
+            a.clear();
+            b.clear();
+        }
     }
 
     void testReserve()
@@ -576,7 +617,7 @@ public:
             TS_ASSERT_EQUALS( 2, a.size() );
             TS_ASSERT_EQUALS( 2, Element::count );
             TS_ASSERT_EQUALS( 2, Element::ctor );
-            TS_ASSERT_EQUALS( 2, Element::cctor );
+            TS_ASSERT_EQUALS( 2, Element::mctor );
             TS_ASSERT_EQUALS( 2, Element::dtor );
         }
 
