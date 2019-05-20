@@ -191,48 +191,62 @@ class DynaArrayTest : public CxxTest::TestSuite
         static int dtor;   ///< number of calls to dtor
         static int cctor;  ///< number of calls to copy constructor
         static int cop;    ///< number of calls to copy operator
+        static int mctor;
+        static int mop;
 
-        static void clear() { ctor = 0; dtor = 0; cctor = 0; cop = 0; }
+        static void clear() { ctor = 0; dtor = 0; cctor = 0; cop = 0; mctor = 0; mop = 0; }
 
-        bool constructed;
+        bool constructed = true;
+        int i = 0;
 
-        Element() : constructed(true)
+        Element()
+        {
+            ++ctor;
+            ++count;
+        }
+
+        Element(int i_) : i(i_)
         {
             ++ctor; ++count;
         }
 
         Element( const Element & o )
-            :constructed(true)
         {
-            if( !o.constructed )
-            {
-                GN_UNEXPECTED();
-            }
-
+            GN_VERIFY(o.constructed);
+            i = o.i;
             ++cctor;
+            ++count;
+        }
+
+        Element(Element && o)
+        {
+            GN_VERIFY(o.constructed);
+            i = o.i; o.i = 0;
+            ++mctor;
             ++count;
         }
 
         ~Element()
         {
-            if( !constructed )
-            {
-                GN_UNEXPECTED();
-            }
-
+            GN_VERIFY(constructed);
             constructed = false;
-
+            i = 0;
             ++dtor;
             --count;
         }
 
-        Element & operator=( Element & o )
+        Element & operator=( Element && o )
         {
-            if( !constructed || !o.constructed )
-            {
-                GN_UNEXPECTED();
-            }
+            GN_VERIFY(constructed && o.constructed);
+            i = o.i; o.i = 0;
+            ++mop;
+            return *this;
+        }
 
+        Element & operator=( const Element & o )
+        {
+            GN_VERIFY(constructed && o.constructed);
+            i = o.i;
             ++cop;
             return *this;
         }
@@ -332,7 +346,7 @@ public:
         b = c;
         TS_ASSERT_EQUALS( 7, Element::count );
         TS_ASSERT_EQUALS( 6, Element::ctor );
-        TS_ASSERT_EQUALS( 3, Element::cctor );
+        TS_ASSERT_EQUALS( 1, Element::cctor );
         TS_ASSERT_EQUALS( 2, Element::dtor );
         TS_ASSERT_EQUALS( 2, Element::cop );
 
@@ -341,7 +355,7 @@ public:
         b = a;
         TS_ASSERT_EQUALS( 5, Element::count );
         TS_ASSERT_EQUALS( 6, Element::ctor );
-        TS_ASSERT_EQUALS( 3, Element::cctor );
+        TS_ASSERT_EQUALS( 1, Element::cctor );
         TS_ASSERT_EQUALS( 4, Element::dtor );
         TS_ASSERT_EQUALS( 3, Element::cop );
     }
@@ -525,6 +539,24 @@ public:
         TS_ASSERT_EQUALS( 1, Element::count );
     }
 
+    void testMove()
+    {
+        // make sure erased item is destructed
+        using namespace GN;
+        Element::clear();
+
+        DynaArray<Element> a;
+        a.append({ 2 });
+        TS_ASSERT_EQUALS(1, Element::count);
+        TS_ASSERT_EQUALS(1, Element::mctor);
+
+        DynaArray<Element> b = std::move(a);
+        TS_ASSERT_EQUALS(0, a.size());
+        TS_ASSERT_EQUALS(1, b.size());
+        TS_ASSERT_EQUALS(1, Element::count);
+        TS_ASSERT_EQUALS(2, Element::mop);
+    }
+
     void testReserve()
     {
         using namespace GN;
@@ -558,3 +590,5 @@ int DynaArrayTest::Element::ctor  = 0;
 int DynaArrayTest::Element::dtor  = 0;
 int DynaArrayTest::Element::cctor = 0;
 int DynaArrayTest::Element::cop = 0;
+int DynaArrayTest::Element::mctor = 0;
+int DynaArrayTest::Element::mop = 0;
