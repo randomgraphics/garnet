@@ -83,6 +83,7 @@ namespace GN { namespace gfx
 
         FatVertexBuffer & operator=( FatVertexBuffer && rhs )
         {
+            clear();
             moveFrom( rhs );
             return *this;
         }
