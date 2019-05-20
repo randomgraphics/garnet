@@ -401,9 +401,11 @@ namespace GN
 
         void moveFrom( DynaArray & other )
         {
-            destroyAll();
-            mElements = other.mElements;
-            other.mElements = nullptr;
+            if (this != &other) {
+                destroyAll();
+                mElements = other.mElements;
+                other.mElements = nullptr;
+            }
         }
 
         bool copyFrom( const DynaArray & other )
@@ -451,9 +453,11 @@ namespace GN
 
             if( !doResize( count + 1 ) ) return false;
 
-            for( SIZE_TYPE i = count - 1; i > position; --i )
+            GN_ASSERT(GetCount() == count + 1);
+
+            for (SIZE_TYPE i = count; i > position; --i)
             {
-                mElements[i] = std::move(mElements[i-1]);
+                mElements[i] = std::move(mElements[i - 1]);
             }
 
             // TODO: make this a move too.
@@ -472,6 +476,7 @@ namespace GN
 
             auto & h = GetHeader();
 
+            GN_ASSERT(h.count > 0);
             --h.count;
 
             // move elements forward
@@ -662,7 +667,7 @@ namespace GN
         T       & back() { auto & h = GetHeader(); GN_ASSERT( h.count > 0 ); return mElements[h.count-1]; }
         const T * begin() const { return mElements; }
         T       * begin() { return mElements; }
-        SIZE_TYPE capacity() const { mElements ? GetHeader().capacity : 0; }
+        SIZE_TYPE capacity() const { return mElements ? GetHeader().capacity : 0; }
         void      clear() { doClear(); }
         const T * rawptr() const { return mElements; } // TODO: maybe rename it to data()?
         T       * rawptr() { return mElements; }
@@ -682,7 +687,7 @@ namespace GN
         //T       * next( const T * t ) { return ( mCount > 0 && mElements <= t && t < (mElements+mCount-1) ) ? ( t + 1 ) : NULL; }
         bool      reserve( SIZE_TYPE count ) { return doReserve( count ); }
         bool      resize( SIZE_TYPE count ) { return doResize( count ); }
-        void      popBack() { GN_ASSERT(GetCount() > 0); doErase( GetCount() - 1 ); }
+        void      popBack() { auto c = GetCount(); if (c > 0) doErase( c - 1 ); }
         /** clear array as well as release memory */
         void      purge() { destroyAll(); GN_ASSERT(nullptr == mElements); }
         SIZE_TYPE size() const { return GetCount(); }
