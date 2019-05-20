@@ -54,8 +54,15 @@ namespace GN { namespace gfx
 
         static Semantic sString2Semantic( const char * s );
 
+        union VertexElement
+        {
+            uint8_t u8[16];
+            uint32_t u32[4];
+            float f32[4];
+            uint64_t u64[2];
+        };
         // Each element is 16 bytes;
-        static const size_t ELEMENT_SIZE = 16;
+        static_assert(sizeof(VertexElement) == 16);
 
         FatVertexBuffer()
             : mCount(0)
@@ -67,28 +74,12 @@ namespace GN { namespace gfx
 
         GN_NO_COPY(FatVertexBuffer);
 
-        // FatVertexBuffer( const FatVertexBuffer & fvb )
-        //     : mCount(0)
-        //     , mLayout(0)
-        // {
-        //     memset( &mElements, 0, sizeof(mElements) );
-        //     memset( &mFormats, 0, sizeof(mFormats) );
-
-        //     copyFrom( fvb );
-        // }
-
         FatVertexBuffer( FatVertexBuffer && fvb ) { moveFrom(fvb); }
 
         ~FatVertexBuffer()
         {
             clear();
         }
-
-        // FatVertexBuffer & operator=( const FatVertexBuffer & rhs )
-        // {
-        //     copyFrom( rhs );
-        //     return *this;
-        // }
 
         FatVertexBuffer & operator=( FatVertexBuffer && rhs )
         {
@@ -116,8 +107,7 @@ namespace GN { namespace gfx
 
         uint32 getVertexCount() const { return mCount; }
 
-        /// No matter what the format is, size of each unit in the element array is always ELEMENT_SIZE.
-        void * getElementData( int semantic ) const
+        VertexElement * getElementData( int semantic ) const
         {
             if( 0 <= semantic && semantic < (int)NUM_SEMANTICS )
             {
@@ -144,10 +134,10 @@ namespace GN { namespace gfx
 
         /// getXXX() helpers
         //@{
-        void * getPosition() const { return mElements[POSITION]; }
-        void * getNormal() const { return mElements[NORMAL]; }
-        void * getJoints() const { return mElements[JOINT_ID]; }
-        void * getTexcoord( size_t stage ) const
+        VertexElement * getPosition() const { return mElements[POSITION]; }
+        VertexElement * getNormal() const { return mElements[NORMAL]; }
+        VertexElement * getJoints() const { return mElements[JOINT_ID]; }
+        VertexElement * getTexcoord( size_t stage ) const
         {
             size_t semantic = TEXCOORD0+stage;
             if( semantic <= TEXCOORD_LAST )
@@ -179,17 +169,13 @@ namespace GN { namespace gfx
                 void                   * buffer,
                 size_t                   bufferSize ) const;
 
-        /// Switch content of 2 fat vertex buffers. (No memory allocation/deallocation/copy, only pointers are switched)
-        static void sSwitchContent( FatVertexBuffer & vb1, FatVertexBuffer & vb2 );
-
     private:
 
-        void      * mElements[NUM_SEMANTICS];
+        VertexElement * mElements[NUM_SEMANTICS];
         ColorFormat mFormats[NUM_SEMANTICS];
         uint32      mCount;
         uint32      mLayout;
 
-        bool copyFrom( const FatVertexBuffer & other );
         void moveFrom(FatVertexBuffer & other)
         {
             if (this == &other) return;
@@ -317,7 +303,7 @@ namespace GN { namespace gfx
         DynaArray<DynaArray<FatRigidAnimation> > skeletonAnimations; //< 2D array that stores animations of each joint indexed by [skeletonIndex][jointIndex]
     };
 
-    struct GN_API FatModel : public NoCopy
+    struct GN_API FatModel
     {
         StrA                           name;       //< name of the model. Usually the filename which the model is loaded from.
         DynaArray<FatMesh,uint32>      meshes;     //< Mesh array. Use FatMesh* to avoid expensive copy opertaion when the array is resized.

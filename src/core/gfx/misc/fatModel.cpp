@@ -73,14 +73,15 @@ bool GN::gfx::FatVertexBuffer::resize( uint32 layout, uint32 count )
     }
 
     // allocate memory
-    void * vertices[NUM_SEMANTICS];
+    VertexElement * vertices[NUM_SEMANTICS];
     memset( vertices, 0, sizeof(vertices) );
     bool outofmem = false;
     for( int i = 0; i < (int)NUM_SEMANTICS; ++i )
     {
         if( (1<<i) & layout )
         {
-            vertices[i] = HeapMemory::alignedAlloc( count * 128, ELEMENT_SIZE );
+            static_assert(std::is_trivially_constructible<VertexElement>::value);
+            vertices[i] = (VertexElement*)HeapMemory::alignedAlloc( count * 128, sizeof(VertexElement) );
             if( NULL == vertices[i] )
             {
                 outofmem = true;
@@ -226,12 +227,12 @@ bool GN::gfx::FatVertexBuffer::GenerateVertexStream(
 
         if( semantics[j] != INVALID )
         {
-            SafeArrayAccessor<const uint8> src( (const uint8*)mElements[semantics[j]], mCount * ELEMENT_SIZE );
+            SafeArrayAccessor<const VertexElement> src(mElements[semantics[j]], mCount);
 
             for( size_t i = 0; i < mCount; ++i )
             {
-                memcpy( dst.subrange(0,size), src.subrange(0,size), size );
-                src += ELEMENT_SIZE;
+                memcpy( dst.subrange(0,size), src.subrange(0,1), size );
+                src += 1;
                 dst += stride;
             }
         }
@@ -244,42 +245,6 @@ bool GN::gfx::FatVertexBuffer::GenerateVertexStream(
             }
         }
     }
-
-    return true;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-void GN::gfx::FatVertexBuffer::sSwitchContent( FatVertexBuffer & vb1, FatVertexBuffer & vb2 )
-{
-    uint8 buff[sizeof(FatVertexBuffer)];
-    memcpy( buff, &vb1, sizeof(vb1) );
-    memcpy( &vb1, &vb2, sizeof(vb1) );
-    memcpy( &vb2, buff, sizeof(vb2) );
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-bool GN::gfx::FatVertexBuffer::copyFrom( const FatVertexBuffer & other )
-{
-    GN_UNUSED_PARAM( other );
-    GN_UNIMPL();
-
-    /*clear();
-
-    if( !resize( other.getLayout(), other.getVertexCount() ) ) return false;
-
-    for( int i = 0; i < NUM_SEMANTICS; ++i )
-    {
-        if( other.mElements[i] )
-        {
-            memcpy( mElements[i], other.mElements[i], mCount * ELEMENT_SIZE );
-        }
-
-        mFormats[i] = other.mFormats[i];
-    }*/
 
     return true;
 }
@@ -711,9 +676,8 @@ static bool sRemapFatMeshJointID( FatMesh & mesh )
     }
 
     // Replace mesh vb and ib with new data. And we are done.
-    FatVertexBuffer::sSwitchContent( mesh.vertices, newvb );
-    // TODO: implement DynaArray::sSwitchContent(...);
-    mesh.indices = newIndices;
+    mesh.vertices = std::move(newvb);
+    mesh.indices = std::move(newIndices);
 
     return true;
 }
