@@ -558,7 +558,7 @@ public:
         TS_ASSERT_EQUALS(0, Element::mop);
     }
 
-    void testMove2()
+    void testCopy2()
     {
         using namespace GN;
         Element::clear();
@@ -577,25 +577,14 @@ public:
             }
         };
         
-        {
-            DynaArray<AutoRef<Stuff>> a;
-            a.append(AutoRef<Stuff>{ new Stuff(0) });
-            a.append(AutoRef<Stuff>{ new Stuff(1) });
+        DynaArray<AutoRef<Stuff>> a;
+        a.append(AutoRef<Stuff>{ new Stuff(0) });
+        a.append(AutoRef<Stuff>{ new Stuff(1) });
 
-            DynaArray<AutoRef<Stuff>> b = a;
-            a.clear();
-            b.clear();
-        }
-
-        {
-            DynaArray<AutoRef<Stuff>> a;
-            a.append(AutoRef<Stuff>{ new Stuff(0) });
-            a.append(AutoRef<Stuff>{ new Stuff(1) });
-
-            DynaArray<AutoRef<Stuff>> b = std::move(a);
-            a.clear();
-            b.clear();
-        }
+        DynaArray<AutoRef<Stuff>> b;
+        a = b;
+        a.clear();
+        b.clear();
     }
 
     void testReserve()

@@ -434,9 +434,8 @@ namespace GN
                 OBJECT_ALLOCATOR::sConstruct( mElements + i, other.mElements[i] );
             }
 
-            if (othersCount > 0) {
-                GetHeader().count = othersCount;
-            }
+            // update count
+            if (mElements) GetHeader().count = othersCount;
 
             return true;
         }
