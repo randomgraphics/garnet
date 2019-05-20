@@ -81,7 +81,7 @@ bool GN::gfx::FatVertexBuffer::resize( uint32 layout, uint32 count )
         if( (1<<i) & layout )
         {
             static_assert(std::is_trivially_constructible<VertexElement>::value);
-            vertices[i] = (VertexElement*)HeapMemory::alignedAlloc( count * 128, sizeof(VertexElement) );
+            vertices[i] = (VertexElement*)HeapMemory::alignedAlloc( count * sizeof(VertexElement), sizeof(VertexElement) );
             if( NULL == vertices[i] )
             {
                 outofmem = true;
