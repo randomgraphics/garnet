@@ -10,7 +10,7 @@ namespace GN
 {
     // -------------------------------------------------------------------------
     /// Reference counted smart pointer. Support both strong and weak reference.
-    class RefCounter : public GN::NoCopy
+    class RefCounter
     {
     public:
 
@@ -21,12 +21,17 @@ namespace GN
             std::mutex     lock;
             GN::DoubleLink references;
 
+            GN_NO_COPY(WeakObject);
+
+            WeakObject() {}
+
             // return true, only when reference list is empty
-            bool deref(GN::DoubleLink & l)
+            bool deref(GN::DoubleLink & l, bool clearPtr = false)
             {
                 lock.lock();
                 l.detach();
                 bool timeToDelete = !references.prev && !references.next;
+                if (clearPtr) ptr = nullptr;
                 lock.unlock();
                 return timeToDelete;
             }
@@ -36,6 +41,10 @@ namespace GN
         //       reference management
         // ********************************
     public :
+
+        GN_NO_COPY(RefCounter);
+
+        GN_NO_MOVE(RefCounter);
 
         ///
         /// increase reference counter
@@ -49,25 +58,14 @@ namespace GN
         {
             GN_ASSERT( mRef > 0 );
 
-            int ref = mRef.fetch_sub(1) - 1;// GN::atomDec32( &mRef ) ;
-            if (0 == ref && mWeakObj)
-            {
-                mWeakLock.lock();
-                mWeakObj->lock.lock();
-                mWeakLink.detach();
-                mWeakObj->ptr = NULL;
-                bool timeToDelete = !mWeakObj->references.prev && !mWeakObj->references.next;
-                mWeakObj->lock.unlock();
-                if (timeToDelete)
-                {
-                    delete mWeakObj;
-                }
-                mWeakObj = NULL;
-                mWeakLock.unlock();
-            }
+            int ref = mRef.fetch_sub(1) - 1;
 
             if( 0 == ref )
             {
+                if (mWeakObj && mWeakObj->deref(mWeakLink, true)) {
+                    delete mWeakObj;
+                }
+                mWeakObj = nullptr;
                 delete this;
             }
 
@@ -201,6 +199,14 @@ namespace GN
         }
 
         ///
+        /// move constructor
+        ///
+        AutoRef(AutoRef && p) throw() : mPtr(p)
+        {
+            p.mPtr = nullptr;
+        }
+
+        ///
         /// destructor
         ///
         ~AutoRef()
@@ -211,18 +217,9 @@ namespace GN
         ///
         /// 赋值语句
         ///
-        AutoRef & operator = ( const AutoRef & rhs )
+        AutoRef & operator = (const AutoRef & rhs)
         {
-            set( rhs );
-            return *this;
-        }
-
-        ///
-        /// 赋值语句
-        ///
-        AutoRef & operator = ( XPTR ptr )
-        {
-            set( ptr );
+            set(rhs);
             return *this;
         }
 
@@ -233,6 +230,27 @@ namespace GN
         AutoRef & operator = ( const AutoRef<Y> & rhs )
         {
             set( rhs );
+            return *this;
+        }
+
+        ///
+        /// 赋值语句
+        ///
+        AutoRef & operator = (XPTR ptr)
+        {
+            set(ptr);
+            return *this;
+        }
+
+        ///
+        /// move operator
+        ///
+        AutoRef & operator = (AutoRef && rhs)
+        {
+            if (this == &rhs) return *this;
+            if (mPtr) mPtr->decref();
+            mPtr = rhs.mPtr;
+            rhs.mPtr = nullptr;
             return *this;
         }
 
@@ -389,6 +407,18 @@ namespace GN
 
         typedef AutoRef<X> StrongRef;
 
+        void moveFrom(WeakRef & ref)
+        {
+            GN_ASSERT(nullptr == mObj);
+            GN_ASSERT(nullptr == mLink.prev);
+            GN_ASSERT(nullptr == mLink.next);
+            mObj = ref.mObj;
+            mLink = std::move(ref.mLink);
+            ref.mObj = nullptr;
+            GN_ASSERT(nullptr == ref.mLink.prev);
+            GN_ASSERT(nullptr == ref.mLink.next);
+        }
+
     public:
 
         ///
@@ -405,6 +435,14 @@ namespace GN
         WeakRef( const WeakRef & ref ) : mObj(NULL)
         {
             set( ref.promote() );
+        }
+
+        ///
+        /// move constructor
+        ///
+        WeakRef( WeakRef && ref ) : mObj(nullptr)
+        {
+            moveFrom(ref);
         }
 
         ///
@@ -444,21 +482,15 @@ namespace GN
         ///
         void set( XPTR ptr )
         {
-            if (!ptr)
+            auto obj = ptr ? ptr->getWeakObj() : nullptr;
+            if (obj != mObj)
             {
                 clear();
-            }
-            else
-            {
-                RefCounter::WeakObject * obj = ptr->getWeakObj();
-                if (obj != mObj)
-                {
-                    obj->lock.lock();
-                    mLink.linkAfter( &obj->references );
-                    mLink.context = this;
-                    obj->lock.unlock();
-                    mObj = obj;
-                }
+                obj->lock.lock();
+                mLink.linkAfter(&obj->references);
+                mLink.context = this;
+                obj->lock.unlock();
+                mObj = obj;
             }
         }
 
@@ -484,6 +516,16 @@ namespace GN
         {
             set( rhs.promote() ); // TODO: we might be able to do it slightly faster.
             return *this;
+        }
+
+        ///
+        /// move operator
+        ///
+        WeakRef & operator = ( WeakRef && rhs )
+        {
+            if (this == &rhs) return *this;
+            clear();
+            moveFrom(rhs);
         }
 
         bool operator !() const { return empty(); }

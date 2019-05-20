@@ -10,15 +10,44 @@ namespace GN
 {
     struct DoubleLink
     {
-        DoubleLink * prev;
-        DoubleLink * next;
-        void       * context; //< A user defined pointer that is not used by the DoubeLink class.
+        DoubleLink * prev = nullptr;
+        DoubleLink * next = nullptr;
+        void       * context = nullptr; //< A user defined pointer that is not used by the DoubeLink class.
 
-        DoubleLink() : prev(NULL), next(NULL)
+        GN_NO_COPY(DoubleLink);
+
+        DoubleLink() {}
+
+        //
+        // move constructor
+        //
+        DoubleLink(DoubleLink && l)
         {
+            prev = l.prev;
+            next = l.next;
+            context = l.context;
+            l.prev = nullptr;
+            l.next = nullptr;
+            l.context = nullptr;
         }
 
-        // Link itself as next item of "where".
+        //
+        // move operator
+        //
+        DoubleLink & operator=(DoubleLink && rhs)
+        {
+            if (this == &rhs) return *this;
+            detach();
+            prev = rhs.prev;
+            next = rhs.next;
+            context = rhs.context;
+            rhs.prev = nullptr;
+            rhs.next = nullptr;
+            rhs.context = nullptr;
+            return *this;
+        }
+
+        /// Link itself as next item of "where".
         bool linkAfter( DoubleLink * where )
         {
             // should never self-linked.
