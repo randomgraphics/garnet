@@ -292,16 +292,16 @@ namespace GN { namespace gfx
     struct FatRigidAnimation
     {
         // local space -> parent space = T * R * S;
-        DynaArray<FatKeyFrame<Vector3f> >    positions;
-        DynaArray<FatKeyFrame<Quaternionf> > rotations;
-        DynaArray<FatKeyFrame<Vector3f> >    scalings;
+        DynaArray<FatKeyFrame<Vector3f>>    positions;
+        DynaArray<FatKeyFrame<Quaternionf>> rotations;
+        DynaArray<FatKeyFrame<Vector3f>>    scalings;
     };
 
     struct FatAnimation
     {
-        StrA                                     name;               //< Name of the animation.
-        double                                   duration;           //< Duration of the animation.
-        DynaArray<DynaArray<FatRigidAnimation> > skeletonAnimations; //< 2D array that stores animations of each joint indexed by [skeletonIndex][jointIndex]
+        StrA                                    name;               //< Name of the animation.
+        double                                  duration;           //< Duration of the animation.
+        DynaArray<DynaArray<FatRigidAnimation>> skeletonAnimations; //< 2D array that stores animations of each joint indexed by [skeletonIndex][jointIndex]
     };
 
     struct GN_API FatModel
