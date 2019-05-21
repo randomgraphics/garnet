@@ -9,6 +9,7 @@
 #include <stdarg.h>
 #include <ostream>
 #include <string.h>
+#include <string>
 namespace GN
 {
     /// name space for string utilities.
@@ -269,6 +270,13 @@ namespace GN
         {
             setCaps( 0 );
             mPtr[0] = 0;
+        }
+
+        Str(const std::basic_string<CharType> & s)
+        {
+            setCaps(s.size());
+            ::memcpy(mPtr, s.c_str(), (s.size() + 1) * sizeof(CharType));
+            setSize(s.size());
         }
 
         ///
