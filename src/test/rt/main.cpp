@@ -11,21 +11,14 @@ using namespace GN::rt;
 
 struct SceneDesc
 {
-    struct Material
-    {
-        float albedo[3] = {.0f, .0f, .0f};
-        float roughness = .0f;
-        float emmisive[3] = {.0f, .0f, .0f};
-        float refindex = .0f;
-    };
+    FatModel model;
 
-    std::vector<FatModel> models;
-    std::vector<Material> materials = {
-        {{1.0, 1.0, 1.0}}, // white
-        {{1.0, 0.0, 0.0}}, // red
-        {{0.0, 1.0, 0.0}}, // green
-        {{0.0, 0.0, 1.0}}, // blue
-        {{1.0, 1.0, 0.0}}, // yellow
+    std::vector<FatMaterial> materials = {
+        {"", "", "", {1.0, 1.0, 1.0}}, // white
+        {"", "", "", {1.0, 0.0, 0.0}}, // red
+        {"", "", "", {0.0, 1.0, 0.0}}, // green
+        {"", "", "", {0.0, 0.0, 1.0}}, // blue
+        {"", "", "", {1.0, 1.0, 0.0}}, // yellow
     };
 
     enum BuiltInMaterial
@@ -39,8 +32,6 @@ struct SceneDesc
 
     SceneDesc()
     {
-        materials.push_back({{1., 1., 1.}});
-        materials.push_back({{1., 0., 0.}});
     }
 
     void Load(const std::string &)
@@ -103,6 +94,28 @@ struct Scene
         Vec4 edges[2];
     };
 
+    struct Position : public Eigen::Vector3f
+    {
+        int primitive;
+    };
+
+    struct Normal : public Eigen::Vector3f
+    {
+        int material;
+    };
+
+    struct Material
+    {
+        float albedo[3] = { .0f, .0f, .0f };
+        float roughness = .0f;
+        float emmisive[3] = { .0f, .0f, .0f };
+        float refindex = .0f;
+        int   metal;
+        int : 32;
+        int : 32;
+        int : 32;
+    };
+    
     template<typename T>
     struct TypedSurface
     {
@@ -113,10 +126,11 @@ struct Scene
         const T & operator[](size_t i) const { return c[i]; }
     };
 
-    TypedSurface<Vec4>  positions; // w channel is primitive ID
-    TypedSurface<Vec4>  normals;   // w channel is material ID
-    TypedSurface<AABB>  bvh;
-    TypedSurface<Light> lights;
+    TypedSurface<Material> materials;
+    TypedSurface<Position> positions;
+    TypedSurface<Normal>   normals;
+    TypedSurface<AABB>     bvh;
+    TypedSurface<Light>    lights;
 
     ~Scene() { Cleanup(); }
 
@@ -125,9 +139,13 @@ struct Scene
 
     }
 
-    void Load(const std::string &)
+    bool Load(const std::string & filename)
     {
+        FatModel m;
+        if (!m.loadFromFile(filename)) return false;
 
+        // done
+        return true;
     }
 
     struct DrawFrameParameters
@@ -185,7 +203,7 @@ int main( int argc, const char * argv[] )
 
     // initialie the scene
     Scene s;
-    s.Load({filename});
+    if (!s.Load(filename)) return -1;
 
     // main camera
     OrbitCamera camera;
