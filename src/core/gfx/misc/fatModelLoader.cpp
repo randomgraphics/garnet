@@ -749,7 +749,7 @@ sLoadFbxSkeletons(
         {
             // The first joint must be the root joint.
             GN_ASSERT( FatJoint::NO_JOINT == fatsk.joints[0].parent );
-            fatsk.rootJointIndex = 0;
+            fatsk.root = 0;
 
             fatmodel.skeletons.append( fatsk );
         }
@@ -953,7 +953,7 @@ sLoadFbxVertexSkinning(
 static bool
 sGenerateFatVertices(
     FatMesh               & fatmesh,
-    FbxNode              * fbxnode,
+    FbxNode               * fbxnode,
     const MeshVertexCache * vertices,
     const MeshVertexKey   * keys,
     uint32                  numkeys )
@@ -1150,7 +1150,7 @@ sLoadFbxMesh(
     FatModel      & fatmodel,
     const StrA    & filename,
     FbxSdkWrapper & sdk,
-    FbxMesh      * fbxmesh )
+    FbxMesh       * fbxmesh )
 {
     FbxNode * fbxnode = fbxmesh->GetNode();
 
@@ -1177,7 +1177,7 @@ sLoadFbxMesh(
     }
 
     // Get basic fbxmesh properties
-    int                         * fbxIndices   = fbxmesh->GetPolygonVertices();
+    int                        * fbxIndices   = fbxmesh->GetPolygonVertices();
     const FbxVector4           * fbxPositions = fbxmesh->GetControlPoints();
     FbxLayerElementUV          * fbxUVs       = layer0->GetUVs();
     FbxLayerElementNormal      * fbxNormals   = layer0->GetNormals();
@@ -1185,8 +1185,8 @@ sLoadFbxMesh(
     //FbxLayerElementVertexColor * fbxColors    = layer0->GetVertexColors();
     //FbxLayerElementTangent     * fbxTangents  = layer0->GetTangents();
     //FbxLayerElementBinormal    * fbxBinormals = layer0->GetBinormals();
-    int                           numtri       = fbxmesh->GetPolygonCount();
-    int                           numidx       = numtri * 3;
+    int                          numtri       = fbxmesh->GetPolygonCount();
+    int                          numidx       = numtri * 3;
 
     // How many materials are there?
     int nummat;
@@ -1448,7 +1448,7 @@ sLoadFbxMeshes(
     FatModel      & fatmodel,
     const StrA    & filename,
     FbxSdkWrapper & sdk,
-    FbxScene     & scene )
+    FbxScene      & scene )
 {
     // Load meshes
     int meshCount = FbxGetSrcCount<FbxMesh>(&scene);
@@ -2008,7 +2008,7 @@ sFindRootJoint( const FatSkeleton & fatsk )
         }
     };
     uint32 counter = 0;
-    Local::sCountJointRecursivly( fatsk.joints.rawptr(), fatsk.joints.size(), counter, fatsk.rootJointIndex );
+    Local::sCountJointRecursivly( fatsk.joints.rawptr(), fatsk.joints.size(), counter, fatsk.root );
     if( counter != fatsk.joints.size() )
     {
         GN_ERROR(sLogger)( "Invalid joint hierarchy!" );
@@ -2106,8 +2106,8 @@ void sLoadAiMeshSkeleton(
     sLoadAiJointHierarchy( fatsk, FatJoint::NO_JOINT, aiscene.mRootNode );
 
     // Find root joint of the hierarchy.
-    fatsk.rootJointIndex = sFindRootJoint( fatsk );
-    if( FatJoint::NO_JOINT == fatsk.rootJointIndex ) return;
+    fatsk.root = sFindRootJoint( fatsk );
+    if( FatJoint::NO_JOINT == fatsk.root ) return;
 
     // Build local transformations of each node.
     for( uint32 i = 0; i < aimesh.mNumBones; ++i )
@@ -2250,8 +2250,8 @@ static bool sLoadAiVertices(
     normalTransform.Inverse();
 
     aiVector3D bbmin, bbmax;
-	bbmin.x = bbmin.y = bbmin.z =  1e10f;
-	bbmax.x = bbmax.y = bbmax.z = -1e10f;
+	bbmin.x = bbmin.y = bbmin.z = FLT_MAX;
+	bbmax.x = bbmax.y = bbmax.z = FLT_MIN;
 
     for( uint32 i = 0; i < aimesh->mNumVertices; ++i )
     {

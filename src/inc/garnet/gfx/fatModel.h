@@ -274,9 +274,9 @@ namespace GN { namespace gfx
 
     struct GN_API FatSkeleton
     {
-        StrA                       name;           //< name of the skeleton.
-        DynaArray<FatJoint,uint32> joints;         //< Joint array.
-        uint32                     rootJointIndex; //< Index of the root joint.
+        StrA                       name;   //< name of the skeleton.
+        DynaArray<FatJoint,uint32> joints; //< Joint array.
+        uint32                     root;   //< Index of the root joint.
 
         /// Print joint hierarchy to a string.
         void printJointHierarchy( StrA & ) const;
