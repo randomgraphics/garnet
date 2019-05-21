@@ -90,14 +90,7 @@ namespace GN { namespace gfx
 
         void clear()
         {
-            for( int i = 0; i < (int)NUM_SEMANTICS; ++i )
-            {
-                if( mElements[i] )
-                {
-                    HeapMemory::dealloc( mElements[i] );
-                    mElements[i] = NULL;
-                }
-            }
+            for(auto & e : mElements) e.clear();
             mCount = 0;
         }
 
@@ -108,11 +101,11 @@ namespace GN { namespace gfx
 
         uint32 getVertexCount() const { return mCount; }
 
-        VertexElement * getElementData( int semantic ) const
+        VertexElement * getElementData( int semantic )
         {
             if( 0 <= semantic && semantic < (int)NUM_SEMANTICS )
             {
-                return mElements[semantic];
+                return mElements[semantic].rawptr();
             }
             else
             {
@@ -135,15 +128,15 @@ namespace GN { namespace gfx
 
         /// getXXX() helpers
         //@{
-        VertexElement * getPosition() const { return mElements[POSITION]; }
-        VertexElement * getNormal() const { return mElements[NORMAL]; }
-        VertexElement * getJoints() const { return mElements[JOINT_ID]; }
-        VertexElement * getTexcoord( size_t stage ) const
+        VertexElement * getPosition() { return mElements[POSITION].rawptr(); }
+        VertexElement * getNormal() { return mElements[NORMAL].rawptr(); }
+        VertexElement * getJoints() { return mElements[JOINT_ID].rawptr(); }
+        VertexElement * getTexcoord( size_t stage )
         {
             size_t semantic = TEXCOORD0+stage;
             if( semantic <= TEXCOORD_LAST )
             {
-                return mElements[semantic];
+                return mElements[semantic].rawptr();
             }
             else
             {
@@ -161,6 +154,10 @@ namespace GN { namespace gfx
             }
         }
 
+        bool beginVertices(uint32_t layout, uint32_t estimatedCount = 0);
+        void addVertexElement(int semantic, const VertexElement & value);
+        void endVertices();
+
         void GenerateMeshVertexFormat( MeshVertexFormat & mvf ) const;
 
         bool GenerateVertexStream(
@@ -172,16 +169,17 @@ namespace GN { namespace gfx
 
     private:
 
-        VertexElement * mElements[NUM_SEMANTICS];
-        ColorFormat mFormats[NUM_SEMANTICS];
-        uint32      mCount;
-        uint32      mLayout;
+        DynaArray<VertexElement> mElements[NUM_SEMANTICS];
+        ColorFormat              mFormats[NUM_SEMANTICS];
+        uint32                   mCount;
+        uint32                   mLayout;
+        DynaArray<VertexElement> mFatVertex; // temporary storage used to store the lastest vertex data between beginVertices() and endVerttices(),
 
         void moveFrom(FatVertexBuffer & other)
         {
             if (this == &other) return;
             for(size_t i = 0; i < NUM_SEMANTICS; ++i) {
-                mElements[i] = other.mElements[i]; other.mElements[i] = nullptr;
+                mElements[i] = std::move(other.mElements[i]); GN_ASSERT(other.mElements[i].empty());
                 mFormats[i] = other.mFormats[i]; other.mFormats[i] = 0;
             }
             mCount = other.mCount; other.mCount = 0;

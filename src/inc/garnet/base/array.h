@@ -490,6 +490,8 @@ namespace GN
 
         bool doReserve( SIZE_TYPE count )
         {
+            if (0 == count) return true;
+
             const Header * oldHeader = mElements ? &GetHeader() : nullptr;
             SIZE_TYPE oldCap = oldHeader ? oldHeader->capacity : 0;
             if (oldCap >= count) return true;

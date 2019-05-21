@@ -72,51 +72,16 @@ bool GN::gfx::FatVertexBuffer::resize( uint32 layout, uint32 count )
         return true;
     }
 
-    // allocate memory
-    VertexElement * vertices[NUM_SEMANTICS];
-    memset( vertices, 0, sizeof(vertices) );
-    bool outofmem = false;
-    for( int i = 0; i < (int)NUM_SEMANTICS; ++i )
-    {
-        if( (1<<i) & layout )
-        {
-            static_assert(std::is_trivially_constructible<VertexElement>::value);
-            vertices[i] = (VertexElement*)HeapMemory::alignedAlloc( count * sizeof(VertexElement), sizeof(VertexElement) );
-            if( NULL == vertices[i] )
-            {
-                outofmem = true;
-                break;
-            }
-        }
-    }
-    if( outofmem )
-    {
-        for( int i = 0; i < (int)NUM_SEMANTICS; ++i )
-        {
-            safeHeapDealloc( vertices[i] );
-        }
-        GN_ERROR(sLogger)( "Fail to resize fat vertex buffer: out of memory." );
-        return false;
-    }
-
     // update data pointer and format
     for( int i = 0; i < (int)NUM_SEMANTICS; ++i )
     {
         if( (1<<i) & layout )
         {
-            GN_ASSERT( vertices[i] );
-            memcpy( vertices[i], mElements[i], math::getmin<>(count,mCount) );
-            safeHeapDealloc( mElements[i] );
-            mElements[i] = vertices[i];
+            mElements[i].resize(count);
         }
         else
         {
-            safeHeapDealloc( mElements[i] );
-        }
-
-        // clear both new and unused formats
-        if( (0 == ((1<<i) & layout)) || (0 == ((1<<i) & mLayout)) )
-        {
+            mElements[i].clear();
             mFormats[i] = ColorFormat::UNKNOWN;
         }
     }
@@ -125,6 +90,65 @@ bool GN::gfx::FatVertexBuffer::resize( uint32 layout, uint32 count )
     mCount = count;
 
     return true;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+bool GN::gfx::FatVertexBuffer::beginVertices(uint32_t layout, uint32_t estimatedCount)
+{
+    if (!mFatVertex.empty()) {
+        GN_ERROR(sLogger)("redundant call to beginVertices()");
+        return false;
+    }
+
+    clear(); // cleanup existing vertices
+
+    // reserve memory
+    for(int i = 0; i < NUM_SEMANTICS; ++i) {
+        mFormats[i] = ColorFormat::UNKNOWN;
+        if (0 == ((1<<i) & layout)) continue;
+        mElements[i].reserve(estimatedCount);
+    }
+    mLayout = layout;
+    mFatVertex.resize(NUM_SEMANTICS);
+
+    return true;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::gfx::FatVertexBuffer::addVertexElement(int semantic, const VertexElement & value)
+{
+    if (mFatVertex.empty()) {
+        GN_ERROR(sLogger)("addVertexElement() can only be called between beginVertices() and endVertices().");
+        return;
+    }
+    if (semantic < 0 || semantic >= NUM_SEMANTICS) {
+        GN_ERROR(sLogger)("invalid semantic.");
+        return;
+    }
+
+    mFatVertex[semantic] = value;
+
+    if (POSITION == semantic) {
+        for(int i = 0; i < NUM_SEMANTICS; ++i) {
+            if (0 == ((1<<i) & mLayout)) continue;
+            mElements[i].append(mFatVertex[i]);
+        }
+    }
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::gfx::FatVertexBuffer::endVertices()
+{
+    if (mFatVertex.empty()) {
+        GN_ERROR(sLogger)("Redundant call to endVertices()");
+    }
+    mFatVertex.purge();
 }
 
 //
@@ -227,7 +251,7 @@ bool GN::gfx::FatVertexBuffer::GenerateVertexStream(
 
         if( semantics[j] != INVALID )
         {
-            SafeArrayAccessor<const VertexElement> src(mElements[semantics[j]], mCount);
+            SafeArrayAccessor<const VertexElement> src(mElements[semantics[j]].rawptr(), mCount);
 
             for( size_t i = 0; i < mCount; ++i )
             {
