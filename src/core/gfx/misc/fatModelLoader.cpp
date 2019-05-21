@@ -247,7 +247,7 @@ sLoadFromASE( FatModel & fatmodel, File & file, const StrA & filename )
         dst.name = src.name;
         dst.albedoTexture = src.mapdiff.bitmap;
         dst.normalTexture = src.mapbump.bitmap;
-        dst.albedoColor.set( src.diffuse, 1.0f );
+        dst.albedo = src.diffuse;
     }
 
     // copy meshes
@@ -1226,7 +1226,7 @@ sLoadFbxMesh(
         if( texname ) fatmat.normalTexture = fs::resolvePath( dirname, texname );
 
         // TODO: get diffuse color.
-        fatmat.albedoColor.set( 1, 1, 1, 1 );
+        fatmat.albedo.set( 1, 1, 1 );
 
         fatmodel.materials.append( fatmat );
         fatmatIndices[i] = fatmodel.materials.size() - 1;

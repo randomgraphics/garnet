@@ -234,14 +234,22 @@ namespace GN { namespace gfx
         StrA     name; //< Material name
         StrA     albedoTexture;
         StrA     normalTexture;
-        Vector4f albedoColor;
+        Vector3f albedo;
+        Vector3f emmisive;
+        float    roughness = .0f;
+        float    refIndex = .0f;
+        bool     metal = false;
 
         void clear()
         {
             name.clear();
             albedoTexture.clear();
             normalTexture.clear();
-            albedoColor.set( 0, 0, 0, 1 );
+            albedo.set(0, 0, 0);
+            emmisive.set(0, 0, 0);
+            roughness = 0.f;
+            refIndex = 0.f;
+            metal = false;
         }
     };
 
