@@ -6,6 +6,8 @@
 /// \author  chenlee (2005.4.17)
 // *****************************************************************************
 
+#include <Eigen/Eigen>
+
 // Garnet system uses right hand system by default. Define this macro to 1 to
 // use left hand system.
 //
@@ -347,6 +349,9 @@ namespace GN
         template<typename TX, typename TY, typename TZ>
         Vector3( TX ix, TY iy, TZ iz )
             : x((T)ix), y((T)iy), z((T)iz)
+        {}
+        Vector3( const Eigen::Matrix<T, 3, 1> & v )
+            : x(v.x()), y(v.y()), z(v.z())
         {}
         Vector3( const Vector3 & v )
             : x(v.x), y(v.y), z(v.z)

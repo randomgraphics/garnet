@@ -9,81 +9,78 @@ using namespace GN;
 using namespace GN::gfx;
 using namespace GN::rt;
 
-struct SceneDesc
+enum BuiltInMaterial : uint32_t
 {
-    FatModel model;
+    LAMBERT_WHITE,
+    LAMBERT_RED,
+    LAMBERT_GREEN,
+    LAMBERT_BLUE,
+    LAMBERT_YELLOW,
+};
 
-    std::vector<FatMaterial> materials = {
+std::vector<FatMaterial> GetBuiltInMaterials()
+{
+    return {
         {"", "", "", {1.0, 1.0, 1.0}}, // white
         {"", "", "", {1.0, 0.0, 0.0}}, // red
         {"", "", "", {0.0, 1.0, 0.0}}, // green
         {"", "", "", {0.0, 0.0, 1.0}}, // blue
         {"", "", "", {1.0, 1.0, 0.0}}, // yellow
     };
-
-    enum BuiltInMaterial
-    {
-        LAMBERT_WHITE,
-        LAMBERT_RED,
-        LAMBERT_GREEN,
-        LAMBERT_BLUE,
-        LAMBERT_YELLOW,
-    };
-
-    SceneDesc()
-    {
-    }
-
-    void Load(const std::string &)
-    {
-        LoadSimpleCornellBox();
-    }
-
-    void LoadSimpleCornellBox()
-    {
-       
-    }
-
-    /*FatModel CreateCornellBox(float dimension)
-    {
-        float l = -dimension / 2.0f; // left
-        float r = +dimension / 2.0f; // right
-        float t = +dimension / 2.0f; // top
-        float b = -dimension / 2.0f; // bottom
-        float f = +dimension / 2.0f; // front
-        float k = -dimension / 2.0f; // back
-        Eigen::Vector3f v[] = {
-            { l, b, f },
-            { r, b, f },
-            { r, t, f },
-            { l, t, f },
-            { l, b, k },
-            { r, b, k },
-            { r, t, k },
-            { l, t, k },
-        };
-        FatModel m;
-        AddRectFace(m, v, 5, 4, 7, 6, { 0, 0, 1 }, LAMBERT_WHITE); // back
-        AddRectFace(m, v, 3, 2, 6, 7, { 0,-1, 0 }, LAMBERT_WHITE); // top
-        AddRectFace(m, v, 4, 5, 1, 0, { 0, 1, 0 }, LAMBERT_WHITE); // bottom
-        AddRectFace(m, v, 4, 0, 3, 7, { 1, 0, 0 }, LAMBERT_RED);   // left
-        AddRectFace(m, v, 1, 5, 6, 2, {-1, 0, 0 }, LAMBERT_GREEN); // right
-        return std::move(m);
-    }
-
-    static void AddRectFace(FatModel & m, const Eigen::Vector3f * v, int a, int b, int c, int d, const Eigen::Vector3f & normal, int material)
-    {
-        // if (m.meshes.empty()) {
-        //     m.meshes.resize(1);
-        //     //m.meshes[0].vertices.resize();
-        // }
-        // auto & mesh = m.meshes[0];
-        // mesh.vertices.
-        // m.meshes.resize
-        // buffer.push_back({ {{v[a], 0.0, normal, 0.0},{v[b], 1.0, normal, 0.0},{v[c], 1.0, normal, 1.0}}, material });
-        // buffer.push_back({ {{v[a], 0.0, normal, 0.0},{v[c], 1.0, normal, 1.0},{v[d], 0.0, normal, 1.0}}, material });
-    };*/
 };
+
+static void AddRectFace(FatModel & model, const Eigen::Vector3f * v, int a, int b, int c, int d, const Eigen::Vector3f & normal, uint32_t material)
+{
+    model.meshes.resize(model.meshes.size() + 1);
+    auto & mesh = model.meshes.back();
+
+    mesh.vertices.resize(FatVertexBuffer::POS_NORMAL, 6);
+    mesh.vertices.setElementFormat(FatVertexBuffer::POSITION, ColorFormat::FLOAT3);
+    mesh.vertices.setElementFormat(FatVertexBuffer::NORMAL, ColorFormat::FLOAT3);
+    auto p = mesh.vertices.getPosition();    
+    auto n = mesh.vertices.getNormal();
+    p[0].v3() = v[a]; p[1].v3() = v[b]; p[2].v3() = v[c];
+    p[3].v3() = v[a]; p[4].v3() = v[c]; p[5].v3() = v[d];
+    for(int i = 0; i < 6; ++i, ++n) n->v3() = normal;
+    
+    // create one subset
+    mesh.subsets.append({material, 0, 6});
+}
+
+static void CreateCornellBox(FatModel & m, float dimension)
+{
+    float l = -dimension / 2.0f; // left
+    float r = +dimension / 2.0f; // right
+    float t = +dimension / 2.0f; // top
+    float b = -dimension / 2.0f; // bottom
+    float f = +dimension / 2.0f; // front
+    float k = -dimension / 2.0f; // back
+    Eigen::Vector3f v[] = {
+        { l, b, f },
+        { r, b, f },
+        { r, t, f },
+        { l, t, f },
+        { l, b, k },
+        { r, b, k },
+        { r, t, k },
+        { l, t, k },
+    };
+    AddRectFace(m, v, 5, 4, 7, 6, { 0, 0, 1 }, LAMBERT_WHITE); // back
+    AddRectFace(m, v, 3, 2, 6, 7, { 0,-1, 0 }, LAMBERT_WHITE); // top
+    AddRectFace(m, v, 4, 5, 1, 0, { 0, 1, 0 }, LAMBERT_WHITE); // bottom
+    AddRectFace(m, v, 4, 0, 3, 7, { 1, 0, 0 }, LAMBERT_RED);   // left
+    AddRectFace(m, v, 1, 5, 6, 2, {-1, 0, 0 }, LAMBERT_GREEN); // right
+}
+
+FatModel LoadSimpleCornellBox()
+{
+    FatModel m;
+    m.materials.append(GetBuiltInMaterials());
+    CreateCornellBox(m, 2.0f);
+    return m;
+}
+
+
 
 struct Scene
 {
@@ -139,11 +136,8 @@ struct Scene
 
     }
 
-    bool Load(const std::string & filename)
+    bool Load(const FatModel &)
     {
-        FatModel m;
-        if (!m.loadFromFile(filename)) return false;
-
         // done
         return true;
     }
@@ -203,7 +197,8 @@ int main( int argc, const char * argv[] )
 
     // initialie the scene
     Scene s;
-    if (!s.Load(filename)) return -1;
+    //if (!s.Load(filename)) return -1;
+    if (!s.Load(LoadSimpleCornellBox())) return -1;
 
     // main camera
     OrbitCamera camera;

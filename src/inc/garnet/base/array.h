@@ -6,6 +6,8 @@
 /// \author  chenlee (2006.5.31)
 // *****************************************************************************
 
+#include <vector>
+
 namespace GN
 {
     ///
@@ -664,6 +666,7 @@ namespace GN
         bool      append( T && t ) { return doMoveAppend( &t, 1 ); }
         bool      append( const T * p, SIZE_TYPE count ) { return doAppend( p, count ); }
         bool      append( const DynaArray & a ) { return doAppend( a.mElements, a.size() ); }
+        bool      append( const std::vector<T> & a ) { return doAppend( a.data(), (SIZE_TYPE)a.size() ); }
         const T & back() const { auto & h = GetHeader(); GN_ASSERT( h.count > 0 ); return mElements[h.count-1]; }
         T       & back() { auto & h = GetHeader(); GN_ASSERT( h.count > 0 ); return mElements[h.count-1]; }
         const T * begin() const { return mElements; }

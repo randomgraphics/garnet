@@ -46,6 +46,8 @@ namespace GN { namespace gfx
 
         static const uint32 MAX_TEXCOORDS;// = (uint32)(TEXCOORD_LAST - TEXCOORD0);
 
+        static const uint32 POS_NORMAL = (1<<POSITION) | (1<<NORMAL);
+
         static const uint32 POS_NORMAL_TEX;// = (1<<POSITION) | (1<<NORMAL) | (1<<TEXCOORD0);
 
         static const uint32 POS_NORMAL_TEX_SKINNING;// = (1<<POSITION) | (1<<NORMAL) | (1<<TEXCOORD0) | (1<<JOINT_ID) | (1<<JOINT_WEIGHT);
@@ -60,6 +62,9 @@ namespace GN { namespace gfx
             uint32_t u32[4];
             float f32[4];
             uint64_t u64[2];
+            Vector4f & v4() { return *(Vector4f*)f32; };
+            Vector3f & v3() { return *(Vector3f*)f32; };
+            Vector2f & v2() { return *(Vector2f*)f32; };
         };
         // Each element is 16 bytes;
         static_assert(sizeof(VertexElement) == 16);
