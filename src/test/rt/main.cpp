@@ -103,12 +103,17 @@ struct Scene
 
     struct Material
     {
-        float albedo[3] = { .0f, .0f, .0f };
-        float roughness = .0f;
-        float emmisive[3] = { .0f, .0f, .0f };
-        float refindex = .0f;
-        int   metal;
-        int : 32;
+        enum Type : int
+        {
+            DIFFUSE,
+            DIELETRIC,
+            METAL,
+            LIGHT,
+        };
+        float albedo[3] = { .0f, .0f, .0f }; // this is emmisive for light
+        float roughness = .0f; // ignored for light
+        float refindex = .0f; // only for dieletric material
+        Type  type;
         int : 32;
         int : 32;
     };
@@ -117,7 +122,13 @@ struct Scene
     struct TypedSurface
     {
         AutoRef<GN::gfx::Gpu2::Surface> g;
-        std::vector<T>                  c;
+        DynaArray<T>                    c;
+
+        void clear()
+        {
+            g.clear();
+            c.clear();
+        }
 
         T & operator[](size_t i) { return c[i]; }
         const T & operator[](size_t i) const { return c[i]; }
@@ -133,10 +144,14 @@ struct Scene
 
     void Cleanup()
     {
-
+        materials.clear();
+        positions.clear();
+        normals.clear();
+        bvh.clear();
+        lights.clear();
     }
 
-    bool Load(const FatModel &)
+    bool Load(Gpu2 *, const FatModel &)
     {
         // done
         return true;
@@ -198,7 +213,7 @@ int main( int argc, const char * argv[] )
     // initialie the scene
     Scene s;
     //if (!s.Load(filename)) return -1;
-    if (!s.Load(LoadSimpleCornellBox())) return -1;
+    if (!s.Load(gpu, LoadSimpleCornellBox())) return -1;
 
     // main camera
     OrbitCamera camera;
