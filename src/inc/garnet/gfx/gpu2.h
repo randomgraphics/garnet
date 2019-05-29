@@ -23,6 +23,7 @@ namespace gfx
             GraphicsAPI   api = GraphicsAPI::AUTO;
             uint32_t      width = 0, height = 0; // back buffer size. set to 0 to use window size.
             bool          fullscreen = false;
+            bool          debug = GN_BUILD_DEBUG_ENABLED;
         };
         static GN_API AutoRef<Gpu2> createGpu2(const CreationParameters &);
         //@}
@@ -165,12 +166,6 @@ namespace gfx
         };
         virtual void present(const PresentParameters &) = 0;
         //@}
-
-        /// misc
-        //@{
-        virtual void wait(uint64_t fence) = 0; ///< block caller thread until the fence completes.
-        virtual bool testFence(uint64_t fence) = 0;
-        //}
     };
 } // end of namespace gfx
 } // end of namespace GN

@@ -126,6 +126,7 @@ add_core_libs(${CMAKE_DL_LIBS} Threads::Threads)
 
 # compiler specific setup
 if (MSVC)
+    target_compile_definitions(GNcore PUBLIC _UNICODE UNICODE)
     target_compile_options(GNcore PUBLIC /EHa /MP /W4 /WX)
 else()
     target_compile_options(GNcore PUBLIC -Wall -Wextra -pedantic -Werror)

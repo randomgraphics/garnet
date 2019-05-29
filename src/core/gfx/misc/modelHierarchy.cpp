@@ -71,7 +71,7 @@ namespace xpr
 
 struct XPRFileHeader
 {
-    FOURCC tag;        ///< must be XPR2
+    uint32 tag;        ///< must be XPR2
     uint32 size1;      ///< size tag 1
     uint32 size2;      ///< size tag 2 (file size = size1+size2+12)
     uint32 numObjects; ///< number of objects in this file
@@ -79,7 +79,7 @@ struct XPRFileHeader
 
 struct XPRObjectHeader
 {
-    FOURCC type;    ///< object type, could be "USER", "TX2D", "VBUF", "IBUF".
+    uint32 type;    ///< object type, could be "USER", "TX2D", "VBUF", "IBUF".
     uint32 offset;  ///< object offset in bytes. The actual offset is this value + 12.
     uint32 size;    ///< object size in bytes
     uint32 unknown; ///< I don't know what this is for.
@@ -158,7 +158,7 @@ sLoadXprSceneFromFile( XPRScene & xpr, File & file )
         size_t offset = o.offset - sizeof(header) + 12;
         void * desc   = &xpr.sceneData[offset];
 
-        switch( o.type.u32 )
+        switch( o.type )
         {
             case GN_MAKE_FOURCC( 'V','B','U','F' ):
             {
