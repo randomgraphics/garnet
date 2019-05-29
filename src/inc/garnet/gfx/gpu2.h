@@ -110,6 +110,13 @@ namespace gfx
         virtual std::vector<uint8> compileProgram(const ProgramSource &) = 0;
         //@}
 
+        enum Binding : int
+        {
+            VERTEX,
+            INDEX,
+            STORAGE,
+        };
+
         /// GPU surface
         //@{
         struct SurfaceCreationParameters
@@ -118,11 +125,13 @@ namespace gfx
             {
                 struct TextureDesc
                 {
-                    uint32_t w, h, d, a, l;
+                    ColorFormat f;
+                    uint32_t w, h, d, a, l; // width, height, depth, array size, levels.
                 } t;
 
                 struct BufferDesc
                 {
+                    uint32_t binding;
                     uint32_t bytes;
                 } b;
             };
