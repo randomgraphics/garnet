@@ -25,5 +25,8 @@
 // Garnet is build with D3D11.1 enabled
 #cmakedefine01 GN_BUILD_HAS_D3D11_1
 
+// Garnet is build with D3D12 enabled
+#cmakedefine01 GN_BUILD_HAS_D3D12
+
 // Has xnamath.h (legacy flag for Xbox only)
 #cmakedefine01 GN_BUILD_HAS_XNAMATH
