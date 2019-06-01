@@ -34,12 +34,10 @@ namespace gfx
         {
             const uint8_t * compiledGpuProgramBinary;
             uint64_t        compiledGpuProgramSizeInBytes;
-            const char * states; // pipeline state defined in JSON format.
+            const char *    states; // pipeline state defined in JSON format.
         };
-        struct Pipeline : public RefCounter
-        {
-        };
-        virtual std::vector<Pipeline> createPipelineObjects(const PipelineCreationParameters *, size_t) = 0;
+        virtual DynaArray<uint64_t> createPipelineStates(const PipelineCreationParameters *, size_t) = 0;
+        virtual void deletePipelineStates(const uint64_t *, size_t) = 0;
         //@}
 
         struct Surface;
@@ -55,25 +53,33 @@ namespace gfx
         };
         struct DrawParameters
         {
-            const Pipeline * pipeline;
-            uint32_t         indexcount;
-            uint32_t         basevertex;
-            uint32_t         baseindex;
-            uint32_t         primitive;
+            uint64_t pso;
+            uint32_t indexcount;
+            uint32_t basevertex;
+            uint32_t baseindex;
+            uint32_t primitive;
+        };
+        struct ComputeParameters
+        {
+            uint64_t pso;
+            uint32_t groupX;
+            uint32_t groupY = 1;
+            uint32_t groupZ = 1;
         };
         struct CommandListCreationParameters
         {
-
+            uint64_t initialState = 0; // optional initial pipeline state. If empty, the default state is used.
         };
         struct CommandList : public RefCounter
         {
             virtual void     copy(const CopyParameters &) = 0;
-            virtual void     draw(const DrawParameters *) = 0;
+            virtual void     draw(const DrawParameters &) = 0;
+            virtual void     compute(const ComputeParameters &) = 0;
             virtual uint64_t mark() = 0; // insert a new fence into command list, returns fence id.
             virtual void     wait(uint64_t fence) = 0; // insert a wait-for-fence into command list
         };
         virtual AutoRef<CommandList> createCommandList(const CommandListCreationParameters &) = 0;
-        virtual void                 kickoff(CommandList &) = 0; ///< kick off command list.
+        virtual void kickoff(CommandList &) = 0; ///< kick off command lists.
         //@}
 
         /// GPU memory pool

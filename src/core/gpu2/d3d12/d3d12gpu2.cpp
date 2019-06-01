@@ -4,6 +4,8 @@
 using namespace GN;
 using namespace GN::gfx;
 
+static auto sLogger = GN::getLogger("GN.gfx.gpu2.D3D12");
+
 // Helper function for acquiring the first available hardware adapter that supports Direct3D 12.
 // If no such adapter can be found, *ppAdapter will be set to nullptr.
 // -----------------------------------------------------------------------------
@@ -116,9 +118,6 @@ GN::gfx::D3D12Gpu2::D3D12Gpu2(const CreationParameters & cp)
             rtvHandle.Offset(1, _rtvDescriptorSize);
         }
     }
-
-    // crate command buffer allocator
-    ThrowIfFailed(_device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&_commandAllocator)));
 }
 
 //
@@ -126,7 +125,18 @@ GN::gfx::D3D12Gpu2::D3D12Gpu2(const CreationParameters & cp)
 // -----------------------------------------------------------------------------
 GN::AutoRef<GN::gfx::Gpu2::CommandList> GN::gfx::D3D12Gpu2::createCommandList(const CommandListCreationParameters & cp)
 {
-     return SafeNew(new D3D12CommandList(cp));
+     return SafeNew(new D3D12CommandList(*this, cp));
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::gfx::D3D12Gpu2::kickoff(GN::gfx::Gpu2::CommandList & cl)
+{
+    ID3D12GraphicsCommandList * gfxcl = ((D3D12CommandList*)&cl)->commandList;
+    gfxcl->Close();
+    ID3D12CommandList * d3dcl = gfxcl;
+    _commandQueue->ExecuteCommandLists(1, &d3dcl);
 }
 
 //
@@ -134,4 +144,14 @@ GN::AutoRef<GN::gfx::Gpu2::CommandList> GN::gfx::D3D12Gpu2::createCommandList(co
 // -----------------------------------------------------------------------------
 void GN::gfx::D3D12Gpu2::present(const PresentParameters &)
 {
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+GN::gfx::D3D12CommandList::D3D12CommandList(D3D12Gpu2 & gpu, const Gpu2::CommandListCreationParameters & cp)
+    : owner(gpu)
+{
+    ReturnIfFailed(gpu.device().CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&allocator)));
+    ReturnIfFailed(gpu.device().CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, allocator, (ID3D12PipelineState*)cp.initialState, IID_PPV_ARGS(&commandList)));
 }
