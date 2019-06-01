@@ -31,35 +31,67 @@ namespace GN { namespace gfx
 
     struct D3D12CommandList;
 
-    struct D3D12CommandQueue
+    template<Gpu2::CommandListType TYPE>
+    class D3D12CommandQueue
     {
-        AutoComPtr<ID3D12CommandQueue> q;
-        AutoComPtr<ID3D12Fence> f;
-        Win32Event e;
-        uint64_t nextFenceValue = 1;
-
-        void init(ID3D12Device & device, D3D12_COMMAND_LIST_TYPE type)
+        union FenceValue
         {
+            uint64_t u64;
+            struct
+            {
+                uint64_t value : 62;
+                uint64_t type  : 2;
+            };
+        };
+
+        AutoComPtr<ID3D12CommandQueue> _q;
+        AutoComPtr<ID3D12Fence> _f;
+        Win32Event _e;
+        FenceValue _fenceValue;
+
+        static constexpr D3D12_COMMAND_LIST_TYPE d3dtype()
+        {
+            if constexpr (Gpu2::CommandListType::GRAPHICS == TYPE)
+                return D3D12_COMMAND_LIST_TYPE_DIRECT;
+            else if constexpr (Gpu2::CommandListType::COMPUTE == TYPE)
+                return D3D12_COMMAND_LIST_TYPE_COMPUTE;
+            else {
+                static_assert(TYPE == Gpu2::CommandListType::COPY);
+                return D3D12_COMMAND_LIST_TYPE_COPY;
+            }
+        }
+
+    public:
+
+        void init(ID3D12Device & device)
+        {
+            _fenceValue.type = (unsigned)TYPE;
+            _fenceValue.value = 0;
             D3D12_COMMAND_QUEUE_DESC queueDesc = {};
             queueDesc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
-            queueDesc.Type = type;
-            ThrowIfFailed(device.CreateCommandQueue(&queueDesc, IID_PPV_ARGS(&q)));
-            ThrowIfFailed(device.CreateFence(nextFenceValue++, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&f)));
-            e.h = CreateEvent(nullptr, FALSE, FALSE, nullptr);
-            GN_VERIFY(!e.empty());
+            queueDesc.Type = d3dtype();
+            ThrowIfFailed(device.CreateCommandQueue(&queueDesc, IID_PPV_ARGS(&_q)));
+            ThrowIfFailed(device.CreateFence(_fenceValue.value++, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&_f)));
+            _e.h = CreateEvent(nullptr, FALSE, FALSE, nullptr);
+            GN_VERIFY(!_e.empty());
         }
+
+        ID3D12CommandQueue & q() { return *_q; }
 
         uint64_t mark()
         {
-            q->Signal(f, nextFenceValue);
-            return nextFenceValue++;
+            _q->Signal(_f, _fenceValue.value);
+            ++_fenceValue.value;
+            return _fenceValue.u64;
         }
 
         void wait(uint64 fence)
         {
-            if (f->GetCompletedValue() < fence) {
-                ThrowIfFailed(f->SetEventOnCompletion(fence, e));
-                WaitForSingleObjectEx(e, INFINITE, FALSE);
+            FenceValue f = {fence};
+            GN_ASSERT(f.type == (unsigned int)TYPE);
+            if (_f->GetCompletedValue() < f.value) {
+                ThrowIfFailed(_f->SetEventOnCompletion(f.value, _e));
+                WaitForSingleObjectEx(_e, INFINITE, FALSE);
             }
         }
     };
@@ -77,7 +109,7 @@ namespace GN { namespace gfx
         static const uint32_t BACK_BUFFER_COUNT = 2;
         AutoComPtr<IDXGISwapChain3> _swapChain;
         AutoComPtr<ID3D12Device> _device;
-        D3D12CommandQueue _graphicsQueue;
+        D3D12CommandQueue<CommandListType::GRAPHICS> _graphicsQueue;
         AutoComPtr<ID3D12RootSignature> _rootSignature;
         AutoComPtr<ID3D12DescriptorHeap> _rtvHeap;
         //AutoComPtr<ID3D12PipelineState> _pipelineState;
@@ -103,7 +135,8 @@ namespace GN { namespace gfx
         std::vector<uint8> compileProgram(const ProgramSource &) { return {}; }
         AutoRef<Surface> createSurface(const SurfaceCreationParameters &) { return {}; }
         AutoRef<Query> createQuery(const QueryCreationParameters &) { return {}; }
-        void kickoff(GN::gfx::Gpu2::CommandList &);
+        void kickoff(GN::gfx::Gpu2::CommandList &, uint64_t * fence);
+        void wait(uint64_t fence);
         void present(const PresentParameters &);
     };
 

@@ -95,15 +95,14 @@ namespace gfx
         };
         struct CommandList : public RefCounter
         {
-            virtual void     clear(const ClearParameters &) = 0;
-            virtual void     draw(const DrawParameters &) = 0;
-            virtual void     compute(const ComputeParameters &) = 0;
-            virtual void     copy(const CopyParameters &) = 0;
-            virtual uint64_t mark() = 0; // insert a new fence into command list, returns fence id.
-            virtual void     wait(uint64_t fence) = 0; // insert a wait-for-fence into command list
+            virtual void  clear(const ClearParameters &) = 0;
+            virtual void  draw(const DrawParameters &) = 0;
+            virtual void  compute(const ComputeParameters &) = 0;
+            virtual void  copy(const CopyParameters &) = 0;
         };
         virtual AutoRef<CommandList> createCommandList(const CommandListCreationParameters &) = 0;
-        virtual void kickoff(CommandList &) = 0; ///< kick off command lists.
+        virtual void kickoff(CommandList &, uint64_t * fence = nullptr) = 0; ///< kick off command lists.
+        virtual void wait(uint64_t fence) = 0; // insert a wait-for-fence into command list
         //@}
 
         /// GPU memory pool

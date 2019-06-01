@@ -72,7 +72,7 @@ GN::gfx::D3D12Gpu2::D3D12Gpu2(const CreationParameters & cp)
         ));
 
     // create command queue
-    _graphicsQueue.init(*_device, D3D12_COMMAND_LIST_TYPE_DIRECT);
+    _graphicsQueue.init(*_device);
 
     // get current window size
     auto windowSize = cp.window->getClientSize();
@@ -90,7 +90,7 @@ GN::gfx::D3D12Gpu2::D3D12Gpu2(const CreationParameters & cp)
     swapChainDesc.Windowed = TRUE;
     AutoComPtr<IDXGISwapChain> swapChain;
     ThrowIfFailed(factory->CreateSwapChain(
-        _graphicsQueue.q, // Swap chain needs the queue so that it can force a flush on it.
+        &_graphicsQueue.q(), // Swap chain needs the queue so that it can force a flush on it.
         &swapChainDesc,
         &swapChain));
     ThrowIfFailed(swapChain.as(&_swapChain));
@@ -129,12 +129,21 @@ GN::AutoRef<GN::gfx::Gpu2::CommandList> GN::gfx::D3D12Gpu2::createCommandList(co
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3D12Gpu2::kickoff(GN::gfx::Gpu2::CommandList & cl)
+void GN::gfx::D3D12Gpu2::kickoff(GN::gfx::Gpu2::CommandList & cl, uint64_t * fence)
 {
     auto ptr = (D3D12CommandList*)&cl;
     ptr->commandList->Close();
     ID3D12CommandList * d3dcl = ptr->commandList;
-    _graphicsQueue.q->ExecuteCommandLists(1, &d3dcl);
+    _graphicsQueue.q().ExecuteCommandLists(1, &d3dcl);
+    if (fence) *fence = _graphicsQueue.mark();
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::gfx::D3D12Gpu2::wait(uint64_t fence)
+{
+    _graphicsQueue.wait(fence);
 }
 
 //
