@@ -1,11 +1,52 @@
 #include "pch.h"
 #include "d3d12gpu2.h"
 
+using namespace GN;
+using namespace GN::gfx;
+
+// Helper function for acquiring the first available hardware adapter that supports Direct3D 12.
+// If no such adapter can be found, *ppAdapter will be set to nullptr.
+// -----------------------------------------------------------------------------
+static void GetHardwareAdapter(IDXGIFactory2* pFactory, IDXGIAdapter1** ppAdapter)
+{
+    AutoComPtr<IDXGIAdapter1> adapter;
+    *ppAdapter = nullptr;
+
+    for (UINT adapterIndex = 0; DXGI_ERROR_NOT_FOUND != pFactory->EnumAdapters1(adapterIndex, &adapter); ++adapterIndex)
+    {
+        DXGI_ADAPTER_DESC1 desc;
+        adapter->GetDesc1(&desc);
+
+        if (desc.Flags & DXGI_ADAPTER_FLAG_SOFTWARE)
+        {
+            continue;
+        }
+
+        // Check to see if the adapter supports Direct3D 12, but don't create the
+        // actual device yet.
+        if (SUCCEEDED(D3D12CreateDevice(adapter, D3D_FEATURE_LEVEL_12_0, _uuidof(ID3D12Device), nullptr)))
+        {
+            break;
+        }
+    }
+
+    *ppAdapter = adapter.detach();
+}
+
+template<typename T>
+static AutoRef<T> SafeNew(T * p)
+{
+    if (p && !p->ok()) delete p, p = nullptr;
+    return AutoRef<T>(p);
+}
+
 //
 //
 // -----------------------------------------------------------------------------
 GN::gfx::D3D12Gpu2::D3D12Gpu2(const CreationParameters & cp)
 {
+    GN_VERIFY(cp.window);
+
     // enable debug layer
     if (cp.debug) {
         AutoComPtr<ID3D12Debug> debug;
@@ -18,7 +59,7 @@ GN::gfx::D3D12Gpu2::D3D12Gpu2(const CreationParameters & cp)
     ThrowIfFailed(CreateDXGIFactory1(IID_PPV_ARGS(&factory)));
 
     AutoComPtr<IDXGIAdapter1> hardwareAdapter;
-    //TODO: GetHardwareAdapter(factory, &hardwareAdapter);
+    GetHardwareAdapter(factory, &hardwareAdapter);
 
     ThrowIfFailed(D3D12CreateDevice(
         hardwareAdapter,
@@ -52,6 +93,40 @@ GN::gfx::D3D12Gpu2::D3D12Gpu2(const CreationParameters & cp)
         &swapChainDesc,
         &swapChain));
     ThrowIfFailed(swapChain.as(&_swapChain));
+    _frameIndex = _swapChain->GetCurrentBackBufferIndex();
+
+    // disable alt-enter transition
+    ThrowIfFailed(factory->MakeWindowAssociation((HWND)cp.window->getWindowHandle(), DXGI_MWA_NO_ALT_ENTER));
+
+    // Create RTV descriptor heaps.
+    D3D12_DESCRIPTOR_HEAP_DESC rtvHeapDesc = {};
+    rtvHeapDesc.NumDescriptors = BACK_BUFFER_COUNT;
+    rtvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
+    rtvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
+    ThrowIfFailed(_device->CreateDescriptorHeap(&rtvHeapDesc, IID_PPV_ARGS(&_rtvHeap)));
+    _rtvDescriptorSize = _device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+
+    // Create a RTV for each frame.
+    {
+        CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(_rtvHeap->GetCPUDescriptorHandleForHeapStart());
+        for (UINT n = 0; n < BACK_BUFFER_COUNT; n++)
+        {
+            ThrowIfFailed(_swapChain->GetBuffer(n, IID_PPV_ARGS(&_renderTargets[n])));
+            _device->CreateRenderTargetView(_renderTargets[n], nullptr, rtvHandle);
+            rtvHandle.Offset(1, _rtvDescriptorSize);
+        }
+    }
+
+    // crate command buffer allocator
+    ThrowIfFailed(_device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&_commandAllocator)));
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+GN::AutoRef<GN::gfx::Gpu2::CommandList> GN::gfx::D3D12Gpu2::createCommandList(const CommandListCreationParameters & cp)
+{
+     return SafeNew(new D3D12CommandList(cp));
 }
 
 //

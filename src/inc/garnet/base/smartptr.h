@@ -8,8 +8,16 @@
 
 namespace GN
 {
-    // -------------------------------------------------------------------------
     /// Reference counted smart pointer. Support both strong and weak reference.
+    /// Note that behavior  of this class is different than the Windows COM pointer:
+    /// A newly  instance of RefCoutner will have reference counter set to 0,
+    /// instead of 1. There are a few reasons why it is this way:
+    ///  - The class can be used in non-ref-counted way. This makes it possible to
+    ///    use subclass of RefCounted as a member of another class.
+    ///  - This makes the AutoRef class logic much more consistent and less error prone.
+    ///    Whenever a raw pointer is given to AutoRef class, always call addref(), regarless
+    ///    the raw pointer is newly constructed or is passed from another AutoRef()
+    // -------------------------------------------------------------------------
     class RefCounter
     {
     public:
@@ -57,18 +65,8 @@ namespace GN
         sint32 decref() const
         {
             GN_ASSERT( mRef > 0 );
-
             int ref = mRef.fetch_sub(1) - 1;
-
-            if( 0 == ref )
-            {
-                if (mWeakObj && mWeakObj->deref(mWeakLink, true)) {
-                    delete mWeakObj;
-                }
-                mWeakObj = nullptr;
-                delete this;
-            }
-
+            if( 0 == ref ) delete this;
             return ref;
         }
 
@@ -122,6 +120,11 @@ namespace GN
             {
                 GN_UNEXPECTED_EX( "Destructing reference counted object with non-zero reference counter usually means memory corruption, thus is not allowed!" );
             }
+
+            if (mWeakObj && mWeakObj->deref(mWeakLink, true)) {
+                delete mWeakObj;
+            }
+            mWeakObj = nullptr;
         }
 
         //@}
@@ -175,7 +178,8 @@ namespace GN
         }
 
         /// construct from a normal pointer
-        ///
+        /// We've already automatically cast AutoRef back to raw pointer via type cast operator.
+        /// If this constructor is not marked as explict, it would create ambiguity for expression like: (AutoRef<T> == T*)
         explicit AutoRef(XPTR p) throw() : mPtr(p)
         {
             if (p) p->incref();
