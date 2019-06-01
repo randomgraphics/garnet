@@ -50,15 +50,17 @@ GN::gfx::D3D12Gpu2::D3D12Gpu2(const CreationParameters & cp)
     GN_VERIFY(cp.window);
 
     // enable debug layer
+    UINT dxgiflags = 0;
     if (cp.debug) {
         AutoComPtr<ID3D12Debug> debug;
         if (SUCCEEDED(D3D12GetDebugInterface(IID_PPV_ARGS(&debug)))) {
             debug->EnableDebugLayer();
+            dxgiflags |= DXGI_CREATE_FACTORY_DEBUG;
         }
     }
 
     AutoComPtr<IDXGIFactory4> factory;
-    ThrowIfFailed(CreateDXGIFactory1(IID_PPV_ARGS(&factory)));
+    ThrowIfFailed(CreateDXGIFactory2(dxgiflags, IID_PPV_ARGS(&factory)));
 
     AutoComPtr<IDXGIAdapter1> hardwareAdapter;
     GetHardwareAdapter(factory, &hardwareAdapter);
@@ -70,10 +72,7 @@ GN::gfx::D3D12Gpu2::D3D12Gpu2(const CreationParameters & cp)
         ));
 
     // create command queue
-    D3D12_COMMAND_QUEUE_DESC queueDesc = {};
-    queueDesc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
-    queueDesc.Type = D3D12_COMMAND_LIST_TYPE_DIRECT;
-    ThrowIfFailed(_device->CreateCommandQueue(&queueDesc, IID_PPV_ARGS(&_commandQueue)));
+    _graphicsQueue.init(*_device, D3D12_COMMAND_LIST_TYPE_DIRECT);
 
     // get current window size
     auto windowSize = cp.window->getClientSize();
@@ -91,7 +90,7 @@ GN::gfx::D3D12Gpu2::D3D12Gpu2(const CreationParameters & cp)
     swapChainDesc.Windowed = TRUE;
     AutoComPtr<IDXGISwapChain> swapChain;
     ThrowIfFailed(factory->CreateSwapChain(
-        _commandQueue, // Swap chain needs the queue so that it can force a flush on it.
+        _graphicsQueue.q, // Swap chain needs the queue so that it can force a flush on it.
         &swapChainDesc,
         &swapChain));
     ThrowIfFailed(swapChain.as(&_swapChain));
@@ -106,17 +105,16 @@ GN::gfx::D3D12Gpu2::D3D12Gpu2(const CreationParameters & cp)
     rtvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
     rtvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
     ThrowIfFailed(_device->CreateDescriptorHeap(&rtvHeapDesc, IID_PPV_ARGS(&_rtvHeap)));
-    _rtvDescriptorSize = _device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+    auto rtvDescriptorSize = _device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 
-    // Create a RTV for each frame.
+    // Initialize frame buffers
+    CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(_rtvHeap->GetCPUDescriptorHandleForHeapStart());
+    for (UINT n = 0; n < BACK_BUFFER_COUNT; n++)
     {
-        CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(_rtvHeap->GetCPUDescriptorHandleForHeapStart());
-        for (UINT n = 0; n < BACK_BUFFER_COUNT; n++)
-        {
-            ThrowIfFailed(_swapChain->GetBuffer(n, IID_PPV_ARGS(&_renderTargets[n])));
-            _device->CreateRenderTargetView(_renderTargets[n], nullptr, rtvHandle);
-            rtvHandle.Offset(1, _rtvDescriptorSize);
-        }
+        ThrowIfFailed(_swapChain->GetBuffer(n, IID_PPV_ARGS(&_frames[n].rt)));
+        _frames[n].rtv = rtvHandle;
+        _device->CreateRenderTargetView(_frames[n].rt, nullptr, _frames[n].rtv);
+        rtvHandle.Offset(rtvDescriptorSize);
     }
 }
 
@@ -133,10 +131,10 @@ GN::AutoRef<GN::gfx::Gpu2::CommandList> GN::gfx::D3D12Gpu2::createCommandList(co
 // -----------------------------------------------------------------------------
 void GN::gfx::D3D12Gpu2::kickoff(GN::gfx::Gpu2::CommandList & cl)
 {
-    ID3D12GraphicsCommandList * gfxcl = ((D3D12CommandList*)&cl)->commandList;
-    gfxcl->Close();
-    ID3D12CommandList * d3dcl = gfxcl;
-    _commandQueue->ExecuteCommandLists(1, &d3dcl);
+    auto ptr = (D3D12CommandList*)&cl;
+    ptr->commandList->Close();
+    ID3D12CommandList * d3dcl = ptr->commandList;
+    _graphicsQueue.q->ExecuteCommandLists(1, &d3dcl);
 }
 
 //
@@ -144,6 +142,16 @@ void GN::gfx::D3D12Gpu2::kickoff(GN::gfx::Gpu2::CommandList & cl)
 // -----------------------------------------------------------------------------
 void GN::gfx::D3D12Gpu2::present(const PresentParameters &)
 {
+    _swapChain->Present(1, 0);
+
+    // insert a fence to mark the end of current frame.
+    _frames[_frameIndex].fence = _graphicsQueue.mark();
+
+    // Update the frame index.
+    _frameIndex = _swapChain->GetCurrentBackBufferIndex();
+
+    // Wait for next frame to be ready to render to.
+    _graphicsQueue.wait(_frames[_frameIndex].fence);
 }
 
 //
@@ -154,4 +162,12 @@ GN::gfx::D3D12CommandList::D3D12CommandList(D3D12Gpu2 & gpu, const Gpu2::Command
 {
     ReturnIfFailed(gpu.device().CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&allocator)));
     ReturnIfFailed(gpu.device().CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, allocator, (ID3D12PipelineState*)cp.initialState, IID_PPV_ARGS(&commandList)));
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::gfx::D3D12CommandList::clear(const Gpu2::ClearParameters & p)
+{
+    commandList->ClearRenderTargetView(owner.backrtv(), p.color, 0, nullptr);
 }

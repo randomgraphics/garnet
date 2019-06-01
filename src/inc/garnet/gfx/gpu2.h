@@ -44,12 +44,27 @@ namespace gfx
 
         /// GPU command list
         //@{
-        struct CopyParameters
+        enum class CommandListType
         {
-            Surface * source;
-            uint32_t  sourceSubresourceId;
-            Surface * dest;
-            uint32_t  destSubresourceId;
+            GRAPHICS,
+            COMPUTE,
+            COPY,
+        };
+        struct ClearParameters
+        {
+            float    color[4] = {.0f, .0f, .0f, .0f};
+            float    depth = 1.0f;
+            uint32_t stencil = 0;
+            union
+            {
+                uint8_t u8 = 0xFF;
+                struct
+                {
+                    uint8_t c : 1;
+                    uint8_t d : 1;
+                    uint8_t s : 1;
+                };
+            } flags;
         };
         struct DrawParameters
         {
@@ -66,15 +81,24 @@ namespace gfx
             uint32_t groupY = 1;
             uint32_t groupZ = 1;
         };
+        struct CopyParameters
+        {
+            Surface * source;
+            uint32_t  sourceSubresourceId;
+            Surface * dest;
+            uint32_t  destSubresourceId;
+        };
         struct CommandListCreationParameters
         {
+            CommandListType type = CommandListType::GRAPHICS;
             uint64_t initialState = 0; // optional initial pipeline state. If empty, the default state is used.
         };
         struct CommandList : public RefCounter
         {
-            virtual void     copy(const CopyParameters &) = 0;
+            virtual void     clear(const ClearParameters &) = 0;
             virtual void     draw(const DrawParameters &) = 0;
             virtual void     compute(const ComputeParameters &) = 0;
+            virtual void     copy(const CopyParameters &) = 0;
             virtual uint64_t mark() = 0; // insert a new fence into command list, returns fence id.
             virtual void     wait(uint64_t fence) = 0; // insert a wait-for-fence into command list
         };

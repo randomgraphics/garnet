@@ -10,31 +10,90 @@
 
 namespace GN { namespace gfx
 {
+    template <HANDLE NULL_HANDLE_VALUE>
+    struct Win32Handle
+    {
+        HANDLE h = NULL_HANDLE_VALUE;
+
+        ~Win32Handle() { close(); }
+
+        bool empty() const { return NULL_HANDLE_VALUE == h; }
+
+        void close()
+        {
+            if (NULL_HANDLE_VALUE != h) CloseHandle(h), h = NULL_HANDLE_VALUE;
+        }
+
+        operator HANDLE () const { return h; }
+    };
+
+    typedef Win32Handle<0> Win32Event;
 
     struct D3D12CommandList;
 
+    struct D3D12CommandQueue
+    {
+        AutoComPtr<ID3D12CommandQueue> q;
+        AutoComPtr<ID3D12Fence> f;
+        Win32Event e;
+        uint64_t nextFenceValue = 1;
+
+        void init(ID3D12Device & device, D3D12_COMMAND_LIST_TYPE type)
+        {
+            D3D12_COMMAND_QUEUE_DESC queueDesc = {};
+            queueDesc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
+            queueDesc.Type = type;
+            ThrowIfFailed(device.CreateCommandQueue(&queueDesc, IID_PPV_ARGS(&q)));
+            ThrowIfFailed(device.CreateFence(nextFenceValue++, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&f)));
+            e.h = CreateEvent(nullptr, FALSE, FALSE, nullptr);
+            GN_VERIFY(!e.empty());
+        }
+
+        uint64_t mark()
+        {
+            q->Signal(f, nextFenceValue);
+            return nextFenceValue++;
+        }
+
+        void wait(uint64 fence)
+        {
+            if (f->GetCompletedValue() < fence) {
+                ThrowIfFailed(f->SetEventOnCompletion(fence, e));
+                WaitForSingleObjectEx(e, INFINITE, FALSE);
+            }
+        }
+    };
+
     class D3D12Gpu2 : public Gpu2
     {
+        struct FrameBuffer
+        {
+            AutoComPtr<ID3D12Resource> rt;
+            D3D12_CPU_DESCRIPTOR_HANDLE rtv = {};
+            uint64_t fence = 0;
+        };
+
         // Pipeline objects.
         static const uint32_t BACK_BUFFER_COUNT = 2;
         AutoComPtr<IDXGISwapChain3> _swapChain;
         AutoComPtr<ID3D12Device> _device;
-        AutoComPtr<ID3D12Resource> _renderTargets[BACK_BUFFER_COUNT];
-        AutoComPtr<ID3D12CommandQueue> _commandQueue;
+        D3D12CommandQueue _graphicsQueue;
         AutoComPtr<ID3D12RootSignature> _rootSignature;
         AutoComPtr<ID3D12DescriptorHeap> _rtvHeap;
         //AutoComPtr<ID3D12PipelineState> _pipelineState;
         //AutoComPtr<ID3D12GraphicsCommandList> _commandList;
-        UINT _rtvDescriptorSize = 0;
-        UINT _frameIndex = 0; // index of current back buffer
         //D3D12_VIEWPORT _viewport;
         //D3D12_RECT _scissorRect;
+        UINT _frameIndex = 0;
+        FrameBuffer _frames[BACK_BUFFER_COUNT] = {};
 
     public:
+        
         D3D12Gpu2(const CreationParameters &);
 
         // member accessor
         ID3D12Device & device() { return *_device; }
+        D3D12_CPU_DESCRIPTOR_HANDLE backrtv() { return _frames[_frameIndex].rtv; }
 
         // interface methods
         DynaArray<uint64_t> createPipelineStates(const PipelineCreationParameters *, size_t) { return {}; }
@@ -58,10 +117,11 @@ namespace GN { namespace gfx
         ~D3D12CommandList() {}
         
         bool ok() const { return nullptr != commandList; }
-        
-        void copy(const Gpu2::CopyParameters &) { GN_UNIMPL(); }
+
+        void clear(const Gpu2::ClearParameters &);        
         void draw(const Gpu2::DrawParameters &) { GN_UNIMPL(); }
         void compute(const Gpu2::ComputeParameters &) { GN_UNIMPL(); }
+        void copy(const Gpu2::CopyParameters &) { GN_UNIMPL(); }
 
         uint64_t mark() { GN_UNIMPL(); return 0; }
         void wait(uint64_t) { GN_UNIMPL(); }

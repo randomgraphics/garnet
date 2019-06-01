@@ -24,6 +24,9 @@ int main()
     });
     if( nullptr == g ) return -1;
 
+    // create a command list
+    auto cl = g->createCommandList({});
+
     // main loop
     while(mainWindow->runUntilNoNewEvents()) {
         gInput.processInputEvents();
@@ -31,6 +34,9 @@ int main()
         {
             break;
         }
+
+        cl->clear({{0.f, 1.f, 0.f, 0.f}});
+        g->kickoff(*cl);
         g->present({});
     }
 
