@@ -156,12 +156,19 @@ void GN::gfx::D3D12Gpu2::wait(uint64_t fence)
 void GN::gfx::D3D12Gpu2::present(const PresentParameters &)
 {
     // transit frame buffer to present state.
-    _present->commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(_frames[_frameIndex].rt, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT));
+    auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(_frames[_frameIndex].rt, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
+    _present->commandList->ResourceBarrier(1, &barrier);
     kickoff(*_present, nullptr);
     _present->reset(0);
 
     // present the frame buffer
     _swapChain->Present(1, 0);
+
+    // transit frame buffer back to render target state.
+    barrier = CD3DX12_RESOURCE_BARRIER::Transition(_frames[_frameIndex].rt, D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
+    _present->commandList->ResourceBarrier(1, &barrier);
+    kickoff(*_present, nullptr);
+    _present->reset(0);
 
     // insert a fence to mark the end of current frame.
     _frames[_frameIndex].fence = _graphicsQueue.mark();
