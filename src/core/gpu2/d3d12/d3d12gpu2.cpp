@@ -116,6 +116,10 @@ GN::gfx::D3D12Gpu2::D3D12Gpu2(const CreationParameters & cp)
         _device->CreateRenderTargetView(_frames[n].rt, nullptr, _frames[n].rtv);
         rtvHandle.Offset(rtvDescriptorSize);
     }
+
+    // create command list for present
+    _present = new D3D12CommandList(*this, {});
+
 }
 
 //
@@ -151,6 +155,12 @@ void GN::gfx::D3D12Gpu2::wait(uint64_t fence)
 // -----------------------------------------------------------------------------
 void GN::gfx::D3D12Gpu2::present(const PresentParameters &)
 {
+    // transit frame buffer to present state.
+    _present->commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(_frames[_frameIndex].rt, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT));
+    kickoff(*_present, nullptr);
+    _present->reset(0);
+
+    // present the frame buffer
     _swapChain->Present(1, 0);
 
     // insert a fence to mark the end of current frame.
@@ -170,7 +180,7 @@ GN::gfx::D3D12CommandList::D3D12CommandList(D3D12Gpu2 & gpu, const Gpu2::Command
     : owner(gpu)
 {
     ReturnIfFailed(gpu.device().CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&allocator)));
-    ReturnIfFailed(gpu.device().CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, allocator, (ID3D12PipelineState*)cp.initialState, IID_PPV_ARGS(&commandList)));
+    ReturnIfFailed(gpu.device().CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, allocator, (ID3D12PipelineState*)cp.initialPipelineState, IID_PPV_ARGS(&commandList)));
 }
 
 //

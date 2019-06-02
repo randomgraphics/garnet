@@ -91,14 +91,15 @@ namespace gfx
         struct CommandListCreationParameters
         {
             CommandListType type = CommandListType::GRAPHICS;
-            uint64_t initialState = 0; // optional initial pipeline state. If empty, the default state is used.
+            uint64_t initialPipelineState = 0; // optional initial pipeline state. If empty, the default state is used.
         };
         struct CommandList : public RefCounter
         {
-            virtual void  clear(const ClearParameters &) = 0;
-            virtual void  draw(const DrawParameters &) = 0;
-            virtual void  compute(const ComputeParameters &) = 0;
-            virtual void  copy(const CopyParameters &) = 0;
+            virtual void reset(uint64_t initialPipelineState = 0) = 0;
+            virtual void clear(const ClearParameters &) = 0;
+            virtual void draw(const DrawParameters &) = 0;
+            virtual void compute(const ComputeParameters &) = 0;
+            virtual void copy(const CopyParameters &) = 0;
         };
         virtual AutoRef<CommandList> createCommandList(const CommandListCreationParameters &) = 0;
         virtual void kickoff(CommandList &, uint64_t * fence = nullptr) = 0; ///< kick off command lists.
@@ -140,11 +141,24 @@ namespace gfx
         virtual std::vector<uint8> compileProgram(const ProgramSource &) = 0;
         //@}
 
-        enum Binding : int
+        enum class SurfaceDimension
         {
-            VERTEX,
-            INDEX,
-            STORAGE,
+            BUFFER,
+            TEX1D,
+            TEX2D,
+            TEX3D,
+        };
+
+        union SurfaceUsage
+        {
+            uint32_t u32 = 0;
+            struct
+            {
+                uint32_t sr : 1; // shader resource
+                uint32_t ua : 1; // unordered access
+                uint32_t rt : 1; // render target
+                uint32_t ds : 1; // depth stencil
+            };
         };
 
         /// GPU surface
@@ -153,20 +167,20 @@ namespace gfx
         {
             union
             {
+                SurfaceDimension dim;
+                SurfaceUsage usage;
                 struct TextureDesc
                 {
                     ColorFormat f;
-                    uint32_t w, h, d, a, l; // width, height, depth, array size, levels.
+                    uint32_t w, h, d, a, m; // width, height, depth, layers, mipmaps.
                 } t;
-
                 struct BufferDesc
                 {
-                    uint32_t binding;
                     uint32_t bytes;
                 } b;
             };
             MemPool * pool = nullptr;
-            uint64_t     offset = 0; // ignored if pool is null.
+            uint64_t  offset = 0; // ignored if pool is null.
         };
         /// this could be a texture or a buffer.
         struct Surface : public RefCounter

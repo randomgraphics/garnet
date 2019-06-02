@@ -112,6 +112,7 @@ namespace GN { namespace gfx
         D3D12CommandQueue<CommandListType::GRAPHICS> _graphicsQueue;
         AutoComPtr<ID3D12RootSignature> _rootSignature;
         AutoComPtr<ID3D12DescriptorHeap> _rtvHeap;
+        AutoRef<D3D12CommandList> _present; // command list for presenting
         //AutoComPtr<ID3D12PipelineState> _pipelineState;
         //AutoComPtr<ID3D12GraphicsCommandList> _commandList;
         //D3D12_VIEWPORT _viewport;
@@ -151,7 +152,8 @@ namespace GN { namespace gfx
         
         bool ok() const { return nullptr != commandList; }
 
-        void clear(const Gpu2::ClearParameters &);        
+        void reset(uint64_t initialState) { commandList->Reset(allocator, (ID3D12PipelineState*)initialState); }
+        void clear(const Gpu2::ClearParameters &);
         void draw(const Gpu2::DrawParameters &) { GN_UNIMPL(); }
         void compute(const Gpu2::ComputeParameters &) { GN_UNIMPL(); }
         void copy(const Gpu2::CopyParameters &) { GN_UNIMPL(); }
