@@ -85,13 +85,20 @@ namespace GN { namespace gfx
             return _fenceValue.u64;
         }
 
-        void wait(uint64 fence)
+        void finish(uint64 fence)
         {
             FenceValue f = {fence};
             GN_ASSERT(f.type == (unsigned int)TYPE);
             if (_f->GetCompletedValue() < f.value) {
                 ThrowIfFailed(_f->SetEventOnCompletion(f.value, _e));
                 WaitForSingleObjectEx(_e, INFINITE, FALSE);
+            }
+        }
+
+        void waitForIdle()
+        {
+            if (_q && _f) {
+                finish(mark());
             }
         }
     };
@@ -110,7 +117,7 @@ namespace GN { namespace gfx
         AutoComPtr<IDXGISwapChain3> _swapChain;
         AutoComPtr<ID3D12Device> _device;
         D3D12CommandQueue<CommandListType::GRAPHICS> _graphicsQueue;
-        AutoComPtr<ID3D12RootSignature> _rootSignature;
+        //AutoComPtr<ID3D12RootSignature> _rootSignature;
         AutoComPtr<ID3D12DescriptorHeap> _rtvHeap;
         AutoRef<D3D12CommandList> _present; // command list for presenting
         //AutoComPtr<ID3D12PipelineState> _pipelineState;
@@ -137,7 +144,7 @@ namespace GN { namespace gfx
         AutoRef<Surface> createSurface(const SurfaceCreationParameters &) { return {}; }
         AutoRef<Query> createQuery(const QueryCreationParameters &) { return {}; }
         void kickoff(GN::gfx::Gpu2::CommandList &, uint64_t * fence);
-        void wait(uint64_t fence);
+        void finish(uint64_t fence);
         void present(const PresentParameters &);
     };
 

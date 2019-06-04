@@ -145,9 +145,13 @@ void GN::gfx::D3D12Gpu2::kickoff(GN::gfx::Gpu2::CommandList & cl, uint64_t * fen
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3D12Gpu2::wait(uint64_t fence)
+void GN::gfx::D3D12Gpu2::finish(uint64_t fence)
 {
-    _graphicsQueue.wait(fence);
+    if (0 == fence) {
+        _graphicsQueue.waitForIdle();
+    } else {
+        _graphicsQueue.finish(fence);
+    }
 }
 
 //
@@ -177,7 +181,7 @@ void GN::gfx::D3D12Gpu2::present(const PresentParameters &)
     _frameIndex = _swapChain->GetCurrentBackBufferIndex();
 
     // Wait for next frame to be ready to render to.
-    _graphicsQueue.wait(_frames[_frameIndex].fence);
+    _graphicsQueue.finish(_frames[_frameIndex].fence);
 }
 
 //

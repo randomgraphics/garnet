@@ -40,6 +40,9 @@ int main()
         g->present({});
     }
 
+    // ensure all rendering is done before everything tears down.
+    g->finish();
+
     // done
     return 0;
 }

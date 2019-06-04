@@ -103,7 +103,7 @@ namespace gfx
         };
         virtual AutoRef<CommandList> createCommandList(const CommandListCreationParameters &) = 0;
         virtual void kickoff(CommandList &, uint64_t * fence = nullptr) = 0; ///< kick off command lists.
-        virtual void wait(uint64_t fence) = 0; // insert a wait-for-fence into command list
+        virtual void finish(uint64_t fence = 0) = 0; // Block the calling CPU thread until the fence, if specified, is passsed. If fence is 0, wait all pending works from all engine to be done.
         //@}
 
         /// GPU memory pool
