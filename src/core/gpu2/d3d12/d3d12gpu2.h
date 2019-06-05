@@ -167,4 +167,34 @@ namespace GN { namespace gfx
         uint64_t mark() { GN_UNIMPL(); return 0; }
         void wait(uint64_t) { GN_UNIMPL(); }
     };
+
+    struct D3D12CommittedResource : public Gpu2::Surface
+    {
+        D3D12Gpu2 & owner;
+        AutoComPtr<ID3D12Resource> ptr;
+
+        D3D12CommittedResource(D3D12Gpu2 & o) : owner(o) {}
+
+        bool ok() const { return !ptr.empty(); }
+
+        void * getPersistentPointer(uint32_t subResourceId, uint32_t * pRowPitch, uint32_t * pSlicePitch)
+        {
+            (void)subResourceId;
+            (void)pRowPitch;
+            (void)pSlicePitch;
+            GN_UNIMPL();
+            return nullptr;
+        }
+    };
+
+    struct D3D12Buffer : public D3D12CommittedResource
+    {
+        D3D12Buffer(D3D12Gpu2 &, const Gpu2::SurfaceCreationParameters &);
+    };
+
+    struct D3D12Texture : public D3D12CommittedResource
+    {
+        D3D12Texture(D3D12Gpu2 &, const Gpu2::SurfaceCreationParameters &);
+    };
+
 }}

@@ -133,9 +133,14 @@ GN::AutoRef<GN::gfx::Gpu2::CommandList> GN::gfx::D3D12Gpu2::createCommandList(co
 //
 //
 // -----------------------------------------------------------------------------
-GN::AutoRef<GN::gfx::Gpu2::Surface> GN::gfx::D3D12Gpu2::createSurface(const SurfaceCreationParameters &)
+GN::AutoRef<GN::gfx::Gpu2::Surface> GN::gfx::D3D12Gpu2::createSurface(const SurfaceCreationParameters & cp)
 {
-     return {};
+    if (SurfaceDimension::BUFFER == cp.dim) {
+        return SafeNew(new D3D12Buffer(*this, cp));
+    } else {
+        GN_ASSERT(SurfaceDimension::TEXTURE == cp.dim);
+        return SafeNew(new D3D12Texture(*this, cp));
+    }
 }
 
 //
@@ -208,4 +213,20 @@ GN::gfx::D3D12CommandList::D3D12CommandList(D3D12Gpu2 & gpu, const Gpu2::Command
 void GN::gfx::D3D12CommandList::clear(const Gpu2::ClearParameters & p)
 {
     commandList->ClearRenderTargetView(owner.backrtv(), p.color, 0, nullptr);
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+GN::gfx::D3D12Buffer::D3D12Buffer(D3D12Gpu2 & o, const Gpu2::SurfaceCreationParameters &) : D3D12CommittedResource(o)
+{
+
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+GN::gfx::D3D12Texture::D3D12Texture(D3D12Gpu2 & o, const Gpu2::SurfaceCreationParameters &) : D3D12CommittedResource(o)
+{
+
 }

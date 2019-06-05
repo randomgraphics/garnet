@@ -164,9 +164,7 @@ namespace gfx
         enum class SurfaceDimension
         {
             BUFFER,
-            TEX1D,
-            TEX2D,
-            TEX3D,
+            TEXTURE,
         };
 
         union SurfaceUsage
