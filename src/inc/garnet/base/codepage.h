@@ -142,10 +142,13 @@ namespace GN
         void * mImpl; ///< implementation instance
     };
 
-    ///
-    /// get current system encoding
-    ///
-    GN_API CharacterEncodingConverter::Encoding getCurrentSystemEncoding();
+    /// conversion between utf-16 and utf-8
+    //@{
+    GN_API size_t wcs2utf8(char * obuf, size_t ocount, const wchar_t * ibuf, size_t icount);
+    GN_API size_t utf82wcs(wchar_t * obuf, size_t ocount, const char * ibuf, size_t icount);
+    GN_API StrA wcs2utf8(const wchar_t * ibuf, size_t icount);
+    GN_API StrW utf82wcs(const char * ibuf, size_t icount);
+    //@}
 
     ///
     /// convert wide char string to multi-byte string in current system encoding

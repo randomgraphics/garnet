@@ -104,9 +104,9 @@ public:
         TS_ASSERT( pathExist("startup::/SConstruct2") );
         TS_ASSERT( pathExist("startup::SConstruct2") );
 
-        TS_ASSERT( pathExist("app::GNut" APPEXT) );
-        TS_ASSERT( pathExist("app::/GNut" APPEXT) );
-        TS_ASSERT( pathExist("app::\\GNut" APPEXT) );
+        TS_ASSERT( pathExist("app::GNtestUnitTests" APPEXT) );
+        TS_ASSERT( pathExist("app::/GNtestUnitTests" APPEXT) );
+        TS_ASSERT( pathExist("app::\\GNtestUnitTests" APPEXT) );
     }
 
     void testIsDir()
@@ -133,7 +133,7 @@ public:
         using namespace GN::fs;
 
         TS_ASSERT( isFile("startup::\\SConstruct2") );
-        TS_ASSERT( isFile("app::GNut" APPEXT) );
+        TS_ASSERT( isFile("app::GNtestUnitTests" APPEXT) );
         TS_ASSERT( !isFile("startup::") );
         TS_ASSERT( !isFile("app::") );
         TS_ASSERT( !isFile("haha,heihei,hoho,huhu,mama,papa") );

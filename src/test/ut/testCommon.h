@@ -96,48 +96,6 @@ namespace CxxTest
     {
         return 0 == ::GN::str::compare(x,y);
     }
-
-    ///
-    /// Type traits of multi-byte string class
-    ///
-    CXXTEST_TEMPLATE_INSTANTIATION
-    class ValueTraits< GN::StrA >
-    {
-        GN::StrA s;
-    public:
-        /** ctor */
-        ValueTraits( const GN::StrA & t ) : s(t) {}
-        /** convert to string */
-        const char *asString() const { return s.rawptr(); }
-    };
-
-    ///
-    /// Type traits of wide char string class
-    ///
-    CXXTEST_TEMPLATE_INSTANTIATION
-    class ValueTraits< GN::StrW >
-    {
-        GN::StrA s;
-    public:
-        /** ctor */
-        ValueTraits( const GN::StrW & t ) : s(GN::wcs2mbs(t)) {}
-        /** convert to string */
-        const char *asString() const { return s.rawptr(); }
-    };
-
-    ///
-    /// Type traits of multi-byte c-style string
-    ///
-    CXXTEST_TEMPLATE_INSTANTIATION
-    class ValueTraits< const wchar_t * >
-    {
-        GN::StrA s;
-    public:
-        /** ctor */
-        ValueTraits( const wchar_t * t ) : s(GN::wcs2mbs(t,0)) {}
-        /** convert to string */
-        const char *asString() const { return s.rawptr(); }
-    };
 }
 
 // *****************************************************************************

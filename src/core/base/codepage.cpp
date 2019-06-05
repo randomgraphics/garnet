@@ -129,10 +129,43 @@ GN_API size_t GN::CharacterEncodingConverter::convert(
 //
 //
 // -----------------------------------------------------------------------------
-GN_API GN::CharacterEncodingConverter::Encoding GN::getCurrentSystemEncoding()
+GN_API size_t GN::wcs2utf8(char * obuf, size_t ocount, const wchar_t * ibuf, size_t icount)
 {
-    GN_UNIMPL_WARNING();
-    return CharacterEncodingConverter::GBK;
+    static auto cec = CharacterEncodingConverter(CharacterEncodingConverter::WIDECHAR, CharacterEncodingConverter::UTF8);
+    return cec.convert(obuf, ocount, ibuf, icount * sizeof(wchar_t));
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+GN_API size_t GN::utf82wcs(wchar_t * obuf, size_t ocount, const char * ibuf, size_t icount)
+{
+    static auto cec = CharacterEncodingConverter(CharacterEncodingConverter::UTF8, CharacterEncodingConverter::WIDECHAR);
+    return cec.convert(obuf, ocount * sizeof(wchar_t), ibuf, icount) / sizeof(wchar_t);
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+GN_API StrA GN::wcs2utf8(const wchar_t * ibuf, size_t icount)
+{
+    // TODO: Let CEC returns StrA directly to avoid extra memory copy
+    static auto cec = CharacterEncodingConverter(CharacterEncodingConverter::WIDECHAR, CharacterEncodingConverter::UTF8);
+    DynaArray<char> buffer((icount + 1) * sizeof(wchar_t));
+    cec.convert(buffer.rawptr(), buffer.size(), ibuf, icount * sizeof(wchar_t));
+    return buffer.rawptr();
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+GN_API StrW GN::utf82wcs(const char * ibuf, size_t icount)
+{
+    // TODO: Let CEC returns StrW directly to avoid extra memory copy
+    static auto cec = CharacterEncodingConverter(CharacterEncodingConverter::UTF8, CharacterEncodingConverter::WIDECHAR);
+    DynaArray<wchar_t> buffer(icount + 1);
+    cec.convert(buffer.rawptr(), buffer.size() * sizeof(wchar_t), ibuf, icount);
+    return buffer.rawptr();
 }
 
 //
