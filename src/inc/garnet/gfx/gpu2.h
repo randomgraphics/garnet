@@ -28,13 +28,55 @@ namespace gfx
         static GN_API AutoRef<Gpu2> createGpu2(const CreationParameters &);
         //@}
 
+        // shader compilation should be static function, instead of part of Gpu2 interface.
+        #if 0
+        /// GPU program compilation
+        //@{
+        enum ShadingLanguage
+        {
+            HLSL,
+            GLSL,
+        };
+        struct ShaderSourceFile
+        {
+            const char * filename;
+        };
+        struct ProgramSource
+        {
+            struct Options
+            {
+                bool debugable : 1; ///< set to true to generate optimized shader.
+                bool optimized : 1; ///< set to true to generate shader binary with debug information.
+                bool diskfile : 1;  ///< if true, then all shader pointers are filename. If false, shader code.
+                Options() : debugable(false), optimized(true), diskfile(true) {}
+            };
+            static_assert(sizeof(Options) == 1);
+
+            ShadingLanguage lang; ///< shading language
+            const char *    vs = nullptr;
+            const char *    hs = nullptr;
+            const char *    ds = nullptr;
+            const char *    gs = nullptr;
+            const char *    ps = nullptr;
+            const char *    cs = nullptr;
+            Options         options;
+        };
+        virtual DynaArray<uint8> compileProgram(const ProgramSource &) = 0;
+        //@}
+        #endif
+
         /// GPU pipeline
         //@{
+        struct CompiledShaderBlob
+        {
+            const void * ptr = nullptr; ///< pointer to shader byte code. Null means the shader stage is disbaled.
+            uint64_t sizeInBytes = 0; ///< size of the byte code
+            const char * entry = nullptr; ///< entry point of the shader (only used in spir-v shader)
+        };
         struct PipelineCreationParameters
         {
-            const uint8_t * compiledGpuProgramBinary;
-            uint64_t        compiledGpuProgramSizeInBytes;
-            const char *    states; // pipeline state defined in JSON format.
+            CompiledShaderBlob vs, hs, ds, gs, ps, cs;
+            const char * states; // pipeline state defined in JSON format.
         };
         virtual DynaArray<uint64_t> createPipelineStates(const PipelineCreationParameters *, size_t) = 0;
         virtual void deletePipelineStates(const uint64_t *, size_t) = 0;
@@ -117,28 +159,6 @@ namespace gfx
 
         };
         virtual AutoRef<MemPool>  createMemoryPool(const MemPoolCreationParameters &) = 0;
-        //@}
-
-        /// GPU program compilation
-        //@{
-        enum ShadingLanguage
-        {
-            HLSL,
-            GLSL,
-        };
-        struct ProgramSource
-        {
-            ShadingLanguage lang; ///< shading language
-            bool            debugable = false; ///< set to true to generate shader binary with debug information.
-            bool            optimized = true;  ///< set to true to generate optimized shader.
-            const char *    vs = nullptr;
-            const char *    ts = nullptr;
-            const char *    ds = nullptr;
-            const char *    gs = nullptr;
-            const char *    ps = nullptr;
-            const char *    cs = nullptr;
-        };
-        virtual std::vector<uint8> compileProgram(const ProgramSource &) = 0;
         //@}
 
         enum class SurfaceDimension

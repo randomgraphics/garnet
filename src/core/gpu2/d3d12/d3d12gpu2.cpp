@@ -133,6 +133,14 @@ GN::AutoRef<GN::gfx::Gpu2::CommandList> GN::gfx::D3D12Gpu2::createCommandList(co
 //
 //
 // -----------------------------------------------------------------------------
+GN::AutoRef<GN::gfx::Gpu2::Surface> GN::gfx::D3D12Gpu2::createSurface(const SurfaceCreationParameters &)
+{
+     return {};
+}
+
+//
+//
+// -----------------------------------------------------------------------------
 void GN::gfx::D3D12Gpu2::kickoff(GN::gfx::Gpu2::CommandList & cl, uint64_t * fence)
 {
     auto ptr = (D3D12CommandList*)&cl;

@@ -140,8 +140,7 @@ namespace GN { namespace gfx
         void deletePipelineStates(const uint64_t *, size_t) {}
         AutoRef<CommandList> createCommandList(const CommandListCreationParameters &);
         AutoRef<MemPool>  createMemoryPool(const MemPoolCreationParameters &) { return {}; }
-        std::vector<uint8> compileProgram(const ProgramSource &) { return {}; }
-        AutoRef<Surface> createSurface(const SurfaceCreationParameters &) { return {}; }
+        AutoRef<Surface> createSurface(const SurfaceCreationParameters &);
         AutoRef<Query> createQuery(const QueryCreationParameters &) { return {}; }
         void kickoff(GN::gfx::Gpu2::CommandList &, uint64_t * fence);
         void finish(uint64_t fence);
