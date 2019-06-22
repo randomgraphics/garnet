@@ -218,15 +218,86 @@ void GN::gfx::D3D12CommandList::clear(const Gpu2::ClearParameters & p)
 //
 //
 // -----------------------------------------------------------------------------
-GN::gfx::D3D12Buffer::D3D12Buffer(D3D12Gpu2 & o, const Gpu2::SurfaceCreationParameters &) : D3D12CommittedResource(o)
+static D3D12_HEAP_TYPE GetHeapType(Gpu2::MemoryType t)
 {
-
+    D3D12_HEAP_TYPE heapType;
+    switch(t) {
+        case Gpu2::MemoryType::UPLOAD : heapType = D3D12_HEAP_TYPE_UPLOAD; break;
+        case Gpu2::MemoryType::READBACK : heapType = D3D12_HEAP_TYPE_READBACK; break;
+        default: heapType = D3D12_HEAP_TYPE_DEFAULT; break;
+    }
+    return heapType;
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-GN::gfx::D3D12Texture::D3D12Texture(D3D12Gpu2 & o, const Gpu2::SurfaceCreationParameters &) : D3D12CommittedResource(o)
+GN::gfx::D3D12Buffer::D3D12Buffer(D3D12Gpu2 & o, const Gpu2::SurfaceCreationParameters & cp) : D3D12PlacedResource(o)
 {
+    GN_ASSERT(GN::gfx::Gpu2::SurfaceDimension::BUFFER == cp.dim);
 
+    auto heapProperties = CD3DX12_HEAP_PROPERTIES(GetHeapType(cp.memoryType));
+    auto desc = CD3DX12_RESOURCE_DESC::Buffer(cp.b.bytes);
+    ReturnIfFailed(o.device().CreateCommittedResource(
+            &heapProperties,
+            D3D12_HEAP_FLAG_NONE,
+            &desc,
+            D3D12_RESOURCE_STATE_GENERIC_READ,
+            nullptr,
+            IID_PPV_ARGS(&resource)));
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+GN::gfx::D3D12Texture::D3D12Texture(D3D12Gpu2 & o, const Gpu2::SurfaceCreationParameters & cp) : D3D12PlacedResource(o)
+{
+    GN_ASSERT(GN::gfx::Gpu2::SurfaceDimension::TEXTURE == cp.dim);
+    auto heapProperties = CD3DX12_HEAP_PROPERTIES(GetHeapType(cp.memoryType));
+
+    DXGI_FORMAT format = (DXGI_FORMAT)colorFormat2DxgiFormat(cp.t.f);
+    if (DXGI_FORMAT_UNKNOWN == format) {
+        GN_ERROR(sLogger)("Invalid/Unsupported texture format.");
+        return;
+    }
+
+    D3D12_RESOURCE_DESC desc;
+    if (1 == cp.t.d && 1 == cp.t.h) {
+        desc = CD3DX12_RESOURCE_DESC::Tex1D(
+            format,
+            cp.t.w,
+            (uint16_t)cp.t.a,
+            (uint16_t)cp.t.m
+        );
+    }
+    else if (1 == cp.t.d) {
+        desc = CD3DX12_RESOURCE_DESC::Tex2D(
+            format,
+            cp.t.w,
+            cp.t.h,
+            (uint16_t)cp.t.a,
+            (uint16_t)cp.t.m,
+            cp.t.s
+        );
+    }
+    else if (1 == cp.t.a) {
+        desc = CD3DX12_RESOURCE_DESC::Tex3D(
+            format,
+            cp.t.w,
+            cp.t.h,
+            (uint16_t)cp.t.d,
+            (uint16_t)cp.t.m
+        );
+    } else {
+        GN_ERROR(sLogger)("D3D12 does not support 3D array texture.");
+        return;
+    }
+
+    ReturnIfFailed(o.device().CreateCommittedResource(
+        &heapProperties,
+        D3D12_HEAP_FLAG_NONE,
+        &desc,
+        D3D12_RESOURCE_STATE_GENERIC_READ,
+        nullptr,
+        IID_PPV_ARGS(&resource)));
 }

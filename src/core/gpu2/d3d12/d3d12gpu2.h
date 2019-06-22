@@ -136,15 +136,15 @@ namespace GN { namespace gfx
         D3D12_CPU_DESCRIPTOR_HANDLE backrtv() { return _frames[_frameIndex].rtv; }
 
         // interface methods
-        DynaArray<uint64_t> createPipelineStates(const PipelineCreationParameters *, size_t) { return {}; }
-        void deletePipelineStates(const uint64_t *, size_t) {}
-        AutoRef<CommandList> createCommandList(const CommandListCreationParameters &);
-        AutoRef<MemPool>  createMemoryPool(const MemPoolCreationParameters &) { return {}; }
-        AutoRef<Surface> createSurface(const SurfaceCreationParameters &);
-        AutoRef<Query> createQuery(const QueryCreationParameters &) { return {}; }
-        void kickoff(GN::gfx::Gpu2::CommandList &, uint64_t * fence);
-        void finish(uint64_t fence);
-        void present(const PresentParameters &);
+        DynaArray<uint64_t> createPipelineStates(const PipelineCreationParameters *, size_t) override { return {}; }
+        void deletePipelineStates(const uint64_t *, size_t) override {}
+        AutoRef<CommandList> createCommandList(const CommandListCreationParameters &) override;
+        AutoRef<MemoryBlock> createMemoryBlock(const MemoryBlockCreationParameters &) override { return {}; }
+        AutoRef<Surface> createSurface(const SurfaceCreationParameters &) override;
+        AutoRef<Query> createQuery(const QueryCreationParameters &) override { return {}; }
+        void kickoff(GN::gfx::Gpu2::CommandList &, uint64_t * fence) override;
+        void finish(uint64_t fence) override;
+        void present(const PresentParameters &) override;
     };
 
     struct D3D12CommandList : public Gpu2::CommandList
@@ -168,14 +168,14 @@ namespace GN { namespace gfx
         void wait(uint64_t) { GN_UNIMPL(); }
     };
 
-    struct D3D12CommittedResource : public Gpu2::Surface
+    struct D3D12PlacedResource : public Gpu2::Surface
     {
         D3D12Gpu2 & owner;
-        AutoComPtr<ID3D12Resource> ptr;
+        AutoComPtr<ID3D12Resource> resource;
 
-        D3D12CommittedResource(D3D12Gpu2 & o) : owner(o) {}
+        D3D12PlacedResource(D3D12Gpu2 & o) : owner(o) {}
 
-        bool ok() const { return !ptr.empty(); }
+        bool ok() const { return !resource.empty(); }
 
         void * getPersistentPointer(uint32_t subResourceId, uint32_t * pRowPitch, uint32_t * pSlicePitch)
         {
@@ -187,12 +187,12 @@ namespace GN { namespace gfx
         }
     };
 
-    struct D3D12Buffer : public D3D12CommittedResource
+    struct D3D12Buffer : public D3D12PlacedResource
     {
         D3D12Buffer(D3D12Gpu2 &, const Gpu2::SurfaceCreationParameters &);
     };
 
-    struct D3D12Texture : public D3D12CommittedResource
+    struct D3D12Texture : public D3D12PlacedResource
     {
         D3D12Texture(D3D12Gpu2 &, const Gpu2::SurfaceCreationParameters &);
     };

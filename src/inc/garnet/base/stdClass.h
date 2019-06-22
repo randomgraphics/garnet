@@ -36,10 +36,20 @@
     preInit();                                                                   \
     /* define sanity checker to ensure calling either failure() or success(). */ \
     SanityChecker __GN_sc(*this);
+#define GN_STDCLASS_INIT2( ... )                                                 \
+    /* call parent's init() */                                                   \
+    if( !MyParent::init(__VA_ARGS__) ) return failure();                         \
+    preInit();                                                                   \
+    /* define sanity checker to ensure calling either failure() or success(). */ \
+    SanityChecker __GN_sc(*this);
 #else
 #define GN_STDCLASS_INIT( class_name, param_list )     \
     /* call parent's init() */                         \
     if( !MyParent::init param_list ) return failure(); \
+    preInit();
+#define GN_STDCLASS_INIT2( ... )                         \
+    /* call parent's init() */                           \
+    if( !MyParent::init(__VA_ARGS__) ) return failure(); \
     preInit();
 #endif
 

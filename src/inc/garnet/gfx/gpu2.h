@@ -150,60 +150,89 @@ namespace gfx
 
         /// GPU memory pool
         //@{
-        struct MemPoolCreationParameters
+        enum class MemoryType
+        {
+            DEFAULT = 0,
+            UPLOAD,
+            READBACK,
+        };
+        struct MemoryBlockCreationParameters
         {
             uint64_t sizeInMB;
+            MemoryType type;
         };
-        struct MemPool : public RefCounter
+        struct MemoryBlock : public RefCounter
         {
-
+            virtual void * rawptr() const = 0; // returns a pointer to the head of the memory block.
         };
-        virtual AutoRef<MemPool>  createMemoryPool(const MemPoolCreationParameters &) = 0;
+        virtual AutoRef<MemoryBlock>  createMemoryBlock(const MemoryBlockCreationParameters &) = 0;
         //@}
 
+        // /// descriptor pool
+        // //@{
+        // struct DescriptorPoolCreationParameters
+        // {
+        //     uint32_t capacity = 1024;
+        // };
+        // struct DescriptorPool : public RefCounter
+        // {
+        //     virtual uint32_t descSize() = 0; // returns size of one descriptor.
+        // };
+        // virtual AutoRef<DescriptorPool> createDescriptorPool(const DescriptorPoolCreationParameters &) = 0;
+        // //@}
+
+        // //@{
+        // struct DescriptorCreationParameters
+        // {
+        // };
+        // virtual void createDescriptors(const DescriptorCreationParameters *, size_t) = 0;
+        // //@}
+
+        /// GPU surface
+        //@{
         enum class SurfaceDimension
         {
             BUFFER,
             TEXTURE,
         };
-
-        union SurfaceUsage
+        union SurfaceFlags
         {
-            uint32_t u32 = 0;
+            uint8_t u8 = 0;
             struct
             {
-                uint32_t sr : 1; // shader resource
-                uint32_t ua : 1; // unordered access
-                uint32_t rt : 1; // render target
-                uint32_t ds : 1; // depth stencil
+                uint8_t sr : 1; // the surface could be used as SRV
+                uint8_t ua : 1; // the surface could be used as UAV
+                uint8_t rt : 1; // the surface could be used as RTV
+                uint8_t ds : 1; // the surface could be used as DSV
             };
         };
-
-        /// GPU surface
-        //@{
         struct SurfaceCreationParameters
         {
+            MemoryBlock * memory;
+            uint64_t offset;
+            SurfaceDimension dim;
             union
             {
-                SurfaceDimension dim;
-                SurfaceUsage usage;
                 struct TextureDesc
                 {
+                    uint32_t w, h, d = 1, a = 1, m = 1, s = 1; // height, depth, array, mipmaps, samples.
                     ColorFormat f;
-                    uint32_t w, h, d, a, m; // width, height, depth, layers, mipmaps.
                 } t;
                 struct BufferDesc
                 {
                     uint32_t bytes;
                 } b;
             };
-            MemPool * pool = nullptr;
-            uint64_t  offset = 0; // ignored if pool is null.
+            SurfaceFlags flags;
+            union
+            {
+                MemoryType memoryType;     // valid when pool is null.
+            };
         };
         /// this could be a texture or a buffer.
         struct Surface : public RefCounter
         {
-            /// For immediate update, no dealy, no async. do hazard tracking yourself.
+            /// Return a pointer to a subresource.
             virtual void * getPersistentPointer(uint32_t subResourceId, uint32_t * pRowPitch, uint32_t * pSlicePitch) = 0;
         };
         virtual AutoRef<Surface> createSurface(const SurfaceCreationParameters &) = 0;
