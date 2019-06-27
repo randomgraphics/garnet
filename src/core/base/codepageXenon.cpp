@@ -21,7 +21,7 @@ bool GN::CECImplXenon::init(
     GN_GUARD;
 
     // standard init procedure
-    GN_STDCLASS_INIT( GN::CECImplXenon, () );
+    GN_STDCLASS_INIT();
 
     // success
     mEncodingFrom = from;

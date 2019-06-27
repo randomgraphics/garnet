@@ -342,7 +342,7 @@ bool GN::gfx::OGLGpuProgramGLSL::init( const GpuProgramDesc & desc )
     OGLAutoAttribStack autoAttribStack;
 
     // standard init procedure
-    GN_STDCLASS_INIT( GN::gfx::OGLGpuProgramGLSL, () );
+    GN_STDCLASS_INIT();
 
     GN_ASSERT( GpuProgramLanguage::GLSL == desc.lang );
 

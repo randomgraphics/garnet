@@ -10,6 +10,14 @@ struct gpu2ex
     AutoRef<Gpu2> gpu;
     AutoRef<Gpu2::CommandList> cl;
     AutoRef<Gpu2::MemoryBlock> um, dm;
+
+    gpu2ex(GN::win::Window * window)
+    {
+        gpu = GN::gfx::Gpu2::createGpu2({window});
+        cl = gpu->createCommandList({});
+        um = gpu->createMemoryBlock({16, Gpu2::MemoryType::UPLOAD});
+        dm = gpu->createMemoryBlock({16, Gpu2::MemoryType::DEFAULT});
+    }
 };
 
 class DX12Triangle : public StdClass
@@ -37,7 +45,7 @@ public:
 
     bool init(gpu2ex &)
     {
-        GN_STDCLASS_INIT2();
+        GN_STDCLASS_INIT();
 
         return success();
     }
@@ -66,11 +74,7 @@ int main()
     gInput.attachToWindow( mainWindow->getDisplayHandle(), mainWindow->getWindowHandle() );
 
     // create GPU2
-    gpu2ex g;
-    g.gpu = GN::gfx::Gpu2::createGpu2({mainWindow.get()});
-    g.cl = g.gpu->createCommandList({});
-    g.um = g.gpu->createMemoryBlock({16, Gpu2::MemoryType::UPLOAD});
-    g.dm = g.gpu->createMemoryBlock({16, Gpu2::MemoryType::DEFAULT});
+    gpu2ex g(mainWindow.get());
 
     // create a triangle
     DX12Triangle tri;

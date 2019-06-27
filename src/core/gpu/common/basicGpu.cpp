@@ -23,7 +23,7 @@ bool GN::gfx::BasicGpu::init( const GpuOptions & o )
     GN_GUARD;
 
     // standard init procedure
-    GN_STDCLASS_INIT( BasicGpu, () );
+    GN_STDCLASS_INIT();
 
     // check GPU options
     if( o.api < 0 || o.api >= GpuAPI::NUM_APIs )

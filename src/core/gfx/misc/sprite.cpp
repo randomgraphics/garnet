@@ -65,7 +65,7 @@ bool GN::gfx::SpriteRenderer::init()
     GN_GUARD;
 
     // standard init procedure
-    GN_STDCLASS_INIT( GN::gfx::SpriteRenderer, () );
+    GN_STDCLASS_INIT();
 
     enum
     {

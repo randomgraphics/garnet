@@ -16,7 +16,7 @@ bool GN::gfx::MultiThreadIdxBuf::init( IdxBuf * ib )
     GN_GUARD;
 
     // standard init procedure
-    GN_STDCLASS_INIT( GN::gfx::MultiThreadIdxBuf, () );
+    GN_STDCLASS_INIT();
 
     if( NULL == ib ) return failure();
 

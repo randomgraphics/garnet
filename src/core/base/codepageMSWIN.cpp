@@ -58,7 +58,7 @@ bool GN::CECImplMSWIN::init(
     GN_GUARD;
 
     // standard init procedure
-    GN_STDCLASS_INIT( GN::CECImplMSWIN, () );
+    GN_STDCLASS_INIT();
 
     mCodePageFrom = sEncodingToCodePage(from);
     mCodePageTo = sEncodingToCodePage(to);

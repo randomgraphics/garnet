@@ -16,7 +16,7 @@ bool GN::gfx::OGLLine::init()
     GN_GUARD;
 
     // standard init procedure
-    GN_STDCLASS_INIT( GN::gfx::OGLLine, () );
+    GN_STDCLASS_INIT();
 
     // create vertex buffer
     GN_ASSERT( !mVtxBuf );

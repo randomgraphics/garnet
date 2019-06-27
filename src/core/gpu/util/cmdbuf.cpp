@@ -15,7 +15,7 @@ bool GN::CommandBuffer::init( size_t bufferSize )
     GN_GUARD;
 
     // standard init procedure
-    GN_STDCLASS_INIT( GN::CommandBuffer, () );
+    GN_STDCLASS_INIT();
 
     GN_ASSERT( NULL == m_Buffer );
 

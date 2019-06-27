@@ -42,7 +42,7 @@ bool GN::gfx::SimpleWireframeModel::init()
     GN_GUARD;
 
     // standard init procedure
-    GN_STDCLASS_INIT( GN::gfx::SimpleWireframeModel, () );
+    GN_STDCLASS_INIT();
 
     mModel = mDatabase.createResource<ModelResource>( NULL );
     if( 0 == mModel || !mModel->reset(&DESC) ) return failure();

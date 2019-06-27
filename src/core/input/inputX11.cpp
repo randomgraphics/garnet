@@ -41,7 +41,7 @@ bool GN::input::InputX11::init()
     GN_GUARD;
 
     // standard init procedure
-    GN_STDCLASS_INIT( GN::input::InputX11, () );
+    GN_STDCLASS_INIT();
 
     // Do custom init here
 

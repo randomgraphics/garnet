@@ -16,7 +16,7 @@ bool GN::win::WindowQt::init( const WindowCreationParameters & wcp )
     GN_GUARD;
 
     // standard init procedure
-    GN_STDCLASS_INIT( GN::win::WindowQt, () );
+    GN_STDCLASS_INIT();
 
     auto app = QApplication::instance();
     if (!app) {
@@ -41,7 +41,7 @@ bool GN::win::WindowQt::init( const WindowAttachingParameters & )
     GN_GUARD;
 
     // standard init procedure
-    GN_STDCLASS_INIT( GN::win::WindowQt, () );
+    GN_STDCLASS_INIT();
 
     GN_ERROR(sLogger)( "Attatch to external window handle is not implemented for WindowQt." );
     return failure();

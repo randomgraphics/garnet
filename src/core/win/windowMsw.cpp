@@ -68,7 +68,7 @@ bool GN::win::WindowMsw::init( const WindowCreationParameters & wcp )
     GN_GUARD;
 
     // standard init procedure
-    GN_STDCLASS_INIT( GN::win::WindowMsw, () );
+    GN_STDCLASS_INIT();
 
     if( !createWindow( wcp ) ) return failure();
 
@@ -88,7 +88,7 @@ bool GN::win::WindowMsw::init( const WindowAttachingParameters & wap )
     GN_GUARD;
 
     // standard init procedure
-    GN_STDCLASS_INIT( GN::win::WindowMsw, () );
+    GN_STDCLASS_INIT();
 
     if( !::IsWindow( (HWND)wap.window ) )
     {

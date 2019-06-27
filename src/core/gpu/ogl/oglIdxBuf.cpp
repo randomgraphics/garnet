@@ -15,7 +15,7 @@ bool GN::gfx::OGLIdxBuf::init( const IdxBufDesc & desc )
     GN_GUARD;
 
     // standard init procedure
-    GN_STDCLASS_INIT( GN::gfx::OGLIdxBuf, () );
+    GN_STDCLASS_INIT();
 
     // check parameter
     if( 0 == desc.numidx )

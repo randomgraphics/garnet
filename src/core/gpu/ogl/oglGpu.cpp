@@ -52,7 +52,7 @@ bool GN::gfx::OGLGpu::init( const GpuOptions & o )
     GN_GUARD;
 
     // standard init procedure
-    GN_STDCLASS_INIT( GN::gfx::OGLGpu, (o) );
+    GN_STDCLASS_INIT( o );
 
     // init sub-components
     if( !dispInit()     ) return failure();

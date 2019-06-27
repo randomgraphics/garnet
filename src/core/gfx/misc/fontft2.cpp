@@ -160,7 +160,7 @@ bool FontFaceFt2::init( const FontFaceCreationDesc & cd )
     GN_GUARD;
 
     // standard init procedure
-    GN_STDCLASS_INIT( FontFaceFt2, () );
+    GN_STDCLASS_INIT();
 
     GN_ASSERT( sLib && sLib->lib );
 

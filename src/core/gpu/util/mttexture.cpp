@@ -35,7 +35,7 @@ bool GN::gfx::MultiThreadTexture::init( Texture * tex )
     GN_GUARD;
 
     // standard init procedure
-    GN_STDCLASS_INIT( GN::gfx::MultiThreadTexture, () );
+    GN_STDCLASS_INIT();
 
     if( NULL == tex ) return failure();
 

@@ -17,7 +17,7 @@ bool GN::gfx::D3D11RTMgr::init()
     GN_GUARD;
 
     // standard init procedure
-    GN_STDCLASS_INIT( GN::gfx::D3D11RTMgr, () );
+    GN_STDCLASS_INIT();
 
     ID3D11Device & dev = mGpu.getDeviceRefInlined();
     ID3D11DeviceContext & cxt = mGpu.getDeviceContextRefInlined();

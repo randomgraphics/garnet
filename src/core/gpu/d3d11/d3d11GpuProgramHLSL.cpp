@@ -378,7 +378,7 @@ bool GN::gfx::D3D11GpuProgramHLSL::init( const GpuProgramDesc & desc )
     GN_GUARD;
 
     // standard init procedure
-    GN_STDCLASS_INIT( D3D11GpuProgramHLSL, () );
+    GN_STDCLASS_INIT();
 
     // covert shader compile options
     uint32 compileFlags;

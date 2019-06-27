@@ -14,7 +14,7 @@ bool GN::gfx::LineRenderer::init()
     GN_GUARD;
 
     // standard init procedure
-    GN_STDCLASS_INIT( GN::gfx::LineRenderer, () );
+    GN_STDCLASS_INIT();
 
     static const char * glslvscode=
         "varying vec4 color; \n"
@@ -314,7 +314,7 @@ bool GN::gfx::ThickLineRenderer::init( Gpu & g )
     GN_GUARD;
 
     // standard init procedure
-    GN_STDCLASS_INIT( GN::gfx::ThickLineRenderer, () );
+    GN_STDCLASS_INIT();
 
     // initialize shaders
     const GpuCaps & caps = g.caps();

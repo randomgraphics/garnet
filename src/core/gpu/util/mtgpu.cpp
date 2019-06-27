@@ -56,7 +56,7 @@ bool GN::gfx::MultiThreadGpu::init(
     GN_GUARD;
 
     // standard init procedure
-    GN_STDCLASS_INIT( GN::gfx::MultiThreadGpu, () );
+    GN_STDCLASS_INIT();
 
     // check parameters
     if( NULL == func )

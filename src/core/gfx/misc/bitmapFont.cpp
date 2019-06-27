@@ -51,7 +51,7 @@ bool GN::gfx::BitmapFont::init( SpriteRenderer * sr, FontFace * ff, size_t maxch
     GN_GUARD;
 
     // standard init procedure
-    GN_STDCLASS_INIT( GN::gfx::BitmapFont, () );
+    GN_STDCLASS_INIT();
 
     if( NULL == sr || NULL == ff )
     {

@@ -576,7 +576,7 @@ bool GN::gfx::OGLTexture::init( const TextureDesc & inputDesc )
     GN_GUARD;
 
     // standard init procedure
-    GN_STDCLASS_INIT( OGLTexture, () );
+    GN_STDCLASS_INIT();
 
     OGLAutoAttribStack autoAttribStack; // auto-restore OGL states
 

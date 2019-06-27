@@ -19,7 +19,7 @@ bool GN::gfx::OGLVtxFmt::init( const VertexBinding & attributes, const OGLBasicG
     GN_GUARD;
 
     // standard init procedure
-    GN_STDCLASS_INIT( GN::gfx::OGLVtxFmt, () );
+    GN_STDCLASS_INIT();
 
     mFormat = attributes;
 

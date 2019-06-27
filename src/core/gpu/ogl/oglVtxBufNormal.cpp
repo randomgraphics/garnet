@@ -15,7 +15,7 @@ bool GN::gfx::OGLVtxBufNormal::init( const VtxBufDesc & desc )
     GN_GUARD;
 
     // standard init procedure
-    GN_STDCLASS_INIT( OGLVtxBufNormal, () );
+    GN_STDCLASS_INIT();
 
     if( 0 == desc.length )
     {

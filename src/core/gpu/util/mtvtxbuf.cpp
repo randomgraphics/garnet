@@ -16,7 +16,7 @@ bool GN::gfx::MultiThreadVtxBuf::init( VtxBuf * vb )
     GN_GUARD;
 
     // standard init procedure
-    GN_STDCLASS_INIT( GN::gfx::MultiThreadVtxBuf, () );
+    GN_STDCLASS_INIT();
 
     if( NULL == vb ) return failure();
 

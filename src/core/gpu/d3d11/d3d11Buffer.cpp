@@ -16,7 +16,7 @@ bool GN::gfx::D3D11Buffer::init( uint32 bytes, bool fastCpuWrite, uint32 bindFla
     GN_GUARD;
 
     // standard init procedure
-    GN_STDCLASS_INIT( GN::gfx::D3D11Buffer, () );
+    GN_STDCLASS_INIT();
 
     // check parameter
     if( 0 == bytes )

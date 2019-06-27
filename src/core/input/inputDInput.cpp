@@ -24,7 +24,7 @@ bool GN::input::InputDInput::init()
     GN_GUARD;
 
     // standard init procedure
-    GN_STDCLASS_INIT( GN::input::InputDInput, () );
+    GN_STDCLASS_INIT();
 
     // init dinput stuff
     if( !diInit() ) return failure();

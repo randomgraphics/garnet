@@ -14,7 +14,7 @@ bool GN::gfx::D3D11VtxBuf::init( const VtxBufDesc & desc )
     GN_GUARD;
 
     // standard init procedure
-    GN_STDCLASS_INIT( D3D11VtxBuf, (desc.length, desc.fastCpuWrite, D3D11_BIND_VERTEX_BUFFER) );
+    GN_STDCLASS_INIT( desc.length, desc.fastCpuWrite, D3D11_BIND_VERTEX_BUFFER );
 
     setDesc( desc );
 

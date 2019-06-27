@@ -48,7 +48,7 @@ bool GN::gfx::SimpleNormalMapModel::init()
     GN_GUARD;
 
     // standard init procedure
-    GN_STDCLASS_INIT( GN::gfx::SimpleNormalMapModel, () );
+    GN_STDCLASS_INIT();
 
     mModel = mDatabase.createResource<ModelResource>( NULL );
     if( 0 == mModel || !mModel->reset(&DESC) ) return failure();

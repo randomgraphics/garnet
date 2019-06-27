@@ -17,7 +17,7 @@ bool GN::input::BasicInputMsw::init()
     GN_GUARD;
 
     // standard init procedure
-    GN_STDCLASS_INIT( GN::input::BasicInputMsw, () );
+    GN_STDCLASS_INIT();
 
     // setup xinput function pointers
     if( !setupXInputFunctionPointers() ) return failure();

@@ -92,7 +92,7 @@ bool GN::gfx::D3D11Texture::init( const TextureDesc & desc )
     GN_GUARD;
 
     // standard init procedure
-    GN_STDCLASS_INIT( GN::gfx::D3D11Texture, () );
+    GN_STDCLASS_INIT();
 
     // create device data
     if( !setDesc( desc ) || !createTexture() ) return failure();

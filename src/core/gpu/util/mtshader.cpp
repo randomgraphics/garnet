@@ -42,7 +42,7 @@ bool GN::gfx::MultiThreadUniform::init( Uniform * uni )
     GN_GUARD;
 
     // standard init procedure
-    GN_STDCLASS_INIT( GN::gfx::MultiThreadUniform, () );
+    GN_STDCLASS_INIT();
 
     GN_ASSERT( uni );
 
@@ -129,7 +129,7 @@ bool GN::gfx::MultiThreadGpuProgram::init( GpuProgram * gp )
     GN_GUARD;
 
     // standard init procedure
-    GN_STDCLASS_INIT( GN::gfx::MultiThreadGpuProgram, () );
+    GN_STDCLASS_INIT();
 
     GN_ASSERT( gp );
 

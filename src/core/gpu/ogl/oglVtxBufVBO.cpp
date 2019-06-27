@@ -18,7 +18,7 @@ bool GN::gfx::OGLVtxBufVBO::init( const VtxBufDesc & desc )
     OGLAutoAttribStack autoAttribStack;
 
     // standard init procedure
-    GN_STDCLASS_INIT( GN::gfx::OGLVtxBufVBO, () );
+    GN_STDCLASS_INIT();
 
     if( 0 == desc.length )
     {

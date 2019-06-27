@@ -47,7 +47,7 @@ bool GN::gfx::SimpleDiffuseModel::init()
     GN_GUARD;
 
     // standard init procedure
-    GN_STDCLASS_INIT( GN::gfx::SimpleDiffuseModel, () );
+    GN_STDCLASS_INIT();
 
     mModel = mDatabase.createResource<ModelResource>( NULL );
     if( 0 == mModel || !mModel->reset(&DESC) ) return failure();

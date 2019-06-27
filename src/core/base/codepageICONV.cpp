@@ -78,7 +78,7 @@ bool GN::CECImplICONV::init(
     GN_GUARD;
 
     // standard init procedure
-    GN_STDCLASS_INIT( GN::CECImplICONV, () );
+    GN_STDCLASS_INIT();
 
     const char * fromstr = sEncodingToLocal( from );
     const char * tostr   = sEncodingToLocal( to );

@@ -16,7 +16,7 @@ bool GN::gfx::D3D11IdxBuf::init( const IdxBufDesc & desc )
     uint32 bytesPerIndex = 2 << (uint32)desc.bits32;
 
     // standard init procedure
-    GN_STDCLASS_INIT( GN::gfx::D3D11IdxBuf, (desc.numidx*bytesPerIndex, desc.fastCpuWrite, D3D11_BIND_INDEX_BUFFER) );
+    GN_STDCLASS_INIT( desc.numidx*bytesPerIndex, desc.fastCpuWrite, D3D11_BIND_INDEX_BUFFER );
 
     // store buffer parameters
     setDesc( desc );

@@ -53,7 +53,7 @@ bool GN::gfx::D3D11Gpu::init( const GN::gfx::GpuOptions & o )
     GN_GUARD;
 
     // standard init procedure
-    GN_STDCLASS_INIT( GN::gfx::D3D11Gpu, ( o ) );
+    GN_STDCLASS_INIT( o );
 
     // init sub-components
     if( !dispInit()     ) return failure();

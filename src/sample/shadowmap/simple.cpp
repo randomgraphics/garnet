@@ -18,7 +18,7 @@ bool GN::SimpleShadowMap::init( const StrA & actorName )
     GN_GUARD;
 
     // standard init procedure
-    GN_STDCLASS_INIT( GN::SimpleShadowMap, () );
+    GN_STDCLASS_INIT();
 
     RenderEngine & re = mApp.getRenderEngine();
     EntityManager & em = mApp.getEntityManager();
