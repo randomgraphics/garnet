@@ -24,11 +24,48 @@ class DX12Triangle : public StdClass
 {
     GN_DECLARE_STDCLASS(DX12Triangle, StdClass);
 
-    AutoRef<Gpu2::Surface> _buffer;
+    struct Vertex
+    {
+        float x, y, z;
+        int : 32; // padding;
+    };
+
+    AutoRef<Gpu2::Surface> _vb;
 
     void clear()
     {
+    }
 
+    void initVB(gpu2ex & g)
+    {
+        // declare vertices
+        Vertex vertices[] = {
+            { -0.5f, -0.5f, .0f },
+            {  0.5f, -0.5f, .0f },
+            {  0.0f,  0.5f, .0f },
+        };
+
+        // create a temporary buffer that holds vertices
+        Gpu2::SurfaceCreationParameters vbcp;
+        vbcp.memory = g.um;
+        vbcp.offset = 0;
+        vbcp.dim = Gpu2::SurfaceDimension::BUFFER;
+        vbcp.b.bytes = sizeof(vertices);
+        auto upload = g.gpu->createSurface(vbcp);
+
+        // create vb for rendering
+        vbcp.memory = g.dm;
+        _vb = g.gpu->createSurface(vbcp);
+
+        // copy vertices to upload buffer
+        memcpy(upload->getPersistentPointer(0).ptr, vertices, sizeof(vertices));
+
+        // copy vertices to vb for rendering
+        g.cl->copy({upload.rawptr(), 0, _vb.rawptr(), 0});
+
+        // wait for copy to finish
+        g.gpu->kickoff(*g.cl);
+        g.gpu->finish();
     }
 
 public:
@@ -43,15 +80,19 @@ public:
         quit();
     }
 
-    bool init(gpu2ex &)
+    bool init(gpu2ex & g)
     {
         GN_STDCLASS_INIT();
 
+        initVB(g);
+
+        // done
         return success();
     }
 
     void quit()
     {
+        _vb = nullptr;
         GN_STDCLASS_QUIT();
     }
 

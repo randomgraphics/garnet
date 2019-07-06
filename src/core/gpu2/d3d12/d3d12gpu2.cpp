@@ -133,6 +133,14 @@ GN::AutoRef<GN::gfx::Gpu2::CommandList> GN::gfx::D3D12Gpu2::createCommandList(co
 //
 //
 // -----------------------------------------------------------------------------
+GN::AutoRef<GN::gfx::Gpu2::MemoryBlock> GN::gfx::D3D12Gpu2::createMemoryBlock(const MemoryBlockCreationParameters & cp)
+{
+    return SafeNew(new D3D12MemoryBlock(*this, cp));
+}
+
+//
+//
+// -----------------------------------------------------------------------------
 GN::AutoRef<GN::gfx::Gpu2::Surface> GN::gfx::D3D12Gpu2::createSurface(const SurfaceCreationParameters & cp)
 {
     if (SurfaceDimension::BUFFER == cp.dim) {
@@ -232,15 +240,34 @@ static D3D12_HEAP_TYPE GetHeapType(Gpu2::MemoryType t)
 //
 //
 // -----------------------------------------------------------------------------
+static ID3D12Heap * GetD3D12Heap(Gpu2::MemoryBlock * mb)
+{
+    GN_ASSERT(mb);
+    return ((D3D12MemoryBlock*)mb)->heap;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+D3D12MemoryBlock::D3D12MemoryBlock(D3D12Gpu2 & o, const Gpu2::MemoryBlockCreationParameters & cp)
+ : owner(o)
+{
+    D3D12_HEAP_DESC desc = {};
+    desc.SizeInBytes = cp.sizeInMB * 1024 * 1024;
+    desc.Properties = CD3DX12_HEAP_PROPERTIES(GetHeapType(cp.type));
+    ReturnIfFailed(o.device().CreateHeap(&desc, IID_PPV_ARGS(&heap)));
+}
+
+//
+//
+// -----------------------------------------------------------------------------
 GN::gfx::D3D12Buffer::D3D12Buffer(D3D12Gpu2 & o, const Gpu2::SurfaceCreationParameters & cp) : D3D12PlacedResource(o)
 {
     GN_ASSERT(GN::gfx::Gpu2::SurfaceDimension::BUFFER == cp.dim);
-
-    auto heapProperties = CD3DX12_HEAP_PROPERTIES(GetHeapType(cp.memoryType));
     auto desc = CD3DX12_RESOURCE_DESC::Buffer(cp.b.bytes);
-    ReturnIfFailed(o.device().CreateCommittedResource(
-            &heapProperties,
-            D3D12_HEAP_FLAG_NONE,
+    ReturnIfFailed(o.device().CreatePlacedResource(
+            GetD3D12Heap(cp.memory),
+            cp.offset,
             &desc,
             D3D12_RESOURCE_STATE_GENERIC_READ,
             nullptr,
@@ -253,7 +280,6 @@ GN::gfx::D3D12Buffer::D3D12Buffer(D3D12Gpu2 & o, const Gpu2::SurfaceCreationPara
 GN::gfx::D3D12Texture::D3D12Texture(D3D12Gpu2 & o, const Gpu2::SurfaceCreationParameters & cp) : D3D12PlacedResource(o)
 {
     GN_ASSERT(GN::gfx::Gpu2::SurfaceDimension::TEXTURE == cp.dim);
-    auto heapProperties = CD3DX12_HEAP_PROPERTIES(GetHeapType(cp.memoryType));
 
     DXGI_FORMAT format = (DXGI_FORMAT)colorFormat2DxgiFormat(cp.t.f);
     if (DXGI_FORMAT_UNKNOWN == format) {
@@ -293,9 +319,9 @@ GN::gfx::D3D12Texture::D3D12Texture(D3D12Gpu2 & o, const Gpu2::SurfaceCreationPa
         return;
     }
 
-    ReturnIfFailed(o.device().CreateCommittedResource(
-        &heapProperties,
-        D3D12_HEAP_FLAG_NONE,
+    ReturnIfFailed(o.device().CreatePlacedResource(
+        GetD3D12Heap(cp.memory),
+        cp.offset,
         &desc,
         D3D12_RESOURCE_STATE_GENERIC_READ,
         nullptr,

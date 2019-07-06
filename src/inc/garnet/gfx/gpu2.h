@@ -163,7 +163,6 @@ namespace gfx
         };
         struct MemoryBlock : public RefCounter
         {
-            virtual void * rawptr() const = 0; // returns a pointer to the head of the memory block.
         };
         virtual AutoRef<MemoryBlock>  createMemoryBlock(const MemoryBlockCreationParameters &) = 0;
         //@}
@@ -211,29 +210,29 @@ namespace gfx
             MemoryBlock * memory;
             uint64_t offset;
             SurfaceDimension dim;
-            union
+            struct TextureDesc
             {
-                struct TextureDesc
-                {
-                    uint32_t w, h, d = 1, a = 1, m = 1, s = 1; // height, depth, array, mipmaps, samples.
-                    ColorFormat f;
-                } t;
-                struct BufferDesc
-                {
-                    uint32_t bytes;
-                } b;
-            };
+                uint32_t w, h = 1, d = 1, a = 1, m = 1, s = 1; // width, height, depth, array, mipmaps, samples.
+                ColorFormat f; // format
+            } t;
+            struct BufferDesc
+            {
+                uint32_t bytes;
+            } b;
             SurfaceFlags flags;
-            union
-            {
-                MemoryType memoryType;     // valid when pool is null.
-            };
+        };
+        struct PersistentSurfaceData
+        {
+            void * ptr;
+            uint64_t slicePitch;
+            uint64_t rawPitch;
+            uint64_t subResourceId;
         };
         /// this could be a texture or a buffer.
         struct Surface : public RefCounter
         {
             /// Return a pointer to a subresource.
-            virtual void * getPersistentPointer(uint32_t subResourceId, uint32_t * pRowPitch, uint32_t * pSlicePitch) = 0;
+            virtual PersistentSurfaceData getPersistentPointer(uint32_t subResourceId) = 0;
         };
         virtual AutoRef<Surface> createSurface(const SurfaceCreationParameters &) = 0;
         //@}

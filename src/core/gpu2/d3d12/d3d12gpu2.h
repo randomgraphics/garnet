@@ -139,7 +139,7 @@ namespace GN { namespace gfx
         DynaArray<uint64_t> createPipelineStates(const PipelineCreationParameters *, size_t) override { return {}; }
         void deletePipelineStates(const uint64_t *, size_t) override {}
         AutoRef<CommandList> createCommandList(const CommandListCreationParameters &) override;
-        AutoRef<MemoryBlock> createMemoryBlock(const MemoryBlockCreationParameters &) override { return {}; }
+        AutoRef<MemoryBlock> createMemoryBlock(const MemoryBlockCreationParameters &) override;
         AutoRef<Surface> createSurface(const SurfaceCreationParameters &) override;
         AutoRef<Query> createQuery(const QueryCreationParameters &) override { return {}; }
         void kickoff(GN::gfx::Gpu2::CommandList &, uint64_t * fence) override;
@@ -168,6 +168,17 @@ namespace GN { namespace gfx
         void wait(uint64_t) { GN_UNIMPL(); }
     };
 
+    struct D3D12MemoryBlock : public Gpu2::MemoryBlock
+    {
+        D3D12Gpu2 & owner;
+        AutoComPtr<ID3D12Heap> heap;
+
+        D3D12MemoryBlock(D3D12Gpu2 &, const Gpu2::MemoryBlockCreationParameters &);
+        ~D3D12MemoryBlock() {}
+
+        bool ok() const { return !heap.empty(); }
+    };
+
     struct D3D12PlacedResource : public Gpu2::Surface
     {
         D3D12Gpu2 & owner;
@@ -177,13 +188,14 @@ namespace GN { namespace gfx
 
         bool ok() const { return !resource.empty(); }
 
-        void * getPersistentPointer(uint32_t subResourceId, uint32_t * pRowPitch, uint32_t * pSlicePitch)
+        Gpu2::PersistentSurfaceData getPersistentPointer(uint32_t subResourceId)
         {
-            (void)subResourceId;
-            (void)pRowPitch;
-            (void)pSlicePitch;
-            GN_UNIMPL();
-            return nullptr;
+            Gpu2::PersistentSurfaceData result;
+            result.ptr = nullptr;
+            result.rawPitch = 0;
+            result.slicePitch = 0;
+            result.subResourceId = subResourceId;
+            return result;
         }
     };
 
