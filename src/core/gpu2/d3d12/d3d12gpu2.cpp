@@ -35,11 +35,24 @@ static void GetHardwareAdapter(IDXGIFactory2* pFactory, IDXGIAdapter1** ppAdapte
     *ppAdapter = adapter.detach();
 }
 
+//
+//
+// -----------------------------------------------------------------------------
 template<typename T>
 static AutoRef<T> SafeNew(T * p)
 {
     if (p && !p->ok()) delete p, p = nullptr;
     return AutoRef<T>(p);
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+static ID3D12Resource * promote(Gpu2::Surface * p)
+{
+    if (!p) return nullptr;
+    auto r = (D3D12PlacedResource *)p;
+    return r->resource.get();
 }
 
 //
@@ -119,6 +132,26 @@ GN::gfx::D3D12Gpu2::D3D12Gpu2(const CreationParameters & cp)
 
     // create command list for present
     _present = new D3D12CommandList(*this, {});
+
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+DynaArray<uint64_t> GN::gfx::D3D12Gpu2::createPipelineStates(const PipelineCreationParameters *, size_t n)
+{
+    DynaArray<uint64_t> r;
+    for(size_t i = 0; i < n; ++i) {
+        r.append(0);
+    }
+    return r;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::gfx::D3D12Gpu2::deletePipelineStates(const uint64_t *, size_t)
+{
 
 }
 
@@ -221,6 +254,30 @@ GN::gfx::D3D12CommandList::D3D12CommandList(D3D12Gpu2 & gpu, const Gpu2::Command
 void GN::gfx::D3D12CommandList::clear(const Gpu2::ClearParameters & p)
 {
     commandList->ClearRenderTargetView(owner.backrtv(), p.color, 0, nullptr);
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::gfx::D3D12CommandList::draw(const Gpu2::DrawParameters & p)
+{
+    if (p.pso)
+        commandList->SetPipelineState((ID3D12PipelineState*)p.pso);
+    else
+        commandList->ClearState(nullptr);
+    if (p.indexed) {
+        commandList->DrawIndexedInstanced(p.vertexOrIndexCount, 1, p.baseindex, p.basevertex, 0);
+    } else {
+        commandList->DrawInstanced(p.vertexOrIndexCount, 1, p.basevertex, 0);
+    }
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::gfx::D3D12CommandList::copyBufferRegion(const Gpu2::CopyBufferRegionParameters & p)
+{
+    commandList->CopyBufferRegion(promote(p.dest), p.destOffset, promote(p.source), p.sourceOffset, p.sourceBytes);
 }
 
 //

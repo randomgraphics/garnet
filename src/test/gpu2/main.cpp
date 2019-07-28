@@ -64,9 +64,9 @@ class DX12Triangle : public StdClass
         _vb = g.gpu->createSurface(vbcp);
 
         // copy vertices to vb for rendering
-        g.cl->reset();
-        g.cl->copy({upload.rawptr(), 0, _vb.rawptr(), 0});
-        g.gpu->kickoff(*g.cl);
+        auto cl = g.gpu->createCommandList({});
+        cl->copySurface(upload.rawptr(), _vb.rawptr());
+        g.gpu->kickoff(*cl);
         g.gpu->finish();
     }
 
@@ -91,7 +91,7 @@ class DX12Triangle : public StdClass
                 return o;
             };
 
-            float4 psmain(VSOutput v) : COLOR0
+            float4 psmain(VSOutput v) : SV_TARGET0
             {
                 return float4(1.0, 0.0, 1.0, 1.0);
             }
@@ -138,8 +138,7 @@ public:
 
     void render(gpu2ex & g)
     {
-        g.cl->reset();
-        g.cl->draw({_pso, PrimitiveType::TRIANGLE_LIST, 3});
+        g.cl->draw({_pso, PrimitiveType::TRIANGLE_LIST, false, 3});
     }
 };
 
@@ -181,5 +180,6 @@ int main()
     g.gpu->finish();
 
     // done
+    GN::input::shutdownInputSystem();
     return 0;
 }

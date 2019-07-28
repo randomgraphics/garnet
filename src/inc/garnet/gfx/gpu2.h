@@ -112,7 +112,8 @@ namespace gfx
         {
             uint64_t pso;
             PrimitiveType prim;
-            uint32_t indexcount;
+            bool     indexed;
+            uint32_t vertexOrIndexCount;
             uint32_t basevertex = 0;
             uint32_t baseindex = 0;
         };
@@ -123,12 +124,13 @@ namespace gfx
             uint32_t groupY = 1;
             uint32_t groupZ = 1;
         };
-        struct CopyParameters
+        struct CopyBufferRegionParameters
         {
             Surface * source;
-            uint32_t  sourceSubresourceId;
+            uint64_t  sourceOffset;
+            uint64_t  sourceBytes;
             Surface * dest;
-            uint32_t  destSubresourceId;
+            uint64_t  destOffset;
         };
         struct CommandListCreationParameters
         {
@@ -141,7 +143,8 @@ namespace gfx
             virtual void clear(const ClearParameters &) = 0;
             virtual void draw(const DrawParameters &) = 0;
             virtual void compute(const ComputeParameters &) = 0;
-            virtual void copy(const CopyParameters &) = 0;
+            virtual void copyBufferRegion(const CopyBufferRegionParameters &) = 0;
+            void copySurface(Surface * from, Surface * to) { copyBufferRegion({from, 0, 0, to, 0}); }
         };
         virtual AutoRef<CommandList> createCommandList(const CommandListCreationParameters &) = 0;
         virtual void kickoff(CommandList &, uint64_t * fence = nullptr) = 0; ///< kick off command lists.

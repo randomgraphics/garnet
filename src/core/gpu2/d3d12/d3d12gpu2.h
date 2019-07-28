@@ -80,9 +80,10 @@ namespace GN { namespace gfx
 
         uint64_t mark()
         {
+            uint64_t ret = _fenceValue.u64;
             _q->Signal(_f, _fenceValue.value);
             ++_fenceValue.value;
-            return _fenceValue.u64;
+            return ret;
         }
 
         void finish(uint64 fence)
@@ -136,8 +137,8 @@ namespace GN { namespace gfx
         D3D12_CPU_DESCRIPTOR_HANDLE backrtv() { return _frames[_frameIndex].rtv; }
 
         // interface methods
-        DynaArray<uint64_t> createPipelineStates(const PipelineCreationParameters *, size_t) override { return {}; }
-        void deletePipelineStates(const uint64_t *, size_t) override {}
+        DynaArray<uint64_t> createPipelineStates(const PipelineCreationParameters *, size_t) override;
+        void deletePipelineStates(const uint64_t *, size_t) override;
         AutoRef<CommandList> createCommandList(const CommandListCreationParameters &) override;
         AutoRef<MemoryBlock> createMemoryBlock(const MemoryBlockCreationParameters &) override;
         AutoRef<Surface> createSurface(const SurfaceCreationParameters &) override;
@@ -157,15 +158,11 @@ namespace GN { namespace gfx
         ~D3D12CommandList() {}
         
         bool ok() const { return nullptr != commandList; }
-
-        void reset(uint64_t initialState) { commandList->Reset(allocator, (ID3D12PipelineState*)initialState); }
-        void clear(const Gpu2::ClearParameters &);
-        void draw(const Gpu2::DrawParameters &) { GN_UNIMPL(); }
-        void compute(const Gpu2::ComputeParameters &) { GN_UNIMPL(); }
-        void copy(const Gpu2::CopyParameters &) { GN_UNIMPL(); }
-
-        uint64_t mark() { GN_UNIMPL(); return 0; }
-        void wait(uint64_t) { GN_UNIMPL(); }
+        void reset(uint64_t initialState) override { commandList->Reset(allocator, (ID3D12PipelineState*)initialState); }
+        void clear(const Gpu2::ClearParameters &) override;
+        void draw(const Gpu2::DrawParameters &) override;
+        void compute(const Gpu2::ComputeParameters &) override { GN_UNIMPL(); }
+        void copyBufferRegion(const Gpu2::CopyBufferRegionParameters &) override;
     };
 
     struct D3D12MemoryBlock : public Gpu2::MemoryBlock
@@ -223,5 +220,4 @@ namespace GN { namespace gfx
             return {};
         }
     };
-
 }}
