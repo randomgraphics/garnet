@@ -6,7 +6,7 @@
 #include <d3dx12.h>
 
 #define ThrowIfFailed(x) if(true) { HRESULT hr__ = (x); if (FAILED(hr__)) GN::breakIntoDebugger(); } else void(0)
-#define ReturnIfFailed(x) if(true) { HRESULT hr__ = (x); if (FAILED(hr__)) { GN_ERROR(sLogger)(#x "failed, hr = 0x%08X", hr__); return; } } else void(0)
+#define ReturnIfFailed(x, ...) if(true) { HRESULT hr__ = (x); if (FAILED(hr__)) { GN_ERROR(sLogger)(#x "failed, hr = 0x%08X", hr__); return __VA_ARGS__; } } else void(0)
 
 namespace GN { namespace gfx
 {
@@ -183,30 +183,45 @@ namespace GN { namespace gfx
     {
         D3D12Gpu2 & owner;
         AutoComPtr<ID3D12Resource> resource;
+        const Gpu2::SurfaceCreationParameters creationParameters;
 
-        D3D12PlacedResource(D3D12Gpu2 & o) : owner(o) {}
+        D3D12PlacedResource(D3D12Gpu2 & o, const Gpu2::SurfaceCreationParameters & cp) : owner(o), creationParameters(cp) {}
 
         bool ok() const { return !resource.empty(); }
 
-        Gpu2::PersistentSurfaceData getPersistentPointer(uint32_t subResourceId)
+        void unmap(uint32_t subSurfaceId) override
         {
-            Gpu2::PersistentSurfaceData result;
-            result.ptr = nullptr;
-            result.rawPitch = 0;
-            result.slicePitch = 0;
-            result.subResourceId = subResourceId;
-            return result;
+            resource->Unmap(subSurfaceId, nullptr);
         }
     };
 
     struct D3D12Buffer : public D3D12PlacedResource
     {
         D3D12Buffer(D3D12Gpu2 &, const Gpu2::SurfaceCreationParameters &);
+
+        Gpu2::MappedSurfaceData map(uint32_t subSurfaceId) override
+        {
+            Gpu2::MappedSurfaceData result = {};
+            result.ptr = nullptr;
+            result.rawPitch = creationParameters.b.bytes;
+            result.slicePitch = creationParameters.b.bytes;
+            result.subSurfaceId = subSurfaceId;
+            GN_DX_CHECK_RETURN(resource->Map(subSurfaceId, nullptr, &result.ptr), result);
+            return result;
+        }
+
     };
 
     struct D3D12Texture : public D3D12PlacedResource
     {
         D3D12Texture(D3D12Gpu2 &, const Gpu2::SurfaceCreationParameters &);
+
+        Gpu2::MappedSurfaceData map(uint32_t subSurfaceId) override
+        {
+            // not implemented.
+            subSurfaceId;
+            return {};
+        }
     };
 
 }}

@@ -111,10 +111,10 @@ namespace gfx
         struct DrawParameters
         {
             uint64_t pso;
+            PrimitiveType prim;
             uint32_t indexcount;
-            uint32_t basevertex;
-            uint32_t baseindex;
-            uint32_t primitive;
+            uint32_t basevertex = 0;
+            uint32_t baseindex = 0;
         };
         struct ComputeParameters
         {
@@ -221,18 +221,18 @@ namespace gfx
             } b;
             SurfaceFlags flags;
         };
-        struct PersistentSurfaceData
+        struct MappedSurfaceData
         {
             void * ptr;
             uint64_t slicePitch;
             uint64_t rawPitch;
-            uint64_t subResourceId;
+            uint32_t subSurfaceId;
         };
         /// this could be a texture or a buffer.
         struct Surface : public RefCounter
         {
-            /// Return a pointer to a subresource.
-            virtual PersistentSurfaceData getPersistentPointer(uint32_t subResourceId) = 0;
+            virtual MappedSurfaceData map(uint32_t subSurfaceId) = 0;
+            virtual void unmap(uint32_t subSurfaceId) = 0;
         };
         virtual AutoRef<Surface> createSurface(const SurfaceCreationParameters &) = 0;
         //@}
@@ -256,5 +256,22 @@ namespace gfx
         virtual void present(const PresentParameters &) = 0;
         //@}
     };
+
+    struct ShaderCompileParameters
+    {
+        struct Options
+        {
+            bool debugable : 1; ///< set to true to generate shader binary with debug information.
+            bool optimized : 1; ///< set to true to generate optimized shader.
+            Options() : debugable(GN_BUILD_DEBUG_ENABLED), optimized(true) {}
+        };
+
+        const char * source;
+        size_t       length = 0; // could be 0 for null-terminated string.
+        const char * entry;
+        const char * profile;
+        Options      options;
+    };
+    GN_API DynaArray<uint8_t> compileHLSL(const ShaderCompileParameters &);
 } // end of namespace gfx
 } // end of namespace GN

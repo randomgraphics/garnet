@@ -31,6 +31,7 @@ class DX12Triangle : public StdClass
     };
 
     AutoRef<Gpu2::Surface> _vb;
+    uint64_t _pso = 0;
 
     void clear()
     {
@@ -45,7 +46,7 @@ class DX12Triangle : public StdClass
             {  0.0f,  0.5f, .0f },
         };
 
-        // create a temporary buffer that holds vertices
+        // create a upload buffer that holds vertices
         Gpu2::SurfaceCreationParameters vbcp;
         vbcp.memory = g.um;
         vbcp.offset = 0;
@@ -53,19 +54,57 @@ class DX12Triangle : public StdClass
         vbcp.b.bytes = sizeof(vertices);
         auto upload = g.gpu->createSurface(vbcp);
 
+        // copy vertices to upload buffer
+        auto mapped = upload->map(0);
+        memcpy(mapped.ptr, vertices, sizeof(vertices));
+        upload->unmap(0);
+
         // create vb for rendering
         vbcp.memory = g.dm;
         _vb = g.gpu->createSurface(vbcp);
 
-        // copy vertices to upload buffer
-        memcpy(upload->getPersistentPointer(0).ptr, vertices, sizeof(vertices));
-
         // copy vertices to vb for rendering
+        g.cl->reset();
         g.cl->copy({upload.rawptr(), 0, _vb.rawptr(), 0});
-
-        // wait for copy to finish
         g.gpu->kickoff(*g.cl);
         g.gpu->finish();
+    }
+
+    void initPSO(gpu2ex & g)
+    {
+        // compile vertex and pixel shader
+        const char * hlsl = R"(
+            struct VSInput
+            {
+                float3 position : POSITION0;
+            };
+
+            struct VSOutput
+            {
+                float4 position : POSITION;
+            };
+
+            VSOutput vsmain(VSInput v)
+            {
+                VSOutput o;
+                o.position = float4(v, 1.0f);
+                return o;
+            };
+
+            float4 psmain(VSOutput v) : COLOR0
+            {
+                return float4(1.0, 0.0, 1.0, 1.0);
+            }
+        )";
+        auto vs = compileHLSL({hlsl, 0, "vsmain", "vs_5_0"});
+        auto ps = compileHLSL({hlsl, 0, "psmain", "ps_5_0"});
+        if (vs.empty() || ps.empty()) return;
+
+        // create pso
+        Gpu2::PipelineCreationParameters pcp = {};
+        pcp.vs = { vs.rawptr(), vs.size() };
+        pcp.ps = { ps.rawptr(), ps.size() };
+        _pso = g.gpu->createPipelineStates(&pcp, 1)[0];
     }
 
 public:
@@ -85,6 +124,7 @@ public:
         GN_STDCLASS_INIT();
 
         initVB(g);
+        initPSO(g);
 
         // done
         return success();
@@ -96,9 +136,10 @@ public:
         GN_STDCLASS_QUIT();
     }
 
-    void render()
+    void render(gpu2ex & g)
     {
-
+        g.cl->reset();
+        g.cl->draw({_pso, PrimitiveType::TRIANGLE_LIST, 3});
     }
 };
 
@@ -129,8 +170,9 @@ int main()
             break;
         }
 
+        g.cl->reset();
         g.cl->clear({{0.f, 1.f, 0.f, 0.f}});
-        tri.render();
+        tri.render(g);
         g.gpu->kickoff(*g.cl);
         g.gpu->present({});
     }

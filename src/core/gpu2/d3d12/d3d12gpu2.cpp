@@ -261,7 +261,7 @@ D3D12MemoryBlock::D3D12MemoryBlock(D3D12Gpu2 & o, const Gpu2::MemoryBlockCreatio
 //
 //
 // -----------------------------------------------------------------------------
-GN::gfx::D3D12Buffer::D3D12Buffer(D3D12Gpu2 & o, const Gpu2::SurfaceCreationParameters & cp) : D3D12PlacedResource(o)
+GN::gfx::D3D12Buffer::D3D12Buffer(D3D12Gpu2 & o, const Gpu2::SurfaceCreationParameters & cp) : D3D12PlacedResource(o, cp)
 {
     GN_ASSERT(GN::gfx::Gpu2::SurfaceDimension::BUFFER == cp.dim);
     auto desc = CD3DX12_RESOURCE_DESC::Buffer(cp.b.bytes);
@@ -277,7 +277,7 @@ GN::gfx::D3D12Buffer::D3D12Buffer(D3D12Gpu2 & o, const Gpu2::SurfaceCreationPara
 //
 //
 // -----------------------------------------------------------------------------
-GN::gfx::D3D12Texture::D3D12Texture(D3D12Gpu2 & o, const Gpu2::SurfaceCreationParameters & cp) : D3D12PlacedResource(o)
+GN::gfx::D3D12Texture::D3D12Texture(D3D12Gpu2 & o, const Gpu2::SurfaceCreationParameters & cp) : D3D12PlacedResource(o, cp)
 {
     GN_ASSERT(GN::gfx::Gpu2::SurfaceDimension::TEXTURE == cp.dim);
 
