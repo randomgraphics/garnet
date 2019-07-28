@@ -82,33 +82,23 @@
 
 //@{
 
-#define GN_OGL_CHECK_DO_DESC( func, errDesc, something )                    \
+#define GN_OGL_CHECK_DO( func, ... )                                        \
     if( true ) {                                                            \
         func;                                                               \
         GLenum err = glGetError();                                          \
         if( GL_NO_ERROR != err )                                            \
         {                                                                   \
             static GN::Logger * sOglLogger = GN::getLogger("GN.gfx.OGLError"); \
-            GN_ERROR(sOglLogger)( "%s (error=0x%x)", errDesc, err );           \
-            GN_UNEXPECTED();                                                \
-            something                                                       \
+            GN_ERROR(sOglLogger)( "error=0x%x", err );                      \
+            __VA_ARGS__                                                     \
         }                                                                   \
     } else void(0)
-//
-#define GN_OGL_CHECK_RV_DESC( func, errDesc, retVal ) GN_OGL_CHECK_DO_DESC( func, errDesc, return retVal; )
-//
-#define GN_OGL_CHECK_R_DESC( func, errDesc ) GN_OGL_CHECK_DO_DESC( func, errDesc, return; )
-//
 #if GN_BUILD_DEBUG_ENABLED
-#define GN_OGL_CHECK_DESC( func, errDesc ) GN_OGL_CHECK_DO_DESC( func, errDesc, )
+#define GN_OGL_CHECK( func, ... ) GN_OGL_CHECK_DO( func, __VA_ARGS__ )
 #else
-#define GN_OGL_CHECK_DESC( func, errDesc ) func
+#define GN_OGL_CHECK( func, ... ) func
 #endif
-//
-#define GN_OGL_CHECK_DO( X, S ) GN_OGL_CHECK_DO_DESC( X, "", S )
-#define GN_OGL_CHECK_RV( X, V ) GN_OGL_CHECK_RV_DESC( X, "", V )
-#define GN_OGL_CHECK_R( X )     GN_OGL_CHECK_R_DESC( X, "" )
-#define GN_OGL_CHECK( X )       GN_OGL_CHECK_DESC( X, "" )
+#define GN_OGL_CHECK_R( X, ... ) GN_OGL_CHECK_DO( X, return __VA_ARGS__; )
 
 ///
 /// check return value of Windows function (general version)
@@ -136,12 +126,7 @@
 ///
 /// check return value of Windows function, return if failed
 ///
-#define GN_MSW_CHECK_RETURN_VOID( func ) GN_MSW_CHECK_DO( func, return; )
-
-///
-/// check return value of Windows function, return if failed
-///
-#define GN_MSW_CHECK_RETURN( func, rval ) GN_MSW_CHECK_DO( func, return rval; )
+#define GN_MSW_CHECK_RETURN( func, ... ) GN_MSW_CHECK_DO( func, return __VA_ARGS__; )
 
 ///
 /// DX9 error check routine
@@ -173,12 +158,7 @@
 ///
 /// DX error check routine
 ///
-#define GN_DX_CHECK_RETURN_VOID( func )  GN_DX_CHECK_DO( func, return; )
-
-///
-/// DX error check routine
-///
-#define GN_DX_CHECK_RETURN( func, rval ) GN_DX_CHECK_DO( func, return rval; )
+#define GN_DX_CHECK_RETURN( func, ... ) GN_DX_CHECK_DO( func, return __VA_ARGS__; )
 
 ///
 /// check return value of XLib function (general version)
@@ -206,12 +186,7 @@
 ///
 /// check return value of XLib function, return if failed
 ///
-#define GN_X_CHECK_RETURN_VOID( func ) GN_X_CHECK_DO( func, return; )
-
-///
-/// check return value of XLib function, return if failed
-///
-#define GN_X_CHECK_RETURN( func, rval ) GN_X_CHECK_DO( func, return rval; )
+#define GN_X_CHECK_RETURN( func, ... ) GN_X_CHECK_DO( func, return __VA_ARGS__; )
 
 //@}
 

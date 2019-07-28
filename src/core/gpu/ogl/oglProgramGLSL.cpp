@@ -110,14 +110,14 @@ sCreateShader( const StrA & code, GLenum usage )
     // set shader code
     const char * code_str = code.rawptr();
     GLint code_size = static_cast<GLint>( code.size() );
-    GN_OGL_CHECK_RV(
+    GN_OGL_CHECK_R(
         glShaderSourceARB( sh, 1, &code_str, &code_size ),
         0 );
 
     // compile shader
-    GN_OGL_CHECK_RV( glCompileShaderARB( sh ), 0 );
+    GN_OGL_CHECK_R( glCompileShaderARB( sh ), 0 );
     int compile_ok;
-    GN_OGL_CHECK_RV( glGetObjectParameterivARB(
+    GN_OGL_CHECK_R( glGetObjectParameterivARB(
         sh, GL_OBJECT_COMPILE_STATUS_ARB, &compile_ok ), 0 );
     if( !compile_ok )
     {
@@ -164,13 +164,13 @@ GLhandleARB sCreateProgram( GLhandleARB vs, GLhandleARB ps )
     AutoARBObjectDel autodel( program );
 
     // attach shaders to program
-    GN_OGL_CHECK_RV( glAttachObjectARB( program, vs ), 0 );
-    GN_OGL_CHECK_RV( glAttachObjectARB( program, ps ), 0 );
+    GN_OGL_CHECK_R( glAttachObjectARB( program, vs ), 0 );
+    GN_OGL_CHECK_R( glAttachObjectARB( program, ps ), 0 );
 
     // link program
     GN_OGL_CHECK( glLinkProgramARB(program) );
     int linkOk;
-    GN_OGL_CHECK_RV( glGetObjectParameterivARB(
+    GN_OGL_CHECK_R( glGetObjectParameterivARB(
         program, GL_OBJECT_LINK_STATUS_ARB, &linkOk ),
         0 );
     if( !linkOk )
@@ -605,11 +605,11 @@ GN::gfx::OGLGpuProgramGLSL::enumParameters()
 
     // get parameter count
     GLint numParameters;
-    GN_OGL_CHECK_RV( glGetObjectParameterivARB( mProgram, GL_OBJECT_ACTIVE_UNIFORMS_ARB, &numParameters ), false );
+    GN_OGL_CHECK_R( glGetObjectParameterivARB( mProgram, GL_OBJECT_ACTIVE_UNIFORMS_ARB, &numParameters ), false );
 
     // get maxinum length of parameter name;
     GLint maxLength;
-    GN_OGL_CHECK_RV( glGetObjectParameterivARB( mProgram, GL_OBJECT_ACTIVE_UNIFORM_MAX_LENGTH_ARB, &maxLength ), false );
+    GN_OGL_CHECK_R( glGetObjectParameterivARB( mProgram, GL_OBJECT_ACTIVE_UNIFORM_MAX_LENGTH_ARB, &maxLength ), false );
 
     // enumerate all parameters
     char * nameptr = (char*)alloca( maxLength+1 );
@@ -618,7 +618,7 @@ GN::gfx::OGLGpuProgramGLSL::enumParameters()
     {
         GLSLUniformOrTextureDesc u;
 
-        GN_OGL_CHECK_RV( glGetActiveUniformARB( mProgram, i, maxLength, NULL, &u.count, &u.type, nameptr ), false );
+        GN_OGL_CHECK_R( glGetActiveUniformARB( mProgram, i, maxLength, NULL, &u.count, &u.type, nameptr ), false );
         nameptr[maxLength] = 0;
 
         // remove "[0]" suffix from array uniform
@@ -630,7 +630,7 @@ GN::gfx::OGLGpuProgramGLSL::enumParameters()
 
         GN_VTRACE(sLogger)( "Found GLSL uniform: %s", nameptr );
 
-        GN_OGL_CHECK_RV( u.location = glGetUniformLocationARB( mProgram, nameptr ), false );
+        GN_OGL_CHECK_R( u.location = glGetUniformLocationARB( mProgram, nameptr ), false );
 
         u.name = nameptr;
 
@@ -697,20 +697,20 @@ GN::gfx::OGLGpuProgramGLSL::enumAttributes()
     if (GLEW_ARB_program_interface_query)
     {
         GLint numActiveAttribs = 0;
-        GN_OGL_CHECK_RV( glGetProgramInterfaceiv(mProgram, GL_PROGRAM_INPUT, GL_ACTIVE_RESOURCES, &numActiveAttribs), false );
+        GN_OGL_CHECK_R( glGetProgramInterfaceiv(mProgram, GL_PROGRAM_INPUT, GL_ACTIVE_RESOURCES, &numActiveAttribs), false );
 
         GLint maxLength;
-        GN_OGL_CHECK_RV( glGetProgramInterfaceiv( mProgram, GL_PROGRAM_INPUT, GL_MAX_NAME_LENGTH, &maxLength ), false );
+        GN_OGL_CHECK_R( glGetProgramInterfaceiv( mProgram, GL_PROGRAM_INPUT, GL_MAX_NAME_LENGTH, &maxLength ), false );
 
         char * nameptr = (char*)alloca( maxLength + 1 );
         mAttributes.clear();
         for( GLint i = 0; i < numActiveAttribs; ++i )
         {
-            GN_OGL_CHECK_RV( glGetProgramResourceName( mProgram, GL_PROGRAM_INPUT, i, maxLength, NULL, nameptr ), false );
+            GN_OGL_CHECK_R( glGetProgramResourceName( mProgram, GL_PROGRAM_INPUT, i, maxLength, NULL, nameptr ), false );
             nameptr[maxLength] = 0;
 
             GLint location;
-            GN_OGL_CHECK_RV( location = glGetAttribLocationARB( mProgram, nameptr ), false );
+            GN_OGL_CHECK_R( location = glGetAttribLocationARB( mProgram, nameptr ), false );
 
             GLSLAttributeDesc a;
             if( !sGetOglVertexSemantic( a.semanticName, a.semanticIndex, nameptr, location ) ) return false;
@@ -723,11 +723,11 @@ GN::gfx::OGLGpuProgramGLSL::enumAttributes()
     {
         // get attribute count
         GLint numAttributes;
-        GN_OGL_CHECK_RV( glGetObjectParameterivARB( mProgram, GL_OBJECT_ACTIVE_ATTRIBUTES_ARB, &numAttributes ), false );
+        GN_OGL_CHECK_R( glGetObjectParameterivARB( mProgram, GL_OBJECT_ACTIVE_ATTRIBUTES_ARB, &numAttributes ), false );
 
         // get maxinum length of attribute name;
         GLint maxLength;
-        GN_OGL_CHECK_RV( glGetObjectParameterivARB( mProgram, GL_OBJECT_ACTIVE_ATTRIBUTE_MAX_LENGTH_ARB, &maxLength ), false );
+        GN_OGL_CHECK_R( glGetObjectParameterivARB( mProgram, GL_OBJECT_ACTIVE_ATTRIBUTE_MAX_LENGTH_ARB, &maxLength ), false );
 
         // enumerate all attributes
         char * nameptr = (char*)alloca( maxLength+1 );
@@ -736,7 +736,7 @@ GN::gfx::OGLGpuProgramGLSL::enumAttributes()
         {
             GLsizei unusedCount;
             GLenum unusedType;
-            GN_OGL_CHECK_RV( glGetActiveAttribARB( mProgram, i, maxLength, NULL, &unusedCount, &unusedType, nameptr ), false );
+            GN_OGL_CHECK_R( glGetActiveAttribARB( mProgram, i, maxLength, NULL, &unusedCount, &unusedType, nameptr ), false );
             nameptr[maxLength] = 0;
             if( 0 == *nameptr)
             {
@@ -746,7 +746,7 @@ GN::gfx::OGLGpuProgramGLSL::enumAttributes()
             }
 
             GLint location;
-            GN_OGL_CHECK_RV( location = glGetAttribLocationARB( mProgram, nameptr ), false );
+            GN_OGL_CHECK_R( location = glGetAttribLocationARB( mProgram, nameptr ), false );
 
             GLSLAttributeDesc a;
             if( !sGetOglVertexSemantic( a.semanticName, a.semanticIndex, nameptr, location ) ) return false;

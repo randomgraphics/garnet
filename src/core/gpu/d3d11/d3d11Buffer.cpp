@@ -91,7 +91,7 @@ void GN::gfx::D3D11Buffer::update( uint32 offset, uint32 bytes, const void * dat
     {
         // update dynamic d3d buffer
         D3D11_MAPPED_SUBRESOURCE mapped;
-        GN_DX_CHECK_RETURN_VOID( cxt.Map( mD3DBuffer, 0, SURFACE_UPDATE_FLAG_TO_D3D11_MAP[flag], 0, &mapped ) );
+        GN_DX_CHECK_RETURN( cxt.Map( mD3DBuffer, 0, SURFACE_UPDATE_FLAG_TO_D3D11_MAP[flag], 0, &mapped ) );
         uint8 * dst = (uint8*)mapped.pData;
         memcpy( dst+offset, data, bytes );
         cxt.Unmap( mD3DBuffer, 0 );

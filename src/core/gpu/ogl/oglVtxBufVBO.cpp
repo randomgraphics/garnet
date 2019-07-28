@@ -134,14 +134,14 @@ bool GN::gfx::OGLVtxBufVBO::createVBO()
     };
 
     // create VBO
-    GN_OGL_CHECK_RV( glGenBuffersARB( 1, &mOGLVertexBufferObject ), false );
+    GN_OGL_CHECK_R( glGenBuffersARB( 1, &mOGLVertexBufferObject ), false );
     AutoDel ad( glDeleteBuffersARB, mOGLVertexBufferObject );
 
     // initialize VBO memory store
-    GN_OGL_CHECK_RV(
+    GN_OGL_CHECK_R(
         glBindBufferARB( GL_ARRAY_BUFFER_ARB, mOGLVertexBufferObject ),
         false );
-    GN_OGL_CHECK_RV(
+    GN_OGL_CHECK_R(
         glBufferDataARB(
             GL_ARRAY_BUFFER_ARB,
             getDesc().length,

@@ -206,7 +206,7 @@ namespace GN { namespace gfx
             result.rawPitch = creationParameters.b.bytes;
             result.slicePitch = creationParameters.b.bytes;
             result.subSurfaceId = subSurfaceId;
-            GN_DX_CHECK_RETURN(resource->Map(subSurfaceId, nullptr, &result.ptr), result);
+            GN_DX_CHECK_RETURN(resource->Map(subSurfaceId, nullptr, &result.ptr), {});
             return result;
         }
 

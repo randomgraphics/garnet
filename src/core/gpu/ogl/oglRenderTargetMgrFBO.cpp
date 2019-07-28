@@ -79,7 +79,7 @@ bool GN::gfx::OGLRTMgrFBO::init()
     GN_ASSERT( 0 == mFbo );
 
     // create frame buffer object
-    GN_OGL_CHECK_RV( glGenFramebuffersEXT( 1, &mFbo ), false );
+    GN_OGL_CHECK_R( glGenFramebuffersEXT( 1, &mFbo ), false );
 
     // success
     return true;
@@ -228,7 +228,7 @@ bool GN::gfx::OGLRTMgrFBO::bind(
             }
 
             // create new z buffer
-            GN_OGL_CHECK_DO( glGenRenderbuffersEXT( 1, &mAutoZ ),
+            GN_OGL_CHECK( glGenRenderbuffersEXT( 1, &mAutoZ ),
                 GN_UNEXPECTED();
                 GN_ERROR(sLogger)( L"fail to generate automatic z buffer" );
                 return false; );

@@ -37,17 +37,17 @@ bool sGetOGLExtensions( Display * disp, GN::DynaArray<GN::StrA> & result )
 
     result.clear();
 
-    // ∑÷ŒˆOpenGL-Extentions-String
+    // OpenGL-Extentions-String
     sGetTokens( result, (const char*)glGetString(GL_EXTENSIONS) );
 
 #if GN_WINPC
-    // ∑÷ŒˆWGL Extensions
+    // WGL Extensions
     PFNWGLGETEXTENSIONSSTRINGARBPROC proc;
     proc = reinterpret_cast<PFNWGLGETEXTENSIONSSTRINGARBPROC>(
         ::wglGetProcAddress("wglGetExtensionsStringARB") );
     if( proc ) sGetTokens( result, (const char *)proc(hdc) );
 #elif GN_POSIX
-    // ∑÷ŒˆGLX Extensions
+    // GLX Extensions
     // TODO: query server extension string
     sGetTokens( result, (const char*)glXGetClientString( disp, GLX_EXTENSIONS) );
 #endif
@@ -131,11 +131,11 @@ void createOGL( HDC hdc, int pfdIndex )
 {
     // Set the pixel format for the device context
     PIXELFORMATDESCRIPTOR pfd;
-    GN_MSW_CHECK_RETURN_VOID( SetPixelFormat( hdc, pfdIndex, &pfd ) );
+    GN_MSW_CHECK_RETURN( SetPixelFormat( hdc, pfdIndex, &pfd ) );
 
     // create OGL render context
     HGLRC hrc;
-    GN_MSW_CHECK_RETURN_VOID( hrc = ::wglCreateContext( hdc ) );
+    GN_MSW_CHECK_RETURN( hrc = ::wglCreateContext( hdc ) );
     ::wglMakeCurrent( hdc, hrc);
 
     // init GLEW
@@ -156,7 +156,7 @@ void createWindow( int pfdIndex )
 
     HWND hwnd = (HWND)oglWindow->getWindowHandle();
     HDC hdc;
-    GN_MSW_CHECK_RETURN_VOID( hdc = ::GetDC(hwnd) );
+    GN_MSW_CHECK_RETURN( hdc = ::GetDC(hwnd) );
     createOGL( hdc, pfdIndex );
     ::ReleaseDC( hwnd, hdc );
 }

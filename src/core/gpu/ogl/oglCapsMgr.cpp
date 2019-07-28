@@ -251,7 +251,7 @@ bool GN::gfx::OGLGpu::capsInit()
     // handle case where multi-texture extension is not supported
     if( GLEW_ARB_multitexture )
     {
-        GN_OGL_CHECK_RV( glGetIntegerv( GL_MAX_TEXTURE_UNITS_ARB, (GLint*)&mCaps.maxTextures ), false );
+        GN_OGL_CHECK_R( glGetIntegerv( GL_MAX_TEXTURE_UNITS_ARB, (GLint*)&mCaps.maxTextures ), false );
     }
     else
     {

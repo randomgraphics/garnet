@@ -420,7 +420,7 @@ static bool sGen2DMipmap( GLenum target,
 
     for( GLint i = 0; i < levels; ++i )
     {
-        GN_OGL_CHECK_RV(
+        GN_OGL_CHECK_R(
             glTexImage2D( target, i, internalformat, width, height, 0, format, type, 0 ),
             false );
         if( width > 1 ) width >>= 1;
@@ -452,7 +452,7 @@ sNew1DTexture(
 
     // generate new texture
     GLuint result;
-    GN_OGL_CHECK_RV( glGenTextures(1, &result), 0 );
+    GN_OGL_CHECK_R( glGenTextures(1, &result), 0 );
     AutoDeleteTexture autoDel( result );
 
     // generate mipmaps
@@ -460,7 +460,7 @@ sNew1DTexture(
     for( GLint i = 0; i < levels; ++i )
     {
         GN_ASSERT( size_x > 0 );
-        GN_OGL_CHECK_RV(
+        GN_OGL_CHECK_R(
             glTexImage1D( GL_TEXTURE_1D, i, internalformat, size_x, 0, format, type, 0 ),
             false );
         size_x >>= 1;
@@ -489,7 +489,7 @@ sNew2DTexture(
 
     // generate new texture
     GLuint result;
-    GN_OGL_CHECK_RV( glGenTextures(1, &result), 0 );
+    GN_OGL_CHECK_R( glGenTextures(1, &result), 0 );
     AutoDeleteTexture autoDel( result );
 
     GN_OGL_CHECK( glBindTexture( GL_TEXTURE_2D, result ) );
@@ -537,7 +537,7 @@ sNewCubeTexture(
 
     // generate new texture
     GLuint result;
-    GN_OGL_CHECK_RV( glGenTextures(1, &result), 0 );
+    GN_OGL_CHECK_R( glGenTextures(1, &result), 0 );
     AutoDeleteTexture autoDel( result );
 
     if( !GLEW_ARB_texture_cube_map )

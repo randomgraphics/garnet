@@ -355,7 +355,7 @@ sUpdateD3D11ConstBuffer(
             size ); // slice pitch
 #else
         D3D11_MAPPED_SUBRESOURCE dst;
-        GN_DX_CHECK_RETURN_VOID( cxt.Map( &buf, 0, D3D11_MAP_WRITE_DISCARD, 0, &dst ) );
+        GN_DX_CHECK_RETURN( cxt.Map( &buf, 0, D3D11_MAP_WRITE_DISCARD, 0, &dst ) );
         memcpy( dst.pData, data, size );
         cxt.Unmap( &buf, 0 );
 #endif
