@@ -8,6 +8,7 @@
 
 #include "GNgfx2.h"
 #include <Eigen/Eigen>
+#include <stack>
 
 namespace GN { namespace rt
 {
@@ -18,27 +19,18 @@ namespace GN { namespace rt
 
     union Vec4
     {
-        struct
-        {
-            Vector3f v3;
-            union
-            {
-                float    f;
-                int32_t  i;
-                uint32_t u;
-            } w;
-        };
         Vector4f v4;
+        Vector3f v3;
     };
     static_assert(sizeof(Vec4) == 16);
 
     struct AABB
     {
         Vector3f min;
-        int             rope = 0;
+        int      rope = 0;
         Vector3f max;
         int : 32;
-        int             left = 0, right = 0;
+        int      left = 0, right = 0;
         int : 32;
         int : 32;
 
@@ -142,7 +134,7 @@ namespace GN { namespace rt
             AABB box;
             Node *parent = nullptr, *left = nullptr, *right = nullptr;
             int primitive = -1;
-            bool IsLeaf() const { GN_ASSERT(left && right || !left && !right); return nullptr == left; }
+            bool IsLeaf() const { GN_ASSERT((left && right) || (!left && !right)); return nullptr == left; }
         };
         typedef Node * NodePtr;
 

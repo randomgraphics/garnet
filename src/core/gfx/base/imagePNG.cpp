@@ -24,7 +24,7 @@ s_get_png_clrfmt( png_struct * png, const png_info * info )
             {
                 case 1  :
                 case 2  :
-                case 4  : png_set_gray_1_2_4_to_8( png );
+                case 4  : png_set_gray_1_2_4_to_8( png ); [[fallthrough]];
                 case 8  : return GN::gfx::ColorFormat::L_8_UNORM;
                 //case 16 : return GN::gfx::ColorFormat::L_16_UNORM;
                 default :
@@ -45,6 +45,7 @@ s_get_png_clrfmt( png_struct * png, const png_info * info )
 
         case PNG_COLOR_TYPE_RGB:
             png_set_add_alpha( png, 0xFFFF, PNG_FILLER_AFTER );
+            [[fallthrough]];
         case PNG_COLOR_TYPE_RGB_ALPHA:
             switch( info->bit_depth )
             {

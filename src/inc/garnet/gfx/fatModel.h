@@ -41,7 +41,7 @@ namespace GN { namespace gfx
             CUSTOM6,
             CUSTOM7,
             NUM_SEMANTICS,
-            INVALID = 0xFFFFFFFF,
+            INVALID = -1,
         };
 
         static const uint32 MAX_TEXCOORDS;// = (uint32)(TEXCOORD_LAST - TEXCOORD0);

@@ -80,7 +80,7 @@ namespace GN
                 return 0 == ::memcmp( &a, &b, sizeof(T) );
             }
         };
-    };
+    }
 
     /// Hash map template class
     template<

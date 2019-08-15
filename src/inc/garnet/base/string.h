@@ -232,7 +232,7 @@ namespace GN
 
             return h;
         }
-    };
+    }
 
 	namespace internal {
 		extern GN_API void * EMPTY_STRING_POINTER;

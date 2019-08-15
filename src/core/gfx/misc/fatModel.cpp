@@ -105,7 +105,7 @@ bool GN::gfx::FatVertexBuffer::beginVertices(uint32_t layout, uint32_t estimated
     clear(); // cleanup existing vertices
 
     // reserve memory
-    for(int i = 0; i < NUM_SEMANTICS; ++i) {
+    for(auto i = 0; i < NUM_SEMANTICS; ++i) {
         mFormats[i] = ColorFormat::UNKNOWN;
         if (0 == ((1<<i) & layout)) continue;
         mElements[i].reserve(estimatedCount);

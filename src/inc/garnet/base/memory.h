@@ -44,7 +44,7 @@ namespace GN
         /// Free heap-allocated memory (aligned or unaligned). Can cross DLL boundary.
         ///
         GN_API void dealloc( void * ptr );
-    };
+    }
 }
 
 // *****************************************************************************

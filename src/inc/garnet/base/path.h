@@ -164,7 +164,7 @@ namespace GN { namespace fs {
         StrA r;
         resolvePath( r, base, relpath );
         return r;
-    };
+    }
 
     //@}
 }}

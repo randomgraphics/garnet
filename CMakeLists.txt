@@ -115,6 +115,7 @@ message("GN_BUILD_DEBUG_ENABLED     = ${GN_BUILD_DEBUG_ENABLED}")
 message("GN_BUILD_PROFILING_ENABLED = ${GN_BUILD_PROFILING_ENABLED}")
 
 # search commonly used packages
+# set(OpenGL_GL_PREFERENCE GLVND)
 find_package(OpenGL)
 find_package(DirectX)
 find_package(X11)

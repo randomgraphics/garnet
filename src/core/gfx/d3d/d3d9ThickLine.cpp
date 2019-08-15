@@ -68,11 +68,11 @@ GN_API GN::d3d9::D3D9ThickLineRenderer::D3D9ThickLineRenderer()
         uint16 v = i * 6;
 
         // v1-v2
-        // |   \
-        // v0   \
-        //  \    \
-        //   \    \
-        //    \    \
+        // |   \           $
+        // v0   \          $
+        //  \    \         $
+        //   \    \        $
+        //    \    \       $
         //     \    v3
         //      \   |
         //       v5-v4
@@ -267,10 +267,10 @@ GN_API void GN::d3d9::D3D9ThickLineRenderer::line( const ThickLineVertex & v0, c
             // e1 in quadrant 2
 
             // ----
-            // |e1 \
-            // \    \
-            //  \    \
-            //   \    \
+            // |e1 \            $
+            // \    \           $
+            //  \    \          $
+            //   \    \         $
             //    \ e0|
             //     ----
 
@@ -289,10 +289,10 @@ GN_API void GN::d3d9::D3D9ThickLineRenderer::line( const ThickLineVertex & v0, c
             // e1 in quadrant 4
 
             // ----
-            // |e0 \
-            // \    \
-            //  \    \
-            //   \    \
+            // |e0 \            $
+            // \    \           $
+            //  \    \          $
+            //   \    \         $
             //    \ e1|
             //     ----
 

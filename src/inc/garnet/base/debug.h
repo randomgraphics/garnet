@@ -289,7 +289,7 @@ namespace GN
             const char * file,
             int          line,
             bool *       ignoreForever ) throw();
-    };
+    }
 
     //@}
 }

@@ -75,9 +75,9 @@ namespace GN { namespace gfx
         {
             switch( mTarget )
             {
-                case GL_TEXTURE_1D           : glDisable( GL_TEXTURE_2D );
-                case GL_TEXTURE_2D           : if( GLEW_EXT_texture3D ) glDisable( GL_TEXTURE_3D_EXT );
-                case GL_TEXTURE_3D_EXT       : if( GLEW_ARB_texture_cube_map ) glDisable( GL_TEXTURE_CUBE_MAP_ARB );
+                case GL_TEXTURE_1D           : glDisable( GL_TEXTURE_2D ); [[fallthrough]];
+                case GL_TEXTURE_2D           : if( GLEW_EXT_texture3D ) glDisable( GL_TEXTURE_3D_EXT ); [[fallthrough]];
+                case GL_TEXTURE_3D_EXT       : if( GLEW_ARB_texture_cube_map ) glDisable( GL_TEXTURE_CUBE_MAP_ARB ); break;
             }
             GN_OGL_CHECK( glEnable(mTarget) );
             GN_OGL_CHECK( glBindTexture(mTarget, mOGLTexture) );

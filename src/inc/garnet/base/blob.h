@@ -78,7 +78,7 @@ namespace GN
         const DynaArray<T,SIZE_TYPE> & array() const { return mBuffer; }
         //@}
     };
-};
+}
 
 // *****************************************************************************
 //                                     EOF

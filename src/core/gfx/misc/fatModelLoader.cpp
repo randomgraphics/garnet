@@ -2219,7 +2219,7 @@ sLoadAiVertexSkinning(
 // -----------------------------------------------------------------------------
 static bool sLoadAiVertices(
     FatMesh           & fatmesh,
-    const aiScene     * aiscene,
+    const aiScene     * , // aiscene
     const aiMesh      * aimesh,
     const aiMatrix4x4 & transform )
 {
@@ -2706,7 +2706,7 @@ static bool sCheckFileExtension( const char * filename, const char * extension )
 //
 //
 // -----------------------------------------------------------------------------
-static FileFormat sDetermineFileFormatByContent( File & file )
+static FileFormat sDetermineFileFormatByContent( File & )
 {
     // not implemented yet.
     return FF_UNKNOWN;

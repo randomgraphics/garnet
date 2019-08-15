@@ -20,7 +20,7 @@
 #define TREE_GN_VERIFY(...) (void(0))
 #endif
 
-static auto sLogger = GN::getLogger("GN.rt");
+//static auto sLogger = GN::getLogger("GN.rt");
 
 using namespace GN::rt;
 
@@ -56,7 +56,7 @@ struct DistanceMap
             AABB box(n->box, newNode->box);
             auto size = box.max - box.min;
             auto d = size.dot(size);
-            distances.insert({d, {n, newNode}});
+            distances.insert({d, {n, newNode, d}});
         }
         nodes.insert(nodes.end(), newNode);
         GN_ASSERT(nodes.size() * (nodes.size() - 1) == distances.size() * 2);
@@ -156,7 +156,7 @@ struct DistanceMap
 
         // each node pair should should show up exactly (nodes.size()-1) times in the map
         if (nodes.size() != 1) {
-            std::map<AABBTree::NodePtr, int> times;
+            std::map<AABBTree::NodePtr, size_t> times;
             for (auto iter = distances.begin(); iter != distances.end(); ++iter) {
                 times[iter->second.n1]++;
                 times[iter->second.n2]++;

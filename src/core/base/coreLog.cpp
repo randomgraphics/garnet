@@ -411,6 +411,10 @@ namespace GN
                 sLevel2Str(desc.level).rawptr(),
                 msg );
             ::OutputDebugStringA( buf );
+#else
+            GN_UNUSED_PARAM(logger);
+            GN_UNUSED_PARAM(desc);
+            GN_UNUSED_PARAM(msg);
 #endif
         }
         virtual void onLog( Logger & logger, const Logger::LogDesc & desc, const wchar_t * msg )
@@ -429,6 +433,10 @@ namespace GN
                 sLevel2Str(desc.level).rawptr(),
                 msg );
             ::OutputDebugStringW( buf );
+#else
+            GN_UNUSED_PARAM(logger);
+            GN_UNUSED_PARAM(desc);
+            GN_UNUSED_PARAM(msg);
 #endif
         }
     };
