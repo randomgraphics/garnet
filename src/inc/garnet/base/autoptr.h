@@ -355,6 +355,14 @@ namespace GN
         }
 
         ///
+        /// self explain.
+        ///
+        T * rawptr() const throw()
+        {
+            return mPtr;
+        }
+
+        ///
         /// Release existing interface, then hold new interface
         ///
         template<typename T2>

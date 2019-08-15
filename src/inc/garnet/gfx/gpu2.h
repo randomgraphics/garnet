@@ -28,43 +28,6 @@ namespace gfx
         static GN_API AutoRef<Gpu2> createGpu2(const CreationParameters &);
         //@}
 
-        // shader compilation should be static function, instead of part of Gpu2 interface.
-        #if 0
-        /// GPU program compilation
-        //@{
-        enum ShadingLanguage
-        {
-            HLSL,
-            GLSL,
-        };
-        struct ShaderSourceFile
-        {
-            const char * filename;
-        };
-        struct ProgramSource
-        {
-            struct Options
-            {
-                bool debugable : 1; ///< set to true to generate optimized shader.
-                bool optimized : 1; ///< set to true to generate shader binary with debug information.
-                bool diskfile : 1;  ///< if true, then all shader pointers are filename. If false, shader code.
-                Options() : debugable(false), optimized(true), diskfile(true) {}
-            };
-            static_assert(sizeof(Options) == 1);
-
-            ShadingLanguage lang; ///< shading language
-            const char *    vs = nullptr;
-            const char *    hs = nullptr;
-            const char *    ds = nullptr;
-            const char *    gs = nullptr;
-            const char *    ps = nullptr;
-            const char *    cs = nullptr;
-            Options         options;
-        };
-        virtual DynaArray<uint8> compileProgram(const ProgramSource &) = 0;
-        //@}
-        #endif
-
         /// GPU pipeline
         //@{
         struct CompiledShaderBlob
@@ -73,9 +36,22 @@ namespace gfx
             uint64_t sizeInBytes = 0; ///< size of the byte code
             const char * entry = nullptr; ///< entry point of the shader (only used in spir-v shader)
         };
+        
+        struct InputElement
+        {
+            const char * semantic;
+            uint32_t     index;
+            ColorFormat  format;
+            uint32_t     slot; // input assembly slot: 0-15
+            uint32_t     offset; // byte offset of the element
+            bool         instanceData = false;
+            uint32_t     instanceRate = 0;
+        };
         struct PipelineCreationParameters
         {
             CompiledShaderBlob vs, hs, ds, gs, ps, cs;
+            const InputElement * inputElements;
+            uint32_t             numInputElements;
             const char * states; // pipeline state defined in JSON format.
         };
         virtual DynaArray<uint64_t> createPipelineStates(const PipelineCreationParameters *, size_t) = 0;

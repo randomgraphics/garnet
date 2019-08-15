@@ -138,11 +138,38 @@ GN::gfx::D3D12Gpu2::D3D12Gpu2(const CreationParameters & cp)
 //
 //
 // -----------------------------------------------------------------------------
-DynaArray<uint64_t> GN::gfx::D3D12Gpu2::createPipelineStates(const PipelineCreationParameters *, size_t n)
+static std::vector<D3D12_INPUT_ELEMENT_DESC> GetD3D12InputElements(const Gpu2::InputElement * elements, uint32_t count)
+{
+    GN_UNIMPL();
+    GN_UNUSED_PARAM(elements);
+    GN_UNUSED_PARAM(count);
+    return {};
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+DynaArray<uint64_t> GN::gfx::D3D12Gpu2::createPipelineStates(const PipelineCreationParameters * parameters, size_t n)
 {
     DynaArray<uint64_t> r;
     for(size_t i = 0; i < n; ++i) {
-        r.append(0);
+        const auto & cp = parameters[i];
+        AutoComPtr<ID3D12PipelineState> pso;
+        D3D12_GRAPHICS_PIPELINE_STATE_DESC d = {};
+        d.VS.pShaderBytecode = cp.vs.ptr;
+        d.VS.BytecodeLength = cp.vs.sizeInBytes;
+        d.PS.pShaderBytecode = cp.ps.ptr;
+        d.PS.BytecodeLength = cp.ps.sizeInBytes;
+        d.RasterizerState.FillMode = D3D12_FILL_MODE_SOLID;
+        d.RasterizerState.CullMode = D3D12_CULL_MODE_BACK;
+        d.DepthStencilState.DepthEnable = TRUE;
+        d.DepthStencilState.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
+        d.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
+        auto elements = GetD3D12InputElements(cp.inputElements, cp.numInputElements);
+        d.InputLayout.NumElements = cp.numInputElements;
+        d.InputLayout.pInputElementDescs = elements.data();
+        _device->CreateGraphicsPipelineState(&d, IID_PPV_ARGS(&pso));
+        r.append((uint64_t)(intptr_t)pso.get());
     }
     return r;
 }
