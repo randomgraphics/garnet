@@ -43,14 +43,15 @@ class GN::d3d11::TextRenderer::Impl : public IDWriteTextRenderer
         AutoComPtr<IDXGISurface> dxgisurface;
         GN_RETURN_NULL_ON_HR_FAILED(rt0->QueryInterface(&dxgisurface));
 
-        FLOAT dpiX, dpiY;
-        _d2dFactory->GetDesktopDpi(&dpiX, &dpiY);
+        //FLOAT dpiX, dpiY;
+        //_d2dFactory->GetDesktopDpi(&dpiX, &dpiY);
+        auto dpi = (float)GetDpiForSystem();
 
         auto properties = D2D1::RenderTargetProperties(
             D2D1_RENDER_TARGET_TYPE_DEFAULT,
             D2D1::PixelFormat(DXGI_FORMAT_UNKNOWN, D2D1_ALPHA_MODE_IGNORE),
-            dpiX,
-            dpiY);
+            dpi,
+            dpi);
 
         AutoComPtr<ID2D1RenderTarget> rt;
         GN_RETURN_NULL_ON_HR_FAILED(_d2dFactory->CreateDxgiSurfaceRenderTarget(
