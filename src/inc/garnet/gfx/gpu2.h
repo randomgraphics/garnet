@@ -43,7 +43,7 @@ namespace gfx
             uint32_t     index;
             ColorFormat  format;
             uint32_t     slot; // input assembly slot: 0-15
-            uint32_t     offset; // byte offset of the element
+            uint32_t     offset = (uint32_t)-1; // byte offset of the element. Set to -1 for auto alignment.
             bool         instanceData = false;
             uint32_t     instanceRate = 0;
         };
@@ -66,7 +66,7 @@ namespace gfx
         {
             GRAPHICS,
             COMPUTE,
-            COPY,
+            DMA, // for copy operations
         };
         struct ClearParameters
         {

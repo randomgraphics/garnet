@@ -140,10 +140,22 @@ GN::gfx::D3D12Gpu2::D3D12Gpu2(const CreationParameters & cp)
 // -----------------------------------------------------------------------------
 static std::vector<D3D12_INPUT_ELEMENT_DESC> GetD3D12InputElements(const Gpu2::InputElement * elements, uint32_t count)
 {
-    GN_UNIMPL();
-    GN_UNUSED_PARAM(elements);
-    GN_UNUSED_PARAM(count);
-    return {};
+    std::vector<D3D12_INPUT_ELEMENT_DESC> result;
+
+    for(size_t i = 0; i < count; ++i) {
+        const auto & e = elements[i];
+        result.push_back({
+            e.semantic,
+            e.index,
+            (DXGI_FORMAT)colorFormat2DxgiFormat(e.format),
+            e.slot,
+            e.offset,
+            e.instanceData ? D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA : D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,
+            e.instanceRate
+        });
+    }
+
+    return result;
 }
 
 //
