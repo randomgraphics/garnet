@@ -48,11 +48,31 @@ static AutoRef<T> SafeNew(T * p)
 //
 //
 // -----------------------------------------------------------------------------
-static ID3D12Resource * promote(Gpu2::Surface * p)
+static ID3D12Resource * promote(const Gpu2::Surface * p)
 {
     if (!p) return nullptr;
-    auto r = (D3D12PlacedResource *)p;
+    auto r = (const D3D12PlacedResource *)p;
     return r->resource.get();
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+static D3D12_PRIMITIVE_TOPOLOGY tod3d(PrimitiveType p)
+{
+    static const D3D12_PRIMITIVE_TOPOLOGY table[] = {
+        D3D_PRIMITIVE_TOPOLOGY_POINTLIST, //    POINT_LIST,     ///< point list
+        D3D_PRIMITIVE_TOPOLOGY_LINELIST, //    LINE_LIST,      ///< line list
+        D3D_PRIMITIVE_TOPOLOGY_LINESTRIP, //    LINE_STRIP,     ///< line strip
+        D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, //    TRIANGLE_LIST,  ///< triangle list
+        D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP, //    TR;IANGLE_STRIP, ///< triangle strip
+    };
+    if (0 <= p && p < GN_ARRAY_COUNT(table))
+        return table[p];
+    else {
+        GN_ERROR(sLogger)("invalid primitive type: %d", p);
+        return D3D_PRIMITIVE_TOPOLOGY_UNDEFINED;
+    }
 }
 
 //
@@ -108,6 +128,8 @@ GN::gfx::D3D12Gpu2::D3D12Gpu2(const CreationParameters & cp)
         &swapChain));
     ThrowIfFailed(swapChain.as(&_swapChain));
     _frameIndex = _swapChain->GetCurrentBackBufferIndex();
+    _frameWidth = swapChainDesc.BufferDesc.Width;
+    _frameHeight = swapChainDesc.BufferDesc.Height;
 
     // disable alt-enter transition
     ThrowIfFailed(factory->MakeWindowAssociation((HWND)cp.window->getWindowHandle(), DXGI_MWA_NO_ALT_ENTER));
@@ -230,8 +252,15 @@ void GN::gfx::D3D12Gpu2::kickoff(GN::gfx::Gpu2::CommandList & cl, uint64_t * fen
 {
     auto ptr = (D3D12CommandList*)&cl;
     ptr->commandList->Close();
-    ID3D12CommandList * d3dcl = ptr->commandList;
-    _graphicsQueue.q().ExecuteCommandLists(1, &d3dcl);
+    ID3D12GraphicsCommandList * d3dcl = ptr->commandList;
+
+    // hack hack: setup default viewport and scissor rect
+    auto viewport = CD3DX12_VIEWPORT(0.0f, 0.0f, static_cast<float>(_frameWidth), static_cast<float>(_frameHeight));
+    auto scissor = CD3DX12_RECT(0, 0, static_cast<LONG>(_frameWidth), static_cast<LONG>(_frameHeight));
+    d3dcl->RSSetViewports(1, &viewport);
+    d3dcl->RSSetScissorRects(1, &scissor);
+
+    _graphicsQueue.q().ExecuteCommandLists(1, (ID3D12CommandList**)&d3dcl);
     if (fence) *fence = _graphicsQueue.mark();
 }
 
@@ -270,10 +299,11 @@ void GN::gfx::D3D12Gpu2::present(const PresentParameters &)
     // insert a fence to mark the end of current frame.
     _frames[_frameIndex].fence = _graphicsQueue.mark();
 
-    // Update the frame index.
+    // Update the frame index to point to the next frame in the queue
     _frameIndex = _swapChain->GetCurrentBackBufferIndex();
 
-    // Wait for next frame to be ready to render to.
+    // Then wait for it to be ready to render to.
+    // TODO: move this out of prensent. to give app a chance to do other CPU related work while waiting for the frame buffer to be ready.
     _graphicsQueue.finish(_frames[_frameIndex].fence);
 }
 
@@ -304,7 +334,22 @@ void GN::gfx::D3D12CommandList::draw(const Gpu2::DrawParameters & p)
         commandList->SetPipelineState((ID3D12PipelineState*)p.pso);
     else
         commandList->ClearState(nullptr);
-    if (p.indexed) {
+
+    // setup vertex buffer views
+    D3D12_VERTEX_BUFFER_VIEW vb[16];
+    uint32_t offsets[16];
+    GN_ASSERT(p.vertexBufferCount <= GN_ARRAY_COUNT(vb));
+    for(size_t i = 0;  i < p.vertexBufferCount; ++i) {
+        vb[i].BufferLocation = promote(p.vertexBuffers[i].surface)->GetGPUVirtualAddress();
+        vb[i].SizeInBytes = ((D3D12PlacedResource*)p.vertexBuffers[i].surface)->creationParameters.b.bytes; // TODO: maybe pass in size?
+        vb[i].StrideInBytes = p.vertexBuffers[i].stride;
+        offsets[i] = p.vertexBuffers[i].offset;
+    }
+    commandList->IASetVertexBuffers(0, p.vertexBufferCount, vb);
+    commandList->IASetPrimitiveTopology(tod3d(p.prim));
+
+    if (p.indexBuffer) {
+        // TODO: setup index buffer view
         commandList->DrawIndexedInstanced(p.vertexOrIndexCount, 1, p.baseindex, p.basevertex, 0);
     } else {
         commandList->DrawInstanced(p.vertexOrIndexCount, 1, p.basevertex, 0);

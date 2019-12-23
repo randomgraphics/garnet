@@ -101,9 +101,12 @@ class DX12Triangle : public StdClass
         if (vs.empty() || ps.empty()) return;
 
         // create pso
+        Gpu2::InputElement ie[] = { {"POSITION", 0, ColorFormat::RGB_32_32_32_FLOAT, 0, 0, false, 0} };
         Gpu2::PipelineCreationParameters pcp = {};
         pcp.vs = { vs.rawptr(), vs.size() };
         pcp.ps = { ps.rawptr(), ps.size() };
+        pcp.inputElements = ie;
+        pcp.numInputElements = 1;
         _pso = g.gpu->createPipelineStates(&pcp, 1)[0];
     }
 
@@ -138,7 +141,13 @@ public:
 
     void render(gpu2ex & g)
     {
-        g.cl->draw({_pso, PrimitiveType::TRIANGLE_LIST, false, 3});
+        Gpu2::VertexBufferView vb[] = {{_vb, 0, sizeof(Vertex)}};
+        g.cl->draw({
+            _pso,
+            GN_ARRAY_COUNT(vb), vb,
+            nullptr, // no ib
+             PrimitiveType::TRIANGLE_LIST,
+            3});
     }
 };
 

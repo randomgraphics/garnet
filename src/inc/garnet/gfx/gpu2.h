@@ -84,14 +84,24 @@ namespace gfx
                 };
             } flags;
         };
+        struct VertexBufferView
+        {
+            const Surface * surface;
+            uint32_t        offset; // offset in bytes
+            uint32_t        stride; // stride in bytes
+        };
         struct DrawParameters
         {
-            uint64_t pso;
-            PrimitiveType prim;
-            bool     indexed;
-            uint32_t vertexOrIndexCount;
-            uint32_t basevertex = 0;
-            uint32_t baseindex = 0;
+            uint64_t          pso;
+            
+            uint32_t          vertexBufferCount;
+            const VertexBufferView * vertexBuffers;
+            Surface *         indexBuffer; // set to null for non-indexed draw.
+            
+            PrimitiveType     prim;
+            uint32_t          vertexOrIndexCount;
+            uint32_t          basevertex = 0;
+            uint32_t          baseindex = 0; // ignored when indexBuffer is null.
         };
         struct ComputeParameters
         {

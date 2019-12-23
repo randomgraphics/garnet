@@ -125,7 +125,9 @@ namespace GN { namespace gfx
         //AutoComPtr<ID3D12GraphicsCommandList> _commandList;
         //D3D12_VIEWPORT _viewport;
         //D3D12_RECT _scissorRect;
-        UINT _frameIndex = 0;
+        uint32_t _frameIndex = 0;
+        uint32_t _frameWidth = 0;
+        uint32_t _frameHeight = 0;
         FrameBuffer _frames[BACK_BUFFER_COUNT] = {};
 
     public:
