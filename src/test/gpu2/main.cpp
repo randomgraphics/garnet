@@ -81,7 +81,7 @@ class DX12Triangle : public StdClass
 
             struct VSOutput
             {
-                float4 position : POSITION;
+                float4 position : SV_POSITION;
             };
 
             VSOutput vsmain(VSInput v)

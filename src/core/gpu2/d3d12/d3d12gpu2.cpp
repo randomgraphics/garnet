@@ -89,6 +89,8 @@ GN::gfx::D3D12Gpu2::D3D12Gpu2(const CreationParameters & cp)
         if (SUCCEEDED(D3D12GetDebugInterface(IID_PPV_ARGS(&debug)))) {
             debug->EnableDebugLayer();
             dxgiflags |= DXGI_CREATE_FACTORY_DEBUG;
+            auto debug1 = debug.as<ID3D12Debug1>();
+            debug1->SetEnableGPUBasedValidation(true);
         }
     }
 
@@ -155,6 +157,13 @@ GN::gfx::D3D12Gpu2::D3D12Gpu2(const CreationParameters & cp)
     // create command list for present
     _present = new D3D12CommandList(*this, {});
 
+    // Create an empty root signature.
+    CD3DX12_ROOT_SIGNATURE_DESC rootSignatureDesc;
+    rootSignatureDesc.Init(0, nullptr, 0, nullptr, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
+    AutoComPtr<ID3DBlob> signature;
+    AutoComPtr<ID3DBlob> error;
+    ThrowIfFailed(D3D12SerializeRootSignature(&rootSignatureDesc, D3D_ROOT_SIGNATURE_VERSION_1, &signature, &error));
+    ThrowIfFailed(_device->CreateRootSignature(0, signature->GetBufferPointer(), signature->GetBufferSize(), IID_PPV_ARGS(&_emptyRootSignature)));
 }
 
 //
@@ -190,20 +199,33 @@ DynaArray<uint64_t> GN::gfx::D3D12Gpu2::createPipelineStates(const PipelineCreat
         const auto & cp = parameters[i];
         AutoComPtr<ID3D12PipelineState> pso;
         D3D12_GRAPHICS_PIPELINE_STATE_DESC d = {};
+        d.pRootSignature = _emptyRootSignature;
         d.VS.pShaderBytecode = cp.vs.ptr;
         d.VS.BytecodeLength = cp.vs.sizeInBytes;
         d.PS.pShaderBytecode = cp.ps.ptr;
         d.PS.BytecodeLength = cp.ps.sizeInBytes;
+        
+        d.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
+
+        d.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
         d.RasterizerState.FillMode = D3D12_FILL_MODE_SOLID;
         d.RasterizerState.CullMode = D3D12_CULL_MODE_BACK;
-        d.DepthStencilState.DepthEnable = TRUE;
+
+        d.DepthStencilState.DepthEnable = false;
         d.DepthStencilState.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
         d.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
+
         auto elements = GetD3D12InputElements(cp.inputElements, cp.numInputElements);
         d.InputLayout.NumElements = cp.numInputElements;
         d.InputLayout.pInputElementDescs = elements.data();
-        _device->CreateGraphicsPipelineState(&d, IID_PPV_ARGS(&pso));
-        r.append((uint64_t)(intptr_t)pso.get());
+        d.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+
+        d.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
+        d.NumRenderTargets = 1;
+        d.SampleDesc.Count = 1;
+        
+        ThrowIfFailed(_device->CreateGraphicsPipelineState(&d, IID_PPV_ARGS(&pso)));
+        r.append((uint64_t)(intptr_t)pso.detach());
     }
     return r;
 }
@@ -253,12 +275,6 @@ void GN::gfx::D3D12Gpu2::kickoff(GN::gfx::Gpu2::CommandList & cl, uint64_t * fen
     auto ptr = (D3D12CommandList*)&cl;
     ptr->commandList->Close();
     ID3D12GraphicsCommandList * d3dcl = ptr->commandList;
-
-    // hack hack: setup default viewport and scissor rect
-    auto viewport = CD3DX12_VIEWPORT(0.0f, 0.0f, static_cast<float>(_frameWidth), static_cast<float>(_frameHeight));
-    auto scissor = CD3DX12_RECT(0, 0, static_cast<LONG>(_frameWidth), static_cast<LONG>(_frameHeight));
-    d3dcl->RSSetViewports(1, &viewport);
-    d3dcl->RSSetScissorRects(1, &scissor);
 
     _graphicsQueue.q().ExecuteCommandLists(1, (ID3D12CommandList**)&d3dcl);
     if (fence) *fence = _graphicsQueue.mark();
@@ -317,6 +333,25 @@ GN::gfx::D3D12CommandList::D3D12CommandList(D3D12Gpu2 & gpu, const Gpu2::Command
     ReturnIfFailed(gpu.device().CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, allocator, (ID3D12PipelineState*)cp.initialPipelineState, IID_PPV_ARGS(&commandList)));
 }
 
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::gfx::D3D12CommandList::reset(uint64_t initialState)
+{
+    commandList->Reset(allocator, (ID3D12PipelineState*)initialState);
+
+    // hack hack: setup default render states
+    auto w = owner.frameWidth();
+    auto h = owner.frameHeight();
+    auto viewport = CD3DX12_VIEWPORT(0.0f, 0.0f, static_cast<float>(w), static_cast<float>(h));
+    auto scissor = CD3DX12_RECT(0, 0, static_cast<LONG>(w), static_cast<LONG>(h));
+    auto rtv = owner.backrtv();
+    commandList->OMSetRenderTargets(1, &rtv, false, nullptr);
+    commandList->RSSetViewports(1, &viewport);
+    commandList->RSSetScissorRects(1, &scissor);
+}
+
 //
 //
 // -----------------------------------------------------------------------------
@@ -361,7 +396,15 @@ void GN::gfx::D3D12CommandList::draw(const Gpu2::DrawParameters & p)
 // -----------------------------------------------------------------------------
 void GN::gfx::D3D12CommandList::copyBufferRegion(const Gpu2::CopyBufferRegionParameters & p)
 {
+    // hack hack: set target buffer to writeable.
+    auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(promote(p.dest), D3D12_RESOURCE_STATE_GENERIC_READ, D3D12_RESOURCE_STATE_COPY_DEST);
+    commandList->ResourceBarrier(1, &barrier);
+
     commandList->CopyBufferRegion(promote(p.dest), p.destOffset, promote(p.source), p.sourceOffset, p.sourceBytes);
+
+    // hack hack: restore default resource state
+    barrier = CD3DX12_RESOURCE_BARRIER::Transition(promote(p.dest), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_GENERIC_READ);
+    commandList->ResourceBarrier(1, &barrier);
 }
 
 //
@@ -405,14 +448,30 @@ D3D12MemoryBlock::D3D12MemoryBlock(D3D12Gpu2 & o, const Gpu2::MemoryBlockCreatio
 GN::gfx::D3D12Buffer::D3D12Buffer(D3D12Gpu2 & o, const Gpu2::SurfaceCreationParameters & cp) : D3D12PlacedResource(o, cp)
 {
     GN_ASSERT(GN::gfx::Gpu2::SurfaceDimension::BUFFER == cp.dim);
-    auto desc = CD3DX12_RESOURCE_DESC::Buffer(cp.b.bytes);
-    ReturnIfFailed(o.device().CreatePlacedResource(
+    if (cp.memory) {
+        // create placed resource
+        auto desc = CD3DX12_RESOURCE_DESC::Buffer(cp.b.bytes);
+        ReturnIfFailed(o.device().CreatePlacedResource(
             GetD3D12Heap(cp.memory),
             cp.offset,
             &desc,
             D3D12_RESOURCE_STATE_GENERIC_READ,
             nullptr,
             IID_PPV_ARGS(&resource)));
+    }
+    else {
+        // test code path: create comitted resource
+        GN_ASSERT(0 == cp.offset);
+        auto prop = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
+        auto desc = CD3DX12_RESOURCE_DESC::Buffer(cp.b.bytes);
+        ReturnIfFailed(o.device().CreateCommittedResource(
+            &prop,
+            D3D12_HEAP_FLAG_NONE,
+            &desc,
+            D3D12_RESOURCE_STATE_GENERIC_READ,
+            nullptr,
+            IID_PPV_ARGS(&resource)));
+    }
 }
 
 //

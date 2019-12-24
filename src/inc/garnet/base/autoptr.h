@@ -426,6 +426,17 @@ namespace GN
                 return 0x80000005; // E_POINTER
             }
         }
+
+        ///
+        /// templated QI.
+        ///
+        template<typename T2>
+        AutoComPtr<T2> as() throw()
+        {
+            AutoComPtr<T2> result;
+            if (mPtr) mPtr->QueryInterface<T2>(&result);
+            return result;
+        }
 #endif
     };
 }

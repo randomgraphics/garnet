@@ -118,7 +118,7 @@ namespace GN { namespace gfx
         AutoComPtr<IDXGISwapChain3> _swapChain;
         AutoComPtr<ID3D12Device> _device;
         D3D12CommandQueue<CommandListType::GRAPHICS> _graphicsQueue;
-        //AutoComPtr<ID3D12RootSignature> _rootSignature;
+        AutoComPtr<ID3D12RootSignature> _emptyRootSignature;
         AutoComPtr<ID3D12DescriptorHeap> _rtvHeap;
         AutoRef<D3D12CommandList> _present; // command list for presenting
         //AutoComPtr<ID3D12PipelineState> _pipelineState;
@@ -137,6 +137,8 @@ namespace GN { namespace gfx
         // member accessor
         ID3D12Device & device() { return *_device; }
         D3D12_CPU_DESCRIPTOR_HANDLE backrtv() { return _frames[_frameIndex].rtv; }
+        uint32_t frameWidth() const { return _frameWidth; }
+        uint32_t frameHeight() const { return _frameHeight; }
 
         // interface methods
         DynaArray<uint64_t> createPipelineStates(const PipelineCreationParameters *, size_t) override;
@@ -160,7 +162,7 @@ namespace GN { namespace gfx
         ~D3D12CommandList() {}
         
         bool ok() const { return nullptr != commandList; }
-        void reset(uint64_t initialState) override { commandList->Reset(allocator, (ID3D12PipelineState*)initialState); }
+        void reset(uint64_t initialState) override;
         void clear(const Gpu2::ClearParameters &) override;
         void draw(const Gpu2::DrawParameters &) override;
         void compute(const Gpu2::ComputeParameters &) override { GN_UNIMPL(); }
