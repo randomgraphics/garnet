@@ -35,6 +35,7 @@ class DX12Triangle : public StdClass
 
     void clear()
     {
+        _pso = 0;
     }
 
     void initVB(gpu2ex & g)
@@ -135,6 +136,7 @@ public:
 
     void quit()
     {
+        // TODO: delete PSO
         _vb = nullptr;
         GN_STDCLASS_QUIT();
     }

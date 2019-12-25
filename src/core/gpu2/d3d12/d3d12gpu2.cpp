@@ -157,6 +157,12 @@ GN::gfx::D3D12Gpu2::D3D12Gpu2(const CreationParameters & cp)
     // create command list for present
     _present = new D3D12CommandList(*this, {});
 
+    // put the back buffer into RT state
+    auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(_frames[_frameIndex].rt, D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_RENDER_TARGET);
+    _present->commandList->ResourceBarrier(1, &barrier);
+    kickoff(*_present, nullptr);
+    _present->reset(0);
+
     // Create an empty root signature.
     CD3DX12_ROOT_SIGNATURE_DESC rootSignatureDesc;
     rootSignatureDesc.Init(0, nullptr, 0, nullptr, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
@@ -235,7 +241,6 @@ DynaArray<uint64_t> GN::gfx::D3D12Gpu2::createPipelineStates(const PipelineCreat
 // -----------------------------------------------------------------------------
 void GN::gfx::D3D12Gpu2::deletePipelineStates(const uint64_t *, size_t)
 {
-
 }
 
 //
@@ -273,9 +278,8 @@ GN::AutoRef<GN::gfx::Gpu2::Surface> GN::gfx::D3D12Gpu2::createSurface(const Surf
 void GN::gfx::D3D12Gpu2::kickoff(GN::gfx::Gpu2::CommandList & cl, uint64_t * fence)
 {
     auto ptr = (D3D12CommandList*)&cl;
-    ptr->commandList->Close();
+    ptr->close();
     ID3D12GraphicsCommandList * d3dcl = ptr->commandList;
-
     _graphicsQueue.q().ExecuteCommandLists(1, (ID3D12CommandList**)&d3dcl);
     if (fence) *fence = _graphicsQueue.mark();
 }
@@ -298,19 +302,13 @@ void GN::gfx::D3D12Gpu2::finish(uint64_t fence)
 void GN::gfx::D3D12Gpu2::present(const PresentParameters &)
 {
     // transit frame buffer to present state.
+    _present->reset(0);
     auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(_frames[_frameIndex].rt, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
     _present->commandList->ResourceBarrier(1, &barrier);
     kickoff(*_present, nullptr);
-    _present->reset(0);
 
     // present the frame buffer
     _swapChain->Present(1, 0);
-
-    // transit frame buffer back to render target state.
-    barrier = CD3DX12_RESOURCE_BARRIER::Transition(_frames[_frameIndex].rt, D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
-    _present->commandList->ResourceBarrier(1, &barrier);
-    kickoff(*_present, nullptr);
-    _present->reset(0);
 
     // insert a fence to mark the end of current frame.
     _frames[_frameIndex].fence = _graphicsQueue.mark();
@@ -321,6 +319,12 @@ void GN::gfx::D3D12Gpu2::present(const PresentParameters &)
     // Then wait for it to be ready to render to.
     // TODO: move this out of prensent. to give app a chance to do other CPU related work while waiting for the frame buffer to be ready.
     _graphicsQueue.finish(_frames[_frameIndex].fence);
+
+    // transit it back to render target state.
+    _present->reset(0);
+    barrier = CD3DX12_RESOURCE_BARRIER::Transition(_frames[_frameIndex].rt, D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
+    _present->commandList->ResourceBarrier(1, &barrier);
+    kickoff(*_present, nullptr);
 }
 
 //
@@ -329,27 +333,29 @@ void GN::gfx::D3D12Gpu2::present(const PresentParameters &)
 GN::gfx::D3D12CommandList::D3D12CommandList(D3D12Gpu2 & gpu, const Gpu2::CommandListCreationParameters & cp)
     : owner(gpu)
 {
-    ReturnIfFailed(gpu.device().CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&allocator)));
-    ReturnIfFailed(gpu.device().CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, allocator, (ID3D12PipelineState*)cp.initialPipelineState, IID_PPV_ARGS(&commandList)));
+    ThrowIfFailed(gpu.device().CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&allocator)));
+    ThrowIfFailed(gpu.device().CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, allocator, (ID3D12PipelineState*)cp.initialPipelineState, IID_PPV_ARGS(&commandList)));
 }
 
+//
+//
+// -----------------------------------------------------------------------------
+void GN::gfx::D3D12CommandList::close()
+{
+    if (!_closed) {
+        commandList->Close();
+        _closed = true;
+    }
+}
 
 //
 //
 // -----------------------------------------------------------------------------
 void GN::gfx::D3D12CommandList::reset(uint64_t initialState)
 {
+    close();
     commandList->Reset(allocator, (ID3D12PipelineState*)initialState);
-
-    // hack hack: setup default render states
-    auto w = owner.frameWidth();
-    auto h = owner.frameHeight();
-    auto viewport = CD3DX12_VIEWPORT(0.0f, 0.0f, static_cast<float>(w), static_cast<float>(h));
-    auto scissor = CD3DX12_RECT(0, 0, static_cast<LONG>(w), static_cast<LONG>(h));
-    auto rtv = owner.backrtv();
-    commandList->OMSetRenderTargets(1, &rtv, false, nullptr);
-    commandList->RSSetViewports(1, &viewport);
-    commandList->RSSetScissorRects(1, &scissor);
+    _closed = false;
 }
 
 //
@@ -357,6 +363,17 @@ void GN::gfx::D3D12CommandList::reset(uint64_t initialState)
 // -----------------------------------------------------------------------------
 void GN::gfx::D3D12CommandList::clear(const Gpu2::ClearParameters & p)
 {
+    // hack hack: setup default render states
+    auto w = owner.frameWidth();
+    auto h = owner.frameHeight();
+    auto viewport = CD3DX12_VIEWPORT(0.0f, 0.0f, static_cast<float>(w), static_cast<float>(h));
+    auto scissor = CD3DX12_RECT(0, 0, static_cast<LONG>(w), static_cast<LONG>(h));
+    auto rtv = owner.backrtv();
+    commandList->SetGraphicsRootSignature(owner.emptyRootSignature());
+    commandList->OMSetRenderTargets(1, &rtv, false, nullptr);
+    commandList->RSSetViewports(1, &viewport);
+    commandList->RSSetScissorRects(1, &scissor);
+
     commandList->ClearRenderTargetView(owner.backrtv(), p.color, 0, nullptr);
 }
 

@@ -139,6 +139,7 @@ namespace GN { namespace gfx
         D3D12_CPU_DESCRIPTOR_HANDLE backrtv() { return _frames[_frameIndex].rtv; }
         uint32_t frameWidth() const { return _frameWidth; }
         uint32_t frameHeight() const { return _frameHeight; }
+        ID3D12RootSignature * emptyRootSignature() const { return _emptyRootSignature.get(); }
 
         // interface methods
         DynaArray<uint64_t> createPipelineStates(const PipelineCreationParameters *, size_t) override;
@@ -162,11 +163,16 @@ namespace GN { namespace gfx
         ~D3D12CommandList() {}
         
         bool ok() const { return nullptr != commandList; }
+        void close();
         void reset(uint64_t initialState) override;
         void clear(const Gpu2::ClearParameters &) override;
         void draw(const Gpu2::DrawParameters &) override;
         void compute(const Gpu2::ComputeParameters &) override { GN_UNIMPL(); }
         void copyBufferRegion(const Gpu2::CopyBufferRegionParameters &) override;
+
+    private:
+
+        bool _closed = false;
     };
 
     struct D3D12MemoryBlock : public Gpu2::MemoryBlock
