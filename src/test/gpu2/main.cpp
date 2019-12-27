@@ -30,6 +30,7 @@ class DX12Triangle : public StdClass
         int : 32; // padding;
     };
 
+    gpu2ex & _g;
     AutoRef<Gpu2::Surface> _vb;
     uint64_t _pso = 0;
 
@@ -38,7 +39,7 @@ class DX12Triangle : public StdClass
         _pso = 0;
     }
 
-    void initVB(gpu2ex & g)
+    void initVB()
     {
         // declare vertices
         Vertex vertices[] = {
@@ -49,11 +50,11 @@ class DX12Triangle : public StdClass
 
         // create a upload buffer that holds vertices
         Gpu2::SurfaceCreationParameters vbcp;
-        vbcp.memory = g.um;
+        vbcp.memory = _g.um;
         vbcp.offset = 0;
         vbcp.dim = Gpu2::SurfaceDimension::BUFFER;
         vbcp.b.bytes = sizeof(vertices);
-        auto upload = g.gpu->createSurface(vbcp);
+        auto upload = _g.gpu->createSurface(vbcp);
 
         // copy vertices to upload buffer
         auto mapped = upload->map(0);
@@ -61,17 +62,17 @@ class DX12Triangle : public StdClass
         upload->unmap(0);
 
         // create vb for rendering
-        vbcp.memory = g.dm;
-        _vb = g.gpu->createSurface(vbcp);
+        vbcp.memory = _g.dm;
+        _vb = _g.gpu->createSurface(vbcp);
 
         // copy vertices to vb for rendering
-        auto cl = g.gpu->createCommandList({});
+        auto cl = _g.gpu->createCommandList({});
         cl->copySurface(upload.rawptr(), _vb.rawptr());
-        g.gpu->kickoff(*cl);
-        g.gpu->finish();
+        _g.gpu->kickoff(*cl);
+        _g.gpu->finish();
     }
 
-    void initPSO(gpu2ex & g)
+    void initPSO()
     {
         // compile vertex and pixel shader
         const char * hlsl = R"(
@@ -94,7 +95,7 @@ class DX12Triangle : public StdClass
 
             float4 psmain(VSOutput v) : SV_TARGET0
             {
-                return float4(1.0, 0.0, 1.0, 1.0);
+                return float4(1.0, 1.0, 1.0, 1.0);
             }
         )";
         auto vs = compileHLSL({hlsl, 0, "vsmain", "vs_5_0"});
@@ -108,12 +109,12 @@ class DX12Triangle : public StdClass
         pcp.ps = { ps.rawptr(), ps.size() };
         pcp.inputElements = ie;
         pcp.numInputElements = 1;
-        _pso = g.gpu->createPipelineStates(&pcp, 1)[0];
+        _pso = _g.gpu->createPipelineStates(&pcp, 1)[0];
     }
 
 public:
     
-    DX12Triangle()
+    DX12Triangle(gpu2ex & g) : _g(g)
     {
         clear();
     }
@@ -123,12 +124,12 @@ public:
         quit();
     }
 
-    bool init(gpu2ex & g)
+    bool init()
     {
         GN_STDCLASS_INIT();
 
-        initVB(g);
-        initPSO(g);
+        initVB();
+        initPSO();
 
         // done
         return success();
@@ -136,8 +137,8 @@ public:
 
     void quit()
     {
-        // TODO: delete PSO
         _vb = nullptr;
+        if (_g.gpu && _pso) _g.gpu->deletePipelineStates(&_pso, 1), _pso = 0;
         GN_STDCLASS_QUIT();
     }
 
@@ -169,8 +170,8 @@ int main()
     gpu2ex g(mainWindow.get());
 
     // create a triangle
-    DX12Triangle tri;
-    GN_VERIFY(tri.init(g));
+    DX12Triangle tri(g);
+    GN_VERIFY(tri.init());
 
     // main loop
     while(mainWindow->runUntilNoNewEvents()) {

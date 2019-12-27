@@ -115,8 +115,8 @@ GN::gfx::D3D12Gpu2::D3D12Gpu2(const CreationParameters & cp)
     // create swap chain.
     DXGI_SWAP_CHAIN_DESC swapChainDesc = {};
     swapChainDesc.BufferCount = BACK_BUFFER_COUNT;
-    swapChainDesc.BufferDesc.Width = 0 == cp.width ? windowSize.x : cp.width;
-    swapChainDesc.BufferDesc.Height = cp.height ? windowSize.y : cp.height;
+    swapChainDesc.BufferDesc.Width = cp.width ? cp.width : windowSize.x;
+    swapChainDesc.BufferDesc.Height = cp.height ? cp.height: windowSize.y;
     swapChainDesc.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
     swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
     swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
@@ -215,11 +215,11 @@ DynaArray<uint64_t> GN::gfx::D3D12Gpu2::createPipelineStates(const PipelineCreat
 
         d.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
         d.RasterizerState.FillMode = D3D12_FILL_MODE_SOLID;
-        d.RasterizerState.CullMode = D3D12_CULL_MODE_BACK;
+        d.RasterizerState.CullMode = D3D12_CULL_MODE_NONE;
 
         d.DepthStencilState.DepthEnable = false;
         d.DepthStencilState.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
-        d.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
+        d.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_ALWAYS;
 
         auto elements = GetD3D12InputElements(cp.inputElements, cp.numInputElements);
         d.InputLayout.NumElements = cp.numInputElements;
@@ -239,8 +239,15 @@ DynaArray<uint64_t> GN::gfx::D3D12Gpu2::createPipelineStates(const PipelineCreat
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3D12Gpu2::deletePipelineStates(const uint64_t *, size_t)
+void GN::gfx::D3D12Gpu2::deletePipelineStates(const uint64_t * psolist, size_t count)
 {
+    for (size_t i = 0; i < count; ++i) {
+        auto pso = psolist[i];
+        if (pso) {
+            auto d3dpso = (ID3D12PipelineState *)pso;
+            d3dpso->Release();
+        }
+    }
 }
 
 //
@@ -356,13 +363,7 @@ void GN::gfx::D3D12CommandList::reset(uint64_t initialState)
     close();
     commandList->Reset(allocator, (ID3D12PipelineState*)initialState);
     _closed = false;
-}
 
-//
-//
-// -----------------------------------------------------------------------------
-void GN::gfx::D3D12CommandList::clear(const Gpu2::ClearParameters & p)
-{
     // hack hack: setup default render states
     auto w = owner.frameWidth();
     auto h = owner.frameHeight();
@@ -373,7 +374,13 @@ void GN::gfx::D3D12CommandList::clear(const Gpu2::ClearParameters & p)
     commandList->OMSetRenderTargets(1, &rtv, false, nullptr);
     commandList->RSSetViewports(1, &viewport);
     commandList->RSSetScissorRects(1, &scissor);
+}
 
+//
+//
+// -----------------------------------------------------------------------------
+void GN::gfx::D3D12CommandList::clear(const Gpu2::ClearParameters & p)
+{
     commandList->ClearRenderTargetView(owner.backrtv(), p.color, 0, nullptr);
 }
 
@@ -417,7 +424,10 @@ void GN::gfx::D3D12CommandList::copyBufferRegion(const Gpu2::CopyBufferRegionPar
     auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(promote(p.dest), D3D12_RESOURCE_STATE_GENERIC_READ, D3D12_RESOURCE_STATE_COPY_DEST);
     commandList->ResourceBarrier(1, &barrier);
 
-    commandList->CopyBufferRegion(promote(p.dest), p.destOffset, promote(p.source), p.sourceOffset, p.sourceBytes);
+    auto sourceBytes = p.sourceBytes;
+    if (0 == sourceBytes) sourceBytes = ((D3D12PlacedResource*)p.source)->creationParameters.b.bytes - p.sourceOffset;
+
+    commandList->CopyBufferRegion(promote(p.dest), p.destOffset, promote(p.source), p.sourceOffset, sourceBytes);
 
     // hack hack: restore default resource state
     barrier = CD3DX12_RESOURCE_BARRIER::Transition(promote(p.dest), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_GENERIC_READ);
