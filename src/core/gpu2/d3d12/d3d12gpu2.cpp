@@ -214,12 +214,9 @@ DynaArray<uint64_t> GN::gfx::D3D12Gpu2::createPipelineStates(const PipelineCreat
         d.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
 
         d.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
-        d.RasterizerState.FillMode = D3D12_FILL_MODE_SOLID;
         d.RasterizerState.CullMode = D3D12_CULL_MODE_NONE;
 
-        d.DepthStencilState.DepthEnable = false;
-        d.DepthStencilState.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
-        d.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_ALWAYS;
+        d.SampleMask = UINT_MAX;
 
         auto elements = GetD3D12InputElements(cp.inputElements, cp.numInputElements);
         d.InputLayout.NumElements = cp.numInputElements;
