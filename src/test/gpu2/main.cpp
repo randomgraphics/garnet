@@ -149,7 +149,7 @@ public:
             _pso,
             GN_ARRAY_COUNT(vb), vb,
             nullptr, // no ib
-             PrimitiveType::TRIANGLE_LIST,
+            PrimitiveType::TRIANGLE_LIST,
             3});
     }
 };

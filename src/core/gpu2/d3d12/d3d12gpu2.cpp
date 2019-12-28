@@ -107,7 +107,7 @@ GN::gfx::D3D12Gpu2::D3D12Gpu2(const CreationParameters & cp)
         ));
 
     // create command queue
-    _graphicsQueue.init(*_device);
+    _graphicsQueue.init<CommandListType::GRAPHICS>(*_device);
 
     // get current window size
     auto windowSize = cp.window->getClientSize();
@@ -159,7 +159,7 @@ GN::gfx::D3D12Gpu2::D3D12Gpu2(const CreationParameters & cp)
 
     // put the back buffer into RT state
     auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(_frames[_frameIndex].rt, D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_RENDER_TARGET);
-    _present->commandList->ResourceBarrier(1, &barrier);
+    _present->active().ResourceBarrier(1, &barrier);
     kickoff(*_present, nullptr);
     _present->reset(0);
 
@@ -282,10 +282,8 @@ GN::AutoRef<GN::gfx::Gpu2::Surface> GN::gfx::D3D12Gpu2::createSurface(const Surf
 void GN::gfx::D3D12Gpu2::kickoff(GN::gfx::Gpu2::CommandList & cl, uint64_t * fence)
 {
     auto ptr = (D3D12CommandList*)&cl;
-    ptr->close();
-    ID3D12GraphicsCommandList * d3dcl = ptr->commandList;
-    _graphicsQueue.q().ExecuteCommandLists(1, (ID3D12CommandList**)&d3dcl);
-    if (fence) *fence = _graphicsQueue.mark();
+    auto f = ptr->kickoff(_graphicsQueue);
+    if (fence) *fence = f;
 }
 
 //
@@ -308,7 +306,7 @@ void GN::gfx::D3D12Gpu2::present(const PresentParameters &)
     // transit frame buffer to present state.
     _present->reset(0);
     auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(_frames[_frameIndex].rt, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
-    _present->commandList->ResourceBarrier(1, &barrier);
+    _present->active().ResourceBarrier(1, &barrier);
     kickoff(*_present, nullptr);
 
     // present the frame buffer
@@ -327,7 +325,7 @@ void GN::gfx::D3D12Gpu2::present(const PresentParameters &)
     // transit it back to render target state.
     _present->reset(0);
     barrier = CD3DX12_RESOURCE_BARRIER::Transition(_frames[_frameIndex].rt, D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
-    _present->commandList->ResourceBarrier(1, &barrier);
+    _present->active().ResourceBarrier(1, &barrier);
     kickoff(*_present, nullptr);
 }
 
@@ -335,21 +333,26 @@ void GN::gfx::D3D12Gpu2::present(const PresentParameters &)
 //
 // -----------------------------------------------------------------------------
 GN::gfx::D3D12CommandList::D3D12CommandList(D3D12Gpu2 & gpu, const Gpu2::CommandListCreationParameters & cp)
-    : owner(gpu)
+    : _owner(gpu)
 {
-    ThrowIfFailed(gpu.device().CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&allocator)));
-    ThrowIfFailed(gpu.device().CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, allocator, (ID3D12PipelineState*)cp.initialPipelineState, IID_PPV_ARGS(&commandList)));
+    reset(cp.initialPipelineState);
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3D12CommandList::close()
+uint64_t GN::gfx::D3D12CommandList::kickoff(D3D12CommandQueue & q)
 {
-    if (!_closed) {
-        commandList->Close();
-        _closed = true;
+    auto & cl = _pool.front();
+    if (!cl.closed) {
+        cl.commandList->Close();
+        cl.closed = true;
     }
+    ID3D12CommandList * d3dcl = cl.commandList;
+    q.q().ExecuteCommandLists(1, &d3dcl);
+    cl.queue = &q;
+    cl.fence = q.mark();
+    return cl.fence;
 }
 
 //
@@ -357,20 +360,38 @@ void GN::gfx::D3D12CommandList::close()
 // -----------------------------------------------------------------------------
 void GN::gfx::D3D12CommandList::reset(uint64_t initialState)
 {
-    close();
-    commandList->Reset(allocator, (ID3D12PipelineState*)initialState);
-    _closed = false;
+    // see if the last item in the pool is stil pending.
+    std::list<Item>::iterator item;
+    if (_pool.empty() || _pool.back().pending()) {
+        // if yes, then add a new item in front of the list.
+        _pool.push_front({});
+        item = _pool.begin();
+        ThrowIfFailed(_owner.device().CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&item->allocator)));
+        ThrowIfFailed(_owner.device().CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, item->allocator, (ID3D12PipelineState*)initialState, IID_PPV_ARGS(&item->commandList)));
+    }
+    else {
+        // if the last item is not pending any more, then reset it, move it to the front.
+        _pool.push_front(std::move(_pool.back()));
+        _pool.pop_back();
+        item = _pool.begin();
+
+        if (!item->closed) item->commandList->Close(); // close it if not already.
+        ThrowIfFailed(item->allocator->Reset());
+        ThrowIfFailed(item->commandList->Reset(item->allocator, (ID3D12PipelineState*)initialState));
+        item->queue = nullptr; // clear the queue pointer, indicating that the command list is not kicked off yet.
+        item->closed = false;
+    }
 
     // hack hack: setup default render states
-    auto w = owner.frameWidth();
-    auto h = owner.frameHeight();
+    auto w = _owner.frameWidth();
+    auto h = _owner.frameHeight();
     auto viewport = CD3DX12_VIEWPORT(0.0f, 0.0f, static_cast<float>(w), static_cast<float>(h));
     auto scissor = CD3DX12_RECT(0, 0, static_cast<LONG>(w), static_cast<LONG>(h));
-    auto rtv = owner.backrtv();
-    commandList->SetGraphicsRootSignature(owner.emptyRootSignature());
-    commandList->OMSetRenderTargets(1, &rtv, false, nullptr);
-    commandList->RSSetViewports(1, &viewport);
-    commandList->RSSetScissorRects(1, &scissor);
+    auto rtv = _owner.backrtv();
+    item->commandList->SetGraphicsRootSignature(_owner.emptyRootSignature());
+    item->commandList->OMSetRenderTargets(1, &rtv, false, nullptr);
+    item->commandList->RSSetViewports(1, &viewport);
+    item->commandList->RSSetScissorRects(1, &scissor);
 }
 
 //
@@ -378,7 +399,7 @@ void GN::gfx::D3D12CommandList::reset(uint64_t initialState)
 // -----------------------------------------------------------------------------
 void GN::gfx::D3D12CommandList::clear(const Gpu2::ClearParameters & p)
 {
-    commandList->ClearRenderTargetView(owner.backrtv(), p.color, 0, nullptr);
+    _pool.begin()->commandList->ClearRenderTargetView(_owner.backrtv(), p.color, 0, nullptr);
 }
 
 //
@@ -386,10 +407,8 @@ void GN::gfx::D3D12CommandList::clear(const Gpu2::ClearParameters & p)
 // -----------------------------------------------------------------------------
 void GN::gfx::D3D12CommandList::draw(const Gpu2::DrawParameters & p)
 {
-    if (p.pso)
-        commandList->SetPipelineState((ID3D12PipelineState*)p.pso);
-    else
-        commandList->ClearState(nullptr);
+    auto cl = _pool.begin()->commandList.get();
+    if (p.pso) cl->SetPipelineState((ID3D12PipelineState*)p.pso);
 
     // setup vertex buffer views
     D3D12_VERTEX_BUFFER_VIEW vb[16];
@@ -401,14 +420,14 @@ void GN::gfx::D3D12CommandList::draw(const Gpu2::DrawParameters & p)
         vb[i].StrideInBytes = p.vertexBuffers[i].stride;
         offsets[i] = p.vertexBuffers[i].offset;
     }
-    commandList->IASetVertexBuffers(0, p.vertexBufferCount, vb);
-    commandList->IASetPrimitiveTopology(tod3d(p.prim));
+    cl->IASetVertexBuffers(0, p.vertexBufferCount, vb);
+    cl->IASetPrimitiveTopology(tod3d(p.prim));
 
     if (p.indexBuffer) {
         // TODO: setup index buffer view
-        commandList->DrawIndexedInstanced(p.vertexOrIndexCount, 1, p.baseindex, p.basevertex, 0);
+        cl->DrawIndexedInstanced(p.vertexOrIndexCount, 1, p.baseindex, p.basevertex, 0);
     } else {
-        commandList->DrawInstanced(p.vertexOrIndexCount, 1, p.basevertex, 0);
+        cl->DrawInstanced(p.vertexOrIndexCount, 1, p.basevertex, 0);
     }
 }
 
@@ -417,18 +436,20 @@ void GN::gfx::D3D12CommandList::draw(const Gpu2::DrawParameters & p)
 // -----------------------------------------------------------------------------
 void GN::gfx::D3D12CommandList::copyBufferRegion(const Gpu2::CopyBufferRegionParameters & p)
 {
+    auto cl = _pool.begin()->commandList.get();
+
     // hack hack: set target buffer to writeable.
     auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(promote(p.dest), D3D12_RESOURCE_STATE_GENERIC_READ, D3D12_RESOURCE_STATE_COPY_DEST);
-    commandList->ResourceBarrier(1, &barrier);
+    cl->ResourceBarrier(1, &barrier);
 
     auto sourceBytes = p.sourceBytes;
     if (0 == sourceBytes) sourceBytes = ((D3D12PlacedResource*)p.source)->creationParameters.b.bytes - p.sourceOffset;
 
-    commandList->CopyBufferRegion(promote(p.dest), p.destOffset, promote(p.source), p.sourceOffset, sourceBytes);
+    cl->CopyBufferRegion(promote(p.dest), p.destOffset, promote(p.source), p.sourceOffset, sourceBytes);
 
     // hack hack: restore default resource state
     barrier = CD3DX12_RESOURCE_BARRIER::Transition(promote(p.dest), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_GENERIC_READ);
-    commandList->ResourceBarrier(1, &barrier);
+    cl->ResourceBarrier(1, &barrier);
 }
 
 //

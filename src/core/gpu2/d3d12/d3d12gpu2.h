@@ -29,9 +29,8 @@ namespace GN { namespace gfx
 
     typedef Win32Handle<0> Win32Event;
 
-    struct D3D12CommandList;
+    class D3D12CommandList;
 
-    template<Gpu2::CommandListType TYPE>
     class D3D12CommandQueue
     {
         union FenceValue
@@ -47,8 +46,10 @@ namespace GN { namespace gfx
         AutoComPtr<ID3D12CommandQueue> _q;
         AutoComPtr<ID3D12Fence> _f;
         Win32Event _e;
+        Gpu2::CommandListType _type;
         FenceValue _fenceValue;
 
+        template<Gpu2::CommandListType TYPE>
         static constexpr D3D12_COMMAND_LIST_TYPE d3dtype()
         {
             if constexpr (Gpu2::CommandListType::GRAPHICS == TYPE)
@@ -63,13 +64,15 @@ namespace GN { namespace gfx
 
     public:
 
+        template<Gpu2::CommandListType TYPE>
         void init(ID3D12Device & device)
         {
+            _type = TYPE;
             _fenceValue.type = (unsigned)TYPE;
             _fenceValue.value = 0;
             D3D12_COMMAND_QUEUE_DESC queueDesc = {};
             queueDesc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
-            queueDesc.Type = d3dtype();
+            queueDesc.Type = d3dtype<TYPE>();
             ThrowIfFailed(device.CreateCommandQueue(&queueDesc, IID_PPV_ARGS(&_q)));
             ThrowIfFailed(device.CreateFence(_fenceValue.value++, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&_f)));
             _e.h = CreateEvent(nullptr, FALSE, FALSE, nullptr);
@@ -86,10 +89,16 @@ namespace GN { namespace gfx
             return ret;
         }
 
+        bool isPending(uint64 fence) const
+        {
+            FenceValue f = { fence };
+            return _f->GetCompletedValue() < f.value;
+        }
+
         void finish(uint64 fence)
         {
             FenceValue f = {fence};
-            GN_ASSERT(f.type == (unsigned int)TYPE);
+            GN_ASSERT(f.type == (uint64_t)_type);
             if (_f->GetCompletedValue() < f.value) {
                 ThrowIfFailed(_f->SetEventOnCompletion(f.value, _e));
                 WaitForSingleObjectEx(_e, INFINITE, FALSE);
@@ -117,7 +126,7 @@ namespace GN { namespace gfx
         static const uint32_t BACK_BUFFER_COUNT = 2;
         AutoComPtr<IDXGISwapChain3> _swapChain;
         AutoComPtr<ID3D12Device> _device;
-        D3D12CommandQueue<CommandListType::GRAPHICS> _graphicsQueue;
+        D3D12CommandQueue _graphicsQueue;
         AutoComPtr<ID3D12RootSignature> _emptyRootSignature;
         AutoComPtr<ID3D12DescriptorHeap> _rtvHeap;
         AutoRef<D3D12CommandList> _present; // command list for presenting
@@ -153,17 +162,34 @@ namespace GN { namespace gfx
         void present(const PresentParameters &) override;
     };
 
-    struct D3D12CommandList : public Gpu2::CommandList
+    class D3D12CommandList : public Gpu2::CommandList
     {
-        D3D12Gpu2 & owner;
-        AutoComPtr<ID3D12CommandAllocator> allocator;
-        AutoComPtr<ID3D12GraphicsCommandList> commandList;
+        struct Item
+        {
+            AutoComPtr<ID3D12CommandAllocator>    allocator;
+            AutoComPtr<ID3D12GraphicsCommandList> commandList;
+            D3D12CommandQueue *                   queue = nullptr;
+            uint64_t                              fence;
+            bool                                  closed = false;
+
+            bool pending() const
+            {
+                return queue && queue->isPending(fence);
+            }
+        };
+
+        D3D12Gpu2 & _owner;
+        std::list<Item> _pool; // command list pool. The first item in the list is always the active command list.
+
+    public:
         
         D3D12CommandList(D3D12Gpu2 &, const Gpu2::CommandListCreationParameters &);
         ~D3D12CommandList() {}
-        
-        bool ok() const { return nullptr != commandList; }
-        void close();
+
+        bool ok() const { return !_pool.empty() && _pool.front().allocator && _pool.front().commandList; }
+        uint64_t kickoff(D3D12CommandQueue &);
+        ID3D12GraphicsCommandList & active() { return *_pool.front().commandList; };
+
         void reset(uint64_t initialState) override;
         void clear(const Gpu2::ClearParameters &) override;
         void draw(const Gpu2::DrawParameters &) override;
