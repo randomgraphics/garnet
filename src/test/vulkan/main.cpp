@@ -138,12 +138,12 @@ struct App {
         // create a window
         const uint32 WIDTH = 1960;
         const uint32 HEIGHT = 1080;
-        mWin = win::createWindow(win::WindowCreationParameters{
+        mWin = win::createWindow({
             "vulkan test",
+            WIDTH, HEIGHT,
             0, // diplay
             0, // monitor
             0, // parent
-            WIDTH, HEIGHT,
             true, // border
             true, // title
             false, // top most
