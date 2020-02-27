@@ -481,6 +481,12 @@ $Host.UI.RawUI.WindowTitle = "garnet3d ( $GARNET_ROOT )"
 # change current location
 set-location $GARNET_ROOT
 
+#reset some command line color
+Set-PSReadlineOption -Colors @{
+        "Parameter" = [System.ConsoleColor]::White
+        "Operator" = [System.ConsoleColor]::White
+}
+
 # ==============================================================================
 # call user specific setup script
 # ==============================================================================
