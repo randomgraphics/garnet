@@ -54,7 +54,7 @@ function global:prompt()
 # ==============================================================================
 
 # note: $GARNET_ROOT is a global variable that could be used in other places outside of this script.
-$global:GARNET_ROOT=split-path -parent $MyInvocation.InvocationName|split-path -parent
+$global:GARNET_ROOT=split-path -parent $PSScriptRoot
 $env:GARNET_ROOT=$GARNET_ROOT
 
 # ==============================================================================
@@ -437,7 +437,6 @@ $env:SCONSFLAGS="-U"
 # ==============================================================================
 # setup aliases
 # ==============================================================================
-
 if( Test-Path -path "$GARNET_ROOT\env\alias.txt" )
 {
     # create script block for all aliases
