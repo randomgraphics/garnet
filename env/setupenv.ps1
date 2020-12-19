@@ -112,11 +112,11 @@ foreach( $a in $args )
 
 if ( "" -eq "$env:GN_BUILD_CMAKE_GENERATOR" )
 {
-    $env:GN_BUILD_DIR="build.tmp\msbuild.$env:GN_BUILD_TARGET_CPU"
+    $env:GN_BUILD_DIR="build.msbuild.$env:GN_BUILD_TARGET_CPU"
 }
 else
 {
-    $env:GN_BUILD_DIR="build.tmp\$env:GN_BUILD_CMAKE_GENERATOR.$env:GN_BUILD_TARGET_CPU"
+    $env:GN_BUILD_DIR="build.$env:GN_BUILD_CMAKE_GENERATOR.$env:GN_BUILD_TARGET_CPU"
 }
 
 # ==============================================================================

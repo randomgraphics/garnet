@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.9)
 
-project(garnet)
+project(garnet LANGUAGES C CXX CUDA)
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/env/cmake)
 set (CMAKE_CXX_STANDARD 17)
 

@@ -4,7 +4,7 @@
 # ======================================
 export GARNET_ROOT=$(cd $(dirname $(realpath ${BASH_SOURCE[0]}))/..; pwd)
 
-export GN_BUILD_DIR=build.tmp/linux.x64
+export GN_BUILD_DIR=build.linux.x64
 
 # ===========
 # setup alias

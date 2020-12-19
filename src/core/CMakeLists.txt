@@ -91,7 +91,6 @@ function(add_core_libs)
 endfunction()
 
 target_include_directories(GNcore PUBLIC ${BUILD_HEADER_INC} ../inc)
-target_compile_features   (GNcore PUBLIC cxx_std_11)
 target_link_libraries     (GNcore PUBLIC GNextern)
 
 # directx
