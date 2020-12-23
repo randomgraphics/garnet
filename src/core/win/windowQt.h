@@ -1,10 +1,11 @@
-#ifndef __GN_WIN_WINDOWQT_H__
-#define __GN_WIN_WINDOWQT_H__
+#pragma once
 // *****************************************************************************
 /// \file
 /// \brief   Window class on MS Windows
 /// \author  chenlee (2006.2.23)
 // *****************************************************************************
+
+#ifdef HAS_QT
 
 #include <QtWidgets/QtWidgets>
 #include <QtWidgets/QApplication>
@@ -78,7 +79,6 @@ namespace GN { namespace win
         bool createWindow( const WindowCreationParameters & );
     };
 }}
-
 #endif
 
 // *****************************************************************************

@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.9)
+cmake_minimum_required(VERSION 3.16.0) # Qt6 requires 3.16+
 
 project(garnet LANGUAGES C CXX CUDA)
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/env/cmake)
@@ -118,7 +118,17 @@ message("GN_BUILD_PROFILING_ENABLED = ${GN_BUILD_PROFILING_ENABLED}")
 # set(OpenGL_GL_PREFERENCE GLVND)
 find_package(OpenGL)
 find_package(DirectX)
+find_package(Vulkan)
 find_package(X11)
+
+# Qt6
+find_package(Qt6 COMPONENTS Core Widgets)
+if (Qt6Widgets_FOUND)
+    set(CMAKE_AUTOMOC ON)
+    set(CMAKE_AUTORCC ON)
+    set(CMAKE_AUTOUIC ON)
+    message("QT not found. QT window is disabled")
+endif()
 
 # ===================
 # call subdirectories

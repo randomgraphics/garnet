@@ -27,7 +27,7 @@ namespace GN { namespace gfx
         operator HANDLE () const { return h; }
     };
 
-    typedef Win32Handle<0> Win32Event;
+    typedef Win32Handle<(HANDLE)0> Win32Event;
 
     class D3D12CommandList;
 

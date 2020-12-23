@@ -332,8 +332,9 @@ private:
         }
 
         // search in current directory
+        using namespace std::string_literals;
         CSimpleGlobA sg( SG_GLOB_ONLYFILE );
-        StrA p = joinPath( curDir, (useRegex ? "*.*" : pattern) );
+        StrA p = joinPath( curDir, (useRegex ? "*.*"s : pattern) );
         sg.Add( p.rawptr() );
         char ** files = sg.Files();
         int c = sg.FileCount();

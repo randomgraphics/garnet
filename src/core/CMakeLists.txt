@@ -58,13 +58,6 @@ if (D3D12_FOUND)
     GN_add_source_folder(sources gpu2/d3d12 PCH_SOURCE gpu2/d3d12/pch.cpp)
 endif()
 
-# Qt5
-find_package(Qt5 COMPONENTS Core Widgets)
-if (NOT HAS_QT5_Widgets)
-    message("Qt5 not found. Remove windowQt.cpp from sources")
-    list(REMOVE_ITEM sources ${CMAKE_CURRENT_SOURCE_DIR}/win/windowQt.cpp)
-endif()
-
  # Split everything into groups
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} PREFIX "Source Files" FILES ${sources})
 
@@ -92,6 +85,15 @@ endfunction()
 
 target_include_directories(GNcore PUBLIC ${BUILD_HEADER_INC} ../inc)
 target_link_libraries     (GNcore PUBLIC GNextern)
+
+# Qt6
+find_package(Qt6 COMPONENTS Widgets)
+if (Qt6Widgets_FOUND)
+    add_core_libs(Qt::Widgets)
+    target_compile_definitions(GNcore PRIVATE HAS_QT=1)
+else()
+    message("QT not found. QT window is disabled")
+endif()
 
 # directx
 if (D3D11_FOUND)

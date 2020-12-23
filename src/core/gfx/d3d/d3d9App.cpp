@@ -80,7 +80,7 @@ static HWND sCreateWindow( HWND parent, HMONITOR monitor, uint32 width, uint32 h
     // get monitor's working area rectangle
     MONITORINFO mi;
     mi.cbSize = sizeof(mi);
-    GN_MSW_CHECK_RETURN( GetMonitorInfoW( monitor, &mi ), false );
+    GN_MSW_CHECK_RETURN( GetMonitorInfoW( monitor, &mi ), 0 );
 
     // calculate window size
     RECT rc = { 0, 0, (LONG)width, (LONG)height };
@@ -101,7 +101,7 @@ static HWND sCreateWindow( HWND parent, HMONITOR monitor, uint32 width, uint32 h
     if( 0 == hwnd )
     {
         GN_ERROR(sLogger)( "fail to create window, %s!", getWin32LastErrorInfo() );
-        return false;
+        return 0;
     }
 
     // show the window

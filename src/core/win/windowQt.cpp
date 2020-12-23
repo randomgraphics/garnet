@@ -1,4 +1,5 @@
 ﻿#include "pch.h"
+#ifdef HAS_QT
 #include "windowQt.h"
 #include <QtCore/QSize>
 
@@ -21,8 +22,8 @@ bool GN::win::WindowQt::init( const WindowCreationParameters & wcp )
     auto app = QApplication::instance();
     if (!app) {
         int argc = 1;
-        char * argv[] = {"garnet"};
-        mApp = new QApplication(argc, argv);
+        const char * argv[] = {"garnet"};
+        mApp = new QApplication(argc, (char**)argv);
     }
 
     if( !createWindow( wcp ) ) return failure();
@@ -187,3 +188,5 @@ bool GN::win::WindowQt::createWindow( const WindowCreationParameters & wcp )
 
     GN_UNGUARD;
 }
+
+#endif

@@ -1,9 +1,7 @@
 #include "pch.h"
 #include "windowMsw.h"
 #include "windowX11.h"
-#ifdef HAS_QT5
 #include "windowQt.h"
-#endif
 
 namespace GN { namespace win
 {
@@ -94,7 +92,7 @@ namespace GN { namespace win
     {
         GN_GUARD;
 
-#ifdef HAS_QT5
+#ifdef HAS_QT
 
         AutoObjPtr<WindowQt> p( new WindowQt );
         if( !p->init( wcp ) ) return 0;
@@ -135,7 +133,7 @@ namespace GN { namespace win
     {
         GN_GUARD;
 
-#ifdef HAS_QT5
+#ifdef HAS_QT
 
         AutoObjPtr<WindowQt> p( new WindowQt );
         if( !p->init( wap ) ) return 0;
