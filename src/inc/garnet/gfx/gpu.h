@@ -6,6 +6,8 @@
 /// \author  chenlee (2005.9.30)
 // *****************************************************************************
 
+#include "garnet/GNwin.h"
+
 namespace GN { namespace gfx
 {
     ///
@@ -917,6 +919,11 @@ namespace GN { namespace gfx
         virtual const DispDesc & getDispDesc() const = 0;
 
         ///
+        /// Return reference to the render window
+        ///
+        virtual GN::win::Window & getRenderWindow() const = 0;
+
+        ///
         /// For D3D, return pointer to current D3D device; for OGL, return NULL.
         ///
         virtual void * getD3DDevice() const = 0;
@@ -1406,11 +1413,6 @@ namespace GN { namespace gfx
         /// retrieve back buffer data
         ///
         virtual void getBackBufferContent( BackBufferContent & ) = 0;
-
-        ///
-        /// Process render window messages, to keep render window responding to user inputs.
-        ///
-        virtual void processRenderWindowMessages( bool blockWhileMinimized ) = 0;
 
         ///
         /// Attatch/Deatch user data to/from the renderer.

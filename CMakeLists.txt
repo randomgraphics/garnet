@@ -120,15 +120,8 @@ find_package(OpenGL)
 find_package(DirectX)
 find_package(Vulkan)
 find_package(X11)
-
-# Qt6
 find_package(Qt6 COMPONENTS Core Widgets)
-if (Qt6Widgets_FOUND)
-    set(CMAKE_AUTOMOC ON)
-    set(CMAKE_AUTORCC ON)
-    set(CMAKE_AUTOUIC ON)
-    message("QT not found. QT window is disabled")
-endif()
+find_package(CUDA)
 
 # ===================
 # call subdirectories

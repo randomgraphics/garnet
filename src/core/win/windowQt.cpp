@@ -144,8 +144,7 @@ bool GN::win::WindowQt::runUntilNoNewEvents( bool )
     GN_GUARD_SLOW;
     auto app = (QApplication*)QApplication::instance();
     app->processEvents();
-    // TODO: check if main window is closed or not.
-    return true;
+    return !mWindow->closing; // returns false, if user is trying to close the window
     GN_UNGUARD_SLOW;
 }
 
@@ -178,7 +177,7 @@ bool GN::win::WindowQt::createWindow( const WindowCreationParameters & wcp )
     // TODO: determine if window has border and title bar
 
     // create the window
-    mWindow = new QWindow(mScreen);
+    mWindow = new MainWindow(mScreen);
     mWindow->resize((int)width, (int)height);
 
     // TODO: connect to window close signal

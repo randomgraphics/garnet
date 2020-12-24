@@ -36,7 +36,7 @@ bool init( Gpu & gpu )
     if( !initTTF() ) return false;
 
     CharacterEncodingConverter cec( CharacterEncodingConverter::GBK, CharacterEncodingConverter::WIDECHAR );
-    cec( textw, "ÄãºÃ!¹þ¹þ" );
+    cec( textw, "ä½ å¥½" );
 
     // success
     return true;
@@ -112,9 +112,7 @@ int run( Gpu & gpu )
     FpsCalculator fps;
     getLogger("GN.util.fps")->setLevel( Logger::VERBOSE ); // enable FPS logger
 
-    while( gogogo )
-    {
-        gpu.processRenderWindowMessages( false );
+    while( gogogo && gpu.getRenderWindow().runUntilNoNewEvents(false)) {
 
         Input & in = gInput;
 

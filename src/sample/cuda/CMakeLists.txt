@@ -1,0 +1,1 @@
+add_executable(GNsample-cuda main.cu)

@@ -67,9 +67,25 @@ namespace GN { namespace win
         // ********************************
     private:
 
+        class MainWindow : public QWindow {
+            using QWindow::QWindow;
+
+        public:
+
+            bool closing = false;
+
+        protected:
+
+            // always ignore window close event
+            void closeEvent(QCloseEvent * event) override {
+                event->ignore();
+                closing = true;
+            }
+        };
+
         QApplication  * mApp;
         QScreen *       mScreen;
-        QWindow *       mWindow;
+        MainWindow *    mWindow;
 
         // ********************************
         // private functions

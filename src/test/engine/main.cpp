@@ -58,9 +58,7 @@ bool run()
     FpsCalculator fps;
     getLogger("GN.util.fps")->setLevel( Logger::VERBOSE ); // enable FPS logger
 
-    while( gogogo )
-    {
-        getGpu()->processRenderWindowMessages( false );
+    while(gogogo && getGpu()->getRenderWindow().runUntilNoNewEvents( false )) {
 
         Input & in = gInput;
 

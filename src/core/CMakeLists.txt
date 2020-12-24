@@ -87,7 +87,6 @@ target_include_directories(GNcore PUBLIC ${BUILD_HEADER_INC} ../inc)
 target_link_libraries     (GNcore PUBLIC GNextern)
 
 # Qt6
-find_package(Qt6 COMPONENTS Widgets)
 if (Qt6Widgets_FOUND)
     add_core_libs(Qt::Widgets)
     target_compile_definitions(GNcore PRIVATE HAS_QT=1)

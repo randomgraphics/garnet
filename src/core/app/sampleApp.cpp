@@ -1,4 +1,5 @@
 ﻿#include "pch.h"
+#include "garnet/GNwin.h"
 #define SO_ASSERT GN_ASSERT
 #include <SimpleOpt.h>
 
@@ -186,7 +187,7 @@ int GN::util::SampleApp::run( int argc, const char * const argv[] )
 
         // Process Inputs
         GN_START_PROFILER( Input );
-        engine::getGpu()->processRenderWindowMessages( false );
+        if (!engine::getGpu()->getRenderWindow().runUntilNoNewEvents( false )) break;
         gInput.processInputEvents();
         GN_STOP_PROFILER( Input );
 

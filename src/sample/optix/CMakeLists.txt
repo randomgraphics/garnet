@@ -1,0 +1,6 @@
+set(sources main.cpp pch.cpp)
+GN_setup_pch(${sources} PCH_SOURCE pch.cpp)
+add_executable(GNsample-optix ${sources})
+target_include_directories(GNsample-optix PRIVATE $ENV{NVIDIA_OPTIX_INSTALL_ROOT}/include)
+message(CUDA_LIB=${CUDA_LIBRARIES})
+target_link_libraries(GNsample-optix GNcore ${CUDA_LIBRARIES})

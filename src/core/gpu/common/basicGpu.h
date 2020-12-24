@@ -66,10 +66,9 @@ namespace GN { namespace gfx
 
         virtual const GpuOptions & getOptions() const { return mOptions; }
         virtual const DispDesc   & getDispDesc() const { return mDispDesc; }
+        virtual GN::win::Window & getRenderWindow() const {  GN_ASSERT(mWindow); return *mWindow; }
 
     protected:
-
-        GN::win::Window & getRenderWindow() const { GN_ASSERT(mWindow); return *mWindow; }
 
         intptr_t getRenderWindowHandle() const { return mWindow ? mWindow->getWindowHandle() : 0; }
 
@@ -159,7 +158,6 @@ namespace GN { namespace gfx
 
     public:
 
-        virtual void         processRenderWindowMessages( bool blockWhileMinimized ) { mWindow->runUntilNoNewEvents(blockWhileMinimized); }
         virtual GpuSignals & getSignals() { return mSignals; }
         virtual void         getBackBufferContent( BackBufferContent & );
         virtual void         setUserData( const Guid & id, const void * data, uint32 length );
