@@ -8,7 +8,27 @@ using namespace GN;
 
 static auto sLogger = GN::getLogger("GN.test.optix");
 
-#define CUDA_CHECK(x, failed) do { cudaError_t result__ = (x); if (CUDA_SUCCESS != result__) { GN_ERROR(sLogger)("CUDA function failed: (%s) %s", cudaGetErrorName(result__), cudaGetErrorString(result__)); failed; } } while (0)
+const char * getCudaErrorName(CUresult r) {
+    const char * s = nullptr;
+    cuGetErrorName(r, &s);
+    return s ? s : "unknown";
+}
+
+const char * getCudaErrorName(cudaError_t r) {
+    return cudaGetErrorName(r);
+}
+
+const char * getCudaErrorString(CUresult r) {
+    const char * s = nullptr;
+    cuGetErrorString(r, &s);
+    return s ? s : "unknown";
+}
+
+const char * getCudaErrorString(cudaError_t r) {
+    return cudaGetErrorString(r);
+}
+
+#define CUDA_CHECK(x, failed) do { auto result__ = (x); if (CUDA_SUCCESS != result__) { GN_ERROR(sLogger)("CUDA function failed: (%s) %s", getCudaErrorName(result__), getCudaErrorString(result__)); failed; } } while (0)
 #define CUDA_RETURN_FALSE_ON_FAIL(x) CUDA_CHECK(x, return false)
 
 #define OPTIX_CHECK(x, failed) do { OptixResult result__ = (x); if (OPTIX_SUCCESS != result__) { GN_ERROR(sLogger)("OptiX function failed: (%s) %s", optixGetErrorName(result__), optixGetErrorString(result__)); failed; } } while (0)
@@ -75,6 +95,7 @@ public:
 };
 
 int main(int argc, char * argv[]) {
+    GN::enableCRTMemoryCheck();
     OptixSample app;
     return app.run( argc, argv );
 }

@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.16.0) # Qt6 requires 3.16+
+cmake_minimum_required(VERSION 3.17.5) # FindQt6 requires 3.16+, FindCUDAToolkit required 3.17.5
 
 project(garnet LANGUAGES C CXX CUDA)
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/env/cmake)
@@ -121,7 +121,7 @@ find_package(DirectX)
 find_package(Vulkan)
 find_package(X11)
 find_package(Qt6 COMPONENTS Core Widgets)
-find_package(CUDA)
+find_package(CUDAToolkit)
 
 # ===================
 # call subdirectories
