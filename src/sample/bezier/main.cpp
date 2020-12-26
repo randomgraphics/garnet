@@ -416,9 +416,9 @@ class BezierApp : public SampleApp
         const Matrix44f & world = arcball.getRotationMatrix44();
         const Matrix44f & view  = camera.view;
         const Matrix44f & proj  = camera.proj;
-        gpu.drawLines( 0, X, 3*sizeof(float), 2, GN_RGBA32(255,0,0,255), world, view, proj );
-        gpu.drawLines( 0, Y, 3*sizeof(float), 2, GN_RGBA32(0,255,0,255), world, view, proj );
-        gpu.drawLines( 0, Z, 3*sizeof(float), 2, GN_RGBA32(0,0,255,255), world, view, proj );
+        gpu.drawLines( 0, X, 3*sizeof(float), 2, GN_RGBA8(255,0,0,255), world, view, proj );
+        gpu.drawLines( 0, Y, 3*sizeof(float), 2, GN_RGBA8(0,255,0,255), world, view, proj );
+        gpu.drawLines( 0, Z, 3*sizeof(float), 2, GN_RGBA8(0,0,255,255), world, view, proj );
     }
 };
 

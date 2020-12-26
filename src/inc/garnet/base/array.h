@@ -645,6 +645,11 @@ namespace GN
         DynaArray( const T * p, SIZE_TYPE count ) : mElements(0) { doAppend( p, count ); }
 
         ///
+        /// construct from conventional C array
+        ///
+        DynaArray( const T * begin, const T * end ) : mElements(0) { doAppend( begin, end - begin ); }
+
+        ///
         /// copy constructor
         ///
         DynaArray( const DynaArray & other ) : mElements(0) { copyFrom( other ); }

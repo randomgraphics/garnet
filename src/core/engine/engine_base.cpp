@@ -108,8 +108,8 @@ static bool sGfxInitInternal( const GfxInitOptions & o )
     //s_engine.gpu->getSignals().rendererWindowSizeMove.connect( this, &SampleApp::onRenderWindowResize );
 
     // create sprite renderer
-    s_engine.spriteRenderer = new SpriteRenderer( *s_engine.gpu );
-    if( !s_engine.spriteRenderer->init() ) return false;
+    s_engine.spriteRenderer = new SpriteRenderer();
+    if( !s_engine.spriteRenderer->init(*s_engine.gpu) ) return false;
 
     // create line renderer
     s_engine.lineRenderer = new LineRenderer( *s_engine.gpu );

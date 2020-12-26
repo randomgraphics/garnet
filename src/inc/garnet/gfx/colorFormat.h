@@ -57,18 +57,18 @@
 //@}
 
 ///
-/// compose RGBA32 color constant
+/// compose RGBA8 color constant
 ///
-#define GN_RGBA32( r, g, b, a )   \
+#define GN_RGBA8( r, g, b, a )   \
         ( ( ((uint32)(r)&0xFF) <<  0 ) | \
           ( ((uint32)(g)&0xFF) <<  8 ) | \
           ( ((uint32)(b)&0xFF) << 16 ) | \
           ( ((uint32)(a)&0xFF) << 24 ) )
 
 ///
-/// compose BGRA32 color constant
+/// compose BGRA8 color constant
 ///
-#define GN_BGRA32( r, g, b, a )   \
+#define GN_BGRA8( r, g, b, a )   \
         ( ( ((uint32)(b)&0xFF) <<  0 ) | \
           ( ((uint32)(g)&0xFF) <<  8 ) | \
           ( ((uint32)(r)&0xFF) << 16 ) | \
@@ -244,13 +244,13 @@ namespace GN { namespace gfx
             RGBA_8_8_8_8_UNORM          = GN_MAKE_COLOR_FORMAT( LAYOUT_8_8_8_8, SIGN_UNORM, SWIZZLE_RGBA ),
             RGBA_8_8_8_8_UNORM_SRGB     = GN_MAKE_COLOR_FORMAT2( LAYOUT_8_8_8_8, SIGN_UNORM, SIGN_GNORM, SWIZZLE_RGBA ),
             RGBA_8_8_8_8_SNORM          = GN_MAKE_COLOR_FORMAT( LAYOUT_8_8_8_8, SIGN_SNORM, SWIZZLE_RGBA ),
-            RGBA32                      = RGBA_8_8_8_8_UNORM,
+            RGBA8                       = RGBA_8_8_8_8_UNORM,
             UBYTE4N                     = RGBA_8_8_8_8_UNORM,
 
             RGBX_8_8_8_8_UNORM          = GN_MAKE_COLOR_FORMAT( LAYOUT_8_8_8_8, SIGN_UNORM, SWIZZLE_RGB1 ),
 
             BGRA_8_8_8_8_UNORM          = GN_MAKE_COLOR_FORMAT( LAYOUT_8_8_8_8, SIGN_UNORM, SWIZZLE_BGRA ),
-            BGRA32                      = BGRA_8_8_8_8_UNORM,
+            BGRA8                       = BGRA_8_8_8_8_UNORM,
 
             BGRX_8_8_8_8_UNORM          = GN_MAKE_COLOR_FORMAT( LAYOUT_8_8_8_8, SIGN_UNORM, SWIZZLE_BGR1 ),
 

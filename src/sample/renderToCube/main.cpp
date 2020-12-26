@@ -78,7 +78,7 @@ public:
         texdesc.depth = 1;
         texdesc.faces = 6;
         texdesc.levels = 1;
-        texdesc.format = ColorFormat::RGBA32;
+        texdesc.format = ColorFormat::RGBA8;
         texdesc.usage = TextureUsage::COLOR_RENDER_TARGET;
         if( !cubemap->reset( &texdesc ) ) return false;
 

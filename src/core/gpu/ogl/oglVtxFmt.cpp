@@ -256,7 +256,7 @@ bool GN::gfx::OGLVtxFmt::setupStateBindings( const OGLBasicGpuProgram * gpuProgr
                 ab.info.normalization = false;
                 break;
 
-            case ColorFormat::RGBA32 :
+            case ColorFormat::RGBA8 :
                 ab.info.format = GL_UNSIGNED_BYTE;
                 ab.info.components = 4;
                 ab.info.normalization = true;

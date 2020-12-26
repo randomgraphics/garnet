@@ -60,12 +60,14 @@ static const char * hlslpscode=
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::SpriteRenderer::init()
+bool GN::gfx::SpriteRenderer::init(Gpu & gpu)
 {
     GN_GUARD;
 
     // standard init procedure
     GN_STDCLASS_INIT();
+
+    mGpu = &gpu;
 
     enum
     {
@@ -75,13 +77,13 @@ bool GN::gfx::SpriteRenderer::init()
     };
 
     // create a 2x2 pure white texture
-    mPureWhiteTexture.attach( mGpu.create2DTexture( 2, 2, 0, ColorFormat::RGBA32 ) );
+    mPureWhiteTexture.attach( mGpu->create2DTexture( 2, 2, 0, ColorFormat::RGBA8 ) );
     if( !mPureWhiteTexture ) return failure();
     const uint32 PURE_WHITE[] = { 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF } ;
     mPureWhiteTexture->updateMipmap( 0, 0, NULL, sizeof(uint32)*2, sizeof(uint32)*4, &PURE_WHITE );
 
     // create GPU program
-    const GpuCaps & caps = mGpu.caps();
+    const GpuCaps & caps = mGpu->caps();
     GpuProgramDesc gpd;
     if( caps.shaderModels & ShaderModel::GLSL_1_00 )
     {
@@ -90,7 +92,7 @@ bool GN::gfx::SpriteRenderer::init()
         gpd.vs.source = glslvscode;
         gpd.ps.source = glslpscode;
 
-        mGpuProgram.attach( mGpu.createGpuProgram( gpd ) );
+        mGpuProgram.attach( mGpu->createGpuProgram( gpd ) );
         if( !mGpuProgram ) return failure();
 
         mVertexBinding.resize( 3 );
@@ -100,7 +102,7 @@ bool GN::gfx::SpriteRenderer::init()
         mVertexBinding[0].attribute = mGpuProgram->getParameterDesc().attributes["gl_Vertex"];
         mVertexBinding[1].stream    = 0;
         mVertexBinding[1].offset    = GN_FIELD_OFFSET( SpriteVertex, clr );
-        mVertexBinding[1].format    = ColorFormat::RGBA32;
+        mVertexBinding[1].format    = ColorFormat::RGBA8;
         mVertexBinding[1].attribute = mGpuProgram->getParameterDesc().attributes["gl_Color"];
         mVertexBinding[2].stream    = 0;
         mVertexBinding[2].offset    = GN_FIELD_OFFSET( SpriteVertex, tex );
@@ -116,7 +118,7 @@ bool GN::gfx::SpriteRenderer::init()
         gpd.ps.source = hlslpscode;
         gpd.ps.entry = "main";
 
-        mGpuProgram.attach( mGpu.createGpuProgram( gpd ) );
+        mGpuProgram.attach( mGpu->createGpuProgram( gpd ) );
         if( !mGpuProgram ) return failure();
 
         mVertexBinding.resize( 3 );
@@ -126,7 +128,7 @@ bool GN::gfx::SpriteRenderer::init()
         mVertexBinding[0].attribute = mGpuProgram->getParameterDesc().attributes["POSITION0"];
         mVertexBinding[1].stream    = 0;
         mVertexBinding[1].offset    = GN_FIELD_OFFSET( SpriteVertex, clr );
-        mVertexBinding[1].format    = ColorFormat::RGBA32;
+        mVertexBinding[1].format    = ColorFormat::RGBA8;
         mVertexBinding[1].attribute = mGpuProgram->getParameterDesc().attributes["COLOR0"];
         mVertexBinding[2].stream    = 0;
         mVertexBinding[2].offset    = GN_FIELD_OFFSET( SpriteVertex, tex );
@@ -140,11 +142,11 @@ bool GN::gfx::SpriteRenderer::init()
     }
 
     // create vertex buffer
-    mVertexBuffer.attach( mGpu.createVtxBuf( VTXBUF_SIZE, true ) );
+    mVertexBuffer.attach( mGpu->createVtxBuf( VTXBUF_SIZE, true ) );
     if( !mVertexBuffer ) return failure();
 
     // create index buffer
-    mIndexBuffer.attach( mGpu.createIdxBuf16( MAX_INDICES, false ) );
+    mIndexBuffer.attach( mGpu->createIdxBuf16( MAX_INDICES, false ) );
     if( !mIndexBuffer ) return failure();
     DynaArray<uint16> indices( MAX_INDICES );
     for( uint16 i = 0; i < MAX_SPRITES; ++i )
@@ -213,8 +215,8 @@ void GN::gfx::SpriteRenderer::drawBegin( Texture * texture, uint32 options )
     if( NULL == texture ) texture = mPureWhiteTexture;
 
     // copy render targets from current context
-    mContext.colortargets = mGpu.getContext().colortargets;
-    mContext.depthstencil = mGpu.getContext().depthstencil;
+    mContext.colortargets = mGpu->getContext().colortargets;
+    mContext.depthstencil = mGpu->getContext().depthstencil;
 
     // setup parameters that are not affected by options
     mContext.textures[0].texture.set( texture );
@@ -317,9 +319,9 @@ void GN::gfx::SpriteRenderer::drawEnd()
             mNextPendingSprite,
             mSprites == mNextPendingSprite ? SurfaceUpdateFlag::DISCARD : SurfaceUpdateFlag::NO_OVERWRITE );
 
-        mGpu.bindContext( mContext );
+        mGpu->bindContext( mContext );
 
-        mGpu.drawIndexed(
+        mGpu->drawIndexed(
             PrimitiveType::TRIANGLE_LIST,
             (uint32)(numPendingSprites * 6),        // numidx
             (uint32)(firstPendingSpriteOffset * 4), // basevtx,
@@ -364,7 +366,7 @@ GN::gfx::SpriteRenderer::drawTextured(
 
     // get screen size based on current context
     uint32 screenWidth, screenHeight;
-    mGpu.getCurrentRenderTargetSize( &screenWidth, &screenHeight );
+    mGpu->getCurrentRenderTargetSize( &screenWidth, &screenHeight );
 
     float x1 = ( x + mVertexShift ) / screenWidth;
     float y1 = ( y + mVertexShift ) / screenHeight;
@@ -422,7 +424,7 @@ GN::gfx::SpriteRenderer::drawSolid(
 
     // get screen size based on current context
     uint32 screenWidth, screenHeight;
-    mGpu.getCurrentRenderTargetSize( &screenWidth, &screenHeight );
+    mGpu->getCurrentRenderTargetSize( &screenWidth, &screenHeight );
 
     float x1 = x / screenWidth;
     float y1 = y / screenHeight;

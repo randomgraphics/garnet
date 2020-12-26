@@ -345,6 +345,11 @@
 #define GN_NO_MOVE(x) x(x&&) = delete; x & operator=(x&&) = delete
 
 ///
+/// Define default copy methods
+///
+#define GN_DEFAULT_COPY(x) x(const x&) = default; x & operator=(const x&) = default
+
+///
 /// Define default move methods
 ///
 #define GN_DEFAULT_MOVE(x) x(x&&) = default; x & operator=(x&&) = default

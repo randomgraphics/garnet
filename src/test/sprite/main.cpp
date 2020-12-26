@@ -11,8 +11,8 @@ AutoRef<Texture> tex;
 bool init( Gpu & gpu )
 {
     // create sprite renderer
-    sr = new SpriteRenderer( gpu );
-    if( !sr->init() ) return false;
+    sr = new SpriteRenderer();
+    if( !sr->init(gpu) ) return false;
 
     // create texture
     tex.attach( loadTextureFromFile( gpu, "media::texture\\rabit.png" ) );

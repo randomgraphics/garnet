@@ -197,7 +197,7 @@ void GN::gfx::BitmapFont::drawText( const TextDesc & td )
     if( td.background )
     {
         mSpriteRenderer->drawSingleSolidSprite(
-            GN_RGBA32( 0, 0, 0, 128 ),
+            GN_RGBA8( 0, 0, 0, 128 ),
             SpriteRenderer::TRANSPARENT_2D_IMAGE,
             bbox.x,
             bbox.y,

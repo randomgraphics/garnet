@@ -108,7 +108,7 @@ namespace GN { namespace gfx
     {
         uint32             rowPitch;
         uint32             slicePitch;
-        DynaArray<uint8> data;
+        DynaArray<uint8_t> data;
     };
 
     ///
@@ -226,12 +226,6 @@ namespace GN { namespace gfx
         /// read mipmap content.
         ///
         virtual void readMipmap( uint32 face, uint32 level, MipmapData & data ) = 0;
-
-        /// read/write the whole texture as a BLOB.
-        //@{
-        virtual void   blobWrite( const void * data, uint32 length ) = 0;
-        virtual uint32 blobRead( void * data ) = 0;
-        //@}
 
         ///
         /// generate content of all mipmap levels based on content in base level

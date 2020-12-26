@@ -24,8 +24,8 @@ bool initTTF()
 bool init( Gpu & gpu )
 {
     // create sprite renderer
-    sr = new SpriteRenderer( gpu );
-    if( !sr->init() ) return false;
+    sr = new SpriteRenderer();
+    if( !sr->init(gpu) ) return false;
 
     // initialize ascii font
     AutoRef<FontFace> ff = referenceTo( createSimpleAsciiFontFace() );

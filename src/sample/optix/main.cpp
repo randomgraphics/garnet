@@ -29,6 +29,7 @@ const char * getCudaErrorString(cudaError_t r) {
 }
 
 #define CUDA_CHECK(x, failed) do { auto result__ = (x); if (CUDA_SUCCESS != result__) { GN_ERROR(sLogger)("CUDA function failed: (%s) %s", getCudaErrorName(result__), getCudaErrorString(result__)); failed; } } while (0)
+#define CUDA_RETURN_ON_FAIL(x) CUDA_CHECK(x, return)
 #define CUDA_RETURN_FALSE_ON_FAIL(x) CUDA_CHECK(x, return false)
 
 #define OPTIX_CHECK(x, failed) do { OptixResult result__ = (x); if (OPTIX_SUCCESS != result__) { GN_ERROR(sLogger)("OptiX function failed: (%s) %s", optixGetErrorName(result__), optixGetErrorString(result__)); failed; } } while (0)
@@ -36,6 +37,9 @@ const char * getCudaErrorString(cudaError_t r) {
 #define OPTIX_RETURN_FALSE_ON_FAIL(x) OPTIX_CHECK(x, return false)
 
 class OptixSample : public GN::util::SampleApp {
+
+    gfx::SpriteRenderer _sprite;
+    AutoRef<gfx::Texture> _texture;
 
     OptixDeviceContext _context = 0;
 
@@ -56,9 +60,12 @@ public:
 
     bool onInit()
     {
-        // auto & g = *engine::getGpu();
-        // uint32 width = g.getDispDesc().width;
-        // uint32 height = g.getDispDesc().height;
+        // create graphics tuff
+        auto g = engine::getGpu();
+        if (!_sprite.init(*g)) return false;
+        auto w = g->getDispDesc().width;
+        auto h = g->getDispDesc().height;
+        _texture = g->create2DTexture(w, h, 1, gfx::ColorFormat::RGBA8);
 
         // Initialize CUDA
         CUDA_RETURN_FALSE_ON_FAIL(cudaFree(0));
@@ -70,6 +77,8 @@ public:
         options.logCallbackLevel          = 4;
         OPTIX_RETURN_FALSE_ON_FAIL(optixDeviceContextCreate(0, &options, &_context));
 
+        // create a output buffer
+
         // done
         return true;
     }
@@ -79,6 +88,8 @@ public:
             optixDeviceContextDestroy(_context);
             _context = 0;
         }
+        _texture.clear();
+        _sprite.quit();
     }
 
     void onKeyPress(input::KeyEvent key) {
@@ -91,6 +102,8 @@ public:
     void onRender() {
         auto g = engine::getGpu();
         g->clearScreen();
+        //OPTIX_RETURN_ON_FAIL(optixLaunch( pipeline, stream, d_param, sizeof( Params ), &sbt, width, height, /*depth=*/1 ));
+        //CUDA_RETURN_ON_FAIL(cudaDeviceSynchronize());
     }
 };
 

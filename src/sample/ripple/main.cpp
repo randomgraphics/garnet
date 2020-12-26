@@ -30,8 +30,8 @@ public:
     {
         Gpu & gpu = *engine::getGpu();
 
-        mSprite = new SpriteRenderer(gpu);
-        if( !mSprite->init() ) return false;
+        mSprite = new SpriteRenderer();
+        if( !mSprite->init(gpu) ) return false;
 
         const char * rippleCode =
             "struct VSIO                                                                  \n"

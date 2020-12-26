@@ -31,7 +31,6 @@ public:
 
     RenderToTexture( GpuResourceDatabase & db_ )
         : db(db_)
-        , sr(db_.getGpu())
         , model(db_)
     {
     }
@@ -43,13 +42,13 @@ public:
 
     bool init()
     {
-        // create sprite renderer
-        if( !sr.init() ) return false;
-
         Gpu & gpu = db.getGpu();
 
+        // create sprite renderer
+        if( !sr.init(gpu) ) return false;
+
         // create render targets
-        c0.attach( gpu.create2DTexture( (uint32)RT_WIDTH, (uint32)RT_HEIGHT, 1, ColorFormat::RGBA32, TextureUsage::COLOR_RENDER_TARGET ) );
+        c0.attach( gpu.create2DTexture( (uint32)RT_WIDTH, (uint32)RT_HEIGHT, 1, ColorFormat::RGBA8, TextureUsage::COLOR_RENDER_TARGET ) );
         if( !c0 )
         {
             GN_ERROR(sLogger)( "Current graphics hardware does not support render-to-texture at all." );

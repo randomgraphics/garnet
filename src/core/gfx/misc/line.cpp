@@ -68,7 +68,7 @@ bool GN::gfx::LineRenderer::init()
     mContext.vtxbind[0].format = ColorFormat::FLOAT3;
     mContext.vtxbind[1].stream = 0;
     mContext.vtxbind[1].offset = GN_FIELD_OFFSET( LineVertex, colorInRGBA );
-    mContext.vtxbind[1].format = ColorFormat::RGBA32;
+    mContext.vtxbind[1].format = ColorFormat::RGBA8;
     mContext.vtxbind[2].stream = 0;
     mContext.vtxbind[2].offset = GN_FIELD_OFFSET( LineVertex, transform );
     mContext.vtxbind[2].format = ColorFormat::FLOAT4;
@@ -405,7 +405,7 @@ bool GN::gfx::ThickLineRenderer::init( Gpu & g )
     mContext.vtxbind[0].format = ColorFormat::FLOAT4;
     mContext.vtxbind[1].stream = 0;
     mContext.vtxbind[1].offset = 16;
-    mContext.vtxbind[1].format = ColorFormat::RGBA32;
+    mContext.vtxbind[1].format = ColorFormat::RGBA8;
     mContext.vtxbind[2].stream = 0;
     mContext.vtxbind[2].offset = 20;
     mContext.vtxbind[2].format = ColorFormat::FLOAT2;

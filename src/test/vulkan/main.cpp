@@ -34,9 +34,6 @@ StrA VkResultToString(VkResult error)
         std::make_pair(VK_ERROR_INCOMPATIBLE_DISPLAY_KHR, "VK_ERROR_INCOMPATIBLE_DISPLAY_KHR"),
         std::make_pair(VK_ERROR_VALIDATION_FAILED_EXT, "VK_ERROR_VALIDATION_FAILED_EXT"),
         std::make_pair(VK_ERROR_INVALID_SHADER_NV, "VK_ERROR_INVALID_SHADER_NV"),
-        std::make_pair(VK_RESULT_BEGIN_RANGE, "VK_RESULT_BEGIN_RANGE"),
-        std::make_pair(VK_RESULT_END_RANGE, "VK_RESULT_END_RANGE"),
-        std::make_pair(VK_RESULT_RANGE_SIZE, "VK_RESULT_RANGE_SIZE"),
     };
 
     auto iter = table.find(error);

@@ -274,9 +274,9 @@ namespace GN { namespace gfx
                 CompactDesc cd;
 
     ///
-    /// compose BGRA32 color constant
+    /// compose RGBA8 color constant
     ///
-#define GN_RGBA32_FROM_FLOAT4( r, g, b, a )   \
+#define GN_RGBA8_FROM_FLOAT4( r, g, b, a )   \
             ( ( (((uint32)(r*255.0f))&0xFF) <<  0 ) | \
               ( (((uint32)(g*255.0f))&0xFF) <<  8 ) | \
               ( (((uint32)(b*255.0f))&0xFF) << 16 ) | \
@@ -289,7 +289,7 @@ namespace GN { namespace gfx
                 cd.lodbias     = (uint64)desc.MipLODBias;
                 cd.maxaniso    = (uint64)desc.MaxAnisotropy;
                 cd.compare     = desc.ComparisonFunc;
-                cd.bordercolor = GN_RGBA32_FROM_FLOAT4( desc.BorderColor[0],
+                cd.bordercolor = GN_RGBA8_FROM_FLOAT4( desc.BorderColor[0],
                                                         desc.BorderColor[1],
                                                         desc.BorderColor[2],
                                                         desc.BorderColor[3] );
