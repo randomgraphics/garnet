@@ -38,8 +38,7 @@ const char * getCudaErrorString(cudaError_t r) {
 
 class OptixSample : public GN::util::SampleApp {
 
-    gfx::SpriteRenderer _sprite;
-    AutoRef<gfx::Texture> _texture;
+    AutoRef<gfx::TextureResource> _texture;
 
     OptixDeviceContext _context = 0;
 
@@ -53,19 +52,18 @@ public:
 
     OptixSample() {}
 
-    bool onPreInit( InitParam & )
+    bool onPreInit( InitParam & ip )
     {
+        ip.useMultithreadGpu = false;
+        ip.ro.api = GN::gfx::GpuAPI::OGL;
         return true;
     }
 
     bool onInit()
     {
         // create graphics tuff
-        auto g = engine::getGpu();
-        if (!_sprite.init(*g)) return false;
-        auto w = g->getDispDesc().width;
-        auto h = g->getDispDesc().height;
-        _texture = g->create2DTexture(gfx::ColorFormat::RGBA8, w, h);
+        _texture = GN::gfx::TextureResource::loadFromFile(*engine::getGdb(), "media::/texture/rockwall.jpg");
+        if (!_texture) return false;
 
         // Initialize CUDA
         CUDA_RETURN_FALSE_ON_FAIL(cudaFree(0));
@@ -89,7 +87,6 @@ public:
             _context = 0;
         }
         _texture.clear();
-        _sprite.quit();
     }
 
     void onKeyPress(input::KeyEvent key) {
@@ -102,6 +99,10 @@ public:
     void onRender() {
         auto g = engine::getGpu();
         g->clearScreen();
+        auto w = g->getOptions().displayMode.width;
+        auto h = g->getOptions().displayMode.height;
+        auto sr = engine::getSpriteRenderer();
+        sr->drawSingleTexturedSprite(_texture->texture(), GN::gfx::SpriteRenderer::SOLID_2D_IMAGE, .0f, .0f, (float)w, (float)h);
         //OPTIX_RETURN_ON_FAIL(optixLaunch( pipeline, stream, d_param, sizeof( Params ), &sbt, width, height, /*depth=*/1 ));
         //CUDA_RETURN_ON_FAIL(cudaDeviceSynchronize());
     }

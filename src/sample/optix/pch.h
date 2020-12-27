@@ -6,7 +6,7 @@
 // \author  chenlee (2005.10.1)
 // *****************************************************************************
 
-#include "garnet/GNinput.h"
+#include "garnet/GNengine.h"
 #include <garnet/GNutil.h>
 #include <cli/CLI.hpp>
 

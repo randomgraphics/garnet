@@ -66,8 +66,11 @@ namespace GN { namespace gfx
             FORCE_DEPTH_WRITE_ENABLED     = 0x00001000, ///< Always enable depth write, disregarding value in current renderer context.
             FORCE_DEPTH_WRITE_DISABLED    = 0x00002000, ///< Always disable depth write, disregarding value in current renderer context.
 
-            // A commonly used set of options that are usually used to render transparent 2D picture with alpha channel.
+            /// A commonly used set of options that are usually used to render transparent 2D picture with alpha channel.
             TRANSPARENT_2D_IMAGE          = FORCE_ALPHA_BLENDING_ENABLED | FORCE_DEPTH_TEST_DISABLED | FORCE_DEPTH_WRITE_DISABLED,
+
+            /// A commonly used set of options to render opaque sprite
+            SOLID_2D_IMAGE                = FORCE_DEPTH_TEST_DISABLED | FORCE_DEPTH_WRITE_DISABLED,
         };
 
         /// get underline renderer
@@ -79,6 +82,9 @@ namespace GN { namespace gfx
         void drawBegin( Texture * texture, uint32 options );
         void drawEnd();
 
+        ///
+        /// By default, x/y/w/h are in screen space. (0,0) is upper left corner of the screen.
+        ///
         void drawTextured(
             float x,
             float y,
@@ -91,7 +97,7 @@ namespace GN { namespace gfx
             float z  = 0.0f );
 
         ///
-        /// Note that [0,0] is upper left corner of the screen.
+        /// By default, x/y/w/h are in screen space. (0,0) is upper left corner of the screen.
         ///
         void drawSolid(
             uint32 rgba,
@@ -108,7 +114,7 @@ namespace GN { namespace gfx
 
         void drawSingleTexturedSprite(
             Texture * tex,
-            uint32 options,
+            uint32_t  options,
             float     x,
             float     y,
             float     w,
@@ -125,8 +131,8 @@ namespace GN { namespace gfx
         }
 
         void drawSingleSolidSprite(
-            uint32    rgba, // color in R-G-B-A format
-            uint32 options,
+            uint32_t  rgba, // color in R-G-B-A format
+            uint32_t  options,
             float     x,
             float     y,
             float     w,

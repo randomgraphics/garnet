@@ -254,15 +254,11 @@ GN::gfx::RawImage GN::gfx::RawImage::load(File & fp) {
     };
 
     // Load from common image file via stb_image library
-    // TODO: hdr support
+    // TODO: hdr/grayscale support
     int x,y,n;
-    auto data = stbi_load_from_callbacks(&io, &fp, &x, &y, &n, 0);
+    auto data = stbi_load_from_callbacks(&io, &fp, &x, &y, &n, 4);
     if (data) {
-        ColorFormat format = (1 == n) ? ColorFormat::R_8_UNORM
-                           : (2 == n) ? ColorFormat::RG_8_8_UNORM
-                           : (3 == n) ? ColorFormat::RGB_8_8_8_UNORM
-                           : ColorFormat::RGBA_8_8_8_8_UNORM;
-        auto image = RawImage(ImageDesc(ImagePlaneDesc::make(format, (uint32_t)x, (uint32_t)y)), data);
+        auto image = RawImage(ImageDesc(ImagePlaneDesc::make(ColorFormat::RGBA_8_8_8_8_UNORM, (uint32_t)x, (uint32_t)y)), data);
         GN_ASSERT(image.desc().valid());
         stbi_image_free(data);
         return image;

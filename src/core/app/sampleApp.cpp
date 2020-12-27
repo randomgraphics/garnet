@@ -426,8 +426,8 @@ bool GN::util::SampleApp::checkCmdLine( int argc, const char * const argv[] )
     mInitParam.asciiFont.width = 16;
     mInitParam.asciiFont.height = 16;
     mInitParam.asciiFont.quality = FontFaceDesc::ANTIALIASED;
-    mInitParam.ro.displayMode.width = 800;
-    mInitParam.ro.displayMode.height = 600;
+    mInitParam.ro.displayMode.width = 1600;
+    mInitParam.ro.displayMode.height = 900;
 
     DynaArray<const char*> unknownArgs;
 
