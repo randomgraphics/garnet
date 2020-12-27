@@ -8,227 +8,227 @@
 
 namespace GN { namespace gfx
 {
-    ///
-    /// mipmap descriptor
-    ///
-    /// \note
-    /// - for 2D and cube texture, depth is always 1
-    /// - slicePitch 和 levelPitch 可以通过mipmap的其他参数计算出来。
-    ///   这里列出这两个值仅仅是为了避免重复计算，方便使用。
-    ///
-    struct MipmapDesc
-    {
-        uint32 width,  ///< mipmap width in pixel
-               height, ///< mipmap height in pixel
-               depth;  ///< mipmap depth in pixel
+    /// This represents a single 1D/2D/3D image in an more complex image structure.
+    // Note: avoid using size_t in this structure. So the size of the structure will never change, regardless of compile platform.
+    struct GN_API ImagePlaneDesc {
+        
+        /// pixel format
+        ColorFormat format = ColorFormat::UNKNOWN;
 
-        ///
-        /// bytes of one row of texel. For DXT compressed texture, this
-        /// is 1/4 of bytes of one "block row"
-        ///
-        uint32 rowPitch;
+        /// Plane width in pixels
+        uint32_t width = 0;
+        
+        /// Plane height in pixels
+        uint32_t height = 0;
+        
+        /// Plane depth in pixels
+        uint32_t depth = 0;
 
-        ///
-        /// bytes of one slice. Must be equal or larger than rowPitch * height
-        ///
-        uint32 slicePitch;
+        /// bits (not BYTES) from one pixel to next. Minimal valid value is pixel size.
+        uint32_t step = 0;
 
-        ///
-        /// total bytes of this mip level. Must be equal or larger than slicePitch * depth.
-        ///
-        uint32 levelPitch;
+        /// Bytes from one row to next. Minimal valid value is (width * step) and aligned to alignment.
+        uint32_t pitch = 0;
+
+        /// Bytes from one slice to next. Minimal valid value is (pitch * height)
+        uint32_t slice = 0;
+
+        /// Bytes of the whole plane. Minimal valid value is (slice * depth)
+        uint32_t size = 0;
+
+        /// Bytes between first pixel of the plane to the first pixel of the whole image.
+        uint32_t offset = 0;
+
+        /// row alignment
+        uint32_t rowAlignment = 0;
+
+        /// returns offset of particular pixel within the plane
+        size_t pixel(size_t x, size_t y, size_t z = 0) const {
+            GN_ASSERT(x < width && y < height && z < depth);
+            size_t r = z * slice + y * pitch + x * step / 8;
+            GN_ASSERT(r < size);
+            return r + offset;
+        }
+
+        /// check if this is a valid image plane descriptor. Note that valid descriptor is never empty.
+        bool valid() const;
+
+        /// check if this is an empty descriptor. Note that empty descriptor is never valid.
+        bool empty() const { return ColorFormat::UNKNOWN == format; }
+
+        /// Create a new image plane descriptor
+        static ImagePlaneDesc make(ColorFormat format, size_t width, size_t height = 1, size_t depth = 1, size_t step = 0, size_t pitch = 0, size_t slice = 0, size_t alignment = 4);
     };
 
     ///
-    /// Image type
+    /// Represent a complex image with optional mipmap chain
     ///
-    enum ImageType
-    {
-        IMAGE_1D,        ///< 1D image
-        IMAGE_2D,        ///< 2D image
-        IMAGE_3D,        ///< 3D image
-        IMAGE_CUBE,      ///< cube image
-        NUM_IMAGE_TYPES, ///< number of image types.
-        IMAGE_UNKNOWN,   ///< unknown image type
-    };
+    struct GN_API ImageDesc {
 
-    ///
-    /// image descriptor
-    ///
-    struct GN_API ImageDesc
-    {
         // ****************************
         /// \name member data
         // ****************************
 
         //@{
 
-        ColorFormat  format;    ///< color format
-        uint32       numFaces;  ///< number of image faces. 6 for cubemaps, 1 for others
-        uint32       numLevels; ///< number of avaliable mipmaps
-        MipmapDesc * mipmaps;   ///< mipmap array, face major. Mip data of face n, mips m is : mip[f*numLevels+m]
+        DynaArray<ImagePlaneDesc> planes; ///< length of array = layers * mips;
+        uint32_t layers = 0; ///< number of layers
+        uint32_t levels = 0; ///< number of mipmap levels
+        uint32_t size = 0;   ///< total size in bytes;
 
         //@}
 
         // ****************************
-        /// \name ctor / dtor
+        /// \name ctor/dtor/copy/move
         // ****************************
 
         //@{
 
-        ImageDesc() : mipmaps(0) {}
-        ~ImageDesc() { safeHeapDealloc( mipmaps ); }
+        ImageDesc() = default;
+
+        ///
+        /// Construct image descriptor from basemap and layer/level count. If anything goes wrong, constructs an empty image descriptor.
+        ///
+        /// \param basemap the base image
+        /// \param layers number of layers. must be positive integer
+        /// \param levels number of mipmap levels. set to 0 to automatically build full mipmap chain.
+        /// 
+        ImageDesc(const ImagePlaneDesc & basemap, size_t layers = 1, size_t levels = 1) { reset(basemap, (uint32_t)layers, (uint32_t)levels); }
+
+        // can copy. can move.
+        GN_DEFAULT_COPY(ImageDesc);
+        GN_DEFAULT_MOVE(ImageDesc);
 
         //@}
 
         // ****************************
-        /// \name copy operation
-        // ****************************
-
-        //@{
-
-        ImageDesc( const ImageDesc & d )
-            : format( d.format )
-            , numFaces( d.numFaces )
-            , numLevels( d.numLevels )
-            , mipmaps( 0 )
-        {
-            if( d.mipmaps != 0 )
-            {
-                setFaceAndLevel( numFaces, numLevels );
-                uint32 mipCount = numFaces * numLevels;
-                memcpy( mipmaps, d.mipmaps, sizeof(MipmapDesc)*mipCount );
-            }
-        }
-
-        ImageDesc & operator=( const ImageDesc & rhs )
-        {
-            format = rhs.format;
-            numFaces = rhs.numFaces;
-            numLevels = rhs.numLevels;
-            if( rhs.mipmaps != 0 )
-            {
-                setFaceAndLevel( numFaces, numLevels );
-                uint32 mipCount = numFaces * numLevels;
-                memcpy( mipmaps, rhs.mipmaps, sizeof(MipmapDesc)*mipCount );
-            }
-            return *this;
-        }
-
-        //@}
-
-        // ****************************
-        /// \name member functions
+        /// \name public methods
         // ****************************
 
         //@{
 
         ///
-        /// make sure an meaningfull image descriptor
+        /// check if the image is empty or not
+        ///
+        bool empty() const { return planes.empty(); }
+
+        ///
+        /// make sure this is a meaningfull image descriptor
         ///
         bool valid() const;
 
-        ///
-        /// set image face count and level count, allocate mipmap array as well.
-        ///
-        inline bool setFaceAndLevel( uint32 faces, uint32 levels );
-
-        ///
-        /// return descriptor of specific mipmap
-        ///
-        inline MipmapDesc & getMipmap( uint32 face, uint32 level );
-
-        ///
-        /// return descriptor of specific mipmap
-        ///
-        inline const MipmapDesc & getMipmap( uint32 face, uint32 level ) const;
-
-        ///
-        /// Get image type
-        ///
-        inline ImageType getImageType() const;
-
-        ///
-        /// total bytes of the whole image
-        ///
-        inline uint32 getTotalBytes() const;
-
-        ///
-        /// bytes of one mip level
-        ///
-        inline uint32 getLevelBytes( uint32 level ) const;
-
-        ///
-        /// bytes per face
-        ///
-        inline uint32 getFaceBytes() const;
-
-        ///
-        /// offset of specific pixel
-        ///
-        inline uint32 getPixelOffset( uint32 face, uint32 level, uint32 x, uint32 y, uint32 z ) const;
-
-        ///
-        /// offset of specific scanline
-        ///
-        inline uint32 getScanlineOffset( uint32 face, uint32 level, uint32 y, uint32 z ) const;
-
-        ///
-        /// offset of specific slice
-        ///
-        inline uint32 getSliceOffset( uint32 face, uint32 level, uint32 z ) const;
-
-        ///
-        /// offset of specific mip level
-        ///
-        inline uint32 getMipmapOffset( uint32 face, uint32 level ) const;
-
-        ///
-        /// offset of specific face
-        ///
-        inline uint32 getFaceOffset( uint32 face ) const;
-
+        /// methods to return properties of the specific plane.
+        //@{
+        const ImagePlaneDesc & plane (size_t layer = 0, size_t level = 0) const { return planes[index(layer, level)]; }
+        ImagePlaneDesc       & plane (size_t layer = 0, size_t level = 0)       { return planes[index(layer, level)]; }
+        ColorFormat            format(size_t layer = 0, size_t level = 0) const { return planes[index(layer, level)].format; }
+        uint32_t               width (size_t layer = 0, size_t level = 0) const { return planes[index(layer, level)].width; }
+        uint32_t               height(size_t layer = 0, size_t level = 0) const { return planes[index(layer, level)].height; }
+        uint32_t               depth (size_t layer = 0, size_t level = 0) const { return planes[index(layer, level)].depth; }
+        uint32_t               step  (size_t layer = 0, size_t level = 0) const { return planes[index(layer, level)].step; }
+        uint32_t               pitch (size_t layer = 0, size_t level = 0) const { return planes[index(layer, level)].pitch; }
+        uint32_t               slice (size_t layer = 0, size_t level = 0) const { return planes[index(layer, level)].slice; }
         //@}
-    };
 
-    ///
-    /// image reader
-    ///
-    class GN_API ImageReader
-    {
-    public:
-        ImageReader();                  ///< constructor
-        ~ImageReader();                 ///< destructor
-        bool reset( File & );           ///< reset image reader
-        bool readHeader( ImageDesc & ); ///< read image header
-        bool readImage( void * data );  ///< read image content
+        ///
+        /// returns offset of particular pixel
+        ///
+        size_t pixel(size_t layer, size_t level, size_t x = 0, size_t y = 0, size_t z = 0) const {
+            const auto & d = planes[index(layer, level)];
+            auto r = d.pixel(x, y, z);
+            GN_ASSERT(r < size);
+            return r;
+        }
+
+        // void vertFlipInpace(void * pixels, size_t sizeInBytes);
 
     private:
-        class Impl;
-        Impl * mImpl;
+
+        /// return plane index
+        size_t index(size_t layer, size_t level) const {
+            GN_ASSERT(layer < layers);
+            GN_ASSERT(level < levels);
+            return (level * layers) + layer;
+        }
+
+        /// reset the descriptor
+        void reset(const ImagePlaneDesc & basemap, uint32_t layers, uint32_t levels);
     };
 
     ///
-    /// load image from file
+    /// A basic image class
     ///
-    inline bool
-    loadImageFromFile( ImageDesc & desc, DynaArray<uint8> & data, const char * filename )
-    {
-        AutoObjPtr<File> fp( fs::openFile( filename, "rb" ) );
-        if( NULL == fp ) return false;
+    class GN_API RawImage {
 
-        ImageReader ir;
-        if( !ir.reset( *fp ) ) return false;
+    public:
 
-        if( !ir.readHeader( desc ) ) return false;
+        /// \name ctor/dtor/copy/move
+        //@{
+        RawImage() = default;
+        RawImage(ImageDesc&& desc, const void * initialContent = nullptr, size_t initialContentSizeInbytes = 0);
+        GN_NO_COPY(RawImage);
+        GN_DEFAULT_MOVE(RawImage);
+        //@}
 
-        data.resize( desc.getTotalBytes() );
+        /// \name basic property query
+        //@{
 
-        return ir.readImage( &data[0] );
-    }
+        /// return descriptor of the whole image
+        const ImageDesc& desc() const { return mDesc; }
+
+        /// return descriptor of a image plane
+        const ImagePlaneDesc & desc(size_t layer, size_t level) const { return mDesc.plane(layer, level); }
+
+        /// return pointer to pixel buffer.
+        const uint8_t* data() const { return mPixels; }
+
+        /// return pointer to pixel buffer.
+        uint8_t* data() { return mPixels; }
+
+        /// return size of the whole image in bytes.
+        uint32_t size() const { return mDesc.size; }
+
+        /// check if the image is empty or not.
+        bool empty() const { return mDesc.empty(); }
+
+        //@}
+
+        /// \name query properties of the specific plane.
+        //@{
+        ColorFormat format(size_t layer = 0, size_t level = 0) const { return mDesc.plane(layer, level).format; }
+        uint32_t    width (size_t layer = 0, size_t level = 0) const { return mDesc.plane(layer, level).width; }
+        uint32_t    height(size_t layer = 0, size_t level = 0) const { return mDesc.plane(layer, level).height; }
+        uint32_t    depth (size_t layer = 0, size_t level = 0) const { return mDesc.plane(layer, level).depth; }
+        uint32_t    step  (size_t layer = 0, size_t level = 0) const { return mDesc.plane(layer, level).step; }
+        uint32_t    pitch (size_t layer = 0, size_t level = 0) const { return mDesc.plane(layer, level).pitch; }
+        uint32_t    slice (size_t layer = 0, size_t level = 0) const { return mDesc.plane(layer, level).slice; }
+        //@}
+
+        /// \name methods to return pointer to particular pixel
+        //@{
+        const uint8_t* pixel(size_t layer, size_t level, size_t x = 0, size_t y = 0, size_t z = 0) const { return mPixels + mDesc.pixel(layer, level, x, y, z); }
+        uint8_t*       pixel(size_t layer, size_t level, size_t x = 0, size_t y = 0, size_t z = 0)       { return mPixels + mDesc.pixel(layer, level, x, y, z); }
+        //@}
+
+        /// \name load & save
+        //@{
+        static RawImage load(File &);
+        static RawImage load(const StrA & filename) {
+            AutoObjPtr<File> fp(GN::fs::openFile(filename, "rb"));
+            if (fp.empty()) return {};
+            return load(*fp);
+        }
+        //@}
+
+    private:
+
+        uint8_t * mPixels = nullptr;
+        
+        ImageDesc mDesc;
+    };
 }}
 
-#include "image.inl"
+// #include "image.inl"
 
 // *****************************************************************************
 //                                     EOF

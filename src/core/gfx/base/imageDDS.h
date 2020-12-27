@@ -50,6 +50,7 @@ GN_CASSERT( sizeof(DDSFileHeader) == 124 );
 ///
 class DDSReader
 {
+    GN::File *         mFile;
     DDSFileHeader      mHeader;
     GN::gfx::ImageDesc mImgDesc;
 
@@ -59,8 +60,6 @@ class DDSReader
         FC_BGRX8888_TO_RGBA8888,
     };
 
-    const uint8 *        mSrc;
-    size_t               mSize;
     GN::gfx::ColorFormat mOriginalFormat;
     FormatConversion     mFormatConversion;
 
@@ -72,7 +71,7 @@ public:
     ///
     /// Constructor
     ///
-    DDSReader() : mSrc(NULL), mSize(0), mFormatConversion(FC_NONE)
+    DDSReader(GN::File & f) : mFile(&f), mFormatConversion(FC_NONE)
     {
     }
 
@@ -86,18 +85,17 @@ public:
     ///
     /// Check file format. Return true if the file is DDS file
     ///
-    bool checkFormat( GN::File & );
+    bool checkFormat();
 
     ///
     /// Read DDS header
     ///
-    bool readHeader(
-        GN::gfx::ImageDesc & o_desc, const uint8 * i_buf, size_t i_size );
+    GN::gfx::ImageDesc readHeader();
 
     ///
     /// Read DDS image
     ///
-    bool readImage( void * o_data ) const;
+    bool readPixels(void * o_buf, size_t o_size) const;
 };
 
 // *****************************************************************************

@@ -31,6 +31,7 @@ namespace GN { namespace gfx
     ///
     struct TextureDesc
     {
+        ColorFormat   format;  ///< pixel format.
         uint32        width;   ///< basemap width
         uint32        height;  ///< basemap height
         uint32        depth;   ///< basemap depth
@@ -38,7 +39,6 @@ namespace GN { namespace gfx
                                ///< you may set it to 0 to use default face count: 6 for cubemap, 1 for others.
         uint32        levels;  ///< mipmap level count. When used as parameter of Gpu::createTexture(),
                                ///< you may set it to 0 to create full mipmap chain (down to 1x1).
-        ColorFormat   format;  ///< pixel format.
         TextureUsage  usage;   ///< texture usage
 
         ///
@@ -51,12 +51,12 @@ namespace GN { namespace gfx
         ///
         bool fromImageDesc( const ImageDesc & id )
         {
-            width      = id.mipmaps[0].width;
-            height     = id.mipmaps[0].height;
-            depth      = id.mipmaps[0].depth;
-            faces      = id.numFaces;
-            levels     = id.numLevels;
-            format     = id.format;
+            format     = id.format();
+            width      = id.width();
+            height     = id.height();
+            depth      = id.depth();
+            faces      = id.layers;
+            levels     = id.levels;
             usage      = TextureUsage::DEFAULT;
             return validate();
         }

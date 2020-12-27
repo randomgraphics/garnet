@@ -136,7 +136,6 @@ namespace GN { namespace gfx
 
         virtual const GpuCaps & caps() const { return mCaps; }
         virtual bool            checkTextureFormatSupport( ColorFormat format, TextureUsage usages ) const;
-        virtual ColorFormat     getDefaultTextureFormat( TextureUsage usages ) const;
 
     public :
 

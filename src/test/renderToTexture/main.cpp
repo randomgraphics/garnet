@@ -48,14 +48,14 @@ public:
         if( !sr.init(gpu) ) return false;
 
         // create render targets
-        c0.attach( gpu.create2DTexture( (uint32)RT_WIDTH, (uint32)RT_HEIGHT, 1, ColorFormat::RGBA8, TextureUsage::COLOR_RENDER_TARGET ) );
+        c0.attach( gpu.create2DTexture( ColorFormat::RGBA8, (uint32)RT_WIDTH, (uint32)RT_HEIGHT, 1, TextureUsage::COLOR_RENDER_TARGET ) );
         if( !c0 )
         {
             GN_ERROR(sLogger)( "Current graphics hardware does not support render-to-texture at all." );
             return false;
         }
 
-        ds.attach( gpu.create2DTexture( (uint32)RT_WIDTH, (uint32)RT_HEIGHT, 1, ColorFormat::UNKNOWN, TextureUsage::DEPTH_RENDER_TARGET ) );
+        ds.attach( gpu.create2DTexture( ColorFormat::RG_24_UNORM_8_UINT, (uint32)RT_WIDTH, (uint32)RT_HEIGHT, 1, TextureUsage::DEPTH_RENDER_TARGET ) );
         if( !ds )
         {
             GN_WARN(sLogger)( "Current graphics hardware does not support depth-texture. All tests related depth-texture are disabled." );

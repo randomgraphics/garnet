@@ -956,15 +956,6 @@ namespace GN { namespace gfx
         ///
         virtual bool checkTextureFormatSupport( ColorFormat format, TextureUsage usages ) const = 0;
 
-        ///
-        /// Get default texture format.
-        ///
-        /// \param usages       Combination of TextureUsage
-        ///
-        /// \return             Return ColorFormat::UNKNOWN, if the usage is not supported by current renderer.
-        ///
-        virtual ColorFormat getDefaultTextureFormat( TextureUsage usages ) const = 0;
-
         //@}
 
         // ********************************************************************
@@ -1015,19 +1006,19 @@ namespace GN { namespace gfx
         /// Create new texture, with individual creation parameters.
         ///
         Texture *
-        createTexture( uint32        sx,
+        createTexture( ColorFormat   format,
+                       uint32        sx,
                        uint32        sy,
                        uint32        sz,
                        uint32        faces  = 1,
-                       uint32        levels = 0, // 0 means full mipmap chain
-                       ColorFormat   format = ColorFormat::UNKNOWN,
+                       uint32        levels = 1, // set to 0 to generate texture with full mipmap chain
                        TextureUsage usages = TextureUsage::DEFAULT )
         {
             TextureDesc desc =
             {
+                format,
                 (uint32)sx, (uint32)sy, (uint32)sz,
                 (uint32)faces, (uint32)levels,
-                ColorFormat::UNKNOWN == format ? getDefaultTextureFormat( usages ) : format,
                 usages,
             };
             return createTexture( desc );
@@ -1037,51 +1028,51 @@ namespace GN { namespace gfx
         /// Create 1D texture
         ///
         Texture *
-        create1DTexture( uint32        sx,
+        create1DTexture( ColorFormat   format,
+                         uint32        sx,
                          uint32        levels = 0,
-                         ColorFormat   format = ColorFormat::UNKNOWN,
                          TextureUsage usages = TextureUsage::DEFAULT )
         {
-            return createTexture( sx, 1, 1, 1, levels, format, usages );
+            return createTexture( format, sx, 1, 1, 1, levels, usages );
         }
 
         ///
         /// Create 2D texture
         ///
         Texture *
-        create2DTexture( uint32        sx,
+        create2DTexture( ColorFormat   format,
+                         uint32        sx,
                          uint32        sy,
-                         uint32        levels = 0,
-                         ColorFormat   format = ColorFormat::UNKNOWN,
+                         uint32        levels = 1,
                          TextureUsage usages = TextureUsage::DEFAULT )
         {
-            return createTexture( sx, sy, 1, 1, levels, format, usages );
+            return createTexture( format, sx, sy, 1, 1, levels, usages );
         }
 
         ///
         /// Create 3D texture
         ///
         Texture *
-        create3DTexture( uint32        sx,
+        create3DTexture( ColorFormat   format,
+                         uint32        sx,
                          uint32        sy,
                          uint32        sz,
-                         uint32        levels = 0,
-                         ColorFormat   format = ColorFormat::UNKNOWN,
+                         uint32        levels = 1,
                          TextureUsage usages = TextureUsage::DEFAULT )
         {
-            return createTexture( sx, sy, sz, 1, levels, format, usages );
+            return createTexture( format, sx, sy, sz, 1, levels, usages );
         }
 
         ///
         /// Create CUBE texture
         ///
         Texture *
-        createCubeTexture( uint32        sx,
-                           uint32        levels = 0,
-                           ColorFormat   format = ColorFormat::UNKNOWN,
+        createCubeTexture( ColorFormat   format,
+                           uint32        sx,
+                           uint32        levels = 1,
                            TextureUsage usages = TextureUsage::DEFAULT )
         {
-            return createTexture( sx, sx, 1, 6, levels, format, usages );
+            return createTexture( format, sx, sx, 1, 6, levels, usages );
         }
 
         ///

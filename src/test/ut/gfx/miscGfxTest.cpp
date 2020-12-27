@@ -99,26 +99,4 @@ public:
         TS_ASSERT( b.isBindByIndex() );
         TS_ASSERT_EQUALS( 2, b.getBindingIndex() );
     }
-
-    void testImageDesc()
-    {
-        using namespace GN;
-        using namespace GN::gfx;
-
-        ImageDesc id;
-
-        id.format.alias = ColorFormat::RGBA_8_8_8_8_UNORM;
-        id.setFaceAndLevel( 1, 1 );
-
-        MipmapDesc & md = id.mipmaps[0];
-        md.width = 0x4000;
-        md.height = 0x4000;
-        md.depth = 1;
-        md.rowPitch = 0x10000;
-        md.slicePitch = 0x40000000;
-        md.levelPitch = 0x40000000;
-
-        size_t totalBytes = id.getTotalBytes();
-        TS_ASSERT_EQUALS( totalBytes, md.levelPitch );
-    }
 };

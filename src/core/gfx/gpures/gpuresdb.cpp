@@ -405,7 +405,7 @@ static AutoRef<EffectResource> sRegisterNormalMapEffect( GpuResourceDatabase & g
 static AutoRef<TextureResource> sRegisterWhiteTexture( GpuResourceDatabase & gdb )
 {
     AutoRef<TextureResource> tr = gdb.createResource<TextureResource>( "@WHITE" );
-    AutoRef<Texture> t = attachTo( gdb.getGpu().create2DTexture( 2, 2, 0, ColorFormat::RGBA8 ) );
+    AutoRef<Texture> t = attachTo( gdb.getGpu().create2DTexture( ColorFormat::RGBA8, 2, 2 ) );
     uint32 white[4] = { 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF };
     t->updateMipmap( 0, 0, NULL, sizeof(uint32)*2, sizeof(uint32)*4, white, SurfaceUpdateFlag::DEFAULT );
     tr->setTexture( t );
@@ -418,7 +418,7 @@ static AutoRef<TextureResource> sRegisterWhiteTexture( GpuResourceDatabase & gdb
 static AutoRef<TextureResource> sRegisterBlackTexture( GpuResourceDatabase & gdb )
 {
     AutoRef<TextureResource> tr = gdb.createResource<TextureResource>( "@BLACK" );
-    AutoRef<Texture> t = attachTo( gdb.getGpu().create2DTexture( 2, 2, 0, ColorFormat::RGBA8 ) );
+    AutoRef<Texture> t = attachTo( gdb.getGpu().create2DTexture( ColorFormat::RGBA8, 2, 2 ) );
     uint32 black[4] = { 0, 0, 0, 0 };
     t->updateMipmap( 0, 0, NULL, sizeof(uint32)*2, sizeof(uint32)*4, black, SurfaceUpdateFlag::DEFAULT );
     tr->setTexture( t );
@@ -431,7 +431,7 @@ static AutoRef<TextureResource> sRegisterBlackTexture( GpuResourceDatabase & gdb
 static AutoRef<TextureResource> sRegisterFlatNormalMap( GpuResourceDatabase & gdb )
 {
     AutoRef<TextureResource> tr = gdb.createResource<TextureResource>( "@FLAT_NORMAL_MAP" );
-    AutoRef<Texture> t = attachTo(  gdb.getGpu().create2DTexture( 2, 2, 0, ColorFormat::RG_16_16_UNORM ) );
+    AutoRef<Texture> t = attachTo(  gdb.getGpu().create2DTexture( ColorFormat::RG_16_16_UNORM, 2, 2, 0 ) );
     uint32 up[4] = { 0x80008000, 0x80008000, 0x80008000, 0x80008000 };
     t->updateMipmap( 0, 0, NULL, sizeof(uint32)*2, sizeof(uint32)*4, up, SurfaceUpdateFlag::DEFAULT );
     tr->setTexture( t );

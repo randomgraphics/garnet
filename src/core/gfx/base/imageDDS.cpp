@@ -242,16 +242,15 @@ static GN::gfx::ColorFormat getImageFormat( const DDPixelFormat & ddpf )
 //
 //
 // -----------------------------------------------------------------------------
-bool DDSReader::checkFormat( GN::File & fp )
+bool DDSReader::checkFormat()
 {
     GN_GUARD;
 
     char buf[5];
 
-    if( !fp.seek( 0, GN::FileSeek::SET ) ) return false;
-
+    // check magic number
     size_t sz;
-    if( !fp.read( buf, 4, &sz ) || 4 != sz ) return false;
+    if( !mFile->read( buf, 4, &sz ) || 4 != sz ) return false;
 
     buf[4] = 0;
 
@@ -263,71 +262,60 @@ bool DDSReader::checkFormat( GN::File & fp )
 //
 //
 // -----------------------------------------------------------------------------
-bool DDSReader::readHeader(
-    GN::gfx::ImageDesc & o_desc, const uint8 * i_buff, size_t i_size )
+GN::gfx::ImageDesc DDSReader::readHeader()
 {
     GN_GUARD;
 
-    // check magic number
-    if( i_size < sizeof(uint32) ||
-        *((const uint32*)i_buff) != MAKE_FOURCC('D','D','S',' ') )
-    {
-        GN_ERROR(sLogger)( "fail to read DDS magic number!" );
-        return false;
-    }
-    i_buff += 4;
-    i_size -= 4;
+    size_t read;
 
     // read header
-    if( i_size < sizeof(mHeader) )
-    {
+    if (!mFile->read(&mHeader, sizeof(mHeader), &read) || read != sizeof(mHeader)) {
         GN_ERROR(sLogger)( "fail to read DDS file header!" );
-        return false;
+        return {};
     }
-    memcpy( &mHeader, i_buff, sizeof(mHeader) );
-    i_buff += sizeof(mHeader);
-    i_size -= sizeof(mHeader);
 
     // validate header flags
     uint32 required_flags = DDS_DDSD_WIDTH | DDS_DDSD_HEIGHT;
     if( required_flags != (required_flags & mHeader.flags) )
     {
         GN_ERROR(sLogger)( "damage DDS header!" );
-        return false;
+        return {};
+    }
+
+    if( DDS_DDPF_PALETTEINDEXED8 & mHeader.ddpf.flags )
+    {
+        GN_ERROR(sLogger)( "do not support palette format!" );
+        return {};
     }
 
     // get image format
+    GN::gfx::ColorFormat format;
     if( GN_MAKE_FOURCC('D','X','1','0') == mHeader.ddpf.fourcc )
     {
-        // special for DX10
-        if( i_size <= sizeof(DX10Info) )
-        {
+        // read DX10 info
+        DX10Info dx10;
+        if (!mFile->read(&dx10, sizeof(dx10), &read) || read != sizeof(dx10)) {
             GN_ERROR(sLogger)( "fail to read DX10 info header!" );
-            return false;
+            return {};
         }
 
-        const DX10Info * dx10info = (const DX10Info*)i_buff;
-        i_buff += sizeof(DX10Info);
-        i_size -= sizeof(DX10Info);
-
-        mImgDesc.format = GN::gfx::dxgiFormat2ColorFormat( dx10info->format );
-        if( GN::gfx::ColorFormat::UNKNOWN == mImgDesc.format ) return false;
+        mOriginalFormat = GN::gfx::dxgiFormat2ColorFormat( dx10.format );
+        if( GN::gfx::ColorFormat::UNKNOWN == mOriginalFormat ) return {};
     }
     else
     {
-        mImgDesc.format = getImageFormat( mHeader.ddpf );
-        if( GN::gfx::ColorFormat::UNKNOWN == mImgDesc.format ) return false;
+        mOriginalFormat = getImageFormat( mHeader.ddpf );
+        if( GN::gfx::ColorFormat::UNKNOWN == mOriginalFormat ) return {};
     }
 
     // BGR format is not compatible with D3D10/D3D11 hardware. So we need to convert it to RGB format.
     // sUpdateSwizzle() will update format swizzle from BGR to RGB. And we'll do data convertion later
     // in readImage() function.
-    mOriginalFormat   = mImgDesc.format;
-    mFormatConversion = sCheckFormatConversion( mImgDesc.format );
+    mFormatConversion = sCheckFormatConversion(mOriginalFormat);
 
     // grok image dimension
     uint32 faces = sGetImageFaceCount( mHeader );
-    if( 0 == faces ) return false;
+    if( 0 == faces ) return {};
     uint32 width = mHeader.width;
     uint32 height = mHeader.height;
     uint32 depth = sGetImageDepth( mHeader );
@@ -336,58 +324,15 @@ bool DDSReader::readHeader(
     bool hasMipmap = ( DDS_DDSD_MIPMAPCOUNT & mHeader.flags )
                   && ( DDS_CAPS_MIPMAP & mHeader.caps )
                   && ( DDS_CAPS_COMPLEX & mHeader.caps );
-    const GN::gfx::ColorLayoutDesc & cld = GN::gfx::ALL_COLOR_LAYOUTS[mImgDesc.format.layout];
     uint32 levels = hasMipmap ? mHeader.mipCount : 1;
     if( 0 == levels ) levels = 1;
 
     // grok mipmaps
-    mImgDesc.setFaceAndLevel( faces, levels );
-    for( uint32 l = 0; l < mImgDesc.numLevels; ++l )
-    {
-        for( uint32 f = 0; f < mImgDesc.numFaces; ++f )
-        {
-            GN::gfx::MipmapDesc & m = mImgDesc.getMipmap( f, l );
-
-            m.width  = width;
-            m.height = height;
-            m.depth  = depth;
-
-            switch( mImgDesc.format.alias )
-            {
-                case GN::gfx::ColorFormat::DXT1_UNORM:
-                    m.rowPitch = ((m.width + 3) & ~3) / 2;
-                    m.slicePitch = m.rowPitch * ((m.height + 3) & ~3);
-                    GN_ASSERT( m.slicePitch >= 8 );
-                    break;
-
-    		    case GN::gfx::ColorFormat::DXT3_UNORM:
-    		    case GN::gfx::ColorFormat::DXT5_UNORM:
-                    m.rowPitch = ((m.width + 3) & 0xFFFFFFFC);
-                    m.slicePitch = m.rowPitch * ((m.height + 3) & ~3);
-                    GN_ASSERT( m.slicePitch >= 16 );
-                    break;
-
-                default:
-                    m.rowPitch = cld.bits * m.width / 8;
-                    m.slicePitch = m.rowPitch * m.height;
-                    break;
-            }
-
-            m.levelPitch = m.slicePitch * m.depth;
-        }
-
-        if( width > 1 ) width >>= 1;
-        if( height > 1 ) height >>= 1;
-        if( depth > 1 ) depth >>= 1;
-    }
-
+    mImgDesc = GN::gfx::ImageDesc(GN::gfx::ImagePlaneDesc::make(mOriginalFormat, width, height, depth), faces, levels);
     GN_ASSERT( mImgDesc.valid() );
 
     // success
-    o_desc = mImgDesc;
-    mSrc = i_buff;
-    mSize = i_size;
-    return true;
+    return mImgDesc;
 
     GN_UNGUARD;
 }
@@ -395,26 +340,24 @@ bool DDSReader::readHeader(
 //
 //
 // -----------------------------------------------------------------------------
-bool DDSReader::readImage( void * o_data ) const
+bool DDSReader::readPixels(void * o_data, size_t o_size) const
 {
     GN_GUARD;
 
-    GN_ASSERT( o_data && mSrc );
-
-    if( DDS_DDPF_PALETTEINDEXED8 & mHeader.ddpf.flags )
-    {
-        GN_ERROR(sLogger)( "do not support palette format!" );
+    if (!o_data) {
+        GN_ERROR(sLogger)("null output buffer.");
+        return false;
+    }
+    if (o_size < mImgDesc.size) {
+        GN_ERROR(sLogger)("output buffer size is not large enough");
         return false;
     }
 
-    // 1D, 2D, 3D texture
-    uint32 nbytes = mImgDesc.getTotalBytes();
-    if( nbytes != mSize )
-    {
-        GN_ERROR(sLogger)( "image size is incorrect!" );
+    size_t read;
+    if (!mFile->read(o_data, mImgDesc.size, &read) || read != mImgDesc.size) {
+        GN_ERROR(sLogger)("failed to read DDS pixels.");
         return false;
     }
-    memcpy( o_data, mSrc, nbytes );
 
     // Do format conversion, if needed.
     if( FC_NONE != mFormatConversion )
@@ -423,7 +366,7 @@ bool DDSReader::readImage( void * o_data ) const
         // But we assume that the data in the gaps are not important and could be converted
         // as well without any side effects. We also assume that each scan line always starts
         // from pixel size aligned address (4 bytes aligned for 8888 format) regardless of gaps.
-        sConvertFormat( mFormatConversion, mOriginalFormat, mImgDesc.format, o_data, nbytes );
+        sConvertFormat( mFormatConversion, mOriginalFormat, mImgDesc.format(), o_data, mImgDesc.size );
     }
 
     // success

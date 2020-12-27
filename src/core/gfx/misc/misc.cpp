@@ -11,13 +11,12 @@ GN::gfx::loadTextureFromFile( Gpu & gpu, const char * filename )
     GN_VERBOSE(sLogger)( "Load texture from file: %s", filename );
 
     // load image
-    ImageDesc id;
-    DynaArray<uint8> texels;
-    if( !loadImageFromFile( id, texels, filename ) ) return 0;
+    auto image = RawImage::load(filename);
+    if (image.empty()) return 0;
 
     // create texture
     TextureDesc td;
-    td.fromImageDesc( id );
+    td.fromImageDesc( image.desc() );
     AutoRef<Texture> tex = attachTo( gpu.createTexture( td ) );
     if( !tex ) return 0;
 
@@ -25,9 +24,8 @@ GN::gfx::loadTextureFromFile( Gpu & gpu, const char * filename )
     for( uint32 f = 0; f < td.faces; ++f )
     for( uint32 l = 0; l < td.levels; ++l )
     {
-        const MipmapDesc & md = id.getMipmap( f, l );
-        size_t offset = id.getMipmapOffset( f, l );
-        tex->updateMipmap( f, l, 0, md.rowPitch, md.slicePitch, &texels[offset], SurfaceUpdateFlag::DEFAULT );
+        auto & md = image.desc(f, l);
+        tex->updateMipmap( f, l, 0, md.pitch, md.slice, image.data() + md.offset, SurfaceUpdateFlag::DEFAULT );
     }
 
     // success

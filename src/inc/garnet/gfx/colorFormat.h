@@ -385,7 +385,7 @@ namespace GN { namespace gfx
         ///
         /// construct from unsigned integer
         ///
-        ColorFormat( uint32 u ) : u32(u) {}
+        explicit ColorFormat( uint32 u ) : u32(u) {}
 
         ///
         /// construct from alias

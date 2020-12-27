@@ -37,15 +37,31 @@ bool GN::win::WindowQt::init( const WindowCreationParameters & wcp )
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::win::WindowQt::init( const WindowAttachingParameters & )
+bool GN::win::WindowQt::init( const WindowAttachingParameters & wap)
 {
     GN_GUARD;
 
     // standard init procedure
     GN_STDCLASS_INIT();
 
-    GN_ERROR(sLogger)( "Attatch to external window handle is not implemented for WindowQt." );
-    return failure();
+    auto app = QApplication::instance();
+    if (!app) {
+        int argc = 1;
+        const char * argv[] = {"garnet"};
+        mApp = new QApplication(argc, (char**)argv);
+    }
+
+    mWindow = QWindow::fromWinId((WId)wap.window);
+    if (!mWindow) {
+        GN_ERROR(sLogger)( "Failed to attach to external window handle 0x%x", wap.window);
+        return failure();
+    }
+
+    // TODO: query screen from window
+    mScreen = QGuiApplication::primaryScreen();
+
+    // success
+    return success();
 
     GN_UNGUARD;
 }
@@ -58,7 +74,7 @@ void GN::win::WindowQt::quit()
     GN_GUARD;
 
     safeDelete(mWindow);
-    safeDelete(mScreen);
+    //safeDelete(mScreen);
     safeDelete(mApp);
 
     // standard quit procedure
@@ -144,7 +160,7 @@ bool GN::win::WindowQt::runUntilNoNewEvents( bool )
     GN_GUARD_SLOW;
     auto app = (QApplication*)QApplication::instance();
     app->processEvents();
-    return !mWindow->closing; // returns false, if user is trying to close the window
+    return !mClosing; // returns false, if user is trying to close the window
     GN_UNGUARD_SLOW;
 }
 
@@ -177,7 +193,7 @@ bool GN::win::WindowQt::createWindow( const WindowCreationParameters & wcp )
     // TODO: determine if window has border and title bar
 
     // create the window
-    mWindow = new MainWindow(mScreen);
+    mWindow = new MainWindow(mScreen, &mClosing);
     mWindow->resize((int)width, (int)height);
 
     // TODO: connect to window close signal

@@ -58,7 +58,7 @@ namespace GN
         /// 检查n是否为2^n
         // --------------------------------------------------------------------
         template<typename T>
-        GN_FORCE_INLINE bool isPowerOf2( T n )
+        GN_FORCE_INLINE constexpr bool isPowerOf2( T n )
         {
             return ( 0 == (n & (n - 1)) ) && ( 0 != n );
         }
@@ -66,7 +66,7 @@ namespace GN
         ///
         /// 返回不小于n的最小的2的整幂
         // --------------------------------------------------------------------
-        GN_FORCE_INLINE uint32 ceilPowerOf2( uint32 n )
+        GN_FORCE_INLINE constexpr uint32 ceilPowerOf2( uint32 n )
         {
             n -= 1;
 
@@ -82,7 +82,7 @@ namespace GN
         ///
         /// 返回不大于n的最大的2的整幂
         // --------------------------------------------------------------------
-        GN_FORCE_INLINE uint32 floorPowerOf2( uint32 n )
+        GN_FORCE_INLINE constexpr uint32 floorPowerOf2( uint32 n )
         {
             n |= n >> 16;
             n |= n >> 8;

@@ -77,7 +77,7 @@ bool GN::gfx::SpriteRenderer::init(Gpu & gpu)
     };
 
     // create a 2x2 pure white texture
-    mPureWhiteTexture.attach( mGpu->create2DTexture( 2, 2, 0, ColorFormat::RGBA8 ) );
+    mPureWhiteTexture.attach( mGpu->create2DTexture( ColorFormat::RGBA8, 2, 2 ) );
     if( !mPureWhiteTexture ) return failure();
     const uint32 PURE_WHITE[] = { 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF } ;
     mPureWhiteTexture->updateMipmap( 0, 0, NULL, sizeof(uint32)*2, sizeof(uint32)*4, &PURE_WHITE );

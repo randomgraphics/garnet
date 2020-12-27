@@ -326,19 +326,3 @@ GN::gfx::OGLGpu::checkTextureFormatSupport(
     GN_UNIMPL_WARNING();
     return true;
 }
-
-//
-//
-// -----------------------------------------------------------------------------
-GN::gfx::ColorFormat
-GN::gfx::OGLGpu::getDefaultTextureFormat( TextureUsage usage ) const
-{
-    if( TextureUsage::DEPTH_RENDER_TARGET == usage )
-    {
-        return ColorFormat::R_32_UINT;
-    }
-    else
-    {
-        return ColorFormat::RGBA_8_8_8_8_UNORM;
-    }
-}

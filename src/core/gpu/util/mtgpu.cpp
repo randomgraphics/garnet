@@ -202,18 +202,6 @@ bool GN::gfx::MultiThreadGpu::checkTextureFormatSupport( ColorFormat format, Tex
 //
 //
 // -----------------------------------------------------------------------------
-ColorFormat GN::gfx::MultiThreadGpu::getDefaultTextureFormat( TextureUsage usages ) const
-{
-    MultiThreadGpu * nonConstPtr = const_cast<GN::gfx::MultiThreadGpu*>(this);
-    ColorFormat result;
-    nonConstPtr->mCommandBuffer.postCommand2( CMD_GET_DEFAULT_TEXTURE_FORMAT, &result, usages );
-    nonConstPtr->waitForIdle();
-    return result;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
 Blob * GN::gfx::MultiThreadGpu::compileGpuProgram( const GpuProgramDesc & desc )
 {
     Blob * cgp;
@@ -722,23 +710,6 @@ namespace GN { namespace gfx
         CheckTextureFormatSupportParam * param = (CheckTextureFormatSupportParam*)p;
 
         *param->result = r.checkTextureFormatSupport( param->format, param->usages );
-    }
-
-    //
-    //
-    // -------------------------------------------------------------------------
-    void func_GET_DEFAULT_TEXTURE_FORMAT( Gpu & r, void * p, uint32 )
-    {
-#pragma pack( push, 1 )
-        struct GetDefaultTextureFormatParam
-        {
-            ColorFormat * result;
-            TextureUsage usages;
-        };
-#pragma pack( pop )
-        GetDefaultTextureFormatParam * param = (GetDefaultTextureFormatParam*)p;
-
-        *param->result = r.getDefaultTextureFormat( param->usages );
     }
 
     //

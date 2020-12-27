@@ -112,19 +112,3 @@ bool GN::gfx::D3D11Gpu::checkTextureFormatSupport(
 
     return true;
 }
-
-//
-//
-// -----------------------------------------------------------------------------
-GN::gfx::ColorFormat
-GN::gfx::D3D11Gpu::getDefaultTextureFormat( TextureUsage usage ) const
-{
-    if( TextureUsage::DEPTH_RENDER_TARGET == usage )
-    {
-        return ColorFormat::RG_24_UNORM_8_UINT;
-    }
-    else
-    {
-        return ColorFormat::RGBA_8_8_8_8_UNORM;
-    }
-}

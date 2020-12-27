@@ -185,7 +185,7 @@ namespace GN { namespace gfx
             if (this == &other) return;
             for(size_t i = 0; i < NUM_SEMANTICS; ++i) {
                 mElements[i] = std::move(other.mElements[i]); GN_ASSERT(other.mElements[i].empty());
-                mFormats[i] = other.mFormats[i]; other.mFormats[i] = 0;
+                mFormats[i] = other.mFormats[i]; other.mFormats[i] = ColorFormat::UNKNOWN;
             }
             mCount = other.mCount; other.mCount = 0;
             mLayout = other.mLayout; other.mLayout = 0;

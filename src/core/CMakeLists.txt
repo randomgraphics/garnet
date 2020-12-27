@@ -58,7 +58,7 @@ if (D3D12_FOUND)
     GN_add_source_folder(sources gpu2/d3d12 PCH_SOURCE gpu2/d3d12/pch.cpp)
 endif()
 
- # Split everything into groups
+# Split everything into groups
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} PREFIX "Source Files" FILES ${sources})
 
 # ====================

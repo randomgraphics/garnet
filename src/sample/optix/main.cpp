@@ -65,7 +65,7 @@ public:
         if (!_sprite.init(*g)) return false;
         auto w = g->getDispDesc().width;
         auto h = g->getDispDesc().height;
-        _texture = g->create2DTexture(w, h, 1, gfx::ColorFormat::RGBA8);
+        _texture = g->create2DTexture(gfx::ColorFormat::RGBA8, w, h);
 
         // Initialize CUDA
         CUDA_RETURN_FALSE_ON_FAIL(cudaFree(0));

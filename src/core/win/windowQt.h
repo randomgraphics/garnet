@@ -39,7 +39,7 @@ namespace GN { namespace win
         bool init( const WindowAttachingParameters & );
         void quit();
     private:
-        void clear() { mApp = nullptr; mScreen = nullptr; mWindow = nullptr; }
+        void clear() { mApp = nullptr; mScreen = nullptr; mWindow = nullptr; mClosing = false; }
         //@}
 
         // ********************************
@@ -70,22 +70,25 @@ namespace GN { namespace win
         class MainWindow : public QWindow {
             using QWindow::QWindow;
 
+            bool * mClosing;
+
         public:
 
-            bool closing = false;
+            MainWindow(QScreen * screen, bool * closing) : QWindow(screen), mClosing(closing) {}
 
         protected:
 
             // always ignore window close event
             void closeEvent(QCloseEvent * event) override {
                 event->ignore();
-                closing = true;
+                *mClosing = true;
             }
         };
 
         QApplication  * mApp;
         QScreen *       mScreen;
-        MainWindow *    mWindow;
+        QWindow *       mWindow;
+        bool            mClosing;
 
         // ********************************
         // private functions
