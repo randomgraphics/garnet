@@ -85,9 +85,7 @@ GN::gfx::OGLVtxFmt::bindBuffers(
     for( size_t i = 0; i < mAttribBindings.size(); ++i )
     {
         const AttribBinding & ab = mAttribBindings[i];
-
         size_t stream = ab.info.stream;
-
         if( stream >= numbufs )
         {
             GN_ERROR(sLogger)(
@@ -95,15 +93,9 @@ GN::gfx::OGLVtxFmt::bindBuffers(
                 stream+1, numbufs );
             return false;
         }
-
         const VertexBufferBinding & b = bindings[stream];
-        const OGLBasicVtxBuf * vb = safeCastPtr<const OGLBasicVtxBuf>( b.vtxbuf.rawptr() );
-
-        const uint8 * vtxdata = vb ? (const uint8*)vb->getVtxData() : NULL;
-        size_t       stride  = b.stride;
-        size_t       offset  = b.offset;
-
-        ab.bind( vtxdata + (startvtx+offset) * stride, stride );
+        safeCastPtr<const OGLVtxBufVBO>( bindings[stream].vtxbuf.rawptr() )->bind();
+        ab.bind((const void*)(intptr_t)((startvtx + b.offset) * b.stride), b.stride);
     }
 
     return true;

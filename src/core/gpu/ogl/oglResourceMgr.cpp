@@ -144,18 +144,9 @@ GN::gfx::VtxBuf * GN::gfx::OGLGpu::createVtxBuf( const VtxBufDesc & desc )
 {
     GN_GUARD;
 
-    if( GLEW_ARB_vertex_buffer_object )
-    {
-        AutoRef<OGLVtxBufVBO> p = referenceTo( new OGLVtxBufVBO(*this) );
-        if( !p->init( desc ) ) return 0;
-        return p.detach();
-    }
-    else
-    {
-        AutoRef<OGLVtxBufNormal> p = referenceTo( new OGLVtxBufNormal(*this) );
-        if( !p->init( desc ) ) return 0;
-        return p.detach();
-    }
+    AutoRef<OGLVtxBufVBO> p = referenceTo( new OGLVtxBufVBO(*this) );
+    if( !p->init( desc ) ) return 0;
+    return p.detach();
 
     GN_UNGUARD;
 }

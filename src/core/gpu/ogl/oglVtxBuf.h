@@ -12,84 +12,9 @@
 namespace GN { namespace gfx
 {
     ///
-    /// Basic OGL vertex buffer class
-    ///
-    struct OGLBasicVtxBuf : public BasicVtxBuf, public OGLResource
-    {
-        ///
-        /// 返回指向顶点数据的指针
-        ///
-        virtual const void * getVtxData() const = 0;
-
-    protected :
-
-        /// protected ctor
-        OGLBasicVtxBuf( OGLGpu & r ) : OGLResource( r ) {}
-    };
-
-    ///
-    /// Normal OGL vertex buffer class
-    ///
-    class OGLVtxBufNormal : public OGLBasicVtxBuf, public StdClass
-    {
-         GN_DECLARE_STDCLASS( OGLVtxBufNormal, StdClass );
-
-        // ********************************
-        // ctor/dtor
-        // ********************************
-
-        //@{
-    public:
-        OGLVtxBufNormal( OGLGpu & r ) : OGLBasicVtxBuf(r) { clear(); }
-        virtual ~OGLVtxBufNormal() { quit(); }
-        //@}
-
-        // ********************************
-        // from StdClass
-        // ********************************
-
-        //@{
-    public:
-        bool init( const VtxBufDesc & desc );
-        void quit();
-    private:
-        void clear() { mBuffer = 0; }
-        //@}
-
-        // ********************************
-        // from VtxBuf
-        // ********************************
-    public:
-
-        virtual void update( uint32 offset, uint32 length, const void * data, SurfaceUpdateFlag flag );
-        virtual void readback( DynaArray<uint8> & data );
-
-        // ********************************
-        // public OGLBasicVtxBuf
-        // ********************************
-    public:
-
-        const void * getVtxData() const
-        {
-            if( GLEW_ARB_vertex_buffer_object )
-            {
-                GN_OGL_CHECK( glBindBufferARB( GL_ARRAY_BUFFER_ARB, 0 ) );
-            }
-            return mBuffer;
-        }
-
-        // ********************************
-        // private variables
-        // ********************************
-    private:
-
-        uint8 * mBuffer;
-    };
-
-    ///
     /// Vertex buffer that use GL_ARB_vertex_buffer_object.
     ///
-    class OGLVtxBufVBO : public OGLBasicVtxBuf, public StdClass
+    class OGLVtxBufVBO : public BasicVtxBuf, public OGLResource, public StdClass
     {
          GN_DECLARE_STDCLASS( OGLVtxBufVBO, StdClass );
 
@@ -99,7 +24,7 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        OGLVtxBufVBO( OGLGpu & r ) : OGLBasicVtxBuf(r) { clear(); }
+        OGLVtxBufVBO( OGLGpu & r ) : OGLResource(r) { clear(); }
         virtual ~OGLVtxBufVBO() { quit(); }
         //@}
 
@@ -132,10 +57,9 @@ namespace GN { namespace gfx
         // ********************************
     public:
 
-        const void * getVtxData() const
+        void bind() const
         {
-            GN_OGL_CHECK( glBindBufferARB( GL_ARRAY_BUFFER_ARB, mOGLVertexBufferObject ) );
-            return 0;
+            glBindBufferARB( GL_ARRAY_BUFFER_ARB, mOGLVertexBufferObject);
         }
 
         // ********************************

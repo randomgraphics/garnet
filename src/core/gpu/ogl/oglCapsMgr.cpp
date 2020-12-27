@@ -42,33 +42,6 @@ sFindExtension( const DynaArray<StrA> & glexts, const char * ext )
 }
 
 ///
-/// Check required extensions
-// ------------------------------------------------------------------------
-static bool sCheckRequiredExtensions( const DynaArray<StrA> & extensions )
-{
-    static const char * sRequiredExtensions[] =
-    {
-        "GL_EXT_bgra",                    // 1.1
-        //"GL_ARB_multitexture",            // 1.3
-        //"GL_ARB_texture_env_combine",     // 1.3
-        0,
-    };
-    bool fail = false;
-    char const * const * p = sRequiredExtensions;
-    while ( *p )
-    {
-        if( GL_TRUE != sFindExtension( extensions, *p ) )
-        {
-            GN_ERROR(sLogger)( "Required extension '%s' was not supported!", *p );
-            fail = true;
-        }
-        // next extension
-        ++p;
-    }
-    return !fail;
-}
-
-///
 /// Get OpenGL version number
 // ------------------------------------------------------------------------
 static void sGetOpenGLVersion( const char * version, int * major, int * minor, int * release )
@@ -103,6 +76,38 @@ static void sGetOpenGLVersion( const char * version, int * major, int * minor, i
 }
 
 ///
+/// Check required extensions
+// ------------------------------------------------------------------------
+static bool sCheckRequiredExtensions( const DynaArray<StrA> & extensions ) {
+    const char * version = (const char *)glGetString(GL_VERSION);
+    int major;
+    sGetOpenGLVersion( version, &major, NULL, NULL );
+    if (major < 2) {
+        GN_ERROR(sLogger)("OpenGL version 2.0+ is required.");
+        return false;
+    }
+
+    static const char * sRequiredExtensions[] = {
+        "GL_EXT_bgra",                 // 1.1
+        "GL_ARB_vertex_buffer_object", // 1.4
+        0,
+    };
+    bool fail = false;
+    char const * const * p = sRequiredExtensions;
+    while ( *p )
+    {
+        if( GL_TRUE != sFindExtension( extensions, *p ) )
+        {
+            GN_ERROR(sLogger)( "Required extension '%s' was not supported!", *p );
+            fail = true;
+        }
+        // next extension
+        ++p;
+    }
+    return !fail;
+}
+
+///
 /// initialize opengl extension
 // ------------------------------------------------------------------------
 #if GN_WINPC
@@ -115,17 +120,17 @@ static bool sGetOGLExtensions( Display * disp, DynaArray<StrA> & result )
 
     result.clear();
 
-    // ����OpenGL-Extentions-String
+    // OpenGL-Extentions-String
     sGetTokens( result, (const char*)glGetString(GL_EXTENSIONS) );
 
 #if GN_WINPC
-    // ����WGL Extensions
+    // WGL Extensions
     PFNWGLGETEXTENSIONSSTRINGARBPROC proc;
     proc = reinterpret_cast<PFNWGLGETEXTENSIONSSTRINGARBPROC>(
         ::wglGetProcAddress("wglGetExtensionsStringARB") );
     if( proc ) sGetTokens( result, (const char *)proc(hdc) );
 #elif GN_POSIX
-    // ����GLX Extensions
+    // GLX Extensions
     // TODO: query server extension string
     sGetTokens( result, (const char*)glXGetClientString( disp, GLX_EXTENSIONS) );
 #endif

@@ -30,8 +30,8 @@ bool GN::gfx::OGLVtxBufVBO::init( const VtxBufDesc & desc )
     setDesc( desc );
 
     // determine buffer usage
-    // TODO: try GL_STREAM_DRAW_ARB
-    mOGLUsage = desc.fastCpuWrite ? GL_DYNAMIC_DRAW_ARB : GL_STATIC_DRAW_ARB;
+    // TODO: try GL_STREAM_DRAW
+    mOGLUsage = desc.fastCpuWrite ? GL_DYNAMIC_DRAW : GL_STATIC_DRAW;
 
     // initialize device data
     if( !createVBO() ) return failure();
@@ -52,8 +52,8 @@ void GN::gfx::OGLVtxBufVBO::quit()
     // release opengl vertex array
     if( mOGLVertexBufferObject )
     {
-        GN_ASSERT( glIsBufferARB( mOGLVertexBufferObject ) );
-        GN_OGL_CHECK( glDeleteBuffersARB( 1, &mOGLVertexBufferObject ) );
+        GN_ASSERT( glIsBuffer( mOGLVertexBufferObject ) );
+        GN_OGL_CHECK( glDeleteBuffers( 1, &mOGLVertexBufferObject ) );
         mOGLVertexBufferObject = 0;
     }
 
@@ -89,11 +89,11 @@ void GN::gfx::OGLVtxBufVBO::update( uint32 offset, uint32 length, const void * d
         (offset + length) <= getDesc().length );
 
     // bind as active buffer
-    GN_OGL_CHECK( glBindBufferARB( GL_ARRAY_BUFFER_ARB, mOGLVertexBufferObject ) );
+    GN_OGL_CHECK( glBindBuffer( GL_ARRAY_BUFFER, mOGLVertexBufferObject ) );
 
     // update VBO
-    GN_OGL_CHECK( glBufferSubDataARB(
-        GL_ARRAY_BUFFER_ARB,
+    GN_OGL_CHECK( glBufferSubData(
+        GL_ARRAY_BUFFER,
         offset,
         length,
         data ) );
@@ -123,27 +123,26 @@ bool GN::gfx::OGLVtxBufVBO::createVBO()
 
     struct AutoDel
     {
-        PFNGLDELETEBUFFERSARBPROC func;
         GLuint vbo;
 
-        AutoDel( PFNGLDELETEBUFFERSARBPROC f, GLuint v ) : func(f), vbo(v) {}
+        AutoDel( GLuint v ) : vbo(v) {}
 
-        ~AutoDel() { if(vbo) func( 1, &vbo ); }
+        ~AutoDel() { if(vbo) glDeleteBuffers( 1, &vbo ); }
 
         void dismiss() { vbo = 0; }
     };
 
     // create VBO
-    GN_OGL_CHECK_R( glGenBuffersARB( 1, &mOGLVertexBufferObject ), false );
-    AutoDel ad( glDeleteBuffersARB, mOGLVertexBufferObject );
+    GN_OGL_CHECK_R( glGenBuffers( 1, &mOGLVertexBufferObject ), false );
+    AutoDel ad( mOGLVertexBufferObject );
 
     // initialize VBO memory store
     GN_OGL_CHECK_R(
-        glBindBufferARB( GL_ARRAY_BUFFER_ARB, mOGLVertexBufferObject ),
+        glBindBuffer( GL_ARRAY_BUFFER, mOGLVertexBufferObject ),
         false );
     GN_OGL_CHECK_R(
-        glBufferDataARB(
-            GL_ARRAY_BUFFER_ARB,
+        glBufferData(
+            GL_ARRAY_BUFFER,
             getDesc().length,
             NULL,
             mOGLUsage ),

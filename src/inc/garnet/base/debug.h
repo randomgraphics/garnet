@@ -93,12 +93,10 @@
             __VA_ARGS__                                                     \
         }                                                                   \
     } else void(0)
-#if GN_BUILD_DEBUG_ENABLED
-#define GN_OGL_CHECK( func, ... ) GN_OGL_CHECK_DO( func, __VA_ARGS__ )
-#else
-#define GN_OGL_CHECK( func, ... ) func
-#endif
 #define GN_OGL_CHECK_R( X, ... ) GN_OGL_CHECK_DO( X, return __VA_ARGS__; )
+
+// Obsolete. Has been replaced by OGL debug output extension.
+#define GN_OGL_CHECK( func, ... ) func
 
 ///
 /// check return value of Windows function (general version)

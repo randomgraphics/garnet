@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "oglGpu.h"
+#include "oglDebug.h"
 
 #if GN_POSIX
 
@@ -67,6 +68,9 @@ bool GN::gfx::OGLGpu::dispInit()
 
     // init GLEW
     glewInit();
+
+    // Setup the debug output
+    if( ro.debug ) OGLDebugOutputARB::enable();
 
     // setup swap control
     if( GLX_SGI_swap_control )
