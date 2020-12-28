@@ -34,6 +34,15 @@ sPrimitiveType2OGL( GN::gfx::PrimitiveType prim )
     }
 }
 
+template<class BufferObject> static inline void
+sCopyToBufferObject(BufferObject & bo, const void * data, size_t size) {
+    if (bo.length < size) {
+        bo.allocate(size, (const uint8_t*)data, GL_STREAM_DRAW);
+    } else {
+        bo.update((const uint8_t*)data, 0, size);
+    }
+}
+
 // *****************************************************************************
 // device management
 // *****************************************************************************
@@ -221,19 +230,18 @@ void GN::gfx::OGLGpu::drawIndexedUp(
 
     if( !mContextOk ) return;
 
+    sCopyToBufferObject(mUserVBO, vertexData, numvtx * strideInBytes);
+    sCopyToBufferObject(mUserIBO, indexData, numidx * 2);
+
     // bind immediate vertex buffer
     GLuint oldvbo = 0;
     bool bindSuccess = false;
     if( mCurrentOGLVtxFmt )
     {
         // disable VBO
-        if( GLEW_ARB_vertex_buffer_object )
-        {
-            GN_OGL_CHECK( glGetIntegerv( GL_ARRAY_BUFFER_BINDING_ARB, (GLint*)&oldvbo ) );
-            GN_OGL_CHECK( glBindBufferARB( GL_ARRAY_BUFFER_ARB, 0 ) );
-        }
-
-        bindSuccess = mCurrentOGLVtxFmt->bindRawMemoryBuffer( vertexData, strideInBytes );
+        GN_OGL_CHECK( glGetIntegerv( GL_ARRAY_BUFFER_BINDING, (GLint*)&oldvbo ) );
+        mUserVBO.bind();
+        bindSuccess = mCurrentOGLVtxFmt->bindRawMemoryBuffer( 0, strideInBytes );
     }
 
     if( bindSuccess )
@@ -253,25 +261,16 @@ void GN::gfx::OGLGpu::drawIndexedUp(
 
         GLenum oglPrim = sPrimitiveType2OGL( prim );
 
-        if( GLEW_EXT_draw_range_elements )
-        {
-            // draw indexed primitives
-            GN_OGL_CHECK( glDrawRangeElements(
-                oglPrim,
-                0, // startvtx,
-                (GLuint)(numvtx-1),
-                (GLsizei)numidx,
-                GL_UNSIGNED_SHORT,
-                indexData ) );
-        }
-        else
-        {
-            GN_OGL_CHECK( glDrawElements(
-                oglPrim,
-                (GLsizei)numidx,
-                GL_UNSIGNED_SHORT,
-                indexData ) );
-        }
+        mUserIBO.bind();
+
+        // draw indexed primitives
+        GN_OGL_CHECK( glDrawRangeElements(
+            oglPrim,
+            0, // startvtx,
+            (GLuint)(numvtx-1),
+            (GLsizei)numidx,
+            GL_UNSIGNED_SHORT,
+            0 ) );
     }
 
     // restore VBO
@@ -300,33 +299,31 @@ void GN::gfx::OGLGpu::drawUp(
 
     if( !mContextOk ) return;
 
+    sCopyToBufferObject(mUserVBO, vertexData, numvtx * strideInBytes);
+
     // bind immediate vertex buffer
     GLuint oldvbo = 0;
     bool bindSuccess = false;
     if( mCurrentOGLVtxFmt )
     {
-        // disable VBO
-        if( GLEW_ARB_vertex_buffer_object )
-        {
-            GN_OGL_CHECK( glGetIntegerv( GL_ARRAY_BUFFER_BINDING_ARB, (GLint*)&oldvbo ) );
-            GN_OGL_CHECK( glBindBufferARB( GL_ARRAY_BUFFER_ARB, 0 ) );
-        }
-
-        bindSuccess = mCurrentOGLVtxFmt->bindRawMemoryBuffer( vertexData, strideInBytes );
+        glGetIntegerv( GL_ARRAY_BUFFER_BINDING, (GLint*)&oldvbo );
+        mUserVBO.bind();
+        bindSuccess = mCurrentOGLVtxFmt->bindRawMemoryBuffer( 0, strideInBytes );
     }
 
     // draw primitives
     if( bindSuccess )
     {
+        GN_GUARD_SLOW;
         GLenum oglPrim = sPrimitiveType2OGL( prim );
-        GN_OGL_CHECK( glDrawArrays( oglPrim, 0, (GLsizei)numvtx ) );
+        glDrawArrays( oglPrim, 0, (GLsizei)numvtx );
+        GN_UNGUARD_SLOW;
     }
 
     // restore VBO
     if( 0 != oldvbo )
     {
-        GN_ASSERT( GLEW_ARB_vertex_buffer_object );
-        GN_OGL_CHECK( glBindBufferARB( GL_ARRAY_BUFFER_ARB, oldvbo ) );
+        glBindBuffer( GL_ARRAY_BUFFER, oldvbo );
     }
 
     // done

@@ -137,6 +137,7 @@ namespace GN { namespace gfx
     private:
 
         uint64_t mID;
+        StrA     mName; // for debugging and logging only.
 
         ///
         /// GLSL uniform parameter description

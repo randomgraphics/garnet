@@ -164,11 +164,11 @@ bool GN::gfx::OGLGpuProgram::init( const GpuProgramDesc & desc )
 
     GN_ASSERT( GpuProgramLanguage::GLSL == desc.lang );
 
-    auto name = desc.name ? StrA(desc.name) : str::format("program %llu", mID);
+    mName = desc.name ? StrA(desc.name) : str::format("program %llu", mID);
 
     #define COMPILE_SHADER(x, type) \
         if (desc.x.source) { \
-            auto s = ogl::loadShaderFromString(desc.x.source, 0, type, name.data()); \
+            auto s = ogl::loadShaderFromString(desc.x.source, 0, type, mName.data()); \
             if (0 == s) return failure(); \
             shaders.append(s); \
         }
@@ -176,7 +176,7 @@ bool GN::gfx::OGLGpuProgram::init( const GpuProgramDesc & desc )
     DynaArray<GLuint> shaders;
     COMPILE_SHADER(vs, GL_VERTEX_SHADER);
     COMPILE_SHADER(ps, GL_FRAGMENT_SHADER);
-    mProgram = ogl::linkProgram(shaders.data(), shaders.size(), name.data());;
+    mProgram = ogl::linkProgram(shaders.data(), shaders.size(), mName.data());;
     if( 0 == mProgram ) return failure();
 
     // enumerate parameters (textures and uniforms)
@@ -444,7 +444,7 @@ GN::gfx::OGLGpuProgram::enumParameters()
             nameptr[namelen-3] = 0;
         }
 
-        GN_VTRACE(sLogger)( "Found GLSL uniform: %s", nameptr );
+        GN_VTRACE(sLogger)( "%s: found GLSL uniform %s", mName.data(), nameptr );
 
         GN_OGL_CHECK_R( u.location = glGetUniformLocation( mProgram, nameptr ), false );
 
@@ -492,7 +492,7 @@ GN::gfx::OGLGpuProgram::enumParameters()
     OGLGpu & r = getGpu();
     if( mTextures.size() > r.caps().maxTextures )
     {
-        GN_ERROR(sLogger)( "The GPU program requires more textures than current hardware supports." );
+        GN_ERROR(sLogger)( "%s: the program requires more textures than current hardware supports.", mName.data() );
         return false;
     }
 
@@ -538,7 +538,7 @@ GN::gfx::OGLGpuProgram::enumAttributes()
         GLSLAttributeDesc a;
         if( !sGetOglVertexSemantic( a.semanticName, a.semanticIndex, nameptr, location ) ) return false;
         if( a.semanticName != VERTEX_SEMANTIC_ATTRIBUTE) {
-            GN_ERROR(sLogger)("client side pointer is not supported anymore.");
+            GN_ERROR(sLogger)("%s: client side pointer is not supported anymore.", mName.data());
             return false;
         }
 

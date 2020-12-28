@@ -96,6 +96,8 @@ GN::gfx::OGLVtxFmt::bindBuffers(
 bool
 GN::gfx::OGLVtxFmt::bindRawMemoryBuffer( const void * data, size_t stride ) const
 {
+    GN_GUARD_SLOW;
+
     if( !mVAO ) return false;
 
     for( size_t i = 0; i < mAttribBindings.size(); ++i )
@@ -110,18 +112,18 @@ GN::gfx::OGLVtxFmt::bindRawMemoryBuffer( const void * data, size_t stride ) cons
             return false;
         }
 
-        //ab.bind( (const uint8*)data, stride );
-
-        glVertexAttribPointer(
+        GN_OGL_CHECK_R( glVertexAttribPointer (
             ab.index,
             ab.components,
             ab.format,
             ab.normalization,
             (GLsizei)stride,
-            (const uint8_t*)data + ab.offset);
+            (const uint8_t*)data + ab.offset ), false );
     }
 
     return true;
+
+    GN_UNGUARD_SLOW;
 }
 
 // *****************************************************************************

@@ -7,6 +7,7 @@
 // *****************************************************************************
 
 #include "../common/basicGpu.h"
+#include "garnet/GNogl.h"
 
 namespace GN { namespace gfx
 {
@@ -298,6 +299,8 @@ namespace GN { namespace gfx
             mCurrentStartVtx = (size_t)-1;
             mFrameCounter = 0;
             mDrawCounter = 0;
+            mUserVBO.cleanup();
+            mUserIBO.cleanup();
         }
 
     private:
@@ -305,6 +308,8 @@ namespace GN { namespace gfx
         size_t    mCurrentStartVtx;
         size_t    mFrameCounter;
         size_t    mDrawCounter;
+        ogl::BufferObject<GL_ARRAY_BUFFER> mUserVBO;
+        ogl::BufferObject<GL_ELEMENT_ARRAY_BUFFER> mUserIBO;
 
         //@}
 

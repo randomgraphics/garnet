@@ -59,7 +59,7 @@ namespace GN { namespace gfx
 
         void bind() const
         {
-            glBindBufferARB( GL_ARRAY_BUFFER_ARB, mOGLVertexBufferObject);
+            glBindBuffer( GL_ARRAY_BUFFER, mOGLVertexBufferObject);
         }
 
         // ********************************

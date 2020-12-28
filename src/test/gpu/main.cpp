@@ -27,11 +27,12 @@ const char * hlsl_pscode =
     "}";
 
 const char * glsl_vscode =
+    "in vec4 i_Position0;\n"
     "varying vec2 texcoords; \n"
     "uniform mat4 transform; \n"
     "void main() { \n"
-    "   gl_Position = transform * gl_Vertex; \n"
-    "   texcoords.xy = gl_Vertex.xy; \n"
+    "   gl_Position = transform * i_Position0; \n"
+    "   texcoords.xy = i_Position0.xy; \n"
     "}";
 
 const char * glsl_pscode =
@@ -48,7 +49,7 @@ bool init( Gpu & gpu )
     rc.clear();
 
     // create GPU program
-    GpuProgramDesc gpd;
+    GpuProgramDesc gpd("test-gpu");
     if( GpuAPI::OGL == gpu.getOptions().api )
     {
         gpd.lang = GpuProgramLanguage::GLSL;
