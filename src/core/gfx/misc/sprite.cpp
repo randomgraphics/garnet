@@ -2,16 +2,20 @@
 
 static GN::Logger * sLogger = GN::getLogger("GN.gfx.util.SpriteRenderer");
 
-static const char * glslvscode=
-    "varying vec4 color; \n"
-    "varying vec2 texcoords; \n"
-    "void main() { \n"
-    "   gl_Position.x = gl_Vertex.x * 2.0 - 1.0; \n"
-    "   gl_Position.y = gl_Vertex.y * -2.0 + 1.0; \n"
-    "   gl_Position.zw = gl_Vertex.zw; \n"
-    "   color = gl_Color; \n"
-    "   texcoords.xy = gl_MultiTexCoord0.xy; \n"
-    "}";
+static const char * glslvscode= R"glsl(
+    in vec4 i_pos;
+    in vec4 i_color;
+    in vec2 i_uv;
+    varying vec4 color;
+    varying vec2 texcoords;
+    void main() {
+       gl_Position.x  = i_pos.x *  2.0 - 1.0;
+       gl_Position.y  = i_pos.y * -2.0 + 1.0;
+       gl_Position.zw = i_pos.zw;
+       color          = i_color;
+       texcoords.xy   = i_uv;
+    }
+)glsl";
 
 static const char * glslpscode=
     "uniform sampler2D t0; \n"
@@ -99,15 +103,15 @@ bool GN::gfx::SpriteRenderer::init(Gpu & gpu)
         mVertexBinding[0].stream    = 0;
         mVertexBinding[0].offset    = 0;
         mVertexBinding[0].format    = ColorFormat::FLOAT3;
-        mVertexBinding[0].attribute = mGpuProgram->getParameterDesc().attributes["gl_Vertex"];
+        mVertexBinding[0].attribute = mGpuProgram->getParameterDesc().attributes["i_pos"];
         mVertexBinding[1].stream    = 0;
         mVertexBinding[1].offset    = GN_FIELD_OFFSET( SpriteVertex, clr );
         mVertexBinding[1].format    = ColorFormat::RGBA8;
-        mVertexBinding[1].attribute = mGpuProgram->getParameterDesc().attributes["gl_Color"];
+        mVertexBinding[1].attribute = mGpuProgram->getParameterDesc().attributes["i_color"];
         mVertexBinding[2].stream    = 0;
         mVertexBinding[2].offset    = GN_FIELD_OFFSET( SpriteVertex, tex );
         mVertexBinding[2].format    = ColorFormat::FLOAT2;
-        mVertexBinding[2].attribute = mGpuProgram->getParameterDesc().attributes["gl_MultiTexCoord0"];
+        mVertexBinding[2].attribute = mGpuProgram->getParameterDesc().attributes["i_uv"];
     }
     else if( caps.shaderModels & ShaderModel::SM_2_0 )
     {

@@ -193,10 +193,8 @@ bool GN::gfx::OGLVtxFmt::setupStateBindings( const OGLBasicGpuProgram * gpuProgr
                 break;
 
             case VERTEX_SEMANTIC_TEXCOORD:
-                ab.func = &sSetTexCoordPointer;
-                ab.info.index = vbd.index;
-                hasTexCoord[vbd.index] = true;
-                break;
+                GN_ERROR(sLogger)("client side vertex data pointer is not supportd anymore.");
+                return false;
 
             case VERTEX_SEMANTIC_COLOR:
                 if( 0 == vbd.index )
@@ -328,16 +326,6 @@ bool GN::gfx::OGLVtxFmt::setupStateBindings( const OGLBasicGpuProgram * gpuProgr
     {
         sb.func = hasAttrib[i] ? &sEnableVAA : &sDisableVAA;
         sb.info.attribute = i;
-        mStateBindings.append( sb );
-    }
-
-    // texture coordinates
-    for( uint32 i = 0; i < maxTextures; ++i )
-    {
-        sb.func          = hasTexCoord[i] ? &sEnableTexArray : &sDisableTexArray;
-        sb.info.self     = this;
-        sb.info.texStage = i;
-        sb.info.semantic = GL_TEXTURE_COORD_ARRAY;
         mStateBindings.append( sb );
     }
 
@@ -495,22 +483,6 @@ void GN::gfx::OGLVtxFmt::sSetFogPointer(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLVtxFmt::sSetTexCoordPointer(
-    const AttribBindingInfo & info, const uint8 * buf, size_t stride )
-{
-    GN_ASSERT( info.self );
-    OGLGpu & r = info.self->getGpu();
-    r.chooseClientTextureStage( info.index );
-    GN_OGL_CHECK( glTexCoordPointer(
-        info.components,
-        info.format,
-        (GLsizei)stride,
-        buf + info.offset ) );
-}
-
-//
-//
-// -----------------------------------------------------------------------------
 void GN::gfx::OGLVtxFmt::sSetVertexAttributePointer(
     const AttribBindingInfo & info, const uint8 * buf, size_t stride )
 {
@@ -548,18 +520,4 @@ void GN::gfx::OGLVtxFmt::sDisableVAA( const StateBindingInfo & info )
 {
     GN_ASSERT( GLEW_ARB_vertex_program || GLEW_ARB_vertex_shader );
     GN_OGL_CHECK( glDisableVertexAttribArrayARB( info.attribute ) );
-}
-//
-void GN::gfx::OGLVtxFmt::sEnableTexArray( const StateBindingInfo & info )
-{
-    GN_ASSERT( info.self );
-    info.self->getGpu().chooseClientTextureStage( info.texStage );
-    GN_OGL_CHECK( glEnableClientState( GL_TEXTURE_COORD_ARRAY ) );
-}
-//
-void GN::gfx::OGLVtxFmt::sDisableTexArray( const StateBindingInfo & info )
-{
-    GN_ASSERT( info.self );
-    info.self->getGpu().chooseClientTextureStage( info.texStage );
-    GN_OGL_CHECK( glDisableClientState( GL_TEXTURE_COORD_ARRAY ) );
 }

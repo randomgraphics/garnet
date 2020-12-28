@@ -710,7 +710,7 @@ GN::gfx::OGLGpuProgramGLSL::enumAttributes()
             nameptr[maxLength] = 0;
 
             GLint location;
-            GN_OGL_CHECK_R( location = glGetAttribLocationARB( mProgram, nameptr ), false );
+            GN_OGL_CHECK_R( location = glGetAttribLocation( mProgram, nameptr ), false );
 
             GLSLAttributeDesc a;
             if( !sGetOglVertexSemantic( a.semanticName, a.semanticIndex, nameptr, location ) ) return false;
@@ -746,7 +746,7 @@ GN::gfx::OGLGpuProgramGLSL::enumAttributes()
             }
 
             GLint location;
-            GN_OGL_CHECK_R( location = glGetAttribLocationARB( mProgram, nameptr ), false );
+            GN_OGL_CHECK_R( location = glGetAttribLocation( mProgram, nameptr ), false );
 
             GLSLAttributeDesc a;
             if( !sGetOglVertexSemantic( a.semanticName, a.semanticIndex, nameptr, location ) ) return false;

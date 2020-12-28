@@ -209,7 +209,6 @@ namespace GN { namespace gfx
 
     public:
 
-        void chooseClientTextureStage( size_t ) const; ///< Choose one stage as client active texture stage.
         void chooseTextureStage( size_t ) const; ///< Choose one texture stage as active stage
         void disableTextureStage( size_t ) const; ///< Disable one texture stage
 

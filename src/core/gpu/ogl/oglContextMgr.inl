@@ -1,24 +1,11 @@
 //
 //
 // ----------------------------------------------------------------------------
-inline void GN::gfx::OGLGpu::chooseClientTextureStage( size_t stage ) const
-{
-    GN_GUARD_SLOW;
-    GN_ASSERT( stage < caps().maxTextures );
-    GN_ASSERT( glClientActiveTextureARB );
-    GN_OGL_CHECK( glClientActiveTextureARB( (GLenum)(GL_TEXTURE0_ARB + stage) ) );
-    GN_UNGUARD_SLOW;
-}
-
-//
-//
-// ----------------------------------------------------------------------------
 inline void GN::gfx::OGLGpu::chooseTextureStage( size_t stage ) const
 {
     GN_GUARD_SLOW;
     GN_ASSERT( stage < caps().maxTextures );
-    GN_ASSERT( glActiveTextureARB );
-    GN_OGL_CHECK( glActiveTextureARB( (GLenum)(GL_TEXTURE0_ARB + stage) ) );
+    GN_OGL_CHECK( glActiveTexture( (GLenum)(GL_TEXTURE0_ARB + stage) ) );
     GN_UNGUARD_SLOW;
 }
 

@@ -212,12 +212,6 @@ static void sOutputOGLInfo( intptr_t disp, const DynaArray<StrA> & glexts )
     GN_UNGUARD;
 }
 
-#ifndef GLAPIENTRY
-#define GLAPIENTRY
-#endif
-static void GLAPIENTRY sFake_glActiveTexture(GLenum) {}
-static void GLAPIENTRY sFake_glClientActiveTexture(GLenum) {}
-
 // *****************************************************************************
 // device management
 // *****************************************************************************
@@ -254,18 +248,9 @@ bool GN::gfx::OGLGpu::capsInit()
     mCaps.maxTex2DSize[0] = mCaps.maxTex2DSize[1] = maxTexSize; mCaps.maxTex2DSize[2] = 1;
 
     // handle case where multi-texture extension is not supported
-    if( GLEW_ARB_multitexture )
-    {
-        GN_OGL_CHECK_R( glGetIntegerv( GL_MAX_TEXTURE_UNITS_ARB, (GLint*)&mCaps.maxTextures ), false );
-    }
-    else
-    {
-        glActiveTextureARB = sFake_glActiveTexture;
-        glClientActiveTextureARB = sFake_glClientActiveTexture;
-        mCaps.maxTextures = 1;
-    }
+    GN_OGL_CHECK_R( glGetIntegerv( GL_MAX_TEXTURE_UNITS_ARB, (GLint*)&mCaps.maxTextures ), false );
 
-    // max render targets
+    // TODO: MRT support
     mCaps.maxColorRenderTargets = 1;
 
     // max vertex attributes
