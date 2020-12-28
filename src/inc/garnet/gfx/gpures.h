@@ -559,6 +559,7 @@ namespace GN { namespace gfx
         ///
         struct GN_API EffectGpuProgramDesc
         {
+            // TODO: add a name field
             ShaderPrerequisites  prerequisites;      ///< prerequisites of the shader.
             GpuProgramDesc       gpd;                ///< GPU Program descriptor
             DynaArray<char>      shaderSourceBuffer; ///< optional buffer used to store store shader source.

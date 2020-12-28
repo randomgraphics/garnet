@@ -127,7 +127,7 @@ void main(
 
 		<!-- GLSL program -->
 
-		<gpuprogram name="glsl" lang="GLSL" shaderModel="GLSL_1_00">
+		<gpuprogram name="glsl" lang="GLSL" shaderModel="GLSL_1_10">
 			<uniref uniform="view" shaderParameter="view"/>
 			<uniref uniform="proj" shaderParameter="proj"/>
 			<uniref uniform="caustic" shaderParameter="caustic"/>

@@ -55,27 +55,9 @@ void GN::gfx::D3D11Gpu::resourceQuit()
 //
 //
 // -----------------------------------------------------------------------------
-GN::Blob *
-GN::gfx::D3D11Gpu::compileGpuProgram( const GpuProgramDesc & gpd )
-{
-    AutoRef<SelfContainedGpuProgramDesc> s = referenceTo( new SelfContainedGpuProgramDesc );
-    if( !s->init( gpd ) ) return NULL;
-
-    // success
-    return s.detach();
-}
-
-//
-//
-// -----------------------------------------------------------------------------
 GN::gfx::GpuProgram *
-GN::gfx::D3D11Gpu::createGpuProgram( const void * data, uint32 length )
+GN::gfx::D3D11Gpu::createGpuProgram( const GpuProgramDesc & desc )
 {
-    AutoRef<SelfContainedGpuProgramDesc> s = referenceTo( new SelfContainedGpuProgramDesc );
-    if( !s->init( data, length ) ) return NULL;
-
-    const GpuProgramDesc & desc = s->getDesc();
-
     if( 0 == (desc.shaderModels & mCaps.shaderModels) )
     {
         GN_ERROR(sLogger)( "Unsupported GPU shader model: %s", ShaderModel::sToString(desc.shaderModels).rawptr() );

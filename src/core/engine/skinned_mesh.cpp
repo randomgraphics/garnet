@@ -286,8 +286,9 @@ sRegisterSkinnedDiffuseEffect( GpuResourceDatabase & gdb )
     ed.attributes["JOINT_WEIGHT"];
     ed.attributes["TEXCOORD"];
 
+    ed.gpuprograms["glsl"].gpd.name = "skinned diffuse effect";
     ed.gpuprograms["glsl"].gpd.lang = GpuProgramLanguage::GLSL;
-    ed.gpuprograms["glsl"].gpd.shaderModels = ShaderModel::GLSL_1_00;
+    ed.gpuprograms["glsl"].gpd.shaderModels = ShaderModel::GLSL_1_10;
     ed.gpuprograms["glsl"].gpd.vs.source = SKINNED_VS_GLSL;
     ed.gpuprograms["glsl"].gpd.ps.source = DIFFUSE_PS_GLSL;
     ed.gpuprograms["glsl"].uniforms["pvw"] = StandardUniform::Desc::MATRIX_PVW.name;
@@ -304,6 +305,7 @@ sRegisterSkinnedDiffuseEffect( GpuResourceDatabase & gdb )
     ed.gpuprograms["glsl"].attributes["fjoints"] = "JOINT_ID";
     ed.gpuprograms["glsl"].attributes["weights"] = "JOINT_WEIGHT";
 
+    ed.gpuprograms["hlsl9"].gpd.name = "skinned diffuse effect";
     ed.gpuprograms["hlsl9"].gpd.lang = GpuProgramLanguage::HLSL9;
     ed.gpuprograms["hlsl9"].gpd.shaderModels = ShaderModel::SM_3_0 | ShaderModel::SM_3_X;
     ed.gpuprograms["hlsl9"].gpd.vs.source = SKINNED_VS_HLSL9;
@@ -449,8 +451,9 @@ sRegisterSkinnedLineEffect( GpuResourceDatabase & gdb )
     ed.attributes["JOINT_ID"];
     ed.attributes["JOINT_WEIGHT"];
 
+    ed.gpuprograms["glsl"].gpd.name = "skinned line effect";
     ed.gpuprograms["glsl"].gpd.lang = GpuProgramLanguage::GLSL;
-    ed.gpuprograms["glsl"].gpd.shaderModels = ShaderModel::GLSL_1_00;
+    ed.gpuprograms["glsl"].gpd.shaderModels = ShaderModel::GLSL_1_10;
     ed.gpuprograms["glsl"].gpd.vs.source = SKINNED_LINE_VS_GLSL;
     ed.gpuprograms["glsl"].gpd.ps.source = SKINNED_LINE_PS_GLSL;
     ed.gpuprograms["glsl"].uniforms["pvw"] = StandardUniform::Desc::MATRIX_PVW.name;
@@ -460,6 +463,7 @@ sRegisterSkinnedLineEffect( GpuResourceDatabase & gdb )
     ed.gpuprograms["glsl"].attributes["fjoints"] = "JOINT_ID";
     ed.gpuprograms["glsl"].attributes["weights"] = "JOINT_WEIGHT";
 
+    ed.gpuprograms["hlsl9"].gpd.name = "skinned line effect";
     ed.gpuprograms["hlsl9"].gpd.lang = GpuProgramLanguage::HLSL9;
     ed.gpuprograms["hlsl9"].gpd.shaderModels = ShaderModel::SM_3_0 | ShaderModel::SM_3_X;
     ed.gpuprograms["hlsl9"].gpd.vs.source = SKINNED_LINE_VS_HLSL9;

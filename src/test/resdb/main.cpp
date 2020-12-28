@@ -66,7 +66,7 @@ void initEffectDesc( EffectResourceDesc & ed )
     ed.attributes["TEXCOORD"];
 
     ed.gpuprograms["glsl"].gpd.lang = GpuProgramLanguage::GLSL;
-    ed.gpuprograms["glsl"].gpd.shaderModels = ShaderModel::GLSL_1_00;
+    ed.gpuprograms["glsl"].gpd.shaderModels = ShaderModel::GLSL_1_10;
     ed.gpuprograms["glsl"].gpd.vs.source = glslvscode;
     ed.gpuprograms["glsl"].gpd.ps.source = glslpscode;
     ed.gpuprograms["glsl"].uniforms["pvw"] = "MATRIX_PVW";

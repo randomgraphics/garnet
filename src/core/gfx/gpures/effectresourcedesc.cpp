@@ -404,12 +404,8 @@ static void sParseGpuProgram( EffectResourceDesc & desc, const XmlElement & node
                 sd.gpd.shaderModels = ShaderModel::SM_4_0;
                 break;
 
-            case GpuProgramLanguage::ARB1:
-                sd.gpd.shaderModels = ShaderModel::ARB1;
-                break;
-
             case GpuProgramLanguage::GLSL:
-                sd.gpd.shaderModels = ShaderModel::GLSL_1_00;
+                sd.gpd.shaderModels = ShaderModel::GLSL_1_10;
                 break;
 
             default:

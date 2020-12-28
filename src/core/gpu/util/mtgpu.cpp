@@ -202,21 +202,10 @@ bool GN::gfx::MultiThreadGpu::checkTextureFormatSupport( ColorFormat format, Tex
 //
 //
 // -----------------------------------------------------------------------------
-Blob * GN::gfx::MultiThreadGpu::compileGpuProgram( const GpuProgramDesc & desc )
-{
-    Blob * cgp;
-    mCommandBuffer.postCommand2( CMD_COMPILE_GPU_PROGRAM, &cgp, &desc );
-    waitForIdle();
-    return cgp;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-GpuProgram * GN::gfx::MultiThreadGpu::createGpuProgram( const void * compiledGpuProgramBinary, uint32 length )
+GpuProgram * GN::gfx::MultiThreadGpu::createGpuProgram( const GpuProgramDesc & desc )
 {
     GpuProgram * gp = NULL;
-    mCommandBuffer.postCommand3( CMD_CREATE_GPU_PROGRAM, &gp, compiledGpuProgramBinary, length );
+    mCommandBuffer.postCommand3( CMD_CREATE_GPU_PROGRAM, &gp, &desc );
     waitForIdle();
     if( NULL == gp ) return NULL;
 
@@ -715,36 +704,18 @@ namespace GN { namespace gfx
     //
     //
     // -------------------------------------------------------------------------
-    void func_COMPILE_GPU_PROGRAM( Gpu & r, void * p, uint32 )
-    {
-#pragma pack( push, 1 )
-        struct CompileGpuProgramParam
-        {
-            Blob                ** cgp;
-            const GpuProgramDesc * desc;
-        };
-#pragma pack( pop )
-        CompileGpuProgramParam * cgpp = (CompileGpuProgramParam*)p;
-
-        *cgpp->cgp = r.compileGpuProgram( *cgpp->desc );
-    }
-
-    //
-    //
-    // -------------------------------------------------------------------------
     void func_CREATE_GPU_PROGRAM( Gpu & r, void * p, uint32 )
     {
 #pragma pack( push, 1 )
         struct CreateGpuProgramParam
         {
             GpuProgram ** gp;
-            const void  * bin;
-            uint32        length;
+            const GpuProgramDesc * desc;
         };
 #pragma pack( pop )
         CreateGpuProgramParam * cgpp = (CreateGpuProgramParam*)p;
 
-        *cgpp->gp = r.createGpuProgram( cgpp->bin, cgpp->length );
+        *cgpp->gp = r.createGpuProgram( *cgpp->desc );
     }
 
     //

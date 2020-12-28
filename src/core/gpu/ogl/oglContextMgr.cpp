@@ -164,7 +164,7 @@ GN::gfx::OGLGpu::bindContextImpl(
 inline OGLVtxFmt *
 GN::gfx::OGLGpu::findOrCreateOGLVtxFmt(
     const VertexBinding & vtxbind,
-    const OGLBasicGpuProgram * program )
+    const OGLGpuProgram * program )
 {
     // get shader ID
     uint64 shaderID;
@@ -198,44 +198,22 @@ GN::gfx::OGLGpu::findOrCreateOGLVtxFmt(
 inline bool
 GN::gfx::OGLGpu::bindContextShaders(
     const GpuContext & newContext,
-    bool                    skipDirtyCheck )
+    bool               skipDirtyCheck )
 {
     GN_GUARD_SLOW;
 
-    const OGLBasicGpuProgram  * oldProgram = (const OGLBasicGpuProgram*)mContext.gpuProgram.rawptr();
-    const OGLBasicGpuProgram  * newProgram = (const OGLBasicGpuProgram*)newContext.gpuProgram.rawptr();
+    GN_UNUSED_PARAM(skipDirtyCheck);
 
-    if( oldProgram == newProgram )
+    const OGLGpuProgram  * newProgram = (const OGLGpuProgram*)newContext.gpuProgram.rawptr();
+
+    // apply new program
+    if( newProgram )
     {
-        if( newProgram )
-        {
-            if( skipDirtyCheck )
-            {
-                newProgram->enable();
-            }
-
-            // Make sure size of AutoRef<T> and T* are same. So we can safely convert AutoRef<T> * to T **
-            GN_CASSERT( sizeof(AutoRef<Uniform>) == sizeof(Uniform*) );
-
-            newProgram->applyUniforms( (const Uniform * const *)newContext.uniforms.rawptr(), newContext.uniforms.size() );
-            newProgram->applyTextures( newContext.textures.rawptr(), newContext.textures.size() );
-        }
-    }
-    else
-    {
-        // disable old program
-        if( oldProgram ) oldProgram->disable();
-
-        // apply new program
-        if( newProgram )
-        {
-            newProgram->enable();
-            newProgram->applyUniforms( (const Uniform * const *)newContext.uniforms.rawptr(), newContext.uniforms.size() );
-            newProgram->applyTextures( newContext.textures.rawptr(), newContext.textures.size() );
-        }
+        newProgram->enable();
+        newProgram->applyUniforms( (const Uniform * const *)newContext.uniforms.rawptr(), newContext.uniforms.size() );
+        newProgram->applyTextures( newContext.textures.rawptr(), newContext.textures.size() );
     }
 
-    GN_OGL_CHECK( (void)0 );
     return true;
 
     GN_UNGUARD_SLOW;
@@ -455,7 +433,7 @@ GN::gfx::OGLGpu::bindContextResources(
     //
     if( skipDirtyCheck || newContext.vtxbind != mContext.vtxbind || newContext.gpuProgram != mContext.gpuProgram )
     {
-        mCurrentOGLVtxFmt = findOrCreateOGLVtxFmt( newContext.vtxbind, (const OGLBasicGpuProgram*)newContext.gpuProgram.rawptr() );
+        mCurrentOGLVtxFmt = findOrCreateOGLVtxFmt( newContext.vtxbind, (const OGLGpuProgram*)newContext.gpuProgram.rawptr() );
         if( !mCurrentOGLVtxFmt ) return false;
         if( !mCurrentOGLVtxFmt->bindStates() ) return false;
     }

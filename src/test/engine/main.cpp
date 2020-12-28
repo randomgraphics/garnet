@@ -81,6 +81,8 @@ bool run()
     return true;
 }
 
+#include <iostream>
+
 int main( int argc, const char * argv[] )
 {
     enableCRTMemoryCheck();
@@ -135,6 +137,5 @@ int main( int argc, const char * argv[] )
     }
 
     engine::shutdown();
-
     return noerror ? 0 : -1;
 }

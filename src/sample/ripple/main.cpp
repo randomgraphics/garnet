@@ -100,7 +100,7 @@ public:
 
         mContext.clear();
 
-        GpuProgramDesc gpd;
+        GpuProgramDesc gpd("ripple");
         gpd.lang = GpuProgramLanguage::HLSL9;
         gpd.shaderModels = ShaderModel::SM_2_0;
         gpd.vs.source = rippleCode;

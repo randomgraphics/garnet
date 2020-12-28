@@ -154,8 +154,7 @@ namespace GN { namespace gfx
 
     public :
 
-        virtual Blob       * compileGpuProgram( const GpuProgramDesc & desc );
-        virtual GpuProgram * createGpuProgram( const void * compiledGpuProgramBinary, uint32 length );
+        virtual GpuProgram * createGpuProgram( const GpuProgramDesc & desc );
         virtual Uniform    * createUniform( uint32 size );
         virtual Texture    * createTexture( const TextureDesc & desc );
         virtual VtxBuf     * createVtxBuf( const VtxBufDesc & desc );

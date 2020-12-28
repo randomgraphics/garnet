@@ -94,11 +94,11 @@ bool GN::gfx::LineRenderer::init()
 
     // create GPU program
     const GpuCaps & caps = mGpu.caps();
-    GpuProgramDesc gpd;
-    if( caps.shaderModels & ShaderModel::GLSL_1_00 )
+    GpuProgramDesc gpd("LineRenderer");
+    if( caps.shaderModels & ShaderModel::GLSL_1_10 )
     {
         gpd.lang = GpuProgramLanguage::GLSL;
-        gpd.shaderModels = ShaderModel::GLSL_1_00;
+        gpd.shaderModels = ShaderModel::GLSL_1_10;
         gpd.vs.source = glslvscode;
         gpd.ps.source = glslpscode;
 
@@ -328,7 +328,7 @@ bool GN::gfx::ThickLineRenderer::init( Gpu & g )
 
     // initialize shaders
     const GpuCaps & caps = g.caps();
-    GpuProgramDesc gpd;
+    GpuProgramDesc gpd("ThickLinkeRenderer");
     if( caps.shaderModels & ShaderModel::SM_2_0 )
     {
         const char * hlslvscode = R"(
@@ -371,7 +371,7 @@ bool GN::gfx::ThickLineRenderer::init( Gpu & g )
         mContext.vtxbind[1].attribute = gppd.attributes["COLOR0"];
         mContext.vtxbind[2].attribute = gppd.attributes["TEXCOORD0"];
     }
-    else if( caps.shaderModels & ShaderModel::GLSL_1_00 )
+    else if( caps.shaderModels & ShaderModel::GLSL_1_10 )
     {
         static const char * glslvscode = R"(
             in vec4 i_Position;
@@ -395,7 +395,7 @@ bool GN::gfx::ThickLineRenderer::init( Gpu & g )
         )";
 
         gpd.lang = GpuProgramLanguage::GLSL;
-        gpd.shaderModels = ShaderModel::GLSL_1_00;
+        gpd.shaderModels = ShaderModel::GLSL_1_10;
         gpd.vs.source = glslvscode;
         gpd.ps.source = glslpscode;
 

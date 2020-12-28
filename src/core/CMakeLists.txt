@@ -46,6 +46,7 @@ GN_add_source_folder(sources win PCH_SOURCE win/pch.cpp)
 # OpenGL GPU Sources
 if (OPENGL_FOUND)
     GN_add_source_folder(sources gpu/ogl PCH_SOURCE gpu/ogl/pch.cpp)
+    GN_add_source_folder(sources gfx/ogl PCH_SOURCE gfx/ogl/pch.cpp)
 endif()
 
 # D3D11 GPU Sources

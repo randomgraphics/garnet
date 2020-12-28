@@ -967,27 +967,10 @@ namespace GN { namespace gfx
         //@{
 
         ///
-        /// Compile shader into platform dependant format
-        ///
-        virtual Blob *
-        compileGpuProgram( const GpuProgramDesc & desc ) = 0;
-
-        ///
-        /// create shader
+        /// create GPU program
         ///
         virtual GpuProgram *
-        createGpuProgram( const void * compiledGpuProgramBinary, uint32 length ) = 0;
-
-        ///
-        /// create shader directly from description
-        ///
-        GpuProgram *
-        createGpuProgram( const GpuProgramDesc & desc )
-        {
-            AutoRef<Blob> bin = attachTo( compileGpuProgram( desc ) );
-            if( !bin ) return NULL;
-            return createGpuProgram( bin->data(), bin->size() );
-        }
+        createGpuProgram(const GpuProgramDesc & desc) = 0;
 
         ///
         /// create GPU uniform
@@ -1267,33 +1250,6 @@ namespace GN { namespace gfx
                              uint32        numvtx,
                              const void *  vertexData,
                              uint32        strideInBytes ) = 0;
-
-        ///
-        /// Draw line segments
-        ///
-        /// \param options
-        ///     渲染选项，详见 DrawLineOptions。Set to 0 to use default options
-        /// \param positions
-        ///     顶点坐标数据，由一系列的3D顶点组成。2个顶点表示一条线段。
-        ///     选项 DL_WINDOW_SPACE会影响坐标的含义。
-        /// \param stride
-        ///     stride of one vertex.
-        /// \param numpoints
-        ///     Number of points (note: _NOT_ number of line segments)
-        /// \param rgba
-        ///     line color, in R-G-B-A format.
-        /// \param model, view, proj
-        ///     Transformation matrices. Ignored when using DL_WINDOW_SPACE.
-        ///
-        GN_DEPRECIATED
-        virtual void drawLines( uint32         options,
-                                const void *      positions,
-                                uint32            stride,
-                                uint32            numpoints,
-                                uint32            rgba,
-                                const Matrix44f & model,
-                                const Matrix44f & view,
-                                const Matrix44f & proj ) = 0;
 
         //@}
 

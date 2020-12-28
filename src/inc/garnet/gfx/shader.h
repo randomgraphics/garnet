@@ -21,8 +21,6 @@ namespace GN { namespace gfx
 
             HLSL10,         ///< HLSL for D3D10+
 
-            ARB1,           ///< OpenGL ARB1 shading language
-
             GLSL,           ///< OpenGL Shading language
 
             COUNT,          ///< Number of GPU program languages
@@ -33,7 +31,6 @@ namespace GN { namespace gfx
         {
             return HLSL9 == *this
                 || HLSL10 == *this
-                || ARB1 == *this
                 || GLSL == *this;
         }
 
@@ -44,7 +41,6 @@ namespace GN { namespace gfx
             {
                 case HLSL9     : return "HLSL9";
                 case HLSL10    : return "HLSL10";
-                case ARB1      : return "ARB1";
                 case GLSL      : return "GLSL";
                 default        : return "INVALID_GPU_PROGRAM_LANGUAGE";
             };
@@ -55,7 +51,6 @@ namespace GN { namespace gfx
         {
                  if( 0 == str::compareI( s, "HLSL9" ) )     return HLSL9;
             else if( 0 == str::compareI( s, "HLSL10" ) )    return HLSL10;
-            else if( 0 == str::compareI( s, "ARB1" ) )      return ARB1;
             else if( 0 == str::compareI( s, "GLSL" ) )      return GLSL;
             else                                             return INVALID;
         }
@@ -95,11 +90,8 @@ namespace GN { namespace gfx
             SM_4_0     = 1<<3, //< D3D Shader Model 4.0 (D3D10)
             SM_5_0     = 1<<4, //< D3D Shader Model 5.0 (D3D11)
 
-            ARB1       = 1<<5, //< OpenGL ARB shader program 1.0
-            GLSL_1_00  = 1<<6, //< OpenGL Shading Language 1.00
-            GLSL_1_20  = 1<<7, //< OpenGL Shading Language 1.20 (OpenGL 2.0+)
-            GLSL_1_30  = 1<<8, //< OpenGL Shading Language 1.30 (GL_EXT_gpu_shader4)
-            GLSL_1_50  = 1<<9, //< OpenGL Shading Language 1.50 (GL_ARB_gpu_shader5)
+            GLSL_1_10  = 1<<5, //< OpenGL Shading Language 1.10 (OpenGL 2.0+)
+            GLSL_3_30  = 1<<6, //< OpenGL Shading Language 3.30 (OpenGL 3.3+)
         };
 
         static uint32 sFromString( const char * str )
@@ -129,11 +121,8 @@ namespace GN { namespace gfx
                 else if( 0 == str::compareI( "SM_3_X"   , s, len ) ) flags |= SM_3_X;
                 else if( 0 == str::compareI( "SM_4_0",    s, len ) ) flags |= SM_4_0;
                 else if( 0 == str::compareI( "SM_5_0",    s, len ) ) flags |= SM_5_0;
-                else if( 0 == str::compareI( "ARB1",      s, len ) ) flags |= ARB1;
-                else if( 0 == str::compareI( "GLSL_1_00", s, len ) ) flags |= GLSL_1_00;
-                else if( 0 == str::compareI( "GLSL_1_20", s, len ) ) flags |= GLSL_1_20;
-                else if( 0 == str::compareI( "GLSL_1_30", s, len ) ) flags |= GLSL_1_30;
-                else if( 0 == str::compareI( "GLSL_1_50", s, len ) ) flags |= GLSL_1_50;
+                else if( 0 == str::compareI( "GLSL_1_10", s, len ) ) flags |= GLSL_1_10;
+                else if( 0 == str::compareI( "GLSL_3_30", s, len ) ) flags |= GLSL_3_30;
 
                 GN_ASSERT( '|' == *e || 0 == *e );
                 str = e;
@@ -152,11 +141,8 @@ namespace GN { namespace gfx
             if( flags & SM_3_X    ) { flags &= ~SM_3_X;    str += str.empty() ? "SM_3_X"    : "|SM_3_X"; }
             if( flags & SM_4_0    ) { flags &= ~SM_4_0;    str += str.empty() ? "SM_4_0"    : "|SM_4_0"; }
             if( flags & SM_5_0    ) { flags &= ~SM_5_0;    str += str.empty() ? "SM_5_0"    : "|SM_5_0"; }
-            if( flags & ARB1      ) { flags &= ~ARB1;      str += str.empty() ? "ARB1"      : "|ARB1"; }
-            if( flags & GLSL_1_00 ) { flags &= ~GLSL_1_00; str += str.empty() ? "GLSL_1_00" : "|GLSL_1_00"; }
-            if( flags & GLSL_1_20 ) { flags &= ~GLSL_1_20; str += str.empty() ? "GLSL_1_20" : "|GLSL_1_20"; }
-            if( flags & GLSL_1_30 ) { flags &= ~GLSL_1_30; str += str.empty() ? "GLSL_1_30" : "|GLSL_1_30"; }
-            if( flags & GLSL_1_50 ) { flags &= ~GLSL_1_50; str += str.empty() ? "GLSL_1_50" : "|GLSL_1_50"; }
+            if( flags & GLSL_1_10 ) { flags &= ~GLSL_1_10; str += str.empty() ? "GLSL_1_10" : "|GLSL_1_10"; }
+            if( flags & GLSL_3_30 ) { flags &= ~GLSL_3_30; str += str.empty() ? "GLSL_3_30" : "|GLSL_3_30"; }
 
             if( flags )
             {
@@ -204,6 +190,8 @@ namespace GN { namespace gfx
         };
         };
 
+        const char * name; // optional prgram name. for debugging/logging only.
+
         /// compile options
         //@{
         bool optimize; //< generate optimized shader. Default is on.
@@ -213,9 +201,10 @@ namespace GN { namespace gfx
         ///
         /// default constructor
         ///
-        GpuProgramDesc()
+        GpuProgramDesc(const char * name_ = nullptr)
             : lang(GpuProgramLanguage::INVALID)
             , shaderModels(0)
+            , name(name_)
             , optimize(true)
             , debug(true)
         {

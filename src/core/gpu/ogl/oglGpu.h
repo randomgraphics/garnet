@@ -11,7 +11,7 @@
 namespace GN { namespace gfx
 {
     class OGLResource;
-    class OGLBasicGpuProgram;
+    class OGLGpuProgram;
     class OGLVtxFmt;
     class OGLBasicRTMgr;
 
@@ -161,8 +161,7 @@ namespace GN { namespace gfx
 
     public :
 
-        virtual Blob       * compileGpuProgram( const GpuProgramDesc & desc );
-        virtual GpuProgram * createGpuProgram( const void * compiledGpuProgramBinary, uint32 length );
+        virtual GpuProgram * createGpuProgram( const GpuProgramDesc & desc );
         virtual Uniform    * createUniform( uint32 size );
         virtual Texture    * createTexture( const TextureDesc & desc );
         virtual VtxBuf     * createVtxBuf( const VtxBufDesc & desc );
@@ -217,7 +216,7 @@ namespace GN { namespace gfx
         void contextQuit();
         void contextClear() { mContext.clear(); mCurrentOGLVtxFmt = NULL; mRTMgr = NULL; }
 
-        inline OGLVtxFmt * findOrCreateOGLVtxFmt( const VertexBinding & vtxbind, const OGLBasicGpuProgram * gpuProgram );
+        inline OGLVtxFmt * findOrCreateOGLVtxFmt( const VertexBinding & vtxbind, const OGLGpuProgram * gpuProgram );
         inline bool bindContextShaders( const GpuContext & newContext, bool skipDirtyCheck );
         inline bool bindContextRenderStates( const GpuContext & newContext, bool skipDirtyCheck );
         inline bool bindContextRenderTargets( const GpuContext & newContext, bool skipDirtyCheck );

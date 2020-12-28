@@ -22,12 +22,17 @@ namespace GN { namespace ogl
 {
     using GN::gfx::ColorFormat;
 
-    // The 'optionalFilename' parameter is optional and is only used when printing
-    // shader compilation error.
-    GLuint loadShaderFromString(const char* source, size_t length, GLenum shaderType, const char* optionalFilename = nullptr);
+    /// The 'optionalFilename' parameter is optional and is only used when printing
+    /// shader compilation error.
+    GN_API GLuint loadShaderFromString(const char* source, size_t length, GLenum shaderType, const char* optionalFilename = nullptr);
 
-    // the program name parameter is optional and is only used to print link error.
-    GLuint linkProgram(const std::vector<GLuint>& shaders, const char* optionalProgramName = nullptr);
+    /// the program name parameter is optional and is only used to print link error.
+    GN_API GLuint linkProgram(const GLuint * shaders, size_t count, const char* optionalProgramName = nullptr);
+
+    /// link program from a list of shader stored in stl vector
+    inline GLuint linkProgram(const std::vector<GLuint> & shaders, const char* optionalProgramName = nullptr) {
+        return linkProgram(shaders.data(), shaders.size(), optionalProgramName);
+    }
 
     // a utility function to upload uniform values
     template<typename T>

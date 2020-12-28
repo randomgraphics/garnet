@@ -88,11 +88,11 @@ bool GN::gfx::SpriteRenderer::init(Gpu & gpu)
 
     // create GPU program
     const GpuCaps & caps = mGpu->caps();
-    GpuProgramDesc gpd;
-    if( caps.shaderModels & ShaderModel::GLSL_1_00 )
+    GpuProgramDesc gpd("Sprite");
+    if( caps.shaderModels & ShaderModel::GLSL_1_10 )
     {
         gpd.lang = GpuProgramLanguage::GLSL;
-        gpd.shaderModels = ShaderModel::GLSL_1_00;
+        gpd.shaderModels = ShaderModel::GLSL_1_10;
         gpd.vs.source = glslvscode;
         gpd.ps.source = glslpscode;
 

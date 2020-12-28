@@ -862,6 +862,8 @@ void GN::gfx::OGLTexture::readMipmap( uint32, uint32, MipmapData & )
 // -----------------------------------------------------------------------------
 void GN::gfx::OGLTexture::setSampler( const SamplerDesc & samp, bool forceUpdate ) const
 {
+    GN_GUARD_SLOW;
+
     if( !forceUpdate && samp == mSampler ) return;
 
     mSamplerDirty = true;
@@ -907,4 +909,6 @@ void GN::gfx::OGLTexture::setSampler( const SamplerDesc & samp, bool forceUpdate
     mOGLWraps[0] = sTexWrap2OGL( samp.addressU );
     mOGLWraps[1] = sTexWrap2OGL( samp.addressV );
     mOGLWraps[2] = sTexWrap2OGL( samp.addressW );
+
+    GN_UNGUARD_SLOW;
 }

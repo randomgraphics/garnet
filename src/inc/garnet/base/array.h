@@ -784,6 +784,7 @@ namespace GN
         //@}
     };
 
+    // TODO: replace with std::size()
     template <typename T, std::size_t N>
     constexpr std::size_t countof(T const (&)[N]) noexcept
     {

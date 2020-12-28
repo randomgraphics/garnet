@@ -79,14 +79,6 @@ static void sGetOpenGLVersion( const char * version, int * major, int * minor, i
 /// Check required extensions
 // ------------------------------------------------------------------------
 static bool sCheckRequiredExtensions( const DynaArray<StrA> & extensions ) {
-    const char * version = (const char *)glGetString(GL_VERSION);
-    int major;
-    sGetOpenGLVersion( version, &major, NULL, NULL );
-    if (major < 2) {
-        GN_ERROR(sLogger)("OpenGL version 2.0+ is required.");
-        return false;
-    }
-
     static const char * sRequiredExtensions[] = {
         "GL_EXT_bgra",                 // 1.1
         "GL_ARB_vertex_buffer_object", // 1.4
@@ -235,6 +227,14 @@ bool GN::gfx::OGLGpu::capsInit()
     }
     sOutputOGLInfo( getDispDesc().displayHandle, glexts );
 
+    // Get Opengl Major version
+    int majorVersion, miniorVersion;
+    sGetOpenGLVersion( (const char *)glGetString( GL_VERSION ), &majorVersion, &miniorVersion, NULL );
+    if (majorVersion < 2) {
+        GN_ERROR(sLogger)("OpenGL version 2.0+ is required.");
+        return false;
+    }
+
     // check required extension
     if( !sCheckRequiredExtensions( glexts ) ) return false;
 
@@ -263,36 +263,13 @@ bool GN::gfx::OGLGpu::capsInit()
         mCaps.maxVertexAttributes = 0;
     }
 
-    // Get Opengl Major version
-    int majorVersion;
-    sGetOpenGLVersion( (const char *)glGetString( GL_VERSION ), &majorVersion, NULL, NULL );
-
     // shader caps
-    if( GLEW_ARB_vertex_program && GLEW_ARB_fragment_program )
+    mCaps.shaderModels |= ShaderModel::GLSL_1_10; // GLSL 110 is part of GL 2.0+
+    int glslMajor, glslMinor;
+    sGetOpenGLVersion( (const char *)glGetString( GL_SHADING_LANGUAGE_VERSION ), &glslMajor, &glslMinor, NULL );
+    if( glslMajor > 3 || (glslMajor == 3 && glslMinor >= 30) )
     {
-        mCaps.shaderModels |= ShaderModel::ARB1;
-    }
-    if( GLEW_ARB_shader_objects && GLEW_ARB_shading_language_100 && GLEW_ARB_vertex_shader && GLEW_ARB_fragment_shader )
-    {
-        mCaps.shaderModels |= ShaderModel::GLSL_1_00;
-    }
-    if( majorVersion >= 2 )
-    {
-        int glslMajor, glslMinor;
-        sGetOpenGLVersion( (const char *)glGetString( GL_SHADING_LANGUAGE_VERSION ), &glslMajor, &glslMinor, NULL );
-
-        if( glslMajor > 1 || (glslMajor==1 && glslMinor >= 20) )
-        {
-            mCaps.shaderModels |= ShaderModel::GLSL_1_20;
-        }
-        if( glslMajor > 1 || (glslMajor==1 && glslMinor >= 30) )
-        {
-            mCaps.shaderModels |= ShaderModel::GLSL_1_30;
-        }
-        if( glslMajor > 1 || (glslMajor==1 && glslMinor >= 50) )
-        {
-            mCaps.shaderModels |= ShaderModel::GLSL_1_50;
-        }
+        mCaps.shaderModels |= ShaderModel::GLSL_3_30;
     }
 
     // success;

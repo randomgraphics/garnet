@@ -34,7 +34,7 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        bool init( const VertexBinding &, const OGLBasicGpuProgram * program );
+        bool init( const VertexBinding &, const OGLGpuProgram * program );
         void quit();
     private:
         void clear() { mAttribBindings.clear(); mStateBindings.clear(); mValid = false; }
@@ -118,7 +118,7 @@ namespace GN { namespace gfx
     private:
 
         // setup state binding
-        bool setupStateBindings( const OGLBasicGpuProgram * gpuProgram );
+        bool setupStateBindings( const OGLGpuProgram * gpuProgram );
         bool getStandardVertexBindingDesc( OGLVertexBindingDesc & result, const char * bindingName, uint8 bindingIndex );
         static void sSetVertexAttributePointer( const AttribBindingInfo &, const uint8 * buf, size_t stride );
         static void sEnableVAA( const StateBindingInfo & info );

@@ -113,7 +113,7 @@ static AutoRef<EffectResource> sRegisterDiffuseEffect( GpuResourceDatabase & gdb
     ed.attributes["TEXCOORD"];
 
     ed.gpuprograms["glsl"].gpd.lang = GpuProgramLanguage::GLSL;
-    ed.gpuprograms["glsl"].gpd.shaderModels = ShaderModel::GLSL_1_00;
+    ed.gpuprograms["glsl"].gpd.shaderModels = ShaderModel::GLSL_1_10;
     ed.gpuprograms["glsl"].gpd.vs.source = DIFFUSE_VS_GLSL;
     ed.gpuprograms["glsl"].gpd.ps.source = DIFFUSE_PS_GLSL;
     ed.gpuprograms["glsl"].uniforms["pvw"] = StandardUniform::Desc::MATRIX_PVW.name;
@@ -210,7 +210,7 @@ static AutoRef<EffectResource> sRegisterWireframeEffect( GpuResourceDatabase & g
     ed.attributes["POSITION"];
 
     ed.gpuprograms["glsl"].gpd.lang = GpuProgramLanguage::GLSL;
-    ed.gpuprograms["glsl"].gpd.shaderModels = ShaderModel::GLSL_1_00;
+    ed.gpuprograms["glsl"].gpd.shaderModels = ShaderModel::GLSL_1_10;
     ed.gpuprograms["glsl"].gpd.vs.source = WIREFRAME_VS_GLSL;
     ed.gpuprograms["glsl"].gpd.ps.source = WIREFRAME_PS_GLSL;
     ed.gpuprograms["glsl"].uniforms["pvw"] = StandardUniform::Desc::MATRIX_PVW.name;
@@ -354,7 +354,7 @@ static AutoRef<EffectResource> sRegisterNormalMapEffect( GpuResourceDatabase & g
     ed.attributes["TEXCOORD"];
 
     ed.gpuprograms["glsl"].gpd.lang = GpuProgramLanguage::GLSL;
-    ed.gpuprograms["glsl"].gpd.shaderModels = ShaderModel::GLSL_1_00;
+    ed.gpuprograms["glsl"].gpd.shaderModels = ShaderModel::GLSL_1_10;
     ed.gpuprograms["glsl"].gpd.vs.source = NORMALMAP_VS_GLSL;
     ed.gpuprograms["glsl"].gpd.ps.source = NORMALMAP_PS_GLSL;
     ed.gpuprograms["glsl"].uniforms["pvw"] = "MATRIX_PVW";

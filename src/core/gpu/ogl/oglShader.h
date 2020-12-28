@@ -67,60 +67,6 @@ namespace GN { namespace gfx
         uint8             index;
     };
 
-    ///
-    /// Basic OGL GPU program class
-    ///
-    class OGLBasicGpuProgram : public GpuProgram, public OGLResource
-    {
-    public:
-
-        ///
-        /// return non-zero unique shader ID.
-        ///
-        uint64 uniqueID() const { return mID; }
-
-        ///
-        /// Get vertex buffer binding description of specific attribute.
-        /// Return false, if the binding name and index is not used byt the program.
-        ///
-        virtual bool getBindingDesc( OGLVertexBindingDesc & result, uint32 attributeIndex ) const = 0;
-
-        ///
-        /// Enable the program
-        ///
-        virtual void enable() const = 0;
-
-        ///
-        /// Disable the program
-        ///
-        virtual void disable() const = 0;
-
-        ///
-        /// Apply uniforms to OpenGL
-        ///
-        virtual void applyUniforms( const Uniform * const * uniforms, uint32 count ) const = 0;
-
-        ///
-        /// Apply textures to OpenGL
-        ///
-        virtual void applyTextures( const TextureBinding * textures, uint32 count ) const = 0;
-
-    protected:
-
-        ///
-        /// protected ctor
-        ///
-        OGLBasicGpuProgram( OGLGpu & r ) : OGLResource(r)
-        {
-            static uint64 counter = 1;
-            mID = counter++;
-        }
-
-    private:
-
-        uint64 mID;
-    };
-
     // *************************************************************************
     // GLSL program
     // *************************************************************************
@@ -128,9 +74,9 @@ namespace GN { namespace gfx
     ///
     /// GLSL program class
     ///
-    class OGLGpuProgramGLSL : public OGLBasicGpuProgram, public StdClass
+    class OGLGpuProgram : public GpuProgram, public OGLResource, public StdClass
     {
-         GN_DECLARE_STDCLASS( OGLGpuProgramGLSL, StdClass );
+         GN_DECLARE_STDCLASS( OGLGpuProgram, StdClass );
 
         // ********************************
         // ctor/dtor
@@ -138,8 +84,8 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        OGLGpuProgramGLSL( OGLGpu & r ) : OGLBasicGpuProgram( r ) { clear(); }
-        virtual ~OGLGpuProgramGLSL() { quit(); }
+        OGLGpuProgram( OGLGpu & r ) : OGLResource( r ) { static uint64 counter = 1; mID = counter++; clear(); }
+        virtual ~OGLGpuProgram() { quit(); }
         //@}
 
         // ********************************
@@ -151,7 +97,7 @@ namespace GN { namespace gfx
         bool init( const GpuProgramDesc & desc );
         void quit();
     private:
-        void clear() { mProgram = 0; mVS = 0; mPS = 0; }
+        void clear() { mProgram = 0; }
         //@}
 
         // ********************************
@@ -163,30 +109,34 @@ namespace GN { namespace gfx
         virtual const GpuProgramParameterDesc & getParameterDesc() const { return mParamDesc; }
 
         // ********************************
-        // from OGLBasicGpuProgram
+        // from OGLGpuProgram
         // ********************************
     public:
 
-        virtual bool getBindingDesc( OGLVertexBindingDesc & result, uint32 attributeIndex ) const;
+        ///
+        /// return non-zero unique shader ID.
+        ///
+        uint64 uniqueID() const { return mID; }
 
-        virtual void enable() const
+        bool getBindingDesc( OGLVertexBindingDesc & result, uint32 attributeIndex ) const;
+
+        void enable() const
         {
-            GN_OGL_CHECK( glUseProgramObjectARB( mProgram ) );
+            GN_GUARD_SLOW;
+            glUseProgram(mProgram);
+            GN_UNGUARD_SLOW;
         }
 
-        virtual void disable() const
-        {
-            GN_OGL_CHECK( glUseProgramObjectARB( 0 ) );
-        }
+        void applyUniforms( const Uniform * const * uniforms, uint32 count ) const;
 
-        virtual void applyUniforms( const Uniform * const * uniforms, uint32 count ) const;
-
-        virtual void applyTextures( const TextureBinding * textures, uint32 count ) const;
+        void applyTextures( const TextureBinding * textures, uint32 count ) const;
 
         // ********************************
         // private variables
         // ********************************
     private:
+
+        uint64_t mID;
 
         ///
         /// GLSL uniform parameter description
@@ -216,10 +166,8 @@ namespace GN { namespace gfx
             uint8                            semanticIndex;
         };
 
-        // GLSL program and shader object handles
-        GLhandleARB mProgram;
-        GLhandleARB mVS;
-        GLhandleARB mPS;
+        // GLSL program
+        GLuint mProgram = 0;
 
         // uniforms
         DynaArray<GLSLUniformOrTextureDesc,uint32>  mUniforms;

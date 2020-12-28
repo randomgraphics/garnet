@@ -418,6 +418,11 @@ namespace GN
         const CharType * rawptr() const { return mPtr; }
 
         ///
+        /// return c-style const char pointer
+        ///
+        const CharType * data() const { return mPtr; }
+
+        ///
         /// empty string or not?
         ///
         bool empty() const { return 0 == size(); }

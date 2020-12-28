@@ -14,7 +14,7 @@ static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.OGL.VtxFmt");
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::OGLVtxFmt::init( const VertexBinding & attributes, const OGLBasicGpuProgram * program )
+bool GN::gfx::OGLVtxFmt::init( const VertexBinding & attributes, const OGLGpuProgram * program )
 {
     GN_GUARD;
 
@@ -136,7 +136,7 @@ GN::gfx::OGLVtxFmt::bindRawMemoryBuffer( const void * data, size_t stride ) cons
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::OGLVtxFmt::setupStateBindings( const OGLBasicGpuProgram * gpuProgram )
+bool GN::gfx::OGLVtxFmt::setupStateBindings( const OGLGpuProgram * gpuProgram )
 {
     GN_GUARD;
 

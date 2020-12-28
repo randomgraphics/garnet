@@ -73,6 +73,8 @@ namespace GN { namespace gfx
         ///
         void bind() const
         {
+            GN_GUARD_SLOW;
+        
             // switch( mTarget )
             // {
             //     case GL_TEXTURE_1D           : glDisable( GL_TEXTURE_2D ); [[fallthrough]];
@@ -94,6 +96,8 @@ namespace GN { namespace gfx
                 }
                 mSamplerDirty = false;
             }
+
+            GN_UNGUARD_SLOW;
         }
 
         ///

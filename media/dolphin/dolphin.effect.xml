@@ -147,7 +147,7 @@ void main(
 
 		<!-- GLSL program -->
 
-		<gpuprogram name="glsl" lang="GLSL" shaderModel="GLSL_1_00">
+		<gpuprogram name="glsl" lang="GLSL" shaderModel="GLSL_1_10">
 			<uniref uniform="pvw"         shaderParameter="g_matWorldViewProj"/>
 			<uniref uniform="viewworld"   shaderParameter="g_matWorldView"/>
 			<uniref uniform="weights"     shaderParameter="g_vBlendWeights"/>

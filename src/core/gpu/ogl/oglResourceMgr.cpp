@@ -61,32 +61,10 @@ void GN::gfx::OGLGpu::resourceQuit()
 //
 //
 // -----------------------------------------------------------------------------
-Blob *
-GN::gfx::OGLGpu::compileGpuProgram( const GpuProgramDesc & gpd )
-{
-    GN_GUARD;
-
-    AutoRef<SelfContainedGpuProgramDesc> s = referenceTo( new SelfContainedGpuProgramDesc );
-    if( !s->init( gpd ) ) return NULL;
-
-    // success
-    return s.detach();
-
-    GN_UNGUARD;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
 GN::gfx::GpuProgram *
-GN::gfx::OGLGpu::createGpuProgram( const void * data, uint32 length )
+GN::gfx::OGLGpu::createGpuProgram( const GpuProgramDesc & desc )
 {
     GN_GUARD;
-
-    AutoRef<SelfContainedGpuProgramDesc> s = referenceTo( new SelfContainedGpuProgramDesc );
-    if( !s->init( data, length ) ) return NULL;
-
-    const GpuProgramDesc & desc = s->getDesc();
 
     if( 0 == (desc.shaderModels & mCaps.shaderModels) )
     {
@@ -98,7 +76,7 @@ GN::gfx::OGLGpu::createGpuProgram( const void * data, uint32 length )
     {
         case GpuProgramLanguage::GLSL:
         {
-            AutoRef<OGLGpuProgramGLSL> prog = referenceTo( new OGLGpuProgramGLSL(*this) );
+            AutoRef<OGLGpuProgram> prog = referenceTo( new OGLGpuProgram(*this) );
             if( !prog->init( desc ) ) return NULL;
             return prog.detach();
         }

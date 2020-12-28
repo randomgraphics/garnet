@@ -17,7 +17,6 @@ void func_GET_OGL_RC( Gpu &, void *, uint32 );
 void func_GET_CAPS( Gpu &, void *, uint32 );
 void func_CHECK_TEXTURE_FORMAT_SUPPORT( Gpu &, void *, uint32 );
 void func_GET_DEFAULT_TEXTURE_FORMAT( Gpu &, void *, uint32 );
-void func_COMPILE_GPU_PROGRAM( Gpu &, void *, uint32 );
 void func_CREATE_GPU_PROGRAM( Gpu &, void *, uint32 );
 void func_CREATE_UNIFORM( Gpu &, void *, uint32 );
 void func_CREATE_TEXTURE( Gpu &, void *, uint32 );
@@ -66,7 +65,6 @@ const GpuCommandHandler g_gpuCommandHandlers[] = {
 &func_GET_CAPS,
 &func_CHECK_TEXTURE_FORMAT_SUPPORT,
 &func_GET_DEFAULT_TEXTURE_FORMAT,
-&func_COMPILE_GPU_PROGRAM,
 &func_CREATE_GPU_PROGRAM,
 &func_CREATE_UNIFORM,
 &func_CREATE_TEXTURE,
