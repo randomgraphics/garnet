@@ -37,7 +37,7 @@ namespace GN { namespace gfx
         bool init( const VertexBinding &, const OGLGpuProgram * program );
         void quit();
     private:
-        void clear() { mAttribBindings.clear(); mStateBindings.clear(); mValid = false; }
+        void clear() { mAttribBindings.clear(); mVAO = 0; }
         //@}
 
         // ********************************
@@ -48,7 +48,17 @@ namespace GN { namespace gfx
         ///
         /// Bind the format to device
         ///
-        bool bindStates() const;
+        bool bindStates() const {
+            GN_GUARD_SLOW;
+            if (mVAO) {
+                glBindVertexArray(mVAO);
+                return true;
+            } else {
+                return false;
+            }
+            GN_UNGUARD_SLOW;
+        }
+
 
         ///
         /// Bind the buffer to device
@@ -78,39 +88,9 @@ namespace GN { namespace gfx
             GLboolean         normalization;
         };
 
-        typedef void (*FP_setOglVertexBuffer)( const AttribBindingInfo &, const uint8 * buf, size_t stride );
-
-        struct AttribBinding
-        {
-            AttribBindingInfo     info;
-            FP_setOglVertexBuffer func;
-            void bind( const void * buf, size_t stride ) const
-            {
-                GN_ASSERT( func );
-                func( info, (const uint8*)buf, stride );
-            }
-        };
-
-        struct StateBindingInfo
-        {
-            const OGLVtxFmt * self;
-            size_t            texStage;
-            GLenum            semantic;
-            GLuint            attribute;
-        };
-
-        typedef void (*FP_setOglVertexState)( const StateBindingInfo & );
-
-        struct StateBinding
-        {
-            StateBindingInfo     info;
-            FP_setOglVertexState func;
-        };
-
-        VertexBinding   mFormat;
-        bool                                mValid;
-        DynaArray<AttribBinding>            mAttribBindings;
-        DynaArray<StateBinding>             mStateBindings;
+        VertexBinding                       mFormat;
+        DynaArray<AttribBindingInfo>        mAttribBindings;
+        GLuint                              mVAO;
 
         // ********************************
         // private functions
@@ -119,10 +99,6 @@ namespace GN { namespace gfx
 
         // setup state binding
         bool setupStateBindings( const OGLGpuProgram * gpuProgram );
-        bool getStandardVertexBindingDesc( OGLVertexBindingDesc & result, const char * bindingName, uint8 bindingIndex );
-        static void sSetVertexAttributePointer( const AttribBindingInfo &, const uint8 * buf, size_t stride );
-        static void sEnableVAA( const StateBindingInfo & info );
-        static void sDisableVAA( const StateBindingInfo & info );
     };
 }}
 

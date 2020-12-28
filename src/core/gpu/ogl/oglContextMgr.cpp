@@ -442,7 +442,6 @@ GN::gfx::OGLGpu::bindContextResources(
     // Note: vertex and index buffers are binded by draw manager
     //
 
-    GN_OGL_CHECK( (void)0 );
     return true;
 
     GN_UNGUARD_SLOW;

@@ -23,7 +23,7 @@ bool GN::gfx::OGLVtxFmt::init( const VertexBinding & attributes, const OGLGpuPro
 
     mFormat = attributes;
 
-    mValid = setupStateBindings( program );
+    setupStateBindings( program );
 
     // success
     return success();
@@ -38,6 +38,8 @@ void GN::gfx::OGLVtxFmt::quit()
 {
     GN_GUARD;
 
+    if (mVAO) glDeleteVertexArrays(1, &mVAO), mVAO = 0;
+
     // standard quit procedure
     GN_STDCLASS_QUIT();
 
@@ -51,27 +53,6 @@ void GN::gfx::OGLVtxFmt::quit()
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::OGLVtxFmt::bindStates() const
-{
-    GN_GUARD_SLOW;
-
-    if( !mValid ) return false;
-
-    for( size_t i = 0; i < mStateBindings.size(); ++i )
-    {
-        const StateBinding & sb = mStateBindings[i];
-        GN_ASSERT( sb.func );
-        sb.func( sb.info );
-    }
-
-    return true;
-
-    GN_UNGUARD_SLOW;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
 bool
 GN::gfx::OGLVtxFmt::bindBuffers(
      const VertexBufferBinding * bindings,
@@ -80,12 +61,12 @@ GN::gfx::OGLVtxFmt::bindBuffers(
 {
     GN_GUARD_SLOW;
 
-    if( !mValid ) return false;
+    if( !mVAO ) return false;
 
     for( size_t i = 0; i < mAttribBindings.size(); ++i )
     {
-        const AttribBinding & ab = mAttribBindings[i];
-        size_t stream = ab.info.stream;
+        auto & ab = mAttribBindings[i];
+        size_t stream = ab.stream;
         if( stream >= numbufs )
         {
             GN_ERROR(sLogger)(
@@ -94,8 +75,14 @@ GN::gfx::OGLVtxFmt::bindBuffers(
             return false;
         }
         const VertexBufferBinding & b = bindings[stream];
-        safeCastPtr<const OGLVtxBufVBO>( bindings[stream].vtxbuf.rawptr() )->bind();
-        ab.bind((const void*)(intptr_t)((startvtx + b.offset) * b.stride), b.stride);
+        safeCastPtr<const OGLVtxBufVBO>( b.vtxbuf.rawptr() )->bind();
+        glVertexAttribPointer(
+            ab.index,
+            ab.components,
+            ab.format,
+            ab.normalization,
+            (GLsizei)b.stride,
+            (const uint8_t*)(intptr_t)(startvtx * b.stride + b.offset + ab.offset) );
     }
 
     return true;
@@ -109,21 +96,29 @@ GN::gfx::OGLVtxFmt::bindBuffers(
 bool
 GN::gfx::OGLVtxFmt::bindRawMemoryBuffer( const void * data, size_t stride ) const
 {
-    if( !mValid ) return false;
+    if( !mVAO ) return false;
 
     for( size_t i = 0; i < mAttribBindings.size(); ++i )
     {
-        const AttribBinding & ab = mAttribBindings[i];
+        auto & ab = mAttribBindings[i];
 
-        if( ab.info.stream > 0 )
+        if( ab.stream > 0 )
         {
             GN_ERROR(sLogger)(
                 "Current vertex format requires at least %u vertex buffers. But only 1 are provided.",
-                ab.info.stream+1 );
+                ab.stream+1 );
             return false;
         }
 
-        ab.bind( (const uint8*)data, stride );
+        //ab.bind( (const uint8*)data, stride );
+
+        glVertexAttribPointer(
+            ab.index,
+            ab.components,
+            ab.format,
+            ab.normalization,
+            (GLsizei)stride,
+            (const uint8_t*)data + ab.offset);
     }
 
     return true;
@@ -161,16 +156,15 @@ bool GN::gfx::OGLVtxFmt::setupStateBindings( const OGLGpuProgram * gpuProgram )
             continue;
         }
 
-        AttribBinding ab;
-        ab.info.self = this;
-        ab.info.stream = (uint8)e.stream;
-        ab.info.offset = (uint8)e.offset;
+        AttribBindingInfo ab;
+        ab.self = this;
+        ab.stream = (uint8)e.stream;
+        ab.offset = (uint8)e.offset;
 
         switch( vbd.semantic )
         {
             case VERTEX_SEMANTIC_ATTRIBUTE:
-                ab.func = &sSetVertexAttributePointer;
-                ab.info.index = vbd.index;
+                ab.index = vbd.index;
                 hasAttrib[vbd.index] = true;
                 break;
 
@@ -190,57 +184,57 @@ bool GN::gfx::OGLVtxFmt::setupStateBindings( const OGLGpuProgram * gpuProgram )
         switch ( e.format.alias )
         {
             case ColorFormat::FLOAT1 :
-                ab.info.format = GL_FLOAT;
-                ab.info.components = 1;
-                ab.info.normalization = false;
+                ab.format = GL_FLOAT;
+                ab.components = 1;
+                ab.normalization = false;
                 break;
 
             case ColorFormat::FLOAT2 :
-                ab.info.format = GL_FLOAT;
-                ab.info.components = 2;
-                ab.info.normalization = false;
+                ab.format = GL_FLOAT;
+                ab.components = 2;
+                ab.normalization = false;
                 break;
 
             case ColorFormat::FLOAT3 :
-                ab.info.format = GL_FLOAT;
-                ab.info.components = 3;
-                ab.info.normalization = false;
+                ab.format = GL_FLOAT;
+                ab.components = 3;
+                ab.normalization = false;
                 break;
 
             case ColorFormat::FLOAT4 :
-                ab.info.format = GL_FLOAT;
-                ab.info.components = 4;
-                ab.info.normalization = false;
+                ab.format = GL_FLOAT;
+                ab.components = 4;
+                ab.normalization = false;
                 break;
 
             case ColorFormat::RGBA8 :
-                ab.info.format = GL_UNSIGNED_BYTE;
-                ab.info.components = 4;
-                ab.info.normalization = true;
+                ab.format = GL_UNSIGNED_BYTE;
+                ab.components = 4;
+                ab.normalization = true;
                 break;
 
             case ColorFormat::USHORT4 :
-                ab.info.format = GL_UNSIGNED_SHORT;
-                ab.info.components = 4;
-                ab.info.normalization = false;
+                ab.format = GL_UNSIGNED_SHORT;
+                ab.components = 4;
+                ab.normalization = false;
                 break;
 
             case ColorFormat::SHORT4 :
-                ab.info.format = GL_SHORT;
-                ab.info.components = 4;
-                ab.info.normalization = false;
+                ab.format = GL_SHORT;
+                ab.components = 4;
+                ab.normalization = false;
                 break;
 
             case ColorFormat::UINT4 :
-                ab.info.format = GL_UNSIGNED_INT;
-                ab.info.components = 4;
-                ab.info.normalization = false;
+                ab.format = GL_UNSIGNED_INT;
+                ab.components = 4;
+                ab.normalization = false;
                 break;
 
             case ColorFormat::SINT4 :
-                ab.info.format = GL_INT;
-                ab.info.components = 4;
-                ab.info.normalization = false;
+                ab.format = GL_INT;
+                ab.components = 4;
+                ab.normalization = false;
                 break;
 
             default:
@@ -248,138 +242,26 @@ bool GN::gfx::OGLVtxFmt::setupStateBindings( const OGLGpuProgram * gpuProgram )
                 return false;
         }
 
-        GN_ASSERT( ab.func );
-
         mAttribBindings.append( ab );
     }
 
     // ===================
     // setup state binding
     // ===================
-
-    StateBinding sb;
-    sb.info.self = this;
+    GN_OGL_CHECK_R(glGenVertexArrays(1, &mVAO), false);
+    glBindVertexArray(mVAO);
     for( uint32 i = 0; i < maxAttributes; ++i )
     {
-        sb.func = hasAttrib[i] ? &sEnableVAA : &sDisableVAA;
-        sb.info.attribute = i;
-        mStateBindings.append( sb );
+        if (hasAttrib[i]) {
+            glEnableVertexAttribArrayARB( i );
+        } else {
+            glDisableVertexAttribArrayARB( i );
+        }
     }
+    glBindVertexArray(0);
 
     // success
     return true;
 
     GN_UNGUARD;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-bool GN::gfx::OGLVtxFmt::getStandardVertexBindingDesc(
-    OGLVertexBindingDesc & vbd,
-    const char           * bindingName,
-    uint8                  bindingIndex )
-{
-#if GN_ENABLE_ASSERT
-    vbd.semantic = (OGLVertexSemantic)-1;
-    vbd.index = (uint8)-1;
-#endif
-
-    uint32 maxAttributes = getGpu().getOGLCaps().maxVertexAttributes;
-    uint32 maxTextures = getGpu().caps().maxTextures;
-
-    if( ( 0 == str::compareI( "position", bindingName ) ||
-          0 == str::compareI( "pos", bindingName ) ||
-          0 == str::compareI( "gl_vertex", bindingName ) )
-        &&
-        0 == bindingIndex )
-    {
-        vbd.semantic = VERTEX_SEMANTIC_VERTEX;
-        vbd.index = 0;
-    }
-    else if( ( 0 == str::compareI( "attribute", bindingName ) ||
-               0 == str::compareI( "VertexArrribute", bindingName ) )
-             &&
-             bindingIndex < maxAttributes )
-    {
-        vbd.semantic = VERTEX_SEMANTIC_ATTRIBUTE;
-        vbd.index = bindingIndex;
-    }
-    else if( (0 == str::compareI( "normal", bindingName ) || 0 == str::compareI( "nml", bindingName ) ) && 0 == bindingIndex )
-    {
-        vbd.semantic = VERTEX_SEMANTIC_NORMAL;
-        vbd.index = 0;
-    }
-    else if( 0 == str::compareI( "color", bindingName ) )
-    {
-        if( 0 == bindingIndex )
-        {
-            vbd.semantic = VERTEX_SEMANTIC_COLOR;
-            vbd.index = 0;
-        }
-        else if( 1 == bindingIndex && GLEW_EXT_secondary_color )
-        {
-            vbd.semantic = VERTEX_SEMANTIC_COLOR;
-            vbd.index = 1;
-        }
-        else
-        {
-            return false;
-        }
-    }
-    else if( 0 == str::compareI( "fog", bindingName ) && GLEW_EXT_fog_coord )
-    {
-        vbd.semantic = VERTEX_SEMANTIC_FOG;
-        vbd.index = 0;
-    }
-    else if( 0 == str::compareI( "texcoord", bindingName ) && bindingIndex < maxTextures )
-    {
-        vbd.semantic = VERTEX_SEMANTIC_TEXCOORD;
-        vbd.index = bindingIndex;
-    }
-    else
-    {
-        return false;
-    }
-
-    // make sure vbd has valid value.
-#if GN_ENABLE_ASSERT
-    GN_ASSERT( (OGLVertexSemantic)-1 != vbd.semantic );
-    GN_ASSERT( (uint8)-1 != vbd.index );
-#endif
-
-    // success
-    return true;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-void GN::gfx::OGLVtxFmt::sSetVertexAttributePointer(
-    const AttribBindingInfo & info, const uint8 * buf, size_t stride)
-{
-    GN_ASSERT( info.index < 16 );
-    GN_OGL_CHECK( glVertexAttribPointer(
-                    info.index,
-                    info.components,
-                    info.format,
-                    info.normalization,
-                    (GLsizei)stride,
-                    buf + info.offset ) );
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-void GN::gfx::OGLVtxFmt::sEnableVAA( const StateBindingInfo & info )
-{
-    GN_OGL_CHECK( glEnableVertexAttribArrayARB( info.attribute ) );
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-void GN::gfx::OGLVtxFmt::sDisableVAA( const StateBindingInfo & info )
-{
-    GN_OGL_CHECK( glDisableVertexAttribArrayARB( info.attribute ) );
 }

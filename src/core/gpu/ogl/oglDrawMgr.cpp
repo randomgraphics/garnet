@@ -144,6 +144,8 @@ void GN::gfx::OGLGpu::drawIndexed(
 
     if( !mContextOk ) return;
 
+    // TODO: optimize using glDrawRangeElementsBaseVertex
+
     // bind vertex buffer based on current startvtx
     if( mCurrentOGLVtxFmt &&
         !mCurrentOGLVtxFmt->bindBuffers( mContext.vtxbufs.rawptr(),
