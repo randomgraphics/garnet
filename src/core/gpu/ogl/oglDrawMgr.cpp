@@ -1,6 +1,5 @@
 ﻿#include "pch.h"
 #include "oglGpu.h"
-#include "oglLine.h"
 #include "oglVtxFmt.h"
 #include "oglVtxBuf.h"
 #include "oglIdxBuf.h"
@@ -46,11 +45,6 @@ bool GN::gfx::OGLGpu::drawInit()
 {
     GN_GUARD;
 
-    // create line renderer
-    GN_ASSERT( !mLine );
-    mLine = new OGLLine(*this);
-    if( !mLine->init() ) return false;
-
     // success
     return true;
 
@@ -63,8 +57,6 @@ bool GN::gfx::OGLGpu::drawInit()
 void GN::gfx::OGLGpu::drawQuit()
 {
     GN_GUARD;
-
-    safeDelete( mLine );
 
     GN_UNGUARD
 }
@@ -107,9 +99,6 @@ void GN::gfx::OGLGpu::clearScreen(
 
     GLbitfield glflag = 0;
 
-    // store GL attributes
-    glPushAttrib( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT );
-
     // clear color buffer
     if( flags & CLEAR_C )
     {
@@ -136,9 +125,6 @@ void GN::gfx::OGLGpu::clearScreen(
 
     // do clear
     GN_OGL_CHECK( glClear( glflag ) );
-
-    // restore GL attributes
-    glPopAttrib();
 
     GN_UNGUARD_SLOW;
 }
@@ -170,55 +156,18 @@ void GN::gfx::OGLGpu::drawIndexed(
     // get current index buffer
     GN_ASSERT( mContext.idxbuf );
     const OGLIdxBuf * ib = safeCastPtr<const OGLIdxBuf>( mContext.idxbuf.rawptr() );
-
-    // Verify index buffer
-    if( paramCheckEnabled() )
-    {
-        if( ib->getDesc().bits32 )
-        {
-            const uint32 * indices = (const uint32*)ib->getIdxData( startidx );
-            for( size_t i = 0; i < numidx; ++i, ++indices )
-            {
-                if( startvtx <= *indices && *indices < (startvtx+numvtx) )
-                {
-                    GN_GPU_RIP( "Invalid index: %u", *indices );
-                }
-            }
-        }
-        else
-        {
-            const uint16 * indices = (const uint16*)ib->getIdxData( startidx );
-            for( size_t i = 0; i < numidx; ++i, ++indices )
-            {
-                if( startvtx <= *indices && *indices < (startvtx+numvtx) )
-                {
-                    GN_GPU_RIP( "Invalid index: %u", *indices );
-                }
-            }
-        }
-    }
+    ib->bind();
 
     GLenum oglPrim = sPrimitiveType2OGL( prim );
 
-    if( GLEW_EXT_draw_range_elements )
-    {
-        // draw indexed primitives
-        GN_OGL_CHECK( glDrawRangeElements(
-            oglPrim,
-            (GLuint)startvtx,
-            (GLuint)( startvtx + numvtx - 1 ),
-            (GLsizei)numidx,
-            ib->getDesc().bits32 ? GL_UNSIGNED_INT : GL_UNSIGNED_SHORT,
-            ib->getIdxData( startidx ) ) );
-    }
-    else
-    {
-        GN_OGL_CHECK( glDrawElements(
-            oglPrim,
-            (GLsizei)numidx,
-            ib->getDesc().bits32 ? GL_UNSIGNED_INT : GL_UNSIGNED_SHORT,
-            ib->getIdxData( startidx ) ) );
-    }
+    // draw indexed primitives
+    glDrawRangeElements(
+        oglPrim,
+        (GLuint)startvtx,
+        (GLuint)(startvtx + numvtx - 1),
+        (GLsizei)numidx,
+        ib->getDesc().bits32 ? GL_UNSIGNED_INT : GL_UNSIGNED_SHORT,
+        ib->data(startidx));
 
     // done
     ++mDrawCounter;
@@ -247,7 +196,7 @@ void GN::gfx::OGLGpu::draw( PrimitiveType prim, uint32 numvtx, uint32 startvtx )
     GLenum oglPrim = sPrimitiveType2OGL( prim );
 
     // draw primitives
-    GN_OGL_CHECK( glDrawArrays( oglPrim, 0, (GLsizei)numvtx ) );
+    glDrawArrays( oglPrim, 0, (GLsizei)numvtx );
 
     // done
     ++mDrawCounter;
@@ -384,36 +333,3 @@ void GN::gfx::OGLGpu::drawUp(
     GN_UNGUARD_SLOW;
 }
 
-//
-//
-// ----------------------------------------------------------------------------
-void GN::gfx::OGLGpu::drawLines(
-    uint32 options,
-    const void * positions,
-    uint32 stride,
-    uint32 numpoints,
-    uint32 rgba,
-    const Matrix44f & model,
-    const Matrix44f & view,
-    const Matrix44f & proj )
-{
-    GN_GUARD_SLOW;
-
-    GN_ASSERT( mLine );
-
-    // clear context, but keep render states
-    GpuContext ctx = getContext();
-    uint64 oldrs = ctx.rs.bitFlags;
-    ctx.clear();
-    ctx.rs.bitFlags = oldrs;
-
-    bindContext( ctx );
-    if( !mContextOk ) return;
-
-    mLine->drawLines( options, (const float*)positions, stride, numpoints, rgba, model, view, proj );
-
-    // done
-    ++mDrawCounter;
-
-    GN_UNGUARD_SLOW;
-}

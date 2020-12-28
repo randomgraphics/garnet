@@ -280,21 +280,3 @@ void GN::gfx::D3D11Gpu::drawUp(
     mDeviceContext->IASetPrimitiveTopology( sD3D11PrimMap[prim] );
     mDeviceContext->Draw( numvtx, 0 );
 }
-
-//
-//
-// -----------------------------------------------------------------------------
-void GN::gfx::D3D11Gpu::drawLines(
-    uint32            /*options*/,
-    const void      * /*positions*/,
-    uint32            /*stride*/,
-    uint32            /*numPoints*/,
-    uint32            /*rgba*/,
-    const Matrix44f & /*model*/,
-    const Matrix44f & /*view*/,
-    const Matrix44f & /*proj*/ )
-{
-    PIXPERF_FUNCTION_EVENT(mDeviceContext);
-
-    GN_UNIMPL_WARNING();
-}

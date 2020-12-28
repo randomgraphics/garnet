@@ -207,11 +207,11 @@ createEffect( GpuResourceDatabase & gdb )
         "uniform   mat4 pvw; \n"
         "uniform   mat4 world; \n"
         "uniform   mat4 wit; \n"
-        "attribute vec3 pos1; \n"
-        "attribute vec3 pos2; \n"
-        "attribute vec3 nml1; \n"
-        "attribute vec3 nml2; \n"
-        "attribute vec2 bc; \n"
+        "in vec3 pos1; \n"
+        "in vec3 pos2; \n"
+        "in vec3 nml1; \n"
+        "in vec3 nml2; \n"
+        "in vec2 bc; \n"
         "varying   vec4 pos_world; // vertex position in world space \n"
         "varying   vec3 nml_world; // vertex normal in world space \n"
         "varying   vec2 texcoords; \n"
@@ -411,14 +411,17 @@ class BezierApp : public SampleApp
         static const float Y[] = { 0.0f, 0.0f, 0.0f, 0.0f, 10000.0f, 0.0f };
         static const float Z[] = { 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 10000.0f };
 
-        Gpu & gpu = *engine::getGpu();
-
         const Matrix44f & world = arcball.getRotationMatrix44();
         const Matrix44f & view  = camera.view;
         const Matrix44f & proj  = camera.proj;
-        gpu.drawLines( 0, X, 3*sizeof(float), 2, GN_RGBA8(255,0,0,255), world, view, proj );
-        gpu.drawLines( 0, Y, 3*sizeof(float), 2, GN_RGBA8(0,255,0,255), world, view, proj );
-        gpu.drawLines( 0, Z, 3*sizeof(float), 2, GN_RGBA8(0,0,255,255), world, view, proj );
+        auto pvw = proj * view * world;
+
+        auto lr = engine::getLineRenderer();
+        lr->batchingBegin();
+        lr->drawLines(X, 3*sizeof(float), 2, GN_RGBA8(255,0,0,255), pvw);
+        lr->drawLines(Y, 3*sizeof(float), 2, GN_RGBA8(0,255,0,255), pvw);
+        lr->drawLines(Z, 3*sizeof(float), 2, GN_RGBA8(0,0,255,255), pvw);
+        lr->batchingEnd();
     }
 };
 

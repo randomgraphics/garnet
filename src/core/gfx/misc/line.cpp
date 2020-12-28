@@ -16,50 +16,60 @@ bool GN::gfx::LineRenderer::init()
     // standard init procedure
     GN_STDCLASS_INIT();
 
-    static const char * glslvscode=
-        "varying vec4 color; \n"
-        "void main() { \n"
-        "   // NOTE: GLSL matrix is colomn major \n"
-        "   mat4 pvw = mat4(gl_MultiTexCoord0, gl_MultiTexCoord1, gl_MultiTexCoord2, gl_MultiTexCoord3); \n"
-        "   gl_Position = gl_Vertex * pvw; \n"
-        "   color       = gl_Color; \n"
-        "}";
+    static const char * glslvscode = R"(
+        in vec4 i_pos;
+        in vec4 i_clr;
+        in vec4 i_pvw_r0;
+        in vec4 i_pvw_r1;
+        in vec4 i_pvw_r2;
+        in vec4 i_pvw_r3;
+        varying vec4 color;
+        void main() {
+           // NOTE: GLSL matrix is colomn major
+           mat4 pvw = mat4(i_pvw_r0, i_pvw_r1, i_pvw_r2, i_pvw_r3);
+           gl_Position = i_pos * pvw;
+           color       = i_clr;
+        }
+    )";
 
-    static const char * glslpscode=
-        "varying vec4 color; \n"
-        "void main() { \n"
-        "   gl_FragColor = color; \n"
-        "}";
+    static const char * glslpscode = R"(
+        varying vec4 color;
+        void main() {
+           gl_FragColor = color;
+        }
+    )";
 
-    static const char * hlslvscode=
-        "struct VSIN { \n"
-        "   float4 pos    : POSITION0; \n"
-        "   float4 clr    : COLOR; \n"
-        "   float4 pvw_r0 : TEXCOORD0; \n"
-        "   float4 pvw_r1 : TEXCOORD1; \n"
-        "   float4 pvw_r2 : TEXCOORD2; \n"
-        "   float4 pvw_r3 : TEXCOORD3; \n"
-        "}; \n"
-        "struct VSOUT { \n"
-        "   float4 pos    : POSITION; \n"
-        "   float4 clr    : COLOR; \n"
-        "}; \n"
-        "VSOUT main( in VSIN i ) { \n"
-        "   float4x4 pvw = { i.pvw_r0, i.pvw_r1, i.pvw_r2, i.pvw_r3 }; \n"
-        "   VSOUT o; \n"
-        "   o.pos = mul( pvw, i.pos ); \n"
-        "   o.clr = i.clr; \n"
-        "   return o; \n"
-        "}";
+    static const char * hlslvscode = R"(
+        struct VSIN {
+           float4 pos    : POSITION0;
+           float4 clr    : COLOR;
+           float4 pvw_r0 : TEXCOORD0;
+           float4 pvw_r1 : TEXCOORD1;
+           float4 pvw_r2 : TEXCOORD2;
+           float4 pvw_r3 : TEXCOORD3;
+        };
+        struct VSOUT {
+           float4 pos    : POSITION;
+           float4 clr    : COLOR;
+        };
+        VSOUT main( in VSIN i ) {
+           float4x4 pvw = { i.pvw_r0, i.pvw_r1, i.pvw_r2, i.pvw_r3 };
+           VSOUT o;
+           o.pos = mul( pvw, i.pos );
+           o.clr = i.clr;
+           return o;
+        }
+    )";
 
-    static const char * hlslpscode=
-        "struct VSIO { \n"
-        "   float4 pos : POSITION; \n"
-        "   float4 clr : COLOR; \n"
-        "}; \n"
-        "float4 main( in VSIO i ) : COLOR0 { \n"
-        "   return i.clr; \n"
-        "}";
+    static const char * hlslpscode = R"(
+        struct VSIO {
+           float4 pos : POSITION;
+           float4 clr : COLOR;
+        };
+        float4 main( in VSIO i ) : COLOR0 {
+           return i.clr;
+        }
+    )";
 
     // create vertex format
     mContext.vtxbind.resize( 6 );
@@ -97,12 +107,12 @@ bool GN::gfx::LineRenderer::init()
 
         const GpuProgramParameterDesc & gppd = mContext.gpuProgram->getParameterDesc();
 
-        mContext.vtxbind[0].attribute = gppd.attributes["gl_Vertex"];
-        mContext.vtxbind[1].attribute = gppd.attributes["gl_Color"];
-        mContext.vtxbind[2].attribute = gppd.attributes["gl_MultiTexCoord0"];
-        mContext.vtxbind[3].attribute = gppd.attributes["gl_MultiTexCoord1"];
-        mContext.vtxbind[4].attribute = gppd.attributes["gl_MultiTexCoord2"];
-        mContext.vtxbind[5].attribute = gppd.attributes["gl_MultiTexCoord3"];
+        mContext.vtxbind[0].attribute = gppd.attributes["i_pos"];
+        mContext.vtxbind[1].attribute = gppd.attributes["i_clr"];
+        mContext.vtxbind[2].attribute = gppd.attributes["i_pvw_r0"];
+        mContext.vtxbind[3].attribute = gppd.attributes["i_pvw_r1"];
+        mContext.vtxbind[4].attribute = gppd.attributes["i_pvw_r2"];
+        mContext.vtxbind[5].attribute = gppd.attributes["i_pvw_r3"];
     }
     else if( caps.shaderModels & ShaderModel::SM_2_0 )
     {
@@ -321,26 +331,28 @@ bool GN::gfx::ThickLineRenderer::init( Gpu & g )
     GpuProgramDesc gpd;
     if( caps.shaderModels & ShaderModel::SM_2_0 )
     {
-        const char * hlslvscode =
-            "struct VSIO { \n"
-            "   float4 pos : POSITION0; \n"
-            "   float2 tex : TEXCOORD0; \n"
-            "   float4 clr : COLOR0;    \n"
-            "}; \n"
-            "VSIO main( VSIO i ) { \n"
-            "   VSIO o = i; \n"
-            "   return o; \n"
-            "}";
+        const char * hlslvscode = R"(
+            struct VSIO {
+               float4 pos : POSITION0;
+               float2 tex : TEXCOORD0;
+               float4 clr : COLOR0;   
+            };
+            VSIO main( VSIO i ) {
+               VSIO o = i;
+               return o;
+            }
+        )";
 
-        const char * hlslpscode =
-            "struct VSIO { \n"
-            "   float4 pos : POSITION0; \n"
-            "   float2 tex : TEXCOORD0; \n"
-            "   float4 clr : COLOR0;    \n"
-            "}; \n"
-            "float4 main( VSIO i ) : COLOR0 { \n"
-            "   return i.clr; \n"
-            "}";
+        const char * hlslpscode = R"(
+            struct VSIO {
+               float4 pos : POSITION0;
+               float2 tex : TEXCOORD0;
+               float4 clr : COLOR0;   
+            };
+            float4 main( VSIO i ) : COLOR0 {
+               return i.clr;
+            }
+        )";
 
         gpd.lang = GpuProgramLanguage::HLSL9;
         gpd.shaderModels = ShaderModel::SM_2_0;
@@ -361,21 +373,26 @@ bool GN::gfx::ThickLineRenderer::init( Gpu & g )
     }
     else if( caps.shaderModels & ShaderModel::GLSL_1_00 )
     {
-        static const char * glslvscode=
-            "varying vec4 color; \n"
-            "varying vec2 texcoords; \n"
-            "void main() { \n"
-            "   gl_Position = gl_Vertex; \n"
-            "   color       = gl_Color; \n"
-            "   texcoords   = gl_MultiTexCoord0.xy; \n"
-            "}";
+        static const char * glslvscode = R"(
+            in vec4 i_Position;
+            in vec4 i_Color;
+            in vcc2 i_TexCoord;
+            varying vec4 color;
+            varying vec2 texcoords;
+            void main() {
+               gl_Position = i_Position;
+               color       = i_Color;
+               texcoords   = i_TexCoord;
+            }
+        )";
 
-        static const char * glslpscode=
-            "varying vec4 color; \n"
-            "varying vec2 texcoords; \n"
-            "void main() { \n"
-            "   gl_FragColor = color; \n"
-            "}";
+        static const char * glslpscode = R"(
+            varying vec4 color;
+            varying vec2 texcoords;
+            void main() {
+               gl_FragColor = color;
+            }
+        )";
 
         gpd.lang = GpuProgramLanguage::GLSL;
         gpd.shaderModels = ShaderModel::GLSL_1_00;
@@ -388,9 +405,9 @@ bool GN::gfx::ThickLineRenderer::init( Gpu & g )
         const GpuProgramParameterDesc & gppd = mContext.gpuProgram->getParameterDesc();
 
         mContext.vtxbind.resize(3);
-        mContext.vtxbind[0].attribute = gppd.attributes["gl_Vertex"];
-        mContext.vtxbind[1].attribute = gppd.attributes["gl_Color"];
-        mContext.vtxbind[2].attribute = gppd.attributes["gl_MultiTexCoord0"];
+        mContext.vtxbind[0].attribute = gppd.attributes["i_Position"];
+        mContext.vtxbind[1].attribute = gppd.attributes["i_Color"];
+        mContext.vtxbind[2].attribute = gppd.attributes["i_TexCoord"];
     }
     else
     {

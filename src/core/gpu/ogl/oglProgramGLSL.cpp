@@ -564,7 +564,7 @@ void GN::gfx::OGLGpuProgramGLSL::applyTextures(
 
             const OGLTexture * ogltexture = safeCastPtr<const OGLTexture>(b.texture.rawptr());
 
-            // bind sampler
+            // bind sampler. TODO: filter redundant sampler.
             ogltexture->setSampler( b.sampler );
 
             // bind texture to current stage
@@ -578,16 +578,6 @@ void GN::gfx::OGLGpuProgramGLSL::applyTextures(
                 desc.lastTexStage = i;
             }
         }
-        else
-        {
-            r.disableTextureStage( i );
-        }
-    }
-
-    // disable remaining texture stages
-    for( ; i < maxStages; ++i )
-    {
-        r.disableTextureStage( i );
     }
 }
 
@@ -714,6 +704,11 @@ GN::gfx::OGLGpuProgramGLSL::enumAttributes()
 
             GLSLAttributeDesc a;
             if( !sGetOglVertexSemantic( a.semanticName, a.semanticIndex, nameptr, location ) ) return false;
+
+            if (a.semanticName != OGLVertexSemantic::VERTEX_SEMANTIC_ATTRIBUTE) {
+                GN_ERROR(sLogger)("client side vertex attribute %s is not supported anymore.", nameptr);
+                return false;
+            }
 
             a.name = nameptr;
             mAttributes.append( a );

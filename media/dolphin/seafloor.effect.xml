@@ -133,11 +133,15 @@ void main(
 			<uniref uniform="caustic" shaderParameter="caustic"/>
 			<texref texture="seafloor" shaderParameter="DiffuseSampler"/>
 			<texref texture="caustic" shaderParameter="CausticsSampler"/>
-			<attref attribute="POSITION0" shaderParameter="gl_Vertex"/>
-			<attref attribute="NORMAL0"   shaderParameter="gl_Normal"/>
-			<attref attribute="TEXCOORD0" shaderParameter="gl_MultiTexCoord0"/>
+			<attref attribute="POSITION0" shaderParameter="i_Position0"/>
+			<attref attribute="NORMAL0"   shaderParameter="i_Normal0"/>
+			<attref attribute="TEXCOORD0" shaderParameter="i_TexCoord0"/>
 			<vs entry="main">
 <![CDATA[
+in vec4 i_Position0;
+in vec3 i_Normal0;
+in vec2 i_TexCoord0;
+
 uniform mat4 view;
 uniform mat4 proj;
 uniform vec4 caustic;
@@ -149,21 +153,17 @@ varying vec2 vCausticTexCoords;
 
 void main()
 {
-	vec4 ipos = gl_Vertex;
-	vec3 inml = gl_Normal.xyz;
-	vec2 itex = gl_MultiTexCoord0.xy;
-
 	const vec3 lightdir = vec3( 0, 1, 0 );
 	const vec4 fogrange = vec4( 0.5,50.0, 1.0/(50.0-1.0), 0 ); // ( x, fog_end, (1/(fog_end-fog_start)), x )
 
 	// Transform to view space (world matrix is identity)
-	vec4 vpos = view * gl_Vertex;
+	vec4 vpos = view * i_Position0;
 
 	// Transform to projection space
 	vec4 opos =  proj * vpos;
 
 	// Lighting calculation
-	float fLightValue = max( dot( inml, lightdir ), 0.0 );
+	float fLightValue = max( dot( i_Normal0, lightdir ), 0.0 );
 
 	// Fog calculation:
 	float fFogValue = clamp( (fogrange.y - vpos.z) * fogrange.z, 0.0, 1.0 );
@@ -173,7 +173,7 @@ void main()
 	vMisc.x           = fLightValue;
 	vMisc.y           = fFogValue;
 	vMisc.zw          = opos.zw;
-	vBaseTexCoords    = itex;
+	vBaseTexCoords    = i_TexCoord0;
 
 	// Generate water caustic tex coords from vertex xz position
 	vCausticTexCoords = caustic.xy * vpos.xz + caustic.zw;

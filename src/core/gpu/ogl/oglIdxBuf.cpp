@@ -27,7 +27,8 @@ bool GN::gfx::OGLIdxBuf::init( const IdxBufDesc & desc )
     setDesc( desc );
 
     mBytesPerIndex = desc.bits32 ? 4 : 2;
-    mBuffer = (uint8*)HeapMemory::alloc( desc.numidx * mBytesPerIndex );
+
+    mBuffer.allocate(desc.numidx * mBytesPerIndex, (const uint8_t*)nullptr, desc.fastCpuWrite ? GL_STREAM_DRAW : GL_STATIC_DRAW);
 
     // success
     return success();
@@ -42,7 +43,7 @@ void GN::gfx::OGLIdxBuf::quit()
 {
     GN_GUARD;
 
-    safeHeapDealloc(mBuffer);
+    mBuffer.cleanup();
 
     // standard quit procedure
     GN_STDCLASS_QUIT();
@@ -67,7 +68,7 @@ void GN::gfx::OGLIdxBuf::update( uint32 startidx, uint32 numidx, const void * da
 
     if( 0 == numidx ) return;
 
-    memcpy( mBuffer + startidx * mBytesPerIndex, data, numidx * mBytesPerIndex );
+    mBuffer.update<uint8_t>((const uint8_t*)data, startidx * mBytesPerIndex, numidx * mBytesPerIndex);
 
     GN_UNGUARD_SLOW
 }
@@ -77,11 +78,6 @@ void GN::gfx::OGLIdxBuf::update( uint32 startidx, uint32 numidx, const void * da
 // -----------------------------------------------------------------------------
 void GN::gfx::OGLIdxBuf::readback( DynaArray<uint8> & data )
 {
-    const IdxBufDesc & ibdesc = getDesc();
-
-    uint32 lengthInBytes = ibdesc.numidx * mBytesPerIndex;
-
-    data.resize( lengthInBytes );
-
-    memcpy( &data[0], mBuffer, lengthInBytes );
+    data.resize(mBuffer.length);
+    mBuffer.getData<uint8_t>(data.data(), 0, mBuffer.length);
 }

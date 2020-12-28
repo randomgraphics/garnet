@@ -291,14 +291,6 @@ namespace GN { namespace gfx
                              uint32        numvtx,
                              const void *  vertexData,
                              uint32        strideInBytes );
-        virtual void drawLines( uint32         options,
-                                const void *      positions,
-                                uint32            stride,
-                                uint32            numpoints,
-                                uint32            rgba,
-                                const Matrix44f & model,
-                                const Matrix44f & view,
-                                const Matrix44f & proj );
 
     private:
 

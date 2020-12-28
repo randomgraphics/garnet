@@ -41,11 +41,13 @@ static const char * hlslpscode =
     "}";
 
 static const char * glslvscode =
+    "in vec4 i_Pos0; \n"
+    "in vec2 i_TexCoord0; \n"
     "uniform mat4 pvw; \n"
     "varying vec2 texcoords; \n"
     "void main() { \n"
-    "   gl_Position = pvw * gl_Vertex; \n"
-    "   texcoords   = gl_MultiTexCoord0.xy; \n"
+    "   gl_Position = pvw * i_Pos0; \n"
+    "   texcoords   = i_TexCoord0.xy; \n"
     "}";
 
 static const char * glslpscode =
@@ -69,8 +71,8 @@ void initEffectDesc( EffectResourceDesc & ed )
     ed.gpuprograms["glsl"].gpd.ps.source = glslpscode;
     ed.gpuprograms["glsl"].uniforms["pvw"] = "MATRIX_PVW";
     ed.gpuprograms["glsl"].textures["t0"] = "ALBEDO_TEXTURE";
-    ed.gpuprograms["glsl"].attributes["gl_Vertex"] = "POSITION";
-    ed.gpuprograms["glsl"].attributes["gl_MultiTexCoord0"] = "TEXCOORD";
+    ed.gpuprograms["glsl"].attributes["i_Pos0"] = "POSITION";
+    ed.gpuprograms["glsl"].attributes["i_TexCoord0"] = "TEXCOORD";
 
     ed.gpuprograms["hlsl"].gpd.lang = GpuProgramLanguage::HLSL9;
     ed.gpuprograms["hlsl"].gpd.shaderModels = ShaderModel::SM_2_0;

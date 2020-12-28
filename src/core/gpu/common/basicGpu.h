@@ -146,6 +146,18 @@ namespace GN { namespace gfx
 
         //@{
 
+        void drawLines(uint32,
+                       const void *,
+                       uint32,
+                       uint32,
+                       uint32,
+                       const Matrix44f &,
+                       const Matrix44f &,
+                       const Matrix44f &) {
+            static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.common");
+            GN_ERROR(sLogger)("obsolete functions. will be removed sooon.");
+        }
+
         //@}
 
         // *****************************************************************************

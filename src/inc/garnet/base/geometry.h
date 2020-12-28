@@ -226,14 +226,14 @@ namespace GN
         ///
         /// type conversion
         ///
-        const T * toPtr() const
+        const T * data() const
         {
             return &x;
         }
         ///
         /// type conversion
         ///
-        T * toPtr()
+        T * data()
         {
             return &x;
         }
@@ -472,11 +472,11 @@ namespace GN
 
         //@{
 
-        const T * toPtr() const
+        const T * data() const
         {
             return &x;
         }
-        T * toPtr()
+        T * data()
         {
             return &x;
         }
@@ -734,11 +734,11 @@ namespace GN
 
         //@{
 
-        const T * toPtr() const
+        const T * data() const
         {
             return &x;
         }
-        T * toPtr()
+        T * data()
         {
             return &x;
         }
@@ -990,6 +990,9 @@ namespace GN
     public:
 
         //@{
+
+        const T * data() const { return rows[0].data(); }
+        T *       data()       { return rows[0].data(); }
 
         Matrix33 & identity()
         {
@@ -1272,6 +1275,9 @@ namespace GN
     public:
 
         //@{
+
+        const T * data() const { return rows[0].data(); }
+        T *       data()       { return rows[0].data(); }
 
         Matrix44 & set( T _00, T _01, T _02, T _03,
                         T _10, T _11, T _12, T _13,
@@ -2548,14 +2554,17 @@ namespace GN
     typedef Vector2<float>      Vector2f;
     typedef Vector2<double>     Vector2d;
     typedef Vector2<int>        Vector2i;
+    typedef Vector2<uint32_t>   Vector2u;
 
     typedef Vector3<float>      Vector3f;
     typedef Vector3<double>     Vector3d;
     typedef Vector3<int>        Vector3i;
+    typedef Vector3<uint32_t>   Vector3u;
 
     typedef Vector4<float>      Vector4f;
     typedef Vector4<double>     Vector4d;
     typedef Vector4<int>        Vector4i;
+    typedef Vector4<uint32_t>   Vector4u;
 
     typedef Matrix33<float>     Matrix33f;
     typedef Matrix33<double>    Matrix33d;

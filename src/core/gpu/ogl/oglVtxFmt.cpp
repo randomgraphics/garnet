@@ -141,15 +141,7 @@ bool GN::gfx::OGLVtxFmt::setupStateBindings( const OGLBasicGpuProgram * gpuProgr
     GN_GUARD;
 
     uint32 maxAttributes = getGpu().getOGLCaps().maxVertexAttributes;
-    uint32 maxTextures = getGpu().caps().maxTextures;
-
-    bool hasVertex = false;
-    bool hasNormal = false;
-    bool hasColor0 = false;
-    bool hasColor1 = false;
-    bool hasFog = false;
     DynaArray<bool> hasAttrib( maxAttributes, false );
-    DynaArray<bool> hasTexCoord( maxTextures, false );
 
     OGLVertexBindingDesc vbd;
 
@@ -176,44 +168,19 @@ bool GN::gfx::OGLVtxFmt::setupStateBindings( const OGLBasicGpuProgram * gpuProgr
 
         switch( vbd.semantic )
         {
-            case VERTEX_SEMANTIC_VERTEX:
-                ab.func = &sSetVertexPointer;
-                hasVertex = true;
-                break;
-
             case VERTEX_SEMANTIC_ATTRIBUTE:
                 ab.func = &sSetVertexAttributePointer;
                 ab.info.index = vbd.index;
                 hasAttrib[vbd.index] = true;
                 break;
 
+            case VERTEX_SEMANTIC_VERTEX:
             case VERTEX_SEMANTIC_NORMAL:
-                ab.func = &sSetNormalPointer;
-                hasNormal = true;
-                break;
-
             case VERTEX_SEMANTIC_TEXCOORD:
+            case VERTEX_SEMANTIC_COLOR:
+            case VERTEX_SEMANTIC_FOG:
                 GN_ERROR(sLogger)("client side vertex data pointer is not supportd anymore.");
                 return false;
-
-            case VERTEX_SEMANTIC_COLOR:
-                if( 0 == vbd.index )
-                {
-                    ab.func = &sSetColorPointer;
-                    hasColor0 = true;
-                }
-                else
-                {
-                    GN_ASSERT( 1 == vbd.index );
-                    ab.func = &sSetSecondaryColorPointer;
-                    hasColor1 = true;
-                }
-                break;
-
-            case VERTEX_SEMANTIC_FOG:
-                ab.func = &sSetFogPointer;
-                hasFog = true;
-                break;
 
             default:
                 GN_UNEXPECTED();
@@ -292,36 +259,6 @@ bool GN::gfx::OGLVtxFmt::setupStateBindings( const OGLBasicGpuProgram * gpuProgr
 
     StateBinding sb;
     sb.info.self = this;
-
-    // position
-    sb.func = hasVertex ? &sEnableClientState : &sDisableClientState;
-    sb.info.semantic = GL_VERTEX_ARRAY;
-    mStateBindings.append( sb );
-
-    // normal
-    sb.func = hasNormal ? &sEnableClientState : &sDisableClientState;
-    sb.info.semantic = GL_NORMAL_ARRAY;
-    mStateBindings.append( sb );
-
-    // color0
-    sb.func = hasColor0 ? &sEnableClientState : &sDisableClientState;
-    sb.info.semantic = GL_COLOR_ARRAY;
-    mStateBindings.append( sb );
-
-    // color1
-    if( GLEW_EXT_secondary_color )
-    {
-        sb.func = hasColor1 ? &sEnableClientState : &sDisableClientState;
-        sb.info.semantic = GL_SECONDARY_COLOR_ARRAY_EXT;
-        mStateBindings.append( sb );
-    }
-
-    // has fog
-    sb.func = hasFog ? &sEnableClientState : &sDisableClientState;
-    sb.info.semantic = GL_FOG_COORDINATE_ARRAY_EXT;
-    mStateBindings.append( sb );
-
-    // vertex attributes
     for( uint32 i = 0; i < maxAttributes; ++i )
     {
         sb.func = hasAttrib[i] ? &sEnableVAA : &sDisableVAA;
@@ -418,77 +355,11 @@ bool GN::gfx::OGLVtxFmt::getStandardVertexBindingDesc(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLVtxFmt::sSetVertexPointer(
-    const AttribBindingInfo & info, const uint8 * buf, size_t stride )
-{
-    GN_OGL_CHECK( glVertexPointer(
-                    info.components,
-                    info.format,
-                    (GLsizei)stride,
-                    buf + info.offset ) );
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-void GN::gfx::OGLVtxFmt::sSetNormalPointer(
-    const AttribBindingInfo & info, const uint8 * buf, size_t stride )
-{
-    GN_OGL_CHECK( glNormalPointer(
-                    info.format,
-                    (GLsizei)stride,
-                    buf + info.offset ) );
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-void GN::gfx::OGLVtxFmt::sSetColorPointer(
-    const AttribBindingInfo & info, const uint8 * buf, size_t stride )
-{
-    GN_OGL_CHECK( glColorPointer(
-                    info.components,
-                    info.format,
-                    (GLsizei)stride,
-                    buf + info.offset ) );
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-void GN::gfx::OGLVtxFmt::sSetSecondaryColorPointer(
-    const AttribBindingInfo & info, const uint8 * buf, size_t stride )
-{
-    GN_ASSERT( GLEW_EXT_secondary_color );
-    GN_OGL_CHECK( glSecondaryColorPointerEXT(
-                    info.components,
-                    info.format,
-                    (GLsizei)stride,
-                    (GLvoid*)(buf + info.offset) ) );
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-void GN::gfx::OGLVtxFmt::sSetFogPointer(
-    const AttribBindingInfo & info, const uint8 * buf, size_t stride )
-{
-    GN_ASSERT( GLEW_EXT_fog_coord );
-    GN_OGL_CHECK( glFogCoordPointerEXT(
-                    info.format,
-                    (GLsizei)stride,
-                    (GLvoid*)(buf + info.offset) ) );
-}
-
-//
-//
-// -----------------------------------------------------------------------------
 void GN::gfx::OGLVtxFmt::sSetVertexAttributePointer(
-    const AttribBindingInfo & info, const uint8 * buf, size_t stride )
+    const AttribBindingInfo & info, const uint8 * buf, size_t stride)
 {
-    GN_ASSERT( GLEW_ARB_vertex_program || GLEW_ARB_vertex_shader );
     GN_ASSERT( info.index < 16 );
-    GN_OGL_CHECK( glVertexAttribPointerARB(
+    GN_OGL_CHECK( glVertexAttribPointer(
                     info.index,
                     info.components,
                     info.format,
@@ -500,24 +371,15 @@ void GN::gfx::OGLVtxFmt::sSetVertexAttributePointer(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLVtxFmt::sEnableClientState( const StateBindingInfo & info )
-{
-    GN_OGL_CHECK( glEnableClientState( info.semantic ) );
-}
-//
-void GN::gfx::OGLVtxFmt::sDisableClientState( const StateBindingInfo & info )
-{
-    GN_OGL_CHECK( glDisableClientState( info.semantic ) );
-}
-//
 void GN::gfx::OGLVtxFmt::sEnableVAA( const StateBindingInfo & info )
 {
-    GN_ASSERT( GLEW_ARB_vertex_program || GLEW_ARB_vertex_shader );
     GN_OGL_CHECK( glEnableVertexAttribArrayARB( info.attribute ) );
 }
+
 //
+//
+// -----------------------------------------------------------------------------
 void GN::gfx::OGLVtxFmt::sDisableVAA( const StateBindingInfo & info )
 {
-    GN_ASSERT( GLEW_ARB_vertex_program || GLEW_ARB_vertex_shader );
     GN_OGL_CHECK( glDisableVertexAttribArrayARB( info.attribute ) );
 }

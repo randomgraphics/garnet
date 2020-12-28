@@ -13,7 +13,6 @@ namespace GN { namespace gfx
     class OGLResource;
     class OGLBasicGpuProgram;
     class OGLVtxFmt;
-    class OGLLine;
     class OGLBasicRTMgr;
 
     ///
@@ -290,14 +289,6 @@ namespace GN { namespace gfx
                              uint32        numvtx,
                              const void *  vertexData,
                              uint32        strideInBytes );
-        virtual void drawLines( uint32         options,
-                                const void *      positions,
-                                uint32            stride,
-                                uint32            numpoints,
-                                uint32            rgba,
-                                const Matrix44f & model,
-                                const Matrix44f & view,
-                                const Matrix44f & proj );
 
     private:
 
@@ -305,7 +296,6 @@ namespace GN { namespace gfx
         void drawQuit();
         void drawClear()
         {
-            mLine = 0;
             mCurrentStartVtx = (size_t)-1;
             mFrameCounter = 0;
             mDrawCounter = 0;
@@ -313,7 +303,6 @@ namespace GN { namespace gfx
 
     private:
 
-        OGLLine * mLine;
         size_t    mCurrentStartVtx;
         size_t    mFrameCounter;
         size_t    mDrawCounter;

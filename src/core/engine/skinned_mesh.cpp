@@ -216,8 +216,11 @@ static const char * DIFFUSE_PS_HLSL9 =
     "}";
 
 static const char * SKINNED_VS_GLSL =
-    "attribute vec4 fjoints; \n"
-    "attribute vec4 weights; \n"
+    "in vec4 i_Position0; \n"
+    "in vec3 i_Normal0; \n"
+    "in vec2 i_TexCoord0; \n"
+    "in vec4 fjoints; \n"
+    "in vec4 weights; \n"
     "\n"
     "uniform mat4 pvw; \n"
     "uniform mat4 world; \n"
@@ -230,19 +233,19 @@ static const char * SKINNED_VS_GLSL =
     "\n"
     "void main() { \n"
     "   ivec4 joints = ivec4(fjoints); \n"
-    "   vec4 skinned_pos = weights.x * ( joint_matrices[joints.x] * gl_Vertex ) + \n"
-    "                      weights.y * ( joint_matrices[joints.y] * gl_Vertex ) + \n"
-    "                      weights.z * ( joint_matrices[joints.z] * gl_Vertex ) + \n"
-    "                      weights.w * ( joint_matrices[joints.w] * gl_Vertex );  \n"
-    "   vec4 input_nml   = vec4(gl_Normal,0); \n"
+    "   vec4 skinned_pos = weights.x * ( joint_matrices[joints.x] * i_Position0 ) + \n"
+    "                      weights.y * ( joint_matrices[joints.y] * i_Position0 ) + \n"
+    "                      weights.z * ( joint_matrices[joints.z] * i_Position0 ) + \n"
+    "                      weights.w * ( joint_matrices[joints.w] * i_Position0 );  \n"
+    "   vec4 input_nml   = vec4(i_Normal0,0); \n"
     "   vec4 skinned_nml = weights.x * ( joint_matrices[joints.x] * input_nml ) + \n"
     "                      weights.y * ( joint_matrices[joints.y] * input_nml ) + \n"
     "                      weights.z * ( joint_matrices[joints.z] * input_nml ) + \n"
     "                      weights.w * ( joint_matrices[joints.w] * input_nml );  \n"
     "   gl_Position = pvw * skinned_pos; \n"
-    "   pos_world   = world * gl_Vertex; \n"
+    "   pos_world   = world * i_Position0; \n"
     "   nml_world   = (wit * skinned_nml).xyz; \n"
-    "   texcoords   = gl_MultiTexCoord0.xy; \n"
+    "   texcoords   = i_TexCoord0.xy; \n"
     "}";
 
 static const char * DIFFUSE_PS_GLSL =
@@ -295,9 +298,9 @@ sRegisterSkinnedDiffuseEffect( GpuResourceDatabase & gdb )
     ed.gpuprograms["glsl"].uniforms["albedoColor"] = "ALBEDO_COLOR";
     ed.gpuprograms["glsl"].uniforms["joint_matrices"] = "JOINT_MATRICES";
     ed.gpuprograms["glsl"].textures["t0"] = "ALBEDO_TEXTURE";
-    ed.gpuprograms["glsl"].attributes["gl_Vertex"] = "POSITION0";
-    ed.gpuprograms["glsl"].attributes["gl_Normal"] = "NORMAL0";
-    ed.gpuprograms["glsl"].attributes["gl_MultiTexCoord0"] = "TEXCOORD0";
+    ed.gpuprograms["glsl"].attributes["i_Position0"] = "POSITION0";
+    ed.gpuprograms["glsl"].attributes["i_Normal0"] = "NORMAL0";
+    ed.gpuprograms["glsl"].attributes["i_TexCoord0"] = "TEXCOORD0";
     ed.gpuprograms["glsl"].attributes["fjoints"] = "JOINT_ID";
     ed.gpuprograms["glsl"].attributes["weights"] = "JOINT_WEIGHT";
 
@@ -418,10 +421,10 @@ static const char * SKINNED_LINE_VS_GLSL =
     "\n"
     "void main() { \n"
     "   ivec4 joints = ivec4(fjoints); \n"
-    "   vec4 skinned_pos = weights.x * ( joint_matrices[joints.x] * gl_Vertex ) + \n"
-    "                      weights.y * ( joint_matrices[joints.y] * gl_Vertex ) + \n"
-    "                      weights.z * ( joint_matrices[joints.z] * gl_Vertex ) + \n"
-    "                      weights.w * ( joint_matrices[joints.w] * gl_Vertex );  \n"
+    "   vec4 skinned_pos = weights.x * ( joint_matrices[joints.x] * i_Position0 ) + \n"
+    "                      weights.y * ( joint_matrices[joints.y] * i_Position0 ) + \n"
+    "                      weights.z * ( joint_matrices[joints.z] * i_Position0 ) + \n"
+    "                      weights.w * ( joint_matrices[joints.w] * i_Position0 );  \n"
     "   gl_Position = pvw * skinned_pos; \n"
     "}";
 
@@ -453,7 +456,7 @@ sRegisterSkinnedLineEffect( GpuResourceDatabase & gdb )
     ed.gpuprograms["glsl"].uniforms["pvw"] = StandardUniform::Desc::MATRIX_PVW.name;
     ed.gpuprograms["glsl"].uniforms["albedoColor"] = "ALBEDO_COLOR";
     ed.gpuprograms["glsl"].uniforms["joint_matrices"] = "JOINT_MATRICES";
-    ed.gpuprograms["glsl"].attributes["gl_Vertex"] = "POSITION";
+    ed.gpuprograms["glsl"].attributes["i_Position0"] = "POSITION";
     ed.gpuprograms["glsl"].attributes["fjoints"] = "JOINT_ID";
     ed.gpuprograms["glsl"].attributes["weights"] = "JOINT_WEIGHT";
 

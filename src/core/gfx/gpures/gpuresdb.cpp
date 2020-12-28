@@ -62,6 +62,9 @@ static const char * DIFFUSE_PS_HLSL9 =
     "}";
 
 static const char * DIFFUSE_VS_GLSL =
+    "in vec4 i_Position0; \n"
+    "in vec3 i_Normal0; \n"
+    "in vec2 i_TexCoord0; \n"
     "uniform mat4 pvw; \n"
     "uniform mat4 world; \n"
     "uniform mat4 wit; \n"
@@ -69,10 +72,10 @@ static const char * DIFFUSE_VS_GLSL =
     "varying vec3 nml_world; // vertex normal in world space \n"
     "varying vec2 texcoords; \n"
     "void main() { \n"
-    "   gl_Position = pvw * gl_Vertex; \n"
-    "   pos_world   = world * gl_Vertex; \n"
-    "   nml_world   = (wit * vec4(gl_Normal,0)).xyz; \n"
-    "   texcoords   = gl_MultiTexCoord0.xy; \n"
+    "   gl_Position = pvw * i_Position0; \n"
+    "   pos_world   = world * i_Position0; \n"
+    "   nml_world   = (wit * vec4(i_Normal0,0)).xyz; \n"
+    "   texcoords   = i_TexCoord0.xy; \n"
     "}";
 
 static const char * DIFFUSE_PS_GLSL =
@@ -120,9 +123,9 @@ static AutoRef<EffectResource> sRegisterDiffuseEffect( GpuResourceDatabase & gdb
     ed.gpuprograms["glsl"].uniforms["lightColor"] = StandardUniform::Desc::LIGHT0_DIFFUSE.name;
     ed.gpuprograms["glsl"].uniforms["albedoColor"] = "ALBEDO_COLOR";
     ed.gpuprograms["glsl"].textures["t0"] = "ALBEDO_TEXTURE";
-    ed.gpuprograms["glsl"].attributes["gl_Vertex"] = "POSITION0";
-    ed.gpuprograms["glsl"].attributes["gl_Normal"] = "NORMAL0";
-    ed.gpuprograms["glsl"].attributes["gl_MultiTexCoord0"] = "TEXCOORD0";
+    ed.gpuprograms["glsl"].attributes["i_Position0"] = "POSITION0";
+    ed.gpuprograms["glsl"].attributes["i_Normal0"] = "NORMAL0";
+    ed.gpuprograms["glsl"].attributes["i_TexCoord0"] = "TEXCOORD0";
 
     ed.gpuprograms["hlsl9"].gpd.lang = GpuProgramLanguage::HLSL9;
     ed.gpuprograms["hlsl9"].gpd.shaderModels = ShaderModel::SM_2_0;
@@ -183,9 +186,10 @@ static const char * WIREFRAME_PS_HLSL9 =
     "}";
 
 static const char * WIREFRAME_VS_GLSL =
+    "in vec4 i_Position0; \n"
     "uniform mat4 pvw; \n"
     "void main() { \n"
-    "   gl_Position = pvw * gl_Vertex; \n"
+    "   gl_Position = pvw * i_Position0; \n"
     "}";
 
 static const char * WIREFRAME_PS_GLSL =
@@ -211,7 +215,7 @@ static AutoRef<EffectResource> sRegisterWireframeEffect( GpuResourceDatabase & g
     ed.gpuprograms["glsl"].gpd.ps.source = WIREFRAME_PS_GLSL;
     ed.gpuprograms["glsl"].uniforms["pvw"] = StandardUniform::Desc::MATRIX_PVW.name;
     ed.gpuprograms["glsl"].uniforms["color"] = "ALBEDO_COLOR";
-    ed.gpuprograms["glsl"].attributes["gl_Vertex"] = "POSITION";
+    ed.gpuprograms["glsl"].attributes["i_Position0"] = "POSITION";
 
     ed.gpuprograms["hlsl"].gpd.lang = GpuProgramLanguage::HLSL9;
     ed.gpuprograms["hlsl"].gpd.shaderModels = ShaderModel::SM_2_0;
@@ -296,6 +300,9 @@ static const char * NORMALMAP_PS_HLSL9 =
     "}";
 
 static const char * NORMALMAP_VS_GLSL =
+    "in vec4 i_Position0; \n"
+    "in vec3 i_Normal0; \n"
+    "in vec2 i_TexCoord0; \n"
     "uniform mat4 pvw; \n"
     "uniform mat4 world; \n"
     "uniform mat4 wit; \n"
@@ -303,10 +310,10 @@ static const char * NORMALMAP_VS_GLSL =
     "varying vec3 nml_world; // vertex normal in world space \n"
     "varying vec2 texcoords; \n"
     "void main() { \n"
-    "   gl_Position = pvw * gl_Vertex; \n"
-    "   pos_world   = world * gl_Vertex; \n"
-    "   nml_world   = (wit * vec4(gl_Normal,0)).xyz; \n"
-    "   texcoords   = gl_MultiTexCoord0.xy; \n"
+    "   gl_Position = pvw * i_Position0; \n"
+    "   pos_world   = world * i_Position0; \n"
+    "   nml_world   = (wit * vec4(i_Normal0,0)).xyz; \n"
+    "   texcoords   = i_TexCoord0.xy; \n"
     "}";
 
 static const char * NORMALMAP_PS_GLSL =
@@ -358,9 +365,9 @@ static AutoRef<EffectResource> sRegisterNormalMapEffect( GpuResourceDatabase & g
     ed.gpuprograms["glsl"].uniforms["albedoColor"] = "ALBEDO_COLOR";
     ed.gpuprograms["glsl"].textures["t0"] = "ALBEDO_TEXTURE";
     ed.gpuprograms["glsl"].textures["t1"] = "NORMAL_TEXTURE";
-    ed.gpuprograms["glsl"].attributes["gl_Vertex"] = "POSITION";
-    ed.gpuprograms["glsl"].attributes["gl_Normal"] = "NORMAL";
-    ed.gpuprograms["glsl"].attributes["gl_MultiTexCoord0"] = "TEXCOORD";
+    ed.gpuprograms["glsl"].attributes["i_Position0"] = "POSITION";
+    ed.gpuprograms["glsl"].attributes["i_Normal0"] = "NORMAL";
+    ed.gpuprograms["glsl"].attributes["i_TexCoord0"] = "TEXCOORD";
 
     ed.gpuprograms["hlsl"].gpd.lang = GpuProgramLanguage::HLSL9;
     ed.gpuprograms["hlsl"].gpd.shaderModels = ShaderModel::SM_2_0;

@@ -678,8 +678,10 @@ namespace GN
         T       * begin() { return mElements; }
         SIZE_TYPE capacity() const { return mElements ? GetHeader().capacity : 0; }
         void      clear() { doClear(); }
-        const T * rawptr() const { return mElements; } // TODO: maybe rename it to data()?
-        T       * rawptr() { return mElements; }
+        const T * data() const { return mElements; }
+        T       * data() { return mElements; }
+        const T * rawptr() const { return mElements; } // obsolete
+        T       * rawptr() { return mElements; } // oboslete
         bool      empty() const { return 0 == GetCount(); }
         const T * end() const { return mElements + GetCount(); }
         T       * end() { return mElements + GetCount(); }

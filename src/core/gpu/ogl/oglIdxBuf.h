@@ -7,6 +7,7 @@
 // *****************************************************************************
 
 #include "../common/basicSurface.h"
+#include "garnet/GNogl.h"
 
 namespace GN { namespace gfx
 {
@@ -38,7 +39,7 @@ namespace GN { namespace gfx
     private:
         void clear()
         {
-            mBuffer = 0;
+            mBuffer.cleanup();
         }
         //@}
 
@@ -56,16 +57,21 @@ namespace GN { namespace gfx
     public:
 
         ///
+        /// bind the index buffer
+        ///
+        void bind() const { mBuffer.bind(); }
+
+        ///
         /// Get index data pointer
         ///
-        const void * getIdxData( uint32 startidx ) const { return mBuffer + startidx * mBytesPerIndex; }
+        const void * data(uint32 startidx) const { return (const void*)(uintptr_t)(startidx * mBytesPerIndex); }
 
         // ********************************
         // private variables
         // ********************************
     private:
 
-        uint8 * mBuffer;
+        ogl::BufferObject<GL_ELEMENT_ARRAY_BUFFER> mBuffer;
         uint32  mBytesPerIndex;
 
         // ********************************

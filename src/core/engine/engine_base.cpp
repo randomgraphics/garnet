@@ -103,10 +103,6 @@ static bool sGfxInitInternal( const GfxInitOptions & o )
     s_engine.gpu = createGpu( o.gpuOptions, o.useMultithreadGpu ? GPU_CREATION_MULTIPLE_THREADS : 0 );
     if( NULL == s_engine.gpu ) return false;
 
-    GN_TODO( "connect to renderer signal: post quit event, if render window is closed." );
-    //s_engine.gpu->getSignals().rendererWindowClose.connect( this, &SampleApp::postExitEvent );
-    //s_engine.gpu->getSignals().rendererWindowSizeMove.connect( this, &SampleApp::onRenderWindowResize );
-
     // create sprite renderer
     s_engine.spriteRenderer = new SpriteRenderer();
     if( !s_engine.spriteRenderer->init(*s_engine.gpu) ) return false;

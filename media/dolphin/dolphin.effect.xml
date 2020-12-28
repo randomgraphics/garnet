@@ -153,23 +153,26 @@ void main(
 			<uniref uniform="weights"     shaderParameter="g_vBlendWeights"/>
 			<texref texture="skin"        shaderParameter="DiffuseSampler"/>
 			<texref texture="caustic"     shaderParameter="CausticsSampler"/>
-			<attref attribute="position0" shaderParameter="gl_Vertex"/>
-			<attref attribute="normal0"   shaderParameter="gl_Normal"/>
+			<attref attribute="position0" shaderParameter="i_Position0"/>
+			<attref attribute="normal0"   shaderParameter="i_Normal0"/>
 			<attref attribute="position1" shaderParameter="i_Position1"/>
 			<attref attribute="normal1"   shaderParameter="i_Normal1"/>
 			<attref attribute="position2" shaderParameter="i_Position2"/>
 			<attref attribute="normal2"   shaderParameter="i_Normal2"/>
-			<attref attribute="texcoord"  shaderParameter="gl_MultiTexCoord0"/>
+			<attref attribute="texcoord"  shaderParameter="i_TexCoord0"/>
 			<vs entry="main">
 <![CDATA[
 uniform vec3 g_vBlendWeights     ;  // ( fWeight1, fWeight2, fWeight3, 0 )
 uniform mat4 g_matWorldViewProj  ;  // world-view-projection matrix
 uniform mat4 g_matWorldView      ;  // world-view matrix
 
+attribute vec3 i_Position0;
+attribute vec3 i_Normal0;
 attribute vec3 i_Position1;
 attribute vec3 i_Normal1;
 attribute vec3 i_Position2;
 attribute vec3 i_Normal2;
+attribute vec2 i_TexCoord0;
 
 varying vec4 o_Misc;     // x = light, y = fog, zw = opos.zw
 varying vec2 o_BaseTexCoords;
@@ -183,7 +186,7 @@ void main()
 	const vec4 g_vFogRange = vec4( 0.5,50.0, 1.0/(50.0-1.0), 0 ); // ( x, fog_end, (1/(fog_end-fog_start)), x )
 
 	// Tween the 3 positions (v0,v1,v2) into one position
-	vec4 vModelPosition = vec4( gl_Vertex.xyz * g_vBlendWeights.x + i_Position1 * g_vBlendWeights.y + i_Position2 * g_vBlendWeights.z, 1.0f );
+	vec4 vModelPosition = vec4( i_Position0.xyz * g_vBlendWeights.x + i_Position1 * g_vBlendWeights.y + i_Position2 * g_vBlendWeights.z, 1.0f );
 
 	// Transform position to the clipping space
 	vec4 vOutputPosition = g_matWorldViewProj * vModelPosition;
@@ -192,7 +195,7 @@ void main()
 	vec4 vViewPosition = g_matWorldView * vModelPosition;
 
 	// Tween the 3 normals (v3,v4,v5) into one normal
-	vec3 vModelNormal = gl_Normal * g_vBlendWeights.x + i_Normal1 * g_vBlendWeights.y + i_Normal2 * g_vBlendWeights.z;
+	vec3 vModelNormal = i_Normal0 * g_vBlendWeights.x + i_Normal1 * g_vBlendWeights.y + i_Normal2 * g_vBlendWeights.z;
 
 	// Do the lighting calculation
 	float fLightValue = max( dot( vModelNormal, g_vDolphinLightDir ), g_vZero.x );
@@ -208,7 +211,7 @@ void main()
 	o_Misc.x           = fLightValue;
 	o_Misc.y           = fFogValue;
 	o_Misc.zw          = vOutputPosition.zw;
-	o_BaseTexCoords    = gl_MultiTexCoord0.xy;
+	o_BaseTexCoords    = i_TexCoord0.xy;
 	o_CausticTexCoords = vCausticTexCoords;
 }
 ]]>

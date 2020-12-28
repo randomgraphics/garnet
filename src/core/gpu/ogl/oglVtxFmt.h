@@ -120,21 +120,9 @@ namespace GN { namespace gfx
         // setup state binding
         bool setupStateBindings( const OGLBasicGpuProgram * gpuProgram );
         bool getStandardVertexBindingDesc( OGLVertexBindingDesc & result, const char * bindingName, uint8 bindingIndex );
-
-        static void sSetVertexPointer( const AttribBindingInfo &, const uint8 * buf, size_t stride );
-        static void sSetNormalPointer( const AttribBindingInfo &, const uint8 * buf, size_t stride );
-        static void sSetColorPointer( const AttribBindingInfo &, const uint8 * buf, size_t stride );
-        static void sSetSecondaryColorPointer( const AttribBindingInfo &, const uint8 * buf, size_t stride );
-        static void sSetFogPointer( const AttribBindingInfo &, const uint8 * buf, size_t stride );
-        static void sSetTexCoordPointer( const AttribBindingInfo &, const uint8 * buf, size_t stride );
         static void sSetVertexAttributePointer( const AttribBindingInfo &, const uint8 * buf, size_t stride );
-
-        static void sEnableClientState( const StateBindingInfo & info );
-        static void sDisableClientState( const StateBindingInfo & info );
         static void sEnableVAA( const StateBindingInfo & info );
         static void sDisableVAA( const StateBindingInfo & info );
-        static void sEnableTexArray( const StateBindingInfo & info );
-        static void sDisableTexArray( const StateBindingInfo & info );
     };
 }}
 
