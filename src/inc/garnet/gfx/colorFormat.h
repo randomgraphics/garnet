@@ -500,6 +500,17 @@ namespace GN { namespace gfx
     };
     GN_CASSERT( 4 == sizeof(ColorFormat) );
 
+    using Rgba8 = Vector4<uint8_t>;
+    using Rgba32f = Vector4<float>;
+
+    inline Rgba8 convertColorFormat(const Rgba32f & c) {
+        return Rgba8(
+            (uint8_t)math::clamp(c.x * 255.0f, 0.0f, 255.0f),
+            (uint8_t)math::clamp(c.y * 255.0f, 0.0f, 255.0f),
+            (uint8_t)math::clamp(c.z * 255.0f, 0.0f, 255.0f),
+            (uint8_t)math::clamp(c.w * 255.0f, 0.0f, 255.0f) );
+    }
+
     ///
     /// D3DFMT to string. Return "INVALID D3D9 FORMAT" if failed.
     ///

@@ -6,6 +6,7 @@
 // \author  chenlee (2005.10.1)
 // *****************************************************************************
 
+#define NOMINMAX
 #include "garnet/GNengine.h"
 #include <garnet/GNutil.h>
 #include <cli/CLI.hpp>

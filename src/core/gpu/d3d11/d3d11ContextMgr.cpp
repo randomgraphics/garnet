@@ -230,16 +230,10 @@ inline bool GN::gfx::D3D11Gpu::bindContextRenderTarget(
     }
     else
     {
-        uint32 l = newvp.x;
-        uint32 t = newvp.y;
-        uint32 r = newvp.x + newvp.w;
-        uint32 b = newvp.y + newvp.h;
-
-        math::clamp<uint32>( l, 0, rtsize.width );
-        math::clamp<uint32>( t, 0, rtsize.height );
-        math::clamp<uint32>( r, 0, rtsize.width );
-        math::clamp<uint32>( b, 0, rtsize.height );
-
+        uint32 l = math::clamp<uint32>( newvp.x, 0, rtsize.width );
+        uint32 t = math::clamp<uint32>( newvp.y, 0, rtsize.height );
+        uint32 r = math::clamp<uint32>( newvp.x + newvp.w, 0, rtsize.width );
+        uint32 b = math::clamp<uint32>( newvp.y + newvp.h, 0, rtsize.height );
         d3dvp.TopLeftX = (float)l;
         d3dvp.TopLeftY = (float)t;
         d3dvp.Width    = (float)(r - l);

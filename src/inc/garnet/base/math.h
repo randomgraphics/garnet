@@ -133,9 +133,10 @@ namespace GN
         /// 将value限定在[vmin, vmax]区间内
         // --------------------------------------------------------------------
         template < typename T >
-        inline void clamp( T & value, const T & vmin, const T & vmax )
+        inline T clamp( T value, const T & vmin, const T & vmax )
         {
             value = vmin > value ? vmin : vmax < value ? vmax : value;
+            return value;
         }
 
         ///
