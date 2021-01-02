@@ -69,8 +69,8 @@ struct OptixStats {
             quit();
             OptixModuleCompileOptions module_compile_options = {};
             module_compile_options.maxRegisterCount     = OPTIX_COMPILE_DEFAULT_MAX_REGISTER_COUNT;
-            module_compile_options.optLevel             = OPTIX_COMPILE_OPTIMIZATION_DEFAULT;
-            module_compile_options.debugLevel           = OPTIX_COMPILE_DEBUG_LEVEL_LINEINFO;
+            module_compile_options.optLevel             = OPTIX_COMPILE_OPTIMIZATION_LEVEL_0;
+            module_compile_options.debugLevel           = OPTIX_COMPILE_DEBUG_LEVEL_FULL;
 
             pipeline_compile_options.usesMotionBlur        = false;
             pipeline_compile_options.traversableGraphFlags = OPTIX_TRAVERSABLE_GRAPH_FLAG_ALLOW_SINGLE_LEVEL_INSTANCING;
@@ -106,7 +106,7 @@ struct OptixStats {
             OptixProgramGroupOptions options = {};
             OptixProgramGroupDesc desc       = {};
             desc.kind                        = kind;
-            desc.raygen.module               = module;
+            desc.raygen.module               = entry ? module : 0;
             desc.raygen.entryFunctionName    = entry;
             static char log[2048];
             size_t sizeof_log = sizeof( log );
@@ -133,16 +133,46 @@ struct OptixStats {
         }
     };
 
+    struct DummySBT {
+        OptixShaderBindingTable sbt = {};
+        struct DummyRecord
+        {
+            __align__( OPTIX_SBT_RECORD_ALIGNMENT ) char header[OPTIX_SBT_RECORD_HEADER_SIZE];
+            int data;
+        };
+        ~DummySBT() {
+            quit();
+        }
+        bool init() {
+            quit();
+            CUDA_RETURN_FALSE_ON_FAIL( cudaMallocManaged<DummyRecord>( (DummyRecord**)&sbt.raygenRecord, 1 ) );
+            CUDA_RETURN_FALSE_ON_FAIL( cudaMallocManaged<DummyRecord>( (DummyRecord**)&sbt.missRecordBase, 1 ) );
+            sbt.missRecordCount = 1;
+            sbt.missRecordStrideInBytes = sizeof(DummyRecord);
+            return true;
+        }
+        void quit() {
+            if( sbt.raygenRecord ) cudaFree( (void*)sbt.raygenRecord ), sbt.raygenRecord = 0;
+        }
+    };
+
     AutoContext                 context;
     AutoModule                  module;
-    AutoProgramGroup            raygen;
+    AutoProgramGroup            raygen, miss;
     AutoPipeline                pipeline;
     OptixPipelineCompileOptions pco = {};
-    OptixShaderBindingTable     sbt = {};
+    DummySBT                    sbt = {};
+
+    bool createProgramGroups() {
+
+    }
 
     bool createPipeline() {
+        GN_GUARD;
+
+        pipeline.quit();
         
-        OptixProgramGroup program_groups[] = { raygen.g };
+        OptixProgramGroup program_groups[] = { raygen.g, miss.g };
 
         OptixPipelineLinkOptions plo = {};
         plo.maxTraceDepth            = 2;
@@ -180,11 +210,13 @@ struct OptixStats {
 
         // done 
         return true;
+
+        GN_UNGUARD;
     }
 
     template<class LAUNCH_PARAMETERS>
     void launch(cudaStream_t stream, LAUNCH_PARAMETERS * parameters, uint32_t width, uint32_t height, uint32_t depth = 1 ) {
-        OPTIX_CHECK( optixLaunch( pipeline.p, stream, (CUdeviceptr)parameters, sizeof(*parameters), nullptr, width, height, depth ), );
+        OPTIX_CHECK( optixLaunch( pipeline.p, stream, (CUdeviceptr)parameters, sizeof(*parameters), &sbt.sbt, width, height, depth ), );
     }
 };
 
@@ -208,6 +240,8 @@ public:
     }
 
     bool onInit() {
+        GN_GUARD;
+
         // create output texture
         auto g = engine::getGpu();
         auto & dd = g->getDispDesc();
@@ -235,6 +269,8 @@ public:
         if( !_optix->context.init() ) return false;
         if( !_optix->module.init( _optix->context.c, _optix->pco, trace_ptx ) ) return false;
         if( !_optix->raygen.init( _optix->context.c, _optix->module.m, OPTIX_PROGRAM_GROUP_KIND_RAYGEN, "__raygen__test1" ) ) return false;
+        if( !_optix->miss.init( _optix->context.c, _optix->module.m, OPTIX_PROGRAM_GROUP_KIND_MISS, nullptr ) ) return false;
+        if( !_optix->sbt.init() ) return false;
         if( !_optix->createPipeline() ) return false;
 
         // initialize launch parameters
@@ -245,6 +281,8 @@ public:
 
         // done
         return true;
+
+        GN_UNGUARD;
     }
 
     void onQuit() {
@@ -263,6 +301,8 @@ public:
     }
 
     void onRender() {
+        GN_GUARD_SLOW;
+
         _optix->launch( _stream, _launchParameters, _launchParameters->width, _launchParameters->height );
         CUDA_CHECK( cudaDeviceSynchronize(), );
 
@@ -272,6 +312,8 @@ public:
         auto h = g->getOptions().displayMode.height;
         auto sr = engine::getSpriteRenderer();
         sr->drawSingleTexturedSprite( _texture, GN::gfx::SpriteRenderer::SOLID_2D_IMAGE, .0f, .0f, (float)w, (float)h );
+
+        GN_UNGUARD_SLOW;
     }
 };
 
