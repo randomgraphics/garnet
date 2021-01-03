@@ -40,6 +40,48 @@ const char * getCudaErrorString(cudaError_t r) {
 #define OPTIX_RETURN_ON_FAIL( x )       OPTIX_CHECK( x, return )
 #define OPTIX_RETURN_FALSE_ON_FAIL( x ) OPTIX_CHECK( x, return false )
 
+template<typename T>
+class CudaBuffer {
+    T * _d    = 0; ///< device pointer
+    T * _h    = 0; ///< host pointer
+    size_t _s = 0; ///< count of elements;
+
+public:
+
+    ~CudaBuffer() { quit(); }
+
+    bool init(size_t count, const T * initialContent = nullptr) {
+        quit();
+        _s = count * sizeof( T );
+        CUDA_RETURN_FALSE_ON_FAIL( cudaMalloc( &_d, _s ) );
+        _h = (T*)malloc( _s ); // TODO: check OOM
+        if (initialContent) {
+            memcpy( _h, initialContent, _s );
+            copyToDevice();
+        }
+        return true;
+    }
+
+    void quit() {
+        if( _d ) cudaFree( _d ), _d = 0;
+        if( _h ) ::free( _h ), _h = nullptr;
+        _s = 0;
+    }
+
+    void copyToDevice() {
+        CUDA_CHECK( cudaMemcpy( _d, _h, _s, cudaMemcpyHostToDevice ), );
+    }
+
+    void copyToHost() {
+        CUDA_CHECK( cudaMemcpy( _h, _d, _s, cudaMemcpyDeviceToHost ), );
+    }
+
+    size_t size() const { return _s; }
+
+    T * d() const { return _d; }
+    T * h() const { return _h; }
+};
+
 struct OptixStats {
 
     struct AutoContext {
@@ -133,26 +175,15 @@ struct OptixStats {
         }
     };
 
-    struct DummySBT {
-        OptixShaderBindingTable sbt = {};
-        struct DummyRecord
-        {
-            __align__( OPTIX_SBT_RECORD_ALIGNMENT ) char header[OPTIX_SBT_RECORD_HEADER_SIZE];
-            int data;
-        };
-        ~DummySBT() {
+    struct AutoSBT : OptixShaderBindingTable {
+        ~AutoSBT() {
             quit();
-        }
-        bool init() {
-            quit();
-            CUDA_RETURN_FALSE_ON_FAIL( cudaMallocManaged<DummyRecord>( (DummyRecord**)&sbt.raygenRecord, 1 ) );
-            CUDA_RETURN_FALSE_ON_FAIL( cudaMallocManaged<DummyRecord>( (DummyRecord**)&sbt.missRecordBase, 1 ) );
-            sbt.missRecordCount = 1;
-            sbt.missRecordStrideInBytes = sizeof(DummyRecord);
-            return true;
         }
         void quit() {
-            if( sbt.raygenRecord ) cudaFree( (void*)sbt.raygenRecord ), sbt.raygenRecord = 0;
+            if( raygenRecord ) cudaFree( (void*)raygenRecord ), raygenRecord = 0;
+            if( missRecordBase ) cudaFree( (void*)missRecordBase ), missRecordBase = 0;
+            missRecordCount = 0;
+            missRecordStrideInBytes = 0;
         }
     };
 
@@ -161,9 +192,28 @@ struct OptixStats {
     AutoProgramGroup            raygen, miss;
     AutoPipeline                pipeline;
     OptixPipelineCompileOptions pco = {};
-    DummySBT                    sbt = {};
+    AutoSBT                     sbt = {};
 
-    bool createProgramGroups() {
+    bool createDummySBT() {
+        struct DummyRecord
+        {
+            __align__( OPTIX_SBT_RECORD_ALIGNMENT ) char header[OPTIX_SBT_RECORD_HEADER_SIZE];
+            int data;
+        };
+        DummyRecord rec;
+
+        sbt.quit();
+
+        CUDA_RETURN_FALSE_ON_FAIL( cudaMalloc( (void**)&sbt.raygenRecord, sizeof(DummyRecord) ) );
+        OPTIX_RETURN_FALSE_ON_FAIL( optixSbtRecordPackHeader( raygen.g, &rec ) );
+        CUDA_RETURN_FALSE_ON_FAIL( cudaMemcpy( (void*)sbt.raygenRecord, &rec, sizeof(rec), cudaMemcpyHostToDevice ) );
+
+        CUDA_RETURN_FALSE_ON_FAIL( cudaMalloc( (void**)&sbt.missRecordBase, sizeof(DummyRecord) ) );
+        OPTIX_RETURN_FALSE_ON_FAIL( optixSbtRecordPackHeader( miss.g, &rec ) );
+        CUDA_RETURN_FALSE_ON_FAIL( cudaMemcpy( (void*)sbt.missRecordBase, &rec, sizeof(rec), cudaMemcpyHostToDevice ) );
+        sbt.missRecordCount = 1;
+        sbt.missRecordStrideInBytes = sizeof(DummyRecord);
+        return true;
 
     }
 
@@ -215,19 +265,27 @@ struct OptixStats {
     }
 
     template<class LAUNCH_PARAMETERS>
-    void launch(cudaStream_t stream, LAUNCH_PARAMETERS * parameters, uint32_t width, uint32_t height, uint32_t depth = 1 ) {
-        OPTIX_CHECK( optixLaunch( pipeline.p, stream, (CUdeviceptr)parameters, sizeof(*parameters), &sbt.sbt, width, height, depth ), );
+    void launch( cudaStream_t stream, LAUNCH_PARAMETERS * parameters, uint32_t width, uint32_t height, uint32_t depth = 1 ) {
+        GN_DO_EVERY_N_SEC( 3, GN_INFO( sLogger ) << "pipline = " << pipeline.p << ", width = " << width << ", height = " << height );
+        OPTIX_CHECK( optixLaunch(
+            pipeline.p,
+            stream,
+            (CUdeviceptr)parameters,
+            sizeof(*parameters),
+            &sbt,
+            width,
+            height,
+            depth ), );
     }
 };
 
 class OptixSample : public GN::util::SampleApp {
 
-    AutoRef<gfx::Texture> _texture;
-
-    CUstream                _stream = 0;
-    uchar4 *                _outputImage = 0;
-    AutoObjPtr<OptixStats>  _optix;
-    LaunchParameters *      _launchParameters = 0;
+    AutoRef<gfx::Texture>           _texture;
+    CUstream                        _stream = 0;
+    CudaBuffer<gfx::Rgba8>          _outputImage;
+    AutoObjPtr<OptixStats>          _optix;
+    CudaBuffer<LaunchParameters>    _launchParameters;
 
 public:
 
@@ -247,37 +305,28 @@ public:
         auto & dd = g->getDispDesc();
         _texture.attach( g->create2DTexture( gfx::ColorFormat::RGBA8, dd.width, dd.height, 1, gfx::TextureUsage::FAST_CPU_WRITE ) );
         if( !_texture ) return false;
-        std::vector<gfx::Rgba8> image( dd.width * dd.height );
-        for( size_t y = 0; y < dd.height; ++y ) {
-            for( size_t x = 0; x < dd.width; ++x ) {
-                image[ y * dd.width + x ] = gfx::Rgba8(
-                    (uint8_t)( x * 255 / ( dd.width - 1 ) ),
-                    (uint8_t)( y * 255 / ( dd.height - 1 ) ),
-                    0,
-                    255 );
-            }
-        }
-        _texture->updateMipmap( 0, 0, nullptr, dd.width * 4, 0, image.data() );
 
-        // Initialize CUDA
-        CUDA_RETURN_FALSE_ON_FAIL( cudaMallocManaged( (void**)&_outputImage, dd.width * dd.height * 4 ) );
-        CUDA_RETURN_FALSE_ON_FAIL( cudaStreamCreate( &_stream ) );
+        // Initialize optix output buffer with pure red color
+        std::vector<gfx::Rgba8> image(dd.width * dd.height, gfx::Rgba8(255, 0, 0, 255));
+        if( !_outputImage.init( dd.width * dd.height, image.data() ) ) return false;
 
         // Initialize Optix
+        CUDA_RETURN_FALSE_ON_FAIL( cudaStreamCreate( &_stream ) );
         OPTIX_RETURN_FALSE_ON_FAIL( optixInit() );
         _optix.attach(new OptixStats());
         if( !_optix->context.init() ) return false;
         if( !_optix->module.init( _optix->context.c, _optix->pco, trace_ptx ) ) return false;
         if( !_optix->raygen.init( _optix->context.c, _optix->module.m, OPTIX_PROGRAM_GROUP_KIND_RAYGEN, "__raygen__test1" ) ) return false;
         if( !_optix->miss.init( _optix->context.c, _optix->module.m, OPTIX_PROGRAM_GROUP_KIND_MISS, nullptr ) ) return false;
-        if( !_optix->sbt.init() ) return false;
+        if( !_optix->createDummySBT() ) return false;
         if( !_optix->createPipeline() ) return false;
 
         // initialize launch parameters
-        CUDA_RETURN_FALSE_ON_FAIL( cudaMallocManaged( (void**)&_launchParameters, sizeof(LaunchParameters) ) );
-        _launchParameters->image  = _outputImage;
-        _launchParameters->width  = dd.width;
-        _launchParameters->height = dd.height;
+        if( !_launchParameters.init( 1 ) ) return false;
+        _launchParameters.h()->image  = (uchar4*)_outputImage.d();
+        _launchParameters.h()->width  = dd.width;
+        _launchParameters.h()->height = dd.height;
+        _launchParameters.copyToDevice();
 
         // done
         return true;
@@ -286,10 +335,10 @@ public:
     }
 
     void onQuit() {
+        _launchParameters.quit();
         _optix.clear();
+        _outputImage.quit();
         if( _stream ) cudaStreamDestroy( _stream ), _stream = 0;
-        if( _outputImage ) cudaFree( _outputImage ), _outputImage = 0;
-        if( _launchParameters ) cudaFree( _launchParameters ); _launchParameters = 0;
         _texture.clear();
     }
 
@@ -303,13 +352,20 @@ public:
     void onRender() {
         GN_GUARD_SLOW;
 
-        _optix->launch( _stream, _launchParameters, _launchParameters->width, _launchParameters->height );
-        CUDA_CHECK( cudaDeviceSynchronize(), );
-
         auto g = engine::getGpu();
-        g->clearScreen();
         auto w = g->getOptions().displayMode.width;
         auto h = g->getOptions().displayMode.height;
+
+        // run optix tracing
+        _optix->launch( _stream, _launchParameters.d(), w, h );
+        CUDA_CHECK( cudaDeviceSynchronize(), );
+
+        // upload tracing result to texture
+        _outputImage.copyToHost();
+        _texture->updateMipmap(0, 0, nullptr, w * 4, 0, _outputImage.h());
+
+        // draw the texture to screen
+        g->clearScreen();
         auto sr = engine::getSpriteRenderer();
         sr->drawSingleTexturedSprite( _texture, GN::gfx::SpriteRenderer::SOLID_2D_IMAGE, .0f, .0f, (float)w, (float)h );
 
