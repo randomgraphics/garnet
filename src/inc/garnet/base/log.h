@@ -6,21 +6,24 @@
 /// \author  chenlee (2005.4.17)
 // *****************************************************************************
 
+#include <chrono>
+#include <sstream>
+
 /// General log macros, with user specified source code location
 //@{
 #if GN_ENABLE_LOG
-#define GN_LOG_EX( logger, level, func, file, line ) if( logger->isOff( level ) ) {} else GN::Logger::LogHelper( logger, level, func, file, line ).doLog
-#define GN_LOG_BEGIN( logger, level )                if( logger->isOn( level ) ) {
+#define GN_LOG_EX( logger, level, func, file, line ) if( logger->isOff( level ) ) {} else GN::Logger::LogHelper( logger, level, func, file, line )
+#define GN_LOG_BEGIN( logger, level )                if( logger->isOn ( level ) ) {
 #define GN_LOG_END()                                 }
 #else
 #define GN_LOG_EX( logger, level, func, file, line ) if( 1 ) {} else GN::Logger::sFakeLog
-#define GN_LOG_BEGIN( logger, level )                if(0) {
+#define GN_LOG_BEGIN( logger, level )                if( 0 ) {
 #define GN_LOG_END()                                 }
 #endif
 //@}
 
 ///
-/// General doLog macro, with automatic source code location
+/// General log macro, with automatic source code location
 ///
 #define GN_LOG( logger, level ) GN_LOG_EX( logger, level, GN_FUNCTION, __FILE__, __LINE__ )
 
@@ -128,6 +131,19 @@ namespace GN
         {
             Logger * mLogger; ///< Logger instance pointer
             LogDesc  mDesc;   ///< Logging descriptor
+            uint8_t  mStreamBuffer[sizeof(std::stringstream)];
+            bool     mStreamConstructed = false;
+
+            std::stringstream * ss() {
+                if( !mStreamConstructed ) {
+                    new (mStreamBuffer) std::stringstream();
+                    mStreamConstructed = true;
+                }
+                return (std::stringstream*)mStreamBuffer;
+            }
+
+            template<class T>
+            static inline void dtor(T * p) { p->~T(); }
 
         public:
 
@@ -141,14 +157,33 @@ namespace GN
             }
 
             ///
-            /// Do doLog
+            /// destructor
             ///
-            void doLog( const char * fmt, ... );
+            ~LogHelper() {
+                if (mStreamConstructed) {
+                    operator()( ss()->str().c_str() );
+                    dtor(ss());
+                }
+            }
 
             ///
-            /// Do doLog (UNICODE)
+            /// stream style log operator
             ///
-            void doLog( const wchar_t * fmt, ... );
+            template <typename T>
+            inline LogHelper & operator<<( T && t ) {
+                *ss() << std::forward<T>( t );
+                return *this;
+            }
+
+            ///
+            /// printf style log
+            ///
+            void operator()( const char * fmt, ... );
+
+            ///
+            /// printf style log (wide char)
+            ///
+            void operator()( const wchar_t * fmt, ... );
         };
 
         ///

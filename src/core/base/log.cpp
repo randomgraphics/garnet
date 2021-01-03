@@ -3,7 +3,7 @@
 //
 //
 // -----------------------------------------------------------------------------
-void GN::Logger::LogHelper::doLog( const char * fmt, ... )
+void GN::Logger::LogHelper::operator()( const char * fmt, ... )
 {
     GN_ASSERT( mLogger );
     StrA s;
@@ -17,7 +17,7 @@ void GN::Logger::LogHelper::doLog( const char * fmt, ... )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::Logger::LogHelper::doLog( const wchar_t * fmt, ... )
+void GN::Logger::LogHelper::operator()( const wchar_t * fmt, ... )
 {
     GN_ASSERT( mLogger );
     StrW s;

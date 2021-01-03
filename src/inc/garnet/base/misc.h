@@ -6,6 +6,8 @@
 /// \author  chenlee (2005.5.4)
 // *****************************************************************************
 
+#include <chrono>
+
 ///
 /// Get element count of C-style array
 ///
@@ -22,7 +24,7 @@
 /// application, no matter how many time it is called.
 ///
 #define GN_DO_LIMITED_TIMES(n,X)      \
-    if (true)                         \
+    if( true )                        \
     {                                 \
         static size_t s_counter = n;  \
         if( s_counter > 0 )           \
@@ -36,6 +38,15 @@
 /// Do something only once. 通常用来在内层循环中输出一些调试和错误信息。
 ///
 #define GN_DO_ONCE(X) GN_DO_LIMITED_TIMES(1,X)
+
+
+#define GN_DO_EVERY_N_SEC(interval, x)                  \
+    do {                                                \
+        static GN::detail::IntervalTimer timer____;     \
+        if( timer____( interval ) ) {                   \
+            x;                                          \
+        }                                               \
+    } while ( 0 )
 
 ///
 /// "Use" unused parameter (to avoid compiler warnings)
@@ -295,6 +306,27 @@ namespace GN
         ///
         void dismiss() { mDismissed = true; }
     };
+
+
+    namespace detail {
+        class IntervalTimer {
+            std::chrono::high_resolution_clock::time_point _lastLogTime;
+
+        public:
+            IntervalTimer() {}
+            bool operator()(int interval) {
+                using namespace std::chrono;
+                if (interval <= 0)
+                    return true;
+                auto now = high_resolution_clock::now();
+                auto dur = duration_cast<seconds>(now - _lastLogTime).count();
+                if (dur < interval)
+                    return false;
+                _lastLogTime = now;
+                return true;
+            }
+        };
+    }
 }
 
 // *****************************************************************************

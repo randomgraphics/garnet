@@ -293,8 +293,7 @@ GN::d3d11::D3D11Application::~D3D11Application()
 // -----------------------------------------------------------------------------
 int GN::d3d11::D3D11Application::run( const D3D11AppOption * o )
 {
-    __try
-    {
+    try {
         if(!GN::input::initializeInputSystem())
         {
             cleanup();
@@ -351,8 +350,7 @@ int GN::d3d11::D3D11Application::run( const D3D11AppOption * o )
         cleanup();
         return 0;
     }
-    __except(EXCEPTION_EXECUTE_HANDLER)
-    {
+    catch(...) {
         cleanup();
         return -1;
     }
