@@ -11,6 +11,7 @@ const int blocksize = 16;
 __global__
 void hello(char *a, int *b)
 {
+	printf("threadIdx = %d\n", threadIdx.x);
 	a[threadIdx.x] += b[threadIdx.x];
 }
 
@@ -24,7 +25,7 @@ int main()
 	const int csize = N*sizeof(char);
 	const int isize = N*sizeof(int);
 
-	printf("%s", a);
+	printf("%s\n", a);
 
 	cudaMalloc( (void**)&ad, csize );
 	cudaMalloc( (void**)&bd, isize );
@@ -34,6 +35,7 @@ int main()
 	dim3 dimBlock( blocksize, 1 );
 	dim3 dimGrid( 1, 1 );
 	hello<<<dimGrid, dimBlock>>>(ad, bd);
+	cudaDeviceSynchronize();
 	cudaMemcpy( a, ad, csize, cudaMemcpyDeviceToHost );
 	cudaFree( ad );
 	cudaFree( bd );
