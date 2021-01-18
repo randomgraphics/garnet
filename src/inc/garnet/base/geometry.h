@@ -63,8 +63,8 @@ namespace GN
     public:
         //@{
         Vector2()                                      {}
-        Vector2(const Vector2 & v) : x(v.x), y(v.y)    {}
         Vector2(T ix, T iy) : x(ix), y(iy) {}
+        GN_DEFAULT_COPY(Vector2);
         //@}
 
         // ********************************
@@ -353,12 +353,10 @@ namespace GN
         Vector3( const Eigen::Matrix<T, 3, 1> & v )
             : x(v.x()), y(v.y()), z(v.z())
         {}
-        Vector3( const Vector3 & v )
-            : x(v.x), y(v.y), z(v.z)
-        {}
         Vector3( const Vector2<T> & v, T iz )
             : x(v.x), y(v.y), z(iz)
         {}
+        GN_DEFAULT_COPY(Vector3);
         //@}
 
         // ********************************
@@ -602,10 +600,6 @@ namespace GN
             : x(ix), y(iy), z(iz), w(iw)
         {}
         //
-        Vector4( const Vector4 & v )
-            : x(v.x), y(v.y), z(v.z), w(v.w)
-        {}
-        //
         Vector4( const Vector2<T> & v, T iz, T iw )
             : x(v.x), y(v.y), z(iz), w(iw)
         {}
@@ -613,12 +607,14 @@ namespace GN
         Vector4( const Vector3<T> & v, T iw )
             : x(v.x), y(v.y), z(v.z), w(iw)
         {}
+        GN_DEFAULT_COPY(Vector4);
         //@}
 
         // ********************************
         /// \name operators
         // ********************************
     public:
+
 
         //@{
 
@@ -2025,15 +2021,6 @@ namespace GN
             T f = n.length();
             if( f ) { n /= f; d /= f; }
             return *this;
-        }
-        ///
-        /// Normalize the plane (so that |a,b,c| == 1)
-        ///
-        static void sNormalize( Plane3 & dst, const Plane3 & src )
-        {
-            dst = src;
-            dst.normalize();
-            return dst;
         }
         ///
         /// Normalize the plane (so that |a,b,c| == 1)

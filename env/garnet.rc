@@ -31,7 +31,6 @@ do
     done
 
     eval x=($line) # split line into array of words. x[0] is alias name, x[1] is alias value
-    echo alias ${x[0]}=\"${x[1]}\"
     alias ${x[0]}="${x[1]}"
 done < ${GARNET_ROOT}/env/alias.txt
 
