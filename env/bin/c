@@ -1,0 +1,3 @@
+mkdir -p ${GARNET_ROOT}/${GN_BUILD_DIR}
+cd ${GARNET_ROOT}/${GN_BUILD_DIR}
+cmake -DCMAKE_BUILD_TYPE=Debug ../..
