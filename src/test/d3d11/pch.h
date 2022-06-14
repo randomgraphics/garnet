@@ -15,15 +15,15 @@
 #undef DEFINE_GUID
 #include <INITGUID.h>
 
-#define UNUSED -1
-#define offsetof_fx( a, b ) (UINT)offsetof( a, b )
+#define UNUSED            -1
+#define offsetof_fx(a, b) (UINT) offsetof(a, b)
 
 #define FXDPF // enable debug output of effect library.
 
 #define D3DX11INLINE inline
 
 #ifndef D3DERR_INVALIDCALL
-#define D3DERR_INVALIDCALL 0x8876086c
+    #define D3DERR_INVALIDCALL 0x8876086c
 #endif
 
 #include "d3dx11effect.h"
@@ -34,9 +34,7 @@
 #include "EffectStateBase11.h"
 #include "EffectLoad.h"
 #include "D3DCompiler.h"
-namespace D3DX11Effects
-{
-}
+namespace D3DX11Effects {}
 
 // *****************************************************************************
 //                                     EOF

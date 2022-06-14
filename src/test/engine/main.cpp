@@ -6,70 +6,64 @@ using namespace GN::input;
 using namespace GN::engine;
 using namespace GN::util;
 
-StaticMesh * root = NULL;
-StaticMesh * box = NULL;
+StaticMesh * root  = NULL;
+StaticMesh * box   = NULL;
 StaticMesh * robot = NULL;
-Matrix44f proj, view;
+Matrix44f    proj, view;
 
-bool init()
-{
+bool init() {
     root = new StaticMesh();
 
     // robot stays at the origin.
     robot = new StaticMesh();
-    robot->spacial().setParent( &root->spacial() );
-    if( !robot->loadFromFile( "media::/boxes/boxes.ase" ) ) return false;
-    //if( !robot->loadAllModelsFromFile "media::/model/R.F.R01/a01.ase" ) ) return false;
+    robot->spacial().setParent(&root->spacial());
+    if (!robot->loadFromFile("media::/boxes/boxes.ase")) return false;
+    // if( !robot->loadAllModelsFromFile "media::/model/R.F.R01/a01.ase" ) ) return false;
 
     const Boxf & bbox = robot->spacial().getSelfBoundingBox();
-    Spheref bs;
-    calculateBoundingSphereFromBoundingBox( bs, bbox );
+    Spheref      bs;
+    calculateBoundingSphereFromBoundingBox(bs, bbox);
 
     // light is where eyes are
-    Vector3f eye( 0, 0, bs.radius * 2.0f );
-    engine::getGdb()->setStandardUniform( StandardUniform::Index::LIGHT0_POSITION, Vector4f(eye,1) );
+    Vector3f eye(0, 0, bs.radius * 2.0f);
+    engine::getGdb()->setStandardUniform(StandardUniform::Index::LIGHT0_POSITION, Vector4f(eye, 1));
 
     // setup camera
-    getGpu()->composePerspectiveMatrixRh( proj, 1.0f, 4.0f/3.0f, bs.radius / 100.0f, bs.radius * 10.0f );
-    view.lookAtRh( eye, bbox.center(), Vector3f(0,1,0) );
+    getGpu()->composePerspectiveMatrixRh(proj, 1.0f, 4.0f / 3.0f, bs.radius / 100.0f, bs.radius * 10.0f);
+    view.lookAtRh(eye, bbox.center(), Vector3f(0, 1, 0));
 
     // success
     return true;
 }
 
-void quit()
-{
-    safeDelete( box );
-    safeDelete( robot );
-    safeDelete( root );
+void quit() {
+    safeDelete(box);
+    safeDelete(robot);
+    safeDelete(root);
 }
 
-void draw()
-{
-    robot->visual().draw( proj, view, &root->spacial() );
-}
+void draw() { robot->visual().draw(proj, view, &root->spacial()); }
 
-bool run()
-{
-    if( !init() ) { quit(); return false; }
+bool run() {
+    if (!init()) {
+        quit();
+        return false;
+    }
 
     bool gogogo = true;
 
     FpsCalculator fps;
-    getLogger("GN.util.fps")->setLevel( Logger::VERBOSE ); // enable FPS logger
+    getLogger("GN.util.fps")->setLevel(Logger::VERBOSE); // enable FPS logger
 
-    while(gogogo && getGpu()->getRenderWindow().runUntilNoNewEvents( false )) {
+    while (gogogo && getGpu()->getRenderWindow().runUntilNoNewEvents(false)) {
 
         Input & in = gInput;
 
         in.processInputEvents();
 
-        if( in.getKeyStatus( KeyCode::ESCAPE ).down )
-        {
-            gogogo = false;
-        }
+        if (in.getKeyStatus(KeyCode::ESCAPE).down) { gogogo = false; }
 
-        getGpu()->clearScreen( Vector4f(0,0.5f,0.5f,1.0f) );
+        getGpu()->clearScreen(Vector4f(0, 0.5f, 0.5f, 1.0f));
         draw();
         getGpu()->present();
 
@@ -83,58 +77,49 @@ bool run()
 
 #include <iostream>
 
-int main( int argc, const char * argv[] )
-{
+int main(int argc, const char * argv[]) {
     enableCRTMemoryCheck();
 
-    CommandLineArguments cmdargs( argc, argv );
-    switch( cmdargs.status )
-    {
-        case CommandLineArguments::SHOW_HELP:
-            cmdargs.showDefaultHelp();
-            return 0;
+    CommandLineArguments cmdargs(argc, argv);
+    switch (cmdargs.status) {
+    case CommandLineArguments::SHOW_HELP:
+        cmdargs.showDefaultHelp();
+        return 0;
 
-        case CommandLineArguments::INVALID_COMMAND_LINE:
-            return -1;
+    case CommandLineArguments::INVALID_COMMAND_LINE:
+        return -1;
 
-        case CommandLineArguments::CONTINUE_EXECUTION:
-            // do nothing
-            break;
+    case CommandLineArguments::CONTINUE_EXECUTION:
+        // do nothing
+        break;
 
-        default:
-            GN_UNEXPECTED();
-            return -1;
+    default:
+        GN_UNEXPECTED();
+        return -1;
     }
 
     bool noerror = engine::initialize();
 
-    if( noerror )
-    {
-        noerror = engine::inputInitialize( input::InputAPI::NATIVE );
-    }
+    if (noerror) { noerror = engine::inputInitialize(input::InputAPI::NATIVE); }
 
-    if( noerror )
-    {
+    if (noerror) {
         // setup graphics options
         engine::GfxInitOptions gio;
-        gio.gpuOptions = cmdargs.rendererOptions;
-        gio.useMultithreadGpu = cmdargs.useMultiThreadGpu;
+        gio.gpuOptions                   = cmdargs.rendererOptions;
+        gio.useMultithreadGpu            = cmdargs.useMultiThreadGpu;
         gio.defaultNonAsciiFont.fontname = "font::/simsun.ttc";
-        gio.defaultNonAsciiFont.width = 16;
-        gio.defaultNonAsciiFont.height = 16;
-        gio.defaultNonAsciiFont.quality = gfx::FontFaceDesc::ANTIALIASED;
-        gio.defaultAsciiFont.fontname = "font::/ltype.ttf";
-        gio.defaultAsciiFont.width = 16;
-        gio.defaultAsciiFont.height = 16;
-        gio.defaultAsciiFont.quality = gfx::FontFaceDesc::ANTIALIASED;
+        gio.defaultNonAsciiFont.width    = 16;
+        gio.defaultNonAsciiFont.height   = 16;
+        gio.defaultNonAsciiFont.quality  = gfx::FontFaceDesc::ANTIALIASED;
+        gio.defaultAsciiFont.fontname    = "font::/ltype.ttf";
+        gio.defaultAsciiFont.width       = 16;
+        gio.defaultAsciiFont.height      = 16;
+        gio.defaultAsciiFont.quality     = gfx::FontFaceDesc::ANTIALIASED;
 
-        noerror = engine::gfxInitialize( gio );
+        noerror = engine::gfxInitialize(gio);
     }
 
-    if( noerror )
-    {
-        noerror = run();
-    }
+    if (noerror) { noerror = run(); }
 
     engine::shutdown();
     return noerror ? 0 : -1;

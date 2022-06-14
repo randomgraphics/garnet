@@ -1,7 +1,7 @@
 ﻿#include "pch.h"
 #ifdef HAS_QT
-#include "windowQt.h"
-#include <QtCore/QSize>
+    #include "windowQt.h"
+    #include <QtCore/QSize>
 
 static GN::Logger * sLogger = GN::getLogger("GN.win.Qt");
 
@@ -12,8 +12,7 @@ static GN::Logger * sLogger = GN::getLogger("GN.win.Qt");
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::win::WindowQt::init( const WindowCreationParameters & wcp )
-{
+bool GN::win::WindowQt::init(const WindowCreationParameters & wcp) {
     GN_GUARD;
 
     // standard init procedure
@@ -21,12 +20,12 @@ bool GN::win::WindowQt::init( const WindowCreationParameters & wcp )
 
     auto app = QApplication::instance();
     if (!app) {
-        int argc = 1;
+        int          argc   = 1;
         const char * argv[] = {"garnet"};
-        mApp = new QApplication(argc, (char**)argv);
+        mApp                = new QApplication(argc, (char **) argv);
     }
 
-    if( !createWindow( wcp ) ) return failure();
+    if (!createWindow(wcp)) return failure();
 
     // success
     return success();
@@ -37,8 +36,7 @@ bool GN::win::WindowQt::init( const WindowCreationParameters & wcp )
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::win::WindowQt::init( const WindowAttachingParameters & wap)
-{
+bool GN::win::WindowQt::init(const WindowAttachingParameters & wap) {
     GN_GUARD;
 
     // standard init procedure
@@ -46,14 +44,14 @@ bool GN::win::WindowQt::init( const WindowAttachingParameters & wap)
 
     auto app = QApplication::instance();
     if (!app) {
-        int argc = 1;
+        int          argc   = 1;
         const char * argv[] = {"garnet"};
-        mApp = new QApplication(argc, (char**)argv);
+        mApp                = new QApplication(argc, (char **) argv);
     }
 
-    mWindow = QWindow::fromWinId((WId)wap.window);
+    mWindow = QWindow::fromWinId((WId) wap.window);
     if (!mWindow) {
-        GN_ERROR(sLogger)( "Failed to attach to external window handle 0x%x", wap.window);
+        GN_ERROR(sLogger)("Failed to attach to external window handle 0x%x", wap.window);
         return failure();
     }
 
@@ -69,12 +67,11 @@ bool GN::win::WindowQt::init( const WindowAttachingParameters & wap)
 //
 //
 // -----------------------------------------------------------------------------
-void GN::win::WindowQt::quit()
-{
+void GN::win::WindowQt::quit() {
     GN_GUARD;
 
     safeDelete(mWindow);
-    //safeDelete(mScreen);
+    // safeDelete(mScreen);
     safeDelete(mApp);
 
     // standard quit procedure
@@ -90,23 +87,21 @@ void GN::win::WindowQt::quit()
 //
 //
 // -----------------------------------------------------------------------------
-intptr_t GN::win::WindowQt::getMonitorHandle() const
-{
+intptr_t GN::win::WindowQt::getMonitorHandle() const {
     GN_GUARD;
-    GN_ASSERT( mScreen );
-    return (intptr_t)mScreen->handle();
+    GN_ASSERT(mScreen);
+    return (intptr_t) mScreen->handle();
     GN_UNGUARD;
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-GN::Vector2<uint32_t> GN::win::WindowQt::getClientSize() const
-{
+GN::Vector2<uint32_t> GN::win::WindowQt::getClientSize() const {
     GN_GUARD;
     Vector2<uint32_t> sz;
-    sz.x = (uint32_t)mWindow->width();
-    sz.y = (uint32_t)mWindow->height();
+    sz.x = (uint32_t) mWindow->width();
+    sz.y = (uint32_t) mWindow->height();
     return sz;
     GN_UNGUARD;
 }
@@ -114,8 +109,7 @@ GN::Vector2<uint32_t> GN::win::WindowQt::getClientSize() const
 //
 //
 // -----------------------------------------------------------------------------
-void GN::win::WindowQt::show()
-{
+void GN::win::WindowQt::show() {
     GN_GUARD;
     mWindow->show();
     GN_UNGUARD;
@@ -124,8 +118,7 @@ void GN::win::WindowQt::show()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::win::WindowQt::hide()
-{
+void GN::win::WindowQt::hide() {
     GN_GUARD;
     mWindow->hide();
     GN_UNGUARD;
@@ -134,8 +127,7 @@ void GN::win::WindowQt::hide()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::win::WindowQt::moveTo( int x, int y )
-{
+void GN::win::WindowQt::moveTo(int x, int y) {
     GN_GUARD;
     mWindow->setPosition(x, y);
     GN_UNGUARD;
@@ -144,10 +136,9 @@ void GN::win::WindowQt::moveTo( int x, int y )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::win::WindowQt::setClientSize( size_t w, size_t h )
-{
+void GN::win::WindowQt::setClientSize(size_t w, size_t h) {
     GN_GUARD;
-    QSize sz((int)w, (int)h);
+    QSize sz((int) w, (int) h);
     mWindow->resize(sz);
     GN_UNGUARD;
 }
@@ -155,10 +146,9 @@ void GN::win::WindowQt::setClientSize( size_t w, size_t h )
 //
 //
 // -------------------------------------------------------------------------
-bool GN::win::WindowQt::runUntilNoNewEvents( bool )
-{
+bool GN::win::WindowQt::runUntilNoNewEvents(bool) {
     GN_GUARD_SLOW;
-    auto app = (QApplication*)QApplication::instance();
+    auto app = (QApplication *) QApplication::instance();
     app->processEvents();
     return !mClosing; // returns false, if user is trying to close the window
     GN_UNGUARD_SLOW;
@@ -171,8 +161,7 @@ bool GN::win::WindowQt::runUntilNoNewEvents( bool )
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::win::WindowQt::createWindow( const WindowCreationParameters & wcp )
-{
+bool GN::win::WindowQt::createWindow(const WindowCreationParameters & wcp) {
     GN_GUARD;
 
     // check parent
@@ -185,7 +174,7 @@ bool GN::win::WindowQt::createWindow( const WindowCreationParameters & wcp )
     mScreen = QGuiApplication::primaryScreen();
 
     // determine client size
-    size_t width = wcp.clientWidth;
+    size_t width  = wcp.clientWidth;
     size_t height = wcp.clientHeight;
     if (0 == width) width = mScreen->availableGeometry().x();
     if (0 == height) height = mScreen->availableGeometry().y();
@@ -194,7 +183,7 @@ bool GN::win::WindowQt::createWindow( const WindowCreationParameters & wcp )
 
     // create the window
     mWindow = new MainWindow(mScreen, &mClosing);
-    mWindow->resize((int)width, (int)height);
+    mWindow->resize((int) width, (int) height);
 
     // TODO: connect to window close signal
 

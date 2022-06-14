@@ -1,5 +1,5 @@
-﻿# ifndef __EXAMPLES_portaldemo_level_H
-# define __EXAMPLES_portaldemo_level_H
+﻿#ifndef __EXAMPLES_portaldemo_level_H
+#define __EXAMPLES_portaldemo_level_H
 /*****************************************************************************\
   filename          : level.h
   create time       : 2002/10/12
@@ -22,11 +22,10 @@
 // collideinfo_s
 // =============
 //
-struct collideinfo_s
-{
-    int     sector_id; // which sector intersected point at.
-    Vector3f  ipoint;    // intersection point.
-    Plane3f iplane;    // intersection plane.
+struct collideinfo_s {
+    int      sector_id; // which sector intersected point at.
+    Vector3f ipoint;    // intersection point.
+    Plane3f  iplane;    // intersection plane.
 };
 
 //
@@ -35,36 +34,34 @@ struct collideinfo_s
 //
 // representing a whole level
 //
-class  camera_c;
-class  clipfrustum_c;
+class camera_c;
+class clipfrustum_c;
 struct lvlFileStruct;
 struct lvlBspNode;
-class level_c : public stdclass_c
-{
-    GN_DECLARE_STDCLASS( level_c, stdclass_c )
+class level_c : public stdclass_c {
+    GN_DECLARE_STDCLASS(level_c, stdclass_c)
 
     // ********************************
     //    local type definitions
     // ********************************
 public:
-
     // ********************************
     //    constructor / destructor
     // ********************************
 public:
-    level_c()          { clear(); }
+    level_c() { clear(); }
     virtual ~level_c() { quit(); }
 
     // ********************************
     //    standard init / quit functions
     // ********************************
 public:
-    bool init( const char * filename );
+    bool init(const char * filename);
     void quit();
     bool isok() const { return myparent_c::isok(); }
+
 private:
-    void clear()
-    {
+    void clear() {
         m_lvlfile = 0;
         m_sectors.clear();
         m_visible_sectors.clear();
@@ -74,24 +71,20 @@ private:
     //    custom public functions
     // ********************************
 public:
-
     //
     // 碰撞检测函数
     //
     // NOTE : 调用此函数时，collideinfo_s中的section_id应当为start点所在的
     //        sector，或者-1
     //
-    bool collide_with_radial( collideinfo_s &, const Vector3f & start,
-                              const Vector3f & end ) const;
-    bool collide_with_segment( collideinfo_s &, const Vector3f & start,
-                               const Vector3f & end ) const;
+    bool collide_with_radial(collideinfo_s &, const Vector3f & start, const Vector3f & end) const;
+    bool collide_with_segment(collideinfo_s &, const Vector3f & start, const Vector3f & end) const;
 
-    void draw( const Matrix44f & proj, const Matrix44f & view );
+    void draw(const Matrix44f & proj, const Matrix44f & view);
 
     // 得到sector的列表
-    const sector_c * get_sector_list() const
-    {
-        GN_ASSERT( !m_sectors.empty() );
+    const sector_c * get_sector_list() const {
+        GN_ASSERT(!m_sectors.empty());
         return &m_sectors[0];
     }
 
@@ -99,13 +92,12 @@ public:
     //    private variables
     // ********************************
 private:
-
     // level data set
     lvlFileStruct * m_lvlfile;
 
     // sector list
     typedef std::vector<sector_c> sector_list_c;
-    sector_list_c m_sectors;
+    sector_list_c                 m_sectors;
 
     // visible sector list
     std::vector<uint> m_visible_sectors;
@@ -114,21 +106,17 @@ private:
     //         Private functions
     // ********************************
 private:
-
     // update level's visibility information
-    void update_visinfo( const Matrix44f & proj,
-                         const Matrix44f & view );
+    void update_visinfo(const Matrix44f & proj, const Matrix44f & view);
 
     // recursive check visiblity of all sectors
-    void check_sector( uint sector_id, clipfrustum_c & );
+    void check_sector(uint sector_id, clipfrustum_c &);
 
     // 在一个section中用BSP树检查多边形在view-frustum中的可见性
-    bool bsptree_check_poly( uint sector_id,
-                             const clipfrustum_c & cf,
-                             const Vector3f * vlist, size_t numvert );
+    bool bsptree_check_poly(uint sector_id, const clipfrustum_c & cf, const Vector3f * vlist, size_t numvert);
 };
 
 /*****************************************************************************\
                               END of level.h
 \*****************************************************************************/
-# endif
+#endif

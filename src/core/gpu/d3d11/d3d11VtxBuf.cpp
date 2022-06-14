@@ -9,14 +9,13 @@
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::D3D11VtxBuf::init( const VtxBufDesc & desc )
-{
+bool GN::gfx::D3D11VtxBuf::init(const VtxBufDesc & desc) {
     GN_GUARD;
 
     // standard init procedure
-    GN_STDCLASS_INIT( desc.length, desc.fastCpuWrite, D3D11_BIND_VERTEX_BUFFER );
+    GN_STDCLASS_INIT(desc.length, desc.fastCpuWrite, D3D11_BIND_VERTEX_BUFFER);
 
-    setDesc( desc );
+    setDesc(desc);
 
     // success
     return success();
@@ -27,8 +26,7 @@ bool GN::gfx::D3D11VtxBuf::init( const VtxBufDesc & desc )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3D11VtxBuf::quit()
-{
+void GN::gfx::D3D11VtxBuf::quit() {
     GN_GUARD;
 
     // standard quit procedure
@@ -44,21 +42,13 @@ void GN::gfx::D3D11VtxBuf::quit()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3D11VtxBuf::update(
-    uint32            offset,
-    uint32            length,
-    const void      * data,
-    SurfaceUpdateFlag flag )
-{
-    if( !validateUpdateParameters( offset, &length, data, flag ) ) return;
+void GN::gfx::D3D11VtxBuf::update(uint32 offset, uint32 length, const void * data, SurfaceUpdateFlag flag) {
+    if (!validateUpdateParameters(offset, &length, data, flag)) return;
 
-    D3D11Buffer::update( offset, length, data, flag );
+    D3D11Buffer::update(offset, length, data, flag);
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3D11VtxBuf::readback( DynaArray<uint8> & data )
-{
-    D3D11Buffer::readback( data );
-}
+void GN::gfx::D3D11VtxBuf::readback(DynaArray<uint8> & data) { D3D11Buffer::readback(data); }

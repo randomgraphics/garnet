@@ -8,76 +8,68 @@
 
 #include "mtgpu.h"
 
-namespace GN { namespace gfx
-{
-    ///
-    /// multi thread texture wrapper
-    ///
-    class MultiThreadTexture : public Texture, public StdClass
-    {
-        GN_DECLARE_STDCLASS( MultiThreadTexture, StdClass );
+namespace GN {
+namespace gfx {
+///
+/// multi thread texture wrapper
+///
+class MultiThreadTexture : public Texture, public StdClass {
+    GN_DECLARE_STDCLASS(MultiThreadTexture, StdClass);
 
-        // ********************************
-        // ctor/dtor
-        // ********************************
+    // ********************************
+    // ctor/dtor
+    // ********************************
 
-        //@{
-    public:
-        MultiThreadTexture( MultiThreadGpu & r ) : mGpu(r) { clear(); }
-        virtual ~MultiThreadTexture() { quit(); }
-        //@}
+    //@{
+public:
+    MultiThreadTexture(MultiThreadGpu & r): mGpu(r) { clear(); }
+    virtual ~MultiThreadTexture() { quit(); }
+    //@}
 
-        // ********************************
-        // from StdClass
-        // ********************************
+    // ********************************
+    // from StdClass
+    // ********************************
 
-        //@{
-    public:
-        bool init( Texture * );
-        void quit();
-    private:
-        void clear() { mTexture = NULL; }
-        //@}
+    //@{
+public:
+    bool init(Texture *);
+    void quit();
 
-        // ********************************
-        // public methods
-        // ********************************
-    public:
+private:
+    void clear() { mTexture = NULL; }
+    //@}
 
-        Texture * getRealTexture() const { return mTexture; }
+    // ********************************
+    // public methods
+    // ********************************
+public:
+    Texture * getRealTexture() const { return mTexture; }
 
-        // ********************************
-        // from Texture
-        // ********************************
-    public:
+    // ********************************
+    // from Texture
+    // ********************************
+public:
+    void   updateMipmap(uint32 face, uint32 level, const Box<uint32> * area, uint32 rowPitch, uint32 slicePitch, const void * data, SurfaceUpdateFlag flag);
+    void   readMipmap(uint32 face, uint32 level, MipmapData & data);
+    void   blobWrite(const void * data, uint32 length);
+    uint32 blobRead(void * data);
+    void   generateMipmapPyramid();
+    void * getAPIDependentData() const;
 
-        void   updateMipmap( uint32              face,
-                             uint32              level,
-                             const Box<uint32> * area,
-                             uint32              rowPitch,
-                             uint32              slicePitch,
-                             const void        * data,
-                             SurfaceUpdateFlag   flag );
-        void   readMipmap( uint32 face, uint32 level, MipmapData & data );
-        void   blobWrite( const void * data, uint32 length );
-        uint32 blobRead( void * data );
-        void   generateMipmapPyramid();
-        void * getAPIDependentData() const;
+    // ********************************
+    // private variables
+    // ********************************
+private:
+    MultiThreadGpu & mGpu;
+    Texture *        mTexture;
 
-        // ********************************
-        // private variables
-        // ********************************
-    private:
-
-        MultiThreadGpu & mGpu;
-        Texture             * mTexture;
-
-        // ********************************
-        // private functions
-        // ********************************
-    private:
-    };
-}}
+    // ********************************
+    // private functions
+    // ********************************
+private:
+};
+} // namespace gfx
+} // namespace GN
 
 // *****************************************************************************
 //                                     EOF

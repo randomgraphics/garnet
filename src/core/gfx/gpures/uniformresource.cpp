@@ -4,7 +4,7 @@
 using namespace GN;
 using namespace GN::gfx;
 
-//static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpures");
+// static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpures");
 
 // *****************************************************************************
 // GN::gfx::UniformResource
@@ -13,25 +13,21 @@ using namespace GN::gfx;
 //
 //
 // -----------------------------------------------------------------------------
-const Guid & GN::gfx::UniformResource::guid()
-{
-    static const Guid UNIFORM_GUID = { 0xd140dbea, 0x9ce3, 0x4bb9, { 0x9c, 0xa7, 0xb8, 0x14, 0xf3, 0x83, 0xab, 0x95 } };
+const Guid & GN::gfx::UniformResource::guid() {
+    static const Guid UNIFORM_GUID = {0xd140dbea, 0x9ce3, 0x4bb9, {0x9c, 0xa7, 0xb8, 0x14, 0xf3, 0x83, 0xab, 0x95}};
     return UNIFORM_GUID;
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::UniformResource::reset(
-    uint32                length,
-    const void          * initialData )
-{
-    AutoRef<Uniform> u = attachTo( getGdb().getGpu().createUniform( length ) );
-    if( !u ) return false;
+bool GN::gfx::UniformResource::reset(uint32 length, const void * initialData) {
+    AutoRef<Uniform> u = attachTo(getGdb().getGpu().createUniform(length));
+    if (!u) return false;
 
-    if( initialData ) u->update( 0, length, initialData );
+    if (initialData) u->update(0, length, initialData);
 
-    setUniform( u );
+    setUniform(u);
 
     return true;
 }
@@ -39,9 +35,8 @@ bool GN::gfx::UniformResource::reset(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::UniformResource::setUniform( const AutoRef<Uniform> & newUniform )
-{
-    if( mUniform == newUniform ) return;
+void GN::gfx::UniformResource::setUniform(const AutoRef<Uniform> & newUniform) {
+    if (mUniform == newUniform) return;
 
     mUniform = newUniform;
 
@@ -52,52 +47,40 @@ void GN::gfx::UniformResource::setUniform( const AutoRef<Uniform> & newUniform )
 // GN::gfx::UniformResourceInternal
 // *****************************************************************************
 
-class UniformResourceInternal : public UniformResource
-{
+class UniformResourceInternal : public UniformResource {
     //
     //
     // -----------------------------------------------------------------------------
-    UniformResourceInternal( GpuResourceDatabase & db )
-        : UniformResource( db )
-    {
-    }
+    UniformResourceInternal(GpuResourceDatabase & db): UniformResource(db) {}
 
     //
     //
     // -----------------------------------------------------------------------------
-    ~UniformResourceInternal()
-    {
-    }
+    ~UniformResourceInternal() {}
 
     //
     //
     // -----------------------------------------------------------------------------
-    static GpuResource * sCreateInstance( GpuResourceDatabase & db )
-    {
-        GpuResource * res = new UniformResourceInternal( db );
+    static GpuResource * sCreateInstance(GpuResourceDatabase & db) {
+        GpuResource * res = new UniformResourceInternal(db);
         res->incref();
         return res;
     }
 
 public:
-
     //
     //
     // -----------------------------------------------------------------------------
-    static bool sRegisterFactory( GpuResourceDatabase & db )
-    {
-        GpuResourceFactory factory = { &sCreateInstance };
+    static bool sRegisterFactory(GpuResourceDatabase & db) {
+        GpuResourceFactory factory = {&sCreateInstance};
 
-        if( db.hasResourceFactory( UniformResource::guid() ) ) return true;
+        if (db.hasResourceFactory(UniformResource::guid())) return true;
 
-        return db.registerResourceFactory( UniformResource::guid(), "Uniform Resource", factory );
+        return db.registerResourceFactory(UniformResource::guid(), "Uniform Resource", factory);
     }
 };
 
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::registerUniformResourceFactory( GpuResourceDatabase & db )
-{
-    return UniformResourceInternal::sRegisterFactory( db );
-}
+bool GN::gfx::registerUniformResourceFactory(GpuResourceDatabase & db) { return UniformResourceInternal::sRegisterFactory(db); }

@@ -8,15 +8,12 @@
 
 #include "GNbase.h"
 
-namespace GN
-{
-    ///
-    /// namespace for GFX module
-    ///
-    namespace gfx
-    {
-    }
-}
+namespace GN {
+///
+/// namespace for GFX module
+///
+namespace gfx {}
+} // namespace GN
 
 // Basic graphics definition and utilities that are building blocks of
 // higher level graphics system.
@@ -26,9 +23,9 @@ namespace GN
 #include "gfx/primitive.h"
 
 // cross API GPU interface
-#include "gfx/surface.h"  // GPU resources (texture, vertex/index buffer)
-#include "gfx/shader.h"   // GPU program
-#include "gfx/gpu.h"      // main GPU interface
+#include "gfx/surface.h" // GPU resources (texture, vertex/index buffer)
+#include "gfx/shader.h"  // GPU program
+#include "gfx/gpu.h"     // main GPU interface
 
 // GPU resource database
 #include "gfx/stdUniform.h"

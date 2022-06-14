@@ -8,42 +8,39 @@
 
 #include "d3d11Gpu.h"
 
-namespace GN { namespace gfx
-{
-    class D3D11Gpu;
+namespace GN {
+namespace gfx {
+class D3D11Gpu;
+
+///
+/// General D3D11 resource class
+///
+class D3D11Resource {
+public:
+    ///
+    /// Get the GPU that the resource belongs to.
+    ///
+    D3D11Gpu & getGpu() const { return mGpu; }
 
     ///
-    /// General D3D11 resource class
+    /// Get reference to D3D11Device
     ///
-    class D3D11Resource
-    {
-    public:
+    ID3D11Device & getDeviceRef() const { return mGpu.getDeviceRefInlined(); }
 
-        ///
-        /// Get the GPU that the resource belongs to.
-        ///
-        D3D11Gpu & getGpu() const { return mGpu; }
+    ///
+    /// Get reference to D3D11Device
+    ///
+    ID3D11DeviceContext & getDeviceContextRef() const { return mGpu.getDeviceContextRefInlined(); }
 
-        ///
-        /// Get reference to D3D11Device
-        ///
-        ID3D11Device & getDeviceRef() const { return mGpu.getDeviceRefInlined(); }
+protected:
+    D3D11Resource(D3D11Gpu &); ///< ctor
+    virtual ~D3D11Resource();  ///< dtor
 
-        ///
-        /// Get reference to D3D11Device
-        ///
-        ID3D11DeviceContext & getDeviceContextRef() const { return mGpu.getDeviceContextRefInlined(); }
-
-    protected :
-
-        D3D11Resource( D3D11Gpu & ); ///< ctor
-        virtual ~D3D11Resource();         ///< dtor
-
-    private:
-
-        D3D11Gpu & mGpu;
-    };
-}}
+private:
+    D3D11Gpu & mGpu;
+};
+} // namespace gfx
+} // namespace GN
 
 // *****************************************************************************
 //                                     EOF

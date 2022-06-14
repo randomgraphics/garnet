@@ -8,17 +8,17 @@
 
 #ifdef HAS_CEGUI
 
-#if GN_ICL
-#elif GN_MSVC
-#pragma warning(disable:4100) // unreferenced parameter
-#endif
+    #if GN_ICL
+    #elif GN_MSVC
+        #pragma warning(disable : 4100) // unreferenced parameter
+    #endif
 
-#include "cegui.h"
+    #include "cegui.h"
 
-#if GN_ICL
-#elif GN_MSVC
-#pragma warning(default:4100)
-#endif
+    #if GN_ICL
+    #elif GN_MSVC
+        #pragma warning(default : 4100)
+    #endif
 
 #endif
 

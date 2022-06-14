@@ -8,66 +8,64 @@
 
 #include "mtgpu.h"
 
-namespace GN { namespace gfx
-{
-    ///
-    /// multi thread index buffer wrapper
-    ///
-    class MultiThreadIdxBuf : public IdxBuf, public StdClass
-    {
-        GN_DECLARE_STDCLASS( MultiThreadIdxBuf, StdClass );
+namespace GN {
+namespace gfx {
+///
+/// multi thread index buffer wrapper
+///
+class MultiThreadIdxBuf : public IdxBuf, public StdClass {
+    GN_DECLARE_STDCLASS(MultiThreadIdxBuf, StdClass);
 
-        // ********************************
-        // ctor/dtor
-        // ********************************
+    // ********************************
+    // ctor/dtor
+    // ********************************
 
-        //@{
-    public:
-        MultiThreadIdxBuf( MultiThreadGpu & r ) : mGpu(r) { clear(); }
-        virtual ~MultiThreadIdxBuf() { quit(); }
-        //@}
+    //@{
+public:
+    MultiThreadIdxBuf(MultiThreadGpu & r): mGpu(r) { clear(); }
+    virtual ~MultiThreadIdxBuf() { quit(); }
+    //@}
 
-        // ********************************
-        // from StdClass
-        // ********************************
+    // ********************************
+    // from StdClass
+    // ********************************
 
-        //@{
-    public:
-        bool init( IdxBuf * );
-        void quit();
-    private:
-        void clear() { mIdxBuf = NULL; }
-        //@}
+    //@{
+public:
+    bool init(IdxBuf *);
+    void quit();
 
-        // ********************************
-        // public methods
-        // ********************************
-    public:
+private:
+    void clear() { mIdxBuf = NULL; }
+    //@}
 
-        IdxBuf * getRealIdxBuf() const { return mIdxBuf; }
+    // ********************************
+    // public methods
+    // ********************************
+public:
+    IdxBuf * getRealIdxBuf() const { return mIdxBuf; }
 
-        // ********************************
-        // from IdxBuf
-        // ********************************
-    public:
+    // ********************************
+    // from IdxBuf
+    // ********************************
+public:
+    virtual void update(uint32 startidx, uint32 numidx, const void * data, SurfaceUpdateFlag flag);
+    virtual void readback(DynaArray<uint8> & data);
 
-        virtual void update( uint32 startidx, uint32 numidx, const void * data, SurfaceUpdateFlag flag );
-        virtual void readback( DynaArray<uint8> & data );
+    // ********************************
+    // private variables
+    // ********************************
+private:
+    MultiThreadGpu & mGpu;
+    IdxBuf *         mIdxBuf;
 
-        // ********************************
-        // private variables
-        // ********************************
-    private:
-
-        MultiThreadGpu & mGpu;
-        IdxBuf         * mIdxBuf;
-
-        // ********************************
-        // private functions
-        // ********************************
-    private:
-    };
-}}
+    // ********************************
+    // private functions
+    // ********************************
+private:
+};
+} // namespace gfx
+} // namespace GN
 
 // *****************************************************************************
 //                                     EOF

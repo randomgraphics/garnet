@@ -6,71 +6,67 @@
 /// \author  chenlee (2005.10.4)
 // *****************************************************************************
 
-namespace GN
-{
+namespace GN {
+///
+/// Shared library class
+///
+class GN_API SharedLib : public NoCopy {
+    // ********************************
+    // ctor/dtor
+    // ********************************
+
+    //@{
+public:
+    SharedLib(): mHandle(0) {}
+    virtual ~SharedLib() { unload(); }
+    //@}
+
+    // ********************************
+    // public functions
+    // ********************************
+public:
     ///
-    /// Shared library class
+    /// Load shared library.
     ///
-    class GN_API SharedLib : public NoCopy
-    {
-        // ********************************
-        // ctor/dtor
-        // ********************************
+    /// \param libName
+    ///     If the libName has no extension. A platform dependent extension
+    ///     will be appended to libName: ".dll" on Windows, ".so" on linux.
+    ///     However, libName can include a trailing point character (.) to
+    ///     indicate that the library name has no extension.
+    ///
+    bool load(const char * libName);
 
-        //@{
-    public:
-        SharedLib() : mHandle(0) {}
-        virtual ~SharedLib() { unload(); }
-        //@}
+    ///
+    /// Free the library.
+    ///
+    /// \note All symbols of the library will be invalidated as well.
+    ///
+    void unload();
 
-        // ********************************
-        // public functions
-        // ********************************
-    public:
+    ///
+    /// Get library handle
+    ///
+    void * getHandle() const { return mHandle; }
 
-        ///
-        /// Load shared library.
-        ///
-        /// \param libName
-        ///     If the libName has no extension. A platform dependent extension
-        ///     will be appended to libName: ".dll" on Windows, ".so" on linux.
-        ///     However, libName can include a trailing point character (.) to
-        ///     indicate that the library name has no extension.
-        ///
-        bool load( const char * libName );
+    ///
+    /// Get pointer of specified symbol of the shared library.
+    ///
+    void * getSymbol(const char * symbol);
 
-        ///
-        /// Free the library.
-        ///
-        /// \note All symbols of the library will be invalidated as well.
-        ///
-        void unload();
+    // ********************************
+    // private variables
+    // ********************************
+private:
+    void * mHandle;
 
-        ///
-        /// Get library handle
-        ///
-        void * getHandle() const { return mHandle; }
+    StrA mFileName;
 
-        ///
-        /// Get pointer of specified symbol of the shared library.
-        ///
-        void * getSymbol( const char * symbol );
-
-        // ********************************
-        // private variables
-        // ********************************
-    private:
-
-        void * mHandle;
-
-        StrA mFileName;
-
-        // ********************************
-        // private functions
-        // ********************************
-    private:
-    };
-}
+    // ********************************
+    // private functions
+    // ********************************
+private:
+};
+} // namespace GN
 
 // *****************************************************************************
 //                                     EOF

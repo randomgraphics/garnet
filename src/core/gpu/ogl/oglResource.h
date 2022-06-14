@@ -6,32 +6,31 @@
 /// \author  chenlee (2005.10.2)
 // *****************************************************************************
 
-namespace GN { namespace gfx
-{
-    class OGLGpu; // forware declaration of OGL GPU.
+namespace GN {
+namespace gfx {
+class OGLGpu; // forware declaration of OGL GPU.
+
+///
+/// General OGL resource class
+///
+class OGLResource {
+protected:
+    //@{
+    OGLResource(OGLGpu &);
+    virtual ~OGLResource();
+    //@}
 
     ///
-    /// General OGL resource class
+    /// Get renderer that the resource belongs to
     ///
-    class OGLResource
-    {
-    protected :
+    OGLGpu & getGpu() const { return mGpu; }
 
-        //@{
-        OGLResource( OGLGpu & );
-        virtual ~OGLResource();
-        //@}
+private:
+    OGLGpu & mGpu;
+};
 
-        ///
-        /// Get renderer that the resource belongs to
-        ///
-        OGLGpu & getGpu() const { return mGpu; }
-
-    private:
-        OGLGpu & mGpu;
-    };
-
-}}
+} // namespace gfx
+} // namespace GN
 
 // *****************************************************************************
 //                                     EOF

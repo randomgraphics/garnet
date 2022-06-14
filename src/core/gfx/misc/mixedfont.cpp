@@ -3,14 +3,14 @@
 #define ENABLE_IMDEBUG 0
 
 #if ENABLE_IMDEBUG
-#include "imdebug.h"
-#pragma comment( lib, "imdebug.lib" )
+    #include "imdebug.h"
+    #pragma comment(lib, "imdebug.lib")
 #endif
 
 using namespace GN;
 using namespace GN::gfx;
 
-//static GN::Logger * sLogger = GN::getLogger("GN.gfx.MixedFont");
+// static GN::Logger * sLogger = GN::getLogger("GN.gfx.MixedFont");
 
 // *****************************************************************************
 // local functions
@@ -20,123 +20,89 @@ using namespace GN::gfx;
 // MixedFont class
 // *****************************************************************************
 
-struct FontRange
-{
-    AutoRef<FontFace>   font;
-    wchar_t             firstChar;
-    size_t              numChars;
+struct FontRange {
+    AutoRef<FontFace> font;
+    wchar_t           firstChar;
+    size_t            numChars;
 
-    bool contains( wchar_t ch ) const
-    {
-        return (size_t)firstChar <= (size_t)ch && (size_t)ch <= (size_t)(firstChar + numChars);
-    }
+    bool contains(wchar_t ch) const { return (size_t) firstChar <= (size_t) ch && (size_t) ch <= (size_t) (firstChar + numChars); }
 };
 
 ///
 /// Font class that using freetype2 library
 ///
-class MixedFontFace : public FontFace
-{
+class MixedFontFace : public FontFace {
     DynaArray<FontRange> mFonts;
     FontFaceDesc         mFontDesc;
 
-    bool failure()
-    {
+    bool failure() {
         clear();
         return false;
     }
 
-    void clear()
-    {
-        mFonts.clear();
-    }
+    void clear() { mFonts.clear(); }
 
 public:
+    MixedFontFace() {}
 
-    MixedFontFace()
-    {
-    }
+    ~MixedFontFace() { clear(); }
 
-    ~MixedFontFace()
-    {
-        clear();
-    }
-
-    bool init(
-        const FontFaceCreationDesc & defaultFont,
-        const MixedFontCreationDesc    * additionalFonts,
-        size_t                           numAdditionalFonts )
-    {
+    bool init(const FontFaceCreationDesc & defaultFont, const MixedFontCreationDesc * additionalFonts, size_t numAdditionalFonts) {
         clear();
 
-        if( additionalFonts != NULL || numAdditionalFonts > 0 )
-        {
-            for( size_t i = 0; i < numAdditionalFonts; ++i )
-            {
+        if (additionalFonts != NULL || numAdditionalFonts > 0) {
+            for (size_t i = 0; i < numAdditionalFonts; ++i) {
                 const MixedFontCreationDesc & cd = additionalFonts[i];
 
-                AutoRef<FontFace> ff = attachTo( createFontFace( cd.font ) );
+                AutoRef<FontFace> ff = attachTo(createFontFace(cd.font));
 
-                if( ff )
-                {
+                if (ff) {
                     FontRange fr;
-                    fr.font = ff;
+                    fr.font      = ff;
                     fr.firstChar = cd.firstChar;
-                    fr.numChars = cd.numChars;
-                    mFonts.append( fr );
+                    fr.numChars  = cd.numChars;
+                    mFonts.append(fr);
                 }
             }
         }
 
         // default font
-        AutoRef<FontFace> df = attachTo( createFontFace( defaultFont ) );
-        if( NULL == df ) return failure();
+        AutoRef<FontFace> df = attachTo(createFontFace(defaultFont));
+        if (NULL == df) return failure();
         FontRange fr;
-        fr.font = df;
+        fr.font      = df;
         fr.firstChar = 0;
-        fr.numChars = (size_t)-1;
-        mFonts.append( fr );
+        fr.numChars  = (size_t) -1;
+        mFonts.append(fr);
 
         // update font descriptor
-        for( size_t i = 0; i < mFonts.size(); ++i )
-        {
+        for (size_t i = 0; i < mFonts.size(); ++i) {
             const FontFaceDesc & ffd = mFonts[i].font->getDesc();
 
-            if( 0 == i )
-            {
+            if (0 == i) {
                 mFontDesc = ffd;
-            }
-            else
-            {
+            } else {
 
-                mFontDesc.xmin      = math::getmin( mFontDesc.xmin, ffd.xmin );
-                mFontDesc.xmax      = math::getmax( mFontDesc.xmax, ffd.xmax );
-                mFontDesc.ymin      = math::getmin( mFontDesc.ymin, ffd.ymin );
-                mFontDesc.ymax      = math::getmax( mFontDesc.ymax, ffd.ymax );
-                mFontDesc.vdistance = math::getmax( mFontDesc.vdistance, ffd.vdistance );
+                mFontDesc.xmin      = math::getmin(mFontDesc.xmin, ffd.xmin);
+                mFontDesc.xmax      = math::getmax(mFontDesc.xmax, ffd.xmax);
+                mFontDesc.ymin      = math::getmin(mFontDesc.ymin, ffd.ymin);
+                mFontDesc.ymax      = math::getmax(mFontDesc.ymax, ffd.ymax);
+                mFontDesc.vdistance = math::getmax(mFontDesc.vdistance, ffd.vdistance);
             }
         }
         mFontDesc.fontname = "mixed font";
-        mFontDesc.quality  = (FontFaceDesc::Quality)-1; // TODO: enum
+        mFontDesc.quality  = (FontFaceDesc::Quality) -1; // TODO: enum
 
         return true;
     }
 
-    virtual const FontFaceDesc & getDesc() const
-    {
-        return mFontDesc;
-    }
+    virtual const FontFaceDesc & getDesc() const { return mFontDesc; }
 
-    virtual bool loadFontImage( FontImage & result, wchar_t ch )
-    {
-        for( size_t i = 0; i < mFonts.size(); ++i )
-        {
+    virtual bool loadFontImage(FontImage & result, wchar_t ch) {
+        for (size_t i = 0; i < mFonts.size(); ++i) {
             const FontRange & fr = mFonts[i];
 
-            if( fr.contains( ch ) )
-            {
-                return fr.font->loadFontImage( result, ch );
-            }
+            if (fr.contains(ch)) { return fr.font->loadFontImage(result, ch); }
         }
 
         // should not be here
@@ -144,16 +110,11 @@ public:
         return false;
     }
 
-    virtual void getKerning( int & dx, int & dy, wchar_t ch1, wchar_t ch2 )
-    {
-        for( size_t i = 0; i < mFonts.size(); ++i )
-        {
+    virtual void getKerning(int & dx, int & dy, wchar_t ch1, wchar_t ch2) {
+        for (size_t i = 0; i < mFonts.size(); ++i) {
             const FontRange & fr = mFonts[i];
 
-            if( fr.contains( ch1 ) && fr.contains( ch2 ) )
-            {
-                return fr.font->getKerning( dx, dy, ch1, ch2 );
-            }
+            if (fr.contains(ch1) && fr.contains(ch2)) { return fr.font->getKerning(dx, dy, ch1, ch2); }
         }
 
         dx = 0;
@@ -168,22 +129,15 @@ public:
 //
 //
 // -----------------------------------------------------------------------------
-GN_API GN::gfx::FontFace *
-GN::gfx::createMixedFontFace(
-    const FontFaceCreationDesc  & defaultFont,
-    const MixedFontCreationDesc * additionalFonts,
-    size_t                        numAdditionalFonts )
-{
+GN_API GN::gfx::FontFace * GN::gfx::createMixedFontFace(const FontFaceCreationDesc & defaultFont, const MixedFontCreationDesc * additionalFonts,
+                                                        size_t numAdditionalFonts) {
     GN_GUARD;
 
-    if( NULL == additionalFonts || 0 == numAdditionalFonts )
-    {
-        return createFontFace( defaultFont );
-    }
+    if (NULL == additionalFonts || 0 == numAdditionalFonts) { return createFontFace(defaultFont); }
 
-    AutoRef<MixedFontFace> font = referenceTo( new MixedFontFace );
+    AutoRef<MixedFontFace> font = referenceTo(new MixedFontFace);
 
-    if( !font->init( defaultFont, additionalFonts, numAdditionalFonts ) ) return 0;
+    if (!font->init(defaultFont, additionalFonts, numAdditionalFonts)) return 0;
 
     // success
     return font.detach();

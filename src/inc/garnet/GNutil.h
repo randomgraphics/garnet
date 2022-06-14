@@ -6,13 +6,12 @@
 /// \author  chenlee (2006.3.8)
 // *****************************************************************************
 
-namespace GN
-{
-    ///
-    /// Namespace for utility module
-    ///
-    namespace util {}
-}
+namespace GN {
+///
+/// Namespace for utility module
+///
+namespace util {}
+} // namespace GN
 
 #include "util/camera.h"
 #include "util/fps.h"

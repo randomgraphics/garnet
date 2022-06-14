@@ -10,13 +10,10 @@
 #include "GNgfx.h"
 #include "GNinput.h"
 
-namespace GN
-{
-    /// Namespace for engine module
-    namespace engine
-    {
-    }
-}
+namespace GN {
+/// Namespace for engine module
+namespace engine {}
+} // namespace GN
 
 #include "engine/engine_base.h"
 #include "engine/spacial_component.h"

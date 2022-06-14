@@ -6,221 +6,227 @@
 /// \author  chen@@chenli-homepc (2009.9.3)
 // *****************************************************************************
 
-namespace GN { namespace gfx
-{
-    ///
-    /// simple wireframe model (no lighting, requires position only)
-    ///
-    class GN_API SimpleWireframeModel : public StdClass
-    {
-        GN_DECLARE_STDCLASS( SimpleWireframeModel, StdClass );
+namespace GN {
+namespace gfx {
+///
+/// simple wireframe model (no lighting, requires position only)
+///
+class GN_API SimpleWireframeModel : public StdClass {
+    GN_DECLARE_STDCLASS(SimpleWireframeModel, StdClass);
 
-        // ********************************
-        // ctor/dtor
-        // ********************************
+    // ********************************
+    // ctor/dtor
+    // ********************************
 
-        //@{
-    public:
-        SimpleWireframeModel( GpuResourceDatabase & db ) : mDatabase(db) { clear(); }
-        virtual ~SimpleWireframeModel() { quit(); }
-        //@}
+    //@{
+public:
+    SimpleWireframeModel(GpuResourceDatabase & db): mDatabase(db) { clear(); }
+    virtual ~SimpleWireframeModel() { quit(); }
+    //@}
 
-        // ********************************
-        // from StdClass
-        // ********************************
+    // ********************************
+    // from StdClass
+    // ********************************
 
-        //@{
-    public:
-        bool init();
-        void quit();
-    private:
-        void clear()
-        {
-        }
-        //@}
+    //@{
+public:
+    bool init();
+    void quit();
 
-        // ********************************
-        // public functions
-        // ********************************
-    public:
+private:
+    void clear() {}
+    //@}
 
-        /// The descriptor that is used to initialize this model
-        static const ModelResourceDesc DESC;
+    // ********************************
+    // public functions
+    // ********************************
+public:
+    /// The descriptor that is used to initialize this model
+    static const ModelResourceDesc DESC;
 
-        //@{
-        const ModelResource & modelResource() const { GN_ASSERT(mModel); return *mModel; }
-        ModelResource & modelResource() { GN_ASSERT(mModel); return *mModel; }
-        void setTransform( const Matrix44f & proj, const Matrix44f & view, const Matrix44f & world ); ///< Defaults are identity matrices.
-        void setColor( const Vector4f & ); ///< set wireframe color, default is (1,1,1,1)
-        //@}
+    //@{
+    const ModelResource & modelResource() const {
+        GN_ASSERT(mModel);
+        return *mModel;
+    }
+    ModelResource & modelResource() {
+        GN_ASSERT(mModel);
+        return *mModel;
+    }
+    void setTransform(const Matrix44f & proj, const Matrix44f & view, const Matrix44f & world); ///< Defaults are identity matrices.
+    void setColor(const Vector4f &);                                                            ///< set wireframe color, default is (1,1,1,1)
+    //@}
 
-        // ********************************
-        // private variables
-        // ********************************
-    private:
+    // ********************************
+    // private variables
+    // ********************************
+private:
+    GpuResourceDatabase &    mDatabase;
+    AutoRef<ModelResource>   mModel;
+    AutoRef<UniformResource> mMatrixPvw;
+    AutoRef<UniformResource> mColor;
 
-        GpuResourceDatabase    & mDatabase;
-        AutoRef<ModelResource>   mModel;
-        AutoRef<UniformResource> mMatrixPvw;
-        AutoRef<UniformResource> mColor;
+    // ********************************
+    // private functions
+    // ********************************
+private:
+};
 
-        // ********************************
-        // private functions
-        // ********************************
-    private:
-    };
+///
+/// simple diffuse model:
+///     - one texture, one color, diffuse lighting
+///     - mesh must have position, normal and texcoord
+///
+class GN_API SimpleDiffuseModel : public StdClass {
+    GN_DECLARE_STDCLASS(SimpleDiffuseModel, StdClass);
 
+    // ********************************
+    // ctor/dtor
+    // ********************************
 
-    ///
-    /// simple diffuse model:
-    ///     - one texture, one color, diffuse lighting
-    ///     - mesh must have position, normal and texcoord
-    ///
-    class GN_API SimpleDiffuseModel : public StdClass
-    {
-        GN_DECLARE_STDCLASS( SimpleDiffuseModel, StdClass );
+    //@{
+public:
+    SimpleDiffuseModel(GpuResourceDatabase & db): mDatabase(db) { clear(); }
+    virtual ~SimpleDiffuseModel() { quit(); }
+    //@}
 
-        // ********************************
-        // ctor/dtor
-        // ********************************
+    // ********************************
+    // from StdClass
+    // ********************************
 
-        //@{
-    public:
-        SimpleDiffuseModel( GpuResourceDatabase & db ) : mDatabase(db) { clear(); }
-        virtual ~SimpleDiffuseModel() { quit(); }
-        //@}
+    //@{
+public:
+    bool init();
+    void quit();
 
-        // ********************************
-        // from StdClass
-        // ********************************
+private:
+    void clear() {}
+    //@}
 
-        //@{
-    public:
-        bool init();
-        void quit();
-    private:
-        void clear()
-        {
-        }
-        //@}
+    // ********************************
+    // public functions
+    // ********************************
+public:
+    //@{
 
-        // ********************************
-        // public functions
-        // ********************************
-    public:
+    /// The descriptor that is used to initialize this model
+    static const ModelResourceDesc DESC;
 
-        //@{
+    const ModelResource & modelResource() const {
+        GN_ASSERT(mModel);
+        return *mModel;
+    }
+    ModelResource & modelResource() {
+        GN_ASSERT(mModel);
+        return *mModel;
+    }
+    void setTransform(const Matrix44f & proj, const Matrix44f & view, const Matrix44f & world); ///< Defaults are identity matrices.
+    void setLightPos(const Vector4f &);                                                         ///< set light position in world space, default is (0,0,0)
+    void setLightColor(const Vector4f &);                                                       ///< set light color, default is (1,1,1,1)
+    void setAlbedoColor(const Vector4f &);                                                      ///< set albedo color, default is (1,1,1,1)
+    void setAlbedoTexture(const AutoRef<Texture> &);                                            ///< set to NULL to use pure white texture. Default is NULL.
+    //@}
 
-        /// The descriptor that is used to initialize this model
-        static const ModelResourceDesc DESC;
+    // ********************************
+    // private variables
+    // ********************************
+private:
+    GpuResourceDatabase &    mDatabase;
+    AutoRef<ModelResource>   mModel;
+    AutoRef<Texture>         mDefaultTexture;
+    AutoRef<UniformResource> mMatrixPvw;
+    AutoRef<UniformResource> mMatrixWorld;
+    AutoRef<UniformResource> mMatrixWorldIT;
+    AutoRef<UniformResource> mLightPos;
+    AutoRef<UniformResource> mLightColor;
+    AutoRef<UniformResource> mAlbedoColor;
+    AutoRef<TextureResource> mAlbedoTexture;
 
-        const ModelResource & modelResource() const { GN_ASSERT(mModel); return *mModel; }
-        ModelResource & modelResource() { GN_ASSERT(mModel); return *mModel; }
-        void setTransform( const Matrix44f & proj, const Matrix44f & view, const Matrix44f & world ); ///< Defaults are identity matrices.
-        void setLightPos( const Vector4f & ); ///< set light position in world space, default is (0,0,0)
-        void setLightColor( const Vector4f & ); ///< set light color, default is (1,1,1,1)
-        void setAlbedoColor( const Vector4f & ); ///< set albedo color, default is (1,1,1,1)
-        void setAlbedoTexture( const AutoRef<Texture> & ); ///< set to NULL to use pure white texture. Default is NULL.
-        //@}
+    // ********************************
+    // private functions
+    // ********************************
+private:
+};
 
-        // ********************************
-        // private variables
-        // ********************************
-    private:
+///
+/// simple normal map effect
+///
+class GN_API SimpleNormalMapModel : public StdClass {
+    GN_DECLARE_STDCLASS(SimpleNormalMapModel, StdClass);
 
-        GpuResourceDatabase    & mDatabase;
-        AutoRef<ModelResource>   mModel;
-        AutoRef<Texture>         mDefaultTexture;
-        AutoRef<UniformResource> mMatrixPvw;
-        AutoRef<UniformResource> mMatrixWorld;
-        AutoRef<UniformResource> mMatrixWorldIT;
-        AutoRef<UniformResource> mLightPos;
-        AutoRef<UniformResource> mLightColor;
-        AutoRef<UniformResource> mAlbedoColor;
-        AutoRef<TextureResource> mAlbedoTexture;
+    // ********************************
+    // ctor/dtor
+    // ********************************
 
-        // ********************************
-        // private functions
-        // ********************************
-    private:
-    };
+    //@{
+public:
+    SimpleNormalMapModel(GpuResourceDatabase & db): mDatabase(db) { clear(); }
+    virtual ~SimpleNormalMapModel() { quit(); }
+    //@}
 
-    ///
-    /// simple normal map effect
-    ///
-    class GN_API SimpleNormalMapModel : public StdClass
-    {
-        GN_DECLARE_STDCLASS( SimpleNormalMapModel, StdClass );
+    // ********************************
+    // from StdClass
+    // ********************************
 
-        // ********************************
-        // ctor/dtor
-        // ********************************
+    //@{
+public:
+    bool init();
+    void quit();
 
-        //@{
-    public:
-        SimpleNormalMapModel( GpuResourceDatabase & db ) : mDatabase(db) { clear(); }
-        virtual ~SimpleNormalMapModel() { quit(); }
-        //@}
+private:
+    void clear() {}
+    //@}
 
-        // ********************************
-        // from StdClass
-        // ********************************
+    // ********************************
+    // public functions
+    // ********************************
+public:
+    //@{
 
-        //@{
-    public:
-        bool init();
-        void quit();
-    private:
-        void clear()
-        {
-        }
-        //@}
+    /// The descriptor that is used to initialize this model
+    static const ModelResourceDesc DESC;
 
-        // ********************************
-        // public functions
-        // ********************************
-    public:
+    const ModelResource & modelResource() const {
+        GN_ASSERT(mModel);
+        return *mModel;
+    }
+    ModelResource & modelResource() {
+        GN_ASSERT(mModel);
+        return *mModel;
+    }
+    void setTransform(const Matrix44f & proj, const Matrix44f & view, const Matrix44f & world); ///< Defaults are identity matrices.
+    void setLightPos(const Vector4f &);                                                         ///< set light position in world space, default is (0,0,0)
+    void setLightColor(const Vector4f &);                                                       ///< set light color, default is (1,1,1,1)
+    void setAlbedoColor(const Vector4f &);                                                      ///< set albedo color, default is (1,1,1,1)
+    void setAlbedoTexture(const AutoRef<Texture> &);                                            ///< set to NULL to use pure white texture. Default is NULL.
+    void setNormalTexture(const AutoRef<Texture> &);                                            ///< set to NULL to use flat normal texture. Defau is NULL.
+    //@}
 
-        //@{
+    // ********************************
+    // private variables
+    // ********************************
+private:
+    GpuResourceDatabase &    mDatabase;
+    AutoRef<ModelResource>   mModel;
+    AutoRef<Texture>         mDefaultAlbedoTexture;
+    AutoRef<Texture>         mDefaultNormalTexture;
+    AutoRef<UniformResource> mMatrixPvw;
+    AutoRef<UniformResource> mMatrixWorld;
+    AutoRef<UniformResource> mMatrixWorldIT;
+    AutoRef<UniformResource> mLightPos;
+    AutoRef<UniformResource> mLightColor;
+    AutoRef<UniformResource> mAlbedoColor;
+    AutoRef<TextureResource> mAlbedoTexture;
+    AutoRef<TextureResource> mNormalTexture;
 
-        /// The descriptor that is used to initialize this model
-        static const ModelResourceDesc DESC;
+    // ********************************
+    // private functions
+    // ********************************
+private:
+};
 
-        const ModelResource & modelResource() const { GN_ASSERT(mModel); return *mModel; }
-        ModelResource & modelResource() { GN_ASSERT(mModel); return *mModel; }
-        void setTransform( const Matrix44f & proj, const Matrix44f & view, const Matrix44f & world ); ///< Defaults are identity matrices.
-        void setLightPos( const Vector4f & ); ///< set light position in world space, default is (0,0,0)
-        void setLightColor( const Vector4f & ); ///< set light color, default is (1,1,1,1)
-        void setAlbedoColor( const Vector4f & ); ///< set albedo color, default is (1,1,1,1)
-        void setAlbedoTexture( const AutoRef<Texture> & ); ///< set to NULL to use pure white texture. Default is NULL.
-        void setNormalTexture( const AutoRef<Texture> & ); ///< set to NULL to use flat normal texture. Defau is NULL.
-        //@}
-
-        // ********************************
-        // private variables
-        // ********************************
-    private:
-
-        GpuResourceDatabase    & mDatabase;
-        AutoRef<ModelResource>   mModel;
-        AutoRef<Texture>         mDefaultAlbedoTexture;
-        AutoRef<Texture>         mDefaultNormalTexture;
-        AutoRef<UniformResource> mMatrixPvw;
-        AutoRef<UniformResource> mMatrixWorld;
-        AutoRef<UniformResource> mMatrixWorldIT;
-        AutoRef<UniformResource> mLightPos;
-        AutoRef<UniformResource> mLightColor;
-        AutoRef<UniformResource> mAlbedoColor;
-        AutoRef<TextureResource> mAlbedoTexture;
-        AutoRef<TextureResource> mNormalTexture;
-
-        // ********************************
-        // private functions
-        // ********************************
-    private:
-    };
-
-}}
+} // namespace gfx
+} // namespace GN
 // *****************************************************************************
 //                                     EOF
 // *****************************************************************************

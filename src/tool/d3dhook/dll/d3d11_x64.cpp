@@ -1,22 +1,66 @@
 #include "pch.h"
 #include "hooks_exports.h"
 
-HINSTANCE mHinst = 0, mHinstDLL = 0;
+HINSTANCE           mHinst = 0, mHinstDLL = 0;
 extern "C" UINT_PTR mProcs[47] = {0};
 
-LPCSTR mImportNames[] = {"D3D11CoreCreateDevice", "D3D11CoreCreateLayeredDevice", "D3D11CoreGetLayeredDeviceSize", "D3D11CoreRegisterLayers", "D3D11CreateDevice", "D3D11CreateDeviceAndSwapChain", "D3DKMTCloseAdapter", "D3DKMTCreateAllocation", "D3DKMTCreateContext", "D3DKMTCreateDevice", "D3DKMTCreateSynchronizationObject", "D3DKMTDestroyAllocation", "D3DKMTDestroyContext", "D3DKMTDestroyDevice", "D3DKMTDestroySynchronizationObject", "D3DKMTEscape", "D3DKMTGetContextSchedulingPriority", "D3DKMTGetDeviceState", "D3DKMTGetDisplayModeList", "D3DKMTGetMultisampleMethodList", "D3DKMTGetRuntimeData", "D3DKMTGetSharedPrimaryHandle", "D3DKMTLock", "D3DKMTOpenAdapterFromHdc", "D3DKMTOpenResource", "D3DKMTPresent", "D3DKMTQueryAdapterInfo", "D3DKMTQueryAllocationResidency", "D3DKMTQueryResourceInfo", "D3DKMTRender", "D3DKMTSetAllocationPriority", "D3DKMTSetContextSchedulingPriority", "D3DKMTSetDisplayMode", "D3DKMTSetDisplayPrivateDriverFormat", "D3DKMTSetGammaRamp", "D3DKMTSetVidPnSourceOwner", "D3DKMTSignalSynchronizationObject", "D3DKMTUnlock", "D3DKMTWaitForSynchronizationObject", "D3DKMTWaitForVerticalBlankEvent", "D3DPerformance_BeginEvent", "D3DPerformance_EndEvent", "D3DPerformance_GetStatus", "D3DPerformance_SetMarker", "EnableFeatureLevelUpgrade", "OpenAdapter10", "OpenAdapter10_2"};
-BOOL WINAPI DllMain( HINSTANCE hinstDLL, DWORD fdwReason, LPVOID ) {
-	mHinst = hinstDLL;
-	if ( fdwReason == DLL_PROCESS_ATTACH ) {
-		mHinstDLL = LoadLibraryW( GetRealDllPath(L"d3d11.dll") );
-		if ( !mHinstDLL )
-			return ( FALSE );
-		for ( int i = 0; i < 47; i++ )
-			mProcs[ i ] = (UINT_PTR)GetProcAddress( mHinstDLL, mImportNames[ i ] );
-	} else if ( fdwReason == DLL_PROCESS_DETACH ) {
-		FreeLibrary( mHinstDLL );
-	}
-	return ( TRUE );
+LPCSTR      mImportNames[] = {"D3D11CoreCreateDevice",
+                         "D3D11CoreCreateLayeredDevice",
+                         "D3D11CoreGetLayeredDeviceSize",
+                         "D3D11CoreRegisterLayers",
+                         "D3D11CreateDevice",
+                         "D3D11CreateDeviceAndSwapChain",
+                         "D3DKMTCloseAdapter",
+                         "D3DKMTCreateAllocation",
+                         "D3DKMTCreateContext",
+                         "D3DKMTCreateDevice",
+                         "D3DKMTCreateSynchronizationObject",
+                         "D3DKMTDestroyAllocation",
+                         "D3DKMTDestroyContext",
+                         "D3DKMTDestroyDevice",
+                         "D3DKMTDestroySynchronizationObject",
+                         "D3DKMTEscape",
+                         "D3DKMTGetContextSchedulingPriority",
+                         "D3DKMTGetDeviceState",
+                         "D3DKMTGetDisplayModeList",
+                         "D3DKMTGetMultisampleMethodList",
+                         "D3DKMTGetRuntimeData",
+                         "D3DKMTGetSharedPrimaryHandle",
+                         "D3DKMTLock",
+                         "D3DKMTOpenAdapterFromHdc",
+                         "D3DKMTOpenResource",
+                         "D3DKMTPresent",
+                         "D3DKMTQueryAdapterInfo",
+                         "D3DKMTQueryAllocationResidency",
+                         "D3DKMTQueryResourceInfo",
+                         "D3DKMTRender",
+                         "D3DKMTSetAllocationPriority",
+                         "D3DKMTSetContextSchedulingPriority",
+                         "D3DKMTSetDisplayMode",
+                         "D3DKMTSetDisplayPrivateDriverFormat",
+                         "D3DKMTSetGammaRamp",
+                         "D3DKMTSetVidPnSourceOwner",
+                         "D3DKMTSignalSynchronizationObject",
+                         "D3DKMTUnlock",
+                         "D3DKMTWaitForSynchronizationObject",
+                         "D3DKMTWaitForVerticalBlankEvent",
+                         "D3DPerformance_BeginEvent",
+                         "D3DPerformance_EndEvent",
+                         "D3DPerformance_GetStatus",
+                         "D3DPerformance_SetMarker",
+                         "EnableFeatureLevelUpgrade",
+                         "OpenAdapter10",
+                         "OpenAdapter10_2"};
+BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID) {
+    mHinst = hinstDLL;
+    if (fdwReason == DLL_PROCESS_ATTACH) {
+        mHinstDLL = LoadLibraryW(GetRealDllPath(L"d3d11.dll"));
+        if (!mHinstDLL) return (FALSE);
+        for (int i = 0; i < 47; i++) mProcs[i] = (UINT_PTR) GetProcAddress(mHinstDLL, mImportNames[i]);
+    } else if (fdwReason == DLL_PROCESS_DETACH) {
+        FreeLibrary(mHinstDLL);
+    }
+    return (TRUE);
 }
 
 extern "C" void D3D11CoreCreateDevice_wrapper();
@@ -27,60 +71,21 @@ extern "C" void D3D11CoreRegisterLayers_wrapper();
 extern "C" void D3D11CreateDevice_wrapper();
 extern "C" void D3D11CreateDeviceAndSwapChain_wrapper();
 #else
-extern "C" HRESULT WINAPI
-D3D11CreateDevice_wrapper(
-    __in_opt IDXGIAdapter* pAdapter,
-    D3D_DRIVER_TYPE DriverType,
-    HMODULE Software,
-    UINT Flags,
-    __in_ecount_opt( FeatureLevels ) CONST D3D_FEATURE_LEVEL* pFeatureLevels,
-    UINT FeatureLevels,
-    UINT SDKVersion,
-    __out_opt ID3D11Device** ppDevice,
-    __out_opt D3D_FEATURE_LEVEL* pFeatureLevel,
-    __out_opt ID3D11DeviceContext** ppImmediateContext )
-{
-    return D3D11CreateDeviceHook(
-        pAdapter,
-        DriverType,
-        Software,
-        Flags,
-        pFeatureLevels,
-        FeatureLevels,
-        SDKVersion,
-        ppDevice,
-        pFeatureLevel,
-        ppImmediateContext);
+extern "C" HRESULT WINAPI D3D11CreateDevice_wrapper(__in_opt IDXGIAdapter * pAdapter, D3D_DRIVER_TYPE DriverType, HMODULE Software, UINT Flags,
+                                                    __in_ecount_opt(FeatureLevels) CONST D3D_FEATURE_LEVEL * pFeatureLevels, UINT FeatureLevels,
+                                                    UINT SDKVersion, __out_opt ID3D11Device ** ppDevice, __out_opt D3D_FEATURE_LEVEL * pFeatureLevel,
+                                                    __out_opt ID3D11DeviceContext ** ppImmediateContext) {
+    return D3D11CreateDeviceHook(pAdapter, DriverType, Software, Flags, pFeatureLevels, FeatureLevels, SDKVersion, ppDevice, pFeatureLevel, ppImmediateContext);
 }
 
-extern "C" HRESULT WINAPI
-D3D11CreateDeviceAndSwapChain_wrapper(
-    __in_opt IDXGIAdapter* pAdapter,
-    D3D_DRIVER_TYPE DriverType,
-    HMODULE Software,
-    UINT Flags,
-    __in_ecount_opt( FeatureLevels ) CONST D3D_FEATURE_LEVEL* pFeatureLevels,
-    UINT FeatureLevels,
-    UINT SDKVersion,
-    __in_opt CONST DXGI_SWAP_CHAIN_DESC* pSwapChainDesc,
-    __out_opt IDXGISwapChain** ppSwapChain,
-    __out_opt ID3D11Device** ppDevice,
-    __out_opt D3D_FEATURE_LEVEL* pFeatureLevel,
-    __out_opt ID3D11DeviceContext** ppImmediateContext )
-{
-    return D3D11CreateDeviceAndSwapChainHook(
-        pAdapter,
-        DriverType,
-        Software,
-        Flags,
-        pFeatureLevels,
-        FeatureLevels,
-        SDKVersion,
-        pSwapChainDesc,
-        ppSwapChain,
-        ppDevice,
-        pFeatureLevel,
-        ppImmediateContext );
+extern "C" HRESULT WINAPI D3D11CreateDeviceAndSwapChain_wrapper(__in_opt IDXGIAdapter * pAdapter, D3D_DRIVER_TYPE DriverType, HMODULE Software, UINT Flags,
+                                                                __in_ecount_opt(FeatureLevels) CONST D3D_FEATURE_LEVEL * pFeatureLevels, UINT FeatureLevels,
+                                                                UINT SDKVersion, __in_opt CONST DXGI_SWAP_CHAIN_DESC * pSwapChainDesc,
+                                                                __out_opt IDXGISwapChain ** ppSwapChain, __out_opt ID3D11Device ** ppDevice,
+                                                                __out_opt D3D_FEATURE_LEVEL * pFeatureLevel,
+                                                                __out_opt ID3D11DeviceContext ** ppImmediateContext) {
+    return D3D11CreateDeviceAndSwapChainHook(pAdapter, DriverType, Software, Flags, pFeatureLevels, FeatureLevels, SDKVersion, pSwapChainDesc, ppSwapChain,
+                                             ppDevice, pFeatureLevel, ppImmediateContext);
 }
 #endif
 

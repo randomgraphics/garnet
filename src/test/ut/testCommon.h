@@ -10,12 +10,12 @@
 #include "cxxtest/TestSuite.h"
 
 #if GN_XBOX2
-#include <xtl.h>
+    #include <xtl.h>
 #elif GN_WINPC
-#ifndef NOMINMAX
-#define NOMINMAX
-#endif
-#include <windows.h>
+    #ifndef NOMINMAX
+        #define NOMINMAX
+    #endif
+    #include <windows.h>
 #endif
 
 static GN::Logger * sLogger = GN::getLogger("GN.gfx.test.UT");
@@ -23,80 +23,55 @@ static GN::Logger * sLogger = GN::getLogger("GN.gfx.test.UT");
 ///
 /// namespace of CxxTest framework
 ///
-namespace CxxTest
-{
-    CXXTEST_TEMPLATE_INSTANTIATION
-    ///
-    /// Equality check of multi-byte char c-style string
-    ///
-    bool equals<const char *, const char *>( const char * x, const char * y )
-    {
-        return 0 == ::GN::str::compare(x,y);
-    }
+namespace CxxTest {
+CXXTEST_TEMPLATE_INSTANTIATION
+///
+/// Equality check of multi-byte char c-style string
+///
+bool equals<const char *, const char *>(const char * x, const char * y) { return 0 == ::GN::str::compare(x, y); }
 
-    CXXTEST_TEMPLATE_INSTANTIATION
-    ///
-    /// Equality check of multi-byte char c-style string
-    ///
-    bool equals<const char *, char *>( const char * x, char * y )
-    {
-        return 0 == ::GN::str::compare(x,y);
-    }
+CXXTEST_TEMPLATE_INSTANTIATION
+///
+/// Equality check of multi-byte char c-style string
+///
+bool equals<const char *, char *>(const char * x, char * y) { return 0 == ::GN::str::compare(x, y); }
 
-    CXXTEST_TEMPLATE_INSTANTIATION
-    ///
-    /// Equality check of multi-byte char c-style string
-    ///
-    bool equals<char *, const char *>( char * x, const char * y )
-    {
-        return 0 == ::GN::str::compare(x,y);
-    }
+CXXTEST_TEMPLATE_INSTANTIATION
+///
+/// Equality check of multi-byte char c-style string
+///
+bool equals<char *, const char *>(char * x, const char * y) { return 0 == ::GN::str::compare(x, y); }
 
-    CXXTEST_TEMPLATE_INSTANTIATION
-    ///
-    /// Equality check of multi-byte char c-style string
-    ///
-    bool equals<char *, char *>( char * x, char * y )
-    {
-        return 0 == ::GN::str::compare(x,y);
-    }
+CXXTEST_TEMPLATE_INSTANTIATION
+///
+/// Equality check of multi-byte char c-style string
+///
+bool equals<char *, char *>(char * x, char * y) { return 0 == ::GN::str::compare(x, y); }
 
-    CXXTEST_TEMPLATE_INSTANTIATION
-    ///
-    /// Equality check of wide char c-style string
-    ///
-    bool equals<const wchar_t *, const wchar_t *>( const wchar_t * x, const wchar_t * y )
-    {
-        return 0 == ::GN::str::compare(x,y);
-    }
+CXXTEST_TEMPLATE_INSTANTIATION
+///
+/// Equality check of wide char c-style string
+///
+bool equals<const wchar_t *, const wchar_t *>(const wchar_t * x, const wchar_t * y) { return 0 == ::GN::str::compare(x, y); }
 
-    CXXTEST_TEMPLATE_INSTANTIATION
-    ///
-    /// Equality check of wide char c-style string
-    ///
-    bool equals<wchar_t *, const wchar_t *>( wchar_t * x, const wchar_t * y )
-    {
-        return 0 == ::GN::str::compare(x,y);
-    }
+CXXTEST_TEMPLATE_INSTANTIATION
+///
+/// Equality check of wide char c-style string
+///
+bool equals<wchar_t *, const wchar_t *>(wchar_t * x, const wchar_t * y) { return 0 == ::GN::str::compare(x, y); }
 
-    CXXTEST_TEMPLATE_INSTANTIATION
-    ///
-    /// Equality check of wide char c-style string
-    ///
-    bool equals<const wchar_t *, wchar_t *>( const wchar_t * x, wchar_t * y )
-    {
-        return 0 == ::GN::str::compare(x,y);
-    }
+CXXTEST_TEMPLATE_INSTANTIATION
+///
+/// Equality check of wide char c-style string
+///
+bool equals<const wchar_t *, wchar_t *>(const wchar_t * x, wchar_t * y) { return 0 == ::GN::str::compare(x, y); }
 
-    CXXTEST_TEMPLATE_INSTANTIATION
-    ///
-    /// Equality check of wide char c-style string
-    ///
-    bool equals<wchar_t *, wchar_t *>( wchar_t * x, wchar_t * y )
-    {
-        return 0 == ::GN::str::compare(x,y);
-    }
-}
+CXXTEST_TEMPLATE_INSTANTIATION
+///
+/// Equality check of wide char c-style string
+///
+bool equals<wchar_t *, wchar_t *>(wchar_t * x, wchar_t * y) { return 0 == ::GN::str::compare(x, y); }
+} // namespace CxxTest
 
 // *****************************************************************************
 //                                     EOF

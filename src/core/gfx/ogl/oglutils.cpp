@@ -9,12 +9,16 @@ static GN::Logger * sLogger = GN::getLogger("GN.ogl");
 
 // -----------------------------------------------------------------------------
 //
-static const char* shaderType2String(GLenum shaderType) {
+static const char * shaderType2String(GLenum shaderType) {
     switch (shaderType) {
-        case GL_VERTEX_SHADER: return "vertex";
-        case GL_FRAGMENT_SHADER: return "fragment";
-        case GL_COMPUTE_SHADER: return "compute";
-        default: return "";
+    case GL_VERTEX_SHADER:
+        return "vertex";
+    case GL_FRAGMENT_SHADER:
+        return "fragment";
+    case GL_COMPUTE_SHADER:
+        return "compute";
+    default:
+        return "";
     }
 }
 
@@ -24,21 +28,22 @@ static std::string addLineCount(const std::string & in) {
     ss << "(  1) : ";
     int line = 1;
     for (auto ch : in) {
-        if ('\n' == ch) ss << GN::str::format("\n(%3d) : ", ++line);
-        else ss << ch;
+        if ('\n' == ch)
+            ss << GN::str::format("\n(%3d) : ", ++line);
+        else
+            ss << ch;
     }
     return ss.str();
 }
 
 // -----------------------------------------------------------------------------
 //
-GLuint GN::ogl::loadShaderFromString(const char* source, size_t length, GLenum shaderType, const char* optionalFilename)
-{
+GLuint GN::ogl::loadShaderFromString(const char * source, size_t length, GLenum shaderType, const char * optionalFilename) {
     if (!source) return 0;
-    const char* sources[] = { source };
+    const char * sources[] = {source};
     if (0 == length) length = strlen(source);
-    GLint sizes[] = { (GLint)length };
-    auto shader = glCreateShader(shaderType);
+    GLint sizes[] = {(GLint) length};
+    auto  shader  = glCreateShader(shaderType);
     glShaderSource(shader, 1, sources, sizes);
     glCompileShader(shader);
 
@@ -49,15 +54,13 @@ GLuint GN::ogl::loadShaderFromString(const char* source, size_t length, GLenum s
         char infoLog[512];
         glGetShaderInfoLog(shader, 512, NULL, infoLog);
         glDeleteShader(shader);
-        GN_ERROR(sLogger)(
-                "\n================== Failed to compile %s shader '%s' ====================\n"
-                "%s\n"
-                "\n============================= GLSL shader source ===============================\n"
-                "%s\n"
-                "\n================================================================================\n",
-                shaderType2String(shaderType), optionalFilename ? optionalFilename : "<no-name>",
-                infoLog,
-                addLineCount(source).c_str());
+        GN_ERROR(sLogger)
+        ("\n================== Failed to compile %s shader '%s' ====================\n"
+         "%s\n"
+         "\n============================= GLSL shader source ===============================\n"
+         "%s\n"
+         "\n================================================================================\n",
+         shaderType2String(shaderType), optionalFilename ? optionalFilename : "<no-name>", infoLog, addLineCount(source).c_str());
         return 0;
     }
 
@@ -68,12 +71,13 @@ GLuint GN::ogl::loadShaderFromString(const char* source, size_t length, GLenum s
 
 // -----------------------------------------------------------------------------
 //
-GLuint GN::ogl::linkProgram(const GLuint * shaders, size_t count, const char* optionalProgramName)
-{
+GLuint GN::ogl::linkProgram(const GLuint * shaders, size_t count, const char * optionalProgramName) {
     auto program = glCreateProgram();
-    for(size_t i = 0; i < count; ++i) if (shaders[i]) glAttachShader(program, shaders[i]);
+    for (size_t i = 0; i < count; ++i)
+        if (shaders[i]) glAttachShader(program, shaders[i]);
     glLinkProgram(program);
-    for(size_t i = 0; i < count; ++i) if (shaders[i]) glDetachShader(program, shaders[i]);
+    for (size_t i = 0; i < count; ++i)
+        if (shaders[i]) glDetachShader(program, shaders[i]);
     GLint success;
     glGetProgramiv(program, GL_LINK_STATUS, &success);
     if (!success) {

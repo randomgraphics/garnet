@@ -8,66 +8,64 @@
 
 #include "mtgpu.h"
 
-namespace GN { namespace gfx
-{
-    ///
-    /// multi thread vertex buffer wrapper
-    ///
-    class MultiThreadVtxBuf : public VtxBuf, public StdClass
-    {
-        GN_DECLARE_STDCLASS( MultiThreadVtxBuf, StdClass );
+namespace GN {
+namespace gfx {
+///
+/// multi thread vertex buffer wrapper
+///
+class MultiThreadVtxBuf : public VtxBuf, public StdClass {
+    GN_DECLARE_STDCLASS(MultiThreadVtxBuf, StdClass);
 
-        // ********************************
-        // ctor/dtor
-        // ********************************
+    // ********************************
+    // ctor/dtor
+    // ********************************
 
-        //@{
-    public:
-        MultiThreadVtxBuf( MultiThreadGpu & r ) : mGpu(r) { clear(); }
-        virtual ~MultiThreadVtxBuf() { quit(); }
-        //@}
+    //@{
+public:
+    MultiThreadVtxBuf(MultiThreadGpu & r): mGpu(r) { clear(); }
+    virtual ~MultiThreadVtxBuf() { quit(); }
+    //@}
 
-        // ********************************
-        // from StdClass
-        // ********************************
+    // ********************************
+    // from StdClass
+    // ********************************
 
-        //@{
-    public:
-        bool init( VtxBuf * );
-        void quit();
-    private:
-        void clear() { mVtxBuf = NULL; }
-        //@}
+    //@{
+public:
+    bool init(VtxBuf *);
+    void quit();
 
-        // ********************************
-        // public methods
-        // ********************************
-    public:
+private:
+    void clear() { mVtxBuf = NULL; }
+    //@}
 
-        VtxBuf * getRealVtxBuf() const { return mVtxBuf; }
+    // ********************************
+    // public methods
+    // ********************************
+public:
+    VtxBuf * getRealVtxBuf() const { return mVtxBuf; }
 
-        // ********************************
-        // from VtxBuf
-        // ********************************
-    public:
+    // ********************************
+    // from VtxBuf
+    // ********************************
+public:
+    virtual void update(uint32 offset, uint32 length, const void * data, SurfaceUpdateFlag flag);
+    virtual void readback(DynaArray<uint8> & data);
 
-        virtual void update( uint32 offset, uint32 length, const void * data, SurfaceUpdateFlag flag );
-        virtual void readback( DynaArray<uint8> & data );
+    // ********************************
+    // private variables
+    // ********************************
+private:
+    MultiThreadGpu & mGpu;
+    VtxBuf *         mVtxBuf;
 
-        // ********************************
-        // private variables
-        // ********************************
-    private:
-
-        MultiThreadGpu & mGpu;
-        VtxBuf              * mVtxBuf;
-
-        // ********************************
-        // private functions
-        // ********************************
-    private:
-    };
-}}
+    // ********************************
+    // private functions
+    // ********************************
+private:
+};
+} // namespace gfx
+} // namespace GN
 
 // *****************************************************************************
 //                                     EOF

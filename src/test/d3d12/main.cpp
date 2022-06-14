@@ -2,30 +2,17 @@
 
 using namespace GN;
 
-class MyApp
-{
+class MyApp {
 public:
-    MyApp()
-    {
+    MyApp() {}
 
-    }
+    ~MyApp() {}
 
-    ~MyApp()
-    {
-
-    }
-
-    int run()
-    {
-        return 0;
-    }
+    int run() { return 0; }
 };
 
 // *****************************************************************************
 // main function
 // *****************************************************************************
 
-int main()
-{
-    return MyApp().run();
-}
+int main() { return MyApp().run(); }

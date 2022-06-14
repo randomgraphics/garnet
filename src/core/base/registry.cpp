@@ -1,6 +1,6 @@
 #include "pch.h"
 
-GN::Logger * GN::Registry::sLogger = GN::getLogger( "GN.base.Registry" );
+GN::Logger * GN::Registry::sLogger = GN::getLogger("GN.base.Registry");
 
 // *****************************************************************************
 // public methods
@@ -9,33 +9,26 @@ GN::Logger * GN::Registry::sLogger = GN::getLogger( "GN.base.Registry" );
 //
 //
 // -----------------------------------------------------------------------------
-GN_API GN::Registry::ItemKey GN::Registry::set(
-    const StrA & name, const Variant & value, bool overwriteExisting )
-{
+GN_API GN::Registry::ItemKey GN::Registry::set(const StrA & name, const Variant & value, bool overwriteExisting) {
     GN_GUARD;
 
-    ItemKey key = name2Key( name );
+    ItemKey key = name2Key(name);
 
-    if (  0 == key )
-    {
+    if (0 == key) {
         // insert a new item to
         Item i;
-        i.name = name;
+        i.name  = name;
         i.value = value;
-        key = mItems.add( i );
-        if( 0 == key ) return 0;
-        GN_ASSERT( NULL == mNames.find(name) );
+        key     = mItems.add(i);
+        if (0 == key) return 0;
+        GN_ASSERT(NULL == mNames.find(name));
         mNames[name] = key;
-    }
-    else if ( overwriteExisting )
-    {
+    } else if (overwriteExisting) {
         // Override old value
-        GN_ASSERT( mItems[key].name == name && *mNames.find(name) == key );
+        GN_ASSERT(mItems[key].name == name && *mNames.find(name) == key);
         mItems[key].value = value;
-    }
-    else
-    {
-        GN_ERROR(sLogger)( "Item '%s' is already existed.!", name.rawptr() );
+    } else {
+        GN_ERROR(sLogger)("Item '%s' is already existed.!", name.rawptr());
         return 0;
     }
 
@@ -48,11 +41,10 @@ GN_API GN::Registry::ItemKey GN::Registry::set(
 //
 //
 // -----------------------------------------------------------------------------
-GN_API void GN::Registry::importFromStr( const StrA & s )
-{
+GN_API void GN::Registry::importFromStr(const StrA & s) {
     GN_GUARD;
 
-    if( s.empty() ) return;
+    if (s.empty()) return;
 
     const char * ptr = s.rawptr();
     const char * end = ptr + s.size();
@@ -63,38 +55,38 @@ GN_API void GN::Registry::importFromStr( const StrA & s )
 
     // get name
 
-    while( NOT_EOL && IS_SPACE ) ++ptr;
+    while (NOT_EOL && IS_SPACE) ++ptr;
     const char * name_s = ptr;
 
-    while( NOT_EOL && !IS_SPACE ) ++ptr;
+    while (NOT_EOL && !IS_SPACE) ++ptr;
     const char * name_e = ptr;
 
-    if( name_e == name_s ) return;
+    if (name_e == name_s) return;
 
     // check "="
 
-    while( NOT_EOL && IS_SPACE ) ++ptr;
+    while (NOT_EOL && IS_SPACE) ++ptr;
     const char * assign_s = ptr;
 
-    if( ptr < end && *ptr == '=' ) ++ptr;
+    if (ptr < end && *ptr == '=') ++ptr;
     const char * assign_e = ptr;
 
-    if( assign_s + 1 != assign_e ) return;
+    if (assign_s + 1 != assign_e) return;
 
     // get value
 
-    while( NOT_EOL && IS_SPACE ) ++ptr;
+    while (NOT_EOL && IS_SPACE) ++ptr;
     const char * value_s = ptr;
 
-    while( ptr < end && !IS_SPACE ) ++ptr;
+    while (ptr < end && !IS_SPACE) ++ptr;
     const char * value_e = ptr;
 
-    if( value_e == value_s ) return;
+    if (value_e == value_s) return;
 
     // add name and value into registry
-    StrA name( name_s, name_e - name_s );
-    StrA value( value_s, value_e - value_s );
-    sets( name, value, true );
+    StrA name(name_s, name_e - name_s);
+    StrA value(value_s, value_e - value_s);
+    sets(name, value, true);
 
     GN_UNGUARD;
 }

@@ -3,7 +3,8 @@
 #include "d3d/d3d9.h"
 
 /// update real vtable to hooked vtable
-template<typename T> void RealToHooked9(T * p);
+template<typename T>
+void RealToHooked9(T * p);
 
 /// update real vtable to hooked vtable based on interface ID
 void RealToHooked9(const IID & iid, void * p);

@@ -8,31 +8,30 @@
 
 #include <garnet/GNengine.h>
 
-namespace GN { namespace util
-{
-    ///
-    /// Virtual world used in sample application
-    ///
-    class SampleWorld
-    {
-        engine::Entity                * mRoot;
-        StringMap<char,engine::Entity*> mEntities; // entities (not including root)
-        bool                            mShowBBox;
+namespace GN {
+namespace util {
+///
+/// Virtual world used in sample application
+///
+class SampleWorld {
+    engine::Entity *                  mRoot;
+    StringMap<char, engine::Entity *> mEntities; // entities (not including root)
+    bool                              mShowBBox;
 
-    public:
+public:
+    //@{
 
-        //@{
-
-                         SampleWorld();
-                        ~SampleWorld();
-        void             clear();
-        bool             createEntites( const gfx::ModelHierarchyDesc & desc );
-        engine::Entity * getRootEntity() const { return mRoot; }
-        void             draw( const Matrix44f & proj, const Matrix44f & view ) const; //< Draw all entities in the world.
-        void             showBoundingBoxes( bool s ) { mShowBBox = s; }
-        //@}
-    };
-}}
+    SampleWorld();
+    ~SampleWorld();
+    void             clear();
+    bool             createEntites(const gfx::ModelHierarchyDesc & desc);
+    engine::Entity * getRootEntity() const { return mRoot; }
+    void             draw(const Matrix44f & proj, const Matrix44f & view) const; //< Draw all entities in the world.
+    void             showBoundingBoxes(bool s) { mShowBBox = s; }
+    //@}
+};
+} // namespace util
+} // namespace GN
 
 // *****************************************************************************
 //                                     EOF

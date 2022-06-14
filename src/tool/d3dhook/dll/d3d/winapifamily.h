@@ -16,35 +16,35 @@ Abstract:
 #define _INC_WINAPIFAMILY
 
 #if defined(_MSC_VER) && !defined(MOFCOMP_PASS)
-#pragma once
+    #pragma once
 #endif // defined(_MSC_VER) && !defined(MOFCOMP_PASS)
 
 /*
- *  Windows APIs can be placed in a partition represented by one of the below bits.   The 
+ *  Windows APIs can be placed in a partition represented by one of the below bits.   The
  *  WINAPI_FAMILY value determines which partitions are available to the client code.
  */
 
-#define WINAPI_PARTITION_DESKTOP   0x00000001
-#define WINAPI_PARTITION_APP       0x00000002    
+#define WINAPI_PARTITION_DESKTOP 0x00000001
+#define WINAPI_PARTITION_APP     0x00000002
 
 /*
  * A family may be defined as the union of multiple families. WINAPI_FAMILY should be set
  * to one of these values.
  */
-#define WINAPI_FAMILY_APP          WINAPI_PARTITION_APP
-#define WINAPI_FAMILY_DESKTOP_APP  (WINAPI_PARTITION_DESKTOP | WINAPI_PARTITION_APP)    
+#define WINAPI_FAMILY_APP         WINAPI_PARTITION_APP
+#define WINAPI_FAMILY_DESKTOP_APP (WINAPI_PARTITION_DESKTOP | WINAPI_PARTITION_APP)
 
 /*
  * A constant that specifies which code is available to the program's target runtime platform.
- * By default we use the 'desktop app' family which places no restrictions on the API surface. 
+ * By default we use the 'desktop app' family which places no restrictions on the API surface.
  * To restrict the API surface to just the App API surface, define WINAPI_FAMILY to WINAPI_FAMILY_APP.
  */
 #ifndef WINAPI_FAMILY
-#define WINAPI_FAMILY WINAPI_FAMILY_DESKTOP_APP
+    #define WINAPI_FAMILY WINAPI_FAMILY_DESKTOP_APP
 #endif
 
 /* Macro to determine if a partition is enabled */
-#define WINAPI_FAMILY_PARTITION(Partition)	((WINAPI_FAMILY & Partition) == Partition)
+#define WINAPI_FAMILY_PARTITION(Partition) ((WINAPI_FAMILY & Partition) == Partition)
 
 /* Macro to determine if only one partition is enabled from a set */
 #define WINAPI_FAMILY_ONE_PARTITION(PartitionSet, Partition) ((WINAPI_FAMILY & PartitionSet) == Partition)
@@ -85,4 +85,4 @@ Abstract:
  *          #if WINAPI_FAMILY_ONE_PARTITION( WINAPI_FAMILY_DESKTOP_APP, WINAPI_PARTITION_APP )
  */
 
-#endif  /* !_INC_WINAPIFAMILY */
+#endif /* !_INC_WINAPIFAMILY */

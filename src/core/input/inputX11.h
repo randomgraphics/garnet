@@ -8,76 +8,73 @@
 
 #if HAS_X11
 
-#include "basicInput.h"
-#include <X11/Xlib.h>
+    #include "basicInput.h"
+    #include <X11/Xlib.h>
 
-namespace GN { namespace input
-{
-    ///
-    /// Input system on X11 platform
-    ///
-    class InputX11 : public BasicInput, public StdClass
-    {
-         GN_DECLARE_STDCLASS( InputX11, StdClass );
+namespace GN {
+namespace input {
+///
+/// Input system on X11 platform
+///
+class InputX11 : public BasicInput, public StdClass {
+    GN_DECLARE_STDCLASS(InputX11, StdClass);
 
-        // ********************************
-        // ctor/dtor
-        // ********************************
+    // ********************************
+    // ctor/dtor
+    // ********************************
 
-        //@{
-    public:
-        InputX11();
-        virtual ~InputX11() { quit(); }
-        //@}
+    //@{
+public:
+    InputX11();
+    virtual ~InputX11() { quit(); }
+    //@}
 
-        // ********************************
-        // from StdClass
-        // ********************************
+    // ********************************
+    // from StdClass
+    // ********************************
 
-        //@{
-    public:
-        bool init();
-        void quit();
-    private:
-        void clear()
-        {
-            mDisplay = 0;
-            mWindow = 0;
-        }
-        //@}
+    //@{
+public:
+    bool init();
+    void quit();
 
-        // ********************************
-        // from Input
-        // ********************************
-    public:
+private:
+    void clear() {
+        mDisplay = 0;
+        mWindow  = 0;
+    }
+    //@}
 
-        virtual bool attachToWindow( intptr_t, intptr_t );
-        virtual void processInputEvents();
-        virtual void getMousePosition( int &, int & ) const;
+    // ********************************
+    // from Input
+    // ********************************
+public:
+    virtual bool attachToWindow(intptr_t, intptr_t);
+    virtual void processInputEvents();
+    virtual void getMousePosition(int &, int &) const;
 
-        // ********************************
-        // public functions
-        // ********************************
-    public:
+    // ********************************
+    // public functions
+    // ********************************
+public:
+    // ********************************
+    // private variables
+    // ********************************
+private:
+    Display * mDisplay;
+    Window    mWindow;
 
-        // ********************************
-        // private variables
-        // ********************************
-    private:
+    enum { MAX_SCAN_CODE = 0x300 };
 
-        Display * mDisplay;
-        Window    mWindow;
+    KeyCode mKeyMap[MAX_SCAN_CODE]; ///< scancode to garnet keycode
 
-        enum { MAX_SCAN_CODE = 0x300 };
-
-        KeyCode mKeyMap[MAX_SCAN_CODE]; ///< scancode to garnet keycode
-
-        // ********************************
-        // private functions
-        // ********************************
-    private:
-    };
-}}
+    // ********************************
+    // private functions
+    // ********************************
+private:
+};
+} // namespace input
+} // namespace GN
 
 #endif // GN_POSIX
 

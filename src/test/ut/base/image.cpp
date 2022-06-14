@@ -3,12 +3,10 @@
 #include <png.h>
 
 static uint8_t            gBuf[10000];
-static GN::MemFile<uint8> gFile(gBuf,10000,"a.png");
+static GN::MemFile<uint8> gFile(gBuf, 10000, "a.png");
 
-class ImageTest : public CxxTest::TestSuite
-{
+class ImageTest : public CxxTest::TestSuite {
 public:
-
     void testEmptyImage() {
         using namespace GN;
         using namespace GN::gfx;
@@ -24,7 +22,7 @@ public:
 
         TS_ASSERT(id.pitch() == 0x10000);
         TS_ASSERT(id.slice() == 0x40000000);
-        TS_ASSERT(id.size    == 0x40000000);
+        TS_ASSERT(id.size == 0x40000000);
     }
 
     void testConstructMipmap() {
@@ -45,7 +43,7 @@ public:
         using namespace GN;
         using namespace GN::gfx;
         png_byte png_signature[8] = {137, 80, 78, 71, 13, 10, 26, 10};
-        ::memcpy( gBuf, png_signature, 8 );
+        ::memcpy(gBuf, png_signature, 8);
         auto image = RawImage::load(gFile);
         TS_ASSERT(image.empty());
     }
@@ -53,10 +51,10 @@ public:
     void testInvalidJPG() {
         using namespace GN;
         using namespace GN::gfx;
-        gBuf[6] = 'J';
-        gBuf[7] = 'F';
-        gBuf[8] = 'I';
-        gBuf[9] = 'F';
+        gBuf[6]    = 'J';
+        gBuf[7]    = 'F';
+        gBuf[8]    = 'I';
+        gBuf[9]    = 'F';
         auto image = RawImage::load(gFile);
         TS_ASSERT(image.empty());
     }

@@ -20,36 +20,31 @@ static GN::Logger * sLogger = GN::getLogger("GN.engine");
 //
 //
 // -----------------------------------------------------------------------------
-#define INIT_UNIFORM( name, type, defval ) \
-    if( 1 ) { \
-        md.uniforms[name].size = sizeof(type); \
-        md.uniforms[name].initialValue.resize( sizeof(type) ); \
-        type def defval; \
-        memcpy( md.uniforms[name].initialValue.rawptr(), &def, sizeof(type) ); \
-    } else void(0)
+#define INIT_UNIFORM(name, type, defval)                                     \
+    if (1) {                                                                 \
+        md.uniforms[name].size = sizeof(type);                               \
+        md.uniforms[name].initialValue.resize(sizeof(type));                 \
+        type def defval;                                                     \
+        memcpy(md.uniforms[name].initialValue.rawptr(), &def, sizeof(type)); \
+    } else                                                                   \
+        void(0)
 
 //
 //
 // -----------------------------------------------------------------------------
 template<typename T>
-struct Interpolate
-{
+struct Interpolate {
     // Linear interpolation
-    static inline void sDoWork( T & result, const T & a, const T & b, float factor )
-    {
-        result = a * (1-factor) + b * factor;
-    }
+    static inline void sDoWork(T & result, const T & a, const T & b, float factor) { result = a * (1 - factor) + b * factor; }
 };
 
 //
 //
 // -----------------------------------------------------------------------------
 template<>
-struct Interpolate<Quaternionf>
-{
+struct Interpolate<Quaternionf> {
     // Spherical interpolation
-    static inline void sDoWork( Quaternionf & res, const Quaternionf & from, const Quaternionf & to, float factor )
-    {
+    static inline void sDoWork(Quaternionf & res, const Quaternionf & from, const Quaternionf & to, float factor) {
         float  to1[4];
         float  scale0, scale1;
         double omega, cosom, sinom;
@@ -58,15 +53,13 @@ struct Interpolate<Quaternionf>
         cosom = from.v.x * to.v.x + from.v.y * to.v.y + from.v.z * to.v.z + from.w * to.w;
 
         // adjust signs (if necessary)
-        if ( cosom <0.0 )
-        {
-            cosom = -cosom; to1[0] = - to.v.x;
-            to1[1] = - to.v.y;
-            to1[2] = - to.v.z;
-            to1[3] = - to.w;
-        }
-        else
-        {
+        if (cosom < 0.0) {
+            cosom  = -cosom;
+            to1[0] = -to.v.x;
+            to1[1] = -to.v.y;
+            to1[2] = -to.v.z;
+            to1[3] = -to.w;
+        } else {
             to1[0] = to.v.x;
             to1[1] = to.v.y;
             to1[2] = to.v.z;
@@ -74,16 +67,13 @@ struct Interpolate<Quaternionf>
         }
 
         // calculate coefficients
-        if ( (1.0 - cosom) > 0.01 )
-        {
+        if ((1.0 - cosom) > 0.01) {
             // standard case (slerp)
             omega  = acos(cosom);
             sinom  = sin(omega);
-            scale0 = (float)( sin((1.0 - factor) * omega) / sinom );
-            scale1 = (float)( sin(factor * omega) / sinom );
-        }
-        else
-        {
+            scale0 = (float) (sin((1.0 - factor) * omega) / sinom);
+            scale1 = (float) (sin(factor * omega) / sinom);
+        } else {
             // "from" and "to" quaternions are very close
             //  ... so we can do a linear interpolation
             scale0 = 1.0f - factor;
@@ -94,7 +84,7 @@ struct Interpolate<Quaternionf>
         res.v.x = scale0 * from.v.x + scale1 * to1[0];
         res.v.y = scale0 * from.v.y + scale1 * to1[1];
         res.v.z = scale0 * from.v.z + scale1 * to1[2];
-        res.w   = scale0 * from.w   + scale1 * to1[3];
+        res.w   = scale0 * from.w + scale1 * to1[3];
     }
 };
 
@@ -102,39 +92,30 @@ struct Interpolate<Quaternionf>
 //
 // -----------------------------------------------------------------------------
 template<typename T>
-static inline bool
-sGetInterpolatedValue( T & result, const DynaArray<FatKeyFrame<T> > & array, float time )
-{
-    if( array.empty() ) return false;
+static inline bool sGetInterpolatedValue(T & result, const DynaArray<FatKeyFrame<T>> & array, float time) {
+    if (array.empty()) return false;
 
     // binary search for the appropriate key frame.
     size_t first = 0;
     size_t last  = array.size() - 1;
     size_t mid;
     float  midtime;
-    while( (first+1) < last )
-    {
+    while ((first + 1) < last) {
         mid = (first + last) / 2;
 
         midtime = array[mid].time;
 
-        if( midtime < time )
-        {
+        if (midtime < time) {
             first = mid;
-        }
-        else
-        {
+        } else {
             last = mid;
         }
     }
 
-    if( first == last )
-    {
+    if (first == last) {
         result = array[first].value;
-    }
-    else
-    {
-        GN_ASSERT( first < last );
+    } else {
+        GN_ASSERT(first < last);
 
         // Cache the first and last key frames.
         const FatKeyFrame<T> & key1 = array[first];
@@ -144,7 +125,7 @@ sGetInterpolatedValue( T & result, const DynaArray<FatKeyFrame<T> > & array, flo
         float factor = (time - key1.time) / (key2.time - key1.time);
 
         // Interpolate between first and last, basing on time.
-        Interpolate<T>::sDoWork( result, key1.value, key2.value, factor );
+        Interpolate<T>::sDoWork(result, key1.value, key2.value, factor);
     }
 
     return true;
@@ -157,119 +138,113 @@ sGetInterpolatedValue( T & result, const DynaArray<FatKeyFrame<T> > & array, flo
 //
 // shaders
 // -----------------------------------------------------------------------------
-static const char * SKINNED_VS_HLSL9 =
-    "uniform float4x4 pvw; \n"
-    "uniform float4x4 world; \n"
-    "uniform float4x4 wit; \n"
-    "uniform float4x4 joint_matrices[" MAX_JOINTS_PER_MESH_STR "]; \n"
-    "struct VSOUTPUT \n"
-    "{ \n"
-    "   float4 hpos      : POSITION0;  // vertex position in homogenous space \n"
-    "   float4 pos_world : POSITION1;  // vertex position in world space \n"
-    "   float3 nml_world : NORMAL0;    // vertex normal in world space \n"
-    "   float2 texcoords : TEXCOORD0; \n"
-    "}; \n"
-    "struct VSINPUT \n"
-    "{ \n"
-    "   float4 position  : POSITION; \n"
-    "   float3 normal    : NORMAL0; \n"
-    "   float4 joints    : TEXCOORD1;  // joint indices \n"
-    "   float4 weights   : TEXCOORD2;  // joint weights \n"
-    "   float2 texcoords : TEXCOORD0; \n"
-    "}; \n"
-    "VSOUTPUT main( in VSINPUT i ) { \n"
-    "   VSOUTPUT o; \n"
-    "   float4 skinned_pos = i.weights.x * mul( joint_matrices[i.joints.x], i.position ) + \n"
-    "                        i.weights.y * mul( joint_matrices[i.joints.y], i.position ) + \n"
-    "                        i.weights.z * mul( joint_matrices[i.joints.z], i.position ) + \n"
-    "                        i.weights.w * mul( joint_matrices[i.joints.w], i.position );  \n"
-    "   float4 input_nml   = float4( i.normal, 0 ); \n"
-    "   float4 skinned_nml = i.weights.x * mul( joint_matrices[i.joints.x], input_nml ) + \n"
-    "                        i.weights.y * mul( joint_matrices[i.joints.y], input_nml ) + \n"
-    "                        i.weights.z * mul( joint_matrices[i.joints.z], input_nml ) + \n"
-    "                        i.weights.w * mul( joint_matrices[i.joints.w], input_nml );  \n"
-    "   o.hpos      = mul( pvw, skinned_pos ); \n"
-    "   o.pos_world = mul( world, skinned_nml ); \n"
-    "   o.nml_world = mul( wit, skinned_nml ).xyz; \n"
-    "   o.texcoords = i.texcoords; \n"
-    "   return o; \n"
-    "}";
+static const char * SKINNED_VS_HLSL9 = "uniform float4x4 pvw; \n"
+                                       "uniform float4x4 world; \n"
+                                       "uniform float4x4 wit; \n"
+                                       "uniform float4x4 joint_matrices[" MAX_JOINTS_PER_MESH_STR "]; \n"
+                                       "struct VSOUTPUT \n"
+                                       "{ \n"
+                                       "   float4 hpos      : POSITION0;  // vertex position in homogenous space \n"
+                                       "   float4 pos_world : POSITION1;  // vertex position in world space \n"
+                                       "   float3 nml_world : NORMAL0;    // vertex normal in world space \n"
+                                       "   float2 texcoords : TEXCOORD0; \n"
+                                       "}; \n"
+                                       "struct VSINPUT \n"
+                                       "{ \n"
+                                       "   float4 position  : POSITION; \n"
+                                       "   float3 normal    : NORMAL0; \n"
+                                       "   float4 joints    : TEXCOORD1;  // joint indices \n"
+                                       "   float4 weights   : TEXCOORD2;  // joint weights \n"
+                                       "   float2 texcoords : TEXCOORD0; \n"
+                                       "}; \n"
+                                       "VSOUTPUT main( in VSINPUT i ) { \n"
+                                       "   VSOUTPUT o; \n"
+                                       "   float4 skinned_pos = i.weights.x * mul( joint_matrices[i.joints.x], i.position ) + \n"
+                                       "                        i.weights.y * mul( joint_matrices[i.joints.y], i.position ) + \n"
+                                       "                        i.weights.z * mul( joint_matrices[i.joints.z], i.position ) + \n"
+                                       "                        i.weights.w * mul( joint_matrices[i.joints.w], i.position );  \n"
+                                       "   float4 input_nml   = float4( i.normal, 0 ); \n"
+                                       "   float4 skinned_nml = i.weights.x * mul( joint_matrices[i.joints.x], input_nml ) + \n"
+                                       "                        i.weights.y * mul( joint_matrices[i.joints.y], input_nml ) + \n"
+                                       "                        i.weights.z * mul( joint_matrices[i.joints.z], input_nml ) + \n"
+                                       "                        i.weights.w * mul( joint_matrices[i.joints.w], input_nml );  \n"
+                                       "   o.hpos      = mul( pvw, skinned_pos ); \n"
+                                       "   o.pos_world = mul( world, skinned_nml ); \n"
+                                       "   o.nml_world = mul( wit, skinned_nml ).xyz; \n"
+                                       "   o.texcoords = i.texcoords; \n"
+                                       "   return o; \n"
+                                       "}";
 
-static const char * DIFFUSE_PS_HLSL9 =
-    "uniform float4 lightpos; // light positin in world space \n"
-    "uniform float4 lightColor; \n"
-    "uniform float4 albedoColor; \n"
-    "sampler t0; \n"
-    "struct VSOUTPUT \n"
-    "{ \n"
-    "   float4 hpos      : POSITION0;  // vertex position in homogenous space \n"
-    "   float4 pos_world : POSITION1;    // vertex position in world space \n"
-    "   float3 nml_world : NORMAL0; // vertex normal in world space \n"
-    "   float2 texcoords : TEXCOORD0; \n"
-    "}; \n"
-    "float4 main( in VSOUTPUT i ) : COLOR0 { \n"
-    "   float3  L    = normalize( (lightpos - i.pos_world).xyz ); \n"
-    "   float3  N    = normalize( i.nml_world ); \n"
-    "   float diff   = clamp( dot( L, N ), 0.0, 1.0 ); \n"
-    "   float4  tex  = tex2D( t0, i.texcoords ); \n"
-    "   return float4( diff, diff, diff, 1.0 ) * lightColor * albedoColor * tex; \n"
-    "}";
+static const char * DIFFUSE_PS_HLSL9 = "uniform float4 lightpos; // light positin in world space \n"
+                                       "uniform float4 lightColor; \n"
+                                       "uniform float4 albedoColor; \n"
+                                       "sampler t0; \n"
+                                       "struct VSOUTPUT \n"
+                                       "{ \n"
+                                       "   float4 hpos      : POSITION0;  // vertex position in homogenous space \n"
+                                       "   float4 pos_world : POSITION1;    // vertex position in world space \n"
+                                       "   float3 nml_world : NORMAL0; // vertex normal in world space \n"
+                                       "   float2 texcoords : TEXCOORD0; \n"
+                                       "}; \n"
+                                       "float4 main( in VSOUTPUT i ) : COLOR0 { \n"
+                                       "   float3  L    = normalize( (lightpos - i.pos_world).xyz ); \n"
+                                       "   float3  N    = normalize( i.nml_world ); \n"
+                                       "   float diff   = clamp( dot( L, N ), 0.0, 1.0 ); \n"
+                                       "   float4  tex  = tex2D( t0, i.texcoords ); \n"
+                                       "   return float4( diff, diff, diff, 1.0 ) * lightColor * albedoColor * tex; \n"
+                                       "}";
 
-static const char * SKINNED_VS_GLSL =
-    "in vec4 i_Position0; \n"
-    "in vec3 i_Normal0; \n"
-    "in vec2 i_TexCoord0; \n"
-    "in vec4 fjoints; \n"
-    "in vec4 weights; \n"
-    "\n"
-    "uniform mat4 pvw; \n"
-    "uniform mat4 world; \n"
-    "uniform mat4 wit; \n"
-    "uniform mat4 joint_matrices[" MAX_JOINTS_PER_MESH_STR "]; \n"
-    "\n"
-    "varying vec4  pos_world; // vertex position in world space \n"
-    "varying vec3  nml_world; // vertex normal in world space \n"
-    "varying vec2  texcoords; \n"
-    "\n"
-    "void main() { \n"
-    "   ivec4 joints = ivec4(fjoints); \n"
-    "   vec4 skinned_pos = weights.x * ( joint_matrices[joints.x] * i_Position0 ) + \n"
-    "                      weights.y * ( joint_matrices[joints.y] * i_Position0 ) + \n"
-    "                      weights.z * ( joint_matrices[joints.z] * i_Position0 ) + \n"
-    "                      weights.w * ( joint_matrices[joints.w] * i_Position0 );  \n"
-    "   vec4 input_nml   = vec4(i_Normal0,0); \n"
-    "   vec4 skinned_nml = weights.x * ( joint_matrices[joints.x] * input_nml ) + \n"
-    "                      weights.y * ( joint_matrices[joints.y] * input_nml ) + \n"
-    "                      weights.z * ( joint_matrices[joints.z] * input_nml ) + \n"
-    "                      weights.w * ( joint_matrices[joints.w] * input_nml );  \n"
-    "   gl_Position = pvw * skinned_pos; \n"
-    "   pos_world   = world * i_Position0; \n"
-    "   nml_world   = (wit * skinned_nml).xyz; \n"
-    "   texcoords   = i_TexCoord0.xy; \n"
-    "}";
+static const char * SKINNED_VS_GLSL = "in vec4 i_Position0; \n"
+                                      "in vec3 i_Normal0; \n"
+                                      "in vec2 i_TexCoord0; \n"
+                                      "in vec4 fjoints; \n"
+                                      "in vec4 weights; \n"
+                                      "\n"
+                                      "uniform mat4 pvw; \n"
+                                      "uniform mat4 world; \n"
+                                      "uniform mat4 wit; \n"
+                                      "uniform mat4 joint_matrices[" MAX_JOINTS_PER_MESH_STR "]; \n"
+                                      "\n"
+                                      "varying vec4  pos_world; // vertex position in world space \n"
+                                      "varying vec3  nml_world; // vertex normal in world space \n"
+                                      "varying vec2  texcoords; \n"
+                                      "\n"
+                                      "void main() { \n"
+                                      "   ivec4 joints = ivec4(fjoints); \n"
+                                      "   vec4 skinned_pos = weights.x * ( joint_matrices[joints.x] * i_Position0 ) + \n"
+                                      "                      weights.y * ( joint_matrices[joints.y] * i_Position0 ) + \n"
+                                      "                      weights.z * ( joint_matrices[joints.z] * i_Position0 ) + \n"
+                                      "                      weights.w * ( joint_matrices[joints.w] * i_Position0 );  \n"
+                                      "   vec4 input_nml   = vec4(i_Normal0,0); \n"
+                                      "   vec4 skinned_nml = weights.x * ( joint_matrices[joints.x] * input_nml ) + \n"
+                                      "                      weights.y * ( joint_matrices[joints.y] * input_nml ) + \n"
+                                      "                      weights.z * ( joint_matrices[joints.z] * input_nml ) + \n"
+                                      "                      weights.w * ( joint_matrices[joints.w] * input_nml );  \n"
+                                      "   gl_Position = pvw * skinned_pos; \n"
+                                      "   pos_world   = world * i_Position0; \n"
+                                      "   nml_world   = (wit * skinned_nml).xyz; \n"
+                                      "   texcoords   = i_TexCoord0.xy; \n"
+                                      "}";
 
-static const char * DIFFUSE_PS_GLSL =
-    "uniform vec4 lightpos; // light positin in world space \n"
-    "uniform vec4 lightColor; \n"
-    "uniform vec4 albedoColor; \n"
-    "uniform sampler2D t0; \n"
-    "varying vec4 pos_world; // position in world space \n"
-    "varying vec3 nml_world; // normal in world space \n"
-    "varying vec2 texcoords; \n"
-    "void main() { \n"
-    "   vec3  L      = normalize( (lightpos - pos_world).xyz ); \n"
-    "   vec3  N      = normalize( nml_world ); \n"
-    "   float diff   = clamp( dot( L, N ), 0.0, 1.0 ); \n"
-    "   vec4  tex    = texture2D( t0, texcoords ); \n"
-    "   gl_FragColor = vec4( diff, diff, diff, 1.0 ) * lightColor * albedoColor * tex; \n"
-    "}";
+static const char * DIFFUSE_PS_GLSL = "uniform vec4 lightpos; // light positin in world space \n"
+                                      "uniform vec4 lightColor; \n"
+                                      "uniform vec4 albedoColor; \n"
+                                      "uniform sampler2D t0; \n"
+                                      "varying vec4 pos_world; // position in world space \n"
+                                      "varying vec3 nml_world; // normal in world space \n"
+                                      "varying vec2 texcoords; \n"
+                                      "void main() { \n"
+                                      "   vec3  L      = normalize( (lightpos - pos_world).xyz ); \n"
+                                      "   vec3  N      = normalize( nml_world ); \n"
+                                      "   float diff   = clamp( dot( L, N ), 0.0, 1.0 ); \n"
+                                      "   vec4  tex    = texture2D( t0, texcoords ); \n"
+                                      "   gl_FragColor = vec4( diff, diff, diff, 1.0 ) * lightColor * albedoColor * tex; \n"
+                                      "}";
 
 //
 //
 // -----------------------------------------------------------------------------
-static AutoRef<EffectResource>
-sRegisterSkinnedDiffuseEffect( GpuResourceDatabase & gdb )
-{
+static AutoRef<EffectResource> sRegisterSkinnedDiffuseEffect(GpuResourceDatabase & gdb) {
     EffectResourceDesc ed;
 
     ed.uniforms[StandardUniform::Desc::MATRIX_PVW.name];
@@ -286,60 +261,57 @@ sRegisterSkinnedDiffuseEffect( GpuResourceDatabase & gdb )
     ed.attributes["JOINT_WEIGHT"];
     ed.attributes["TEXCOORD"];
 
-    ed.gpuprograms["glsl"].gpd.name = "skinned diffuse effect";
-    ed.gpuprograms["glsl"].gpd.lang = GpuProgramLanguage::GLSL;
-    ed.gpuprograms["glsl"].gpd.shaderModels = ShaderModel::GLSL_1_10;
-    ed.gpuprograms["glsl"].gpd.vs.source = SKINNED_VS_GLSL;
-    ed.gpuprograms["glsl"].gpd.ps.source = DIFFUSE_PS_GLSL;
-    ed.gpuprograms["glsl"].uniforms["pvw"] = StandardUniform::Desc::MATRIX_PVW.name;
-    ed.gpuprograms["glsl"].uniforms["world"] = StandardUniform::Desc::MATRIX_WORLD.name;
-    ed.gpuprograms["glsl"].uniforms["wit"] = StandardUniform::Desc::MATRIX_WORLD_IT.name;
-    ed.gpuprograms["glsl"].uniforms["lightpos"] = StandardUniform::Desc::LIGHT0_POSITION.name;
-    ed.gpuprograms["glsl"].uniforms["lightColor"] = StandardUniform::Desc::LIGHT0_DIFFUSE.name;
-    ed.gpuprograms["glsl"].uniforms["albedoColor"] = "ALBEDO_COLOR";
+    ed.gpuprograms["glsl"].gpd.name                   = "skinned diffuse effect";
+    ed.gpuprograms["glsl"].gpd.lang                   = GpuProgramLanguage::GLSL;
+    ed.gpuprograms["glsl"].gpd.shaderModels           = ShaderModel::GLSL_1_10;
+    ed.gpuprograms["glsl"].gpd.vs.source              = SKINNED_VS_GLSL;
+    ed.gpuprograms["glsl"].gpd.ps.source              = DIFFUSE_PS_GLSL;
+    ed.gpuprograms["glsl"].uniforms["pvw"]            = StandardUniform::Desc::MATRIX_PVW.name;
+    ed.gpuprograms["glsl"].uniforms["world"]          = StandardUniform::Desc::MATRIX_WORLD.name;
+    ed.gpuprograms["glsl"].uniforms["wit"]            = StandardUniform::Desc::MATRIX_WORLD_IT.name;
+    ed.gpuprograms["glsl"].uniforms["lightpos"]       = StandardUniform::Desc::LIGHT0_POSITION.name;
+    ed.gpuprograms["glsl"].uniforms["lightColor"]     = StandardUniform::Desc::LIGHT0_DIFFUSE.name;
+    ed.gpuprograms["glsl"].uniforms["albedoColor"]    = "ALBEDO_COLOR";
     ed.gpuprograms["glsl"].uniforms["joint_matrices"] = "JOINT_MATRICES";
-    ed.gpuprograms["glsl"].textures["t0"] = "ALBEDO_TEXTURE";
-    ed.gpuprograms["glsl"].attributes["i_Position0"] = "POSITION0";
-    ed.gpuprograms["glsl"].attributes["i_Normal0"] = "NORMAL0";
-    ed.gpuprograms["glsl"].attributes["i_TexCoord0"] = "TEXCOORD0";
-    ed.gpuprograms["glsl"].attributes["fjoints"] = "JOINT_ID";
-    ed.gpuprograms["glsl"].attributes["weights"] = "JOINT_WEIGHT";
+    ed.gpuprograms["glsl"].textures["t0"]             = "ALBEDO_TEXTURE";
+    ed.gpuprograms["glsl"].attributes["i_Position0"]  = "POSITION0";
+    ed.gpuprograms["glsl"].attributes["i_Normal0"]    = "NORMAL0";
+    ed.gpuprograms["glsl"].attributes["i_TexCoord0"]  = "TEXCOORD0";
+    ed.gpuprograms["glsl"].attributes["fjoints"]      = "JOINT_ID";
+    ed.gpuprograms["glsl"].attributes["weights"]      = "JOINT_WEIGHT";
 
-    ed.gpuprograms["hlsl9"].gpd.name = "skinned diffuse effect";
-    ed.gpuprograms["hlsl9"].gpd.lang = GpuProgramLanguage::HLSL9;
-    ed.gpuprograms["hlsl9"].gpd.shaderModels = ShaderModel::SM_3_0 | ShaderModel::SM_3_X;
-    ed.gpuprograms["hlsl9"].gpd.vs.source = SKINNED_VS_HLSL9;
-    ed.gpuprograms["hlsl9"].gpd.vs.entry  = "main";
-    ed.gpuprograms["hlsl9"].gpd.ps.source = DIFFUSE_PS_HLSL9;
-    ed.gpuprograms["hlsl9"].gpd.ps.entry  = "main";
-    ed.gpuprograms["hlsl9"].uniforms["pvw"] = StandardUniform::Desc::MATRIX_PVW.name;
-    ed.gpuprograms["hlsl9"].uniforms["world"] = StandardUniform::Desc::MATRIX_WORLD.name;
-    ed.gpuprograms["hlsl9"].uniforms["wit"] = StandardUniform::Desc::MATRIX_WORLD_IT.name;
-    ed.gpuprograms["hlsl9"].uniforms["lightpos"] = StandardUniform::Desc::LIGHT0_POSITION.name;
-    ed.gpuprograms["hlsl9"].uniforms["lightColor"] = StandardUniform::Desc::LIGHT0_DIFFUSE.name;
-    ed.gpuprograms["hlsl9"].uniforms["albedoColor"] = "ALBEDO_COLOR";
+    ed.gpuprograms["hlsl9"].gpd.name                   = "skinned diffuse effect";
+    ed.gpuprograms["hlsl9"].gpd.lang                   = GpuProgramLanguage::HLSL9;
+    ed.gpuprograms["hlsl9"].gpd.shaderModels           = ShaderModel::SM_3_0 | ShaderModel::SM_3_X;
+    ed.gpuprograms["hlsl9"].gpd.vs.source              = SKINNED_VS_HLSL9;
+    ed.gpuprograms["hlsl9"].gpd.vs.entry               = "main";
+    ed.gpuprograms["hlsl9"].gpd.ps.source              = DIFFUSE_PS_HLSL9;
+    ed.gpuprograms["hlsl9"].gpd.ps.entry               = "main";
+    ed.gpuprograms["hlsl9"].uniforms["pvw"]            = StandardUniform::Desc::MATRIX_PVW.name;
+    ed.gpuprograms["hlsl9"].uniforms["world"]          = StandardUniform::Desc::MATRIX_WORLD.name;
+    ed.gpuprograms["hlsl9"].uniforms["wit"]            = StandardUniform::Desc::MATRIX_WORLD_IT.name;
+    ed.gpuprograms["hlsl9"].uniforms["lightpos"]       = StandardUniform::Desc::LIGHT0_POSITION.name;
+    ed.gpuprograms["hlsl9"].uniforms["lightColor"]     = StandardUniform::Desc::LIGHT0_DIFFUSE.name;
+    ed.gpuprograms["hlsl9"].uniforms["albedoColor"]    = "ALBEDO_COLOR";
     ed.gpuprograms["hlsl9"].uniforms["joint_matrices"] = "JOINT_MATRICES";
-    ed.gpuprograms["hlsl9"].textures["t0"] = "ALBEDO_TEXTURE";
-    ed.gpuprograms["hlsl9"].attributes["POSITION0"] = "POSITION";
-    ed.gpuprograms["hlsl9"].attributes["NORMAL0"] = "NORMAL";
-    ed.gpuprograms["hlsl9"].attributes["TEXCOORD0"] = "TEXCOORD";
-    ed.gpuprograms["hlsl9"].attributes["TEXCOORD1"] = "JOINT_ID";
-    ed.gpuprograms["hlsl9"].attributes["TEXCOORD2"] = "JOINT_WEIGHT";
+    ed.gpuprograms["hlsl9"].textures["t0"]             = "ALBEDO_TEXTURE";
+    ed.gpuprograms["hlsl9"].attributes["POSITION0"]    = "POSITION";
+    ed.gpuprograms["hlsl9"].attributes["NORMAL0"]      = "NORMAL";
+    ed.gpuprograms["hlsl9"].attributes["TEXCOORD0"]    = "TEXCOORD";
+    ed.gpuprograms["hlsl9"].attributes["TEXCOORD1"]    = "JOINT_ID";
+    ed.gpuprograms["hlsl9"].attributes["TEXCOORD2"]    = "JOINT_WEIGHT";
 
-    ed.techniques.resize( 2 );
+    ed.techniques.resize(2);
     ed.techniques[0].name = "glsl";
-    ed.techniques[0].passes.resize( 1 );
+    ed.techniques[0].passes.resize(1);
     ed.techniques[0].passes[0].gpuprogram = "glsl";
-    ed.techniques[1].name = "hlsl9";
-    ed.techniques[1].passes.resize( 1 );
+    ed.techniques[1].name                 = "hlsl9";
+    ed.techniques[1].passes.resize(1);
     ed.techniques[1].passes[0].gpuprogram = "hlsl9";
 
-    bool isExistingResource;
-    AutoRef<EffectResource> e = gdb.findOrCreateResource<EffectResource>( "@SKINNED_DIFFUSE", &isExistingResource );
-    if( !isExistingResource && !e->reset( &ed ) )
-    {
-        return AutoRef<EffectResource>::NULLREF;
-    }
+    bool                    isExistingResource;
+    AutoRef<EffectResource> e = gdb.findOrCreateResource<EffectResource>("@SKINNED_DIFFUSE", &isExistingResource);
+    if (!isExistingResource && !e->reset(&ed)) { return AutoRef<EffectResource>::NULLREF; }
 
     return e;
 }
@@ -347,32 +319,26 @@ sRegisterSkinnedDiffuseEffect( GpuResourceDatabase & gdb )
 //
 //
 // -----------------------------------------------------------------------------
-static ModelResourceDesc sSkinnedDiffuseModelDesc()
-{
-    struct JointMatrices
-    {
+static ModelResourceDesc sSkinnedDiffuseModelDesc() {
+    struct JointMatrices {
         Matrix44f matrices[MAX_JOINTS_PER_DRAW];
 
-        JointMatrices()
-        {
-            for( size_t i = 0; i < GN_ARRAY_COUNT(matrices); ++i )
-            {
-                matrices[i].identity();
-            }
+        JointMatrices() {
+            for (size_t i = 0; i < GN_ARRAY_COUNT(matrices); ++i) { matrices[i].identity(); }
         }
     };
 
     ModelResourceDesc md;
-    md.effect = "@SKINNED_DIFFUSE";
+    md.effect                                  = "@SKINNED_DIFFUSE";
     md.textures["ALBEDO_TEXTURE"].resourceName = "@WHITE";
 
-    INIT_UNIFORM( "MATRIX_PVW"      , Matrix44f,     = Matrix44f::sIdentity() );
-    INIT_UNIFORM( "MATRIX_WORLD"    , Matrix44f,     = Matrix44f::sIdentity() );
-    INIT_UNIFORM( "MATRIX_WORLD_IT" , Matrix44f,     = Matrix44f::sIdentity() );
-    INIT_UNIFORM( "LIGHT0_POSITION" , Vector4f,      = Vector4f(0,0,0,0) );
-    INIT_UNIFORM( "LIGHT0_DIFFUSE"  , Vector4f,      = Vector4f(1,1,1,1) );
-    INIT_UNIFORM( "ALBEDO_COLOR"    , Vector4f,      = Vector4f(1,1,1,1) );
-    INIT_UNIFORM( "JOINT_MATRICES"  , JointMatrices, );
+    INIT_UNIFORM("MATRIX_PVW", Matrix44f, = Matrix44f::sIdentity());
+    INIT_UNIFORM("MATRIX_WORLD", Matrix44f, = Matrix44f::sIdentity());
+    INIT_UNIFORM("MATRIX_WORLD_IT", Matrix44f, = Matrix44f::sIdentity());
+    INIT_UNIFORM("LIGHT0_POSITION", Vector4f, = Vector4f(0, 0, 0, 0));
+    INIT_UNIFORM("LIGHT0_DIFFUSE", Vector4f, = Vector4f(1, 1, 1, 1));
+    INIT_UNIFORM("ALBEDO_COLOR", Vector4f, = Vector4f(1, 1, 1, 1));
+    INIT_UNIFORM("JOINT_MATRICES", JointMatrices, );
 
     return md;
 }
@@ -529,39 +495,34 @@ static ModelResourceDesc sSkinnedWireframeModelDesc()
 // SkinnedVisualComponent
 // *****************************************************************************
 
-class GN::engine::SkinnedMesh::SkinnedVisualComponent : public VisualComponent
-{
-    SkinnedMesh  & mOwner;
+class GN::engine::SkinnedMesh::SkinnedVisualComponent : public VisualComponent {
+    SkinnedMesh & mOwner;
 
 protected:
-
-    virtual void drawModelResource( uint32 index, ModelResource & model ) const
-    {
+    virtual void drawModelResource(uint32 index, ModelResource & model) const {
         // Reference the subset
-        GN_ASSERT( index < mOwner.mSubsets.size() );
+        GN_ASSERT(index < mOwner.mSubsets.size());
         const SkinnedMesh::SkinnedSubset & subset = mOwner.mSubsets[index];
 
         Matrix44f matrices[MAX_JOINTS_PER_DRAW];
 
         // Upload joint matrices to GPU uniform
-        if( FatMesh::NO_SKELETON != subset.skeleton )
-        {
+        if (FatMesh::NO_SKELETON != subset.skeleton) {
             const SkinnedMesh::Skeleton & sk = mOwner.mSkeletons[subset.skeleton];
 
             Uniform * uniform = sk.matrices->uniform().rawptr();
 
-            GN_ASSERT( uniform->size() >= sizeof(Matrix44f)*MAX_JOINTS_PER_DRAW );
-            GN_ASSERT( subset.joints.size() <= MAX_JOINTS_PER_DRAW );
+            GN_ASSERT(uniform->size() >= sizeof(Matrix44f) * MAX_JOINTS_PER_DRAW);
+            GN_ASSERT(subset.joints.size() <= MAX_JOINTS_PER_DRAW);
 
-            for( uint32 i = 0; i < subset.joints.size(); ++i )
-            {
+            for (uint32 i = 0; i < subset.joints.size(); ++i) {
                 uint32 jointIndex = subset.joints[i];
-                matrices[i] = sk.bind2rest[jointIndex];
+                matrices[i]       = sk.bind2rest[jointIndex];
             }
 
             size_t uploadBytes = sizeof(Matrix44f) * subset.joints.size();
 
-            uniform->update( 0, (uint32)uploadBytes, matrices );
+            uniform->update(0, (uint32) uploadBytes, matrices);
         }
 
         // draw the GPU model resource.
@@ -569,23 +530,15 @@ protected:
     }
 
 public:
-
-    SkinnedVisualComponent( SkinnedMesh & owner )
-        : mOwner(owner)
-    {
-    }
+    SkinnedVisualComponent(SkinnedMesh & owner): mOwner(owner) {}
 };
 
 // *****************************************************************************
 // SkinnedAnimation
 // *****************************************************************************
 
-struct GN::engine::SkinnedMesh::SkinnedAnimation : public FatAnimation
-{
-    static void sDeleteAnimation( SkinnedAnimation * p )
-    {
-        delete p;
-    }
+struct GN::engine::SkinnedMesh::SkinnedAnimation : public FatAnimation {
+    static void sDeleteAnimation(SkinnedAnimation * p) { delete p; }
 };
 
 // *****************************************************************************
@@ -595,61 +548,51 @@ struct GN::engine::SkinnedMesh::SkinnedAnimation : public FatAnimation
 //
 //
 // -----------------------------------------------------------------------------
-static const GN::Guid SKINNED_MESH_GUID = { 0x950374b7, 0x3b50, 0x4d6e, { 0x9b, 0xd3, 0xa2, 0x36, 0xbe, 0xdb, 0x8e, 0x83 } };
-GN_ENGINE_IMPLEMENT_ENTITY( GN::engine::SkinnedMesh, SKINNED_MESH_GUID );
+static const GN::Guid SKINNED_MESH_GUID = {0x950374b7, 0x3b50, 0x4d6e, {0x9b, 0xd3, 0xa2, 0x36, 0xbe, 0xdb, 0x8e, 0x83}};
+GN_ENGINE_IMPLEMENT_ENTITY(GN::engine::SkinnedMesh, SKINNED_MESH_GUID);
 
 //
 //
 // -----------------------------------------------------------------------------
-uint32 GN::engine::SkinnedMesh::sGetMaxJointsPerDraw()
-{
-    return MAX_JOINTS_PER_DRAW;
+uint32 GN::engine::SkinnedMesh::sGetMaxJointsPerDraw() { return MAX_JOINTS_PER_DRAW; }
+
+//
+//
+// -----------------------------------------------------------------------------
+GN::engine::SkinnedMesh::SkinnedMesh() {
+    setComponent<SpacialComponent>(&mRootSpacial);
+    mVisual = new SkinnedVisualComponent(*this);
+    setComponent<VisualComponent>(mVisual);
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-GN::engine::SkinnedMesh::SkinnedMesh()
-{
-    setComponent<SpacialComponent>( &mRootSpacial );
-    mVisual = new SkinnedVisualComponent( *this );
-    setComponent<VisualComponent>( mVisual );
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-GN::engine::SkinnedMesh::~SkinnedMesh()
-{
+GN::engine::SkinnedMesh::~SkinnedMesh() {
     clear();
-    setComponent<VisualComponent>( NULL );
-    setComponent<SpacialComponent>( NULL );
+    setComponent<VisualComponent>(NULL);
+    setComponent<SpacialComponent>(NULL);
     delete mVisual;
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-void GN::engine::SkinnedMesh::clear()
-{
+void GN::engine::SkinnedMesh::clear() {
     // Delete all animations
-    std::for_each( mAnimations.begin(), mAnimations.end(), SkinnedAnimation::sDeleteAnimation );
+    std::for_each(mAnimations.begin(), mAnimations.end(), SkinnedAnimation::sDeleteAnimation);
     mAnimations.clear();
 
     // Delete all skeletons
-    for( size_t i = 0; i < mSkeletons.size(); ++i )
-    {
+    for (size_t i = 0; i < mSkeletons.size(); ++i) {
         Skeleton & sk = mSkeletons[i];
-        safeHeapDealloc( sk.hierarchy );
-        for( size_t j = 0; j < sk.jointCount; ++j )
-        {
-            safeDelete( sk.spacials[j] );
-        }
-        safeHeapDealloc( sk.spacials );
-        safeHeapDealloc( sk.bindPose );
-        safeHeapDealloc( sk.invRestPose );
-        safeHeapDealloc( sk.bind2rest );
-        safeDecref( sk.matrices );
+        safeHeapDealloc(sk.hierarchy);
+        for (size_t j = 0; j < sk.jointCount; ++j) { safeDelete(sk.spacials[j]); }
+        safeHeapDealloc(sk.spacials);
+        safeHeapDealloc(sk.bindPose);
+        safeHeapDealloc(sk.invRestPose);
+        safeHeapDealloc(sk.bind2rest);
+        safeDecref(sk.matrices);
     }
     mSkeletons.clear();
 
@@ -666,17 +609,15 @@ void GN::engine::SkinnedMesh::clear()
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::engine::SkinnedMesh::getAnimationInfo( size_t animationIndex, SkinnedAnimationInfo & info )
-{
-    if( animationIndex >= mAnimations.size() || NULL == mAnimations[animationIndex] )
-    {
+bool GN::engine::SkinnedMesh::getAnimationInfo(size_t animationIndex, SkinnedAnimationInfo & info) {
+    if (animationIndex >= mAnimations.size() || NULL == mAnimations[animationIndex]) {
         // Invalid animation index
         return false;
     }
 
     const SkinnedAnimation * sa = mAnimations[animationIndex];
 
-    info.name = sa->name;
+    info.name     = sa->name;
     info.duration = sa->duration;
 
     return true;
@@ -685,27 +626,22 @@ bool GN::engine::SkinnedMesh::getAnimationInfo( size_t animationIndex, SkinnedAn
 //
 //
 // -----------------------------------------------------------------------------
-void GN::engine::SkinnedMesh::setAnimation( size_t animationIndex, float seconds )
-{
-    if( (size_t)-1 == animationIndex )
-    {
+void GN::engine::SkinnedMesh::setAnimation(size_t animationIndex, float seconds) {
+    if ((size_t) -1 == animationIndex) {
         // reset back to bind pose.
 
-        for( uint32 skeletonIndex = 0; skeletonIndex < mSkeletons.size(); ++skeletonIndex )
-        {
+        for (uint32 skeletonIndex = 0; skeletonIndex < mSkeletons.size(); ++skeletonIndex) {
             Skeleton & sk = mSkeletons[skeletonIndex];
 
             // bind pose is rest pose in this case.
-            for( uint32 jointIndex = 0; jointIndex < sk.jointCount; ++jointIndex )
-            {
+            for (uint32 jointIndex = 0; jointIndex < sk.jointCount; ++jointIndex) {
                 SpacialComponent * spacial = sk.spacials[jointIndex];
-                spacial->setPosition( sk.bindPose[jointIndex].position );
-                spacial->setRotation( sk.bindPose[jointIndex].rotation );
-                spacial->setScale( sk.bindPose[jointIndex].scaling );
+                spacial->setPosition(sk.bindPose[jointIndex].position);
+                spacial->setRotation(sk.bindPose[jointIndex].rotation);
+                spacial->setScale(sk.bindPose[jointIndex].scaling);
             }
-            for( uint32 jointIndex = 0; jointIndex < sk.jointCount; ++jointIndex )
-            {
-                sk.invRestPose[jointIndex] = Matrix44f::sInverse( sk.bindPose[jointIndex].model2joint );
+            for (uint32 jointIndex = 0; jointIndex < sk.jointCount; ++jointIndex) {
+                sk.invRestPose[jointIndex] = Matrix44f::sInverse(sk.bindPose[jointIndex].model2joint);
                 sk.bind2rest[jointIndex].identity();
             }
 
@@ -714,65 +650,55 @@ void GN::engine::SkinnedMesh::setAnimation( size_t animationIndex, float seconds
             GN_ASSERT( uniform->size() >= sizeof(identityMatrices) );
             uniform->update( 0, (uint32)sizeof(identityMatrices), identityMatrices );*/
         }
-    }
-    else
-    {
-        if( animationIndex >= mAnimations.size() || NULL == mAnimations[animationIndex] )
-        {
-            GN_ERROR(sLogger)( "Invalid animation index." );
+    } else {
+        if (animationIndex >= mAnimations.size() || NULL == mAnimations[animationIndex]) {
+            GN_ERROR(sLogger)("Invalid animation index.");
             return;
         }
 
         const FatAnimation & fatanim = *mAnimations[animationIndex];
 
         // Mod time stamp by animation duration.
-        seconds = fmod( seconds, (float)fatanim.duration );
+        seconds = fmod(seconds, (float) fatanim.duration);
 
         Vector3f    t;
         Quaternionf r;
         Vector3f    s;
         Matrix44f   local2parent;
 
-        for( uint32 skeletonIndex = 0; skeletonIndex < fatanim.skeletonAnimations.size(); ++skeletonIndex )
-        {
+        for (uint32 skeletonIndex = 0; skeletonIndex < fatanim.skeletonAnimations.size(); ++skeletonIndex) {
             const auto & skanim = fatanim.skeletonAnimations[skeletonIndex];
 
             Skeleton & sk = mSkeletons[skeletonIndex];
 
-            GN_ASSERT( skanim.size() == sk.jointCount );
+            GN_ASSERT(skanim.size() == sk.jointCount);
 
             // Loop through all joints, update each spacial component with
             // the rest pose transformation.
-            for( uint32 jointIndex = 0; jointIndex < sk.jointCount; ++jointIndex )
-            {
+            for (uint32 jointIndex = 0; jointIndex < sk.jointCount; ++jointIndex) {
                 const auto & jointanim = skanim[jointIndex];
 
                 SpacialComponent * spacial = sk.spacials[jointIndex];
 
                 // Get rest pose tranformation of the joint. T*R*S is the
                 // the transformation from local space to it's parent space.
-                if( sGetInterpolatedValue( t, jointanim.positions, seconds ) &&
-                    sGetInterpolatedValue( r, jointanim.rotations, seconds ) &&
-                    sGetInterpolatedValue( s, jointanim.scalings, seconds ) )
-                {
-                    spacial->setPosition( t );
-                    spacial->setRotation( r );
-                    spacial->setScale( s );
-                }
-                else
-                {
+                if (sGetInterpolatedValue(t, jointanim.positions, seconds) && sGetInterpolatedValue(r, jointanim.rotations, seconds) &&
+                    sGetInterpolatedValue(s, jointanim.scalings, seconds)) {
+                    spacial->setPosition(t);
+                    spacial->setRotation(r);
+                    spacial->setScale(s);
+                } else {
                     // No rest pose found for this joint at this time. We'll use
                     // bind pose as rest pose.
-                    spacial->setPosition( sk.bindPose[jointIndex].position );
-                    spacial->setRotation( sk.bindPose[jointIndex].rotation );
-                    spacial->setScale( sk.bindPose[jointIndex].scaling );
+                    spacial->setPosition(sk.bindPose[jointIndex].position);
+                    spacial->setRotation(sk.bindPose[jointIndex].rotation);
+                    spacial->setScale(sk.bindPose[jointIndex].scaling);
                 }
             }
 
             // Loop through all joints again. Caluclate bind pose -> rest post
             // transformation for each joint.
-            for( uint32 jointIndex = 0; jointIndex < sk.jointCount; ++jointIndex )
-            {
+            for (uint32 jointIndex = 0; jointIndex < sk.jointCount; ++jointIndex) {
                 // Reference the spacial component of the joint.
                 SpacialComponent * spacial = sk.spacials[jointIndex];
 
@@ -802,16 +728,14 @@ void GN::engine::SkinnedMesh::setAnimation( size_t animationIndex, float seconds
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::engine::SkinnedMesh::loadFromFatModel( const GN::gfx::FatModel & fatmodel )
-{
-    GN_SCOPE_PROFILER( SkinnedMesh_loadFromFatModel, "Load skinned mesh from FatModel" );
+bool GN::engine::SkinnedMesh::loadFromFatModel(const GN::gfx::FatModel & fatmodel) {
+    GN_SCOPE_PROFILER(SkinnedMesh_loadFromFatModel, "Load skinned mesh from FatModel");
 
     // Clear existing data.
     clear();
 
-    if( fatmodel.skeletons.empty() )
-    {
-        GN_ERROR(sLogger)( "The fat model does not contain any skeletons." );
+    if (fatmodel.skeletons.empty()) {
+        GN_ERROR(sLogger)("The fat model does not contain any skeletons.");
         clear();
         return false;
     }
@@ -821,33 +745,30 @@ bool GN::engine::SkinnedMesh::loadFromFatModel( const GN::gfx::FatModel & fatmod
     DynaArray<uint8> vb;
 
     // Load skinned effect
-    mSkinnedEffect = sRegisterSkinnedDiffuseEffect( gdb );
-    if( NULL == mSkinnedEffect ) return false;
+    mSkinnedEffect = sRegisterSkinnedDiffuseEffect(gdb);
+    if (NULL == mSkinnedEffect) return false;
 
     // Load skeleton array
-    mSkeletons.resize( fatmodel.skeletons.size() );
-    memset( mSkeletons.rawptr(), 0, sizeof(Skeleton)*mSkeletons.size() );
-    for( uint32 i = 0; i < fatmodel.skeletons.size(); ++i )
-    {
+    mSkeletons.resize(fatmodel.skeletons.size());
+    memset(mSkeletons.rawptr(), 0, sizeof(Skeleton) * mSkeletons.size());
+    for (uint32 i = 0; i < fatmodel.skeletons.size(); ++i) {
         const FatSkeleton & source = fatmodel.skeletons[i];
 
-        Skeleton & dest = mSkeletons[i];
-        dest.jointCount = source.joints.size();
-        dest.hierarchy = (JointHierarchy*)HeapMemory::alloc( sizeof(JointHierarchy) * dest.jointCount );
-        dest.spacials = (SpacialComponent**)HeapMemory::alloc( sizeof(void*) * dest.jointCount );
-        dest.bindPose = (JointBindPose*)HeapMemory::alloc( sizeof(JointBindPose) * dest.jointCount );
-        dest.invRestPose = (Matrix44f*)HeapMemory::alloc( sizeof(Matrix44f) * dest.jointCount );
-        dest.bind2rest = (Matrix44f*)HeapMemory::alloc( sizeof(Matrix44f) * dest.jointCount );
-        if( !dest.hierarchy || !dest.spacials || !dest.bindPose || !dest.invRestPose || !dest.bind2rest )
-        {
-            GN_ERROR(sLogger)( "Fail to load skinned mesh from FatModel: out of memory." );
+        Skeleton & dest  = mSkeletons[i];
+        dest.jointCount  = source.joints.size();
+        dest.hierarchy   = (JointHierarchy *) HeapMemory::alloc(sizeof(JointHierarchy) * dest.jointCount);
+        dest.spacials    = (SpacialComponent **) HeapMemory::alloc(sizeof(void *) * dest.jointCount);
+        dest.bindPose    = (JointBindPose *) HeapMemory::alloc(sizeof(JointBindPose) * dest.jointCount);
+        dest.invRestPose = (Matrix44f *) HeapMemory::alloc(sizeof(Matrix44f) * dest.jointCount);
+        dest.bind2rest   = (Matrix44f *) HeapMemory::alloc(sizeof(Matrix44f) * dest.jointCount);
+        if (!dest.hierarchy || !dest.spacials || !dest.bindPose || !dest.invRestPose || !dest.bind2rest) {
+            GN_ERROR(sLogger)("Fail to load skinned mesh from FatModel: out of memory.");
             clear();
             return false;
         }
 
         // Loop through each joints (first pass)
-        for( uint32 j = 0; j < source.joints.size(); ++j )
-        {
+        for (uint32 j = 0; j < source.joints.size(); ++j) {
             const FatJoint & srcjoint = source.joints[j];
 
             // Replicate the hierarchy
@@ -859,18 +780,18 @@ bool GN::engine::SkinnedMesh::loadFromFatModel( const GN::gfx::FatModel & fatmod
             dest.spacials[j] = new SpacialComponent;
 
             // setup the local transformation of the spacial component
-            dest.spacials[j]->setPosition( srcjoint.bindPose.position );
-            dest.spacials[j]->setRotation( srcjoint.bindPose.rotation );
-            dest.spacials[j]->setScale( srcjoint.bindPose.scaling );
+            dest.spacials[j]->setPosition(srcjoint.bindPose.position);
+            dest.spacials[j]->setRotation(srcjoint.bindPose.rotation);
+            dest.spacials[j]->setScale(srcjoint.bindPose.scaling);
 
             // copy bind pose transformation
             dest.bindPose[j].model2joint = srcjoint.bindPose.model2joint;
-            dest.bindPose[j].position = srcjoint.bindPose.position;
-            dest.bindPose[j].rotation = srcjoint.bindPose.rotation;
-            dest.bindPose[j].scaling = srcjoint.bindPose.scaling;
+            dest.bindPose[j].position    = srcjoint.bindPose.position;
+            dest.bindPose[j].rotation    = srcjoint.bindPose.rotation;
+            dest.bindPose[j].scaling     = srcjoint.bindPose.scaling;
 
             // Initial rest pose is same as bind pose.
-            dest.invRestPose[j] = Matrix44f::sInverse( srcjoint.bindPose.model2joint );
+            dest.invRestPose[j] = Matrix44f::sInverse(srcjoint.bindPose.model2joint);
 
             // And Initial bind->rest transformation would be identity
             dest.bind2rest[j].identity();
@@ -885,166 +806,141 @@ bool GN::engine::SkinnedMesh::loadFromFatModel( const GN::gfx::FatModel & fatmod
         // calculate transformation from joint space to model space.
         // Transfomration outside of the model space should not be
         // involved.
-        for( uint32 j = 0; j < source.joints.size(); ++j )
-        {
+        for (uint32 j = 0; j < source.joints.size(); ++j) {
             uint32 parent = source.joints[j].parent;
-            dest.spacials[j]->setParent( (parent == FatJoint::NO_JOINT) ? NULL : dest.spacials[parent] );
+            dest.spacials[j]->setParent((parent == FatJoint::NO_JOINT) ? NULL : dest.spacials[parent]);
         }
 
         // Create a uniform resource for the skeleton
-        dest.matrices = gdb.createResource<UniformResource>( NULL ).detach();
-        if( NULL == dest.matrices || !dest.matrices->reset( sizeof(Matrix44f)*MAX_JOINTS_PER_DRAW, NULL ) )
-        {
+        dest.matrices = gdb.createResource<UniformResource>(NULL).detach();
+        if (NULL == dest.matrices || !dest.matrices->reset(sizeof(Matrix44f) * MAX_JOINTS_PER_DRAW, NULL)) {
             clear();
             return false;
         }
     }
 
     // Load all meshes
-    for( uint32 mi = 0; mi < fatmodel.meshes.size(); ++mi )
-    {
+    for (uint32 mi = 0; mi < fatmodel.meshes.size(); ++mi) {
         const auto & fatmesh = fatmodel.meshes[mi];
 
-        StrA meshName = str::format( "%s.mesh.%d", fatmodel.name.rawptr(), mi );
+        StrA meshName = str::format("%s.mesh.%d", fatmodel.name.rawptr(), mi);
 
         // use exising mesh, if possible
-        AutoRef<MeshResource> mesh = gdb.findResource<MeshResource>( meshName );
-        if( !mesh )
-        {
+        AutoRef<MeshResource> mesh = gdb.findResource<MeshResource>(meshName);
+        if (!mesh) {
             // setup mesh descriptor
             MeshResourceDesc merd;
-            memset( &merd, 0, sizeof(merd) );
-            merd.prim = fatmesh.primitive;
-            merd.numvtx = fatmesh.vertices.getVertexCount();
-            merd.numidx = fatmesh.indices.size();
-            merd.idx32 = true; // TODO: use 16-bit index buffer, when possible.
+            memset(&merd, 0, sizeof(merd));
+            merd.prim       = fatmesh.primitive;
+            merd.numvtx     = fatmesh.vertices.getVertexCount();
+            merd.numidx     = fatmesh.indices.size();
+            merd.idx32      = true; // TODO: use 16-bit index buffer, when possible.
             merd.offsets[0] = 0;
-            merd.indices = (void*)fatmesh.indices.rawptr();
+            merd.indices    = (void *) fatmesh.indices.rawptr();
 
             // setup vertex format
-            fatmesh.vertices.GenerateMeshVertexFormat( merd.vtxfmt );
-            merd.strides[0] = math::alignToPowerOf2<uint16>( merd.vtxfmt.calcStreamStride( 0 ), 16 );
+            fatmesh.vertices.GenerateMeshVertexFormat(merd.vtxfmt);
+            merd.strides[0] = math::alignToPowerOf2<uint16>(merd.vtxfmt.calcStreamStride(0), 16);
 
             // copy vertex data
-            if( !vb.resize( merd.strides[0] * fatmesh.vertices.getVertexCount() ) ) continue;
-            if( !fatmesh.vertices.GenerateVertexStream( merd.vtxfmt, 0, merd.strides[0], vb.rawptr(), vb.size() ) ) continue;
+            if (!vb.resize(merd.strides[0] * fatmesh.vertices.getVertexCount())) continue;
+            if (!fatmesh.vertices.GenerateVertexStream(merd.vtxfmt, 0, merd.strides[0], vb.rawptr(), vb.size())) continue;
             merd.vertices[0] = vb.rawptr();
 
             // convert integer joint index to floats to workaround hardware liminations (not all hardware supports integer
             // vertex elements)
             uint32 jointSemanticIndex;
-            if( merd.vtxfmt.hasSemantic( "JOINT_ID", &jointSemanticIndex ) )
-            {
+            if (merd.vtxfmt.hasSemantic("JOINT_ID", &jointSemanticIndex)) {
                 MeshVertexElement & mve = merd.vtxfmt.elements[jointSemanticIndex];
-                if( mve.format == ColorFormat::UINT4 )
-                {
+                if (mve.format == ColorFormat::UINT4) {
                     mve.format = ColorFormat::FLOAT4;
-                    uint8 * p = (uint8*)merd.vertices[0] + mve.offset;
-                    for( uint32 i = 0; i < merd.numvtx; ++i, p += merd.strides[0] )
-                    {
+                    uint8 * p  = (uint8 *) merd.vertices[0] + mve.offset;
+                    for (uint32 i = 0; i < merd.numvtx; ++i, p += merd.strides[0]) {
                         // Offset the value by 0.5 to avoid float to integer rounding error. Or else,
                         // it is possible that an integer value, for example 10, could be converted to
                         // floating point value 9.999999999. When it is converted back to integer
                         // in shader, it becomes 9.
-                        uint32 * joints = (uint32*)p;
-                        ((float*)joints)[0] = (float)(joints[0]==FatJoint::NO_JOINT?255:joints[0]) + 0.5f;
-                        ((float*)joints)[1] = (float)(joints[1]==FatJoint::NO_JOINT?255:joints[1]) + 0.5f;
-                        ((float*)joints)[2] = (float)(joints[2]==FatJoint::NO_JOINT?255:joints[2]) + 0.5f;
-                        ((float*)joints)[3] = (float)(joints[3]==FatJoint::NO_JOINT?255:joints[3]) + 0.5f;
+                        uint32 * joints       = (uint32 *) p;
+                        ((float *) joints)[0] = (float) (joints[0] == FatJoint::NO_JOINT ? 255 : joints[0]) + 0.5f;
+                        ((float *) joints)[1] = (float) (joints[1] == FatJoint::NO_JOINT ? 255 : joints[1]) + 0.5f;
+                        ((float *) joints)[2] = (float) (joints[2] == FatJoint::NO_JOINT ? 255 : joints[2]) + 0.5f;
+                        ((float *) joints)[3] = (float) (joints[3] == FatJoint::NO_JOINT ? 255 : joints[3]) + 0.5f;
                     }
                 }
             }
 
             // create GPU mesh resource
-            mesh = gdb.createResource<MeshResource>( meshName );
-            if( !mesh || !mesh->reset( &merd ) )
-            {
-                continue;
-            }
+            mesh = gdb.createResource<MeshResource>(meshName);
+            if (!mesh || !mesh->reset(&merd)) { continue; }
         }
 
-        GN_ASSERT( mesh );
+        GN_ASSERT(mesh);
 
         // reserve memory for mesh subsets.
-        if( !mSubsets.reserve( fatmesh.subsets.size() ) )
-        {
-            GN_ERROR(sLogger)( "Out of memory." );
+        if (!mSubsets.reserve(fatmesh.subsets.size())) {
+            GN_ERROR(sLogger)("Out of memory.");
             clear();
             return false;
         }
 
         // Loop through all mesh subsets. Create one model for each subset.
-        for( size_t s = 0; s < fatmesh.subsets.size(); ++s )
-        {
+        for (size_t s = 0; s < fatmesh.subsets.size(); ++s) {
             const FatMeshSubset & fatsubset = fatmesh.subsets[s];
-            const FatMaterial   & fatmat    = fatmodel.materials[fatsubset.material];
+            const FatMaterial &   fatmat    = fatmodel.materials[fatsubset.material];
 
             uint32 jointCountInTheSubset = fatsubset.joints.size();
-            if( jointCountInTheSubset > MAX_JOINTS_PER_DRAW )
-            {
-                GN_ERROR(sLogger)( "Ignore mesh %s subset %d. It contains too many joints (#%d) then the current code allowed (#%d)",
-                    meshName.rawptr(), s, jointCountInTheSubset, MAX_JOINTS_PER_DRAW );
+            if (jointCountInTheSubset > MAX_JOINTS_PER_DRAW) {
+                GN_ERROR(sLogger)
+                ("Ignore mesh %s subset %d. It contains too many joints (#%d) then the current code allowed (#%d)", meshName.rawptr(), s, jointCountInTheSubset,
+                 MAX_JOINTS_PER_DRAW);
                 continue;
             }
 
             // setup model descriptor
             ModelResourceDesc mord = sSkinnedDiffuseModelDesc();
-            mord.mesh = meshName;
-            mord.subset.basevtx = fatsubset.basevtx;
-            mord.subset.numvtx = fatsubset.numvtx;
-            mord.subset.startidx = fatsubset.startidx;
-            mord.subset.numidx = fatsubset.numidx;
+            mord.mesh              = meshName;
+            mord.subset.basevtx    = fatsubset.basevtx;
+            mord.subset.numvtx     = fatsubset.numvtx;
+            mord.subset.startidx   = fatsubset.startidx;
+            mord.subset.numidx     = fatsubset.numidx;
 
             // associate textures to the model
-            if( mord.hasTexture("ALBEDO_TEXTURE") && !fatmat.albedoTexture.empty() )
-            {
-                mord.textures["ALBEDO_TEXTURE"].resourceName = fatmat.albedoTexture;
-            }
-            if( mord.hasTexture("NORMAL_TEXTURE") && !fatmat.normalTexture.empty() )
-            {
-                mord.textures["NORMAL_TEXTURE"].resourceName = fatmat.normalTexture;
-            }
+            if (mord.hasTexture("ALBEDO_TEXTURE") && !fatmat.albedoTexture.empty()) { mord.textures["ALBEDO_TEXTURE"].resourceName = fatmat.albedoTexture; }
+            if (mord.hasTexture("NORMAL_TEXTURE") && !fatmat.normalTexture.empty()) { mord.textures["NORMAL_TEXTURE"].resourceName = fatmat.normalTexture; }
 
             // create new GPU model resource
-            AutoRef<ModelResource> model = gdb.createResource<ModelResource>( NULL );
-            if( !model || !model->reset( &mord ) ) continue;
+            AutoRef<ModelResource> model = gdb.createResource<ModelResource>(NULL);
+            if (!model || !model->reset(&mord)) continue;
 
             // add model to visual component.
-            if( !mVisual->addModel( model ) ) continue;
+            if (!mVisual->addModel(model)) continue;
 
             // remember the subset information.
-            GN_VERIFY( mSubsets.resize( mSubsets.size() + 1 ) );
+            GN_VERIFY(mSubsets.resize(mSubsets.size() + 1));
             mSubsets.back().skeleton = fatmesh.skeleton;
-            mSubsets.back().joints = fatsubset.joints;
+            mSubsets.back().joints   = fatsubset.joints;
 
             // bind joint matrix uniform to the mesh.
             uint32 skeletonIndex = fatmesh.skeleton;
-            if( skeletonIndex != FatMesh::NO_SKELETON )
-            {
-                model->setUniformResource( "JOINT_MATRICES", mSkeletons[skeletonIndex].matrices );
-            }
+            if (skeletonIndex != FatMesh::NO_SKELETON) { model->setUniformResource("JOINT_MATRICES", mSkeletons[skeletonIndex].matrices); }
         }
     }
 
     // loading all animations
-    if( mAnimations.resize( fatmodel.skinAnimations.size() ) )
-    {
-        for( uint32 i = 0; i < fatmodel.skinAnimations.size(); ++i )
-        {
-            mAnimations[i] = new SkinnedAnimation;
+    if (mAnimations.resize(fatmodel.skinAnimations.size())) {
+        for (uint32 i = 0; i < fatmodel.skinAnimations.size(); ++i) {
+            mAnimations[i]           = new SkinnedAnimation;
             const FatAnimation & src = fatmodel.skinAnimations[i];
-            FatAnimation & dst = *(FatAnimation*)mAnimations[i];
-            dst = src;
-            GN_ASSERT( dst.duration == src.duration );
+            FatAnimation &       dst = *(FatAnimation *) mAnimations[i];
+            dst                      = src;
+            GN_ASSERT(dst.duration == src.duration);
         }
-    }
-    else
-    {
-        GN_ERROR(sLogger)( "Fail to load animations: out of memory." );
+    } else {
+        GN_ERROR(sLogger)("Fail to load animations: out of memory.");
     }
 
     // update bounding box
-    mRootSpacial.setSelfBoundingBox( fatmodel.bbox );
+    mRootSpacial.setSelfBoundingBox(fatmodel.bbox);
 
     return true;
 }
@@ -1052,45 +948,40 @@ bool GN::engine::SkinnedMesh::loadFromFatModel( const GN::gfx::FatModel & fatmod
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::engine::SkinnedMesh::loadFromFile( const StrA & filename )
-{
+bool GN::engine::SkinnedMesh::loadFromFile(const StrA & filename) {
     FatModel fm;
-    if( !fm.loadFromFile( filename ) ) return false;
-    return loadFromFatModel( fm );
+    if (!fm.loadFromFile(filename)) return false;
+    return loadFromFatModel(fm);
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-void GN::engine::SkinnedMesh::drawSkeletons( uint32 colorInRGBA, const Matrix44f & transform )
-{
+void GN::engine::SkinnedMesh::drawSkeletons(uint32 colorInRGBA, const Matrix44f & transform) {
     LineRenderer * lr = getLineRenderer();
-    if( NULL == lr ) return;
+    if (NULL == lr) return;
 
-    if( !lr->batchingBegin() ) return;
+    if (!lr->batchingBegin()) return;
 
     Vector3f line[2];
 
-    Vector3f zero( 0, 0, 0 );
+    Vector3f zero(0, 0, 0);
 
     Matrix44f parent, current;
 
     Matrix44f finalTransform = transform * mRootSpacial.getLocal2Root();
 
     // Loop through skeletons
-    for( uint32 i = 0; i < mSkeletons.size(); ++i )
-    {
+    for (uint32 i = 0; i < mSkeletons.size(); ++i) {
         const Skeleton & sk = mSkeletons[i];
 
         // Loop through joints
-        for( uint32 j = 0; j < sk.jointCount; ++j )
-        {
+        for (uint32 j = 0; j < sk.jointCount; ++j) {
             const JointHierarchy & h = sk.hierarchy[j];
 
             // if the joint has parent, then draw
             // a line between the joint and the parent.
-            if( FatJoint::NO_JOINT != h.parent )
-            {
+            if (FatJoint::NO_JOINT != h.parent) {
 #if 1
                 //
                 // Show rest pose skeleton
@@ -1101,8 +992,8 @@ void GN::engine::SkinnedMesh::drawSkeletons( uint32 colorInRGBA, const Matrix44f
                 //
                 parent  = sk.invRestPose[h.parent];
                 current = sk.invRestPose[j];
-                parent.transformPoint( line[0], zero );
-                current.transformPoint( line[1], zero );
+                parent.transformPoint(line[0], zero);
+                current.transformPoint(line[1], zero);
 #elif 0
                 //
                 // Show bind pose skeleton.
@@ -1111,10 +1002,10 @@ void GN::engine::SkinnedMesh::drawSkeletons( uint32 colorInRGBA, const Matrix44f
                 // joint space. So we use invese of it to transform
                 // Point (0,0,0) to joint position in model space.
                 //
-                parent = Matrix44f::sInverse( sk.bindPose[h.parent].model2joint );
-                current = Matrix44f::sInverse( sk.bindPose[j].model2joint );
-                parent.transformPoint( line[0], zero );
-                current.transformPoint( line[1], zero );
+                parent  = Matrix44f::sInverse(sk.bindPose[h.parent].model2joint);
+                current = Matrix44f::sInverse(sk.bindPose[j].model2joint);
+                parent.transformPoint(line[0], zero);
+                current.transformPoint(line[1], zero);
 #else
                 //
                 // Show rest pose skeleton, using transformation stored
@@ -1125,23 +1016,18 @@ void GN::engine::SkinnedMesh::drawSkeletons( uint32 colorInRGBA, const Matrix44f
                 //
 
                 // transform to bind pose first
-                parent = Matrix44f::sInverse( sk.bindPose[h.parent].model2joint );
-                current = Matrix44f::sInverse( sk.bindPose[j].model2joint );
-                parent.transformPoint( line[0], zero );
-                current.transformPoint( line[1], zero );
+                parent  = Matrix44f::sInverse(sk.bindPose[h.parent].model2joint);
+                current = Matrix44f::sInverse(sk.bindPose[j].model2joint);
+                parent.transformPoint(line[0], zero);
+                current.transformPoint(line[1], zero);
 
                 // then transform to rest pose
-                const Matrix44f * b2r = (const Matrix44f*)sk.matrices->uniform()->getval();
-                b2r[h.parent].transformPoint( line[0], line[0] );
-                b2r[j].transformPoint( line[1], line[1] );
+                const Matrix44f * b2r = (const Matrix44f *) sk.matrices->uniform()->getval();
+                b2r[h.parent].transformPoint(line[0], line[0]);
+                b2r[j].transformPoint(line[1], line[1]);
 #endif
                 // draw a line between parent and current joint.
-                lr->drawLines(
-                    line,
-                    sizeof(line[0]),
-                    2,
-                    colorInRGBA,
-                    finalTransform );
+                lr->drawLines(line, sizeof(line[0]), 2, colorInRGBA, finalTransform);
             }
         }
     }

@@ -38,6 +38,27 @@ function catch_batch_env( $batch, $arg )
 }
 
 # ==============================================================================
+# Setup Vulkan SDK
+# ==============================================================================
+
+if (-not $(test-path env:VULKAN_SDK)) {
+    write-host -ForegroundColor red -NoNewline "Environment variable VULKAN_SDK is not set. Please run "
+    write-host -ForegroundColor yellow  -NoNewline "install-vulkan-sdk.ps1 "
+    write-host -ForegroundColor red "to download and install Vulkan SDK."
+} elseif (-not $(test-path $env:VULKAN_SDK)) {
+    fatal "Environment variable VULKAN_SDK is not pointing to valid folder."
+}
+
+# ==============================================================================
+# Check Python support
+# ==============================================================================
+
+$py = [System.Version]$(python.exe -V).Substring(7)
+if ([System.Version]"3.8.0" -gt $py) {
+    warn "Python is not installed or current version ($py) is too low. Please upgrade to 3.8.0+ for best script compatibility."
+}
+
+# ==============================================================================
 # Define global functions
 # ==============================================================================
 
@@ -527,4 +548,5 @@ GARNET_ROOT              = $env:GARNET_ROOT
 GN_BUILD_CMAKE_GENERATOR = $env:GN_BUILD_CMAKE_GENERATOR
 GN_BUILD_TARGET_CPU      = $env:GN_BUILD_TARGET_CPU
 GN_BUILD_DIR             = $env:GN_BUILD_DIR
+VULKAN_SDK               = $env:VULKAN_SDK
 "

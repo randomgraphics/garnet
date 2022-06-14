@@ -1,13 +1,10 @@
 #include "garnet/GNbase.h"
 
-static void sPrintUsage()
-{
-    printf(
-        "Usage: GNut <options>\n"
-        "Options:\n"
-        "   -h, -?      Print help screen\n"
-        "   -v          Verbose mode.\n"
-        );
+static void sPrintUsage() {
+    printf("Usage: GNut <options>\n"
+           "Options:\n"
+           "   -h, -?      Print help screen\n"
+           "   -v          Verbose mode.\n");
 };
 
 //
@@ -15,34 +12,26 @@ static void sPrintUsage()
 //  - This function will be called before any test cases.
 //  - Return non-zero means failed.
 //
-int myInit( int argc, const char * argv[] )
-{
+int myInit(int argc, const char * argv[]) {
     GN::enableCRTMemoryCheck();
 
     // parse command line arguments
     bool verbose = false;
-    for( int i = 1; i < argc; ++i )
-    {
+    for (int i = 1; i < argc; ++i) {
         const char * a = argv[i];
 
-        if( '-' == *a
-            #if GN_MSWIN
+        if ('-' == *a
+#if GN_MSWIN
             || '/' == *a
-            #endif
-            )
-        {
-            if( 0 == GN::str::compareI( a+1, "h" ) )
-            {
+#endif
+        ) {
+            if (0 == GN::str::compareI(a + 1, "h")) {
                 sPrintUsage();
                 exit(-1);
-            }
-            else if( 0 == GN::str::compareI( a+1, "v" ) )
-            {
+            } else if (0 == GN::str::compareI(a + 1, "v")) {
                 verbose = true;
-            }
-            else
-            {
-                fprintf( stderr, "Unknown command line option: %s\n\n", a );
+            } else {
+                fprintf(stderr, "Unknown command line option: %s\n\n", a);
                 sPrintUsage();
                 exit(-1);
             }
@@ -50,10 +39,7 @@ int myInit( int argc, const char * argv[] )
     }
 
     // setup environment variables to control log behavior.
-    if( !verbose )
-    {
-        GN::putEnv( "GN_LOG_QUIET", "1" );
-    }
+    if (!verbose) { GN::putEnv("GN_LOG_QUIET", "1"); }
 
     return 0;
 }

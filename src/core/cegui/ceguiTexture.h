@@ -8,78 +8,73 @@
 
 #ifdef HAS_CEGUI
 
-#include "ceguiHeaders.h"
+    #include "ceguiHeaders.h"
 
-namespace CEGUI
-{
+namespace CEGUI {
+///
+/// CEGUI Texture adapter
+///
+class GarnetTexture : public Texture {
+    // ********************************
+    // ctor/dtor
+    // ********************************
+
+    //@{
+public:
+    GarnetTexture(Renderer * r): Texture(r), mWidth(0), mHeight(0), mMemBuffer(0) {}
+    virtual ~GarnetTexture() {
+        dispose();
+        GN::safeHeapDealloc(mMemBuffer);
+    }
+    //@}
+
+    // ********************************
+    // from CECUI::Texture
+    // ********************************
+public:
+    virtual ushort getWidth(void) const { return mWidth; }
+    virtual ushort getHeight(void) const { return mHeight; }
+    virtual void   loadFromFile(const String & filename, const String & resourceGroup);
+    virtual void   loadFromMemory(const void * buffPtr, uint buffWidth, uint buffHeight);
+
+    // ********************************
+    // public functions
+    // ********************************
+
+public:
     ///
-    /// CEGUI Texture adapter
+    /// reload the content
     ///
-    class GarnetTexture : public Texture
-    {
-        // ********************************
-        // ctor/dtor
-        // ********************************
+    bool reload();
 
-        //@{
-    public:
-        GarnetTexture( Renderer * r )
-            : Texture(r)
-            , mWidth(0), mHeight(0)
-            , mMemBuffer(0) {}
-        virtual ~GarnetTexture() { dispose(); GN::safeHeapDealloc(mMemBuffer); }
-        //@}
+    ///
+    /// dispose the content
+    ///
+    void dispose() { mGarnetTexture.clear(); }
 
-        // ********************************
-        // from CECUI::Texture
-        // ********************************
-    public:
+    ///
+    /// Get internal texture handle
+    ///
+    GN::gfx::Texture * getGarnetTexture() const { return mGarnetTexture; }
 
-    	virtual	ushort  getWidth(void) const { return mWidth; }
-    	virtual	ushort  getHeight(void) const { return mHeight; }
-    	virtual void    loadFromFile(const String& filename, const String& resourceGroup);
-    	virtual void    loadFromMemory(const void* buffPtr, uint buffWidth, uint buffHeight);
+    // ********************************
+    // private variables
+    // ********************************
+private:
+    GN::AutoRef<GN::gfx::Texture> mGarnetTexture;
+    ushort                        mWidth;
+    ushort                        mHeight;
 
-        // ********************************
-        // public functions
-        // ********************************
+    String mFileName;
+    String mGroup;
+    void * mMemBuffer;
 
-   public:
-
-        ///
-        /// reload the content
-        ///
-        bool reload();
-
-        ///
-        /// dispose the content
-        ///
-        void dispose() { mGarnetTexture.clear(); }
-
-        ///
-        /// Get internal texture handle
-        ///
-        GN::gfx::Texture * getGarnetTexture() const { return mGarnetTexture; }
-
-        // ********************************
-        // private variables
-        // ********************************
-    private:
-
-        GN::AutoRef<GN::gfx::Texture> mGarnetTexture;
-        ushort mWidth;
-        ushort mHeight;
-
-        String mFileName;
-        String mGroup;
-        void * mMemBuffer;
-
-        // ********************************
-        // private functions
-        // ********************************
-    private:
-    };
-}
+    // ********************************
+    // private functions
+    // ********************************
+private:
+};
+} // namespace CEGUI
 
 #endif
 

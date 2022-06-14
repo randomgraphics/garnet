@@ -7,20 +7,19 @@
 //---------------------------------------------------------------------------
 #pragma once
 
-
 #ifndef _D2DBASETYPES_INCLUDED
-#define _D2DBASETYPES_INCLUDED
+    #define _D2DBASETYPES_INCLUDED
 
-#ifndef COM_NO_WINDOWS_H
-#include <windows.h>
-#endif // #ifndef COM_NO_WINDOWS_H
+    #ifndef COM_NO_WINDOWS_H
+        #include <windows.h>
+    #endif // #ifndef COM_NO_WINDOWS_H
 
-#if _MSC_VER >= 1200
-#pragma warning(push)
-#endif
-#pragma warning(disable:4201) // anonymous unions warning
+    #if _MSC_VER >= 1200
+        #pragma warning(push)
+    #endif
+    #pragma warning(disable : 4201) // anonymous unions warning
 
-#ifndef D3DCOLORVALUE_DEFINED
+    #ifndef D3DCOLORVALUE_DEFINED
 
 //+-----------------------------------------------------------------------------
 //
@@ -28,8 +27,7 @@
 //      D3DCOLORVALUE
 //
 //------------------------------------------------------------------------------
-typedef struct D3DCOLORVALUE
-{
+typedef struct D3DCOLORVALUE {
     FLOAT r;
     FLOAT g;
     FLOAT b;
@@ -37,9 +35,8 @@ typedef struct D3DCOLORVALUE
 
 } D3DCOLORVALUE;
 
-#define D3DCOLORVALUE_DEFINED
-#endif
-
+        #define D3DCOLORVALUE_DEFINED
+    #endif
 
 //+-----------------------------------------------------------------------------
 //
@@ -47,13 +44,11 @@ typedef struct D3DCOLORVALUE
 //      D2D_POINT_2U
 //
 //------------------------------------------------------------------------------
-typedef struct D2D_POINT_2U
-{
+typedef struct D2D_POINT_2U {
     UINT32 x;
     UINT32 y;
 
 } D2D_POINT_2U;
-
 
 //+-----------------------------------------------------------------------------
 //
@@ -61,8 +56,7 @@ typedef struct D2D_POINT_2U
 //      D2D_POINT_2F
 //
 //------------------------------------------------------------------------------
-typedef struct D2D_POINT_2F
-{
+typedef struct D2D_POINT_2F {
     FLOAT x;
     FLOAT y;
 
@@ -76,13 +70,11 @@ typedef POINT D2D_POINT_2L;
 //      D2D_VECTOR_2F
 //
 //------------------------------------------------------------------------------
-typedef struct D2D_VECTOR_2F
-{
+typedef struct D2D_VECTOR_2F {
     FLOAT x;
     FLOAT y;
 
 } D2D_VECTOR_2F;
-
 
 //+-----------------------------------------------------------------------------
 //
@@ -90,14 +82,12 @@ typedef struct D2D_VECTOR_2F
 //      D2D_VECTOR_3F
 //
 //------------------------------------------------------------------------------
-typedef struct D2D_VECTOR_3F
-{
+typedef struct D2D_VECTOR_3F {
     FLOAT x;
     FLOAT y;
     FLOAT z;
 
 } D2D_VECTOR_3F;
-
 
 //+-----------------------------------------------------------------------------
 //
@@ -105,8 +95,7 @@ typedef struct D2D_VECTOR_3F
 //      D2D_VECTOR_4F
 //
 //------------------------------------------------------------------------------
-typedef struct D2D_VECTOR_4F
-{
+typedef struct D2D_VECTOR_4F {
     FLOAT x;
     FLOAT y;
     FLOAT z;
@@ -114,15 +103,13 @@ typedef struct D2D_VECTOR_4F
 
 } D2D_VECTOR_4F;
 
-
 //+-----------------------------------------------------------------------------
 //
 //  Struct:
 //      D2D_RECT_F
 //
 //------------------------------------------------------------------------------
-typedef struct D2D_RECT_F
-{
+typedef struct D2D_RECT_F {
     FLOAT left;
     FLOAT top;
     FLOAT right;
@@ -130,15 +117,13 @@ typedef struct D2D_RECT_F
 
 } D2D_RECT_F;
 
-
 //+-----------------------------------------------------------------------------
 //
 //  Struct:
 //      D2D_RECT_U
 //
 //------------------------------------------------------------------------------
-typedef struct D2D_RECT_U
-{
+typedef struct D2D_RECT_U {
     UINT32 left;
     UINT32 top;
     UINT32 right;
@@ -154,13 +139,11 @@ typedef RECT D2D_RECT_L;
 //      D2D_SIZE_F
 //
 //------------------------------------------------------------------------------
-typedef struct D2D_SIZE_F
-{
+typedef struct D2D_SIZE_F {
     FLOAT width;
     FLOAT height;
 
 } D2D_SIZE_F;
-
 
 //+-----------------------------------------------------------------------------
 //
@@ -168,8 +151,7 @@ typedef struct D2D_SIZE_F
 //      D2D_SIZE_U
 //
 //------------------------------------------------------------------------------
-typedef struct D2D_SIZE_U
-{
+typedef struct D2D_SIZE_U {
     UINT32 width;
     UINT32 height;
 
@@ -183,8 +165,7 @@ typedef D3DCOLORVALUE D2D_COLOR_F;
 //      D2D_MATRIX_3X2_F
 //
 //------------------------------------------------------------------------------
-typedef struct D2D_MATRIX_3X2_F
-{
+typedef struct D2D_MATRIX_3X2_F {
     FLOAT _11;
     FLOAT _12;
     FLOAT _21;
@@ -194,33 +175,26 @@ typedef struct D2D_MATRIX_3X2_F
 
 } D2D_MATRIX_3X2_F;
 
-
 //+-----------------------------------------------------------------------------
 //
 //  Struct:
 //      D2D_MATRIX_4X3_F
 //
 //------------------------------------------------------------------------------
-typedef struct D2D_MATRIX_4X3_F
-{
-    
-    union
-    {
-        struct 
-        {
+typedef struct D2D_MATRIX_4X3_F {
+
+    union {
+        struct {
             FLOAT _11, _12, _13;
             FLOAT _21, _22, _23;
             FLOAT _31, _32, _33;
             FLOAT _41, _42, _43;
-        
-        } ;
-        
+        };
+
         FLOAT m[4][3];
     };
 
-
 } D2D_MATRIX_4X3_F;
-
 
 //+-----------------------------------------------------------------------------
 //
@@ -228,26 +202,20 @@ typedef struct D2D_MATRIX_4X3_F
 //      D2D_MATRIX_4X4_F
 //
 //------------------------------------------------------------------------------
-typedef struct D2D_MATRIX_4X4_F
-{
-    
-    union
-    {
-        struct 
-        {
+typedef struct D2D_MATRIX_4X4_F {
+
+    union {
+        struct {
             FLOAT _11, _12, _13, _14;
             FLOAT _21, _22, _23, _24;
             FLOAT _31, _32, _33, _34;
             FLOAT _41, _42, _43, _44;
-        
-        } ;
-        
+        };
+
         FLOAT m[4][4];
     };
 
-
 } D2D_MATRIX_4X4_F;
-
 
 //+-----------------------------------------------------------------------------
 //
@@ -255,31 +223,25 @@ typedef struct D2D_MATRIX_4X4_F
 //      D2D_MATRIX_5X4_F
 //
 //------------------------------------------------------------------------------
-typedef struct D2D_MATRIX_5X4_F
-{
-    
-    union
-    {
-        struct 
-        {
+typedef struct D2D_MATRIX_5X4_F {
+
+    union {
+        struct {
             FLOAT _11, _12, _13, _14;
             FLOAT _21, _22, _23, _24;
             FLOAT _31, _32, _33, _34;
             FLOAT _41, _42, _43, _44;
             FLOAT _51, _52, _53, _54;
-        
-        } ;
-        
+        };
+
         FLOAT m[5][4];
     };
 
-
 } D2D_MATRIX_5X4_F;
 
-
-#if _MSC_VER >= 1200
-#pragma warning(pop)
-#else
-#pragma warning(default:4201)
-#endif
+    #if _MSC_VER >= 1200
+        #pragma warning(pop)
+    #else
+        #pragma warning(default : 4201)
+    #endif
 #endif // #ifndef _D2DBASETYPES_INCLUDED

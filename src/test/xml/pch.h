@@ -9,12 +9,12 @@
 #include "garnet/GNbase.h"
 
 #if GN_XBOX2
-#include <xtl.h>
+    #include <xtl.h>
 #elif GN_WINPC
-#ifndef NOMINMAX
-#define NOMINMAX
-#endif
-#include <windows.h>
+    #ifndef NOMINMAX
+        #define NOMINMAX
+    #endif
+    #include <windows.h>
 #endif
 
 // *****************************************************************************

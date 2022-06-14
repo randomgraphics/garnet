@@ -1,26 +1,20 @@
 //
 //
 // -----------------------------------------------------------------------------
-inline void GN::input::BasicInput::updateMousePosition( int x, int y, bool notify )
-{
+inline void GN::input::BasicInput::updateMousePosition(int x, int y, bool notify) {
     GN_GUARD_SLOW;
 
-    if( notify )
-    {
+    if (notify) {
         int old;
-        if( mAxisStatus[Axis::MOUSE_X] != x )
-        {
+        if (mAxisStatus[Axis::MOUSE_X] != x) {
             old = mAxisStatus[Axis::MOUSE_X];
-            triggerAxisMove( Axis::MOUSE_X, x - old );
+            triggerAxisMove(Axis::MOUSE_X, x - old);
         }
-        if( mAxisStatus[Axis::MOUSE_Y] != y )
-        {
+        if (mAxisStatus[Axis::MOUSE_Y] != y) {
             old = mAxisStatus[Axis::MOUSE_Y];
-            triggerAxisMove( Axis::MOUSE_Y, y - old );
+            triggerAxisMove(Axis::MOUSE_Y, y - old);
         }
-    }
-    else
-    {
+    } else {
         mAxisStatus[Axis::MOUSE_X] = x;
         mAxisStatus[Axis::MOUSE_Y] = y;
     }

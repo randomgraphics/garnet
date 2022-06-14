@@ -9,15 +9,13 @@
 
 #include "pch.h"
 
-
 #ifdef FXDPF
 
 //
 // DPF
 //
 
-void cdecl D3DXDebugPrintf(UINT lvl, LPCSTR szFormat, ...)
-{
+void cdecl D3DXDebugPrintf(UINT lvl, LPCSTR szFormat, ...) {
     static UINT uDebugLevel = (UINT) -1;
 
     char strA[4096];
@@ -40,15 +38,13 @@ void cdecl D3DXDebugPrintf(UINT lvl, LPCSTR szFormat, ...)
 void cdecl D3DXDebugPrintf(UINT lvl, LPCSTR szFormat, ...) {}
 #endif
 
-
 //
 // D3DXASSERT
 //
 
 #ifdef _DEBUG
 
-int WINAPI D3DXDebugAssert(LPCSTR szFile, int nLine, LPCSTR szCondition)
-{
+int WINAPI D3DXDebugAssert(LPCSTR szFile, int nLine, LPCSTR szCondition) {
     char str[512];
 
     // Print message to debug console
@@ -59,4 +55,3 @@ int WINAPI D3DXDebugAssert(LPCSTR szFile, int nLine, LPCSTR szCondition)
     return 0;
 }
 #endif
-

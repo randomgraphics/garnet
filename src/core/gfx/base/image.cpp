@@ -1,12 +1,12 @@
 #include "pch.h"
 #include "imageDDS.h"
 #define STB_IMAGE_IMPLEMENTATION
-#define STBI_ASSERT GN_ASSERT
-#define STBI_MALLOC GN::HeapMemory::alloc
+#define STBI_ASSERT  GN_ASSERT
+#define STBI_MALLOC  GN::HeapMemory::alloc
 #define STBI_REALLOC GN::HeapMemory::realloc
-#define STBI_FREE GN::HeapMemory::dealloc
+#define STBI_FREE    GN::HeapMemory::dealloc
 #include "stb_image.h"
-   
+
 using namespace GN;
 using namespace GN::gfx;
 
@@ -34,8 +34,8 @@ GN_API bool GN::gfx::ImagePlaneDesc::valid() const {
 
     // check pitches
     auto & cld = format.layoutDesc();
-    auto w = math::alignToPowerOf2<uint32>( width, cld.blockWidth );
-    auto h = math::alignToPowerOf2<uint32>( height, cld.blockHeight );
+    auto   w   = math::alignToPowerOf2<uint32>(width, cld.blockWidth);
+    auto   h   = math::alignToPowerOf2<uint32>(height, cld.blockHeight);
     if (step < cld.bits) {
         GN_ERROR(sLogger)("step is too small!");
         return false;
@@ -59,9 +59,7 @@ GN_API bool GN::gfx::ImagePlaneDesc::valid() const {
         GN_ERROR(sLogger)("alignment is not power of 2.");
         return false;
     }
-    if (offset % rowAlignment) {
-        GN_ERROR(sLogger)("offset is not aligned.");
-    }
+    if (offset % rowAlignment) { GN_ERROR(sLogger)("offset is not aligned."); }
     if (pitch % rowAlignment) {
         GN_ERROR(sLogger)("pitch is not aligned.");
         return false;
@@ -78,7 +76,8 @@ GN_API bool GN::gfx::ImagePlaneDesc::valid() const {
 //
 //
 // -----------------------------------------------------------------------------
-GN_API GN::gfx::ImagePlaneDesc GN::gfx::ImagePlaneDesc::make(ColorFormat format, size_t width, size_t height, size_t depth, size_t step, size_t pitch, size_t slice, size_t alignment) {
+GN_API GN::gfx::ImagePlaneDesc GN::gfx::ImagePlaneDesc::make(ColorFormat format, size_t width, size_t height, size_t depth, size_t step, size_t pitch,
+                                                             size_t slice, size_t alignment) {
 
     if (!format.valid()) {
         GN_ERROR(sLogger)("invalid color format: 0x%X", format.u32);
@@ -96,19 +95,19 @@ GN_API GN::gfx::ImagePlaneDesc GN::gfx::ImagePlaneDesc::make(ColorFormat format,
 
     ImagePlaneDesc p;
     p.format = format;
-    p.width  = (uint32_t)(width ? width : 1);
-    p.height = (uint32_t)(height ? height : 1);
-    p.depth  = (uint32_t)(depth ? depth : 1);
-    p.step   = std::max((uint32_t)step, (uint32_t)fd.bits);
+    p.width  = (uint32_t) (width ? width : 1);
+    p.height = (uint32_t) (height ? height : 1);
+    p.depth  = (uint32_t) (depth ? depth : 1);
+    p.step   = std::max((uint32_t) step, (uint32_t) fd.bits);
 
     auto aw = math::alignToPowerOf2<uint32_t>(p.width, fd.blockWidth);
-    auto ah = math::alignToPowerOf2<uint32_t>(p.height, fd.blockHeight); 
+    auto ah = math::alignToPowerOf2<uint32_t>(p.height, fd.blockHeight);
 
-    p.pitch  = std::max(aw * p.step / 8u, (uint32_t)pitch);
-    p.pitch  = (p.pitch + (uint32_t)alignment - 1) & ~((uint32_t)alignment - 1); // make sure pitch meets alignment requirement.
-    p.slice  = std::max(p.pitch * ah, (uint32_t)slice);
-    p.size   = p.slice * p.depth;
-    p.rowAlignment = (uint32_t)alignment;
+    p.pitch        = std::max(aw * p.step / 8u, (uint32_t) pitch);
+    p.pitch        = (p.pitch + (uint32_t) alignment - 1) & ~((uint32_t) alignment - 1); // make sure pitch meets alignment requirement.
+    p.slice        = std::max(p.pitch * ah, (uint32_t) slice);
+    p.size         = p.slice * p.depth;
+    p.rowAlignment = (uint32_t) alignment;
 
     // done
     GN_ASSERT(p.valid());
@@ -140,16 +139,15 @@ GN_API bool GN::gfx::ImageDesc::valid() const {
     }
 
     // check mipmaps
-    for( uint32 f = 0; f < layers; ++f )
-    for( uint32 l = 0; l < levels; ++l )
-    {
-        auto & m = plane(f, l);
+    for (uint32 f = 0; f < layers; ++f)
+        for (uint32 l = 0; l < levels; ++l) {
+            auto & m = plane(f, l);
 
-        if (!m.valid()) {
-            GN_ERROR(sLogger)("plane descritor [%d] is invalid", index(f, l));
-            return false;
+            if (!m.valid()) {
+                GN_ERROR(sLogger)("plane descritor [%d] is invalid", index(f, l));
+                return false;
+            }
         }
-    }
 
     // success
     return true;
@@ -164,7 +162,7 @@ GN_API void GN::gfx::ImageDesc::reset(const ImagePlaneDesc & basemap, uint32_t l
         planes.clear();
         layers = 0;
         levels = 0;
-        size = 0;
+        size   = 0;
         GN_ASSERT(valid());
         return;
     }
@@ -175,9 +173,9 @@ GN_API void GN::gfx::ImageDesc::reset(const ImagePlaneDesc & basemap, uint32_t l
 
     // build full mipmap chain
     ImagePlaneDesc mip = basemap;
-    levels = 0;
-    for(;;) {
-        for(size_t i = 0; i < layers_; ++i) {
+    levels             = 0;
+    for (;;) {
+        for (size_t i = 0; i < layers_; ++i) {
             planes.append(mip);
             mip.offset += mip.size;
         }
@@ -185,7 +183,7 @@ GN_API void GN::gfx::ImageDesc::reset(const ImagePlaneDesc & basemap, uint32_t l
 
         // check for loop end
         if (levels >= levels_) break;
-        if (1 == mip.width && 1 == mip.height && 1 == mip.depth ) break;
+        if (1 == mip.width && 1 == mip.height && 1 == mip.depth) break;
 
         // next level
         if (mip.width > 1) mip.width >>= 1;
@@ -195,7 +193,7 @@ GN_API void GN::gfx::ImageDesc::reset(const ImagePlaneDesc & basemap, uint32_t l
     }
 
     layers = layers_;
-    size = mip.offset;
+    size   = mip.offset;
 
     // done
     GN_ASSERT(valid());
@@ -208,15 +206,12 @@ GN_API void GN::gfx::ImageDesc::reset(const ImagePlaneDesc & basemap, uint32_t l
 //
 //
 // -----------------------------------------------------------------------------
-GN::gfx::RawImage::RawImage(ImageDesc&& desc, const void * initialContent, size_t initialContentSizeInbytes)
-    : mDesc(std::move(desc)) {
+GN::gfx::RawImage::RawImage(ImageDesc && desc, const void * initialContent, size_t initialContentSizeInbytes): mDesc(std::move(desc)) {
 
     // allocate pixel buffer
     size_t imageSize = size();
-    mPixels = (uint8_t*)HeapMemory::alignedAlloc(imageSize, mDesc.plane(0, 0).rowAlignment); // TODO: may LSM of all planes' alignment?
-    if (!mPixels) {
-        return;
-    }
+    mPixels          = (uint8_t *) HeapMemory::alignedAlloc(imageSize, mDesc.plane(0, 0).rowAlignment); // TODO: may LSM of all planes' alignment?
+    if (!mPixels) { return; }
 
     // store the initial content
     if (initialContent) {
@@ -238,27 +233,27 @@ GN::gfx::RawImage GN::gfx::RawImage::load(File & fp) {
 
     // setup stbi io callback
     stbi_io_callbacks io = {};
-    io.read = [](void* user, char* data, int size) -> int {
-        auto fp = (GN::File*)user;
+    io.read              = [](void * user, char * data, int size) -> int {
+        auto   fp   = (GN::File *) user;
         size_t read = 0;
         if (!fp->read(data, size, &read)) return 0;
-        return (int)read;
+        return (int) read;
     };
-    io.skip = [](void* user, int n) {
-        auto fp = (GN::File*)user;
-        fp->seek((size_t)n, GN::FileSeek::CUR);
+    io.skip = [](void * user, int n) {
+        auto fp = (GN::File *) user;
+        fp->seek((size_t) n, GN::FileSeek::CUR);
     };
-    io.eof = [](void* user) -> int {
-        auto fp = (GN::File*)user;
+    io.eof = [](void * user) -> int {
+        auto fp = (GN::File *) user;
         return fp->eof();
     };
 
     // Load from common image file via stb_image library
     // TODO: hdr/grayscale support
-    int x,y,n;
+    int  x, y, n;
     auto data = stbi_load_from_callbacks(&io, &fp, &x, &y, &n, 4);
     if (data) {
-        auto image = RawImage(ImageDesc(ImagePlaneDesc::make(ColorFormat::RGBA_8_8_8_8_UNORM, (uint32_t)x, (uint32_t)y)), data);
+        auto image = RawImage(ImageDesc(ImagePlaneDesc::make(ColorFormat::RGBA_8_8_8_8_UNORM, (uint32_t) x, (uint32_t) y)), data);
         GN_ASSERT(image.desc().valid());
         stbi_image_free(data);
         return image;

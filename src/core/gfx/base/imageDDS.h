@@ -9,8 +9,7 @@
 ///
 /// DD pixel format
 ///
-struct DDPixelFormat
-{
+struct DDPixelFormat {
     uint32 size;   ///< size of this structure
     uint32 flags;  ///< pixel format flags
     uint32 fourcc; ///< fourcc
@@ -24,14 +23,14 @@ struct DDPixelFormat
 ///
 /// DDS file header
 ///
-struct DDSFileHeader
-{
+struct DDSFileHeader {
     /// \cond NEVER
-    uint32        size;
-    uint32        flags;
-    uint32        height;
-    uint32        width;
-    uint32        pitchOrLinearSize; // The number of bytes per scan line in an uncompressed texture; the total number of bytes in the top level texture for a compressed texture. The pitch must be DWORD aligned.
+    uint32 size;
+    uint32 flags;
+    uint32 height;
+    uint32 width;
+    uint32 pitchOrLinearSize; // The number of bytes per scan line in an uncompressed texture; the total number of bytes in the top level texture for a
+                              // compressed texture. The pitch must be DWORD aligned.
     uint32        depth;
     uint32        mipCount;
     uint32        reserved[11];
@@ -43,19 +42,17 @@ struct DDSFileHeader
     uint32        reserved2;
     /// \endcond
 };
-GN_CASSERT( sizeof(DDSFileHeader) == 124 );
+GN_CASSERT(sizeof(DDSFileHeader) == 124);
 
 ///
 /// dds image reader
 ///
-class DDSReader
-{
+class DDSReader {
     GN::File *         mFile;
     DDSFileHeader      mHeader;
     GN::gfx::ImageDesc mImgDesc;
 
-    enum FormatConversion
-    {
+    enum FormatConversion {
         FC_NONE,
         FC_BGRX8888_TO_RGBA8888,
     };
@@ -63,24 +60,19 @@ class DDSReader
     GN::gfx::ColorFormat mOriginalFormat;
     FormatConversion     mFormatConversion;
 
-    static FormatConversion sCheckFormatConversion( GN::gfx::ColorFormat & );
-    static void sConvertFormat( FormatConversion fc, GN::gfx::ColorFormat from, GN::gfx::ColorFormat to, void * data, size_t size );
+    static FormatConversion sCheckFormatConversion(GN::gfx::ColorFormat &);
+    static void             sConvertFormat(FormatConversion fc, GN::gfx::ColorFormat from, GN::gfx::ColorFormat to, void * data, size_t size);
 
 public:
-
     ///
     /// Constructor
     ///
-    DDSReader(GN::File & f) : mFile(&f), mFormatConversion(FC_NONE)
-    {
-    }
+    DDSReader(GN::File & f): mFile(&f), mFormatConversion(FC_NONE) {}
 
     ///
     /// Destructor
     ///
-    ~DDSReader()
-    {
-    }
+    ~DDSReader() {}
 
     ///
     /// Check file format. Return true if the file is DDS file

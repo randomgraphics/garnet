@@ -13,33 +13,35 @@ static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.OGL");
 // local functions
 // *****************************************************************************
 
-
 //
 /// \brief translate garnet primitive to OpenGL primitive
 // ------------------------------------------------------------------------
-static inline GLenum
-sPrimitiveType2OGL( GN::gfx::PrimitiveType prim )
-{
-    switch( prim )
-    {
-        case GN::gfx::PrimitiveType::POINT_LIST     : return GL_POINTS;
-        case GN::gfx::PrimitiveType::LINE_LIST      : return GL_LINES;
-        case GN::gfx::PrimitiveType::LINE_STRIP     : return GL_LINE_STRIP;
-        case GN::gfx::PrimitiveType::TRIANGLE_LIST  : return GL_TRIANGLES;
-        case GN::gfx::PrimitiveType::TRIANGLE_STRIP : return GL_TRIANGLE_STRIP;
-        case GN::gfx::PrimitiveType::QUAD_LIST      : return GL_QUADS;
-        default :
-            GN_ERROR(sLogger)( "unsupport primitve type %s!", prim.toString() );
-            return GL_TRIANGLES;
+static inline GLenum sPrimitiveType2OGL(GN::gfx::PrimitiveType prim) {
+    switch (prim) {
+    case GN::gfx::PrimitiveType::POINT_LIST:
+        return GL_POINTS;
+    case GN::gfx::PrimitiveType::LINE_LIST:
+        return GL_LINES;
+    case GN::gfx::PrimitiveType::LINE_STRIP:
+        return GL_LINE_STRIP;
+    case GN::gfx::PrimitiveType::TRIANGLE_LIST:
+        return GL_TRIANGLES;
+    case GN::gfx::PrimitiveType::TRIANGLE_STRIP:
+        return GL_TRIANGLE_STRIP;
+    case GN::gfx::PrimitiveType::QUAD_LIST:
+        return GL_QUADS;
+    default:
+        GN_ERROR(sLogger)("unsupport primitve type %s!", prim.toString());
+        return GL_TRIANGLES;
     }
 }
 
-template<class BufferObject> static inline void
-sCopyToBufferObject(BufferObject & bo, const void * data, size_t size) {
+template<class BufferObject>
+static inline void sCopyToBufferObject(BufferObject & bo, const void * data, size_t size) {
     if (bo.length < size) {
-        bo.allocate(size, (const uint8_t*)data, GL_STREAM_DRAW);
+        bo.allocate(size, (const uint8_t *) data, GL_STREAM_DRAW);
     } else {
-        bo.update((const uint8_t*)data, 0, size);
+        bo.update((const uint8_t *) data, 0, size);
     }
 }
 
@@ -50,8 +52,7 @@ sCopyToBufferObject(BufferObject & bo, const void * data, size_t size) {
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::OGLGpu::drawInit()
-{
+bool GN::gfx::OGLGpu::drawInit() {
     GN_GUARD;
 
     // success
@@ -63,8 +64,7 @@ bool GN::gfx::OGLGpu::drawInit()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLGpu::drawQuit()
-{
+void GN::gfx::OGLGpu::drawQuit() {
     GN_GUARD;
 
     GN_UNGUARD
@@ -77,16 +77,15 @@ void GN::gfx::OGLGpu::drawQuit()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLGpu::present()
-{
+void GN::gfx::OGLGpu::present() {
     GN_GUARD_SLOW;
 
 #if GN_WINPC
-    GN_MSW_CHECK( ::SwapBuffers( mDeviceContext ) );
+    GN_MSW_CHECK(::SwapBuffers(mDeviceContext));
 #else
     const DispDesc & dd = getDispDesc();
-    GN_ASSERT( dd.displayHandle && dd.windowHandle );
-    glXSwapBuffers( (Display*)dd.displayHandle, (Window)dd.windowHandle );
+    GN_ASSERT(dd.displayHandle && dd.windowHandle);
+    glXSwapBuffers((Display *) dd.displayHandle, (Window) dd.windowHandle);
 #endif
 
     ++mFrameCounter;
@@ -101,39 +100,34 @@ void GN::gfx::OGLGpu::present()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLGpu::clearScreen(
-    const GN::Vector4f & c, float z, uint8 s, uint32 flags )
-{
+void GN::gfx::OGLGpu::clearScreen(const GN::Vector4f & c, float z, uint8 s, uint32 flags) {
     GN_GUARD_SLOW;
 
     GLbitfield glflag = 0;
 
     // clear color buffer
-    if( flags & CLEAR_C )
-    {
+    if (flags & CLEAR_C) {
         glflag |= GL_COLOR_BUFFER_BIT;
-        glClearColor( c.r, c.g, c.b, c.a );
-        glColorMask( 1,1,1,1 );       // 确保COLOR BUFFER可写
+        glClearColor(c.r, c.g, c.b, c.a);
+        glColorMask(1, 1, 1, 1); // 确保COLOR BUFFER可写
     }
 
     // clean z-buffer
-    if( flags & CLEAR_Z )
-    {
+    if (flags & CLEAR_Z) {
         glflag |= GL_DEPTH_BUFFER_BIT;
-        glClearDepth( z );
-        glDepthMask( 1 );             // 确保Z-BUFFER可写
+        glClearDepth(z);
+        glDepthMask(1); // 确保Z-BUFFER可写
     }
 
     // clearn stencil buffer
-    if( flags & CLEAR_S )
-    {
+    if (flags & CLEAR_S) {
         glflag |= GL_STENCIL_BUFFER_BIT;
-        glClearStencil( s );
-        glStencilMask( 0xFFFFFFFF );  // 确保STENCIL BUFFER可写
+        glClearStencil(s);
+        glStencilMask(0xFFFFFFFF); // 确保STENCIL BUFFER可写
     }
 
     // do clear
-    GN_OGL_CHECK( glClear( glflag ) );
+    GN_OGL_CHECK(glClear(glflag));
 
     GN_UNGUARD_SLOW;
 }
@@ -141,44 +135,26 @@ void GN::gfx::OGLGpu::clearScreen(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLGpu::drawIndexed(
-    PrimitiveType prim,
-    uint32        numidx,
-    uint32        basevtx,
-    uint32        startvtx,
-    uint32        numvtx,
-    uint32        startidx )
-{
+void GN::gfx::OGLGpu::drawIndexed(PrimitiveType prim, uint32 numidx, uint32 basevtx, uint32 startvtx, uint32 numvtx, uint32 startidx) {
     GN_GUARD_SLOW;
 
-    if( !mContextOk ) return;
+    if (!mContextOk) return;
 
     // TODO: optimize using glDrawRangeElementsBaseVertex
 
     // bind vertex buffer based on current startvtx
-    if( mCurrentOGLVtxFmt &&
-        !mCurrentOGLVtxFmt->bindBuffers( mContext.vtxbufs.rawptr(),
-                                         mContext.vtxbufs.size(),
-                                         basevtx ) )
-    {
-        return;
-    }
+    if (mCurrentOGLVtxFmt && !mCurrentOGLVtxFmt->bindBuffers(mContext.vtxbufs.rawptr(), mContext.vtxbufs.size(), basevtx)) { return; }
 
     // get current index buffer
-    GN_ASSERT( mContext.idxbuf );
-    const OGLIdxBuf * ib = safeCastPtr<const OGLIdxBuf>( mContext.idxbuf.rawptr() );
+    GN_ASSERT(mContext.idxbuf);
+    const OGLIdxBuf * ib = safeCastPtr<const OGLIdxBuf>(mContext.idxbuf.rawptr());
     ib->bind();
 
-    GLenum oglPrim = sPrimitiveType2OGL( prim );
+    GLenum oglPrim = sPrimitiveType2OGL(prim);
 
     // draw indexed primitives
-    glDrawRangeElements(
-        oglPrim,
-        (GLuint)startvtx,
-        (GLuint)(startvtx + numvtx - 1),
-        (GLsizei)numidx,
-        ib->getDesc().bits32 ? GL_UNSIGNED_INT : GL_UNSIGNED_SHORT,
-        ib->data(startidx));
+    glDrawRangeElements(oglPrim, (GLuint) startvtx, (GLuint) (startvtx + numvtx - 1), (GLsizei) numidx,
+                        ib->getDesc().bits32 ? GL_UNSIGNED_INT : GL_UNSIGNED_SHORT, ib->data(startidx));
 
     // done
     ++mDrawCounter;
@@ -189,25 +165,18 @@ void GN::gfx::OGLGpu::drawIndexed(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLGpu::draw( PrimitiveType prim, uint32 numvtx, uint32 startvtx )
-{
+void GN::gfx::OGLGpu::draw(PrimitiveType prim, uint32 numvtx, uint32 startvtx) {
     GN_GUARD_SLOW;
 
-    if( !mContextOk ) return;
+    if (!mContextOk) return;
 
     // bind vertex buffer based on current startvtx
-    if( mCurrentOGLVtxFmt &&
-        !mCurrentOGLVtxFmt->bindBuffers( mContext.vtxbufs.rawptr(),
-                                         mContext.vtxbufs.size(),
-                                         startvtx ) )
-    {
-        return;
-    }
+    if (mCurrentOGLVtxFmt && !mCurrentOGLVtxFmt->bindBuffers(mContext.vtxbufs.rawptr(), mContext.vtxbufs.size(), startvtx)) { return; }
 
-    GLenum oglPrim = sPrimitiveType2OGL( prim );
+    GLenum oglPrim = sPrimitiveType2OGL(prim);
 
     // draw primitives
-    glDrawArrays( oglPrim, 0, (GLsizei)numvtx );
+    glDrawArrays(oglPrim, 0, (GLsizei) numvtx);
 
     // done
     ++mDrawCounter;
@@ -218,66 +187,47 @@ void GN::gfx::OGLGpu::draw( PrimitiveType prim, uint32 numvtx, uint32 startvtx )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLGpu::drawIndexedUp(
-    PrimitiveType  prim,
-    uint32         numidx,
-    uint32         numvtx,
-    const void *   vertexData,
-    uint32         strideInBytes,
-    const uint16 * indexData )
-{
+void GN::gfx::OGLGpu::drawIndexedUp(PrimitiveType prim, uint32 numidx, uint32 numvtx, const void * vertexData, uint32 strideInBytes, const uint16 * indexData) {
     GN_GUARD_SLOW;
 
-    if( !mContextOk ) return;
+    if (!mContextOk) return;
 
     sCopyToBufferObject(mUserVBO, vertexData, numvtx * strideInBytes);
     sCopyToBufferObject(mUserIBO, indexData, numidx * 2);
 
     // bind immediate vertex buffer
-    GLuint oldvbo = 0;
-    bool bindSuccess = false;
-    if( mCurrentOGLVtxFmt )
-    {
+    GLuint oldvbo      = 0;
+    bool   bindSuccess = false;
+    if (mCurrentOGLVtxFmt) {
         // disable VBO
-        GN_OGL_CHECK( glGetIntegerv( GL_ARRAY_BUFFER_BINDING, (GLint*)&oldvbo ) );
+        GN_OGL_CHECK(glGetIntegerv(GL_ARRAY_BUFFER_BINDING, (GLint *) &oldvbo));
         mUserVBO.bind();
-        bindSuccess = mCurrentOGLVtxFmt->bindRawMemoryBuffer( 0, strideInBytes );
+        bindSuccess = mCurrentOGLVtxFmt->bindRawMemoryBuffer(0, strideInBytes);
     }
 
-    if( bindSuccess )
-    {
+    if (bindSuccess) {
         // Verify index buffer
-        if( paramCheckEnabled() )
-        {
+        if (paramCheckEnabled()) {
             const uint16 * indices = indexData;
-            for( size_t i = 0; i < numidx; ++i, ++indices )
-            {
-                if( *indices >= numvtx )
-                {
-                    GN_GPU_RIP( "Invalid index (%u) in index buffer.", *indices );
-                }
+            for (size_t i = 0; i < numidx; ++i, ++indices) {
+                if (*indices >= numvtx) { GN_GPU_RIP("Invalid index (%u) in index buffer.", *indices); }
             }
         }
 
-        GLenum oglPrim = sPrimitiveType2OGL( prim );
+        GLenum oglPrim = sPrimitiveType2OGL(prim);
 
         mUserIBO.bind();
 
         // draw indexed primitives
-        GN_OGL_CHECK( glDrawRangeElements(
-            oglPrim,
-            0, // startvtx,
-            (GLuint)(numvtx-1),
-            (GLsizei)numidx,
-            GL_UNSIGNED_SHORT,
-            0 ) );
+        GN_OGL_CHECK(glDrawRangeElements(oglPrim,
+                                         0, // startvtx,
+                                         (GLuint) (numvtx - 1), (GLsizei) numidx, GL_UNSIGNED_SHORT, 0));
     }
 
     // restore VBO
-    if( 0 != oldvbo )
-    {
-        GN_ASSERT( GLEW_ARB_vertex_buffer_object );
-        GN_OGL_CHECK( glBindBufferARB( GL_ARRAY_BUFFER_ARB, oldvbo ) );
+    if (0 != oldvbo) {
+        GN_ASSERT(GLEW_ARB_vertex_buffer_object);
+        GN_OGL_CHECK(glBindBufferARB(GL_ARRAY_BUFFER_ARB, oldvbo));
     }
 
     // done
@@ -289,46 +239,35 @@ void GN::gfx::OGLGpu::drawIndexedUp(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLGpu::drawUp(
-    PrimitiveType prim,
-    uint32        numvtx,
-    const void *  vertexData,
-    uint32        strideInBytes )
-{
+void GN::gfx::OGLGpu::drawUp(PrimitiveType prim, uint32 numvtx, const void * vertexData, uint32 strideInBytes) {
     GN_GUARD_SLOW;
 
-    if( !mContextOk ) return;
+    if (!mContextOk) return;
 
     sCopyToBufferObject(mUserVBO, vertexData, numvtx * strideInBytes);
 
     // bind immediate vertex buffer
-    GLuint oldvbo = 0;
-    bool bindSuccess = false;
-    if( mCurrentOGLVtxFmt )
-    {
-        glGetIntegerv( GL_ARRAY_BUFFER_BINDING, (GLint*)&oldvbo );
+    GLuint oldvbo      = 0;
+    bool   bindSuccess = false;
+    if (mCurrentOGLVtxFmt) {
+        glGetIntegerv(GL_ARRAY_BUFFER_BINDING, (GLint *) &oldvbo);
         mUserVBO.bind();
-        bindSuccess = mCurrentOGLVtxFmt->bindRawMemoryBuffer( 0, strideInBytes );
+        bindSuccess = mCurrentOGLVtxFmt->bindRawMemoryBuffer(0, strideInBytes);
     }
 
     // draw primitives
-    if( bindSuccess )
-    {
+    if (bindSuccess) {
         GN_GUARD_SLOW;
-        GLenum oglPrim = sPrimitiveType2OGL( prim );
-        glDrawArrays( oglPrim, 0, (GLsizei)numvtx );
+        GLenum oglPrim = sPrimitiveType2OGL(prim);
+        glDrawArrays(oglPrim, 0, (GLsizei) numvtx);
         GN_UNGUARD_SLOW;
     }
 
     // restore VBO
-    if( 0 != oldvbo )
-    {
-        glBindBuffer( GL_ARRAY_BUFFER, oldvbo );
-    }
+    if (0 != oldvbo) { glBindBuffer(GL_ARRAY_BUFFER, oldvbo); }
 
     // done
     ++mDrawCounter;
 
     GN_UNGUARD_SLOW;
 }
-

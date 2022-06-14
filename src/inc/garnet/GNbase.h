@@ -9,14 +9,13 @@
 ///
 /// namespace for garnet library
 ///
-namespace GN
-{
-    ///
-    /// namespace for declaration of internal classes and functions that are reserved
-    /// for garnet library.
-    ///
-    namespace internal {}
-}
+namespace GN {
+///
+/// namespace for declaration of internal classes and functions that are reserved
+/// for garnet library.
+///
+namespace internal {}
+} // namespace GN
 
 // defines features that are the garnet library was built with.
 #include "base/features.h"

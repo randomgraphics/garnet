@@ -11,34 +11,30 @@
 #include <thread>
 #include <chrono>
 
-namespace GN
-{
-    ///
-    /// Spinloop lock
-    ///
-    class SpinLoop : NoCopy
-    {
-        std::atomic_flag mLock;
-    public:
-        //@{
-        bool tryLock() { return mLock.test_and_set(); }
-        void lock()
-        {
-            size_t i = 0;
-            while( !mLock.test_and_set() )
-            {
-                ++i;
-                if( i > 1000000 )
-                {
-                    std::this_thread::sleep_for( std::chrono::microseconds::min() );
-                    i = 0;
-                }
+namespace GN {
+///
+/// Spinloop lock
+///
+class SpinLoop : NoCopy {
+    std::atomic_flag mLock;
+
+public:
+    //@{
+    bool tryLock() { return mLock.test_and_set(); }
+    void lock() {
+        size_t i = 0;
+        while (!mLock.test_and_set()) {
+            ++i;
+            if (i > 1000000) {
+                std::this_thread::sleep_for(std::chrono::microseconds::min());
+                i = 0;
             }
         }
-        void unlock() { mLock.clear(); }
-        //@}
-    };
-}
+    }
+    void unlock() { mLock.clear(); }
+    //@}
+};
+} // namespace GN
 
 // *****************************************************************************
 //                                     EOF

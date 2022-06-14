@@ -18,12 +18,9 @@ static GN::Logger * sLogger = GN::getLogger("GN.util");
 //
 //
 // -----------------------------------------------------------------------------
-static const char *
-sGetOptionValue( int argc, const char * const * argv, int & i )
-{
-    if( i+1 == argc || '-' == *argv[i+1] )
-    {
-        GN_ERROR(sLogger)( "Argument value of option %s is missing.", argv[i] );
+static const char * sGetOptionValue(int argc, const char * const * argv, int & i) {
+    if (i + 1 == argc || '-' == *argv[i + 1]) {
+        GN_ERROR(sLogger)("Argument value of option %s is missing.", argv[i]);
         return NULL;
     }
 
@@ -33,51 +30,31 @@ sGetOptionValue( int argc, const char * const * argv, int & i )
 //
 //
 // -----------------------------------------------------------------------------
-static int
-sParseStrings(const char * option, const char * value, const char * strings[], size_t count )
-{
+static int sParseStrings(const char * option, const char * value, const char * strings[], size_t count) {
     using namespace GN;
 
-    for(size_t i = 0; i < count; ++i) {
-        if( 0 == str::compareI( strings[i], value ) ) return (int)i;
+    for (size_t i = 0; i < count; ++i) {
+        if (0 == str::compareI(strings[i], value)) return (int) i;
     }
 
-    GN_ERROR(sLogger)(
-        "Invalid argument value (%s) for option %s",
-        value, option );
+    GN_ERROR(sLogger)("Invalid argument value (%s) for option %s", value, option);
     return -1;
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-static bool
-sParseBool( bool & result, const char * option, const char * value )
-{
+static bool sParseBool(bool & result, const char * option, const char * value) {
     using namespace GN;
 
-    if( 0 == str::compareI( "on", value ) ||
-        0 == str::compareI( "yes", value ) ||
-        0 == str::compareI( "true", value ) ||
-        0 == str::compareI( "1", value ) )
-    {
+    if (0 == str::compareI("on", value) || 0 == str::compareI("yes", value) || 0 == str::compareI("true", value) || 0 == str::compareI("1", value)) {
         result = true;
         return true;
-    }
-    else if(
-        0 == str::compareI( "off", value ) ||
-        0 == str::compareI( "no", value ) ||
-        0 == str::compareI( "false", value ) ||
-        0 == str::compareI( "0", value ) )
-    {
+    } else if (0 == str::compareI("off", value) || 0 == str::compareI("no", value) || 0 == str::compareI("false", value) || 0 == str::compareI("0", value)) {
         result = false;
         return true;
-    }
-    else
-    {
-        GN_ERROR(sLogger)(
-            "Invalid boolean argument value (%s) for option %s",
-            value, option );
+    } else {
+        GN_ERROR(sLogger)("Invalid boolean argument value (%s) for option %s", value, option);
         return false;
     }
 }
@@ -86,20 +63,13 @@ sParseBool( bool & result, const char * option, const char * value )
 //
 // -----------------------------------------------------------------------------
 template<typename T>
-static bool
-sParseInteger( T & result, const char * option, const char * value )
-{
+static bool sParseInteger(T & result, const char * option, const char * value) {
     using namespace GN;
 
-    if( 0 != str::toInetger( result, value ) )
-    {
+    if (0 != str::toInetger(result, value)) {
         return true;
-    }
-    else
-    {
-        GN_ERROR(sLogger)(
-            "Invalid integer argument value (%s) for option %s",
-            value, option );
+    } else {
+        GN_ERROR(sLogger)("Invalid integer argument value (%s) for option %s", value, option);
         return false;
     }
 }
@@ -107,19 +77,17 @@ sParseInteger( T & result, const char * option, const char * value )
 //
 //
 // -----------------------------------------------------------------------------
-static bool sParseGpuAPI( GN::gfx::GpuAPI & result, const char * value )
-{
+static bool sParseGpuAPI(GN::gfx::GpuAPI & result, const char * value) {
     using namespace GN;
     using namespace GN::gfx;
 
     StrA upperCase(value);
     upperCase.toUpper();
 
-    result = GpuAPI::sFromString( upperCase );
+    result = GpuAPI::sFromString(upperCase);
 
-    if( GpuAPI::INVALID == result )
-    {
-        GN_ERROR(sLogger)( "invalid renderer API: %s", value );
+    if (GpuAPI::INVALID == result) {
+        GN_ERROR(sLogger)("invalid renderer API: %s", value);
         return false;
     }
 
@@ -135,11 +103,7 @@ static bool sParseGpuAPI( GN::gfx::GpuAPI & result, const char * value )
 //
 //
 // -----------------------------------------------------------------------------
-GN::util::SampleApp::SampleApp()
-    : mFps( L"FPS: %.2f\n(Press F1 for help)" )
-    , mShowHUD(true)
-    , mShowHelp(false)
-{
+GN::util::SampleApp::SampleApp(): mFps(L"FPS: %.2f\n(Press F1 for help)"), mShowHUD(true), mShowHelp(false) {
     enableCRTMemoryCheck();
     mFps.reset();
 }
@@ -147,9 +111,11 @@ GN::util::SampleApp::SampleApp()
 //
 //
 // -----------------------------------------------------------------------------
-int GN::util::SampleApp::run( int argc, const char * const argv[] )
-{
-    if( !init( argc, argv ) ) { quit(); return -1; }
+int GN::util::SampleApp::run(int argc, const char * const argv[]) {
+    if (!init(argc, argv)) {
+        quit();
+        return -1;
+    }
 
     mDone = false;
 
@@ -168,28 +134,27 @@ int GN::util::SampleApp::run( int argc, const char * const argv[] )
 
     mFrameIdlePercentage = 0;
 
-    GN_DEFINE_STATIC_PROFILER( Frame,   "Main Game Loop - Frame Time" );
-    GN_DEFINE_STATIC_PROFILER( Input,   "Main Game Loop - Progess Input" );
-    GN_DEFINE_STATIC_PROFILER( Update,  "Main Game Loop - Update" );
-    GN_DEFINE_STATIC_PROFILER( Render,  "Main Game Loop - Render" );
-    GN_DEFINE_STATIC_PROFILER( Idle,    "Main Game Loop - Idle" );
+    GN_DEFINE_STATIC_PROFILER(Frame, "Main Game Loop - Frame Time");
+    GN_DEFINE_STATIC_PROFILER(Input, "Main Game Loop - Progess Input");
+    GN_DEFINE_STATIC_PROFILER(Update, "Main Game Loop - Update");
+    GN_DEFINE_STATIC_PROFILER(Render, "Main Game Loop - Render");
+    GN_DEFINE_STATIC_PROFILER(Idle, "Main Game Loop - Idle");
 
     int skipRendering = 0;
 
-    while( !mDone )
-    {
-        GN_START_PROFILER( Frame );
+    while (!mDone) {
+        GN_START_PROFILER(Frame);
 
         const Clock::Duration scheduledEndTime = clock.now() + INTERVAL;
 
         // Process Inputs
-        GN_START_PROFILER( Input );
-        if (!engine::getGpu()->getRenderWindow().runUntilNoNewEvents( false )) break;
+        GN_START_PROFILER(Input);
+        if (!engine::getGpu()->getRenderWindow().runUntilNoNewEvents(false)) break;
         gInput.processInputEvents();
-        GN_STOP_PROFILER( Input );
+        GN_STOP_PROFILER(Input);
 
         // Update frame
-        GN_START_PROFILER( Update );
+        GN_START_PROFILER(Update);
         onUpdate();
 #if 0
         //
@@ -198,49 +163,40 @@ int GN::util::SampleApp::run( int argc, const char * const argv[] )
         //
         Thread::sSleepCurrentThread( 1000000000/30 );
 #endif
-        GN_STOP_PROFILER( Update );
+        GN_STOP_PROFILER(Update);
 
-        if (skipRendering <= 0)
-        {
-            GN_START_PROFILER( Render );
+        if (skipRendering <= 0) {
+            GN_START_PROFILER(Render);
             onRender();
             drawHUD();
             engine::getGpu()->present();
             mFps.onFrame();
-            GN_STOP_PROFILER( Render );
+            GN_STOP_PROFILER(Render);
         }
 
         // Idle time
-        GN_START_PROFILER( Idle );
+        GN_START_PROFILER(Idle);
         auto idleStartTime = clock.now();
-        auto idleDuration = scheduledEndTime - idleStartTime;
-        if (idleDuration > 1ms)
-        {
+        auto idleDuration  = scheduledEndTime - idleStartTime;
+        if (idleDuration > 1ms) {
             // no need to skip rendering.
             skipRendering = 0;
 
             // Put some idle time in.
-            while ((scheduledEndTime - clock.now()) > 1ms)
-            {
-                std::this_thread::sleep_for(std::chrono::microseconds::min());
-            }
-        }
-        else if (0 == skipRendering)
-        {
+            while ((scheduledEndTime - clock.now()) > 1ms) { std::this_thread::sleep_for(std::chrono::microseconds::min()); }
+        } else if (0 == skipRendering) {
             // We are over frame budget. Skip next rendering to compensate.
             ++skipRendering;
-        }
-        else
-        {
+        } else {
             // We have skipped rendering, but still not fast enough. The game is
             // simply too slow. In this case, we'll just call update and render in
             // sequential and let the game run in slow motion mode.
             skipRendering = -1;
         }
-        mFrameIdlePercentage = (float)(idleDuration * 100 / INTERVAL);
-        GN_STOP_PROFILER( Idle );
+        mFrameIdlePercentage = (float) (idleDuration * 100 / INTERVAL);
+        GN_STOP_PROFILER(Idle);
 
-        GN_STOP_PROFILER( Frame );
+        GN_STOP_PROFILER(Frame);
     }
 
     // success
@@ -251,19 +207,16 @@ int GN::util::SampleApp::run( int argc, const char * const argv[] )
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::util::SampleApp::onCheckExtraCmdlineArguments( const char * exename, int argc, const char * const argv[] )
-{
-    GN_UNUSED_PARAM( exename );
+bool GN::util::SampleApp::onCheckExtraCmdlineArguments(const char * exename, int argc, const char * const argv[]) {
+    GN_UNUSED_PARAM(exename);
 
-    if( argc > 0 )
-    {
+    if (argc > 0) {
         StrA s = "unknown command line arguments:";
-        for( int i = 0; i < argc; ++i )
-        {
+        for (int i = 0; i < argc; ++i) {
             s += " ";
             s += argv[i];
         }
-        GN_ERROR(sLogger)( s.rawptr() );
+        GN_ERROR(sLogger)(s.rawptr());
     }
 
     return true;
@@ -272,40 +225,27 @@ bool GN::util::SampleApp::onCheckExtraCmdlineArguments( const char * exename, in
 //
 //
 // -----------------------------------------------------------------------------
-void GN::util::SampleApp::onPrintHelpScreen( const char * executableName )
-{
+void GN::util::SampleApp::onPrintHelpScreen(const char * executableName) {
     // show default help screen
-    printf( "Usage: %s [options]\n", executableName );
+    printf("Usage: %s [options]\n", executableName);
     printStandardCommandLineOptions();
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-void GN::util::SampleApp::onKeyPress( input::KeyEvent ke )
-{
-    if( input::KeyCode::XB360_X == ke.code && ke.status.down )
-    {
+void GN::util::SampleApp::onKeyPress(input::KeyEvent ke) {
+    if (input::KeyCode::XB360_X == ke.code && ke.status.down) {
         mDone = true;
-    }
-    else if( input::KeyCode::ESCAPE == ke.code && !ke.status.down )
-    {
+    } else if (input::KeyCode::ESCAPE == ke.code && !ke.status.down) {
         mDone = true;
-    }
-    else if( input::KeyCode::R == ke.code && !ke.status.down )
-    {
-        GN_TODO( "reload all graphics resources." );
-    }
-    else if( input::KeyCode::F == ke.code && !ke.status.down )
-    {
-        GN_TODO( "dump graphics system states" );
-    }
-    else if( input::KeyCode::RETURN == ke.code && ke.status.down && ke.status.altDown() )
-    {
-        GN_TODO( "switch fullscreen mode." );
-    }
-    else if( input::KeyCode::F1 == ke.code && !ke.status.down )
-    {
+    } else if (input::KeyCode::R == ke.code && !ke.status.down) {
+        GN_TODO("reload all graphics resources.");
+    } else if (input::KeyCode::F == ke.code && !ke.status.down) {
+        GN_TODO("dump graphics system states");
+    } else if (input::KeyCode::RETURN == ke.code && ke.status.down && ke.status.altDown()) {
+        GN_TODO("switch fullscreen mode.");
+    } else if (input::KeyCode::F1 == ke.code && !ke.status.down) {
         mShowHelp = !mShowHelp;
     }
 }
@@ -313,17 +253,15 @@ void GN::util::SampleApp::onKeyPress( input::KeyEvent ke )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::util::SampleApp::drawXYZCoordinateAxes( const Matrix44f & projViewWorld )
-{
-    static const float X[] = { 0.0f, 0.0f, 0.0f, 10000.0f, 0.0f, 0.0f };
-    static const float Y[] = { 0.0f, 0.0f, 0.0f, 0.0f, 10000.0f, 0.0f };
-    static const float Z[] = { 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 10000.0f };
-    LineRenderer * lr = engine::getLineRenderer();
-    if( lr->batchingBegin() )
-    {
-        lr->drawLines( X, 3*sizeof(float), 2, GN_RGBA8(255,0,0,255), projViewWorld );
-        lr->drawLines( Y, 3*sizeof(float), 2, GN_RGBA8(0,255,0,255), projViewWorld );
-        lr->drawLines( Z, 3*sizeof(float), 2, GN_RGBA8(0,0,255,255), projViewWorld );
+void GN::util::SampleApp::drawXYZCoordinateAxes(const Matrix44f & projViewWorld) {
+    static const float X[] = {0.0f, 0.0f, 0.0f, 10000.0f, 0.0f, 0.0f};
+    static const float Y[] = {0.0f, 0.0f, 0.0f, 0.0f, 10000.0f, 0.0f};
+    static const float Z[] = {0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 10000.0f};
+    LineRenderer *     lr  = engine::getLineRenderer();
+    if (lr->batchingBegin()) {
+        lr->drawLines(X, 3 * sizeof(float), 2, GN_RGBA8(255, 0, 0, 255), projViewWorld);
+        lr->drawLines(Y, 3 * sizeof(float), 2, GN_RGBA8(0, 255, 0, 255), projViewWorld);
+        lr->drawLines(Z, 3 * sizeof(float), 2, GN_RGBA8(0, 0, 255, 255), projViewWorld);
         lr->batchingEnd();
     }
 }
@@ -331,45 +269,43 @@ void GN::util::SampleApp::drawXYZCoordinateAxes( const Matrix44f & projViewWorld
 //
 //
 // -----------------------------------------------------------------------------
-void GN::util::SampleApp::printStandardCommandLineOptions()
-{
-    printf(
-        "Standard command line options:\n"
-        "\n"
-        "   -dm   [f|b|w]           Display Mode: fullscreen|borderless|windowed. Default is windowed.\n"
-        "\n"
-        "   -? -h --help            Show help.\n"
-        "\n"
-        "   -ll [name:level]        Set log level for specific logger. Level is integer.\n"
-        "                           Samller number indicates higher level.\n"
-        "                               positive : enable all log levels higher than,\n"
-        "                                          or equal to it.\n"
-        "                               zero     : disable all levels.\n"
-        "                               negative : enable this specific log level only (-level).\n"
-        "\n"
-        "                           Normally used levels are:\n"
-        "                               FATAL    = 10\n"
-        "                               ERROR    = 20\n"
-        "                               WARN     = 30\n"
-        "                               INFO     = 40\n"
-        "                               VERBOSE  = 50\n"
-        "                               VVERBOSE = 60\n"
-        "\n"
-        "   -mt   [on|off]          Use multithread renderer. Default is on.\n"
-        "\n"
-        "   -gpu [auto|ogl|d3d11]   Choose GPU API. Default is AUTO.\n"
-        "\n"
-        "   -ww [num]               Windows width. Default is 800.\n"
-        "\n"
-        "   -wh [num]               Windows width. Default is 600.\n"
-        "\n"
-        "   -vsync [on|off]         Enable/Disable vsync. Default is off.\n"
-        //"\n"
-        //"    -m [num]               Specify monitor index. Default is 0.\n"
-        //"\n"
-        //"    -di                    Use direct input.\n"
-        //"\n"
-        );
+void GN::util::SampleApp::printStandardCommandLineOptions() {
+    printf("Standard command line options:\n"
+           "\n"
+           "   -dm   [f|b|w]           Display Mode: fullscreen|borderless|windowed. Default is windowed.\n"
+           "\n"
+           "   -? -h --help            Show help.\n"
+           "\n"
+           "   -ll [name:level]        Set log level for specific logger. Level is integer.\n"
+           "                           Samller number indicates higher level.\n"
+           "                               positive : enable all log levels higher than,\n"
+           "                                          or equal to it.\n"
+           "                               zero     : disable all levels.\n"
+           "                               negative : enable this specific log level only (-level).\n"
+           "\n"
+           "                           Normally used levels are:\n"
+           "                               FATAL    = 10\n"
+           "                               ERROR    = 20\n"
+           "                               WARN     = 30\n"
+           "                               INFO     = 40\n"
+           "                               VERBOSE  = 50\n"
+           "                               VVERBOSE = 60\n"
+           "\n"
+           "   -mt   [on|off]          Use multithread renderer. Default is on.\n"
+           "\n"
+           "   -gpu [auto|ogl|d3d11]   Choose GPU API. Default is AUTO.\n"
+           "\n"
+           "   -ww [num]               Windows width. Default is 800.\n"
+           "\n"
+           "   -wh [num]               Windows width. Default is 600.\n"
+           "\n"
+           "   -vsync [on|off]         Enable/Disable vsync. Default is off.\n"
+           //"\n"
+           //"    -m [num]               Specify monitor index. Default is 0.\n"
+           //"\n"
+           //"    -di                    Use direct input.\n"
+           //"\n"
+    );
 }
 
 // *****************************************************************************
@@ -379,12 +315,11 @@ void GN::util::SampleApp::printStandardCommandLineOptions()
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::util::SampleApp::init( int argc, const char * const argv[] )
-{
-    if( !checkCmdLine(argc,argv) ) return false;
-    if( !onPreInit( mInitParam ) ) return false;
-    if( !initEngine() ) return false;
-    if( !onInit() ) return false;
+bool GN::util::SampleApp::init(int argc, const char * const argv[]) {
+    if (!checkCmdLine(argc, argv)) return false;
+    if (!onPreInit(mInitParam)) return false;
+    if (!initEngine()) return false;
+    if (!onInit()) return false;
 
     mHelpText = L"ESC/XB360 BTN X : 退出";
 
@@ -395,8 +330,7 @@ bool GN::util::SampleApp::init( int argc, const char * const argv[] )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::util::SampleApp::quit()
-{
+void GN::util::SampleApp::quit() {
     GN_GUARD_ALWAYS;
 
     onQuit();
@@ -408,134 +342,99 @@ void GN::util::SampleApp::quit()
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::util::SampleApp::checkCmdLine( int argc, const char * const argv[] )
-{
+bool GN::util::SampleApp::checkCmdLine(int argc, const char * const argv[]) {
     GN_GUARD;
 
     // setup default options
-    mInitParam.useMultithreadGpu = !GN_POSIX;
-    mInitParam.iapi = InputAPI::NATIVE;
-    mInitParam.defaultFont.fontname = "font::/simsun.ttc";
-    mInitParam.defaultFont.width = 16;
-    mInitParam.defaultFont.height = 16;
-    mInitParam.defaultFont.quality = FontFaceDesc::ANTIALIASED;
-    mInitParam.asciiFont.fontname = "font::/ltype.ttf";
-    mInitParam.asciiFont.width = 16;
-    mInitParam.asciiFont.height = 16;
-    mInitParam.asciiFont.quality = FontFaceDesc::ANTIALIASED;
-    mInitParam.ro.displayMode.width = 1600;
+    mInitParam.useMultithreadGpu     = !GN_POSIX;
+    mInitParam.iapi                  = InputAPI::NATIVE;
+    mInitParam.defaultFont.fontname  = "font::/simsun.ttc";
+    mInitParam.defaultFont.width     = 16;
+    mInitParam.defaultFont.height    = 16;
+    mInitParam.defaultFont.quality   = FontFaceDesc::ANTIALIASED;
+    mInitParam.asciiFont.fontname    = "font::/ltype.ttf";
+    mInitParam.asciiFont.width       = 16;
+    mInitParam.asciiFont.height      = 16;
+    mInitParam.asciiFont.quality     = FontFaceDesc::ANTIALIASED;
+    mInitParam.ro.displayMode.width  = 1600;
     mInitParam.ro.displayMode.height = 900;
 
-    DynaArray<const char*> unknownArgs;
+    DynaArray<const char *> unknownArgs;
 
-    for( int i = 1; i < argc; ++i )
-    {
+    for (int i = 1; i < argc; ++i) {
         const char * a = argv[i];
 
-        if( 0 == str::compareI( "-h", a ) ||
-            0 == str::compareI( "-?", a ) ||
-            0 == str::compareI( "--help", a ) ||
-            0 == str::compareI( "/help", a ) ||
-            0 == str::compareI( "/h", a ) ||
-            0 == str::compareI( "/?", a ) )
-        {
-            StrA executableName = fs::baseName( argv[0] ) + fs::extName( argv[0] );
-            onPrintHelpScreen( executableName );
+        if (0 == str::compareI("-h", a) || 0 == str::compareI("-?", a) || 0 == str::compareI("--help", a) || 0 == str::compareI("/help", a) ||
+            0 == str::compareI("/h", a) || 0 == str::compareI("/?", a)) {
+            StrA executableName = fs::baseName(argv[0]) + fs::extName(argv[0]);
+            onPrintHelpScreen(executableName);
             return false;
-        }
-        else if( '-' == *a
-            #if GN_MSWIN
-            || '/' == *a
-            #endif
-            )
-        {
-            if( 0 == str::compareI( "dm", a+1 ) )
-            {
-                const char * value = sGetOptionValue( argc, argv, i );
-                if( NULL == value ) return false;
+        } else if ('-' == *a
+#if GN_MSWIN
+                   || '/' == *a
+#endif
+        ) {
+            if (0 == str::compareI("dm", a + 1)) {
+                const char * value = sGetOptionValue(argc, argv, i);
+                if (NULL == value) return false;
 
-                const char * MODES[] = { "f", "b", "w" };
-                mInitParam.ro.displayMode.mode = (gfx::DisplayMode::Mode)sParseStrings(a, value, MODES, countof(MODES));
-                if( mInitParam.ro.displayMode.mode < 0)
-                    return false;
-            }
-            else if( 0 == str::compareI( "mt", a+1 ) )
-            {
-                const char * value = sGetOptionValue( argc, argv, i );
-                if( NULL == value ) return false;
+                const char * MODES[]           = {"f", "b", "w"};
+                mInitParam.ro.displayMode.mode = (gfx::DisplayMode::Mode) sParseStrings(a, value, MODES, countof(MODES));
+                if (mInitParam.ro.displayMode.mode < 0) return false;
+            } else if (0 == str::compareI("mt", a + 1)) {
+                const char * value = sGetOptionValue(argc, argv, i);
+                if (NULL == value) return false;
 
-                if( !sParseBool( mInitParam.useMultithreadGpu, a, value ) )
-                    return false;
-            }
-            else if( 0 == str::compareI( "gpu", a+1 ) )
-            {
-                const char * value = sGetOptionValue( argc, argv, i );
-                if( NULL == value ) return false;
+                if (!sParseBool(mInitParam.useMultithreadGpu, a, value)) return false;
+            } else if (0 == str::compareI("gpu", a + 1)) {
+                const char * value = sGetOptionValue(argc, argv, i);
+                if (NULL == value) return false;
 
-                if( !sParseGpuAPI( mInitParam.ro.api, value ) )
-                    return false;
-            }
-            else if( 0 == str::compareI( "ll", a+1 ) )
-            {
-                StrA value =sGetOptionValue( argc, argv, i );
-                if( value.empty() ) return false;
+                if (!sParseGpuAPI(mInitParam.ro.api, value)) return false;
+            } else if (0 == str::compareI("ll", a + 1)) {
+                StrA value = sGetOptionValue(argc, argv, i);
+                if (value.empty()) return false;
 
-                size_t k = value.findFirstOf( ":" );
-                if( StrA::NOT_FOUND == k )
-                {
-                    GN_ERROR(sLogger)( "Log level must be in format of 'name:level'" );
-                }
-                else
-                {
-                    StrA name( value.subString( 0, k ) );
-                    StrA leveltok( value.subString( k+1, 0 ) );
-                    int level;
-                    if( !name.empty() && 0 != str::toInetger( level, leveltok.rawptr() ) )
-                    {
-                        getLogger( name.rawptr() )->setLevel( level );
-                    }
-                    else
-                    {
-                        GN_ERROR(sLogger)( "Log level must be in format of 'name:level'" );
+                size_t k = value.findFirstOf(":");
+                if (StrA::NOT_FOUND == k) {
+                    GN_ERROR(sLogger)("Log level must be in format of 'name:level'");
+                } else {
+                    StrA name(value.subString(0, k));
+                    StrA leveltok(value.subString(k + 1, 0));
+                    int  level;
+                    if (!name.empty() && 0 != str::toInetger(level, leveltok.rawptr())) {
+                        getLogger(name.rawptr())->setLevel(level);
+                    } else {
+                        GN_ERROR(sLogger)("Log level must be in format of 'name:level'");
                     }
                 }
-            }
-            else if( 0 == str::compareI( "ww", a+1 ) )
-            {
-                StrA value = sGetOptionValue( argc, argv, i );
-                if( value.empty() ) return false;
+            } else if (0 == str::compareI("ww", a + 1)) {
+                StrA value = sGetOptionValue(argc, argv, i);
+                if (value.empty()) return false;
 
-                if( !sParseInteger( mInitParam.ro.displayMode.width, a, value ) ) return false;
-            }
-            else if( 0 == str::compareI( "wh", a+1 ) )
-            {
-                StrA value = sGetOptionValue( argc, argv, i );
-                if( value.empty() ) return false;
+                if (!sParseInteger(mInitParam.ro.displayMode.width, a, value)) return false;
+            } else if (0 == str::compareI("wh", a + 1)) {
+                StrA value = sGetOptionValue(argc, argv, i);
+                if (value.empty()) return false;
 
-                if( !sParseInteger( mInitParam.ro.displayMode.height, a, value ) ) return false;
-            }
-            else if( 0 == str::compareI( "vsync", a+1 ) )
-            {
-                StrA value = sGetOptionValue( argc, argv, i );
-                if( value.empty() ) return false;
+                if (!sParseInteger(mInitParam.ro.displayMode.height, a, value)) return false;
+            } else if (0 == str::compareI("vsync", a + 1)) {
+                StrA value = sGetOptionValue(argc, argv, i);
+                if (value.empty()) return false;
 
-                if( !sParseBool( mInitParam.ro.vsync, a, value ) ) return false;
-            }
-            else
-            {
+                if (!sParseBool(mInitParam.ro.vsync, a, value)) return false;
+            } else {
                 // this is an extra option
-                unknownArgs.append( a );
+                unknownArgs.append(a);
             }
-        }
-        else
-        {
+        } else {
             // this is non-option argument
-            unknownArgs.append( a );
+            unknownArgs.append(a);
         }
     }
 
     // handle unrecoganized arguments
-    if( !onCheckExtraCmdlineArguments( argv[0], (int)unknownArgs.size(), unknownArgs.rawptr() ) ) return false;
+    if (!onCheckExtraCmdlineArguments(argv[0], (int) unknownArgs.size(), unknownArgs.rawptr())) return false;
 
     // success
     return true;
@@ -546,28 +445,27 @@ bool GN::util::SampleApp::checkCmdLine( int argc, const char * const argv[] )
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::util::SampleApp::initEngine()
-{
+bool GN::util::SampleApp::initEngine() {
     GN_GUARD;
 
-    if( !engine::initialize() ) return false;
+    if (!engine::initialize()) return false;
 
     engine::GfxInitOptions gio;
-    gio.gpuOptions = mInitParam.ro;
-    gio.useMultithreadGpu = mInitParam.useMultithreadGpu;
+    gio.gpuOptions          = mInitParam.ro;
+    gio.useMultithreadGpu   = mInitParam.useMultithreadGpu;
     gio.defaultNonAsciiFont = mInitParam.defaultFont;
-    gio.defaultAsciiFont = mInitParam.asciiFont;
-    if( !engine::gfxInitialize( gio ) ) return false;
+    gio.defaultAsciiFont    = mInitParam.asciiFont;
+    if (!engine::gfxInitialize(gio)) return false;
 
     // connect to renderer signal: post quit event, if render window is closed.
-    engine::getGpu()->getSignals().rendererWindowClose.connect( this, &SampleApp::postExitEvent );
-    engine::getGpu()->getSignals().rendererWindowSizeMove.connect( this, &SampleApp::onRenderWindowResize );
+    engine::getGpu()->getSignals().rendererWindowClose.connect(this, &SampleApp::postExitEvent);
+    engine::getGpu()->getSignals().rendererWindowSizeMove.connect(this, &SampleApp::onRenderWindowResize);
 
     // initialize input system
-    if( !engine::inputInitialize( mInitParam.iapi ) ) return false;
-    gInput.sigKeyPress.connect( this, &SampleApp::onKeyPress );
-    gInput.sigCharPress.connect( this, &SampleApp::onCharPress );
-    gInput.sigAxisMove.connect( this, &SampleApp::onAxisMove );
+    if (!engine::inputInitialize(mInitParam.iapi)) return false;
+    gInput.sigKeyPress.connect(this, &SampleApp::onKeyPress);
+    gInput.sigCharPress.connect(this, &SampleApp::onCharPress);
+    gInput.sigAxisMove.connect(this, &SampleApp::onAxisMove);
 
     // done
     return true;
@@ -578,8 +476,7 @@ bool GN::util::SampleApp::initEngine()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::util::SampleApp::quitEngine()
-{
+void GN::util::SampleApp::quitEngine() {
     GN_GUARD;
 
     engine::shutdown();
@@ -590,26 +487,19 @@ void GN::util::SampleApp::quitEngine()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::util::SampleApp::drawHUD()
-{
+void GN::util::SampleApp::drawHUD() {
     GN_GUARD_SLOW;
 
-    if( mShowHUD )
-    {
+    if (mShowHUD) {
         BitmapFont * font = engine::getDefaultFontRenderer();
 
-        StrW timeInfo = str::format(
-            L"FPS: %.2f\tIdle: %.1f%%\n"
-            L"(Press F1 for more helps)",
-            mFps.fps(),
-            mFrameIdlePercentage );
+        StrW timeInfo = str::format(L"FPS: %.2f\tIdle: %.1f%%\n"
+                                    L"(Press F1 for more helps)",
+                                    mFps.fps(), mFrameIdlePercentage);
 
-        font->drawText( timeInfo.rawptr(), 40, 40 );
+        font->drawText(timeInfo.rawptr(), 40, 40);
 
-        if( mShowHelp )
-        {
-            font->drawText( mHelpText, 40, 120 );
-        }
+        if (mShowHelp) { font->drawText(mHelpText, 40, 120); }
     }
 
     GN_UNGUARD_SLOW;

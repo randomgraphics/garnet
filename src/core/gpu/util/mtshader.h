@@ -8,127 +8,125 @@
 
 #include "mtgpu.h"
 
-namespace GN { namespace gfx
-{
-    ///
-    /// multithread GPU uniform
-    ///
-    class MultiThreadUniform : public Uniform, public StdClass
-    {
-        GN_DECLARE_STDCLASS( MultiThreadUniform, StdClass );
+namespace GN {
+namespace gfx {
+///
+/// multithread GPU uniform
+///
+class MultiThreadUniform : public Uniform, public StdClass {
+    GN_DECLARE_STDCLASS(MultiThreadUniform, StdClass);
 
-        // ********************************
-        // ctor/dtor
-        // ********************************
+    // ********************************
+    // ctor/dtor
+    // ********************************
 
-        //@{
-    public:
-        MultiThreadUniform( MultiThreadGpu & r ) : mGpu(r) { clear(); }
-        virtual ~MultiThreadUniform() { quit(); }
-        //@}
+    //@{
+public:
+    MultiThreadUniform(MultiThreadGpu & r): mGpu(r) { clear(); }
+    virtual ~MultiThreadUniform() { quit(); }
+    //@}
 
-        // ********************************
-        // from StdClass
-        // ********************************
+    // ********************************
+    // from StdClass
+    // ********************************
 
-        //@{
-    public:
-        bool init( Uniform * );
-        void quit();
-    private:
-        void clear() { mUniform = NULL; mFrontEndData = NULL; }
-        //@}
+    //@{
+public:
+    bool init(Uniform *);
+    void quit();
 
-        // ********************************
-        // public functions
-        // ********************************
-    public:
+private:
+    void clear() {
+        mUniform      = NULL;
+        mFrontEndData = NULL;
+    }
+    //@}
 
-        Uniform * getRealUniform() const { return mUniform; }
+    // ********************************
+    // public functions
+    // ********************************
+public:
+    Uniform * getRealUniform() const { return mUniform; }
 
-        // ********************************
-        // from GpuProgram
-        // ********************************
-    public:
+    // ********************************
+    // from GpuProgram
+    // ********************************
+public:
+    virtual uint32       size() const { return mSize; }
+    virtual const void * getval() const { return mFrontEndData; }
+    virtual void         update(uint32 offset, uint32 length, const void * data);
 
-        virtual uint32 size() const { return mSize; }
-        virtual const void * getval() const { return mFrontEndData; }
-        virtual void update( uint32 offset, uint32 length, const void * data );
+    // ********************************
+    // private variables
+    // ********************************
+private:
+    MultiThreadGpu & mGpu;
+    Uniform *        mUniform;
+    uint32           mSize;
+    uint8 *          mFrontEndData;
 
-        // ********************************
-        // private variables
-        // ********************************
-    private:
+    // ********************************
+    // private functions
+    // ********************************
+private:
+};
 
-        MultiThreadGpu & mGpu;
-        Uniform             * mUniform;
-        uint32                mSize;
-        uint8               * mFrontEndData;
+///
+/// multithread GPU program wrapper
+///
+class MultiThreadGpuProgram : public GpuProgram, public StdClass {
+    GN_DECLARE_STDCLASS(MultiThreadGpuProgram, StdClass);
 
-        // ********************************
-        // private functions
-        // ********************************
-    private:
-    };
+    // ********************************
+    // ctor/dtor
+    // ********************************
 
-    ///
-    /// multithread GPU program wrapper
-    ///
-    class MultiThreadGpuProgram : public GpuProgram, public StdClass
-    {
-        GN_DECLARE_STDCLASS( MultiThreadGpuProgram, StdClass );
+    //@{
+public:
+    MultiThreadGpuProgram(MultiThreadGpu & r): mGpu(r) { clear(); }
+    virtual ~MultiThreadGpuProgram() { quit(); }
+    //@}
 
-        // ********************************
-        // ctor/dtor
-        // ********************************
+    // ********************************
+    // from StdClass
+    // ********************************
 
-        //@{
-    public:
-        MultiThreadGpuProgram( MultiThreadGpu & r ) : mGpu(r) { clear(); }
-        virtual ~MultiThreadGpuProgram() { quit(); }
-        //@}
+    //@{
+public:
+    bool init(GpuProgram *);
+    void quit();
 
-        // ********************************
-        // from StdClass
-        // ********************************
+private:
+    void clear() { mGpuProgram = NULL; }
+    //@}
 
-        //@{
-    public:
-        bool init( GpuProgram * );
-        void quit();
-    private:
-        void clear() { mGpuProgram = NULL; }
-        //@}
+    // ********************************
+    // public method
+    // ********************************
+public:
+    GpuProgram * getRealGpuProgram() const { return mGpuProgram; }
 
-        // ********************************
-        // public method
-        // ********************************
-    public:
+    // ********************************
+    // from GpuProgram
+    // ********************************
+public:
+    virtual const GpuProgramParameterDesc & getParameterDesc() const { return *mParamDesc; }
 
-        GpuProgram * getRealGpuProgram() const { return mGpuProgram; }
+    // ********************************
+    // private variables
+    // ********************************
+private:
+    MultiThreadGpu &                mGpu;
+    GpuProgram *                    mGpuProgram;
+    const GpuProgramParameterDesc * mParamDesc;
 
-        // ********************************
-        // from GpuProgram
-        // ********************************
-    public:
-
-        virtual const GpuProgramParameterDesc & getParameterDesc() const { return *mParamDesc; }
-
-        // ********************************
-        // private variables
-        // ********************************
-    private:
-
-        MultiThreadGpu                & mGpu;
-        GpuProgram                    * mGpuProgram;
-        const GpuProgramParameterDesc * mParamDesc;
-
-        // ********************************
-        // private functions
-        // ********************************
-    private:
-    };
-}}
+    // ********************************
+    // private functions
+    // ********************************
+private:
+};
+} // namespace gfx
+} // namespace GN
 
 // *****************************************************************************
 //                                     EOF

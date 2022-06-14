@@ -9,48 +9,43 @@
 
 #include "pch.h"
 
-namespace D3DX11Effects
-{
+namespace D3DX11Effects {
 
 SEffectInvalidType g_InvalidType;
 
-SEffectInvalidScalarVariable g_InvalidScalarVariable;
-SEffectInvalidVectorVariable g_InvalidVectorVariable;
-SEffectInvalidMatrixVariable g_InvalidMatrixVariable;
-SEffectInvalidStringVariable g_InvalidStringVariable;
-SEffectInvalidClassInstanceVariable g_InvalidClassInstanceVariable;
-SEffectInvalidInterfaceVariable g_InvalidInterfaceVariable;
-SEffectInvalidShaderResourceVariable g_InvalidShaderResourceVariable;
+SEffectInvalidScalarVariable              g_InvalidScalarVariable;
+SEffectInvalidVectorVariable              g_InvalidVectorVariable;
+SEffectInvalidMatrixVariable              g_InvalidMatrixVariable;
+SEffectInvalidStringVariable              g_InvalidStringVariable;
+SEffectInvalidClassInstanceVariable       g_InvalidClassInstanceVariable;
+SEffectInvalidInterfaceVariable           g_InvalidInterfaceVariable;
+SEffectInvalidShaderResourceVariable      g_InvalidShaderResourceVariable;
 SEffectInvalidUnorderedAccessViewVariable g_InvalidUnorderedAccessViewVariable;
-SEffectInvalidRenderTargetViewVariable g_InvalidRenderTargetViewVariable;
-SEffectInvalidDepthStencilViewVariable g_InvalidDepthStencilViewVariable;
-SEffectInvalidConstantBuffer g_InvalidConstantBuffer;
-SEffectInvalidShaderVariable g_InvalidShaderVariable;
-SEffectInvalidBlendVariable g_InvalidBlendVariable;
-SEffectInvalidDepthStencilVariable g_InvalidDepthStencilVariable;
-SEffectInvalidRasterizerVariable g_InvalidRasterizerVariable;
-SEffectInvalidSamplerVariable g_InvalidSamplerVariable;
+SEffectInvalidRenderTargetViewVariable    g_InvalidRenderTargetViewVariable;
+SEffectInvalidDepthStencilViewVariable    g_InvalidDepthStencilViewVariable;
+SEffectInvalidConstantBuffer              g_InvalidConstantBuffer;
+SEffectInvalidShaderVariable              g_InvalidShaderVariable;
+SEffectInvalidBlendVariable               g_InvalidBlendVariable;
+SEffectInvalidDepthStencilVariable        g_InvalidDepthStencilVariable;
+SEffectInvalidRasterizerVariable          g_InvalidRasterizerVariable;
+SEffectInvalidSamplerVariable             g_InvalidSamplerVariable;
 
-SEffectInvalidPass g_InvalidPass;
+SEffectInvalidPass      g_InvalidPass;
 SEffectInvalidTechnique g_InvalidTechnique;
-SEffectInvalidGroup g_InvalidGroup;
-
+SEffectInvalidGroup     g_InvalidGroup;
 
 //////////////////////////////////////////////////////////////////////////
 // Helper routine implementations
 //////////////////////////////////////////////////////////////////////////
 
-ID3DX11EffectConstantBuffer * NoParentCB()
-{
+ID3DX11EffectConstantBuffer * NoParentCB() {
     DPF(0, "ID3DX11EffectVariable::GetParentConstantBuffer: Variable does not have a parent constant buffer");
     // have to typecast because the type of g_InvalidScalarVariable has not been declared yet
     return &g_InvalidConstantBuffer;
 }
 
-ID3DX11EffectVariable * GetAnnotationByIndexHelper(const char *pClassName, UINT  Index, UINT  AnnotationCount, SAnnotation *pAnnotations)
-{
-    if (Index >= AnnotationCount)
-    {
+ID3DX11EffectVariable * GetAnnotationByIndexHelper(const char * pClassName, UINT Index, UINT AnnotationCount, SAnnotation * pAnnotations) {
+    if (Index >= AnnotationCount) {
         DPF(0, "%s::GetAnnotationByIndex: Invalid index (%d, total: %d)", pClassName, Index, AnnotationCount);
         return &g_InvalidScalarVariable;
     }
@@ -58,15 +53,10 @@ ID3DX11EffectVariable * GetAnnotationByIndexHelper(const char *pClassName, UINT 
     return pAnnotations + Index;
 }
 
-ID3DX11EffectVariable * GetAnnotationByNameHelper(const char *pClassName, LPCSTR Name, UINT  AnnotationCount, SAnnotation *pAnnotations)
-{
-    UINT  i;
-    for (i = 0; i < AnnotationCount; ++ i)
-    {
-        if (strcmp(pAnnotations[i].pName, Name) == 0)
-        {
-            return pAnnotations + i;
-        }
+ID3DX11EffectVariable * GetAnnotationByNameHelper(const char * pClassName, LPCSTR Name, UINT AnnotationCount, SAnnotation * pAnnotations) {
+    UINT i;
+    for (i = 0; i < AnnotationCount; ++i) {
+        if (strcmp(pAnnotations[i].pName, Name) == 0) { return pAnnotations + i; }
     }
 
     DPF(0, "%s::GetAnnotationByName: Annotation [%s] not found", pClassName, Name);
@@ -77,26 +67,19 @@ ID3DX11EffectVariable * GetAnnotationByNameHelper(const char *pClassName, LPCSTR
 // Effect routines to pool interfaces
 //////////////////////////////////////////////////////////////////////////
 
-ID3DX11EffectType * CEffect::CreatePooledSingleElementTypeInterface(SType *pType)
-{
-    UINT  i;
+ID3DX11EffectType * CEffect::CreatePooledSingleElementTypeInterface(SType * pType) {
+    UINT i;
 
-    if (IsOptimized())
-    {
+    if (IsOptimized()) {
         DPF(0, "ID3DX11Effect: Cannot create new type interfaces since the effect has been Optimize()'ed");
         return &g_InvalidType;
     }
 
-    for (i = 0; i < m_pTypeInterfaces.GetSize(); ++ i)
-    {
-        if (m_pTypeInterfaces[i]->pType == pType)
-        {
-            return (SSingleElementType*)m_pTypeInterfaces[i];
-        }
+    for (i = 0; i < m_pTypeInterfaces.GetSize(); ++i) {
+        if (m_pTypeInterfaces[i]->pType == pType) { return (SSingleElementType *) m_pTypeInterfaces[i]; }
     }
-    SSingleElementType *pNewType;
-    if (NULL == (pNewType = NEW SSingleElementType))
-    {
+    SSingleElementType * pNewType;
+    if (NULL == (pNewType = NEW SSingleElementType)) {
         DPF(0, "ID3DX11Effect: Out of memory while trying to create new type interface");
         return &g_InvalidType;
     }
@@ -108,76 +91,62 @@ ID3DX11EffectType * CEffect::CreatePooledSingleElementTypeInterface(SType *pType
 }
 
 // Create a member variable (via GetMemberBy* or GetElement)
-ID3DX11EffectVariable * CEffect::CreatePooledVariableMemberInterface(TTopLevelVariable<ID3DX11EffectVariable> *pTopLevelEntity, SVariable *pMember, UDataPointer Data, BOOL IsSingleElement, UINT Index)
-{
+ID3DX11EffectVariable * CEffect::CreatePooledVariableMemberInterface(TTopLevelVariable<ID3DX11EffectVariable> * pTopLevelEntity, SVariable * pMember,
+                                                                     UDataPointer Data, BOOL IsSingleElement, UINT Index) {
     BOOL IsAnnotation;
-    UINT  i;
+    UINT i;
 
-    if (IsOptimized())
-    {
+    if (IsOptimized()) {
         DPF(0, "ID3DX11Effect: Cannot create new variable interfaces since the effect has been Optimize()'ed");
         return &g_InvalidScalarVariable;
     }
 
-    for (i = 0; i < m_pMemberInterfaces.GetSize(); ++ i)
-    {
-        if (m_pMemberInterfaces[i]->pType == pMember->pType &&
-            m_pMemberInterfaces[i]->pName == pMember->pName &&
-            m_pMemberInterfaces[i]->pSemantic == pMember->pSemantic &&
-            m_pMemberInterfaces[i]->Data.pGeneric == Data.pGeneric &&
-            m_pMemberInterfaces[i]->IsSingleElement == IsSingleElement &&
-            ((SMember*)m_pMemberInterfaces[i])->pTopLevelEntity == pTopLevelEntity)
-        {
+    for (i = 0; i < m_pMemberInterfaces.GetSize(); ++i) {
+        if (m_pMemberInterfaces[i]->pType == pMember->pType && m_pMemberInterfaces[i]->pName == pMember->pName &&
+            m_pMemberInterfaces[i]->pSemantic == pMember->pSemantic && m_pMemberInterfaces[i]->Data.pGeneric == Data.pGeneric &&
+            m_pMemberInterfaces[i]->IsSingleElement == IsSingleElement && ((SMember *) m_pMemberInterfaces[i])->pTopLevelEntity == pTopLevelEntity) {
             return (ID3DX11EffectVariable *) m_pMemberInterfaces[i];
         }
     }
 
     // is this annotation or runtime data?
-    if( pTopLevelEntity->pEffect->IsReflectionData(pTopLevelEntity) )
-    {
-        D3DXASSERT( pTopLevelEntity->pEffect->IsReflectionData(Data.pGeneric) );
+    if (pTopLevelEntity->pEffect->IsReflectionData(pTopLevelEntity)) {
+        D3DXASSERT(pTopLevelEntity->pEffect->IsReflectionData(Data.pGeneric));
         IsAnnotation = TRUE;
-    }
-    else
-    {
+    } else {
         // if the heap is empty, we are still loading the Effect, and thus creating a member for a variable initializer
         // ex. Interface myInt = myClassArray[2];
-        if( pTopLevelEntity->pEffect->m_Heap.GetSize() > 0 )
-        {
-            D3DXASSERT( pTopLevelEntity->pEffect->IsRuntimeData(pTopLevelEntity) );
-            if (!pTopLevelEntity->pType->IsObjectType(EOT_String))
-            {
+        if (pTopLevelEntity->pEffect->m_Heap.GetSize() > 0) {
+            D3DXASSERT(pTopLevelEntity->pEffect->IsRuntimeData(pTopLevelEntity));
+            if (!pTopLevelEntity->pType->IsObjectType(EOT_String)) {
                 // strings are funny; their data is reflection data, so ignore those
-                D3DXASSERT( pTopLevelEntity->pEffect->IsRuntimeData(Data.pGeneric) );
+                D3DXASSERT(pTopLevelEntity->pEffect->IsRuntimeData(Data.pGeneric));
             }
         }
         IsAnnotation = FALSE;
     }
 
-    SMember *pNewMember;
+    SMember * pNewMember;
 
-    if (NULL == (pNewMember = CreateNewMember((SType*)pMember->pType, IsAnnotation)))
-    {
+    if (NULL == (pNewMember = CreateNewMember((SType *) pMember->pType, IsAnnotation))) {
         DPF(0, "ID3DX11Effect: Out of memory while trying to create new member variable interface");
         return &g_InvalidScalarVariable;
     }
 
-    pNewMember->pType = pMember->pType;
-    pNewMember->pName = pMember->pName;
-    pNewMember->pSemantic = pMember->pSemantic;
-    pNewMember->Data.pGeneric = Data.pGeneric;
+    pNewMember->pType           = pMember->pType;
+    pNewMember->pName           = pMember->pName;
+    pNewMember->pSemantic       = pMember->pSemantic;
+    pNewMember->Data.pGeneric   = Data.pGeneric;
     pNewMember->IsSingleElement = IsSingleElement;
     pNewMember->pTopLevelEntity = pTopLevelEntity;
 
-    if( IsSingleElement && pMember->pMemberData )
-    {
-        D3DXASSERT( !IsAnnotation );
+    if (IsSingleElement && pMember->pMemberData) {
+        D3DXASSERT(!IsAnnotation);
         // This is an element of a global variable array
         pNewMember->pMemberData = pMember->pMemberData + Index;
     }
 
-    if (FAILED(m_pMemberInterfaces.Add(pNewMember)))
-    {
+    if (FAILED(m_pMemberInterfaces.Add(pNewMember))) {
         SAFE_DELETE(pNewMember);
         DPF(0, "ID3DX11Effect: Out of memory while trying to create new member variable interface");
         return &g_InvalidScalarVariable;
@@ -190,20 +159,16 @@ ID3DX11EffectVariable * CEffect::CreatePooledVariableMemberInterface(TTopLevelVa
 // ID3DX11EffectType (SType, SSingleElementType implementations)
 //////////////////////////////////////////////////////////////////////////
 
-static ID3DX11EffectType * GetTypeByIndexHelper(UINT Index, UINT  VariableCount,
-                                               SVariable *pVariables, UINT  SizeOfVariableType)
-{
+static ID3DX11EffectType * GetTypeByIndexHelper(UINT Index, UINT VariableCount, SVariable * pVariables, UINT SizeOfVariableType) {
     LPCSTR pFuncName = "ID3DX11EffectType::GetMemberTypeByIndex";
 
-    if (Index >= VariableCount)
-    {
+    if (Index >= VariableCount) {
         DPF(0, "%s: Invalid index (%d, total: %d)", pFuncName, Index, VariableCount);
         return &g_InvalidType;
     }
 
-    SVariable *pVariable = (SVariable *)((BYTE *)pVariables + Index * SizeOfVariableType);
-    if (NULL == pVariable->pName)
-    {
+    SVariable * pVariable = (SVariable *) ((BYTE *) pVariables + Index * SizeOfVariableType);
+    if (NULL == pVariable->pName) {
         DPF(0, "%s: Cannot get member types; Effect has been Optimize()'ed", pFuncName);
         return &g_InvalidType;
     }
@@ -211,76 +176,56 @@ static ID3DX11EffectType * GetTypeByIndexHelper(UINT Index, UINT  VariableCount,
     return (ID3DX11EffectType *) pVariable->pType;
 }
 
-static ID3DX11EffectType * GetTypeByNameHelper(LPCSTR Name, UINT  VariableCount,
-                                              SVariable *pVariables, UINT  SizeOfVariableType)
-{
+static ID3DX11EffectType * GetTypeByNameHelper(LPCSTR Name, UINT VariableCount, SVariable * pVariables, UINT SizeOfVariableType) {
     LPCSTR pFuncName = "ID3DX11EffectType::GetMemberTypeByName";
 
-    if (NULL == Name)
-    {
+    if (NULL == Name) {
         DPF(0, "%s: Parameter Name was NULL.", pFuncName);
         return &g_InvalidType;
     }
 
-    UINT  i;
-    SVariable *pVariable;
+    UINT        i;
+    SVariable * pVariable;
 
-    for (i = 0; i < VariableCount; ++ i)
-    {
-        pVariable = (SVariable *)((BYTE *)pVariables + i * SizeOfVariableType);
-        if (NULL == pVariable->pName)
-        {
+    for (i = 0; i < VariableCount; ++i) {
+        pVariable = (SVariable *) ((BYTE *) pVariables + i * SizeOfVariableType);
+        if (NULL == pVariable->pName) {
             DPF(0, "%s: Cannot get member types; Effect has been Optimize()'ed", pFuncName);
             return &g_InvalidType;
         }
-        if (strcmp(pVariable->pName, Name) == 0)
-        {
-            return (ID3DX11EffectType *) pVariable->pType;
-        }
+        if (strcmp(pVariable->pName, Name) == 0) { return (ID3DX11EffectType *) pVariable->pType; }
     }
 
     DPF(0, "%s: Member type [%s] not found", pFuncName, Name);
     return &g_InvalidType;
 }
 
-
-static ID3DX11EffectType * GetTypeBySemanticHelper(LPCSTR Semantic, UINT  VariableCount,
-                                                  SVariable *pVariables, UINT  SizeOfVariableType)
-{
+static ID3DX11EffectType * GetTypeBySemanticHelper(LPCSTR Semantic, UINT VariableCount, SVariable * pVariables, UINT SizeOfVariableType) {
     LPCSTR pFuncName = "ID3DX11EffectType::GetMemberTypeBySemantic";
 
-    if (NULL == Semantic)
-    {
+    if (NULL == Semantic) {
         DPF(0, "%s: Parameter Semantic was NULL.", pFuncName);
         return &g_InvalidType;
     }
 
-    UINT  i;
-    SVariable *pVariable;
+    UINT        i;
+    SVariable * pVariable;
 
-    for (i = 0; i < VariableCount; ++ i)
-    {
-        pVariable = (SVariable *)((BYTE *)pVariables + i * SizeOfVariableType);
-        if (NULL == pVariable->pName)
-        {
+    for (i = 0; i < VariableCount; ++i) {
+        pVariable = (SVariable *) ((BYTE *) pVariables + i * SizeOfVariableType);
+        if (NULL == pVariable->pName) {
             DPF(0, "%s: Cannot get member types; Effect has been Optimize()'ed", pFuncName);
             return &g_InvalidType;
         }
-        if (NULL != pVariable->pSemantic &&
-            _stricmp(pVariable->pSemantic, Semantic) == 0)
-        {
-            return (ID3DX11EffectType *) pVariable->pType;
-        }
+        if (NULL != pVariable->pSemantic && _stricmp(pVariable->pSemantic, Semantic) == 0) { return (ID3DX11EffectType *) pVariable->pType; }
     }
 
     DPF(0, "%s: Member type with semantic [%s] not found", pFuncName, Semantic);
     return &g_InvalidType;
 }
 
-ID3DX11EffectType * SType::GetMemberTypeByIndex(UINT Index)
-{
-    if (VarType != EVT_Struct)
-    {
+ID3DX11EffectType * SType::GetMemberTypeByIndex(UINT Index) {
+    if (VarType != EVT_Struct) {
         DPF(0, "ID3DX11EffectType::GetMemberTypeByIndex: This interface does not refer to a structure");
         return &g_InvalidType;
     }
@@ -288,10 +233,8 @@ ID3DX11EffectType * SType::GetMemberTypeByIndex(UINT Index)
     return GetTypeByIndexHelper(Index, StructType.Members, StructType.pMembers, sizeof(SVariable));
 }
 
-ID3DX11EffectType * SType::GetMemberTypeByName(LPCSTR Name)
-{
-    if (VarType != EVT_Struct)
-    {
+ID3DX11EffectType * SType::GetMemberTypeByName(LPCSTR Name) {
+    if (VarType != EVT_Struct) {
         DPF(0, "ID3DX11EffectType::GetMemberTypeByName: This interface does not refer to a structure");
         return &g_InvalidType;
     }
@@ -299,10 +242,8 @@ ID3DX11EffectType * SType::GetMemberTypeByName(LPCSTR Name)
     return GetTypeByNameHelper(Name, StructType.Members, StructType.pMembers, sizeof(SVariable));
 }
 
-ID3DX11EffectType * SType::GetMemberTypeBySemantic(LPCSTR Semantic)
-{
-    if (VarType != EVT_Struct)
-    {
+ID3DX11EffectType * SType::GetMemberTypeBySemantic(LPCSTR Semantic) {
+    if (VarType != EVT_Struct) {
         DPF(0, "ID3DX11EffectType::GetMemberTypeBySemantic: This interface does not refer to a structure");
         return &g_InvalidType;
     }
@@ -310,26 +251,22 @@ ID3DX11EffectType * SType::GetMemberTypeBySemantic(LPCSTR Semantic)
     return GetTypeBySemanticHelper(Semantic, StructType.Members, StructType.pMembers, sizeof(SVariable));
 }
 
-LPCSTR SType::GetMemberName(UINT Index)
-{
+LPCSTR SType::GetMemberName(UINT Index) {
     LPCSTR pFuncName = "ID3DX11EffectType::GetMemberName";
 
-    if (VarType != EVT_Struct)
-    {
+    if (VarType != EVT_Struct) {
         DPF(0, "%s: This interface does not refer to a structure", pFuncName);
         return NULL;
     }
 
-    if (Index >= StructType.Members)
-    {
+    if (Index >= StructType.Members) {
         DPF(0, "%s: Invalid index (%d, total: %d)", pFuncName, Index, StructType.Members);
         return NULL;
     }
 
-    SVariable *pVariable = StructType.pMembers + Index;
+    SVariable * pVariable = StructType.pMembers + Index;
 
-    if (NULL == pVariable->pName)
-    {
+    if (NULL == pVariable->pName) {
         DPF(0, "%s: Cannot get member names; Effect has been Optimize()'ed", pFuncName);
         return NULL;
     }
@@ -337,26 +274,22 @@ LPCSTR SType::GetMemberName(UINT Index)
     return pVariable->pName;
 }
 
-LPCSTR SType::GetMemberSemantic(UINT Index)
-{
+LPCSTR SType::GetMemberSemantic(UINT Index) {
     LPCSTR pFuncName = "ID3DX11EffectType::GetMemberSemantic";
 
-    if (VarType != EVT_Struct)
-    {
+    if (VarType != EVT_Struct) {
         DPF(0, "%s: This interface does not refer to a structure", pFuncName);
         return NULL;
     }
 
-    if (Index >= StructType.Members)
-    {
+    if (Index >= StructType.Members) {
         DPF(0, "%s: Invalid index (%d, total: %d)", pFuncName, Index, StructType.Members);
         return NULL;
     }
 
-    SVariable *pVariable = StructType.pMembers + Index;
+    SVariable * pVariable = StructType.pMembers + Index;
 
-    if (NULL == pVariable->pName)
-    {
+    if (NULL == pVariable->pName) {
         DPF(0, "%s: Cannot get member semantics; Effect has been Optimize()'ed", pFuncName);
         return NULL;
     }
@@ -364,33 +297,27 @@ LPCSTR SType::GetMemberSemantic(UINT Index)
     return pVariable->pSemantic;
 }
 
-HRESULT SType::GetDescHelper(D3DX11_EFFECT_TYPE_DESC *pDesc, BOOL IsSingleElement) const
-{
-    HRESULT hr = S_OK;
-    LPCSTR pFuncName = "ID3DX11EffectType::GetDesc";
+HRESULT SType::GetDescHelper(D3DX11_EFFECT_TYPE_DESC * pDesc, BOOL IsSingleElement) const {
+    HRESULT hr        = S_OK;
+    LPCSTR  pFuncName = "ID3DX11EffectType::GetDesc";
 
     VERIFYPARAMETER(pDesc);
 
     pDesc->TypeName = pTypeName;
 
     // intentionally return 0 so they know it's not a single element array
-    pDesc->Elements = IsSingleElement ? 0 : Elements;
-    pDesc->PackedSize = GetTotalPackedSize(IsSingleElement);
+    pDesc->Elements     = IsSingleElement ? 0 : Elements;
+    pDesc->PackedSize   = GetTotalPackedSize(IsSingleElement);
     pDesc->UnpackedSize = GetTotalUnpackedSize(IsSingleElement);
-    pDesc->Stride = Stride;
+    pDesc->Stride       = Stride;
 
-    switch (VarType)
-    {
+    switch (VarType) {
     case EVT_Numeric:
-        switch (NumericType.NumericLayout)
-        {
+        switch (NumericType.NumericLayout) {
         case ENL_Matrix:
-            if (NumericType.IsColumnMajor)
-            {
+            if (NumericType.IsColumnMajor) {
                 pDesc->Class = D3D10_SVC_MATRIX_COLUMNS;
-            }
-            else
-            {
+            } else {
                 pDesc->Class = D3D10_SVC_MATRIX_ROWS;
             }
             break;
@@ -404,8 +331,7 @@ HRESULT SType::GetDescHelper(D3DX11_EFFECT_TYPE_DESC *pDesc, BOOL IsSingleElemen
             D3DXASSERT(0);
         }
 
-        switch (NumericType.ScalarType)
-        {
+        switch (NumericType.ScalarType) {
         case EST_Bool:
             pDesc->Type = D3D10_SVT_BOOL;
             break;
@@ -422,43 +348,39 @@ HRESULT SType::GetDescHelper(D3DX11_EFFECT_TYPE_DESC *pDesc, BOOL IsSingleElemen
             D3DXASSERT(0);
         }
 
-        pDesc->Rows = NumericType.Rows;
+        pDesc->Rows    = NumericType.Rows;
         pDesc->Columns = NumericType.Columns;
         pDesc->Members = 0;
 
         break;
 
     case EVT_Struct:
-        pDesc->Rows = 0;
+        pDesc->Rows    = 0;
         pDesc->Columns = 0;
         pDesc->Members = StructType.Members;
-        if( StructType.ImplementsInterface )
-        {
+        if (StructType.ImplementsInterface) {
             pDesc->Class = D3D11_SVC_INTERFACE_CLASS;
-        }
-        else
-        {
+        } else {
             pDesc->Class = D3D10_SVC_STRUCT;
         }
         pDesc->Type = D3D10_SVT_VOID;
         break;
 
     case EVT_Interface:
-        pDesc->Rows = 0;
+        pDesc->Rows    = 0;
         pDesc->Columns = 0;
         pDesc->Members = 0;
-        pDesc->Class = D3D11_SVC_INTERFACE_POINTER;
-        pDesc->Type = D3D11_SVT_INTERFACE_POINTER;
+        pDesc->Class   = D3D11_SVC_INTERFACE_POINTER;
+        pDesc->Type    = D3D11_SVT_INTERFACE_POINTER;
         break;
 
     case EVT_Object:
-        pDesc->Rows = 0;
+        pDesc->Rows    = 0;
         pDesc->Columns = 0;
         pDesc->Members = 0;
-        pDesc->Class = D3D10_SVC_OBJECT;
+        pDesc->Class   = D3D10_SVC_OBJECT;
 
-        switch (ObjectType)
-        {
+        switch (ObjectType) {
         case EOT_String:
             pDesc->Type = D3D10_SVT_STRING;
             break;
@@ -585,106 +507,75 @@ HRESULT SType::GetDescHelper(D3DX11_EFFECT_TYPE_DESC *pDesc, BOOL IsSingleElemen
 
 lExit:
     return hr;
-
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 // ID3DX11EffectShaderVariable (SAnonymousShader implementation)
 ////////////////////////////////////////////////////////////////////////////////
 
-SAnonymousShader::SAnonymousShader(SShaderBlock *pBlock)
-{
-    pShaderBlock = pBlock;
-}
+SAnonymousShader::SAnonymousShader(SShaderBlock * pBlock) { pShaderBlock = pBlock; }
 
-BOOL SAnonymousShader::IsValid()
-{
-    return pShaderBlock && pShaderBlock->IsValid;
-}
+BOOL SAnonymousShader::IsValid() { return pShaderBlock && pShaderBlock->IsValid; }
 
-ID3DX11EffectType * SAnonymousShader::GetType()
-{
-    return (ID3DX11EffectType *) this;
-}
+ID3DX11EffectType * SAnonymousShader::GetType() { return (ID3DX11EffectType *) this; }
 
-HRESULT SAnonymousShader::GetDesc(D3DX11_EFFECT_VARIABLE_DESC *pDesc)
-{
+HRESULT SAnonymousShader::GetDesc(D3DX11_EFFECT_VARIABLE_DESC * pDesc) {
     pDesc->Annotations = 0;
-    pDesc->Flags = 0;
+    pDesc->Flags       = 0;
 
-    pDesc->Name = "$Anonymous";
-    pDesc->Semantic = NULL;
+    pDesc->Name         = "$Anonymous";
+    pDesc->Semantic     = NULL;
     pDesc->BufferOffset = 0;
 
     return S_OK;
 }
 
-ID3DX11EffectVariable * SAnonymousShader::GetAnnotationByIndex(UINT Index)
-{
+ID3DX11EffectVariable * SAnonymousShader::GetAnnotationByIndex(UINT Index) {
     DPF(0, "ID3DX11EffectVariable::GetAnnotationByIndex: Anonymous shaders cannot have annotations");
     return &g_InvalidScalarVariable;
 }
 
-ID3DX11EffectVariable * SAnonymousShader::GetAnnotationByName(LPCSTR Name)
-{
+ID3DX11EffectVariable * SAnonymousShader::GetAnnotationByName(LPCSTR Name) {
     DPF(0, "ID3DX11EffectVariable::GetAnnotationByName: Anonymous shaders cannot have annotations");
     return &g_InvalidScalarVariable;
 }
 
-ID3DX11EffectVariable * SAnonymousShader::GetMemberByIndex(UINT  Index)
-{
+ID3DX11EffectVariable * SAnonymousShader::GetMemberByIndex(UINT Index) {
     DPF(0, "ID3DX11EffectVariable::GetMemberByIndex: Variable is not a structure");
     return &g_InvalidScalarVariable;
 }
 
-ID3DX11EffectVariable * SAnonymousShader::GetMemberByName(LPCSTR Name)
-{
+ID3DX11EffectVariable * SAnonymousShader::GetMemberByName(LPCSTR Name) {
     DPF(0, "ID3DX11EffectVariable::GetMemberByName: Variable is not a structure");
     return &g_InvalidScalarVariable;
 }
 
-ID3DX11EffectVariable * SAnonymousShader::GetMemberBySemantic(LPCSTR Semantic)
-{
+ID3DX11EffectVariable * SAnonymousShader::GetMemberBySemantic(LPCSTR Semantic) {
     DPF(0, "ID3DX11EffectVariable::GetMemberBySemantic: Variable is not a structure");
     return &g_InvalidScalarVariable;
 }
 
-ID3DX11EffectVariable * SAnonymousShader::GetElement(UINT Index)
-{
+ID3DX11EffectVariable * SAnonymousShader::GetElement(UINT Index) {
     DPF(0, "ID3DX11EffectVariable::GetElement: Anonymous shaders cannot have elements");
     return &g_InvalidScalarVariable;
 }
 
-ID3DX11EffectConstantBuffer * SAnonymousShader::GetParentConstantBuffer()
-{
-    return NoParentCB();
-}
+ID3DX11EffectConstantBuffer * SAnonymousShader::GetParentConstantBuffer() { return NoParentCB(); }
 
-ID3DX11EffectShaderVariable * SAnonymousShader::AsShader()
-{
-    return (ID3DX11EffectShaderVariable *) this;
-}
+ID3DX11EffectShaderVariable * SAnonymousShader::AsShader() { return (ID3DX11EffectShaderVariable *) this; }
 
-HRESULT SAnonymousShader::SetRawValue(CONST void *pData, UINT Offset, UINT Count)
-{
-    return ObjectSetRawValue();
-}
+HRESULT SAnonymousShader::SetRawValue(CONST void * pData, UINT Offset, UINT Count) { return ObjectSetRawValue(); }
 
-HRESULT SAnonymousShader::GetRawValue(__out_bcount(Count) void *pData, UINT Offset, UINT Count)
-{
-    return ObjectGetRawValue();
-}
+HRESULT SAnonymousShader::GetRawValue(__out_bcount(Count) void * pData, UINT Offset, UINT Count) { return ObjectGetRawValue(); }
 
-#define ANONYMOUS_SHADER_INDEX_CHECK() \
-    HRESULT hr = S_OK; \
-    if (0 != ShaderIndex) \
-    { \
+#define ANONYMOUS_SHADER_INDEX_CHECK()                    \
+    HRESULT hr = S_OK;                                    \
+    if (0 != ShaderIndex) {                               \
         DPF(0, "%s: Invalid index specified", pFuncName); \
-        VH(E_INVALIDARG); \
-    } \
+        VH(E_INVALIDARG);                                 \
+    }
 
-HRESULT SAnonymousShader::GetShaderDesc(UINT ShaderIndex, D3DX11_EFFECT_SHADER_DESC *pDesc)
-{
+HRESULT SAnonymousShader::GetShaderDesc(UINT ShaderIndex, D3DX11_EFFECT_SHADER_DESC * pDesc) {
     LPCSTR pFuncName = "ID3DX11EffectShaderVariable::GetShaderDesc";
 
     ANONYMOUS_SHADER_INDEX_CHECK();
@@ -695,186 +586,170 @@ lExit:
     return hr;
 }
 
-HRESULT SAnonymousShader::GetVertexShader(UINT ShaderIndex, ID3D11VertexShader **ppVS)
-{
+HRESULT SAnonymousShader::GetVertexShader(UINT ShaderIndex, ID3D11VertexShader ** ppVS) {
     LPCSTR pFuncName = "ID3DX11EffectShaderVariable::GetVertexShader";
 
     ANONYMOUS_SHADER_INDEX_CHECK();
 
-    VH( pShaderBlock->GetVertexShader(ppVS) );
+    VH(pShaderBlock->GetVertexShader(ppVS));
 
 lExit:
     return hr;
 }
 
-HRESULT SAnonymousShader::GetGeometryShader(UINT ShaderIndex, ID3D11GeometryShader **ppGS)
-{
+HRESULT SAnonymousShader::GetGeometryShader(UINT ShaderIndex, ID3D11GeometryShader ** ppGS) {
     LPCSTR pFuncName = "ID3DX11EffectShaderVariable::GetGeometryShader";
 
     ANONYMOUS_SHADER_INDEX_CHECK();
 
-    VH( pShaderBlock->GetGeometryShader(ppGS) );
+    VH(pShaderBlock->GetGeometryShader(ppGS));
 
 lExit:
     return hr;
 }
 
-HRESULT SAnonymousShader::GetPixelShader(UINT ShaderIndex, ID3D11PixelShader **ppPS)
-{
+HRESULT SAnonymousShader::GetPixelShader(UINT ShaderIndex, ID3D11PixelShader ** ppPS) {
     LPCSTR pFuncName = "ID3DX11EffectShaderVariable::GetPixelShader";
 
     ANONYMOUS_SHADER_INDEX_CHECK();
 
-    VH( pShaderBlock->GetPixelShader(ppPS) );
+    VH(pShaderBlock->GetPixelShader(ppPS));
 
 lExit:
     return hr;
 }
 
-HRESULT SAnonymousShader::GetHullShader(UINT ShaderIndex, ID3D11HullShader **ppHS)
-{
+HRESULT SAnonymousShader::GetHullShader(UINT ShaderIndex, ID3D11HullShader ** ppHS) {
     LPCSTR pFuncName = "ID3DX11EffectShaderVariable::GetHullShader";
 
     ANONYMOUS_SHADER_INDEX_CHECK();
 
-    VH( pShaderBlock->GetHullShader(ppHS) );
+    VH(pShaderBlock->GetHullShader(ppHS));
 
 lExit:
     return hr;
 }
 
-HRESULT SAnonymousShader::GetDomainShader(UINT ShaderIndex, ID3D11DomainShader **ppCS)
-{
+HRESULT SAnonymousShader::GetDomainShader(UINT ShaderIndex, ID3D11DomainShader ** ppCS) {
     LPCSTR pFuncName = "ID3DX11EffectShaderVariable::GetDomainShader";
 
     ANONYMOUS_SHADER_INDEX_CHECK();
 
-    VH( pShaderBlock->GetDomainShader(ppCS) );
+    VH(pShaderBlock->GetDomainShader(ppCS));
 
 lExit:
     return hr;
 }
 
-HRESULT SAnonymousShader::GetComputeShader(UINT ShaderIndex, ID3D11ComputeShader **ppCS)
-{
+HRESULT SAnonymousShader::GetComputeShader(UINT ShaderIndex, ID3D11ComputeShader ** ppCS) {
     LPCSTR pFuncName = "ID3DX11EffectShaderVariable::GetComputeShader";
 
     ANONYMOUS_SHADER_INDEX_CHECK();
 
-    VH( pShaderBlock->GetComputeShader(ppCS) );
+    VH(pShaderBlock->GetComputeShader(ppCS));
 
 lExit:
     return hr;
 }
 
-HRESULT SAnonymousShader::GetInputSignatureElementDesc(UINT ShaderIndex, UINT Element, D3D11_SIGNATURE_PARAMETER_DESC *pDesc)
-{
+HRESULT SAnonymousShader::GetInputSignatureElementDesc(UINT ShaderIndex, UINT Element, D3D11_SIGNATURE_PARAMETER_DESC * pDesc) {
     LPCSTR pFuncName = "ID3DX11EffectShaderVariable::GetInputSignatureElementDesc";
 
     ANONYMOUS_SHADER_INDEX_CHECK();
 
-    VH( pShaderBlock->GetSignatureElementDesc(SShaderBlock::ST_Input, Element, pDesc) );
+    VH(pShaderBlock->GetSignatureElementDesc(SShaderBlock::ST_Input, Element, pDesc));
 
 lExit:
     return hr;
 }
 
-HRESULT SAnonymousShader::GetOutputSignatureElementDesc(UINT ShaderIndex, UINT Element, D3D11_SIGNATURE_PARAMETER_DESC *pDesc)
-{
+HRESULT SAnonymousShader::GetOutputSignatureElementDesc(UINT ShaderIndex, UINT Element, D3D11_SIGNATURE_PARAMETER_DESC * pDesc) {
     LPCSTR pFuncName = "ID3DX11EffectShaderVariable::GetOutputSignatureElementDesc";
 
     ANONYMOUS_SHADER_INDEX_CHECK();
 
-    VH( pShaderBlock->GetSignatureElementDesc(SShaderBlock::ST_Output, Element, pDesc) );
+    VH(pShaderBlock->GetSignatureElementDesc(SShaderBlock::ST_Output, Element, pDesc));
 
 lExit:
     return hr;
 }
 
-HRESULT SAnonymousShader::GetPatchConstantSignatureElementDesc(UINT ShaderIndex, UINT Element, D3D11_SIGNATURE_PARAMETER_DESC *pDesc)
-{
+HRESULT SAnonymousShader::GetPatchConstantSignatureElementDesc(UINT ShaderIndex, UINT Element, D3D11_SIGNATURE_PARAMETER_DESC * pDesc) {
     LPCSTR pFuncName = "ID3DX11EffectShaderVariable::GetPatchConstantSignatureElementDesc";
 
     ANONYMOUS_SHADER_INDEX_CHECK();
 
-    VH( pShaderBlock->GetSignatureElementDesc(SShaderBlock::ST_PatchConstant, Element, pDesc) );
+    VH(pShaderBlock->GetSignatureElementDesc(SShaderBlock::ST_PatchConstant, Element, pDesc));
 
 lExit:
     return hr;
 }
 
-HRESULT SAnonymousShader::GetDesc(D3DX11_EFFECT_TYPE_DESC *pDesc)
-{
+HRESULT SAnonymousShader::GetDesc(D3DX11_EFFECT_TYPE_DESC * pDesc) {
     pDesc->Class = D3D10_SVC_OBJECT;
 
-    switch (pShaderBlock->GetShaderType())
-    {
+    switch (pShaderBlock->GetShaderType()) {
     case EOT_VertexShader:
     case EOT_VertexShader5:
         pDesc->TypeName = "vertexshader";
-        pDesc->Type = D3D10_SVT_VERTEXSHADER;
+        pDesc->Type     = D3D10_SVT_VERTEXSHADER;
         break;
     case EOT_GeometryShader:
     case EOT_GeometryShader5:
         pDesc->TypeName = "geometryshader";
-        pDesc->Type = D3D10_SVT_GEOMETRYSHADER;
+        pDesc->Type     = D3D10_SVT_GEOMETRYSHADER;
         break;
     case EOT_PixelShader:
     case EOT_PixelShader5:
         pDesc->TypeName = "pixelshader";
-        pDesc->Type = D3D10_SVT_PIXELSHADER;
+        pDesc->Type     = D3D10_SVT_PIXELSHADER;
         break;
     case EOT_HullShader5:
         pDesc->TypeName = "Hullshader";
-        pDesc->Type = D3D11_SVT_HULLSHADER;
+        pDesc->Type     = D3D11_SVT_HULLSHADER;
         break;
     case EOT_DomainShader5:
         pDesc->TypeName = "Domainshader";
-        pDesc->Type = D3D11_SVT_DOMAINSHADER;
+        pDesc->Type     = D3D11_SVT_DOMAINSHADER;
         break;
     case EOT_ComputeShader5:
         pDesc->TypeName = "Computeshader";
-        pDesc->Type = D3D11_SVT_COMPUTESHADER;
+        pDesc->Type     = D3D11_SVT_COMPUTESHADER;
         break;
     }
 
-    pDesc->Elements = 0;
-    pDesc->Members = 0;
-    pDesc->Rows = 0;
-    pDesc->Columns = 0;
-    pDesc->PackedSize = 0;
+    pDesc->Elements     = 0;
+    pDesc->Members      = 0;
+    pDesc->Rows         = 0;
+    pDesc->Columns      = 0;
+    pDesc->PackedSize   = 0;
     pDesc->UnpackedSize = 0;
-    pDesc->Stride = 0;
+    pDesc->Stride       = 0;
 
     return S_OK;
 }
 
-ID3DX11EffectType * SAnonymousShader::GetMemberTypeByIndex(UINT  Index)
-{
+ID3DX11EffectType * SAnonymousShader::GetMemberTypeByIndex(UINT Index) {
     DPF(0, "ID3DX11EffectType::GetMemberTypeByIndex: This interface does not refer to a structure");
     return &g_InvalidType;
 }
 
-ID3DX11EffectType * SAnonymousShader::GetMemberTypeByName(LPCSTR Name)
-{
+ID3DX11EffectType * SAnonymousShader::GetMemberTypeByName(LPCSTR Name) {
     DPF(0, "ID3DX11EffectType::GetMemberTypeByName: This interface does not refer to a structure");
     return &g_InvalidType;
 }
 
-ID3DX11EffectType * SAnonymousShader::GetMemberTypeBySemantic(LPCSTR Semantic)
-{
+ID3DX11EffectType * SAnonymousShader::GetMemberTypeBySemantic(LPCSTR Semantic) {
     DPF(0, "ID3DX11EffectType::GetMemberTypeBySemantic: This interface does not refer to a structure");
     return &g_InvalidType;
 }
 
-LPCSTR SAnonymousShader::GetMemberName(UINT Index)
-{
+LPCSTR SAnonymousShader::GetMemberName(UINT Index) {
     DPF(0, "ID3DX11EffectType::GetMemberName: This interface does not refer to a structure");
     return NULL;
 }
 
-LPCSTR SAnonymousShader::GetMemberSemantic(UINT Index)
-{
+LPCSTR SAnonymousShader::GetMemberSemantic(UINT Index) {
     DPF(0, "ID3DX11EffectType::GetMemberSemantic: This interface does not refer to a structure");
     return NULL;
 }
@@ -883,146 +758,113 @@ LPCSTR SAnonymousShader::GetMemberSemantic(UINT Index)
 // ID3DX11EffectConstantBuffer (SConstantBuffer implementation)
 //////////////////////////////////////////////////////////////////////////
 
-BOOL SConstantBuffer::IsValid()
-{
-    return TRUE;
-}
+BOOL SConstantBuffer::IsValid() { return TRUE; }
 
-ID3DX11EffectType * SConstantBuffer::GetType()
-{
-    return (ID3DX11EffectType *) this;
-}
+ID3DX11EffectType * SConstantBuffer::GetType() { return (ID3DX11EffectType *) this; }
 
-HRESULT SConstantBuffer::GetDesc(D3DX11_EFFECT_VARIABLE_DESC *pDesc)
-{
+HRESULT SConstantBuffer::GetDesc(D3DX11_EFFECT_VARIABLE_DESC * pDesc) {
     pDesc->Annotations = AnnotationCount;
-    pDesc->Flags = 0;
+    pDesc->Flags       = 0;
 
-    pDesc->Name = pName;
-    pDesc->Semantic = NULL;
+    pDesc->Name         = pName;
+    pDesc->Semantic     = NULL;
     pDesc->BufferOffset = 0;
 
-    if (ExplicitBindPoint != -1)
-    {
+    if (ExplicitBindPoint != -1) {
         pDesc->ExplicitBindPoint = ExplicitBindPoint;
         pDesc->Flags |= D3DX11_EFFECT_VARIABLE_EXPLICIT_BIND_POINT;
-    }
-    else
-    {
+    } else {
         pDesc->ExplicitBindPoint = 0;
     }
 
     return S_OK;
 }
 
-ID3DX11EffectVariable * SConstantBuffer::GetAnnotationByIndex(UINT  Index)
-{
+ID3DX11EffectVariable * SConstantBuffer::GetAnnotationByIndex(UINT Index) {
     return GetAnnotationByIndexHelper("ID3DX11EffectVariable", Index, AnnotationCount, pAnnotations);
 }
 
-ID3DX11EffectVariable * SConstantBuffer::GetAnnotationByName(LPCSTR Name)
-{
+ID3DX11EffectVariable * SConstantBuffer::GetAnnotationByName(LPCSTR Name) {
     return GetAnnotationByNameHelper("ID3DX11EffectVariable", Name, AnnotationCount, pAnnotations);
 }
 
-ID3DX11EffectVariable * SConstantBuffer::GetMemberByIndex(UINT  Index)
-{
-    SGlobalVariable *pMember;
-    UDataPointer dataPtr;
+ID3DX11EffectVariable * SConstantBuffer::GetMemberByIndex(UINT Index) {
+    SGlobalVariable * pMember;
+    UDataPointer      dataPtr;
 
-    if (IsEffectOptimized)
-    {
+    if (IsEffectOptimized) {
         DPF(0, "ID3DX11EffectVariable::GetMemberByIndex: Cannot get members; effect has been Optimize()'ed");
         return &g_InvalidScalarVariable;
     }
 
-    if (!GetVariableByIndexHelper<SGlobalVariable>(Index, VariableCount, (SGlobalVariable*)pVariables,
-        NULL, &pMember, &dataPtr.pGeneric))
-    {
+    if (!GetVariableByIndexHelper<SGlobalVariable>(Index, VariableCount, (SGlobalVariable *) pVariables, NULL, &pMember, &dataPtr.pGeneric)) {
         return &g_InvalidScalarVariable;
     }
 
     return (ID3DX11EffectVariable *) pMember;
 }
 
-ID3DX11EffectVariable * SConstantBuffer::GetMemberByName(LPCSTR Name)
-{
-    SGlobalVariable *pMember;
-    UDataPointer dataPtr;
-    UINT index;
+ID3DX11EffectVariable * SConstantBuffer::GetMemberByName(LPCSTR Name) {
+    SGlobalVariable * pMember;
+    UDataPointer      dataPtr;
+    UINT              index;
 
-    if (IsEffectOptimized)
-    {
+    if (IsEffectOptimized) {
         DPF(0, "ID3DX11EffectVariable::GetMemberByName: Cannot get members; effect has been Optimize()'ed");
         return &g_InvalidScalarVariable;
     }
 
-    if (!GetVariableByNameHelper<SGlobalVariable>(Name, VariableCount, (SGlobalVariable*)pVariables,
-        NULL, &pMember, &dataPtr.pGeneric, &index))
-    {
+    if (!GetVariableByNameHelper<SGlobalVariable>(Name, VariableCount, (SGlobalVariable *) pVariables, NULL, &pMember, &dataPtr.pGeneric, &index)) {
         return &g_InvalidScalarVariable;
     }
 
     return (ID3DX11EffectVariable *) pMember;
 }
 
-ID3DX11EffectVariable * SConstantBuffer::GetMemberBySemantic(LPCSTR Semantic)
-{
-    SGlobalVariable *pMember;
-    UDataPointer dataPtr;
-    UINT index;
+ID3DX11EffectVariable * SConstantBuffer::GetMemberBySemantic(LPCSTR Semantic) {
+    SGlobalVariable * pMember;
+    UDataPointer      dataPtr;
+    UINT              index;
 
-    if (IsEffectOptimized)
-    {
+    if (IsEffectOptimized) {
         DPF(0, "ID3DX11EffectVariable::GetMemberBySemantic: Cannot get members; effect has been Optimize()'ed");
         return &g_InvalidScalarVariable;
     }
 
-    if (!GetVariableBySemanticHelper<SGlobalVariable>(Semantic, VariableCount, (SGlobalVariable*)pVariables,
-        NULL, &pMember, &dataPtr.pGeneric, &index))
-    {
+    if (!GetVariableBySemanticHelper<SGlobalVariable>(Semantic, VariableCount, (SGlobalVariable *) pVariables, NULL, &pMember, &dataPtr.pGeneric, &index)) {
         return &g_InvalidScalarVariable;
     }
 
     return (ID3DX11EffectVariable *) pMember;
 }
 
-ID3DX11EffectVariable * SConstantBuffer::GetElement(UINT  Index)
-{
+ID3DX11EffectVariable * SConstantBuffer::GetElement(UINT Index) {
     LPCSTR pFuncName = "ID3DX11EffectVariable::GetElement";
     DPF(0, "%s: This interface does not refer to an array", pFuncName);
     return &g_InvalidScalarVariable;
 }
 
-ID3DX11EffectConstantBuffer * SConstantBuffer::GetParentConstantBuffer()
-{
+ID3DX11EffectConstantBuffer * SConstantBuffer::GetParentConstantBuffer() {
     LPCSTR pFuncName = "ID3DX11EffectVariable::GetParentConstantBuffer";
     DPF(0, "%s: Constant buffers do not have parent constant buffers", pFuncName);
     return &g_InvalidConstantBuffer;
 }
 
-ID3DX11EffectConstantBuffer * SConstantBuffer::AsConstantBuffer()
-{
-    return (ID3DX11EffectConstantBuffer *) this;
-}
+ID3DX11EffectConstantBuffer * SConstantBuffer::AsConstantBuffer() { return (ID3DX11EffectConstantBuffer *) this; }
 
-HRESULT SConstantBuffer::GetDesc(D3DX11_EFFECT_TYPE_DESC *pDesc)
-{
+HRESULT SConstantBuffer::GetDesc(D3DX11_EFFECT_TYPE_DESC * pDesc) {
     pDesc->TypeName = IsTBuffer ? "tbuffer" : "cbuffer";
-    pDesc->Class = D3D10_SVC_OBJECT;
-    pDesc->Type = IsTBuffer ? D3D10_SVT_TBUFFER : D3D10_SVT_CBUFFER;
+    pDesc->Class    = D3D10_SVC_OBJECT;
+    pDesc->Type     = IsTBuffer ? D3D10_SVT_TBUFFER : D3D10_SVT_CBUFFER;
 
     pDesc->Elements = 0;
-    pDesc->Members = VariableCount;
-    pDesc->Rows = 0;
-    pDesc->Columns = 0;
+    pDesc->Members  = VariableCount;
+    pDesc->Rows     = 0;
+    pDesc->Columns  = 0;
 
-    UINT  i;
+    UINT i;
     pDesc->PackedSize = 0;
-    for (i = 0; i < VariableCount; ++ i)
-    {
-        pDesc->PackedSize += pVariables[i].pType->PackedSize;
-    }
+    for (i = 0; i < VariableCount; ++i) { pDesc->PackedSize += pVariables[i].pType->PackedSize; }
 
     pDesc->UnpackedSize = Size;
     D3DXASSERT(pDesc->UnpackedSize >= pDesc->PackedSize);
@@ -1032,33 +874,25 @@ HRESULT SConstantBuffer::GetDesc(D3DX11_EFFECT_TYPE_DESC *pDesc)
     return S_OK;
 }
 
-ID3DX11EffectType * SConstantBuffer::GetMemberTypeByIndex(UINT  Index)
-{
-    return GetTypeByIndexHelper(Index, VariableCount, pVariables, sizeof (SGlobalVariable));
+ID3DX11EffectType * SConstantBuffer::GetMemberTypeByIndex(UINT Index) {
+    return GetTypeByIndexHelper(Index, VariableCount, pVariables, sizeof(SGlobalVariable));
 }
 
-ID3DX11EffectType * SConstantBuffer::GetMemberTypeByName(LPCSTR Name)
-{
-    return GetTypeByNameHelper(Name, VariableCount, pVariables, sizeof (SGlobalVariable));
+ID3DX11EffectType * SConstantBuffer::GetMemberTypeByName(LPCSTR Name) { return GetTypeByNameHelper(Name, VariableCount, pVariables, sizeof(SGlobalVariable)); }
+
+ID3DX11EffectType * SConstantBuffer::GetMemberTypeBySemantic(LPCSTR Semantic) {
+    return GetTypeBySemanticHelper(Semantic, VariableCount, pVariables, sizeof(SGlobalVariable));
 }
 
-ID3DX11EffectType * SConstantBuffer::GetMemberTypeBySemantic(LPCSTR Semantic)
-{
-    return GetTypeBySemanticHelper(Semantic, VariableCount, pVariables, sizeof (SGlobalVariable));
-}
-
-LPCSTR SConstantBuffer::GetMemberName(UINT Index)
-{
+LPCSTR SConstantBuffer::GetMemberName(UINT Index) {
     LPCSTR pFuncName = "ID3DX11EffectType::GetMemberName";
 
-    if (IsEffectOptimized)
-    {
+    if (IsEffectOptimized) {
         DPF(0, "%s: Cannot get member names; Effect has been Optimize()'ed", pFuncName);
         return NULL;
     }
 
-    if (Index >= VariableCount)
-    {
+    if (Index >= VariableCount) {
         DPF(0, "%s: Invalid index (%d, total: %d)", pFuncName, Index, VariableCount);
         return NULL;
     }
@@ -1066,18 +900,15 @@ LPCSTR SConstantBuffer::GetMemberName(UINT Index)
     return pVariables[Index].pName;
 }
 
-LPCSTR SConstantBuffer::GetMemberSemantic(UINT Index)
-{
+LPCSTR SConstantBuffer::GetMemberSemantic(UINT Index) {
     LPCSTR pFuncName = "ID3DX11EffectType::GetMemberSemantic";
 
-    if (IsEffectOptimized)
-    {
+    if (IsEffectOptimized) {
         DPF(0, "%s: Cannot get member semantics; Effect has been Optimize()'ed", pFuncName);
         return NULL;
     }
 
-    if (Index >= VariableCount)
-    {
+    if (Index >= VariableCount) {
         DPF(0, "%s: Invalid index (%d, total: %d)", pFuncName, Index, VariableCount);
         return NULL;
     }
@@ -1085,8 +916,7 @@ LPCSTR SConstantBuffer::GetMemberSemantic(UINT Index)
     return pVariables[Index].pSemantic;
 }
 
-HRESULT SConstantBuffer::SetRawValue(CONST void *pData, UINT  Offset, UINT  Count)
-{
+HRESULT SConstantBuffer::SetRawValue(CONST void * pData, UINT Offset, UINT Count) {
     HRESULT hr = S_OK;
 
 #ifdef _DEBUG
@@ -1094,26 +924,17 @@ HRESULT SConstantBuffer::SetRawValue(CONST void *pData, UINT  Offset, UINT  Coun
 
     VERIFYPARAMETER(pData);
 
-    if ((Offset + Count < Offset) ||
-        (Count + (BYTE*)pData < (BYTE*)pData) ||
-        ((Offset + Count) > Size))
-    {
+    if ((Offset + Count < Offset) || (Count + (BYTE *) pData < (BYTE *) pData) || ((Offset + Count) > Size)) {
         // overflow of some kind
         DPF(0, "%s: Invalid range specified", pFuncName);
         VH(E_INVALIDARG);
     }
 #endif
 
-    if (IsUsedByExpression)
-    {
-        UINT  i;
-        for (i = 0; i < VariableCount; ++ i)
-        {
-            ((SGlobalVariable*)pVariables)[i].DirtyVariable();
-        }
-    }
-    else
-    {
+    if (IsUsedByExpression) {
+        UINT i;
+        for (i = 0; i < VariableCount; ++i) { ((SGlobalVariable *) pVariables)[i].DirtyVariable(); }
+    } else {
         IsDirty = TRUE;
     }
 
@@ -1123,8 +944,7 @@ lExit:
     return hr;
 }
 
-HRESULT SConstantBuffer::GetRawValue(__out_bcount(Count) void *pData, UINT  Offset, UINT  Count)
-{
+HRESULT SConstantBuffer::GetRawValue(__out_bcount(Count) void * pData, UINT Offset, UINT Count) {
     HRESULT hr = S_OK;
 
 #ifdef _DEBUG
@@ -1132,10 +952,7 @@ HRESULT SConstantBuffer::GetRawValue(__out_bcount(Count) void *pData, UINT  Offs
 
     VERIFYPARAMETER(pData);
 
-    if ((Offset + Count < Offset) ||
-        (Count + (BYTE*)pData < (BYTE*)pData) ||
-        ((Offset + Count) > Size))
-    {
+    if ((Offset + Count < Offset) || (Count + (BYTE *) pData < (BYTE *) pData) || ((Offset + Count) > Size)) {
         // overflow of some kind
         DPF(0, "%s: Invalid range specified", pFuncName);
         VH(E_INVALIDARG);
@@ -1148,18 +965,13 @@ lExit:
     return hr;
 }
 
-bool SConstantBuffer::ClonedSingle() const
-{
-    return IsSingle && ( pEffect->m_Flags & D3DX11_EFFECT_CLONE );
-}
+bool SConstantBuffer::ClonedSingle() const { return IsSingle && (pEffect->m_Flags & D3DX11_EFFECT_CLONE); }
 
-HRESULT SConstantBuffer::SetConstantBuffer(ID3D11Buffer *pConstantBuffer)
-{
-    HRESULT hr = S_OK;
-    LPCSTR pFuncName = "ID3DX11EffectConstantBuffer::SetConstantBuffer";
+HRESULT SConstantBuffer::SetConstantBuffer(ID3D11Buffer * pConstantBuffer) {
+    HRESULT hr        = S_OK;
+    LPCSTR  pFuncName = "ID3DX11EffectConstantBuffer::SetConstantBuffer";
 
-    if (IsTBuffer)
-    {
+    if (IsTBuffer) {
         DPF(0, "%s: This is a texture buffer; use SetTextureBuffer instead", pFuncName);
         VH(D3DERR_INVALIDCALL);
     }
@@ -1167,34 +979,31 @@ HRESULT SConstantBuffer::SetConstantBuffer(ID3D11Buffer *pConstantBuffer)
     // Replace all references to the old shader block with this one
     pEffect->ReplaceCBReference(this, pConstantBuffer);
 
-    if( !IsUserManaged )
-    {
+    if (!IsUserManaged) {
         // Save original cbuffer in case we UndoSet
-        D3DXASSERT( pMemberData[0].Type == MDT_Buffer );
-        VB( pMemberData[0].Data.pD3DEffectsManagedConstantBuffer == NULL );
+        D3DXASSERT(pMemberData[0].Type == MDT_Buffer);
+        VB(pMemberData[0].Data.pD3DEffectsManagedConstantBuffer == NULL);
         pMemberData[0].Data.pD3DEffectsManagedConstantBuffer = pD3DObject;
-        pD3DObject = NULL;
-        IsUserManaged = TRUE;
-        IsNonUpdatable = TRUE;
+        pD3DObject                                           = NULL;
+        IsUserManaged                                        = TRUE;
+        IsNonUpdatable                                       = TRUE;
     }
 
-    SAFE_ADDREF( pConstantBuffer );
-    SAFE_RELEASE( pD3DObject );
+    SAFE_ADDREF(pConstantBuffer);
+    SAFE_RELEASE(pD3DObject);
     pD3DObject = pConstantBuffer;
 
 lExit:
     return hr;
 }
 
-HRESULT SConstantBuffer::GetConstantBuffer(ID3D11Buffer **ppConstantBuffer)
-{
-    HRESULT hr = S_OK;
-    LPCSTR pFuncName = "ID3DX11EffectConstantBuffer::GetConstantBuffer";
+HRESULT SConstantBuffer::GetConstantBuffer(ID3D11Buffer ** ppConstantBuffer) {
+    HRESULT hr        = S_OK;
+    LPCSTR  pFuncName = "ID3DX11EffectConstantBuffer::GetConstantBuffer";
 
     VERIFYPARAMETER(ppConstantBuffer);
 
-    if (IsTBuffer)
-    {
+    if (IsTBuffer) {
         DPF(0, "%s: This is a texture buffer; use GetTextureBuffer instead", pFuncName);
         VH(D3DERR_INVALIDCALL);
     }
@@ -1206,80 +1015,70 @@ lExit:
     return hr;
 }
 
-HRESULT SConstantBuffer::UndoSetConstantBuffer()
-{
-    HRESULT hr = S_OK;
-    LPCSTR pFuncName = "ID3DX11EffectConstantBuffer::UndoSetConstantBuffer";
+HRESULT SConstantBuffer::UndoSetConstantBuffer() {
+    HRESULT hr        = S_OK;
+    LPCSTR  pFuncName = "ID3DX11EffectConstantBuffer::UndoSetConstantBuffer";
 
-    if (IsTBuffer)
-    {
+    if (IsTBuffer) {
         DPF(0, "%s: This is a texture buffer; use UndoSetTextureBuffer instead", pFuncName);
         VH(D3DERR_INVALIDCALL);
     }
 
-    if( !IsUserManaged )
-    {
-        return S_FALSE;
-    }
+    if (!IsUserManaged) { return S_FALSE; }
 
     // Replace all references to the old shader block with this one
     pEffect->ReplaceCBReference(this, pMemberData[0].Data.pD3DEffectsManagedConstantBuffer);
 
     // Revert to original cbuffer
-    SAFE_RELEASE( pD3DObject );
-    pD3DObject = pMemberData[0].Data.pD3DEffectsManagedConstantBuffer;
+    SAFE_RELEASE(pD3DObject);
+    pD3DObject                                           = pMemberData[0].Data.pD3DEffectsManagedConstantBuffer;
     pMemberData[0].Data.pD3DEffectsManagedConstantBuffer = NULL;
-    IsUserManaged = FALSE;
-    IsNonUpdatable = ClonedSingle();
+    IsUserManaged                                        = FALSE;
+    IsNonUpdatable                                       = ClonedSingle();
 
 lExit:
     return hr;
 }
 
-HRESULT SConstantBuffer::SetTextureBuffer(ID3D11ShaderResourceView *pTextureBuffer)
-{
-    HRESULT hr = S_OK;
-    LPCSTR pFuncName = "ID3DX11EffectConstantBuffer::SetTextureBuffer";
+HRESULT SConstantBuffer::SetTextureBuffer(ID3D11ShaderResourceView * pTextureBuffer) {
+    HRESULT hr        = S_OK;
+    LPCSTR  pFuncName = "ID3DX11EffectConstantBuffer::SetTextureBuffer";
 
-    if (!IsTBuffer)
-    {
+    if (!IsTBuffer) {
         DPF(0, "%s: This is a constant buffer; use SetConstantBuffer instead", pFuncName);
         VH(D3DERR_INVALIDCALL);
     }
 
-    if( !IsUserManaged )
-    {
+    if (!IsUserManaged) {
         // Save original cbuffer and tbuffer in case we UndoSet
-        D3DXASSERT( pMemberData[0].Type == MDT_Buffer );
-        VB( pMemberData[0].Data.pD3DEffectsManagedConstantBuffer == NULL );
+        D3DXASSERT(pMemberData[0].Type == MDT_Buffer);
+        VB(pMemberData[0].Data.pD3DEffectsManagedConstantBuffer == NULL);
         pMemberData[0].Data.pD3DEffectsManagedConstantBuffer = pD3DObject;
-        pD3DObject = NULL;
-        D3DXASSERT( pMemberData[1].Type == MDT_ShaderResourceView );
-        VB( pMemberData[1].Data.pD3DEffectsManagedTextureBuffer == NULL );
+        pD3DObject                                           = NULL;
+        D3DXASSERT(pMemberData[1].Type == MDT_ShaderResourceView);
+        VB(pMemberData[1].Data.pD3DEffectsManagedTextureBuffer == NULL);
         pMemberData[1].Data.pD3DEffectsManagedTextureBuffer = TBuffer.pShaderResource;
-        TBuffer.pShaderResource = NULL;
-        IsUserManaged = TRUE;
-        IsNonUpdatable = TRUE;
+        TBuffer.pShaderResource                             = NULL;
+        IsUserManaged                                       = TRUE;
+        IsNonUpdatable                                      = TRUE;
     }
 
-    SAFE_ADDREF( pTextureBuffer );
+    SAFE_ADDREF(pTextureBuffer);
     SAFE_RELEASE(pD3DObject); // won't be needing this anymore...
-    SAFE_RELEASE( TBuffer.pShaderResource );
+    SAFE_RELEASE(TBuffer.pShaderResource);
     TBuffer.pShaderResource = pTextureBuffer;
 
 lExit:
     return hr;
 }
 
-HRESULT SConstantBuffer::GetTextureBuffer(ID3D11ShaderResourceView **ppTextureBuffer)
-{
-    HRESULT hr = S_OK;
-    LPCSTR pFuncName = "ID3DX11EffectConstantBuffer::GetTextureBuffer";
+HRESULT SConstantBuffer::GetTextureBuffer(ID3D11ShaderResourceView ** ppTextureBuffer) {
+    HRESULT hr        = S_OK;
+    LPCSTR  pFuncName = "ID3DX11EffectConstantBuffer::GetTextureBuffer";
 
     VERIFYPARAMETER(ppTextureBuffer);
 
-    if (!IsTBuffer)
-    {
+    if (!IsTBuffer) {
         DPF(0, "%s: This is a constant buffer; use GetConstantBuffer instead", pFuncName);
         VH(D3DERR_INVALIDCALL);
     }
@@ -1291,31 +1090,26 @@ lExit:
     return hr;
 }
 
-HRESULT SConstantBuffer::UndoSetTextureBuffer()
-{
-    HRESULT hr = S_OK;
-    LPCSTR pFuncName = "ID3DX11EffectConstantBuffer::UndoSetTextureBuffer";
+HRESULT SConstantBuffer::UndoSetTextureBuffer() {
+    HRESULT hr        = S_OK;
+    LPCSTR  pFuncName = "ID3DX11EffectConstantBuffer::UndoSetTextureBuffer";
 
-    if (!IsTBuffer)
-    {
+    if (!IsTBuffer) {
         DPF(0, "%s: This is a texture buffer; use UndoSetConstantBuffer instead", pFuncName);
         VH(D3DERR_INVALIDCALL);
     }
 
-    if( !IsUserManaged )
-    {
-        return S_FALSE;
-    }
+    if (!IsUserManaged) { return S_FALSE; }
 
     // Revert to original cbuffer
-    SAFE_RELEASE( pD3DObject );
-    pD3DObject = pMemberData[0].Data.pD3DEffectsManagedConstantBuffer;
+    SAFE_RELEASE(pD3DObject);
+    pD3DObject                                           = pMemberData[0].Data.pD3DEffectsManagedConstantBuffer;
     pMemberData[0].Data.pD3DEffectsManagedConstantBuffer = NULL;
-    SAFE_RELEASE( TBuffer.pShaderResource );
-    TBuffer.pShaderResource = pMemberData[1].Data.pD3DEffectsManagedTextureBuffer;
+    SAFE_RELEASE(TBuffer.pShaderResource);
+    TBuffer.pShaderResource                             = pMemberData[1].Data.pD3DEffectsManagedTextureBuffer;
     pMemberData[1].Data.pD3DEffectsManagedTextureBuffer = NULL;
-    IsUserManaged = FALSE;
-    IsNonUpdatable = ClonedSingle();
+    IsUserManaged                                       = FALSE;
+    IsNonUpdatable                                      = ClonedSingle();
 
 lExit:
     return hr;
@@ -1325,47 +1119,40 @@ lExit:
 // ID3DX11EffectPass (CEffectPass implementation)
 //////////////////////////////////////////////////////////////////////////
 
-BOOL SPassBlock::IsValid()
-{
-    if( HasDependencies )
-        return pEffect->ValidatePassBlock( this );
+BOOL SPassBlock::IsValid() {
+    if (HasDependencies) return pEffect->ValidatePassBlock(this);
     return InitiallyValid;
 }
 
-HRESULT SPassBlock::GetDesc(D3DX11_PASS_DESC *pDesc)
-{
-    HRESULT hr = S_OK;
-    LPCSTR pFuncName = "ID3DX11EffectPass::GetDesc";
+HRESULT SPassBlock::GetDesc(D3DX11_PASS_DESC * pDesc) {
+    HRESULT hr        = S_OK;
+    LPCSTR  pFuncName = "ID3DX11EffectPass::GetDesc";
 
     VERIFYPARAMETER(pDesc);
 
     ZeroMemory(pDesc, sizeof(*pDesc));
 
-    pDesc->Name = pName;
+    pDesc->Name        = pName;
     pDesc->Annotations = AnnotationCount;
 
-    SAssignment *pAssignment;
-    SAssignment *pLastAssn;
+    SAssignment * pAssignment;
+    SAssignment * pLastAssn;
 
     pEffect->IncrementTimer();
 
     pAssignment = pAssignments;
-    pLastAssn = pAssignments + AssignmentCount;
+    pLastAssn   = pAssignments + AssignmentCount;
 
-    for(; pAssignment < pLastAssn; pAssignment++)
-    {
-        pEffect->EvaluateAssignment(pAssignment);
-    }
+    for (; pAssignment < pLastAssn; pAssignment++) { pEffect->EvaluateAssignment(pAssignment); }
 
-    if( BackingStore.pVertexShaderBlock && BackingStore.pVertexShaderBlock->pInputSignatureBlob )
-    {
+    if (BackingStore.pVertexShaderBlock && BackingStore.pVertexShaderBlock->pInputSignatureBlob) {
         // pInputSignatureBlob can be null if we're setting a NULL VS "SetVertexShader( NULL )"
-        pDesc->pIAInputSignature = (BYTE*)BackingStore.pVertexShaderBlock->pInputSignatureBlob->GetBufferPointer();
+        pDesc->pIAInputSignature    = (BYTE *) BackingStore.pVertexShaderBlock->pInputSignatureBlob->GetBufferPointer();
         pDesc->IAInputSignatureSize = BackingStore.pVertexShaderBlock->pInputSignatureBlob->GetBufferSize();
     }
 
-    pDesc->StencilRef = BackingStore.StencilRef;
-    pDesc->SampleMask = BackingStore.SampleMask;
+    pDesc->StencilRef     = BackingStore.StencilRef;
+    pDesc->SampleMask     = BackingStore.SampleMask;
     pDesc->BlendFactor[0] = BackingStore.BlendFactor[0];
     pDesc->BlendFactor[1] = BackingStore.BlendFactor[1];
     pDesc->BlendFactor[2] = BackingStore.BlendFactor[2];
@@ -1390,48 +1177,46 @@ SAnonymousShader g_AnonymousNullDS(&g_NullDS);
 SAnonymousShader g_AnonymousNullCS(&g_NullCS);
 
 template<EObjectType EShaderType>
-HRESULT SPassBlock::GetShaderDescHelper(D3DX11_PASS_SHADER_DESC *pDesc)
-{
-    HRESULT hr = S_OK;
-    UINT  i;
-    LPCSTR pFuncName = NULL;
-    SShaderBlock *pShaderBlock = NULL;
+HRESULT SPassBlock::GetShaderDescHelper(D3DX11_PASS_SHADER_DESC * pDesc) {
+    HRESULT        hr = S_OK;
+    UINT           i;
+    LPCSTR         pFuncName    = NULL;
+    SShaderBlock * pShaderBlock = NULL;
 
     ApplyPassAssignments();
 
-    switch (EShaderType)
-    {
+    switch (EShaderType) {
     case EOT_VertexShader:
     case EOT_VertexShader5:
-#pragma prefast(suppress:__WARNING_UNUSED_POINTER_ASSIGNMENT, "pFuncName used in DPF")
-        pFuncName = "ID3DX11EffectPass::GetVertexShaderDesc";
+#pragma prefast(suppress : __WARNING_UNUSED_POINTER_ASSIGNMENT, "pFuncName used in DPF")
+        pFuncName    = "ID3DX11EffectPass::GetVertexShaderDesc";
         pShaderBlock = BackingStore.pVertexShaderBlock;
         break;
     case EOT_PixelShader:
     case EOT_PixelShader5:
-#pragma prefast(suppress:__WARNING_UNUSED_POINTER_ASSIGNMENT, "pFuncName used in DPF")
-        pFuncName = "ID3DX11EffectPass::GetPixelShaderDesc";
+#pragma prefast(suppress : __WARNING_UNUSED_POINTER_ASSIGNMENT, "pFuncName used in DPF")
+        pFuncName    = "ID3DX11EffectPass::GetPixelShaderDesc";
         pShaderBlock = BackingStore.pPixelShaderBlock;
         break;
     case EOT_GeometryShader:
     case EOT_GeometryShader5:
-#pragma prefast(suppress:__WARNING_UNUSED_POINTER_ASSIGNMENT, "pFuncName used in DPF")
-        pFuncName = "ID3DX11EffectPass::GetGeometryShaderDesc";
+#pragma prefast(suppress : __WARNING_UNUSED_POINTER_ASSIGNMENT, "pFuncName used in DPF")
+        pFuncName    = "ID3DX11EffectPass::GetGeometryShaderDesc";
         pShaderBlock = BackingStore.pGeometryShaderBlock;
         break;
     case EOT_HullShader5:
-#pragma prefast(suppress:__WARNING_UNUSED_POINTER_ASSIGNMENT, "pFuncName used in DPF")
-        pFuncName = "ID3DX11EffectPass::GetHullShaderDesc";
+#pragma prefast(suppress : __WARNING_UNUSED_POINTER_ASSIGNMENT, "pFuncName used in DPF")
+        pFuncName    = "ID3DX11EffectPass::GetHullShaderDesc";
         pShaderBlock = BackingStore.pHullShaderBlock;
         break;
     case EOT_DomainShader5:
-#pragma prefast(suppress:__WARNING_UNUSED_POINTER_ASSIGNMENT, "pFuncName used in DPF")
-        pFuncName = "ID3DX11EffectPass::GetDomainShaderDesc";
+#pragma prefast(suppress : __WARNING_UNUSED_POINTER_ASSIGNMENT, "pFuncName used in DPF")
+        pFuncName    = "ID3DX11EffectPass::GetDomainShaderDesc";
         pShaderBlock = BackingStore.pDomainShaderBlock;
         break;
     case EOT_ComputeShader5:
-#pragma prefast(suppress:__WARNING_UNUSED_POINTER_ASSIGNMENT, "pFuncName used in DPF")
-        pFuncName = "ID3DX11EffectPass::GetComputeShaderDesc";
+#pragma prefast(suppress : __WARNING_UNUSED_POINTER_ASSIGNMENT, "pFuncName used in DPF")
+        pFuncName    = "ID3DX11EffectPass::GetComputeShaderDesc";
         pShaderBlock = BackingStore.pComputeShaderBlock;
         break;
     default:
@@ -1442,148 +1227,108 @@ HRESULT SPassBlock::GetShaderDescHelper(D3DX11_PASS_SHADER_DESC *pDesc)
 
     // in case of error (or in case the assignment doesn't exist), return something reasonable
     pDesc->pShaderVariable = &g_InvalidShaderVariable;
-    pDesc->ShaderIndex = 0;
+    pDesc->ShaderIndex     = 0;
 
-    if (NULL != pShaderBlock)
-    {
-        UINT elements, varCount, anonymousShaderCount;
-        SGlobalVariable *pVariables;
-        SAnonymousShader *pAnonymousShaders;
+    if (NULL != pShaderBlock) {
+        UINT               elements, varCount, anonymousShaderCount;
+        SGlobalVariable *  pVariables;
+        SAnonymousShader * pAnonymousShaders;
 
-        if (pShaderBlock == &g_NullVS)
-        {
+        if (pShaderBlock == &g_NullVS) {
             pDesc->pShaderVariable = &g_AnonymousNullVS;
-            pDesc->ShaderIndex = 0;
+            pDesc->ShaderIndex     = 0;
             // we're done
             goto lExit;
-        }
-        else if (pShaderBlock == &g_NullGS)
-        {
+        } else if (pShaderBlock == &g_NullGS) {
             pDesc->pShaderVariable = &g_AnonymousNullGS;
-            pDesc->ShaderIndex = 0;
+            pDesc->ShaderIndex     = 0;
             // we're done
             goto lExit;
-        }
-        else if (pShaderBlock == &g_NullPS)
-        {
+        } else if (pShaderBlock == &g_NullPS) {
             pDesc->pShaderVariable = &g_AnonymousNullPS;
-            pDesc->ShaderIndex = 0;
+            pDesc->ShaderIndex     = 0;
             // we're done
             goto lExit;
-        }
-        else if (pShaderBlock == &g_NullHS)
-        {
+        } else if (pShaderBlock == &g_NullHS) {
             pDesc->pShaderVariable = &g_AnonymousNullHS;
-            pDesc->ShaderIndex = 0;
+            pDesc->ShaderIndex     = 0;
             // we're done
             goto lExit;
-        }
-        else if (pShaderBlock == &g_NullDS)
-        {
+        } else if (pShaderBlock == &g_NullDS) {
             pDesc->pShaderVariable = &g_AnonymousNullDS;
-            pDesc->ShaderIndex = 0;
+            pDesc->ShaderIndex     = 0;
             // we're done
             goto lExit;
-        }
-        else if (pShaderBlock == &g_NullCS)
-        {
+        } else if (pShaderBlock == &g_NullCS) {
             pDesc->pShaderVariable = &g_AnonymousNullCS;
-            pDesc->ShaderIndex = 0;
+            pDesc->ShaderIndex     = 0;
             // we're done
             goto lExit;
-        }
-        else
-        {
-            VB( pEffect->IsRuntimeData(pShaderBlock) );
-            varCount = pEffect->m_VariableCount;
-            pVariables = pEffect->m_pVariables;
+        } else {
+            VB(pEffect->IsRuntimeData(pShaderBlock));
+            varCount             = pEffect->m_VariableCount;
+            pVariables           = pEffect->m_pVariables;
             anonymousShaderCount = pEffect->m_AnonymousShaderCount;
-            pAnonymousShaders = pEffect->m_pAnonymousShaders;
+            pAnonymousShaders    = pEffect->m_pAnonymousShaders;
         }
 
-        for (i = 0; i < varCount; ++ i)
-        {
+        for (i = 0; i < varCount; ++i) {
             elements = std::max<UINT>(1, pVariables[i].pType->Elements);
             // make sure the variable type matches, and don't forget about GeometryShaderSO's
-            if (pVariables[i].pType->IsShader())
-            {
-                if (pShaderBlock >= pVariables[i].Data.pShader && pShaderBlock < pVariables[i].Data.pShader + elements)
-                {
-                    pDesc->pShaderVariable = (ID3DX11EffectShaderVariable *)(pVariables + i);
-                    pDesc->ShaderIndex = (UINT)(UINT_PTR)(pShaderBlock - pVariables[i].Data.pShader);
+            if (pVariables[i].pType->IsShader()) {
+                if (pShaderBlock >= pVariables[i].Data.pShader && pShaderBlock < pVariables[i].Data.pShader + elements) {
+                    pDesc->pShaderVariable = (ID3DX11EffectShaderVariable *) (pVariables + i);
+                    pDesc->ShaderIndex     = (UINT) (UINT_PTR) (pShaderBlock - pVariables[i].Data.pShader);
                     // we're done
                     goto lExit;
                 }
             }
         }
 
-        for (i = 0; i < anonymousShaderCount; ++ i)
-        {
-            if (pShaderBlock == pAnonymousShaders[i].pShaderBlock)
-            {
+        for (i = 0; i < anonymousShaderCount; ++i) {
+            if (pShaderBlock == pAnonymousShaders[i].pShaderBlock) {
                 VB(EShaderType == pAnonymousShaders[i].pShaderBlock->GetShaderType())
                 pDesc->pShaderVariable = (pAnonymousShaders + i);
-                pDesc->ShaderIndex = 0;
+                pDesc->ShaderIndex     = 0;
                 // we're done
                 goto lExit;
             }
         }
 
         DPF(0, "%s: Internal error; shader not found", pFuncName);
-        VH( E_FAIL );
+        VH(E_FAIL);
     }
 
 lExit:
     return hr;
 }
 
-HRESULT SPassBlock::GetVertexShaderDesc(D3DX11_PASS_SHADER_DESC *pDesc)
-{
-    return GetShaderDescHelper<EOT_VertexShader>(pDesc);
-}
+HRESULT SPassBlock::GetVertexShaderDesc(D3DX11_PASS_SHADER_DESC * pDesc) { return GetShaderDescHelper<EOT_VertexShader>(pDesc); }
 
-HRESULT SPassBlock::GetPixelShaderDesc(D3DX11_PASS_SHADER_DESC *pDesc)
-{
-    return GetShaderDescHelper<EOT_PixelShader>(pDesc);
-}
+HRESULT SPassBlock::GetPixelShaderDesc(D3DX11_PASS_SHADER_DESC * pDesc) { return GetShaderDescHelper<EOT_PixelShader>(pDesc); }
 
-HRESULT SPassBlock::GetGeometryShaderDesc(D3DX11_PASS_SHADER_DESC *pDesc)
-{
-    return GetShaderDescHelper<EOT_GeometryShader>(pDesc);
-}
+HRESULT SPassBlock::GetGeometryShaderDesc(D3DX11_PASS_SHADER_DESC * pDesc) { return GetShaderDescHelper<EOT_GeometryShader>(pDesc); }
 
-HRESULT SPassBlock::GetHullShaderDesc(D3DX11_PASS_SHADER_DESC *pDesc)
-{
-    return GetShaderDescHelper<EOT_HullShader5>(pDesc);
-}
+HRESULT SPassBlock::GetHullShaderDesc(D3DX11_PASS_SHADER_DESC * pDesc) { return GetShaderDescHelper<EOT_HullShader5>(pDesc); }
 
-HRESULT SPassBlock::GetDomainShaderDesc(D3DX11_PASS_SHADER_DESC *pDesc)
-{
-    return GetShaderDescHelper<EOT_DomainShader5>(pDesc);
-}
+HRESULT SPassBlock::GetDomainShaderDesc(D3DX11_PASS_SHADER_DESC * pDesc) { return GetShaderDescHelper<EOT_DomainShader5>(pDesc); }
 
-HRESULT SPassBlock::GetComputeShaderDesc(D3DX11_PASS_SHADER_DESC *pDesc)
-{
-    return GetShaderDescHelper<EOT_ComputeShader5>(pDesc);
-}
+HRESULT SPassBlock::GetComputeShaderDesc(D3DX11_PASS_SHADER_DESC * pDesc) { return GetShaderDescHelper<EOT_ComputeShader5>(pDesc); }
 
-ID3DX11EffectVariable * SPassBlock::GetAnnotationByIndex(UINT  Index)
-{
+ID3DX11EffectVariable * SPassBlock::GetAnnotationByIndex(UINT Index) {
     return GetAnnotationByIndexHelper("ID3DX11EffectPass", Index, AnnotationCount, pAnnotations);
 }
 
-ID3DX11EffectVariable * SPassBlock::GetAnnotationByName(LPCSTR Name)
-{
+ID3DX11EffectVariable * SPassBlock::GetAnnotationByName(LPCSTR Name) {
     return GetAnnotationByNameHelper("ID3DX11EffectPass", Name, AnnotationCount, pAnnotations);
 }
 
-HRESULT SPassBlock::Apply(UINT  Flags, ID3D11DeviceContext* pContext)
-{
+HRESULT SPassBlock::Apply(UINT Flags, ID3D11DeviceContext * pContext) {
     HRESULT hr = S_OK;
 
     // TODO: Flags are not yet implemented
 
-    D3DXASSERT( pEffect->m_pContext == NULL );
+    D3DXASSERT(pEffect->m_pContext == NULL);
     pEffect->m_pContext = pContext;
     pEffect->ApplyPassBlock(this);
     pEffect->m_pContext = NULL;
@@ -1592,42 +1337,39 @@ lExit:
     return hr;
 }
 
-HRESULT SPassBlock::ComputeStateBlockMask(D3DX11_STATE_BLOCK_MASK *pStateBlockMask)
-{
+HRESULT SPassBlock::ComputeStateBlockMask(D3DX11_STATE_BLOCK_MASK * pStateBlockMask) {
     HRESULT hr = S_OK;
-    UINT i, j;
+    UINT    i, j;
 
     // flags indicating whether the following shader types were caught by assignment checks or not
     BOOL bVS = FALSE, bGS = FALSE, bPS = FALSE, bHS = FALSE, bDS = FALSE, bCS = FALSE;
 
-    for (i = 0; i < AssignmentCount; ++ i)
-    {
+    for (i = 0; i < AssignmentCount; ++i) {
         BOOL bShader = FALSE;
 
-        switch (pAssignments[i].LhsType)
-        {
+        switch (pAssignments[i].LhsType) {
         case ELHS_VertexShaderBlock:
-            bVS = TRUE;
+            bVS     = TRUE;
             bShader = TRUE;
             break;
         case ELHS_GeometryShaderBlock:
-            bGS = TRUE;
+            bGS     = TRUE;
             bShader = TRUE;
             break;
         case ELHS_PixelShaderBlock:
-            bPS = TRUE;
+            bPS     = TRUE;
             bShader = TRUE;
             break;
         case ELHS_HullShaderBlock:
-            bHS = TRUE;
+            bHS     = TRUE;
             bShader = TRUE;
             break;
         case ELHS_DomainShaderBlock:
-            bDS = TRUE;
+            bDS     = TRUE;
             bShader = TRUE;
             break;
         case ELHS_ComputeShaderBlock:
-            bCS = TRUE;
+            bCS     = TRUE;
             bShader = TRUE;
             break;
 
@@ -1646,55 +1388,26 @@ HRESULT SPassBlock::ComputeStateBlockMask(D3DX11_STATE_BLOCK_MASK *pStateBlockMa
             break;
         }
 
-        if (bShader)
-        {
-            for (j = 0; j < pAssignments[i].MaxElements; ++ j)
-            {
+        if (bShader) {
+            for (j = 0; j < pAssignments[i].MaxElements; ++j) {
                 // compute state block mask for the union of ALL shaders
-                VH( pAssignments[i].Source.pShader[j].ComputeStateBlockMask(pStateBlockMask) );
+                VH(pAssignments[i].Source.pShader[j].ComputeStateBlockMask(pStateBlockMask));
             }
         }
     }
 
     // go over the state block objects in case there was no corresponding assignment
-    if (NULL != BackingStore.pRasterizerBlock)
-    {
-        pStateBlockMask->RSRasterizerState = 1;
-    }
-    if (NULL != BackingStore.pBlendBlock)
-    {
-        pStateBlockMask->OMBlendState = 1;
-    }
-    if (NULL != BackingStore.pDepthStencilBlock)
-    {
-        pStateBlockMask->OMDepthStencilState = 1;
-    }
+    if (NULL != BackingStore.pRasterizerBlock) { pStateBlockMask->RSRasterizerState = 1; }
+    if (NULL != BackingStore.pBlendBlock) { pStateBlockMask->OMBlendState = 1; }
+    if (NULL != BackingStore.pDepthStencilBlock) { pStateBlockMask->OMDepthStencilState = 1; }
 
     // go over the shaders only if an assignment didn't already catch them
-    if (FALSE == bVS && NULL != BackingStore.pVertexShaderBlock)
-    {
-        VH( BackingStore.pVertexShaderBlock->ComputeStateBlockMask(pStateBlockMask) );
-    }
-    if (FALSE == bGS && NULL != BackingStore.pGeometryShaderBlock)
-    {
-        VH( BackingStore.pGeometryShaderBlock->ComputeStateBlockMask(pStateBlockMask) );
-    }
-    if (FALSE == bPS && NULL != BackingStore.pPixelShaderBlock)
-    {
-        VH( BackingStore.pPixelShaderBlock->ComputeStateBlockMask(pStateBlockMask) );
-    }
-    if (FALSE == bHS && NULL != BackingStore.pHullShaderBlock)
-    {
-        VH( BackingStore.pHullShaderBlock->ComputeStateBlockMask(pStateBlockMask) );
-    }
-    if (FALSE == bDS && NULL != BackingStore.pDomainShaderBlock)
-    {
-        VH( BackingStore.pDomainShaderBlock->ComputeStateBlockMask(pStateBlockMask) );
-    }
-    if (FALSE == bCS && NULL != BackingStore.pComputeShaderBlock)
-    {
-        VH( BackingStore.pComputeShaderBlock->ComputeStateBlockMask(pStateBlockMask) );
-    }
+    if (FALSE == bVS && NULL != BackingStore.pVertexShaderBlock) { VH(BackingStore.pVertexShaderBlock->ComputeStateBlockMask(pStateBlockMask)); }
+    if (FALSE == bGS && NULL != BackingStore.pGeometryShaderBlock) { VH(BackingStore.pGeometryShaderBlock->ComputeStateBlockMask(pStateBlockMask)); }
+    if (FALSE == bPS && NULL != BackingStore.pPixelShaderBlock) { VH(BackingStore.pPixelShaderBlock->ComputeStateBlockMask(pStateBlockMask)); }
+    if (FALSE == bHS && NULL != BackingStore.pHullShaderBlock) { VH(BackingStore.pHullShaderBlock->ComputeStateBlockMask(pStateBlockMask)); }
+    if (FALSE == bDS && NULL != BackingStore.pDomainShaderBlock) { VH(BackingStore.pDomainShaderBlock->ComputeStateBlockMask(pStateBlockMask)); }
+    if (FALSE == bCS && NULL != BackingStore.pComputeShaderBlock) { VH(BackingStore.pComputeShaderBlock->ComputeStateBlockMask(pStateBlockMask)); }
 
 lExit:
     return hr;
@@ -1704,92 +1417,72 @@ lExit:
 // ID3DX11EffectTechnique (STechnique implementation)
 //////////////////////////////////////////////////////////////////////////
 
-BOOL STechnique::IsValid()
-{
-    if( HasDependencies )
-    {
-        for( UINT i = 0; i < PassCount; i++ )
-        {
-            if( !((SPassBlock*)pPasses)[i].IsValid() )
-                return FALSE;
+BOOL STechnique::IsValid() {
+    if (HasDependencies) {
+        for (UINT i = 0; i < PassCount; i++) {
+            if (!((SPassBlock *) pPasses)[i].IsValid()) return FALSE;
         }
         return TRUE;
     }
     return InitiallyValid;
 }
 
-HRESULT STechnique::GetDesc(D3DX11_TECHNIQUE_DESC *pDesc)
-{
+HRESULT STechnique::GetDesc(D3DX11_TECHNIQUE_DESC * pDesc) {
     HRESULT hr = S_OK;
 
     LPCSTR pFuncName = "ID3DX11EffectTechnique::GetDesc";
 
     VERIFYPARAMETER(pDesc);
 
-    pDesc->Name = pName;
+    pDesc->Name        = pName;
     pDesc->Annotations = AnnotationCount;
-    pDesc->Passes = PassCount;
+    pDesc->Passes      = PassCount;
 
 lExit:
     return hr;
 }
 
-ID3DX11EffectVariable * STechnique::GetAnnotationByIndex(UINT  Index)
-{
+ID3DX11EffectVariable * STechnique::GetAnnotationByIndex(UINT Index) {
     return GetAnnotationByIndexHelper("ID3DX11EffectTechnique", Index, AnnotationCount, pAnnotations);
 }
 
-ID3DX11EffectVariable * STechnique::GetAnnotationByName(LPCSTR Name)
-{
+ID3DX11EffectVariable * STechnique::GetAnnotationByName(LPCSTR Name) {
     return GetAnnotationByNameHelper("ID3DX11EffectTechnique", Name, AnnotationCount, pAnnotations);
 }
 
-ID3DX11EffectPass * STechnique::GetPassByIndex(UINT  Index)
-{
+ID3DX11EffectPass * STechnique::GetPassByIndex(UINT Index) {
     LPCSTR pFuncName = "ID3DX11EffectTechnique::GetPassByIndex";
 
-    if (Index >= PassCount)
-    {
+    if (Index >= PassCount) {
         DPF(0, "%s: Invalid pass index (%d, total: %d)", pFuncName, Index, PassCount);
         return &g_InvalidPass;
     }
 
-    return (ID3DX11EffectPass *)(pPasses + Index);
+    return (ID3DX11EffectPass *) (pPasses + Index);
 }
 
-ID3DX11EffectPass * STechnique::GetPassByName(LPCSTR Name)
-{
+ID3DX11EffectPass * STechnique::GetPassByName(LPCSTR Name) {
     LPCSTR pFuncName = "ID3DX11EffectTechnique::GetPassByName";
 
-    UINT  i;
+    UINT i;
 
-    for (i = 0; i < PassCount; ++ i)
-    {
-        if (NULL != pPasses[i].pName &&
-            strcmp(pPasses[i].pName, Name) == 0)
-        {
-            break;
-        }
+    for (i = 0; i < PassCount; ++i) {
+        if (NULL != pPasses[i].pName && strcmp(pPasses[i].pName, Name) == 0) { break; }
     }
 
-    if (i == PassCount)
-    {
+    if (i == PassCount) {
         DPF(0, "%s: Pass [%s] not found", pFuncName, Name);
         return &g_InvalidPass;
     }
 
-    return (ID3DX11EffectPass *)(pPasses + i);
+    return (ID3DX11EffectPass *) (pPasses + i);
 }
 
-HRESULT STechnique::ComputeStateBlockMask(D3DX11_STATE_BLOCK_MASK *pStateBlockMask)
-{
+HRESULT STechnique::ComputeStateBlockMask(D3DX11_STATE_BLOCK_MASK * pStateBlockMask) {
     HRESULT hr = S_OK;
-    UINT i;
+    UINT    i;
 
-    for (i = 0; i < PassCount; ++ i)
-    {
-        VH( ((SPassBlock*)pPasses)[i].ComputeStateBlockMask(pStateBlockMask) );
-    }
+    for (i = 0; i < PassCount; ++i) { VH(((SPassBlock *) pPasses)[i].ComputeStateBlockMask(pStateBlockMask)); }
 
 lExit:
     return hr;
@@ -1799,91 +1492,74 @@ lExit:
 // ID3DX11EffectGroup (SGroup implementation)
 //////////////////////////////////////////////////////////////////////////
 
-BOOL SGroup::IsValid()
-{
-    if( HasDependencies )
-    {
-        for( UINT i = 0; i < TechniqueCount; i++ )
-        {
-            if( !((STechnique*)pTechniques)[i].IsValid() )
-                return FALSE;
+BOOL SGroup::IsValid() {
+    if (HasDependencies) {
+        for (UINT i = 0; i < TechniqueCount; i++) {
+            if (!((STechnique *) pTechniques)[i].IsValid()) return FALSE;
         }
         return TRUE;
     }
     return InitiallyValid;
 }
 
-HRESULT SGroup::GetDesc(D3DX11_GROUP_DESC *pDesc)
-{
+HRESULT SGroup::GetDesc(D3DX11_GROUP_DESC * pDesc) {
     HRESULT hr = S_OK;
 
     LPCSTR pFuncName = "ID3DX11EffectGroup::GetDesc";
 
     VERIFYPARAMETER(pDesc);
 
-    pDesc->Name = pName;
+    pDesc->Name        = pName;
     pDesc->Annotations = AnnotationCount;
-    pDesc->Techniques = TechniqueCount;
+    pDesc->Techniques  = TechniqueCount;
 
 lExit:
     return hr;
 }
 
-ID3DX11EffectVariable * SGroup::GetAnnotationByIndex(UINT  Index)
-{
+ID3DX11EffectVariable * SGroup::GetAnnotationByIndex(UINT Index) {
     return GetAnnotationByIndexHelper("ID3DX11EffectGroup", Index, AnnotationCount, pAnnotations);
 }
 
-ID3DX11EffectVariable * SGroup::GetAnnotationByName(LPCSTR Name)
-{
+ID3DX11EffectVariable * SGroup::GetAnnotationByName(LPCSTR Name) {
     return GetAnnotationByNameHelper("ID3DX11EffectGroup", Name, AnnotationCount, pAnnotations);
 }
 
-ID3DX11EffectTechnique * SGroup::GetTechniqueByIndex(UINT  Index)
-{
+ID3DX11EffectTechnique * SGroup::GetTechniqueByIndex(UINT Index) {
     LPCSTR pFuncName = "ID3DX11EffectGroup::GetTechniqueByIndex";
 
-    if (Index >= TechniqueCount)
-    {
+    if (Index >= TechniqueCount) {
         DPF(0, "%s: Invalid pass index (%d, total: %d)", pFuncName, Index, TechniqueCount);
         return &g_InvalidTechnique;
     }
 
-    return (ID3DX11EffectTechnique *)(pTechniques + Index);
+    return (ID3DX11EffectTechnique *) (pTechniques + Index);
 }
 
-ID3DX11EffectTechnique * SGroup::GetTechniqueByName(LPCSTR Name)
-{
+ID3DX11EffectTechnique * SGroup::GetTechniqueByName(LPCSTR Name) {
     LPCSTR pFuncName = "ID3DX11EffectGroup::GetTechniqueByName";
 
-    UINT  i;
+    UINT i;
 
-    for (i = 0; i < TechniqueCount; ++ i)
-    {
-        if (NULL != pTechniques[i].pName &&
-            strcmp(pTechniques[i].pName, Name) == 0)
-        {
-            break;
-        }
+    for (i = 0; i < TechniqueCount; ++i) {
+        if (NULL != pTechniques[i].pName && strcmp(pTechniques[i].pName, Name) == 0) { break; }
     }
 
-    if (i == TechniqueCount)
-    {
+    if (i == TechniqueCount) {
         DPF(0, "%s: Technique [%s] not found", pFuncName, Name);
         return &g_InvalidTechnique;
     }
 
-    return (ID3DX11EffectTechnique *)(pTechniques + i);
+    return (ID3DX11EffectTechnique *) (pTechniques + i);
 }
 
 //////////////////////////////////////////////////////////////////////////
 // ID3DX11Effect Public Reflection APIs (CEffect)
 //////////////////////////////////////////////////////////////////////////
 
-HRESULT CEffect::GetDevice(ID3D11Device **ppDevice)
-{
-    HRESULT hr = S_OK;
-    LPCSTR pFuncName = "ID3DX11Effect::GetDevice";
+HRESULT CEffect::GetDevice(ID3D11Device ** ppDevice) {
+    HRESULT hr        = S_OK;
+    LPCSTR  pFuncName = "ID3DX11Effect::GetDevice";
     VERIFYPARAMETER(ppDevice);
 
     m_pDevice->AddRef();
@@ -1893,259 +1569,200 @@ lExit:
     return hr;
 }
 
-HRESULT CEffect::GetDesc(D3DX11_EFFECT_DESC *pDesc)
-{
+HRESULT CEffect::GetDesc(D3DX11_EFFECT_DESC * pDesc) {
     HRESULT hr = S_OK;
 
     LPCSTR pFuncName = "ID3DX11Effect::GetDesc";
 
     VERIFYPARAMETER(pDesc);
 
-    pDesc->ConstantBuffers = m_CBCount;
-    pDesc->GlobalVariables = m_VariableCount;
-    pDesc->Techniques = m_TechniqueCount;
-    pDesc->Groups = m_GroupCount;
+    pDesc->ConstantBuffers    = m_CBCount;
+    pDesc->GlobalVariables    = m_VariableCount;
+    pDesc->Techniques         = m_TechniqueCount;
+    pDesc->Groups             = m_GroupCount;
     pDesc->InterfaceVariables = m_InterfaceCount;
 
 lExit:
     return hr;
 }
 
-ID3DX11EffectConstantBuffer * CEffect::GetConstantBufferByIndex(UINT  Index)
-{
+ID3DX11EffectConstantBuffer * CEffect::GetConstantBufferByIndex(UINT Index) {
     LPCSTR pFuncName = "ID3DX11Effect::GetConstantBufferByIndex";
 
-    if (Index < m_CBCount)
-    {
-        return m_pCBs + Index;
-    }
+    if (Index < m_CBCount) { return m_pCBs + Index; }
 
     DPF(0, "%s: Invalid constant buffer index", pFuncName);
     return &g_InvalidConstantBuffer;
 }
 
-ID3DX11EffectConstantBuffer * CEffect::GetConstantBufferByName(LPCSTR Name)
-{
-    HRESULT hr = S_OK;
-    LPCSTR pFuncName = "ID3DX11Effect::GetConstantBufferByName";
+ID3DX11EffectConstantBuffer * CEffect::GetConstantBufferByName(LPCSTR Name) {
+    HRESULT hr        = S_OK;
+    LPCSTR  pFuncName = "ID3DX11Effect::GetConstantBufferByName";
 
-    if (IsOptimized())
-    {
+    if (IsOptimized()) {
         DPF(0, "%s: Cannot get constant buffer interfaces by name since the effect has been Optimize()'ed", pFuncName);
         return &g_InvalidConstantBuffer;
     }
 
-    if (NULL == Name)
-    {
+    if (NULL == Name) {
         DPF(0, "%s: Parameter Name was NULL.", pFuncName);
         return &g_InvalidConstantBuffer;
     }
 
-    UINT  i;
+    UINT i;
 
-    for (i = 0; i < m_CBCount; ++ i)
-    {
-        if (strcmp(m_pCBs[i].pName, Name) == 0)
-        {
-            return m_pCBs + i;
-        }
+    for (i = 0; i < m_CBCount; ++i) {
+        if (strcmp(m_pCBs[i].pName, Name) == 0) { return m_pCBs + i; }
     }
 
     DPF(0, "%s: Constant Buffer [%s] not found", pFuncName, Name);
     return &g_InvalidConstantBuffer;
 }
 
-ID3DX11EffectVariable * CEffect::GetVariableByIndex(UINT  Index)
-{
+ID3DX11EffectVariable * CEffect::GetVariableByIndex(UINT Index) {
     LPCSTR pFuncName = "ID3DX11Effect::GetVariableByIndex";
 
-    if (Index < m_VariableCount)
-    {
-        return m_pVariables + Index;
-    }
+    if (Index < m_VariableCount) { return m_pVariables + Index; }
 
     DPF(0, "%s: Invalid variable index", pFuncName);
     return &g_InvalidScalarVariable;
 }
 
-ID3DX11EffectVariable * CEffect::GetVariableByName(LPCSTR Name)
-{
-    HRESULT hr = S_OK;
-    LPCSTR pFuncName = "ID3DX11Effect::GetVariableByName";
+ID3DX11EffectVariable * CEffect::GetVariableByName(LPCSTR Name) {
+    HRESULT hr        = S_OK;
+    LPCSTR  pFuncName = "ID3DX11Effect::GetVariableByName";
 
-    if (IsOptimized())
-    {
+    if (IsOptimized()) {
         DPF(0, "%s: Cannot get variable interfaces by name since the effect has been Optimize()'ed", pFuncName);
         return &g_InvalidScalarVariable;
     }
 
-    if (NULL == Name)
-    {
+    if (NULL == Name) {
         DPF(0, "%s: Parameter Name was NULL.", pFuncName);
         return &g_InvalidScalarVariable;
     }
 
-    UINT  i;
+    UINT i;
 
-    for (i = 0; i < m_VariableCount; ++ i)
-    {
-        if (strcmp(m_pVariables[i].pName, Name) == 0)
-        {
-            return m_pVariables + i;
-        }
+    for (i = 0; i < m_VariableCount; ++i) {
+        if (strcmp(m_pVariables[i].pName, Name) == 0) { return m_pVariables + i; }
     }
 
     DPF(0, "%s: Variable [%s] not found", pFuncName, Name);
     return &g_InvalidScalarVariable;
 }
 
-ID3DX11EffectVariable * CEffect::GetVariableBySemantic(LPCSTR Semantic)
-{
+ID3DX11EffectVariable * CEffect::GetVariableBySemantic(LPCSTR Semantic) {
     LPCSTR pFuncName = "ID3DX11Effect::GetVariableBySemantic";
 
-    if (IsOptimized())
-    {
+    if (IsOptimized()) {
         DPF(0, "%s: Cannot get variable interfaces by semantic since the effect has been Optimize()'ed", pFuncName);
         return &g_InvalidScalarVariable;
     }
 
-    if (NULL == Semantic)
-    {
+    if (NULL == Semantic) {
         DPF(0, "%s: Parameter Semantic was NULL.", pFuncName);
         return &g_InvalidScalarVariable;
     }
 
-    UINT  i;
+    UINT i;
 
-    for (i = 0; i < m_VariableCount; ++ i)
-    {
-        if (NULL != m_pVariables[i].pSemantic &&
-            _stricmp(m_pVariables[i].pSemantic, Semantic) == 0)
-        {
-            return (ID3DX11EffectVariable *)(m_pVariables + i);
-        }
+    for (i = 0; i < m_VariableCount; ++i) {
+        if (NULL != m_pVariables[i].pSemantic && _stricmp(m_pVariables[i].pSemantic, Semantic) == 0) { return (ID3DX11EffectVariable *) (m_pVariables + i); }
     }
 
     DPF(0, "%s: Variable with semantic [%s] not found", pFuncName, Semantic);
     return &g_InvalidScalarVariable;
 }
 
-ID3DX11EffectTechnique * CEffect::GetTechniqueByIndex(UINT  Index)
-{
+ID3DX11EffectTechnique * CEffect::GetTechniqueByIndex(UINT Index) {
     LPCSTR pFuncName = "ID3DX11Effect::GetTechniqueByIndex";
 
-    if( Index < m_TechniqueCount )
-    {
+    if (Index < m_TechniqueCount) {
         UINT i;
-        for( i=0; i < m_GroupCount; i++ )
-        {
-            if( Index < m_pGroups[i].TechniqueCount )
-            {
-                return (ID3DX11EffectTechnique *)(m_pGroups[i].pTechniques + Index);
-            }
+        for (i = 0; i < m_GroupCount; i++) {
+            if (Index < m_pGroups[i].TechniqueCount) { return (ID3DX11EffectTechnique *) (m_pGroups[i].pTechniques + Index); }
             Index -= m_pGroups[i].TechniqueCount;
         }
-        D3DXASSERT( FALSE );
+        D3DXASSERT(FALSE);
     }
     DPF(0, "%s: Invalid technique index (%d)", pFuncName, Index);
     return &g_InvalidTechnique;
 }
 
-ID3DX11EffectTechnique * CEffect::GetTechniqueByName(LPCSTR Name)
-{
-    HRESULT hr = S_OK;
-    LPCSTR pFuncName = "ID3DX11Effect::GetTechniqueByName";
+ID3DX11EffectTechnique * CEffect::GetTechniqueByName(LPCSTR Name) {
+    HRESULT    hr                       = S_OK;
+    LPCSTR     pFuncName                = "ID3DX11Effect::GetTechniqueByName";
     const UINT MAX_GROUP_TECHNIQUE_SIZE = 256;
-    char NameCopy[MAX_GROUP_TECHNIQUE_SIZE];
+    char       NameCopy[MAX_GROUP_TECHNIQUE_SIZE];
 
-    if (IsOptimized())
-    {
+    if (IsOptimized()) {
         DPF(0, "ID3DX11Effect::GetTechniqueByName: Cannot get technique interfaces by name since the effect has been Optimize()'ed");
         return &g_InvalidTechnique;
     }
 
-    if (NULL == Name)
-    {
+    if (NULL == Name) {
         DPF(0, "%s: Parameter Name was NULL.", pFuncName);
         return &g_InvalidTechnique;
     }
 
-    if( FAILED( StringCchCopyA( NameCopy, MAX_GROUP_TECHNIQUE_SIZE, Name ) ) )
-    {
-        DPF( 0, "Group|Technique name has a length greater than %d.", MAX_GROUP_TECHNIQUE_SIZE );
+    if (FAILED(StringCchCopyA(NameCopy, MAX_GROUP_TECHNIQUE_SIZE, Name))) {
+        DPF(0, "Group|Technique name has a length greater than %d.", MAX_GROUP_TECHNIQUE_SIZE);
         return &g_InvalidTechnique;
     }
 
-    char* pDelimiter = strchr( NameCopy, '|' );
-    if( pDelimiter == NULL )
-    {
-        if ( m_pNullGroup == NULL )
-        {
-            DPF( 0, "The effect contains no default group." );
+    char * pDelimiter = strchr(NameCopy, '|');
+    if (pDelimiter == NULL) {
+        if (m_pNullGroup == NULL) {
+            DPF(0, "The effect contains no default group.");
             return &g_InvalidTechnique;
         }
 
-        return m_pNullGroup->GetTechniqueByName( Name );
+        return m_pNullGroup->GetTechniqueByName(Name);
     }
 
     // separate group name and technique name
     *pDelimiter = 0;
 
-    return GetGroupByName( NameCopy )->GetTechniqueByName( pDelimiter + 1 );
+    return GetGroupByName(NameCopy)->GetTechniqueByName(pDelimiter + 1);
 }
 
-ID3D11ClassLinkage * CEffect::GetClassLinkage()
-{
-    SAFE_ADDREF( m_pClassLinkage );
+ID3D11ClassLinkage * CEffect::GetClassLinkage() {
+    SAFE_ADDREF(m_pClassLinkage);
     return m_pClassLinkage;
 }
 
-ID3DX11EffectGroup * CEffect::GetGroupByIndex(UINT  Index)
-{
+ID3DX11EffectGroup * CEffect::GetGroupByIndex(UINT Index) {
     LPCSTR pFuncName = "ID3DX11Effect::GetGroupByIndex";
 
-    if( Index < m_GroupCount )
-    {
-        return (ID3DX11EffectGroup *)(m_pGroups + Index);
-    }
+    if (Index < m_GroupCount) { return (ID3DX11EffectGroup *) (m_pGroups + Index); }
     DPF(0, "%s: Invalid group index (%d)", pFuncName, Index);
     return &g_InvalidGroup;
 }
 
-ID3DX11EffectGroup * CEffect::GetGroupByName(LPCSTR Name)
-{
-    HRESULT hr = S_OK;
-    LPCSTR pFuncName = "ID3DX11Effect::GetGroupByName";
+ID3DX11EffectGroup * CEffect::GetGroupByName(LPCSTR Name) {
+    HRESULT hr        = S_OK;
+    LPCSTR  pFuncName = "ID3DX11Effect::GetGroupByName";
 
-    if (IsOptimized())
-    {
+    if (IsOptimized()) {
         DPF(0, "ID3DX11Effect::GetGroupByName: Cannot get group interfaces by name since the effect has been Optimize()'ed");
         return &g_InvalidGroup;
     }
 
-    if (NULL == Name || Name[0] == 0 )
-    {
-        return m_pNullGroup ? (ID3DX11EffectGroup *)m_pNullGroup : &g_InvalidGroup;
+    if (NULL == Name || Name[0] == 0) { return m_pNullGroup ? (ID3DX11EffectGroup *) m_pNullGroup : &g_InvalidGroup; }
+
+    UINT i;
+
+    for (i = 0; i < m_GroupCount; ++i) {
+        if (NULL != m_pGroups[i].pName && strcmp(m_pGroups[i].pName, Name) == 0) { break; }
     }
 
-    UINT  i;
-
-    for (i = 0; i < m_GroupCount; ++ i)
-    {
-        if (NULL != m_pGroups[i].pName &&
-            strcmp(m_pGroups[i].pName, Name) == 0)
-        {
-            break;
-        }
-    }
-
-    if (i == m_GroupCount)
-    {
+    if (i == m_GroupCount) {
         DPF(0, "%s: Group [%s] not found", pFuncName, Name);
         return &g_InvalidGroup;
     }
 
-    return (ID3DX11EffectGroup *)(m_pGroups + i);
+    return (ID3DX11EffectGroup *) (m_pGroups + i);
 }
 
-}
+} // namespace D3DX11Effects

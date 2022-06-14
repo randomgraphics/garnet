@@ -8,14 +8,14 @@
 #pragma once
 
 #ifndef _D2D1_EFFECT_HELPERS_H_
-#define _D2D1_EFFECT_HELPERS_H_
+    #define _D2D1_EFFECT_HELPERS_H_
 
-#include <winapifamily.h>
+    #include <winapifamily.h>
 
-#pragma region Application Family
-#if WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_APP)
+    #pragma region Application Family
+    #if WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_APP)
 
-#include <D2D1EffectAuthor.h>
+        #include <D2D1EffectAuthor.h>
 
 //+-----------------------------------------------------------------------------
 //
@@ -30,18 +30,9 @@
 //
 //--------------------------------------------------------------------------------
 template<class C, typename P, typename I>
-HRESULT DeducingValueSetter(
-    _In_ HRESULT (C::*callback)(P),
-    _In_ I *effect,
-    _In_reads_(dataSize) const BYTE *data,
-    UINT32 dataSize
-    )
-{
+HRESULT DeducingValueSetter(_In_ HRESULT (C::*callback)(P), _In_ I * effect, _In_reads_(dataSize) const BYTE * data, UINT32 dataSize) {
     // We must exactly match the value-type's size.
-    if (dataSize != sizeof(P))
-    {
-        return E_INVALIDARG;
-    }
+    if (dataSize != sizeof(P)) { return E_INVALIDARG; }
 
     return (static_cast<C *>(effect)->*callback)(*reinterpret_cast<const P *>(data));
 }
@@ -56,12 +47,7 @@ HRESULT DeducingValueSetter(
 //
 //--------------------------------------------------------------------------------
 template<typename T, T P, typename I>
-HRESULT CALLBACK ValueSetter(
-    _In_ IUnknown *effect,
-    _In_reads_(dataSize) const BYTE *data,
-    UINT32 dataSize
-    )
-{
+HRESULT CALLBACK ValueSetter(_In_ IUnknown * effect, _In_reads_(dataSize) const BYTE * data, UINT32 dataSize) {
     // Cast through I to resolve multiple-inheritance ambiguities.
     return DeducingValueSetter(P, static_cast<I *>(effect), data, dataSize);
 }
@@ -79,25 +65,12 @@ HRESULT CALLBACK ValueSetter(
 //
 //--------------------------------------------------------------------------------
 template<class C, typename P, typename I>
-HRESULT DeducingValueGetter(
-    _In_ P (C::*callback)() const,
-    _In_ const I *effect,
-    _Out_writes_opt_(dataSize) BYTE *data,
-    UINT32 dataSize,
-    _Out_opt_ UINT32 *actualSize
-    )
-{
-    if (actualSize)
-    {
-        *actualSize = sizeof(P);
-    }
+HRESULT DeducingValueGetter(_In_ P (C::*callback)() const, _In_ const I * effect, _Out_writes_opt_(dataSize) BYTE * data, UINT32 dataSize,
+                            _Out_opt_ UINT32 * actualSize) {
+    if (actualSize) { *actualSize = sizeof(P); }
 
-    if (dataSize > 0 && data)
-    {
-        if (dataSize < sizeof(P))
-        {
-            return E_NOT_SUFFICIENT_BUFFER;
-        }
+    if (dataSize > 0 && data) {
+        if (dataSize < sizeof(P)) { return E_NOT_SUFFICIENT_BUFFER; }
 
         *reinterpret_cast<P *>(data) = (static_cast<const C *>(effect)->*callback)();
     }
@@ -115,13 +88,7 @@ HRESULT DeducingValueGetter(
 //
 //--------------------------------------------------------------------------------
 template<typename T, T P, typename I>
-HRESULT CALLBACK ValueGetter(
-    _In_ const IUnknown *effect,
-    _Out_writes_opt_(dataSize) BYTE *data,
-    UINT32 dataSize,
-    _Out_opt_ UINT32 *actualSize
-    )
-{
+HRESULT CALLBACK ValueGetter(_In_ const IUnknown * effect, _Out_writes_opt_(dataSize) BYTE * data, UINT32 dataSize, _Out_opt_ UINT32 * actualSize) {
     // Cast through I to resolve multiple-inheritance ambiguities.
     return DeducingValueGetter(P, static_cast<const I *>(effect), data, dataSize, actualSize);
 }
@@ -139,13 +106,7 @@ HRESULT CALLBACK ValueGetter(
 //
 //--------------------------------------------------------------------------------
 template<class C, typename I>
-HRESULT DeducingBlobSetter(
-    _In_ HRESULT (C::*callback)(const BYTE *, UINT32),
-    _In_ I *effect,
-    _In_reads_(dataSize) const BYTE *data,
-    UINT32 dataSize
-    )
-{
+HRESULT DeducingBlobSetter(_In_ HRESULT (C::*callback)(const BYTE *, UINT32), _In_ I * effect, _In_reads_(dataSize) const BYTE * data, UINT32 dataSize) {
     return (static_cast<C *>(effect)->*callback)(data, dataSize);
 }
 
@@ -159,12 +120,7 @@ HRESULT DeducingBlobSetter(
 //
 //--------------------------------------------------------------------------------
 template<typename T, T P, typename I>
-HRESULT CALLBACK BlobSetter(
-    _In_ IUnknown *effect,
-    _In_reads_(dataSize) const BYTE *data,
-    UINT32 dataSize
-    )
-{
+HRESULT CALLBACK BlobSetter(_In_ IUnknown * effect, _In_reads_(dataSize) const BYTE * data, UINT32 dataSize) {
     // Cast through I to resolve multiple-inheritance ambiguities.
     return DeducingBlobSetter(P, static_cast<I *>(effect), data, dataSize);
 }
@@ -182,14 +138,8 @@ HRESULT CALLBACK BlobSetter(
 //
 //--------------------------------------------------------------------------------
 template<class C, typename I>
-HRESULT DeducingBlobGetter(
-    _In_ HRESULT (C::*callback)(BYTE *, UINT32, UINT32*) const,
-    _In_ const I *effect,
-    _Out_writes_opt_(dataSize) BYTE *data,
-    UINT32 dataSize,
-    _Out_opt_ UINT32 *actualSize
-    )
-{
+HRESULT DeducingBlobGetter(_In_ HRESULT (C::*callback)(BYTE *, UINT32, UINT32 *) const, _In_ const I * effect, _Out_writes_opt_(dataSize) BYTE * data,
+                           UINT32 dataSize, _Out_opt_ UINT32 * actualSize) {
     return (static_cast<const C *>(effect)->*callback)(data, dataSize, actualSize);
 }
 
@@ -203,13 +153,7 @@ HRESULT DeducingBlobGetter(
 //
 //--------------------------------------------------------------------------------
 template<typename T, T P, typename I>
-HRESULT CALLBACK BlobGetter(
-    _In_ const IUnknown *effect,
-    _Out_writes_opt_(dataSize) BYTE *data,
-    UINT32 dataSize,
-    _Out_opt_ UINT32 *actualSize
-    )
-{
+HRESULT CALLBACK BlobGetter(_In_ const IUnknown * effect, _Out_writes_opt_(dataSize) BYTE * data, UINT32 dataSize, _Out_opt_ UINT32 * actualSize) {
     // Cast through I to resolve multiple-inheritance ambiguities.
     return DeducingBlobGetter(P, static_cast<const I *>(effect), data, dataSize, actualSize);
 }
@@ -227,13 +171,7 @@ HRESULT CALLBACK BlobGetter(
 //
 //--------------------------------------------------------------------------------
 template<class C, typename I>
-HRESULT DeducingStringSetter(
-    _In_ HRESULT (C::*callback)(PCWSTR string),
-    _In_ I *effect,
-    _In_reads_(dataSize) const BYTE *data,
-    UINT32 dataSize
-    )
-{
+HRESULT DeducingStringSetter(_In_ HRESULT (C::*callback)(PCWSTR string), _In_ I * effect, _In_reads_(dataSize) const BYTE * data, UINT32 dataSize) {
     dataSize;
 
     return (static_cast<C *>(effect)->*callback)(reinterpret_cast<PCWSTR>(data));
@@ -249,12 +187,7 @@ HRESULT DeducingStringSetter(
 //
 //--------------------------------------------------------------------------------
 template<typename T, T P, typename I>
-HRESULT CALLBACK StringSetter(
-    _In_ IUnknown *effect,
-    _In_reads_(dataSize) const BYTE *data,
-    UINT32 dataSize
-    )
-{
+HRESULT CALLBACK StringSetter(_In_ IUnknown * effect, _In_reads_(dataSize) const BYTE * data, UINT32 dataSize) {
     // Cast through I to resolve multiple-inheritance ambiguities.
     return DeducingStringSetter(P, static_cast<I *>(effect), data, dataSize);
 }
@@ -272,22 +205,13 @@ HRESULT CALLBACK StringSetter(
 //
 //--------------------------------------------------------------------------------
 template<class C, typename I>
-HRESULT DeducingStringGetter(
-    _In_ HRESULT (C::*callback)(PWSTR, UINT32, UINT32*) const,
-    _In_ const I *effect,
-    _Out_writes_opt_(dataSize) BYTE *data,
-    UINT32 dataSize,
-    _Out_opt_ UINT32 *actualSize
-    )
-{
+HRESULT DeducingStringGetter(_In_ HRESULT (C::*callback)(PWSTR, UINT32, UINT32 *) const, _In_ const I * effect, _Out_writes_opt_(dataSize) BYTE * data,
+                             UINT32 dataSize, _Out_opt_ UINT32 * actualSize) {
     UINT32 cchString;
 
     HRESULT hr = (static_cast<const C *>(effect)->*callback)(reinterpret_cast<PWSTR>(data), dataSize / sizeof(WCHAR), &cchString);
 
-    if ((SUCCEEDED(hr) || hr == E_NOT_SUFFICIENT_BUFFER) && actualSize)
-    {
-        *actualSize = cchString * sizeof(WCHAR);
-    }
+    if ((SUCCEEDED(hr) || hr == E_NOT_SUFFICIENT_BUFFER) && actualSize) { *actualSize = cchString * sizeof(WCHAR); }
 
     return hr;
 }
@@ -302,109 +226,87 @@ HRESULT DeducingStringGetter(
 //
 //--------------------------------------------------------------------------------
 template<typename T, T P, typename I>
-HRESULT CALLBACK StringGetter(
-    _In_ const IUnknown *effect,
-    _Out_writes_opt_(dataSize) BYTE *data,
-    UINT32 dataSize,
-    _Out_opt_ UINT32 *actualSize
-    )
-{
+HRESULT CALLBACK StringGetter(_In_ const IUnknown * effect, _Out_writes_opt_(dataSize) BYTE * data, UINT32 dataSize, _Out_opt_ UINT32 * actualSize) {
     // Cast through I to resolve multiple-inheritance ambiguities.
     return DeducingStringGetter(P, static_cast<const I *>(effect), data, dataSize, actualSize);
 }
 
-//
-// Simpler versions of the helpers can be declared if decltype is available:
-//
-#if _MSC_VER >= 1600
-#define D2D1_SIMPLE_BINDING_MACROS
-#endif
+        //
+        // Simpler versions of the helpers can be declared if decltype is available:
+        //
+        #if _MSC_VER >= 1600
+            #define D2D1_SIMPLE_BINDING_MACROS
+        #endif
 
-#ifdef D2D1_SIMPLE_BINDING_MACROS
+        #ifdef D2D1_SIMPLE_BINDING_MACROS
 
 //
 // Helper to work around decltype issues:
 //
 template<typename T>
-T GetType(T t) { return t; };
+T GetType(T t) {
+    return t;
+};
 
-//
-// Helper macros for declaring a D2D1_PROPERTY_BINDING for value, blob, or string callbacks.
-//
-#define D2D1_VALUE_TYPE_BINDING(NAME, SETTER, GETTER) \
-    { NAME, &ValueSetter<decltype(GetType(SETTER)), SETTER, ID2D1EffectImpl>, &ValueGetter<decltype(GetType(GETTER)), GETTER, ID2D1EffectImpl> }
+            //
+            // Helper macros for declaring a D2D1_PROPERTY_BINDING for value, blob, or string callbacks.
+            //
+            #define D2D1_VALUE_TYPE_BINDING(NAME, SETTER, GETTER) \
+                { NAME, &ValueSetter<decltype(GetType(SETTER)), SETTER, ID2D1EffectImpl>, &ValueGetter<decltype(GetType(GETTER)), GETTER, ID2D1EffectImpl> }
 
-#define D2D1_BLOB_TYPE_BINDING(NAME, SETTER, GETTER) \
-    { NAME, &BlobSetter<decltype(GetType(SETTER)), SETTER, ID2D1EffectImpl>, &BlobGetter<decltype(GetType(GETTER)), GETTER, ID2D1EffectImpl> }
+            #define D2D1_BLOB_TYPE_BINDING(NAME, SETTER, GETTER) \
+                { NAME, &BlobSetter<decltype(GetType(SETTER)), SETTER, ID2D1EffectImpl>, &BlobGetter<decltype(GetType(GETTER)), GETTER, ID2D1EffectImpl> }
 
-#define D2D1_STRING_TYPE_BINDING(NAME, SETTER, GETTER) \
-    { NAME, &StringSetter<decltype(GetType(SETTER)), SETTER, ID2D1EffectImpl>, &StringGetter<decltype(GetType(GETTER)), GETTER, ID2D1EffectImpl> }
+            #define D2D1_STRING_TYPE_BINDING(NAME, SETTER, GETTER) \
+                { NAME, &StringSetter<decltype(GetType(SETTER)), SETTER, ID2D1EffectImpl>, &StringGetter<decltype(GetType(GETTER)), GETTER, ID2D1EffectImpl> }
 
-//
-// Read-only variants:
-//
-#define D2D1_READONLY_VALUE_TYPE_BINDING(NAME, GETTER) \
-    { NAME, NULL, &ValueGetter<decltype(GetType(GETTER)), GETTER, ID2D1EffectImpl> }
+            //
+            // Read-only variants:
+            //
+            #define D2D1_READONLY_VALUE_TYPE_BINDING(NAME, GETTER) \
+                { NAME, NULL, &ValueGetter<decltype(GetType(GETTER)), GETTER, ID2D1EffectImpl> }
 
-#define D2D1_READONLY_BLOB_TYPE_BINDING(NAME, GETTER) \
-    { NAME, NULL, &BlobGetter<decltype(GetType(GETTER)), GETTER, ID2D1EffectImpl> }
+            #define D2D1_READONLY_BLOB_TYPE_BINDING(NAME, GETTER) \
+                { NAME, NULL, &BlobGetter<decltype(GetType(GETTER)), GETTER, ID2D1EffectImpl> }
 
-#define D2D1_READONLY_STRING_TYPE_BINDING(NAME, GETTER) \
-    { NAME, NULL, &StringGetter<decltype(GetType(GETTER)), GETTER, ID2D1EffectImpl> }
+            #define D2D1_READONLY_STRING_TYPE_BINDING(NAME, GETTER) \
+                { NAME, NULL, &StringGetter<decltype(GetType(GETTER)), GETTER, ID2D1EffectImpl> }
 
-#else // #ifdef D2D1_SIMPLE_BINDING_MACROS
+        #else // #ifdef D2D1_SIMPLE_BINDING_MACROS
 
-//
-// Helper macros for declaring a D2D1_PROPERTY_BINDING for value, blob, or string callbacks.
-//
-#define D2D1_VALUE_TYPE_BINDING(NAME, TYPE, CLASS, SETTER, GETTER)          \
-    {                                                                       \
-        NAME,                                                               \
-        &ValueSetter<HRESULT (CLASS::*)(TYPE),  SETTER, ID2D1EffectImpl>,   \
-        &ValueGetter<TYPE (CLASS::*)() const,   GETTER, ID2D1EffectImpl>    \
-    }
+            //
+            // Helper macros for declaring a D2D1_PROPERTY_BINDING for value, blob, or string callbacks.
+            //
+            #define D2D1_VALUE_TYPE_BINDING(NAME, TYPE, CLASS, SETTER, GETTER) \
+                { NAME, &ValueSetter<HRESULT (CLASS::*)(TYPE), SETTER, ID2D1EffectImpl>, &ValueGetter<TYPE (CLASS::*)() const, GETTER, ID2D1EffectImpl> }
 
-#define D2D1_BLOB_TYPE_BINDING(NAME, CLASS, SETTER, GETTER)                                         \
-    {                                                                                               \
-        NAME,                                                                                       \
-        &BlobSetter<HRESULT (CLASS::*)(const BYTE *, UINT32),           SETTER, ID2D1EffectImpl>,   \
-        &BlobGetter<HRESULT (CLASS::*)(BYTE *, UINT32, UINT32*) const,  GETTER, ID2D1EffectImpl>    \
-    }
+            #define D2D1_BLOB_TYPE_BINDING(NAME, CLASS, SETTER, GETTER)                                          \
+                {                                                                                                \
+                    NAME, &BlobSetter<HRESULT (CLASS::*)(const BYTE *, UINT32), SETTER, ID2D1EffectImpl>,        \
+                        &BlobGetter<HRESULT (CLASS::*)(BYTE *, UINT32, UINT32 *) const, GETTER, ID2D1EffectImpl> \
+                }
 
-#define D2D1_STRING_TYPE_BINDING(NAME, CLASS, SETTER, GETTER)                                       \
-    {                                                                                               \
-        NAME,                                                                                       \
-        &StringSetter<HRESULT (CLASS::*)(PCWSTR string),                SETTER, ID2D1EffectImpl>,   \
-        &StringGetter<HRESULT (CLASS::*)(PWSTR, UINT32, UINT32*) const, GETTER, ID2D1EffectImpl>    \
-    }
+            #define D2D1_STRING_TYPE_BINDING(NAME, CLASS, SETTER, GETTER)                                         \
+                {                                                                                                 \
+                    NAME, &StringSetter<HRESULT (CLASS::*)(PCWSTR string), SETTER, ID2D1EffectImpl>,              \
+                        &StringGetter<HRESULT (CLASS::*)(PWSTR, UINT32, UINT32 *) const, GETTER, ID2D1EffectImpl> \
+                }
 
-//
-// Read-only variants:
-//
-#define D2D1_READONLY_VALUE_TYPE_BINDING(NAME, TYPE, CLASS, GETTER)         \
-    {                                                                       \
-        NAME,                                                               \
-        NULL,                                                               \
-        &ValueGetter<TYPE (CLASS::*)() const,   GETTER, ID2D1EffectImpl>    \
-    }
+            //
+            // Read-only variants:
+            //
+            #define D2D1_READONLY_VALUE_TYPE_BINDING(NAME, TYPE, CLASS, GETTER) \
+                { NAME, NULL, &ValueGetter<TYPE (CLASS::*)() const, GETTER, ID2D1EffectImpl> }
 
-#define D2D1_READONLY_BLOB_TYPE_BINDING(NAME, CLASS, GETTER)                                        \
-    {                                                                                               \
-        NAME,                                                                                       \
-        NULL,                                                                                       \
-        &BlobGetter<HRESULT (CLASS::*)(BYTE *, UINT32, UINT32*) const,  GETTER, ID2D1EffectImpl>    \
-    }
+            #define D2D1_READONLY_BLOB_TYPE_BINDING(NAME, CLASS, GETTER) \
+                { NAME, NULL, &BlobGetter<HRESULT (CLASS::*)(BYTE *, UINT32, UINT32 *) const, GETTER, ID2D1EffectImpl> }
 
-#define D2D1_READONLY_STRING_TYPE_BINDING(NAME, CLASS, GETTER)                                      \
-    {                                                                                               \
-        NAME,                                                                                       \
-        NULL,                                                                                       \
-        &StringGetter<HRESULT (CLASS::*)(PWSTR, UINT32, UINT32*) const, GETTER, ID2D1EffectImpl>    \
-    }
+            #define D2D1_READONLY_STRING_TYPE_BINDING(NAME, CLASS, GETTER) \
+                { NAME, NULL, &StringGetter<HRESULT (CLASS::*)(PWSTR, UINT32, UINT32 *) const, GETTER, ID2D1EffectImpl> }
 
-#endif // #ifdef D2D1_SIMPLE_BINDING_MACROS
-    
-#endif /* WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_APP) */
-#pragma endregion
+        #endif // #ifdef D2D1_SIMPLE_BINDING_MACROS
+
+    #endif /* WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_APP) */
+    #pragma endregion
 
 #endif // #ifndef _D2D1_AUTHOR_H_

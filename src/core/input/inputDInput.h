@@ -10,100 +10,99 @@
 
 #ifdef HAS_DINPUT
 
-#include <dinput.h>
+    #include <dinput.h>
 
-namespace GN { namespace input
-{
-    ///
-    /// 使用DirectInput的输入系统
-    ///
-    class InputDInput : public BasicInputMsw
-    {
-         GN_DECLARE_STDCLASS( InputDInput, BasicInputMsw );
+namespace GN {
+namespace input {
+///
+/// 使用DirectInput的输入系统
+///
+class InputDInput : public BasicInputMsw {
+    GN_DECLARE_STDCLASS(InputDInput, BasicInputMsw);
 
-        // ********************************
-        // ctor/dtor
-        // ********************************
+    // ********************************
+    // ctor/dtor
+    // ********************************
 
-        //@{
-    public:
-        InputDInput()          { clear(); buildKeyMap(); }
-        virtual ~InputDInput() { quit(); }
-        //@}
+    //@{
+public:
+    InputDInput() {
+        clear();
+        buildKeyMap();
+    }
+    virtual ~InputDInput() { quit(); }
+    //@}
 
-        // ********************************
-        // from StdClass
-        // ********************************
+    // ********************************
+    // from StdClass
+    // ********************************
 
-        //@{
-    public:
-        bool init();
-        void quit();
-    private:
-        void clear()
-        {
-            mLibrary = 0;
-            mDInput = 0;
-            mKeyboard = 0;
-            mMouse = 0;
-            mAttached = false;
-            mAcquired = false;
-            mLost = false;
-        }
-        //@}
+    //@{
+public:
+    bool init();
+    void quit();
 
-        // ********************************
-        // from Input
-        // ********************************
-    public:
+private:
+    void clear() {
+        mLibrary  = 0;
+        mDInput   = 0;
+        mKeyboard = 0;
+        mMouse    = 0;
+        mAttached = false;
+        mAcquired = false;
+        mLost     = false;
+    }
+    //@}
 
-        bool attachToWindow( intptr_t, intptr_t );
+    // ********************************
+    // from Input
+    // ********************************
+public:
+    bool attachToWindow(intptr_t, intptr_t);
 
-        void processInputEvents();
+    void processInputEvents();
 
-        // ********************************
-        // from BasicInputMsw
-        // ********************************
-    protected:
+    // ********************************
+    // from BasicInputMsw
+    // ********************************
+protected:
+    void msgHandler(UINT, WPARAM, LPARAM);
 
-        void msgHandler( UINT, WPARAM, LPARAM );
+    // ********************************
+    // private variables
+    // ********************************
+private:
+    // DI keycode -> custom keycode
+    KeyCode mKeyMap[0x200];
 
-        // ********************************
-        // private variables
-        // ********************************
-    private:
+    HMODULE              mLibrary;
+    LPDIRECTINPUT8       mDInput;
+    LPDIRECTINPUTDEVICE8 mKeyboard;
+    LPDIRECTINPUTDEVICE8 mMouse;
 
-        // DI keycode -> custom keycode
-        KeyCode               mKeyMap[0x200];
+    bool mAttached;
+    bool mAcquired;
+    bool mLost;
 
-        HMODULE               mLibrary;
-        LPDIRECTINPUT8        mDInput;
-        LPDIRECTINPUTDEVICE8  mKeyboard;
-        LPDIRECTINPUTDEVICE8  mMouse;
+    // ********************************
+    // private functions
+    // ********************************
+private:
+    bool acquire();
+    bool unacquire();
 
-        bool                  mAttached;
-        bool                  mAcquired;
-        bool                  mLost;
+    void pollKeyboard();
+    void pollMouse();
 
-        // ********************************
-        // private functions
-        // ********************************
-    private:
+    void buildKeyMap();
 
-        bool acquire();
-        bool unacquire();
-
-        void pollKeyboard();
-        void pollMouse();
-
-        void buildKeyMap();
-
-        bool diInit();
-        void diQuit();
-        bool kbInit();
-        bool mouseInit();
-    };
-}}
+    bool diInit();
+    void diQuit();
+    bool kbInit();
+    bool mouseInit();
+};
+} // namespace input
+} // namespace GN
 
 #endif // HAS_DINPUT
 

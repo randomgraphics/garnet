@@ -11,24 +11,24 @@
 #define DWRITE_H_INCLUDED
 
 #if _MSC_VER > 1000
-#pragma once
+    #pragma once
 #endif
 
 #ifndef DWRITE_NO_WINDOWS_H
 
-#include <specstrings.h>
-#include <unknwn.h>
+    #include <specstrings.h>
+    #include <unknwn.h>
 
 #endif // DWRITE_NO_WINDOWS_H
 
 #include <dcommon.h>
 
 #ifndef DWRITE_DECLARE_INTERFACE
-#define DWRITE_DECLARE_INTERFACE(iid) DECLSPEC_UUID(iid) DECLSPEC_NOVTABLE
+    #define DWRITE_DECLARE_INTERFACE(iid) DECLSPEC_UUID(iid) DECLSPEC_NOVTABLE
 #endif
 
 #ifndef DWRITE_EXPORT
-#define DWRITE_EXPORT __declspec(dllimport) WINAPI
+    #define DWRITE_EXPORT __declspec(dllimport) WINAPI
 #endif
 
 /// <summary>
@@ -36,8 +36,7 @@
 /// Font formats that consist of multiple files, e.g. Type 1 .PFM and .PFB, have
 /// separate enum values for each of the file type.
 /// </summary>
-enum DWRITE_FONT_FILE_TYPE
-{
+enum DWRITE_FONT_FILE_TYPE {
     /// <summary>
     /// Font type is not recognized by the DirectWrite font system.
     /// </summary>
@@ -84,8 +83,7 @@ enum DWRITE_FONT_FILE_TYPE
 /// Font formats that consist of multiple files, e.g. Type 1 .PFM and .PFB, have
 /// a single enum entry.
 /// </summary>
-enum DWRITE_FONT_FACE_TYPE
-{
+enum DWRITE_FONT_FACE_TYPE {
     /// <summary>
     /// OpenType font face with CFF outlines.
     /// </summary>
@@ -134,17 +132,16 @@ enum DWRITE_FONT_FACE_TYPE
 /// Specifies algorithmic style simulations to be applied to the font face.
 /// Bold and oblique simulations can be combined via bitwise OR operation.
 /// </summary>
-enum DWRITE_FONT_SIMULATIONS
-{
+enum DWRITE_FONT_SIMULATIONS {
     /// <summary>
     /// No simulations are performed.
     /// </summary>
-    DWRITE_FONT_SIMULATIONS_NONE    = 0x0000,
+    DWRITE_FONT_SIMULATIONS_NONE = 0x0000,
 
     /// <summary>
     /// Algorithmic emboldening is performed.
     /// </summary>
-    DWRITE_FONT_SIMULATIONS_BOLD    = 0x0001,
+    DWRITE_FONT_SIMULATIONS_BOLD = 0x0001,
 
     /// <summary>
     /// Algorithmic italicization is performed.
@@ -160,8 +157,7 @@ DEFINE_ENUM_FLAG_OPERATORS(DWRITE_FONT_SIMULATIONS);
 /// The font weight enumeration describes common values for degree of blackness or thickness of strokes of characters in a font.
 /// Font weight values less than 1 or greater than 999 are considered to be invalid, and they are rejected by font API functions.
 /// </summary>
-enum DWRITE_FONT_WEIGHT
-{
+enum DWRITE_FONT_WEIGHT {
     /// <summary>
     /// Predefined font weight : Thin (100).
     /// </summary>
@@ -253,8 +249,7 @@ enum DWRITE_FONT_WEIGHT
 /// as specified by a font designer for the glyphs in a font.
 /// Values less than 1 or greater than 9 are considered to be invalid, and they are rejected by font API functions.
 /// </summary>
-enum DWRITE_FONT_STRETCH
-{
+enum DWRITE_FONT_STRETCH {
     /// <summary>
     /// Predefined font stretch : Not known (0).
     /// </summary>
@@ -315,8 +310,7 @@ enum DWRITE_FONT_STRETCH
 /// The font style enumeration describes the slope style of a font face, such as Normal, Italic or Oblique.
 /// Values other than the ones defined in the enumeration are considered to be invalid, and they are rejected by font API functions.
 /// </summary>
-enum DWRITE_FONT_STYLE
-{
+enum DWRITE_FONT_STYLE {
     /// <summary>
     /// Font slope style : Normal.
     /// </summary>
@@ -337,8 +331,7 @@ enum DWRITE_FONT_STYLE
 /// <summary>
 /// The informational string enumeration identifies a string in a font.
 /// </summary>
-enum DWRITE_INFORMATIONAL_STRING_ID
-{
+enum DWRITE_INFORMATIONAL_STRING_ID {
     /// <summary>
     /// Unspecified name ID.
     /// </summary>
@@ -385,7 +378,8 @@ enum DWRITE_INFORMATIONAL_STRING_ID
     DWRITE_INFORMATIONAL_STRING_FONT_VENDOR_URL,
 
     /// <summary>
-    /// Description of how the font may be legally used, or different example scenarios for licensed use. This field should be written in plain language, not legalese.
+    /// Description of how the font may be legally used, or different example scenarios for licensed use. This field should be written in plain language, not
+    /// legalese.
     /// </summary>
     DWRITE_INFORMATIONAL_STRING_LICENSE_DESCRIPTION,
 
@@ -395,8 +389,8 @@ enum DWRITE_INFORMATIONAL_STRING_ID
     DWRITE_INFORMATIONAL_STRING_LICENSE_INFO_URL,
 
     /// <summary>
-    /// GDI-compatible family name. Because GDI allows a maximum of four fonts per family, fonts in the same family may have different GDI-compatible family names
-    /// (e.g., "Arial", "Arial Narrow", "Arial Black").
+    /// GDI-compatible family name. Because GDI allows a maximum of four fonts per family, fonts in the same family may have different GDI-compatible family
+    /// names (e.g., "Arial", "Arial Narrow", "Arial Black").
     /// </summary>
     DWRITE_INFORMATIONAL_STRING_WIN32_FAMILY_NAMES,
 
@@ -412,7 +406,7 @@ enum DWRITE_INFORMATIONAL_STRING_ID
     DWRITE_INFORMATIONAL_STRING_PREFERRED_FAMILY_NAMES,
 
     /// <summary>
-    /// Subfamily name preferred by the designer. This name is typically only present if it differs from the GDI-compatible subfamily name. 
+    /// Subfamily name preferred by the designer. This name is typically only present if it differs from the GDI-compatible subfamily name.
     /// </summary>
     DWRITE_INFORMATIONAL_STRING_PREFERRED_SUBFAMILY_NAMES,
 
@@ -437,13 +431,11 @@ enum DWRITE_INFORMATIONAL_STRING_ID
     DWRITE_INFORMATIONAL_STRING_POSTSCRIPT_CID_NAME
 };
 
-
 /// <summary>
 /// The DWRITE_FONT_METRICS structure specifies the metrics of a font face that
 /// are applicable to all glyphs within the font face.
 /// </summary>
-struct DWRITE_FONT_METRICS
-{
+struct DWRITE_FONT_METRICS {
     /// <summary>
     /// The number of font design units per em unit.
     /// Font files use their own coordinate system of font design units.
@@ -468,8 +460,8 @@ struct DWRITE_FONT_METRICS
 
     /// <summary>
     /// Line gap in font design units.
-    /// Recommended additional white space to add between lines to improve legibility. The recommended line spacing 
-    /// (baseline-to-baseline distance) is thus the sum of ascent, descent, and lineGap. The line gap is usually 
+    /// Recommended additional white space to add between lines to improve legibility. The recommended line spacing
+    /// (baseline-to-baseline distance) is thus the sum of ascent, descent, and lineGap. The line gap is usually
     /// positive or zero but can be negative, in which case the recommended line spacing is less than the height
     /// of the character alignment box.
     /// </summary>
@@ -517,8 +509,7 @@ struct DWRITE_FONT_METRICS
 /// The DWRITE_GLYPH_METRICS structure specifies the metrics of an individual glyph.
 /// The units depend on how the metrics are obtained.
 /// </summary>
-struct DWRITE_GLYPH_METRICS
-{
+struct DWRITE_GLYPH_METRICS {
     /// <summary>
     /// Specifies the X offset from the glyph origin to the left edge of the black box.
     /// The glyph origin is the current horizontal writing position.
@@ -570,8 +561,7 @@ struct DWRITE_GLYPH_METRICS
 /// Optional adjustment to a glyph's position. An glyph offset changes the position of a glyph without affecting
 /// the pen position. Offsets are in logical, pre-transform units.
 /// </summary>
-struct DWRITE_GLYPH_OFFSET
-{
+struct DWRITE_GLYPH_OFFSET {
     /// <summary>
     /// Offset in the advance direction of the run. A positive advance offset moves the glyph to the right
     /// (in pre-transform coordinates) if the run is left-to-right or to the left if the run is right-to-left.
@@ -595,8 +585,7 @@ struct DWRITE_GLYPH_OFFSET
 /// from the rest of the process components. In such cases, it is recommended to use an isolated factory for the sandboxed
 /// component.
 /// </summary>
-enum DWRITE_FACTORY_TYPE
-{
+enum DWRITE_FACTORY_TYPE {
     /// <summary>
     /// Shared factory allow for re-use of cached font data across multiple in process components.
     /// Such factories also take advantage of cross process font caching components for better performance.
@@ -618,11 +607,9 @@ enum DWRITE_FACTORY_TYPE
 // Example: DWRITE_MAKE_OPENTYPE_TAG('c','c','m','p')
 // Dword:   0x706D6363
 //
-#define DWRITE_MAKE_OPENTYPE_TAG(a,b,c,d) ( \
-    (static_cast<UINT32>(static_cast<UINT8>(d)) << 24) | \
-    (static_cast<UINT32>(static_cast<UINT8>(c)) << 16) | \
-    (static_cast<UINT32>(static_cast<UINT8>(b)) << 8)  | \
-     static_cast<UINT32>(static_cast<UINT8>(a)))
+#define DWRITE_MAKE_OPENTYPE_TAG(a, b, c, d)                                                                   \
+    ((static_cast<UINT32>(static_cast<UINT8>(d)) << 24) | (static_cast<UINT32>(static_cast<UINT8>(c)) << 16) | \
+     (static_cast<UINT32>(static_cast<UINT8>(b)) << 8) | static_cast<UINT32>(static_cast<UINT8>(a)))
 
 interface IDWriteFontFileStream;
 
@@ -635,8 +622,7 @@ interface IDWriteFontFileStream;
 /// Instead, registration and unregistration of font file loaders with DirectWrite factory should be performed
 /// outside of the font file loader implementation as a separate step.
 /// </summary>
-interface DWRITE_DECLARE_INTERFACE("727cad4e-d6af-4c9e-8a08-d695b11caa49") IDWriteFontFileLoader : public IUnknown
-{
+interface DWRITE_DECLARE_INTERFACE("727cad4e-d6af-4c9e-8a08-d695b11caa49") IDWriteFontFileLoader : public IUnknown {
     /// <summary>
     /// Creates a font file stream object that encapsulates an open file resource.
     /// The resource is closed when the last reference to fontFileStream is released.
@@ -648,11 +634,9 @@ interface DWRITE_DECLARE_INTERFACE("727cad4e-d6af-4c9e-8a08-d695b11caa49") IDWri
     /// <returns>
     /// Standard HRESULT error code.
     /// </returns>
-    STDMETHOD(CreateStreamFromKey)(
-        _In_reads_bytes_(fontFileReferenceKeySize) void const* fontFileReferenceKey,
-        UINT32 fontFileReferenceKeySize,
-        _Out_ IDWriteFontFileStream** fontFileStream
-        ) PURE;
+    STDMETHOD(CreateStreamFromKey)
+    (_In_reads_bytes_(fontFileReferenceKeySize) void const * fontFileReferenceKey, UINT32 fontFileReferenceKeySize,
+     _Out_ IDWriteFontFileStream ** fontFileStream) PURE;
 };
 
 /// <summary>
@@ -660,8 +644,7 @@ interface DWRITE_DECLARE_INTERFACE("727cad4e-d6af-4c9e-8a08-d695b11caa49") IDWri
 /// and exposes local font file information from the font file reference key.
 /// Font file references created using CreateFontFileReference use this font file loader.
 /// </summary>
-interface DWRITE_DECLARE_INTERFACE("b2d9f3ec-c9fe-4a11-a2ec-d86208f7c0a2") IDWriteLocalFontFileLoader : public IDWriteFontFileLoader
-{
+interface DWRITE_DECLARE_INTERFACE("b2d9f3ec-c9fe-4a11-a2ec-d86208f7c0a2") IDWriteLocalFontFileLoader : public IDWriteFontFileLoader {
     /// <summary>
     /// Obtains the length of the absolute file path from the font file reference key.
     /// </summary>
@@ -672,11 +655,8 @@ interface DWRITE_DECLARE_INTERFACE("b2d9f3ec-c9fe-4a11-a2ec-d86208f7c0a2") IDWri
     /// <returns>
     /// Standard HRESULT error code.
     /// </returns>
-    STDMETHOD(GetFilePathLengthFromKey)(
-        _In_reads_bytes_(fontFileReferenceKeySize) void const* fontFileReferenceKey,
-        UINT32 fontFileReferenceKeySize,
-        _Out_ UINT32* filePathLength
-        ) PURE;
+    STDMETHOD(GetFilePathLengthFromKey)
+    (_In_reads_bytes_(fontFileReferenceKeySize) void const * fontFileReferenceKey, UINT32 fontFileReferenceKeySize, _Out_ UINT32 * filePathLength) PURE;
 
     /// <summary>
     /// Obtains the absolute font file path from the font file reference key.
@@ -689,12 +669,9 @@ interface DWRITE_DECLARE_INTERFACE("b2d9f3ec-c9fe-4a11-a2ec-d86208f7c0a2") IDWri
     /// <returns>
     /// Standard HRESULT error code.
     /// </returns>
-    STDMETHOD(GetFilePathFromKey)(
-        _In_reads_bytes_(fontFileReferenceKeySize) void const* fontFileReferenceKey,
-        UINT32 fontFileReferenceKeySize,
-        _Out_writes_z_(filePathSize) WCHAR* filePath,
-        UINT32 filePathSize
-        ) PURE;
+    STDMETHOD(GetFilePathFromKey)
+    (_In_reads_bytes_(fontFileReferenceKeySize) void const * fontFileReferenceKey, UINT32 fontFileReferenceKeySize,
+     _Out_writes_z_(filePathSize) WCHAR * filePath, UINT32 filePathSize) PURE;
 
     /// <summary>
     /// Obtains the last write time of the file from the font file reference key.
@@ -706,18 +683,14 @@ interface DWRITE_DECLARE_INTERFACE("b2d9f3ec-c9fe-4a11-a2ec-d86208f7c0a2") IDWri
     /// <returns>
     /// Standard HRESULT error code.
     /// </returns>
-    STDMETHOD(GetLastWriteTimeFromKey)(
-        _In_reads_bytes_(fontFileReferenceKeySize) void const* fontFileReferenceKey,
-        UINT32 fontFileReferenceKeySize,
-        _Out_ FILETIME* lastWriteTime
-        ) PURE;
+    STDMETHOD(GetLastWriteTimeFromKey)
+    (_In_reads_bytes_(fontFileReferenceKeySize) void const * fontFileReferenceKey, UINT32 fontFileReferenceKeySize, _Out_ FILETIME * lastWriteTime) PURE;
 };
 
 /// <summary>
 /// The interface for loading font file data.
 /// </summary>
-interface DWRITE_DECLARE_INTERFACE("6d4865fe-0ab8-4d91-8f62-5dd6be34a3e0") IDWriteFontFileStream : public IUnknown
-{
+interface DWRITE_DECLARE_INTERFACE("6d4865fe-0ab8-4d91-8f62-5dd6be34a3e0") IDWriteFontFileStream : public IUnknown {
     /// <summary>
     /// Reads a fragment from a file.
     /// </summary>
@@ -732,20 +705,14 @@ interface DWRITE_DECLARE_INTERFACE("6d4865fe-0ab8-4d91-8f62-5dd6be34a3e0") IDWri
     /// IMPORTANT: ReadFileFragment() implementations must check whether the requested file fragment
     /// is within the file bounds. Otherwise, an error should be returned from ReadFileFragment.
     /// </remarks>
-    STDMETHOD(ReadFileFragment)(
-        _Outptr_result_bytebuffer_(fragmentSize) void const** fragmentStart,
-        UINT64 fileOffset,
-        UINT64 fragmentSize,
-        _Out_ void** fragmentContext
-        ) PURE;
+    STDMETHOD(ReadFileFragment)
+    (_Outptr_result_bytebuffer_(fragmentSize) void const ** fragmentStart, UINT64 fileOffset, UINT64 fragmentSize, _Out_ void ** fragmentContext) PURE;
 
     /// <summary>
     /// Releases a fragment from a file.
     /// </summary>
     /// <param name="fragmentContext">The client defined context of a font fragment returned from ReadFileFragment.</param>
-    STDMETHOD_(void, ReleaseFileFragment)(
-        void* fragmentContext
-        ) PURE;
+    STDMETHOD_(void, ReleaseFileFragment)(void * fragmentContext) PURE;
 
     /// <summary>
     /// Obtains the total size of a file.
@@ -760,9 +727,7 @@ interface DWRITE_DECLARE_INTERFACE("6d4865fe-0ab8-4d91-8f62-5dd6be34a3e0") IDWri
     /// either require complete font file to be loaded (e.g., copying a font file) or need to make
     /// decisions based on the value of the file size (e.g., validation against a persisted file size).
     /// </remarks>
-    STDMETHOD(GetFileSize)(
-        _Out_ UINT64* fileSize
-        ) PURE;
+    STDMETHOD(GetFileSize)(_Out_ UINT64 * fileSize) PURE;
 
     /// <summary>
     /// Obtains the last modified time of the file. The last modified time is used by DirectWrite font selection algorithms
@@ -774,16 +739,13 @@ interface DWRITE_DECLARE_INTERFACE("6d4865fe-0ab8-4d91-8f62-5dd6be34a3e0") IDWri
     /// Standard HRESULT error code. For resources that don't have a concept of the last modified time, the implementation of
     /// GetLastWriteTime should return E_NOTIMPL.
     /// </returns>
-    STDMETHOD(GetLastWriteTime)(
-        _Out_ UINT64* lastWriteTime
-        ) PURE;
+    STDMETHOD(GetLastWriteTime)(_Out_ UINT64 * lastWriteTime) PURE;
 };
 
 /// <summary>
 /// The interface that represents a reference to a font file.
 /// </summary>
-interface DWRITE_DECLARE_INTERFACE("739d886a-cef5-47dc-8769-1a8b41bebbb0") IDWriteFontFile : public IUnknown
-{
+interface DWRITE_DECLARE_INTERFACE("739d886a-cef5-47dc-8769-1a8b41bebbb0") IDWriteFontFile : public IUnknown {
     /// <summary>
     /// This method obtains the pointer to the reference key of a font file. The pointer is only valid until the object that refers to it is released.
     /// </summary>
@@ -793,10 +755,8 @@ interface DWRITE_DECLARE_INTERFACE("739d886a-cef5-47dc-8769-1a8b41bebbb0") IDWri
     /// <returns>
     /// Standard HRESULT error code.
     /// </returns>
-    STDMETHOD(GetReferenceKey)(
-        _Outptr_result_bytebuffer_(*fontFileReferenceKeySize) void const** fontFileReferenceKey,
-        _Out_ UINT32* fontFileReferenceKeySize
-        ) PURE;
+    STDMETHOD(GetReferenceKey)
+    (_Outptr_result_bytebuffer_(*fontFileReferenceKeySize) void const ** fontFileReferenceKey, _Out_ UINT32 * fontFileReferenceKeySize) PURE;
 
     /// <summary>
     /// Obtains the file loader associated with a font file object.
@@ -805,9 +765,7 @@ interface DWRITE_DECLARE_INTERFACE("739d886a-cef5-47dc-8769-1a8b41bebbb0") IDWri
     /// <returns>
     /// Standard HRESULT error code.
     /// </returns>
-    STDMETHOD(GetLoader)(
-        _Out_ IDWriteFontFileLoader** fontFileLoader
-        ) PURE;
+    STDMETHOD(GetLoader)(_Out_ IDWriteFontFileLoader * *fontFileLoader) PURE;
 
     /// <summary>
     /// Analyzes a file and returns whether it represents a font, and whether the font type is supported by the font system.
@@ -828,12 +786,9 @@ interface DWRITE_DECLARE_INTERFACE("739d886a-cef5-47dc-8769-1a8b41bebbb0") IDWri
     /// but will not be able to construct a font face object from it. In such situations, Analyze will set
     /// isSupportedFontType output parameter to FALSE.
     /// </remarks>
-    STDMETHOD(Analyze)(
-        _Out_ BOOL* isSupportedFontType,
-        _Out_ DWRITE_FONT_FILE_TYPE* fontFileType,
-        _Out_opt_ DWRITE_FONT_FACE_TYPE* fontFaceType,
-        _Out_ UINT32* numberOfFaces
-        ) PURE;
+    STDMETHOD(Analyze)
+    (_Out_ BOOL * isSupportedFontType, _Out_ DWRITE_FONT_FILE_TYPE * fontFileType, _Out_opt_ DWRITE_FONT_FACE_TYPE * fontFaceType, _Out_ UINT32 * numberOfFaces)
+        PURE;
 };
 
 /// <summary>
@@ -841,47 +796,45 @@ interface DWRITE_DECLARE_INTERFACE("739d886a-cef5-47dc-8769-1a8b41bebbb0") IDWri
 /// green, and blue color components) that is assumed for purposes of rendering text.
 /// </summary>
 #ifndef DWRITE_PIXEL_GEOMETRY_DEFINED
-enum DWRITE_PIXEL_GEOMETRY
-{
+enum DWRITE_PIXEL_GEOMETRY {
     /// <summary>
     /// The red, green, and blue color components of each pixel are assumed to occupy the same point.
     /// </summary>
     DWRITE_PIXEL_GEOMETRY_FLAT,
 
     /// <summary>
-    /// Each pixel comprises three vertical stripes, with red on the left, green in the center, and 
+    /// Each pixel comprises three vertical stripes, with red on the left, green in the center, and
     /// blue on the right. This is the most common pixel geometry for LCD monitors.
     /// </summary>
     DWRITE_PIXEL_GEOMETRY_RGB,
 
     /// <summary>
-    /// Each pixel comprises three vertical stripes, with blue on the left, green in the center, and 
+    /// Each pixel comprises three vertical stripes, with blue on the left, green in the center, and
     /// red on the right.
     /// </summary>
     DWRITE_PIXEL_GEOMETRY_BGR
 };
-#define DWRITE_PIXEL_GEOMETRY_DEFINED
+    #define DWRITE_PIXEL_GEOMETRY_DEFINED
 #endif
 
 /// <summary>
 /// Represents a method of rendering glyphs.
 /// </summary>
-enum DWRITE_RENDERING_MODE
-{
+enum DWRITE_RENDERING_MODE {
     /// <summary>
     /// Specifies that the rendering mode is determined automatically based on the font and size.
     /// </summary>
     DWRITE_RENDERING_MODE_DEFAULT,
 
     /// <summary>
-    /// Specifies that no antialiasing is performed. Each pixel is either set to the foreground 
+    /// Specifies that no antialiasing is performed. Each pixel is either set to the foreground
     /// color of the text or retains the color of the background.
     /// </summary>
     DWRITE_RENDERING_MODE_ALIASED,
 
     /// <summary>
     /// Specifies that antialiasing is performed in the horizontal direction and the appearance
-    /// of glyphs is layout-compatible with GDI using CLEARTYPE_QUALITY. Use DWRITE_MEASURING_MODE_GDI_CLASSIC 
+    /// of glyphs is layout-compatible with GDI using CLEARTYPE_QUALITY. Use DWRITE_MEASURING_MODE_GDI_CLASSIC
     /// to get glyph advances. The antialiasing may be either ClearType or grayscale depending on
     /// the text antialiasing mode.
     /// </summary>
@@ -913,26 +866,25 @@ enum DWRITE_RENDERING_MODE
     DWRITE_RENDERING_MODE_NATURAL_SYMMETRIC,
 
     /// <summary>
-    /// Specifies that rendering should bypass the rasterizer and use the outlines directly. 
+    /// Specifies that rendering should bypass the rasterizer and use the outlines directly.
     /// This is typically used at very large sizes.
     /// </summary>
     DWRITE_RENDERING_MODE_OUTLINE,
 
     // The following names are obsolete, but are kept as aliases to avoid breaking existing code.
-    // Each of these rendering modes may result in either ClearType or grayscale antialiasing 
+    // Each of these rendering modes may result in either ClearType or grayscale antialiasing
     // depending on the DWRITE_TEXT_ANTIALIASING_MODE.
-    DWRITE_RENDERING_MODE_CLEARTYPE_GDI_CLASSIC         = DWRITE_RENDERING_MODE_GDI_CLASSIC,
-    DWRITE_RENDERING_MODE_CLEARTYPE_GDI_NATURAL         = DWRITE_RENDERING_MODE_GDI_NATURAL,
-    DWRITE_RENDERING_MODE_CLEARTYPE_NATURAL             = DWRITE_RENDERING_MODE_NATURAL,
-    DWRITE_RENDERING_MODE_CLEARTYPE_NATURAL_SYMMETRIC   = DWRITE_RENDERING_MODE_NATURAL_SYMMETRIC
+    DWRITE_RENDERING_MODE_CLEARTYPE_GDI_CLASSIC       = DWRITE_RENDERING_MODE_GDI_CLASSIC,
+    DWRITE_RENDERING_MODE_CLEARTYPE_GDI_NATURAL       = DWRITE_RENDERING_MODE_GDI_NATURAL,
+    DWRITE_RENDERING_MODE_CLEARTYPE_NATURAL           = DWRITE_RENDERING_MODE_NATURAL,
+    DWRITE_RENDERING_MODE_CLEARTYPE_NATURAL_SYMMETRIC = DWRITE_RENDERING_MODE_NATURAL_SYMMETRIC
 };
 
 /// <summary>
 /// The DWRITE_MATRIX structure specifies the graphics transform to be applied
 /// to rendered glyphs.
 /// </summary>
-struct DWRITE_MATRIX
-{
+struct DWRITE_MATRIX {
     /// <summary>
     /// Horizontal scaling / cosine of rotation
     /// </summary>
@@ -967,8 +919,7 @@ struct DWRITE_MATRIX
 /// <summary>
 /// The interface that represents text rendering settings for glyph rasterization and filtering.
 /// </summary>
-interface DWRITE_DECLARE_INTERFACE("2f0da53a-2add-47cd-82ee-d9ec34688e75") IDWriteRenderingParams : public IUnknown
-{
+interface DWRITE_DECLARE_INTERFACE("2f0da53a-2add-47cd-82ee-d9ec34688e75") IDWriteRenderingParams : public IUnknown {
     /// <summary>
     /// Gets the gamma value used for gamma correction. Valid values must be
     /// greater than zero and cannot exceed 256.
@@ -982,7 +933,7 @@ interface DWRITE_DECLARE_INTERFACE("2f0da53a-2add-47cd-82ee-d9ec34688e75") IDWri
     STDMETHOD_(FLOAT, GetEnhancedContrast)() PURE;
 
     /// <summary>
-    /// Gets the ClearType level. Valid values range from 0.0f (no ClearType) 
+    /// Gets the ClearType level. Valid values range from 0.0f (no ClearType)
     /// to 1.0f (full ClearType).
     /// </summary>
     STDMETHOD_(FLOAT, GetClearTypeLevel)() PURE;
@@ -1008,8 +959,7 @@ typedef ID2D1SimplifiedGeometrySink IDWriteGeometrySink;
 /// It contains font face type, appropriate file references and face identification data.
 /// Various font data such as metrics, names and glyph outlines is obtained from IDWriteFontFace.
 /// </summary>
-interface DWRITE_DECLARE_INTERFACE("5f49804d-7024-4d43-bfa9-d25984f53849") IDWriteFontFace : public IUnknown
-{
+interface DWRITE_DECLARE_INTERFACE("5f49804d-7024-4d43-bfa9-d25984f53849") IDWriteFontFace : public IUnknown {
     /// <summary>
     /// Obtains the file format type of a font face.
     /// </summary>
@@ -1026,10 +976,7 @@ interface DWRITE_DECLARE_INTERFACE("5f49804d-7024-4d43-bfa9-d25984f53849") IDWri
     /// <returns>
     /// Standard HRESULT error code.
     /// </returns>
-    STDMETHOD(GetFiles)(
-        _Inout_ UINT32* numberOfFiles,
-        _Out_writes_opt_(*numberOfFiles) IDWriteFontFile** fontFiles
-        ) PURE;
+    STDMETHOD(GetFiles)(_Inout_ UINT32 * numberOfFiles, _Out_writes_opt_(*numberOfFiles) IDWriteFontFile * *fontFiles) PURE;
 
     /// <summary>
     /// Obtains the zero-based index of the font face in its font file or files. If the font files contain a single face,
@@ -1053,9 +1000,7 @@ interface DWRITE_DECLARE_INTERFACE("5f49804d-7024-4d43-bfa9-d25984f53849") IDWri
     /// </summary>
     /// <param name="fontFaceMetrics">Points to a DWRITE_FONT_METRICS structure to fill in.
     /// The metrics returned by this function are in font design units.</param>
-    STDMETHOD_(void, GetMetrics)(
-        _Out_ DWRITE_FONT_METRICS* fontFaceMetrics
-        ) PURE;
+    STDMETHOD_(void, GetMetrics)(_Out_ DWRITE_FONT_METRICS * fontFaceMetrics) PURE;
 
     /// <summary>
     /// Obtains the number of glyphs in the font face.
@@ -1076,12 +1021,9 @@ interface DWRITE_DECLARE_INTERFACE("5f49804d-7024-4d43-bfa9-d25984f53849") IDWri
     /// Standard HRESULT error code. If any of the input glyph indices are outside of the valid glyph index range
     /// for the current font face, E_INVALIDARG will be returned.
     /// </returns>
-    STDMETHOD(GetDesignGlyphMetrics)(
-        _In_reads_(glyphCount) UINT16 const* glyphIndices,
-        UINT32 glyphCount,
-        _Out_writes_(glyphCount) DWRITE_GLYPH_METRICS* glyphMetrics,
-        BOOL isSideways = FALSE
-        ) PURE;
+    STDMETHOD(GetDesignGlyphMetrics)
+    (_In_reads_(glyphCount) UINT16 const * glyphIndices, UINT32 glyphCount, _Out_writes_(glyphCount) DWRITE_GLYPH_METRICS * glyphMetrics,
+     BOOL isSideways = FALSE) PURE;
 
     /// <summary>
     /// Returns the nominal mapping of UTF-32 Unicode code points to glyph indices as defined by the font 'cmap' table.
@@ -1097,12 +1039,9 @@ interface DWRITE_DECLARE_INTERFACE("5f49804d-7024-4d43-bfa9-d25984f53849") IDWri
     /// <returns>
     /// Standard HRESULT error code.
     /// </returns>
-    STDMETHOD(GetGlyphIndices)(
-        _In_reads_(codePointCount) UINT32 const* codePoints,
-        UINT32 codePointCount,
-        _Out_writes_(codePointCount) UINT16* glyphIndices
-        ) PURE;
- 
+    STDMETHOD(GetGlyphIndices)
+    (_In_reads_(codePointCount) UINT32 const * codePoints, UINT32 codePointCount, _Out_writes_(codePointCount) UINT16 * glyphIndices) PURE;
+
     /// <summary>
     /// Finds the specified OpenType font table if it exists and returns a pointer to it.
     /// The function accesses the underlying font data via the IDWriteFontFileStream interface
@@ -1137,21 +1076,15 @@ interface DWRITE_DECLARE_INTERFACE("5f49804d-7024-4d43-bfa9-d25984f53849") IDWri
     /// The context for the same tag may be different for each call,
     /// so each one must be held and released separately.
     /// </remarks>
-    STDMETHOD(TryGetFontTable)(
-        _In_ UINT32 openTypeTableTag,
-        _Outptr_result_bytebuffer_(*tableSize) const void** tableData,
-        _Out_ UINT32* tableSize,
-        _Out_ void** tableContext,
-        _Out_ BOOL* exists
-        ) PURE;
+    STDMETHOD(TryGetFontTable)
+    (_In_ UINT32 openTypeTableTag, _Outptr_result_bytebuffer_(*tableSize) const void ** tableData, _Out_ UINT32 * tableSize, _Out_ void ** tableContext,
+     _Out_ BOOL * exists) PURE;
 
     /// <summary>
     /// Releases the table obtained earlier from TryGetFontTable.
     /// </summary>
     /// <param name="tableContext">Opaque context from TryGetFontTable.</param>
-    STDMETHOD_(void, ReleaseFontTable)(
-        _In_ void* tableContext
-        ) PURE;
+    STDMETHOD_(void, ReleaseFontTable)(_In_ void * tableContext) PURE;
 
     /// <summary>
     /// Computes the outline of a run of glyphs by calling back to the outline sink interface.
@@ -1170,22 +1103,16 @@ interface DWRITE_DECLARE_INTERFACE("5f49804d-7024-4d43-bfa9-d25984f53849") IDWri
     /// <returns>
     /// Standard HRESULT error code.
     /// </returns>
-    STDMETHOD(GetGlyphRunOutline)(
-        FLOAT emSize,
-        _In_reads_(glyphCount) UINT16 const* glyphIndices,
-        _In_reads_opt_(glyphCount) FLOAT const* glyphAdvances,
-        _In_reads_opt_(glyphCount) DWRITE_GLYPH_OFFSET const* glyphOffsets,
-        UINT32 glyphCount,
-        BOOL isSideways,
-        BOOL isRightToLeft,
-        IDWriteGeometrySink* geometrySink
-        ) PURE;
+    STDMETHOD(GetGlyphRunOutline)
+    (FLOAT emSize, _In_reads_(glyphCount) UINT16 const * glyphIndices, _In_reads_opt_(glyphCount) FLOAT const * glyphAdvances,
+     _In_reads_opt_(glyphCount) DWRITE_GLYPH_OFFSET const * glyphOffsets, UINT32 glyphCount, BOOL isSideways, BOOL isRightToLeft,
+     IDWriteGeometrySink * geometrySink) PURE;
 
     /// <summary>
     /// Determines the recommended rendering mode for the font given the specified size and rendering parameters.
     /// </summary>
     /// <param name="emSize">Logical size of the font in DIP units. A DIP ("device-independent pixel") equals 1/96 inch.</param>
-    /// <param name="pixelsPerDip">Number of physical pixels per DIP. For example, if the DPI of the rendering surface is 96 this 
+    /// <param name="pixelsPerDip">Number of physical pixels per DIP. For example, if the DPI of the rendering surface is 96 this
     /// value is 1.0f. If the DPI is 120, this value is 120.0f/96.</param>
     /// <param name="measuringMode">Specifies measuring method that will be used for glyphs in the font.
     /// Renderer implementations may choose different rendering modes for given measuring methods, but
@@ -1194,44 +1121,36 @@ interface DWRITE_DECLARE_INTERFACE("5f49804d-7024-4d43-bfa9-d25984f53849") IDWri
     /// DWRITE_RENDERING_MODE_CLEARTYPE_GDI_CLASSIC for DWRITE_MEASURING_MODE_GDI_CLASSIC
     /// DWRITE_RENDERING_MODE_CLEARTYPE_GDI_NATURAL for DWRITE_MEASURING_MODE_GDI_NATURAL
     /// </param>
-    /// <param name="renderingParams">Rendering parameters object. This parameter is necessary in case the rendering parameters 
+    /// <param name="renderingParams">Rendering parameters object. This parameter is necessary in case the rendering parameters
     /// object overrides the rendering mode.</param>
     /// <param name="renderingMode">Receives the recommended rendering mode to use.</param>
     /// <returns>
     /// Standard HRESULT error code.
     /// </returns>
-    STDMETHOD(GetRecommendedRenderingMode)(
-        FLOAT emSize,
-        FLOAT pixelsPerDip,
-        DWRITE_MEASURING_MODE measuringMode,
-        IDWriteRenderingParams* renderingParams,
-        _Out_ DWRITE_RENDERING_MODE* renderingMode
-        ) PURE;
+    STDMETHOD(GetRecommendedRenderingMode)
+    (FLOAT emSize, FLOAT pixelsPerDip, DWRITE_MEASURING_MODE measuringMode, IDWriteRenderingParams * renderingParams,
+     _Out_ DWRITE_RENDERING_MODE * renderingMode) PURE;
 
     /// <summary>
     /// Obtains design units and common metrics for the font face.
     /// These metrics are applicable to all the glyphs within a fontface and are used by applications for layout calculations.
     /// </summary>
     /// <param name="emSize">Logical size of the font in DIP units. A DIP ("device-independent pixel") equals 1/96 inch.</param>
-    /// <param name="pixelsPerDip">Number of physical pixels per DIP. For example, if the DPI of the rendering surface is 96 this 
+    /// <param name="pixelsPerDip">Number of physical pixels per DIP. For example, if the DPI of the rendering surface is 96 this
     /// value is 1.0f. If the DPI is 120, this value is 120.0f/96.</param>
     /// <param name="transform">Optional transform applied to the glyphs and their positions. This transform is applied after the
     /// scaling specified by the font size and pixelsPerDip.</param>
     /// <param name="fontFaceMetrics">Points to a DWRITE_FONT_METRICS structure to fill in.
     /// The metrics returned by this function are in font design units.</param>
-    STDMETHOD(GetGdiCompatibleMetrics)(
-        FLOAT emSize,
-        FLOAT pixelsPerDip,
-        _In_opt_ DWRITE_MATRIX const* transform,
-        _Out_ DWRITE_FONT_METRICS* fontFaceMetrics
-        ) PURE;
+    STDMETHOD(GetGdiCompatibleMetrics)
+    (FLOAT emSize, FLOAT pixelsPerDip, _In_opt_ DWRITE_MATRIX const * transform, _Out_ DWRITE_FONT_METRICS * fontFaceMetrics) PURE;
 
     /// <summary>
     /// Obtains glyph metrics in font design units with the return values compatible with what GDI would produce.
     /// Glyphs metrics are used for positioning of individual glyphs.
     /// </summary>
     /// <param name="emSize">Logical size of the font in DIP units. A DIP ("device-independent pixel") equals 1/96 inch.</param>
-    /// <param name="pixelsPerDip">Number of physical pixels per DIP. For example, if the DPI of the rendering surface is 96 this 
+    /// <param name="pixelsPerDip">Number of physical pixels per DIP. For example, if the DPI of the rendering surface is 96 this
     /// value is 1.0f. If the DPI is 120, this value is 120.0f/96.</param>
     /// <param name="transform">Optional transform applied to the glyphs and their positions. This transform is applied after the
     /// scaling specified by the font size and pixelsPerDip.</param>
@@ -1251,18 +1170,10 @@ interface DWRITE_DECLARE_INTERFACE("5f49804d-7024-4d43-bfa9-d25984f53849") IDWri
     /// Standard HRESULT error code. If any of the input glyph indices are outside of the valid glyph index range
     /// for the current font face, E_INVALIDARG will be returned.
     /// </returns>
-    STDMETHOD(GetGdiCompatibleGlyphMetrics)(
-        FLOAT emSize,
-        FLOAT pixelsPerDip,
-        _In_opt_ DWRITE_MATRIX const* transform,
-        BOOL useGdiNatural,
-        _In_reads_(glyphCount) UINT16 const* glyphIndices,
-        UINT32 glyphCount,
-        _Out_writes_(glyphCount) DWRITE_GLYPH_METRICS* glyphMetrics,
-        BOOL isSideways = FALSE
-        ) PURE;
+    STDMETHOD(GetGdiCompatibleGlyphMetrics)
+    (FLOAT emSize, FLOAT pixelsPerDip, _In_opt_ DWRITE_MATRIX const * transform, BOOL useGdiNatural, _In_reads_(glyphCount) UINT16 const * glyphIndices,
+     UINT32 glyphCount, _Out_writes_(glyphCount) DWRITE_GLYPH_METRICS * glyphMetrics, BOOL isSideways = FALSE) PURE;
 };
-
 
 interface IDWriteFactory;
 interface IDWriteFontFileEnumerator;
@@ -1276,8 +1187,7 @@ interface IDWriteFontFileEnumerator;
 /// Instead, registration and unregistration of font file loaders with DirectWrite factory should be performed
 /// outside of the font file loader implementation as a separate step.
 /// </summary>
-interface DWRITE_DECLARE_INTERFACE("cca920e4-52f0-492b-bfa8-29c72ee0a468") IDWriteFontCollectionLoader : public IUnknown
-{
+interface DWRITE_DECLARE_INTERFACE("cca920e4-52f0-492b-bfa8-29c72ee0a468") IDWriteFontCollectionLoader : public IUnknown {
     /// <summary>
     /// Creates a font file enumerator object that encapsulates a collection of font files.
     /// The font system calls back to this interface to create a font collection.
@@ -1290,20 +1200,16 @@ interface DWRITE_DECLARE_INTERFACE("cca920e4-52f0-492b-bfa8-29c72ee0a468") IDWri
     /// <returns>
     /// Standard HRESULT error code.
     /// </returns>
-    STDMETHOD(CreateEnumeratorFromKey)(
-        IDWriteFactory* factory,
-        _In_reads_bytes_(collectionKeySize) void const* collectionKey,
-        UINT32 collectionKeySize,
-        _Out_ IDWriteFontFileEnumerator** fontFileEnumerator
-        ) PURE;
+    STDMETHOD(CreateEnumeratorFromKey)
+    (IDWriteFactory * factory, _In_reads_bytes_(collectionKeySize) void const * collectionKey, UINT32 collectionKeySize,
+     _Out_ IDWriteFontFileEnumerator ** fontFileEnumerator) PURE;
 };
 
 /// <summary>
 /// The font file enumerator interface encapsulates a collection of font files. The font system uses this interface
 /// to enumerate font files when building a font collection.
 /// </summary>
-interface DWRITE_DECLARE_INTERFACE("72755049-5ff7-435d-8348-4be97cfa6c7c") IDWriteFontFileEnumerator : public IUnknown
-{
+interface DWRITE_DECLARE_INTERFACE("72755049-5ff7-435d-8348-4be97cfa6c7c") IDWriteFontFileEnumerator : public IUnknown {
     /// <summary>
     /// Advances to the next font file in the collection. When it is first created, the enumerator is positioned
     /// before the first element of the collection and the first call to MoveNext advances to the first file.
@@ -1313,9 +1219,7 @@ interface DWRITE_DECLARE_INTERFACE("72755049-5ff7-435d-8348-4be97cfa6c7c") IDWri
     /// <returns>
     /// Standard HRESULT error code.
     /// </returns>
-    STDMETHOD(MoveNext)(
-        _Out_ BOOL* hasCurrentFile
-        ) PURE;
+    STDMETHOD(MoveNext)(_Out_ BOOL * hasCurrentFile) PURE;
 
     /// <summary>
     /// Gets a reference to the current font file.
@@ -1324,16 +1228,13 @@ interface DWRITE_DECLARE_INTERFACE("72755049-5ff7-435d-8348-4be97cfa6c7c") IDWri
     /// <returns>
     /// Standard HRESULT error code.
     /// </returns>
-    STDMETHOD(GetCurrentFontFile)(
-        _Out_ IDWriteFontFile** fontFile
-        ) PURE;
+    STDMETHOD(GetCurrentFontFile)(_Out_ IDWriteFontFile * *fontFile) PURE;
 };
 
 /// <summary>
 /// Represents a collection of strings indexed by locale name.
 /// </summary>
-interface DWRITE_DECLARE_INTERFACE("08256209-099a-4b34-b86d-c22b110e7771") IDWriteLocalizedStrings : public IUnknown
-{
+interface DWRITE_DECLARE_INTERFACE("08256209-099a-4b34-b86d-c22b110e7771") IDWriteLocalizedStrings : public IUnknown {
     /// <summary>
     /// Gets the number of language/string pairs.
     /// </summary>
@@ -1346,14 +1247,10 @@ interface DWRITE_DECLARE_INTERFACE("08256209-099a-4b34-b86d-c22b110e7771") IDWri
     /// <param name="index">Receives the zero-based index of the locale name/string pair.</param>
     /// <param name="exists">Receives TRUE if the locale name exists or FALSE if not.</param>
     /// <returns>
-    /// Standard HRESULT error code. If the specified locale name does not exist, the return value is S_OK, 
+    /// Standard HRESULT error code. If the specified locale name does not exist, the return value is S_OK,
     /// but *index is UINT_MAX and *exists is FALSE.
     /// </returns>
-    STDMETHOD(FindLocaleName)(
-        _In_z_ WCHAR const* localeName,
-        _Out_ UINT32* index,
-        _Out_ BOOL* exists
-        ) PURE;
+    STDMETHOD(FindLocaleName)(_In_z_ WCHAR const * localeName, _Out_ UINT32 * index, _Out_ BOOL * exists) PURE;
 
     /// <summary>
     /// Gets the length in characters (not including the null terminator) of the locale name with the specified index.
@@ -1363,10 +1260,7 @@ interface DWRITE_DECLARE_INTERFACE("08256209-099a-4b34-b86d-c22b110e7771") IDWri
     /// <returns>
     /// Standard HRESULT error code.
     /// </returns>
-    STDMETHOD(GetLocaleNameLength)(
-        UINT32 index,
-        _Out_ UINT32* length
-        ) PURE;
+    STDMETHOD(GetLocaleNameLength)(UINT32 index, _Out_ UINT32 * length) PURE;
 
     /// <summary>
     /// Copies the locale name with the specified index to the specified array.
@@ -1378,11 +1272,7 @@ interface DWRITE_DECLARE_INTERFACE("08256209-099a-4b34-b86d-c22b110e7771") IDWri
     /// <returns>
     /// Standard HRESULT error code.
     /// </returns>
-    STDMETHOD(GetLocaleName)(
-        UINT32 index,
-        _Out_writes_z_(size) WCHAR* localeName,
-        UINT32 size
-        ) PURE;
+    STDMETHOD(GetLocaleName)(UINT32 index, _Out_writes_z_(size) WCHAR * localeName, UINT32 size) PURE;
 
     /// <summary>
     /// Gets the length in characters (not including the null terminator) of the string with the specified index.
@@ -1392,10 +1282,7 @@ interface DWRITE_DECLARE_INTERFACE("08256209-099a-4b34-b86d-c22b110e7771") IDWri
     /// <returns>
     /// Standard HRESULT error code.
     /// </returns>
-    STDMETHOD(GetStringLength)(
-        UINT32 index,
-        _Out_ UINT32* length
-        ) PURE;
+    STDMETHOD(GetStringLength)(UINT32 index, _Out_ UINT32 * length) PURE;
 
     /// <summary>
     /// Copies the string with the specified index to the specified array.
@@ -1407,11 +1294,7 @@ interface DWRITE_DECLARE_INTERFACE("08256209-099a-4b34-b86d-c22b110e7771") IDWri
     /// <returns>
     /// Standard HRESULT error code.
     /// </returns>
-    STDMETHOD(GetString)(
-        UINT32 index,
-        _Out_writes_z_(size) WCHAR* stringBuffer,
-        UINT32 size
-        ) PURE;
+    STDMETHOD(GetString)(UINT32 index, _Out_writes_z_(size) WCHAR * stringBuffer, UINT32 size) PURE;
 };
 
 interface IDWriteFontFamily;
@@ -1420,8 +1303,7 @@ interface IDWriteFont;
 /// <summary>
 /// The IDWriteFontCollection encapsulates a collection of fonts.
 /// </summary>
-interface DWRITE_DECLARE_INTERFACE("a84cee02-3eea-4eee-a827-87c1a02a0fcc") IDWriteFontCollection : public IUnknown
-{
+interface DWRITE_DECLARE_INTERFACE("a84cee02-3eea-4eee-a827-87c1a02a0fcc") IDWriteFontCollection : public IUnknown {
     /// <summary>
     /// Gets the number of font families in the collection.
     /// </summary>
@@ -1435,28 +1317,20 @@ interface DWRITE_DECLARE_INTERFACE("a84cee02-3eea-4eee-a827-87c1a02a0fcc") IDWri
     /// <returns>
     /// Standard HRESULT error code.
     /// </returns>
-    STDMETHOD(GetFontFamily)(
-        UINT32 index,
-        _Out_ IDWriteFontFamily** fontFamily
-        ) PURE;
+    STDMETHOD(GetFontFamily)(UINT32 index, _Out_ IDWriteFontFamily * *fontFamily) PURE;
 
     /// <summary>
     /// Finds the font family with the specified family name.
     /// </summary>
-    /// <param name="familyName">Name of the font family. The name is not case-sensitive but must otherwise exactly match a family name in the collection.</param>
-    /// <param name="index">Receives the zero-based index of the matching font family if the family name was found or UINT_MAX otherwise.</param>
-    /// <param name="exists">Receives TRUE if the family name exists or FALSE otherwise.</param>
-    /// <returns>
-    /// Standard HRESULT error code. If the specified family name does not exist, the return value is S_OK, but *index is UINT_MAX and *exists is FALSE.
+    /// <param name="familyName">Name of the font family. The name is not case-sensitive but must otherwise exactly match a family name in the
+    /// collection.</param> <param name="index">Receives the zero-based index of the matching font family if the family name was found or UINT_MAX
+    /// otherwise.</param> <param name="exists">Receives TRUE if the family name exists or FALSE otherwise.</param> <returns> Standard HRESULT error code. If
+    /// the specified family name does not exist, the return value is S_OK, but *index is UINT_MAX and *exists is FALSE.
     /// </returns>
-    STDMETHOD(FindFamilyName)(
-        _In_z_ WCHAR const* familyName,
-        _Out_ UINT32* index,
-        _Out_ BOOL* exists
-        ) PURE;
+    STDMETHOD(FindFamilyName)(_In_z_ WCHAR const * familyName, _Out_ UINT32 * index, _Out_ BOOL * exists) PURE;
 
     /// <summary>
-    /// Gets the font object that corresponds to the same physical font as the specified font face object. The specified physical font must belong 
+    /// Gets the font object that corresponds to the same physical font as the specified font face object. The specified physical font must belong
     /// to the font collection.
     /// </summary>
     /// <param name="fontFace">Font face object that specifies the physical font.</param>
@@ -1464,17 +1338,13 @@ interface DWRITE_DECLARE_INTERFACE("a84cee02-3eea-4eee-a827-87c1a02a0fcc") IDWri
     /// <returns>
     /// Standard HRESULT error code. If the specified physical font is not part of the font collection the return value is DWRITE_E_NOFONT.
     /// </returns>
-    STDMETHOD(GetFontFromFontFace)(
-        IDWriteFontFace* fontFace,
-        _Out_ IDWriteFont** font
-        ) PURE;
+    STDMETHOD(GetFontFromFontFace)(IDWriteFontFace * fontFace, _Out_ IDWriteFont * *font) PURE;
 };
 
 /// <summary>
 /// The IDWriteFontList interface represents a list of fonts.
 /// </summary>
-interface DWRITE_DECLARE_INTERFACE("1a0d8438-1d97-4ec1-aef9-a2fb86ed6acb") IDWriteFontList : public IUnknown
-{
+interface DWRITE_DECLARE_INTERFACE("1a0d8438-1d97-4ec1-aef9-a2fb86ed6acb") IDWriteFontList : public IUnknown {
     /// <summary>
     /// Gets the font collection that contains the fonts.
     /// </summary>
@@ -1482,9 +1352,7 @@ interface DWRITE_DECLARE_INTERFACE("1a0d8438-1d97-4ec1-aef9-a2fb86ed6acb") IDWri
     /// <returns>
     /// Standard HRESULT error code.
     /// </returns>
-    STDMETHOD(GetFontCollection)(
-        _Out_ IDWriteFontCollection** fontCollection
-        ) PURE;
+    STDMETHOD(GetFontCollection)(_Out_ IDWriteFontCollection * *fontCollection) PURE;
 
     /// <summary>
     /// Gets the number of fonts in the font list.
@@ -1499,18 +1367,14 @@ interface DWRITE_DECLARE_INTERFACE("1a0d8438-1d97-4ec1-aef9-a2fb86ed6acb") IDWri
     /// <returns>
     /// Standard HRESULT error code.
     /// </returns>
-    STDMETHOD(GetFont)(
-        UINT32 index, 
-        _Out_ IDWriteFont** font
-        ) PURE;
+    STDMETHOD(GetFont)(UINT32 index, _Out_ IDWriteFont * *font) PURE;
 };
 
 /// <summary>
 /// The IDWriteFontFamily interface represents a set of fonts that share the same design but are differentiated
 /// by weight, stretch, and style.
 /// </summary>
-interface DWRITE_DECLARE_INTERFACE("da20d8ef-812a-4c43-9802-62ec4abd7add") IDWriteFontFamily : public IDWriteFontList
-{
+interface DWRITE_DECLARE_INTERFACE("da20d8ef-812a-4c43-9802-62ec4abd7add") IDWriteFontFamily : public IDWriteFontList {
     /// <summary>
     /// Creates an localized strings object that contains the family names for the font family, indexed by locale name.
     /// </summary>
@@ -1518,9 +1382,7 @@ interface DWRITE_DECLARE_INTERFACE("da20d8ef-812a-4c43-9802-62ec4abd7add") IDWri
     /// <returns>
     /// Standard HRESULT error code.
     /// </returns>
-    STDMETHOD(GetFamilyNames)(
-        _Out_ IDWriteLocalizedStrings** names
-        ) PURE;
+    STDMETHOD(GetFamilyNames)(_Out_ IDWriteLocalizedStrings * *names) PURE;
 
     /// <summary>
     /// Gets the font that best matches the specified properties.
@@ -1532,12 +1394,7 @@ interface DWRITE_DECLARE_INTERFACE("da20d8ef-812a-4c43-9802-62ec4abd7add") IDWri
     /// <returns>
     /// Standard HRESULT error code.
     /// </returns>
-    STDMETHOD(GetFirstMatchingFont)(
-        DWRITE_FONT_WEIGHT  weight,
-        DWRITE_FONT_STRETCH stretch,
-        DWRITE_FONT_STYLE   style,
-        _Out_ IDWriteFont** matchingFont
-        ) PURE;
+    STDMETHOD(GetFirstMatchingFont)(DWRITE_FONT_WEIGHT weight, DWRITE_FONT_STRETCH stretch, DWRITE_FONT_STYLE style, _Out_ IDWriteFont * *matchingFont) PURE;
 
     /// <summary>
     /// Gets a list of fonts in the font family ranked in order of how well they match the specified properties.
@@ -1549,19 +1406,13 @@ interface DWRITE_DECLARE_INTERFACE("da20d8ef-812a-4c43-9802-62ec4abd7add") IDWri
     /// <returns>
     /// Standard HRESULT error code.
     /// </returns>
-    STDMETHOD(GetMatchingFonts)(
-        DWRITE_FONT_WEIGHT      weight,
-        DWRITE_FONT_STRETCH     stretch,
-        DWRITE_FONT_STYLE       style,
-        _Out_ IDWriteFontList** matchingFonts
-        ) PURE;
+    STDMETHOD(GetMatchingFonts)(DWRITE_FONT_WEIGHT weight, DWRITE_FONT_STRETCH stretch, DWRITE_FONT_STYLE style, _Out_ IDWriteFontList * *matchingFonts) PURE;
 };
 
 /// <summary>
 /// The IDWriteFont interface represents a physical font in a font collection.
 /// </summary>
-interface DWRITE_DECLARE_INTERFACE("acd16696-8c14-4f5d-877e-fe3fc1d32737") IDWriteFont : public IUnknown
-{
+interface DWRITE_DECLARE_INTERFACE("acd16696-8c14-4f5d-877e-fe3fc1d32737") IDWriteFont : public IUnknown {
     /// <summary>
     /// Gets the font family to which the specified font belongs.
     /// </summary>
@@ -1569,9 +1420,7 @@ interface DWRITE_DECLARE_INTERFACE("acd16696-8c14-4f5d-877e-fe3fc1d32737") IDWri
     /// <returns>
     /// Standard HRESULT error code.
     /// </returns>
-    STDMETHOD(GetFontFamily)(
-        _Out_ IDWriteFontFamily** fontFamily
-        ) PURE;
+    STDMETHOD(GetFontFamily)(_Out_ IDWriteFontFamily * *fontFamily) PURE;
 
     /// <summary>
     /// Gets the weight of the specified font.
@@ -1600,9 +1449,7 @@ interface DWRITE_DECLARE_INTERFACE("acd16696-8c14-4f5d-877e-fe3fc1d32737") IDWri
     /// <returns>
     /// Standard HRESULT error code.
     /// </returns>
-    STDMETHOD(GetFaceNames)(
-        _Out_ IDWriteLocalizedStrings** names
-        ) PURE;
+    STDMETHOD(GetFaceNames)(_Out_ IDWriteLocalizedStrings * *names) PURE;
 
     /// <summary>
     /// Gets a localized strings collection containing the specified informational strings, indexed by locale name.
@@ -1611,14 +1458,11 @@ interface DWRITE_DECLARE_INTERFACE("acd16696-8c14-4f5d-877e-fe3fc1d32737") IDWri
     /// <param name="informationalStrings">Receives a pointer to the newly created localized strings object.</param>
     /// <param name="exists">Receives the value TRUE if the font contains the specified string ID or FALSE if not.</param>
     /// <returns>
-    /// Standard HRESULT error code. If the font does not contain the specified string, the return value is S_OK but 
+    /// Standard HRESULT error code. If the font does not contain the specified string, the return value is S_OK but
     /// informationalStrings receives a NULL pointer and exists receives the value FALSE.
     /// </returns>
-    STDMETHOD(GetInformationalStrings)(
-        DWRITE_INFORMATIONAL_STRING_ID informationalStringID,
-        _Out_ IDWriteLocalizedStrings** informationalStrings,
-        _Out_ BOOL* exists
-        ) PURE;
+    STDMETHOD(GetInformationalStrings)
+    (DWRITE_INFORMATIONAL_STRING_ID informationalStringID, _Out_ IDWriteLocalizedStrings * *informationalStrings, _Out_ BOOL * exists) PURE;
 
     /// <summary>
     /// Gets a value that indicates what simulation are applied to the specified font.
@@ -1629,9 +1473,7 @@ interface DWRITE_DECLARE_INTERFACE("acd16696-8c14-4f5d-877e-fe3fc1d32737") IDWri
     /// Gets the metrics for the font.
     /// </summary>
     /// <param name="fontMetrics">Receives the font metrics.</param>
-    STDMETHOD_(void, GetMetrics)(
-        _Out_ DWRITE_FONT_METRICS* fontMetrics
-        ) PURE;
+    STDMETHOD_(void, GetMetrics)(_Out_ DWRITE_FONT_METRICS * fontMetrics) PURE;
 
     /// <summary>
     /// Determines whether the font supports the specified character.
@@ -1641,10 +1483,7 @@ interface DWRITE_DECLARE_INTERFACE("acd16696-8c14-4f5d-877e-fe3fc1d32737") IDWri
     /// <returns>
     /// Standard HRESULT error code.
     /// </returns>
-    STDMETHOD(HasCharacter)(
-        UINT32 unicodeValue,
-        _Out_ BOOL* exists
-        ) PURE;
+    STDMETHOD(HasCharacter)(UINT32 unicodeValue, _Out_ BOOL * exists) PURE;
 
     /// <summary>
     /// Creates a font face object for the font.
@@ -1653,16 +1492,13 @@ interface DWRITE_DECLARE_INTERFACE("acd16696-8c14-4f5d-877e-fe3fc1d32737") IDWri
     /// <returns>
     /// Standard HRESULT error code.
     /// </returns>
-    STDMETHOD(CreateFontFace)(
-        _Out_ IDWriteFontFace** fontFace
-        ) PURE;
+    STDMETHOD(CreateFontFace)(_Out_ IDWriteFontFace * *fontFace) PURE;
 };
 
 /// <summary>
 /// Direction for how reading progresses.
 /// </summary>
-enum DWRITE_READING_DIRECTION
-{
+enum DWRITE_READING_DIRECTION {
     /// <summary>
     /// Reading progresses from left to right.
     /// </summary>
@@ -1677,8 +1513,7 @@ enum DWRITE_READING_DIRECTION
 /// <summary>
 /// Direction for how lines of text are placed relative to one another.
 /// </summary>
-enum DWRITE_FLOW_DIRECTION
-{
+enum DWRITE_FLOW_DIRECTION {
     /// <summary>
     /// Text lines are placed from top to bottom.
     /// </summary>
@@ -1686,11 +1521,10 @@ enum DWRITE_FLOW_DIRECTION
 };
 
 /// <summary>
-/// Alignment of paragraph text along the reading direction axis relative to 
+/// Alignment of paragraph text along the reading direction axis relative to
 /// the leading and trailing edge of the layout box.
 /// </summary>
-enum DWRITE_TEXT_ALIGNMENT
-{
+enum DWRITE_TEXT_ALIGNMENT {
     /// <summary>
     /// The leading edge of the paragraph text is aligned to the layout box's leading edge.
     /// </summary>
@@ -1716,8 +1550,7 @@ enum DWRITE_TEXT_ALIGNMENT
 /// Alignment of paragraph text along the flow direction axis relative to the
 /// flow's beginning and ending edge of the layout box.
 /// </summary>
-enum DWRITE_PARAGRAPH_ALIGNMENT
-{
+enum DWRITE_PARAGRAPH_ALIGNMENT {
     /// <summary>
     /// The first line of paragraph is aligned to the flow's beginning edge of the layout box.
     /// </summary>
@@ -1737,8 +1570,7 @@ enum DWRITE_PARAGRAPH_ALIGNMENT
 /// <summary>
 /// Word wrapping in multiline paragraph.
 /// </summary>
-enum DWRITE_WORD_WRAPPING
-{
+enum DWRITE_WORD_WRAPPING {
     /// <summary>
     /// Words are broken across lines to avoid text overflowing the layout box.
     /// </summary>
@@ -1746,7 +1578,7 @@ enum DWRITE_WORD_WRAPPING
 
     /// <summary>
     /// Words are kept within the same line even when it overflows the layout box.
-    /// This option is often used with scrolling to reveal overflow text. 
+    /// This option is often used with scrolling to reveal overflow text.
     /// </summary>
     DWRITE_WORD_WRAPPING_NO_WRAP
 };
@@ -1754,8 +1586,7 @@ enum DWRITE_WORD_WRAPPING
 /// <summary>
 /// The method used for line spacing in layout.
 /// </summary>
-enum DWRITE_LINE_SPACING_METHOD
-{
+enum DWRITE_LINE_SPACING_METHOD {
     /// <summary>
     /// Line spacing depends solely on the content, growing to accommodate the size of fonts and inline objects.
     /// </summary>
@@ -1771,8 +1602,7 @@ enum DWRITE_LINE_SPACING_METHOD
 /// <summary>
 /// Text granularity used to trim text overflowing the layout box.
 /// </summary>
-enum DWRITE_TRIMMING_GRANULARITY
-{
+enum DWRITE_TRIMMING_GRANULARITY {
     /// <summary>
     /// No trimming occurs. Text flows beyond the layout width.
     /// </summary>
@@ -1782,106 +1612,104 @@ enum DWRITE_TRIMMING_GRANULARITY
     /// Trimming occurs at character cluster boundary.
     /// </summary>
     DWRITE_TRIMMING_GRANULARITY_CHARACTER,
-    
+
     /// <summary>
     /// Trimming occurs at word boundary.
     /// </summary>
-    DWRITE_TRIMMING_GRANULARITY_WORD    
+    DWRITE_TRIMMING_GRANULARITY_WORD
 };
 
 /// <summary>
 /// Typographic feature of text supplied by the font.
 /// </summary>
-enum DWRITE_FONT_FEATURE_TAG
-{
-    DWRITE_FONT_FEATURE_TAG_ALTERNATIVE_FRACTIONS               = 0x63726661, // 'afrc'
-    DWRITE_FONT_FEATURE_TAG_PETITE_CAPITALS_FROM_CAPITALS       = 0x63703263, // 'c2pc'
-    DWRITE_FONT_FEATURE_TAG_SMALL_CAPITALS_FROM_CAPITALS        = 0x63733263, // 'c2sc'
-    DWRITE_FONT_FEATURE_TAG_CONTEXTUAL_ALTERNATES               = 0x746c6163, // 'calt'
-    DWRITE_FONT_FEATURE_TAG_CASE_SENSITIVE_FORMS                = 0x65736163, // 'case'
-    DWRITE_FONT_FEATURE_TAG_GLYPH_COMPOSITION_DECOMPOSITION     = 0x706d6363, // 'ccmp'
-    DWRITE_FONT_FEATURE_TAG_CONTEXTUAL_LIGATURES                = 0x67696c63, // 'clig'
-    DWRITE_FONT_FEATURE_TAG_CAPITAL_SPACING                     = 0x70737063, // 'cpsp'
-    DWRITE_FONT_FEATURE_TAG_CONTEXTUAL_SWASH                    = 0x68777363, // 'cswh'
-    DWRITE_FONT_FEATURE_TAG_CURSIVE_POSITIONING                 = 0x73727563, // 'curs'
-    DWRITE_FONT_FEATURE_TAG_DEFAULT                             = 0x746c6664, // 'dflt'
-    DWRITE_FONT_FEATURE_TAG_DISCRETIONARY_LIGATURES             = 0x67696c64, // 'dlig'
-    DWRITE_FONT_FEATURE_TAG_EXPERT_FORMS                        = 0x74707865, // 'expt'
-    DWRITE_FONT_FEATURE_TAG_FRACTIONS                           = 0x63617266, // 'frac'
-    DWRITE_FONT_FEATURE_TAG_FULL_WIDTH                          = 0x64697766, // 'fwid'
-    DWRITE_FONT_FEATURE_TAG_HALF_FORMS                          = 0x666c6168, // 'half'
-    DWRITE_FONT_FEATURE_TAG_HALANT_FORMS                        = 0x6e6c6168, // 'haln'
-    DWRITE_FONT_FEATURE_TAG_ALTERNATE_HALF_WIDTH                = 0x746c6168, // 'halt'
-    DWRITE_FONT_FEATURE_TAG_HISTORICAL_FORMS                    = 0x74736968, // 'hist'
-    DWRITE_FONT_FEATURE_TAG_HORIZONTAL_KANA_ALTERNATES          = 0x616e6b68, // 'hkna'
-    DWRITE_FONT_FEATURE_TAG_HISTORICAL_LIGATURES                = 0x67696c68, // 'hlig'
-    DWRITE_FONT_FEATURE_TAG_HALF_WIDTH                          = 0x64697768, // 'hwid'
-    DWRITE_FONT_FEATURE_TAG_HOJO_KANJI_FORMS                    = 0x6f6a6f68, // 'hojo'
-    DWRITE_FONT_FEATURE_TAG_JIS04_FORMS                         = 0x3430706a, // 'jp04'
-    DWRITE_FONT_FEATURE_TAG_JIS78_FORMS                         = 0x3837706a, // 'jp78'
-    DWRITE_FONT_FEATURE_TAG_JIS83_FORMS                         = 0x3338706a, // 'jp83'
-    DWRITE_FONT_FEATURE_TAG_JIS90_FORMS                         = 0x3039706a, // 'jp90'
-    DWRITE_FONT_FEATURE_TAG_KERNING                             = 0x6e72656b, // 'kern'
-    DWRITE_FONT_FEATURE_TAG_STANDARD_LIGATURES                  = 0x6167696c, // 'liga'
-    DWRITE_FONT_FEATURE_TAG_LINING_FIGURES                      = 0x6d756e6c, // 'lnum'
-    DWRITE_FONT_FEATURE_TAG_LOCALIZED_FORMS                     = 0x6c636f6c, // 'locl'
-    DWRITE_FONT_FEATURE_TAG_MARK_POSITIONING                    = 0x6b72616d, // 'mark'
-    DWRITE_FONT_FEATURE_TAG_MATHEMATICAL_GREEK                  = 0x6b72676d, // 'mgrk'
-    DWRITE_FONT_FEATURE_TAG_MARK_TO_MARK_POSITIONING            = 0x6b6d6b6d, // 'mkmk'
-    DWRITE_FONT_FEATURE_TAG_ALTERNATE_ANNOTATION_FORMS          = 0x746c616e, // 'nalt'
-    DWRITE_FONT_FEATURE_TAG_NLC_KANJI_FORMS                     = 0x6b636c6e, // 'nlck'
-    DWRITE_FONT_FEATURE_TAG_OLD_STYLE_FIGURES                   = 0x6d756e6f, // 'onum'
-    DWRITE_FONT_FEATURE_TAG_ORDINALS                            = 0x6e64726f, // 'ordn'
-    DWRITE_FONT_FEATURE_TAG_PROPORTIONAL_ALTERNATE_WIDTH        = 0x746c6170, // 'palt'
-    DWRITE_FONT_FEATURE_TAG_PETITE_CAPITALS                     = 0x70616370, // 'pcap'
-    DWRITE_FONT_FEATURE_TAG_PROPORTIONAL_FIGURES                = 0x6d756e70, // 'pnum'
-    DWRITE_FONT_FEATURE_TAG_PROPORTIONAL_WIDTHS                 = 0x64697770, // 'pwid'
-    DWRITE_FONT_FEATURE_TAG_QUARTER_WIDTHS                      = 0x64697771, // 'qwid'
-    DWRITE_FONT_FEATURE_TAG_REQUIRED_LIGATURES                  = 0x67696c72, // 'rlig'
-    DWRITE_FONT_FEATURE_TAG_RUBY_NOTATION_FORMS                 = 0x79627572, // 'ruby'
-    DWRITE_FONT_FEATURE_TAG_STYLISTIC_ALTERNATES                = 0x746c6173, // 'salt'
-    DWRITE_FONT_FEATURE_TAG_SCIENTIFIC_INFERIORS                = 0x666e6973, // 'sinf'
-    DWRITE_FONT_FEATURE_TAG_SMALL_CAPITALS                      = 0x70636d73, // 'smcp'
-    DWRITE_FONT_FEATURE_TAG_SIMPLIFIED_FORMS                    = 0x6c706d73, // 'smpl'
-    DWRITE_FONT_FEATURE_TAG_STYLISTIC_SET_1                     = 0x31307373, // 'ss01'
-    DWRITE_FONT_FEATURE_TAG_STYLISTIC_SET_2                     = 0x32307373, // 'ss02'
-    DWRITE_FONT_FEATURE_TAG_STYLISTIC_SET_3                     = 0x33307373, // 'ss03'
-    DWRITE_FONT_FEATURE_TAG_STYLISTIC_SET_4                     = 0x34307373, // 'ss04'
-    DWRITE_FONT_FEATURE_TAG_STYLISTIC_SET_5                     = 0x35307373, // 'ss05'
-    DWRITE_FONT_FEATURE_TAG_STYLISTIC_SET_6                     = 0x36307373, // 'ss06'
-    DWRITE_FONT_FEATURE_TAG_STYLISTIC_SET_7                     = 0x37307373, // 'ss07'
-    DWRITE_FONT_FEATURE_TAG_STYLISTIC_SET_8                     = 0x38307373, // 'ss08'
-    DWRITE_FONT_FEATURE_TAG_STYLISTIC_SET_9                     = 0x39307373, // 'ss09'
-    DWRITE_FONT_FEATURE_TAG_STYLISTIC_SET_10                    = 0x30317373, // 'ss10'
-    DWRITE_FONT_FEATURE_TAG_STYLISTIC_SET_11                    = 0x31317373, // 'ss11'
-    DWRITE_FONT_FEATURE_TAG_STYLISTIC_SET_12                    = 0x32317373, // 'ss12'
-    DWRITE_FONT_FEATURE_TAG_STYLISTIC_SET_13                    = 0x33317373, // 'ss13'
-    DWRITE_FONT_FEATURE_TAG_STYLISTIC_SET_14                    = 0x34317373, // 'ss14'
-    DWRITE_FONT_FEATURE_TAG_STYLISTIC_SET_15                    = 0x35317373, // 'ss15'
-    DWRITE_FONT_FEATURE_TAG_STYLISTIC_SET_16                    = 0x36317373, // 'ss16'
-    DWRITE_FONT_FEATURE_TAG_STYLISTIC_SET_17                    = 0x37317373, // 'ss17'
-    DWRITE_FONT_FEATURE_TAG_STYLISTIC_SET_18                    = 0x38317373, // 'ss18'
-    DWRITE_FONT_FEATURE_TAG_STYLISTIC_SET_19                    = 0x39317373, // 'ss19'
-    DWRITE_FONT_FEATURE_TAG_STYLISTIC_SET_20                    = 0x30327373, // 'ss20'
-    DWRITE_FONT_FEATURE_TAG_SUBSCRIPT                           = 0x73627573, // 'subs'
-    DWRITE_FONT_FEATURE_TAG_SUPERSCRIPT                         = 0x73707573, // 'sups'
-    DWRITE_FONT_FEATURE_TAG_SWASH                               = 0x68737773, // 'swsh'
-    DWRITE_FONT_FEATURE_TAG_TITLING                             = 0x6c746974, // 'titl'
-    DWRITE_FONT_FEATURE_TAG_TRADITIONAL_NAME_FORMS              = 0x6d616e74, // 'tnam'
-    DWRITE_FONT_FEATURE_TAG_TABULAR_FIGURES                     = 0x6d756e74, // 'tnum'
-    DWRITE_FONT_FEATURE_TAG_TRADITIONAL_FORMS                   = 0x64617274, // 'trad'
-    DWRITE_FONT_FEATURE_TAG_THIRD_WIDTHS                        = 0x64697774, // 'twid'
-    DWRITE_FONT_FEATURE_TAG_UNICASE                             = 0x63696e75, // 'unic'
-    DWRITE_FONT_FEATURE_TAG_VERTICAL_WRITING                    = 0x74726576, // 'vert'
-    DWRITE_FONT_FEATURE_TAG_VERTICAL_ALTERNATES_AND_ROTATION    = 0x32747276, // 'vrt2'
-    DWRITE_FONT_FEATURE_TAG_SLASHED_ZERO                        = 0x6f72657a, // 'zero'
+enum DWRITE_FONT_FEATURE_TAG {
+    DWRITE_FONT_FEATURE_TAG_ALTERNATIVE_FRACTIONS            = 0x63726661, // 'afrc'
+    DWRITE_FONT_FEATURE_TAG_PETITE_CAPITALS_FROM_CAPITALS    = 0x63703263, // 'c2pc'
+    DWRITE_FONT_FEATURE_TAG_SMALL_CAPITALS_FROM_CAPITALS     = 0x63733263, // 'c2sc'
+    DWRITE_FONT_FEATURE_TAG_CONTEXTUAL_ALTERNATES            = 0x746c6163, // 'calt'
+    DWRITE_FONT_FEATURE_TAG_CASE_SENSITIVE_FORMS             = 0x65736163, // 'case'
+    DWRITE_FONT_FEATURE_TAG_GLYPH_COMPOSITION_DECOMPOSITION  = 0x706d6363, // 'ccmp'
+    DWRITE_FONT_FEATURE_TAG_CONTEXTUAL_LIGATURES             = 0x67696c63, // 'clig'
+    DWRITE_FONT_FEATURE_TAG_CAPITAL_SPACING                  = 0x70737063, // 'cpsp'
+    DWRITE_FONT_FEATURE_TAG_CONTEXTUAL_SWASH                 = 0x68777363, // 'cswh'
+    DWRITE_FONT_FEATURE_TAG_CURSIVE_POSITIONING              = 0x73727563, // 'curs'
+    DWRITE_FONT_FEATURE_TAG_DEFAULT                          = 0x746c6664, // 'dflt'
+    DWRITE_FONT_FEATURE_TAG_DISCRETIONARY_LIGATURES          = 0x67696c64, // 'dlig'
+    DWRITE_FONT_FEATURE_TAG_EXPERT_FORMS                     = 0x74707865, // 'expt'
+    DWRITE_FONT_FEATURE_TAG_FRACTIONS                        = 0x63617266, // 'frac'
+    DWRITE_FONT_FEATURE_TAG_FULL_WIDTH                       = 0x64697766, // 'fwid'
+    DWRITE_FONT_FEATURE_TAG_HALF_FORMS                       = 0x666c6168, // 'half'
+    DWRITE_FONT_FEATURE_TAG_HALANT_FORMS                     = 0x6e6c6168, // 'haln'
+    DWRITE_FONT_FEATURE_TAG_ALTERNATE_HALF_WIDTH             = 0x746c6168, // 'halt'
+    DWRITE_FONT_FEATURE_TAG_HISTORICAL_FORMS                 = 0x74736968, // 'hist'
+    DWRITE_FONT_FEATURE_TAG_HORIZONTAL_KANA_ALTERNATES       = 0x616e6b68, // 'hkna'
+    DWRITE_FONT_FEATURE_TAG_HISTORICAL_LIGATURES             = 0x67696c68, // 'hlig'
+    DWRITE_FONT_FEATURE_TAG_HALF_WIDTH                       = 0x64697768, // 'hwid'
+    DWRITE_FONT_FEATURE_TAG_HOJO_KANJI_FORMS                 = 0x6f6a6f68, // 'hojo'
+    DWRITE_FONT_FEATURE_TAG_JIS04_FORMS                      = 0x3430706a, // 'jp04'
+    DWRITE_FONT_FEATURE_TAG_JIS78_FORMS                      = 0x3837706a, // 'jp78'
+    DWRITE_FONT_FEATURE_TAG_JIS83_FORMS                      = 0x3338706a, // 'jp83'
+    DWRITE_FONT_FEATURE_TAG_JIS90_FORMS                      = 0x3039706a, // 'jp90'
+    DWRITE_FONT_FEATURE_TAG_KERNING                          = 0x6e72656b, // 'kern'
+    DWRITE_FONT_FEATURE_TAG_STANDARD_LIGATURES               = 0x6167696c, // 'liga'
+    DWRITE_FONT_FEATURE_TAG_LINING_FIGURES                   = 0x6d756e6c, // 'lnum'
+    DWRITE_FONT_FEATURE_TAG_LOCALIZED_FORMS                  = 0x6c636f6c, // 'locl'
+    DWRITE_FONT_FEATURE_TAG_MARK_POSITIONING                 = 0x6b72616d, // 'mark'
+    DWRITE_FONT_FEATURE_TAG_MATHEMATICAL_GREEK               = 0x6b72676d, // 'mgrk'
+    DWRITE_FONT_FEATURE_TAG_MARK_TO_MARK_POSITIONING         = 0x6b6d6b6d, // 'mkmk'
+    DWRITE_FONT_FEATURE_TAG_ALTERNATE_ANNOTATION_FORMS       = 0x746c616e, // 'nalt'
+    DWRITE_FONT_FEATURE_TAG_NLC_KANJI_FORMS                  = 0x6b636c6e, // 'nlck'
+    DWRITE_FONT_FEATURE_TAG_OLD_STYLE_FIGURES                = 0x6d756e6f, // 'onum'
+    DWRITE_FONT_FEATURE_TAG_ORDINALS                         = 0x6e64726f, // 'ordn'
+    DWRITE_FONT_FEATURE_TAG_PROPORTIONAL_ALTERNATE_WIDTH     = 0x746c6170, // 'palt'
+    DWRITE_FONT_FEATURE_TAG_PETITE_CAPITALS                  = 0x70616370, // 'pcap'
+    DWRITE_FONT_FEATURE_TAG_PROPORTIONAL_FIGURES             = 0x6d756e70, // 'pnum'
+    DWRITE_FONT_FEATURE_TAG_PROPORTIONAL_WIDTHS              = 0x64697770, // 'pwid'
+    DWRITE_FONT_FEATURE_TAG_QUARTER_WIDTHS                   = 0x64697771, // 'qwid'
+    DWRITE_FONT_FEATURE_TAG_REQUIRED_LIGATURES               = 0x67696c72, // 'rlig'
+    DWRITE_FONT_FEATURE_TAG_RUBY_NOTATION_FORMS              = 0x79627572, // 'ruby'
+    DWRITE_FONT_FEATURE_TAG_STYLISTIC_ALTERNATES             = 0x746c6173, // 'salt'
+    DWRITE_FONT_FEATURE_TAG_SCIENTIFIC_INFERIORS             = 0x666e6973, // 'sinf'
+    DWRITE_FONT_FEATURE_TAG_SMALL_CAPITALS                   = 0x70636d73, // 'smcp'
+    DWRITE_FONT_FEATURE_TAG_SIMPLIFIED_FORMS                 = 0x6c706d73, // 'smpl'
+    DWRITE_FONT_FEATURE_TAG_STYLISTIC_SET_1                  = 0x31307373, // 'ss01'
+    DWRITE_FONT_FEATURE_TAG_STYLISTIC_SET_2                  = 0x32307373, // 'ss02'
+    DWRITE_FONT_FEATURE_TAG_STYLISTIC_SET_3                  = 0x33307373, // 'ss03'
+    DWRITE_FONT_FEATURE_TAG_STYLISTIC_SET_4                  = 0x34307373, // 'ss04'
+    DWRITE_FONT_FEATURE_TAG_STYLISTIC_SET_5                  = 0x35307373, // 'ss05'
+    DWRITE_FONT_FEATURE_TAG_STYLISTIC_SET_6                  = 0x36307373, // 'ss06'
+    DWRITE_FONT_FEATURE_TAG_STYLISTIC_SET_7                  = 0x37307373, // 'ss07'
+    DWRITE_FONT_FEATURE_TAG_STYLISTIC_SET_8                  = 0x38307373, // 'ss08'
+    DWRITE_FONT_FEATURE_TAG_STYLISTIC_SET_9                  = 0x39307373, // 'ss09'
+    DWRITE_FONT_FEATURE_TAG_STYLISTIC_SET_10                 = 0x30317373, // 'ss10'
+    DWRITE_FONT_FEATURE_TAG_STYLISTIC_SET_11                 = 0x31317373, // 'ss11'
+    DWRITE_FONT_FEATURE_TAG_STYLISTIC_SET_12                 = 0x32317373, // 'ss12'
+    DWRITE_FONT_FEATURE_TAG_STYLISTIC_SET_13                 = 0x33317373, // 'ss13'
+    DWRITE_FONT_FEATURE_TAG_STYLISTIC_SET_14                 = 0x34317373, // 'ss14'
+    DWRITE_FONT_FEATURE_TAG_STYLISTIC_SET_15                 = 0x35317373, // 'ss15'
+    DWRITE_FONT_FEATURE_TAG_STYLISTIC_SET_16                 = 0x36317373, // 'ss16'
+    DWRITE_FONT_FEATURE_TAG_STYLISTIC_SET_17                 = 0x37317373, // 'ss17'
+    DWRITE_FONT_FEATURE_TAG_STYLISTIC_SET_18                 = 0x38317373, // 'ss18'
+    DWRITE_FONT_FEATURE_TAG_STYLISTIC_SET_19                 = 0x39317373, // 'ss19'
+    DWRITE_FONT_FEATURE_TAG_STYLISTIC_SET_20                 = 0x30327373, // 'ss20'
+    DWRITE_FONT_FEATURE_TAG_SUBSCRIPT                        = 0x73627573, // 'subs'
+    DWRITE_FONT_FEATURE_TAG_SUPERSCRIPT                      = 0x73707573, // 'sups'
+    DWRITE_FONT_FEATURE_TAG_SWASH                            = 0x68737773, // 'swsh'
+    DWRITE_FONT_FEATURE_TAG_TITLING                          = 0x6c746974, // 'titl'
+    DWRITE_FONT_FEATURE_TAG_TRADITIONAL_NAME_FORMS           = 0x6d616e74, // 'tnam'
+    DWRITE_FONT_FEATURE_TAG_TABULAR_FIGURES                  = 0x6d756e74, // 'tnum'
+    DWRITE_FONT_FEATURE_TAG_TRADITIONAL_FORMS                = 0x64617274, // 'trad'
+    DWRITE_FONT_FEATURE_TAG_THIRD_WIDTHS                     = 0x64697774, // 'twid'
+    DWRITE_FONT_FEATURE_TAG_UNICASE                          = 0x63696e75, // 'unic'
+    DWRITE_FONT_FEATURE_TAG_VERTICAL_WRITING                 = 0x74726576, // 'vert'
+    DWRITE_FONT_FEATURE_TAG_VERTICAL_ALTERNATES_AND_ROTATION = 0x32747276, // 'vrt2'
+    DWRITE_FONT_FEATURE_TAG_SLASHED_ZERO                     = 0x6f72657a, // 'zero'
 };
 
 /// <summary>
 /// The DWRITE_TEXT_RANGE structure specifies a range of text positions where format is applied.
 /// </summary>
-struct DWRITE_TEXT_RANGE
-{
+struct DWRITE_TEXT_RANGE {
     /// <summary>
     /// The start text position of the range.
     /// </summary>
@@ -1896,8 +1724,7 @@ struct DWRITE_TEXT_RANGE
 /// <summary>
 /// The DWRITE_FONT_FEATURE structure specifies properties used to identify and execute typographic feature in the font.
 /// </summary>
-struct DWRITE_FONT_FEATURE
-{
+struct DWRITE_FONT_FEATURE {
     /// <summary>
     /// The feature OpenType name identifier.
     /// </summary>
@@ -1908,7 +1735,7 @@ struct DWRITE_FONT_FEATURE
     /// </summary>
     /// <remarks>
     /// The parameter should be non-zero to enable the feature.  Once enabled, a feature can't be disabled again within
-    /// the same range.  Features requiring a selector use this value to indicate the selector index. 
+    /// the same range.  Features requiring a selector use this value to indicate the selector index.
     /// </remarks>
     UINT32 parameter;
 };
@@ -1918,12 +1745,11 @@ struct DWRITE_FONT_FEATURE
 /// Notice the character range which this feature list spans is specified
 /// as a separate parameter to GetGlyphs.
 /// </summary>
-struct DWRITE_TYPOGRAPHIC_FEATURES
-{
+struct DWRITE_TYPOGRAPHIC_FEATURES {
     /// <summary>
     /// Array of font features.
     /// </summary>
-    _Field_size_(featureCount) DWRITE_FONT_FEATURE* features;
+    _Field_size_(featureCount) DWRITE_FONT_FEATURE * features;
 
     /// <summary>
     /// The number of features.
@@ -1934,8 +1760,7 @@ struct DWRITE_TYPOGRAPHIC_FEATURES
 /// <summary>
 /// The DWRITE_TRIMMING structure specifies the trimming option for text overflowing the layout box.
 /// </summary>
-struct DWRITE_TRIMMING
-{
+struct DWRITE_TRIMMING {
     /// <summary>
     /// Text granularity of which trimming applies.
     /// </summary>
@@ -1953,7 +1778,6 @@ struct DWRITE_TRIMMING
     UINT32 delimiterCount;
 };
 
-
 interface IDWriteTypography;
 interface IDWriteInlineObject;
 
@@ -1963,8 +1787,7 @@ interface IDWriteInlineObject;
 /// <remarks>
 /// This object may not be thread-safe and it may carry the state of text format change.
 /// </remarks>
-interface DWRITE_DECLARE_INTERFACE("9c906818-31d7-4fd3-a151-7c5e225db55a") IDWriteTextFormat : public IUnknown
-{
+interface DWRITE_DECLARE_INTERFACE("9c906818-31d7-4fd3-a151-7c5e225db55a") IDWriteTextFormat : public IUnknown {
     /// <summary>
     /// Set alignment option of text relative to layout box's leading and trailing edge.
     /// </summary>
@@ -1972,9 +1795,7 @@ interface DWRITE_DECLARE_INTERFACE("9c906818-31d7-4fd3-a151-7c5e225db55a") IDWri
     /// <returns>
     /// Standard HRESULT error code.
     /// </returns>
-    STDMETHOD(SetTextAlignment)(
-        DWRITE_TEXT_ALIGNMENT textAlignment
-        ) PURE;
+    STDMETHOD(SetTextAlignment)(DWRITE_TEXT_ALIGNMENT textAlignment) PURE;
 
     /// <summary>
     /// Set alignment option of paragraph relative to layout box's top and bottom edge.
@@ -1983,9 +1804,7 @@ interface DWRITE_DECLARE_INTERFACE("9c906818-31d7-4fd3-a151-7c5e225db55a") IDWri
     /// <returns>
     /// Standard HRESULT error code.
     /// </returns>
-    STDMETHOD(SetParagraphAlignment)(
-        DWRITE_PARAGRAPH_ALIGNMENT paragraphAlignment
-        ) PURE;
+    STDMETHOD(SetParagraphAlignment)(DWRITE_PARAGRAPH_ALIGNMENT paragraphAlignment) PURE;
 
     /// <summary>
     /// Set word wrapping option.
@@ -1994,9 +1813,7 @@ interface DWRITE_DECLARE_INTERFACE("9c906818-31d7-4fd3-a151-7c5e225db55a") IDWri
     /// <returns>
     /// Standard HRESULT error code.
     /// </returns>
-    STDMETHOD(SetWordWrapping)(
-        DWRITE_WORD_WRAPPING wordWrapping
-        ) PURE;
+    STDMETHOD(SetWordWrapping)(DWRITE_WORD_WRAPPING wordWrapping) PURE;
 
     /// <summary>
     /// Set paragraph reading direction.
@@ -2005,9 +1822,7 @@ interface DWRITE_DECLARE_INTERFACE("9c906818-31d7-4fd3-a151-7c5e225db55a") IDWri
     /// <returns>
     /// Standard HRESULT error code.
     /// </returns>
-    STDMETHOD(SetReadingDirection)(
-        DWRITE_READING_DIRECTION readingDirection
-        ) PURE;
+    STDMETHOD(SetReadingDirection)(DWRITE_READING_DIRECTION readingDirection) PURE;
 
     /// <summary>
     /// Set paragraph flow direction.
@@ -2016,9 +1831,7 @@ interface DWRITE_DECLARE_INTERFACE("9c906818-31d7-4fd3-a151-7c5e225db55a") IDWri
     /// <returns>
     /// Standard HRESULT error code.
     /// </returns>
-    STDMETHOD(SetFlowDirection)(
-        DWRITE_FLOW_DIRECTION flowDirection
-        ) PURE;
+    STDMETHOD(SetFlowDirection)(DWRITE_FLOW_DIRECTION flowDirection) PURE;
 
     /// <summary>
     /// Set incremental tab stop position.
@@ -2027,9 +1840,7 @@ interface DWRITE_DECLARE_INTERFACE("9c906818-31d7-4fd3-a151-7c5e225db55a") IDWri
     /// <returns>
     /// Standard HRESULT error code.
     /// </returns>
-    STDMETHOD(SetIncrementalTabStop)(
-        FLOAT incrementalTabStop
-        ) PURE;
+    STDMETHOD(SetIncrementalTabStop)(FLOAT incrementalTabStop) PURE;
 
     /// <summary>
     /// Set trimming options for any trailing text exceeding the layout width
@@ -2045,10 +1856,7 @@ interface DWRITE_DECLARE_INTERFACE("9c906818-31d7-4fd3-a151-7c5e225db55a") IDWri
     /// <returns>
     /// Standard HRESULT error code.
     /// </returns>
-    STDMETHOD(SetTrimming)(
-        _In_ DWRITE_TRIMMING const* trimmingOptions,
-        IDWriteInlineObject* trimmingSign
-        ) PURE;
+    STDMETHOD(SetTrimming)(_In_ DWRITE_TRIMMING const * trimmingOptions, IDWriteInlineObject * trimmingSign) PURE;
 
     /// <summary>
     /// Set line spacing.
@@ -2063,11 +1871,7 @@ interface DWRITE_DECLARE_INTERFACE("9c906818-31d7-4fd3-a151-7c5e225db55a") IDWri
     /// <returns>
     /// Standard HRESULT error code.
     /// </returns>
-    STDMETHOD(SetLineSpacing)(
-        DWRITE_LINE_SPACING_METHOD lineSpacingMethod,
-        FLOAT lineSpacing,
-        FLOAT baseline
-        ) PURE;
+    STDMETHOD(SetLineSpacing)(DWRITE_LINE_SPACING_METHOD lineSpacingMethod, FLOAT lineSpacing, FLOAT baseline) PURE;
 
     /// <summary>
     /// Get alignment option of text relative to layout box's leading and trailing edge.
@@ -2107,10 +1911,7 @@ interface DWRITE_DECLARE_INTERFACE("9c906818-31d7-4fd3-a151-7c5e225db55a") IDWri
     /// <returns>
     /// Standard HRESULT error code.
     /// </returns>
-    STDMETHOD(GetTrimming)(
-        _Out_ DWRITE_TRIMMING* trimmingOptions,
-        _Out_ IDWriteInlineObject** trimmingSign
-        ) PURE;
+    STDMETHOD(GetTrimming)(_Out_ DWRITE_TRIMMING * trimmingOptions, _Out_ IDWriteInlineObject * *trimmingSign) PURE;
 
     /// <summary>
     /// Get line spacing.
@@ -2121,11 +1922,7 @@ interface DWRITE_DECLARE_INTERFACE("9c906818-31d7-4fd3-a151-7c5e225db55a") IDWri
     /// <returns>
     /// Standard HRESULT error code.
     /// </returns>
-    STDMETHOD(GetLineSpacing)(
-        _Out_ DWRITE_LINE_SPACING_METHOD* lineSpacingMethod,
-        _Out_ FLOAT* lineSpacing,
-        _Out_ FLOAT* baseline
-        ) PURE;
+    STDMETHOD(GetLineSpacing)(_Out_ DWRITE_LINE_SPACING_METHOD * lineSpacingMethod, _Out_ FLOAT * lineSpacing, _Out_ FLOAT * baseline) PURE;
 
     /// <summary>
     /// Get the font collection.
@@ -2134,9 +1931,7 @@ interface DWRITE_DECLARE_INTERFACE("9c906818-31d7-4fd3-a151-7c5e225db55a") IDWri
     /// <returns>
     /// Standard HRESULT error code.
     /// </returns>
-    STDMETHOD(GetFontCollection)(
-        _Out_ IDWriteFontCollection** fontCollection
-        ) PURE;
+    STDMETHOD(GetFontCollection)(_Out_ IDWriteFontCollection * *fontCollection) PURE;
 
     /// <summary>
     /// Get the length of the font family name, in characters, not including the terminating NULL character.
@@ -2151,10 +1946,7 @@ interface DWRITE_DECLARE_INTERFACE("9c906818-31d7-4fd3-a151-7c5e225db55a") IDWri
     /// <returns>
     /// Standard HRESULT error code.
     /// </returns>
-    STDMETHOD(GetFontFamilyName)(
-        _Out_writes_z_(nameSize) WCHAR* fontFamilyName,
-        UINT32 nameSize
-        ) PURE;
+    STDMETHOD(GetFontFamilyName)(_Out_writes_z_(nameSize) WCHAR * fontFamilyName, UINT32 nameSize) PURE;
 
     /// <summary>
     /// Get the font weight.
@@ -2189,18 +1981,13 @@ interface DWRITE_DECLARE_INTERFACE("9c906818-31d7-4fd3-a151-7c5e225db55a") IDWri
     /// <returns>
     /// Standard HRESULT error code.
     /// </returns>
-    STDMETHOD(GetLocaleName)(
-        _Out_writes_z_(nameSize) WCHAR* localeName,
-        UINT32 nameSize
-        ) PURE;
+    STDMETHOD(GetLocaleName)(_Out_writes_z_(nameSize) WCHAR * localeName, UINT32 nameSize) PURE;
 };
-
 
 /// <summary>
 /// Font typography setting.
 /// </summary>
-interface DWRITE_DECLARE_INTERFACE("55f1112b-1dc2-4b3c-9541-f46894ed85b6") IDWriteTypography : public IUnknown
-{
+interface DWRITE_DECLARE_INTERFACE("55f1112b-1dc2-4b3c-9541-f46894ed85b6") IDWriteTypography : public IUnknown {
     /// <summary>
     /// Add font feature.
     /// </summary>
@@ -2208,9 +1995,7 @@ interface DWRITE_DECLARE_INTERFACE("55f1112b-1dc2-4b3c-9541-f46894ed85b6") IDWri
     /// <returns>
     /// Standard HRESULT error code.
     /// </returns>
-    STDMETHOD(AddFontFeature)(
-        DWRITE_FONT_FEATURE fontFeature
-        ) PURE;
+    STDMETHOD(AddFontFeature)(DWRITE_FONT_FEATURE fontFeature) PURE;
 
     /// <summary>
     /// Get the number of font features.
@@ -2225,14 +2010,10 @@ interface DWRITE_DECLARE_INTERFACE("55f1112b-1dc2-4b3c-9541-f46894ed85b6") IDWri
     /// <returns>
     /// Standard HRESULT error code.
     /// </returns>
-    STDMETHOD(GetFontFeature)(
-        UINT32 fontFeatureIndex,
-        _Out_ DWRITE_FONT_FEATURE* fontFeature
-        ) PURE;
+    STDMETHOD(GetFontFeature)(UINT32 fontFeatureIndex, _Out_ DWRITE_FONT_FEATURE * fontFeature) PURE;
 };
 
-enum DWRITE_SCRIPT_SHAPES
-{
+enum DWRITE_SCRIPT_SHAPES {
     /// <summary>
     /// No additional shaping requirement. Text is shaped with the writing system default behavior.
     /// </summary>
@@ -2251,8 +2032,7 @@ DEFINE_ENUM_FLAG_OPERATORS(DWRITE_SCRIPT_SHAPES);
 /// <summary>
 /// Association of text and its writing system script as well as some display attributes.
 /// </summary>
-struct DWRITE_SCRIPT_ANALYSIS
-{
+struct DWRITE_SCRIPT_ANALYSIS {
     /// <summary>
     /// Zero-based index representation of writing system script.
     /// </summary>
@@ -2268,8 +2048,7 @@ struct DWRITE_SCRIPT_ANALYSIS
 /// Condition at the edges of inline object or text used to determine
 /// line-breaking behavior.
 /// </summary>
-enum DWRITE_BREAK_CONDITION
-{
+enum DWRITE_BREAK_CONDITION {
     /// <summary>
     /// Whether a break is allowed is determined by the condition of the
     /// neighboring text span or inline object.
@@ -2299,38 +2078,36 @@ enum DWRITE_BREAK_CONDITION
 /// <summary>
 /// Line breakpoint characteristics of a character.
 /// </summary>
-struct DWRITE_LINE_BREAKPOINT
-{
+struct DWRITE_LINE_BREAKPOINT {
     /// <summary>
     /// Breaking condition before the character.
     /// </summary>
-    UINT8 breakConditionBefore  : 2;
+    UINT8 breakConditionBefore : 2;
 
     /// <summary>
     /// Breaking condition after the character.
     /// </summary>
-    UINT8 breakConditionAfter   : 2;
+    UINT8 breakConditionAfter : 2;
 
     /// <summary>
     /// The character is some form of whitespace, which may be meaningful
     /// for justification.
     /// </summary>
-    UINT8 isWhitespace          : 1;
+    UINT8 isWhitespace : 1;
 
     /// <summary>
     /// The character is a soft hyphen, often used to indicate hyphenation
     /// points inside words.
     /// </summary>
-    UINT8 isSoftHyphen          : 1;
+    UINT8 isSoftHyphen : 1;
 
-    UINT8 padding               : 2;
+    UINT8 padding : 2;
 };
 
 /// <summary>
 /// How to apply number substitution on digits and related punctuation.
 /// </summary>
-enum DWRITE_NUMBER_SUBSTITUTION_METHOD
-{
+enum DWRITE_NUMBER_SUBSTITUTION_METHOD {
     /// <summary>
     /// Specifies that the substitution method should be determined based
     /// on LOCALE_IDIGITSUBSTITUTION value of the specified text culture.
@@ -2346,13 +2123,13 @@ enum DWRITE_NUMBER_SUBSTITUTION_METHOD
     DWRITE_NUMBER_SUBSTITUTION_METHOD_CONTEXTUAL,
 
     /// <summary>
-    /// Specifies that code points 0x30-0x39 are always rendered as nominal numeral 
+    /// Specifies that code points 0x30-0x39 are always rendered as nominal numeral
     /// shapes (ones of the European number), i.e., no substitution is performed.
     /// </summary>
     DWRITE_NUMBER_SUBSTITUTION_METHOD_NONE,
 
     /// <summary>
-    /// Specifies that number are rendered using the national number shape 
+    /// Specifies that number are rendered using the national number shape
     /// as specified by the LOCALE_SNATIVEDIGITS value of the specified text culture.
     /// </summary>
     DWRITE_NUMBER_SUBSTITUTION_METHOD_NATIONAL,
@@ -2370,58 +2147,54 @@ enum DWRITE_NUMBER_SUBSTITUTION_METHOD
 /// <summary>
 /// Holds the appropriate digits and numeric punctuation for a given locale.
 /// </summary>
-interface DECLSPEC_UUID("14885CC9-BAB0-4f90-B6ED-5C366A2CD03D") DECLSPEC_NOVTABLE IDWriteNumberSubstitution : public IUnknown
-{
-};
+interface DECLSPEC_UUID("14885CC9-BAB0-4f90-B6ED-5C366A2CD03D") DECLSPEC_NOVTABLE IDWriteNumberSubstitution : public IUnknown {};
 
 /// <summary>
 /// Shaping output properties per input character.
 /// </summary>
-struct DWRITE_SHAPING_TEXT_PROPERTIES
-{
+struct DWRITE_SHAPING_TEXT_PROPERTIES {
     /// <summary>
     /// This character can be shaped independently from the others
     /// (usually set for the space character).
     /// </summary>
-    UINT16  isShapedAlone       : 1;
+    UINT16 isShapedAlone : 1;
 
     /// <summary>
     /// Reserved for use by shaping engine.
     /// </summary>
-    UINT16  reserved            : 15;
+    UINT16 reserved : 15;
 };
 
 /// <summary>
 /// Shaping output properties per output glyph.
 /// </summary>
-struct DWRITE_SHAPING_GLYPH_PROPERTIES
-{
+struct DWRITE_SHAPING_GLYPH_PROPERTIES {
     /// <summary>
     /// Justification class, whether to use spacing, kashidas, or
     /// another method. This exists for backwards compatibility
     /// with Uniscribe's SCRIPT_JUSTIFY enum.
     /// </summary>
-    UINT16  justification       : 4;
+    UINT16 justification : 4;
 
     /// <summary>
     /// Indicates glyph is the first of a cluster.
     /// </summary>
-    UINT16  isClusterStart      : 1;
+    UINT16 isClusterStart : 1;
 
     /// <summary>
     /// Glyph is a diacritic.
     /// </summary>
-    UINT16  isDiacritic         : 1;
+    UINT16 isDiacritic : 1;
 
     /// <summary>
     /// Glyph has no width, blank, ZWJ, ZWNJ etc.
     /// </summary>
-    UINT16  isZeroWidthSpace    : 1;
+    UINT16 isZeroWidthSpace : 1;
 
     /// <summary>
     /// Reserved for use by shaping engine.
     /// </summary>
-    UINT16  reserved            : 9;
+    UINT16 reserved : 9;
 };
 
 /// <summary>
@@ -2435,8 +2208,7 @@ struct DWRITE_SHAPING_GLYPH_PROPERTIES
 /// stop prematurely and return a callback error. Rather than return E_NOTIMPL,
 /// an application should stub the method and return a constant/null and S_OK.
 /// </summary>
-interface DECLSPEC_UUID("688e1a58-5094-47c8-adc8-fbcea60ae92b") DECLSPEC_NOVTABLE IDWriteTextAnalysisSource : public IUnknown
-{
+interface DECLSPEC_UUID("688e1a58-5094-47c8-adc8-fbcea60ae92b") DECLSPEC_NOVTABLE IDWriteTextAnalysisSource : public IUnknown {
     /// <summary>
     /// Get a block of text starting at the specified text position.
     /// Returning NULL indicates the end of text - the position is after
@@ -2463,11 +2235,7 @@ interface DECLSPEC_UUID("688e1a58-5094-47c8-adc8-fbcea60ae92b") DECLSPEC_NOVTABL
     /// the backing store, the app must map any text that is in the range passed
     /// to any analysis functions.
     /// </remarks>
-    STDMETHOD(GetTextAtPosition)(
-        UINT32 textPosition,
-        _Outptr_result_buffer_(*textLength) WCHAR const** textString,
-        _Out_ UINT32* textLength
-        ) PURE;
+    STDMETHOD(GetTextAtPosition)(UINT32 textPosition, _Outptr_result_buffer_(*textLength) WCHAR const ** textString, _Out_ UINT32 * textLength) PURE;
 
     /// <summary>
     /// Get a block of text immediately preceding the specified position.
@@ -2488,11 +2256,7 @@ interface DECLSPEC_UUID("688e1a58-5094-47c8-adc8-fbcea60ae92b") DECLSPEC_NOVTABL
     /// the backing store, the app must map any text that is in the range passed
     /// to any analysis functions.
     /// </remarks>
-    STDMETHOD(GetTextBeforePosition)(
-        UINT32 textPosition,
-        _Outptr_result_buffer_(*textLength) WCHAR const** textString,
-        _Out_ UINT32* textLength
-        ) PURE;
+    STDMETHOD(GetTextBeforePosition)(UINT32 textPosition, _Outptr_result_buffer_(*textLength) WCHAR const ** textString, _Out_ UINT32 * textLength) PURE;
 
     /// <summary>
     /// Get paragraph reading direction.
@@ -2511,11 +2275,7 @@ interface DECLSPEC_UUID("688e1a58-5094-47c8-adc8-fbcea60ae92b") DECLSPEC_NOVTABL
     /// The localeName pointer must remain valid until the next call or until
     /// the analysis returns.
     /// </remarks>
-    STDMETHOD(GetLocaleName)(
-        UINT32 textPosition,
-        _Out_ UINT32* textLength,
-        _Outptr_result_z_ WCHAR const** localeName
-        ) PURE;
+    STDMETHOD(GetLocaleName)(UINT32 textPosition, _Out_ UINT32 * textLength, _Outptr_result_z_ WCHAR const ** localeName) PURE;
 
     /// <summary>
     /// Get number substitution on the range affected by it.
@@ -2531,21 +2291,16 @@ interface DECLSPEC_UUID("688e1a58-5094-47c8-adc8-fbcea60ae92b") DECLSPEC_NOVTABL
     /// with it (either before the next call or before it returns). However,
     /// the sink callback may hold onto it after that.
     /// </remarks>
-    STDMETHOD(GetNumberSubstitution)(
-        UINT32 textPosition,
-        _Out_ UINT32* textLength,
-        _Outptr_ IDWriteNumberSubstitution** numberSubstitution
-        ) PURE;
+    STDMETHOD(GetNumberSubstitution)(UINT32 textPosition, _Out_ UINT32 * textLength, _Outptr_ IDWriteNumberSubstitution * *numberSubstitution) PURE;
 };
 
 /// <summary>
 /// The interface implemented by the text analyzer's client to receive the
 /// output of a given text analysis. The Text analyzer disregards any current
 /// state of the analysis sink, therefore a Set method call on a range
-/// overwrites the previously set analysis result of the same range. 
+/// overwrites the previously set analysis result of the same range.
 /// </summary>
-interface DECLSPEC_UUID("5810cd44-0ca0-4701-b3fa-bec5182ae4f6") DECLSPEC_NOVTABLE IDWriteTextAnalysisSink : public IUnknown
-{
+interface DECLSPEC_UUID("5810cd44-0ca0-4701-b3fa-bec5182ae4f6") DECLSPEC_NOVTABLE IDWriteTextAnalysisSink : public IUnknown {
     /// <summary>
     /// Report script analysis for the text range.
     /// </summary>
@@ -2555,11 +2310,7 @@ interface DECLSPEC_UUID("5810cd44-0ca0-4701-b3fa-bec5182ae4f6") DECLSPEC_NOVTABL
     /// <returns>
     /// A successful code or error code to abort analysis.
     /// </returns>
-    STDMETHOD(SetScriptAnalysis)(
-        UINT32 textPosition,
-        UINT32 textLength,
-        _In_ DWRITE_SCRIPT_ANALYSIS const* scriptAnalysis
-        ) PURE;
+    STDMETHOD(SetScriptAnalysis)(UINT32 textPosition, UINT32 textLength, _In_ DWRITE_SCRIPT_ANALYSIS const * scriptAnalysis) PURE;
 
     /// <summary>
     /// Repport line-break opportunities for each character, starting from
@@ -2571,11 +2322,7 @@ interface DECLSPEC_UUID("5810cd44-0ca0-4701-b3fa-bec5182ae4f6") DECLSPEC_NOVTABL
     /// <returns>
     /// A successful code or error code to abort analysis.
     /// </returns>
-    STDMETHOD(SetLineBreakpoints)(
-        UINT32 textPosition,
-        UINT32 textLength,
-        _In_reads_(textLength) DWRITE_LINE_BREAKPOINT const* lineBreakpoints
-        ) PURE;
+    STDMETHOD(SetLineBreakpoints)(UINT32 textPosition, UINT32 textLength, _In_reads_(textLength) DWRITE_LINE_BREAKPOINT const * lineBreakpoints) PURE;
 
     /// <summary>
     /// Set bidirectional level on the range, called once per each
@@ -2591,12 +2338,7 @@ interface DECLSPEC_UUID("5810cd44-0ca0-4701-b3fa-bec5182ae4f6") DECLSPEC_NOVTABL
     /// <returns>
     /// A successful code or error code to abort analysis.
     /// </returns>
-    STDMETHOD(SetBidiLevel)(
-        UINT32 textPosition,
-        UINT32 textLength,
-        UINT8 explicitLevel,
-        UINT8 resolvedLevel
-        ) PURE;
+    STDMETHOD(SetBidiLevel)(UINT32 textPosition, UINT32 textLength, UINT8 explicitLevel, UINT8 resolvedLevel) PURE;
 
     /// <summary>
     /// Set number substitution on the range.
@@ -2615,21 +2357,16 @@ interface DECLSPEC_UUID("5810cd44-0ca0-4701-b3fa-bec5182ae4f6") DECLSPEC_NOVTABL
     /// substitution is applicable. For any other range, you will simply not
     /// be called.
     /// </remark>
-    STDMETHOD(SetNumberSubstitution)(
-        UINT32 textPosition,
-        UINT32 textLength,
-        _In_ IDWriteNumberSubstitution* numberSubstitution
-        ) PURE;
+    STDMETHOD(SetNumberSubstitution)(UINT32 textPosition, UINT32 textLength, _In_ IDWriteNumberSubstitution * numberSubstitution) PURE;
 };
 
 /// <summary>
 /// Analyzes various text properties for complex script processing.
 /// </summary>
-interface DWRITE_DECLARE_INTERFACE("b7e6163e-7f46-43b4-84b3-e4e6249c365d") IDWriteTextAnalyzer : public IUnknown
-{
+interface DWRITE_DECLARE_INTERFACE("b7e6163e-7f46-43b4-84b3-e4e6249c365d") IDWriteTextAnalyzer : public IUnknown {
     /// <summary>
     /// Analyzes a text range for script boundaries, reading text attributes
-    /// from the source and reporting the Unicode script ID to the sink 
+    /// from the source and reporting the Unicode script ID to the sink
     /// callback SetScript.
     /// </summary>
     /// <param name="analysisSource">Source object to analyze.</param>
@@ -2639,12 +2376,7 @@ interface DWRITE_DECLARE_INTERFACE("b7e6163e-7f46-43b4-84b3-e4e6249c365d") IDWri
     /// <returns>
     /// Standard HRESULT error code.
     /// </returns>
-    STDMETHOD(AnalyzeScript)(
-        IDWriteTextAnalysisSource* analysisSource,
-        UINT32 textPosition,
-        UINT32 textLength,
-        IDWriteTextAnalysisSink* analysisSink
-        ) PURE;
+    STDMETHOD(AnalyzeScript)(IDWriteTextAnalysisSource * analysisSource, UINT32 textPosition, UINT32 textLength, IDWriteTextAnalysisSink * analysisSink) PURE;
 
     /// <summary>
     /// Analyzes a text range for script directionality, reading attributes
@@ -2666,12 +2398,7 @@ interface DWRITE_DECLARE_INTERFACE("b7e6163e-7f46-43b4-84b3-e4e6249c365d") IDWri
     /// <remarks>
     /// Embedded control codes (LRE/LRO/RLE/RLO/PDF) are taken into account.
     /// </remarks>
-    STDMETHOD(AnalyzeBidi)(
-        IDWriteTextAnalysisSource* analysisSource,
-        UINT32 textPosition,
-        UINT32 textLength,
-        IDWriteTextAnalysisSink* analysisSink
-        ) PURE;
+    STDMETHOD(AnalyzeBidi)(IDWriteTextAnalysisSource * analysisSource, UINT32 textPosition, UINT32 textLength, IDWriteTextAnalysisSink * analysisSink) PURE;
 
     /// <summary>
     /// Analyzes a text range for spans where number substitution is applicable,
@@ -2694,12 +2421,8 @@ interface DWRITE_DECLARE_INTERFACE("b7e6163e-7f46-43b4-84b3-e4e6249c365d") IDWri
     /// <remarks>
     /// Embedded control codes (LRE/LRO/RLE/RLO/PDF) are taken into account.
     /// </remarks>
-    STDMETHOD(AnalyzeNumberSubstitution)(
-        IDWriteTextAnalysisSource* analysisSource,
-        UINT32 textPosition,
-        UINT32 textLength,
-        IDWriteTextAnalysisSink* analysisSink
-        ) PURE;
+    STDMETHOD(AnalyzeNumberSubstitution)
+    (IDWriteTextAnalysisSource * analysisSource, UINT32 textPosition, UINT32 textLength, IDWriteTextAnalysisSink * analysisSink) PURE;
 
     /// <summary>
     /// Analyzes a text range for potential breakpoint opportunities, reading
@@ -2723,18 +2446,14 @@ interface DWRITE_DECLARE_INTERFACE("b7e6163e-7f46-43b4-84b3-e4e6249c365d") IDWri
     /// <remarks>
     /// Special cases include the first, last, and surrogate characters. Any
     /// text span is treated as if adjacent to inline objects on either side.
-    /// So the rules with contingent-break opportunities are used, where the 
+    /// So the rules with contingent-break opportunities are used, where the
     /// edge between text and inline objects is always treated as a potential
     /// break opportunity, dependent on any overriding rules of the adjacent
     /// objects to prohibit or force the break (see Unicode TR #14).
     /// Surrogate pairs never break between.
     /// </remarks>
-    STDMETHOD(AnalyzeLineBreakpoints)(
-        IDWriteTextAnalysisSource* analysisSource,
-        UINT32 textPosition,
-        UINT32 textLength,
-        IDWriteTextAnalysisSink* analysisSink
-        ) PURE;
+    STDMETHOD(AnalyzeLineBreakpoints)
+    (IDWriteTextAnalysisSource * analysisSource, UINT32 textPosition, UINT32 textLength, IDWriteTextAnalysisSink * analysisSink) PURE;
 
     /// <summary>
     /// Parses the input text string and maps it to the set of glyphs and associated glyph data
@@ -2755,14 +2474,14 @@ interface DWRITE_DECLARE_INTERFACE("b7e6163e-7f46-43b4-84b3-e4e6249c365d") IDWri
     /// depending on the results obtained from AnalyzeNumberSubstitution. Passing
     /// null indicates that no substitution is needed and that the digits should
     /// receive nominal glyphs.</param>
-    /// <param name="features">An array of pointers to the sets of typographic 
+    /// <param name="features">An array of pointers to the sets of typographic
     /// features to use in each feature range.</param>
-    /// <param name="featureRangeLengths">The length of each feature range, in characters.  
+    /// <param name="featureRangeLengths">The length of each feature range, in characters.
     /// The sum of all lengths should be equal to textLength.</param>
     /// <param name="featureRanges">The number of feature ranges.</param>
     /// <param name="maxGlyphCount">The maximum number of glyphs that can be
     /// returned.</param>
-    /// <param name="clusterMap">The mapping from character ranges to glyph 
+    /// <param name="clusterMap">The mapping from character ranges to glyph
     /// ranges.</param>
     /// <param name="textProps">Per-character output properties.</param>
     /// <param name="glyphIndices">Output glyph indices.</param>
@@ -2782,34 +2501,22 @@ interface DWRITE_DECLARE_INTERFACE("b7e6163e-7f46-43b4-84b3-e4e6249c365d") IDWri
     /// E_NOT_SUFFICIENT_BUFFER, which is equivalent to HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER),
     /// will be returned.  The application should allocate a larger buffer and try again.
     /// </remarks>
-    STDMETHOD(GetGlyphs)(
-        _In_reads_(textLength) WCHAR const* textString,
-        UINT32 textLength,
-        IDWriteFontFace* fontFace,
-        BOOL isSideways,
-        BOOL isRightToLeft,
-        _In_ DWRITE_SCRIPT_ANALYSIS const* scriptAnalysis,
-        _In_opt_z_ WCHAR const* localeName,
-        _In_opt_ IDWriteNumberSubstitution* numberSubstitution,
-        _In_reads_opt_(featureRanges) DWRITE_TYPOGRAPHIC_FEATURES const** features,
-        _In_reads_opt_(featureRanges) UINT32 const* featureRangeLengths,
-        UINT32 featureRanges,
-        UINT32 maxGlyphCount,
-        _Out_writes_(textLength) UINT16* clusterMap,
-        _Out_writes_(textLength) DWRITE_SHAPING_TEXT_PROPERTIES* textProps,
-        _Out_writes_(maxGlyphCount) UINT16* glyphIndices,
-        _Out_writes_(maxGlyphCount) DWRITE_SHAPING_GLYPH_PROPERTIES* glyphProps,
-        _Out_ UINT32* actualGlyphCount
-        ) PURE;
+    STDMETHOD(GetGlyphs)
+    (_In_reads_(textLength) WCHAR const * textString, UINT32 textLength, IDWriteFontFace * fontFace, BOOL isSideways, BOOL isRightToLeft,
+     _In_ DWRITE_SCRIPT_ANALYSIS const * scriptAnalysis, _In_opt_z_ WCHAR const * localeName, _In_opt_ IDWriteNumberSubstitution * numberSubstitution,
+     _In_reads_opt_(featureRanges) DWRITE_TYPOGRAPHIC_FEATURES const ** features, _In_reads_opt_(featureRanges) UINT32 const * featureRangeLengths,
+     UINT32 featureRanges, UINT32 maxGlyphCount, _Out_writes_(textLength) UINT16 * clusterMap,
+     _Out_writes_(textLength) DWRITE_SHAPING_TEXT_PROPERTIES * textProps, _Out_writes_(maxGlyphCount) UINT16 * glyphIndices,
+     _Out_writes_(maxGlyphCount) DWRITE_SHAPING_GLYPH_PROPERTIES * glyphProps, _Out_ UINT32 * actualGlyphCount) PURE;
 
     /// <summary>
-    /// Place glyphs output from the GetGlyphs method according to the font 
+    /// Place glyphs output from the GetGlyphs method according to the font
     /// and the writing system's rendering rules.
     /// </summary>
     /// <param name="textString">The original string the glyphs came from.</param>
-    /// <param name="clusterMap">The mapping from character ranges to glyph 
+    /// <param name="clusterMap">The mapping from character ranges to glyph
     /// ranges. Returned by GetGlyphs.</param>
-    /// <param name="textProps">Per-character properties. Returned by 
+    /// <param name="textProps">Per-character properties. Returned by
     /// GetGlyphs.</param>
     /// <param name="textLength">The length of textString.</param>
     /// <param name="glyphIndices">Glyph indices. See GetGlyphs</param>
@@ -2824,9 +2531,9 @@ interface DWRITE_DECLARE_INTERFACE("b7e6163e-7f46-43b4-84b3-e4e6249c365d") IDWri
     /// <param name="localeName">The locale to use when selecting glyphs.
     /// e.g. the same character may map to different glyphs for ja-jp vs zh-chs.
     /// If this is NULL then the default mapping based on the script is used.</param>
-    /// <param name="features">An array of pointers to the sets of typographic 
+    /// <param name="features">An array of pointers to the sets of typographic
     /// features to use in each feature range.</param>
-    /// <param name="featureRangeLengths">The length of each feature range, in characters.  
+    /// <param name="featureRangeLengths">The length of each feature range, in characters.
     /// The sum of all lengths should be equal to textLength.</param>
     /// <param name="featureRanges">The number of feature ranges.</param>
     /// <param name="glyphAdvances">The advance width of each glyph.</param>
@@ -2834,35 +2541,22 @@ interface DWRITE_DECLARE_INTERFACE("b7e6163e-7f46-43b4-84b3-e4e6249c365d") IDWri
     /// <returns>
     /// Standard HRESULT error code.
     /// </returns>
-    STDMETHOD(GetGlyphPlacements)(
-        _In_reads_(textLength) WCHAR const* textString,
-        _In_reads_(textLength) UINT16 const* clusterMap,
-        _In_reads_(textLength) DWRITE_SHAPING_TEXT_PROPERTIES* textProps,
-        UINT32 textLength,
-        _In_reads_(glyphCount) UINT16 const* glyphIndices,
-        _In_reads_(glyphCount) DWRITE_SHAPING_GLYPH_PROPERTIES const* glyphProps,
-        UINT32 glyphCount,
-        IDWriteFontFace * fontFace,
-        FLOAT fontEmSize,
-        BOOL isSideways,
-        BOOL isRightToLeft,
-        _In_ DWRITE_SCRIPT_ANALYSIS const* scriptAnalysis,
-        _In_opt_z_ WCHAR const* localeName,
-        _In_reads_opt_(featureRanges) DWRITE_TYPOGRAPHIC_FEATURES const** features,
-        _In_reads_opt_(featureRanges) UINT32 const* featureRangeLengths,
-        UINT32 featureRanges,
-        _Out_writes_(glyphCount) FLOAT* glyphAdvances,
-        _Out_writes_(glyphCount) DWRITE_GLYPH_OFFSET* glyphOffsets
-        ) PURE;
+    STDMETHOD(GetGlyphPlacements)
+    (_In_reads_(textLength) WCHAR const * textString, _In_reads_(textLength) UINT16 const * clusterMap,
+     _In_reads_(textLength) DWRITE_SHAPING_TEXT_PROPERTIES * textProps, UINT32 textLength, _In_reads_(glyphCount) UINT16 const * glyphIndices,
+     _In_reads_(glyphCount) DWRITE_SHAPING_GLYPH_PROPERTIES const * glyphProps, UINT32 glyphCount, IDWriteFontFace * fontFace, FLOAT fontEmSize,
+     BOOL isSideways, BOOL isRightToLeft, _In_ DWRITE_SCRIPT_ANALYSIS const * scriptAnalysis, _In_opt_z_ WCHAR const * localeName,
+     _In_reads_opt_(featureRanges) DWRITE_TYPOGRAPHIC_FEATURES const ** features, _In_reads_opt_(featureRanges) UINT32 const * featureRangeLengths,
+     UINT32 featureRanges, _Out_writes_(glyphCount) FLOAT * glyphAdvances, _Out_writes_(glyphCount) DWRITE_GLYPH_OFFSET * glyphOffsets) PURE;
 
     /// <summary>
-    /// Place glyphs output from the GetGlyphs method according to the font 
+    /// Place glyphs output from the GetGlyphs method according to the font
     /// and the writing system's rendering rules.
     /// </summary>
     /// <param name="textString">The original string the glyphs came from.</param>
-    /// <param name="clusterMap">The mapping from character ranges to glyph 
+    /// <param name="clusterMap">The mapping from character ranges to glyph
     /// ranges. Returned by GetGlyphs.</param>
-    /// <param name="textProps">Per-character properties. Returned by 
+    /// <param name="textProps">Per-character properties. Returned by
     /// GetGlyphs.</param>
     /// <param name="textLength">The length of textString.</param>
     /// <param name="glyphIndices">Glyph indices. See GetGlyphs</param>
@@ -2870,7 +2564,7 @@ interface DWRITE_DECLARE_INTERFACE("b7e6163e-7f46-43b4-84b3-e4e6249c365d") IDWri
     /// <param name="glyphCount">The number of glyphs.</param>
     /// <param name="fontFace">The font face the glyphs came from.</param>
     /// <param name="fontEmSize">Logical font size in DIP's.</param>
-    /// <param name="pixelsPerDip">Number of physical pixels per DIP. For example, if the DPI of the rendering surface is 96 this 
+    /// <param name="pixelsPerDip">Number of physical pixels per DIP. For example, if the DPI of the rendering surface is 96 this
     /// value is 1.0f. If the DPI is 120, this value is 120.0f/96.</param>
     /// <param name="transform">Optional transform applied to the glyphs and their positions. This transform is applied after the
     /// scaling specified by the font size and pixelsPerDip.</param>
@@ -2886,9 +2580,9 @@ interface DWRITE_DECLARE_INTERFACE("b7e6163e-7f46-43b4-84b3-e4e6249c365d") IDWri
     /// <param name="localeName">The locale to use when selecting glyphs.
     /// e.g. the same character may map to different glyphs for ja-jp vs zh-chs.
     /// If this is NULL then the default mapping based on the script is used.</param>
-    /// <param name="features">An array of pointers to the sets of typographic 
+    /// <param name="features">An array of pointers to the sets of typographic
     /// features to use in each feature range.</param>
-    /// <param name="featureRangeLengths">The length of each feature range, in characters.  
+    /// <param name="featureRangeLengths">The length of each feature range, in characters.
     /// The sum of all lengths should be equal to textLength.</param>
     /// <param name="featureRanges">The number of feature ranges.</param>
     /// <param name="glyphAdvances">The advance width of each glyph.</param>
@@ -2896,41 +2590,25 @@ interface DWRITE_DECLARE_INTERFACE("b7e6163e-7f46-43b4-84b3-e4e6249c365d") IDWri
     /// <returns>
     /// Standard HRESULT error code.
     /// </returns>
-    STDMETHOD(GetGdiCompatibleGlyphPlacements)(
-        _In_reads_(textLength) WCHAR const* textString,
-        _In_reads_(textLength) UINT16 const* clusterMap,
-        _In_reads_(textLength) DWRITE_SHAPING_TEXT_PROPERTIES* textProps,
-        UINT32 textLength,
-        _In_reads_(glyphCount) UINT16 const* glyphIndices,
-        _In_reads_(glyphCount) DWRITE_SHAPING_GLYPH_PROPERTIES const* glyphProps,
-        UINT32 glyphCount,
-        IDWriteFontFace * fontFace,
-        FLOAT fontEmSize,
-        FLOAT pixelsPerDip,
-        _In_opt_ DWRITE_MATRIX const* transform,
-        BOOL useGdiNatural,
-        BOOL isSideways,
-        BOOL isRightToLeft,
-        _In_ DWRITE_SCRIPT_ANALYSIS const* scriptAnalysis,
-        _In_opt_z_ WCHAR const* localeName,
-        _In_reads_opt_(featureRanges) DWRITE_TYPOGRAPHIC_FEATURES const** features,
-        _In_reads_opt_(featureRanges) UINT32 const* featureRangeLengths,
-        UINT32 featureRanges,
-        _Out_writes_(glyphCount) FLOAT* glyphAdvances,
-        _Out_writes_(glyphCount) DWRITE_GLYPH_OFFSET* glyphOffsets
-        ) PURE;
+    STDMETHOD(GetGdiCompatibleGlyphPlacements)
+    (_In_reads_(textLength) WCHAR const * textString, _In_reads_(textLength) UINT16 const * clusterMap,
+     _In_reads_(textLength) DWRITE_SHAPING_TEXT_PROPERTIES * textProps, UINT32 textLength, _In_reads_(glyphCount) UINT16 const * glyphIndices,
+     _In_reads_(glyphCount) DWRITE_SHAPING_GLYPH_PROPERTIES const * glyphProps, UINT32 glyphCount, IDWriteFontFace * fontFace, FLOAT fontEmSize,
+     FLOAT pixelsPerDip, _In_opt_ DWRITE_MATRIX const * transform, BOOL useGdiNatural, BOOL isSideways, BOOL isRightToLeft,
+     _In_ DWRITE_SCRIPT_ANALYSIS const * scriptAnalysis, _In_opt_z_ WCHAR const * localeName,
+     _In_reads_opt_(featureRanges) DWRITE_TYPOGRAPHIC_FEATURES const ** features, _In_reads_opt_(featureRanges) UINT32 const * featureRangeLengths,
+     UINT32 featureRanges, _Out_writes_(glyphCount) FLOAT * glyphAdvances, _Out_writes_(glyphCount) DWRITE_GLYPH_OFFSET * glyphOffsets) PURE;
 };
 
 /// <summary>
 /// The DWRITE_GLYPH_RUN structure contains the information needed by renderers
 /// to draw glyph runs. All coordinates are in device independent pixels (DIPs).
 /// </summary>
-struct DWRITE_GLYPH_RUN
-{
+struct DWRITE_GLYPH_RUN {
     /// <summary>
     /// The physical font face to draw with.
     /// </summary>
-    _Notnull_ IDWriteFontFace* fontFace;
+    _Notnull_ IDWriteFontFace * fontFace;
 
     /// <summary>
     /// Logical size of the font in DIPs, not points (equals 1/96 inch).
@@ -2944,18 +2622,18 @@ struct DWRITE_GLYPH_RUN
 
     /// <summary>
     /// The indices to render.
-    /// </summary>    
-    _Field_size_(glyphCount) UINT16 const* glyphIndices;
+    /// </summary>
+    _Field_size_(glyphCount) UINT16 const * glyphIndices;
 
     /// <summary>
     /// Glyph advance widths.
     /// </summary>
-    _Field_size_opt_(glyphCount) FLOAT const* glyphAdvances;
+    _Field_size_opt_(glyphCount) FLOAT const * glyphAdvances;
 
     /// <summary>
     /// Glyph offsets.
     /// </summary>
-    _Field_size_opt_(glyphCount) DWRITE_GLYPH_OFFSET const* glyphOffsets;
+    _Field_size_opt_(glyphCount) DWRITE_GLYPH_OFFSET const * glyphOffsets;
 
     /// <summary>
     /// If true, specifies that glyphs are rotated 90 degrees to the left and
@@ -2979,17 +2657,16 @@ struct DWRITE_GLYPH_RUN
 /// The DWRITE_GLYPH_RUN_DESCRIPTION structure contains additional properties
 /// related to those in DWRITE_GLYPH_RUN.
 /// </summary>
-struct DWRITE_GLYPH_RUN_DESCRIPTION
-{
+struct DWRITE_GLYPH_RUN_DESCRIPTION {
     /// <summary>
     /// The locale name associated with this run.
     /// </summary>
-    _Field_z_ WCHAR const* localeName;
+    _Field_z_ WCHAR const * localeName;
 
     /// <summary>
     /// The text associated with the glyphs.
     /// </summary>
-    _Field_size_(stringLength) WCHAR const* string;
+    _Field_size_(stringLength) WCHAR const * string;
 
     /// <summary>
     /// The number of characters (UTF16 code-units).
@@ -2999,9 +2676,9 @@ struct DWRITE_GLYPH_RUN_DESCRIPTION
 
     /// <summary>
     /// An array of indices to the glyph indices array, of the first glyphs of
-    /// all the glyph clusters of the glyphs to render. 
+    /// all the glyph clusters of the glyphs to render.
     /// </summary>
-    _Field_size_opt_(stringLength) UINT16 const* clusterMap;
+    _Field_size_opt_(stringLength) UINT16 const * clusterMap;
 
     /// <summary>
     /// Corresponding text position in the original string
@@ -3011,11 +2688,10 @@ struct DWRITE_GLYPH_RUN_DESCRIPTION
 };
 
 /// <summary>
-/// The DWRITE_UNDERLINE structure contains about the size and placement of 
+/// The DWRITE_UNDERLINE structure contains about the size and placement of
 /// underlines. All coordinates are in device independent pixels (DIPs).
 /// </summary>
-struct DWRITE_UNDERLINE
-{
+struct DWRITE_UNDERLINE {
     /// <summary>
     /// Width of the underline, measured parallel to the baseline.
     /// </summary>
@@ -3040,15 +2716,15 @@ struct DWRITE_UNDERLINE
     FLOAT runHeight;
 
     /// <summary>
-    /// Reading direction of the text associated with the underline.  This 
-    /// value is used to interpret whether the width value runs horizontally 
+    /// Reading direction of the text associated with the underline.  This
+    /// value is used to interpret whether the width value runs horizontally
     /// or vertically.
     /// </summary>
     DWRITE_READING_DIRECTION readingDirection;
 
     /// <summary>
     /// Flow direction of the text associated with the underline.  This value
-    /// is used to interpret whether the thickness value advances top to 
+    /// is used to interpret whether the thickness value advances top to
     /// bottom, left to right, or right to left.
     /// </summary>
     DWRITE_FLOW_DIRECTION flowDirection;
@@ -3060,7 +2736,7 @@ struct DWRITE_UNDERLINE
     /// left for Chinese but on the right for Japanese.
     /// This choice is completely left up to higher levels.
     /// </summary>
-    _Field_z_ WCHAR const* localeName;
+    _Field_z_ WCHAR const * localeName;
 
     /// <summary>
     /// The measuring mode can be useful to the renderer to determine how
@@ -3071,11 +2747,10 @@ struct DWRITE_UNDERLINE
 };
 
 /// <summary>
-/// The DWRITE_STRIKETHROUGH structure contains about the size and placement of 
+/// The DWRITE_STRIKETHROUGH structure contains about the size and placement of
 /// strickthroughs. All coordinates are in device independent pixels (DIPs).
 /// </summary>
-struct DWRITE_STRIKETHROUGH
-{
+struct DWRITE_STRIKETHROUGH {
     /// <summary>
     /// Width of the strikethrough, measured parallel to the baseline.
     /// </summary>
@@ -3096,13 +2771,13 @@ struct DWRITE_STRIKETHROUGH
 
     /// <summary>
     /// Reading direction of the text associated with the strikethrough.  This
-    /// value is used to interpret whether the width value runs horizontally 
+    /// value is used to interpret whether the width value runs horizontally
     /// or vertically.
     /// </summary>
     DWRITE_READING_DIRECTION readingDirection;
 
     /// <summary>
-    /// Flow direction of the text associated with the strikethrough.  This 
+    /// Flow direction of the text associated with the strikethrough.  This
     /// value is used to interpret whether the thickness value advances top to
     /// bottom, left to right, or right to left.
     /// </summary>
@@ -3111,7 +2786,7 @@ struct DWRITE_STRIKETHROUGH
     /// <summary>
     /// Locale of the range. Can be pertinent where the locale affects the style.
     /// </summary>
-    _Field_z_ WCHAR const* localeName;
+    _Field_z_ WCHAR const * localeName;
 
     /// <summary>
     /// The measuring mode can be useful to the renderer to determine how
@@ -3125,8 +2800,7 @@ struct DWRITE_STRIKETHROUGH
 /// The DWRITE_LINE_METRICS structure contains information about a formatted
 /// line of text.
 /// </summary>
-struct DWRITE_LINE_METRICS
-{
+struct DWRITE_LINE_METRICS {
     /// <summary>
     /// The number of total text positions in the line.
     /// This includes any trailing whitespace and newline characters.
@@ -3162,12 +2836,10 @@ struct DWRITE_LINE_METRICS
     BOOL isTrimmed;
 };
 
-
 /// <summary>
 /// The DWRITE_CLUSTER_METRICS structure contains information about a glyph cluster.
 /// </summary>
-struct DWRITE_CLUSTER_METRICS
-{
+struct DWRITE_CLUSTER_METRICS {
     /// <summary>
     /// The total advance width of all glyphs in the cluster.
     /// </summary>
@@ -3206,13 +2878,11 @@ struct DWRITE_CLUSTER_METRICS
     UINT16 padding : 11;
 };
 
-
 /// <summary>
 /// Overall metrics associated with text after layout.
 /// All coordinates are in device independent pixels (DIPs).
 /// </summary>
-struct DWRITE_TEXT_METRICS
-{
+struct DWRITE_TEXT_METRICS {
     /// <summary>
     /// Left-most point of formatted text relative to layout box
     /// (excluding any glyph overhang).
@@ -3270,13 +2940,11 @@ struct DWRITE_TEXT_METRICS
     UINT32 lineCount;
 };
 
-
 /// <summary>
 /// Properties describing the geometric measurement of an
 /// application-defined inline object.
 /// </summary>
-struct DWRITE_INLINE_OBJECT_METRICS
-{
+struct DWRITE_INLINE_OBJECT_METRICS {
     /// <summary>
     /// Width of the inline object.
     /// </summary>
@@ -3297,9 +2965,8 @@ struct DWRITE_INLINE_OBJECT_METRICS
     /// Flag indicating whether the object is to be placed upright or alongside the text baseline
     /// for vertical text.
     /// </summary>
-    BOOL  supportsSideways;
+    BOOL supportsSideways;
 };
-
 
 /// <summary>
 /// The DWRITE_OVERHANG_METRICS structure holds how much any visible pixels
@@ -3312,8 +2979,7 @@ struct DWRITE_INLINE_OBJECT_METRICS
 /// Additionally, they may not exactly match final target's pixel bounds after
 /// applying grid fitting and hinting.
 /// </remarks>
-struct DWRITE_OVERHANG_METRICS
-{
+struct DWRITE_OVERHANG_METRICS {
     /// <summary>
     /// The distance from the left-most visible DIP to its left alignment edge.
     /// </summary>
@@ -3335,12 +3001,10 @@ struct DWRITE_OVERHANG_METRICS
     FLOAT bottom;
 };
 
-
 /// <summary>
 /// Geometry enclosing of text positions.
 /// </summary>
-struct DWRITE_HIT_TEST_METRICS
-{
+struct DWRITE_HIT_TEST_METRICS {
     /// <summary>
     /// First text position within the geometry.
     /// </summary>
@@ -3387,16 +3051,13 @@ struct DWRITE_HIT_TEST_METRICS
     BOOL isTrimmed;
 };
 
-
 interface IDWriteTextRenderer;
-
 
 /// <summary>
 /// The IDWriteInlineObject interface wraps an application defined inline graphic,
 /// allowing DWrite to query metrics as if it was a glyph inline with the text.
 /// </summary>
-interface DWRITE_DECLARE_INTERFACE("8339FDE3-106F-47ab-8373-1C6295EB10B3") IDWriteInlineObject : public IUnknown
-{
+interface DWRITE_DECLARE_INTERFACE("8339FDE3-106F-47ab-8373-1C6295EB10B3") IDWriteInlineObject : public IUnknown {
     /// <summary>
     /// The application implemented rendering callback (IDWriteTextRenderer::DrawInlineObject)
     /// can use this to draw the inline object without needing to cast or query the object
@@ -3412,15 +3073,9 @@ interface DWRITE_DECLARE_INTERFACE("8339FDE3-106F-47ab-8373-1C6295EB10B3") IDWri
     /// <returns>
     /// Standard HRESULT error code.
     /// </returns>
-    STDMETHOD(Draw)(
-        _In_opt_ void* clientDrawingContext,
-        IDWriteTextRenderer* renderer,
-        FLOAT originX,
-        FLOAT originY,
-        BOOL isSideways,
-        BOOL isRightToLeft,
-        _In_opt_ IUnknown* clientDrawingEffect
-        ) PURE;
+    STDMETHOD(Draw)
+    (_In_opt_ void * clientDrawingContext, IDWriteTextRenderer * renderer, FLOAT originX, FLOAT originY, BOOL isSideways, BOOL isRightToLeft,
+     _In_opt_ IUnknown * clientDrawingEffect) PURE;
 
     /// <summary>
     /// TextLayout calls this callback function to get the measurement of the inline object.
@@ -3429,9 +3084,7 @@ interface DWRITE_DECLARE_INTERFACE("8339FDE3-106F-47ab-8373-1C6295EB10B3") IDWri
     /// <returns>
     /// Standard HRESULT error code.
     /// </returns>
-    STDMETHOD(GetMetrics)(
-        _Out_ DWRITE_INLINE_OBJECT_METRICS* metrics
-        ) PURE;
+    STDMETHOD(GetMetrics)(_Out_ DWRITE_INLINE_OBJECT_METRICS * metrics) PURE;
 
     /// <summary>
     /// TextLayout calls this callback function to get the visible extents (in DIPs) of the inline object.
@@ -3449,9 +3102,7 @@ interface DWRITE_DECLARE_INTERFACE("8339FDE3-106F-47ab-8373-1C6295EB10B3") IDWri
     /// slightly inset (perhaps it has a glow) by 20 DIPs on each side, you would
     /// return a width/height of 60x60 and four overhangs of 20 DIPs.
     /// </remarks>
-    STDMETHOD(GetOverhangMetrics)(
-        _Out_ DWRITE_OVERHANG_METRICS* overhangs
-        ) PURE;
+    STDMETHOD(GetOverhangMetrics)(_Out_ DWRITE_OVERHANG_METRICS * overhangs) PURE;
 
     /// <summary>
     /// Layout uses this to determine the line breaking behavior of the inline object
@@ -3462,17 +3113,13 @@ interface DWRITE_DECLARE_INTERFACE("8339FDE3-106F-47ab-8373-1C6295EB10B3") IDWri
     /// <returns>
     /// Standard HRESULT error code.
     /// </returns>
-    STDMETHOD(GetBreakConditions)(
-        _Out_ DWRITE_BREAK_CONDITION* breakConditionBefore,
-        _Out_ DWRITE_BREAK_CONDITION* breakConditionAfter
-        ) PURE;
+    STDMETHOD(GetBreakConditions)(_Out_ DWRITE_BREAK_CONDITION * breakConditionBefore, _Out_ DWRITE_BREAK_CONDITION * breakConditionAfter) PURE;
 };
 
 /// <summary>
 /// The IDWritePixelSnapping interface defines the pixel snapping properties of a text renderer.
 /// </summary>
-interface DWRITE_DECLARE_INTERFACE("eaf3a2da-ecf4-4d24-b644-b34f6842024b") IDWritePixelSnapping : public IUnknown
-{
+interface DWRITE_DECLARE_INTERFACE("eaf3a2da-ecf4-4d24-b644-b34f6842024b") IDWritePixelSnapping : public IUnknown {
     /// <summary>
     /// Determines whether pixel snapping is disabled. The recommended default is FALSE,
     /// unless doing animation that requires subpixel vertical placement.
@@ -3482,10 +3129,7 @@ interface DWRITE_DECLARE_INTERFACE("eaf3a2da-ecf4-4d24-b644-b34f6842024b") IDWri
     /// <returns>
     /// Standard HRESULT error code.
     /// </returns>
-    STDMETHOD(IsPixelSnappingDisabled)(
-        _In_opt_ void* clientDrawingContext,
-        _Out_ BOOL* isDisabled
-        ) PURE;
+    STDMETHOD(IsPixelSnappingDisabled)(_In_opt_ void * clientDrawingContext, _Out_ BOOL * isDisabled) PURE;
 
     /// <summary>
     /// Gets the current transform that maps abstract coordinates to DIPs,
@@ -3496,10 +3140,7 @@ interface DWRITE_DECLARE_INTERFACE("eaf3a2da-ecf4-4d24-b644-b34f6842024b") IDWri
     /// <returns>
     /// Standard HRESULT error code.
     /// </returns>
-    STDMETHOD(GetCurrentTransform)(
-        _In_opt_ void* clientDrawingContext,
-        _Out_ DWRITE_MATRIX* transform
-        ) PURE;
+    STDMETHOD(GetCurrentTransform)(_In_opt_ void * clientDrawingContext, _Out_ DWRITE_MATRIX * transform) PURE;
 
     /// <summary>
     /// Gets the number of physical pixels per DIP. A DIP (device-independent pixel) is 1/96 inch,
@@ -3511,10 +3152,7 @@ interface DWRITE_DECLARE_INTERFACE("eaf3a2da-ecf4-4d24-b644-b34f6842024b") IDWri
     /// <returns>
     /// Standard HRESULT error code.
     /// </returns>
-    STDMETHOD(GetPixelsPerDip)(
-        _In_opt_ void* clientDrawingContext,
-        _Out_ FLOAT* pixelsPerDip
-        ) PURE;
+    STDMETHOD(GetPixelsPerDip)(_In_opt_ void * clientDrawingContext, _Out_ FLOAT * pixelsPerDip) PURE;
 };
 
 /// <summary>
@@ -3522,13 +3160,12 @@ interface DWRITE_DECLARE_INTERFACE("eaf3a2da-ecf4-4d24-b644-b34f6842024b") IDWri
 /// callbacks that perform rendering of text, inline objects, and decorations
 /// such as underlines.
 /// </summary>
-interface DWRITE_DECLARE_INTERFACE("ef8a8135-5cc6-45fe-8825-c5a0724eb819") IDWriteTextRenderer : public IDWritePixelSnapping
-{
+interface DWRITE_DECLARE_INTERFACE("ef8a8135-5cc6-45fe-8825-c5a0724eb819") IDWriteTextRenderer : public IDWritePixelSnapping {
     /// <summary>
     /// IDWriteTextLayout::Draw calls this function to instruct the client to
     /// render a run of glyphs.
     /// </summary>
-    /// <param name="clientDrawingContext">The context passed to 
+    /// <param name="clientDrawingContext">The context passed to
     /// IDWriteTextLayout::Draw.</param>
     /// <param name="baselineOriginX">X-coordinate of the baseline.</param>
     /// <param name="baselineOriginY">Y-coordinate of the baseline.</param>
@@ -3540,28 +3177,22 @@ interface DWRITE_DECLARE_INTERFACE("ef8a8135-5cc6-45fe-8825-c5a0724eb819") IDWri
     /// DWRITE_RENDERING_MODE_CLEARTYPE_GDI_NATURAL for DWRITE_MEASURING_MODE_GDI_NATURAL
     /// </param>
     /// <param name="glyphRun">The glyph run to draw.</param>
-    /// <param name="glyphRunDescription">Properties of the characters 
+    /// <param name="glyphRunDescription">Properties of the characters
     /// associated with this run.</param>
     /// <param name="clientDrawingEffect">The drawing effect set in
     /// IDWriteTextLayout::SetDrawingEffect.</param>
     /// <returns>
     /// Standard HRESULT error code.
     /// </returns>
-    STDMETHOD(DrawGlyphRun)(
-        _In_opt_ void* clientDrawingContext,
-        FLOAT baselineOriginX,
-        FLOAT baselineOriginY,
-        DWRITE_MEASURING_MODE measuringMode,
-        _In_ DWRITE_GLYPH_RUN const* glyphRun,
-        _In_ DWRITE_GLYPH_RUN_DESCRIPTION const* glyphRunDescription,
-        _In_opt_ IUnknown* clientDrawingEffect
-        ) PURE;
+    STDMETHOD(DrawGlyphRun)
+    (_In_opt_ void * clientDrawingContext, FLOAT baselineOriginX, FLOAT baselineOriginY, DWRITE_MEASURING_MODE measuringMode,
+     _In_ DWRITE_GLYPH_RUN const * glyphRun, _In_ DWRITE_GLYPH_RUN_DESCRIPTION const * glyphRunDescription, _In_opt_ IUnknown * clientDrawingEffect) PURE;
 
     /// <summary>
     /// IDWriteTextLayout::Draw calls this function to instruct the client to draw
     /// an underline.
     /// </summary>
-    /// <param name="clientDrawingContext">The context passed to 
+    /// <param name="clientDrawingContext">The context passed to
     /// IDWriteTextLayout::Draw.</param>
     /// <param name="baselineOriginX">X-coordinate of the baseline.</param>
     /// <param name="baselineOriginY">Y-coordinate of the baseline.</param>
@@ -3584,19 +3215,15 @@ interface DWRITE_DECLARE_INTERFACE("ef8a8135-5cc6-45fe-8825-c5a0724eb819") IDWri
     /// stamped alpha blend. To avoid alpha overlap, round the end points
     /// to the nearest device pixel.
     /// </remarks>
-    STDMETHOD(DrawUnderline)(
-        _In_opt_ void* clientDrawingContext,
-        FLOAT baselineOriginX,
-        FLOAT baselineOriginY,
-        _In_ DWRITE_UNDERLINE const* underline,
-        _In_opt_ IUnknown* clientDrawingEffect
-        ) PURE;
+    STDMETHOD(DrawUnderline)
+    (_In_opt_ void * clientDrawingContext, FLOAT baselineOriginX, FLOAT baselineOriginY, _In_ DWRITE_UNDERLINE const * underline,
+     _In_opt_ IUnknown * clientDrawingEffect) PURE;
 
     /// <summary>
     /// IDWriteTextLayout::Draw calls this function to instruct the client to draw
     /// a strikethrough.
     /// </summary>
-    /// <param name="clientDrawingContext">The context passed to 
+    /// <param name="clientDrawingContext">The context passed to
     /// IDWriteTextLayout::Draw.</param>
     /// <param name="baselineOriginX">X-coordinate of the baseline.</param>
     /// <param name="baselineOriginY">Y-coordinate of the baseline.</param>
@@ -3615,13 +3242,9 @@ interface DWRITE_DECLARE_INTERFACE("ef8a8135-5cc6-45fe-8825-c5a0724eb819") IDWri
     /// Like underlines, the x coordinate will always be passed as the left side,
     /// regardless of text directionality.
     /// </remarks>
-    STDMETHOD(DrawStrikethrough)(
-        _In_opt_ void* clientDrawingContext,
-        FLOAT baselineOriginX,
-        FLOAT baselineOriginY,
-        _In_ DWRITE_STRIKETHROUGH const* strikethrough,
-        _In_opt_ IUnknown* clientDrawingEffect
-        ) PURE;
+    STDMETHOD(DrawStrikethrough)
+    (_In_opt_ void * clientDrawingContext, FLOAT baselineOriginX, FLOAT baselineOriginY, _In_ DWRITE_STRIKETHROUGH const * strikethrough,
+     _In_opt_ IUnknown * clientDrawingEffect) PURE;
 
     /// <summary>
     /// IDWriteTextLayout::Draw calls this application callback when it needs to
@@ -3643,15 +3266,9 @@ interface DWRITE_DECLARE_INTERFACE("ef8a8135-5cc6-45fe-8825-c5a0724eb819") IDWri
     /// strange for the image to be shown normally (like an arrow pointing to
     /// right to indicate a submenu).
     /// </remarks>
-    STDMETHOD(DrawInlineObject)(
-        _In_opt_ void* clientDrawingContext,
-        FLOAT originX,
-        FLOAT originY,
-        IDWriteInlineObject* inlineObject,
-        BOOL isSideways,
-        BOOL isRightToLeft,
-        _In_opt_ IUnknown* clientDrawingEffect
-        ) PURE;
+    STDMETHOD(DrawInlineObject)
+    (_In_opt_ void * clientDrawingContext, FLOAT originX, FLOAT originY, IDWriteInlineObject * inlineObject, BOOL isSideways, BOOL isRightToLeft,
+     _In_opt_ IUnknown * clientDrawingEffect) PURE;
 };
 
 /// <summary>
@@ -3660,8 +3277,7 @@ interface DWRITE_DECLARE_INTERFACE("ef8a8135-5cc6-45fe-8825-c5a0724eb819") IDWri
 ///
 /// All coordinates are in device independent pixels (DIPs).
 /// </summary>
-interface DWRITE_DECLARE_INTERFACE("53737037-6d14-410b-9bfe-0b182bb70961") IDWriteTextLayout : public IDWriteTextFormat
-{
+interface DWRITE_DECLARE_INTERFACE("53737037-6d14-410b-9bfe-0b182bb70961") IDWriteTextLayout : public IDWriteTextFormat {
     /// <summary>
     /// Set layout maximum width
     /// </summary>
@@ -3669,9 +3285,7 @@ interface DWRITE_DECLARE_INTERFACE("53737037-6d14-410b-9bfe-0b182bb70961") IDWri
     /// <returns>
     /// Standard HRESULT error code.
     /// </returns>
-    STDMETHOD(SetMaxWidth)(
-        FLOAT maxWidth
-        ) PURE;
+    STDMETHOD(SetMaxWidth)(FLOAT maxWidth) PURE;
 
     /// <summary>
     /// Set layout maximum height
@@ -3680,9 +3294,7 @@ interface DWRITE_DECLARE_INTERFACE("53737037-6d14-410b-9bfe-0b182bb70961") IDWri
     /// <returns>
     /// Standard HRESULT error code.
     /// </returns>
-    STDMETHOD(SetMaxHeight)(
-        FLOAT maxHeight
-        ) PURE;
+    STDMETHOD(SetMaxHeight)(FLOAT maxHeight) PURE;
 
     /// <summary>
     /// Set the font collection.
@@ -3692,10 +3304,7 @@ interface DWRITE_DECLARE_INTERFACE("53737037-6d14-410b-9bfe-0b182bb70961") IDWri
     /// <returns>
     /// Standard HRESULT error code.
     /// </returns>
-    STDMETHOD(SetFontCollection)(
-        IDWriteFontCollection* fontCollection,
-        DWRITE_TEXT_RANGE textRange
-        ) PURE;
+    STDMETHOD(SetFontCollection)(IDWriteFontCollection * fontCollection, DWRITE_TEXT_RANGE textRange) PURE;
 
     /// <summary>
     /// Set null-terminated font family name.
@@ -3705,10 +3314,7 @@ interface DWRITE_DECLARE_INTERFACE("53737037-6d14-410b-9bfe-0b182bb70961") IDWri
     /// <returns>
     /// Standard HRESULT error code.
     /// </returns>
-    STDMETHOD(SetFontFamilyName)(
-        _In_z_ WCHAR const* fontFamilyName,
-        DWRITE_TEXT_RANGE textRange
-        ) PURE;
+    STDMETHOD(SetFontFamilyName)(_In_z_ WCHAR const * fontFamilyName, DWRITE_TEXT_RANGE textRange) PURE;
 
     /// <summary>
     /// Set font weight.
@@ -3718,10 +3324,7 @@ interface DWRITE_DECLARE_INTERFACE("53737037-6d14-410b-9bfe-0b182bb70961") IDWri
     /// <returns>
     /// Standard HRESULT error code.
     /// </returns>
-    STDMETHOD(SetFontWeight)(
-        DWRITE_FONT_WEIGHT fontWeight,
-        DWRITE_TEXT_RANGE textRange
-        ) PURE;
+    STDMETHOD(SetFontWeight)(DWRITE_FONT_WEIGHT fontWeight, DWRITE_TEXT_RANGE textRange) PURE;
 
     /// <summary>
     /// Set font style.
@@ -3731,10 +3334,7 @@ interface DWRITE_DECLARE_INTERFACE("53737037-6d14-410b-9bfe-0b182bb70961") IDWri
     /// <returns>
     /// Standard HRESULT error code.
     /// </returns>
-    STDMETHOD(SetFontStyle)(
-        DWRITE_FONT_STYLE fontStyle,
-        DWRITE_TEXT_RANGE textRange
-        ) PURE;
+    STDMETHOD(SetFontStyle)(DWRITE_FONT_STYLE fontStyle, DWRITE_TEXT_RANGE textRange) PURE;
 
     /// <summary>
     /// Set font stretch.
@@ -3744,10 +3344,7 @@ interface DWRITE_DECLARE_INTERFACE("53737037-6d14-410b-9bfe-0b182bb70961") IDWri
     /// <returns>
     /// Standard HRESULT error code.
     /// </returns>
-    STDMETHOD(SetFontStretch)(
-        DWRITE_FONT_STRETCH fontStretch,
-        DWRITE_TEXT_RANGE textRange
-        ) PURE;
+    STDMETHOD(SetFontStretch)(DWRITE_FONT_STRETCH fontStretch, DWRITE_TEXT_RANGE textRange) PURE;
 
     /// <summary>
     /// Set font em height.
@@ -3757,10 +3354,7 @@ interface DWRITE_DECLARE_INTERFACE("53737037-6d14-410b-9bfe-0b182bb70961") IDWri
     /// <returns>
     /// Standard HRESULT error code.
     /// </returns>
-    STDMETHOD(SetFontSize)(
-        FLOAT fontSize,
-        DWRITE_TEXT_RANGE textRange
-        ) PURE;
+    STDMETHOD(SetFontSize)(FLOAT fontSize, DWRITE_TEXT_RANGE textRange) PURE;
 
     /// <summary>
     /// Set underline.
@@ -3770,10 +3364,7 @@ interface DWRITE_DECLARE_INTERFACE("53737037-6d14-410b-9bfe-0b182bb70961") IDWri
     /// <returns>
     /// Standard HRESULT error code.
     /// </returns>
-    STDMETHOD(SetUnderline)(
-        BOOL hasUnderline,
-        DWRITE_TEXT_RANGE textRange
-        ) PURE;
+    STDMETHOD(SetUnderline)(BOOL hasUnderline, DWRITE_TEXT_RANGE textRange) PURE;
 
     /// <summary>
     /// Set strikethrough.
@@ -3783,10 +3374,7 @@ interface DWRITE_DECLARE_INTERFACE("53737037-6d14-410b-9bfe-0b182bb70961") IDWri
     /// <returns>
     /// Standard HRESULT error code.
     /// </returns>
-    STDMETHOD(SetStrikethrough)(
-        BOOL hasStrikethrough,
-        DWRITE_TEXT_RANGE textRange
-        ) PURE;
+    STDMETHOD(SetStrikethrough)(BOOL hasStrikethrough, DWRITE_TEXT_RANGE textRange) PURE;
 
     /// <summary>
     /// Set application-defined drawing effect.
@@ -3800,10 +3388,7 @@ interface DWRITE_DECLARE_INTERFACE("53737037-6d14-410b-9bfe-0b182bb70961") IDWri
     /// This drawing effect is associated with the specified range and will be passed back
     /// to the application via the callback when the range is drawn at drawing time.
     /// </remarks>
-    STDMETHOD(SetDrawingEffect)(
-        IUnknown* drawingEffect,
-        DWRITE_TEXT_RANGE textRange
-        ) PURE;
+    STDMETHOD(SetDrawingEffect)(IUnknown * drawingEffect, DWRITE_TEXT_RANGE textRange) PURE;
 
     /// <summary>
     /// Set inline object.
@@ -3818,10 +3403,7 @@ interface DWRITE_DECLARE_INTERFACE("53737037-6d14-410b-9bfe-0b182bb70961") IDWri
     /// to the application via the DrawInlineObject callback when the range is drawn.
     /// Any text in that range will be suppressed.
     /// </remarks>
-    STDMETHOD(SetInlineObject)(
-        IDWriteInlineObject* inlineObject,
-        DWRITE_TEXT_RANGE textRange
-        ) PURE;
+    STDMETHOD(SetInlineObject)(IDWriteInlineObject * inlineObject, DWRITE_TEXT_RANGE textRange) PURE;
 
     /// <summary>
     /// Set font typography features.
@@ -3831,10 +3413,7 @@ interface DWRITE_DECLARE_INTERFACE("53737037-6d14-410b-9bfe-0b182bb70961") IDWri
     /// <returns>
     /// Standard HRESULT error code.
     /// </returns>
-    STDMETHOD(SetTypography)(
-        IDWriteTypography* typography,
-        DWRITE_TEXT_RANGE textRange
-        ) PURE;
+    STDMETHOD(SetTypography)(IDWriteTypography * typography, DWRITE_TEXT_RANGE textRange) PURE;
 
     /// <summary>
     /// Set locale name.
@@ -3844,10 +3423,7 @@ interface DWRITE_DECLARE_INTERFACE("53737037-6d14-410b-9bfe-0b182bb70961") IDWri
     /// <returns>
     /// Standard HRESULT error code.
     /// </returns>
-    STDMETHOD(SetLocaleName)(
-        _In_z_ WCHAR const* localeName,
-        DWRITE_TEXT_RANGE textRange
-        ) PURE;
+    STDMETHOD(SetLocaleName)(_In_z_ WCHAR const * localeName, DWRITE_TEXT_RANGE textRange) PURE;
 
     /// <summary>
     /// Get layout maximum width
@@ -3868,11 +3444,7 @@ interface DWRITE_DECLARE_INTERFACE("53737037-6d14-410b-9bfe-0b182bb70961") IDWri
     /// <returns>
     /// Standard HRESULT error code.
     /// </returns>
-    STDMETHOD(GetFontCollection)(
-        UINT32 currentPosition,
-        _Out_ IDWriteFontCollection** fontCollection,
-        _Out_opt_ DWRITE_TEXT_RANGE* textRange = NULL
-        ) PURE;
+    STDMETHOD(GetFontCollection)(UINT32 currentPosition, _Out_ IDWriteFontCollection * *fontCollection, _Out_opt_ DWRITE_TEXT_RANGE * textRange = NULL) PURE;
 
     /// <summary>
     /// Get the length of the font family name where the current position is at.
@@ -3883,11 +3455,7 @@ interface DWRITE_DECLARE_INTERFACE("53737037-6d14-410b-9bfe-0b182bb70961") IDWri
     /// <returns>
     /// Standard HRESULT error code.
     /// </returns>
-    STDMETHOD(GetFontFamilyNameLength)(
-        UINT32 currentPosition,
-        _Out_ UINT32* nameLength,
-        _Out_opt_ DWRITE_TEXT_RANGE* textRange = NULL
-        ) PURE;
+    STDMETHOD(GetFontFamilyNameLength)(UINT32 currentPosition, _Out_ UINT32 * nameLength, _Out_opt_ DWRITE_TEXT_RANGE * textRange = NULL) PURE;
 
     /// <summary>
     /// Copy the font family name where the current position is at.
@@ -3899,12 +3467,8 @@ interface DWRITE_DECLARE_INTERFACE("53737037-6d14-410b-9bfe-0b182bb70961") IDWri
     /// <returns>
     /// Standard HRESULT error code.
     /// </returns>
-    STDMETHOD(GetFontFamilyName)(
-        UINT32 currentPosition,
-        _Out_writes_z_(nameSize) WCHAR* fontFamilyName,
-        UINT32 nameSize,
-        _Out_opt_ DWRITE_TEXT_RANGE* textRange = NULL
-        ) PURE;
+    STDMETHOD(GetFontFamilyName)
+    (UINT32 currentPosition, _Out_writes_z_(nameSize) WCHAR * fontFamilyName, UINT32 nameSize, _Out_opt_ DWRITE_TEXT_RANGE * textRange = NULL) PURE;
 
     /// <summary>
     /// Get the font weight where the current position is at.
@@ -3915,11 +3479,7 @@ interface DWRITE_DECLARE_INTERFACE("53737037-6d14-410b-9bfe-0b182bb70961") IDWri
     /// <returns>
     /// Standard HRESULT error code.
     /// </returns>
-    STDMETHOD(GetFontWeight)(
-        UINT32 currentPosition,
-        _Out_ DWRITE_FONT_WEIGHT* fontWeight,
-        _Out_opt_ DWRITE_TEXT_RANGE* textRange = NULL
-        ) PURE;
+    STDMETHOD(GetFontWeight)(UINT32 currentPosition, _Out_ DWRITE_FONT_WEIGHT * fontWeight, _Out_opt_ DWRITE_TEXT_RANGE * textRange = NULL) PURE;
 
     /// <summary>
     /// Get the font style where the current position is at.
@@ -3930,11 +3490,7 @@ interface DWRITE_DECLARE_INTERFACE("53737037-6d14-410b-9bfe-0b182bb70961") IDWri
     /// <returns>
     /// Standard HRESULT error code.
     /// </returns>
-    STDMETHOD(GetFontStyle)(
-        UINT32 currentPosition,
-        _Out_ DWRITE_FONT_STYLE* fontStyle,
-        _Out_opt_ DWRITE_TEXT_RANGE* textRange = NULL
-        ) PURE;
+    STDMETHOD(GetFontStyle)(UINT32 currentPosition, _Out_ DWRITE_FONT_STYLE * fontStyle, _Out_opt_ DWRITE_TEXT_RANGE * textRange = NULL) PURE;
 
     /// <summary>
     /// Get the font stretch where the current position is at.
@@ -3945,11 +3501,7 @@ interface DWRITE_DECLARE_INTERFACE("53737037-6d14-410b-9bfe-0b182bb70961") IDWri
     /// <returns>
     /// Standard HRESULT error code.
     /// </returns>
-    STDMETHOD(GetFontStretch)(
-        UINT32 currentPosition,
-        _Out_ DWRITE_FONT_STRETCH* fontStretch,
-        _Out_opt_ DWRITE_TEXT_RANGE* textRange = NULL
-        ) PURE;
+    STDMETHOD(GetFontStretch)(UINT32 currentPosition, _Out_ DWRITE_FONT_STRETCH * fontStretch, _Out_opt_ DWRITE_TEXT_RANGE * textRange = NULL) PURE;
 
     /// <summary>
     /// Get the font em height where the current position is at.
@@ -3960,11 +3512,7 @@ interface DWRITE_DECLARE_INTERFACE("53737037-6d14-410b-9bfe-0b182bb70961") IDWri
     /// <returns>
     /// Standard HRESULT error code.
     /// </returns>
-    STDMETHOD(GetFontSize)(
-        UINT32 currentPosition,
-        _Out_ FLOAT* fontSize,
-        _Out_opt_ DWRITE_TEXT_RANGE* textRange = NULL
-        ) PURE;
+    STDMETHOD(GetFontSize)(UINT32 currentPosition, _Out_ FLOAT * fontSize, _Out_opt_ DWRITE_TEXT_RANGE * textRange = NULL) PURE;
 
     /// <summary>
     /// Get the underline presence where the current position is at.
@@ -3975,11 +3523,7 @@ interface DWRITE_DECLARE_INTERFACE("53737037-6d14-410b-9bfe-0b182bb70961") IDWri
     /// <returns>
     /// Standard HRESULT error code.
     /// </returns>
-    STDMETHOD(GetUnderline)(
-        UINT32 currentPosition,
-        _Out_ BOOL* hasUnderline,
-        _Out_opt_ DWRITE_TEXT_RANGE* textRange = NULL
-        ) PURE;
+    STDMETHOD(GetUnderline)(UINT32 currentPosition, _Out_ BOOL * hasUnderline, _Out_opt_ DWRITE_TEXT_RANGE * textRange = NULL) PURE;
 
     /// <summary>
     /// Get the strikethrough presence where the current position is at.
@@ -3990,11 +3534,7 @@ interface DWRITE_DECLARE_INTERFACE("53737037-6d14-410b-9bfe-0b182bb70961") IDWri
     /// <returns>
     /// Standard HRESULT error code.
     /// </returns>
-    STDMETHOD(GetStrikethrough)(
-        UINT32 currentPosition,
-        _Out_ BOOL* hasStrikethrough,
-        _Out_opt_ DWRITE_TEXT_RANGE* textRange = NULL
-        ) PURE;
+    STDMETHOD(GetStrikethrough)(UINT32 currentPosition, _Out_ BOOL * hasStrikethrough, _Out_opt_ DWRITE_TEXT_RANGE * textRange = NULL) PURE;
 
     /// <summary>
     /// Get the application-defined drawing effect where the current position is at.
@@ -4005,11 +3545,7 @@ interface DWRITE_DECLARE_INTERFACE("53737037-6d14-410b-9bfe-0b182bb70961") IDWri
     /// <returns>
     /// Standard HRESULT error code.
     /// </returns>
-    STDMETHOD(GetDrawingEffect)(
-        UINT32 currentPosition,
-        _Out_ IUnknown** drawingEffect,
-        _Out_opt_ DWRITE_TEXT_RANGE* textRange = NULL
-        ) PURE;
+    STDMETHOD(GetDrawingEffect)(UINT32 currentPosition, _Out_ IUnknown * *drawingEffect, _Out_opt_ DWRITE_TEXT_RANGE * textRange = NULL) PURE;
 
     /// <summary>
     /// Get the inline object at the given position.
@@ -4020,11 +3556,7 @@ interface DWRITE_DECLARE_INTERFACE("53737037-6d14-410b-9bfe-0b182bb70961") IDWri
     /// <returns>
     /// Standard HRESULT error code.
     /// </returns>
-    STDMETHOD(GetInlineObject)(
-        UINT32 currentPosition,
-        _Out_ IDWriteInlineObject** inlineObject,
-        _Out_opt_ DWRITE_TEXT_RANGE* textRange = NULL
-        ) PURE;
+    STDMETHOD(GetInlineObject)(UINT32 currentPosition, _Out_ IDWriteInlineObject * *inlineObject, _Out_opt_ DWRITE_TEXT_RANGE * textRange = NULL) PURE;
 
     /// <summary>
     /// Get the typography setting where the current position is at.
@@ -4035,11 +3567,7 @@ interface DWRITE_DECLARE_INTERFACE("53737037-6d14-410b-9bfe-0b182bb70961") IDWri
     /// <returns>
     /// Standard HRESULT error code.
     /// </returns>
-    STDMETHOD(GetTypography)(
-        UINT32 currentPosition,
-        _Out_ IDWriteTypography** typography,
-        _Out_opt_ DWRITE_TEXT_RANGE* textRange = NULL
-        ) PURE;
+    STDMETHOD(GetTypography)(UINT32 currentPosition, _Out_ IDWriteTypography * *typography, _Out_opt_ DWRITE_TEXT_RANGE * textRange = NULL) PURE;
 
     /// <summary>
     /// Get the length of the locale name where the current position is at.
@@ -4050,11 +3578,7 @@ interface DWRITE_DECLARE_INTERFACE("53737037-6d14-410b-9bfe-0b182bb70961") IDWri
     /// <returns>
     /// Standard HRESULT error code.
     /// </returns>
-    STDMETHOD(GetLocaleNameLength)(
-        UINT32 currentPosition,
-        _Out_ UINT32* nameLength,
-        _Out_opt_ DWRITE_TEXT_RANGE* textRange = NULL
-        ) PURE;
+    STDMETHOD(GetLocaleNameLength)(UINT32 currentPosition, _Out_ UINT32 * nameLength, _Out_opt_ DWRITE_TEXT_RANGE * textRange = NULL) PURE;
 
     /// <summary>
     /// Get the locale name where the current position is at.
@@ -4066,12 +3590,8 @@ interface DWRITE_DECLARE_INTERFACE("53737037-6d14-410b-9bfe-0b182bb70961") IDWri
     /// <returns>
     /// Standard HRESULT error code.
     /// </returns>
-    STDMETHOD(GetLocaleName)(
-        UINT32 currentPosition,
-        _Out_writes_z_(nameSize) WCHAR* localeName,
-        UINT32 nameSize,
-        _Out_opt_ DWRITE_TEXT_RANGE* textRange = NULL
-        ) PURE;
+    STDMETHOD(GetLocaleName)
+    (UINT32 currentPosition, _Out_writes_z_(nameSize) WCHAR * localeName, UINT32 nameSize, _Out_opt_ DWRITE_TEXT_RANGE * textRange = NULL) PURE;
 
     /// <summary>
     /// Initiate drawing of the text.
@@ -4085,12 +3605,7 @@ interface DWRITE_DECLARE_INTERFACE("53737037-6d14-410b-9bfe-0b182bb70961") IDWri
     /// <returns>
     /// Standard HRESULT error code.
     /// </returns>
-    STDMETHOD(Draw)(
-        _In_opt_ void* clientDrawingContext,
-        IDWriteTextRenderer* renderer,
-        FLOAT originX,
-        FLOAT originY
-        ) PURE;
+    STDMETHOD(Draw)(_In_opt_ void * clientDrawingContext, IDWriteTextRenderer * renderer, FLOAT originX, FLOAT originY) PURE;
 
     /// <summary>
     /// GetLineMetrics returns properties of each line.
@@ -4103,16 +3618,12 @@ interface DWRITE_DECLARE_INTERFACE("53737037-6d14-410b-9bfe-0b182bb70961") IDWri
     /// Standard HRESULT error code.
     /// </returns>
     /// <remarks>
-    /// If maxLineCount is not large enough E_NOT_SUFFICIENT_BUFFER, 
+    /// If maxLineCount is not large enough E_NOT_SUFFICIENT_BUFFER,
     /// which is equivalent to HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER),
     /// is returned and *actualLineCount is set to the number of lines
     /// needed.
     /// </remarks>
-    STDMETHOD(GetLineMetrics)(
-        _Out_writes_opt_(maxLineCount) DWRITE_LINE_METRICS* lineMetrics,
-        UINT32 maxLineCount,
-        _Out_ UINT32* actualLineCount
-        ) PURE;
+    STDMETHOD(GetLineMetrics)(_Out_writes_opt_(maxLineCount) DWRITE_LINE_METRICS * lineMetrics, UINT32 maxLineCount, _Out_ UINT32 * actualLineCount) PURE;
 
     /// <summary>
     /// GetMetrics retrieves overall metrics for the formatted string.
@@ -4127,9 +3638,7 @@ interface DWRITE_DECLARE_INTERFACE("53737037-6d14-410b-9bfe-0b182bb70961") IDWri
     /// line heights. Additionally, visible swashes and other graphic
     /// adornments may extend outside the returned width and height.
     /// </remarks>
-    STDMETHOD(GetMetrics)(
-        _Out_ DWRITE_TEXT_METRICS* textMetrics
-        ) PURE;
+    STDMETHOD(GetMetrics)(_Out_ DWRITE_TEXT_METRICS * textMetrics) PURE;
 
     /// <summary>
     /// GetOverhangMetrics returns the overhangs (in DIPs) of the layout and all
@@ -4144,9 +3653,7 @@ interface DWRITE_DECLARE_INTERFACE("53737037-6d14-410b-9bfe-0b182bb70961") IDWri
     /// determination, since these are actually drawn by the renderer, which
     /// is allowed to draw them in any variety of styles.
     /// </remarks>
-    STDMETHOD(GetOverhangMetrics)(
-        _Out_ DWRITE_OVERHANG_METRICS* overhangs
-        ) PURE;
+    STDMETHOD(GetOverhangMetrics)(_Out_ DWRITE_OVERHANG_METRICS * overhangs) PURE;
 
     /// <summary>
     /// Retrieve logical properties and measurement of each cluster.
@@ -4158,16 +3665,13 @@ interface DWRITE_DECLARE_INTERFACE("53737037-6d14-410b-9bfe-0b182bb70961") IDWri
     /// Standard HRESULT error code.
     /// </returns>
     /// <remarks>
-    /// If maxClusterCount is not large enough E_NOT_SUFFICIENT_BUFFER, 
-    /// which is equivalent to HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER), 
+    /// If maxClusterCount is not large enough E_NOT_SUFFICIENT_BUFFER,
+    /// which is equivalent to HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER),
     /// is returned and *actualClusterCount is set to the number of clusters
     /// needed.
     /// </remarks>
-    STDMETHOD(GetClusterMetrics)(
-        _Out_writes_opt_(maxClusterCount) DWRITE_CLUSTER_METRICS* clusterMetrics,
-        UINT32 maxClusterCount,
-        _Out_ UINT32* actualClusterCount
-        ) PURE;
+    STDMETHOD(GetClusterMetrics)
+    (_Out_writes_opt_(maxClusterCount) DWRITE_CLUSTER_METRICS * clusterMetrics, UINT32 maxClusterCount, _Out_ UINT32 * actualClusterCount) PURE;
 
     /// <summary>
     /// Determines the minimum possible width the layout can be set to without
@@ -4177,9 +3681,7 @@ interface DWRITE_DECLARE_INTERFACE("53737037-6d14-410b-9bfe-0b182bb70961") IDWri
     /// <returns>
     /// Standard HRESULT error code.
     /// </returns>
-    STDMETHOD(DetermineMinWidth)(
-        _Out_ FLOAT* minWidth
-        ) PURE;
+    STDMETHOD(DetermineMinWidth)(_Out_ FLOAT * minWidth) PURE;
 
     /// <summary>
     /// Given a coordinate (in DIPs) relative to the top-left of the layout box,
@@ -4201,13 +3703,7 @@ interface DWRITE_DECLARE_INTERFACE("53737037-6d14-410b-9bfe-0b182bb70961") IDWri
     /// <returns>
     /// Standard HRESULT error code.
     /// </returns>
-    STDMETHOD(HitTestPoint)(
-        FLOAT pointX,
-        FLOAT pointY,
-        _Out_ BOOL* isTrailingHit,
-        _Out_ BOOL* isInside,
-        _Out_ DWRITE_HIT_TEST_METRICS* hitTestMetrics
-        ) PURE;
+    STDMETHOD(HitTestPoint)(FLOAT pointX, FLOAT pointY, _Out_ BOOL * isTrailingHit, _Out_ BOOL * isInside, _Out_ DWRITE_HIT_TEST_METRICS * hitTestMetrics) PURE;
 
     /// <summary>
     /// Given a text position and whether the caret is on the leading or trailing
@@ -4236,20 +3732,15 @@ interface DWRITE_DECLARE_INTERFACE("53737037-6d14-410b-9bfe-0b182bb70961") IDWri
     /// This happens for complex scripts when multiple characters form a single cluster,
     /// when diacritics join their base character, or when you test a surrogate pair.
     /// </remarks>
-    STDMETHOD(HitTestTextPosition)(
-        UINT32 textPosition,
-        BOOL isTrailingHit,
-        _Out_ FLOAT* pointX,
-        _Out_ FLOAT* pointY,
-        _Out_ DWRITE_HIT_TEST_METRICS* hitTestMetrics
-        ) PURE;
+    STDMETHOD(HitTestTextPosition)
+    (UINT32 textPosition, BOOL isTrailingHit, _Out_ FLOAT * pointX, _Out_ FLOAT * pointY, _Out_ DWRITE_HIT_TEST_METRICS * hitTestMetrics) PURE;
 
     /// <summary>
     /// The application calls this function to get a set of hit-test metrics
     /// corresponding to a range of text positions. The main usage for this
     /// is to draw highlighted selection of the text string.
     ///
-    /// The function returns E_NOT_SUFFICIENT_BUFFER, which is equivalent to 
+    /// The function returns E_NOT_SUFFICIENT_BUFFER, which is equivalent to
     /// HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER), when the buffer size of
     /// hitTestMetrics is too small to hold all the regions calculated by the
     /// function. In such situation, the function sets the output value
@@ -4284,23 +3775,15 @@ interface DWRITE_DECLARE_INTERFACE("53737037-6d14-410b-9bfe-0b182bb70961") IDWri
     /// The height of each returned range will be the same within each line, regardless
     /// of how the font sizes vary.
     /// </remarks>
-    STDMETHOD(HitTestTextRange)(
-        UINT32 textPosition,
-        UINT32 textLength,
-        FLOAT originX,
-        FLOAT originY,
-        _Out_writes_opt_(maxHitTestMetricsCount) DWRITE_HIT_TEST_METRICS* hitTestMetrics,
-        UINT32 maxHitTestMetricsCount,
-        _Out_ UINT32* actualHitTestMetricsCount
-        ) PURE;
+    STDMETHOD(HitTestTextRange)
+    (UINT32 textPosition, UINT32 textLength, FLOAT originX, FLOAT originY, _Out_writes_opt_(maxHitTestMetricsCount) DWRITE_HIT_TEST_METRICS * hitTestMetrics,
+     UINT32 maxHitTestMetricsCount, _Out_ UINT32 * actualHitTestMetricsCount) PURE;
 };
-
 
 /// <summary>
 /// Encapsulates a 32-bit device independent bitmap and device context, which can be used for rendering glyphs.
 /// </summary>
-interface DWRITE_DECLARE_INTERFACE("5e5a32a3-8dff-4773-9ff6-0696eab77267") IDWriteBitmapRenderTarget : public IUnknown
-{
+interface DWRITE_DECLARE_INTERFACE("5e5a32a3-8dff-4773-9ff6-0696eab77267") IDWriteBitmapRenderTarget : public IUnknown {
     /// <summary>
     /// Draws a run of glyphs to the bitmap.
     /// </summary>
@@ -4315,20 +3798,14 @@ interface DWRITE_DECLARE_INTERFACE("5e5a32a3-8dff-4773-9ff6-0696eab77267") IDWri
     /// <param name="glyphRun">Structure containing the properties of the glyph run.</param>
     /// <param name="renderingParams">Object that controls rendering behavior.</param>
     /// <param name="textColor">Specifies the foreground color of the text.</param>
-    /// <param name="blackBoxRect">Optional rectangle that receives the bounding box (in pixels not DIPs) of all the pixels affected by 
+    /// <param name="blackBoxRect">Optional rectangle that receives the bounding box (in pixels not DIPs) of all the pixels affected by
     /// drawing the glyph run. The black box rectangle may extend beyond the dimensions of the bitmap.</param>
     /// <returns>
     /// Standard HRESULT error code.
     /// </returns>
-    STDMETHOD(DrawGlyphRun)(
-        FLOAT baselineOriginX,
-        FLOAT baselineOriginY,
-        DWRITE_MEASURING_MODE measuringMode,
-        _In_ DWRITE_GLYPH_RUN const* glyphRun,
-        IDWriteRenderingParams* renderingParams,
-        COLORREF textColor,
-        _Out_opt_ RECT* blackBoxRect = NULL
-        ) PURE;
+    STDMETHOD(DrawGlyphRun)
+    (FLOAT baselineOriginX, FLOAT baselineOriginY, DWRITE_MEASURING_MODE measuringMode, _In_ DWRITE_GLYPH_RUN const * glyphRun,
+     IDWriteRenderingParams * renderingParams, COLORREF textColor, _Out_opt_ RECT * blackBoxRect = NULL) PURE;
 
     /// <summary>
     /// Gets a handle to the memory device context.
@@ -4339,7 +3816,7 @@ interface DWRITE_DECLARE_INTERFACE("5e5a32a3-8dff-4773-9ff6-0696eab77267") IDWri
     /// <remarks>
     /// An application can use the device context to draw using GDI functions. An application can obtain the bitmap handle
     /// (HBITMAP) by calling GetCurrentObject. An application that wants information about the underlying bitmap, including
-    /// a pointer to the pixel data, can call GetObject to fill in a DIBSECTION structure. The bitmap is always a 32-bit 
+    /// a pointer to the pixel data, can call GetObject to fill in a DIBSECTION structure. The bitmap is always a 32-bit
     /// top-down DIB.
     /// </remarks>
     STDMETHOD_(HDC, GetMemoryDC)() PURE;
@@ -4361,12 +3838,10 @@ interface DWRITE_DECLARE_INTERFACE("5e5a32a3-8dff-4773-9ff6-0696eab77267") IDWri
     /// <returns>
     /// Standard HRESULT error code.
     /// </returns>
-    STDMETHOD(SetPixelsPerDip)(
-        FLOAT pixelsPerDip
-        ) PURE;
+    STDMETHOD(SetPixelsPerDip)(FLOAT pixelsPerDip) PURE;
 
     /// <summary>
-    /// Gets the transform that maps abstract coordinate to DIPs. By default this is the identity 
+    /// Gets the transform that maps abstract coordinate to DIPs. By default this is the identity
     /// transform. Note that this is unrelated to the world transform of the underlying device
     /// context.
     /// </summary>
@@ -4374,9 +3849,7 @@ interface DWRITE_DECLARE_INTERFACE("5e5a32a3-8dff-4773-9ff6-0696eab77267") IDWri
     /// <returns>
     /// Standard HRESULT error code.
     /// </returns>
-    STDMETHOD(GetCurrentTransform)(
-        _Out_ DWRITE_MATRIX* transform
-        ) PURE;
+    STDMETHOD(GetCurrentTransform)(_Out_ DWRITE_MATRIX * transform) PURE;
 
     /// <summary>
     /// Sets the transform that maps abstract coordinate to DIPs. This does not affect the world
@@ -4387,9 +3860,7 @@ interface DWRITE_DECLARE_INTERFACE("5e5a32a3-8dff-4773-9ff6-0696eab77267") IDWri
     /// <returns>
     /// Standard HRESULT error code.
     /// </returns>
-    STDMETHOD(SetCurrentTransform)(
-        _In_opt_ DWRITE_MATRIX const* transform
-        ) PURE;
+    STDMETHOD(SetCurrentTransform)(_In_opt_ DWRITE_MATRIX const * transform) PURE;
 
     /// <summary>
     /// Gets the dimensions of the bitmap.
@@ -4398,9 +3869,7 @@ interface DWRITE_DECLARE_INTERFACE("5e5a32a3-8dff-4773-9ff6-0696eab77267") IDWri
     /// <returns>
     /// Standard HRESULT error code.
     /// </returns>
-    STDMETHOD(GetSize)(
-        _Out_ SIZE* size
-        ) PURE;
+    STDMETHOD(GetSize)(_Out_ SIZE * size) PURE;
 
     /// <summary>
     /// Resizes the bitmap.
@@ -4410,17 +3879,13 @@ interface DWRITE_DECLARE_INTERFACE("5e5a32a3-8dff-4773-9ff6-0696eab77267") IDWri
     /// <returns>
     /// Standard HRESULT error code.
     /// </returns>
-    STDMETHOD(Resize)(
-        UINT32 width,
-        UINT32 height
-        ) PURE;
+    STDMETHOD(Resize)(UINT32 width, UINT32 height) PURE;
 };
 
 /// <summary>
 /// The GDI interop interface provides interoperability with GDI.
 /// </summary>
-interface DWRITE_DECLARE_INTERFACE("1edd9491-9853-4299-898f-6432983b6f3a") IDWriteGdiInterop : public IUnknown
-{
+interface DWRITE_DECLARE_INTERFACE("1edd9491-9853-4299-898f-6432983b6f3a") IDWriteGdiInterop : public IUnknown {
     /// <summary>
     /// Creates a font object that matches the properties specified by the LOGFONT structure.
     /// </summary>
@@ -4429,10 +3894,7 @@ interface DWRITE_DECLARE_INTERFACE("1edd9491-9853-4299-898f-6432983b6f3a") IDWri
     /// <returns>
     /// Standard HRESULT error code.
     /// </returns>
-    STDMETHOD(CreateFontFromLOGFONT)(
-        _In_ LOGFONTW const* logFont,
-        _Out_ IDWriteFont** font
-        ) PURE;
+    STDMETHOD(CreateFontFromLOGFONT)(_In_ LOGFONTW const * logFont, _Out_ IDWriteFont ** font) PURE;
 
     /// <summary>
     /// Initializes a LOGFONT structure based on the GDI-compatible properties of the specified font.
@@ -4444,11 +3906,7 @@ interface DWRITE_DECLARE_INTERFACE("1edd9491-9853-4299-898f-6432983b6f3a") IDWri
     /// <returns>
     /// Standard HRESULT error code.
     /// </returns>
-    STDMETHOD(ConvertFontToLOGFONT)(
-        IDWriteFont* font,
-        _Out_ LOGFONTW* logFont,
-        _Out_ BOOL* isSystemFont
-        ) PURE;
+    STDMETHOD(ConvertFontToLOGFONT)(IDWriteFont * font, _Out_ LOGFONTW * logFont, _Out_ BOOL * isSystemFont) PURE;
 
     /// <summary>
     /// Initializes a LOGFONT structure based on the GDI-compatible properties of the specified font.
@@ -4458,25 +3916,19 @@ interface DWRITE_DECLARE_INTERFACE("1edd9491-9853-4299-898f-6432983b6f3a") IDWri
     /// <returns>
     /// Standard HRESULT error code.
     /// </returns>
-    STDMETHOD(ConvertFontFaceToLOGFONT)(
-        IDWriteFontFace* font,
-        _Out_ LOGFONTW* logFont
-        ) PURE;
+    STDMETHOD(ConvertFontFaceToLOGFONT)(IDWriteFontFace * font, _Out_ LOGFONTW * logFont) PURE;
 
     /// <summary>
     /// Creates a font face object that corresponds to the currently selected HFONT.
     /// </summary>
     /// <param name="hdc">Handle to a device context into which a font has been selected. It is assumed that the client
-    /// has already performed font mapping and that the font selected into the DC is the actual font that would be used 
+    /// has already performed font mapping and that the font selected into the DC is the actual font that would be used
     /// for rendering glyphs.</param>
     /// <param name="fontFace">Contains the newly created font face object, or NULL in case of failure.</param>
     /// <returns>
     /// Standard HRESULT error code.
     /// </returns>
-    STDMETHOD(CreateFontFaceFromHdc)(
-        HDC hdc,
-        _Out_ IDWriteFontFace** fontFace
-        ) PURE;
+    STDMETHOD(CreateFontFaceFromHdc)(HDC hdc, _Out_ IDWriteFontFace * *fontFace) PURE;
 
     /// <summary>
     /// Creates an object that encapsulates a bitmap and memory DC which can be used for rendering glyphs.
@@ -4485,20 +3937,14 @@ interface DWRITE_DECLARE_INTERFACE("1edd9491-9853-4299-898f-6432983b6f3a") IDWri
     /// <param name="width">Width of the bitmap.</param>
     /// <param name="height">Height of the bitmap.</param>
     /// <param name="renderTarget">Receives a pointer to the newly created render target.</param>
-    STDMETHOD(CreateBitmapRenderTarget)(
-        _In_opt_ HDC hdc,
-        UINT32 width,
-        UINT32 height,
-        _Out_ IDWriteBitmapRenderTarget** renderTarget
-        ) PURE;
+    STDMETHOD(CreateBitmapRenderTarget)(_In_opt_ HDC hdc, UINT32 width, UINT32 height, _Out_ IDWriteBitmapRenderTarget * *renderTarget) PURE;
 };
 
 /// <summary>
 /// The DWRITE_TEXTURE_TYPE enumeration identifies a type of alpha texture. An alpha texture is a bitmap of alpha values, each
 /// representing the darkness (i.e., opacity) of a pixel or subpixel.
 /// </summary>
-enum DWRITE_TEXTURE_TYPE
-{
+enum DWRITE_TEXTURE_TYPE {
     /// <summary>
     /// Specifies an alpha texture for aliased text rendering (i.e., bi-level, where each pixel is either fully opaque or fully transparent),
     /// with one byte per pixel.
@@ -4506,7 +3952,7 @@ enum DWRITE_TEXTURE_TYPE
     DWRITE_TEXTURE_ALIASED_1x1,
 
     /// <summary>
-    /// Specifies an alpha texture for ClearType text rendering, with three bytes per pixel in the horizontal dimension and 
+    /// Specifies an alpha texture for ClearType text rendering, with three bytes per pixel in the horizontal dimension and
     /// one byte per pixel in the vertical dimension.
     /// </summary>
     DWRITE_TEXTURE_CLEARTYPE_3x1
@@ -4520,8 +3966,7 @@ enum DWRITE_TEXTURE_TYPE
 /// <summary>
 /// Interface that encapsulates information used to render a glyph run.
 /// </summary>
-interface DWRITE_DECLARE_INTERFACE("7d97dbf7-e085-42d4-81e3-6a883bded118") IDWriteGlyphRunAnalysis : public IUnknown
-{
+interface DWRITE_DECLARE_INTERFACE("7d97dbf7-e085-42d4-81e3-6a883bded118") IDWriteGlyphRunAnalysis : public IUnknown {
     /// <summary>
     /// Gets the bounding rectangle of the physical pixels affected by the glyph run.
     /// </summary>
@@ -4533,10 +3978,7 @@ interface DWRITE_DECLARE_INTERFACE("7d97dbf7-e085-42d4-81e3-6a883bded118") IDWri
     /// <returns>
     /// Standard HRESULT error code.
     /// </returns>
-    STDMETHOD(GetAlphaTextureBounds)(
-        DWRITE_TEXTURE_TYPE textureType,
-        _Out_ RECT* textureBounds
-        ) PURE;
+    STDMETHOD(GetAlphaTextureBounds)(DWRITE_TEXTURE_TYPE textureType, _Out_ RECT * textureBounds) PURE;
 
     /// <summary>
     /// Creates an alpha texture of the specified type.
@@ -4551,12 +3993,8 @@ interface DWRITE_DECLARE_INTERFACE("7d97dbf7-e085-42d4-81e3-6a883bded118") IDWri
     /// <returns>
     /// Standard HRESULT error code.
     /// </returns>
-    STDMETHOD(CreateAlphaTexture)(
-        DWRITE_TEXTURE_TYPE textureType,
-        _In_ RECT const* textureBounds,
-        _Out_writes_bytes_(bufferSize) BYTE* alphaValues,
-        UINT32 bufferSize
-        ) PURE;
+    STDMETHOD(CreateAlphaTexture)
+    (DWRITE_TEXTURE_TYPE textureType, _In_ RECT const * textureBounds, _Out_writes_bytes_(bufferSize) BYTE * alphaValues, UINT32 bufferSize) PURE;
 
     /// <summary>
     /// Gets properties required for ClearType blending.
@@ -4567,34 +4005,26 @@ interface DWRITE_DECLARE_INTERFACE("7d97dbf7-e085-42d4-81e3-6a883bded118") IDWri
     /// <param name="blendGamma">Receives the gamma value to use for gamma correction.</param>
     /// <param name="blendEnhancedContrast">Receives the enhanced contrast value.</param>
     /// <param name="blendClearTypeLevel">Receives the ClearType level.</param>
-    STDMETHOD(GetAlphaBlendParams)(
-        IDWriteRenderingParams* renderingParams,
-        _Out_ FLOAT* blendGamma,
-        _Out_ FLOAT* blendEnhancedContrast,
-        _Out_ FLOAT* blendClearTypeLevel
-        ) PURE;
+    STDMETHOD(GetAlphaBlendParams)
+    (IDWriteRenderingParams * renderingParams, _Out_ FLOAT * blendGamma, _Out_ FLOAT * blendEnhancedContrast, _Out_ FLOAT * blendClearTypeLevel) PURE;
 };
 
 /// <summary>
 /// The root factory interface for all DWrite objects.
 /// </summary>
-interface DWRITE_DECLARE_INTERFACE("b859ee5a-d838-4b5b-a2e8-1adc7d93db48") IDWriteFactory : public IUnknown
-{
+interface DWRITE_DECLARE_INTERFACE("b859ee5a-d838-4b5b-a2e8-1adc7d93db48") IDWriteFactory : public IUnknown {
     /// <summary>
     /// Gets a font collection representing the set of installed fonts.
     /// </summary>
     /// <param name="fontCollection">Receives a pointer to the system font collection object, or NULL in case of failure.</param>
     /// <param name="checkForUpdates">If this parameter is nonzero, the function performs an immediate check for changes to the set of
     /// installed fonts. If this parameter is FALSE, the function will still detect changes if the font cache service is running, but
-    /// there may be some latency. For example, an application might specify TRUE if it has itself just installed a font and wants to 
+    /// there may be some latency. For example, an application might specify TRUE if it has itself just installed a font and wants to
     /// be sure the font collection contains that font.</param>
     /// <returns>
     /// Standard HRESULT error code.
     /// </returns>
-    STDMETHOD(GetSystemFontCollection)(
-        _Out_ IDWriteFontCollection** fontCollection,
-        BOOL checkForUpdates = FALSE
-        ) PURE;
+    STDMETHOD(GetSystemFontCollection)(_Out_ IDWriteFontCollection * *fontCollection, BOOL checkForUpdates = FALSE) PURE;
 
     /// <summary>
     /// Creates a font collection using a custom font collection loader.
@@ -4607,12 +4037,9 @@ interface DWRITE_DECLARE_INTERFACE("b859ee5a-d838-4b5b-a2e8-1adc7d93db48") IDWri
     /// <returns>
     /// Standard HRESULT error code.
     /// </returns>
-    STDMETHOD(CreateCustomFontCollection)(
-        IDWriteFontCollectionLoader* collectionLoader,
-        _In_reads_bytes_(collectionKeySize) void const* collectionKey,
-        UINT32 collectionKeySize,
-        _Out_ IDWriteFontCollection** fontCollection
-        ) PURE;
+    STDMETHOD(CreateCustomFontCollection)
+    (IDWriteFontCollectionLoader * collectionLoader, _In_reads_bytes_(collectionKeySize) void const * collectionKey, UINT32 collectionKeySize,
+     _Out_ IDWriteFontCollection ** fontCollection) PURE;
 
     /// <summary>
     /// Registers a custom font collection loader with the factory object.
@@ -4621,9 +4048,7 @@ interface DWRITE_DECLARE_INTERFACE("b859ee5a-d838-4b5b-a2e8-1adc7d93db48") IDWri
     /// <returns>
     /// Standard HRESULT error code.
     /// </returns>
-    STDMETHOD(RegisterFontCollectionLoader)(
-        IDWriteFontCollectionLoader* fontCollectionLoader
-        ) PURE;
+    STDMETHOD(RegisterFontCollectionLoader)(IDWriteFontCollectionLoader * fontCollectionLoader) PURE;
 
     /// <summary>
     /// Unregisters a custom font collection loader that was previously registered using RegisterFontCollectionLoader.
@@ -4632,9 +4057,7 @@ interface DWRITE_DECLARE_INTERFACE("b859ee5a-d838-4b5b-a2e8-1adc7d93db48") IDWri
     /// <returns>
     /// Standard HRESULT error code.
     /// </returns>
-    STDMETHOD(UnregisterFontCollectionLoader)(
-        IDWriteFontCollectionLoader* fontCollectionLoader
-        ) PURE;
+    STDMETHOD(UnregisterFontCollectionLoader)(IDWriteFontCollectionLoader * fontCollectionLoader) PURE;
 
     /// <summary>
     /// CreateFontFileReference creates a font file reference object from a local font file.
@@ -4649,11 +4072,7 @@ interface DWRITE_DECLARE_INTERFACE("b859ee5a-d838-4b5b-a2e8-1adc7d93db48") IDWri
     /// <returns>
     /// Standard HRESULT error code.
     /// </returns>
-    STDMETHOD(CreateFontFileReference)(
-        _In_z_ WCHAR const* filePath,
-        _In_opt_ FILETIME const* lastWriteTime,
-        _Out_ IDWriteFontFile** fontFile
-        ) PURE;
+    STDMETHOD(CreateFontFileReference)(_In_z_ WCHAR const * filePath, _In_opt_ FILETIME const * lastWriteTime, _Out_ IDWriteFontFile ** fontFile) PURE;
 
     /// <summary>
     /// CreateCustomFontFileReference creates a reference to an application specific font file resource.
@@ -4674,12 +4093,9 @@ interface DWRITE_DECLARE_INTERFACE("b859ee5a-d838-4b5b-a2e8-1adc7d93db48") IDWri
     /// without having to install it on the system. fontFileReferenceKey has to be unique only in the scope
     /// of the fontFileLoader used in this call.
     /// </remarks>
-    STDMETHOD(CreateCustomFontFileReference)(
-        _In_reads_bytes_(fontFileReferenceKeySize) void const* fontFileReferenceKey,
-        UINT32 fontFileReferenceKeySize,
-        IDWriteFontFileLoader* fontFileLoader,
-        _Out_ IDWriteFontFile** fontFile
-        ) PURE;
+    STDMETHOD(CreateCustomFontFileReference)
+    (_In_reads_bytes_(fontFileReferenceKeySize) void const * fontFileReferenceKey, UINT32 fontFileReferenceKeySize, IDWriteFontFileLoader * fontFileLoader,
+     _Out_ IDWriteFontFile ** fontFile) PURE;
 
     /// <summary>
     /// Creates a font face object.
@@ -4695,14 +4111,9 @@ interface DWRITE_DECLARE_INTERFACE("b859ee5a-d838-4b5b-a2e8-1adc7d93db48") IDWri
     /// <returns>
     /// Standard HRESULT error code.
     /// </returns>
-    STDMETHOD(CreateFontFace)(
-        DWRITE_FONT_FACE_TYPE fontFaceType,
-        UINT32 numberOfFiles,
-        _In_reads_(numberOfFiles) IDWriteFontFile* const* fontFiles,
-        UINT32 faceIndex,
-        DWRITE_FONT_SIMULATIONS fontFaceSimulationFlags,
-        _Out_ IDWriteFontFace** fontFace
-        ) PURE;
+    STDMETHOD(CreateFontFace)
+    (DWRITE_FONT_FACE_TYPE fontFaceType, UINT32 numberOfFiles, _In_reads_(numberOfFiles) IDWriteFontFile * const * fontFiles, UINT32 faceIndex,
+     DWRITE_FONT_SIMULATIONS fontFaceSimulationFlags, _Out_ IDWriteFontFace ** fontFace) PURE;
 
     /// <summary>
     /// Creates a rendering parameters object with default settings for the primary monitor.
@@ -4711,9 +4122,7 @@ interface DWRITE_DECLARE_INTERFACE("b859ee5a-d838-4b5b-a2e8-1adc7d93db48") IDWri
     /// <returns>
     /// Standard HRESULT error code.
     /// </returns>
-    STDMETHOD(CreateRenderingParams)(
-        _Out_ IDWriteRenderingParams** renderingParams
-        ) PURE;
+    STDMETHOD(CreateRenderingParams)(_Out_ IDWriteRenderingParams * *renderingParams) PURE;
 
     /// <summary>
     /// Creates a rendering parameters object with default settings for the specified monitor.
@@ -4723,10 +4132,7 @@ interface DWRITE_DECLARE_INTERFACE("b859ee5a-d838-4b5b-a2e8-1adc7d93db48") IDWri
     /// <returns>
     /// Standard HRESULT error code.
     /// </returns>
-    STDMETHOD(CreateMonitorRenderingParams)(
-        HMONITOR monitor,
-        _Out_ IDWriteRenderingParams** renderingParams
-        ) PURE;
+    STDMETHOD(CreateMonitorRenderingParams)(HMONITOR monitor, _Out_ IDWriteRenderingParams * *renderingParams) PURE;
 
     /// <summary>
     /// Creates a rendering parameters object with the specified properties.
@@ -4735,19 +4141,13 @@ interface DWRITE_DECLARE_INTERFACE("b859ee5a-d838-4b5b-a2e8-1adc7d93db48") IDWri
     /// <param name="enhancedContrast">The amount of contrast enhancement, zero or greater.</param>
     /// <param name="clearTypeLevel">The degree of ClearType level, from 0.0f (no ClearType) to 1.0f (full ClearType).</param>
     /// <param name="pixelGeometry">The geometry of a device pixel.</param>
-    /// <param name="renderingMode">Method of rendering glyphs. In most cases, this should be DWRITE_RENDERING_MODE_DEFAULT to automatically use an appropriate mode.</param>
-    /// <param name="renderingParams">Holds the newly created rendering parameters object, or NULL in case of failure.</param>
-    /// <returns>
-    /// Standard HRESULT error code.
+    /// <param name="renderingMode">Method of rendering glyphs. In most cases, this should be DWRITE_RENDERING_MODE_DEFAULT to automatically use an appropriate
+    /// mode.</param> <param name="renderingParams">Holds the newly created rendering parameters object, or NULL in case of failure.</param> <returns> Standard
+    /// HRESULT error code.
     /// </returns>
-    STDMETHOD(CreateCustomRenderingParams)(
-        FLOAT gamma,
-        FLOAT enhancedContrast,
-        FLOAT clearTypeLevel,
-        DWRITE_PIXEL_GEOMETRY pixelGeometry,
-        DWRITE_RENDERING_MODE renderingMode,
-        _Out_ IDWriteRenderingParams** renderingParams
-        ) PURE;
+    STDMETHOD(CreateCustomRenderingParams)
+    (FLOAT gamma, FLOAT enhancedContrast, FLOAT clearTypeLevel, DWRITE_PIXEL_GEOMETRY pixelGeometry, DWRITE_RENDERING_MODE renderingMode,
+     _Out_ IDWriteRenderingParams * *renderingParams) PURE;
 
     /// <summary>
     /// Registers a font file loader with DirectWrite.
@@ -4768,18 +4168,14 @@ interface DWRITE_DECLARE_INTERFACE("b859ee5a-d838-4b5b-a2e8-1adc7d93db48") IDWri
     /// Instead, registration and unregistration of font file loaders with DirectWrite should be performed
     /// outside of the font file loader implementation as a separate step.
     /// </remarks>
-    STDMETHOD(RegisterFontFileLoader)(
-        IDWriteFontFileLoader* fontFileLoader
-        ) PURE;
+    STDMETHOD(RegisterFontFileLoader)(IDWriteFontFileLoader * fontFileLoader) PURE;
 
     /// <summary>
     /// Unregisters a font file loader that was previously registered with the DirectWrite font system using RegisterFontFileLoader.
     /// </summary>
-    /// <param name="fontFileLoader">Pointer to the file loader that was previously registered with the DirectWrite font system using RegisterFontFileLoader.</param>
-    /// <returns>
-    /// This function will succeed if the user loader is requested to be removed.
-    /// It will fail if the pointer to the file loader identifies a standard DirectWrite loader,
-    /// or a loader that is never registered or has already been unregistered.
+    /// <param name="fontFileLoader">Pointer to the file loader that was previously registered with the DirectWrite font system using
+    /// RegisterFontFileLoader.</param> <returns> This function will succeed if the user loader is requested to be removed. It will fail if the pointer to the
+    /// file loader identifies a standard DirectWrite loader, or a loader that is never registered or has already been unregistered.
     /// </returns>
     /// <remarks>
     /// This function unregisters font file loader callbacks with the DirectWrite font system.
@@ -4790,9 +4186,7 @@ interface DWRITE_DECLARE_INTERFACE("b859ee5a-d838-4b5b-a2e8-1adc7d93db48") IDWri
     /// Instead, registration and unregistration of font file loaders with DirectWrite should be performed
     /// outside of the font file loader implementation as a separate step.
     /// </remarks>
-    STDMETHOD(UnregisterFontFileLoader)(
-        IDWriteFontFileLoader* fontFileLoader
-        ) PURE;
+    STDMETHOD(UnregisterFontFileLoader)(IDWriteFontFileLoader * fontFileLoader) PURE;
 
     /// <summary>
     /// Create a text format object used for text layout.
@@ -4808,16 +4202,9 @@ interface DWRITE_DECLARE_INTERFACE("b859ee5a-d838-4b5b-a2e8-1adc7d93db48") IDWri
     /// <returns>
     /// Standard HRESULT error code.
     /// </returns>
-    STDMETHOD(CreateTextFormat)(
-        _In_z_ WCHAR const* fontFamilyName,
-        _In_opt_ IDWriteFontCollection* fontCollection,
-        DWRITE_FONT_WEIGHT fontWeight,
-        DWRITE_FONT_STYLE fontStyle,
-        DWRITE_FONT_STRETCH fontStretch,
-        FLOAT fontSize,
-        _In_z_ WCHAR const* localeName,
-        _Out_ IDWriteTextFormat** textFormat
-        ) PURE;
+    STDMETHOD(CreateTextFormat)
+    (_In_z_ WCHAR const * fontFamilyName, _In_opt_ IDWriteFontCollection * fontCollection, DWRITE_FONT_WEIGHT fontWeight, DWRITE_FONT_STYLE fontStyle,
+     DWRITE_FONT_STRETCH fontStretch, FLOAT fontSize, _In_z_ WCHAR const * localeName, _Out_ IDWriteTextFormat ** textFormat) PURE;
 
     /// <summary>
     /// Create a typography object used in conjunction with text format for text layout.
@@ -4826,9 +4213,7 @@ interface DWRITE_DECLARE_INTERFACE("b859ee5a-d838-4b5b-a2e8-1adc7d93db48") IDWri
     /// <returns>
     /// Standard HRESULT error code.
     /// </returns>
-    STDMETHOD(CreateTypography)(
-        _Out_ IDWriteTypography** typography
-        ) PURE;
+    STDMETHOD(CreateTypography)(_Out_ IDWriteTypography * *typography) PURE;
 
     /// <summary>
     /// Create an object used for interoperability with GDI.
@@ -4837,9 +4222,7 @@ interface DWRITE_DECLARE_INTERFACE("b859ee5a-d838-4b5b-a2e8-1adc7d93db48") IDWri
     /// <returns>
     /// Standard HRESULT error code.
     /// </returns>
-    STDMETHOD(GetGdiInterop)(
-        _Out_ IDWriteGdiInterop** gdiInterop
-        ) PURE;
+    STDMETHOD(GetGdiInterop)(_Out_ IDWriteGdiInterop * *gdiInterop) PURE;
 
     /// <summary>
     /// CreateTextLayout takes a string, format, and associated constraints
@@ -4855,14 +4238,9 @@ interface DWRITE_DECLARE_INTERFACE("b859ee5a-d838-4b5b-a2e8-1adc7d93db48") IDWri
     /// <returns>
     /// Standard HRESULT error code.
     /// </returns>
-    STDMETHOD(CreateTextLayout)(
-        _In_reads_(stringLength) WCHAR const* string,
-        UINT32 stringLength,
-        IDWriteTextFormat* textFormat,
-        FLOAT maxWidth,
-        FLOAT maxHeight,
-        _Out_ IDWriteTextLayout** textLayout
-        ) PURE;
+    STDMETHOD(CreateTextLayout)
+    (_In_reads_(stringLength) WCHAR const * string, UINT32 stringLength, IDWriteTextFormat * textFormat, FLOAT maxWidth, FLOAT maxHeight,
+     _Out_ IDWriteTextLayout ** textLayout) PURE;
 
     /// <summary>
     /// CreateGdiCompatibleTextLayout takes a string, format, and associated constraints
@@ -4888,17 +4266,9 @@ interface DWRITE_DECLARE_INTERFACE("b859ee5a-d838-4b5b-a2e8-1adc7d93db48") IDWri
     /// <returns>
     /// Standard HRESULT error code.
     /// </returns>
-    STDMETHOD(CreateGdiCompatibleTextLayout)(
-        _In_reads_(stringLength) WCHAR const* string,
-        UINT32 stringLength,
-        IDWriteTextFormat* textFormat,
-        FLOAT layoutWidth,
-        FLOAT layoutHeight,
-        FLOAT pixelsPerDip,
-        _In_opt_ DWRITE_MATRIX const* transform,
-        BOOL useGdiNatural,
-        _Out_ IDWriteTextLayout** textLayout
-        ) PURE;
+    STDMETHOD(CreateGdiCompatibleTextLayout)
+    (_In_reads_(stringLength) WCHAR const * string, UINT32 stringLength, IDWriteTextFormat * textFormat, FLOAT layoutWidth, FLOAT layoutHeight,
+     FLOAT pixelsPerDip, _In_opt_ DWRITE_MATRIX const * transform, BOOL useGdiNatural, _Out_ IDWriteTextLayout ** textLayout) PURE;
 
     /// <summary>
     /// The application may call this function to create an inline object for trimming, using an ellipsis as the omission sign.
@@ -4910,10 +4280,7 @@ interface DWRITE_DECLARE_INTERFACE("b859ee5a-d838-4b5b-a2e8-1adc7d93db48") IDWri
     /// <returns>
     /// Standard HRESULT error code.
     /// </returns>
-    STDMETHOD(CreateEllipsisTrimmingSign)(
-        IDWriteTextFormat* textFormat,
-        _Out_ IDWriteInlineObject** trimmingSign
-        ) PURE;
+    STDMETHOD(CreateEllipsisTrimmingSign)(IDWriteTextFormat * textFormat, _Out_ IDWriteInlineObject * *trimmingSign) PURE;
 
     /// <summary>
     /// Return an interface to perform text analysis with.
@@ -4922,9 +4289,7 @@ interface DWRITE_DECLARE_INTERFACE("b859ee5a-d838-4b5b-a2e8-1adc7d93db48") IDWri
     /// <returns>
     /// Standard HRESULT error code.
     /// </returns>
-    STDMETHOD(CreateTextAnalyzer)(
-        _Out_ IDWriteTextAnalyzer** textAnalyzer
-        ) PURE;
+    STDMETHOD(CreateTextAnalyzer)(_Out_ IDWriteTextAnalyzer * *textAnalyzer) PURE;
 
     /// <summary>
     /// Creates a number substitution object using a locale name,
@@ -4935,12 +4300,9 @@ interface DWRITE_DECLARE_INTERFACE("b859ee5a-d838-4b5b-a2e8-1adc7d93db48") IDWri
     /// <param name="localeName">Which locale to obtain the digits from.</param>
     /// <param name="ignoreUserOverride">Ignore the user's settings and use the locale defaults</param>
     /// <param name="numberSubstitution">Receives a pointer to the newly created object.</param>
-    STDMETHOD(CreateNumberSubstitution)(
-        _In_ DWRITE_NUMBER_SUBSTITUTION_METHOD substitutionMethod,
-        _In_z_ WCHAR const* localeName,
-        _In_ BOOL ignoreUserOverride,
-        _Out_ IDWriteNumberSubstitution** numberSubstitution
-        ) PURE;
+    STDMETHOD(CreateNumberSubstitution)
+    (_In_ DWRITE_NUMBER_SUBSTITUTION_METHOD substitutionMethod, _In_z_ WCHAR const * localeName, _In_ BOOL ignoreUserOverride,
+     _Out_ IDWriteNumberSubstitution ** numberSubstitution) PURE;
 
     /// <summary>
     /// Creates a glyph run analysis object, which encapsulates information
@@ -4960,19 +4322,11 @@ interface DWRITE_DECLARE_INTERFACE("b859ee5a-d838-4b5b-a2e8-1adc7d93db48") IDWri
     /// <returns>
     /// Standard HRESULT error code.
     /// </returns>
-    STDMETHOD(CreateGlyphRunAnalysis)(
-        _In_ DWRITE_GLYPH_RUN const* glyphRun,
-        FLOAT pixelsPerDip,
-        _In_opt_ DWRITE_MATRIX const* transform,
-        DWRITE_RENDERING_MODE renderingMode,
-        DWRITE_MEASURING_MODE measuringMode,
-        FLOAT baselineOriginX,
-        FLOAT baselineOriginY,
-        _Out_ IDWriteGlyphRunAnalysis** glyphRunAnalysis
-        ) PURE;
+    STDMETHOD(CreateGlyphRunAnalysis)
+    (_In_ DWRITE_GLYPH_RUN const * glyphRun, FLOAT pixelsPerDip, _In_opt_ DWRITE_MATRIX const * transform, DWRITE_RENDERING_MODE renderingMode,
+     DWRITE_MEASURING_MODE measuringMode, FLOAT baselineOriginX, FLOAT baselineOriginY, _Out_ IDWriteGlyphRunAnalysis ** glyphRunAnalysis) PURE;
 
 }; // interface IDWriteFactory
-
 
 /// <summary>
 /// Creates a DirectWrite factory object that is used for subsequent creation of individual DirectWrite objects.
@@ -4993,19 +4347,14 @@ interface DWRITE_DECLARE_INTERFACE("b859ee5a-d838-4b5b-a2e8-1adc7d93db48") IDWri
 /// from the rest of the process components. In such cases, it is recommended to use an isolated factory for the sandboxed
 /// component.
 /// </remarks>
-EXTERN_C HRESULT DWRITE_EXPORT DWriteCreateFactory(
-    _In_ DWRITE_FACTORY_TYPE factoryType,
-    _In_ REFIID iid,
-    _Out_ IUnknown **factory
-    );
+EXTERN_C HRESULT DWRITE_EXPORT DWriteCreateFactory(_In_ DWRITE_FACTORY_TYPE factoryType, _In_ REFIID iid, _Out_ IUnknown ** factory);
 
 // Macros used to define DirectWrite error codes.
-#define FACILITY_DWRITE 0x898
-#define DWRITE_ERR_BASE 0x5000
+#define FACILITY_DWRITE                0x898
+#define DWRITE_ERR_BASE                0x5000
 #define MAKE_DWRITE_HR(severity, code) MAKE_HRESULT(severity, FACILITY_DWRITE, (DWRITE_ERR_BASE + code))
-#define MAKE_DWRITE_HR_ERR(code) MAKE_DWRITE_HR(SEVERITY_ERROR, code)
+#define MAKE_DWRITE_HR_ERR(code)       MAKE_DWRITE_HR(SEVERITY_ERROR, code)
 
 // DWrite errors have moved to winerror.h
-
 
 #endif /* DWRITE_H_INCLUDED */

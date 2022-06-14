@@ -9,74 +9,68 @@
 #include "oglResource.h"
 #include "../common/basicSurface.h"
 
-namespace GN { namespace gfx
-{
-    ///
-    /// Vertex buffer that use GL_ARB_vertex_buffer_object.
-    ///
-    class OGLVtxBufVBO : public BasicVtxBuf, public OGLResource, public StdClass
-    {
-         GN_DECLARE_STDCLASS( OGLVtxBufVBO, StdClass );
+namespace GN {
+namespace gfx {
+///
+/// Vertex buffer that use GL_ARB_vertex_buffer_object.
+///
+class OGLVtxBufVBO : public BasicVtxBuf, public OGLResource, public StdClass {
+    GN_DECLARE_STDCLASS(OGLVtxBufVBO, StdClass);
 
-        // ********************************
-        // ctor/dtor
-        // ********************************
+    // ********************************
+    // ctor/dtor
+    // ********************************
 
-        //@{
-    public:
-        OGLVtxBufVBO( OGLGpu & r ) : OGLResource(r) { clear(); }
-        virtual ~OGLVtxBufVBO() { quit(); }
-        //@}
+    //@{
+public:
+    OGLVtxBufVBO(OGLGpu & r): OGLResource(r) { clear(); }
+    virtual ~OGLVtxBufVBO() { quit(); }
+    //@}
 
-        // ********************************
-        // from StdClass
-        // ********************************
+    // ********************************
+    // from StdClass
+    // ********************************
 
-        //@{
-    public:
-        bool init( const VtxBufDesc & desc );
-        void quit();
-    private:
-        void clear()
-        {
-            mOGLVertexBufferObject = 0;
-            mOGLUsage = 0;
-         }
-        //@}
+    //@{
+public:
+    bool init(const VtxBufDesc & desc);
+    void quit();
 
-        // ********************************
-        // from VtxBuf
-        // ********************************
-    public:
+private:
+    void clear() {
+        mOGLVertexBufferObject = 0;
+        mOGLUsage              = 0;
+    }
+    //@}
 
-        virtual void update( uint32 offset, uint32 length, const void * data, SurfaceUpdateFlag flag );
-        virtual void readback( DynaArray<uint8> & data );
+    // ********************************
+    // from VtxBuf
+    // ********************************
+public:
+    virtual void update(uint32 offset, uint32 length, const void * data, SurfaceUpdateFlag flag);
+    virtual void readback(DynaArray<uint8> & data);
 
-        // ********************************
-        // public OGLBasicVtxBuf
-        // ********************************
-    public:
+    // ********************************
+    // public OGLBasicVtxBuf
+    // ********************************
+public:
+    void bind() const { glBindBuffer(GL_ARRAY_BUFFER, mOGLVertexBufferObject); }
 
-        void bind() const
-        {
-            glBindBuffer( GL_ARRAY_BUFFER, mOGLVertexBufferObject);
-        }
+    // ********************************
+    // private variables
+    // ********************************
+private:
+    GLuint mOGLVertexBufferObject;
+    GLenum mOGLUsage;
 
-        // ********************************
-        // private variables
-        // ********************************
-    private:
-
-        GLuint mOGLVertexBufferObject;
-        GLenum mOGLUsage;
-
-        // ********************************
-        // private functions
-        // ********************************
-    private:
-        bool createVBO();
-    };
-}}
+    // ********************************
+    // private functions
+    // ********************************
+private:
+    bool createVBO();
+};
+} // namespace gfx
+} // namespace GN
 
 // *****************************************************************************
 //                                     EOF

@@ -8,72 +8,65 @@
 
 #include "../common/basicGpu.h"
 
-#pragma warning(disable:4100) // unreferenced formal parameters
+#pragma warning(disable : 4100) // unreferenced formal parameters
 
-namespace GN { namespace gfx
-{
-    // Forward declarations
-    class D3D11Resource;
-    class D3D11GpuProgram;
-    class D3D11RTMgr;
-    class D3D11StateObjectManager;
+namespace GN {
+namespace gfx {
+// Forward declarations
+class D3D11Resource;
+class D3D11GpuProgram;
+class D3D11RTMgr;
+class D3D11StateObjectManager;
 
-    ///
-    /// D3D11 vertex format structure
-    ///
-    class D3D11VertexLayout
-    {
-    public:
+///
+/// D3D11 vertex format structure
+///
+class D3D11VertexLayout {
+public:
+    AutoComPtr<ID3D11InputLayout> il; ///< D3D11 input layout
 
-        AutoComPtr<ID3D11InputLayout> il; ///< D3D11 input layout
+public:
+    /// initialize the layout
+    bool init(ID3D11Device & dev, const GN::gfx::VertexBinding & vtxbind, const D3D11GpuProgram & gpuProgram);
 
-    public:
+    /// less operator
+    bool operator<(const D3D11VertexLayout & rhs) const { return il < rhs.il; }
+};
 
-        /// initialize the layout
-        bool init( ID3D11Device & dev, const GN::gfx::VertexBinding & vtxbind, const D3D11GpuProgram & gpuProgram );
+///
+/// D3D11 GPU class
+///
+class D3D11Gpu : public BasicGpu {
+    GN_DECLARE_STDCLASS(D3D11Gpu, BasicGpu);
 
-        /// less operator
-        bool operator<( const D3D11VertexLayout & rhs ) const
-        {
-            return il < rhs.il;
-        }
-    };
+    // ********************************
+    // ctor/dtor
+    // ********************************
 
-    ///
-    /// D3D11 GPU class
-    ///
-    class D3D11Gpu : public BasicGpu
-    {
-        GN_DECLARE_STDCLASS(D3D11Gpu, BasicGpu);
+    //@{
+public:
+    D3D11Gpu() { clear(); }
+    virtual ~D3D11Gpu() { quit(); }
+    //@}
 
-        // ********************************
-        // ctor/dtor
-        // ********************************
+    // ********************************
+    // from StdClass
+    // ********************************
 
-        //@{
-    public :
-        D3D11Gpu()          { clear(); }
-        virtual ~D3D11Gpu() { quit(); }
-        //@}
+    //@{
+public:
+    bool init(const GpuOptions &);
+    void quit();
 
-        // ********************************
-        // from StdClass
-        // ********************************
-
-        //@{
-    public:
-        bool init( const GpuOptions & );
-        void quit();
-    private:
-        void clear()
-        {
-            dispClear();
-            capsClear();
-            resourceClear();
-            contextClear();
-            drawClear();
-        }
-        //@}
+private:
+    void clear() {
+        dispClear();
+        capsClear();
+        resourceClear();
+        contextClear();
+        drawClear();
+    }
+    //@}
 
     // ************************************************************************
     //
@@ -81,43 +74,47 @@ namespace GN { namespace gfx
     //
     // ************************************************************************
 
-        //@{
+    //@{
 
-    public :
+public:
+    virtual void * getD3DDevice() const { return mDevice; }
+    virtual void * getOGLRC() const { return 0; }
 
-        virtual void * getD3DDevice() const { return mDevice; }
-        virtual void * getOGLRC() const { return 0; }
+public:
+    ID3D11Device & getDeviceRefInlined() const {
+        GN_ASSERT(mDevice);
+        return *mDevice;
+    }
+    ID3D11DeviceContext & getDeviceContextRefInlined() const {
+        GN_ASSERT(mDeviceContext);
+        return *mDeviceContext;
+    }
+    IDXGISwapChain & getSwapChainRef() const {
+        GN_ASSERT(mSwapChain);
+        return *mSwapChain;
+    }
 
-    public :
+    void ReportLiveDeviceObjects();
 
-        ID3D11Device        & getDeviceRefInlined() const { GN_ASSERT(mDevice); return *mDevice; }
-        ID3D11DeviceContext & getDeviceContextRefInlined() const { GN_ASSERT(mDeviceContext); return *mDeviceContext; }
-        IDXGISwapChain      & getSwapChainRef() const { GN_ASSERT(mSwapChain); return *mSwapChain; }
+private:
+    bool dispInit();
+    void dispQuit();
+    void dispClear() {
+        mAdapter       = 0;
+        mSwapChain     = 0;
+        mDevice        = 0;
+        mDeviceContext = 0;
+        mD3D11Debug    = 0;
+    }
 
-        void                  ReportLiveDeviceObjects();
+private:
+    IDXGIAdapter *        mAdapter;
+    IDXGISwapChain *      mSwapChain;
+    ID3D11Device *        mDevice;
+    ID3D11DeviceContext * mDeviceContext;
+    ID3D11Debug *         mD3D11Debug;
 
-    private :
-
-        bool dispInit();
-        void dispQuit();
-        void dispClear()
-        {
-            mAdapter = 0;
-            mSwapChain = 0;
-            mDevice = 0;
-            mDeviceContext = 0;
-            mD3D11Debug = 0;
-        }
-
-    private :
-
-        IDXGIAdapter        * mAdapter;
-        IDXGISwapChain      * mSwapChain;
-        ID3D11Device        * mDevice;
-        ID3D11DeviceContext * mDeviceContext;
-        ID3D11Debug         * mD3D11Debug;
-
-        //@}
+    //@}
 
     // ************************************************************************
     //
@@ -125,24 +122,21 @@ namespace GN { namespace gfx
     //
     // ************************************************************************
 
-        //@{
+    //@{
 
-    public :
+public:
+    virtual const GpuCaps & caps() const { return mCaps; }
+    virtual bool            checkTextureFormatSupport(ColorFormat format, TextureUsage usage) const;
 
-        virtual const GpuCaps & caps() const { return mCaps; }
-        virtual bool checkTextureFormatSupport( ColorFormat format, TextureUsage usage ) const;
+private:
+    bool capsInit();
+    void capsQuit() {}
+    void capsClear() {}
 
-    private :
+private:
+    GpuCaps mCaps;
 
-        bool capsInit();
-        void capsQuit() {}
-        void capsClear() {}
-
-    private :
-
-        GpuCaps mCaps;
-
-        //@}
+    //@}
 
     // ************************************************************************
     //
@@ -150,48 +144,37 @@ namespace GN { namespace gfx
     //
     // ************************************************************************
 
-        //@{
+    //@{
 
-    public :
+public:
+    virtual GpuProgram * createGpuProgram(const GpuProgramDesc & desc);
+    virtual Uniform *    createUniform(uint32 size);
+    virtual Texture *    createTexture(const TextureDesc & desc);
+    virtual VtxBuf *     createVtxBuf(const VtxBufDesc & desc);
+    virtual IdxBuf *     createIdxBuf(const IdxBufDesc & desc);
 
-        virtual GpuProgram * createGpuProgram( const GpuProgramDesc & desc );
-        virtual Uniform    * createUniform( uint32 size );
-        virtual Texture    * createTexture( const TextureDesc & desc );
-        virtual VtxBuf     * createVtxBuf( const VtxBufDesc & desc );
-        virtual IdxBuf     * createIdxBuf( const IdxBufDesc & desc );
+public:
+    ///
+    /// Insert resource into resource list. Can be only called by
+    /// constructor of D3D9Resource.
+    ///
+    void insertResource(D3D11Resource * p) { mResourceList.push_back(p); }
 
-    public :
+    ///
+    /// Remove resource from resource list. Can be only called by
+    /// destructor of D3D9Resource.
+    ///
+    void removeResource(D3D11Resource * p) { mResourceList.remove(p); }
 
-        ///
-        /// Insert resource into resource list. Can be only called by
-        /// constructor of D3D9Resource.
-        ///
-        void insertResource( D3D11Resource * p )
-        {
-            mResourceList.push_back(p);
-        }
+private:
+    bool resourceInit();
+    void resourceQuit();
+    void resourceClear() {}
 
-        ///
-        /// Remove resource from resource list. Can be only called by
-        /// destructor of D3D9Resource.
-        ///
-        void removeResource( D3D11Resource * p )
-        {
-            mResourceList.remove(p);
-        }
+private:
+    std::list<D3D11Resource *> mResourceList;
 
-    private:
-
-        bool resourceInit();
-        void resourceQuit();
-        void resourceClear() {}
-
-    private :
-
-        std::list<D3D11Resource*> mResourceList;
-
-        //@}
-
+    //@}
 
     // ********************************************************************
     //
@@ -199,64 +182,59 @@ namespace GN { namespace gfx
     //
     // ********************************************************************
 
-        //@{
+    //@{
 
-    public:
+public:
+    virtual bool bindContextImpl(const GpuContext & context, bool skipDirtyCheck);
 
-        virtual bool bindContextImpl( const GpuContext & context, bool skipDirtyCheck );
+    void setSampler(ShaderStage shaderStage, int samplerStage, const D3D11_SAMPLER_DESC & ssdesc, bool skipDirtyCheck);
 
-        void setSampler(
-            ShaderStage                shaderStage,
-            int                        samplerStage,
-            const D3D11_SAMPLER_DESC & ssdesc,
-            bool                       skipDirtyCheck );
+private:
+    bool contextInit();
+    void contextQuit();
+    void contextClear() {
+        mContext.clear();
+        mCurrentVertexLayout = NULL;
+        mSOMgr               = 0;
+        mRTMgr               = 0;
+    }
 
-    private :
+    inline bool bindContextRenderTarget(const GpuContext & newContext, bool skipDirtyCheck);
+    inline bool bindContextShader(const GpuContext & newContext, bool skipDirtyCheck);
+    inline bool bindContextState(const GpuContext & newContext, bool skipDirtyCheck);
+    inline bool bindContextResource(const GpuContext & newContext, bool skipDirtyCheck);
 
-        bool contextInit();
-        void contextQuit();
-        void contextClear() { mContext.clear(); mCurrentVertexLayout = NULL; mSOMgr = 0; mRTMgr = 0; }
+private:
+    struct VertexFormatKey {
+        VertexBinding vtxbind;
+        uint64        shaderID;
 
-        inline bool bindContextRenderTarget( const GpuContext & newContext, bool skipDirtyCheck );
-        inline bool bindContextShader( const GpuContext & newContext, bool skipDirtyCheck );
-        inline bool bindContextState( const GpuContext & newContext, bool skipDirtyCheck );
-        inline bool bindContextResource( const GpuContext & newContext, bool skipDirtyCheck );
+        bool operator<(const VertexFormatKey & rhs) const {
+            if (this == &rhs) return false;
+            if (shaderID < rhs.shaderID) return true;
+            if (shaderID > rhs.shaderID) return false;
+            if (vtxbind.size() < rhs.vtxbind.size()) return true;
+            if (vtxbind.size() > rhs.vtxbind.size()) return false;
 
-    private:
+            for (size_t i = 0; i < vtxbind.size(); ++i) {
+                const VertexElement & b1 = vtxbind[i];
+                const VertexElement & b2 = rhs.vtxbind[i];
 
-        struct VertexFormatKey
-        {
-            VertexBinding vtxbind;
-            uint64        shaderID;
-
-            bool operator<( const VertexFormatKey & rhs ) const
-            {
-                if( this == &rhs ) return false;
-                if( shaderID < rhs.shaderID ) return true;
-                if( shaderID > rhs.shaderID ) return false;
-                if( vtxbind.size() < rhs.vtxbind.size() ) return true;
-                if( vtxbind.size() > rhs.vtxbind.size() ) return false;
-
-                for( size_t i = 0; i < vtxbind.size(); ++i )
-                {
-                    const VertexElement & b1 = vtxbind[i];
-                    const VertexElement & b2 = rhs.vtxbind[i];
-
-                    if( b1 < b2 ) return true;
-                    if( b1 > b2 ) return false;
-                }
-
-                return false;
+                if (b1 < b2) return true;
+                if (b1 > b2) return false;
             }
-        };
 
-        GN::Dictionary<VertexFormatKey,D3D11VertexLayout> mVertexLayouts;
-        D3D11VertexLayout                               * mCurrentVertexLayout;
-        AutoComPtr<ID3D11SamplerState>                    mDefaultSampler;
-        D3D11StateObjectManager                         * mSOMgr;
-        D3D11RTMgr                                      * mRTMgr;
+            return false;
+        }
+    };
 
-        //@}
+    GN::Dictionary<VertexFormatKey, D3D11VertexLayout> mVertexLayouts;
+    D3D11VertexLayout *                                mCurrentVertexLayout;
+    AutoComPtr<ID3D11SamplerState>                     mDefaultSampler;
+    D3D11StateObjectManager *                          mSOMgr;
+    D3D11RTMgr *                                       mRTMgr;
+
+    //@}
 
     // ************************************************************************
     //
@@ -264,64 +242,45 @@ namespace GN { namespace gfx
     //
     // ************************************************************************
 
-        //@{
+    //@{
 
-    public: // from Gpu
+public: // from Gpu
+    virtual void present();
+    virtual void clearScreen(const Vector4f & c, float z, uint8 s, uint32 flags);
+    virtual void drawIndexed(PrimitiveType prim, uint32 numidx, uint32 basevtx, uint32 startvtx, uint32 numvtx, uint32 startidx);
+    virtual void draw(PrimitiveType prim, uint32 numvtx, uint32 startvtx);
+    virtual void drawIndexedUp(PrimitiveType prim, uint32 numidx, uint32 numvtx, const void * vertexData, uint32 strideInBytes, const uint16 * indexData);
+    virtual void drawUp(PrimitiveType prim, uint32 numvtx, const void * vertexData, uint32 strideInBytes);
 
-        virtual void present();
-        virtual void clearScreen( const Vector4f & c, float z, uint8 s, uint32 flags );
-        virtual void drawIndexed( PrimitiveType prim,
-                                  uint32        numidx,
-                                  uint32        basevtx,
-                                  uint32        startvtx,
-                                  uint32        numvtx,
-                                  uint32        startidx );
-        virtual void draw( PrimitiveType prim,
-                           uint32        numvtx,
-                           uint32        startvtx );
-        virtual void drawIndexedUp(
-                             PrimitiveType  prim,
-                             uint32         numidx,
-                             uint32         numvtx,
-                             const void *   vertexData,
-                             uint32         strideInBytes,
-                             const uint16 * indexData );
-        virtual void drawUp( PrimitiveType prim,
-                             uint32        numvtx,
-                             const void *  vertexData,
-                             uint32        strideInBytes );
+private:
+    bool drawInit();
+    void drawQuit();
+    void drawClear() { mUserVB = mUserIB = 0; }
 
-    private:
+private:
+    ID3D11Buffer * mUserVB;
+    ID3D11Buffer * mUserIB;
 
-        bool drawInit();
-        void drawQuit();
-        void drawClear() { mUserVB = mUserIB = 0; }
+    //@}
 
-    private:
+    // ********************************************************************
+    //
+    /// \name Debug
+    //
+    // ********************************************************************
 
-        ID3D11Buffer * mUserVB;
-        ID3D11Buffer * mUserIB;
+    //@{
 
-        //@}
+public:
+    virtual void debugDumpNextFrame(uint32 startBatchIndex, uint32 numBatches);
+    virtual void debugMarkBegin(const char * markerName);
+    virtual void debugMarkEnd();
+    virtual void debugMarkSet(const char * markerName);
 
-        // ********************************************************************
-        //
-        /// \name Debug
-        //
-        // ********************************************************************
-
-        //@{
-
-    public:
-
-        virtual void debugDumpNextFrame( uint32 startBatchIndex, uint32 numBatches );
-        virtual void debugMarkBegin( const char * markerName );
-        virtual void debugMarkEnd();
-        virtual void debugMarkSet( const char * markerName );
-
-        //@}
-    };
-}}
+    //@}
+};
+} // namespace gfx
+} // namespace GN
 
 // *****************************************************************************
 //                                     EOF

@@ -9,8 +9,7 @@
 ///
 /// Bitmap character descriptor
 ///
-struct BitmapCharDesc
-{
+struct BitmapCharDesc {
     uint32        width;   ///< character width, in pixel
     uint32        height;  ///< character height, in pixel
     sint32        xorig;   ///< origin of the image

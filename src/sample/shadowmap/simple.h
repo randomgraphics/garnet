@@ -12,84 +12,82 @@
 using namespace GN::gfx;
 using namespace GN::util;
 
-namespace GN
-{
-    ///
-    /// The most primitive shadow map implementation.
-    ///
-    class SimpleShadowMap : public StdClass
-    {
-        GN_DECLARE_STDCLASS( SimpleShadowMap, StdClass );
+namespace GN {
+///
+/// The most primitive shadow map implementation.
+///
+class SimpleShadowMap : public StdClass {
+    GN_DECLARE_STDCLASS(SimpleShadowMap, StdClass);
 
-        // ********************************
-        // ctor/dtor
-        // ********************************
+    // ********************************
+    // ctor/dtor
+    // ********************************
 
-        //@{
-    public:
-        SimpleShadowMap( SampleApp & app )
-            : mApp(app)
-            , mCamera(RIGHT_HAND)
-            , mScene( app.getEntityManager(), app.getRenderEngine() )
-        { clear(); mCamera.connectToInput(); }
-        virtual ~SimpleShadowMap() { quit(); mCamera.disconnectFromInput(); }
-        //@}
+    //@{
+public:
+    SimpleShadowMap(SampleApp & app): mApp(app), mCamera(RIGHT_HAND), mScene(app.getEntityManager(), app.getRenderEngine()) {
+        clear();
+        mCamera.connectToInput();
+    }
+    virtual ~SimpleShadowMap() {
+        quit();
+        mCamera.disconnectFromInput();
+    }
+    //@}
 
-        // ********************************
-        // from StdClass
-        // ********************************
+    // ********************************
+    // from StdClass
+    // ********************************
 
-        //@{
-    public:
-        bool init( const StrA & actorName );
-        void quit();
-    private:
-        void clear();
-        //@}
+    //@{
+public:
+    bool init(const StrA & actorName);
+    void quit();
 
-        // ********************************
-        // public functions
-        // ********************************
-    public:
+private:
+    void clear();
+    //@}
 
-        //@{
+    // ********************************
+    // public functions
+    // ********************************
+public:
+    //@{
 
-        void update();
-        void draw();
+    void update();
+    void draw();
 
-        //@}
+    //@}
 
-        // ********************************
-        // private variables
-        // ********************************
-    private:
+    // ********************************
+    // private variables
+    // ********************************
+private:
+    SampleApp & mApp;
 
-        SampleApp & mApp;
+    GraphicsResource * mColorMap;
+    GraphicsResource * mShadowMap;
 
-        GraphicsResource * mColorMap;
-        GraphicsResource * mShadowMap;
+    FirstPersonCamera mCamera;
 
-        FirstPersonCamera mCamera;
+    Matrix44f mProj;
+    Matrix44f mLightProj;
+    Matrix44f mLightView;
 
-        Matrix44f mProj;
-        Matrix44f mLightProj;
-        Matrix44f mLightView;
+    Scene mScene;
 
-        Scene mScene;
+    Actor * mShadowProjectors;
+    Actor * mShadowReceivers;
 
-        Actor * mShadowProjectors;
-        Actor * mShadowReceivers;
+    DrawContext mCtx;
 
-        DrawContext mCtx;
-
-        // ********************************
-        // private functions
-        // ********************************
-    private:
-
-        bool loadActor( const StrA & name );
-    };
+    // ********************************
+    // private functions
+    // ********************************
+private:
+    bool loadActor(const StrA & name);
 };
+}; // namespace GN
 
 // *****************************************************************************
 //                                     EOF

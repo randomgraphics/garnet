@@ -9,45 +9,40 @@
 #include "basicInput.h"
 
 #ifdef HAS_XINPUT
-#include <xinput.h>
+    #include <xinput.h>
 
-namespace GN { namespace input
-{
+namespace GN {
+namespace input {
+///
+/// Basic XInput system for MS Windows and Xenon.
+///
+class BasicXInput : public BasicInput {
+    bool   mCoInit;
+    uint32 mXInputPacketNumber;
+
+protected:
+    void * mXInputGetState; ///< function pointer to "XInputGetState"
+
+public:
     ///
-    /// Basic XInput system for MS Windows and Xenon.
+    /// Constructor
     ///
-    class BasicXInput : public BasicInput
-    {
-        bool   mCoInit;
-        uint32 mXInputPacketNumber;
+    BasicXInput(): mXInputPacketNumber(0), mXInputGetState(0) { mCoInit = (S_OK == CoInitializeEx(nullptr, COINIT_MULTITHREADED)); }
 
-    protected:
+    ///
+    /// Destructor
+    ///
+    ~BasicXInput() {
+        if (mCoInit) CoUninitialize();
+    }
 
-        void * mXInputGetState; ///< function pointer to "XInputGetState"
-
-    public:
-
-        ///
-        /// Constructor
-        ///
-        BasicXInput() : mXInputPacketNumber(0), mXInputGetState(0) {
-            mCoInit = (S_OK == CoInitializeEx(nullptr, COINIT_MULTITHREADED));
-        }
-
-        ///
-        /// Destructor
-        ///
-        ~BasicXInput() {
-            if (mCoInit) CoUninitialize();
-        }
-
-        //
-        // inherited from Input
-        //
-        void processInputEvents();
-
-    };
-}}
+    //
+    // inherited from Input
+    //
+    void processInputEvents();
+};
+} // namespace input
+} // namespace GN
 
 #endif
 

@@ -9,118 +9,110 @@
 #include "garnet/GNinput.h"
 #include <queue>
 
-namespace GN { namespace input
-{
+namespace GN {
+namespace input {
+///
+/// input模块的基类，实现了input模块的通用功能.
+///
+class BasicInput : public Input {
+public:
     ///
-    /// input模块的基类，实现了input模块的通用功能.
+    /// Ctor
     ///
-    class BasicInput : public Input
-    {
-    public:
+    BasicInput() { resetInputStates(); }
 
-        ///
-        /// Ctor
-        ///
-        BasicInput() { resetInputStates(); }
+    // ********************************
+    // from Input
+    // ********************************
+public:
+    KeyEvent          popLastKeyEvent();
+    const KeyStatus * getKeyboardStatus() const { return mKeyboardStatus; }
+    const int *       getAxisStatus() const { return mAxisStatus; }
 
-        // ********************************
-        // from Input
-        // ********************************
-    public:
+    // ********************************
+    //     custom protected functions
+    // ********************************
+protected:
+    ///
+    /// Reset to initial state
+    ///
+    void resetInputStates() {
+        memset(mKeyboardStatus, 0, sizeof(mKeyboardStatus));
+        memset(mAxisStatus, 0, sizeof(mAxisStatus));
+        mKeyFlags.u8  = 0;
+        mHalfWideChar = false;
+    }
 
-        KeyEvent popLastKeyEvent();
-        const KeyStatus * getKeyboardStatus() const { return mKeyboardStatus; }
-        const int * getAxisStatus() const { return mAxisStatus; }
+    ///
+    /// Update internal mouse position.
+    ///
+    /// \param x, y
+    ///     New mouse position
+    /// \param notify
+    ///     If true, the function will trigger axis move signal, while
+    ///     new position differs from the old one.
+    ///
+    void updateMousePosition(int x, int y, bool notify = true);
 
-        // ********************************
-        //     custom protected functions
-        // ********************************
-    protected:
+    /// \name signal triggers
+    ///
+    /// sub class should call these function when key/axis event occurs
+    //@{
+    void triggerKeyPress(KeyCode key, bool keydown);
+    void triggerCharPress(char ch);
+    void triggerAxisMove(Axis axis, int distance) {
+        GN_ASSERT(0 <= axis && axis < Axis::NUM_AXISES);
+        mAxisStatus[axis] += distance;
+        sigAxisMove(axis, distance);
+    }
+    void triggerAxisMoveAbs(Axis axis, int value, int deadZone) {
+        GN_ASSERT(0 <= axis && axis < Axis::NUM_AXISES);
 
-        ///
-        /// Reset to initial state
-        ///
-        void resetInputStates()
-        {
-            memset( mKeyboardStatus, 0, sizeof(mKeyboardStatus) );
-            memset( mAxisStatus, 0, sizeof(mAxisStatus) );
-            mKeyFlags.u8 = 0;
-            mHalfWideChar = false;
+        // handle dead zone
+        if (-deadZone <= value && value <= deadZone) value = 0;
+
+        if (value != mAxisStatus[axis]) {
+            int old           = mAxisStatus[axis];
+            mAxisStatus[axis] = value;
+            sigAxisMove(axis, value - old);
         }
+    }
+    //@}
 
-        ///
-        /// Update internal mouse position.
-        ///
-        /// \param x, y
-        ///     New mouse position
-        /// \param notify
-        ///     If true, the function will trigger axis move signal, while
-        ///     new position differs from the old one.
-        ///
-        void updateMousePosition( int x, int y, bool notify = true );
+    // ********************************
+    // private variables
+    // ********************************
+private:
+    std::queue<KeyEvent> mKeyEventQueue;
+    SpinLoop             mKeyEventQueueMutex;
 
-        /// \name signal triggers
-        ///
-        /// sub class should call these function when key/axis event occurs
-        //@{
-        void triggerKeyPress( KeyCode key, bool keydown );
-        void triggerCharPress( char ch );
-        void triggerAxisMove( Axis axis, int distance )
-        {
-            GN_ASSERT( 0 <= axis && axis < Axis::NUM_AXISES );
-            mAxisStatus[axis] += distance;
-            sigAxisMove(axis,distance);
-        }
-        void triggerAxisMoveAbs( Axis axis, int value, int deadZone )
-        {
-            GN_ASSERT( 0 <= axis && axis < Axis::NUM_AXISES );
+    ///
+    /// 记录键盘的状态，用来过滤/修正不匹配的按键操作
+    ///
+    KeyStatus mKeyboardStatus[KeyCode::NUM_KEYS];
 
-            // handle dead zone
-            if( -deadZone <= value && value <= deadZone ) value = 0;
+    ///
+    /// axis positions
+    ///
+    int mAxisStatus[Axis::NUM_AXISES];
 
-            if( value != mAxisStatus[axis] )
-            {
-                int old = mAxisStatus[axis];
-                mAxisStatus[axis] = value;
-                sigAxisMove(axis, value - old );
-            }
-        }
-        //@}
+    ///
+    /// 记录了CTRL/ALT/SHIFT的状态
+    ///
+    KeyStatus mKeyFlags;
 
-        // ********************************
-        // private variables
-        // ********************************
-    private:
+    ///
+    /// True，表明已经插入了半个UNICODE字符，正在等待下半个字符。
+    ///
+    bool mHalfWideChar;
 
-        std::queue<KeyEvent> mKeyEventQueue;
-        SpinLoop             mKeyEventQueueMutex;
-
-        ///
-        /// 记录键盘的状态，用来过滤/修正不匹配的按键操作
-        ///
-        KeyStatus mKeyboardStatus[KeyCode::NUM_KEYS];
-
-        ///
-        /// axis positions
-        ///
-        int mAxisStatus[Axis::NUM_AXISES];
-
-        ///
-        /// 记录了CTRL/ALT/SHIFT的状态
-        ///
-        KeyStatus mKeyFlags;
-
-        ///
-        /// True，表明已经插入了半个UNICODE字符，正在等待下半个字符。
-        ///
-        bool mHalfWideChar;
-
-        ///
-        /// 暂存待插入的半个UNICODE字符
-        ///
-        char mHalfBytes[2];
-    };
-}}
+    ///
+    /// 暂存待插入的半个UNICODE字符
+    ///
+    char mHalfBytes[2];
+};
+} // namespace input
+} // namespace GN
 
 #include "basicInput.inl"
 

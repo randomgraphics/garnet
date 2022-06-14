@@ -10,12 +10,8 @@ static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.D3D11");
 //
 //
 // -----------------------------------------------------------------------------
-GN::gfx::D3D11StateObjectManager::D3D11StateObjectManager( ID3D11Device & dev, ID3D11DeviceContext & cxt )
-    : mRasterStates( dev, cxt )
-    , mBlendStates( dev, cxt )
-    , mDepthStates( dev, cxt )
-    , mSamplerStates( dev, cxt )
-{
+GN::gfx::D3D11StateObjectManager::D3D11StateObjectManager(ID3D11Device & dev, ID3D11DeviceContext & cxt)
+    : mRasterStates(dev, cxt), mBlendStates(dev, cxt), mDepthStates(dev, cxt), mSamplerStates(dev, cxt) {
     /* setup default rasterization states
     mRasterDirty = false;
 
@@ -83,9 +79,8 @@ GN::gfx::D3D11StateObjectManager::D3D11StateObjectManager( ID3D11Device & dev, I
     mDepthDesc.FrontFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
     mDepthDesc.FrontFace.StencilDepthFailOp = D3D11_STENCIL_OP_KEEP;
     mDepthDesc.FrontFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
-    mDepthDesc.FrontFace.StencilFunc = D3D11_COMPARISON_ALWAYS; //( Note: Apr. 07 SDK document has bug about the default value of stencil op, check for newer SDK document for default valeu)
-    mDepthDesc.BackFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
-    mDepthDesc.BackFace.StencilDepthFailOp = D3D11_STENCIL_OP_KEEP;
+    mDepthDesc.FrontFace.StencilFunc = D3D11_COMPARISON_ALWAYS; //( Note: Apr. 07 SDK document has bug about the default value of stencil op, check for newer
+    SDK document for default valeu) mDepthDesc.BackFace.StencilFailOp = D3D11_STENCIL_OP_KEEP; mDepthDesc.BackFace.StencilDepthFailOp = D3D11_STENCIL_OP_KEEP;
     mDepthDesc.BackFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
     mDepthDesc.BackFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
 
@@ -110,16 +105,12 @@ GN::gfx::D3D11StateObjectManager::D3D11StateObjectManager( ID3D11Device & dev, I
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::D3D11StateObjectManager::setRS(
-    const D3D11_RASTERIZER_DESC & desc,
-    bool                          skipDirtyCheck )
-{
+bool GN::gfx::D3D11StateObjectManager::setRS(const D3D11_RASTERIZER_DESC & desc, bool skipDirtyCheck) {
     ID3D11RasterizerState * stateObject = mRasterStates[desc];
-    if( NULL == stateObject ) return false;
+    if (NULL == stateObject) return false;
 
-    if( skipDirtyCheck || stateObject != mCurrentRS )
-    {
-        mRasterStates.devcxt().RSSetState( stateObject );
+    if (skipDirtyCheck || stateObject != mCurrentRS) {
+        mRasterStates.devcxt().RSSetState(stateObject);
 
         mCurrentRS = stateObject;
     }
@@ -130,25 +121,16 @@ bool GN::gfx::D3D11StateObjectManager::setRS(
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::D3D11StateObjectManager::setBS(
-    const D3D11_BLEND_DESC & desc,
-    const Vector4f         & blendFactors,
-    uint32                   sampleMask,
-    bool                     skipDirtyCheck )
-{
+bool GN::gfx::D3D11StateObjectManager::setBS(const D3D11_BLEND_DESC & desc, const Vector4f & blendFactors, uint32 sampleMask, bool skipDirtyCheck) {
     ID3D11BlendState * stateObject = mBlendStates[desc];
-    if( NULL == stateObject ) return false;
+    if (NULL == stateObject) return false;
 
-    if( skipDirtyCheck ||
-        stateObject != mCurrentBS ||
-        blendFactors != mCurrentBlendFactors ||
-        sampleMask != mCurrentSampleMask )
-    {
-        mBlendStates.devcxt().OMSetBlendState( stateObject, blendFactors, sampleMask );
+    if (skipDirtyCheck || stateObject != mCurrentBS || blendFactors != mCurrentBlendFactors || sampleMask != mCurrentSampleMask) {
+        mBlendStates.devcxt().OMSetBlendState(stateObject, blendFactors, sampleMask);
 
-        mCurrentBS = stateObject;
+        mCurrentBS           = stateObject;
         mCurrentBlendFactors = blendFactors;
-        mCurrentSampleMask = sampleMask;
+        mCurrentSampleMask   = sampleMask;
     }
 
     return true;
@@ -157,21 +139,14 @@ bool GN::gfx::D3D11StateObjectManager::setBS(
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::D3D11StateObjectManager::setDS(
-    const D3D11_DEPTH_STENCIL_DESC & desc,
-    uint32                           stencilRef,
-    bool                             skipDirtyCheck )
-{
+bool GN::gfx::D3D11StateObjectManager::setDS(const D3D11_DEPTH_STENCIL_DESC & desc, uint32 stencilRef, bool skipDirtyCheck) {
     ID3D11DepthStencilState * stateObject = mDepthStates[desc];
-    if( NULL == stateObject ) return false;
+    if (NULL == stateObject) return false;
 
-    if( skipDirtyCheck ||
-        stateObject != mCurrentDS ||
-        stencilRef != mCurrentStencilRef )
-    {
-        mDepthStates.devcxt().OMSetDepthStencilState( stateObject, stencilRef );
+    if (skipDirtyCheck || stateObject != mCurrentDS || stencilRef != mCurrentStencilRef) {
+        mDepthStates.devcxt().OMSetDepthStencilState(stateObject, stencilRef);
 
-        mCurrentDS = stateObject;
+        mCurrentDS         = stateObject;
         mCurrentStencilRef = stencilRef;
     }
 
@@ -181,23 +156,16 @@ bool GN::gfx::D3D11StateObjectManager::setDS(
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::D3D11StateObjectManager::setVSSampler(
-    const D3D11_SAMPLER_DESC & desc,
-    uint32                     stage,
-    bool                       skipDirtyCheck )
-{
+bool GN::gfx::D3D11StateObjectManager::setVSSampler(const D3D11_SAMPLER_DESC & desc, uint32 stage, bool skipDirtyCheck) {
     ID3D11SamplerState * ss = mSamplerStates[desc];
-    if( NULL == ss ) return false;
+    if (NULL == ss) return false;
 
-    if( stage >= GN_ARRAY_COUNT(mCurrentVSSamplers) )
-    {
-        GN_ERROR(sLogger)( "PS sampler state is too large." );
+    if (stage >= GN_ARRAY_COUNT(mCurrentVSSamplers)) {
+        GN_ERROR(sLogger)("PS sampler state is too large.");
         return false;
     }
-    if( skipDirtyCheck ||
-        ss != mCurrentVSSamplers[stage] )
-    {
-        mDepthStates.devcxt().VSSetSamplers( stage, 1, &ss );
+    if (skipDirtyCheck || ss != mCurrentVSSamplers[stage]) {
+        mDepthStates.devcxt().VSSetSamplers(stage, 1, &ss);
 
         mCurrentVSSamplers[stage] = ss;
     }
@@ -208,23 +176,16 @@ bool GN::gfx::D3D11StateObjectManager::setVSSampler(
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::D3D11StateObjectManager::setGSSampler(
-    const D3D11_SAMPLER_DESC & desc,
-    uint32                     stage,
-    bool                       skipDirtyCheck )
-{
+bool GN::gfx::D3D11StateObjectManager::setGSSampler(const D3D11_SAMPLER_DESC & desc, uint32 stage, bool skipDirtyCheck) {
     ID3D11SamplerState * ss = mSamplerStates[desc];
-    if( NULL == ss ) return false;
+    if (NULL == ss) return false;
 
-    if( stage >= GN_ARRAY_COUNT(mCurrentGSSamplers) )
-    {
-        GN_ERROR(sLogger)( "PS sampler state is too large." );
+    if (stage >= GN_ARRAY_COUNT(mCurrentGSSamplers)) {
+        GN_ERROR(sLogger)("PS sampler state is too large.");
         return false;
     }
-    if( skipDirtyCheck ||
-        ss != mCurrentGSSamplers[stage] )
-    {
-        mDepthStates.devcxt().GSSetSamplers( stage, 1, &ss );
+    if (skipDirtyCheck || ss != mCurrentGSSamplers[stage]) {
+        mDepthStates.devcxt().GSSetSamplers(stage, 1, &ss);
 
         mCurrentGSSamplers[stage] = ss;
     }
@@ -235,27 +196,19 @@ bool GN::gfx::D3D11StateObjectManager::setGSSampler(
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::D3D11StateObjectManager::setPSSampler(
-    const D3D11_SAMPLER_DESC & desc,
-    uint32                     stage,
-    bool                       skipDirtyCheck )
-{
+bool GN::gfx::D3D11StateObjectManager::setPSSampler(const D3D11_SAMPLER_DESC & desc, uint32 stage, bool skipDirtyCheck) {
     ID3D11SamplerState * ss = mSamplerStates[desc];
-    if( NULL == ss ) return false;
+    if (NULL == ss) return false;
 
-    if( stage >= GN_ARRAY_COUNT(mCurrentPSSamplers) )
-    {
-        GN_ERROR(sLogger)( "PS sampler state is too large." );
+    if (stage >= GN_ARRAY_COUNT(mCurrentPSSamplers)) {
+        GN_ERROR(sLogger)("PS sampler state is too large.");
         return false;
     }
-    if( skipDirtyCheck ||
-        ss != mCurrentPSSamplers[stage] )
-    {
-        mDepthStates.devcxt().PSSetSamplers( stage, 1, &ss );
+    if (skipDirtyCheck || ss != mCurrentPSSamplers[stage]) {
+        mDepthStates.devcxt().PSSetSamplers(stage, 1, &ss);
 
         mCurrentPSSamplers[stage] = ss;
     }
 
     return true;
 }
-

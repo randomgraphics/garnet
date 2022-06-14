@@ -14,10 +14,7 @@ using namespace GN;
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::CECImplXenon::init(
-    CharacterEncodingConverter::Encoding from,
-    CharacterEncodingConverter::Encoding to )
-{
+bool GN::CECImplXenon::init(CharacterEncodingConverter::Encoding from, CharacterEncodingConverter::Encoding to) {
     GN_GUARD;
 
     // standard init procedure
@@ -34,8 +31,7 @@ bool GN::CECImplXenon::init(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::CECImplXenon::quit()
-{
+void GN::CECImplXenon::quit() {
     GN_GUARD;
 
     // standard quit procedure
@@ -51,78 +47,48 @@ void GN::CECImplXenon::quit()
 //
 //
 // -----------------------------------------------------------------------------
-size_t
-GN::CECImplXenon::convert(
-    void       * destBuffer,
-    size_t       destBufferSizeInBytes,
-    const void * sourceBuffer,
-    size_t       sourceBufferSizeInBytes )
-{
+size_t GN::CECImplXenon::convert(void * destBuffer, size_t destBufferSizeInBytes, const void * sourceBuffer, size_t sourceBufferSizeInBytes) {
     // convert from source encoding to widechar encoding
     DynaArray<wchar_t> tempBuffer;
-    if( mEncodingFrom != CharacterEncodingConverter::UTF16 &&
-        mEncodingFrom != CharacterEncodingConverter::UTF16_BE &&
-        mEncodingFrom != CharacterEncodingConverter::WIDECHAR )
-    {
-        tempBuffer.resize( sourceBufferSizeInBytes );
+    if (mEncodingFrom != CharacterEncodingConverter::UTF16 && mEncodingFrom != CharacterEncodingConverter::UTF16_BE &&
+        mEncodingFrom != CharacterEncodingConverter::WIDECHAR) {
+        tempBuffer.resize(sourceBufferSizeInBytes);
 
-        GN_MSW_CHECK_RETURN( MultiByteToWideChar(
-                CP_ACP,
-                0,
-                (LPCSTR)sourceBuffer,
-                sourceBufferSizeInBytes,
-                (LPWSTR)destBuffer,
-                destBufferSizeInBytes / sizeof(wchar_t) ),
-            0 );
+        GN_MSW_CHECK_RETURN(
+            MultiByteToWideChar(CP_ACP, 0, (LPCSTR) sourceBuffer, sourceBufferSizeInBytes, (LPWSTR) destBuffer, destBufferSizeInBytes / sizeof(wchar_t)), 0);
 
-        sourceBuffer = tempBuffer.rawptr();
+        sourceBuffer            = tempBuffer.rawptr();
         sourceBufferSizeInBytes = tempBuffer.size() * sizeof(wchar_t);
-    }
-    else
-    {
+    } else {
         // source encoding is already UTF16_BE, do nothing
     }
 
     // convert from widechar encoding to target encoding
-    if( mEncodingTo == CharacterEncodingConverter::UTF16 ||
-        mEncodingTo == CharacterEncodingConverter::UTF16_BE ||
-        mEncodingTo == CharacterEncodingConverter::WIDECHAR )
-    {
+    if (mEncodingTo == CharacterEncodingConverter::UTF16 || mEncodingTo == CharacterEncodingConverter::UTF16_BE ||
+        mEncodingTo == CharacterEncodingConverter::WIDECHAR) {
         // Target encoding is UNICODE too. A memory copy is enough.
 
-        if( 0 == destBuffer )
-        {
+        if (0 == destBuffer) {
             // return number of bytes required to store conversion result
             return sourceBufferSizeInBytes;
         }
 
-        if( 0 == sourceBuffer )
-        {
-            GN_ERROR(sLogger)( "NULL source buffer pointer!" );
+        if (0 == sourceBuffer) {
+            GN_ERROR(sLogger)("NULL source buffer pointer!");
             return 0;
         }
 
-        if( sourceBufferSizeInBytes > destBufferSizeInBytes )
-        {
-            GN_ERROR(sLogger)( "There's no enough space in destination buffer." );
+        if (sourceBufferSizeInBytes > destBufferSizeInBytes) {
+            GN_ERROR(sLogger)("There's no enough space in destination buffer.");
             return 0;
         }
 
-        memcpy( destBuffer, sourceBuffer, sourceBufferSizeInBytes );
+        memcpy(destBuffer, sourceBuffer, sourceBufferSizeInBytes);
 
         return sourceBufferSizeInBytes;
-    }
-    else
-    {
-        return (size_t)WideCharToMultiByte(
-            CP_ACP,
-            0,
-            (LPCWSTR)sourceBuffer,
-            sourceBufferSizeInBytes / sizeof(wchar_t),
-            (LPSTR)destBuffer,
-            destBufferSizeInBytes,
-            NULL,
-            NULL);
+    } else {
+        return (size_t) WideCharToMultiByte(CP_ACP, 0, (LPCWSTR) sourceBuffer, sourceBufferSizeInBytes / sizeof(wchar_t), (LPSTR) destBuffer,
+                                            destBufferSizeInBytes, NULL, NULL);
     }
 }
 

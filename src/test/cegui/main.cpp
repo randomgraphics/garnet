@@ -2,10 +2,9 @@
 #include "garnet/GNutil.h"
 
 #ifdef HAS_CEGUI
-#include "ceguiApp.h"
+    #include "ceguiApp.h"
 #else
-class GuiTest : public GN::util::SampleApp
-{
+class GuiTest : public GN::util::SampleApp {
 public:
     bool onInit() { return true; }
     void onQuit() {}
@@ -14,8 +13,7 @@ public:
 };
 #endif
 
-int main( int argc, const char * argv[] )
-{
+int main(int argc, const char * argv[]) {
     GuiTest app;
-    return app.run( argc, argv );
+    return app.run(argc, argv);
 }

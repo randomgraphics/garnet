@@ -10,28 +10,26 @@
 
 #if GN_WINPC
 
-namespace GN { namespace input
-{
+namespace GN {
+namespace input {
+///
+/// 使用Windows的标准消息机制的输入模块
+///
+class InputMsw : public BasicInputMsw {
+    KeyCode mKeyMap[0x200]; ///< windows vkcode to garnet keycode
+
+public:
     ///
-    /// 使用Windows的标准消息机制的输入模块
+    /// Ctor
     ///
-    class InputMsw : public BasicInputMsw
-    {
-        KeyCode mKeyMap[0x200]; ///< windows vkcode to garnet keycode
+    InputMsw();
 
-    public:
-
-        ///
-        /// Ctor
-        ///
-        InputMsw();
-
-    protected:
-
-        // inherited from BasicInputMsw
-        virtual void msgHandler( UINT msg, WPARAM wp, LPARAM lp );
-    };
-}}
+protected:
+    // inherited from BasicInputMsw
+    virtual void msgHandler(UINT msg, WPARAM wp, LPARAM lp);
+};
+} // namespace input
+} // namespace GN
 
 #endif
 

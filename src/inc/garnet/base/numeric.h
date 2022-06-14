@@ -10,32 +10,32 @@
 #include <wchar.h>
 
 #if GN_POSIX
-#include <stdint.h>
+    #include <stdint.h>
 #endif
 
 ///
 /// unsigned 8 bit integer
 ///
 typedef unsigned char uint8;
-GN_CASSERT( sizeof(uint8) == 1 );
+GN_CASSERT(sizeof(uint8) == 1);
 
 ///
 /// unsigned 16 bit integer
 ///
 typedef unsigned short uint16;
-GN_CASSERT( sizeof(uint16) == 2 );
+GN_CASSERT(sizeof(uint16) == 2);
 
 ///
 /// unsigned 32 bit integer
 ///
 typedef unsigned int uint32;
-GN_CASSERT( sizeof(uint32) == 4 );
+GN_CASSERT(sizeof(uint32) == 4);
 
 ///
 /// unsigned 64 bit integer
 ///
 typedef unsigned long long uint64;
-GN_CASSERT( sizeof(uint64) == 8 );
+GN_CASSERT(sizeof(uint64) == 8);
 
 ///
 /// signed 8 bit integer
@@ -60,7 +60,7 @@ typedef signed long long sint64;
 ///
 /// signed integer type that can hold a pointer
 ///
-GN_CASSERT( sizeof(intptr_t) == sizeof(void*) );
+GN_CASSERT(sizeof(intptr_t) == sizeof(void *));
 
 // *****************************************************************************
 //                                     EOF

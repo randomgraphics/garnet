@@ -9,176 +9,169 @@
 #include "d3d11Resource.h"
 #include "../common/basicSurface.h"
 
-namespace GN { namespace gfx
-{
-    ///
-    /// D3D buffer class
-    ///
-    class D3D11Buffer : public D3D11Resource, public StdClass
-    {
-        GN_DECLARE_STDCLASS( D3D11Buffer, StdClass );
+namespace GN {
+namespace gfx {
+///
+/// D3D buffer class
+///
+class D3D11Buffer : public D3D11Resource, public StdClass {
+    GN_DECLARE_STDCLASS(D3D11Buffer, StdClass);
 
-        // ********************************
-        // ctor/dtor
-        // ********************************
+    // ********************************
+    // ctor/dtor
+    // ********************************
 
-        //@{
-    public:
-        D3D11Buffer( D3D11Gpu & r ) : D3D11Resource(r) { clear(); }
-        virtual ~D3D11Buffer() { quit(); }
-        //@}
+    //@{
+public:
+    D3D11Buffer(D3D11Gpu & r): D3D11Resource(r) { clear(); }
+    virtual ~D3D11Buffer() { quit(); }
+    //@}
 
-        // ********************************
-        // from StdClass
-        // ********************************
+    // ********************************
+    // from StdClass
+    // ********************************
 
-        //@{
-    public:
-        bool init( uint32 bytes, bool fastCpuWrite, uint32 bindFlags );
-        void quit();
-    private:
-        void clear()
-        {
-            mD3DBuffer = 0;
-        }
-        //@}
+    //@{
+public:
+    bool init(uint32 bytes, bool fastCpuWrite, uint32 bindFlags);
+    void quit();
 
-        // ********************************
-        // public functions
-        // ********************************
-    public:
+private:
+    void clear() { mD3DBuffer = 0; }
+    //@}
 
-        //@{
+    // ********************************
+    // public functions
+    // ********************************
+public:
+    //@{
 
-        // Get D3D11 buffer pointer (no reference couter change).
-        ID3D11Buffer * getD3DBuffer() const { GN_ASSERT(mD3DBuffer); return mD3DBuffer; }
+    // Get D3D11 buffer pointer (no reference couter change).
+    ID3D11Buffer * getD3DBuffer() const {
+        GN_ASSERT(mD3DBuffer);
+        return mD3DBuffer;
+    }
 
-        void           update( uint32 offset, uint32 length, const void * data, SurfaceUpdateFlag flag );
-        void           readback( DynaArray<uint8> & data );
+    void update(uint32 offset, uint32 length, const void * data, SurfaceUpdateFlag flag);
+    void readback(DynaArray<uint8> & data);
 
-        //@}
+    //@}
 
-        // ********************************
-        // private variables
-        // ********************************
-    private:
+    // ********************************
+    // private variables
+    // ********************************
+private:
+    ID3D11Buffer * mD3DBuffer;
+    uint32         mBytes;
+    bool           mFastCpuWrite;
 
-        ID3D11Buffer * mD3DBuffer;
-        uint32         mBytes;
-        bool           mFastCpuWrite;
+    // ********************************
+    // private function
+    // ********************************
+private:
+};
 
-        // ********************************
-        // private function
-        // ********************************
-    private:
-    };
+///
+/// D3D vertex buffer class.
+///
+class D3D11VtxBuf : public BasicVtxBuf, public D3D11Buffer {
+    GN_DECLARE_STDCLASS(D3D11VtxBuf, D3D11Buffer);
 
-    ///
-    /// D3D vertex buffer class.
-    ///
-    class D3D11VtxBuf : public BasicVtxBuf, public D3D11Buffer
-    {
-         GN_DECLARE_STDCLASS( D3D11VtxBuf, D3D11Buffer );
+    // ********************************
+    // ctor/dtor
+    // ********************************
 
-        // ********************************
-        // ctor/dtor
-        // ********************************
+    //@{
+public:
+    D3D11VtxBuf(D3D11Gpu & r): D3D11Buffer(r) { clear(); }
+    virtual ~D3D11VtxBuf() { quit(); }
+    //@}
 
-        //@{
-    public:
-        D3D11VtxBuf( D3D11Gpu & r ) : D3D11Buffer(r) { clear(); }
-        virtual ~D3D11VtxBuf() { quit(); }
-        //@}
+    // ********************************
+    // from StdClass
+    // ********************************
 
-        // ********************************
-        // from StdClass
-        // ********************************
+    //@{
+public:
+    bool init(const VtxBufDesc & desc);
+    void quit();
 
-        //@{
-    public:
-        bool init( const VtxBufDesc & desc );
-        void quit();
-    private:
-        void clear() {}
-        //@}
+private:
+    void clear() {}
+    //@}
 
-        // ********************************
-        // from VtxBuf
-        // ********************************
-    public:
+    // ********************************
+    // from VtxBuf
+    // ********************************
+public:
+    virtual void update(uint32 offset, uint32 length, const void * data, SurfaceUpdateFlag flag);
+    virtual void readback(DynaArray<uint8> & data);
 
-        virtual void update( uint32 offset, uint32 length, const void * data, SurfaceUpdateFlag flag );
-        virtual void readback( DynaArray<uint8> & data );
+    // ********************************
+    // public functions
+    // ********************************
+public:
+    // ********************************
+    // private variables
+    // ********************************
+private:
+    // ********************************
+    // private function
+    // ********************************
+private:
+};
 
-        // ********************************
-        // public functions
-        // ********************************
-    public:
+///
+/// D3D index buffer class.
+///
+class D3D11IdxBuf : public BasicIdxBuf, public D3D11Buffer {
+    GN_DECLARE_STDCLASS(D3D11IdxBuf, D3D11Buffer);
 
-        // ********************************
-        // private variables
-        // ********************************
-    private:
+    // ********************************
+    // ctor/dtor
+    // ********************************
 
-        // ********************************
-        // private function
-        // ********************************
-    private:
-    };
+    //@{
+public:
+    D3D11IdxBuf(D3D11Gpu & r): D3D11Buffer(r) { clear(); }
+    virtual ~D3D11IdxBuf() { quit(); }
+    //@}
 
-    ///
-    /// D3D index buffer class.
-    ///
-    class D3D11IdxBuf : public BasicIdxBuf, public D3D11Buffer
-    {
-        GN_DECLARE_STDCLASS( D3D11IdxBuf, D3D11Buffer );
+    // ********************************
+    // from StdClass
+    // ********************************
 
-        // ********************************
-        // ctor/dtor
-        // ********************************
+    //@{
+public:
+    bool init(const IdxBufDesc & desc);
+    void quit();
 
-        //@{
-    public:
-        D3D11IdxBuf( D3D11Gpu & r ) : D3D11Buffer(r) { clear(); }
-        virtual ~D3D11IdxBuf() { quit(); }
-        //@}
+private:
+    void clear() {}
+    //@}
 
-        // ********************************
-        // from StdClass
-        // ********************************
+    // ********************************
+    // from IdxBuf
+    // ********************************
+public:
+    virtual void update(uint32 startidx, uint32 numidx, const void * data, SurfaceUpdateFlag flag);
+    virtual void readback(DynaArray<uint8> & data);
 
-        //@{
-    public:
-        bool init( const IdxBufDesc & desc );
-        void quit();
-    private:
-        void clear() {}
-        //@}
-
-        // ********************************
-        // from IdxBuf
-        // ********************************
-    public:
-
-        virtual void update( uint32 startidx, uint32 numidx, const void * data, SurfaceUpdateFlag flag );
-        virtual void readback( DynaArray<uint8> & data );
-
-        // ********************************
-        // public functions
-        // ********************************
-    public:
-
-        // ********************************
-        // private variables
-        // ********************************
-    private:
-
-        // ********************************
-        // private function
-        // ********************************
-    private:
-    };
-}}
+    // ********************************
+    // public functions
+    // ********************************
+public:
+    // ********************************
+    // private variables
+    // ********************************
+private:
+    // ********************************
+    // private function
+    // ********************************
+private:
+};
+} // namespace gfx
+} // namespace GN
 
 // *****************************************************************************
 //                                     EOF

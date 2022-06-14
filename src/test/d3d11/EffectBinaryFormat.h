@@ -11,32 +11,27 @@
 
 #pragma once
 
-namespace D3DX11Effects
-{
-
+namespace D3DX11Effects {
 
 //////////////////////////////////////////////////////////////////////////
 // Version Control
 //////////////////////////////////////////////////////////////////////////
 
-#define D3D10_FXL_VERSION(_Major,_Minor) (('F' << 24) | ('X' << 16) | ((_Major) << 8) | (_Minor))
+#define D3D10_FXL_VERSION(_Major, _Minor) (('F' << 24) | ('X' << 16) | ((_Major) << 8) | (_Minor))
 
-struct EVersionTag
-{
-    const char* m_pName;
-    DWORD       m_Version;
-    UINT        m_Tag;
+struct EVersionTag {
+    const char * m_pName;
+    DWORD        m_Version;
+    UINT         m_Tag;
 };
 
 // versions must be listed in ascending order
-static CONST EVersionTag g_EffectVersions[] =
-{
-    { "fx_4_0", D3D10_FXL_VERSION(4,0),   0xFEFF1001 },
-    { "fx_4_1", D3D10_FXL_VERSION(4,1),   0xFEFF1011 },
-    { "fx_5_0", D3D10_FXL_VERSION(5,0),   0xFEFF2001 },
+static CONST EVersionTag g_EffectVersions[] = {
+    {"fx_4_0", D3D10_FXL_VERSION(4, 0), 0xFEFF1001},
+    {"fx_4_1", D3D10_FXL_VERSION(4, 1), 0xFEFF1011},
+    {"fx_5_0", D3D10_FXL_VERSION(5, 0), 0xFEFF2001},
 };
-#define NUM_EFFECT10_VERSIONS ( sizeof(g_EffectVersions) / sizeof(EVersionTag) )
-
+#define NUM_EFFECT10_VERSIONS (sizeof(g_EffectVersions) / sizeof(EVersionTag))
 
 //////////////////////////////////////////////////////////////////////////
 // Reflection & Type structures
@@ -44,13 +39,12 @@ static CONST EVersionTag g_EffectVersions[] =
 
 // Enumeration of the possible left-hand side values of an assignment,
 // divided up categorically by the type of block they may appear in
-enum ELhsType
-{
+enum ELhsType {
     ELHS_Invalid,
 
     // Pass block assignment types
 
-    ELHS_PixelShaderBlock,          // SBlock *pValue points to the block to apply
+    ELHS_PixelShaderBlock, // SBlock *pValue points to the block to apply
     ELHS_VertexShaderBlock,
     ELHS_GeometryShaderBlock,
     ELHS_RenderTargetView,
@@ -60,15 +54,15 @@ enum ELhsType
     ELHS_DepthStencilBlock,
     ELHS_BlendBlock,
 
-    ELHS_GenerateMips,              // This is really a call to D3D::GenerateMips
+    ELHS_GenerateMips, // This is really a call to D3D::GenerateMips
 
     // Various SAssignment.Value.*
 
-    ELHS_DS_StencilRef,             // SAssignment.Value.pdValue
-    ELHS_B_BlendFactor,             // D3D10_BLEND_CONFIG.BlendFactor, points to a float4
-    ELHS_B_SampleMask,              // D3D10_BLEND_CONFIG.SampleMask
+    ELHS_DS_StencilRef, // SAssignment.Value.pdValue
+    ELHS_B_BlendFactor, // D3D10_BLEND_CONFIG.BlendFactor, points to a float4
+    ELHS_B_SampleMask,  // D3D10_BLEND_CONFIG.SampleMask
 
-    ELHS_GeometryShaderSO,          // When setting SO assignments, GeometryShaderSO precedes the actual GeometryShader assn
+    ELHS_GeometryShaderSO, // When setting SO assignments, GeometryShaderSO precedes the actual GeometryShader assn
 
     ELHS_ComputeShaderBlock,
     ELHS_HullShaderBlock,
@@ -131,20 +125,9 @@ enum ELhsType
     ELHS_RenderTargetWriteMask,
 };
 
+enum EBlockType { EBT_Invalid, EBT_DepthStencil, EBT_Blend, EBT_Rasterizer, EBT_Sampler, EBT_Pass };
 
-
-enum EBlockType
-{
-    EBT_Invalid,
-    EBT_DepthStencil,
-    EBT_Blend,
-    EBT_Rasterizer,
-    EBT_Sampler,
-    EBT_Pass
-};
-
-enum EVarType
-{
+enum EVarType {
     EVT_Invalid,
     EVT_Numeric,
     EVT_Object,
@@ -152,27 +135,11 @@ enum EVarType
     EVT_Interface,
 };
 
-enum EScalarType
-{
-    EST_Invalid,
-    EST_Float,
-    EST_Int,
-    EST_UInt,
-    EST_Bool,
-    EST_Count
-};
+enum EScalarType { EST_Invalid, EST_Float, EST_Int, EST_UInt, EST_Bool, EST_Count };
 
-enum ENumericLayout
-{
-    ENL_Invalid,
-    ENL_Scalar,
-    ENL_Vector,
-    ENL_Matrix,
-    ENL_Count
-};
+enum ENumericLayout { ENL_Invalid, ENL_Scalar, ENL_Vector, ENL_Matrix, ENL_Count };
 
-enum EObjectType
-{
+enum EObjectType {
     EOT_Invalid,
     EOT_String,
     EOT_Blend,
@@ -180,8 +147,8 @@ enum EObjectType
     EOT_Rasterizer,
     EOT_PixelShader,
     EOT_VertexShader,
-    EOT_GeometryShader,              // Regular geometry shader
-    EOT_GeometryShaderSO,            // Geometry shader with a attached StreamOut decl
+    EOT_GeometryShader,   // Regular geometry shader
+    EOT_GeometryShaderSO, // Geometry shader with a attached StreamOut decl
     EOT_Texture,
     EOT_Texture1D,
     EOT_Texture1DArray,
@@ -220,110 +187,60 @@ enum EObjectType
     EOT_ConsumeStructuredBuffer,
 };
 
-D3DX11INLINE BOOL IsObjectTypeHelper(EVarType InVarType,
-                                     EObjectType InObjType,
-                                     EObjectType TargetObjType)
-{
+D3DX11INLINE BOOL IsObjectTypeHelper(EVarType InVarType, EObjectType InObjType, EObjectType TargetObjType) {
     return (InVarType == EVT_Object) && (InObjType == TargetObjType);
 }
 
-D3DX11INLINE BOOL IsSamplerHelper(EVarType InVarType,
-                                  EObjectType InObjType)
-{
-    return (InVarType == EVT_Object) && (InObjType == EOT_Sampler);
+D3DX11INLINE BOOL IsSamplerHelper(EVarType InVarType, EObjectType InObjType) { return (InVarType == EVT_Object) && (InObjType == EOT_Sampler); }
+
+D3DX11INLINE BOOL IsStateBlockObjectHelper(EVarType InVarType, EObjectType InObjType) {
+    return (InVarType == EVT_Object) &&
+           ((InObjType == EOT_Blend) || (InObjType == EOT_DepthStencil) || (InObjType == EOT_Rasterizer) || IsSamplerHelper(InVarType, InObjType));
 }
 
-D3DX11INLINE BOOL IsStateBlockObjectHelper(EVarType InVarType,
-                                           EObjectType InObjType)
-{
-    return (InVarType == EVT_Object) && ((InObjType == EOT_Blend) || (InObjType == EOT_DepthStencil) || (InObjType == EOT_Rasterizer) || IsSamplerHelper(InVarType, InObjType));
+D3DX11INLINE BOOL IsShaderHelper(EVarType InVarType, EObjectType InObjType) {
+    return (InVarType == EVT_Object) &&
+           ((InObjType == EOT_VertexShader) || (InObjType == EOT_VertexShader5) || (InObjType == EOT_HullShader5) || (InObjType == EOT_DomainShader5) ||
+            (InObjType == EOT_ComputeShader5) || (InObjType == EOT_GeometryShader) || (InObjType == EOT_GeometryShaderSO) ||
+            (InObjType == EOT_GeometryShader5) || (InObjType == EOT_PixelShader) || (InObjType == EOT_PixelShader5));
 }
 
-D3DX11INLINE BOOL IsShaderHelper(EVarType InVarType,
-                                 EObjectType InObjType)
-{
-    return (InVarType == EVT_Object) && ((InObjType == EOT_VertexShader) ||
-                                         (InObjType == EOT_VertexShader5) ||
-                                         (InObjType == EOT_HullShader5) ||
-                                         (InObjType == EOT_DomainShader5) ||
-                                         (InObjType == EOT_ComputeShader5) ||
-                                         (InObjType == EOT_GeometryShader) ||
-                                         (InObjType == EOT_GeometryShaderSO) ||
-                                         (InObjType == EOT_GeometryShader5) ||
-                                         (InObjType == EOT_PixelShader) ||
-                                         (InObjType == EOT_PixelShader5));
+D3DX11INLINE BOOL IsShader5Helper(EVarType InVarType, EObjectType InObjType) {
+    return (InVarType == EVT_Object) && ((InObjType == EOT_VertexShader5) || (InObjType == EOT_HullShader5) || (InObjType == EOT_DomainShader5) ||
+                                         (InObjType == EOT_ComputeShader5) || (InObjType == EOT_GeometryShader5) || (InObjType == EOT_PixelShader5));
 }
 
-D3DX11INLINE BOOL IsShader5Helper(EVarType InVarType,
-                                  EObjectType InObjType)
-{
-    return (InVarType == EVT_Object) && ((InObjType == EOT_VertexShader5) ||
-                                         (InObjType == EOT_HullShader5) ||
-                                         (InObjType == EOT_DomainShader5) ||
-                                         (InObjType == EOT_ComputeShader5) ||
-                                         (InObjType == EOT_GeometryShader5) ||
-                                         (InObjType == EOT_PixelShader5));
-}
-
-D3DX11INLINE BOOL IsInterfaceHelper(EVarType InVarType,
-                                    EObjectType InObjType)
-{
+D3DX11INLINE BOOL IsInterfaceHelper(EVarType InVarType, EObjectType InObjType) {
     UNREFERENCED_PARAMETER(InObjType);
     return (InVarType == EVT_Interface);
 }
 
-D3DX11INLINE BOOL IsShaderResourceHelper(EVarType InVarType,
-                                         EObjectType InObjType)
-{
-    return (InVarType == EVT_Object) && ((InObjType == EOT_Texture) ||
-                                         (InObjType == EOT_Texture1D) ||
-                                         (InObjType == EOT_Texture1DArray) ||
-                                         (InObjType == EOT_Texture2D) ||
-                                         (InObjType == EOT_Texture2DArray) ||
-                                         (InObjType == EOT_Texture2DMS) ||
-                                         (InObjType == EOT_Texture2DMSArray) ||
-                                         (InObjType == EOT_Texture3D) ||
-                                         (InObjType == EOT_TextureCube) ||
-                                         (InObjType == EOT_TextureCubeArray) ||
-                                         (InObjType == EOT_Buffer) ||
-                                         (InObjType == EOT_StructuredBuffer) ||
-                                         (InObjType == EOT_ByteAddressBuffer));
-}
-
-D3DX11INLINE BOOL IsUnorderedAccessViewHelper(EVarType InVarType,
-                                              EObjectType InObjType)
-{
+D3DX11INLINE BOOL IsShaderResourceHelper(EVarType InVarType, EObjectType InObjType) {
     return (InVarType == EVT_Object) &&
-        ((InObjType == EOT_RWTexture1D) ||
-         (InObjType == EOT_RWTexture1DArray) ||
-         (InObjType == EOT_RWTexture2D) ||
-         (InObjType == EOT_RWTexture2DArray) ||
-         (InObjType == EOT_RWTexture3D) ||
-         (InObjType == EOT_RWBuffer) ||
-         (InObjType == EOT_RWByteAddressBuffer) ||
-         (InObjType == EOT_RWStructuredBuffer) ||
-         (InObjType == EOT_RWStructuredBufferAlloc) ||
-         (InObjType == EOT_RWStructuredBufferConsume) ||
-         (InObjType == EOT_AppendStructuredBuffer) ||
-         (InObjType == EOT_ConsumeStructuredBuffer));
+           ((InObjType == EOT_Texture) || (InObjType == EOT_Texture1D) || (InObjType == EOT_Texture1DArray) || (InObjType == EOT_Texture2D) ||
+            (InObjType == EOT_Texture2DArray) || (InObjType == EOT_Texture2DMS) || (InObjType == EOT_Texture2DMSArray) || (InObjType == EOT_Texture3D) ||
+            (InObjType == EOT_TextureCube) || (InObjType == EOT_TextureCubeArray) || (InObjType == EOT_Buffer) || (InObjType == EOT_StructuredBuffer) ||
+            (InObjType == EOT_ByteAddressBuffer));
 }
 
-D3DX11INLINE BOOL IsRenderTargetViewHelper(EVarType InVarType,
-                                           EObjectType InObjType)
-{
+D3DX11INLINE BOOL IsUnorderedAccessViewHelper(EVarType InVarType, EObjectType InObjType) {
+    return (InVarType == EVT_Object) &&
+           ((InObjType == EOT_RWTexture1D) || (InObjType == EOT_RWTexture1DArray) || (InObjType == EOT_RWTexture2D) || (InObjType == EOT_RWTexture2DArray) ||
+            (InObjType == EOT_RWTexture3D) || (InObjType == EOT_RWBuffer) || (InObjType == EOT_RWByteAddressBuffer) || (InObjType == EOT_RWStructuredBuffer) ||
+            (InObjType == EOT_RWStructuredBufferAlloc) || (InObjType == EOT_RWStructuredBufferConsume) || (InObjType == EOT_AppendStructuredBuffer) ||
+            (InObjType == EOT_ConsumeStructuredBuffer));
+}
+
+D3DX11INLINE BOOL IsRenderTargetViewHelper(EVarType InVarType, EObjectType InObjType) {
     return (InVarType == EVT_Object) && (InObjType == EOT_RenderTargetView);
 }
 
-D3DX11INLINE BOOL IsDepthStencilViewHelper(EVarType InVarType,
-                                           EObjectType InObjType)
-{
+D3DX11INLINE BOOL IsDepthStencilViewHelper(EVarType InVarType, EObjectType InObjType) {
     return (InVarType == EVT_Object) && (InObjType == EOT_DepthStencilView);
 }
 
-D3DX11INLINE BOOL IsObjectAssignmentHelper(ELhsType LhsType)
-{
-    switch(LhsType)
-    {
+D3DX11INLINE BOOL IsObjectAssignmentHelper(ELhsType LhsType) {
+    switch (LhsType) {
     case ELHS_VertexShaderBlock:
     case ELHS_HullShaderBlock:
     case ELHS_DepthStencilView:
@@ -340,9 +257,6 @@ D3DX11INLINE BOOL IsObjectAssignmentHelper(ELhsType LhsType)
     }
     return FALSE;
 }
-
-
-
 
 // Effect file format structures /////////////////////////////////////////////
 // File format:
@@ -372,73 +286,63 @@ D3DX11INLINE BOOL IsObjectAssignmentHelper(ELhsType LhsType)
 //           Annotation data (SBinaryAnnotation) * (NumAnnotations) *this structure is variable sized
 //           Pass assignments (SBinaryAssignment) * Pass.cAssignments
 
-struct SBinaryHeader
-{
-    struct SVarCounts
-    {
-        UINT  cCBs;
-        UINT  cNumericVariables;
-        UINT  cObjectVariables;
+struct SBinaryHeader {
+    struct SVarCounts {
+        UINT cCBs;
+        UINT cNumericVariables;
+        UINT cObjectVariables;
     };
 
-    UINT        Tag;    // should be equal to c_EffectFileTag
-                        // this is used to identify ASCII vs Binary files
+    UINT Tag; // should be equal to c_EffectFileTag
+              // this is used to identify ASCII vs Binary files
 
-    SVarCounts  Effect;
-    SVarCounts  Pool;
+    SVarCounts Effect;
+    SVarCounts Pool;
 
-    UINT        cTechniques;
-    UINT        cbUnstructured;
+    UINT cTechniques;
+    UINT cbUnstructured;
 
-    UINT        cStrings;
-    UINT        cShaderResources;
+    UINT cStrings;
+    UINT cShaderResources;
 
-    UINT        cDepthStencilBlocks;
-    UINT        cBlendStateBlocks;
-    UINT        cRasterizerStateBlocks;
-    UINT        cSamplers;
-    UINT        cRenderTargetViews;
-    UINT        cDepthStencilViews;
+    UINT cDepthStencilBlocks;
+    UINT cBlendStateBlocks;
+    UINT cRasterizerStateBlocks;
+    UINT cSamplers;
+    UINT cRenderTargetViews;
+    UINT cDepthStencilViews;
 
-    UINT        cTotalShaders;
-    UINT        cInlineShaders; // of the aforementioned shaders, the number that are defined inline within pass blocks
+    UINT cTotalShaders;
+    UINT cInlineShaders; // of the aforementioned shaders, the number that are defined inline within pass blocks
 
-    D3DX11INLINE bool RequiresPool() const
-    {
-        return (Pool.cCBs != 0) ||
-               (Pool.cNumericVariables != 0) ||
-               (Pool.cObjectVariables != 0);
-    }
+    D3DX11INLINE bool RequiresPool() const { return (Pool.cCBs != 0) || (Pool.cNumericVariables != 0) || (Pool.cObjectVariables != 0); }
 };
 
-struct SBinaryHeader5 : public SBinaryHeader
-{
-    UINT  cGroups;
-    UINT  cUnorderedAccessViews;
-    UINT  cInterfaceVariables;
-    UINT  cInterfaceVariableElements;
-    UINT  cClassInstanceElements;
+struct SBinaryHeader5 : public SBinaryHeader {
+    UINT cGroups;
+    UINT cUnorderedAccessViews;
+    UINT cInterfaceVariables;
+    UINT cInterfaceVariableElements;
+    UINT cClassInstanceElements;
 };
 
 // Constant buffer definition
-struct SBinaryConstantBuffer
-{
+struct SBinaryConstantBuffer {
     // private flags
-    static const UINT   c_IsTBuffer = (1 << 0);
-    static const UINT   c_IsSingle = (1 << 1);
+    static const UINT c_IsTBuffer = (1 << 0);
+    static const UINT c_IsSingle  = (1 << 1);
 
-    UINT                oName;                // Offset to constant buffer name
-    UINT                Size;                 // Size, in bytes
-    UINT                Flags;
-    UINT                cVariables;           // # of variables inside this buffer
-    UINT                ExplicitBindPoint;    // Defined if the effect file specifies a bind point using the register keyword
-                                              // otherwise, -1
+    UINT oName; // Offset to constant buffer name
+    UINT Size;  // Size, in bytes
+    UINT Flags;
+    UINT cVariables;        // # of variables inside this buffer
+    UINT ExplicitBindPoint; // Defined if the effect file specifies a bind point using the register keyword
+                            // otherwise, -1
 };
 
-struct SBinaryAnnotation
-{
-    UINT  oName;                // Offset to variable name
-    UINT  oType;                // Offset to type information (SBinaryType)
+struct SBinaryAnnotation {
+    UINT oName; // Offset to variable name
+    UINT oType; // Offset to type information (SBinaryType)
 
     // For numeric annotations:
     // UINT  oDefaultValue;     // Offset to default initializer value
@@ -447,36 +351,32 @@ struct SBinaryAnnotation
     // UINT  oStringOffsets[Elements]; // Elements comes from the type data at oType
 };
 
-struct SBinaryNumericVariable
-{
-    UINT  oName;                // Offset to variable name
-    UINT  oType;                // Offset to type information (SBinaryType)
-    UINT  oSemantic;            // Offset to semantic information
-    UINT  Offset;               // Offset in parent constant buffer
-    UINT  oDefaultValue;        // Offset to default initializer value
-    UINT  Flags;                // Explicit bind point
+struct SBinaryNumericVariable {
+    UINT oName;         // Offset to variable name
+    UINT oType;         // Offset to type information (SBinaryType)
+    UINT oSemantic;     // Offset to semantic information
+    UINT Offset;        // Offset in parent constant buffer
+    UINT oDefaultValue; // Offset to default initializer value
+    UINT Flags;         // Explicit bind point
 };
 
-struct SBinaryInterfaceVariable
-{
-    UINT  oName;                // Offset to variable name
-    UINT  oType;                // Offset to type information (SBinaryType)
-    UINT  oDefaultValue;        // Offset to default initializer array (SBinaryInterfaceInitializer[Elements])
-    UINT  Flags;
+struct SBinaryInterfaceVariable {
+    UINT oName;         // Offset to variable name
+    UINT oType;         // Offset to type information (SBinaryType)
+    UINT oDefaultValue; // Offset to default initializer array (SBinaryInterfaceInitializer[Elements])
+    UINT Flags;
 };
 
-struct SBinaryInterfaceInitializer
-{
-    UINT  oInstanceName;
-    UINT  ArrayIndex;
+struct SBinaryInterfaceInitializer {
+    UINT oInstanceName;
+    UINT ArrayIndex;
 };
 
-struct SBinaryObjectVariable
-{
-    UINT  oName;                // Offset to variable name
-    UINT  oType;                // Offset to type information (SBinaryType)
-    UINT  oSemantic;            // Offset to semantic information
-    UINT  ExplicitBindPoint;    // Used when a variable has been explicitly bound (register(XX)). -1 if not
+struct SBinaryObjectVariable {
+    UINT oName;             // Offset to variable name
+    UINT oType;             // Offset to type information (SBinaryType)
+    UINT oSemantic;         // Offset to semantic information
+    UINT ExplicitBindPoint; // Used when a variable has been explicitly bound (register(XX)). -1 if not
 
     // Initializer data:
     //
@@ -503,40 +403,36 @@ struct SBinaryObjectVariable
     //   SBinaryShaderData5[Elements]
 };
 
-struct SBinaryGSSOInitializer
-{
-    UINT  oShader;              // Offset to shader bytecode data block
-    UINT  oSODecl;              // Offset to StreamOutput decl string
+struct SBinaryGSSOInitializer {
+    UINT oShader; // Offset to shader bytecode data block
+    UINT oSODecl; // Offset to StreamOutput decl string
 };
 
-struct SBinaryShaderData5
-{
-    UINT  oShader;              // Offset to shader bytecode data block
-    UINT  oSODecls[4];          // Offset to StreamOutput decl strings
-    UINT  cSODecls;             // Count of valid oSODecls entries.
-    UINT  RasterizedStream;     // Which stream is used for rasterization
-    UINT  cInterfaceBindings;   // Count of interface bindings.
-    UINT  oInterfaceBindings;   // Offset to SBinaryInterfaceInitializer[cInterfaceBindings].
+struct SBinaryShaderData5 {
+    UINT oShader;            // Offset to shader bytecode data block
+    UINT oSODecls[4];        // Offset to StreamOutput decl strings
+    UINT cSODecls;           // Count of valid oSODecls entries.
+    UINT RasterizedStream;   // Which stream is used for rasterization
+    UINT cInterfaceBindings; // Count of interface bindings.
+    UINT oInterfaceBindings; // Offset to SBinaryInterfaceInitializer[cInterfaceBindings].
 };
 
-struct SBinaryType
-{
-    UINT        oTypeName;      // Offset to friendly type name ("float4", "VS_OUTPUT")
-    EVarType    VarType;        // Numeric, Object, or Struct
-    UINT        Elements;       // # of array elements (0 for non-arrays)
-    UINT        TotalSize;      // Size in bytes; not necessarily Stride * Elements for arrays
-                                // because of possible gap left in final register
-    UINT        Stride;         // If an array, this is the spacing between elements.
-                                // For unpacked arrays, always divisible by 16-bytes (1 register).
-                                // No support for packed arrays
-    UINT        PackedSize;     // Size, in bytes, of this data typed when fully packed
+struct SBinaryType {
+    UINT     oTypeName; // Offset to friendly type name ("float4", "VS_OUTPUT")
+    EVarType VarType;   // Numeric, Object, or Struct
+    UINT     Elements;  // # of array elements (0 for non-arrays)
+    UINT     TotalSize; // Size in bytes; not necessarily Stride * Elements for arrays
+                        // because of possible gap left in final register
+    UINT Stride;        // If an array, this is the spacing between elements.
+                        // For unpacked arrays, always divisible by 16-bytes (1 register).
+                        // No support for packed arrays
+    UINT PackedSize;    // Size, in bytes, of this data typed when fully packed
 
-    struct SBinaryMember
-    {
-        UINT    oName;          // Offset to structure member name ("m_pFoo")
-        UINT    oSemantic;      // Offset to semantic ("POSITION0")
-        UINT    Offset;         // Offset, in bytes, relative to start of parent structure
-        UINT    oType;          // Offset to member's type descriptor
+    struct SBinaryMember {
+        UINT oName;     // Offset to structure member name ("m_pFoo")
+        UINT oSemantic; // Offset to semantic ("POSITION0")
+        UINT Offset;    // Offset, in bytes, relative to start of parent structure
+        UINT oType;     // Offset to member's type descriptor
     };
 
     // the data that follows depends on the VarType:
@@ -557,111 +453,96 @@ struct SBinaryType
     // Interface: (nothing)
 };
 
-struct SBinaryNumericType
-{
-    ENumericLayout  NumericLayout   : 3;    // scalar (1x1), vector (1xN), matrix (NxN)
-    EScalarType     ScalarType      : 5;    // float32, int32, int8, etc.
-    UINT            Rows            : 3;    // 1 <= Rows <= 4
-    UINT            Columns         : 3;    // 1 <= Columns <= 4
-    UINT            IsColumnMajor   : 1;    // applies only to matrices
-    UINT            IsPackedArray   : 1;    // if this is an array, indicates whether elements should be greedily packed
+struct SBinaryNumericType {
+    ENumericLayout NumericLayout : 3; // scalar (1x1), vector (1xN), matrix (NxN)
+    EScalarType    ScalarType    : 5; // float32, int32, int8, etc.
+    UINT           Rows          : 3; // 1 <= Rows <= 4
+    UINT           Columns       : 3; // 1 <= Columns <= 4
+    UINT           IsColumnMajor : 1; // applies only to matrices
+    UINT           IsPackedArray : 1; // if this is an array, indicates whether elements should be greedily packed
 };
 
-struct SBinaryTypeInheritance
-{
-    UINT oBaseClass;            // Offset to base class type info or 0 if no base class.
+struct SBinaryTypeInheritance {
+    UINT oBaseClass; // Offset to base class type info or 0 if no base class.
     UINT cInterfaces;
 
     // Followed by UINT[cInterfaces] with offsets to the type
     // info of each interface.
 };
 
-struct SBinaryGroup
-{
-    UINT  oName;
-    UINT  cTechniques;
+struct SBinaryGroup {
+    UINT oName;
+    UINT cTechniques;
 };
 
-struct SBinaryTechnique
-{
-    UINT  oName;
-    UINT  cPasses;
+struct SBinaryTechnique {
+    UINT oName;
+    UINT cPasses;
 };
 
-struct SBinaryPass
-{
-    UINT  oName;
-    UINT  cAssignments;
+struct SBinaryPass {
+    UINT oName;
+    UINT cAssignments;
 };
 
-enum ECompilerAssignmentType
-{
-    ECAT_Invalid,                   // Assignment-specific data (always in the unstructured blob)
-    ECAT_Constant,                  // -N SConstant structures
-    ECAT_Variable,                  // -NULL terminated string with variable name ("foo")
-    ECAT_ConstIndex,                // -SConstantIndex structure
-    ECAT_VariableIndex,             // -SVariableIndex structure
-    ECAT_ExpressionIndex,           // -SIndexedObjectExpression structure
-    ECAT_Expression,                // -Data block containing FXLVM code
-    ECAT_InlineShader,              // -Data block containing shader
-    ECAT_InlineShader5,             // -Data block containing shader with extended 5.0 data (SBinaryShaderData5)
+enum ECompilerAssignmentType {
+    ECAT_Invalid,         // Assignment-specific data (always in the unstructured blob)
+    ECAT_Constant,        // -N SConstant structures
+    ECAT_Variable,        // -NULL terminated string with variable name ("foo")
+    ECAT_ConstIndex,      // -SConstantIndex structure
+    ECAT_VariableIndex,   // -SVariableIndex structure
+    ECAT_ExpressionIndex, // -SIndexedObjectExpression structure
+    ECAT_Expression,      // -Data block containing FXLVM code
+    ECAT_InlineShader,    // -Data block containing shader
+    ECAT_InlineShader5,   // -Data block containing shader with extended 5.0 data (SBinaryShaderData5)
 };
 
-struct SBinaryAssignment
-{
-    UINT  iState;                   // index into g_lvGeneral
-    UINT  Index;                    // the particular index to assign to (see g_lvGeneral to find the # of valid indices)
+struct SBinaryAssignment {
+    UINT                    iState; // index into g_lvGeneral
+    UINT                    Index;  // the particular index to assign to (see g_lvGeneral to find the # of valid indices)
     ECompilerAssignmentType AssignmentType;
-    UINT  oInitializer;             // Offset of assignment-specific data
+    UINT                    oInitializer; // Offset of assignment-specific data
 
-    //struct SConstantAssignment
+    // struct SConstantAssignment
     //{
     //    UINT  NumConstants;         // number of constants to follow
     //    SCompilerConstant Constants[NumConstants];
     //};
 
-    struct SConstantIndex
-    {
-        UINT  oArrayName;
-        UINT  Index;
+    struct SConstantIndex {
+        UINT oArrayName;
+        UINT Index;
     };
 
-    struct SVariableIndex
-    {
-        UINT  oArrayName;
-        UINT  oIndexVarName;
+    struct SVariableIndex {
+        UINT oArrayName;
+        UINT oIndexVarName;
     };
 
-    struct SIndexedObjectExpression
-    {
-        UINT  oArrayName;
-        UINT  oCode;
+    struct SIndexedObjectExpression {
+        UINT oArrayName;
+        UINT oCode;
     };
 
-    struct SInlineShader
-    {
-        UINT  oShader;
-        UINT  oSODecl;
+    struct SInlineShader {
+        UINT oShader;
+        UINT oSODecl;
     };
 
-    //struct SExpression or SInlineShader
+    // struct SExpression or SInlineShader
     //{
     //    UINT  DataSize;
     //    BYTE Data[DataSize];
     //}
-
 };
 
-struct SBinaryConstant
-{
+struct SBinaryConstant {
     EScalarType Type;
-    union
-    {
-        BOOL    bValue;
-        INT     iValue;
-        float   fValue;
+    union {
+        BOOL  bValue;
+        INT   iValue;
+        float fValue;
     };
 };
-
 
 } // end namespace D3DX11Effects

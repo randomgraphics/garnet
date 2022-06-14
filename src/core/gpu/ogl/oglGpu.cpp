@@ -11,12 +11,11 @@ GN::Logger * GN::gfx::OGLGpu::sLogger = GN::getLogger("GN.gfx.gpu.OGL");
 //
 //
 // -----------------------------------------------------------------------------
-static GN::gfx::Gpu * sCreateOGLGpuPrivate( const GN::gfx::GpuOptions & o, void * )
-{
+static GN::gfx::Gpu * sCreateOGLGpuPrivate(const GN::gfx::GpuOptions & o, void *) {
     GN_GUARD;
 
-    GN::AutoObjPtr<GN::gfx::OGLGpu> p( new GN::gfx::OGLGpu );
-    if( !p->init( o ) ) return 0;
+    GN::AutoObjPtr<GN::gfx::OGLGpu> p(new GN::gfx::OGLGpu);
+    if (!p->init(o)) return 0;
     return p.detach();
 
     GN_UNGUARD;
@@ -25,18 +24,14 @@ static GN::gfx::Gpu * sCreateOGLGpuPrivate( const GN::gfx::GpuOptions & o, void 
 //
 //
 // -----------------------------------------------------------------------------
-GN_API GN::gfx::Gpu * GN::gfx::createOGLGpu( const GN::gfx::GpuOptions & o, uint32 creationFlags )
-{
+GN_API GN::gfx::Gpu * GN::gfx::createOGLGpu(const GN::gfx::GpuOptions & o, uint32 creationFlags) {
     GpuOptions localOptions = o;
-    localOptions.api = GpuAPI::OGL;
+    localOptions.api        = GpuAPI::OGL;
 
-    if( 0 != (creationFlags & GPU_CREATION_MULTIPLE_THREADS) )
-    {
-        return createMultiThreadGpu( o, sCreateOGLGpuPrivate, 0 );
-    }
-    else
-    {
-        return sCreateOGLGpuPrivate( localOptions, 0 );
+    if (0 != (creationFlags & GPU_CREATION_MULTIPLE_THREADS)) {
+        return createMultiThreadGpu(o, sCreateOGLGpuPrivate, 0);
+    } else {
+        return sCreateOGLGpuPrivate(localOptions, 0);
     }
 }
 
@@ -47,19 +42,18 @@ GN_API GN::gfx::Gpu * GN::gfx::createOGLGpu( const GN::gfx::GpuOptions & o, uint
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::OGLGpu::init( const GpuOptions & o )
-{
+bool GN::gfx::OGLGpu::init(const GpuOptions & o) {
     GN_GUARD;
 
     // standard init procedure
-    GN_STDCLASS_INIT( o );
+    GN_STDCLASS_INIT(o);
 
     // init sub-components
-    if( !dispInit()     ) return failure();
-    if( !capsInit()     ) return failure();
-    if( !resourceInit() ) return failure();
-    if( !contextInit()  ) return failure();
-    if( !drawInit()     ) return failure();
+    if (!dispInit()) return failure();
+    if (!capsInit()) return failure();
+    if (!resourceInit()) return failure();
+    if (!contextInit()) return failure();
+    if (!drawInit()) return failure();
 
     // successful
     return success();
@@ -70,8 +64,7 @@ bool GN::gfx::OGLGpu::init( const GpuOptions & o )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLGpu::quit()
-{
+void GN::gfx::OGLGpu::quit() {
     GN_GUARD;
 
     drawQuit();

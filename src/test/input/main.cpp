@@ -5,33 +5,28 @@ static GN::Logger * sLogger = GN::getLogger("GN.gfx.test.input");
 ///
 /// input module test application
 ///
-class InputTest
-{
+class InputTest {
     GN::AutoObjPtr<GN::win::Window> mWin;
 
     bool mDone;
 
     GN::input::KeyEvent mLastKeyEvent;
 
-    bool createWindow()
-    {
-        mWin.attach( GN::win::createWindow( GN::win::WCP_WINDOWED_RENDER_WINDOW ) );
-        if( mWin.empty() ) return false;
+    bool createWindow() {
+        mWin.attach(GN::win::createWindow(GN::win::WCP_WINDOWED_RENDER_WINDOW));
+        if (mWin.empty()) return false;
         mWin->show();
         return true;
     }
 
-    bool createInput( const char * api )
-    {
-        if( !GN::input::initializeInputSystem( 0 == GN::str::compare("DI",api) ? GN::input::InputAPI::DINPUT : GN::input::InputAPI::NATIVE ) )
-            return false;
-        if( !gInputPtr->attachToWindow( 0, mWin->getWindowHandle() ) )
-            return false;
+    bool createInput(const char * api) {
+        if (!GN::input::initializeInputSystem(0 == GN::str::compare("DI", api) ? GN::input::InputAPI::DINPUT : GN::input::InputAPI::NATIVE)) return false;
+        if (!gInputPtr->attachToWindow(0, mWin->getWindowHandle())) return false;
 
         // connect to input signals
-        gInput.sigKeyPress.connect( this, &InputTest::onKeyPress );
-        gInput.sigCharPress.connect( this, &InputTest::onCharPress );
-        gInput.sigAxisMove.connect( this, &InputTest::onAxisMove );
+        gInput.sigKeyPress.connect(this, &InputTest::onKeyPress);
+        gInput.sigCharPress.connect(this, &InputTest::onCharPress);
+        gInput.sigAxisMove.connect(this, &InputTest::onAxisMove);
 
         return true;
     }
@@ -81,27 +76,19 @@ class InputTest
         return ::DefWindowProc( hwnd, msg, wp, lp );
     }*/
 
-    void onKeyPress( GN::input::KeyEvent ke )
-    {
+    void onKeyPress(GN::input::KeyEvent ke) {
         mLastKeyEvent = ke;
         RepainWindow();
-        if( !ke.status.down )
-        {
-            if( GN::input::KeyCode::ESCAPE == ke.code ) mDone = true;
+        if (!ke.status.down) {
+            if (GN::input::KeyCode::ESCAPE == ke.code) mDone = true;
         }
     }
 
-    void onCharPress( wchar_t )
-    {
-    }
+    void onCharPress(wchar_t) {}
 
-    void onAxisMove( GN::input::Axis, int  )
-    {
-        RepainWindow();
-    }
+    void onAxisMove(GN::input::Axis, int) { RepainWindow(); }
 
 public:
-
     ///
     /// Default constructor
     ///
@@ -115,9 +102,8 @@ public:
     ///
     /// Initialize test application
     ///
-    bool init( const char * api )
-    {
-        if( !createWindow() || !createInput(api) ) return false;
+    bool init(const char * api) {
+        if (!createWindow() || !createInput(api)) return false;
 
         mDone = false;
 
@@ -128,8 +114,7 @@ public:
     ///
     /// Quit test application
     ///
-    void quit()
-    {
+    void quit() {
         GN::input::shutdownInputSystem();
         mWin.clear();
     }
@@ -137,16 +122,13 @@ public:
     ///
     /// Run test application
     ///
-    int run()
-    {
-        if( !gInputPtr )
-        {
-            GN_ERROR(sLogger)( "InputTest is not initialized!" );
+    int run() {
+        if (!gInputPtr) {
+            GN_ERROR(sLogger)("InputTest is not initialized!");
             return -1;
         }
 
-        while(!mDone)
-        {
+        while (!mDone) {
             mWin->runUntilNoNewEvents();
             gInputPtr->processInputEvents();
         }
@@ -158,35 +140,29 @@ public:
 ///
 /// Print usage
 ///
-void usage( const char * appName )
-{
-    printf(
-        "Input module test application.\n"
-        "\n"
-        "Usage: %s [MSW|DI]\n"
-        "\n"
-        "Note: default module is NT\n",
-        appName );
+void usage(const char * appName) {
+    printf("Input module test application.\n"
+           "\n"
+           "Usage: %s [MSW|DI]\n"
+           "\n"
+           "Note: default module is NT\n",
+           appName);
 }
 
 ///
 /// Main entry point
 ///
-int main( int argc, const char * argv[] )
-{
+int main(int argc, const char * argv[]) {
     const char * module;
 
-    if( argc < 2 )
-    {
-        usage( argv[0] );
+    if (argc < 2) {
+        usage(argv[0]);
         module = "MSW";
-    }
-    else
-    {
+    } else {
         module = argv[1];
     }
 
     InputTest app;
-    if( !app.init( module ) ) return -1;
+    if (!app.init(module)) return -1;
     return app.run();
 }

@@ -8,10 +8,11 @@
 
 #include "garnet/GNgfx.h"
 
-namespace GN { namespace gfx
-{
-    bool registerTextureResourceFactory( GpuResourceDatabase & db );
-}}
+namespace GN {
+namespace gfx {
+bool registerTextureResourceFactory(GpuResourceDatabase & db);
+}
+} // namespace GN
 
 // *****************************************************************************
 //                                     EOF

@@ -9,22 +9,21 @@
 #include "garnet/GNbase.h"
 
 #if GN_XBOX2
-#include <xtl.h>
+    #include <xtl.h>
 #elif GN_WINPC
-#ifndef NOMINMAX
-#define NOMINMAX
-#endif
-#include <windows.h>
+    #ifndef NOMINMAX
+        #define NOMINMAX
+    #endif
+    #include <windows.h>
 #endif
 #include <stdio.h>
 
 //
 //
 // -----------------------------------------------------------------------------
-inline const wchar_t * GetRealDllPath(const wchar_t * dllName)
-{
+inline const wchar_t * GetRealDllPath(const wchar_t * dllName) {
     static __declspec(thread) wchar_t dllpath[256];
-    GetSystemDirectoryW(dllpath, (uint32_t)GN::countof(dllpath));
+    GetSystemDirectoryW(dllpath, (uint32_t) GN::countof(dllpath));
     wcscat_s(dllpath, L"\\");
     wcscat_s(dllpath, dllName);
     return dllpath;
@@ -52,19 +51,19 @@ inline const wchar_t * GetRealDllPath(const wchar_t * dllName)
 #define _Out_writes_(x)
 
 #undef _Out_writes_to_
-#define _Out_writes_to_(x,y)
+#define _Out_writes_to_(x, y)
 
 #undef _Out_writes_opt_
 #define _Out_writes_opt_(x)
 
 #undef _Out_writes_bytes_to_
-#define _Out_writes_bytes_to_(x,y)
+#define _Out_writes_bytes_to_(x, y)
 
 #undef _Out_writes_all_opt_
 #define _Out_writes_all_opt_(x)
 
 #undef _Out_writes_to_opt_
-#define _Out_writes_to_opt_(x,y)
+#define _Out_writes_to_opt_(x, y)
 
 #undef _Out_writes_bytes_
 #define _Out_writes_bytes_(x)
