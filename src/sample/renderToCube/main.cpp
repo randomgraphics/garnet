@@ -34,7 +34,6 @@ class RenderToTexture : public SampleApp
             );
 
         MeshResourceDesc desc;
-        desc.clear();
         desc.prim = PrimitiveType::TRIANGLE_LIST;
         desc.numvtx = 24;
         desc.numidx = 36;

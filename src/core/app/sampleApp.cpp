@@ -7,9 +7,6 @@ using namespace GN::gfx;
 using namespace GN::input;
 using namespace GN::util;
 
-const uint32 GN::util::SampleApp::UPDATE_FREQUENCY = 60;
-const float  GN::util::SampleApp::UPDATE_INTERVAL = 1.0f / (float)GN::util::SampleApp::UPDATE_FREQUENCY;
-
 static GN::Logger * sLogger = GN::getLogger("GN.util");
 
 // *****************************************************************************
@@ -166,8 +163,8 @@ int GN::util::SampleApp::run( int argc, const char * const argv[] )
 
     Clock clock;
 
-    const sint64 ONE_SECOND                = clock.sGetSystemCycleFrequency();
-    const sint64 UPDATE_INTERVAL_IN_CYCLES = ONE_SECOND / UPDATE_FREQUENCY;
+    using namespace std::chrono_literals;
+    const Clock::Duration INTERVAL = 1s / UPDATE_FREQUENCY;
 
     mFrameIdlePercentage = 0;
 
@@ -183,7 +180,7 @@ int GN::util::SampleApp::run( int argc, const char * const argv[] )
     {
         GN_START_PROFILER( Frame );
 
-        const sint64 scheduledEndTime = clock.getCycleCount() + UPDATE_INTERVAL_IN_CYCLES;
+        const Clock::Duration scheduledEndTime = clock.now() + INTERVAL;
 
         // Process Inputs
         GN_START_PROFILER( Input );
@@ -215,15 +212,15 @@ int GN::util::SampleApp::run( int argc, const char * const argv[] )
 
         // Idle time
         GN_START_PROFILER( Idle );
-        sint64 idleStartTime = clock.getCycleCount();
-        sint64 idleDuration = scheduledEndTime - idleStartTime;
-        if (idleDuration > 50)
+        auto idleStartTime = clock.now();
+        auto idleDuration = scheduledEndTime - idleStartTime;
+        if (idleDuration > 1ms)
         {
             // no need to skip rendering.
             skipRendering = 0;
 
             // Put some idle time in.
-            while (scheduledEndTime - clock.getCycleCount() > 50)
+            while ((scheduledEndTime - clock.now()) > 1ms)
             {
                 std::this_thread::sleep_for(std::chrono::microseconds::min());
             }
@@ -240,7 +237,7 @@ int GN::util::SampleApp::run( int argc, const char * const argv[] )
             // sequential and let the game run in slow motion mode.
             skipRendering = -1;
         }
-        mFrameIdlePercentage = (float)(idleDuration * 1000 / UPDATE_INTERVAL_IN_CYCLES) / 10.0f;
+        mFrameIdlePercentage = (float)(idleDuration * 100 / INTERVAL);
         GN_STOP_PROFILER( Idle );
 
         GN_STOP_PROFILER( Frame );

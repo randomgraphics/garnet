@@ -148,7 +148,7 @@ public:
         {
             SkinnedMesh * mesh = (SkinnedMesh*)entity.rawptr();
             mesh->setAnimation( 0, currentTime );
-            currentTime += UPDATE_INTERVAL;
+            currentTime += UPDATE_INTERVAL_IN_SECONDS;
         }
 #else
         SpacialComponent * spacial = world.getRootEntity()->getComponent<engine::SpacialComponent>();

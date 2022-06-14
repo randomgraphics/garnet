@@ -152,7 +152,7 @@ public:
         {
             if( mRipples[i].time > 0.0f )
             {
-                mRipples[i].time += UPDATE_INTERVAL;
+                mRipples[i].time += UPDATE_INTERVAL_IN_SECONDS;
             }
         }
 

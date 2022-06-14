@@ -6,126 +6,79 @@
 /// \author  chenlee (2005.7.1)
 // *****************************************************************************
 
-namespace GN
-{
-    ///
-    /// high resolution clock system
-    ///
-    class GN_API Clock
-    {
-        // ********************************
-        /// name  ctor/dtor
-        // ********************************
+#include <chrono>
 
-        //@{
-    public:
-        Clock()  { reset(); }
-        ~Clock() {}
-        //@}
+namespace GN {
+///
+/// high resolution clock system
+///
+class GN_API Clock {
+  // ********************************
+  /// name  ctor/dtor
+  // ********************************
 
-        // ********************************
-        //   public interface
-        // ********************************
-    public:
+  //@{
+public:
+  Clock() { reset(); }
+  ~Clock() {}
+  //@}
 
-        ///
-        /// Clock cycle type
-        ///
-        typedef sint64 CycleType;
+  // ********************************
+  //   public interface
+  // ********************************
+public:
+  using SystemClock = std::chrono::high_resolution_clock;
+  using TimePoint = std::chrono::high_resolution_clock::time_point;
+  using Duration = std::chrono::high_resolution_clock::duration;
 
-        ///
-        /// 一个高精度的计时函数
-        ///
-        /// 返回从开机到现在计时器经过的cycle数，
-        /// 用返回值除以计时器的主频，就可以换算成秒。
-        ///
-        static CycleType sGetSystemCycleCount();
 
-        ///
-        /// Get system cycle frequency
-        ///
-        static CycleType sGetSystemCycleFrequency() { return msSystemCycleFrequency; }
+  ///
+  /// 返回从上次reset到当前的时间，刨除暂停的部分
+  ///
+  Duration now() { return SystemClock::now() - mResetTime - mPauseElapsed; }
 
-        ///
-        /// 获得当前时间计数
-        ///
-        CycleType getCycleCount() const
-        {
-            return getCleanCycleCount();
-        }
+  ///
+  /// return time in seconds
+  ///
+  double seconds() {
+    return (double) std::chrono::duration_cast<std::chrono::milliseconds>(now())
+               .count() /
+           1000.0;
+  }
 
-        ///
-        /// 获得当前时间, in seconds
-        ///
-        double getTimeD() const
-        {
-            double c1 = static_cast<double>( getCleanCycleCount() );
-            double c2 = static_cast<double>( msSystemCycleFrequency );
-            return c1 / c2;
-        }
+  ///
+  /// 重置时钟到初始状态
+  ///
+  void reset();
 
-        ///
-        /// 获得当前时间, in seconds
-        ///
-        float getTimef() const
-        {
-            return (float)getTimeD();
-        }
+  ///
+  /// 恢复时钟运行
+  ///
+  void resume();
 
-        ///
-        /// 重置时钟到初始状态
-        ///
-        void reset();
+  ///
+  /// 暂停时钟
+  ///
+  void pause();
 
-        ///
-        /// 恢复时钟运行
-        ///
-        void resume();
+  ///
+  /// 当前时钟是否暂停
+  ///
+  bool paused() const { return mPaused; }
 
-        ///
-        /// 暂停时钟
-        ///
-        void pause();
+  // ********************************
+  //   private variables
+  // ********************************
+private:
+  TimePoint mResetTime;    ///< 计时器复位时的cycle数
+  TimePoint mPauseTime;    ///< 计时器暂停时的cycle数
+  Duration  mPauseElapsed; ///< 计时器总计暂停的cycle数
+  bool mPaused;            ///< 计时器是否暂停
+};
 
-        ///
-        /// 当前时钟是否暂停
-        ///
-        bool paused() const { return mPaused; }
-
-        // ********************************
-        //   private variables
-        // ********************************
-    private:
-
-        CycleType mResetTime;    ///< 计时器复位时的cycle数
-        CycleType mPauseTime;    ///< 计时器暂停时的cycle数
-        CycleType mPauseElapsed; ///< 计时器总计暂停的cycle数
-        bool      mPaused;       ///< 计时器是否暂停
-
-        ///< 系统计时器的频率（每秒钟的cycle数）
-        static CycleType msSystemCycleFrequency;
-
-        // ********************************
-        //   private functions
-        // ********************************
-    private:
-
-        ///
-        /// 得到从上次计时器复位到现在且去除暂停时间后所实际经过的净cycle数
-        ///
-        CycleType getCleanCycleCount() const
-        {
-            if (mPaused)
-                return mPauseTime;
-            else
-                return sGetSystemCycleCount() - mResetTime - mPauseElapsed;
-        }
-    };
-}
-
+} // namespace GN
 
 // *****************************************************************************
 //                                     EOF
 // *****************************************************************************
 #endif // __GN_BASE_CLOCK_H__
-

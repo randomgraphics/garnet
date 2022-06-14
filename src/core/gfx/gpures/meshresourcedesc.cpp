@@ -454,22 +454,18 @@ static bool sReadV1BinaryFile( MeshBinaryHeaderV1 & header, uint8 * dst, size_t 
 // -----------------------------------------------------------------------------
 AutoRef<Blob> sLoadFromMeshXMLFile( File & fp, MeshResourceDesc & desc )
 {
-    desc.clear();
+  desc = {};
 
-    XmlDocument doc;
-    XmlParseResult xpr;
-    if( !doc.parse( xpr, fp ) )
-    {
-        GN_ERROR(sLogger)(
-            "Fail to parse XML file (%s):\n"
-            "    line   : %d\n"
-            "    column : %d\n"
-            "    error  : %s",
-            fp.name().rawptr(),
-            xpr.errLine,
-            xpr.errColumn,
-            xpr.errInfo.rawptr() );
-        return AutoRef<Blob>::NULLREF;
+  XmlDocument doc;
+  XmlParseResult xpr;
+  if (!doc.parse(xpr, fp)) {
+    GN_ERROR(sLogger)
+    ("Fail to parse XML file (%s):\n"
+     "    line   : %d\n"
+     "    column : %d\n"
+     "    error  : %s",
+     fp.name().rawptr(), xpr.errLine, xpr.errColumn, xpr.errInfo.rawptr());
+    return AutoRef<Blob>::NULLREF;
     }
     GN_ASSERT( xpr.root );
 
@@ -740,19 +736,18 @@ GN::gfx::MeshResourceDesc::calculateBoundingSphere( Sphere<float> & sphere ) con
 // -----------------------------------------------------------------------------
 AutoRef<Blob> GN::gfx::MeshResourceDesc::loadFromFile( File & fp )
 {
-    clear();
+  *this = {};
 
-    switch( sDetermineMeshFileType( fp ) )
-    {
-        case MESH_FILE_XML:
-            return sLoadFromMeshXMLFile( fp, *this );
+  switch (sDetermineMeshFileType(fp)) {
+  case MESH_FILE_XML:
+    return sLoadFromMeshXMLFile(fp, *this);
 
-        case MESH_FILE_BIN:
-            return sLoadFromMeshBinaryFile( fp, *this );
+  case MESH_FILE_BIN:
+    return sLoadFromMeshBinaryFile(fp, *this);
 
-        case MESH_FILE_UNKNOWN:
-        default:
-            return AutoRef<Blob>::NULLREF;
+  case MESH_FILE_UNKNOWN:
+  default:
+    return AutoRef<Blob>::NULLREF;
     };
 }
 
@@ -763,7 +758,7 @@ AutoRef<Blob> GN::gfx::MeshResourceDesc::loadFromFile( const char * filename )
 {
     GN_INFO(sLogger)( "Load mesh from file: %s", filename?filename:"<null filename>" );
 
-    clear();
+    *this = {};
 
     AutoObjPtr<File> fp( fs::openFile( filename, "rb" ) );
     if( !fp ) return AutoRef<Blob>::NULLREF;

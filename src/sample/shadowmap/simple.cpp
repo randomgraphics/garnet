@@ -118,7 +118,7 @@ void GN::SimpleShadowMap::clear()
 void GN::SimpleShadowMap::update()
 {
     // update camera
-    mCamera.update( app::SampleApp::UPDATE_INTERVAL );
+    mCamera.update( app::SampleApp::UPDATE_INTERVAL_IN_SECONDS );
 
     RenderEngine & re = mApp.getRenderEngine();
 

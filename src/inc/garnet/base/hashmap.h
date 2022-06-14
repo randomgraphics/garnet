@@ -83,6 +83,7 @@ namespace GN
     }
 
     /// Hash map template class
+    /// use std::unordered_map instead.
     template<
         class  KEY,
         class  VALUE,

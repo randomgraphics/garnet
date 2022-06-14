@@ -519,9 +519,9 @@ if( Test-Path $GARNET_ROOT\user\$env:USERNAME.ps1 )
 # ==============================================================================
 
 write-host -ForegroundColor green "
-====================================================
+
 Garnet build environment ready to use. Happy coding!
-====================================================
+
 USERNAME                 = $env:USERNAME
 GARNET_ROOT              = $env:GARNET_ROOT
 GN_BUILD_CMAKE_GENERATOR = $env:GN_BUILD_CMAKE_GENERATOR

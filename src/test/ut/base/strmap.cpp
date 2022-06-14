@@ -25,9 +25,9 @@ class StringMapTest : public CxxTest::TestSuite
 
     struct Perf
     {
-        GN::Clock::CycleType insert;
-        GN::Clock::CycleType find;
-        GN::Clock::CycleType remove;
+        GN::Clock::Duration insert;
+        GN::Clock::Duration find;
+        GN::Clock::Duration remove;
     };
 
     struct AllPerfs
@@ -39,20 +39,20 @@ class StringMapTest : public CxxTest::TestSuite
 
         void print() const
         {
-            printf( "GN::Dictionary  - insert : %llu\n", dict.insert );
-            printf( "std::map        - insert : %llu\n", stlmap.insert );
-            printf( "StringMap       - insert : %llu\n", strmap.insert );
-            printf( "HashMap         - insert : %llu\n", hashmap.insert );
+            printf( "GN::Dictionary  - insert : %llu\n", dict.insert.count() );
+            printf( "std::map        - insert : %llu\n", stlmap.insert.count() );
+            printf( "StringMap       - insert : %llu\n", strmap.insert.count() );
+            printf( "HashMap         - insert : %llu\n", hashmap.insert.count() );
 
-            printf( "GN::Dictionary  - find   : %llu\n", dict.find );
-            printf( "std::map        - find   : %llu\n", stlmap.find );
-            printf( "StringMap       - find   : %llu\n", strmap.find );
-            printf( "HashMap         - find   : %llu\n", hashmap.find );
+            printf( "GN::Dictionary  - find   : %llu\n", dict.find.count() );
+            printf( "std::map        - find   : %llu\n", stlmap.find.count() );
+            printf( "StringMap       - find   : %llu\n", strmap.find.count() );
+            printf( "HashMap         - find   : %llu\n", hashmap.find.count() );
 
-            printf( "GN::Dictionary  - remove : %llu\n", dict.remove );
-            printf( "std::map        - remove : %llu\n", stlmap.remove );
-            printf( "StringMap       - remove : %llu\n", strmap.remove );
-            printf( "HashMap         - remove : %llu\n", hashmap.remove );
+            printf( "GN::Dictionary  - remove : %llu\n", dict.remove.count() );
+            printf( "std::map        - remove : %llu\n", stlmap.remove.count() );
+            printf( "StringMap       - remove : %llu\n", strmap.remove.count() );
+            printf( "HashMap         - remove : %llu\n", hashmap.remove.count() );
         }
     };
 
@@ -63,7 +63,7 @@ class StringMapTest : public CxxTest::TestSuite
         using namespace GN;
 
         Clock c;
-        Clock::CycleType t;
+        Clock::Duration t;
 
         AllPerfs perfs;
         memset( &perfs, 0, sizeof(perfs) );
@@ -72,39 +72,39 @@ class StringMapTest : public CxxTest::TestSuite
         {
             // Dictionary insertion
             Dictionary<std::string,size_t> dict;
-            t = c.getCycleCount();
+            t = c.now();
             for( size_t i = 0; i < w.count; ++i )
             {
                 dict.insert( w.table[i], i );
             }
-            perfs.dict.insert += c.getCycleCount() - t;
+            perfs.dict.insert += c.now() - t;
 
-            // std::map insersion
+            // std::map insertion
             std::map<std::string,size_t> stlmap;
-            t = c.getCycleCount();
+            t = c.now();
             for( size_t i = 0; i < w.count; ++i )
             {
                 stlmap.insert( std::make_pair( w.table[i], i ) );
             }
-            perfs.stlmap.insert += c.getCycleCount() - t;
+            perfs.stlmap.insert += c.now() - t;
 
             // StringMap insertion
             StringMap<char,size_t> mymap;
-            t = c.getCycleCount();
+            t = c.now();
             for( size_t i = 0; i < w.count; ++i )
             {
                 mymap.insert( w.table[i], i );
             }
-            perfs.strmap.insert += c.getCycleCount() - t;
+            perfs.strmap.insert += c.now() - t;
 
             // HashMap insertion
             StrHashMap hmap(w.count);
-            t = c.getCycleCount();
+            t = c.now();
             for( size_t i = 0; i < w.count; ++i )
             {
                 hmap.insert( w.table[i], i );
             }
-            perfs.hashmap.insert += c.getCycleCount() - t;
+            perfs.hashmap.insert += c.now() - t;
 
             // generate random searching set
             DynaArray<std::string> strings( 10000 );
@@ -116,72 +116,72 @@ class StringMapTest : public CxxTest::TestSuite
             }
 
             // Dictionary find
-            t = c.getCycleCount();
+            t = c.now();
             for( size_t i = 0; i < strings.size(); ++i )
             {
                 dict.find( strings[i] );
             }
-            perfs.dict.find += c.getCycleCount() - t;
+            perfs.dict.find += c.now() - t;
 
             // std::map find
-            t = c.getCycleCount();
+            t = c.now();
             for( size_t i = 0; i < strings.size(); ++i )
             {
                 auto aaa = stlmap.find( strings[i] );
                 (void)aaa;
             }
-            perfs.stlmap.find += c.getCycleCount() - t;
+            perfs.stlmap.find += c.now() - t;
 
             // StringMap find
-            t = c.getCycleCount();
+            t = c.now();
             for( size_t i = 0; i < strings.size(); ++i )
             {
                 mymap.find( strings[i].c_str() );
             }
-            perfs.strmap.find += c.getCycleCount() - t;
+            perfs.strmap.find += c.now() - t;
 
             // StrHashMap find
-            t = c.getCycleCount();
+            t = c.now();
             for( size_t i = 0; i < strings.size(); ++i )
             {
                 hmap.find( strings[i] );
             }
-            perfs.hashmap.find += c.getCycleCount() - t;
+            perfs.hashmap.find += c.now() - t;
 
             // Dictionary erasing
-            t = c.getCycleCount();
+            t = c.now();
             for( size_t i = 0; i < w.count; ++i )
             {
                 dict.remove( w.table[i] );
             }
-            perfs.dict.remove += c.getCycleCount() - t;
+            perfs.dict.remove += c.now() - t;
             TS_ASSERT( dict.empty() );
 
             // std::map erasing
-            t = c.getCycleCount();
+            t = c.now();
             for( size_t i = 0; i < w.count; ++i )
             {
                 stlmap.erase( w.table[i] );
             }
-            perfs.stlmap.remove += c.getCycleCount() - t;
+            perfs.stlmap.remove += c.now() - t;
             TS_ASSERT( stlmap.empty() );
 
             // StringMap erasing
-            t = c.getCycleCount();
+            t = c.now();
             for( size_t i = 0; i < w.count; ++i )
             {
                 mymap.remove( w.table[i] );
             }
-            perfs.strmap.remove += c.getCycleCount() - t;
+            perfs.strmap.remove += c.now() - t;
             TS_ASSERT( mymap.empty() );
 
             // StrHashMap erasing
-            t = c.getCycleCount();
+            t = c.now();
             for( size_t i = 0; i < w.count; ++i )
             {
                 hmap.remove( w.table[i] );
             }
-            perfs.hashmap.remove += c.getCycleCount() - t;
+            perfs.hashmap.remove += c.now() - t;
             TS_ASSERT( hmap.empty() );
         }
 
@@ -369,7 +369,7 @@ public:
 
     void testPerfWith_25000_Items()
     {
-        srand( (int)(0xFFFFFFFF & GN::Clock::sGetSystemCycleCount()) );
+        srand( (int)(0xFFFFFFFF & std::chrono::high_resolution_clock::now().time_since_epoch().count()) );
         WordTable w = words();
         printf( "num words = %zd\n", w.count );
         doPerfTest( w );
@@ -377,19 +377,19 @@ public:
 
     void testPerfWith_1000_Items()
     {
-        srand( (int)(0xFFFFFFFF & GN::Clock::sGetSystemCycleCount()) );
+        srand( (int)(0xFFFFFFFF & std::chrono::high_resolution_clock::now().time_since_epoch().count()) );
         doPerfTestWithFixedNumberOfItems( 1009 );
     }
 
     void testPerfWith_100_Items()
     {
-        srand( (int)(0xFFFFFFFF & GN::Clock::sGetSystemCycleCount()) );
+        srand( (int)(0xFFFFFFFF & std::chrono::high_resolution_clock::now().time_since_epoch().count()) );
         doPerfTestWithFixedNumberOfItems( 103 );
     }
 
     void testPerfWith_10_Items()
     {
-        srand( (int)(0xFFFFFFFF & GN::Clock::sGetSystemCycleCount()) );
+        srand( (int)(0xFFFFFFFF & std::chrono::high_resolution_clock::now().time_since_epoch().count()) );
         doPerfTestWithFixedNumberOfItems( 11 );
     }
 };

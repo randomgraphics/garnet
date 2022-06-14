@@ -41,7 +41,7 @@ namespace GN { namespace util
         ///
         void reset()
         {
-            mCurrentTime = mClock.getTimeD();
+            mCurrentTime = mClock.seconds();
             mFpsValue = 60.0f; // ensure non-zero FPS for the very first frame.
             mFpsString.format( mFormatString.rawptr(), 0 );
             mFrameCounter = 0;
@@ -56,7 +56,7 @@ namespace GN { namespace util
         ///
         void onFrame()
         {
-            mCurrentTime = mClock.getTimeD();
+            mCurrentTime = mClock.seconds();
 
             ++mFrameCounter;
 

@@ -5,17 +5,58 @@ if [ -f "$HOME/.bashrc" ]; then
     . "$HOME/.bashrc"
 fi
 
+echo
+echo "********************************************************************************"
+echo "*                                                                              *"
+echo "*                       GARNET Development Console                             *"
+echo "*                                                                              *"
+echo "********************************************************************************"
+echo
 
-# ======================================
-# detect garnet root directory
-# ======================================
+
+# ===========
+# Basic setup
+# ===========
+
 export GARNET_ROOT=$(dirname $(dirname $(realpath ${BASH_SOURCE[0]})))
+export GN_BUILD_TARGET_CPU=x64
+export GN_BUILD_DIR=build.linux.${GN_BUILD_TARGET_CPU}
 
-export GN_BUILD_DIR=build.linux.x64
+# Detect WSL enviroonment
+echo $(uname -r) | grep -q "microsoft"
+if [[ $? == 0 ]] ; then
+    # kernel name contains string "microsoft". we must be in wsl environment.
+    echo "NOTE: You are currently running WSL environment. Please refer to the following"
+    echo "      link to ensure your docker environemnt is running properly:"
+    echo
+    echo "      https://docs.docker.com/docker-for-windows/wsl/"
+    echo
 
-# ===========
-# setup alias
-# ===========
+    # remove /mnt/... like path imported via WSL interoperbility to avoid confusing linux tools, except docker related path
+    # TODO: retain docker path in original PATH instead of appending with hardcoded one
+    export PATH=`echo $PATH | tr ":" "\n" | grep -v "/mnt/" | tr "\n" ":"`:/mnt/c/Program\ Files/Docker/Docker/resources/bin:/mnt/c/ProgramData/DockerDesktop/version-bin
+fi
+
+# ==========
+# Config GIT
+# ==========
+
+# setup local git config (prefix with double underscore indicating it is private to this script)
+__setup-local-git-config()
+{
+    if [ -d $1/.git ] || [ -f $1/.git ]; then
+        cd $1
+        git config --local include.path ${GARNET_ROOT}/.gitconfig
+        cd ->/dev/null
+    fi
+}
+__setup-local-git-config ${GARNET_ROOT}
+
+
+# =====
+# alias
+# =====
+
 while read -r line
 do
     line=${line/\$\*/}  # remove $*
@@ -34,26 +75,29 @@ do
     alias ${x[0]}="${x[1]}"
 done < ${GARNET_ROOT}/env/alias.txt
 
+# =====================
+# Config Console Prompt
+# =====================
+
+# utility function to get git branch
+get-git-branch() {
+    branch=$(git rev-parse --abbrev-ref HEAD 2>&1)
+    if [[ $? != 0 ]]  ; then
+        branch="n/a"
+    fi
+    echo $branch
+}
+
+# setup command line prompt
+PS1="\n\e[00;92m==== [GARNET] - \e[01;96m${GARNET_ROOT}\e[00;92m - \e[01;93m\$(get-git-branch)\e[00;92m ====\e[m\n$PS1"
+
 # =====
 # Misc.
 # =====
 
 unset INCLUDE
 unset LIBS
-PATH=${GARNET_ROOT}/env/bin/bash:${PATH}
-
-# setup local git config
-setup-local-git-config()
-{
-    if [ -d $1/.git ] || [ -f $1/.git ]; then
-        cd $1
-        git config --local include.path ${GARNET_ROOT}/.gitconfig
-        cd ->/dev/null
-    fi
-}
-setup-local-git-config ${GARNET_ROOT}
-
-PS1="[$GARNET_ROOT] $PS1"
+PATH=${GARNET_ROOT}/env/bin:${PATH}
 
 # =================
 # End of main setup
@@ -67,8 +111,15 @@ cd ${GARNET_ROOT}
 
 # if exist env/user/${USER}.sh env/user/${USER}.sh
 
-# ================================================
-# Garnet build environment setup done successfully
-# ================================================
-echo USERNAME             = $USER
-echo GARNET_ROOT          = $GARNET_ROOT
+# ====
+# Done
+# ====
+
+echo
+echo Garnet build environment ready to use. Happy coding!
+echo
+echo "USERNAME                 = $USER"
+echo "GARNET_ROOT              = $GARNET_ROOT"
+echo "GN_BUILD_CMAKE_GENERATOR = $GN_BUILD_CMAKE_GENERATOR"
+echo "GN_BUILD_TARGET_CPU      = $GN_BUILD_TARGET_CPU"
+echo "GN_BUILD_DIR             = $GN_BUILD_DIR"

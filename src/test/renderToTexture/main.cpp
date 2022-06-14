@@ -114,7 +114,7 @@ public:
 
     void drawBox( float speed )
     {
-        float angle = speed * fmod( timer.getTimef(), GN_TWO_PI );
+        float angle = speed * fmod( (float)timer.seconds(), GN_TWO_PI );
 
         Matrix44f world;
         world.rotateY( angle );

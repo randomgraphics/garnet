@@ -872,7 +872,7 @@ sLoadFbxMesh(
 
     // Now copy everthing to the output descriptor. And we are done!
     MeshResourceDesc & gnmesh = desc.meshes[meshName];
-    gnmesh.clear();
+    gnmesh = {};
     gnmesh.prim        = PrimitiveType::TRIANGLE_LIST;
     gnmesh.numvtx      = (uint32)vertexBlob->array().size();
     gnmesh.numidx      = numidx;

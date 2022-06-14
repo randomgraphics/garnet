@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.17.5) # FindQt6 requires 3.16+, FindCUDAToolkit required 3.17.5
+cmake_minimum_required(VERSION 3.16.3) # 3.16.3 is the default version coming with Ubuntu 20.04
 
 project(garnet LANGUAGES C CXX)
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/env/cmake)

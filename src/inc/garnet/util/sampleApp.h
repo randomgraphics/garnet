@@ -44,8 +44,8 @@ namespace GN { namespace util
             gfx::FontFaceCreationDesc asciiFont;         ///< default ascii font face creation descriptor.
         };
 
-        static const uint32 UPDATE_FREQUENCY; //< Frequency of onUpdate() call.
-        static const float  UPDATE_INTERVAL;  //< 1.0 / UPDATE_FREQUENCY.
+        inline static const uint32 UPDATE_FREQUENCY = 60; ///< Target to 60 FPS.
+        inline static const float  UPDATE_INTERVAL_IN_SECONDS = 1.0f / 60.0f;
 
         virtual int  run( int argc, const char * const argv[] );
         virtual bool onCheckExtraCmdlineArguments( const char * exename, int argc, const char * const argv[] ); // only non-standard/unknown arguments are passed to this function.

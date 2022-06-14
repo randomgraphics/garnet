@@ -49,7 +49,7 @@ GN_API GN::ProfileTimer::~ProfileTimer()
 // -----------------------------------------------------------------------------
 GN_API void GN::ProfileTimer::start()
 {
-    timestart = clock.getTimeD();
+    timestart = clock.seconds();
 }
 
 //
@@ -57,7 +57,7 @@ GN_API void GN::ProfileTimer::start()
 // -----------------------------------------------------------------------------
 GN_API void GN::ProfileTimer::stop()
 {
-    double t = clock.getTimeD() - timestart;
+    double t = clock.seconds() - timestart;
     if( t < timemin ) timemin = t;
     if( t > timemax ) timemax = t;
     timesum += t;
