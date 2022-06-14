@@ -10,7 +10,10 @@
 
 function warn { write-host -ForegroundColor yellow "WARN : $args" }
 
-function error { write-host -ForegroundColor red "ERROR : $args"; "GARNET build environment setup failed."; exit }
+function error {
+    write-host -ForegroundColor red "GARNET build environment setup failed : $args"
+    stop-process $PID # kill current power shell process
+}
 
 function catch_batch_env( $batch, $arg )
 {
@@ -41,12 +44,24 @@ function catch_batch_env( $batch, $arg )
 # Define your function like this: function global:<name> (...) { .... }
 function global:ccc { cmd.exe /c $args }
 
+# A helper function to retrieve current git branch
+function global:get-git-branch {
+    $branch=$(git rev-parse --abbrev-ref HEAD 2>&1)
+    if ($lastExitCode -ne 0) {
+        $branch = "n/a"
+    }
+    "$branch"
+}
+
 # redefine prompt function
-function global:prompt()
-{
-	write-host -ForegroundColor Magenta "=== GARNET ===="
-	write-host -ForegroundColor Magenta "[$(get-location)]"
-	return ">"
+function global:prompt {
+    write-host -ForegroundColor Green "==== GARNET - " -NoNewline
+    write-host -ForegroundColor Blue "$GARNET_ROOT" -NoNewline
+    write-host -ForegroundColor Green " - " -NoNewline
+    write-host -ForegroundColor Yellow "$(get-git-branch)" -NoNewline
+    write-host -ForegroundColor Green " ===="
+    write-host -ForegroundColor Green "[$(get-location)]"
+    return ">"
 }
 
 # ==============================================================================
@@ -134,19 +149,19 @@ if( "Ninja" -eq $env:GN_BUILD_CMAKE_GENERATOR )
 
     # locate vsvarall.bat
     $vcvarbat=$false
-    if( test-path "C:\Program Files (x86)\Microsoft Visual Studio\2017\Professional\VC\Auxiliary\Build\vcvarsall.bat" )
+    if( test-path "C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Auxiliary\Build\vcvarsall.bat" )
     {
-        $vcvarbat="C:\Program Files (x86)\Microsoft Visual Studio\2017\Professional\VC\Auxiliary\Build\vcvarsall.bat"
-        $env:GN_BUILD_COMPILER="vc150";
+        $vcvarbat="C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Auxiliary\Build\vcvarsall.bat"
+        $env:GN_BUILD_COMPILER="vc170";
     }
-    elseif( test-path "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvarsall.bat" )
+    elseif( test-path "C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvarsall.bat" )
     {
-        $vcvarbat="C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvarsall.bat"
-        $env:GN_BUILD_COMPILER="vc150";
+        $vcvarbat="C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvarsall.bat"
+        $env:GN_BUILD_COMPILER="vc170";
     }
     else
     {
-        error "Visual Studio 2017 Community/Professional is required."
+        error "Visual Studio 2022 Community/Professional is required."
     }
 
     # run vsvarall.bat, catch all environments
@@ -463,6 +478,12 @@ else
 }
 
 # ==============================================================================
+# setup local git config
+# ==============================================================================
+
+git config --local include.path ${GARNET_ROOT}/.gitconfig
+
+# ==============================================================================
 # MISC
 # ==============================================================================
 
@@ -500,9 +521,9 @@ if( Test-Path $GARNET_ROOT\user\$env:USERNAME.ps1 )
 # ==============================================================================
 
 write-host -ForegroundColor green "
-================================================
-Garnet build environment setup done successfully
-================================================
+====================================================
+Garnet build environment ready to use. Happy coding!
+====================================================
 USERNAME                 = $env:USERNAME
 GARNET_ROOT              = $env:GARNET_ROOT
 GN_BUILD_CMAKE_GENERATOR = $env:GN_BUILD_CMAKE_GENERATOR

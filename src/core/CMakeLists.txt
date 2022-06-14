@@ -14,10 +14,17 @@ configure_file(../inc/garnet/base/features.h.in ../inc/garnet/base/features.h)
 set(BUILD_HEADER_INC ${CMAKE_CURRENT_BINARY_DIR}/../inc/garnet)
 
 # print configuration summary
-message("GN_BUILD_HAS_OGL     = ${GN_BUILD_HAS_OGL}")
-message("GN_BUILD_HAS_D3D9    = ${GN_BUILD_HAS_D3D9}")
-message("GN_BUILD_HAS_D3D11   = ${GN_BUILD_HAS_D3D11}")
-message("GN_BUILD_HAS_D3D11_1 = ${GN_BUILD_HAS_D3D11_1}")
+# print summary
+GN_print_status("CMAKE_MAKE_PROGRAM         = ${CMAKE_MAKE_PROGRAM}")
+GN_print_status("CMAKE_BUILD_TYPE           = ${CMAKE_BUILD_TYPE}")
+GN_print_status("CMAKE_SIZEOF_VOID_P        = ${CMAKE_SIZEOF_VOID_P}")
+GN_print_status("GN_BUILD_IS_STATIC         = ${GN_BUILD_IS_STATIC}")
+GN_print_status("GN_BUILD_DEBUG_ENABLED     = ${GN_BUILD_DEBUG_ENABLED}")
+GN_print_status("GN_BUILD_PROFILING_ENABLED = ${GN_BUILD_PROFILING_ENABLED}")
+GN_print_status("GN_BUILD_HAS_OGL           = ${GN_BUILD_HAS_OGL}")
+GN_print_status("GN_BUILD_HAS_D3D9          = ${GN_BUILD_HAS_D3D9}")
+GN_print_status("GN_BUILD_HAS_D3D11         = ${GN_BUILD_HAS_D3D11}")
+GN_print_status("GN_BUILD_HAS_D3D11_1       = ${GN_BUILD_HAS_D3D11_1}")
 
 # ====================
 # Collect source files

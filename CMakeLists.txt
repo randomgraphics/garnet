@@ -8,6 +8,14 @@ set (CMAKE_CXX_STANDARD 17)
 # utility functions
 # =================
 
+macro(GN_print_status)
+    message("[GARNET] ${ARGN}")
+endmacro()
+
+macro(GN_warning)
+    message(WARNING "========================\n\n[GARNET] ${ARGN}\n\n========================")
+endmacro()
+
 # Setup PCH for source files
 #
 # Usage:
@@ -91,12 +99,15 @@ endif()
 
 # check build type
 if ("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
+    # debug build
     set(GN_BUILD_DEBUG_ENABLED ON)
     set(GN_BUILD_PROFILING_ENABLED ON)
 elseif ("${CMAKE_BUILD_TYPE}" STREQUAL "RelWithDebInfo")
+    # profile build
     set(GN_BUILD_DEBUG_ENABLED OFF)
     set(GN_BUILD_PROFILING_ENABLED ON)
 else()
+    # release build
     set(GN_BUILD_DEBUG_ENABLED OFF)
     set(GN_BUILD_PROFILING_ENABLED OFF)
 endif()
@@ -106,14 +117,6 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/bin)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/lib)
 
-# print summary
-message("CMAKE_MAKE_PROGRAM         = ${CMAKE_MAKE_PROGRAM}")
-message("CMAKE_BUILD_TYPE           = ${CMAKE_BUILD_TYPE}")
-message("CMAKE_SIZEOF_VOID_P        = ${CMAKE_SIZEOF_VOID_P}")
-message("GN_BUILD_IS_STATIC         = ${GN_BUILD_IS_STATIC}")
-message("GN_BUILD_DEBUG_ENABLED     = ${GN_BUILD_DEBUG_ENABLED}")
-message("GN_BUILD_PROFILING_ENABLED = ${GN_BUILD_PROFILING_ENABLED}")
-
 # search commonly used packages
 # set(OpenGL_GL_PREFERENCE GLVND)
 find_package(OpenGL)
@@ -122,6 +125,7 @@ find_package(Vulkan)
 find_package(X11)
 find_package(Qt6 COMPONENTS Core Widgets)
 find_package(CUDAToolkit)
+find_package(OptiX)
 
 # ===================
 # call subdirectories
