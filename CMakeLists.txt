@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.17.5) # FindQt6 requires 3.16+, FindCUDAToolkit required 3.17.5
 
-project(garnet LANGUAGES C CXX CUDA)
+project(garnet LANGUAGES C CXX)
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/env/cmake)
 set (CMAKE_CXX_STANDARD 17)
 
@@ -126,6 +126,13 @@ find_package(X11)
 find_package(Qt6 COMPONENTS Core Widgets)
 find_package(CUDAToolkit)
 find_package(OptiX)
+
+# Check for CUDA support
+include(CheckLanguage)
+check_language(CUDA)
+if (CMAKE_CUDA_COMPILER)
+    enable_language(CUDA OPTIONAL)
+endif()
 
 # ===================
 # call subdirectories

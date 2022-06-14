@@ -1,20 +1,12 @@
-# set the default test behavior
-* text auto
-
-# specify true binary files here
-*.bmp binary
-*.dds binary
-*.dll binary
-*.exe binary
-*.fbx binary
-*.ib  binary
-*.jpg binary
-*.lib binary
-*.max binary
-*.pdb binary
-*.png binary
-*.rtf binary
-*.tga binary
-*.ttc binary
-*.ttf binary
-*.vb  binary
+*.exe filter=lfs diff=lfs merge=lfs -text
+*.bmp filter=lfs diff=lfs merge=lfs -text
+*.dds filter=lfs diff=lfs merge=lfs -text
+*.fbx filter=lfs diff=lfs merge=lfs -text
+*.jpg filter=lfs diff=lfs merge=lfs -text
+*.lib filter=lfs diff=lfs merge=lfs -text
+*.max filter=lfs diff=lfs merge=lfs -text
+*.png filter=lfs diff=lfs merge=lfs -text
+*.rtf filter=lfs diff=lfs merge=lfs -text
+*.tga filter=lfs diff=lfs merge=lfs -text
+*.ttf filter=lfs diff=lfs merge=lfs -text
+*.vb filter=lfs diff=lfs merge=lfs -text
