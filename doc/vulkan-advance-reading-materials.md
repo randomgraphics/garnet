@@ -21,6 +21,7 @@ Vulkan Guide with sample code focusing on practical dynamic scene rendering
 https://vkguide.dev/
 
 A very thorough walkthrough of Vulkan Synchronization from LunarG.
+--
 https://www.lunarg.com/wp-content/uploads/2021/08/Vulkan-Synchronization-SIGGRAPH-2021.pdf
 
 ARM's Vulkan best pratice guidance
