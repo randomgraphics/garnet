@@ -79,7 +79,7 @@ class OGLDebugOutputARB {
                 break;
 
             case GL_DEBUG_SEVERITY_LOW_ARB: // Performance warnings from redundant state changes
-                logLevel = Logger::VVERBOSE;
+                logLevel = Logger::BABBLE;
                 break;
 
             default:
@@ -103,7 +103,7 @@ class OGLDebugOutputARB {
                 break;
 
             case GL_DEBUG_SEVERITY_NOTIFICATION:
-                logLevel = Logger::VVERBOSE;
+                logLevel = Logger::BABBLE;
                 break;
 
             default:

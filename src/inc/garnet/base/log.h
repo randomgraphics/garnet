@@ -61,7 +61,7 @@
 ///
 /// output very-verbose message
 ///
-#define GN_VVERBOSE(logger) GN_LOG(logger, GN::Logger::VVERBOSE)
+#define GN_BABBLE(logger) GN_LOG(logger, GN::Logger::BABBLE)
 
 ///
 /// Debug only log macros (no effect to non-debug build)
@@ -70,7 +70,7 @@
 #if GN_BUILD_DEBUG_ENABLED
     #define GN_TRACE(logger)   GN_INFO(logger)
     #define GN_VTRACE(logger)  GN_VERBOSE(logger)
-    #define GN_VVTRACE(logger) GN_VVERBOSE(logger)
+    #define GN_VVTRACE(logger) GN_BABBLE(logger)
 #else
     #define GN_TRACE(logger) \
         if (1) {             \
@@ -97,12 +97,12 @@ public:
     /// logging level
     ///
     enum LogLevel {
-        FATAL    = 10, ///< fatal error message
-        ERROR_   = 20, ///< error message (Note: ERROR is define as a macro)
-        WARN     = 30, ///< warning message
-        INFO     = 40, ///< informational message
-        VERBOSE  = 50, ///< verbose message
-        VVERBOSE = 60, ///< very verbose message
+        FATAL   = 10, ///< fatal error message
+        ERROR_  = 20, ///< error message (Note: ERROR is define as a macro)
+        WARN    = 30, ///< warning message
+        INFO    = 40, ///< informational message
+        VERBOSE = 50, ///< verbose message
+        BABBLE  = 60, ///< very verbose message
     };
 
     ///

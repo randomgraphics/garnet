@@ -67,9 +67,9 @@ function global:ccc { cmd.exe /c $args }
 
 # A helper function to retrieve current git branch
 function global:get-git-branch {
-    $branch=$(git rev-parse --abbrev-ref HEAD 2>&1)
+    $branch = $(git rev-parse --abbrev-ref HEAD 2>&1)
     if ($lastExitCode -ne 0) {
-        $branch = "n/a"
+        $branch = "!!!GIT ERROR: {$lastExitCode}!!!"
     }
     "$branch"
 }
@@ -499,7 +499,7 @@ else
 }
 
 # ==============================================================================
-# setup local git config
+# setup git
 # ==============================================================================
 
 git config --local include.path ${GARNET_ROOT}/.gitconfig
@@ -509,6 +509,11 @@ git config --local include.path ${GARNET_ROOT}/.gitconfig
 # ==============================================================================
 
 # Setup PATH
+$MY_BIN_PATH = "$GARNET_ROOT\env\bin\mswin\x86"
+if( "x64" -eq $current_cpu )
+{
+    $MY_BIN_PATH = "$GARNET_ROOT\env\bin\mswin\x64;$MY_BIN_PATH"
+}
 $env:Path = "$GARNET_ROOT\env\bin;$env:Path"
 
 # update title
@@ -517,14 +522,11 @@ $Host.UI.RawUI.WindowTitle = "garnet3d ( $GARNET_ROOT )"
 # change current location
 set-location $GARNET_ROOT
 
-# reset some command line color
+#reset some command line color
 Set-PSReadlineOption -Colors @{
         "Parameter" = [System.ConsoleColor]::White
         "Operator" = [System.ConsoleColor]::White
 }
-
-# setup git config
-git config --local include.path ${GARNET_ROOT}/.gitconfig
 
 # ==============================================================================
 # call user specific setup script
