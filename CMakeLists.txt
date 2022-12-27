@@ -1,8 +1,6 @@
 cmake_minimum_required(VERSION 3.16.3) # 3.16.3 is the default version coming with Ubuntu 20.04
 
-project(garnet LANGUAGES C CXX)
-list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/env/cmake)
-set (CMAKE_CXX_STANDARD 17)
+project(garnet)
 
 # =================
 # utility functions
@@ -112,7 +110,9 @@ else()
     set(GN_BUILD_PROFILING_ENABLED OFF)
 endif()
 
-# runtime output directory
+# setup repository wide cmake properties
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/env/cmake)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/bin)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/lib)

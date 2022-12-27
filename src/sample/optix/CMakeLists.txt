@@ -1,4 +1,5 @@
-if (OPTIX_FOUND)
+if (CUDA_FOUND)
+    project(GN-sample-optix LANGUAGES C CXX CUDA)
     add_library(GNsample-optix-ptx OBJECT trace.cu)
     target_include_directories(GNsample-optix-ptx PRIVATE $ENV{NVIDIA_OPTIX_INSTALL_ROOT}/include)
     set_target_properties(GNsample-optix-ptx PROPERTIES

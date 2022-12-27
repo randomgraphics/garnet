@@ -134,7 +134,7 @@ else()
     )
 endif()
 
-target_compile_features(GNextern PRIVATE cxx_std_11)
+# target_compile_features(GNextern PRIVATE cxx_std_11)
 
 # OpenGL and X11 options
 if (${OPENGL_FOUND})
