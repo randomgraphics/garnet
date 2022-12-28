@@ -529,15 +529,6 @@ Set-PSReadlineOption -Colors @{
 }
 
 # ==============================================================================
-# call user specific setup script
-# ==============================================================================
-
-if( Test-Path $GARNET_ROOT\user\$env:USERNAME.ps1 )
-{
-    .$GARNET_ROOT\user\$env:USERNAME.ps1
-}
-
-# ==============================================================================
 # DONE
 # ==============================================================================
 
@@ -545,7 +536,6 @@ write-host -ForegroundColor green "
 
 Garnet build environment ready to use. Happy coding!
 
-USERNAME                 = $env:USERNAME
 GARNET_ROOT              = $env:GARNET_ROOT
 GN_BUILD_CMAKE_GENERATOR = $env:GN_BUILD_CMAKE_GENERATOR
 GN_BUILD_TARGET_CPU      = $env:GN_BUILD_TARGET_CPU
