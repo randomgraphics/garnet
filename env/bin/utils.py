@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-from os import times
+import os
 from re import search
 import sys, subprocess, pathlib, pprint
 
@@ -78,6 +78,38 @@ def compare_file_timestamp(path, latest, chosen):
 
 def get_sdk_root_folder():
     return pathlib.Path(__file__).resolve().parent.parent.parent.absolute()
+
+def get_cmake_build_type(variant, build_dir, for_android = False):
+    # determine build type
+    build_type = str(variant).lower()
+    if "d" == build_type or "debug" == build_type:
+        suffix = ".d"
+        build_type = "Debug"
+    elif "p" == build_type or "profile" == build_type:
+        suffix = ".p"
+        build_type = "RelWithDebInfo"
+    elif "r" == build_type or "release" == build_type:
+        suffix = ".r"
+        build_type = "Release"
+    elif "c" == build_type or "clean" == build_type:
+        # return [None, None] indicating a clear action.
+        return [None, None]
+    else:
+        rip(f"[ERROR] unrecognized build variant : {variant}.")
+
+    # determine build folder
+    build_dir = pathlib.Path(build_dir)
+    if not build_dir.is_absolute():
+        build_dir = get_sdk_root_folder() / build_dir
+    if for_android:
+        build_dir = build_dir / ("android" + suffix)
+    elif os.name == "nt":
+        build_dir = build_dir / ("mswin" + suffix)
+    else:
+        build_dir = build_dir / ("posix" + suffix)
+
+    #done
+    return [build_type, build_dir]
 
 # def search_for_the_latest_binary_ex(path_template):
 #     candidates = [
