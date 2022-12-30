@@ -153,7 +153,7 @@ public:
     AutoRef<MemoryBlock> createMemoryBlock(const MemoryBlockCreateParameters &) override;
     AutoRef<Surface>     createSurface(const SurfaceCreateParameters &) override;
     AutoRef<Query>       createQuery(const QueryCreateParameters &) override { return {}; }
-    Kicked               kickOff(GN::gfx::Gpu2::CommandList &) override;
+    Kicked               kickOff(ConstRange<GN::gfx::Gpu2::CommandList *>) override;
     void                 finish(uint64_t fence) override;
     void                 present(const PresentParameters &) override;
 };
@@ -179,9 +179,12 @@ public:
     bool                        ok() const { return !_pool.empty() && _pool.front().allocator && _pool.front().commandList; }
     uint64_t                    kickOff(D3D12CommandQueue &);
     ID3D12GraphicsCommandList & active() { return *_pool.front().commandList; };
+    void                        reset(uint64_t);
 
-    void reset(uint64_t initialState) override;
-    void clear(const Gpu2::ClearParameters &) override;
+    void begin(const Gpu2::RenderPass &) override;
+    void next() override;
+    void end() override;
+    void clearScreen(const Gpu2::ClearScreenParameters &) override;
     void draw(const Gpu2::DrawParameters &) override;
     void compute(const Gpu2::ComputeParameters &) override { GN_UNIMPL(); }
     void copySurface(const Gpu2::CopySurfaceParameters &) override;
@@ -201,8 +204,8 @@ struct D3D12MemoryBlock : public Gpu2::MemoryBlock {
 };
 
 struct D3D12PlacedResource : public Gpu2::Surface {
-    D3D12Gpu2 &                           owner;
-    AutoComPtr<ID3D12Resource>            resource;
+    D3D12Gpu2 &                         owner;
+    AutoComPtr<ID3D12Resource>          resource;
     const Gpu2::SurfaceCreateParameters creationParameters;
 
     D3D12PlacedResource(D3D12Gpu2 & o, const Gpu2::SurfaceCreateParameters & cp): owner(o), creationParameters(cp) {}
