@@ -12,7 +12,7 @@ static GN::Logger * sLogger = GN::getLogger("GN.win.Qt");
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::win::WindowQt::init(const WindowCreationParameters & wcp) {
+bool GN::win::WindowQt::init(const WindowCreateParameters & wcp) {
     GN_GUARD;
 
     // standard init procedure
@@ -161,7 +161,7 @@ bool GN::win::WindowQt::runUntilNoNewEvents(bool) {
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::win::WindowQt::createWindow(const WindowCreationParameters & wcp) {
+bool GN::win::WindowQt::createWindow(const WindowCreateParameters & wcp) {
     GN_GUARD;
 
     // check parent

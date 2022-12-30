@@ -47,7 +47,7 @@ struct IDirect3DDevice9Vtbl {
     HRESULT(STDMETHODCALLTYPE * GetDirect3D)(IDirect3DDevice9 * this_, IDirect3D9 ** ppD3D9);
     HRESULT(STDMETHODCALLTYPE * GetDeviceCaps)(IDirect3DDevice9 * this_, D3DCAPS9 * pCaps);
     HRESULT(STDMETHODCALLTYPE * GetDisplayMode)(IDirect3DDevice9 * this_, UINT iSwapChain, D3DDISPLAYMODE * pMode);
-    HRESULT(STDMETHODCALLTYPE * GetCreationParameters)(IDirect3DDevice9 * this_, D3DDEVICE_CREATION_PARAMETERS * pParameters);
+    HRESULT(STDMETHODCALLTYPE * GetCreateParameters)(IDirect3DDevice9 * this_, D3DDEVICE_CREATION_PARAMETERS * pParameters);
     HRESULT(STDMETHODCALLTYPE * SetCursorProperties)(IDirect3DDevice9 * this_, UINT XHotSpot, UINT YHotSpot, IDirect3DSurface9 * pCursorBitmap);
     void(STDMETHODCALLTYPE * SetCursorPosition)(IDirect3DDevice9 * this_, int X, int Y, DWORD Flags);
     BOOL(STDMETHODCALLTYPE * ShowCursor)(IDirect3DDevice9 * this_, BOOL bShow);
@@ -553,7 +553,7 @@ struct IDirect3DDevice9ExVtbl {
     HRESULT(STDMETHODCALLTYPE * GetDirect3D)(IDirect3DDevice9Ex * this_, IDirect3D9 ** ppD3D9);
     HRESULT(STDMETHODCALLTYPE * GetDeviceCaps)(IDirect3DDevice9Ex * this_, D3DCAPS9 * pCaps);
     HRESULT(STDMETHODCALLTYPE * GetDisplayMode)(IDirect3DDevice9Ex * this_, UINT iSwapChain, D3DDISPLAYMODE * pMode);
-    HRESULT(STDMETHODCALLTYPE * GetCreationParameters)(IDirect3DDevice9Ex * this_, D3DDEVICE_CREATION_PARAMETERS * pParameters);
+    HRESULT(STDMETHODCALLTYPE * GetCreateParameters)(IDirect3DDevice9Ex * this_, D3DDEVICE_CREATION_PARAMETERS * pParameters);
     HRESULT(STDMETHODCALLTYPE * SetCursorProperties)(IDirect3DDevice9Ex * this_, UINT XHotSpot, UINT YHotSpot, IDirect3DSurface9 * pCursorBitmap);
     void(STDMETHODCALLTYPE * SetCursorPosition)(IDirect3DDevice9Ex * this_, int X, int Y, DWORD Flags);
     BOOL(STDMETHODCALLTYPE * ShowCursor)(IDirect3DDevice9Ex * this_, BOOL bShow);

@@ -41,10 +41,10 @@ class DX12Triangle : public StdClass {
         };
 
         // create a upload buffer that holds vertices
-        Gpu2::SurfaceCreationParameters vbcp;
+        Gpu2::SurfaceCreateParameters vbcp;
         vbcp.memory  = _g.um;
         vbcp.offset  = 0;
-        vbcp.dim     = Gpu2::SurfaceDimension::BUFFER;
+        vbcp.type    = Gpu2::SurfaceType::BUFFER;
         vbcp.b.bytes = sizeof(vertices);
         auto upload  = _g.gpu->createSurface(vbcp);
 
@@ -60,7 +60,7 @@ class DX12Triangle : public StdClass {
         // copy vertices to vb for rendering
         auto cl = _g.gpu->createCommandList({});
         cl->copySurface(upload.rawptr(), _vb.rawptr());
-        _g.gpu->kickoff(*cl);
+        _g.gpu->kickOff(*cl);
         _g.gpu->finish();
     }
 
@@ -95,7 +95,7 @@ class DX12Triangle : public StdClass {
 
         // create pso
         Gpu2::InputElement               ie[] = {{"POSITION", 0, ColorFormat::RGB_32_32_32_FLOAT, 0, 0, false, 0}};
-        Gpu2::PipelineCreationParameters pcp  = {};
+        Gpu2::PipelineCreateParameters pcp  = {};
         pcp.vs                                = {vs.rawptr(), vs.size()};
         pcp.ps                                = {ps.rawptr(), ps.size()};
         pcp.inputElements                     = ie;
@@ -158,7 +158,7 @@ int main() {
         g.cl->reset();
         g.cl->clear({{0.f, 1.f, 0.f, 0.f}});
         tri.render(g);
-        g.gpu->kickoff(*g.cl);
+        g.gpu->kickOff(*g.cl);
         g.gpu->present({});
     }
 

@@ -63,7 +63,7 @@ static HMONITOR getMonitorByIndex( size_t i )
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::win::WindowMsw::init(const WindowCreationParameters & wcp) {
+bool GN::win::WindowMsw::init(const WindowCreateParameters & wcp) {
     GN_GUARD;
 
     // standard init procedure
@@ -272,7 +272,7 @@ bool GN::win::WindowMsw::runUntilNoNewEvents(bool blockWhileMinized) {
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::win::WindowMsw::createWindow(const WindowCreationParameters & wcp) {
+bool GN::win::WindowMsw::createWindow(const WindowCreateParameters & wcp) {
     GN_GUARD;
 
     // check parent

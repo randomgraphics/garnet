@@ -32,7 +32,7 @@ public:
 
     //@{
 public:
-    bool init(const WindowCreationParameters &);
+    bool init(const WindowCreateParameters &);
     bool init(const WindowAttachingParameters &);
     void quit();
 
@@ -78,7 +78,7 @@ private:
     ::Window  mWindow;
 
     bool createExternalRenderWindow(const WindowAttachingParameters &);
-    bool createInternalRenderWindow(const WindowCreationParameters &);
+    bool createInternalRenderWindow(const WindowCreateParameters &);
     bool initDisplay(intptr_t handle);
 };
 } // namespace win

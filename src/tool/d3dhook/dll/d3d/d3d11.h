@@ -7984,7 +7984,7 @@ EXTERN_C const IID IID_ID3D11VideoDecoder;
 MIDL_INTERFACE("3C9C5B51-995D-48d1-9B8D-FA5CAEDED65C")
 ID3D11VideoDecoder : public ID3D11DeviceChild {
 public:
-    virtual HRESULT STDMETHODCALLTYPE GetCreationParameters(
+    virtual HRESULT STDMETHODCALLTYPE GetCreateParameters(
         /* [annotation] */
         _Out_ D3D11_VIDEO_DECODER_DESC * pVideoDesc,
         /* [annotation] */
@@ -8039,7 +8039,7 @@ typedef struct ID3D11VideoDecoderVtbl {
      /* [annotation] */
      _In_opt_ const IUnknown * pData);
 
-    HRESULT(STDMETHODCALLTYPE * GetCreationParameters)
+    HRESULT(STDMETHODCALLTYPE * GetCreateParameters)
     (ID3D11VideoDecoder * This,
      /* [annotation] */
      _Out_ D3D11_VIDEO_DECODER_DESC * pVideoDesc,
@@ -8074,7 +8074,7 @@ interface ID3D11VideoDecoder {
 
                 #define ID3D11VideoDecoder_SetPrivateDataInterface(This, guid, pData) ((This)->lpVtbl->SetPrivateDataInterface(This, guid, pData))
 
-                #define ID3D11VideoDecoder_GetCreationParameters(This, pVideoDesc, pConfig) ((This)->lpVtbl->GetCreationParameters(This, pVideoDesc, pConfig))
+                #define ID3D11VideoDecoder_GetCreateParameters(This, pVideoDesc, pConfig) ((This)->lpVtbl->GetCreateParameters(This, pVideoDesc, pConfig))
 
                 #define ID3D11VideoDecoder_GetDriverHandle(This, pDriverHandle) ((This)->lpVtbl->GetDriverHandle(This, pDriverHandle))
 

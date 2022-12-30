@@ -32,7 +32,7 @@ public:
 
     //@{
 public:
-    bool init(const WindowCreationParameters &);
+    bool init(const WindowCreateParameters &);
     bool init(const WindowAttachingParameters &);
     void quit();
 
@@ -82,7 +82,7 @@ private:
     // private functions
     // ********************************
 private:
-    bool                    createWindow(const WindowCreationParameters & wcp);
+    bool                    createWindow(const WindowCreateParameters & wcp);
     void                    handleMessage(HWND wnd, UINT msg, WPARAM wp, LPARAM lp);
     LRESULT                 windowProc(HWND wnd, UINT msg, WPARAM wp, LPARAM lp);
     static LRESULT CALLBACK staticWindowProc(HWND wnd, UINT msg, WPARAM wp, LPARAM lp);

@@ -165,7 +165,7 @@ bool GN::gfx::BasicGpu::dispInit(const GpuOptions & ro) {
             if (0 == w) w = 1280;
             if (0 == h) h = 720;
         }
-        GN::win::WindowCreationParameters wcp = {};
+        GN::win::WindowCreateParameters wcp = {};
         wcp.caption                           = "Garnet 3D"; // make it a parameter?
         wcp.display                           = ro.displayHandle;
         wcp.monitor                           = ro.monitorHandle;

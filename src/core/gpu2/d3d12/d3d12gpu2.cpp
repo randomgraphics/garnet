@@ -67,7 +67,7 @@ static D3D12_PRIMITIVE_TOPOLOGY tod3d(PrimitiveType p) {
 //
 //
 // -----------------------------------------------------------------------------
-GN::gfx::D3D12Gpu2::D3D12Gpu2(const CreationParameters & cp) {
+GN::gfx::D3D12Gpu2::D3D12Gpu2(const CreateParameters & cp) {
     GN_VERIFY(cp.window);
 
     // enable debug layer
@@ -141,7 +141,7 @@ GN::gfx::D3D12Gpu2::D3D12Gpu2(const CreationParameters & cp) {
     // put the back buffer into RT state
     auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(_frames[_frameIndex].rt, D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_RENDER_TARGET);
     _present->active().ResourceBarrier(1, &barrier);
-    kickoff(*_present, nullptr);
+    kickOff(*_present);
     _present->reset(0);
 
     // Create an empty root signature.
@@ -171,7 +171,7 @@ static std::vector<D3D12_INPUT_ELEMENT_DESC> GetD3D12InputElements(const Gpu2::I
 //
 //
 // -----------------------------------------------------------------------------
-DynaArray<uint64_t> GN::gfx::D3D12Gpu2::createPipelineStates(const PipelineCreationParameters * parameters, size_t n) {
+DynaArray<uint64_t> GN::gfx::D3D12Gpu2::createPipelineStates(const PipelineCreateParameters * parameters, size_t n) {
     DynaArray<uint64_t> r;
     for (size_t i = 0; i < n; ++i) {
         const auto &                       cp = parameters[i];
@@ -221,25 +221,25 @@ void GN::gfx::D3D12Gpu2::deletePipelineStates(const uint64_t * psolist, size_t c
 //
 //
 // -----------------------------------------------------------------------------
-GN::AutoRef<GN::gfx::Gpu2::CommandList> GN::gfx::D3D12Gpu2::createCommandList(const CommandListCreationParameters & cp) {
+GN::AutoRef<GN::gfx::Gpu2::CommandList> GN::gfx::D3D12Gpu2::createCommandList(const CommandListCreateParameters & cp) {
     return SafeNew(new D3D12CommandList(*this, cp));
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-GN::AutoRef<GN::gfx::Gpu2::MemoryBlock> GN::gfx::D3D12Gpu2::createMemoryBlock(const MemoryBlockCreationParameters & cp) {
+GN::AutoRef<GN::gfx::Gpu2::MemoryBlock> GN::gfx::D3D12Gpu2::createMemoryBlock(const MemoryBlockCreateParameters & cp) {
     return SafeNew(new D3D12MemoryBlock(*this, cp));
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-GN::AutoRef<GN::gfx::Gpu2::Surface> GN::gfx::D3D12Gpu2::createSurface(const SurfaceCreationParameters & cp) {
-    if (SurfaceDimension::BUFFER == cp.dim) {
+GN::AutoRef<GN::gfx::Gpu2::Surface> GN::gfx::D3D12Gpu2::createSurface(const SurfaceCreateParameters & cp) {
+    if (SurfaceType::BUFFER == cp.type) {
         return SafeNew(new D3D12Buffer(*this, cp));
     } else {
-        GN_ASSERT(SurfaceDimension::TEXTURE == cp.dim);
+        GN_ASSERT(SurfaceType::TEXTURE == cp.type);
         return SafeNew(new D3D12Texture(*this, cp));
     }
 }
@@ -247,10 +247,10 @@ GN::AutoRef<GN::gfx::Gpu2::Surface> GN::gfx::D3D12Gpu2::createSurface(const Surf
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3D12Gpu2::kickoff(GN::gfx::Gpu2::CommandList & cl, uint64_t * fence) {
+auto GN::gfx::D3D12Gpu2::kickOff(GN::gfx::Gpu2::CommandList & cl) -> Kicked {
     auto ptr = (D3D12CommandList *) &cl;
-    auto f   = ptr->kickoff(_graphicsQueue);
-    if (fence) *fence = f;
+    auto f   = ptr->kickOff(_graphicsQueue);
+    return {f, 0};
 }
 
 //
@@ -272,7 +272,7 @@ void GN::gfx::D3D12Gpu2::present(const PresentParameters &) {
     _present->reset(0);
     auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(_frames[_frameIndex].rt, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
     _present->active().ResourceBarrier(1, &barrier);
-    kickoff(*_present, nullptr);
+    kickOff(*_present);
 
     // present the frame buffer
     _swapChain->Present(1, 0);
@@ -284,25 +284,25 @@ void GN::gfx::D3D12Gpu2::present(const PresentParameters &) {
     _frameIndex = _swapChain->GetCurrentBackBufferIndex();
 
     // Then wait for it to be ready to render to.
-    // TODO: move this out of prensent. to give app a chance to do other CPU related work while waiting for the frame buffer to be ready.
+    // TODO: move this out of present. to give app a chance to do other CPU related work while waiting for the frame buffer to be ready.
     _graphicsQueue.finish(_frames[_frameIndex].fence);
 
     // transit it back to render target state.
     _present->reset(0);
     barrier = CD3DX12_RESOURCE_BARRIER::Transition(_frames[_frameIndex].rt, D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
     _present->active().ResourceBarrier(1, &barrier);
-    kickoff(*_present, nullptr);
+    kickOff(*_present);
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-GN::gfx::D3D12CommandList::D3D12CommandList(D3D12Gpu2 & gpu, const Gpu2::CommandListCreationParameters & cp): _owner(gpu) { reset(cp.initialPipelineState); }
+GN::gfx::D3D12CommandList::D3D12CommandList(D3D12Gpu2 & gpu, const Gpu2::CommandListCreateParameters & cp): _owner(gpu) { reset(cp.initialPipelineState); }
 
 //
 //
 // -----------------------------------------------------------------------------
-uint64_t GN::gfx::D3D12CommandList::kickoff(D3D12CommandQueue & q) {
+uint64_t GN::gfx::D3D12CommandList::kickOff(D3D12CommandQueue & q) {
     auto & cl = _pool.front();
     if (!cl.closed) {
         cl.commandList->Close();
@@ -319,7 +319,7 @@ uint64_t GN::gfx::D3D12CommandList::kickoff(D3D12CommandQueue & q) {
 //
 // -----------------------------------------------------------------------------
 void GN::gfx::D3D12CommandList::reset(uint64_t initialState) {
-    // see if the last item in the pool is stil pending.
+    // see if the last item in the pool is still pending.
     std::list<Item>::iterator item;
     if (_pool.empty() || _pool.back().pending()) {
         // if yes, then add a new item in front of the list.
@@ -382,16 +382,16 @@ void GN::gfx::D3D12CommandList::draw(const Gpu2::DrawParameters & p) {
 
     if (p.indexBuffer) {
         // TODO: setup index buffer view
-        cl->DrawIndexedInstanced(p.vertexOrIndexCount, 1, p.baseindex, p.basevertex, 0);
+        cl->DrawIndexedInstanced(p.vertexOrIndexCount, 1, p.baseIndex, p.baseVertex, 0);
     } else {
-        cl->DrawInstanced(p.vertexOrIndexCount, 1, p.basevertex, 0);
+        cl->DrawInstanced(p.vertexOrIndexCount, 1, p.baseVertex, 0);
     }
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3D12CommandList::copyBufferRegion(const Gpu2::CopyBufferRegionParameters & p) {
+void GN::gfx::D3D12CommandList::copySurface(const Gpu2::CopySurfaceParameters & p) {
     auto cl = _pool.begin()->commandList.get();
 
     // hack hack: set target buffer to writeable.
@@ -417,7 +417,7 @@ static D3D12_HEAP_TYPE GetHeapType(Gpu2::MemoryType t) {
     case Gpu2::MemoryType::UPLOAD:
         heapType = D3D12_HEAP_TYPE_UPLOAD;
         break;
-    case Gpu2::MemoryType::READBACK:
+    case Gpu2::MemoryType::READ_BACK:
         heapType = D3D12_HEAP_TYPE_READBACK;
         break;
     default:
@@ -438,7 +438,7 @@ static ID3D12Heap * GetD3D12Heap(Gpu2::MemoryBlock * mb) {
 //
 //
 // -----------------------------------------------------------------------------
-D3D12MemoryBlock::D3D12MemoryBlock(D3D12Gpu2 & o, const Gpu2::MemoryBlockCreationParameters & cp): owner(o) {
+D3D12MemoryBlock::D3D12MemoryBlock(D3D12Gpu2 & o, const Gpu2::MemoryBlockCreateParameters & cp): owner(o) {
     D3D12_HEAP_DESC desc = {};
     desc.SizeInBytes     = cp.sizeInMB * 1024 * 1024;
     desc.Properties      = CD3DX12_HEAP_PROPERTIES(GetHeapType(cp.type));
@@ -448,8 +448,8 @@ D3D12MemoryBlock::D3D12MemoryBlock(D3D12Gpu2 & o, const Gpu2::MemoryBlockCreatio
 //
 //
 // -----------------------------------------------------------------------------
-GN::gfx::D3D12Buffer::D3D12Buffer(D3D12Gpu2 & o, const Gpu2::SurfaceCreationParameters & cp): D3D12PlacedResource(o, cp) {
-    GN_ASSERT(GN::gfx::Gpu2::SurfaceDimension::BUFFER == cp.dim);
+GN::gfx::D3D12Buffer::D3D12Buffer(D3D12Gpu2 & o, const Gpu2::SurfaceCreateParameters & cp): D3D12PlacedResource(o, cp) {
+    GN_ASSERT(GN::gfx::Gpu2::SurfaceType::BUFFER == cp.type);
     if (cp.memory) {
         // create placed resource
         auto desc = CD3DX12_RESOURCE_DESC::Buffer(cp.b.bytes);
@@ -468,8 +468,8 @@ GN::gfx::D3D12Buffer::D3D12Buffer(D3D12Gpu2 & o, const Gpu2::SurfaceCreationPara
 //
 //
 // -----------------------------------------------------------------------------
-GN::gfx::D3D12Texture::D3D12Texture(D3D12Gpu2 & o, const Gpu2::SurfaceCreationParameters & cp): D3D12PlacedResource(o, cp) {
-    GN_ASSERT(GN::gfx::Gpu2::SurfaceDimension::TEXTURE == cp.dim);
+GN::gfx::D3D12Texture::D3D12Texture(D3D12Gpu2 & o, const Gpu2::SurfaceCreateParameters & cp): D3D12PlacedResource(o, cp) {
+    GN_ASSERT(GN::gfx::Gpu2::SurfaceType::TEXTURE == cp.type);
 
     DXGI_FORMAT format = (DXGI_FORMAT) colorFormat2DxgiFormat(cp.t.f);
     if (DXGI_FORMAT_UNKNOWN == format) {

@@ -49,7 +49,7 @@ private:
 // Public functions
 // *************************************************************************
 
-GN_API const WindowCreationParameters WCP_APPLICATION_WINDOW = {
+GN_API const WindowCreateParameters WCP_APPLICATION_WINDOW = {
     StrA("Garnet Application"),
     0,
     0, // default size
@@ -62,7 +62,7 @@ GN_API const WindowCreationParameters WCP_APPLICATION_WINDOW = {
     true,  // has close box
 };
 
-GN_API const WindowCreationParameters WCP_WINDOWED_RENDER_WINDOW = {
+GN_API const WindowCreateParameters WCP_WINDOWED_RENDER_WINDOW = {
     StrA("Garnet Application"),
     640,
     480, // size
@@ -75,7 +75,7 @@ GN_API const WindowCreationParameters WCP_WINDOWED_RENDER_WINDOW = {
     false, // no close box
 };
 
-GN_API const WindowCreationParameters WCP_FULLSCREEN_RENDER_WINDOW = {
+GN_API const WindowCreateParameters WCP_FULLSCREEN_RENDER_WINDOW = {
     StrA(""), 640, 480, // size
     0,        0,   0,   // no parent
     false,              // border
@@ -87,7 +87,7 @@ GN_API const WindowCreationParameters WCP_FULLSCREEN_RENDER_WINDOW = {
 //
 //
 // -------------------------------------------------------------------------
-GN_API Window * createWindow(const WindowCreationParameters & wcp) {
+GN_API Window * createWindow(const WindowCreateParameters & wcp) {
     GN_GUARD;
 
 #ifdef HAS_QT

@@ -57,7 +57,7 @@ public:
 ///
 /// Window creation parameters
 ///
-struct WindowCreationParameters {
+struct WindowCreateParameters {
     StrA     caption;              ///< window title text.
     size_t   clientWidth  = 0;     ///< client width. 0 means current display width.
     size_t   clientHeight = 0;     ///< client height. 0 means current display height.
@@ -80,26 +80,26 @@ struct WindowAttachingParameters {
 ///
 /// border, title, no parent, default size
 ///
-extern GN_API const WindowCreationParameters WCP_APPLICATION_WINDOW;
+extern GN_API const WindowCreateParameters WCP_APPLICATION_WINDOW;
 
 ///
 /// Default parameters to create main render window.
 ///
 /// border, title, no parent, 640x480
 ///
-extern GN_API const WindowCreationParameters WCP_WINDOWED_RENDER_WINDOW;
+extern GN_API const WindowCreateParameters WCP_WINDOWED_RENDER_WINDOW;
 
 ///
 /// Default parameters to create main render window.
 ///
 /// no border, no title, no parent, topmost, 640x480
 ///
-extern GN_API const WindowCreationParameters WCP_FULLSCREEN_RENDER_WINDOW;
+extern GN_API const WindowCreateParameters WCP_FULLSCREEN_RENDER_WINDOW;
 
 ///
 /// Create window instance
 ///
-GN_API Window * createWindow(const WindowCreationParameters &);
+GN_API Window * createWindow(const WindowCreateParameters &);
 
 ///
 /// Create a wrapper class on top of existing native window handle.

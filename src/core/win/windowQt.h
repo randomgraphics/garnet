@@ -34,7 +34,7 @@ public:
 
     //@{
 public:
-    bool init(const WindowCreationParameters &);
+    bool init(const WindowCreateParameters &);
     bool init(const WindowAttachingParameters &);
     void quit();
 
@@ -95,7 +95,7 @@ private:
     // private functions
     // ********************************
 private:
-    bool createWindow(const WindowCreationParameters &);
+    bool createWindow(const WindowCreateParameters &);
 };
 } // namespace win
 } // namespace GN

@@ -137,7 +137,7 @@ class D3D12Gpu2 : public Gpu2 {
     FrameBuffer _frames[BACK_BUFFER_COUNT] = {};
 
 public:
-    D3D12Gpu2(const CreationParameters &);
+    D3D12Gpu2(const CreateParameters &);
 
     // member accessor
     ID3D12Device &              device() { return *_device; }
@@ -147,13 +147,13 @@ public:
     ID3D12RootSignature *       emptyRootSignature() const { return _emptyRootSignature.get(); }
 
     // interface methods
-    DynaArray<uint64_t>  createPipelineStates(const PipelineCreationParameters *, size_t) override;
+    DynaArray<uint64_t>  createPipelineStates(const PipelineCreateParameters *, size_t) override;
     void                 deletePipelineStates(const uint64_t *, size_t) override;
-    AutoRef<CommandList> createCommandList(const CommandListCreationParameters &) override;
-    AutoRef<MemoryBlock> createMemoryBlock(const MemoryBlockCreationParameters &) override;
-    AutoRef<Surface>     createSurface(const SurfaceCreationParameters &) override;
-    AutoRef<Query>       createQuery(const QueryCreationParameters &) override { return {}; }
-    void                 kickoff(GN::gfx::Gpu2::CommandList &, uint64_t * fence) override;
+    AutoRef<CommandList> createCommandList(const CommandListCreateParameters &) override;
+    AutoRef<MemoryBlock> createMemoryBlock(const MemoryBlockCreateParameters &) override;
+    AutoRef<Surface>     createSurface(const SurfaceCreateParameters &) override;
+    AutoRef<Query>       createQuery(const QueryCreateParameters &) override { return {}; }
+    Kicked               kickOff(GN::gfx::Gpu2::CommandList &) override;
     void                 finish(uint64_t fence) override;
     void                 present(const PresentParameters &) override;
 };
@@ -173,18 +173,18 @@ class D3D12CommandList : public Gpu2::CommandList {
     std::list<Item> _pool; // command list pool. The first item in the list is always the active command list.
 
 public:
-    D3D12CommandList(D3D12Gpu2 &, const Gpu2::CommandListCreationParameters &);
+    D3D12CommandList(D3D12Gpu2 &, const Gpu2::CommandListCreateParameters &);
     ~D3D12CommandList() {}
 
     bool                        ok() const { return !_pool.empty() && _pool.front().allocator && _pool.front().commandList; }
-    uint64_t                    kickoff(D3D12CommandQueue &);
+    uint64_t                    kickOff(D3D12CommandQueue &);
     ID3D12GraphicsCommandList & active() { return *_pool.front().commandList; };
 
     void reset(uint64_t initialState) override;
     void clear(const Gpu2::ClearParameters &) override;
     void draw(const Gpu2::DrawParameters &) override;
     void compute(const Gpu2::ComputeParameters &) override { GN_UNIMPL(); }
-    void copyBufferRegion(const Gpu2::CopyBufferRegionParameters &) override;
+    void copySurface(const Gpu2::CopySurfaceParameters &) override;
 
 private:
     bool _closed = false;
@@ -194,7 +194,7 @@ struct D3D12MemoryBlock : public Gpu2::MemoryBlock {
     D3D12Gpu2 &            owner;
     AutoComPtr<ID3D12Heap> heap;
 
-    D3D12MemoryBlock(D3D12Gpu2 &, const Gpu2::MemoryBlockCreationParameters &);
+    D3D12MemoryBlock(D3D12Gpu2 &, const Gpu2::MemoryBlockCreateParameters &);
     ~D3D12MemoryBlock() {}
 
     bool ok() const { return !heap.empty(); }
@@ -203,9 +203,9 @@ struct D3D12MemoryBlock : public Gpu2::MemoryBlock {
 struct D3D12PlacedResource : public Gpu2::Surface {
     D3D12Gpu2 &                           owner;
     AutoComPtr<ID3D12Resource>            resource;
-    const Gpu2::SurfaceCreationParameters creationParameters;
+    const Gpu2::SurfaceCreateParameters creationParameters;
 
-    D3D12PlacedResource(D3D12Gpu2 & o, const Gpu2::SurfaceCreationParameters & cp): owner(o), creationParameters(cp) {}
+    D3D12PlacedResource(D3D12Gpu2 & o, const Gpu2::SurfaceCreateParameters & cp): owner(o), creationParameters(cp) {}
 
     bool ok() const { return !resource.empty(); }
 
@@ -213,7 +213,7 @@ struct D3D12PlacedResource : public Gpu2::Surface {
 };
 
 struct D3D12Buffer : public D3D12PlacedResource {
-    D3D12Buffer(D3D12Gpu2 &, const Gpu2::SurfaceCreationParameters &);
+    D3D12Buffer(D3D12Gpu2 &, const Gpu2::SurfaceCreateParameters &);
 
     Gpu2::MappedSurfaceData map(uint32_t subSurfaceId) override {
         Gpu2::MappedSurfaceData result = {};
@@ -227,7 +227,7 @@ struct D3D12Buffer : public D3D12PlacedResource {
 };
 
 struct D3D12Texture : public D3D12PlacedResource {
-    D3D12Texture(D3D12Gpu2 &, const Gpu2::SurfaceCreationParameters &);
+    D3D12Texture(D3D12Gpu2 &, const Gpu2::SurfaceCreateParameters &);
 
     Gpu2::MappedSurfaceData map(uint32_t subSurfaceId) override {
         // not implemented.

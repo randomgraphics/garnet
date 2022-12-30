@@ -410,7 +410,7 @@ DECLARE_INTERFACE_(IDirect3DDevice9, IUnknown) {
     STDMETHOD(GetDirect3D)(THIS_ IDirect3D9 * *ppD3D9) PURE;
     STDMETHOD(GetDeviceCaps)(THIS_ D3DCAPS9 * pCaps) PURE;
     STDMETHOD(GetDisplayMode)(THIS_ UINT iSwapChain, D3DDISPLAYMODE * pMode) PURE;
-    STDMETHOD(GetCreationParameters)(THIS_ D3DDEVICE_CREATION_PARAMETERS * pParameters) PURE;
+    STDMETHOD(GetCreateParameters)(THIS_ D3DDEVICE_CREATION_PARAMETERS * pParameters) PURE;
     STDMETHOD(SetCursorProperties)(THIS_ UINT XHotSpot, UINT YHotSpot, IDirect3DSurface9 * pCursorBitmap) PURE;
     STDMETHOD_(void, SetCursorPosition)(THIS_ int X, int Y, DWORD Flags) PURE;
     STDMETHOD_(BOOL, ShowCursor)(THIS_ BOOL bShow) PURE;
@@ -541,7 +541,7 @@ DECLARE_INTERFACE_(IDirect3DDevice9, IUnknown) {
     STDMETHOD(CreateQuery)(THIS_ D3DQUERYTYPE Type, IDirect3DQuery9 * *ppQuery) PURE;
 
         #ifdef D3D_DEBUG_INFO
-    D3DDEVICE_CREATION_PARAMETERS CreationParameters;
+    D3DDEVICE_CREATION_PARAMETERS CreateParameters;
     D3DPRESENT_PARAMETERS         PresentParameters;
     D3DDISPLAYMODE                DisplayMode;
     D3DCAPS9                      Caps;
@@ -588,7 +588,7 @@ typedef struct IDirect3DDevice9 *LPDIRECT3DDEVICE9, *PDIRECT3DDEVICE9;
             #define IDirect3DDevice9_GetDirect3D(p, a)                                    (p)->lpVtbl->GetDirect3D(p, a)
             #define IDirect3DDevice9_GetDeviceCaps(p, a)                                  (p)->lpVtbl->GetDeviceCaps(p, a)
             #define IDirect3DDevice9_GetDisplayMode(p, a, b)                              (p)->lpVtbl->GetDisplayMode(p, a, b)
-            #define IDirect3DDevice9_GetCreationParameters(p, a)                          (p)->lpVtbl->GetCreationParameters(p, a)
+            #define IDirect3DDevice9_GetCreateParameters(p, a)                          (p)->lpVtbl->GetCreateParameters(p, a)
             #define IDirect3DDevice9_SetCursorProperties(p, a, b, c)                      (p)->lpVtbl->SetCursorProperties(p, a, b, c)
             #define IDirect3DDevice9_SetCursorPosition(p, a, b, c)                        (p)->lpVtbl->SetCursorPosition(p, a, b, c)
             #define IDirect3DDevice9_ShowCursor(p, a)                                     (p)->lpVtbl->ShowCursor(p, a)
@@ -708,7 +708,7 @@ typedef struct IDirect3DDevice9 *LPDIRECT3DDEVICE9, *PDIRECT3DDEVICE9;
             #define IDirect3DDevice9_GetDirect3D(p, a)                                    (p)->GetDirect3D(a)
             #define IDirect3DDevice9_GetDeviceCaps(p, a)                                  (p)->GetDeviceCaps(a)
             #define IDirect3DDevice9_GetDisplayMode(p, a, b)                              (p)->GetDisplayMode(a, b)
-            #define IDirect3DDevice9_GetCreationParameters(p, a)                          (p)->GetCreationParameters(a)
+            #define IDirect3DDevice9_GetCreateParameters(p, a)                          (p)->GetCreateParameters(a)
             #define IDirect3DDevice9_SetCursorProperties(p, a, b, c)                      (p)->SetCursorProperties(a, b, c)
             #define IDirect3DDevice9_SetCursorPosition(p, a, b, c)                        (p)->SetCursorPosition(a, b, c)
             #define IDirect3DDevice9_ShowCursor(p, a)                                     (p)->ShowCursor(a)
@@ -2047,7 +2047,7 @@ DECLARE_INTERFACE_(IDirect3DDevice9Ex, IDirect3DDevice9) {
     STDMETHOD(GetDirect3D)(THIS_ IDirect3D9 * *ppD3D9) PURE;
     STDMETHOD(GetDeviceCaps)(THIS_ D3DCAPS9 * pCaps) PURE;
     STDMETHOD(GetDisplayMode)(THIS_ UINT iSwapChain, D3DDISPLAYMODE * pMode) PURE;
-    STDMETHOD(GetCreationParameters)(THIS_ D3DDEVICE_CREATION_PARAMETERS * pParameters) PURE;
+    STDMETHOD(GetCreateParameters)(THIS_ D3DDEVICE_CREATION_PARAMETERS * pParameters) PURE;
     STDMETHOD(SetCursorProperties)(THIS_ UINT XHotSpot, UINT YHotSpot, IDirect3DSurface9 * pCursorBitmap) PURE;
     STDMETHOD_(void, SetCursorPosition)(THIS_ int X, int Y, DWORD Flags) PURE;
     STDMETHOD_(BOOL, ShowCursor)(THIS_ BOOL bShow) PURE;
@@ -2212,7 +2212,7 @@ typedef struct IDirect3DDevice9Ex *LPDIRECT3DDEVICE9EX, *PDIRECT3DDEVICE9EX;
                 #define IDirect3DDevice9Ex_GetDirect3D(p, a)                                 (p)->lpVtbl->GetDirect3D(p, a)
                 #define IDirect3DDevice9Ex_GetDeviceCaps(p, a)                               (p)->lpVtbl->GetDeviceCaps(p, a)
                 #define IDirect3DDevice9Ex_GetDisplayMode(p, a, b)                           (p)->lpVtbl->GetDisplayMode(p, a, b)
-                #define IDirect3DDevice9Ex_GetCreationParameters(p, a)                       (p)->lpVtbl->GetCreationParameters(p, a)
+                #define IDirect3DDevice9Ex_GetCreateParameters(p, a)                       (p)->lpVtbl->GetCreateParameters(p, a)
                 #define IDirect3DDevice9Ex_SetCursorProperties(p, a, b, c)                   (p)->lpVtbl->SetCursorProperties(p, a, b, c)
                 #define IDirect3DDevice9Ex_SetCursorPosition(p, a, b, c)                     (p)->lpVtbl->SetCursorPosition(p, a, b, c)
                 #define IDirect3DDevice9Ex_ShowCursor(p, a)                                  (p)->lpVtbl->ShowCursor(p, a)
@@ -2350,7 +2350,7 @@ typedef struct IDirect3DDevice9Ex *LPDIRECT3DDEVICE9EX, *PDIRECT3DDEVICE9EX;
                 #define IDirect3DDevice9Ex_GetDirect3D(p, a)                                         (p)->GetDirect3D(a)
                 #define IDirect3DDevice9Ex_GetDeviceCaps(p, a)                                       (p)->GetDeviceCaps(a)
                 #define IDirect3DDevice9Ex_GetDisplayMode(p, a, b)                                   (p)->GetDisplayMode(a, b)
-                #define IDirect3DDevice9Ex_GetCreationParameters(p, a)                               (p)->GetCreationParameters(a)
+                #define IDirect3DDevice9Ex_GetCreateParameters(p, a)                               (p)->GetCreateParameters(a)
                 #define IDirect3DDevice9Ex_SetCursorProperties(p, a, b, c)                           (p)->SetCursorProperties(a, b, c)
                 #define IDirect3DDevice9Ex_SetCursorPosition(p, a, b, c)                             (p)->SetCursorPosition(a, b, c)
                 #define IDirect3DDevice9Ex_ShowCursor(p, a)                                          (p)->ShowCursor(a)

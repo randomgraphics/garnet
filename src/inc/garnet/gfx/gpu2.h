@@ -13,14 +13,14 @@ struct Gpu2 : public RefCounter {
         D3D12,
         VULKAN,
     };
-    struct CreationParameters {
+    struct CreateParameters {
         win::Window * window;
         GraphicsAPI   api   = GraphicsAPI::AUTO;
         uint32_t      width = 0, height = 0; // back buffer size. set to 0 to use window size.
         bool          fullscreen = false;
         bool          debug      = GN_BUILD_DEBUG_ENABLED;
     };
-    static GN_API AutoRef<Gpu2> createGpu2(const CreationParameters &);
+    static GN_API AutoRef<Gpu2> createGpu2(const CreateParameters &);
     //@}
 
     /// GPU pipeline
@@ -40,13 +40,13 @@ struct Gpu2 : public RefCounter {
         bool         instanceData = false;
         uint32_t     instanceRate = 0;
     };
-    struct PipelineCreationParameters {
+    struct PipelineCreateParameters {
         CompiledShaderBlob   vs, hs, ds, gs, ps, cs;
         const InputElement * inputElements;
         uint32_t             numInputElements;
         const char *         states; // pipeline state defined in JSON format.
     };
-    virtual DynaArray<uint64_t> createPipelineStates(const PipelineCreationParameters *, size_t) = 0;
+    virtual DynaArray<uint64_t> createPipelineStates(const PipelineCreateParameters *, size_t) = 0;
     virtual void                deletePipelineStates(const uint64_t *, size_t)                   = 0;
     //@}
 
@@ -86,8 +86,8 @@ struct Gpu2 : public RefCounter {
 
         PrimitiveType prim;
         uint32_t      vertexOrIndexCount;
-        uint32_t      basevertex = 0;
-        uint32_t      baseindex  = 0; // ignored when indexBuffer is null.
+        uint32_t      baseVertex = 0;
+        uint32_t      baseIndex  = 0; // ignored when indexBuffer is null.
     };
     struct ComputeParameters {
         uint64_t pso;
@@ -95,14 +95,14 @@ struct Gpu2 : public RefCounter {
         uint32_t groupY = 1;
         uint32_t groupZ = 1;
     };
-    struct CopyBufferRegionParameters {
+    struct CopySurfaceParameters {
         Surface * source;
         uint64_t  sourceOffset;
         uint64_t  sourceBytes;
         Surface * dest;
         uint64_t  destOffset;
     };
-    struct CommandListCreationParameters {
+    struct CommandListCreateParameters {
         CommandListType type                 = CommandListType::GRAPHICS;
         uint64_t        initialPipelineState = 0; // optional initial pipeline state. If empty, the default state is used.
     };
@@ -111,33 +111,47 @@ struct Gpu2 : public RefCounter {
         virtual void clear(const ClearParameters &)                       = 0;
         virtual void draw(const DrawParameters &)                         = 0;
         virtual void compute(const ComputeParameters &)                   = 0;
-        virtual void copyBufferRegion(const CopyBufferRegionParameters &) = 0;
-        void         copySurface(Surface * from, Surface * to) { copyBufferRegion({from, 0, 0, to, 0}); }
+        virtual void copySurface(const CopySurfaceParameters &) = 0;
+        void         copySurface(Surface * from, Surface * to) { copySurface({from, 0, 0, to, 0}); }
     };
-    virtual AutoRef<CommandList> createCommandList(const CommandListCreationParameters &) = 0;
-    virtual void                 kickoff(CommandList &, uint64_t * fence = nullptr)       = 0; ///< kick off command lists.
-    virtual void finish(uint64_t fence = 0) = 0; // Block the calling CPU thread until the fence, if specified, is passsed. If fence is 0, wait all pending
+    struct Kicked {
+        uint64_t fence = 0;
+        uint64_t semaphore = 0;
+        bool     empty() const { return 0 == fence && 0 == semaphore; }
+    };
+    virtual auto createCommandList(const CommandListCreateParameters &) -> AutoRef<CommandList> = 0;
+    virtual auto kickOff(CommandList &) -> Kicked = 0; ///< kick off command lists.
+    virtual void finish(uint64_t fence = 0) = 0; // Block the calling CPU thread until the fence, if specified, is passed. If fence is 0, wait all pending
                                                  // works from all engine to be done.
     //@}
 
     /// GPU memory pool
     //@{
     enum class MemoryType {
+        /// The memory type optimized for GPU reading & writing. CPU access is prohibited.
         DEFAULT = 0,
+
+        /// The memory type optimized for uploading dynamic data from CPU to GPU. GPU access bandwidth is limited.
+        /// Best for CPU-write-once, GPU-read-once data. CPU read is allowed but could be slow. GPU-write to this
+        /// is not recommended and could cause undefined behavior.
         UPLOAD,
-        READBACK,
+
+        /// The memory type optimized for reading data back from GPU. GPU access bandwidth is limited.
+        /// Best for GPU-write-once, CPU-readable data. CPU-write to this buffer is not recommended and could cause
+        /// undefined result.
+        READ_BACK, 
     };
-    struct MemoryBlockCreationParameters {
+    struct MemoryBlockCreateParameters {
         uint64_t   sizeInMB;
         MemoryType type;
     };
     struct MemoryBlock : public RefCounter {};
-    virtual AutoRef<MemoryBlock> createMemoryBlock(const MemoryBlockCreationParameters &) = 0;
+    virtual AutoRef<MemoryBlock> createMemoryBlock(const MemoryBlockCreateParameters &) = 0;
     //@}
 
     // /// descriptor pool
     // //@{
-    // struct DescriptorPoolCreationParameters
+    // struct DescriptorPoolCreateParameters
     // {
     //     uint32_t capacity = 1024;
     // };
@@ -145,19 +159,19 @@ struct Gpu2 : public RefCounter {
     // {
     //     virtual uint32_t descSize() = 0; // returns size of one descriptor.
     // };
-    // virtual AutoRef<DescriptorPool> createDescriptorPool(const DescriptorPoolCreationParameters &) = 0;
+    // virtual AutoRef<DescriptorPool> createDescriptorPool(const DescriptorPoolCreateParameters &) = 0;
     // //@}
 
     // //@{
-    // struct DescriptorCreationParameters
+    // struct DescriptorCreateParameters
     // {
     // };
-    // virtual void createDescriptors(const DescriptorCreationParameters *, size_t) = 0;
+    // virtual void createDescriptors(const DescriptorCreateParameters *, size_t) = 0;
     // //@}
 
     /// GPU surface
     //@{
-    enum class SurfaceDimension {
+    enum class SurfaceType {
         BUFFER,
         TEXTURE,
     };
@@ -170,18 +184,18 @@ struct Gpu2 : public RefCounter {
             uint8_t ds : 1; // the surface could be used as DSV
         };
     };
-    struct SurfaceCreationParameters {
+    struct SurfaceCreateParameters {
         MemoryBlock *    memory;
         uint64_t         offset;
-        SurfaceDimension dim;
+        SurfaceType      type;
         struct TextureDesc {
-            uint32_t    w, h = 1, d = 1, a = 1, m = 1, s = 1; // width, height, depth, array, mipmaps, samples.
-            ColorFormat f;                                    // format
+            uint32_t    w, h = 1, d = 1, a = 1, m = 1, s = 1; ///< width, height, depth, array, mipmaps, samples.
+            ColorFormat f;                                    ///< format
         } t;
         struct BufferDesc {
             uint32_t bytes;
         } b;
-        SurfaceFlags flags;
+        SurfaceFlags flags = {0};
     };
     struct MappedSurfaceData {
         void *   ptr;
@@ -194,13 +208,13 @@ struct Gpu2 : public RefCounter {
         virtual MappedSurfaceData map(uint32_t subSurfaceId)   = 0;
         virtual void              unmap(uint32_t subSurfaceId) = 0;
     };
-    virtual AutoRef<Surface> createSurface(const SurfaceCreationParameters &) = 0;
+    virtual AutoRef<Surface> createSurface(const SurfaceCreateParameters &) = 0;
     //@}
 
     //@{
-    struct QueryCreationParameters {};
+    struct QueryCreateParameters {};
     struct Query : public RefCounter {};
-    virtual AutoRef<Query> createQuery(const QueryCreationParameters &) = 0;
+    virtual AutoRef<Query> createQuery(const QueryCreateParameters &) = 0;
     //@}
 
     /// present

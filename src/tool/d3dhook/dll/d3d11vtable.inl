@@ -2465,7 +2465,7 @@ typedef struct ID3D11VideoDecoderVtbl {
      /* [annotation] */
      _In_opt_ const IUnknown * pData);
 
-    HRESULT(STDMETHODCALLTYPE * GetCreationParameters)
+    HRESULT(STDMETHODCALLTYPE * GetCreateParameters)
     (ID3D11VideoDecoder * This,
      /* [annotation] */
      _Out_ D3D11_VIDEO_DECODER_DESC * pVideoDesc,

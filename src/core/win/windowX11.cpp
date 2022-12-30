@@ -103,7 +103,7 @@ bool GN::win::WindowX11::init(const WindowAttachingParameters & wap) {
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::win::WindowX11::init(const WindowCreationParameters & wcp) {
+bool GN::win::WindowX11::init(const WindowCreateParameters & wcp) {
     GN_GUARD;
 
     // initialize display

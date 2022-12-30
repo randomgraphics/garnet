@@ -3262,10 +3262,10 @@ static HRESULT STDMETHODCALLTYPE ID3D11VideoDecoder_SetPrivateDataInterface_Hook
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX>
-static HRESULT STDMETHODCALLTYPE ID3D11VideoDecoder_GetCreationParameters_Hooked(ID3D11VideoDecoder * ptr, _Out_ D3D11_VIDEO_DECODER_DESC * pVideoDesc,
+static HRESULT STDMETHODCALLTYPE ID3D11VideoDecoder_GetCreateParameters_Hooked(ID3D11VideoDecoder * ptr, _Out_ D3D11_VIDEO_DECODER_DESC * pVideoDesc,
                                                                                  _Out_ D3D11_VIDEO_DECODER_CONFIG * pConfig) {
-    GN_D3DHOOK_CALLTRACE("ID3D11VideoDecoder::GetCreationParameters");
-    HRESULT result = g_D3D11OriginVTables._ID3D11VideoDecoder.tables[INDEX].GetCreationParameters(ptr, pVideoDesc, pConfig);
+    GN_D3DHOOK_CALLTRACE("ID3D11VideoDecoder::GetCreateParameters");
+    HRESULT result = g_D3D11OriginVTables._ID3D11VideoDecoder.tables[INDEX].GetCreateParameters(ptr, pVideoDesc, pConfig);
     return result;
 }
 
@@ -11434,7 +11434,7 @@ static void SetupD3D11HookedVTables() {
     g_D3D11HookedVTables._ID3D11VideoDecoder.tables[INDEX].GetPrivateData             = ID3D11VideoDecoder_GetPrivateData_Hooked<INDEX>;
     g_D3D11HookedVTables._ID3D11VideoDecoder.tables[INDEX].SetPrivateData             = ID3D11VideoDecoder_SetPrivateData_Hooked<INDEX>;
     g_D3D11HookedVTables._ID3D11VideoDecoder.tables[INDEX].SetPrivateDataInterface    = ID3D11VideoDecoder_SetPrivateDataInterface_Hooked<INDEX>;
-    g_D3D11HookedVTables._ID3D11VideoDecoder.tables[INDEX].GetCreationParameters      = ID3D11VideoDecoder_GetCreationParameters_Hooked<INDEX>;
+    g_D3D11HookedVTables._ID3D11VideoDecoder.tables[INDEX].GetCreateParameters      = ID3D11VideoDecoder_GetCreateParameters_Hooked<INDEX>;
     g_D3D11HookedVTables._ID3D11VideoDecoder.tables[INDEX].GetDriverHandle            = ID3D11VideoDecoder_GetDriverHandle_Hooked<INDEX>;
     g_D3D11HookedVTables._ID3D11VideoProcessorEnumerator.tables[INDEX].QueryInterface = ID3D11VideoProcessorEnumerator_QueryInterface_Hooked<INDEX>;
     g_D3D11HookedVTables._ID3D11VideoProcessorEnumerator.tables[INDEX].AddRef         = ID3D11VideoProcessorEnumerator_AddRef_Hooked<INDEX>;

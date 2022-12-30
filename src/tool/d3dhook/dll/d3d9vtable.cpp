@@ -230,9 +230,9 @@ static HRESULT STDMETHODCALLTYPE IDirect3DDevice9_GetDisplayMode_Hooked(IDirect3
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX>
-static HRESULT STDMETHODCALLTYPE IDirect3DDevice9_GetCreationParameters_Hooked(IDirect3DDevice9 * ptr, D3DDEVICE_CREATION_PARAMETERS * pParameters) {
-    GN_D3DHOOK_CALLTRACE("IDirect3DDevice9::GetCreationParameters");
-    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].GetCreationParameters(ptr, pParameters);
+static HRESULT STDMETHODCALLTYPE IDirect3DDevice9_GetCreateParameters_Hooked(IDirect3DDevice9 * ptr, D3DDEVICE_CREATION_PARAMETERS * pParameters) {
+    GN_D3DHOOK_CALLTRACE("IDirect3DDevice9::GetCreateParameters");
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9.tables[INDEX].GetCreateParameters(ptr, pParameters);
     return result;
 }
 
@@ -3006,9 +3006,9 @@ static HRESULT STDMETHODCALLTYPE IDirect3DDevice9Ex_GetDisplayMode_Hooked(IDirec
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX>
-static HRESULT STDMETHODCALLTYPE IDirect3DDevice9Ex_GetCreationParameters_Hooked(IDirect3DDevice9Ex * ptr, D3DDEVICE_CREATION_PARAMETERS * pParameters) {
-    GN_D3DHOOK_CALLTRACE("IDirect3DDevice9Ex::GetCreationParameters");
-    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].GetCreationParameters(ptr, pParameters);
+static HRESULT STDMETHODCALLTYPE IDirect3DDevice9Ex_GetCreateParameters_Hooked(IDirect3DDevice9Ex * ptr, D3DDEVICE_CREATION_PARAMETERS * pParameters) {
+    GN_D3DHOOK_CALLTRACE("IDirect3DDevice9Ex::GetCreateParameters");
+    HRESULT result = g_D3D9OriginVTables._IDirect3DDevice9Ex.tables[INDEX].GetCreateParameters(ptr, pParameters);
     return result;
 }
 
@@ -4575,7 +4575,7 @@ static void SetupD3D9HookedVTables() {
     g_D3D9HookedVTables._IDirect3DDevice9.tables[INDEX].GetDirect3D                        = IDirect3DDevice9_GetDirect3D_Hooked<INDEX>;
     g_D3D9HookedVTables._IDirect3DDevice9.tables[INDEX].GetDeviceCaps                      = IDirect3DDevice9_GetDeviceCaps_Hooked<INDEX>;
     g_D3D9HookedVTables._IDirect3DDevice9.tables[INDEX].GetDisplayMode                     = IDirect3DDevice9_GetDisplayMode_Hooked<INDEX>;
-    g_D3D9HookedVTables._IDirect3DDevice9.tables[INDEX].GetCreationParameters              = IDirect3DDevice9_GetCreationParameters_Hooked<INDEX>;
+    g_D3D9HookedVTables._IDirect3DDevice9.tables[INDEX].GetCreateParameters              = IDirect3DDevice9_GetCreateParameters_Hooked<INDEX>;
     g_D3D9HookedVTables._IDirect3DDevice9.tables[INDEX].SetCursorProperties                = IDirect3DDevice9_SetCursorProperties_Hooked<INDEX>;
     g_D3D9HookedVTables._IDirect3DDevice9.tables[INDEX].SetCursorPosition                  = IDirect3DDevice9_SetCursorPosition_Hooked<INDEX>;
     g_D3D9HookedVTables._IDirect3DDevice9.tables[INDEX].ShowCursor                         = IDirect3DDevice9_ShowCursor_Hooked<INDEX>;
@@ -4904,7 +4904,7 @@ static void SetupD3D9HookedVTables() {
     g_D3D9HookedVTables._IDirect3DDevice9Ex.tables[INDEX].GetDirect3D                      = IDirect3DDevice9Ex_GetDirect3D_Hooked<INDEX>;
     g_D3D9HookedVTables._IDirect3DDevice9Ex.tables[INDEX].GetDeviceCaps                    = IDirect3DDevice9Ex_GetDeviceCaps_Hooked<INDEX>;
     g_D3D9HookedVTables._IDirect3DDevice9Ex.tables[INDEX].GetDisplayMode                   = IDirect3DDevice9Ex_GetDisplayMode_Hooked<INDEX>;
-    g_D3D9HookedVTables._IDirect3DDevice9Ex.tables[INDEX].GetCreationParameters            = IDirect3DDevice9Ex_GetCreationParameters_Hooked<INDEX>;
+    g_D3D9HookedVTables._IDirect3DDevice9Ex.tables[INDEX].GetCreateParameters            = IDirect3DDevice9Ex_GetCreateParameters_Hooked<INDEX>;
     g_D3D9HookedVTables._IDirect3DDevice9Ex.tables[INDEX].SetCursorProperties              = IDirect3DDevice9Ex_SetCursorProperties_Hooked<INDEX>;
     g_D3D9HookedVTables._IDirect3DDevice9Ex.tables[INDEX].SetCursorPosition                = IDirect3DDevice9Ex_SetCursorPosition_Hooked<INDEX>;
     g_D3D9HookedVTables._IDirect3DDevice9Ex.tables[INDEX].ShowCursor                       = IDirect3DDevice9Ex_ShowCursor_Hooked<INDEX>;
