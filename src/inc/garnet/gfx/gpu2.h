@@ -47,7 +47,7 @@ struct Gpu2 : public RefCounter {
         const char *         states; // pipeline state defined in JSON format.
     };
     virtual DynaArray<uint64_t> createPipelineStates(const PipelineCreateParameters *, size_t) = 0;
-    virtual void                deletePipelineStates(const uint64_t *, size_t)                   = 0;
+    virtual void                deletePipelineStates(const uint64_t *, size_t)                 = 0;
     //@}
 
     struct Surface;
@@ -59,7 +59,16 @@ struct Gpu2 : public RefCounter {
         COMPUTE,
         DMA, // for copy operations
     };
-    struct ClearParameters {
+    struct SubPass {
+        ConstRange<size_t> inputs;
+        ConstRange<size_t> colors;
+        size_t             depth = size_t(~0);
+    };
+    struct RenderPass {
+        ConstRange<Surface *> targets;
+        ConstRange<SubPass *> subs;
+    };
+    struct ClearScreenParameters {
         float    color[4] = {.0f, .0f, .0f, .0f};
         float    depth    = 1.0f;
         uint32_t stencil  = 0;
@@ -97,32 +106,41 @@ struct Gpu2 : public RefCounter {
     };
     struct CopySurfaceParameters {
         Surface * source;
-        uint64_t  sourceOffset;
-        uint64_t  sourceBytes;
+        uint64_t  sourceOffset = 0;
+        uint64_t  sourceBytes  = uint64_t(~0);
         Surface * dest;
-        uint64_t  destOffset;
+        uint64_t  destOffset = 0;
     };
     struct CommandListCreateParameters {
         CommandListType type                 = CommandListType::GRAPHICS;
         uint64_t        initialPipelineState = 0; // optional initial pipeline state. If empty, the default state is used.
     };
     struct CommandList : public RefCounter {
-        virtual void reset(uint64_t initialPipelineState = 0)             = 0;
-        virtual void clear(const ClearParameters &)                       = 0;
-        virtual void draw(const DrawParameters &)                         = 0;
-        virtual void compute(const ComputeParameters &)                   = 0;
+        virtual void begin(const RenderPass &)                  = 0; ///< begin a new render pass
+        virtual void next()                                     = 0; ///< move to next subpass.
+        virtual void end()                                      = 0; ///< end current render pass
+        virtual void clearScreen(const ClearScreenParameters &) = 0;
+        virtual void draw(const DrawParameters &)               = 0;
+        virtual void compute(const ComputeParameters &)         = 0;
         virtual void copySurface(const CopySurfaceParameters &) = 0;
-        void         copySurface(Surface * from, Surface * to) { copySurface({from, 0, 0, to, 0}); }
+        void         copySurface(Surface * from, Surface * to) { copySurface({from, 0, uint64_t(~0), to, 0}); }
     };
     struct Kicked {
-        uint64_t fence = 0;
+        uint64_t fence     = 0;
         uint64_t semaphore = 0;
         bool     empty() const { return 0 == fence && 0 == semaphore; }
     };
     virtual auto createCommandList(const CommandListCreateParameters &) -> AutoRef<CommandList> = 0;
-    virtual auto kickOff(CommandList &) -> Kicked = 0; ///< kick off command lists.
-    virtual void finish(uint64_t fence = 0) = 0; // Block the calling CPU thread until the fence, if specified, is passed. If fence is 0, wait all pending
-                                                 // works from all engine to be done.
+
+    /// Kick off an array of command list.
+    virtual auto kickOff(ConstRange<CommandList *>) -> Kicked = 0;
+
+    /// Kick off one command list.
+    auto kickOff(CommandList & cl) -> Kicked { return kickOff(ConstRange<CommandList *> {&cl}); }
+
+    /// Block the calling CPU thread until the fence, if specified, is passed. If fence is 0, wait all pending
+    /// works from all engine to be done.
+    virtual void finish(uint64_t fence = 0) = 0;
     //@}
 
     /// GPU memory pool
@@ -139,7 +157,7 @@ struct Gpu2 : public RefCounter {
         /// The memory type optimized for reading data back from GPU. GPU access bandwidth is limited.
         /// Best for GPU-write-once, CPU-readable data. CPU-write to this buffer is not recommended and could cause
         /// undefined result.
-        READ_BACK, 
+        READ_BACK,
     };
     struct MemoryBlockCreateParameters {
         uint64_t   sizeInMB;
@@ -185,9 +203,9 @@ struct Gpu2 : public RefCounter {
         };
     };
     struct SurfaceCreateParameters {
-        MemoryBlock *    memory;
-        uint64_t         offset;
-        SurfaceType      type;
+        MemoryBlock * memory;
+        uint64_t      offset;
+        SurfaceType   type;
         struct TextureDesc {
             uint32_t    w, h = 1, d = 1, a = 1, m = 1, s = 1; ///< width, height, depth, array, mipmaps, samples.
             ColorFormat f;                                    ///< format

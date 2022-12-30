@@ -379,7 +379,7 @@ bool GN::util::SampleApp::checkCmdLine(int argc, const char * const argv[]) {
                 if (NULL == value) return false;
 
                 const char * MODES[]           = {"f", "b", "w"};
-                mInitParam.ro.displayMode.mode = (gfx::DisplayMode::Mode) sParseStrings(a, value, MODES, countof(MODES));
+                mInitParam.ro.displayMode.mode = (gfx::DisplayMode::Mode) sParseStrings(a, value, MODES, std::size(MODES));
                 if (mInitParam.ro.displayMode.mode < 0) return false;
             } else if (0 == str::compareI("mt", a + 1)) {
                 const char * value = sGetOptionValue(argc, argv, i);

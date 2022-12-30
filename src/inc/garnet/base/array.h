@@ -718,11 +718,61 @@ public:
     //@}
 };
 
-// TODO: replace with std::size()
-template<typename T, std::size_t N>
-constexpr std::size_t countof(T const (&)[N]) noexcept {
-    return N;
-}
+/// Represents a constant non-resizable list of elements.
+template<typename T, typename SIZE_T = size_t>
+class ConstRange {
+    const T * mPtr;  ///< pointer to the first element in the list.
+    SIZE_T    mSize; ///< number of elements in the list.
+
+public:
+    constexpr ConstRange(): mPtr(nullptr), mSize(0) {}
+
+    constexpr ConstRange(const MutableRange<T, SIZE_T> & mr): mPtr(mr.begin()), mSize(mr.size()) {}
+
+    constexpr ConstRange(const T * ptr, SIZE_T size): mPtr(ptr), mSize(size) {}
+
+    constexpr ConstRange(const std::vector<T> & v): mPtr(v.data()), mSize((SIZE_T) v.size()) {}
+
+    template<SIZE_T N>
+    constexpr ConstRange(const T (&array)[N]): mPtr(array), mSize(N) {}
+
+    template<SIZE_T N>
+    constexpr ConstRange(const StackArray<T, N> & v): mPtr(v.data()), mSize(v.size()) {}
+
+    template<SIZE_T N>
+    constexpr ConstRange(const std::array<T, N> & v): mPtr(v.data()), mSize(v.size()) {}
+
+    GN_DEFAULT_COPY(ConstRange);
+
+    GN_DEFAULT_MOVE(ConstRange);
+
+    ConstRange & clear() {
+        mPtr  = nullptr;
+        mSize = 0;
+        return *this;
+    }
+
+    ConstRange & reset(const T * ptr, SIZE_T size) {
+        mPtr  = ptr;
+        mSize = size;
+        return *this;
+    }
+
+    constexpr bool      empty() const { return 0 == mPtr || 0 == mSize; }
+    constexpr SIZE_T    size() const { return mSize; }
+    constexpr const T * begin() const { return mPtr; }
+    constexpr const T * end() const { return mPtr + mSize; }
+    constexpr const T * data() const { return mPtr; }
+    constexpr const T & at(SIZE_T i) const {
+        PH_ASSERT(i < mSize);
+        return mPtr[i];
+    }
+    constexpr const T & operator[](SIZE_T i) const { return at(i); }
+
+    /// convert to std::initialize_list
+    constexpr std::initializer_list<T> il() const { return std::initializer_list<T>(mPtr, mPtr + mSize); }
+};
+
 } // namespace GN
 
 // *****************************************************************************

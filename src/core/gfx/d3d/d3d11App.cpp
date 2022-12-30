@@ -349,7 +349,7 @@ bool GN::d3d11::D3D11Application::createDevice() {
                                          D3D11_MESSAGE_ID_DEVICE_PSSETSHADERRESOURCES_HAZARD};
             D3D11_INFO_QUEUE_FILTER filter;
             memset(&filter, 0, sizeof(filter));
-            filter.DenyList.NumIDs  = (uint32_t) countof(denied);
+            filter.DenyList.NumIDs  = (uint32_t) std::size(denied);
             filter.DenyList.pIDList = denied;
             mInfoQueue->AddStorageFilterEntries(&filter);
         }
