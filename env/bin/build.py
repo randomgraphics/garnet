@@ -81,6 +81,8 @@ def cmake_config(args, build_dir, build_type):
 ap = argparse.ArgumentParser()
 ap.add_argument("-a", dest="android_build", action="store_true", help="Build for Android")
 ap.add_argument("-b", dest="build_dir", default="build", help="Build output folder.")
+ap.add_argument("-c", dest="config_only", action="store_true", help="Run CMake config only. Skip cmake build.")
+ap.add_argument("-C", dest="skip_config", action="store_true", help="Skip CMake config. Run build process only.")
 ap.add_argument("-m", dest="use_makefile", action="store_true", help="Use OS's default makefile instead of Ninja")
 ap.add_argument("variant", help="Specify build variant. Acceptable values are: d(ebug)/p(rofile)/r(elease)/c(lean). "
                                          "Note that all parameters alert this one will be considered \"extra\" and passed to CMake directly.")
@@ -106,9 +108,11 @@ if build_type is None:
         print(f"rm {x}")
         shutil.rmtree(x)
 else:
-    cmake_config(args, build_dir, build_type)
-    jobs = ["-j8"] # limit to 8 cores.
-    cmake(build_dir, ["--build", "."] + jobs + ["--config", build_type] + args.extra)
-    # if args.install_destination_folder:
-    #     inst_dir = str(pathlib.Path(args.install_destination_folder).absolute())
-    #     cmake(build_dir, ["--install", ".", "--config", build_type, "--prefix", inst_dir] + args.extra)
+    if not args.skip_config:
+        cmake_config(args, build_dir, build_type)
+    if not args.config_only:
+        jobs = ["-j8"] # limit to 8 cores.
+        cmake(build_dir, ["--build", "."] + jobs + ["--config", build_type] + args.extra)
+        # if args.install_destination_folder:
+        #     inst_dir = str(pathlib.Path(args.install_destination_folder).absolute())
+        #     cmake(build_dir, ["--install", ".", "--config", build_type, "--prefix", inst_dir] + args.extra)
