@@ -166,17 +166,17 @@ bool GN::gfx::BasicGpu::dispInit(const GpuOptions & ro) {
             if (0 == h) h = 720;
         }
         GN::win::WindowCreateParameters wcp = {};
-        wcp.caption                           = "Garnet 3D"; // make it a parameter?
-        wcp.display                           = ro.displayHandle;
-        wcp.monitor                           = ro.monitorHandle;
-        wcp.parent                            = ro.parentWindow;
-        wcp.clientWidth                       = w;
-        wcp.clientHeight                      = h;
-        wcp.hasBorder                         = ro.displayMode.mode == DisplayMode::WINDOWED;
-        wcp.hasTitleBar                       = ro.displayMode.mode == DisplayMode::WINDOWED;
-        wcp.topMost                           = false;
-        wcp.closebox                          = true;
-        mWindow                               = GN::win::createWindow(wcp);
+        wcp.caption                         = "Garnet 3D"; // make it a parameter?
+        wcp.display                         = ro.displayHandle;
+        wcp.monitor                         = ro.monitorHandle;
+        wcp.parent                          = ro.parentWindow;
+        wcp.clientWidth                     = w;
+        wcp.clientHeight                    = h;
+        wcp.hasBorder                       = ro.displayMode.mode == DisplayMode::WINDOWED;
+        wcp.hasTitleBar                     = ro.displayMode.mode == DisplayMode::WINDOWED;
+        wcp.topMost                         = false;
+        wcp.closebox                        = true;
+        mWindow                             = GN::win::createWindow(wcp);
     }
     if (!mWindow) return false;
 

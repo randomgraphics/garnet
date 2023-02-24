@@ -40,11 +40,11 @@ public:
             attrib = FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE;
             break;
 
-            case GN::Logger::VERBOSE:
-            case GN::Logger::BABBLE:
-            default:
-                attrib = FOREGROUND_GREEN;
-                break;
+        case GN::Logger::VERBOSE:
+        case GN::Logger::BABBLE:
+        default:
+            attrib = FOREGROUND_GREEN;
+            break;
         }
         SetConsoleTextAttribute(mConsole, attrib);
     }
@@ -95,17 +95,22 @@ typedef std::recursive_mutex LocalMutex;
 //
 //
 // -----------------------------------------------------------------------------
-static inline GN::StrA sLevel2Str( int level )
-{
-    switch( level )
-    {
-        case GN::Logger::FATAL   : return "FATAL";
-        case GN::Logger::ERROR_  : return "ERROR";
-        case GN::Logger::WARN    : return "WARN";
-        case GN::Logger::INFO    : return "INFO";
-        case GN::Logger::VERBOSE : return "VERBOSE";
-        case GN::Logger::BABBLE  : return "VERY_VERBOSE";
-        default                  : return GN::str::format( "%d", level );
+static inline GN::StrA sLevel2Str(int level) {
+    switch (level) {
+    case GN::Logger::FATAL:
+        return "FATAL";
+    case GN::Logger::ERROR_:
+        return "ERROR";
+    case GN::Logger::WARN:
+        return "WARN";
+    case GN::Logger::INFO:
+        return "INFO";
+    case GN::Logger::VERBOSE:
+        return "VERBOSE";
+    case GN::Logger::BABBLE:
+        return "VERY_VERBOSE";
+    default:
+        return GN::str::format("%d", level);
     }
 }
 

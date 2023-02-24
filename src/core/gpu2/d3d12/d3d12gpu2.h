@@ -201,8 +201,8 @@ struct D3D12MemoryBlock : public Gpu2::MemoryBlock {
 };
 
 struct D3D12PlacedResource : public Gpu2::Surface {
-    D3D12Gpu2 &                           owner;
-    AutoComPtr<ID3D12Resource>            resource;
+    D3D12Gpu2 &                         owner;
+    AutoComPtr<ID3D12Resource>          resource;
     const Gpu2::SurfaceCreateParameters creationParameters;
 
     D3D12PlacedResource(D3D12Gpu2 & o, const Gpu2::SurfaceCreateParameters & cp): owner(o), creationParameters(cp) {}
