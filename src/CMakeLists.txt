@@ -1,5 +1,14 @@
 add_subdirectory(3rdparty/src)
 add_subdirectory(core)
-add_subdirectory(sample)
-add_subdirectory(tool)
-add_subdirectory(test)
+
+if (GN_BUILD_SAMPLES)
+    add_subdirectory(sample)
+endif()
+
+if (GN_BUILD_TOOLS)
+    add_subdirectory(tool)
+endif()
+
+if (GN_BUILD_TESTS)
+    add_subdirectory(test)
+endif()

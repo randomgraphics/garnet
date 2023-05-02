@@ -2,6 +2,15 @@ cmake_minimum_required(VERSION 3.16.3) # 3.16.3 is the default version coming wi
 
 project(garnet)
 
+# ====================
+# public configrations
+# ====================
+
+option(GN_BUILD_IS_STATIC "Set to ON|OFF to build GNcore as static|shared library." OFF)
+option(GN_BUILD_SAMPLES "Set to ON|OFF to build samples." ON)
+option(GN_BUILD_TOOLS "Set to ON|OFF to build tools." ON)
+option(GN_BUILD_TESTS "Set to ON|OFF to build tests." ON)
+
 # =================
 # utility functions
 # =================
@@ -90,7 +99,6 @@ endfunction()
 # Configure Options and Build Flags
 # =================================
 
-option(GN_BUILD_IS_STATIC "Set to ON|OFF to build GNcore as static|shared library." OFF)
 if (NOT GN_BUILD_IS_STATIC)
     set(CMAKE_POSITION_INDEPENDENT_CODE TRUE)
 endif()
