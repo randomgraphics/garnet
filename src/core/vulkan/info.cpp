@@ -79,8 +79,7 @@ bool InstanceInfo::checkExtension(const char * extension) const {
 
 // ---------------------------------------------------------------------------------------------------------------------
 //
-auto InstanceInfo::validate(const std::vector<std::pair<const char *, bool>> & layers_, std::map<const char *, bool> extensions_) const
-    -> ValidatedExtentions {
+auto InstanceInfo::validate(const std::vector<std::pair<const char *, bool>> & layers_, std::map<const char *, bool> extensions_) const -> ValidatedExtentions {
     ValidatedExtentions v;
 
     // hold list of supported extensions in a set to avoid duplicated extension names.

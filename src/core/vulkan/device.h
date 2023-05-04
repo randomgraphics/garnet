@@ -18,9 +18,10 @@ public:
     bool lost() const { return _lost; }
 
     void setLost(const char *) {
-        _lost   = true;
+        _lost = true;
         // auto bt = backtrace();
-        // if (!bt.empty()) { PH_LOGE("Device 0x%" PRIx64 ": %s failed due to VK_ERROR_DEVICE_LOST:\n%s", (uint64_t) _owner->vgi().device, action, bt.c_str()); }
+        // if (!bt.empty()) { PH_LOGE("Device 0x%" PRIx64 ": %s failed due to VK_ERROR_DEVICE_LOST:\n%s", (uint64_t) _owner->vgi().device, action, bt.c_str());
+        // }
     }
 
 private:
@@ -40,4 +41,4 @@ private:
     }
 };
 
-} // namespace ph
+} // namespace GN::vulkan

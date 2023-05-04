@@ -105,7 +105,7 @@ struct PhysicalDeviceFeatureList {
     }
 
 private:
-    VkPhysicalDeviceFeatures2 _deviceFeatures {VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2_KHR};
+    VkPhysicalDeviceFeatures2       _deviceFeatures {VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2_KHR};
     std::list<SimpleStructureChain> _list;
 };
 

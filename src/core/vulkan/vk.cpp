@@ -103,4 +103,4 @@ void fullPipelineBarrier(VkCommandBuffer cb) {
                          0, nullptr);                                                                                                   // image barrier
 }
 
-}
+} // namespace GN::vulkan

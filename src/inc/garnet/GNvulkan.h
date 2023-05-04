@@ -46,15 +46,15 @@
 
 // ---------------------------------------------------------------------------------------------------------------------
 // Error check helpers
-#define GN_VK_CHK(func, actionOnFailure)                                                                \
-    if (true) {                                                                                         \
-        auto result__ = (func);                                                                         \
-        /* there are a few positive success code other than VK_SUCCESS */                               \
-        if (result__ < 0) {                                                                             \
+#define GN_VK_CHK(func, actionOnFailure)                                                                    \
+    if (true) {                                                                                             \
+        auto result__ = (func);                                                                             \
+        /* there are a few positive success code other than VK_SUCCESS */                                   \
+        if (result__ < 0) {                                                                                 \
             GN_ERROR(getLogger("GN.vk"))("%s failed: %s", #func, ::GN::vulkan::VkResultToString(result__)); \
-            actionOnFailure;                                                                            \
-        }                                                                                               \
-    } else                                                                                              \
+            actionOnFailure;                                                                                \
+        }                                                                                                   \
+    } else                                                                                                  \
         void(0)
 
 /// Check on vulkan functions call, throw exception when function failed (returned negative VkResult)

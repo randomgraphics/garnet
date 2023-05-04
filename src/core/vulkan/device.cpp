@@ -528,7 +528,7 @@ SimpleVulkanDevice::SimpleVulkanDevice(ConstructParameters cp): _cp(cp) {
         for (auto & e : _cp.instance->cp().instanceExtensions) {
             if (e.first == VK_KHR_SURFACE_EXTENSION_NAME) {
                 askedDeviceExtensions[VK_KHR_SWAPCHAIN_EXTENSION_NAME] = true;
-                present = true;
+                present                                                = true;
                 break;
             }
         }

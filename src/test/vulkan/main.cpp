@@ -50,10 +50,10 @@ struct App {
 
     bool initVulkan() {
         // create instance
-        mInstance = new SimpleVulkanInstance(SimpleVulkanInstance::ConstructParameters{
+        mInstance = new SimpleVulkanInstance(SimpleVulkanInstance::ConstructParameters {
             .instanceExtensions = {{VK_KHR_SURFACE_EXTENSION_NAME, true}, {VK_KHR_WIN32_SURFACE_EXTENSION_NAME, true}},
-            .validation = SimpleVulkanInstance::BREAK_ON_VK_ERROR,
-            .printVkInfo = SimpleVulkanInstance::VERBOSE,
+            .validation         = SimpleVulkanInstance::BREAK_ON_VK_ERROR,
+            .printVkInfo        = SimpleVulkanInstance::VERBOSE,
         });
 
         // create a window
@@ -81,9 +81,9 @@ struct App {
         // create device
         mDevice = new SimpleVulkanDevice({
             .instance = mInstance,
-            .surface = mSurface,
+            .surface  = mSurface,
         });
-        mVgi = mDevice->vgi();
+        mVgi    = mDevice->vgi();
 
         // acquire queue handles
         vkGetDeviceQueue(mVgi.device, mDevice->gfxQueueFamilyIndex(), 0, &mGraphicsQueue);
