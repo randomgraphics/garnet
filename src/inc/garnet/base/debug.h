@@ -272,6 +272,7 @@ namespace internal {
 /// Handle assert failure
 ///
 GN_API void handleAssertFailure(const char * msg, const char * file, int line, bool * ignoreForever) throw();
+
 } // namespace internal
 
 //@}

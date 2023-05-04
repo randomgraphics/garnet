@@ -1,9 +1,9 @@
 #pragma once
-#include <garnet/GNvk.h>
+#include <garnet/GNvulkan.h>
 #include <map>
 #include <list>
 
-namespace GN::vk {
+namespace GN::vulkan {
 
 // ---------------------------------------------------------------------------------------------------------------------
 //
@@ -109,4 +109,4 @@ private:
     std::list<SimpleStructureChain> _list;
 };
 
-} // namespace GN::vk
+} // namespace GN::vulkan

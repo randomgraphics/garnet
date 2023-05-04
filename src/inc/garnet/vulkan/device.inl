@@ -3,7 +3,7 @@
 #include <vector>
 #include <string>
 
-namespace GN::vk {
+namespace GN::vulkan {
 
 /// Extensible structure chain used by Vulkan API.
 struct SimpleStructureChain {
@@ -24,8 +24,11 @@ struct SimpleStructureChain {
     }
 };
 
-class SimpleVulkanInstance {
+class GN_API SimpleVulkanInstance {
 public:
+    GN_NO_COPY(SimpleVulkanInstance);
+    GN_NO_MOVE(SimpleVulkanInstance);
+
     /// Define level of validation on Vulkan error.
     enum Validation {
         VALIDATION_DISABLED = 0,
@@ -74,17 +77,20 @@ public:
 
 private:
     ConstructParameters      _cp;
-    VkInstance               _instance    = nullptr;
+    VkInstance               _instance {};
     VkDebugReportCallbackEXT _debugReport = 0;
 };
 
 // ---------------------------------------------------------------------------------------------------------------------
 //
-class SimpleVulkanDevice {
+class GN_API SimpleVulkanDevice {
 public:
     struct ConstructParameters {
         /// pointer to Vulkan instance.
         SimpleVulkanInstance * instance = nullptr;
+
+        /// Leave it at zero to create an headless device w/o presentation support.
+        VkSurfaceKHR surface = 0;
 
         /// Specify extra extension to initialize VK device. Value indicate if the extension is required or not.
         std::map<std::string, bool> deviceExtensions;
@@ -127,6 +133,11 @@ public:
 
     const VulkanGlobalInfo & vgi() const { return _vgi; }
 
+    uint32_t gfxQueueFamilyIndex() const { return _gfxQueueFamilyIndex; }
+    uint32_t tfrQueueFamilyIndex() const { return _tfrQueueFamilyIndex; }
+    uint32_t cmpQueueFamilyIndex() const { return _cmpQueueFamilyIndex; }
+    uint32_t prnQueueFamilyIndex() const { return _prnQueueFamilyIndex; }
+
     // VulkanSubmissionProxy & graphicsQ() const { return *_queues[_gfxQueueFamilyIndex].get(); }
     // VulkanSubmissionProxy & transferQ() const { return *_queues[_tfrQueueFamilyIndex].get(); }
     // VulkanSubmissionProxy & computeQ() const { return *_queues[_cmpQueueFamilyIndex].get(); }
@@ -144,6 +155,7 @@ private:
     uint32_t            _gfxQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
     uint32_t            _tfrQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
     uint32_t            _cmpQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+    uint32_t            _prnQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
     // std::vector<std::unique_ptr<VulkanSubmissionProxy>> _queues; // one for each queue family
 };
 
@@ -165,4 +177,4 @@ public:
     }
 };
 
-} // namespace GN::vk
+} // namespace GN::vulkan

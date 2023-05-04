@@ -69,14 +69,15 @@
 // Detect Target Platform
 // *****************************************************************************
 
-#define GN_MSWIN  0 ///< Windows-based system (PC, Xbox, Phone and etc.)
-#define GN_WINPC  0 ///< If 1, means current platform is Microsoft Windows on PC (not Xbox)
-#define GN_WINRT  0 ///< Windows RT enabled platform (Win8 or Xbox3)
-#define GN_XBOX2  0 ///< If 1, means Xbox 360
-#define GN_XBOX3  0 ///< If 1, means Xbox One
-#define GN_POSIX  0 ///< If 1, means POSIX compatible platform, such as linux/mac/unix and Cygwin
-#define GN_DARWIN 0 ///< true when running on mac os.
-#define GN_CYGWIN 0 ///< If 1, means Cygwin
+#define GN_MSWIN   0 ///< Windows-based system (PC, Xbox, Phone and etc.)
+#define GN_WINPC   0 ///< If 1, means current platform is Microsoft Windows on PC (not Xbox)
+#define GN_WINRT   0 ///< Windows RT enabled platform (Win8 or Xbox3)
+#define GN_XBOX2   0 ///< If 1, means Xbox 360
+#define GN_XBOX3   0 ///< If 1, means Xbox One
+#define GN_POSIX   0 ///< If 1, means POSIX compatible platform, such as linux/mac/unix/android and Cygwin
+#define GN_DARWIN  0 ///< true when running on mac os.
+#define GN_CYGWIN  0 ///< If 1, means Cygwin
+#define GN_ANDROID 0 ///< If 1, means Android
 
 // Windows platform
 #if defined(_WIN32)
@@ -113,6 +114,13 @@
     #undef GN_DARWIN
     #define GN_DARWIN        1
     #define GN_PLATFORM_NAME darwin
+
+// Android
+#elif defined(__ANDROID__)
+    #undef GN_POSIX
+    #undef GN_ANDROID
+    #define GN_POSIX   1
+    #define GN_ANDROID 1
 
 // other unix/linux platform
 #elif defined(__unix) || defined(__unix__)

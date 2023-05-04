@@ -3,7 +3,7 @@
 
 static GN::Logger * sLogger = GN::getLogger("GN.vk.info");
 
-namespace GN::vk {
+namespace GN::vulkan {
 
 // ---------------------------------------------------------------------------------------------------------------------
 //
@@ -105,8 +105,7 @@ auto InstanceInfo::validate(const std::vector<std::pair<const char *, bool>> & l
         auto iter = std::find_if(layers.begin(), layers.end(), [&](const LayerInfo & a) { return 0 == strcmp(a.properties.layerName, l.first); });
         if (iter == layers.end()) {
             if (l.second) {
-                auto error = str::format("Required VK layer %s is not supported.", l.first);
-                GN_THROW(error.data());
+                GN_THROW("Required VK layer %s is not supported.", l.first);
             } else {
                 GN_WARN(sLogger)("Optional VK layer %s is not supported.", l.first);
             }
@@ -125,8 +124,7 @@ auto InstanceInfo::validate(const std::vector<std::pair<const char *, bool>> & l
     // from extensions_list. Now it is time to see if there's any unsupported but required extensions.
     for (const auto & asked : extensions_) {
         if (asked.second) {
-            auto error = str::format("Required VK extension %s is not supported.", asked.first);
-            GN_THROW(error.data());
+            GN_THROW("Required VK extension %s is not supported.", asked.first);
         } else {
             GN_WARN(sLogger)("Optional VK extension %s is not supported.", asked.first);
         }
@@ -192,4 +190,4 @@ std::string InstanceInfo::print(const VkInstanceCreateInfo & ici, bool verbose) 
     return ss.str();
 }
 
-} // namespace GN::vk
+} // namespace GN::vulkan

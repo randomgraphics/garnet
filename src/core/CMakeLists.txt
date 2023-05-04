@@ -71,7 +71,7 @@ if(D3D12_FOUND)
 endif()
 
 if(VULKAN_FOUND)
-    GN_add_source_folder(sources vk)
+    GN_add_source_folder(sources vulkan)
 endif()
 
 # Split everything into groups
@@ -140,7 +140,9 @@ endif()
 # Vulkan
 if(VULKAN_FOUND)
     target_compile_definitions(GNcore PRIVATE HAS_VULKAN=1)
-    add_core_libs(Vulkan::Vulkan)
+    # only include Vulkan headers. Do not link to Vulkan libraries, since it
+    # will be conflict with the symbols defined in volk.h
+    target_include_directories(GNcore PUBLIC ${Vulkan_INCLUDE_DIRS})
 endif()
 
 # thread libraries
@@ -150,7 +152,9 @@ add_core_libs(${CMAKE_DL_LIBS} Threads::Threads)
 # compiler specific setup
 if(MSVC)
     target_compile_definitions(GNcore PUBLIC _UNICODE UNICODE)
-    target_compile_options(GNcore PUBLIC /EHa /MP /W4 /WX)
+    target_compile_options(GNcore PUBLIC /EHa /MP /W4 /WX
+        /Wv:18 # fix eigen warning
+    )
 else()
     target_compile_options(GNcore PUBLIC -Wall -Wextra -Werror)
 endif()

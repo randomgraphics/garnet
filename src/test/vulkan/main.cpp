@@ -3,53 +3,11 @@
 #include <unordered_map>
 
 using namespace GN;
+using namespace GN::vulkan;
 
 static GN::Logger * sLogger = GN::getLogger("GN.test.vulkan");
 
-StrA VkResultToString(VkResult error) {
-    static std::unordered_map<VkResult, StrA> table {
-        std::make_pair(VK_SUCCESS, "VK_SUCCESS"),
-        std::make_pair(VK_NOT_READY, "VK_NOT_READY"),
-        std::make_pair(VK_TIMEOUT, "VK_TIMEOUT"),
-        std::make_pair(VK_EVENT_SET, "VK_EVENT_SET"),
-        std::make_pair(VK_EVENT_RESET, "VK_EVENT_RESET"),
-        std::make_pair(VK_INCOMPLETE, "VK_INCOMPLETE"),
-        std::make_pair(VK_ERROR_OUT_OF_HOST_MEMORY, "VK_ERROR_OUT_OF_HOST_MEMORY"),
-        std::make_pair(VK_ERROR_OUT_OF_DEVICE_MEMORY, "VK_ERROR_OUT_OF_DEVICE_MEMORY"),
-        std::make_pair(VK_ERROR_INITIALIZATION_FAILED, "VK_ERROR_INITIALIZATION_FAILED"),
-        std::make_pair(VK_ERROR_DEVICE_LOST, "VK_ERROR_DEVICE_LOST"),
-        std::make_pair(VK_ERROR_MEMORY_MAP_FAILED, "VK_ERROR_MEMORY_MAP_FAILED"),
-        std::make_pair(VK_ERROR_LAYER_NOT_PRESENT, "VK_ERROR_LAYER_NOT_PRESENT"),
-        std::make_pair(VK_ERROR_EXTENSION_NOT_PRESENT, "VK_ERROR_EXTENSION_NOT_PRESENT"),
-        std::make_pair(VK_ERROR_FEATURE_NOT_PRESENT, "VK_ERROR_FEATURE_NOT_PRESENT"),
-        std::make_pair(VK_ERROR_INCOMPATIBLE_DRIVER, "VK_ERROR_INCOMPATIBLE_DRIVER"),
-        std::make_pair(VK_ERROR_TOO_MANY_OBJECTS, "VK_ERROR_TOO_MANY_OBJECTS"),
-        std::make_pair(VK_ERROR_FORMAT_NOT_SUPPORTED, "VK_ERROR_FORMAT_NOT_SUPPORTED"),
-        std::make_pair(VK_ERROR_FRAGMENTED_POOL, "VK_ERROR_FRAGMENTED_POOL"),
-        std::make_pair(VK_ERROR_SURFACE_LOST_KHR, "VK_ERROR_SURFACE_LOST_KHR"),
-        std::make_pair(VK_ERROR_NATIVE_WINDOW_IN_USE_KHR, "VK_ERROR_NATIVE_WINDOW_IN_USE_KHR"),
-        std::make_pair(VK_SUBOPTIMAL_KHR, "VK_SUBOPTIMAL_KHR"),
-        std::make_pair(VK_ERROR_OUT_OF_DATE_KHR, "VK_ERROR_OUT_OF_DATE_KHR"),
-        std::make_pair(VK_ERROR_INCOMPATIBLE_DISPLAY_KHR, "VK_ERROR_INCOMPATIBLE_DISPLAY_KHR"),
-        std::make_pair(VK_ERROR_VALIDATION_FAILED_EXT, "VK_ERROR_VALIDATION_FAILED_EXT"),
-        std::make_pair(VK_ERROR_INVALID_SHADER_NV, "VK_ERROR_INVALID_SHADER_NV"),
-    };
-
-    auto iter = table.find(error);
-    if (iter != table.end()) return iter->second;
-
-    return str::format("Unrecognized VkResult 0x%08X", error);
-}
-
-#define CHECK_VK(x)                                                                      \
-    if (1) {                                                                             \
-        auto result__ = (x);                                                             \
-        if ((result__) < 0) {                                                            \
-            GN_ERROR(sLogger)("%s failed: %s", #x, VkResultToString(result__).rawptr()); \
-            return false;                                                                \
-        }                                                                                \
-    } else                                                                               \
-        void(0)
+#define CHECK_VK(x) GN_VK_CHK(x, return false;)
 
 #define CHECK_BOOL(x)                                \
     if (!(x)) {                                      \
@@ -59,15 +17,12 @@ StrA VkResultToString(VkResult error) {
         void(0)
 
 struct App {
-    bool                     mSuccess     = false;
-    VkAllocationCallbacks *  mAllocator   = nullptr;
-    win::Window *            mWin         = nullptr;
-    VkInstance               mInstance    = nullptr;
-    VkDebugReportCallbackEXT mDebugReport = 0;
-    VkSurfaceKHR             mSurface     = 0;
-    VkPhysicalDevice         mSelectedPhysicalDevice; // no need to release this one.
-    VkDevice                 mDevice             = nullptr;
-    int                      mGraphicsQueueIndex = -1, mPresentQueueIndex = -1;
+    bool                     mSuccess  = false;
+    win::Window *            mWin      = nullptr;
+    SimpleVulkanInstance *   mInstance = nullptr;
+    VkSurfaceKHR             mSurface  = 0;
+    SimpleVulkanDevice *     mDevice   = nullptr;
+    VulkanGlobalInfo         mVgi {};
     VkQueue                  mGraphicsQueue = nullptr, mPresentQueue = nullptr;
     VkSwapchainKHR           mSwapchain = 0;
     std::vector<VkImageView> mBackBuffers;
@@ -86,55 +41,20 @@ struct App {
 
     ~App() {
         cleanupSwapchain();
-        if (mCommandPool) vkDestroyCommandPool(mDevice, mCommandPool, mAllocator);
-        if (mDevice) vkDestroyDevice(mDevice, mAllocator);
-        if (mSurface) vkDestroySurfaceKHR(mInstance, mSurface, mAllocator);
-        if (mDebugReport) vkDestroyDebugReportCallbackEXT(mInstance, mDebugReport, mAllocator);
-        if (mInstance) vkDestroyInstance(mInstance, mAllocator);
+        if (mCommandPool) vkDestroyCommandPool(mVgi.device, mCommandPool, mVgi.allocator);
+        safeDelete(mDevice);
+        if (mSurface) vkDestroySurfaceKHR(mVgi.instance, mSurface, mVgi.allocator);
+        safeDelete(mInstance);
         if (mWin) delete mWin;
     }
 
     bool initVulkan() {
-        // query layers
-        uint32 count;
-        vkEnumerateInstanceLayerProperties(&count, nullptr);
-        std::vector<VkLayerProperties> availableLayers(count);
-        vkEnumerateInstanceLayerProperties(&count, availableLayers.data());
-        StrA s = "available Vulkan layers:\n";
-        for (const auto & l : availableLayers) { s += str::format("\t%s\n", l.layerName); }
-        GN_INFO(sLogger)(s);
-
-        // query extensions
-        vkEnumerateInstanceExtensionProperties(nullptr, &count, nullptr);
-        std::vector<VkExtensionProperties> availableExtensions(count);
-        vkEnumerateInstanceExtensionProperties(nullptr, &count, availableExtensions.data());
-        s = "available Vulkan extensions:\n";
-        for (const auto & e : availableExtensions) { s += str::format("\t%s\n", e.extensionName); }
-        GN_INFO(sLogger)(s);
-
-        // create VK instance
-        std::vector<const char *> layers     = {"VK_LAYER_LUNARG_standard_validation"};
-        std::vector<const char *> extensions = {
-            VK_EXT_DEBUG_REPORT_EXTENSION_NAME,
-            VK_KHR_SURFACE_EXTENSION_NAME,
-            VK_KHR_WIN32_SURFACE_EXTENSION_NAME,
-        };
-        auto ci = VkInstanceCreateInfo {VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO,
-                                        nullptr,
-                                        0, // flags,
-                                        nullptr,
-                                        (uint32) layers.size(),
-                                        layers.data(),
-                                        (uint32) extensions.size(),
-                                        extensions.data()};
-        CHECK_VK(vkCreateInstance(&ci, nullptr, &mInstance));
-
-        // setup debug callback
-        VkDebugReportCallbackCreateInfoEXT debugCallbackCreateInfo = {};
-        debugCallbackCreateInfo.sType                              = VK_STRUCTURE_TYPE_DEBUG_REPORT_CALLBACK_CREATE_INFO_EXT;
-        debugCallbackCreateInfo.flags                              = VK_DEBUG_REPORT_ERROR_BIT_EXT | VK_DEBUG_REPORT_WARNING_BIT_EXT;
-        debugCallbackCreateInfo.pfnCallback                        = debugCallback;
-        CHECK_VK(vkCreateDebugReportCallbackEXT(mInstance, &debugCallbackCreateInfo, mAllocator, &mDebugReport));
+        // create instance
+        mInstance = new SimpleVulkanInstance(SimpleVulkanInstance::ConstructParameters{
+            .instanceExtensions = {{VK_KHR_SURFACE_EXTENSION_NAME, true}, {VK_KHR_WIN32_SURFACE_EXTENSION_NAME, true}},
+            .validation = SimpleVulkanInstance::BREAK_ON_VK_ERROR,
+            .printVkInfo = SimpleVulkanInstance::VERBOSE,
+        });
 
         // create a window
         const uint32 WIDTH  = 1960;
@@ -156,92 +76,25 @@ struct App {
         surfaceCreateInfo.sType                       = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
         surfaceCreateInfo.hwnd                        = (HWND) mWin->getWindowHandle();
         surfaceCreateInfo.hinstance                   = (HINSTANCE) mWin->getModuleHandle();
-        CHECK_VK(vkCreateWin32SurfaceKHR(mInstance, &surfaceCreateInfo, mAllocator, &mSurface));
+        CHECK_VK(vkCreateWin32SurfaceKHR(*mInstance, &surfaceCreateInfo, nullptr, &mSurface));
 
-        // enumerate physical device
-        CHECK_VK(vkEnumeratePhysicalDevices(mInstance, &count, nullptr));
-        std::vector<VkPhysicalDevice> devices(count);
-        CHECK_VK(vkEnumeratePhysicalDevices(mInstance, &count, devices.data()));
-
-        // Pick a physical device. For simplicity, pick the first one for now.
-        mSelectedPhysicalDevice = devices[0];
-#if 0
-        for(const auto & d : devices) {
-            VkPhysicalDeviceFeatures f;
-            CHECK_VK(vkGetPhysicalDeviceFeatures(d, &f));
-            VkPhysicalDeviceProperties p;
-            CHECK_VK(vkGetPhysicalDeviceProperties(d, &p));
-            // TODO: check features and properties
-        }
-#endif
-
-        // query device extensions
-        std::vector<VkExtensionProperties> availableDeviceExtensions;
-        vkEnumerateDeviceExtensionProperties(mSelectedPhysicalDevice, nullptr, &count, nullptr);
-        availableDeviceExtensions.resize(count);
-        vkEnumerateDeviceExtensionProperties(mSelectedPhysicalDevice, nullptr, &count, availableDeviceExtensions.data());
-        s = "available Vulkan device extensions:\n";
-        for (const auto & e : availableDeviceExtensions) { s += str::format("\t%s\n", e.extensionName); }
-        GN_INFO(sLogger)(s);
-
-        // query queues
-        mGraphicsQueueIndex = -1;
-        mPresentQueueIndex  = -1;
-        vkGetPhysicalDeviceQueueFamilyProperties(mSelectedPhysicalDevice, &count, nullptr);
-        std::vector<VkQueueFamilyProperties> queueFamilies(count);
-        vkGetPhysicalDeviceQueueFamilyProperties(mSelectedPhysicalDevice, &count, queueFamilies.data());
-        for (uint32 i = 0; i < queueFamilies.size(); ++i) {
-            const auto & p = queueFamilies[i];
-            if (0 == p.queueCount) continue;
-            if (mGraphicsQueueIndex < 0 && p.queueFlags & VK_QUEUE_GRAPHICS_BIT) { mGraphicsQueueIndex = i; }
-            if (mPresentQueueIndex < 0) {
-                VkBool32 presentSupport;
-                vkGetPhysicalDeviceSurfaceSupportKHR(mSelectedPhysicalDevice, i, mSurface, &presentSupport);
-                if (presentSupport) { mPresentQueueIndex = i; }
-            }
-        }
-        if (mGraphicsQueueIndex < 0 || mPresentQueueIndex < 0) {
-            GN_ERROR(sLogger)("the VK device needs to support both graphics and present queue.");
-            return false;
-        }
-
-        // create logical device
-        float                                queuePriority = 1.0f;
-        std::vector<VkDeviceQueueCreateInfo> queueCreateInfo;
-        queueCreateInfo.push_back(
-            VkDeviceQueueCreateInfo {VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO, nullptr, 0, (uint32) mGraphicsQueueIndex, 1, &queuePriority});
-        if (mPresentQueueIndex != mGraphicsQueueIndex) {
-            queueCreateInfo.push_back(
-                VkDeviceQueueCreateInfo {VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO, nullptr, 0, (uint32) mPresentQueueIndex, 1, &queuePriority});
-        }
-        VkPhysicalDeviceFeatures  deviceFeatures   = {};
-        std::vector<const char *> deviceExtensions = {
-            VK_KHR_SWAPCHAIN_EXTENSION_NAME,
-        };
-        VkDeviceCreateInfo deviceCreateInfo = {
-            VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
-            nullptr,
-            0,
-            (uint32) queueCreateInfo.size(),
-            queueCreateInfo.data(),
-            (uint32) layers.size(),
-            layers.data(),
-            (uint32) deviceExtensions.size(),
-            deviceExtensions.data(),
-            &deviceFeatures,
-        };
-        CHECK_VK(vkCreateDevice(mSelectedPhysicalDevice, &deviceCreateInfo, mAllocator, &mDevice));
+        // create device
+        mDevice = new SimpleVulkanDevice({
+            .instance = mInstance,
+            .surface = mSurface,
+        });
+        mVgi = mDevice->vgi();
 
         // acquire queue handles
-        vkGetDeviceQueue(mDevice, mGraphicsQueueIndex, 0, &mGraphicsQueue);
-        vkGetDeviceQueue(mDevice, mPresentQueueIndex, 0, &mPresentQueue);
+        vkGetDeviceQueue(mVgi.device, mDevice->gfxQueueFamilyIndex(), 0, &mGraphicsQueue);
+        vkGetDeviceQueue(mVgi.device, mDevice->prnQueueFamilyIndex(), 0, &mPresentQueue);
 
         // create command buffer pool
         VkCommandPoolCreateInfo poolInfo = {};
         poolInfo.sType                   = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-        poolInfo.queueFamilyIndex        = mGraphicsQueueIndex;
+        poolInfo.queueFamilyIndex        = mDevice->gfxQueueFamilyIndex();
         poolInfo.flags                   = 0; // Optional
-        CHECK_VK(vkCreateCommandPool(mDevice, &poolInfo, mAllocator, &mCommandPool));
+        CHECK_VK(vkCreateCommandPool(mVgi.device, &poolInfo, mVgi.allocator, &mCommandPool));
 
         CHECK_BOOL(createSwapchain());
 
@@ -258,11 +111,11 @@ struct App {
 
         // create swap chain
         VkSurfaceCapabilitiesKHR surfaceCaps = {};
-        vkGetPhysicalDeviceSurfaceCapabilitiesKHR(mSelectedPhysicalDevice, mSurface, &surfaceCaps);
+        vkGetPhysicalDeviceSurfaceCapabilitiesKHR(mVgi.phydev, mSurface, &surfaceCaps);
         std::vector<uint32> queueIndices;
-        if (mGraphicsQueueIndex != mPresentQueueIndex) {
-            queueIndices.push_back(mGraphicsQueueIndex);
-            queueIndices.push_back(mPresentQueueIndex);
+        if (mDevice->gfxQueueFamilyIndex() != mDevice->prnQueueFamilyIndex()) {
+            queueIndices.push_back(mDevice->gfxQueueFamilyIndex());
+            queueIndices.push_back(mDevice->prnQueueFamilyIndex());
         }
         VkSwapchainCreateInfoKHR swapChainCreateInfo = {
             VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR,
@@ -275,7 +128,7 @@ struct App {
             {windowSize.x, windowSize.y},
             1, // image array layers (2 for stereoscopic rendering)
             VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
-            mGraphicsQueueIndex == mPresentQueueIndex ? VK_SHARING_MODE_EXCLUSIVE : VK_SHARING_MODE_CONCURRENT,
+            mDevice->gfxQueueFamilyIndex() == mDevice->prnQueueFamilyIndex() ? VK_SHARING_MODE_EXCLUSIVE : VK_SHARING_MODE_CONCURRENT,
             (uint32) queueIndices.size(),
             queueIndices.data(),
             surfaceCaps.currentTransform,
@@ -284,14 +137,14 @@ struct App {
             true,                     // clipped.
             0,                        // old swap chain
         };
-        CHECK_VK(vkCreateSwapchainKHR(mDevice, &swapChainCreateInfo, mAllocator, &mSwapchain));
+        CHECK_VK(vkCreateSwapchainKHR(mVgi.device, &swapChainCreateInfo, mVgi.allocator, &mSwapchain));
 
         // acquire back buffers
         uint32               count;
         std::vector<VkImage> swapchainImages;
-        vkGetSwapchainImagesKHR(mDevice, mSwapchain, &count, nullptr);
+        vkGetSwapchainImagesKHR(mVgi.device, mSwapchain, &count, nullptr);
         swapchainImages.resize(count);
-        vkGetSwapchainImagesKHR(mDevice, mSwapchain, &count, swapchainImages.data());
+        vkGetSwapchainImagesKHR(mVgi.device, mSwapchain, &count, swapchainImages.data());
         mBackBuffers.resize(swapchainImages.size());
         for (size_t i = 0; i < swapchainImages.size(); i++) {
             VkImageViewCreateInfo createInfo           = {};
@@ -308,14 +161,14 @@ struct App {
             createInfo.subresourceRange.levelCount     = 1;
             createInfo.subresourceRange.baseArrayLayer = 0;
             createInfo.subresourceRange.layerCount     = 1;
-            CHECK_VK(vkCreateImageView(mDevice, &createInfo, mAllocator, &mBackBuffers[i]));
+            CHECK_VK(vkCreateImageView(mVgi.device, &createInfo, mVgi.allocator, &mBackBuffers[i]));
         }
 
         // create back buffer semaphore
         VkSemaphoreCreateInfo semaphoreInfo = {};
         semaphoreInfo.sType                 = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
-        CHECK_VK(vkCreateSemaphore(mDevice, &semaphoreInfo, nullptr, &mBackBufferAvailableSemaphore));
-        CHECK_VK(vkCreateSemaphore(mDevice, &semaphoreInfo, nullptr, &mRenderFinishedSemaphore));
+        CHECK_VK(vkCreateSemaphore(mVgi.device, &semaphoreInfo, nullptr, &mBackBufferAvailableSemaphore));
+        CHECK_VK(vkCreateSemaphore(mVgi.device, &semaphoreInfo, nullptr, &mRenderFinishedSemaphore));
 
         // create pipeline object
         CHECK_BOOL(createGraphicsPipeline(windowSize.x, windowSize.y, swapChainCreateInfo.imageFormat));
@@ -331,7 +184,7 @@ struct App {
             framebufferInfo.width                   = windowSize.x;
             framebufferInfo.height                  = windowSize.y;
             framebufferInfo.layers                  = 1;
-            CHECK_VK(vkCreateFramebuffer(mDevice, &framebufferInfo, mAllocator, &mFramebuffers[i]));
+            CHECK_VK(vkCreateFramebuffer(mVgi.device, &framebufferInfo, mVgi.allocator, &mFramebuffers[i]));
         }
 
         // create primary command buffers
@@ -341,7 +194,7 @@ struct App {
         cmdbufAllocInfo.commandPool                 = mCommandPool;
         cmdbufAllocInfo.level                       = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
         cmdbufAllocInfo.commandBufferCount          = (uint32_t) mCommandBuffers.size();
-        CHECK_VK(vkAllocateCommandBuffers(mDevice, &cmdbufAllocInfo, mCommandBuffers.data()));
+        CHECK_VK(vkAllocateCommandBuffers(mVgi.device, &cmdbufAllocInfo, mCommandBuffers.data()));
 
         // Record commmands
         for (size_t i = 0; i < mCommandBuffers.size(); i++) {
@@ -375,19 +228,19 @@ struct App {
 
     void cleanupSwapchain() {
         // cleanup all command buffers.
-        vkFreeCommandBuffers(mDevice, mCommandPool, (uint32_t) mCommandBuffers.size(), mCommandBuffers.data());
+        if (!mCommandBuffers.empty()) vkFreeCommandBuffers(mVgi.device, mCommandPool, (uint32_t) mCommandBuffers.size(), mCommandBuffers.data());
 
         for (auto i : mFramebuffers) {
-            vkDestroyFramebuffer(mDevice, i, mAllocator);
+            vkDestroyFramebuffer(mVgi.device, i, mVgi.allocator);
             mFramebuffers.clear();
         }
-        if (mPipeline) vkDestroyPipeline(mDevice, mPipeline, mAllocator), mPipeline = 0;
-        if (mPipelineLayout) vkDestroyPipelineLayout(mDevice, mPipelineLayout, mAllocator), mPipelineLayout = 0;
-        if (mRenderPass) vkDestroyRenderPass(mDevice, mRenderPass, mAllocator), mRenderPass = 0;
-        if (mRenderFinishedSemaphore) vkDestroySemaphore(mDevice, mRenderFinishedSemaphore, mAllocator), mRenderFinishedSemaphore = 0;
-        if (mBackBufferAvailableSemaphore) vkDestroySemaphore(mDevice, mBackBufferAvailableSemaphore, mAllocator), mBackBufferAvailableSemaphore = 0;
-        for (auto i : mBackBuffers) { vkDestroyImageView(mDevice, i, mAllocator), mBackBuffers.clear(); }
-        if (mSwapchain) vkDestroySwapchainKHR(mDevice, mSwapchain, mAllocator), mSwapchain = 0;
+        if (mPipeline) vkDestroyPipeline(mVgi.device, mPipeline, mVgi.allocator), mPipeline = 0;
+        if (mPipelineLayout) vkDestroyPipelineLayout(mVgi.device, mPipelineLayout, mVgi.allocator), mPipelineLayout = 0;
+        if (mRenderPass) vkDestroyRenderPass(mVgi.device, mRenderPass, mVgi.allocator), mRenderPass = 0;
+        if (mRenderFinishedSemaphore) vkDestroySemaphore(mVgi.device, mRenderFinishedSemaphore, mVgi.allocator), mRenderFinishedSemaphore = 0;
+        if (mBackBufferAvailableSemaphore) vkDestroySemaphore(mVgi.device, mBackBufferAvailableSemaphore, mVgi.allocator), mBackBufferAvailableSemaphore = 0;
+        for (auto i : mBackBuffers) { vkDestroyImageView(mVgi.device, i, mVgi.allocator), mBackBuffers.clear(); }
+        if (mSwapchain) vkDestroySwapchainKHR(mVgi.device, mSwapchain, mVgi.allocator), mSwapchain = 0;
     }
 
     bool createGraphicsPipeline(uint32 width, uint32 height, VkFormat format) {
@@ -399,7 +252,7 @@ struct App {
         shaderCreateInfo.codeSize                 = sizeof(vsbin);
         shaderCreateInfo.pCode                    = vsbin;
         VkShaderModule vs;
-        CHECK_VK(vkCreateShaderModule(mDevice, &shaderCreateInfo, nullptr, &vs));
+        CHECK_VK(vkCreateShaderModule(mVgi.device, &shaderCreateInfo, nullptr, &vs));
 
         const uint32 psbin[] = {
 #include "shaders/frag.h"
@@ -407,7 +260,7 @@ struct App {
         VkShaderModule ps;
         shaderCreateInfo.codeSize = sizeof(psbin);
         shaderCreateInfo.pCode    = psbin;
-        CHECK_VK(vkCreateShaderModule(mDevice, &shaderCreateInfo, nullptr, &ps));
+        CHECK_VK(vkCreateShaderModule(mVgi.device, &shaderCreateInfo, nullptr, &ps));
 
         VkPipelineShaderStageCreateInfo shaderStages[] = {
             {
@@ -501,7 +354,7 @@ struct App {
         pipelineLayoutInfo.pSetLayouts                = nullptr; // Optional
         pipelineLayoutInfo.pushConstantRangeCount     = 0;       // Optional
         pipelineLayoutInfo.pPushConstantRanges        = 0;       // Optional
-        CHECK_VK(vkCreatePipelineLayout(mDevice, &pipelineLayoutInfo, nullptr, &mPipelineLayout));
+        CHECK_VK(vkCreatePipelineLayout(mVgi.device, &pipelineLayoutInfo, nullptr, &mPipelineLayout));
 
         // create render pass
         VkAttachmentDescription colorAttachment = {};
@@ -539,7 +392,7 @@ struct App {
         renderPassInfo.pSubpasses             = &subpass;
         renderPassInfo.dependencyCount        = 1;
         renderPassInfo.pDependencies          = &dependency;
-        CHECK_VK(vkCreateRenderPass(mDevice, &renderPassInfo, nullptr, &mRenderPass));
+        CHECK_VK(vkCreateRenderPass(mVgi.device, &renderPassInfo, nullptr, &mRenderPass));
 
         // create pipeline
         VkGraphicsPipelineCreateInfo pipelineInfo = {};
@@ -559,45 +412,18 @@ struct App {
         pipelineInfo.subpass                      = 0;
         pipelineInfo.basePipelineHandle           = VK_NULL_HANDLE; // Optional
         pipelineInfo.basePipelineIndex            = -1;             // Optional
-        CHECK_VK(vkCreateGraphicsPipelines(mDevice, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &mPipeline));
+        CHECK_VK(vkCreateGraphicsPipelines(mVgi.device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &mPipeline));
 
         // done
-        vkDestroyShaderModule(mDevice, vs, nullptr);
-        vkDestroyShaderModule(mDevice, ps, nullptr);
+        vkDestroyShaderModule(mVgi.device, vs, nullptr);
+        vkDestroyShaderModule(mVgi.device, ps, nullptr);
         return true;
-    }
-
-    static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(VkDebugReportFlagsEXT,      // flags,
-                                                        VkDebugReportObjectTypeEXT, // objType,
-                                                        uint64_t,                   // obj,
-                                                        size_t,                     // location,
-                                                        int32_t,                    // code,
-                                                        const char *,               // layerPrefix,
-                                                        const char * msg, void * userData) {
-        GN_UNUSED_PARAM(userData);
-        GN_INFO(sLogger)("[vulkan] %s", msg);
-        return VK_FALSE;
-    }
-
-    static VkResult vkCreateDebugReportCallbackEXT(VkInstance instance, const VkDebugReportCallbackCreateInfoEXT * pCreateInfo,
-                                                   const VkAllocationCallbacks * pAllocator, VkDebugReportCallbackEXT * pCallback) {
-        auto func = (PFN_vkCreateDebugReportCallbackEXT) vkGetInstanceProcAddr(instance, "vkCreateDebugReportCallbackEXT");
-        if (func != nullptr) {
-            return func(instance, pCreateInfo, pAllocator, pCallback);
-        } else {
-            return VK_ERROR_EXTENSION_NOT_PRESENT;
-        }
-    }
-
-    static void vkDestroyDebugReportCallbackEXT(VkInstance instance, VkDebugReportCallbackEXT callback, const VkAllocationCallbacks * pAllocator) {
-        auto func = (PFN_vkDestroyDebugReportCallbackEXT) vkGetInstanceProcAddr(instance, "vkDestroyDebugReportCallbackEXT");
-        if (func != nullptr) { func(instance, callback, pAllocator); }
     }
 
     bool HandleWindowResize(VkResult vr) {
         if (VK_ERROR_OUT_OF_DATE_KHR == vr || VK_SUBOPTIMAL_KHR == vr) {
             GN_INFO(sLogger)("Window size changed. Try recreate swap chain.");
-            CHECK_VK(vkDeviceWaitIdle(mDevice));
+            CHECK_VK(vkDeviceWaitIdle(mVgi.device));
             CHECK_BOOL(createSwapchain());
             return true;
         }
@@ -613,7 +439,7 @@ struct App {
             auto     vr = VK_SUCCESS;
             do {
                 if (!HandleWindowResize(vr)) return -1;
-                vr = vkAcquireNextImageKHR(mDevice, mSwapchain, (uint64_t) -1, mBackBufferAvailableSemaphore, VK_NULL_HANDLE, &imageIndex);
+                vr = vkAcquireNextImageKHR(mVgi.device, mSwapchain, (uint64_t) -1, mBackBufferAvailableSemaphore, VK_NULL_HANDLE, &imageIndex);
             } while (VK_ERROR_OUT_OF_DATE_KHR == vr);
             CHECK_VK(vr);
 
@@ -642,12 +468,14 @@ struct App {
             presentInfo.pResults           = nullptr; // Optional
             if (!HandleWindowResize(vkQueuePresentKHR(mPresentQueue, &presentInfo))) return -1;
         }
-        vkDeviceWaitIdle(mDevice);
+        vkDeviceWaitIdle(mVgi.device);
         return 0;
     }
 };
 
 int main() {
+    GN_GUARD_ALWAYS;
     App app;
     return app.mSuccess ? app.run() : -1;
+    GN_UNGUARD_ALWAYS_DO(return -1;);
 }

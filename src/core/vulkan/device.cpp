@@ -9,7 +9,7 @@
 
 static GN::Logger * sLogger = GN::getLogger("GN.vk.device");
 
-namespace GN::vk {
+namespace GN::vulkan {
 
 std::list<SimpleVulkanDevice *> SimpleVulkanDevice::Details::_table;
 std::mutex                      SimpleVulkanDevice::Details::_mutex;
@@ -42,7 +42,7 @@ static VkBool32 VKAPI_PTR debugCallback(VkDebugReportFlagsEXT flags, VkDebugRepo
         auto str = ss.str();
         GN_ERROR(sLogger)("%s", str.c_str());
         if (v == SimpleVulkanInstance::THROW_ON_VK_ERROR) {
-            GN_THROW(str.c_str());
+            GN_THROW("%s", str.data());
         } else if (v == SimpleVulkanInstance::BREAK_ON_VK_ERROR) {
             breakIntoDebugger();
         }
@@ -303,8 +303,7 @@ static std::vector<const char *> validateExtensions(const std::vector<VkExtensio
         }
         if (found) continue;
         if (a.second) {
-            auto message = str::format("Extension %s is not supported by current device.", a.first.c_str());
-            GN_THROW(message.data());
+            GN_THROW("Extension %s is not supported by current device.", a.first.c_str());
         } else {
             GN_WARN(sLogger)("Optional feature %s is not supported by the current device.", a.first.c_str());
         }
@@ -330,12 +329,8 @@ static inline SimpleVulkanInstance::ConstructParameters & adjust(SimpleVulkanIns
 // ---------------------------------------------------------------------------------------------------------------------
 //
 SimpleVulkanInstance::SimpleVulkanInstance(ConstructParameters cp): _cp(adjust(cp)) {
-    // initialize VOLK only once per process
-    static std::atomic<bool> volkInitialized = {false};
-    if (!volkInitialized.exchange(true)) {
-        GN_ASSERT(volkInitialized);
-        GN_VK_REQUIRE(volkInitialize());
-    }
+    // initialize volk loader
+    volkInitialize();
 
     InstanceInfo instanceInfo;
     instanceInfo.init();
@@ -402,7 +397,7 @@ SimpleVulkanInstance::SimpleVulkanInstance(ConstructParameters cp): _cp(adjust(c
         GN_INFO(sLogger)(message.data());
     }
 
-    // initialize extensions
+    // load all function poivovolnters.
     volkLoadInstance(_instance);
 
     // setup debug callback
@@ -514,13 +509,6 @@ SimpleVulkanDevice::SimpleVulkanDevice(ConstructParameters cp): _cp(cp) {
     vkGetPhysicalDeviceQueueFamilyProperties(_vgi.phydev, &count, families.data());
     if (cp.printVkInfo) printAvailableQueues(_vgi.phydev, families, verbose);
 
-    // create device, one queue for each family
-    float                                queuePriority = 1.0f;
-    std::vector<VkDeviceQueueCreateInfo> queueCreateInfo;
-    for (uint32_t i = 0; i < families.size(); ++i) {
-        queueCreateInfo.push_back(VkDeviceQueueCreateInfo {VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO, nullptr, 0, i, 1, &queuePriority});
-    }
-
     // setup device feature and extension
     PhysicalDeviceFeatureList   deviceFeatures(cp.features1, cp.features2, cp.features3);
     std::map<std::string, bool> askedDeviceExtensions = cp.deviceExtensions;
@@ -528,23 +516,34 @@ SimpleVulkanDevice::SimpleVulkanDevice(ConstructParameters cp): _cp(cp) {
     // more extension
     askedDeviceExtensions[VK_KHR_GET_MEMORY_REQUIREMENTS_2_EXTENSION_NAME] = true;
 
-// #if PH_ANDROID == 0
-//     if (isRenderDocPresent()) {                                                       // only add this when renderdoc is available
-//         askedDeviceExtensions[VK_KHR_SHADER_NON_SEMANTIC_INFO_EXTENSION_NAME] = true; // add this to allow debugging on compute shaders
-//     }
-// #endif
+    // #if PH_ANDROID == 0
+    //     if (isRenderDocPresent()) {                                                       // only add this when renderdoc is available
+    //         askedDeviceExtensions[VK_KHR_SHADER_NON_SEMANTIC_INFO_EXTENSION_NAME] = true; // add this to allow debugging on compute shaders
+    //     }
+    // #endif
 
-    // determine if this is an headless rendering or not.
-    for (auto & e : _cp.instance->cp().instanceExtensions) {
-        if (e.first == VK_KHR_SURFACE_EXTENSION_NAME) {
-            askedDeviceExtensions[VK_KHR_SWAPCHAIN_EXTENSION_NAME] = true;
-            break;
+    // Determine if this is an headless rendering or not.
+    bool present = false;
+    if (_cp.surface) {
+        for (auto & e : _cp.instance->cp().instanceExtensions) {
+            if (e.first == VK_KHR_SURFACE_EXTENSION_NAME) {
+                askedDeviceExtensions[VK_KHR_SWAPCHAIN_EXTENSION_NAME] = true;
+                present = true;
+                break;
+            }
         }
     }
 
     // make sure all extensions are actually supported by the hardware.
     auto availableDeviceExtensions = enumerateDeviceExtenstions(_vgi.phydev);
     auto enabledDeviceExtensions   = validateExtensions(availableDeviceExtensions, askedDeviceExtensions);
+
+    // create device, one queue for each family
+    float                                queuePriority = 1.0f;
+    std::vector<VkDeviceQueueCreateInfo> queueCreateInfo;
+    for (uint32_t i = 0; i < families.size(); ++i) {
+        queueCreateInfo.push_back(VkDeviceQueueCreateInfo {VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO, nullptr, 0, i, 1, &queuePriority});
+    }
 
     // create device
     VkDeviceCreateInfo deviceCreateInfo = {
@@ -560,31 +559,33 @@ SimpleVulkanDevice::SimpleVulkanDevice(ConstructParameters cp): _cp(cp) {
     };
     GN_VK_REQUIRE(vkCreateDevice(_vgi.phydev, &deviceCreateInfo, _vgi.allocator, &_vgi.device));
 
-//     // initialize a memory allocator for Vulkan images
-//     if (_cp.useVmaAllocator) {
-//         VmaVulkanFunctions vf {};
-//         vf.vkGetInstanceProcAddr = vkGetInstanceProcAddr;
-//         vf.vkGetDeviceProcAddr   = vkGetDeviceProcAddr;
-//         VmaAllocatorCreateInfo ai {};
-//         ai.vulkanApiVersion = _cp.instance->cp().apiVersion;
-//         ai.physicalDevice   = _vgi.phydev;
-//         ai.device           = _vgi.device;
-//         ai.instance         = _vgi.instance;
-//         ai.pVulkanFunctions = &vf;
+    // TODO: intialize device specific dispatcher.`
 
-// #if 0 // uncomment this section to enable vma allocation recording
-//         VmaRecordSettings vmaRecordSettings;
-//         vmaRecordSettings.pFilePath = "vmaReplay.csv";
-//         vmaRecordSettings.flags = VMA_RECORD_FLUSH_AFTER_CALL_BIT;
-//         ai.pRecordSettings = &vmaRecordSettings;
-// #endif
+    //     // initialize a memory allocator for Vulkan images
+    //     if (_cp.useVmaAllocator) {
+    //         VmaVulkanFunctions vf {};
+    //         vf.vkGetInstanceProcAddr = vkGetInstanceProcAddr;
+    //         vf.vkGetDeviceProcAddr   = vkGetDeviceProcAddr;
+    //         VmaAllocatorCreateInfo ai {};
+    //         ai.vulkanApiVersion = _cp.instance->cp().apiVersion;
+    //         ai.physicalDevice   = _vgi.phydev;
+    //         ai.device           = _vgi.device;
+    //         ai.instance         = _vgi.instance;
+    //         ai.pVulkanFunctions = &vf;
 
-//         if (askedDeviceExtensions.find(VK_KHR_BUFFER_DEVICE_ADDRESS_EXTENSION_NAME) != askedDeviceExtensions.end()) {
-//             GN_INFO(sLogger)("Enable VMA allocator with buffer device address.");
-//             ai.flags = VMA_ALLOCATOR_CREATE_BUFFER_DEVICE_ADDRESS_BIT;
-//         }
-//         GN_VK_REQUIRE(vmaCreateAllocator(&ai, &_vgi.vmaAllocator));
-//     }
+    // #if 0 // uncomment this section to enable vma allocation recording
+    //         VmaRecordSettings vmaRecordSettings;
+    //         vmaRecordSettings.pFilePath = "vmaReplay.csv";
+    //         vmaRecordSettings.flags = VMA_RECORD_FLUSH_AFTER_CALL_BIT;
+    //         ai.pRecordSettings = &vmaRecordSettings;
+    // #endif
+
+    //         if (askedDeviceExtensions.find(VK_KHR_BUFFER_DEVICE_ADDRESS_EXTENSION_NAME) != askedDeviceExtensions.end()) {
+    //             GN_INFO(sLogger)("Enable VMA allocator with buffer device address.");
+    //             ai.flags = VMA_ALLOCATOR_CREATE_BUFFER_DEVICE_ADDRESS_BIT;
+    //         }
+    //         GN_VK_REQUIRE(vmaCreateAllocator(&ai, &_vgi.vmaAllocator));
+    //     }
 
     // print device information
     if (cp.printVkInfo) {
@@ -611,6 +612,12 @@ SimpleVulkanDevice::SimpleVulkanDevice(ConstructParameters cp): _cp(cp) {
 
         if ((VK_QUEUE_FAMILY_IGNORED == _cmpQueueFamilyIndex) && !(f.queueFlags & VK_QUEUE_GRAPHICS_BIT) && (f.queueFlags & VK_QUEUE_COMPUTE_BIT)) {
             _cmpQueueFamilyIndex = i;
+        }
+
+        if (present && VK_QUEUE_FAMILY_IGNORED == _prnQueueFamilyIndex) {
+            VkBool32 supportPresenting = false;
+            vkGetPhysicalDeviceSurfaceSupportKHR(_vgi.phydev, i, _cp.surface, &supportPresenting);
+            if (supportPresenting) _prnQueueFamilyIndex = i;
         }
 
         // if (!computeQueue && f.queueFlags & VK_QUEUE_COMPUTE_BIT) {
@@ -665,4 +672,4 @@ GN_API void muteValidationErrorLog() { ++debugMuteCounter; }
 //
 GN_API void unmuteValidationErrorLog() { --debugMuteCounter; }
 
-} // namespace GN::vk
+} // namespace GN::vulkan

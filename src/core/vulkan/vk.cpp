@@ -1,6 +1,6 @@
 #include "pch.h"
 
-namespace GN::vk {
+namespace GN::vulkan {
 
 GN_API const char * VkResultToString(VkResult r) {
     switch (r) {

@@ -194,6 +194,7 @@ namespace internal {
 extern GN_API void * EMPTY_STRING_POINTER;
 extern GN_API void * EMPTY_STRING_INSTANCE;
 } // namespace internal
+
 ///
 /// Custom string class. CHAR type must be POD type.
 ///
@@ -201,7 +202,7 @@ template<typename CHAR, typename RAW_MEMORY_ALLOCATOR = RawHeapMemoryAllocator>
 class Str {
     typedef CHAR CharType;
 
-    CharType * mPtr; ///< string buffer pointer.
+    CharType * mPtr = nullptr; ///< string buffer pointer.
 
 public:
     ///
@@ -217,7 +218,7 @@ public:
     ///
     /// default constructor
     ///
-    Str(): mPtr(NULL) {
+    Str() {
         setCaps(0);
         mPtr[0] = 0;
     }
@@ -231,7 +232,7 @@ public:
     ///
     /// copy constructor
     ///
-    Str(const Str & s): mPtr(NULL) {
+    Str(const Str & s) {
         setCaps(s.size());
         ::memcpy(mPtr, s.mPtr, (s.size() + 1) * sizeof(CharType));
         setSize(s.size());
@@ -247,7 +248,7 @@ public:
     ///
     /// copy constructor from c-style string
     ///
-    Str(const CharType * s, size_t l = 0): mPtr(NULL) {
+    Str(const CharType * s, size_t l = 0) {
         if (0 == s) {
             setCaps(0);
             setSize(0);
@@ -352,6 +353,11 @@ public:
     /// return c-style const char pointer
     ///
     const CharType * data() const { return mPtr; }
+
+    ///
+    /// return c-style const char pointer in std::string compatible way.
+    ///
+    const CharType * c_str() const { return mPtr; }
 
     ///
     /// empty string or not?

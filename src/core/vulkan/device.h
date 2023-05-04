@@ -1,7 +1,7 @@
 #pragma once
-#include <garnet/GNvk.h>
+#include <garnet/GNvulkan.h>
 
-namespace GN::vk {
+namespace GN::vulkan {
 
 class SimpleVulkanDevice::Details {
 public:

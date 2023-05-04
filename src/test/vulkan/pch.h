@@ -6,11 +6,8 @@
 // \author  chenlee (2005.10.1)
 // *****************************************************************************
 
-#include "garnet/GNbase.h"
+#include "garnet/GNvulkan.h"
 #include "garnet/GNwin.h"
-//#include <vkel.h>
-#define VK_USE_PLATFORM_WIN32_KHR
-#include <vulkan/vulkan.h>
 
 // *****************************************************************************
 //                                     EOF

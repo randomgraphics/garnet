@@ -2,7 +2,7 @@
 #include <sstream>
 #include <algorithm>
 
-namespace GN::vk {
+namespace GN::vulkan {
 
 // ---------------------------------------------------------------------------------------------------------------------
 /// Utility function to enumerate vulkan item/feature/extension list.
@@ -56,4 +56,4 @@ inline std::string printVulkanVersion(uint32_t v) {
     return ss.str();
 };
 
-} // namespace GN::vk
+} // namespace GN::vulkan

@@ -1,6 +1,6 @@
 #include "pch.h"
 
-namespace GN::vk {
+namespace GN::vulkan {
 
 SimpleBarriers & SimpleBarriers::addMemory(VkAccessFlags srcAccess, VkAccessFlags dstAccess) {
     memory.emplace_back(VkMemoryBarrier {
@@ -33,4 +33,4 @@ void SimpleBarriers::write(VkCommandBuffer cb) const {
                          (uint32_t) images.size(), images.data());
 }
 
-} // namespace GN::vk
+} // namespace GN::vulkan
