@@ -197,5 +197,10 @@ struct VulkanGlobalInfo {
 
 } // namespace GN::vulkan
 
+#include "vulkan/handle.inl"
+// #include "vulkan/buffer.inl"
+// #include "vulkan/image.inl"
+// #include "vulkan/pipeline.inl"
 #include "vulkan/info.inl"
 #include "vulkan/device.inl"
+
