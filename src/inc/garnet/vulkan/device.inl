@@ -24,10 +24,10 @@ struct SimpleStructureChain {
     }
 };
 
-class GN_API SimpleVulkanInstance {
+class GN_API SimpleInstance {
 public:
-    GN_NO_COPY(SimpleVulkanInstance);
-    GN_NO_MOVE(SimpleVulkanInstance);
+    GN_NO_COPY(SimpleInstance);
+    GN_NO_MOVE(SimpleInstance);
 
     /// Define level of validation on Vulkan error.
     enum Validation {
@@ -65,9 +65,9 @@ public:
         Verbosity printVkInfo = BRIEF;
     };
 
-    SimpleVulkanInstance(ConstructParameters);
+    SimpleInstance(ConstructParameters);
 
-    ~SimpleVulkanInstance();
+    ~SimpleInstance();
 
     const ConstructParameters & cp() const { return _cp; }
 
@@ -83,11 +83,36 @@ private:
 
 // ---------------------------------------------------------------------------------------------------------------------
 //
-class GN_API SimpleVulkanDevice {
+class GN_API SimpleQueue {
 public:
+    GN_NO_COPY(SimpleQueue);
+    GN_NO_MOVE(SimpleQueue);
+
+    uint32_t family() const { return _family; }
+    uint32_t index() const { return _index; }
+    VkQueue  handle() const { return _handle; }
+
+    operator VkQueue() const { return _handle; }
+
+private:
+    friend class SimpleDevice;
+    SimpleQueue() {}
+    ~SimpleQueue() {}
+    uint32_t _family = VK_QUEUE_FAMILY_IGNORED;
+    uint32_t _index  = 0;
+    VkQueue  _handle = 0;
+};
+
+// ---------------------------------------------------------------------------------------------------------------------
+//
+class GN_API SimpleDevice {
+public:
+    GN_NO_COPY(SimpleDevice);
+    GN_NO_MOVE(SimpleDevice);
+
     struct ConstructParameters {
         /// pointer to Vulkan instance.
-        SimpleVulkanInstance * instance = nullptr;
+        SimpleInstance * instance = nullptr;
 
         /// Leave it at zero to create an headless device w/o presentation support.
         VkSurfaceKHR surface = 0;
@@ -99,7 +124,7 @@ public:
         bool useVmaAllocator = false;
 
         /// set to false to make the creation log less verbose.
-        SimpleVulkanInstance::Verbosity printVkInfo = SimpleVulkanInstance::BRIEF;
+        SimpleInstance::Verbosity printVkInfo = SimpleInstance::BRIEF;
 
         /// Basic VK device feature list defined by Vulkan 1.0
         VkPhysicalDeviceFeatures features1 {};
@@ -117,7 +142,7 @@ public:
             return *(T *) features2.back().buffer.data();
         }
 
-        /// A utility function to setup SimpleVulkanDevice::ConstructParameters to for ray tracing
+        /// A utility function to setup SimpleDevice::ConstructParameters to for ray tracing
         /// \param hw Whether to use hardware VK_KHR_ray_query extension. If set to false, then setup the construct
         ///           parameter for in-house compute shader based pipeline. In this case, return value is always false.
         /// \return   If the construction parameter is properly set for hardware ray query. If false is returned,
@@ -125,23 +150,20 @@ public:
         bool setupForRayQuery(bool hw);
     };
 
-    SimpleVulkanDevice(ConstructParameters);
+    SimpleDevice(ConstructParameters);
 
-    ~SimpleVulkanDevice();
+    ~SimpleDevice();
 
     const ConstructParameters & cp() const { return _cp; }
 
     const VulkanGlobalInfo & vgi() const { return _vgi; }
 
-    uint32_t gfxQueueFamilyIndex() const { return _gfxQueueFamilyIndex; }
-    uint32_t tfrQueueFamilyIndex() const { return _tfrQueueFamilyIndex; }
-    uint32_t cmpQueueFamilyIndex() const { return _cmpQueueFamilyIndex; }
-    uint32_t prnQueueFamilyIndex() const { return _prnQueueFamilyIndex; }
+    SimpleQueue & graphics() const { return *_graphics; }
+    SimpleQueue & compute() const { return *_compute; }
+    SimpleQueue & transfer() const { return *_transfer; }
+    SimpleQueue & present() const { return *_present; }
 
-    // VulkanSubmissionProxy & graphicsQ() const { return *_queues[_gfxQueueFamilyIndex].get(); }
-    // VulkanSubmissionProxy & transferQ() const { return *_queues[_tfrQueueFamilyIndex].get(); }
-    // VulkanSubmissionProxy & computeQ() const { return *_queues[_cmpQueueFamilyIndex].get(); }
-    // VulkanSubmissionProxy * searchForPresentQ(VkSurfaceKHR) const;
+    bool separatePresentQueue() const { return _present != _graphics; }
 
     // VkResult waitIdle() const { return _vgi.device ? threadSafeDeviceWaitIdle(_vgi.device) : VK_SUCCESS; }
 
@@ -149,14 +171,14 @@ public:
     Details & details() const { return *_details; }
 
 private:
-    Details *           _details = nullptr;
-    ConstructParameters _cp;
-    VulkanGlobalInfo    _vgi {};
-    uint32_t            _gfxQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-    uint32_t            _tfrQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-    uint32_t            _cmpQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-    uint32_t            _prnQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-    // std::vector<std::unique_ptr<VulkanSubmissionProxy>> _queues; // one for each queue family
+    Details *                  _details = nullptr;
+    ConstructParameters        _cp;
+    VulkanGlobalInfo           _vgi {};
+    std::vector<SimpleQueue *> _queues; // one for each queue family
+    SimpleQueue *              _graphics = nullptr;
+    SimpleQueue *              _compute  = nullptr;
+    SimpleQueue *              _transfer = nullptr;
+    SimpleQueue *              _present  = nullptr;
 };
 
 /// This is used to temporarily mute error log of Vulkan validation error, when you are expecting some VK errors and don't want to those pollute the log output.

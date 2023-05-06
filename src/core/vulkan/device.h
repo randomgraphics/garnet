@@ -3,13 +3,13 @@
 
 namespace GN::vulkan {
 
-class SimpleVulkanDevice::Details {
+class SimpleDevice::Details {
 public:
-    Details(SimpleVulkanDevice * owner): _owner(owner) { add(owner); }
+    Details(SimpleDevice * owner): _owner(owner) { add(owner); }
 
     ~Details() { del(_owner); }
 
-    static SimpleVulkanDevice * find(uint64_t handle) {
+    static SimpleDevice * find(uint64_t handle) {
         std::lock_guard<std::mutex> lock(_mutex);
         auto                        iter = std::find_if(_table.begin(), _table.end(), [&](auto p) { return (uint64_t) p->vgi().device == handle; });
         return iter != _table.end() ? *iter : nullptr;
@@ -25,17 +25,17 @@ public:
     }
 
 private:
-    static std::list<SimpleVulkanDevice *> _table;
-    static std::mutex                      _mutex;
-    SimpleVulkanDevice *                   _owner;
-    bool                                   _lost = false;
+    static std::list<SimpleDevice *> _table;
+    static std::mutex                _mutex;
+    SimpleDevice *                   _owner;
+    bool                             _lost = false;
 
-    static void add(SimpleVulkanDevice * p) {
+    static void add(SimpleDevice * p) {
         std::lock_guard<std::mutex> lock(_mutex);
         _table.push_back(p);
     }
 
-    static void del(SimpleVulkanDevice * p) {
+    static void del(SimpleDevice * p) {
         std::lock_guard<std::mutex> lock(_mutex);
         _table.remove(p);
     }

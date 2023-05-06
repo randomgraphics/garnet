@@ -57,15 +57,17 @@ endfunction()
 # Setup PCH if specified.
 #
 # Usage:
-#     GN_add_source_folder(sources_list folder <SOURCE_WILDCARDS ...> <HEADER_WILDCARDS ...> <PCH_SOURCE ...> <PCH_HEADER ...>)
+#     GN_add_source_folder(sources_list folder <RECURSIVE> <VERBOSE> <SOURCE_WILDCARDS ...> <HEADER_WILDCARDS ...> <PCH_SOURCE ...> <PCH_HEADER ...>)
 # ------------------------------------------------------------------------------
 function(GN_add_source_folder result folder)
     set(input ${${result}})
 
     # parse optional parameters
+    set(options RECURSIVE VERBOSE)
     set(oneValueArgs PCH_SOURCE PCH_HEADER)
-    set(multiValueArgs SOURCE_WILDCARDS HEADER_WILDCARDS)
-    cmake_parse_arguments(arg "" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
+    set(multiValueArgs SOURCE_WILDCARDS HEADER_WILDCARDS EXTRA_SOURCES)
+    cmake_parse_arguments(arg "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
+    
     if (NOT arg_SOURCE_WILDCARDS)
         set(arg_SOURCE_WILDCARDS *.cpp *.cxx *.c)
     endif()
@@ -77,7 +79,14 @@ function(GN_add_source_folder result folder)
     foreach(x ${arg_SOURCE_WILDCARDS})
         list(APPEND source_patterns ${folder}/${x})
     endforeach()
-    file(GLOB sources ${source_patterns})
+    if (${arg_RECURSIVE})
+        file(GLOB_RECURSE sources ${source_patterns})
+    else()
+        file(GLOB sources ${source_patterns})
+    endif()
+    if (${arg_VERBOSE})
+        GN_print_status("Globbed source files: ${sources}")
+    endif()
 
     # setup PCH if specified
     if (arg_PCH_SOURCE)
@@ -92,7 +101,7 @@ function(GN_add_source_folder result folder)
     file(GLOB headers ${header_patterns})
 
     # done
-    set(${result} ${input} ${sources} ${headers} ${arg_PCH_SOURCE} PARENT_SCOPE)
+    set(${result} ${input} ${sources} ${headers} ${arg_PCH_SOURCE} ${arg_EXTRA_SOURCES} PARENT_SCOPE)
 endfunction()
 
 # =================================

@@ -19,11 +19,10 @@ static GN::Logger * sLogger = GN::getLogger("GN.test.vulkan");
 struct App {
     bool                     mSuccess  = false;
     win::Window *            mWin      = nullptr;
-    SimpleVulkanInstance *   mInstance = nullptr;
+    SimpleInstance *         mInstance = nullptr;
     VkSurfaceKHR             mSurface  = 0;
-    SimpleVulkanDevice *     mDevice   = nullptr;
+    SimpleDevice *           mDevice   = nullptr;
     VulkanGlobalInfo         mVgi {};
-    VkQueue                  mGraphicsQueue = nullptr, mPresentQueue = nullptr;
     VkSwapchainKHR           mSwapchain = 0;
     std::vector<VkImageView> mBackBuffers;
     VkSemaphore              mBackBufferAvailableSemaphore = 0;
@@ -50,10 +49,10 @@ struct App {
 
     bool initVulkan() {
         // create instance
-        mInstance = new SimpleVulkanInstance(SimpleVulkanInstance::ConstructParameters {
+        mInstance = new SimpleInstance(SimpleInstance::ConstructParameters {
             .instanceExtensions = {{VK_KHR_SURFACE_EXTENSION_NAME, true}, {VK_KHR_WIN32_SURFACE_EXTENSION_NAME, true}},
-            .validation         = SimpleVulkanInstance::BREAK_ON_VK_ERROR,
-            .printVkInfo        = SimpleVulkanInstance::VERBOSE,
+            .validation         = SimpleInstance::BREAK_ON_VK_ERROR,
+            .printVkInfo        = SimpleInstance::VERBOSE,
         });
 
         // create a window
@@ -79,20 +78,16 @@ struct App {
         CHECK_VK(vkCreateWin32SurfaceKHR(*mInstance, &surfaceCreateInfo, nullptr, &mSurface));
 
         // create device
-        mDevice = new SimpleVulkanDevice({
+        mDevice = new SimpleDevice({
             .instance = mInstance,
             .surface  = mSurface,
         });
         mVgi    = mDevice->vgi();
 
-        // acquire queue handles
-        vkGetDeviceQueue(mVgi.device, mDevice->gfxQueueFamilyIndex(), 0, &mGraphicsQueue);
-        vkGetDeviceQueue(mVgi.device, mDevice->prnQueueFamilyIndex(), 0, &mPresentQueue);
-
         // create command buffer pool
         VkCommandPoolCreateInfo poolInfo = {};
         poolInfo.sType                   = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-        poolInfo.queueFamilyIndex        = mDevice->gfxQueueFamilyIndex();
+        poolInfo.queueFamilyIndex        = mDevice->graphics().family();
         poolInfo.flags                   = 0; // Optional
         CHECK_VK(vkCreateCommandPool(mVgi.device, &poolInfo, mVgi.allocator, &mCommandPool));
 
@@ -113,9 +108,9 @@ struct App {
         VkSurfaceCapabilitiesKHR surfaceCaps = {};
         vkGetPhysicalDeviceSurfaceCapabilitiesKHR(mVgi.phydev, mSurface, &surfaceCaps);
         std::vector<uint32> queueIndices;
-        if (mDevice->gfxQueueFamilyIndex() != mDevice->prnQueueFamilyIndex()) {
-            queueIndices.push_back(mDevice->gfxQueueFamilyIndex());
-            queueIndices.push_back(mDevice->prnQueueFamilyIndex());
+        if (mDevice->separatePresentQueue()) {
+            queueIndices.push_back(mDevice->graphics().family());
+            queueIndices.push_back(mDevice->present().family());
         }
         VkSwapchainCreateInfoKHR swapChainCreateInfo = {
             VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR,
@@ -128,7 +123,7 @@ struct App {
             {windowSize.x, windowSize.y},
             1, // image array layers (2 for stereoscopic rendering)
             VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
-            mDevice->gfxQueueFamilyIndex() == mDevice->prnQueueFamilyIndex() ? VK_SHARING_MODE_EXCLUSIVE : VK_SHARING_MODE_CONCURRENT,
+            mDevice->separatePresentQueue() ? VK_SHARING_MODE_CONCURRENT : VK_SHARING_MODE_EXCLUSIVE,
             (uint32) queueIndices.size(),
             queueIndices.data(),
             surfaceCaps.currentTransform,
@@ -455,7 +450,7 @@ struct App {
             submitInfo.pCommandBuffers            = &mCommandBuffers[imageIndex];
             submitInfo.signalSemaphoreCount       = 1;
             submitInfo.pSignalSemaphores          = &mRenderFinishedSemaphore;
-            CHECK_VK(vkQueueSubmit(mGraphicsQueue, 1, &submitInfo, VK_NULL_HANDLE));
+            CHECK_VK(vkQueueSubmit(mDevice->graphics(), 1, &submitInfo, VK_NULL_HANDLE));
 
             // present
             VkPresentInfoKHR presentInfo   = {};
@@ -466,7 +461,7 @@ struct App {
             presentInfo.pSwapchains        = &mSwapchain;
             presentInfo.pImageIndices      = &imageIndex;
             presentInfo.pResults           = nullptr; // Optional
-            if (!HandleWindowResize(vkQueuePresentKHR(mPresentQueue, &presentInfo))) return -1;
+            if (!HandleWindowResize(vkQueuePresentKHR(mDevice->present(), &presentInfo))) return -1;
         }
         vkDeviceWaitIdle(mVgi.device);
         return 0;

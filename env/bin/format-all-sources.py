@@ -13,6 +13,7 @@ all_files = subprocess.check_output(["git", "ls-files", "*.h", "*.hpp", "*.inl",
 # Remove all 3rd party sources
 def is_our_source(x):
      if x.find("3rdparty") >= 0: return False
+     if x.find("3rd-party") >= 0: return False
      if x.find("catch.hpp") >= 0: return False
      return True
 our_sources = [x for x in all_files if is_our_source(x)]

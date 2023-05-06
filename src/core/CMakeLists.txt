@@ -71,7 +71,7 @@ if(D3D12_FOUND)
 endif()
 
 if(VULKAN_FOUND)
-    GN_add_source_folder(sources vulkan)
+    GN_add_source_folder(sources vulkan RECURSIVE PCH_SOURCE vulkan/pch.cpp)
 endif()
 
 # Split everything into groups

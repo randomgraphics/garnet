@@ -11,8 +11,8 @@ static GN::Logger * sLogger = GN::getLogger("GN.vk.device");
 
 namespace GN::vulkan {
 
-std::list<SimpleVulkanDevice *> SimpleVulkanDevice::Details::_table;
-std::mutex                      SimpleVulkanDevice::Details::_mutex;
+std::list<SimpleDevice *> SimpleDevice::Details::_table;
+std::mutex                SimpleDevice::Details::_mutex;
 
 static std::atomic<int> debugMuteCounter {0};
 
@@ -24,11 +24,11 @@ static VkBool32 VKAPI_PTR debugCallback(VkDebugReportFlagsEXT flags, VkDebugRepo
                                         const char * prefix, const char * message, void * userData) {
     if (debugMuteCounter > 0) return VK_FALSE;
 
-    auto inst = (SimpleVulkanInstance *) userData;
+    auto inst = (SimpleInstance *) userData;
 
     auto reportVkError = [=]() {
         if (objectType == VK_DEBUG_REPORT_OBJECT_TYPE_DEVICE_EXT) {
-            auto dev = SimpleVulkanDevice::Details::find(object);
+            auto dev = SimpleDevice::Details::find(object);
             if (dev && dev->details().lost()) {
                 // Ignore validation errors on lost device, to avoid spamming log with useless messages.
                 return;
@@ -38,12 +38,12 @@ static VkBool32 VKAPI_PTR debugCallback(VkDebugReportFlagsEXT flags, VkDebugRepo
         auto              v = inst->cp().validation;
         std::stringstream ss;
         ss << str::format("[Vulkan] %s : %s", prefix, message);
-        // if (v >= SimpleVulkanInstance::LOG_ON_VK_ERROR_WITH_CALL_STACK) { ss << std::endl << backtrace(false); }
+        // if (v >= SimpleInstance::LOG_ON_VK_ERROR_WITH_CALL_STACK) { ss << std::endl << backtrace(false); }
         auto str = ss.str();
         GN_ERROR(sLogger)("%s", str.c_str());
-        if (v == SimpleVulkanInstance::THROW_ON_VK_ERROR) {
+        if (v == SimpleInstance::THROW_ON_VK_ERROR) {
             GN_THROW("%s", str.data());
-        } else if (v == SimpleVulkanInstance::BREAK_ON_VK_ERROR) {
+        } else if (v == SimpleInstance::BREAK_ON_VK_ERROR) {
             breakIntoDebugger();
         }
     };
@@ -313,11 +313,11 @@ static std::vector<const char *> validateExtensions(const std::vector<VkExtensio
 
 // ---------------------------------------------------------------------------------------------------------------------
 //
-static inline SimpleVulkanInstance::ConstructParameters & adjust(SimpleVulkanInstance::ConstructParameters & cp) {
+static inline SimpleInstance::ConstructParameters & adjust(SimpleInstance::ConstructParameters & cp) {
     // GN_INFO(sLogger)("Detecting RenderDoc...");
     // if (isRenderDocPresent()) {
     //     GN_INFO(sLogger)("RenderDoc is detected. Turn off validation.");
-    //     cp.validation = SimpleVulkanInstance::VALIDATION_DISABLED;
+    //     cp.validation = SimpleInstance::VALIDATION_DISABLED;
     // } else {
     //     GN_INFO(sLogger)("RenderDoc not found.");
     // }
@@ -328,7 +328,7 @@ static inline SimpleVulkanInstance::ConstructParameters & adjust(SimpleVulkanIns
 
 // ---------------------------------------------------------------------------------------------------------------------
 //
-SimpleVulkanInstance::SimpleVulkanInstance(ConstructParameters cp): _cp(adjust(cp)) {
+SimpleInstance::SimpleInstance(ConstructParameters cp): _cp(adjust(cp)) {
     // initialize volk loader
     volkInitialize();
 
@@ -417,7 +417,7 @@ SimpleVulkanInstance::SimpleVulkanInstance(ConstructParameters cp): _cp(adjust(c
 
 // ---------------------------------------------------------------------------------------------------------------------
 //
-SimpleVulkanInstance::~SimpleVulkanInstance() {
+SimpleInstance::~SimpleInstance() {
     if (_debugReport) vkDestroyDebugReportCallbackEXT(_instance, _debugReport, nullptr), _debugReport = 0;
     if (_instance) vkDestroyInstance(_instance, nullptr), _instance = 0;
     GN_INFO(sLogger)("Vulkan instance destroyed.");
@@ -425,7 +425,7 @@ SimpleVulkanInstance::~SimpleVulkanInstance() {
 
 // ---------------------------------------------------------------------------------------------------------------------
 //
-bool SimpleVulkanDevice::ConstructParameters::setupForRayQuery(bool hw) {
+bool SimpleDevice::ConstructParameters::setupForRayQuery(bool hw) {
     // setup some common extension and feature that are needed regardless if we are in HW or SW mode.
 
     // Required to reference resource descriptor by index in shader.
@@ -486,7 +486,7 @@ bool SimpleVulkanDevice::ConstructParameters::setupForRayQuery(bool hw) {
 
 // ---------------------------------------------------------------------------------------------------------------------
 //
-SimpleVulkanDevice::SimpleVulkanDevice(ConstructParameters cp): _cp(cp) {
+SimpleDevice::SimpleDevice(ConstructParameters cp): _cp(cp) {
     _details = new Details(this);
 
     // check instance pointer
@@ -498,7 +498,7 @@ SimpleVulkanDevice::SimpleVulkanDevice(ConstructParameters cp): _cp(cp) {
 
     // TODO: pick the one specified by user.
     _vgi.phydev  = selectTheMostPowerfulPhysicalDevice(phydevs.data(), phydevs.size());
-    bool verbose = cp.printVkInfo == SimpleVulkanInstance::VERBOSE;
+    bool verbose = cp.printVkInfo == SimpleInstance::VERBOSE;
     if (cp.printVkInfo) printPhysicalDeviceInfo(phydevs, _vgi.phydev, verbose);
 
     // query queues
@@ -523,12 +523,12 @@ SimpleVulkanDevice::SimpleVulkanDevice(ConstructParameters cp): _cp(cp) {
     // #endif
 
     // Determine if this is an headless rendering or not.
-    bool present = false;
+    bool presenting = false;
     if (_cp.surface) {
         for (auto & e : _cp.instance->cp().instanceExtensions) {
             if (e.first == VK_KHR_SURFACE_EXTENSION_NAME) {
                 askedDeviceExtensions[VK_KHR_SWAPCHAIN_EXTENSION_NAME] = true;
-                present                                                = true;
+                presenting                                             = true;
                 break;
             }
         }
@@ -594,42 +594,31 @@ SimpleVulkanDevice::SimpleVulkanDevice(ConstructParameters cp): _cp(cp) {
     }
 
     // classify queue families. create command pool for each of them.
-    // _queues.resize(families.size());
+    _queues.resize(families.size());
     for (uint32_t i = 0; i < families.size(); ++i) {
         const auto & f = families[i];
 
-        // // create an submission proxy for each queue.
-        // _queues[i].reset(new SubmissionThread(*this, i, f));
+        // create an submission proxy for each queue.
+        auto q     = new SimpleQueue();
+        _queues[i] = q;
+        q->_family = i;
+        q->_index  = 0;
+        vkGetDeviceQueue(_vgi.device, i, 0, &q->_handle);
+        GN_VERIFY(q->_handle);
 
         // classify all queues
-        if (VK_QUEUE_FAMILY_IGNORED == _gfxQueueFamilyIndex && f.queueFlags & VK_QUEUE_GRAPHICS_BIT) { _gfxQueueFamilyIndex = i; }
+        if (!_graphics && f.queueFlags & VK_QUEUE_GRAPHICS_BIT) _graphics = q;
 
-        // FIXME: this can pick either the compute or the transfer queue family.
-        // what happens if we just use any of the queues?
-        if ((VK_QUEUE_FAMILY_IGNORED == _tfrQueueFamilyIndex) && !(f.queueFlags & VK_QUEUE_GRAPHICS_BIT) && (f.queueFlags & VK_QUEUE_TRANSFER_BIT)) {
-            _tfrQueueFamilyIndex = i;
-        }
+        if (!_compute && !(f.queueFlags & VK_QUEUE_GRAPHICS_BIT) && (f.queueFlags & VK_QUEUE_COMPUTE_BIT)) _compute = q;
 
-        if ((VK_QUEUE_FAMILY_IGNORED == _cmpQueueFamilyIndex) && !(f.queueFlags & VK_QUEUE_GRAPHICS_BIT) && (f.queueFlags & VK_QUEUE_COMPUTE_BIT)) {
-            _cmpQueueFamilyIndex = i;
-        }
+        if (!_transfer && !(f.queueFlags & VK_QUEUE_GRAPHICS_BIT) && !(f.queueFlags & VK_QUEUE_COMPUTE_BIT) && (f.queueFlags & VK_QUEUE_TRANSFER_BIT))
+            _transfer = q;
 
-        if (present && VK_QUEUE_FAMILY_IGNORED == _prnQueueFamilyIndex) {
+        if (!_present && presenting) {
             VkBool32 supportPresenting = false;
             vkGetPhysicalDeviceSurfaceSupportKHR(_vgi.phydev, i, _cp.surface, &supportPresenting);
-            if (supportPresenting) _prnQueueFamilyIndex = i;
+            if (supportPresenting) _present = q;
         }
-
-        // if (!computeQueue && f.queueFlags & VK_QUEUE_COMPUTE_BIT) {
-        //     vkGetDeviceQueue(device, i, 0, &computeQueue.q);
-        //     computeQueue.i = i;
-        //     computeQueue.p = pool;
-        // }
-        // if (!dmaQueue && f.queueFlags & VK_QUEUE_TRANSFER_BIT) {
-        //     vkGetDeviceQueue(device, i, 0, &dmaQueue.q);
-        //     dmaQueue.i = i;
-        //     dmaQueue.p = pool;
-        // }
     }
 
     GN_INFO(sLogger)("Vulkan device initialized.");
@@ -637,32 +626,18 @@ SimpleVulkanDevice::SimpleVulkanDevice(ConstructParameters cp): _cp(cp) {
 
 // ---------------------------------------------------------------------------------------------------------------------
 //
-SimpleVulkanDevice::~SimpleVulkanDevice() {
+SimpleDevice::~SimpleDevice() {
     delete _details;
-    // _queues.clear();
+    for (auto q : _queues) delete q;
+    _queues.clear();
     // if (_vgi.vmaAllocator) vmaDestroyAllocator(_vgi.vmaAllocator), _vgi.vmaAllocator = nullptr;
     if (_vgi.device) {
-        GN_INFO(sLogger)("[SimpleVulkanDevice] destroying device...");
+        GN_INFO(sLogger)("[SimpleDevice] destroying device...");
         vkDestroyDevice(_vgi.device, _vgi.allocator);
         _vgi.device = nullptr;
-        GN_INFO(sLogger)("[SimpleVulkanDevice] device destroyed");
+        GN_INFO(sLogger)("[SimpleDevice] device destroyed");
     }
 }
-
-// // ---------------------------------------------------------------------------------------------------------------------
-// //
-// VulkanSubmissionProxy * SimpleVulkanDevice::searchForPresentQ(VkSurfaceKHR surface) const {
-//     // if the suface is null, it means we are doing offscreen rendering. In this case, we just return the graphics
-//     // queue as the present queue.
-//     if (!surface) return &graphicsQ();
-
-//     for (const auto & q : _queues) {
-//         VkBool32 presentSupport;
-//         vkGetPhysicalDeviceSurfaceSupportKHR(_vgi.phydev, q->queueFamilyIndex(), surface, &presentSupport);
-//         if (presentSupport) { return q.get(); }
-//     }
-//     return nullptr;
-// }
 
 // ---------------------------------------------------------------------------------------------------------------------
 //
