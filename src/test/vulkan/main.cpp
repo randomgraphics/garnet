@@ -23,7 +23,6 @@ struct App {
     VkSurfaceKHR             mSurface  = 0;
     SimpleVulkanDevice *     mDevice   = nullptr;
     VulkanGlobalInfo         mVgi {};
-    VkQueue                  mGraphicsQueue = nullptr, mPresentQueue = nullptr;
     VkSwapchainKHR           mSwapchain = 0;
     std::vector<VkImageView> mBackBuffers;
     VkSemaphore              mBackBufferAvailableSemaphore = 0;
@@ -85,14 +84,10 @@ struct App {
         });
         mVgi    = mDevice->vgi();
 
-        // acquire queue handles
-        vkGetDeviceQueue(mVgi.device, mDevice->gfxQueueFamilyIndex(), 0, &mGraphicsQueue);
-        vkGetDeviceQueue(mVgi.device, mDevice->prnQueueFamilyIndex(), 0, &mPresentQueue);
-
         // create command buffer pool
         VkCommandPoolCreateInfo poolInfo = {};
         poolInfo.sType                   = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-        poolInfo.queueFamilyIndex        = mDevice->gfxQueueFamilyIndex();
+        poolInfo.queueFamilyIndex        = mDevice->graphics().family();
         poolInfo.flags                   = 0; // Optional
         CHECK_VK(vkCreateCommandPool(mVgi.device, &poolInfo, mVgi.allocator, &mCommandPool));
 
@@ -113,9 +108,9 @@ struct App {
         VkSurfaceCapabilitiesKHR surfaceCaps = {};
         vkGetPhysicalDeviceSurfaceCapabilitiesKHR(mVgi.phydev, mSurface, &surfaceCaps);
         std::vector<uint32> queueIndices;
-        if (mDevice->gfxQueueFamilyIndex() != mDevice->prnQueueFamilyIndex()) {
-            queueIndices.push_back(mDevice->gfxQueueFamilyIndex());
-            queueIndices.push_back(mDevice->prnQueueFamilyIndex());
+        if (&mDevice->graphics() != &mDevice->present()) {
+            queueIndices.push_back(mDevice->graphics().family());
+            queueIndices.push_back(mDevice->present().family());
         }
         VkSwapchainCreateInfoKHR swapChainCreateInfo = {
             VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR,

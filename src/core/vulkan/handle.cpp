@@ -67,8 +67,8 @@ void PoolAllocator::deallocate(void * ptr, size_t) {
     _startPtr                            = reinterpret_cast<Chunk *>(ptr);
 }
 
-GN_API void * ph::va::allocateAutoHandle(size_t size) { return PoolAllocator::getInstance().allocate(size); }
+GN_API void * allocateAutoHandle(size_t size) { return PoolAllocator::getInstance().allocate(size); }
 
-GN_API void ph::va::deallocateAutoHandle(void * ptr, size_t size) { return PoolAllocator::getInstance().deallocate(ptr, size); }
+GN_API void deallocateAutoHandle(void * ptr, size_t size) { return PoolAllocator::getInstance().deallocate(ptr, size); }
 
 } // namespace GN::vulkan

@@ -81,25 +81,38 @@ private:
     VkDebugReportCallbackEXT _debugReport = 0;
 };
 
+// ---------------------------------------------------------------------------------------------------------------------
+//
 class GN_API SimpleQueue {
 public:
+    GN_NO_COPY(SimpleQueue);
+    GN_NO_MOVE(SimpleQueue);
+
     struct ConstructParameters {
-        uint32_t family = VK_QUEUE_FAMILY_IGNORED;
+        const VulkanGlobalInfo & vgi;
+        uint32_t                 family = VK_QUEUE_FAMILY_IGNORED;
+        float                    priority = 0.5f;
     };
+
+    SimpleQueue(const ConstructParameters &);
+    ~SimpleQueue();
 
     uint32_t family() const { return _family; }
     VkQueue  handle() const { return _handle; }
 
 private:
-    VulkanGlobalInfo _vgi {};
-    uint32_t         _family;
-    VkQueue          _handle = 0;
+    const VulkanGlobalInfo & _vgi;
+    uint32_t                 _family;
+    VkQueue                  _handle = 0;
 };
 
 // ---------------------------------------------------------------------------------------------------------------------
 //
 class GN_API SimpleVulkanDevice {
 public:
+    GN_NO_COPY(SimpleVulkanDevice);
+    GN_NO_MOVE(SimpleVulkanDevice);
+
     struct ConstructParameters {
         /// pointer to Vulkan instance.
         SimpleVulkanInstance * instance = nullptr;
@@ -149,9 +162,9 @@ public:
     const VulkanGlobalInfo & vgi() const { return _vgi; }
 
     SimpleQueue & graphics() const { return *_graphics; }
-    SimpleQueue & transfer() const { return *_transfer; }
     SimpleQueue & compute() const { return *_compute; }
-    simpleQueue & present() const { return _present; }
+    SimpleQueue & transfer() const { return *_transfer; }
+    SimpleQueue & present() const { return *_present; }
 
     // VulkanSubmissionProxy & graphicsQ() const { return *_queues[_gfxQueueFamilyIndex].get(); }
     // VulkanSubmissionProxy & transferQ() const { return *_queues[_tfrQueueFamilyIndex].get(); }
@@ -169,8 +182,8 @@ private:
     VulkanGlobalInfo                          _vgi {};
     std::vector<std::unique_ptr<SimpleQueue>> _queues; // one for each queue family
     SimpleQueue *                             _graphics = nullptr;
-    SimpleQueue *                             _transfer = nullptr;
     SimpleQueue *                             _compute  = nullptr;
+    SimpleQueue *                             _transfer = nullptr;
     SimpleQueue *                             _present  = nullptr;
 };
 

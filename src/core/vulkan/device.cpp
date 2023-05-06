@@ -382,7 +382,7 @@ SimpleVulkanInstance::SimpleVulkanInstance(ConstructParameters cp): _cp(adjust(c
     auto ici           = VkInstanceCreateInfo {
         VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO,
         buildStructureChain(_cp.instanceCreateInfo.begin(), _cp.instanceCreateInfo.end()),
-        {}, // flags
+                  {}, // flags
         &appInfo,
         (uint32_t) supported.layers.size(),
         supported.layers.data(),
@@ -523,12 +523,12 @@ SimpleVulkanDevice::SimpleVulkanDevice(ConstructParameters cp): _cp(cp) {
     // #endif
 
     // Determine if this is an headless rendering or not.
-    bool present = false;
+    bool presenting = false;
     if (_cp.surface) {
         for (auto & e : _cp.instance->cp().instanceExtensions) {
             if (e.first == VK_KHR_SURFACE_EXTENSION_NAME) {
                 askedDeviceExtensions[VK_KHR_SWAPCHAIN_EXTENSION_NAME] = true;
-                present                                                = true;
+                presenting                                             = true;
                 break;
             }
         }
@@ -594,42 +594,25 @@ SimpleVulkanDevice::SimpleVulkanDevice(ConstructParameters cp): _cp(cp) {
     }
 
     // classify queue families. create command pool for each of them.
-    // _queues.resize(families.size());
+    _queues.resize(families.size());
     for (uint32_t i = 0; i < families.size(); ++i) {
         const auto & f = families[i];
 
-        // // create an submission proxy for each queue.
-        // _queues[i].reset(new SubmissionThread(*this, i, f));
+        // create an submission proxy for each queue.
+        _queues[i] = std::make_unique<SimpleQueue>(SimpleQueue::ConstructParameters{_vgi, i});
 
         // classify all queues
-        if (VK_QUEUE_FAMILY_IGNORED == _gfxQueueFamilyIndex && f.queueFlags & VK_QUEUE_GRAPHICS_BIT) { _gfxQueueFamilyIndex = i; }
-
-        // FIXME: this can pick either the compute or the transfer queue family.
-        // what happens if we just use any of the queues?
-        if ((VK_QUEUE_FAMILY_IGNORED == _tfrQueueFamilyIndex) && !(f.queueFlags & VK_QUEUE_GRAPHICS_BIT) && (f.queueFlags & VK_QUEUE_TRANSFER_BIT)) {
-            _tfrQueueFamilyIndex = i;
-        }
-
-        if ((VK_QUEUE_FAMILY_IGNORED == _cmpQueueFamilyIndex) && !(f.queueFlags & VK_QUEUE_GRAPHICS_BIT) && (f.queueFlags & VK_QUEUE_COMPUTE_BIT)) {
-            _cmpQueueFamilyIndex = i;
-        }
-
-        if (present && VK_QUEUE_FAMILY_IGNORED == _prnQueueFamilyIndex) {
+        if (!_graphics && f.queueFlags & VK_QUEUE_GRAPHICS_BIT) _graphics = _queues[i].get();
+        
+        if (!_compute && !(f.queueFlags & VK_QUEUE_GRAPHICS_BIT) && (f.queueFlags & VK_QUEUE_COMPUTE_BIT)) _compute = _queues[i].get();
+        
+        if (!_transfer && !(f.queueFlags & VK_QUEUE_GRAPHICS_BIT) && !(f.queueFlags & VK_QUEUE_COMPUTE_BIT) && (f.queueFlags & VK_QUEUE_TRANSFER_BIT)) _transfer = _queues[i].get();
+        
+        if (!_present && presenting) {
             VkBool32 supportPresenting = false;
             vkGetPhysicalDeviceSurfaceSupportKHR(_vgi.phydev, i, _cp.surface, &supportPresenting);
-            if (supportPresenting) _prnQueueFamilyIndex = i;
+            if (supportPresenting) _present = _queues[i].get();
         }
-
-        // if (!computeQueue && f.queueFlags & VK_QUEUE_COMPUTE_BIT) {
-        //     vkGetDeviceQueue(device, i, 0, &computeQueue.q);
-        //     computeQueue.i = i;
-        //     computeQueue.p = pool;
-        // }
-        // if (!dmaQueue && f.queueFlags & VK_QUEUE_TRANSFER_BIT) {
-        //     vkGetDeviceQueue(device, i, 0, &dmaQueue.q);
-        //     dmaQueue.i = i;
-        //     dmaQueue.p = pool;
-        // }
     }
 
     GN_INFO(sLogger)("Vulkan device initialized.");
@@ -639,7 +622,7 @@ SimpleVulkanDevice::SimpleVulkanDevice(ConstructParameters cp): _cp(cp) {
 //
 SimpleVulkanDevice::~SimpleVulkanDevice() {
     delete _details;
-    // _queues.clear();
+    _queues.clear();
     // if (_vgi.vmaAllocator) vmaDestroyAllocator(_vgi.vmaAllocator), _vgi.vmaAllocator = nullptr;
     if (_vgi.device) {
         GN_INFO(sLogger)("[SimpleVulkanDevice] destroying device...");
@@ -648,21 +631,6 @@ SimpleVulkanDevice::~SimpleVulkanDevice() {
         GN_INFO(sLogger)("[SimpleVulkanDevice] device destroyed");
     }
 }
-
-// // ---------------------------------------------------------------------------------------------------------------------
-// //
-// VulkanSubmissionProxy * SimpleVulkanDevice::searchForPresentQ(VkSurfaceKHR surface) const {
-//     // if the suface is null, it means we are doing offscreen rendering. In this case, we just return the graphics
-//     // queue as the present queue.
-//     if (!surface) return &graphicsQ();
-
-//     for (const auto & q : _queues) {
-//         VkBool32 presentSupport;
-//         vkGetPhysicalDeviceSurfaceSupportKHR(_vgi.phydev, q->queueFamilyIndex(), surface, &presentSupport);
-//         if (presentSupport) { return q.get(); }
-//     }
-//     return nullptr;
-// }
 
 // ---------------------------------------------------------------------------------------------------------------------
 //

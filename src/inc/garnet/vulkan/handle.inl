@@ -3,6 +3,60 @@
 
 namespace GN::vulkan {
 
+// ---------------------------------------------------------------------------------------------------------------------
+/// @brief Get object type of a VK handle.
+/// The base function is intentionally left undefined. See va.inl for all specialized versions.
+/// \todo simplify this with "if constexpr" expression in c++17.
+template<typename HANDLE>
+inline VkObjectType getHandleObjectType() {
+    if constexpr (std::is_same_v<HANDLE, VkBuffer>) {
+        return VK_OBJECT_TYPE_BUFFER;
+    } else if constexpr (std::is_same_v<HANDLE, VkCommandPool>) {
+        return VK_OBJECT_TYPE_COMMAND_POOL;
+    } else if constexpr (std::is_same_v<HANDLE, VkCommandBuffer>) {
+        return VK_OBJECT_TYPE_COMMAND_BUFFER;
+    } else if constexpr (std::is_same_v<HANDLE, VkDescriptorPool>) {
+        return VK_OBJECT_TYPE_DESCRIPTOR_POOL;
+    } else if constexpr (std::is_same_v<HANDLE, VkDescriptorSetLayout>) {
+        return VK_OBJECT_TYPE_DESCRIPTOR_SET_LAYOUT;
+    } else if constexpr (std::is_same_v<HANDLE, VkDescriptorSet>) {
+        return VK_OBJECT_TYPE_DESCRIPTOR_SET;
+    } else if constexpr (std::is_same_v<HANDLE, VkDeviceMemory>) {
+        return VK_OBJECT_TYPE_DEVICE_MEMORY;
+    } else if constexpr (std::is_same_v<HANDLE, VkFence>) {
+        return VK_OBJECT_TYPE_FENCE;
+    } else if constexpr (std::is_same_v<HANDLE, VkFramebuffer>) {
+        return VK_OBJECT_TYPE_FRAMEBUFFER;
+    } else if constexpr (std::is_same_v<HANDLE, VkImage>) {
+        return VK_OBJECT_TYPE_IMAGE;
+    } else if constexpr (std::is_same_v<HANDLE, VkImageView>) {
+        return VK_OBJECT_TYPE_IMAGE_VIEW;
+    } else if constexpr (std::is_same_v<HANDLE, VkPipeline>) {
+        return VK_OBJECT_TYPE_PIPELINE;
+    } else if constexpr (std::is_same_v<HANDLE, VkPipelineLayout>) {
+        return VK_OBJECT_TYPE_PIPELINE_LAYOUT;
+    } else if constexpr (std::is_same_v<HANDLE, VkRenderPass>) {
+        return VK_OBJECT_TYPE_RENDER_PASS;
+    } else if constexpr (std::is_same_v<HANDLE, VkSemaphore>) {
+        return VK_OBJECT_TYPE_SEMAPHORE;
+    } else if constexpr (std::is_same_v<HANDLE, VkShaderModule>) {
+        return VK_OBJECT_TYPE_SHADER_MODULE;
+    } else if constexpr (std::is_same_v<HANDLE, VkSurfaceKHR>) {
+        return VK_OBJECT_TYPE_SURFACE_KHR;
+    } else if constexpr (std::is_same_v<HANDLE, VkSwapchainKHR>) {
+        return VK_OBJECT_TYPE_SWAPCHAIN_KHR;
+    } else if constexpr (std::is_same_v<HANDLE, VkSampler>) {
+        return VK_OBJECT_TYPE_SAMPLER;
+    } else if constexpr (std::is_same_v<HANDLE, VkQueryPool>) {
+        return VK_OBJECT_TYPE_QUERY_POOL;
+    } else if constexpr (std::is_same_v<HANDLE, VkAccelerationStructureKHR>) {
+        return VK_OBJECT_TYPE_ACCELERATION_STRUCTURE_KHR;
+    } else {
+        static_assert(std::false_type<HANDLE>::value, "Unsupported handle type");
+        return VK_OBJECT_TYPE_UNKNOWN;
+    }
+}
+
 /// Pooled allocator to speed up dynamic memory allocation/deallocation in AutoHandle class.
 //@{
 GN_API void * allocateAutoHandle(size_t);
