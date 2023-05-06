@@ -81,6 +81,21 @@ private:
     VkDebugReportCallbackEXT _debugReport = 0;
 };
 
+class GN_API SimpleQueue {
+public:
+    struct ConstructParameters {
+        uint32_t family = VK_QUEUE_FAMILY_IGNORED;
+    };
+
+    uint32_t family() const { return _family; }
+    VkQueue  handle() const { return _handle; }
+
+private:
+    VulkanGlobalInfo _vgi {};
+    uint32_t         _family;
+    VkQueue          _handle = 0;
+};
+
 // ---------------------------------------------------------------------------------------------------------------------
 //
 class GN_API SimpleVulkanDevice {
@@ -133,10 +148,10 @@ public:
 
     const VulkanGlobalInfo & vgi() const { return _vgi; }
 
-    uint32_t gfxQueueFamilyIndex() const { return _gfxQueueFamilyIndex; }
-    uint32_t tfrQueueFamilyIndex() const { return _tfrQueueFamilyIndex; }
-    uint32_t cmpQueueFamilyIndex() const { return _cmpQueueFamilyIndex; }
-    uint32_t prnQueueFamilyIndex() const { return _prnQueueFamilyIndex; }
+    SimpleQueue & graphics() const { return *_graphics; }
+    SimpleQueue & transfer() const { return *_transfer; }
+    SimpleQueue & compute() const { return *_compute; }
+    simpleQueue & present() const { return _present; }
 
     // VulkanSubmissionProxy & graphicsQ() const { return *_queues[_gfxQueueFamilyIndex].get(); }
     // VulkanSubmissionProxy & transferQ() const { return *_queues[_tfrQueueFamilyIndex].get(); }
@@ -149,14 +164,14 @@ public:
     Details & details() const { return *_details; }
 
 private:
-    Details *           _details = nullptr;
-    ConstructParameters _cp;
-    VulkanGlobalInfo    _vgi {};
-    uint32_t            _gfxQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-    uint32_t            _tfrQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-    uint32_t            _cmpQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-    uint32_t            _prnQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-    // std::vector<std::unique_ptr<VulkanSubmissionProxy>> _queues; // one for each queue family
+    Details *                                 _details = nullptr;
+    ConstructParameters                       _cp;
+    VulkanGlobalInfo                          _vgi {};
+    std::vector<std::unique_ptr<SimpleQueue>> _queues; // one for each queue family
+    SimpleQueue *                             _graphics = nullptr;
+    SimpleQueue *                             _transfer = nullptr;
+    SimpleQueue *                             _compute  = nullptr;
+    SimpleQueue *                             _present  = nullptr;
 };
 
 /// This is used to temporarily mute error log of Vulkan validation error, when you are expecting some VK errors and don't want to those pollute the log output.
