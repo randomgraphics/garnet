@@ -87,7 +87,7 @@ struct App {
         // create command buffer pool
         VkCommandPoolCreateInfo poolInfo = {};
         poolInfo.sType                   = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-        poolInfo.queueFamilyIndex        = mDevice->graphics().family();
+        poolInfo.queueFamilyIndex        = mDevice->graphics()->family();
         poolInfo.flags                   = 0; // Optional
         CHECK_VK(vkCreateCommandPool(mVgi.device, &poolInfo, mVgi.allocator, &mCommandPool));
 
@@ -109,8 +109,8 @@ struct App {
         vkGetPhysicalDeviceSurfaceCapabilitiesKHR(mVgi.phydev, mSurface, &surfaceCaps);
         std::vector<uint32> queueIndices;
         if (mDevice->separatePresentQueue()) {
-            queueIndices.push_back(mDevice->graphics().family());
-            queueIndices.push_back(mDevice->present().family());
+            queueIndices.push_back(mDevice->graphics()->family());
+            queueIndices.push_back(mDevice->present()->family());
         }
         VkSwapchainCreateInfoKHR swapChainCreateInfo = {
             VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR,
@@ -450,7 +450,7 @@ struct App {
             submitInfo.pCommandBuffers            = &mCommandBuffers[imageIndex];
             submitInfo.signalSemaphoreCount       = 1;
             submitInfo.pSignalSemaphores          = &mRenderFinishedSemaphore;
-            CHECK_VK(vkQueueSubmit(mDevice->graphics(), 1, &submitInfo, VK_NULL_HANDLE));
+            CHECK_VK(vkQueueSubmit(*mDevice->graphics(), 1, &submitInfo, VK_NULL_HANDLE));
 
             // present
             VkPresentInfoKHR presentInfo   = {};
@@ -461,7 +461,7 @@ struct App {
             presentInfo.pSwapchains        = &mSwapchain;
             presentInfo.pImageIndices      = &imageIndex;
             presentInfo.pResults           = nullptr; // Optional
-            if (!HandleWindowResize(vkQueuePresentKHR(mDevice->present(), &presentInfo))) return -1;
+            if (!HandleWindowResize(vkQueuePresentKHR(*mDevice->present(), &presentInfo))) return -1;
         }
         vkDeviceWaitIdle(mVgi.device);
         return 0;

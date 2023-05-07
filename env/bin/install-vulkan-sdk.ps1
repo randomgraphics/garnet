@@ -6,7 +6,7 @@ if (-not (test-path $temp_dir)) {
     new-item $temp_dir -ItemType directory
 }
 
-$sdk_version="1.2.162.1"
+$sdk_version="1.3.246.0"
 $source_url="https://sdk.lunarg.com/sdk/download/$sdk_version/windows/VulkanSDK-$sdk_version-Installer.exe"
 $dest_file ="$temp_dir\VulkanSDK-$sdk_version-Installer.exe"
 $expected_hash = "ada71bb25f5775c648048d22185d65c0bf49678ac1060e9fa79edcafe9816440"

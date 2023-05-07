@@ -158,10 +158,18 @@ public:
 
     const VulkanGlobalInfo & vgi() const { return _vgi; }
 
-    SimpleQueue & graphics() const { return *_graphics; }
-    SimpleQueue & compute() const { return *_compute; }
-    SimpleQueue & transfer() const { return *_transfer; }
-    SimpleQueue & present() const { return *_present; }
+    /// The general purpose graphics queue that is able to do everything: graphics, compute and transfer. Should always be available.
+    SimpleQueue * graphics() const { return _graphics; }
+
+    /// The presentation queue. Could be null if the device is headless. Could be same as the graphics queue, if the device does not support separate present
+    /// queue.
+    SimpleQueue * present() const { return _present; }
+
+    /// the async compute queue. could be null if the device does not support async compute.
+    SimpleQueue * compute() const { return _compute; }
+
+    /// the async transfer queue. could be null if the device does not support async transfer.
+    SimpleQueue * transfer() const { return _transfer; }
 
     bool separatePresentQueue() const { return _present != _graphics; }
 

@@ -74,8 +74,6 @@
 #endif
 
 #include <cassert>
-#include <functional>
-#include <type_traits>
 
 // ---------------------------------------------------------------------------------------------------------------------
 // Error check helpers
