@@ -329,8 +329,12 @@ class DebugReceiver : public Logger::Receiver {
     virtual void onLog(Logger & logger, const Logger::LogDesc & desc, const char * msg) {
 #if GN_MSWIN
         char buf[16384];
-        str::formatTo(buf, 16384, "%s(%d) : name(%s), level(%s) : %s\n", sFormatPath(desc.file).rawptr(), desc.line, logger.getName(),
-                      sLevel2Str(desc.level).rawptr(), msg);
+        if (desc.level >= GN::Logger::INFO) {
+            str::formatTo(buf, 16384, "%s\n", msg);
+        } else {
+            str::formatTo(buf, 16384, "%s(%d) : name(%s), level(%s) : %s\n", sFormatPath(desc.file).rawptr(), desc.line, logger.getName(),
+                        sLevel2Str(desc.level).rawptr(), msg);
+        }
         ::OutputDebugStringA(buf);
 #else
         GN_UNUSED_PARAM(logger);
@@ -343,8 +347,12 @@ class DebugReceiver : public Logger::Receiver {
         if (NULL == msg) msg = L"";
 
         wchar_t buf[16384];
-        str::formatTo(buf, 16384, L"%S(%d) : name(%S), level(%S) : %s\n", sFormatPath(desc.file).rawptr(), desc.line, logger.getName(),
-                      sLevel2Str(desc.level).rawptr(), msg);
+        if (desc.level >= GN::Logger::INFO) {
+            str::formatTo(buf, 16384, L"%S\n", msg);
+        } else {
+            str::formatTo(buf, 16384, L"%S(%d) : name(%S), level(%S) : %s\n", sFormatPath(desc.file).rawptr(), desc.line, logger.getName(),
+                        sLevel2Str(desc.level).rawptr(), msg);
+        }
         ::OutputDebugStringW(buf);
 #else
         GN_UNUSED_PARAM(logger);
