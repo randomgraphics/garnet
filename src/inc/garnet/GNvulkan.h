@@ -16,18 +16,18 @@
 #if !defined(__LP64__) && !defined(_WIN64) && (!defined(__x86_64__) || defined(__ILP32__)) && !defined(_M_X64) && !defined(__ia64) && !defined(_M_IA64) && \
     !defined(__aarch64__) && !defined(__powerpc64__)
     #define PH_SDK_CUSTOM_VK_HANDLE 1
-    #define VK_DEFINE_NON_DISPATCHABLE_HANDLE(object)                        \
-        typedef struct object##_T {                                          \
-            uint64_t u64;                                                    \
-            constexpr object##_T(): u64(0) {}                                \
-            constexpr object##_T(uint64_t u): u64(u) {}                      \
-            constexpr object##_T(int u): u64((uint64_t) u) {}                \
-            constexpr object##_T(nullptr_t): u64(0) {}                       \
-            constexpr object##_T(const object##_T &) = default;              \
-            constexpr object##_T & operator=(const object##_T &) = default;  \
-            constexpr object##_T(object##_T &&)                  = default;  \
-            constexpr object##_T & operator=(object##_T &&) = default;       \
-            constexpr              operator uint64_t() const { return u64; } \
+    #define VK_DEFINE_NON_DISPATCHABLE_HANDLE(object)                       \
+        typedef struct object##_T {                                         \
+            uint64_t u64;                                                   \
+            constexpr object##_T(): u64(0) {}                               \
+            constexpr object##_T(uint64_t u): u64(u) {}                     \
+            constexpr object##_T(int u): u64((uint64_t) u) {}               \
+            constexpr object##_T(nullptr_t): u64(0) {}                      \
+            constexpr object##_T(const object##_T &)             = default; \
+            constexpr object##_T & operator=(const object##_T &) = default; \
+            constexpr object##_T(object##_T &&)                  = default; \
+            constexpr object##_T & operator=(object##_T &&)      = default; \
+            constexpr operator uint64_t() const { return u64; }             \
         } object;
 #endif
 
@@ -39,6 +39,12 @@
     #define VK_USE_PLATFORM_ANDROID_KHR
 #endif
 #include "vulkan/3rd-party/volk.h"
+
+// Check if volk.h is too old.
+#if VOLK_HEADER_VERSION < VK_HEADER_VERSION
+    #pragma message("[WARNING] VOLK_HEADER_VERSION(" GN_STR(VOLK_HEADER_VERSION) ") is older VK_HEADER_VERSION(" GN_STR( \
+            VK_HEADER_VERSION) ")! You might see link error of missing Vulkan symbos. Consider downgrade your Vulkan SDK to match the version of volk.h.")
+#endif
 
 // ---------------------------------------------------------------------------------------------------------------------
 // Include VMA allocator header

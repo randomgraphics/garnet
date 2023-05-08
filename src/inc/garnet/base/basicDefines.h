@@ -311,6 +311,16 @@ public:                                                                     \
 #define GN_JOIN_DIRECT(s1, s2)       s1##s2                                ///< Auxillary macro used by GN_JOIN'
 
 ///
+/// Convert a token to string
+///
+#define GN_STR(x) GN_STR_HELPER(x)
+
+///
+/// Helper macro called by GN_STR()
+///
+#define GN_STR_HELPER(x) #x
+
+///
 /// Make wide-char string
 ///
 #define GN_WSTR(X) GN_JOIN(L, X)
