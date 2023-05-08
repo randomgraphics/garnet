@@ -22,9 +22,8 @@ extern "C" __declspec(dllimport) HMODULE __stdcall LoadLibraryA(LPCSTR);
 extern "C" __declspec(dllimport) FARPROC __stdcall GetProcAddress(HMODULE, LPCSTR);
 #endif
 
-// Optionally put global Vulkan prototypes into a namespace to avoid naming collisions
-#ifdef VOLK_PROTOTYPE_NAMESPACE
-namespace VOLK_PROTOTYPE_NAMESPACE {
+#ifdef __cplusplus
+extern "C" {
 #endif
 
 static VkInstance loadedInstance = VK_NULL_HANDLE;
@@ -2444,8 +2443,7 @@ GN_API PFN_vkAcquireNextImage2KHR vkAcquireNextImage2KHR;
 #	pragma GCC visibility pop
 #endif
 
-// Optionally put global Vulkan prototypes into a namespace to avoid naming collisions
-#ifdef VOLK_PROTOTYPE_NAMESPACE
-} // VOLK_PROTOTYPE_NAMESPACE
+#ifdef __cplusplus
+}
 #endif
 /* clang-format on */

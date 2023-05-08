@@ -59,9 +59,8 @@
 #	undef VK_HUAWEI_subpass_shading
 #endif
 
-// Optionally put global Vulkan prototypes into a namespace to avoid naming collisions
-#ifdef VOLK_PROTOTYPE_NAMESPACE
-namespace VOLK_PROTOTYPE_NAMESPACE {
+#ifdef __cplusplus
+extern "C" {
 #endif
 
 struct VolkDeviceTable;
@@ -1567,9 +1566,8 @@ extern GN_API PFN_vkAcquireNextImage2KHR vkAcquireNextImage2KHR;
 #endif /* (defined(VK_KHR_device_group) && defined(VK_KHR_swapchain)) || (defined(VK_KHR_swapchain) && defined(VK_VERSION_1_1)) */
 /* VOLK_GENERATE_PROTOTYPES_H */
 
-// Optionally put global Vulkan prototypes into a namespace to avoid naming collisions
-#ifdef VOLK_PROTOTYPE_NAMESPACE
-} // VOLK_PROTOTYPE_NAMESPACE
+#ifdef __cplusplus
+}
 #endif
 
 #endif
