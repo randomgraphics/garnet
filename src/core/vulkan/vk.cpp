@@ -1,4 +1,5 @@
 #include "pch.h"
+#include <garnet/vulkan/3rd-party/volk.c>
 
 namespace GN::vulkan {
 

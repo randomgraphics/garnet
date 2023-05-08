@@ -66,7 +66,7 @@
     #define VMA_DEBUG_ERROR_LOG PH_LOGE
 #endif
 
-#include "vulkan/3rd-party/vk_mem_alloc.h"
+#include <vma/vk_mem_alloc.h>
 #if PH_MSWIN
     #pragma warning(pop)
 #elif PH_UNIX_LIKE
