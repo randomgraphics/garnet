@@ -40,6 +40,14 @@
 #endif
 #include "vulkan/3rd-party/volk.h"
 
+// undefine this macro, since it interferes with vulkan.hpp
+#undef VK_NO_PROTOTYPES
+
+// Prevents vulkan.h from being included again.
+#ifndef VULKAN_H_
+#define VULKAN_H_
+#endif
+
 // Check if volk.h is too old.
 #if VOLK_HEADER_VERSION < VK_HEADER_VERSION
     #pragma message("[WARNING] VOLK_HEADER_VERSION(" GN_STR(VOLK_HEADER_VERSION) ") is older VK_HEADER_VERSION(" GN_STR( \
