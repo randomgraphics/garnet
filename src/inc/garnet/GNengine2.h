@@ -6,11 +6,7 @@
 /// \author  CHEN@@CHENLI-HOMEPC (2015.4.8)
 // *****************************************************************************
 
-namespace GN {
-namespace e2 {
-class Position {
-    sint64 x, y, z;
-};
+namespace GN::e2 {
 
 class Transformation {
     Vector3f    translation;
@@ -20,7 +16,7 @@ class Transformation {
 
 class Entity : public RefCounter {
     // basic properties
-    uint64 _id;
+    uint64_t _id;
     StrA   _name;
 };
 
@@ -48,7 +44,7 @@ class ImmutableGeometry : public VisualEntity {};
 class SceneGraph {
 public:
     void AddEntity(SpacialEntity *);
-    void RemoveEntity(uint64 id);
+    void RemoveEntity(uint64_t id);
 };
 
 class AsyncNofitication : RefCounter {
@@ -65,20 +61,26 @@ public:
     void   WaitForFinish();
 };
 
-// self contained world object.
-class World {
+/// @brief The visual/rendering system of the engine.
+class VisualSystem {
 public:
-    void LoadAsync(File &);
-    void SaveAsync(File &);
-    void PurgeAsync();
-    void Render(UINT pass);
+    /// @brief The parametrers to initialize/reboot the visual system.
+    struct VisualSubsystemParameters {
+        // reserved for future use.
+    };
+
+    /// @brief Reboot the visual/rendering system.
+    void rebootVisual();
 };
 
+/// @brief The top level object of the engine. Represents the world that is currently running.
 class Universe {
-    uint64 GenerateUniqueId();
+public:
+    /// Reboot the whole universe. Initialize the foundation. Setup an empty universe. If the universe contains anything, it'll be completely removed.
+    void reboot();
 };
-} // namespace e2
-} // namespace GN
+
+} // namespace GN::e2
 
 // *****************************************************************************
 //                                     EOF
