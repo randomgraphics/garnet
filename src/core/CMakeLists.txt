@@ -101,6 +101,7 @@ target_include_directories(GNcore PUBLIC
     ${BUILD_HEADER_INC}
     ../inc
     ../3rdparty/Eigen
+    ../3rdparty/rapid-image/inc
 )
 target_link_libraries(GNcore PUBLIC GNextern)
 target_compile_features(GNcore PUBLIC cxx_std_17)

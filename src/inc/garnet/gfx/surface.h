@@ -28,7 +28,7 @@ GN_CASSERT(sizeof(TextureUsage) == sizeof(uint32));
 /// Texture descriptor
 ///
 struct TextureDesc {
-    ColorFormat format; ///< pixel format.
+    PixelFormat format; ///< pixel format.
     uint32      width;  ///< basemap width
     uint32      height; ///< basemap height
     uint32      depth;  ///< basemap depth
@@ -90,7 +90,7 @@ struct TextureDesc {
         // check format
         if (!format.valid()) {
             static Logger * sLocalLogger = getLogger("GN.gfx.TextureDesc");
-            GN_ERROR(sLocalLogger)("invalid texture format: %s", format.toString().rawptr());
+            GN_ERROR(sLocalLogger)("invalid texture format: %s", format.toString().c_str());
             return false;
         }
 
