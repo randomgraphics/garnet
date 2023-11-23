@@ -100,8 +100,6 @@ endfunction()
 target_include_directories(GNcore PUBLIC
     ${BUILD_HEADER_INC}
     ../inc
-)
-target_include_directories(GNcore PRIVATE
     ../3rdparty/Eigen
 )
 target_link_libraries(GNcore PUBLIC GNextern)

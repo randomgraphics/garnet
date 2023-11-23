@@ -65,7 +65,7 @@ bool GN::gfx::OGLGpu::dispInit() {
     glewInit();
 
     // Setup the debug output
-    if (ro.debug) OGLDebugOutputARB::enable();
+    if (getOptions().debug) OGLDebugOutputARB::enable();
 
     // setup swap control
     if (GLX_SGI_swap_control) {

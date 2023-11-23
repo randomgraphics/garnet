@@ -95,15 +95,15 @@ inline void bindTexture(GLenum target, uint32_t stage, GLuint texture) {
 //
 template<GLenum TARGET>
 struct QueryObject {
-    enum Status {
+    enum Status_ { // can use "Status" since Xlib.h has it defined to int.
         EMPTY,   // the query object is not created yet.
         IDLE,    // the query object is idle and ready to use.
         RUNNING, // in between begin() and end()
         PENDING, // query is issued. but result is yet to returned.
     };
 
-    GLuint qo     = 0;
-    Status status = EMPTY;
+    GLuint  qo     = 0;
+    Status_ status = EMPTY;
 
     QueryObject() = default;
     ~QueryObject() { cleanup(); }

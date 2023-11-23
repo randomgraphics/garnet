@@ -10,6 +10,7 @@
     #pragma clang diagnostic ignored "-Waddress-of-packed-member"
     #pragma clang diagnostic ignored "-Woverloaded-virtual"
 #endif
+#include <assimp/cimport.h>
 #include <assimp/scene.h>       // Output data structure
 #include <assimp/postprocess.h> // Post processing flags
 #include <assimp/IOStream.hpp>
