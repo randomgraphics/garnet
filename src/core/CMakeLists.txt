@@ -156,5 +156,5 @@ if(MSVC)
         /Wv:18 # fix eigen warning
     )
 else()
-    target_compile_options(GNcore PUBLIC -Wall -Wextra -Werror)
+    target_compile_options(GNcore PUBLIC -Wall -Wextra -Werror -Wfatal-errors)
 endif()

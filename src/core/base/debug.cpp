@@ -100,7 +100,7 @@ GN_API bool GN::isDebuggerAttached() {
 GN_API void GN::breakIntoDebugger() {
 #if GN_MSVC
     ::DebugBreak();
-#elif GN_GCC
+#elif GN_GNUC
     asm("int $3");
 #else
     #error "Unsupport compiler!"

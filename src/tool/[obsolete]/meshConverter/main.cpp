@@ -2,7 +2,7 @@
 
 #ifdef HAS_FBX
     #pragma warning(disable : 4100) // unreferenced formal parameter
-    #if GN_GCC
+    #if GN_GNUC
         #pragma GCC diagnostic ignored "-Wunused"
     #endif
     #include <fbxsdk.h>

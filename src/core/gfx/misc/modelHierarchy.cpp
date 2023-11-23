@@ -14,7 +14,7 @@
 #include <assimp/IOSystem.h>
 
 #ifdef HAS_FBX
-    #if GN_GCC
+    #if GN_GNUC
         #pragma GCC diagnostic ignored "-Wunused"
     #endif
     #pragma warning(disable : 4996) // 'x' was declared depreciated

@@ -1,4 +1,4 @@
-add_subdirectory(3rdparty/src)
+add_subdirectory(3rdparty)
 add_subdirectory(core)
 
 if (GN_BUILD_SAMPLES)

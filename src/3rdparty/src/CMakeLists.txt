@@ -42,11 +42,6 @@ if (${OPENGL_FOUND})
     list(APPEND sources glew/glew.c)
 endif()
 
-# collect assimp sources
-GN_add_source_folder(sources assimp PCH_SOURCE assimp/AssimpPCH.cpp PCH_HEADER AssimpPCH.h)
-file(GLOB_RECURSE assimp_contrib_sources assimp/contrib/*.c assimp/contrib/*.cpp)
-list(APPEND sources ${assimp_contrib_sources})
-
 # freetype sources. Copied from <freetype_package>/doc/INSTALL.ANY
 list(APPEND sources
 	freetype-2.8.1/autofit/autofit.c
@@ -106,18 +101,15 @@ source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} PREFIX "Source Files" FILES ${sour
 add_library(GNextern ${sources} expat_build.h.in ${CMAKE_CURRENT_BINARY_DIR}/expat/expat_build.h)
 
 target_compile_definitions(GNextern PRIVATE
-    ASSIMP_BUILD_BOOST_WORKAROUND
-    ASSIMP_BUILD_NO_OWN_ZLIB
+    # ASSIMP_BUILD_BOOST_WORKAROUND
+    # ASSIMP_BUILD_NO_OWN_ZLIB
     FT2_BUILD_LIBRARY
     GLEW_STATIC
     _SCL_SECURE_NO_WARNINGS # disable MSVC security warnings
 )
 target_include_directories(GNextern PUBLIC  ../inc)
 target_include_directories(GNextern PRIVATE
-    ../inc/assimp
     jpeg
-    assimp
-    assimp/BoostWorkaround
     ${CMAKE_CURRENT_BINARY_DIR}/expat # for expat_build.h
 )
 

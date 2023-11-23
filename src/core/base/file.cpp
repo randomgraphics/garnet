@@ -25,7 +25,7 @@ static FILE * sOpenFile(const char * filename, const char * mode) {
 template<typename T>
 class AutoMallocPtr : public detail::BaseAutoPtr<T, AutoMallocPtr<T>> {
     typedef detail::BaseAutoPtr<T, AutoMallocPtr<T>> ParentType;
-    #if GN_GCC
+    #if GN_GNUC
     friend class detail::BaseAutoPtr<T, AutoMallocPtr<T>>;
     #else
     friend class ParentType;

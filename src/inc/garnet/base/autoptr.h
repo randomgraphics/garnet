@@ -124,7 +124,7 @@ public:
 template<typename T>
 class AutoObjPtr : public detail::BaseAutoPtr<T, AutoObjPtr<T>> {
     typedef detail::BaseAutoPtr<T, AutoObjPtr<T>> ParentType;
-#if GN_GCC
+#if GN_GNUC
     friend class detail::BaseAutoPtr<T, AutoObjPtr<T>>;
 #else
     friend class ParentType;
@@ -147,7 +147,7 @@ public:
 template<typename T>
 class AutoObjArray : public detail::BaseAutoPtr<T, AutoObjArray<T>> {
     typedef detail::BaseAutoPtr<T, AutoObjArray<T>> ParentType;
-#if GN_GCC
+#if GN_GNUC
     friend class detail::BaseAutoPtr<T, AutoObjArray<T>>;
 #else
     friend class ParentType;
@@ -170,7 +170,7 @@ public:
 template<typename T>
 class AutoHeapPtr : public detail::BaseAutoPtr<T, AutoHeapPtr<T>> {
     typedef detail::BaseAutoPtr<T, AutoHeapPtr<T>> ParentType;
-#if GN_GCC
+#if GN_GNUC
     friend class detail::BaseAutoPtr<T, AutoHeapPtr<T>>;
 #else
     friend class ParentType;
@@ -361,7 +361,7 @@ public:
         return pt;
     }
 
-#if !GN_GCC
+#if !GN_GNUC
     ///
     /// templated QI.
     ///
