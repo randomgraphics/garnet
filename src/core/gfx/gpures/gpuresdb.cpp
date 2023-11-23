@@ -820,7 +820,7 @@ inline GpuResource::Impl * GpuResourceDatabase::Impl::getResourceImpl(const GpuR
 GpuResourceDatabase::GpuResourceDatabase(Gpu & g): mImpl(NULL) {
     mImpl = new Impl(*this, g);
 
-    if (!mImpl->setupBuiltInResources()) { GN_THROW("Fail to setup built-in resources."); }
+    if (!mImpl->setupBuiltInResources()) { GN_THROW("%s", "Fail to setup built-in resources."); }
 }
 
 GpuResourceDatabase::~GpuResourceDatabase() { delete mImpl; }

@@ -1,5 +1,7 @@
 #include "pch.h"
 
+#include <signal.h>
+
 #if GN_XBOX2
     #include "dxerr9.h"
     #pragma comment(lib, "dxerr9.lib")
@@ -98,12 +100,15 @@ GN_API bool GN::isDebuggerAttached() {
 //
 // -----------------------------------------------------------------------------
 GN_API void GN::breakIntoDebugger() {
-#if GN_MSVC
+#ifdef _WIN32
     ::DebugBreak();
-#elif GN_GNUC
-    asm("int $3");
+#elif defined(__ANDROID__)
+    __builtin_trap();
+#elif defined(__arm__) || defined(__arm64__) || defined(__aarch64__)
+    // arm chipset.
+    raise(SIGTRAP);
 #else
-    #error "Unsupport compiler!"
+    asm("int $3");
 #endif
 }
 

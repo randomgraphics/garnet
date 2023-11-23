@@ -22,7 +22,7 @@ class GpuResourceHandle {
 public:
     //@{
 
-    enum { MAX_TYPES = (2 ^ 8) - 1 };
+    enum { MAX_TYPES = (1 << 8) - 1 };
 
     explicit GpuResourceHandle(uint32 u32): mU32(u32) {}
 

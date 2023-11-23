@@ -147,7 +147,7 @@
     #undef GN_PPC
     #define GN_PPC 1
     #define GN_CPU ppc
-#elif defined(__arm__)
+#elif defined(__arm64__)
     #undef  GN_ARM
     #define GN_ARM 1
     #define GN_CPU arm
@@ -163,12 +163,15 @@
 // 辨识endian
 // *****************************************************************************
 
-#if defined(__LITTLE_ENDIAN__) || defined(__BIG_ENDIAN__)
-    #define GN_LITTLE_ENDIAN defined(__LITTLE_ENDIAN__) ///< true on little endian machine
-    #define GN_BIT_ENDIAN    defined(__BIG_ENDIAN__)    ///< true on big endian machine
+#if defined(__LITTLE_ENDIAN__)
+    #define GN_LITTLE_ENDIAN 1
+    #define GN_BIT_ENDIAN    0
+#elif defined(__BIG_ENDIAN__)
+    #define GN_LITTLE_ENDIAN 0
+    #define GN_BIT_ENDIAN    1
 #else
-    #define GN_LITTLE_ENDIAN (GN_X64 || GN_X86) ///< true on little endian machine
-    #define GN_BIG_ENDIAN    GN_PPC             ///< true on big endian machine
+    #define GN_BIG_ENDIAN    GN_PPC
+    #define GN_LITTLE_ENDIAN !(GN_BIG_ENDINE)
 #endif
 
 #if !(GN_LITTLE_ENDIAN ^ GN_BIG_ENDIAN)
@@ -203,7 +206,7 @@
 #if GN_MSVC
     #define GN_EXPORT __declspec(dllexport)
 #elif GN_GNUC && __GNUC__ >= 4
-    #define GN_EXPORT       __attribute__ ((visibility("default"))
+    #define GN_EXPORT __attribute__((visibility("default")))
 #else
     #define GN_EXPORT
 #endif

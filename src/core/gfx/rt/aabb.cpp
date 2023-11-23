@@ -418,7 +418,7 @@ static bool VerifyAABBTree(const std::vector<AABBTree::Node *> & nodes, const AA
         if (n->IsLeaf()) {
             // Once isLeafNode is set to false, we should see no more leaf nodes.
             if (primitiveCount > 0) {
-                GN_VERIFY(firstPrimitiveId <= n->primitive && n->primitive <= (firstPrimitiveId + primitiveCount));
+                GN_VERIFY(firstPrimitiveId <= (size_t)n->primitive && (size_t)n->primitive <= (firstPrimitiveId + primitiveCount));
                 GN_VERIFY(primitives.find(n->primitive) != primitives.end());
                 primitives.erase(n->primitive);
             }

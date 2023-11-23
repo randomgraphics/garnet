@@ -537,6 +537,12 @@ struct GN_API EffectResourceDesc {
             /// default ctor
             OverridableVariable(): overridden(false) {}
 
+            /// copy ctor
+            OverridableVariable(const OverridableVariable & rhs) {
+                value      = rhs.value;
+                overridden = rhs.overridden;
+            }
+
             /// set value
             template<typename T2>
             OverridableVariable & operator=(const T2 & rhs) {

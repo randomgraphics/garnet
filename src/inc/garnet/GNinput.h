@@ -187,6 +187,12 @@ union KeyEvent {
     KeyEvent(KeyCode kc, KeyStatus ks): code(static_cast<uint8>(kc)), status(ks) { GN_ASSERT(kc < KeyCode::NUM_KEYS); }
     //@}
 
+    /// assignment
+    KeyEvent & operator=(const KeyEvent & rhs) {
+        u16 = rhs.u16;
+        return *this;
+    }
+
     ///
     /// Equality
     ///

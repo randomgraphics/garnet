@@ -10,11 +10,10 @@
     #pragma clang diagnostic ignored "-Waddress-of-packed-member"
     #pragma clang diagnostic ignored "-Woverloaded-virtual"
 #endif
-#include <assimp/assimp.h>
-#include <assimp/aiScene.h>       // Output data structure
-#include <assimp/aiPostProcess.h> // Post processing flags
-#include <assimp/IOStream.h>
-#include <assimp/IOSystem.h>
+#include <assimp/scene.h>       // Output data structure
+#include <assimp/postprocess.h> // Post processing flags
+#include <assimp/IOStream.hpp>
+#include <assimp/IOSystem.hpp>
 
 #ifdef HAS_FBX
     #if GN_GNUC

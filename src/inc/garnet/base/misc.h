@@ -148,14 +148,6 @@ struct GN_API Guid {
     /// \name operators
     //@{
 
-    Guid & operator=(const Guid & rhs) {
-        uint64 *       a = (uint64 *) this;
-        const uint64 * b = (const uint64 *) &rhs;
-        a[0]             = b[0];
-        a[1]             = b[1];
-        return *this;
-    }
-
     bool operator==(const Guid & rhs) const {
         const uint64 * a = (const uint64 *) this;
         const uint64 * b = (const uint64 *) &rhs;

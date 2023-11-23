@@ -97,7 +97,13 @@ function(add_core_libs)
     endif()
 endfunction()
 
-target_include_directories(GNcore PUBLIC ${BUILD_HEADER_INC} ../inc)
+target_include_directories(GNcore PUBLIC
+    ${BUILD_HEADER_INC}
+    ../inc
+)
+target_include_directories(GNcore PRIVATE
+    ../3rdparty/Eigen
+)
 target_link_libraries(GNcore PUBLIC GNextern)
 target_compile_features(GNcore PUBLIC cxx_std_17)
 
@@ -147,7 +153,10 @@ endif()
 
 # thread libraries
 find_package(Threads REQUIRED)
-add_core_libs(${CMAKE_DL_LIBS} Threads::Threads)
+add_core_libs(Threads::Threads)
+
+# Assimp
+add_core_libs(assimp)
 
 # compiler specific setup
 if(MSVC)
