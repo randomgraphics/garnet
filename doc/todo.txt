@@ -3,6 +3,8 @@
 
 - Mordenization:
   - depreicate/remove some old old code: like guard, icl support
+  - update 3rd party libraries using submodule:
+    - assimp
   - replace some custom classes with 3rdparty library:
     - math
     - delegate
