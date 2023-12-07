@@ -47,7 +47,7 @@ AutoRef<TextureResource> GN::gfx::TextureResource::loadFromFile(GpuResourceDatab
     GN_INFO(sLogger)("Load texture from file: %s", filename);
 
     // load image
-    auto image = RawImage::load(filename);
+    auto image = Image::load(filename);
     if (image.empty()) return AutoRef<TextureResource>::NULLREF;
 
     // create texture

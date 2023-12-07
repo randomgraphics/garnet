@@ -264,7 +264,7 @@ struct MeshVertexFormat {
         vf.numElements = 1;
 
         vf.elements[0].setSemantic("POSITION");
-        vf.elements[0].format = PixelFormat::FLOAT3;
+        vf.elements[0].format = PixelFormat::FLOAT3();
         vf.elements[0].stream = 0;
         vf.elements[0].offset = 0;
 
@@ -286,12 +286,12 @@ struct MeshVertexFormat {
         vf.numElements = 2;
 
         vf.elements[0].setSemantic("POSITION");
-        vf.elements[0].format = PixelFormat::FLOAT2;
+        vf.elements[0].format = PixelFormat::FLOAT2();
         vf.elements[0].stream = 0;
         vf.elements[0].offset = 0;
 
         vf.elements[1].setSemantic("TEXCOORD");
-        vf.elements[1].format = PixelFormat::FLOAT2;
+        vf.elements[1].format = PixelFormat::FLOAT2();
         vf.elements[1].stream = 0;
         vf.elements[1].offset = 8;
 
@@ -314,17 +314,17 @@ struct MeshVertexFormat {
         vf.numElements = 3;
 
         vf.elements[0].setSemantic("POSITION");
-        vf.elements[0].format = PixelFormat::FLOAT3;
+        vf.elements[0].format = PixelFormat::FLOAT3();
         vf.elements[0].stream = 0;
         vf.elements[0].offset = 0;
 
         vf.elements[1].setSemantic("NORMAL");
-        vf.elements[1].format = PixelFormat::FLOAT3;
+        vf.elements[1].format = PixelFormat::FLOAT3();
         vf.elements[1].stream = 0;
         vf.elements[1].offset = 12;
 
         vf.elements[2].setSemantic("TEXCOORD");
-        vf.elements[2].format = PixelFormat::FLOAT2;
+        vf.elements[2].format = PixelFormat::FLOAT2();
         vf.elements[2].stream = 0;
         vf.elements[2].offset = 24;
 

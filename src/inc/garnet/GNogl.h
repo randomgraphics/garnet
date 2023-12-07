@@ -1,7 +1,6 @@
 #pragma once
 
-#include "garnet/GNbase.h"
-#include "garnet/gfx/colorFormat.h"
+#include "garnet/GNgfx.h"
 
 #define GLEW_STATIC
 #include <GL/glew.h>
@@ -20,7 +19,7 @@
 
 namespace GN {
 namespace ogl {
-using GN::gfx::ColorFormat;
+using GN::gfx::PixelFormat;
 
 /// The 'optionalFilename' parameter is optional and is only used when printing
 /// shader compilation error.
@@ -488,7 +487,7 @@ public:
     struct TextureDesc {
         GLuint      id = 0; // all other fields are undefined, if id is 0.
         GLenum      target;
-        ColorFormat format;
+        PixelFormat format;
         uint32_t    width;
         uint32_t    height;
         uint32_t    depth; // this is number of layers for 2D array texture and is always 6 for cube texture.
@@ -510,11 +509,11 @@ public:
 
     void attach(const TextureObject & that) { attach(that._desc.target, that._desc.id); }
 
-    void allocate2D(ColorFormat f, size_t w, size_t h, size_t m = 1);
+    void allocate2D(PixelFormat f, size_t w, size_t h, size_t m = 1);
 
-    void allocate2DArray(ColorFormat f, size_t w, size_t h, size_t l, size_t m = 1);
+    void allocate2DArray(PixelFormat f, size_t w, size_t h, size_t l, size_t m = 1);
 
-    void allocateCube(ColorFormat f, size_t w, size_t m = 1);
+    void allocateCube(PixelFormat f, size_t w, size_t m = 1);
 
     void setPixels(size_t level, size_t x, size_t y, size_t w, size_t h,
                    size_t       rowPitchInBytes, // set to 0, if pixels are tightly packed.
@@ -527,7 +526,7 @@ public:
         if (_owned && _desc.id) { glDeleteTextures(1, &_desc.id); }
         _desc.id     = 0;
         _desc.target = GL_NONE;
-        _desc.format = ColorFormat::UNKNOWN;
+        _desc.format = PixelFormat::UNKNOWN();
         _desc.width  = 0;
         _desc.height = 0;
         _desc.depth  = 0;
@@ -558,7 +557,7 @@ class SimpleFBO {
     };
 
     struct RenderTarget {
-        ColorFormat format  = ColorFormat::UNKNOWN;
+        PixelFormat format  = PixelFormat::UNKNOWN();
         GLuint      texture = 0;
     };
 
@@ -578,16 +577,16 @@ public:
 
     void cleanup();
 
-    void allocate(uint32_t w, uint32_t h, uint32_t levels, const ColorFormat * cf);
+    void allocate(uint32_t w, uint32_t h, uint32_t levels, const PixelFormat * cf);
 
-    void allocate(uint32_t w, uint32_t h, uint32_t levels, ColorFormat cf) {
+    void allocate(uint32_t w, uint32_t h, uint32_t levels, PixelFormat cf) {
         GN_ASSERT(1 == COLOR_BUFFER_COUNT);
         allocate(w, h, levels, &cf);
     }
 
-    void allocate(uint32_t w, uint32_t h, uint32_t levels, ColorFormat cf1, ColorFormat cf2) {
+    void allocate(uint32_t w, uint32_t h, uint32_t levels, PixelFormat cf1, PixelFormat cf2) {
         GN_ASSERT(2 == COLOR_BUFFER_COUNT);
-        ColorFormat formats[] = {cf1, cf2};
+        PixelFormat formats[] = {cf1, cf2};
         allocate(w, h, levels, formats);
     }
 
@@ -628,7 +627,7 @@ public:
 
     GLenum      getColorTarget() const { return _colorTextureTarget; }
     GLuint      getColorTexture(size_t rt) const { return _colors[rt].texture; }
-    ColorFormat getColorFormat(size_t rt) const { return _colors[rt].format; }
+    PixelFormat getColorFormat(size_t rt) const { return _colors[rt].format; }
 
     void saveColorToFile(uint32_t rt, const std::string & filepath) const;
     void saveDepthToFile(const std::string & filepath) const;
@@ -659,7 +658,7 @@ public:
         _mips.clear();
     }
 
-    void allocate(uint32_t w, uint32_t levels, ColorFormat cf);
+    void allocate(uint32_t w, uint32_t levels, PixelFormat cf);
 
     uint32_t getLevels() const { return (uint32_t) _mips.size(); }
 
