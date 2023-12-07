@@ -80,7 +80,7 @@ void GN::gfx::BasicGpu::rebindContext() { mContextOk = bindContextImpl(mContext,
 // -----------------------------------------------------------------------------
 void GN::gfx::BasicGpu::getBackBufferContent(BackBufferContent & c) {
     c.data.clear();
-    c.format = ColorFormat::UNKNOWN;
+    c.format = PixelFormat::UNKNOWN();
     c.width  = 0;
     c.height = 0;
     c.pitch  = 0;

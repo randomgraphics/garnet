@@ -74,22 +74,22 @@ bool GN::gfx::LineRenderer::init() {
     mContext.vtxbind.resize(6);
     mContext.vtxbind[0].stream = 0;
     mContext.vtxbind[0].offset = GN_FIELD_OFFSET(LineVertex, pos);
-    mContext.vtxbind[0].format = ColorFormat::FLOAT3;
+    mContext.vtxbind[0].format = PixelFormat::FLOAT3();
     mContext.vtxbind[1].stream = 0;
     mContext.vtxbind[1].offset = GN_FIELD_OFFSET(LineVertex, colorInRGBA);
-    mContext.vtxbind[1].format = ColorFormat::RGBA8;
+    mContext.vtxbind[1].format = PixelFormat::RGBA8();
     mContext.vtxbind[2].stream = 0;
     mContext.vtxbind[2].offset = GN_FIELD_OFFSET(LineVertex, transform);
-    mContext.vtxbind[2].format = ColorFormat::FLOAT4;
+    mContext.vtxbind[2].format = PixelFormat::FLOAT4();
     mContext.vtxbind[3].stream = 0;
     mContext.vtxbind[3].offset = GN_FIELD_OFFSET(LineVertex, transform) + sizeof(Vector4f);
-    mContext.vtxbind[3].format = ColorFormat::FLOAT4;
+    mContext.vtxbind[3].format = PixelFormat::FLOAT4();
     mContext.vtxbind[4].stream = 0;
     mContext.vtxbind[4].offset = GN_FIELD_OFFSET(LineVertex, transform) + sizeof(Vector4f) * 2;
-    mContext.vtxbind[4].format = ColorFormat::FLOAT4;
+    mContext.vtxbind[4].format = PixelFormat::FLOAT4();
     mContext.vtxbind[5].stream = 0;
     mContext.vtxbind[5].offset = GN_FIELD_OFFSET(LineVertex, transform) + sizeof(Vector4f) * 3;
-    mContext.vtxbind[5].format = ColorFormat::FLOAT4;
+    mContext.vtxbind[5].format = PixelFormat::FLOAT4();
 
     // create GPU program
     const GpuCaps & caps = mGpu.caps();
@@ -370,13 +370,13 @@ bool GN::gfx::ThickLineRenderer::init(Gpu & g) {
     mContext.vtxbind.resize(3);
     mContext.vtxbind[0].stream = 0;
     mContext.vtxbind[0].offset = 0;
-    mContext.vtxbind[0].format = ColorFormat::FLOAT4;
+    mContext.vtxbind[0].format = PixelFormat::FLOAT4();
     mContext.vtxbind[1].stream = 0;
     mContext.vtxbind[1].offset = 16;
-    mContext.vtxbind[1].format = ColorFormat::RGBA8;
+    mContext.vtxbind[1].format = PixelFormat::RGBA8();
     mContext.vtxbind[2].stream = 0;
     mContext.vtxbind[2].offset = 20;
-    mContext.vtxbind[2].format = ColorFormat::FLOAT2;
+    mContext.vtxbind[2].format = PixelFormat::FLOAT2();
 
     // initialize index buffer
     const uint16 numpoly = MAX_VERTICES / 6;

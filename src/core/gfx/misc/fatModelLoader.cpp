@@ -235,15 +235,15 @@ static bool sLoadFromASE(FatModel & fatmodel, File & file, const StrA & filename
         }
         if (position) {
             sCopyVertexElement<Vector3f>(dst.vertices.getPosition(), src, *position);
-            dst.vertices.setElementFormat(FatVertexBuffer::POSITION, ColorFormat::FLOAT3);
+            dst.vertices.setElementFormat(FatVertexBuffer::POSITION, PixelFormat::FLOAT3());
         }
         if (normal) {
             sCopyVertexElement<Vector3f>(dst.vertices.getNormal(), src, *normal);
-            dst.vertices.setElementFormat(FatVertexBuffer::NORMAL, ColorFormat::FLOAT3);
+            dst.vertices.setElementFormat(FatVertexBuffer::NORMAL, PixelFormat::FLOAT3());
         }
         if (texcoord) {
             sCopyVertexElement<Vector2f>(dst.vertices.getTexcoord(0), src, *texcoord);
-            dst.vertices.setElementFormat(FatVertexBuffer::TEXCOORD0, ColorFormat::FLOAT2);
+            dst.vertices.setElementFormat(FatVertexBuffer::TEXCOORD0, PixelFormat::FLOAT2());
         }
 
         // copy index buffer
@@ -760,12 +760,12 @@ static bool sGenerateFatVertices(FatMesh & fatmesh, FbxNode * fbxnode, const Mes
     FatVertexBuffer & fatvb = fatmesh.vertices;
     if (!fatvb.resize(layout, numkeys)) return false;
 
-    fatvb.setElementFormat(FatVertexBuffer::POSITION, ColorFormat::FLOAT3);
-    fatvb.setElementFormat(FatVertexBuffer::NORMAL, ColorFormat::FLOAT3);
-    fatvb.setElementFormat(FatVertexBuffer::TEXCOORD0, ColorFormat::FLOAT2);
+    fatvb.setElementFormat(FatVertexBuffer::POSITION, PixelFormat::FLOAT3());
+    fatvb.setElementFormat(FatVertexBuffer::NORMAL, PixelFormat::FLOAT3());
+    fatvb.setElementFormat(FatVertexBuffer::TEXCOORD0, PixelFormat::FLOAT2());
     if (skinning) {
-        fatvb.setElementFormat(FatVertexBuffer::JOINT_ID, ColorFormat::UINT4);
-        fatvb.setElementFormat(FatVertexBuffer::JOINT_WEIGHT, ColorFormat::FLOAT4);
+        fatvb.setElementFormat(FatVertexBuffer::JOINT_ID, PixelFormat::UINT4());
+        fatvb.setElementFormat(FatVertexBuffer::JOINT_WEIGHT, PixelFormat::FLOAT4());
     }
 
     Vector4f * pos     = (Vector4f *) fatvb.getPosition();
@@ -1773,20 +1773,20 @@ static bool sLoadAiVertices(FatMesh & fatmesh,
     if (!fatvb.resize(fatlayout, aimesh->mNumVertices)) return false;
 
     Vector4f * fatpos = (Vector4f *) fatvb.getPosition();
-    if (fatpos) fatvb.setElementFormat(FatVertexBuffer::POSITION, ColorFormat::FLOAT3);
+    if (fatpos) fatvb.setElementFormat(FatVertexBuffer::POSITION, PixelFormat::FLOAT3());
 
     Vector4f * fatnormal = (Vector4f *) fatvb.getNormal();
-    if (fatnormal) fatvb.setElementFormat(FatVertexBuffer::NORMAL, ColorFormat::FLOAT3);
+    if (fatnormal) fatvb.setElementFormat(FatVertexBuffer::NORMAL, PixelFormat::FLOAT3());
 
     Vector4f * fattc0 = (Vector4f *) fatvb.getTexcoord(0);
     // TODO: get texcood format from aimesh.
-    if (fattc0) fatvb.setElementFormat(FatVertexBuffer::TEXCOORD0, ColorFormat::FLOAT2);
+    if (fattc0) fatvb.setElementFormat(FatVertexBuffer::TEXCOORD0, PixelFormat::FLOAT2());
 
     Vector4<uint32> * fatjoint = (Vector4<uint32> *) fatvb.getElementData(FatVertexBuffer::JOINT_ID);
-    if (fatjoint) fatvb.setElementFormat(FatVertexBuffer::JOINT_ID, ColorFormat::UINT4);
+    if (fatjoint) fatvb.setElementFormat(FatVertexBuffer::JOINT_ID, PixelFormat::UINT4());
 
     Vector4f * fatweight = (Vector4f *) fatvb.getElementData(FatVertexBuffer::JOINT_WEIGHT);
-    if (fatweight) fatvb.setElementFormat(FatVertexBuffer::JOINT_WEIGHT, ColorFormat::FLOAT4);
+    if (fatweight) fatvb.setElementFormat(FatVertexBuffer::JOINT_WEIGHT, PixelFormat::FLOAT4());
 
     aiMatrix4x4 normalTransform = transform;
     normalTransform.Transpose();

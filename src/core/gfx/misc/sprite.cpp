@@ -72,7 +72,7 @@ bool GN::gfx::SpriteRenderer::init(Gpu & gpu) {
     enum { MAX_VERTICES = MAX_SPRITES * 4, MAX_INDICES = MAX_SPRITES * 6, VTXBUF_SIZE = MAX_VERTICES * sizeof(SpriteVertex) };
 
     // create a 2x2 pure white texture
-    mPureWhiteTexture.attach(mGpu->create2DTexture(ColorFormat::RGBA8, 2, 2));
+    mPureWhiteTexture.attach(mGpu->create2DTexture(PixelFormat::RGBA8(), 2, 2));
     if (!mPureWhiteTexture) return failure();
     const uint32 PURE_WHITE[] = {0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF};
     mPureWhiteTexture->updateMipmap(0, 0, NULL, sizeof(uint32) * 2, sizeof(uint32) * 4, &PURE_WHITE);
@@ -92,15 +92,15 @@ bool GN::gfx::SpriteRenderer::init(Gpu & gpu) {
         mVertexBinding.resize(3);
         mVertexBinding[0].stream    = 0;
         mVertexBinding[0].offset    = 0;
-        mVertexBinding[0].format    = ColorFormat::FLOAT3;
+        mVertexBinding[0].format    = PixelFormat::FLOAT3();
         mVertexBinding[0].attribute = mGpuProgram->getParameterDesc().attributes["i_pos"];
         mVertexBinding[1].stream    = 0;
         mVertexBinding[1].offset    = GN_FIELD_OFFSET(SpriteVertex, clr);
-        mVertexBinding[1].format    = ColorFormat::RGBA8;
+        mVertexBinding[1].format    = PixelFormat::RGBA8();
         mVertexBinding[1].attribute = mGpuProgram->getParameterDesc().attributes["i_color"];
         mVertexBinding[2].stream    = 0;
         mVertexBinding[2].offset    = GN_FIELD_OFFSET(SpriteVertex, tex);
-        mVertexBinding[2].format    = ColorFormat::FLOAT2;
+        mVertexBinding[2].format    = PixelFormat::FLOAT2();
         mVertexBinding[2].attribute = mGpuProgram->getParameterDesc().attributes["i_uv"];
     } else if (caps.shaderModels & ShaderModel::SM_2_0) {
         gpd.lang         = GpuProgramLanguage::HLSL9;
@@ -116,15 +116,15 @@ bool GN::gfx::SpriteRenderer::init(Gpu & gpu) {
         mVertexBinding.resize(3);
         mVertexBinding[0].stream    = 0;
         mVertexBinding[0].offset    = 0;
-        mVertexBinding[0].format    = ColorFormat::FLOAT3;
+        mVertexBinding[0].format    = PixelFormat::FLOAT3();
         mVertexBinding[0].attribute = mGpuProgram->getParameterDesc().attributes["POSITION0"];
         mVertexBinding[1].stream    = 0;
         mVertexBinding[1].offset    = GN_FIELD_OFFSET(SpriteVertex, clr);
-        mVertexBinding[1].format    = ColorFormat::RGBA8;
+        mVertexBinding[1].format    = PixelFormat::RGBA8();
         mVertexBinding[1].attribute = mGpuProgram->getParameterDesc().attributes["COLOR0"];
         mVertexBinding[2].stream    = 0;
         mVertexBinding[2].offset    = GN_FIELD_OFFSET(SpriteVertex, tex);
-        mVertexBinding[2].format    = ColorFormat::FLOAT2;
+        mVertexBinding[2].format    = PixelFormat::FLOAT2();
         mVertexBinding[2].attribute = mGpuProgram->getParameterDesc().attributes["TEXCOORD0"];
     } else {
         GN_ERROR(sLogger)("Sprite renderer requires either GLSL or HLSL support from graphics hardware.");

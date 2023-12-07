@@ -9,7 +9,7 @@ GN_API GN::gfx::Texture * GN::gfx::loadTextureFromFile(Gpu & gpu, const char * f
     GN_VERBOSE(sLogger)("Load texture from file: %s", filename);
 
     // load image
-    auto image = RawImage::load(filename);
+    auto image = Image::load(filename);
     if (image.empty()) return 0;
 
     // create texture
@@ -21,7 +21,7 @@ GN_API GN::gfx::Texture * GN::gfx::loadTextureFromFile(Gpu & gpu, const char * f
     // update texture content
     for (uint32 f = 0; f < td.faces; ++f)
         for (uint32 l = 0; l < td.levels; ++l) {
-            auto & md = image.desc(f, l);
+            auto & md = image.plane(f, l);
             tex->updateMipmap(f, l, 0, md.pitch, md.slice, image.data() + md.offset, SurfaceUpdateFlag::DEFAULT);
         }
 

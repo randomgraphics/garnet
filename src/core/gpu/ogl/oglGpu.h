@@ -123,7 +123,7 @@ private:
 
 public:
     virtual const GpuCaps & caps() const { return mCaps; }
-    virtual bool            checkTextureFormatSupport(ColorFormat format, TextureUsage usages) const;
+    virtual bool            checkTextureFormatSupport(PixelFormat format, TextureUsage usages) const;
 
 public:
     const OGLGpuCaps & getOGLCaps() const { return mCaps; }

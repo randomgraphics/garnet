@@ -80,38 +80,38 @@ void sSwapVertexEndianInplace(void *                   buffer,
 
             switch (e.format.layout) {
             // 16 bits
-            case ColorFormat::LAYOUT_4_4_4_4:
-            case ColorFormat::LAYOUT_5_5_5_1:
-            case ColorFormat::LAYOUT_5_6_5:
-            case ColorFormat::LAYOUT_16:
+            case PixelFormat::LAYOUT_4_4_4_4:
+            case PixelFormat::LAYOUT_5_5_5_1:
+            case PixelFormat::LAYOUT_5_6_5:
+            case PixelFormat::LAYOUT_16:
                 swap8in16(p, p, 1);
                 break;
 
-            case ColorFormat::LAYOUT_16_16:
+            case PixelFormat::LAYOUT_16_16:
                 swap8in16(p, p, 2);
                 break;
 
-            case ColorFormat::LAYOUT_16_16_16_16:
+            case PixelFormat::LAYOUT_16_16_16_16:
                 swap8in16(p, p, 4);
                 break;
 
             // 32 bits
-            case ColorFormat::LAYOUT_10_11_11:
-            case ColorFormat::LAYOUT_11_11_10:
-            case ColorFormat::LAYOUT_10_10_10_2:
-            case ColorFormat::LAYOUT_32:
+            case PixelFormat::LAYOUT_10_11_11:
+            case PixelFormat::LAYOUT_11_11_10:
+            case PixelFormat::LAYOUT_10_10_10_2:
+            case PixelFormat::LAYOUT_32:
                 swap8in32(p, p, 1);
                 break;
 
-            case ColorFormat::LAYOUT_32_32:
+            case PixelFormat::LAYOUT_32_32:
                 swap8in32(p, p, 2);
                 break;
 
-            case ColorFormat::LAYOUT_32_32_32:
+            case PixelFormat::LAYOUT_32_32_32:
                 swap8in32(p, p, 3);
                 break;
 
-            case ColorFormat::LAYOUT_32_32_32_32:
+            case PixelFormat::LAYOUT_32_32_32_32:
                 swap8in32(p, p, 4);
                 break;
 
@@ -162,24 +162,24 @@ bool sGetMeshVertexPositions(MeshVertexPosition & pos, const MeshResourceDesc & 
 
     const float * vertices = (const float *) (((const uint8 *) desc.vertices[positionElement->stream]) + positionElement->offset);
 
-    if (ColorFormat::FLOAT1 == positionElement->format) {
+    if (PixelFormat::FLOAT1() == positionElement->format) {
         pos.x = vertices;
         pos.y = 0;
         pos.z = 0;
-    } else if (ColorFormat::FLOAT2 == positionElement->format) {
+    } else if (PixelFormat::FLOAT2() == positionElement->format) {
         pos.x = vertices;
         pos.y = vertices + 1;
         pos.z = 0;
-    } else if (ColorFormat::FLOAT3 == positionElement->format) {
+    } else if (PixelFormat::FLOAT3() == positionElement->format) {
         pos.x = vertices;
         pos.y = vertices + 1;
         pos.z = vertices + 2;
-    } else if (ColorFormat::FLOAT4 == positionElement->format) {
+    } else if (PixelFormat::FLOAT4() == positionElement->format) {
         pos.x = vertices;
         pos.y = vertices + 1;
         pos.z = vertices + 2;
     } else {
-        GN_ERROR(sLogger)("AABB calculation failed: unsupported vertex format %s", positionElement->format.toString().rawptr());
+        GN_ERROR(sLogger)("AABB calculation failed: unsupported vertex format %s", positionElement->format.toString().c_str());
         return false;
     }
     pos.strideX = pos.strideY = pos.strideZ = desc.strides[positionElement->stream];
@@ -373,6 +373,35 @@ static bool sReadV1BinaryFile(MeshBinaryHeaderV1 & header, uint8 * dst, size_t l
 //
 //
 // -----------------------------------------------------------------------------
+static PixelFormat fromString(const char * str) {
+    struct ColorFormatName {
+        PixelFormat  format;
+        const char * name;
+    };
+
+    static const ColorFormatName TABLE[] = {
+        {PixelFormat::FLOAT1(), "float1"},
+        {PixelFormat::FLOAT2(), "float2"},
+        {PixelFormat::FLOAT3(), "float3"},
+        {PixelFormat::FLOAT4(), "float4"},
+    };
+
+    if (0 == str || 0 == *str) return PixelFormat::UNKNOWN();
+
+    for (size_t i = 0; i < GN_ARRAY_COUNT(TABLE); ++i) {
+        const ColorFormatName & n = TABLE[i];
+
+        if (0 == str::compareI(n.name, str)) {
+            return n.format;
+        }
+    }
+
+    return PixelFormat::UNKNOWN();
+}
+
+//
+//
+// -----------------------------------------------------------------------------
 AutoRef<Blob> sLoadFromMeshXMLFile(File & fp, MeshResourceDesc & desc) {
     desc = {};
 
@@ -438,7 +467,7 @@ AutoRef<Blob> sLoadFromMeshXMLFile(File & fp, MeshResourceDesc & desc) {
         ve.setSemantic(a->value);
 
         a = e->findAttrib("format");
-        if (!a || (ColorFormat::UNKNOWN == (ve.format = ColorFormat::sFromString(a->value)))) {
+        if (!a || (PixelFormat::UNKNOWN() == (ve.format = fromString(a->value)))) {
             GN_ERROR(sLogger)("Missing or invalid format attribute.");
             return AutoRef<Blob>::NULLREF;
         }
