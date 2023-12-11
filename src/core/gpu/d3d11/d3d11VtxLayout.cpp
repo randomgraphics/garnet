@@ -33,7 +33,7 @@ static bool sVtxBind2D3D11InputLayout(GN::DynaArray<D3D11_INPUT_ELEMENT_DESC> & 
         // set attrib format
         elem.Format = (DXGI_FORMAT) colorFormat2DxgiFormat(ve.format);
         if (DXGI_FORMAT_UNKNOWN == elem.Format) {
-            GN_ERROR(sLogger)("Unknown element format: %s", ve.format.toString().rawptr());
+            GN_ERROR(sLogger)("Unknown element format: %s", ve.format.toString().c_str());
             return false;
         }
 

@@ -126,7 +126,7 @@ private:
 
 public:
     virtual const GpuCaps & caps() const { return mCaps; }
-    virtual bool            checkTextureFormatSupport(ColorFormat format, TextureUsage usage) const;
+    virtual bool            checkTextureFormatSupport(PixelFormat format, TextureUsage usage) const;
 
 private:
     bool capsInit();
