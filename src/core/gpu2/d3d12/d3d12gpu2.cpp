@@ -161,7 +161,7 @@ static std::vector<D3D12_INPUT_ELEMENT_DESC> GetD3D12InputElements(const Gpu2::I
 
     for (size_t i = 0; i < count; ++i) {
         const auto & e = elements[i];
-        result.push_back({e.semantic, e.index, (DXGI_FORMAT) colorFormat2DxgiFormat(e.format), e.slot, e.offset,
+        result.push_back({e.semantic, e.index, (DXGI_FORMAT) e.format.toDXGI(), e.slot, e.offset,
                           e.instanceData ? D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA : D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, e.instanceRate});
     }
 
@@ -471,7 +471,7 @@ GN::gfx::D3D12Buffer::D3D12Buffer(D3D12Gpu2 & o, const Gpu2::SurfaceCreateParame
 GN::gfx::D3D12Texture::D3D12Texture(D3D12Gpu2 & o, const Gpu2::SurfaceCreateParameters & cp): D3D12PlacedResource(o, cp) {
     GN_ASSERT(GN::gfx::Gpu2::SurfaceType::TEXTURE == cp.type);
 
-    DXGI_FORMAT format = (DXGI_FORMAT) colorFormat2DxgiFormat(cp.t.f);
+    DXGI_FORMAT format = (DXGI_FORMAT) cp.t.f.toDXGI();
     if (DXGI_FORMAT_UNKNOWN == format) {
         GN_ERROR(sLogger)("Invalid/Unsupported texture format.");
         return;
