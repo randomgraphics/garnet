@@ -98,7 +98,7 @@ source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} PREFIX "Source Files" FILES ${sour
 # Build the library
 # =================
 
-add_library(GNextern ${sources} expat_build.h.in ${CMAKE_CURRENT_BINARY_DIR}/expat/expat_build.h)
+add_library(GNextern STATIC ${sources} expat_build.h.in ${CMAKE_CURRENT_BINARY_DIR}/expat/expat_build.h)
 
 target_compile_definitions(GNextern PRIVATE
     # ASSIMP_BUILD_BOOST_WORKAROUND
