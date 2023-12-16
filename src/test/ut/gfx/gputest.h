@@ -54,7 +54,7 @@ class GpuTest {
         MipmapData md;
         rtt.texture->readMipmap(rtt.face, rtt.level, md);
 
-        size_t bytesPerPixel = rtt.texture->getDesc().format.getBytesPerBlock();
+        size_t bytesPerPixel = rtt.texture->getDesc().format.bytesPerBlock();
         size_t srcOffset     = md.slicePitch * rtt.slice + md.rowPitch * y + x * bytesPerPixel;
         if (srcOffset >= md.data.size()) {
             TS_ASSERT(0);
@@ -87,7 +87,7 @@ class GpuTest {
         TS_ASSERT(x < bc.width && y < bc.height);
         if (x >= bc.width && y >= bc.height) return rtp;
 
-        size_t bytesPerPixel = bc.format.getBytesPerBlock();
+        size_t bytesPerPixel = bc.format.bytesPerBlock();
         size_t srcOffset     = bc.pitch * y + x * bytesPerPixel;
         TS_ASSERT(srcOffset < bc.data.size());
         if (srcOffset >= bc.data.size()) return rtp;

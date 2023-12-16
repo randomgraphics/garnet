@@ -94,7 +94,7 @@ class DX12Triangle : public StdClass {
         if (vs.empty() || ps.empty()) return;
 
         // create pso
-        Gpu2::InputElement             ie[] = {{"POSITION", 0, ColorFormat::RGB_32_32_32_FLOAT, 0, 0, false, 0}};
+        Gpu2::InputElement             ie[] = {{"POSITION", 0, PixelFormat::RGB_32_32_32_FLOAT(), 0, 0, false, 0}};
         Gpu2::PipelineCreateParameters pcp  = {};
         pcp.vs                              = {vs.rawptr(), vs.size()};
         pcp.ps                              = {ps.rawptr(), ps.size()};
