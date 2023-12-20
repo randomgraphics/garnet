@@ -7,8 +7,7 @@
 // *****************************************************************************
 
 #include "GNbase.h"
-#define RAPID_IMAGE_NAMESPACE GN::gfx
-#include <rapid-image/rapid-image.h>
+#include "gfx/image.h"
 #include "gfx/shape.h"
 #include "gfx/primitive.h"
 #include "gfx/gpu2.h"

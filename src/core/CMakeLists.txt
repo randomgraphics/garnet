@@ -105,6 +105,7 @@ target_include_directories(GNcore PUBLIC
 )
 target_link_libraries(GNcore PUBLIC GNextern)
 target_compile_features(GNcore PUBLIC cxx_std_17)
+target_compile_definitions(GNcore PRIVATE GN_CORE_INTERNAL RAPID_IMAGE_EXPORTS)
 
 # Qt6
 if(Qt6Widgets_FOUND)

@@ -1,4 +1,3 @@
-#define GN_CORE_INTERNAL
 #include <garnet/GNgfx2.h>
 
 using namespace GN;

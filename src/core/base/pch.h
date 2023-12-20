@@ -6,8 +6,6 @@
 // \author  chenlee (2005.4.18)
 // *****************************************************************************
 
-#define GN_CORE_INTERNAL
-
 #include "garnet/GNbase.h"
 
 #if GN_XBOX2
