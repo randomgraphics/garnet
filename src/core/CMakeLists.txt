@@ -140,8 +140,8 @@ if(WIN32)
     target_compile_definitions(GNcore PRIVATE HAS_FBX=1)
     add_core_libs(${fbx_win_lib_dir}/libfbxsdk.lib)
     file(COPY ${fbx_win_lib_dir}/libfbxsdk.dll DESTINATION "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/Debug")
-    file(COPY ${fbx_win_lib_dir}/libfbxsdk.dll DESTINATION "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/Release")
     file(COPY ${fbx_win_lib_dir}/libfbxsdk.dll DESTINATION "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/RelWithDebInfo")
+    file(COPY ${fbx_win_lib_dir}/libfbxsdk.dll DESTINATION "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/Release")
 endif()
 
 # Vulkan
