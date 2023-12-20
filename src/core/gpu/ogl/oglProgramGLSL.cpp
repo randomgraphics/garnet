@@ -314,12 +314,11 @@ void GN::gfx::OGLGpuProgram::applyUniforms(const Uniform * const * uniforms, uin
 void GN::gfx::OGLGpuProgram::applyTextures(const TextureBinding * textures, uint32 count) const {
     GN_GUARD_SLOW;
 
-    OGLGpu & r         = getGpu();
-    uint32   maxStages = r.caps().maxTextures;
+    OGLGpu & r = getGpu();
 
     // determine effective texture count
     if (count > mTextures.size()) { count = (uint32) mTextures.size(); }
-    GN_ASSERT(count <= maxStages);
+    GN_ASSERT(count <= r.caps().maxTextures);
 
     // apply textures to OpenGL, one by one
     uint32 i;

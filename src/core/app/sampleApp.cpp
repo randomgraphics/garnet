@@ -130,7 +130,7 @@ int GN::util::SampleApp::run(int argc, const char * const argv[]) {
     Clock clock;
 
     using namespace std::chrono_literals;
-    const Clock::Duration INTERVAL = 1s / UPDATE_FREQUENCY;
+    const Clock::Duration INTERVAL = 1000000us / UPDATE_FREQUENCY;
 
     mFrameIdlePercentage = 0;
 
