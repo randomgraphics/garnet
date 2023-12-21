@@ -336,20 +336,20 @@ struct MeshVertexFormat {
 /// Mesh resource descriptor base (no data pointers)
 ///
 struct MeshResourceDescBase {
-    PrimitiveType    prim   = PrimitiveType::POINT_LIST;      ///< primitive type
-    uint32           numvtx = 0;                              ///< number of vertices
-    uint32           numidx = 0;                              ///< number of indices. 0 means non-indexed mesh
-    bool             idx32  = false;                          ///< true for 32-bit index buffer
-    bool             dynavb = false;                          ///< true for dynamic vertex buffer
-    bool             dynaib = false;                          ///< trur for dynamic index buffer
-    MeshVertexFormat vtxfmt;                                  ///< vertex format
-    uint16           strides[GpuContext::MAX_VERTEX_BUFFERS]; ///< vertex buffer strides. 0
-                                                              ///< means using vertex size
-                                                              ///< defined by vertex format.
-    uint32 offsets[GpuContext::MAX_VERTEX_BUFFERS];           ///< Number of bytes from
-                                                              ///< vertex buffer beginning
-                                                              ///< to the first element that
-                                                              ///< will be used.
+    PrimitiveType    prim   = PrimitiveType::POINT_LIST;           ///< primitive type
+    uint32           numvtx = 0;                                   ///< number of vertices
+    uint32           numidx = 0;                                   ///< number of indices. 0 means non-indexed mesh
+    bool             idx32  = false;                               ///< true for 32-bit index buffer
+    bool             dynavb = false;                               ///< true for dynamic vertex buffer
+    bool             dynaib = false;                               ///< trur for dynamic index buffer
+    MeshVertexFormat vtxfmt {};                                    ///< vertex format
+    uint16           strides[GpuContext::MAX_VERTEX_BUFFERS] = {}; ///< vertex buffer strides. 0
+                                                                   ///< means using vertex size
+                                                                   ///< defined by vertex format.
+    uint32 offsets[GpuContext::MAX_VERTEX_BUFFERS] = {};           ///< Number of bytes from
+                                                                   ///< vertex buffer beginning
+                                                                   ///< to the first element that
+                                                                   ///< will be used.
 
     ///
     /// constructor
