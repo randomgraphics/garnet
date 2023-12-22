@@ -120,11 +120,10 @@ struct AseFile {
 
     bool open(File & file) {
         // read ASE file
-        buf.resize(file.size() + 1);
-        size_t readen;
-        if (!file.read(buf.rawptr(), file.size(), &readen)) { return false; }
-        GN_ASSERT(readen <= file.size());
-        buf[readen] = 0;
+        auto sz = file.size();
+        buf.resize(sz + 1);
+        if (sz != file.read(buf.rawptr(), sz)) { return false; }
+        buf[sz] = 0;
 
         str  = buf.rawptr();
         line = 0;

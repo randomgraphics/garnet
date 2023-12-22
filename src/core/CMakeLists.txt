@@ -103,6 +103,9 @@ target_include_directories(GNcore PUBLIC
     ../3rdparty/Eigen
     ../3rdparty/rapid-image/inc
 )
+target_include_directories(GNcore PRIVATE
+    ../3rdparty/stb
+)
 target_link_libraries(GNcore PUBLIC GNextern)
 target_compile_features(GNcore PUBLIC cxx_std_17)
 target_compile_definitions(GNcore PRIVATE GN_CORE_INTERNAL)

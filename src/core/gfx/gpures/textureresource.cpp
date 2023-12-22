@@ -45,9 +45,11 @@ AutoRef<TextureResource> GN::gfx::TextureResource::loadFromFile(GpuResourceDatab
 
     // load new texture from file
     GN_INFO(sLogger)("Load texture from file: %s", filename);
+    auto fp = GN::fs::openFile(filename, std::ios::binary|std::ios::in);
+    if (!fp) return AutoRef<TextureResource>::NULLREF;
 
     // load image
-    auto image = Image::load(filename);
+    auto image = Image::load(fp->input());
     if (image.empty()) return AutoRef<TextureResource>::NULLREF;
 
     // create texture

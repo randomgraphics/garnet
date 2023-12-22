@@ -19,7 +19,7 @@ static GN::Logger * sLogger = GN::getLogger("GN.base.xml");
 //
 // -----------------------------------------------------------------------------
 static void sIdent(GN::File & fp, int ident) {
-    for (int i = 0; i < ident; ++i) fp << "\t";
+    for (int i = 0; i < ident; ++i) fp.output() << "\t";
 }
 
 //
@@ -28,7 +28,7 @@ static void sIdent(GN::File & fp, int ident) {
 static void sFormatAttributes(GN::File & fp, const GN::XmlAttrib * att, int ident) {
     for (; 0 != att; att = att->next) {
         sIdent(fp, ident);
-        fp << att->name << "=\"" << att->value << "\"\n";
+        fp.output() << att->name << "=\"" << att->value << "\"\n";
     }
 }
 
@@ -43,7 +43,7 @@ static bool sFormatNodes(GN::File & fp, const GN::XmlNode * root, int ident) {
         const GN::XmlCdata * c = root->toCdata();
         GN_ASSERT(c && !c->firstc); // cdata node should have no child.
         sIdent(fp, ident);
-        fp << "<![CDATA[" << c->text << "]]>\n";
+        fp.output() << "<![CDATA[" << c->text << "]]>\n";
         break;
     }
 
@@ -51,7 +51,7 @@ static bool sFormatNodes(GN::File & fp, const GN::XmlNode * root, int ident) {
         const GN::XmlComment * c = root->toComment();
         GN_ASSERT(c && !c->firstc); // comment node should have no child.
         sIdent(fp, ident);
-        fp << "<!-- " << c->text << " -->\n";
+        fp.output() << "<!-- " << c->text << " -->\n";
         break;
     }
 
@@ -60,28 +60,28 @@ static bool sFormatNodes(GN::File & fp, const GN::XmlNode * root, int ident) {
         GN_ASSERT(e);
 
         sIdent(fp, ident);
-        fp << "<" << e->name;
+        fp.output() << "<" << e->name;
 
         if (e->firsta) {
-            fp << "\n";
+            fp.output() << "\n";
             sFormatAttributes(fp, e->firsta, ident + 1);
             sIdent(fp, ident);
         }
 
         if (!e->text.empty() || e->firstc) {
-            fp << ">\n";
+            fp.output() << ">\n";
 
             if (!e->text.empty()) {
                 sIdent(fp, ident + 1);
-                fp << e->text << "\n";
+                fp.output() << e->text << "\n";
             }
 
             if (e->firstc) { sFormatNodes(fp, e->firstc, ident + 1); }
 
             sIdent(fp, ident);
-            fp << "</" << e->name << ">\n";
+            fp.output() << "</" << e->name << ">\n";
         } else {
-            fp << "/>\n";
+            fp.output() << "/>\n";
         }
         break;
     }
@@ -100,7 +100,7 @@ static bool sFormatNodes(GN::File & fp, const GN::XmlNode * root, int ident) {
 //
 // -----------------------------------------------------------------------------
 static void sCompactAttributes(GN::File & fp, const GN::XmlAttrib * att) {
-    for (; 0 != att; att = att->next) { fp << " " << att->name << "=\"" << att->value << "\""; }
+    for (; 0 != att; att = att->next) { fp.output() << " " << att->name << "=\"" << att->value << "\""; }
 }
 
 //
@@ -114,29 +114,29 @@ static bool sCompactNodeAndChildren(GN::File & fp, const GN::XmlNode * root) {
     case GN::XML_CDATA: {
         const GN::XmlCdata * c = root->toCdata();
         GN_ASSERT(!c->firstc); // cdata node should have no child.
-        fp << "<![CDATA[" << c->text << "]]>\n";
+        fp.output() << "<![CDATA[" << c->text << "]]>\n";
         break;
     }
 
     case GN::XML_COMMENT: {
         const GN::XmlComment * c = root->toComment();
         GN_ASSERT(c && !c->firstc); // comment node should have no child.
-        fp << "<!-- " << c->text << " -->\n";
+        fp.output() << "<!-- " << c->text << " -->\n";
         break;
     }
 
     case GN::XML_ELEMENT: {
         const GN::XmlElement * e = root->toElement();
         GN_ASSERT(e);
-        fp << "<" << e->name;
+        fp.output() << "<" << e->name;
         if (e->firsta) { sCompactAttributes(fp, e->firsta); }
         if (!e->text.empty() || e->firstc) {
-            fp << ">\n";
-            if (!e->text.empty()) fp << e->text;
+            fp.output() << ">\n";
+            if (!e->text.empty()) fp.output() << e->text;
             if (e->firstc) sCompactNodes(fp, e->firstc);
-            fp << "</" << e->name << ">\n";
+            fp.output() << "</" << e->name << ">\n";
         } else {
-            fp << "/>\n";
+            fp.output() << "/>\n";
         }
         break;
     }
@@ -636,12 +636,9 @@ GN_API bool GN::XmlDocument::parse(XmlParseResult & result, File & fp) {
 
     DynaArray<char> buf(fp.size());
 
-    size_t sz;
-
-    if (!fp.read(&buf[0], fp.size(), &sz)) {
-        result.errInfo = "Fail to read the file!";
-        return false;
-    }
+    size_t sz = fp.size();
+    size_t rd = fp.read(&buf[0], fp.size());
+    if (sz != rd) return false;
 
     return parse(result, &buf[0], sz);
 
@@ -657,12 +654,12 @@ GN_API bool GN::XmlDocument::writeToFile(File & file, const XmlNode & root, bool
     // static const uint8 bom[3] = { 0xEF, 0xBB, 0xBF };
     // if( sizeof(bom) != file.write( bom, sizeof(bom) ) ) return false;
 
-    file << "<?xml version=\"1.0\"?>";
+    file.output() << "<?xml version=\"1.0\"?>";
 
     if (compact) {
         return sCompactNodes(file, &root);
     } else {
-        file << "\n";
+        file.output() << "\n";
         return sFormatNodes(file, &root, 0);
     }
 

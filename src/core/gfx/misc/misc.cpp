@@ -8,8 +8,12 @@ static GN::Logger * sLogger = GN::getLogger("GN.gfx.util.misc");
 GN_API GN::gfx::Texture * GN::gfx::loadTextureFromFile(Gpu & gpu, const char * filename) {
     GN_VERBOSE(sLogger)("Load texture from file: %s", filename);
 
+    // open file
+    auto file = fs::openFile(filename, std::ios::in | std::ios::binary);
+    if (!file) return 0;
+
     // load image
-    auto image = Image::load(filename);
+    auto image = Image::load(file->input());
     if (image.empty()) return 0;
 
     // create texture

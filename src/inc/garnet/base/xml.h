@@ -315,7 +315,7 @@ inline bool loadFromXmlFile(T & t, const StrA & filename) {
     static Logger * sLocalLogger = getLogger("GN.base.xml");
     GN_INFO(sLocalLogger)("Load '%s'", filename.rawptr());
 
-    AutoObjPtr<File> fp(fs::openFile(filename, "rt"));
+    auto fp = fs::openFile(filename, std::ios::in);
     if (!fp) return false;
 
     StrA basedir = fs::dirName(filename);

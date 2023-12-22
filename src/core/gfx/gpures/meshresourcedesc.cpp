@@ -191,17 +191,16 @@ bool sGetMeshVertexPositions(MeshVertexPosition & pos, const MeshResourceDesc & 
 //
 // -----------------------------------------------------------------------------
 MeshFileType sDetermineMeshFileType(File & fp) {
-    size_t currentPos = fp.tell();
+    auto currentPos = fp.input().tellg();
 
     char buf[16];
 
-    size_t readen;
-    if (!fp.read(buf, 16, &readen)) {
+    if (16 != fp.read(buf, 16)) {
         GN_ERROR(sLogger)("Fail to read mesh file header.");
         return MESH_FILE_UNKNOWN;
     }
 
-    if (!fp.seek(currentPos, FileSeek::SET)) {
+    if (!fp.input().seekg(currentPos, std::ios::beg)) {
         GN_ERROR(sLogger)("Fail to seek mesh file reading cursor back.");
         return MESH_FILE_UNKNOWN;
     }
@@ -222,7 +221,7 @@ MeshFileType sDetermineMeshFileType(File & fp) {
 AutoRef<Blob> sLoadFromMeshBinaryFile(File & fp, MeshResourceDesc & desc) {
     MeshBinaryFileHeaderV2 header;
 
-    if (!fp.read(&header, sizeof(header), NULL)) {
+    if (sizeof(header) != fp.read(&header, sizeof(header))) {
         GN_ERROR(sLogger)("Fail to read mesh header.");
         return AutoRef<Blob>::NULLREF;
     }
@@ -248,7 +247,7 @@ AutoRef<Blob> sLoadFromMeshBinaryFile(File & fp, MeshResourceDesc & desc) {
 
     // read mesh data
     AutoRef<Blob> blob = referenceTo(new SimpleBlob(header.bytes));
-    if (!fp.read(blob->data(), header.bytes, NULL)) {
+    if (header.bytes != fp.read(blob->data(), header.bytes)) {
         GN_ERROR(sLogger)("fail to read mesh data.");
         return AutoRef<Blob>::NULLREF;
     }
@@ -349,10 +348,10 @@ static bool sGetBoolAttrib(const XmlElement & node, const char * attribName, boo
 //
 // -----------------------------------------------------------------------------
 static bool sReadV1BinaryFile(MeshBinaryHeaderV1 & header, uint8 * dst, size_t length, const char * filename) {
-    AutoObjPtr<File> fp(fs::openFile(filename, "rb"));
+    auto fp = fs::openFile(filename, std::ios::binary | std::ios::in);
     if (!fp) return false;
 
-    if (!fp->read(&header, sizeof(header), NULL)) {
+    if (sizeof(header) != fp->read(&header, sizeof(header))) {
         GN_ERROR(sLogger)("Fail to read garnet binary file header: %s", filename);
         return false;
     }
@@ -362,7 +361,7 @@ static bool sReadV1BinaryFile(MeshBinaryHeaderV1 & header, uint8 * dst, size_t l
         return false;
     }
 
-    if (!fp->read(dst, length, NULL)) {
+    if (length != fp->read(dst, length)) {
         GN_ERROR(sLogger)("Fail to read binary data from file: %s", filename);
         return false;
     }
@@ -391,9 +390,7 @@ static PixelFormat fromString(const char * str) {
     for (size_t i = 0; i < GN_ARRAY_COUNT(TABLE); ++i) {
         const ColorFormatName & n = TABLE[i];
 
-        if (0 == str::compareI(n.name, str)) {
-            return n.format;
-        }
+        if (0 == str::compareI(n.name, str)) { return n.format; }
     }
 
     return PixelFormat::UNKNOWN();
@@ -650,7 +647,7 @@ AutoRef<Blob> GN::gfx::MeshResourceDesc::loadFromFile(const char * filename) {
 
     *this = {};
 
-    AutoObjPtr<File> fp(fs::openFile(filename, "rb"));
+    auto fp = fs::openFile(filename, std::ios::binary | std::ios::in);
     if (!fp) return AutoRef<Blob>::NULLREF;
 
     return loadFromFile(*fp);
@@ -701,7 +698,7 @@ bool GN::gfx::MeshResourceDesc::saveToFile(File & fp) const {
     }
 
     // write header
-    if (!fp.write(&header, sizeof(header), NULL)) {
+    if (sizeof(header) != fp.write(&header, sizeof(header))) {
         GN_ERROR(sLogger)("Fail to write mesh header.");
         return false;
     }
@@ -709,7 +706,7 @@ bool GN::gfx::MeshResourceDesc::saveToFile(File & fp) const {
     // write vertex buffers
     for (size_t i = 0; i < GpuContext::MAX_VERTEX_BUFFERS; ++i) {
         if (vfp.used[i]) {
-            if (!fp.write(this->vertices[i], vbsizes[i], NULL)) {
+            if (vbsizes[i] != fp.write(this->vertices[i], vbsizes[i])) {
                 GN_ERROR(sLogger)("Fail to write vertex buffer %i", i);
                 return false;
             }
@@ -718,7 +715,7 @@ bool GN::gfx::MeshResourceDesc::saveToFile(File & fp) const {
 
     // write index buffer
     if (numidx > 0) {
-        if (!fp.write(this->indices, ibsize, NULL)) {
+        if (ibsize != fp.write(this->indices, ibsize)) {
             GN_ERROR(sLogger)("Fail to write index buffer");
             return false;
         }
@@ -733,7 +730,7 @@ bool GN::gfx::MeshResourceDesc::saveToFile(File & fp) const {
 bool GN::gfx::MeshResourceDesc::saveToFile(const char * filename) const {
     GN_INFO(sLogger)("Save mesh to file: %s", filename ? filename : "<null filename>");
 
-    AutoObjPtr<File> fp(fs::openFile(filename, "wb"));
+    auto fp = fs::openFile(filename, std::ios::binary | std::ios::out);
     if (!fp) return false;
     return saveToFile(*fp);
 }

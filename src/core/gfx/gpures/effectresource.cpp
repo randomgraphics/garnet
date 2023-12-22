@@ -603,7 +603,7 @@ AutoRef<EffectResource> GN::gfx::EffectResource::loadFromFile(GpuResourceDatabas
     GN_INFO(sLogger)("Load effect from file: %s", filename);
 
     // open XML file
-    AutoObjPtr<File> fp(fs::openFile(filename, "rt"));
+    auto fp = fs::openFile(filename, std::ios::in);
     if (!fp) return AutoRef<EffectResource>::NULLREF;
     XmlDocument    doc;
     XmlParseResult xpr;
@@ -616,7 +616,7 @@ AutoRef<EffectResource> GN::gfx::EffectResource::loadFromFile(GpuResourceDatabas
          fp->name().rawptr(), xpr.errLine, xpr.errColumn, xpr.errInfo.rawptr());
         return AutoRef<EffectResource>::NULLREF;
     }
-    fp.clear();
+    fp.reset();
     GN_ASSERT(xpr.root);
 
     // load descriptor from file

@@ -7,3 +7,6 @@
 [submodule "src/eigen"]
 	path = src/3rdparty/eigen
 	url = https://gitlab.com/libeigen/eigen
+[submodule "src/3rdparty/stb"]
+	path = src/3rdparty/stb
+	url = https://github.com/nothings/stb.git

@@ -34,6 +34,7 @@ def update_submodules():
         "src/3rdparty/assimp",
         "src/3rdparty/eigen",
         "src/3rdparty/rapid-image",
+        "src/3rdparty/stb",
     ]
     for s in submodules:
         dir = sdk_root_dir / s

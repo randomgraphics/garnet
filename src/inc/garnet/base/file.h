@@ -7,17 +7,11 @@
 // *****************************************************************************
 
 #include <stdio.h>
+#include <fstream>
+#include <sstream>
+#include <memory>
 
 namespace GN {
-///
-/// 文件定位模式
-///
-enum class FileSeek {
-    CUR,       ///< same as standard SEEK_CUR
-    END,       ///< same as standard SEEK_END
-    SET,       ///< same as standard SEEK_SET
-    NUM_MODES, ///< number of avaliable seeking modes
-};
 
 ///
 /// File operation caps
@@ -44,37 +38,76 @@ union FileOperationCaps {
 ///
 /// TODO: replace size_t with uint64 or sint64, to support large file on x86 system
 ///
-struct File : public NoCopy {
-    ///
-    /// Get file operation caps
-    ///
-    const FileOperationCaps & caps() const { return mCaps; }
+struct GN_API File : public NoCopy {
+    /// construct from input stream
+    File(std::istream & i, const StrA & name) {
+        setStream(&i, nullptr);
+        setName(name);
+    }
+ 
+    /// construct from output stream
+    File(std::ostream & o, const StrA & name) {
+        setStream(nullptr, &o);
+        setName(name);
+    }
 
-    ///
-    /// 读取size个字节到buffer中
-    ///
-    virtual bool read(void * /*buffer*/, size_t /*size*/, size_t * /*readen*/) = 0;
+    /// @brief Construct from input and output stream
+    File(std::istream & i, std::ostream & o, const StrA & name) {
+        setStream(&i, &o);
+        setName(name);
+    }
 
-    ///
-    /// 向文件中写入size个字节
-    ///
-    /// \return   -1 means failed
-    ///
-    virtual bool write(const void * /*buffer*/, size_t /*size*/, size_t * /*written*/) = 0;
+    /// construct from iostream
+    File(std::iostream & s, const StrA & name) {
+        setStream(&s, &s);
+        setName(name);
+    }
 
-    ///
-    /// 是否已经到文件结尾. Return true, if failed or not supported.
-    ///
-    virtual bool eof() const = 0;
+    /// dtor
+    virtual ~File() {}
 
-    ///
+    /// return file name string
+    const StrA & name() const { return mName; }
+
+    // /// Get file operation caps
+    // const FileOperationCaps & caps() const { return mCaps; }
+
+    /// @brief Check if the file is readable.
+    bool readable() const { return !!mInput; }
+
+    /// @brief Check if the file is writable.
+    bool writeable() const { return !!mOutput; }
+
+    /// @brief Acquire the input stream object for reading. Assuming the file is readable.
+    std::istream & input() {
+        GN_ASSERT(readable());
+        return *mInput;
+    }
+
+    /// @brief Acquire the output stream object for writing. Assuming the file is writable.
+    std::ostream & output() {
+        GN_ASSERT(writeable());
+        return *mOutput;
+    }
+
+    /// 读取up to size个字节到buffer中.
+    /// \return Number of bytes readen. 0 means failed.
+    size_t read(void * /*buffer*/, size_t /*size*/);
+
+    /// 向文件中写入up to size个字节
+    /// \return Number of bytes written. 0 means failed.
+    size_t write(const void * /*buffer*/, size_t /*size*/);
+
+    /// 是否已经到文件结尾. Return true, if failed or not support reading.
+    bool eof() const;
+
+    /// 返回文件的总长度. Return 0 if failed or not support reading.
+    size_t size() const;
+
     /// write string to file
-    ///
-    inline bool print(const StrA & s) { return write(s.rawptr(), s.size(), 0); }
+    bool print(const StrA & s) { return write(s.rawptr(), s.size()) == s.size(); }
 
-    ///
     /// write formatted string to file
-    ///
     inline bool printf(const char * fmt, ...) {
         StrA    s;
         va_list arglist;
@@ -84,324 +117,73 @@ struct File : public NoCopy {
         return print(s);
     }
 
-    ///
-    /// 设定文件读写游标的位置
-    ///
-    /// \return return false if failed or not supported.
-    ///
-    virtual bool seek(size_t /*offset*/, FileSeek /*origin*/) = 0;
-
-    ///
-    /// 返回当前文件读写游标的位置. Return -1 if failed or not supported.
-    ///
-    virtual size_t tell() const = 0;
-
-    ///
-    /// 返回文件的总长度. Return 0 if failed or not supported.
-    ///
-    virtual size_t size() const = 0;
-
-    ///
-    /// get memory mapping of the file content. Return NULL if not supported or failed.
-    ///
-    virtual void * map(size_t offset, size_t length, bool readonly) = 0;
-
-    ///
-    /// unmap file content
-    ///
-    virtual void unmap() = 0;
-
-    ///
-    /// return file name string
-    ///
-    const StrA & name() const { return mName; }
-
-    ///
-    /// dtor
-    ///
-    virtual ~File() {}
-
 protected:
-    ///
-    /// protected ctor
-    ///
-    File() { mCaps.u8 = 0; }
+    /// protected default ctor
+    File() = default;
 
-    ///
     /// Set file name
-    ///
     void setName(const StrA & name) { mName = name; }
 
-    ///
-    /// Set operation caps
-    ///
-    void setCaps(const FileOperationCaps & caps) { mCaps = caps; }
-
-    ///
-    /// Set operation caps
-    ///
-    void setCaps(int caps) { mCaps.i8 = (signed char) caps; }
-
-    ///
-    /// File logger
-    ///
-    static inline Logger * myLogger() {
-        static Logger * logger = getLogger("GN.base.File");
-        return logger;
+    void setStream(std::istream * i, std::ostream * o) {
+        mInput  = i;
+        mOutput = o;
     }
 
 private:
-    StrA              mName;
-    FileOperationCaps mCaps;
-};
-
-///
-/// stream operator
-///
-inline File & operator<<(File & fp, int i) {
-    char buf[256];
-    str::formatTo(buf, 256, "%d", i);
-    fp.write(buf, str::length(buf), 0);
-    return fp;
-}
-
-///
-/// stream operator
-///
-inline File & operator<<(File & fp, size_t s) {
-    char buf[256];
-    str::formatTo(buf, 256, "%Iu", s);
-    fp.write(buf, str::length(buf), 0);
-    return fp;
-}
-
-///
-/// stream operator
-///
-inline File & operator<<(File & fp, const char * s) {
-    if (0 == s) return fp;
-    fp.write(s, str::length(s), 0);
-    return fp;
-}
-
-///
-/// stream operator
-///
-inline File & operator<<(File & fp, const StrA & s) {
-    if (s.empty()) return fp;
-    fp.write(s.rawptr(), s.size(), 0);
-    return fp;
-}
-
-///
-/// 用File包装的standard file stream
-///
-class GN_API StdFile : public File {
-    FILE * mFile;
-
-protected:
-    ///
-    /// Change the internal file pointer
-    ///
-    void setFile(FILE * fp) {
-        mFile = fp;
-        if (stdin == fp)
-            setName("stdin");
-        else if (stdout == fp)
-            setName("stdout");
-        else if (stderr == fp)
-            setName("stderr");
-        else
-            setName(str::format("#%p", fp));
-    }
-
-public:
-    ///
-    /// constructor
-    ///
-    StdFile(FILE * fp) {
-        setCaps(0x3F); // support all operations, except mapping
-        setFile(fp);
-    }
-
-    ///
-    /// get internal file pointer
-    ///
-    FILE * getFILE() const { return mFile; }
-
-    ///
-    /// Convert to ANSI FILE *
-    ///
-    operator FILE *() const { return mFile; }
-
-    // from File
-public:
-    bool   read(void *, size_t, size_t *);
-    bool   write(const void * buffer, size_t size, size_t *);
-    bool   eof() const;
-    bool   seek(size_t, FileSeek);
-    size_t tell() const;
-    size_t size() const;
-    void * map(size_t, size_t, bool) {
-        GN_ERROR(myLogger())("StdFile: does not support memory mapping operation!");
-        return 0;
-    }
-    void unmap() { GN_ERROR(myLogger())("StdFile: does not support memory mapping operation!"); }
+    StrA           mName;
+    std::istream * mInput  = nullptr;
+    std::ostream * mOutput = nullptr;
 };
 
 ///
 /// disk file class
 ///
-class GN_API DiskFile : public StdFile {
-    size_t mSize;
-
+class GN_API DiskFile : public File {
 public:
-    DiskFile(): StdFile(0), mSize(0) {}
+    DiskFile() {}
     ~DiskFile() { close(); }
 
-    ///
     /// open a file
-    ///
-    /// \param fname File name
-    /// \param mode  ANSI compatible open mode, such as "r", "w+".
-    ///
-    bool open(const StrA & fname, const StrA & mode);
+    bool open(const StrA & filename, std::ios_base::openmode mode);
 
-    ///
     /// close the file
-    ///
     void close() throw();
 
-    ///
-    /// Convert to ANSI FILE *
-    ///
-    operator FILE *() const { return getFILE(); }
-
-    // from File
-public:
-    size_t size() const { return mSize; }
+private:
+    std::fstream mFile;
 };
 
-///
-/// temporary file
-///
-class GN_API TempFile : public StdFile {
+/// A temporary file that will be automatically deleted after closed.
+class GN_API TempFile : public File {
 public:
-    ///
-    /// Temporary file behavior flags
-    ///
-    enum Behavior {
-        AUTO_DELETE,   ///< The temporary file will be deleted automatically after file is closed.
-        MANUAL_DELETE, ///< The temporary file will remain on the disc.
-    };
-
     /// default constructor
-    TempFile(): StdFile(0), mFileDesc(-1) {};
+    TempFile() { open(); }
 
-    ///
     /// open a temporary file with user specified prefix
-    ///
-    bool open(const StrA & prefix, const StrA & mode, Behavior behavior);
+    bool open();
 
-    ///
     /// close the temporary file
-    ///
-    void close();
-
-    ///
-    /// Convert to ANSI FILE *
-    ///
-    operator FILE *() const { return getFILE(); }
+    void close() throw();
 
 private:
-    Behavior mBehavior;
-    int      mFileDesc; ///< file descriptor (used on linux system only)
+    std::unique_ptr<std::iostream>  mStream;
+    std::unique_ptr<std::streambuf> mBuf;
+    FILE *                          mFile {};
 };
 
 ///
 /// file class that wraps a fixed-sized memory buffer
 ///
-template<typename T>
-class MemFile : public File {
-    uint8 * mStart;
-    uint8 * mPtr;
-    size_t  mSize;
-
+class GN_API MemFile : public File {
 public:
-    /// \name ctor/dtor
-    //@{
-    MemFile(T * buf = 0, size_t size = 0, const StrA & name = ""): mStart((uint8 *) buf), mPtr((uint8 *) buf), mSize(size) {
-        setCaps(0xFF); // support all operations
-        setName(name);
-    }
-    ~MemFile() {}
-    //@}
+    MemFile(void * buf = 0, size_t size = 0, const StrA & name = "");
 
-    ///
-    /// reset memory buf
-    ///
-    void reset(T * buf = 0, size_t size = 0, const StrA & name = "");
-
-    /// \name from File
-    //@{
-    bool   read(void *, size_t, size_t *);
-    bool   write(const void * buffer, size_t size, size_t *);
-    bool   eof() const { return (mStart + mSize) == mPtr; }
-    bool   seek(size_t offset, FileSeek origin);
-    size_t tell() const { return mPtr - mStart; }
-    size_t size() const { return mSize; }
-    void * map(size_t offset, size_t length, bool) {
-        if (offset >= mSize || (offset + length) > mSize) {
-            GN_ERROR(myLogger())("invalid mapping range!");
-            return 0;
-        }
-        return mStart + offset;
-    }
-    void unmap() {}
-    //@}
+private:
+    std::unique_ptr<std::streambuf> mBuf;
+    std::iostream                   mStream;
 };
 
-///
-/// File class the wraps a vector class
-///
-class VectorFile : public File {
-    DynaArray<uint8> mBuffer;
-    size_t           mCursor;
-
-public:
-    ///
-    /// ctor
-    ///
-    VectorFile(): mCursor(0) {
-        setCaps(0xFF); // support all operations
-    }
-
-    ///
-    /// dtor
-    ///
-    ~VectorFile() {}
-
-    /// \name from File
-    //@{
-    bool   read(void *, size_t, size_t *);
-    bool   write(const void * buffer, size_t size, size_t *);
-    bool   eof() const { return mBuffer.size() == mCursor; }
-    bool   seek(size_t offset, FileSeek origin);
-    size_t tell() const { return mCursor; }
-    size_t size() const { return mBuffer.size(); }
-    void * map(size_t offset, size_t length, bool) {
-        if (offset >= mBuffer.size() || (offset + length) > mBuffer.size()) {
-            GN_ERROR(myLogger())("invalid mapping range!");
-            return 0;
-        }
-        return &mBuffer[offset];
-    }
-    void unmap() {}
-    //@}
-};
 } // namespace GN
-
-#include "file.inl"
 
 // *****************************************************************************
 //                                     EOF
