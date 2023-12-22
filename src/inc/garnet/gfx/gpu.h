@@ -348,6 +348,7 @@ struct TextureBinding {
 };
 
 /// Define one vertex element
+/// \todo use attribute name instead of index
 struct VertexElement {
     PixelFormat format;    ///< the vertex element format.
     uint8       stream;    ///< vertex buffer index

@@ -23,7 +23,12 @@ class MyApp : public SampleApp {
 public:
     MyApp(): mSprite(NULL) {}
 
-    bool onInit() {
+    bool onPreInit(InitParam & p) override {
+        p.ro.api = GpuAPI::D3D11; // d3d11 only
+        return true;
+    }
+
+    bool onInit() override {
         Gpu & gpu = *engine::getGpu();
 
         mSprite = new SpriteRenderer();

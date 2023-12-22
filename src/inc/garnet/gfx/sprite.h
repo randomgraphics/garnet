@@ -8,14 +8,16 @@
 
 namespace GN {
 namespace gfx {
-///
-/// 2D sprite renderer.
+
+/// @brief 2D sprite renderer.
 ///
 /// 2D sprite coordinate system:
 ///     - left-top corner is (0,0)
 ///     - X is leftward
 ///     - Y is downward
 ///     - length unit is pixel
+///
+/// \todo add support for custom pixel/fragment shader and uniforms.
 ///
 class GN_API SpriteRenderer : public StdClass {
     GN_DECLARE_STDCLASS(SpriteRenderer, StdClass);
