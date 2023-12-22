@@ -162,7 +162,7 @@ bool FontFaceFt2::init(const FontFaceCreationDesc & cd) {
     mStream.base               = 0;
     mStream.size               = (FT_ULong) fp->size();
     mStream.pos                = (FT_ULong) fp->input().tellg();
-    mStream.descriptor.pointer = fp.get();
+    mStream.descriptor.pointer = fp.release();
     mStream.read               = sReadStream;
     mStream.close              = sCloseStream;
 
