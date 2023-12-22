@@ -51,15 +51,15 @@ MeshResource * createMesh(GpuResourceDatabase & gdb) {
     md.vtxfmt.elements[3].stream = 0;
     md.vtxfmt.elements[3].format = PixelFormat::FLOAT3();
     md.vtxfmt.elements[3].offset = GN_FIELD_OFFSET(BezierVertex, n0);
-    md.vtxfmt.elements[3].setSemantic("normal0");
+    md.vtxfmt.elements[3].setSemantic("nml");
     md.vtxfmt.elements[4].stream = 0;
     md.vtxfmt.elements[4].format = PixelFormat::FLOAT3();
     md.vtxfmt.elements[4].offset = GN_FIELD_OFFSET(BezierVertex, n1);
-    md.vtxfmt.elements[4].setSemantic("normal1");
+    md.vtxfmt.elements[4].setSemantic("nml1");
     md.vtxfmt.elements[5].stream = 0;
     md.vtxfmt.elements[5].format = PixelFormat::FLOAT3();
     md.vtxfmt.elements[5].offset = GN_FIELD_OFFSET(BezierVertex, n2);
-    md.vtxfmt.elements[5].setSemantic("normal2");
+    md.vtxfmt.elements[5].setSemantic("nml2");
     md.vtxfmt.elements[6].stream = 0;
     md.vtxfmt.elements[6].format = PixelFormat::FLOAT2();
     md.vtxfmt.elements[6].offset = GN_FIELD_OFFSET(BezierVertex, bc);
@@ -151,13 +151,13 @@ EffectResource * createEffect(GpuResourceDatabase & gdb) {
         "	cp.n200 = n0;                                                                        \n"
         "	cp.n020 = n1;                                                                        \n"
         "	cp.n002 = n2;                                                                        \n"
-        "	cp.p210 = ( 2 * cp.p300 + cp.p030 - dot(cp.n200, (cp.p030 - cp.p300)) * cp.n200 ) / 3; \n"
-        "	cp.p120 = ( 2 * cp.p030 + cp.p300 - dot(cp.n020, (cp.p300 - cp.p030)) * cp.n020 ) / 3; \n"
-        "	cp.p201 = ( 2 * cp.p300 + cp.p003 - dot(cp.n200, (cp.p003 - cp.p300)) * cp.n200 ) / 3; \n"
-        "	cp.p102 = ( 2 * cp.p003 + cp.p300 - dot(cp.n002, (cp.p300 - cp.p003)) * cp.n002 ) / 3; \n"
-        "	cp.p012 = ( 2 * cp.p003 + cp.p030 - dot(cp.n002, (cp.p030 - cp.p003)) * cp.n002 ) / 3; \n"
-        "	cp.p021 = ( 2 * cp.p030 + cp.p003 - dot(cp.n020, (cp.p003 - cp.p030)) * cp.n020 ) / 3; \n"
-        "	cp.p111 = ( cp.p210 + cp.p120 + cp.p102 + cp.p201 + cp.p021 + cp.p012 ) / 4 - ( cp.p300 + cp.p030 + cp.p003 ) / 6;  \n"
+        "	cp.p210 = ( 2.0 * cp.p300 + cp.p030 - dot(cp.n200, (cp.p030 - cp.p300)) * cp.n200 ) / 3.0; \n"
+        "	cp.p120 = ( 2.0 * cp.p030 + cp.p300 - dot(cp.n020, (cp.p300 - cp.p030)) * cp.n020 ) / 3.0; \n"
+        "	cp.p201 = ( 2.0 * cp.p300 + cp.p003 - dot(cp.n200, (cp.p003 - cp.p300)) * cp.n200 ) / 3.0; \n"
+        "	cp.p102 = ( 2.0 * cp.p003 + cp.p300 - dot(cp.n002, (cp.p300 - cp.p003)) * cp.n002 ) / 3.0; \n"
+        "	cp.p012 = ( 2.0 * cp.p003 + cp.p030 - dot(cp.n002, (cp.p030 - cp.p003)) * cp.n002 ) / 3.0; \n"
+        "	cp.p021 = ( 2.0 * cp.p030 + cp.p003 - dot(cp.n020, (cp.p003 - cp.p030)) * cp.n020 ) / 3.0; \n"
+        "	cp.p111 = ( cp.p210 + cp.p120 + cp.p102 + cp.p201 + cp.p021 + cp.p012 ) / 4.0 - ( cp.p300 + cp.p030 + cp.p003 ) / 6.0;  \n"
         "                                                                                        \n"
         "	return cp;                                                                           \n"
         "}                                                                                       \n"
@@ -198,11 +198,13 @@ EffectResource * createEffect(GpuResourceDatabase & gdb) {
         "uniform   mat4 pvw; \n"
         "uniform   mat4 world; \n"
         "uniform   mat4 wit; \n"
-        "in vec3 pos1; \n"
-        "in vec3 pos2; \n"
-        "in vec3 nml1; \n"
-        "in vec3 nml2; \n"
-        "in vec2 bc; \n"
+        "attribute vec3 pos0; \n"
+        "attribute vec3 pos1; \n"
+        "attribute vec3 pos2; \n"
+        "attribute vec3 nml0; \n"
+        "attribute vec3 nml1; \n"
+        "attribute vec3 nml2; \n"
+        "attribute vec2 bc; \n"
         "varying   vec4 pos_world; // vertex position in world space \n"
         "varying   vec3 nml_world; // vertex normal in world space \n"
         "varying   vec2 texcoords; \n"
@@ -211,8 +213,6 @@ EffectResource * createEffect(GpuResourceDatabase & gdb) {
         "void main() { \n"
 
         // calculate control points
-        "   vec3 pos0 = gl_Vertex.xyz; \n"
-        "   vec3 nml0 = gl_Normal.xyz; \n"
         "   BezierControlPoints cp = calcBezierControlPoints( pos0, pos1, pos2, nml0, nml1, nml2 ); \n"
 
         // calculate output vertex
@@ -259,6 +259,13 @@ EffectResource * createEffect(GpuResourceDatabase & gdb) {
     ed.uniforms["MATRIX_WORLD_IT"]; // used to translate normal from local space into world space
     ed.uniforms["LIGHT0_POSITION"];
     ed.textures["DIFFUSE_TEXTURE"]; // create a texture parameter named "DIFFUSE_TEXTURE"
+    ed.attributes["pos0"];
+    ed.attributes["pos1"];
+    ed.attributes["pos2"];
+    ed.attributes["nml0"];
+    ed.attributes["nml1"];
+    ed.attributes["nml2"];
+    ed.attributes["bc"];
     ed.gpuprograms["glsl"].gpd.lang             = GpuProgramLanguage::GLSL;
     ed.gpuprograms["glsl"].gpd.shaderModels     = ShaderModel::GLSL_1_10;
     ed.gpuprograms["glsl"].gpd.vs.source        = glslvscode;
@@ -268,6 +275,13 @@ EffectResource * createEffect(GpuResourceDatabase & gdb) {
     ed.gpuprograms["glsl"].uniforms["wit"]      = "MATRIX_WORLD_IT";
     ed.gpuprograms["glsl"].uniforms["lightpos"] = "LIGHT0_POSITION";
     ed.gpuprograms["glsl"].textures["t0"]       = "DIFFUSE_TEXTURE";
+    ed.gpuprograms["glsl"].attributes["pos0"]   = "pos0";
+    ed.gpuprograms["glsl"].attributes["pos1"]   = "pos1";
+    ed.gpuprograms["glsl"].attributes["pos2"]   = "pos2";
+    ed.gpuprograms["glsl"].attributes["nml0"]   = "nml0";
+    ed.gpuprograms["glsl"].attributes["nml1"]   = "nml1";
+    ed.gpuprograms["glsl"].attributes["nml2"]   = "nml2";
+    ed.gpuprograms["glsl"].attributes["bc"]     = "bc";
     ed.techniques.resize(1);
     ed.techniques[0].passes.resize(1);
     ed.techniques[0].passes[0].gpuprogram = "glsl";
