@@ -17,7 +17,8 @@
     - ColorFormat -> rapid_image
   - something keepers:
     - autoptr: it is much faster and more memory effecient than use std::shared_ptr directly.
-    
+
+- ripple effect sample is currently broken: report empty vertex layout error.
 
 - create a real time rendering system
   - Using new gpu2 interface
