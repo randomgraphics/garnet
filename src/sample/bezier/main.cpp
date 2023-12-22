@@ -118,140 +118,143 @@ MeshResource * createMesh(GpuResourceDatabase & gdb) {
 }
 
 EffectResource * createEffect(GpuResourceDatabase & gdb) {
-    const char * glslvscode =
-
+    const char * glslvscode = R"glsl(
         // define bezier control point structure
-        "struct BezierControlPoints \n"
-        "{                          \n"
-        "   vec3 p300;              \n"
-        "   vec3 p030;              \n"
-        "   vec3 p003;              \n"
-        "   vec3 p210;              \n"
-        "   vec3 p120;              \n"
-        "   vec3 p201;              \n"
-        "   vec3 p102;              \n"
-        "   vec3 p012;              \n"
-        "   vec3 p021;              \n"
-        "   vec3 p111;              \n"
-        "                           \n"
-        "   vec3 n200;              \n"
-        "   vec3 n020;              \n"
-        "   vec3 n002;              \n"
-        "};                         \n"
+        struct BezierControlPoints
+        {
+           vec3 p300;
+           vec3 p030;
+           vec3 p003;
+           vec3 p210;
+           vec3 p120;
+           vec3 p201;
+           vec3 p102;
+           vec3 p012;
+           vec3 p021;
+           vec3 p111;
+
+           vec3 n200;
+           vec3 n020;
+           vec3 n002;
+        };
 
         // utils to calculate bezier control points
-        "BezierControlPoints                                                                     \n"
-        "calcBezierControlPoints( vec3 p0, vec3 p1, vec3 p2, vec3 n0, vec3 n1, vec3 n2 )         \n"
-        "{                                                                                       \n"
-        "	BezierControlPoints cp;                                                              \n"
-        "                                                                                        \n"
-        "	cp.p300 = p0;                                                                        \n"
-        "	cp.p030 = p1;                                                                        \n"
-        "	cp.p003 = p2;                                                                        \n"
-        "	cp.n200 = n0;                                                                        \n"
-        "	cp.n020 = n1;                                                                        \n"
-        "	cp.n002 = n2;                                                                        \n"
-        "	cp.p210 = ( 2.0 * cp.p300 + cp.p030 - dot(cp.n200, (cp.p030 - cp.p300)) * cp.n200 ) / 3.0; \n"
-        "	cp.p120 = ( 2.0 * cp.p030 + cp.p300 - dot(cp.n020, (cp.p300 - cp.p030)) * cp.n020 ) / 3.0; \n"
-        "	cp.p201 = ( 2.0 * cp.p300 + cp.p003 - dot(cp.n200, (cp.p003 - cp.p300)) * cp.n200 ) / 3.0; \n"
-        "	cp.p102 = ( 2.0 * cp.p003 + cp.p300 - dot(cp.n002, (cp.p300 - cp.p003)) * cp.n002 ) / 3.0; \n"
-        "	cp.p012 = ( 2.0 * cp.p003 + cp.p030 - dot(cp.n002, (cp.p030 - cp.p003)) * cp.n002 ) / 3.0; \n"
-        "	cp.p021 = ( 2.0 * cp.p030 + cp.p003 - dot(cp.n020, (cp.p003 - cp.p030)) * cp.n020 ) / 3.0; \n"
-        "	cp.p111 = ( cp.p210 + cp.p120 + cp.p102 + cp.p201 + cp.p021 + cp.p012 ) / 4.0 - ( cp.p300 + cp.p030 + cp.p003 ) / 6.0;  \n"
-        "                                                                                        \n"
-        "	return cp;                                                                           \n"
-        "}                                                                                       \n"
+        BezierControlPoints
+        calcBezierControlPoints( vec3 p0, vec3 p1, vec3 p2, vec3 n0, vec3 n1, vec3 n2 )
+        {
+        	BezierControlPoints cp;
+
+        	cp.p300 = p0;
+        	cp.p030 = p1;
+        	cp.p003 = p2;
+        	cp.n200 = n0;
+        	cp.n020 = n1;
+        	cp.n002 = n2;
+        	cp.p210 = ( 2.0 * cp.p300 + cp.p030 - dot(cp.n200, (cp.p030 - cp.p300)) * cp.n200 ) / 3.0;
+        	cp.p120 = ( 2.0 * cp.p030 + cp.p300 - dot(cp.n020, (cp.p300 - cp.p030)) * cp.n020 ) / 3.0;
+        	cp.p201 = ( 2.0 * cp.p300 + cp.p003 - dot(cp.n200, (cp.p003 - cp.p300)) * cp.n200 ) / 3.0;
+        	cp.p102 = ( 2.0 * cp.p003 + cp.p300 - dot(cp.n002, (cp.p300 - cp.p003)) * cp.n002 ) / 3.0;
+        	cp.p012 = ( 2.0 * cp.p003 + cp.p030 - dot(cp.n002, (cp.p030 - cp.p003)) * cp.n002 ) / 3.0;
+        	cp.p021 = ( 2.0 * cp.p030 + cp.p003 - dot(cp.n020, (cp.p003 - cp.p030)) * cp.n020 ) / 3.0;
+        	cp.p111 = ( cp.p210 + cp.p120 + cp.p102 + cp.p201 + cp.p021 + cp.p012 ) / 4.0 - ( cp.p300 + cp.p030 + cp.p003 ) / 6.0;
+
+        	return cp;
+        }
 
         // type and function to calcuatle single bezier vertex
-        "struct BezierVertex                                             \n"
-        "{                                                               \n"
-        "	vec3 position;                                               \n"
-        "	vec3 normal;                                                 \n"
-        "};                                                              \n"
-        "                                                                \n"
-        "BezierVertex                                                    \n"
-        "calcBezierVertex(                                               \n"
-        "	BezierControlPoints cp,                                      \n"
-        "	float u, float v )                                           \n"
-        "{                                                               \n"
-        "	float u2 = u * u;                                            \n"
-        "	float u3 = u2 * u;                                           \n"
-        "	float v2 = v * v;                                            \n"
-        "	float v3 = v2 * v;                                           \n"
-        "	float w  = 1.0 - u - v;                                      \n"
-        "	float w2 = w * w;                                            \n"
-        "	float w3 = w2 * w;                                           \n"
-        "	                                                             \n"
-        "	BezierVertex vert;                                           \n"
-        "                                                                \n"
-        "	vert.position =                                              \n"
-        "		u3 * cp.p300 + v3 * cp.p030 + w3 * cp.p003 +             \n"
-        "		3.0 * ( u2 * v * cp.p210 + u2 * w * cp.p201 + u * v2 * cp.p120 + v2 * w * cp.p021 + v * w2 * cp.p012 + u * w2 * cp.p102 ) + \n"
-        "		6.0 * u * v * w * cp.p111;                               \n"
-        "                                                                \n"
-        "	vert.normal = cp.n200 * u + cp.n020 * v + cp.n002 * w;       \n"
-        "	                                                             \n"
-        "	return vert;                                                 \n"
-        "}                                                               \n"
+        struct BezierVertex
+        {
+        	vec3 position;
+        	vec3 normal;
+        };
+
+        BezierVertex
+        calcBezierVertex(
+        	BezierControlPoints cp,
+        	float u, float v )
+        {
+        	float u2 = u * u;
+        	float u3 = u2 * u;
+        	float v2 = v * v;
+        	float v3 = v2 * v;
+        	float w  = 1.0 - u - v;
+        	float w2 = w * w;
+        	float w3 = w2 * w;
+
+        	BezierVertex vert;
+
+        	vert.position =
+        		u3 * cp.p300 + v3 * cp.p030 + w3 * cp.p003 +
+        		3.0 * ( u2 * v * cp.p210 + u2 * w * cp.p201 + u * v2 * cp.p120 + v2 * w * cp.p021 + v * w2 * cp.p012 + u * w2 * cp.p102 ) +
+        		6.0 * u * v * w * cp.p111;
+
+        	vert.normal = cp.n200 * u + cp.n020 * v + cp.n002 * w;
+
+        	return vert;
+        }
 
         // shader parameters
-        "uniform   mat4 pvw; \n"
-        "uniform   mat4 world; \n"
-        "uniform   mat4 wit; \n"
-        "attribute vec3 pos0; \n"
-        "attribute vec3 pos1; \n"
-        "attribute vec3 pos2; \n"
-        "attribute vec3 nml0; \n"
-        "attribute vec3 nml1; \n"
-        "attribute vec3 nml2; \n"
-        "attribute vec2 bc; \n"
-        "varying   vec4 pos_world; // vertex position in world space \n"
-        "varying   vec3 nml_world; // vertex normal in world space \n"
-        "varying   vec2 texcoords; \n"
+        uniform   mat4 pvw;
+        uniform   mat4 world;
+        uniform   mat4 wit;
+        attribute vec3 pos0;
+        attribute vec3 pos1;
+        attribute vec3 pos2;
+        attribute vec3 nml0;
+        attribute vec3 nml1;
+        attribute vec3 nml2;
+        attribute vec2 bc;
+        varying   vec4 pos_world; // vertex position in world space
+        varying   vec3 nml_world; // vertex normal in world space
+        varying   vec2 texcoords;
 
         // main function
-        "void main() { \n"
+        void main() {
 
         // calculate control points
-        "   BezierControlPoints cp = calcBezierControlPoints( pos0, pos1, pos2, nml0, nml1, nml2 ); \n"
+        BezierControlPoints cp = calcBezierControlPoints( pos0, pos1, pos2, nml0, nml1, nml2 );
 
         // calculate output vertex
-        "   float u  = bc.x; \n"
-        "   float v  = bc.y; \n"
-        "   BezierVertex vert = calcBezierVertex( cp, u, v ); \n"
+        float u  = bc.x;
+        float v  = bc.y;
+        BezierVertex vert = calcBezierVertex( cp, u, v );
 
         // test code
-        //"   vert.position = pos0 * (1-u-v) + pos1 * u + pos2 * v; \n"
-        //"   vert.normal   = nml0 * (1-u-v) + nml1 * u + nml2 * v; \n"
+        //   vert.position = pos0 * (1-u-v) + pos1 * u + pos2 * v;
+        //   vert.normal   = nml0 * (1-u-v) + nml1 * u + nml2 * v;
 
         // translate position
-        "   gl_Position = pvw * vec4(vert.position,1); \n"
-        "   pos_world   = world * vec4(vert.position,1); \n"
+        gl_Position = pvw * vec4(vert.position,1);
+        pos_world   = world * vec4(vert.position,1);
 
         // translate normal
-        "   nml_world = (wit * vec4(vert.normal,0)).xyz; \n"
+        nml_world = (wit * vec4(vert.normal,0)).xyz;
 
         // texcoord
-        "   vec2 tc0 = vec2(0.0, 0.0); \n"
-        "   vec2 tc1 = vec2(1.0, 0.0); \n"
-        "   vec2 tc2 = vec2(1.0, 1.0); \n"
-        "   texcoords = tc0 * (1-u-v) + tc1 * u + tc2 * v; \n"
+        vec2 tc0 = vec2(0.0, 0.0);
+        vec2 tc1 = vec2(1.0, 0.0);
+        vec2 tc2 = vec2(1.0, 1.0);
+        texcoords = tc0 * (1-u-v) + tc1 * u + tc2 * v;
 
         // end of vertex shader
-        "}";
+        };
 
-    const char * glslpscode = "uniform vec4 lightpos; // light positin in world space \n"
-                              "uniform sampler2D t0; \n"
-                              "varying vec4 pos_world; // position in world space \n"
-                              "varying vec3 nml_world; // normal in world space \n"
-                              "varying vec2 texcoords; \n"
-                              "void main() { \n"
-                              "   vec3  L      = normalize( (lightpos - pos_world).xyz ); \n"
-                              "   vec3  N      = normalize( nml_world ); \n"
-                              "   float diff   = clamp( dot( L, N ), 0.0, 1.0 ); \n"
-                              "   vec4  tex    = texture2D( t0, texcoords ); \n"
-                              "   gl_FragColor = diff * tex; \n"
-                              "}";
+    )glsl";
+
+    const char * glslpscode = R"glsl(
+        uniform vec4 lightpos; // light positin in world space
+        uniform sampler2D t0;
+        varying vec4 pos_world; // position in world space
+        varying vec3 nml_world; // normal in world space
+        varying vec2 texcoords;
+        void main() {
+           vec3  L      = normalize( (lightpos - pos_world).xyz );
+           vec3  N      = normalize( nml_world );
+           float diff   = clamp( dot( L, N ), 0.0, 1.0 );
+           vec4  tex    = texture2D( t0, texcoords );
+           gl_FragColor = diff * tex;
+        };
+    )glsl";
 
     EffectResourceDesc ed;
     ed.uniforms["MATRIX_PVW"];
