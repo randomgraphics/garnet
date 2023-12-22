@@ -636,11 +636,10 @@ GN_API bool GN::XmlDocument::parse(XmlParseResult & result, File & fp) {
 
     DynaArray<char> buf(fp.size());
 
-    size_t sz = fp.size();
-    size_t rd = fp.read(&buf[0], fp.size());
-    if (sz != rd) return false;
+    size_t rd = fp.read(buf.data(), buf.size());
+    if (0 == rd) return false;
 
-    return parse(result, &buf[0], sz);
+    return parse(result, buf.data(), rd);
 
     GN_UNGUARD;
 }

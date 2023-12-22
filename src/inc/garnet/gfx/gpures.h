@@ -6,6 +6,8 @@
 /// \author  chenli@@REDMOND (2009.8.13)
 // *****************************************************************************
 
+#include <map>
+
 namespace GN::gfx {
 
 class GpuResourceDatabase;
@@ -505,11 +507,11 @@ struct GN_API EffectResourceDesc {
         GpuProgramDesc      gpd;                ///< GPU Program descriptor
         DynaArray<char>     shaderSourceBuffer; ///< optional buffer used to store store
                                                 ///< shader source.
-        StringMap<char, StrA> textures;         ///< textures. Key is shader parameter name, value is name of
+        std::map<StrA, StrA> textures;          ///< textures. Key is shader parameter name, value is name of
                                                 ///< one texture in EffectResourceDesc.textures.
-        StringMap<char, StrA> uniforms;         ///< uniforms. Key is shader parameter name, value is name of
+        std::map<StrA, StrA> uniforms;          ///< uniforms. Key is shader parameter name, value is name of
                                                 ///< one uniform in EffectResourceDesc.textures.
-        StringMap<char, StrA> attributes;       ///< attributes. Key is shader parameter name, value is name
+        std::map<StrA, StrA> attributes;        ///< attributes. Key is shader parameter name, value is name
                                                 ///< of one attribute in EffectResourceDesc.attributes.
 
         /// default constructor
@@ -624,12 +626,12 @@ struct GN_API EffectResourceDesc {
     // data
     // *****************************
 
-    StringMap<char, EffectTextureDesc>    textures;     ///< Texture list
-    StringMap<char, EffectUniformDesc>    uniforms;     ///< Uniform list
-    StringMap<char, EffectAttributeDesc>  attributes;   ///< attribute list
-    StringMap<char, EffectGpuProgramDesc> gpuprograms;  ///< GPU program list
-    DynaArray<EffectTechniqueDesc>        techniques;   ///< Technique list.
-    EffectRenderStateDesc                 renderstates; ///< Root render state descriptor for the effect.
+    std::map<StrA, EffectTextureDesc>    textures;     ///< Texture list
+    std::map<StrA, EffectUniformDesc>    uniforms;     ///< Uniform list
+    std::map<StrA, EffectAttributeDesc>  attributes;   ///< attribute list
+    std::map<StrA, EffectGpuProgramDesc> gpuprograms;  ///< GPU program list
+    DynaArray<EffectTechniqueDesc>       techniques;   ///< Technique list.
+    EffectRenderStateDesc                renderstates; ///< Root render state descriptor for the effect.
 
     // *****************************
     // methods
@@ -794,9 +796,9 @@ struct GN_API ModelResourceDesc {
 
     //@{
 
-    StrA                              effect;   ///< effect resource name.
-    StringMap<char, ModelTextureDesc> textures; ///< key is effect parameter name
-    StringMap<char, ModelUniformDesc> uniforms; ///< key is effect parameter name
+    StrA                             effect;   ///< effect resource name.
+    std::map<StrA, ModelTextureDesc> textures; ///< key is effect parameter name
+    std::map<StrA, ModelUniformDesc> uniforms; ///< key is effect parameter name
 
     StrA               mesh;   ///< Mesh resource name.
     MeshResourceSubset subset; ///< Mesh subset information.
@@ -817,13 +819,13 @@ struct GN_API ModelResourceDesc {
     /// check if the model has a texture parameter that is mapped to specific
     /// effect parameter
     ///
-    bool hasTexture(const char * effectParameterName) const { return NULL != textures.find(effectParameterName); }
+    bool hasTexture(const char * effectParameterName) const { return textures.end() != textures.find(effectParameterName); }
 
     ///
     /// check if the model has an uniform parameter that is mapped to specific
     /// effect parameter
     ///
-    bool hasUniform(const char * effectParameterName) const { return NULL != uniforms.find(effectParameterName); }
+    bool hasUniform(const char * effectParameterName) const { return uniforms.end() != uniforms.find(effectParameterName); }
 
     ///
     /// setup the descriptor from XML
