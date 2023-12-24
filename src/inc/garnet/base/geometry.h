@@ -7,7 +7,7 @@
 // *****************************************************************************
 
 #ifdef _MSC_VER
-#pragma warning(disable : 4819) // unicode file name warning
+    #pragma warning(disable : 4819) // unicode file name warning
 #endif
 #include <Eigen/Eigen>
 

@@ -194,7 +194,7 @@ public:
 
         if (c != EOF) {
             // insert the character into the buffer
-            *pptr() = (char)c;
+            *pptr() = (char) c;
             pbump(1);
         }
 
@@ -231,7 +231,7 @@ private:
         if (!(m_mode & std::ios::out) || !is_open()) return false;
         size_t num = pptr() - pbase();
         if (::fwrite(pbase(), 1, num, m_filedes) != num) return false;
-        pbump(-(int)num);
+        pbump(-(int) num);
         return true;
     }
 };
@@ -257,7 +257,7 @@ GN_API bool GN::TempFile::open() {
     }
 #endif
 
-    mBuf = std::make_unique<stdiobuf>(mFile, std::ios::in | std::ios::out | std::ios::binary);
+    mBuf    = std::make_unique<stdiobuf>(mFile, std::ios::in | std::ios::out | std::ios::binary);
     mStream = std::make_unique<std::iostream>(mBuf.get());
     setName(std::to_string(_fileno(mFile)).c_str());
     setStream(mStream.get(), mStream.get());
@@ -280,7 +280,7 @@ GN_API void GN::TempFile::close() throw() {
 class MemFileBuf : public std::streambuf {
 public:
     MemFileBuf(void * buf, size_t size) {
-        char * p = (char *)buf;
+        char * p = (char *) buf;
         setg(p, p, p + size);
         setp(p, p + size);
     }
@@ -289,7 +289,7 @@ public:
 //
 //
 // -----------------------------------------------------------------------------
-GN_API GN::MemFile::MemFile(void * buf, size_t size, const StrA & name) : mBuf(std::make_unique<MemFileBuf>(buf, size)), mStream(mBuf.get()) {
+GN_API GN::MemFile::MemFile(void * buf, size_t size, const StrA & name): mBuf(std::make_unique<MemFileBuf>(buf, size)), mStream(mBuf.get()) {
     setName(name);
     setStream(&mStream, &mStream);
 }

@@ -1,7 +1,7 @@
 #include "pch.h"
 
 #ifdef _MSC_VER
-#define __STDC_LIB_EXT1__ // this is to tell stb image header to use secure version of the C library.
+    #define __STDC_LIB_EXT1__ // this is to tell stb image header to use secure version of the C library.
 #endif
 #define STB_IMAGE_IMPLEMENTATION
 #define STB_IMAGE_WRITE_IMPLEMENTATION

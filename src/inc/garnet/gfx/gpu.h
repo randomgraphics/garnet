@@ -65,9 +65,7 @@ struct GpuAPI {
 
     /// convert enum to string
     const char * toString() const {
-        static const char * TABLE[] = {"OGL", "D3D11", "FAKE", "INVALID_GPU_API",
-                                       "AUTO",
-                                       "INVALID_GPU_API"};
+        static const char * TABLE[] = {"OGL", "D3D11", "FAKE", "INVALID_GPU_API", "AUTO", "INVALID_GPU_API"};
 
         const Enum & e = *this;
 

@@ -39,8 +39,8 @@ public:
     void testInvalidPNG() {
         using namespace GN;
         using namespace GN::gfx;
-        auto buf = std::vector<uint8_t>(10000);
-        auto file = GN::MemFile(buf.data(), buf.size(), "a.png");
+        auto     buf              = std::vector<uint8_t>(10000);
+        auto     file             = GN::MemFile(buf.data(), buf.size(), "a.png");
         png_byte png_signature[8] = {137, 80, 78, 71, 13, 10, 26, 10};
         ::memcpy(buf.data(), png_signature, 8);
         auto image = GN::gfx::Image::load(file.input());
@@ -50,12 +50,12 @@ public:
     void testInvalidJPG() {
         using namespace GN;
         using namespace GN::gfx;
-        auto buf = std::vector<uint8_t>(10000);
-        auto file = GN::MemFile(buf.data(), buf.size(), "a.jpg");
-        buf[6]    = 'J';
-        buf[7]    = 'F';
-        buf[8]    = 'I';
-        buf[9]    = 'F';
+        auto buf   = std::vector<uint8_t>(10000);
+        auto file  = GN::MemFile(buf.data(), buf.size(), "a.jpg");
+        buf[6]     = 'J';
+        buf[7]     = 'F';
+        buf[8]     = 'I';
+        buf[9]     = 'F';
         auto image = GN::gfx::Image::load(file.input());
         TS_ASSERT(image.empty());
     }

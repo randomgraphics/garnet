@@ -44,7 +44,7 @@ struct GN_API File : public NoCopy {
         setStream(&i, nullptr);
         setName(name);
     }
- 
+
     /// construct from output stream
     File(std::ostream & o, const StrA & name) {
         setStream(nullptr, &o);

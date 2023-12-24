@@ -334,7 +334,7 @@ XmlElement * GN::gfx::ModelResourceDesc::saveToXml(XmlNode & root, const char * 
     }
 
     // create texture nodes
-    for(const auto & [texname, texdesc] : textures) {
+    for (const auto & [texname, texdesc] : textures) {
         XmlElement * textureNode = doc.createElement(modelNode);
         textureNode->name        = "texture";
 
@@ -354,7 +354,7 @@ XmlElement * GN::gfx::ModelResourceDesc::saveToXml(XmlNode & root, const char * 
 
     // create uniform nodes
     // for (const StringMap<char, ModelUniformDesc>::KeyValuePair * i = uniforms.first(); i != NULL; i = uniforms.next(i)) {
-    for(const auto & [uniname, unidesc] : uniforms) {
+    for (const auto & [uniname, unidesc] : uniforms) {
         XmlElement * uniformNode = doc.createElement(modelNode);
         uniformNode->name        = "uniform";
 

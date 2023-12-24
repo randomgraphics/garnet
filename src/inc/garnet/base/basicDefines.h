@@ -52,7 +52,7 @@
 
 #elif defined(__GNUC__)
     #undef GN_GNUC
-    #define GN_GNUC      1
+    #define GN_GNUC     1
     #define GN_COMPILER gcc
 
 #else
@@ -148,7 +148,7 @@
     #define GN_PPC 1
     #define GN_CPU ppc
 #elif defined(__arm64__)
-    #undef  GN_ARM
+    #undef GN_ARM
     #define GN_ARM 1
     #define GN_CPU arm
 #elif defined(_M_IX86) || defined(_X86_) || defined(i386) || defined(__i386__)

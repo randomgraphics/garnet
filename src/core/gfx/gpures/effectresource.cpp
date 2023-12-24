@@ -266,9 +266,7 @@ void GN::gfx::EffectResource::Impl::clear() {
 //
 // -----------------------------------------------------------------------------
 bool GN::gfx::EffectResource::Impl::initGpuPrograms(const EffectResourceDesc & effectDesc) {
-    for(const auto & [programName, programDesc] : effectDesc.gpuprograms) {
-        initGpuProgram(effectDesc, programName, programDesc);
-    }
+    for (const auto & [programName, programDesc] : effectDesc.gpuprograms) { initGpuProgram(effectDesc, programName, programDesc); }
     return true;
 }
 
@@ -388,7 +386,7 @@ bool GN::gfx::EffectResource::Impl::initTech(const EffectResourceDesc & effectDe
 // -----------------------------------------------------------------------------
 bool GN::gfx::EffectResource::Impl::initTextures(const EffectResourceDesc & effectDesc) {
     // for (const StringMap<char, EffectTextureDesc>::KeyValuePair * iter = effectDesc.textures.first(); iter != NULL; iter = effectDesc.textures.next(iter)) {
-    for(const auto & [name, texture] : effectDesc.textures) {
+    for (const auto & [name, texture] : effectDesc.textures) {
         TextureProperties tp;
         tp.parameterName = name;
         tp.sampler       = texture.sampler;
@@ -399,7 +397,7 @@ bool GN::gfx::EffectResource::Impl::initTextures(const EffectResourceDesc & effe
             const GpuProgramParameterDesc & gpparam     = gpitem.prog->getParameterDesc();
             const EffectGpuProgramDesc &    programDesc = effectDesc.gpuprograms.at(gpitem.name);
 
-            for(const auto & [shaderParameterName, textureName] : programDesc.textures) {
+            for (const auto & [shaderParameterName, textureName] : programDesc.textures) {
                 GN_ASSERT(effectDesc.textures.end() != effectDesc.textures.find(textureName));
                 if (textureName == tp.parameterName) {
                     BindingLocation b = {ipass, gpparam.textures[shaderParameterName]};
@@ -457,7 +455,7 @@ bool GN::gfx::EffectResource::Impl::initUniforms(const EffectResourceDesc & effe
 bool GN::gfx::EffectResource::Impl::initAttributes(const EffectResourceDesc & effectDesc) {
     // for (const StringMap<char, EffectAttributeDesc>::KeyValuePair * iter = effectDesc.attributes.first(); iter != NULL;
     //     iter                                                            = effectDesc.attributes.next(iter)) {
-    for(const auto & [name, ead] : effectDesc.attributes) {
+    for (const auto & [name, ead] : effectDesc.attributes) {
         AttributeProperties ap;
         ap.parameterName = name;
 
@@ -467,7 +465,7 @@ bool GN::gfx::EffectResource::Impl::initAttributes(const EffectResourceDesc & ef
             const auto & gpparam     = gpitem.prog->getParameterDesc();
             const auto & programDesc = effectDesc.gpuprograms.at(gpitem.name);
 
-            for(const auto & [shaderParameterName, attributeName] : programDesc.attributes) {
+            for (const auto & [shaderParameterName, attributeName] : programDesc.attributes) {
                 if (sAttributeNameEqual(attributeName, ap.parameterName)) {
                     BindingLocation b = {ipass, gpparam.attributes[shaderParameterName]};
                     if (GPU_PROGRAM_PARAMETER_NOT_FOUND != b.gpuProgramParameterIndex) {
