@@ -1,0 +1,12 @@
+
+12-24-2023
+==========
+
+Some refactor and code cleanup:
+- Removed local copy of assimp and Eigen source code, replaced with submodule.
+- Removed local image and pixel format classes, replaced with rapid-image repository.
+- Refined File classes to be compatible with stl streaming interface.
+- Fixed some broken samples
+- Partially fixed build breaks on macos (still working in progress)
+- Removed local vulkan utility classes. Will replace them with rapid-vulkan repository.
+- Replaced StringMap with STL string map.
