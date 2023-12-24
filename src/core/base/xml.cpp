@@ -653,12 +653,12 @@ GN_API bool GN::XmlDocument::writeToFile(File & file, const XmlNode & root, bool
     // static const uint8 bom[3] = { 0xEF, 0xBB, 0xBF };
     // if( sizeof(bom) != file.write( bom, sizeof(bom) ) ) return false;
 
-    file.output() << "<?xml version=\"1.0\"?>";
+    file << "<?xml version=\"1.0\"?>";
 
     if (compact) {
         return sCompactNodes(file, &root);
     } else {
-        file.output() << "\n";
+        file << "\n";
         return sFormatNodes(file, &root, 0);
     }
 
