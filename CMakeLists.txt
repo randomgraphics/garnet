@@ -104,6 +104,20 @@ function(GN_add_source_folder result folder)
     set(${result} ${input} ${sources} ${headers} ${arg_PCH_SOURCE} ${arg_EXTRA_SOURCES} PARENT_SCOPE)
 endfunction()
 
+# =======================
+# Detect current compiler
+# =======================
+
+if(CMAKE_COMPILER_IS_GNUCC)
+    set(IS_GCC TRUE)
+endif()
+if(CMAKE_C_COMPILER_ID MATCHES "Clang")
+    set(IS_CLANG TRUE)
+endif()
+if(IS_GCC OR IS_CLANG)
+    set(IS_GNUC TRUE)
+endif()
+
 # =================================
 # Configure Options and Build Flags
 # =================================

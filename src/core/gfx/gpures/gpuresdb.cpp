@@ -396,7 +396,7 @@ static AutoRef<EffectResource> sRegisterNormalMapEffect(GpuResourceDatabase & gd
 // -----------------------------------------------------------------------------
 static AutoRef<TextureResource> sRegisterWhiteTexture(GpuResourceDatabase & gdb) {
     AutoRef<TextureResource> tr       = gdb.createResource<TextureResource>("@WHITE");
-    AutoRef<Texture>         t        = attachTo(gdb.getGpu().create2DTexture(ColorFormat::RGBA8, 2, 2));
+    AutoRef<Texture>         t        = attachTo(gdb.getGpu().create2DTexture(PixelFormat::RGBA8(), 2, 2));
     uint32                   white[4] = {0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF};
     t->updateMipmap(0, 0, NULL, sizeof(uint32) * 2, sizeof(uint32) * 4, white, SurfaceUpdateFlag::DEFAULT);
     tr->setTexture(t);
@@ -408,7 +408,7 @@ static AutoRef<TextureResource> sRegisterWhiteTexture(GpuResourceDatabase & gdb)
 // -----------------------------------------------------------------------------
 static AutoRef<TextureResource> sRegisterBlackTexture(GpuResourceDatabase & gdb) {
     AutoRef<TextureResource> tr       = gdb.createResource<TextureResource>("@BLACK");
-    AutoRef<Texture>         t        = attachTo(gdb.getGpu().create2DTexture(ColorFormat::RGBA8, 2, 2));
+    AutoRef<Texture>         t        = attachTo(gdb.getGpu().create2DTexture(PixelFormat::RGBA8(), 2, 2));
     uint32                   black[4] = {0, 0, 0, 0};
     t->updateMipmap(0, 0, NULL, sizeof(uint32) * 2, sizeof(uint32) * 4, black, SurfaceUpdateFlag::DEFAULT);
     tr->setTexture(t);
@@ -420,7 +420,7 @@ static AutoRef<TextureResource> sRegisterBlackTexture(GpuResourceDatabase & gdb)
 // -----------------------------------------------------------------------------
 static AutoRef<TextureResource> sRegisterFlatNormalMap(GpuResourceDatabase & gdb) {
     AutoRef<TextureResource> tr    = gdb.createResource<TextureResource>("@FLAT_NORMAL_MAP");
-    AutoRef<Texture>         t     = attachTo(gdb.getGpu().create2DTexture(ColorFormat::RG_16_16_UNORM, 2, 2, 0));
+    AutoRef<Texture>         t     = attachTo(gdb.getGpu().create2DTexture(PixelFormat::RG_16_16_UNORM(), 2, 2, 0));
     uint32                   up[4] = {0x80008000, 0x80008000, 0x80008000, 0x80008000};
     t->updateMipmap(0, 0, NULL, sizeof(uint32) * 2, sizeof(uint32) * 4, up, SurfaceUpdateFlag::DEFAULT);
     tr->setTexture(t);
@@ -820,7 +820,7 @@ inline GpuResource::Impl * GpuResourceDatabase::Impl::getResourceImpl(const GpuR
 GpuResourceDatabase::GpuResourceDatabase(Gpu & g): mImpl(NULL) {
     mImpl = new Impl(*this, g);
 
-    if (!mImpl->setupBuiltInResources()) { GN_THROW("Fail to setup built-in resources."); }
+    if (!mImpl->setupBuiltInResources()) { GN_THROW("%s", "Fail to setup built-in resources."); }
 }
 
 GpuResourceDatabase::~GpuResourceDatabase() { delete mImpl; }

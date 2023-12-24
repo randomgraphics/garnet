@@ -334,10 +334,7 @@ XmlElement * GN::gfx::ModelResourceDesc::saveToXml(XmlNode & root, const char * 
     }
 
     // create texture nodes
-    for (const StringMap<char, ModelTextureDesc>::KeyValuePair * i = textures.first(); i != NULL; i = textures.next(i)) {
-        const StrA &             texname = i->key;
-        const ModelTextureDesc & texdesc = i->value;
-
+    for (const auto & [texname, texdesc] : textures) {
         XmlElement * textureNode = doc.createElement(modelNode);
         textureNode->name        = "texture";
 
@@ -356,10 +353,8 @@ XmlElement * GN::gfx::ModelResourceDesc::saveToXml(XmlNode & root, const char * 
     }
 
     // create uniform nodes
-    for (const StringMap<char, ModelUniformDesc>::KeyValuePair * i = uniforms.first(); i != NULL; i = uniforms.next(i)) {
-        const StrA &             uniname = i->key;
-        const ModelUniformDesc & unidesc = i->value;
-
+    // for (const StringMap<char, ModelUniformDesc>::KeyValuePair * i = uniforms.first(); i != NULL; i = uniforms.next(i)) {
+    for (const auto & [uniname, unidesc] : uniforms) {
         XmlElement * uniformNode = doc.createElement(modelNode);
         uniformNode->name        = "uniform";
 
@@ -910,17 +905,17 @@ bool GN::gfx::ModelResource::Impl::fromDesc(const ModelResourceDesc & desc) {
 
         const EffectResource::TextureProperties & tp = mEffectResource->textureProperties(i);
 
-        const ModelResourceDesc::ModelTextureDesc * td = desc.textures.find(tp.parameterName);
+        auto td = desc.textures.find(tp.parameterName);
 
         AutoRef<TextureResource> texres;
 
-        if (td) {
-            if (!td->resourceName.empty()) {
-                texres = TextureResource::loadFromFile(db, td->resourceName);
+        if (td != desc.textures.end()) {
+            if (!td->second.resourceName.empty()) {
+                texres = TextureResource::loadFromFile(db, td->second.resourceName);
             } else {
                 StrA texname = str::format("%s.texture.%s", getModelName(), tp.parameterName.rawptr());
                 texres       = db.findOrCreateResource<TextureResource>(texname);
-                if (texres) texres->reset(&td->desc);
+                if (texres) texres->reset(&td->second.desc);
             }
         } else {
             GN_ERROR(sLogger)
@@ -941,24 +936,24 @@ bool GN::gfx::ModelResource::Impl::fromDesc(const ModelResourceDesc & desc) {
 
         const EffectResource::UniformProperties & up = mEffectResource->uniformProperties(i);
 
-        const ModelResourceDesc::ModelUniformDesc * ud = desc.uniforms.find(up.parameterName);
+        auto ud = desc.uniforms.find(up.parameterName);
 
         AutoRef<UniformResource> unires;
-        if (ud) {
-            if (!ud->resourceName.empty()) {
-                unires = db.findResource<UniformResource>(ud->resourceName);
-                if (!unires) { GN_ERROR(sLogger)("Invalid uniform resource name '%s' in model '%s'.", ud->resourceName.rawptr(), getModelName()); }
+        if (ud != desc.uniforms.end()) {
+            if (!ud->second.resourceName.empty()) {
+                unires = db.findResource<UniformResource>(ud->second.resourceName);
+                if (!unires) { GN_ERROR(sLogger)("Invalid uniform resource name '%s' in model '%s'.", ud->second.resourceName.rawptr(), getModelName()); }
             } else {
                 StrA uniname = str::format("%s.uniform.%s", getModelName(), up.parameterName.rawptr());
 
-                const void * initialValue = ud->initialValue.rawptr();
-                if (!ud->initialValue.empty() && ud->initialValue.size() != ud->size) {
+                const void * initialValue = ud->second.initialValue.rawptr();
+                if (!ud->second.initialValue.empty() && ud->second.initialValue.size() != ud->second.size) {
                     GN_ERROR(sLogger)("Incorrect initial data size of uniform '%s in model '%s'.", up.parameterName.rawptr(), getModelName());
                     initialValue = NULL;
                 }
 
                 unires = db.findOrCreateResource<UniformResource>(uniname);
-                if (unires) unires->reset(ud->size, initialValue);
+                if (unires) unires->reset(ud->second.size, initialValue);
             }
         } else {
             GN_ERROR(sLogger)

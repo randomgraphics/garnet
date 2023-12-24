@@ -32,8 +32,8 @@ static void AddRectFace(FatModel & model, const Eigen::Vector3f * v, int a, int 
     auto & mesh = model.meshes.back();
 
     mesh.vertices.resize(FatVertexBuffer::POS_NORMAL, 6);
-    mesh.vertices.setElementFormat(FatVertexBuffer::POSITION, ColorFormat::FLOAT3);
-    mesh.vertices.setElementFormat(FatVertexBuffer::NORMAL, ColorFormat::FLOAT3);
+    mesh.vertices.setElementFormat(FatVertexBuffer::POSITION, PixelFormat::FLOAT3());
+    mesh.vertices.setElementFormat(FatVertexBuffer::NORMAL, PixelFormat::FLOAT3());
     auto p    = mesh.vertices.getPosition();
     auto n    = mesh.vertices.getNormal();
     p[0].v3() = v[a];

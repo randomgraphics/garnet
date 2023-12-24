@@ -48,6 +48,16 @@
 ///
 #define GN_UNUSED_PARAM(X) ((void) (X))
 
+///
+/// compose RGBA8 color constant
+///
+#define GN_RGBA8(r, g, b, a) ((((uint32) (r) &0xFF) << 0) | (((uint32) (g) &0xFF) << 8) | (((uint32) (b) &0xFF) << 16) | (((uint32) (a) &0xFF) << 24))
+
+///
+/// compose BGRA8 color constant
+///
+#define GN_BGRA8(r, g, b, a) ((((uint32) (b) &0xFF) << 0) | (((uint32) (g) &0xFF) << 8) | (((uint32) (r) &0xFF) << 16) | (((uint32) (a) &0xFF) << 24))
+
 namespace GN {
 ///
 /// type cast function
@@ -147,14 +157,6 @@ struct GN_API Guid {
 
     /// \name operators
     //@{
-
-    Guid & operator=(const Guid & rhs) {
-        uint64 *       a = (uint64 *) this;
-        const uint64 * b = (const uint64 *) &rhs;
-        a[0]             = b[0];
-        a[1]             = b[1];
-        return *this;
-    }
 
     bool operator==(const Guid & rhs) const {
         const uint64 * a = (const uint64 *) this;

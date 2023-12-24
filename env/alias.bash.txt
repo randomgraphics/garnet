@@ -1,3 +1,4 @@
+b           "build.py"
 g           "git"
 g.root      "cd ${GARNET_ROOT}"
 g.build     "cd ${GARNET_ROOT}/build"

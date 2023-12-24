@@ -1428,6 +1428,15 @@ private:
 }; // End of StringMap class
 
 namespace str {
+
+///
+/// printf-like string format function (with zero args)`
+///
+template<typename CHAR>
+inline Str<CHAR> format(const CHAR * fmt) {
+    return Str<CHAR>(fmt);
+}
+
 ///
 /// printf-like string format function.
 ///

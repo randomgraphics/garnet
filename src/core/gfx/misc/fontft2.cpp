@@ -105,11 +105,9 @@ private:
     static unsigned long sReadStream(FT_Stream stream, unsigned long offset, unsigned char * buffer, unsigned long count) {
         File * fp = (File *) stream->descriptor.pointer;
 
-        fp->seek(offset, FileSeek::SET);
+        fp->input().seekg(offset, std::ios::beg);
 
-        size_t readen;
-
-        if (!fp->read(buffer, count, &readen)) return 0;
+        size_t readen = fp->read(buffer, count);
 
         return (unsigned long) readen;
     }
@@ -157,14 +155,14 @@ bool FontFaceFt2::init(const FontFaceCreationDesc & cd) {
     }
 
     // open font file
-    File * fp = fs::openFile(cd.fontname, "rb");
+    auto fp = fs::openFile(cd.fontname, std::ios::binary | std::ios::in);
     if (!fp) return failure();
 
     // initialize FT2 stream
     mStream.base               = 0;
     mStream.size               = (FT_ULong) fp->size();
-    mStream.pos                = (FT_ULong) fp->tell();
-    mStream.descriptor.pointer = fp;
+    mStream.pos                = (FT_ULong) fp->input().tellg();
+    mStream.descriptor.pointer = fp.release();
     mStream.read               = sReadStream;
     mStream.close              = sCloseStream;
 

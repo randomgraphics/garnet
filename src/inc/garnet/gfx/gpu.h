@@ -65,9 +65,7 @@ struct GpuAPI {
 
     /// convert enum to string
     const char * toString() const {
-        static const char * TABLE[] = {"OGL", "D3D11", "FAKE", "INVALID_GPU_API",
-                                       "AUTO"
-                                       "INVALID_GPU_API"};
+        static const char * TABLE[] = {"OGL", "D3D11", "FAKE", "INVALID_GPU_API", "AUTO", "INVALID_GPU_API"};
 
         const Enum & e = *this;
 
@@ -348,8 +346,9 @@ struct TextureBinding {
 };
 
 /// Define one vertex element
+/// \todo use attribute name instead of index
 struct VertexElement {
-    ColorFormat format;    ///< the vertex element format.
+    PixelFormat format;    ///< the vertex element format.
     uint8       stream;    ///< vertex buffer index
     uint8       offset;    ///< offset of the element in the vertex.
     uint16      attribute; ///< index of the GPU program attribute.
@@ -830,7 +829,7 @@ public:
     /// \param format       The texture format.
     /// \param usages       Combination of TextureUsage
     ///
-    virtual bool checkTextureFormatSupport(ColorFormat format, TextureUsage usages) const = 0;
+    virtual bool checkTextureFormatSupport(PixelFormat format, TextureUsage usages) const = 0;
 
     //@}
 
@@ -861,7 +860,7 @@ public:
     ///
     /// Create new texture, with individual creation parameters.
     ///
-    Texture * createTexture(ColorFormat format, uint32 sx, uint32 sy, uint32 sz, uint32 faces = 1,
+    Texture * createTexture(PixelFormat format, uint32 sx, uint32 sy, uint32 sz, uint32 faces = 1,
                             uint32       levels = 1, // set to 0 to generate texture with full mipmap chain
                             TextureUsage usages = TextureUsage::DEFAULT) {
         TextureDesc desc = {
@@ -873,28 +872,28 @@ public:
     ///
     /// Create 1D texture
     ///
-    Texture * create1DTexture(ColorFormat format, uint32 sx, uint32 levels = 0, TextureUsage usages = TextureUsage::DEFAULT) {
+    Texture * create1DTexture(PixelFormat format, uint32 sx, uint32 levels = 0, TextureUsage usages = TextureUsage::DEFAULT) {
         return createTexture(format, sx, 1, 1, 1, levels, usages);
     }
 
     ///
     /// Create 2D texture
     ///
-    Texture * create2DTexture(ColorFormat format, uint32 sx, uint32 sy, uint32 levels = 1, TextureUsage usages = TextureUsage::DEFAULT) {
+    Texture * create2DTexture(PixelFormat format, uint32 sx, uint32 sy, uint32 levels = 1, TextureUsage usages = TextureUsage::DEFAULT) {
         return createTexture(format, sx, sy, 1, 1, levels, usages);
     }
 
     ///
     /// Create 3D texture
     ///
-    Texture * create3DTexture(ColorFormat format, uint32 sx, uint32 sy, uint32 sz, uint32 levels = 1, TextureUsage usages = TextureUsage::DEFAULT) {
+    Texture * create3DTexture(PixelFormat format, uint32 sx, uint32 sy, uint32 sz, uint32 levels = 1, TextureUsage usages = TextureUsage::DEFAULT) {
         return createTexture(format, sx, sy, sz, 1, levels, usages);
     }
 
     ///
     /// Create CUBE texture
     ///
-    Texture * createCubeTexture(ColorFormat format, uint32 sx, uint32 levels = 1, TextureUsage usages = TextureUsage::DEFAULT) {
+    Texture * createCubeTexture(PixelFormat format, uint32 sx, uint32 levels = 1, TextureUsage usages = TextureUsage::DEFAULT) {
         return createTexture(format, sx, sx, 1, 6, levels, usages);
     }
 
@@ -1118,7 +1117,7 @@ public:
 
     struct BackBufferContent {
         DynaArray<uint8> data;
-        ColorFormat      format;
+        PixelFormat      format;
         uint32           width;
         uint32           height;
         uint32           pitch;

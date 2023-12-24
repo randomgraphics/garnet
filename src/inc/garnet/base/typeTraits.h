@@ -93,7 +93,7 @@ template<>
 struct NumericProperties<uint64> {
     static const bool isSigned = false;
 };
-#if GN_GCC
+#if GN_GNUC
 template<>
 struct NumericProperties<size_t> {
     static const bool isSigned = false;

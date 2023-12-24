@@ -103,11 +103,11 @@ public:
     }
 
     /// Get format of the element.
-    ColorFormat getElementFormat(int semantic) const {
+    PixelFormat getElementFormat(int semantic) const {
         if (0 <= semantic && semantic < (int) NUM_SEMANTICS) {
             return mFormats[semantic];
         } else {
-            return ColorFormat::UNKNOWN;
+            return PixelFormat::UNKNOWN();
         }
     }
 
@@ -127,7 +127,7 @@ public:
     //@}
 
     /// Set element format
-    void setElementFormat(int semantic, ColorFormat format) {
+    void setElementFormat(int semantic, PixelFormat format) {
         if (0 <= semantic && semantic < (int) NUM_SEMANTICS) { mFormats[semantic] = format; }
     }
 
@@ -141,7 +141,7 @@ public:
 
 private:
     DynaArray<VertexElement> mElements[NUM_SEMANTICS];
-    ColorFormat              mFormats[NUM_SEMANTICS];
+    PixelFormat              mFormats[NUM_SEMANTICS];
     uint32                   mCount;
     uint32                   mLayout;
     DynaArray<VertexElement> mFatVertex; // temporary storage used to store the lastest vertex data between beginVertices() and endVerttices(),
@@ -152,7 +152,7 @@ private:
             mElements[i] = std::move(other.mElements[i]);
             GN_ASSERT(other.mElements[i].empty());
             mFormats[i]       = other.mFormats[i];
-            other.mFormats[i] = ColorFormat::UNKNOWN;
+            other.mFormats[i] = PixelFormat::UNKNOWN();
         }
         mCount        = other.mCount;
         other.mCount  = 0;

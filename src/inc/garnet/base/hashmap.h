@@ -215,7 +215,7 @@ public:
         return (KeyValuePair *) n->context;
     }
 
-    const KeyValuePair * next(const KeyValuePair * p) const {
+    const KeyValuePair * next(const KeyValuePair *) const {
         HashMap * pThis = (HashMap *) this;
         return pThis->next();
     }

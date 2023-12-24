@@ -52,7 +52,7 @@ bool GN::gfx::FatVertexBuffer::resize(uint32 layout, uint32 count) {
             mElements[i].resize(count);
         } else {
             mElements[i].clear();
-            mFormats[i] = ColorFormat::UNKNOWN;
+            mFormats[i] = PixelFormat::UNKNOWN();
         }
     }
 
@@ -75,7 +75,7 @@ bool GN::gfx::FatVertexBuffer::beginVertices(uint32_t layout, uint32_t estimated
 
     // reserve memory
     for (auto i = 0; i < NUM_SEMANTICS; ++i) {
-        mFormats[i] = ColorFormat::UNKNOWN;
+        mFormats[i] = PixelFormat::UNKNOWN();
         if (0 == ((1 << i) & layout)) continue;
         mElements[i].reserve(estimatedCount);
     }
@@ -132,7 +132,7 @@ void GN::gfx::FatVertexBuffer::GenerateMeshVertexFormat(MeshVertexFormat & mvf) 
             e.offset = offset;
             e.setSemantic(SEMANTIC_NAMES[i]);
 
-            offset += e.format.getBytesPerBlock();
+            offset += e.format.bytesPerBlock();
             ++mvf.numElements;
         }
     }
@@ -184,7 +184,7 @@ bool GN::gfx::FatVertexBuffer::GenerateVertexStream(const MeshVertexFormat & mvf
     for (size_t j = 0; j < mvf.numElements; ++j) {
         const MeshVertexElement & e = mvf.elements[j];
 
-        size_t size = e.format.getBytesPerBlock();
+        size_t size = e.format.bytesPerBlock();
         if (0 == size) continue;
 
         GN_ASSERT((e.offset + size) <= stride);

@@ -4,5 +4,4 @@
 // \author  chenlee (2019.05/18)
 // *****************************************************************************
 
-#define GN_CORE_INTERNAL
 #include "garnet/GNgfx.h"

@@ -636,14 +636,10 @@ GN_API bool GN::XmlDocument::parse(XmlParseResult & result, File & fp) {
 
     DynaArray<char> buf(fp.size());
 
-    size_t sz;
+    size_t rd = fp.read(buf.data(), buf.size());
+    if (0 == rd) return false;
 
-    if (!fp.read(&buf[0], fp.size(), &sz)) {
-        result.errInfo = "Fail to read the file!";
-        return false;
-    }
-
-    return parse(result, &buf[0], sz);
+    return parse(result, buf.data(), rd);
 
     GN_UNGUARD;
 }

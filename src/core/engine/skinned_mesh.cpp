@@ -852,8 +852,8 @@ bool GN::engine::SkinnedMesh::loadFromFatModel(const GN::gfx::FatModel & fatmode
             uint32 jointSemanticIndex;
             if (merd.vtxfmt.hasSemantic("JOINT_ID", &jointSemanticIndex)) {
                 MeshVertexElement & mve = merd.vtxfmt.elements[jointSemanticIndex];
-                if (mve.format == ColorFormat::UINT4) {
-                    mve.format = ColorFormat::FLOAT4;
+                if (mve.format == PixelFormat::UINT4()) {
+                    mve.format = PixelFormat::FLOAT4();
                     uint8 * p  = (uint8 *) merd.vertices[0] + mve.offset;
                     for (uint32 i = 0; i < merd.numvtx; ++i, p += merd.strides[0]) {
                         // Offset the value by 0.5 to avoid float to integer rounding error. Or else,

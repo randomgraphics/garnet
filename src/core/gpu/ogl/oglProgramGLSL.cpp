@@ -192,7 +192,7 @@ void GN::gfx::OGLGpuProgram::quit() {
 // -----------------------------------------------------------------------------
 bool GN::gfx::OGLGpuProgram::getBindingDesc(OGLVertexBindingDesc & result, uint32 attributeIndex) const {
     if (attributeIndex >= mAttributes.size()) {
-        GN_ERROR(sLogger)("Invalid attribute index.");
+        GN_ERROR(sLogger)("Invalid attribute index: %u. Max value is %u", attributeIndex, mAttributes.size() - 1);
         result.index    = 255;
         result.semantic = (OGLVertexSemantic) -1;
         return false;

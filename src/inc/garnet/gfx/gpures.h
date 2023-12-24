@@ -6,6 +6,8 @@
 /// \author  chenli@@REDMOND (2009.8.13)
 // *****************************************************************************
 
+#include <map>
+
 namespace GN::gfx {
 
 class GpuResourceDatabase;
@@ -136,10 +138,10 @@ protected:
 /// definition of single mesh vertex element
 ///
 struct MeshVertexElement {
-    ColorFormat format       = ColorFormat::UNKNOWN; ///< the vertex element format.
-    uint8       stream       = 0;                    ///< vertex buffer index
-    uint8       offset       = 0;                    ///< offset of the element in the vertex.
-    char        semantic[16] = {};                   ///< Semantic name (null terminated string, 15 characters at most).
+    PixelFormat format       = PixelFormat::UNKNOWN(); ///< the vertex element format.
+    uint8       stream       = 0;                      ///< vertex buffer index
+    uint8       offset       = 0;                      ///< offset of the element in the vertex.
+    char        semantic[16] = {};                     ///< Semantic name (null terminated string, 15 characters at most).
 
     /// Set vertex element semantic.
     void setSemantic(const char * s) {
@@ -230,7 +232,7 @@ struct MeshVertexFormat {
         for (uint32 i = 0; i < numElements; ++i) {
             const MeshVertexElement & e = elements[i];
 
-            uint16 elementEnd = e.offset + e.format.getBytesPerBlock();
+            uint16 elementEnd = e.offset + e.format.bytesPerBlock();
 
             if (stream == e.stream && stride < elementEnd) stride = elementEnd;
         }
@@ -264,7 +266,7 @@ struct MeshVertexFormat {
         vf.numElements = 1;
 
         vf.elements[0].setSemantic("POSITION");
-        vf.elements[0].format = ColorFormat::FLOAT3;
+        vf.elements[0].format = PixelFormat::FLOAT3();
         vf.elements[0].stream = 0;
         vf.elements[0].offset = 0;
 
@@ -286,12 +288,12 @@ struct MeshVertexFormat {
         vf.numElements = 2;
 
         vf.elements[0].setSemantic("POSITION");
-        vf.elements[0].format = ColorFormat::FLOAT2;
+        vf.elements[0].format = PixelFormat::FLOAT2();
         vf.elements[0].stream = 0;
         vf.elements[0].offset = 0;
 
         vf.elements[1].setSemantic("TEXCOORD");
-        vf.elements[1].format = ColorFormat::FLOAT2;
+        vf.elements[1].format = PixelFormat::FLOAT2();
         vf.elements[1].stream = 0;
         vf.elements[1].offset = 8;
 
@@ -314,17 +316,17 @@ struct MeshVertexFormat {
         vf.numElements = 3;
 
         vf.elements[0].setSemantic("POSITION");
-        vf.elements[0].format = ColorFormat::FLOAT3;
+        vf.elements[0].format = PixelFormat::FLOAT3();
         vf.elements[0].stream = 0;
         vf.elements[0].offset = 0;
 
         vf.elements[1].setSemantic("NORMAL");
-        vf.elements[1].format = ColorFormat::FLOAT3;
+        vf.elements[1].format = PixelFormat::FLOAT3();
         vf.elements[1].stream = 0;
         vf.elements[1].offset = 12;
 
         vf.elements[2].setSemantic("TEXCOORD");
-        vf.elements[2].format = ColorFormat::FLOAT2;
+        vf.elements[2].format = PixelFormat::FLOAT2();
         vf.elements[2].stream = 0;
         vf.elements[2].offset = 24;
 
@@ -336,20 +338,20 @@ struct MeshVertexFormat {
 /// Mesh resource descriptor base (no data pointers)
 ///
 struct MeshResourceDescBase {
-    PrimitiveType    prim   = PrimitiveType::POINT_LIST;      ///< primitive type
-    uint32           numvtx = 0;                              ///< number of vertices
-    uint32           numidx = 0;                              ///< number of indices. 0 means non-indexed mesh
-    bool             idx32  = false;                          ///< true for 32-bit index buffer
-    bool             dynavb = false;                          ///< true for dynamic vertex buffer
-    bool             dynaib = false;                          ///< trur for dynamic index buffer
-    MeshVertexFormat vtxfmt;                                  ///< vertex format
-    uint16           strides[GpuContext::MAX_VERTEX_BUFFERS]; ///< vertex buffer strides. 0
-                                                              ///< means using vertex size
-                                                              ///< defined by vertex format.
-    uint32 offsets[GpuContext::MAX_VERTEX_BUFFERS];           ///< Number of bytes from
-                                                              ///< vertex buffer beginning
-                                                              ///< to the first element that
-                                                              ///< will be used.
+    PrimitiveType    prim   = PrimitiveType::POINT_LIST;           ///< primitive type
+    uint32           numvtx = 0;                                   ///< number of vertices
+    uint32           numidx = 0;                                   ///< number of indices. 0 means non-indexed mesh
+    bool             idx32  = false;                               ///< true for 32-bit index buffer
+    bool             dynavb = false;                               ///< true for dynamic vertex buffer
+    bool             dynaib = false;                               ///< trur for dynamic index buffer
+    MeshVertexFormat vtxfmt {};                                    ///< vertex format
+    uint16           strides[GpuContext::MAX_VERTEX_BUFFERS] = {}; ///< vertex buffer strides. 0
+                                                                   ///< means using vertex size
+                                                                   ///< defined by vertex format.
+    uint32 offsets[GpuContext::MAX_VERTEX_BUFFERS] = {};           ///< Number of bytes from
+                                                                   ///< vertex buffer beginning
+                                                                   ///< to the first element that
+                                                                   ///< will be used.
 
     ///
     /// constructor
@@ -505,11 +507,11 @@ struct GN_API EffectResourceDesc {
         GpuProgramDesc      gpd;                ///< GPU Program descriptor
         DynaArray<char>     shaderSourceBuffer; ///< optional buffer used to store store
                                                 ///< shader source.
-        StringMap<char, StrA> textures;         ///< textures. Key is shader parameter name, value is name of
+        std::map<StrA, StrA> textures;          ///< textures. Key is shader parameter name, value is name of
                                                 ///< one texture in EffectResourceDesc.textures.
-        StringMap<char, StrA> uniforms;         ///< uniforms. Key is shader parameter name, value is name of
+        std::map<StrA, StrA> uniforms;          ///< uniforms. Key is shader parameter name, value is name of
                                                 ///< one uniform in EffectResourceDesc.textures.
-        StringMap<char, StrA> attributes;       ///< attributes. Key is shader parameter name, value is name
+        std::map<StrA, StrA> attributes;        ///< attributes. Key is shader parameter name, value is name
                                                 ///< of one attribute in EffectResourceDesc.attributes.
 
         /// default constructor
@@ -536,6 +538,12 @@ struct GN_API EffectResourceDesc {
 
             /// default ctor
             OverridableVariable(): overridden(false) {}
+
+            /// copy ctor
+            OverridableVariable(const OverridableVariable & rhs) {
+                value      = rhs.value;
+                overridden = rhs.overridden;
+            }
 
             /// set value
             template<typename T2>
@@ -618,12 +626,12 @@ struct GN_API EffectResourceDesc {
     // data
     // *****************************
 
-    StringMap<char, EffectTextureDesc>    textures;     ///< Texture list
-    StringMap<char, EffectUniformDesc>    uniforms;     ///< Uniform list
-    StringMap<char, EffectAttributeDesc>  attributes;   ///< attribute list
-    StringMap<char, EffectGpuProgramDesc> gpuprograms;  ///< GPU program list
-    DynaArray<EffectTechniqueDesc>        techniques;   ///< Technique list.
-    EffectRenderStateDesc                 renderstates; ///< Root render state descriptor for the effect.
+    std::map<StrA, EffectTextureDesc>    textures;     ///< Texture list
+    std::map<StrA, EffectUniformDesc>    uniforms;     ///< Uniform list
+    std::map<StrA, EffectAttributeDesc>  attributes;   ///< attribute list
+    std::map<StrA, EffectGpuProgramDesc> gpuprograms;  ///< GPU program list
+    DynaArray<EffectTechniqueDesc>       techniques;   ///< Technique list.
+    EffectRenderStateDesc                renderstates; ///< Root render state descriptor for the effect.
 
     // *****************************
     // methods
@@ -788,9 +796,9 @@ struct GN_API ModelResourceDesc {
 
     //@{
 
-    StrA                              effect;   ///< effect resource name.
-    StringMap<char, ModelTextureDesc> textures; ///< key is effect parameter name
-    StringMap<char, ModelUniformDesc> uniforms; ///< key is effect parameter name
+    StrA                             effect;   ///< effect resource name.
+    std::map<StrA, ModelTextureDesc> textures; ///< key is effect parameter name
+    std::map<StrA, ModelUniformDesc> uniforms; ///< key is effect parameter name
 
     StrA               mesh;   ///< Mesh resource name.
     MeshResourceSubset subset; ///< Mesh subset information.
@@ -811,13 +819,13 @@ struct GN_API ModelResourceDesc {
     /// check if the model has a texture parameter that is mapped to specific
     /// effect parameter
     ///
-    bool hasTexture(const char * effectParameterName) const { return NULL != textures.find(effectParameterName); }
+    bool hasTexture(const char * effectParameterName) const { return textures.end() != textures.find(effectParameterName); }
 
     ///
     /// check if the model has an uniform parameter that is mapped to specific
     /// effect parameter
     ///
-    bool hasUniform(const char * effectParameterName) const { return NULL != uniforms.find(effectParameterName); }
+    bool hasUniform(const char * effectParameterName) const { return uniforms.end() != uniforms.find(effectParameterName); }
 
     ///
     /// setup the descriptor from XML

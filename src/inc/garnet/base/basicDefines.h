@@ -13,10 +13,9 @@
 #define GN_MSVC  0 ///< If 1, means current compiler is msvc (or icl)
 #define GN_MSVC8 0 ///< If 1, means current compiler is msvc 8+
 #define GN_ICL   0 ///< If 1, means current compiler is intel c++ compiler
+#define GN_GNUC  0 ///< If 1, means current compiler is GNUC compilers (gcc, mingw, clang and etc.)
 #define GN_MINGW 0 ///< If 1, means current compiler is MingW
-#define GN_GCC   0 ///< If 1, means current compiler is gcc/g++
-#define GN_CLANG 0 ///< C++ compiler on mac os
-#define GN_BCB   0 ///< If 1, means current compiler is boland c++ compiler
+#define GN_CLANG 0 ///< IF 1, means current compiler is clang
 
 /// \def GN_COMPILER
 /// Indicate current compiler
@@ -39,26 +38,21 @@
 
 #elif defined(__GNUC__) && defined(_WIN32)
     #undef GN_MINGW
-    #undef GN_GCC
+    #undef GN_GNUC
     #define GN_MINGW    1
-    #define GN_GCC      1
+    #define GN_GNUC     1
     #define GN_COMPILER mingw
 
-#elif defined(__BORLANDC__)
-    #undef GN_BCB
-    #define GN_BCB      1
-    #define GN_COMPILER bcb
-
 #elif defined(__clang__)
-    #undef GN_GCC
+    #undef GN_GNUC
     #undef GN_CLANG
-    #define GN_GCC      1
+    #define GN_GNUC     1
     #define GN_CLANG    1
     #define GN_COMPILER clang
 
 #elif defined(__GNUC__)
-    #undef GN_GCC
-    #define GN_GCC      1
+    #undef GN_GNUC
+    #define GN_GNUC     1
     #define GN_COMPILER gcc
 
 #else
@@ -140,6 +134,7 @@
 #define GN_X86 0 ///< 32-bit x86
 #define GN_X64 0 ///< 64-bit amd64
 #define GN_PPC 0 ///< power pc
+#define GN_ARM 0 ///< arm processor
 
 /// \def GN_CPU
 /// Indicate current CPU
@@ -152,6 +147,10 @@
     #undef GN_PPC
     #define GN_PPC 1
     #define GN_CPU ppc
+#elif defined(__arm64__)
+    #undef GN_ARM
+    #define GN_ARM 1
+    #define GN_CPU arm
 #elif defined(_M_IX86) || defined(_X86_) || defined(i386) || defined(__i386__)
     #undef GN_X86
     #define GN_X86 1
@@ -164,12 +163,15 @@
 // 辨识endian
 // *****************************************************************************
 
-#if defined(__LITTLE_ENDIAN__) || defined(__BIG_ENDIAN__)
-    #define GN_LITTLE_ENDIAN defined(__LITTLE_ENDIAN__) ///< true on little endian machine
-    #define GN_BIT_ENDIAN    defined(__BIG_ENDIAN__)    ///< true on big endian machine
+#if defined(__LITTLE_ENDIAN__)
+    #define GN_LITTLE_ENDIAN 1
+    #define GN_BIT_ENDIAN    0
+#elif defined(__BIG_ENDIAN__)
+    #define GN_LITTLE_ENDIAN 0
+    #define GN_BIT_ENDIAN    1
 #else
-    #define GN_LITTLE_ENDIAN (GN_X64 || GN_X86) ///< true on little endian machine
-    #define GN_BIG_ENDIAN    GN_PPC             ///< true on big endian machine
+    #define GN_BIG_ENDIAN    GN_PPC
+    #define GN_LITTLE_ENDIAN !(GN_BIG_ENDINE)
 #endif
 
 #if !(GN_LITTLE_ENDIAN ^ GN_BIG_ENDIAN)
@@ -204,7 +206,7 @@
 #if GN_MSVC
     #define GN_EXPORT __declspec(dllexport)
 #elif GN_GNUC && __GNUC__ >= 4
-    #define GN_EXPORT       __attribute__ ((visibility("default"))
+    #define GN_EXPORT __attribute__((visibility("default")))
 #else
     #define GN_EXPORT
 #endif

@@ -109,14 +109,11 @@ static bool sCheckShaderTextures(const EffectResourceDesc & effectDesc, const Ef
                                  const GpuProgram & program) {
     const GpuProgramParameterDesc & param = program.getParameterDesc();
 
-    for (const StringMap<char, StrA>::KeyValuePair * iter = programDesc.textures.first(); iter != NULL; iter = programDesc.textures.next(iter)) {
-        const StrA & shaderParameterName = iter->key;
-        const StrA & textureName         = iter->value;
-
+    for (const auto & [shaderParameterName, textureName] : programDesc.textures) {
         if (GPU_PROGRAM_PARAMETER_NOT_FOUND == param.textures[shaderParameterName]) {
             GN_ERROR(sLogger)("Invalid GPU program parameter named '%s' is referenced in shader '%s'.", shaderParameterName.rawptr(), programName);
             return false;
-        } else if (NULL == effectDesc.textures.find(textureName)) {
+        } else if (effectDesc.textures.end() == effectDesc.textures.find(textureName)) {
             GN_ERROR(sLogger)("Invalid texture named '%s' is referenced in shader '%s'.", shaderParameterName.rawptr(), programName);
             return false;
         }
@@ -132,14 +129,11 @@ static bool sCheckShaderUniforms(const EffectResourceDesc & effectDesc, const Ef
                                  const GpuProgram & program) {
     const GpuProgramParameterDesc & param = program.getParameterDesc();
 
-    for (const StringMap<char, StrA>::KeyValuePair * iter = programDesc.uniforms.first(); iter != NULL; iter = programDesc.uniforms.next(iter)) {
-        const StrA & shaderParameterName = iter->key;
-        const StrA & uniformName         = iter->value;
-
+    for (const auto & [shaderParameterName, uniformName] : programDesc.uniforms) {
         if (GPU_PROGRAM_PARAMETER_NOT_FOUND == param.uniforms[shaderParameterName]) {
             GN_ERROR(sLogger)("Invalid GPU program parameter named '%s' is referenced in shader '%s'.", shaderParameterName.rawptr(), programName);
             return false;
-        } else if (NULL == effectDesc.uniforms.find(uniformName)) {
+        } else if (effectDesc.uniforms.end() == effectDesc.uniforms.find(uniformName)) {
             GN_ERROR(sLogger)("Invalid uniform named '%s' is referenced in shader '%s'.", shaderParameterName.rawptr(), programName);
             return false;
         }
@@ -272,13 +266,7 @@ void GN::gfx::EffectResource::Impl::clear() {
 //
 // -----------------------------------------------------------------------------
 bool GN::gfx::EffectResource::Impl::initGpuPrograms(const EffectResourceDesc & effectDesc) {
-    for (const StringMap<char, EffectGpuProgramDesc>::KeyValuePair * iter = effectDesc.gpuprograms.first(); iter != NULL;
-         iter                                                             = effectDesc.gpuprograms.next(iter)) {
-        const StrA &                 programName = iter->key;
-        const EffectGpuProgramDesc & programDesc = iter->value;
-        initGpuProgram(effectDesc, programName, programDesc);
-    }
-
+    for (const auto & [programName, programDesc] : effectDesc.gpuprograms) { initGpuProgram(effectDesc, programName, programDesc); }
     return true;
 }
 
@@ -364,13 +352,13 @@ bool GN::gfx::EffectResource::Impl::initTech(const EffectResourceDesc & effectDe
             // Shader is not found. Let's find out why. See if it is expected.
 
             // Look up GPU program description
-            const EffectGpuProgramDesc * programDesc = effectDesc.gpuprograms.find(programName);
-            if (NULL == programDesc) {
+            auto programIter = effectDesc.gpuprograms.find(programName);
+            if (effectDesc.gpuprograms.end() == programIter) {
                 GN_ERROR(sLogger)("Technique '%s' referencs non-exist shader name '%s' in pass %u", techName.rawptr(), programName.rawptr(), ipass);
             }
 
             // check GPU caps against shader requirments
-            else if (!sCheckGpuCaps(gpu, *programDesc)) {
+            else if (!sCheckGpuCaps(gpu, programIter->second)) {
                 // Note: it is expected scenario that some shaders are not supported by current hardware.
                 //       So here only a verbose, instead of error, message is issued.
                 GN_VERBOSE(sLogger)
@@ -397,24 +385,20 @@ bool GN::gfx::EffectResource::Impl::initTech(const EffectResourceDesc & effectDe
 //
 // -----------------------------------------------------------------------------
 bool GN::gfx::EffectResource::Impl::initTextures(const EffectResourceDesc & effectDesc) {
-    for (const StringMap<char, EffectTextureDesc>::KeyValuePair * iter = effectDesc.textures.first(); iter != NULL; iter = effectDesc.textures.next(iter)) {
+    // for (const StringMap<char, EffectTextureDesc>::KeyValuePair * iter = effectDesc.textures.first(); iter != NULL; iter = effectDesc.textures.next(iter)) {
+    for (const auto & [name, texture] : effectDesc.textures) {
         TextureProperties tp;
-
-        tp.parameterName = iter->key;
-        tp.sampler       = iter->value.sampler;
+        tp.parameterName = name;
+        tp.sampler       = texture.sampler;
 
         // setup texture binding point array
         for (uint32 ipass = 0; ipass < mPasses.size(); ++ipass) {
             const GpuProgramItem &          gpitem      = mPrograms[mPasses[ipass].gpuProgramIndex];
             const GpuProgramParameterDesc & gpparam     = gpitem.prog->getParameterDesc();
-            const EffectGpuProgramDesc *    programDesc = effectDesc.gpuprograms.find(gpitem.name);
+            const EffectGpuProgramDesc &    programDesc = effectDesc.gpuprograms.at(gpitem.name);
 
-            for (const StringMap<char, StrA>::KeyValuePair * iter = programDesc->textures.first(); iter != NULL; iter = programDesc->textures.next(iter)) {
-                const StrA & shaderParameterName = iter->key;
-                const StrA & textureName         = iter->value;
-
-                GN_ASSERT(NULL != effectDesc.textures.find(textureName));
-
+            for (const auto & [shaderParameterName, textureName] : programDesc.textures) {
+                GN_ASSERT(effectDesc.textures.end() != effectDesc.textures.find(textureName));
                 if (textureName == tp.parameterName) {
                     BindingLocation b = {ipass, gpparam.textures[shaderParameterName]};
                     GN_ASSERT(GPU_PROGRAM_PARAMETER_NOT_FOUND != b.gpuProgramParameterIndex);
@@ -435,26 +419,20 @@ bool GN::gfx::EffectResource::Impl::initTextures(const EffectResourceDesc & effe
 //
 // -----------------------------------------------------------------------------
 bool GN::gfx::EffectResource::Impl::initUniforms(const EffectResourceDesc & effectDesc) {
-    for (const StringMap<char, EffectUniformDesc>::KeyValuePair * iter = effectDesc.uniforms.first(); iter != NULL; iter = effectDesc.uniforms.next(iter)) {
+    // for (auto iter = effectDesc.uniforms.begin(); iter != effec; iter = effectDesc.uniforms.next(iter)) {
+    for (const auto & [name, eud] : effectDesc.uniforms) {
         UniformProperties up;
-
-        up.parameterName = iter->key;
-
-        const EffectUniformDesc & eud = iter->value;
-        up.size                       = eud.size;
+        up.parameterName = name;
+        up.size          = eud.size;
 
         // setup uniform binding point array
         for (uint32 ipass = 0; ipass < mPasses.size(); ++ipass) {
             const GpuProgramItem &          gpitem      = mPrograms[mPasses[ipass].gpuProgramIndex];
             const GpuProgramParameterDesc & gpparam     = gpitem.prog->getParameterDesc();
-            const EffectGpuProgramDesc *    programDesc = effectDesc.gpuprograms.find(gpitem.name);
+            const EffectGpuProgramDesc &    programDesc = effectDesc.gpuprograms.at(gpitem.name);
 
-            for (const StringMap<char, StrA>::KeyValuePair * iter = programDesc->uniforms.first(); iter != NULL; iter = programDesc->uniforms.next(iter)) {
-                const StrA & shaderParameterName = iter->key;
-                const StrA & uniformName         = iter->value;
-
-                GN_ASSERT(NULL != effectDesc.uniforms.find(uniformName));
-
+            for (const auto & [shaderParameterName, uniformName] : programDesc.uniforms) {
+                GN_ASSERT(effectDesc.uniforms.end() != effectDesc.uniforms.find(uniformName));
                 if (uniformName == up.parameterName) {
                     BindingLocation b = {ipass, gpparam.uniforms[shaderParameterName]};
                     GN_ASSERT(GPU_PROGRAM_PARAMETER_NOT_FOUND != b.gpuProgramParameterIndex);
@@ -475,22 +453,19 @@ bool GN::gfx::EffectResource::Impl::initUniforms(const EffectResourceDesc & effe
 //
 // -----------------------------------------------------------------------------
 bool GN::gfx::EffectResource::Impl::initAttributes(const EffectResourceDesc & effectDesc) {
-    for (const StringMap<char, EffectAttributeDesc>::KeyValuePair * iter = effectDesc.attributes.first(); iter != NULL;
-         iter                                                            = effectDesc.attributes.next(iter)) {
+    // for (const StringMap<char, EffectAttributeDesc>::KeyValuePair * iter = effectDesc.attributes.first(); iter != NULL;
+    //     iter                                                            = effectDesc.attributes.next(iter)) {
+    for (const auto & [name, ead] : effectDesc.attributes) {
         AttributeProperties ap;
-
-        ap.parameterName = iter->key;
+        ap.parameterName = name;
 
         // setup attribute binding point array
         for (uint32 ipass = 0; ipass < mPasses.size(); ++ipass) {
-            const GpuProgramItem &          gpitem      = mPrograms[mPasses[ipass].gpuProgramIndex];
-            const GpuProgramParameterDesc & gpparam     = gpitem.prog->getParameterDesc();
-            const EffectGpuProgramDesc *    programDesc = effectDesc.gpuprograms.find(gpitem.name);
+            const auto & gpitem      = mPrograms[mPasses[ipass].gpuProgramIndex];
+            const auto & gpparam     = gpitem.prog->getParameterDesc();
+            const auto & programDesc = effectDesc.gpuprograms.at(gpitem.name);
 
-            for (const StringMap<char, StrA>::KeyValuePair * iter = programDesc->attributes.first(); iter != NULL; iter = programDesc->attributes.next(iter)) {
-                const StrA & shaderParameterName = iter->key;
-                const StrA & attributeName       = iter->value;
-
+            for (const auto & [shaderParameterName, attributeName] : programDesc.attributes) {
                 if (sAttributeNameEqual(attributeName, ap.parameterName)) {
                     BindingLocation b = {ipass, gpparam.attributes[shaderParameterName]};
                     if (GPU_PROGRAM_PARAMETER_NOT_FOUND != b.gpuProgramParameterIndex) {
@@ -520,8 +495,8 @@ uint32 GN::gfx::EffectResource::Impl::findGpuProgram(const EffectResourceDesc & 
     }
 
 #if LOAD_GPU_PROGRAM_ONDEMAND
-    const EffectGpuProgramDesc * programDesc = effectDesc.gpuprograms.find(programName);
-    if (NULL != programDesc && initGpuProgram(effectDesc, programName, *programDesc)) {
+    auto programDesc = effectDesc.gpuprograms.find(programName);
+    if (effectDesc.gpuprograms.end() != programDesc && initGpuProgram(effectDesc, programName, programDesc->second)) {
         GN_ASSERT(mPrograms.size() > 0);
         return (uint32) (mPrograms.size() - 1);
     }
@@ -603,7 +578,7 @@ AutoRef<EffectResource> GN::gfx::EffectResource::loadFromFile(GpuResourceDatabas
     GN_INFO(sLogger)("Load effect from file: %s", filename);
 
     // open XML file
-    AutoObjPtr<File> fp(fs::openFile(filename, "rt"));
+    auto fp = fs::openFile(filename, std::ios::in);
     if (!fp) return AutoRef<EffectResource>::NULLREF;
     XmlDocument    doc;
     XmlParseResult xpr;
@@ -616,7 +591,7 @@ AutoRef<EffectResource> GN::gfx::EffectResource::loadFromFile(GpuResourceDatabas
          fp->name().rawptr(), xpr.errLine, xpr.errColumn, xpr.errInfo.rawptr());
         return AutoRef<EffectResource>::NULLREF;
     }
-    fp.clear();
+    fp.reset();
     GN_ASSERT(xpr.root);
 
     // load descriptor from file

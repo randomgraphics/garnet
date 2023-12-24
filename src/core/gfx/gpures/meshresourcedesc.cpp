@@ -80,38 +80,38 @@ void sSwapVertexEndianInplace(void *                   buffer,
 
             switch (e.format.layout) {
             // 16 bits
-            case ColorFormat::LAYOUT_4_4_4_4:
-            case ColorFormat::LAYOUT_5_5_5_1:
-            case ColorFormat::LAYOUT_5_6_5:
-            case ColorFormat::LAYOUT_16:
+            case PixelFormat::LAYOUT_4_4_4_4:
+            case PixelFormat::LAYOUT_5_5_5_1:
+            case PixelFormat::LAYOUT_5_6_5:
+            case PixelFormat::LAYOUT_16:
                 swap8in16(p, p, 1);
                 break;
 
-            case ColorFormat::LAYOUT_16_16:
+            case PixelFormat::LAYOUT_16_16:
                 swap8in16(p, p, 2);
                 break;
 
-            case ColorFormat::LAYOUT_16_16_16_16:
+            case PixelFormat::LAYOUT_16_16_16_16:
                 swap8in16(p, p, 4);
                 break;
 
             // 32 bits
-            case ColorFormat::LAYOUT_10_11_11:
-            case ColorFormat::LAYOUT_11_11_10:
-            case ColorFormat::LAYOUT_10_10_10_2:
-            case ColorFormat::LAYOUT_32:
+            case PixelFormat::LAYOUT_10_11_11:
+            case PixelFormat::LAYOUT_11_11_10:
+            case PixelFormat::LAYOUT_10_10_10_2:
+            case PixelFormat::LAYOUT_32:
                 swap8in32(p, p, 1);
                 break;
 
-            case ColorFormat::LAYOUT_32_32:
+            case PixelFormat::LAYOUT_32_32:
                 swap8in32(p, p, 2);
                 break;
 
-            case ColorFormat::LAYOUT_32_32_32:
+            case PixelFormat::LAYOUT_32_32_32:
                 swap8in32(p, p, 3);
                 break;
 
-            case ColorFormat::LAYOUT_32_32_32_32:
+            case PixelFormat::LAYOUT_32_32_32_32:
                 swap8in32(p, p, 4);
                 break;
 
@@ -162,24 +162,24 @@ bool sGetMeshVertexPositions(MeshVertexPosition & pos, const MeshResourceDesc & 
 
     const float * vertices = (const float *) (((const uint8 *) desc.vertices[positionElement->stream]) + positionElement->offset);
 
-    if (ColorFormat::FLOAT1 == positionElement->format) {
+    if (PixelFormat::FLOAT1() == positionElement->format) {
         pos.x = vertices;
         pos.y = 0;
         pos.z = 0;
-    } else if (ColorFormat::FLOAT2 == positionElement->format) {
+    } else if (PixelFormat::FLOAT2() == positionElement->format) {
         pos.x = vertices;
         pos.y = vertices + 1;
         pos.z = 0;
-    } else if (ColorFormat::FLOAT3 == positionElement->format) {
+    } else if (PixelFormat::FLOAT3() == positionElement->format) {
         pos.x = vertices;
         pos.y = vertices + 1;
         pos.z = vertices + 2;
-    } else if (ColorFormat::FLOAT4 == positionElement->format) {
+    } else if (PixelFormat::FLOAT4() == positionElement->format) {
         pos.x = vertices;
         pos.y = vertices + 1;
         pos.z = vertices + 2;
     } else {
-        GN_ERROR(sLogger)("AABB calculation failed: unsupported vertex format %s", positionElement->format.toString().rawptr());
+        GN_ERROR(sLogger)("AABB calculation failed: unsupported vertex format %s", positionElement->format.toString().c_str());
         return false;
     }
     pos.strideX = pos.strideY = pos.strideZ = desc.strides[positionElement->stream];
@@ -191,17 +191,16 @@ bool sGetMeshVertexPositions(MeshVertexPosition & pos, const MeshResourceDesc & 
 //
 // -----------------------------------------------------------------------------
 MeshFileType sDetermineMeshFileType(File & fp) {
-    size_t currentPos = fp.tell();
+    auto currentPos = fp.input().tellg();
 
     char buf[16];
 
-    size_t readen;
-    if (!fp.read(buf, 16, &readen)) {
+    if (16 != fp.read(buf, 16)) {
         GN_ERROR(sLogger)("Fail to read mesh file header.");
         return MESH_FILE_UNKNOWN;
     }
 
-    if (!fp.seek(currentPos, FileSeek::SET)) {
+    if (!fp.input().seekg(currentPos, std::ios::beg)) {
         GN_ERROR(sLogger)("Fail to seek mesh file reading cursor back.");
         return MESH_FILE_UNKNOWN;
     }
@@ -222,7 +221,7 @@ MeshFileType sDetermineMeshFileType(File & fp) {
 AutoRef<Blob> sLoadFromMeshBinaryFile(File & fp, MeshResourceDesc & desc) {
     MeshBinaryFileHeaderV2 header;
 
-    if (!fp.read(&header, sizeof(header), NULL)) {
+    if (sizeof(header) != fp.read(&header, sizeof(header))) {
         GN_ERROR(sLogger)("Fail to read mesh header.");
         return AutoRef<Blob>::NULLREF;
     }
@@ -248,7 +247,7 @@ AutoRef<Blob> sLoadFromMeshBinaryFile(File & fp, MeshResourceDesc & desc) {
 
     // read mesh data
     AutoRef<Blob> blob = referenceTo(new SimpleBlob(header.bytes));
-    if (!fp.read(blob->data(), header.bytes, NULL)) {
+    if (header.bytes != fp.read(blob->data(), header.bytes)) {
         GN_ERROR(sLogger)("fail to read mesh data.");
         return AutoRef<Blob>::NULLREF;
     }
@@ -349,10 +348,10 @@ static bool sGetBoolAttrib(const XmlElement & node, const char * attribName, boo
 //
 // -----------------------------------------------------------------------------
 static bool sReadV1BinaryFile(MeshBinaryHeaderV1 & header, uint8 * dst, size_t length, const char * filename) {
-    AutoObjPtr<File> fp(fs::openFile(filename, "rb"));
+    auto fp = fs::openFile(filename, std::ios::binary | std::ios::in);
     if (!fp) return false;
 
-    if (!fp->read(&header, sizeof(header), NULL)) {
+    if (sizeof(header) != fp->read(&header, sizeof(header))) {
         GN_ERROR(sLogger)("Fail to read garnet binary file header: %s", filename);
         return false;
     }
@@ -362,12 +361,39 @@ static bool sReadV1BinaryFile(MeshBinaryHeaderV1 & header, uint8 * dst, size_t l
         return false;
     }
 
-    if (!fp->read(dst, length, NULL)) {
+    if (length != fp->read(dst, length)) {
         GN_ERROR(sLogger)("Fail to read binary data from file: %s", filename);
         return false;
     }
 
     return true;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+static PixelFormat fromString(const char * str) {
+    struct ColorFormatName {
+        PixelFormat  format;
+        const char * name;
+    };
+
+    static const ColorFormatName TABLE[] = {
+        {PixelFormat::FLOAT1(), "float1"},
+        {PixelFormat::FLOAT2(), "float2"},
+        {PixelFormat::FLOAT3(), "float3"},
+        {PixelFormat::FLOAT4(), "float4"},
+    };
+
+    if (0 == str || 0 == *str) return PixelFormat::UNKNOWN();
+
+    for (size_t i = 0; i < GN_ARRAY_COUNT(TABLE); ++i) {
+        const ColorFormatName & n = TABLE[i];
+
+        if (0 == str::compareI(n.name, str)) { return n.format; }
+    }
+
+    return PixelFormat::UNKNOWN();
 }
 
 //
@@ -438,7 +464,7 @@ AutoRef<Blob> sLoadFromMeshXMLFile(File & fp, MeshResourceDesc & desc) {
         ve.setSemantic(a->value);
 
         a = e->findAttrib("format");
-        if (!a || (ColorFormat::UNKNOWN == (ve.format = ColorFormat::sFromString(a->value)))) {
+        if (!a || (PixelFormat::UNKNOWN() == (ve.format = fromString(a->value)))) {
             GN_ERROR(sLogger)("Missing or invalid format attribute.");
             return AutoRef<Blob>::NULLREF;
         }
@@ -621,7 +647,7 @@ AutoRef<Blob> GN::gfx::MeshResourceDesc::loadFromFile(const char * filename) {
 
     *this = {};
 
-    AutoObjPtr<File> fp(fs::openFile(filename, "rb"));
+    auto fp = fs::openFile(filename, std::ios::binary | std::ios::in);
     if (!fp) return AutoRef<Blob>::NULLREF;
 
     return loadFromFile(*fp);
@@ -672,7 +698,7 @@ bool GN::gfx::MeshResourceDesc::saveToFile(File & fp) const {
     }
 
     // write header
-    if (!fp.write(&header, sizeof(header), NULL)) {
+    if (sizeof(header) != fp.write(&header, sizeof(header))) {
         GN_ERROR(sLogger)("Fail to write mesh header.");
         return false;
     }
@@ -680,7 +706,7 @@ bool GN::gfx::MeshResourceDesc::saveToFile(File & fp) const {
     // write vertex buffers
     for (size_t i = 0; i < GpuContext::MAX_VERTEX_BUFFERS; ++i) {
         if (vfp.used[i]) {
-            if (!fp.write(this->vertices[i], vbsizes[i], NULL)) {
+            if (vbsizes[i] != fp.write(this->vertices[i], vbsizes[i])) {
                 GN_ERROR(sLogger)("Fail to write vertex buffer %i", i);
                 return false;
             }
@@ -689,7 +715,7 @@ bool GN::gfx::MeshResourceDesc::saveToFile(File & fp) const {
 
     // write index buffer
     if (numidx > 0) {
-        if (!fp.write(this->indices, ibsize, NULL)) {
+        if (ibsize != fp.write(this->indices, ibsize)) {
             GN_ERROR(sLogger)("Fail to write index buffer");
             return false;
         }
@@ -704,7 +730,7 @@ bool GN::gfx::MeshResourceDesc::saveToFile(File & fp) const {
 bool GN::gfx::MeshResourceDesc::saveToFile(const char * filename) const {
     GN_INFO(sLogger)("Save mesh to file: %s", filename ? filename : "<null filename>");
 
-    AutoObjPtr<File> fp(fs::openFile(filename, "wb"));
+    auto fp = fs::openFile(filename, std::ios::binary | std::ios::out);
     if (!fp) return false;
     return saveToFile(*fp);
 }

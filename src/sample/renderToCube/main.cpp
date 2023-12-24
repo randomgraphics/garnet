@@ -35,7 +35,7 @@ class RenderToTexture : public SampleApp {
         desc.numidx             = 36;
         desc.vtxfmt.numElements = 1;
         desc.vtxfmt.elements[0].setSemantic("POSITION0");
-        desc.vtxfmt.elements[0].format = ColorFormat::RGB_32_32_32_FLOAT;
+        desc.vtxfmt.elements[0].format = PixelFormat::RGB_32_32_32_FLOAT();
         desc.vertices[0]               = vertices;
         desc.indices                   = indices;
 
@@ -70,7 +70,7 @@ public:
         texdesc.depth                  = 1;
         texdesc.faces                  = 6;
         texdesc.levels                 = 1;
-        texdesc.format                 = ColorFormat::RGBA8;
+        texdesc.format                 = PixelFormat::RGBA8();
         texdesc.usage                  = TextureUsage::COLOR_RENDER_TARGET;
         if (!cubemap->reset(&texdesc)) return false;
 

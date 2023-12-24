@@ -15,10 +15,10 @@ namespace GN {
 namespace gfx {}
 } // namespace GN
 
+#include "gfx/image.h"
+
 // Basic graphics definition and utilities that are building blocks of
 // higher level graphics system.
-#include "gfx/colorFormat.h"
-#include "gfx/image.h"
 #include "gfx/shape.h"
 #include "gfx/primitive.h"
 

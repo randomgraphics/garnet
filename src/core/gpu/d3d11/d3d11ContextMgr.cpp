@@ -374,7 +374,7 @@ inline bool GN::gfx::D3D11Gpu::bindContextResource(const GpuContext & newContext
 
             if (0 == b.stride && b.vtxbuf) {
                 const VertexElement & e = newContext.vtxbind[i];
-                strides[i]              = e.format.getBytesPerBlock();
+                strides[i]              = e.format.bytesPerBlock();
             }
         }
         mDeviceContext->IASetVertexBuffers(0, GpuContext::MAX_VERTEX_BUFFERS, buf, strides, offsets);

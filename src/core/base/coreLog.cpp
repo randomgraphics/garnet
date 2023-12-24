@@ -333,7 +333,7 @@ class DebugReceiver : public Logger::Receiver {
             str::formatTo(buf, 16384, "%s\n", msg);
         } else {
             str::formatTo(buf, 16384, "%s(%d) : name(%s), level(%s) : %s\n", sFormatPath(desc.file).rawptr(), desc.line, logger.getName(),
-                        sLevel2Str(desc.level).rawptr(), msg);
+                          sLevel2Str(desc.level).rawptr(), msg);
         }
         ::OutputDebugStringA(buf);
 #else
@@ -351,7 +351,7 @@ class DebugReceiver : public Logger::Receiver {
             str::formatTo(buf, 16384, L"%S\n", msg);
         } else {
             str::formatTo(buf, 16384, L"%S(%d) : name(%S), level(%S) : %s\n", sFormatPath(desc.file).rawptr(), desc.line, logger.getName(),
-                        sLevel2Str(desc.level).rawptr(), msg);
+                          sLevel2Str(desc.level).rawptr(), msg);
         }
         ::OutputDebugStringW(buf);
 #else

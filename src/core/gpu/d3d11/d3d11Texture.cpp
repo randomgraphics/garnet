@@ -417,7 +417,7 @@ bool GN::gfx::D3D11Texture::createTexture() {
     if (TextureUsage::DEPTH_RENDER_TARGET == texdesc.usage) {
         // special case for depth texture
 
-        mTextureFormat = dxgi::getDXGIFormatDesc((DXGI_FORMAT) colorFormat2DxgiFormat(texdesc.format)).typelessFormat;
+        mTextureFormat = dxgi::getDXGIFormatDesc((DXGI_FORMAT) texdesc.format.toDXGI()).typelessFormat;
         mReadingFormat = sGetDepthReadingFormat(mTextureFormat);
         mWritingFormat = sGetDepthWritingFormat(mTextureFormat);
         if (DXGI_FORMAT_UNKNOWN == mTextureFormat || DXGI_FORMAT_UNKNOWN == mReadingFormat || DXGI_FORMAT_UNKNOWN == mWritingFormat) {
@@ -425,7 +425,7 @@ bool GN::gfx::D3D11Texture::createTexture() {
             return false;
         }
     } else {
-        mReadingFormat = (DXGI_FORMAT) colorFormat2DxgiFormat(texdesc.format);
+        mReadingFormat = (DXGI_FORMAT) texdesc.format.toDXGI();
         mTextureFormat = mReadingFormat;
         mWritingFormat = mReadingFormat;
         if (DXGI_FORMAT_UNKNOWN == mReadingFormat) {

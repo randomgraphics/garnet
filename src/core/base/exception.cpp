@@ -19,7 +19,7 @@ static Logger * sLogger = getLogger("GN.base.exception");
 
 // ---------------------------------------------------------------------------------------------------------------------
 //
-GN_API GN::StrA GN::backtrace(bool includeSourceSnippet) {
+GN_API StrA backtrace(bool includeSourceSnippet) {
     (void) includeSourceSnippet; // this is to avoid unreferenced variable warning.
 #if GN_ANDROID
     struct android_backtrace_state {

@@ -10,14 +10,14 @@
     #pragma clang diagnostic ignored "-Waddress-of-packed-member"
     #pragma clang diagnostic ignored "-Woverloaded-virtual"
 #endif
-#include <assimp/assimp.h>
-#include <assimp/aiScene.h>       // Output data structure
-#include <assimp/aiPostProcess.h> // Post processing flags
-#include <assimp/IOStream.h>
-#include <assimp/IOSystem.h>
+#include <assimp/cimport.h>
+#include <assimp/scene.h>       // Output data structure
+#include <assimp/postprocess.h> // Post processing flags
+#include <assimp/IOStream.hpp>
+#include <assimp/IOSystem.hpp>
 
 #ifdef HAS_FBX
-    #if GN_GCC
+    #if GN_GNUC
         #pragma GCC diagnostic ignored "-Wunused"
     #elif GN_MSVC
         #pragma warning(disable : 4996) // 'x' was declared depreciated
@@ -235,15 +235,15 @@ static bool sLoadFromASE(FatModel & fatmodel, File & file, const StrA & filename
         }
         if (position) {
             sCopyVertexElement<Vector3f>(dst.vertices.getPosition(), src, *position);
-            dst.vertices.setElementFormat(FatVertexBuffer::POSITION, ColorFormat::FLOAT3);
+            dst.vertices.setElementFormat(FatVertexBuffer::POSITION, PixelFormat::FLOAT3());
         }
         if (normal) {
             sCopyVertexElement<Vector3f>(dst.vertices.getNormal(), src, *normal);
-            dst.vertices.setElementFormat(FatVertexBuffer::NORMAL, ColorFormat::FLOAT3);
+            dst.vertices.setElementFormat(FatVertexBuffer::NORMAL, PixelFormat::FLOAT3());
         }
         if (texcoord) {
             sCopyVertexElement<Vector2f>(dst.vertices.getTexcoord(0), src, *texcoord);
-            dst.vertices.setElementFormat(FatVertexBuffer::TEXCOORD0, ColorFormat::FLOAT2);
+            dst.vertices.setElementFormat(FatVertexBuffer::TEXCOORD0, PixelFormat::FLOAT2());
         }
 
         // copy index buffer
@@ -760,12 +760,12 @@ static bool sGenerateFatVertices(FatMesh & fatmesh, FbxNode * fbxnode, const Mes
     FatVertexBuffer & fatvb = fatmesh.vertices;
     if (!fatvb.resize(layout, numkeys)) return false;
 
-    fatvb.setElementFormat(FatVertexBuffer::POSITION, ColorFormat::FLOAT3);
-    fatvb.setElementFormat(FatVertexBuffer::NORMAL, ColorFormat::FLOAT3);
-    fatvb.setElementFormat(FatVertexBuffer::TEXCOORD0, ColorFormat::FLOAT2);
+    fatvb.setElementFormat(FatVertexBuffer::POSITION, PixelFormat::FLOAT3());
+    fatvb.setElementFormat(FatVertexBuffer::NORMAL, PixelFormat::FLOAT3());
+    fatvb.setElementFormat(FatVertexBuffer::TEXCOORD0, PixelFormat::FLOAT2());
     if (skinning) {
-        fatvb.setElementFormat(FatVertexBuffer::JOINT_ID, ColorFormat::UINT4);
-        fatvb.setElementFormat(FatVertexBuffer::JOINT_WEIGHT, ColorFormat::FLOAT4);
+        fatvb.setElementFormat(FatVertexBuffer::JOINT_ID, PixelFormat::UINT4());
+        fatvb.setElementFormat(FatVertexBuffer::JOINT_WEIGHT, PixelFormat::FLOAT4());
     }
 
     Vector4f * pos     = (Vector4f *) fatvb.getPosition();
@@ -1403,80 +1403,80 @@ namespace ai {
 
 using namespace Assimp;
 
-// My own implementation of IOStream
-class MyIOStream : public Assimp::IOStream {
-    friend class MyIOSystem;
+// // My own implementation of IOStream
+// class MyIOStream : public Assimp::IOStream {
+//     friend class MyIOSystem;
 
-    AutoObjPtr<File> mFile;
+//     AutoObjPtr<File> mFile;
 
-protected:
-    // Constructor protected for private usage by MyIOSystem
-    MyIOStream(const std::string & filename, const std::string & mode) { mFile.attach(fs::openFile(filename.c_str(), mode.c_str())); }
+// protected:
+//     // Constructor protected for private usage by MyIOSystem
+//     MyIOStream(const std::string & filename, const std::string & mode) { mFile.attach(fs::openFile(filename.c_str(), mode.c_str())); }
 
-public:
-    ~MyIOStream() { mFile.clear(); }
+// public:
+//     ~MyIOStream() { mFile.clear(); }
 
-    size_t Read(void * pvBuffer, size_t pSize, size_t pCount) {
-        size_t readen;
-        if (mFile && mFile->write(pvBuffer, pSize * pCount, &readen)) {
-            return readen;
-        } else {
-            return 0;
-        }
-    }
+//     size_t Read(void * pvBuffer, size_t pSize, size_t pCount) {
+//         size_t readen;
+//         if (mFile && mFile->write(pvBuffer, pSize * pCount, &readen)) {
+//             return readen;
+//         } else {
+//             return 0;
+//         }
+//     }
 
-    size_t Write(const void * pvBuffer, size_t pSize, size_t pCount) {
-        size_t written;
-        if (mFile && mFile->write(pvBuffer, pSize * pCount, &written)) {
-            return written;
-        } else {
-            return 0;
-        }
-    }
+//     size_t Write(const void * pvBuffer, size_t pSize, size_t pCount) {
+//         size_t written;
+//         if (mFile && mFile->write(pvBuffer, pSize * pCount, &written)) {
+//             return written;
+//         } else {
+//             return 0;
+//         }
+//     }
 
-    aiReturn Seek(size_t pOffset, aiOrigin pOrigin) {
-        if (mFile) {
-            FileSeek fs;
-            switch (pOrigin) {
-            case aiOrigin_SET:
-                fs = FileSeek::SET;
-            case aiOrigin_CUR:
-                fs = FileSeek::CUR;
-            case aiOrigin_END:
-                fs = FileSeek::END;
-            default:
-                return aiReturn_FAILURE;
-            }
-            return mFile->seek(pOffset, fs) ? aiReturn_SUCCESS : aiReturn_FAILURE;
-        } else {
-            return aiReturn_FAILURE;
-        }
-    }
+//     aiReturn Seek(size_t pOffset, aiOrigin pOrigin) {
+//         if (mFile) {
+//             FileSeek fs;
+//             switch (pOrigin) {
+//             case aiOrigin_SET:
+//                 fs = FileSeek::SET;
+//             case aiOrigin_CUR:
+//                 fs = FileSeek::CUR;
+//             case aiOrigin_END:
+//                 fs = FileSeek::END;
+//             default:
+//                 return aiReturn_FAILURE;
+//             }
+//             return mFile->seek(pOffset, fs) ? aiReturn_SUCCESS : aiReturn_FAILURE;
+//         } else {
+//             return aiReturn_FAILURE;
+//         }
+//     }
 
-    size_t Tell() const { return mFile ? mFile->tell() : 0; }
+//     size_t Tell() const { return mFile ? mFile->tell() : 0; }
 
-    size_t FileSize() const { return mFile ? mFile->size() : 0; }
+//     size_t FileSize() const { return mFile ? mFile->size() : 0; }
 
-    void Flush() {}
-};
+//     void Flush() {}
+// };
 
-// Fisher Price - My First Filesystem
-class MyIOSystem : public Assimp::IOSystem {
-    MyIOSystem() {}
+// // Fisher Price - My First Filesystem
+// class MyIOSystem : public Assimp::IOSystem {
+//     MyIOSystem() {}
 
-    ~MyIOSystem() {}
+//     ~MyIOSystem() {}
 
-    // Check whether a specific file exists
-    bool Exists(const std::string & filename) const { return GN::fs::pathExist(filename.c_str()); }
+//     // Check whether a specific file exists
+//     bool Exists(const std::string & filename) const { return GN::fs::pathExist(filename.c_str()); }
 
-    // Get the path delimiter character we'd like to see
-    char GetOsSeparator() const { return '/'; }
+//     // Get the path delimiter character we'd like to see
+//     char GetOsSeparator() const { return '/'; }
 
-    // ... and finally a method to open a custom stream
-    Assimp::IOStream * Open(const std::string & file, const std::string & mode) { return new MyIOStream(file, mode); }
+//     // ... and finally a method to open a custom stream
+//     Assimp::IOStream * Open(const std::string & file, const std::string & mode) { return new MyIOStream(file, mode); }
 
-    void Close(Assimp::IOStream * pFile) { delete pFile; }
-};
+//     void Close(Assimp::IOStream * pFile) { delete pFile; }
+// };
 
 //
 //
@@ -1773,20 +1773,20 @@ static bool sLoadAiVertices(FatMesh & fatmesh,
     if (!fatvb.resize(fatlayout, aimesh->mNumVertices)) return false;
 
     Vector4f * fatpos = (Vector4f *) fatvb.getPosition();
-    if (fatpos) fatvb.setElementFormat(FatVertexBuffer::POSITION, ColorFormat::FLOAT3);
+    if (fatpos) fatvb.setElementFormat(FatVertexBuffer::POSITION, PixelFormat::FLOAT3());
 
     Vector4f * fatnormal = (Vector4f *) fatvb.getNormal();
-    if (fatnormal) fatvb.setElementFormat(FatVertexBuffer::NORMAL, ColorFormat::FLOAT3);
+    if (fatnormal) fatvb.setElementFormat(FatVertexBuffer::NORMAL, PixelFormat::FLOAT3());
 
     Vector4f * fattc0 = (Vector4f *) fatvb.getTexcoord(0);
     // TODO: get texcood format from aimesh.
-    if (fattc0) fatvb.setElementFormat(FatVertexBuffer::TEXCOORD0, ColorFormat::FLOAT2);
+    if (fattc0) fatvb.setElementFormat(FatVertexBuffer::TEXCOORD0, PixelFormat::FLOAT2());
 
     Vector4<uint32> * fatjoint = (Vector4<uint32> *) fatvb.getElementData(FatVertexBuffer::JOINT_ID);
-    if (fatjoint) fatvb.setElementFormat(FatVertexBuffer::JOINT_ID, ColorFormat::UINT4);
+    if (fatjoint) fatvb.setElementFormat(FatVertexBuffer::JOINT_ID, PixelFormat::UINT4());
 
     Vector4f * fatweight = (Vector4f *) fatvb.getElementData(FatVertexBuffer::JOINT_WEIGHT);
-    if (fatweight) fatvb.setElementFormat(FatVertexBuffer::JOINT_WEIGHT, ColorFormat::FLOAT4);
+    if (fatweight) fatvb.setElementFormat(FatVertexBuffer::JOINT_WEIGHT, PixelFormat::FLOAT4());
 
     aiMatrix4x4 normalTransform = transform;
     normalTransform.Transpose();
@@ -2215,8 +2215,8 @@ bool GN::gfx::FatModel::loadFromFile(const StrA & filename) {
     bool noerr = true;
 
     // Open the file.
-    AutoObjPtr<File> file(fs::openFile(filename, "rb"));
-    if (NULL == file) return false;
+    auto file = fs::openFile(filename, std::ios::in | std::ios::binary);
+    if (!file) return false;
 
     // determine file format
     FileFormat ff = sDetermineFileFormatByContent(*file);

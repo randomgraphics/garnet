@@ -222,12 +222,12 @@ public:
         GN_UNGUARD;
     }
 
-    File * openFile(const StrA & name, const StrA & mode) {
+    std::unique_ptr<File> openFile(const StrA & name, std::ios_base::openmode mode) {
         StrA nativeName;
         toNativeDiskFilePath(nativeName, name);
-        AutoObjPtr<DiskFile> fp(new DiskFile);
-        if (!fp->open(nativeName, mode)) return NULL;
-        return fp.detach();
+        auto fp = std::make_unique<DiskFile>();
+        if (!fp->open(nativeName, mode)) return {};
+        return fp;
     }
 
 private:
@@ -315,7 +315,7 @@ public:
         return mNativeFs.glob(result, joinPath(mRootDir, dirName), pattern, recursive, useRegex);
     }
 
-    File * openFile(const StrA & path, const StrA & mode) { return mNativeFs.openFile(joinPath(mRootDir, path), mode); }
+    std::unique_ptr<File> openFile(const StrA & name, std::ios_base::openmode mode) { return mNativeFs.openFile(joinPath(mRootDir, name), mode); }
 };
 
 // *****************************************************************************
@@ -343,7 +343,7 @@ public:
         return mNativeFs.glob(result, joinPath(mRootDir, dirName), pattern, recursive, useRegex);
     }
 
-    File * openFile(const StrA & path, const StrA & mode) { return mNativeFs.openFile(joinPath(mRootDir, path), mode); }
+    std::unique_ptr<File> openFile(const StrA & path, std::ios_base::openmode mode) { return mNativeFs.openFile(joinPath(mRootDir, path), mode); }
 };
 
 // *****************************************************************************
@@ -411,7 +411,7 @@ public:
         return result;
     }
 
-    File * openFile(const StrA & path, const StrA & mode) {
+    std::unique_ptr<File> openFile(const StrA & path, std::ios_base::openmode mode) {
         const StrA * root = findRoot(path);
         if (!root) {
             GN_ERROR(sLogger)("file '%s' not found!", path.rawptr());
@@ -466,13 +466,13 @@ class FakeFileSystem : public FileSystem {
 public:
     FakeFileSystem() {}
 
-    bool              exist(const StrA &) { return false; }
-    bool              isDir(const StrA &) { return false; }
-    bool              isFile(const StrA &) { return false; }
-    void              toNativeDiskFilePath(StrA & result, const StrA & path) { result = path; }
-    bool              isAbsPath(const StrA &) { return true; }
-    DynaArray<StrA> & glob(DynaArray<StrA> & result, const StrA &, const StrA &, bool, bool) { return result; }
-    File *            openFile(const StrA &, const StrA &) { return 0; }
+    bool                  exist(const StrA &) { return false; }
+    bool                  isDir(const StrA &) { return false; }
+    bool                  isFile(const StrA &) { return false; }
+    void                  toNativeDiskFilePath(StrA & result, const StrA & path) { result = path; }
+    bool                  isAbsPath(const StrA &) { return true; }
+    DynaArray<StrA> &     glob(DynaArray<StrA> & result, const StrA &, const StrA &, bool, bool) { return result; }
+    std::unique_ptr<File> openFile(const StrA &, std::ios_base::openmode) { return {}; }
 };
 
 // *****************************************************************************

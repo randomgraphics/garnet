@@ -74,22 +74,22 @@ bool GN::gfx::LineRenderer::init() {
     mContext.vtxbind.resize(6);
     mContext.vtxbind[0].stream = 0;
     mContext.vtxbind[0].offset = GN_FIELD_OFFSET(LineVertex, pos);
-    mContext.vtxbind[0].format = ColorFormat::FLOAT3;
+    mContext.vtxbind[0].format = PixelFormat::FLOAT3();
     mContext.vtxbind[1].stream = 0;
     mContext.vtxbind[1].offset = GN_FIELD_OFFSET(LineVertex, colorInRGBA);
-    mContext.vtxbind[1].format = ColorFormat::RGBA8;
+    mContext.vtxbind[1].format = PixelFormat::RGBA8();
     mContext.vtxbind[2].stream = 0;
     mContext.vtxbind[2].offset = GN_FIELD_OFFSET(LineVertex, transform);
-    mContext.vtxbind[2].format = ColorFormat::FLOAT4;
+    mContext.vtxbind[2].format = PixelFormat::FLOAT4();
     mContext.vtxbind[3].stream = 0;
     mContext.vtxbind[3].offset = GN_FIELD_OFFSET(LineVertex, transform) + sizeof(Vector4f);
-    mContext.vtxbind[3].format = ColorFormat::FLOAT4;
+    mContext.vtxbind[3].format = PixelFormat::FLOAT4();
     mContext.vtxbind[4].stream = 0;
     mContext.vtxbind[4].offset = GN_FIELD_OFFSET(LineVertex, transform) + sizeof(Vector4f) * 2;
-    mContext.vtxbind[4].format = ColorFormat::FLOAT4;
+    mContext.vtxbind[4].format = PixelFormat::FLOAT4();
     mContext.vtxbind[5].stream = 0;
     mContext.vtxbind[5].offset = GN_FIELD_OFFSET(LineVertex, transform) + sizeof(Vector4f) * 3;
-    mContext.vtxbind[5].format = ColorFormat::FLOAT4;
+    mContext.vtxbind[5].format = PixelFormat::FLOAT4();
 
     // create GPU program
     const GpuCaps & caps = mGpu.caps();
@@ -282,6 +282,18 @@ bool GN::gfx::ThickLineRenderer::init(Gpu & g) {
     // standard init procedure
     GN_STDCLASS_INIT();
 
+    // create vertex format with 2 elements)
+    mContext.vtxbind.resize(2);
+    mContext.vtxbind[0].stream = 0;
+    mContext.vtxbind[0].offset = 0;
+    mContext.vtxbind[0].format = PixelFormat::FLOAT4();
+    mContext.vtxbind[1].stream = 0;
+    mContext.vtxbind[1].offset = 16;
+    mContext.vtxbind[1].format = PixelFormat::RGBA8();
+    // mContext.vtxbind[2].stream = 0;
+    // mContext.vtxbind[2].offset = 20;
+    // mContext.vtxbind[2].format = PixelFormat::FLOAT2();
+
     // initialize shaders
     const GpuCaps & caps = g.caps();
     GpuProgramDesc  gpd("ThickLinkeRenderer");
@@ -289,8 +301,8 @@ bool GN::gfx::ThickLineRenderer::init(Gpu & g) {
         const char * hlslvscode = R"(
             struct VSIO {
                float4 pos : POSITION0;
-               float2 tex : TEXCOORD0;
                float4 clr : COLOR0;   
+               // float2 tex : TEXCOORD0;
             };
             VSIO main( VSIO i ) {
                VSIO o = i;
@@ -301,8 +313,8 @@ bool GN::gfx::ThickLineRenderer::init(Gpu & g) {
         const char * hlslpscode = R"(
             struct VSIO {
                float4 pos : POSITION0;
-               float2 tex : TEXCOORD0;
                float4 clr : COLOR0;   
+               // float2 tex : TEXCOORD0;
             };
             float4 main( VSIO i ) : COLOR0 {
                return i.clr;
@@ -321,21 +333,20 @@ bool GN::gfx::ThickLineRenderer::init(Gpu & g) {
 
         const GpuProgramParameterDesc & gppd = mContext.gpuProgram->getParameterDesc();
 
-        mContext.vtxbind.resize(3);
         mContext.vtxbind[0].attribute = gppd.attributes["POSITION0"];
         mContext.vtxbind[1].attribute = gppd.attributes["COLOR0"];
-        mContext.vtxbind[2].attribute = gppd.attributes["TEXCOORD0"];
+        // mContext.vtxbind[2].attribute = gppd.attributes["TEXCOORD0"];
     } else if (caps.shaderModels & ShaderModel::GLSL_1_10) {
         static const char * glslvscode = R"(
             in vec4 i_Position;
             in vec4 i_Color;
-            in vcc2 i_TexCoord;
+            // in vec2 i_TexCoord;
             varying vec4 color;
             varying vec2 texcoords;
             void main() {
                gl_Position = i_Position;
                color       = i_Color;
-               texcoords   = i_TexCoord;
+               // texcoords   = i_TexCoord;
             }
         )";
 
@@ -357,26 +368,13 @@ bool GN::gfx::ThickLineRenderer::init(Gpu & g) {
 
         const GpuProgramParameterDesc & gppd = mContext.gpuProgram->getParameterDesc();
 
-        mContext.vtxbind.resize(3);
         mContext.vtxbind[0].attribute = gppd.attributes["i_Position"];
         mContext.vtxbind[1].attribute = gppd.attributes["i_Color"];
-        mContext.vtxbind[2].attribute = gppd.attributes["i_TexCoord"];
+        // mContext.vtxbind[2].attribute = gppd.attributes["i_TexCoord"];
     } else {
         GN_ERROR(sLogger)("Sprite renderer requires either GLSL or HLSL support from graphics hardware.");
         return failure();
     }
-
-    // create vertex format
-    mContext.vtxbind.resize(3);
-    mContext.vtxbind[0].stream = 0;
-    mContext.vtxbind[0].offset = 0;
-    mContext.vtxbind[0].format = ColorFormat::FLOAT4;
-    mContext.vtxbind[1].stream = 0;
-    mContext.vtxbind[1].offset = 16;
-    mContext.vtxbind[1].format = ColorFormat::RGBA8;
-    mContext.vtxbind[2].stream = 0;
-    mContext.vtxbind[2].offset = 20;
-    mContext.vtxbind[2].format = ColorFormat::FLOAT2;
 
     // initialize index buffer
     const uint16 numpoly = MAX_VERTICES / 6;

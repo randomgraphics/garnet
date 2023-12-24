@@ -69,7 +69,7 @@ bool init(Gpu & gpu) {
     // setup vertex format
     rc.vtxbind.resize(1);
     rc.vtxbind[0].attribute = 0; // bind to the first GPU program attribute
-    rc.vtxbind[0].format    = ColorFormat::FLOAT4;
+    rc.vtxbind[0].format    = PixelFormat::FLOAT4();
     rc.vtxbind[0].offset    = 0;
     rc.vtxbind[0].stream    = 0;
 

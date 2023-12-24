@@ -51,6 +51,7 @@ __setup-local-git-config()
     fi
 }
 __setup-local-git-config ${GARNET_ROOT}
+__setup-local-git-config ${GARNET_ROOT/src/3rdparty/rapid-image}
 
 
 # =====

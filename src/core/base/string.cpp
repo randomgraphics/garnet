@@ -69,7 +69,7 @@ GN_API void GN::str::formatvTo(wchar_t * buf, size_t bufSize, const wchar_t * fm
 // -----------------------------------------------------------------------------
 GN_API size_t GN::str::toSignedInteger(sint64 & result, int bits, int base, const char * s) {
     // check invalid parameters
-    if (bits < 2 && bits > 64) return 0;
+    if (bits < 2 || bits > 64) return 0;
     if (base < 2) return 0;
     if (isEmpty(s)) return 0;
 
@@ -100,7 +100,7 @@ GN_API size_t GN::str::toSignedInteger(sint64 & result, int bits, int base, cons
 // -----------------------------------------------------------------------------
 GN_API size_t GN::str::toUnsignedInteger(uint64 & result, int bits, int base, const char * s) {
     // check invalid parameters
-    if (bits < 2 && bits > 64) return 0;
+    if (bits < 2 || bits > 64) return 0;
     if (base < 2) return 0;
     if (isEmpty(s)) return 0;
 

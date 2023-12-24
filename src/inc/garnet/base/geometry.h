@@ -6,6 +6,9 @@
 /// \author  chenlee (2005.4.17)
 // *****************************************************************************
 
+#ifdef _MSC_VER
+    #pragma warning(disable : 4819) // unicode file name warning
+#endif
 #include <Eigen/Eigen>
 
 // Garnet system uses right hand system by default. Define this macro to 1 to

@@ -31,6 +31,10 @@ def git(cmdline):
 def update_submodules():
     submodules = [
         # list all submodules here to automatically fetch them as part of the build process.
+        "src/3rdparty/assimp",
+        "src/3rdparty/eigen",
+        "src/3rdparty/rapid-image",
+        "src/3rdparty/stb",
     ]
     for s in submodules:
         dir = sdk_root_dir / s
@@ -38,7 +42,7 @@ def update_submodules():
             utils.rip(f"{dir} not found. your working directory might be corrupted. Please consider re-cloning.")
         items = dir.iterdir()
         if len(list(items)) == 0 :
-            git("submodule update --init")
+            git("submodule update --init --recursive")
             break
 
 def cmake_config(args, build_dir, build_type):

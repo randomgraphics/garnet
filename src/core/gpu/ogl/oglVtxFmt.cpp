@@ -152,63 +152,44 @@ bool GN::gfx::OGLVtxFmt::setupStateBindings(const OGLGpuProgram * gpuProgram) {
             return false;
         }
 
-        switch (e.format.alias) {
-        case ColorFormat::FLOAT1:
+        if (PixelFormat::FLOAT1() == e.format) {
             ab.format        = GL_FLOAT;
             ab.components    = 1;
             ab.normalization = false;
-            break;
-
-        case ColorFormat::FLOAT2:
+        } else if (PixelFormat::FLOAT2() == e.format) {
             ab.format        = GL_FLOAT;
             ab.components    = 2;
             ab.normalization = false;
-            break;
-
-        case ColorFormat::FLOAT3:
+        } else if (PixelFormat::FLOAT3() == e.format) {
             ab.format        = GL_FLOAT;
             ab.components    = 3;
             ab.normalization = false;
-            break;
-
-        case ColorFormat::FLOAT4:
+        } else if (PixelFormat::FLOAT4() == e.format) {
             ab.format        = GL_FLOAT;
             ab.components    = 4;
             ab.normalization = false;
-            break;
-
-        case ColorFormat::RGBA8:
+        } else if (PixelFormat::RGBA8() == e.format) {
             ab.format        = GL_UNSIGNED_BYTE;
             ab.components    = 4;
             ab.normalization = true;
-            break;
-
-        case ColorFormat::USHORT4:
+        } else if (PixelFormat::USHORT4() == e.format) {
             ab.format        = GL_UNSIGNED_SHORT;
             ab.components    = 4;
             ab.normalization = false;
-            break;
-
-        case ColorFormat::SHORT4:
+        } else if (PixelFormat::SHORT4() == e.format) {
             ab.format        = GL_SHORT;
             ab.components    = 4;
             ab.normalization = false;
-            break;
-
-        case ColorFormat::UINT4:
+        } else if (PixelFormat::UINT4() == e.format) {
             ab.format        = GL_UNSIGNED_INT;
             ab.components    = 4;
             ab.normalization = false;
-            break;
-
-        case ColorFormat::SINT4:
+        } else if (PixelFormat::SINT4() == e.format) {
             ab.format        = GL_INT;
             ab.components    = 4;
             ab.normalization = false;
-            break;
-
-        default:
-            GN_ERROR(sLogger)("unsupport vertex format: %s", e.format.toString().rawptr());
+        } else {
+            GN_ERROR(sLogger)("unsupport vertex format: %s", e.format.toString().c_str());
             return false;
         }
 

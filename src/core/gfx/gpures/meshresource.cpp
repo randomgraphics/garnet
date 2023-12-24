@@ -28,7 +28,7 @@ bool GN::gfx::VertexFormatProperties::analyze(const MeshVertexFormat & vf) {
 
         uint16 currentStride = minStrides[e.stream];
 
-        uint16 newStride = e.offset + e.format.getBytesPerBlock();
+        uint16 newStride = e.offset + e.format.bytesPerBlock();
 
         if (newStride > currentStride) minStrides[e.stream] = newStride;
     }

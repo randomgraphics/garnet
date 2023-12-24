@@ -97,9 +97,18 @@ function(add_core_libs)
     endif()
 endfunction()
 
-target_include_directories(GNcore PUBLIC ${BUILD_HEADER_INC} ../inc)
+target_include_directories(GNcore PUBLIC
+    ${BUILD_HEADER_INC}
+    ../inc
+    ../3rdparty/Eigen
+    ../3rdparty/rapid-image/inc
+)
+target_include_directories(GNcore PRIVATE
+    ../3rdparty/stb
+)
 target_link_libraries(GNcore PUBLIC GNextern)
 target_compile_features(GNcore PUBLIC cxx_std_17)
+target_compile_definitions(GNcore PRIVATE GN_CORE_INTERNAL)
 
 # Qt6
 if(Qt6Widgets_FOUND)
@@ -148,7 +157,10 @@ endif()
 
 # thread libraries
 find_package(Threads REQUIRED)
-add_core_libs(${CMAKE_DL_LIBS} Threads::Threads)
+add_core_libs(Threads::Threads)
+
+# Assimp
+add_core_libs(assimp)
 
 # compiler specific setup
 if(MSVC)

@@ -23,7 +23,12 @@ class MyApp : public SampleApp {
 public:
     MyApp(): mSprite(NULL) {}
 
-    bool onInit() {
+    bool onPreInit(InitParam & p) override {
+        p.ro.api = GpuAPI::D3D11; // d3d11 only
+        return true;
+    }
+
+    bool onInit() override {
         Gpu & gpu = *engine::getGpu();
 
         mSprite = new SpriteRenderer();
@@ -80,10 +85,11 @@ public:
         const char *    filename = "media/ripple.ps";
         if (fs::pathExist(filename)) {
             DiskFile f;
-            if (f.open(filename, "rt")) {
-                rippleCodeFromFile.resize(f.size() + 1);
-                rippleCodeFromFile[f.size()] = '\0';
-                if (f.read(&rippleCodeFromFile[0], f.size(), NULL)) { rippleCode = &rippleCodeFromFile[0]; }
+            if (f.open(filename, std::ios::in)) {
+                auto sz = f.size();
+                rippleCodeFromFile.resize(sz + 1);
+                rippleCodeFromFile[sz] = '\0';
+                if (sz != f.read(&rippleCodeFromFile[0], sz)) { rippleCode = &rippleCodeFromFile[0]; }
             }
         }
 

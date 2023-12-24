@@ -34,7 +34,7 @@ struct Gpu2 : public RefCounter {
     struct InputElement {
         const char * semantic;
         uint32_t     index;
-        ColorFormat  format;
+        PixelFormat  format;
         uint32_t     slot;                         // input assembly slot: 0-15
         uint32_t     offset       = (uint32_t) -1; // byte offset of the element. Set to -1 for auto alignment.
         bool         instanceData = false;
@@ -190,7 +190,7 @@ struct Gpu2 : public RefCounter {
         SurfaceType   type;
         struct TextureDesc {
             uint32_t    w, h = 1, d = 1, a = 1, m = 1, s = 1; ///< width, height, depth, array, mipmaps, samples.
-            ColorFormat f;                                    ///< format
+            PixelFormat f;                                    ///< format
         } t;
         struct BufferDesc {
             uint32_t bytes;

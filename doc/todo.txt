@@ -3,15 +3,22 @@
 
 - Mordenization:
   - depreicate/remove some old old code: like guard, icl support
+  - update 3rd party libraries using submodule:
+    - assimp
+  - replace custom types with standard STL types:
+    - AutoObjPtr
+    - custom containers: array, hashmap, dict
+    - string: TBD
+    - File -> std::iostream
   - replace some custom classes with 3rdparty library:
     - math
     - delegate
-    - custom containers: array, hashmap, string, dict
     - Spinlook=p -> std::mutex
     - ColorFormat -> rapid_image
   - something keepers:
     - autoptr: it is much faster and more memory effecient than use std::shared_ptr directly.
-    
+
+- ripple effect sample is currently broken: report empty vertex layout error.
 
 - create a real time rendering system
   - Using new gpu2 interface
