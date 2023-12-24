@@ -135,6 +135,14 @@ private:
     std::ostream * mOutput = nullptr;
 };
 
+/// stream output operator
+template<typename T>
+inline File & operator<<(File & fp, const T & t) {
+    GN_ASSERT(fp.writeable());
+    fp.output() << t;
+    return fp;
+}
+
 ///
 /// disk file class
 ///
