@@ -14,6 +14,8 @@
     - math
     - delegate
     - Spinlook=p -> std::mutex
+    - custom log -> spdlog (https://github.com/gabime/spdlog)
+    - format -> fmtlib (https://github.com/fmtlib/fmt )
   - something keepers:
     - autoptr: it is much faster and more memory effecient than use std::shared_ptr directly.
 
