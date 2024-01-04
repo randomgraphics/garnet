@@ -19,6 +19,8 @@
   - something keepers:
     - autoptr: it is much faster and more memory effecient than use std::shared_ptr directly.
 
+- fix Qt6 window build.
+
 - ripple effect sample is currently broken: report empty vertex layout error.
 
 - create a render graph system using gpu2 interface.

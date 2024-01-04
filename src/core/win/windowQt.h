@@ -7,6 +7,10 @@
 
 #ifdef HAS_QT
 
+#ifdef __GNUC__
+#pragma GCC diagnostic ignore "-Wpermissive"
+#endif
+
     #include <QtWidgets/QtWidgets>
     #include <QtWidgets/QApplication>
 

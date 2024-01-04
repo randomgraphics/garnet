@@ -110,13 +110,13 @@ target_link_libraries(GNcore PUBLIC GNextern)
 target_compile_features(GNcore PUBLIC cxx_std_17)
 target_compile_definitions(GNcore PRIVATE GN_CORE_INTERNAL)
 
-# Qt6
-if(Qt6Widgets_FOUND)
-    add_core_libs(Qt::Widgets)
-    target_compile_definitions(GNcore PRIVATE HAS_QT=1)
-else()
-    message("QT not found. QT window is disabled")
-endif()
+# Qt6 build is disabled for now.
+# if(Qt6Widgets_FOUND)                                                
+#     add_core_libs(Qt::Widgets)
+#     target_compile_definitions(GNcore PRIVATE HAS_QT=1)
+# else()
+#     message("QT not found. QT window is disabled")
+# endif()
 
 # directx
 if(D3D11_FOUND)
