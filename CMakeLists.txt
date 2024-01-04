@@ -6,10 +6,11 @@ project(garnet)
 # public configrations
 # ====================
 
-option(GN_BUILD_IS_STATIC "Set to ON|OFF to build GNcore as static|shared library." OFF)
-option(GN_BUILD_SAMPLES "Set to ON|OFF to build samples." ON)
-option(GN_BUILD_TOOLS "Set to ON|OFF to build tools." ON)
-option(GN_BUILD_TESTS "Set to ON|OFF to build tests." ON)
+option(GN_BUILD_IS_STATIC "Set to ON to build GNcore as static library. Default is OFF" OFF)
+option(GN_BUILD_SAMPLES "Set to ON to build samples. Default is ON." ON)
+option(GN_BUILD_TOOLS "Set to ON to build tools. Default is ON." ON)
+option(GN_BUILD_TESTS "Set to ON to build tests. Default is ON." ON)
+option(GN_BUILD_DISABLE_ALL_WARINGS "Set to ON mute all compiler warnings. Default is OFF." OFF)
 
 # =================
 # utility functions
@@ -139,6 +140,25 @@ else()
     # release build
     set(GN_BUILD_DEBUG_ENABLED OFF)
     set(GN_BUILD_PROFILING_ENABLED OFF)
+endif()
+
+# Set compiler specific options
+if (MSVC)
+    if (GN_BUILD_DISABLE_ALL_WARINGS)
+        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /w")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /w")
+    else()
+        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /W4 /WX")
+        set(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} /W4 /WX")
+    endif()
+else()
+    if (GN_BUILD_DISABLE_ALL_WARINGS)
+        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -w")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -w")
+    else()
+        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -Werror")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Werror")
+    endif()
 endif()
 
 # setup repository wide cmake properties

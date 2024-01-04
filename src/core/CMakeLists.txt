@@ -163,17 +163,14 @@ add_core_libs(Threads::Threads)
 add_core_libs(assimp)
 
 # compiler specific setup
-if(MSVC)
+if (MSVC)
     target_compile_definitions(GNcore PUBLIC _UNICODE UNICODE) # REVIEW: why not private?
-    target_compile_options(GNcore PUBLIC /EHa /MP /W4 /WX
+    target_compile_options(GNcore PUBLIC /EHa /MP
         /Wv:18 # fix eigen warning
     )
-else()
-    target_compile_options(GNcore PUBLIC -Wall -Wextra -Werror)
-    if (NOT GN_BUILD_IS_STATIC)
-        target_compile_options(GNcore PRIVATE
-            -fvisibility=hidden # hide symbols by default.
-            -Wno-attributes # disable warning about attributes
-        )
-    endif()
+elseif (NOT GN_BUILD_IS_STATIC)
+    target_compile_options(GNcore PRIVATE
+        -fvisibility=hidden # hide symbols by default.
+        -Wno-attributes # disable warning about attributes
+    )
 endif()

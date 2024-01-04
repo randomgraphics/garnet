@@ -129,8 +129,8 @@ public:
             virtual bool isEqual(const BaseType & other) const { return BaseType::getType() == other.getType() && mFunc == ((ThisType &) other).mFunc; } \
                                                                                                                                                          \
             virtual bool isLess(const BaseType & other) const {                                                                                          \
-                if (BaseType::getType() != other.getType()) return BaseType::getType() < other.getType();                                                \
-                return mFunc < ((ThisType &) other).mFunc;                                                                                               \
+                if (BaseType::getType() != other.getType()) return (void*)BaseType::getType() < (void*)other.getType();                                                \
+                return (void*)mFunc < (void*)(((ThisType &) other).mFunc);                                                                                               \
             }                                                                                                                                            \
                                                                                                                                                          \
             virtual R run(PARAM_LIST) const {                                                                                                            \
@@ -167,7 +167,7 @@ DEFINE_FREECLOSURE(GN_CDECL, );
             }                                                                                                                                                \
                                                                                                                                                              \
             virtual bool isLess(const BaseType & other) const {                                                                                              \
-                if (BaseType::getType() != other.getType()) return BaseType::getType() < other.getType();                                                    \
+                if (BaseType::getType() != other.getType()) return (void*)BaseType::getType() < (void*)other.getType();                                                    \
                 const ThisType & o = (ThisType &) other;                                                                                                     \
                 if (mClassPtr != o.mClassPtr) return mClassPtr < o.mClassPtr;                                                                                \
                 return ::memcmp(&mFunc, &o.mFunc, sizeof(mFunc)) < 0;                                                                                        \
@@ -231,9 +231,9 @@ public:
             virtual bool isEqual(const BaseType & other) const { return BaseType::getType() == other.getType() && mFunctor == ((ThisType &) other).mFunctor; } \
                                                                                                                                                                \
             virtual bool isLess(const BaseType & other) const {                                                                                                \
-                if (BaseType::getType() != other.getType()) return BaseType::getType() < other.getType();                                                      \
+                if (BaseType::getType() != other.getType()) return (void*)BaseType::getType() < (void*)other.getType();                                                      \
                 const ThisType & o = (ThisType &) other;                                                                                                       \
-                return mFunctor < o.mFunctor;                                                                                                                  \
+                return (void*)mFunctor < (void*)o.mFunctor;                                                                                                                  \
             }                                                                                                                                                  \
                                                                                                                                                                \
             virtual R run(PARAM_LIST) const { return (*mFunctor)(PARAM_VALUES); }                                                                              \

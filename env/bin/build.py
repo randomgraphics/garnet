@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
 from ctypes import util
-import sys, subprocess, os, pathlib, argparse, shutil, glob
+import sys, subprocess, os, platform, pathlib, argparse, shutil, glob
 
 import utils
 
@@ -53,7 +53,7 @@ def cmake_config(args, build_dir, build_type):
         # Support only arm64 for now
         sdk = pathlib.Path(os.getenv('ANDROID_SDK_ROOT'))
         ndk = sdk / "ndk/23.1.7779620"
-        if 'nt' == os.name:
+        if 'Windows' == platform.system():
             ninja = sdk / "cmake/3.18.1/bin/ninja.exe"
             if not ninja.exists(): utils.rip(f"{ninja} not found. Please install cmake 3.18+ via Android SDK Manager." )
         else:
@@ -73,8 +73,11 @@ def cmake_config(args, build_dir, build_type):
             -DANDROID_ABI=arm64-v8a \
             -DCMAKE_ANDROID_ARCH_ABI=arm64-v8a \
             "
-    elif ('nt' != os.name) and (not args.use_makefile) :
-        config += " -GNinja"
+    elif 'Windows' != platform.system():
+        if not args.use_makefile: config += " -GNinja"
+        if args.use_clang:
+            clang_version = "" if "Darwin" == platform.system() else ""
+            config += f" -DCMAKE_C_COMPILER=clang{clang_version} -DCMAKE_CXX_COMPILER=clang++{clang_version}"
     cmake(build_dir, config)
 
 # ==========
@@ -88,6 +91,7 @@ ap.add_argument("-b", dest="build_dir", default="build", help="Build output fold
 ap.add_argument("-c", dest="config_only", action="store_true", help="Run CMake config only. Skip cmake build.")
 ap.add_argument("-C", dest="skip_config", action="store_true", help="Skip CMake config. Run build process only.")
 ap.add_argument("-m", dest="use_makefile", action="store_true", help="Use OS's default makefile instead of Ninja")
+ap.add_argument("--clang", dest="use_clang", action="store_true", help="Use CLANG instead of GCC as the compiler. Default is GCC. This option is only valid on Linux.")
 ap.add_argument("variant", help="Specify build variant. Acceptable values are: d(ebug)/p(rofile)/r(elease)/c(lean). "
                                          "Note that all parameters alert this one will be considered \"extra\" and passed to CMake directly.")
 ap.add_argument("extra", nargs=argparse.REMAINDER, help="Extra arguments passing to cmake.")
