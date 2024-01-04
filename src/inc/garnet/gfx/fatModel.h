@@ -162,15 +162,15 @@ private:
 };
 
 struct FatMeshSubset {
-    uint32 material; //< index into FatModel.materials array.
+    uint32 material {}; //< index into FatModel.materials array.
 
     // Vertex range.
-    uint32 basevtx;
-    uint32 numvtx;
+    uint32 basevtx {};
+    uint32 numvtx {};
 
     // Index range. If the mesh has no index buffer, index range will be ignored.
-    uint32 startidx;
-    uint32 numidx;
+    uint32 startidx {};
+    uint32 numidx {};
 
     /// Joints used by the subset. This is also a joint ID remapping table for
     /// vertices used by this subset:
@@ -182,19 +182,19 @@ struct FatMeshSubset {
     /// vertex:
     ///
     ///    subset1.joints[TheVertex.jointID] == subset2.joints[TheVertex.jointID] == subset3....
-    DynaArray<uint32, uint32> joints;
+    DynaArray<uint32, uint32> joints {};
 };
 
 struct FatMesh {
     /// Constant value indicating that the mesh has no skeleton.
     static const uint32 NO_SKELETON = (uint32) -1;
 
-    FatVertexBuffer           vertices;
-    DynaArray<uint32, uint32> indices;
-    PrimitiveType             primitive;
-    DynaArray<FatMeshSubset>  subsets;
-    uint32                    skeleton; ///< index into FatModel::skeletons, or NO_SKELETON if the mesh has no skeleton.
-    Boxf                      bbox;
+    FatVertexBuffer           vertices {};
+    DynaArray<uint32, uint32> indices {};
+    PrimitiveType             primitive {};
+    DynaArray<FatMeshSubset>  subsets {};
+    uint32                    skeleton {}; ///< index into FatModel::skeletons, or NO_SKELETON if the mesh has no skeleton.
+    Boxf                      bbox {};
 
     GN_NO_COPY(FatMesh);
     GN_DEFAULT_MOVE(FatMesh);
@@ -202,11 +202,11 @@ struct FatMesh {
 };
 
 struct FatMaterial {
-    StrA     name; //< Material name
-    StrA     albedoTexture;
-    StrA     normalTexture;
-    Vector3f albedo;
-    Vector3f emmisive;
+    StrA     name {}; //< Material name
+    StrA     albedoTexture {};
+    StrA     normalTexture {};
+    Vector3f albedo {};
+    Vector3f emmisive {};
     float    roughness = .0f;
     float    refIndex  = .0f;
     bool     metal     = false;
@@ -225,31 +225,31 @@ struct FatMaterial {
 
 struct FatJointBindPose {
     // Local transformation (relative to parent joint)
-    Vector3f    position; //< Position in parent space
-    Quaternionf rotation; //< Rotation in local space
-    Vector3f    scaling;  //< Scaling in local space.
+    Vector3f    position {}; //< Position in parent space
+    Quaternionf rotation {}; //< Rotation in local space
+    Vector3f    scaling {};  //< Scaling in local space.
 
     // Global transformation (in model space)
-    Matrix44f model2joint; //< bind pose in model space -> joint space transformation.
+    Matrix44f model2joint {}; //< bind pose in model space -> joint space transformation.
 };
 
 struct FatJoint {
     static const uint32 NO_JOINT = (uint32) -1;
 
-    StrA name; //< Joint name (unique in a skeleton).
+    StrA name {}; //< Joint name (unique in a skeleton).
 
     // Hierarchy
-    uint32 parent;  //< parent joint index. NO_JOINT, if the joint has no parent.
-    uint32 child;   //< first child joint index. NO_JOINT, if the joint has no child.
-    uint32 sibling; //< next sibling joing index. NO_JOINT, if the joint has no next sibling.
+    uint32 parent {};  //< parent joint index. NO_JOINT, if the joint has no parent.
+    uint32 child {};   //< first child joint index. NO_JOINT, if the joint has no child.
+    uint32 sibling {}; //< next sibling joing index. NO_JOINT, if the joint has no next sibling.
 
-    FatJointBindPose bindPose; //< Bind pose transformation.
+    FatJointBindPose bindPose {}; //< Bind pose transformation.
 };
 
 struct GN_API FatSkeleton {
-    StrA                        name;   //< name of the skeleton.
-    DynaArray<FatJoint, uint32> joints; //< Joint array.
-    uint32                      root;   //< Index of the root joint.
+    StrA                        name {};   //< name of the skeleton.
+    DynaArray<FatJoint, uint32> joints {}; //< Joint array.
+    uint32                      root {};   //< Index of the root joint.
 
     /// Print joint hierarchy to a string.
     void printJointHierarchy(StrA &) const;
@@ -257,30 +257,30 @@ struct GN_API FatSkeleton {
 
 template<typename T>
 struct FatKeyFrame {
-    float time;  //< Time stamp in seconds.
-    T     value; //< The value at the specified time.
+    float time {};  //< Time stamp in seconds.
+    T     value {}; //< The value at the specified time.
 };
 
 struct FatRigidAnimation {
     // local space -> parent space = T * R * S;
-    DynaArray<FatKeyFrame<Vector3f>>    positions;
-    DynaArray<FatKeyFrame<Quaternionf>> rotations;
-    DynaArray<FatKeyFrame<Vector3f>>    scalings;
+    DynaArray<FatKeyFrame<Vector3f>>    positions {};
+    DynaArray<FatKeyFrame<Quaternionf>> rotations {};
+    DynaArray<FatKeyFrame<Vector3f>>    scalings {};
 };
 
 struct FatAnimation {
-    StrA                                    name;               //< Name of the animation.
-    double                                  duration;           //< Duration of the animation.
-    DynaArray<DynaArray<FatRigidAnimation>> skeletonAnimations; //< 2D array that stores animations of each joint indexed by [skeletonIndex][jointIndex]
+    StrA                                    name {};               //< Name of the animation.
+    double                                  duration {};           //< Duration of the animation.
+    DynaArray<DynaArray<FatRigidAnimation>> skeletonAnimations {}; //< 2D array that stores animations of each joint indexed by [skeletonIndex][jointIndex]
 };
 
 struct GN_API FatModel {
-    StrA                            name;   //< name of the model. Usually the filename which the model is loaded from.
-    DynaArray<FatMesh, uint32>      meshes; //< Mesh array. Use FatMesh* to avoid expensive copy opertaion when the array is resized.
-    DynaArray<FatMaterial, uint32>  materials;
-    DynaArray<FatSkeleton, uint32>  skeletons;
-    DynaArray<FatAnimation, uint32> skinAnimations;
-    Boxf                            bbox;
+    StrA                            name {};   //< name of the model. Usually the filename which the model is loaded from.
+    DynaArray<FatMesh, uint32>      meshes {}; //< Mesh array. Use FatMesh* to avoid expensive copy opertaion when the array is resized.
+    DynaArray<FatMaterial, uint32>  materials {};
+    DynaArray<FatSkeleton, uint32>  skeletons {};
+    DynaArray<FatAnimation, uint32> skinAnimations {};
+    Boxf                            bbox {};
 
     GN_NO_COPY(FatModel);
     GN_DEFAULT_MOVE(FatModel);

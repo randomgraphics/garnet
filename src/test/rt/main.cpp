@@ -2,7 +2,7 @@
 #include <garnet/GNrt.h>
 #include <garnet/GNutil.h>
 #include <garnet/gfx/fatModel.h>
-#include <cli/CLI.hpp>
+#include <CLI/CLI.hpp>
 #include <chrono>
 
 using namespace GN;
@@ -138,18 +138,18 @@ struct Scene {
     }
 
     struct DrawFrameParameters {
-        Matrix44f proj;
-        Matrix44f view;
-        float     frameDuration;
+        Matrix44f proj {};
+        Matrix44f view {};
+        float     frameDuration {};
     };
 
     void DrawFrame(const DrawFrameParameters &) {}
 };
 
 struct OrbitCamera {
-    GN::util::ArcBall arcball;
-    Matrix44f         proj;
-    Matrix44f         view;
+    GN::util::ArcBall arcball {};
+    Matrix44f         proj {};
+    Matrix44f         view {};
 
 public:
     OrbitCamera() {
@@ -190,8 +190,8 @@ int main(int argc, const char * argv[]) {
     camera.reset(s.bvh[0]);
 
     // start the main loop
-    float frameDuration = 1.0f / 30.0f;
-    auto  lastFrameTime = std::chrono::high_resolution_clock::now();
+    // float frameDuration = 1.0f / 30.0f;
+    // auto  lastFrameTime = std::chrono::high_resolution_clock::now();
     while (win->runUntilNoNewEvents()) {
 
         gInput.processInputEvents();
@@ -203,9 +203,9 @@ int main(int argc, const char * argv[]) {
 
         gpu->present({});
 
-        // calculate frame time
-        auto now      = std::chrono::high_resolution_clock::now();
-        frameDuration = (float) std::chrono::duration_cast<std::chrono::microseconds>(now - lastFrameTime).count() / 1e6f;
-        lastFrameTime = now;
+        // // calculate frame time
+        // auto now      = std::chrono::high_resolution_clock::now();
+        // frameDuration = (float) std::chrono::duration_cast<std::chrono::microseconds>(now - lastFrameTime).count() / 1e6f;
+        // lastFrameTime = now;
     }
 }

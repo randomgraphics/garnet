@@ -117,12 +117,12 @@ public:
         return true;
     }
 
-    void onQuit() {
+    void onQuit() override {
         safeDelete(mSprite);
         mContext.clear();
     }
 
-    void onKeyPress(input::KeyEvent key) {
+    void onKeyPress(input::KeyEvent key) override {
         if (key.code == KeyCode::MOUSEBTN_0 && key.status.down) {
             int mx, my;
             gInput.getMousePosition(mx, my);
@@ -135,7 +135,7 @@ public:
         }
     }
 
-    void onUpdate() {
+    void onUpdate() override {
         for (size_t i = 0; i < GN_ARRAY_COUNT(mRipples); ++i) {
             if (mRipples[i].time > 0.0f) { mRipples[i].time += UPDATE_INTERVAL_IN_SECONDS; }
         }
@@ -143,7 +143,7 @@ public:
         mContext.uniforms[0]->update(0, sizeof(mRipples), mRipples);
     }
 
-    void onRender() {
+    void onRender() override {
         Gpu & gpu = *engine::getGpu();
 
         const DispDesc & dd = gpu.getDispDesc();

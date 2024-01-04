@@ -70,7 +70,7 @@ struct Gpu2 : public RefCounter {
                 uint8_t d : 1;
                 uint8_t s : 1;
             };
-        } flags;
+        } flags {};
     };
     struct VertexBufferView {
         const Surface * surface;
@@ -232,10 +232,10 @@ struct ShaderCompileParameters {
     };
 
     const char * source;
-    size_t       length = 0; // could be 0 for null-terminated string.
-    const char * entry;
-    const char * profile;
-    Options      options;
+    size_t       length {}; // could be 0 for null-terminated string.
+    const char * entry {};
+    const char * profile {};
+    Options      options {};
 };
 GN_API DynaArray<uint8_t> compileHLSL(const ShaderCompileParameters &);
 } // end of namespace gfx

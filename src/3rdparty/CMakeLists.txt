@@ -3,6 +3,8 @@ function(build_assimp)
     # build inside a function so that we can modify build variables freely
     if (MSVC)
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /O2 ") # enable optimization all the time.
+    else()
+        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -w") # disable warnings
     endif()
     OPTION( ASSIMP_BUILD_TESTS "" OFF)
     OPTION( ASSIMP_INSTALL "" OFF)
