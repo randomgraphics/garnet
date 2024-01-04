@@ -158,7 +158,7 @@ void GN::util::ArcBall::onTranslation(int x, int y) {
 //
 // -----------------------------------------------------------------------------
 void GN::util::ArcBall::onKeyPress(input::KeyEvent key) {
-    if (input::KeyCode::MOUSEBTN_0 == key.code) {
+    if (input::KeyCode::MOUSEBTN_0 == (input::KeyCode) key.code) {
         if (key.status.down) {
             int x, y;
             gInput.getMousePosition(x, y);
@@ -166,7 +166,7 @@ void GN::util::ArcBall::onKeyPress(input::KeyEvent key) {
         } else {
             endRotation();
         }
-    } else if (input::KeyCode::MOUSEBTN_1 == key.code) {
+    } else if (input::KeyCode::MOUSEBTN_1 == (input::KeyCode) key.code) {
         if (key.status.down) {
             int x, y;
             gInput.getMousePosition(x, y);

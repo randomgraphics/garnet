@@ -84,11 +84,11 @@ public:
         using namespace GN::input;
         if (key.status.down) {
             if (KeyCode::MOUSEBTN_FIRST <= key.code && key.code <= KeyCode::LAST_MOUSE_BUTTON) {
-                CEGUI::System::getSingleton().injectMouseButtonDown((CEGUI::MouseButton) (CEGUI::LeftButton + key.code - KeyCode::MOUSEBTN_FIRST));
+                CEGUI::System::getSingleton().injectMouseButtonDown((CEGUI::MouseButton)(CEGUI::LeftButton + key.code - KeyCode::MOUSEBTN_FIRST));
             }
         } else {
             if (KeyCode::MOUSEBTN_FIRST <= key.code && key.code <= KeyCode::LAST_MOUSE_BUTTON) {
-                CEGUI::System::getSingleton().injectMouseButtonUp((CEGUI::MouseButton) (CEGUI::LeftButton + key.code - KeyCode::MOUSEBTN_FIRST));
+                CEGUI::System::getSingleton().injectMouseButtonUp((CEGUI::MouseButton)(CEGUI::LeftButton + key.code - KeyCode::MOUSEBTN_FIRST));
             }
         }
     }

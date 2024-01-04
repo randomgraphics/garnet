@@ -354,11 +354,6 @@ struct MeshResourceDescBase {
                                                                    ///< will be used.
 
     ///
-    /// constructor
-    ///
-    MeshResourceDescBase() {}
-
-    ///
     /// get vertex buffer size in bytes
     ///
     uint32 getVtxBufSize(uint32 stream) const;
@@ -377,11 +372,6 @@ struct MeshResourceDesc : public MeshResourceDescBase {
                                                           ///< data are undefined
     void * indices = nullptr;                             ///< Null means that the mesh should be drawed as
                                                           ///< non-indexed mesh.
-
-    ///
-    /// constructor
-    ///
-    MeshResourceDesc() {}
 
     ///
     /// calculate bounding box

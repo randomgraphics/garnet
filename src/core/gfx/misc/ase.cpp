@@ -1104,7 +1104,7 @@ struct VertexSelector {
 /// collection of unique items
 template<typename T>
 class ElementCollection {
-    typedef GN::HashMap<T, uint32, 128, typename T::Hash> TypeMap;
+    typedef std::unordered_map<T, uint32, typename T::Hash> TypeMap;
 
     TypeMap      mMap;
     DynaArray<T> mBuffer;
@@ -1119,18 +1119,16 @@ public:
     /// add element into buffer, ignore redundant element.
     ///
     uint32 add(const T & element) {
-        typename TypeMap::KeyValuePair * p = mMap.insert(element, 0xbad);
+        auto inserted = mMap.insert({element, 0xbad});
 
-        if (p) {
+        if (inserted.second) {
             // this is a new element
-            GN_ASSERT(0xbad == p->value);
+            auto & p = inserted.first->second;
+            GN_ASSERT(0xbad == p); // make sure it is not initialized.
             GN_ASSERT(mBuffer.size() + 1 == mMap.size());
-
-            p->value = (uint32) (mBuffer.size());
-
+            p = (uint32) (mBuffer.size()); // assign correct value to p
             mBuffer.append(element);
-
-            return p->value;
+            return p;
         } else {
             return mMap[element];
         }

@@ -590,8 +590,6 @@ void GN::gfx::EffectResourceDesc::clear() {
     GpuContext::RenderStates rs;
     rs.clear();
 
-    memset(&renderstates, 0, sizeof(renderstates));
-
     // copy default render state values from GPU context
     renderstates.depthTestEnabled  = !!rs.depthTestEnabled;
     renderstates.depthWriteEnabled = !!rs.depthWriteEnabled;

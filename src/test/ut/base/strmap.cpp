@@ -10,7 +10,7 @@ class StringMapTest : public CxxTest::TestSuite {
         uint64 operator()(const std::string & s) const { return GN::str::hash(s.c_str()); }
     };
 
-    typedef GN::HashMap<std::string, size_t, 128, StlStringHash> StrHashMap;
+    typedef std::unordered_map<std::string, size_t> StrHashMap;
 
     struct WordTable {
         const char * const * table;
@@ -74,13 +74,13 @@ class StringMapTest : public CxxTest::TestSuite {
             // StringMap insertion
             StringMap<char, size_t> mymap;
             t = c.now();
-            for (size_t i = 0; i < w.count; ++i) { mymap.insert(w.table[i], i); }
+            for (size_t i = 0; i < w.count; ++i) { mymap.insert({w.table[i], i}); }
             perfs.strmap.insert += c.now() - t;
 
             // HashMap insertion
             StrHashMap hmap(w.count);
             t = c.now();
-            for (size_t i = 0; i < w.count; ++i) { hmap.insert(w.table[i], i); }
+            for (size_t i = 0; i < w.count; ++i) { hmap.insert({w.table[i], i}); }
             perfs.hashmap.insert += c.now() - t;
 
             // generate random searching set
@@ -128,13 +128,13 @@ class StringMapTest : public CxxTest::TestSuite {
 
             // StringMap erasing
             t = c.now();
-            for (size_t i = 0; i < w.count; ++i) { mymap.remove(w.table[i]); }
+            for (size_t i = 0; i < w.count; ++i) { mymap.erase(w.table[i]); }
             perfs.strmap.remove += c.now() - t;
             TS_ASSERT(mymap.empty());
 
             // StrHashMap erasing
             t = c.now();
-            for (size_t i = 0; i < w.count; ++i) { hmap.remove(w.table[i]); }
+            for (size_t i = 0; i < w.count; ++i) { hmap.erase(w.table[i]); }
             perfs.hashmap.remove += c.now() - t;
             TS_ASSERT(hmap.empty());
         }

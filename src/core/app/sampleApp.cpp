@@ -235,17 +235,17 @@ void GN::util::SampleApp::onPrintHelpScreen(const char * executableName) {
 //
 // -----------------------------------------------------------------------------
 void GN::util::SampleApp::onKeyPress(input::KeyEvent ke) {
-    if (input::KeyCode::XB360_X == ke.code && ke.status.down) {
+    if (input::KeyCode::XB360_X == (input::KeyCode) ke.code && ke.status.down) {
         mDone = true;
-    } else if (input::KeyCode::ESCAPE == ke.code && !ke.status.down) {
+    } else if (input::KeyCode::ESCAPE == (input::KeyCode) ke.code && !ke.status.down) {
         mDone = true;
-    } else if (input::KeyCode::R == ke.code && !ke.status.down) {
+    } else if (input::KeyCode::R == (input::KeyCode) ke.code && !ke.status.down) {
         GN_TODO("reload all graphics resources.");
-    } else if (input::KeyCode::F == ke.code && !ke.status.down) {
+    } else if (input::KeyCode::F == (input::KeyCode) ke.code && !ke.status.down) {
         GN_TODO("dump graphics system states");
-    } else if (input::KeyCode::RETURN == ke.code && ke.status.down && ke.status.altDown()) {
+    } else if (input::KeyCode::RETURN == (input::KeyCode) ke.code && ke.status.down && ke.status.altDown()) {
         GN_TODO("switch fullscreen mode.");
-    } else if (input::KeyCode::F1 == ke.code && !ke.status.down) {
+    } else if (input::KeyCode::F1 == (input::KeyCode) ke.code && !ke.status.down) {
         mShowHelp = !mShowHelp;
     }
 }

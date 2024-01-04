@@ -16,7 +16,7 @@ void GN::input::BasicXInput::processInputEvents() {
     // process gamepad key
     XINPUT_STATE     state;
     XINPUT_GAMEPAD & pad = state.Gamepad;
-    if (ERROR_SUCCESS == ((XInputGetStateFuncPtr) mXInputGetState) (0, &state) && mXInputPacketNumber != state.dwPacketNumber) {
+    if (ERROR_SUCCESS == ((XInputGetStateFuncPtr) mXInputGetState)(0, &state) && mXInputPacketNumber != state.dwPacketNumber) {
         mXInputPacketNumber = state.dwPacketNumber;
 
         // update keys

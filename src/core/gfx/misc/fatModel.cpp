@@ -248,14 +248,25 @@ struct SkinnedVertexKey {
     uint32 vertexIndex; //< Index into vertex array
     uint32 joints[4];   //< Remapped joint ID that associated with this vertex.
 
-    uint64 hash() const {
-        uint64 h = ((uint64) vertexIndex) | (((uint64) (joints[0] | (joints[1] << 16))) << 32) | (((uint64) (joints[2] | (joints[3] << 16))) << 48);
+    bool operator==(const SkinnedVertexKey & rhs) const {
+        return vertexIndex == rhs.vertexIndex && joints[0] == rhs.joints[0] && joints[1] == rhs.joints[1] && joints[2] == rhs.joints[2] &&
+               joints[3] == rhs.joints[3];
+    }
+
+    static uint64 hash(const SkinnedVertexKey & k) {
+        uint64 h = ((uint64) k.vertexIndex) | (((uint64) (k.joints[0] | (k.joints[1] << 16))) << 32) | (((uint64) (k.joints[2] | (k.joints[3] << 16))) << 48);
         return h;
     }
 };
 
-typedef HashMap<SkinnedVertexKey, uint32, 4096, HashMapUtils::HashFunc_HashMethod<SkinnedVertexKey>, HashMapUtils::EqualFunc_MemoryCompare<SkinnedVertexKey>>
-    SkinnedVertexMap;
+namespace std {
+template<>
+struct hash<SkinnedVertexKey> {
+    size_t operator()(const SkinnedVertexKey & k) const { return (size_t) SkinnedVertexKey::hash(k); }
+};
+} // namespace std
+
+typedef std::unordered_map<SkinnedVertexKey, uint32> SkinnedVertexMap;
 
 //
 //
@@ -495,9 +506,9 @@ static bool sRemapFatMeshJointID(FatMesh & mesh) {
             key.joints[3]   = sRemapJoint(subset.joints, originalJoints[vertexIndex * 4 + 3]);
 
             // Is this an existing key or new key?
-            SkinnedVertexMap::KeyValuePair * pair;
-            bool                             isNewVertex         = vmap.insert(key, (uint32) vmap.size(), &pair);
-            uint32                           remappedVertexIndex = pair->value;
+            auto inserted            = vmap.insert({key, (uint32) vmap.size()});
+            auto isNewVertex         = inserted.second;
+            auto remappedVertexIndex = inserted.first->second;
             if (isNewVertex) {
                 // If it is a new key, add it to the new vertex array.
                 GN_ASSERT(newVertices.size() == remappedVertexIndex);
