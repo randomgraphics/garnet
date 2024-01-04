@@ -514,7 +514,7 @@ public:
         Element::clear();
 
         DynaArray<Element> a;
-        a.append({2});
+        a.append(2);
         TS_ASSERT_EQUALS(1, Element::count);
         TS_ASSERT_EQUALS(1, Element::mctor);
         TS_ASSERT_EQUALS(0, Element::mop);

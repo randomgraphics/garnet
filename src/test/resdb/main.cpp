@@ -150,7 +150,7 @@ void quit(Gpu &) {
 void update(Input & in) {
     KeyEvent k = in.popLastKeyEvent();
 
-    if (KeyCode::SPACEBAR == k.code && k.status.down) {
+    if (KeyCode::SPACEBAR == k.code() && k.status.down) {
         static int i = 0;
         i            = (i + 1) % 2;
 

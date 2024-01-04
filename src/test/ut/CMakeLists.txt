@@ -14,3 +14,6 @@ add_custom_command(
 
 add_executable(GNtest-unit-tests ut.cpp testCommon.cpp testCommon.h)
 target_link_libraries(GNtest-unit-tests GNcore GNextern)
+if (CMAKE_COMPILER_IS_GNUCC)
+    target_compile_options(GNtest-unit-tests PRIVATE -Wno-ignored-qualifiers -Wno-sign-compare)
+endif()

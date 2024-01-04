@@ -30,20 +30,20 @@ class StringMapTest : public CxxTest::TestSuite {
         Perf hashmap;
 
         void print() const {
-            printf("GN::Dictionary  - insert : %llu\n", dict.insert.count());
-            printf("std::map        - insert : %llu\n", stlmap.insert.count());
-            printf("StringMap       - insert : %llu\n", strmap.insert.count());
-            printf("HashMap         - insert : %llu\n", hashmap.insert.count());
+            printf("GN::Dictionary  - insert : %zu\n", dict.insert.count());
+            printf("std::map        - insert : %zu\n", stlmap.insert.count());
+            printf("StringMap       - insert : %zu\n", strmap.insert.count());
+            printf("HashMap         - insert : %zu\n", hashmap.insert.count());
 
-            printf("GN::Dictionary  - find   : %llu\n", dict.find.count());
-            printf("std::map        - find   : %llu\n", stlmap.find.count());
-            printf("StringMap       - find   : %llu\n", strmap.find.count());
-            printf("HashMap         - find   : %llu\n", hashmap.find.count());
+            printf("GN::Dictionary  - find   : %zu\n", dict.find.count());
+            printf("std::map        - find   : %zu\n", stlmap.find.count());
+            printf("StringMap       - find   : %zu\n", strmap.find.count());
+            printf("HashMap         - find   : %zu\n", hashmap.find.count());
 
-            printf("GN::Dictionary  - remove : %llu\n", dict.remove.count());
-            printf("std::map        - remove : %llu\n", stlmap.remove.count());
-            printf("StringMap       - remove : %llu\n", strmap.remove.count());
-            printf("HashMap         - remove : %llu\n", hashmap.remove.count());
+            printf("GN::Dictionary  - remove : %zu\n", dict.remove.count());
+            printf("std::map        - remove : %zu\n", stlmap.remove.count());
+            printf("StringMap       - remove : %zu\n", strmap.remove.count());
+            printf("HashMap         - remove : %zu\n", hashmap.remove.count());
         }
     };
 
@@ -74,7 +74,7 @@ class StringMapTest : public CxxTest::TestSuite {
             // StringMap insertion
             StringMap<char, size_t> mymap;
             t = c.now();
-            for (size_t i = 0; i < w.count; ++i) { mymap.insert({w.table[i], i}); }
+            for (size_t i = 0; i < w.count; ++i) { mymap.insert(w.table[i], i); }
             perfs.strmap.insert += c.now() - t;
 
             // HashMap insertion
@@ -85,7 +85,7 @@ class StringMapTest : public CxxTest::TestSuite {
 
             // generate random searching set
             DynaArray<std::string> strings(10000);
-            for (size_t i = 0; i < strings.size(); ++i) {
+            for (size_t i = 0; i <strings.size(); ++i) {
                 size_t n = (size_t) ((double) rand() / (double) RAND_MAX * (double) w.count);
                 if (n >= w.count) n = w.count - 1;
                 strings[i] = w.table[n];
@@ -93,12 +93,12 @@ class StringMapTest : public CxxTest::TestSuite {
 
             // Dictionary find
             t = c.now();
-            for (size_t i = 0; i < strings.size(); ++i) { dict.find(strings[i]); }
+            for (size_t i = 0; i <strings.size(); ++i) { dict.find(strings[i]); }
             perfs.dict.find += c.now() - t;
 
             // std::map find
             t = c.now();
-            for (size_t i = 0; i < strings.size(); ++i) {
+            for (size_t i = 0; i <strings.size(); ++i) {
                 auto aaa = stlmap.find(strings[i]);
                 (void) aaa;
             }
@@ -106,12 +106,12 @@ class StringMapTest : public CxxTest::TestSuite {
 
             // StringMap find
             t = c.now();
-            for (size_t i = 0; i < strings.size(); ++i) { mymap.find(strings[i].c_str()); }
+            for (size_t i = 0; i <strings.size(); ++i) { mymap.find(strings[i].c_str()); }
             perfs.strmap.find += c.now() - t;
 
             // StrHashMap find
             t = c.now();
-            for (size_t i = 0; i < strings.size(); ++i) { hmap.find(strings[i]); }
+            for (size_t i = 0; i <strings.size(); ++i) { hmap.find(strings[i]); }
             perfs.hashmap.find += c.now() - t;
 
             // Dictionary erasing
@@ -128,7 +128,7 @@ class StringMapTest : public CxxTest::TestSuite {
 
             // StringMap erasing
             t = c.now();
-            for (size_t i = 0; i < w.count; ++i) { mymap.erase(w.table[i]); }
+            for (size_t i = 0; i < w.count; ++i) { mymap.remove(w.table[i]); }
             perfs.strmap.remove += c.now() - t;
             TS_ASSERT(mymap.empty());
 
@@ -150,14 +150,14 @@ class StringMapTest : public CxxTest::TestSuite {
         WordTable w = words();
 
         DynaArray<const char *> strings(count);
-        for (size_t i = 0; i < strings.size(); ++i) {
+        for (size_t i = 0; i <strings.size(); ++i) {
             size_t n = (size_t) ((double) rand() / (double) RAND_MAX * (double) w.count);
             if (n >= count) n = count - 1;
             strings[i] = w.table[n];
         }
 
         w.table = &strings[0];
-        w.count = strings.size();
+        w.count =strings.size();
 
         doPerfTest(w);
     }
@@ -218,12 +218,12 @@ public:
 
         StringMap<char, int> b;
         b = a;
-        TS_ASSERT_EQUALS(2, b.size());
+        TS_ASSERT_EQUALS(2u, b.size());
         TS_ASSERT_EQUALS(*b.find("abc"), 1);
         TS_ASSERT_EQUALS(*b.find("abd"), 2);
 
         StringMap<char, int> c(a);
-        TS_ASSERT_EQUALS(2, c.size());
+        TS_ASSERT_EQUALS(2u, c.size());
         TS_ASSERT_EQUALS(*c.find("abc"), 1);
         TS_ASSERT_EQUALS(*c.find("abd"), 2);
     }
@@ -235,14 +235,14 @@ public:
 
         a["abc"] = 1;
         a["abd"] = 2;
-        TS_ASSERT_EQUALS(2, a.size());
+        TS_ASSERT_EQUALS(2u, a.size());
 
         a.clear();
-        TS_ASSERT_EQUALS(0, a.size());
+        TS_ASSERT_EQUALS(0u, a.size());
 
         a["abc"] = 3;
         a["abd"] = 4;
-        TS_ASSERT_EQUALS(2, a.size());
+        TS_ASSERT_EQUALS(2u, a.size());
         TS_ASSERT_EQUALS(*a.find("abc"), 3);
         TS_ASSERT_EQUALS(*a.find("abd"), 4);
     }
@@ -255,7 +255,7 @@ public:
         m["a,b,c"] = 1;
         m["a,B,c"] = 2;
 
-        TS_ASSERT_EQUALS(1, m.size());
+        TS_ASSERT_EQUALS(1u, m.size());
         TS_ASSERT_EQUALS(*m.find("a,b,C"), 2);
         TS_ASSERT_EQUALS(*m.find("A,b,c"), 2);
         TS_ASSERT_EQUALS(m.find("A,b,c,d"), (int *) NULL);
@@ -272,10 +272,10 @@ public:
         m["abd"] = 2;
 
         m.remove("abe");
-        TS_ASSERT_EQUALS(m.size(), 2); // erase non-existing item should have no effect.
+        TS_ASSERT_EQUALS(m.size(), 2u); // erase non-existing item should have no effect.
         int * i = m.find("abc");
         m.remove("abd");
-        TS_ASSERT_EQUALS(m.size(), 1);                 // verify the one and only one item is removed.
+        TS_ASSERT_EQUALS(m.size(), 1u);                 // verify the one and only one item is removed.
         TS_ASSERT_EQUALS(m.find("abd"), (int *) NULL); // verify correct item is erased.
         TS_ASSERT_EQUALS(m.find("abc"), i);            // verify that erase operation does not affect other iterators.
 
@@ -299,12 +299,12 @@ public:
         // try insert NULL string to string map (should do nothing)
         StringMap<char, int>::KeyValuePair * i;
         i = m.insert(NULL, 1);
-        TS_ASSERT_EQUALS(0, m.size());
+        TS_ASSERT_EQUALS(0u, m.size());
         TS_ASSERT_EQUALS(NULL_PAIR, i);
 
         // insert empty string should work
         i = m.insert("", 123);
-        TS_ASSERT_EQUALS(1, m.size());
+        TS_ASSERT_EQUALS(1u, m.size());
         TS_ASSERT_EQUALS(i, m.first());
         TS_ASSERT_EQUALS(i->key, "");
         TS_ASSERT_EQUALS(i->value, 123);

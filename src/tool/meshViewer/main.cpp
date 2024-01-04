@@ -177,7 +177,7 @@ public:
     void onKeyPress(input::KeyEvent ke) {
         SampleApp::onKeyPress(ke);
 
-        if (input::KeyCode::B == ke.code && ke.status.down) { showbbox = !showbbox; }
+        if (input::KeyCode::B == ke.code() && ke.status.down) { showbbox = !showbbox; }
     }
 
     bool onCheckExtraCmdlineArguments(const char * exename, int argc, const char * const argv[]) {

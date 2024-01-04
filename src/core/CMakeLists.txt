@@ -171,6 +171,9 @@ if(MSVC)
 else()
     target_compile_options(GNcore PUBLIC -Wall -Wextra -Werror)
     if (NOT GN_BUILD_IS_STATIC)
-        target_compile_options(GNcore PRIVATE -fvisibility=hidden) # hide symbols by default.
+        target_compile_options(GNcore PRIVATE
+            -fvisibility=hidden # hide symbols by default.
+            -Wno-attributes # disable warning about attributes
+        )
     endif()
 endif()

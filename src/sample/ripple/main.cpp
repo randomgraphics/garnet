@@ -123,7 +123,7 @@ public:
     }
 
     void onKeyPress(input::KeyEvent key) override {
-        if (key.code == KeyCode::MOUSEBTN_0 && key.status.down) {
+        if (key.code() == KeyCode::MOUSEBTN_0 && key.status.down) {
             int mx, my;
             gInput.getMousePosition(mx, my);
 

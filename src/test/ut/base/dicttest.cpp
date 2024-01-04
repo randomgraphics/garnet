@@ -68,6 +68,8 @@ public:
 
         ~KeyType() { --kc; }
 
+        KeyType & operator=(const KeyType &) { ++kc; return *this; }
+
         bool operator<(const KeyType &) const { return false; }
     };
 
@@ -86,6 +88,8 @@ public:
         ValueType(const ValueType &): ValueTypeNC(100) { ++vc; }
 
         ~ValueType() { --vc; }
+
+        ValueType & operator=(const ValueType &) { ++vc; return *this; }
     };
 
     void testObject() {

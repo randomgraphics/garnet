@@ -29,7 +29,7 @@ namespace input {
 ///
 /// keycode type
 ///
-enum class KeyCode : int {
+enum class KeyCode : uint8_t {
     ///
     /// 空码 ( normally indicate a error )
     ///
@@ -164,7 +164,7 @@ union KeyEvent {
 
     /// structured key states
     struct {
-        uint8     code;   ///< Key code
+        uint8     code_;   ///< Key code
         KeyStatus status; ///< Key status
     };
 
@@ -172,7 +172,7 @@ union KeyEvent {
     //@{
     KeyEvent() {}
     KeyEvent(const KeyEvent & k): u16(k.u16) {}
-    KeyEvent(KeyCode kc, KeyStatus ks): code(static_cast<uint8>(kc)), status(ks) { GN_ASSERT(kc < KeyCode::NUM_KEYS); }
+    KeyEvent(KeyCode kc, KeyStatus ks): code_(static_cast<uint8>(kc)), status(ks) { GN_ASSERT(kc < KeyCode::NUM_KEYS); }
     //@}
 
     /// assignment
@@ -197,11 +197,17 @@ union KeyEvent {
     /// set key data
     ///
     const KeyEvent & set(KeyCode kc, KeyStatus ks) {
-        GN_ASSERT(kc < KeyCode::NUM_KEYS);
-        code   = static_cast<uint8>(kc);
+        GN_ASSERT(KeyCode::NONE <= kc && kc < KeyCode::NUM_KEYS);
+        code() = kc;
         status = ks;
         return *this;
     }
+
+    /// access key code
+    const input::KeyCode & code() const { return *(const input::KeyCode*)&code_; }
+
+    /// access key code
+    input::KeyCode & code() { return *(input::KeyCode*)&code_; }
 };
 
 ///

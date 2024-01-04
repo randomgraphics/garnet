@@ -49,7 +49,7 @@ void quit(Gpu &) {
 void onKeyPress(KeyEvent ke) {
     if (!ke.status.down) return;
 
-    switch (ke.code) {
+    switch (ke.code()) {
     case KeyCode::UP:
         ffc.height *= 2;
         initTTF();
