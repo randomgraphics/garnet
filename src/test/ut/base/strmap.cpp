@@ -85,7 +85,7 @@ class StringMapTest : public CxxTest::TestSuite {
 
             // generate random searching set
             DynaArray<std::string> strings(10000);
-            for (size_t i = 0; i <strings.size(); ++i) {
+            for (size_t i = 0; i < strings.size(); ++i) {
                 size_t n = (size_t) ((double) rand() / (double) RAND_MAX * (double) w.count);
                 if (n >= w.count) n = w.count - 1;
                 strings[i] = w.table[n];
@@ -93,12 +93,12 @@ class StringMapTest : public CxxTest::TestSuite {
 
             // Dictionary find
             t = c.now();
-            for (size_t i = 0; i <strings.size(); ++i) { dict.find(strings[i]); }
+            for (size_t i = 0; i < strings.size(); ++i) { dict.find(strings[i]); }
             perfs.dict.find += c.now() - t;
 
             // std::map find
             t = c.now();
-            for (size_t i = 0; i <strings.size(); ++i) {
+            for (size_t i = 0; i < strings.size(); ++i) {
                 auto aaa = stlmap.find(strings[i]);
                 (void) aaa;
             }
@@ -106,12 +106,12 @@ class StringMapTest : public CxxTest::TestSuite {
 
             // StringMap find
             t = c.now();
-            for (size_t i = 0; i <strings.size(); ++i) { mymap.find(strings[i].c_str()); }
+            for (size_t i = 0; i < strings.size(); ++i) { mymap.find(strings[i].c_str()); }
             perfs.strmap.find += c.now() - t;
 
             // StrHashMap find
             t = c.now();
-            for (size_t i = 0; i <strings.size(); ++i) { hmap.find(strings[i]); }
+            for (size_t i = 0; i < strings.size(); ++i) { hmap.find(strings[i]); }
             perfs.hashmap.find += c.now() - t;
 
             // Dictionary erasing
@@ -150,14 +150,14 @@ class StringMapTest : public CxxTest::TestSuite {
         WordTable w = words();
 
         DynaArray<const char *> strings(count);
-        for (size_t i = 0; i <strings.size(); ++i) {
+        for (size_t i = 0; i < strings.size(); ++i) {
             size_t n = (size_t) ((double) rand() / (double) RAND_MAX * (double) w.count);
             if (n >= count) n = count - 1;
             strings[i] = w.table[n];
         }
 
         w.table = &strings[0];
-        w.count =strings.size();
+        w.count = strings.size();
 
         doPerfTest(w);
     }
@@ -275,7 +275,7 @@ public:
         TS_ASSERT_EQUALS(m.size(), 2u); // erase non-existing item should have no effect.
         int * i = m.find("abc");
         m.remove("abd");
-        TS_ASSERT_EQUALS(m.size(), 1u);                 // verify the one and only one item is removed.
+        TS_ASSERT_EQUALS(m.size(), 1u);                // verify the one and only one item is removed.
         TS_ASSERT_EQUALS(m.find("abd"), (int *) NULL); // verify correct item is erased.
         TS_ASSERT_EQUALS(m.find("abc"), i);            // verify that erase operation does not affect other iterators.
 

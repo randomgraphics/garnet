@@ -87,15 +87,15 @@ public:
 
         TS_ASSERT(pathExist("/"));
         TS_ASSERT(!pathExist("haha,heihei,hoho,huhu,mama,papa"));
-        TS_ASSERT(pathExist("SConstruct2"));
+        TS_ASSERT(pathExist("CMakeLists.txt"));
 
-        TS_ASSERT(pathExist("startup::\\SConstruct2"));
-        TS_ASSERT(pathExist("startup::/SConstruct2"));
-        TS_ASSERT(pathExist("startup::SConstruct2"));
+        TS_ASSERT(pathExist("startup::\\CMakeLists.txt"));
+        TS_ASSERT(pathExist("startup::/CMakeLists.txt"));
+        TS_ASSERT(pathExist("startup::CMakeLists.txt"));
 
-        TS_ASSERT(pathExist("app::GNtestUnitTests" APPEXT));
-        TS_ASSERT(pathExist("app::/GNtestUnitTests" APPEXT));
-        TS_ASSERT(pathExist("app::\\GNtestUnitTests" APPEXT));
+        TS_ASSERT(pathExist("app::GNtest-unit-tests" APPEXT));
+        TS_ASSERT(pathExist("app::/GNtest-unit-tests" APPEXT));
+        TS_ASSERT(pathExist("app::\\GNtest-unit-tests" APPEXT));
     }
 
     void testIsDir() {
@@ -119,8 +119,8 @@ public:
         using namespace GN;
         using namespace GN::fs;
 
-        TS_ASSERT(isFile("startup::\\SConstruct2"));
-        TS_ASSERT(isFile("app::GNtestUnitTests" APPEXT));
+        TS_ASSERT(isFile("startup::\\CMakeLists.txt"));
+        TS_ASSERT(isFile("app::GNtest-unit-tests" APPEXT));
         TS_ASSERT(!isFile("startup::"));
         TS_ASSERT(!isFile("app::"));
         TS_ASSERT(!isFile("haha,heihei,hoho,huhu,mama,papa"));

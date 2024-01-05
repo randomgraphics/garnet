@@ -164,7 +164,7 @@ union KeyEvent {
 
     /// structured key states
     struct {
-        uint8     code_;   ///< Key code
+        uint8     code_;  ///< Key code
         KeyStatus status; ///< Key status
     };
 
@@ -204,10 +204,10 @@ union KeyEvent {
     }
 
     /// access key code
-    const input::KeyCode & code() const { return *(const input::KeyCode*)&code_; }
+    const input::KeyCode & code() const { return *(const input::KeyCode *) &code_; }
 
     /// access key code
-    input::KeyCode & code() { return *(input::KeyCode*)&code_; }
+    input::KeyCode & code() { return *(input::KeyCode *) &code_; }
 };
 
 ///
