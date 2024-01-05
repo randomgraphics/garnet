@@ -7,6 +7,7 @@
 // *****************************************************************************
 
 #include <chrono>
+#include <type_traits>
 
 ///
 /// Get element count of C-style array
@@ -51,14 +52,20 @@
 ///
 /// compose RGBA8 color constant
 ///
-#define GN_RGBA8(r, g, b, a) ((((uint32) (r) &0xFF) << 0) | (((uint32) (g) &0xFF) << 8) | (((uint32) (b) &0xFF) << 16) | (((uint32) (a) &0xFF) << 24))
+#define GN_RGBA8(r, g, b, a) ((((uint32) (r) & 0xFF) << 0) | (((uint32) (g) & 0xFF) << 8) | (((uint32) (b) & 0xFF) << 16) | (((uint32) (a) & 0xFF) << 24))
 
 ///
 /// compose BGRA8 color constant
 ///
-#define GN_BGRA8(r, g, b, a) ((((uint32) (b) &0xFF) << 0) | (((uint32) (g) &0xFF) << 8) | (((uint32) (r) &0xFF) << 16) | (((uint32) (a) &0xFF) << 24))
+#define GN_BGRA8(r, g, b, a) ((((uint32) (b) & 0xFF) << 0) | (((uint32) (g) & 0xFF) << 8) | (((uint32) (r) & 0xFF) << 16) | (((uint32) (a) & 0xFF) << 24))
 
 namespace GN {
+
+template<typename T>
+inline void combineHash(std::size_t & seed, const T & val) {
+    seed ^= std::hash<T>()(val) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+}
+
 ///
 /// type cast function
 ///

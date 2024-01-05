@@ -165,8 +165,8 @@ add_core_libs(assimp)
 # compiler specific setup
 if (MSVC)
     target_compile_definitions(GNcore PUBLIC _UNICODE UNICODE) # REVIEW: why not private?
-    target_compile_options(GNcore PUBLIC /EHa /MP
-        /Wv:18 # fix eigen warning
+    target_compile_options(GNcore PUBLIC
+        /Wv:18 # fix eigen warning. still needed?
     )
 elseif (NOT GN_BUILD_IS_STATIC)
     target_compile_options(GNcore PRIVATE

@@ -500,10 +500,31 @@ struct MeshVertexKey {
     int      pos;
     Vector3f normal;
     Vector2f uv;
+
+    bool operator==(const MeshVertexKey & rhs) const { return pos == rhs.pos && normal == rhs.normal && uv == rhs.uv; }
 };
 
-typedef HashMap<MeshVertexKey, uint32, 4096, HashMapUtils::HashFunc_MemoryHash<MeshVertexKey>, HashMapUtils::EqualFunc_MemoryCompare<MeshVertexKey>>
-    MeshVertexHashMap;
+}
+
+namespace std {
+template<>
+struct hash<fbx::MeshVertexKey> {
+    size_t operator()(const fbx::MeshVertexKey & vertex) const {
+        size_t hash = 0;
+        combineHash(hash, vertex.pos);
+        combineHash(hash, vertex.normal.x);
+        combineHash(hash, vertex.normal.y);
+        combineHash(hash, vertex.normal.z);
+        combineHash(hash, vertex.uv.x);
+        combineHash(hash, vertex.uv.y);
+        return hash;
+    }
+};
+} // namespace std
+
+namespace fbx {
+
+typedef std::unordered_map<MeshVertexKey, uint32> MeshVertexHashMap;
 
 //
 //
@@ -647,9 +668,9 @@ static void sLoadFbxMesh(ModelHierarchyDesc & desc, const StrA & filename, Model
             // If the key exists already, the pair will point to it.
             // If the key does not exisit, the pair will point to the newly inserted one.
             // Either way, pair->value should give us the correct index of the vertex.
-            MeshVertexHashMap::KeyValuePair * pair;
-            bool                              isNewVertex = vhash.insert(key, (uint32) vhash.size(), &pair);
-            uint32                            vertexIndex = pair->value;
+            auto inserted = vhash.insert({key, (uint32) vhash.size()});
+            auto isNewVertex = inserted.second;
+            auto vertexIndex = inserted.first->second;
 
             if (isNewVertex) {
                 // If it is a new vertex, append it to the vertex blob.
