@@ -76,7 +76,7 @@ def compare_file_timestamp(path, latest, chosen):
     if timestamp < latest: return latest, chosen
     return timestamp, path
 
-def get_sdk_root_folder():
+def get_root_folder():
     return pathlib.Path(__file__).resolve().parent.parent.parent.absolute()
 
 def get_cmake_build_type(variant, build_dir, for_android = False):
@@ -100,7 +100,7 @@ def get_cmake_build_type(variant, build_dir, for_android = False):
     # determine build folder
     build_dir = pathlib.Path(build_dir)
     if not build_dir.is_absolute():
-        build_dir = get_sdk_root_folder() / build_dir
+        build_dir = get_root_folder() / build_dir
     if for_android:
         build_dir = build_dir / ("android" + suffix)
     elif os.name == "nt":
@@ -111,43 +111,40 @@ def get_cmake_build_type(variant, build_dir, for_android = False):
     #done
     return [build_type, build_dir]
 
-# def search_for_the_latest_binary_ex(path_template):
-#     candidates = [
-#         path_template.format(variant = ""),
-#         path_template.format(variant = "Debug"),
-#         path_template.format(variant = "RelWithDebInfo"),
-#         path_template.format(variant = "Release"),
-#     ]
-#     # Loop through all candidates
-#     latest = 0
-#     chosen = None
-#     sdk_root_dir = get_sdk_root_folder()
-#     searched = []
-#     for c in candidates:
-#         # print(f"latest : {latest}")
-#         p = pathlib.Path(c)
-#         if not p.is_absolute(): p = sdk_root_dir / p
-#         searched.append(p)
-#         searched.append(p.with_suffix(".exe"))
-#         latest, chosen = compare_file_timestamp(p, latest, chosen)
-#         latest, chosen = compare_file_timestamp(p.with_suffix(".exe"), latest, chosen)
-#     return chosen, searched
+def search_for_the_latest_binary_ex(path_template):
+    variants = [".d", ".p", ".r"]
+    platforms = ["mswin", "posix"]
+    # Loop through all candidates
+    latest = 0
+    chosen = None
+    sdk_root_dir = get_root_folder()
+    searched = []
+    for var in variants:
+        for pla in platforms:
+            c = path_template.format(variant=f"{pla}{var}")
+            p = pathlib.Path(c)
+            if not p.is_absolute(): p = sdk_root_dir / p
+            searched.append(p)
+            searched.append(p.with_suffix(".exe"))
+            latest, chosen = compare_file_timestamp(p, latest, chosen)
+            latest, chosen = compare_file_timestamp(p.with_suffix(".exe"), latest, chosen)
+    return chosen, searched
 
-# def search_for_the_latest_binary(path_template):
-#     chosen, searched = search_for_the_latest_binary_ex(path_template)
-#     if chosen is None:
-#         pp = pprint.PrettyPrinter(indent=4)
-#         print(f"[ERROR] binary _NOT_ found: {path_template}. The following locations are searched:\n{pp.pformat(searched)}")
-#     return chosen
+def search_for_the_latest_binary(path_template):
+    chosen, searched = search_for_the_latest_binary_ex(path_template)
+    if chosen is None:
+        pp = pprint.PrettyPrinter(indent=4)
+        print(f"[ERROR] binary _NOT_ found: {path_template}. The following locations are searched:\n{pp.pformat(searched)}")
+    return chosen
 
-# def run_the_latest_binary(path_template, argv, check = True):
-#     chosen, searched = search_for_the_latest_binary_ex(path_template)
-#     if chosen is None:
-#         pp = pprint.PrettyPrinter(indent=4)
-#         print(f"[ERROR] binary _NOT_ found: {path_template}. The following locations are searched:\n{pp.pformat(searched)}")
-#         sys.exit(1)
-
-#     # Invoke the binary
-#     cmdline = [str(chosen)] + argv
-#     print(' '.join(cmdline))
-#     return subprocess.run(cmdline, check=check)
+def run_the_latest_binary(path_template, argv, check = True):
+    # search for the latest binary
+    chosen, searched = search_for_the_latest_binary_ex(path_template)
+    if chosen is None:
+        pp = pprint.PrettyPrinter(indent=4)
+        print(f"[ERROR] binary _NOT_ found: {path_template}. The following locations are searched:\n{pp.pformat(searched)}")
+        sys.exit(1)
+    # Invoke the binary
+    cmdline = [str(chosen)] + argv
+    print(' '.join(cmdline))
+    return subprocess.run(cmdline, check=check)

@@ -1,9 +1,8 @@
 #!/usr/bin/python3
 
 from ctypes import util
-import sys, subprocess, os, platform, pathlib, argparse, shutil, glob
-
-import utils
+import sys, subprocess, os, platform, pathlib, argparse, shutil, glob, importlib
+utils = importlib.import_module("garnet-utils")
 
 # Run cmake command. the args is list of arguments.
 def cmake(build_dir, cmdline):
@@ -99,7 +98,7 @@ args = ap.parse_args()
 #print(args.extra)
 
 # get the root directory of the code base
-sdk_root_dir = utils.get_sdk_root_folder()
+sdk_root_dir = utils.get_root_folder()
 # print(f"PhysRay-SDK root folder = {sdk_root_dir}")
 
 # get cmake build variant and build folder
