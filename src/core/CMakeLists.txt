@@ -111,17 +111,22 @@ target_compile_features(GNcore PUBLIC cxx_std_17)
 target_compile_definitions(GNcore PRIVATE GN_CORE_INTERNAL)
 
 # Qt6 build is disabled for now.
-# if(Qt6Widgets_FOUND)                                                
+# if(Qt6Widgets_FOUND)
 #     add_core_libs(Qt::Widgets)
 #     target_compile_definitions(GNcore PRIVATE HAS_QT=1)
 # else()
 #     message("QT not found. QT window is disabled")
 # endif()
 
-# directx
-if(D3D11_FOUND)
+# xinput
+if(XINPUT_FOUND)
     target_compile_definitions(GNcore PRIVATE HAS_XINPUT=1)
     add_core_libs(${DIRECTX_LIBRARIES})
+elseif(WIN32)
+    message(FATAL_ERROR
+        "XInput not found. XInput is required on Windows platform. "
+        "Make sure you have both Windows SDK and Game Development "
+        "with C++ component of Visual Studio properly installed.")
 endif()
 
 # X11
@@ -163,12 +168,12 @@ add_core_libs(Threads::Threads)
 add_core_libs(assimp)
 
 # compiler specific setup
-if (MSVC)
+if(MSVC)
     target_compile_definitions(GNcore PUBLIC _UNICODE UNICODE) # REVIEW: why not private?
     target_compile_options(GNcore PUBLIC
         /Wv:18 # fix eigen warning. still needed?
     )
-elseif (NOT GN_BUILD_IS_STATIC)
+elseif(NOT GN_BUILD_IS_STATIC)
     target_compile_options(GNcore PRIVATE
         -fvisibility=hidden # hide symbols by default.
         -Wno-attributes # disable warning about attributes
