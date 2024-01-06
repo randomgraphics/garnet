@@ -32,7 +32,7 @@ if(WIN32)
     check_include_files("windows.h;d3d11.h" D3D11_FOUND)
     check_include_files("windows.h;d3d11_1.h" D3D11_1_FOUND)
     if (D3D11_FOUND)
-        list(APPEND DIRECTX_LIBRARIES d3d11.lib)
+        list(APPEND DIRECTX_LIBRARIES d3d11.lib d2d1.lib dwrite.lib)
     endif()
 
     check_include_files("windows.h;d3d12.h" D3D12_FOUND)

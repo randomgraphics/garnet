@@ -96,9 +96,15 @@ public:
     // ********************************
 private:
     // mapping subresource index to render target view
-    typedef std::unordered_map<D3D11_SHADER_RESOURCE_VIEW_DESC, AutoComPtr<ID3D11ShaderResourceView>, AnyHash<D3D11_SHADER_RESOURCE_VIEW_DESC>> SRViewMap;
-    typedef std::unordered_map<D3D11_RENDER_TARGET_VIEW_DESC, AutoComPtr<ID3D11RenderTargetView>, AnyHash<D3D11_RENDER_TARGET_VIEW_DESC>>       RTViewMap;
-    typedef std::unordered_map<D3D11_DEPTH_STENCIL_VIEW_DESC, AutoComPtr<ID3D11DepthStencilView>, AnyHash<D3D11_DEPTH_STENCIL_VIEW_DESC>>       DSViewMap;
+    typedef std::unordered_map<D3D11_SHADER_RESOURCE_VIEW_DESC, AutoComPtr<ID3D11ShaderResourceView>, BlobHash<D3D11_SHADER_RESOURCE_VIEW_DESC>,
+                               MemoryEqual<D3D11_SHADER_RESOURCE_VIEW_DESC>>
+        SRViewMap;
+    typedef std::unordered_map<D3D11_RENDER_TARGET_VIEW_DESC, AutoComPtr<ID3D11RenderTargetView>, BlobHash<D3D11_RENDER_TARGET_VIEW_DESC>,
+                               MemoryEqual<D3D11_RENDER_TARGET_VIEW_DESC>>
+        RTViewMap;
+    typedef std::unordered_map<D3D11_DEPTH_STENCIL_VIEW_DESC, AutoComPtr<ID3D11DepthStencilView>, BlobHash<D3D11_DEPTH_STENCIL_VIEW_DESC>,
+                               MemoryEqual<D3D11_DEPTH_STENCIL_VIEW_DESC>>
+        DSViewMap;
 
     D3D11_SRV_DIMENSION mDimension;     ///< texture dimension
     DXGI_FORMAT         mTextureFormat; ///< D3D11 texture format

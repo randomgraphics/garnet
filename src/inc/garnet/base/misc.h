@@ -52,12 +52,12 @@
 ///
 /// compose RGBA8 color constant
 ///
-#define GN_RGBA8(r, g, b, a) ((((uint32) (r) & 0xFF) << 0) | (((uint32) (g) & 0xFF) << 8) | (((uint32) (b) & 0xFF) << 16) | (((uint32) (a) & 0xFF) << 24))
+#define GN_RGBA8(r, g, b, a) ((((uint32) (r) &0xFF) << 0) | (((uint32) (g) &0xFF) << 8) | (((uint32) (b) &0xFF) << 16) | (((uint32) (a) &0xFF) << 24))
 
 ///
 /// compose BGRA8 color constant
 ///
-#define GN_BGRA8(r, g, b, a) ((((uint32) (b) & 0xFF) << 0) | (((uint32) (g) & 0xFF) << 8) | (((uint32) (r) & 0xFF) << 16) | (((uint32) (a) & 0xFF) << 24))
+#define GN_BGRA8(r, g, b, a) ((((uint32) (b) &0xFF) << 0) | (((uint32) (g) &0xFF) << 8) | (((uint32) (r) &0xFF) << 16) | (((uint32) (a) &0xFF) << 24))
 
 namespace GN {
 
@@ -75,7 +75,7 @@ inline void combineHash(std::size_t & seed, const T & val) {
 ///          Those padding bytes could interfere with the hash calculation and generate unexpected result.
 /// @tparam T type of the value.
 template<typename T>
-struct AnyHash {
+struct BlobHash {
     enum {
         N_SIZE_T = sizeof(T) / sizeof(size_t),
         TAIL     = sizeof(T) % sizeof(size_t),
@@ -92,6 +92,14 @@ struct AnyHash {
 
         return h;
     }
+};
+
+/// @brief Equal function for comparing the type as a plain memory block.
+/// @details Be careful when your type contains padding bytes. It could interfere with the comparison and yield unexpected result.
+/// @tparam T
+template<typename T>
+struct MemoryEqual {
+    bool operator()(const T & a, const T & b) const { return 0 == ::memcmp(&a, &b, sizeof(T)); }
 };
 
 ///

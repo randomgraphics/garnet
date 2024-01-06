@@ -503,7 +503,6 @@ struct MeshVertexKey {
 
     bool operator==(const MeshVertexKey & rhs) const { return pos == rhs.pos && normal == rhs.normal && uv == rhs.uv; }
 };
-
 }
 
 namespace std {
@@ -668,7 +667,7 @@ static void sLoadFbxMesh(ModelHierarchyDesc & desc, const StrA & filename, Model
             // If the key exists already, the pair will point to it.
             // If the key does not exisit, the pair will point to the newly inserted one.
             // Either way, pair->value should give us the correct index of the vertex.
-            auto inserted = vhash.insert({key, (uint32) vhash.size()});
+            auto inserted    = vhash.insert({key, (uint32) vhash.size()});
             auto isNewVertex = inserted.second;
             auto vertexIndex = inserted.first->second;
 
