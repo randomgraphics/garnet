@@ -454,16 +454,32 @@ struct MeshVertexCache {
 };
 
 struct MeshVertexKey {
-    int   pos;      //< Index of the the vertex in FBX mesh control point array.
-    uint8 normal;   //< Index into MeshVertexCache.normal.
-    uint8 tc0;      //< Index into MeshVertexCache.texcoord0.
-    uint8 skinning; //< Index into MeshVertexCache.skinnings;
+    int   pos      = -1;           //< Index of the the vertex in FBX mesh control point array.
+    uint8 normal   = (uint8_t) -1; //< Index into MeshVertexCache.normal.
+    uint8 tc0      = (uint8_t) -1; //< Index into MeshVertexCache.texcoord0.
+    uint8 skinning = (uint8_t) -1; //< Index into MeshVertexCache.skinning;
 
-    MeshVertexKey(): pos(-1), normal((uint8) -1), tc0((uint8) -1), skinning((uint8) -1) {}
+    bool operator==(const MeshVertexKey & rhs) const { return pos == rhs.pos && normal == rhs.normal && tc0 == rhs.tc0 && skinning == rhs.skinning; }
 };
+}
 
-typedef HashMap<MeshVertexKey, uint32, 4096, HashMapUtils::HashFunc_MemoryHash<MeshVertexKey>, HashMapUtils::EqualFunc_MemoryCompare<MeshVertexKey>>
-    MeshVertexMap;
+namespace std {
+template<>
+struct hash<fbx::MeshVertexKey> {
+    size_t operator()(const fbx::MeshVertexKey & k) const {
+        size_t hash = 0;
+        combineHash(hash, k.pos);
+        combineHash(hash, k.normal);
+        combineHash(hash, k.tc0);
+        combineHash(hash, k.skinning);
+        return hash;
+    }
+};
+} // namespace std
+
+namespace fbx {
+
+typedef std::unordered_map<MeshVertexKey, uint32> MeshVertexMap;
 
 //
 // Convert FBX matrix (column-major) to Garnet matrix (row-major)
@@ -1090,9 +1106,9 @@ static void sLoadFbxMesh(FatModel & fatmodel, const StrA & filename, FbxSdkWrapp
             // If the key exists already, the pair will point to it.
             // If the key does not exisit, the pair will point to the newly inserted one.
             // Either way, pair->value should give us the correct index of the vertex.
-            MeshVertexMap::KeyValuePair * pair;
-            bool                          isNewVertex = vtxmap.insert(key, (uint32) vtxmap.size(), &pair);
-            uint32                        vertexIndex = pair->value;
+            auto inserted    = vtxmap.insert({key, (uint32) vtxmap.size()});
+            auto isNewVertex = inserted.second;
+            auto vertexIndex = inserted.first->second;
 
             if (isNewVertex) {
                 // If it is a new vertex, append it to the vertex key array.
