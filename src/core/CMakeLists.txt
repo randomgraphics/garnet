@@ -168,9 +168,12 @@ if (MSVC)
     target_compile_options(GNcore PUBLIC /EHa /MP
         /Wv:18 # fix eigen warning
     )
-elseif (NOT GN_BUILD_IS_STATIC)
-    target_compile_options(GNcore PRIVATE
-        -fvisibility=hidden # hide symbols by default.
-        -Wno-attributes # disable warning about attributes
-    )
+else()
+    target_compile_definitions(GNcore PRIVATE HAS_ICONV=1)
+    if (NOT GN_BUILD_IS_STATIC)
+        target_compile_options(GNcore PRIVATE
+            -fvisibility=hidden # hide symbols by default.
+            -Wno-attributes # disable warning about attributes
+        )
+    endif()
 endif()

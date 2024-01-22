@@ -11,28 +11,17 @@ using namespace GN;
 // class CharacterEncodingConverter implementation class
 // *****************************************************************************
 
-#if HAS_ICONV
-
-typedef GN::CECImplICONV CECImpl;
-
-#elif GN_XBOX2
-
-typedef GN::CECImplXenon CECImpl;
-
-#elif GN_WINPC
+#if GN_WINPC
 
 typedef GN::CECImplMSWIN CECImpl;
 
+#elif HAS_ICONV
+
+typedef GN::CECImplICONV CECImpl;
+
 #else
 
-struct CECImpl {
-    bool init(CharacterEncodingConverter::Encoding, CharacterEncodingConverter::Encoding) {
-        GN_ERROR(sLogger)("Character encoding class is not implemented on current platform.");
-        return false;
-    }
-
-    size_t convert(void * /*destBuffer*/, size_t /*destBufferSizeInBytes*/, const void * /*sourceBuffer*/, size_t /*sourceBufferSizeInBytes*/) { return 0; }
-};
+    #error "ICONV not found. Make sure you have iconv library installed."
 
 #endif
 
