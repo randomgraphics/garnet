@@ -79,29 +79,55 @@ def compare_file_timestamp(path, latest, chosen):
 def get_root_folder():
     return pathlib.Path(__file__).resolve().parent.parent.parent.absolute()
 
+def check_windows_container():
+    return os.name == "nt" and os.environ.get("USERNAME") == "ContainerAdministrator"
+
+class BuildSystem:
+    name = None
+    mswin = False
+    compiler = None
+    android_abi = None
+
+    def __init__(self, android = False, use_clang = False, use_xcode = False):
+        if android:
+            self.name = "android"
+            self.mswin = False
+            self.compiler = "clang"
+            self.android_abi = "arm64-v8a"
+        elif check_windows_container():
+            self.name = "windocker"
+            self.mswin = True
+            self.compiler = "vc"
+        else:
+            self.name = platform.system().lower()
+            self.mswin = "Windows" == self.name
+            self.compiler = "clang" if use_clang else "xcode" if use_xcode else "vc" if self.mswin else "gcc"
+
+    def build_dir(self):
+        return f"{self.name}.{self.compiler}"
+
 def search_for_the_latest_binary_ex(path_template):
     variants = [".d", ".p", ".r"]
-    platforms = ["mswin", "linux", "darwin"]
-    compilers = [".clang", ".gcc", ".xcode"]
+    p = [BuildSystem(), BuildSystem(())]
+    compilers = [".vc", ".clang", ".gcc", ".xcode"]
     # Loop through all candidates
     latest = 0
     chosen = None
     sdk_root_dir = get_root_folder()
     searched = []
     for var in variants:
-        for pla in platforms:
-            if "mswin" == pla and "Windows" != platform.system(): continue
-            for com in compilers:
-                c = path_template.format(variant=f"{pla}{com}{var}")
-                p = pathlib.Path(c)
-                if not p.is_absolute(): p = sdk_root_dir / p
-                if "mswin" == pla:
-                    v = "Debug" if ".d" == var else "Release" if ".r" == var else "RelWithDebInfo"
-                    p = pathlib.Path(c).with_suffix(".exe")
-                    p = p.parent / v / p.name
-                searched.append(p)
-                latest, chosen = compare_file_timestamp(p, latest, chosen)
-                latest, chosen = compare_file_timestamp(p.with_suffix(".exe"), latest, chosen)
+        pla = platform.system().lower()
+        for com in compilers:
+            c = path_template.format(variant=f"{pla}{com}{var}")
+            p = pathlib.Path(c)
+            if not p.is_absolute(): p = sdk_root_dir / p
+            if "mswin" == pla:
+                v = "Debug" if ".d" == var else "Release" if ".r" == var else "RelWithDebInfo"
+                p = pathlib.Path(c).with_suffix(".exe")
+                p = p.parent / v / p.name
+            searched.append(p)
+            latest, chosen = compare_file_timestamp(p, latest, chosen)
+            latest, chosen = compare_file_timestamp(p.with_suffix(".exe"), latest, chosen)
     return chosen, searched
 
 def search_for_the_latest_binary(path_template):

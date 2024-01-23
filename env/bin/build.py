@@ -4,9 +4,6 @@ from ctypes import util
 import sys, subprocess, os, platform, pathlib, argparse, shutil, glob, importlib
 utils = importlib.import_module("garnet-utils")
 
-def check_windows_container():
-    return os.name == "nt" and os.environ.get("USERNAME") == "ContainerAdministrator"
-
 def get_cmake_build_info(args):
     # determine build type
     build_type = str(args.variant).lower()
@@ -31,22 +28,11 @@ def get_cmake_build_info(args):
         build_dir = utils.get_root_folder() / build_dir
 
     # check for platform and compiler
-    android_abi = None
-    system = platform.system()
-    if args.android_build:
-        android_abi = "arm64-v8a"
-        build_dir = build_dir / f"android.{android_abi}{suffix}"
-    elif check_windows_container():
-        build_dir = build_dir / f"windocker{suffix}"
-    elif "Windows" == system:
-        build_dir = build_dir / f"mswin{suffix}"
-    else:
-        # posix system (Linux or MacOS)
-        compiler = "clang" if args.use_clang else "xcode" if args.use_xcode else "gcc"
-        build_dir = build_dir / f"{system.lower()}.{compiler}{suffix}"
+    system = utils.BuildSystem(android = args.android_build, use_clang = args.use_clang, use_xcode = args.use_xcode)
+    build_dir = build_dir / f"{system.build_dir()}{suffix}"
 
     #done
-    return [build_type, build_dir, android_abi]
+    return [build_type, build_dir, system.android_abi]
 
 # Run cmake command. the args is list of arguments.
 def cmake(build_dir, cmdline):
