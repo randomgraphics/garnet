@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 
 # include .bashrc if it exists
 if [ -f "$HOME/.bashrc" ]; then
@@ -24,8 +25,7 @@ export GN_BUILD_DIR=build.linux.${GN_BUILD_TARGET_CPU}
 
 # Detect WSL enviroonment
 echo "Detecting WSL environment..."
-echo $(uname -r) | grep -q "microsoft"
-if [[ $? == 0 ]] ; then
+if [[ $(uname -r) == *"microsoft"* ]] ; then
     # kernel name contains string "microsoft". we must be in wsl environment.
     echo "NOTE: You are currently running WSL environment. Please refer to the following"
     echo "      link to ensure your docker environemnt is running properly:"
