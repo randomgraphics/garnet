@@ -23,6 +23,7 @@ export GN_BUILD_TARGET_CPU=x64
 export GN_BUILD_DIR=build.linux.${GN_BUILD_TARGET_CPU}
 
 # Detect WSL enviroonment
+echo "Detecting WSL environment..."
 echo $(uname -r) | grep -q "microsoft"
 if [[ $? == 0 ]] ; then
     # kernel name contains string "microsoft". we must be in wsl environment.
@@ -40,7 +41,7 @@ fi
 # ==========
 # Config GIT
 # ==========
-
+echo "Configuring GIT..."
 # setup local git config (prefix with double underscore indicating it is private to this script)
 __setup-local-git-config()
 {
@@ -57,7 +58,7 @@ __setup-local-git-config ${GARNET_ROOT/src/3rdparty/rapid-image}
 # =====
 # alias
 # =====
-
+echo "Configuring alias..."
 while read -r line
 do
     line=${line/% \"/\"} # remove trailing space
@@ -68,7 +69,7 @@ done < ${GARNET_ROOT}/env/alias.bash.txt
 # =====================
 # Config Console Prompt
 # =====================
-
+echo "Configuring console prompt..."
 # utility function to get git branch
 get-git-branch() {
     branch=$(git rev-parse --abbrev-ref HEAD 2>&1)
@@ -84,7 +85,7 @@ PS1="\n\e[00;92m==== [GARNET] - \e[01;96m${GARNET_ROOT}\e[00;92m - \e[01;93m\$(g
 # =====
 # Misc.
 # =====
-
+echo "Misc. setup..."
 unset INCLUDE
 unset LIBS
 PATH=${GARNET_ROOT}/env/bin:${PATH}

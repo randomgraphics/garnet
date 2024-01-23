@@ -54,7 +54,7 @@ jobs:
 
   build-android:
     docker:
-      - image: randomgraphics/garnet:android-latest
+      - image: randomgraphics/garnet:latest
     steps:
       - run:
           name: prep git
