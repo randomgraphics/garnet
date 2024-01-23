@@ -3,7 +3,11 @@
 #include <string.h>
 #include <string>
 #include <iostream>
-//#include <hash_map>
+#include <unordered_map>
+
+#if GN_ANDROID && GN_CLANG
+    #pragma clang diagnostic ignored "-Wformat"
+#endif
 
 class StringMapTest : public CxxTest::TestSuite {
     struct StlStringHash {

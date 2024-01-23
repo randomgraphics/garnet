@@ -179,14 +179,16 @@ find_package(DirectX)
 find_package(Vulkan)
 find_package(X11)
 find_package(Qt6 COMPONENTS Core Widgets)
-find_package(CUDAToolkit)
-find_package(OptiX)
 
 # Check for CUDA support
-include(CheckLanguage)
-check_language(CUDA)
-if (CMAKE_CUDA_COMPILER)
-    enable_language(CUDA OPTIONAL)
+if (NOT ANDROID)
+    include(CheckLanguage)
+    check_language(CUDA)
+    if (CMAKE_CUDA_COMPILER)
+        find_package(OptiX)
+        find_package(CUDAToolkit)
+        enable_language(CUDA OPTIONAL)
+    endif()
 endif()
 
 # ===================

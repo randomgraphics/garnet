@@ -4,6 +4,50 @@ from ctypes import util
 import sys, subprocess, os, platform, pathlib, argparse, shutil, glob, importlib
 utils = importlib.import_module("garnet-utils")
 
+def check_windows_container():
+    return os.name == "nt" and os.environ.get("USERNAME") == "ContainerAdministrator"
+
+def get_cmake_build_info(args):
+    # determine build type
+    build_type = str(args.variant).lower()
+    if "d" == build_type or "debug" == build_type:
+        suffix = ".d"
+        build_type = "Debug"
+    elif "p" == build_type or "profile" == build_type:
+        suffix = ".p"
+        build_type = "RelWithDebInfo"
+    elif "r" == build_type or "release" == build_type:
+        suffix = ".r"
+        build_type = "Release"
+    elif "c" == build_type or "clean" == build_type:
+        # return [None, None, None] indicating a clear action.
+        return [None, None, None]
+    else:
+        utils.rip(f"[ERROR] unrecognized build variant : {args.variant}.")
+
+    # determine build folder basename
+    build_dir = pathlib.Path(args.build_dir)
+    if not build_dir.is_absolute():
+        build_dir = utils.get_root_folder() / build_dir
+
+    # check for platform and compiler
+    android_abi = None
+    system = platform.system()
+    if args.android_build:
+        android_abi = "arm64-v8a"
+        build_dir = build_dir / f"android.{android_abi}{suffix}"
+    elif check_windows_container():
+        build_dir = build_dir / f"windocker{suffix}"
+    elif "Windows" == system:
+        build_dir = build_dir / f"mswin{suffix}"
+    else:
+        # posix system (Linux or MacOS)
+        compiler = "clang" if args.use_clang else "xcode" if args.use_xcode else "gcc"
+        build_dir = build_dir / f"{system.lower()}.{compiler}{suffix}"
+
+    #done
+    return [build_type, build_dir, android_abi]
+
 # Run cmake command. the args is list of arguments.
 def cmake(build_dir, cmdline):
     if not isinstance(cmdline, list):
@@ -49,7 +93,6 @@ def cmake_config(args, build_dir, build_type):
     os.makedirs(build_dir, exist_ok=True)
     config = f"-S {sdk_root_dir} -B {build_dir} -DCMAKE_BUILD_TYPE={build_type}"
     if args.android_build:
-        # Support only arm64 for now
         sdk = pathlib.Path(os.getenv('ANDROID_SDK_ROOT'))
         ndk = sdk / "ndk/23.1.7779620"
         if 'Windows' == platform.system():
@@ -69,8 +112,8 @@ def cmake_config(args, build_dir, build_type):
             -DANDROID_NATIVE_API_LEVEL=29 \
             -DCMAKE_SYSTEM_VERSION=29 \
             -DANDROID_PLATFORM=android-29 \
-            -DANDROID_ABI=arm64-v8a \
-            -DCMAKE_ANDROID_ARCH_ABI=arm64-v8a \
+            -DANDROID_ABI={android_abi} \
+            -DCMAKE_ANDROID_ARCH_ABI={android_abi} \
             "
     elif 'Windows' != platform.system():
         if not args.use_makefile: config += " -GNinja"
@@ -90,7 +133,8 @@ ap.add_argument("-b", dest="build_dir", default="build", help="Build output fold
 ap.add_argument("-c", dest="config_only", action="store_true", help="Run CMake config only. Skip cmake build.")
 ap.add_argument("-C", dest="skip_config", action="store_true", help="Skip CMake config. Run build process only.")
 ap.add_argument("-m", dest="use_makefile", action="store_true", help="Use OS's default makefile instead of Ninja")
-ap.add_argument("--clang", dest="use_clang", action="store_true", help="Use CLANG instead of GCC as the compiler. Default is GCC. This option is only valid on Linux.")
+ap.add_argument("--clang", dest="use_clang", action="store_true", help="Use CLANG instead of GCC as the compiler. This option is only valid on Linux.")
+ap.add_argument("--xcode", dest="use_xcode", action="store_true", help="Use XCode instead of GCC as the compiler. This option is only valid on Mac.")
 ap.add_argument("variant", help="Specify build variant. Acceptable values are: d(ebug)/p(rofile)/r(elease)/c(lean). "
                                          "Note that all parameters alert this one will be considered \"extra\" and passed to CMake directly.")
 ap.add_argument("extra", nargs=argparse.REMAINDER, help="Extra arguments passing to cmake.")
@@ -102,7 +146,7 @@ sdk_root_dir = utils.get_root_folder()
 # print(f"PhysRay-SDK root folder = {sdk_root_dir}")
 
 # get cmake build variant and build folder
-build_type, build_dir = utils.get_cmake_build_type(args.variant, args.build_dir, args.android_build)
+build_type, build_dir, android_abi = get_cmake_build_info(args)
 
 if build_type is None:
     if os.name == "nt":

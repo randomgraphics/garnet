@@ -147,14 +147,14 @@
     #undef GN_PPC
     #define GN_PPC 1
     #define GN_CPU ppc
-#elif defined(__arm64__)
+#elif defined(__arm64__) || defined(__arm__) || defined(__aarch64__) || defined(_M_ARM) || defined(_M_ARM64)
     #undef GN_ARM
     #define GN_ARM 1
     #define GN_CPU arm
 #elif defined(_M_IX86) || defined(_X86_) || defined(i386) || defined(__i386__)
     #undef GN_X86
     #define GN_X86 1
-    #define GN_CPU x86
+    #define GN_CPU x86g
 #else
     #error "Unknown CPU"
 #endif

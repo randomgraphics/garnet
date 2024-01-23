@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "garnet/gfx/fatModel.h"
 #include <set>
+#include <unordered_map>
 
 using namespace GN;
 using namespace GN::gfx;

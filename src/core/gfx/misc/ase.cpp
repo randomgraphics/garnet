@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "ase.h"
+#include <unordered_map>
 
 using namespace GN;
 using namespace GN::gfx;
