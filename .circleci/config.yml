@@ -90,7 +90,7 @@ jobs:
       - run:
           name: build
           command: |
-            $env:VULKAN_SDK="C:\vulkan-sdk\
+            $env:VULKAN_SDK="C:\vulkan-sdk\"
             . env\garnet.ps1
             b d 
 
