@@ -14,7 +14,6 @@
 #define GN_MSVC8 0 ///< If 1, means current compiler is msvc 8+
 #define GN_ICL   0 ///< If 1, means current compiler is intel c++ compiler
 #define GN_GNUC  0 ///< If 1, means current compiler is GNUC compilers (gcc, mingw, clang and etc.)
-#define GN_MINGW 0 ///< If 1, means current compiler is MingW
 #define GN_CLANG 0 ///< IF 1, means current compiler is clang
 
 /// \def GN_COMPILER
@@ -35,13 +34,6 @@
     #define GN_MSVC     1 // treat intel compiler as VC compiler
     #define GN_MSVC8    (_MSC_VER >= 1400)
     #define GN_COMPILER icl
-
-#elif defined(__GNUC__) && defined(_WIN32)
-    #undef GN_MINGW
-    #undef GN_GNUC
-    #define GN_MINGW    1
-    #define GN_GNUC     1
-    #define GN_COMPILER mingw
 
 #elif defined(__clang__)
     #undef GN_GNUC

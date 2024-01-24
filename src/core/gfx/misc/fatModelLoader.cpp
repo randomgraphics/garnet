@@ -1673,6 +1673,8 @@ void sLoadAiMeshSkeleton(FatModel & fatmodel, FatMesh & fatmesh, const aiScene &
         fatjoint.name = aibone.mName.data;
 
         boneTransform                 = aibone.mOffsetMatrix * invMeshTransform;
+// Workaround of warning due to pointer cast. TODO: remove this line and fix the real code issue.
+#pragma GCC diagnostic ignored "-Wstrict-aliasing"
         fatjoint.bindPose.model2joint = *(Matrix44f *) &boneTransform;
 
         // Setup default hierarchy
