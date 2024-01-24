@@ -114,3 +114,7 @@ echo "GARNET_ROOT              = $GARNET_ROOT"
 echo "GN_BUILD_CMAKE_GENERATOR = $GN_BUILD_CMAKE_GENERATOR"
 echo "GN_BUILD_TARGET_CPU      = $GN_BUILD_TARGET_CPU"
 echo "GN_BUILD_DIR             = $GN_BUILD_DIR"
+
+# Disable error checking. Without this line, any errors after this script
+# will cause the bash instance to exit.
+set +e

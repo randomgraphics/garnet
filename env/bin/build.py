@@ -104,7 +104,7 @@ def cmake_config(args, build_dir, build_type):
     elif 'Windows' != platform.system():
         if not args.use_makefile: config += " -GNinja"
         if args.use_clang:
-            clang_version = "" if "Darwin" == platform.system() else ""
+            clang_version = "" if "Darwin" == platform.system() else "-15"
             config += f" -DCMAKE_C_COMPILER=clang{clang_version} -DCMAKE_CXX_COMPILER=clang++{clang_version}"
     cmake(build_dir, config)
 

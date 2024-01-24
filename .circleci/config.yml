@@ -178,13 +178,15 @@ jobs:
           command: |
             git config --global --unset-all "url.ssh://git@github.com.insteadof" # fix git lfs bad credential when fetching repo stored on github
             git clone https://github.com/randomgraphics/vulkan-sdk.git c:\vulkan-sdk
+            $env:VULKAN_SDK="C:\vulkan-sdk\"
             python.exe -m pip install --upgrade termcolor
       - run:
           name: build
           command: |
-            $env:VULKAN_SDK="C:\vulkan-sdk\"
             . env\garnet.ps1
             b d
+            b p
+            b r
 
 workflows:
   build-and-test:

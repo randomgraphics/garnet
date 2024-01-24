@@ -84,23 +84,21 @@ def check_windows_container():
 
 class BuildSystem:
     name = None
-    mswin = False
     compiler = None
+    mswin = False
     android_abi = None
 
     def __init__(self, android = False, use_clang = False, use_xcode = False):
         if android:
             self.name = "android"
-            self.mswin = False
             self.compiler = "clang"
             self.android_abi = "arm64-v8a"
-        elif check_windows_container():
-            self.name = "windocker"
-            self.mswin = True
+        elif "Windows" == platform.system():
+            self.name = "windocker" if check_windows_container() else "windows"
             self.compiler = "vc"
+            self.mswin = True
         else:
             self.name = platform.system().lower()
-            self.mswin = "Windows" == self.name
             self.compiler = "clang" if use_clang else "xcode" if use_xcode else "vc" if self.mswin else "gcc"
 
     def build_dir(self):
