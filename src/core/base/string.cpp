@@ -1,10 +1,27 @@
 #include "pch.h"
 
-static sint64 sEmptyStringBuffer                 = 0;
-GN_API void * GN::internal::EMPTY_STRING_POINTER = &sEmptyStringBuffer;
+struct EmptyString {
+    size_t  caps = 0;
+    size_t  size = 0;
+    int64_t eos  = 0;
+};
 
-static GN::StrA sEmptyString;
-GN_API void *   GN::internal::EMPTY_STRING_INSTANCE = (void *) &sEmptyString;
+//
+//
+// -----------------------------------------------------------------------------
+GN_API void * GN::internal::emptyStringPointer() {
+    static EmptyString s;
+    return &s.eos;
+};
+
+//
+//
+// -----------------------------------------------------------------------------
+GN_API void * GN::internal::empytStringInstance() {
+    static void * s = emptyStringPointer();
+    GN_ASSERT(0 == *(int64_t *) s);
+    return &s;
+}
 
 //
 //

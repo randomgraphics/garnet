@@ -113,21 +113,10 @@ target_include_directories(GNextern PRIVATE
     ${CMAKE_CURRENT_BINARY_DIR}/expat # for expat_build.h
 )
 
-# compiler specific options
-if (MSVC)
-    target_compile_options(GNextern PRIVATE
-        /w # don't care about warnings in 3rd party sources.
-        /EHa
-        /MP # enable parallel build.
-    )
-else()
-    message("Current compiler is: ${CMAKE_CXX_COMPILER_ID}")
-    target_compile_options(GNextern PRIVATE
-        -w # disable all warnings
-    )
-endif()
-
-# target_compile_features(GNextern PRIVATE cxx_std_11)
+# # compiler specific options
+# if (MSVC)
+#     target_compile_options(GNextern PRIVATE /EHa) # why?
+# endif()
 
 # OpenGL and X11 options
 if (${OPENGL_FOUND})

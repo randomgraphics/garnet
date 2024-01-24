@@ -829,8 +829,7 @@ bool GN::engine::SkinnedMesh::loadFromFatModel(const GN::gfx::FatModel & fatmode
         AutoRef<MeshResource> mesh = gdb.findResource<MeshResource>(meshName);
         if (!mesh) {
             // setup mesh descriptor
-            MeshResourceDesc merd;
-            memset(&merd, 0, sizeof(merd));
+            MeshResourceDesc merd {};
             merd.prim       = fatmesh.primitive;
             merd.numvtx     = fatmesh.vertices.getVertexCount();
             merd.numidx     = fatmesh.indices.size();

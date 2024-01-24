@@ -150,7 +150,10 @@ Set-PSReadlineOption -Colors @{
 write-host -ForegroundColor green "
 Garnet build environment ready to use. Happy coding!
 
-GARNET_ROOT = $env:GARNET_ROOT
-VULKAN_SDK  = $env:VULKAN_SDK
-USERNAME    = $env:USERNAME
+USERNAME         = $env:USERNAME
+GARNET_ROOT      = $env:GARNET_ROOT
+VULKAN_SDK       = $env:VULKAN_SDK
+ANDROID_SDK_ROOT = $env:ANDROID_SDK_ROOT (required for Android build)
+ANDROID_NDK_ROOT = $env:ANDROID_NDK_ROOT (required for Android build)
+JAVA_HOME        = $env:JAVA_HOME (required for Android build)
 "

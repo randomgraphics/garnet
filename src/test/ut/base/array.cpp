@@ -1,5 +1,9 @@
 #include "../testCommon.h"
 
+#if GN_GNUC
+    #pragma GCC diagnostic ignored "-Warray-bounds" // need to disable this warning to test the out-of-bound access.
+#endif
+
 class StackArrayTest : public CxxTest::TestSuite {
     struct Element {
         static int count; ///< number of Element instances
@@ -514,7 +518,7 @@ public:
         Element::clear();
 
         DynaArray<Element> a;
-        a.append({2});
+        a.append(2);
         TS_ASSERT_EQUALS(1, Element::count);
         TS_ASSERT_EQUALS(1, Element::mctor);
         TS_ASSERT_EQUALS(0, Element::mop);

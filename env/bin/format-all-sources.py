@@ -1,10 +1,10 @@
 #!/usr/bin/python3
 
-import sys, pathlib, subprocess
-import utils
+import sys, pathlib, subprocess, importlib
+utils = importlib.import_module("garnet-utils")
 
 # get the root directory of the code base
-sdk_root_dir = utils.get_sdk_root_folder()
+sdk_root_dir = utils.get_root_folder()
 print(sdk_root_dir)
 
 # Gather all GIT managed source files

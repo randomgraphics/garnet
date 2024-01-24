@@ -37,7 +37,7 @@ void GN::input::BasicInput::triggerKeyPress(KeyCode code, bool keydown) {
     GN_GUARD;
 
     // ignore redundant keyup(s)
-    if (keydown == mKeyboardStatus[code].down) return;
+    if (keydown == mKeyboardStatus[(int) code].down) return;
 
     // GN_TRACE( "Key press: %s %s", keyCode2String(code), keydown?"down":"up" );
 
@@ -59,7 +59,7 @@ void GN::input::BasicInput::triggerKeyPress(KeyCode code, bool keydown) {
     KeyEvent k(code, mKeyFlags);
 
     // 更新键盘状态数组
-    mKeyboardStatus[code] = k.status;
+    mKeyboardStatus[(int) code] = k.status;
 
     // update last key event
     mKeyEventQueueMutex.lock();

@@ -147,7 +147,7 @@ public:
 
     ~stdiobuf() { close(); }
 
-    bool is_open() const { return m_filedes >= 0; }
+    bool is_open() const { return !!m_filedes; }
 
     void close() {
         // We don't really close the file here. Should leave it to whoever instantiated this class.
@@ -259,7 +259,11 @@ GN_API bool GN::TempFile::open() {
 
     mBuf    = std::make_unique<stdiobuf>(mFile, std::ios::in | std::ios::out | std::ios::binary);
     mStream = std::make_unique<std::iostream>(mBuf.get());
+#ifdef _MSC_VER
     setName(std::to_string(_fileno(mFile)).c_str());
+#else
+    setName(std::to_string(fileno(mFile)).c_str());
+#endif
     setStream(mStream.get(), mStream.get());
     return true;
 }

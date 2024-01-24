@@ -15,14 +15,14 @@ class GpuResourceDatabase;
 ///
 /// Gpu Resource baes class.
 ///
-class GpuResource : public RefCounter {
+class GN_API GpuResource : public RefCounter {
     // *****************************
     // ctor / dtor
     // *****************************
 
     //@{
 protected:
-    GpuResource(GpuResourceDatabase & db);
+    GpuResource(GpuResourceDatabase & db): mDatabase(db) {};
     virtual ~GpuResource();
     //@}
 
@@ -58,7 +58,7 @@ private:
     // this implementation class is used by GpuResourceDatabase class to track
     // internal resource information
     class Impl;
-    Impl * mImpl;
+    Impl * mImpl = nullptr;
 };
 
 ///
@@ -354,11 +354,6 @@ struct MeshResourceDescBase {
                                                                    ///< will be used.
 
     ///
-    /// constructor
-    ///
-    MeshResourceDescBase() {}
-
-    ///
     /// get vertex buffer size in bytes
     ///
     uint32 getVtxBufSize(uint32 stream) const;
@@ -377,11 +372,6 @@ struct MeshResourceDesc : public MeshResourceDescBase {
                                                           ///< data are undefined
     void * indices = nullptr;                             ///< Null means that the mesh should be drawed as
                                                           ///< non-indexed mesh.
-
-    ///
-    /// constructor
-    ///
-    MeshResourceDesc() {}
 
     ///
     /// calculate bounding box

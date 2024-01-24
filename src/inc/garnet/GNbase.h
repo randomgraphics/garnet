@@ -82,9 +82,6 @@ namespace internal {}
 // dictionary type
 #include "base/dict.h"
 
-// hash map
-#include "base/hashmap.h"
-
 // code page routines
 #include "base/codepage.h"
 

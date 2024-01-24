@@ -100,7 +100,7 @@ endfunction()
 target_include_directories(GNcore PUBLIC
     ${BUILD_HEADER_INC}
     ../inc
-    ../3rdparty/Eigen
+    ../3rdparty/eigen
     ../3rdparty/rapid-image/inc
 )
 target_include_directories(GNcore PRIVATE
@@ -110,18 +110,23 @@ target_link_libraries(GNcore PUBLIC GNextern)
 target_compile_features(GNcore PUBLIC cxx_std_17)
 target_compile_definitions(GNcore PRIVATE GN_CORE_INTERNAL)
 
-# Qt6
-if(Qt6Widgets_FOUND)
-    add_core_libs(Qt::Widgets)
-    target_compile_definitions(GNcore PRIVATE HAS_QT=1)
-else()
-    message("QT not found. QT window is disabled")
-endif()
+# Qt6 build is disabled for now.
+# if(Qt6Widgets_FOUND)
+#     add_core_libs(Qt::Widgets)
+#     target_compile_definitions(GNcore PRIVATE HAS_QT=1)
+# else()
+#     message("QT not found. QT window is disabled")
+# endif()
 
-# directx
-if(D3D11_FOUND)
+# xinput
+if(XINPUT_FOUND)
     target_compile_definitions(GNcore PRIVATE HAS_XINPUT=1)
     add_core_libs(${DIRECTX_LIBRARIES})
+elseif(WIN32)
+    message(FATAL_ERROR
+        "XInput not found. XInput is required on Windows platform. "
+        "Make sure you have both Windows SDK and Game Development "
+        "with C++ component of Visual Studio properly installed.")
 endif()
 
 # X11
@@ -164,10 +169,16 @@ add_core_libs(assimp)
 
 # compiler specific setup
 if(MSVC)
-    target_compile_definitions(GNcore PUBLIC _UNICODE UNICODE)
-    target_compile_options(GNcore PUBLIC /EHa /MP /W4 /WX
-        /Wv:18 # fix eigen warning
+    target_compile_definitions(GNcore PUBLIC _UNICODE UNICODE) # REVIEW: why not private?
+    target_compile_options(GNcore PUBLIC
+        /Wv:18 # fix eigen warning. still needed?
     )
 else()
-    target_compile_options(GNcore PUBLIC -Wall -Wextra -Werror)
+    target_compile_definitions(GNcore PRIVATE HAS_ICONV=1)
+    if (NOT GN_BUILD_IS_STATIC)
+        target_compile_options(GNcore PRIVATE
+            -fvisibility=hidden # hide symbols by default.
+            -Wno-attributes # disable warning about attributes
+        )
+    endif()
 endif()

@@ -158,7 +158,7 @@ public:
     void onKeyPress(input::KeyEvent ke) override {
         SampleApp::onKeyPress(ke);
 
-        if (input::KeyCode::SPACEBAR == ke.code && ke.status.down) {
+        if (input::KeyCode::SPACEBAR == ke.code() && ke.status.down) {
             // const int NUM_SCENES = 2;
             // m_ActiveScene = (m_ActiveScene + 1) % NUM_SCENES;
             m_LineWidthInScreenSpace = !m_LineWidthInScreenSpace;

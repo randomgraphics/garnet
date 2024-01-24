@@ -538,7 +538,6 @@ struct GpuContext {
 
     struct RenderStates {
         union {
-
             uint64 bitFlags; ///< aggregated render state bit flags in single 64 bits integer.
 
             struct {

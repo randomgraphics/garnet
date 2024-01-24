@@ -142,10 +142,10 @@ private:
     /// GLSL vertex attribute description
     ///
     struct GLSLAttributeDesc {
-        GpuProgramAttributeParameterDesc desc; ///< attribute parameter description
-        StrA                             name; ///< attribute name
-        OGLVertexSemantic                semanticName;
-        uint8                            semanticIndex;
+        GpuProgramAttributeParameterDesc desc {}; ///< attribute parameter description
+        StrA                             name {}; ///< attribute name
+        OGLVertexSemantic                semanticName {};
+        uint8                            semanticIndex {};
     };
 
     // GLSL program

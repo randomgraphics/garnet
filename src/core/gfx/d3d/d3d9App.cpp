@@ -328,7 +328,7 @@ GN_API void GN::d3d9::D3D9Application::onKeyPress(input::KeyEvent ke) {
     #if GN_XBOX2
     GN_UNUSED_PARAM(ke);
     #else
-    if (input::KeyCode::ESCAPE == ke.code && !ke.status.down) { mRunning = false; }
+    if (input::KeyCode::ESCAPE == ke.code() && !ke.status.down) { mRunning = false; }
     #endif
 }
 

@@ -7,6 +7,7 @@
 // *****************************************************************************
 
 #include <chrono>
+#include <type_traits>
 
 ///
 /// Get element count of C-style array
@@ -59,6 +60,48 @@
 #define GN_BGRA8(r, g, b, a) ((((uint32) (b) &0xFF) << 0) | (((uint32) (g) &0xFF) << 8) | (((uint32) (r) &0xFF) << 16) | (((uint32) (a) &0xFF) << 24))
 
 namespace GN {
+
+/// @brief A utility function to combine hash values.
+/// @tparam T Type of the value.
+/// @param seed Reference to the current hash value to combine to. This will also be the new hash value.
+/// @param val The value that we'd like to add to the hash.
+template<typename T>
+inline void combineHash(std::size_t & seed, const T & val) {
+    seed ^= std::hash<T>()(val) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+}
+
+/// @brief Hash anything as a plain memory block.
+/// @details This is useful for hashing POD types. Be careful when your type contains padding bytes.
+///          Those padding bytes could interfere with the hash calculation and generate unexpected result.
+/// @tparam T type of the value.
+template<typename T>
+struct BlobHash {
+    enum {
+        N_SIZE_T = sizeof(T) / sizeof(size_t),
+        TAIL     = sizeof(T) % sizeof(size_t),
+    };
+
+    size_t operator()(const T & t) const {
+        const size_t * pz = (const size_t *) &t;
+
+        size_t h = 0;
+        for (size_t i = 0; i < N_SIZE_T; ++i, ++pz) { combineHash(h, *pz); }
+
+        const uint8_t * p8 = (const uint8_t *) pz;
+        for (size_t i = 0; i < TAIL; ++i, ++p8) { combineHash(h, *p8); }
+
+        return h;
+    }
+};
+
+/// @brief Equal function for comparing the type as a plain memory block.
+/// @details Be careful when your type contains padding bytes. It could interfere with the comparison and yield unexpected result.
+/// @tparam T
+template<typename T>
+struct MemoryEqual {
+    bool operator()(const T & a, const T & b) const { return 0 == ::memcmp(&a, &b, sizeof(T)); }
+};
+
 ///
 /// type cast function
 ///
@@ -129,18 +172,18 @@ struct GN_API Guid {
     /// Hasing
     ///
     struct Hash {
-        uint64 operator()(const Guid & guid) const {
-            const uint64 * u64 = (const uint64 *) &guid;
+        uint64_t operator()(const Guid & guid) const {
+            const uint64_t * u64 = (const uint64_t *) &guid;
             return u64[0] + u64[1];
         }
     };
 
     /// \name data members
     //@{
-    uint32 data1;
-    uint16 data2;
-    uint16 data3;
-    uint8  data4[8];
+    uint32  data1;
+    uint16  data2;
+    uint16  data3;
+    uint8_t data4[8];
     //@}
 
     /// \name public methods
@@ -159,21 +202,21 @@ struct GN_API Guid {
     //@{
 
     bool operator==(const Guid & rhs) const {
-        const uint64 * a = (const uint64 *) this;
-        const uint64 * b = (const uint64 *) &rhs;
+        const uint64_t * a = (const uint64_t *) this;
+        const uint64_t * b = (const uint64_t *) &rhs;
         return a[0] == b[0] && a[1] == b[1];
     }
 
     bool operator!=(const Guid & rhs) const {
-        const uint64 * a = (const uint64 *) this;
-        const uint64 * b = (const uint64 *) &rhs;
+        const uint64_t * a = (const uint64_t *) this;
+        const uint64_t * b = (const uint64_t *) &rhs;
         return a[0] != b[0] || a[1] != b[1];
     }
 
     bool operator<(const Guid & rhs) const {
         // Note: may produce different result on machine with different endian.
-        const uint64 * a = (const uint64 *) this;
-        const uint64 * b = (const uint64 *) &rhs;
+        const uint64_t * a = (const uint64_t *) this;
+        const uint64_t * b = (const uint64_t *) &rhs;
         if (a[0] != b[0])
             return a[0] < b[0];
         else

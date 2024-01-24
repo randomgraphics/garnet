@@ -80,7 +80,7 @@ class InputTest {
         mLastKeyEvent = ke;
         RepainWindow();
         if (!ke.status.down) {
-            if (GN::input::KeyCode::ESCAPE == ke.code) mDone = true;
+            if (GN::input::KeyCode::ESCAPE == ke.code()) mDone = true;
         }
     }
 

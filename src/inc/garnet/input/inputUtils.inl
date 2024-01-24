@@ -31,7 +31,7 @@ inline const char * keyCode2String(int code) {
 #undef GNINPUT_DEFINE_KEYCODE
     };
 
-    if (KeyCode::NONE <= code && code < KeyCode::NUM_KEYS)
+    if (KeyCode::NONE <= (KeyCode) code && (KeyCode) code < KeyCode::NUM_KEYS)
         return sTable[code];
     else
         return "";

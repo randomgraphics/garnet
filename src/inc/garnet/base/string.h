@@ -191,8 +191,8 @@ inline uint64 hash(const CHAR * s, size_t length = 0) {
 } // namespace str
 
 namespace internal {
-extern GN_API void * EMPTY_STRING_POINTER;
-extern GN_API void * EMPTY_STRING_INSTANCE;
+GN_API void * emptyStringPointer();
+GN_API void * empytStringInstance();
 } // namespace internal
 
 ///
@@ -202,13 +202,13 @@ template<typename CHAR, typename RAW_MEMORY_ALLOCATOR = RawHeapMemoryAllocator>
 class Str {
     typedef CHAR CharType;
 
-    CharType * mPtr = nullptr; ///< string buffer pointer.
+    CharType * mPtr = (CharType *) internal::emptyStringPointer(); ///< string buffer pointer.
 
 public:
     ///
     /// Instance of empty string
     ///
-    static const Str & EMPTYSTR() { return *(Str *) internal::EMPTY_STRING_INSTANCE; }
+    static const Str & EMPTYSTR() { return *(Str *) internal::empytStringInstance(); }
 
     ///
     /// indicate serach failure.
@@ -930,11 +930,11 @@ private:
     }
 
     // Returns a static pointer for empty string
-    static CharType * sEmptyPtr() { return (CharType *) internal::EMPTY_STRING_POINTER; }
+    static CharType * sEmptyPtr() { return (CharType *) internal::emptyStringPointer(); }
 
     // Allocate a memory buffer that can hold at least 'count' characters, and one extra '\0'.
     static CharType * sAlloc(size_t count) {
-        if (1 == count) return sEmptyPtr();
+        if (count <= 1) return sEmptyPtr();
         // ALLOCATOR:sAllocate only allocates raw memory buffer. No constuctors are invoked.
         // This is safe, as long as CharType is POD type.
         StringHeader * ptr = (StringHeader *) RAW_MEMORY_ALLOCATOR::sAllocate(sizeof(StringHeader) + sizeof(CharType) * (count + 1), sizeof(size_t));
@@ -942,12 +942,11 @@ private:
     }
 
     static void sDealloc(CharType * ptr) {
-        // ALLOCATOR:sDeallocate frees memory without calling destructors.
+        if (!ptr || ptr == sEmptyPtr()) return;
+        StringHeader * p = ((StringHeader *) ptr) - 1;
+        // ALLOCATOR:sDeallocate only deallocates raw memory buffer. No destructors are invoked.
         // This is safe, as long as CharType is POD type.
-        if (ptr && ptr != sEmptyPtr()) {
-            StringHeader * p = (StringHeader *) ptr;
-            RAW_MEMORY_ALLOCATOR::sDeallocate(p - 1);
-        }
+        RAW_MEMORY_ALLOCATOR::sDeallocate(p);
     }
 
     friend GN_API void wcs2mbs(Str<char> &, const wchar_t *, size_t);

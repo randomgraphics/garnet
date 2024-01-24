@@ -28,10 +28,10 @@ GN::engine::Entity::~Entity() {
 //
 // -----------------------------------------------------------------------------
 GN::engine::Entity * GN::engine::Entity::getComponent(const EntityType & type) const {
-    EntityRef<Entity> * pp = mComponents.find(type);
-    if (pp) {
-        GN_ASSERT(*pp);
-        return *pp;
+    auto iter = mComponents.find(type);
+    if (iter != mComponents.end()) {
+        GN_ASSERT(!iter->second.empty());
+        return iter->second.rawptr();
     } else {
         return NULL;
     }
@@ -44,7 +44,7 @@ void GN::engine::Entity::setComponent(const EntityType & type, Entity * comp) {
     if (comp) {
         mComponents[type].set(comp);
     } else {
-        mComponents.remove(type);
+        mComponents.erase(type);
     }
 }
 

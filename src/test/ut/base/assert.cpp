@@ -27,7 +27,13 @@ public:
 
         GN_ASSERT(0);
 
+#if GN_BUILD_DEBUG_ENABLED
+        // In debug build, assert failrure shoudl trigger assert failure routine.
         TS_ASSERT_EQUALS(context, this);
+#else
+        // In profile and release build, assert macro does nothing
+        TS_ASSERT_EQUALS(context, (void *) NULL);
+#endif
 
         GN::setRuntimeAssertBehavior(oldb);
         GN::setAssertFailerUserRoutine(oldr, oldc);

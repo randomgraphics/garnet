@@ -14,7 +14,6 @@
 #define GN_MSVC8 0 ///< If 1, means current compiler is msvc 8+
 #define GN_ICL   0 ///< If 1, means current compiler is intel c++ compiler
 #define GN_GNUC  0 ///< If 1, means current compiler is GNUC compilers (gcc, mingw, clang and etc.)
-#define GN_MINGW 0 ///< If 1, means current compiler is MingW
 #define GN_CLANG 0 ///< IF 1, means current compiler is clang
 
 /// \def GN_COMPILER
@@ -35,13 +34,6 @@
     #define GN_MSVC     1 // treat intel compiler as VC compiler
     #define GN_MSVC8    (_MSC_VER >= 1400)
     #define GN_COMPILER icl
-
-#elif defined(__GNUC__) && defined(_WIN32)
-    #undef GN_MINGW
-    #undef GN_GNUC
-    #define GN_MINGW    1
-    #define GN_GNUC     1
-    #define GN_COMPILER mingw
 
 #elif defined(__clang__)
     #undef GN_GNUC
@@ -147,14 +139,14 @@
     #undef GN_PPC
     #define GN_PPC 1
     #define GN_CPU ppc
-#elif defined(__arm64__)
+#elif defined(__arm64__) || defined(__arm__) || defined(__aarch64__) || defined(_M_ARM) || defined(_M_ARM64)
     #undef GN_ARM
     #define GN_ARM 1
     #define GN_CPU arm
 #elif defined(_M_IX86) || defined(_X86_) || defined(i386) || defined(__i386__)
     #undef GN_X86
     #define GN_X86 1
-    #define GN_CPU x86
+    #define GN_CPU x86g
 #else
     #error "Unknown CPU"
 #endif

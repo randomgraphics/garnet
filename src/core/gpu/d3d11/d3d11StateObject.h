@@ -327,9 +327,9 @@ public:
     ///
     OBJECT_CLASS * operator[](const OBJECT_DESC & desc) {
         // look up existing item first
-        StateObjectItem ** hashitem = mHashTable.find(desc);
-        if (hashitem) {
-            StateObjectItem * item = *hashitem;
+        auto hashitem = mHashTable.find(desc);
+        if (hashitem != mHashTable.end()) {
+            StateObjectItem * item = hashitem->second;
 
             GN_ASSERT(item);
 
@@ -353,7 +353,7 @@ public:
                 safeRelease(item->object);
 
                 // remove from hash
-                mHashTable.remove(item->desc);
+                mHashTable.erase(item->desc);
 
                 // remove from LRU list
                 StateObjectItem * prev = item->prev;
@@ -381,8 +381,8 @@ public:
         item->object           = newobj;
         item->desc             = desc;
 
-        // add to hash
-        mHashTable.insert(desc, item);
+        // add to hash. make sure it is indeed inserted as a new item.
+        GN_VERIFY(mHashTable.insert({desc, item}).second);
 
         // update LRU
         InsertToHead(item);
@@ -423,8 +423,8 @@ private:
     ///
     /// Hash map type
     ///
-    typedef HashMap<OBJECT_DESC, StateObjectItem *, CACHE_SIZE, typename D3D11StateObjectCreator<OBJECT_DESC>::Hash,
-                    typename D3D11StateObjectCreator<OBJECT_DESC>::Equal>
+    typedef std::unordered_map<OBJECT_DESC, StateObjectItem *, typename D3D11StateObjectCreator<OBJECT_DESC>::Hash,
+                               typename D3D11StateObjectCreator<OBJECT_DESC>::Equal>
         ObjectHashMap;
 
     // *************************************************

@@ -135,7 +135,7 @@ public:
     void onKeyPress(input::KeyEvent key) {
         GN::util::SampleApp::onKeyPress(key);
 
-        if (input::KeyCode::SPACEBAR == key.code && key.status.down) { swimming = !swimming; }
+        if (input::KeyCode::SPACEBAR == key.code() && key.status.down) { swimming = !swimming; }
     }
 
     void onUpdate() {
