@@ -2,7 +2,7 @@ version: 2.1
 orbs:
   win: circleci/windows@5.0
 jobs:
-  build-linux-gcc-debug:
+  lint:
     docker:
       - image: randomgraphics/garnet:latest
     steps:
@@ -16,6 +16,16 @@ jobs:
           name: lint
           command: |
             env/bin/cit.py -l
+  build-linux-gcc-debug:
+    docker:
+      - image: randomgraphics/garnet:latest
+    steps:
+      - run:
+          name: prep git
+          command: |
+            git config --global --add safe.directory /tmp/_circleci_local_build_repo
+            git config --global --add safe.directory /root/project
+      - checkout
       - run:
           name: build
           command: |
@@ -182,7 +192,7 @@ jobs:
             $env:VULKAN_SDK="C:\vulkan-sdk\"
 
             # install cmake
-            Invoke-WebRequest https://github.com/Kitware/CMake/releases/download/v3.28.1/cmake-3.28.1-windows-x86_64.zip c:\cmake.zip
+            Invoke-WebRequest https://github.com/Kitware/CMake/releases/download/v3.28.1/cmake-3.28.1-windows-x86_64.zip -OutFile c:\cmake.zip
             Expand-Archive c:\cmake.zip c:\
             $env:PATH="C:\cmake-3.28.1-windows-x86_64\bin;$env:PATH"
 
@@ -199,7 +209,10 @@ jobs:
 workflows:
   build-and-test:
     jobs:
+      # - lint
       # - build-linux-gcc-debug
+      #   - requires:
+      #     - lint
       # - build-linux-gcc-profile:
       #     requires:
       #       - build-linux-gcc-debug
@@ -225,3 +238,5 @@ workflows:
       #     requires:
       #       - build-android-debug
       - build-windows
+        # - requires:
+        #   - lint
