@@ -6,7 +6,7 @@ Garnet 3D is lightweight crossplatform 3D rendering library. It supports Windows
 
 - [doc](doc/) : documentation
 - [env](env/) : Build environment setup and utility script.
-- [media](media/) : non-source code asset files (textures, models, shaders, fonts and etc.)
+- [media](media/) : non source code asset files (textures, models, shaders, fonts and etc.)
 - [src](src/) : Source codes
   - [3rdparty](src/3rdparty/) : 3rd party code and libraries
   - [core](src/core/) : garnet core library
@@ -23,7 +23,7 @@ Build on Windows requires manual install of the following depencencies:
 - Git (with LFS support)
 - CMake (3.16.3+)
 - Python 3.8+ with pip
-  - also needs termcolor package: python3.exe -m pip install --upgrade termcolor
+  - also needs termcolor package: `python3.exe -m pip install --upgrade termcolor`
 - Vulkan SDK
 - Qt6 (optional)
 

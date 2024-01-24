@@ -1672,10 +1672,10 @@ void sLoadAiMeshSkeleton(FatModel & fatmodel, FatMesh & fatmesh, const aiScene &
 
         fatjoint.name = aibone.mName.data;
 
-        boneTransform                 = aibone.mOffsetMatrix * invMeshTransform;
+        boneTransform = aibone.mOffsetMatrix * invMeshTransform;
 // Workaround of warning due to pointer cast. TODO: remove this line and fix the real code issue.
 #if GN_GNUC
-#pragma GCC diagnostic ignored "-Wstrict-aliasing"
+    #pragma GCC diagnostic ignored "-Wstrict-aliasing"
 #endif
         fatjoint.bindPose.model2joint = *(Matrix44f *) &boneTransform;
 
