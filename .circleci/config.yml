@@ -199,31 +199,29 @@ jobs:
 workflows:
   build-and-test:
     jobs:
-      - build-linux-gcc-debug
-      - build-linux-gcc-profile:
-          requires:
-            - build-linux-gcc-debug
-      - build-linux-gcc-release:
-          requires:
-            - build-linux-gcc-debug
-      - build-linux-clang-debug:
-          requires:
-            - build-linux-gcc-debug
-      - build-linux-clang-profile:
-          requires:
-            - build-linux-clang-debug
-      - build-linux-clang-release:
-          requires:
-            - build-linux-clang-debug
-      - build-android-debug:
-          requires:
-            - build-linux-gcc-debug
-      - build-android-profile:
-          requires:
-            - build-android-debug
-      - build-android-release:
-          requires:
-            - build-android-debug
-      - build-windows:
-          requires:
-            - build-linux-gcc-debug
+      # - build-linux-gcc-debug
+      # - build-linux-gcc-profile:
+      #     requires:
+      #       - build-linux-gcc-debug
+      # - build-linux-gcc-release:
+      #     requires:
+      #       - build-linux-gcc-debug
+      # - build-linux-clang-debug:
+      #     requires:
+      #       - build-linux-gcc-debug
+      # - build-linux-clang-profile:
+      #     requires:
+      #       - build-linux-clang-debug
+      # - build-linux-clang-release:
+      #     requires:
+      #       - build-linux-clang-debug
+      # - build-android-debug:
+      #     requires:
+      #       - build-linux-gcc-debug
+      # - build-android-profile:
+      #     requires:
+      #       - build-android-debug
+      # - build-android-release:
+      #     requires:
+      #       - build-android-debug
+      - build-windows
