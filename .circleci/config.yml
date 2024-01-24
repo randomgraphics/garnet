@@ -296,9 +296,12 @@ workflows:
       - build-windows-debug:
           requires:
             - prep-windows
+            - build-linux-gcc-debug
       - build-windows-profile:
           requires:
             - prep-windows
+            - build-linux-gcc-debug
       - build-windows-release:
           requires:
             - prep-windows
+            - build-linux-gcc-debug
