@@ -15,14 +15,14 @@ class GpuResourceDatabase;
 ///
 /// Gpu Resource baes class.
 ///
-class GpuResource : public RefCounter {
+class GN_API GpuResource : public RefCounter {
     // *****************************
     // ctor / dtor
     // *****************************
 
     //@{
 protected:
-    GpuResource(GpuResourceDatabase & db);
+    GpuResource(GpuResourceDatabase & db): mDatabase(db) {};
     virtual ~GpuResource();
     //@}
 
@@ -58,7 +58,7 @@ private:
     // this implementation class is used by GpuResourceDatabase class to track
     // internal resource information
     class Impl;
-    Impl * mImpl;
+    Impl * mImpl = nullptr;
 };
 
 ///

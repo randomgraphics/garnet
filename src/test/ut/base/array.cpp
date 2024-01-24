@@ -1,5 +1,9 @@
 #include "../testCommon.h"
 
+#if GN_GNUC
+    #pragma GCC diagnostic ignored "-Warray-bounds" // need to disable this warning to test the out-of-bound access.
+#endif
+
 class StackArrayTest : public CxxTest::TestSuite {
     struct Element {
         static int count; ///< number of Element instances

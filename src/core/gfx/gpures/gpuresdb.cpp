@@ -450,12 +450,7 @@ GN::gfx::GpuResource::Impl::~Impl() {
 //
 //
 // -----------------------------------------------------------------------------
-GN::gfx::GpuResource::GpuResource(GpuResourceDatabase & db): mDatabase(db), mImpl(NULL) {}
-
-//
-//
-// -----------------------------------------------------------------------------
-GN::gfx::GpuResource::~GpuResource() { delete mImpl; }
+GN_API GN::gfx::GpuResource::~GpuResource() { delete mImpl; }
 
 // *****************************************************************************
 // GpuResourceDatabase::Impl public methods

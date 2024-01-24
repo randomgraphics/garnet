@@ -175,7 +175,31 @@ jobs:
             source env/garnet.rc
             build.py -a r
 
-  build-windows:
+  prep-windows:
+    executor:
+      name: win/server-2022
+    steps:
+      - run:
+          name: install Vulkan SDK
+          command: |
+            git config --global --unset-all "url.ssh://git@github.com.insteadof" # fix git lfs bad credential when fetching repo stored on github
+            git clone https://github.com/randomgraphics/vulkan-sdk.git c:\vulkan-sdk
+      - run:
+          name: install CMake
+          command: |
+            Invoke-WebRequest https://github.com/Kitware/CMake/releases/download/v3.28.1/cmake-3.28.1-windows-x86_64.zip -OutFile c:\cmake.zip
+            Expand-Archive c:\cmake.zip c:\
+      # TODO: install Qt6
+      - run:
+          name: install misc. dependencies
+          command: |
+            python.exe -m pip install --upgrade termcolor
+      - persist_to_workspace:
+          root: .
+          paths:
+              - '*'
+
+  build-windows-debug:
     executor:
       name: win/server-2022
     steps:
@@ -185,41 +209,50 @@ jobs:
             git config --global --add safe.directory /tmp/_circleci_local_build_repo
             git config --global --add safe.directory /root/project
       - checkout
+      - attach_workspace:
+          at: .
       - run:
-          name: bootstrap
-          command: |
-            # install vulkan sdk
-            "Installing Vulkan SDK..."
-            git config --global --unset-all "url.ssh://git@github.com.insteadof" # fix git lfs bad credential when fetching repo stored on github
-            git clone https://github.com/randomgraphics/vulkan-sdk.git c:\vulkan-sdk
-
-            # install cmake
-            "Installing CMake..."
-            Invoke-WebRequest https://github.com/Kitware/CMake/releases/download/v3.28.1/cmake-3.28.1-windows-x86_64.zip -OutFile c:\cmake.zip
-            Expand-Archive c:\cmake.zip c:\
-
-            # TODO: install Qt6
-
-            # install misc. dependencies
-            "Installing misc. dependencies..."
-            python.exe -m pip install --upgrade termcolor
-      - run:
-          name: build debug
+          name: build
           command: |
             $env:VULKAN_SDK="C:\vulkan-sdk\"
             $env:PATH="C:\cmake-3.28.1-windows-x86_64\bin;$env:PATH"
             . env\garnet.ps1
             b d
+
+  build-windows-profile:
+    executor:
+      name: win/server-2022
+    steps:
       - run:
-          name: build profile
+          name: prep git
+          command: |
+            git config --global --add safe.directory /tmp/_circleci_local_build_repo
+            git config --global --add safe.directory /root/project
+      - checkout
+      - attach_workspace:
+          at: .
+      - run:
+          name: build
           command: |
             $env:VULKAN_SDK="C:\vulkan-sdk\"
             $env:PATH="C:\cmake-3.28.1-windows-x86_64\bin;$env:PATH"
             . env\garnet.ps1
             b p
 
+  build-windows-release:
+    executor:
+      name: win/server-2022
+    steps:
       - run:
-          name: build release
+          name: prep git
+          command: |
+            git config --global --add safe.directory /tmp/_circleci_local_build_repo
+            git config --global --add safe.directory /root/project
+      - checkout
+      - attach_workspace:
+          at: .
+      - run:
+          name: build
           command: |
             $env:VULKAN_SDK="C:\vulkan-sdk\"
             $env:PATH="C:\cmake-3.28.1-windows-x86_64\bin;$env:PATH"
@@ -257,6 +290,15 @@ workflows:
       - build-android-release:
           requires:
             - build-android-debug
-      - build-windows:
+      - prep-windows:
           requires:
           - lint
+      - build-windows-debug:
+          requires:
+            - prep-windows
+      - build-windows-profile:
+          requires:
+            - prep-windows
+      - build-windows-release:
+          requires:
+            - prep-windows
