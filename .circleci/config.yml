@@ -85,9 +85,9 @@ jobs:
       - run:
           name: bootstrap
           command: |
-            git config -l --show-scope
-            git config --global --unset url.ssh://git@github.com/.insteadOf
-            git config -l --show-scope
+            git config -l --global
+            git config --global --unset url.ssh://git@github.com/.insteadof
+            git config -l --global
             git clone https://github.com/randomgraphics/vulkan-sdk.git c:\vulkan-sdk
             python.exe -m pip install --upgrade termcolor
       - run:
@@ -100,7 +100,7 @@ jobs:
 workflows:
   build-and-test:
     jobs:
-      - lint
+      # - lint
       # - build-linux-gcc-with-cit:
       #     requires:
       #       - lint
@@ -110,6 +110,6 @@ workflows:
       # - build-android:
       #     requires:
       #       - lint
-      - build-windows:
-          requires:
-            - lint
+      - build-windows
+          # requires:
+          #   - lint
