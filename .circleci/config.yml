@@ -228,7 +228,7 @@ workflows:
   build-and-test:
     jobs:
       - lint
-      - build-linux-gcc-debug
+      - build-linux-gcc-debug:
         - requires:
           - lint
       - build-linux-gcc-profile:
@@ -255,6 +255,6 @@ workflows:
       - build-android-release:
           requires:
             - build-android-debug
-      - build-windows
+      - build-windows:
         - requires:
           - lint
