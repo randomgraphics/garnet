@@ -214,6 +214,7 @@ jobs:
       - run:
           name: build
           command: |
+            git config --global --unset-all "url.ssh://git@github.com.insteadof" # fix git lfs bad credential when fetching repo stored on github
             $env:VULKAN_SDK="C:\dep\vulkan-sdk\"
             $env:PATH="C:\dep\cmake-3.28.1-windows-x86_64\bin;$env:PATH"
             . env\garnet.ps1
@@ -234,6 +235,7 @@ jobs:
       - run:
           name: build
           command: |
+            git config --global --unset-all "url.ssh://git@github.com.insteadof" # fix git lfs bad credential when fetching repo stored on github
             $env:VULKAN_SDK="C:\dep\vulkan-sdk\"
             $env:PATH="C:\dep\cmake-3.28.1-windows-x86_64\bin;$env:PATH"
             . env\garnet.ps1
@@ -254,6 +256,7 @@ jobs:
       - run:
           name: build
           command: |
+            git config --global --unset-all "url.ssh://git@github.com.insteadof" # fix git lfs bad credential when fetching repo stored on github
             $env:VULKAN_SDK="C:\dep\vulkan-sdk\"
             $env:PATH="C:\dep\cmake-3.28.1-windows-x86_64\bin;$env:PATH"
             . env\garnet.ps1
@@ -263,45 +266,45 @@ workflows:
   build-and-test:
     jobs:
       - lint
-      # - build-linux-gcc-debug:
-      #     requires:
-      #     - lint
-      # - build-linux-gcc-profile:
-      #     requires:
-      #       - build-linux-gcc-debug
-      # - build-linux-gcc-release:
-      #     requires:
-      #       - build-linux-gcc-debug
-      # - build-linux-clang-debug:
-      #     requires:
-      #       - build-linux-gcc-debug
-      # - build-linux-clang-profile:
-      #     requires:
-      #       - build-linux-clang-debug
-      # - build-linux-clang-release:
-      #     requires:
-      #       - build-linux-clang-debug
-      # - build-android-debug:
-      #     requires:
-      #       - build-linux-gcc-debug
-      # - build-android-profile:
-      #     requires:
-      #       - build-android-debug
-      # - build-android-release:
-      #     requires:
-      #       - build-android-debug
+      - build-linux-gcc-debug:
+          requires:
+          - lint
+      - build-linux-gcc-profile:
+          requires:
+            - build-linux-gcc-debug
+      - build-linux-gcc-release:
+          requires:
+            - build-linux-gcc-debug
+      - build-linux-clang-debug:
+          requires:
+            - build-linux-gcc-debug
+      - build-linux-clang-profile:
+          requires:
+            - build-linux-clang-debug
+      - build-linux-clang-release:
+          requires:
+            - build-linux-clang-debug
+      - build-android-debug:
+          requires:
+            - build-linux-gcc-debug
+      - build-android-profile:
+          requires:
+            - build-android-debug
+      - build-android-release:
+          requires:
+            - build-android-debug
       - prep-windows:
           requires:
           - lint
       - build-windows-debug:
           requires:
             - prep-windows
-            # - build-linux-gcc-debug
+            - build-linux-gcc-debug
       - build-windows-profile:
           requires:
             - prep-windows
-            # - build-linux-gcc-debug
+            - build-linux-gcc-debug
       - build-windows-release:
           requires:
             - prep-windows
-            # - build-linux-gcc-debug
+            - build-linux-gcc-debug
