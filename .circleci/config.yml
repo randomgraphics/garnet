@@ -85,17 +85,17 @@ jobs:
       - run:
           name: bootstrap
           command: |
-            git config -l --global
-            git config --global --unset url.ssh://git@github.com/.insteadof
+            git config -l --global --show-origin
+            git config --global --unset-all url.ssh://git@github.com/.insteadof
             git config -l --global
             git clone https://github.com/randomgraphics/vulkan-sdk.git c:\vulkan-sdk
             python.exe -m pip install --upgrade termcolor
-      - run:
-          name: build
-          command: |
-            $env:VULKAN_SDK="C:\vulkan-sdk\"
-            . env\garnet.ps1
-            b d 
+      # - run:
+      #     name: build
+      #     command: |
+      #       $env:VULKAN_SDK="C:\vulkan-sdk\"
+      #       . env\garnet.ps1
+      #       b d
 
 workflows:
   build-and-test:
