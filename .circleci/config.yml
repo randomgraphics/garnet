@@ -32,7 +32,9 @@ jobs:
             git config --global --unset-all "url.ssh://git@github.com.insteadof" # fix git lfs bad credential when fetching repo stored on github
             source env/garnet.rc
             build.py d
-            env/bin/cit.py -t
+      - run:
+          name: test
+          command: env/bin/cit.py -t
 
   build-linux-gcc-profile:
     docker:

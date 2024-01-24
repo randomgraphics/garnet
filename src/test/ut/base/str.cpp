@@ -5,6 +5,16 @@
 
 class StringTest : public CxxTest::TestSuite {
 public:
+    void testEmptyStr() {
+        const auto & a = GN::StrA::EMPTYSTR();
+        const auto & w = GN::StrW::EMPTYSTR();
+        TS_ASSERT_EQUALS(a, "");
+        TS_ASSERT_EQUALS(w, L"");
+        TS_ASSERT_EQUALS((void *) &a, (void *) &w);
+        TS_ASSERT_EQUALS(a.rawptr(), GN::internal::emptyStringPointer());
+        TS_ASSERT_EQUALS(w.rawptr(), GN::internal::emptyStringPointer());
+    }
+
     void testMbs2wcs() {
         const char * mbs    = "abc";
         wchar_t      wcs[6] = {L'\0', L'\0', L'\0', L'\0', L'5', L'\0'};
