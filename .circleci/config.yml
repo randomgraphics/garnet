@@ -85,7 +85,8 @@ jobs:
       - run:
           name: bootstrap
           command: |
-            git config --global --unset url.ssh://git@github.com/.insteadOf || true # Fix git lfs bad credentials when fetching other repos hosted on github. 
+            git config -l --show-scope
+            git config --global --unset url.ssh://git@github.com/.insteadOf
             git config -l --show-scope
             git clone https://github.com/randomgraphics/vulkan-sdk.git c:\vulkan-sdk
             python.exe -m pip install --upgrade termcolor
