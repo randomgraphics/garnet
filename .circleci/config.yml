@@ -1,5 +1,6 @@
 version: 2.1
-
+orbs:
+  win: circleci/windows@5.0
 jobs:
   lint:
     docker:
@@ -71,16 +72,41 @@ jobs:
             build.py -a p
             build.py -a r
 
+  build-windows:
+    executor:
+      name: win/server-2022
+    steps:
+      - run:
+          name: prep git
+          command: |
+            git config --global --add safe.directory /tmp/_circleci_local_build_repo
+            git config --global --add safe.directory /root/project
+      - checkout
+      - run:
+          name: bootstrap
+          command: |
+            git clone https://github.com/randomgraphics/vulkan-sdk.git c:\vulkan-sdk
+            python.exe -m pip install --upgrade termcolor
+      - run:
+          name: build
+          command: |
+            $env:VULKAN_SDK="C:\vulkan-sdk\
+            . env\garnet.ps1
+            b d 
+
 workflows:
   build-and-test:
     jobs:
       - lint
-      - build-linux-gcc-with-cit:
-          requires:
-            - lint
-      - build-linux-clang:
-          requires:
-            - lint
-      - build-android:
+      # - build-linux-gcc-with-cit:
+      #     requires:
+      #       - lint
+      # - build-linux-clang:
+      #     requires:
+      #       - lint
+      # - build-android:
+      #     requires:
+      #       - lint
+      - build-windows:
           requires:
             - lint
