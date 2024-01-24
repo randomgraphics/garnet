@@ -27,7 +27,7 @@ Build on Windows requires manual install of the following depencencies:
 - Vulkan SDK
 - Qt6 (optional)
 
-After that run setupenv.cmd to launch the build console window. In the console window, run command `b d` to build debug variant. Command `b` w/o any arguments to show build help screen.
+After that run setupenv.cmd to launch the build console window. In the console window, run command `b d` to build debug variant. Run command `b` w/o any arguments to show build help screen.
 
 # License
 The library itself is released under MIT license. Please check [src/3rdparty](src/3rdparty) for license details of the 3rd party libraries referenced by Garnet 3D.
