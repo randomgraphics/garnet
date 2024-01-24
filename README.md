@@ -29,5 +29,12 @@ Build on Windows requires manual install of the following depencencies:
 
 After that run setupenv.cmd to launch the build console window. In the console window, run command `b d` to build debug variant. Run command `b` w/o any arguments to show build help screen.
 
+# Build on Ubuntu 22.04
+
+1. Run `env/bin/bootstrap.sh` to install build dependencies. You'll only need to run it once per dev machine.
+2. Run `setupenv.sh`to launch build environment.
+3. Run `b d` to build debug build. (Run `b` to check detailed build helps.)
+4. Run `cit.py` to run check-in-test suite.
+
 # License
 The library itself is released under MIT license. Please check [src/3rdparty](src/3rdparty) for license details of the 3rd party libraries referenced by Garnet 3D.
