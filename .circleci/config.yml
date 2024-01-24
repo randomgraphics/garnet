@@ -27,6 +27,7 @@ jobs:
       - run:
           name: build
           command: |
+            git config --global --unset-all "url.ssh://git@github.com.insteadof" # fix git lfs bad credential when fetching repo stored on github
             git submodule update --init --recursive
             source env/garnet.rc
             build.py d
@@ -81,16 +82,11 @@ jobs:
           command: |
             git config --global --add safe.directory /tmp/_circleci_local_build_repo
             git config --global --add safe.directory /root/project
-            git config --global -l --show-origin
       - checkout
       - run:
           name: bootstrap
           command: |
-            git config -l --global --show-origin
-            get-content -path $env:USERPROFILE\.gitconfig
-            git config --global --unset-all "url.ssh://git@github.com.insteadof"
-            get-content -path $env:USERPROFILE\.gitconfig
-            git config -l --global
+            git config --global --unset-all "url.ssh://git@github.com.insteadof" # fix git lfs bad credential when fetching repo stored on github
             git clone https://github.com/randomgraphics/vulkan-sdk.git c:\vulkan-sdk
             python.exe -m pip install --upgrade termcolor
       # - run:
@@ -104,15 +100,15 @@ workflows:
   build-and-test:
     jobs:
       # - lint
-      # - build-linux-gcc-with-cit:
-      #     requires:
-      #       - lint
+      - build-linux-gcc-with-cit
+          # requires:
+          #   - lint
       # - build-linux-clang:
       #     requires:
       #       - lint
       # - build-android:
       #     requires:
       #       - lint
-      - build-windows
-          # requires:
-          #   - lint
+      # - build-windows
+      #     requires:
+      #       - lint
