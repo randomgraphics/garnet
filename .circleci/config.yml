@@ -229,7 +229,7 @@ workflows:
     jobs:
       - lint
       - build-linux-gcc-debug:
-        - requires:
+          requires:
           - lint
       - build-linux-gcc-profile:
           requires:
@@ -256,5 +256,5 @@ workflows:
           requires:
             - build-android-debug
       - build-windows:
-        - requires:
+          requires:
           - lint
