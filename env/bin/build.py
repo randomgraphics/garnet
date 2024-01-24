@@ -74,19 +74,27 @@ def update_submodules():
             git("submodule update --init --recursive")
             break
 
+def get_android_path(name):
+    if os.environ.get(name) is None: utils.rip(f"{name} environment variable not found.")
+    p = pathlib.Path(os.getenv(name))
+    if not p.is_dir(): utils.rip(f"{p} folder not found.")
+    return p
+
 def cmake_config(args, build_dir, build_type):
     update_submodules()
     os.makedirs(build_dir, exist_ok=True)
     config = f"-S {sdk_root_dir} -B {build_dir} -DCMAKE_BUILD_TYPE={build_type}"
     if args.android_build:
-        sdk = pathlib.Path(os.getenv('ANDROID_SDK_ROOT'))
-        ndk = sdk / "ndk/23.1.7779620"
+        sdk = get_android_path('ANDROID_SDK_ROOT')
+        ndk = get_android_path('ANDROID_NDK_ROOT')
+        get_android_path('JAVA_HOME') # Ensure JAVA_HOME is set.
         if 'Windows' == platform.system():
-            ninja = sdk / "cmake/3.18.1/bin/ninja.exe"
-            if not ninja.exists(): utils.rip(f"{ninja} not found. Please install cmake 3.18+ via Android SDK Manager." )
+            # look for ninja.exe within sdk folder.
+            candidates = list((sdk / "cmake").glob("**/ninja.exe"))
+            ninja = candidates[0] if len(candidates) > 0 else None
+            if (ninja is None) or (not ninja.exists()): utils.rip(f"ninja.exe not found. Please install cmake 3.18+ via Android SDK Manager." )
         else:
             ninja = "ninja"
-        if not ndk.is_dir(): utils.rip(f"{ndk} folder not found.")
         toolchain = ndk / "build/cmake/android.toolchain.cmake"
         config += f" \
             -GNinja \
