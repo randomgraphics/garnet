@@ -86,7 +86,9 @@ jobs:
           name: bootstrap
           command: |
             git config -l --global --show-origin
+            get-content -path $env:USERPROFILE\.gitconfig
             git config --global --unset-all url.ssh://git@github.com/.insteadof
+            get-content -path $env:USERPROFILE\.gitconfig
             git config -l --global
             git clone https://github.com/randomgraphics/vulkan-sdk.git c:\vulkan-sdk
             python.exe -m pip install --upgrade termcolor
