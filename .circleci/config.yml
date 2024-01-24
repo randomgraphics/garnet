@@ -81,11 +81,11 @@ jobs:
           command: |
             git config --global --add safe.directory /tmp/_circleci_local_build_repo
             git config --global --add safe.directory /root/project
-            git config --global --unset url.ssh://git@github.com/.insteadOf # Fix git lfs bad credentials when fetching other repos hosted on github. 
       - checkout
       - run:
           name: bootstrap
           command: |
+            git config --global --unset url.ssh://git@github.com/.insteadOf || true # Fix git lfs bad credentials when fetching other repos hosted on github. 
             git config -l --show-scope
             git clone https://github.com/randomgraphics/vulkan-sdk.git c:\vulkan-sdk
             python.exe -m pip install --upgrade termcolor
