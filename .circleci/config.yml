@@ -176,9 +176,17 @@ jobs:
       - run:
           name: bootstrap
           command: |
+            # install vulkan sdk
             git config --global --unset-all "url.ssh://git@github.com.insteadof" # fix git lfs bad credential when fetching repo stored on github
             git clone https://github.com/randomgraphics/vulkan-sdk.git c:\vulkan-sdk
             $env:VULKAN_SDK="C:\vulkan-sdk\"
+
+            # install cmake
+            Invoke-WebRequest https://github.com/Kitware/CMake/releases/download/v3.28.1/cmake-3.28.1-windows-x86_64.zip c:\cmake.zip
+            Expand-Archive c:\cmake.zip c:\
+            $env:PATH="C:\cmake-3.28.1-windows-x86_64\bin;$env:PATH"
+
+            # install misc. dependencies
             python.exe -m pip install --upgrade termcolor
       - run:
           name: build
