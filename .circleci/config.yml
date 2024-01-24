@@ -2,7 +2,7 @@ version: 2.1
 orbs:
   win: circleci/windows@5.0
 jobs:
-  lint:
+  build-linux-gcc-debug:
     docker:
       - image: randomgraphics/garnet:latest
     steps:
@@ -12,9 +12,37 @@ jobs:
             git config --global --add safe.directory /tmp/_circleci_local_build_repo
             git config --global --add safe.directory /root/project
       - checkout
-      - run: env/bin/cit.py -l
+      - run:
+          name: lint
+          command: |
+            env/bin/cit.py -l
+      - run:
+          name: build
+          command: |
+            git config --global --unset-all "url.ssh://git@github.com.insteadof" # fix git lfs bad credential when fetching repo stored on github
+            source env/garnet.rc
+            build.py d
+            env/bin/cit.py -t
 
-  build-linux-gcc-with-cit:
+  build-linux-gcc-profile:
+    docker:
+      - image: randomgraphics/garnet:latest
+    steps:
+      - run:
+          name: prep git
+          command: |
+            git config --global --add safe.directory /tmp/_circleci_local_build_repo
+            git config --global --add safe.directory /root/project
+      - checkout
+      - run:
+          name: build
+          command: |
+            git config --global --unset-all "url.ssh://git@github.com.insteadof" # fix git lfs bad credential when fetching repo stored on github
+            source env/garnet.rc
+            build.py p
+            env/bin/cit.py -t
+
+  build-linux-gcc-release:
     docker:
       - image: randomgraphics/garnet:latest
     steps:
@@ -30,14 +58,10 @@ jobs:
             git config --global --unset-all "url.ssh://git@github.com.insteadof" # fix git lfs bad credential when fetching repo stored on github
             git submodule update --init --recursive
             source env/garnet.rc
-            build.py d
-            build.py p
             build.py r
-            build/linux.gcc.d/bin/GNtest-unit-tests
-            build/linux.gcc.p/bin/GNtest-unit-tests
-            build/linux.gcc.r/bin/GNtest-unit-tests
+            env/bin/cit.py -t
 
-  build-linux-clang:
+  build-linux-clang-debug:
     docker:
       - image: randomgraphics/garnet:latest
     steps:
@@ -50,12 +74,11 @@ jobs:
       - run:
           name: build
           command: |
+            git config --global --unset-all "url.ssh://git@github.com.insteadof" # fix git lfs bad credential when fetching repo stored on github
             source env/garnet.rc
             build.py --clang d
-            build.py --clang p
-            build.py --clang r
 
-  build-android:
+  build-linux-clang-profile:
     docker:
       - image: randomgraphics/garnet:latest
     steps:
@@ -68,9 +91,76 @@ jobs:
       - run:
           name: build
           command: |
+            git config --global --unset-all "url.ssh://git@github.com.insteadof" # fix git lfs bad credential when fetching repo stored on github
+            source env/garnet.rc
+            build.py --clang p
+
+  build-linux-clang-release:
+    docker:
+      - image: randomgraphics/garnet:latest
+    steps:
+      - run:
+          name: prep git
+          command: |
+            git config --global --add safe.directory /tmp/_circleci_local_build_repo
+            git config --global --add safe.directory /root/project
+      - checkout
+      - run:
+          name: build
+          command: |
+            git config --global --unset-all "url.ssh://git@github.com.insteadof" # fix git lfs bad credential when fetching repo stored on github
+            source env/garnet.rc
+            build.py --clang r
+
+  build-android-debug:
+    docker:
+      - image: randomgraphics/garnet:latest
+    steps:
+      - run:
+          name: prep git
+          command: |
+            git config --global --add safe.directory /tmp/_circleci_local_build_repo
+            git config --global --add safe.directory /root/project
+      - checkout
+      - run:
+          name: build
+          command: |
+            git config --global --unset-all "url.ssh://git@github.com.insteadof" # fix git lfs bad credential when fetching repo stored on github
             source env/garnet.rc
             build.py -a d
+
+  build-android-profile:
+    docker:
+      - image: randomgraphics/garnet:latest
+    steps:
+      - run:
+          name: prep git
+          command: |
+            git config --global --add safe.directory /tmp/_circleci_local_build_repo
+            git config --global --add safe.directory /root/project
+      - checkout
+      - run:
+          name: build
+          command: |
+            git config --global --unset-all "url.ssh://git@github.com.insteadof" # fix git lfs bad credential when fetching repo stored on github
+            source env/garnet.rc
             build.py -a p
+
+  build-android-release:
+    docker:
+      - image: randomgraphics/garnet:latest
+    steps:
+      - run:
+          name: prep git
+          command: |
+            git config --global --add safe.directory /tmp/_circleci_local_build_repo
+            git config --global --add safe.directory /root/project
+      - checkout
+      - run:
+          name: build
+          command: |
+            git config --global --unset-all "url.ssh://git@github.com.insteadof" # fix git lfs bad credential when fetching repo stored on github
+            source env/garnet.rc
             build.py -a r
 
   build-windows:
@@ -89,26 +179,41 @@ jobs:
             git config --global --unset-all "url.ssh://git@github.com.insteadof" # fix git lfs bad credential when fetching repo stored on github
             git clone https://github.com/randomgraphics/vulkan-sdk.git c:\vulkan-sdk
             python.exe -m pip install --upgrade termcolor
-      # - run:
-      #     name: build
-      #     command: |
-      #       $env:VULKAN_SDK="C:\vulkan-sdk\"
-      #       . env\garnet.ps1
-      #       b d
+      - run:
+          name: build
+          command: |
+            $env:VULKAN_SDK="C:\vulkan-sdk\"
+            . env\garnet.ps1
+            b d
 
 workflows:
   build-and-test:
     jobs:
-      # - lint
-      - build-linux-gcc-with-cit
-          # requires:
-          #   - lint
-      # - build-linux-clang:
-      #     requires:
-      #       - lint
-      # - build-android:
-      #     requires:
-      #       - lint
-      # - build-windows
-      #     requires:
-      #       - lint
+      - build-linux-gcc-debug
+      - build-linux-gcc-profile:
+          requires:
+            - build-linux-gcc-debug
+      - build-linux-gcc-release:
+          requires:
+            - build-linux-gcc-debug
+      - build-linux-clang-debug:
+          requires:
+            - build-linux-gcc-debug
+      - build-linux-clang-profile:
+          requires:
+            - build-linux-clang-debug
+      - build-linux-clang-release:
+          requires:
+            - build-linux-clang-debug
+      - build-android-debug:
+          requires:
+            - build-linux-gcc-debug
+      - build-android-profile:
+          requires:
+            - build-android-debug
+      - build-android-release:
+          requires:
+            - build-android-debug
+      - build-windows:
+          requires:
+            - build-linux-gcc-debug
