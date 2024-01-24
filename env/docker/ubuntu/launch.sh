@@ -9,7 +9,6 @@ run_as="-u $UID:$GID"
 gpu=
 entry_point="entrypoint.sh"
 interactive="-it"
-docker_login="registry.gitlab.com"
 image=`cat $dir/tag.txt`
 usb=
 for param in "$@"
