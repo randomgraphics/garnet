@@ -196,6 +196,8 @@ jobs:
             Invoke-WebRequest https://github.com/Kitware/CMake/releases/download/v3.28.1/cmake-3.28.1-windows-x86_64.zip -OutFile c:\cmake.zip
             Expand-Archive c:\cmake.zip c:\
 
+            # TODO: install Qt6
+
             # install misc. dependencies
             "Installing misc. dependencies..."
             python.exe -m pip install --upgrade termcolor
@@ -205,8 +207,11 @@ jobs:
             $env:VULKAN_SDK="C:\vulkan-sdk\"
             $env:PATH="C:\cmake-3.28.1-windows-x86_64\bin;$env:PATH"
             . env\garnet.ps1
+            "Build debug variant..."
             b d
+            "Build profile variant..."
             b p
+            "Build release variant..."
             b r
 
 workflows:
