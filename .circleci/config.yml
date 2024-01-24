@@ -81,6 +81,7 @@ jobs:
           command: |
             git config --global --add safe.directory /tmp/_circleci_local_build_repo
             git config --global --add safe.directory /root/project
+            git config --global --unset url.ssh://git@github.com.insteadof
       - checkout
       - run:
           name: bootstrap
