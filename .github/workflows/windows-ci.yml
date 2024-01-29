@@ -47,4 +47,4 @@ jobs:
           . env\garnet.ps1
           b ${{ matrix.variant }}
 
-          - run: echo "🍏 This job's status is ${{ job.status }}."
+      - run: echo "🍏 This job's status is ${{ job.status }}."
