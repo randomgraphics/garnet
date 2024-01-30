@@ -26,9 +26,6 @@ jobs:
           lfs: true
           submodules: recursive
 
-      - name: Pull LFS files
-        run: git lfs pull
-
       - name: Restore Vulkan SDK from cache
         id: vulkan-sdk
         uses: actions/cache@v4
