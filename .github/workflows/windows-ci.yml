@@ -24,17 +24,18 @@ jobs:
         uses: actions/cache@v4
         with:
           path: c:\dep\vulkan-sdk
-          key: ${{ runner.os }}-vulkan-sdk-1.3.250.0
+          key: ${{ runner.os }}-vulkan-sdk-1.3.275.0
 
       - name: Install Vulkan SDK (only when it is not cached)
         if: steps.vulkan-sdk.outputs.cache-hit != 'true'
-        run: git clone --depth 1 --branch 1.3.250.0 https://github.com/randomgraphics/vulkan-sdk.git c:\dep\vulkan-sdk
+        run: git clone --depth 1 --branch 1.3.275.0 https://github.com/randomgraphics/vulkan-sdk.git c:\dep\vulkan-sdk
 
       - name: Save Vulkan SDK to cache
+        if: steps.vulkan-sdk.outputs.cache-hit != 'true'
         uses: actions/cache/save@v4
         with:
           path: c:\dep\vulkan-sdk
-          key: ${{ runner.os }}-vulkan-sdk-1.3.250.0
+          key: ${{ steps.vulkan-sdk.outputs.cache-key }}
 
       # TODO: cache python packages too.
       - name: Install Python Packages
