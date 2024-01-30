@@ -21,6 +21,13 @@ jobs:
 
       - name: Clone repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          lfs: true
+          submodules: recursive
+
+      - name: Pull LFS files
+        run: git lfs pull
 
       - name: Restore Vulkan SDK from cache
         id: vulkan-sdk
