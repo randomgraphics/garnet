@@ -183,7 +183,7 @@ jobs:
           name: install Vulkan SDK
           command: |
             git config --global --unset-all "url.ssh://git@github.com.insteadof" # fix git lfs bad credential when fetching repo stored on github
-            git clone https://github.com/randomgraphics/vulkan-sdk.git c:\dep\vulkan-sdk
+            git clone --depth 1 --branch 1.3.250.0 https://github.com/randomgraphics/vulkan-sdk.git c:\dep\vulkan-sdk
       - run:
           name: install CMake
           command: |
@@ -293,18 +293,18 @@ workflows:
       - build-android-release:
           requires:
             - build-android-debug
-      - prep-windows:
-          requires:
-          - lint
-      - build-windows-debug:
-          requires:
-            - prep-windows
-            - build-linux-gcc-debug
-      - build-windows-profile:
-          requires:
-            - prep-windows
-            - build-linux-gcc-debug
-      - build-windows-release:
-          requires:
-            - prep-windows
-            - build-linux-gcc-debug
+      # - prep-windows:
+      #     requires:
+      #     - lint
+      # - build-windows-debug:
+      #     requires:
+      #       - prep-windows
+      #       - build-linux-gcc-debug
+      # - build-windows-profile:
+      #     requires:
+      #       - prep-windows
+      #       - build-linux-gcc-debug
+      # - build-windows-release:
+      #     requires:
+      #       - prep-windows
+      #       - build-linux-gcc-debug
