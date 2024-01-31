@@ -9,6 +9,9 @@
 #include <chrono>
 #include <sstream>
 
+#define FMT_HEADER_ONLY
+#include <fmt/format.h>
+
 /// General log macros, with user specified source code location
 //@{
 #if GN_ENABLE_LOG
@@ -173,12 +176,20 @@ public:
         ///
         /// printf style log
         ///
-        void operator()(const char * fmt, ...);
+        template<typename... Args>
+        void operator()(const char * format_, Args&&... args_) {
+            GN_ASSERT(mLogger);
+            return mLogger->doLog(mDesc, fmt::format(format_, std::forward<Args>(args_)...).c_str());
+        }
 
         ///
         /// printf style log (wide char)
         ///
-        void operator()(const wchar_t * fmt, ...);
+        template<typename... Args>
+        void operator()(const wchar_t * format_, Args&&... args_) {
+            GN_ASSERT(mLogger);
+            return mLogger->doLog(mDesc, fmt::format(format_, std::forward<Args>(args_)...).c_str());
+        }
     };
 
     ///

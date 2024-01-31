@@ -20,8 +20,8 @@ struct GN_API XmlAttrib {
     XmlElement *  node;  ///< pointer to the element that this attribute belongs to.
     XmlAttrib *   prev;  ///< pointer to previous attribute
     XmlAttrib *   next;  ///< pointer to next attribute
-    StrA          name;  ///< attribute name
-    StrA          value; ///< attribute value
+    std::string          name;  ///< attribute name
+    std::string          value; ///< attribute value
 
     ///
     /// attach attribute to specific element
@@ -124,7 +124,7 @@ protected:
 /// XML cdata node
 ///
 struct GN_API XmlCdata : public XmlNode {
-    StrA text; ///< text content.
+    std::string text; ///< text content.
 
 protected:
     ///
@@ -137,7 +137,7 @@ protected:
 /// XML comment node
 ///
 struct GN_API XmlComment : public XmlNode {
-    StrA text; ///< comment text
+    std::string text; ///< comment text
 
 protected:
     ///
@@ -156,18 +156,18 @@ protected:
 struct GN_API XmlElement : public XmlNode {
     XmlAttrib * firsta; ///< pointer to first attribute
     XmlAttrib * lasta;  ///< pointer to last attribute
-    StrA        name;   ///< element name
-    StrA        text;   ///< optional text section
+    std::string        name;   ///< element name
+    std::string        text;   ///< optional text section
 
     ///
     /// find specific attribute of element
     ///
-    XmlAttrib * findAttrib(const StrA & name_, str::CompareCase scc = str::SENSITIVE) const {
+    XmlAttrib * findAttrib(const std::string & name_, bool caseSensitive = true) const {
         for (XmlAttrib * a = firsta; a; a = a->next) {
-            if (str::SENSITIVE == scc) {
+            if (caseSensitive) {
                 if (name_ == a->name) return a;
             } else {
-                if (0 == str::compareI(name_.rawptr(), a->name.rawptr())) return a;
+                if (0 == str::compareI(name_.data(), a->name.data())) return a;
             }
         }
         return NULL;
@@ -176,15 +176,14 @@ struct GN_API XmlElement : public XmlNode {
     ///
     /// find specific firstc of element
     ///
-    XmlElement * findChildElement(const StrA & name_, str::CompareCase scc = str::SENSITIVE) const {
+    XmlElement * findChildElement(const std::string & name_, bool caseSensitive = true) const {
         for (XmlNode * n = firstc; n; n = n->nexts) {
             XmlElement * e = n->toElement();
             if (!e) continue;
-
-            if (str::SENSITIVE == scc) {
+            if (caseSensitive) {
                 if (name_ == e->name) return e;
             } else {
-                if (0 == str::compareI(name_.rawptr(), e->name.rawptr())) return e;
+                if (0 == str::compareI(name_.data(), e->name.data())) return e;
             }
         }
         return NULL;
@@ -204,7 +203,7 @@ struct XmlParseResult {
     XmlNode * root;      ///< root node of the xml document
     size_t    errLine;   ///< error position
     size_t    errColumn; ///< error position
-    StrA      errInfo;   ///< error information
+    std::string      errInfo;   ///< error information
 };
 
 ///
@@ -284,7 +283,7 @@ private:
 /// load something from XML file
 ///
 template<class T>
-inline bool loadFromXmlFile(T & t, File & fp, const StrA & basedir) {
+inline bool loadFromXmlFile(T & t, File & fp, const std::string & basedir) {
     GN_GUARD;
 
     XmlDocument    doc;
@@ -296,7 +295,7 @@ inline bool loadFromXmlFile(T & t, File & fp, const StrA & basedir) {
          "    line   : %d\n"
          "    column : %d\n"
          "    error  : %s",
-         fp.name().rawptr(), xpr.errLine, xpr.errColumn, xpr.errInfo.rawptr());
+         fp.name().data(), xpr.errLine, xpr.errColumn, xpr.errInfo.data());
         return false;
     }
     GN_ASSERT(xpr.root);
@@ -309,16 +308,16 @@ inline bool loadFromXmlFile(T & t, File & fp, const StrA & basedir) {
 /// load something from XML file
 ///
 template<class T>
-inline bool loadFromXmlFile(T & t, const StrA & filename) {
+inline bool loadFromXmlFile(T & t, const std::string & filename) {
     GN_GUARD;
 
     static Logger * sLocalLogger = getLogger("GN.base.xml");
-    GN_INFO(sLocalLogger)("Load '%s'", filename.rawptr());
+    GN_INFO(sLocalLogger)("Load '%s'", filename.data());
 
     auto fp = fs::openFile(filename, std::ios::in);
     if (!fp) return false;
 
-    StrA basedir = fs::dirName(filename);
+    std::string basedir = fs::dirName(filename);
 
     return loadFromXmlFile(t, *fp, basedir);
 

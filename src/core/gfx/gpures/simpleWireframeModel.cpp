@@ -17,7 +17,7 @@ static ModelResourceDesc sWireframeModelDesc() {
         md.uniforms[name].size = sizeof(type);                               \
         md.uniforms[name].initialValue.resize(sizeof(type));                 \
         type def = (defval);                                                 \
-        memcpy(md.uniforms[name].initialValue.rawptr(), &def, sizeof(type)); \
+        memcpy(md.uniforms[name].initialValue.data(), &def, sizeof(type)); \
     } else                                                                   \
         void(0)
 

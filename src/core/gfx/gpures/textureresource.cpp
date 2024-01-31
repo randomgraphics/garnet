@@ -36,7 +36,7 @@ AutoRef<TextureResource> GN::gfx::TextureResource::loadFromFile(GpuResourceDatab
     if (texres) return texres;
 
     // convert to full (absolute) path
-    StrA abspath = fs::resolvePath(fs::getCurrentDir(), filename);
+    std::string abspath = fs::resolvePath(fs::getCurrentDir(), filename);
     filename     = abspath;
 
     // Try search for existing resource again with full path

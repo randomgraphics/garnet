@@ -102,6 +102,7 @@ target_include_directories(GNcore PUBLIC
     ../inc
     ../3rdparty/eigen
     ../3rdparty/rapid-image/inc
+    ../3rdparty/fmt/include
 )
 target_include_directories(GNcore PRIVATE
     ../3rdparty/stb

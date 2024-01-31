@@ -131,8 +131,8 @@ struct ShaderModel {
         return flags;
     }
 
-    static StrA sToString(uint32 flags) {
-        StrA str;
+    static std::string sToString(uint32 flags) {
+        std::string str;
 
         if (flags & SM_2_0) {
             flags &= ~SM_2_0;
@@ -165,7 +165,7 @@ struct ShaderModel {
 
         if (flags) {
             if (!str.empty()) str += "|";
-            str += str::format("0x%X", flags);
+            str += fmt::format("0x%X", flags);
         }
 
         return str;

@@ -11,13 +11,9 @@ static GN::Logger * sLogger = GN::getLogger("GN.d3d9.thickline");
 //
 //
 // -----------------------------------------------------------------------------
-static void LOG_ERROR(const char * format, ...) {
-    GN::StrA s;
-    va_list  arglist;
-    va_start(arglist, format);
-    s.formatv(format, arglist);
-    va_end(arglist);
-    GN_ERROR(sLogger)("%s\n", s.rawptr());
+template<typeaname... ARGS>
+static void LOG_ERROR(const char * format, ARGS&&... args) {
+    GN_ERROR(sLogger)(format, std::forward<ARGS>(args)...);
 }
 
     #define SAFE_RELEASE(x) \

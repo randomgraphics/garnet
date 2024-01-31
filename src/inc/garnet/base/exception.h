@@ -25,7 +25,7 @@
 ///
 /// <b>ALWAYS</b> use this macro when throwing a exception
 ///
-#define GN_THROW(msg, ...) throwException(GN_FUNCTION, __FILE__, __LINE__, str::format(msg, __VA_ARGS__))
+#define GN_THROW(msg, ...) throwException(GN_FUNCTION, __FILE__, __LINE__, fmt::format(msg, __VA_ARGS__))
 
 ///
 /// Throw a custom exception class
@@ -37,7 +37,7 @@ namespace GN {
 /// custom exception class
 ///
 struct Exception {
-    StrA         msg;
+    std::string  msg;
     const char * func; ///< location of the exception
     const char * file; ///< location of the exception
     int          line; ///< location of the exception
@@ -45,7 +45,7 @@ struct Exception {
     ///
     /// constructor
     ///
-    Exception(const char * ifunc, const char * ifile, int iline, StrA && imsg) throw(): msg(std::move(imsg)), func(ifunc), file(ifile), line(iline) {}
+    Exception(const char * ifunc, const char * ifile, int iline, std::string && imsg) throw(): msg(std::move(imsg)), func(ifunc), file(ifile), line(iline) {}
 
     ///
     /// copy constructor
@@ -67,12 +67,12 @@ struct Exception {
 ///
 /// Dump current call stack to string
 ///
-GN_API StrA backtrace(bool includeSourceSnippet = GN_BUILD_DEBUG_ENABLED);
+GN_API std::string backtrace(bool includeSourceSnippet = GN_BUILD_DEBUG_ENABLED);
 
 ///
 /// Throw exception
 ///
-GN_API void throwException(const char * ifunc, const char * ifile, int iline, StrA && imsg);
+GN_API void throwException(const char * ifunc, const char * ifile, int iline, std::string && imsg);
 
 ///
 /// exception handler
@@ -82,7 +82,7 @@ GN_API void exceptionHandler(const char * msg, const char * func, const char * f
 ///
 /// exception handler
 ///
-inline void exceptionHandler(const Exception & e) { exceptionHandler(e.msg, e.func, e.file, e.line); }
+inline void exceptionHandler(const Exception & e) { exceptionHandler(e.msg.data(), e.func, e.file, e.line); }
 
 } // namespace GN
 

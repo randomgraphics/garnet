@@ -129,13 +129,13 @@ public:
     ///
     /// print profile result to string
     ///
-    void toString(StrA &) const;
+    void toString(std::string &) const;
 
     ///
     /// print profile result to string
     ///
-    StrA toString() {
-        StrA str;
+    std::string toString() {
+        std::string str;
         toString(str);
         return str;
     }
@@ -143,7 +143,7 @@ public:
     ///
     /// return a named timer
     ///
-    ProfileTimer & getTimer(const StrA & name) {
+    ProfileTimer & getTimer(const std::string & name) {
         GN_ASSERT(!name.empty());
 
         std::lock_guard<SpinLoop> lock(mMutex);
@@ -159,12 +159,12 @@ public:
     ///
     /// start a profile timer
     ///
-    void startTimer(const StrA & name) { getTimer(name).start(); }
+    void startTimer(const std::string & name) { getTimer(name).start(); }
 
     ///
     /// stop a profile timer
     ///
-    void stopTimer(const StrA & name) { getTimer(name).stop(); }
+    void stopTimer(const std::string & name) { getTimer(name).stop(); }
 
     // ********************************
     //   private variables

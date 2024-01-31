@@ -39,17 +39,17 @@ public:
         // calculate buffer size
         size_t headerLen  = sizeof(desc);
         size_t vsCodeLen  = desc.vs.source ? (strlen(desc.vs.source) + 1) : 0;
-        size_t vsEntryLen = str::isEmpty(desc.vs.entry) ? sizeof(DEFAULT_ENTRY) : (strlen(desc.vs.entry) + 1);
+        size_t vsEntryLen = str::empty(desc.vs.entry) ? sizeof(DEFAULT_ENTRY) : (strlen(desc.vs.entry) + 1);
         size_t gsCodeLen  = desc.gs.source ? (strlen(desc.gs.source) + 1) : 0;
-        size_t gsEntryLen = str::isEmpty(desc.gs.entry) ? sizeof(DEFAULT_ENTRY) : (strlen(desc.gs.entry) + 1);
+        size_t gsEntryLen = str::empty(desc.gs.entry) ? sizeof(DEFAULT_ENTRY) : (strlen(desc.gs.entry) + 1);
         size_t psCodeLen  = desc.ps.source ? (strlen(desc.ps.source) + 1) : 0;
-        size_t psEntryLen = str::isEmpty(desc.ps.entry) ? sizeof(DEFAULT_ENTRY) : (strlen(desc.ps.entry) + 1);
+        size_t psEntryLen = str::empty(desc.ps.entry) ? sizeof(DEFAULT_ENTRY) : (strlen(desc.ps.entry) + 1);
         size_t length     = headerLen + vsCodeLen + vsEntryLen + gsCodeLen + gsEntryLen + psCodeLen + psEntryLen;
 
         // allocate buffer
         mBuffer.resize(length);
-        GpuProgramDesc & copy  = *(GpuProgramDesc *) mBuffer.rawptr();
-        uint8 *          start = mBuffer.rawptr();
+        GpuProgramDesc & copy  = *(GpuProgramDesc *) mBuffer.data();
+        uint8 *          start = mBuffer.data();
         uint8 *          ptr   = start;
 
         // copy header
@@ -63,7 +63,7 @@ public:
 
 #define COPY_ENTRY(X)                                                                    \
     GN_ASSERT(X##EntryLen > 0);                                                          \
-    memcpy(ptr, str::isEmpty(desc.X.entry) ? DEFAULT_ENTRY : desc.X.entry, X##EntryLen); \
+    memcpy(ptr, str::empty(desc.X.entry) ? DEFAULT_ENTRY : desc.X.entry, X##EntryLen); \
     copy.X.entry = (const char *) (ptr - start);                                         \
     ptr += X##EntryLen;
 
@@ -84,9 +84,9 @@ public:
     bool init(const void * data, size_t length) {
         // copy input buffer
         mBuffer.resize(length);
-        memcpy(mBuffer.rawptr(), data, length);
+        memcpy(mBuffer.data(), data, length);
 
-        const char *     start = (const char *) mBuffer.rawptr();
+        const char *     start = (const char *) mBuffer.data();
         const char *     end   = start + length;
         GpuProgramDesc & desc  = *(GpuProgramDesc *) start;
 
@@ -118,9 +118,9 @@ public:
         return true;
     }
 
-    const GpuProgramDesc & getDesc() const { return *(const GpuProgramDesc *) mBuffer.rawptr(); }
+    const GpuProgramDesc & getDesc() const { return *(const GpuProgramDesc *) mBuffer.data(); }
 
-    virtual void * data() const { return (void *) mBuffer.rawptr(); }
+    virtual void * data() const { return (void *) mBuffer.data(); }
     virtual uint32 size() const { return (uint32) mBuffer.size(); }
 };
 

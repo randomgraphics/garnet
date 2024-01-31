@@ -114,7 +114,7 @@ void GN::gfx::BasicGpu::setUserData(const Guid & id, const void * data, uint32 l
 
         if (NULL != data && length > 0) {
             newUserData.resize(length);
-            memcpy(newUserData.rawptr(), data, length);
+            memcpy(newUserData.data(), data, length);
         }
     }
 }

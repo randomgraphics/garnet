@@ -140,7 +140,7 @@ bool GN::engine::StaticMesh::loadFromFatModel(const GN::gfx::FatModel & fatmodel
     for (uint32 i = 0; i < fatmodel.meshes.size(); ++i) {
         const auto & fatmesh = fatmodel.meshes[i];
 
-        StrA meshName = str::format("%s.mesh.%d", fatmodel.name.rawptr(), i);
+        std::string meshName = fmt::format("%s.mesh.%d", fatmodel.name.data(), i);
 
         // use exising mesh, if possible
         AutoRef<MeshResource> mesh = gdb.findResource<MeshResource>(meshName);
@@ -152,7 +152,7 @@ bool GN::engine::StaticMesh::loadFromFatModel(const GN::gfx::FatModel & fatmodel
             merd.numidx     = fatmesh.indices.size();
             merd.idx32      = true; // TODO: use 16-bit index buffer, when possible.
             merd.offsets[0] = 0;
-            merd.indices    = (void *) fatmesh.indices.rawptr();
+            merd.indices    = (void *) fatmesh.indices.data();
 
             // setup vertex format
             fatmesh.vertices.GenerateMeshVertexFormat(merd.vtxfmt);
@@ -160,8 +160,8 @@ bool GN::engine::StaticMesh::loadFromFatModel(const GN::gfx::FatModel & fatmodel
 
             // copy vertex data
             if (!vb.resize(merd.strides[0] * fatmesh.vertices.getVertexCount())) continue;
-            if (!fatmesh.vertices.GenerateVertexStream(merd.vtxfmt, 0, merd.strides[0], vb.rawptr(), vb.size())) continue;
-            merd.vertices[0] = vb.rawptr();
+            if (!fatmesh.vertices.GenerateVertexStream(merd.vtxfmt, 0, merd.strides[0], vb.data(), vb.size())) continue;
+            merd.vertices[0] = vb.data();
 
             // create GPU mesh resource
             mesh = gdb.createResource<MeshResource>(meshName);
@@ -206,7 +206,7 @@ bool GN::engine::StaticMesh::loadFromFatModel(const GN::gfx::FatModel & fatmodel
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::engine::StaticMesh::loadFromFile(const StrA & filename) {
+bool GN::engine::StaticMesh::loadFromFile(const std::string & filename) {
     FatModel fm;
     if (!fm.loadFromFile(filename)) return false;
     return loadFromFatModel(fm);

@@ -16,7 +16,7 @@ using namespace GN::gfx;
 
 static GN::Logger * sLogger = GN::getLogger("GN.tool.meshConverter");
 
-void printHelp(const char * exepath) { printf("Usage: %s inputfile <outputfile>\n", fs::baseName(exepath).rawptr()); }
+void printHelp(const char * exepath) { printf("Usage: %s inputfile <outputfile>\n", fs::baseName(exepath).data()); }
 
 #ifdef HAS_FBX
 
@@ -25,7 +25,7 @@ void printHelp(const char * exepath) { printf("Usage: %s inputfile <outputfile>\
 // -----------------------------------------------------------------------------
 int FbxBin2Ascii(int argc, const char * argv[]) {
     struct Local {
-        static void Local::sPrintHelp(const char * exepath) { printf("Usage: -fbx inputfile outputfile\n", fs::baseName(exepath).rawptr()); }
+        static void Local::sPrintHelp(const char * exepath) { printf("Usage: -fbx inputfile outputfile\n", fs::baseName(exepath).data()); }
 
         KFbxSdkManager * sdk;
         KFbxImporter *   importer;
@@ -114,11 +114,11 @@ int main(int argc, const char * argv[]) {
 
     const char * inputFile = argv[1];
 
-    StrA outputFile;
+    std::string outputFile;
     if (argc > 2) {
         outputFile = argv[2];
     } else {
-        outputFile = str::format("startup::%s.scene.xml", fs::baseName(inputFile).rawptr());
+        outputFile = fmt::format("startup::%s.scene.xml", fs::baseName(inputFile).data());
     }
 
     ModelHierarchyDesc mhd;

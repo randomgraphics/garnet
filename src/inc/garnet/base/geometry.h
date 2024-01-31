@@ -735,9 +735,7 @@ public:
         return ret;
     }
     friend std::ostream & operator<<(std::ostream & o, const Matrix33 & m) {
-        StrA s;
-        m.print(s);
-        o << s;
+        o << m.print();
         return o;
     }
 
@@ -809,18 +807,9 @@ public:
     }
 
     ///
-    /// 打印矩阵内容到字符串中, mainly for debug purpose.
-    ///
-    void print(StrA &) const;
-
-    ///
     /// print to string
     ///
-    StrA print() const {
-        StrA s;
-        print(s);
-        return s;
-    }
+    std::string print() const;
 
     //@}
 };
@@ -966,7 +955,7 @@ public:
         return ret;
     }
     friend std::ostream & operator<<(std::ostream & o, const Matrix44 & m) {
-        StrA s;
+        std::string s;
         m.print(s);
         o << s;
         return o;
@@ -1201,12 +1190,7 @@ public:
     ///
     /// Print the matrix to string.
     ///
-    void print(StrA &) const;
-    StrA print() const {
-        StrA s;
-        print(s);
-        return s;
-    }
+    std::string print() const;
 
     //@}
 };

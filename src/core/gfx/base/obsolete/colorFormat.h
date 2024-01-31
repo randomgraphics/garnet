@@ -408,13 +408,13 @@ union GN_API ColorFormat {
     ///
     /// convert to string
     ///
-    void toString(StrA &) const;
+    void toString(std::string &) const;
 
     ///
     /// convert to string
     ///
-    inline StrA toString() const {
-        StrA s;
+    inline std::string toString() const {
+        std::string s;
         toString(s);
         return s;
     }

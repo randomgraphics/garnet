@@ -97,7 +97,7 @@ void GN::gfx::BitmapFont::quit() {
 void GN::gfx::BitmapFont::drawText(const TextDesc & td) {
     GN_GUARD_SLOW;
 
-    if (str::isEmpty(td.text)) return; // skip empty text.
+    if (str::empty(td.text)) return; // skip empty text.
 
     GN_ASSERT(mFont);
 
@@ -287,7 +287,7 @@ const GN::gfx::BitmapFont::FontSlot * GN::gfx::BitmapFont::createSlot(wchar_t ch
 
     // update texture
     Box<uint32> area(slot.x, slot.y, 0, slot.w, slot.h, 1);
-    mTextures[slot.texidx]->updateMipmap(0, 0, &area, slot.w * 4, (uint32) tmpbuf.size(), tmpbuf.rawptr());
+    mTextures[slot.texidx]->updateMipmap(0, 0, &area, slot.w * 4, (uint32) tmpbuf.size(), tmpbuf.data());
 
     // success
     return &slot;
@@ -379,7 +379,7 @@ bool GN::gfx::BitmapFont::slotInit(Gpu & gpu, uint16 fontw, uint16 fonth, size_t
         }
 
         // clear texture to pure black
-        // mTextures[i]->updateMipmap( 0, 0, 0, texwidth * 4, texels.size(), texels.rawptr() );
+        // mTextures[i]->updateMipmap( 0, 0, 0, texwidth * 4, texels.size(), texels.data() );
     }
 
     // success

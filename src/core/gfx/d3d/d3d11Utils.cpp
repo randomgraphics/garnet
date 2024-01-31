@@ -63,7 +63,7 @@ static std::string sAddLineCountD3D11(const char * source) {
         int line = 1;
         for (const char * s = source; *s; ++s) {
             if ('\n' == *s) {
-                out += (char *) GN::str::format("\n(%3d) : ", ++line);
+                out += (char *) GN::fmt::format("\n(%3d) : ", ++line);
             } else {
                 out += *s;
             }
@@ -115,8 +115,8 @@ static void sPrintShaderCompileInfoD3D11(const char * hlsl, ID3DBlob * bin) {
     #pragma comment(lib, "OleAut32.lib")
 
 // -----------------------------------------------------------------------------
-GN_API GN::StrW GN::d3d11::hresult2string(HRESULT hr) {
-    StrW                   strMessage;
+GN_API GN::std::wstring GN::d3d11::hresult2string(HRESULT hr) {
+    std::wstring                   strMessage;
     WORD                   facility = HRESULT_FACILITY(hr);
     AutoComPtr<IErrorInfo> iei;
     if (S_OK == GetErrorInfo(0, &iei) && iei) {
@@ -153,7 +153,7 @@ GN_API ID3DBlob * GN::d3d11::compileShader(const char * profile, const char * so
 
     #if 0
     // TODO: generate temporary file to store shader source
-    StrA filename;
+    std::string filename;
         #if GN_BUILD_DEBUG_ENABLED
     TempFile file;
     if( file.open( "D3D11_shader_source", "wt", TempFile::MANUAL_DELETE ) )

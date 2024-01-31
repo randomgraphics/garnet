@@ -16,7 +16,7 @@ bool GN::IniFile::loadFromFile(const wchar_t * filename) { return false; }
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::IniFile::reads(const char * section, const char * key, StrA & value) { return false; }
+bool GN::IniFile::reads(const char * section, const char * key, std::string & value) { return false; }
 
 //
 //

@@ -58,7 +58,7 @@ public:
 /// Window creation parameters
 ///
 struct WindowCreateParameters {
-    StrA     caption;              ///< window title text.
+    std::string     caption;              ///< window title text.
     size_t   clientWidth  = 0;     ///< client width. 0 means current display width.
     size_t   clientHeight = 0;     ///< client height. 0 means current display height.
     intptr_t display      = 0;     ///< display handle. X windows only. 0 means using default display handle.

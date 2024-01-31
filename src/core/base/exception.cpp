@@ -19,7 +19,7 @@ static Logger * sLogger = getLogger("GN.base.exception");
 
 // ---------------------------------------------------------------------------------------------------------------------
 //
-GN_API StrA backtrace(bool includeSourceSnippet) {
+GN_API std::string backtrace(bool includeSourceSnippet) {
     (void) includeSourceSnippet; // this is to avoid unreferenced variable warning.
 #if GN_ANDROID
     struct android_backtrace_state {
@@ -79,7 +79,7 @@ GN_API StrA backtrace(bool includeSourceSnippet) {
         auto addr   = buffer[idx];
         auto symbol = android_backtrace_state::addr2symbol(addr);
         if (symbol.empty()) symbol = "<no symbol>";
-        ss << prefix << str::format("%03d: 0x%p %s\n", idx, addr, symbol.c_str());
+        ss << prefix << fmt::format("%03d: 0x%p %s\n", idx, addr, symbol.c_str());
     }
 
     ss << prefix << "android stack dump done\n";
@@ -113,7 +113,7 @@ GN_API StrA backtrace(bool includeSourceSnippet) {
 #endif
 }
 
-GN_API void throwException(const char * func, const char * file, int line, StrA && msg) {
+GN_API void throwException(const char * func, const char * file, int line, std::string && msg) {
     // TODO: print callstack.
     auto bt = backtrace();
     GN_LOG_EX(sLogger, GN::Logger::ERROR_, func, file, line)("%s\n%s", msg.data(), bt.data());

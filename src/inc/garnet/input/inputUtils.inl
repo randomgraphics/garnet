@@ -4,7 +4,7 @@ namespace input {
 //
 // ----------------------------------------------------------------------------
 inline KeyCode str2kc(const char * name) {
-    if (GN::str::isEmpty(name)) return KeyCode::NONE;
+    if (GN::str::empty(name)) return KeyCode::NONE;
 
     static const char * sTable[] = {
         "KeyCode::NONE",

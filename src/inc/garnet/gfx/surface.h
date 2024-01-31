@@ -234,8 +234,8 @@ struct Texture : public RefCounter {
     /// Name field is for debug purpose only, it is not used by garnet library except logging.
     /// Set it to any value you want.
     //@{
-    const StrA & name() const { return mName; }
-    StrA &       name() { return mName; }
+    const std::string & name() const { return mName; }
+    std::string &       name() { return mName; }
     //@}
 
 protected:
@@ -272,7 +272,7 @@ protected:
 private:
     TextureDesc                mDesc;    ///< descriptor
     DynaArray<Vector3<uint32>> mMipSize; ///< mipmap size of each level
-    StrA                       mName;    ///< texture name. Only for debug purpose.
+    std::string                       mName;    ///< texture name. Only for debug purpose.
 };
 
 ///

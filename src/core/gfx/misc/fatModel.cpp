@@ -172,7 +172,7 @@ bool GN::gfx::FatVertexBuffer::GenerateVertexStream(const MeshVertexFormat & mvf
     Semantic semantics[MeshVertexFormat::MAX_VERTEX_ELEMENTS];
     for (size_t i = 0; i < mvf.numElements; ++i) {
         const char * s = mvf.elements[i].semantic;
-        if (str::isEmpty(s)) {
+        if (str::empty(s)) {
             s            = "[EMPTY]";
             semantics[i] = INVALID;
         } else {
@@ -193,7 +193,7 @@ bool GN::gfx::FatVertexBuffer::GenerateVertexStream(const MeshVertexFormat & mvf
         SafeArrayAccessor<uint8> dst((uint8 *) buffer + e.offset, (mCount * stride) - e.offset);
 
         if (semantics[j] != INVALID) {
-            SafeArrayAccessor<const VertexElement> src(mElements[semantics[j]].rawptr(), mCount);
+            SafeArrayAccessor<const VertexElement> src(mElements[semantics[j]].data(), mCount);
 
             for (size_t i = 0; i < mCount; ++i) {
                 memcpy(dst.subrange(0, size), src.subrange(0, 1), size);
@@ -218,26 +218,26 @@ bool GN::gfx::FatVertexBuffer::GenerateVertexStream(const MeshVertexFormat & mvf
 //
 //
 // -----------------------------------------------------------------------------
-static void sPrintFatJointRecursivly(StrA & s, const FatJoint * joints, uint32 count, uint32 root, uint32 depth) {
+static void sPrintFatJointRecursivly(std::string & s, const FatJoint * joints, uint32 count, uint32 root, uint32 depth) {
     for (uint32 i = 0; i < depth; ++i) { s += "  "; }
 
     if (root < count) {
-        s += str::format("(%d) %s\n", depth, joints[root].name.rawptr());
+        s += fmt::format("(%d) %s\n", depth, joints[root].name.data());
 
         for (uint32 i = joints[root].child; i != FatJoint::NO_JOINT; i = joints[i].sibling) { sPrintFatJointRecursivly(s, joints, count, i, depth + 1); }
     } else {
-        s += str::format("(%d) ERROR: joint index out of range: %d\n", depth, root);
+        s += fmt::format("(%d) ERROR: joint index out of range: %d\n", depth, root);
     }
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::FatSkeleton::printJointHierarchy(StrA & s) const {
+void GN::gfx::FatSkeleton::printJointHierarchy(std::string & s) const {
     if (joints.empty()) {
         s = "[Empty skeleton]";
     } else {
-        return sPrintFatJointRecursivly(s, joints.rawptr(), joints.size(), root, 0);
+        return sPrintFatJointRecursivly(s, joints.data(), joints.size(), root, 0);
     }
 }
 
@@ -293,7 +293,7 @@ static bool sSplitFatMeshSubsets(FatMesh & mesh, uint32 maxJointsPerSubset) {
     if (NULL == joints || NULL == weights) return false;
 
     // cache mesh index buffer (might be NULL)
-    uint32 * indices = mesh.indices.rawptr();
+    uint32 * indices = mesh.indices.data();
 
     // Temporary array to hold newly created subset.
     DynaArray<FatMeshSubset> newSubsets;
@@ -476,7 +476,7 @@ static bool sRemapFatMeshJointID(FatMesh & mesh) {
         FatMeshSubset & subset = mesh.subsets[isubset];
 
         // Sort joint array of the subset. So that we can binary search it later.
-        qsort(subset.joints.rawptr(), subset.joints.size(), sizeof(uint32), sCompareUInt32);
+        qsort(subset.joints.data(), subset.joints.size(), sizeof(uint32), sCompareUInt32);
 
         // Remember how many new indices we have now. We'll use that later.
         uint32 currentNewIndexCount = newIndices.size();

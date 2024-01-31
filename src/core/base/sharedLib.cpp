@@ -35,26 +35,26 @@ GN_API bool GN::SharedLib::load(const char * libName) {
     unload();
 
     // check parameter
-    if (str::isEmpty(libName)) {
+    if (str::empty(libName)) {
         GN_ERROR(sLogger)("Library name can't be empty!");
         return false;
     }
 
     // Handle libName
-    StrA filename;
+    std::string filename;
     if (fs::extName(libName).empty())
-        filename = StrA(libName) + SHLIB_EXT;
+        filename = std::string(libName) + SHLIB_EXT;
     else
         filename = libName;
 
     // load library
-    mHandle = SHLIB_LOAD(filename.rawptr());
+    mHandle = SHLIB_LOAD(filename.data());
     if (0 == mHandle) {
-        GN_ERROR(sLogger)("Fail to load library %s: %s!", filename.rawptr(), SHLIB_ERROR());
+        GN_ERROR(sLogger)("Fail to load library %s: %s!", filename.data(), SHLIB_ERROR());
         return false;
     }
 
-    GN_TRACE(sLogger)("Load library '%s'.", filename.rawptr());
+    GN_TRACE(sLogger)("Load library '%s'.", filename.data());
 
     // success
     mFileName = filename;
@@ -72,7 +72,7 @@ GN_API void GN::SharedLib::unload() {
     if (mHandle) {
         SHLIB_UNLOAD(mHandle);
         mHandle = 0;
-        GN_TRACE(sLogger)("Unload library '%s'.", mFileName.rawptr());
+        GN_TRACE(sLogger)("Unload library '%s'.", mFileName.data());
     }
 
     GN_UNGUARD;
@@ -89,7 +89,7 @@ GN_API void * GN::SharedLib::getSymbol(const char * symbol) {
         return 0;
     }
 
-    if (str::isEmpty(symbol)) {
+    if (str::empty(symbol)) {
         GN_ERROR(sLogger)("Symbol name can't be empty!");
         return 0;
     }

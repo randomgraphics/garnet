@@ -90,15 +90,15 @@ void GN::gfx::D3D11GpuProgramParameterDesc::clear() {
 //
 // -----------------------------------------------------------------------------
 void GN::gfx::D3D11GpuProgramParameterDesc::buildParameterArrays() {
-    mUniformArray       = mUniforms.rawptr();
+    mUniformArray       = mUniforms.data();
     mUniformCount       = (uint32) mUniforms.size();
     mUniformArrayStride = (uint32) sizeof(mUniforms[0]);
 
-    mTextureArray       = mTextures.rawptr();
+    mTextureArray       = mTextures.data();
     mTextureCount       = (uint32) mTextures.size();
     mTextureArrayStride = (uint32) sizeof(mTextures[0]);
 
-    mAttributeArray       = mAttributes.rawptr();
+    mAttributeArray       = mAttributes.data();
     mAttributeCount       = (uint32) mAttributes.size();
     mAttributeArrayStride = (uint32) sizeof(mAttributes[0]);
 }
@@ -415,7 +415,7 @@ void GN::gfx::D3D11GpuProgramHLSL::applyUniforms(const Uniform * const * uniform
             if (skipDirtyCheck || constDirty[s][i]) {
                 ID3D11Buffer &           buf  = *mShaders[s].constBufs[i];
                 const DynaArray<uint8> & data = mShaders[s].constData[i];
-                sUpdateD3D11ConstBuffer(cxt, buf, data.rawptr(), data.size());
+                sUpdateD3D11ConstBuffer(cxt, buf, data.data(), data.size());
             }
         }
     }
@@ -445,7 +445,7 @@ void GN::gfx::D3D11GpuProgramHLSL::applyTextures(const TextureBinding * bindings
     for (size_t i = 0; i < count; ++i) {
         const TextureBinding & tb = bindings[i];
 
-        D3D11Texture * tex = (D3D11Texture *) tb.texture.rawptr();
+        D3D11Texture * tex = (D3D11Texture *) tb.texture.data();
 
         if (tex) {
             const D3D11TextureParameterDesc & texParam = (const D3D11TextureParameterDesc &) mParamDesc.textures[i];
@@ -485,7 +485,7 @@ void GN::gfx::D3D11GpuProgramHLSL::applyTextures(const TextureBinding * bindings
 template<int SHADER_STAGE>
 bool GN::gfx::D3D11GpuProgramHLSL::initShader(ShaderHLSL & shader, const ShaderCode & code, GpuProgramLanguage targetLanguage, uint32 compileFlags) {
     // do nothing for empty shader code
-    if (str::isEmpty(code.source)) return true;
+    if (str::empty(code.source)) return true;
 
     // define shader type traits
     typedef D3D11ShaderTypeTraits<SHADER_STAGE> Traits;
@@ -527,7 +527,7 @@ bool GN::gfx::D3D11GpuProgramHLSL::initShader(ShaderHLSL & shader, const ShaderC
             D3D11AttributeParameterDesc a;
             a.semanticName  = sig.SemanticName;
             a.semanticIndex = sig.SemanticIndex;
-            a.name          = sD3D11CloneString(str::format("%s%d", sig.SemanticName, sig.SemanticIndex));
+            a.name          = sD3D11CloneString(fmt::format("%s%d", sig.SemanticName, sig.SemanticIndex));
 
             // append to attribute array
             paramDesc.addAttribute(a);
@@ -602,7 +602,7 @@ void GN::gfx::D3D11GpuProgramHLSL::sUpdateD3D11ConstData(const D3D11UniformParam
 
     DynaArray<uint8> &             cb = cbarray[ssp.cbidx];
     SafeArrayAccessor<const uint8> src((const uint8 *) uniform.getval(), uniform.size());
-    SafeArrayAccessor<uint8>       dst(cb.rawptr(), cb.size());
+    SafeArrayAccessor<uint8>       dst(cb.data(), cb.size());
 
     // copy uniform data to system const buffer
     src.copyTo(0,          // src offset

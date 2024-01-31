@@ -21,14 +21,14 @@ typedef uint32 DebugVariableId;
 class BasicDebugVariable {
     DebugVarManager & mManager;
     DebugVariableId   mId; // unique ID of the variable
-    const StrA        mName;
-    const StrA        mType;
+    const std::string        mName;
+    const std::string        mType;
     DynaArray<uint8>  mValue;
 
 public:
     //@{
 
-    BasicDebugVariable(size_t size, const StrA & name, const StrA & type);
+    BasicDebugVariable(size_t size, const std::string & name, const std::string & type);
 
     BasicDebugVariable(const BasicDebugVariable &);
 
@@ -40,11 +40,11 @@ public:
 
     size_t getSize() const { return mValue.size(); }
 
-    const void * getValue() const { return mValue.rawptr(); }
+    const void * getValue() const { return mValue.data(); }
 
-    const StrA & getName() const { return mName; }
+    const std::string & getName() const { return mName; }
 
-    const StrA & getType() const { return mType; }
+    const std::string & getType() const { return mType; }
 
     //@}
 };
@@ -59,9 +59,9 @@ class DebugVar : public BasicDebugVariable {
 public:
     //@{
 
-    DebugVar(const StrA & name = StrA::EMPTYSTR());
+    DebugVar(const std::string & name = std::string::EMPTYSTR());
 
-    DebugVar(const T &, const StrA & name = StrA::EMPTYSTR());
+    DebugVar(const T &, const std::string & name = std::string::EMPTYSTR());
 
     //@}
 

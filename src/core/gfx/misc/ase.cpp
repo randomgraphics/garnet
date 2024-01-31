@@ -81,8 +81,8 @@ struct AseMeshInternal {
 /// ASE node (elemnet for mesh hierachy)
 ///
 struct AseNode {
-    StrA      parent;
-    StrA      name;
+    std::string      parent;
+    std::string      name;
     Matrix44f transform;
     Vector3f  pos;
     Vector3f  rotaxis;
@@ -117,16 +117,16 @@ struct AseFile {
     DynaArray<char> buf;
     char *          str;
     int             line;
-    StrA            filedir; // directory of the ASE file
+    std::string            filedir; // directory of the ASE file
 
     bool open(File & file) {
         // read ASE file
         auto sz = file.size();
         buf.resize(sz + 1);
-        if (sz != file.read(buf.rawptr(), sz)) { return false; }
+        if (sz != file.read(buf.data(), sz)) { return false; }
         buf[sz] = 0;
 
-        str  = buf.rawptr();
+        str  = buf.data();
         line = 0;
 
         // get file dir
@@ -136,9 +136,9 @@ struct AseFile {
         return true;
     }
 
-    void err(const StrA & msg) const { GN_ERROR(sLogger)("ASEFILE: line %d : %s", line, msg.rawptr()); }
-    void warn(const StrA & msg) const { GN_WARN(sLogger)("ASEFILE: line %d : %s", line, msg.rawptr()); }
-    void verbose(const StrA & msg) const { GN_VERBOSE(sLogger)("ASEFILE: line %d : %s", line, msg.rawptr()); }
+    void err(const std::string & msg) const { GN_ERROR(sLogger)("ASEFILE: line %d : %s", line, msg.data()); }
+    void warn(const std::string & msg) const { GN_WARN(sLogger)("ASEFILE: line %d : %s", line, msg.data()); }
+    void verbose(const std::string & msg) const { GN_VERBOSE(sLogger)("ASEFILE: line %d : %s", line, msg.data()); }
 
     enum ScanOptionEnum {
         IN_CURRENT_BLOCK            = 0,
@@ -205,7 +205,7 @@ struct AseFile {
             }
 
             if (expectedValue && 0 != str::compare(expectedValue, r)) {
-                if (!option.silence) { err(str::format("expect '%s', but found '%s'.", expectedValue, r)); }
+                if (!option.silence) { err(fmt::format("expect '%s', but found '%s'.", expectedValue, r)); }
                 return 0;
             }
 
@@ -222,7 +222,7 @@ struct AseFile {
             if (0 != *str) *str = 0, ++str; // point to start of next token
 
             if (expectedValue && 0 != str::compare(expectedValue, r)) {
-                if (!option.silence) { err(str::format("expect '%s', but found '%s'.", expectedValue, r)); }
+                if (!option.silence) { err(fmt::format("expect '%s', but found '%s'.", expectedValue, r)); }
                 return 0;
             }
 
@@ -234,7 +234,7 @@ struct AseFile {
     /// skip until meet specific token
     ///
     bool skipUntil(const char * endtoken, ScanOption option = 0) {
-        GN_ASSERT(!str::isEmpty(endtoken));
+        GN_ASSERT(!str::empty(endtoken));
 
         const char * token;
         int          level = 0;
@@ -249,12 +249,12 @@ struct AseFile {
             if (IN_CURRENT_BLOCK == option.scope && level > 0) continue; // skip sub levels
 
             if (IN_CURRENT_AND_CHILD_BLOCKS == option.scope && level < 0) {
-                if (!option.silence) err(str::format("token '%s' not found inside current block!", endtoken));
+                if (!option.silence) err(fmt::format("token '%s' not found inside current block!", endtoken));
                 return false;
             }
 
             if (0 == token) {
-                if (!option.silence) err(str::format("token '%s' not found!", endtoken));
+                if (!option.silence) err(fmt::format("token '%s' not found!", endtoken));
                 return false;
             }
 
@@ -298,7 +298,7 @@ struct AseFile {
     const char * readNode(ScanOption option = 0) {
         const char * token = next(0, option);
         if (!token) return NULL;
-        GN_ASSERT(!str::isEmpty(token));
+        GN_ASSERT(!str::empty(token));
 
         if ('*' != *token) {
             if (!option.silence) err("Not a node token");
@@ -315,7 +315,7 @@ struct AseFile {
     const char * readString(ScanOption option = 0) {
         char * token = const_cast<char *>(next(0, option));
         if (!token) return NULL;
-        GN_ASSERT(!str::isEmpty(token));
+        GN_ASSERT(!str::empty(token));
 
         if ('"' != *token) {
             if (!option.silence) err("Not a string token");
@@ -335,7 +335,7 @@ struct AseFile {
     //
     //
     // -----------------------------------------------------------------------------
-    bool readString(StrA & result, ScanOption option = 0) {
+    bool readString(std::string & result, ScanOption option = 0) {
         const char * s = readString(option);
         if (0 == s) return false;
         result = s;
@@ -345,8 +345,8 @@ struct AseFile {
     //
     //
     // -----------------------------------------------------------------------------
-    bool readAndResolveRelativePath(StrA & result, ScanOption option = 0) {
-        StrA relpath;
+    bool readAndResolveRelativePath(std::string & result, ScanOption option = 0) {
+        std::string relpath;
         if (!readString(relpath, option)) return false;
         GN::fs::resolvePath(result, filedir, relpath);
         return true;
@@ -355,14 +355,14 @@ struct AseFile {
     //
     // Note: symbol is a word w/o quotes and spaces.
     // -----------------------------------------------------------------------------
-    bool readSymbol(StrA & result, ScanOption option = 0) {
+    bool readSymbol(std::string & result, ScanOption option = 0) {
         const char * s = next(0, option);
         if (0 == s) return false;
         if (('a' <= *s && *s <= 'z') || ('A' <= *s && *s <= 'Z') || '_' == *s) {
             result = s;
             return true;
         } else {
-            err(str::format("Expect a symbol (start with [_a-zA-Z]), but met: %s", s));
+            err(fmt::format("Expect a symbol (start with [_a-zA-Z]), but met: %s", s));
             return false;
         }
     }
@@ -382,7 +382,7 @@ struct AseFile {
             result = -1.0f;
             return true;
         } else {
-            if (!option.silence) err(str::format("Not valid float : %s", token));
+            if (!option.silence) err(fmt::format("Not valid float : %s", token));
             return false;
         }
     }
@@ -396,7 +396,7 @@ struct AseFile {
         if (0 == token) return false;
 
         if (0 == str::toInetger<INT_TYPE>(result, token)) {
-            if (!option.silence) err(str::format("Not valid integer : %s", token));
+            if (!option.silence) err(fmt::format("Not valid integer : %s", token));
             return false;
         }
 
@@ -423,8 +423,8 @@ struct AseFile {
     //
     // -----------------------------------------------------------------------------
     bool readIndexedVector3Node(const char * nodename, uint32 index, Vector3f & result, ScanOption option = 0) {
-        GN_ASSERT(!str::isEmpty(nodename));
-        return next(nodename, option) && next(str::format("%d", index).rawptr(), option) && readVector3(result, option);
+        GN_ASSERT(!str::empty(nodename));
+        return next(nodename, option) && next(fmt::format("%d", index).data(), option) && readVector3(result, option);
     }
 };
 
@@ -478,13 +478,13 @@ static bool sReadMap(AseMap & m, AseFile & ase) {
         } else if (0 == str::compare(token, "*BITMAP_FILTER")) {
             if (!ase.readSymbol(m.filter)) return false;
         } else if ('*' == *token) {
-            ase.verbose(str::format("skip node %s", token));
+            ase.verbose(fmt::format("skip node %s", token));
             if (!ase.skipNode()) return false;
         } else if (0 == str::compare(token, "}")) {
             // end of the block
             return true;
         } else {
-            ase.err(str::format("expecting node or close-brace, but met '%s'!", token).rawptr());
+            ase.err(fmt::format("expecting node or close-brace, but met '%s'!", token).data());
             return false;
         }
     }
@@ -506,7 +506,7 @@ static bool sReadMaterial(AseMaterialInternal & m, AseFile & ase) {
     const char * token;
 
     while (0 != (token = ase.next())) {
-        GN_ASSERT(!str::isEmpty(token));
+        GN_ASSERT(!str::empty(token));
 
         if (0 == str::compare(token, "*MATERIAL_NAME")) {
             if (!ase.readString(m.name)) return false;
@@ -543,7 +543,7 @@ static bool sReadMaterial(AseMaterialInternal & m, AseFile & ase) {
             } else if (0 == str::compare(map, "BUMP")) {
                 if (!sReadMap(m.mapbump, ase)) return false;
             } else {
-                ase.verbose(str::format("skip unsupport map %s", token));
+                ase.verbose(fmt::format("skip unsupport map %s", token));
                 if (!ase.skipNode()) return false;
             }
         } else if (0 == str::compare(token, "*NUMSUBMTLS")) {
@@ -554,17 +554,17 @@ static bool sReadMaterial(AseMaterialInternal & m, AseFile & ase) {
             // read sub-materials one by one
             for (uint32 i = 0; i < count; ++i) {
                 if (!ase.next("*SUBMATERIAL")) return false;
-                if (!ase.next(str::format("%d", i).rawptr())) return false;
+                if (!ase.next(fmt::format("%d", i).data())) return false;
                 if (!sReadMaterial(m.submaterials[i], ase)) return false;
             }
         } else if ('*' == *token) {
-            ase.verbose(str::format("skip node %s", token));
+            ase.verbose(fmt::format("skip node %s", token));
             if (!ase.skipNode()) return false;
         } else if (0 == str::compare(token, "}")) {
             // end of the block
             return true;
         } else {
-            ase.err(str::format("expecting node or close-brace, but met '%s'!", token).rawptr());
+            ase.err(fmt::format("expecting node or close-brace, but met '%s'!", token).data());
             return false;
         }
     }
@@ -594,7 +594,7 @@ static bool sReadMaterials(AseSceneInternal & scene, AseFile & ase) {
     // read materials one by one
     for (uint32 i = 0; i < matcount; ++i) {
         if (!ase.next("*MATERIAL")) return false;
-        if (!ase.next(str::format("%d", i).rawptr())) return false;
+        if (!ase.next(fmt::format("%d", i).data())) return false;
         if (!sReadMaterial(scene.materials[i], ase)) return false;
     }
 
@@ -642,7 +642,7 @@ static bool sReadMesh(AseMeshInternal & m, const Matrix44f & transform, AseFile 
         AseFace & f = m.faces[i];
         int       dummy;
         if (!ase.next("*MESH_FACE")) return false;
-        if (!ase.next(str::format("%d:", i).rawptr())) return false;
+        if (!ase.next(fmt::format("%d:", i).data())) return false;
         if (!ase.next("A:") || !ase.readInt(f.v[0])) return false;
         if (!ase.next("B:") || !ase.readInt(f.v[1])) return false;
         if (!ase.next("C:") || !ase.readInt(f.v[2])) return false;
@@ -679,13 +679,13 @@ static bool sReadMesh(AseMeshInternal & m, const Matrix44f & transform, AseFile 
         if (!ase.readBlockEnd()) return false;
 
         // read tface list
-        if (!ase.next("*MESH_NUMTVFACES") || !ase.next(str::format("%d", numface).rawptr())) return false;
+        if (!ase.next("*MESH_NUMTVFACES") || !ase.next(fmt::format("%d", numface).data())) return false;
         if (!ase.next("*MESH_TFACELIST") || !ase.readBlockStart()) return false;
         for (uint32 i = 0; i < numface; ++i) {
             AseFace & f = m.faces[i];
 
             if (!ase.next("*MESH_TFACE")) return false;
-            if (!ase.next(str::format("%d", i).rawptr())) return false;
+            if (!ase.next(fmt::format("%d", i).data())) return false;
 
             // for each vertex in the face
             for (uint32 j = 0; j < 3; ++j) {
@@ -798,7 +798,7 @@ static bool sReadNode(AseNode & n, AseFile & ase) {
         } else if (0 == str::compare("*TM_SCALE", token)) {
             if (!ase.readVector3(n.scale)) return false;
         } else if ('*' == *token) {
-            ase.verbose(str::format("skip node %s", token));
+            ase.verbose(fmt::format("skip node %s", token));
             if (!ase.skipNode()) return false;
         } else if (0 == str::compare(token, "}")) {
             // end of the block. done.
@@ -834,7 +834,7 @@ static bool sReadGeomObject(AseSceneInternal & scene, AseFile & ase) {
                 ase.err("Node name can't be empty!");
                 return false;
             }
-            ase.verbose(str::format("read geometry object '%s' ...", o.node.name.rawptr()));
+            ase.verbose(fmt::format("read geometry object '%s' ...", o.node.name.data()));
         } else if (0 == str::compare(token, "*NODE_PARENT")) {
             o.node.parent = ase.readString();
         } else if (0 == str::compare(token, "*NODE_TM")) {
@@ -849,7 +849,7 @@ static bool sReadGeomObject(AseSceneInternal & scene, AseFile & ase) {
             }
             hasMaterial = true;
         } else if ('*' == *token) {
-            ase.verbose(str::format("skip node %s", token));
+            ase.verbose(fmt::format("skip node %s", token));
             if (!ase.skipNode()) return false;
         } else if (0 == str::compare(token, "}")) {
             // end of the block. do some post processing.
@@ -857,7 +857,7 @@ static bool sReadGeomObject(AseSceneInternal & scene, AseFile & ase) {
             AseMeshInternal & m = o.mesh;
 
             if (!hasMaterial) {
-                ase.warn(str::format("object '%s' has no material. Using default one.", o.node.name.rawptr()));
+                ase.warn(fmt::format("object '%s' has no material. Using default one.", o.node.name.data()));
                 o.matid = 0;
             }
 
@@ -895,7 +895,7 @@ static bool sReadGeomObject(AseSceneInternal & scene, AseFile & ase) {
             // success
             return true;
         } else {
-            ase.err(str::format("expecting node or close-brace, but met '%s'!", token).rawptr());
+            ase.err(fmt::format("expecting node or close-brace, but met '%s'!", token).data());
             return false;
         }
     }
@@ -927,13 +927,13 @@ static bool sReadGroup(AseSceneInternal & scene, AseFile & ase) {
         else if (0 == str::compare(token, "*GEOMOBJECT")) {
             if (!sReadGeomObject(scene, ase)) return false;
         } else if ('*' == *token) {
-            ase.verbose(str::format("skip node %s", token));
+            ase.verbose(fmt::format("skip node %s", token));
             if (!ase.skipNode()) return false;
         } else if (0 == str::compare(token, "}")) {
             // end of the block.
             return true;
         } else {
-            ase.err(str::format("expecting node token, but met '%s'.", token));
+            ase.err(fmt::format("expecting node token, but met '%s'.", token));
             return false;
         }
     }
@@ -980,10 +980,10 @@ static bool sReadAse(AseSceneInternal & scene, File & file) {
         } else if (0 == str::compare(token, "*GEOMOBJECT")) {
             if (!sReadGeomObject(scene, ase)) return false;
         } else if ('*' == *token) {
-            ase.verbose(str::format("skip node %s", token));
+            ase.verbose(fmt::format("skip node %s", token));
             if (!ase.skipNode()) return false;
         } else {
-            ase.err(str::format("expecting node token, but met '%s'.", token));
+            ase.err(fmt::format("expecting node token, but met '%s'.", token));
             return false;
         }
     }
@@ -997,7 +997,7 @@ static bool sReadAse(AseSceneInternal & scene, File & file) {
 //
 //
 // -----------------------------------------------------------------------------
-static AseGeoObject * sFindGeoObject(AseSceneInternal & scene, const StrA & name) {
+static AseGeoObject * sFindGeoObject(AseSceneInternal & scene, const std::string & name) {
     if (name.empty()) return &scene.root;
     for (AseGeoObject * o = scene.objects.begin(); o != scene.objects.end(); ++o) {
         if (name == o->node.name) return o;
@@ -1029,7 +1029,7 @@ static bool sBuildNodeTree(AseSceneInternal & scene) {
         AseGeoObject * p = sFindGeoObject(scene, o.node.parent);
 
         if (0 == p) {
-            GN_ERROR(sLogger)("Object %s has invalid parent: %s. Replace it with \"root\".", o.node.name.rawptr(), o.node.parent.rawptr());
+            GN_ERROR(sLogger)("Object %s has invalid parent: %s. Replace it with \"root\".", o.node.name.data(), o.node.parent.data());
             p = &scene.root;
         }
 
@@ -1038,7 +1038,7 @@ static bool sBuildNodeTree(AseSceneInternal & scene) {
 
     // make sure all objects are linked into the tree.
     GN_ASSERT_EX(scene.root.calcChildrenCount() == scene.objects.size(),
-                 str::format("numchildren=%d, numobjects=%d", scene.root.calcChildrenCount(), scene.objects.size()).rawptr());
+                 fmt::format("numchildren=%d, numobjects=%d", scene.root.calcChildrenCount(), scene.objects.size()).data());
 
     // calculate bounding box for each node, in post order
     TreeTraversePostOrder<AseGeoObject> ttpost(&scene.root);
@@ -1068,13 +1068,13 @@ static bool sBuildNodeTree(AseSceneInternal & scene) {
     n         = ttpre.first();
     int level = 0;
     while (n) {
-        StrA s("    ");
+        std::string s("    ");
 
         for (int i = 0; i < level; ++i) s += "- ";
-        s += str::format("%s : bbox_pos(%f,%f,%f), bbox_size(%f,%f,%f)", n->node.name.rawptr(), n->node.selfbbox.pos().x, n->node.selfbbox.pos().y,
+        s += fmt::format("%s : bbox_pos(%f,%f,%f), bbox_size(%f,%f,%f)", n->node.name.data(), n->node.selfbbox.pos().x, n->node.selfbbox.pos().y,
                          n->node.selfbbox.pos().z, n->node.selfbbox.extend().x, n->node.selfbbox.extend().y, n->node.selfbbox.extend().z);
 
-        GN_VERBOSE(sLogger)(s.rawptr());
+        GN_VERBOSE(sLogger)(s.data());
 
         // next node
         n = ttpre.next(n, &level);
@@ -1300,7 +1300,7 @@ static bool sWriteGeoObject(AseScene & dst, const AseSceneInternal & src, const 
     if (vc.size() > 0x10000) {
         // 32bit index buffer
         blob = referenceTo(new SimpleBlob((uint32) (sizeof(uint32) * ib.size())));
-        memcpy(blob->data(), ib.rawptr(), blob->size());
+        memcpy(blob->data(), ib.data(), blob->size());
         dstmesh.idx32   = true;
         dstmesh.indices = blob->data();
         dst.meshdata.append(blob);

@@ -60,7 +60,7 @@ GN::gfx::GpuProgram * GN::gfx::OGLGpu::createGpuProgram(const GpuProgramDesc & d
     GN_GUARD;
 
     if (0 == (desc.shaderModels & mCaps.shaderModels)) {
-        GN_ERROR(sLogger)("Unsupported GPU shader model: %s", ShaderModel::sToString(desc.shaderModels).rawptr());
+        GN_ERROR(sLogger)("Unsupported GPU shader model: %s", ShaderModel::sToString(desc.shaderModels).data());
         return NULL;
     }
 

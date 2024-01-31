@@ -59,7 +59,7 @@ class DX12Triangle : public StdClass {
 
         // copy vertices to vb for rendering
         auto cl = _g.gpu->createCommandList({});
-        cl->copySurface(upload.rawptr(), _vb.rawptr());
+        cl->copySurface(upload.data(), _vb.data());
         _g.gpu->kickOff(*cl);
         _g.gpu->finish();
     }
@@ -96,8 +96,8 @@ class DX12Triangle : public StdClass {
         // create pso
         Gpu2::InputElement             ie[] = {{"POSITION", 0, PixelFormat::RGB_32_32_32_FLOAT(), 0, 0, false, 0}};
         Gpu2::PipelineCreateParameters pcp  = {};
-        pcp.vs                              = {vs.rawptr(), vs.size()};
-        pcp.ps                              = {ps.rawptr(), ps.size()};
+        pcp.vs                              = {vs.data(), vs.size()};
+        pcp.ps                              = {ps.data(), ps.size()};
         pcp.inputElements                   = ie;
         pcp.numInputElements                = 1;
         _pso                                = _g.gpu->createPipelineStates(&pcp, 1)[0];

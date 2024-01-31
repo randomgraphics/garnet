@@ -21,7 +21,7 @@ class Transformation {
 class Entity : public RefCounter {
     // basic properties
     uint64 _id;
-    StrA   _name;
+    std::string   _name;
 };
 
 class SpacialEntity : public Entity {

@@ -96,7 +96,7 @@ public:
 
     VertexElement * getElementData(int semantic) {
         if (0 <= semantic && semantic < (int) NUM_SEMANTICS) {
-            return mElements[semantic].rawptr();
+            return mElements[semantic].data();
         } else {
             return NULL;
         }
@@ -113,13 +113,13 @@ public:
 
     /// getXXX() helpers
     //@{
-    VertexElement * getPosition() { return mElements[POSITION].rawptr(); }
-    VertexElement * getNormal() { return mElements[NORMAL].rawptr(); }
-    VertexElement * getJoints() { return mElements[JOINT_ID].rawptr(); }
+    VertexElement * getPosition() { return mElements[POSITION].data(); }
+    VertexElement * getNormal() { return mElements[NORMAL].data(); }
+    VertexElement * getJoints() { return mElements[JOINT_ID].data(); }
     VertexElement * getTexcoord(size_t stage) {
         size_t semantic = TEXCOORD0 + stage;
         if (semantic <= TEXCOORD_LAST) {
-            return mElements[semantic].rawptr();
+            return mElements[semantic].data();
         } else {
             return NULL;
         }
@@ -202,9 +202,9 @@ struct FatMesh {
 };
 
 struct FatMaterial {
-    StrA     name {}; //< Material name
-    StrA     albedoTexture {};
-    StrA     normalTexture {};
+    std::string     name {}; //< Material name
+    std::string     albedoTexture {};
+    std::string     normalTexture {};
     Vector3f albedo {};
     Vector3f emmisive {};
     float    roughness = .0f;
@@ -236,7 +236,7 @@ struct FatJointBindPose {
 struct FatJoint {
     static const uint32 NO_JOINT = (uint32) -1;
 
-    StrA name {}; //< Joint name (unique in a skeleton).
+    std::string name {}; //< Joint name (unique in a skeleton).
 
     // Hierarchy
     uint32 parent {};  //< parent joint index. NO_JOINT, if the joint has no parent.
@@ -247,12 +247,12 @@ struct FatJoint {
 };
 
 struct GN_API FatSkeleton {
-    StrA                        name {};   //< name of the skeleton.
+    std::string                        name {};   //< name of the skeleton.
     DynaArray<FatJoint, uint32> joints {}; //< Joint array.
     uint32                      root {};   //< Index of the root joint.
 
     /// Print joint hierarchy to a string.
-    void printJointHierarchy(StrA &) const;
+    void printJointHierarchy(std::string &) const;
 };
 
 template<typename T>
@@ -269,13 +269,13 @@ struct FatRigidAnimation {
 };
 
 struct FatAnimation {
-    StrA                                    name {};               //< Name of the animation.
+    std::string                                    name {};               //< Name of the animation.
     double                                  duration {};           //< Duration of the animation.
     DynaArray<DynaArray<FatRigidAnimation>> skeletonAnimations {}; //< 2D array that stores animations of each joint indexed by [skeletonIndex][jointIndex]
 };
 
 struct GN_API FatModel {
-    StrA                            name {};   //< name of the model. Usually the filename which the model is loaded from.
+    std::string                            name {};   //< name of the model. Usually the filename which the model is loaded from.
     DynaArray<FatMesh, uint32>      meshes {}; //< Mesh array. Use FatMesh* to avoid expensive copy opertaion when the array is resized.
     DynaArray<FatMaterial, uint32>  materials {};
     DynaArray<FatSkeleton, uint32>  skeletons {};
@@ -309,10 +309,10 @@ struct GN_API FatModel {
     bool splitSkinnedMesh(uint32 maxJointsPerSubset);
 
     /// load fatmodel from file
-    bool loadFromFile(const StrA & filename);
+    bool loadFromFile(const std::string & filename);
 
     /// save fatmodel to file.
-    bool saveToFile(const StrA & filename) const;
+    bool saveToFile(const std::string & filename) const;
 };
 
 // Misc. ulitities
@@ -321,7 +321,7 @@ struct GN_API FatModel {
 ///
 /// Print module file node hierarchy
 /// w
-GN_API void printModelFileNodeHierarchy(StrA & hierarchy, const StrA & filename);
+GN_API void printModelFileNodeHierarchy(std::string & hierarchy, const std::string & filename);
 
 //@}
 } // namespace gfx

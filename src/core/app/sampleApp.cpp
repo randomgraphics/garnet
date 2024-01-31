@@ -81,7 +81,7 @@ static bool sParseGpuAPI(GN::gfx::GpuAPI & result, const char * value) {
     using namespace GN;
     using namespace GN::gfx;
 
-    StrA upperCase(value);
+    std::string upperCase(value);
     upperCase.toUpper();
 
     result = GpuAPI::sFromString(upperCase);
@@ -211,12 +211,12 @@ bool GN::util::SampleApp::onCheckExtraCmdlineArguments(const char * exename, int
     GN_UNUSED_PARAM(exename);
 
     if (argc > 0) {
-        StrA s = "unknown command line arguments:";
+        std::string s = "unknown command line arguments:";
         for (int i = 0; i < argc; ++i) {
             s += " ";
             s += argv[i];
         }
-        GN_ERROR(sLogger)(s.rawptr());
+        GN_ERROR(sLogger)(s.data());
     }
 
     return true;
@@ -366,7 +366,7 @@ bool GN::util::SampleApp::checkCmdLine(int argc, const char * const argv[]) {
 
         if (0 == str::compareI("-h", a) || 0 == str::compareI("-?", a) || 0 == str::compareI("--help", a) || 0 == str::compareI("/help", a) ||
             0 == str::compareI("/h", a) || 0 == str::compareI("/?", a)) {
-            StrA executableName = fs::baseName(argv[0]) + fs::extName(argv[0]);
+            std::string executableName = fs::baseName(argv[0]) + fs::extName(argv[0]);
             onPrintHelpScreen(executableName);
             return false;
         } else if ('-' == *a
@@ -392,34 +392,34 @@ bool GN::util::SampleApp::checkCmdLine(int argc, const char * const argv[]) {
 
                 if (!sParseGpuAPI(mInitParam.ro.api, value)) return false;
             } else if (0 == str::compareI("ll", a + 1)) {
-                StrA value = sGetOptionValue(argc, argv, i);
+                std::string value = sGetOptionValue(argc, argv, i);
                 if (value.empty()) return false;
 
                 size_t k = value.findFirstOf(":");
-                if (StrA::NOT_FOUND == k) {
+                if (std::string::NOT_FOUND == k) {
                     GN_ERROR(sLogger)("Log level must be in format of 'name:level'");
                 } else {
-                    StrA name(value.subString(0, k));
-                    StrA leveltok(value.subString(k + 1, 0));
+                    std::string name(value.subString(0, k));
+                    std::string leveltok(value.subString(k + 1, 0));
                     int  level;
-                    if (!name.empty() && 0 != str::toInetger(level, leveltok.rawptr())) {
-                        getLogger(name.rawptr())->setLevel(level);
+                    if (!name.empty() && 0 != str::toInetger(level, leveltok.data())) {
+                        getLogger(name.data())->setLevel(level);
                     } else {
                         GN_ERROR(sLogger)("Log level must be in format of 'name:level'");
                     }
                 }
             } else if (0 == str::compareI("ww", a + 1)) {
-                StrA value = sGetOptionValue(argc, argv, i);
+                std::string value = sGetOptionValue(argc, argv, i);
                 if (value.empty()) return false;
 
                 if (!sParseInteger(mInitParam.ro.displayMode.width, a, value)) return false;
             } else if (0 == str::compareI("wh", a + 1)) {
-                StrA value = sGetOptionValue(argc, argv, i);
+                std::string value = sGetOptionValue(argc, argv, i);
                 if (value.empty()) return false;
 
                 if (!sParseInteger(mInitParam.ro.displayMode.height, a, value)) return false;
             } else if (0 == str::compareI("vsync", a + 1)) {
-                StrA value = sGetOptionValue(argc, argv, i);
+                std::string value = sGetOptionValue(argc, argv, i);
                 if (value.empty()) return false;
 
                 if (!sParseBool(mInitParam.ro.vsync, a, value)) return false;
@@ -434,7 +434,7 @@ bool GN::util::SampleApp::checkCmdLine(int argc, const char * const argv[]) {
     }
 
     // handle unrecoganized arguments
-    if (!onCheckExtraCmdlineArguments(argv[0], (int) unknownArgs.size(), unknownArgs.rawptr())) return false;
+    if (!onCheckExtraCmdlineArguments(argv[0], (int) unknownArgs.size(), unknownArgs.data())) return false;
 
     // success
     return true;
@@ -493,11 +493,11 @@ void GN::util::SampleApp::drawHUD() {
     if (mShowHUD) {
         BitmapFont * font = engine::getDefaultFontRenderer();
 
-        StrW timeInfo = str::format(L"FPS: %.2f\tIdle: %.1f%%\n"
+        std::wstring timeInfo = fmt::format(L"FPS: %.2f\tIdle: %.1f%%\n"
                                     L"(Press F1 for more helps)",
                                     mFps.fps(), mFrameIdlePercentage);
 
-        font->drawText(timeInfo.rawptr(), 40, 40);
+        font->drawText(timeInfo.data(), 40, 40);
 
         if (mShowHelp) { font->drawText(mHelpText, 40, 120); }
     }

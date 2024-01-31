@@ -62,7 +62,7 @@ static void sBuildJointMapFromSkeletons(StringMap<char, JointLocation> & jointMa
     for (uint32 s = 0; s < skeletons.size(); ++s) {
         const FatSkeleton & fatsk = skeletons[s];
         for (uint32 j = 0; j < fatsk.joints.size(); ++j) {
-            const StrA &  jointName = fatsk.joints[j].name;
+            const std::string &  jointName = fatsk.joints[j].name;
             JointLocation location  = {s, j};
             jointMap.insert(jointName, location);
             // printf( "Insert joint %s to joint map.\n", jointName );
@@ -180,7 +180,7 @@ static void sCopyVertexElement(void * dst, const MeshResourceDesc & src, const M
 //
 //
 // -----------------------------------------------------------------------------
-static bool sLoadFromASE(FatModel & fatmodel, File & file, const StrA & filename) {
+static bool sLoadFromASE(FatModel & fatmodel, File & file, const std::string & filename) {
     // load ASE scene
     AseScene ase;
     if (!ase.loadFromFile(file)) return false;
@@ -252,10 +252,10 @@ static bool sLoadFromASE(FatModel & fatmodel, File & file, const StrA & filename
             return false;
         }
         if (src.idx32) {
-            memcpy(dst.indices.rawptr(), src.indices, src.numidx * 4);
+            memcpy(dst.indices.data(), src.indices, src.numidx * 4);
         } else {
             const uint16 * s = (const uint16 *) src.indices;
-            uint32 *       d = dst.indices.rawptr();
+            uint32 *       d = dst.indices.data();
             for (size_t i = 0; i < src.numidx; ++i, ++s, ++d) { *d = *s; }
         }
         dst.primitive = PrimitiveType::TRIANGLE_LIST;
@@ -612,7 +612,7 @@ static void sLoadFbxSkeletons(FatModel & fatmodel, FbxNode * fbxnode) {
     {
         for( uint32 i = 0; i < fatmodel.skeletons.size(); ++i )
         {
-            StrA s;
+            std::string s;
             fatmodel.skeletons[i].printJointHierarchy( s );
             GN_INFO(sLogger)( s );
         }
@@ -848,7 +848,7 @@ static bool sBuildFatMeshSubsetJointList(FatMesh & mesh) {
     const uint32 * joints = (const uint32 *) mesh.vertices.getJoints();
     if (NULL == joints) return true;
 
-    const uint32 * indices = mesh.indices.rawptr();
+    const uint32 * indices = mesh.indices.data();
 
     // Loop through all subsets.
     for (uint32 i = 0; i < mesh.subsets.size(); ++i) {
@@ -907,7 +907,7 @@ static bool sBuildFatMeshSubsetJointList(FatMesh & mesh) {
 //
 //
 // -----------------------------------------------------------------------------
-static void sLoadFbxMesh(FatModel & fatmodel, const StrA & filename, FbxSdkWrapper & sdk, FbxMesh * fbxmesh) {
+static void sLoadFbxMesh(FatModel & fatmodel, const std::string & filename, FbxSdkWrapper & sdk, FbxMesh * fbxmesh) {
     FbxNode * fbxnode = fbxmesh->GetNode();
 
     if (!fbxmesh->IsTriangleMesh()) {
@@ -963,7 +963,7 @@ static void sLoadFbxMesh(FatModel & fatmodel, const StrA & filename, FbxSdkWrapp
         FatMaterial fatmat;
         fatmat.name = fbxmat->GetName();
 
-        StrA         dirname = fs::dirName(filename);
+        std::string         dirname = fs::dirName(filename);
         const char * texname = sGetTextureFileName(fbxmat, FbxSurfaceMaterial::sDiffuse);
         if (texname) fatmat.albedoTexture = fs::resolvePath(dirname, texname);
 
@@ -1129,7 +1129,7 @@ static void sLoadFbxMesh(FatModel & fatmodel, const StrA & filename, FbxSdkWrapp
     for (size_t i = 0; i < fatmesh.subsets.size(); ++i) { fatmesh.subsets[i].numvtx = (uint32) vertexKeys.size(); }
 
     // Now copy vertex data to fatmesh, and translate position and normal to global space.
-    if (!sGenerateFatVertices(fatmesh, fbxnode, vcache.rawptr(), vertexKeys.rawptr(), vertexKeys.size())) return;
+    if (!sGenerateFatVertices(fatmesh, fbxnode, vcache.data(), vertexKeys.data(), vertexKeys.size())) return;
 
     // Build joint list for each subset.
     if (!sBuildFatMeshSubsetJointList(fatmesh)) return;
@@ -1151,7 +1151,7 @@ static void sLoadFbxMesh(FatModel & fatmodel, const StrA & filename, FbxSdkWrapp
 //
 //
 // -----------------------------------------------------------------------------
-static void sLoadFbxMeshes(FatModel & fatmodel, const StrA & filename, FbxSdkWrapper & sdk, FbxScene & scene) {
+static void sLoadFbxMeshes(FatModel & fatmodel, const std::string & filename, FbxSdkWrapper & sdk, FbxScene & scene) {
     // Load meshes
     int meshCount = FbxGetSrcCount<FbxMesh>(&scene);
     for (int i = 0; i < meshCount; i++) {
@@ -1203,10 +1203,10 @@ static void sLoadFbxAnimations(FatModel & fatmodel, FbxScene & fbxscene) {
 //
 //
 // -----------------------------------------------------------------------------
-static bool sLoadFromFBX(FatModel & fatmodel, File & file, const StrA & filename) {
+static bool sLoadFromFBX(FatModel & fatmodel, File & file, const std::string & filename) {
 #ifdef HAS_FBX
 
-    GN_INFO(sLogger)("Load FBX model from file: %s", filename.rawptr());
+    GN_INFO(sLogger)("Load FBX model from file: %s", filename.data());
 
     FbxSdkWrapper sdk;
     if (!sdk.init()) return false;
@@ -1286,13 +1286,13 @@ static bool sLoadFromFBX(FatModel & fatmodel, File & file, const StrA & filename
 
     fatmodel.clear();
     GN_UNUSED_PARAM(file);
-    GN_ERROR(sLogger)("Fail to load file %s: FBX is not supported.", filename.rawptr());
+    GN_ERROR(sLogger)("Fail to load file %s: FBX is not supported.", filename.data());
     return false;
 
 #endif // HAS_FBX
 }
 
-static void sPrintFBXNodeHierarchy(StrA & hierarchy, const StrA & filename) {
+static void sPrintFBXNodeHierarchy(std::string & hierarchy, const std::string & filename) {
 #ifdef HAS_FBX
 
     FbxSdkWrapper sdk;
@@ -1334,16 +1334,16 @@ static void sPrintFBXNodeHierarchy(StrA & hierarchy, const StrA & filename) {
     }
 
     struct Local {
-        static void sPrintNodeRecursivly(StrA & hierarchy, FbxNode * node, int depth) {
+        static void sPrintNodeRecursivly(std::string & hierarchy, FbxNode * node, int depth) {
             if (NULL == node) return;
 
             for (int i = 0; i < depth; ++i) { hierarchy += "  "; }
 
-            hierarchy += str::format("(%d) ", depth);
+            hierarchy += fmt::format("(%d) ", depth);
 
             const char * name = node->GetName();
 
-            hierarchy += str::isEmpty(name) ? "[UNNAMED]" : name;
+            hierarchy += str::empty(name) ? "[UNNAMED]" : name;
 
             hierarchy += " : ";
 
@@ -1383,7 +1383,7 @@ static void sPrintFBXNodeHierarchy(StrA & hierarchy, const StrA & filename) {
                 } else if (0 <= atype && atype < (int) GN_ARRAY_COUNT(sAttributeTypeNames)) {
                     hierarchy += sAttributeTypeNames[atype];
                 } else {
-                    hierarchy += str::format("[INVALID:%d]", atype);
+                    hierarchy += fmt::format("[INVALID:%d]", atype);
                 }
             } else {
                 hierarchy += "[NULL]";
@@ -1501,7 +1501,7 @@ static void sLoadAiJointHierarchy(FatSkeleton & fatsk, uint32 parentJointIndex, 
     if (NULL == ainode) return;
 
     // Store node name.
-    const StrA & name = ainode->mName.data;
+    const std::string & name = ainode->mName.data;
 
     // Search through joints for a joint with the same name as node name.
     uint32 currentJointIndex = FatJoint::NO_JOINT;
@@ -1595,7 +1595,7 @@ static uint32 sFindRootJoint(const FatSkeleton & fatsk) {
         }
     };
     uint32 counter = 0;
-    Local::sCountJointRecursivly( fatsk.joints.rawptr(), fatsk.joints.size(), counter, fatsk.root );
+    Local::sCountJointRecursivly( fatsk.joints.data(), fatsk.joints.size(), counter, fatsk.root );
     if( counter != fatsk.joints.size() )
     {
         GN_ERROR(sLogger)( "Invalid joint hierarchy!" );
@@ -1717,7 +1717,7 @@ void sLoadAiMeshSkeleton(FatModel & fatmodel, FatMesh & fatmesh, const aiScene &
 
 #if 0
     // Print joint hierarchy
-    StrA s;
+    std::string s;
     fatsk.printJointHierarchy( s );
     GN_INFO(sLogger)( s );
 #endif
@@ -2079,7 +2079,7 @@ static void sLoadAiAnimations(FatModel & fatmodel, const aiScene & aiscene) {
 //
 //
 // -----------------------------------------------------------------------------
-static bool sLoadFromAssimp(FatModel & fatmodel, const StrA & filename) {
+static bool sLoadFromAssimp(FatModel & fatmodel, const std::string & filename) {
     GN_SCOPE_PROFILER(sLoadFromAssimp, "Load model from Assimp.");
 
     const aiScene * scene;
@@ -2090,7 +2090,7 @@ static bool sLoadFromAssimp(FatModel & fatmodel, const StrA & filename) {
     if (NULL == scene) return false;
 
     // Load materials
-    StrA dirname = fs::dirName(filename);
+    std::string dirname = fs::dirName(filename);
     fatmodel.materials.resize(scene->mNumMaterials);
     for (uint32 i = 0; i < fatmodel.materials.size(); ++i) {
         const aiMaterial * aimat = scene->mMaterials[i];
@@ -2130,21 +2130,21 @@ static bool sLoadFromAssimp(FatModel & fatmodel, const StrA & filename) {
     return true;
 }
 
-static bool sPrintAiNodeHierarchy(StrA & hierarchy, const StrA & filename) {
+static bool sPrintAiNodeHierarchy(std::string & hierarchy, const std::string & filename) {
     const aiScene * scene = aiImportFile(filename, aiProcessPreset_TargetRealtime_Quality);
     if (NULL == scene) return false;
 
     struct Local {
-        static void sPrintRecursivly(StrA & hierarchy, const aiNode * node, int depth) {
+        static void sPrintRecursivly(std::string & hierarchy, const aiNode * node, int depth) {
             if (NULL == node) return;
 
             for (int i = 0; i < depth; ++i) { hierarchy += "  "; }
 
-            hierarchy += str::format("(%d) ", depth);
+            hierarchy += fmt::format("(%d) ", depth);
 
             const char * name = node->mName.data;
 
-            hierarchy += str::isEmpty(name) ? "[UNNAMED]" : name;
+            hierarchy += str::empty(name) ? "[UNNAMED]" : name;
 
             hierarchy += "\n";
 
@@ -2210,7 +2210,7 @@ static FileFormat sDetermineFileFormatByContent(File &) {
 //
 //
 // -----------------------------------------------------------------------------
-static FileFormat sDetermineFileFormatByFileName(const StrA & filename) {
+static FileFormat sDetermineFileFormatByFileName(const std::string & filename) {
     if (sCheckFileExtension(filename, ".xml")) {
         return FF_GARNET_XML;
     } else if (sCheckFileExtension(filename, ".mesh.bin")) {
@@ -2227,7 +2227,7 @@ static FileFormat sDetermineFileFormatByFileName(const StrA & filename) {
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::FatModel::loadFromFile(const StrA & filename) {
+bool GN::gfx::FatModel::loadFromFile(const std::string & filename) {
     GN_SCOPE_PROFILER(FatModel_loadFromFile, "Load FatModel from file.");
 
     clear();
@@ -2242,7 +2242,7 @@ bool GN::gfx::FatModel::loadFromFile(const StrA & filename) {
     FileFormat ff = sDetermineFileFormatByContent(*file);
     if (FF_UNKNOWN == ff) { ff = sDetermineFileFormatByFileName(filename); }
 
-    StrA fullFileName = fs::resolvePath(fs::getCurrentDir(), filename);
+    std::string fullFileName = fs::resolvePath(fs::getCurrentDir(), filename);
 
     // by default the fat model name would be the file.
     this->name = fullFileName;
@@ -2266,7 +2266,7 @@ bool GN::gfx::FatModel::loadFromFile(const StrA & filename) {
 
     default:
         if (!ai::sLoadFromAssimp(*this, fullFileName)) {
-            GN_ERROR(sLogger)("Unknown file format: %s", filename.rawptr());
+            GN_ERROR(sLogger)("Unknown file format: %s", filename.data());
             noerr = false;
         }
         break;
@@ -2291,8 +2291,8 @@ bool GN::gfx::FatModel::loadFromFile(const StrA & filename) {
 //
 //
 // -----------------------------------------------------------------------------
-GN_API void GN::gfx::printModelFileNodeHierarchy(StrA & hierarchy, const StrA & filename) {
-    StrA fullFileName = fs::resolvePath(fs::getCurrentDir(), filename);
+GN_API void GN::gfx::printModelFileNodeHierarchy(std::string & hierarchy, const std::string & filename) {
+    std::string fullFileName = fs::resolvePath(fs::getCurrentDir(), filename);
 
     FileFormat ff = sDetermineFileFormatByFileName(fullFileName);
     if (FF_FBX == ff) {

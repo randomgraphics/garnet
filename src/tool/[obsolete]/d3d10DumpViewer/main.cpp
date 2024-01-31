@@ -11,7 +11,7 @@ using namespace GN::d3d10;
 
 static GN::Logger * sLogger = GN::getLogger("GN.tool.D3D10DumpViewer");
 
-static StrA sDumpFileName;
+static std::string sDumpFileName;
 
 /* *****************************************************************************
 // shader function templates
@@ -84,30 +84,30 @@ template<> struct ShaderFunc<ID3D10GeometryShader>
 // *****************************************************************************
 
 template<typename T>
-static bool sLoadBinary(const XmlElement & node, const StrA & attr, const StrA & basedir, DynaArray<T> & result) {
+static bool sLoadBinary(const XmlElement & node, const std::string & attr, const std::string & basedir, DynaArray<T> & result) {
     const XmlAttrib * a = node.findAttrib(attr);
     if (!a) {
-        GN_ERROR(sLogger)("%s : attribute '%s' is missing!", node.getLocation(), attr.rawptr());
+        GN_ERROR(sLogger)("%s : attribute '%s' is missing!", node.getLocation(), attr.data());
         return false;
     }
 
-    StrA fullname = fs::resolvePath(basedir, a->value);
+    std::string fullname = fs::resolvePath(basedir, a->value);
 
-    if (!fs::isFile(fullname)) { GN_WARN(sLogger)("%s : binary file not found :  %s!", node.getLocation(), fullname.rawptr()); }
+    if (!fs::isFile(fullname)) { GN_WARN(sLogger)("%s : binary file not found :  %s!", node.getLocation(), fullname.data()); }
 
     AutoObjPtr<File> fp(fs::openFile(fullname, "rb"));
     if (!fp) return false;
 
     result.resize(fp->size() / sizeof(T));
 
-    return fp->read(result.rawptr(), result.size() * sizeof(T), 0);
+    return fp->read(result.data(), result.size() * sizeof(T), 0);
 }
 
 template<typename T>
-static bool sGetNumericAttr(const XmlElement & node, const StrA & attrname, T & result) {
+static bool sGetNumericAttr(const XmlElement & node, const std::string & attrname, T & result) {
     const XmlAttrib * a = node.findAttrib(attrname);
-    if (!a || !str::toNumber<T>(result, a->value.rawptr())) {
-        GN_ERROR(sLogger)("%s : attribute '%s' is missing!", node.getLocation(), attrname.rawptr());
+    if (!a || !str::toNumber<T>(result, a->value.data())) {
+        GN_ERROR(sLogger)("%s : attribute '%s' is missing!", node.getLocation(), attrname.data());
         return false;
     } else {
         return true;
@@ -131,7 +131,7 @@ struct BinaryComDump {
     DynaArray<uint8> binary;
     AutoComPtr<T>    comptr;
 
-    bool load(const XmlElement & node, const StrA & attr, const StrA & basedir) { return sLoadBinary(node, attr, basedir, binary); }
+    bool load(const XmlElement & node, const std::string & attr, const std::string & basedir) { return sLoadBinary(node, attr, basedir, binary); }
 
     void clear() { comptr.clear(); }
 };
@@ -146,7 +146,7 @@ struct D3D10BufferDump : BinaryComDump<ID3D10Buffer> {
             0, // no CPU access
             0  // no misc. flags
         };
-        D3D10_SUBRESOURCE_DATA data = {binary.rawptr(), (UINT) binary.size(), (UINT) binary.size()};
+        D3D10_SUBRESOURCE_DATA data = {binary.data(), (UINT) binary.size(), (UINT) binary.size()};
 
         return S_OK == dev.CreateBuffer(&desc, &data, &comptr);
     }
@@ -155,12 +155,12 @@ struct D3D10BufferDump : BinaryComDump<ID3D10Buffer> {
 struct D3D10ConstBufferDump : public D3D10BufferDump {};
 
 struct D3D10InputLayoutDump {
-    StackArray<StrA, 256>               semantics;
+    StackArray<std::string, 256>               semantics;
     DynaArray<D3D10_INPUT_ELEMENT_DESC> elements;
     DynaArray<uint8>                    signature;
     AutoComPtr<ID3D10InputLayout>       comptr;
 
-    bool load(const XmlElement & node, const StrA & basedir) {
+    bool load(const XmlElement & node, const std::string & basedir) {
         XmlElement * e;
 
         D3D10_INPUT_ELEMENT_DESC desc;
@@ -177,7 +177,7 @@ struct D3D10InputLayoutDump {
                     return false;
                 }
                 semantics.append(sem->value);
-                desc.SemanticName = semantics.back().rawptr();
+                desc.SemanticName = semantics.back().data();
 
                 if (!sGetNumericAttr(*e, "index", desc.SemanticIndex)) return false;
                 if (!sGetNumericAttr(*e, "format", (INT &) desc.Format)) return false;
@@ -188,7 +188,7 @@ struct D3D10InputLayoutDump {
 
                 elements.append(desc);
             } else {
-                GN_WARN(sLogger)("%s : ignore unknown node %s", e->getLocation(), e->name.rawptr());
+                GN_WARN(sLogger)("%s : ignore unknown node %s", e->getLocation(), e->name.data());
             }
         }
 
@@ -218,7 +218,7 @@ struct D3D10ViewDump {
     AutoComPtr<ID3D10Resource> original; ///< store original resource data loaded from file
     AutoComPtr<ID3D10Resource> res;
 
-    bool load(const XmlElement & node, const StrA & basedir) {
+    bool load(const XmlElement & node, const std::string & basedir) {
         if (!sLoadBinary(node, "desc", basedir, desc)) return false;
         if (!sLoadBinary(node, "res", basedir, content)) return false;
         return true;
@@ -232,7 +232,7 @@ struct D3D10ViewDump {
             width, D3D10_USAGE_DEFAULT, bind, 0, 0,
         };
 
-        D3D10_SUBRESOURCE_DATA sd = {content.rawptr(), width, width};
+        D3D10_SUBRESOURCE_DATA sd = {content.data(), width, width};
 
         ID3D10Buffer * buf;
 
@@ -245,7 +245,7 @@ struct D3D10ViewDump {
     bool createTexture(ID3D10Device & dev, UINT bind, DXGI_FORMAT format) {
         // get image information
         D3DX10_IMAGE_INFO info;
-        GN_DX_CHECK_RETURN(D3DX10GetImageInfoFromMemory(content.rawptr(), content.size(), 0, &info, 0), false);
+        GN_DX_CHECK_RETURN(D3DX10GetImageInfoFromMemory(content.data(), content.size(), 0, &info, 0), false);
         width  = info.Width;
         height = info.Height;
 
@@ -254,7 +254,7 @@ struct D3D10ViewDump {
             // This is a depth format that is not supported by current D3D10X library.
             // We'll have to use our custom loader
 
-            MemFile<uint8> file(content.rawptr(), content.size());
+            MemFile<uint8> file(content.data(), content.size());
 
             ImageReader      ir;
             ImageDesc        id;
@@ -263,7 +263,7 @@ struct D3D10ViewDump {
             if (!ir.reset(file)) return false;
             if (!ir.readHeader(id)) return false;
             data.resize(id.getTotalBytes());
-            if (!ir.readImage(data.rawptr())) return false;
+            if (!ir.readImage(data.data())) return false;
 
             switch (info.ResourceDimension) {
             case D3D10_RESOURCE_DIMENSION_TEXTURE1D:
@@ -296,13 +296,13 @@ struct D3D10ViewDump {
 
                 ID3D10Texture2D * tex2d;
 
-                GN_DX_CHECK_RETURN(dev.CreateTexture2D(&desc2d, subdata.rawptr(), &tex2d), false);
+                GN_DX_CHECK_RETURN(dev.CreateTexture2D(&desc2d, subdata.data(), &tex2d), false);
                 original.attach(tex2d);
 
                 desc2d.Usage          = D3D10_USAGE_DEFAULT;
                 desc2d.BindFlags      = bind;
                 desc2d.CPUAccessFlags = 0;
-                GN_DX_CHECK_RETURN(dev.CreateTexture2D(&desc2d, subdata.rawptr(), &tex2d), false);
+                GN_DX_CHECK_RETURN(dev.CreateTexture2D(&desc2d, subdata.data(), &tex2d), false);
                 res.attach(tex2d);
 
                 break;
@@ -331,12 +331,12 @@ struct D3D10ViewDump {
             load.MipLevels     = info.MipLevels;
             if (DXGI_FORMAT_UNKNOWN != format) { load.Format = format; }
 
-            GN_DX_CHECK_RETURN(D3DX10CreateTextureFromMemory(&dev, content.rawptr(), content.size(), &load, 0, &original, 0), false);
+            GN_DX_CHECK_RETURN(D3DX10CreateTextureFromMemory(&dev, content.data(), content.size(), &load, 0, &original, 0), false);
 
             load.BindFlags      = bind;
             load.CpuAccessFlags = 0;
 
-            GN_DX_CHECK_RETURN(D3DX10CreateTextureFromMemory(&dev, content.rawptr(), content.size(), &load, 0, &res, 0), false);
+            GN_DX_CHECK_RETURN(D3DX10CreateTextureFromMemory(&dev, content.data(), content.size(), &load, 0, &res, 0), false);
         }
 
         // success
@@ -361,7 +361,7 @@ struct D3D10SrvDump : public D3D10ViewDump<ID3D10ShaderResourceView> {
     bool create(ID3D10Device & dev) {
         GN_ASSERT(sizeof(D3D10_SHADER_RESOURCE_VIEW_DESC) == desc.size());
 
-        const D3D10_SHADER_RESOURCE_VIEW_DESC * srvdesc = (const D3D10_SHADER_RESOURCE_VIEW_DESC *) desc.rawptr();
+        const D3D10_SHADER_RESOURCE_VIEW_DESC * srvdesc = (const D3D10_SHADER_RESOURCE_VIEW_DESC *) desc.data();
 
         if (D3D10_SRV_DIMENSION_BUFFER == srvdesc->ViewDimension) {
             if (!createBuffer(dev, D3D10_BIND_SHADER_RESOURCE)) return false;
@@ -383,7 +383,7 @@ struct D3D10RtvDump : public D3D10ViewDump<ID3D10RenderTargetView> {
     bool create(ID3D10Device & dev) {
         GN_ASSERT(sizeof(D3D10_RENDER_TARGET_VIEW_DESC) == desc.size());
 
-        const D3D10_RENDER_TARGET_VIEW_DESC * rtvdesc = (const D3D10_RENDER_TARGET_VIEW_DESC *) desc.rawptr();
+        const D3D10_RENDER_TARGET_VIEW_DESC * rtvdesc = (const D3D10_RENDER_TARGET_VIEW_DESC *) desc.data();
 
         if (!createTexture(dev, D3D10_BIND_RENDER_TARGET | D3D10_BIND_SHADER_RESOURCE, rtvdesc->Format)) return false;
 
@@ -424,7 +424,7 @@ struct D3D10DsvDump : public D3D10ViewDump<ID3D10DepthStencilView> {
     bool create(ID3D10Device & dev) {
         GN_ASSERT(sizeof(D3D10_DEPTH_STENCIL_VIEW_DESC) == desc.size());
 
-        const D3D10_DEPTH_STENCIL_VIEW_DESC * dsvdesc = (const D3D10_DEPTH_STENCIL_VIEW_DESC *) desc.rawptr();
+        const D3D10_DEPTH_STENCIL_VIEW_DESC * dsvdesc = (const D3D10_DEPTH_STENCIL_VIEW_DESC *) desc.data();
 
         if (!createTexture(dev, D3D10_BIND_DEPTH_STENCIL, dsvdesc->Format)) return false;
 
@@ -472,7 +472,7 @@ struct D3D10SamplerStateDump : BinaryComDump<ID3D10SamplerState> {
                                                         -FLT_MAX,
                                                         FLT_MAX};
 
-        const D3D10_SAMPLER_DESC * desc = binary.empty() ? &DEFAULT_DESC : (const D3D10_SAMPLER_DESC *) binary.rawptr();
+        const D3D10_SAMPLER_DESC * desc = binary.empty() ? &DEFAULT_DESC : (const D3D10_SAMPLER_DESC *) binary.data();
 
         return S_OK == dev.CreateSamplerState(desc, &comptr);
     }
@@ -555,7 +555,7 @@ struct D3D10StateDump {
 
     //@{
 
-    bool loadFromXml(const XmlNode & root, const StrA & basedir) {
+    bool loadFromXml(const XmlNode & root, const std::string & basedir) {
         GN_GUARD;
 
         // check root name
@@ -678,7 +678,7 @@ struct D3D10StateDump {
                 if (!sGetNumericAttr(*e, "BaseVertexLocation", operation.startvtx)) return false;
                 if (!sGetNumericAttr(*e, "StartInstanceLocation", operation.startinst)) return false;
             } else {
-                GN_WARN(sLogger)("%s : ignore unknown node %s", e->getLocation(), e->name.rawptr());
+                GN_WARN(sLogger)("%s : ignore unknown node %s", e->getLocation(), e->name.data());
             }
         }
 
@@ -692,13 +692,13 @@ struct D3D10StateDump {
         GN_GUARD;
 
         // vs
-        if (!vs.binary.empty()) { GN_DX_CHECK_RETURN(dev.CreateVertexShader(vs.binary.rawptr(), vs.binary.size(), &vs.comptr), false); }
+        if (!vs.binary.empty()) { GN_DX_CHECK_RETURN(dev.CreateVertexShader(vs.binary.data(), vs.binary.size(), &vs.comptr), false); }
 
         // ps
-        if (!ps.binary.empty()) { GN_DX_CHECK_RETURN(dev.CreatePixelShader(ps.binary.rawptr(), ps.binary.size(), &ps.comptr), false); }
+        if (!ps.binary.empty()) { GN_DX_CHECK_RETURN(dev.CreatePixelShader(ps.binary.data(), ps.binary.size(), &ps.comptr), false); }
 
         // gs
-        if (!gs.binary.empty()) { GN_DX_CHECK_RETURN(dev.CreateGeometryShader(gs.binary.rawptr(), gs.binary.size(), &gs.comptr), false); }
+        if (!gs.binary.empty()) { GN_DX_CHECK_RETURN(dev.CreateGeometryShader(gs.binary.data(), gs.binary.size(), &gs.comptr), false); }
 
         // const buffers
         for (size_t i = 0; i < GN_ARRAY_COUNT(vsc); ++i) {
@@ -710,7 +710,7 @@ struct D3D10StateDump {
         // il
         if (!il.elements.empty()) {
             GN_DX_CHECK_RETURN(
-                dev.CreateInputLayout(il.elements.rawptr(), (UINT) il.elements.size(), il.signature.rawptr(), (UINT) il.signature.size(), &il.comptr), false);
+                dev.CreateInputLayout(il.elements.data(), (UINT) il.elements.size(), il.signature.data(), (UINT) il.signature.size(), &il.comptr), false);
         }
 
         // vb
@@ -751,15 +751,15 @@ struct D3D10StateDump {
 
         // rs
         GN_ASSERT(sizeof(D3D10_RASTERIZER_DESC) == rs.binary.size());
-        GN_DX_CHECK_RETURN(dev.CreateRasterizerState((const D3D10_RASTERIZER_DESC *) rs.binary.rawptr(), &rs.comptr), false);
+        GN_DX_CHECK_RETURN(dev.CreateRasterizerState((const D3D10_RASTERIZER_DESC *) rs.binary.data(), &rs.comptr), false);
 
         // bs
         GN_ASSERT(sizeof(D3D10_BLEND_DESC) == bs.binary.size());
-        GN_DX_CHECK_RETURN(dev.CreateBlendState((const D3D10_BLEND_DESC *) bs.binary.rawptr(), &bs.comptr), false);
+        GN_DX_CHECK_RETURN(dev.CreateBlendState((const D3D10_BLEND_DESC *) bs.binary.data(), &bs.comptr), false);
 
         // ds
         GN_ASSERT(sizeof(D3D10_DEPTH_STENCIL_DESC) == ds.binary.size());
-        GN_DX_CHECK_RETURN(dev.CreateDepthStencilState((const D3D10_DEPTH_STENCIL_DESC *) ds.binary.rawptr(), &ds.comptr), false);
+        GN_DX_CHECK_RETURN(dev.CreateDepthStencilState((const D3D10_DEPTH_STENCIL_DESC *) ds.binary.data(), &ds.comptr), false);
 
         // success
         return true;
@@ -984,7 +984,7 @@ protected:
     }
 };
 
-void printhelp(const char * appname) { printf("Usage: %s <ref|hal|refd|hald> [dumpname]\n", (fs::baseName(appname) + fs::extName(appname)).rawptr()); }
+void printhelp(const char * appname) { printf("Usage: %s <ref|hal|refd|hald> [dumpname]\n", (fs::baseName(appname) + fs::extName(appname)).data()); }
 
 int main(int argc, const char * argv[]) {
     GN_GUARD;

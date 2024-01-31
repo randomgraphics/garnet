@@ -41,7 +41,7 @@ public:
 
     //@{
 public:
-    bool init(const StrA & actorName);
+    bool init(const std::string & actorName);
     void quit();
 
 private:
@@ -85,7 +85,7 @@ private:
     // private functions
     // ********************************
 private:
-    bool loadActor(const StrA & name);
+    bool loadActor(const std::string & name);
 };
 }; // namespace GN
 

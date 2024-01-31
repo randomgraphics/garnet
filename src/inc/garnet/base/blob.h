@@ -61,7 +61,7 @@ public:
     DynaArrayBlob() {}
 
     //@{
-    virtual void * data() const { return (void *) mBuffer.rawptr(); }
+    virtual void * data() const { return (void *) mBuffer.data(); }
     virtual uint32 size() const { return (uint32) (sizeof(T) * mBuffer.size()); }
     //@}
 

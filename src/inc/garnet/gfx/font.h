@@ -53,7 +53,7 @@ struct FontFaceDesc {
     ///
     /// font file name. Normally would be something like "font::/xxxx"
     ///
-    StrA fontname;
+    std::string fontname;
 
     ///
     /// font quality
@@ -115,7 +115,7 @@ struct FontFaceCreationDesc {
     ///
     /// Font file name. Usually would be something like "font::/xxxx"
     ///
-    StrA fontname;
+    std::string fontname;
 
     ///
     /// Character width in pixel.
@@ -250,6 +250,8 @@ public:
         td.kerning    = false;
         drawText(td);
     }
+
+    void drawText(const std::wstring & text, float x, float y) { drawText(text.c_str(), x, y); }
 
     // ********************************
     // private variables

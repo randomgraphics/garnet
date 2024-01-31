@@ -13,15 +13,15 @@ static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.OGL");
 ///
 /// Split a string into token list
 // ------------------------------------------------------------------------
-static void sGetTokens(DynaArray<StrA> & tokens, const char * str) {
-    if (str::isEmpty(str)) return;
+static void sGetTokens(DynaArray<std::string> & tokens, const char * str) {
+    if (str::empty(str)) return;
     const char * p1 = str;
     const char * p2 = p1;
 
     while (*p1) {
         while (*p2 && *p2 != ' ') ++p2;
 
-        tokens.append(StrA(p1, p2 - p1));
+        tokens.append(std::string(p1, p2 - p1));
 
         while (*p2 && *p2 == ' ') ++p2;
 
@@ -32,7 +32,7 @@ static void sGetTokens(DynaArray<StrA> & tokens, const char * str) {
 ///
 /// function use to determine a extension is supported or not
 // ------------------------------------------------------------------------
-static inline bool sFindExtension(const DynaArray<StrA> & glexts, const char * ext) { return glexts.end() != std::find(glexts.begin(), glexts.end(), ext); }
+static inline bool sFindExtension(const DynaArray<std::string> & glexts, const char * ext) { return glexts.end() != std::find(glexts.begin(), glexts.end(), ext); }
 
 ///
 /// Get OpenGL version number
@@ -40,25 +40,25 @@ static inline bool sFindExtension(const DynaArray<StrA> & glexts, const char * e
 static void sGetOpenGLVersion(const char * version, int * major, int * minor, int * release) {
     // According to OpenGL standard, the version must starts with: major.minor or major.minor.release
 
-    StrA str;
+    std::string str;
 
     // get major version
     const char * p = version;
     while ('.' != *p) ++p;
-    if (major) *major = str::toInetger<int>(StrA(version, p - version).rawptr(), 0);
+    if (major) *major = str::toInetger<int>(std::string(version, p - version).data(), 0);
 
     // get minor version
     version = p + 1;
     p       = version;
     while (*p && '.' != *p && ' ' != *p) ++p;
-    if (minor) *minor = str::toInetger<int>(StrA(version, p - version).rawptr(), 0);
+    if (minor) *minor = str::toInetger<int>(std::string(version, p - version).data(), 0);
 
     // get release version
     if (*p && '.' == *p) {
         version = p + 1;
         p       = version;
         while (*p && ' ' != *p) ++p;
-        if (release) *release = str::toInetger<int>(StrA(version, p - version).rawptr(), 0);
+        if (release) *release = str::toInetger<int>(std::string(version, p - version).data(), 0);
     } else {
         if (release) *release = 0;
     }
@@ -67,7 +67,7 @@ static void sGetOpenGLVersion(const char * version, int * major, int * minor, in
 ///
 /// Check required extensions
 // ------------------------------------------------------------------------
-static bool sCheckRequiredExtensions(const DynaArray<StrA> & extensions) {
+static bool sCheckRequiredExtensions(const DynaArray<std::string> & extensions) {
     static const char * sRequiredExtensions[] = {
         "GL_EXT_bgra",                 // 1.1
         "GL_ARB_vertex_buffer_object", // 1.4
@@ -90,9 +90,9 @@ static bool sCheckRequiredExtensions(const DynaArray<StrA> & extensions) {
 /// initialize opengl extension
 // ------------------------------------------------------------------------
 #if GN_WINPC
-static bool sGetOGLExtensions(HDC hdc, DynaArray<StrA> & result)
+static bool sGetOGLExtensions(HDC hdc, DynaArray<std::string> & result)
 #else
-static bool sGetOGLExtensions(Display * disp, DynaArray<StrA> & result)
+static bool sGetOGLExtensions(Display * disp, DynaArray<std::string> & result)
 #endif
 {
     GN_GUARD;
@@ -124,10 +124,10 @@ static bool sGetOGLExtensions(Display * disp, DynaArray<StrA> & result)
 ///
 /// output GL implementation info.
 // ------------------------------------------------------------------------
-static void sOutputOGLInfo(intptr_t disp, const DynaArray<StrA> & glexts) {
+static void sOutputOGLInfo(intptr_t disp, const DynaArray<std::string> & glexts) {
     GN_GUARD;
 
-    StrA info;
+    std::string info;
 
     // vendor and version info.
     GN_UNUSED_PARAM(disp);
@@ -140,7 +140,7 @@ static void sOutputOGLInfo(intptr_t disp, const DynaArray<StrA> & glexts) {
     sGetOpenGLVersion(version, &major, NULL, NULL);
     if (major >= 2) { glsl = (const char *) glGetString(GL_SHADING_LANGUAGE_VERSION); }
 
-    info = GN::str::format("\n\n"
+    info = GN::fmt::format("\n\n"
                            "===================================================\n"
                            "        OpenGL Implementation Informations\n"
                            "---------------------------------------------------\n"
@@ -157,13 +157,13 @@ static void sOutputOGLInfo(intptr_t disp, const DynaArray<StrA> & glexts) {
         GN_OGL_CHECK(glGetIntegerv(GL_MAX_TEXTURE_UNITS_ARB, &tu));
     else
         tu = 1;
-    info += str::format("---------------------------------------------------\n"
+    info += fmt::format("---------------------------------------------------\n"
                         "    Max size of texture             :    %d\n"
                         "    Max number of texture stages    :    %d\n"
                         "===================================================\n"
                         "\n\n",
                         ts, tu);
-    GN_INFO(sLogger)(info.rawptr());
+    GN_INFO(sLogger)(info.data());
 
     // extension info.
     info = "\n\n"
@@ -174,7 +174,7 @@ static void sOutputOGLInfo(intptr_t disp, const DynaArray<StrA> & glexts) {
     info += "===================================================\n"
             "\n\n";
 
-    GN_VERBOSE(sLogger)(info.rawptr());
+    GN_VERBOSE(sLogger)(info.data());
 
     GN_UNGUARD;
 }
@@ -190,7 +190,7 @@ bool GN::gfx::OGLGpu::capsInit() {
     GN_GUARD;
 
     // output opengl implementation info.
-    DynaArray<StrA> glexts;
+    DynaArray<std::string> glexts;
 #if GN_WINPC
     if (!sGetOGLExtensions(mDeviceContext, glexts))
 #else

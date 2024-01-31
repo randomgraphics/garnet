@@ -178,8 +178,8 @@ int run(Gpu & gpu) {
 }
 
 void showHelp(CommandLineArguments & ca) {
-    StrA executableName = fs::baseName(ca.applicationName) + fs::extName(ca.applicationName);
-    GN_INFO(ca.logger)("Usage: %s [options]\n", executableName.rawptr());
+    std::string executableName = fs::baseName(ca.applicationName) + fs::extName(ca.applicationName);
+    GN_INFO(ca.logger)("Usage: %s [options]\n", executableName.data());
     ca.showStandardCommandLineOptions();
     GN_INFO(ca.logger)("  -b                       Draw blank screen only. Do not create any graphics resources.\n");
 }

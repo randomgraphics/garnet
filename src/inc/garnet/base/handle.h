@@ -236,12 +236,12 @@ class NamedHandleManager {
     struct NamedItem {
         NamedHandleManager & mgr;
         const H              handle;
-        const StrA           name;
+        const std::string           name;
         T                    data;
 
-        NamedItem(NamedHandleManager & m, H h, const StrA & n, const T & d): mgr(m), handle(h), name(n), data(d) {}
+        NamedItem(NamedHandleManager & m, H h, const std::string & n, const T & d): mgr(m), handle(h), name(n), data(d) {}
 
-        NamedItem(NamedHandleManager & m, H h, const StrA & n): mgr(m), handle(h), name(n) {}
+        NamedItem(NamedHandleManager & m, H h, const std::string & n): mgr(m), handle(h), name(n) {}
     };
 
     NameMap                       mNames; // name -> handle
@@ -296,11 +296,11 @@ public:
     ///
     /// name must be unique.
     ///
-    H add(const StrA & name) {
+    H add(const std::string & name) {
         if (CASE_INSENSITIVE) { GN_UNIMPL(); }
 
         if (NULL != mNames.find(name)) {
-            GN_ERROR(getLogger("GN.base.NamedHandleManager"))("name '%s' is not unique.", name.rawptr());
+            GN_ERROR(getLogger("GN.base.NamedHandleManager"))("name '%s' is not unique.", name.data());
             return 0;
         }
 
@@ -323,11 +323,11 @@ public:
     ///
     /// name must be unique.
     ///
-    H add(const StrA & name, const T & data) {
+    H add(const std::string & name, const T & data) {
         if (CASE_INSENSITIVE) { GN_UNIMPL(); }
 
         if (NULL != mNames.find(name)) {
-            GN_ERROR(getLogger("GN.base.NamedHandleManager"))("name '%s' is not unique.", name.rawptr());
+            GN_ERROR(getLogger("GN.base.NamedHandleManager"))("name '%s' is not unique.", name.data());
             return 0;
         }
 
@@ -362,11 +362,11 @@ public:
         mPool.deconstructAndFree(item);
     }
 
-    void remove(const StrA & name) {
+    void remove(const std::string & name) {
         if (CASE_INSENSITIVE) { GN_UNIMPL(); }
 
         if (!validName(name)) {
-            GN_ERROR(getLogger("GN.base.NamedHandleManager"))("invalid name: %s.", name.rawptr());
+            GN_ERROR(getLogger("GN.base.NamedHandleManager"))("invalid name: %s.", name.data());
             return;
         }
 
@@ -383,13 +383,13 @@ public:
 
     bool validHandle(H h) const { return mItems.validHandle(h); }
 
-    bool validName(const StrA & name) const {
+    bool validName(const std::string & name) const {
         if (CASE_INSENSITIVE) { GN_UNIMPL(); }
 
         return NULL != mNames.find(name);
     }
 
-    H name2handle(const StrA & name) const {
+    H name2handle(const std::string & name) const {
         if (CASE_INSENSITIVE) { GN_UNIMPL(); }
 
         const H * h = mNames.find(name);
@@ -397,7 +397,7 @@ public:
         return h ? *h : (H) 0;
     }
 
-    const StrA * handle2name(H h) const {
+    const std::string * handle2name(H h) const {
         if (!mItems.validHandle(h))
             return NULL;
         else
@@ -406,14 +406,14 @@ public:
 
     T & get(H h) const { return mItems[h]->data; }
 
-    T & get(const StrA & name) const {
+    T & get(const std::string & name) const {
         GN_ASSERT(validName(name));
         return mItems[mNames[name]]->data;
     }
 
     T & operator[](H h) const { return get(h); }
 
-    T & operator[](const StrA & name) const { return get(name); }
+    T & operator[](const std::string & name) const { return get(name); }
 
     //@}
 };

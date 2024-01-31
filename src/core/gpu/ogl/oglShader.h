@@ -120,7 +120,7 @@ public:
     // ********************************
 private:
     uint64_t mID;
-    StrA     mName; // for debugging and logging only.
+    std::string     mName; // for debugging and logging only.
 
     ///
     /// GLSL uniform parameter description
@@ -132,7 +132,7 @@ private:
         GLsizei                                      count;        ///< uniform count
         GLint                                        location;     ///< uniform location
         uint32                                       size;         ///< uniform size in bytes
-        StrA                                         name;         ///< uniform name
+        std::string                                         name;         ///< uniform name
         mutable WeakRef<const Uniform>               lastUniform;  ///< pointer to last uniform parameter
         mutable sint32                               lastStamp;    ///< update time stamp of the last uniform parameter
         mutable AutoInitializer<uint32, (uint32) -1> lastTexStage; ///< last texture stage associated to this parameter
@@ -143,7 +143,7 @@ private:
     ///
     struct GLSLAttributeDesc {
         GpuProgramAttributeParameterDesc desc {}; ///< attribute parameter description
-        StrA                             name {}; ///< attribute name
+        std::string                             name {}; ///< attribute name
         OGLVertexSemantic                semanticName {};
         uint8                            semanticIndex {};
     };

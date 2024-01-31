@@ -12,12 +12,12 @@ namespace gfx {
 /// ASE map
 ///
 struct AseMap {
-    StrA     name;
-    StrA     class_;
+    std::string     name;
+    std::string     class_;
     int      subno;
     float    amount;
-    StrA     bitmap;
-    StrA     type;
+    std::string     bitmap;
+    std::string     type;
     Vector2f offset;
     Vector2f tiling;
     float    angle;
@@ -27,32 +27,32 @@ struct AseMap {
     float    noise_size;
     int      noise_level;
     float    noise_phase;
-    StrA     filter;
+    std::string     filter;
 };
 
 ///
 /// ASE material
 ///
 struct AseMaterial {
-    StrA     name;
-    StrA     class_;
+    std::string     name;
+    std::string     class_;
     Vector3f ambient, diffuse, specular;
     float    shine;
     float    shinestrength;
     float    transparency;
     float    wiresize;
-    StrA     shading;
+    std::string     shading;
     float    xp_falloff;
     float    selfillum;
-    StrA     falloff;
-    StrA     xp_type;
+    std::string     falloff;
+    std::string     xp_type;
     AseMap   mapdiff;
     AseMap   mapbump;
 };
 
 struct AseMesh : public gfx::MeshResourceDesc {
-    StrA      parent;    ///< parent mesh
-    StrA      name;      ///< mesh name
+    std::string      parent;    ///< parent mesh
+    std::string      name;      ///< mesh name
     Matrix44f transform; ///< transformation
     Vector3f  pos;       ///< position
     Vector3f  rotaxis;   ///< rotate axis

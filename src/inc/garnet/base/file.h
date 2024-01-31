@@ -40,25 +40,25 @@ union FileOperationCaps {
 ///
 struct GN_API File : public NoCopy {
     /// construct from input stream
-    File(std::istream & i, const StrA & name) {
+    File(std::istream & i, const std::string & name) {
         setStream(&i, nullptr);
         setName(name);
     }
 
     /// construct from output stream
-    File(std::ostream & o, const StrA & name) {
+    File(std::ostream & o, const std::string & name) {
         setStream(nullptr, &o);
         setName(name);
     }
 
     /// @brief Construct from input and output stream
-    File(std::istream & i, std::ostream & o, const StrA & name) {
+    File(std::istream & i, std::ostream & o, const std::string & name) {
         setStream(&i, &o);
         setName(name);
     }
 
     /// construct from iostream
-    File(std::iostream & s, const StrA & name) {
+    File(std::iostream & s, const std::string & name) {
         setStream(&s, &s);
         setName(name);
     }
@@ -67,7 +67,7 @@ struct GN_API File : public NoCopy {
     virtual ~File() {}
 
     /// return file name string
-    const StrA & name() const { return mName; }
+    const std::string & name() const { return mName; }
 
     // /// Get file operation caps
     // const FileOperationCaps & caps() const { return mCaps; }
@@ -105,15 +105,12 @@ struct GN_API File : public NoCopy {
     size_t size() const;
 
     /// write string to file
-    bool print(const StrA & s) { return write(s.rawptr(), s.size()) == s.size(); }
+    bool print(const std::string & s) { return write(s.data(), s.size()) == s.size(); }
 
     /// write formatted string to file
-    inline bool printf(const char * fmt, ...) {
-        StrA    s;
-        va_list arglist;
-        va_start(arglist, fmt);
-        s.formatv(fmt, arglist);
-        va_end(arglist);
+    template<typename... Args>
+    bool printf(const char * format, Args&&... args) {
+        auto s = fmt::format(format, std::forward<Args>(args)...);
         return print(s);
     }
 
@@ -122,7 +119,7 @@ protected:
     File() = default;
 
     /// Set file name
-    void setName(const StrA & name) { mName = name; }
+    void setName(const std::string & name) { mName = name; }
 
     void setStream(std::istream * i, std::ostream * o) {
         mInput  = i;
@@ -130,7 +127,7 @@ protected:
     }
 
 private:
-    StrA           mName;
+    std::string           mName;
     std::istream * mInput  = nullptr;
     std::ostream * mOutput = nullptr;
 };
@@ -152,7 +149,7 @@ public:
     ~DiskFile() { close(); }
 
     /// open a file
-    bool open(const StrA & filename, std::ios_base::openmode mode);
+    bool open(const std::string & filename, std::ios_base::openmode mode);
 
     /// close the file
     void close() throw();
@@ -184,7 +181,7 @@ private:
 ///
 class GN_API MemFile : public File {
 public:
-    MemFile(void * buf = 0, size_t size = 0, const StrA & name = "");
+    MemFile(void * buf = 0, size_t size = 0, const std::string & name = "");
 
 private:
     std::unique_ptr<std::streambuf> mBuf;

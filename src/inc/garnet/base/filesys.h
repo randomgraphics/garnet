@@ -20,22 +20,22 @@ struct FileSystem : public NoCopy {
     ///
     /// 路径是否存在
     ///
-    virtual bool exist(const StrA &) = 0;
+    virtual bool exist(const std::string &) = 0;
 
     ///
     /// if the path points to a directoy?
     ///
-    virtual bool isDir(const StrA &) = 0;
+    virtual bool isDir(const std::string &) = 0;
 
     ///
     /// if the path points to a file
     ///
-    virtual bool isFile(const StrA & path) = 0;
+    virtual bool isFile(const std::string & path) = 0;
 
     ///
     /// if the path is absolute path
     ///
-    virtual bool isAbsPath(const StrA & path) = 0;
+    virtual bool isAbsPath(const std::string & path) = 0;
 
     ///
     /// Conver to disk file path in platform native format.
@@ -49,13 +49,13 @@ struct FileSystem : public NoCopy {
     ///   - Resolve embbed environment variable, like this:
     ///     "${windir}/system32" -> "c:\\windows\\system32"
     ///
-    virtual void toNativeDiskFilePath(StrA & result, const StrA & path) = 0;
+    virtual void toNativeDiskFilePath(std::string & result, const std::string & path) = 0;
 
     ///
     /// Conver path to platform native format.
     ///
-    inline StrA toNativeDiskFilePath(const StrA & path) {
-        StrA ret;
+    inline std::string toNativeDiskFilePath(const std::string & path) {
+        std::string ret;
         toNativeDiskFilePath(ret, path);
         return ret;
     }
@@ -70,12 +70,12 @@ struct FileSystem : public NoCopy {
     /// \param useRegex   是否使用正则匹配
     /// \return           返回参数 result
     ///
-    virtual DynaArray<StrA> & glob(DynaArray<StrA> & result, const StrA & dirName, const StrA & pattern, bool recursive, bool useRegex) = 0;
+    virtual DynaArray<std::string> & glob(DynaArray<std::string> & result, const std::string & dirName, const std::string & pattern, bool recursive, bool useRegex) = 0;
 
     ///
     /// open file. Note that meaning of mode is identical with standard fopen().
     ///
-    virtual std::unique_ptr<File> openFile(const StrA & path, std::ios_base::openmode mode) = 0;
+    virtual std::unique_ptr<File> openFile(const std::string & path, std::ios_base::openmode mode) = 0;
 };
 
 /// \name managing file system objects
@@ -92,58 +92,58 @@ struct FileSystem : public NoCopy {
 //      - if register same file system multiple times, only the last one is effective.
 ///
 //@{
-GN_API bool registerFileSystem(const StrA & name, FileSystem * fs);
-GN_API void UnregisterFileSystem(const StrA & name);
-GN_API FileSystem * getFileSystem(const StrA & name);
+GN_API bool registerFileSystem(const std::string & name, FileSystem * fs);
+GN_API void UnregisterFileSystem(const std::string & name);
+GN_API FileSystem * getFileSystem(const std::string & name);
 //@}
 
 /// \name FileSystem method wrappers. See FileSystem methods for details.
 //@{
 
-inline bool pathExist(const StrA & path) {
-    StrA sys, child;
+inline bool pathExist(const std::string & path) {
+    std::string sys, child;
     splitPath(path, sys, child);
     return getFileSystem(sys)->exist(child);
 }
 
-inline bool isDir(const StrA & path) {
-    StrA sys, child;
+inline bool isDir(const std::string & path) {
+    std::string sys, child;
     splitPath(path, sys, child);
     return getFileSystem(sys)->isDir(child);
 }
 
-inline bool isFile(const StrA & path) {
-    StrA sys, child;
+inline bool isFile(const std::string & path) {
+    std::string sys, child;
     splitPath(path, sys, child);
     return getFileSystem(sys)->isFile(child);
 }
 
-inline void toNativeDiskFilePath(StrA & result, const StrA & path) {
-    StrA sys, child;
+inline void toNativeDiskFilePath(std::string & result, const std::string & path) {
+    std::string sys, child;
     splitPath(path, sys, child);
     getFileSystem(sys)->toNativeDiskFilePath(result, child);
 }
 
-inline StrA toNativeDiskFilePath(const StrA & path) {
-    StrA sys, child;
+inline std::string toNativeDiskFilePath(const std::string & path) {
+    std::string sys, child;
     splitPath(path, sys, child);
     return getFileSystem(sys)->toNativeDiskFilePath(child);
 }
 
-inline bool isAbsPath(const StrA & path) {
-    StrA sys, child;
+inline bool isAbsPath(const std::string & path) {
+    std::string sys, child;
     splitPath(path, sys, child);
     return getFileSystem(sys)->isAbsPath(child);
 }
 
-inline std::unique_ptr<File> openFile(const StrA & path, std::ios_base::openmode mode) {
-    StrA sys, child;
+inline std::unique_ptr<File> openFile(const std::string & path, std::ios_base::openmode mode) {
+    std::string sys, child;
     splitPath(path, sys, child);
     return getFileSystem(sys)->openFile(child, mode);
 }
 
-inline DynaArray<StrA> & glob(DynaArray<StrA> & result, const StrA & dirName, const StrA & pattern, bool recursive, bool useRegex) {
-    StrA sys, child;
+inline DynaArray<std::string> & glob(DynaArray<std::string> & result, const std::string & dirName, const std::string & pattern, bool recursive, bool useRegex) {
+    std::string sys, child;
     splitPath(dirName, sys, child);
     return getFileSystem(sys)->glob(result, child, pattern, recursive, useRegex);
 }

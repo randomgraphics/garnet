@@ -17,7 +17,7 @@ GN_API size_t GN::str::toSignedInteger(sint64 & result, int bits, int base, cons
     // check invalid parameters
     if (bits < 2 || bits > 64) return 0;
     if (base < 2) return 0;
-    if (isEmpty(s)) return 0;
+    if (empty(s)) return 0;
 
     errno = 0;
 
@@ -48,7 +48,7 @@ GN_API size_t GN::str::toUnsignedInteger(uint64 & result, int bits, int base, co
     // check invalid parameters
     if (bits < 2 || bits > 64) return 0;
     if (base < 2) return 0;
-    if (isEmpty(s)) return 0;
+    if (empty(s)) return 0;
 
     errno = 0;
 
@@ -98,7 +98,7 @@ GN_API size_t GN::str::toFloat(float & i, const char * s) {
 //
 // -----------------------------------------------------------------------------
 GN_API size_t GN::str::toDouble(double & i, const char * s) {
-    if (isEmpty(s)) return 0;
+    if (empty(s)) return 0;
 
     char * e;
     double d = strtod(s, &e);
@@ -116,7 +116,7 @@ GN_API size_t GN::str::toDouble(double & i, const char * s) {
 // -----------------------------------------------------------------------------
 GN_API size_t GN::str::toFloatArray(float * buffer, size_t maxCount, const char * str, size_t length) {
     if (NULL == buffer) return 0;
-    if (isEmpty(str)) return 0;
+    if (empty(str)) return 0;
 
     if (0 == length) length = strlen(str);
 

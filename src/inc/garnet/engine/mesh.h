@@ -49,7 +49,7 @@ public:
     bool loadFromFatModel(const GN::gfx::FatModel &);
 
     /// Load from file
-    bool loadFromFile(const StrA & filename);
+    bool loadFromFile(const std::string & filename);
 
 private:
     SpacialComponent mSpacial;
@@ -57,7 +57,7 @@ private:
 };
 
 struct SkinnedAnimationInfo {
-    StrA   name;
+    std::string   name;
     double duration;
 };
 
@@ -111,7 +111,7 @@ public:
     bool loadFromFatModel(const GN::gfx::FatModel &);
 
     /// Load from file
-    bool loadFromFile(const StrA & filename);
+    bool loadFromFile(const std::string & filename);
 
     /// Draw skeletons as line segments.
     void drawSkeletons(uint32 colorInRGBA, const Matrix44f & transform);

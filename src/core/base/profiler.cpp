@@ -1,15 +1,15 @@
 #include "pch.h"
 #include "garnet/base/profiler.h"
 
-static GN::StrA sTime2Str(double time) {
+static std::string sTime2Str(double time) {
     using namespace GN;
 
     if (time < 0.000001) {
-        return str::format("%fus", time * 1000000);
+        return fmt::format("%fus", time * 1000000);
     } else if (time < 0.001) {
-        return str::format("%fms", time * 1000);
+        return fmt::format("%fms", time * 1000);
     } else {
-        return str::format("%fs", time);
+        return fmt::format("%fs", time);
     }
 }
 
@@ -54,16 +54,16 @@ GN_API void GN::ProfileTimer::stop() {
 GN_API GN::ProfilerManager::~ProfilerManager() {
 #if GN_BUILD_PROFILING_ENABLED
     // print profile result
-    StrA s;
+    std::string s;
     toString(s);
-    printf("%s\n", s.rawptr());
+    printf("%s\n", s.data());
 #endif
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-GN_API void GN::ProfilerManager::toString(GN::StrA & rval) const {
+GN_API void GN::ProfilerManager::toString(std::string & rval) const {
     std::lock_guard<SpinLoop> lock(mMutex);
 
     if (mTimers.empty()) {
@@ -79,11 +79,11 @@ GN_API void GN::ProfilerManager::toString(GN::StrA & rval) const {
     const StringMap<char, ProfilerTimerImpl>::KeyValuePair * i;
     for (i = mTimers.first(); i != NULL; i = mTimers.next(i)) {
         const ProfilerTimerImpl & t = i->value;
-        rval += GN::str::format("    %s :\n"
+        rval += GN::fmt::format("    %s :\n"
                                 "        count(%d), sum(%s), ave(%s), min(%s), max(%s)\n"
                                 "\n",
-                                i->key, t.count, sTime2Str(t.timesum).rawptr(), sTime2Str(0 == t.count ? 0 : (t.timesum / t.count)).rawptr(),
-                                sTime2Str(0 == t.count ? 0 : t.timemin).rawptr(), sTime2Str(0 == t.count ? 0 : t.timemax).rawptr());
+                                i->key, t.count, sTime2Str(t.timesum).data(), sTime2Str(0 == t.count ? 0 : (t.timesum / t.count)).data(),
+                                sTime2Str(0 == t.count ? 0 : t.timemin).data(), sTime2Str(0 == t.count ? 0 : t.timemax).data());
     }
     rval += "=====================================================================\n"
             "\n";

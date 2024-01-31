@@ -11,7 +11,7 @@ GN_API void GN::putEnv(const char * name, const char * value) {
     GN_UNUSED_PARAM(name);
     GN_UNUSED_PARAM(value);
 #else
-    if (str::isEmpty(name)) {
+    if (str::empty(name)) {
         GN_ERROR(sLogger)("Environment variable name can't be empty!");
         return;
     }
@@ -21,14 +21,14 @@ GN_API void GN::putEnv(const char * name, const char * value) {
     #if GN_POSIX
     if (0 != ::setenv(name, value, 1)) { GN_ERROR(sLogger)("fail to set environment '%s=%s'.", name, value); }
     #else
-    StrA s;
-    if (str::isEmpty(value)) {
+    std::string s;
+    if (str::empty(value)) {
         s.format("%s=", name);
     } else {
         s.format("%s=%s", name, value);
     }
 
-    if (0 != _putenv(const_cast<char *>(s.rawptr()))) { GN_ERROR(sLogger)("fail to set environment '%s'.", s.rawptr()); }
+    if (0 != _putenv(const_cast<char *>(s.data()))) { GN_ERROR(sLogger)("fail to set environment '%s'.", s.data()); }
     #endif
 #endif
 }
@@ -36,16 +36,16 @@ GN_API void GN::putEnv(const char * name, const char * value) {
 //
 //
 // -----------------------------------------------------------------------------
-GN_API void GN::getEnv(StrA & result, const char * name) {
+GN_API void GN::getEnv(std::string & result, const char * name) {
 #if GN_XBOX2 || GN_XBOX3
     // Xbox does not support getenv()
     GN_UNUSED_PARAM(name);
     result.clear();
 #else
-    if (str::isEmpty(name)) {
+    if (str::empty(name)) {
         result.clear();
     } else {
-    #if GN_MSVC8
+    #if GN_MSVC
         char * value;
         size_t sz;
         if (0 == _dupenv_s(&value, &sz, name)) {

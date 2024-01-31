@@ -212,7 +212,7 @@ public:
     /// \name load & save
     //@{
     static RawImage load(File &);
-    static RawImage load(const StrA & filename) {
+    static RawImage load(const std::string & filename) {
         AutoObjPtr<File> fp(GN::fs::openFile(filename, "rb"));
         if (fp.empty()) return {};
         return load(*fp);

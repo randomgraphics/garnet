@@ -88,7 +88,7 @@ class StackArray {
 
     void copyFrom(const StackArray & other) {
         T *       dst = rawptr();
-        const T * src = other.rawptr();
+        const T * src = other.data();
 
         SIZE_TYPE mincount = math::getmin<SIZE_TYPE>(mCount, other.mCount);
         for (SIZE_TYPE i = 0; i < mincount; ++i) { dst[i] = src[i]; }
@@ -169,7 +169,7 @@ class StackArray {
         if (mCount != other.mCount) return false;
 
         const T * p1 = rawptr();
-        const T * p2 = other.rawptr();
+        const T * p2 = other.data();
 
         for (SIZE_TYPE i = 0; i < mCount; ++i) {
             if (p1[i] != p2[i]) return false;

@@ -28,8 +28,8 @@ public:
             TS_ASSERT_EQUALS((void *) NULL, v);
         }
         {
-            GN::Variant var(GN::StrA("a"));
-            GN::StrA    v = var.gets();
+            GN::Variant var(std::string("a"));
+            std::string    v = var.gets();
             TS_ASSERT_EQUALS("a", v);
         }
         {
@@ -62,7 +62,7 @@ public:
 
     void testFromBool() {
         GN::Variant   var;
-        GN::StrA      s;
+        std::string      s;
         bool          b = false;
         int           i = 0;
         float         f = 0.0f;
@@ -103,7 +103,7 @@ public:
 
     void testFromInt() {
         GN::Variant   var;
-        GN::StrA      s;
+        std::string      s;
         bool          b = false;
         int           i = 0;
         float         f = 0.0f;
@@ -144,7 +144,7 @@ public:
 
     void testFromFloat() {
         GN::Variant   var;
-        GN::StrA      s;
+        std::string      s;
         bool          b = false;
         int           i = 0;
         float         f = 0.0f;
@@ -185,7 +185,7 @@ public:
 
     void testFromString() {
         GN::Variant   var;
-        GN::StrA      s;
+        std::string      s;
         bool          b = false;
         int           i = 0;
         float         f = 0.0f;

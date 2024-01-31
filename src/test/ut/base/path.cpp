@@ -20,8 +20,8 @@ public:
         using namespace GN;
         using namespace GN::fs;
 
-        StrA pwd = toNativeDiskFilePath(getCurrentDir());
-        StrA d   = getCurrentDrive();
+        std::string pwd = toNativeDiskFilePath(getCurrentDir());
+        std::string d   = getCurrentDrive();
 
         TS_ASSERT_EQUALS(d + PSS, toNativeDiskFilePath("/"));
         TS_ASSERT_EQUALS(d + PSS, toNativeDiskFilePath("\\"));
@@ -63,13 +63,13 @@ public:
         using namespace GN;
         using namespace GN::fs;
 
-        StrA s[2] = {
+        std::string s[2] = {
             toNativeDiskFilePath("app::"),
             toNativeDiskFilePath("startup::"),
         };
 
-        GN_INFO(sLogger)("appDir = %s", s[0].rawptr());
-        GN_INFO(sLogger)("startup = %s", s[1].rawptr());
+        GN_INFO(sLogger)("appDir = %s", s[0].data());
+        GN_INFO(sLogger)("startup = %s", s[1].data());
 
         for (size_t i = 0; i < 2; ++i) {
             TS_ASSERT(!s[i].empty());

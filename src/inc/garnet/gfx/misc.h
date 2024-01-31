@@ -19,12 +19,12 @@ GN_API Texture * loadTextureFromFile(Gpu & gpu, const char * filename);
 struct GN_API ModelHierarchyDesc : public NoCopy {
     //@{
     struct NodeDesc {
-        StrA            parent;      //< name of the parent node. Empty if there's no parent.
+        std::string            parent;      //< name of the parent node. Empty if there's no parent.
         Vector3f        position;    //< node position in parent's space
         Quaternionf     orientation; //< node orientation in parent's space
         Vector3f        scaling;     //< node scaling in local space
         Boxf            bbox;        //< bounding box of the node itself (children are not considered)
-        DynaArray<StrA> models;      //< List of models in the node.
+        DynaArray<std::string> models;      //< List of models in the node.
     };
 
     StringMap<char, MeshResourceDesc>  meshes;

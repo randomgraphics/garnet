@@ -69,7 +69,7 @@ public:
     // private variables
     // ********************************
 private:
-    StrW      mClassName;
+    std::wstring      mClassName;
     HINSTANCE mModuleInstance;
     HWND      mWindow;
     HHOOK     mHook;

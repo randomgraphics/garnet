@@ -130,7 +130,7 @@ xCharTexture * getTextChar(wchar_t ch) {
     return &g_TexID[ch];
 }
 
-GN::StrW        g_text(L"文件格式：\n"
+GN::std::wstring        g_text(L"文件格式：\n"
                 L"若不明确就标为未知\n"
                 L"表演者：	若不明确就标为未知\n"
                 L"专辑：		若不明确就标为未知\n"
@@ -141,7 +141,7 @@ GN::StrW        g_text(L"文件格式：\n"
                 L"   glTexParameteri ( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );\n"
                 L"   glEnable(GL_BLEND);\n"
                 L"   glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);");
-const wchar_t * g_UnicodeString = g_text.rawptr();
+const wchar_t * g_UnicodeString = g_text.data();
 
 void drawText(const wchar_t * _strText, int x, int y, int maxW, int h) {
     int sx   = x;

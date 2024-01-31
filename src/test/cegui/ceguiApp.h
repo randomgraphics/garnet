@@ -28,8 +28,8 @@ public:
                     throw InvalidRequestException((utf8 *) "DefaultResourceProvider::load - Filename supplied for data loading must be valid");
                 }
 
-                StrA name;
-                name.format("d:/software/green/cegui/datafiles/%s", filename.rawptr());
+                std::string name;
+                name.format("d:/software/green/cegui/datafiles/%s", filename.data());
 
                 DiskFile fp;
                 if (!fp.open(name, "rb")) { throw InvalidRequestException((utf8 *) "DefaultResourceProvider::load - " + filename + " does not exist"); }

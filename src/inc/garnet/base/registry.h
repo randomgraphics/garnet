@@ -12,7 +12,7 @@ namespace GN {
 ///
 class GN_API Registry {
     struct Item {
-        StrA    name;
+        std::string    name;
         Variant value;
     };
 
@@ -49,7 +49,7 @@ public:
     ///
     /// Construct from string. See importFromStr() for details of input string format.
     ///
-    explicit Registry(const StrA & values) { importFromStr(values); }
+    explicit Registry(const std::string & values) { importFromStr(values); }
 
     ///
     /// Destructor
@@ -67,7 +67,7 @@ public:
     ///
     /// Get item key by name
     ///
-    ItemKey name2Key(const StrA & name) const {
+    ItemKey name2Key(const std::string & name) const {
         const ItemKey * key = mNames.find(name);
         return (NULL == key) ? 0 : *key;
     }
@@ -75,12 +75,12 @@ public:
     ///
     /// Get item name by key. Return empty string for non-existed key
     ///
-    const StrA & key2Name(ItemKey key) const { return mItems.validHandle(key) ? mItems[key].name : StrA::EMPTYSTR(); }
+    const std::string & key2Name(ItemKey key) const { return mItems.validHandle(key) ? mItems[key].name : str::EMPTY_STRING(); }
 
     /// set registry value by name
     //@{
-    ItemKey set(const StrA & name, const Variant & value, bool override = true);
-    ItemKey sets(const StrA & name, const StrA & value, bool override = true) { return set(name, value, override); }
+    ItemKey set(const std::string & name, const Variant & value, bool override = true);
+    ItemKey sets(const std::string & name, const std::string & value, bool override = true) { return set(name, value, override); }
     //@}
 
     /// get registry value by key
@@ -90,7 +90,7 @@ public:
 
     /// get registry value by name
     //@{
-    const Variant * get(const StrA & name) const { return getItemByKey(name2Key(name), name.rawptr(), true); }
+    const Variant * get(const std::string & name) const { return getItemByKey(name2Key(name), name.data(), true); }
     //@}
 
     /// get registry value with default value, by key
@@ -103,35 +103,35 @@ public:
 
     /// get registry value with default value, by name
     //@{
-    const Variant & get(const StrA & name, const Variant & defval) const {
+    const Variant & get(const std::string & name, const Variant & defval) const {
         const Variant * item = getItemByKey(name2Key(name), 0, false);
         return (0 == item) ? defval : *item;
     }
-    const StrA & gets(const StrA & name, const StrA & defval) const {
+    const std::string & gets(const std::string & name, const std::string & defval) const {
         const Variant * item = getItemByKey(name2Key(name), 0, false);
         return (0 == item) ? defval : item->gets();
     }
-    bool getb(const StrA & name, bool defval) const {
+    bool getb(const std::string & name, bool defval) const {
         const Variant * item = getItemByKey(name2Key(name), 0, false);
         return (0 == item) ? defval : item->getdb(defval);
     }
-    int geti(const StrA & name, int defval) const {
+    int geti(const std::string & name, int defval) const {
         const Variant * item = getItemByKey(name2Key(name), 0, false);
         return (0 == item) ? defval : item->getdi(defval);
     }
-    float getf(const StrA & name, float defval) const {
+    float getf(const std::string & name, float defval) const {
         const Variant * item = getItemByKey(name2Key(name), 0, false);
         return (0 == item) ? defval : item->getdf(defval);
     }
-    void * getp(const StrA & name, void * defval) const {
+    void * getp(const std::string & name, void * defval) const {
         const Variant * item = getItemByKey(name2Key(name), 0, false);
         return (0 == item) ? defval : item->getdp(defval);
     }
-    Vector4f getv(const StrA & name, const Vector4f & defval) const {
+    Vector4f getv(const std::string & name, const Vector4f & defval) const {
         const Variant * item = getItemByKey(name2Key(name), 0, false);
         return (0 == item) ? defval : item->getdv(defval);
     }
-    Matrix44f getm(const StrA & name, const Matrix44f & defval) const {
+    Matrix44f getm(const std::string & name, const Matrix44f & defval) const {
         const Variant * item = getItemByKey(name2Key(name), 0, false);
         return (0 == item) ? defval : item->getdm(defval);
     }
@@ -151,7 +151,7 @@ public:
     /// Import registry from string.
     /// Import string must be in format of: "name1=value1\nname2=value2\n..."
     ///
-    void importFromStr(const StrA &);
+    void importFromStr(const std::string &);
 };
 } // namespace GN
 

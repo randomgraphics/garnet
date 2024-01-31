@@ -5,15 +5,15 @@ static GN::Logger * sLogger = GN::getLogger("GN.gfx.tool.oglInfo");
 ///
 /// Split a string into token list
 // ------------------------------------------------------------------------
-static void sGetTokens(GN::DynaArray<GN::StrA> & tokens, const char * str) {
-    if (GN::str::isEmpty(str)) return;
+static void sGetTokens(GN::DynaArray<std::string> & tokens, const char * str) {
+    if (GN::str::empty(str)) return;
     const char * p1 = str;
     const char * p2 = p1;
 
     while (*p1) {
         while (*p2 && *p2 != ' ') ++p2;
 
-        tokens.append(GN::StrA(p1, p2 - p1));
+        tokens.append(std::string(p1, p2 - p1));
 
         while (*p2 && *p2 == ' ') ++p2;
 
@@ -25,9 +25,9 @@ static void sGetTokens(GN::DynaArray<GN::StrA> & tokens, const char * str) {
 /// initialize opengl extension
 // ------------------------------------------------------------------------
 #if GN_WINPC
-bool sGetOGLExtensions(HDC hdc, GN::DynaArray<GN::StrA> & result)
+bool sGetOGLExtensions(HDC hdc, GN::DynaArray<std::string> & result)
 #else
-bool sGetOGLExtensions(Display * disp, GN::DynaArray<GN::StrA> & result)
+bool sGetOGLExtensions(Display * disp, GN::DynaArray<std::string> & result)
 #endif
 {
     GN_GUARD;
@@ -59,8 +59,8 @@ bool sGetOGLExtensions(Display * disp, GN::DynaArray<GN::StrA> & result)
 void printOglInfo(intptr_t disp, int index) {
     GN_GUARD;
 
-    GN::DynaArray<GN::StrA> glexts;
-    GN::StrA                info;
+    GN::DynaArray<std::string> glexts;
+    std::string                info;
 
 #if GN_POSIX
     sGetOGLExtensions((Display *) disp, glexts);
@@ -73,7 +73,7 @@ void printOglInfo(intptr_t disp, int index) {
 #endif
     const char * renderer = (const char *) glGetString(GL_RENDERER);
 
-    info = GN::str::format("\n\n"
+    info = GN::fmt::format("\n\n"
                            "===================================================\n"
                            "        OpenGL Implementation Informations(%d)\n"
                            "---------------------------------------------------\n"
@@ -89,7 +89,7 @@ void printOglInfo(intptr_t disp, int index) {
         GN_OGL_CHECK(glGetIntegerv(GL_MAX_TEXTURE_UNITS_ARB, &tu));
     else
         tu = 1;
-    info += GN::str::format("---------------------------------------------------\n"
+    info += GN::fmt::format("---------------------------------------------------\n"
                             "    Max size of texture             :    %d\n"
                             "    Max number of texture stages    :    %d\n",
                             ts, tu);
@@ -101,7 +101,7 @@ void printOglInfo(intptr_t disp, int index) {
             "===================================================\n"
             "\n\n";
 
-    GN_INFO(sLogger)(info.rawptr());
+    GN_INFO(sLogger)(info.data());
 
     GN_UNGUARD;
 }

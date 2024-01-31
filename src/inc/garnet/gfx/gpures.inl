@@ -10,7 +10,7 @@ inline const GN::Guid & GN::gfx::GpuResource::type() const { return *mDatabase.g
 //
 // Get resource name
 // -----------------------------------------------------------------------------
-inline const GN::StrA & GN::gfx::GpuResource::name() const { return *mDatabase.getResourceName(this); }
+inline const std::string & GN::gfx::GpuResource::name() const { return *mDatabase.getResourceName(this); }
 
 //
 // Cast GPU resource pointer with type check.

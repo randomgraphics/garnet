@@ -34,7 +34,7 @@ public:
     //@{
     GpuResourceDatabase & getGdb() const { return mDatabase; }
     inline const Guid &   type() const;
-    inline const StrA &   name() const;
+    inline const std::string &   name() const;
     //@}
 
     /// Cast GPU resource pointer with type check.
@@ -497,11 +497,11 @@ struct GN_API EffectResourceDesc {
         GpuProgramDesc      gpd;                ///< GPU Program descriptor
         DynaArray<char>     shaderSourceBuffer; ///< optional buffer used to store store
                                                 ///< shader source.
-        std::map<StrA, StrA> textures;          ///< textures. Key is shader parameter name, value is name of
+        std::map<std::string, std::string> textures;          ///< textures. Key is shader parameter name, value is name of
                                                 ///< one texture in EffectResourceDesc.textures.
-        std::map<StrA, StrA> uniforms;          ///< uniforms. Key is shader parameter name, value is name of
+        std::map<std::string, std::string> uniforms;          ///< uniforms. Key is shader parameter name, value is name of
                                                 ///< one uniform in EffectResourceDesc.textures.
-        std::map<StrA, StrA> attributes;        ///< attributes. Key is shader parameter name, value is name
+        std::map<std::string, std::string> attributes;        ///< attributes. Key is shader parameter name, value is name
                                                 ///< of one attribute in EffectResourceDesc.attributes.
 
         /// default constructor
@@ -593,7 +593,7 @@ struct GN_API EffectResourceDesc {
     /// Rendering pass descriptor
     ///
     struct EffectPassDesc {
-        StrA                  gpuprogram;   ///< Name of gpuprogram used in this pass. Can't be empty
+        std::string                  gpuprogram;   ///< Name of gpuprogram used in this pass. Can't be empty
         EffectRenderStateDesc renderstates; ///< Pass specific render states
     };
 
@@ -601,7 +601,7 @@ struct GN_API EffectResourceDesc {
     /// Technique descriptor structure
     ///
     struct EffectTechniqueDesc {
-        StrA name;                              ///< Optional technique name.
+        std::string name;                              ///< Optional technique name.
         int  quality;                           ///< user defined rendering quality. Effect class uses
                                                 ///< the technique with the hightest quality as default
                                                 ///< technique.
@@ -616,10 +616,10 @@ struct GN_API EffectResourceDesc {
     // data
     // *****************************
 
-    std::map<StrA, EffectTextureDesc>    textures;     ///< Texture list
-    std::map<StrA, EffectUniformDesc>    uniforms;     ///< Uniform list
-    std::map<StrA, EffectAttributeDesc>  attributes;   ///< attribute list
-    std::map<StrA, EffectGpuProgramDesc> gpuprograms;  ///< GPU program list
+    std::map<std::string, EffectTextureDesc>    textures;     ///< Texture list
+    std::map<std::string, EffectUniformDesc>    uniforms;     ///< Uniform list
+    std::map<std::string, EffectAttributeDesc>  attributes;   ///< attribute list
+    std::map<std::string, EffectGpuProgramDesc> gpuprograms;  ///< GPU program list
     DynaArray<EffectTechniqueDesc>       techniques;   ///< Technique list.
     EffectRenderStateDesc                renderstates; ///< Root render state descriptor for the effect.
 
@@ -683,7 +683,7 @@ public:
     };
 
     struct EffectParameterProperties {
-        StrA                       parameterName;
+        std::string                       parameterName;
         DynaArray<BindingLocation> bindings;
     };
 
@@ -771,13 +771,13 @@ struct GN_API ModelResourceDesc {
     //@{
 
     struct ModelTextureDesc {
-        StrA resourceName; /// if empty, then create a new texture using the
+        std::string resourceName; /// if empty, then create a new texture using the
                            /// descriptor
         TextureDesc desc;
     };
 
     struct ModelUniformDesc {
-        StrA             resourceName; ///< if empty, then create a new uniform
+        std::string             resourceName; ///< if empty, then create a new uniform
         uint32           size;
         DynaArray<uint8> initialValue; ///< if empty, then no initial value.
     };
@@ -786,11 +786,11 @@ struct GN_API ModelResourceDesc {
 
     //@{
 
-    StrA                             effect;   ///< effect resource name.
-    std::map<StrA, ModelTextureDesc> textures; ///< key is effect parameter name
-    std::map<StrA, ModelUniformDesc> uniforms; ///< key is effect parameter name
+    std::string                             effect;   ///< effect resource name.
+    std::map<std::string, ModelTextureDesc> textures; ///< key is effect parameter name
+    std::map<std::string, ModelUniformDesc> uniforms; ///< key is effect parameter name
 
-    StrA               mesh;   ///< Mesh resource name.
+    std::string               mesh;   ///< Mesh resource name.
     MeshResourceSubset subset; ///< Mesh subset information.
 
     //@}
@@ -930,7 +930,7 @@ public:
     AutoRef<GpuResource> findOrCreateResource(const Guid & type, const char * name, bool * isExistingResource = NULL);
     bool                 validResource(const Guid & type, const GpuResource * resource) const; // valid resource pointer of specific type
     bool                 validResource(const GpuResource * resource) const;                    // valid resource pointer of whatever type.
-    const StrA *         getResourceName(const GpuResource * resource) const;
+    const std::string *         getResourceName(const GpuResource * resource) const;
     const Guid *         getResourceType(const GpuResource * resource) const;
     //@}
 

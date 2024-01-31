@@ -12,6 +12,8 @@
 #include <string>
 namespace GN {
 
+using namespace std::string_literals;
+
 ///
 /// Fixed sized string that has no runtime memory allocation.
 ///
@@ -33,7 +35,7 @@ public:
             mCount  = 0;
             mBuf[0] = 0;
         } else {
-            if (0 == l) l = str::length(s);
+            if (0 == l) l = (s ? strlen(s) : 0);
             memcpy(mBuf, s, sValidateLength(l) * sizeof(CHAR));
         }
     }
@@ -114,7 +116,13 @@ public:
     const T * find(const CHAR * text) const { return doFind(text); }
 
     /// find
+    const T * find(const std::basic_string<CHAR> & text) const { return doFind(text.c_str()); }
+
+    /// find
     T * find(const CHAR * text) { return doFind(text); }
+
+    /// find
+    T * find(const std::basic_string<CHAR> & text) { return doFind(text.c_str()); }
 
     /// find
     KeyValuePair * findPair(const CHAR * text) { return doFindPair(text); }
@@ -128,6 +136,8 @@ public:
         KeyValuePair * p = doFindOrInsert(text, value, inserted);
         return inserted ? p : NULL;
     }
+
+    KeyValuePair * insert(const std::basic_string<CHAR> & text, const T & value) { return insert(text.c_str(), value); }
 
     /// return number of items in map
     size_t size() const { return mCount; }
@@ -477,6 +487,34 @@ private:
 }; // End of StringMap class
 
 namespace str {
+
+inline const std::string & EMPTY_STRING() {
+    static std::string s;
+    return s;
+}
+
+/// @brief Check if a C style string is null or empty.
+inline bool empty(const char * s) { return 0 == s || 0 == *s; }
+
+/// @brief null pointer friendly string compare function
+inline int compare(const char * s1, const char * s2) {
+    if (!s1) return s2 ? -1 : 0;
+    if (!s2) return 1;
+    return 0 == strcmp(s1, s2);
+}
+
+/// @brief null pointer friendly string compare function
+inline int compareI(const char * s1, const char * s2) {
+    if (!s1) return s2 ? -1 : 0;
+    if (!s2) return 1;
+    return std::equal(s1, s1 + strlen(s1), s2, s2 + strlen(s2), [](char a, char b) { return tolower(a) == tolower(b); });
+}
+
+/// @brief null pointer friendly string length function
+inline size_t length(const char * s) { return s ? strlen(s) : 0; }
+
+/// @brief null pointer friendly string length function
+inline size_t length(const wchar_t * s) { return s ? wcslen(s) : 0; }
 
 /// \name string -> number conversion
 ///

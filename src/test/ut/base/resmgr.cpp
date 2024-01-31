@@ -44,13 +44,13 @@ public:
 
     typedef RES Resource; ///< resource type
 
-    typedef Delegate3<bool, RES &, const StrA &, void *> Creator; ///< Resource creation functor
+    typedef Delegate3<bool, RES &, const std::string &, void *> Creator; ///< Resource creation functor
 
     typedef Delegate2<void, RES &, void *> Deletor; ///< Resource deletion functor
 
-    typedef Delegate2<void, StrA &, const StrA &> NameResolver; ///< Resource name resolver.
+    typedef Delegate2<void, std::string &, const std::string &> NameResolver; ///< Resource name resolver.
 
-    typedef Delegate1<bool, const StrA &> NameChecker; ///< Resource name checker.
+    typedef Delegate1<bool, const std::string &> NameChecker; ///< Resource name checker.
 
     ///
     /// Default constructor
@@ -165,8 +165,8 @@ public:
     ///
     /// Return true for valid resource name
     ///
-    bool validResourceName(const StrA & n) const {
-        StrA realname;
+    bool validResourceName(const std::string & n) const {
+        std::string realname;
         return mResNames.end() != mResNames.find(resolveName(realname, n));
     }
 
@@ -199,11 +199,11 @@ public:
     ///
     /// \sa getResourceHandle()
     ///
-    bool getResource(RES & result, const StrA & name, bool autoAddNewName = true) {
+    bool getResource(RES & result, const std::string & name, bool autoAddNewName = true) {
         GN_GUARD_SLOW;
-        StrA           realname;
+        std::string           realname;
         ResourceHandle h = getResourceHandle(resolveName(realname, name), autoAddNewName);
-        return getResourceImpl(result, h, realname.rawptr());
+        return getResourceImpl(result, h, realname.data());
         GN_UNGUARD_SLOW;
     }
 
@@ -214,10 +214,10 @@ public:
     ///
     /// \sa getResourceHandle()
     ///
-    RES getResource(const StrA & name, bool autoAddNewName = true) {
+    RES getResource(const std::string & name, bool autoAddNewName = true) {
         GN_GUARD_SLOW;
         RES  res;
-        StrA realname;
+        std::string realname;
         if (getResource(res, resolveName(realname, name), autoAddNewName))
             return res;
         else
@@ -235,9 +235,9 @@ public:
     ///       it'll be add to manager automatically, and a valid handle will be return.
     ///     - If false, return 0 for non-exist resource name.
     ///
-    ResourceHandle getResourceHandle(const StrA & name, bool autoAddNewName = true) {
+    ResourceHandle getResourceHandle(const std::string & name, bool autoAddNewName = true) {
         GN_GUARD_SLOW;
-        StrA             realname;
+        std::string             realname;
         ResourceHandle * handle = mResNames.find(resolveName(realname, name));
         if (NULL != handle) return *handle;
         if (autoAddNewName && (!mNameChecker || mNameChecker(realname))) return addResource(realname);
@@ -248,30 +248,30 @@ public:
     ///
     /// Get resource name
     ///
-    const StrA & getResourceName(ResourceHandle handle) const {
+    const std::string & getResourceName(ResourceHandle handle) const {
         GN_GUARD_SLOW;
         if (validResourceHandle(handle)) {
             GN_ASSERT(mResHandles.get(handle));
             return mResHandles.get(handle)->name;
         } else
-            return StrA::EMPTYSTR();
+            return std::string::EMPTYSTR();
         GN_UNGUARD_SLOW;
     }
 
     ///
     /// Add new resource item to manager
     ///
-    ResourceHandle addResource(const StrA & name, void * userData = 0, const Creator & creator = Creator(), const Creator & nullor = Creator(),
+    ResourceHandle addResource(const std::string & name, void * userData = 0, const Creator & creator = Creator(), const Creator & nullor = Creator(),
                                bool overrideExistingResource = false) {
         GN_GUARD;
 
         ResourceHandle   h;
         ResDesc *        item;
-        StrA             realname;
+        std::string             realname;
         ResourceHandle * handle = mResNames.find(resolveName(realname, name));
         if (NULL != handle) {
             if (!overrideExistingResource) {
-                GN_ERROR(sLogger)("resource '%s' already exist!", realname.rawptr());
+                GN_ERROR(sLogger)("resource '%s' already exist!", realname.data());
                 return 0;
             }
             GN_ASSERT(mResHandles.validHandle(*handle));
@@ -315,14 +315,14 @@ public:
     ///
     /// Remove resource from manager (unimplemented)
     ///
-    void removeResourceByName(const StrA & name) {
+    void removeResourceByName(const std::string & name) {
         GN_GUARD;
 
         // find the resource
-        StrA             realname;
+        std::string             realname;
         ResourceHandle * handle = mResNames.find(resolveName(realname, name));
         if (NULL == handle) {
-            GN_ERROR(sLogger)("invalid resource name: %s", realname.rawptr());
+            GN_ERROR(sLogger)("invalid resource name: %s", realname.data());
             return;
         }
 
@@ -367,12 +367,12 @@ public:
     ///
     /// Dispose specific resource
     ///
-    void disposeResourceByName(const StrA & name) {
+    void disposeResourceByName(const std::string & name) {
         GN_GUARD;
-        StrA             realname;
+        std::string             realname;
         ResourceHandle * h = mResNames.find(resolveName(realname, name));
         if (NULL == h) {
-            GN_ERROR(sLogger)("invalid resource name: %s", realname.rawptr());
+            GN_ERROR(sLogger)("invalid resource name: %s", realname.data());
             return;
         }
         disposeResourceByHandle(*h);
@@ -427,7 +427,7 @@ private:
         Creator creator;
         Creator nullor; // Use to create per-resource "NULL" instance.
         RES     res;
-        StrA    name;
+        std::string    name;
         void *  userData;
         bool    disposed;
 
@@ -464,7 +464,7 @@ private:
     // *****************************
 
 private:
-    StrA & resolveName(StrA & out, const StrA & in) const {
+    std::string & resolveName(std::string & out, const std::string & in) const {
         if (mNameResolver)
             mNameResolver(out, in);
         else
@@ -513,11 +513,11 @@ private:
             }
 
             if (!ok) {
-                GN_WARN(sLogger)("Fall back to null instance for resource '%s'.", item->name.rawptr());
+                GN_WARN(sLogger)("Fall back to null instance for resource '%s'.", item->name.data());
                 if (item->nullor) { ok = item->nullor(item->res, item->name, item->userData); }
                 if (!ok && mNullor) { ok = mNullor(item->res, item->name, item->userData); }
                 if (!ok) {
-                    GN_ERROR(sLogger)("Fail to create NULL instance for resource '%s'.", item->name.rawptr());
+                    GN_ERROR(sLogger)("Fail to create NULL instance for resource '%s'.", item->name.data());
                     return false;
                 }
             }
@@ -570,14 +570,14 @@ GN::Logger * ResourceManagerTempl<RES, HANDLE>::sLogger = getLogger("GN.base.Res
 
 typedef GN::ResourceManagerTempl<int> ResMgr;
 
-bool defCreator(int & res, const GN::StrA & name, void *) { return 0 != GN::str::toInetger<int>(res, name.rawptr()); }
+bool defCreator(int & res, const std::string & name, void *) { return 0 != GN::str::toInetger<int>(res, name.data()); }
 
-bool nullCreator(int & res, const GN::StrA &, void *) {
+bool nullCreator(int & res, const std::string &, void *) {
     res = -1;
     return true;
 }
 
-bool failedCreator(int &, const GN::StrA &, void *) { return false; }
+bool failedCreator(int &, const std::string &, void *) { return false; }
 
 void defDeletor(int &, void *) {
     // do nothing
@@ -677,8 +677,8 @@ public:
         TS_ASSERT(!rm.empty());
 
         // handle -> name
-        TS_ASSERT_EQUALS("1", rm.getResourceName(h1).rawptr());
-        TS_ASSERT_EQUALS("", rm.getResourceName(h1 + 1).rawptr());
+        TS_ASSERT_EQUALS("1", rm.getResourceName(h1).data());
+        TS_ASSERT_EQUALS("", rm.getResourceName(h1 + 1).data());
 
         // name -> handle
         TS_ASSERT_EQUALS(h1, rm.getResourceHandle("1"));
