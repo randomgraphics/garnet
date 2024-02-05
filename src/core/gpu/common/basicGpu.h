@@ -65,8 +65,8 @@ public:
     virtual const GpuOptions & getOptions() const { return mOptions; }
     virtual const DispDesc &   getDispDesc() const { return mDispDesc; }
     virtual GN::win::Window &  getRenderWindow() const {
-        GN_ASSERT(mWindow);
-        return *mWindow;
+         GN_ASSERT(mWindow);
+         return *mWindow;
     }
 
 protected:

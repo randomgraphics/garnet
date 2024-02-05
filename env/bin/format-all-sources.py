@@ -45,10 +45,13 @@ def format_one_file(x):
      if not args.q:
           with lock: print(' '.join(cmdline))
      ret = subprocess.run(cmdline, cwd=root_dir, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
-     if not args.q:
-          with lock: print(ret.stdout.decode("utf-8"))
+     out = ret.stdout.strip()
+     err = ret.stderr.strip()
+     if not args.q and len(out) > 0:
+          with lock: print(out)
      # always print errors to stderr
-     sys.stderr.write(ret.stderr.decode("utf-8"))
+     if len(err) > 0:
+          with lock: sys.stderr.write(err)
 
 # run clang-format on all files in parallel
 # for x in our_sources: format_one_file(x)

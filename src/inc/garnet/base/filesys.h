@@ -92,8 +92,8 @@ struct FileSystem : public NoCopy {
 //      - if register same file system multiple times, only the last one is effective.
 ///
 //@{
-GN_API bool registerFileSystem(const StrA & name, FileSystem * fs);
-GN_API void UnregisterFileSystem(const StrA & name);
+GN_API bool         registerFileSystem(const StrA & name, FileSystem * fs);
+GN_API void         UnregisterFileSystem(const StrA & name);
 GN_API FileSystem * getFileSystem(const StrA & name);
 //@}
 

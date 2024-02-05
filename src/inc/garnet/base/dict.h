@@ -239,7 +239,7 @@ public:
     const VALUE_TYPE * find(const KEY_TYPE & key) const { return (const VALUE_TYPE *) mTypelessDict.find(&key); }
     VALUE_TYPE *       find(const KEY_TYPE & key) { return (VALUE_TYPE *) mTypelessDict.find(&key); }
     bool               insert(const KEY_TYPE & key, const VALUE_TYPE & value, Iterator * iter = NULL) {
-        return mTypelessDict.insert(&key, &value, (TypelessDict::Iterator *) iter);
+                      return mTypelessDict.insert(&key, &value, (TypelessDict::Iterator *) iter);
     }
     void   remove(const KEY_TYPE & key) { mTypelessDict.remove(&key); }
     size_t size() const { return mTypelessDict.size(); }

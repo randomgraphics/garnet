@@ -688,10 +688,10 @@ public:
     }
     Matrix33<T> & operator*=(const Matrix33<T> & m);
     Matrix33 &    operator*=(T f) {
-        rows[0] *= f;
-        rows[1] *= f;
-        rows[2] *= f;
-        return *this;
+           rows[0] *= f;
+           rows[1] *= f;
+           rows[2] *= f;
+           return *this;
     }
     friend bool     operator==(const Matrix33 & a, const Matrix33 & b) { return ((a[0] == b[0]) && (a[1] == b[1]) && (a[2] == b[2])); }
     friend bool     operator!=(const Matrix33 & a, const Matrix33 & b) { return ((a[0] != b[0]) || (a[1] != b[1]) || (a[2] != b[2])); }
@@ -760,10 +760,10 @@ public:
     }
     static Matrix33 sIdentity() { return Matrix33((T) 1, (T) 0, (T) 0, (T) 0, (T) 1, (T) 0, (T) 0, (T) 0, (T) 1); }
     Matrix33 &      transpose() {
-        detail::swap(rows[0][1], rows[1][0]);
-        detail::swap(rows[0][2], rows[2][0]);
-        detail::swap(rows[1][2], rows[2][1]);
-        return *this;
+             detail::swap(rows[0][1], rows[1][0]);
+             detail::swap(rows[0][2], rows[2][0]);
+             detail::swap(rows[1][2], rows[2][1]);
+             return *this;
     }
     static void sTranspose(Matrix33 & dst, const Matrix33 & src) {
         dst = src;
@@ -913,11 +913,11 @@ public:
     }
     Matrix44<T> & operator*=(const Matrix44<T> & m);
     Matrix44 &    operator*=(T f) {
-        rows[0] *= f;
-        rows[1] *= f;
-        rows[2] *= f;
-        rows[3] *= f;
-        return *this;
+           rows[0] *= f;
+           rows[1] *= f;
+           rows[2] *= f;
+           rows[3] *= f;
+           return *this;
     }
     friend bool     operator==(const Matrix44 & a, const Matrix44 & b) { return ((a[0] == b[0]) && (a[1] == b[1]) && (a[2] == b[2]) && (a[3] == b[3])); }
     friend bool     operator!=(const Matrix44 & a, const Matrix44 & b) { return ((a[0] != b[0]) || (a[1] != b[1]) || (a[2] != b[2]) || (a[3] != b[3])); }

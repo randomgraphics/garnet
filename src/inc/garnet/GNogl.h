@@ -465,7 +465,7 @@ public:
 class TextureObject {
 public:
     // no copy
-    TextureObject(const TextureObject &) = delete;
+    TextureObject(const TextureObject &)             = delete;
     TextureObject & operator=(const TextureObject &) = delete;
 
     // can move

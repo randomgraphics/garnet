@@ -12139,7 +12139,7 @@ typedef enum D3D11_CREATE_DEVICE_FLAG {
 //          D3D11CreateDevice
 //
 ///////////////////////////////////////////////////////////////////////////
-typedef HRESULT(WINAPI * PFN_D3D11_CREATE_DEVICE)(_In_opt_                            IDXGIAdapter *, D3D_DRIVER_TYPE, HMODULE, UINT,
+typedef HRESULT(WINAPI * PFN_D3D11_CREATE_DEVICE)(_In_opt_ IDXGIAdapter *, D3D_DRIVER_TYPE, HMODULE, UINT,
                                                   _In_reads_opt_(FeatureLevels) CONST D3D_FEATURE_LEVEL *, UINT FeatureLevels, UINT, _Out_opt_ ID3D11Device **,
                                                   _Out_opt_ D3D_FEATURE_LEVEL *, _Out_opt_ ID3D11DeviceContext **);
 
@@ -12203,7 +12203,7 @@ HRESULT WINAPI D3D11CreateDevice(_In_opt_ IDXGIAdapter * pAdapter, D3D_DRIVER_TY
 //          IDXGIFactory::CreateSwapChain
 //
 ///////////////////////////////////////////////////////////////////////////
-typedef HRESULT(WINAPI * PFN_D3D11_CREATE_DEVICE_AND_SWAP_CHAIN)(_In_opt_                            IDXGIAdapter *, D3D_DRIVER_TYPE, HMODULE, UINT,
+typedef HRESULT(WINAPI * PFN_D3D11_CREATE_DEVICE_AND_SWAP_CHAIN)(_In_opt_ IDXGIAdapter *, D3D_DRIVER_TYPE, HMODULE, UINT,
                                                                  _In_reads_opt_(FeatureLevels) CONST D3D_FEATURE_LEVEL *, UINT FeatureLevels, UINT,
                                                                  _In_opt_ CONST DXGI_SWAP_CHAIN_DESC *, _Out_opt_ IDXGISwapChain **, _Out_opt_ ID3D11Device **,
                                                                  _Out_opt_ D3D_FEATURE_LEVEL *, _Out_opt_ ID3D11DeviceContext **);

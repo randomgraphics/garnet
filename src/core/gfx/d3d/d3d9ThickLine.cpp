@@ -402,7 +402,7 @@ GN_API void GN::d3d9::D3D9ThickLineRenderer::calcEndPoint(EndPoint & endpoint, c
         float    half_size = m_Parameters.width / 2.0f * XMVectorGetW(center);
         XMVECTOR distance  = XMVectorSet(-half_size, half_size, 0.0f, 0.0f);
         XMVECTOR topleft   = XMVectorSet(XMVectorGetX(center) + XMVectorGetX(distance), XMVectorGetY(center) + XMVectorGetY(distance),
-                                       XMVectorGetZ(center) + XMVectorGetZ(distance), XMVectorGetW(center) + XMVectorGetW(distance));
+                                         XMVectorGetZ(center) + XMVectorGetZ(distance), XMVectorGetW(center) + XMVectorGetW(distance));
 
         // translate both center and left top into clip space
         center  = XMVector4Transform(center, m_Parameters.proj);
