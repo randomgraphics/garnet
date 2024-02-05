@@ -4,7 +4,7 @@ import sys, pathlib, subprocess, importlib, argparse, platform, concurrent.futur
 utils = importlib.import_module("garnet-utils")
 
 ap = argparse.ArgumentParser()
-ap.add_argument("-n", "--dry-run", dest="n", action="store_true", help="Dry run. Print format violations to stderr, if any.")
+ap.add_argument("-n", action="store_true", help="Dry run. Print format violations to stderr, if any.")
 ap.add_argument("-q", action="store_true", help="Quiet mode. Mute stdout.")
 ap.add_argument("-d", action="store_true", help="Only process files that are different than the master/main branch")
 args = ap.parse_args()
@@ -25,7 +25,6 @@ else:
 def is_our_source(x):
      if x.find("3rdparty") >= 0: return False
      if x.find("3rd-party") >= 0: return False
-     if x.find("function-macros.h") >= 0: return False # ignore this file since it is script generated and is super long.
      return True
 our_sources = [x for x in all_files if is_our_source(x)]
 
