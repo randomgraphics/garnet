@@ -286,15 +286,15 @@ bool GN::d3d11::SimpleMesh::init(ID3D11DeviceContext & cxt) {
     cxt.GetDevice(&mDevice);
 
     // create a mini-shader (for its signature)
-    static const char * vscode = "struct VSInput \n"
-                                 "{ \n"
-                                 "   float4 p : POSITION0; \n"
-                                 "   float3 n : NORMAL0; \n"
-                                 "   float2 t : TEXCOORD0; \n"
-                                 "   float4 c : COLOR0; \n"
-                                 "   float4 u : USER0; \n"
-                                 "};\n"
-                                 "float4 main( VSInput i ) : SV_Position0 { return 0; }";
+    static const char *            vscode = "struct VSInput \n"
+                                            "{ \n"
+                                            "   float4 p : POSITION0; \n"
+                                            "   float3 n : NORMAL0; \n"
+                                            "   float2 t : TEXCOORD0; \n"
+                                            "   float4 c : COLOR0; \n"
+                                            "   float4 u : USER0; \n"
+                                            "};\n"
+                                            "float4 main( VSInput i ) : SV_Position0 { return 0; }";
     AutoComPtr<ID3D11VertexShader> vs;
     AutoComPtr<ID3DBlob>           signature;
     vs.attach(createVS(*mDevice, vscode, 0, 0, "main", "vs_4_0", &signature));

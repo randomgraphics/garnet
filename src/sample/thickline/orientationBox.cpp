@@ -315,7 +315,7 @@ void D3D9OrientationBox::Draw(float x, float y, const XMMATRIX & viewRH) {
     float        halfSpriteW = m_BoxSize / 2.0f;
     float        halfSpriteH = m_BoxSize / 2.0f;
     SpriteVertex sprite[]    = {
-        // x                            y                             z     w     u     v
+           // x                            y                             z     w     u     v
         {centerX - halfSpriteW - 0.5f, centerY - halfSpriteH + 0.5f, 0.0f, 1.0f, 0.0f, 0.0f}, // left top
         {centerX - halfSpriteW - 0.5f, centerY + halfSpriteH + 0.5f, 0.0f, 1.0f, 0.0f, 1.0f}, // left bottoom
         {centerX + halfSpriteW - 0.5f, centerY - halfSpriteH + 0.5f, 0.0f, 1.0f, 1.0f, 0.0f}, // right top

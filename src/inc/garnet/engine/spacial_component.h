@@ -37,8 +37,8 @@ public:
     const Quaternionf & getRotation() const { return mRotation; } ///< get orientation, in parent space
     const Vector3f &    getScale() const { return mScale; }       ///< get scaling for each axis in local space.
     const Matrix44f &   getLocal2Parent() const {
-        validateTransform();
-        return mLocal2Parent;
+          validateTransform();
+          return mLocal2Parent;
     } ///< get local space to parent space transformation matrix
     const Matrix44f & getLocal2Root() const {
         validateTransform();

@@ -33,32 +33,32 @@ SDepthStencilView    g_NullDepthStencilView;
 // 4) SetShaderResources
 // 5) CreateShader
 SD3DShaderVTable g_vtPS = {
-    (void (__stdcall ID3D11DeviceContext::*)(ID3D11DeviceChild *, ID3D11ClassInstance * const *, UINT)) & ID3D11DeviceContext::PSSetShader,
+    (void(__stdcall ID3D11DeviceContext::*)(ID3D11DeviceChild *, ID3D11ClassInstance * const *, UINT)) & ID3D11DeviceContext::PSSetShader,
     &ID3D11DeviceContext::PSSetConstantBuffers, &ID3D11DeviceContext::PSSetSamplers, &ID3D11DeviceContext::PSSetShaderResources,
     (HRESULT(__stdcall ID3D11Device::*)(const void *, SIZE_T, ID3D11ClassLinkage *, ID3D11DeviceChild **)) & ID3D11Device::CreatePixelShader};
 
 SD3DShaderVTable g_vtVS = {
-    (void (__stdcall ID3D11DeviceContext::*)(ID3D11DeviceChild *, ID3D11ClassInstance * const *, UINT)) & ID3D11DeviceContext::VSSetShader,
+    (void(__stdcall ID3D11DeviceContext::*)(ID3D11DeviceChild *, ID3D11ClassInstance * const *, UINT)) & ID3D11DeviceContext::VSSetShader,
     &ID3D11DeviceContext::VSSetConstantBuffers, &ID3D11DeviceContext::VSSetSamplers, &ID3D11DeviceContext::VSSetShaderResources,
     (HRESULT(__stdcall ID3D11Device::*)(const void *, SIZE_T, ID3D11ClassLinkage *, ID3D11DeviceChild **)) & ID3D11Device::CreateVertexShader};
 
 SD3DShaderVTable g_vtGS = {
-    (void (__stdcall ID3D11DeviceContext::*)(ID3D11DeviceChild *, ID3D11ClassInstance * const *, UINT)) & ID3D11DeviceContext::GSSetShader,
+    (void(__stdcall ID3D11DeviceContext::*)(ID3D11DeviceChild *, ID3D11ClassInstance * const *, UINT)) & ID3D11DeviceContext::GSSetShader,
     &ID3D11DeviceContext::GSSetConstantBuffers, &ID3D11DeviceContext::GSSetSamplers, &ID3D11DeviceContext::GSSetShaderResources,
     (HRESULT(__stdcall ID3D11Device::*)(const void *, SIZE_T, ID3D11ClassLinkage *, ID3D11DeviceChild **)) & ID3D11Device::CreateGeometryShader};
 
 SD3DShaderVTable g_vtHS = {
-    (void (__stdcall ID3D11DeviceContext::*)(ID3D11DeviceChild *, ID3D11ClassInstance * const *, UINT)) & ID3D11DeviceContext::HSSetShader,
+    (void(__stdcall ID3D11DeviceContext::*)(ID3D11DeviceChild *, ID3D11ClassInstance * const *, UINT)) & ID3D11DeviceContext::HSSetShader,
     &ID3D11DeviceContext::HSSetConstantBuffers, &ID3D11DeviceContext::HSSetSamplers, &ID3D11DeviceContext::HSSetShaderResources,
     (HRESULT(__stdcall ID3D11Device::*)(const void *, SIZE_T, ID3D11ClassLinkage *, ID3D11DeviceChild **)) & ID3D11Device::CreateHullShader};
 
 SD3DShaderVTable g_vtDS = {
-    (void (__stdcall ID3D11DeviceContext::*)(ID3D11DeviceChild *, ID3D11ClassInstance * const *, UINT)) & ID3D11DeviceContext::DSSetShader,
+    (void(__stdcall ID3D11DeviceContext::*)(ID3D11DeviceChild *, ID3D11ClassInstance * const *, UINT)) & ID3D11DeviceContext::DSSetShader,
     &ID3D11DeviceContext::DSSetConstantBuffers, &ID3D11DeviceContext::DSSetSamplers, &ID3D11DeviceContext::DSSetShaderResources,
     (HRESULT(__stdcall ID3D11Device::*)(const void *, SIZE_T, ID3D11ClassLinkage *, ID3D11DeviceChild **)) & ID3D11Device::CreateDomainShader};
 
 SD3DShaderVTable g_vtCS = {
-    (void (__stdcall ID3D11DeviceContext::*)(ID3D11DeviceChild *, ID3D11ClassInstance * const *, UINT)) & ID3D11DeviceContext::CSSetShader,
+    (void(__stdcall ID3D11DeviceContext::*)(ID3D11DeviceChild *, ID3D11ClassInstance * const *, UINT)) & ID3D11DeviceContext::CSSetShader,
     &ID3D11DeviceContext::CSSetConstantBuffers, &ID3D11DeviceContext::CSSetSamplers, &ID3D11DeviceContext::CSSetShaderResources,
     (HRESULT(__stdcall ID3D11Device::*)(const void *, SIZE_T, ID3D11ClassLinkage *, ID3D11DeviceChild **)) & ID3D11Device::CreateComputeShader};
 

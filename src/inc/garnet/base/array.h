@@ -250,8 +250,8 @@ public:
     bool operator==(const StackArray & other) const { return equal(other); }
     bool operator!=(const StackArray & other) const { return !equal(other); }
     T &  operator[](SIZE_TYPE i) {
-        GN_ASSERT(i < mCount);
-        return rawptr()[i];
+         GN_ASSERT(i < mCount);
+         return rawptr()[i];
     }
     const T & operator[](SIZE_TYPE i) const {
         GN_ASSERT(i < mCount);
@@ -646,8 +646,8 @@ public:
     bool operator==(const DynaArray & other) const { return equal(other); }
     bool operator!=(const DynaArray & other) const { return !equal(other); }
     T &  operator[](SIZE_TYPE i) {
-        GN_ASSERT(i < GetCount());
-        return mElements[i];
+         GN_ASSERT(i < GetCount());
+         return mElements[i];
     }
     const T & operator[](SIZE_TYPE i) const {
         GN_ASSERT(i < GetCount());

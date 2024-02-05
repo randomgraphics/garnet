@@ -821,7 +821,7 @@ GpuResourceDatabase::GpuResourceDatabase(Gpu & g): mImpl(NULL) {
 GpuResourceDatabase::~GpuResourceDatabase() { delete mImpl; }
 Gpu & GpuResourceDatabase::getGpu() const { return mImpl->getGpu(); }
 bool  GpuResourceDatabase::registerResourceFactory(const Guid & type, const char * desc, GpuResourceFactory factory) {
-    return mImpl->registerResourceFactory(type, desc, factory);
+     return mImpl->registerResourceFactory(type, desc, factory);
 }
 bool                 GpuResourceDatabase::hasResourceFactory(const Guid & type) { return mImpl->hasResourceFactory(type); }
 AutoRef<GpuResource> GpuResourceDatabase::createResource(const Guid & type, const char * name) { return mImpl->createResource(type, name); }

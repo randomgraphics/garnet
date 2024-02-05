@@ -36,10 +36,10 @@ struct LValue {
     UINT                       m_Cols;         // number of [m_Type]'s required (1 for a scalar, 4 for a vector)
     UINT                       m_Indices;      // max index allowable (if LHS is an array; otherwise this is 1)
     BOOL                       m_VectorScalar; // can be both vector and scalar (setting as a scalar sets all m_Indices values simultaneously)
-    CONST RValue * m_pRValue;                  // pointer to table of allowable RHS "late resolve" values
-    ELhsType       m_LhsType;                  // ELHS_* enum value that corresponds to this entry
-    UINT           m_Offset;                   // offset into the given block type where this value should be written
-    UINT           m_Stride;                   // for vectors, byte stride between two consecutive values. if 0, m_Type's size is used
+    CONST RValue *             m_pRValue;      // pointer to table of allowable RHS "late resolve" values
+    ELhsType                   m_LhsType;      // ELHS_* enum value that corresponds to this entry
+    UINT                       m_Offset;       // offset into the given block type where this value should be written
+    UINT                       m_Stride;       // for vectors, byte stride between two consecutive values. if 0, m_Type's size is used
 };
 
 #define LVALUE_END() \

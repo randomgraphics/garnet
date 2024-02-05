@@ -4541,9 +4541,7 @@ void RealToHooked9(const IID & iid, void * p) {
         RealToHooked9_IDirect3DAuthenticatedChannel9((IDirect3DAuthenticatedChannel9 *) p);
     else if (__uuidof(IDirect3DCryptoSession9) == iid)
         RealToHooked9_IDirect3DCryptoSession9((IDirect3DCryptoSession9 *) p);
-    else {
-        HOOK_WARN_LOG("unrecognized interface UUID: <xxxx-xxxx-xxxxx...>");
-    }
+    else { HOOK_WARN_LOG("unrecognized interface UUID: <xxxx-xxxx-xxxxx...>"); }
 }
 
 // -----------------------------------------------------------------------------

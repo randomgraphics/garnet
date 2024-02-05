@@ -151,11 +151,11 @@ inline ID3D11Buffer * createBuffer(ID3D11Device & dev, size_t bytes, D3D11_USAGE
 /// \name state dumper
 //@{
 
-GN_API ID3D11VertexShader * createDumpableVS(ID3D11Device & device, const void * binary, size_t bytes);
+GN_API ID3D11VertexShader *   createDumpableVS(ID3D11Device & device, const void * binary, size_t bytes);
 GN_API ID3D11GeometryShader * createDumpableGS(ID3D11Device & device, const void * binary, size_t bytes);
-GN_API ID3D11PixelShader * createDumpablePS(ID3D11Device & device, const void * binary, size_t bytes);
-GN_API ID3D11InputLayout * createDumpableIL(ID3D11Device & device, const D3D11_INPUT_ELEMENT_DESC * elements, size_t count, const void * signature,
-                                            size_t bytes);
+GN_API ID3D11PixelShader *    createDumpablePS(ID3D11Device & device, const void * binary, size_t bytes);
+GN_API ID3D11InputLayout *    createDumpableIL(ID3D11Device & device, const D3D11_INPUT_ELEMENT_DESC * elements, size_t count, const void * signature,
+                                               size_t bytes);
 
 GN_API void setDumpFilePrefix(const StrA &);
 GN_API void dumpDraw(ID3D11DeviceContext & devcxt, uint32 vertexCount, uint32 startVertex);

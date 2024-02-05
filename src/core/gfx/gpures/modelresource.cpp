@@ -1167,11 +1167,11 @@ AutoRef<ModelResource> GN::gfx::ModelResource::loadFromFile(GpuResourceDatabase 
 bool                   GN::gfx::ModelResource::reset(const ModelResourceDesc * desc) { return mImpl->reset(desc); }
 AutoRef<ModelResource> GN::gfx::ModelResource::makeClone(const char * nameOfTheClone) const { return mImpl->makeClone(nameOfTheClone); }
 void                   GN::gfx::ModelResource::setTextureResource(const char * effectParameterName, GpuResource * texture) {
-    mImpl->setTextureResource(effectParameterName, texture);
+                      mImpl->setTextureResource(effectParameterName, texture);
 }
 AutoRef<TextureResource> GN::gfx::ModelResource::textureResource(const char * effectParameterName) const { return mImpl->textureResource(effectParameterName); }
 void                     GN::gfx::ModelResource::setUniformResource(const char * effectParameterName, GpuResource * uniform) {
-    mImpl->setUniformResource(effectParameterName, uniform);
+                        mImpl->setUniformResource(effectParameterName, uniform);
 }
 AutoRef<UniformResource> GN::gfx::ModelResource::uniformResource(const char * effectParameterName) const { return mImpl->uniformResource(effectParameterName); }
 void                    GN::gfx::ModelResource::setMeshResource(GpuResource * mesh, const MeshResourceSubset * subset) { mImpl->setMeshResource(mesh, subset); }

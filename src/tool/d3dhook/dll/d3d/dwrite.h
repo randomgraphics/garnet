@@ -765,7 +765,7 @@ interface DWRITE_DECLARE_INTERFACE("739d886a-cef5-47dc-8769-1a8b41bebbb0") IDWri
     /// <returns>
     /// Standard HRESULT error code.
     /// </returns>
-    STDMETHOD(GetLoader)(_Out_ IDWriteFontFileLoader * *fontFileLoader) PURE;
+    STDMETHOD(GetLoader)(_Out_ IDWriteFontFileLoader ** fontFileLoader) PURE;
 
     /// <summary>
     /// Analyzes a file and returns whether it represents a font, and whether the font type is supported by the font system.
@@ -787,8 +787,8 @@ interface DWRITE_DECLARE_INTERFACE("739d886a-cef5-47dc-8769-1a8b41bebbb0") IDWri
     /// isSupportedFontType output parameter to FALSE.
     /// </remarks>
     STDMETHOD(Analyze)
-    (_Out_ BOOL * isSupportedFontType, _Out_ DWRITE_FONT_FILE_TYPE * fontFileType, _Out_opt_ DWRITE_FONT_FACE_TYPE * fontFaceType, _Out_ UINT32 * numberOfFaces)
-        PURE;
+    (_Out_ BOOL * isSupportedFontType, _Out_ DWRITE_FONT_FILE_TYPE * fontFileType, _Out_opt_ DWRITE_FONT_FACE_TYPE * fontFaceType,
+     _Out_ UINT32 * numberOfFaces) PURE;
 };
 
 /// <summary>
@@ -976,7 +976,7 @@ interface DWRITE_DECLARE_INTERFACE("5f49804d-7024-4d43-bfa9-d25984f53849") IDWri
     /// <returns>
     /// Standard HRESULT error code.
     /// </returns>
-    STDMETHOD(GetFiles)(_Inout_ UINT32 * numberOfFiles, _Out_writes_opt_(*numberOfFiles) IDWriteFontFile * *fontFiles) PURE;
+    STDMETHOD(GetFiles)(_Inout_ UINT32 * numberOfFiles, _Out_writes_opt_(*numberOfFiles) IDWriteFontFile ** fontFiles) PURE;
 
     /// <summary>
     /// Obtains the zero-based index of the font face in its font file or files. If the font files contain a single face,
@@ -1228,7 +1228,7 @@ interface DWRITE_DECLARE_INTERFACE("72755049-5ff7-435d-8348-4be97cfa6c7c") IDWri
     /// <returns>
     /// Standard HRESULT error code.
     /// </returns>
-    STDMETHOD(GetCurrentFontFile)(_Out_ IDWriteFontFile * *fontFile) PURE;
+    STDMETHOD(GetCurrentFontFile)(_Out_ IDWriteFontFile ** fontFile) PURE;
 };
 
 /// <summary>
@@ -1317,7 +1317,7 @@ interface DWRITE_DECLARE_INTERFACE("a84cee02-3eea-4eee-a827-87c1a02a0fcc") IDWri
     /// <returns>
     /// Standard HRESULT error code.
     /// </returns>
-    STDMETHOD(GetFontFamily)(UINT32 index, _Out_ IDWriteFontFamily * *fontFamily) PURE;
+    STDMETHOD(GetFontFamily)(UINT32 index, _Out_ IDWriteFontFamily ** fontFamily) PURE;
 
     /// <summary>
     /// Finds the font family with the specified family name.
@@ -1338,7 +1338,7 @@ interface DWRITE_DECLARE_INTERFACE("a84cee02-3eea-4eee-a827-87c1a02a0fcc") IDWri
     /// <returns>
     /// Standard HRESULT error code. If the specified physical font is not part of the font collection the return value is DWRITE_E_NOFONT.
     /// </returns>
-    STDMETHOD(GetFontFromFontFace)(IDWriteFontFace * fontFace, _Out_ IDWriteFont * *font) PURE;
+    STDMETHOD(GetFontFromFontFace)(IDWriteFontFace * fontFace, _Out_ IDWriteFont ** font) PURE;
 };
 
 /// <summary>
@@ -1352,7 +1352,7 @@ interface DWRITE_DECLARE_INTERFACE("1a0d8438-1d97-4ec1-aef9-a2fb86ed6acb") IDWri
     /// <returns>
     /// Standard HRESULT error code.
     /// </returns>
-    STDMETHOD(GetFontCollection)(_Out_ IDWriteFontCollection * *fontCollection) PURE;
+    STDMETHOD(GetFontCollection)(_Out_ IDWriteFontCollection ** fontCollection) PURE;
 
     /// <summary>
     /// Gets the number of fonts in the font list.
@@ -1367,7 +1367,7 @@ interface DWRITE_DECLARE_INTERFACE("1a0d8438-1d97-4ec1-aef9-a2fb86ed6acb") IDWri
     /// <returns>
     /// Standard HRESULT error code.
     /// </returns>
-    STDMETHOD(GetFont)(UINT32 index, _Out_ IDWriteFont * *font) PURE;
+    STDMETHOD(GetFont)(UINT32 index, _Out_ IDWriteFont ** font) PURE;
 };
 
 /// <summary>
@@ -1382,7 +1382,7 @@ interface DWRITE_DECLARE_INTERFACE("da20d8ef-812a-4c43-9802-62ec4abd7add") IDWri
     /// <returns>
     /// Standard HRESULT error code.
     /// </returns>
-    STDMETHOD(GetFamilyNames)(_Out_ IDWriteLocalizedStrings * *names) PURE;
+    STDMETHOD(GetFamilyNames)(_Out_ IDWriteLocalizedStrings ** names) PURE;
 
     /// <summary>
     /// Gets the font that best matches the specified properties.
@@ -1394,7 +1394,7 @@ interface DWRITE_DECLARE_INTERFACE("da20d8ef-812a-4c43-9802-62ec4abd7add") IDWri
     /// <returns>
     /// Standard HRESULT error code.
     /// </returns>
-    STDMETHOD(GetFirstMatchingFont)(DWRITE_FONT_WEIGHT weight, DWRITE_FONT_STRETCH stretch, DWRITE_FONT_STYLE style, _Out_ IDWriteFont * *matchingFont) PURE;
+    STDMETHOD(GetFirstMatchingFont)(DWRITE_FONT_WEIGHT weight, DWRITE_FONT_STRETCH stretch, DWRITE_FONT_STYLE style, _Out_ IDWriteFont ** matchingFont) PURE;
 
     /// <summary>
     /// Gets a list of fonts in the font family ranked in order of how well they match the specified properties.
@@ -1406,7 +1406,7 @@ interface DWRITE_DECLARE_INTERFACE("da20d8ef-812a-4c43-9802-62ec4abd7add") IDWri
     /// <returns>
     /// Standard HRESULT error code.
     /// </returns>
-    STDMETHOD(GetMatchingFonts)(DWRITE_FONT_WEIGHT weight, DWRITE_FONT_STRETCH stretch, DWRITE_FONT_STYLE style, _Out_ IDWriteFontList * *matchingFonts) PURE;
+    STDMETHOD(GetMatchingFonts)(DWRITE_FONT_WEIGHT weight, DWRITE_FONT_STRETCH stretch, DWRITE_FONT_STYLE style, _Out_ IDWriteFontList ** matchingFonts) PURE;
 };
 
 /// <summary>
@@ -1420,7 +1420,7 @@ interface DWRITE_DECLARE_INTERFACE("acd16696-8c14-4f5d-877e-fe3fc1d32737") IDWri
     /// <returns>
     /// Standard HRESULT error code.
     /// </returns>
-    STDMETHOD(GetFontFamily)(_Out_ IDWriteFontFamily * *fontFamily) PURE;
+    STDMETHOD(GetFontFamily)(_Out_ IDWriteFontFamily ** fontFamily) PURE;
 
     /// <summary>
     /// Gets the weight of the specified font.
@@ -1449,7 +1449,7 @@ interface DWRITE_DECLARE_INTERFACE("acd16696-8c14-4f5d-877e-fe3fc1d32737") IDWri
     /// <returns>
     /// Standard HRESULT error code.
     /// </returns>
-    STDMETHOD(GetFaceNames)(_Out_ IDWriteLocalizedStrings * *names) PURE;
+    STDMETHOD(GetFaceNames)(_Out_ IDWriteLocalizedStrings ** names) PURE;
 
     /// <summary>
     /// Gets a localized strings collection containing the specified informational strings, indexed by locale name.
@@ -1462,7 +1462,7 @@ interface DWRITE_DECLARE_INTERFACE("acd16696-8c14-4f5d-877e-fe3fc1d32737") IDWri
     /// informationalStrings receives a NULL pointer and exists receives the value FALSE.
     /// </returns>
     STDMETHOD(GetInformationalStrings)
-    (DWRITE_INFORMATIONAL_STRING_ID informationalStringID, _Out_ IDWriteLocalizedStrings * *informationalStrings, _Out_ BOOL * exists) PURE;
+    (DWRITE_INFORMATIONAL_STRING_ID informationalStringID, _Out_ IDWriteLocalizedStrings ** informationalStrings, _Out_ BOOL * exists) PURE;
 
     /// <summary>
     /// Gets a value that indicates what simulation are applied to the specified font.
@@ -1492,7 +1492,7 @@ interface DWRITE_DECLARE_INTERFACE("acd16696-8c14-4f5d-877e-fe3fc1d32737") IDWri
     /// <returns>
     /// Standard HRESULT error code.
     /// </returns>
-    STDMETHOD(CreateFontFace)(_Out_ IDWriteFontFace * *fontFace) PURE;
+    STDMETHOD(CreateFontFace)(_Out_ IDWriteFontFace ** fontFace) PURE;
 };
 
 /// <summary>
@@ -1911,7 +1911,7 @@ interface DWRITE_DECLARE_INTERFACE("9c906818-31d7-4fd3-a151-7c5e225db55a") IDWri
     /// <returns>
     /// Standard HRESULT error code.
     /// </returns>
-    STDMETHOD(GetTrimming)(_Out_ DWRITE_TRIMMING * trimmingOptions, _Out_ IDWriteInlineObject * *trimmingSign) PURE;
+    STDMETHOD(GetTrimming)(_Out_ DWRITE_TRIMMING * trimmingOptions, _Out_ IDWriteInlineObject ** trimmingSign) PURE;
 
     /// <summary>
     /// Get line spacing.
@@ -1931,7 +1931,7 @@ interface DWRITE_DECLARE_INTERFACE("9c906818-31d7-4fd3-a151-7c5e225db55a") IDWri
     /// <returns>
     /// Standard HRESULT error code.
     /// </returns>
-    STDMETHOD(GetFontCollection)(_Out_ IDWriteFontCollection * *fontCollection) PURE;
+    STDMETHOD(GetFontCollection)(_Out_ IDWriteFontCollection ** fontCollection) PURE;
 
     /// <summary>
     /// Get the length of the font family name, in characters, not including the terminating NULL character.
@@ -2291,7 +2291,7 @@ interface DECLSPEC_UUID("688e1a58-5094-47c8-adc8-fbcea60ae92b") DECLSPEC_NOVTABL
     /// with it (either before the next call or before it returns). However,
     /// the sink callback may hold onto it after that.
     /// </remarks>
-    STDMETHOD(GetNumberSubstitution)(UINT32 textPosition, _Out_ UINT32 * textLength, _Outptr_ IDWriteNumberSubstitution * *numberSubstitution) PURE;
+    STDMETHOD(GetNumberSubstitution)(UINT32 textPosition, _Out_ UINT32 * textLength, _Outptr_ IDWriteNumberSubstitution ** numberSubstitution) PURE;
 };
 
 /// <summary>
@@ -3444,7 +3444,7 @@ interface DWRITE_DECLARE_INTERFACE("53737037-6d14-410b-9bfe-0b182bb70961") IDWri
     /// <returns>
     /// Standard HRESULT error code.
     /// </returns>
-    STDMETHOD(GetFontCollection)(UINT32 currentPosition, _Out_ IDWriteFontCollection * *fontCollection, _Out_opt_ DWRITE_TEXT_RANGE * textRange = NULL) PURE;
+    STDMETHOD(GetFontCollection)(UINT32 currentPosition, _Out_ IDWriteFontCollection ** fontCollection, _Out_opt_ DWRITE_TEXT_RANGE * textRange = NULL) PURE;
 
     /// <summary>
     /// Get the length of the font family name where the current position is at.
@@ -3545,7 +3545,7 @@ interface DWRITE_DECLARE_INTERFACE("53737037-6d14-410b-9bfe-0b182bb70961") IDWri
     /// <returns>
     /// Standard HRESULT error code.
     /// </returns>
-    STDMETHOD(GetDrawingEffect)(UINT32 currentPosition, _Out_ IUnknown * *drawingEffect, _Out_opt_ DWRITE_TEXT_RANGE * textRange = NULL) PURE;
+    STDMETHOD(GetDrawingEffect)(UINT32 currentPosition, _Out_ IUnknown ** drawingEffect, _Out_opt_ DWRITE_TEXT_RANGE * textRange = NULL) PURE;
 
     /// <summary>
     /// Get the inline object at the given position.
@@ -3556,7 +3556,7 @@ interface DWRITE_DECLARE_INTERFACE("53737037-6d14-410b-9bfe-0b182bb70961") IDWri
     /// <returns>
     /// Standard HRESULT error code.
     /// </returns>
-    STDMETHOD(GetInlineObject)(UINT32 currentPosition, _Out_ IDWriteInlineObject * *inlineObject, _Out_opt_ DWRITE_TEXT_RANGE * textRange = NULL) PURE;
+    STDMETHOD(GetInlineObject)(UINT32 currentPosition, _Out_ IDWriteInlineObject ** inlineObject, _Out_opt_ DWRITE_TEXT_RANGE * textRange = NULL) PURE;
 
     /// <summary>
     /// Get the typography setting where the current position is at.
@@ -3567,7 +3567,7 @@ interface DWRITE_DECLARE_INTERFACE("53737037-6d14-410b-9bfe-0b182bb70961") IDWri
     /// <returns>
     /// Standard HRESULT error code.
     /// </returns>
-    STDMETHOD(GetTypography)(UINT32 currentPosition, _Out_ IDWriteTypography * *typography, _Out_opt_ DWRITE_TEXT_RANGE * textRange = NULL) PURE;
+    STDMETHOD(GetTypography)(UINT32 currentPosition, _Out_ IDWriteTypography ** typography, _Out_opt_ DWRITE_TEXT_RANGE * textRange = NULL) PURE;
 
     /// <summary>
     /// Get the length of the locale name where the current position is at.
@@ -3928,7 +3928,7 @@ interface DWRITE_DECLARE_INTERFACE("1edd9491-9853-4299-898f-6432983b6f3a") IDWri
     /// <returns>
     /// Standard HRESULT error code.
     /// </returns>
-    STDMETHOD(CreateFontFaceFromHdc)(HDC hdc, _Out_ IDWriteFontFace * *fontFace) PURE;
+    STDMETHOD(CreateFontFaceFromHdc)(HDC hdc, _Out_ IDWriteFontFace ** fontFace) PURE;
 
     /// <summary>
     /// Creates an object that encapsulates a bitmap and memory DC which can be used for rendering glyphs.
@@ -3937,7 +3937,7 @@ interface DWRITE_DECLARE_INTERFACE("1edd9491-9853-4299-898f-6432983b6f3a") IDWri
     /// <param name="width">Width of the bitmap.</param>
     /// <param name="height">Height of the bitmap.</param>
     /// <param name="renderTarget">Receives a pointer to the newly created render target.</param>
-    STDMETHOD(CreateBitmapRenderTarget)(_In_opt_ HDC hdc, UINT32 width, UINT32 height, _Out_ IDWriteBitmapRenderTarget * *renderTarget) PURE;
+    STDMETHOD(CreateBitmapRenderTarget)(_In_opt_ HDC hdc, UINT32 width, UINT32 height, _Out_ IDWriteBitmapRenderTarget ** renderTarget) PURE;
 };
 
 /// <summary>
@@ -4024,7 +4024,7 @@ interface DWRITE_DECLARE_INTERFACE("b859ee5a-d838-4b5b-a2e8-1adc7d93db48") IDWri
     /// <returns>
     /// Standard HRESULT error code.
     /// </returns>
-    STDMETHOD(GetSystemFontCollection)(_Out_ IDWriteFontCollection * *fontCollection, BOOL checkForUpdates = FALSE) PURE;
+    STDMETHOD(GetSystemFontCollection)(_Out_ IDWriteFontCollection ** fontCollection, BOOL checkForUpdates = FALSE) PURE;
 
     /// <summary>
     /// Creates a font collection using a custom font collection loader.
@@ -4122,7 +4122,7 @@ interface DWRITE_DECLARE_INTERFACE("b859ee5a-d838-4b5b-a2e8-1adc7d93db48") IDWri
     /// <returns>
     /// Standard HRESULT error code.
     /// </returns>
-    STDMETHOD(CreateRenderingParams)(_Out_ IDWriteRenderingParams * *renderingParams) PURE;
+    STDMETHOD(CreateRenderingParams)(_Out_ IDWriteRenderingParams ** renderingParams) PURE;
 
     /// <summary>
     /// Creates a rendering parameters object with default settings for the specified monitor.
@@ -4132,7 +4132,7 @@ interface DWRITE_DECLARE_INTERFACE("b859ee5a-d838-4b5b-a2e8-1adc7d93db48") IDWri
     /// <returns>
     /// Standard HRESULT error code.
     /// </returns>
-    STDMETHOD(CreateMonitorRenderingParams)(HMONITOR monitor, _Out_ IDWriteRenderingParams * *renderingParams) PURE;
+    STDMETHOD(CreateMonitorRenderingParams)(HMONITOR monitor, _Out_ IDWriteRenderingParams ** renderingParams) PURE;
 
     /// <summary>
     /// Creates a rendering parameters object with the specified properties.
@@ -4147,7 +4147,7 @@ interface DWRITE_DECLARE_INTERFACE("b859ee5a-d838-4b5b-a2e8-1adc7d93db48") IDWri
     /// </returns>
     STDMETHOD(CreateCustomRenderingParams)
     (FLOAT gamma, FLOAT enhancedContrast, FLOAT clearTypeLevel, DWRITE_PIXEL_GEOMETRY pixelGeometry, DWRITE_RENDERING_MODE renderingMode,
-     _Out_ IDWriteRenderingParams * *renderingParams) PURE;
+     _Out_ IDWriteRenderingParams ** renderingParams) PURE;
 
     /// <summary>
     /// Registers a font file loader with DirectWrite.
@@ -4213,7 +4213,7 @@ interface DWRITE_DECLARE_INTERFACE("b859ee5a-d838-4b5b-a2e8-1adc7d93db48") IDWri
     /// <returns>
     /// Standard HRESULT error code.
     /// </returns>
-    STDMETHOD(CreateTypography)(_Out_ IDWriteTypography * *typography) PURE;
+    STDMETHOD(CreateTypography)(_Out_ IDWriteTypography ** typography) PURE;
 
     /// <summary>
     /// Create an object used for interoperability with GDI.
@@ -4222,7 +4222,7 @@ interface DWRITE_DECLARE_INTERFACE("b859ee5a-d838-4b5b-a2e8-1adc7d93db48") IDWri
     /// <returns>
     /// Standard HRESULT error code.
     /// </returns>
-    STDMETHOD(GetGdiInterop)(_Out_ IDWriteGdiInterop * *gdiInterop) PURE;
+    STDMETHOD(GetGdiInterop)(_Out_ IDWriteGdiInterop ** gdiInterop) PURE;
 
     /// <summary>
     /// CreateTextLayout takes a string, format, and associated constraints
@@ -4280,7 +4280,7 @@ interface DWRITE_DECLARE_INTERFACE("b859ee5a-d838-4b5b-a2e8-1adc7d93db48") IDWri
     /// <returns>
     /// Standard HRESULT error code.
     /// </returns>
-    STDMETHOD(CreateEllipsisTrimmingSign)(IDWriteTextFormat * textFormat, _Out_ IDWriteInlineObject * *trimmingSign) PURE;
+    STDMETHOD(CreateEllipsisTrimmingSign)(IDWriteTextFormat * textFormat, _Out_ IDWriteInlineObject ** trimmingSign) PURE;
 
     /// <summary>
     /// Return an interface to perform text analysis with.
@@ -4289,7 +4289,7 @@ interface DWRITE_DECLARE_INTERFACE("b859ee5a-d838-4b5b-a2e8-1adc7d93db48") IDWri
     /// <returns>
     /// Standard HRESULT error code.
     /// </returns>
-    STDMETHOD(CreateTextAnalyzer)(_Out_ IDWriteTextAnalyzer * *textAnalyzer) PURE;
+    STDMETHOD(CreateTextAnalyzer)(_Out_ IDWriteTextAnalyzer ** textAnalyzer) PURE;
 
     /// <summary>
     /// Creates a number substitution object using a locale name,
