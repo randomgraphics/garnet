@@ -6,7 +6,7 @@ def run_style_check():
     print("Checking code styles...", end="", flush=True)
 
     # calling format-all-sources.py to verify that all sources are properly formatted.
-    result= subprocess.run([sys.executable, pathlib.Path(os.path.realpath(__file__)).parent / "format-all-sources.py", "-qn"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
+    result= subprocess.run([sys.executable, pathlib.Path(os.path.realpath(__file__)).parent / "format-all-sources.py", "-dqn"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
     err = result.stderr.decode("utf-8")
     if len(err) > 0:
         print(f"\nThe following changes are violating coding style standard:\n{err}")

@@ -45,11 +45,11 @@ def format_one_file(x):
      if not args.q:
           with lock: print(' '.join(cmdline))
      ret = subprocess.run(cmdline, cwd=root_dir, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
-     out = ret.stdout.strip()
-     err = ret.stderr.strip()
+     out = ret.stdout.decode("utf-8").strip()
      if not args.q and len(out) > 0:
           with lock: print(out)
      # always print errors to stderr
+     err = ret.stderr.decode("utf-8").strip()
      if len(err) > 0:
           with lock: sys.stderr.write(err)
 
