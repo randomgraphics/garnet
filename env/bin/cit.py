@@ -1,33 +1,19 @@
 #!/usr/bin/python3
-import sys, subprocess, re, argparse, platform
+import sys, subprocess, re, argparse, platform, pathlib, os
 import importlib; utils = importlib.import_module("garnet-utils")
 
 def run_style_check():
-    print("Checking code styles...", end="")
+    print("Checking code styles...", end="", flush=True)
 
-    # get changes from git.
-    root_dir = utils.get_root_folder()
-    git_remote = subprocess.check_output(["git", "remote"], cwd=root_dir).decode(sys.stdout.encoding).strip()
-    diff = subprocess.check_output(["git", "diff", "-U0", "--no-color", git_remote + "/master", "--", ":!*3rd-party*"], cwd=root_dir)
+    # calling format-all-sources.py to verify that all sources are properly formatted.
+    result= subprocess.run([sys.executable, pathlib.Path(os.path.realpath(__file__)).parent / "format-all-sources.py", "-qn"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
+    err = result.stderr.decode("utf-8")
+    if len(err) > 0:
+        print(f"\nThe following changes are violating coding style standard:\n{err}")
+        sys.exit(-1)
 
-    # determine the clang-format-diff command line
-    diff_script = root_dir / "env/bin/clang-format-diff.py"
-    system = platform.system()
-    if "Windows" == system:
-        clang_format = root_dir / "env/bin/clang-format-14.exe"
-        cmdline = ["python.exe", str(diff_script.absolute()), "-p1", "-binary", str(clang_format.absolute())]
-    elif "Darwin" == system:
-        cmdline = [str(diff_script.absolute()), "-p1", "-binary", "clang-format-mp-14"]
-    else:
-        cmdline = [str(diff_script.absolute()), "-p1", "-binary", "clang-format-14"]
-
-    # check coding style of the diff
-    format_diff = subprocess.check_output(cmdline, input=diff, cwd=root_dir).decode("utf-8")
-    if len(format_diff) > 0:
-        utils.rip(f"The following changes are violating coding style standard:\n{format_diff}")
-
-    # Done
-    print("OK.")
+    # style check passed.
+    print("OK")
 
 # main
 ap = argparse.ArgumentParser()
