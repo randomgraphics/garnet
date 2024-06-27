@@ -36,7 +36,7 @@ namespace internal {}
 #include "base/endian.h"
 
 // type traits
-#include "base/typeTraits.h"
+// #include "base/typeTraits.h"
 
 // debug macros and functions
 #include "base/debug.h"
