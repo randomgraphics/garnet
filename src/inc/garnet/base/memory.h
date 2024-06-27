@@ -294,12 +294,12 @@ class FixSizedRawMemoryPool : public NoCopy {
     static const size_t ALIGNED_ITEM_SIZE = Alignment<Alignment<ITEM_SIZE, sizeof(void *)>::VALUE + sizeof(void *) * 3, ALIGNMENT>::VALUE;
 
     union Item {
-        uint8 raw[ALIGNED_ITEM_SIZE];
+        uint8_t raw[ALIGNED_ITEM_SIZE];
         struct {
-            uint8  data[ITEM_SIZE];
-            void * pool; ///< pointer to the pool
-            Item * prev; ///< points to previous item
-            Item * next; ///< points to next item
+            uint8_t data[ITEM_SIZE];
+            void *  pool; ///< pointer to the pool
+            Item *  prev; ///< points to previous item
+            Item *  next; ///< points to next item
         };
     };
     GN_CASSERT(sizeof(Item) == ALIGNED_ITEM_SIZE);

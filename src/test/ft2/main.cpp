@@ -51,14 +51,14 @@ public:
         //加载一个字体,取默认的Face,一般为Regualer
         FontFaceCreationDesc defaultFont;
         defaultFont.fontname = font_file1;
-        defaultFont.width    = (uint16) _w;
-        defaultFont.height   = (uint16) _h;
+        defaultFont.width    = (uint16_t) _w;
+        defaultFont.height   = (uint16_t) _h;
         defaultFont.quality  = FontFaceDesc::ANTIALIASED;
 
         MixedFontCreationDesc asciiFont;
         asciiFont.font.fontname = font_file2;
-        asciiFont.font.width    = (uint16) _w;
-        asciiFont.font.height   = (uint16) _h;
+        asciiFont.font.width    = (uint16_t) _w;
+        asciiFont.font.height   = (uint16_t) _h;
         asciiFont.font.quality  = FontFaceDesc::ANTIALIASED;
         asciiFont.firstChar     = 0;
         asciiFont.numChars      = 127;

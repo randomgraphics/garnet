@@ -904,7 +904,7 @@ FT_BEGIN_HEADER
    *                            0 => string (e.g., COMMENT)
    *                            1 => atom   (e.g., FONT or even SIZE)
    *                            2 => int32
-   *                            3 => uint32
+   *                            3 => uint32_t
    *                         0x10 => A flag to indicate a properties.  This
    *                                 is ORed with the above values.
    *   ULONG    item_value   For strings  => Offset into string table without

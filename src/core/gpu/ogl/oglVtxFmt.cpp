@@ -109,7 +109,7 @@ bool GN::gfx::OGLVtxFmt::bindRawMemoryBuffer(const void * data, size_t stride) c
 bool GN::gfx::OGLVtxFmt::setupStateBindings(const OGLGpuProgram * gpuProgram) {
     GN_GUARD;
 
-    uint32          maxAttributes = getGpu().getOGLCaps().maxVertexAttributes;
+    uint32_t        maxAttributes = getGpu().getOGLCaps().maxVertexAttributes;
     DynaArray<bool> hasAttrib(maxAttributes, false);
 
     OGLVertexBindingDesc vbd;
@@ -130,8 +130,8 @@ bool GN::gfx::OGLVtxFmt::setupStateBindings(const OGLGpuProgram * gpuProgram) {
 
         AttribBindingInfo ab;
         ab.self   = this;
-        ab.stream = (uint8) e.stream;
-        ab.offset = (uint8) e.offset;
+        ab.stream = (uint8_t) e.stream;
+        ab.offset = (uint8_t) e.offset;
 
         switch (vbd.semantic) {
         case VERTEX_SEMANTIC_ATTRIBUTE:
@@ -201,7 +201,7 @@ bool GN::gfx::OGLVtxFmt::setupStateBindings(const OGLGpuProgram * gpuProgram) {
     // ===================
     GN_OGL_CHECK_R(glGenVertexArrays(1, &mVAO), false);
     glBindVertexArray(mVAO);
-    for (uint32 i = 0; i < maxAttributes; ++i) {
+    for (uint32_t i = 0; i < maxAttributes; ++i) {
         if (hasAttrib[i]) {
             glEnableVertexAttribArrayARB(i);
         } else {

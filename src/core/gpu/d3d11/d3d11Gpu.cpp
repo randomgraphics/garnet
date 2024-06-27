@@ -26,7 +26,7 @@ static GN::gfx::Gpu * sCreateD3DGpuPrivate(const GN::gfx::GpuOptions & o, void *
 //
 //
 // -----------------------------------------------------------------------------
-GN_API GN::gfx::Gpu * GN::gfx::createD3DGpu(const GN::gfx::GpuOptions & o, uint32 creationFlags) {
+GN_API GN::gfx::Gpu * GN::gfx::createD3DGpu(const GN::gfx::GpuOptions & o, uint32_t creationFlags) {
     GpuOptions lo = o;
     lo.api        = GpuAPI::D3D11;
     if (0 != (creationFlags & GPU_CREATION_MULTIPLE_THREADS)) {
@@ -96,7 +96,7 @@ void GN::gfx::D3D11Gpu::ReportLiveDeviceObjects() {
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3D11Gpu::debugDumpNextFrame(uint32 startBatchIndex, uint32 numBatches) {
+void GN::gfx::D3D11Gpu::debugDumpNextFrame(uint32_t startBatchIndex, uint32_t numBatches) {
     GN_UNUSED_PARAM(startBatchIndex);
     GN_UNUSED_PARAM(numBatches);
     GN_TODO("D3D11 frame dump is not implemented.");

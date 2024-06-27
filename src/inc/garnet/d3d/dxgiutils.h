@@ -41,19 +41,19 @@ struct DXGI_FORMAT_DESCRIPTION {
     const char * name;
 
     /// The block width.
-    uint32 blockWidth;
+    uint32_t blockWidth;
 
     /// The block height.
-    uint32 blockHeight;
+    uint32_t blockHeight;
 
     /// Block size in bytes
-    uint32 blockBytes;
+    uint32_t blockBytes;
 
     /// Bits of a single texel
-    uint32 texelBits;
+    uint32_t texelBits;
 
     /// Number of color channels.
-    uint32 numChannels;
+    uint32_t numChannels;
 
     /// The number format.
     DXGINumberFormat numfmt;

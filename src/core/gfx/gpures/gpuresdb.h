@@ -12,10 +12,10 @@ namespace GN {
 namespace gfx {
 class GpuResourceHandle {
     union {
-        uint32 mU32;
+        uint32_t mU32;
         struct {
-            uint32 mIndexPlusOne   : 8;
-            uint32 mInternalHandle : 24;
+            uint32_t mIndexPlusOne   : 8;
+            uint32_t mInternalHandle : 24;
         };
     };
 
@@ -24,21 +24,21 @@ public:
 
     enum { MAX_TYPES = (1 << 8) - 1 };
 
-    explicit GpuResourceHandle(uint32 u32): mU32(u32) {}
+    explicit GpuResourceHandle(uint32_t u32): mU32(u32) {}
 
-    GpuResourceHandle(size_t managerIndex, uint32 internalHandle) {
+    GpuResourceHandle(size_t managerIndex, uint32_t internalHandle) {
         mIndexPlusOne   = managerIndex + 1;
         mInternalHandle = internalHandle;
     }
 
-    void set(uint32 managerIndex, uint32 internalHandle) {
+    void set(uint32_t managerIndex, uint32_t internalHandle) {
         mIndexPlusOne   = managerIndex + 1;
         mInternalHandle = internalHandle;
     }
 
-    uint32 u32() const { return mU32; }
-    uint32 managerIndex() const { return mIndexPlusOne - 1; }
-    uint32 internalHandle() const { return mInternalHandle; }
+    uint32_t u32() const { return mU32; }
+    uint32_t managerIndex() const { return mIndexPlusOne - 1; }
+    uint32_t internalHandle() const { return mInternalHandle; }
 
     //@}
 };
@@ -70,7 +70,7 @@ class GpuResourceDatabase::Impl {
     // *********************************************************************
 
 private:
-    typedef NamedHandleManager<GpuResource::Impl *, uint32> ResourceMap;
+    typedef NamedHandleManager<GpuResource::Impl *, uint32_t> ResourceMap;
 
     struct ResourceManager {
         Guid               guid;
@@ -128,7 +128,7 @@ public:
 
     //@{
     AutoRef<UniformResource> getStandardUniformResource(int index) const;
-    void                     setStandardUniform(int index, const void * data, uint32 dataSize);
+    void                     setStandardUniform(int index, const void * data, uint32_t dataSize);
     void                     setTransform(const Matrix44f & proj, const Matrix44f & view);
     void setLight0(const Vector4f & diffuse, const Vector4f & ambient, const Vector4f & specular, const Vector3f & position, const Vector3f & direction);
     //@}

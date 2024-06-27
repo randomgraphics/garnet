@@ -6,6 +6,9 @@
 /// \author  chenlee(2005.4.10)
 // *****************************************************************************
 
+#include <stdint.h>
+#include <stddef.h>
+
 ///
 /// namespace for garnet library
 ///
@@ -28,9 +31,6 @@ namespace internal {}
 
 // global pragma
 #include "base/pragma.h"
-
-// standard numeric types
-#include "base/numeric.h"
 
 // endian routine
 #include "base/endian.h"

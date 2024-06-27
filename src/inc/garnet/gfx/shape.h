@@ -36,7 +36,7 @@ namespace gfx {
 ///     Can be NULL if you do not need it.
 ///
 GN_API void createBox(float sx, float sy, float sz, float * positions, size_t posStride, float * texcoords, size_t texStride, float * normals,
-                      size_t normStride, float * tangents, size_t tangStride, float * binormals, size_t n2Stride, uint16 * triList, uint16 * quadList);
+                      size_t normStride, float * tangents, size_t tangStride, float * binormals, size_t n2Stride, uint16_t * triList, uint16_t * quadList);
 } // namespace gfx
 } // namespace GN
 

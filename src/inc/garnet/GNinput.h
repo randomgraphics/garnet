@@ -118,8 +118,8 @@ enum class KeyState {
 /// Key status structure
 ///
 union KeyStatus {
-    uint8 u8; ///< Key status as unsigned integer
-    sint8 i8; ///< Key status as signed integer
+    uint8_t u8; ///< Key status as unsigned integer
+    int8_t  i8; ///< Key status as signed integer
 
     struct {
         bool down   : 1; ///< key down
@@ -157,14 +157,14 @@ union KeyStatus {
 ///
 union KeyEvent {
     /// key event as unsigned 16bit integer
-    uint16 u16;
+    uint16_t u16;
 
     /// key event as signed 16bit integer
-    sint16 i16;
+    int16_t i16;
 
     /// structured key states
     struct {
-        uint8     code_;  ///< Key code
+        uint8_t   code_;  ///< Key code
         KeyStatus status; ///< Key status
     };
 
@@ -172,7 +172,7 @@ union KeyEvent {
     //@{
     KeyEvent() {}
     KeyEvent(const KeyEvent & k): u16(k.u16) {}
-    KeyEvent(KeyCode kc, KeyStatus ks): code_(static_cast<uint8>(kc)), status(ks) { GN_ASSERT(kc < KeyCode::NUM_KEYS); }
+    KeyEvent(KeyCode kc, KeyStatus ks): code_(static_cast<uint8_t>(kc)), status(ks) { GN_ASSERT(kc < KeyCode::NUM_KEYS); }
     //@}
 
     /// assignment

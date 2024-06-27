@@ -180,7 +180,7 @@ static void sParseUniform(EffectResourceDesc & desc, const XmlElement & node) {
 
     const char * type = sGetAttrib(node, "type");
     if (NULL == type) {
-        ud.size = sGetIntAttrib<uint32>(node, "size", 0);
+        ud.size = sGetIntAttrib<uint32_t>(node, "size", 0);
     } else {
         if (0 == str::compareI("matrix", type) || 0 == str::compareI("matrix4x4", type) || 0 == str::compareI("matrix44", type) ||
             0 == str::compareI("matrix4", type) || 0 == str::compareI("mat4", type) || 0 == str::compareI("float4x4", type)) {

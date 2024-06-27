@@ -33,7 +33,7 @@ public:
 
     //@{
 public:
-    bool init(uint32 bytes, bool fastCpuWrite, uint32 bindFlags);
+    bool init(uint32_t bytes, bool fastCpuWrite, uint32_t bindFlags);
     void quit();
 
 private:
@@ -52,8 +52,8 @@ public:
         return mD3DBuffer;
     }
 
-    void update(uint32 offset, uint32 length, const void * data, SurfaceUpdateFlag flag);
-    void readback(DynaArray<uint8> & data);
+    void update(uint32_t offset, uint32_t length, const void * data, SurfaceUpdateFlag flag);
+    void readback(DynaArray<uint8_t> & data);
 
     //@}
 
@@ -62,7 +62,7 @@ public:
     // ********************************
 private:
     ID3D11Buffer * mD3DBuffer;
-    uint32         mBytes;
+    uint32_t       mBytes;
     bool           mFastCpuWrite;
 
     // ********************************
@@ -104,8 +104,8 @@ private:
     // from VtxBuf
     // ********************************
 public:
-    virtual void update(uint32 offset, uint32 length, const void * data, SurfaceUpdateFlag flag);
-    virtual void readback(DynaArray<uint8> & data);
+    virtual void update(uint32_t offset, uint32_t length, const void * data, SurfaceUpdateFlag flag);
+    virtual void readback(DynaArray<uint8_t> & data);
 
     // ********************************
     // public functions
@@ -154,8 +154,8 @@ private:
     // from IdxBuf
     // ********************************
 public:
-    virtual void update(uint32 startidx, uint32 numidx, const void * data, SurfaceUpdateFlag flag);
-    virtual void readback(DynaArray<uint8> & data);
+    virtual void update(uint32_t startidx, uint32_t numidx, const void * data, SurfaceUpdateFlag flag);
+    virtual void readback(DynaArray<uint8_t> & data);
 
     // ********************************
     // public functions

@@ -51,12 +51,12 @@ public:
     ///
     /// increase reference counter
     ///
-    sint32 incref() const throw() { return mRef.fetch_add(1) - 1; }
+    int32_t incref() const throw() { return mRef.fetch_add(1) - 1; }
 
     ///
     /// decrease reference counter, delete the object, if reference count reaches zero.
     ///
-    sint32 decref() const {
+    int32_t decref() const {
         GN_ASSERT(mRef > 0);
         int ref = mRef.fetch_sub(1) - 1;
         if (0 == ref) delete this;

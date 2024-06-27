@@ -20,16 +20,16 @@ struct DisplayMode {
         FULL_SCREEN, ///< true/exclusive full screen mode.
     };
 
-    Mode   mode;    ///< Display mode.
-    uint32 width;   ///< Screen width.  0 means current screen width.
-    uint32 height;  ///< Screen height. 0 means current screen height.
-    uint32 depth;   ///< Color depth.   0 means current screen color depth. FULL_SCREEN only.
-    uint32 refrate; ///< Referesh rate. 0 means current screen refresh rate. FULL_SCREEN only.
+    Mode     mode;    ///< Display mode.
+    uint32_t width;   ///< Screen width.  0 means current screen width.
+    uint32_t height;  ///< Screen height. 0 means current screen height.
+    uint32_t depth;   ///< Color depth.   0 means current screen color depth. FULL_SCREEN only.
+    uint32_t refrate; ///< Referesh rate. 0 means current screen refresh rate. FULL_SCREEN only.
 
     ///
     /// Set display mode parameters
     ///
-    void set(Mode m, uint32 w, uint32 h, uint32 d, uint32 r) {
+    void set(Mode m, uint32_t w, uint32_t h, uint32_t d, uint32_t r) {
         mode    = m;
         width   = w;
         height  = h;
@@ -88,7 +88,7 @@ struct GpuAPI {
             {AUTO, "AUTO"},
         };
 
-        for (uint32 i = 0; i < GN_ARRAY_COUNT(TABLE); ++i) {
+        for (uint32_t i = 0; i < GN_ARRAY_COUNT(TABLE); ++i) {
             if (0 == str::compare(s, TABLE[i].name)) { return TABLE[i].value; }
         }
 
@@ -211,10 +211,10 @@ struct DispDesc {
     intptr_t displayHandle; ///< Native Display handle. For X Window only.
     intptr_t monitorHandle; ///< Native Monitor/Screen handle.
     intptr_t windowHandle;  ///< Native Render window handle
-    uint32   width;         ///< Back buffer width
-    uint32   height;        ///< Back buffer height
-    uint32   depth;         ///< Back buffer color depth in bits
-    uint32   refrate;       ///< Screen refresh rate
+    uint32_t width;         ///< Back buffer width
+    uint32_t height;        ///< Back buffer height
+    uint32_t depth;         ///< Back buffer color depth in bits
+    uint32_t refrate;       ///< Screen refresh rate
 
     ///
     /// equality operator
@@ -230,12 +230,12 @@ struct DispDesc {
 /// renderer caps
 ///
 struct GpuCaps {
-    uint32 maxTex1DSize[2];       ///< width, array
-    uint32 maxTex2DSize[3];       ///< width, height, array
-    uint32 maxTex3DSize[4];       ///< width, height, array
-    uint32 maxTextures;           ///< max number of simutaneous textures
-    uint32 maxColorRenderTargets; ///< max number of simutaneous render targets
-    uint32 shaderModels;          ///< shader models supported by the GPU.
+    uint32_t maxTex1DSize[2];       ///< width, array
+    uint32_t maxTex2DSize[3];       ///< width, height, array
+    uint32_t maxTex3DSize[4];       ///< width, height, array
+    uint32_t maxTextures;           ///< max number of simutaneous textures
+    uint32_t maxColorRenderTargets; ///< max number of simutaneous render targets
+    uint32_t shaderModels;          ///< shader models supported by the GPU.
 };
 
 ///
@@ -243,8 +243,8 @@ struct GpuCaps {
 ///
 struct VertexBufferBinding {
     AutoRef<VtxBuf> vtxbuf; ///< vertex buffer
-    uint16          stride; ///< vertex stride. 0 means using vertex stride defined in vertex format structure.
-    uint32          offset; ///< Number of bytes from vertex buffer begining to the first element that will be used.
+    uint16_t        stride; ///< vertex stride. 0 means using vertex stride defined in vertex format structure.
+    uint32_t        offset; ///< Number of bytes from vertex buffer begining to the first element that will be used.
 
     /// ctor
     VertexBufferBinding(): stride(0), offset(0) {}
@@ -309,10 +309,10 @@ struct SamplerDesc {
         };
     };
 
-    uint8 border[4]; ///< border color in R-G-B-A. Default is (0,0,0,0)
-    float mipbias;   ///< Mip bias. Default is 0.0
-    float minlod;    ///< Min mipmap level. Default is zero
-    float maxlod;    ///< Max mipmap level. Default is negative that means no limination
+    uint8_t border[4]; ///< border color in R-G-B-A. Default is (0,0,0,0)
+    float   mipbias;   ///< Mip bias. Default is 0.0
+    float   minlod;    ///< Min mipmap level. Default is zero
+    float   maxlod;    ///< Max mipmap level. Default is negative that means no limination
 
     void clear() {
         filterMin = filterMip = filterMag = FILTER_LINEAR;
@@ -326,7 +326,7 @@ struct SamplerDesc {
     }
 
     bool operator==(const SamplerDesc & rhs) const {
-        return filters == rhs.filters && addressModes == rhs.addressModes && *(uint32 *) border == *(uint32 *) rhs.border && mipbias == rhs.mipbias &&
+        return filters == rhs.filters && addressModes == rhs.addressModes && *(uint32_t *) border == *(uint32_t *) rhs.border && mipbias == rhs.mipbias &&
                minlod == rhs.minlod && maxlod == rhs.maxlod;
     }
 
@@ -349,22 +349,22 @@ struct TextureBinding {
 /// \todo use attribute name instead of index
 struct VertexElement {
     PixelFormat format;    ///< the vertex element format.
-    uint8       stream;    ///< vertex buffer index
-    uint8       offset;    ///< offset of the element in the vertex.
-    uint16      attribute; ///< index of the GPU program attribute.
+    uint8_t     stream;    ///< vertex buffer index
+    uint8_t     offset;    ///< offset of the element in the vertex.
+    uint16_t    attribute; ///< index of the GPU program attribute.
 
     // operators
     //@{
-    bool operator==(const VertexElement & rhs) const { return *(const uint64 *) this == *(const uint64 *) &rhs; }
+    bool operator==(const VertexElement & rhs) const { return *(const uint64_t *) this == *(const uint64_t *) &rhs; }
 
-    bool operator!=(const VertexElement & rhs) const { return *(const uint64 *) this != *(const uint64 *) &rhs; }
+    bool operator!=(const VertexElement & rhs) const { return *(const uint64_t *) this != *(const uint64_t *) &rhs; }
 
-    bool operator<(const VertexElement & rhs) const { return *(const uint64 *) this < *(const uint64 *) &rhs; }
+    bool operator<(const VertexElement & rhs) const { return *(const uint64_t *) this < *(const uint64_t *) &rhs; }
 
-    bool operator>(const VertexElement & rhs) const { return *(const uint64 *) this > *(const uint64 *) &rhs; }
+    bool operator>(const VertexElement & rhs) const { return *(const uint64_t *) this > *(const uint64_t *) &rhs; }
     //@}
 };
-GN_CASSERT(sizeof(VertexElement) == sizeof(uint64));
+GN_CASSERT(sizeof(VertexElement) == sizeof(uint64_t));
 
 typedef StackArray<VertexElement, 32> VertexBinding;
 
@@ -373,13 +373,13 @@ typedef StackArray<VertexElement, 32> VertexBinding;
 ///
 struct Uniform : public RefCounter {
     /// get parameter size
-    virtual uint32 size() const = 0;
+    virtual uint32_t size() const = 0;
 
     /// get current parameter value
     virtual const void * getval() const = 0;
 
     /// update parameter value
-    virtual void update(uint32 offset, uint32 length, const void * data) = 0;
+    virtual void update(uint32_t offset, uint32_t length, const void * data) = 0;
 
     /// update parameter value
     template<typename T>
@@ -396,7 +396,7 @@ struct RenderTargetTextureTempl {
     T texture;
 
     union {
-        uint32 subsurface;
+        uint32_t subsurface;
         struct {
             unsigned int face  : 12;
             unsigned int level : 8;
@@ -513,17 +513,17 @@ struct GpuContext {
     /// Alpha blend flags for one color render target
     union RenderTargetAlphaBlend {
         struct {
-            uint8 blendSrc      : 4;
-            uint8 blendDst      : 4;
-            uint8 blendAlphaSrc : 4;
-            uint8 blendAlphaDst : 4;
-            uint8 blendOp       : 3;
-            uint8 blendAlphaOp  : 3;
-            uint8 blendEnabled  : 2;
-            uint8 _reserved     : 8;
+            uint8_t blendSrc      : 4;
+            uint8_t blendDst      : 4;
+            uint8_t blendAlphaSrc : 4;
+            uint8_t blendAlphaDst : 4;
+            uint8_t blendOp       : 3;
+            uint8_t blendAlphaOp  : 3;
+            uint8_t blendEnabled  : 2;
+            uint8_t _reserved     : 8;
         };
 
-        uint32 u32;
+        uint32_t u32;
 
         bool operator==(const RenderTargetAlphaBlend & rhs) const { return u32 == rhs.u32; }
 
@@ -531,46 +531,46 @@ struct GpuContext {
 
         bool operator<(const RenderTargetAlphaBlend & rhs) const { return u32 < rhs.u32; }
     };
-    GN_CASSERT(sizeof(RenderTargetAlphaBlend) == sizeof(uint32));
+    GN_CASSERT(sizeof(RenderTargetAlphaBlend) == sizeof(uint32_t));
 
     /// Render state bit flags
     //@{
 
     struct RenderStates {
         union {
-            uint64 bitFlags; ///< aggregated render state bit flags in single 64 bits integer.
+            uint64_t bitFlags; ///< aggregated render state bit flags in single 64 bits integer.
 
             struct {
 
                 // depth stencil flags ( 1 bytes )
-                uint64 depthTestEnabled  : 2;
-                uint64 depthWriteEnabled : 2;
-                uint64 depthFunc         : 4;
+                uint64_t depthTestEnabled  : 2;
+                uint64_t depthWriteEnabled : 2;
+                uint64_t depthFunc         : 4;
 
                 // stencil flags ( 3 bytes )
                 // TODO: stencil function
-                uint64 stencilEnabled : 2;
-                uint64 stencilPassOp  : 4; ///< pass both stencil and Z
-                uint64 stencilFailOp  : 4; ///< fail stencil (no z test at all)
-                uint64 stencilZFailOp : 4; ///< pass stencil but fail Z
-                uint64 stencilFunc    : 4; ///< Stencil function
-                uint64 _reserved0     : 6; ///< reserved bits. keep them zero.
+                uint64_t stencilEnabled : 2;
+                uint64_t stencilPassOp  : 4; ///< pass both stencil and Z
+                uint64_t stencilFailOp  : 4; ///< fail stencil (no z test at all)
+                uint64_t stencilZFailOp : 4; ///< pass stencil but fail Z
+                uint64_t stencilFunc    : 4; ///< Stencil function
+                uint64_t _reserved0     : 6; ///< reserved bits. keep them zero.
 
                 // misc. flags (1 byte)
-                uint64 fillMode    : 2;
-                uint64 cullMode    : 2;
-                uint64 frontFace   : 2;
-                uint64 msaaEnabled : 2;
+                uint64_t fillMode    : 2;
+                uint64_t cullMode    : 2;
+                uint64_t frontFace   : 2;
+                uint64_t msaaEnabled : 2;
 
                 // reserved (3 byte)
-                uint64 _reserved1 : 24; ///< reserved bits. keep them zero.
+                uint64_t _reserved1 : 24; ///< reserved bits. keep them zero.
             };
 
             struct {
 
-                uint64 depthFlags   : 8;
-                uint64 stencilFlags : 24;
-                uint64 miscFlags    : 8;
+                uint64_t depthFlags   : 8;
+                uint64_t stencilFlags : 24;
+                uint64_t miscFlags    : 8;
             };
         };
 
@@ -590,13 +590,13 @@ struct GpuContext {
         Vector4f blendFactors;
 
         /// 4 bits x 8 render targets.
-        uint32 colorWriteMask;
+        uint32_t colorWriteMask;
 
         /// viewport. (0,0,0,0) is used to represent current size of render target.
-        Rect<uint32> viewport;
+        Rect<uint32_t> viewport;
 
         /// Scissor rect. (0,0,0,0) is used to represent current size of the render target.
-        Rect<uint32> scissorRect;
+        Rect<uint32_t> scissorRect;
 
         /// clear to default render states
         void clear() {
@@ -649,21 +649,21 @@ struct GpuContext {
     ///
     /// \note  Parameters are ordered based on their binding index in current GPU program.
     //@{
-    DynaArray<AutoRef<Uniform>, uint32>              uniforms; ///< uniforms
-    FixedArray<TextureBinding, MAX_TEXTURES, uint32> textures; ///< textures
+    DynaArray<AutoRef<Uniform>, uint32_t>              uniforms; ///< uniforms
+    FixedArray<TextureBinding, MAX_TEXTURES, uint32_t> textures; ///< textures
     //@}
 
     /// geometry data
     //@{
-    VertexBinding                                               vtxbind; ///< vtxbind
-    FixedArray<VertexBufferBinding, MAX_VERTEX_BUFFERS, uint32> vtxbufs; ///< vertex buffers
-    AutoRef<IdxBuf>                                             idxbuf;  ///< index buffer
+    VertexBinding                                                 vtxbind; ///< vtxbind
+    FixedArray<VertexBufferBinding, MAX_VERTEX_BUFFERS, uint32_t> vtxbufs; ///< vertex buffers
+    AutoRef<IdxBuf>                                               idxbuf;  ///< index buffer
     //@}
 
     /// render targets
     //@{
-    StackArray<RenderTargetTexture, MAX_COLOR_RENDER_TARGETS, uint32> colortargets;
-    RenderTargetTexture                                               depthstencil;
+    StackArray<RenderTargetTexture, MAX_COLOR_RENDER_TARGETS, uint32_t> colortargets;
+    RenderTargetTexture                                                 depthstencil;
     //@}
 
     ///
@@ -681,11 +681,11 @@ struct GpuContext {
 
         uniforms.clear();
 
-        for (uint32 i = 0; i < GN_ARRAY_COUNT(textures); ++i) { textures[i].clear(); }
+        for (uint32_t i = 0; i < GN_ARRAY_COUNT(textures); ++i) { textures[i].clear(); }
 
         vtxbind.clear();
 
-        for (uint32 i = 0; i < GN_ARRAY_COUNT(vtxbufs); ++i) { vtxbufs[i].clear(); }
+        for (uint32_t i = 0; i < GN_ARRAY_COUNT(vtxbufs); ++i) { vtxbufs[i].clear(); }
 
         idxbuf.clear();
 
@@ -738,10 +738,10 @@ struct GpuSignals {
     ///
     /// The 3 parameters are:
     ///  - intptr_t monior     : monitor handle that render window stays in
-    ///  - uint32 clientWidth  : width of client area of render window
-    ///  - uint32 clientHeight : height of client area of render window
+    ///  - uint32_t clientWidth  : width of client area of render window
+    ///  - uint32_t clientHeight : height of client area of render window
     ///
-    Signal3<void, intptr_t, uint32, uint32> rendererWindowSizeMove;
+    Signal3<void, intptr_t, uint32_t, uint32_t> rendererWindowSizeMove;
 
     ///
     /// 当用户试图关闭渲染窗口时被触发，如点击窗口的关闭按钮或者按ALT-F4。
@@ -848,7 +848,7 @@ public:
     ///
     /// create GPU uniform
     ///
-    virtual Uniform * createUniform(uint32 size) = 0;
+    virtual Uniform * createUniform(uint32_t size) = 0;
 
     ///
     /// Create new texture
@@ -859,11 +859,11 @@ public:
     ///
     /// Create new texture, with individual creation parameters.
     ///
-    Texture * createTexture(PixelFormat format, uint32 sx, uint32 sy, uint32 sz, uint32 faces = 1,
-                            uint32       levels = 1, // set to 0 to generate texture with full mipmap chain
+    Texture * createTexture(PixelFormat format, uint32_t sx, uint32_t sy, uint32_t sz, uint32_t faces = 1,
+                            uint32_t     levels = 1, // set to 0 to generate texture with full mipmap chain
                             TextureUsage usages = TextureUsage::DEFAULT) {
         TextureDesc desc = {
-            format, (uint32) sx, (uint32) sy, (uint32) sz, (uint32) faces, (uint32) levels, usages,
+            format, (uint32_t) sx, (uint32_t) sy, (uint32_t) sz, (uint32_t) faces, (uint32_t) levels, usages,
         };
         return createTexture(desc);
     }
@@ -871,28 +871,28 @@ public:
     ///
     /// Create 1D texture
     ///
-    Texture * create1DTexture(PixelFormat format, uint32 sx, uint32 levels = 0, TextureUsage usages = TextureUsage::DEFAULT) {
+    Texture * create1DTexture(PixelFormat format, uint32_t sx, uint32_t levels = 0, TextureUsage usages = TextureUsage::DEFAULT) {
         return createTexture(format, sx, 1, 1, 1, levels, usages);
     }
 
     ///
     /// Create 2D texture
     ///
-    Texture * create2DTexture(PixelFormat format, uint32 sx, uint32 sy, uint32 levels = 1, TextureUsage usages = TextureUsage::DEFAULT) {
+    Texture * create2DTexture(PixelFormat format, uint32_t sx, uint32_t sy, uint32_t levels = 1, TextureUsage usages = TextureUsage::DEFAULT) {
         return createTexture(format, sx, sy, 1, 1, levels, usages);
     }
 
     ///
     /// Create 3D texture
     ///
-    Texture * create3DTexture(PixelFormat format, uint32 sx, uint32 sy, uint32 sz, uint32 levels = 1, TextureUsage usages = TextureUsage::DEFAULT) {
+    Texture * create3DTexture(PixelFormat format, uint32_t sx, uint32_t sy, uint32_t sz, uint32_t levels = 1, TextureUsage usages = TextureUsage::DEFAULT) {
         return createTexture(format, sx, sy, sz, 1, levels, usages);
     }
 
     ///
     /// Create CUBE texture
     ///
-    Texture * createCubeTexture(PixelFormat format, uint32 sx, uint32 levels = 1, TextureUsage usages = TextureUsage::DEFAULT) {
+    Texture * createCubeTexture(PixelFormat format, uint32_t sx, uint32_t levels = 1, TextureUsage usages = TextureUsage::DEFAULT) {
         return createTexture(format, sx, sx, 1, 6, levels, usages);
     }
 
@@ -904,7 +904,7 @@ public:
     ///
     /// Create new vertex buffer
     ///
-    VtxBuf * createVtxBuf(uint32 length, bool fastCpuWrite = false) {
+    VtxBuf * createVtxBuf(uint32_t length, bool fastCpuWrite = false) {
         VtxBufDesc desc;
         desc.length       = length;
         desc.fastCpuWrite = fastCpuWrite;
@@ -919,9 +919,9 @@ public:
     ///
     /// Create new 16 bit index buffer
     ///
-    IdxBuf * createIdxBuf16(uint32 numidx, bool fastCpuWrite = false) {
+    IdxBuf * createIdxBuf16(uint32_t numidx, bool fastCpuWrite = false) {
         IdxBufDesc desc;
-        desc.numidx       = (uint32) numidx;
+        desc.numidx       = (uint32_t) numidx;
         desc.bits32       = false;
         desc.fastCpuWrite = fastCpuWrite;
         return createIdxBuf(desc);
@@ -930,9 +930,9 @@ public:
     ///
     /// Create new 32 bit index buffer
     ///
-    IdxBuf * createIdxBuf32(uint32 numidx, bool fastCpuWrite = false) {
+    IdxBuf * createIdxBuf32(uint32_t numidx, bool fastCpuWrite = false) {
         IdxBufDesc desc;
-        desc.numidx       = (uint32) numidx;
+        desc.numidx       = (uint32_t) numidx;
         desc.bits32       = true;
         desc.fastCpuWrite = fastCpuWrite;
         return createIdxBuf(desc);
@@ -1016,7 +1016,7 @@ public:
     /// \param z     深度值
     /// \param s     模板值
     ///
-    virtual void clearScreen(const Vector4f & c = Vector4f(0, 0, 0, 1), float z = 1.0f, uint8 s = 0, uint32 flags = CLEAR_ALL) = 0;
+    virtual void clearScreen(const Vector4f & c = Vector4f(0, 0, 0, 1), float z = 1.0f, uint8_t s = 0, uint32_t flags = CLEAR_ALL) = 0;
 
     ///
     /// Draw indexed primitives.
@@ -1032,7 +1032,7 @@ public:
     /// \param startidx
     ///     index into index buffer of the first index
     ///
-    virtual void drawIndexed(PrimitiveType prim, uint32 numidx, uint32 basevtx, uint32 startvtx, uint32 numvtx, uint32 startidx) = 0;
+    virtual void drawIndexed(PrimitiveType prim, uint32_t numidx, uint32_t basevtx, uint32_t startvtx, uint32_t numvtx, uint32_t startidx) = 0;
 
     ///
     /// Draw non-indexed primitives.
@@ -1044,17 +1044,18 @@ public:
     /// \param startvtx
     ///     index into vertex buffer of the first vertex.
     ///
-    virtual void draw(PrimitiveType prim, uint32 numvtx, uint32 startvtx) = 0;
+    virtual void draw(PrimitiveType prim, uint32_t numvtx, uint32_t startvtx) = 0;
 
     ///
     /// draw on-indexed primitives with user-defined data array
     ///
-    virtual void drawIndexedUp(PrimitiveType prim, uint32 numidx, uint32 numvtx, const void * vertexData, uint32 strideInBytes, const uint16 * indexData) = 0;
+    virtual void drawIndexedUp(PrimitiveType prim, uint32_t numidx, uint32_t numvtx, const void * vertexData, uint32_t strideInBytes,
+                               const uint16_t * indexData) = 0;
 
     ///
     /// draw on-indexed primitives with user-defined data array
     ///
-    virtual void drawUp(PrimitiveType prim, uint32 numvtx, const void * vertexData, uint32 strideInBytes) = 0;
+    virtual void drawUp(PrimitiveType prim, uint32_t numvtx, const void * vertexData, uint32_t strideInBytes) = 0;
 
     //@}
 
@@ -1115,11 +1116,11 @@ public:
     virtual GpuSignals & getSignals() = 0;
 
     struct BackBufferContent {
-        DynaArray<uint8> data;
-        PixelFormat      format;
-        uint32           width;
-        uint32           height;
-        uint32           pitch;
+        DynaArray<uint8_t> data;
+        PixelFormat        format;
+        uint32_t           width;
+        uint32_t           height;
+        uint32_t           pitch;
     };
 
     ///
@@ -1138,7 +1139,7 @@ public:
     /// - Settting both data and length to zero, to delete exsiting user data.
     /// - User data buffer will be deleted automatically when the renderer is deleted.
     ///
-    virtual void setUserData(const Guid & id, const void * data, uint32 length) = 0;
+    virtual void setUserData(const Guid & id, const void * data, uint32_t length) = 0;
 
     ///
     /// Get user data
@@ -1147,7 +1148,7 @@ public:
     /// \param length           Optional parameter to return user data length.
     /// \return                 Return user data pointer. Return NULL if ID is not found.
     ///
-    virtual const void * getUserData(const Guid & id, uint32 * length = NULL) const = 0;
+    virtual const void * getUserData(const Guid & id, uint32_t * length = NULL) const = 0;
 
     ///
     /// determine if there is the user data with specific ID
@@ -1157,8 +1158,8 @@ public:
     ///
     /// get user data length.
     ///
-    inline uint32 getUserDataLength(const Guid & id) const {
-        uint32 length;
+    inline uint32_t getUserDataLength(const Guid & id) const {
+        uint32_t length;
         if (NULL == getUserData(id, &length)) length = 0;
         return length;
     }
@@ -1170,11 +1171,11 @@ public:
     /// \param data, length     Target buffer to store user data.
     /// \return                 return bytes copied to target buffer. Return 0 for failure.
     ///
-    inline uint32 getUserData(const Guid & id, void * data, uint32 length) const {
-        uint32       srcLength;
+    inline uint32_t getUserData(const Guid & id, void * data, uint32_t length) const {
+        uint32_t     srcLength;
         const void * src = getUserData(id, &srcLength);
         if (NULL == src) return 0;
-        uint32 copyLength = srcLength < length ? srcLength : length;
+        uint32_t copyLength = srcLength < length ? srcLength : length;
         memcpy(data, src, copyLength);
         return copyLength;
     }
@@ -1206,7 +1207,7 @@ public:
     ///     Dump data format is renderer dependent.
     ///     Check document of specific renderer implementation for details.
     ///
-    virtual void debugDumpNextFrame(uint32 startBatchIndex = 0, uint32 numBatches = 0) = 0;
+    virtual void debugDumpNextFrame(uint32_t startBatchIndex = 0, uint32_t numBatches = 0) = 0;
 
     /// Marks the beginning of a user-defined event in GPU debugging tool.
     /// \note Debug mark currently works on D3D GPU only (PIX).
@@ -1231,17 +1232,17 @@ enum GpuCreationFlag {
 ///
 /// Create OpenGL GPU (no linkage to any D3D libraries)
 ///
-GN_API Gpu * createOGLGpu(const GpuOptions & go, uint32 creationFlags);
+GN_API Gpu * createOGLGpu(const GpuOptions & go, uint32_t creationFlags);
 
 ///
 /// Create D3D GPU (no linkage to any OpenGL libraries)
 ///
-GN_API Gpu * createD3DGpu(const GpuOptions & go, uint32 creationFlags);
+GN_API Gpu * createD3DGpu(const GpuOptions & go, uint32_t creationFlags);
 
 ///
 /// General GPU creator (link to both D3D and OpenGL libraries)
 ///
-GN_API Gpu * createGpu(const GpuOptions & go, uint32 creationFlags);
+GN_API Gpu * createGpu(const GpuOptions & go, uint32_t creationFlags);
 
 ///
 /// Delete renderer

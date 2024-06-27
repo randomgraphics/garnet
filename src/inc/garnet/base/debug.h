@@ -243,12 +243,12 @@ GN_API void printToDebugger(const char *);
 ///
 /// get OS error info (Windows specific)
 ///
-GN_API const char * getWin32ErrorInfo(sint32 win32ErrorCode) throw();
+GN_API const char * getWin32ErrorInfo(int32_t win32ErrorCode) throw();
 
 ///
 /// get OS error info (Windows specific)
 ///
-GN_API const wchar_t * getWin32ErrorInfoW(sint32 win32ErrorCode) throw();
+GN_API const wchar_t * getWin32ErrorInfoW(int32_t win32ErrorCode) throw();
 
 ///
 /// get OS error info (Windows specific)
@@ -260,7 +260,7 @@ GN_API const char * getWin32LastErrorInfo() throw();
 ///
 /// get DX error string
 ///
-GN_API const char * getDXErrorInfo(sint32 hr) throw();
+GN_API const char * getDXErrorInfo(int32_t hr) throw();
 
 ///
 /// convert errno value to string

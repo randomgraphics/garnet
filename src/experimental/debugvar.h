@@ -13,17 +13,17 @@ class DebugVarManager;
 ///
 /// Unique debug varialbe ID
 ///
-typedef uint32 DebugVariableId;
+typedef uint32_t DebugVariableId;
 
 ///
 /// base class of debug variable
 ///
 class BasicDebugVariable {
-    DebugVarManager & mManager;
-    DebugVariableId   mId; // unique ID of the variable
-    const StrA        mName;
-    const StrA        mType;
-    DynaArray<uint8>  mValue;
+    DebugVarManager &  mManager;
+    DebugVariableId    mId; // unique ID of the variable
+    const StrA         mName;
+    const StrA         mType;
+    DynaArray<uint8_t> mValue;
 
 public:
     //@{

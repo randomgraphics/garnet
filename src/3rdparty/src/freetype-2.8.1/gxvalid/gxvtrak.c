@@ -54,10 +54,10 @@
      * ----------------------------------------------
      * [MINIMUM HEADER]: GXV_TRAK_SIZE_MIN
      * version          (fixed:  32bit) = 0x00010000
-     * format           (uint16: 16bit) = 0 is only defined (1996)
-     * horizOffset      (uint16: 16bit)
-     * vertOffset       (uint16: 16bit)
-     * reserved         (uint16: 16bit) = 0
+     * format           (uint16_t: 16bit) = 0 is only defined (1996)
+     * horizOffset      (uint16_t: 16bit)
+     * vertOffset       (uint16_t: 16bit)
+     * reserved         (uint16_t: 16bit) = 0
      * ----------------------------------------------
      * [VARIABLE BODY]:
      * horizData

@@ -55,7 +55,7 @@ void GN::gfx::MultiThreadIdxBuf::quit() {
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::MultiThreadIdxBuf::update(uint32 startidx, uint32 numidx, const void * data, SurfaceUpdateFlag flag) {
+void GN::gfx::MultiThreadIdxBuf::update(uint32_t startidx, uint32_t numidx, const void * data, SurfaceUpdateFlag flag) {
     if (NULL == data) {
         GN_ERROR(sLogger)("Null data pointer.");
         return;
@@ -67,7 +67,7 @@ void GN::gfx::MultiThreadIdxBuf::update(uint32 startidx, uint32 numidx, const vo
     if (startidx >= d.numidx) return;
     if (0 == numidx) numidx = d.numidx - startidx;
 
-    uint32 length = numidx * (d.bits32 ? 4 : 2);
+    uint32_t length = numidx * (d.bits32 ? 4 : 2);
 
     void * tmpbuf = HeapMemory::alloc(length);
     if (NULL == tmpbuf) {
@@ -82,7 +82,7 @@ void GN::gfx::MultiThreadIdxBuf::update(uint32 startidx, uint32 numidx, const vo
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::MultiThreadIdxBuf::readback(DynaArray<uint8> & data) { mGpu.cmdbuf().postCommand2(CMD_IDXBUF_READBACK, mIdxBuf, &data); }
+void GN::gfx::MultiThreadIdxBuf::readback(DynaArray<uint8_t> & data) { mGpu.cmdbuf().postCommand2(CMD_IDXBUF_READBACK, mIdxBuf, &data); }
 
 // *****************************************************************************
 // Command handlers (called by back end thread)
@@ -93,7 +93,7 @@ namespace gfx {
 //
 //
 // -------------------------------------------------------------------------
-void func_IDXBUF_DESTROY(Gpu &, void * p, uint32) {
+void func_IDXBUF_DESTROY(Gpu &, void * p, uint32_t) {
     IdxBuf * ib = *(IdxBuf **) p;
     ib->decref();
 }
@@ -101,11 +101,11 @@ void func_IDXBUF_DESTROY(Gpu &, void * p, uint32) {
 //
 //
 // -------------------------------------------------------------------------
-void func_IDXBUF_UPDATE(Gpu &, void * p, uint32) {
+void func_IDXBUF_UPDATE(Gpu &, void * p, uint32_t) {
     struct IdxBufUpdateParam {
         IdxBuf *          idxbuf;
-        uint32            offset;
-        uint32            length;
+        uint32_t          offset;
+        uint32_t          length;
         void *            data;
         SurfaceUpdateFlag flag;
     };
@@ -120,10 +120,10 @@ void func_IDXBUF_UPDATE(Gpu &, void * p, uint32) {
 //
 //
 // -------------------------------------------------------------------------
-void func_IDXBUF_READBACK(Gpu &, void * p, uint32) {
+void func_IDXBUF_READBACK(Gpu &, void * p, uint32_t) {
     struct IdxBufReadBackParam {
-        IdxBuf *           ib;
-        DynaArray<uint8> * buf;
+        IdxBuf *             ib;
+        DynaArray<uint8_t> * buf;
     };
     IdxBufReadBackParam * vbrp = (IdxBufReadBackParam *) p;
 

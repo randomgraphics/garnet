@@ -93,12 +93,12 @@ public:
         return ret;
     }
 
-    bool isPending(uint64 fence) const {
+    bool isPending(uint64_t fence) const {
         FenceValue f = {fence};
         return _f->GetCompletedValue() < f.value;
     }
 
-    void finish(uint64 fence) {
+    void finish(uint64_t fence) {
         FenceValue f = {fence};
         GN_ASSERT(f.type == (uint64_t) _type);
         if (_f->GetCompletedValue() < f.value) {

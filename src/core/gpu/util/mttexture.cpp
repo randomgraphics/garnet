@@ -13,11 +13,11 @@ using namespace GN::gfx;
 
 struct UpdateMipmapParam {
     Texture *         tex;
-    uint32            face;
-    uint32            level;
-    Box<uint32>       area;
-    uint32            rowPitch;
-    uint32            slicePitch;
+    uint32_t          face;
+    uint32_t          level;
+    Box<uint32_t>     area;
+    uint32_t          rowPitch;
+    uint32_t          slicePitch;
     void *            data;
     SurfaceUpdateFlag flag;
 };
@@ -43,7 +43,7 @@ bool GN::gfx::MultiThreadTexture::init(Texture * tex) {
 
     setDesc(desc);
 
-    for (uint32 i = 0; i < desc.levels; ++i) { setMipSize(i, mTexture->getMipSize(i)); }
+    for (uint32_t i = 0; i < desc.levels; ++i) { setMipSize(i, mTexture->getMipSize(i)); }
 
     // success
     return success();
@@ -75,16 +75,16 @@ void GN::gfx::MultiThreadTexture::quit() {
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::MultiThreadTexture::updateMipmap(uint32 face, uint32 level, const Box<uint32> * area, uint32 rowPitch, uint32 slicePitch, const void * data,
-                                               SurfaceUpdateFlag flag) {
+void GN::gfx::MultiThreadTexture::updateMipmap(uint32_t face, uint32_t level, const Box<uint32_t> * area, uint32_t rowPitch, uint32_t slicePitch,
+                                               const void * data, SurfaceUpdateFlag flag) {
     if (level >= getDesc().levels) {
         GN_ERROR(sLogger)("Invalid mipmap level: %d", level);
         return;
     }
 
-    const Vector3<uint32> & mipsize = getMipSize(level);
+    const Vector3<uint32_t> & mipsize = getMipSize(level);
 
-    uint32 dataSize = slicePitch * mipsize.z;
+    uint32_t dataSize = slicePitch * mipsize.z;
 
     void * tmpbuf = HeapMemory::alloc(dataSize);
     if (NULL == tmpbuf) {
@@ -100,7 +100,7 @@ void GN::gfx::MultiThreadTexture::updateMipmap(uint32 face, uint32 level, const 
         ump->tex        = mTexture;
         ump->face       = face;
         ump->level      = level;
-        ump->area       = area ? *area : Box<uint32>(0, 0, 0, mipsize.x, mipsize.y, mipsize.z);
+        ump->area       = area ? *area : Box<uint32_t>(0, 0, 0, mipsize.x, mipsize.y, mipsize.z);
         ump->rowPitch   = rowPitch;
         ump->slicePitch = slicePitch;
         ump->data       = tmpbuf;
@@ -113,7 +113,7 @@ void GN::gfx::MultiThreadTexture::updateMipmap(uint32 face, uint32 level, const 
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::MultiThreadTexture::readMipmap(uint32 face, uint32 level, MipmapData & data) {
+void GN::gfx::MultiThreadTexture::readMipmap(uint32_t face, uint32_t level, MipmapData & data) {
     GN_UNUSED_PARAM(face);
     GN_UNUSED_PARAM(level);
     GN_UNUSED_PARAM(data);
@@ -123,7 +123,7 @@ void GN::gfx::MultiThreadTexture::readMipmap(uint32 face, uint32 level, MipmapDa
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::MultiThreadTexture::blobWrite(const void * data, uint32 length) {
+void GN::gfx::MultiThreadTexture::blobWrite(const void * data, uint32_t length) {
     GN_UNUSED_PARAM(data);
     GN_UNUSED_PARAM(length);
     GN_UNIMPL();
@@ -132,7 +132,7 @@ void GN::gfx::MultiThreadTexture::blobWrite(const void * data, uint32 length) {
 //
 //
 // -----------------------------------------------------------------------------
-uint32 GN::gfx::MultiThreadTexture::blobRead(void * data) {
+uint32_t GN::gfx::MultiThreadTexture::blobRead(void * data) {
     GN_UNUSED_PARAM(data);
     GN_UNIMPL();
     return 0;
@@ -160,7 +160,7 @@ namespace gfx {
 //
 //
 // -------------------------------------------------------------------------
-void func_TEXTURE_DESTROY(Gpu &, void * p, uint32) {
+void func_TEXTURE_DESTROY(Gpu &, void * p, uint32_t) {
     Texture ** tex = (Texture **) p;
     (*tex)->decref();
 }
@@ -168,7 +168,7 @@ void func_TEXTURE_DESTROY(Gpu &, void * p, uint32) {
 //
 //
 // -------------------------------------------------------------------------
-void func_TEXTURE_UPDATE_MIPMAP(Gpu &, void * p, uint32) {
+void func_TEXTURE_UPDATE_MIPMAP(Gpu &, void * p, uint32_t) {
     UpdateMipmapParam * ump = (UpdateMipmapParam *) p;
 
     ump->tex->updateMipmap(ump->face, ump->level, &ump->area, ump->rowPitch, ump->slicePitch, ump->data, ump->flag);
@@ -179,16 +179,16 @@ void func_TEXTURE_UPDATE_MIPMAP(Gpu &, void * p, uint32) {
 //
 //
 // -------------------------------------------------------------------------
-void func_TEXTURE_READ_MIPMAP(Gpu &, void *, uint32) { GN_UNIMPL(); }
+void func_TEXTURE_READ_MIPMAP(Gpu &, void *, uint32_t) { GN_UNIMPL(); }
 
 //
 //
 // -------------------------------------------------------------------------
-void func_TEXTURE_BLOB_WRITE(Gpu &, void *, uint32) { GN_UNIMPL(); }
+void func_TEXTURE_BLOB_WRITE(Gpu &, void *, uint32_t) { GN_UNIMPL(); }
 
 //
 //
 // -------------------------------------------------------------------------
-void func_TEXTURE_BLOB_READ(Gpu &, void *, uint32) { GN_UNIMPL(); }
+void func_TEXTURE_BLOB_READ(Gpu &, void *, uint32_t) { GN_UNIMPL(); }
 } // namespace gfx
 } // namespace GN

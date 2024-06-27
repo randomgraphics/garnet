@@ -47,9 +47,9 @@
    * ----------------------------------------------
    * [JUST HEADER]: GXV_JUST_HEADER_SIZE
    * version     (fixed:  32bit) = 0x00010000
-   * format      (uint16: 16bit) = 0 is only defined (2000)
-   * horizOffset (uint16: 16bit)
-   * vertOffset  (uint16: 16bit)
+   * format      (uint16_t: 16bit) = 0 is only defined (2000)
+   * horizOffset (uint16_t: 16bit)
+   * vertOffset  (uint16_t: 16bit)
    * ----------------------------------------------
    */
 

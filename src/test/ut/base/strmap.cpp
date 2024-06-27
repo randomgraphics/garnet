@@ -11,7 +11,7 @@
 
 class StringMapTest : public CxxTest::TestSuite {
     struct StlStringHash {
-        uint64 operator()(const std::string & s) const { return GN::str::hash(s.c_str()); }
+        uint64_t operator()(const std::string & s) const { return GN::str::hash(s.c_str()); }
     };
 
     typedef std::unordered_map<std::string, size_t> StrHashMap;

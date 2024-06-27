@@ -9,7 +9,7 @@ static GN::Logger * sLogger = GN::getLogger("GN.gfx.base.image");
 
 #ifndef MAKE_FOURCC
     #define MAKE_FOURCC(ch0, ch1, ch2, ch3) \
-        ((uint32) (uint8) (ch0) | ((uint32) (uint8) (ch1) << 8) | ((uint32) (uint8) (ch2) << 16) | ((uint32) (uint8) (ch3) << 24))
+        ((uint32_t) (uint8_t) (ch0) | ((uint32_t) (uint8_t) (ch1) << 8) | ((uint32_t) (uint8_t) (ch2) << 16) | ((uint32_t) (uint8_t) (ch3) << 24))
 #endif /* defined(MAKE_FOURCC) */
 
 ///
@@ -129,11 +129,11 @@ static struct DdpfDesc {
 };
 
 struct DX10Info {
-    sint32 format;   // DXGI_FORMAT
-    sint32 dim;      // D3D10_RESOURCE_DIMENSION
-    uint32 miscFlag; // D3D10_RESOURCE_MISC_FLAG
-    uint32 arraySize;
-    uint32 reserved;
+    int32_t  format;   // DXGI_FORMAT
+    int32_t  dim;      // D3D10_RESOURCE_DIMENSION
+    uint32_t miscFlag; // D3D10_RESOURCE_MISC_FLAG
+    uint32_t arraySize;
+    uint32_t reserved;
 };
 
 // *****************************************************************************
@@ -143,7 +143,7 @@ struct DX10Info {
 ///
 /// return image face count
 // -----------------------------------------------------------------------------
-static uint32 sGetImageFaceCount(const DDSFileHeader & header) {
+static uint32_t sGetImageFaceCount(const DDSFileHeader & header) {
     if (DDS_DDSD_DEPTH & header.flags && DDS_CAPS_COMPLEX & header.caps && DDS_CAPS2_VOLUME & header.caps2) {
         return 1; // volume texture
     } else if (DDS_CAPS_COMPLEX & header.caps && DDS_CAPS2_CUBEMAP & header.caps2 &&
@@ -160,7 +160,7 @@ static uint32 sGetImageFaceCount(const DDSFileHeader & header) {
 ///
 /// return image depth
 // -----------------------------------------------------------------------------
-static uint32 sGetImageDepth(const DDSFileHeader & header) { return DDS_DDSD_DEPTH & header.flags ? header.depth : 1; }
+static uint32_t sGetImageDepth(const DDSFileHeader & header) { return DDS_DDSD_DEPTH & header.flags ? header.depth : 1; }
 
 //
 /// \brief return FMT_INVAID if falied
@@ -168,7 +168,7 @@ static uint32 sGetImageDepth(const DDSFileHeader & header) { return DDS_DDSD_DEP
 static GN::gfx::ColorFormat getImageFormat(const DDPixelFormat & ddpf) {
     GN_GUARD;
 
-    uint32 flags = ddpf.flags;
+    uint32_t flags = ddpf.flags;
     if (flags & DDS_DDPF_FOURCC) flags = DDS_DDPF_FOURCC;
 
     bool fourcc = !!(flags & DDS_DDPF_FOURCC);
@@ -179,7 +179,7 @@ static GN::gfx::ColorFormat getImageFormat(const DDPixelFormat & ddpf) {
     bool b      = !!(flags & (DDS_DDPF_RGB | DDS_DDPF_STENCILBUFFER | DDS_DDPF_BUMPLUMINANCE | DDS_DDPF_BUMPDUDV));
     bool a      = !!(flags & (DDS_DDPF_ALPHAPIXELS | DDS_DDPF_ALPHA | DDS_DDPF_BUMPDUDV));
 
-    for (uint32 i = 0; i < sizeof(s_ddpfDescTable) / sizeof(s_ddpfDescTable[0]); ++i) {
+    for (uint32_t i = 0; i < sizeof(s_ddpfDescTable) / sizeof(s_ddpfDescTable[0]); ++i) {
         const DdpfDesc & desc = s_ddpfDescTable[i];
         if (DDS_DDPF_SIZE != ddpf.size) continue;
         if (flags != desc.ddpf.flags) continue;
@@ -239,7 +239,7 @@ GN::gfx::ImageDesc DDSReader::readHeader() {
     }
 
     // validate header flags
-    uint32 required_flags = DDS_DDSD_WIDTH | DDS_DDSD_HEIGHT;
+    uint32_t required_flags = DDS_DDSD_WIDTH | DDS_DDSD_HEIGHT;
     if (required_flags != (required_flags & mHeader.flags)) {
         GN_ERROR(sLogger)("damage DDS header!");
         return {};
@@ -273,15 +273,15 @@ GN::gfx::ImageDesc DDSReader::readHeader() {
     mFormatConversion = sCheckFormatConversion(mOriginalFormat);
 
     // grok image dimension
-    uint32 faces = sGetImageFaceCount(mHeader);
+    uint32_t faces = sGetImageFaceCount(mHeader);
     if (0 == faces) return {};
-    uint32 width  = mHeader.width;
-    uint32 height = mHeader.height;
-    uint32 depth  = sGetImageDepth(mHeader);
+    uint32_t width  = mHeader.width;
+    uint32_t height = mHeader.height;
+    uint32_t depth  = sGetImageDepth(mHeader);
 
     // grok miplevel information
-    bool   hasMipmap = (DDS_DDSD_MIPMAPCOUNT & mHeader.flags) && (DDS_CAPS_MIPMAP & mHeader.caps) && (DDS_CAPS_COMPLEX & mHeader.caps);
-    uint32 levels    = hasMipmap ? mHeader.mipCount : 1;
+    bool     hasMipmap = (DDS_DDSD_MIPMAPCOUNT & mHeader.flags) && (DDS_CAPS_MIPMAP & mHeader.caps) && (DDS_CAPS_COMPLEX & mHeader.caps);
+    uint32_t levels    = hasMipmap ? mHeader.mipCount : 1;
     if (0 == levels) levels = 1;
 
     // grok mipmaps
@@ -364,12 +364,12 @@ void DDSReader::sConvertFormat(FormatConversion fc, GN::gfx::ColorFormat from, G
         GN_ASSERT(ColorFormat::LAYOUT_8_8_8_8 == from.layout);
         GN_ASSERT(ColorFormat::LAYOUT_8_8_8_8 == to.layout);
 
-        size_t   numPixels = size / 4;
-        uint32 * pixels    = (uint32 *) data;
-        uint32 * end       = pixels + numPixels;
+        size_t     numPixels = size / 4;
+        uint32_t * pixels    = (uint32_t *) data;
+        uint32_t * end       = pixels + numPixels;
         for (; pixels < end; ++pixels) {
             // Determine Alpha channel.
-            uint32 a;
+            uint32_t a;
             switch (from.swizzle3) {
             case ColorFormat::SWIZZLE_0:
                 a = 0;

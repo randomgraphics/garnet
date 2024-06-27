@@ -62,43 +62,37 @@ struct IsConvertibleHelper {
 template<typename T>
 struct NumericProperties {};
 template<>
-struct NumericProperties<sint8> {
+struct NumericProperties<int8_t> {
     static const bool isSigned = true;
 };
 template<>
-struct NumericProperties<uint8> {
+struct NumericProperties<uint8_t> {
     static const bool isSigned = false;
 };
 template<>
-struct NumericProperties<sint16> {
+struct NumericProperties<int16_t> {
     static const bool isSigned = true;
 };
 template<>
-struct NumericProperties<uint16> {
+struct NumericProperties<uint16_t> {
     static const bool isSigned = false;
 };
 template<>
-struct NumericProperties<sint32> {
+struct NumericProperties<int32_t> {
     static const bool isSigned = true;
 };
 template<>
-struct NumericProperties<uint32> {
+struct NumericProperties<uint32_t> {
     static const bool isSigned = false;
 };
 template<>
-struct NumericProperties<sint64> {
+struct NumericProperties<int64_t> {
     static const bool isSigned = true;
 };
 template<>
-struct NumericProperties<uint64> {
+struct NumericProperties<uint64_t> {
     static const bool isSigned = false;
 };
-#if GN_GNUC
-template<>
-struct NumericProperties<size_t> {
-    static const bool isSigned = false;
-};
-#endif
 template<>
 struct NumericProperties<float> {
     static const bool isSigned = true;

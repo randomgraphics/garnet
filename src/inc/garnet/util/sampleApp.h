@@ -41,8 +41,8 @@ public:
         gfx::FontFaceCreationDesc asciiFont;         ///< default ascii font face creation descriptor.
     };
 
-    inline static const uint32 UPDATE_FREQUENCY           = 60; ///< Target to 60 FPS.
-    inline static const float  UPDATE_INTERVAL_IN_SECONDS = 1.0f / 60.0f;
+    inline static const uint32_t UPDATE_FREQUENCY           = 60; ///< Target to 60 FPS.
+    inline static const float    UPDATE_INTERVAL_IN_SECONDS = 1.0f / 60.0f;
 
     virtual int  run(int argc, const char * const argv[]);
     virtual bool onCheckExtraCmdlineArguments(const char * exename, int argc,
@@ -53,7 +53,7 @@ public:
     virtual void onQuit()   = 0;
     virtual void onUpdate() = 0;
     virtual void onRender() = 0;
-    virtual void onRenderWindowResize(intptr_t /*window*/, uint32 /*width*/, uint32 /*height*/) {}
+    virtual void onRenderWindowResize(intptr_t /*window*/, uint32_t /*width*/, uint32_t /*height*/) {}
     virtual void onKeyPress(input::KeyEvent);
     virtual void onCharPress(wchar_t) {}
     virtual void onAxisMove(input::Axis, int) {}

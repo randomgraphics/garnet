@@ -44,8 +44,8 @@ private:
     // from IdxBuf
     // ********************************
 public:
-    virtual void update(uint32 startidx, uint32 numidx, const void * data, SurfaceUpdateFlag flag);
-    virtual void readback(DynaArray<uint8> & data);
+    virtual void update(uint32_t startidx, uint32_t numidx, const void * data, SurfaceUpdateFlag flag);
+    virtual void readback(DynaArray<uint8_t> & data);
 
     // ********************************
     // public functions
@@ -59,14 +59,14 @@ public:
     ///
     /// Get index data pointer
     ///
-    const void * data(uint32 startidx) const { return (const void *) (uintptr_t) (startidx * mBytesPerIndex); }
+    const void * data(uint32_t startidx) const { return (const void *) (uintptr_t) (startidx * mBytesPerIndex); }
 
     // ********************************
     // private variables
     // ********************************
 private:
     ogl::BufferObject<GL_ELEMENT_ARRAY_BUFFER> mBuffer;
-    uint32                                     mBytesPerIndex;
+    uint32_t                                   mBytesPerIndex;
 
     // ********************************
     // private functions

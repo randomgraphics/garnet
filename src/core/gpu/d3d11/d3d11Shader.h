@@ -17,12 +17,12 @@ namespace gfx {
 
 class D3D11GpuProgram : public GpuProgram {
 public:
-    uint64 getUniqueID() const { return m_ID; }
+    uint64_t getUniqueID() const { return m_ID; }
 
     ///
     /// Get attribute semantic name and semantic index
     ///
-    virtual const char * getAttributeSemantic(uint32 attributeIndex, UINT * semanticIndex) const = 0;
+    virtual const char * getAttributeSemantic(uint32_t attributeIndex, UINT * semanticIndex) const = 0;
 
     ///
     /// Get vertex input signature.
@@ -37,21 +37,21 @@ public:
     ///
     /// Apply uniforms to D3D device
     ///
-    virtual void applyUniforms(const Uniform * const * uniforms, uint32 count, bool skipDirtyCheck) const = 0;
+    virtual void applyUniforms(const Uniform * const * uniforms, uint32_t count, bool skipDirtyCheck) const = 0;
 
     ///
     /// apply textures to D3D device
     ///
-    virtual void applyTextures(const TextureBinding * bindings, uint32 count, bool skipDirtyCheck) const = 0;
+    virtual void applyTextures(const TextureBinding * bindings, uint32_t count, bool skipDirtyCheck) const = 0;
 
 protected:
     D3D11GpuProgram() {
-        static uint64 sShaderID = 0;
-        m_ID                    = ++sShaderID;
+        static uint64_t sShaderID = 0;
+        m_ID                      = ++sShaderID;
     }
 
 private:
-    uint64 m_ID;
+    uint64_t m_ID;
 };
 
 // *************************************************************************
@@ -67,8 +67,8 @@ struct D3D11UniformParameterDesc : public GpuProgramUniformParameterDesc {
     ///
     struct ShaderSpecificProperties {
         AutoInitializer<bool, false> used;   ///< are these properties used
-        uint32                       cbidx;  ///< const buffer index
-        uint32                       offset; ///< uniform offset in bytes in the const buffer.
+        uint32_t                     cbidx;  ///< const buffer index
+        uint32_t                     offset; ///< uniform offset in bytes in the const buffer.
     };
 
     ///
@@ -180,15 +180,15 @@ public:
     // from D3D11GpuProgram
     // ********************************
 public:
-    virtual const char * getAttributeSemantic(uint32 attributeIndex, UINT * semanticIndex) const;
+    virtual const char * getAttributeSemantic(uint32_t attributeIndex, UINT * semanticIndex) const;
 
     virtual const void * getInputSignature(size_t * pSignatureSize) const;
 
     virtual void apply() const;
 
-    virtual void applyUniforms(const Uniform * const * uniforms, uint32 count, bool skipDirtyCheck) const;
+    virtual void applyUniforms(const Uniform * const * uniforms, uint32_t count, bool skipDirtyCheck) const;
 
-    virtual void applyTextures(const TextureBinding * bindings, uint32 count, bool skipDirtyCheck) const;
+    virtual void applyTextures(const TextureBinding * bindings, uint32_t count, bool skipDirtyCheck) const;
 
     // ********************************
     // private variables
@@ -201,7 +201,7 @@ private:
     GN_CASSERT(sizeof(AutoComPtr<ID3D11Buffer>) == sizeof(ID3D11Buffer *));
 
     /// array of constant buffer in system memory
-    typedef StackArray<DynaArray<uint8>, 16> SysMemConstBufferArray;
+    typedef StackArray<DynaArray<uint8_t>, 16> SysMemConstBufferArray;
 
     struct ShaderHLSL {
         AutoComPtr<ID3D11DeviceChild>  shader;    ///< shader pointer
@@ -224,7 +224,7 @@ private:
     // ********************************
 private:
     template<int SHADER_STAGE>
-    bool initShader(ShaderHLSL & shader, const ShaderCode & code, GpuProgramLanguage targetLanguage, uint32 compileFlags);
+    bool initShader(ShaderHLSL & shader, const ShaderCode & code, GpuProgramLanguage targetLanguage, uint32_t compileFlags);
 
     static bool sInitConstBuffers(ID3D11Device & dev, ID3D11ShaderReflection & reflection, D3D11ConstBufferArray & constBufs,
                                   SysMemConstBufferArray & constData);

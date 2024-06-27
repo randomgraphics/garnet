@@ -621,14 +621,14 @@
   /*************************************************************************/
 
   /*
-     u:   uint16
+     u:   uint16_t
      ux:  unit16 [x]
 
      s:   struct
      sx:  struct [x]
      sxy: struct [x], using external y count
 
-     x:   uint16 x
+     x:   uint16_t x
 
      C:   Coverage
 

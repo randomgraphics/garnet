@@ -52,9 +52,9 @@ public:
     // from GpuProgram
     // ********************************
 public:
-    virtual uint32       size() const { return mSize; }
+    virtual uint32_t     size() const { return mSize; }
     virtual const void * getval() const { return mFrontEndData; }
-    virtual void         update(uint32 offset, uint32 length, const void * data);
+    virtual void         update(uint32_t offset, uint32_t length, const void * data);
 
     // ********************************
     // private variables
@@ -62,8 +62,8 @@ public:
 private:
     MultiThreadGpu & mGpu;
     Uniform *        mUniform;
-    uint32           mSize;
-    uint8 *          mFrontEndData;
+    uint32_t         mSize;
+    uint8_t *        mFrontEndData;
 
     // ********************************
     // private functions

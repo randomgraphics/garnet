@@ -19,7 +19,7 @@ class RenderToTexture : public SampleApp {
 
     bool initMesh(MeshResource * m) {
         Vector3f vertices[24];
-        uint16   indices[36];
+        uint16_t indices[36];
 
         createBox(100, 100, 100, (float *) vertices, sizeof(Vector3f), NULL, 0, // texcoord
                   NULL, 0,                                                      // normal

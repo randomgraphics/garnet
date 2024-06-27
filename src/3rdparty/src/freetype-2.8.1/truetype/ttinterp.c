@@ -2662,7 +2662,7 @@
   /*                                                                       */
   /* DEPTH[]:      return the stack DEPTH                                  */
   /* Opcode range: 0x24                                                    */
-  /* Stack:        --> uint32                                              */
+  /* Stack:        --> uint32_t                                              */
   /*                                                                       */
   static void
   Ins_DEPTH( TT_ExecContext  exc,
@@ -2782,7 +2782,7 @@
   /*                                                                       */
   /* AND[]:        logical AND                                             */
   /* Opcode range: 0x5A                                                    */
-  /* Stack:        uint32 uint32 --> uint32                                */
+  /* Stack:        uint32_t uint32_t --> uint32_t                                */
   /*                                                                       */
   static void
   Ins_AND( FT_Long*  args )
@@ -2795,7 +2795,7 @@
   /*                                                                       */
   /* OR[]:         logical OR                                              */
   /* Opcode range: 0x5B                                                    */
-  /* Stack:        uint32 uint32 --> uint32                                */
+  /* Stack:        uint32_t uint32_t --> uint32_t                                */
   /*                                                                       */
   static void
   Ins_OR( FT_Long*  args )
@@ -2808,7 +2808,7 @@
   /*                                                                       */
   /* NOT[]:        logical NOT                                             */
   /* Opcode range: 0x5C                                                    */
-  /* Stack:        StkElt --> uint32                                       */
+  /* Stack:        StkElt --> uint32_t                                       */
   /*                                                                       */
   static void
   Ins_NOT( FT_Long*  args )
@@ -2929,7 +2929,7 @@
   /*                                                                       */
   /* RS[]:         Read Store                                              */
   /* Opcode range: 0x43                                                    */
-  /* Stack:        uint32 --> uint32                                       */
+  /* Stack:        uint32_t --> uint32_t                                       */
   /*                                                                       */
   static void
   Ins_RS( TT_ExecContext  exc,
@@ -2975,7 +2975,7 @@
   /*                                                                       */
   /* WS[]:         Write Store                                             */
   /* Opcode range: 0x42                                                    */
-  /* Stack:        uint32 uint32 -->                                       */
+  /* Stack:        uint32_t uint32_t -->                                       */
   /*                                                                       */
   static void
   Ins_WS( TT_ExecContext  exc,
@@ -2998,7 +2998,7 @@
   /*                                                                       */
   /* WCVTP[]:      Write CVT in Pixel units                                */
   /* Opcode range: 0x44                                                    */
-  /* Stack:        f26.6 uint32 -->                                        */
+  /* Stack:        f26.6 uint32_t -->                                        */
   /*                                                                       */
   static void
   Ins_WCVTP( TT_ExecContext  exc,
@@ -3021,7 +3021,7 @@
   /*                                                                       */
   /* WCVTF[]:      Write CVT in Funits                                     */
   /* Opcode range: 0x70                                                    */
-  /* Stack:        uint32 uint32 -->                                       */
+  /* Stack:        uint32_t uint32_t -->                                       */
   /*                                                                       */
   static void
   Ins_WCVTF( TT_ExecContext  exc,
@@ -3044,7 +3044,7 @@
   /*                                                                       */
   /* RCVT[]:       Read CVT                                                */
   /* Opcode range: 0x45                                                    */
-  /* Stack:        uint32 --> f26.6                                        */
+  /* Stack:        uint32_t --> f26.6                                        */
   /*                                                                       */
   static void
   Ins_RCVT( TT_ExecContext  exc,
@@ -3069,7 +3069,7 @@
   /*                                                                       */
   /* AA[]:         Adjust Angle                                            */
   /* Opcode range: 0x7F                                                    */
-  /* Stack:        uint32 -->                                              */
+  /* Stack:        uint32_t -->                                              */
   /*                                                                       */
   static void
   Ins_AA( void )
@@ -3082,7 +3082,7 @@
   /*                                                                       */
   /* DEBUG[]:      DEBUG.  Unsupported.                                    */
   /* Opcode range: 0x4F                                                    */
-  /* Stack:        uint32 -->                                              */
+  /* Stack:        uint32_t -->                                              */
   /*                                                                       */
   /* Note: The original instruction pops a value from the stack.           */
   /*                                                                       */
@@ -3453,7 +3453,7 @@
   /*                                                                       */
   /* FDEF[]:       Function DEFinition                                     */
   /* Opcode range: 0x2C                                                    */
-  /* Stack:        uint32 -->                                              */
+  /* Stack:        uint32_t -->                                              */
   /*                                                                       */
   static void
   Ins_FDEF( TT_ExecContext  exc,
@@ -3805,7 +3805,7 @@
   /*                                                                       */
   /* CALL[]:       CALL function                                           */
   /* Opcode range: 0x2B                                                    */
-  /* Stack:        uint32? -->                                             */
+  /* Stack:        uint32_t? -->                                             */
   /*                                                                       */
   static void
   Ins_CALL( TT_ExecContext  exc,
@@ -3894,7 +3894,7 @@
   /*                                                                       */
   /* LOOPCALL[]:   LOOP and CALL function                                  */
   /* Opcode range: 0x2A                                                    */
-  /* Stack:        uint32? Eint16? -->                                     */
+  /* Stack:        uint32_t? Eint16? -->                                     */
   /*                                                                       */
   static void
   Ins_LOOPCALL( TT_ExecContext  exc,
@@ -4069,7 +4069,7 @@
   /*                                                                       */
   /* NPUSHB[]:     PUSH N Bytes                                            */
   /* Opcode range: 0x40                                                    */
-  /* Stack:        --> uint32...                                           */
+  /* Stack:        --> uint32_t...                                           */
   /*                                                                       */
   static void
   Ins_NPUSHB( TT_ExecContext  exc,
@@ -4128,7 +4128,7 @@
   /*                                                                       */
   /* PUSHB[abc]:   PUSH Bytes                                              */
   /* Opcode range: 0xB0-0xB7                                               */
-  /* Stack:        --> uint32...                                           */
+  /* Stack:        --> uint32_t...                                           */
   /*                                                                       */
   static void
   Ins_PUSHB( TT_ExecContext  exc,
@@ -4286,7 +4286,7 @@
   /*                                                                       */
   /* SPvTL[a]:     Set PVector To Line                                     */
   /* Opcode range: 0x06-0x07                                               */
-  /* Stack:        uint32 uint32 -->                                       */
+  /* Stack:        uint32_t uint32_t -->                                       */
   /*                                                                       */
   static void
   Ins_SPVTL( TT_ExecContext  exc,
@@ -4307,7 +4307,7 @@
   /*                                                                       */
   /* SFvTL[a]:     Set FVector To Line                                     */
   /* Opcode range: 0x08-0x09                                               */
-  /* Stack:        uint32 uint32 -->                                       */
+  /* Stack:        uint32_t uint32_t -->                                       */
   /*                                                                       */
   static void
   Ins_SFVTL( TT_ExecContext  exc,
@@ -4423,7 +4423,7 @@
   /*                                                                       */
   /* SRP0[]:       Set Reference Point 0                                   */
   /* Opcode range: 0x10                                                    */
-  /* Stack:        uint32 -->                                              */
+  /* Stack:        uint32_t -->                                              */
   /*                                                                       */
   static void
   Ins_SRP0( TT_ExecContext  exc,
@@ -4437,7 +4437,7 @@
   /*                                                                       */
   /* SRP1[]:       Set Reference Point 1                                   */
   /* Opcode range: 0x11                                                    */
-  /* Stack:        uint32 -->                                              */
+  /* Stack:        uint32_t -->                                              */
   /*                                                                       */
   static void
   Ins_SRP1( TT_ExecContext  exc,
@@ -4451,7 +4451,7 @@
   /*                                                                       */
   /* SRP2[]:       Set Reference Point 2                                   */
   /* Opcode range: 0x12                                                    */
-  /* Stack:        uint32 -->                                              */
+  /* Stack:        uint32_t -->                                              */
   /*                                                                       */
   static void
   Ins_SRP2( TT_ExecContext  exc,
@@ -4548,7 +4548,7 @@
   /*                                                                       */
   /* SANGW[]:      Set ANGle Weight                                        */
   /* Opcode range: 0x7E                                                    */
-  /* Stack:        uint32 -->                                              */
+  /* Stack:        uint32_t -->                                              */
   /*                                                                       */
   static void
   Ins_SANGW( void )
@@ -4561,7 +4561,7 @@
   /*                                                                       */
   /* SDB[]:        Set Delta Base                                          */
   /* Opcode range: 0x5E                                                    */
-  /* Stack:        uint32 -->                                              */
+  /* Stack:        uint32_t -->                                              */
   /*                                                                       */
   static void
   Ins_SDB( TT_ExecContext  exc,
@@ -4575,7 +4575,7 @@
   /*                                                                       */
   /* SDS[]:        Set Delta Shift                                         */
   /* Opcode range: 0x5F                                                    */
-  /* Stack:        uint32 -->                                              */
+  /* Stack:        uint32_t -->                                              */
   /*                                                                       */
   static void
   Ins_SDS( TT_ExecContext  exc,
@@ -4691,7 +4691,7 @@
   /*                                                                       */
   /* S45ROUND[]:   Super ROUND 45 degrees                                  */
   /* Opcode range: 0x77                                                    */
-  /* Stack:        uint32 -->                                              */
+  /* Stack:        uint32_t -->                                              */
   /*                                                                       */
   static void
   Ins_S45ROUND( TT_ExecContext  exc,
@@ -4708,7 +4708,7 @@
   /*                                                                       */
   /* GC[a]:        Get Coordinate projected onto                           */
   /* Opcode range: 0x46-0x47                                               */
-  /* Stack:        uint32 --> f26.6                                        */
+  /* Stack:        uint32_t --> f26.6                                        */
   /*                                                                       */
   /* XXX: UNDOCUMENTED: Measures from the original glyph must be taken     */
   /*      along the dual projection vector!                                */
@@ -4745,7 +4745,7 @@
   /*                                                                       */
   /* SCFS[]:       Set Coordinate From Stack                               */
   /* Opcode range: 0x48                                                    */
-  /* Stack:        f26.6 uint32 -->                                        */
+  /* Stack:        f26.6 uint32_t -->                                        */
   /*                                                                       */
   /* Formula:                                                              */
   /*                                                                       */
@@ -4783,7 +4783,7 @@
   /*                                                                       */
   /* MD[a]:        Measure Distance                                        */
   /* Opcode range: 0x49-0x4A                                               */
-  /* Stack:        uint32 uint32 --> f26.6                                 */
+  /* Stack:        uint32_t uint32_t --> f26.6                                 */
   /*                                                                       */
   /* XXX: UNDOCUMENTED: Measure taken in the original glyph must be along  */
   /*                    the dual projection vector.                        */
@@ -4870,7 +4870,7 @@
   /*                                                                       */
   /* SDPvTL[a]:    Set Dual PVector to Line                                */
   /* Opcode range: 0x86-0x87                                               */
-  /* Stack:        uint32 uint32 -->                                       */
+  /* Stack:        uint32_t uint32_t -->                                       */
   /*                                                                       */
   static void
   Ins_SDPVTL( TT_ExecContext  exc,
@@ -4953,7 +4953,7 @@
   /*                                                                       */
   /* SZP0[]:       Set Zone Pointer 0                                      */
   /* Opcode range: 0x13                                                    */
-  /* Stack:        uint32 -->                                              */
+  /* Stack:        uint32_t -->                                              */
   /*                                                                       */
   static void
   Ins_SZP0( TT_ExecContext  exc,
@@ -4983,7 +4983,7 @@
   /*                                                                       */
   /* SZP1[]:       Set Zone Pointer 1                                      */
   /* Opcode range: 0x14                                                    */
-  /* Stack:        uint32 -->                                              */
+  /* Stack:        uint32_t -->                                              */
   /*                                                                       */
   static void
   Ins_SZP1( TT_ExecContext  exc,
@@ -5013,7 +5013,7 @@
   /*                                                                       */
   /* SZP2[]:       Set Zone Pointer 2                                      */
   /* Opcode range: 0x15                                                    */
-  /* Stack:        uint32 -->                                              */
+  /* Stack:        uint32_t -->                                              */
   /*                                                                       */
   static void
   Ins_SZP2( TT_ExecContext  exc,
@@ -5043,7 +5043,7 @@
   /*                                                                       */
   /* SZPS[]:       Set Zone PointerS                                       */
   /* Opcode range: 0x16                                                    */
-  /* Stack:        uint32 -->                                              */
+  /* Stack:        uint32_t -->                                              */
   /*                                                                       */
   static void
   Ins_SZPS( TT_ExecContext  exc,
@@ -5140,7 +5140,7 @@
   /*                                                                       */
   /* SCANCTRL[]:   SCAN ConTRoL                                            */
   /* Opcode range: 0x85                                                    */
-  /* Stack:        uint32? -->                                             */
+  /* Stack:        uint32_t? -->                                             */
   /*                                                                       */
   static void
   Ins_SCANCTRL( TT_ExecContext  exc,
@@ -5187,7 +5187,7 @@
   /*                                                                       */
   /* SCANTYPE[]:   SCAN TYPE                                               */
   /* Opcode range: 0x8D                                                    */
-  /* Stack:        uint16 -->                                              */
+  /* Stack:        uint16_t -->                                              */
   /*                                                                       */
   static void
   Ins_SCANTYPE( TT_ExecContext  exc,
@@ -5209,7 +5209,7 @@
   /*                                                                       */
   /* FLIPPT[]:     FLIP PoinT                                              */
   /* Opcode range: 0x80                                                    */
-  /* Stack:        uint32... -->                                           */
+  /* Stack:        uint32_t... -->                                           */
   /*                                                                       */
   static void
   Ins_FLIPPT( TT_ExecContext  exc )
@@ -5263,7 +5263,7 @@
   /*                                                                       */
   /* FLIPRGON[]:   FLIP RanGe ON                                           */
   /* Opcode range: 0x81                                                    */
-  /* Stack:        uint32 uint32 -->                                       */
+  /* Stack:        uint32_t uint32_t -->                                       */
   /*                                                                       */
   static void
   Ins_FLIPRGON( TT_ExecContext  exc,
@@ -5301,7 +5301,7 @@
   /*                                                                       */
   /* FLIPRGOFF:    FLIP RanGe OFF                                          */
   /* Opcode range: 0x82                                                    */
-  /* Stack:        uint32 uint32 -->                                       */
+  /* Stack:        uint32_t uint32_t -->                                       */
   /*                                                                       */
   static void
   Ins_FLIPRGOFF( TT_ExecContext  exc,
@@ -5418,7 +5418,7 @@
   /*                                                                       */
   /* SHP[a]:       SHift Point by the last point                           */
   /* Opcode range: 0x32-0x33                                               */
-  /* Stack:        uint32... -->                                           */
+  /* Stack:        uint32_t... -->                                           */
   /*                                                                       */
   static void
   Ins_SHP( TT_ExecContext  exc )
@@ -5475,7 +5475,7 @@
   /*                                                                       */
   /* SHC[a]:       SHift Contour                                           */
   /* Opcode range: 0x34-35                                                 */
-  /* Stack:        uint32 -->                                              */
+  /* Stack:        uint32_t -->                                              */
   /*                                                                       */
   /* UNDOCUMENTED: According to Greg Hitchcock, there is one (virtual)     */
   /*               contour in the twilight zone, namely contour number     */
@@ -5531,7 +5531,7 @@
   /*                                                                       */
   /* SHZ[a]:       SHift Zone                                              */
   /* Opcode range: 0x36-37                                                 */
-  /* Stack:        uint32 -->                                              */
+  /* Stack:        uint32_t -->                                              */
   /*                                                                       */
   static void
   Ins_SHZ( TT_ExecContext  exc,
@@ -5579,7 +5579,7 @@
   /*                                                                       */
   /* SHPIX[]:      SHift points by a PIXel amount                          */
   /* Opcode range: 0x38                                                    */
-  /* Stack:        f26.6 uint32... -->                                     */
+  /* Stack:        f26.6 uint32_t... -->                                     */
   /*                                                                       */
   static void
   Ins_SHPIX( TT_ExecContext  exc,
@@ -5735,7 +5735,7 @@
   /*                                                                       */
   /* MSIRP[a]:     Move Stack Indirect Relative Position                   */
   /* Opcode range: 0x3A-0x3B                                               */
-  /* Stack:        f26.6 uint32 -->                                        */
+  /* Stack:        f26.6 uint32_t -->                                        */
   /*                                                                       */
   static void
   Ins_MSIRP( TT_ExecContext  exc,
@@ -5802,7 +5802,7 @@
   /*                                                                       */
   /* MDAP[a]:      Move Direct Absolute Point                              */
   /* Opcode range: 0x2E-0x2F                                               */
-  /* Stack:        uint32 -->                                              */
+  /* Stack:        uint32_t -->                                              */
   /*                                                                       */
   static void
   Ins_MDAP( TT_ExecContext  exc,
@@ -5854,7 +5854,7 @@
   /*                                                                       */
   /* MIAP[a]:      Move Indirect Absolute Point                            */
   /* Opcode range: 0x3E-0x3F                                               */
-  /* Stack:        uint32 uint32 -->                                       */
+  /* Stack:        uint32_t uint32_t -->                                       */
   /*                                                                       */
   static void
   Ins_MIAP( TT_ExecContext  exc,
@@ -5967,7 +5967,7 @@
   /*                                                                       */
   /* MDRP[abcde]:  Move Direct Relative Point                              */
   /* Opcode range: 0xC0-0xDF                                               */
-  /* Stack:        uint32 -->                                              */
+  /* Stack:        uint32_t -->                                              */
   /*                                                                       */
   static void
   Ins_MDRP( TT_ExecContext  exc,
@@ -6105,7 +6105,7 @@
   /*                                                                       */
   /* MIRP[abcde]:  Move Indirect Relative Point                            */
   /* Opcode range: 0xE0-0xFF                                               */
-  /* Stack:        int32? uint32 -->                                       */
+  /* Stack:        int32? uint32_t -->                                       */
   /*                                                                       */
   static void
   Ins_MIRP( TT_ExecContext  exc,
@@ -6333,7 +6333,7 @@
   /*                                                                       */
   /* ALIGNRP[]:    ALIGN Relative Point                                    */
   /* Opcode range: 0x3C                                                    */
-  /* Stack:        uint32 uint32... -->                                    */
+  /* Stack:        uint32_t uint32_t... -->                                    */
   /*                                                                       */
   static void
   Ins_ALIGNRP( TT_ExecContext  exc )
@@ -6396,7 +6396,7 @@
   /*                                                                       */
   /* ISECT[]:      moves point to InterSECTion                             */
   /* Opcode range: 0x0F                                                    */
-  /* Stack:        5 * uint32 -->                                          */
+  /* Stack:        5 * uint32_t -->                                          */
   /*                                                                       */
   static void
   Ins_ISECT( TT_ExecContext  exc,
@@ -6493,7 +6493,7 @@
   /*                                                                       */
   /* ALIGNPTS[]:   ALIGN PoinTS                                            */
   /* Opcode range: 0x27                                                    */
-  /* Stack:        uint32 uint32 -->                                       */
+  /* Stack:        uint32_t uint32_t -->                                       */
   /*                                                                       */
   static void
   Ins_ALIGNPTS( TT_ExecContext  exc,
@@ -6525,7 +6525,7 @@
   /*                                                                       */
   /* IP[]:         Interpolate Point                                       */
   /* Opcode range: 0x39                                                    */
-  /* Stack:        uint32... -->                                           */
+  /* Stack:        uint32_t... -->                                           */
   /*                                                                       */
 
   /* SOMETIMES, DUMBER CODE IS BETTER CODE */
@@ -6681,7 +6681,7 @@
   /*                                                                       */
   /* UTP[a]:       UnTouch Point                                           */
   /* Opcode range: 0x29                                                    */
-  /* Stack:        uint32 -->                                              */
+  /* Stack:        uint32_t -->                                              */
   /*                                                                       */
   static void
   Ins_UTP( TT_ExecContext  exc,
@@ -6975,7 +6975,7 @@
   /*                                                                       */
   /* DELTAPn[]:    DELTA exceptions P1, P2, P3                             */
   /* Opcode range: 0x5D,0x71,0x72                                          */
-  /* Stack:        uint32 (2 * uint32)... -->                              */
+  /* Stack:        uint32_t (2 * uint32_t)... -->                              */
   /*                                                                       */
   static void
   Ins_DELTAP( TT_ExecContext  exc,
@@ -7142,7 +7142,7 @@
   /*                                                                       */
   /* DELTACn[]:    DELTA exceptions C1, C2, C3                             */
   /* Opcode range: 0x73,0x74,0x75                                          */
-  /* Stack:        uint32 (2 * uint32)... -->                              */
+  /* Stack:        uint32_t (2 * uint32_t)... -->                              */
   /*                                                                       */
   static void
   Ins_DELTAC( TT_ExecContext  exc,
@@ -7227,7 +7227,7 @@
   /*                                                                       */
   /* GETINFO[]:    GET INFOrmation                                         */
   /* Opcode range: 0x88                                                    */
-  /* Stack:        uint32 --> uint32                                       */
+  /* Stack:        uint32_t --> uint32_t                                       */
   /*                                                                       */
   /* XXX: UNDOCUMENTED: Selector bits higher than 9 are currently (May     */
   /*      2015) not documented in the OpenType specification.              */

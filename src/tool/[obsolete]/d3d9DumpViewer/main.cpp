@@ -29,15 +29,15 @@ struct D3D9VtxDeclDump {
 };
 
 struct D3D9VtxBufDump {
-    uint32                             offset;
-    uint32                             stride;
+    uint32_t                           offset;
+    uint32_t                           stride;
     StrA                               ref;
     AutoComPtr<IDirect3DVertexBuffer9> vb;
 };
 
 struct D3D9IdxBufDump {
-    uint32                            format;
-    uint32                            startvtx;
+    uint32_t                          format;
+    uint32_t                          startvtx;
     StrA                              ref;
     AutoComPtr<IDirect3DIndexBuffer9> ib;
 };
@@ -49,32 +49,32 @@ struct D3D9TextureDump {
 
 struct D3D9RtDump {
     bool                          inuse;
-    uint32                        width;
-    uint32                        height;
-    uint32                        format;
-    uint32                        msaa;
-    uint32                        quality;
+    uint32_t                      width;
+    uint32_t                      height;
+    uint32_t                      format;
+    uint32_t                      msaa;
+    uint32_t                      quality;
     StrA                          ref;
     AutoComPtr<IDirect3DSurface9> surf;
     AutoComPtr<IDirect3DSurface9> syscopy;
 };
 
 struct D3D9RsDump {
-    uint32 type;
-    uint32 value;
+    uint32_t type;
+    uint32_t value;
 };
 
 struct D3D9OperationDump {
     bool indexed;
 
-    uint32 prim;
-    uint32 numprim;
-    uint32 startvtx;
+    uint32_t prim;
+    uint32_t numprim;
+    uint32_t startvtx;
 
     // for indexed draw only
-    uint32 minvtxidx;
-    uint32 numvtx;
-    uint32 startidx;
+    uint32_t minvtxidx;
+    uint32_t numvtx;
+    uint32_t startidx;
 
     void draw(IDirect3DDevice9 & dev) {
         if (indexed) {
@@ -112,7 +112,7 @@ struct D3D9StateDump {
 
     D3D9RsDump renderstates[103];
 
-    uint32 samplerstates[16][14]; // samplerstates[x][0] is unused.
+    uint32_t samplerstates[16][14]; // samplerstates[x][0] is unused.
 
     D3DVIEWPORT9 viewport;
 
@@ -305,7 +305,7 @@ struct D3D9StateDump {
         dev.SetVertexDeclaration(vtxdecl.decl);
 
         // vb
-        for (uint32 i = 0; i < GN_ARRAY_COUNT(vtxbufs); ++i) {
+        for (uint32_t i = 0; i < GN_ARRAY_COUNT(vtxbufs); ++i) {
             const D3D9VtxBufDump & vb = vtxbufs[i];
             if (vb.vb) {
                 dev.SetStreamSource(i, vb.vb, vb.offset, vb.stride);
@@ -318,23 +318,23 @@ struct D3D9StateDump {
         dev.SetIndices(idxbuf.ib);
 
         // tex
-        for (uint32 i = 0; i < GN_ARRAY_COUNT(textures); ++i) { dev.SetTexture(i, textures[i].tex); }
+        for (uint32_t i = 0; i < GN_ARRAY_COUNT(textures); ++i) { dev.SetTexture(i, textures[i].tex); }
 
         // rt
-        for (uint32 i = 0; i < GN_ARRAY_COUNT(rendertargets); ++i) { dev.SetRenderTarget(i, rendertargets[i].surf); }
+        for (uint32_t i = 0; i < GN_ARRAY_COUNT(rendertargets); ++i) { dev.SetRenderTarget(i, rendertargets[i].surf); }
 
         // ds
         dev.SetDepthStencilSurface(depthstencil.surf);
 
         // rs
-        for (uint32 i = 0; i < GN_ARRAY_COUNT(renderstates); ++i) {
+        for (uint32_t i = 0; i < GN_ARRAY_COUNT(renderstates); ++i) {
             const D3D9RsDump & rs = renderstates[i];
             dev.SetRenderState((D3DRENDERSTATETYPE) rs.type, rs.value);
         }
 
         // ss
-        for (uint32 s = 0; s < GN_ARRAY_COUNT(samplerstates); ++s)
-            for (uint32 t = 1; t < GN_ARRAY_COUNT(samplerstates[0]); ++t) { dev.SetSamplerState(s, (D3DSAMPLERSTATETYPE) t, samplerstates[s][t]); }
+        for (uint32_t s = 0; s < GN_ARRAY_COUNT(samplerstates); ++s)
+            for (uint32_t t = 1; t < GN_ARRAY_COUNT(samplerstates[0]); ++t) { dev.SetSamplerState(s, (D3DSAMPLERSTATETYPE) t, samplerstates[s][t]); }
 
         // viewport
         dev.SetViewport(&viewport);
@@ -347,7 +347,7 @@ struct D3D9StateDump {
         // load RT data
         {
             PixPerfScopeEvent pixevent(0, "Load RT data");
-            for (uint32 i = 0; i < GN_ARRAY_COUNT(rendertargets); ++i) {
+            for (uint32_t i = 0; i < GN_ARRAY_COUNT(rendertargets); ++i) {
                 D3D9RtDump & rtd = rendertargets[i];
                 if (!rtd.inuse) continue;
 
@@ -397,17 +397,17 @@ struct D3D9StateDump {
             } else if ("samplerstates" == e->name) {
                 if (!loadSamplerStates(*e)) return false;
             } else if ("viewport" == e->name) {
-                if (!sGetNumericAttr(*e, "x", (uint32 &) viewport.X)) return false;
-                if (!sGetNumericAttr(*e, "y", (uint32 &) viewport.Y)) return false;
-                if (!sGetNumericAttr(*e, "w", (uint32 &) viewport.Width)) return false;
-                if (!sGetNumericAttr(*e, "h", (uint32 &) viewport.Height)) return false;
+                if (!sGetNumericAttr(*e, "x", (uint32_t &) viewport.X)) return false;
+                if (!sGetNumericAttr(*e, "y", (uint32_t &) viewport.Y)) return false;
+                if (!sGetNumericAttr(*e, "w", (uint32_t &) viewport.Width)) return false;
+                if (!sGetNumericAttr(*e, "h", (uint32_t &) viewport.Height)) return false;
                 if (!sGetNumericAttr(*e, "zmin", viewport.MinZ)) return false;
                 if (!sGetNumericAttr(*e, "zmax", viewport.MaxZ)) return false;
             } else if ("scissor" == e->name) {
-                if (!sGetNumericAttr(*e, "l", (sint32 &) scissorrect.left)) return false;
-                if (!sGetNumericAttr(*e, "t", (sint32 &) scissorrect.top)) return false;
-                if (!sGetNumericAttr(*e, "r", (sint32 &) scissorrect.right)) return false;
-                if (!sGetNumericAttr(*e, "b", (sint32 &) scissorrect.bottom)) return false;
+                if (!sGetNumericAttr(*e, "l", (int32_t &) scissorrect.left)) return false;
+                if (!sGetNumericAttr(*e, "t", (int32_t &) scissorrect.top)) return false;
+                if (!sGetNumericAttr(*e, "r", (int32_t &) scissorrect.right)) return false;
+                if (!sGetNumericAttr(*e, "b", (int32_t &) scissorrect.bottom)) return false;
             } else if ("drawindexed" == e->name) {
                 operation.indexed = true;
                 if (!sGetNumericAttr(*e, "prim", operation.prim)) return false;
@@ -696,7 +696,7 @@ private:
                 continue;
             }
 
-            uint32 stage, type;
+            uint32_t stage, type;
             if (!sGetNumericAttr(*e, "stage", stage)) return false;
             if (!sGetNumericAttr(*e, "type", type)) return false;
 

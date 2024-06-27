@@ -17,8 +17,8 @@ class OGLGpu;
 ///
 class OGLBasicRTMgr {
 protected:
-    OGLGpu &        mGpu;              ///< reference to GPU instance;
-    Vector2<uint32> mRenderTargetSize; ///< render target size
+    OGLGpu &          mGpu;              ///< reference to GPU instance;
+    Vector2<uint32_t> mRenderTargetSize; ///< render target size
 
     ///
     /// protected ctor.
@@ -39,7 +39,7 @@ public:
     ///
     /// Get color render target size
     ///
-    const Vector2<uint32> & getRenderTargetSize() const { return mRenderTargetSize; }
+    const Vector2<uint32_t> & getRenderTargetSize() const { return mRenderTargetSize; }
 
     ///
     /// bind render target to device.
@@ -111,9 +111,9 @@ public:
     // private variables
     // ********************************
 private:
-    GLuint          mFbo;
-    GLuint          mAutoZ;
-    Vector2<uint32> mAutoZSize;
+    GLuint            mFbo;
+    GLuint            mAutoZ;
+    Vector2<uint32_t> mAutoZSize;
 
     // ********************************
     // private functions

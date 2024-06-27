@@ -12,7 +12,7 @@ static GN::Logger * sLogger = GN::getLogger("GN.gfx.AsciiFont");
 
 class AsciiFontFace : public FontFace {
     FontFaceDesc mDesc;
-    uint8        mImage[8 * 13];
+    uint8_t      mImage[8 * 13];
 
 public:
     /// ctor
@@ -50,7 +50,7 @@ public:
 
         const BitmapCharDesc * bcd = gBitmapChars8x13[ch];
 
-        std::fill(mImage, mImage + sizeof(mImage), (uint8) 0);
+        std::fill(mImage, mImage + sizeof(mImage), (uint8_t) 0);
 
         for (size_t y = 0; y < bcd->height; ++y) {
             for (size_t x = 0; x < 8; ++x) { mImage[(bcd->height - y - 1) * 8 + x] = 255 * !!(bcd->bitmap[y] & (1L << (7 - x))); }

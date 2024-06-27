@@ -22,7 +22,7 @@ class CommandBuffer : public StdClass {
 
 public:
 #if GN_COMMAND_BUFFER_BUILT_IN_FENCE
-    typedef uint32     Fence;
+    typedef uint32_t   Fence;
     static const Fence INVALID_FENCE = 0;
 #endif
 
@@ -34,9 +34,9 @@ public:
     };
 
     struct Token {
-        uint16 commandID;        ///< command ID
-        uint16 parameterSize;    ///< parameter buffer size.
-        void * pParameterBuffer; ///< command
+        uint16_t commandID;        ///< command ID
+        uint16_t parameterSize;    ///< parameter buffer size.
+        void *   pParameterBuffer; ///< command
     };
 
     // ********************************
@@ -61,7 +61,7 @@ public:
 private:
     void clear() {
         m_Buffer       = NULL;
-        m_ReadenCursor = (uint32) -1;
+        m_ReadenCursor = (uint32_t) -1;
 #if GN_COMMAND_BUFFER_BUILT_IN_FENCE
         m_Fences = NULL;
 #endif
@@ -74,7 +74,7 @@ private:
 public:
 #if GN_COMMAND_BUFFER_BUILT_IN_FENCE
 
-    typedef uint32 Fence;
+    typedef uint32_t Fence;
 
     static const Fence INVALID_FENCE = 0;
 
@@ -99,10 +99,10 @@ public:
     //      OPERATION_SUCCEEDED, if production succeeds.
     //      OPERATION_CANCELLED if command buffer is shutting down.
     //      OPERATION_FAILED for other failures, like not paired with endProduce().
-    OperationResult beginProduce(uint16 command, uint16 parameterSize, Token * token, SyncEvent * optionalCompletionEvent = NULL);
+    OperationResult beginProduce(uint16_t command, uint16_t parameterSize, Token * token, SyncEvent * optionalCompletionEvent = NULL);
     void            endProduce();
 
-    OperationResult postCommand0(uint16 command, SyncEvent * optionalCompletionEvent = NULL) {
+    OperationResult postCommand0(uint16_t command, SyncEvent * optionalCompletionEvent = NULL) {
         Token           token;
         OperationResult hr = beginProduce(command, 0, &token, optionalCompletionEvent);
         if (OPERATION_SUCCEEDED == hr) { endProduce(); }
@@ -110,11 +110,11 @@ public:
     }
 
     template<typename T1>
-    OperationResult postCommand1(uint16 command, const T1 & p1, SyncEvent * optionalCompletionEvent = NULL) {
+    OperationResult postCommand1(uint16_t command, const T1 & p1, SyncEvent * optionalCompletionEvent = NULL) {
         Token           token;
         OperationResult hr = beginProduce(command, sizeof(p1), &token, optionalCompletionEvent);
         if (OPERATION_SUCCEEDED == hr) {
-            uint8 * buf = (uint8 *) token.pParameterBuffer;
+            uint8_t * buf = (uint8_t *) token.pParameterBuffer;
             memcpy(buf, &p1, sizeof(p1));
             endProduce();
         }
@@ -122,11 +122,11 @@ public:
     }
 
     template<typename T1, typename T2>
-    OperationResult postCommand2(uint16 command, const T1 & p1, const T2 & p2, SyncEvent * optionalCompletionEvent = NULL) {
+    OperationResult postCommand2(uint16_t command, const T1 & p1, const T2 & p2, SyncEvent * optionalCompletionEvent = NULL) {
         Token           token;
         OperationResult hr = beginProduce(command, sizeof(p1) + sizeof(p2), &token, optionalCompletionEvent);
         if (OPERATION_SUCCEEDED == hr) {
-            uint8 * buf = (uint8 *) token.pParameterBuffer;
+            uint8_t * buf = (uint8_t *) token.pParameterBuffer;
             memcpy(buf, &p1, sizeof(p1));
             buf += sizeof(p1);
             memcpy(buf, &p2, sizeof(p2));
@@ -136,11 +136,11 @@ public:
     }
 
     template<typename T1, typename T2, typename T3>
-    OperationResult postCommand3(uint16 command, const T1 & p1, const T2 & p2, const T3 & p3, SyncEvent * optionalCompletionEvent = NULL) {
+    OperationResult postCommand3(uint16_t command, const T1 & p1, const T2 & p2, const T3 & p3, SyncEvent * optionalCompletionEvent = NULL) {
         Token           token;
         OperationResult hr = beginProduce(command, sizeof(p1) + sizeof(p2) + sizeof(p3), &token, optionalCompletionEvent);
         if (OPERATION_SUCCEEDED == hr) {
-            uint8 * buf = (uint8 *) token.pParameterBuffer;
+            uint8_t * buf = (uint8_t *) token.pParameterBuffer;
             memcpy(buf, &p1, sizeof(p1));
             buf += sizeof(p1);
             memcpy(buf, &p2, sizeof(p2));
@@ -152,11 +152,11 @@ public:
     }
 
     template<typename T1, typename T2, typename T3, typename T4>
-    OperationResult postCommand4(uint16 command, const T1 & p1, const T2 & p2, const T3 & p3, const T4 & p4, SyncEvent * optionalCompletionEvent = NULL) {
+    OperationResult postCommand4(uint16_t command, const T1 & p1, const T2 & p2, const T3 & p3, const T4 & p4, SyncEvent * optionalCompletionEvent = NULL) {
         Token           token;
         OperationResult hr = beginProduce(command, sizeof(p1) + sizeof(p2) + sizeof(p3) + sizeof(p4), &token, optionalCompletionEvent);
         if (OPERATION_SUCCEEDED == hr) {
-            uint8 * buf = (uint8 *) token.pParameterBuffer;
+            uint8_t * buf = (uint8_t *) token.pParameterBuffer;
             memcpy(buf, &p1, sizeof(p1));
             buf += sizeof(p1);
             memcpy(buf, &p2, sizeof(p2));
@@ -170,12 +170,12 @@ public:
     }
 
     template<typename T1, typename T2, typename T3, typename T4, typename T5>
-    OperationResult postCommand5(uint16 command, const T1 & p1, const T2 & p2, const T3 & p3, const T4 & p4, const T5 & p5,
+    OperationResult postCommand5(uint16_t command, const T1 & p1, const T2 & p2, const T3 & p3, const T4 & p4, const T5 & p5,
                                  SyncEvent * optionalCompletionEvent = NULL) {
         Token           token;
         OperationResult hr = beginProduce(command, sizeof(p1) + sizeof(p2) + sizeof(p3) + sizeof(p4) + sizeof(p5), &token, optionalCompletionEvent);
         if (OPERATION_SUCCEEDED == hr) {
-            uint8 * buf = (uint8 *) token.pParameterBuffer;
+            uint8_t * buf = (uint8_t *) token.pParameterBuffer;
             memcpy(buf, &p1, sizeof(p1));
             buf += sizeof(p1);
             memcpy(buf, &p2, sizeof(p2));
@@ -191,13 +191,13 @@ public:
     }
 
     template<typename T1, typename T2, typename T3, typename T4, typename T5, typename T6>
-    OperationResult postCommand6(uint16 command, const T1 & p1, const T2 & p2, const T3 & p3, const T4 & p4, const T5 & p5, const T6 & p6,
+    OperationResult postCommand6(uint16_t command, const T1 & p1, const T2 & p2, const T3 & p3, const T4 & p4, const T5 & p5, const T6 & p6,
                                  SyncEvent * optionalCompletionEvent = NULL) {
         Token           token;
         OperationResult hr =
             beginProduce(command, sizeof(p1) + sizeof(p2) + sizeof(p3) + sizeof(p4) + sizeof(p5) + sizeof(p6), &token, optionalCompletionEvent);
         if (OPERATION_SUCCEEDED == hr) {
-            uint8 * buf = (uint8 *) token.pParameterBuffer;
+            uint8_t * buf = (uint8_t *) token.pParameterBuffer;
             memcpy(buf, &p1, sizeof(p1));
             buf += sizeof(p1);
             memcpy(buf, &p2, sizeof(p2));
@@ -246,7 +246,7 @@ public:
         GN_UNUSED_PARAM(parameterSize);
         GN_ASSERT(parameterSize == ((sizeof(T1) + sizeof(T2) + 15) & ~15));
 
-        const uint8 * ptr = (const uint8 *) commandParameter;
+        const uint8_t * ptr = (const uint8_t *) commandParameter;
 
         *p1 = *(const T1 *) ptr;
         ptr += sizeof(T1);
@@ -258,7 +258,7 @@ public:
         GN_UNUSED_PARAM(parameterSize);
         GN_ASSERT(parameterSize == ((sizeof(T1) + sizeof(T2) + sizeof(T3) + 15) & ~15));
 
-        const uint8 * ptr = (const uint8 *) commandParameter;
+        const uint8_t * ptr = (const uint8_t *) commandParameter;
 
         *p1 = *(const T1 *) ptr;
         ptr += sizeof(T1);
@@ -273,19 +273,19 @@ public:
 private:
     // Command token
     struct TokenInternal {
-        uint16      commandId;       ///< command ID ( 2 bytes )
-        uint16      parameterSize;   ///< command parameter size. this header is not included.
-        uint32      endOffset;       ///< Ring buffer offset in bytes of the end of the command.
+        uint16_t    commandId;       ///< command ID ( 2 bytes )
+        uint16_t    parameterSize;   ///< command parameter size. this header is not included.
+        uint32_t    endOffset;       ///< Ring buffer offset in bytes of the end of the command.
         SyncEvent * completionEvent; ///< Optional event that gets signaled when the command is consumed.
 #if !GN_X64
-        uint32 _padding; // pad to 16 bytes to get a good cache alignment
+        uint32_t _padding; // pad to 16 bytes to get a good cache alignment
 #endif
     };
     GN_CASSERT(16 == sizeof(TokenInternal));
 
 #if GN_COMMAND_BUFFER_BUILT_IN_FENCE
     union FenceInternal {
-        uint32          offset; //< The offset of the command in the command buffer.
+        uint32_t        offset; //< The offset of the command in the command buffer.
         SyncEvent *     event;  //< The completion event pointer.
         FenceInternal * prev;   //< Points to the previous free fence in the free list.
         FenceInternal * next;   //< Points to the next free fence in the free list.
@@ -293,15 +293,15 @@ private:
 #endif
 
     // ring buffer
-    uint8 *         m_Buffer;
-    size_t          m_Size;
-    uint8 *         m_End;
-    volatile uint32 m_ReadenCursor;     // Ring buffer offset pointing to the next byte that will be used for consumption.
-    volatile uint32 m_WrittenCursor;    // Ring buffer offset pointing to the next byte that will be used for production.
-    TokenInternal * m_ReadingToken;     // Pointer to the current consuming token. Should be NULL outside of beginConsume() and endConsume().
-    TokenInternal * m_WritingToken;     // Pointer to the current producing token. Should be NULL outside of beginProdue() and endProduce().
-    SyncEvent       m_ConsumptionEvent; // auto-reset event that is signaled whenever a command is consumed, and unsignaled when buffer is full.
-    SyncEvent       m_NotEmpty;         // manual-reset event that remains signaled when command buffer is not empty.
+    uint8_t *         m_Buffer;
+    size_t            m_Size;
+    uint8_t *         m_End;
+    volatile uint32_t m_ReadenCursor;     // Ring buffer offset pointing to the next byte that will be used for consumption.
+    volatile uint32_t m_WrittenCursor;    // Ring buffer offset pointing to the next byte that will be used for production.
+    TokenInternal *   m_ReadingToken;     // Pointer to the current consuming token. Should be NULL outside of beginConsume() and endConsume().
+    TokenInternal *   m_WritingToken;     // Pointer to the current producing token. Should be NULL outside of beginProdue() and endProduce().
+    SyncEvent         m_ConsumptionEvent; // auto-reset event that is signaled whenever a command is consumed, and unsignaled when buffer is full.
+    SyncEvent         m_NotEmpty;         // manual-reset event that remains signaled when command buffer is not empty.
 
 #if GN_COMMAND_BUFFER_BUILT_IN_FENCE
     // Fence
@@ -318,7 +318,7 @@ private:
     // ********************************
 private:
     // Internal version of produce function that support producing token command
-    OperationResult beginProduceInternal(uint16 command, uint16 parameterSize, Token * token = NULL, SyncEvent * optionalCompletionEvent = NULL);
+    OperationResult beginProduceInternal(uint16_t command, uint16_t parameterSize, Token * token = NULL, SyncEvent * optionalCompletionEvent = NULL);
 };
 } // namespace GN
 

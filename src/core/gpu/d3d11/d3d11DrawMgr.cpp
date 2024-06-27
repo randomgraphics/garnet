@@ -13,14 +13,15 @@ static D3D11_PRIMITIVE_TOPOLOGY sD3D11PrimMap[GN::gfx::PrimitiveType::NUM_PRIMIT
 //
 //
 // -----------------------------------------------------------------------------
-static bool sSetupUserD3D11Buffer(ID3D11Device & dev, ID3D11DeviceContext & context, ID3D11Buffer ** buffer, uint32 size, uint32 bindFlags, const void * data) {
+static bool sSetupUserD3D11Buffer(ID3D11Device & dev, ID3D11DeviceContext & context, ID3D11Buffer ** buffer, uint32_t size, uint32_t bindFlags,
+                                  const void * data) {
     GN_ASSERT(buffer);
 
     if (NULL == *buffer) {
         // create new buffer
 
         D3D11_BUFFER_DESC desc;
-        desc.ByteWidth      = (uint32) size;
+        desc.ByteWidth      = (uint32_t) size;
         desc.Usage          = D3D11_USAGE_DYNAMIC;
         desc.BindFlags      = bindFlags;
         desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
@@ -60,11 +61,11 @@ static bool sSetupUserD3D11Buffer(ID3D11Device & dev, ID3D11DeviceContext & cont
 class D3D11RestoreVB0AndIB {
     ID3D11DeviceContext & mDevcxt;
     ID3D11Buffer *        mOldVB;
-    uint32                mOldStride;
-    uint32                mOldVBOffset;
+    uint32_t              mOldStride;
+    uint32_t              mOldVBOffset;
     ID3D11Buffer *        mOldIB;
     DXGI_FORMAT           mOldFormat;
-    uint32                mOldIBOffset;
+    uint32_t              mOldIBOffset;
 
 public:
     D3D11RestoreVB0AndIB(ID3D11DeviceContext & devcxt): mDevcxt(devcxt), mOldVB(0), mOldIB(0) {
@@ -110,15 +111,15 @@ void GN::gfx::D3D11Gpu::present() { GN_DX_CHECK(mSwapChain->Present(getOptions()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3D11Gpu::clearScreen(const GN::Vector4f & c, float z, uint8 s, uint32 flags) {
+void GN::gfx::D3D11Gpu::clearScreen(const GN::Vector4f & c, float z, uint8_t s, uint32_t flags) {
     PIXPERF_FUNCTION_EVENT(mDeviceContext);
 
     if (CLEAR_C & flags) {
-        for (uint32 i = 0; i < mRTMgr->getRenderTargetCount(); ++i) { mDeviceContext->ClearRenderTargetView(mRTMgr->getRenderTargetView(i), c); }
+        for (uint32_t i = 0; i < mRTMgr->getRenderTargetCount(); ++i) { mDeviceContext->ClearRenderTargetView(mRTMgr->getRenderTargetView(i), c); }
     }
 
     ID3D11DepthStencilView * dsview  = mRTMgr->getDepthStencilView();
-    uint32                   d3dflag = 0;
+    uint32_t                 d3dflag = 0;
     if (CLEAR_Z) d3dflag |= D3D11_CLEAR_DEPTH;
     if (CLEAR_S) d3dflag |= D3D11_CLEAR_STENCIL;
     if (d3dflag && dsview) { mDeviceContext->ClearDepthStencilView(dsview, d3dflag, z, s); }
@@ -127,10 +128,10 @@ void GN::gfx::D3D11Gpu::clearScreen(const GN::Vector4f & c, float z, uint8 s, ui
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3D11Gpu::drawIndexed(PrimitiveType prim, uint32 numidx, uint32 basevtx,
-                                    uint32, // startvtx,
-                                    uint32, // numvtx,
-                                    uint32 startidx) {
+void GN::gfx::D3D11Gpu::drawIndexed(PrimitiveType prim, uint32_t numidx, uint32_t basevtx,
+                                    uint32_t, // startvtx,
+                                    uint32_t, // numvtx,
+                                    uint32_t startidx) {
     PIXPERF_FUNCTION_EVENT(mDeviceContext);
 
     mDeviceContext->IASetPrimitiveTopology(sD3D11PrimMap[prim]);
@@ -140,7 +141,7 @@ void GN::gfx::D3D11Gpu::drawIndexed(PrimitiveType prim, uint32 numidx, uint32 ba
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3D11Gpu::draw(PrimitiveType prim, uint32 numvtx, uint32 startvtx) {
+void GN::gfx::D3D11Gpu::draw(PrimitiveType prim, uint32_t numvtx, uint32_t startvtx) {
     PIXPERF_FUNCTION_EVENT(mDeviceContext);
 
     mDeviceContext->IASetPrimitiveTopology(sD3D11PrimMap[prim]);
@@ -150,8 +151,8 @@ void GN::gfx::D3D11Gpu::draw(PrimitiveType prim, uint32 numvtx, uint32 startvtx)
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3D11Gpu::drawIndexedUp(PrimitiveType prim, uint32 numidx, uint32 numvtx, const void * vertexData, uint32 strideInBytes,
-                                      const uint16 * indexData) {
+void GN::gfx::D3D11Gpu::drawIndexedUp(PrimitiveType prim, uint32_t numidx, uint32_t numvtx, const void * vertexData, uint32_t strideInBytes,
+                                      const uint16_t * indexData) {
     PIXPERF_FUNCTION_EVENT(mDeviceContext);
 
     if (!sSetupUserD3D11Buffer(*mDevice, *mDeviceContext, &mUserVB, strideInBytes * numvtx, D3D11_BIND_VERTEX_BUFFER, vertexData)) { return; }
@@ -162,8 +163,8 @@ void GN::gfx::D3D11Gpu::drawIndexedUp(PrimitiveType prim, uint32 numidx, uint32 
     D3D11RestoreVB0AndIB autoRestore(*mDeviceContext);
 
     // setup vertex buffer and index buffer
-    uint32 stride = (uint32) strideInBytes;
-    uint32 offset = 0;
+    uint32_t stride = (uint32_t) strideInBytes;
+    uint32_t offset = 0;
     mDeviceContext->IASetVertexBuffers(0, 1, &mUserVB, &stride, &offset);
     mDeviceContext->IASetIndexBuffer(mUserIB, DXGI_FORMAT_R16_UINT, 0);
 
@@ -175,7 +176,7 @@ void GN::gfx::D3D11Gpu::drawIndexedUp(PrimitiveType prim, uint32 numidx, uint32 
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3D11Gpu::drawUp(PrimitiveType prim, uint32 numvtx, const void * vertexData, uint32 strideInBytes) {
+void GN::gfx::D3D11Gpu::drawUp(PrimitiveType prim, uint32_t numvtx, const void * vertexData, uint32_t strideInBytes) {
     PIXPERF_FUNCTION_EVENT(mDeviceContext);
 
     if (!sSetupUserD3D11Buffer(*mDevice, *mDeviceContext, &mUserVB, strideInBytes * numvtx, D3D11_BIND_VERTEX_BUFFER, vertexData)) { return; }
@@ -184,8 +185,8 @@ void GN::gfx::D3D11Gpu::drawUp(PrimitiveType prim, uint32 numvtx, const void * v
     D3D11RestoreVB0AndIB autoRestore(*mDeviceContext);
 
     // setup vertex buffer and index buffer
-    uint32 stride = (uint32) strideInBytes;
-    uint32 offset = 0;
+    uint32_t stride = (uint32_t) strideInBytes;
+    uint32_t offset = 0;
     mDeviceContext->IASetVertexBuffers(0, 1, &mUserVB, &stride, &offset);
 
     // do rendering

@@ -58,13 +58,13 @@ private:
         TextureItem();
         ~TextureItem();
 
-        void setResource(Impl & owner, uint32 effectParameterIndex, TextureResource *);
+        void setResource(Impl & owner, uint32_t effectParameterIndex, TextureResource *);
 
         const AutoRef<TextureResource> & getResource() const { return mResource; }
 
     private:
         Impl *                   mOwner;
-        uint32                   mEffectParameterIndex;
+        uint32_t                 mEffectParameterIndex;
         AutoRef<TextureResource> mResource;
 
     private:
@@ -81,13 +81,13 @@ private:
         UniformItem();
         ~UniformItem();
 
-        void setResource(Impl & owner, uint32 effectParameterIndex, UniformResource *);
+        void setResource(Impl & owner, uint32_t effectParameterIndex, UniformResource *);
 
         const AutoRef<UniformResource> & getResource() const { return mResource; }
 
     private:
         Impl *                   mOwner;
-        uint32                   mEffectParameterIndex;
+        uint32_t                 mEffectParameterIndex;
         AutoRef<UniformResource> mResource;
 
     private:

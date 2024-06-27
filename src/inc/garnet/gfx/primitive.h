@@ -29,7 +29,7 @@ struct PrimitiveType {
         static const char * TABLE[] = {
             "POINT_LIST", "LINE_LIST", "LINE_STRIP", "TRIANGLE_LIST", "TRIANGLE_STRIP", "QUAD_LIST", "RECT_LIST",
         };
-        GN_CASSERT(GN_ARRAY_COUNT(TABLE) == (uint32) NUM_PRIMITIVES);
+        GN_CASSERT(GN_ARRAY_COUNT(TABLE) == (uint32_t) NUM_PRIMITIVES);
 
         unsigned int e = *this;
         if (e < GN_ARRAY_COUNT(TABLE))
@@ -71,7 +71,7 @@ struct PrimitiveType {
 /// \param numvert  vertex count
 /// \return         primitive count
 ///
-inline uint32 calcPrimitiveCount(PrimitiveType pt, uint32 numvert) {
+inline uint32_t calcPrimitiveCount(PrimitiveType pt, uint32_t numvert) {
     GN_GUARD_SLOW;
 
     switch (pt) {
@@ -105,7 +105,7 @@ inline uint32 calcPrimitiveCount(PrimitiveType pt, uint32 numvert) {
 /// \param numprim  primitive count
 /// \return         vertex count
 ///
-inline uint32 calcVertexCount(PrimitiveType pt, uint32 numprim) {
+inline uint32_t calcVertexCount(PrimitiveType pt, uint32_t numprim) {
     GN_GUARD_SLOW;
     switch (pt) {
     case PrimitiveType::POINT_LIST:

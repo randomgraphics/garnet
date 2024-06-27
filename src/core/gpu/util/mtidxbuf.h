@@ -49,8 +49,8 @@ public:
     // from IdxBuf
     // ********************************
 public:
-    virtual void update(uint32 startidx, uint32 numidx, const void * data, SurfaceUpdateFlag flag);
-    virtual void readback(DynaArray<uint8> & data);
+    virtual void update(uint32_t startidx, uint32_t numidx, const void * data, SurfaceUpdateFlag flag);
+    virtual void readback(DynaArray<uint8_t> & data);
 
     // ********************************
     // private variables
