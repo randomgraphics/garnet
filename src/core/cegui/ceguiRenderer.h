@@ -76,10 +76,10 @@ private:
         float                 v0;
         float                 u1;
         float                 v1;
-        uint32                cx0;
-        uint32                cx1;
-        uint32                cy0;
-        uint32                cy1;
+        uint32_t              cx0;
+        uint32_t              cx1;
+        uint32_t              cy0;
+        uint32_t              cy1;
     };
 
     bool                       mQueueEnabled;

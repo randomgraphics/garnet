@@ -12,7 +12,7 @@ class GN_API TypelessDict {
 public:
     /// Typeless iterator clas
     class GN_API Iterator {
-        uint8 mBuf[32];
+        uint8_t mBuf[32];
 
     public:
         Iterator();                 ///< ctor

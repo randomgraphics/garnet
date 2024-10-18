@@ -128,7 +128,7 @@ GN_API void GN::printToDebugger(const char * message) {
 //
 //
 // -----------------------------------------------------------------------------
-GN_API const char * GN::getWin32ErrorInfo(sint32 win32ErrorCode) throw() {
+GN_API const char * GN::getWin32ErrorInfo(int32_t win32ErrorCode) throw() {
     static char info[4096];
 
     #if GN_XBOX2
@@ -153,7 +153,7 @@ GN_API const char * GN::getWin32ErrorInfo(sint32 win32ErrorCode) throw() {
 //
 //
 // -----------------------------------------------------------------------------
-GN_API const wchar_t * GN::getWin32ErrorInfoW(sint32 win32ErrorCode) throw() {
+GN_API const wchar_t * GN::getWin32ErrorInfoW(int32_t win32ErrorCode) throw() {
     static wchar_t info[4096];
 
     #if GN_XBOX2
@@ -185,7 +185,7 @@ GN_API const char * GN::getWin32LastErrorInfo() throw() { return getWin32ErrorIn
 //
 //
 // -----------------------------------------------------------------------------
-GN_API const char * GN::getDXErrorInfo(sint32 hr) throw() {
+GN_API const char * GN::getDXErrorInfo(int32_t hr) throw() {
 #if GN_XBOX2
     return DXGetErrorDescription9A(hr);
 #elif GN_MSWIN

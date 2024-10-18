@@ -499,7 +499,7 @@ class GN::engine::SkinnedMesh::SkinnedVisualComponent : public VisualComponent {
     SkinnedMesh & mOwner;
 
 protected:
-    virtual void drawModelResource(uint32 index, ModelResource & model) const {
+    virtual void drawModelResource(uint32_t index, ModelResource & model) const {
         // Reference the subset
         GN_ASSERT(index < mOwner.mSubsets.size());
         const SkinnedMesh::SkinnedSubset & subset = mOwner.mSubsets[index];
@@ -515,14 +515,14 @@ protected:
             GN_ASSERT(uniform->size() >= sizeof(Matrix44f) * MAX_JOINTS_PER_DRAW);
             GN_ASSERT(subset.joints.size() <= MAX_JOINTS_PER_DRAW);
 
-            for (uint32 i = 0; i < subset.joints.size(); ++i) {
-                uint32 jointIndex = subset.joints[i];
-                matrices[i]       = sk.bind2rest[jointIndex];
+            for (uint32_t i = 0; i < subset.joints.size(); ++i) {
+                uint32_t jointIndex = subset.joints[i];
+                matrices[i]         = sk.bind2rest[jointIndex];
             }
 
             size_t uploadBytes = sizeof(Matrix44f) * subset.joints.size();
 
-            uniform->update(0, (uint32) uploadBytes, matrices);
+            uniform->update(0, (uint32_t) uploadBytes, matrices);
         }
 
         // draw the GPU model resource.
@@ -554,7 +554,7 @@ GN_ENGINE_IMPLEMENT_ENTITY(GN::engine::SkinnedMesh, SKINNED_MESH_GUID);
 //
 //
 // -----------------------------------------------------------------------------
-uint32 GN::engine::SkinnedMesh::sGetMaxJointsPerDraw() { return MAX_JOINTS_PER_DRAW; }
+uint32_t GN::engine::SkinnedMesh::sGetMaxJointsPerDraw() { return MAX_JOINTS_PER_DRAW; }
 
 //
 //
@@ -630,17 +630,17 @@ void GN::engine::SkinnedMesh::setAnimation(size_t animationIndex, float seconds)
     if ((size_t) -1 == animationIndex) {
         // reset back to bind pose.
 
-        for (uint32 skeletonIndex = 0; skeletonIndex < mSkeletons.size(); ++skeletonIndex) {
+        for (uint32_t skeletonIndex = 0; skeletonIndex < mSkeletons.size(); ++skeletonIndex) {
             Skeleton & sk = mSkeletons[skeletonIndex];
 
             // bind pose is rest pose in this case.
-            for (uint32 jointIndex = 0; jointIndex < sk.jointCount; ++jointIndex) {
+            for (uint32_t jointIndex = 0; jointIndex < sk.jointCount; ++jointIndex) {
                 SpacialComponent * spacial = sk.spacials[jointIndex];
                 spacial->setPosition(sk.bindPose[jointIndex].position);
                 spacial->setRotation(sk.bindPose[jointIndex].rotation);
                 spacial->setScale(sk.bindPose[jointIndex].scaling);
             }
-            for (uint32 jointIndex = 0; jointIndex < sk.jointCount; ++jointIndex) {
+            for (uint32_t jointIndex = 0; jointIndex < sk.jointCount; ++jointIndex) {
                 sk.invRestPose[jointIndex] = Matrix44f::sInverse(sk.bindPose[jointIndex].model2joint);
                 sk.bind2rest[jointIndex].identity();
             }
@@ -648,7 +648,7 @@ void GN::engine::SkinnedMesh::setAnimation(size_t animationIndex, float seconds)
             /* And the bind pose -> rest pose transformation should be identity.
             Uniform * uniform = sk.matrices->uniform().rawptr();
             GN_ASSERT( uniform->size() >= sizeof(identityMatrices) );
-            uniform->update( 0, (uint32)sizeof(identityMatrices), identityMatrices );*/
+            uniform->update( 0, (uint32_t)sizeof(identityMatrices), identityMatrices );*/
         }
     } else {
         if (animationIndex >= mAnimations.size() || NULL == mAnimations[animationIndex]) {
@@ -666,7 +666,7 @@ void GN::engine::SkinnedMesh::setAnimation(size_t animationIndex, float seconds)
         Vector3f    s;
         Matrix44f   local2parent;
 
-        for (uint32 skeletonIndex = 0; skeletonIndex < fatanim.skeletonAnimations.size(); ++skeletonIndex) {
+        for (uint32_t skeletonIndex = 0; skeletonIndex < fatanim.skeletonAnimations.size(); ++skeletonIndex) {
             const auto & skanim = fatanim.skeletonAnimations[skeletonIndex];
 
             Skeleton & sk = mSkeletons[skeletonIndex];
@@ -675,7 +675,7 @@ void GN::engine::SkinnedMesh::setAnimation(size_t animationIndex, float seconds)
 
             // Loop through all joints, update each spacial component with
             // the rest pose transformation.
-            for (uint32 jointIndex = 0; jointIndex < sk.jointCount; ++jointIndex) {
+            for (uint32_t jointIndex = 0; jointIndex < sk.jointCount; ++jointIndex) {
                 const auto & jointanim = skanim[jointIndex];
 
                 SpacialComponent * spacial = sk.spacials[jointIndex];
@@ -698,7 +698,7 @@ void GN::engine::SkinnedMesh::setAnimation(size_t animationIndex, float seconds)
 
             // Loop through all joints again. Caluclate bind pose -> rest post
             // transformation for each joint.
-            for (uint32 jointIndex = 0; jointIndex < sk.jointCount; ++jointIndex) {
+            for (uint32_t jointIndex = 0; jointIndex < sk.jointCount; ++jointIndex) {
                 // Reference the spacial component of the joint.
                 SpacialComponent * spacial = sk.spacials[jointIndex];
 
@@ -720,7 +720,7 @@ void GN::engine::SkinnedMesh::setAnimation(size_t animationIndex, float seconds)
             Uniform * uniform = sk.matrices->uniform().rawptr();
             GN_ASSERT( uniform->size() >= sizeof(Matrix44f)*MAX_JOINTS_PER_DRAW );
             size_t bytes = sizeof(Matrix44f) * math::getmin<size_t>(MAX_JOINTS_PER_DRAW,sk.jointCount);
-            uniform->update( 0, (uint32)bytes, matrices );*/
+            uniform->update( 0, (uint32_t)bytes, matrices );*/
         }
     }
 }
@@ -742,7 +742,7 @@ bool GN::engine::SkinnedMesh::loadFromFatModel(const GN::gfx::FatModel & fatmode
 
     GpuResourceDatabase & gdb = *getGdb();
 
-    DynaArray<uint8> vb;
+    DynaArray<uint8_t> vb;
 
     // Load skinned effect
     mSkinnedEffect = sRegisterSkinnedDiffuseEffect(gdb);
@@ -751,7 +751,7 @@ bool GN::engine::SkinnedMesh::loadFromFatModel(const GN::gfx::FatModel & fatmode
     // Load skeleton array
     mSkeletons.resize(fatmodel.skeletons.size());
     memset(mSkeletons.rawptr(), 0, sizeof(Skeleton) * mSkeletons.size());
-    for (uint32 i = 0; i < fatmodel.skeletons.size(); ++i) {
+    for (uint32_t i = 0; i < fatmodel.skeletons.size(); ++i) {
         const FatSkeleton & source = fatmodel.skeletons[i];
 
         Skeleton & dest  = mSkeletons[i];
@@ -768,7 +768,7 @@ bool GN::engine::SkinnedMesh::loadFromFatModel(const GN::gfx::FatModel & fatmode
         }
 
         // Loop through each joints (first pass)
-        for (uint32 j = 0; j < source.joints.size(); ++j) {
+        for (uint32_t j = 0; j < source.joints.size(); ++j) {
             const FatJoint & srcjoint = source.joints[j];
 
             // Replicate the hierarchy
@@ -806,8 +806,8 @@ bool GN::engine::SkinnedMesh::loadFromFatModel(const GN::gfx::FatModel & fatmode
         // calculate transformation from joint space to model space.
         // Transfomration outside of the model space should not be
         // involved.
-        for (uint32 j = 0; j < source.joints.size(); ++j) {
-            uint32 parent = source.joints[j].parent;
+        for (uint32_t j = 0; j < source.joints.size(); ++j) {
+            uint32_t parent = source.joints[j].parent;
             dest.spacials[j]->setParent((parent == FatJoint::NO_JOINT) ? NULL : dest.spacials[parent]);
         }
 
@@ -820,7 +820,7 @@ bool GN::engine::SkinnedMesh::loadFromFatModel(const GN::gfx::FatModel & fatmode
     }
 
     // Load all meshes
-    for (uint32 mi = 0; mi < fatmodel.meshes.size(); ++mi) {
+    for (uint32_t mi = 0; mi < fatmodel.meshes.size(); ++mi) {
         const auto & fatmesh = fatmodel.meshes[mi];
 
         StrA meshName = str::format("%s.mesh.%d", fatmodel.name.rawptr(), mi);
@@ -839,7 +839,7 @@ bool GN::engine::SkinnedMesh::loadFromFatModel(const GN::gfx::FatModel & fatmode
 
             // setup vertex format
             fatmesh.vertices.GenerateMeshVertexFormat(merd.vtxfmt);
-            merd.strides[0] = math::alignToPowerOf2<uint16>(merd.vtxfmt.calcStreamStride(0), 16);
+            merd.strides[0] = math::alignToPowerOf2<uint16_t>(merd.vtxfmt.calcStreamStride(0), 16);
 
             // copy vertex data
             if (!vb.resize(merd.strides[0] * fatmesh.vertices.getVertexCount())) continue;
@@ -848,18 +848,18 @@ bool GN::engine::SkinnedMesh::loadFromFatModel(const GN::gfx::FatModel & fatmode
 
             // convert integer joint index to floats to workaround hardware liminations (not all hardware supports integer
             // vertex elements)
-            uint32 jointSemanticIndex;
+            uint32_t jointSemanticIndex;
             if (merd.vtxfmt.hasSemantic("JOINT_ID", &jointSemanticIndex)) {
                 MeshVertexElement & mve = merd.vtxfmt.elements[jointSemanticIndex];
                 if (mve.format == PixelFormat::UINT4()) {
-                    mve.format = PixelFormat::FLOAT4();
-                    uint8 * p  = (uint8 *) merd.vertices[0] + mve.offset;
-                    for (uint32 i = 0; i < merd.numvtx; ++i, p += merd.strides[0]) {
+                    mve.format  = PixelFormat::FLOAT4();
+                    uint8_t * p = (uint8_t *) merd.vertices[0] + mve.offset;
+                    for (uint32_t i = 0; i < merd.numvtx; ++i, p += merd.strides[0]) {
                         // Offset the value by 0.5 to avoid float to integer rounding error. Or else,
                         // it is possible that an integer value, for example 10, could be converted to
                         // floating point value 9.999999999. When it is converted back to integer
                         // in shader, it becomes 9.
-                        uint32 * joints       = (uint32 *) p;
+                        uint32_t * joints     = (uint32_t *) p;
                         ((float *) joints)[0] = (float) (joints[0] == FatJoint::NO_JOINT ? 255 : joints[0]) + 0.5f;
                         ((float *) joints)[1] = (float) (joints[1] == FatJoint::NO_JOINT ? 255 : joints[1]) + 0.5f;
                         ((float *) joints)[2] = (float) (joints[2] == FatJoint::NO_JOINT ? 255 : joints[2]) + 0.5f;
@@ -887,7 +887,7 @@ bool GN::engine::SkinnedMesh::loadFromFatModel(const GN::gfx::FatModel & fatmode
             const FatMeshSubset & fatsubset = fatmesh.subsets[s];
             const FatMaterial &   fatmat    = fatmodel.materials[fatsubset.material];
 
-            uint32 jointCountInTheSubset = fatsubset.joints.size();
+            uint32_t jointCountInTheSubset = fatsubset.joints.size();
             if (jointCountInTheSubset > MAX_JOINTS_PER_DRAW) {
                 GN_ERROR(sLogger)
                 ("Ignore mesh %s subset %d. It contains too many joints (#%d) then the current code allowed (#%d)", meshName.rawptr(), s, jointCountInTheSubset,
@@ -920,14 +920,14 @@ bool GN::engine::SkinnedMesh::loadFromFatModel(const GN::gfx::FatModel & fatmode
             mSubsets.back().joints   = fatsubset.joints;
 
             // bind joint matrix uniform to the mesh.
-            uint32 skeletonIndex = fatmesh.skeleton;
+            uint32_t skeletonIndex = fatmesh.skeleton;
             if (skeletonIndex != FatMesh::NO_SKELETON) { model->setUniformResource("JOINT_MATRICES", mSkeletons[skeletonIndex].matrices); }
         }
     }
 
     // loading all animations
     if (mAnimations.resize(fatmodel.skinAnimations.size())) {
-        for (uint32 i = 0; i < fatmodel.skinAnimations.size(); ++i) {
+        for (uint32_t i = 0; i < fatmodel.skinAnimations.size(); ++i) {
             mAnimations[i]           = new SkinnedAnimation;
             const FatAnimation & src = fatmodel.skinAnimations[i];
             FatAnimation &       dst = *(FatAnimation *) mAnimations[i];
@@ -956,7 +956,7 @@ bool GN::engine::SkinnedMesh::loadFromFile(const StrA & filename) {
 //
 //
 // -----------------------------------------------------------------------------
-void GN::engine::SkinnedMesh::drawSkeletons(uint32 colorInRGBA, const Matrix44f & transform) {
+void GN::engine::SkinnedMesh::drawSkeletons(uint32_t colorInRGBA, const Matrix44f & transform) {
     LineRenderer * lr = getLineRenderer();
     if (NULL == lr) return;
 
@@ -971,11 +971,11 @@ void GN::engine::SkinnedMesh::drawSkeletons(uint32 colorInRGBA, const Matrix44f 
     Matrix44f finalTransform = transform * mRootSpacial.getLocal2Root();
 
     // Loop through skeletons
-    for (uint32 i = 0; i < mSkeletons.size(); ++i) {
+    for (uint32_t i = 0; i < mSkeletons.size(); ++i) {
         const Skeleton & sk = mSkeletons[i];
 
         // Loop through joints
-        for (uint32 j = 0; j < sk.jointCount; ++j) {
+        for (uint32_t j = 0; j < sk.jointCount; ++j) {
             const JointHierarchy & h = sk.hierarchy[j];
 
             // if the joint has parent, then draw

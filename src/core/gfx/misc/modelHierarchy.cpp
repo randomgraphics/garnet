@@ -67,35 +67,35 @@ static bool sStrEndWithI(const char * string, const char * suffix) {
 namespace xpr {
 
 struct XPRFileHeader {
-    uint32 tag;        ///< must be XPR2
-    uint32 size1;      ///< size tag 1
-    uint32 size2;      ///< size tag 2 (file size = size1+size2+12)
-    uint32 numObjects; ///< number of objects in this file
+    uint32_t tag;        ///< must be XPR2
+    uint32_t size1;      ///< size tag 1
+    uint32_t size2;      ///< size tag 2 (file size = size1+size2+12)
+    uint32_t numObjects; ///< number of objects in this file
 };
 
 struct XPRObjectHeader {
-    uint32 type;    ///< object type, could be "USER", "TX2D", "VBUF", "IBUF".
-    uint32 offset;  ///< object offset in bytes. The actual offset is this value + 12.
-    uint32 size;    ///< object size in bytes
-    uint32 unknown; ///< I don't know what this is for.
+    uint32_t type;    ///< object type, could be "USER", "TX2D", "VBUF", "IBUF".
+    uint32_t offset;  ///< object offset in bytes. The actual offset is this value + 12.
+    uint32_t size;    ///< object size in bytes
+    uint32_t unknown; ///< I don't know what this is for.
 };
 
 // XPR texture descriptor, 0x28 bytes
 struct XPRTex2DDesc {
     // 10 dwords
-    uint32 dwords[10];
+    uint32_t dwords[10];
 };
 GN_CASSERT(0x28 == sizeof(XPRTex2DDesc));
 
 /// XPR vertex buffer descriptor, 0x14 bytes
 struct XPRVBufDesc {
-    uint32 dwords[5];
+    uint32_t dwords[5];
 };
 GN_CASSERT(0x14 == sizeof(XPRVBufDesc));
 
 /// XPR index buffer descriptor, 0x14 bytes
 struct XPRIBufDesc {
-    uint32 dwords[5];
+    uint32_t dwords[5];
 };
 GN_CASSERT(0x14 == sizeof(XPRIBufDesc));
 
@@ -523,7 +523,7 @@ struct hash<fbx::MeshVertexKey> {
 
 namespace fbx {
 
-typedef std::unordered_map<MeshVertexKey, uint32> MeshVertexHashMap;
+typedef std::unordered_map<MeshVertexKey, uint32_t> MeshVertexHashMap;
 
 //
 //
@@ -594,7 +594,7 @@ static void sLoadFbxMesh(ModelHierarchyDesc & desc, const StrA & filename, Model
     }
 
     // Create index blob that stores the index buffer (assume 32-bit indices)
-    AutoRef<SimpleBlob> indexBlob = referenceTo(new SimpleBlob(numidx * sizeof(uint32)));
+    AutoRef<SimpleBlob> indexBlob = referenceTo(new SimpleBlob(numidx * sizeof(uint32_t)));
     if (0 == indexBlob->size()) {
         GN_ERROR(sLogger)("Fail to load FBX mesh: out of memory.");
         return;
@@ -610,7 +610,7 @@ static void sLoadFbxMesh(ModelHierarchyDesc & desc, const StrA & filename, Model
     int uvIndex     = 0;
     int normalIndex = 0;
     int lastMatID   = -1;
-    for (uint32 sortedPolygonIndex = 0; sortedPolygonIndex < sortedPolygons.size(); ++sortedPolygonIndex) {
+    for (uint32_t sortedPolygonIndex = 0; sortedPolygonIndex < sortedPolygons.size(); ++sortedPolygonIndex) {
         int polygonIndex = sortedPolygons[sortedPolygonIndex];
 
         int matid = nummat > 1 ? fbxMaterials->GetIndexArray().GetAt(polygonIndex) : 0;
@@ -667,7 +667,7 @@ static void sLoadFbxMesh(ModelHierarchyDesc & desc, const StrA & filename, Model
             // If the key exists already, the pair will point to it.
             // If the key does not exisit, the pair will point to the newly inserted one.
             // Either way, pair->value should give us the correct index of the vertex.
-            auto inserted    = vhash.insert({key, (uint32) vhash.size()});
+            auto inserted    = vhash.insert({key, (uint32_t) vhash.size()});
             auto isNewVertex = inserted.second;
             auto vertexIndex = inserted.first->second;
 
@@ -687,7 +687,7 @@ static void sLoadFbxMesh(ModelHierarchyDesc & desc, const StrA & filename, Model
             }
 
             // add the vertex index into the final index buffer
-            uint32 * indices                    = (uint32 *) indexBlob->data();
+            uint32_t * indices                  = (uint32_t *) indexBlob->data();
             indices[sortedPolygonIndex * 3 + i] = vertexIndex;
         }
     }
@@ -697,15 +697,15 @@ static void sLoadFbxMesh(ModelHierarchyDesc & desc, const StrA & filename, Model
 
     // Compress index buffer to 16 bits, if possible.
     if (vertexBlob->array().size() <= 0x10000) {
-        AutoRef<SimpleBlob> ib16 = referenceTo(new SimpleBlob(numidx * sizeof(uint16)));
+        AutoRef<SimpleBlob> ib16 = referenceTo(new SimpleBlob(numidx * sizeof(uint16_t)));
         if (0 == ib16->size()) {
             GN_ERROR(sLogger)("Fail to load FBX mesh: out of memory.");
             return;
         }
 
-        const uint32 * i32 = (const uint32 *) indexBlob->data();
-        uint16 *       i16 = (uint16 *) ib16->data();
-        for (size_t i = 0; i < (size_t) numidx; ++i) { i16[i] = (uint16) i32[i]; }
+        const uint32_t * i32 = (const uint32_t *) indexBlob->data();
+        uint16_t *       i16 = (uint16_t *) ib16->data();
+        for (size_t i = 0; i < (size_t) numidx; ++i) { i16[i] = (uint16_t) i32[i]; }
 
         indexBlob = ib16;
     }
@@ -719,14 +719,14 @@ static void sLoadFbxMesh(ModelHierarchyDesc & desc, const StrA & filename, Model
     // Fill up the rest of informations for each models.
     for (size_t i = 0; i < models.size(); ++i) {
         models[i].mesh          = meshName;
-        models[i].subset.numvtx = (uint32) vertexBlob->array().size();
+        models[i].subset.numvtx = (uint32_t) vertexBlob->array().size();
     }
 
     // Now copy everthing to the output descriptor. And we are done!
     MeshResourceDesc & gnmesh = desc.meshes[meshName];
     gnmesh                    = {};
     gnmesh.prim               = PrimitiveType::TRIANGLE_LIST;
-    gnmesh.numvtx             = (uint32) vertexBlob->array().size();
+    gnmesh.numvtx             = (uint32_t) vertexBlob->array().size();
     gnmesh.numidx             = numidx;
     gnmesh.idx32              = gnmesh.numvtx > 0x10000;
     gnmesh.vtxfmt             = MeshVertex::sGetVertexFormat();

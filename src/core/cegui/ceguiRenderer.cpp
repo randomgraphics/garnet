@@ -23,18 +23,18 @@ void CEGUI::GarnetRenderer::addQuad(const Rect & dest_rect, float z, const Textu
     // get screen size
     const GN::gfx::DispDesc & dd = gRenderer.getDispDesc();
 
-    float  x0  = dest_rect.d_left / dd.width;
-    float  y0  = dest_rect.d_top / dd.height;
-    float  x1  = dest_rect.d_right / dd.width;
-    float  y1  = dest_rect.d_bottom / dd.height;
-    float  u0  = texture_rect.d_left;
-    float  v0  = texture_rect.d_top;
-    float  u1  = texture_rect.d_right;
-    float  v1  = texture_rect.d_bottom;
-    uint32 cx0 = colours.d_top_left.getARGB();
-    uint32 cx1 = colours.d_top_right.getARGB();
-    uint32 cy0 = colours.d_bottom_right.getARGB();
-    uint32 cy1 = colours.d_bottom_left.getARGB();
+    float    x0  = dest_rect.d_left / dd.width;
+    float    y0  = dest_rect.d_top / dd.height;
+    float    x1  = dest_rect.d_right / dd.width;
+    float    y1  = dest_rect.d_bottom / dd.height;
+    float    u0  = texture_rect.d_left;
+    float    v0  = texture_rect.d_top;
+    float    u1  = texture_rect.d_right;
+    float    v1  = texture_rect.d_bottom;
+    uint32_t cx0 = colours.d_top_left.getARGB();
+    uint32_t cx1 = colours.d_top_right.getARGB();
+    uint32_t cy0 = colours.d_bottom_right.getARGB();
+    uint32_t cy1 = colours.d_bottom_left.getARGB();
 
     QuadDesc qd = {(const GarnetTexture *) tex, z, x0, y0, x1, y1, u0, v0, u1, v1, cx0, cx1, cy0, cy1};
     if (mQueueEnabled)

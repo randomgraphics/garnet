@@ -66,8 +66,8 @@ struct AseMesh : public gfx::MeshResourceDesc {
 /// ase mesh subset
 ///
 struct AseMeshSubset : public gfx::MeshResourceSubset {
-    uint32 matid;  ///< index into AseScene::materials array
-    uint32 meshid; ///< index into AseScene::meshes array
+    uint32_t matid;  ///< index into AseScene::materials array
+    uint32_t meshid; ///< index into AseScene::meshes array
 };
 
 ///

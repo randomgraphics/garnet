@@ -135,9 +135,9 @@ bool GN::engine::StaticMesh::loadFromFatModel(const GN::gfx::FatModel & fatmodel
 
     GpuResourceDatabase & gdb = *getGdb();
 
-    DynaArray<uint8> vb;
+    DynaArray<uint8_t> vb;
 
-    for (uint32 i = 0; i < fatmodel.meshes.size(); ++i) {
+    for (uint32_t i = 0; i < fatmodel.meshes.size(); ++i) {
         const auto & fatmesh = fatmodel.meshes[i];
 
         StrA meshName = str::format("%s.mesh.%d", fatmodel.name.rawptr(), i);
@@ -156,7 +156,7 @@ bool GN::engine::StaticMesh::loadFromFatModel(const GN::gfx::FatModel & fatmodel
 
             // setup vertex format
             fatmesh.vertices.GenerateMeshVertexFormat(merd.vtxfmt);
-            merd.strides[0] = math::alignToPowerOf2<uint16>(merd.vtxfmt.calcStreamStride(0), 16);
+            merd.strides[0] = math::alignToPowerOf2<uint16_t>(merd.vtxfmt.calcStreamStride(0), 16);
 
             // copy vertex data
             if (!vb.resize(merd.strides[0] * fatmesh.vertices.getVertexCount())) continue;

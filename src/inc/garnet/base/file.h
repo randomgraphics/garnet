@@ -36,7 +36,7 @@ union FileOperationCaps {
 ///
 /// 用户实现该文件类时，不一定要实现下面的所有操作。
 ///
-/// TODO: replace size_t with uint64 or sint64, to support large file on x86 system
+/// TODO: replace size_t with uint64_t or int64_t, to support large file on x86 system
 ///
 struct GN_API File : public NoCopy {
     /// construct from input stream

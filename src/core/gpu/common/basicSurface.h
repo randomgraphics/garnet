@@ -28,7 +28,7 @@ protected:
     ///
     /// Validate update parameters.
     ///
-    bool validateUpdateParameters(uint32 face, uint32 level, const Box<uint32> * area, SurfaceUpdateFlag flag, Box<uint32> & clippedArea) {
+    bool validateUpdateParameters(uint32_t face, uint32_t level, const Box<uint32_t> * area, SurfaceUpdateFlag flag, Box<uint32_t> & clippedArea) {
         // check face
         if (face >= getDesc().faces) {
             static Logger * sLogger = getLogger("GN.gfx.gpu.common.BasicTexture");
@@ -51,7 +51,7 @@ protected:
         }
 
         // get texture size
-        const Vector3<uint32> & sz = getMipSize(level);
+        const Vector3<uint32_t> & sz = getMipSize(level);
 
         // make sure lock area is valid
         if (area) {
@@ -113,7 +113,7 @@ protected:
     ///
     /// Validate update parameters. Note that this function may modify "length" parameter
     ///
-    bool validateUpdateParameters(uint32 offset, uint32 * length, const void * data, SurfaceUpdateFlag flag) {
+    bool validateUpdateParameters(uint32_t offset, uint32_t * length, const void * data, SurfaceUpdateFlag flag) {
         const VtxBufDesc & vbd = getDesc();
 
         if (NULL == data) {
@@ -172,7 +172,7 @@ protected:
     ///
     /// Validate update parameters.
     ///
-    bool validateUpdateParameters(uint32 startidx, uint32 * numidx, const void * data, SurfaceUpdateFlag flag) {
+    bool validateUpdateParameters(uint32_t startidx, uint32_t * numidx, const void * data, SurfaceUpdateFlag flag) {
         GN_ASSERT(numidx);
 
         const IdxBufDesc & ibd = getDesc();

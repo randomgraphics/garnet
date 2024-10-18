@@ -65,7 +65,7 @@ GN_FORCE_INLINE constexpr bool isPowerOf2(T n) {
 ///
 /// 返回不小于n的最小的2的整幂
 // --------------------------------------------------------------------
-GN_FORCE_INLINE constexpr uint32 ceilPowerOf2(uint32 n) {
+GN_FORCE_INLINE constexpr uint32_t ceilPowerOf2(uint32_t n) {
     n -= 1;
 
     n |= n >> 16;
@@ -80,7 +80,7 @@ GN_FORCE_INLINE constexpr uint32 ceilPowerOf2(uint32 n) {
 ///
 /// 返回不大于n的最大的2的整幂
 // --------------------------------------------------------------------
-GN_FORCE_INLINE constexpr uint32 floorPowerOf2(uint32 n) {
+GN_FORCE_INLINE constexpr uint32_t floorPowerOf2(uint32_t n) {
     n |= n >> 16;
     n |= n >> 8;
     n |= n >> 4;

@@ -202,9 +202,9 @@ inline bool GN::gfx::D3D11Gpu::bindContextRenderTarget(const GpuContext & newCon
     }
 
     // bind viewport
-    const Vector2<uint32> & rtsize = mRTMgr->getRenderTargetSize();
-    const Rect<uint32> &    newvp  = newContext.rs.viewport;
-    D3D11_VIEWPORT          d3dvp;
+    const Vector2<uint32_t> & rtsize = mRTMgr->getRenderTargetSize();
+    const Rect<uint32_t> &    newvp  = newContext.rs.viewport;
+    D3D11_VIEWPORT            d3dvp;
     d3dvp.MinDepth = 0.0f;
     d3dvp.MaxDepth = 1.0f;
     if (0 == newvp.x && 0 == newvp.y && 0 == newvp.w && 0 == newvp.h) {
@@ -213,10 +213,10 @@ inline bool GN::gfx::D3D11Gpu::bindContextRenderTarget(const GpuContext & newCon
         d3dvp.Width    = (float) rtsize.x;
         d3dvp.Height   = (float) rtsize.y;
     } else {
-        uint32 l       = math::clamp<uint32>(newvp.x, 0, rtsize.width);
-        uint32 t       = math::clamp<uint32>(newvp.y, 0, rtsize.height);
-        uint32 r       = math::clamp<uint32>(newvp.x + newvp.w, 0, rtsize.width);
-        uint32 b       = math::clamp<uint32>(newvp.y + newvp.h, 0, rtsize.height);
+        uint32_t l     = math::clamp<uint32_t>(newvp.x, 0, rtsize.width);
+        uint32_t t     = math::clamp<uint32_t>(newvp.y, 0, rtsize.height);
+        uint32_t r     = math::clamp<uint32_t>(newvp.x + newvp.w, 0, rtsize.width);
+        uint32_t b     = math::clamp<uint32_t>(newvp.y + newvp.h, 0, rtsize.height);
         d3dvp.TopLeftX = (float) l;
         d3dvp.TopLeftY = (float) t;
         d3dvp.Width    = (float) (r - l);
@@ -254,8 +254,8 @@ inline bool GN::gfx::D3D11Gpu::bindContextShader(const GpuContext & newContext, 
         GN_CASSERT(sizeof(AutoRef<Uniform>) == sizeof(Uniform *));
 
         // apply GPU program resources
-        newProg->applyUniforms((const Uniform * const *) newContext.uniforms.rawptr(), (uint32) newContext.uniforms.size(), skipDirtyCheck);
-        newProg->applyTextures(newContext.textures.rawptr(), (uint32) newContext.textures.size(), skipDirtyCheck);
+        newProg->applyUniforms((const Uniform * const *) newContext.uniforms.rawptr(), (uint32_t) newContext.uniforms.size(), skipDirtyCheck);
+        newProg->applyTextures(newContext.textures.rawptr(), (uint32_t) newContext.textures.size(), skipDirtyCheck);
     } else if (skipDirtyCheck || (NULL != mContext.gpuProgram)) {
         mDeviceContext->VSSetShader(NULL, NULL, 0);
         mDeviceContext->GSSetShader(NULL, NULL, 0);
@@ -300,7 +300,7 @@ inline bool GN::gfx::D3D11Gpu::bindContextState(const GpuContext & newContext, b
     dsdesc.FrontFace.StencilFailOp      = STENCIL_OP_TO_D3D11[newContext.rs.stencilFailOp];
     dsdesc.FrontFace.StencilDepthFailOp = STENCIL_OP_TO_D3D11[newContext.rs.stencilZFailOp];
     dsdesc.BackFace                     = dsdesc.FrontFace;
-    uint32 stencilRef                   = 0;
+    uint32_t stencilRef                 = 0;
     if (!mSOMgr->setDS(dsdesc, stencilRef, skipDirtyCheck)) return false;
 
     // blend states
@@ -325,7 +325,7 @@ inline bool GN::gfx::D3D11Gpu::bindContextState(const GpuContext & newContext, b
     bsdesc.RenderTarget[5].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
     bsdesc.RenderTarget[6].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
     bsdesc.RenderTarget[7].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
-    uint32 sampleMask                            = 0xFFFFFFFF;
+    uint32_t sampleMask                          = 0xFFFFFFFF;
     if (!mSOMgr->setBS(bsdesc, newContext.rs.blendFactors, sampleMask, skipDirtyCheck)) return false;
 
     // Note: input and sampler states are handled in bindContextResource()

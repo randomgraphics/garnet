@@ -479,7 +479,6 @@ MAKE_FREEDELEGATE(GN_CDECL, )
     #define MAKE_MEMDELEGATE(CALL_CONVENSION, CONSTNESS)                                                                                  \
         template<class X, class Y, typename R PARAM_COMMA PARAM_TEMPLS>                                                                   \
         inline DELEGATE_NAME<R PARAM_COMMA PARAM_TYPES> makeDelegate(CONSTNESS Y * x, R (CALL_CONVENSION X::*f)(PARAM_TYPES) CONSTNESS) { \
-            GN_CASSERT(!IsConst<Y>::value);                                                                                               \
             DELEGATE_NAME<R PARAM_COMMA PARAM_TYPES> fn;                                                                                  \
             fn.bind(x, f);                                                                                                                \
             return fn;                                                                                                                    \

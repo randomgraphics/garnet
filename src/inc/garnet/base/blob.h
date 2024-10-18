@@ -19,19 +19,19 @@ struct Blob : public RefCounter {
     ///
     /// get binary size in bytes
     ///
-    virtual uint32 size() const = 0;
+    virtual uint32_t size() const = 0;
 };
 
 ///
 /// A simple fixed size blob class
 ///
 class SimpleBlob : public Blob {
-    void * mBuffer;
-    uint32 mSize;
+    void *   mBuffer;
+    uint32_t mSize;
 
 public:
     /// ctor
-    explicit SimpleBlob(uint32 sz) {
+    explicit SimpleBlob(uint32_t sz) {
         mBuffer = HeapMemory::alignedAlloc(sz, 16);
         mSize   = (NULL != mBuffer) ? sz : 0;
     }
@@ -44,8 +44,8 @@ public:
     }
 
     //@{
-    virtual void * data() const { return mBuffer; }
-    virtual uint32 size() const { return mSize; }
+    virtual void *   data() const { return mBuffer; }
+    virtual uint32_t size() const { return mSize; }
     //@}
 };
 
@@ -61,8 +61,8 @@ public:
     DynaArrayBlob() {}
 
     //@{
-    virtual void * data() const { return (void *) mBuffer.rawptr(); }
-    virtual uint32 size() const { return (uint32) (sizeof(T) * mBuffer.size()); }
+    virtual void *   data() const { return (void *) mBuffer.rawptr(); }
+    virtual uint32_t size() const { return (uint32_t) (sizeof(T) * mBuffer.size()); }
     //@}
 
     //@{

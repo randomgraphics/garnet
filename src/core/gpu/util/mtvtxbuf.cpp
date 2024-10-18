@@ -55,7 +55,7 @@ void GN::gfx::MultiThreadVtxBuf::quit() {
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::MultiThreadVtxBuf::update(uint32 offset, uint32 length, const void * data, SurfaceUpdateFlag flag) {
+void GN::gfx::MultiThreadVtxBuf::update(uint32_t offset, uint32_t length, const void * data, SurfaceUpdateFlag flag) {
     if (NULL == data) {
         GN_ERROR(sLogger)("Null data pointer.");
         return;
@@ -80,7 +80,7 @@ void GN::gfx::MultiThreadVtxBuf::update(uint32 offset, uint32 length, const void
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::MultiThreadVtxBuf::readback(DynaArray<uint8> & data) { mGpu.cmdbuf().postCommand2(CMD_VTXBUF_READBACK, mVtxBuf, &data); }
+void GN::gfx::MultiThreadVtxBuf::readback(DynaArray<uint8_t> & data) { mGpu.cmdbuf().postCommand2(CMD_VTXBUF_READBACK, mVtxBuf, &data); }
 
 // *****************************************************************************
 // Command handlers (called by back end thread)
@@ -91,7 +91,7 @@ namespace gfx {
 //
 //
 // -------------------------------------------------------------------------
-void func_VTXBUF_DESTROY(Gpu &, void * p, uint32) {
+void func_VTXBUF_DESTROY(Gpu &, void * p, uint32_t) {
     VtxBuf * vb = *(VtxBuf **) p;
     vb->decref();
 }
@@ -99,11 +99,11 @@ void func_VTXBUF_DESTROY(Gpu &, void * p, uint32) {
 //
 //
 // -------------------------------------------------------------------------
-void func_VTXBUF_UPDATE(Gpu &, void * p, uint32) {
+void func_VTXBUF_UPDATE(Gpu &, void * p, uint32_t) {
     struct VtxBufUpdateParam {
         VtxBuf *          vtxbuf;
-        uint32            offset;
-        uint32            length;
+        uint32_t          offset;
+        uint32_t          length;
         void *            data;
         SurfaceUpdateFlag flag;
     };
@@ -118,10 +118,10 @@ void func_VTXBUF_UPDATE(Gpu &, void * p, uint32) {
 //
 //
 // -------------------------------------------------------------------------
-void func_VTXBUF_READBACK(Gpu &, void * p, uint32) {
+void func_VTXBUF_READBACK(Gpu &, void * p, uint32_t) {
     struct VtxBufReadBackParam {
-        VtxBuf *           vb;
-        DynaArray<uint8> * buf;
+        VtxBuf *             vb;
+        DynaArray<uint8_t> * buf;
     };
     VtxBufReadBackParam * vbrp = (VtxBufReadBackParam *) p;
 

@@ -51,7 +51,7 @@ public:
         return mUberBBox;
     } ///< get the uber bounding box of the component and all sub components, in local space.
     /// draw the bounding box
-    void drawBoundingBox(const Matrix44f & proj, const Matrix44f & view, uint32 colorInRGBA) const {
+    void drawBoundingBox(const Matrix44f & proj, const Matrix44f & view, uint32_t colorInRGBA) const {
         getGdb()->setTransform(proj, view);
         getLineRenderer()->drawBox(getUberBoundingBox(), colorInRGBA, proj * view * getLocal2Root());
     }

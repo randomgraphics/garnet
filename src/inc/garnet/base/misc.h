@@ -52,12 +52,12 @@
 ///
 /// compose RGBA8 color constant
 ///
-#define GN_RGBA8(r, g, b, a) ((((uint32) (r) &0xFF) << 0) | (((uint32) (g) &0xFF) << 8) | (((uint32) (b) &0xFF) << 16) | (((uint32) (a) &0xFF) << 24))
+#define GN_RGBA8(r, g, b, a) ((((uint32_t) (r) &0xFF) << 0) | (((uint32_t) (g) &0xFF) << 8) | (((uint32_t) (b) &0xFF) << 16) | (((uint32_t) (a) &0xFF) << 24))
 
 ///
 /// compose BGRA8 color constant
 ///
-#define GN_BGRA8(r, g, b, a) ((((uint32) (b) &0xFF) << 0) | (((uint32) (g) &0xFF) << 8) | (((uint32) (r) &0xFF) << 16) | (((uint32) (a) &0xFF) << 24))
+#define GN_BGRA8(r, g, b, a) ((((uint32_t) (b) &0xFF) << 0) | (((uint32_t) (g) &0xFF) << 8) | (((uint32_t) (r) &0xFF) << 16) | (((uint32_t) (a) &0xFF) << 24))
 
 namespace GN {
 
@@ -180,10 +180,10 @@ struct GN_API Guid {
 
     /// \name data members
     //@{
-    uint32  data1;
-    uint16  data2;
-    uint16  data3;
-    uint8_t data4[8];
+    uint32_t data1;
+    uint16_t data2;
+    uint16_t data3;
+    uint8_t  data4[8];
     //@}
 
     /// \name public methods

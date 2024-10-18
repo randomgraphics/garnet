@@ -171,7 +171,7 @@ GN_API void formatvTo(wchar_t * buf, size_t bufSizeInWchar, const wchar_t * fmt,
 /// set to length to 0 to hash NULL terminated string.
 ///
 template<typename CHAR>
-inline uint64 hash(const CHAR * s, size_t length = 0) {
+inline uint64_t hash(const CHAR * s, size_t length = 0) {
     unsigned long h = 5381;
 
     if (length > 0) {
@@ -498,7 +498,7 @@ public:
     ///
     /// string hash
     ///
-    uint64 hash() const { return str::hash(mPtr, size()); }
+    uint64_t hash() const { return str::hash(mPtr, size()); }
 
     ///
     /// Insert a character at specific position
@@ -901,7 +901,7 @@ public:
     /// string Hash Functor
     ///
     struct Hash {
-        uint64 operator()(const Str & s) const { return str::hash(s.mPtr, s.size()); }
+        uint64_t operator()(const Str & s) const { return str::hash(s.mPtr, s.size()); }
     };
 
 private:
@@ -1464,19 +1464,19 @@ inline Str<CHAR> formatv(const CHAR * fmt, va_list args) {
 ///  Returns number of characters that are sucessfully converted. Return 0 for failure.
 //@{
 
-GN_API size_t toSignedInteger(sint64 & result, int bits, int base, const char * s);
-GN_API size_t toUnsignedInteger(uint64 & result, int bits, int base, const char * s);
+GN_API size_t toSignedInteger(int64_t & result, int bits, int base, const char * s);
+GN_API size_t toUnsignedInteger(uint64_t & result, int bits, int base, const char * s);
 
 template<typename T>
 inline size_t toInetger(T & i, const char * s, int base = 10) {
     size_t n;
 
-    if (SignedType<T>::value) {
-        sint64 s64;
+    if constexpr (std::is_signed<T>::value) {
+        int64_t s64;
         n = toSignedInteger(s64, sizeof(T) * 8, base, s);
         if (n > 0) i = (T) s64;
     } else {
-        uint64 u64;
+        uint64_t u64;
         n = toUnsignedInteger(u64, sizeof(T) * 8, base, s);
         if (n > 0) i = (T) u64;
     }

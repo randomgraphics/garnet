@@ -82,7 +82,7 @@
   - thread and sync objects unit tests.
   - update skinned mesh bounding box with animation
   - unit test:
-    - DynaArray<???,uint8>
+    - DynaArray<???,uint8_t>
   - New Engine module entity class
     - loop through all entities
     - loop through entities of specific type

@@ -158,8 +158,8 @@ GN_API ID3D11InputLayout *    createDumpableIL(ID3D11Device & device, const D3D1
                                                size_t bytes);
 
 GN_API void setDumpFilePrefix(const StrA &);
-GN_API void dumpDraw(ID3D11DeviceContext & devcxt, uint32 vertexCount, uint32 startVertex);
-GN_API void dumpDrawIndexed(ID3D11DeviceContext & devcxt, uint32 indexCount, uint32 startIndex, uint32 startVertex);
+GN_API void dumpDraw(ID3D11DeviceContext & devcxt, uint32_t vertexCount, uint32_t startVertex);
+GN_API void dumpDrawIndexed(ID3D11DeviceContext & devcxt, uint32_t indexCount, uint32_t startIndex, uint32_t startVertex);
 
 //@}
 

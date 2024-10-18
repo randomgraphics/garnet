@@ -62,7 +62,7 @@ public:
 ///
 template<class T, size_t N, typename SIZE_TYPE = size_t>
 class StackArray {
-    uint8     mBuffer[sizeof(T) * N];
+    uint8_t   mBuffer[sizeof(T) * N];
     SIZE_TYPE mCount;
 
     /// default constructor
@@ -430,7 +430,7 @@ class DynaArray {
 
         // align caps to next power of 2
         GN_ASSERT(count > 0);
-        uint64 newCap = count - 1;
+        uint64_t newCap = count - 1;
         newCap |= newCap >> 32;
         newCap |= newCap >> 16;
         newCap |= newCap >> 8;
@@ -440,7 +440,7 @@ class DynaArray {
         newCap += 1;
 
         // Cap to maximum allowable value.
-        const uint64 MAX_CAPS = (uint64) (SIZE_TYPE) -1;
+        const uint64_t MAX_CAPS = (uint64_t) (SIZE_TYPE) -1;
         if (newCap > MAX_CAPS) newCap = MAX_CAPS;
 
         GN_ASSERT(count <= MAX_CAPS);

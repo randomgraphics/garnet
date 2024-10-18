@@ -38,7 +38,7 @@ static const GLenum INVALID_DIMENSION = 0xFFFFFFFF;
 ///
 /// determine texture dimension based on texture size, return 0xFFFFFFFF if failed.
 // -----------------------------------------------------------------------------
-static inline GLenum sDetermineTextureDimension(uint32 faces, uint32 width, uint32 height, uint32 depth) {
+static inline GLenum sDetermineTextureDimension(uint32_t faces, uint32_t width, uint32_t height, uint32_t depth) {
     if (depth > 1) {
         // 3D texture
         if (faces > 1) {
@@ -279,7 +279,7 @@ static inline bool sColorFormat2OGL(GLint & gl_internalformat, GLuint & gl_forma
 ///
 /// map wrap mode to opengl constant
 // -----------------------------------------------------------------------------
-static inline GLint sTexWrap2OGL(uint32 wrap) {
+static inline GLint sTexWrap2OGL(uint32_t wrap) {
     switch (wrap) {
     case GN::gfx::SamplerDesc::ADDRESS_REPEAT:
         return GL_REPEAT;
@@ -473,7 +473,7 @@ bool GN::gfx::OGLTexture::init(const TextureDesc & inputDesc) {
     if (0 == mOGLTexture) return failure();
 
     // setup mipmap size array
-    for (uint32 i = 0; i < texdesc.levels; ++i) {
+    for (uint32_t i = 0; i < texdesc.levels; ++i) {
         GLint sx, sy, sz;
         switch (mTarget) {
         case GL_TEXTURE_1D:
@@ -536,10 +536,10 @@ void GN::gfx::OGLTexture::quit() {
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLTexture::updateMipmap(uint32 face, uint32 level, const Box<uint32> * area, uint32 rowPitch, uint32 slicePitch, const void * inputData,
-                                       SurfaceUpdateFlag flag) {
+void GN::gfx::OGLTexture::updateMipmap(uint32_t face, uint32_t level, const Box<uint32_t> * area, uint32_t rowPitch, uint32_t slicePitch,
+                                       const void * inputData, SurfaceUpdateFlag flag) {
     // check update parameters,
-    Box<uint32> clippedArea;
+    Box<uint32_t> clippedArea;
     if (!validateUpdateParameters(face, level, area, flag, clippedArea)) return;
 
     // Auto-restore texture binding when exiting this function.
@@ -630,7 +630,7 @@ void GN::gfx::OGLTexture::updateMipmap(uint32 face, uint32 level, const Box<uint
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLTexture::readMipmap(uint32, uint32, MipmapData &) { GN_UNIMPL(); }
+void GN::gfx::OGLTexture::readMipmap(uint32_t, uint32_t, MipmapData &) { GN_UNIMPL(); }
 
 //
 //

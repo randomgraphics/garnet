@@ -72,12 +72,12 @@ public:
     ///
     void drawLines(const void * positions, // 3D positions
                    size_t       stride,    // position buffer stride. 0 for default stride (3 floats).
-                   size_t numpoints, uint32 colorInRgba, const Matrix44f & transform);
+                   size_t numpoints, uint32_t colorInRgba, const Matrix44f & transform);
 
     ///
     /// draw a wireframe box
     ///
-    void drawBox(const Boxf & box, uint32 colorInRgba, const Matrix44f & transform);
+    void drawBox(const Boxf & box, uint32_t colorInRgba, const Matrix44f & transform);
 
     // ********************************
     // private variables
@@ -85,7 +85,7 @@ public:
 private:
     struct LineVertex {
         Vector3f  pos;
-        uint32    colorInRGBA;
+        uint32_t  colorInRGBA;
         Matrix44f transform;
     };
 
@@ -148,9 +148,9 @@ private:
     // ********************************
 public:
     struct ThickLineVertex {
-        float  x, y, z;
-        float  u, v;
-        uint32 color;
+        float    x, y, z;
+        float    u, v;
+        uint32_t color;
     };
 
     struct ThickLineParameters {
@@ -165,7 +165,7 @@ public:
     void drawEnd();
 
     void line(const ThickLineVertex & v0, const ThickLineVertex & v1);
-    void line(float x1, float y1, float z1, float x2, float y2, float z2, uint32 abgr);
+    void line(float x1, float y1, float z1, float x2, float y2, float z2, uint32_t abgr);
     void lineList(const ThickLineVertex * vertices, size_t numverts);
 
     // ********************************
@@ -180,15 +180,15 @@ private:
 
     struct PrivateVertex {
         Vector4f position; // position in clip space
-        uint32   color;
+        uint32_t color;
         float    u, v;
-        uint32   _; // padding
+        uint32_t _; // padding
     };
 
     struct EndPoint {
-        float  posl, posr, post, posb, posz, posw;
-        float  texl, texr, text, texb;
-        uint32 color;
+        float    posl, posr, post, posb, posz, posw;
+        float    texl, texr, text, texb;
+        uint32_t color;
 
         PrivateVertex * topLeft(PrivateVertex * v);
         PrivateVertex * topRight(PrivateVertex * v);
@@ -204,7 +204,7 @@ private:
 
     static const size_t MAX_VERTICES = 1024;
     PrivateVertex       m_Vertices[MAX_VERTICES];
-    uint32              m_NumVertices;
+    uint32_t            m_NumVertices;
 
     // ********************************
     // private functions

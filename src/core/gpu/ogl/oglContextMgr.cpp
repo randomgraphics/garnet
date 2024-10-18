@@ -144,7 +144,7 @@ bool GN::gfx::OGLGpu::bindContextImpl(const GpuContext & newContext, bool skipDi
 // -----------------------------------------------------------------------------
 inline OGLVtxFmt * GN::gfx::OGLGpu::findOrCreateOGLVtxFmt(const VertexBinding & vtxbind, const OGLGpuProgram * program) {
     // get shader ID
-    uint64 shaderID;
+    uint64_t shaderID;
     if (program) {
         shaderID = program->uniqueID();
         GN_ASSERT(0 != shaderID);
@@ -303,10 +303,10 @@ inline bool GN::gfx::OGLGpu::bindContextRenderTargets(const GpuContext & newCont
     if (!mRTMgr->bind(*(const RenderTargetDesc *) &mContext.colortargets, *(const RenderTargetDesc *) &newContext.colortargets, skipDirtyCheck)) return false;
 
     // get render target size
-    const Vector2<uint32> & rtsize = mRTMgr->getRenderTargetSize();
+    const Vector2<uint32_t> & rtsize = mRTMgr->getRenderTargetSize();
 
     // clip viewport against render target size
-    Rect<uint32> newvp = newContext.rs.viewport;
+    Rect<uint32_t> newvp = newContext.rs.viewport;
     if ((newvp.x + newvp.w) > rtsize.x) {
         GN_WARN(sLogger)("Viewport cannot be larger with current render target size.");
         if (newvp.x >= rtsize.x) {

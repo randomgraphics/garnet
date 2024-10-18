@@ -179,10 +179,10 @@ bool GN::gfx::EffectResource::Impl::reset(const EffectResourceDesc * desc) {
 //
 //
 // -----------------------------------------------------------------------------
-uint32 GN::gfx::EffectResource::Impl::findTexture(const char * name) const {
+uint32_t GN::gfx::EffectResource::Impl::findTexture(const char * name) const {
     if (NULL == name || 0 == *name) return PARAMETER_NOT_FOUND;
 
-    for (uint32 i = 0; i < mTextures.size(); ++i) {
+    for (uint32_t i = 0; i < mTextures.size(); ++i) {
         if (name == mTextures[i].parameterName) { return i; }
     }
 
@@ -192,10 +192,10 @@ uint32 GN::gfx::EffectResource::Impl::findTexture(const char * name) const {
 //
 //
 // -----------------------------------------------------------------------------
-uint32 GN::gfx::EffectResource::Impl::findUniform(const char * name) const {
+uint32_t GN::gfx::EffectResource::Impl::findUniform(const char * name) const {
     if (NULL == name || 0 == *name) return PARAMETER_NOT_FOUND;
 
-    for (uint32 i = 0; i < mUniforms.size(); ++i) {
+    for (uint32_t i = 0; i < mUniforms.size(); ++i) {
         if (name == mUniforms[i].parameterName) { return i; }
     }
 
@@ -205,8 +205,8 @@ uint32 GN::gfx::EffectResource::Impl::findUniform(const char * name) const {
 //
 //
 // -----------------------------------------------------------------------------
-uint32 GN::gfx::EffectResource::Impl::findAttribute(const char * name) const {
-    for (uint32 i = 0; i < mAttributes.size(); ++i) {
+uint32_t GN::gfx::EffectResource::Impl::findAttribute(const char * name) const {
+    for (uint32_t i = 0; i < mAttributes.size(); ++i) {
         if (sAttributeNameEqual(name, mAttributes[i].parameterName)) { return i; }
     }
 
@@ -216,7 +216,7 @@ uint32 GN::gfx::EffectResource::Impl::findAttribute(const char * name) const {
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::EffectResource::Impl::applyToContext(uint32 passIndex, GpuContext & gc) const {
+void GN::gfx::EffectResource::Impl::applyToContext(uint32_t passIndex, GpuContext & gc) const {
     if (passIndex >= mPasses.size()) {
         GN_ERROR(sLogger)("Pass index is too large: %u", passIndex);
         return;
@@ -339,7 +339,7 @@ bool GN::gfx::EffectResource::Impl::initTech(const EffectResourceDesc & effectDe
     Gpu & gpu = getGdb().getGpu();
 
     // initialize each pass
-    for (uint32 ipass = 0; ipass < techDesc.passes.size(); ++ipass) {
+    for (uint32_t ipass = 0; ipass < techDesc.passes.size(); ++ipass) {
         const EffectPassDesc & passDesc = techDesc.passes[ipass];
 
         const StrA & programName = passDesc.gpuprogram; // shader techName alias for easy referencing
@@ -392,7 +392,7 @@ bool GN::gfx::EffectResource::Impl::initTextures(const EffectResourceDesc & effe
         tp.sampler       = texture.sampler;
 
         // setup texture binding point array
-        for (uint32 ipass = 0; ipass < mPasses.size(); ++ipass) {
+        for (uint32_t ipass = 0; ipass < mPasses.size(); ++ipass) {
             const GpuProgramItem &          gpitem      = mPrograms[mPasses[ipass].gpuProgramIndex];
             const GpuProgramParameterDesc & gpparam     = gpitem.prog->getParameterDesc();
             const EffectGpuProgramDesc &    programDesc = effectDesc.gpuprograms.at(gpitem.name);
@@ -426,7 +426,7 @@ bool GN::gfx::EffectResource::Impl::initUniforms(const EffectResourceDesc & effe
         up.size          = eud.size;
 
         // setup uniform binding point array
-        for (uint32 ipass = 0; ipass < mPasses.size(); ++ipass) {
+        for (uint32_t ipass = 0; ipass < mPasses.size(); ++ipass) {
             const GpuProgramItem &          gpitem      = mPrograms[mPasses[ipass].gpuProgramIndex];
             const GpuProgramParameterDesc & gpparam     = gpitem.prog->getParameterDesc();
             const EffectGpuProgramDesc &    programDesc = effectDesc.gpuprograms.at(gpitem.name);
@@ -460,7 +460,7 @@ bool GN::gfx::EffectResource::Impl::initAttributes(const EffectResourceDesc & ef
         ap.parameterName = name;
 
         // setup attribute binding point array
-        for (uint32 ipass = 0; ipass < mPasses.size(); ++ipass) {
+        for (uint32_t ipass = 0; ipass < mPasses.size(); ++ipass) {
             const auto & gpitem      = mPrograms[mPasses[ipass].gpuProgramIndex];
             const auto & gpparam     = gpitem.prog->getParameterDesc();
             const auto & programDesc = effectDesc.gpuprograms.at(gpitem.name);
@@ -489,8 +489,8 @@ bool GN::gfx::EffectResource::Impl::initAttributes(const EffectResourceDesc & ef
 //
 //
 // -----------------------------------------------------------------------------
-uint32 GN::gfx::EffectResource::Impl::findGpuProgram(const EffectResourceDesc & effectDesc, const StrA & programName) {
-    for (uint32 i = 0; i < mPrograms.size(); ++i) {
+uint32_t GN::gfx::EffectResource::Impl::findGpuProgram(const EffectResourceDesc & effectDesc, const StrA & programName) {
+    for (uint32_t i = 0; i < mPrograms.size(); ++i) {
         if (mPrograms[i].name == programName) return i;
     }
 
@@ -498,7 +498,7 @@ uint32 GN::gfx::EffectResource::Impl::findGpuProgram(const EffectResourceDesc & 
     auto programDesc = effectDesc.gpuprograms.find(programName);
     if (effectDesc.gpuprograms.end() != programDesc && initGpuProgram(effectDesc, programName, programDesc->second)) {
         GN_ASSERT(mPrograms.size() > 0);
-        return (uint32) (mPrograms.size() - 1);
+        return (uint32_t) (mPrograms.size() - 1);
     }
 #endif
 
@@ -611,20 +611,20 @@ AutoRef<EffectResource> GN::gfx::EffectResource::loadFromFile(GpuResourceDatabas
 // -----------------------------------------------------------------------------
 bool GN::gfx::EffectResource::reset(const EffectResourceDesc * desc) { return mImpl->reset(desc); }
 
-uint32 GN::gfx::EffectResource::numPasses() const { return mImpl->numPasses(); }
+uint32_t GN::gfx::EffectResource::numPasses() const { return mImpl->numPasses(); }
 
-uint32                                             GN::gfx::EffectResource::numTextures() const { return mImpl->numTextures(); }
-uint32                                             GN::gfx::EffectResource::findTexture(const char * name) const { return mImpl->findTexture(name); }
-const GN::gfx::EffectResource::TextureProperties & GN::gfx::EffectResource::textureProperties(uint32 i) const { return mImpl->textureProperties(i); }
+uint32_t                                           GN::gfx::EffectResource::numTextures() const { return mImpl->numTextures(); }
+uint32_t                                           GN::gfx::EffectResource::findTexture(const char * name) const { return mImpl->findTexture(name); }
+const GN::gfx::EffectResource::TextureProperties & GN::gfx::EffectResource::textureProperties(uint32_t i) const { return mImpl->textureProperties(i); }
 
-uint32                                             GN::gfx::EffectResource::numUniforms() const { return mImpl->numUniforms(); }
-uint32                                             GN::gfx::EffectResource::findUniform(const char * name) const { return mImpl->findUniform(name); }
-const GN::gfx::EffectResource::UniformProperties & GN::gfx::EffectResource::uniformProperties(uint32 i) const { return mImpl->uniformProperties(i); }
+uint32_t                                           GN::gfx::EffectResource::numUniforms() const { return mImpl->numUniforms(); }
+uint32_t                                           GN::gfx::EffectResource::findUniform(const char * name) const { return mImpl->findUniform(name); }
+const GN::gfx::EffectResource::UniformProperties & GN::gfx::EffectResource::uniformProperties(uint32_t i) const { return mImpl->uniformProperties(i); }
 
-uint32                                               GN::gfx::EffectResource::numAttributes() const { return mImpl->numAttributes(); }
-uint32                                               GN::gfx::EffectResource::findAttribute(const char * name) const { return mImpl->findAttribute(name); }
-const GN::gfx::EffectResource::AttributeProperties & GN::gfx::EffectResource::attributeProperties(uint32 i) const { return mImpl->attributeProperties(i); }
+uint32_t                                             GN::gfx::EffectResource::numAttributes() const { return mImpl->numAttributes(); }
+uint32_t                                             GN::gfx::EffectResource::findAttribute(const char * name) const { return mImpl->findAttribute(name); }
+const GN::gfx::EffectResource::AttributeProperties & GN::gfx::EffectResource::attributeProperties(uint32_t i) const { return mImpl->attributeProperties(i); }
 
-const EffectResourceDesc::EffectRenderStateDesc & GN::gfx::EffectResource::renderStates(uint32 pass) const { return mImpl->renderStates(pass); }
+const EffectResourceDesc::EffectRenderStateDesc & GN::gfx::EffectResource::renderStates(uint32_t pass) const { return mImpl->renderStates(pass); }
 
-void GN::gfx::EffectResource::applyToContext(uint32 pass, GpuContext & gc) const { return mImpl->applyToContext(pass, gc); }
+void GN::gfx::EffectResource::applyToContext(uint32_t pass, GpuContext & gc) const { return mImpl->applyToContext(pass, gc); }

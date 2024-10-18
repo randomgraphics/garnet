@@ -119,7 +119,7 @@ public:
     //@}
 
     //@{
-    bool                     reset(uint32 length, const void * initialData);
+    bool                     reset(uint32_t length, const void * initialData);
     void                     setUniform(const AutoRef<Uniform> &);
     const AutoRef<Uniform> & uniform() const { return mUniform; }
     //@}
@@ -139,8 +139,8 @@ protected:
 ///
 struct MeshVertexElement {
     PixelFormat format       = PixelFormat::UNKNOWN(); ///< the vertex element format.
-    uint8       stream       = 0;                      ///< vertex buffer index
-    uint8       offset       = 0;                      ///< offset of the element in the vertex.
+    uint8_t     stream       = 0;                      ///< vertex buffer index
+    uint8_t     offset       = 0;                      ///< offset of the element in the vertex.
     char        semantic[16] = {};                     ///< Semantic name (null terminated string, 15 characters at most).
 
     /// Set vertex element semantic.
@@ -179,12 +179,12 @@ struct MeshVertexFormat {
         MAX_VERTEX_ELEMENTS = 16,
     };
 
-    uint32            numElements                   = 0;  ///< number of elements
+    uint32_t          numElements                   = 0;  ///< number of elements
     MeshVertexElement elements[MAX_VERTEX_ELEMENTS] = {}; ///< vertex element array
 
     bool operator==(const MeshVertexFormat & rhs) const {
         if (numElements != rhs.numElements) return false;
-        for (uint32 i = 0; i < numElements; ++i) {
+        for (uint32_t i = 0; i < numElements; ++i) {
             if (elements[i] != rhs.elements[i]) return false;
         }
         return true;
@@ -195,11 +195,11 @@ struct MeshVertexFormat {
     bool operator<(const MeshVertexFormat & rhs) const {
         if (this == &rhs) return false;
 
-        const uint32 * a = (const uint32 *) this;
-        const uint32 * b = (const uint32 *) &rhs;
-        uint32         n = sizeof(*this) / 4;
+        const uint32_t * a = (const uint32_t *) this;
+        const uint32_t * b = (const uint32_t *) &rhs;
+        uint32_t         n = sizeof(*this) / 4;
 
-        for (uint32 i = 0; i < n; ++i) {
+        for (uint32_t i = 0; i < n; ++i) {
             if (a[i] < b[i]) return true;
             if (a[i] > b[i]) return false;
         }
@@ -215,9 +215,9 @@ struct MeshVertexFormat {
     ///
     /// Calculate number of streams.
     ///
-    uint32 inline calcNumStreams() const {
-        uint32 n = 0;
-        for (uint32 i = 0; i < numElements; ++i) {
+    uint32_t inline calcNumStreams() const {
+        uint32_t n = 0;
+        for (uint32_t i = 0; i < numElements; ++i) {
             const MeshVertexElement & e = elements[i];
             if (e.stream >= n) n = e.stream + 1;
         }
@@ -227,12 +227,12 @@ struct MeshVertexFormat {
     ///
     /// Calculate stride of specific stream.
     ///
-    uint16 inline calcStreamStride(uint32 stream) const {
-        uint16 stride = 0;
-        for (uint32 i = 0; i < numElements; ++i) {
+    uint16_t inline calcStreamStride(uint32_t stream) const {
+        uint16_t stride = 0;
+        for (uint32_t i = 0; i < numElements; ++i) {
             const MeshVertexElement & e = elements[i];
 
-            uint16 elementEnd = e.offset + e.format.bytesPerBlock();
+            uint16_t elementEnd = e.offset + e.format.bytesPerBlock();
 
             if (stream == e.stream && stride < elementEnd) stride = elementEnd;
         }
@@ -242,8 +242,8 @@ struct MeshVertexFormat {
     ///
     /// Check if the vertex format has specific semantic.
     ///
-    bool hasSemantic(const char * semantic, uint32 * elementIndex = NULL) const {
-        for (uint32 i = 0; i < numElements; ++i) {
+    bool hasSemantic(const char * semantic, uint32_t * elementIndex = NULL) const {
+        for (uint32_t i = 0; i < numElements; ++i) {
             if (0 == str::compareI(elements[i].semantic, semantic)) {
                 if (NULL != elementIndex) *elementIndex = i;
                 return true;
@@ -339,16 +339,16 @@ struct MeshVertexFormat {
 ///
 struct MeshResourceDescBase {
     PrimitiveType    prim   = PrimitiveType::POINT_LIST;           ///< primitive type
-    uint32           numvtx = 0;                                   ///< number of vertices
-    uint32           numidx = 0;                                   ///< number of indices. 0 means non-indexed mesh
+    uint32_t         numvtx = 0;                                   ///< number of vertices
+    uint32_t         numidx = 0;                                   ///< number of indices. 0 means non-indexed mesh
     bool             idx32  = false;                               ///< true for 32-bit index buffer
     bool             dynavb = false;                               ///< true for dynamic vertex buffer
     bool             dynaib = false;                               ///< trur for dynamic index buffer
     MeshVertexFormat vtxfmt {};                                    ///< vertex format
-    uint16           strides[GpuContext::MAX_VERTEX_BUFFERS] = {}; ///< vertex buffer strides. 0
+    uint16_t         strides[GpuContext::MAX_VERTEX_BUFFERS] = {}; ///< vertex buffer strides. 0
                                                                    ///< means using vertex size
                                                                    ///< defined by vertex format.
-    uint32 offsets[GpuContext::MAX_VERTEX_BUFFERS] = {};           ///< Number of bytes from
+    uint32_t offsets[GpuContext::MAX_VERTEX_BUFFERS] = {};         ///< Number of bytes from
                                                                    ///< vertex buffer beginning
                                                                    ///< to the first element that
                                                                    ///< will be used.
@@ -356,12 +356,12 @@ struct MeshResourceDescBase {
     ///
     /// get vertex buffer size in bytes
     ///
-    uint32 getVtxBufSize(uint32 stream) const;
+    uint32_t getVtxBufSize(uint32_t stream) const;
 
     ///
     /// get indices buffer size in bytes
     ///
-    uint32 getIdxBufSize() const;
+    uint32_t getIdxBufSize() const;
 };
 
 ///
@@ -456,8 +456,8 @@ struct GN_API EffectResourceDesc {
     /// Shader Prerequisites
     ///
     struct ShaderPrerequisites {
-        uint32 numTextures;           ///< minimal number of textures required.
-        uint32 numColorRenderTargets; ///< minimal number of color render targets.
+        uint32_t numTextures;           ///< minimal number of textures required.
+        uint32_t numColorRenderTargets; ///< minimal number of color render targets.
 
         /// default constructor
         ShaderPrerequisites(): numTextures(0), numColorRenderTargets(0) {}
@@ -478,7 +478,7 @@ struct GN_API EffectResourceDesc {
     /// Uniform descriptor
     ///
     struct EffectUniformDesc {
-        uint32 size; ///< uniform size in bytes
+        uint32_t size; ///< uniform size in bytes
 
         EffectUniformDesc(): size(0) {}
     };
@@ -552,39 +552,39 @@ struct GN_API EffectResourceDesc {
         };
 
         struct RenderTargetAlphaBlend {
-            OverridableVariable<bool>  blendEnabled;
-            OverridableVariable<uint8> blendSrc;
-            OverridableVariable<uint8> blendDst;
-            OverridableVariable<uint8> blendOp;
-            OverridableVariable<uint8> blendAlphaSrc;
-            OverridableVariable<uint8> blendAlphaDst;
-            OverridableVariable<uint8> blendAlphaOp;
+            OverridableVariable<bool>    blendEnabled;
+            OverridableVariable<uint8_t> blendSrc;
+            OverridableVariable<uint8_t> blendDst;
+            OverridableVariable<uint8_t> blendOp;
+            OverridableVariable<uint8_t> blendAlphaSrc;
+            OverridableVariable<uint8_t> blendAlphaDst;
+            OverridableVariable<uint8_t> blendAlphaOp;
         };
 
         //@{
 
-        OverridableVariable<bool>  depthTestEnabled;
-        OverridableVariable<bool>  depthWriteEnabled;
-        OverridableVariable<uint8> depthFunc;
+        OverridableVariable<bool>    depthTestEnabled;
+        OverridableVariable<bool>    depthWriteEnabled;
+        OverridableVariable<uint8_t> depthFunc;
 
-        OverridableVariable<bool>  stencilEnabled;
-        OverridableVariable<uint8> stencilPassOp;
-        OverridableVariable<uint8> stencilFailOp;
-        OverridableVariable<uint8> stencilZFailOp;
-        OverridableVariable<uint8> stencilFunc;
+        OverridableVariable<bool>    stencilEnabled;
+        OverridableVariable<uint8_t> stencilPassOp;
+        OverridableVariable<uint8_t> stencilFailOp;
+        OverridableVariable<uint8_t> stencilZFailOp;
+        OverridableVariable<uint8_t> stencilFunc;
 
-        OverridableVariable<uint8> fillMode;
-        OverridableVariable<uint8> cullMode;
-        OverridableVariable<uint8> frontFace;
-        OverridableVariable<bool>  msaaEnabled;
+        OverridableVariable<uint8_t> fillMode;
+        OverridableVariable<uint8_t> cullMode;
+        OverridableVariable<uint8_t> frontFace;
+        OverridableVariable<bool>    msaaEnabled;
 
         OverridableVariable<bool>     independentAlphaBlending;
         RenderTargetAlphaBlend        alphaBlend[GpuContext::MAX_COLOR_RENDER_TARGETS];
         OverridableVariable<Vector4f> blendFactors;
 
-        OverridableVariable<uint32>       colorWriteMask;
-        OverridableVariable<Rect<uint32>> viewport;
-        OverridableVariable<Rect<uint32>> scissorRect;
+        OverridableVariable<uint32_t>       colorWriteMask;
+        OverridableVariable<Rect<uint32_t>> viewport;
+        OverridableVariable<Rect<uint32_t>> scissorRect;
 
         //@}
     };
@@ -678,8 +678,8 @@ public:
     //@{
 
     struct BindingLocation {
-        uint32 pass;                     // index of the pass
-        uint32 gpuProgramParameterIndex; // index of the GPU program parameter
+        uint32_t pass;                     // index of the pass
+        uint32_t gpuProgramParameterIndex; // index of the GPU program parameter
     };
 
     struct EffectParameterProperties {
@@ -692,12 +692,12 @@ public:
     };
 
     struct UniformProperties : public EffectParameterProperties {
-        uint32 size; ///< uniform size in bytes
+        uint32_t size; ///< uniform size in bytes
     };
 
     struct AttributeProperties : public EffectParameterProperties {};
 
-    static const uint32 PARAMETER_NOT_FOUND = 0xFFFFFFFF;
+    static const uint32_t PARAMETER_NOT_FOUND = 0xFFFFFFFF;
 
     //@}
 
@@ -711,26 +711,26 @@ public:
 
     bool reset(const EffectResourceDesc * desc);
 
-    uint32 numPasses() const;
+    uint32_t numPasses() const;
 
-    uint32                    numTextures() const;
-    uint32                    findTexture(const char * name) const;
+    uint32_t                  numTextures() const;
+    uint32_t                  findTexture(const char * name) const;
     bool                      hasTexture(const char * name) const { return PARAMETER_NOT_FOUND != findTexture(name); }
-    const TextureProperties & textureProperties(uint32 i) const;
+    const TextureProperties & textureProperties(uint32_t i) const;
 
-    uint32                    numUniforms() const;
-    uint32                    findUniform(const char * name) const;
+    uint32_t                  numUniforms() const;
+    uint32_t                  findUniform(const char * name) const;
     bool                      hasUniform(const char * name) const { return PARAMETER_NOT_FOUND != findUniform(name); }
-    const UniformProperties & uniformProperties(uint32 i) const;
+    const UniformProperties & uniformProperties(uint32_t i) const;
 
-    uint32                      numAttributes() const;
-    uint32                      findAttribute(const char * name) const;
+    uint32_t                    numAttributes() const;
+    uint32_t                    findAttribute(const char * name) const;
     bool                        hasAttribute(const char * name) const { return PARAMETER_NOT_FOUND != findAttribute(name); }
-    const AttributeProperties & attributeProperties(uint32 i) const;
+    const AttributeProperties & attributeProperties(uint32_t i) const;
 
-    const EffectResourceDesc::EffectRenderStateDesc & renderStates(uint32 pass) const;
+    const EffectResourceDesc::EffectRenderStateDesc & renderStates(uint32_t pass) const;
 
-    void applyToContext(uint32 pass, GpuContext & gc) const;
+    void applyToContext(uint32_t pass, GpuContext & gc) const;
 
     //@}
 
@@ -747,10 +747,10 @@ struct MeshResourceSubset {
     /// data members
     //@{
 
-    uint32 basevtx;
-    uint32 numvtx;
-    uint32 startidx;
-    uint32 numidx;
+    uint32_t basevtx;
+    uint32_t numvtx;
+    uint32_t startidx;
+    uint32_t numidx;
 
     //@}
 
@@ -777,9 +777,9 @@ struct GN_API ModelResourceDesc {
     };
 
     struct ModelUniformDesc {
-        StrA             resourceName; ///< if empty, then create a new uniform
-        uint32           size;
-        DynaArray<uint8> initialValue; ///< if empty, then no initial value.
+        StrA               resourceName; ///< if empty, then create a new uniform
+        uint32_t           size;
+        DynaArray<uint8_t> initialValue; ///< if empty, then no initial value.
     };
 
     //@}
@@ -949,7 +949,7 @@ public:
 
     AutoRef<UniformResource> getStandardUniformResource(int index) const;
 
-    void setStandardUniform(int index, const void * data, uint32 dataSize);
+    void setStandardUniform(int index, const void * data, uint32_t dataSize);
 
     template<typename T>
     void setStandardUniform(int index, const T & value) {

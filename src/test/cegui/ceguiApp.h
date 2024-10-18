@@ -34,7 +34,7 @@ public:
                 DiskFile fp;
                 if (!fp.open(name, "rb")) { throw InvalidRequestException((utf8 *) "DefaultResourceProvider::load - " + filename + " does not exist"); }
 
-                AutoObjPtr<uint8> buffer(new uint8[fp.size()]);
+                AutoObjPtr<uint8_t> buffer(new uint8_t[fp.size()]);
                 if (!fp.read(buffer, fp.size(), NULL)) {
                     throw GenericException((utf8 *) "DefaultResourceProvider::loadRawDataContainer - Problem reading " + filename);
                 }

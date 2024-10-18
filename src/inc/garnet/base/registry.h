@@ -16,12 +16,12 @@ class GN_API Registry {
         Variant value;
     };
 
-    HandleManager<Item, uint32> mItems;
-    StringMap<char, uint32>     mNames;
+    HandleManager<Item, uint32_t> mItems;
+    StringMap<char, uint32_t>     mNames;
 
     static Logger * sLogger;
 
-    const Variant * getItemByKey(uint32 key, const char * name, bool printError) const {
+    const Variant * getItemByKey(uint32_t key, const char * name, bool printError) const {
         GN_GUARD_SLOW;
 
         if (!mItems.validHandle(key)) {
@@ -39,7 +39,7 @@ public:
     ///
     /// Item key
     ///
-    typedef uint32 ItemKey;
+    typedef uint32_t ItemKey;
 
     ///
     /// Default constructor

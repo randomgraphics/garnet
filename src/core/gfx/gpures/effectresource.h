@@ -38,26 +38,26 @@ public:
 public:
     bool reset(const EffectResourceDesc * desc);
 
-    uint32 numPasses() const { return (uint32) mPasses.size(); }
+    uint32_t numPasses() const { return (uint32_t) mPasses.size(); }
 
-    uint32                    numTextures() const { return (uint32) mTextures.size(); }
-    uint32                    findTexture(const char * name) const;
-    const TextureProperties & textureProperties(uint32 i) const { return mTextures[i]; }
+    uint32_t                  numTextures() const { return (uint32_t) mTextures.size(); }
+    uint32_t                  findTexture(const char * name) const;
+    const TextureProperties & textureProperties(uint32_t i) const { return mTextures[i]; }
 
-    uint32                    numUniforms() const { return (uint32) mUniforms.size(); }
-    uint32                    findUniform(const char * name) const;
-    const UniformProperties & uniformProperties(uint32 i) const { return mUniforms[i]; }
+    uint32_t                  numUniforms() const { return (uint32_t) mUniforms.size(); }
+    uint32_t                  findUniform(const char * name) const;
+    const UniformProperties & uniformProperties(uint32_t i) const { return mUniforms[i]; }
 
-    uint32                      numAttributes() const { return (uint32) mAttributes.size(); }
-    uint32                      findAttribute(const char * name) const;
-    const AttributeProperties & attributeProperties(uint32 i) const { return mAttributes[i]; }
+    uint32_t                    numAttributes() const { return (uint32_t) mAttributes.size(); }
+    uint32_t                    findAttribute(const char * name) const;
+    const AttributeProperties & attributeProperties(uint32_t i) const { return mAttributes[i]; }
 
-    const EffectResourceDesc::EffectRenderStateDesc & renderStates(uint32 pass) const {
+    const EffectResourceDesc::EffectRenderStateDesc & renderStates(uint32_t pass) const {
         GN_ASSERT(pass < mPasses.size());
         return mPasses[pass].renderstates;
     }
 
-    void applyToContext(uint32 pass, GpuContext & gc) const;
+    void applyToContext(uint32_t pass, GpuContext & gc) const;
 
     // ********************************
     // private types
@@ -70,7 +70,7 @@ private:
 
     struct RenderPass {
         /// Index of GPU program used in this pass
-        uint32 gpuProgramIndex;
+        uint32_t gpuProgramIndex;
 
         /// render states
         EffectResourceDesc::EffectRenderStateDesc renderstates;
@@ -112,7 +112,7 @@ private:
 
     bool initAttributes(const EffectResourceDesc & effectDesc);
 
-    uint32 findGpuProgram(const EffectResourceDesc & passDesc, const StrA & programName);
+    uint32_t findGpuProgram(const EffectResourceDesc & passDesc, const StrA & programName);
 };
 
 ///

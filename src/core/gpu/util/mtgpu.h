@@ -92,7 +92,7 @@ namespace GN { namespace gfx
     private:
 
         CommandBuffer      mCommandBuffer;
-        volatile uint32    mGpuCreationStatus; ///< 0: creation failed, 1: creation succeeded, 2: creation is not finished yet.
+        volatile uint32_t    mGpuCreationStatus; ///< 0: creation failed, 1: creation succeeded, 2: creation is not finished yet.
         SyncEvent          mWaitForIdleFence;
         SyncEvent          mPresentFence;
         Thread::Identifier mThread;
@@ -144,8 +144,8 @@ namespace GN { namespace gfx
         virtual bool checkTextureFormatSupport( ColorFormat format, TextureUsage usages ) const;
 
         virtual Blob * compileGpuProgram( const GpuProgramDesc & desc );
-        virtual GpuProgram * createGpuProgram( const void * compiledGpuProgramBinary, uint32 length );
-        virtual Uniform * createUniform( uint32 size );
+        virtual GpuProgram * createGpuProgram( const void * compiledGpuProgramBinary, uint32_t length );
+        virtual Uniform * createUniform( uint32_t size );
         virtual Texture * createTexture( const TextureDesc & desc );
         virtual VtxBuf * createVtxBuf( const VtxBufDesc & );
         virtual IdxBuf * createIdxBuf( const IdxBufDesc & desc );
@@ -157,33 +157,33 @@ namespace GN { namespace gfx
         virtual void present();
         virtual void clearScreen( const Vector4f & c,
                                   float            z,
-                                  uint8            s,
-                                  uint32        flags );
+                                  uint8_t            s,
+                                  uint32_t        flags );
         virtual void drawIndexed( PrimitiveType prim,
-                                  uint32        numprim,
-                                  uint32        basevtx,
-                                  uint32        startvtx,
-                                  uint32        numvtx,
-                                  uint32        startidx );
+                                  uint32_t        numprim,
+                                  uint32_t        basevtx,
+                                  uint32_t        startvtx,
+                                  uint32_t        numvtx,
+                                  uint32_t        startidx );
         virtual void draw( PrimitiveType prim,
-                           uint32        numprim,
-                           uint32        startvtx );
+                           uint32_t        numprim,
+                           uint32_t        startvtx );
         virtual void drawIndexedUp(
                              PrimitiveType  prim,
-                             uint32         numprim,
-                             uint32         numvtx,
+                             uint32_t         numprim,
+                             uint32_t         numvtx,
                              const void *   vertexData,
-                             uint32         strideInBytes,
-                             const uint16 * indexData );
+                             uint32_t         strideInBytes,
+                             const uint16_t * indexData );
         virtual void drawUp( PrimitiveType prim,
-                             uint32        numprim,
+                             uint32_t        numprim,
                              const void *  vertexData,
-                             uint32        strideInBytes );
-        virtual void drawLines( uint32         options,
+                             uint32_t        strideInBytes );
+        virtual void drawLines( uint32_t         options,
                                 const void *      positions,
-                                uint32            stride,
-                                uint32            count,
-                                uint32            rgba,
+                                uint32_t            stride,
+                                uint32_t            count,
+                                uint32_t            rgba,
                                 const Matrix44f & model,
                                 const Matrix44f & view,
                                 const Matrix44f & proj );
@@ -191,11 +191,11 @@ namespace GN { namespace gfx
         virtual GpuSignals & getSignals() { GN_ASSERT(mSignals); return *mSignals; }
         virtual void getBackBufferContent( BackBufferContent & );
         virtual void processRenderWindowMessages( bool blockWhileMinimized );
-        virtual void setUserData( const Guid & id, const void * data, uint32 length );
-        virtual const void * getUserData( const Guid & id, uint32 * length ) const;
+        virtual void setUserData( const Guid & id, const void * data, uint32_t length );
+        virtual const void * getUserData( const Guid & id, uint32_t * length ) const;
         virtual bool hasUserData( const Guid & id ) const;
         virtual void debugEnableParameterCheck( bool enable );
-        virtual void debugDumpNextFrame( uint32 startBatchIndex, uint32 numBatches );
+        virtual void debugDumpNextFrame( uint32_t startBatchIndex, uint32_t numBatches );
         virtual void debugMarkBegin( const char * markerName );
         virtual void debugMarkEnd();
         virtual void debugMarkSet( const char * markerName );

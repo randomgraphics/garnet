@@ -34,8 +34,8 @@ GN_API bool GN::gfx::ImagePlaneDesc::valid() const {
 
     // check pitches
     auto & cld = format.layoutDesc();
-    auto   w   = math::alignToPowerOf2<uint32>(width, cld.blockWidth);
-    auto   h   = math::alignToPowerOf2<uint32>(height, cld.blockHeight);
+    auto   w   = math::alignToPowerOf2<uint32_t>(width, cld.blockWidth);
+    auto   h   = math::alignToPowerOf2<uint32_t>(height, cld.blockHeight);
     if (step < cld.bits) {
         GN_ERROR(sLogger)("step is too small!");
         return false;
@@ -139,8 +139,8 @@ GN_API bool GN::gfx::ImageDesc::valid() const {
     }
 
     // check mipmaps
-    for (uint32 f = 0; f < layers; ++f)
-        for (uint32 l = 0; l < levels; ++l) {
+    for (uint32_t f = 0; f < layers; ++f)
+        for (uint32_t l = 0; l < levels; ++l) {
             auto & m = plane(f, l);
 
             if (!m.valid()) {

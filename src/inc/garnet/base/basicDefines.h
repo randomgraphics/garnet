@@ -325,11 +325,11 @@ public:                                                                     \
 #if GN_PPC
     // big endian
     #define GN_MAKE_FOURCC(ch0, ch1, ch2, ch3) \
-        ((uint32) (uint8) (ch3) | ((uint32) (uint8) (ch2) << 8) | ((uint32) (uint8) (ch1) << 16) | ((uint32) (uint8) (ch0) << 24))
+        ((uint32_t) (uint8_t) (ch3) | ((uint32_t) (uint8_t) (ch2) << 8) | ((uint32_t) (uint8_t) (ch1) << 16) | ((uint32_t) (uint8_t) (ch0) << 24))
 #else
     // little endian
     #define GN_MAKE_FOURCC(ch0, ch1, ch2, ch3) \
-        ((uint32) (uint8) (ch0) | ((uint32) (uint8) (ch1) << 8) | ((uint32) (uint8) (ch2) << 16) | ((uint32) (uint8) (ch3) << 24))
+        ((uint32_t) (uint8_t) (ch0) | ((uint32_t) (uint8_t) (ch1) << 8) | ((uint32_t) (uint8_t) (ch2) << 16) | ((uint32_t) (uint8_t) (ch3) << 24))
 #endif
 
 ///
