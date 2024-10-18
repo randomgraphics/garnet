@@ -167,9 +167,9 @@ static void sCopyVertexElement(void * dst, const MeshResourceDesc & src, const M
     Vector4f *      d = (Vector4f *) dst;
     const uint8_t * s = (const uint8_t *) src.vertices[e.stream] + src.offsets[e.stream] + e.offset;
     for (size_t i = 0; i < src.numvtx; ++i) {
-        if (IsSameType<SRC_VERTEX_TYPE, Vector3f>::value) {
+        if constexpr (std::is_same<SRC_VERTEX_TYPE, Vector3f>::value) {
             d->set(*(const Vector3f *) s, 0.0f);
-        } else if (IsSameType<SRC_VERTEX_TYPE, Vector2f>::value) {
+        } else if constexpr (std::is_same<SRC_VERTEX_TYPE, Vector2f>::value) {
             d->set(*(const Vector2f *) s, 0.0f, 0.0f);
         }
         s += src.strides[e.stream];

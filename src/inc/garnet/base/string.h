@@ -1471,7 +1471,7 @@ template<typename T>
 inline size_t toInetger(T & i, const char * s, int base = 10) {
     size_t n;
 
-    if (SignedType<T>::value) {
+    if constexpr (std::is_signed<T>::value) {
         int64_t s64;
         n = toSignedInteger(s64, sizeof(T) * 8, base, s);
         if (n > 0) i = (T) s64;
