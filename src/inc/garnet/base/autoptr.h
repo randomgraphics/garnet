@@ -79,7 +79,7 @@ public:
     ///
     /// Get internal C-style raw pointer
     ///
-    T * rawptr() const {
+    T * get() const {
         auto lock = std::lock_guard(mMutex);
         return mPayload ? mPayload->ptr : nullptr;
     }
@@ -374,7 +374,7 @@ public:
     ///
     /// self explain.
     ///
-    T * rawptr() const throw() { return mPtr; }
+    T * data() const throw() { return mPtr; }
 
     ///
     /// Release existing interface, then hold new interface

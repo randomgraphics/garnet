@@ -126,7 +126,7 @@ public:
 #if USE_ENTITY
         SpacialComponent * spacial = entity->getComponent<SpacialComponent>();
         if (animationDuration > 0) {
-            SkinnedMesh * mesh = (SkinnedMesh *) entity.rawptr();
+            SkinnedMesh * mesh = (SkinnedMesh *) entity.data();
             mesh->setAnimation(0, currentTime);
             currentTime += UPDATE_INTERVAL_IN_SECONDS;
         }
@@ -148,7 +148,7 @@ public:
         if( animationDuration > 0 )
         {
             // Draw skeleton of the skinned mesh.
-            SkinnedMesh * mesh = (SkinnedMesh*)entity.rawptr();
+            SkinnedMesh * mesh = (SkinnedMesh*)entity.data();
             Matrix44f transform = camera.proj * camera.view;
             mesh->drawSkeletons( 0xFFFFFFFF, transform );
         }
@@ -170,7 +170,7 @@ public:
                                                                L"           %f\n"
                                                                L"radius   : %f",
                                                                position.x, position.y, position.z, radius)
-                                                       .rawptr(),
+                                                       .data(),
                                                    (float) getGpu()->getDispDesc().width - 320, 40);
     }
 
@@ -191,7 +191,7 @@ public:
         if (argc >= 2 && (0 == str::compare(argv[0], "-print") || 0 == str::compare(argv[0], "--print"))) {
             StrA s;
             printModelFileNodeHierarchy(s, argv[1]);
-            GN_INFO(sLogger)("%s", s.rawptr());
+            GN_INFO(sLogger)("%s", s.data());
             return false;
         } else {
             filename = argv[0];

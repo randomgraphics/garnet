@@ -14,18 +14,18 @@ static Logger * sLogger = getLogger("GN.base.File");
 GN_API size_t GN::File::read(void * buffer, size_t size) {
     // check parameter(s)
     if (0 == buffer && 0 != size) {
-        GN_ERROR(sLogger)("Failed to read file (%s): invalid parameter(s)!", name().rawptr());
+        GN_ERROR(sLogger)("Failed to read file (%s): invalid parameter(s)!", name().data());
         return 0;
     }
 
     if (!readable()) {
-        GN_ERROR(sLogger)("Failed to read file (%s): the file is not readable!", name().rawptr());
+        GN_ERROR(sLogger)("Failed to read file (%s): the file is not readable!", name().data());
         return 0;
     }
 
     auto & is = input();
     if (!is) {
-        GN_ERROR(sLogger)("Failed to read file (%s): the file is not in good state!", name().rawptr());
+        GN_ERROR(sLogger)("Failed to read file (%s): the file is not in good state!", name().data());
         return 0;
     }
 
@@ -44,18 +44,18 @@ GN_API size_t GN::File::read(void * buffer, size_t size) {
 GN_API size_t GN::File::write(const void * buffer, size_t size) {
     // check parameter(s)
     if (0 == buffer && 0 != size) {
-        GN_ERROR(sLogger)("Failed to write to file (%s): invalid parameter(s)!", name().rawptr());
+        GN_ERROR(sLogger)("Failed to write to file (%s): invalid parameter(s)!", name().data());
         return 0;
     }
 
     if (!writeable()) {
-        GN_ERROR(sLogger)("Failed to write to file (%s): the file is not writable!", name().rawptr());
+        GN_ERROR(sLogger)("Failed to write to file (%s): the file is not writable!", name().data());
         return 0;
     }
 
     auto & os = output();
     if (!os) {
-        GN_ERROR(sLogger)("Failed to write to file (%s): the file is not in good state!", name().rawptr());
+        GN_ERROR(sLogger)("Failed to write to file (%s): the file is not in good state!", name().data());
         return 0;
     }
 
@@ -111,10 +111,10 @@ GN_API bool GN::DiskFile::open(const StrA & filename, const std::ios_base::openm
         return false;
     }
 
-    mFile.open(filename.rawptr(), mode);
+    mFile.open(filename.data(), mode);
 
     if (!mFile) {
-        GN_ERROR(sLogger)("fail to open file '%s' : %s", filename.rawptr(), mode, GN::errno2str(errno));
+        GN_ERROR(sLogger)("fail to open file '%s' : %s", filename.data(), mode, GN::errno2str(errno));
         close();
         return false;
     }

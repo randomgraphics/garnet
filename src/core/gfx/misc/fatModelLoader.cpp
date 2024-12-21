@@ -252,10 +252,10 @@ static bool sLoadFromASE(FatModel & fatmodel, File & file, const StrA & filename
             return false;
         }
         if (src.idx32) {
-            memcpy(dst.indices.rawptr(), src.indices, src.numidx * 4);
+            memcpy(dst.indices.data(), src.indices, src.numidx * 4);
         } else {
-            const uint16_t * s = (const uint16_t *) src.indices;
-            uint32_t *       d = dst.indices.rawptr();
+            const uint16_t * s = (const uint16 *) src.indices;
+            uint32_t *       d = dst.indices.data();
             for (size_t i = 0; i < src.numidx; ++i, ++s, ++d) { *d = *s; }
         }
         dst.primitive = PrimitiveType::TRIANGLE_LIST;
@@ -848,7 +848,7 @@ static bool sBuildFatMeshSubsetJointList(FatMesh & mesh) {
     const uint32_t * joints = (const uint32_t *) mesh.vertices.getJoints();
     if (NULL == joints) return true;
 
-    const uint32_t * indices = mesh.indices.rawptr();
+    const uint32_t * indices = mesh.indices.data();
 
     // Loop through all subsets.
     for (uint32_t i = 0; i < mesh.subsets.size(); ++i) {
@@ -1129,7 +1129,7 @@ static void sLoadFbxMesh(FatModel & fatmodel, const StrA & filename, FbxSdkWrapp
     for (size_t i = 0; i < fatmesh.subsets.size(); ++i) { fatmesh.subsets[i].numvtx = (uint32_t) vertexKeys.size(); }
 
     // Now copy vertex data to fatmesh, and translate position and normal to global space.
-    if (!sGenerateFatVertices(fatmesh, fbxnode, vcache.rawptr(), vertexKeys.rawptr(), vertexKeys.size())) return;
+    if (!sGenerateFatVertices(fatmesh, fbxnode, vcache.data(), vertexKeys.data(), vertexKeys.size())) return;
 
     // Build joint list for each subset.
     if (!sBuildFatMeshSubsetJointList(fatmesh)) return;
@@ -1206,7 +1206,7 @@ static void sLoadFbxAnimations(FatModel & fatmodel, FbxScene & fbxscene) {
 static bool sLoadFromFBX(FatModel & fatmodel, File & file, const StrA & filename) {
 #ifdef HAS_FBX
 
-    GN_INFO(sLogger)("Load FBX model from file: %s", filename.rawptr());
+    GN_INFO(sLogger)("Load FBX model from file: %s", filename.data());
 
     FbxSdkWrapper sdk;
     if (!sdk.init()) return false;
@@ -1286,7 +1286,7 @@ static bool sLoadFromFBX(FatModel & fatmodel, File & file, const StrA & filename
 
     fatmodel.clear();
     GN_UNUSED_PARAM(file);
-    GN_ERROR(sLogger)("Fail to load file %s: FBX is not supported.", filename.rawptr());
+    GN_ERROR(sLogger)("Fail to load file %s: FBX is not supported.", filename.data());
     return false;
 
 #endif // HAS_FBX
@@ -1595,7 +1595,7 @@ static uint32_t sFindRootJoint(const FatSkeleton & fatsk) {
         }
     };
     uint32_t counter = 0;
-    Local::sCountJointRecursivly( fatsk.joints.rawptr(), fatsk.joints.size(), counter, fatsk.root );
+    Local::sCountJointRecursivly( fatsk.joints.data(), fatsk.joints.size(), counter, fatsk.root );
     if( counter != fatsk.joints.size() )
     {
         GN_ERROR(sLogger)( "Invalid joint hierarchy!" );
@@ -2266,7 +2266,7 @@ bool GN::gfx::FatModel::loadFromFile(const StrA & filename) {
 
     default:
         if (!ai::sLoadFromAssimp(*this, fullFileName)) {
-            GN_ERROR(sLogger)("Unknown file format: %s", filename.rawptr());
+            GN_ERROR(sLogger)("Unknown file format: %s", filename.data());
             noerr = false;
         }
         break;

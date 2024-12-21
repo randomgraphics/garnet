@@ -92,7 +92,7 @@ private:
     // ********************************
 private:
     GpuResourceDatabase & getGdb() const { return mOwner.getGdb(); }
-    const char *          getEffectName() const { return mOwner.getGdb().getResourceName(&mOwner)->rawptr(); }
+    const char *          getEffectName() const { return mOwner.getGdb().getResourceName(&mOwner)->data(); }
 
     bool init(const EffectResourceDesc & desc);
     void clear();

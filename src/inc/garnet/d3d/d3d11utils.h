@@ -24,7 +24,7 @@
     if (true) {                                                                                                                      \
         HRESULT __hr = func;                                                                                                         \
         if (FAILED(__hr)) {                                                                                                          \
-            GN_ERROR(::GN::getLogger("GN.d3d11utils"))("HRESULT failed: (0x%X) %S", __hr, GN::d3d11::hresult2string(__hr).rawptr()); \
+            GN_ERROR(::GN::getLogger("GN.d3d11utils"))("HRESULT failed: (0x%X) %S", __hr, GN::d3d11::hresult2string(__hr).data()); \
             do_something                                                                                                             \
         }                                                                                                                            \
     } else                                                                                                                           \

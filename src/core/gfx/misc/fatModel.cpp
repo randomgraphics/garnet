@@ -193,7 +193,7 @@ bool GN::gfx::FatVertexBuffer::GenerateVertexStream(const MeshVertexFormat & mvf
         SafeArrayAccessor<uint8_t> dst((uint8_t *) buffer + e.offset, (mCount * stride) - e.offset);
 
         if (semantics[j] != INVALID) {
-            SafeArrayAccessor<const VertexElement> src(mElements[semantics[j]].rawptr(), mCount);
+            SafeArrayAccessor<const VertexElement> src(mElements[semantics[j]].data(), mCount);
 
             for (size_t i = 0; i < mCount; ++i) {
                 memcpy(dst.subrange(0, size), src.subrange(0, 1), size);
@@ -222,7 +222,7 @@ static void sPrintFatJointRecursivly(StrA & s, const FatJoint * joints, uint32_t
     for (uint32_t i = 0; i < depth; ++i) { s += "  "; }
 
     if (root < count) {
-        s += str::format("(%d) %s\n", depth, joints[root].name.rawptr());
+        s += str::format("(%d) %s\n", depth, joints[root].name.data());
 
         for (uint32_t i = joints[root].child; i != FatJoint::NO_JOINT; i = joints[i].sibling) { sPrintFatJointRecursivly(s, joints, count, i, depth + 1); }
     } else {
@@ -237,7 +237,7 @@ void GN::gfx::FatSkeleton::printJointHierarchy(StrA & s) const {
     if (joints.empty()) {
         s = "[Empty skeleton]";
     } else {
-        return sPrintFatJointRecursivly(s, joints.rawptr(), joints.size(), root, 0);
+        return sPrintFatJointRecursivly(s, joints.data(), joints.size(), root, 0);
     }
 }
 
@@ -294,7 +294,7 @@ static bool sSplitFatMeshSubsets(FatMesh & mesh, uint32_t maxJointsPerSubset) {
     if (NULL == joints || NULL == weights) return false;
 
     // cache mesh index buffer (might be NULL)
-    uint32_t * indices = mesh.indices.rawptr();
+    auto indices = mesh.indices.data();
 
     // Temporary array to hold newly created subset.
     DynaArray<FatMeshSubset> newSubsets;
@@ -477,7 +477,7 @@ static bool sRemapFatMeshJointID(FatMesh & mesh) {
         FatMeshSubset & subset = mesh.subsets[isubset];
 
         // Sort joint array of the subset. So that we can binary search it later.
-        qsort(subset.joints.rawptr(), subset.joints.size(), sizeof(uint32_t), sCompareUInt32);
+        qsort(subset.joints.data(), subset.joints.size(), sizeof(uint32_t), sCompareUInt32);
 
         // Remember how many new indices we have now. We'll use that later.
         uint32_t currentNewIndexCount = newIndices.size();

@@ -272,7 +272,7 @@ public:
     ///
     /// get internal raw pointer
     ///
-    XPTR rawptr() const throw() { return mPtr; }
+    XPTR data() const throw() { return mPtr; }
 
     ///
     /// get address of internal pointer.

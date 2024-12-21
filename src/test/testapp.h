@@ -60,7 +60,7 @@ public:
 
         if (CONTINUE_EXECUTION == status) {
             extraArgc = mExtraArgs.size();
-            extraArgv = mExtraArgs.rawptr();
+            extraArgv = mExtraArgs.data();
         }
     }
 
@@ -87,7 +87,7 @@ public:
 
         StrA executableName = fs::baseName(applicationName) + fs::extName(applicationName);
 
-        GN_INFO(logger)("Usage: %s [options]\n", executableName.rawptr());
+        GN_INFO(logger)("Usage: %s [options]\n", executableName.data());
         showStandardCommandLineOptions();
     }
 

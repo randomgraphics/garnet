@@ -33,7 +33,7 @@ static Logger * sLogger = getLogger("GN.base.filesys");
 //
 // -----------------------------------------------------------------------------
 static bool sNativeIsDir(const StrA & path) {
-    DIR * d = opendir(path.rawptr());
+    DIR * d = opendir(path.data());
     if (0 == d) return false;
     closedir(d);
     return true;
@@ -44,7 +44,7 @@ static bool sNativeIsDir(const StrA & path) {
 // -----------------------------------------------------------------------------
 static bool sNativeExist(const StrA & path) {
     if (sNativeIsDir(path)) return true;
-    FILE * fp = fopen(path.rawptr(), "r");
+    FILE * fp = fopen(path.data(), "r");
     if (0 == fp) return false;
     fclose(fp);
     return true;
@@ -71,12 +71,12 @@ static bool sIsAbsPath(const StrA & path) { return !path.empty() && '/' == path[
 //
 //
 // -----------------------------------------------------------------------------
-static bool sNativeExist(const StrA & path) { return !!::PathFileExistsA(path.rawptr()); }
+static bool sNativeExist(const StrA & path) { return !!::PathFileExistsA(path.data()); }
 
 //
 //
 // -----------------------------------------------------------------------------
-static bool sNativeIsDir(const StrA & path) { return !!::PathIsDirectoryA(path.rawptr()); }
+static bool sNativeIsDir(const StrA & path) { return !!::PathIsDirectoryA(path.data()); }
 
 //
 //
@@ -103,7 +103,7 @@ static bool sIsAbsPath(const StrA & path) {
 // -----------------------------------------------------------------------------
 static bool sNativeExist(const StrA & path) {
     WIN32_FIND_DATAA wfd;
-    HANDLE           fh = ::FindFirstFileA(path.rawptr(), &wfd);
+    HANDLE           fh = ::FindFirstFileA(path.data(), &wfd);
     if (INVALID_HANDLE_VALUE == fh) {
         return false;
     } else {
@@ -117,7 +117,7 @@ static bool sNativeExist(const StrA & path) {
 // -----------------------------------------------------------------------------
 static bool sNativeIsDir(const StrA & path) {
     WIN32_FIND_DATAA wfd;
-    HANDLE           fh = ::FindFirstFileA(path.rawptr(), &wfd);
+    HANDLE           fh = ::FindFirstFileA(path.data(), &wfd);
     if (INVALID_HANDLE_VALUE == fh) {
         return false;
     } else {
@@ -179,8 +179,8 @@ public:
         }
         // convert to full path
         char absPath[MAX_PATH + 1];
-        if (0 == _fullpath(absPath, tmp.rawptr(), MAX_PATH)) {
-            GN_ERROR(sLogger)("invalid path '%s'.", path.rawptr());
+        if (0 == _fullpath(absPath, tmp.data(), MAX_PATH)) {
+            GN_ERROR(sLogger)("invalid path '%s'.", path.data());
             result.clear();
             return;
         }
@@ -206,12 +206,12 @@ public:
         GN_GUARD;
 
         if (!exist(dirName)) {
-            GN_TRACE(sLogger)("'%s' does not exist!", dirName.rawptr());
+            GN_TRACE(sLogger)("'%s' does not exist!", dirName.data());
             return result;
         }
 
         if (!isDir(dirName)) {
-            GN_TRACE(sLogger)("'%s' is not directory!", dirName.rawptr());
+            GN_TRACE(sLogger)("'%s' is not directory!", dirName.data());
             return result;
         }
 
@@ -249,7 +249,7 @@ private:
             // TODO: ignore links/junctions
             CSimpleGlobA sg(SG_GLOB_ONLYDIR | SG_GLOB_NODOT);
             StrA         p = joinPath(curDir, "*");
-            sg.Add(p.rawptr());
+            sg.Add(p.data());
             char ** dirs = sg.Files();
             int     c    = sg.FileCount();
             for (int i = 0; i < c; ++i, ++dirs) {
@@ -262,7 +262,7 @@ private:
         using namespace std::string_literals;
         CSimpleGlobA sg(SG_GLOB_ONLYFILE);
         StrA         p = joinPath(curDir, (useRegex ? "*.*"s : pattern));
-        sg.Add(p.rawptr());
+        sg.Add(p.data());
         char ** files = sg.Files();
         int     c     = sg.FileCount();
         for (int i = 0; i < c; ++i, ++files) { result.append(joinPath(curDir, *files)); }
@@ -414,7 +414,7 @@ public:
     std::unique_ptr<File> openFile(const StrA & path, std::ios_base::openmode mode) {
         const StrA * root = findRoot(path);
         if (!root) {
-            GN_ERROR(sLogger)("file '%s' not found!", path.rawptr());
+            GN_ERROR(sLogger)("file '%s' not found!", path.data());
             return 0;
         }
         return GN::fs::openFile(joinPath(*root, path), mode);
@@ -435,7 +435,7 @@ public:
         addRoot("app::media");
         auto gnroot = getEnv("GARNET_ROOT");
         if (!gnroot.empty()) {
-            addRoot(str::format("native::%s/media", gnroot.rawptr()));
+            addRoot(str::format("native::%s/media", gnroot.data()));
         } else {
             addRoot("app::../../../../media");
         }
@@ -519,7 +519,7 @@ struct FileSystemContainer {
         }
 
         if (NULL != mFileSystems.find(name)) {
-            GN_ERROR(sLogger)("File system '%s' already exists!", name.rawptr());
+            GN_ERROR(sLogger)("File system '%s' already exists!", name.data());
             return false;
         }
 

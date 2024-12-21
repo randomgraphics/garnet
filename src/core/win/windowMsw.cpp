@@ -137,9 +137,9 @@ void GN::win::WindowMsw::quit() {
 
     // unregister window class
     if (!mClassName.empty()) {
-        GN_TRACE(sLogger)("Unregister window class: %S (module handle: 0x%X)", mClassName.rawptr(), mModuleInstance);
+        GN_TRACE(sLogger)("Unregister window class: %S (module handle: 0x%X)", mClassName.data(), mModuleInstance);
         GN_ASSERT(mModuleInstance);
-        GN_MSW_CHECK(::UnregisterClassW(mClassName.rawptr(), mModuleInstance));
+        GN_MSW_CHECK(::UnregisterClassW(mClassName.data(), mModuleInstance));
         mClassName.clear();
     }
 
@@ -307,7 +307,7 @@ bool GN::win::WindowMsw::createWindow(const WindowCreateParameters & wcp) {
 
     // generate an unique window class name
     WNDCLASSEXW wcex = {};
-    do { mClassName.format(L"GNwindowMsw_%d", rand()); } while (::GetClassInfoExW(mModuleInstance, mClassName.rawptr(), &wcex));
+    do { mClassName.format(L"GNwindowMsw_%d", rand()); } while (::GetClassInfoExW(mModuleInstance, mClassName.data(), &wcex));
 
     // register window class
     wcex.cbSize        = sizeof(WNDCLASSEXW);
@@ -320,13 +320,13 @@ bool GN::win::WindowMsw::createWindow(const WindowCreateParameters & wcp) {
     wcex.hCursor       = LoadCursor(0, IDC_ARROW);
     wcex.hbrBackground = (HBRUSH) (COLOR_WINDOW + 1);
     wcex.lpszMenuName  = 0;
-    wcex.lpszClassName = mClassName.rawptr();
+    wcex.lpszClassName = mClassName.data();
     wcex.hIconSm       = LoadIcon(0, IDI_APPLICATION);
     if (0 == ::RegisterClassExW(&wcex)) {
         GN_ERROR(sLogger)("fail to register window class, %s!", getWin32LastErrorInfo());
         return false;
     }
-    GN_TRACE(sLogger)("Register window class: %S (module handle: 0x%X)", mClassName.rawptr(), mModuleInstance);
+    GN_TRACE(sLogger)("Register window class: %S (module handle: 0x%X)", mClassName.data(), mModuleInstance);
 
     // setup window style
     DWORD exStyle = 0;
@@ -349,7 +349,7 @@ bool GN::win::WindowMsw::createWindow(const WindowCreateParameters & wcp) {
     GN_MSW_CHECK_RETURN(::AdjustWindowRectEx(&rc, style, 0, exStyle), false);
 
     // create window
-    mWindow = ::CreateWindowExW(exStyle, mClassName.rawptr(), mbs2wcs(wcp.caption).rawptr(), style, CW_USEDEFAULT, CW_USEDEFAULT, rc.right - rc.left,
+    mWindow = ::CreateWindowExW(exStyle, mClassName.data(), mbs2wcs(wcp.caption).data(), style, CW_USEDEFAULT, CW_USEDEFAULT, rc.right - rc.left,
                                 rc.bottom - rc.top, parent,
                                 0, // no menu
                                 mModuleInstance, 0);

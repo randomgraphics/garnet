@@ -105,7 +105,7 @@ struct GN_API File : public NoCopy {
     size_t size() const;
 
     /// write string to file
-    bool print(const StrA & s) { return write(s.rawptr(), s.size()) == s.size(); }
+    bool print(const StrA & s) { return write(s.data(), s.size()) == s.size(); }
 
     /// write formatted string to file
     inline bool printf(const char * fmt, ...) {

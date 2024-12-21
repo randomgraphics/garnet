@@ -40,7 +40,7 @@ public:
 
     size_t getSize() const { return mValue.size(); }
 
-    const void * getValue() const { return mValue.rawptr(); }
+    const void * getValue() const { return mValue.data(); }
 
     const StrA & getName() const { return mName; }
 

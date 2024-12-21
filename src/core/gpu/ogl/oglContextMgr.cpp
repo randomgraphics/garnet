@@ -174,13 +174,13 @@ inline bool GN::gfx::OGLGpu::bindContextShaders(const GpuContext & newContext, b
 
     GN_UNUSED_PARAM(skipDirtyCheck);
 
-    const OGLGpuProgram * newProgram = (const OGLGpuProgram *) newContext.gpuProgram.rawptr();
+    const OGLGpuProgram * newProgram = (const OGLGpuProgram *) newContext.gpuProgram.data();
 
     // apply new program
     if (newProgram) {
         newProgram->enable();
-        newProgram->applyUniforms((const Uniform * const *) newContext.uniforms.rawptr(), newContext.uniforms.size());
-        newProgram->applyTextures(newContext.textures.rawptr(), newContext.textures.size());
+        newProgram->applyUniforms((const Uniform * const *) newContext.uniforms.data(), newContext.uniforms.size());
+        newProgram->applyTextures(newContext.textures.data(), newContext.textures.size());
     }
 
     return true;
@@ -354,7 +354,7 @@ inline bool GN::gfx::OGLGpu::bindContextResources(const GpuContext & newContext,
     // bind vertex format
     //
     if (skipDirtyCheck || newContext.vtxbind != mContext.vtxbind || newContext.gpuProgram != mContext.gpuProgram) {
-        mCurrentOGLVtxFmt = findOrCreateOGLVtxFmt(newContext.vtxbind, (const OGLGpuProgram *) newContext.gpuProgram.rawptr());
+        mCurrentOGLVtxFmt = findOrCreateOGLVtxFmt(newContext.vtxbind, (const OGLGpuProgram *) newContext.gpuProgram.data());
         if (!mCurrentOGLVtxFmt) return false;
         if (!mCurrentOGLVtxFmt->bindStates()) return false;
     }

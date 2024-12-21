@@ -11,8 +11,8 @@ public:
         TS_ASSERT_EQUALS(a, "");
         TS_ASSERT_EQUALS(w, L"");
         TS_ASSERT_EQUALS((void *) &a, (void *) &w);
-        TS_ASSERT_EQUALS(a.rawptr(), GN::internal::emptyStringPointer());
-        TS_ASSERT_EQUALS(w.rawptr(), GN::internal::emptyStringPointer());
+        TS_ASSERT_EQUALS(a.data(), GN::internal::emptyStringPointer());
+        TS_ASSERT_EQUALS(w.data(), GN::internal::emptyStringPointer());
     }
 
     void testMbs2wcs() {
@@ -311,20 +311,20 @@ public:
         TS_ASSERT_EQUALS(1, GN::str::compare(L"abc", L"ABC"));
         TS_ASSERT_EQUALS(-1, GN::str::compare(L"abc", L"abcd"));
 
-        TS_ASSERT_EQUALS(0, GN::str::compare(s1.rawptr(), s2.rawptr(), 0));
-        TS_ASSERT_EQUALS(0, GN::str::compare(s1.rawptr(), s2.rawptr(), 1));
-        TS_ASSERT_EQUALS(-1, GN::str::compare(s1.rawptr(), s2.rawptr(), 2));
-        TS_ASSERT_EQUALS(0, GN::str::compare(s4.rawptr(), s5.rawptr(), 4));
-        TS_ASSERT_EQUALS(-1, GN::str::compare(s4.rawptr(), s5.rawptr(), 5));
+        TS_ASSERT_EQUALS(0, GN::str::compare(s1.data(), s2.data(), 0));
+        TS_ASSERT_EQUALS(0, GN::str::compare(s1.data(), s2.data(), 1));
+        TS_ASSERT_EQUALS(-1, GN::str::compare(s1.data(), s2.data(), 2));
+        TS_ASSERT_EQUALS(0, GN::str::compare(s4.data(), s5.data(), 4));
+        TS_ASSERT_EQUALS(-1, GN::str::compare(s4.data(), s5.data(), 5));
 
-        TS_ASSERT(-1 == GN::str::compareI<wchar_t>(0, s1.rawptr()));
-        TS_ASSERT(1 == GN::str::compareI<wchar_t>(s1.rawptr(), 0));
-        TS_ASSERT(1 == GN::str::compareI(s5.rawptr(), s3.rawptr()));
-        TS_ASSERT(0 == GN::str::compareI(s4.rawptr(), s4.rawptr()));
-        TS_ASSERT(0 == GN::str::compareI(s2.rawptr(), s4.rawptr()));
-        TS_ASSERT(0 == GN::str::compareI(s4.rawptr(), s2.rawptr()));
-        TS_ASSERT(-1 == GN::str::compareI(s1.rawptr(), s4.rawptr()));
-        TS_ASSERT(1 == GN::str::compareI(s4.rawptr(), s1.rawptr()));
+        TS_ASSERT(-1 == GN::str::compareI<wchar_t>(0, s1.data()));
+        TS_ASSERT(1 == GN::str::compareI<wchar_t>(s1.data(), 0));
+        TS_ASSERT(1 == GN::str::compareI(s5.data(), s3.data()));
+        TS_ASSERT(0 == GN::str::compareI(s4.data(), s4.data()));
+        TS_ASSERT(0 == GN::str::compareI(s2.data(), s4.data()));
+        TS_ASSERT(0 == GN::str::compareI(s4.data(), s2.data()));
+        TS_ASSERT(-1 == GN::str::compareI(s1.data(), s4.data()));
+        TS_ASSERT(1 == GN::str::compareI(s4.data(), s1.data()));
     }
 
     void testStrFunc() {
@@ -407,13 +407,13 @@ public:
             S    s1("haha");
             auto a  = TestAllocator::allocated();
             auto s2 = std::move(s1);
-            TS_ASSERT_EQUALS(s1.rawptr(), "");
-            TS_ASSERT_EQUALS(s2.rawptr(), "haha");
+            TS_ASSERT_EQUALS(s1.data(), "");
+            TS_ASSERT_EQUALS(s2.data(), "haha");
             TS_ASSERT_EQUALS(TestAllocator::allocated(), a);
             S s3;
             s3 = std::move(s2);
-            TS_ASSERT_EQUALS(s2.rawptr(), "");
-            TS_ASSERT_EQUALS(s3.rawptr(), "haha");
+            TS_ASSERT_EQUALS(s2.data(), "");
+            TS_ASSERT_EQUALS(s3.data(), "haha");
             TS_ASSERT_EQUALS(TestAllocator::allocated(), a);
         }
         {

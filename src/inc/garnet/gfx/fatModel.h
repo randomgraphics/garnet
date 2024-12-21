@@ -96,7 +96,7 @@ public:
 
     VertexElement * getElementData(int semantic) {
         if (0 <= semantic && semantic < (int) NUM_SEMANTICS) {
-            return mElements[semantic].rawptr();
+            return mElements[semantic].data();
         } else {
             return NULL;
         }
@@ -113,13 +113,13 @@ public:
 
     /// getXXX() helpers
     //@{
-    VertexElement * getPosition() { return mElements[POSITION].rawptr(); }
-    VertexElement * getNormal() { return mElements[NORMAL].rawptr(); }
-    VertexElement * getJoints() { return mElements[JOINT_ID].rawptr(); }
+    VertexElement * getPosition() { return mElements[POSITION].data(); }
+    VertexElement * getNormal() { return mElements[NORMAL].data(); }
+    VertexElement * getJoints() { return mElements[JOINT_ID].data(); }
     VertexElement * getTexcoord(size_t stage) {
         size_t semantic = TEXCOORD0 + stage;
         if (semantic <= TEXCOORD_LAST) {
-            return mElements[semantic].rawptr();
+            return mElements[semantic].data();
         } else {
             return NULL;
         }

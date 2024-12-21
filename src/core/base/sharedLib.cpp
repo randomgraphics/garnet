@@ -48,13 +48,13 @@ GN_API bool GN::SharedLib::load(const char * libName) {
         filename = libName;
 
     // load library
-    mHandle = SHLIB_LOAD(filename.rawptr());
+    mHandle = SHLIB_LOAD(filename.data());
     if (0 == mHandle) {
-        GN_ERROR(sLogger)("Fail to load library %s: %s!", filename.rawptr(), SHLIB_ERROR());
+        GN_ERROR(sLogger)("Fail to load library %s: %s!", filename.data(), SHLIB_ERROR());
         return false;
     }
 
-    GN_TRACE(sLogger)("Load library '%s'.", filename.rawptr());
+    GN_TRACE(sLogger)("Load library '%s'.", filename.data());
 
     // success
     mFileName = filename;
@@ -72,7 +72,7 @@ GN_API void GN::SharedLib::unload() {
     if (mHandle) {
         SHLIB_UNLOAD(mHandle);
         mHandle = 0;
-        GN_TRACE(sLogger)("Unload library '%s'.", mFileName.rawptr());
+        GN_TRACE(sLogger)("Unload library '%s'.", mFileName.data());
     }
 
     GN_UNGUARD;

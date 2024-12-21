@@ -287,7 +287,7 @@ const GN::gfx::BitmapFont::FontSlot * GN::gfx::BitmapFont::createSlot(wchar_t ch
 
     // update texture
     Box<uint32_t> area(slot.x, slot.y, 0, slot.w, slot.h, 1);
-    mTextures[slot.texidx]->updateMipmap(0, 0, &area, slot.w * 4, (uint32_t) tmpbuf.size(), tmpbuf.rawptr());
+    mTextures[slot.texidx]->updateMipmap(0, 0, &area, slot.w * 4, (uint32_t) tmpbuf.size(), tmpbuf.data());
 
     // success
     return &slot;
@@ -379,7 +379,7 @@ bool GN::gfx::BitmapFont::slotInit(Gpu & gpu, uint16_t fontw, uint16_t fonth, si
         }
 
         // clear texture to pure black
-        // mTextures[i]->updateMipmap( 0, 0, 0, texwidth * 4, texels.size(), texels.rawptr() );
+        // mTextures[i]->updateMipmap( 0, 0, 0, texwidth * 4, texels.size(), texels.data() );
     }
 
     // success

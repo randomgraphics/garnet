@@ -29,7 +29,7 @@ public:
                 }
 
                 StrA name;
-                name.format("d:/software/green/cegui/datafiles/%s", filename.rawptr());
+                name.format("d:/software/green/cegui/datafiles/%s", filename.data());
 
                 DiskFile fp;
                 if (!fp.open(name, "rb")) { throw InvalidRequestException((utf8 *) "DefaultResourceProvider::load - " + filename + " does not exist"); }

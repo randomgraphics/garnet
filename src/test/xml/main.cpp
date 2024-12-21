@@ -12,7 +12,7 @@ bool doParse(XmlDocument & doc, XmlParseResult & xpr, const char * filename) {
     if (!fp.open(fs::toNativeDiskFilePath(filename), std::ios::in)) return false;
 
     if (!doc.parse(xpr, fp)) {
-        GN_ERROR(sLogger)("xml parse error (l:%d,c:%d) : %s", xpr.errLine, xpr.errColumn, xpr.errInfo.rawptr());
+        GN_ERROR(sLogger)("xml parse error (l:%d,c:%d) : %s", xpr.errLine, xpr.errColumn, xpr.errInfo.data());
         return false;
     }
 

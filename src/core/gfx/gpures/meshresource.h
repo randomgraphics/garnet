@@ -70,7 +70,7 @@ private:
     // ********************************
 private:
     GpuResourceDatabase & getGdb() const { return mOwner.getGdb(); }
-    const char *          getMeshName() const { return mOwner.getGdb().getResourceName(&mOwner)->rawptr(); }
+    const char *          getMeshName() const { return mOwner.getGdb().getResourceName(&mOwner)->data(); }
 
     bool create(const MeshResourceDesc & desc);
     void clear();

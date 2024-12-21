@@ -123,7 +123,7 @@ private:
     // ********************************
 private:
     GpuResourceDatabase & getGdb() const { return mOwner.getGdb(); }
-    const char *          getModelName() const { return mOwner.getGdb().getResourceName(&mOwner)->rawptr(); }
+    const char *          getModelName() const { return mOwner.getGdb().getResourceName(&mOwner)->data(); }
 
     bool fromDesc(const ModelResourceDesc & desc);
     void clear();

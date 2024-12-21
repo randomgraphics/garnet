@@ -239,7 +239,7 @@ void GN::gfx::OGLGpuProgram::applyUniforms(const Uniform * const * uniforms, uin
         // check parameter size
         if (getGpu().paramCheckEnabled()) {
             if (uniform->size() != desc.size) {
-                GN_WARN(sLogger)("parameter %s: value size(%d) differs from size defined in shader code(%d).", desc.name.rawptr(), uniform->size(), desc.size);
+                GN_WARN(sLogger)("parameter %s: value size(%d) differs from size defined in shader code(%d).", desc.name.data(), uniform->size(), desc.size);
             }
         }
 
@@ -331,7 +331,7 @@ void GN::gfx::OGLGpuProgram::applyTextures(const TextureBinding * textures, uint
         if (b.texture) {
             r.chooseTextureStage(i);
 
-            const OGLTexture * ogltexture = safeCastPtr<const OGLTexture>(b.texture.rawptr());
+            const OGLTexture * ogltexture = safeCastPtr<const OGLTexture>(b.texture.data());
 
             // bind sampler. TODO: filter redundant sampler.
             ogltexture->setSampler(b.sampler);
@@ -399,12 +399,12 @@ bool GN::gfx::OGLGpuProgram::enumParameters() {
     // initialize name and size arrays
     for (uint32_t i = 0; i < mUniforms.size(); ++i) {
         GLSLUniformOrTextureDesc & u = mUniforms[i];
-        u.uniformDesc.name           = u.name.rawptr();
+        u.uniformDesc.name           = u.name.data();
         u.uniformDesc.size           = u.size;
     }
     for (uint32_t i = 0; i < mTextures.size(); ++i) {
         GLSLUniformOrTextureDesc & t = mTextures[i];
-        t.textureDesc.name           = t.name.rawptr();
+        t.textureDesc.name           = t.name.data();
     }
 
     // update parameter descriptor
@@ -467,7 +467,7 @@ bool GN::gfx::OGLGpuProgram::enumAttributes() {
     // initialize name and format arrays
     for (uint32_t i = 0; i < mAttributes.size(); ++i) {
         GLSLAttributeDesc & a = mAttributes[i];
-        a.desc.name           = a.name.rawptr();
+        a.desc.name           = a.name.data();
     }
 
     // update parameter descriptor

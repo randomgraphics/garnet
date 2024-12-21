@@ -347,7 +347,7 @@ public:
     ///
     /// return c-style const char pointer [[depreciated]]
     ///
-    const CharType * rawptr() const { return mPtr; }
+    const CharType * data() const { return mPtr; }
 
     ///
     /// return c-style const char pointer
@@ -893,7 +893,7 @@ public:
     /// Output to ostream
     ///
     friend std::ostream & operator<<(std::ostream & os, const Str & str) {
-        os << str.rawptr();
+        os << str.data();
         return os;
     }
 
@@ -989,7 +989,7 @@ public:
         }
     }
     StackStr(const StackStr & s): mCount(s.mCount) { memcpy(mBuf, s.mBuf, sizeof(CHAR) * s.mCount); }
-    StackStr(const Str<CHAR> & s) { memcpy(mBuf, s.rawptr(), sizeof(CHAR) * sValidateLength(s.size())); }
+    StackStr(const Str<CHAR> & s) { memcpy(mBuf, s.data(), sizeof(CHAR) * sValidateLength(s.size())); }
     //@}
 };
 

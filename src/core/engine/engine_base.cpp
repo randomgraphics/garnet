@@ -31,7 +31,7 @@ GN::engine::Entity * GN::engine::Entity::getComponent(const EntityType & type) c
     auto iter = mComponents.find(type);
     if (iter != mComponents.end()) {
         GN_ASSERT(!iter->second.empty());
-        return iter->second.rawptr();
+        return iter->second.data();
     } else {
         return NULL;
     }
