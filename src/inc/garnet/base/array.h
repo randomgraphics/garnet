@@ -720,7 +720,7 @@ public:
 
 // TODO: replace with std::size()
 template<typename T, std::size_t N>
-constexpr std::size_t countof(T const (&)[N]) noexcept {
+constexpr std::size_t std::size(T const (&)[N]) noexcept {
     return N;
 }
 } // namespace GN

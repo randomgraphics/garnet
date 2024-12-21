@@ -23,7 +23,7 @@
 // -----------------------------------------------------------------------------
 inline const wchar_t * GetRealDllPath(const wchar_t * dllName) {
     static __declspec(thread) wchar_t dllpath[256];
-    GetSystemDirectoryW(dllpath, (uint32_t) GN::countof(dllpath));
+    GetSystemDirectoryW(dllpath, (uint32_t) GN::std::size(dllpath));
     wcscat_s(dllpath, L"\\");
     wcscat_s(dllpath, dllName);
     return dllpath;

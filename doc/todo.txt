@@ -5,6 +5,7 @@
   - depreicate/remove some old old code: like guard, icl support
   - update 3rd party libraries using submodule:
     - ft2
+  - Retain custom containers to avoid dependencies to STL version
   - replace custom types with standard STL types:
     - AutoObjPtr
     - custom containers: array, hashmap, dict
