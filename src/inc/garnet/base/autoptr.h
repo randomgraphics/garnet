@@ -102,7 +102,7 @@ public:
     }
 
     ///
-    /// Release ownership of private pointer
+    /// Forfeit ownership to the underlying pointer.
     ///
     T * detach() throw() {
         auto lock = std::lock_guard(mMutex);

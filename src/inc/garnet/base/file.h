@@ -14,29 +14,7 @@
 namespace GN {
 
 ///
-/// File operation caps
-///
-union FileOperationCaps {
-    unsigned char u8; ///< File operation caps as unsigned char
-    signed char   i8; ///< File operation caps as char
-    struct {
-        bool read      : 1; ///< support reading
-        bool write     : 1; ///< support writing
-        bool eof       : 1; ///< support EOF quering
-        bool seek      : 1; ///< support position seeking
-        bool tell      : 1; ///< support position querying
-        bool size      : 1; ///< support size querying
-        bool map       : 1; ///< support memory-mapping
-        bool _reserved : 1; ///< reserved.
-    };
-};
-
-///
-/// basic file interface used throughout of the garnet system
-///
-/// 用户实现该文件类时，不一定要实现下面的所有操作。
-///
-/// TODO: replace size_t with uint64_t or int64_t, to support large file on x86 system
+/// basic file interface used with garnet's virtual file system
 ///
 struct GN_API File : public NoCopy {
     /// construct from input stream

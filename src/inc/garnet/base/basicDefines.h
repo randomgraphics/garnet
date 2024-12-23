@@ -381,6 +381,10 @@ public:                                                                     \
     x(x &&)             = default; \
     x & operator=(x &&) = default
 
+#define GN_LIKELY
+
+#define GN_UNLIKELY
+
 namespace GN {
 ///
 /// Disable copy semantic of all descendants.
