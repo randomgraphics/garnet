@@ -6,32 +6,59 @@
 /// \author  chenli@@REDMOND (2009.3.31)
 // *****************************************************************************
 
+#include <mutex>
+
 namespace GN {
 namespace detail {
 ///
-/// Basic auto pointer class. Can NOT be used in STL containers.
+/// Basic auto pointer class. STL compatible and thread safe.
 ///
 template<typename T, typename CLASS>
-class BaseAutoPtr : public NoCopy {
-    T * mPtr;
+class BaseAutoPtr {
+    T *                mPtr {};
+    mutable DoubleLink mLink {};
+    mutable std::mutex mMutex;
 
     typedef BaseAutoPtr<T, CLASS> MyType;
 
-    void release() {
+    void doClear() {
+        mLink.detach();
         CLASS::sDoRelease(mPtr);
         mPtr = 0;
     }
 
 public:
     ///
-    /// Construct from C-style
+    /// Construct from raw pointer
     ///
-    explicit BaseAutoPtr(T * p) throw(): mPtr(p) {}
+    explicit BaseAutoPtr(T * p = nullptr) throw(): mPtr(p) {}
+
+    ///
+    /// Copy constructor
+    ///
+    BaseAutoPtr(const MyType & other) throw() {
+        other.mMutex.lock();
+        mPtr = other.mPtr;
+        mLink.linkAfter(&other.mLink);
+        other.mMutex.unlock();
+    }
+
+    ///
+    /// Move constructor
+    ///
+    BaseAutoPtr(MyType && other) throw() {
+        other.mMutex.lock();
+        mPtr = other.mPtr;
+        mLink.linkAfter(&other.mLink);
+        other.mLink.detach();
+        other.mPtr = 0;
+        other.mMutex.unlock();
+    }
 
     ///
     /// Destructor
     ///
-    ~BaseAutoPtr() { release(); }
+    ~BaseAutoPtr() { clear(); }
 
     ///
     /// Is pointer empty or not.
@@ -47,23 +74,25 @@ public:
     /// clear internal pointer. Same as attach(0)
     ///
     void clear() {
-        if (mPtr) release(), mPtr = 0;
+        auto lock = std::lock_guard(mMutex);
+        doClear();
     }
 
     ///
     /// attach to new pointer (release the old one)
     ///
     void attach(T * p) {
-        if (p != mPtr) {
-            release();
-            mPtr = p;
-        }
+        auto lock = std::lock_guard(mMutex);
+        if (p == mPtr) return;
+        doClear();
+        mPtr = p;
     }
 
     ///
     /// Release ownership of private pointer
     ///
     T * detach() throw() {
+        auto lock = std::lock_guard(mMutex);
         T * tmp = mPtr;
         mPtr    = 0;
         return tmp;
@@ -94,6 +123,34 @@ public:
     /// arrow operator
     ///
     T * operator->() const { return mPtr; }
+
+    ///
+    /// assignment operator
+    ///
+    MyType & operator=(const MyType & other) {
+        if (this != &other) {
+            auto lock = std::scoped_lock(mMutex, other.mMutex);
+            doClear();
+            mPtr = other.mPtr;
+            mLink.linkAfter(&other.mLink);
+        }
+        return *this;
+    }
+
+    ///
+    /// Move assignment operator
+    ///
+    MyType & operator=(MyType && other) {
+        if (this != &other) {
+            auto lock = std::scoped_lock(mMutex, other.mMutex);
+            doClear();
+            mPtr = other.mPtr;
+            mLink.linkAfter(&other.mLink);
+            other.mLink.detach();
+            other.mPtr = 0;
+        }
+        return *this;
+    }
 };
 } // namespace detail
 
@@ -119,7 +176,7 @@ public:
 #endif
 
 ///
-/// Automatic object pointer. Can NOT be used in STL containers.
+/// Automatic object pointer.
 ///
 template<typename T>
 class AutoObjPtr : public detail::BaseAutoPtr<T, AutoObjPtr<T>> {
@@ -142,7 +199,7 @@ public:
 };
 
 ///
-/// Automatic object array. Can NOT be used in STL containers.
+/// Automatic object array.
 ///
 template<typename T>
 class AutoObjArray : public detail::BaseAutoPtr<T, AutoObjArray<T>> {
@@ -165,7 +222,7 @@ public:
 };
 
 ///
-/// Automatic C-style array created by HeapMemory::alloc. Can NOT be used in STL containers.
+/// Automatic C-style array created by HeapMemory::alloc.
 ///
 template<typename T>
 class AutoHeapPtr : public detail::BaseAutoPtr<T, AutoHeapPtr<T>> {
@@ -188,11 +245,12 @@ public:
 };
 
 ///
-/// Automatic COM pointer class. CAN be used in STL containers.
+/// Automatic COM pointer class. STL compatible and thread safe.
 ///
 template<class T>
 class AutoComPtr {
-    T * mPtr;
+    T *                mPtr;
+    mutable std::mutex mMutex;
 
 public:
     ///
@@ -210,7 +268,9 @@ public:
     ///
     /// Copy constructor
     ///
-    AutoComPtr(const AutoComPtr & other) throw(): mPtr(other) {
+    AutoComPtr(const AutoComPtr & other) throw() {
+        auto lock = std::lock_guard(other.mMutex);
+        mPtr = other.mPtr;
         if (mPtr) mPtr->AddRef();
     }
 
@@ -218,7 +278,9 @@ public:
     /// Copy constructor
     ///
     template<typename T2>
-    AutoComPtr(const AutoComPtr<T2> & other) throw(): mPtr((T2 *) other) {
+    AutoComPtr(const AutoComPtr<T2> & other) throw() {
+        auto lock = std::lock_guard(other.mMutex);
+        mPtr = other.mPtr;
         if (mPtr) mPtr->AddRef();
     }
 
@@ -310,6 +372,7 @@ public:
     /// Clear to empty. Same as set(NULL).
     ///
     void clear() {
+        auto lock = std::lock_guard(mMutex);
         if (mPtr) mPtr->Release();
         mPtr = 0;
     }
@@ -329,6 +392,7 @@ public:
     ///
     template<typename T2>
     void set(T2 * p) throw() {
+        auto lock = std::lock_guard(mMutex);
         if (p) p->AddRef();
         if (mPtr) mPtr->Release();
         mPtr = p;
@@ -339,6 +403,7 @@ public:
     ///
     template<typename T2>
     void attach(T2 * p2) throw() {
+        auto lock = std::lock_guard(mMutex);
         if (mPtr) mPtr->Release();
         mPtr = p2;
     }
@@ -356,6 +421,7 @@ public:
     /// Detach the interface (does not Release)
     ///
     T * detach() throw() {
+        auto lock = std::lock_guard(mMutex);
         T * pt = mPtr;
         mPtr   = NULL;
         return pt;
