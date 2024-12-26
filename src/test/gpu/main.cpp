@@ -9,8 +9,7 @@ using namespace GN::util;
 bool       blankScreen = false;
 GpuContext rc;
 
-const char * hlsl_vscode = R"glsl(
-    #version 330
+const char * hlsl_vscode = R"hlsl(
     uniform float4x4 transform;
     struct VSOUT { float4 pos : POSITION0; float2 uv : TEXCOORD; };
     VSOUT main( in float4 pos : POSITION ) {
@@ -19,16 +18,15 @@ const char * hlsl_vscode = R"glsl(
        o.uv  = pos.xy;
        return o;
     }
-)glsl";
+)hlsl";
 
-const char * hlsl_pscode = R"glsl(
-    #version 330
+const char * hlsl_pscode = R"hlsl(
     sampler t0;
     struct VSOUT { float4 pos : POSITION0; float2 uv : TEXCOORD; };
     float4 main( in VSOUT i ) : COLOR0 {
        return tex2D( t0, i.uv );
     }
-)glsl";
+)hlsl";
 
 const char * glsl_vscode = R"glsl(
     #version 330
@@ -59,7 +57,7 @@ bool init(Gpu & gpu) {
     GpuProgramDesc gpd("test-gpu");
     if (GpuAPI::OGL == gpu.getOptions().api) {
         gpd.lang         = GpuProgramLanguage::GLSL;
-        gpd.shaderModels = ShaderModel::GLSL_1_10;
+        gpd.shaderModels = ShaderModel::GLSL_3_30;
         gpd.vs.source    = glsl_vscode;
         gpd.ps.source    = glsl_pscode;
     } else {
