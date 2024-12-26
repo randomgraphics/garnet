@@ -13,30 +13,27 @@ namespace detail {
 ///
 /// Basic auto pointer class. STL compatible and thread safe.
 ///
-template<typename T, typename CLASS>
+template<typename T, typename CLASS, typename MUTEX>
 class BaseAutoPtr {
     T *                mPtr {};
     mutable DoubleLink mLink {};
-    mutable std::mutex mMutex;
+    mutable MUTEX      mMutex {};
 
-    typedef BaseAutoPtr<T, CLASS> MyType;
-
-    void doClear() {
-        mLink.detach();
-        CLASS::sDoRelease(mPtr);
-        mPtr = 0;
-    }
+    typedef BaseAutoPtr<T, CLASS, MUTEX> MyType;
 
 public:
     ///
     /// Construct from raw pointer
     ///
-    explicit BaseAutoPtr(T * p = nullptr) throw(): mPtr(p) {}
+    explicit BaseAutoPtr(T * p = nullptr) throw(): mPtr(p) {
+        mLink.context = this;
+    }
 
     ///
     /// Copy constructor
     ///
     BaseAutoPtr(const MyType & other) throw() {
+        mLink.context = this;
         other.mMutex.lock();
         mPtr = other.mPtr;
         mLink.linkAfter(&other.mLink);
@@ -47,6 +44,7 @@ public:
     /// Move constructor
     ///
     BaseAutoPtr(MyType && other) throw() {
+        mLink.context = this;
         other.mMutex.lock();
         mPtr = other.mPtr;
         mLink.linkAfter(&other.mLink);
@@ -74,17 +72,17 @@ public:
     /// clear internal pointer. Same as attach(0)
     ///
     void clear() {
-        auto lock = std::lock_guard(mMutex);
-        doClear();
+        mLink.detach();
+        CLASS::sDoRelease(mPtr);
+        mPtr = 0;
     }
 
     ///
     /// attach to new pointer (release the old one)
     ///
     void attach(T * p) {
-        auto lock = std::lock_guard(mMutex);
         if (p == mPtr) return;
-        doClear();
+        clear();
         mPtr = p;
     }
 
@@ -92,9 +90,8 @@ public:
     /// Release ownership of private pointer
     ///
     T * detach() throw() {
-        auto lock = std::lock_guard(mMutex);
-        T * tmp = mPtr;
-        mPtr    = 0;
+        T *  tmp  = mPtr;
+        mPtr      = 0;
         return tmp;
     }
 
@@ -129,8 +126,7 @@ public:
     ///
     MyType & operator=(const MyType & other) {
         if (this != &other) {
-            auto lock = std::scoped_lock(mMutex, other.mMutex);
-            doClear();
+            clear();
             mPtr = other.mPtr;
             mLink.linkAfter(&other.mLink);
         }
@@ -142,8 +138,7 @@ public:
     ///
     MyType & operator=(MyType && other) {
         if (this != &other) {
-            auto lock = std::scoped_lock(mMutex, other.mMutex);
-            doClear();
+            clear();
             mPtr = other.mPtr;
             mLink.linkAfter(&other.mLink);
             other.mLink.detach();
@@ -158,90 +153,66 @@ public:
 ///
 /// Automatic X resource pointer
 ///
-template<typename T>
-class AutoXPtr : public detail::BaseAutoPtr<T, AutoXPtr<T>> {
-    typedef detail::BaseAutoPtr<T, AutoXPtr<T>> ParentType;
-    friend class detail::BaseAutoPtr<T, AutoXPtr<T>>;
-
+template<typename T, typename MUTEX = std::mutex>
+class AutoXPtr : public detail::BaseAutoPtr<T, AutoXPtr<T>, MUTEX> {
+public:
     static void sDoRelease(T * p) {
         if (p) XFree(p);
     }
 
-public:
     ///
     /// Construct from C-style pointer
     ///
-    explicit AutoXPtr(T * p = 0) throw(): ParentType(p) {}
+    explicit AutoXPtr(T * p = 0) throw(): detail::BaseAutoPtr<T, AutoXPtr<T>, MUTEX>(p) {}
 };
 #endif
 
 ///
 /// Automatic object pointer.
 ///
-template<typename T>
-class AutoObjPtr : public detail::BaseAutoPtr<T, AutoObjPtr<T>> {
-    typedef detail::BaseAutoPtr<T, AutoObjPtr<T>> ParentType;
-#if GN_GNUC
-    friend class detail::BaseAutoPtr<T, AutoObjPtr<T>>;
-#else
-    friend class ParentType;
-#endif
-
+template<typename T, typename MUTEX = std::mutex>
+class AutoObjPtr : public detail::BaseAutoPtr<T, AutoObjPtr<T>, MUTEX> {
+public:
     static void sDoRelease(T * p) {
         if (p) delete p;
     }
 
-public:
     ///
     /// Construct from C-style pointer
     ///
-    explicit AutoObjPtr(T * p = 0) throw(): ParentType(p) {}
+    explicit AutoObjPtr(T * p = 0) throw(): detail::BaseAutoPtr<T, AutoObjPtr<T>, MUTEX>(p) {}
 };
 
 ///
 /// Automatic object array.
 ///
-template<typename T>
-class AutoObjArray : public detail::BaseAutoPtr<T, AutoObjArray<T>> {
-    typedef detail::BaseAutoPtr<T, AutoObjArray<T>> ParentType;
-#if GN_GNUC
-    friend class detail::BaseAutoPtr<T, AutoObjArray<T>>;
-#else
-    friend class ParentType;
-#endif
-
+template<typename T, typename MUTEX = std::mutex>
+class AutoObjArray : public detail::BaseAutoPtr<T, AutoObjArray<T>, MUTEX> {
+public:
     static void sDoRelease(T * p) {
         if (p) delete[] p;
     }
 
-public:
     ///
     /// Construct from C-style pointer
     ///
-    explicit AutoObjArray(T * p = 0) throw(): ParentType(p) {}
+    explicit AutoObjArray(T * p = 0) throw(): detail::BaseAutoPtr<T, AutoObjArray<T>, MUTEX>(p) {}
 };
 
 ///
 /// Automatic C-style array created by HeapMemory::alloc.
 ///
-template<typename T>
-class AutoHeapPtr : public detail::BaseAutoPtr<T, AutoHeapPtr<T>> {
-    typedef detail::BaseAutoPtr<T, AutoHeapPtr<T>> ParentType;
-#if GN_GNUC
-    friend class detail::BaseAutoPtr<T, AutoHeapPtr<T>>;
-#else
-    friend class ParentType;
-#endif
-
+template<typename T, typename MUTEX = std::mutex>
+class AutoHeapPtr : public detail::BaseAutoPtr<T, AutoHeapPtr<T>, MUTEX> {
+public:
     static void sDoRelease(T * p) {
         if (p) HeapMemory::dealloc((void *) p);
     }
 
-public:
     ///
     /// Construct from C-style pointer
     ///
-    explicit AutoHeapPtr(T * p = 0) throw(): ParentType(p) {}
+    explicit AutoHeapPtr(T * p = 0) throw(): detail::BaseAutoPtr<T, AutoHeapPtr<T>, MUTEX>(p) {}
 };
 
 ///
@@ -270,7 +241,7 @@ public:
     ///
     AutoComPtr(const AutoComPtr & other) throw() {
         auto lock = std::lock_guard(other.mMutex);
-        mPtr = other.mPtr;
+        mPtr      = other.mPtr;
         if (mPtr) mPtr->AddRef();
     }
 
@@ -280,7 +251,7 @@ public:
     template<typename T2>
     AutoComPtr(const AutoComPtr<T2> & other) throw() {
         auto lock = std::lock_guard(other.mMutex);
-        mPtr = other.mPtr;
+        mPtr      = other.mPtr;
         if (mPtr) mPtr->AddRef();
     }
 
@@ -422,8 +393,8 @@ public:
     ///
     T * detach() throw() {
         auto lock = std::lock_guard(mMutex);
-        T * pt = mPtr;
-        mPtr   = NULL;
+        T *  pt   = mPtr;
+        mPtr      = NULL;
         return pt;
     }
 

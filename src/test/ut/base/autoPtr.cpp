@@ -2,12 +2,20 @@
 
 class AutoPtrTest : public CxxTest::TestSuite {
     inline static int a = 0;
+    inline static int b = 0;
     inline static int c = 0;
 
     struct S1 {
         int a;
-        S1(int i) { AutoPtrTest::a = a = i; ++c; }
-        ~S1() { AutoPtrTest::a = 0; --c; }
+        S1(int i) {
+            AutoPtrTest::a = a = i;
+            ++b;
+            ++c;
+        }
+        ~S1() {
+            AutoPtrTest::a = 0;
+            --c;
+        }
     };
 
 public:
@@ -68,6 +76,21 @@ public:
 
         // p4 is the only one holding the object
         TS_ASSERT_EQUALS(1, p4->a);
+
+        p4.clear();
+
+        // object should be deleted
+        TS_ASSERT_EQUALS(0, c);
+    }
+
+    void testMove() {
+        GN::AutoObjPtr<S1> p1(new S1(1));
+        GN::AutoObjPtr<S1> p2(std::move(p1));
+        GN::AutoObjPtr<S1> p3 = std::move(p2);
+        GN::AutoObjPtr<S1> p4;
+        p4 = std::move(p3);
+
+        TS_ASSERT_EQUALS(1, b); // there should be only one object
 
         p4.clear();
 
