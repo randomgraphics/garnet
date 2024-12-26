@@ -9,34 +9,46 @@ using namespace GN::util;
 bool       blankScreen = false;
 GpuContext rc;
 
-const char * hlsl_vscode = "uniform float4x4 transform; \n"
-                           "struct VSOUT { float4 pos : POSITION0; float2 uv : TEXCOORD; }; \n"
-                           "VSOUT main( in float4 pos : POSITION ) { \n"
-                           "   VSOUT o; \n"
-                           "   o.pos = mul( transform, pos ); \n"
-                           "   o.uv  = pos.xy; \n"
-                           "   return o; \n"
-                           "}";
+const char * hlsl_vscode = R"glsl(
+    #version 330
+    uniform float4x4 transform;
+    struct VSOUT { float4 pos : POSITION0; float2 uv : TEXCOORD; };
+    VSOUT main( in float4 pos : POSITION ) {
+       VSOUT o;
+       o.pos = mul( transform, pos );
+       o.uv  = pos.xy;
+       return o;
+    }
+)glsl";
 
-const char * hlsl_pscode = "sampler t0; \n"
-                           "struct VSOUT { float4 pos : POSITION0; float2 uv : TEXCOORD; }; \n"
-                           "float4 main( in VSOUT i ) : COLOR0 { \n"
-                           "   return tex2D( t0, i.uv ); \n"
-                           "}";
+const char * hlsl_pscode = R"glsl(
+    #version 330
+    sampler t0;
+    struct VSOUT { float4 pos : POSITION0; float2 uv : TEXCOORD; };
+    float4 main( in VSOUT i ) : COLOR0 {
+       return tex2D( t0, i.uv );
+    }
+)glsl";
 
-const char * glsl_vscode = "in vec4 i_Position0;\n"
-                           "varying vec2 texcoords; \n"
-                           "uniform mat4 transform; \n"
-                           "void main() { \n"
-                           "   gl_Position = transform * i_Position0; \n"
-                           "   texcoords.xy = i_Position0.xy; \n"
-                           "}";
+const char * glsl_vscode = R"glsl(
+    #version 330
+    vec4 i_Position0;
+    varying vec2 texcoords;
+    uniform mat4 transform;
+    void main() {
+        gl_Position = transform * i_Position0;
+        texcoords.xy = i_Position0.xy;
+    }
+)glsl";
 
-const char * glsl_pscode = "uniform sampler2D t0; \n"
-                           "varying vec2 texcoords; \n"
-                           "void main() { \n"
-                           "   gl_FragColor = texture2D( t0, texcoords ); \n"
-                           "}";
+const char * glsl_pscode = R"glsl(
+    #version 330
+    uniform sampler2D t0;
+    varying vec2 texcoords;
+    void main() {
+        gl_FragColor = texture2D( t0, texcoords );
+    }
+)glsl";
 
 bool init(Gpu & gpu) {
     if (blankScreen) return true;
