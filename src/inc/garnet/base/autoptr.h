@@ -15,42 +15,53 @@ namespace detail {
 ///
 template<typename T, typename CLASS, typename MUTEX>
 class BaseAutoPtr {
-    T *                mPtr {};
-    mutable DoubleLink mLink {};
-    mutable MUTEX      mMutex {};
+    struct Payload {
+        T *                  ptr {};
+        std::atomic<int64_t> counter {1};
+    };
 
     typedef BaseAutoPtr<T, CLASS, MUTEX> MyType;
+
+    Payload *          mPayload {};
+    mutable std::mutex mMutex;
+
+    void doAttach(T * p) {
+        if (p) {
+            mPayload      = new Payload;
+            mPayload->ptr = p;
+        }
+    }
+
+    void doClear(bool releaseRawPtr = true) {
+        if (mPayload && 1 == mPayload->counter.fetch_sub(1)) {
+            if (releaseRawPtr) CLASS::sDoRelease(mPayload->ptr);
+            delete mPayload;
+            mPayload = nullptr;
+        }
+    }
 
 public:
     ///
     /// Construct from raw pointer
     ///
-    explicit BaseAutoPtr(T * p = nullptr) throw(): mPtr(p) {
-        mLink.context = this;
-    }
+    explicit BaseAutoPtr(T * p = nullptr) { doAttach(p); }
 
     ///
     /// Copy constructor
     ///
     BaseAutoPtr(const MyType & other) throw() {
-        mLink.context = this;
-        other.mMutex.lock();
-        mPtr = other.mPtr;
-        mLink.linkAfter(&other.mLink);
-        other.mMutex.unlock();
+        auto lock = std::lock_guard(other.mMutex);
+        mPayload  = other.mPayload;
+        if (mPayload) mPayload->counter.fetch_add(1);
     }
 
     ///
     /// Move constructor
     ///
     BaseAutoPtr(MyType && other) throw() {
-        mLink.context = this;
-        other.mMutex.lock();
-        mPtr = other.mPtr;
-        mLink.linkAfter(&other.mLink);
-        other.mLink.detach();
-        other.mPtr = 0;
-        other.mMutex.unlock();
+        auto lock      = std::lock_guard(other.mMutex);
+        mPayload       = other.mPayload;
+        other.mPayload = nullptr;
     }
 
     ///
@@ -61,74 +72,74 @@ public:
     ///
     /// Is pointer empty or not.
     ///
-    bool empty() const { return 0 == mPtr; }
+    bool empty() const { return 0 == mPayload; }
 
     ///
     /// Get internal C-style raw pointer
     ///
-    T * rawptr() const { return mPtr; }
+    T * rawptr() const {
+        auto lock = std::lock_guard(mMutex);
+        return mPayload ? mPayload->ptr : nullptr;
+    }
 
     ///
     /// clear internal pointer. Same as attach(0)
     ///
     void clear() {
-        mLink.detach();
-        CLASS::sDoRelease(mPtr);
-        mPtr = 0;
+        auto lock = std::lock_guard(mMutex);
+        doClear();
     }
 
     ///
     /// attach to new pointer (release the old one)
     ///
     void attach(T * p) {
-        if (p == mPtr) return;
-        clear();
-        mPtr = p;
+        auto lock = std::lock_guard(mMutex);
+        doClear();
+        doAttach(p);
     }
 
     ///
     /// Release ownership of private pointer
     ///
     T * detach() throw() {
-        T *  tmp  = mPtr;
-        mPtr      = 0;
+        auto lock = std::lock_guard(mMutex);
+        T *  tmp  = mPayload ? mPayload->ptr : nullptr;
+        doClear(false);
         return tmp;
     }
 
     ///
     /// dereference the pointer
     ///
-    T & dereference() const {
-        GN_ASSERT(mPtr);
-        return *mPtr;
-    }
+    T & dereference() const { return *rawptr(); }
 
     ///
     /// Convert to T *
     ///
-    operator T *() const { return mPtr; }
+    operator T *() const { return rawptr(); }
 
     ///
     /// dereference operator
     ///
-    T & operator*() const {
-        GN_ASSERT(mPtr);
-        return *mPtr;
-    }
+    T & operator*() const { return dereference(); }
 
     ///
     /// arrow operator
     ///
-    T * operator->() const { return mPtr; }
+    T * operator->() const { return rawptr(); }
 
     ///
     /// assignment operator
     ///
     MyType & operator=(const MyType & other) {
         if (this != &other) {
-            clear();
-            mPtr = other.mPtr;
-            mLink.linkAfter(&other.mLink);
+            auto lock = std::scoped_lock(mMutex, other.mMutex);
+            if (mPayload != other.mPayload) {
+                doClear();
+                mPayload = other.mPayload;
+                if (mPayload) mPayload->counter.fetch_add(1);
+            }
         }
         return *this;
     }
@@ -138,11 +149,12 @@ public:
     ///
     MyType & operator=(MyType && other) {
         if (this != &other) {
-            clear();
-            mPtr = other.mPtr;
-            mLink.linkAfter(&other.mLink);
-            other.mLink.detach();
-            other.mPtr = 0;
+            auto lock = std::scoped_lock(mMutex, other.mMutex);
+            if (mPayload != other.mPayload) {
+                doClear();
+                mPayload       = other.mPayload;
+                other.mPayload = nullptr;
+            }
         }
         return *this;
     }

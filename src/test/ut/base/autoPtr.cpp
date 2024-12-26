@@ -84,13 +84,16 @@ public:
     }
 
     void testMove() {
+        b = 0;
+
         GN::AutoObjPtr<S1> p1(new S1(1));
         GN::AutoObjPtr<S1> p2(std::move(p1));
         GN::AutoObjPtr<S1> p3 = std::move(p2);
         GN::AutoObjPtr<S1> p4;
         p4 = std::move(p3);
 
-        TS_ASSERT_EQUALS(1, b); // there should be only one object
+        TS_ASSERT_EQUALS(1, b); // there should be only one object constructed
+        TS_ASSERT_EQUALS(1, c); // there should be only one object alive
 
         p4.clear();
 
