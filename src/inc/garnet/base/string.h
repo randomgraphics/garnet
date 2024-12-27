@@ -345,11 +345,6 @@ public:
     }
 
     ///
-    /// return c-style const char pointer [[depreciated]]
-    ///
-    const CharType * data() const { return mPtr; }
-
-    ///
     /// return c-style const char pointer
     ///
     const CharType * data() const { return mPtr; }

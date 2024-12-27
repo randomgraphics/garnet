@@ -510,7 +510,7 @@ protected:
         if (FatMesh::NO_SKELETON != subset.skeleton) {
             const SkinnedMesh::Skeleton & sk = mOwner.mSkeletons[subset.skeleton];
 
-            Uniform * uniform = sk.matrices->uniform().data();
+            Uniform * uniform = sk.matrices->uniform().get();
 
             GN_ASSERT(uniform->size() >= sizeof(Matrix44f) * MAX_JOINTS_PER_DRAW);
             GN_ASSERT(subset.joints.size() <= MAX_JOINTS_PER_DRAW);

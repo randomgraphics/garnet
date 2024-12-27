@@ -121,7 +121,7 @@ public:
     const GpuProgramDesc & getDesc() const { return *(const GpuProgramDesc *) mBuffer.data(); }
 
     virtual void *   data() const { return (void *) mBuffer.data(); }
-    virtual uint32_t size() const { return (uint32) mBuffer.size(); }
+    virtual uint32_t size() const { return (uint32_t) mBuffer.size(); }
 };
 
 ///

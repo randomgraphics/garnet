@@ -254,7 +254,7 @@ static bool sLoadFromASE(FatModel & fatmodel, File & file, const StrA & filename
         if (src.idx32) {
             memcpy(dst.indices.data(), src.indices, src.numidx * 4);
         } else {
-            const uint16_t * s = (const uint16 *) src.indices;
+            const uint16_t * s = (const uint16_t *) src.indices;
             uint32_t *       d = dst.indices.data();
             for (size_t i = 0; i < src.numidx; ++i, ++s, ++d) { *d = *s; }
         }

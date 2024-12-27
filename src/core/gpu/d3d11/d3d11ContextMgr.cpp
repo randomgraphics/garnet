@@ -254,7 +254,7 @@ inline bool GN::gfx::D3D11Gpu::bindContextShader(const GpuContext & newContext, 
         GN_CASSERT(sizeof(AutoRef<Uniform>) == sizeof(Uniform *));
 
         // apply GPU program resources
-        newProg->applyUniforms((const Uniform * const *) newContext.uniforms.data(), (uint32) newContext.uniforms.size(), skipDirtyCheck);
+        newProg->applyUniforms((const Uniform * const *) newContext.uniforms.data(), (uint32_t) newContext.uniforms.size(), skipDirtyCheck);
         newProg->applyTextures(newContext.textures.data(), (uint32_t) newContext.textures.size(), skipDirtyCheck);
     } else if (skipDirtyCheck || (NULL != mContext.gpuProgram)) {
         mDeviceContext->VSSetShader(NULL, NULL, 0);

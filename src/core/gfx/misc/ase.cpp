@@ -1299,7 +1299,7 @@ static bool sWriteGeoObject(AseScene & dst, const AseSceneInternal & src, const 
     dstmesh.numidx = (uint32_t) ib.size();
     if (vc.size() > 0x10000) {
         // 32bit index buffer
-        blob = referenceTo(new SimpleBlob((uint32) (sizeof(uint32_t) * ib.size())));
+        blob = referenceTo(new SimpleBlob((uint32_t) (sizeof(uint32_t) * ib.size())));
         memcpy(blob->data(), ib.data(), blob->size());
         dstmesh.idx32   = true;
         dstmesh.indices = blob->data();

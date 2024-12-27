@@ -600,8 +600,8 @@ void GN::gfx::D3D11GpuProgramHLSL::sUpdateD3D11ConstData(const D3D11UniformParam
         GN_WARN(sLogger)("parameter %s: value size(%d) differs from size defined in shader code(%d).", desc.name, uniform.size(), desc.size);
     }
 
-    DynaArray<uint8> &               cb = cbarray[ssp.cbidx];
-    SafeArrayAccessor<const uint8_t> src((const uint8 *) uniform.getval(), uniform.size());
+    DynaArray<uint8_t> &             cb = cbarray[ssp.cbidx];
+    SafeArrayAccessor<const uint8_t> src((const uint8_t *) uniform.getval(), uniform.size());
     SafeArrayAccessor<uint8_t>       dst(cb.data(), cb.size());
 
     // copy uniform data to system const buffer
