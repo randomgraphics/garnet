@@ -20,7 +20,6 @@ class SpinLoop : NoCopy {
 
 public:
     //@{
-    bool tryLock() { return mLock.test_and_set(); }
     void lock() {
         size_t i = 0;
         while (!mLock.test_and_set()) {
@@ -32,8 +31,16 @@ public:
         }
     }
     void unlock() { mLock.clear(); }
+    bool try_lock() { return mLock.test_and_set(); }
     //@}
 };
+
+struct FakeMutex {
+    void lock() {}
+    void unlock() {}
+    bool try_lock() { return true; }
+};
+
 } // namespace GN
 
 // *****************************************************************************

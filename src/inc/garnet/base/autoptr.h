@@ -10,6 +10,7 @@
 
 namespace GN {
 namespace detail {
+
 ///
 /// Basic auto pointer class. STL compatible and thread safe.
 ///
@@ -22,11 +23,12 @@ class BaseAutoPtr {
 
     typedef BaseAutoPtr<T, CLASS, MUTEX> MyType;
 
-    Payload *          mPayload {};
-    mutable std::mutex mMutex;
+    Payload *     mPayload {};
+    mutable MUTEX mMutex;
 
     void doAttach(T * p) {
         if (p) {
+            // TODO: use object pool, or double linked list, to avoid dynamic memory allocation.
             mPayload      = new Payload;
             mPayload->ptr = p;
         }
@@ -165,7 +167,7 @@ public:
 ///
 /// Automatic X resource pointer
 ///
-template<typename T, typename MUTEX = std::mutex>
+template<typename T, typename MUTEX = FakeMutex>
 class AutoXPtr : public detail::BaseAutoPtr<T, AutoXPtr<T>, MUTEX> {
 public:
     static void sDoRelease(T * p) {
@@ -182,7 +184,7 @@ public:
 ///
 /// Automatic object pointer.
 ///
-template<typename T, typename MUTEX = std::mutex>
+template<typename T, typename MUTEX = FakeMutex>
 class AutoObjPtr : public detail::BaseAutoPtr<T, AutoObjPtr<T>, MUTEX> {
 public:
     static void sDoRelease(T * p) {
@@ -198,7 +200,7 @@ public:
 ///
 /// Automatic object array.
 ///
-template<typename T, typename MUTEX = std::mutex>
+template<typename T, typename MUTEX = FakeMutex>
 class AutoObjArray : public detail::BaseAutoPtr<T, AutoObjArray<T>, MUTEX> {
 public:
     static void sDoRelease(T * p) {
@@ -214,7 +216,7 @@ public:
 ///
 /// Automatic C-style array created by HeapMemory::alloc.
 ///
-template<typename T, typename MUTEX = std::mutex>
+template<typename T, typename MUTEX = FakeMutex>
 class AutoHeapPtr : public detail::BaseAutoPtr<T, AutoHeapPtr<T>, MUTEX> {
 public:
     static void sDoRelease(T * p) {
@@ -228,12 +230,16 @@ public:
 };
 
 ///
-/// Automatic COM pointer class. STL compatible and thread safe.
+/// Automatic COM pointer class. STL compatible. To make it thread safe, use std::mutex as the 2nd template argument.
 ///
-template<class T>
-class AutoComPtr {
-    T *                mPtr;
-    mutable std::mutex mMutex;
+template<class T, class MUTEX = FakeMutex>
+class AutoComPtr : private MUTEX {
+    T * mPtr;
+
+    MUTEX & mutex() const {
+        const MUTEX * m = this;
+        return const_cast<MUTEX &>(*m);
+    }
 
 public:
     ///
@@ -252,7 +258,7 @@ public:
     /// Copy constructor
     ///
     AutoComPtr(const AutoComPtr & other) throw() {
-        auto lock = std::lock_guard(other.mMutex);
+        auto lock = std::lock_guard(other.mutex());
         mPtr      = other.mPtr;
         if (mPtr) mPtr->AddRef();
     }
@@ -262,7 +268,7 @@ public:
     ///
     template<typename T2>
     AutoComPtr(const AutoComPtr<T2> & other) throw() {
-        auto lock = std::lock_guard(other.mMutex);
+        auto lock = std::lock_guard(other.mutex());
         mPtr      = other.mPtr;
         if (mPtr) mPtr->AddRef();
     }
@@ -355,7 +361,7 @@ public:
     /// Clear to empty. Same as set(NULL).
     ///
     void clear() {
-        auto lock = std::lock_guard(mMutex);
+        auto lock = std::lock_guard(mutex());
         if (mPtr) mPtr->Release();
         mPtr = 0;
     }
@@ -375,7 +381,7 @@ public:
     ///
     template<typename T2>
     void set(T2 * p) throw() {
-        auto lock = std::lock_guard(mMutex);
+        auto lock = std::lock_guard(mutex());
         if (p) p->AddRef();
         if (mPtr) mPtr->Release();
         mPtr = p;
@@ -386,7 +392,7 @@ public:
     ///
     template<typename T2>
     void attach(T2 * p2) throw() {
-        auto lock = std::lock_guard(mMutex);
+        auto lock = std::lock_guard(mutex());
         if (mPtr) mPtr->Release();
         mPtr = p2;
     }
@@ -404,7 +410,7 @@ public:
     /// Detach the interface (does not Release)
     ///
     T * detach() throw() {
-        auto lock = std::lock_guard(mMutex);
+        auto lock = std::lock_guard(mutex());
         T *  pt   = mPtr;
         mPtr      = NULL;
         return pt;
@@ -416,6 +422,7 @@ public:
     ///
     template<typename T2>
     long as(T2 ** ppResult) throw() {
+        auto lock = std::lock_guard(mutex());
         if (!ppResult) {
             return 0x80000003; // E_INVALIDARG
         }
@@ -434,12 +441,14 @@ public:
     ///
     template<typename T2>
     AutoComPtr<T2> as() throw() {
+        auto           lock = std::lock_guard(mutex());
         AutoComPtr<T2> result;
         if (mPtr) mPtr->QueryInterface<T2>(&result);
         return result;
     }
 #endif
 };
+
 } // namespace GN
 
 // *****************************************************************************
