@@ -1,12 +1,21 @@
 #include "../testCommon.h"
 
 class AutoPtrTest : public CxxTest::TestSuite {
-    static int a;
+    inline static int a = 0;
+    inline static int b = 0;
+    inline static int c = 0;
 
     struct S1 {
         int a;
-        S1(int i) { AutoPtrTest::a = a = i; }
-        ~S1() { AutoPtrTest::a = 0; }
+        S1(int i) {
+            AutoPtrTest::a = a = i;
+            ++b;
+            ++c;
+        }
+        ~S1() {
+            AutoPtrTest::a = 0;
+            --c;
+        }
     };
 
 public:
@@ -47,6 +56,51 @@ public:
         TS_ASSERT(!p2);
     }
 
+    void testCopy() {
+        GN::AutoObjPtr<S1> p1(new S1(1));
+        GN::AutoObjPtr<S1> p2(p1);
+        GN::AutoObjPtr<S1> p3 = p1;
+        GN::AutoObjPtr<S1> p4;
+        p4 = p1;
+
+        TS_ASSERT_EQUALS(1, c); // there should be only one object
+
+        TS_ASSERT_EQUALS(1, p1->a);
+        TS_ASSERT_EQUALS(1, p2->a);
+        TS_ASSERT_EQUALS(1, p3->a);
+        TS_ASSERT_EQUALS(1, p4->a);
+
+        p1.clear();
+        p2.attach(nullptr);
+        p3.clear();
+
+        // p4 is the only one holding the object
+        TS_ASSERT_EQUALS(1, p4->a);
+
+        p4.clear();
+
+        // object should be deleted
+        TS_ASSERT_EQUALS(0, c);
+    }
+
+    void testMove() {
+        b = 0;
+
+        GN::AutoObjPtr<S1> p1(new S1(1));
+        GN::AutoObjPtr<S1> p2(std::move(p1));
+        GN::AutoObjPtr<S1> p3 = std::move(p2);
+        GN::AutoObjPtr<S1> p4;
+        p4 = std::move(p3);
+
+        TS_ASSERT_EQUALS(1, b); // there should be only one object constructed
+        TS_ASSERT_EQUALS(1, c); // there should be only one object alive
+
+        p4.clear();
+
+        // object should be deleted
+        TS_ASSERT_EQUALS(0, c);
+    }
+
     struct FakeComClass {
         int ref;
 
@@ -83,4 +137,3 @@ public:
         TS_ASSERT_EQUALS(c.ref, 0);
     }
 };
-int AutoPtrTest::a;

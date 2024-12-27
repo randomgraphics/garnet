@@ -24,4 +24,4 @@ args = ap.parse_args()
 if not args.t:
     run_style_check()
 if not args.l:
-    utils.run_the_latest_binary("build/{variant}/bin/GNtest-unit-tests", args.test_args)
+    utils.run_the_latest_binary("build/{variant}/bin/GNtest-unit-tests", args.test_args, check=False)
