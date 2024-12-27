@@ -15,13 +15,13 @@ static ModelResourceDesc sNormalMapModelDesc() {
     md.textures["ALBEDO_TEXTURE"].resourceName = "@WHITE";
     md.textures["NORMAL_TEXTURE"].resourceName = "@FLAT_NORMAL_MAP";
 
-#define INIT_UNIFORM(name, type, defval)                                     \
-    if (1) {                                                                 \
-        md.uniforms[name].size = sizeof(type);                               \
-        md.uniforms[name].initialValue.resize(sizeof(type));                 \
-        type def = (defval);                                                 \
+#define INIT_UNIFORM(name, type, defval)                                   \
+    if (1) {                                                               \
+        md.uniforms[name].size = sizeof(type);                             \
+        md.uniforms[name].initialValue.resize(sizeof(type));               \
+        type def = (defval);                                               \
         memcpy(md.uniforms[name].initialValue.data(), &def, sizeof(type)); \
-    } else                                                                   \
+    } else                                                                 \
         void(0)
 
     INIT_UNIFORM("MATRIX_PVW", Matrix44f, Matrix44f::sIdentity());

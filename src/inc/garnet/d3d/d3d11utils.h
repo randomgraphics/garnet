@@ -20,14 +20,14 @@
 
 /// HRESULT error check macros
 //@{
-#define GN_DO_ON_HR_FAILED(func, do_something)                                                                                       \
-    if (true) {                                                                                                                      \
-        HRESULT __hr = func;                                                                                                         \
-        if (FAILED(__hr)) {                                                                                                          \
+#define GN_DO_ON_HR_FAILED(func, do_something)                                                                                     \
+    if (true) {                                                                                                                    \
+        HRESULT __hr = func;                                                                                                       \
+        if (FAILED(__hr)) {                                                                                                        \
             GN_ERROR(::GN::getLogger("GN.d3d11utils"))("HRESULT failed: (0x%X) %S", __hr, GN::d3d11::hresult2string(__hr).data()); \
-            do_something                                                                                                             \
-        }                                                                                                                            \
-    } else                                                                                                                           \
+            do_something                                                                                                           \
+        }                                                                                                                          \
+    } else                                                                                                                         \
         void(0)
 #if GN_BUILD_DEBUG_ENABLED
     #define GN_CHECK_HR(func) GN_DO_ON_HR_FAILED(func, )

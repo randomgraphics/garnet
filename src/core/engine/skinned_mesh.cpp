@@ -20,13 +20,13 @@ static GN::Logger * sLogger = GN::getLogger("GN.engine");
 //
 //
 // -----------------------------------------------------------------------------
-#define INIT_UNIFORM(name, type, defval)                                     \
-    if (1) {                                                                 \
-        md.uniforms[name].size = sizeof(type);                               \
-        md.uniforms[name].initialValue.resize(sizeof(type));                 \
-        type def defval;                                                     \
+#define INIT_UNIFORM(name, type, defval)                                   \
+    if (1) {                                                               \
+        md.uniforms[name].size = sizeof(type);                             \
+        md.uniforms[name].initialValue.resize(sizeof(type));               \
+        type def defval;                                                   \
         memcpy(md.uniforms[name].initialValue.data(), &def, sizeof(type)); \
-    } else                                                                   \
+    } else                                                                 \
         void(0)
 
 //

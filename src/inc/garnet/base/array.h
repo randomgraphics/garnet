@@ -55,7 +55,7 @@ public:
 };
 
 ///
-/// Resizeable array array completely allocated on stack. No heap allocation. Support commonly used
+/// Resizable array array completely allocated on stack. No heap allocation. Support commonly used
 /// array operations like push, pop, insert, remove and etc.
 ///
 /// \todo Fix issues using with class with non-trival constructor and destructor
@@ -261,7 +261,7 @@ public:
 };
 
 ///
-/// Resizeable array.
+/// Resizable array.
 ///
 template<class T, typename SIZE_TYPE = size_t, class OBJECT_ALLOCATOR = CxxObjectAllocator<T>>
 class DynaArray {
@@ -595,8 +595,6 @@ public:
     void      clear() { doClear(); }
     const T * data() const { return mElements; }
     T *       data() { return mElements; }
-    const T * data() const { return mElements; } // obsolete
-    T *       data() { return mElements; }       // oboslete
     bool      empty() const { return 0 == GetCount(); }
     const T * end() const { return mElements + GetCount(); }
     T *       end() { return mElements + GetCount(); }
