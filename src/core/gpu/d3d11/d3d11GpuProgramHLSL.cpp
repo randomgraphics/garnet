@@ -90,15 +90,15 @@ void GN::gfx::D3D11GpuProgramParameterDesc::clear() {
 //
 // -----------------------------------------------------------------------------
 void GN::gfx::D3D11GpuProgramParameterDesc::buildParameterArrays() {
-    mUniformArray       = mUniforms.rawptr();
+    mUniformArray       = mUniforms.data();
     mUniformCount       = (uint32_t) mUniforms.size();
     mUniformArrayStride = (uint32_t) sizeof(mUniforms[0]);
 
-    mTextureArray       = mTextures.rawptr();
+    mTextureArray       = mTextures.data();
     mTextureCount       = (uint32_t) mTextures.size();
     mTextureArrayStride = (uint32_t) sizeof(mTextures[0]);
 
-    mAttributeArray       = mAttributes.rawptr();
+    mAttributeArray       = mAttributes.data();
     mAttributeCount       = (uint32_t) mAttributes.size();
     mAttributeArrayStride = (uint32_t) sizeof(mAttributes[0]);
 }
@@ -415,7 +415,7 @@ void GN::gfx::D3D11GpuProgramHLSL::applyUniforms(const Uniform * const * uniform
             if (skipDirtyCheck || constDirty[s][i]) {
                 ID3D11Buffer &             buf  = *mShaders[s].constBufs[i];
                 const DynaArray<uint8_t> & data = mShaders[s].constData[i];
-                sUpdateD3D11ConstBuffer(cxt, buf, data.rawptr(), data.size());
+                sUpdateD3D11ConstBuffer(cxt, buf, data.data(), data.size());
             }
         }
     }
@@ -445,7 +445,7 @@ void GN::gfx::D3D11GpuProgramHLSL::applyTextures(const TextureBinding * bindings
     for (size_t i = 0; i < count; ++i) {
         const TextureBinding & tb = bindings[i];
 
-        D3D11Texture * tex = (D3D11Texture *) tb.texture.rawptr();
+        D3D11Texture * tex = (D3D11Texture *) tb.texture.data();
 
         if (tex) {
             const D3D11TextureParameterDesc & texParam = (const D3D11TextureParameterDesc &) mParamDesc.textures[i];
@@ -602,7 +602,7 @@ void GN::gfx::D3D11GpuProgramHLSL::sUpdateD3D11ConstData(const D3D11UniformParam
 
     DynaArray<uint8_t> &             cb = cbarray[ssp.cbidx];
     SafeArrayAccessor<const uint8_t> src((const uint8_t *) uniform.getval(), uniform.size());
-    SafeArrayAccessor<uint8_t>       dst(cb.rawptr(), cb.size());
+    SafeArrayAccessor<uint8_t>       dst(cb.data(), cb.size());
 
     // copy uniform data to system const buffer
     src.copyTo(0,          // src offset

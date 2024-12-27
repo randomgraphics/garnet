@@ -167,7 +167,7 @@ struct GN_API XmlElement : public XmlNode {
             if (str::SENSITIVE == scc) {
                 if (name_ == a->name) return a;
             } else {
-                if (0 == str::compareI(name_.rawptr(), a->name.rawptr())) return a;
+                if (0 == str::compareI(name_.data(), a->name.data())) return a;
             }
         }
         return NULL;
@@ -184,7 +184,7 @@ struct GN_API XmlElement : public XmlNode {
             if (str::SENSITIVE == scc) {
                 if (name_ == e->name) return e;
             } else {
-                if (0 == str::compareI(name_.rawptr(), e->name.rawptr())) return e;
+                if (0 == str::compareI(name_.data(), e->name.data())) return e;
             }
         }
         return NULL;
@@ -296,7 +296,7 @@ inline bool loadFromXmlFile(T & t, File & fp, const StrA & basedir) {
          "    line   : %d\n"
          "    column : %d\n"
          "    error  : %s",
-         fp.name().rawptr(), xpr.errLine, xpr.errColumn, xpr.errInfo.rawptr());
+         fp.name().data(), xpr.errLine, xpr.errColumn, xpr.errInfo.data());
         return false;
     }
     GN_ASSERT(xpr.root);
@@ -313,7 +313,7 @@ inline bool loadFromXmlFile(T & t, const StrA & filename) {
     GN_GUARD;
 
     static Logger * sLocalLogger = getLogger("GN.base.xml");
-    GN_INFO(sLocalLogger)("Load '%s'", filename.rawptr());
+    GN_INFO(sLocalLogger)("Load '%s'", filename.data());
 
     auto fp = fs::openFile(filename, std::ios::in);
     if (!fp) return false;

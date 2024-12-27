@@ -2,18 +2,18 @@
 ====
 
 - Mordenization:
+  - Retain custom containers (such as string and array) in case we need to avoid dependencies to STL
+    - like when used as part of interface of shared library.
+  - cleanup File class
+    - has to keep dependencies to STL stream, due to << and >> template operators.
+  - Make AutoPtr be compatible with STL (support copy & move): using linked list.
   - depreicate/remove some old old code: like guard, icl support
   - update 3rd party libraries using submodule:
     - ft2
-  - replace custom types with standard STL types:
-    - AutoObjPtr
-    - custom containers: array, hashmap, dict
-    - string: TBD
-    - File -> std::iostream
   - replace some custom classes with 3rdparty library:
     - math
     - delegate
-    - Spinlook=p -> std::mutex
+    - Spinlock -> std::mutex
     - custom log -> spdlog (https://github.com/gabime/spdlog)
     - format -> fmtlib (https://github.com/fmtlib/fmt )
   - something keepers:

@@ -20,13 +20,13 @@ static GN::Logger * sLogger = GN::getLogger("GN.engine");
 //
 //
 // -----------------------------------------------------------------------------
-#define INIT_UNIFORM(name, type, defval)                                     \
-    if (1) {                                                                 \
-        md.uniforms[name].size = sizeof(type);                               \
-        md.uniforms[name].initialValue.resize(sizeof(type));                 \
-        type def defval;                                                     \
-        memcpy(md.uniforms[name].initialValue.rawptr(), &def, sizeof(type)); \
-    } else                                                                   \
+#define INIT_UNIFORM(name, type, defval)                                   \
+    if (1) {                                                               \
+        md.uniforms[name].size = sizeof(type);                             \
+        md.uniforms[name].initialValue.resize(sizeof(type));               \
+        type def defval;                                                   \
+        memcpy(md.uniforms[name].initialValue.data(), &def, sizeof(type)); \
+    } else                                                                 \
         void(0)
 
 //
@@ -510,7 +510,7 @@ protected:
         if (FatMesh::NO_SKELETON != subset.skeleton) {
             const SkinnedMesh::Skeleton & sk = mOwner.mSkeletons[subset.skeleton];
 
-            Uniform * uniform = sk.matrices->uniform().rawptr();
+            Uniform * uniform = sk.matrices->uniform().get();
 
             GN_ASSERT(uniform->size() >= sizeof(Matrix44f) * MAX_JOINTS_PER_DRAW);
             GN_ASSERT(subset.joints.size() <= MAX_JOINTS_PER_DRAW);
@@ -646,7 +646,7 @@ void GN::engine::SkinnedMesh::setAnimation(size_t animationIndex, float seconds)
             }
 
             /* And the bind pose -> rest pose transformation should be identity.
-            Uniform * uniform = sk.matrices->uniform().rawptr();
+            Uniform * uniform = sk.matrices->uniform().data();
             GN_ASSERT( uniform->size() >= sizeof(identityMatrices) );
             uniform->update( 0, (uint32_t)sizeof(identityMatrices), identityMatrices );*/
         }
@@ -717,7 +717,7 @@ void GN::engine::SkinnedMesh::setAnimation(size_t animationIndex, float seconds)
             }
 
             /* update the matrix uniform.
-            Uniform * uniform = sk.matrices->uniform().rawptr();
+            Uniform * uniform = sk.matrices->uniform().data();
             GN_ASSERT( uniform->size() >= sizeof(Matrix44f)*MAX_JOINTS_PER_DRAW );
             size_t bytes = sizeof(Matrix44f) * math::getmin<size_t>(MAX_JOINTS_PER_DRAW,sk.jointCount);
             uniform->update( 0, (uint32_t)bytes, matrices );*/
@@ -750,7 +750,7 @@ bool GN::engine::SkinnedMesh::loadFromFatModel(const GN::gfx::FatModel & fatmode
 
     // Load skeleton array
     mSkeletons.resize(fatmodel.skeletons.size());
-    memset(mSkeletons.rawptr(), 0, sizeof(Skeleton) * mSkeletons.size());
+    memset(mSkeletons.data(), 0, sizeof(Skeleton) * mSkeletons.size());
     for (uint32_t i = 0; i < fatmodel.skeletons.size(); ++i) {
         const FatSkeleton & source = fatmodel.skeletons[i];
 
@@ -823,7 +823,7 @@ bool GN::engine::SkinnedMesh::loadFromFatModel(const GN::gfx::FatModel & fatmode
     for (uint32_t mi = 0; mi < fatmodel.meshes.size(); ++mi) {
         const auto & fatmesh = fatmodel.meshes[mi];
 
-        StrA meshName = str::format("%s.mesh.%d", fatmodel.name.rawptr(), mi);
+        StrA meshName = str::format("%s.mesh.%d", fatmodel.name.data(), mi);
 
         // use exising mesh, if possible
         AutoRef<MeshResource> mesh = gdb.findResource<MeshResource>(meshName);
@@ -835,7 +835,7 @@ bool GN::engine::SkinnedMesh::loadFromFatModel(const GN::gfx::FatModel & fatmode
             merd.numidx     = fatmesh.indices.size();
             merd.idx32      = true; // TODO: use 16-bit index buffer, when possible.
             merd.offsets[0] = 0;
-            merd.indices    = (void *) fatmesh.indices.rawptr();
+            merd.indices    = (void *) fatmesh.indices.data();
 
             // setup vertex format
             fatmesh.vertices.GenerateMeshVertexFormat(merd.vtxfmt);
@@ -843,8 +843,8 @@ bool GN::engine::SkinnedMesh::loadFromFatModel(const GN::gfx::FatModel & fatmode
 
             // copy vertex data
             if (!vb.resize(merd.strides[0] * fatmesh.vertices.getVertexCount())) continue;
-            if (!fatmesh.vertices.GenerateVertexStream(merd.vtxfmt, 0, merd.strides[0], vb.rawptr(), vb.size())) continue;
-            merd.vertices[0] = vb.rawptr();
+            if (!fatmesh.vertices.GenerateVertexStream(merd.vtxfmt, 0, merd.strides[0], vb.data(), vb.size())) continue;
+            merd.vertices[0] = vb.data();
 
             // convert integer joint index to floats to workaround hardware liminations (not all hardware supports integer
             // vertex elements)
@@ -890,7 +890,7 @@ bool GN::engine::SkinnedMesh::loadFromFatModel(const GN::gfx::FatModel & fatmode
             uint32_t jointCountInTheSubset = fatsubset.joints.size();
             if (jointCountInTheSubset > MAX_JOINTS_PER_DRAW) {
                 GN_ERROR(sLogger)
-                ("Ignore mesh %s subset %d. It contains too many joints (#%d) then the current code allowed (#%d)", meshName.rawptr(), s, jointCountInTheSubset,
+                ("Ignore mesh %s subset %d. It contains too many joints (#%d) then the current code allowed (#%d)", meshName.data(), s, jointCountInTheSubset,
                  MAX_JOINTS_PER_DRAW);
                 continue;
             }

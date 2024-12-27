@@ -143,7 +143,7 @@ public:
     ///
     /// get the raw pointer
     ///
-    XPTR rawptr() const { return (XPTR) mPtr; }
+    XPTR data() const { return (XPTR) mPtr; }
 
     ///
     /// check for empty reference

@@ -14,13 +14,13 @@ static ModelResourceDesc sDiffuseModelDesc() {
 
     md.textures["ALBEDO_TEXTURE"].resourceName = "@WHITE";
 
-#define INIT_UNIFORM(name, type, defval)                                     \
-    if (1) {                                                                 \
-        md.uniforms[name].size = sizeof(type);                               \
-        md.uniforms[name].initialValue.resize(sizeof(type));                 \
-        type def = (defval);                                                 \
-        memcpy(md.uniforms[name].initialValue.rawptr(), &def, sizeof(type)); \
-    } else                                                                   \
+#define INIT_UNIFORM(name, type, defval)                                   \
+    if (1) {                                                               \
+        md.uniforms[name].size = sizeof(type);                             \
+        md.uniforms[name].initialValue.resize(sizeof(type));               \
+        type def = (defval);                                               \
+        memcpy(md.uniforms[name].initialValue.data(), &def, sizeof(type)); \
+    } else                                                                 \
         void(0)
 
     INIT_UNIFORM("MATRIX_PVW", Matrix44f, Matrix44f::sIdentity());

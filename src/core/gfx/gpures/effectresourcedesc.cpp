@@ -65,9 +65,9 @@ static RESULT_TYPE sParseEnum(const char * name, const EnumNames * table, const 
 static void sPostError(const XmlNode & node, const StrA & msg) {
     const XmlElement * e = node.toElement();
     if (e) {
-        GN_ERROR(sLogger)("Effect XML error: element <%s> - %s", e->name.rawptr(), msg.rawptr());
+        GN_ERROR(sLogger)("Effect XML error: element <%s> - %s", e->name.data(), msg.data());
     } else {
-        GN_ERROR(sLogger)("Effect XML error: %s", msg.rawptr());
+        GN_ERROR(sLogger)("Effect XML error: %s", msg.data());
     }
 }
 
@@ -77,9 +77,9 @@ static void sPostError(const XmlNode & node, const StrA & msg) {
 static void sPostWarning(const XmlNode & node, const StrA & msg) {
     const XmlElement * e = node.toElement();
     if (e) {
-        GN_WARN(sLogger)("Effect XML warning: element <%s> - %s", e->name.rawptr(), msg.rawptr());
+        GN_WARN(sLogger)("Effect XML warning: element <%s> - %s", e->name.data(), msg.data());
     } else {
-        GN_WARN(sLogger)("Effect XML warning: %s", msg.rawptr());
+        GN_WARN(sLogger)("Effect XML warning: %s", msg.data());
     }
 }
 
@@ -88,7 +88,7 @@ static void sPostWarning(const XmlNode & node, const StrA & msg) {
 // -----------------------------------------------------------------------------
 static const char * sGetAttrib(const XmlElement & node, const char * attribName, const char * defaultValue = NULL) {
     const XmlAttrib * a = node.findAttrib(attribName);
-    return a ? a->value.rawptr() : defaultValue;
+    return a ? a->value.data() : defaultValue;
 }
 
 //
@@ -100,7 +100,7 @@ static T sGetIntAttrib(const XmlElement & node, const char * attribName, T defau
 
     T result;
 
-    if (!a || 0 == str::toInetger<T>(result, a->value.rawptr()))
+    if (!a || 0 == str::toInetger<T>(result, a->value.data()))
         return defaultValue;
     else
         return result;
@@ -113,9 +113,9 @@ static bool sGetBoolAttrib(const XmlElement & node, const char * attribName, boo
     const XmlAttrib * a = node.findAttrib(attribName);
     if (!a) return defaultValue;
 
-    if (0 == str::compareI("1", a->value.rawptr()) || 0 == str::compareI("true", a->value.rawptr())) {
+    if (0 == str::compareI("1", a->value.data()) || 0 == str::compareI("true", a->value.data())) {
         return true;
-    } else if (0 == str::compareI("0", a->value.rawptr()) || 0 == str::compareI("false", a->value.rawptr())) {
+    } else if (0 == str::compareI("0", a->value.data()) || 0 == str::compareI("false", a->value.data())) {
         return false;
     } else {
         return defaultValue;
@@ -131,7 +131,7 @@ static const char * sGetItemName(const XmlElement & node, const char * nodeType)
         sPostError(node, str::format("Unnamed %s node. Ignored.", nodeType));
         return 0;
     }
-    return a->value.rawptr();
+    return a->value.data();
 }
 
 //
@@ -221,7 +221,7 @@ static void sParseParameters(EffectResourceDesc & desc, const XmlNode & root) {
         else if ("attribute" == e->name)
             sParseAttribute(desc, *e);
         else
-            sPostError(*e, str::format("Unknown parameter '%s'. Ignored", e->name.rawptr()));
+            sPostError(*e, str::format("Unknown parameter '%s'. Ignored", e->name.data()));
     }
 }
 
@@ -283,7 +283,7 @@ static void sParseCode(EffectGpuProgramDesc & sd, ShaderCode & code, const XmlEl
         const XmlCdata * c = n->toCdata();
         if (c) {
             size_t offset = sd.shaderSourceBuffer.size();
-            sd.shaderSourceBuffer.append(c->text.rawptr(), c->text.size() + 1);
+            sd.shaderSourceBuffer.append(c->text.data(), c->text.size() + 1);
             code.source = (const char *) offset;
             break;
         }
@@ -344,7 +344,7 @@ static void sParseGpuProgram(EffectResourceDesc & desc, const XmlElement & node)
             GN_UNEXPECTED();
             break;
         };
-        sPostWarning(node, str::format("shaderModel attribute is missing. Assume: %s", ShaderModel::sToString(sd.gpd.shaderModels).rawptr()));
+        sPostWarning(node, str::format("shaderModel attribute is missing. Assume: %s", ShaderModel::sToString(sd.gpd.shaderModels).data()));
     } else {
         sd.gpd.shaderModels = ShaderModel::sFromString(models);
         if (0 == sd.gpd.shaderModels) {
@@ -380,7 +380,7 @@ static void sParseGpuProgram(EffectResourceDesc & desc, const XmlElement & node)
     }
 
     // convert all shader source offsets to pointers
-    const char * start = sd.shaderSourceBuffer.rawptr();
+    const char * start = sd.shaderSourceBuffer.data();
     if (sd.gpd.vs.source) sd.gpd.vs.source += (size_t) start;
     if (sd.gpd.vs.entry) sd.gpd.vs.entry += (size_t) start;
     if (sd.gpd.gs.source) sd.gpd.gs.source += (size_t) start;
@@ -422,8 +422,8 @@ static void sParseRenderStates(EffectResourceDesc::EffectRenderStateDesc & rsdes
                                                 ENUM_TABLE_END};
 
     for (const XmlAttrib * a = node.firsta; a; a = a->next) {
-        const char * rsname  = a->name.rawptr();
-        const char * rsvalue = a->value.rawptr();
+        const char * rsname  = a->name.data();
+        const char * rsvalue = a->value.data();
 
         if (0 == str::compareI("CULL_MODE", rsname)) {
             rsdesc.cullMode = sParseEnum(rsvalue, CULL_MODE_TABLE, GpuContext::CULL_BACK);
@@ -519,11 +519,11 @@ static void sParseTechniques(EffectResourceDesc & desc, const XmlElement & node)
 static void sCopyShaderSourcePtr(const char *& to, const DynaArray<char> & tobuf, const char * from, const DynaArray<char> & frombuf) {
     GN_ASSERT(tobuf.size() == frombuf.size());
 
-    const char * s = frombuf.rawptr();
+    const char * s = frombuf.data();
     const char * e = s + frombuf.size();
 
     if (s <= from && from < e) {
-        to = tobuf.rawptr() + (from - s);
+        to = tobuf.data() + (from - s);
     } else {
         to = from;
     }

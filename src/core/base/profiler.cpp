@@ -56,7 +56,7 @@ GN_API GN::ProfilerManager::~ProfilerManager() {
     // print profile result
     StrA s;
     toString(s);
-    printf("%s\n", s.rawptr());
+    printf("%s\n", s.data());
 #endif
 }
 
@@ -82,8 +82,8 @@ GN_API void GN::ProfilerManager::toString(GN::StrA & rval) const {
         rval += GN::str::format("    %s :\n"
                                 "        count(%d), sum(%s), ave(%s), min(%s), max(%s)\n"
                                 "\n",
-                                i->key, t.count, sTime2Str(t.timesum).rawptr(), sTime2Str(0 == t.count ? 0 : (t.timesum / t.count)).rawptr(),
-                                sTime2Str(0 == t.count ? 0 : t.timemin).rawptr(), sTime2Str(0 == t.count ? 0 : t.timemax).rawptr());
+                                i->key, t.count, sTime2Str(t.timesum).data(), sTime2Str(0 == t.count ? 0 : (t.timesum / t.count)).data(),
+                                sTime2Str(0 == t.count ? 0 : t.timemin).data(), sTime2Str(0 == t.count ? 0 : t.timemax).data());
     }
     rval += "=====================================================================\n"
             "\n";

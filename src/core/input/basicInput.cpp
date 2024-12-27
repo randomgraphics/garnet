@@ -84,14 +84,14 @@ void GN::input::BasicInput::triggerCharPress(char ch) {
 
     if ((unsigned char) ch < 128) {
         // ASCII character
-        // GN_TRACE( "Char press: %s", StrA(&ch,1).rawptr() );
+        // GN_TRACE( "Char press: %s", StrA(&ch,1).data() );
         sigCharPress(ch);
     } else if (mHalfWideChar) {
         mHalfBytes[1] = ch;
         wchar_t wch[2];
         mbs2wcs(wch, 2, mHalfBytes, 2);
 
-        // GN_TRACE( "Char press: %s", StrA(mHalfBytes,2).rawptr() );
+        // GN_TRACE( "Char press: %s", StrA(mHalfBytes,2).data() );
         sigCharPress(wch[0]);
 
         // 清除“半字符”标志

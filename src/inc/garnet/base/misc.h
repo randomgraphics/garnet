@@ -161,7 +161,7 @@ inline StrA getEnv(const char * name) {
 inline bool getEnvBoolean(const char * name) {
     StrA result;
     getEnv(result, name);
-    return "1" == result || 0 == str::compareI("yes", result.rawptr()) || 0 == str::compareI("true", result.rawptr());
+    return "1" == result || 0 == str::compareI("yes", result.data()) || 0 == str::compareI("true", result.data());
 }
 
 ///

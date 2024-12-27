@@ -143,11 +143,11 @@ void GN::gfx::OGLGpu::drawIndexed(PrimitiveType prim, uint32_t numidx, uint32_t 
     // TODO: optimize using glDrawRangeElementsBaseVertex
 
     // bind vertex buffer based on current startvtx
-    if (mCurrentOGLVtxFmt && !mCurrentOGLVtxFmt->bindBuffers(mContext.vtxbufs.rawptr(), mContext.vtxbufs.size(), basevtx)) { return; }
+    if (mCurrentOGLVtxFmt && !mCurrentOGLVtxFmt->bindBuffers(mContext.vtxbufs.data(), mContext.vtxbufs.size(), basevtx)) { return; }
 
     // get current index buffer
     GN_ASSERT(mContext.idxbuf);
-    const OGLIdxBuf * ib = safeCastPtr<const OGLIdxBuf>(mContext.idxbuf.rawptr());
+    const OGLIdxBuf * ib = safeCastPtr<const OGLIdxBuf>(mContext.idxbuf.data());
     ib->bind();
 
     GLenum oglPrim = sPrimitiveType2OGL(prim);
@@ -171,7 +171,7 @@ void GN::gfx::OGLGpu::draw(PrimitiveType prim, uint32_t numvtx, uint32_t startvt
     if (!mContextOk) return;
 
     // bind vertex buffer based on current startvtx
-    if (mCurrentOGLVtxFmt && !mCurrentOGLVtxFmt->bindBuffers(mContext.vtxbufs.rawptr(), mContext.vtxbufs.size(), startvtx)) { return; }
+    if (mCurrentOGLVtxFmt && !mCurrentOGLVtxFmt->bindBuffers(mContext.vtxbufs.data(), mContext.vtxbufs.size(), startvtx)) { return; }
 
     GLenum oglPrim = sPrimitiveType2OGL(prim);
 

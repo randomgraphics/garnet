@@ -60,7 +60,7 @@ public:
 
         if (CONTINUE_EXECUTION == status) {
             extraArgc = mExtraArgs.size();
-            extraArgv = mExtraArgs.rawptr();
+            extraArgv = mExtraArgs.data();
         }
     }
 
@@ -87,7 +87,7 @@ public:
 
         StrA executableName = fs::baseName(applicationName) + fs::extName(applicationName);
 
-        GN_INFO(logger)("Usage: %s [options]\n", executableName.rawptr());
+        GN_INFO(logger)("Usage: %s [options]\n", executableName.data());
         showStandardCommandLineOptions();
     }
 
@@ -179,7 +179,7 @@ private:
                     if (NULL == value) return INVALID_COMMAND_LINE;
 
                     const char * MODES[]             = {"w", "b", "f"};
-                    rendererOptions.displayMode.mode = (gfx::DisplayMode::Mode) parseStrings(a, value, MODES, countof(MODES));
+                    rendererOptions.displayMode.mode = (gfx::DisplayMode::Mode) parseStrings(a, value, MODES, std::size(MODES));
                     if (rendererOptions.displayMode.mode < 0) return INVALID_COMMAND_LINE;
                 } else if (0 == str::compareI("mt", a + 1)) {
                     const char * value = getOptionValue(argc, argv, i);

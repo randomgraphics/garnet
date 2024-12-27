@@ -104,7 +104,7 @@ void GN::gfx::BasicGpu::setUserData(const Guid & id, const void * data, uint32_t
 
         if (NULL != data && length > 0) {
             currentUserData->resize(length);
-            memcpy(currentUserData->rawptr(), data, length);
+            memcpy(currentUserData->data(), data, length);
         } else {
             currentUserData->clear();
         }
@@ -114,7 +114,7 @@ void GN::gfx::BasicGpu::setUserData(const Guid & id, const void * data, uint32_t
 
         if (NULL != data && length > 0) {
             newUserData.resize(length);
-            memcpy(newUserData.rawptr(), data, length);
+            memcpy(newUserData.data(), data, length);
         }
     }
 }
@@ -128,7 +128,7 @@ const void * GN::gfx::BasicGpu::getUserData(const Guid & id, uint32_t * length) 
     if (NULL != currentUserData) {
         if (length) *length = (uint32_t) currentUserData->size();
 
-        return currentUserData->rawptr();
+        return currentUserData->data();
     } else {
         GN_ERROR(sLogger)("Invalid user data GUID.");
 

@@ -312,7 +312,7 @@ bool GN::d3d11::SimpleMesh::init(ID3D11DeviceContext & cxt) {
         {"USER", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
     };
     GN_RETURN_ON_HR_FAILED(
-        mDevice->CreateInputLayout(elements, (uint32_t) countof(elements), signature->GetBufferPointer(), signature->GetBufferSize(), &mLayout),
+        mDevice->CreateInputLayout(elements, (uint32_t) std::size(elements), signature->GetBufferPointer(), signature->GetBufferSize(), &mLayout),
         (quit(), false));
 
     // success

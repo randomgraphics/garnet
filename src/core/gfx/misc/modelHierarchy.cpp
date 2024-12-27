@@ -124,13 +124,13 @@ static bool sLoadXprSceneFromFile(XPRScene & xpr, File & file) {
     // read scene data
     size_t dataSize = header.size1 + header.size2 + 12 - sizeof(header);
     xpr.sceneData.resize(dataSize);
-    if (dataSize != file.read(xpr.sceneData.rawptr(), dataSize)) {
+    if (dataSize != file.read(xpr.sceneData.data(), dataSize)) {
         GN_ERROR(sLogger)("Fail to read XPR data.");
         return false;
     }
 
     // iterate all objects
-    XPRObjectHeader * objects = (XPRObjectHeader *) xpr.sceneData.rawptr();
+    XPRObjectHeader * objects = (XPRObjectHeader *) xpr.sceneData.data();
     for (size_t i = 0; i < header.numObjects; ++i) {
         XPRObjectHeader & o = objects[i];
 
@@ -279,7 +279,7 @@ static bool sLoadModelHierarchyFromASE(ModelHierarchyDesc & desc, File & file) {
     }
     filename = fs::resolvePath(fs::getCurrentDir(), filename);
 
-#define FULL_MESH_NAME(n) str::format("%s.%s", filename.rawptr(), n.rawptr())
+#define FULL_MESH_NAME(n) str::format("%s.%s", filename.data(), n.data())
 
     // copy meshes. create nodes as well, since in ASE scene, one mesh is one node.
     for (size_t i = 0; i < ase.meshes.size(); ++i) {
@@ -330,7 +330,7 @@ static bool sLoadModelHierarchyFromASE(ModelHierarchyDesc & desc, File & file) {
         if (model.hasTexture("NORMAL_TEXTURE") && !am.mapbump.bitmap.empty()) { model.textures["NORMAL_TEXTURE"].resourceName = am.mapbump.bitmap; }
 
         // add the model to model list
-        StrA modelname = str::format("%s.%u", asemesh.name.rawptr(), i);
+        StrA modelname = str::format("%s.%u", asemesh.name.data(), i);
         GN_ASSERT(NULL == desc.models.find(modelname));
         desc.models[modelname] = model;
 
@@ -711,7 +711,7 @@ static void sLoadFbxMesh(ModelHierarchyDesc & desc, const StrA & filename, Model
     }
 
     // calculate the bounding box of the mesh
-    const MeshVertex * vertices = vertexBlob->array().rawptr();
+    const MeshVertex * vertices = vertexBlob->array().data();
     Boxf               boundingBox;
     calculateBoundingBox(boundingBox, &vertices->pos.x, sizeof(MeshVertex), &vertices->pos.y, sizeof(MeshVertex), &vertices->pos.z, sizeof(MeshVertex),
                          vertexBlob->array().size());
@@ -858,7 +858,7 @@ static bool sLoadModelHierarchyFromFBX(ModelHierarchyDesc & desc, File & file) {
 #else
 
     desc.clear();
-    GN_ERROR(sLogger)("Fail to load file %s: FBX is not supported.", file.name().rawptr());
+    GN_ERROR(sLogger)("Fail to load file %s: FBX is not supported.", file.name().data());
     return false;
 
 #endif
@@ -964,9 +964,9 @@ static void sPostXMLError(const XmlNode & node, const StrA & msg) {
     GN_UNUSED_PARAM(node);
     const XmlElement * e = node.toElement();
     if (e) {
-        GN_ERROR(sLogger)("<%s>: %s", e->name.rawptr(), msg.rawptr());
+        GN_ERROR(sLogger)("<%s>: %s", e->name.data(), msg.data());
     } else {
-        GN_ERROR(sLogger)("%s", msg.rawptr());
+        GN_ERROR(sLogger)("%s", msg.data());
     }
 }
 
@@ -1056,7 +1056,7 @@ static bool sParseNode(ModelHierarchyDesc & desc, XmlElement & root) {
 
                 node.models.append(a->value);
             } else {
-                sPostXMLError(*e, str::format("Unknown element: <%s>", e->name.rawptr()));
+                sPostXMLError(*e, str::format("Unknown element: <%s>", e->name.data()));
             }
         }
     }
@@ -1078,7 +1078,7 @@ static bool sLoadModelHierarchyFromXML(ModelHierarchyDesc & desc, File & file) {
          "    line   : %d\n"
          "    column : %d\n"
          "    error  : %s",
-         file.name().rawptr(), xpr.errLine, xpr.errColumn, xpr.errInfo.rawptr());
+         file.name().data(), xpr.errLine, xpr.errColumn, xpr.errInfo.data());
         return false;
     }
     GN_ASSERT(xpr.root);
@@ -1112,7 +1112,7 @@ static bool sLoadModelHierarchyFromXML(ModelHierarchyDesc & desc, File & file) {
         if ("model" == e->name) {
             if (!sParseModel(desc, *e, basedir)) return false;
         } else {
-            sPostXMLError(*e, str::format("Ignore unknowned element: <%s>", e->name.rawptr()));
+            sPostXMLError(*e, str::format("Ignore unknowned element: <%s>", e->name.data()));
         }
     }
 
@@ -1129,7 +1129,7 @@ static bool sLoadModelHierarchyFromXML(ModelHierarchyDesc & desc, File & file) {
         if ("node" == e->name) {
             if (!sParseNode(desc, *e)) return false;
         } else {
-            sPostXMLError(*e, str::format("Ignore unknowned element: <%s>", e->name.rawptr()));
+            sPostXMLError(*e, str::format("Ignore unknowned element: <%s>", e->name.data()));
         }
     }
 
@@ -1154,7 +1154,7 @@ static bool sSaveModelHierarchyToXML(const ModelHierarchyDesc & desc, const char
     StrA basename = fs::baseName(fullpath);
 
     if (!fs::isDir(dirname)) {
-        GN_ERROR(sLogger)("%s is not a directory", dirname.rawptr());
+        GN_ERROR(sLogger)("%s is not a directory", dirname.data());
         return false;
     }
 
@@ -1165,7 +1165,7 @@ static bool sSaveModelHierarchyToXML(const ModelHierarchyDesc & desc, const char
         const StrA &             oldMeshName = i->key;
         const MeshResourceDesc & mesh        = i->value;
 
-        StrA newMeshName = str::format("%s.%d.mesh.bin", basename.rawptr(), meshindex);
+        StrA newMeshName = str::format("%s.%d.mesh.bin", basename.data(), meshindex);
 
         if (!mesh.saveToFile(dirname + "\\" + newMeshName)) return false;
 
@@ -1226,7 +1226,7 @@ static bool sSaveModelHierarchyToXML(const ModelHierarchyDesc & desc, const char
         if (NULL != pParentEntityName) {
             a->value = *pParentEntityName;
         } else if (!nodeDesc.parent.empty()) {
-            GN_WARN(sLogger)("Entity %s has invalid parent: %s", i->key, nodeDesc.parent.rawptr());
+            GN_WARN(sLogger)("Entity %s has invalid parent: %s", i->key, nodeDesc.parent.data());
         }
 
         a        = xmldoc.createAttrib(node);
@@ -1353,7 +1353,7 @@ GN_API bool GN::gfx::ModelHierarchyDesc::loadFromFile(const char * filename) {
     } else if (sStrEndWithI(filename, ".mesh.bin")) {
         if (!bin::sLoadModelHierarchyFromMeshBinary(*this, *fp)) return false;
     } else {
-        GN_ERROR(sLogger)("Unknown file extension: %s", ext.rawptr());
+        GN_ERROR(sLogger)("Unknown file extension: %s", ext.data());
         return false;
     }
 

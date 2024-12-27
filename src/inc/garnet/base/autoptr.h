@@ -79,10 +79,14 @@ public:
     ///
     /// Get internal C-style raw pointer
     ///
-    T * rawptr() const {
+    T * get() const {
         auto lock = std::lock_guard(mMutex);
         return mPayload ? mPayload->ptr : nullptr;
     }
+
+    /// Get internal C-style raw pointer
+    ///
+    T * data() const { return get(); }
 
     ///
     /// clear internal pointer. Same as attach(0)
@@ -102,7 +106,7 @@ public:
     }
 
     ///
-    /// Release ownership of private pointer
+    /// Forfeit ownership to the underlying pointer.
     ///
     T * detach() throw() {
         auto lock = std::lock_guard(mMutex);
@@ -114,12 +118,12 @@ public:
     ///
     /// dereference the pointer
     ///
-    T & dereference() const { return *rawptr(); }
+    T & dereference() const { return *get(); }
 
     ///
     /// Convert to T *
     ///
-    operator T *() const { return rawptr(); }
+    operator T *() const { return get(); }
 
     ///
     /// dereference operator
@@ -129,7 +133,7 @@ public:
     ///
     /// arrow operator
     ///
-    T * operator->() const { return rawptr(); }
+    T * operator->() const { return get(); }
 
     ///
     /// assignment operator
@@ -370,11 +374,6 @@ public:
     /// self explain.
     ///
     T * get() const throw() { return mPtr; }
-
-    ///
-    /// self explain.
-    ///
-    T * rawptr() const throw() { return mPtr; }
 
     ///
     /// Release existing interface, then hold new interface

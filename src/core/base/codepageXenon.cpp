@@ -57,7 +57,7 @@ size_t GN::CECImplXenon::convert(void * destBuffer, size_t destBufferSizeInBytes
         GN_MSW_CHECK_RETURN(
             MultiByteToWideChar(CP_ACP, 0, (LPCSTR) sourceBuffer, sourceBufferSizeInBytes, (LPWSTR) destBuffer, destBufferSizeInBytes / sizeof(wchar_t)), 0);
 
-        sourceBuffer            = tempBuffer.rawptr();
+        sourceBuffer            = tempBuffer.data();
         sourceBufferSizeInBytes = tempBuffer.size() * sizeof(wchar_t);
     } else {
         // source encoding is already UTF16_BE, do nothing

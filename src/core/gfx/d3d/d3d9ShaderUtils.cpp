@@ -15,7 +15,7 @@ static GN::StrA sAddLineCountD3D9(const GN::StrA & in) {
     GN::StrA out("(  1) : ");
 
     int line = 1;
-    for (const char * s = in.rawptr(); *s; ++s) {
+    for (const char * s = in.data(); *s; ++s) {
         if ('\n' == *s) {
             out.append(str::format("\n(%3d) : ", ++line));
         } else {
@@ -50,7 +50,7 @@ static void sPrintShaderCompileErrorD3D9(HRESULT hr, const char * code, LPD3DXBU
      "\n---------------------------------------------------------\n"
      "%s\n"
      "\n=========================================================\n",
-     code ? sAddLineCountD3D9(code).rawptr() : "Shader code: <EMPTY>", hr, GN::getDXErrorInfo(hr),
+     code ? sAddLineCountD3D9(code).data() : "Shader code: <EMPTY>", hr, GN::getDXErrorInfo(hr),
      err ? (const char *) err->GetBufferPointer() : "Error: <EMPTY>");
 
     GN_UNGUARD;
@@ -69,7 +69,7 @@ static void sPrintShaderCompileInfoD3D9(const char * hlsl, ID3DXBuffer * bin) {
     ("\n================== Shader compile success ===============\n"
      "%s\n"
      "\n=========================================================\n",
-     sAddLineCountD3D9(hlsl).rawptr());
+     sAddLineCountD3D9(hlsl).data());
 
     GN_UNGUARD;
 }

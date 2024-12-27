@@ -28,7 +28,7 @@ GN_API void GN::putEnv(const char * name, const char * value) {
         s.format("%s=%s", name, value);
     }
 
-    if (0 != _putenv(const_cast<char *>(s.rawptr()))) { GN_ERROR(sLogger)("fail to set environment '%s'.", s.rawptr()); }
+    if (0 != _putenv(const_cast<char *>(s.data()))) { GN_ERROR(sLogger)("fail to set environment '%s'.", s.data()); }
     #endif
 #endif
 }

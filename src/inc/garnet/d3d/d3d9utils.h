@@ -53,7 +53,7 @@ struct PixPerfScopeEvent {
 #if GN_XBOX2
         PIXBeginNamedEvent(color, name);
 #else
-        D3DPERF_BeginEvent(color, mbs2wcs(name).rawptr());
+        D3DPERF_BeginEvent(color, mbs2wcs(name).data());
 #endif
     }
     ~PixPerfScopeEvent() {

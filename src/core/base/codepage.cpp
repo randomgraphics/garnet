@@ -124,8 +124,8 @@ GN_API StrA GN::wcs2utf8(const wchar_t * ibuf, size_t icount) {
     // TODO: Let CEC returns StrA directly to avoid extra memory copy
     static auto     cec = CharacterEncodingConverter(CharacterEncodingConverter::WIDECHAR, CharacterEncodingConverter::UTF8);
     DynaArray<char> buffer((icount + 1) * sizeof(wchar_t));
-    cec.convert(buffer.rawptr(), buffer.size(), ibuf, icount * sizeof(wchar_t));
-    return buffer.rawptr();
+    cec.convert(buffer.data(), buffer.size(), ibuf, icount * sizeof(wchar_t));
+    return buffer.data();
 }
 
 //
@@ -135,8 +135,8 @@ GN_API StrW GN::utf82wcs(const char * ibuf, size_t icount) {
     // TODO: Let CEC returns StrW directly to avoid extra memory copy
     static auto        cec = CharacterEncodingConverter(CharacterEncodingConverter::UTF8, CharacterEncodingConverter::WIDECHAR);
     DynaArray<wchar_t> buffer(icount + 1);
-    cec.convert(buffer.rawptr(), buffer.size() * sizeof(wchar_t), ibuf, icount);
-    return buffer.rawptr();
+    cec.convert(buffer.data(), buffer.size() * sizeof(wchar_t), ibuf, icount);
+    return buffer.data();
 }
 
 //
@@ -176,11 +176,11 @@ GN_API size_t GN::mbs2wcs(wchar_t * o, size_t os, const char * i, size_t is) {
 
     if (o) {
         if (os > n) {
-            memcpy(o, wcs.rawptr(), n);
+            memcpy(o, wcs.data(), n);
             GN_ASSERT(0 == o[n - 1]);
             return n;
         } else if (os > 0) {
-            memcpy(o, wcs.rawptr(), sizeof(wchar_t) * (os - 1));
+            memcpy(o, wcs.data(), sizeof(wchar_t) * (os - 1));
             o[os - 1] = 0;
             return os;
         } else {

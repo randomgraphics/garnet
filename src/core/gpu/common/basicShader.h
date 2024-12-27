@@ -48,8 +48,8 @@ public:
 
         // allocate buffer
         mBuffer.resize(length);
-        GpuProgramDesc & copy  = *(GpuProgramDesc *) mBuffer.rawptr();
-        uint8_t *        start = mBuffer.rawptr();
+        GpuProgramDesc & copy  = *(GpuProgramDesc *) mBuffer.data();
+        uint8_t *        start = mBuffer.data();
         uint8_t *        ptr   = start;
 
         // copy header
@@ -84,9 +84,9 @@ public:
     bool init(const void * data, size_t length) {
         // copy input buffer
         mBuffer.resize(length);
-        memcpy(mBuffer.rawptr(), data, length);
+        memcpy(mBuffer.data(), data, length);
 
-        const char *     start = (const char *) mBuffer.rawptr();
+        const char *     start = (const char *) mBuffer.data();
         const char *     end   = start + length;
         GpuProgramDesc & desc  = *(GpuProgramDesc *) start;
 
@@ -118,9 +118,9 @@ public:
         return true;
     }
 
-    const GpuProgramDesc & getDesc() const { return *(const GpuProgramDesc *) mBuffer.rawptr(); }
+    const GpuProgramDesc & getDesc() const { return *(const GpuProgramDesc *) mBuffer.data(); }
 
-    virtual void *   data() const { return (void *) mBuffer.rawptr(); }
+    virtual void *   data() const { return (void *) mBuffer.data(); }
     virtual uint32_t size() const { return (uint32_t) mBuffer.size(); }
 };
 

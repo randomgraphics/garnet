@@ -147,7 +147,7 @@ bool GN::gfx::SpriteRenderer::init(Gpu & gpu) {
         indices[i * 6 + 4] = i * 4 + 2;
         indices[i * 6 + 5] = i * 4 + 3;
     }
-    mIndexBuffer->update(0, MAX_INDICES, indices.rawptr());
+    mIndexBuffer->update(0, MAX_INDICES, indices.data());
 
     // create pending vertex buffer
     mSprites = (Sprite *) HeapMemory::alloc(VTXBUF_SIZE);

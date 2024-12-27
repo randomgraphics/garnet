@@ -519,7 +519,7 @@ AutoRef<GpuResource> GpuResourceDatabase::Impl::createResource(const Guid & type
     if (0 == name || 0 == *name) {
         static int i = 0;
         ++i;
-        str::formatTo(unnamed, GN_ARRAY_COUNT(unnamed), "Unnamed %s #%d", mgr->desc.rawptr(), i);
+        str::formatTo(unnamed, GN_ARRAY_COUNT(unnamed), "Unnamed %s #%d", mgr->desc.data(), i);
         name = unnamed;
 
         GN_ASSERT(!mgr->resources.validName(name));

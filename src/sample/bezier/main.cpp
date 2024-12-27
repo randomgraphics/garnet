@@ -392,7 +392,7 @@ class BezierApp : public SampleApp {
         engine::getDefaultFontRenderer()->drawText(str::format(L"position : %f, %f, %f\n"
                                                                L"radius   : %f",
                                                                position.x, position.y, position.z, radius)
-                                                       .rawptr(),
+                                                       .data(),
                                                    0, 320);
     }
 
