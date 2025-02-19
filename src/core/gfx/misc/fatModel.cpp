@@ -190,10 +190,10 @@ bool GN::gfx::FatVertexBuffer::GenerateVertexStream(const MeshVertexFormat & mvf
 
         GN_ASSERT((e.offset + size) <= stride);
 
-        SafeArrayAccessor<uint8_t> dst((uint8_t *) buffer + e.offset, (mCount * stride) - e.offset);
+        ArrayProxy<uint8_t> dst((uint8_t *) buffer + e.offset, (mCount * stride) - e.offset);
 
         if (semantics[j] != INVALID) {
-            SafeArrayAccessor<const VertexElement> src(mElements[semantics[j]].data(), mCount);
+            ArrayProxy<const VertexElement> src(mElements[semantics[j]].data(), mCount);
 
             for (size_t i = 0; i < mCount; ++i) {
                 memcpy(dst.subrange(0, size), src.subrange(0, 1), size);

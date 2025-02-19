@@ -655,31 +655,64 @@ public:
 };
 
 ///
-/// array accessor with out-of-boundary check in debug build.
+/// Array proxy with out-of-boundary check.
 ///
 template<typename T>
-class SafeArrayAccessor {
-    T * mBegin;
-    T * mEnd;
-    T * mPtr;
+class ArrayProxy {
+    T * mBegin = nullptr;
+    T * mEnd = nullptr;
+    T * mPtr = nullptr;
 
 public:
     //@{
 
-    SafeArrayAccessor(T * data, size_t count): mBegin(data), mEnd(data + count), mPtr(data) {}
+    ArrayProxy() = default;
 
-    T * subrange(size_t index, size_t length) const {
+    ArrayProxy(std::initializer_list<T> list): mBegin(list.begin()), mEnd(list.end()), mPtr(list.begin()) {}
+
+    ArrayProxy(T * data, size_t count): mBegin(data), mEnd(data + count), mPtr(data) {}
+
+    ArrayProxy(const ArrayProxy & other): mBegin(other.mBegin), mEnd(other.mEnd), mPtr(other.mPtr) {}
+
+    size_t size() const {
+        GN_ASSERT(mBegin <= mPtr && mPtr <= mEnd);
+        return mEnd - mPtr;
+    }
+
+    bool empty() const {
+        GN_ASSERT(mBegin <= mPtr && mPtr <= mEnd);
+        return mPtr >= mEnd;
+    }
+
+    T * data() const {
+        GN_ASSERT(mBegin <= mPtr && mPtr <= mEnd);
+        return mPtr;
+    }
+
+    ArrayProxy subrange(size_t index, size_t count) const {
         GN_ASSERT(mBegin <= (mPtr + index));
         GN_ASSERT((mPtr + index) < mEnd);
-        GN_ASSERT((mPtr + index + length) <= mEnd);
-        GN_UNUSED_PARAM(length);
-        return mPtr + index;
+        GN_ASSERT((mPtr + index + count) <= mEnd);
+        auto p = mPtr + index;
+        if (p > mEnd) p = mEnd;
+        auto s = mEnd - p;
+        return ArrayProxy(p, std::min(s, count));
     }
 
     template<typename T2>
-    void copyTo(size_t srcOffset, const SafeArrayAccessor<T2> & dest, size_t dstOffset, size_t bytes) {
+    void copyTo(size_t srcOffset, const ArrayProxy<T2> & dest, size_t dstOffset, size_t bytes) {
         GN_CASSERT(sizeof(T) == sizeof(T2));
-        memcpy(dest.subrange(dstOffset, bytes), subrange(srcOffset, bytes), bytes);
+        auto s = subrange(srcOffset, bytes);
+        auto d = dest.subrange(dstOffset, bytes);
+        auto n = std::min(s.size(), d.size());
+        if (n > 0) memcpy(d.data(), s.data(), n * sizeof(T));
+    }
+
+    ArrayProxy & operator = (const ArrayProxy & other) {
+        mBegin = other.mBegin;
+        mEnd = other.mEnd;
+        mPtr = other.mPtr;
+        return *this;
     }
 
     T * operator->() const {
@@ -693,23 +726,31 @@ public:
         return mPtr[index];
     }
 
-    SafeArrayAccessor & operator++() {
-        ++mPtr;
+    ArrayProxy & operator++() {
+        if (mPtr < mEnd) ++mPtr;
         return *this;
     }
 
-    SafeArrayAccessor & operator--() {
-        --mPtr;
+    ArrayProxy & operator--() {
+        if (mPtr > mBegin) --mPtr;
         return *this;
     }
 
-    SafeArrayAccessor & operator+=(size_t offset) {
-        mPtr += offset;
+    ArrayProxy & operator+=(size_t offset) {
+        if (mPtr + offset > mEnd) {
+            mPtr = mEnd;
+        } else {
+            mPtr += offset;
+        }
         return *this;
     }
 
-    SafeArrayAccessor & operator-=(size_t offset) {
-        mPtr -= offset;
+    ArrayProxy & operator-=(size_t offset) {
+        if (mPtr < mBegin + offset) {
+            mPtr = mBegin;
+        } else {
+            mPtr -= offset;
+        }
         return *this;
     }
 

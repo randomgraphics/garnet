@@ -26,9 +26,8 @@ struct Gpu2 : public RefCounter {
     /// GPU pipeline
     //@{
     struct CompiledShaderBlob {
-        const void * ptr         = nullptr; ///< pointer to shader byte code. Null means the shader stage is disbaled.
-        uint64_t     sizeInBytes = 0;       ///< size of the byte code
-        const char * entry       = nullptr; ///< entry point of the shader (only used in spir-v shader)
+        ArrayProxy<char> binary;
+        const char *     entry;
     };
 
     struct InputElement {
@@ -65,8 +64,8 @@ struct Gpu2 : public RefCounter {
         size_t             depth = size_t(~0);
     };
     struct RenderPass {
-        ConstRange<Surface *> targets;
-        ConstRange<SubPass *> subs;
+        ArrayProxy<Surface *> targets;
+        ArrayProxy<SubPass *> subs;
     };
     struct ClearScreenParameters {
         float    color[4] = {.0f, .0f, .0f, .0f};
@@ -116,14 +115,14 @@ struct Gpu2 : public RefCounter {
         uint64_t        initialPipelineState = 0; // optional initial pipeline state. If empty, the default state is used.
     };
     struct CommandList : public RefCounter {
-        virtual void begin(const RenderPass &)                  = 0; ///< begin a new render pass
-        virtual void next()                                     = 0; ///< move to next subpass.
-        virtual void end()                                      = 0; ///< end current render pass
-        virtual void clearScreen(const ClearScreenParameters &) = 0;
-        virtual void draw(const DrawParameters &)               = 0;
-        virtual void compute(const ComputeParameters &)         = 0;
-        virtual void copySurface(const CopySurfaceParameters &) = 0;
-        void         copySurface(Surface * from, Surface * to) { copySurface({from, 0, uint64_t(~0), to, 0}); }
+        virtual void begin(const RenderPass &)            = 0; ///< begin a new render pass
+        virtual void next()                               = 0; ///< move to next subpass.
+        virtual void end()                                = 0; ///< end current render pass
+        virtual void clear(const ClearScreenParameters &) = 0;
+        virtual void draw(const DrawParameters &)         = 0;
+        virtual void comp(const ComputeParameters &)      = 0;
+        virtual void copy(const CopySurfaceParameters &)  = 0;
+        void         copy(Surface * from, Surface * to) { copy({from, 0, uint64_t(~0), to, 0}); }
     };
     struct Kicked {
         uint64_t fence     = 0;
@@ -133,10 +132,10 @@ struct Gpu2 : public RefCounter {
     virtual auto createCommandList(const CommandListCreateParameters &) -> AutoRef<CommandList> = 0;
 
     /// Kick off an array of command list.
-    virtual auto kickOff(ConstRange<CommandList *>) -> Kicked = 0;
+    virtual auto kickOff(ArrayProxy<CommandList *>) -> Kicked = 0;
 
     /// Kick off one command list.
-    auto kickOff(CommandList & cl) -> Kicked { return kickOff(ConstRange<CommandList *> {&cl}); }
+    auto kickOff(CommandList & cl) -> Kicked { return kickOff(ArrayProxy<CommandList *> {&cl}); }
 
     /// Block the calling CPU thread until the fence, if specified, is passed. If fence is 0, wait all pending
     /// works from all engine to be done.
@@ -244,17 +243,17 @@ struct Gpu2 : public RefCounter {
 
 struct ShaderCompileParameters {
     struct Options {
-        bool debugable : 1; ///< set to true to generate shader binary with debug information.
-        bool optimized : 1; ///< set to true to generate optimized shader.
-        Options(): debugable(GN_BUILD_DEBUG_ENABLED), optimized(true) {}
+        bool debuggable : 1; ///< set to true to generate shader binary with debug information.
+        bool optimized  : 1; ///< set to true to generate optimized shader.
+        Options(): debuggable(GN_BUILD_DEBUG_ENABLED), optimized(true) {}
     };
 
     const char * source;
-    size_t       length {}; // could be 0 for null-terminated string.
+    size_t       length {}; // could be set to 0, if the source string is null-terminated.
     const char * entry {};
     const char * profile {};
     Options      options {};
 };
-GN_API DynaArray<uint8_t> compileHLSL(const ShaderCompileParameters &);
+GN_API DynaArray<uint8_t> compileShader(const ShaderCompileParameters &);
 } // end of namespace gfx
 } // end of namespace GN
