@@ -134,36 +134,9 @@ struct Gpu2 : public RefCounter {
     /// Kick off an array of command list.
     virtual auto kickOff(ArrayProxy<CommandList *>) -> Kicked = 0;
 
-    /// Kick off one command list.
-    auto kickOff(CommandList & cl) -> Kicked { return kickOff(ArrayProxy<CommandList *> {&cl}); }
-
     /// Block the calling CPU thread until the fence, if specified, is passed. If fence is 0, wait all pending
     /// works from all engine to be done.
     virtual void finish(uint64_t fence = 0) = 0;
-    //@}
-
-    /// GPU memory pool
-    //@{
-    enum class MemoryType {
-        /// The memory type optimized for GPU reading & writing. CPU access is prohibited.
-        DEFAULT = 0,
-
-        /// The memory type optimized for uploading dynamic data from CPU to GPU. GPU access bandwidth is limited.
-        /// Best for CPU-write-once, GPU-read-once data. CPU read is allowed but could be slow. GPU-write to this
-        /// is not recommended and could cause undefined behavior.
-        UPLOAD,
-
-        /// The memory type optimized for reading data back from GPU. GPU access bandwidth is limited.
-        /// Best for GPU-write-once, CPU-readable data. CPU-write to this buffer is not recommended and could cause
-        /// undefined result.
-        READ_BACK,
-    };
-    struct MemoryBlockCreateParameters {
-        uint64_t   sizeInMB;
-        MemoryType type;
-    };
-    struct MemoryBlock : public RefCounter {};
-    virtual AutoRef<MemoryBlock> createMemoryBlock(const MemoryBlockCreateParameters &) = 0;
     //@}
 
     // /// descriptor pool
@@ -202,8 +175,6 @@ struct Gpu2 : public RefCounter {
         };
     };
     struct SurfaceCreateParameters {
-        MemoryBlock * memory;
-        uint64_t      offset;
         SurfaceType   type;
         struct TextureDesc {
             uint32_t    w, h = 1, d = 1, a = 1, m = 1, s = 1; ///< width, height, depth, array, mipmaps, samples.
@@ -228,15 +199,21 @@ struct Gpu2 : public RefCounter {
     virtual AutoRef<Surface> createSurface(const SurfaceCreateParameters &) = 0;
     //@}
 
-    //@{
-    struct QueryCreateParameters {};
-    struct Query : public RefCounter {};
-    virtual AutoRef<Query> createQuery(const QueryCreateParameters &) = 0;
-    //@}
+    // //@{
+    // struct QueryCreateParameters {};
+    // struct Query : public RefCounter {};
+    // virtual AutoRef<Query> createQuery(const QueryCreateParameters &) = 0;
+    // //@}
 
-    /// present
+    /// frame management
     //@{
-    struct PresentParameters {};
+    struct Frame {
+        //
+    };
+    struct PresentParameters {
+        //
+    };
+    virtual auto beginFrame() -> Frame = 0;
     virtual void present(const PresentParameters &) = 0;
     //@}
 };
