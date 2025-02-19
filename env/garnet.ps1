@@ -122,7 +122,15 @@ else
 # setup git
 # ==============================================================================
 
-git config --local include.path ${GARNET_ROOT}/.gitconfig
+# Lookup for .gitconfig file, first in parent folder, then current folder.
+if (Test-Path -path "$GARNET_ROOT\..\.gitconfig") {
+    write-host "Include ${GARNET_ROOT}/../.gitconfig"
+    git config --local include.path ${GARNET_ROOT}/../.gitconfig
+}
+if (Test-Path -path "$GARNET_ROOT\.gitconfig") {
+    write-host "Include ${GARNET_ROOT}/.gitconfig"
+    git config --local include.path ${GARNET_ROOT}/.gitconfig
+}
 
 # ==============================================================================
 # MISC
