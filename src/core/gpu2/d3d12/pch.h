@@ -1,5 +1,4 @@
 #pragma once
-#define GN_CORE_INTERNAL
 #include <garnet/GNbase.h>
 #define NOMINMAX
 #include <windows.h>

@@ -4,7 +4,7 @@
 // local functions
 // *****************************************************************************
 
-#define ENCODE_KEY(from, to) (((((sint16) from) & 0xFF) << 8) | (((sint16) to) & 0xFF))
+#define ENCODE_KEY(from, to) (((((int16_t) from) & 0xFF) << 8) | (((int16_t) to) & 0xFF))
 
 static GN::Logger * sLogger = GN::getLogger("GN.base.Variant");
 
@@ -40,12 +40,12 @@ GN_API void GN::Variant::setm(const Matrix44f & m) {
 GN_API bool GN::Variant::getb(bool & b) const {
     int   i;
     float f;
-    if (0 == str::compareI("yes", mValue.rawptr()) || 0 == str::compareI("true", mValue.rawptr()) || 0 == str::compareI("on", mValue.rawptr()) ||
-        0 == str::compare("1", mValue.rawptr())) {
+    if (0 == str::compareI("yes", mValue.data()) || 0 == str::compareI("true", mValue.data()) || 0 == str::compareI("on", mValue.data()) ||
+        0 == str::compare("1", mValue.data())) {
         b = true;
         return true;
-    } else if (0 == str::compareI("no", mValue.rawptr()) || 0 == str::compareI("false", mValue.rawptr()) || 0 == str::compareI("off", mValue.rawptr()) ||
-               0 == str::compare("0", mValue.rawptr())) {
+    } else if (0 == str::compareI("no", mValue.data()) || 0 == str::compareI("false", mValue.data()) || 0 == str::compareI("off", mValue.data()) ||
+               0 == str::compare("0", mValue.data())) {
         b = false;
         return true;
     } else if (geti(i)) {
@@ -55,24 +55,24 @@ GN_API bool GN::Variant::getb(bool & b) const {
         b = .0f != f;
         return true;
     } else {
-        GN_ERROR(sLogger)("Can't convert string '%s' to boolean.", mValue.rawptr());
+        GN_ERROR(sLogger)("Can't convert string '%s' to boolean.", mValue.data());
         return false;
     }
 }
 //
-GN_API bool GN::Variant::geti(int & i) const { return 0 != str::toInetger<int>(i, mValue.rawptr()); }
+GN_API bool GN::Variant::geti(int & i) const { return 0 != str::toInetger<int>(i, mValue.data()); }
 //
-GN_API bool GN::Variant::getf(float & f) const { return 0 != str::toFloat(f, mValue.rawptr()); }
+GN_API bool GN::Variant::getf(float & f) const { return 0 != str::toFloat(f, mValue.data()); }
 //
 GN_API bool GN::Variant::getp(void *& p) const {
-    bool b = 0 != str::toInetger<size_t>((size_t &) p, mValue.rawptr());
+    bool b = 0 != str::toInetger<size_t>((size_t &) p, mValue.data());
     if (!b) p = NULL;
     return b;
 }
 //
-GN_API bool GN::Variant::getv(Vector4f & v) const { return 4 == str::toFloatArray(v, 4, mValue.rawptr(), mValue.size()); }
+GN_API bool GN::Variant::getv(Vector4f & v) const { return 4 == str::toFloatArray(v, 4, mValue.data(), mValue.size()); }
 //
-GN_API bool GN::Variant::getm(Matrix44f & m) const { return 16 == str::toFloatArray(m[0], 16, mValue.rawptr(), mValue.size()); }
+GN_API bool GN::Variant::getm(Matrix44f & m) const { return 16 == str::toFloatArray(m[0], 16, mValue.data(), mValue.size()); }
 
 // *****************************************************************************
 // private methods

@@ -34,23 +34,23 @@ GN_API void swap8in64(void * out, const void * in, size_t count);
 GN_API void swap16in32(void * out, const void * in, size_t count);
 
 //@{
-inline uint16 swap8in16(uint16 i) {
-    uint16 o;
+inline uint16_t swap8in16(uint16_t i) {
+    uint16_t o;
     swap8in16(&o, &i, 1);
     return o;
 }
-inline uint32 swap8in32(uint32 i) {
-    uint32 o;
+inline uint32_t swap8in32(uint32_t i) {
+    uint32_t o;
     swap8in32(&o, &i, 1);
     return o;
 }
-inline uint64 swap8in64(uint64 i) {
-    uint64 o;
+inline uint64_t swap8in64(uint64_t i) {
+    uint64_t o;
     swap8in64(&o, &i, 1);
     return o;
 }
-inline uint32 swap16in32(uint32 i) {
-    uint32 o;
+inline uint32_t swap16in32(uint32_t i) {
+    uint32_t o;
     swap16in32(&o, &i, 1);
     return o;
 }

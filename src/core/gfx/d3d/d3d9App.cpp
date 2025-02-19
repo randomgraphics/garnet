@@ -38,7 +38,7 @@ static LRESULT CALLBACK sStaticWindowProc(HWND wnd, UINT msg, WPARAM wp, LPARAM 
 //
 //
 // -----------------------------------------------------------------------------
-static HWND sCreateWindow(HWND parent, HMONITOR monitor, uint32 width, uint32 height, bool fullscreen) {
+static HWND sCreateWindow(HWND parent, HMONITOR monitor, uint32_t width, uint32_t height, bool fullscreen) {
     // check parent
     if (!::IsWindow(parent)) parent = 0;
 
@@ -101,7 +101,7 @@ static HWND sCreateWindow(HWND parent, HMONITOR monitor, uint32 width, uint32 he
 //
 //
 // -----------------------------------------------------------------------------
-static bool sAdjustWindow(HWND window, uint32 width, uint32 height, bool fullscreen) {
+static bool sAdjustWindow(HWND window, uint32_t width, uint32_t height, bool fullscreen) {
     DWORD style = fullscreen ? WS_POPUP : WS_OVERLAPPEDWINDOW;
     style |= WS_VISIBLE;
 
@@ -328,7 +328,7 @@ GN_API void GN::d3d9::D3D9Application::onKeyPress(input::KeyEvent ke) {
     #if GN_XBOX2
     GN_UNUSED_PARAM(ke);
     #else
-    if (input::KeyCode::ESCAPE == ke.code && !ke.status.down) { mRunning = false; }
+    if (input::KeyCode::ESCAPE == ke.code() && !ke.status.down) { mRunning = false; }
     #endif
 }
 
@@ -352,7 +352,7 @@ GN_API bool GN::d3d9::D3D9Application::createDevice() {
     // Look for nvidia adapter
     UINT nAdapter = mD3D->GetAdapterCount();
     GN_ASSERT(nAdapter);
-    for (uint32 i = 0; i < nAdapter; ++i) {
+    for (uint32_t i = 0; i < nAdapter; ++i) {
         D3DADAPTER_IDENTIFIER9 Identifier;
         GN_DX_CHECK(mD3D->GetAdapterIdentifier(i, 0, &Identifier));
         GN_TRACE(sLogger)("Enumerating D3D adapters: %s", Identifier.Description);
@@ -397,8 +397,8 @@ GN_API bool GN::d3d9::D3D9Application::restoreDevice() {
     GN_ASSERT(mDevice);
 
     #if !GN_XBOX2
-    uint32 w = mOption.fullscreen ? mOption.fsWidth : mOption.windowedWidth;
-    uint32 h = mOption.fullscreen ? mOption.fsHeight : mOption.windowedHeight;
+    uint32_t w = mOption.fullscreen ? mOption.fsWidth : mOption.windowedWidth;
+    uint32_t h = mOption.fullscreen ? mOption.fsHeight : mOption.windowedHeight;
     sAdjustWindow(mWindow, w, h, mOption.fullscreen);
     #endif
 

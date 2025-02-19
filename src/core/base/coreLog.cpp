@@ -40,11 +40,11 @@ public:
             attrib = FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE;
             break;
 
-            case GN::Logger::VERBOSE:
-            case GN::Logger::BABBLE:
-            default:
-                attrib = FOREGROUND_GREEN;
-                break;
+        case GN::Logger::VERBOSE:
+        case GN::Logger::BABBLE:
+        default:
+            attrib = FOREGROUND_GREEN;
+            break;
         }
         SetConsoleTextAttribute(mConsole, attrib);
     }
@@ -95,17 +95,22 @@ typedef std::recursive_mutex LocalMutex;
 //
 //
 // -----------------------------------------------------------------------------
-static inline GN::StrA sLevel2Str( int level )
-{
-    switch( level )
-    {
-        case GN::Logger::FATAL   : return "FATAL";
-        case GN::Logger::ERROR_  : return "ERROR";
-        case GN::Logger::WARN    : return "WARN";
-        case GN::Logger::INFO    : return "INFO";
-        case GN::Logger::VERBOSE : return "VERBOSE";
-        case GN::Logger::BABBLE  : return "VERY_VERBOSE";
-        default                  : return GN::str::format( "%d", level );
+static inline GN::StrA sLevel2Str(int level) {
+    switch (level) {
+    case GN::Logger::FATAL:
+        return "FATAL";
+    case GN::Logger::ERROR_:
+        return "ERROR";
+    case GN::Logger::WARN:
+        return "WARN";
+    case GN::Logger::INFO:
+        return "INFO";
+    case GN::Logger::VERBOSE:
+        return "VERBOSE";
+    case GN::Logger::BABBLE:
+        return "VERY_VERBOSE";
+    default:
+        return GN::str::format("%d", level);
     }
 }
 
@@ -236,7 +241,7 @@ struct ConsoleReceiver : public Logger::Receiver {
                       "%s(%d)\n"
                       "\tname=%s, level=%s\n"
                       "\t%s\n\n",
-                      sFormatPath(desc.file).rawptr(), desc.line, logger.getName(), sLevel2Str(desc.level).rawptr(), msg);
+                      sFormatPath(desc.file).data(), desc.line, logger.getName(), sLevel2Str(desc.level).data(), msg);
         }
     };
     virtual void onLog(Logger & logger, const Logger::LogDesc & desc, const wchar_t * msg) {
@@ -252,7 +257,7 @@ struct ConsoleReceiver : public Logger::Receiver {
                       "%s(%d)\n"
                       "\tname=%s, level=%s\n"
                       "\t%S\n\n",
-                      sFormatPath(desc.file).rawptr(), desc.line, logger.getName(), sLevel2Str(desc.level).rawptr(), msg);
+                      sFormatPath(desc.file).data(), desc.line, logger.getName(), sLevel2Str(desc.level).data(), msg);
         }
     };
 };
@@ -268,9 +273,9 @@ struct FileReceiver : public Logger::Receiver {
         AutoFile(const StrA & name, const char * mode = "at"): fp(0) {
             if (name.empty()) return;
 #if GN_MSVC8
-            if (0 != ::fopen_s(&fp, name.rawptr(), mode)) fp = 0;
+            if (0 != ::fopen_s(&fp, name.data(), mode)) fp = 0;
 #else
-            fp = ::fopen(name.rawptr(), mode);
+            fp = ::fopen(name.data(), mode);
 #endif
         }
         ~AutoFile() {
@@ -303,8 +308,8 @@ struct FileReceiver : public Logger::Receiver {
 
         if (NULL == msg) msg = "";
 
-        ::fprintf(af.fp, "<log file=\"%s\" line=\"%d\" name=\"%s\" level=\"%s\"><![CDATA[%s]]></log>\n", sFormatPath(desc.file).rawptr(), desc.line,
-                  logger.getName(), sLevel2Str(desc.level).rawptr(), msg);
+        ::fprintf(af.fp, "<log file=\"%s\" line=\"%d\" name=\"%s\" level=\"%s\"><![CDATA[%s]]></log>\n", sFormatPath(desc.file).data(), desc.line,
+                  logger.getName(), sLevel2Str(desc.level).data(), msg);
     }
     virtual void onLog(Logger & logger, const Logger::LogDesc & desc, const wchar_t * msg) {
         AutoFile af(mFileName);
@@ -312,8 +317,8 @@ struct FileReceiver : public Logger::Receiver {
 
         if (NULL == msg) msg = L"";
 
-        ::fprintf(af.fp, "<log file=\"%s\" line=\"%d\" name=\"%s\" level=\"%s\"><![CDATA[%S]]></log>\n", sFormatPath(desc.file).rawptr(), desc.line,
-                  logger.getName(), sLevel2Str(desc.level).rawptr(), msg);
+        ::fprintf(af.fp, "<log file=\"%s\" line=\"%d\" name=\"%s\" level=\"%s\"><![CDATA[%S]]></log>\n", sFormatPath(desc.file).data(), desc.line,
+                  logger.getName(), sLevel2Str(desc.level).data(), msg);
     }
 };
 
@@ -324,8 +329,12 @@ class DebugReceiver : public Logger::Receiver {
     virtual void onLog(Logger & logger, const Logger::LogDesc & desc, const char * msg) {
 #if GN_MSWIN
         char buf[16384];
-        str::formatTo(buf, 16384, "%s(%d) : name(%s), level(%s) : %s\n", sFormatPath(desc.file).rawptr(), desc.line, logger.getName(),
-                      sLevel2Str(desc.level).rawptr(), msg);
+        if (desc.level >= GN::Logger::INFO) {
+            str::formatTo(buf, 16384, "%s\n", msg);
+        } else {
+            str::formatTo(buf, 16384, "%s(%d) : name(%s), level(%s) : %s\n", sFormatPath(desc.file).data(), desc.line, logger.getName(),
+                          sLevel2Str(desc.level).data(), msg);
+        }
         ::OutputDebugStringA(buf);
 #else
         GN_UNUSED_PARAM(logger);
@@ -338,8 +347,12 @@ class DebugReceiver : public Logger::Receiver {
         if (NULL == msg) msg = L"";
 
         wchar_t buf[16384];
-        str::formatTo(buf, 16384, L"%S(%d) : name(%S), level(%S) : %s\n", sFormatPath(desc.file).rawptr(), desc.line, logger.getName(),
-                      sLevel2Str(desc.level).rawptr(), msg);
+        if (desc.level >= GN::Logger::INFO) {
+            str::formatTo(buf, 16384, L"%S\n", msg);
+        } else {
+            str::formatTo(buf, 16384, L"%S(%d) : name(%S), level(%S) : %s\n", sFormatPath(desc.file).data(), desc.line, logger.getName(),
+                          sLevel2Str(desc.level).data(), msg);
+        }
         ::OutputDebugStringW(buf);
 #else
         GN_UNUSED_PARAM(logger);
@@ -482,7 +495,7 @@ class LoggerContainer {
         GN_ASSERT(n > 0);
         StrA parent = name.subString(0, n);
 
-        return getLogger(parent.rawptr());
+        return getLogger(parent.data());
     }
 
     void printLoggerTree(StrA & str, int level, LoggerImpl & logger) {
@@ -519,7 +532,7 @@ public:
          "    Logger Tree\n"
          "===================");
         printLoggerTree(loggerTree, 0, mRootLogger);
-        GN_VERBOSE(sLogger)("\n%s", loggerTree.rawptr());
+        GN_VERBOSE(sLogger)("\n%s", loggerTree.data());
         for (LoggerMap::KeyValuePair * p = mLoggers.first(); NULL != p; p = mLoggers.next(p)) { delete p->value; }
     }
 
@@ -531,7 +544,7 @@ public:
         n.trim('.');
 
         // shortcut for root logger
-        if (n.empty() || 0 == str::compareI("ROOT", n.rawptr())) return &mRootLogger;
+        if (n.empty() || 0 == str::compareI("ROOT", n.data())) return &mRootLogger;
 
         // find for existing logger
         LoggerImpl ** pplogger = mLoggers.find(n);

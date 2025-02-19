@@ -2,7 +2,6 @@
 #include "garnet/base/clock.h"
 #if GN_POSIX
     #include <pthread.h>
-    #include <sys/timeb.h>
 #endif
 
 // *****************************************************************************

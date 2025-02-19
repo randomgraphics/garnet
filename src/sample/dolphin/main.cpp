@@ -39,7 +39,7 @@ public:
     void update(float time, const Matrix44f & view, const Matrix44f & proj) {
         // update caustic parameters
         Vector4f caustics(0.05f, 0.05f, sinf(time) / 8, cosf(time) / 10);
-        uint32   causticTex = ((uint32) (time * 32)) % 32;
+        uint32_t causticTex = ((uint32_t) (time * 32)) % 32;
 
         // update seafloor effect parameters
         mSeafloor->uniformResource("view")->uniform()->update(view);
@@ -119,8 +119,8 @@ public:
     bool onInit() {
         Gpu & g = *engine::getGpu();
 
-        uint32 width  = g.getDispDesc().width;
-        uint32 height = g.getDispDesc().height;
+        uint32_t width  = g.getDispDesc().width;
+        uint32_t height = g.getDispDesc().height;
 
         float aspect = (float) width / height;
         g.composePerspectiveMatrixLh(proj, GN_PI / 3, aspect, 1.0f, 1000.0f);
@@ -135,7 +135,7 @@ public:
     void onKeyPress(input::KeyEvent key) {
         GN::util::SampleApp::onKeyPress(key);
 
-        if (input::KeyCode::SPACEBAR == key.code && key.status.down) { swimming = !swimming; }
+        if (input::KeyCode::SPACEBAR == key.code() && key.status.down) { swimming = !swimming; }
     }
 
     void onUpdate() {

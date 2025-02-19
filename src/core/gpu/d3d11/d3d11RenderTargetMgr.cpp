@@ -101,10 +101,10 @@ bool GN::gfx::D3D11RTMgr::bind(const RenderTargetDesc & oldrt, const RenderTarge
         mNumColors = 1;
     } else {
         // build RTV array
-        for (uint32 i = 0; i < newrt.colortargets.size(); ++i) {
+        for (uint32_t i = 0; i < newrt.colortargets.size(); ++i) {
             const RenderTargetTexture & rtt = newrt.colortargets[i];
 
-            D3D11Texture * tex = (D3D11Texture *) rtt.texture.rawptr();
+            D3D11Texture * tex = (D3D11Texture *) rtt.texture.data();
 
             GN_ASSERT(tex);
 
@@ -113,12 +113,12 @@ bool GN::gfx::D3D11RTMgr::bind(const RenderTargetDesc & oldrt, const RenderTarge
             if (NULL == mColors[i]) { return false; }
         }
         // fill remained items in RTV array with NULLs
-        for (uint32 i = newrt.colortargets.size(); i < GpuContext::MAX_COLOR_RENDER_TARGETS; ++i) { mColors[i] = NULL; }
+        for (uint32_t i = newrt.colortargets.size(); i < GpuContext::MAX_COLOR_RENDER_TARGETS; ++i) { mColors[i] = NULL; }
 
         mNumColors = newrt.colortargets.size();
 
         // Get depth stencil view
-        D3D11Texture * dstex = (D3D11Texture *) newrt.depthstencil.texture.rawptr();
+        D3D11Texture * dstex = (D3D11Texture *) newrt.depthstencil.texture.data();
         if (dstex) {
             mDepth = dstex->getDSView(newrt.depthstencil.face, newrt.depthstencil.level, newrt.depthstencil.slice);
             if (NULL == mDepth) { return false; }
@@ -131,7 +131,7 @@ bool GN::gfx::D3D11RTMgr::bind(const RenderTargetDesc & oldrt, const RenderTarge
     mGpu.getDeviceContextRefInlined().OMSetRenderTargets((UINT) GpuContext::MAX_COLOR_RENDER_TARGETS, mColors, mDepth);
 
     // update mRenderTargetSize
-    Vector2<uint32> newRtSize;
+    Vector2<uint32_t> newRtSize;
     if (newrt.colortargets.size() > 0) {
         newrt.colortargets[0].texture->getMipSize(newrt.colortargets[0].level, &newRtSize.x, &newRtSize.y);
     } else if (newrt.depthstencil.texture) {

@@ -34,7 +34,7 @@ public:
     ///
     /// Get number of models in the component.
     ///
-    uint32 getModelCount() const { return mModels.size(); }
+    uint32_t getModelCount() const { return mModels.size(); }
 
     /// Render all models in the component. If an spcial component is provided, it will be
     /// used to update world transformations.
@@ -61,7 +61,7 @@ protected:
     /// This method is called for each model in the visual component. The default
     /// implementation just calls ModelResource::draw(). Subclass could override
     /// this function to do custom rendering for each model.
-    virtual void drawModelResource(uint32 modelIndex, gfx::ModelResource & model) const {
+    virtual void drawModelResource(uint32_t modelIndex, gfx::ModelResource & model) const {
         GN_UNUSED_PARAM(modelIndex);
         model.draw();
     }
@@ -70,7 +70,7 @@ private:
     void updateWorldTransform(const Matrix44f & world) const;
 
 private:
-    typedef DynaArray<AutoRef<gfx::ModelResource>, uint32> ModelManager;
+    typedef DynaArray<AutoRef<gfx::ModelResource>, uint32_t> ModelManager;
 
     typedef FixedArray<AutoRef<gfx::UniformResource>, gfx::StandardUniform::Index::NUM_STANDARD_UNIFORMS> StandardUniformArray;
 

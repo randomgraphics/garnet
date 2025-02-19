@@ -1,9 +1,29 @@
 ﻿TODO
 ====
 
-- create a real time rendering system
-  - Using new gpu2 interface
+- Mordenization:
+  - Retain custom containers (such as string and array) in case we need to avoid dependencies to STL
+    - like when used as part of interface of shared library.
+  - cleanup File class
+    - has to keep dependencies to STL stream, due to << and >> template operators.
+  - Make AutoPtr be compatible with STL (support copy & move): using linked list.
+  - depreicate/remove some old old code: like guard, icl support
+  - update 3rd party libraries using submodule:
+    - ft2
+  - replace some custom classes with 3rdparty library:
+    - math
+    - delegate
+    - Spinlock -> std::mutex
+    - custom log -> spdlog (https://github.com/gabime/spdlog)
+    - format -> fmtlib (https://github.com/fmtlib/fmt )
+  - something keepers:
+    - autoptr: it is much faster and more memory effecient than use std::shared_ptr directly.
 
+- fix Qt6 window build.
+
+- ripple effect sample is currently broken: report empty vertex layout error.
+
+- create a render graph system using gpu2 interface.
 
 # ============================================================
 # The following are achieved TODO list from long long time ago
@@ -62,7 +82,7 @@
   - thread and sync objects unit tests.
   - update skinned mesh bounding box with animation
   - unit test:
-    - DynaArray<???,uint8>
+    - DynaArray<???,uint8_t>
   - New Engine module entity class
     - loop through all entities
     - loop through entities of specific type

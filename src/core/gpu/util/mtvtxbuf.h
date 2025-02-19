@@ -49,8 +49,8 @@ public:
     // from VtxBuf
     // ********************************
 public:
-    virtual void update(uint32 offset, uint32 length, const void * data, SurfaceUpdateFlag flag);
-    virtual void readback(DynaArray<uint8> & data);
+    virtual void update(uint32_t offset, uint32_t length, const void * data, SurfaceUpdateFlag flag);
+    virtual void readback(DynaArray<uint8_t> & data);
 
     // ********************************
     // private variables

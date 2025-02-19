@@ -77,9 +77,9 @@ public:
 private:
     struct AttribBindingInfo {
         const OGLVtxFmt * self;
-        uint16            offset;
-        uint8             stream; ///< vertex stream index
-        uint8             index;  ///< texture coordinate stage index or vertex attribute index
+        uint16_t          offset;
+        uint8_t           stream; ///< vertex stream index
+        uint8_t           index;  ///< texture coordinate stage index or vertex attribute index
         GLuint            format;
         GLuint            components;
         GLboolean         normalization;

@@ -45,9 +45,11 @@ AutoRef<TextureResource> GN::gfx::TextureResource::loadFromFile(GpuResourceDatab
 
     // load new texture from file
     GN_INFO(sLogger)("Load texture from file: %s", filename);
+    auto fp = GN::fs::openFile(filename, std::ios::binary | std::ios::in);
+    if (!fp) return AutoRef<TextureResource>::NULLREF;
 
     // load image
-    auto image = RawImage::load(filename);
+    auto image = Image::load(fp->input());
     if (image.empty()) return AutoRef<TextureResource>::NULLREF;
 
     // create texture
@@ -57,9 +59,9 @@ AutoRef<TextureResource> GN::gfx::TextureResource::loadFromFile(GpuResourceDatab
     if (!tex) return AutoRef<TextureResource>::NULLREF;
 
     // update texture content
-    for (uint32 f = 0; f < td.faces; ++f)
-        for (uint32 l = 0; l < td.levels; ++l) {
-            auto & md = image.desc(f, l);
+    for (uint32_t f = 0; f < td.faces; ++f)
+        for (uint32_t l = 0; l < td.levels; ++l) {
+            auto & md = image.plane(f, l);
             tex->updateMipmap(f, l, 0, md.pitch, md.slice, image.data() + md.offset, SurfaceUpdateFlag::DEFAULT);
         }
 

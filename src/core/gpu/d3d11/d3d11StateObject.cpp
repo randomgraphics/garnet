@@ -121,7 +121,7 @@ bool GN::gfx::D3D11StateObjectManager::setRS(const D3D11_RASTERIZER_DESC & desc,
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::D3D11StateObjectManager::setBS(const D3D11_BLEND_DESC & desc, const Vector4f & blendFactors, uint32 sampleMask, bool skipDirtyCheck) {
+bool GN::gfx::D3D11StateObjectManager::setBS(const D3D11_BLEND_DESC & desc, const Vector4f & blendFactors, uint32_t sampleMask, bool skipDirtyCheck) {
     ID3D11BlendState * stateObject = mBlendStates[desc];
     if (NULL == stateObject) return false;
 
@@ -139,7 +139,7 @@ bool GN::gfx::D3D11StateObjectManager::setBS(const D3D11_BLEND_DESC & desc, cons
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::D3D11StateObjectManager::setDS(const D3D11_DEPTH_STENCIL_DESC & desc, uint32 stencilRef, bool skipDirtyCheck) {
+bool GN::gfx::D3D11StateObjectManager::setDS(const D3D11_DEPTH_STENCIL_DESC & desc, uint32_t stencilRef, bool skipDirtyCheck) {
     ID3D11DepthStencilState * stateObject = mDepthStates[desc];
     if (NULL == stateObject) return false;
 
@@ -156,7 +156,7 @@ bool GN::gfx::D3D11StateObjectManager::setDS(const D3D11_DEPTH_STENCIL_DESC & de
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::D3D11StateObjectManager::setVSSampler(const D3D11_SAMPLER_DESC & desc, uint32 stage, bool skipDirtyCheck) {
+bool GN::gfx::D3D11StateObjectManager::setVSSampler(const D3D11_SAMPLER_DESC & desc, uint32_t stage, bool skipDirtyCheck) {
     ID3D11SamplerState * ss = mSamplerStates[desc];
     if (NULL == ss) return false;
 
@@ -176,7 +176,7 @@ bool GN::gfx::D3D11StateObjectManager::setVSSampler(const D3D11_SAMPLER_DESC & d
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::D3D11StateObjectManager::setGSSampler(const D3D11_SAMPLER_DESC & desc, uint32 stage, bool skipDirtyCheck) {
+bool GN::gfx::D3D11StateObjectManager::setGSSampler(const D3D11_SAMPLER_DESC & desc, uint32_t stage, bool skipDirtyCheck) {
     ID3D11SamplerState * ss = mSamplerStates[desc];
     if (NULL == ss) return false;
 
@@ -196,7 +196,7 @@ bool GN::gfx::D3D11StateObjectManager::setGSSampler(const D3D11_SAMPLER_DESC & d
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::D3D11StateObjectManager::setPSSampler(const D3D11_SAMPLER_DESC & desc, uint32 stage, bool skipDirtyCheck) {
+bool GN::gfx::D3D11StateObjectManager::setPSSampler(const D3D11_SAMPLER_DESC & desc, uint32_t stage, bool skipDirtyCheck) {
     ID3D11SamplerState * ss = mSamplerStates[desc];
     if (NULL == ss) return false;
 

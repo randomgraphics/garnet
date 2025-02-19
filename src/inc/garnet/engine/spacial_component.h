@@ -37,8 +37,8 @@ public:
     const Quaternionf & getRotation() const { return mRotation; } ///< get orientation, in parent space
     const Vector3f &    getScale() const { return mScale; }       ///< get scaling for each axis in local space.
     const Matrix44f &   getLocal2Parent() const {
-        validateTransform();
-        return mLocal2Parent;
+          validateTransform();
+          return mLocal2Parent;
     } ///< get local space to parent space transformation matrix
     const Matrix44f & getLocal2Root() const {
         validateTransform();
@@ -51,7 +51,7 @@ public:
         return mUberBBox;
     } ///< get the uber bounding box of the component and all sub components, in local space.
     /// draw the bounding box
-    void drawBoundingBox(const Matrix44f & proj, const Matrix44f & view, uint32 colorInRGBA) const {
+    void drawBoundingBox(const Matrix44f & proj, const Matrix44f & view, uint32_t colorInRGBA) const {
         getGdb()->setTransform(proj, view);
         getLineRenderer()->drawBox(getUberBoundingBox(), colorInRGBA, proj * view * getLocal2Root());
     }

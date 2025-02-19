@@ -17,8 +17,8 @@ namespace input {
 /// Basic XInput system for MS Windows and Xenon.
 ///
 class BasicXInput : public BasicInput {
-    bool   mCoInit;
-    uint32 mXInputPacketNumber;
+    bool     mCoInit;
+    uint32_t mXInputPacketNumber;
 
 protected:
     void * mXInputGetState; ///< function pointer to "XInputGetState"

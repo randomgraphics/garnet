@@ -14,13 +14,13 @@
 
 class GpuTest {
     union RenderTargetPixel {
-        float  f32[4];
-        uint32 u32[4];
-        sint32 s32[4];
-        uint16 u16[8];
-        uint8  u8[16];
+        float    f32[4];
+        uint32_t u32[4];
+        int32_t  s32[4];
+        uint16_t u16[8];
+        uint8_t  u8[16];
         struct {
-            uint8 r, g, b, a;
+            uint8_t r, g, b, a;
         } rgba8888;
     };
 
@@ -28,7 +28,7 @@ class GpuTest {
     /// \note
     ///     - position (0,0) is left-top corner of the render target
     ///     - this function may crash because of invalid parameters.
-    RenderTargetPixel getRenderTargetPixel(GN::gfx::Gpu & r, uint32 rtidx, size_t x, size_t y) {
+    RenderTargetPixel getRenderTargetPixel(GN::gfx::Gpu & r, uint32_t rtidx, size_t x, size_t y) {
         using namespace GN;
         using namespace GN::gfx;
 
@@ -45,7 +45,7 @@ class GpuTest {
         rtp.s32[2] = rand();
         rtp.s32[3] = rand();
 
-        const Vector3<uint32> & rtsize = rtt.texture->getMipSize(rtt.level);
+        const Vector3<uint32_t> & rtsize = rtt.texture->getMipSize(rtt.level);
         if (x >= rtsize.x && y >= rtsize.y) {
             TS_ASSERT(0);
             return rtp;
@@ -54,14 +54,14 @@ class GpuTest {
         MipmapData md;
         rtt.texture->readMipmap(rtt.face, rtt.level, md);
 
-        size_t bytesPerPixel = rtt.texture->getDesc().format.getBytesPerBlock();
+        size_t bytesPerPixel = rtt.texture->getDesc().format.bytesPerBlock();
         size_t srcOffset     = md.slicePitch * rtt.slice + md.rowPitch * y + x * bytesPerPixel;
         if (srcOffset >= md.data.size()) {
             TS_ASSERT(0);
             return rtp;
         }
-        const uint8 * src         = &md.data[srcOffset];
-        size_t        copiedBytes = math::getmin(md.data.size() - srcOffset, sizeof(rtp));
+        const uint8_t * src         = &md.data[srcOffset];
+        size_t          copiedBytes = math::getmin(md.data.size() - srcOffset, sizeof(rtp));
         memcpy(&rtp, src, copiedBytes);
 
         return rtp;
@@ -87,12 +87,12 @@ class GpuTest {
         TS_ASSERT(x < bc.width && y < bc.height);
         if (x >= bc.width && y >= bc.height) return rtp;
 
-        size_t bytesPerPixel = bc.format.getBytesPerBlock();
+        size_t bytesPerPixel = bc.format.bytesPerBlock();
         size_t srcOffset     = bc.pitch * y + x * bytesPerPixel;
         TS_ASSERT(srcOffset < bc.data.size());
         if (srcOffset >= bc.data.size()) return rtp;
-        const uint8 * src         = &bc.data[srcOffset];
-        size_t        copiedBytes = math::getmin(bc.data.size() - srcOffset, sizeof(rtp));
+        const uint8_t * src         = &bc.data[srcOffset];
+        size_t          copiedBytes = math::getmin(bc.data.size() - srcOffset, sizeof(rtp));
         memcpy(&rtp, src, copiedBytes);
 
         return rtp;
@@ -120,7 +120,7 @@ class GpuTest {
     };
 
     GN::gfx::GpuAPI mAPI;
-    uint32          mCreationFlags;
+    uint32_t        mCreationFlags;
 
 protected:
     /// ctor

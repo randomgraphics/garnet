@@ -34,7 +34,7 @@ struct Gpu2 : public RefCounter {
     struct InputElement {
         const char * semantic;
         uint32_t     index;
-        ColorFormat  format;
+        PixelFormat  format;
         uint32_t     slot;                         // input assembly slot: 0-15
         uint32_t     offset       = (uint32_t) -1; // byte offset of the element. Set to -1 for auto alignment.
         bool         instanceData = false;
@@ -79,7 +79,7 @@ struct Gpu2 : public RefCounter {
                 uint8_t d : 1;
                 uint8_t s : 1;
             };
-        } flags;
+        } flags {};
     };
     struct VertexBufferView {
         const Surface * surface;
@@ -208,7 +208,7 @@ struct Gpu2 : public RefCounter {
         SurfaceType   type;
         struct TextureDesc {
             uint32_t    w, h = 1, d = 1, a = 1, m = 1, s = 1; ///< width, height, depth, array, mipmaps, samples.
-            ColorFormat f;                                    ///< format
+            PixelFormat f;                                    ///< format
         } t;
         struct BufferDesc {
             uint32_t bytes;
@@ -250,10 +250,10 @@ struct ShaderCompileParameters {
     };
 
     const char * source;
-    size_t       length = 0; // could be 0 for null-terminated string.
-    const char * entry;
-    const char * profile;
-    Options      options;
+    size_t       length {}; // could be 0 for null-terminated string.
+    const char * entry {};
+    const char * profile {};
+    Options      options {};
 };
 GN_API DynaArray<uint8_t> compileHLSL(const ShaderCompileParameters &);
 } // end of namespace gfx

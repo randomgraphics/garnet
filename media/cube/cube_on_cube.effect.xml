@@ -47,15 +47,16 @@ float4 main( in float4 ipos: POSITION0, in float3 itex : TEXCOORD0 ) : COLOR0
 		<gpuprogram name="glsl" lang="GLSL">
 			<uniref uniform="pvw" shaderParameter="pvw"/>
 			<texref texture="cube" shaderParameter="t0"/>
-			<attref attribute="POSITION0" shaderParameter="gl_Vertex"/>
+			<attref attribute="POSITION0" shaderParameter="position"/>
 			<vs entry="main">
 <![CDATA[
+attribute vec4 position;
 uniform mat4 pvw;
 varying vec3 texcoords;
 void main()
 {
-	gl_Position = pvw * gl_Vertex;
-	texcoords   = sign( gl_Vertex.xyz );
+	gl_Position = pvw * position;
+	texcoords   = sign( position.xyz );
 }
  ]]>
 			</vs>

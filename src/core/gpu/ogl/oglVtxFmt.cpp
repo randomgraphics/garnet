@@ -64,7 +64,7 @@ bool GN::gfx::OGLVtxFmt::bindBuffers(const VertexBufferBinding * bindings, size_
             return false;
         }
         const VertexBufferBinding & b = bindings[stream];
-        safeCastPtr<const OGLVtxBufVBO>(b.vtxbuf.rawptr())->bind();
+        safeCastPtr<const OGLVtxBufVBO>(b.vtxbuf.data())->bind();
         glVertexAttribPointer(ab.index, ab.components, ab.format, ab.normalization, (GLsizei) b.stride,
                               (const uint8_t *) (intptr_t) (startvtx * b.stride + b.offset + ab.offset));
     }
@@ -109,7 +109,7 @@ bool GN::gfx::OGLVtxFmt::bindRawMemoryBuffer(const void * data, size_t stride) c
 bool GN::gfx::OGLVtxFmt::setupStateBindings(const OGLGpuProgram * gpuProgram) {
     GN_GUARD;
 
-    uint32          maxAttributes = getGpu().getOGLCaps().maxVertexAttributes;
+    uint32_t        maxAttributes = getGpu().getOGLCaps().maxVertexAttributes;
     DynaArray<bool> hasAttrib(maxAttributes, false);
 
     OGLVertexBindingDesc vbd;
@@ -130,8 +130,8 @@ bool GN::gfx::OGLVtxFmt::setupStateBindings(const OGLGpuProgram * gpuProgram) {
 
         AttribBindingInfo ab;
         ab.self   = this;
-        ab.stream = (uint8) e.stream;
-        ab.offset = (uint8) e.offset;
+        ab.stream = (uint8_t) e.stream;
+        ab.offset = (uint8_t) e.offset;
 
         switch (vbd.semantic) {
         case VERTEX_SEMANTIC_ATTRIBUTE:
@@ -152,63 +152,44 @@ bool GN::gfx::OGLVtxFmt::setupStateBindings(const OGLGpuProgram * gpuProgram) {
             return false;
         }
 
-        switch (e.format.alias) {
-        case ColorFormat::FLOAT1:
+        if (PixelFormat::FLOAT1() == e.format) {
             ab.format        = GL_FLOAT;
             ab.components    = 1;
             ab.normalization = false;
-            break;
-
-        case ColorFormat::FLOAT2:
+        } else if (PixelFormat::FLOAT2() == e.format) {
             ab.format        = GL_FLOAT;
             ab.components    = 2;
             ab.normalization = false;
-            break;
-
-        case ColorFormat::FLOAT3:
+        } else if (PixelFormat::FLOAT3() == e.format) {
             ab.format        = GL_FLOAT;
             ab.components    = 3;
             ab.normalization = false;
-            break;
-
-        case ColorFormat::FLOAT4:
+        } else if (PixelFormat::FLOAT4() == e.format) {
             ab.format        = GL_FLOAT;
             ab.components    = 4;
             ab.normalization = false;
-            break;
-
-        case ColorFormat::RGBA8:
+        } else if (PixelFormat::RGBA8() == e.format) {
             ab.format        = GL_UNSIGNED_BYTE;
             ab.components    = 4;
             ab.normalization = true;
-            break;
-
-        case ColorFormat::USHORT4:
+        } else if (PixelFormat::USHORT4() == e.format) {
             ab.format        = GL_UNSIGNED_SHORT;
             ab.components    = 4;
             ab.normalization = false;
-            break;
-
-        case ColorFormat::SHORT4:
+        } else if (PixelFormat::SHORT4() == e.format) {
             ab.format        = GL_SHORT;
             ab.components    = 4;
             ab.normalization = false;
-            break;
-
-        case ColorFormat::UINT4:
+        } else if (PixelFormat::UINT4() == e.format) {
             ab.format        = GL_UNSIGNED_INT;
             ab.components    = 4;
             ab.normalization = false;
-            break;
-
-        case ColorFormat::SINT4:
+        } else if (PixelFormat::SINT4() == e.format) {
             ab.format        = GL_INT;
             ab.components    = 4;
             ab.normalization = false;
-            break;
-
-        default:
-            GN_ERROR(sLogger)("unsupport vertex format: %s", e.format.toString().rawptr());
+        } else {
+            GN_ERROR(sLogger)("unsupport vertex format: %s", e.format.toString().c_str());
             return false;
         }
 
@@ -220,7 +201,7 @@ bool GN::gfx::OGLVtxFmt::setupStateBindings(const OGLGpuProgram * gpuProgram) {
     // ===================
     GN_OGL_CHECK_R(glGenVertexArrays(1, &mVAO), false);
     glBindVertexArray(mVAO);
-    for (uint32 i = 0; i < maxAttributes; ++i) {
+    for (uint32_t i = 0; i < maxAttributes; ++i) {
         if (hasAttrib[i]) {
             glEnableVertexAttribArrayARB(i);
         } else {

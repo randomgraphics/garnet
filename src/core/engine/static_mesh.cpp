@@ -135,34 +135,33 @@ bool GN::engine::StaticMesh::loadFromFatModel(const GN::gfx::FatModel & fatmodel
 
     GpuResourceDatabase & gdb = *getGdb();
 
-    DynaArray<uint8> vb;
+    DynaArray<uint8_t> vb;
 
-    for (uint32 i = 0; i < fatmodel.meshes.size(); ++i) {
+    for (uint32_t i = 0; i < fatmodel.meshes.size(); ++i) {
         const auto & fatmesh = fatmodel.meshes[i];
 
-        StrA meshName = str::format("%s.mesh.%d", fatmodel.name.rawptr(), i);
+        StrA meshName = str::format("%s.mesh.%d", fatmodel.name.data(), i);
 
         // use exising mesh, if possible
         AutoRef<MeshResource> mesh = gdb.findResource<MeshResource>(meshName);
         if (!mesh) {
             // setup mesh descriptor
-            MeshResourceDesc merd;
-            memset(&merd, 0, sizeof(merd));
+            MeshResourceDesc merd {};
             merd.prim       = fatmesh.primitive;
             merd.numvtx     = fatmesh.vertices.getVertexCount();
             merd.numidx     = fatmesh.indices.size();
             merd.idx32      = true; // TODO: use 16-bit index buffer, when possible.
             merd.offsets[0] = 0;
-            merd.indices    = (void *) fatmesh.indices.rawptr();
+            merd.indices    = (void *) fatmesh.indices.data();
 
             // setup vertex format
             fatmesh.vertices.GenerateMeshVertexFormat(merd.vtxfmt);
-            merd.strides[0] = math::alignToPowerOf2<uint16>(merd.vtxfmt.calcStreamStride(0), 16);
+            merd.strides[0] = math::alignToPowerOf2<uint16_t>(merd.vtxfmt.calcStreamStride(0), 16);
 
             // copy vertex data
             if (!vb.resize(merd.strides[0] * fatmesh.vertices.getVertexCount())) continue;
-            if (!fatmesh.vertices.GenerateVertexStream(merd.vtxfmt, 0, merd.strides[0], vb.rawptr(), vb.size())) continue;
-            merd.vertices[0] = vb.rawptr();
+            if (!fatmesh.vertices.GenerateVertexStream(merd.vtxfmt, 0, merd.strides[0], vb.data(), vb.size())) continue;
+            merd.vertices[0] = vb.data();
 
             // create GPU mesh resource
             mesh = gdb.createResource<MeshResource>(meshName);

@@ -6,6 +6,8 @@
 /// \author  chen@@CHENLI-OLDPC (2011.2.24)
 // *****************************************************************************
 
+#include <unordered_map>
+
 /// Declare an entity type
 #define GN_ENGINE_DECLARE_ENTITY(self, parent)                    \
 public:                                                           \
@@ -141,7 +143,7 @@ public:
     ///
     /// get the raw pointer
     ///
-    XPTR rawptr() const { return (XPTR) mPtr; }
+    XPTR data() const { return (XPTR) mPtr; }
 
     ///
     /// check for empty reference
@@ -251,10 +253,10 @@ public:
     }
     //@}
 
-    // public: virtual void processEvent( uint32 eventid, uint64 param1, void * param2 ) = 0;
+    // public: virtual void processEvent( uint32_t eventid, uint64_t param1, void * param2 ) = 0;
 
 private:
-    typedef HashMap<EntityType, EntityRef<Entity>, 128, EntityType::Hash> ComponentMap;
+    typedef std::unordered_map<EntityType, EntityRef<Entity>, EntityType::Hash> ComponentMap;
 
     int          mID;
     ComponentMap mComponents;

@@ -25,12 +25,12 @@ public:
     ///
     /// convert to C pointer
     ///
-    const T * rawptr() const { return mElements; }
+    const T * data() const { return mElements; }
 
     ///
     /// convert to C pointer
     ///
-    T * rawptr() { return mElements; }
+    T * data() { return mElements; }
 
     ///
     /// return size of the array (always be MAX_SIZE)
@@ -55,14 +55,14 @@ public:
 };
 
 ///
-/// Fixed size array with supporting to common array operations
-/// like push, pop, insert, remove and etc.
+/// Resizable array array completely allocated on stack. No heap allocation. Support commonly used
+/// array operations like push, pop, insert, remove and etc.
 ///
 /// \todo Fix issues using with class with non-trival constructor and destructor
 ///
 template<class T, size_t N, typename SIZE_TYPE = size_t>
 class StackArray {
-    uint8     mBuffer[sizeof(T) * N];
+    uint8_t   mBuffer[sizeof(T) * N];
     SIZE_TYPE mCount;
 
     /// default constructor
@@ -81,14 +81,14 @@ class StackArray {
     }
 
     void doClear() {
-        T * p = rawptr();
+        T * p = data();
         for (SIZE_TYPE i = 0; i < mCount; ++i, ++p) { dtor(p); }
         mCount = 0;
     }
 
     void copyFrom(const StackArray & other) {
-        T *       dst = rawptr();
-        const T * src = other.rawptr();
+        T *       dst = data();
+        const T * src = other.data();
 
         SIZE_TYPE mincount = math::getmin<SIZE_TYPE>(mCount, other.mCount);
         for (SIZE_TYPE i = 0; i < mincount; ++i) { dst[i] = src[i]; }
@@ -115,7 +115,7 @@ class StackArray {
             return;
         }
 
-        T * p = rawptr();
+        T * p = data();
 
         // construct last element
         ctor(p + mCount, 1);
@@ -137,7 +137,7 @@ class StackArray {
 
         --mCount;
 
-        T * p = rawptr();
+        T * p = data();
 
         // move elements
         for (SIZE_TYPE i = position; i < mCount; ++i) { p[i] = p[i + 1]; }
@@ -154,7 +154,7 @@ class StackArray {
             return;
         }
 
-        T * p = rawptr();
+        T * p = data();
 
         // destruct extra objects, only when count < mCount
         for (SIZE_TYPE i = count; i < mCount; ++i) { dtor(p + i); }
@@ -168,8 +168,8 @@ class StackArray {
     bool equal(const StackArray & other) const {
         if (mCount != other.mCount) return false;
 
-        const T * p1 = rawptr();
-        const T * p2 = other.rawptr();
+        const T * p1 = data();
+        const T * p2 = other.data();
 
         for (SIZE_TYPE i = 0; i < mCount; ++i) {
             if (p1[i] != p2[i]) return false;
@@ -190,7 +190,7 @@ public:
     ///
     /// constructor with user-defined count.
     ///
-    explicit StackArray(SIZE_TYPE count): mCount(count) { ctor(rawptr(), count); }
+    explicit StackArray(SIZE_TYPE count): mCount(count) { ctor(data(), count); }
 
     ///
     /// copy constructor
@@ -208,30 +208,30 @@ public:
     void      append(const T & t) { doInsert(mCount, t); }
     const T & back() const {
         GN_ASSERT(mCount > 0);
-        return rawptr()[mCount - 1];
+        return data()[mCount - 1];
     }
     T & back() {
         GN_ASSERT(mCount > 0);
-        return rawptr()[mCount - 1];
+        return data()[mCount - 1];
     }
-    const T * begin() const { return rawptr(); }
-    T *       begin() { return rawptr(); }
+    const T * begin() const { return data(); }
+    T *       begin() { return data(); }
     void      clear() { doClear(); }
-    const T * rawptr() const { return (const T *) mBuffer; }
-    T *       rawptr() { return (T *) mBuffer; }
+    const T * data() const { return (const T *) mBuffer; }
+    T *       data() { return (T *) mBuffer; }
     bool      empty() const { return 0 == mCount; }
-    const T * end() const { return rawptr() + mCount; }
-    T *       end() { return rawptr() + mCount; }
+    const T * end() const { return data() + mCount; }
+    T *       end() { return data() + mCount; }
     /** do nothing if position is invalid or array is empty */
     void      eraseIdx(SIZE_TYPE position) { doErase(position); }
     void      erasePtr(const T * ptr) { doErase(ptr - mBuffer); }
     const T & front() const {
         GN_ASSERT(mCount > 0);
-        return rawptr()[0];
+        return data()[0];
     }
     T & front() {
         GN_ASSERT(mCount > 0);
-        return rawptr()[0];
+        return data()[0];
     }
     /** do nothing if position is invalid or array is full */
     void      insert(SIZE_TYPE position, const T & t) { doInsert(position, t); }
@@ -250,18 +250,18 @@ public:
     bool operator==(const StackArray & other) const { return equal(other); }
     bool operator!=(const StackArray & other) const { return !equal(other); }
     T &  operator[](SIZE_TYPE i) {
-        GN_ASSERT(i < mCount);
-        return rawptr()[i];
+         GN_ASSERT(i < mCount);
+         return data()[i];
     }
     const T & operator[](SIZE_TYPE i) const {
         GN_ASSERT(i < mCount);
-        return rawptr()[i];
+        return data()[i];
     }
     //@}
 };
 
 ///
-/// Resizeable array.
+/// Resizable array.
 ///
 template<class T, typename SIZE_TYPE = size_t, class OBJECT_ALLOCATOR = CxxObjectAllocator<T>>
 class DynaArray {
@@ -430,7 +430,7 @@ class DynaArray {
 
         // align caps to next power of 2
         GN_ASSERT(count > 0);
-        uint64 newCap = count - 1;
+        uint64_t newCap = count - 1;
         newCap |= newCap >> 32;
         newCap |= newCap >> 16;
         newCap |= newCap >> 8;
@@ -440,7 +440,7 @@ class DynaArray {
         newCap += 1;
 
         // Cap to maximum allowable value.
-        const uint64 MAX_CAPS = (uint64) (SIZE_TYPE) -1;
+        const uint64_t MAX_CAPS = (uint64_t) (SIZE_TYPE) -1;
         if (newCap > MAX_CAPS) newCap = MAX_CAPS;
 
         GN_ASSERT(count <= MAX_CAPS);
@@ -595,8 +595,6 @@ public:
     void      clear() { doClear(); }
     const T * data() const { return mElements; }
     T *       data() { return mElements; }
-    const T * rawptr() const { return mElements; } // obsolete
-    T *       rawptr() { return mElements; }       // oboslete
     bool      empty() const { return 0 == GetCount(); }
     const T * end() const { return mElements + GetCount(); }
     T *       end() { return mElements + GetCount(); }
@@ -646,8 +644,8 @@ public:
     bool operator==(const DynaArray & other) const { return equal(other); }
     bool operator!=(const DynaArray & other) const { return !equal(other); }
     T &  operator[](SIZE_TYPE i) {
-        GN_ASSERT(i < GetCount());
-        return mElements[i];
+         GN_ASSERT(i < GetCount());
+         return mElements[i];
     }
     const T & operator[](SIZE_TYPE i) const {
         GN_ASSERT(i < GetCount());
@@ -716,61 +714,6 @@ public:
     }
 
     //@}
-};
-
-/// Represents a constant non-resizable list of elements.
-template<typename T, typename SIZE_T = size_t>
-class ConstRange {
-    const T * mPtr;  ///< pointer to the first element in the list.
-    SIZE_T    mSize; ///< number of elements in the list.
-
-public:
-    constexpr ConstRange(): mPtr(nullptr), mSize(0) {}
-
-    constexpr ConstRange(const MutableRange<T, SIZE_T> & mr): mPtr(mr.begin()), mSize(mr.size()) {}
-
-    constexpr ConstRange(const T * ptr, SIZE_T size): mPtr(ptr), mSize(size) {}
-
-    constexpr ConstRange(const std::vector<T> & v): mPtr(v.data()), mSize((SIZE_T) v.size()) {}
-
-    template<SIZE_T N>
-    constexpr ConstRange(const T (&array)[N]): mPtr(array), mSize(N) {}
-
-    template<SIZE_T N>
-    constexpr ConstRange(const StackArray<T, N> & v): mPtr(v.data()), mSize(v.size()) {}
-
-    template<SIZE_T N>
-    constexpr ConstRange(const std::array<T, N> & v): mPtr(v.data()), mSize(v.size()) {}
-
-    GN_DEFAULT_COPY(ConstRange);
-
-    GN_DEFAULT_MOVE(ConstRange);
-
-    ConstRange & clear() {
-        mPtr  = nullptr;
-        mSize = 0;
-        return *this;
-    }
-
-    ConstRange & reset(const T * ptr, SIZE_T size) {
-        mPtr  = ptr;
-        mSize = size;
-        return *this;
-    }
-
-    constexpr bool      empty() const { return 0 == mPtr || 0 == mSize; }
-    constexpr SIZE_T    size() const { return mSize; }
-    constexpr const T * begin() const { return mPtr; }
-    constexpr const T * end() const { return mPtr + mSize; }
-    constexpr const T * data() const { return mPtr; }
-    constexpr const T & at(SIZE_T i) const {
-        PH_ASSERT(i < mSize);
-        return mPtr[i];
-    }
-    constexpr const T & operator[](SIZE_T i) const { return at(i); }
-
-    /// convert to std::initialize_list
-    constexpr std::initializer_list<T> il() const { return std::initializer_list<T>(mPtr, mPtr + mSize); }
 };
 
 } // namespace GN

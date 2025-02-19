@@ -7,7 +7,6 @@
 // *****************************************************************************
 
 #include "GNbase.h"
-#include "gfx/colorFormat.h"
 #include "gfx/image.h"
 #include "gfx/shape.h"
 #include "gfx/primitive.h"

@@ -61,19 +61,19 @@ protected:
     void triggerKeyPress(KeyCode key, bool keydown);
     void triggerCharPress(char ch);
     void triggerAxisMove(Axis axis, int distance) {
-        GN_ASSERT(0 <= axis && axis < Axis::NUM_AXISES);
-        mAxisStatus[axis] += distance;
+        GN_ASSERT(Axis::NONE <= axis && axis < Axis::NUM_AXISES);
+        mAxisStatus[(int) axis] += distance;
         sigAxisMove(axis, distance);
     }
     void triggerAxisMoveAbs(Axis axis, int value, int deadZone) {
-        GN_ASSERT(0 <= axis && axis < Axis::NUM_AXISES);
+        GN_ASSERT(Axis::NONE <= axis && axis < Axis::NUM_AXISES);
 
         // handle dead zone
         if (-deadZone <= value && value <= deadZone) value = 0;
 
-        if (value != mAxisStatus[axis]) {
-            int old           = mAxisStatus[axis];
-            mAxisStatus[axis] = value;
+        if (value != mAxisStatus[(int) axis]) {
+            int old                 = mAxisStatus[(int) axis];
+            mAxisStatus[(int) axis] = value;
             sigAxisMove(axis, value - old);
         }
     }
@@ -89,12 +89,12 @@ private:
     ///
     /// 记录键盘的状态，用来过滤/修正不匹配的按键操作
     ///
-    KeyStatus mKeyboardStatus[KeyCode::NUM_KEYS];
+    KeyStatus mKeyboardStatus[(size_t) KeyCode::NUM_KEYS];
 
     ///
     /// axis positions
     ///
-    int mAxisStatus[Axis::NUM_AXISES];
+    int mAxisStatus[(size_t) Axis::NUM_AXISES];
 
     ///
     /// 记录了CTRL/ALT/SHIFT的状态

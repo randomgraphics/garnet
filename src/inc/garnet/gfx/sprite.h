@@ -8,14 +8,16 @@
 
 namespace GN {
 namespace gfx {
-///
-/// 2D sprite renderer.
+
+/// @brief 2D sprite renderer.
 ///
 /// 2D sprite coordinate system:
 ///     - left-top corner is (0,0)
 ///     - X is leftward
 ///     - Y is downward
 ///     - length unit is pixel
+///
+/// \todo add support for custom pixel/fragment shader and uniforms.
 ///
 class GN_API SpriteRenderer : public StdClass {
     GN_DECLARE_STDCLASS(SpriteRenderer, StdClass);
@@ -83,7 +85,7 @@ public:
     ///
     /// \note set texture to NULL, to draw solid sprite
     ///
-    void drawBegin(Texture * texture, uint32 options);
+    void drawBegin(Texture * texture, uint32_t options);
     void drawEnd();
 
     ///
@@ -94,7 +96,7 @@ public:
     ///
     /// By default, x/y/w/h are in screen space. (0,0) is upper left corner of the screen.
     ///
-    void drawSolid(uint32 rgba, float x, float y, float w, float h, float z);
+    void drawSolid(uint32_t rgba, float x, float y, float w, float h, float z);
 
     //@}
 
@@ -123,7 +125,7 @@ public:
 private:
     struct SpriteVertex {
         GN::Vector3f pos;
-        uint32       clr; // color in R-G-B-A format
+        uint32_t     clr; // color in R-G-B-A format
         GN::Vector2f tex;
         float        _[2]; // padding to 32 bytes
     };
@@ -147,7 +149,7 @@ private:
 
     GpuContext mContext;
 
-    uint32   mOptions;
+    uint32_t mOptions;
     float    mVertexShift;
     bool     mDrawBegun;
     Sprite * mSprites;

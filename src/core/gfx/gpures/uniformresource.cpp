@@ -21,7 +21,7 @@ const Guid & GN::gfx::UniformResource::guid() {
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::UniformResource::reset(uint32 length, const void * initialData) {
+bool GN::gfx::UniformResource::reset(uint32_t length, const void * initialData) {
     AutoRef<Uniform> u = attachTo(getGdb().getGpu().createUniform(length));
     if (!u) return false;
 

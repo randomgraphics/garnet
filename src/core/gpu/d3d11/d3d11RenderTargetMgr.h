@@ -58,7 +58,7 @@ public:
     ///
     /// get render target count
     ///
-    uint32 getRenderTargetCount() const { return (uint32) mNumColors; }
+    uint32_t getRenderTargetCount() const { return (uint32_t) mNumColors; }
 
     ///
     /// get render target view
@@ -76,7 +76,7 @@ public:
     ///
     /// get render target size in pixels
     ///
-    const Vector2<uint32> & getRenderTargetSize() const { return mRenderTargetSize; }
+    const Vector2<uint32_t> & getRenderTargetSize() const { return mRenderTargetSize; }
 
     // ********************************
     // private variables
@@ -92,7 +92,7 @@ private:
     ID3D11DepthStencilView * mDepth;
     size_t                   mNumColors;
 
-    Vector2<uint32> mRenderTargetSize;
+    Vector2<uint32_t> mRenderTargetSize;
 
     // ********************************
     // private functions

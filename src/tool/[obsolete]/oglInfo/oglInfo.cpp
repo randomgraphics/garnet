@@ -101,7 +101,7 @@ void printOglInfo(intptr_t disp, int index) {
             "===================================================\n"
             "\n\n";
 
-    GN_INFO(sLogger)(info.rawptr());
+    GN_INFO(sLogger)(info.data());
 
     GN_UNGUARD;
 }

@@ -44,7 +44,7 @@ static Entity * sCreateEntity(Entity * root, const ModelHierarchyDesc & worldDes
     if (!entityDesc.parent.empty()) {
         const ModelHierarchyDesc::NodeDesc * parentDesc = worldDesc.nodes.find(entityDesc.parent);
         if (NULL == parentDesc) {
-            GN_ERROR(sLogger)("Entity '%s' has a invalid parent: '%s'", entityName.rawptr(), entityDesc.parent.rawptr());
+            GN_ERROR(sLogger)("Entity '%s' has a invalid parent: '%s'", entityName.data(), entityDesc.parent.data());
         } else {
 
             parent = (SampleSpacialEntity *) sCreateEntity(root, worldDesc, entities, entityDesc.parent, *parentDesc);
@@ -77,7 +77,7 @@ static Entity * sCreateEntity(Entity * root, const ModelHierarchyDesc & worldDes
 
         const GN::gfx::ModelResourceDesc * pModelDesc = worldDesc.models.find(modelName);
         if (NULL == pModelDesc) {
-            GN_ERROR(sLogger)("Entity %s references invalid model named \"%s\".", entityName.rawptr(), modelName.rawptr());
+            GN_ERROR(sLogger)("Entity %s references invalid model named \"%s\".", entityName.data(), modelName.data());
             continue;
         }
 
@@ -93,7 +93,7 @@ static Entity * sCreateEntity(Entity * root, const ModelHierarchyDesc & worldDes
 
                 if (NULL == pMeshDesc) {
                     GN_ERROR(sLogger)
-                    ("Model \"%s\" references a mesh \"%s\" that does not belong to this scene.", modelName.rawptr(), pModelDesc->mesh.rawptr());
+                    ("Model \"%s\" references a mesh \"%s\" that does not belong to this scene.", modelName.data(), pModelDesc->mesh.data());
                     continue; // ignore the model
                 }
 

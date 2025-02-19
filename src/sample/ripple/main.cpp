@@ -23,7 +23,12 @@ class MyApp : public SampleApp {
 public:
     MyApp(): mSprite(NULL) {}
 
-    bool onInit() {
+    bool onPreInit(InitParam & p) override {
+        p.ro.api = GpuAPI::D3D11; // d3d11 only
+        return true;
+    }
+
+    bool onInit() override {
         Gpu & gpu = *engine::getGpu();
 
         mSprite = new SpriteRenderer();
@@ -80,10 +85,11 @@ public:
         const char *    filename = "media/ripple.ps";
         if (fs::pathExist(filename)) {
             DiskFile f;
-            if (f.open(filename, "rt")) {
-                rippleCodeFromFile.resize(f.size() + 1);
-                rippleCodeFromFile[f.size()] = '\0';
-                if (f.read(&rippleCodeFromFile[0], f.size(), NULL)) { rippleCode = &rippleCodeFromFile[0]; }
+            if (f.open(filename, std::ios::in)) {
+                auto sz = f.size();
+                rippleCodeFromFile.resize(sz + 1);
+                rippleCodeFromFile[sz] = '\0';
+                if (sz != f.read(&rippleCodeFromFile[0], sz)) { rippleCode = &rippleCodeFromFile[0]; }
             }
         }
 
@@ -111,13 +117,13 @@ public:
         return true;
     }
 
-    void onQuit() {
+    void onQuit() override {
         safeDelete(mSprite);
         mContext.clear();
     }
 
-    void onKeyPress(input::KeyEvent key) {
-        if (key.code == KeyCode::MOUSEBTN_0 && key.status.down) {
+    void onKeyPress(input::KeyEvent key) override {
+        if (key.code() == KeyCode::MOUSEBTN_0 && key.status.down) {
             int mx, my;
             gInput.getMousePosition(mx, my);
 
@@ -129,7 +135,7 @@ public:
         }
     }
 
-    void onUpdate() {
+    void onUpdate() override {
         for (size_t i = 0; i < GN_ARRAY_COUNT(mRipples); ++i) {
             if (mRipples[i].time > 0.0f) { mRipples[i].time += UPDATE_INTERVAL_IN_SECONDS; }
         }
@@ -137,7 +143,7 @@ public:
         mContext.uniforms[0]->update(0, sizeof(mRipples), mRipples);
     }
 
-    void onRender() {
+    void onRender() override {
         Gpu & gpu = *engine::getGpu();
 
         const DispDesc & dd = gpu.getDispDesc();

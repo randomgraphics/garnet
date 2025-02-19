@@ -60,7 +60,7 @@ class ThickLineDemo : public SampleApp {
 
     // box scene
     ThickLineVertex m_Box[24];
-    uint16          m_BoxIndices[36];
+    uint16_t        m_BoxIndices[36];
 
     // view frustum scene
     // D3D9ViewFrustum viewFrustum;
@@ -158,7 +158,7 @@ public:
     void onKeyPress(input::KeyEvent ke) override {
         SampleApp::onKeyPress(ke);
 
-        if (input::KeyCode::SPACEBAR == ke.code && ke.status.down) {
+        if (input::KeyCode::SPACEBAR == ke.code() && ke.status.down) {
             // const int NUM_SCENES = 2;
             // m_ActiveScene = (m_ActiveScene + 1) % NUM_SCENES;
             m_LineWidthInScreenSpace = !m_LineWidthInScreenSpace;

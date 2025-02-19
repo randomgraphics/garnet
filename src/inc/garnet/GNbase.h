@@ -6,6 +6,9 @@
 /// \author  chenlee(2005.4.10)
 // *****************************************************************************
 
+#include <stdint.h>
+#include <stddef.h>
+
 ///
 /// namespace for garnet library
 ///
@@ -29,14 +32,11 @@ namespace internal {}
 // global pragma
 #include "base/pragma.h"
 
-// standard numeric types
-#include "base/numeric.h"
-
 // endian routine
 #include "base/endian.h"
 
 // type traits
-#include "base/typeTraits.h"
+// #include "base/typeTraits.h"
 
 // debug macros and functions
 #include "base/debug.h"
@@ -59,6 +59,9 @@ namespace internal {}
 // string types
 #include "base/string.h"
 
+// exceptions
+#include "base/exception.h"
+
 // math library
 #include "base/math.h"
 #include "base/geometry.h"
@@ -69,9 +72,6 @@ namespace internal {}
 // various auto pointers
 #include "base/autoptr.h"
 
-// exceptions
-#include "base/exception.h"
-
 // delegate & callback
 #include "base/delegate.h"
 #include "base/sigslot.h"
@@ -81,9 +81,6 @@ namespace internal {}
 
 // dictionary type
 #include "base/dict.h"
-
-// hash map
-#include "base/hashmap.h"
 
 // code page routines
 #include "base/codepage.h"

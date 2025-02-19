@@ -66,7 +66,7 @@ void GN::gfx::OGLVtxBufVBO::quit() {
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLVtxBufVBO::update(uint32 offset, uint32 length, const void * data, SurfaceUpdateFlag flag) {
+void GN::gfx::OGLVtxBufVBO::update(uint32_t offset, uint32_t length, const void * data, SurfaceUpdateFlag flag) {
     GN_GUARD_SLOW;
 
     GN_ASSERT(ok());
@@ -92,7 +92,7 @@ void GN::gfx::OGLVtxBufVBO::update(uint32 offset, uint32 length, const void * da
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLVtxBufVBO::readback(DynaArray<uint8> & data) {
+void GN::gfx::OGLVtxBufVBO::readback(DynaArray<uint8_t> & data) {
     GN_UNIMPL_WARNING();
     data.clear();
 }

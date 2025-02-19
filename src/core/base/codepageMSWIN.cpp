@@ -94,14 +94,14 @@ size_t GN::CECImplMSWIN::convert(void * destBuffer, size_t destBufferSizeInBytes
     if (0 != mCodePageFrom) {
         tempBuffer.resize(sourceBufferSizeInBytes);
 
-        converted = (size_t)::MultiByteToWideChar(mCodePageFrom, 0, (const char *) sourceBuffer, (int) sourceBufferSizeInBytes, tempBuffer.rawptr(),
+        converted = (size_t)::MultiByteToWideChar(mCodePageFrom, 0, (const char *) sourceBuffer, (int) sourceBufferSizeInBytes, tempBuffer.data(),
                                                   (int) (tempBuffer.size() * sizeof(wchar_t)));
         if (0 == converted) {
             GN_ERROR(sLogger)("fail to convert input buffer to UNICODE.");
             return 0;
         }
 
-        sourceBuffer            = tempBuffer.rawptr();
+        sourceBuffer            = tempBuffer.data();
         sourceBufferSizeInBytes = converted * sizeof(wchar_t);
     }
 

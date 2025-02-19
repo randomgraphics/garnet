@@ -13,10 +13,8 @@
 #define GN_MSVC  0 ///< If 1, means current compiler is msvc (or icl)
 #define GN_MSVC8 0 ///< If 1, means current compiler is msvc 8+
 #define GN_ICL   0 ///< If 1, means current compiler is intel c++ compiler
-#define GN_MINGW 0 ///< If 1, means current compiler is MingW
-#define GN_GCC   0 ///< If 1, means current compiler is gcc/g++
-#define GN_CLANG 0 ///< C++ compiler on mac os
-#define GN_BCB   0 ///< If 1, means current compiler is boland c++ compiler
+#define GN_GNUC  0 ///< If 1, means current compiler is GNUC compilers (gcc, mingw, clang and etc.)
+#define GN_CLANG 0 ///< IF 1, means current compiler is clang
 
 /// \def GN_COMPILER
 /// Indicate current compiler
@@ -37,28 +35,16 @@
     #define GN_MSVC8    (_MSC_VER >= 1400)
     #define GN_COMPILER icl
 
-#elif defined(__GNUC__) && defined(_WIN32)
-    #undef GN_MINGW
-    #undef GN_GCC
-    #define GN_MINGW    1
-    #define GN_GCC      1
-    #define GN_COMPILER mingw
-
-#elif defined(__BORLANDC__)
-    #undef GN_BCB
-    #define GN_BCB      1
-    #define GN_COMPILER bcb
-
 #elif defined(__clang__)
-    #undef GN_GCC
+    #undef GN_GNUC
     #undef GN_CLANG
-    #define GN_GCC      1
+    #define GN_GNUC     1
     #define GN_CLANG    1
     #define GN_COMPILER clang
 
 #elif defined(__GNUC__)
-    #undef GN_GCC
-    #define GN_GCC      1
+    #undef GN_GNUC
+    #define GN_GNUC     1
     #define GN_COMPILER gcc
 
 #else
@@ -69,14 +55,15 @@
 // Detect Target Platform
 // *****************************************************************************
 
-#define GN_MSWIN  0 ///< Windows-based system (PC, Xbox, Phone and etc.)
-#define GN_WINPC  0 ///< If 1, means current platform is Microsoft Windows on PC (not Xbox)
-#define GN_WINRT  0 ///< Windows RT enabled platform (Win8 or Xbox3)
-#define GN_XBOX2  0 ///< If 1, means Xbox 360
-#define GN_XBOX3  0 ///< If 1, means Xbox One
-#define GN_POSIX  0 ///< If 1, means POSIX compatible platform, such as linux/mac/unix and Cygwin
-#define GN_DARWIN 0 ///< true when running on mac os.
-#define GN_CYGWIN 0 ///< If 1, means Cygwin
+#define GN_MSWIN   0 ///< Windows-based system (PC, Xbox, Phone and etc.)
+#define GN_WINPC   0 ///< If 1, means current platform is Microsoft Windows on PC (not Xbox)
+#define GN_WINRT   0 ///< Windows RT enabled platform (Win8 or Xbox3)
+#define GN_XBOX2   0 ///< If 1, means Xbox 360
+#define GN_XBOX3   0 ///< If 1, means Xbox One
+#define GN_POSIX   0 ///< If 1, means POSIX compatible platform, such as linux/mac/unix/android and Cygwin
+#define GN_DARWIN  0 ///< true when running on mac os.
+#define GN_CYGWIN  0 ///< If 1, means Cygwin
+#define GN_ANDROID 0 ///< If 1, means Android
 
 // Windows platform
 #if defined(_WIN32)
@@ -114,6 +101,13 @@
     #define GN_DARWIN        1
     #define GN_PLATFORM_NAME darwin
 
+// Android
+#elif defined(__ANDROID__)
+    #undef GN_POSIX
+    #undef GN_ANDROID
+    #define GN_POSIX   1
+    #define GN_ANDROID 1
+
 // other unix/linux platform
 #elif defined(__unix) || defined(__unix__)
     #undef GN_POSIX
@@ -132,6 +126,7 @@
 #define GN_X86 0 ///< 32-bit x86
 #define GN_X64 0 ///< 64-bit amd64
 #define GN_PPC 0 ///< power pc
+#define GN_ARM 0 ///< arm processor
 
 /// \def GN_CPU
 /// Indicate current CPU
@@ -144,10 +139,14 @@
     #undef GN_PPC
     #define GN_PPC 1
     #define GN_CPU ppc
+#elif defined(__arm64__) || defined(__arm__) || defined(__aarch64__) || defined(_M_ARM) || defined(_M_ARM64)
+    #undef GN_ARM
+    #define GN_ARM 1
+    #define GN_CPU arm
 #elif defined(_M_IX86) || defined(_X86_) || defined(i386) || defined(__i386__)
     #undef GN_X86
     #define GN_X86 1
-    #define GN_CPU x86
+    #define GN_CPU x86g
 #else
     #error "Unknown CPU"
 #endif
@@ -156,12 +155,15 @@
 // 辨识endian
 // *****************************************************************************
 
-#if defined(__LITTLE_ENDIAN__) || defined(__BIG_ENDIAN__)
-    #define GN_LITTLE_ENDIAN defined(__LITTLE_ENDIAN__) ///< true on little endian machine
-    #define GN_BIT_ENDIAN    defined(__BIG_ENDIAN__)    ///< true on big endian machine
+#if defined(__LITTLE_ENDIAN__)
+    #define GN_LITTLE_ENDIAN 1
+    #define GN_BIT_ENDIAN    0
+#elif defined(__BIG_ENDIAN__)
+    #define GN_LITTLE_ENDIAN 0
+    #define GN_BIT_ENDIAN    1
 #else
-    #define GN_LITTLE_ENDIAN (GN_X64 || GN_X86) ///< true on little endian machine
-    #define GN_BIG_ENDIAN    GN_PPC             ///< true on big endian machine
+    #define GN_BIG_ENDIAN    GN_PPC
+    #define GN_LITTLE_ENDIAN !(GN_BIG_ENDINE)
 #endif
 
 #if !(GN_LITTLE_ENDIAN ^ GN_BIG_ENDIAN)
@@ -196,7 +198,7 @@
 #if GN_MSVC
     #define GN_EXPORT __declspec(dllexport)
 #elif GN_GNUC && __GNUC__ >= 4
-    #define GN_EXPORT       __attribute__ ((visibility("default"))
+    #define GN_EXPORT __attribute__((visibility("default")))
 #else
     #define GN_EXPORT
 #endif
@@ -277,8 +279,8 @@ public:                                                                     \
     const ENUM_TYPE & toRawEnum() const { return mValue; }                  \
                       operator const ENUM_TYPE &() const { return mValue; } \
     ENUM_CLASS &      operator++() {                                        \
-        mValue = (ENUM_TYPE) (mValue + 1);                             \
-        return *this;                                                  \
+             mValue = (ENUM_TYPE) (mValue + 1);                             \
+             return *this;                                                  \
     }                                                                       \
     ENUM_CLASS & operator--() {                                             \
         mValue = (ENUM_TYPE) (mValue - 1);                                  \
@@ -303,6 +305,16 @@ public:                                                                     \
 #define GN_JOIN_DIRECT(s1, s2)       s1##s2                                ///< Auxillary macro used by GN_JOIN'
 
 ///
+/// Convert a token to string
+///
+#define GN_STR(x) GN_STR_HELPER(x)
+
+///
+/// Helper macro called by GN_STR()
+///
+#define GN_STR_HELPER(x) #x
+
+///
 /// Make wide-char string
 ///
 #define GN_WSTR(X) GN_JOIN(L, X)
@@ -313,11 +325,11 @@ public:                                                                     \
 #if GN_PPC
     // big endian
     #define GN_MAKE_FOURCC(ch0, ch1, ch2, ch3) \
-        ((uint32) (uint8) (ch3) | ((uint32) (uint8) (ch2) << 8) | ((uint32) (uint8) (ch1) << 16) | ((uint32) (uint8) (ch0) << 24))
+        ((uint32_t) (uint8_t) (ch3) | ((uint32_t) (uint8_t) (ch2) << 8) | ((uint32_t) (uint8_t) (ch1) << 16) | ((uint32_t) (uint8_t) (ch0) << 24))
 #else
     // little endian
     #define GN_MAKE_FOURCC(ch0, ch1, ch2, ch3) \
-        ((uint32) (uint8) (ch0) | ((uint32) (uint8) (ch1) << 8) | ((uint32) (uint8) (ch2) << 16) | ((uint32) (uint8) (ch3) << 24))
+        ((uint32_t) (uint8_t) (ch0) | ((uint32_t) (uint8_t) (ch1) << 8) | ((uint32_t) (uint8_t) (ch2) << 16) | ((uint32_t) (uint8_t) (ch3) << 24))
 #endif
 
 ///
@@ -344,30 +356,34 @@ public:                                                                     \
 ///
 /// Delete copy methods of a class.
 ///
-#define GN_NO_COPY(x)      \
-    x(const x &) = delete; \
+#define GN_NO_COPY(x)                  \
+    x(const x &)             = delete; \
     x & operator=(const x &) = delete
 
 ///
 /// Delete move methods of a class
 ///
-#define GN_NO_MOVE(x)     \
-    x(x &&)     = delete; \
+#define GN_NO_MOVE(x)             \
+    x(x &&)             = delete; \
     x & operator=(x &&) = delete
 
 ///
 /// Define default copy methods
 ///
-#define GN_DEFAULT_COPY(x)  \
-    x(const x &) = default; \
+#define GN_DEFAULT_COPY(x)              \
+    x(const x &)             = default; \
     x & operator=(const x &) = default
 
 ///
 /// Define default move methods
 ///
-#define GN_DEFAULT_MOVE(x) \
-    x(x &&)     = default; \
+#define GN_DEFAULT_MOVE(x)         \
+    x(x &&)             = default; \
     x & operator=(x &&) = default
+
+#define GN_LIKELY
+
+#define GN_UNLIKELY
 
 namespace GN {
 ///

@@ -2387,7 +2387,7 @@ template<UINT INDEX>
 static void STDMETHODCALLTYPE ID3D11DeviceContext_OMSetRenderTargets_Hooked(ID3D11DeviceContext *                                      ptr,
                                                                             _In_range_(0, D3D11_SIMULTANEOUS_RENDER_TARGET_COUNT) UINT NumViews,
                                                                             _In_reads_opt_(NumViews) ID3D11RenderTargetView * const *  ppRenderTargetViews,
-                                                                            _In_opt_ ID3D11DepthStencilView * pDepthStencilView) {
+                                                                            _In_opt_ ID3D11DepthStencilView *                          pDepthStencilView) {
     GN_D3DHOOK_CALLTRACE("ID3D11DeviceContext::OMSetRenderTargets");
     g_D3D11OriginVTables._ID3D11DeviceContext.tables[INDEX].OMSetRenderTargets(ptr, NumViews, ppRenderTargetViews, pDepthStencilView);
 }
@@ -2413,7 +2413,7 @@ static void STDMETHODCALLTYPE ID3D11DeviceContext_OMSetBlendState_Hooked(ID3D11D
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX>
-static void STDMETHODCALLTYPE ID3D11DeviceContext_OMSetDepthStencilState_Hooked(ID3D11DeviceContext * ptr,
+static void STDMETHODCALLTYPE ID3D11DeviceContext_OMSetDepthStencilState_Hooked(ID3D11DeviceContext *              ptr,
                                                                                 _In_opt_ ID3D11DepthStencilState * pDepthStencilState, _In_ UINT StencilRef) {
     GN_D3DHOOK_CALLTRACE("ID3D11DeviceContext::OMSetDepthStencilState");
     g_D3D11OriginVTables._ID3D11DeviceContext.tables[INDEX].OMSetDepthStencilState(ptr, pDepthStencilState, StencilRef);
@@ -2540,7 +2540,7 @@ static void STDMETHODCALLTYPE ID3D11DeviceContext_ClearRenderTargetView_Hooked(I
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX>
-static void STDMETHODCALLTYPE ID3D11DeviceContext_ClearUnorderedAccessViewUint_Hooked(ID3D11DeviceContext * ptr,
+static void STDMETHODCALLTYPE ID3D11DeviceContext_ClearUnorderedAccessViewUint_Hooked(ID3D11DeviceContext *            ptr,
                                                                                       _In_ ID3D11UnorderedAccessView * pUnorderedAccessView,
                                                                                       _In_ const UINT                  Values[4]) {
     GN_D3DHOOK_CALLTRACE("ID3D11DeviceContext::ClearUnorderedAccessViewUint");
@@ -2549,7 +2549,7 @@ static void STDMETHODCALLTYPE ID3D11DeviceContext_ClearUnorderedAccessViewUint_H
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX>
-static void STDMETHODCALLTYPE ID3D11DeviceContext_ClearUnorderedAccessViewFloat_Hooked(ID3D11DeviceContext * ptr,
+static void STDMETHODCALLTYPE ID3D11DeviceContext_ClearUnorderedAccessViewFloat_Hooked(ID3D11DeviceContext *            ptr,
                                                                                        _In_ ID3D11UnorderedAccessView * pUnorderedAccessView,
                                                                                        _In_ const FLOAT                 Values[4]) {
     GN_D3DHOOK_CALLTRACE("ID3D11DeviceContext::ClearUnorderedAccessViewFloat");
@@ -2770,7 +2770,7 @@ static void STDMETHODCALLTYPE ID3D11DeviceContext_PSGetShaderResources_Hooked(ID
 template<UINT INDEX>
 static void STDMETHODCALLTYPE ID3D11DeviceContext_PSGetShader_Hooked(ID3D11DeviceContext * ptr, _Out_ ID3D11PixelShader ** ppPixelShader,
                                                                      _Out_writes_opt_(*pNumClassInstances) ID3D11ClassInstance ** ppClassInstances,
-                                                                     _Inout_opt_ UINT * pNumClassInstances) {
+                                                                     _Inout_opt_ UINT *                                           pNumClassInstances) {
     GN_D3DHOOK_CALLTRACE("ID3D11DeviceContext::PSGetShader");
     g_D3D11OriginVTables._ID3D11DeviceContext.tables[INDEX].PSGetShader(ptr, ppPixelShader, ppClassInstances, pNumClassInstances);
     if (ppPixelShader && *ppPixelShader) { RealToHooked11(*ppPixelShader); }
@@ -2792,7 +2792,7 @@ static void STDMETHODCALLTYPE ID3D11DeviceContext_PSGetSamplers_Hooked(ID3D11Dev
 template<UINT INDEX>
 static void STDMETHODCALLTYPE ID3D11DeviceContext_VSGetShader_Hooked(ID3D11DeviceContext * ptr, _Out_ ID3D11VertexShader ** ppVertexShader,
                                                                      _Out_writes_opt_(*pNumClassInstances) ID3D11ClassInstance ** ppClassInstances,
-                                                                     _Inout_opt_ UINT * pNumClassInstances) {
+                                                                     _Inout_opt_ UINT *                                           pNumClassInstances) {
     GN_D3DHOOK_CALLTRACE("ID3D11DeviceContext::VSGetShader");
     g_D3D11OriginVTables._ID3D11DeviceContext.tables[INDEX].VSGetShader(ptr, ppVertexShader, ppClassInstances, pNumClassInstances);
     if (ppVertexShader && *ppVertexShader) { RealToHooked11(*ppVertexShader); }
@@ -2857,7 +2857,7 @@ static void STDMETHODCALLTYPE ID3D11DeviceContext_GSGetConstantBuffers_Hooked(ID
 template<UINT INDEX>
 static void STDMETHODCALLTYPE ID3D11DeviceContext_GSGetShader_Hooked(ID3D11DeviceContext * ptr, _Out_ ID3D11GeometryShader ** ppGeometryShader,
                                                                      _Out_writes_opt_(*pNumClassInstances) ID3D11ClassInstance ** ppClassInstances,
-                                                                     _Inout_opt_ UINT * pNumClassInstances) {
+                                                                     _Inout_opt_ UINT *                                           pNumClassInstances) {
     GN_D3DHOOK_CALLTRACE("ID3D11DeviceContext::GSGetShader");
     g_D3D11OriginVTables._ID3D11DeviceContext.tables[INDEX].GSGetShader(ptr, ppGeometryShader, ppClassInstances, pNumClassInstances);
     if (ppGeometryShader && *ppGeometryShader) { RealToHooked11(*ppGeometryShader); }
@@ -2931,7 +2931,7 @@ template<UINT INDEX>
 static void STDMETHODCALLTYPE ID3D11DeviceContext_OMGetRenderTargets_Hooked(ID3D11DeviceContext *                                      ptr,
                                                                             _In_range_(0, D3D11_SIMULTANEOUS_RENDER_TARGET_COUNT) UINT NumViews,
                                                                             _Out_writes_opt_(NumViews) ID3D11RenderTargetView **       ppRenderTargetViews,
-                                                                            _Out_opt_ ID3D11DepthStencilView ** ppDepthStencilView) {
+                                                                            _Out_opt_ ID3D11DepthStencilView **                        ppDepthStencilView) {
     GN_D3DHOOK_CALLTRACE("ID3D11DeviceContext::OMGetRenderTargets");
     g_D3D11OriginVTables._ID3D11DeviceContext.tables[INDEX].OMGetRenderTargets(ptr, NumViews, ppRenderTargetViews, ppDepthStencilView);
     if (ppRenderTargetViews && *ppRenderTargetViews) { RealToHooked11(*ppRenderTargetViews); }
@@ -2964,9 +2964,9 @@ static void STDMETHODCALLTYPE ID3D11DeviceContext_OMGetBlendState_Hooked(ID3D11D
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX>
-static void STDMETHODCALLTYPE ID3D11DeviceContext_OMGetDepthStencilState_Hooked(ID3D11DeviceContext * ptr,
+static void STDMETHODCALLTYPE ID3D11DeviceContext_OMGetDepthStencilState_Hooked(ID3D11DeviceContext *                ptr,
                                                                                 _Out_opt_ ID3D11DepthStencilState ** ppDepthStencilState,
-                                                                                _Out_opt_ UINT * pStencilRef) {
+                                                                                _Out_opt_ UINT *                     pStencilRef) {
     GN_D3DHOOK_CALLTRACE("ID3D11DeviceContext::OMGetDepthStencilState");
     g_D3D11OriginVTables._ID3D11DeviceContext.tables[INDEX].OMGetDepthStencilState(ptr, ppDepthStencilState, pStencilRef);
     if (ppDepthStencilState && *ppDepthStencilState) { RealToHooked11(*ppDepthStencilState); }
@@ -3023,7 +3023,7 @@ static void STDMETHODCALLTYPE ID3D11DeviceContext_HSGetShaderResources_Hooked(ID
 template<UINT INDEX>
 static void STDMETHODCALLTYPE ID3D11DeviceContext_HSGetShader_Hooked(ID3D11DeviceContext * ptr, _Out_ ID3D11HullShader ** ppHullShader,
                                                                      _Out_writes_opt_(*pNumClassInstances) ID3D11ClassInstance ** ppClassInstances,
-                                                                     _Inout_opt_ UINT * pNumClassInstances) {
+                                                                     _Inout_opt_ UINT *                                           pNumClassInstances) {
     GN_D3DHOOK_CALLTRACE("ID3D11DeviceContext::HSGetShader");
     g_D3D11OriginVTables._ID3D11DeviceContext.tables[INDEX].HSGetShader(ptr, ppHullShader, ppClassInstances, pNumClassInstances);
     if (ppHullShader && *ppHullShader) { RealToHooked11(*ppHullShader); }
@@ -3070,7 +3070,7 @@ static void STDMETHODCALLTYPE ID3D11DeviceContext_DSGetShaderResources_Hooked(ID
 template<UINT INDEX>
 static void STDMETHODCALLTYPE ID3D11DeviceContext_DSGetShader_Hooked(ID3D11DeviceContext * ptr, _Out_ ID3D11DomainShader ** ppDomainShader,
                                                                      _Out_writes_opt_(*pNumClassInstances) ID3D11ClassInstance ** ppClassInstances,
-                                                                     _Inout_opt_ UINT * pNumClassInstances) {
+                                                                     _Inout_opt_ UINT *                                           pNumClassInstances) {
     GN_D3DHOOK_CALLTRACE("ID3D11DeviceContext::DSGetShader");
     g_D3D11OriginVTables._ID3D11DeviceContext.tables[INDEX].DSGetShader(ptr, ppDomainShader, ppClassInstances, pNumClassInstances);
     if (ppDomainShader && *ppDomainShader) { RealToHooked11(*ppDomainShader); }
@@ -3129,7 +3129,7 @@ static void STDMETHODCALLTYPE ID3D11DeviceContext_CSGetUnorderedAccessViews_Hook
 template<UINT INDEX>
 static void STDMETHODCALLTYPE ID3D11DeviceContext_CSGetShader_Hooked(ID3D11DeviceContext * ptr, _Out_ ID3D11ComputeShader ** ppComputeShader,
                                                                      _Out_writes_opt_(*pNumClassInstances) ID3D11ClassInstance ** ppClassInstances,
-                                                                     _Inout_opt_ UINT * pNumClassInstances) {
+                                                                     _Inout_opt_ UINT *                                           pNumClassInstances) {
     GN_D3DHOOK_CALLTRACE("ID3D11DeviceContext::CSGetShader");
     g_D3D11OriginVTables._ID3D11DeviceContext.tables[INDEX].CSGetShader(ptr, ppComputeShader, ppClassInstances, pNumClassInstances);
     if (ppComputeShader && *ppComputeShader) { RealToHooked11(*ppComputeShader); }
@@ -3263,7 +3263,7 @@ static HRESULT STDMETHODCALLTYPE ID3D11VideoDecoder_SetPrivateDataInterface_Hook
 // -----------------------------------------------------------------------------
 template<UINT INDEX>
 static HRESULT STDMETHODCALLTYPE ID3D11VideoDecoder_GetCreateParameters_Hooked(ID3D11VideoDecoder * ptr, _Out_ D3D11_VIDEO_DECODER_DESC * pVideoDesc,
-                                                                                 _Out_ D3D11_VIDEO_DECODER_CONFIG * pConfig) {
+                                                                               _Out_ D3D11_VIDEO_DECODER_CONFIG * pConfig) {
     GN_D3DHOOK_CALLTRACE("ID3D11VideoDecoder::GetCreateParameters");
     HRESULT result = g_D3D11OriginVTables._ID3D11VideoDecoder.tables[INDEX].GetCreateParameters(ptr, pVideoDesc, pConfig);
     return result;
@@ -3340,7 +3340,7 @@ static HRESULT STDMETHODCALLTYPE ID3D11VideoProcessorEnumerator_SetPrivateDataIn
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX>
-static HRESULT STDMETHODCALLTYPE ID3D11VideoProcessorEnumerator_GetVideoProcessorContentDesc_Hooked(ID3D11VideoProcessorEnumerator * ptr,
+static HRESULT STDMETHODCALLTYPE ID3D11VideoProcessorEnumerator_GetVideoProcessorContentDesc_Hooked(ID3D11VideoProcessorEnumerator *           ptr,
                                                                                                     _Out_ D3D11_VIDEO_PROCESSOR_CONTENT_DESC * pContentDesc) {
     GN_D3DHOOK_CALLTRACE("ID3D11VideoProcessorEnumerator::GetVideoProcessorContentDesc");
     HRESULT result = g_D3D11OriginVTables._ID3D11VideoProcessorEnumerator.tables[INDEX].GetVideoProcessorContentDesc(ptr, pContentDesc);
@@ -3358,7 +3358,7 @@ static HRESULT STDMETHODCALLTYPE ID3D11VideoProcessorEnumerator_CheckVideoProces
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX>
-static HRESULT STDMETHODCALLTYPE ID3D11VideoProcessorEnumerator_GetVideoProcessorCaps_Hooked(ID3D11VideoProcessorEnumerator * ptr,
+static HRESULT STDMETHODCALLTYPE ID3D11VideoProcessorEnumerator_GetVideoProcessorCaps_Hooked(ID3D11VideoProcessorEnumerator *   ptr,
                                                                                              _Out_ D3D11_VIDEO_PROCESSOR_CAPS * pCaps) {
     GN_D3DHOOK_CALLTRACE("ID3D11VideoProcessorEnumerator::GetVideoProcessorCaps");
     HRESULT result = g_D3D11OriginVTables._ID3D11VideoProcessorEnumerator.tables[INDEX].GetVideoProcessorCaps(ptr, pCaps);
@@ -3377,7 +3377,7 @@ static HRESULT STDMETHODCALLTYPE ID3D11VideoProcessorEnumerator_GetVideoProcesso
 // -----------------------------------------------------------------------------
 template<UINT INDEX>
 static HRESULT STDMETHODCALLTYPE ID3D11VideoProcessorEnumerator_GetVideoProcessorCustomRate_Hooked(ID3D11VideoProcessorEnumerator * ptr, _In_ UINT TypeIndex,
-                                                                                                   _In_ UINT CustomRateIndex,
+                                                                                                   _In_ UINT                                 CustomRateIndex,
                                                                                                    _Out_ D3D11_VIDEO_PROCESSOR_CUSTOM_RATE * pRate) {
     GN_D3DHOOK_CALLTRACE("ID3D11VideoProcessorEnumerator::GetVideoProcessorCustomRate");
     HRESULT result = g_D3D11OriginVTables._ID3D11VideoProcessorEnumerator.tables[INDEX].GetVideoProcessorCustomRate(ptr, TypeIndex, CustomRateIndex, pRate);
@@ -3386,8 +3386,8 @@ static HRESULT STDMETHODCALLTYPE ID3D11VideoProcessorEnumerator_GetVideoProcesso
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX>
-static HRESULT STDMETHODCALLTYPE ID3D11VideoProcessorEnumerator_GetVideoProcessorFilterRange_Hooked(ID3D11VideoProcessorEnumerator *  ptr,
-                                                                                                    _In_ D3D11_VIDEO_PROCESSOR_FILTER Filter,
+static HRESULT STDMETHODCALLTYPE ID3D11VideoProcessorEnumerator_GetVideoProcessorFilterRange_Hooked(ID3D11VideoProcessorEnumerator *           ptr,
+                                                                                                    _In_ D3D11_VIDEO_PROCESSOR_FILTER          Filter,
                                                                                                     _Out_ D3D11_VIDEO_PROCESSOR_FILTER_RANGE * pRange) {
     GN_D3DHOOK_CALLTRACE("ID3D11VideoProcessorEnumerator::GetVideoProcessorFilterRange");
     HRESULT result = g_D3D11OriginVTables._ID3D11VideoProcessorEnumerator.tables[INDEX].GetVideoProcessorFilterRange(ptr, Filter, pRange);
@@ -3463,7 +3463,7 @@ static void STDMETHODCALLTYPE ID3D11VideoProcessor_GetContentDesc_Hooked(ID3D11V
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX>
-static void STDMETHODCALLTYPE ID3D11VideoProcessor_GetRateConversionCaps_Hooked(ID3D11VideoProcessor * ptr,
+static void STDMETHODCALLTYPE ID3D11VideoProcessor_GetRateConversionCaps_Hooked(ID3D11VideoProcessor *                             ptr,
                                                                                 _Out_ D3D11_VIDEO_PROCESSOR_RATE_CONVERSION_CAPS * pCaps) {
     GN_D3DHOOK_CALLTRACE("ID3D11VideoProcessor::GetRateConversionCaps");
     g_D3D11OriginVTables._ID3D11VideoProcessor.tables[INDEX].GetRateConversionCaps(ptr, pCaps);
@@ -3721,7 +3721,7 @@ static void STDMETHODCALLTYPE ID3D11VideoDecoderOutputView_GetResource_Hooked(ID
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX>
-static void STDMETHODCALLTYPE ID3D11VideoDecoderOutputView_GetDesc_Hooked(ID3D11VideoDecoderOutputView * ptr,
+static void STDMETHODCALLTYPE ID3D11VideoDecoderOutputView_GetDesc_Hooked(ID3D11VideoDecoderOutputView *               ptr,
                                                                           _Out_ D3D11_VIDEO_DECODER_OUTPUT_VIEW_DESC * pDesc) {
     GN_D3DHOOK_CALLTRACE("ID3D11VideoDecoderOutputView::GetDesc");
     g_D3D11OriginVTables._ID3D11VideoDecoderOutputView.tables[INDEX].GetDesc(ptr, pDesc);
@@ -3798,7 +3798,7 @@ static void STDMETHODCALLTYPE ID3D11VideoProcessorInputView_GetResource_Hooked(I
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX>
-static void STDMETHODCALLTYPE ID3D11VideoProcessorInputView_GetDesc_Hooked(ID3D11VideoProcessorInputView * ptr,
+static void STDMETHODCALLTYPE ID3D11VideoProcessorInputView_GetDesc_Hooked(ID3D11VideoProcessorInputView *               ptr,
                                                                            _Out_ D3D11_VIDEO_PROCESSOR_INPUT_VIEW_DESC * pDesc) {
     GN_D3DHOOK_CALLTRACE("ID3D11VideoProcessorInputView::GetDesc");
     g_D3D11OriginVTables._ID3D11VideoProcessorInputView.tables[INDEX].GetDesc(ptr, pDesc);
@@ -3875,7 +3875,7 @@ static void STDMETHODCALLTYPE ID3D11VideoProcessorOutputView_GetResource_Hooked(
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX>
-static void STDMETHODCALLTYPE ID3D11VideoProcessorOutputView_GetDesc_Hooked(ID3D11VideoProcessorOutputView * ptr,
+static void STDMETHODCALLTYPE ID3D11VideoProcessorOutputView_GetDesc_Hooked(ID3D11VideoProcessorOutputView *               ptr,
                                                                             _Out_ D3D11_VIDEO_PROCESSOR_OUTPUT_VIEW_DESC * pDesc) {
     GN_D3DHOOK_CALLTRACE("ID3D11VideoProcessorOutputView::GetDesc");
     g_D3D11OriginVTables._ID3D11VideoProcessorOutputView.tables[INDEX].GetDesc(ptr, pDesc);
@@ -4007,7 +4007,7 @@ static void STDMETHODCALLTYPE ID3D11VideoContext_VideoProcessorSetOutputTargetRe
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX>
-static void STDMETHODCALLTYPE ID3D11VideoContext_VideoProcessorSetOutputBackgroundColor_Hooked(ID3D11VideoContext * ptr,
+static void STDMETHODCALLTYPE ID3D11VideoContext_VideoProcessorSetOutputBackgroundColor_Hooked(ID3D11VideoContext *        ptr,
                                                                                                _In_ ID3D11VideoProcessor * pVideoProcessor, _In_ BOOL YCbCr,
                                                                                                _In_ const D3D11_VIDEO_COLOR * pColor) {
     GN_D3DHOOK_CALLTRACE("ID3D11VideoContext::VideoProcessorSetOutputBackgroundColor");
@@ -4024,7 +4024,7 @@ static void STDMETHODCALLTYPE ID3D11VideoContext_VideoProcessorSetOutputColorSpa
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX>
-static void STDMETHODCALLTYPE ID3D11VideoContext_VideoProcessorSetOutputAlphaFillMode_Hooked(ID3D11VideoContext * ptr,
+static void STDMETHODCALLTYPE ID3D11VideoContext_VideoProcessorSetOutputAlphaFillMode_Hooked(ID3D11VideoContext *                       ptr,
                                                                                              _In_ ID3D11VideoProcessor *                pVideoProcessor,
                                                                                              _In_ D3D11_VIDEO_PROCESSOR_ALPHA_FILL_MODE AlphaFillMode,
                                                                                              _In_ UINT                                  StreamIndex) {
@@ -4034,7 +4034,7 @@ static void STDMETHODCALLTYPE ID3D11VideoContext_VideoProcessorSetOutputAlphaFil
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX>
-static void STDMETHODCALLTYPE ID3D11VideoContext_VideoProcessorSetOutputConstriction_Hooked(ID3D11VideoContext * ptr,
+static void STDMETHODCALLTYPE ID3D11VideoContext_VideoProcessorSetOutputConstriction_Hooked(ID3D11VideoContext *        ptr,
                                                                                             _In_ ID3D11VideoProcessor * pVideoProcessor, _In_ BOOL Enable,
                                                                                             _In_ SIZE Size) {
     GN_D3DHOOK_CALLTRACE("ID3D11VideoContext::VideoProcessorSetOutputConstriction");
@@ -4051,7 +4051,7 @@ static void STDMETHODCALLTYPE ID3D11VideoContext_VideoProcessorSetOutputStereoMo
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX>
-static HRESULT STDMETHODCALLTYPE ID3D11VideoContext_VideoProcessorSetOutputExtension_Hooked(ID3D11VideoContext * ptr,
+static HRESULT STDMETHODCALLTYPE ID3D11VideoContext_VideoProcessorSetOutputExtension_Hooked(ID3D11VideoContext *        ptr,
                                                                                             _In_ ID3D11VideoProcessor * pVideoProcessor,
                                                                                             _In_ const GUID * pExtensionGuid, _In_ UINT DataSize,
                                                                                             _In_ void * pData) {
@@ -4071,7 +4071,7 @@ static void STDMETHODCALLTYPE ID3D11VideoContext_VideoProcessorGetOutputTargetRe
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX>
-static void STDMETHODCALLTYPE ID3D11VideoContext_VideoProcessorGetOutputBackgroundColor_Hooked(ID3D11VideoContext * ptr,
+static void STDMETHODCALLTYPE ID3D11VideoContext_VideoProcessorGetOutputBackgroundColor_Hooked(ID3D11VideoContext *        ptr,
                                                                                                _In_ ID3D11VideoProcessor * pVideoProcessor, _Out_ BOOL * pYCbCr,
                                                                                                _Out_ D3D11_VIDEO_COLOR * pColor) {
     GN_D3DHOOK_CALLTRACE("ID3D11VideoContext::VideoProcessorGetOutputBackgroundColor");
@@ -4088,17 +4088,17 @@ static void STDMETHODCALLTYPE ID3D11VideoContext_VideoProcessorGetOutputColorSpa
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX>
-static void STDMETHODCALLTYPE ID3D11VideoContext_VideoProcessorGetOutputAlphaFillMode_Hooked(ID3D11VideoContext * ptr,
-                                                                                             _In_ ID3D11VideoProcessor * pVideoProcessor,
+static void STDMETHODCALLTYPE ID3D11VideoContext_VideoProcessorGetOutputAlphaFillMode_Hooked(ID3D11VideoContext *                          ptr,
+                                                                                             _In_ ID3D11VideoProcessor *                   pVideoProcessor,
                                                                                              _Out_ D3D11_VIDEO_PROCESSOR_ALPHA_FILL_MODE * pAlphaFillMode,
-                                                                                             _Out_ UINT * pStreamIndex) {
+                                                                                             _Out_ UINT *                                  pStreamIndex) {
     GN_D3DHOOK_CALLTRACE("ID3D11VideoContext::VideoProcessorGetOutputAlphaFillMode");
     g_D3D11OriginVTables._ID3D11VideoContext.tables[INDEX].VideoProcessorGetOutputAlphaFillMode(ptr, pVideoProcessor, pAlphaFillMode, pStreamIndex);
 }
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX>
-static void STDMETHODCALLTYPE ID3D11VideoContext_VideoProcessorGetOutputConstriction_Hooked(ID3D11VideoContext * ptr,
+static void STDMETHODCALLTYPE ID3D11VideoContext_VideoProcessorGetOutputConstriction_Hooked(ID3D11VideoContext *        ptr,
                                                                                             _In_ ID3D11VideoProcessor * pVideoProcessor, _Out_ BOOL * pEnabled,
                                                                                             _Out_ SIZE * pSize) {
     GN_D3DHOOK_CALLTRACE("ID3D11VideoContext::VideoProcessorGetOutputConstriction");
@@ -4115,7 +4115,7 @@ static void STDMETHODCALLTYPE ID3D11VideoContext_VideoProcessorGetOutputStereoMo
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX>
-static HRESULT STDMETHODCALLTYPE ID3D11VideoContext_VideoProcessorGetOutputExtension_Hooked(ID3D11VideoContext * ptr,
+static HRESULT STDMETHODCALLTYPE ID3D11VideoContext_VideoProcessorGetOutputExtension_Hooked(ID3D11VideoContext *        ptr,
                                                                                             _In_ ID3D11VideoProcessor * pVideoProcessor,
                                                                                             _In_ const GUID * pExtensionGuid, _In_ UINT DataSize,
                                                                                             _Out_ void * pData) {
@@ -4127,7 +4127,7 @@ static HRESULT STDMETHODCALLTYPE ID3D11VideoContext_VideoProcessorGetOutputExten
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX>
-static void STDMETHODCALLTYPE ID3D11VideoContext_VideoProcessorSetStreamFrameFormat_Hooked(ID3D11VideoContext * ptr,
+static void STDMETHODCALLTYPE ID3D11VideoContext_VideoProcessorSetStreamFrameFormat_Hooked(ID3D11VideoContext *        ptr,
                                                                                            _In_ ID3D11VideoProcessor * pVideoProcessor, _In_ UINT StreamIndex,
                                                                                            _In_ D3D11_VIDEO_FRAME_FORMAT FrameFormat) {
     GN_D3DHOOK_CALLTRACE("ID3D11VideoContext::VideoProcessorSetStreamFrameFormat");
@@ -4137,7 +4137,7 @@ static void STDMETHODCALLTYPE ID3D11VideoContext_VideoProcessorSetStreamFrameFor
 // -----------------------------------------------------------------------------
 template<UINT INDEX>
 static void STDMETHODCALLTYPE ID3D11VideoContext_VideoProcessorSetStreamColorSpace_Hooked(ID3D11VideoContext * ptr, _In_ ID3D11VideoProcessor * pVideoProcessor,
-                                                                                          _In_ UINT  StreamIndex,
+                                                                                          _In_ UINT                                      StreamIndex,
                                                                                           _In_ const D3D11_VIDEO_PROCESSOR_COLOR_SPACE * pColorSpace) {
     GN_D3DHOOK_CALLTRACE("ID3D11VideoContext::VideoProcessorSetStreamColorSpace");
     g_D3D11OriginVTables._ID3D11VideoContext.tables[INDEX].VideoProcessorSetStreamColorSpace(ptr, pVideoProcessor, StreamIndex, pColorSpace);
@@ -4190,7 +4190,7 @@ static void STDMETHODCALLTYPE ID3D11VideoContext_VideoProcessorSetStreamPalette_
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX>
-static void STDMETHODCALLTYPE ID3D11VideoContext_VideoProcessorSetStreamPixelAspectRatio_Hooked(ID3D11VideoContext * ptr,
+static void STDMETHODCALLTYPE ID3D11VideoContext_VideoProcessorSetStreamPixelAspectRatio_Hooked(ID3D11VideoContext *        ptr,
                                                                                                 _In_ ID3D11VideoProcessor * pVideoProcessor,
                                                                                                 _In_ UINT StreamIndex, _In_ BOOL Enable,
                                                                                                 _In_opt_ const DXGI_RATIONAL * pSourceAspectRatio,
@@ -4211,7 +4211,7 @@ static void STDMETHODCALLTYPE ID3D11VideoContext_VideoProcessorSetStreamLumaKey_
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX>
-static void STDMETHODCALLTYPE ID3D11VideoContext_VideoProcessorSetStreamStereoFormat_Hooked(ID3D11VideoContext * ptr,
+static void STDMETHODCALLTYPE ID3D11VideoContext_VideoProcessorSetStreamStereoFormat_Hooked(ID3D11VideoContext *        ptr,
                                                                                             _In_ ID3D11VideoProcessor * pVideoProcessor, _In_ UINT StreamIndex,
                                                                                             _In_ BOOL Enable, _In_ D3D11_VIDEO_PROCESSOR_STEREO_FORMAT Format,
                                                                                             _In_ BOOL LeftViewFrame0, _In_ BOOL BaseViewFrame0,
@@ -4224,7 +4224,7 @@ static void STDMETHODCALLTYPE ID3D11VideoContext_VideoProcessorSetStreamStereoFo
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX>
-static void STDMETHODCALLTYPE ID3D11VideoContext_VideoProcessorSetStreamAutoProcessingMode_Hooked(ID3D11VideoContext * ptr,
+static void STDMETHODCALLTYPE ID3D11VideoContext_VideoProcessorSetStreamAutoProcessingMode_Hooked(ID3D11VideoContext *        ptr,
                                                                                                   _In_ ID3D11VideoProcessor * pVideoProcessor,
                                                                                                   _In_ UINT StreamIndex, _In_ BOOL Enable) {
     GN_D3DHOOK_CALLTRACE("ID3D11VideoContext::VideoProcessorSetStreamAutoProcessingMode");
@@ -4242,7 +4242,7 @@ static void STDMETHODCALLTYPE ID3D11VideoContext_VideoProcessorSetStreamFilter_H
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX>
-static HRESULT STDMETHODCALLTYPE ID3D11VideoContext_VideoProcessorSetStreamExtension_Hooked(ID3D11VideoContext * ptr,
+static HRESULT STDMETHODCALLTYPE ID3D11VideoContext_VideoProcessorSetStreamExtension_Hooked(ID3D11VideoContext *        ptr,
                                                                                             _In_ ID3D11VideoProcessor * pVideoProcessor, _In_ UINT StreamIndex,
                                                                                             _In_ const GUID * pExtensionGuid, _In_ UINT DataSize,
                                                                                             _In_ void * pData) {
@@ -4254,7 +4254,7 @@ static HRESULT STDMETHODCALLTYPE ID3D11VideoContext_VideoProcessorSetStreamExten
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX>
-static void STDMETHODCALLTYPE ID3D11VideoContext_VideoProcessorGetStreamFrameFormat_Hooked(ID3D11VideoContext * ptr,
+static void STDMETHODCALLTYPE ID3D11VideoContext_VideoProcessorGetStreamFrameFormat_Hooked(ID3D11VideoContext *        ptr,
                                                                                            _In_ ID3D11VideoProcessor * pVideoProcessor, _In_ UINT StreamIndex,
                                                                                            _Out_ D3D11_VIDEO_FRAME_FORMAT * pFrameFormat) {
     GN_D3DHOOK_CALLTRACE("ID3D11VideoContext::VideoProcessorGetStreamFrameFormat");
@@ -4264,7 +4264,7 @@ static void STDMETHODCALLTYPE ID3D11VideoContext_VideoProcessorGetStreamFrameFor
 // -----------------------------------------------------------------------------
 template<UINT INDEX>
 static void STDMETHODCALLTYPE ID3D11VideoContext_VideoProcessorGetStreamColorSpace_Hooked(ID3D11VideoContext * ptr, _In_ ID3D11VideoProcessor * pVideoProcessor,
-                                                                                          _In_ UINT StreamIndex,
+                                                                                          _In_ UINT                                 StreamIndex,
                                                                                           _Out_ D3D11_VIDEO_PROCESSOR_COLOR_SPACE * pColorSpace) {
     GN_D3DHOOK_CALLTRACE("ID3D11VideoContext::VideoProcessorGetStreamColorSpace");
     g_D3D11OriginVTables._ID3D11VideoContext.tables[INDEX].VideoProcessorGetStreamColorSpace(ptr, pVideoProcessor, StreamIndex, pColorSpace);
@@ -4273,7 +4273,7 @@ static void STDMETHODCALLTYPE ID3D11VideoContext_VideoProcessorGetStreamColorSpa
 // -----------------------------------------------------------------------------
 template<UINT INDEX>
 static void STDMETHODCALLTYPE ID3D11VideoContext_VideoProcessorGetStreamOutputRate_Hooked(ID3D11VideoContext * ptr, _In_ ID3D11VideoProcessor * pVideoProcessor,
-                                                                                          _In_ UINT StreamIndex,
+                                                                                          _In_ UINT                                 StreamIndex,
                                                                                           _Out_ D3D11_VIDEO_PROCESSOR_OUTPUT_RATE * pOutputRate,
                                                                                           _Out_ BOOL * pRepeatFrame, _Out_ DXGI_RATIONAL * pCustomRate) {
     GN_D3DHOOK_CALLTRACE("ID3D11VideoContext::VideoProcessorGetStreamOutputRate");
@@ -4316,7 +4316,7 @@ static void STDMETHODCALLTYPE ID3D11VideoContext_VideoProcessorGetStreamPalette_
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX>
-static void STDMETHODCALLTYPE ID3D11VideoContext_VideoProcessorGetStreamPixelAspectRatio_Hooked(ID3D11VideoContext * ptr,
+static void STDMETHODCALLTYPE ID3D11VideoContext_VideoProcessorGetStreamPixelAspectRatio_Hooked(ID3D11VideoContext *        ptr,
                                                                                                 _In_ ID3D11VideoProcessor * pVideoProcessor,
                                                                                                 _In_ UINT StreamIndex, _Out_ BOOL * pEnabled,
                                                                                                 _Out_ DXGI_RATIONAL * pSourceAspectRatio,
@@ -4348,7 +4348,7 @@ static void STDMETHODCALLTYPE ID3D11VideoContext_VideoProcessorGetStreamStereoFo
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX>
-static void STDMETHODCALLTYPE ID3D11VideoContext_VideoProcessorGetStreamAutoProcessingMode_Hooked(ID3D11VideoContext * ptr,
+static void STDMETHODCALLTYPE ID3D11VideoContext_VideoProcessorGetStreamAutoProcessingMode_Hooked(ID3D11VideoContext *        ptr,
                                                                                                   _In_ ID3D11VideoProcessor * pVideoProcessor,
                                                                                                   _In_ UINT StreamIndex, _Out_ BOOL * pEnabled) {
     GN_D3DHOOK_CALLTRACE("ID3D11VideoContext::VideoProcessorGetStreamAutoProcessingMode");
@@ -4366,7 +4366,7 @@ static void STDMETHODCALLTYPE ID3D11VideoContext_VideoProcessorGetStreamFilter_H
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX>
-static HRESULT STDMETHODCALLTYPE ID3D11VideoContext_VideoProcessorGetStreamExtension_Hooked(ID3D11VideoContext * ptr,
+static HRESULT STDMETHODCALLTYPE ID3D11VideoContext_VideoProcessorGetStreamExtension_Hooked(ID3D11VideoContext *        ptr,
                                                                                             _In_ ID3D11VideoProcessor * pVideoProcessor, _In_ UINT StreamIndex,
                                                                                             _In_ const GUID * pExtensionGuid, _In_ UINT DataSize,
                                                                                             _Out_ void * pData) {
@@ -4389,7 +4389,7 @@ static HRESULT STDMETHODCALLTYPE ID3D11VideoContext_VideoProcessorBlt_Hooked(ID3
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX>
-static HRESULT STDMETHODCALLTYPE ID3D11VideoContext_NegotiateCryptoSessionKeyExchange_Hooked(ID3D11VideoContext * ptr,
+static HRESULT STDMETHODCALLTYPE ID3D11VideoContext_NegotiateCryptoSessionKeyExchange_Hooked(ID3D11VideoContext *       ptr,
                                                                                              _In_ ID3D11CryptoSession * pCryptoSession, _In_ UINT DataSize,
                                                                                              _Inout_updates_bytes_(DataSize) void * pData) {
     GN_D3DHOOK_CALLTRACE("ID3D11VideoContext::NegotiateCryptoSessionKeyExchange");
@@ -4445,7 +4445,7 @@ static HRESULT STDMETHODCALLTYPE ID3D11VideoContext_GetEncryptionBltKey_Hooked(I
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX>
-static HRESULT STDMETHODCALLTYPE ID3D11VideoContext_NegotiateAuthenticatedChannelKeyExchange_Hooked(ID3D11VideoContext * ptr,
+static HRESULT STDMETHODCALLTYPE ID3D11VideoContext_NegotiateAuthenticatedChannelKeyExchange_Hooked(ID3D11VideoContext *                   ptr,
                                                                                                     _In_ ID3D11AuthenticatedChannel *      pChannel,
                                                                                                     _In_ UINT                              DataSize,
                                                                                                     _Inout_updates_bytes_(DataSize) void * pData) {
@@ -4521,7 +4521,7 @@ static ULONG STDMETHODCALLTYPE ID3D11VideoDevice_Release_Hooked(ID3D11VideoDevic
 template<UINT INDEX>
 static HRESULT STDMETHODCALLTYPE ID3D11VideoDevice_CreateVideoDecoder_Hooked(ID3D11VideoDevice * ptr, _In_ const D3D11_VIDEO_DECODER_DESC * pVideoDesc,
                                                                              _In_ const D3D11_VIDEO_DECODER_CONFIG * pConfig,
-                                                                             _Out_ ID3D11VideoDecoder ** ppDecoder) {
+                                                                             _Out_ ID3D11VideoDecoder **             ppDecoder) {
     GN_D3DHOOK_CALLTRACE("ID3D11VideoDevice::CreateVideoDecoder");
     HRESULT result = g_D3D11OriginVTables._ID3D11VideoDevice.tables[INDEX].CreateVideoDecoder(ptr, pVideoDesc, pConfig, ppDecoder);
     if (ppDecoder && *ppDecoder) { RealToHooked11(*ppDecoder); }
@@ -4564,7 +4564,7 @@ static HRESULT STDMETHODCALLTYPE ID3D11VideoDevice_CreateCryptoSession_Hooked(ID
 template<UINT INDEX>
 static HRESULT STDMETHODCALLTYPE ID3D11VideoDevice_CreateVideoDecoderOutputView_Hooked(ID3D11VideoDevice * ptr, _In_ ID3D11Resource * pResource,
                                                                                        _In_ const D3D11_VIDEO_DECODER_OUTPUT_VIEW_DESC * pDesc,
-                                                                                       _Out_opt_ ID3D11VideoDecoderOutputView ** ppVDOVView) {
+                                                                                       _Out_opt_ ID3D11VideoDecoderOutputView **         ppVDOVView) {
     GN_D3DHOOK_CALLTRACE("ID3D11VideoDevice::CreateVideoDecoderOutputView");
     HRESULT result = g_D3D11OriginVTables._ID3D11VideoDevice.tables[INDEX].CreateVideoDecoderOutputView(ptr, pResource, pDesc, ppVDOVView);
     if (ppVDOVView && *ppVDOVView) { RealToHooked11(*ppVDOVView); }
@@ -4574,9 +4574,9 @@ static HRESULT STDMETHODCALLTYPE ID3D11VideoDevice_CreateVideoDecoderOutputView_
 // -----------------------------------------------------------------------------
 template<UINT INDEX>
 static HRESULT STDMETHODCALLTYPE ID3D11VideoDevice_CreateVideoProcessorInputView_Hooked(ID3D11VideoDevice * ptr, _In_ ID3D11Resource * pResource,
-                                                                                        _In_ ID3D11VideoProcessorEnumerator * pEnum,
+                                                                                        _In_ ID3D11VideoProcessorEnumerator *              pEnum,
                                                                                         _In_ const D3D11_VIDEO_PROCESSOR_INPUT_VIEW_DESC * pDesc,
-                                                                                        _Out_opt_ ID3D11VideoProcessorInputView ** ppVPIView) {
+                                                                                        _Out_opt_ ID3D11VideoProcessorInputView **         ppVPIView) {
     GN_D3DHOOK_CALLTRACE("ID3D11VideoDevice::CreateVideoProcessorInputView");
     HRESULT result = g_D3D11OriginVTables._ID3D11VideoDevice.tables[INDEX].CreateVideoProcessorInputView(ptr, pResource, pEnum, pDesc, ppVPIView);
     if (ppVPIView && *ppVPIView) { RealToHooked11(*ppVPIView); }
@@ -4586,9 +4586,9 @@ static HRESULT STDMETHODCALLTYPE ID3D11VideoDevice_CreateVideoProcessorInputView
 // -----------------------------------------------------------------------------
 template<UINT INDEX>
 static HRESULT STDMETHODCALLTYPE ID3D11VideoDevice_CreateVideoProcessorOutputView_Hooked(ID3D11VideoDevice * ptr, _In_ ID3D11Resource * pResource,
-                                                                                         _In_ ID3D11VideoProcessorEnumerator * pEnum,
+                                                                                         _In_ ID3D11VideoProcessorEnumerator *               pEnum,
                                                                                          _In_ const D3D11_VIDEO_PROCESSOR_OUTPUT_VIEW_DESC * pDesc,
-                                                                                         _Out_opt_ ID3D11VideoProcessorOutputView ** ppVPOView) {
+                                                                                         _Out_opt_ ID3D11VideoProcessorOutputView **         ppVPOView) {
     GN_D3DHOOK_CALLTRACE("ID3D11VideoDevice::CreateVideoProcessorOutputView");
     HRESULT result = g_D3D11OriginVTables._ID3D11VideoDevice.tables[INDEX].CreateVideoProcessorOutputView(ptr, pResource, pEnum, pDesc, ppVPOView);
     if (ppVPOView && *ppVPOView) { RealToHooked11(*ppVPOView); }
@@ -4597,9 +4597,9 @@ static HRESULT STDMETHODCALLTYPE ID3D11VideoDevice_CreateVideoProcessorOutputVie
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX>
-static HRESULT STDMETHODCALLTYPE ID3D11VideoDevice_CreateVideoProcessorEnumerator_Hooked(ID3D11VideoDevice * ptr,
+static HRESULT STDMETHODCALLTYPE ID3D11VideoDevice_CreateVideoProcessorEnumerator_Hooked(ID3D11VideoDevice *                             ptr,
                                                                                          _In_ const D3D11_VIDEO_PROCESSOR_CONTENT_DESC * pDesc,
-                                                                                         _Out_ ID3D11VideoProcessorEnumerator ** ppEnum) {
+                                                                                         _Out_ ID3D11VideoProcessorEnumerator **         ppEnum) {
     GN_D3DHOOK_CALLTRACE("ID3D11VideoDevice::CreateVideoProcessorEnumerator");
     HRESULT result = g_D3D11OriginVTables._ID3D11VideoDevice.tables[INDEX].CreateVideoProcessorEnumerator(ptr, pDesc, ppEnum);
     if (ppEnum && *ppEnum) { RealToHooked11(*ppEnum); }
@@ -4652,7 +4652,7 @@ static HRESULT STDMETHODCALLTYPE ID3D11VideoDevice_GetVideoDecoderConfig_Hooked(
 // -----------------------------------------------------------------------------
 template<UINT INDEX>
 static HRESULT STDMETHODCALLTYPE ID3D11VideoDevice_GetContentProtectionCaps_Hooked(ID3D11VideoDevice * ptr, _In_opt_ const GUID * pCryptoType,
-                                                                                   _In_opt_ const GUID * pDecoderProfile,
+                                                                                   _In_opt_ const GUID *                       pDecoderProfile,
                                                                                    _Out_ D3D11_VIDEO_CONTENT_PROTECTION_CAPS * pCaps) {
     GN_D3DHOOK_CALLTRACE("ID3D11VideoDevice::GetContentProtectionCaps");
     HRESULT result = g_D3D11OriginVTables._ID3D11VideoDevice.tables[INDEX].GetContentProtectionCaps(ptr, pCryptoType, pDecoderProfile, pCaps);
@@ -4726,7 +4726,7 @@ template<UINT INDEX>
 static HRESULT STDMETHODCALLTYPE ID3D11Device_CreateTexture1D_Hooked(ID3D11Device * ptr, _In_ const D3D11_TEXTURE1D_DESC * pDesc,
                                                                      _In_reads_opt_(_Inexpressible_(pDesc->MipLevels * pDesc->ArraySize))
                                                                          const D3D11_SUBRESOURCE_DATA * pInitialData,
-                                                                     _Out_opt_ ID3D11Texture1D ** ppTexture1D) {
+                                                                     _Out_opt_ ID3D11Texture1D **       ppTexture1D) {
     GN_D3DHOOK_CALLTRACE("ID3D11Device::CreateTexture1D");
     HRESULT result = g_D3D11OriginVTables._ID3D11Device.tables[INDEX].CreateTexture1D(ptr, pDesc, pInitialData, ppTexture1D);
     if (ppTexture1D && *ppTexture1D) { RealToHooked11(*ppTexture1D); }
@@ -4738,7 +4738,7 @@ template<UINT INDEX>
 static HRESULT STDMETHODCALLTYPE ID3D11Device_CreateTexture2D_Hooked(ID3D11Device * ptr, _In_ const D3D11_TEXTURE2D_DESC * pDesc,
                                                                      _In_reads_opt_(_Inexpressible_(pDesc->MipLevels * pDesc->ArraySize))
                                                                          const D3D11_SUBRESOURCE_DATA * pInitialData,
-                                                                     _Out_opt_ ID3D11Texture2D ** ppTexture2D) {
+                                                                     _Out_opt_ ID3D11Texture2D **       ppTexture2D) {
     GN_D3DHOOK_CALLTRACE("ID3D11Device::CreateTexture2D");
     HRESULT result = g_D3D11OriginVTables._ID3D11Device.tables[INDEX].CreateTexture2D(ptr, pDesc, pInitialData, ppTexture2D);
     if (ppTexture2D && *ppTexture2D) { RealToHooked11(*ppTexture2D); }
@@ -4750,7 +4750,7 @@ template<UINT INDEX>
 static HRESULT STDMETHODCALLTYPE ID3D11Device_CreateTexture3D_Hooked(ID3D11Device * ptr, _In_ const D3D11_TEXTURE3D_DESC * pDesc,
                                                                      _In_reads_opt_(_Inexpressible_(pDesc->MipLevels))
                                                                          const D3D11_SUBRESOURCE_DATA * pInitialData,
-                                                                     _Out_opt_ ID3D11Texture3D ** ppTexture3D) {
+                                                                     _Out_opt_ ID3D11Texture3D **       ppTexture3D) {
     GN_D3DHOOK_CALLTRACE("ID3D11Device::CreateTexture3D");
     HRESULT result = g_D3D11OriginVTables._ID3D11Device.tables[INDEX].CreateTexture3D(ptr, pDesc, pInitialData, ppTexture3D);
     if (ppTexture3D && *ppTexture3D) { RealToHooked11(*ppTexture3D); }
@@ -4761,7 +4761,7 @@ static HRESULT STDMETHODCALLTYPE ID3D11Device_CreateTexture3D_Hooked(ID3D11Devic
 template<UINT INDEX>
 static HRESULT STDMETHODCALLTYPE ID3D11Device_CreateShaderResourceView_Hooked(ID3D11Device * ptr, _In_ ID3D11Resource * pResource,
                                                                               _In_opt_ const D3D11_SHADER_RESOURCE_VIEW_DESC * pDesc,
-                                                                              _Out_opt_ ID3D11ShaderResourceView ** ppSRView) {
+                                                                              _Out_opt_ ID3D11ShaderResourceView **            ppSRView) {
     GN_D3DHOOK_CALLTRACE("ID3D11Device::CreateShaderResourceView");
     HRESULT result = g_D3D11OriginVTables._ID3D11Device.tables[INDEX].CreateShaderResourceView(ptr, pResource, pDesc, ppSRView);
     if (ppSRView && *ppSRView) { RealToHooked11(*ppSRView); }
@@ -4772,7 +4772,7 @@ static HRESULT STDMETHODCALLTYPE ID3D11Device_CreateShaderResourceView_Hooked(ID
 template<UINT INDEX>
 static HRESULT STDMETHODCALLTYPE ID3D11Device_CreateUnorderedAccessView_Hooked(ID3D11Device * ptr, _In_ ID3D11Resource * pResource,
                                                                                _In_opt_ const D3D11_UNORDERED_ACCESS_VIEW_DESC * pDesc,
-                                                                               _Out_opt_ ID3D11UnorderedAccessView ** ppUAView) {
+                                                                               _Out_opt_ ID3D11UnorderedAccessView **            ppUAView) {
     GN_D3DHOOK_CALLTRACE("ID3D11Device::CreateUnorderedAccessView");
     HRESULT result = g_D3D11OriginVTables._ID3D11Device.tables[INDEX].CreateUnorderedAccessView(ptr, pResource, pDesc, ppUAView);
     if (ppUAView && *ppUAView) { RealToHooked11(*ppUAView); }
@@ -4783,7 +4783,7 @@ static HRESULT STDMETHODCALLTYPE ID3D11Device_CreateUnorderedAccessView_Hooked(I
 template<UINT INDEX>
 static HRESULT STDMETHODCALLTYPE ID3D11Device_CreateRenderTargetView_Hooked(ID3D11Device * ptr, _In_ ID3D11Resource * pResource,
                                                                             _In_opt_ const D3D11_RENDER_TARGET_VIEW_DESC * pDesc,
-                                                                            _Out_opt_ ID3D11RenderTargetView ** ppRTView) {
+                                                                            _Out_opt_ ID3D11RenderTargetView **            ppRTView) {
     GN_D3DHOOK_CALLTRACE("ID3D11Device::CreateRenderTargetView");
     HRESULT result = g_D3D11OriginVTables._ID3D11Device.tables[INDEX].CreateRenderTargetView(ptr, pResource, pDesc, ppRTView);
     if (ppRTView && *ppRTView) { RealToHooked11(*ppRTView); }
@@ -4794,7 +4794,7 @@ static HRESULT STDMETHODCALLTYPE ID3D11Device_CreateRenderTargetView_Hooked(ID3D
 template<UINT INDEX>
 static HRESULT STDMETHODCALLTYPE ID3D11Device_CreateDepthStencilView_Hooked(ID3D11Device * ptr, _In_ ID3D11Resource * pResource,
                                                                             _In_opt_ const D3D11_DEPTH_STENCIL_VIEW_DESC * pDesc,
-                                                                            _Out_opt_ ID3D11DepthStencilView ** ppDepthStencilView) {
+                                                                            _Out_opt_ ID3D11DepthStencilView **            ppDepthStencilView) {
     GN_D3DHOOK_CALLTRACE("ID3D11Device::CreateDepthStencilView");
     HRESULT result = g_D3D11OriginVTables._ID3D11Device.tables[INDEX].CreateDepthStencilView(ptr, pResource, pDesc, ppDepthStencilView);
     if (ppDepthStencilView && *ppDepthStencilView) { RealToHooked11(*ppDepthStencilView); }
@@ -4818,7 +4818,7 @@ static HRESULT STDMETHODCALLTYPE ID3D11Device_CreateInputLayout_Hooked(ID3D11Dev
 // -----------------------------------------------------------------------------
 template<UINT INDEX>
 static HRESULT STDMETHODCALLTYPE ID3D11Device_CreateVertexShader_Hooked(ID3D11Device * ptr, _In_ const void * pShaderBytecode, _In_ SIZE_T BytecodeLength,
-                                                                        _In_opt_ ID3D11ClassLinkage * pClassLinkage,
+                                                                        _In_opt_ ID3D11ClassLinkage *   pClassLinkage,
                                                                         _Out_opt_ ID3D11VertexShader ** ppVertexShader) {
     GN_D3DHOOK_CALLTRACE("ID3D11Device::CreateVertexShader");
     HRESULT result = g_D3D11OriginVTables._ID3D11Device.tables[INDEX].CreateVertexShader(ptr, pShaderBytecode, BytecodeLength, pClassLinkage, ppVertexShader);
@@ -4829,7 +4829,7 @@ static HRESULT STDMETHODCALLTYPE ID3D11Device_CreateVertexShader_Hooked(ID3D11De
 // -----------------------------------------------------------------------------
 template<UINT INDEX>
 static HRESULT STDMETHODCALLTYPE ID3D11Device_CreateGeometryShader_Hooked(ID3D11Device * ptr, _In_ const void * pShaderBytecode, _In_ SIZE_T BytecodeLength,
-                                                                          _In_opt_ ID3D11ClassLinkage * pClassLinkage,
+                                                                          _In_opt_ ID3D11ClassLinkage *     pClassLinkage,
                                                                           _Out_opt_ ID3D11GeometryShader ** ppGeometryShader) {
     GN_D3DHOOK_CALLTRACE("ID3D11Device::CreateGeometryShader");
     HRESULT result =
@@ -4856,7 +4856,7 @@ static HRESULT STDMETHODCALLTYPE ID3D11Device_CreateGeometryShaderWithStreamOutp
 // -----------------------------------------------------------------------------
 template<UINT INDEX>
 static HRESULT STDMETHODCALLTYPE ID3D11Device_CreatePixelShader_Hooked(ID3D11Device * ptr, _In_ const void * pShaderBytecode, _In_ SIZE_T BytecodeLength,
-                                                                       _In_opt_ ID3D11ClassLinkage * pClassLinkage,
+                                                                       _In_opt_ ID3D11ClassLinkage *  pClassLinkage,
                                                                        _Out_opt_ ID3D11PixelShader ** ppPixelShader) {
     GN_D3DHOOK_CALLTRACE("ID3D11Device::CreatePixelShader");
     HRESULT result = g_D3D11OriginVTables._ID3D11Device.tables[INDEX].CreatePixelShader(ptr, pShaderBytecode, BytecodeLength, pClassLinkage, ppPixelShader);
@@ -4877,7 +4877,7 @@ static HRESULT STDMETHODCALLTYPE ID3D11Device_CreateHullShader_Hooked(ID3D11Devi
 // -----------------------------------------------------------------------------
 template<UINT INDEX>
 static HRESULT STDMETHODCALLTYPE ID3D11Device_CreateDomainShader_Hooked(ID3D11Device * ptr, _In_ const void * pShaderBytecode, _In_ SIZE_T BytecodeLength,
-                                                                        _In_opt_ ID3D11ClassLinkage * pClassLinkage,
+                                                                        _In_opt_ ID3D11ClassLinkage *   pClassLinkage,
                                                                         _Out_opt_ ID3D11DomainShader ** ppDomainShader) {
     GN_D3DHOOK_CALLTRACE("ID3D11Device::CreateDomainShader");
     HRESULT result = g_D3D11OriginVTables._ID3D11Device.tables[INDEX].CreateDomainShader(ptr, pShaderBytecode, BytecodeLength, pClassLinkage, ppDomainShader);
@@ -4888,7 +4888,7 @@ static HRESULT STDMETHODCALLTYPE ID3D11Device_CreateDomainShader_Hooked(ID3D11De
 // -----------------------------------------------------------------------------
 template<UINT INDEX>
 static HRESULT STDMETHODCALLTYPE ID3D11Device_CreateComputeShader_Hooked(ID3D11Device * ptr, _In_ const void * pShaderBytecode, _In_ SIZE_T BytecodeLength,
-                                                                         _In_opt_ ID3D11ClassLinkage * pClassLinkage,
+                                                                         _In_opt_ ID3D11ClassLinkage *    pClassLinkage,
                                                                          _Out_opt_ ID3D11ComputeShader ** ppComputeShader) {
     GN_D3DHOOK_CALLTRACE("ID3D11Device::CreateComputeShader");
     HRESULT result = g_D3D11OriginVTables._ID3D11Device.tables[INDEX].CreateComputeShader(ptr, pShaderBytecode, BytecodeLength, pClassLinkage, ppComputeShader);
@@ -5630,7 +5630,7 @@ template<UINT INDEX>
 static void STDMETHODCALLTYPE ID3D11DeviceContext1_OMSetRenderTargets_Hooked(ID3D11DeviceContext1 *                                     ptr,
                                                                              _In_range_(0, D3D11_SIMULTANEOUS_RENDER_TARGET_COUNT) UINT NumViews,
                                                                              _In_reads_opt_(NumViews) ID3D11RenderTargetView * const *  ppRenderTargetViews,
-                                                                             _In_opt_ ID3D11DepthStencilView * pDepthStencilView) {
+                                                                             _In_opt_ ID3D11DepthStencilView *                          pDepthStencilView) {
     GN_D3DHOOK_CALLTRACE("ID3D11DeviceContext1::OMSetRenderTargets");
     g_D3D11OriginVTables._ID3D11DeviceContext1.tables[INDEX].OMSetRenderTargets(ptr, NumViews, ppRenderTargetViews, pDepthStencilView);
 }
@@ -5656,7 +5656,7 @@ static void STDMETHODCALLTYPE ID3D11DeviceContext1_OMSetBlendState_Hooked(ID3D11
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX>
-static void STDMETHODCALLTYPE ID3D11DeviceContext1_OMSetDepthStencilState_Hooked(ID3D11DeviceContext1 * ptr,
+static void STDMETHODCALLTYPE ID3D11DeviceContext1_OMSetDepthStencilState_Hooked(ID3D11DeviceContext1 *             ptr,
                                                                                  _In_opt_ ID3D11DepthStencilState * pDepthStencilState, _In_ UINT StencilRef) {
     GN_D3DHOOK_CALLTRACE("ID3D11DeviceContext1::OMSetDepthStencilState");
     g_D3D11OriginVTables._ID3D11DeviceContext1.tables[INDEX].OMSetDepthStencilState(ptr, pDepthStencilState, StencilRef);
@@ -5784,7 +5784,7 @@ static void STDMETHODCALLTYPE ID3D11DeviceContext1_ClearRenderTargetView_Hooked(
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX>
-static void STDMETHODCALLTYPE ID3D11DeviceContext1_ClearUnorderedAccessViewUint_Hooked(ID3D11DeviceContext1 * ptr,
+static void STDMETHODCALLTYPE ID3D11DeviceContext1_ClearUnorderedAccessViewUint_Hooked(ID3D11DeviceContext1 *           ptr,
                                                                                        _In_ ID3D11UnorderedAccessView * pUnorderedAccessView,
                                                                                        _In_ const UINT                  Values[4]) {
     GN_D3DHOOK_CALLTRACE("ID3D11DeviceContext1::ClearUnorderedAccessViewUint");
@@ -5793,7 +5793,7 @@ static void STDMETHODCALLTYPE ID3D11DeviceContext1_ClearUnorderedAccessViewUint_
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX>
-static void STDMETHODCALLTYPE ID3D11DeviceContext1_ClearUnorderedAccessViewFloat_Hooked(ID3D11DeviceContext1 * ptr,
+static void STDMETHODCALLTYPE ID3D11DeviceContext1_ClearUnorderedAccessViewFloat_Hooked(ID3D11DeviceContext1 *           ptr,
                                                                                         _In_ ID3D11UnorderedAccessView * pUnorderedAccessView,
                                                                                         _In_ const FLOAT                 Values[4]) {
     GN_D3DHOOK_CALLTRACE("ID3D11DeviceContext1::ClearUnorderedAccessViewFloat");
@@ -6014,7 +6014,7 @@ static void STDMETHODCALLTYPE ID3D11DeviceContext1_PSGetShaderResources_Hooked(I
 template<UINT INDEX>
 static void STDMETHODCALLTYPE ID3D11DeviceContext1_PSGetShader_Hooked(ID3D11DeviceContext1 * ptr, _Out_ ID3D11PixelShader ** ppPixelShader,
                                                                       _Out_writes_opt_(*pNumClassInstances) ID3D11ClassInstance ** ppClassInstances,
-                                                                      _Inout_opt_ UINT * pNumClassInstances) {
+                                                                      _Inout_opt_ UINT *                                           pNumClassInstances) {
     GN_D3DHOOK_CALLTRACE("ID3D11DeviceContext1::PSGetShader");
     g_D3D11OriginVTables._ID3D11DeviceContext1.tables[INDEX].PSGetShader(ptr, ppPixelShader, ppClassInstances, pNumClassInstances);
     if (ppPixelShader && *ppPixelShader) { RealToHooked11(*ppPixelShader); }
@@ -6036,7 +6036,7 @@ static void STDMETHODCALLTYPE ID3D11DeviceContext1_PSGetSamplers_Hooked(ID3D11De
 template<UINT INDEX>
 static void STDMETHODCALLTYPE ID3D11DeviceContext1_VSGetShader_Hooked(ID3D11DeviceContext1 * ptr, _Out_ ID3D11VertexShader ** ppVertexShader,
                                                                       _Out_writes_opt_(*pNumClassInstances) ID3D11ClassInstance ** ppClassInstances,
-                                                                      _Inout_opt_ UINT * pNumClassInstances) {
+                                                                      _Inout_opt_ UINT *                                           pNumClassInstances) {
     GN_D3DHOOK_CALLTRACE("ID3D11DeviceContext1::VSGetShader");
     g_D3D11OriginVTables._ID3D11DeviceContext1.tables[INDEX].VSGetShader(ptr, ppVertexShader, ppClassInstances, pNumClassInstances);
     if (ppVertexShader && *ppVertexShader) { RealToHooked11(*ppVertexShader); }
@@ -6101,7 +6101,7 @@ static void STDMETHODCALLTYPE ID3D11DeviceContext1_GSGetConstantBuffers_Hooked(I
 template<UINT INDEX>
 static void STDMETHODCALLTYPE ID3D11DeviceContext1_GSGetShader_Hooked(ID3D11DeviceContext1 * ptr, _Out_ ID3D11GeometryShader ** ppGeometryShader,
                                                                       _Out_writes_opt_(*pNumClassInstances) ID3D11ClassInstance ** ppClassInstances,
-                                                                      _Inout_opt_ UINT * pNumClassInstances) {
+                                                                      _Inout_opt_ UINT *                                           pNumClassInstances) {
     GN_D3DHOOK_CALLTRACE("ID3D11DeviceContext1::GSGetShader");
     g_D3D11OriginVTables._ID3D11DeviceContext1.tables[INDEX].GSGetShader(ptr, ppGeometryShader, ppClassInstances, pNumClassInstances);
     if (ppGeometryShader && *ppGeometryShader) { RealToHooked11(*ppGeometryShader); }
@@ -6175,7 +6175,7 @@ template<UINT INDEX>
 static void STDMETHODCALLTYPE ID3D11DeviceContext1_OMGetRenderTargets_Hooked(ID3D11DeviceContext1 *                                     ptr,
                                                                              _In_range_(0, D3D11_SIMULTANEOUS_RENDER_TARGET_COUNT) UINT NumViews,
                                                                              _Out_writes_opt_(NumViews) ID3D11RenderTargetView **       ppRenderTargetViews,
-                                                                             _Out_opt_ ID3D11DepthStencilView ** ppDepthStencilView) {
+                                                                             _Out_opt_ ID3D11DepthStencilView **                        ppDepthStencilView) {
     GN_D3DHOOK_CALLTRACE("ID3D11DeviceContext1::OMGetRenderTargets");
     g_D3D11OriginVTables._ID3D11DeviceContext1.tables[INDEX].OMGetRenderTargets(ptr, NumViews, ppRenderTargetViews, ppDepthStencilView);
     if (ppRenderTargetViews && *ppRenderTargetViews) { RealToHooked11(*ppRenderTargetViews); }
@@ -6208,9 +6208,9 @@ static void STDMETHODCALLTYPE ID3D11DeviceContext1_OMGetBlendState_Hooked(ID3D11
 
 // -----------------------------------------------------------------------------
 template<UINT INDEX>
-static void STDMETHODCALLTYPE ID3D11DeviceContext1_OMGetDepthStencilState_Hooked(ID3D11DeviceContext1 * ptr,
+static void STDMETHODCALLTYPE ID3D11DeviceContext1_OMGetDepthStencilState_Hooked(ID3D11DeviceContext1 *               ptr,
                                                                                  _Out_opt_ ID3D11DepthStencilState ** ppDepthStencilState,
-                                                                                 _Out_opt_ UINT * pStencilRef) {
+                                                                                 _Out_opt_ UINT *                     pStencilRef) {
     GN_D3DHOOK_CALLTRACE("ID3D11DeviceContext1::OMGetDepthStencilState");
     g_D3D11OriginVTables._ID3D11DeviceContext1.tables[INDEX].OMGetDepthStencilState(ptr, ppDepthStencilState, pStencilRef);
     if (ppDepthStencilState && *ppDepthStencilState) { RealToHooked11(*ppDepthStencilState); }
@@ -6267,7 +6267,7 @@ static void STDMETHODCALLTYPE ID3D11DeviceContext1_HSGetShaderResources_Hooked(I
 template<UINT INDEX>
 static void STDMETHODCALLTYPE ID3D11DeviceContext1_HSGetShader_Hooked(ID3D11DeviceContext1 * ptr, _Out_ ID3D11HullShader ** ppHullShader,
                                                                       _Out_writes_opt_(*pNumClassInstances) ID3D11ClassInstance ** ppClassInstances,
-                                                                      _Inout_opt_ UINT * pNumClassInstances) {
+                                                                      _Inout_opt_ UINT *                                           pNumClassInstances) {
     GN_D3DHOOK_CALLTRACE("ID3D11DeviceContext1::HSGetShader");
     g_D3D11OriginVTables._ID3D11DeviceContext1.tables[INDEX].HSGetShader(ptr, ppHullShader, ppClassInstances, pNumClassInstances);
     if (ppHullShader && *ppHullShader) { RealToHooked11(*ppHullShader); }
@@ -6314,7 +6314,7 @@ static void STDMETHODCALLTYPE ID3D11DeviceContext1_DSGetShaderResources_Hooked(I
 template<UINT INDEX>
 static void STDMETHODCALLTYPE ID3D11DeviceContext1_DSGetShader_Hooked(ID3D11DeviceContext1 * ptr, _Out_ ID3D11DomainShader ** ppDomainShader,
                                                                       _Out_writes_opt_(*pNumClassInstances) ID3D11ClassInstance ** ppClassInstances,
-                                                                      _Inout_opt_ UINT * pNumClassInstances) {
+                                                                      _Inout_opt_ UINT *                                           pNumClassInstances) {
     GN_D3DHOOK_CALLTRACE("ID3D11DeviceContext1::DSGetShader");
     g_D3D11OriginVTables._ID3D11DeviceContext1.tables[INDEX].DSGetShader(ptr, ppDomainShader, ppClassInstances, pNumClassInstances);
     if (ppDomainShader && *ppDomainShader) { RealToHooked11(*ppDomainShader); }
@@ -6373,7 +6373,7 @@ static void STDMETHODCALLTYPE ID3D11DeviceContext1_CSGetUnorderedAccessViews_Hoo
 template<UINT INDEX>
 static void STDMETHODCALLTYPE ID3D11DeviceContext1_CSGetShader_Hooked(ID3D11DeviceContext1 * ptr, _Out_ ID3D11ComputeShader ** ppComputeShader,
                                                                       _Out_writes_opt_(*pNumClassInstances) ID3D11ClassInstance ** ppClassInstances,
-                                                                      _Inout_opt_ UINT * pNumClassInstances) {
+                                                                      _Inout_opt_ UINT *                                           pNumClassInstances) {
     GN_D3DHOOK_CALLTRACE("ID3D11DeviceContext1::CSGetShader");
     g_D3D11OriginVTables._ID3D11DeviceContext1.tables[INDEX].CSGetShader(ptr, ppComputeShader, ppClassInstances, pNumClassInstances);
     if (ppComputeShader && *ppComputeShader) { RealToHooked11(*ppComputeShader); }
@@ -6695,7 +6695,7 @@ template<UINT INDEX>
 static HRESULT STDMETHODCALLTYPE ID3D11Device1_CreateTexture1D_Hooked(ID3D11Device1 * ptr, _In_ const D3D11_TEXTURE1D_DESC * pDesc,
                                                                       _In_reads_opt_(_Inexpressible_(pDesc->MipLevels * pDesc->ArraySize))
                                                                           const D3D11_SUBRESOURCE_DATA * pInitialData,
-                                                                      _Out_opt_ ID3D11Texture1D ** ppTexture1D) {
+                                                                      _Out_opt_ ID3D11Texture1D **       ppTexture1D) {
     GN_D3DHOOK_CALLTRACE("ID3D11Device1::CreateTexture1D");
     HRESULT result = g_D3D11OriginVTables._ID3D11Device1.tables[INDEX].CreateTexture1D(ptr, pDesc, pInitialData, ppTexture1D);
     if (ppTexture1D && *ppTexture1D) { RealToHooked11(*ppTexture1D); }
@@ -6707,7 +6707,7 @@ template<UINT INDEX>
 static HRESULT STDMETHODCALLTYPE ID3D11Device1_CreateTexture2D_Hooked(ID3D11Device1 * ptr, _In_ const D3D11_TEXTURE2D_DESC * pDesc,
                                                                       _In_reads_opt_(_Inexpressible_(pDesc->MipLevels * pDesc->ArraySize))
                                                                           const D3D11_SUBRESOURCE_DATA * pInitialData,
-                                                                      _Out_opt_ ID3D11Texture2D ** ppTexture2D) {
+                                                                      _Out_opt_ ID3D11Texture2D **       ppTexture2D) {
     GN_D3DHOOK_CALLTRACE("ID3D11Device1::CreateTexture2D");
     HRESULT result = g_D3D11OriginVTables._ID3D11Device1.tables[INDEX].CreateTexture2D(ptr, pDesc, pInitialData, ppTexture2D);
     if (ppTexture2D && *ppTexture2D) { RealToHooked11(*ppTexture2D); }
@@ -6719,7 +6719,7 @@ template<UINT INDEX>
 static HRESULT STDMETHODCALLTYPE ID3D11Device1_CreateTexture3D_Hooked(ID3D11Device1 * ptr, _In_ const D3D11_TEXTURE3D_DESC * pDesc,
                                                                       _In_reads_opt_(_Inexpressible_(pDesc->MipLevels))
                                                                           const D3D11_SUBRESOURCE_DATA * pInitialData,
-                                                                      _Out_opt_ ID3D11Texture3D ** ppTexture3D) {
+                                                                      _Out_opt_ ID3D11Texture3D **       ppTexture3D) {
     GN_D3DHOOK_CALLTRACE("ID3D11Device1::CreateTexture3D");
     HRESULT result = g_D3D11OriginVTables._ID3D11Device1.tables[INDEX].CreateTexture3D(ptr, pDesc, pInitialData, ppTexture3D);
     if (ppTexture3D && *ppTexture3D) { RealToHooked11(*ppTexture3D); }
@@ -6730,7 +6730,7 @@ static HRESULT STDMETHODCALLTYPE ID3D11Device1_CreateTexture3D_Hooked(ID3D11Devi
 template<UINT INDEX>
 static HRESULT STDMETHODCALLTYPE ID3D11Device1_CreateShaderResourceView_Hooked(ID3D11Device1 * ptr, _In_ ID3D11Resource * pResource,
                                                                                _In_opt_ const D3D11_SHADER_RESOURCE_VIEW_DESC * pDesc,
-                                                                               _Out_opt_ ID3D11ShaderResourceView ** ppSRView) {
+                                                                               _Out_opt_ ID3D11ShaderResourceView **            ppSRView) {
     GN_D3DHOOK_CALLTRACE("ID3D11Device1::CreateShaderResourceView");
     HRESULT result = g_D3D11OriginVTables._ID3D11Device1.tables[INDEX].CreateShaderResourceView(ptr, pResource, pDesc, ppSRView);
     if (ppSRView && *ppSRView) { RealToHooked11(*ppSRView); }
@@ -6741,7 +6741,7 @@ static HRESULT STDMETHODCALLTYPE ID3D11Device1_CreateShaderResourceView_Hooked(I
 template<UINT INDEX>
 static HRESULT STDMETHODCALLTYPE ID3D11Device1_CreateUnorderedAccessView_Hooked(ID3D11Device1 * ptr, _In_ ID3D11Resource * pResource,
                                                                                 _In_opt_ const D3D11_UNORDERED_ACCESS_VIEW_DESC * pDesc,
-                                                                                _Out_opt_ ID3D11UnorderedAccessView ** ppUAView) {
+                                                                                _Out_opt_ ID3D11UnorderedAccessView **            ppUAView) {
     GN_D3DHOOK_CALLTRACE("ID3D11Device1::CreateUnorderedAccessView");
     HRESULT result = g_D3D11OriginVTables._ID3D11Device1.tables[INDEX].CreateUnorderedAccessView(ptr, pResource, pDesc, ppUAView);
     if (ppUAView && *ppUAView) { RealToHooked11(*ppUAView); }
@@ -6752,7 +6752,7 @@ static HRESULT STDMETHODCALLTYPE ID3D11Device1_CreateUnorderedAccessView_Hooked(
 template<UINT INDEX>
 static HRESULT STDMETHODCALLTYPE ID3D11Device1_CreateRenderTargetView_Hooked(ID3D11Device1 * ptr, _In_ ID3D11Resource * pResource,
                                                                              _In_opt_ const D3D11_RENDER_TARGET_VIEW_DESC * pDesc,
-                                                                             _Out_opt_ ID3D11RenderTargetView ** ppRTView) {
+                                                                             _Out_opt_ ID3D11RenderTargetView **            ppRTView) {
     GN_D3DHOOK_CALLTRACE("ID3D11Device1::CreateRenderTargetView");
     HRESULT result = g_D3D11OriginVTables._ID3D11Device1.tables[INDEX].CreateRenderTargetView(ptr, pResource, pDesc, ppRTView);
     if (ppRTView && *ppRTView) { RealToHooked11(*ppRTView); }
@@ -6763,7 +6763,7 @@ static HRESULT STDMETHODCALLTYPE ID3D11Device1_CreateRenderTargetView_Hooked(ID3
 template<UINT INDEX>
 static HRESULT STDMETHODCALLTYPE ID3D11Device1_CreateDepthStencilView_Hooked(ID3D11Device1 * ptr, _In_ ID3D11Resource * pResource,
                                                                              _In_opt_ const D3D11_DEPTH_STENCIL_VIEW_DESC * pDesc,
-                                                                             _Out_opt_ ID3D11DepthStencilView ** ppDepthStencilView) {
+                                                                             _Out_opt_ ID3D11DepthStencilView **            ppDepthStencilView) {
     GN_D3DHOOK_CALLTRACE("ID3D11Device1::CreateDepthStencilView");
     HRESULT result = g_D3D11OriginVTables._ID3D11Device1.tables[INDEX].CreateDepthStencilView(ptr, pResource, pDesc, ppDepthStencilView);
     if (ppDepthStencilView && *ppDepthStencilView) { RealToHooked11(*ppDepthStencilView); }
@@ -6787,7 +6787,7 @@ static HRESULT STDMETHODCALLTYPE ID3D11Device1_CreateInputLayout_Hooked(ID3D11De
 // -----------------------------------------------------------------------------
 template<UINT INDEX>
 static HRESULT STDMETHODCALLTYPE ID3D11Device1_CreateVertexShader_Hooked(ID3D11Device1 * ptr, _In_ const void * pShaderBytecode, _In_ SIZE_T BytecodeLength,
-                                                                         _In_opt_ ID3D11ClassLinkage * pClassLinkage,
+                                                                         _In_opt_ ID3D11ClassLinkage *   pClassLinkage,
                                                                          _Out_opt_ ID3D11VertexShader ** ppVertexShader) {
     GN_D3DHOOK_CALLTRACE("ID3D11Device1::CreateVertexShader");
     HRESULT result = g_D3D11OriginVTables._ID3D11Device1.tables[INDEX].CreateVertexShader(ptr, pShaderBytecode, BytecodeLength, pClassLinkage, ppVertexShader);
@@ -6798,7 +6798,7 @@ static HRESULT STDMETHODCALLTYPE ID3D11Device1_CreateVertexShader_Hooked(ID3D11D
 // -----------------------------------------------------------------------------
 template<UINT INDEX>
 static HRESULT STDMETHODCALLTYPE ID3D11Device1_CreateGeometryShader_Hooked(ID3D11Device1 * ptr, _In_ const void * pShaderBytecode, _In_ SIZE_T BytecodeLength,
-                                                                           _In_opt_ ID3D11ClassLinkage * pClassLinkage,
+                                                                           _In_opt_ ID3D11ClassLinkage *     pClassLinkage,
                                                                            _Out_opt_ ID3D11GeometryShader ** ppGeometryShader) {
     GN_D3DHOOK_CALLTRACE("ID3D11Device1::CreateGeometryShader");
     HRESULT result =
@@ -6825,7 +6825,7 @@ static HRESULT STDMETHODCALLTYPE ID3D11Device1_CreateGeometryShaderWithStreamOut
 // -----------------------------------------------------------------------------
 template<UINT INDEX>
 static HRESULT STDMETHODCALLTYPE ID3D11Device1_CreatePixelShader_Hooked(ID3D11Device1 * ptr, _In_ const void * pShaderBytecode, _In_ SIZE_T BytecodeLength,
-                                                                        _In_opt_ ID3D11ClassLinkage * pClassLinkage,
+                                                                        _In_opt_ ID3D11ClassLinkage *  pClassLinkage,
                                                                         _Out_opt_ ID3D11PixelShader ** ppPixelShader) {
     GN_D3DHOOK_CALLTRACE("ID3D11Device1::CreatePixelShader");
     HRESULT result = g_D3D11OriginVTables._ID3D11Device1.tables[INDEX].CreatePixelShader(ptr, pShaderBytecode, BytecodeLength, pClassLinkage, ppPixelShader);
@@ -6847,7 +6847,7 @@ static HRESULT STDMETHODCALLTYPE ID3D11Device1_CreateHullShader_Hooked(ID3D11Dev
 // -----------------------------------------------------------------------------
 template<UINT INDEX>
 static HRESULT STDMETHODCALLTYPE ID3D11Device1_CreateDomainShader_Hooked(ID3D11Device1 * ptr, _In_ const void * pShaderBytecode, _In_ SIZE_T BytecodeLength,
-                                                                         _In_opt_ ID3D11ClassLinkage * pClassLinkage,
+                                                                         _In_opt_ ID3D11ClassLinkage *   pClassLinkage,
                                                                          _Out_opt_ ID3D11DomainShader ** ppDomainShader) {
     GN_D3DHOOK_CALLTRACE("ID3D11Device1::CreateDomainShader");
     HRESULT result = g_D3D11OriginVTables._ID3D11Device1.tables[INDEX].CreateDomainShader(ptr, pShaderBytecode, BytecodeLength, pClassLinkage, ppDomainShader);
@@ -6858,7 +6858,7 @@ static HRESULT STDMETHODCALLTYPE ID3D11Device1_CreateDomainShader_Hooked(ID3D11D
 // -----------------------------------------------------------------------------
 template<UINT INDEX>
 static HRESULT STDMETHODCALLTYPE ID3D11Device1_CreateComputeShader_Hooked(ID3D11Device1 * ptr, _In_ const void * pShaderBytecode, _In_ SIZE_T BytecodeLength,
-                                                                          _In_opt_ ID3D11ClassLinkage * pClassLinkage,
+                                                                          _In_opt_ ID3D11ClassLinkage *    pClassLinkage,
                                                                           _Out_opt_ ID3D11ComputeShader ** ppComputeShader) {
     GN_D3DHOOK_CALLTRACE("ID3D11Device1::CreateComputeShader");
     HRESULT result =
@@ -7129,7 +7129,7 @@ template<UINT INDEX>
 static HRESULT STDMETHODCALLTYPE ID3D11Device1_CreateDeviceContextState_Hooked(ID3D11Device1 * ptr, UINT Flags,
                                                                                _In_reads_(FeatureLevels) const D3D_FEATURE_LEVEL * pFeatureLevels,
                                                                                UINT FeatureLevels, UINT SDKVersion, REFIID EmulatedInterface,
-                                                                               _Out_opt_ D3D_FEATURE_LEVEL * pChosenFeatureLevel,
+                                                                               _Out_opt_ D3D_FEATURE_LEVEL *       pChosenFeatureLevel,
                                                                                _Out_opt_ ID3DDeviceContextState ** ppContextState) {
     GN_D3DHOOK_CALLTRACE("ID3D11Device1::CreateDeviceContextState");
     HRESULT result = g_D3D11OriginVTables._ID3D11Device1.tables[INDEX].CreateDeviceContextState(ptr, Flags, pFeatureLevels, FeatureLevels, SDKVersion,
@@ -7504,7 +7504,7 @@ static void STDMETHODCALLTYPE ID3D11InfoQueue_ClearStoredMessages_Hooked(ID3D11I
 template<UINT INDEX>
 static HRESULT STDMETHODCALLTYPE ID3D11InfoQueue_GetMessage_Hooked(ID3D11InfoQueue * ptr, _In_ UINT64 MessageIndex,
                                                                    _Out_writes_bytes_opt_(*pMessageByteLength) D3D11_MESSAGE * pMessage,
-                                                                   _Inout_ SIZE_T * pMessageByteLength) {
+                                                                   _Inout_ SIZE_T *                                            pMessageByteLength) {
     GN_D3DHOOK_CALLTRACE("ID3D11InfoQueue::GetMessage");
     HRESULT result = g_D3D11OriginVTables._ID3D11InfoQueue.tables[INDEX].GetMessage(ptr, MessageIndex, pMessage, pMessageByteLength);
     return result;
@@ -9319,7 +9319,7 @@ static void STDMETHODCALLTYPE IDXGIOutputDuplication_GetDesc_Hooked(IDXGIOutputD
 template<UINT INDEX>
 static HRESULT STDMETHODCALLTYPE IDXGIOutputDuplication_AcquireNextFrame_Hooked(IDXGIOutputDuplication * ptr, _In_ UINT TimeoutInMilliseconds,
                                                                                 _Out_ DXGI_OUTDUPL_FRAME_INFO * pFrameInfo,
-                                                                                _Out_ IDXGIResource ** ppDesktopResource) {
+                                                                                _Out_ IDXGIResource **          ppDesktopResource) {
     GN_D3DHOOK_CALLTRACE("IDXGIOutputDuplication::AcquireNextFrame");
     HRESULT result = g_D3D11OriginVTables._IDXGIOutputDuplication.tables[INDEX].AcquireNextFrame(ptr, TimeoutInMilliseconds, pFrameInfo, ppDesktopResource);
     if (ppDesktopResource && *ppDesktopResource) { RealToHooked11(*ppDesktopResource); }
@@ -9330,7 +9330,7 @@ static HRESULT STDMETHODCALLTYPE IDXGIOutputDuplication_AcquireNextFrame_Hooked(
 template<UINT INDEX>
 static HRESULT STDMETHODCALLTYPE IDXGIOutputDuplication_GetFrameDirtyRects_Hooked(IDXGIOutputDuplication * ptr, _In_ UINT DirtyRectsBufferSize,
                                                                                   _Out_writes_bytes_to_(DirtyRectsBufferSize, *pDirtyRectsBufferSizeRequired)
-                                                                                      RECT * pDirtyRectsBuffer,
+                                                                                      RECT *   pDirtyRectsBuffer,
                                                                                   _Out_ UINT * pDirtyRectsBufferSizeRequired) {
     GN_D3DHOOK_CALLTRACE("IDXGIOutputDuplication::GetFrameDirtyRects");
     HRESULT result = g_D3D11OriginVTables._IDXGIOutputDuplication.tables[INDEX].GetFrameDirtyRects(ptr, DirtyRectsBufferSize, pDirtyRectsBuffer,
@@ -9343,7 +9343,7 @@ template<UINT INDEX>
 static HRESULT STDMETHODCALLTYPE IDXGIOutputDuplication_GetFrameMoveRects_Hooked(IDXGIOutputDuplication * ptr, _In_ UINT MoveRectsBufferSize,
                                                                                  _Out_writes_bytes_to_(MoveRectsBufferSize, *pMoveRectsBufferSizeRequired)
                                                                                      DXGI_OUTDUPL_MOVE_RECT * pMoveRectBuffer,
-                                                                                 _Out_ UINT * pMoveRectsBufferSizeRequired) {
+                                                                                 _Out_ UINT *                 pMoveRectsBufferSizeRequired) {
     GN_D3DHOOK_CALLTRACE("IDXGIOutputDuplication::GetFrameMoveRects");
     HRESULT result =
         g_D3D11OriginVTables._IDXGIOutputDuplication.tables[INDEX].GetFrameMoveRects(ptr, MoveRectsBufferSize, pMoveRectBuffer, pMoveRectsBufferSizeRequired);
@@ -10141,7 +10141,7 @@ static BOOL STDMETHODCALLTYPE IDXGIFactory2_IsWindowedStereoEnabled_Hooked(IDXGI
 // -----------------------------------------------------------------------------
 template<UINT INDEX>
 static HRESULT STDMETHODCALLTYPE IDXGIFactory2_CreateSwapChainForHwnd_Hooked(IDXGIFactory2 * ptr, _In_ IUnknown * pDevice, _In_ HWND hWnd,
-                                                                             _In_ const DXGI_SWAP_CHAIN_DESC1 * pDesc,
+                                                                             _In_ const DXGI_SWAP_CHAIN_DESC1 *               pDesc,
                                                                              _In_opt_ const DXGI_SWAP_CHAIN_FULLSCREEN_DESC * pFullscreenDesc,
                                                                              _In_opt_ IDXGIOutput * pRestrictToOutput, _Out_ IDXGISwapChain1 ** ppSwapChain) {
     GN_D3DHOOK_CALLTRACE("IDXGIFactory2::CreateSwapChainForHwnd");
@@ -10155,8 +10155,8 @@ static HRESULT STDMETHODCALLTYPE IDXGIFactory2_CreateSwapChainForHwnd_Hooked(IDX
 template<UINT INDEX>
 static HRESULT STDMETHODCALLTYPE IDXGIFactory2_CreateSwapChainForCoreWindow_Hooked(IDXGIFactory2 * ptr, _In_ IUnknown * pDevice, _In_ IUnknown * pWindow,
                                                                                    _In_ const DXGI_SWAP_CHAIN_DESC1 * pDesc,
-                                                                                   _In_opt_ IDXGIOutput * pRestrictToOutput,
-                                                                                   _Out_ IDXGISwapChain1 ** ppSwapChain) {
+                                                                                   _In_opt_ IDXGIOutput *             pRestrictToOutput,
+                                                                                   _Out_ IDXGISwapChain1 **           ppSwapChain) {
     GN_D3DHOOK_CALLTRACE("IDXGIFactory2::CreateSwapChainForCoreWindow");
     HRESULT result =
         g_D3D11OriginVTables._IDXGIFactory2.tables[INDEX].CreateSwapChainForCoreWindow(ptr, pDevice, pWindow, pDesc, pRestrictToOutput, ppSwapChain);
@@ -10224,8 +10224,8 @@ static void STDMETHODCALLTYPE IDXGIFactory2_UnregisterOcclusionStatus_Hooked(IDX
 template<UINT INDEX>
 static HRESULT STDMETHODCALLTYPE IDXGIFactory2_CreateSwapChainForComposition_Hooked(IDXGIFactory2 * ptr, _In_ IUnknown * pDevice,
                                                                                     _In_ const DXGI_SWAP_CHAIN_DESC1 * pDesc,
-                                                                                    _In_opt_ IDXGIOutput * pRestrictToOutput,
-                                                                                    _Outptr_ IDXGISwapChain1 ** ppSwapChain) {
+                                                                                    _In_opt_ IDXGIOutput *             pRestrictToOutput,
+                                                                                    _Outptr_ IDXGISwapChain1 **        ppSwapChain) {
     GN_D3DHOOK_CALLTRACE("IDXGIFactory2::CreateSwapChainForComposition");
     HRESULT result = g_D3D11OriginVTables._IDXGIFactory2.tables[INDEX].CreateSwapChainForComposition(ptr, pDevice, pDesc, pRestrictToOutput, ppSwapChain);
     if (ppSwapChain && *ppSwapChain) { RealToHooked11(*ppSwapChain); }
@@ -10571,7 +10571,7 @@ static void STDMETHODCALLTYPE IDXGIInfoQueue_ClearStoredMessages_Hooked(IDXGIInf
 template<UINT INDEX>
 static HRESULT STDMETHODCALLTYPE IDXGIInfoQueue_GetMessage_Hooked(IDXGIInfoQueue * ptr, _In_ DXGI_DEBUG_ID Producer, _In_ UINT64 MessageIndex,
                                                                   _Out_writes_bytes_opt_(*pMessageByteLength) DXGI_INFO_QUEUE_MESSAGE * pMessage,
-                                                                  _Inout_ SIZE_T * pMessageByteLength) {
+                                                                  _Inout_ SIZE_T *                                                      pMessageByteLength) {
     GN_D3DHOOK_CALLTRACE("IDXGIInfoQueue::GetMessage");
     HRESULT result = g_D3D11OriginVTables._IDXGIInfoQueue.tables[INDEX].GetMessage(ptr, Producer, MessageIndex, pMessage, pMessageByteLength);
     return result;
@@ -10638,7 +10638,7 @@ static HRESULT STDMETHODCALLTYPE IDXGIInfoQueue_AddStorageFilterEntries_Hooked(I
 template<UINT INDEX>
 static HRESULT STDMETHODCALLTYPE IDXGIInfoQueue_GetStorageFilter_Hooked(IDXGIInfoQueue * ptr, _In_ DXGI_DEBUG_ID Producer,
                                                                         _Out_writes_bytes_opt_(*pFilterByteLength) DXGI_INFO_QUEUE_FILTER * pFilter,
-                                                                        _Inout_ SIZE_T * pFilterByteLength) {
+                                                                        _Inout_ SIZE_T *                                                    pFilterByteLength) {
     GN_D3DHOOK_CALLTRACE("IDXGIInfoQueue::GetStorageFilter");
     HRESULT result = g_D3D11OriginVTables._IDXGIInfoQueue.tables[INDEX].GetStorageFilter(ptr, Producer, pFilter, pFilterByteLength);
     return result;
@@ -11053,9 +11053,7 @@ void RealToHooked11(const IID & iid, void * p) {
         RealToHooked11_IDXGIInfoQueue((IDXGIInfoQueue *) p);
     else if (__uuidof(IDXGIDebug) == iid)
         RealToHooked11_IDXGIDebug((IDXGIDebug *) p);
-    else {
-        HOOK_WARN_LOG("unrecognized interface UUID: <xxxx-xxxx-xxxxx...>");
-    }
+    else { HOOK_WARN_LOG("unrecognized interface UUID: <xxxx-xxxx-xxxxx...>"); }
 }
 
 // -----------------------------------------------------------------------------
@@ -11434,7 +11432,7 @@ static void SetupD3D11HookedVTables() {
     g_D3D11HookedVTables._ID3D11VideoDecoder.tables[INDEX].GetPrivateData             = ID3D11VideoDecoder_GetPrivateData_Hooked<INDEX>;
     g_D3D11HookedVTables._ID3D11VideoDecoder.tables[INDEX].SetPrivateData             = ID3D11VideoDecoder_SetPrivateData_Hooked<INDEX>;
     g_D3D11HookedVTables._ID3D11VideoDecoder.tables[INDEX].SetPrivateDataInterface    = ID3D11VideoDecoder_SetPrivateDataInterface_Hooked<INDEX>;
-    g_D3D11HookedVTables._ID3D11VideoDecoder.tables[INDEX].GetCreateParameters      = ID3D11VideoDecoder_GetCreateParameters_Hooked<INDEX>;
+    g_D3D11HookedVTables._ID3D11VideoDecoder.tables[INDEX].GetCreateParameters        = ID3D11VideoDecoder_GetCreateParameters_Hooked<INDEX>;
     g_D3D11HookedVTables._ID3D11VideoDecoder.tables[INDEX].GetDriverHandle            = ID3D11VideoDecoder_GetDriverHandle_Hooked<INDEX>;
     g_D3D11HookedVTables._ID3D11VideoProcessorEnumerator.tables[INDEX].QueryInterface = ID3D11VideoProcessorEnumerator_QueryInterface_Hooked<INDEX>;
     g_D3D11HookedVTables._ID3D11VideoProcessorEnumerator.tables[INDEX].AddRef         = ID3D11VideoProcessorEnumerator_AddRef_Hooked<INDEX>;

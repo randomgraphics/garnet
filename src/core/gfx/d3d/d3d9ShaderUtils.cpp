@@ -15,7 +15,7 @@ static GN::StrA sAddLineCountD3D9(const GN::StrA & in) {
     GN::StrA out("(  1) : ");
 
     int line = 1;
-    for (const char * s = in.rawptr(); *s; ++s) {
+    for (const char * s = in.data(); *s; ++s) {
         if ('\n' == *s) {
             out.append(str::format("\n(%3d) : ", ++line));
         } else {
@@ -29,7 +29,7 @@ static GN::StrA sAddLineCountD3D9(const GN::StrA & in) {
 //
 //
 // -----------------------------------------------------------------------------
-static uint32 sRefineFlagsD3D9(uint32 flags) {
+static uint32_t sRefineFlagsD3D9(uint32_t flags) {
     #if GN_BUILD_DEBUG_ENABLED
     flags |= D3DCOMPILE_DEBUG;
     #endif
@@ -50,7 +50,7 @@ static void sPrintShaderCompileErrorD3D9(HRESULT hr, const char * code, LPD3DXBU
      "\n---------------------------------------------------------\n"
      "%s\n"
      "\n=========================================================\n",
-     code ? sAddLineCountD3D9(code).rawptr() : "Shader code: <EMPTY>", hr, GN::getDXErrorInfo(hr),
+     code ? sAddLineCountD3D9(code).data() : "Shader code: <EMPTY>", hr, GN::getDXErrorInfo(hr),
      err ? (const char *) err->GetBufferPointer() : "Error: <EMPTY>");
 
     GN_UNGUARD;
@@ -69,7 +69,7 @@ static void sPrintShaderCompileInfoD3D9(const char * hlsl, ID3DXBuffer * bin) {
     ("\n================== Shader compile success ===============\n"
      "%s\n"
      "\n=========================================================\n",
-     sAddLineCountD3D9(hlsl).rawptr());
+     sAddLineCountD3D9(hlsl).data());
 
     GN_UNGUARD;
 }
@@ -113,7 +113,7 @@ static GN::StrA sSaveCodeToTemporaryFile( const char * code, size_t len )
 //
 //
 // -----------------------------------------------------------------------------
-GN_API LPDIRECT3DVERTEXSHADER9 GN::d3d9::compileAndCreateVS(LPDIRECT3DDEVICE9 dev, const char * code, size_t len, uint32 flags, const char * entry,
+GN_API LPDIRECT3DVERTEXSHADER9 GN::d3d9::compileAndCreateVS(LPDIRECT3DDEVICE9 dev, const char * code, size_t len, uint32_t flags, const char * entry,
                                                             const char * profile, LPD3DXCONSTANTTABLE * constTable, LPD3DXBUFFER * binary) {
     GN_GUARD;
 
@@ -159,7 +159,7 @@ GN_API LPDIRECT3DVERTEXSHADER9 GN::d3d9::compileAndCreateVS(LPDIRECT3DDEVICE9 de
 //
 //
 // -----------------------------------------------------------------------------
-GN_API LPDIRECT3DPIXELSHADER9 GN::d3d9::compileAndCreatePS(LPDIRECT3DDEVICE9 dev, const char * code, size_t len, uint32 flags, const char * entry,
+GN_API LPDIRECT3DPIXELSHADER9 GN::d3d9::compileAndCreatePS(LPDIRECT3DDEVICE9 dev, const char * code, size_t len, uint32_t flags, const char * entry,
                                                            const char * profile, LPD3DXCONSTANTTABLE * constTable) {
     GN_GUARD;
 

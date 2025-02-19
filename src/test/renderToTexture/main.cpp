@@ -37,13 +37,13 @@ public:
         if (!sr.init(gpu)) return false;
 
         // create render targets
-        c0.attach(gpu.create2DTexture(ColorFormat::RGBA8, (uint32) RT_WIDTH, (uint32) RT_HEIGHT, 1, TextureUsage::COLOR_RENDER_TARGET));
+        c0.attach(gpu.create2DTexture(PixelFormat::RGBA8(), (uint32_t) RT_WIDTH, (uint32_t) RT_HEIGHT, 1, TextureUsage::COLOR_RENDER_TARGET));
         if (!c0) {
             GN_ERROR(sLogger)("Current graphics hardware does not support render-to-texture at all.");
             return false;
         }
 
-        ds.attach(gpu.create2DTexture(ColorFormat::RG_24_UNORM_8_UINT, (uint32) RT_WIDTH, (uint32) RT_HEIGHT, 1, TextureUsage::DEPTH_RENDER_TARGET));
+        ds.attach(gpu.create2DTexture(PixelFormat::RG_24_UNORM_8_UINT(), (uint32_t) RT_WIDTH, (uint32_t) RT_HEIGHT, 1, TextureUsage::DEPTH_RENDER_TARGET));
         if (!ds) { GN_WARN(sLogger)("Current graphics hardware does not support depth-texture. All tests related depth-texture are disabled."); }
 
         // load textures
@@ -52,9 +52,9 @@ public:
         if (0 == tex0 || 0 == tex1) return false;
 
         // create box mesh
-        float   edge = 200.0f;
-        BoxVert vertices[24];
-        uint16  indices[36];
+        float    edge = 200.0f;
+        BoxVert  vertices[24];
+        uint16_t indices[36];
         createBox(edge, edge, edge, &vertices[0].x, sizeof(BoxVert), &vertices[0].u, sizeof(BoxVert), &vertices[0].nx, sizeof(BoxVert), 0, 0, // tangent
                   0, 0,                                                                                                                       // binormal
                   indices, 0);
@@ -214,8 +214,8 @@ int main(int argc, const char * argv[]) {
         return -1;
     }
 
-    cmdargs.rendererOptions.displayMode.width  = (uint32) RT_WIDTH * 2;
-    cmdargs.rendererOptions.displayMode.height = (uint32) RT_HEIGHT * 2;
+    cmdargs.rendererOptions.displayMode.width  = (uint32_t) RT_WIDTH * 2;
+    cmdargs.rendererOptions.displayMode.height = (uint32_t) RT_HEIGHT * 2;
 
     Gpu * r = createGpu(cmdargs.rendererOptions, cmdargs.useMultiThreadGpu ? GPU_CREATION_MULTIPLE_THREADS : 0);
     if (NULL == r) return -1;

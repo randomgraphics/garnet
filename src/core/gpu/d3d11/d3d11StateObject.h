@@ -29,7 +29,7 @@ struct D3D11StateObjectCreator<D3D11_RASTERIZER_DESC> {
     }
 
     union CompactDesc {
-        uint64 u64;
+        uint64_t u64;
         struct {
             unsigned int fillmode  : 2;
             unsigned int cullmode  : 2;
@@ -45,7 +45,7 @@ struct D3D11StateObjectCreator<D3D11_RASTERIZER_DESC> {
     GN_CASSERT(8 == sizeof(CompactDesc));
 
     struct Hash {
-        uint64 operator()(const D3D11_RASTERIZER_DESC & desc) const {
+        uint64_t operator()(const D3D11_RASTERIZER_DESC & desc) const {
             CompactDesc cd;
 
             cd.fillmode  = desc.FillMode;
@@ -82,24 +82,24 @@ struct D3D11StateObjectCreator<D3D11_BLEND_DESC> {
     }
 
     union CompactDesc {
-        uint64 u64;
+        uint64_t u64;
         struct {
-            uint64 a2c  : 1;
-            uint64 ibe  : 1;
-            uint64 be   : 8;
-            uint64 sb   : 5;
-            uint64 db   : 5;
-            uint64 bo   : 3;
-            uint64 sba  : 5;
-            uint64 dba  : 5;
-            uint64 boa  : 3;
-            uint64 mask : 28;
+            uint64_t a2c  : 1;
+            uint64_t ibe  : 1;
+            uint64_t be   : 8;
+            uint64_t sb   : 5;
+            uint64_t db   : 5;
+            uint64_t bo   : 3;
+            uint64_t sba  : 5;
+            uint64_t dba  : 5;
+            uint64_t boa  : 3;
+            uint64_t mask : 28;
         };
     };
     GN_CASSERT(8 == sizeof(CompactDesc));
 
     struct Hash {
-        uint64 operator()(const D3D11_BLEND_DESC & desc) const {
+        uint64_t operator()(const D3D11_BLEND_DESC & desc) const {
             CompactDesc cd;
 
             cd.a2c  = desc.AlphaToCoverageEnable;
@@ -142,7 +142,7 @@ struct D3D11StateObjectCreator<D3D11_DEPTH_STENCIL_DESC> {
     }
 
     union CompactDesc {
-        uint64 u64;
+        uint64_t u64;
         struct {
             unsigned int depth    : 1;
             unsigned int write    : 1;
@@ -164,7 +164,7 @@ struct D3D11StateObjectCreator<D3D11_DEPTH_STENCIL_DESC> {
     GN_CASSERT(8 == sizeof(CompactDesc));
 
     struct Hash {
-        uint64 operator()(const D3D11_DEPTH_STENCIL_DESC & desc) const {
+        uint64_t operator()(const D3D11_DEPTH_STENCIL_DESC & desc) const {
             CompactDesc cd;
 
             cd.depth    = desc.DepthEnable;
@@ -206,41 +206,41 @@ struct D3D11StateObjectCreator<D3D11_SAMPLER_DESC> {
     }
 
     union CompactDesc {
-        uint64 u64;
+        uint64_t u64;
         struct {
-            uint64 filter      : 8;
-            uint64 addressU    : 3;
-            uint64 addressV    : 3;
-            uint64 addressW    : 3;
-            uint64 lodbias     : 4;
-            uint64 maxaniso    : 3;
-            uint64 compare     : 3;
-            uint64 bordercolor : 32;
-            uint64 lod         : 5;
+            uint64_t filter      : 8;
+            uint64_t addressU    : 3;
+            uint64_t addressV    : 3;
+            uint64_t addressW    : 3;
+            uint64_t lodbias     : 4;
+            uint64_t maxaniso    : 3;
+            uint64_t compare     : 3;
+            uint64_t bordercolor : 32;
+            uint64_t lod         : 5;
         };
     };
     GN_CASSERT(8 == sizeof(CompactDesc));
 
     struct Hash {
-        uint64 operator()(const D3D11_SAMPLER_DESC & desc) const {
+        uint64_t operator()(const D3D11_SAMPLER_DESC & desc) const {
             CompactDesc cd;
 
             ///
             /// compose RGBA8 color constant
             ///
-#define GN_RGBA8_FROM_FLOAT4(r, g, b, a)                                                                                            \
-    (((((uint32) (r * 255.0f)) & 0xFF) << 0) | ((((uint32) (g * 255.0f)) & 0xFF) << 8) | ((((uint32) (b * 255.0f)) & 0xFF) << 16) | \
-     ((((uint32) (a * 255.0f)) & 0xFF) << 24))
+#define GN_RGBA8_FROM_FLOAT4(r, g, b, a)                                                                                                  \
+    (((((uint32_t) (r * 255.0f)) & 0xFF) << 0) | ((((uint32_t) (g * 255.0f)) & 0xFF) << 8) | ((((uint32_t) (b * 255.0f)) & 0xFF) << 16) | \
+     ((((uint32_t) (a * 255.0f)) & 0xFF) << 24))
 
             cd.filter      = desc.Filter;
             cd.addressU    = desc.AddressU;
             cd.addressV    = desc.AddressV;
             cd.addressW    = desc.AddressW;
-            cd.lodbias     = (uint64) desc.MipLODBias;
-            cd.maxaniso    = (uint64) desc.MaxAnisotropy;
+            cd.lodbias     = (uint64_t) desc.MipLODBias;
+            cd.maxaniso    = (uint64_t) desc.MaxAnisotropy;
             cd.compare     = desc.ComparisonFunc;
             cd.bordercolor = GN_RGBA8_FROM_FLOAT4(desc.BorderColor[0], desc.BorderColor[1], desc.BorderColor[2], desc.BorderColor[3]);
-            cd.lod         = (uint32) (desc.MinLOD + desc.MaxLOD);
+            cd.lod         = (uint32_t) (desc.MinLOD + desc.MaxLOD);
 
             return cd.u64;
         }
@@ -286,7 +286,7 @@ public:
 
         // initialize free item list
         mNextFreeItem = &mPool[0];
-        for (uint32 i = 0; i < CACHE_SIZE - 1; ++i) { mPool[i].nextFree = &mPool[i + 1]; }
+        for (uint32_t i = 0; i < CACHE_SIZE - 1; ++i) { mPool[i].nextFree = &mPool[i + 1]; }
         mPool[CACHE_SIZE - 1].nextFree = NULL;
     }
 
@@ -316,7 +316,7 @@ public:
 
         // rebuild free list
         mNextFreeItem = &mPool[0];
-        for (uint32 i = 0; i < CACHE_SIZE - 1; ++i) { mPool[i].nextFree = &mPool[i + 1]; }
+        for (uint32_t i = 0; i < CACHE_SIZE - 1; ++i) { mPool[i].nextFree = &mPool[i + 1]; }
         mPool[CACHE_SIZE - 1].nextFree = NULL;
 
         mCount = 0;
@@ -327,9 +327,9 @@ public:
     ///
     OBJECT_CLASS * operator[](const OBJECT_DESC & desc) {
         // look up existing item first
-        StateObjectItem ** hashitem = mHashTable.find(desc);
-        if (hashitem) {
-            StateObjectItem * item = *hashitem;
+        auto hashitem = mHashTable.find(desc);
+        if (hashitem != mHashTable.end()) {
+            StateObjectItem * item = hashitem->second;
 
             GN_ASSERT(item);
 
@@ -353,7 +353,7 @@ public:
                 safeRelease(item->object);
 
                 // remove from hash
-                mHashTable.remove(item->desc);
+                mHashTable.erase(item->desc);
 
                 // remove from LRU list
                 StateObjectItem * prev = item->prev;
@@ -381,8 +381,8 @@ public:
         item->object           = newobj;
         item->desc             = desc;
 
-        // add to hash
-        mHashTable.insert(desc, item);
+        // add to hash. make sure it is indeed inserted as a new item.
+        GN_VERIFY(mHashTable.insert({desc, item}).second);
 
         // update LRU
         InsertToHead(item);
@@ -423,8 +423,8 @@ private:
     ///
     /// Hash map type
     ///
-    typedef HashMap<OBJECT_DESC, StateObjectItem *, CACHE_SIZE, typename D3D11StateObjectCreator<OBJECT_DESC>::Hash,
-                    typename D3D11StateObjectCreator<OBJECT_DESC>::Equal>
+    typedef std::unordered_map<OBJECT_DESC, StateObjectItem *, typename D3D11StateObjectCreator<OBJECT_DESC>::Hash,
+                               typename D3D11StateObjectCreator<OBJECT_DESC>::Equal>
         ObjectHashMap;
 
     // *************************************************
@@ -522,11 +522,11 @@ class D3D11StateObjectManager {
     BlendStateCache    mBlendStates;
     ID3D11BlendState * mCurrentBS;
     Vector4f           mCurrentBlendFactors;
-    uint32             mCurrentSampleMask;
+    uint32_t           mCurrentSampleMask;
 
     DepthStencilStateCache    mDepthStates;
     ID3D11DepthStencilState * mCurrentDS;
-    uint32                    mCurrentStencilRef;
+    uint32_t                  mCurrentStencilRef;
 
     SamplerStateCache    mSamplerStates;
     ID3D11SamplerState * mCurrentVSSamplers[D3D11_COMMONSHADER_SAMPLER_REGISTER_COUNT];
@@ -558,19 +558,19 @@ public:
     bool setRS(const D3D11_RASTERIZER_DESC & desc, bool skipDirtyCheck);
 
     /// set blend state
-    bool setBS(const D3D11_BLEND_DESC & desc, const Vector4f & blendFactors, uint32 sampleMask, bool skipDirtyCheck);
+    bool setBS(const D3D11_BLEND_DESC & desc, const Vector4f & blendFactors, uint32_t sampleMask, bool skipDirtyCheck);
 
     /// set depth stencil state
-    bool setDS(const D3D11_DEPTH_STENCIL_DESC & desc, uint32 stencilRef, bool skipDirtyCheck);
+    bool setDS(const D3D11_DEPTH_STENCIL_DESC & desc, uint32_t stencilRef, bool skipDirtyCheck);
 
     /// set VS samplers
-    bool setVSSampler(const D3D11_SAMPLER_DESC & desc, uint32 stage, bool skipDirtyCheck);
+    bool setVSSampler(const D3D11_SAMPLER_DESC & desc, uint32_t stage, bool skipDirtyCheck);
 
     /// set VS samplers
-    bool setGSSampler(const D3D11_SAMPLER_DESC & desc, uint32 stage, bool skipDirtyCheck);
+    bool setGSSampler(const D3D11_SAMPLER_DESC & desc, uint32_t stage, bool skipDirtyCheck);
 
     /// set VS samplers
-    bool setPSSampler(const D3D11_SAMPLER_DESC & desc, uint32 stage, bool skipDirtyCheck);
+    bool setPSSampler(const D3D11_SAMPLER_DESC & desc, uint32_t stage, bool skipDirtyCheck);
 };
 } // namespace gfx
 } // namespace GN

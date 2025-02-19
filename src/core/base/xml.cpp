@@ -262,7 +262,7 @@ static void sParseFail(ParseTracer * tracer, const char * errInfo) {
 static GN::XmlNode * sNewNode(ParseTracer * tracer, GN::XmlNodeType type) {
     GN::XmlNode * n = tracer->doc->createNode(type, NULL);
     if (0 == n) {
-        sParseFail(tracer, GN::str::format("Fail to create node with type of '%d'", type).rawptr());
+        sParseFail(tracer, GN::str::format("Fail to create node with type of '%d'", type).data());
         return NULL;
     }
 
@@ -636,14 +636,10 @@ GN_API bool GN::XmlDocument::parse(XmlParseResult & result, File & fp) {
 
     DynaArray<char> buf(fp.size());
 
-    size_t sz;
+    size_t rd = fp.read(buf.data(), buf.size());
+    if (0 == rd) return false;
 
-    if (!fp.read(&buf[0], fp.size(), &sz)) {
-        result.errInfo = "Fail to read the file!";
-        return false;
-    }
-
-    return parse(result, &buf[0], sz);
+    return parse(result, buf.data(), rd);
 
     GN_UNGUARD;
 }
@@ -654,7 +650,7 @@ GN_API bool GN::XmlDocument::parse(XmlParseResult & result, File & fp) {
 GN_API bool GN::XmlDocument::writeToFile(File & file, const XmlNode & root, bool compact) {
     GN_GUARD;
 
-    // static const uint8 bom[3] = { 0xEF, 0xBB, 0xBF };
+    // static const uint8_t bom[3] = { 0xEF, 0xBB, 0xBF };
     // if( sizeof(bom) != file.write( bom, sizeof(bom) ) ) return false;
 
     file << "<?xml version=\"1.0\"?>";

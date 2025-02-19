@@ -93,7 +93,7 @@ GN_API void GN::fs::baseName(StrA & result, const StrA & path) {
     size_t n1 = (dir.size() < tmp.size() && '/' == tmp[dir.size()]) ? dir.size() + 1 : dir.size();
     size_t n2 = tmp.size() - n1 - ext.size();
 
-    result.assign(tmp.rawptr() + n1, n2);
+    result.assign(tmp.data() + n1, n2);
 }
 
 //
@@ -111,12 +111,12 @@ GN_API void GN::fs::relPath(StrA & result, const StrA & path, const StrA & base)
             parts.clear();
             normalizePathSeparator(input, path);
             buf.resize(input.size() + 1);
-            memcpy(buf.rawptr(), input.rawptr(), input.size() + 1);
-            parts.append(buf.rawptr());
+            memcpy(buf.data(), input.data(), input.size() + 1);
+            parts.append(buf.data());
             for (size_t i = 0; i < buf.size() - 1; ++i) {
                 if ('/' == buf[i]) {
                     buf[i] = 0;
-                    parts.append(buf.rawptr() + i + 1);
+                    parts.append(buf.data() + i + 1);
                 }
             }
         }

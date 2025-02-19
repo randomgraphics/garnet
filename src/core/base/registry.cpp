@@ -28,7 +28,7 @@ GN_API GN::Registry::ItemKey GN::Registry::set(const StrA & name, const Variant 
         GN_ASSERT(mItems[key].name == name && *mNames.find(name) == key);
         mItems[key].value = value;
     } else {
-        GN_ERROR(sLogger)("Item '%s' is already existed.!", name.rawptr());
+        GN_ERROR(sLogger)("Item '%s' is already existed.!", name.data());
         return 0;
     }
 
@@ -46,7 +46,7 @@ GN_API void GN::Registry::importFromStr(const StrA & s) {
 
     if (s.empty()) return;
 
-    const char * ptr = s.rawptr();
+    const char * ptr = s.data();
     const char * end = ptr + s.size();
 
 #define NOT_EOL (ptr < end && *ptr != '\n')

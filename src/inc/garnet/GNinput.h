@@ -29,42 +29,38 @@ namespace input {
 ///
 /// keycode type
 ///
-struct KeyCode {
-    enum Enum {
-        ///
-        /// 空码 ( normally indicate a error )
-        ///
-        NONE = 0,
+enum class KeyCode : uint8_t {
+    ///
+    /// 空码 ( normally indicate a error )
+    ///
+    NONE = 0,
 
 #include "input/keyCodeMeta.h"
 
-        ///
-        /// number of available keycodes
-        ///
-        NUM_KEYS,
+    ///
+    /// number of available keycodes
+    ///
+    NUM_KEYS,
 
-        ///
-        /// first mouse button
-        ///
-        FIRST_MOUSE_BUTTON = MOUSEBTN_0,
+    ///
+    /// first mouse button
+    ///
+    FIRST_MOUSE_BUTTON = MOUSEBTN_0,
 
-        ///
-        /// last mouse button
-        ///
-        LAST_MOUSE_BUTTON = MOUSEBTN_7,
+    ///
+    /// last mouse button
+    ///
+    LAST_MOUSE_BUTTON = MOUSEBTN_7,
 
-        ///
-        /// first xb360 button
-        ///
-        FIRST_XB360_BUTTON = XB360_UP,
+    ///
+    /// first xb360 button
+    ///
+    FIRST_XB360_BUTTON = XB360_UP,
 
-        ///
-        /// last xb360 button
-        ///
-        LAST_XB360_BUTTON = XB360_Y,
-    };
-
-    GN_DEFINE_ENUM_CLASS_HELPERS(KeyCode, Enum);
+    ///
+    /// last xb360 button
+    ///
+    LAST_XB360_BUTTON = XB360_Y,
 };
 
 #undef GNINPUT_DEFINE_KEYCODE
@@ -72,33 +68,29 @@ struct KeyCode {
 ///
 /// axis type
 ///
-struct Axis {
-    enum Enum {
-        NONE,          ///< ...
-        MOUSE_X,       ///< mouse X
-        MOUSE_Y,       ///< mouse Y
-        MOUSE_WHEEL_0, ///< mouse wheel 0
-        MOUSE_WHEEL_1, ///< mouse wheel 1
+enum class Axis : int {
+    NONE = 0,      ///< ...
+    MOUSE_X,       ///< mouse X
+    MOUSE_Y,       ///< mouse Y
+    MOUSE_WHEEL_0, ///< mouse wheel 0
+    MOUSE_WHEEL_1, ///< mouse wheel 1
 
-        XB360_LEFT_TRIGGER,  ///< xb360 left trigger
-        XB360_RIGHT_TRIGGER, ///< xb360 right trigger
-        XB360_THUMB_LX,      ///< xb360 left thumb X
-        XB360_THUMB_LY,      ///< xb360 left thumb Y
-        XB360_THUMB_RX,      ///< xb360 right thumb X
-        XB360_THUMB_RY,      ///< xb360 right thumb Y
+    XB360_LEFT_TRIGGER,  ///< xb360 left trigger
+    XB360_RIGHT_TRIGGER, ///< xb360 right trigger
+    XB360_THUMB_LX,      ///< xb360 left thumb X
+    XB360_THUMB_LY,      ///< xb360 left thumb Y
+    XB360_THUMB_RX,      ///< xb360 right thumb X
+    XB360_THUMB_RY,      ///< xb360 right thumb Y
 
-        NUM_AXISES, ///< number of axises.
+    NUM_AXISES, ///< number of axises.
 
-        /// \name some aliases
-        //@{
-        MOUSE_FIRST = MOUSE_X,
-        MOUSE_LAST  = MOUSE_WHEEL_1,
-        XB360_FIRST = XB360_LEFT_TRIGGER,
-        XB360_LAST  = XB360_THUMB_RY,
-        //@}
-    };
-
-    GN_DEFINE_ENUM_CLASS_HELPERS(Axis, Enum);
+    /// \name some aliases
+    //@{
+    MOUSE_FIRST = MOUSE_X,
+    MOUSE_LAST  = MOUSE_WHEEL_1,
+    XB360_FIRST = XB360_LEFT_TRIGGER,
+    XB360_LAST  = XB360_THUMB_RY,
+    //@}
 };
 
 // TODO: joystick support
@@ -106,18 +98,14 @@ struct Axis {
 ///
 /// 定义按键的状态, used by struct KeyEvent
 ///
-struct KeyState {
-    enum Enum {
-        DOWN   = 1 << 0,
-        LCTRL  = 1 << 1,
-        RCTRL  = 1 << 2,
-        LALT   = 1 << 3,
-        RALT   = 1 << 4,
-        LSHIFT = 1 << 5,
-        RSHIFT = 1 << 6,
-    };
-
-    GN_DEFINE_ENUM_CLASS_HELPERS(KeyState, Enum);
+enum class KeyState {
+    DOWN   = 1 << 0,
+    LCTRL  = 1 << 1,
+    RCTRL  = 1 << 2,
+    LALT   = 1 << 3,
+    RALT   = 1 << 4,
+    LSHIFT = 1 << 5,
+    RSHIFT = 1 << 6,
 };
 
 //@{
@@ -130,8 +118,8 @@ struct KeyState {
 /// Key status structure
 ///
 union KeyStatus {
-    uint8 u8; ///< Key status as unsigned integer
-    sint8 i8; ///< Key status as signed integer
+    uint8_t u8; ///< Key status as unsigned integer
+    int8_t  i8; ///< Key status as signed integer
 
     struct {
         bool down   : 1; ///< key down
@@ -169,14 +157,14 @@ union KeyStatus {
 ///
 union KeyEvent {
     /// key event as unsigned 16bit integer
-    uint16 u16;
+    uint16_t u16;
 
     /// key event as signed 16bit integer
-    sint16 i16;
+    int16_t i16;
 
     /// structured key states
     struct {
-        uint8     code;   ///< Key code
+        uint8_t   code_;  ///< Key code
         KeyStatus status; ///< Key status
     };
 
@@ -184,8 +172,14 @@ union KeyEvent {
     //@{
     KeyEvent() {}
     KeyEvent(const KeyEvent & k): u16(k.u16) {}
-    KeyEvent(KeyCode kc, KeyStatus ks): code(static_cast<uint8>(kc)), status(ks) { GN_ASSERT(kc < KeyCode::NUM_KEYS); }
+    KeyEvent(KeyCode kc, KeyStatus ks): code_(static_cast<uint8_t>(kc)), status(ks) { GN_ASSERT(kc < KeyCode::NUM_KEYS); }
     //@}
+
+    /// assignment
+    KeyEvent & operator=(const KeyEvent & rhs) {
+        u16 = rhs.u16;
+        return *this;
+    }
 
     ///
     /// Equality
@@ -203,11 +197,17 @@ union KeyEvent {
     /// set key data
     ///
     const KeyEvent & set(KeyCode kc, KeyStatus ks) {
-        GN_ASSERT(kc < KeyCode::NUM_KEYS);
-        code   = static_cast<uint8>(kc);
+        GN_ASSERT(KeyCode::NONE <= kc && kc < KeyCode::NUM_KEYS);
+        code() = kc;
         status = ks;
         return *this;
     }
+
+    /// access key code
+    const input::KeyCode & code() const { return *(const input::KeyCode *) &code_; }
+
+    /// access key code
+    input::KeyCode & code() { return *(input::KeyCode *) &code_; }
 };
 
 ///
@@ -313,8 +313,8 @@ public:
     /// Get status of specific key
     ///
     const KeyStatus & getKeyStatus(KeyCode k) const {
-        GN_ASSERT(0 <= k && k < KeyCode::NUM_KEYS);
-        return getKeyboardStatus()[k];
+        GN_ASSERT(KeyCode::NONE <= k && k < KeyCode::NUM_KEYS);
+        return getKeyboardStatus()[(int) k];
     }
 
     ///

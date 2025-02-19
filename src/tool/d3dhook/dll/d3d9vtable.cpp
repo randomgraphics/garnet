@@ -4541,9 +4541,7 @@ void RealToHooked9(const IID & iid, void * p) {
         RealToHooked9_IDirect3DAuthenticatedChannel9((IDirect3DAuthenticatedChannel9 *) p);
     else if (__uuidof(IDirect3DCryptoSession9) == iid)
         RealToHooked9_IDirect3DCryptoSession9((IDirect3DCryptoSession9 *) p);
-    else {
-        HOOK_WARN_LOG("unrecognized interface UUID: <xxxx-xxxx-xxxxx...>");
-    }
+    else { HOOK_WARN_LOG("unrecognized interface UUID: <xxxx-xxxx-xxxxx...>"); }
 }
 
 // -----------------------------------------------------------------------------
@@ -4575,7 +4573,7 @@ static void SetupD3D9HookedVTables() {
     g_D3D9HookedVTables._IDirect3DDevice9.tables[INDEX].GetDirect3D                        = IDirect3DDevice9_GetDirect3D_Hooked<INDEX>;
     g_D3D9HookedVTables._IDirect3DDevice9.tables[INDEX].GetDeviceCaps                      = IDirect3DDevice9_GetDeviceCaps_Hooked<INDEX>;
     g_D3D9HookedVTables._IDirect3DDevice9.tables[INDEX].GetDisplayMode                     = IDirect3DDevice9_GetDisplayMode_Hooked<INDEX>;
-    g_D3D9HookedVTables._IDirect3DDevice9.tables[INDEX].GetCreateParameters              = IDirect3DDevice9_GetCreateParameters_Hooked<INDEX>;
+    g_D3D9HookedVTables._IDirect3DDevice9.tables[INDEX].GetCreateParameters                = IDirect3DDevice9_GetCreateParameters_Hooked<INDEX>;
     g_D3D9HookedVTables._IDirect3DDevice9.tables[INDEX].SetCursorProperties                = IDirect3DDevice9_SetCursorProperties_Hooked<INDEX>;
     g_D3D9HookedVTables._IDirect3DDevice9.tables[INDEX].SetCursorPosition                  = IDirect3DDevice9_SetCursorPosition_Hooked<INDEX>;
     g_D3D9HookedVTables._IDirect3DDevice9.tables[INDEX].ShowCursor                         = IDirect3DDevice9_ShowCursor_Hooked<INDEX>;
@@ -4904,7 +4902,7 @@ static void SetupD3D9HookedVTables() {
     g_D3D9HookedVTables._IDirect3DDevice9Ex.tables[INDEX].GetDirect3D                      = IDirect3DDevice9Ex_GetDirect3D_Hooked<INDEX>;
     g_D3D9HookedVTables._IDirect3DDevice9Ex.tables[INDEX].GetDeviceCaps                    = IDirect3DDevice9Ex_GetDeviceCaps_Hooked<INDEX>;
     g_D3D9HookedVTables._IDirect3DDevice9Ex.tables[INDEX].GetDisplayMode                   = IDirect3DDevice9Ex_GetDisplayMode_Hooked<INDEX>;
-    g_D3D9HookedVTables._IDirect3DDevice9Ex.tables[INDEX].GetCreateParameters            = IDirect3DDevice9Ex_GetCreateParameters_Hooked<INDEX>;
+    g_D3D9HookedVTables._IDirect3DDevice9Ex.tables[INDEX].GetCreateParameters              = IDirect3DDevice9Ex_GetCreateParameters_Hooked<INDEX>;
     g_D3D9HookedVTables._IDirect3DDevice9Ex.tables[INDEX].SetCursorProperties              = IDirect3DDevice9Ex_SetCursorProperties_Hooked<INDEX>;
     g_D3D9HookedVTables._IDirect3DDevice9Ex.tables[INDEX].SetCursorPosition                = IDirect3DDevice9Ex_SetCursorPosition_Hooked<INDEX>;
     g_D3D9HookedVTables._IDirect3DDevice9Ex.tables[INDEX].ShowCursor                       = IDirect3DDevice9Ex_ShowCursor_Hooked<INDEX>;

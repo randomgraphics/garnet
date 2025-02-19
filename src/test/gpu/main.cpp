@@ -9,34 +9,44 @@ using namespace GN::util;
 bool       blankScreen = false;
 GpuContext rc;
 
-const char * hlsl_vscode = "uniform float4x4 transform; \n"
-                           "struct VSOUT { float4 pos : POSITION0; float2 uv : TEXCOORD; }; \n"
-                           "VSOUT main( in float4 pos : POSITION ) { \n"
-                           "   VSOUT o; \n"
-                           "   o.pos = mul( transform, pos ); \n"
-                           "   o.uv  = pos.xy; \n"
-                           "   return o; \n"
-                           "}";
+const char * hlsl_vscode = R"hlsl(
+    uniform float4x4 transform;
+    struct VSOUT { float4 pos : POSITION0; float2 uv : TEXCOORD; };
+    VSOUT main( in float4 pos : POSITION ) {
+       VSOUT o;
+       o.pos = mul( transform, pos );
+       o.uv  = pos.xy;
+       return o;
+    }
+)hlsl";
 
-const char * hlsl_pscode = "sampler t0; \n"
-                           "struct VSOUT { float4 pos : POSITION0; float2 uv : TEXCOORD; }; \n"
-                           "float4 main( in VSOUT i ) : COLOR0 { \n"
-                           "   return tex2D( t0, i.uv ); \n"
-                           "}";
+const char * hlsl_pscode = R"hlsl(
+    sampler t0;
+    struct VSOUT { float4 pos : POSITION0; float2 uv : TEXCOORD; };
+    float4 main( in VSOUT i ) : COLOR0 {
+       return tex2D( t0, i.uv );
+    }
+)hlsl";
 
-const char * glsl_vscode = "in vec4 i_Position0;\n"
-                           "varying vec2 texcoords; \n"
-                           "uniform mat4 transform; \n"
-                           "void main() { \n"
-                           "   gl_Position = transform * i_Position0; \n"
-                           "   texcoords.xy = i_Position0.xy; \n"
-                           "}";
+const char * glsl_vscode = R"glsl(
+    #version 330
+    vec4 i_Position0;
+    varying vec2 texcoords;
+    uniform mat4 transform;
+    void main() {
+        gl_Position = transform * i_Position0;
+        texcoords.xy = i_Position0.xy;
+    }
+)glsl";
 
-const char * glsl_pscode = "uniform sampler2D t0; \n"
-                           "varying vec2 texcoords; \n"
-                           "void main() { \n"
-                           "   gl_FragColor = texture2D( t0, texcoords ); \n"
-                           "}";
+const char * glsl_pscode = R"glsl(
+    #version 330
+    uniform sampler2D t0;
+    varying vec2 texcoords;
+    void main() {
+        gl_FragColor = texture2D( t0, texcoords );
+    }
+)glsl";
 
 bool init(Gpu & gpu) {
     if (blankScreen) return true;
@@ -47,7 +57,7 @@ bool init(Gpu & gpu) {
     GpuProgramDesc gpd("test-gpu");
     if (GpuAPI::OGL == gpu.getOptions().api) {
         gpd.lang         = GpuProgramLanguage::GLSL;
-        gpd.shaderModels = ShaderModel::GLSL_1_10;
+        gpd.shaderModels = ShaderModel::GLSL_3_30;
         gpd.vs.source    = glsl_vscode;
         gpd.ps.source    = glsl_pscode;
     } else {
@@ -69,7 +79,7 @@ bool init(Gpu & gpu) {
     // setup vertex format
     rc.vtxbind.resize(1);
     rc.vtxbind[0].attribute = 0; // bind to the first GPU program attribute
-    rc.vtxbind[0].format    = ColorFormat::FLOAT4;
+    rc.vtxbind[0].format    = PixelFormat::FLOAT4();
     rc.vtxbind[0].offset    = 0;
     rc.vtxbind[0].stream    = 0;
 
@@ -89,7 +99,7 @@ bool init(Gpu & gpu) {
     rc.vtxbufs[0].vtxbuf->update(0, 0, vertices);
 
     // create index buffer
-    uint16     indices[] = {0, 1, 3, 2};
+    uint16_t   indices[] = {0, 1, 3, 2};
     IdxBufDesc ibd       = {4, false, false};
     rc.idxbuf.attach(gpu.createIdxBuf(ibd));
     if (!rc.idxbuf) return false;
@@ -115,7 +125,7 @@ void draw(Gpu & r) {
     r.drawUp(PrimitiveType::TRIANGLE_LIST, 3, vertices, 4 * sizeof(float));
 
     // DRAW_INDEXED_UP : triangle at left bottom
-    static uint16 indices[] = {0, 1, 3};
+    static uint16_t indices[] = {0, 1, 3};
     m.translate(-1.0f, -1.0f, 0);
     rc.uniforms[0]->update(m);
     r.bindContext(rc);
@@ -179,7 +189,7 @@ int run(Gpu & gpu) {
 
 void showHelp(CommandLineArguments & ca) {
     StrA executableName = fs::baseName(ca.applicationName) + fs::extName(ca.applicationName);
-    GN_INFO(ca.logger)("Usage: %s [options]\n", executableName.rawptr());
+    GN_INFO(ca.logger)("Usage: %s [options]\n", executableName.data());
     ca.showStandardCommandLineOptions();
     GN_INFO(ca.logger)("  -b                       Draw blank screen only. Do not create any graphics resources.\n");
 }

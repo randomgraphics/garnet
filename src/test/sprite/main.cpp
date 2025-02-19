@@ -35,7 +35,7 @@ void update(float timestep) {
 
     Input &  in = gInput;
     KeyEvent ke = in.popLastKeyEvent();
-    if (ke.status.down && (KeyCode::SPACEBAR == ke.code || KeyCode::XB360_A == ke.code)) { paused = !paused; }
+    if (ke.status.down && (KeyCode::SPACEBAR == ke.code() || KeyCode::XB360_A == ke.code())) { paused = !paused; }
 
     if (!paused) {
         angle += timestep * GN_HALF_PI;

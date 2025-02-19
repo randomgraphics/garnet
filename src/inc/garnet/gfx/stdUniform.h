@@ -50,7 +50,7 @@ struct StandardUniform {
     struct Desc {
         int          index;  //< uniform index
         const char * name;   //< uniform name
-        uint32       size;   //< uniform size in bytes
+        uint32_t     size;   //< uniform size in bytes
         bool         global; //< global or per-object uniform
 
         GN_API static const Desc MATRIX_PVW;       //< proj * view * world
@@ -90,7 +90,7 @@ struct StandardUniform {
             &Desc::MATRIX_VIEW,     &Desc::MATRIX_VIEW_INV,  &Desc::MATRIX_VIEW_IT, &Desc::MATRIX_WORLD,   &Desc::MATRIX_WORLD_INV, &Desc::MATRIX_WORLD_IT,
             &Desc::LIGHT0_POSITION, &Desc::LIGHT0_DIRECTION, &Desc::LIGHT0_DIFFUSE, &Desc::LIGHT0_AMBIENT, &Desc::LIGHT0_SPECULAR,  &Desc::TIME,
         };
-        GN_CASSERT((uint32) Index::NUM_STANDARD_UNIFORMS == GN_ARRAY_COUNT(DESCRIPTORS));
+        GN_CASSERT((uint32_t) Index::NUM_STANDARD_UNIFORMS == GN_ARRAY_COUNT(DESCRIPTORS));
 
         if (0 <= i && i < Index::NUM_STANDARD_UNIFORMS) {
             return DESCRIPTORS[i];

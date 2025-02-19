@@ -5,6 +5,16 @@
 
 class StringTest : public CxxTest::TestSuite {
 public:
+    void testEmptyStr() {
+        const auto & a = GN::StrA::EMPTYSTR();
+        const auto & w = GN::StrW::EMPTYSTR();
+        TS_ASSERT_EQUALS(a, "");
+        TS_ASSERT_EQUALS(w, L"");
+        TS_ASSERT_EQUALS((void *) &a, (void *) &w);
+        TS_ASSERT_EQUALS(a.data(), GN::internal::emptyStringPointer());
+        TS_ASSERT_EQUALS(w.data(), GN::internal::emptyStringPointer());
+    }
+
     void testMbs2wcs() {
         const char * mbs    = "abc";
         wchar_t      wcs[6] = {L'\0', L'\0', L'\0', L'\0', L'5', L'\0'};
@@ -301,20 +311,20 @@ public:
         TS_ASSERT_EQUALS(1, GN::str::compare(L"abc", L"ABC"));
         TS_ASSERT_EQUALS(-1, GN::str::compare(L"abc", L"abcd"));
 
-        TS_ASSERT_EQUALS(0, GN::str::compare(s1.rawptr(), s2.rawptr(), 0));
-        TS_ASSERT_EQUALS(0, GN::str::compare(s1.rawptr(), s2.rawptr(), 1));
-        TS_ASSERT_EQUALS(-1, GN::str::compare(s1.rawptr(), s2.rawptr(), 2));
-        TS_ASSERT_EQUALS(0, GN::str::compare(s4.rawptr(), s5.rawptr(), 4));
-        TS_ASSERT_EQUALS(-1, GN::str::compare(s4.rawptr(), s5.rawptr(), 5));
+        TS_ASSERT_EQUALS(0, GN::str::compare(s1.data(), s2.data(), 0));
+        TS_ASSERT_EQUALS(0, GN::str::compare(s1.data(), s2.data(), 1));
+        TS_ASSERT_EQUALS(-1, GN::str::compare(s1.data(), s2.data(), 2));
+        TS_ASSERT_EQUALS(0, GN::str::compare(s4.data(), s5.data(), 4));
+        TS_ASSERT_EQUALS(-1, GN::str::compare(s4.data(), s5.data(), 5));
 
-        TS_ASSERT(-1 == GN::str::compareI<wchar_t>(0, s1.rawptr()));
-        TS_ASSERT(1 == GN::str::compareI<wchar_t>(s1.rawptr(), 0));
-        TS_ASSERT(1 == GN::str::compareI(s5.rawptr(), s3.rawptr()));
-        TS_ASSERT(0 == GN::str::compareI(s4.rawptr(), s4.rawptr()));
-        TS_ASSERT(0 == GN::str::compareI(s2.rawptr(), s4.rawptr()));
-        TS_ASSERT(0 == GN::str::compareI(s4.rawptr(), s2.rawptr()));
-        TS_ASSERT(-1 == GN::str::compareI(s1.rawptr(), s4.rawptr()));
-        TS_ASSERT(1 == GN::str::compareI(s4.rawptr(), s1.rawptr()));
+        TS_ASSERT(-1 == GN::str::compareI<wchar_t>(0, s1.data()));
+        TS_ASSERT(1 == GN::str::compareI<wchar_t>(s1.data(), 0));
+        TS_ASSERT(1 == GN::str::compareI(s5.data(), s3.data()));
+        TS_ASSERT(0 == GN::str::compareI(s4.data(), s4.data()));
+        TS_ASSERT(0 == GN::str::compareI(s2.data(), s4.data()));
+        TS_ASSERT(0 == GN::str::compareI(s4.data(), s2.data()));
+        TS_ASSERT(-1 == GN::str::compareI(s1.data(), s4.data()));
+        TS_ASSERT(1 == GN::str::compareI(s4.data(), s1.data()));
     }
 
     void testStrFunc() {
@@ -339,7 +349,7 @@ public:
     void testStr2Int() {
         using namespace GN;
 
-        uint8 u8 = 123;
+        uint8_t u8 = 123;
         TS_ASSERT(!str::toInetger(u8, "-1"));
         TS_ASSERT(str::toInetger(u8, "0"));
         TS_ASSERT_EQUALS(u8, 0);
@@ -347,7 +357,7 @@ public:
         TS_ASSERT_EQUALS(u8, 255);
         TS_ASSERT(!str::toInetger(u8, "256"));
 
-        sint8 s8 = 123;
+        int8_t s8 = 123;
         TS_ASSERT(!str::toInetger(s8, "-129"));
         TS_ASSERT(str::toInetger(s8, "-128"));
         TS_ASSERT_EQUALS(s8, -128);
@@ -355,7 +365,7 @@ public:
         TS_ASSERT_EQUALS(s8, 127);
         TS_ASSERT(!str::toInetger(s8, "128"));
 
-        uint64 u64 = 123;
+        uint64_t u64 = 123;
         TS_ASSERT(!str::toInetger(u64, "-1"));
         TS_ASSERT(str::toInetger(u64, "0"));
         TS_ASSERT_EQUALS(u64, 0);
@@ -363,9 +373,9 @@ public:
         TS_ASSERT_EQUALS(u64, 0xFFFFFFFFFFFFFFFFLL);
         TS_ASSERT(!str::toInetger(u64, "0x10000000000000000", 16));
 
-        const sint64 i64min = (-0x7fffffffffffffffLL - 1);
-        const sint64 i64max = 0x7fffffffffffffffLL; // Note: 0x7FFFFFFFFFFFFFFF = 9223372036854775807
-        sint64       s64    = 123;
+        const int64_t i64min = (-0x7fffffffffffffffLL - 1);
+        const int64_t i64max = 0x7fffffffffffffffLL; // Note: 0x7FFFFFFFFFFFFFFF = 9223372036854775807
+        int64_t       s64    = 123;
         TS_ASSERT(!str::toInetger(s64, "-9223372036854775809"));
         TS_ASSERT(str::toInetger(s64, "-9223372036854775808"));
         TS_ASSERT_EQUALS(s64, i64min);
@@ -397,13 +407,13 @@ public:
             S    s1("haha");
             auto a  = TestAllocator::allocated();
             auto s2 = std::move(s1);
-            TS_ASSERT_EQUALS(s1.rawptr(), "");
-            TS_ASSERT_EQUALS(s2.rawptr(), "haha");
+            TS_ASSERT_EQUALS(s1.data(), "");
+            TS_ASSERT_EQUALS(s2.data(), "haha");
             TS_ASSERT_EQUALS(TestAllocator::allocated(), a);
             S s3;
             s3 = std::move(s2);
-            TS_ASSERT_EQUALS(s2.rawptr(), "");
-            TS_ASSERT_EQUALS(s3.rawptr(), "haha");
+            TS_ASSERT_EQUALS(s2.data(), "");
+            TS_ASSERT_EQUALS(s3.data(), "haha");
             TS_ASSERT_EQUALS(TestAllocator::allocated(), a);
         }
         {

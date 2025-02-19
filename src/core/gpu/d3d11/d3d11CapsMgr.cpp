@@ -29,10 +29,10 @@ bool GN::gfx::D3D11Gpu::capsInit() {
     mCaps.maxTex3DSize[2]                         = 1;
 
     // max simultaneous textures
-    mCaps.maxTextures = math::getmin<uint32>(D3D11_COMMONSHADER_INPUT_RESOURCE_SLOT_COUNT, GpuContext::MAX_TEXTURES);
+    mCaps.maxTextures = math::getmin<uint32_t>(D3D11_COMMONSHADER_INPUT_RESOURCE_SLOT_COUNT, GpuContext::MAX_TEXTURES);
 
     // max simultaneous render targets
-    mCaps.maxColorRenderTargets = math::getmin<uint32>(D3D11_SIMULTANEOUS_RENDER_TARGET_COUNT, GpuContext::MAX_COLOR_RENDER_TARGETS);
+    mCaps.maxColorRenderTargets = math::getmin<uint32_t>(D3D11_SIMULTANEOUS_RENDER_TARGET_COUNT, GpuContext::MAX_COLOR_RENDER_TARGETS);
 
     // shader caps
     if (feature >= D3D_FEATURE_LEVEL_9_1) mCaps.shaderModels |= ShaderModel::SM_2_0;
@@ -62,8 +62,8 @@ bool GN::gfx::D3D11Gpu::capsInit() {
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::D3D11Gpu::checkTextureFormatSupport(ColorFormat format, TextureUsage usage) const {
-    DXGI_FORMAT d3dfmt = (DXGI_FORMAT) colorFormat2DxgiFormat(format);
+bool GN::gfx::D3D11Gpu::checkTextureFormatSupport(PixelFormat format, TextureUsage usage) const {
+    DXGI_FORMAT d3dfmt = (DXGI_FORMAT) format.toDXGI();
     if (DXGI_FORMAT_UNKNOWN == d3dfmt) return false;
 
     UINT formatSupport;

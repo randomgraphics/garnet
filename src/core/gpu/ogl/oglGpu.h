@@ -20,7 +20,7 @@ class OGLBasicRTMgr;
 /// OGL specific caps
 ///
 struct OGLGpuCaps : public GpuCaps {
-    uint32 maxVertexAttributes; ///< query GL_MAX_VERTEX_ATTRIBS_ARB
+    uint32_t maxVertexAttributes; ///< query GL_MAX_VERTEX_ATTRIBS_ARB
 };
 
 ///
@@ -123,7 +123,7 @@ private:
 
 public:
     virtual const GpuCaps & caps() const { return mCaps; }
-    virtual bool            checkTextureFormatSupport(ColorFormat format, TextureUsage usages) const;
+    virtual bool            checkTextureFormatSupport(PixelFormat format, TextureUsage usages) const;
 
 public:
     const OGLGpuCaps & getOGLCaps() const { return mCaps; }
@@ -148,7 +148,7 @@ private:
 
 public:
     virtual GpuProgram * createGpuProgram(const GpuProgramDesc & desc);
-    virtual Uniform *    createUniform(uint32 size);
+    virtual Uniform *    createUniform(uint32_t size);
     virtual Texture *    createTexture(const TextureDesc & desc);
     virtual VtxBuf *     createVtxBuf(const VtxBufDesc & desc);
     virtual IdxBuf *     createIdxBuf(const IdxBufDesc & desc);
@@ -209,7 +209,7 @@ private:
 private:
     struct VertexFormatKey {
         VertexBinding vtxbind;
-        uint64        shaderID;
+        uint64_t      shaderID;
 
         bool operator<(const VertexFormatKey & rhs) const {
             if (this == &rhs) return false;
@@ -246,11 +246,12 @@ private:
 
 public:
     virtual void present();
-    virtual void clearScreen(const Vector4f & c, float z, uint8 s, uint32 flags);
-    virtual void drawIndexed(PrimitiveType prim, uint32 numidx, uint32 basevtx, uint32 startvtx, uint32 numvtx, uint32 startidx);
-    virtual void draw(PrimitiveType prim, uint32 numvtx, uint32 startvtx);
-    virtual void drawIndexedUp(PrimitiveType prim, uint32 numidx, uint32 numvtx, const void * vertexData, uint32 strideInBytes, const uint16 * indexData);
-    virtual void drawUp(PrimitiveType prim, uint32 numvtx, const void * vertexData, uint32 strideInBytes);
+    virtual void clearScreen(const Vector4f & c, float z, uint8_t s, uint32_t flags);
+    virtual void drawIndexed(PrimitiveType prim, uint32_t numidx, uint32_t basevtx, uint32_t startvtx, uint32_t numvtx, uint32_t startidx);
+    virtual void draw(PrimitiveType prim, uint32_t numvtx, uint32_t startvtx);
+    virtual void drawIndexedUp(PrimitiveType prim, uint32_t numidx, uint32_t numvtx, const void * vertexData, uint32_t strideInBytes,
+                               const uint16_t * indexData);
+    virtual void drawUp(PrimitiveType prim, uint32_t numvtx, const void * vertexData, uint32_t strideInBytes);
 
 private:
     bool drawInit();
@@ -281,7 +282,7 @@ private:
     //@{
 
 public:
-    virtual void debugDumpNextFrame(uint32 startBatchIndex, uint32 numBatches) {
+    virtual void debugDumpNextFrame(uint32_t startBatchIndex, uint32_t numBatches) {
         GN_UNUSED_PARAM(startBatchIndex);
         GN_UNUSED_PARAM(numBatches);
         GN_TODO("OpenGL frame dump is not implemented.");

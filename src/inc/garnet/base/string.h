@@ -171,7 +171,7 @@ GN_API void formatvTo(wchar_t * buf, size_t bufSizeInWchar, const wchar_t * fmt,
 /// set to length to 0 to hash NULL terminated string.
 ///
 template<typename CHAR>
-inline uint64 hash(const CHAR * s, size_t length = 0) {
+inline uint64_t hash(const CHAR * s, size_t length = 0) {
     unsigned long h = 5381;
 
     if (length > 0) {
@@ -191,9 +191,10 @@ inline uint64 hash(const CHAR * s, size_t length = 0) {
 } // namespace str
 
 namespace internal {
-extern GN_API void * EMPTY_STRING_POINTER;
-extern GN_API void * EMPTY_STRING_INSTANCE;
+GN_API void * emptyStringPointer();
+GN_API void * empytStringInstance();
 } // namespace internal
+
 ///
 /// Custom string class. CHAR type must be POD type.
 ///
@@ -201,13 +202,13 @@ template<typename CHAR, typename RAW_MEMORY_ALLOCATOR = RawHeapMemoryAllocator>
 class Str {
     typedef CHAR CharType;
 
-    CharType * mPtr; ///< string buffer pointer.
+    CharType * mPtr = (CharType *) internal::emptyStringPointer(); ///< string buffer pointer.
 
 public:
     ///
     /// Instance of empty string
     ///
-    static const Str & EMPTYSTR() { return *(Str *) internal::EMPTY_STRING_INSTANCE; }
+    static const Str & EMPTYSTR() { return *(Str *) internal::empytStringInstance(); }
 
     ///
     /// indicate serach failure.
@@ -217,7 +218,7 @@ public:
     ///
     /// default constructor
     ///
-    Str(): mPtr(NULL) {
+    Str() {
         setCaps(0);
         mPtr[0] = 0;
     }
@@ -231,7 +232,7 @@ public:
     ///
     /// copy constructor
     ///
-    Str(const Str & s): mPtr(NULL) {
+    Str(const Str & s) {
         setCaps(s.size());
         ::memcpy(mPtr, s.mPtr, (s.size() + 1) * sizeof(CharType));
         setSize(s.size());
@@ -247,7 +248,7 @@ public:
     ///
     /// copy constructor from c-style string
     ///
-    Str(const CharType * s, size_t l = 0): mPtr(NULL) {
+    Str(const CharType * s, size_t l = 0) {
         if (0 == s) {
             setCaps(0);
             setSize(0);
@@ -344,14 +345,14 @@ public:
     }
 
     ///
-    /// return c-style const char pointer [[depreciated]]
-    ///
-    const CharType * rawptr() const { return mPtr; }
-
-    ///
     /// return c-style const char pointer
     ///
     const CharType * data() const { return mPtr; }
+
+    ///
+    /// return c-style const char pointer in std::string compatible way.
+    ///
+    const CharType * c_str() const { return mPtr; }
 
     ///
     /// empty string or not?
@@ -492,7 +493,7 @@ public:
     ///
     /// string hash
     ///
-    uint64 hash() const { return str::hash(mPtr, size()); }
+    uint64_t hash() const { return str::hash(mPtr, size()); }
 
     ///
     /// Insert a character at specific position
@@ -887,7 +888,7 @@ public:
     /// Output to ostream
     ///
     friend std::ostream & operator<<(std::ostream & os, const Str & str) {
-        os << str.rawptr();
+        os << str.data();
         return os;
     }
 
@@ -895,7 +896,7 @@ public:
     /// string Hash Functor
     ///
     struct Hash {
-        uint64 operator()(const Str & s) const { return str::hash(s.mPtr, s.size()); }
+        uint64_t operator()(const Str & s) const { return str::hash(s.mPtr, s.size()); }
     };
 
 private:
@@ -924,11 +925,11 @@ private:
     }
 
     // Returns a static pointer for empty string
-    static CharType * sEmptyPtr() { return (CharType *) internal::EMPTY_STRING_POINTER; }
+    static CharType * sEmptyPtr() { return (CharType *) internal::emptyStringPointer(); }
 
     // Allocate a memory buffer that can hold at least 'count' characters, and one extra '\0'.
     static CharType * sAlloc(size_t count) {
-        if (1 == count) return sEmptyPtr();
+        if (count <= 1) return sEmptyPtr();
         // ALLOCATOR:sAllocate only allocates raw memory buffer. No constuctors are invoked.
         // This is safe, as long as CharType is POD type.
         StringHeader * ptr = (StringHeader *) RAW_MEMORY_ALLOCATOR::sAllocate(sizeof(StringHeader) + sizeof(CharType) * (count + 1), sizeof(size_t));
@@ -936,12 +937,11 @@ private:
     }
 
     static void sDealloc(CharType * ptr) {
-        // ALLOCATOR:sDeallocate frees memory without calling destructors.
+        if (!ptr || ptr == sEmptyPtr()) return;
+        StringHeader * p = ((StringHeader *) ptr) - 1;
+        // ALLOCATOR:sDeallocate only deallocates raw memory buffer. No destructors are invoked.
         // This is safe, as long as CharType is POD type.
-        if (ptr && ptr != sEmptyPtr()) {
-            StringHeader * p = (StringHeader *) ptr;
-            RAW_MEMORY_ALLOCATOR::sDeallocate(p - 1);
-        }
+        RAW_MEMORY_ALLOCATOR::sDeallocate(p);
     }
 
     friend GN_API void wcs2mbs(Str<char> &, const wchar_t *, size_t);
@@ -984,7 +984,7 @@ public:
         }
     }
     StackStr(const StackStr & s): mCount(s.mCount) { memcpy(mBuf, s.mBuf, sizeof(CHAR) * s.mCount); }
-    StackStr(const Str<CHAR> & s) { memcpy(mBuf, s.rawptr(), sizeof(CHAR) * sValidateLength(s.size())); }
+    StackStr(const Str<CHAR> & s) { memcpy(mBuf, s.data(), sizeof(CHAR) * sValidateLength(s.size())); }
     //@}
 };
 
@@ -1422,6 +1422,15 @@ private:
 }; // End of StringMap class
 
 namespace str {
+
+///
+/// printf-like string format function (with zero args)`
+///
+template<typename CHAR>
+inline Str<CHAR> format(const CHAR * fmt) {
+    return Str<CHAR>(fmt);
+}
+
 ///
 /// printf-like string format function.
 ///
@@ -1450,19 +1459,19 @@ inline Str<CHAR> formatv(const CHAR * fmt, va_list args) {
 ///  Returns number of characters that are sucessfully converted. Return 0 for failure.
 //@{
 
-GN_API size_t toSignedInteger(sint64 & result, int bits, int base, const char * s);
-GN_API size_t toUnsignedInteger(uint64 & result, int bits, int base, const char * s);
+GN_API size_t toSignedInteger(int64_t & result, int bits, int base, const char * s);
+GN_API size_t toUnsignedInteger(uint64_t & result, int bits, int base, const char * s);
 
 template<typename T>
 inline size_t toInetger(T & i, const char * s, int base = 10) {
     size_t n;
 
-    if (SignedType<T>::value) {
-        sint64 s64;
+    if constexpr (std::is_signed<T>::value) {
+        int64_t s64;
         n = toSignedInteger(s64, sizeof(T) * 8, base, s);
         if (n > 0) i = (T) s64;
     } else {
-        uint64 u64;
+        uint64_t u64;
         n = toUnsignedInteger(u64, sizeof(T) * 8, base, s);
         if (n > 0) i = (T) u64;
     }

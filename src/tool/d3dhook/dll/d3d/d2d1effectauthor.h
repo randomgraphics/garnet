@@ -477,7 +477,7 @@ typedef struct D2D1_FEATURE_DATA_D3D10_X_HARDWARE_OPTIONS {
 //------------------------------------------------------------------------------
 interface DX_DECLARE_INTERFACE("9b8b1336-00a5-4668-92b7-ced5d8bf9b7b") ID2D1VertexBuffer : public IUnknown {
 
-    STDMETHOD(Map)(_Outptr_result_bytebuffer_(bufferSize) BYTE * *data, UINT32 bufferSize) PURE;
+    STDMETHOD(Map)(_Outptr_result_bytebuffer_(bufferSize) BYTE ** data, UINT32 bufferSize) PURE;
 
     STDMETHOD(Unmap)() PURE;
 }; // interface ID2D1VertexBuffer
@@ -905,24 +905,24 @@ interface DX_DECLARE_INTERFACE("3d9f916b-27dc-4ad7-b4f1-64945340f563") ID2D1Effe
     // Create a new effect, the effect must either be built in or previously registered
     // through ID2D1Factory1::RegisterEffect.
     //
-    STDMETHOD(CreateEffect)(_In_ REFCLSID effectId, _Outptr_ ID2D1Effect * *effect) PURE;
+    STDMETHOD(CreateEffect)(_In_ REFCLSID effectId, _Outptr_ ID2D1Effect ** effect) PURE;
 
     STDMETHOD(GetMaximumSupportedFeatureLevel)
-    (_In_reads_(featureLevelsCount) CONST D3D_FEATURE_LEVEL * featureLevels, UINT32 featureLevelsCount, _Out_ D3D_FEATURE_LEVEL * maximumSupportedFeatureLevel)
-        CONST PURE;
+    (_In_reads_(featureLevelsCount) CONST D3D_FEATURE_LEVEL * featureLevels, UINT32 featureLevelsCount,
+     _Out_ D3D_FEATURE_LEVEL * maximumSupportedFeatureLevel) CONST PURE;
 
     //
     // Create a transform node from the passed in effect.
     //
-    STDMETHOD(CreateTransformNodeFromEffect)(_In_ ID2D1Effect * effect, _Outptr_ ID2D1TransformNode * *transformNode) PURE;
+    STDMETHOD(CreateTransformNodeFromEffect)(_In_ ID2D1Effect * effect, _Outptr_ ID2D1TransformNode ** transformNode) PURE;
 
-    STDMETHOD(CreateBlendTransform)(UINT32 numInputs, _In_ CONST D2D1_BLEND_DESCRIPTION * blendDescription, _Outptr_ ID2D1BlendTransform * *transform) PURE;
+    STDMETHOD(CreateBlendTransform)(UINT32 numInputs, _In_ CONST D2D1_BLEND_DESCRIPTION * blendDescription, _Outptr_ ID2D1BlendTransform ** transform) PURE;
 
-    STDMETHOD(CreateBorderTransform)(D2D1_EXTEND_MODE extendModeX, D2D1_EXTEND_MODE extendModeY, _Outptr_ ID2D1BorderTransform * *transform) PURE;
+    STDMETHOD(CreateBorderTransform)(D2D1_EXTEND_MODE extendModeX, D2D1_EXTEND_MODE extendModeY, _Outptr_ ID2D1BorderTransform ** transform) PURE;
 
-    STDMETHOD(CreateOffsetTransform)(D2D1_POINT_2L offset, _Outptr_ ID2D1OffsetTransform * *transform) PURE;
+    STDMETHOD(CreateOffsetTransform)(D2D1_POINT_2L offset, _Outptr_ ID2D1OffsetTransform ** transform) PURE;
 
-    STDMETHOD(CreateBoundsAdjustmentTransform)(_In_ CONST D2D1_RECT_L * outputRectangle, _Outptr_ ID2D1BoundsAdjustmentTransform * *transform) PURE;
+    STDMETHOD(CreateBoundsAdjustmentTransform)(_In_ CONST D2D1_RECT_L * outputRectangle, _Outptr_ ID2D1BoundsAdjustmentTransform ** transform) PURE;
 
     STDMETHOD(LoadPixelShader)(REFGUID shaderId, _In_reads_(shaderBufferCount) CONST BYTE * shaderBuffer, UINT32 shaderBufferCount) PURE;
 
@@ -934,15 +934,15 @@ interface DX_DECLARE_INTERFACE("3d9f916b-27dc-4ad7-b4f1-64945340f563") ID2D1Effe
 
     STDMETHOD(CreateResourceTexture)
     (_In_opt_ CONST GUID * resourceId, _In_ CONST D2D1_RESOURCE_TEXTURE_PROPERTIES * resourceTextureProperties, _In_reads_opt_(dataSize) CONST BYTE * data,
-     _In_reads_opt_(resourceTextureProperties->dimensions - 1) CONST UINT32 * strides, UINT32 dataSize, _Outptr_ ID2D1ResourceTexture * *resourceTexture) PURE;
+     _In_reads_opt_(resourceTextureProperties->dimensions - 1) CONST UINT32 * strides, UINT32 dataSize, _Outptr_ ID2D1ResourceTexture ** resourceTexture) PURE;
 
-    STDMETHOD(FindResourceTexture)(_In_ CONST GUID * resourceId, _Outptr_ ID2D1ResourceTexture * *resourceTexture) PURE;
+    STDMETHOD(FindResourceTexture)(_In_ CONST GUID * resourceId, _Outptr_ ID2D1ResourceTexture ** resourceTexture) PURE;
 
     STDMETHOD(CreateVertexBuffer)
     (_In_ CONST D2D1_VERTEX_BUFFER_PROPERTIES * vertexBufferProperties, _In_opt_ CONST GUID * resourceId,
-     _In_opt_ CONST D2D1_CUSTOM_VERTEX_BUFFER_PROPERTIES * customVertexBufferProperties, _Outptr_ ID2D1VertexBuffer * *buffer) PURE;
+     _In_opt_ CONST D2D1_CUSTOM_VERTEX_BUFFER_PROPERTIES * customVertexBufferProperties, _Outptr_ ID2D1VertexBuffer ** buffer) PURE;
 
-    STDMETHOD(FindVertexBuffer)(_In_ CONST GUID * resourceId, _Outptr_ ID2D1VertexBuffer * *buffer) PURE;
+    STDMETHOD(FindVertexBuffer)(_In_ CONST GUID * resourceId, _Outptr_ ID2D1VertexBuffer ** buffer) PURE;
 
     //
     // Creates a color context from a color space.  If the space is Custom, the context
@@ -951,11 +951,11 @@ interface DX_DECLARE_INTERFACE("3d9f916b-27dc-4ad7-b4f1-64945340f563") ID2D1Effe
     // profile/profileSize are ignored.
     //
     STDMETHOD(CreateColorContext)
-    (D2D1_COLOR_SPACE space, _In_reads_opt_(profileSize) CONST BYTE * profile, UINT32 profileSize, _Outptr_ ID2D1ColorContext * *colorContext) PURE;
+    (D2D1_COLOR_SPACE space, _In_reads_opt_(profileSize) CONST BYTE * profile, UINT32 profileSize, _Outptr_ ID2D1ColorContext ** colorContext) PURE;
 
-    STDMETHOD(CreateColorContextFromFilename)(_In_ PCWSTR filename, _Outptr_ ID2D1ColorContext * *colorContext) PURE;
+    STDMETHOD(CreateColorContextFromFilename)(_In_ PCWSTR filename, _Outptr_ ID2D1ColorContext ** colorContext) PURE;
 
-    STDMETHOD(CreateColorContextFromWicColorContext)(_In_ IWICColorContext * wicColorContext, _Outptr_ ID2D1ColorContext * *colorContext) PURE;
+    STDMETHOD(CreateColorContextFromWicColorContext)(_In_ IWICColorContext * wicColorContext, _Outptr_ ID2D1ColorContext ** colorContext) PURE;
 
     STDMETHOD(CheckFeatureSupport)
     (D2D1_FEATURE feature, _Out_writes_bytes_(featureSupportDataSize) void * featureSupportData, UINT32 featureSupportDataSize) CONST PURE;

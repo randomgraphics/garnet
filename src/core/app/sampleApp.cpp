@@ -130,7 +130,7 @@ int GN::util::SampleApp::run(int argc, const char * const argv[]) {
     Clock clock;
 
     using namespace std::chrono_literals;
-    const Clock::Duration INTERVAL = 1s / UPDATE_FREQUENCY;
+    const Clock::Duration INTERVAL = 1000000us / UPDATE_FREQUENCY;
 
     mFrameIdlePercentage = 0;
 
@@ -216,7 +216,7 @@ bool GN::util::SampleApp::onCheckExtraCmdlineArguments(const char * exename, int
             s += " ";
             s += argv[i];
         }
-        GN_ERROR(sLogger)(s.rawptr());
+        GN_ERROR(sLogger)(s.data());
     }
 
     return true;
@@ -235,17 +235,17 @@ void GN::util::SampleApp::onPrintHelpScreen(const char * executableName) {
 //
 // -----------------------------------------------------------------------------
 void GN::util::SampleApp::onKeyPress(input::KeyEvent ke) {
-    if (input::KeyCode::XB360_X == ke.code && ke.status.down) {
+    if (input::KeyCode::XB360_X == ke.code() && ke.status.down) {
         mDone = true;
-    } else if (input::KeyCode::ESCAPE == ke.code && !ke.status.down) {
+    } else if (input::KeyCode::ESCAPE == ke.code() && !ke.status.down) {
         mDone = true;
-    } else if (input::KeyCode::R == ke.code && !ke.status.down) {
+    } else if (input::KeyCode::R == ke.code() && !ke.status.down) {
         GN_TODO("reload all graphics resources.");
-    } else if (input::KeyCode::F == ke.code && !ke.status.down) {
+    } else if (input::KeyCode::F == ke.code() && !ke.status.down) {
         GN_TODO("dump graphics system states");
-    } else if (input::KeyCode::RETURN == ke.code && ke.status.down && ke.status.altDown()) {
+    } else if (input::KeyCode::RETURN == ke.code() && ke.status.down && ke.status.altDown()) {
         GN_TODO("switch fullscreen mode.");
-    } else if (input::KeyCode::F1 == ke.code && !ke.status.down) {
+    } else if (input::KeyCode::F1 == ke.code() && !ke.status.down) {
         mShowHelp = !mShowHelp;
     }
 }
@@ -402,8 +402,8 @@ bool GN::util::SampleApp::checkCmdLine(int argc, const char * const argv[]) {
                     StrA name(value.subString(0, k));
                     StrA leveltok(value.subString(k + 1, 0));
                     int  level;
-                    if (!name.empty() && 0 != str::toInetger(level, leveltok.rawptr())) {
-                        getLogger(name.rawptr())->setLevel(level);
+                    if (!name.empty() && 0 != str::toInetger(level, leveltok.data())) {
+                        getLogger(name.data())->setLevel(level);
                     } else {
                         GN_ERROR(sLogger)("Log level must be in format of 'name:level'");
                     }
@@ -434,7 +434,7 @@ bool GN::util::SampleApp::checkCmdLine(int argc, const char * const argv[]) {
     }
 
     // handle unrecoganized arguments
-    if (!onCheckExtraCmdlineArguments(argv[0], (int) unknownArgs.size(), unknownArgs.rawptr())) return false;
+    if (!onCheckExtraCmdlineArguments(argv[0], (int) unknownArgs.size(), unknownArgs.data())) return false;
 
     // success
     return true;
@@ -497,7 +497,7 @@ void GN::util::SampleApp::drawHUD() {
                                     L"(Press F1 for more helps)",
                                     mFps.fps(), mFrameIdlePercentage);
 
-        font->drawText(timeInfo.rawptr(), 40, 40);
+        font->drawText(timeInfo.data(), 40, 40);
 
         if (mShowHelp) { font->drawText(mHelpText, 40, 120); }
     }

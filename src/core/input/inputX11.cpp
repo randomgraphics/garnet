@@ -21,7 +21,7 @@ GN::input::InputX11::InputX11() {
     clear();
 
     // clear all fields to KeyCode::NONE
-    memset(mKeyMap, KeyCode::NONE, sizeof(mKeyMap));
+    memset(mKeyMap, (int) KeyCode::NONE, sizeof(mKeyMap));
 
     // setup key map
     #define GNINPUT_DEFINE_KEYCODE(name, dikey, scancode, vkeycode, xkeysym) \
@@ -147,14 +147,14 @@ void GN::input::InputX11::processInputEvents() {
                     // mouse wheel down
                     triggerAxisMove(Axis::MOUSE_WHEEL_0, -10);
                 } else {
-                    kc = (KeyCode) (KeyCode::MOUSEBTN_0 + e.xbutton.button - 1);
+                    kc = (KeyCode) ((int) KeyCode::MOUSEBTN_0 + e.xbutton.button - 1);
                     if (KeyCode::FIRST_MOUSE_BUTTON <= kc && kc <= KeyCode::LAST_MOUSE_BUTTON) triggerKeyPress(kc, true);
                 }
                 break;
 
             case ButtonRelease:
                 // GN_TRACE( "ButtonRelease: button(%d)", e.xbutton.button );
-                kc = (KeyCode) (KeyCode::MOUSEBTN_0 + e.xbutton.button - 1);
+                kc = (KeyCode) ((int) KeyCode::MOUSEBTN_0 + e.xbutton.button - 1);
                 if (KeyCode::FIRST_MOUSE_BUTTON <= kc && kc <= KeyCode::LAST_MOUSE_BUTTON) triggerKeyPress(kc, false);
                 break;
 

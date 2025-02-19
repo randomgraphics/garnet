@@ -53,7 +53,7 @@ void GN::gfx::D3D11Gpu::resourceQuit() {
 // -----------------------------------------------------------------------------
 GN::gfx::GpuProgram * GN::gfx::D3D11Gpu::createGpuProgram(const GpuProgramDesc & desc) {
     if (0 == (desc.shaderModels & mCaps.shaderModels)) {
-        GN_ERROR(sLogger)("Unsupported GPU shader model: %s", ShaderModel::sToString(desc.shaderModels).rawptr());
+        GN_ERROR(sLogger)("Unsupported GPU shader model: %s", ShaderModel::sToString(desc.shaderModels).data());
         return NULL;
     }
 
@@ -70,7 +70,7 @@ GN::gfx::GpuProgram * GN::gfx::D3D11Gpu::createGpuProgram(const GpuProgramDesc &
 //
 //
 // -----------------------------------------------------------------------------
-GN::gfx::Uniform * GN::gfx::D3D11Gpu::createUniform(uint32 size) {
+GN::gfx::Uniform * GN::gfx::D3D11Gpu::createUniform(uint32_t size) {
     Uniform * result = new SysMemUniform(size);
     result->incref();
     return result;

@@ -72,10 +72,10 @@ bool GN::gfx::SpriteRenderer::init(Gpu & gpu) {
     enum { MAX_VERTICES = MAX_SPRITES * 4, MAX_INDICES = MAX_SPRITES * 6, VTXBUF_SIZE = MAX_VERTICES * sizeof(SpriteVertex) };
 
     // create a 2x2 pure white texture
-    mPureWhiteTexture.attach(mGpu->create2DTexture(ColorFormat::RGBA8, 2, 2));
+    mPureWhiteTexture.attach(mGpu->create2DTexture(PixelFormat::RGBA8(), 2, 2));
     if (!mPureWhiteTexture) return failure();
-    const uint32 PURE_WHITE[] = {0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF};
-    mPureWhiteTexture->updateMipmap(0, 0, NULL, sizeof(uint32) * 2, sizeof(uint32) * 4, &PURE_WHITE);
+    const uint32_t PURE_WHITE[] = {0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF};
+    mPureWhiteTexture->updateMipmap(0, 0, NULL, sizeof(uint32_t) * 2, sizeof(uint32_t) * 4, &PURE_WHITE);
 
     // create GPU program
     const GpuCaps & caps = mGpu->caps();
@@ -92,15 +92,15 @@ bool GN::gfx::SpriteRenderer::init(Gpu & gpu) {
         mVertexBinding.resize(3);
         mVertexBinding[0].stream    = 0;
         mVertexBinding[0].offset    = 0;
-        mVertexBinding[0].format    = ColorFormat::FLOAT3;
+        mVertexBinding[0].format    = PixelFormat::FLOAT3();
         mVertexBinding[0].attribute = mGpuProgram->getParameterDesc().attributes["i_pos"];
         mVertexBinding[1].stream    = 0;
         mVertexBinding[1].offset    = GN_FIELD_OFFSET(SpriteVertex, clr);
-        mVertexBinding[1].format    = ColorFormat::RGBA8;
+        mVertexBinding[1].format    = PixelFormat::RGBA8();
         mVertexBinding[1].attribute = mGpuProgram->getParameterDesc().attributes["i_color"];
         mVertexBinding[2].stream    = 0;
         mVertexBinding[2].offset    = GN_FIELD_OFFSET(SpriteVertex, tex);
-        mVertexBinding[2].format    = ColorFormat::FLOAT2;
+        mVertexBinding[2].format    = PixelFormat::FLOAT2();
         mVertexBinding[2].attribute = mGpuProgram->getParameterDesc().attributes["i_uv"];
     } else if (caps.shaderModels & ShaderModel::SM_2_0) {
         gpd.lang         = GpuProgramLanguage::HLSL9;
@@ -116,15 +116,15 @@ bool GN::gfx::SpriteRenderer::init(Gpu & gpu) {
         mVertexBinding.resize(3);
         mVertexBinding[0].stream    = 0;
         mVertexBinding[0].offset    = 0;
-        mVertexBinding[0].format    = ColorFormat::FLOAT3;
+        mVertexBinding[0].format    = PixelFormat::FLOAT3();
         mVertexBinding[0].attribute = mGpuProgram->getParameterDesc().attributes["POSITION0"];
         mVertexBinding[1].stream    = 0;
         mVertexBinding[1].offset    = GN_FIELD_OFFSET(SpriteVertex, clr);
-        mVertexBinding[1].format    = ColorFormat::RGBA8;
+        mVertexBinding[1].format    = PixelFormat::RGBA8();
         mVertexBinding[1].attribute = mGpuProgram->getParameterDesc().attributes["COLOR0"];
         mVertexBinding[2].stream    = 0;
         mVertexBinding[2].offset    = GN_FIELD_OFFSET(SpriteVertex, tex);
-        mVertexBinding[2].format    = ColorFormat::FLOAT2;
+        mVertexBinding[2].format    = PixelFormat::FLOAT2();
         mVertexBinding[2].attribute = mGpuProgram->getParameterDesc().attributes["TEXCOORD0"];
     } else {
         GN_ERROR(sLogger)("Sprite renderer requires either GLSL or HLSL support from graphics hardware.");
@@ -138,8 +138,8 @@ bool GN::gfx::SpriteRenderer::init(Gpu & gpu) {
     // create index buffer
     mIndexBuffer.attach(mGpu->createIdxBuf16(MAX_INDICES, false));
     if (!mIndexBuffer) return failure();
-    DynaArray<uint16> indices(MAX_INDICES);
-    for (uint16 i = 0; i < MAX_SPRITES; ++i) {
+    DynaArray<uint16_t> indices(MAX_INDICES);
+    for (uint16_t i = 0; i < MAX_SPRITES; ++i) {
         indices[i * 6 + 0] = i * 4 + 0;
         indices[i * 6 + 1] = i * 4 + 1;
         indices[i * 6 + 2] = i * 4 + 2;
@@ -147,7 +147,7 @@ bool GN::gfx::SpriteRenderer::init(Gpu & gpu) {
         indices[i * 6 + 4] = i * 4 + 2;
         indices[i * 6 + 5] = i * 4 + 3;
     }
-    mIndexBuffer->update(0, MAX_INDICES, indices.rawptr());
+    mIndexBuffer->update(0, MAX_INDICES, indices.data());
 
     // create pending vertex buffer
     mSprites = (Sprite *) HeapMemory::alloc(VTXBUF_SIZE);
@@ -190,7 +190,7 @@ void GN::gfx::SpriteRenderer::quit() {
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::SpriteRenderer::drawBegin(Texture * texture, uint32 options) {
+void GN::gfx::SpriteRenderer::drawBegin(Texture * texture, uint32_t options) {
     if (mDrawBegun) {
         GN_ERROR(sLogger)("SpriteRenderer::drawBegin() can not be called consequtively w/o drawEnd() in between");
         return;
@@ -281,17 +281,17 @@ void GN::gfx::SpriteRenderer::drawEnd() {
     if (numPendingSprites > 0) {
         size_t firstPendingSpriteOffset = mNextPendingSprite - mSprites;
 
-        mVertexBuffer->update((uint32) (firstPendingSpriteOffset * sizeof(Sprite)), (uint32) (numPendingSprites * sizeof(Sprite)), mNextPendingSprite,
+        mVertexBuffer->update((uint32_t) (firstPendingSpriteOffset * sizeof(Sprite)), (uint32_t) (numPendingSprites * sizeof(Sprite)), mNextPendingSprite,
                               mSprites == mNextPendingSprite ? SurfaceUpdateFlag::DISCARD : SurfaceUpdateFlag::NO_OVERWRITE);
 
         mGpu->bindContext(mContext);
 
         mGpu->drawIndexed(PrimitiveType::TRIANGLE_LIST,
-                          (uint32) (numPendingSprites * 6),        // numidx
-                          (uint32) (firstPendingSpriteOffset * 4), // basevtx,
-                          0,                                       // startvtx
-                          (uint32) (numPendingSprites * 4),        // numvtx
-                          0);                                      // startidx
+                          (uint32_t) (numPendingSprites * 6),        // numidx
+                          (uint32_t) (firstPendingSpriteOffset * 4), // basevtx,
+                          0,                                         // startvtx
+                          (uint32_t) (numPendingSprites * 4),        // numvtx
+                          0);                                        // startidx
     }
 
     mDrawBegun = false;
@@ -316,7 +316,7 @@ void GN::gfx::SpriteRenderer::drawTextured(float x, float y, float w, float h, f
     GN_ASSERT(mNextFreeSprite < mSprites + MAX_SPRITES);
 
     // get screen size based on current context
-    uint32 screenWidth, screenHeight;
+    uint32_t screenWidth, screenHeight;
     mGpu->getCurrentRenderTargetSize(&screenWidth, &screenHeight);
 
     float x1 = (x + mVertexShift) / screenWidth;
@@ -350,7 +350,7 @@ void GN::gfx::SpriteRenderer::drawTextured(float x, float y, float w, float h, f
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::SpriteRenderer::drawSolid(uint32 rgba, float x, float y, float w, float h, float z) {
+void GN::gfx::SpriteRenderer::drawSolid(uint32_t rgba, float x, float y, float w, float h, float z) {
     if (!mDrawBegun) {
         GN_ERROR(sLogger)("Must be called between drawBegin() and drawEnd().");
         return;
@@ -364,7 +364,7 @@ void GN::gfx::SpriteRenderer::drawSolid(uint32 rgba, float x, float y, float w, 
     GN_ASSERT(mNextFreeSprite < mSprites + MAX_SPRITES);
 
     // get screen size based on current context
-    uint32 screenWidth, screenHeight;
+    uint32_t screenWidth, screenHeight;
     mGpu->getCurrentRenderTargetSize(&screenWidth, &screenHeight);
 
     float x1 = x / screenWidth;

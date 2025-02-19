@@ -7,14 +7,13 @@
     #pragma clang diagnostic ignored "-Waddress-of-packed-member"
     #pragma clang diagnostic ignored "-Woverloaded-virtual"
 #endif
-#include <assimp/assimp.hpp>
-#include <assimp/aiScene.h>       // Output data structure
-#include <assimp/aiPostProcess.h> // Post processing flags
-#include <assimp/IOStream.h>
-#include <assimp/IOSystem.h>
+#include <assimp/scene.h>
+#include <assimp/postprocess.h>
+#include <assimp/IOStream.hpp>
+#include <assimp/IOSystem.hpp>
 
 #ifdef HAS_FBX
-    #if GN_GCC
+    #if GN_GNUC
         #pragma GCC diagnostic ignored "-Wunused"
     #endif
     #pragma warning(disable : 4996) // 'x' was declared depreciated
@@ -68,35 +67,35 @@ static bool sStrEndWithI(const char * string, const char * suffix) {
 namespace xpr {
 
 struct XPRFileHeader {
-    uint32 tag;        ///< must be XPR2
-    uint32 size1;      ///< size tag 1
-    uint32 size2;      ///< size tag 2 (file size = size1+size2+12)
-    uint32 numObjects; ///< number of objects in this file
+    uint32_t tag;        ///< must be XPR2
+    uint32_t size1;      ///< size tag 1
+    uint32_t size2;      ///< size tag 2 (file size = size1+size2+12)
+    uint32_t numObjects; ///< number of objects in this file
 };
 
 struct XPRObjectHeader {
-    uint32 type;    ///< object type, could be "USER", "TX2D", "VBUF", "IBUF".
-    uint32 offset;  ///< object offset in bytes. The actual offset is this value + 12.
-    uint32 size;    ///< object size in bytes
-    uint32 unknown; ///< I don't know what this is for.
+    uint32_t type;    ///< object type, could be "USER", "TX2D", "VBUF", "IBUF".
+    uint32_t offset;  ///< object offset in bytes. The actual offset is this value + 12.
+    uint32_t size;    ///< object size in bytes
+    uint32_t unknown; ///< I don't know what this is for.
 };
 
 // XPR texture descriptor, 0x28 bytes
 struct XPRTex2DDesc {
     // 10 dwords
-    uint32 dwords[10];
+    uint32_t dwords[10];
 };
 GN_CASSERT(0x28 == sizeof(XPRTex2DDesc));
 
 /// XPR vertex buffer descriptor, 0x14 bytes
 struct XPRVBufDesc {
-    uint32 dwords[5];
+    uint32_t dwords[5];
 };
 GN_CASSERT(0x14 == sizeof(XPRVBufDesc));
 
 /// XPR index buffer descriptor, 0x14 bytes
 struct XPRIBufDesc {
-    uint32 dwords[5];
+    uint32_t dwords[5];
 };
 GN_CASSERT(0x14 == sizeof(XPRIBufDesc));
 
@@ -110,11 +109,9 @@ struct XPRScene {
 };
 
 static bool sLoadXprSceneFromFile(XPRScene & xpr, File & file) {
-    size_t readen;
-
     // read file header
     XPRFileHeader header;
-    if (!file.read(&header, sizeof(header), &readen) || sizeof(header) != readen) {
+    if (sizeof(header) != file.read(&header, sizeof(header))) {
         GN_ERROR(sLogger)("Fail to read file header.");
         return false;
     }
@@ -127,13 +124,13 @@ static bool sLoadXprSceneFromFile(XPRScene & xpr, File & file) {
     // read scene data
     size_t dataSize = header.size1 + header.size2 + 12 - sizeof(header);
     xpr.sceneData.resize(dataSize);
-    if (!file.read(xpr.sceneData.rawptr(), dataSize, &readen) || dataSize != readen) {
+    if (dataSize != file.read(xpr.sceneData.data(), dataSize)) {
         GN_ERROR(sLogger)("Fail to read XPR data.");
         return false;
     }
 
     // iterate all objects
-    XPRObjectHeader * objects = (XPRObjectHeader *) xpr.sceneData.rawptr();
+    XPRObjectHeader * objects = (XPRObjectHeader *) xpr.sceneData.data();
     for (size_t i = 0; i < header.numObjects; ++i) {
         XPRObjectHeader & o = objects[i];
 
@@ -282,7 +279,7 @@ static bool sLoadModelHierarchyFromASE(ModelHierarchyDesc & desc, File & file) {
     }
     filename = fs::resolvePath(fs::getCurrentDir(), filename);
 
-#define FULL_MESH_NAME(n) str::format("%s.%s", filename.rawptr(), n.rawptr())
+#define FULL_MESH_NAME(n) str::format("%s.%s", filename.data(), n.data())
 
     // copy meshes. create nodes as well, since in ASE scene, one mesh is one node.
     for (size_t i = 0; i < ase.meshes.size(); ++i) {
@@ -333,7 +330,7 @@ static bool sLoadModelHierarchyFromASE(ModelHierarchyDesc & desc, File & file) {
         if (model.hasTexture("NORMAL_TEXTURE") && !am.mapbump.bitmap.empty()) { model.textures["NORMAL_TEXTURE"].resourceName = am.mapbump.bitmap; }
 
         // add the model to model list
-        StrA modelname = str::format("%s.%u", asemesh.name.rawptr(), i);
+        StrA modelname = str::format("%s.%u", asemesh.name.data(), i);
         GN_ASSERT(NULL == desc.models.find(modelname));
         desc.models[modelname] = model;
 
@@ -503,10 +500,30 @@ struct MeshVertexKey {
     int      pos;
     Vector3f normal;
     Vector2f uv;
-};
 
-typedef HashMap<MeshVertexKey, uint32, 4096, HashMapUtils::HashFunc_MemoryHash<MeshVertexKey>, HashMapUtils::EqualFunc_MemoryCompare<MeshVertexKey>>
-    MeshVertexHashMap;
+    bool operator==(const MeshVertexKey & rhs) const { return pos == rhs.pos && normal == rhs.normal && uv == rhs.uv; }
+};
+}
+
+namespace std {
+template<>
+struct hash<fbx::MeshVertexKey> {
+    size_t operator()(const fbx::MeshVertexKey & vertex) const {
+        size_t hash = 0;
+        combineHash(hash, vertex.pos);
+        combineHash(hash, vertex.normal.x);
+        combineHash(hash, vertex.normal.y);
+        combineHash(hash, vertex.normal.z);
+        combineHash(hash, vertex.uv.x);
+        combineHash(hash, vertex.uv.y);
+        return hash;
+    }
+};
+} // namespace std
+
+namespace fbx {
+
+typedef std::unordered_map<MeshVertexKey, uint32_t> MeshVertexHashMap;
 
 //
 //
@@ -577,7 +594,7 @@ static void sLoadFbxMesh(ModelHierarchyDesc & desc, const StrA & filename, Model
     }
 
     // Create index blob that stores the index buffer (assume 32-bit indices)
-    AutoRef<SimpleBlob> indexBlob = referenceTo(new SimpleBlob(numidx * sizeof(uint32)));
+    AutoRef<SimpleBlob> indexBlob = referenceTo(new SimpleBlob(numidx * sizeof(uint32_t)));
     if (0 == indexBlob->size()) {
         GN_ERROR(sLogger)("Fail to load FBX mesh: out of memory.");
         return;
@@ -593,7 +610,7 @@ static void sLoadFbxMesh(ModelHierarchyDesc & desc, const StrA & filename, Model
     int uvIndex     = 0;
     int normalIndex = 0;
     int lastMatID   = -1;
-    for (uint32 sortedPolygonIndex = 0; sortedPolygonIndex < sortedPolygons.size(); ++sortedPolygonIndex) {
+    for (uint32_t sortedPolygonIndex = 0; sortedPolygonIndex < sortedPolygons.size(); ++sortedPolygonIndex) {
         int polygonIndex = sortedPolygons[sortedPolygonIndex];
 
         int matid = nummat > 1 ? fbxMaterials->GetIndexArray().GetAt(polygonIndex) : 0;
@@ -650,9 +667,9 @@ static void sLoadFbxMesh(ModelHierarchyDesc & desc, const StrA & filename, Model
             // If the key exists already, the pair will point to it.
             // If the key does not exisit, the pair will point to the newly inserted one.
             // Either way, pair->value should give us the correct index of the vertex.
-            MeshVertexHashMap::KeyValuePair * pair;
-            bool                              isNewVertex = vhash.insert(key, (uint32) vhash.size(), &pair);
-            uint32                            vertexIndex = pair->value;
+            auto inserted    = vhash.insert({key, (uint32_t) vhash.size()});
+            auto isNewVertex = inserted.second;
+            auto vertexIndex = inserted.first->second;
 
             if (isNewVertex) {
                 // If it is a new vertex, append it to the vertex blob.
@@ -670,7 +687,7 @@ static void sLoadFbxMesh(ModelHierarchyDesc & desc, const StrA & filename, Model
             }
 
             // add the vertex index into the final index buffer
-            uint32 * indices                    = (uint32 *) indexBlob->data();
+            uint32_t * indices                  = (uint32_t *) indexBlob->data();
             indices[sortedPolygonIndex * 3 + i] = vertexIndex;
         }
     }
@@ -680,21 +697,21 @@ static void sLoadFbxMesh(ModelHierarchyDesc & desc, const StrA & filename, Model
 
     // Compress index buffer to 16 bits, if possible.
     if (vertexBlob->array().size() <= 0x10000) {
-        AutoRef<SimpleBlob> ib16 = referenceTo(new SimpleBlob(numidx * sizeof(uint16)));
+        AutoRef<SimpleBlob> ib16 = referenceTo(new SimpleBlob(numidx * sizeof(uint16_t)));
         if (0 == ib16->size()) {
             GN_ERROR(sLogger)("Fail to load FBX mesh: out of memory.");
             return;
         }
 
-        const uint32 * i32 = (const uint32 *) indexBlob->data();
-        uint16 *       i16 = (uint16 *) ib16->data();
-        for (size_t i = 0; i < (size_t) numidx; ++i) { i16[i] = (uint16) i32[i]; }
+        const uint32_t * i32 = (const uint32_t *) indexBlob->data();
+        uint16_t *       i16 = (uint16_t *) ib16->data();
+        for (size_t i = 0; i < (size_t) numidx; ++i) { i16[i] = (uint16_t) i32[i]; }
 
         indexBlob = ib16;
     }
 
     // calculate the bounding box of the mesh
-    const MeshVertex * vertices = vertexBlob->array().rawptr();
+    const MeshVertex * vertices = vertexBlob->array().data();
     Boxf               boundingBox;
     calculateBoundingBox(boundingBox, &vertices->pos.x, sizeof(MeshVertex), &vertices->pos.y, sizeof(MeshVertex), &vertices->pos.z, sizeof(MeshVertex),
                          vertexBlob->array().size());
@@ -702,14 +719,14 @@ static void sLoadFbxMesh(ModelHierarchyDesc & desc, const StrA & filename, Model
     // Fill up the rest of informations for each models.
     for (size_t i = 0; i < models.size(); ++i) {
         models[i].mesh          = meshName;
-        models[i].subset.numvtx = (uint32) vertexBlob->array().size();
+        models[i].subset.numvtx = (uint32_t) vertexBlob->array().size();
     }
 
     // Now copy everthing to the output descriptor. And we are done!
     MeshResourceDesc & gnmesh = desc.meshes[meshName];
     gnmesh                    = {};
     gnmesh.prim               = PrimitiveType::TRIANGLE_LIST;
-    gnmesh.numvtx             = (uint32) vertexBlob->array().size();
+    gnmesh.numvtx             = (uint32_t) vertexBlob->array().size();
     gnmesh.numidx             = numidx;
     gnmesh.idx32              = gnmesh.numvtx > 0x10000;
     gnmesh.vtxfmt             = MeshVertex::sGetVertexFormat();
@@ -841,7 +858,7 @@ static bool sLoadModelHierarchyFromFBX(ModelHierarchyDesc & desc, File & file) {
 #else
 
     desc.clear();
-    GN_ERROR(sLogger)("Fail to load file %s: FBX is not supported.", file.name().rawptr());
+    GN_ERROR(sLogger)("Fail to load file %s: FBX is not supported.", file.name().data());
     return false;
 
 #endif
@@ -849,89 +866,89 @@ static bool sLoadModelHierarchyFromFBX(ModelHierarchyDesc & desc, File & file) {
 
 } // namespace fbx
 
-// *****************************************************************************
-//
-// Assimp loader
-//
-// *****************************************************************************
-namespace ai {
+// // *****************************************************************************
+// //
+// // Assimp loader
+// //
+// // *****************************************************************************
+// namespace ai {
 
-// My own implementation of IOStream
-class MyIOStream : public Assimp::IOStream {
-    friend class MyIOSystem;
+// // My own implementation of IOStream
+// class MyIOStream : public Assimp::IOStream {
+//     friend class MyIOSystem;
 
-    AutoObjPtr<File> mFile;
+//     std::unique_ptr<File> mFile;
 
-protected:
-    // Constructor protected for private usage by MyIOSystem
-    MyIOStream(const std::string & filename, const std::string & mode) { mFile.attach(fs::openFile(filename.c_str(), mode.c_str())); }
+// protected:
+//     // Constructor protected for private usage by MyIOSystem
+//     MyIOStream(const std::string & filename, const std::string & mode) { mFile = fs::openFile(filename.c_str(), mode.c_str()); }
 
-public:
-    ~MyIOStream() { mFile.clear(); }
+// public:
+//     ~MyIOStream() { mFile.reset(); }
 
-    size_t Read(void * pvBuffer, size_t pSize, size_t pCount) {
-        size_t readen;
-        if (mFile && mFile->write(pvBuffer, pSize * pCount, &readen)) {
-            return readen;
-        } else {
-            return 0;
-        }
-    }
+//     size_t Read(void * pvBuffer, size_t pSize, size_t pCount) {
+//         size_t readen;
+//         if (mFile && mFile->write(pvBuffer, pSize * pCount, &readen)) {
+//             return readen;
+//         } else {
+//             return 0;
+//         }
+//     }
 
-    size_t Write(const void * pvBuffer, size_t pSize, size_t pCount) {
-        size_t written;
-        if (mFile && mFile->write(pvBuffer, pSize * pCount, &written)) {
-            return written;
-        } else {
-            return 0;
-        }
-    }
+//     size_t Write(const void * pvBuffer, size_t pSize, size_t pCount) {
+//         size_t written;
+//         if (mFile && mFile->write(pvBuffer, pSize * pCount, &written)) {
+//             return written;
+//         } else {
+//             return 0;
+//         }
+//     }
 
-    aiReturn Seek(size_t pOffset, aiOrigin pOrigin) {
-        if (mFile) {
-            FileSeek fs;
-            switch (pOrigin) {
-            case aiOrigin_SET:
-                fs = FileSeek::SET;
-            case aiOrigin_CUR:
-                fs = FileSeek::CUR;
-            case aiOrigin_END:
-                fs = FileSeek::END;
-            default:
-                return aiReturn_FAILURE;
-            }
-            return mFile->seek(pOffset, fs) ? aiReturn_SUCCESS : aiReturn_FAILURE;
-        } else {
-            return aiReturn_FAILURE;
-        }
-    }
+//     aiReturn Seek(size_t pOffset, aiOrigin pOrigin) {
+//         if (mFile) {
+//             std::ios_base::seekdir fs;
+//             switch (pOrigin) {
+//             case aiOrigin_SET:
+//                 fs = std::ios::beg
+//             case aiOrigin_CUR:
+//                 fs = std::ios::cur;
+//             case aiOrigin_END:
+//                 fs = std::ios::end;
+//             default:
+//                 return aiReturn_FAILURE;
+//             }
+//             return mFile->input().seekg(pOffset, fs) ? aiReturn_SUCCESS : aiReturn_FAILURE;
+//         } else {
+//             return aiReturn_FAILURE;
+//         }
+//     }
 
-    size_t Tell() const { return mFile ? mFile->tell() : 0; }
+//     size_t Tell() const { return mFile ? mFile->input().tellg() : 0; }
 
-    size_t FileSize() const { return mFile ? mFile->size() : 0; }
+//     size_t FileSize() const { return mFile ? mFile->size() : 0; }
 
-    void Flush() {}
-};
+//     void Flush() {}
+// };
 
-// Fisher Price - My First Filesystem
-class MyIOSystem : public Assimp::IOSystem {
-    MyIOSystem() {}
+// // Fisher Price - My First Filesystem
+// class MyIOSystem : public Assimp::IOSystem {
+//     MyIOSystem() {}
 
-    ~MyIOSystem() {}
+//     ~MyIOSystem() {}
 
-    // Check whether a specific file exists
-    bool Exists(const std::string & filename) const { return GN::fs::pathExist(filename.c_str()); }
+//     // Check whether a specific file exists
+//     bool Exists(const std::string & filename) const { return GN::fs::pathExist(filename.c_str()); }
 
-    // Get the path delimiter character we'd like to see
-    char GetOsSeparator() const { return '/'; }
+//     // Get the path delimiter character we'd like to see
+//     char GetOsSeparator() const { return '/'; }
 
-    // ... and finally a method to open a custom stream
-    Assimp::IOStream * Open(const std::string & file, const std::string & mode) { return new MyIOStream(file, mode); }
+//     // ... and finally a method to open a custom stream
+//     Assimp::IOStream * Open(const std::string & file, const std::string & mode) { return new MyIOStream(file, mode); }
 
-    void Close(Assimp::IOStream * pFile) { delete pFile; }
-};
+//     void Close(Assimp::IOStream * pFile) { delete pFile; }
+// };
 
-} // namespace ai
+// } // namespace ai
 
 // *****************************************************************************
 //
@@ -947,9 +964,9 @@ static void sPostXMLError(const XmlNode & node, const StrA & msg) {
     GN_UNUSED_PARAM(node);
     const XmlElement * e = node.toElement();
     if (e) {
-        GN_ERROR(sLogger)("<%s>: %s", e->name.rawptr(), msg.rawptr());
+        GN_ERROR(sLogger)("<%s>: %s", e->name.data(), msg.data());
     } else {
-        GN_ERROR(sLogger)("%s", msg.rawptr());
+        GN_ERROR(sLogger)("%s", msg.data());
     }
 }
 
@@ -1039,7 +1056,7 @@ static bool sParseNode(ModelHierarchyDesc & desc, XmlElement & root) {
 
                 node.models.append(a->value);
             } else {
-                sPostXMLError(*e, str::format("Unknown element: <%s>", e->name.rawptr()));
+                sPostXMLError(*e, str::format("Unknown element: <%s>", e->name.data()));
             }
         }
     }
@@ -1061,7 +1078,7 @@ static bool sLoadModelHierarchyFromXML(ModelHierarchyDesc & desc, File & file) {
          "    line   : %d\n"
          "    column : %d\n"
          "    error  : %s",
-         file.name().rawptr(), xpr.errLine, xpr.errColumn, xpr.errInfo.rawptr());
+         file.name().data(), xpr.errLine, xpr.errColumn, xpr.errInfo.data());
         return false;
     }
     GN_ASSERT(xpr.root);
@@ -1095,7 +1112,7 @@ static bool sLoadModelHierarchyFromXML(ModelHierarchyDesc & desc, File & file) {
         if ("model" == e->name) {
             if (!sParseModel(desc, *e, basedir)) return false;
         } else {
-            sPostXMLError(*e, str::format("Ignore unknowned element: <%s>", e->name.rawptr()));
+            sPostXMLError(*e, str::format("Ignore unknowned element: <%s>", e->name.data()));
         }
     }
 
@@ -1112,7 +1129,7 @@ static bool sLoadModelHierarchyFromXML(ModelHierarchyDesc & desc, File & file) {
         if ("node" == e->name) {
             if (!sParseNode(desc, *e)) return false;
         } else {
-            sPostXMLError(*e, str::format("Ignore unknowned element: <%s>", e->name.rawptr()));
+            sPostXMLError(*e, str::format("Ignore unknowned element: <%s>", e->name.data()));
         }
     }
 
@@ -1137,7 +1154,7 @@ static bool sSaveModelHierarchyToXML(const ModelHierarchyDesc & desc, const char
     StrA basename = fs::baseName(fullpath);
 
     if (!fs::isDir(dirname)) {
-        GN_ERROR(sLogger)("%s is not a directory", dirname.rawptr());
+        GN_ERROR(sLogger)("%s is not a directory", dirname.data());
         return false;
     }
 
@@ -1148,7 +1165,7 @@ static bool sSaveModelHierarchyToXML(const ModelHierarchyDesc & desc, const char
         const StrA &             oldMeshName = i->key;
         const MeshResourceDesc & mesh        = i->value;
 
-        StrA newMeshName = str::format("%s.%d.mesh.bin", basename.rawptr(), meshindex);
+        StrA newMeshName = str::format("%s.%d.mesh.bin", basename.data(), meshindex);
 
         if (!mesh.saveToFile(dirname + "\\" + newMeshName)) return false;
 
@@ -1209,7 +1226,7 @@ static bool sSaveModelHierarchyToXML(const ModelHierarchyDesc & desc, const char
         if (NULL != pParentEntityName) {
             a->value = *pParentEntityName;
         } else if (!nodeDesc.parent.empty()) {
-            GN_WARN(sLogger)("Entity %s has invalid parent: %s", i->key, nodeDesc.parent.rawptr());
+            GN_WARN(sLogger)("Entity %s has invalid parent: %s", i->key, nodeDesc.parent.data());
         }
 
         a        = xmldoc.createAttrib(node);
@@ -1248,7 +1265,7 @@ static bool sSaveModelHierarchyToXML(const ModelHierarchyDesc & desc, const char
 #endif
 
     // write XML document
-    AutoObjPtr<File> fp(fs::openFile(filename, "wt"));
+    auto fp = fs::openFile(filename, std::ios::out);
     if (!fp) return false;
     return xmldoc.writeToFile(*fp, *root, false);
 }
@@ -1318,7 +1335,7 @@ GN_API bool GN::gfx::ModelHierarchyDesc::loadFromFile(const char * filename) {
     clear();
 
     // open file
-    AutoObjPtr<File> fp(fs::openFile(filename, "rb"));
+    auto fp = fs::openFile(filename, std::ios::in | std::ios::binary);
     if (!fp) return false;
 
     // get file extension
@@ -1336,7 +1353,7 @@ GN_API bool GN::gfx::ModelHierarchyDesc::loadFromFile(const char * filename) {
     } else if (sStrEndWithI(filename, ".mesh.bin")) {
         if (!bin::sLoadModelHierarchyFromMeshBinary(*this, *fp)) return false;
     } else {
-        GN_ERROR(sLogger)("Unknown file extension: %s", ext.rawptr());
+        GN_ERROR(sLogger)("Unknown file extension: %s", ext.data());
         return false;
     }
 

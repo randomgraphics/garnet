@@ -37,7 +37,7 @@ namespace GN {
 ///   - 一个常用的NameChecker就是检查该名字是否对应一个有效的磁盘文件. 这样, 当用户试图访问一个
 ///     不在资源管理器内, 但存在于磁盘上的资源时, 该资源就会被自动加入资源管理器.
 ///
-template<typename RES, typename HANDLE = uint32>
+template<typename RES, typename HANDLE = uint32_t>
 class ResourceManagerTempl {
 public:
     typedef HANDLE ResourceHandle; ///< resource Handle. 0 means invalid handle
@@ -203,7 +203,7 @@ public:
         GN_GUARD_SLOW;
         StrA           realname;
         ResourceHandle h = getResourceHandle(resolveName(realname, name), autoAddNewName);
-        return getResourceImpl(result, h, realname.rawptr());
+        return getResourceImpl(result, h, realname.data());
         GN_UNGUARD_SLOW;
     }
 
@@ -271,7 +271,7 @@ public:
         ResourceHandle * handle = mResNames.find(resolveName(realname, name));
         if (NULL != handle) {
             if (!overrideExistingResource) {
-                GN_ERROR(sLogger)("resource '%s' already exist!", realname.rawptr());
+                GN_ERROR(sLogger)("resource '%s' already exist!", realname.data());
                 return 0;
             }
             GN_ASSERT(mResHandles.validHandle(*handle));
@@ -322,7 +322,7 @@ public:
         StrA             realname;
         ResourceHandle * handle = mResNames.find(resolveName(realname, name));
         if (NULL == handle) {
-            GN_ERROR(sLogger)("invalid resource name: %s", realname.rawptr());
+            GN_ERROR(sLogger)("invalid resource name: %s", realname.data());
             return;
         }
 
@@ -372,7 +372,7 @@ public:
         StrA             realname;
         ResourceHandle * h = mResNames.find(resolveName(realname, name));
         if (NULL == h) {
-            GN_ERROR(sLogger)("invalid resource name: %s", realname.rawptr());
+            GN_ERROR(sLogger)("invalid resource name: %s", realname.data());
             return;
         }
         disposeResourceByHandle(*h);
@@ -513,11 +513,11 @@ private:
             }
 
             if (!ok) {
-                GN_WARN(sLogger)("Fall back to null instance for resource '%s'.", item->name.rawptr());
+                GN_WARN(sLogger)("Fall back to null instance for resource '%s'.", item->name.data());
                 if (item->nullor) { ok = item->nullor(item->res, item->name, item->userData); }
                 if (!ok && mNullor) { ok = mNullor(item->res, item->name, item->userData); }
                 if (!ok) {
-                    GN_ERROR(sLogger)("Fail to create NULL instance for resource '%s'.", item->name.rawptr());
+                    GN_ERROR(sLogger)("Fail to create NULL instance for resource '%s'.", item->name.data());
                     return false;
                 }
             }
@@ -570,7 +570,7 @@ GN::Logger * ResourceManagerTempl<RES, HANDLE>::sLogger = getLogger("GN.base.Res
 
 typedef GN::ResourceManagerTempl<int> ResMgr;
 
-bool defCreator(int & res, const GN::StrA & name, void *) { return 0 != GN::str::toInetger<int>(res, name.rawptr()); }
+bool defCreator(int & res, const GN::StrA & name, void *) { return 0 != GN::str::toInetger<int>(res, name.data()); }
 
 bool nullCreator(int & res, const GN::StrA &, void *) {
     res = -1;
@@ -677,8 +677,8 @@ public:
         TS_ASSERT(!rm.empty());
 
         // handle -> name
-        TS_ASSERT_EQUALS("1", rm.getResourceName(h1).rawptr());
-        TS_ASSERT_EQUALS("", rm.getResourceName(h1 + 1).rawptr());
+        TS_ASSERT_EQUALS("1", rm.getResourceName(h1).data());
+        TS_ASSERT_EQUALS("", rm.getResourceName(h1 + 1).data());
 
         // name -> handle
         TS_ASSERT_EQUALS(h1, rm.getResourceHandle("1"));

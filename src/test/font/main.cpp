@@ -6,7 +6,7 @@ using namespace GN::input;
 using namespace GN::util;
 
 SpriteRenderer *     sr  = NULL;
-FontFaceCreationDesc ffc = {"font::simsun.ttc", (uint16) 64, (uint16) 64, FontFaceDesc::ANTIALIASED};
+FontFaceCreationDesc ffc = {"font::simsun.ttc", (uint16_t) 64, (uint16_t) 64, FontFaceDesc::ANTIALIASED};
 BitmapFont           ascii, ttf;
 wchar_t              textw[256];
 
@@ -49,7 +49,7 @@ void quit(Gpu &) {
 void onKeyPress(KeyEvent ke) {
     if (!ke.status.down) return;
 
-    switch (ke.code) {
+    switch (ke.code()) {
     case KeyCode::UP:
         ffc.height *= 2;
         initTTF();

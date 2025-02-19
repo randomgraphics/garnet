@@ -17,13 +17,13 @@ struct GpuProgramInitParam {
 
 struct UniformInitParam {
     Uniform * uniform;
-    uint32    size;
+    uint32_t  size;
 };
 
 struct UniformUpdateParam {
     Uniform * uniform;
-    uint32    offset;
-    uint32    length;
+    uint32_t  offset;
+    uint32_t  length;
     void *    data;
 };
 
@@ -44,7 +44,7 @@ bool GN::gfx::MultiThreadUniform::init(Uniform * uni) {
 
     mUniform      = uni;
     mSize         = uni->size();
-    mFrontEndData = (uint8 *) HeapMemory::alloc(mSize);
+    mFrontEndData = (uint8_t *) HeapMemory::alloc(mSize);
     if (NULL == mFrontEndData) return failure();
 
     // success
@@ -75,7 +75,7 @@ void GN::gfx::MultiThreadUniform::quit() {
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::MultiThreadUniform::update(uint32 offset, uint32 length, const void * data) {
+void GN::gfx::MultiThreadUniform::update(uint32_t offset, uint32_t length, const void * data) {
     if (offset >= mSize || (offset + length) > mSize) {
         GN_ERROR(getLogger("GN.gfx.Uniform"))("Out of range!");
         return;
@@ -87,7 +87,7 @@ void GN::gfx::MultiThreadUniform::update(uint32 offset, uint32 length, const voi
 
     memcpy(mFrontEndData + offset, data, length);
 
-    uint16               cmdsize = (uint16) (sizeof(UniformUpdateParam) + length);
+    uint16_t             cmdsize = (uint16_t) (sizeof(UniformUpdateParam) + length);
     CommandBuffer::Token token;
     if (CommandBuffer::OPERATION_SUCCEEDED == mGpu.cmdbuf().beginProduce(CMD_UNIFORM_UPDATE, cmdsize, &token)) {
         UniformUpdateParam * p = (UniformUpdateParam *) token.pParameterBuffer;
@@ -159,7 +159,7 @@ namespace gfx {
 //
 //
 // -------------------------------------------------------------------------
-void func_GPU_PROGRAM_DESTROY(Gpu &, void * p, uint32) {
+void func_GPU_PROGRAM_DESTROY(Gpu &, void * p, uint32_t) {
     GpuProgram & gp = **(GpuProgram **) p;
     gp.decref();
 }
@@ -167,7 +167,7 @@ void func_GPU_PROGRAM_DESTROY(Gpu &, void * p, uint32) {
 //
 //
 // -------------------------------------------------------------------------
-void func_GPU_PROGRAM_INIT(Gpu &, void * p, uint32) {
+void func_GPU_PROGRAM_INIT(Gpu &, void * p, uint32_t) {
     GpuProgramInitParam * gpip = *(GpuProgramInitParam **) p;
     gpip->params               = &gpip->gp->getParameterDesc();
 }
@@ -175,7 +175,7 @@ void func_GPU_PROGRAM_INIT(Gpu &, void * p, uint32) {
 //
 //
 // -------------------------------------------------------------------------
-void func_UNIFORM_DESTROY(Gpu &, void * p, uint32) {
+void func_UNIFORM_DESTROY(Gpu &, void * p, uint32_t) {
     Uniform & u = **(Uniform **) p;
     u.decref();
 }
@@ -183,7 +183,7 @@ void func_UNIFORM_DESTROY(Gpu &, void * p, uint32) {
 //
 //
 // -------------------------------------------------------------------------
-void func_UNIFORM_UPDATE(Gpu &, void * p, uint32) {
+void func_UNIFORM_UPDATE(Gpu &, void * p, uint32_t) {
     const UniformUpdateParam & uup = *(const UniformUpdateParam *) p;
     uup.uniform->update(uup.offset, uup.length, uup.data);
 }

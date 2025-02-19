@@ -33,6 +33,7 @@ file(GLOB sources
     pcre/*.c
     pcre/*.cc
     png/*.c
+	StackWalker/*.cpp
     tinyxml/*.c
     zlib/*.c
 )
@@ -40,11 +41,6 @@ file(GLOB sources
 if (${OPENGL_FOUND})
     list(APPEND sources glew/glew.c)
 endif()
-
-# collect assimp sources
-GN_add_source_folder(sources assimp PCH_SOURCE assimp/AssimpPCH.cpp PCH_HEADER AssimpPCH.h)
-file(GLOB_RECURSE assimp_contrib_sources assimp/contrib/*.c assimp/contrib/*.cpp)
-list(APPEND sources ${assimp_contrib_sources})
 
 # freetype sources. Copied from <freetype_package>/doc/INSTALL.ANY
 list(APPEND sources
@@ -102,39 +98,25 @@ source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} PREFIX "Source Files" FILES ${sour
 # Build the library
 # =================
 
-add_library(GNextern ${sources} expat_build.h.in ${CMAKE_CURRENT_BINARY_DIR}/expat/expat_build.h)
+add_library(GNextern STATIC ${sources} expat_build.h.in ${CMAKE_CURRENT_BINARY_DIR}/expat/expat_build.h)
 
 target_compile_definitions(GNextern PRIVATE
-    ASSIMP_BUILD_BOOST_WORKAROUND
-    ASSIMP_BUILD_NO_OWN_ZLIB
+    # ASSIMP_BUILD_BOOST_WORKAROUND
+    # ASSIMP_BUILD_NO_OWN_ZLIB
     FT2_BUILD_LIBRARY
     GLEW_STATIC
     _SCL_SECURE_NO_WARNINGS # disable MSVC security warnings
 )
 target_include_directories(GNextern PUBLIC  ../inc)
 target_include_directories(GNextern PRIVATE
-    ../inc/assimp
     jpeg
-    assimp
-    assimp/BoostWorkaround
     ${CMAKE_CURRENT_BINARY_DIR}/expat # for expat_build.h
 )
 
-# compiler specific options
-if (MSVC)
-    target_compile_options(GNextern PRIVATE
-        /w # don't care about warnings in 3rd party sources.
-        /EHa
-        /MP # enable parallel build.
-    )
-else()
-    message("Current compiler is: ${CMAKE_CXX_COMPILER_ID}")
-    target_compile_options(GNextern PRIVATE
-        -w # disable all warnings
-    )
-endif()
-
-# target_compile_features(GNextern PRIVATE cxx_std_11)
+# # compiler specific options
+# if (MSVC)
+#     target_compile_options(GNextern PRIVATE /EHa) # why?
+# endif()
 
 # OpenGL and X11 options
 if (${OPENGL_FOUND})
@@ -147,6 +129,9 @@ if (${OPENGL_FOUND})
         # installed headers with same names.
         target_include_directories(GNextern PUBLIC ${X11_INCLUDE_DIR})
         target_link_libraries(GNextern PUBLIC ${X11_LIBRARIES})
+		if (CMAKE_SYSTEM_NAME MATCHES "Darwin")
+			target_compile_definitions(GNextern PUBLIC GLEW_APPLE_GLX)
+		endif()
     else()
         message("X11 not found.")
     endif()

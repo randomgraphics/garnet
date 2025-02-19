@@ -53,7 +53,7 @@ struct PixPerfScopeEvent {
 #if GN_XBOX2
         PIXBeginNamedEvent(color, name);
 #else
-        D3DPERF_BeginEvent(color, mbs2wcs(name).rawptr());
+        D3DPERF_BeginEvent(color, mbs2wcs(name).data());
 #endif
     }
     ~PixPerfScopeEvent() {
@@ -69,25 +69,25 @@ struct PixPerfScopeEvent {
 ///
 /// Compile vertex shader from string
 ///
-GN_API LPDIRECT3DVERTEXSHADER9 compileAndCreateVS(LPDIRECT3DDEVICE9 dev, const char * code, size_t len = 0, uint32 flags = 0, const char * entryFunc = "main",
+GN_API LPDIRECT3DVERTEXSHADER9 compileAndCreateVS(LPDIRECT3DDEVICE9 dev, const char * code, size_t len = 0, uint32_t flags = 0, const char * entryFunc = "main",
                                                   const char * profile = 0, LPD3DXCONSTANTTABLE * constTable = 0, LPD3DXBUFFER * binary = 0);
 
 ///
 /// Compile pixel shader from string
 ///
-GN_API LPDIRECT3DPIXELSHADER9 compileAndCreatePS(LPDIRECT3DDEVICE9 dev, const char * code, size_t len = 0, uint32 flags = 0, const char * entryFunc = "main",
+GN_API LPDIRECT3DPIXELSHADER9 compileAndCreatePS(LPDIRECT3DDEVICE9 dev, const char * code, size_t len = 0, uint32_t flags = 0, const char * entryFunc = "main",
                                                  const char * profile = 0, LPD3DXCONSTANTTABLE * constTable = 0);
 
 #if GN_BUILD_HAS_D3DX9
 ///
 /// Assemble vertex shader from string
 ///
-GN_API LPDIRECT3DVERTEXSHADER9 assembleAndCreateVS(LPDIRECT3DDEVICE9 dev, const char * code, size_t len = 0, uint32 flags = 0, LPD3DXBUFFER * binary = 0);
+GN_API LPDIRECT3DVERTEXSHADER9 assembleAndCreateVS(LPDIRECT3DDEVICE9 dev, const char * code, size_t len = 0, uint32_t flags = 0, LPD3DXBUFFER * binary = 0);
 
 ///
 /// Assemble pixel shader from string
 ///
-GN_API LPDIRECT3DPIXELSHADER9 assembleAndCreatePS(LPDIRECT3DDEVICE9 dev, const char * code, size_t len = 0, uint32 flags = 0);
+GN_API LPDIRECT3DPIXELSHADER9 assembleAndCreatePS(LPDIRECT3DDEVICE9 dev, const char * code, size_t len = 0, uint32_t flags = 0);
 
 #endif
 
@@ -107,13 +107,13 @@ struct ShaderCompiler<IDirect3DVertexShader9> {
     //@{
 
 #if GN_PLATFORM_HAS_D3D9X
-    static inline IDirect3DVertexShader9 * assembleAndCreate(IDirect3DDevice9 & dev, const char * code, size_t len = 0, uint32 flags = 0,
+    static inline IDirect3DVertexShader9 * assembleAndCreate(IDirect3DDevice9 & dev, const char * code, size_t len = 0, uint32_t flags = 0,
                                                              LPD3DXBUFFER * binary = 0) {
         return assembleAndCreateVS(&dev, code, len, flags, binary);
     }
 #endif
 
-    static inline IDirect3DVertexShader9 * compileAndCreate(IDirect3DDevice9 & dev, const char * code, size_t len = 0, uint32 flags = 0,
+    static inline IDirect3DVertexShader9 * compileAndCreate(IDirect3DDevice9 & dev, const char * code, size_t len = 0, uint32_t flags = 0,
                                                             const char * entryFunc = "main", const char * profile = 0, LPD3DXCONSTANTTABLE * constTable = 0,
                                                             LPD3DXBUFFER * binary = 0) {
         return compileAndCreateVS(&dev, code, len, flags, entryFunc, profile, constTable, binary);
@@ -130,12 +130,12 @@ struct ShaderCompiler<IDirect3DPixelShader9> {
     //@{
 
 #if GN_PLATFORM_HAS_D3D9X
-    static inline IDirect3DPixelShader9 * assembleAndCreate(IDirect3DDevice9 & dev, const char * code, size_t len = 0, uint32 flags = 0) {
+    static inline IDirect3DPixelShader9 * assembleAndCreate(IDirect3DDevice9 & dev, const char * code, size_t len = 0, uint32_t flags = 0) {
         return assembleAndCreatePS(&dev, code, len, flags);
     }
 #endif
 
-    static inline IDirect3DPixelShader9 * compileAndCreate(IDirect3DDevice9 & dev, const char * code, size_t len = 0, uint32 flags = 0,
+    static inline IDirect3DPixelShader9 * compileAndCreate(IDirect3DDevice9 & dev, const char * code, size_t len = 0, uint32_t flags = 0,
                                                            const char * entryFunc = "main", const char * profile = 0, LPD3DXCONSTANTTABLE * constTable = 0) {
         return compileAndCreatePS(&dev, code, len, flags, entryFunc, profile, constTable);
     }
@@ -159,10 +159,10 @@ inline bool getBackBufferDesc(LPDIRECT3DDEVICE9 dev, D3DSURFACE_DESC & desc) {
 ///
 /// Get backbuffer size
 ///
-inline Vector2<uint32> getBackBufferSize(LPDIRECT3DDEVICE9 dev) {
+inline Vector2<uint32_t> getBackBufferSize(LPDIRECT3DDEVICE9 dev) {
     GN_GUARD_SLOW;
     D3DSURFACE_DESC desc;
-    return getBackBufferDesc(dev, desc) ? Vector2<uint32>(desc.Width, desc.Height) : Vector2<uint32>(0, 0);
+    return getBackBufferDesc(dev, desc) ? Vector2<uint32_t>(desc.Width, desc.Height) : Vector2<uint32_t>(0, 0);
     GN_UNGUARD_SLOW;
 }
 
@@ -182,10 +182,10 @@ inline bool getDepthStencilDesc(LPDIRECT3DDEVICE9 dev, D3DSURFACE_DESC & desc) {
 ///
 /// Get depth buffer size
 ///
-inline Vector2<uint32> getDepthStencilSize(LPDIRECT3DDEVICE9 dev) {
+inline Vector2<uint32_t> getDepthStencilSize(LPDIRECT3DDEVICE9 dev) {
     GN_GUARD_SLOW;
     D3DSURFACE_DESC desc;
-    return getDepthStencilDesc(dev, desc) ? Vector2<uint32>(desc.Width, desc.Height) : Vector2<uint32>(0, 0);
+    return getDepthStencilDesc(dev, desc) ? Vector2<uint32_t>(desc.Width, desc.Height) : Vector2<uint32_t>(0, 0);
     GN_UNGUARD_SLOW;
 }
 
@@ -377,7 +377,7 @@ private:
         XMVECTOR position; // position in clip space
         D3DCOLOR color;
         float    u, v;
-        uint32   _; // padding
+        uint32_t _; // padding
     };
 
     struct EndPoint {
@@ -404,8 +404,8 @@ private:
 
     static const size_t MAX_VERTICES = 1024;
     PrivateVertex       m_Vertices[MAX_VERTICES];
-    uint16              m_Indices[MAX_VERTICES / 6 * 12]; // 12 indices (4 triangles ) per 6 verices
-    uint32              m_NumVertices;
+    uint16_t            m_Indices[MAX_VERTICES / 6 * 12]; // 12 indices (4 triangles ) per 6 verices
+    uint32_t            m_NumVertices;
 
 private:
     void clear();
@@ -462,10 +462,10 @@ struct D3D9AppOption {
     /// full screen display mode
     ///
     //@{
-    uint32 fsWidth;   ///< Screen width.
-    uint32 fsHeight;  ///< Screen height.
-    uint32 fsDepth;   ///< Color depth. Ignored for windowed mode.
-    uint32 fsRefrate; ///< Referesh rate. Ignored for windowed mode.
+    uint32_t fsWidth;   ///< Screen width.
+    uint32_t fsHeight;  ///< Screen height.
+    uint32_t fsDepth;   ///< Color depth. Ignored for windowed mode.
+    uint32_t fsRefrate; ///< Referesh rate. Ignored for windowed mode.
     //@}
 
     ///
@@ -474,7 +474,7 @@ struct D3D9AppOption {
     /// is also not avaiable, default width 640 will be used.
     /// Default is 0.
     ///
-    uint32 windowedWidth;
+    uint32_t windowedWidth;
 
     ///
     /// Backbuffer height for windowed mode. Ignored in fullscreen mode.
@@ -482,7 +482,7 @@ struct D3D9AppOption {
     /// is also not avaiable, default height 480 will be used.
     /// Default is 0.
     ///
-    uint32 windowedHeight;
+    uint32_t windowedHeight;
 };
 
 ///

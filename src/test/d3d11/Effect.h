@@ -459,7 +459,7 @@ struct SD3DShaderVTable {
     void (__stdcall ID3D11DeviceContext::*pSetConstantBuffers)(UINT StartConstantSlot, UINT NumBuffers, ID3D11Buffer * const * pBuffers);
     void (__stdcall ID3D11DeviceContext::*pSetSamplers)(UINT Offset, UINT NumSamplers, ID3D11SamplerState * const * pSamplers);
     void (__stdcall ID3D11DeviceContext::*pSetShaderResources)(UINT Offset, UINT NumResources, ID3D11ShaderResourceView * const * pResources);
-    HRESULT (__stdcall ID3D11Device::*pCreateShader)
+    HRESULT(__stdcall ID3D11Device::*pCreateShader)
     (const void * pShaderBlob, SIZE_T ShaderBlobSize, ID3D11ClassLinkage * pClassLinkage, ID3D11DeviceChild ** ppShader);
 };
 

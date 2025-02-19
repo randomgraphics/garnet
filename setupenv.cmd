@@ -1,1 +1,1 @@
-@powershell.exe -nologo -noexit %~dp0env\\setupenv.ps1 %*
+@powershell.exe -nologo -noexit %~dp0env\\garnet.ps1 %*

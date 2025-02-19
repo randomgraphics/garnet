@@ -16,15 +16,11 @@
         if (logger->isOff(level)) {                    \
         } else                                         \
             GN::Logger::LogHelper(logger, level, func, file, line)
-    #define GN_LOG_BEGIN(logger, level) if (logger->isOn(level)) {
-    #define GN_LOG_END()                }
 #else
     #define GN_LOG_EX(logger, level, func, file, line) \
         if (1) {                                       \
         } else                                         \
             GN::Logger::sFakeLog
-    #define GN_LOG_BEGIN(logger, level) if (0) {
-    #define GN_LOG_END()                }
 #endif
 //@}
 

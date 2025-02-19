@@ -8,8 +8,12 @@ static GN::Logger * sLogger = GN::getLogger("GN.gfx.util.misc");
 GN_API GN::gfx::Texture * GN::gfx::loadTextureFromFile(Gpu & gpu, const char * filename) {
     GN_VERBOSE(sLogger)("Load texture from file: %s", filename);
 
+    // open file
+    auto file = fs::openFile(filename, std::ios::in | std::ios::binary);
+    if (!file) return 0;
+
     // load image
-    auto image = RawImage::load(filename);
+    auto image = Image::load(file->input());
     if (image.empty()) return 0;
 
     // create texture
@@ -19,9 +23,9 @@ GN_API GN::gfx::Texture * GN::gfx::loadTextureFromFile(Gpu & gpu, const char * f
     if (!tex) return 0;
 
     // update texture content
-    for (uint32 f = 0; f < td.faces; ++f)
-        for (uint32 l = 0; l < td.levels; ++l) {
-            auto & md = image.desc(f, l);
+    for (uint32_t f = 0; f < td.faces; ++f)
+        for (uint32_t l = 0; l < td.levels; ++l) {
+            auto & md = image.plane(f, l);
             tex->updateMipmap(f, l, 0, md.pitch, md.slice, image.data() + md.offset, SurfaceUpdateFlag::DEFAULT);
         }
 

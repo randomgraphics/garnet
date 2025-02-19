@@ -38,7 +38,7 @@ static const GLenum INVALID_DIMENSION = 0xFFFFFFFF;
 ///
 /// determine texture dimension based on texture size, return 0xFFFFFFFF if failed.
 // -----------------------------------------------------------------------------
-static inline GLenum sDetermineTextureDimension(uint32 faces, uint32 width, uint32 height, uint32 depth) {
+static inline GLenum sDetermineTextureDimension(uint32_t faces, uint32_t width, uint32_t height, uint32_t depth) {
     if (depth > 1) {
         // 3D texture
         if (faces > 1) {
@@ -77,13 +77,13 @@ static inline GLenum sDetermineTextureDimension(uint32 faces, uint32 width, uint
 ///
 /// convert garnet color format to OpenGL format
 // -----------------------------------------------------------------------------
-static inline bool sColorFormat2OGL(GLint & gl_internalformat, GLuint & gl_format, GLuint & gl_type, bool & gl_compressed, GN::gfx::ColorFormat clrfmt,
+static inline bool sColorFormat2OGL(GLint & gl_internalformat, GLuint & gl_format, GLuint & gl_type, bool & gl_compressed, GN::gfx::PixelFormat clrfmt,
                                     GN::gfx::TextureUsage usage) {
     using namespace GN::gfx;
 
     gl_compressed = false;
-    switch (clrfmt.alias) {
-    case ColorFormat::RGBA_32_32_32_32_FLOAT:
+
+    if (PixelFormat::RGBA_32_32_32_32_FLOAT() == clrfmt) {
         if (!GLEW_ARB_texture_float) {
             GN_WARN(sLogger)("current hardware do not support floating point texture format!");
             return false;
@@ -92,8 +92,7 @@ static inline bool sColorFormat2OGL(GLint & gl_internalformat, GLuint & gl_forma
         gl_format         = GL_RGBA;
         gl_type           = GL_FLOAT;
         return true;
-
-    case ColorFormat::RG_32_32_FLOAT:
+    } else if (PixelFormat::RG_32_32_FLOAT() == clrfmt) {
         if (!GLEW_ARB_texture_float) {
             GN_WARN(sLogger)("current hardware do not support floating point texture format!");
             return false;
@@ -102,8 +101,7 @@ static inline bool sColorFormat2OGL(GLint & gl_internalformat, GLuint & gl_forma
         gl_format         = GL_RGBA;
         gl_type           = GL_FLOAT;
         return true;
-
-    case ColorFormat::RGBA_16_16_16_16_FLOAT:
+    } else if (PixelFormat::RGBA_16_16_16_16_FLOAT() == clrfmt) {
         if (!GLEW_ARB_texture_float) {
             GN_WARN(sLogger)("current hardware do not support floating point texture format!");
             return false;
@@ -112,8 +110,7 @@ static inline bool sColorFormat2OGL(GLint & gl_internalformat, GLuint & gl_forma
         gl_format         = GL_RGBA;
         gl_type           = GL_FLOAT;
         return true;
-
-    case ColorFormat::RG_16_16_FLOAT:
+    } else if (PixelFormat::RG_16_16_FLOAT() == clrfmt) {
         if (!GLEW_ARB_texture_float) {
             GN_WARN(sLogger)("current hardware do not support floating point texture format!");
             return false;
@@ -122,74 +119,62 @@ static inline bool sColorFormat2OGL(GLint & gl_internalformat, GLuint & gl_forma
         gl_format         = GL_RGBA;
         gl_type           = GL_FLOAT;
         return true;
-
-    case ColorFormat::RGBA_16_16_16_16_UNORM:
+    } else if (PixelFormat::RGBA_16_16_16_16_UNORM() == clrfmt) {
         gl_internalformat = GL_RGBA16;
         gl_format         = GL_RGBA;
         gl_type           = GL_UNSIGNED_SHORT;
         return true;
-
-    case ColorFormat::RGBX_16_16_16_16_UNORM:
+    } else if (PixelFormat::RGBX_16_16_16_16_UNORM() == clrfmt) {
         gl_internalformat = GL_RGB16;
         gl_format         = GL_RGBA;
         gl_type           = GL_UNSIGNED_SHORT;
         return true;
-
-    case ColorFormat::RG_16_16_UNORM:
+    } else if (PixelFormat::RG_16_16_UNORM() == clrfmt) {
         gl_internalformat = GL_LUMINANCE_ALPHA;
         gl_format         = GL_RGBA;
         gl_type           = GL_UNSIGNED_SHORT;
         return true;
-
-    case ColorFormat::RGBA_8_8_8_8_UNORM:
+    } else if (PixelFormat::RGBA_8_8_8_8_UNORM() == clrfmt) {
         gl_internalformat = GL_RGBA8;
         gl_format         = GL_RGBA;
         gl_type           = GL_UNSIGNED_BYTE;
         return true;
-
-    case ColorFormat::BGRA_8_8_8_8_UNORM:
+    } else if (PixelFormat::BGRA_8_8_8_8_UNORM() == clrfmt) {
         gl_internalformat = GL_RGBA8;
         gl_format         = GL_BGRA_EXT;
         gl_type           = GL_UNSIGNED_BYTE;
         return true;
-
-    case ColorFormat::RGBX_8_8_8_8_UNORM:
+    } else if (PixelFormat::RGBX_8_8_8_8_UNORM() == clrfmt) {
         gl_internalformat = GL_RGB8;
         gl_format         = GL_RGBA;
         gl_type           = GL_UNSIGNED_BYTE;
         return true;
-
-    case ColorFormat::BGRX_8_8_8_8_UNORM:
+    } else if (PixelFormat::BGRX_8_8_8_8_UNORM() == clrfmt) {
         gl_internalformat = GL_RGB8;
         gl_format         = GL_BGRA_EXT;
         gl_type           = GL_UNSIGNED_BYTE;
         return true;
-
-    case ColorFormat::RGB_8_8_8_UNORM:
+    } else if (PixelFormat::RGB_8_8_8_UNORM() == clrfmt) {
         gl_internalformat = GL_RGB8;
         gl_format         = GL_RGB;
         gl_type           = GL_UNSIGNED_BYTE;
         return true;
-
-    case ColorFormat::BGR_8_8_8_UNORM:
+    } else if (PixelFormat::BGR_8_8_8_UNORM() == clrfmt) {
         gl_internalformat = GL_RGB8;
         gl_format         = GL_BGR_EXT;
         gl_type           = GL_UNSIGNED_BYTE;
         return true;
-
-    case ColorFormat::BGRA_5_5_5_1_UNORM:
+    } else if (PixelFormat::BGRA_5_5_5_1_UNORM() == clrfmt) {
         gl_internalformat = GL_RGB5_A1;
         gl_format         = GL_BGRA_EXT;
         gl_type           = GL_UNSIGNED_SHORT_5_5_5_1;
         return true;
-
-    case ColorFormat::BGR_5_6_5_UNORM:
+    } else if (PixelFormat::BGR_5_6_5_UNORM() == clrfmt) {
         gl_internalformat = GL_RGB5;
         gl_format         = GL_BGR_EXT;
         gl_type           = GL_UNSIGNED_SHORT_5_6_5_REV;
         return true;
-
-    case ColorFormat::RG_8_8_SNORM:
+    } else if (PixelFormat::RG_8_8_SNORM() == clrfmt) {
         if (GLEW_ATI_envmap_bumpmap) {
             gl_internalformat = GL_DU8DV8_ATI;
             gl_format         = GL_DUDV_ATI;
@@ -201,44 +186,38 @@ static inline bool sColorFormat2OGL(GLint & gl_internalformat, GLuint & gl_forma
             gl_type           = GL_BYTE;
         }
         return true;
-
-    case ColorFormat::LA_16_16_UNORM:
+    } else if (PixelFormat::LA_16_16_UNORM() == clrfmt) {
         gl_internalformat = GL_LUMINANCE16_ALPHA16;
         gl_format         = GL_LUMINANCE_ALPHA;
         gl_type           = GL_UNSIGNED_SHORT;
         return true;
-
-    case ColorFormat::LA_8_8_UNORM:
+    } else if (PixelFormat::LA_8_8_UNORM() == clrfmt) {
         gl_internalformat = GL_LUMINANCE8_ALPHA8;
         gl_format         = GL_LUMINANCE_ALPHA;
         gl_type           = GL_UNSIGNED_BYTE;
         return true;
-
-    case ColorFormat::L_16_UNORM:
+    } else if (PixelFormat::L_16_UNORM() == clrfmt) {
         gl_internalformat = GL_LUMINANCE16;
         gl_format         = GL_LUMINANCE;
         gl_type           = GL_UNSIGNED_SHORT;
         return true;
-
-    case ColorFormat::R_8_UNORM:
+    } else if (PixelFormat::R_8_UNORM() == clrfmt) {
         gl_internalformat = 1;
         gl_format         = GL_RED;
         gl_type           = GL_UNSIGNED_BYTE;
         return true;
 
-    case ColorFormat::L_8_UNORM:
+    } else if (PixelFormat::L_8_UNORM() == clrfmt) {
         gl_internalformat = GL_LUMINANCE8;
         gl_format         = GL_LUMINANCE;
         gl_type           = GL_UNSIGNED_BYTE;
         return true;
-
-    case ColorFormat::A_8_UNORM:
+    } else if (PixelFormat::A_8_UNORM() == clrfmt) {
         gl_internalformat = GL_ALPHA8;
         gl_format         = GL_ALPHA;
         gl_type           = GL_UNSIGNED_BYTE;
         return true;
-
-    case ColorFormat::R_16_UINT:
+    } else if (PixelFormat::R_16_UINT() == clrfmt) {
         if (TextureUsage::DEPTH_RENDER_TARGET == usage) {
             if (!GLEW_ARB_depth_texture) {
                 GN_ERROR(sLogger)("does not support GL_ARB_depth_texture.");
@@ -252,8 +231,7 @@ static inline bool sColorFormat2OGL(GLint & gl_internalformat, GLuint & gl_forma
             GN_ERROR(sLogger)("integer texture is not supported yet.");
             return false;
         }
-
-    case ColorFormat::R_32_UINT:
+    } else if (PixelFormat::R_32_UINT() == clrfmt) {
         if (TextureUsage::DEPTH_RENDER_TARGET == usage) {
             if (!GLEW_ARB_depth_texture) {
                 GN_ERROR(sLogger)("does not support GL_ARB_depth_texture.");
@@ -267,8 +245,7 @@ static inline bool sColorFormat2OGL(GLint & gl_internalformat, GLuint & gl_forma
             GN_ERROR(sLogger)("integer texture is not supported yet.");
             return false;
         }
-
-    case ColorFormat::DXT1_UNORM:
+    } else if (PixelFormat::DXT1_UNORM() == clrfmt) {
         if (GLEW_ARB_texture_compression && GLEW_EXT_texture_compression_s3tc) {
             gl_internalformat = GL_COMPRESSED_RGBA_S3TC_DXT1_EXT;
             gl_format         = GL_RGBA;
@@ -276,9 +253,7 @@ static inline bool sColorFormat2OGL(GLint & gl_internalformat, GLuint & gl_forma
             gl_compressed     = true;
             return true;
         }
-        break;
-
-    case ColorFormat::DXT3_UNORM:
+    } else if (PixelFormat::DXT3_UNORM() == clrfmt) {
         if (GLEW_ARB_texture_compression && GLEW_EXT_texture_compression_s3tc) {
             gl_internalformat = GL_COMPRESSED_RGBA_S3TC_DXT3_EXT;
             gl_format         = GL_RGBA;
@@ -286,9 +261,7 @@ static inline bool sColorFormat2OGL(GLint & gl_internalformat, GLuint & gl_forma
             gl_compressed     = true;
             return true;
         }
-        break;
-
-    case ColorFormat::DXT5_UNORM:
+    } else if (PixelFormat::DXT5_UNORM() == clrfmt) {
         if (GLEW_ARB_texture_compression && GLEW_EXT_texture_compression_s3tc) {
             gl_internalformat = GL_COMPRESSED_RGBA_S3TC_DXT5_EXT;
             gl_format         = GL_RGBA;
@@ -296,21 +269,17 @@ static inline bool sColorFormat2OGL(GLint & gl_internalformat, GLuint & gl_forma
             gl_compressed     = true;
             return true;
         }
-        break;
-
-    default:
-        break;
     }
 
     // failed
-    GN_ERROR(sLogger)("invalid or unsupported format '%s'!", clrfmt.toString().rawptr());
+    GN_ERROR(sLogger)("invalid or unsupported format '%s'!", clrfmt.toString().c_str());
     return false;
 }
 
 ///
 /// map wrap mode to opengl constant
 // -----------------------------------------------------------------------------
-static inline GLint sTexWrap2OGL(uint32 wrap) {
+static inline GLint sTexWrap2OGL(uint32_t wrap) {
     switch (wrap) {
     case GN::gfx::SamplerDesc::ADDRESS_REPEAT:
         return GL_REPEAT;
@@ -504,7 +473,7 @@ bool GN::gfx::OGLTexture::init(const TextureDesc & inputDesc) {
     if (0 == mOGLTexture) return failure();
 
     // setup mipmap size array
-    for (uint32 i = 0; i < texdesc.levels; ++i) {
+    for (uint32_t i = 0; i < texdesc.levels; ++i) {
         GLint sx, sy, sz;
         switch (mTarget) {
         case GL_TEXTURE_1D:
@@ -567,10 +536,10 @@ void GN::gfx::OGLTexture::quit() {
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLTexture::updateMipmap(uint32 face, uint32 level, const Box<uint32> * area, uint32 rowPitch, uint32 slicePitch, const void * inputData,
-                                       SurfaceUpdateFlag flag) {
+void GN::gfx::OGLTexture::updateMipmap(uint32_t face, uint32_t level, const Box<uint32_t> * area, uint32_t rowPitch, uint32_t slicePitch,
+                                       const void * inputData, SurfaceUpdateFlag flag) {
     // check update parameters,
-    Box<uint32> clippedArea;
+    Box<uint32_t> clippedArea;
     if (!validateUpdateParameters(face, level, area, flag, clippedArea)) return;
 
     // Auto-restore texture binding when exiting this function.
@@ -582,7 +551,7 @@ void GN::gfx::OGLTexture::updateMipmap(uint32 face, uint32 level, const Box<uint
     // setup pixel store parameters
 
     // Note: GL_PACK_ROW_LENGTH defines number of pixels in a row.
-    size_t bpp = getDesc().format.getBitsPerPixel();
+    size_t bpp = getDesc().format.bitsPerPixel();
     glPixelStorei(GL_UNPACK_ROW_LENGTH, (GLint) (rowPitch * 8 / bpp));
 
     GLint alignment;
@@ -661,7 +630,7 @@ void GN::gfx::OGLTexture::updateMipmap(uint32 face, uint32 level, const Box<uint
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLTexture::readMipmap(uint32, uint32, MipmapData &) { GN_UNIMPL(); }
+void GN::gfx::OGLTexture::readMipmap(uint32_t, uint32_t, MipmapData &) { GN_UNIMPL(); }
 
 //
 //

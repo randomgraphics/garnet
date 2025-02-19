@@ -115,16 +115,16 @@ void FirstPersonCamera::update(float timeslice) {
 
     // process keyboard actions (as for right hand)
     const KeyStatus * kb = gInput.getKeyboardStatus();
-    if (kb[mKeys[MOVE_F]].down) delta_p.z -= mMoveSpeed * timeslice;
-    if (kb[mKeys[MOVE_B]].down) delta_p.z += mMoveSpeed * timeslice;
-    if (kb[mKeys[MOVE_L]].down) delta_p.x -= mMoveSpeed * timeslice;
-    if (kb[mKeys[MOVE_R]].down) delta_p.x += mMoveSpeed * timeslice;
-    if (kb[mKeys[MOVE_D]].down) delta_p.y -= mMoveSpeed * timeslice;
-    if (kb[mKeys[MOVE_U]].down) delta_p.y += mMoveSpeed * timeslice;
-    if (kb[mKeys[TURN_U]].down) delta_a.x += mRotateSpeed * timeslice;
-    if (kb[mKeys[TURN_D]].down) delta_a.x -= mRotateSpeed * timeslice;
-    if (kb[mKeys[TURN_L]].down) delta_a.y += mRotateSpeed * timeslice;
-    if (kb[mKeys[TURN_R]].down) delta_a.y -= mRotateSpeed * timeslice;
+    if (kb[(int) mKeys[MOVE_F]].down) delta_p.z -= mMoveSpeed * timeslice;
+    if (kb[(int) mKeys[MOVE_B]].down) delta_p.z += mMoveSpeed * timeslice;
+    if (kb[(int) mKeys[MOVE_L]].down) delta_p.x -= mMoveSpeed * timeslice;
+    if (kb[(int) mKeys[MOVE_R]].down) delta_p.x += mMoveSpeed * timeslice;
+    if (kb[(int) mKeys[MOVE_D]].down) delta_p.y -= mMoveSpeed * timeslice;
+    if (kb[(int) mKeys[MOVE_U]].down) delta_p.y += mMoveSpeed * timeslice;
+    if (kb[(int) mKeys[TURN_U]].down) delta_a.x += mRotateSpeed * timeslice;
+    if (kb[(int) mKeys[TURN_D]].down) delta_a.x -= mRotateSpeed * timeslice;
+    if (kb[(int) mKeys[TURN_L]].down) delta_a.y += mRotateSpeed * timeslice;
+    if (kb[(int) mKeys[TURN_R]].down) delta_a.y -= mRotateSpeed * timeslice;
 
     // deal with handness
     if (mHandNess == LEFT_HAND) {

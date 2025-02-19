@@ -16,8 +16,8 @@ class HandleManager : public NoCopy {
     /// Handle item used internally by manager
     ///
     struct Item {
-        uint8 buf[sizeof(T)];
-        bool  occupied;
+        uint8_t buf[sizeof(T)];
+        bool    occupied;
 
         T & t() const {
             GN_ASSERT(occupied);
@@ -300,7 +300,7 @@ public:
         if (CASE_INSENSITIVE) { GN_UNIMPL(); }
 
         if (NULL != mNames.find(name)) {
-            GN_ERROR(getLogger("GN.base.NamedHandleManager"))("name '%s' is not unique.", name.rawptr());
+            GN_ERROR(getLogger("GN.base.NamedHandleManager"))("name '%s' is not unique.", name.data());
             return 0;
         }
 
@@ -327,7 +327,7 @@ public:
         if (CASE_INSENSITIVE) { GN_UNIMPL(); }
 
         if (NULL != mNames.find(name)) {
-            GN_ERROR(getLogger("GN.base.NamedHandleManager"))("name '%s' is not unique.", name.rawptr());
+            GN_ERROR(getLogger("GN.base.NamedHandleManager"))("name '%s' is not unique.", name.data());
             return 0;
         }
 
@@ -366,7 +366,7 @@ public:
         if (CASE_INSENSITIVE) { GN_UNIMPL(); }
 
         if (!validName(name)) {
-            GN_ERROR(getLogger("GN.base.NamedHandleManager"))("invalid name: %s.", name.rawptr());
+            GN_ERROR(getLogger("GN.base.NamedHandleManager"))("invalid name: %s.", name.data());
             return;
         }
 

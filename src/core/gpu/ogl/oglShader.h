@@ -13,19 +13,19 @@ namespace GN {
 namespace gfx {
 class OglGpuProgramParameterDesc : public GpuProgramParameterDesc {
 public:
-    void setUniformArray(const GpuProgramUniformParameterDesc * array, uint32 count, uint32 stride) {
+    void setUniformArray(const GpuProgramUniformParameterDesc * array, uint32_t count, uint32_t stride) {
         mUniformArray       = array;
         mUniformCount       = count;
         mUniformArrayStride = stride;
     }
 
-    void setTextureArray(const GpuProgramTextureParameterDesc * array, uint32 count, uint32 stride) {
+    void setTextureArray(const GpuProgramTextureParameterDesc * array, uint32_t count, uint32_t stride) {
         mTextureArray       = array;
         mTextureCount       = count;
         mTextureArrayStride = stride;
     }
 
-    void setAttributeArray(const GpuProgramAttributeParameterDesc * array, uint32 count, uint32 stride) {
+    void setAttributeArray(const GpuProgramAttributeParameterDesc * array, uint32_t count, uint32_t stride) {
         mAttributeArray       = array;
         mAttributeCount       = count;
         mAttributeArrayStride = stride;
@@ -47,7 +47,7 @@ enum OGLVertexSemantic {
 
 struct OGLVertexBindingDesc {
     OGLVertexSemantic semantic;
-    uint8             index;
+    uint8_t           index;
 };
 
 // *************************************************************************
@@ -67,8 +67,8 @@ class OGLGpuProgram : public GpuProgram, public OGLResource, public StdClass {
     //@{
 public:
     OGLGpuProgram(OGLGpu & r): OGLResource(r) {
-        static uint64 counter = 1;
-        mID                   = counter++;
+        static uint64_t counter = 1;
+        mID                     = counter++;
         clear();
     }
     virtual ~OGLGpuProgram() { quit(); }
@@ -101,9 +101,9 @@ public:
     ///
     /// return non-zero unique shader ID.
     ///
-    uint64 uniqueID() const { return mID; }
+    uint64_t uniqueID() const { return mID; }
 
-    bool getBindingDesc(OGLVertexBindingDesc & result, uint32 attributeIndex) const;
+    bool getBindingDesc(OGLVertexBindingDesc & result, uint32_t attributeIndex) const;
 
     void enable() const {
         GN_GUARD_SLOW;
@@ -111,9 +111,9 @@ public:
         GN_UNGUARD_SLOW;
     }
 
-    void applyUniforms(const Uniform * const * uniforms, uint32 count) const;
+    void applyUniforms(const Uniform * const * uniforms, uint32_t count) const;
 
-    void applyTextures(const TextureBinding * textures, uint32 count) const;
+    void applyTextures(const TextureBinding * textures, uint32_t count) const;
 
     // ********************************
     // private variables
@@ -126,39 +126,39 @@ private:
     /// GLSL uniform parameter description
     ///
     struct GLSLUniformOrTextureDesc {
-        GpuProgramUniformParameterDesc               uniformDesc;  ///< uniform parameter description
-        GpuProgramTextureParameterDesc               textureDesc;  ///< textureparameter description
-        GLenum                                       type;         ///< uniform type
-        GLsizei                                      count;        ///< uniform count
-        GLint                                        location;     ///< uniform location
-        uint32                                       size;         ///< uniform size in bytes
-        StrA                                         name;         ///< uniform name
-        mutable WeakRef<const Uniform>               lastUniform;  ///< pointer to last uniform parameter
-        mutable sint32                               lastStamp;    ///< update time stamp of the last uniform parameter
-        mutable AutoInitializer<uint32, (uint32) -1> lastTexStage; ///< last texture stage associated to this parameter
+        GpuProgramUniformParameterDesc                   uniformDesc;  ///< uniform parameter description
+        GpuProgramTextureParameterDesc                   textureDesc;  ///< textureparameter description
+        GLenum                                           type;         ///< uniform type
+        GLsizei                                          count;        ///< uniform count
+        GLint                                            location;     ///< uniform location
+        uint32_t                                         size;         ///< uniform size in bytes
+        StrA                                             name;         ///< uniform name
+        mutable WeakRef<const Uniform>                   lastUniform;  ///< pointer to last uniform parameter
+        mutable int32_t                                  lastStamp;    ///< update time stamp of the last uniform parameter
+        mutable AutoInitializer<uint32_t, (uint32_t) -1> lastTexStage; ///< last texture stage associated to this parameter
     };
 
     ///
     /// GLSL vertex attribute description
     ///
     struct GLSLAttributeDesc {
-        GpuProgramAttributeParameterDesc desc; ///< attribute parameter description
-        StrA                             name; ///< attribute name
-        OGLVertexSemantic                semanticName;
-        uint8                            semanticIndex;
+        GpuProgramAttributeParameterDesc desc {}; ///< attribute parameter description
+        StrA                             name {}; ///< attribute name
+        OGLVertexSemantic                semanticName {};
+        uint8_t                          semanticIndex {};
     };
 
     // GLSL program
     GLuint mProgram = 0;
 
     // uniforms
-    DynaArray<GLSLUniformOrTextureDesc, uint32> mUniforms;
+    DynaArray<GLSLUniformOrTextureDesc, uint32_t> mUniforms;
 
     // textures
-    DynaArray<GLSLUniformOrTextureDesc, uint32> mTextures;
+    DynaArray<GLSLUniformOrTextureDesc, uint32_t> mTextures;
 
     // attributes
-    DynaArray<GLSLAttributeDesc, uint32> mAttributes;
+    DynaArray<GLSLAttributeDesc, uint32_t> mAttributes;
 
     // parameter descriptor
     OglGpuProgramParameterDesc mParamDesc;

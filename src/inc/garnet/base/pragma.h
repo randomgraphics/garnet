@@ -65,7 +65,7 @@
 // *****************************************************************************
 // Disable GCC warnings
 // *****************************************************************************
-#if GN_GCC && (__GNUC__ > 4 || __GNUC__ == 4 && __GNUC_MINOR__ >= 8)
+#if GN_GNUC && (__GNUC__ > 4 || __GNUC__ == 4 && __GNUC_MINOR__ >= 8)
     #pragma GCC diagnostic ignored "-Waggressive-loop-optimizations"
 #endif
 

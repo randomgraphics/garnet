@@ -176,11 +176,11 @@ public:
     typedef std::list<AABBTree::Node *> Cell;
 
     // no copy
-    NodeGrid(const NodeGrid &) = delete;
+    NodeGrid(const NodeGrid &)             = delete;
     NodeGrid & operator=(const NodeGrid &) = delete;
 
     // can move
-    NodeGrid(NodeGrid &&) = default;
+    NodeGrid(NodeGrid &&)             = default;
     NodeGrid & operator=(NodeGrid &&) = default;
 
     NodeGrid() {}
@@ -371,9 +371,9 @@ struct PrimitiveTraits<Eigen::Vector3f> {
     typedef Eigen::Vector3f InputType;
     static const size_t     ELEMENT_COUNT_PER_PRIMITIVE = 3;
     static AABB             Construct(const Eigen::Vector3f * v) {
-        GN_ASSERT(isfinite(v[0].x()) && isfinite(v[1].y()) && isfinite(v[2].z()) && isfinite(v[0].x()) && isfinite(v[1].y()) && isfinite(v[2].z()) &&
-                  isfinite(v[0].x()) && isfinite(v[1].y()) && isfinite(v[2].z()));
-        return {v[0], v[1], v[2]};
+                    GN_ASSERT(isfinite(v[0].x()) && isfinite(v[1].y()) && isfinite(v[2].z()) && isfinite(v[0].x()) && isfinite(v[1].y()) && isfinite(v[2].z()) &&
+                              isfinite(v[0].x()) && isfinite(v[1].y()) && isfinite(v[2].z()));
+                    return {v[0], v[1], v[2]};
     }
 };
 template<>
@@ -381,8 +381,8 @@ struct PrimitiveTraits<AABB> {
     typedef AABB        InputType;
     static const size_t ELEMENT_COUNT_PER_PRIMITIVE = 1;
     static AABB         Construct(const AABB * b) {
-        GN_ASSERT(b->IsFinite());
-        return {*b, *b};
+                GN_ASSERT(b->IsFinite());
+                return {*b, *b};
     }
 };
 
@@ -418,7 +418,7 @@ static bool VerifyAABBTree(const std::vector<AABBTree::Node *> & nodes, const AA
         if (n->IsLeaf()) {
             // Once isLeafNode is set to false, we should see no more leaf nodes.
             if (primitiveCount > 0) {
-                GN_VERIFY(firstPrimitiveId <= n->primitive && n->primitive <= (firstPrimitiveId + primitiveCount));
+                GN_VERIFY(firstPrimitiveId <= (size_t) n->primitive && (size_t) n->primitive <= (firstPrimitiveId + primitiveCount));
                 GN_VERIFY(primitives.find(n->primitive) != primitives.end());
                 primitives.erase(n->primitive);
             }

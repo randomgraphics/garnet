@@ -42,7 +42,7 @@ void GN::gfx::D3D11VtxBuf::quit() {
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3D11VtxBuf::update(uint32 offset, uint32 length, const void * data, SurfaceUpdateFlag flag) {
+void GN::gfx::D3D11VtxBuf::update(uint32_t offset, uint32_t length, const void * data, SurfaceUpdateFlag flag) {
     if (!validateUpdateParameters(offset, &length, data, flag)) return;
 
     D3D11Buffer::update(offset, length, data, flag);
@@ -51,4 +51,4 @@ void GN::gfx::D3D11VtxBuf::update(uint32 offset, uint32 length, const void * dat
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3D11VtxBuf::readback(DynaArray<uint8> & data) { D3D11Buffer::readback(data); }
+void GN::gfx::D3D11VtxBuf::readback(DynaArray<uint8_t> & data) { D3D11Buffer::readback(data); }

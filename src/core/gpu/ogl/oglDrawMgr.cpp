@@ -100,7 +100,7 @@ void GN::gfx::OGLGpu::present() {
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLGpu::clearScreen(const GN::Vector4f & c, float z, uint8 s, uint32 flags) {
+void GN::gfx::OGLGpu::clearScreen(const GN::Vector4f & c, float z, uint8_t s, uint32_t flags) {
     GN_GUARD_SLOW;
 
     GLbitfield glflag = 0;
@@ -135,7 +135,7 @@ void GN::gfx::OGLGpu::clearScreen(const GN::Vector4f & c, float z, uint8 s, uint
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLGpu::drawIndexed(PrimitiveType prim, uint32 numidx, uint32 basevtx, uint32 startvtx, uint32 numvtx, uint32 startidx) {
+void GN::gfx::OGLGpu::drawIndexed(PrimitiveType prim, uint32_t numidx, uint32_t basevtx, uint32_t startvtx, uint32_t numvtx, uint32_t startidx) {
     GN_GUARD_SLOW;
 
     if (!mContextOk) return;
@@ -143,11 +143,11 @@ void GN::gfx::OGLGpu::drawIndexed(PrimitiveType prim, uint32 numidx, uint32 base
     // TODO: optimize using glDrawRangeElementsBaseVertex
 
     // bind vertex buffer based on current startvtx
-    if (mCurrentOGLVtxFmt && !mCurrentOGLVtxFmt->bindBuffers(mContext.vtxbufs.rawptr(), mContext.vtxbufs.size(), basevtx)) { return; }
+    if (mCurrentOGLVtxFmt && !mCurrentOGLVtxFmt->bindBuffers(mContext.vtxbufs.data(), mContext.vtxbufs.size(), basevtx)) { return; }
 
     // get current index buffer
     GN_ASSERT(mContext.idxbuf);
-    const OGLIdxBuf * ib = safeCastPtr<const OGLIdxBuf>(mContext.idxbuf.rawptr());
+    const OGLIdxBuf * ib = safeCastPtr<const OGLIdxBuf>(mContext.idxbuf.data());
     ib->bind();
 
     GLenum oglPrim = sPrimitiveType2OGL(prim);
@@ -165,13 +165,13 @@ void GN::gfx::OGLGpu::drawIndexed(PrimitiveType prim, uint32 numidx, uint32 base
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLGpu::draw(PrimitiveType prim, uint32 numvtx, uint32 startvtx) {
+void GN::gfx::OGLGpu::draw(PrimitiveType prim, uint32_t numvtx, uint32_t startvtx) {
     GN_GUARD_SLOW;
 
     if (!mContextOk) return;
 
     // bind vertex buffer based on current startvtx
-    if (mCurrentOGLVtxFmt && !mCurrentOGLVtxFmt->bindBuffers(mContext.vtxbufs.rawptr(), mContext.vtxbufs.size(), startvtx)) { return; }
+    if (mCurrentOGLVtxFmt && !mCurrentOGLVtxFmt->bindBuffers(mContext.vtxbufs.data(), mContext.vtxbufs.size(), startvtx)) { return; }
 
     GLenum oglPrim = sPrimitiveType2OGL(prim);
 
@@ -187,7 +187,8 @@ void GN::gfx::OGLGpu::draw(PrimitiveType prim, uint32 numvtx, uint32 startvtx) {
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLGpu::drawIndexedUp(PrimitiveType prim, uint32 numidx, uint32 numvtx, const void * vertexData, uint32 strideInBytes, const uint16 * indexData) {
+void GN::gfx::OGLGpu::drawIndexedUp(PrimitiveType prim, uint32_t numidx, uint32_t numvtx, const void * vertexData, uint32_t strideInBytes,
+                                    const uint16_t * indexData) {
     GN_GUARD_SLOW;
 
     if (!mContextOk) return;
@@ -208,7 +209,7 @@ void GN::gfx::OGLGpu::drawIndexedUp(PrimitiveType prim, uint32 numidx, uint32 nu
     if (bindSuccess) {
         // Verify index buffer
         if (paramCheckEnabled()) {
-            const uint16 * indices = indexData;
+            const uint16_t * indices = indexData;
             for (size_t i = 0; i < numidx; ++i, ++indices) {
                 if (*indices >= numvtx) { GN_GPU_RIP("Invalid index (%u) in index buffer.", *indices); }
             }
@@ -239,7 +240,7 @@ void GN::gfx::OGLGpu::drawIndexedUp(PrimitiveType prim, uint32 numidx, uint32 nu
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLGpu::drawUp(PrimitiveType prim, uint32 numvtx, const void * vertexData, uint32 strideInBytes) {
+void GN::gfx::OGLGpu::drawUp(PrimitiveType prim, uint32_t numvtx, const void * vertexData, uint32_t strideInBytes) {
     GN_GUARD_SLOW;
 
     if (!mContextOk) return;

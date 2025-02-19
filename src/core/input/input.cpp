@@ -30,7 +30,7 @@ public:
         return ks;
     }
     virtual const int * getAxisStatus() const {
-        static int as[Axis::NUM_AXISES];
+        static int as[(int) Axis::NUM_AXISES];
         return as;
     }
     virtual void getMousePosition(int & x, int & y) const {

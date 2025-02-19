@@ -29,12 +29,12 @@ public:
                 }
 
                 StrA name;
-                name.format("d:/software/green/cegui/datafiles/%s", filename.rawptr());
+                name.format("d:/software/green/cegui/datafiles/%s", filename.data());
 
                 DiskFile fp;
                 if (!fp.open(name, "rb")) { throw InvalidRequestException((utf8 *) "DefaultResourceProvider::load - " + filename + " does not exist"); }
 
-                AutoObjPtr<uint8> buffer(new uint8[fp.size()]);
+                AutoObjPtr<uint8_t> buffer(new uint8_t[fp.size()]);
                 if (!fp.read(buffer, fp.size(), NULL)) {
                     throw GenericException((utf8 *) "DefaultResourceProvider::loadRawDataContainer - Problem reading " + filename);
                 }
@@ -84,11 +84,11 @@ public:
         using namespace GN::input;
         if (key.status.down) {
             if (KeyCode::MOUSEBTN_FIRST <= key.code && key.code <= KeyCode::LAST_MOUSE_BUTTON) {
-                CEGUI::System::getSingleton().injectMouseButtonDown((CEGUI::MouseButton) (CEGUI::LeftButton + key.code - KeyCode::MOUSEBTN_FIRST));
+                CEGUI::System::getSingleton().injectMouseButtonDown((CEGUI::MouseButton)(CEGUI::LeftButton + key.code - KeyCode::MOUSEBTN_FIRST));
             }
         } else {
             if (KeyCode::MOUSEBTN_FIRST <= key.code && key.code <= KeyCode::LAST_MOUSE_BUTTON) {
-                CEGUI::System::getSingleton().injectMouseButtonUp((CEGUI::MouseButton) (CEGUI::LeftButton + key.code - KeyCode::MOUSEBTN_FIRST));
+                CEGUI::System::getSingleton().injectMouseButtonUp((CEGUI::MouseButton)(CEGUI::LeftButton + key.code - KeyCode::MOUSEBTN_FIRST));
             }
         }
     }

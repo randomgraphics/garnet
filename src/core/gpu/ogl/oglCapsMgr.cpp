@@ -45,20 +45,20 @@ static void sGetOpenGLVersion(const char * version, int * major, int * minor, in
     // get major version
     const char * p = version;
     while ('.' != *p) ++p;
-    if (major) *major = str::toInetger<int>(StrA(version, p - version).rawptr(), 0);
+    if (major) *major = str::toInetger<int>(StrA(version, p - version).data(), 0);
 
     // get minor version
     version = p + 1;
     p       = version;
     while (*p && '.' != *p && ' ' != *p) ++p;
-    if (minor) *minor = str::toInetger<int>(StrA(version, p - version).rawptr(), 0);
+    if (minor) *minor = str::toInetger<int>(StrA(version, p - version).data(), 0);
 
     // get release version
     if (*p && '.' == *p) {
         version = p + 1;
         p       = version;
         while (*p && ' ' != *p) ++p;
-        if (release) *release = str::toInetger<int>(StrA(version, p - version).rawptr(), 0);
+        if (release) *release = str::toInetger<int>(StrA(version, p - version).data(), 0);
     } else {
         if (release) *release = 0;
     }
@@ -163,7 +163,7 @@ static void sOutputOGLInfo(intptr_t disp, const DynaArray<StrA> & glexts) {
                         "===================================================\n"
                         "\n\n",
                         ts, tu);
-    GN_INFO(sLogger)(info.rawptr());
+    GN_INFO(sLogger)(info.data());
 
     // extension info.
     info = "\n\n"
@@ -174,7 +174,7 @@ static void sOutputOGLInfo(intptr_t disp, const DynaArray<StrA> & glexts) {
     info += "===================================================\n"
             "\n\n";
 
-    GN_VERBOSE(sLogger)(info.rawptr());
+    GN_VERBOSE(sLogger)(info.data());
 
     GN_UNGUARD;
 }
@@ -255,7 +255,7 @@ bool GN::gfx::OGLGpu::capsInit() {
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::OGLGpu::checkTextureFormatSupport(ColorFormat /*format*/, TextureUsage /*usages*/) const {
+bool GN::gfx::OGLGpu::checkTextureFormatSupport(PixelFormat /*format*/, TextureUsage /*usages*/) const {
     GN_UNIMPL_WARNING();
     return true;
 }

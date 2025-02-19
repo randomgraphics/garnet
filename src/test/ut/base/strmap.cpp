@@ -3,14 +3,18 @@
 #include <string.h>
 #include <string>
 #include <iostream>
-//#include <hash_map>
+#include <unordered_map>
+
+#if GN_ANDROID && GN_CLANG
+    #pragma clang diagnostic ignored "-Wformat"
+#endif
 
 class StringMapTest : public CxxTest::TestSuite {
     struct StlStringHash {
-        uint64 operator()(const std::string & s) const { return GN::str::hash(s.c_str()); }
+        uint64_t operator()(const std::string & s) const { return GN::str::hash(s.c_str()); }
     };
 
-    typedef GN::HashMap<std::string, size_t, 128, StlStringHash> StrHashMap;
+    typedef std::unordered_map<std::string, size_t> StrHashMap;
 
     struct WordTable {
         const char * const * table;
@@ -30,20 +34,20 @@ class StringMapTest : public CxxTest::TestSuite {
         Perf hashmap;
 
         void print() const {
-            printf("GN::Dictionary  - insert : %llu\n", dict.insert.count());
-            printf("std::map        - insert : %llu\n", stlmap.insert.count());
-            printf("StringMap       - insert : %llu\n", strmap.insert.count());
-            printf("HashMap         - insert : %llu\n", hashmap.insert.count());
+            printf("GN::Dictionary  - insert : %zu\n", dict.insert.count());
+            printf("std::map        - insert : %zu\n", stlmap.insert.count());
+            printf("StringMap       - insert : %zu\n", strmap.insert.count());
+            printf("HashMap         - insert : %zu\n", hashmap.insert.count());
 
-            printf("GN::Dictionary  - find   : %llu\n", dict.find.count());
-            printf("std::map        - find   : %llu\n", stlmap.find.count());
-            printf("StringMap       - find   : %llu\n", strmap.find.count());
-            printf("HashMap         - find   : %llu\n", hashmap.find.count());
+            printf("GN::Dictionary  - find   : %zu\n", dict.find.count());
+            printf("std::map        - find   : %zu\n", stlmap.find.count());
+            printf("StringMap       - find   : %zu\n", strmap.find.count());
+            printf("HashMap         - find   : %zu\n", hashmap.find.count());
 
-            printf("GN::Dictionary  - remove : %llu\n", dict.remove.count());
-            printf("std::map        - remove : %llu\n", stlmap.remove.count());
-            printf("StringMap       - remove : %llu\n", strmap.remove.count());
-            printf("HashMap         - remove : %llu\n", hashmap.remove.count());
+            printf("GN::Dictionary  - remove : %zu\n", dict.remove.count());
+            printf("std::map        - remove : %zu\n", stlmap.remove.count());
+            printf("StringMap       - remove : %zu\n", strmap.remove.count());
+            printf("HashMap         - remove : %zu\n", hashmap.remove.count());
         }
     };
 
@@ -80,7 +84,7 @@ class StringMapTest : public CxxTest::TestSuite {
             // HashMap insertion
             StrHashMap hmap(w.count);
             t = c.now();
-            for (size_t i = 0; i < w.count; ++i) { hmap.insert(w.table[i], i); }
+            for (size_t i = 0; i < w.count; ++i) { hmap.insert({w.table[i], i}); }
             perfs.hashmap.insert += c.now() - t;
 
             // generate random searching set
@@ -134,7 +138,7 @@ class StringMapTest : public CxxTest::TestSuite {
 
             // StrHashMap erasing
             t = c.now();
-            for (size_t i = 0; i < w.count; ++i) { hmap.remove(w.table[i]); }
+            for (size_t i = 0; i < w.count; ++i) { hmap.erase(w.table[i]); }
             perfs.hashmap.remove += c.now() - t;
             TS_ASSERT(hmap.empty());
         }
@@ -218,12 +222,12 @@ public:
 
         StringMap<char, int> b;
         b = a;
-        TS_ASSERT_EQUALS(2, b.size());
+        TS_ASSERT_EQUALS(2u, b.size());
         TS_ASSERT_EQUALS(*b.find("abc"), 1);
         TS_ASSERT_EQUALS(*b.find("abd"), 2);
 
         StringMap<char, int> c(a);
-        TS_ASSERT_EQUALS(2, c.size());
+        TS_ASSERT_EQUALS(2u, c.size());
         TS_ASSERT_EQUALS(*c.find("abc"), 1);
         TS_ASSERT_EQUALS(*c.find("abd"), 2);
     }
@@ -235,14 +239,14 @@ public:
 
         a["abc"] = 1;
         a["abd"] = 2;
-        TS_ASSERT_EQUALS(2, a.size());
+        TS_ASSERT_EQUALS(2u, a.size());
 
         a.clear();
-        TS_ASSERT_EQUALS(0, a.size());
+        TS_ASSERT_EQUALS(0u, a.size());
 
         a["abc"] = 3;
         a["abd"] = 4;
-        TS_ASSERT_EQUALS(2, a.size());
+        TS_ASSERT_EQUALS(2u, a.size());
         TS_ASSERT_EQUALS(*a.find("abc"), 3);
         TS_ASSERT_EQUALS(*a.find("abd"), 4);
     }
@@ -255,7 +259,7 @@ public:
         m["a,b,c"] = 1;
         m["a,B,c"] = 2;
 
-        TS_ASSERT_EQUALS(1, m.size());
+        TS_ASSERT_EQUALS(1u, m.size());
         TS_ASSERT_EQUALS(*m.find("a,b,C"), 2);
         TS_ASSERT_EQUALS(*m.find("A,b,c"), 2);
         TS_ASSERT_EQUALS(m.find("A,b,c,d"), (int *) NULL);
@@ -272,10 +276,10 @@ public:
         m["abd"] = 2;
 
         m.remove("abe");
-        TS_ASSERT_EQUALS(m.size(), 2); // erase non-existing item should have no effect.
+        TS_ASSERT_EQUALS(m.size(), 2u); // erase non-existing item should have no effect.
         int * i = m.find("abc");
         m.remove("abd");
-        TS_ASSERT_EQUALS(m.size(), 1);                 // verify the one and only one item is removed.
+        TS_ASSERT_EQUALS(m.size(), 1u);                // verify the one and only one item is removed.
         TS_ASSERT_EQUALS(m.find("abd"), (int *) NULL); // verify correct item is erased.
         TS_ASSERT_EQUALS(m.find("abc"), i);            // verify that erase operation does not affect other iterators.
 
@@ -299,12 +303,12 @@ public:
         // try insert NULL string to string map (should do nothing)
         StringMap<char, int>::KeyValuePair * i;
         i = m.insert(NULL, 1);
-        TS_ASSERT_EQUALS(0, m.size());
+        TS_ASSERT_EQUALS(0u, m.size());
         TS_ASSERT_EQUALS(NULL_PAIR, i);
 
         // insert empty string should work
         i = m.insert("", 123);
-        TS_ASSERT_EQUALS(1, m.size());
+        TS_ASSERT_EQUALS(1u, m.size());
         TS_ASSERT_EQUALS(i, m.first());
         TS_ASSERT_EQUALS(i->key, "");
         TS_ASSERT_EQUALS(i->value, 123);

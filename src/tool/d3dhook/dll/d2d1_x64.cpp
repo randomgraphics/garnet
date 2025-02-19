@@ -5,17 +5,17 @@ HINSTANCE           mHinst = 0, mHinstDLL = 0;
 extern "C" UINT_PTR mProcs[12] = {0};
 
 LPCSTR      mImportNames[] = {"D2D1ComputeMaximumScaleFactor",
-                         "D2D1ConvertColorSpace",
-                         "D2D1CreateDevice",
-                         "D2D1CreateDeviceContext",
-                         "D2D1CreateFactory",
-                         "D2D1InvertMatrix",
-                         "D2D1IsMatrixInvertible",
-                         "D2D1MakeRotateMatrix",
-                         "D2D1MakeSkewMatrix",
-                         "D2D1SinCos",
-                         "D2D1Tan",
-                         "D2D1Vec3Length"};
+                              "D2D1ConvertColorSpace",
+                              "D2D1CreateDevice",
+                              "D2D1CreateDeviceContext",
+                              "D2D1CreateFactory",
+                              "D2D1InvertMatrix",
+                              "D2D1IsMatrixInvertible",
+                              "D2D1MakeRotateMatrix",
+                              "D2D1MakeSkewMatrix",
+                              "D2D1SinCos",
+                              "D2D1Tan",
+                              "D2D1Vec3Length"};
 BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID) {
     mHinst = hinstDLL;
     if (fdwReason == DLL_PROCESS_ATTACH) {
