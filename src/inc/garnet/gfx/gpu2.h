@@ -23,13 +23,12 @@ struct Gpu2 : public RefCounter {
     static GN_API AutoRef<Gpu2> createGpu2(const CreateParameters &);
     //@}
 
-    /// GPU pipeline
+    /// GPU pipeline management
     //@{
     struct CompiledShaderBlob {
         ArrayProxy<char> binary;
         const char *     entry;
     };
-
     struct InputElement {
         const char * semantic;
         uint32_t     index;
@@ -40,13 +39,13 @@ struct Gpu2 : public RefCounter {
         uint32_t     instanceRate = 0;
     };
     struct PipelineCreateParameters {
-        CompiledShaderBlob   vs, hs, ds, gs, ps, cs;
-        const InputElement * inputElements;
-        uint32_t             numInputElements;
-        const char *         states; // pipeline state defined in JSON format.
+        CompiledShaderBlob      vs, hs, ds, gs, ps, cs;
+        DynaArray<InputElement> inputElements;
     };
-    virtual DynaArray<uint64_t> createPipelineStates(const PipelineCreateParameters *, size_t) = 0;
-    virtual void                deletePipelineStates(const uint64_t *, size_t)                 = 0;
+    struct Pipeline : RefCounter {
+        //
+    };
+    virtual auto createPipelines(ArrayProxy<const PipelineCreateParameters>) -> DynaArray<AutoRef<Pipeline>> = 0;
     //@}
 
     struct Surface;
@@ -58,14 +57,21 @@ struct Gpu2 : public RefCounter {
         COMPUTE,
         DMA, // for copy operations
     };
+    enum class PrimitiveType {
+        POINT_LIST,
+        LINE_LIST,
+        LINE_STRIP,
+        TRIANGLE_LIST,
+        TRIANGLE_STRIP,
+    };
     struct SubPass {
-        ConstRange<size_t> inputs;
-        ConstRange<size_t> colors;
-        size_t             depth = size_t(~0);
+        DynaArray<size_t> inputs;
+        DynaArray<size_t> colors;
+        size_t            depth = size_t(~0);
     };
     struct RenderPass {
-        ArrayProxy<Surface *> targets;
-        ArrayProxy<SubPass *> subs;
+        DynaArray<AutoRef<Surface>> targets;
+        DynaArray<SubPass>          subs;
     };
     struct ClearScreenParameters {
         float    color[4] = {.0f, .0f, .0f, .0f};
@@ -80,22 +86,22 @@ struct Gpu2 : public RefCounter {
             };
         } flags {};
     };
-    struct VertexBufferView {
+    struct VertexBuffer {
         const Surface * surface;
         uint32_t        offset; // offset in bytes
         uint32_t        stride; // stride in bytes
     };
     struct DrawParameters {
-        uint64_t pso;
+        AutoRef<Pipeline> pipeline;
+        ArrayProxy<const VertexBuffer> vertexBuffers;
+        Surface *                      indexBuffer = nullptr; // set to null for non-indexed draw.
 
-        uint32_t                 vertexBufferCount;
-        const VertexBufferView * vertexBuffers;
-        Surface *                indexBuffer; // set to null for non-indexed draw.
-
-        PrimitiveType prim;
-        uint32_t      vertexOrIndexCount;
-        uint32_t      baseVertex = 0;
-        uint32_t      baseIndex  = 0; // ignored when indexBuffer is null.
+        PrimitiveType primitive = PrimitiveType::TRIANGLE_LIST;
+        uint32_t      instanceBase = 0; ///< the instance ID of the first instance to draw
+        uint32_t      instanceCount = 1; ///< the number of instances to draw
+        uint32_t      vertexBase = 0; ///< the value added to the vertex index before indexing into the vertex buffer
+        uint32_t      vertexOrIndexCount = 0;
+        uint32_t      indexBase = 0; ///< the base index within the index buffer. Ignored if indexBuffer is null.
     };
     struct ComputeParameters {
         uint64_t pso;
@@ -114,25 +120,39 @@ struct Gpu2 : public RefCounter {
         CommandListType type                 = CommandListType::GRAPHICS;
         uint64_t        initialPipelineState = 0; // optional initial pipeline state. If empty, the default state is used.
     };
+
+    /// A one-time use command list to record GPU rendering commands. Once the command list is submitted to GPU (via kickOff() method),
+    /// it becomes inaccessible and should not be used anymore.
     struct CommandList : public RefCounter {
+        // graphics commands (not valid on compute and copy command list)
+        //@{
         virtual void begin(const RenderPass &)            = 0; ///< begin a new render pass
         virtual void next()                               = 0; ///< move to next subpass.
         virtual void end()                                = 0; ///< end current render pass
-        virtual void clear(const ClearScreenParameters &) = 0;
-        virtual void draw(const DrawParameters &)         = 0;
-        virtual void comp(const ComputeParameters &)      = 0;
-        virtual void copy(const CopySurfaceParameters &)  = 0;
-        void         copy(Surface * from, Surface * to) { copy({from, 0, uint64_t(~0), to, 0}); }
+        virtual void clear(const ClearScreenParameters &) = 0; ///< clear screen. must be called between begin() and end() calls.
+        virtual void draw(const DrawParameters &)         = 0; ///< issue GPU draw command. must be called between begin() and end() calls.
+        //@}
+        virtual void comp(const ComputeParameters &)      = 0; ///< issue GPU compute command.
+        virtual void copy(const CopySurfaceParameters &)  = 0; ///< issue GPU copy command
+        void         copy(Surface * from, Surface * to) { copy({from, 0, uint64_t(~0), to, 0}); } ///< helper to copy entire surface.
     };
+
     struct Kicked {
         uint64_t fence     = 0;
         uint64_t semaphore = 0;
         bool     empty() const { return 0 == fence && 0 == semaphore; }
     };
+
+    /// Create a new command list. Once the command list is created, it is empty and ready to record commands.
+    /// It is imperative that a command list must be either discarded or kicked off, otherwise it will be leaked,
+    /// along with all resources it references.
     virtual auto createCommandList(const CommandListCreateParameters &) -> AutoRef<CommandList> = 0;
 
-    /// Kick off an array of command list.
+    /// Kick off an array of command list. Must be called in between beginFrame() and present() calls.
     virtual auto kickOff(ArrayProxy<CommandList *>) -> Kicked = 0;
+
+    /// Discard an array of command list. This is used to discard the command list that were created but not useful any more.
+    virtual void discard(ArrayProxy<CommandList *>) = 0;
 
     /// Block the calling CPU thread until the fence, if specified, is passed. If fence is 0, wait all pending
     /// works from all engine to be done.
@@ -159,7 +179,7 @@ struct Gpu2 : public RefCounter {
     // virtual void createDescriptors(const DescriptorCreateParameters *, size_t) = 0;
     // //@}
 
-    /// GPU surface
+    /// GPU surface management
     //@{
     enum class SurfaceType {
         BUFFER,
@@ -191,7 +211,7 @@ struct Gpu2 : public RefCounter {
         uint64_t rawPitch;
         uint32_t subSurfaceId;
     };
-    /// this could be a texture or a buffer.
+    /// This could be a texture or a buffer.
     struct Surface : public RefCounter {
         virtual MappedSurfaceData map(uint32_t subSurfaceId)   = 0;
         virtual void              unmap(uint32_t subSurfaceId) = 0;
