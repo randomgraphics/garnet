@@ -23,8 +23,89 @@ struct Gpu2 : public RefCounter {
     static GN_API AutoRef<Gpu2> createGpu2(const CreateParameters &);
     //@}
 
-    /// GPU pipeline management
-    //@{
+    // /// descriptor pool
+    // //@{
+    // struct DescriptorPoolCreateParameters
+    // {
+    //     uint32_t capacity = 1024;
+    // };
+    // struct DescriptorPool : public RefCounter
+    // {
+    //     virtual uint32_t descSize() = 0; // returns size of one descriptor.
+    // };
+    // virtual AutoRef<DescriptorPool> createDescriptorPool(const DescriptorPoolCreateParameters &) = 0;
+    // //@}
+
+    // //@{
+    // struct DescriptorCreateParameters
+    // {
+    // };
+    // virtual void createDescriptors(const DescriptorCreateParameters *, size_t) = 0;
+    // //@}
+
+    // *********************************************************************************************************************************************************
+    //
+    // resource management
+    //
+    // *********************************************************************************************************************************************************
+
+    enum class SurfaceType {
+        BUFFER,
+        TEXTURE,
+    };
+    union SurfaceFlags {
+        uint8_t u8 = 0;
+        struct {
+            uint8_t sr : 1; // the surface could be used as SRV
+            uint8_t ua : 1; // the surface could be used as UAV
+            uint8_t rt : 1; // the surface could be used as RTV
+            uint8_t ds : 1; // the surface could be used as DSV
+        };
+    };
+    struct SurfaceCreateParameters {
+        SurfaceType   type;
+        struct TextureDesc {
+            uint32_t    w, h = 1, d = 1, a = 1, m = 1, s = 1; ///< width, height, depth, array, mipmaps, samples.
+            PixelFormat f;                                    ///< format
+        } t;
+        struct BufferDesc {
+            uint32_t bytes;
+        } b;
+        SurfaceFlags flags = {0};
+    };
+    // struct MappedSurfaceData {
+    //     void *   ptr;
+    //     uint64_t slicePitch;
+    //     uint64_t rawPitch;
+    //     uint32_t subSurfaceId;
+    // };
+    /// This could be a texture or a buffer.
+    struct Surface : public RefCounter {
+        // virtual auto map(uint32_t subSurfaceId) -> MappedSurfaceData = 0;
+        // virtual void unmap(uint32_t subSurfaceId) = 0;
+    };
+    virtual AutoRef<Surface> createSurface(const SurfaceCreateParameters &) = 0;
+
+    struct Sampler : public RefCounter {
+        //
+    };
+    struct SamplerCreateParameters {
+        //
+    };
+    virtual AutoRef<Sampler> createSampler(const SamplerCreateParameters &) = 0;
+
+    // *********************************************************************************************************************************************************
+    //
+    // descriptor management
+    //
+    // *********************************************************************************************************************************************************
+
+    // *********************************************************************************************************************************************************
+    //
+    // pipeline management
+    //
+    // *********************************************************************************************************************************************************
+
     struct CompiledShaderBlob {
         ArrayProxy<char> binary;
         const char *     entry;
@@ -46,12 +127,15 @@ struct Gpu2 : public RefCounter {
         //
     };
     virtual auto createPipelines(ArrayProxy<const PipelineCreateParameters>) -> DynaArray<AutoRef<Pipeline>> = 0;
-    //@}
 
     struct Surface;
 
-    /// GPU command list
-    //@{
+    // *********************************************************************************************************************************************************
+    //
+    // command list management
+    //
+    // *********************************************************************************************************************************************************
+
     enum class CommandListType {
         GRAPHICS,
         COMPUTE,
@@ -159,83 +243,20 @@ struct Gpu2 : public RefCounter {
     virtual void finish(uint64_t fence = 0) = 0;
     //@}
 
-    // /// descriptor pool
-    // //@{
-    // struct DescriptorPoolCreateParameters
-    // {
-    //     uint32_t capacity = 1024;
-    // };
-    // struct DescriptorPool : public RefCounter
-    // {
-    //     virtual uint32_t descSize() = 0; // returns size of one descriptor.
-    // };
-    // virtual AutoRef<DescriptorPool> createDescriptorPool(const DescriptorPoolCreateParameters &) = 0;
-    // //@}
+    // *********************************************************************************************************************************************************
+    //
+    // frame management
+    //
+    // *********************************************************************************************************************************************************
 
-    // //@{
-    // struct DescriptorCreateParameters
-    // {
-    // };
-    // virtual void createDescriptors(const DescriptorCreateParameters *, size_t) = 0;
-    // //@}
-
-    /// GPU surface management
-    //@{
-    enum class SurfaceType {
-        BUFFER,
-        TEXTURE,
-    };
-    union SurfaceFlags {
-        uint8_t u8 = 0;
-        struct {
-            uint8_t sr : 1; // the surface could be used as SRV
-            uint8_t ua : 1; // the surface could be used as UAV
-            uint8_t rt : 1; // the surface could be used as RTV
-            uint8_t ds : 1; // the surface could be used as DSV
-        };
-    };
-    struct SurfaceCreateParameters {
-        SurfaceType   type;
-        struct TextureDesc {
-            uint32_t    w, h = 1, d = 1, a = 1, m = 1, s = 1; ///< width, height, depth, array, mipmaps, samples.
-            PixelFormat f;                                    ///< format
-        } t;
-        struct BufferDesc {
-            uint32_t bytes;
-        } b;
-        SurfaceFlags flags = {0};
-    };
-    struct MappedSurfaceData {
-        void *   ptr;
-        uint64_t slicePitch;
-        uint64_t rawPitch;
-        uint32_t subSurfaceId;
-    };
-    /// This could be a texture or a buffer.
-    struct Surface : public RefCounter {
-        virtual MappedSurfaceData map(uint32_t subSurfaceId)   = 0;
-        virtual void              unmap(uint32_t subSurfaceId) = 0;
-    };
-    virtual AutoRef<Surface> createSurface(const SurfaceCreateParameters &) = 0;
-    //@}
-
-    // //@{
-    // struct QueryCreateParameters {};
-    // struct Query : public RefCounter {};
-    // virtual AutoRef<Query> createQuery(const QueryCreateParameters &) = 0;
-    // //@}
-
-    /// frame management
-    //@{
     struct Frame {
-        //
+        // contains backbuffer information of the current frame.
     };
     struct PresentParameters {
         //
     };
     virtual auto beginFrame() -> Frame = 0;
     virtual void present(const PresentParameters &) = 0;
-    //@}
 };
 
 struct ShaderCompileParameters {
