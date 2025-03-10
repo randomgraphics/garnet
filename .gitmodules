@@ -1,12 +1,16 @@
 [submodule "src/3rdparty/rapid-image"]
 	path = src/3rdparty/rapid-image
 	url = https://github.com/randomgraphics/rapid-image.git
+	shallow = true
 [submodule "src/3rdparty/assimp"]
 	path = src/3rdparty/assimp
 	url = https://github.com/assimp/assimp.git
+	shallow = true
 [submodule "src/eigen"]
 	path = src/3rdparty/eigen
 	url = https://gitlab.com/libeigen/eigen
+	shallow = true
 [submodule "src/3rdparty/stb"]
 	path = src/3rdparty/stb
 	url = https://github.com/nothings/stb.git
+	shallow = true
