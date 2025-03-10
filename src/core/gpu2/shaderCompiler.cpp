@@ -10,7 +10,7 @@ static auto * sLogger = GN::getLogger("GN.gfx.gpu2");
 //
 //
 // -------------------------------------------------------------------------
-GN_API DynaArray<uint8_t> GN::gfx::compileHLSL(const ShaderCompileParameters & p) {
+GN_API DynaArray<uint8_t> GN::gfx::compileShader(const ShaderCompileParameters & p) {
     AutoComPtr<ID3DBlob> bin, err;
 
     auto hr = D3DCompile(p.source, strlen(p.source), nullptr, nullptr, nullptr, p.entry, p.profile, 0, 0, &bin, &err);
@@ -23,7 +23,7 @@ GN_API DynaArray<uint8_t> GN::gfx::compileHLSL(const ShaderCompileParameters & p
     return {(const uint8_t *) bin->GetBufferPointer(), bin->GetBufferSize()};
 }
 #else
-GN_API DynaArray<uint8_t> GN::gfx::compileHLSL(const ShaderCompileParameters &) {
+GN_API DynaArray<uint8_t> GN::gfx::compileShader(const ShaderCompileParameters &) {
     GN_ERROR(sLogger)("compiling HLSL is not supported on current build.");
     return {};
 }

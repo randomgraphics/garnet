@@ -526,34 +526,30 @@ AutoRef<Blob> sLoadFromMeshXMLFile(File & fp, MeshResourceDesc & desc) {
             a = sGetRequiredAttrib(*e, "ref");
             GN_ASSERT(a);
 
-            uint32_t vbsize = desc.strides[stream] * desc.numvtx;
-
-            uint8_t * vb = meshData.subrange(offset, vbsize);
+            GN::ArrayProxy<uint8_t> vb = meshData.subrange(offset, desc.strides[stream] * desc.numvtx);
 
             MeshBinaryHeaderV1 header;
-            if (!sReadV1BinaryFile(header, vb, vbsize, fs::resolvePath(basedir, a->value))) { return AutoRef<Blob>::NULLREF; }
+            if (!sReadV1BinaryFile(header, vb.data(), vb.size(), fs::resolvePath(basedir, a->value))) { return AutoRef<Blob>::NULLREF; }
 
-            if (header.endian != MESH_BINARY_ENDIAN_TAG_V1) { sSwapVertexEndianInplace(vb, vbsize, desc.vtxfmt, stream, desc.strides[stream]); }
+            if (header.endian != MESH_BINARY_ENDIAN_TAG_V1) { sSwapVertexEndianInplace(vb.data(), vb.size(), desc.vtxfmt, stream, desc.strides[stream]); }
 
-            desc.vertices[stream] = vb;
+            desc.vertices[stream] = vb.data();
 
-            offset += vbsize;
+            offset += vb.size();
         } else if ("idxbuf" == e->name) {
             a = sGetRequiredAttrib(*e, "ref");
             GN_ASSERT(a);
 
-            uint32_t ibsize = desc.numidx * (desc.idx32 ? 4 : 2);
-
-            uint8_t * ib = meshData.subrange(offset, ibsize);
+            auto ib = meshData.subrange(offset, desc.numidx * (desc.idx32 ? 4 : 2));
 
             MeshBinaryHeaderV1 header;
-            if (!sReadV1BinaryFile(header, ib, ibsize, fs::resolvePath(basedir, a->value))) { return AutoRef<Blob>::NULLREF; }
+            if (!sReadV1BinaryFile(header, ib.data(), ib.size(), fs::resolvePath(basedir, a->value))) { return AutoRef<Blob>::NULLREF; }
 
-            if (header.endian != MESH_BINARY_ENDIAN_TAG_V1) { sSwapIndexEndianInplace(ib, ibsize, desc.idx32); }
+            if (header.endian != MESH_BINARY_ENDIAN_TAG_V1) { sSwapIndexEndianInplace(ib.data(), ib.size(), desc.idx32); }
 
-            desc.indices = ib;
+            desc.indices = ib.data();
 
-            offset += ibsize;
+            offset += ib.size();
         } else if ("vtxfmt" == e->name) {
             // silently ignored, since it is handled already.
         } else {

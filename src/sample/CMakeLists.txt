@@ -1,6 +1,7 @@
 add_subdirectory(bezier)
 add_subdirectory(cuda)
 add_subdirectory(dolphin)
+add_subdirectory(gpu2)
 #add_subdirectory(portal)
 add_subdirectory(renderToCube)
 add_subdirectory(ripple)

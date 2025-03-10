@@ -128,8 +128,6 @@ struct Gpu2 : public RefCounter {
     };
     virtual auto createPipelines(ArrayProxy<const PipelineCreateParameters>) -> DynaArray<AutoRef<Pipeline>> = 0;
 
-    struct Surface;
-
     // *********************************************************************************************************************************************************
     //
     // command list management

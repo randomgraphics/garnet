@@ -196,13 +196,16 @@ bool GN::gfx::FatVertexBuffer::GenerateVertexStream(const MeshVertexFormat & mvf
             ArrayProxy<const VertexElement> src(mElements[semantics[j]].data(), mCount);
 
             for (size_t i = 0; i < mCount; ++i) {
-                memcpy(dst.subrange(0, size), src.subrange(0, 1), size);
+                auto d = dst.subrange(0, size);
+                auto s = src.subrange(0, 1);
+                memcpy(d.data(), s.data(), d.size());
                 src += 1;
                 dst += stride;
             }
         } else {
             for (size_t i = 0; i < mCount; ++i) {
-                memset(dst.subrange(0, size), 0, size);
+                auto d = dst.subrange(0, size);
+                memset(d.data(), 0, d.size());
                 dst += stride;
             }
         }

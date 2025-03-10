@@ -369,6 +369,11 @@ GN_API bool initializeInputSystem(InputAPI = InputAPI::NATIVE);
 ///
 GN_API void shutdownInputSystem();
 
+struct ScopedInputInitializer {
+    ScopedInputInitializer(InputAPI api = InputAPI::NATIVE) { initializeInputSystem(api); }
+    ~ScopedInputInitializer() { shutdownInputSystem(); }
+};
+
 ///
 /// convert string to keycode
 ///

@@ -696,7 +696,7 @@ public:
         auto p = mPtr + index;
         if (p > mEnd) p = mEnd;
         auto s = mEnd - p;
-        return ArrayProxy(p, std::min(s, count));
+        return ArrayProxy(p, std::min<size_t>(s, count));
     }
 
     template<typename T2>
