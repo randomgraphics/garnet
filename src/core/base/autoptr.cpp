@@ -54,11 +54,14 @@ struct PayLoadFreeList {
     }
 };
 
-static PayLoadFreeList sFreeList;
+static PayLoadFreeList& getFreeList() {
+    static PayLoadFreeList sFreeList;
+    return sFreeList;
+}
 
-AutoPtrPayload * AutoPtrPayload::allocate() { return sFreeList.allocate(); }
+AutoPtrPayload * AutoPtrPayload::allocate() { return getFreeList().allocate(); }
 
-void AutoPtrPayload::free(AutoPtrPayload * p) { return sFreeList.recycle(p); }
+void AutoPtrPayload::free(AutoPtrPayload * p) { return getFreeList().recycle(p); }
 
 } // namespace detail
 } // namespace GN 
