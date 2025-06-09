@@ -115,9 +115,7 @@ public:
             });
         }
         // wait for all threads to finish
-        for (auto& thread : threads) {
-            thread.join();
-        }
+        for (auto & thread : threads) { thread.join(); }
         // verify that all objects are deleted
         TS_ASSERT_EQUALS(0, c);
     }

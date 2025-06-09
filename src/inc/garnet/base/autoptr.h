@@ -13,7 +13,7 @@ namespace GN {
 namespace detail {
 
 #if GN_BUILD_DEBUG_ENABLED
-    GN_API extern std::atomic<size_t> sPayloadInstanceCount;
+GN_API extern std::atomic<size_t> sPayloadInstanceCount;
 #endif
 
 struct AutoPtrPayload {
