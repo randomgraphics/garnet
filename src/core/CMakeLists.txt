@@ -160,12 +160,11 @@ if(VULKAN_FOUND)
     target_include_directories(GNcore PUBLIC ${Vulkan_INCLUDE_DIRS})
 endif()
 
-# thread libraries
+# Other dependencies
 find_package(Threads REQUIRED)
 add_core_libs(Threads::Threads)
-
-# Assimp
 add_core_libs(assimp)
+add_core_libs(freetype)
 
 # compiler specific setup
 if(MSVC)
