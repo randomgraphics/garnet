@@ -14,3 +14,7 @@
 	path = src/3rdparty/stb
 	url = https://github.com/nothings/stb.git
 	shallow = true
+[submodule "src/3rdparty/freetype"]
+	path = src/3rdparty/freetype
+	url = https://github.com/freetype/freetype.git
+	shallow = true
