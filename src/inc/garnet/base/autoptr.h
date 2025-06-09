@@ -117,7 +117,7 @@ public:
     ///
     T * detach() throw() {
         auto lock = std::lock_guard(mMutex);
-        T *  tmp  = get();
+        T *  tmp  = mPayload ? (T*)mPayload->ptr : nullptr;
         doClear(false);
         return tmp;
     }
