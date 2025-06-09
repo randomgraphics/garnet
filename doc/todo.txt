@@ -6,7 +6,6 @@
     - like when used as part of interface of shared library.
   - cleanup File class
     - has to keep dependencies to STL stream, due to << and >> template operators.
-  - Make AutoPtr be compatible with STL (support copy & move): using linked list.
   - depreicate/remove some old old code: like guard, icl support
   - update 3rd party libraries using submodule:
     - ft2
