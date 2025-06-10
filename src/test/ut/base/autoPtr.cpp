@@ -101,6 +101,25 @@ public:
         TS_ASSERT_EQUALS(0, c);
     }
 
+    void testThreadSafety() {
+        std::vector<std::thread> threads;
+        for (int i = 0; i < 1000; ++i) {
+            threads.emplace_back([i]() {
+                GN::AutoObjPtr<S1> p(new S1(i));
+                GN::AutoObjPtr<S1> p2(new S1(i));
+                GN::AutoObjPtr<S1> p3(new S1(i));
+                GN::AutoObjPtr<S1> p4(new S1(i));
+                GN::AutoObjPtr<S1> p5(new S1(i));
+                GN::AutoObjPtr<S1> p6(new S1(i));
+                GN::AutoObjPtr<S1> p7(new S1(i));
+            });
+        }
+        // wait for all threads to finish
+        for (auto & thread : threads) { thread.join(); }
+        // verify that all objects are deleted
+        TS_ASSERT_EQUALS(0, c);
+    }
+
     struct FakeComClass {
         int ref;
 
