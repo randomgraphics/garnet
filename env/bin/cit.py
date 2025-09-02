@@ -24,4 +24,6 @@ args = ap.parse_args()
 if not args.t:
     run_style_check()
 if not args.l:
-    utils.run_the_latest_binary("build/{variant}/bin/GNtest-unit-tests", args.test_args, check=False)
+    # look for the root folder of the repository, then run the test app from that folder
+    root_folder = utils.get_root_folder()
+    utils.run_the_latest_binary("build/{variant}/bin/GNtest-unit-tests", args.test_args, check=False, cwd=root_folder)

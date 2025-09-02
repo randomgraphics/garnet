@@ -6,11 +6,11 @@
 
 class StackArrayTest : public CxxTest::TestSuite {
     struct Element {
-        static int count; ///< number of Element instances
-        static int ctor;  ///< number of calls to ctor
-        static int dtor;  ///< number of calls to dtor
-        static int cctor; ///< number of calls to copy constructor
-        static int cop;   ///< number of calls to copy operator
+        inline static int count = 0; ///< number of Element instances
+        inline static int ctor  = 0; ///< number of calls to ctor
+        inline static int dtor  = 0; ///< number of calls to dtor
+        inline static int cctor = 0; ///< number of calls to copy constructor
+        inline static int cop   = 0; ///< number of calls to copy operator
 
         static void clear() {
             ctor  = 0;
@@ -163,21 +163,15 @@ public:
     }
 };
 
-int StackArrayTest::Element::count = 0;
-int StackArrayTest::Element::ctor  = 0;
-int StackArrayTest::Element::dtor  = 0;
-int StackArrayTest::Element::cctor = 0;
-int StackArrayTest::Element::cop   = 0;
-
 class DynaArrayTest : public CxxTest::TestSuite {
     struct Element {
-        static int count; ///< number of Element instances
-        static int ctor;  ///< number of calls to ctor
-        static int dtor;  ///< number of calls to dtor
-        static int cctor; ///< number of calls to copy constructor
-        static int cop;   ///< number of calls to copy operator
-        static int mctor;
-        static int mop;
+        inline static int count = 0; ///< number of Element instances
+        inline static int ctor  = 0; ///< number of calls to ctor
+        inline static int dtor  = 0; ///< number of calls to dtor
+        inline static int cctor = 0; ///< number of calls to copy constructor
+        inline static int cop   = 0; ///< number of calls to copy operator
+        inline static int mctor = 0;
+        inline static int mop   = 0;
 
         static void clear() {
             ctor  = 0;
@@ -580,11 +574,3 @@ public:
         TS_ASSERT_EQUALS(4, Element::dtor);
     }
 };
-
-int DynaArrayTest::Element::count = 0;
-int DynaArrayTest::Element::ctor  = 0;
-int DynaArrayTest::Element::dtor  = 0;
-int DynaArrayTest::Element::cctor = 0;
-int DynaArrayTest::Element::cop   = 0;
-int DynaArrayTest::Element::mctor = 0;
-int DynaArrayTest::Element::mop   = 0;
