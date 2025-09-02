@@ -255,8 +255,8 @@ AutoRef<MeshResource> GN::gfx::MeshResource::loadFromFile(GpuResourceDatabase & 
     if (m) return m;
 
     MeshResourceDesc desc;
-    AutoRef<Blob>    blob = desc.loadFromFile(filename);
-    if (!blob) return AutoRef<MeshResource>::NULLREF;
+    auto             blob = desc.loadFromFile(filename);
+    if (blob.empty()) return AutoRef<MeshResource>::NULLREF;
 
     m = db.createResource<MeshResource>(abspath);
     if (!m || !m->reset(&desc)) return AutoRef<MeshResource>::NULLREF;

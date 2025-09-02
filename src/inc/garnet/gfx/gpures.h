@@ -387,12 +387,12 @@ struct MeshResourceDesc : public MeshResourceDescBase {
     /// Load descriptor from file, return the mesh data. Return a NULL blob for
     /// failure.
     ///
-    AutoRef<Blob> loadFromFile(File &);
+    Blob<uint8_t> loadFromFile(File &);
 
     ///
     /// Load descriptor from file
     ///
-    AutoRef<Blob> loadFromFile(const char * filename);
+    Blob<uint8_t> loadFromFile(const char * filename);
 
     ///
     /// Save descriptor to file

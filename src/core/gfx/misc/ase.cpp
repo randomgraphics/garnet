@@ -1275,9 +1275,8 @@ static bool sWriteGeoObject(AseScene & dst, const AseSceneInternal & src, const 
     }
 
     // copy vertices into destination scene
-    AutoRef<Blob>  blob     = referenceTo(new SimpleBlob((uint32_t) (sizeof(OutputVertex) * vc.size())));
-    OutputVertex * vertices = (OutputVertex *) blob->data();
-    if (NULL == vertices) return false;
+    auto vertices = Blob<OutputVertex>(vc.size());
+    if (vertices.empty()) return false;
     for (size_t i = 0; i < vc.size(); ++i) {
         const VertexSelector & vs = vc[i];
 
@@ -1292,29 +1291,29 @@ static bool sWriteGeoObject(AseScene & dst, const AseSceneInternal & src, const 
         o.texcoord = Vector2f(srctexcoord.x, srctexcoord.y);
     }
     dstmesh.numvtx      = (uint32_t) vc.size();
-    dstmesh.vertices[0] = vertices;
-    dst.meshdata.append(blob);
+    dstmesh.vertices[0] = vertices.data();
+    dst.meshdata.append(vertices.moveTo<uint8_t>());
 
     // copy index data into destination scene
     dstmesh.numidx = (uint32_t) ib.size();
     if (vc.size() > 0x10000) {
         // 32bit index buffer
-        blob = referenceTo(new SimpleBlob((uint32_t) (sizeof(uint32_t) * ib.size())));
-        memcpy(blob->data(), ib.data(), blob->size());
+        auto blob = Blob<uint32_t>(ib.size(), ib.data());
+        if (blob.empty()) return false;
         dstmesh.idx32   = true;
-        dstmesh.indices = blob->data();
-        dst.meshdata.append(blob);
+        dstmesh.indices = blob.data();
+        dst.meshdata.append(blob.moveTo<uint8_t>());
     } else {
         // 16bit index buffer
-        blob             = referenceTo(new SimpleBlob((uint32_t) (sizeof(uint16_t) * ib.size())));
-        uint16_t * idx16 = (uint16_t *) blob->data();
+        auto blob = Blob<uint16_t>(ib.size());
+        if (blob.empty()) return false;
         for (size_t i = 0; i < ib.size(); ++i) {
             GN_ASSERT(ib[i] < 0x10000);
-            idx16[i] = (uint16_t) ib[i];
+            blob[i] = (uint16_t) ib[i];
         }
         dstmesh.idx32   = false;
-        dstmesh.indices = idx16;
-        dst.meshdata.append(blob);
+        dstmesh.indices = blob.data();
+        dst.meshdata.append(blob.moveTo<uint8_t>());
     }
 
     // success

@@ -307,7 +307,7 @@ static bool sLoadModelHierarchyFromASE(ModelHierarchyDesc & desc, File & file) {
     }
 
     // copy mesh data
-    desc.meshdata = ase.meshdata;
+    desc.meshdata = std::move(ase.meshdata);
 
     // create models
     for (size_t i = 0; i < ase.subsets.size(); ++i) {
@@ -986,11 +986,10 @@ static bool sParseModel(ModelHierarchyDesc & desc, XmlElement & root, const StrA
 
     if (NULL == desc.meshes.find(md.mesh)) {
         MeshResourceDesc mesh;
-        AutoRef<Blob>    blob = mesh.loadFromFile(fs::resolvePath(basedir, md.mesh));
-        if (!blob) return false;
-
+        auto             blob = mesh.loadFromFile(fs::resolvePath(basedir, md.mesh));
+        if (blob.empty()) return false;
         desc.meshes[md.mesh] = mesh;
-        desc.meshdata.append(blob);
+        desc.meshdata.append(blob.moveTo<uint8_t>());
     }
 
     desc.models[modelName->value] = md;
@@ -1287,8 +1286,8 @@ bool sLoadModelHierarchyFromMeshBinary(ModelHierarchyDesc & desc, File & fp) {
     const StrA & meshname = fp.name();
 
     MeshResourceDesc mesh;
-    AutoRef<Blob>    blob = mesh.loadFromFile(fp);
-    if (!blob) return false;
+    auto             blob = mesh.loadFromFile(fp);
+    if (blob.empty()) return false;
 
     // determine the model template
     const ModelResourceDesc * modelTemplate = ase::sDetermineBestModelTemplate(mesh);
@@ -1300,7 +1299,7 @@ bool sLoadModelHierarchyFromMeshBinary(ModelHierarchyDesc & desc, File & fp) {
 
     // add mesh and model to scene
     desc.meshes[meshname] = mesh;
-    desc.meshdata.append(blob);
+    desc.meshdata.append(std::move(blob));
     desc.models[meshname] = model;
 
     // create a node for the model

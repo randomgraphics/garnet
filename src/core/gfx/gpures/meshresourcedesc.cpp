@@ -218,40 +218,44 @@ MeshFileType sDetermineMeshFileType(File & fp) {
 //
 //
 // -----------------------------------------------------------------------------
-AutoRef<Blob> sLoadFromMeshBinaryFile(File & fp, MeshResourceDesc & desc) {
+Blob<uint8_t> sLoadFromMeshBinaryFile(File & fp, MeshResourceDesc & desc) {
     MeshBinaryFileHeaderV2 header;
 
     if (sizeof(header) != fp.read(&header, sizeof(header))) {
         GN_ERROR(sLogger)("Fail to read mesh header.");
-        return AutoRef<Blob>::NULLREF;
+        return {};
     }
 
     // verify header
     if (0 != memcmp(header.tag, MESH_BINARY_TAG_V2, sizeof(MESH_BINARY_TAG_V2))) {
         GN_ERROR(sLogger)("Unrecognized binary tag");
-        return AutoRef<Blob>::NULLREF;
+        return {};
     }
     if (MESH_BINARY_ENDIAN_TAG_V2 != header.endian) {
         GN_ERROR(sLogger)("Unsupported endian.");
-        return AutoRef<Blob>::NULLREF;
+        return {};
     }
     if (0x00010000 != header.version) // version must be 1.0
     {
         GN_ERROR(sLogger)("Unsupported mesh version.");
-        return AutoRef<Blob>::NULLREF;
+        return {};
     }
 
     // analyze vertex format
     VertexFormatProperties vfp;
-    if (!vfp.analyze(header.vtxfmt)) return AutoRef<Blob>::NULLREF;
+    if (!vfp.analyze(header.vtxfmt)) return {};
 
     // read mesh data
-    AutoRef<Blob> blob = referenceTo(new SimpleBlob(header.bytes));
-    if (header.bytes != fp.read(blob->data(), header.bytes)) {
-        GN_ERROR(sLogger)("fail to read mesh data.");
-        return AutoRef<Blob>::NULLREF;
+    auto blob = Blob<uint8_t>(header.bytes);
+    if (blob.empty()) {
+        GN_ERROR(sLogger)("Out of memory");
+        return {};
     }
-    uint8_t * start = (uint8_t *) blob->data();
+    if (header.bytes != fp.read(blob.data(), header.bytes)) {
+        GN_ERROR(sLogger)("fail to read mesh data.");
+        return {};
+    }
+    auto start = blob.data();
 
     desc.prim   = (PrimitiveType) header.prim;
     desc.numvtx = header.numvtx;
@@ -399,7 +403,7 @@ static PixelFormat fromString(const char * str) {
 //
 //
 // -----------------------------------------------------------------------------
-AutoRef<Blob> sLoadFromMeshXMLFile(File & fp, MeshResourceDesc & desc) {
+Blob<uint8_t> sLoadFromMeshXMLFile(File & fp, MeshResourceDesc & desc) {
     desc = {};
 
     XmlDocument    doc;
@@ -411,25 +415,25 @@ AutoRef<Blob> sLoadFromMeshXMLFile(File & fp, MeshResourceDesc & desc) {
          "    column : %d\n"
          "    error  : %s",
          fp.name().data(), xpr.errLine, xpr.errColumn, xpr.errInfo.data());
-        return AutoRef<Blob>::NULLREF;
+        return {};
     }
     GN_ASSERT(xpr.root);
 
     const XmlElement * root = xpr.root->toElement();
     if (!root || root->name != "mesh") {
         GN_ERROR(sLogger)("Invalid root element.");
-        return AutoRef<Blob>::NULLREF;
+        return {};
     }
 
     const XmlAttrib * a = root->findAttrib("primtype");
     if (!a || PrimitiveType::INVALID == (desc.prim = PrimitiveType::sFromString(a->value))) {
         GN_ERROR(sLogger)("Element <%s> attribute \"%s\": missing or invalid.", root->name.data(), "primtype");
-        return AutoRef<Blob>::NULLREF;
+        return {};
     }
 
-    if (!sGetRequiredIntAttrib(desc.numvtx, *root, "numvtx")) { return AutoRef<Blob>::NULLREF; }
+    if (!sGetRequiredIntAttrib(desc.numvtx, *root, "numvtx")) { return {}; }
 
-    if (!sGetRequiredIntAttrib(desc.numidx, *root, "numidx")) { return AutoRef<Blob>::NULLREF; }
+    if (!sGetRequiredIntAttrib(desc.numidx, *root, "numidx")) { return {}; }
 
     desc.idx32  = sGetBoolAttrib(*root, "idx32", false);
     desc.dynavb = sGetBoolAttrib(*root, "dynavb", false);
@@ -439,7 +443,7 @@ AutoRef<Blob> sLoadFromMeshXMLFile(File & fp, MeshResourceDesc & desc) {
     const XmlElement * vtxfmtNode = root->findChildElement("vtxfmt");
     if (!vtxfmtNode) {
         GN_ERROR(sLogger)("<vtxfmt> element is missing.");
-        return AutoRef<Blob>::NULLREF;
+        return {};
     }
     for (const XmlNode * n = vtxfmtNode->firstc; n != NULL; n = n->nexts) {
         const XmlElement * e = n->toElement();
@@ -452,13 +456,13 @@ AutoRef<Blob> sLoadFromMeshXMLFile(File & fp, MeshResourceDesc & desc) {
 
         if (desc.vtxfmt.numElements >= MeshVertexFormat::MAX_VERTEX_ELEMENTS) {
             GN_ERROR(sLogger)("Too many vertex elements.");
-            return AutoRef<Blob>::NULLREF;
+            return {};
         }
         MeshVertexElement & ve = desc.vtxfmt.elements[desc.vtxfmt.numElements];
 
         if (!sGetRequiredIntAttrib(ve.stream, *e, "stream") || !sGetRequiredIntAttrib(ve.offset, *e, "offset") ||
             NULL == (a = sGetRequiredAttrib(*e, "semantic"))) {
-            return AutoRef<Blob>::NULLREF;
+            return {};
         }
 
         ve.setSemantic(a->value);
@@ -466,7 +470,7 @@ AutoRef<Blob> sLoadFromMeshXMLFile(File & fp, MeshResourceDesc & desc) {
         a = e->findAttrib("format");
         if (!a || (PixelFormat::UNKNOWN() == (ve.format = fromString(a->value)))) {
             GN_ERROR(sLogger)("Missing or invalid format attribute.");
-            return AutoRef<Blob>::NULLREF;
+            return {};
         }
 
         desc.vtxfmt.numElements++;
@@ -483,12 +487,12 @@ AutoRef<Blob> sLoadFromMeshXMLFile(File & fp, MeshResourceDesc & desc) {
             uint16_t stride;
             if (!sGetRequiredIntAttrib(stream, *e, "stream") || !sGetRequiredIntAttrib(offset, *e, "offset") || !sGetRequiredIntAttrib(stride, *e, "stride") ||
                 NULL == (a = sGetRequiredAttrib(*e, "ref"))) {
-                return AutoRef<Blob>::NULLREF;
+                return {};
             }
 
             if (stream >= GpuContext::MAX_VERTEX_BUFFERS) {
                 GN_WARN(sLogger)("vtxbuf stream is too large.");
-                return AutoRef<Blob>::NULLREF;
+                return {};
             }
 
             desc.offsets[stream] = offset;
@@ -504,16 +508,16 @@ AutoRef<Blob> sLoadFromMeshXMLFile(File & fp, MeshResourceDesc & desc) {
         }
     }
 
-    AutoRef<SimpleBlob> blob = referenceTo(new SimpleBlob(meshDataSize));
-    if (!blob) {
+    Blob<uint8_t> blob(meshDataSize);
+    if (blob.empty()) {
         GN_ERROR(sLogger)("Out of memory");
-        return AutoRef<Blob>::NULLREF;
+        return {};
     }
 
     StrA basedir = fs::dirName(fp.name());
 
     // parse vtxbuf and idxbuf elements, again, to read, calculate mesh data size
-    SafeArrayAccessor<uint8_t> meshData((uint8_t *) blob->data(), blob->size());
+    SafeArrayAccessor<uint8_t> meshData((uint8_t *) blob.data(), blob.size());
     uint32_t                   offset = 0;
     for (const XmlNode * n = root->firstc; n != NULL; n = n->nexts) {
         const XmlElement * e = n->toElement();
@@ -531,7 +535,7 @@ AutoRef<Blob> sLoadFromMeshXMLFile(File & fp, MeshResourceDesc & desc) {
             uint8_t * vb = meshData.subrange(offset, vbsize);
 
             MeshBinaryHeaderV1 header;
-            if (!sReadV1BinaryFile(header, vb, vbsize, fs::resolvePath(basedir, a->value))) { return AutoRef<Blob>::NULLREF; }
+            if (!sReadV1BinaryFile(header, vb, vbsize, fs::resolvePath(basedir, a->value))) { return {}; }
 
             if (header.endian != MESH_BINARY_ENDIAN_TAG_V1) { sSwapVertexEndianInplace(vb, vbsize, desc.vtxfmt, stream, desc.strides[stream]); }
 
@@ -547,7 +551,7 @@ AutoRef<Blob> sLoadFromMeshXMLFile(File & fp, MeshResourceDesc & desc) {
             uint8_t * ib = meshData.subrange(offset, ibsize);
 
             MeshBinaryHeaderV1 header;
-            if (!sReadV1BinaryFile(header, ib, ibsize, fs::resolvePath(basedir, a->value))) { return AutoRef<Blob>::NULLREF; }
+            if (!sReadV1BinaryFile(header, ib, ibsize, fs::resolvePath(basedir, a->value))) { return {}; }
 
             if (header.endian != MESH_BINARY_ENDIAN_TAG_V1) { sSwapIndexEndianInplace(ib, ibsize, desc.idx32); }
 
@@ -623,7 +627,7 @@ void GN::gfx::MeshResourceDesc::calculateBoundingSphere(Sphere<float> & sphere) 
 //
 //
 // -----------------------------------------------------------------------------
-AutoRef<Blob> GN::gfx::MeshResourceDesc::loadFromFile(File & fp) {
+Blob<uint8_t> GN::gfx::MeshResourceDesc::loadFromFile(File & fp) {
     *this = {};
 
     switch (sDetermineMeshFileType(fp)) {
@@ -635,20 +639,20 @@ AutoRef<Blob> GN::gfx::MeshResourceDesc::loadFromFile(File & fp) {
 
     case MESH_FILE_UNKNOWN:
     default:
-        return AutoRef<Blob>::NULLREF;
+        return {};
     };
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-AutoRef<Blob> GN::gfx::MeshResourceDesc::loadFromFile(const char * filename) {
+Blob<uint8_t> GN::gfx::MeshResourceDesc::loadFromFile(const char * filename) {
     GN_INFO(sLogger)("Load mesh from file: %s", filename ? filename : "<null filename>");
 
     *this = {};
 
     auto fp = fs::openFile(filename, std::ios::binary | std::ios::in);
-    if (!fp) return AutoRef<Blob>::NULLREF;
+    if (!fp) return {};
 
     return loadFromFile(*fp);
 }

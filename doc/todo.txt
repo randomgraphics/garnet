@@ -2,13 +2,9 @@
 ====
 
 - Mordenization:
-  - cleanup File class
-    - has to keep dependencies to STL stream, due to << and >> template operators.
-  - depreicate/remove some old old code: like guard, icl support
   - replace some custom classes with 3rdparty library:
-    - math
     - delegate
-    - Spinlock -> std::mutex
+    - math -> glm (cons: no more custom field names like r/g/b/a)
     - custom log -> spdlog (https://github.com/gabime/spdlog)
     - format -> fmtlib (https://github.com/fmtlib/fmt )
   - keepers:

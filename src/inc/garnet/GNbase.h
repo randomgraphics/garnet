@@ -89,7 +89,6 @@ namespace internal {}
 #include "base/handle.h"
 
 // misc.
-#include "base/blob.h"
 #include "base/stdClass.h"
 #include "base/sharedLib.h"
 

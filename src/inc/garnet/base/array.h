@@ -11,53 +11,44 @@
 namespace GN {
 
 namespace details {
-    template<class T>
-    inline void inplaceDefaultConstructArray(size_t n, T * ptr) {
-        if (!ptr) GN_UNLIKELY return;
-        for(T * end = ptr + n; ptr < end; ++ptr) {
-            new (ptr) T();
-        }
-    }
+template<class T>
+inline void inplaceDefaultConstructArray(size_t n, T * ptr) {
+    if (!ptr) GN_UNLIKELY return;
+    for (T * end = ptr + n; ptr < end; ++ptr) { new (ptr) T(); }
+}
 
-    template<class T>
-    inline void inplaceCopyConstructArray(size_t n, T * ptr, const T & from) {
-        if (!ptr) GN_UNLIKELY return;
-        for(T * end = ptr + n; ptr < end; ++ptr) {
-            new (ptr) T(from);
-        }
-    }
+template<class T>
+inline void inplaceCopyConstructArray(size_t n, T * ptr, const T & from) {
+    if (!ptr) GN_UNLIKELY return;
+    for (T * end = ptr + n; ptr < end; ++ptr) { new (ptr) T(from); }
+}
 
-    template<class T>
-    inline void inplaceCopyConstructArray(size_t n, T * ptr, const T * from) {
-        if (!ptr || !from) GN_UNLIKELY return;
-        for(T * end = ptr + n; ptr < end; ++ptr, ++x) {
-            new (ptr) T(*from);
-        }
-    }
+template<class T>
+inline void inplaceCopyConstructArray(size_t n, T * ptr, const T * from) {
+    if (!ptr || !from) GN_UNLIKELY return;
+    for (T * end = ptr + n; ptr < end; ++ptr, ++from) { new (ptr) T(*from); }
+}
 
-    template<class T>
-    inline void inplaceMoveConstructArray(size_t n, T * ptr, T * from) {
-        if (!ptr || !x) GN_UNLIKELY return;
-        for(T * end = ptr + n; ptr < end; ++ptr, ++from) {
-            new (ptr) T(std::move(*from));
-        }
-    }
+template<class T>
+inline void inplaceMoveConstructArray(size_t n, T * ptr, T * from) {
+    if (!ptr || !from) GN_UNLIKELY return;
+    for (T * end = ptr + n; ptr < end; ++ptr, ++from) { new (ptr) T(std::move(*from)); }
+}
 
-    // Inplace destruct an array of objects. No memory\ freeing.
-    template<class T>
-    inline void inplaceDestructArray(size_t n, T * ptr) {
-        if constexpr (!std::is_pod<T>()) {
-            if (!ptr) GN_UNLIKELY return;
-            for(T * end = ptr + n; ptr < end; ++ptr) {
-                ptr->T::~T();
+// Inplace destruct an array of objects. No memory\ freeing.
+template<class T>
+inline void inplaceDestructArray(size_t n, T * ptr) {
+    if constexpr (!std::is_pod<T>()) {
+        if (ptr && n) GN_LIKELY {
+                for (T * end = ptr + n; ptr < end; ++ptr) { ptr->T::~T(); }
             }
-        } else {
-            // do nothing to POD like type.
-            (void)ptr;
-            (void)n;
-        }
+    } else {
+        // do nothing to POD like type.
+        (void) ptr;
+        (void) n;
     }
 }
+} // namespace details
 
 ///
 /// Fixed sized array, which always has N elements.
@@ -711,56 +702,77 @@ public:
 template<typename T = uint8_t, class SIZE_T = size_t, class OBJECT_ALLOCATOR = CxxObjectAllocator<T>>
 class Blob {
 private:
-    T * mData;
+    T *    mData;
     SIZE_T mSize;
 
 public:
     // Type definitions
-    typedef T value_type;
-    typedef T& reference;
-    typedef const T& const_reference;
-    typedef T* pointer;
-    typedef const T* const_pointer;
-    typedef T* iterator;
-    typedef const T* const_iterator;
-    typedef SIZE_T size_type;
+    typedef T         value_type;
+    typedef T &       reference;
+    typedef const T & const_reference;
+    typedef T *       pointer;
+    typedef const T * const_pointer;
+    typedef T *       iterator;
+    typedef const T * const_iterator;
+    typedef SIZE_T    size_type;
 
     // Disable copy semantics
     GN_NO_COPY(Blob);
 
-    // Constructor from plain data array
-    explicit Blob(size_type count, const T * data = nullptr) : mSize(count), mData(nullptr) {
+    // Default constructor
+    Blob(): mData(nullptr), mSize(0) {}
+
+    // Constructor new blob of certain size.
+    explicit Blob(size_type count): mData(nullptr), mSize(count) {
         if (count > 0) {
             // allocate raw memory
-            mData = static_cast<T*>(OBJECT_ALLOCATOR::sAllocate(count));
+            mData = static_cast<T *>(OBJECT_ALLOCATOR::sAllocate(count));
             if (!mData) GN_UNLIKELY {
-                GN_ERROR(getLogger("GN.base.Blob"))("Failed to allocate memory for blob of %zu bytes", count * sizeof(T));
-                mSize = 0;
-            } else if (data) {
-                // copy construct the data array.
-                details::inplaceCopyConstructArray(count, mData, data);
-            } else {
+                    GN_ERROR(getLogger("GN.base.Blob"))("Failed to allocate memory for blob of %zu bytes", count * sizeof(T));
+                    mSize = 0;
+                }
+            else {
                 // default construct the data array.
                 details::inplaceDefaultConstructArray(count, mData);
             }
         }
     }
 
-    // Constructor with single initial value
-    Blob(size_type count, const T & value) : mData(nullptr), mSize(count) {
+    // Copy constructor from raw data array
+    explicit Blob(size_type count, const T * data): mData(nullptr), mSize(count) {
         if (count > 0) {
-            mData = static_cast<T*>(HeapMemory::alignedAlloc(count * sizeof(T), 16));
+            // allocate raw memory
+            mData = static_cast<T *>(OBJECT_ALLOCATOR::sAllocate(count));
             if (!mData) GN_UNLIKELY {
-                GN_ERROR(getLogger("GN.base.Blob"))("Failed to allocate memory for blob of size %zu", count * sizeof(T));
-                mSize = 0;
-            } else {
-                details::inplaceCopyConstructArray(count, mData, value);
+                    GN_ERROR(getLogger("GN.base.Blob"))("Failed to allocate memory for blob of %zu bytes", count * sizeof(T));
+                    mSize = 0;
+                }
+            else if (data)
+                GN_UNLIKELY {
+                    // copy construct the data array.
+                    details::inplaceCopyConstructArray(count, mData, data);
+                }
+            else {
+                // default construct the data array.
+                details::inplaceDefaultConstructArray(count, mData);
             }
         }
     }
 
+    // Copy constructor from single initial value
+    Blob(size_type count, const T & value): mData(nullptr), mSize(count) {
+        if (count > 0) {
+            mData = static_cast<T *>(OBJECT_ALLOCATOR::sAllocate(count * sizeof(T)));
+            if (!mData) GN_UNLIKELY {
+                    GN_ERROR(getLogger("GN.base.Blob"))("Failed to allocate memory for blob of size %zu", count * sizeof(T));
+                    mSize = 0;
+                }
+            else { details::inplaceCopyConstructArray(count, mData, value); }
+        }
+    }
+
     // Move constructor
-    Blob(Blob && other) noexcept : mData(other.mData), mSize(other.mSize) {
+    Blob(Blob && other) noexcept: mData(other.mData), mSize(other.mSize) {
         other.mData = nullptr;
         other.mSize = 0;
     }
@@ -768,7 +780,8 @@ public:
     // Destructor
     ~Blob() {
         if (mData) {
-            OBJECT_ALLOCATOR::sDestruct(mData, mCount);
+            details::inplaceDestructArray(mSize, mData);
+            OBJECT_ALLOCATOR::sDeallocate(mData);
         }
     }
 
@@ -777,22 +790,16 @@ public:
         if (this != &other) {
             if (mData) {
                 // Destroy existing objects
-                for (size_type i = 0; i < mSize; ++i) {
-                    mData[i].~T();
-                }
+                for (size_type i = 0; i < mSize; ++i) { mData[i].~T(); }
                 HeapMemory::dealloc(mData);
             }
-            mData = other.mData;
-            mSize = other.mSize;
+            mData       = other.mData;
+            mSize       = other.mSize;
             other.mData = nullptr;
             other.mSize = 0;
         }
         return *this;
     }
-
-    // Delete copy constructor and assignment operator
-    Blob(const Blob &) = delete;
-    Blob & operator=(const Blob &) = delete;
 
     // Element access
     reference at(size_type pos) {
@@ -836,118 +843,43 @@ public:
     }
 
     // Data access
-    pointer data() { return mData; }
+    pointer       data() { return mData; }
     const_pointer data() const { return mData; }
 
-    // Raw data access (void*)
-    void * rawData() { return mData; }
-    const void * rawData() const { return mData; }
-
     // Iterators
-    iterator begin() { return mData; }
+    iterator       begin() { return mData; }
     const_iterator begin() const { return mData; }
     const_iterator cbegin() const { return mData; }
 
-    iterator end() { return mData + mSize; }
+    iterator       end() { return mData + mSize; }
     const_iterator end() const { return mData + mSize; }
     const_iterator cend() const { return mData + mSize; }
 
     // Capacity
-    bool empty() const { return mSize == 0; }
+    bool      empty() const { return mSize == 0; }
     size_type size() const { return mSize; }
     size_type max_size() const { return SIZE_MAX / sizeof(T); }
 
-    // Utility methods
-    void fill(const T& value) {
-        if (mData && mSize > 0) {
-            for (size_type i = 0; i < mSize; ++i) {
-                mData[i] = value;
-            }
-        }
+    // attach to existing data
+    Blob<T> & attachTo(SIZE_T count, T * data) {
+        clear();
+        mSize = count;
+        mData = data;
+        return *this;
     }
 
     void clear() {
-        if (mData && mSize > 0) {
-            for (size_type i = 0; i < mSize; ++i) {
-                mData[i] = T{};
-            }
-        }
+        details::inplaceDestructArray(mSize, mData);
+        mSize = 0;
+        mData = nullptr;
     }
 
-    // Copy data from another blob
-    bool copyFrom(const Blob & other, size_type destOffset = 0, size_type srcOffset = 0, size_type count = SIZE_MAX) {
-        if (!mData || !other.mData) return false;
-        
-        size_type actualCount = std::min(count, std::min(mSize - destOffset, other.mSize - srcOffset));
-        if (actualCount == 0) return true;
-
-        for (size_type i = 0; i < actualCount; ++i) {
-            mData[destOffset + i] = other.mData[srcOffset + i];
-        }
-        return true;
-    }
-
-    // Copy data from external source
-    bool copyFrom(const T* source, size_type destOffset = 0, size_type count = SIZE_MAX) {
-        if (!mData || !source) return false;
-        
-        size_type actualCount = std::min(count, mSize - destOffset);
-        if (actualCount == 0) return true;
-
-        for (size_type i = 0; i < actualCount; ++i) {
-            mData[destOffset + i] = source[i];
-        }
-        return true;
-    }
-
-    // Copy data to external destination
-    bool copyTo(T* destination, size_type srcOffset = 0, size_type count = SIZE_MAX) const {
-        if (!mData || !destination) return false;
-        
-        size_type actualCount = std::min(count, mSize - srcOffset);
-        if (actualCount == 0) return true;
-
-        for (size_type i = 0; i < actualCount; ++i) {
-            destination[i] = mData[srcOffset + i];
-        }
-        return true;
-    }
-
-    // Create a sub-blob view (doesn't copy data)
-    Blob subBlob(size_type offset, size_type length) const {
-        GN_ASSERT(offset + length <= mSize);
-        return Blob(mData + offset, length);
-    }
-
-    // Create a sub-blob view (doesn't copy data) - non-const version
-    Blob subBlob(size_type offset, size_type length) {
-        GN_ASSERT(offset + length <= mSize);
-        return Blob(mData + offset, length);
-    }
-
-    // Comparison operators
-    bool operator==(const Blob & other) const {
-        if (mSize != other.mSize) return false;
-        if (mSize == 0) return true;
-        for (size_type i = 0; i < mSize; ++i) {
-            if (mData[i] != other.mData[i]) return false;
-        }
-        return true;
-    }
-
-    bool operator!=(const Blob & other) const {
-        return !(*this == other);
-    }
-
-    // Get size in bytes
-    size_type sizeInBytes() const { 
-        return mSize * sizeof(T); 
-    }
-
-    // Get size in terms of another type
-    template<typename U>
-    size_type sizeAs() const { 
-        return (mSize * sizeof(T)) / sizeof(U); 
+    // Move to another array with different type
+    template<typename T2>
+    Blob<T2> moveTo() {
+        Blob<T2> result(mSize);
+        result.attachTo((SIZE_T) (mSize * sizeof(T) / sizeof(T2)), (T2 *) mData);
+        return result;
     }
 };
 

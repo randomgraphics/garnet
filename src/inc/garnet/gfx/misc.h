@@ -28,7 +28,7 @@ struct GN_API ModelHierarchyDesc : public NoCopy {
     };
 
     StringMap<char, MeshResourceDesc>  meshes;
-    DynaArray<AutoRef<Blob>>           meshdata;
+    DynaArray<Blob<uint8_t>>           meshdata;
     StringMap<char, ModelResourceDesc> models;
     StringMap<char, NodeDesc>          nodes;
     Boxf                               bbox; ///< bounding box of the whole hierarchy.

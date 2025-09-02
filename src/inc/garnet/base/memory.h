@@ -165,13 +165,25 @@ struct CxxObjectAllocator {
     static inline void sDeallocate(void * ptr) { RAW_MEMORY_ALLOCATOR::sDeallocate(ptr); }
 
     /// Inplace construct a single object
-    static inline void sConstruct(T * ptr) { if (ptr) GN_LIKELY { new (ptr) T; } }
+    static inline void sConstruct(T * ptr) {
+        if (ptr) GN_LIKELY {
+                new (ptr) T;
+            }
+    }
 
     /// Inplace copy construct a single object.
-    static inline void sConstruct(T * ptr, const T & x) { if (ptr) GN_LIKELY { new (ptr) T(x); } }
+    static inline void sConstruct(T * ptr, const T & x) {
+        if (ptr) GN_LIKELY {
+                new (ptr) T(x);
+            }
+    }
 
     /// Inplace move construct a single object.
-    static inline void sConstruct(T * ptr, T && x) { if (ptr) GN_LIKELY { new (ptr) T(std::move(x)); } }
+    static inline void sConstruct(T * ptr, T && x) {
+        if (ptr) GN_LIKELY {
+                new (ptr) T(std::move(x));
+            }
+    }
 
     /// Inplace destruct a single object. No memory freeing.
     static inline void sDestruct(T * ptr) {
@@ -179,7 +191,7 @@ struct CxxObjectAllocator {
             if (ptr) GN_LIKELY ptr->T::~T();
         } else {
             // do nothing to POD type.
-            (void)ptr;
+            (void) ptr;
         }
     }
 };
