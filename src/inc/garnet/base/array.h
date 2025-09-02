@@ -879,6 +879,8 @@ public:
     Blob<T2> moveTo() {
         Blob<T2> result(mSize);
         result.attachTo((SIZE_T) (mSize * sizeof(T) / sizeof(T2)), (T2 *) mData);
+        mData = nullptr;
+        mSize = 0;
         return result;
     }
 };
