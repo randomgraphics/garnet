@@ -1,9 +1,9 @@
 #include "../testCommon.h"
 
 class AutoPtrTest : public CxxTest::TestSuite {
-    inline static int a = 0;
-    inline static int b = 0;
-    inline static int c = 0;
+    inline static std::atomic<int> a {0};
+    inline static std::atomic<int> b {0};
+    inline static std::atomic<int> c {0};
 
     struct S1 {
         int a;
@@ -23,12 +23,12 @@ public:
         a = -1;
         {
             S1 * c1 = new S1(1);
-            TS_ASSERT_EQUALS(1, a);
+            TS_ASSERT_EQUALS(1, a.load());
 
             GN::AutoObjPtr<S1> p1(c1);
             TS_ASSERT_EQUALS(1, p1->a);
         }
-        TS_ASSERT_EQUALS(0, a);
+        TS_ASSERT_EQUALS(0, a.load());
     }
 
     void testAttach() {
@@ -63,7 +63,7 @@ public:
         GN::AutoObjPtr<S1> p4;
         p4 = p1;
 
-        TS_ASSERT_EQUALS(1, c); // there should be only one object
+        TS_ASSERT_EQUALS(1, c.load()); // there should be only one object
 
         TS_ASSERT_EQUALS(1, p1->a);
         TS_ASSERT_EQUALS(1, p2->a);
@@ -80,7 +80,7 @@ public:
         p4.clear();
 
         // object should be deleted
-        TS_ASSERT_EQUALS(0, c);
+        TS_ASSERT_EQUALS(0, c.load());
     }
 
     void testMove() {
@@ -92,13 +92,13 @@ public:
         GN::AutoObjPtr<S1> p4;
         p4 = std::move(p3);
 
-        TS_ASSERT_EQUALS(1, b); // there should be only one object constructed
-        TS_ASSERT_EQUALS(1, c); // there should be only one object alive
+        TS_ASSERT_EQUALS(1, b.load()); // there should be only one object constructed
+        TS_ASSERT_EQUALS(1, c.load()); // there should be only one object alive
 
         p4.clear();
 
         // object should be deleted
-        TS_ASSERT_EQUALS(0, c);
+        TS_ASSERT_EQUALS(0, c.load());
     }
 
     void testThreadSafety() {
@@ -117,7 +117,7 @@ public:
         // wait for all threads to finish
         for (auto & thread : threads) { thread.join(); }
         // verify that all objects are deleted
-        TS_ASSERT_EQUALS(0, c);
+        TS_ASSERT_EQUALS(0, c.load());
     }
 
     struct FakeComClass {
