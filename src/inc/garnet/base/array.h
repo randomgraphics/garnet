@@ -858,7 +858,6 @@ public:
     // Capacity
     bool      empty() const { return mSize == 0; }
     size_type size() const { return mSize; }
-    size_type max_size() const { return SIZE_MAX / sizeof(T); }
 
     // attach to existing data
     Blob<T> & attachTo(SIZE_T count, T * data) {
