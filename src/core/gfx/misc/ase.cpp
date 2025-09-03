@@ -1275,7 +1275,7 @@ static bool sWriteGeoObject(AseScene & dst, const AseSceneInternal & src, const 
     }
 
     // copy vertices into destination scene
-    auto vertices = Blob<OutputVertex>(vc.size());
+    auto vertices = SimpleBlob<OutputVertex>(vc.size());
     if (vertices.empty()) return false;
     for (size_t i = 0; i < vc.size(); ++i) {
         const VertexSelector & vs = vc[i];

@@ -710,6 +710,26 @@ public:
 
     SafeArrayAccessor(T * data, size_t count): mBegin(data), mEnd(data + count), mPtr(data) {}
 
+    bool empty() const { return mPtr == mEnd; }
+
+    size_t size() const { return mEnd - mPtr; }
+
+    T * data() const { return mPtr; }
+
+    T * begin() const { return mPtr; }
+
+    T * end() const { return mEnd; }
+
+    T & front() const {
+        GN_ASSERT(!empty());
+        return *mPtr;
+    }
+
+    T & back() const {
+        GN_ASSERT(!empty());
+        return *(mEnd - 1);
+    }
+
     T * subrange(size_t index, size_t length) const {
         GN_ASSERT(mBegin <= (mPtr + index));
         GN_ASSERT((mPtr + index) < mEnd);
@@ -718,10 +738,16 @@ public:
         return mPtr + index;
     }
 
-    template<typename T2>
-    void copyTo(size_t srcOffset, const SafeArrayAccessor<T2> & dest, size_t dstOffset, size_t bytes) {
-        GN_CASSERT(sizeof(T) == sizeof(T2));
-        memcpy(dest.subrange(dstOffset, bytes), subrange(srcOffset, bytes), bytes);
+    // template<typename T2>
+    // void copyTo(size_t srcOffset, const SafeArrayAccessor<T2> & dest, size_t dstOffset, size_t bytes) {
+    //     GN_CASSERT(sizeof(T) == sizeof(T2));
+    //     memcpy(dest.subrange(dstOffset, bytes), subrange(srcOffset, bytes), bytes);
+    // }
+
+    T & at(size_t index) const {
+        GN_ASSERT(mBegin <= (mPtr + index));
+        GN_ASSERT((mPtr + index) < mEnd);
+        return mPtr[index];
     }
 
     T * operator->() const {
@@ -729,11 +755,12 @@ public:
         return mPtr;
     }
 
-    T & operator[](size_t index) const {
-        GN_ASSERT(mBegin <= (mPtr + index));
-        GN_ASSERT((mPtr + index) < mEnd);
-        return mPtr[index];
+    T & operator*() const {
+        GN_ASSERT(mBegin <= mPtr && mPtr < mEnd);
+        return *mPtr;
     }
+
+    T & operator[](size_t index) const { return at(index); }
 
     SafeArrayAccessor & operator++() {
         ++mPtr;

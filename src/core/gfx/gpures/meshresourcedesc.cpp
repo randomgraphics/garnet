@@ -646,7 +646,7 @@ AutoRef<Blob<uint8_t>> GN::gfx::MeshResourceDesc::loadFromFile(File & fp) {
 //
 //
 // -----------------------------------------------------------------------------
-Blob<uint8_t> GN::gfx::MeshResourceDesc::loadFromFile(const char * filename) {
+AutoRef<Blob<uint8_t>> GN::gfx::MeshResourceDesc::loadFromFile(const char * filename) {
     GN_INFO(sLogger)("Load mesh from file: %s", filename ? filename : "<null filename>");
 
     *this = {};
