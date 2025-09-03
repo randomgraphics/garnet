@@ -78,6 +78,7 @@ namespace internal {}
 
 // array types
 #include "base/array.h"
+#include "base/blob.h"
 
 // dictionary type
 #include "base/dict.h"
