@@ -16,15 +16,7 @@
 #include <assimp/IOStream.hpp>
 #include <assimp/IOSystem.hpp>
 
-#ifdef HAS_FBX
-    #if GN_GNUC
-        #pragma GCC diagnostic ignored "-Wunused"
-    #elif GN_MSVC
-        #pragma warning(disable : 4996) // 'x' was declared depreciated
-    #endif
-    #define FBXSDK_SHARED
-    #include <fbxsdk.h>
-#endif
+#include "fbx-settings.h"
 
 using namespace GN;
 using namespace GN::gfx;
