@@ -695,7 +695,6 @@ public:
     //@}
 };
 
-
 ///
 /// array accessor with out-of-boundary check in debug build.
 ///

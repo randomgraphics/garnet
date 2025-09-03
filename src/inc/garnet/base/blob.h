@@ -32,7 +32,9 @@ public:
     }
 
     template<typename T>
-    SafeArrayAccessor<T> accessor() const { return SafeArrayAccessor<T>((T*)mData, mSize / sizeof(T)); }
+    SafeArrayAccessor<T> accessor() const {
+        return SafeArrayAccessor<T>((T *) mData, mSize / sizeof(T));
+    }
 
     bool empty() const { return mSize == 0; }
 
@@ -63,9 +65,9 @@ class SimpleBlob : public Blob {
     struct Impl : Base::ImplBase {
         size_t mSize = 0;
         T *    mData = nullptr;
-        
-        Impl(size_t size, T * data) : mSize(size), mData(data) {}
-        
+
+        Impl(size_t size, T * data): mSize(size), mData(data) {}
+
         ~Impl() override {
             if (mData) {
                 details::inplaceDestructArray(mSize, mData);
@@ -86,14 +88,14 @@ public:
                 GN_ERROR(getLogger("GN.base.Blob"))("Failed to allocate memory for blob of %zu bytes", count * sizeof(T));
             } else if (data) {
                 // copy construct the data array.
-                details::inplaceCopyConstructArray(count, (T*)Base::mData, data);
+                details::inplaceCopyConstructArray(count, (T *) Base::mData, data);
                 Base::mSize = count;
-                Base::mImpl = new Impl(count, (T*)Base::mData);
+                Base::mImpl = new Impl(count, (T *) Base::mData);
             } else {
                 // default construct the data array.
-                details::inplaceDefaultConstructArray(count, (T*)Base::mData);
+                details::inplaceDefaultConstructArray(count, (T *) Base::mData);
                 Base::mSize = count;
-                Base::mImpl = new Impl(count, (T*)Base::mData);
+                Base::mImpl = new Impl(count, (T *) Base::mData);
             }
         }
     }
@@ -120,18 +122,14 @@ private:
         DynaArray<T, size_t, OBJECT_ALLOCATOR> array;
     };
 
-    DynaArray<T, size_t, OBJECT_ALLOCATOR> array() const {
-        return static_cast<Impl*>(Base::mImpl)->array;
-    }
+    DynaArray<T, size_t, OBJECT_ALLOCATOR> array() const { return static_cast<Impl *>(Base::mImpl)->array; }
 
 public:
-    DynaArrayBlob() {
-        Base::mImpl = new Impl();
-    }
+    DynaArrayBlob() { Base::mImpl = new Impl(); }
 
     DynaArrayBlob & reserve(size_t count) {
-        auto reservedSize = std::max(count, Base::mSize);
-        auto & a = array();
+        auto   reservedSize = std::max(count, Base::mSize);
+        auto & a            = array();
         a.reserve(reservedSize);
         Base::mData = a.data(); // in case the array is reallocated
         return *this;
@@ -154,6 +152,6 @@ public:
     }
 };
 
-}
+} // namespace GN
 
 #endif // _GN_BASE_BLOB_H_
