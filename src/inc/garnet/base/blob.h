@@ -13,7 +13,7 @@ namespace GN {
 /// It is movable but not copyable. This is means to pass around non-resizeable binary data block.
 ///
 template<typename T = uint8_t, class SIZE_T = size_t>
-class Blob : public RefCounted {
+class Blob : public RefCounter {
 protected:
     T *    mData = nullptr;
     SIZE_T mSize = 0;
@@ -30,49 +30,32 @@ public:
     typedef SIZE_T    size_type;
 
     // Disable copy semantics
-    GN_NO_COPY_NO_MOVE(Blob);
+    GN_NO_COPY(Blob);
+    GN_NO_MOVE(Blob);
 
     // Destructor
-    ~Blob() {
-        if (mData) {
-            details::inplaceDestructArray(mSize, mData);
-            OBJECT_ALLOCATOR::sDeallocate(mData);
-        }
-    }
-
-    // Move assignment operator
-    Blob & operator=(Blob && other) noexcept {
-        if (this != &other) {
-            if (mData) {
-                // Destroy existing objects
-                for (size_type i = 0; i < mSize; ++i) { mData[i].~T(); }
-                HeapMemory::dealloc(mData);
-            }
-            mData       = other.mData;
-            mSize       = other.mSize;
-            other.mData = nullptr;
-            other.mSize = 0;
-        }
-        return *this;
+    virtual ~Blob() {
+        mData = nullptr;
+        mSize = 0;
     }
 
     // Element access
-    reference at(size_type pos) {
+    reference at(SIZE_T pos) {
         GN_ASSERT(pos < mSize);
         return mData[pos];
     }
 
-    const_reference at(size_type pos) const {
+    const_reference at(SIZE_T pos) const {
         GN_ASSERT(pos < mSize);
         return mData[pos];
     }
 
-    reference operator[](size_type pos) {
+    reference operator[](SIZE_T pos) {
         GN_ASSERT(pos < mSize);
         return mData[pos];
     }
 
-    const_reference operator[](size_type pos) const {
+    const_reference operator[](SIZE_T pos) const {
         GN_ASSERT(pos < mSize);
         return mData[pos];
     }
@@ -112,7 +95,7 @@ public:
 
     // Capacity
     bool      empty() const { return mSize == 0; }
-    size_type size() const { return mSize; }
+    SIZE_T size() const { return mSize; }
 
     // // attach to existing data
     // Blob<T> & attachTo(SIZE_T count, T * data) {
@@ -122,89 +105,91 @@ public:
     //     return *this;
     // }
 
-    // Move to another array with different type
-    template<typename T2>
-    Blob<T2> moveTo() {
-        Blob<T2> result(mSize);
-        result.attachTo((SIZE_T) (mSize * sizeof(T) / sizeof(T2)), (T2 *) mData);
-        mData = nullptr;
-        mSize = 0;
-        return result;
-    }
+    // // Move to another array with different type
+    // template<typename T2>
+    // Blob<T2> moveTo() {
+    //     Blob<T2> result(mSize);
+    //     result.attachTo((SIZE_T) (mSize * sizeof(T) / sizeof(T2)), (T2 *) mData);
+    //     mData = nullptr;
+    //     mSize = 0;
+    //     return result;
+    // }
 
     // Clear the blob. Make it empty.
     virtual void clear() = 0;
 };
 
-template<typename T, class SIZE_T = size_t, class OBJECT_ALLOCATOR = CxxObjectAllocator<T>>
+template<typename T = uint8_t, class SIZE_T = size_t, class OBJECT_ALLOCATOR = CxxObjectAllocator<T>>
 class SimpleBlob : public Blob<T, SIZE_T> {
+    typedef Blob<T, SIZE_T> Base;
 public:
     SimpleBlob() {}
 
     // Constructor new blob of certain size.
-    explicit SimpleBlob(size_type count): mData(nullptr), mSize(count) {
+    explicit SimpleBlob(SIZE_T count) {
         if (count > 0) {
             // allocate raw memory
-            mData = static_cast<T *>(OBJECT_ALLOCATOR::sAllocate(count));
-            if (!mData) GN_UNLIKELY {
-                    GN_ERROR(getLogger("GN.base.Blob"))("Failed to allocate memory for blob of %zu bytes", count * sizeof(T));
-                    mSize = 0;
-                }
-            else {
+            Base::mData = static_cast<T *>(OBJECT_ALLOCATOR::sAllocate(count));
+            if (!Base::mData) GN_UNLIKELY {
+                GN_ERROR(getLogger("GN.base.Blob"))("Failed to allocate memory for blob of %zu bytes", count * sizeof(T));
+                Base::mSize = 0;
+            } else {
                 // default construct the data array.
-                details::inplaceDefaultConstructArray(count, mData);
+                details::inplaceDefaultConstructArray(count, Base::mData);
+                Base::mSize = count;
             }
         }
     }
 
     // Copy constructor from raw data array
-    explicit SimpleBlob(size_type count, const T * data): mData(nullptr), mSize(count) {
+    SimpleBlob(SIZE_T count, const T * data) {
         if (count > 0) {
             // allocate raw memory
-            mData = static_cast<T *>(OBJECT_ALLOCATOR::sAllocate(count));
-            if (!mData) GN_UNLIKELY {
+            Base::mData = static_cast<T *>(OBJECT_ALLOCATOR::sAllocate(count));
+            if (!Base::mData) GN_UNLIKELY {
                     GN_ERROR(getLogger("GN.base.Blob"))("Failed to allocate memory for blob of %zu bytes", count * sizeof(T));
-                    mSize = 0;
+                    Base::mSize = 0;
                 }
             else if (data)
                 GN_UNLIKELY {
                     // copy construct the data array.
-                    details::inplaceCopyConstructArray(count, mData, data);
+                    details::inplaceCopyConstructArray(count, Base::mData, data);
                 }
             else {
                 // default construct the data array.
-                details::inplaceDefaultConstructArray(count, mData);
+                details::inplaceDefaultConstructArray(count, Base::mData);
             }
         }
     }
 
     // Copy constructor from single initial value
-    SimpleBlob(size_type count, const T & value): mData(nullptr), mSize(count) {
+    SimpleBlob(SIZE_T count, const T & value) {
         if (count > 0) {
-            mData = static_cast<T *>(OBJECT_ALLOCATOR::sAllocate(count * sizeof(T)));
-            if (!mData) GN_UNLIKELY {
+            Base::mData = static_cast<T *>(OBJECT_ALLOCATOR::sAllocate(count * sizeof(T)));
+            if (!Base::mData) GN_UNLIKELY {
                     GN_ERROR(getLogger("GN.base.Blob"))("Failed to allocate memory for blob of size %zu", count * sizeof(T));
-                    mSize = 0;
+                    Base::mSize = 0;
                 }
-            else { details::inplaceCopyConstructArray(count, mData, value); }
+            else { details::inplaceCopyConstructArray(count, Base::mData, value); }
         }
     }
 
     ~SimpleBlob() override { clear(); }
 
     void clear() override {
-        if (mData) {
-            details::inplaceDestructArray(mSize, mData);
-            OBJECT_ALLOCATOR::sDeallocate(mData);
-            mData = nullptr;
-            mSize = 0;
+        if (Base::mData) {
+            details::inplaceDestructArray(Base::mSize, Base::mData);
+            OBJECT_ALLOCATOR::sDeallocate(Base::mData);
+            Base::mData = nullptr;
+            Base::mSize = 0;
         }
     }
 };
 
-template<typename T, class SIZE_T = size_t, class OBJECT_ALLOCATOR = CxxObjectAllocator<T>>
+template<typename T = uint8_t, class SIZE_T = size_t, class OBJECT_ALLOCATOR = CxxObjectAllocator<T>>
 class DynaArrayBlob : public Blob<T, SIZE_T> {
 private:
+    typedef Blob<T, SIZE_T> Base;
     DynaArray<T, SIZE_T, OBJECT_ALLOCATOR> mArray;
 
 public:
@@ -213,30 +198,30 @@ public:
     ~DynaArrayBlob() override { clear(); }
 
     DynaArrayBlob & reserve(SIZE_T count) {
-        auto reservedSize = std::max(count, mSize);
+        auto reservedSize = std::max(count, Base::mSize);
         mArray.reserve(reservedSize);
-        mData = mArray.data(); // in case the array is reallocated
+        Base::mData = mArray.data(); // in case the array is reallocated
         return *this;
     }
 
     DynaArrayBlob & resize(SIZE_T count) {
         mArray.resize(count);
-        mData = mArray.data(); // in case the array is reallocated
-        mSize = mArray.size();
+        Base::mData = mArray.data(); // in case the array is reallocated
+        Base::mSize = mArray.size();
         return *this;
     }
 
     DynaArrayBlob & append(const T & value) {
         mArray.push_back(value);
-        mData = mArray.data(); // in case the array is reallocated
-        mSize = mArray.size();
+        Base::mData = mArray.data(); // in case the array is reallocated
+        Base::mSize = mArray.size();
         return *this;
     }
 
     void clear() override {
         mArray.clear();
-        mData = nullptr;
-        mSize = 0;
+        Base::mData = nullptr;
+        Base::mSize = 0;
     }
 };
 

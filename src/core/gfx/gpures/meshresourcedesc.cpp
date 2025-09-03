@@ -218,7 +218,7 @@ MeshFileType sDetermineMeshFileType(File & fp) {
 //
 //
 // -----------------------------------------------------------------------------
-Blob<uint8_t> sLoadFromMeshBinaryFile(File & fp, MeshResourceDesc & desc) {
+AutoRef<Blob<uint8_t>> sLoadFromMeshBinaryFile(File & fp, MeshResourceDesc & desc) {
     MeshBinaryFileHeaderV2 header;
 
     if (sizeof(header) != fp.read(&header, sizeof(header))) {
@@ -246,16 +246,16 @@ Blob<uint8_t> sLoadFromMeshBinaryFile(File & fp, MeshResourceDesc & desc) {
     if (!vfp.analyze(header.vtxfmt)) return {};
 
     // read mesh data
-    auto blob = Blob<uint8_t>(header.bytes);
-    if (blob.empty()) {
+    auto blob = referenceTo(new SimpleBlob<uint8_t>(header.bytes));
+    if (blob->empty()) {
         GN_ERROR(sLogger)("Out of memory");
         return {};
     }
-    if (header.bytes != fp.read(blob.data(), header.bytes)) {
+    if (header.bytes != fp.read(blob->data(), header.bytes)) {
         GN_ERROR(sLogger)("fail to read mesh data.");
         return {};
     }
-    auto start = blob.data();
+    auto start = blob->data();
 
     desc.prim   = (PrimitiveType) header.prim;
     desc.numvtx = header.numvtx;
@@ -403,7 +403,7 @@ static PixelFormat fromString(const char * str) {
 //
 //
 // -----------------------------------------------------------------------------
-Blob<uint8_t> sLoadFromMeshXMLFile(File & fp, MeshResourceDesc & desc) {
+AutoRef<Blob<uint8_t>> sLoadFromMeshXMLFile(File & fp, MeshResourceDesc & desc) {
     desc = {};
 
     XmlDocument    doc;
@@ -508,8 +508,8 @@ Blob<uint8_t> sLoadFromMeshXMLFile(File & fp, MeshResourceDesc & desc) {
         }
     }
 
-    Blob<uint8_t> blob(meshDataSize);
-    if (blob.empty()) {
+    auto blob = referenceTo(new SimpleBlob<uint8_t>(meshDataSize));
+    if (blob->empty()) {
         GN_ERROR(sLogger)("Out of memory");
         return {};
     }
@@ -517,7 +517,7 @@ Blob<uint8_t> sLoadFromMeshXMLFile(File & fp, MeshResourceDesc & desc) {
     StrA basedir = fs::dirName(fp.name());
 
     // parse vtxbuf and idxbuf elements, again, to read, calculate mesh data size
-    SafeArrayAccessor<uint8_t> meshData((uint8_t *) blob.data(), blob.size());
+    SafeArrayAccessor<uint8_t> meshData((uint8_t *) blob->data(), blob->size());
     uint32_t                   offset = 0;
     for (const XmlNode * n = root->firstc; n != NULL; n = n->nexts) {
         const XmlElement * e = n->toElement();
@@ -627,7 +627,7 @@ void GN::gfx::MeshResourceDesc::calculateBoundingSphere(Sphere<float> & sphere) 
 //
 //
 // -----------------------------------------------------------------------------
-Blob<uint8_t> GN::gfx::MeshResourceDesc::loadFromFile(File & fp) {
+AutoRef<Blob<uint8_t>> GN::gfx::MeshResourceDesc::loadFromFile(File & fp) {
     *this = {};
 
     switch (sDetermineMeshFileType(fp)) {
