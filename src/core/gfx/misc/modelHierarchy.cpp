@@ -982,7 +982,7 @@ static bool sParseModel(ModelHierarchyDesc & desc, XmlElement & root, const StrA
         auto             blob = mesh.loadFromFile(fs::resolvePath(basedir, md.mesh));
         if (blob.empty()) return false;
         desc.meshes[md.mesh] = mesh;
-        desc.meshdata.append(blob.moveTo<uint8_t>());
+        desc.meshdata.append(blob);
     }
 
     desc.models[modelName->value] = md;

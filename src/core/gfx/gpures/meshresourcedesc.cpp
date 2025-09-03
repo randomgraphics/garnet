@@ -218,7 +218,7 @@ MeshFileType sDetermineMeshFileType(File & fp) {
 //
 //
 // -----------------------------------------------------------------------------
-AutoRef<Blob<uint8_t>> sLoadFromMeshBinaryFile(File & fp, MeshResourceDesc & desc) {
+AutoRef<Blob> sLoadFromMeshBinaryFile(File & fp, MeshResourceDesc & desc) {
     MeshBinaryFileHeaderV2 header;
 
     if (sizeof(header) != fp.read(&header, sizeof(header))) {
@@ -403,7 +403,7 @@ static PixelFormat fromString(const char * str) {
 //
 //
 // -----------------------------------------------------------------------------
-AutoRef<Blob<uint8_t>> sLoadFromMeshXMLFile(File & fp, MeshResourceDesc & desc) {
+AutoRef<Blob> sLoadFromMeshXMLFile(File & fp, MeshResourceDesc & desc) {
     desc = {};
 
     XmlDocument    doc;
@@ -627,7 +627,7 @@ void GN::gfx::MeshResourceDesc::calculateBoundingSphere(Sphere<float> & sphere) 
 //
 //
 // -----------------------------------------------------------------------------
-AutoRef<Blob<uint8_t>> GN::gfx::MeshResourceDesc::loadFromFile(File & fp) {
+AutoRef<Blob> GN::gfx::MeshResourceDesc::loadFromFile(File & fp) {
     *this = {};
 
     switch (sDetermineMeshFileType(fp)) {
@@ -646,7 +646,7 @@ AutoRef<Blob<uint8_t>> GN::gfx::MeshResourceDesc::loadFromFile(File & fp) {
 //
 //
 // -----------------------------------------------------------------------------
-AutoRef<Blob<uint8_t>> GN::gfx::MeshResourceDesc::loadFromFile(const char * filename) {
+AutoRef<Blob> GN::gfx::MeshResourceDesc::loadFromFile(const char * filename) {
     GN_INFO(sLogger)("Load mesh from file: %s", filename ? filename : "<null filename>");
 
     *this = {};

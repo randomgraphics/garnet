@@ -76,7 +76,7 @@ struct AseMeshSubset : public gfx::MeshResourceSubset {
 struct AseScene : public NoCopy {
     DynaArray<AseMaterial>   materials;
     DynaArray<AseMesh>       meshes;
-    DynaArray<Blob<uint8_t>> meshdata; ///< store mesh data
+    DynaArray<AutoRef<Blob>> meshdata; ///< store mesh data
     DynaArray<AseMeshSubset> subsets;
     Boxf                     bbox; ///< bounding box of the whole scene
 
