@@ -41,7 +41,13 @@ GN_API Gpu * GN::gfx::createD3DGpu(const GpuOptions &, uint32_t) {
 GN_API Gpu * GN::gfx::createGpu(const GpuOptions & inputOptions, uint32_t creationFlags) {
     GpuOptions ro = inputOptions;
 
-    if (GpuAPI::AUTO == ro.api) ro.api = GpuAPI::OGL;
+    if (GpuAPI::AUTO == ro.api) {
+#if GN_BUILD_HAS_D3D11
+        ro.api = GpuAPI::D3D11;
+#else
+        ro.api = GpuAPI::OGL;
+#endif
+    }
 
     switch (ro.api) {
     case GpuAPI::OGL:
