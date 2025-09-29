@@ -52,7 +52,7 @@ public:
 
 protected:
     void *     mData = nullptr;
-    size_t     mSize = 0;
+    size_t     mSize = 0; ///< size in bytes
     ImplBase * mImpl = nullptr;
 
     Blob() {}
@@ -80,7 +80,7 @@ class SimpleBlob : public Blob {
 
 public:
     // Copy constructor from raw data array
-    explicit SimpleBlob(size_t count, const T * data = nullptr) {
+    explicit SimpleBlob(size_t count = 0, const T * data = nullptr) {
         if (count > 0) {
             // allocate raw memory
             Base::mData = static_cast<T *>(OBJECT_ALLOCATOR::sAllocate(count));
@@ -89,7 +89,7 @@ public:
             } else if (data) {
                 // copy construct the data array.
                 details::inplaceCopyConstructArray(count, (T *) Base::mData, data);
-                Base::mSize = count;
+                Base::mSize = count * sizeof(T);
                 Base::mImpl = new Impl(count, (T *) Base::mData);
             } else {
                 // default construct the data array.
@@ -122,10 +122,13 @@ private:
         DynaArray<T, size_t, OBJECT_ALLOCATOR> array;
     };
 
-    DynaArray<T, size_t, OBJECT_ALLOCATOR> array() const { return static_cast<Impl *>(Base::mImpl)->array; }
+    DynaArray<T, size_t, OBJECT_ALLOCATOR> &       array() { return static_cast<Impl *>(Base::mImpl)->array; }
+    const DynaArray<T, size_t, OBJECT_ALLOCATOR> & array() const { return static_cast<Impl *>(Base::mImpl)->array; }
 
 public:
     DynaArrayBlob() { Base::mImpl = new Impl(); }
+
+    size_t count() const { return array().size(); }
 
     DynaArrayBlob & reserve(size_t count) {
         auto   reservedSize = std::max(count, Base::mSize);
@@ -139,15 +142,15 @@ public:
         auto & a = array();
         a.resize(count);
         Base::mData = a.data(); // in case the array is reallocated
-        Base::mSize = a.size();
+        Base::mSize = a.size() * sizeof(T);
         return *this;
     }
 
     DynaArrayBlob & append(const T & value) {
         auto & a = array();
-        a.push_back(value);
+        a.append(value);
         Base::mData = a.data(); // in case the array is reallocated
-        Base::mSize = a.size();
+        Base::mSize = a.size() * sizeof(T);
         return *this;
     }
 };

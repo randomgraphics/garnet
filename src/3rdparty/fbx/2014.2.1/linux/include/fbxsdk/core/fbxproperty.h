@@ -1328,17 +1328,17 @@ public:
 		operator T() const { return Get(); }
 	//@}
 
-	/** \name Animation Evaluation */
-	//@{
-		/** Evaluate the value of a property if it has animation and return the result.
-		* \param pTime The time used for evaluate.
-		* \param pForceEval Force the evaluator to refresh the evaluation state cache even if its already up-to-date.
-		* \return The property value at the specified time. */
-		T EvaluateValue(const FbxTime& pTime=FBXSDK_TIME_INFINITE, bool pForceEval=false)
-		{
-			return GetAnimationEvaluator()-> template GetPropertyValue<T>(*this, pTime, pForceEval);
-		}
-	//@}
+	// /** \name Animation Evaluation */
+	// //@{
+	// 	/** Evaluate the value of a property if it has animation and return the result.
+	// 	* \param pTime The time used for evaluate.
+	// 	* \param pForceEval Force the evaluator to refresh the evaluation state cache even if its already up-to-date.
+	// 	* \return The property value at the specified time. */
+	// 	T EvaluateValue(const FbxTime& pTime=FBXSDK_TIME_INFINITE, bool pForceEval=false)
+	// 	{
+	// 		return GetAnimationEvaluator()-> template GetPropertyValue<T>(*this, pTime, pForceEval);
+	// 	}
+	// //@}
 
 /*****************************************************************************************************************************
 ** WARNING! Anything beyond these lines is for internal use, may not be documented and is subject to change without notice! **
