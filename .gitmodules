@@ -16,5 +16,5 @@
 	shallow = true
 [submodule "src/3rdparty/freetype"]
 	path = src/3rdparty/freetype
-	url = https://github.com/freetype/freetype.git
+	url = https://gitlab.freedesktop.org/freetype/freetype
 	shallow = true

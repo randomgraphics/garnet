@@ -37,14 +37,32 @@ function catch_batch_env( $batch, $arg )
     }
 }
 
+# A utility function to chek if a environment variable is set and pointing to a valid folder.
+function check_env_folder ( $VariableName ) {
+    # Check if the environment variable exists
+    if (-not (Get-ChildItem Env: | Where-Object {$_.Name -eq $VariableName})) {
+        # Write-Host "Environment variable '$VariableName' does not exist."
+        return $false
+    }
+
+    # Get the value of the environment variable
+    $VariableValue = (Get-Item Env:$VariableName).Value
+
+    # Check if the variable value is a valid path to a folder
+    if (-not (Test-Path -Path $VariableValue -PathType Container)) {
+        # Write-Host "Environment variable '$VariableName' exists, but its value ('$VariableValue') is not a valid folder path."
+        return $false
+    }
+
+    # Write-Host "Environment variable '$VariableName' exists and points to a valid folder: '$VariableValue'."
+    return $true
+}
 # ==============================================================================
 # Setup Vulkan SDK
 # ==============================================================================
 
 if (-not $(test-path env:VULKAN_SDK)) {
-    write-host -ForegroundColor red -NoNewline "Environment variable VULKAN_SDK is not set. Please run "
-    write-host -ForegroundColor yellow  -NoNewline "install-vulkan-sdk.ps1 "
-    write-host -ForegroundColor red "to download and install Vulkan SDK."
+    warn "Environment variable VULKAN_SDK is not set. Please run ""install-vulkan-sdk.ps1"" to download and install Vulkan SDK."
 } elseif (-not $(test-path $env:VULKAN_SDK)) {
     fatal "Environment variable VULKAN_SDK is not pointing to valid folder."
 }
@@ -92,6 +110,25 @@ function global:prompt {
 # note: $GARNET_ROOT is a global variable that could be used in other places outside of this script.
 $global:GARNET_ROOT=split-path -parent $PSScriptRoot
 $env:GARNET_ROOT=$GARNET_ROOT
+
+# ==============================================================================
+# setup android environment
+# ==============================================================================
+if( check_env_folder "ANDROID_SDK_ROOT" ) {
+    $env:PATH = "$env:ANDROID_SDK_ROOT\platform-tools;$env:PATH"
+} else {
+    warn "ANDROID_SDK_ROOT is not set or is pointing to a non-exist folder. Android build will not work."
+}
+if( check_env_folder "ANDROID_NDK_ROOT" ) {
+    $env:PATH = "$env:ANDROID_NDK_ROOT\bin;$env:PATH"
+} else {
+    warn "ANDROID_NDK_ROOT is not set or is pointing to a non-exist folder. Android build might not work."
+}
+if( check_env_folder "JAVA_HOME" ) {
+    $env:PATH = "$env:JAVA_HOME\bin;$env:PATH"
+} else {
+    warn "JAVA_HOME is not set or is pointing to a non-exist folder. Android build will not work."
+}
 
 # ==============================================================================
 # setup aliases
