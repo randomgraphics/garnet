@@ -186,6 +186,12 @@ add_core_libs(Threads::Threads)
 add_core_libs(assimp)
 add_core_libs(freetype)
 
+find_package(Iconv)
+if (Iconv_FOUND)
+    target_compile_definitions(GNcore PRIVATE HAS_ICONV=1)
+    add_core_libs(${Iconv_LIBRARIES})
+endif()
+
 # compiler specific setup
 if(MSVC)
     target_compile_definitions(GNcore PUBLIC _UNICODE UNICODE) # REVIEW: why not private?
@@ -193,7 +199,6 @@ if(MSVC)
         /Wv:18 # fix eigen warning. still needed?
     )
 else()
-    target_compile_definitions(GNcore PRIVATE HAS_ICONV=1)
     if (NOT GN_BUILD_IS_STATIC)
         target_compile_options(GNcore PRIVATE
             -fvisibility=hidden # hide symbols by default.
