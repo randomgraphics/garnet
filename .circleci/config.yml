@@ -1,6 +1,4 @@
 version: 2.1
-orbs:
-  win: circleci/windows@5.0
 jobs:
   lint:
     docker:
@@ -175,93 +173,6 @@ jobs:
             source env/garnet.rc
             build.py -a r
 
-  prep-windows:
-    executor:
-      name: win/server-2022
-    steps:
-      - run:
-          name: install Vulkan SDK
-          command: |
-            git config --global --unset-all "url.ssh://git@github.com.insteadof" # fix git lfs bad credential when fetching repo stored on github
-            git clone --depth 1 --branch 1.3.250.0 https://github.com/randomgraphics/vulkan-sdk.git c:\dep\vulkan-sdk
-      - run:
-          name: install CMake
-          command: |
-            Invoke-WebRequest https://github.com/Kitware/CMake/releases/download/v3.28.1/cmake-3.28.1-windows-x86_64.zip -OutFile c:\cmake.zip
-            Expand-Archive c:\cmake.zip c:\dep\
-      # TODO: install Qt6
-      - run:
-          name: install misc. dependencies
-          command: |
-            python.exe -m pip install --upgrade termcolor
-      - persist_to_workspace:
-          root: c:\dep
-          paths:
-              - "*"
-
-  build-windows-debug:
-    executor:
-      name: win/server-2022
-    steps:
-      - run:
-          name: prep git
-          command: |
-            git config --global --add safe.directory /tmp/_circleci_local_build_repo
-            git config --global --add safe.directory /root/project
-      - checkout
-      - attach_workspace:
-          at: c:\dep
-      - run:
-          name: build
-          command: |
-            git config --global --unset-all "url.ssh://git@github.com.insteadof" # fix git lfs bad credential when fetching repo stored on github
-            $env:VULKAN_SDK="C:\dep\vulkan-sdk\"
-            $env:PATH="C:\dep\cmake-3.28.1-windows-x86_64\bin;$env:PATH"
-            . env\garnet.ps1
-            b d
-
-  build-windows-profile:
-    executor:
-      name: win/server-2022
-    steps:
-      - run:
-          name: prep git
-          command: |
-            git config --global --add safe.directory /tmp/_circleci_local_build_repo
-            git config --global --add safe.directory /root/project
-      - checkout
-      - attach_workspace:
-          at: c:\dep
-      - run:
-          name: build
-          command: |
-            git config --global --unset-all "url.ssh://git@github.com.insteadof" # fix git lfs bad credential when fetching repo stored on github
-            $env:VULKAN_SDK="C:\dep\vulkan-sdk\"
-            $env:PATH="C:\dep\cmake-3.28.1-windows-x86_64\bin;$env:PATH"
-            . env\garnet.ps1
-            b p
-
-  build-windows-release:
-    executor:
-      name: win/server-2022
-    steps:
-      - run:
-          name: prep git
-          command: |
-            git config --global --add safe.directory /tmp/_circleci_local_build_repo
-            git config --global --add safe.directory /root/project
-      - checkout
-      - attach_workspace:
-          at: c:\dep
-      - run:
-          name: build
-          command: |
-            git config --global --unset-all "url.ssh://git@github.com.insteadof" # fix git lfs bad credential when fetching repo stored on github
-            $env:VULKAN_SDK="C:\dep\vulkan-sdk\"
-            $env:PATH="C:\dep\cmake-3.28.1-windows-x86_64\bin;$env:PATH"
-            . env\garnet.ps1
-            b r
-
 workflows:
   build-and-test:
     jobs:
@@ -293,18 +204,3 @@ workflows:
       - build-android-release:
           requires:
             - build-android-debug
-      # - prep-windows:
-      #     requires:
-      #     - lint
-      # - build-windows-debug:
-      #     requires:
-      #       - prep-windows
-      #       - build-linux-gcc-debug
-      # - build-windows-profile:
-      #     requires:
-      #       - prep-windows
-      #       - build-linux-gcc-debug
-      # - build-windows-release:
-      #     requires:
-      #       - prep-windows
-      #       - build-linux-gcc-debug
