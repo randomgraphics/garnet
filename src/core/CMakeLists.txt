@@ -2,11 +2,17 @@
 # generate feature header
 # =======================
 
-set(GN_BUILD_HAS_OGL ${OPENGL_FOUND})
-set(GN_BUILD_HAS_D3D9 ${D3D9_FOUND})
-set(GN_BUILD_HAS_D3D11 ${D3D11_FOUND})
-set(GN_BUILD_HAS_D3D11_1 ${D3D11_FOUND})
-set(GN_BUILD_HAS_D3D12 ${D3D12_FOUND})
+# if not mac os then enable OpenGL
+if (NOT CMAKE_SYSTEM_NAME STREQUAL "Darwin")
+    set(GN_BUILD_HAS_OGL ${OPENGL_FOUND})
+endif()
+# enable DirectX if on Windows
+if (CMAKE_SYSTEM_NAME STREQUAL "Windows")
+    set(GN_BUILD_HAS_D3D9 ${D3D9_FOUND})
+    set(GN_BUILD_HAS_D3D11 ${D3D11_FOUND})
+    set(GN_BUILD_HAS_D3D11_1 ${D3D11_FOUND})
+    set(GN_BUILD_HAS_D3D12 ${D3D12_FOUND})
+endif()
 set(GN_BUILD_HAS_XNAMATH OFF) # this is legacy flag that is available on pre-vista OS and Xbox2
 set(GN_BUILD_HAS_VULKAN ${VULKAN_FOUND})
 
@@ -55,7 +61,7 @@ GN_add_source_folder(sources util PCH_SOURCE util/pch.cpp)
 GN_add_source_folder(sources win PCH_SOURCE win/pch.cpp)
 
 # OpenGL GPU Sources
-if(OPENGL_FOUND)
+if(GN_BUILD_HAS_OGL)
     GN_add_source_folder(sources gpu/ogl PCH_SOURCE gpu/ogl/pch.cpp)
     GN_add_source_folder(sources gfx/ogl PCH_SOURCE gfx/ogl/pch.cpp)
 endif()
@@ -130,7 +136,7 @@ elseif(WIN32)
 endif()
 
 # X11
-if(X11_FOUND)
+if(X11_FOUND AND CMAKE_SYSTEM_NAME STREQUAL "Linux")
     target_compile_definitions(GNcore PRIVATE HAS_X11=1)
 endif()
 
