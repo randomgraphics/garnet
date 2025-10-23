@@ -15,6 +15,7 @@
 #define GN_ICL   0 ///< If 1, means current compiler is intel c++ compiler
 #define GN_GNUC  0 ///< If 1, means current compiler is GNUC compilers (gcc, mingw, clang and etc.)
 #define GN_CLANG 0 ///< IF 1, means current compiler is clang
+#define GN_GCC   0 ///< If 1, means current compiler is gcc
 
 /// \def GN_COMPILER
 /// Indicate current compiler
@@ -44,7 +45,9 @@
 
 #elif defined(__GNUC__)
     #undef GN_GNUC
+    #undef GN_GCC
     #define GN_GNUC     1
+    #define GN_GCC      1
     #define GN_COMPILER gcc
 
 #else

@@ -1,5 +1,5 @@
 #ifdef HAS_FBX
-    #if GN_GNUC
+    #if GN_GCC
         #pragma GCC diagnostic ignored "-Wunused"
         #pragma GCC diagnostic ignored "-Wunused-value"
         #pragma GCC diagnostic ignored "-Wunused-parameter"
