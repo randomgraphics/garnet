@@ -35,11 +35,6 @@ if "Windows" == system:
 else:
      clang_format = "clang-format-14"
 
-# Make sure clang-format is available
-if not os.path.exists(clang_format):
-     utils.rip(f"clang-format-14 not found. Please install it.")
-     sys.exit(1)
-
 # create a lock to serialize output
 lock = threading.Lock()
 
