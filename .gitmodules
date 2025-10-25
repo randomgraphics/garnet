@@ -14,3 +14,11 @@
 	path = src/3rdparty/stb
 	url = https://github.com/nothings/stb.git
 	shallow = true
+[submodule "src/3rdparty/freetype"]
+	path = src/3rdparty/freetype
+	url = https://gitlab.freedesktop.org/freetype/freetype
+	shallow = true
+[submodule "src/test/3rdparty/fmt"]
+	path = src/test/3rdparty/fmt
+	url = https://github.com/fmtlib/fmt.git
+	shallow = true

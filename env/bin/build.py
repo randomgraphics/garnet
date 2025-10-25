@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
 from ctypes import util
-import sys, subprocess, os, platform, pathlib, argparse, shutil, glob, importlib
+import sys, subprocess, os, platform, pathlib, argparse, shutil, glob, importlib, configparser
 utils = importlib.import_module("garnet-utils")
 
 def get_cmake_build_info(args):
@@ -57,14 +57,24 @@ def git(cmdline):
         print("[ERROR] GIT process exits with non-zero exit code.")
         sys.exit(1)
 
+def query_submodules():
+    gitmodules_path = sdk_root_dir / ".gitmodules"
+    if not gitmodules_path.exists():
+        utils.rip(".gitmodules file not found")
+    
+    config = configparser.ConfigParser()
+    config.read(gitmodules_path)
+    
+    submodules = []
+    for section in config.sections():
+        if section.startswith("submodule"):
+            path = config[section]["path"]
+            submodules.append(path)
+    
+    return submodules
+
 def update_submodules():
-    submodules = [
-        # list all submodules here to automatically fetch them as part of the build process.
-        "src/3rdparty/assimp",
-        "src/3rdparty/eigen",
-        "src/3rdparty/rapid-image",
-        "src/3rdparty/stb",
-    ]
+    submodules = query_submodules()
     for s in submodules:
         dir = sdk_root_dir / s
         if not dir.is_dir():

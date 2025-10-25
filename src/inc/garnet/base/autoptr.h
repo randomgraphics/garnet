@@ -7,37 +7,44 @@
 // *****************************************************************************
 
 #include <mutex>
+#include <atomic>
 
 namespace GN {
 namespace detail {
+
+#if GN_BUILD_DEBUG_ENABLED
+GN_API extern std::atomic<size_t> sPayloadInstanceCount;
+#endif
+
+struct AutoPtrPayload {
+    void *               next {};
+    void *               ptr {};
+    std::atomic<int64_t> counter {1};
+    GN_API static auto   allocate() -> AutoPtrPayload *;
+    GN_API static void   free(AutoPtrPayload * p);
+};
 
 ///
 /// Basic auto pointer class. STL compatible and thread safe.
 ///
 template<typename T, typename CLASS, typename MUTEX>
 class BaseAutoPtr {
-    struct Payload {
-        T *                  ptr {};
-        std::atomic<int64_t> counter {1};
-    };
-
     typedef BaseAutoPtr<T, CLASS, MUTEX> MyType;
 
-    Payload *     mPayload {};
-    mutable MUTEX mMutex;
+    AutoPtrPayload * mPayload {};
+    mutable MUTEX    mMutex;
 
     void doAttach(T * p) {
         if (p) {
-            // TODO: use object pool, or double linked list, to avoid dynamic memory allocation.
-            mPayload      = new Payload;
+            mPayload      = AutoPtrPayload::allocate();
             mPayload->ptr = p;
         }
     }
 
     void doClear(bool releaseRawPtr = true) {
         if (mPayload && 1 == mPayload->counter.fetch_sub(1)) {
-            if (releaseRawPtr) CLASS::sDoRelease(mPayload->ptr);
-            delete mPayload;
+            if (releaseRawPtr) CLASS::sDoRelease(static_cast<T *>(mPayload->ptr));
+            AutoPtrPayload::free(mPayload);
             mPayload = nullptr;
         }
     }
@@ -81,7 +88,7 @@ public:
     ///
     T * get() const {
         auto lock = std::lock_guard(mMutex);
-        return mPayload ? mPayload->ptr : nullptr;
+        return mPayload ? static_cast<T *>(mPayload->ptr) : nullptr;
     }
 
     /// Get internal C-style raw pointer
@@ -110,7 +117,7 @@ public:
     ///
     T * detach() throw() {
         auto lock = std::lock_guard(mMutex);
-        T *  tmp  = mPayload ? mPayload->ptr : nullptr;
+        T *  tmp  = mPayload ? (T *) mPayload->ptr : nullptr;
         doClear(false);
         return tmp;
     }

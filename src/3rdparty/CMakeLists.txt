@@ -22,5 +22,10 @@ OPTION( ASSIMP_INSTALL "" OFF)
 OPTION( ASSIMP_WARNINGS_AS_ERRORS "" OFF)
 add_subdirectory(assimp)
 
+# Build FreeType as static library
+set(BUILD_SHARED_LIBS OFF)
+set(FT_DISABLE_GPL ON)
+add_subdirectory(freetype)
+
 # Build other 3rd party libs
 add_subdirectory(src)

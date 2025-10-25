@@ -7,7 +7,7 @@ Here is the full list of 3rd party libraries refrenced by the Garnet 3D.
 | [Eigen](http://eigen.tuxfamily.org) | 3.3.7 | [MPL2](https://www.mozilla.org/en-US/MPL/2.0/) |
 | [Expat](https://libexpat.github.io/) | 2.0.0 | MIT License |
 | [FBX](https://aps.autodesk.com/developer/overview/fbx-sdk) | 2014.1 | [Autodesk Software User Agreement](fbx/2014.1/License.rtf) |
-| [Freetype](http://www.freetype.org) | 2.8.1 | [FreeType License](https://gitlab.freedesktop.org/freetype/freetype/-/blob/master/docs/FTL.TXT) (GPL2 part disabled) |
+| [Freetype](http://www.freetype.org) | 2.14.1 | [FreeType License](https://gitlab.freedesktop.org/freetype/freetype/-/blob/master/docs/FTL.TXT) (GPL2 part disabled) |
 | [glad](https://github.com/Dav1dde/glad) | 0.1.34 | [MIT](https://github.com/Dav1dde/glad/blob/glad2/LICENSE) |
 | [glew](http://glew.sourceforge.net) | 2.1.0 | [Modified BSD and MIT](https://github.com/nigels-com/glew#copyright-and-licensing) |
 | [jpeg](http://www.ijg.org) | jpeg-6b | Public Domain |

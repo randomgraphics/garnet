@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-import sys, pathlib, subprocess, importlib, argparse, platform, concurrent.futures, threading
+import sys, pathlib, subprocess, importlib, argparse, platform, concurrent.futures, threading, os
 utils = importlib.import_module("garnet-utils")
 
 ap = argparse.ArgumentParser()

@@ -12,14 +12,7 @@
 #include <assimp/IOStream.hpp>
 #include <assimp/IOSystem.hpp>
 
-#ifdef HAS_FBX
-    #if GN_GNUC
-        #pragma GCC diagnostic ignored "-Wunused"
-    #endif
-    #pragma warning(disable : 4996) // 'x' was declared depreciated
-    #define FBXSDK_SHARED
-    #include <fbxsdk.h>
-#endif
+#include "fbx-settings.h"
 
 using namespace GN;
 using namespace GN::gfx;
@@ -307,7 +300,7 @@ static bool sLoadModelHierarchyFromASE(ModelHierarchyDesc & desc, File & file) {
     }
 
     // copy mesh data
-    desc.meshdata = ase.meshdata;
+    desc.meshdata = std::move(ase.meshdata);
 
     // create models
     for (size_t i = 0; i < ase.subsets.size(); ++i) {
@@ -588,13 +581,10 @@ static void sLoadFbxMesh(ModelHierarchyDesc & desc, const StrA & filename, Model
 
     // Create vertex blob that stores the final vertex buffer.
     AutoRef<DynaArrayBlob<MeshVertex>> vertexBlob = referenceTo(new DynaArrayBlob<MeshVertex>);
-    if (!vertexBlob->array().reserve(numidx)) {
-        GN_ERROR(sLogger)("Fail to load FBX mesh: out of memory.");
-        return;
-    }
+    vertexBlob->reserve(numidx);
 
     // Create index blob that stores the index buffer (assume 32-bit indices)
-    AutoRef<SimpleBlob> indexBlob = referenceTo(new SimpleBlob(numidx * sizeof(uint32_t)));
+    AutoRef<Blob> indexBlob = referenceTo(new SimpleBlob<uint32_t>(numidx));
     if (0 == indexBlob->size()) {
         GN_ERROR(sLogger)("Fail to load FBX mesh: out of memory.");
         return;
@@ -681,9 +671,9 @@ static void sLoadFbxMesh(ModelHierarchyDesc & desc, const StrA & filename, Model
                 vertex.normal = key.normal;
                 vertex.uv     = key.uv;
 
-                vertexBlob->array().append(vertex);
+                vertexBlob->append(vertex);
 
-                GN_ASSERT(vertexBlob->array().size() == (vertexIndex + 1));
+                GN_ASSERT(vertexBlob->count() == (vertexIndex + 1));
             }
 
             // add the vertex index into the final index buffer
@@ -696,8 +686,8 @@ static void sLoadFbxMesh(ModelHierarchyDesc & desc, const StrA & filename, Model
     // We are almost there.
 
     // Compress index buffer to 16 bits, if possible.
-    if (vertexBlob->array().size() <= 0x10000) {
-        AutoRef<SimpleBlob> ib16 = referenceTo(new SimpleBlob(numidx * sizeof(uint16_t)));
+    if (vertexBlob->count() <= 0x10000) {
+        AutoRef<Blob> ib16 = referenceTo(new SimpleBlob<uint16_t>(numidx));
         if (0 == ib16->size()) {
             GN_ERROR(sLogger)("Fail to load FBX mesh: out of memory.");
             return;
@@ -711,22 +701,22 @@ static void sLoadFbxMesh(ModelHierarchyDesc & desc, const StrA & filename, Model
     }
 
     // calculate the bounding box of the mesh
-    const MeshVertex * vertices = vertexBlob->array().data();
-    Boxf               boundingBox;
+    auto vertices = (const MeshVertex *) vertexBlob->data();
+    Boxf boundingBox;
     calculateBoundingBox(boundingBox, &vertices->pos.x, sizeof(MeshVertex), &vertices->pos.y, sizeof(MeshVertex), &vertices->pos.z, sizeof(MeshVertex),
-                         vertexBlob->array().size());
+                         vertexBlob->count());
 
     // Fill up the rest of informations for each models.
     for (size_t i = 0; i < models.size(); ++i) {
         models[i].mesh          = meshName;
-        models[i].subset.numvtx = (uint32_t) vertexBlob->array().size();
+        models[i].subset.numvtx = (uint32_t) vertexBlob->count();
     }
 
     // Now copy everthing to the output descriptor. And we are done!
     MeshResourceDesc & gnmesh = desc.meshes[meshName];
     gnmesh                    = {};
     gnmesh.prim               = PrimitiveType::TRIANGLE_LIST;
-    gnmesh.numvtx             = (uint32_t) vertexBlob->array().size();
+    gnmesh.numvtx             = (uint32_t) vertexBlob->count();
     gnmesh.numidx             = numidx;
     gnmesh.idx32              = gnmesh.numvtx > 0x10000;
     gnmesh.vtxfmt             = MeshVertex::sGetVertexFormat();
@@ -779,7 +769,7 @@ static bool sLoadFbxNodeRecursivly(ModelHierarchyDesc & desc, const StrA & filen
 
     // we don't support skeleton mesh yet. So ignore skeleton node for now.
 
-    const FbxMatrix & localTransform = node->GetScene()->GetEvaluator()->GetNodeLocalTransform(node);
+    const FbxMatrix & localTransform = node->GetScene()->GetAnimationEvaluator()->GetNodeLocalTransform(node);
     FbxVector4        t, s, sh;
     double            sign;
     FbxQuaternion     q;
@@ -986,9 +976,8 @@ static bool sParseModel(ModelHierarchyDesc & desc, XmlElement & root, const StrA
 
     if (NULL == desc.meshes.find(md.mesh)) {
         MeshResourceDesc mesh;
-        AutoRef<Blob>    blob = mesh.loadFromFile(fs::resolvePath(basedir, md.mesh));
-        if (!blob) return false;
-
+        auto             blob = mesh.loadFromFile(fs::resolvePath(basedir, md.mesh));
+        if (blob.empty()) return false;
         desc.meshes[md.mesh] = mesh;
         desc.meshdata.append(blob);
     }
@@ -1287,8 +1276,8 @@ bool sLoadModelHierarchyFromMeshBinary(ModelHierarchyDesc & desc, File & fp) {
     const StrA & meshname = fp.name();
 
     MeshResourceDesc mesh;
-    AutoRef<Blob>    blob = mesh.loadFromFile(fp);
-    if (!blob) return false;
+    auto             blob = mesh.loadFromFile(fp);
+    if (blob.empty()) return false;
 
     // determine the model template
     const ModelResourceDesc * modelTemplate = ase::sDetermineBestModelTemplate(mesh);
@@ -1300,7 +1289,7 @@ bool sLoadModelHierarchyFromMeshBinary(ModelHierarchyDesc & desc, File & fp) {
 
     // add mesh and model to scene
     desc.meshes[meshname] = mesh;
-    desc.meshdata.append(blob);
+    desc.meshdata.append(std::move(blob));
     desc.models[meshname] = model;
 
     // create a node for the model

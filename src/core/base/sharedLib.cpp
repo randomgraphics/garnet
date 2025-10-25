@@ -3,7 +3,7 @@
 
 #if GN_MSWIN
     #define SHLIB_LOAD(libName)          ((void *) LoadLibraryA(libName))
-    #define SHLIB_UNLOAD(lib)            (!!FreeLibrary(HMODULE(lib)))
+    #define SHLIB_UNLOAD(lib)            (FreeLibrary(HMODULE(lib)))
     #define SHLIB_LOAD_SYMBOL(lib, symb) ((void *) GetProcAddress(HMODULE(lib), symb))
     #define SHLIB_ERROR()                ::GN::getWin32LastErrorInfo()
     #define SHLIB_EXT                    ".dll"
@@ -11,7 +11,7 @@
     #include <dlfcn.h>
     #include <stdio.h>
     #define SHLIB_LOAD(libName)          ((void *) dlopen(libName, RTLD_NOW))
-    #define SHLIB_UNLOAD(lib)            (!dlclose(lib))
+    #define SHLIB_UNLOAD(lib)            (dlclose(lib))
     #define SHLIB_LOAD_SYMBOL(lib, symb) ((void *) dlsym(lib, symb))
     #define SHLIB_ERROR()                dlerror()
     #if GN_CYGWIN
