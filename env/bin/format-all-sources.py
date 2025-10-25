@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-import sys, pathlib, subprocess, importlib, argparse, platform, concurrent.futures, threading
+import sys, pathlib, subprocess, importlib, argparse, platform, concurrent.futures, threading, os
 utils = importlib.import_module("garnet-utils")
 
 ap = argparse.ArgumentParser()
@@ -34,6 +34,11 @@ if "Windows" == system:
      clang_format = str(root_dir / "env/bin/clang-format-14.exe")
 else:
      clang_format = "clang-format-14"
+
+# Make sure clang-format is available
+if not os.path.exists(clang_format):
+     utils.rip(f"clang-format-14 not found. Please install it.")
+     sys.exit(1)
 
 # create a lock to serialize output
 lock = threading.Lock()

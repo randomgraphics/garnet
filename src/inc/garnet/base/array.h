@@ -740,13 +740,12 @@ public:
     template<typename T2>
     void copyTo(size_t srcOffset, const SafeArrayAccessor<T2> & dest, size_t dstOffset, size_t lengthInUnitOfT) {
         const T * src = subrange(srcOffset, lengthInUnitOfT);
-        T2 * dst = dest.subrange(dstOffset, lengthInUnitOfT);
-        if constexpr(std::is_trivially_copyable<T>::value && std::is_trivially_copyable<T2>::value) {
+        T2 *      dst = dest.subrange(dstOffset, lengthInUnitOfT);
+        if constexpr (std::is_trivially_copyable<T>::value && std::is_trivially_copyable<T2>::value) {
+            GN_CASSERT(sizeof(T) == sizeof(T2));
             memcpy(dst, src, lengthInUnitOfT * sizeof(T));
         } else {
-            for (size_t i = 0; i < lengthInUnitOfT; ++i) {
-                dst[i] = src[i];
-            }
+            for (size_t i = 0; i < lengthInUnitOfT; ++i) { dst[i] = src[i]; }
         }
     }
 
