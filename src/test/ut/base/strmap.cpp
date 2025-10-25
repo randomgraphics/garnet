@@ -5,6 +5,9 @@
 #include <iostream>
 #include <unordered_map>
 
+#define FMT_HEADER_ONLY
+#include <fmt/format.h>
+
 #if GN_ANDROID && GN_CLANG
     #pragma clang diagnostic ignored "-Wformat"
 #endif
@@ -34,20 +37,20 @@ class StringMapTest : public CxxTest::TestSuite {
         Perf hashmap;
 
         void print() const {
-            printf("GN::Dictionary  - insert : %lld\n", dict.insert.count());
-            printf("std::map        - insert : %lld\n", stlmap.insert.count());
-            printf("StringMap       - insert : %lld\n", strmap.insert.count());
-            printf("HashMap         - insert : %lld\n", hashmap.insert.count());
+            printf("%s", fmt::format("GN::Dictionary  - insert : {}\n", dict.insert.count()).c_str());
+            printf("%s", fmt::format("std::map        - insert : {}\n", stlmap.insert.count()).c_str());
+            printf("%s", fmt::format("StringMap       - insert : {}\n", strmap.insert.count()).c_str());
+            printf("%s", fmt::format("HashMap         - insert : {}\n", hashmap.insert.count()).c_str());
 
-            printf("GN::Dictionary  - find   : %lld\n", dict.find.count());
-            printf("std::map        - find   : %lld\n", stlmap.find.count());
-            printf("StringMap       - find   : %lld\n", strmap.find.count());
-            printf("HashMap         - find   : %lld\n", hashmap.find.count());
+            printf("%s", fmt::format("GN::Dictionary  - find   : {}\n", dict.find.count()).c_str());
+            printf("%s", fmt::format("std::map        - find   : {}\n", stlmap.find.count()).c_str());
+            printf("%s", fmt::format("StringMap       - find   : {}\n", strmap.find.count()).c_str());
+            printf("%s", fmt::format("HashMap         - find   : {}\n", hashmap.find.count()).c_str());
 
-            printf("GN::Dictionary  - remove : %lld\n", dict.remove.count());
-            printf("std::map        - remove : %lld\n", stlmap.remove.count());
-            printf("StringMap       - remove : %lld\n", strmap.remove.count());
-            printf("HashMap         - remove : %lld\n", hashmap.remove.count());
+            printf("%s", fmt::format("GN::Dictionary  - remove : {}\n", dict.remove.count()).c_str());
+            printf("%s", fmt::format("std::map        - remove : {}\n", stlmap.remove.count()).c_str());
+            printf("%s", fmt::format("StringMap       - remove : {}\n", strmap.remove.count()).c_str());
+            printf("%s", fmt::format("HashMap         - remove : {}\n", hashmap.remove.count()).c_str());
         }
     };
 
