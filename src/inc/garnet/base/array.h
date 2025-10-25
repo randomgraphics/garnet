@@ -729,19 +729,26 @@ public:
         return *(mEnd - 1);
     }
 
-    T * subrange(size_t index, size_t length) const {
+    T * subrange(size_t index, size_t lengthInUnitOfT) const {
         GN_ASSERT(mBegin <= (mPtr + index));
         GN_ASSERT((mPtr + index) < mEnd);
-        GN_ASSERT((mPtr + index + length) <= mEnd);
-        GN_UNUSED_PARAM(length);
+        GN_ASSERT((mPtr + index + lengthInUnitOfT) <= mEnd);
+        GN_UNUSED_PARAM(lengthInUnitOfT);
         return mPtr + index;
     }
 
-    // template<typename T2>
-    // void copyTo(size_t srcOffset, const SafeArrayAccessor<T2> & dest, size_t dstOffset, size_t bytes) {
-    //     GN_CASSERT(sizeof(T) == sizeof(T2));
-    //     memcpy(dest.subrange(dstOffset, bytes), subrange(srcOffset, bytes), bytes);
-    // }
+    template<typename T2>
+    void copyTo(size_t srcOffset, const SafeArrayAccessor<T2> & dest, size_t dstOffset, size_t lengthInUnitOfT) {
+        const T * src = subrange(srcOffset, lengthInUnitOfT);
+        T2 * dst = dest.subrange(dstOffset, lengthInUnitOfT);
+        if constexpr(std::is_trivially_copyable<T>::value && std::is_trivially_copyable<T2>::value) {
+            memcpy(dst, src, lengthInUnitOfT * sizeof(T));
+        } else {
+            for (size_t i = 0; i < lengthInUnitOfT; ++i) {
+                dst[i] = src[i];
+            }
+        }
+    }
 
     T & at(size_t index) const {
         GN_ASSERT(mBegin <= (mPtr + index));
