@@ -78,6 +78,7 @@ namespace internal {}
 
 // array types
 #include "base/array.h"
+#include "base/blob.h"
 
 // dictionary type
 #include "base/dict.h"
@@ -89,7 +90,6 @@ namespace internal {}
 #include "base/handle.h"
 
 // misc.
-#include "base/blob.h"
 #include "base/stdClass.h"
 #include "base/sharedLib.h"
 

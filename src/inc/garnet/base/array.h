@@ -9,6 +9,47 @@
 #include <vector>
 
 namespace GN {
+
+namespace details {
+template<class T>
+inline void inplaceDefaultConstructArray(size_t n, T * ptr) {
+    if (!ptr) GN_UNLIKELY return;
+    for (T * end = ptr + n; ptr < end; ++ptr) { new (ptr) T(); }
+}
+
+template<class T>
+inline void inplaceCopyConstructArray(size_t n, T * ptr, const T & from) {
+    if (!ptr) GN_UNLIKELY return;
+    for (T * end = ptr + n; ptr < end; ++ptr) { new (ptr) T(from); }
+}
+
+template<class T>
+inline void inplaceCopyConstructArray(size_t n, T * ptr, const T * from) {
+    if (!ptr || !from) GN_UNLIKELY return;
+    for (T * end = ptr + n; ptr < end; ++ptr, ++from) { new (ptr) T(*from); }
+}
+
+template<class T>
+inline void inplaceMoveConstructArray(size_t n, T * ptr, T * from) {
+    if (!ptr || !from) GN_UNLIKELY return;
+    for (T * end = ptr + n; ptr < end; ++ptr, ++from) { new (ptr) T(std::move(*from)); }
+}
+
+// Inplace destruct an array of objects. No memory\ freeing.
+template<class T>
+inline void inplaceDestructArray(size_t n, T * ptr) {
+    if constexpr (!std::is_pod<T>()) {
+        if (ptr && n) GN_LIKELY {
+                for (T * end = ptr + n; ptr < end; ++ptr) { ptr->T::~T(); }
+            }
+    } else {
+        // do nothing to POD like type.
+        (void) ptr;
+        (void) n;
+    }
+}
+} // namespace details
+
 ///
 /// Fixed sized array, which always has N elements.
 /// Behaves like C-style array, but with bound check in debug build.
@@ -668,18 +709,50 @@ public:
 
     SafeArrayAccessor(T * data, size_t count): mBegin(data), mEnd(data + count), mPtr(data) {}
 
-    T * subrange(size_t index, size_t length) const {
+    bool empty() const { return mPtr == mEnd; }
+
+    size_t size() const { return mEnd - mPtr; }
+
+    T * data() const { return mPtr; }
+
+    T * begin() const { return mPtr; }
+
+    T * end() const { return mEnd; }
+
+    T & front() const {
+        GN_ASSERT(!empty());
+        return *mPtr;
+    }
+
+    T & back() const {
+        GN_ASSERT(!empty());
+        return *(mEnd - 1);
+    }
+
+    T * subrange(size_t index, size_t lengthInUnitOfT) const {
         GN_ASSERT(mBegin <= (mPtr + index));
         GN_ASSERT((mPtr + index) < mEnd);
-        GN_ASSERT((mPtr + index + length) <= mEnd);
-        GN_UNUSED_PARAM(length);
+        GN_ASSERT((mPtr + index + lengthInUnitOfT) <= mEnd);
+        GN_UNUSED_PARAM(lengthInUnitOfT);
         return mPtr + index;
     }
 
     template<typename T2>
-    void copyTo(size_t srcOffset, const SafeArrayAccessor<T2> & dest, size_t dstOffset, size_t bytes) {
-        GN_CASSERT(sizeof(T) == sizeof(T2));
-        memcpy(dest.subrange(dstOffset, bytes), subrange(srcOffset, bytes), bytes);
+    void copyTo(size_t srcOffset, const SafeArrayAccessor<T2> & dest, size_t dstOffset, size_t lengthInUnitOfT) {
+        const T * src = subrange(srcOffset, lengthInUnitOfT);
+        T2 *      dst = dest.subrange(dstOffset, lengthInUnitOfT);
+        if constexpr (std::is_trivially_copyable<T>::value && std::is_trivially_copyable<T2>::value) {
+            GN_CASSERT(sizeof(T) == sizeof(T2));
+            memcpy(dst, src, lengthInUnitOfT * sizeof(T));
+        } else {
+            for (size_t i = 0; i < lengthInUnitOfT; ++i) { dst[i] = src[i]; }
+        }
+    }
+
+    T & at(size_t index) const {
+        GN_ASSERT(mBegin <= (mPtr + index));
+        GN_ASSERT((mPtr + index) < mEnd);
+        return mPtr[index];
     }
 
     T * operator->() const {
@@ -687,11 +760,12 @@ public:
         return mPtr;
     }
 
-    T & operator[](size_t index) const {
-        GN_ASSERT(mBegin <= (mPtr + index));
-        GN_ASSERT((mPtr + index) < mEnd);
-        return mPtr[index];
+    T & operator*() const {
+        GN_ASSERT(mBegin <= mPtr && mPtr < mEnd);
+        return *mPtr;
     }
+
+    T & operator[](size_t index) const { return at(index); }
 
     SafeArrayAccessor & operator++() {
         ++mPtr;

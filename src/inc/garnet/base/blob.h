@@ -1,78 +1,160 @@
-#ifndef __GN_BASE_BLOB_H__
-#define __GN_BASE_BLOB_H__
+#ifndef _GN_BASE_BLOB_H_
+#define _GN_BASE_BLOB_H_
 // *****************************************************************************
 /// \file
-/// \brief   non-typed binary data chunk class
-/// \author  chenli@@REDMOND (2009.9.24)
+/// \brief   Blob utilites
+/// \author  chenlee (2025.9)
 // *****************************************************************************
 
 namespace GN {
-///
-/// Represents a chunk of non-typed binary data
-///
-struct Blob : public RefCounter {
-    ///
-    /// get binary pointer
-    ///
-    virtual void * data() const = 0;
 
-    ///
-    /// get binary size in bytes
-    ///
-    virtual uint32_t size() const = 0;
+///
+/// Fix sized heap memory with regular data accessor and boundary check in debug build.
+/// It is movable but not copyable. This is means to pass around non-resizeable binary data block.
+///
+class Blob : public RefCounter {
+public:
+    // Type definitions
+    struct ImplBase {
+        virtual ~ImplBase() {};
+    };
+
+    // Disable copy semantics
+    GN_NO_COPY(Blob);
+    GN_NO_MOVE(Blob);
+
+    // Destructor
+    virtual ~Blob() {
+        mData = nullptr;
+        mSize = 0;
+        delete mImpl;
+        mImpl = 0;
+    }
+
+    template<typename T>
+    SafeArrayAccessor<T> accessor() const {
+        return SafeArrayAccessor<T>((T *) mData, mSize / sizeof(T));
+    }
+
+    bool empty() const { return mSize == 0; }
+
+    size_t size() const { return mSize; }
+
+    void * data() const { return mData; }
+
+    // Clear the blob. Make it empty.
+    void clear() {
+        mData = nullptr;
+        mSize = 0;
+        delete mImpl;
+        mImpl = 0;
+    }
+
+protected:
+    void *     mData = nullptr;
+    size_t     mSize = 0; ///< size in bytes
+    ImplBase * mImpl = nullptr;
+
+    Blob() {}
 };
 
-///
-/// A simple fixed size blob class
-///
+template<typename T, class OBJECT_ALLOCATOR = CxxObjectAllocator<T>>
 class SimpleBlob : public Blob {
-    void *   mBuffer;
-    uint32_t mSize;
+    typedef Blob Base;
+
+    struct Impl : Base::ImplBase {
+        size_t mSize = 0;
+        T *    mData = nullptr;
+
+        Impl(size_t size, T * data): mSize(size), mData(data) {}
+
+        ~Impl() override {
+            if (mData) {
+                details::inplaceDestructArray(mSize, mData);
+                OBJECT_ALLOCATOR::sDeallocate(mData);
+            }
+            mData = nullptr;
+            mSize = 0;
+        }
+    };
 
 public:
-    /// ctor
-    explicit SimpleBlob(uint32_t sz) {
-        mBuffer = HeapMemory::alignedAlloc(sz, 16);
-        mSize   = (NULL != mBuffer) ? sz : 0;
+    // Copy constructor from raw data array
+    explicit SimpleBlob(size_t count = 0, const T * data = nullptr) {
+        if (count > 0) {
+            // allocate raw memory
+            Base::mData = static_cast<T *>(OBJECT_ALLOCATOR::sAllocate(count));
+            if (!Base::mData) {
+                GN_ERROR(getLogger("GN.base.Blob"))("Failed to allocate memory for blob of %zu bytes", count * sizeof(T));
+            } else if (data) {
+                // copy construct the data array.
+                details::inplaceCopyConstructArray(count, (T *) Base::mData, data);
+                Base::mSize = count * sizeof(T);
+                Base::mImpl = new Impl(count, (T *) Base::mData);
+            } else {
+                // default construct the data array.
+                details::inplaceDefaultConstructArray(count, (T *) Base::mData);
+                Base::mSize = count;
+                Base::mImpl = new Impl(count, (T *) Base::mData);
+            }
+        }
     }
 
-    /// dtor
-    virtual ~SimpleBlob() {
-        HeapMemory::dealloc(mBuffer);
-        mBuffer = 0;
-        mSize   = 0;
-    }
-
-    //@{
-    virtual void *   data() const { return mBuffer; }
-    virtual uint32_t size() const { return mSize; }
-    //@}
+    // // Copy constructor from single initial value
+    // SimpleBlob(size_t count, const T & value) {
+    //     if (count > 0) {
+    //         Base::mData = static_cast<T *>(OBJECT_ALLOCATOR::sAllocate(count * sizeof(T)));
+    //         if (!Base::mData) GN_UNLIKELY {
+    //                 GN_ERROR(getLogger("GN.base.Blob"))("Failed to allocate memory for blob of size %zu", count * sizeof(T));
+    //                 Base::mSize = 0;
+    //             }
+    //         else { details::inplaceCopyConstructArray(count, Base::mData, value); }
+    //     }
+    // }
 };
 
-///
-/// A blob class that used DynaArray as backend.
-///
-template<typename T, typename SIZE_TYPE = size_t>
+template<typename T, class OBJECT_ALLOCATOR = CxxObjectAllocator<T>>
 class DynaArrayBlob : public Blob {
-    DynaArray<T, SIZE_TYPE> mBuffer;
+private:
+    typedef Blob Base;
+
+    struct Impl : Base::ImplBase {
+        DynaArray<T, size_t, OBJECT_ALLOCATOR> array;
+    };
+
+    DynaArray<T, size_t, OBJECT_ALLOCATOR> &       array() { return static_cast<Impl *>(Base::mImpl)->array; }
+    const DynaArray<T, size_t, OBJECT_ALLOCATOR> & array() const { return static_cast<Impl *>(Base::mImpl)->array; }
 
 public:
-    /// ctor
-    DynaArrayBlob() {}
+    DynaArrayBlob() { Base::mImpl = new Impl(); }
 
-    //@{
-    virtual void *   data() const { return (void *) mBuffer.data(); }
-    virtual uint32_t size() const { return (uint32_t) (sizeof(T) * mBuffer.size()); }
-    //@}
+    size_t count() const { return array().size(); }
 
-    //@{
-    DynaArray<T, SIZE_TYPE> &       array() { return mBuffer; }
-    const DynaArray<T, SIZE_TYPE> & array() const { return mBuffer; }
-    //@}
+    DynaArrayBlob & reserve(size_t count) {
+        auto   reservedSize = std::max(count, Base::mSize);
+        auto & a            = array();
+        a.reserve(reservedSize);
+        Base::mData = a.data(); // in case the array is reallocated
+        return *this;
+    }
+
+    DynaArrayBlob & resize(size_t count) {
+        auto & a = array();
+        a.resize(count);
+        Base::mData = a.data(); // in case the array is reallocated
+        Base::mSize = a.size() * sizeof(T);
+        return *this;
+    }
+
+    DynaArrayBlob & append(const T & value) {
+        auto & a = array();
+        a.append(value);
+        Base::mData = a.data(); // in case the array is reallocated
+        Base::mSize = a.size() * sizeof(T);
+        return *this;
+    }
 };
+
 } // namespace GN
 
-// *****************************************************************************
-//                                     EOF
-// *****************************************************************************
-#endif // __GN_BASE_BLOB_H__
+#endif // _GN_BASE_BLOB_H_

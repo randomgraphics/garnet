@@ -11,7 +11,7 @@ namespace gfx {
 ///
 /// Self-contained GPU program description: all string pointers point to internal data buffer
 ///
-class SelfContainedGpuProgramDesc : public Blob {
+class SelfContainedGpuProgramDesc {
     DynaArray<uint8_t> mBuffer;
 
     static inline bool sCheckShaderCode(const char *       type, ///< shader type

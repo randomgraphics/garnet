@@ -6,6 +6,7 @@
 /// \author  chenlee (2005.7.23)
 // *****************************************************************************
 
+#include "basicDefines.h"
 #include <new>
 
 /// \name macro to exception throw
@@ -155,128 +156,45 @@ struct RawHeapMemoryAllocator {
 ///
 template<typename T, typename RAW_MEMORY_ALLOCATOR = RawHeapMemoryAllocator>
 struct CxxObjectAllocator {
-    /// Allocate raw memory from heap
+    /// Allocate raw memory from heap. No calling constructors
     static inline T * sAllocate(size_t objectCount, size_t alignmentInBytes = DefaultMemoryAlignment<sizeof(T)>::VALUE) {
         return (T *) RAW_MEMORY_ALLOCATOR::sAllocate(objectCount * sizeof(T), alignmentInBytes);
     }
 
-    /// Deallocate memory buffer
+    /// Deallocate memory buffer. No calling destructors.
     static inline void sDeallocate(void * ptr) { RAW_MEMORY_ALLOCATOR::sDeallocate(ptr); }
 
-    /// Construct the object
-    static inline void sConstruct(T * ptr) { new (ptr) T; }
+    /// Inplace construct a single object
+    static inline void sConstruct(T * ptr) {
+        if (ptr) GN_LIKELY {
+                new (ptr) T;
+            }
+    }
 
-    /// Copy construct the object on existing memory buffer.
-    static inline void sConstruct(T * ptr, const T & x) { new (ptr) T(x); }
+    /// Inplace copy construct a single object.
+    static inline void sConstruct(T * ptr, const T & x) {
+        if (ptr) GN_LIKELY {
+                new (ptr) T(x);
+            }
+    }
 
-    /// Move construct the object on existing memory buffer.
-    static inline void sConstruct(T * ptr, T && x) { new (ptr) T(std::move(x)); }
+    /// Inplace move construct a single object.
+    static inline void sConstruct(T * ptr, T && x) {
+        if (ptr) GN_LIKELY {
+                new (ptr) T(std::move(x));
+            }
+    }
 
-    /// Destruct the object, but do not free the memory buffer.
+    /// Inplace destruct a single object. No memory freeing.
     static inline void sDestruct(T * ptr) {
-        ptr->T::~T();
-
-        // Note:
-        //  This is to ensure that the compiler thinks that variable ptr is used.
-        //
-        //  When T is a simple type, like char or integer, VC compiler will generate
-        //  warning of "unreferenced formal parameter", since there's no destructor for POD types.
-        (void) ptr;
+        if constexpr (!std::is_pod<T>()) {
+            if (ptr) GN_LIKELY ptr->T::~T();
+        } else {
+            // do nothing to POD type.
+            (void) ptr;
+        }
     }
 };
-
-#if 0
-    ///
-    /// STL compilant allocator that use garnet heap memory management routines.
-    ///
-    template<typename T>
-    class StlAllocator
-    {
-        /// \cond NEVER
-    public:
-        typedef T                  value_type;
-        typedef size_t             size_type;
-        typedef ptrdiff_t          difference_type;
-        typedef const value_type * const_pointer;
-        typedef const value_type & const_reference;
-        typedef value_type *       pointer;
-        typedef value_type &       reference;
-
-        template<class T2>
-        struct rebind
-        {
-            typedef StlAllocator<T2> other;
-        };
-
-        StlAllocator() GN_NOTHROW() {}
-
-        ~StlAllocator() GN_NOTHROW() {}
-
-        StlAllocator( const StlAllocator<T> & ) GN_NOTHROW() {}
-
-        template<class T2>
-        StlAllocator( const StlAllocator<T2> & ) GN_NOTHROW() {}
-
-        template<class T2>
-        StlAllocator<T> & operator=( const StlAllocator<T2> & )
-        {
-            return *this;
-        }
-
-        pointer address( reference x ) const
-        {
-            return &x;
-        }
-
-        const_pointer address( const_reference x ) const
-        {
-            return &x;
-        }
-
-        pointer allocate( size_type count )
-        {
-            void * p = HeapMemory::alignedAlloc( count * sizeof(T), DefaultMemoryAlignment<sizeof(T)>::VALUE );
-
-            // Note: here we are different from standard STL allocator. We return
-            // NULL pointer instead of throw std::bad_alloc() pointer.
-            return static_cast<pointer>(p);
-        }
-
-        void deallocate( pointer ptr, size_type )
-        {
-            HeapMemory::dealloc( ptr );
-        }
-
-        void construct( pointer ptr, const_reference x )
-        {
-            new (ptr) T(x);
-        }
-
-        void construct( pointer ptr )
-        {
-            new (ptr) T;
-        }
-
-        void destroy( pointer ptr )
-        {
-            ptr->T::~T();
-
-            // Note:
-            //  This is to ensure that the compiler thinks that variable ptr is used.
-            //
-            //  When T is a simple type, like char or integer, VC compiler will generate
-            //  warning of "unreferenced formal parameter", since there's no destructor for POD types.
-            (void)ptr;
-        }
-
-        size_type max_size() const GN_NOTHROW()
-        {
-            size_type count = (size_t)(-1) / sizeof(T);
-            return ( 0 < count ? count : 1 );
-        }
-        /// \endcond
-    };
-#endif
 
 ///
 /// Fix-sized raw memory pool, no ctor/dtor involved.

@@ -16,15 +16,7 @@
 #include <assimp/IOStream.hpp>
 #include <assimp/IOSystem.hpp>
 
-#ifdef HAS_FBX
-    #if GN_GNUC
-        #pragma GCC diagnostic ignored "-Wunused"
-    #elif GN_MSVC
-        #pragma warning(disable : 4996) // 'x' was declared depreciated
-    #endif
-    #define FBXSDK_SHARED
-    #include <fbxsdk.h>
-#endif
+#include "fbx-settings.h"
 
 using namespace GN;
 using namespace GN::gfx;
@@ -546,13 +538,13 @@ static void sLoadFbxLimbNodes(FatSkeleton & fatsk, uint32_t parent, uint32_t pre
 
     // Get the global transform of the node. Note that it is the transformation
     // from joint space to model space.
-    sFbxMatrix2GarnetMatrix(newjoint.bindPose.model2joint, fbxnode->GetScene()->GetEvaluator()->GetNodeGlobalTransform(fbxnode));
+    sFbxMatrix2GarnetMatrix(newjoint.bindPose.model2joint, fbxnode->GetScene()->GetAnimationEvaluator()->GetNodeGlobalTransform(fbxnode));
 
     // Inverse that to get the bind pose transfomration we want.
     newjoint.bindPose.model2joint.inverse();
 
     // Now get joint local transformations.
-    FbxMatrix     localTransform = fbxnode->GetScene()->GetEvaluator()->GetNodeLocalTransform(fbxnode);
+    FbxMatrix     localTransform = fbxnode->GetScene()->GetAnimationEvaluator()->GetNodeLocalTransform(fbxnode);
     FbxVector4    t, sh, s;
     FbxQuaternion r;
     double        sign;
@@ -750,7 +742,7 @@ static void sLoadFbxVertexSkinning(INOUT uint32_t & skeleton, // Index into FatM
 // -----------------------------------------------------------------------------
 static bool sGenerateFatVertices(FatMesh & fatmesh, FbxNode * fbxnode, const MeshVertexCache * vertices, const MeshVertexKey * keys, uint32_t numkeys) {
     // Compute the node's global position.
-    FbxMatrix globalTransform = fbxnode->GetScene()->GetEvaluator()->GetNodeGlobalTransform(fbxnode);
+    FbxMatrix globalTransform = fbxnode->GetScene()->GetAnimationEvaluator()->GetNodeGlobalTransform(fbxnode);
 
     // Geometry offset is not inherited by the children.
     FbxMatrix  geometryOffset;

@@ -14,6 +14,13 @@ function(add_simple_test folder)
     target_link_libraries(${target_name} GNcore)
 endfunction()
 
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/fmt/include)
+
+# this is needed for fmt to build correctly with unicode support on Windows platform.
+if (MSVC)
+    add_compile_options("/utf-8")
+endif()
+
 if (GLUT_FOUND)
     add_simple_test(assimp)
 endif()
