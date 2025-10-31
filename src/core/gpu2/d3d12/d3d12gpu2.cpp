@@ -247,11 +247,15 @@ GN::AutoRef<GN::gfx::Gpu2::Surface> GN::gfx::D3D12Gpu2::createSurface(const Surf
 //
 //
 // -----------------------------------------------------------------------------
-auto GN::gfx::D3D12Gpu2::kickOff(GN::gfx::Gpu2::CommandList & cl) -> Kicked {
-    auto ptr = (D3D12CommandList *) &cl;
-    auto f   = ptr->kickOff(_graphicsQueue);
-    return {f, 0};
-}
+auto GN::gfx::D3D12Gpu2::kickOff(ConstRange<GN::gfx::Gpu2::CommandList*> commands) -> Kicked {
+    Kicked k;
+    for(auto c : commands) {
+        if (!c) continue;
+        auto ptr = (D3D12CommandList *) c;
+        k.fence = ptr->kickOff(_graphicsQueue);
+    }
+    return k;
+ }
 
 //
 //
@@ -356,7 +360,28 @@ void GN::gfx::D3D12CommandList::reset(uint64_t initialState) {
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3D12CommandList::clear(const Gpu2::ClearParameters & p) {
+void GN::gfx::D3D12CommandList::begin(const Gpu2::RenderPass &) {
+    //
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::gfx::D3D12CommandList::next() {
+    //
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::gfx::D3D12CommandList::end() {
+    //
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::gfx::D3D12CommandList::clearScreen(const Gpu2::ClearScreenParameters & p) {
     _pool.begin()->commandList->ClearRenderTargetView(_owner.backrtv(), p.color, 0, nullptr);
 }
 

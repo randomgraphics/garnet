@@ -12,141 +12,17 @@ struct Gpu2 : public RefCounter {
         AUTO,
         D3D12,
         VULKAN,
+        METAL,
     };
     struct CreateParameters {
-        win::Window * window;
-        GraphicsAPI   api   = GraphicsAPI::AUTO;
-        uint32_t      width = 0, height = 0; // back buffer size. set to 0 to use window size.
-        bool          fullscreen = false;
-        bool          debug      = GN_BUILD_DEBUG_ENABLED;
+        win::Window * window; ///< window to use for rendering. Set to null for headless mode.
+        GraphicsAPI   api   = GraphicsAPI::AUTO; ///< graphics API to use.
+        uint32_t      width = 0; ///< back buffer width. set to 0 to use window size.
+        uint32_t      height = 0; ///< back buffer height. set to 0 to use window size.
+        bool          fullscreen = false; ///< set to true to use fullscreen mode.
+        bool          debug      = GN_BUILD_DEBUG_ENABLED; ///< set to true to enable debug mode.
     };
     static GN_API AutoRef<Gpu2> createGpu2(const CreateParameters &);
-    //@}
-
-    /// GPU pipeline
-    //@{
-    struct CompiledShaderBlob {
-        const void * ptr         = nullptr; ///< pointer to shader byte code. Null means the shader stage is disbaled.
-        uint64_t     sizeInBytes = 0;       ///< size of the byte code
-        const char * entry       = nullptr; ///< entry point of the shader (only used in spir-v shader)
-    };
-
-    struct InputElement {
-        const char * semantic;
-        uint32_t     index;
-        PixelFormat  format;
-        uint32_t     slot;                         // input assembly slot: 0-15
-        uint32_t     offset       = (uint32_t) -1; // byte offset of the element. Set to -1 for auto alignment.
-        bool         instanceData = false;
-        uint32_t     instanceRate = 0;
-    };
-    struct PipelineCreateParameters {
-        CompiledShaderBlob   vs, hs, ds, gs, ps, cs;
-        const InputElement * inputElements;
-        uint32_t             numInputElements;
-        const char *         states; // pipeline state defined in JSON format.
-    };
-    virtual DynaArray<uint64_t> createPipelineStates(const PipelineCreateParameters *, size_t) = 0;
-    virtual void                deletePipelineStates(const uint64_t *, size_t)                 = 0;
-    //@}
-
-    struct Surface;
-
-    /// GPU command list
-    //@{
-    enum class CommandListType {
-        GRAPHICS,
-        COMPUTE,
-        DMA, // for copy operations
-    };
-    struct ClearParameters {
-        float    color[4] = {.0f, .0f, .0f, .0f};
-        float    depth    = 1.0f;
-        uint32_t stencil  = 0;
-        union {
-            uint8_t u8 = 0xFF;
-            struct {
-                uint8_t c : 1;
-                uint8_t d : 1;
-                uint8_t s : 1;
-            };
-        } flags {};
-    };
-    struct VertexBufferView {
-        const Surface * surface;
-        uint32_t        offset; // offset in bytes
-        uint32_t        stride; // stride in bytes
-    };
-    struct DrawParameters {
-        uint64_t pso;
-
-        uint32_t                 vertexBufferCount;
-        const VertexBufferView * vertexBuffers;
-        Surface *                indexBuffer; // set to null for non-indexed draw.
-
-        PrimitiveType prim;
-        uint32_t      vertexOrIndexCount;
-        uint32_t      baseVertex = 0;
-        uint32_t      baseIndex  = 0; // ignored when indexBuffer is null.
-    };
-    struct ComputeParameters {
-        uint64_t pso;
-        uint32_t groupX;
-        uint32_t groupY = 1;
-        uint32_t groupZ = 1;
-    };
-    struct CopySurfaceParameters {
-        Surface * source;
-        uint64_t  sourceOffset;
-        uint64_t  sourceBytes;
-        Surface * dest;
-        uint64_t  destOffset;
-    };
-    struct CommandListCreateParameters {
-        CommandListType type                 = CommandListType::GRAPHICS;
-        uint64_t        initialPipelineState = 0; // optional initial pipeline state. If empty, the default state is used.
-    };
-    struct CommandList : public RefCounter {
-        virtual void reset(uint64_t initialPipelineState = 0)   = 0;
-        virtual void clear(const ClearParameters &)             = 0;
-        virtual void draw(const DrawParameters &)               = 0;
-        virtual void compute(const ComputeParameters &)         = 0;
-        virtual void copySurface(const CopySurfaceParameters &) = 0;
-        void         copySurface(Surface * from, Surface * to) { copySurface({from, 0, 0, to, 0}); }
-    };
-    struct Kicked {
-        uint64_t fence     = 0;
-        uint64_t semaphore = 0;
-        bool     empty() const { return 0 == fence && 0 == semaphore; }
-    };
-    virtual auto createCommandList(const CommandListCreateParameters &) -> AutoRef<CommandList> = 0;
-    virtual auto kickOff(CommandList &) -> Kicked                                               = 0; ///< kick off command lists.
-    virtual void finish(uint64_t fence = 0) = 0; // Block the calling CPU thread until the fence, if specified, is passed. If fence is 0, wait all pending
-                                                 // works from all engine to be done.
-    //@}
-
-    /// GPU memory pool
-    //@{
-    enum class MemoryType {
-        /// The memory type optimized for GPU reading & writing. CPU access is prohibited.
-        DEFAULT = 0,
-
-        /// The memory type optimized for uploading dynamic data from CPU to GPU. GPU access bandwidth is limited.
-        /// Best for CPU-write-once, GPU-read-once data. CPU read is allowed but could be slow. GPU-write to this
-        /// is not recommended and could cause undefined behavior.
-        UPLOAD,
-
-        /// The memory type optimized for reading data back from GPU. GPU access bandwidth is limited.
-        /// Best for GPU-write-once, CPU-readable data. CPU-write to this buffer is not recommended and could cause
-        /// undefined result.
-        READ_BACK,
-    };
-    struct MemoryBlockCreateParameters {
-        uint64_t   sizeInMB;
-        MemoryType type;
-    };
-    struct MemoryBlock : public RefCounter {};
-    virtual AutoRef<MemoryBlock> createMemoryBlock(const MemoryBlockCreateParameters &) = 0;
     //@}
 
     // /// descriptor pool
@@ -169,12 +45,12 @@ struct Gpu2 : public RefCounter {
     // virtual void createDescriptors(const DescriptorCreateParameters *, size_t) = 0;
     // //@}
 
-    /// GPU surface
-    //@{
-    enum class SurfaceType {
-        BUFFER,
-        TEXTURE,
-    };
+    // *********************************************************************************************************************************************************
+    //
+    // resource management
+    //
+    // *********************************************************************************************************************************************************
+
     union SurfaceFlags {
         uint8_t u8 = 0;
         struct {
@@ -184,59 +60,213 @@ struct Gpu2 : public RefCounter {
             uint8_t ds : 1; // the surface could be used as DSV
         };
     };
-    struct SurfaceCreateParameters {
-        MemoryBlock * memory;
-        uint64_t      offset;
-        SurfaceType   type;
-        struct TextureDesc {
-            uint32_t    w, h = 1, d = 1, a = 1, m = 1, s = 1; ///< width, height, depth, array, mipmaps, samples.
-            PixelFormat f;                                    ///< format
-        } t;
-        struct BufferDesc {
-            uint32_t bytes;
-        } b;
+
+    enum class SurfaceType {
+        BUFFER,
+        TEXTURE,
+    };
+
+    struct TextureDesc {
         SurfaceFlags flags = {0};
+        uint32_t     w = 1, h = 1, d = 1, a = 1, m = 1, s = 1; ///< width, height, depth, array, mipmaps, samples.
+        PixelFormat  f = PixelFormat::UNKNOWN;                                    ///< format
     };
-    struct MappedSurfaceData {
-        void *   ptr;
-        uint64_t slicePitch;
-        uint64_t rawPitch;
-        uint32_t subSurfaceId;
+
+    struct BufferDesc {
+        SurfaceFlags flags = {0};
+        uint32_t     bytes = 0; ///< buffer size in bytes.
     };
-    /// this could be a texture or a buffer.
-    struct Surface : public RefCounter {
-        virtual MappedSurfaceData map(uint32_t subSurfaceId)   = 0;
-        virtual void              unmap(uint32_t subSurfaceId) = 0;
+
+    struct SamplerDesc {
+        //
     };
-    virtual AutoRef<Surface> createSurface(const SurfaceCreateParameters &) = 0;
+
+    struct Texture : public RefCounter {
+        //
+    };
+
+    struct Buffer : public RefCounter {
+        //
+    };
+
+    struct Sampler : public RefCounter {
+        //
+    };
+
+    virtual AutoRef<Buffer> createBuffer(const BufferDesc &) = 0;
+    virtual AutoRef<Texture> createTexture(const TextureDesc &) = 0;
+    virtual AutoRef<Sampler> createSampler(const SamplerDesc &) = 0;
+
+    // *********************************************************************************************************************************************************
+    //
+    // pipeline management
+    //
+    // *********************************************************************************************************************************************************
+
+    struct CompiledShaderBlob {
+        ArrayProxy<char> binary;
+        const char *     entry;
+    };
+    struct InputElement {
+        const char * semantic;
+        uint32_t     index;
+        PixelFormat  format;
+        uint32_t     slot;                         // input assembly slot: 0-15
+        uint32_t     offset       = (uint32_t) -1; // byte offset of the element. Set to -1 for auto alignment.
+        bool         instanceData = false;
+        uint32_t     instanceRate = 0;
+    };
+    struct PipelineCreateParameters {
+        CompiledShaderBlob      vs, hs, ds, gs, ps, cs;
+        DynaArray<InputElement> inputElements;
+    };
+    struct Pipeline : RefCounter {
+        //
+    };
+    virtual auto createPipelines(ArrayProxy<const PipelineCreateParameters>) -> DynaArray<AutoRef<Pipeline>> = 0;
+
+    // *********************************************************************************************************************************************************
+    //
+    // command list management
+    //
+    // *********************************************************************************************************************************************************
+
+    enum class CommandListType {
+        GRAPHICS,
+        COMPUTE,
+        DMA, // for copy operations
+    };
+    enum class PrimitiveType {
+        POINT_LIST,
+        LINE_LIST,
+        LINE_STRIP,
+        TRIANGLE_LIST,
+        TRIANGLE_STRIP,
+    };
+    struct SubPass {
+        DynaArray<size_t> inputs;
+        DynaArray<size_t> colors;
+        size_t            depth = size_t(~0);
+    };
+    struct RenderPass {
+        DynaArray<AutoRef<Surface>> targets;
+        DynaArray<SubPass>          subs;
+    };
+    struct ClearScreenParameters {
+        float    color[4] = {.0f, .0f, .0f, .0f};
+        float    depth    = 1.0f;
+        uint32_t stencil  = 0;
+        union {
+            uint8_t u8 = 0xFF;
+            struct {
+                uint8_t c : 1;
+                uint8_t d : 1;
+                uint8_t s : 1;
+            };
+        } flags {};
+    };
+    struct VertexBuffer {
+        const Surface * surface;
+        uint32_t        offset; // offset in bytes
+        uint32_t        stride; // stride in bytes
+    };
+    struct DrawParameters {
+        AutoRef<Pipeline> pipeline;
+        ArrayProxy<const VertexBuffer> vertexBuffers;
+        Surface *                      indexBuffer = nullptr; // set to null for non-indexed draw.
+
+        PrimitiveType primitive = PrimitiveType::TRIANGLE_LIST;
+        uint32_t      instanceBase = 0; ///< the instance ID of the first instance to draw
+        uint32_t      instanceCount = 1; ///< the number of instances to draw
+        uint32_t      vertexBase = 0; ///< the value added to the vertex index before indexing into the vertex buffer
+        uint32_t      vertexOrIndexCount = 0;
+        uint32_t      indexBase = 0; ///< the base index within the index buffer. Ignored if indexBuffer is null.
+    };
+    struct ComputeParameters {
+        uint64_t pso;
+        uint32_t groupX;
+        uint32_t groupY = 1;
+        uint32_t groupZ = 1;
+    };
+    struct CopySurfaceParameters {
+        Surface * source;
+        uint64_t  sourceOffset = 0;
+        uint64_t  sourceBytes  = uint64_t(~0);
+        Surface * dest;
+        uint64_t  destOffset = 0;
+    };
+    struct CommandListCreateParameters {
+        CommandListType type                 = CommandListType::GRAPHICS;
+        uint64_t        initialPipelineState = 0; // optional initial pipeline state. If empty, the default state is used.
+    };
+
+    /// A one-time use command list to record GPU rendering commands. Once the command list is submitted to GPU (via kickOff() method),
+    /// it becomes inaccessible and should not be used anymore.
+    struct CommandList : public RefCounter {
+        // graphics commands (not valid on compute and copy command list)
+        //@{
+        virtual void begin(const RenderPass &)            = 0; ///< begin a new render pass
+        virtual void next()                               = 0; ///< move to next subpass.
+        virtual void end()                                = 0; ///< end current render pass
+        virtual void clear(const ClearScreenParameters &) = 0; ///< clear screen. must be called between begin() and end() calls.
+        virtual void draw(const DrawParameters &)         = 0; ///< issue GPU draw command. must be called between begin() and end() calls.
+        //@}
+        virtual void comp(const ComputeParameters &)      = 0; ///< issue GPU compute command.
+        virtual void copy(const CopySurfaceParameters &)  = 0; ///< issue GPU copy command
+        void         copy(Surface * from, Surface * to) { copy({from, 0, uint64_t(~0), to, 0}); } ///< helper to copy entire surface.
+    };
+
+    struct Kicked {
+        uint64_t fence     = 0;
+        uint64_t semaphore = 0;
+        bool     empty() const { return 0 == fence && 0 == semaphore; }
+    };
+
+    /// Create a new command list. Once the command list is created, it is empty and ready to record commands.
+    /// It is imperative that a command list must be either discarded or kicked off, otherwise it will be leaked,
+    /// along with all resources it references.
+    virtual auto createCommandList(const CommandListCreateParameters &) -> AutoRef<CommandList> = 0;
+
+    /// Kick off an array of command list. Must be called in between beginFrame() and present() calls.
+    virtual auto kickOff(ArrayProxy<CommandList *>) -> Kicked = 0;
+
+    /// Discard an array of command list. This is used to discard the command list that were created but not useful any more.
+    virtual void discard(ArrayProxy<CommandList *>) = 0;
+
+    /// Block the calling CPU thread until the fence, if specified, is passed. If fence is 0, wait all pending
+    /// works from all engine to be done.
+    virtual void finish(uint64_t fence = 0) = 0;
     //@}
 
-    //@{
-    struct QueryCreateParameters {};
-    struct Query : public RefCounter {};
-    virtual AutoRef<Query> createQuery(const QueryCreateParameters &) = 0;
-    //@}
+    // *********************************************************************************************************************************************************
+    //
+    // frame management
+    //
+    // *********************************************************************************************************************************************************
 
-    /// present
-    //@{
-    struct PresentParameters {};
+    struct Frame {
+        // contains backbuffer information of the current frame.
+    };
+    struct PresentParameters {
+        //
+    };
+    virtual auto beginFrame() -> Frame = 0;
     virtual void present(const PresentParameters &) = 0;
-    //@}
 };
 
 struct ShaderCompileParameters {
     struct Options {
-        bool debugable : 1; ///< set to true to generate shader binary with debug information.
-        bool optimized : 1; ///< set to true to generate optimized shader.
-        Options(): debugable(GN_BUILD_DEBUG_ENABLED), optimized(true) {}
+        bool debuggable : 1; ///< set to true to generate shader binary with debug information.
+        bool optimized  : 1; ///< set to true to generate optimized shader.
+        Options(): debuggable(GN_BUILD_DEBUG_ENABLED), optimized(true) {}
     };
 
     const char * source;
-    size_t       length {}; // could be 0 for null-terminated string.
+    size_t       length {}; // could be set to 0, if the source string is null-terminated.
     const char * entry {};
     const char * profile {};
     Options      options {};
 };
-GN_API DynaArray<uint8_t> compileHLSL(const ShaderCompileParameters &);
+GN_API DynaArray<uint8_t> compileShader(const ShaderCompileParameters &);
 } // end of namespace gfx
 } // end of namespace GN
