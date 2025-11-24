@@ -10,6 +10,7 @@
 #include <ostream>
 #include <string.h>
 #include <string>
+
 namespace GN {
 
 /// @brief Namespace for string utilities.
@@ -139,27 +140,20 @@ inline bool isEmpty(const CHAR * s) {
 }
 
 ///
-/// safe sprintf. This function always outputs null-terminated string,
-/// like StringCchPrintf(...)
+/// format string via template argument pack.
+/// return the length of the formatted string (not including the null terminator)
 ///
-GN_API void formatTo(char * buf, size_t bufSizeInChar, const char * fmt, ...);
-
-///
-/// safe sprintf. This function always outputs null-terminated string,
-/// like StringCchPrintf(...)
-///
-GN_API void formatTo(wchar_t * buf, size_t bufSizeInWchar, const wchar_t * fmt, ...);
-
-///
-/// safe sprintf. This function always outputs null-terminated string,
-/// like StringCchPrintf(...)
-///
-GN_API void formatvTo(char * buf, size_t bufSizeInChar, const char * fmt, va_list args);
-
-///
-/// printf-like format string (wide-char)
-///
-GN_API void formatvTo(wchar_t * buf, size_t bufSizeInWchar, const wchar_t * fmt, va_list args);
+template<typename CHAR, typename... Args>
+inline size_t formatTo(CHAR * buf, size_t bufSizeInChar, const CHAR * fmt, Args&&... args) {
+    const auto result = std::format_to_n(buf, bufSizeInChar, fmt, std::forward<Args>(args)...);
+    if (result.size < bufSizeInChar) GN_LIKELY {
+        buf[result.size] = 0;
+        return result.size;
+    } else {
+        buf[bufSizeInChar - 1] = 0;
+        return bufSizeInChar - 1;
+    }
+}
 
 ///
 /// string hash function
@@ -447,32 +441,6 @@ public:
     /// get first character of the string. If string is empty, return 0.
     ///
     CharType first() const { return mPtr[0]; }
-
-    ///
-    /// printf-like string formatting
-    ///
-    const CharType * format(const CharType * fmt, ...) {
-        va_list arglist;
-        va_start(arglist, fmt);
-        formatv(fmt, arglist);
-        va_end(arglist);
-        return mPtr;
-    }
-
-    ///
-    /// printf-like string formatting
-    ///
-    const CharType * formatv(const CharType * fmt, va_list args) {
-        if (str::isEmpty(fmt)) {
-            clear();
-        } else {
-            CharType buf[16384]; // 16k should be enough in most cases
-            str::formatvTo(buf, 16384, fmt, args);
-            buf[16383] = 0;
-            assign(buf);
-        }
-        return mPtr;
-    }
 
     ///
     /// get string caps
@@ -894,6 +862,20 @@ public:
     struct Hash {
         uint64_t operator()(const Str & s) const { return str::hash(s.mPtr, s.size()); }
     };
+
+    ///
+    /// string formatting
+    ///
+    template<typename... Args>
+    static Str<CharType> format(const CharType * fmt, Args&&... args) {
+        auto requiredLength = std::formatted_size(fmt, std::forward<Args>(args)...);
+        Str<CharType> s(requiredLength);
+        auto newSize = str::formatTo<CharType>(s.data, s.caps(), fmt, std::forward<Args>(args)...);
+        GN_ASSERT(newSize <= s.caps() && s.mPtr[newSize] == 0);
+        s.setSize(newSize);
+        return s;
+    }
+
 
 private:
     struct StringHeader {

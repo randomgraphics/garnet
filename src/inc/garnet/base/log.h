@@ -179,7 +179,7 @@ public:
         template<typename... Args>
         void operator()(const char * format_, Args&&... args_) {
             GN_ASSERT(mLogger);
-            return mLogger->doLog(mDesc, fmt::format(format_, std::forward<Args>(args_)...).c_str());
+            return mLogger->doLog(mDesc, StrA::format(format_, std::forward<Args>(args_)...).data());
         }
 
         ///
@@ -188,7 +188,7 @@ public:
         template<typename... Args>
         void operator()(const wchar_t * format_, Args&&... args_) {
             GN_ASSERT(mLogger);
-            return mLogger->doLog(mDesc, fmt::format(format_, std::forward<Args>(args_)...).c_str());
+            return mLogger->doLog(mDesc, StrW::format(format_, std::forward<Args>(args_)...).data());
         }
     };
 
