@@ -567,8 +567,8 @@ AutoRef<EffectResource> GN::gfx::EffectResource::loadFromFile(GpuResourceDatabas
     if (resource) return resource;
 
     // convert to full (absolute) path
-    std::string abspath = fs::resolvePath(fs::getCurrentDir(), filename);
-    filename     = abspath;
+    auto abspath = fs::resolvePath(fs::getCurrentDir(), filename);
+    filename     = abspath.data();
 
     // Try search for existing resource again with full path
     resource = db.findResource<EffectResource>(filename);

@@ -95,7 +95,7 @@ typedef std::recursive_mutex LocalMutex;
 //
 //
 // -----------------------------------------------------------------------------
-static inline std::string sLevel2Str(int level) {
+static inline GN::StrA sLevel2Str(int level) {
     switch (level) {
     case GN::Logger::FATAL:
         return "FATAL";
@@ -117,8 +117,8 @@ static inline std::string sLevel2Str(int level) {
 //
 //
 // -----------------------------------------------------------------------------
-static std::string sFormatPath(const char * path) {
-    std::string s;
+static GN::StrA sFormatPath(const char * path) {
+    GN::StrA s;
 
     if (NULL == path) return s;
 
@@ -266,11 +266,11 @@ struct ConsoleReceiver : public Logger::Receiver {
 /// Log to disk file
 ///
 struct FileReceiver : public Logger::Receiver {
-    std::string mFileName;
+    StrA mFileName;
 
     struct AutoFile {
         FILE * fp;
-        AutoFile(const std::string & name, const char * mode = "at"): fp(0) {
+        AutoFile(const StrA & name, const char * mode = "at"): fp(0) {
             if (name.empty()) return;
 #if GN_MSVC
             if (0 != ::fopen_s(&fp, name.data(), mode)) fp = 0;
@@ -488,17 +488,17 @@ class LoggerContainer {
     LocalMutex      mMutex;
     LoggerMap       mLoggers;
 
-    LoggerImpl * findParent(const std::string & name) {
+    LoggerImpl * findParent(const StrA & name) {
         // get parent name
         size_t n = name.findLastOf(".");
-        if (std::string::NOT_FOUND == n) return &mRootLogger; // shortcut for root logger
+        if (StrA::NOT_FOUND == n) return &mRootLogger; // shortcut for root logger
         GN_ASSERT(n > 0);
-        std::string parent = name.subString(0, n);
+        StrA parent = name.subString(0, n);
 
         return getLogger(parent.data());
     }
 
-    void printLoggerTree(std::string & str, int level, LoggerImpl & logger) {
+    void printLoggerTree(StrA & str, int level, LoggerImpl & logger) {
         // print itself
         for (int i = 0; i < level; ++i) str.append("  ");
         str.append(StrA::format("%s\n", logger.getName()));
@@ -525,7 +525,7 @@ public:
 
     ~LoggerContainer() {
         static Logger * sLogger = getLogger("GN.core.LoggerContainer");
-        std::string            loggerTree;
+        StrA            loggerTree;
         GN_VERBOSE(sLogger)
         ("\n"
          "===================\n"
@@ -540,7 +540,7 @@ public:
         std::lock_guard<LocalMutex> m(mMutex);
 
         // trip leading and trailing dots
-        std::string n(name);
+        StrA n(name);
         n.trim('.');
 
         // shortcut for root logger

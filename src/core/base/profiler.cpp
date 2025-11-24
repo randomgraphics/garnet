@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "garnet/base/profiler.h"
 
-static std::string sTime2Str(double time) {
+static StrA sTime2Str(double time) {
     using namespace GN;
 
     if (time < 0.000001) {
@@ -54,7 +54,7 @@ GN_API void GN::ProfileTimer::stop() {
 GN_API GN::ProfilerManager::~ProfilerManager() {
 #if GN_BUILD_PROFILING_ENABLED
     // print profile result
-    std::string s;
+    StrA s;
     toString(s);
     printf("%s\n", s.data());
 #endif
@@ -63,7 +63,7 @@ GN_API GN::ProfilerManager::~ProfilerManager() {
 //
 //
 // -----------------------------------------------------------------------------
-GN_API void GN::ProfilerManager::toString(std::string & rval) const {
+GN_API void GN::ProfilerManager::toString(StrA & rval) const {
     std::lock_guard<SpinLoop> lock(mMutex);
 
     if (mTimers.empty()) {

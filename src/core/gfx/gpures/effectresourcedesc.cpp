@@ -62,7 +62,7 @@ static RESULT_TYPE sParseEnum(const char * name, const EnumNames * table, const 
 //
 // post error message
 // -----------------------------------------------------------------------------
-static void sPostError(const XmlNode & node, const std::string & msg) {
+static void sPostError(const XmlNode & node, const StrA & msg) {
     const XmlElement * e = node.toElement();
     if (e) {
         GN_ERROR(sLogger)("Effect XML error: element <%s> - %s", e->name.data(), msg.data());
@@ -74,7 +74,7 @@ static void sPostError(const XmlNode & node, const std::string & msg) {
 //
 // post warning message
 // -----------------------------------------------------------------------------
-static void sPostWarning(const XmlNode & node, const std::string & msg) {
+static void sPostWarning(const XmlNode & node, const StrA & msg) {
     const XmlElement * e = node.toElement();
     if (e) {
         GN_WARN(sLogger)("Effect XML warning: element <%s> - %s", e->name.data(), msg.data());

@@ -262,7 +262,7 @@ static void sParseFail(ParseTracer * tracer, const char * errInfo) {
 static GN::XmlNode * sNewNode(ParseTracer * tracer, GN::XmlNodeType type) {
     GN::XmlNode * n = tracer->doc->createNode(type, NULL);
     if (0 == n) {
-        sParseFail(tracer, GN::StrA::format("Fail to create node with type of '%d'", type).data());
+        sParseFail(tracer, GN::StrA::format("Fail to create node with type of '%d'", (int)type).data());
         return NULL;
     }
 
@@ -381,9 +381,9 @@ static void XMLCALL sCharacterDataHandler(void * userData, const XML_Char * s, i
         GN::XmlCdata * t = tracer->parent->toCdata();
         t->text.append(s, len);
     } else {
-        std::string text = sMangleText(s, len);
+        auto text = sMangleText(s, len);
         if (!text.empty() && tracer->parent->type == GN::XML_ELEMENT) {
-            std::string & currentText = tracer->parent->toElement()->text;
+            auto & currentText = tracer->parent->toElement()->text;
 
             if (!currentText.empty()) currentText += ' ';
 
@@ -681,7 +681,7 @@ GN_API GN::XmlNode * GN::XmlDocument::createNode(XmlNodeType type, XmlNode * par
         p = new PooledNode<XmlElement>(*this);
         break;
     default:
-        GN_ERROR(sLogger)("invalid node type : %d", type);
+        GN_ERROR(sLogger)("invalid node type : %d", (int)type);
         return NULL;
     }
     mNodes.append(p);

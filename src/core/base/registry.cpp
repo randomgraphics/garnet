@@ -9,7 +9,7 @@ GN::Logger * GN::Registry::sLogger = GN::getLogger("GN.base.Registry");
 //
 //
 // -----------------------------------------------------------------------------
-GN_API GN::Registry::ItemKey GN::Registry::set(const std::string & name, const Variant & value, bool overwriteExisting) {
+GN_API GN::Registry::ItemKey GN::Registry::set(const StrA & name, const Variant & value, bool overwriteExisting) {
     GN_GUARD;
 
     ItemKey key = name2Key(name);
@@ -41,7 +41,7 @@ GN_API GN::Registry::ItemKey GN::Registry::set(const std::string & name, const V
 //
 //
 // -----------------------------------------------------------------------------
-GN_API void GN::Registry::importFromStr(const std::string & s) {
+GN_API void GN::Registry::importFromStr(const StrA & s) {
     GN_GUARD;
 
     if (s.empty()) return;
@@ -84,8 +84,8 @@ GN_API void GN::Registry::importFromStr(const std::string & s) {
     if (value_e == value_s) return;
 
     // add name and value into registry
-    std::string name(name_s, name_e - name_s);
-    std::string value(value_s, value_e - value_s);
+    StrA name(name_s, name_e - name_s);
+    StrA value(value_s, value_e - value_s);
     sets(name, value, true);
 
     GN_UNGUARD;
