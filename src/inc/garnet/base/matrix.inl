@@ -240,7 +240,7 @@ Matrix33<T> & Matrix33<T>::lookAtRh(const Vector3<T> & forward, const Vector3<T>
 // 将矩阵的内容打印到字符串中
 // -------------------------------------------------------------------------
 template<typename T>
-std::string Matrix33<T>::print() const {
+StrA Matrix33<T>::print() const {
     return StrA::format("%f,\t%f,\t%f\n"
              "%f,\t%f,\t%f\n"
              "%f,\t%f,\t%f\n",
@@ -720,7 +720,7 @@ Matrix44<T> & Matrix44<T>::perspectiveD3DRh(T fovy, T ratio, T znear, T zfar) {
 //  将矩阵的内容打印到字符串中
 // -------------------------------------------------------------------------
 template<typename T>
-std::string Matrix44<T>::print() const {
+StrA Matrix44<T>::print() const {
     return StrA::format("%f,\t%f,\t%f,\t%f,\n"
              "%f,\t%f,\t%f,\t%f,\n"
              "%f,\t%f,\t%f,\t%f,\n"

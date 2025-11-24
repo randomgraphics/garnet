@@ -809,7 +809,7 @@ public:
     ///
     /// print to string
     ///
-    std::string print() const;
+    StrA print() const;
 
     //@}
 };
@@ -955,7 +955,7 @@ public:
         return ret;
     }
     friend std::ostream & operator<<(std::ostream & o, const Matrix44 & m) {
-        std::string s;
+        StrA s;
         m.print(s);
         o << s;
         return o;
@@ -1190,7 +1190,7 @@ public:
     ///
     /// Print the matrix to string.
     ///
-    std::string print() const;
+    StrA print() const;
 
     //@}
 };
