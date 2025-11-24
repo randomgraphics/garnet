@@ -110,7 +110,7 @@ static inline std::string sLevel2Str(int level) {
     case GN::Logger::BABBLE:
         return "VERY_VERBOSE";
     default:
-        return GN::fmt::format("%d", level);
+        return GN::StrA::format("%d", level);
     }
 }
 
@@ -501,7 +501,7 @@ class LoggerContainer {
     void printLoggerTree(std::string & str, int level, LoggerImpl & logger) {
         // print itself
         for (int i = 0; i < level; ++i) str.append("  ");
-        str.append(fmt::format("%s\n", logger.getName()));
+        str.append(StrA::format("%s\n", logger.getName()));
 
         // print children
         LoggerImpl * c = logger.firstChild();

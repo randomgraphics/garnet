@@ -9,9 +9,7 @@
 #include <chrono>
 #include <sstream>
 
-#define FMT_HEADER_ONLY
-#include <fmt/format.h>
-
+///
 /// General log macros, with user specified source code location
 //@{
 #if GN_ENABLE_LOG

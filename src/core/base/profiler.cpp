@@ -5,11 +5,11 @@ static std::string sTime2Str(double time) {
     using namespace GN;
 
     if (time < 0.000001) {
-        return fmt::format("%fus", time * 1000000);
+        return StrA::format("%fus", time * 1000000);
     } else if (time < 0.001) {
-        return fmt::format("%fms", time * 1000);
+        return StrA::format("%fms", time * 1000);
     } else {
-        return fmt::format("%fs", time);
+        return StrA::format("%fs", time);
     }
 }
 
@@ -79,7 +79,7 @@ GN_API void GN::ProfilerManager::toString(std::string & rval) const {
     const StringMap<char, ProfilerTimerImpl>::KeyValuePair * i;
     for (i = mTimers.first(); i != NULL; i = mTimers.next(i)) {
         const ProfilerTimerImpl & t = i->value;
-        rval += GN::fmt::format("    %s :\n"
+        rval += GN::StrA::format("    %s :\n"
                                 "        count(%d), sum(%s), ave(%s), min(%s), max(%s)\n"
                                 "\n",
                                 i->key, t.count, sTime2Str(t.timesum).data(), sTime2Str(0 == t.count ? 0 : (t.timesum / t.count)).data(),

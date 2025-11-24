@@ -137,7 +137,7 @@ bool GN::gfx::OGLGpuProgram::init(const GpuProgramDesc & desc) {
 
     GN_ASSERT(GpuProgramLanguage::GLSL == desc.lang);
 
-    mName = desc.name ? std::string(desc.name) : fmt::format("program %llu", mID);
+    mName = desc.name ? std::string(desc.name) : StrA::format("program %llu", mID);
 
 #define COMPILE_SHADER(x, type)                                                   \
     if (desc.x.source) {                                                          \

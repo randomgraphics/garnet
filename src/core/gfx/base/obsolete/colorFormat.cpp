@@ -325,7 +325,7 @@ GN_API void GN::gfx::ColorFormat::toString(std::string & s) const {
         }
     };
 
-    s = fmt::format("%s-sign012(%s)-sign3(%s)-%s%s%s%s", Local::layout2str(layout), Local::sign2str(sign012), Local::sign2str(sign3),
+    s = StrA::format("%s-sign012(%s)-sign3(%s)-%s%s%s%s", Local::layout2str(layout), Local::sign2str(sign012), Local::sign2str(sign3),
                     Local::swizzle2str(swizzle0), Local::swizzle2str(swizzle1), Local::swizzle2str(swizzle2), Local::swizzle2str(swizzle3));
 }
 

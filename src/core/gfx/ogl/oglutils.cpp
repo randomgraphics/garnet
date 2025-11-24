@@ -29,7 +29,7 @@ static std::string addLineCount(const std::string & in) {
     int line = 1;
     for (auto ch : in) {
         if ('\n' == ch)
-            ss << GN::fmt::format("\n(%3d) : ", ++line);
+            ss << GN::StrA::format("\n(%3d) : ", ++line);
         else
             ss << ch;
     }

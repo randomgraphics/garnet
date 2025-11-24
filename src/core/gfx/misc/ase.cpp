@@ -205,7 +205,7 @@ struct AseFile {
             }
 
             if (expectedValue && 0 != str::compare(expectedValue, r)) {
-                if (!option.silence) { err(fmt::format("expect '%s', but found '%s'.", expectedValue, r)); }
+                if (!option.silence) { err(StrA::format("expect '%s', but found '%s'.", expectedValue, r)); }
                 return 0;
             }
 
@@ -222,7 +222,7 @@ struct AseFile {
             if (0 != *str) *str = 0, ++str; // point to start of next token
 
             if (expectedValue && 0 != str::compare(expectedValue, r)) {
-                if (!option.silence) { err(fmt::format("expect '%s', but found '%s'.", expectedValue, r)); }
+                if (!option.silence) { err(StrA::format("expect '%s', but found '%s'.", expectedValue, r)); }
                 return 0;
             }
 
@@ -249,12 +249,12 @@ struct AseFile {
             if (IN_CURRENT_BLOCK == option.scope && level > 0) continue; // skip sub levels
 
             if (IN_CURRENT_AND_CHILD_BLOCKS == option.scope && level < 0) {
-                if (!option.silence) err(fmt::format("token '%s' not found inside current block!", endtoken));
+                if (!option.silence) err(StrA::format("token '%s' not found inside current block!", endtoken));
                 return false;
             }
 
             if (0 == token) {
-                if (!option.silence) err(fmt::format("token '%s' not found!", endtoken));
+                if (!option.silence) err(StrA::format("token '%s' not found!", endtoken));
                 return false;
             }
 
@@ -362,7 +362,7 @@ struct AseFile {
             result = s;
             return true;
         } else {
-            err(fmt::format("Expect a symbol (start with [_a-zA-Z]), but met: %s", s));
+            err(StrA::format("Expect a symbol (start with [_a-zA-Z]), but met: %s", s));
             return false;
         }
     }
@@ -382,7 +382,7 @@ struct AseFile {
             result = -1.0f;
             return true;
         } else {
-            if (!option.silence) err(fmt::format("Not valid float : %s", token));
+            if (!option.silence) err(StrA::format("Not valid float : %s", token));
             return false;
         }
     }
@@ -396,7 +396,7 @@ struct AseFile {
         if (0 == token) return false;
 
         if (0 == str::toInetger<INT_TYPE>(result, token)) {
-            if (!option.silence) err(fmt::format("Not valid integer : %s", token));
+            if (!option.silence) err(StrA::format("Not valid integer : %s", token));
             return false;
         }
 
@@ -478,7 +478,7 @@ static bool sReadMap(AseMap & m, AseFile & ase) {
         } else if (0 == str::compare(token, "*BITMAP_FILTER")) {
             if (!ase.readSymbol(m.filter)) return false;
         } else if ('*' == *token) {
-            ase.verbose(fmt::format("skip node %s", token));
+            ase.verbose(StrA::format("skip node %s", token));
             if (!ase.skipNode()) return false;
         } else if (0 == str::compare(token, "}")) {
             // end of the block
@@ -543,7 +543,7 @@ static bool sReadMaterial(AseMaterialInternal & m, AseFile & ase) {
             } else if (0 == str::compare(map, "BUMP")) {
                 if (!sReadMap(m.mapbump, ase)) return false;
             } else {
-                ase.verbose(fmt::format("skip unsupport map %s", token));
+                ase.verbose(StrA::format("skip unsupport map %s", token));
                 if (!ase.skipNode()) return false;
             }
         } else if (0 == str::compare(token, "*NUMSUBMTLS")) {
@@ -558,7 +558,7 @@ static bool sReadMaterial(AseMaterialInternal & m, AseFile & ase) {
                 if (!sReadMaterial(m.submaterials[i], ase)) return false;
             }
         } else if ('*' == *token) {
-            ase.verbose(fmt::format("skip node %s", token));
+            ase.verbose(StrA::format("skip node %s", token));
             if (!ase.skipNode()) return false;
         } else if (0 == str::compare(token, "}")) {
             // end of the block
@@ -798,7 +798,7 @@ static bool sReadNode(AseNode & n, AseFile & ase) {
         } else if (0 == str::compare("*TM_SCALE", token)) {
             if (!ase.readVector3(n.scale)) return false;
         } else if ('*' == *token) {
-            ase.verbose(fmt::format("skip node %s", token));
+            ase.verbose(StrA::format("skip node %s", token));
             if (!ase.skipNode()) return false;
         } else if (0 == str::compare(token, "}")) {
             // end of the block. done.
@@ -849,7 +849,7 @@ static bool sReadGeomObject(AseSceneInternal & scene, AseFile & ase) {
             }
             hasMaterial = true;
         } else if ('*' == *token) {
-            ase.verbose(fmt::format("skip node %s", token));
+            ase.verbose(StrA::format("skip node %s", token));
             if (!ase.skipNode()) return false;
         } else if (0 == str::compare(token, "}")) {
             // end of the block. do some post processing.
@@ -927,13 +927,13 @@ static bool sReadGroup(AseSceneInternal & scene, AseFile & ase) {
         else if (0 == str::compare(token, "*GEOMOBJECT")) {
             if (!sReadGeomObject(scene, ase)) return false;
         } else if ('*' == *token) {
-            ase.verbose(fmt::format("skip node %s", token));
+            ase.verbose(StrA::format("skip node %s", token));
             if (!ase.skipNode()) return false;
         } else if (0 == str::compare(token, "}")) {
             // end of the block.
             return true;
         } else {
-            ase.err(fmt::format("expecting node token, but met '%s'.", token));
+            ase.err(StrA::format("expecting node token, but met '%s'.", token));
             return false;
         }
     }
@@ -980,10 +980,10 @@ static bool sReadAse(AseSceneInternal & scene, File & file) {
         } else if (0 == str::compare(token, "*GEOMOBJECT")) {
             if (!sReadGeomObject(scene, ase)) return false;
         } else if ('*' == *token) {
-            ase.verbose(fmt::format("skip node %s", token));
+            ase.verbose(StrA::format("skip node %s", token));
             if (!ase.skipNode()) return false;
         } else {
-            ase.err(fmt::format("expecting node token, but met '%s'.", token));
+            ase.err(StrA::format("expecting node token, but met '%s'.", token));
             return false;
         }
     }

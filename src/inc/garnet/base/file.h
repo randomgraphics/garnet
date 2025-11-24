@@ -88,7 +88,7 @@ struct GN_API File : public NoCopy {
     /// write formatted string to file
     template<typename... Args>
     bool printf(const char * format, Args&&... args) {
-        auto s = fmt::format(format, std::forward<Args>(args)...);
+        auto s = StrA::format(format, std::forward<Args>(args)...);
         return print(s);
     }
 

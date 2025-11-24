@@ -79,7 +79,7 @@ GN_API std::string backtrace(bool includeSourceSnippet) {
         auto addr   = buffer[idx];
         auto symbol = android_backtrace_state::addr2symbol(addr);
         if (symbol.empty()) symbol = "<no symbol>";
-        ss << prefix << fmt::format("%03d: 0x%p %s\n", idx, addr, symbol.c_str());
+        ss << prefix << StrA::format("%03d: 0x%p %s\n", idx, addr, symbol.c_str());
     }
 
     ss << prefix << "android stack dump done\n";

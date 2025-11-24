@@ -128,7 +128,7 @@ static bool sGetBoolAttrib(const XmlElement & node, const char * attribName, boo
 static const char * sGetItemName(const XmlElement & node, const char * nodeType) {
     XmlAttrib * a = node.findAttrib("name");
     if (!a) {
-        sPostError(node, fmt::format("Unnamed %s node. Ignored.", nodeType));
+        sPostError(node, StrA::format("Unnamed %s node. Ignored.", nodeType));
         return 0;
     }
     return a->value.data();
@@ -189,7 +189,7 @@ static void sParseUniform(EffectResourceDesc & desc, const XmlElement & node) {
                    0 == str::compareI("float4", type)) {
             ud.size = sizeof(float) * 4;
         } else {
-            sPostError(node, fmt::format("Unrecognized uniform type: %s", type));
+            sPostError(node, StrA::format("Unrecognized uniform type: %s", type));
             ud.size = 0;
         }
     }
@@ -320,7 +320,7 @@ static void sParseGpuProgram(EffectResourceDesc & desc, const XmlElement & node)
     const char * lang = sGetAttrib(node, "lang");
     sd.gpd.lang       = GpuProgramLanguage::sFromString(lang);
     if (!sd.gpd.lang.valid()) {
-        sPostError(node, fmt::format("invalid shading language: %s", lang ? lang : "<NULL>"));
+        sPostError(node, StrA::format("invalid shading language: %s", lang ? lang : "<NULL>"));
         return;
     }
 
@@ -348,7 +348,7 @@ static void sParseGpuProgram(EffectResourceDesc & desc, const XmlElement & node)
     } else {
         sd.gpd.shaderModels = ShaderModel::sFromString(models);
         if (0 == sd.gpd.shaderModels) {
-            sPostError(node, fmt::format("Invalid shaderModel attribute: %s", models));
+            sPostError(node, StrA::format("Invalid shaderModel attribute: %s", models));
             return;
         }
     }

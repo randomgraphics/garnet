@@ -318,19 +318,19 @@ XmlElement * GN::gfx::ModelResourceDesc::saveToXml(XmlNode & root, const char * 
     {
         XmlAttrib * a = doc.createAttrib(subsetNode);
         a->name       = "basevtx";
-        a->value      = fmt::format("%u", subset.basevtx);
+        a->value      = StrA::format("%u", subset.basevtx);
 
         a        = doc.createAttrib(subsetNode);
         a->name  = "numvtx";
-        a->value = fmt::format("%u", subset.numvtx);
+        a->value = StrA::format("%u", subset.numvtx);
 
         a        = doc.createAttrib(subsetNode);
         a->name  = "startidx";
-        a->value = fmt::format("%u", subset.startidx);
+        a->value = StrA::format("%u", subset.startidx);
 
         a        = doc.createAttrib(subsetNode);
         a->name  = "numidx";
-        a->value = fmt::format("%u", subset.numidx);
+        a->value = StrA::format("%u", subset.numidx);
     }
 
     // create texture nodes
@@ -365,7 +365,7 @@ XmlElement * GN::gfx::ModelResourceDesc::saveToXml(XmlNode & root, const char * 
         if (unidesc.resourceName.empty()) {
             a        = doc.createAttrib(uniformNode);
             a->name  = "size";
-            a->value = fmt::format("%u", unidesc.size);
+            a->value = StrA::format("%u", unidesc.size);
 
             if (!unidesc.initialValue.empty()) {
                 XmlElement * bin = doc.createElement(uniformNode);

@@ -25,7 +25,7 @@
 ///
 /// <b>ALWAYS</b> use this macro when throwing a exception
 ///
-#define GN_THROW(msg, ...) throwException(GN_FUNCTION, __FILE__, __LINE__, fmt::format(msg, __VA_ARGS__))
+#define GN_THROW(msg, ...) throwException(GN_FUNCTION, __FILE__, __LINE__, StrA::format(msg, __VA_ARGS__))
 
 ///
 /// Throw a custom exception class

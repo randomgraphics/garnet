@@ -14,8 +14,8 @@ namespace util {
 class FpsCalculator {
     Clock  mClock;
     float  mFpsValue;
-    std::wstring   mFormatString;
-    std::wstring   mFpsString;
+    StrW   mFormatString;
+    StrW   mFpsString;
     size_t mFrameCounter;
     double mLastCheckPoint;
     double mLastFrameElapsed;
@@ -40,7 +40,7 @@ public:
     void reset() {
         mCurrentTime = mClock.seconds();
         mFpsValue    = 60.0f; // ensure non-zero FPS for the very first frame.
-        mFpsString.format(mFormatString.data(), 0);
+        mFpsString.formatInplace(mFormatString.data(), 0);
         mFrameCounter      = 0;
         mLastFrameElapsed  = 1.0f / mFpsValue;
         mLastFrameTime     = mCurrentTime - mLastFrameElapsed;
@@ -70,7 +70,7 @@ public:
             GN_VERBOSE(sLogger)("FPS: %f", mFpsValue);
         } else if (mBeforeFirstUpdate) {
             mFpsValue = (float) ((mCurrentTime - mLastCheckPoint) / mFrameCounter);
-            mFpsString.format(mFormatString.data(), mFpsValue);
+            mFpsString.formatInplace(mFormatString.data(), mFpsValue);
         }
     }
 
@@ -87,7 +87,7 @@ public:
     ///
     /// Get FPS string
     ///
-    const std::wstring & fpsString() const { return mFpsString; }
+    const StrW & fpsString() const { return mFpsString; }
 };
 } // namespace util
 } // namespace GN

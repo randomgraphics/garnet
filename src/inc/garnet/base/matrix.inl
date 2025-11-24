@@ -241,7 +241,7 @@ Matrix33<T> & Matrix33<T>::lookAtRh(const Vector3<T> & forward, const Vector3<T>
 // -------------------------------------------------------------------------
 template<typename T>
 std::string Matrix33<T>::print() const {
-    return fmt::format("%f,\t%f,\t%f\n"
+    return StrA::format("%f,\t%f,\t%f\n"
              "%f,\t%f,\t%f\n"
              "%f,\t%f,\t%f\n",
              rows[0][0], rows[0][1], rows[0][2], rows[1][0], rows[1][1], rows[1][2], rows[2][0], rows[2][1], rows[2][2]);
@@ -721,7 +721,7 @@ Matrix44<T> & Matrix44<T>::perspectiveD3DRh(T fovy, T ratio, T znear, T zfar) {
 // -------------------------------------------------------------------------
 template<typename T>
 std::string Matrix44<T>::print() const {
-    return fmt::format("%f,\t%f,\t%f,\t%f,\n"
+    return StrA::format("%f,\t%f,\t%f,\t%f,\n"
              "%f,\t%f,\t%f,\t%f,\n"
              "%f,\t%f,\t%f,\t%f,\n"
              "%f,\t%f,\t%f,\t%f,\n",

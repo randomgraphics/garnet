@@ -140,7 +140,7 @@ static void sOutputOGLInfo(intptr_t disp, const DynaArray<std::string> & glexts)
     sGetOpenGLVersion(version, &major, NULL, NULL);
     if (major >= 2) { glsl = (const char *) glGetString(GL_SHADING_LANGUAGE_VERSION); }
 
-    info = GN::fmt::format("\n\n"
+    info = GN::StrA::format("\n\n"
                            "===================================================\n"
                            "        OpenGL Implementation Informations\n"
                            "---------------------------------------------------\n"
@@ -157,7 +157,7 @@ static void sOutputOGLInfo(intptr_t disp, const DynaArray<std::string> & glexts)
         GN_OGL_CHECK(glGetIntegerv(GL_MAX_TEXTURE_UNITS_ARB, &tu));
     else
         tu = 1;
-    info += fmt::format("---------------------------------------------------\n"
+    info += StrA::format("---------------------------------------------------\n"
                         "    Max size of texture             :    %d\n"
                         "    Max number of texture stages    :    %d\n"
                         "===================================================\n"

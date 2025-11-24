@@ -16,13 +16,13 @@ namespace GN {
 /// - string value like "no", "false", "off" and "0" can be translate to boolean value "false" (case insensitive)
 ///
 class GN_API Variant {
-    std::string mValue;
+    StrA mValue;
 
 public:
     /// \name constructors
     //@{
     Variant() {}
-    Variant(const std::string & s) { sets(s); }
+    Variant(const StrA & s) { sets(s); }
     Variant(bool b) { setb(b); }
     Variant(int i) { seti(i); }
     Variant(float f) { setf(f); }
@@ -33,7 +33,7 @@ public:
 
     /// \name set variable value
     //@{
-    void sets(const std::string & s) { mValue = s; }
+    void sets(const StrA & s) { mValue = s; }
     void setb(bool b);
     void seti(int i);
     void setf(float f);
@@ -44,7 +44,7 @@ public:
 
     /// \name Get variable value. Return false for incompatible type.
     //@{
-    const std::string & gets() const { return mValue; }
+    const StrA & gets() const { return mValue; }
     bool         getb(bool & b) const;
     bool         geti(int & i) const;
     bool         getf(float & f) const;

@@ -10,6 +10,8 @@
 #include <ostream>
 #include <string.h>
 #include <string>
+#include <fmt/format.h>
+#include <fmt/xchar.h>
 
 namespace GN {
 
@@ -140,12 +142,11 @@ inline bool isEmpty(const CHAR * s) {
 }
 
 ///
-/// format string via template argument pack.
-/// return the length of the formatted string (not including the null terminator)
+/// format string to raw buffer with guaranteed null terminator.
 ///
 template<typename CHAR, typename... Args>
 inline size_t formatTo(CHAR * buf, size_t bufSizeInChar, const CHAR * fmt, Args&&... args) {
-    const auto result = std::format_to_n(buf, bufSizeInChar, fmt, std::forward<Args>(args)...);
+    const auto result = fmt::format_to_n(buf, bufSizeInChar, fmt, std::forward<Args>(args)...);
     if (result.size < bufSizeInChar) GN_LIKELY {
         buf[result.size] = 0;
         return result.size;
@@ -358,6 +359,21 @@ public:
     /// begin iterator(2)
     ///
     const CharType * end() const { return mPtr + size(); }
+
+    ///
+    /// string formatting
+    ///
+    template<typename... Args>
+    Str<CharType> & formatInplace(const CharType * formatString, Args&&... args) {
+        auto requiredLength = fmt::formatted_size(formatString, std::forward<Args>(args)...) + 1;
+        if (requiredLength > caps()) {
+            setCaps(requiredLength);
+        }
+        auto newSize = str::formatTo<CharType>(mPtr, requiredLength, formatString, std::forward<Args>(args)...);
+        GN_ASSERT(newSize <= caps() && mPtr[newSize] == 0);
+        setSize(newSize);
+        return *this;
+    }
 
     ///
     /// Searches through a string for the first character that matches any elements in user specified string
@@ -759,6 +775,11 @@ public:
     }
 
     ///
+    /// Define custom string literal operator
+    ///
+    friend Str operator"" _s(const CharType * s, size_t len) { return Str(s, len); }
+
+    ///
     /// equality operator(1)
     ///
     friend bool operator==(const CharType * s1, const Str & s2) { return 0 == str::compare(s1, s2.mPtr); }
@@ -867,10 +888,11 @@ public:
     /// string formatting
     ///
     template<typename... Args>
-    static Str<CharType> format(const CharType * fmt, Args&&... args) {
-        auto requiredLength = std::formatted_size(fmt, std::forward<Args>(args)...);
-        Str<CharType> s(requiredLength);
-        auto newSize = str::formatTo<CharType>(s.data, s.caps(), fmt, std::forward<Args>(args)...);
+    static Str<CharType> format(const CharType * formatString, Args&&... args) {
+        auto requiredLength = fmt::formatted_size(formatString, std::forward<Args>(args)...);
+        Str<CharType> s;
+        s.setCaps(requiredLength);
+        auto newSize = str::formatTo<CharType>(s.mPtr, s.caps(), formatString, std::forward<Args>(args)...);
         GN_ASSERT(newSize <= s.caps() && s.mPtr[newSize] == 0);
         s.setSize(newSize);
         return s;
@@ -1410,11 +1432,6 @@ private:
 }; // End of StringMap class
 
 namespace str {
-
-inline const std::string & EMPTY_STRING() {
-    static std::string s;
-    return s;
-}
 
 /// @brief Check if a C style string is null or empty.
 inline bool empty(const char * s) { return 0 == s || 0 == *s; }

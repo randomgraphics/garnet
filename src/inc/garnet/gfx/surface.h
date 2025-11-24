@@ -234,8 +234,8 @@ struct Texture : public RefCounter {
     /// Name field is for debug purpose only, it is not used by garnet library except logging.
     /// Set it to any value you want.
     //@{
-    const std::string & name() const { return mName; }
-    std::string &       name() { return mName; }
+    const StrA & name() const { return mName; }
+    StrA &       name() { return mName; }
     //@}
 
 protected:

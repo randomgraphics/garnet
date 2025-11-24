@@ -737,7 +737,7 @@ static void sLoadFbxMesh(ModelHierarchyDesc & desc, const std::string & filename
         // skip empty models.
         if (model.effect.empty()) continue;
 
-        std::string modelName         = fmt::format("%s.%d", meshName, i);
+        std::string modelName         = StrA::format("%s.%d", meshName, i);
         desc.models[modelName] = model;
         gnnode.models.append(modelName);
     }
@@ -1192,7 +1192,7 @@ static bool sSaveModelHierarchyToXML(const ModelHierarchyDesc & desc, const char
     for (const StringMap<char, ModelHierarchyDesc::NodeDesc>::KeyValuePair * i = desc.nodes.first(); i != NULL; i = desc.nodes.next(i)) {
         const std::string & nodeName = i->key;
 
-        entityNameMap[nodeName] = fmt::format("%d", ++entityIndex);
+        entityNameMap[nodeName] = StrA::format("%d", ++entityIndex);
     }
 
     // write nodes
@@ -1220,19 +1220,19 @@ static bool sSaveModelHierarchyToXML(const ModelHierarchyDesc & desc, const char
 
         a        = xmldoc.createAttrib(node);
         a->name  = "position";
-        a->value = fmt::format("%f,%f,%f", nodeDesc.position.x, nodeDesc.position.y, nodeDesc.position.z);
+        a->value = StrA::format("%f,%f,%f", nodeDesc.position.x, nodeDesc.position.y, nodeDesc.position.z);
 
         a        = xmldoc.createAttrib(node);
         a->name  = "orientation";
-        a->value = fmt::format("%f,%f,%f,%f", nodeDesc.orientation.v.x, nodeDesc.orientation.v.y, nodeDesc.orientation.v.z, nodeDesc.orientation.w);
+        a->value = StrA::format("%f,%f,%f,%f", nodeDesc.orientation.v.x, nodeDesc.orientation.v.y, nodeDesc.orientation.v.z, nodeDesc.orientation.w);
 
         a        = xmldoc.createAttrib(node);
         a->name  = "scaling";
-        a->value = fmt::format("%f,%f,%f", nodeDesc.scaling.x, nodeDesc.scaling.y, nodeDesc.scaling.z);
+        a->value = StrA::format("%f,%f,%f", nodeDesc.scaling.x, nodeDesc.scaling.y, nodeDesc.scaling.z);
 
         a        = xmldoc.createAttrib(node);
         a->name  = "bbox";
-        a->value = fmt::format("%f,%f,%f,%f,%f,%f", nodeDesc.bbox.x, nodeDesc.bbox.y, nodeDesc.bbox.z, nodeDesc.bbox.w, nodeDesc.bbox.h, nodeDesc.bbox.d);
+        a->value = StrA::format("%f,%f,%f,%f,%f,%f", nodeDesc.bbox.x, nodeDesc.bbox.y, nodeDesc.bbox.z, nodeDesc.bbox.w, nodeDesc.bbox.h, nodeDesc.bbox.d);
 
         XmlElement * visual = xmldoc.createElement(node);
         visual->name        = "visual";
@@ -1250,7 +1250,7 @@ static bool sSaveModelHierarchyToXML(const ModelHierarchyDesc & desc, const char
     // write scene bounding box
     XmlAttrib * a = xmldoc.createAttrib(root->toElement());
     a->name       = "bbox";
-    a->value      = fmt::format("%f,%f,%f,%f,%f,%f", desc.bbox.x, desc.bbox.y, desc.bbox.z, desc.bbox.w, desc.bbox.h, desc.bbox.d);
+    a->value      = StrA::format("%f,%f,%f,%f,%f,%f", desc.bbox.x, desc.bbox.y, desc.bbox.z, desc.bbox.w, desc.bbox.h, desc.bbox.d);
 #endif
 
     // write XML document

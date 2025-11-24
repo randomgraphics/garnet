@@ -527,7 +527,7 @@ bool GN::gfx::D3D11GpuProgramHLSL::initShader(ShaderHLSL & shader, const ShaderC
             D3D11AttributeParameterDesc a;
             a.semanticName  = sig.SemanticName;
             a.semanticIndex = sig.SemanticIndex;
-            a.name          = sD3D11CloneString(fmt::format("%s%d", sig.SemanticName, sig.SemanticIndex));
+            a.name          = sD3D11CloneString(StrA::format("%s%d", sig.SemanticName, sig.SemanticIndex));
 
             // append to attribute array
             paramDesc.addAttribute(a);

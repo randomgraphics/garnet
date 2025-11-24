@@ -17,7 +17,7 @@ static std::string sAddLineCountD3D9(const std::string & in) {
     int line = 1;
     for (const char * s = in.data(); *s; ++s) {
         if ('\n' == *s) {
-            out.append(fmt::format("\n(%3d) : ", ++line));
+            out.append(StrA::format("\n(%3d) : ", ++line));
         } else {
             out.append(*s);
         }

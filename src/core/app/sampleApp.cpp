@@ -81,7 +81,7 @@ static bool sParseGpuAPI(GN::gfx::GpuAPI & result, const char * value) {
     using namespace GN;
     using namespace GN::gfx;
 
-    std::string upperCase(value);
+    StrA upperCase(value);
     upperCase.toUpper();
 
     result = GpuAPI::sFromString(upperCase);
@@ -211,7 +211,7 @@ bool GN::util::SampleApp::onCheckExtraCmdlineArguments(const char * exename, int
     GN_UNUSED_PARAM(exename);
 
     if (argc > 0) {
-        std::string s = "unknown command line arguments:";
+        StrA s = "unknown command line arguments:";
         for (int i = 0; i < argc; ++i) {
             s += " ";
             s += argv[i];
@@ -366,7 +366,7 @@ bool GN::util::SampleApp::checkCmdLine(int argc, const char * const argv[]) {
 
         if (0 == str::compareI("-h", a) || 0 == str::compareI("-?", a) || 0 == str::compareI("--help", a) || 0 == str::compareI("/help", a) ||
             0 == str::compareI("/h", a) || 0 == str::compareI("/?", a)) {
-            std::string executableName = fs::baseName(argv[0]) + fs::extName(argv[0]);
+            StrA executableName = fs::baseName(argv[0]) + fs::extName(argv[0]);
             onPrintHelpScreen(executableName);
             return false;
         } else if ('-' == *a
@@ -392,15 +392,15 @@ bool GN::util::SampleApp::checkCmdLine(int argc, const char * const argv[]) {
 
                 if (!sParseGpuAPI(mInitParam.ro.api, value)) return false;
             } else if (0 == str::compareI("ll", a + 1)) {
-                std::string value = sGetOptionValue(argc, argv, i);
+                StrA value = sGetOptionValue(argc, argv, i);
                 if (value.empty()) return false;
 
                 size_t k = value.findFirstOf(":");
-                if (std::string::NOT_FOUND == k) {
+                if (StrA::NOT_FOUND == k) {
                     GN_ERROR(sLogger)("Log level must be in format of 'name:level'");
                 } else {
-                    std::string name(value.subString(0, k));
-                    std::string leveltok(value.subString(k + 1, 0));
+                    StrA name(value.subString(0, k));
+                    StrA leveltok(value.subString(k + 1, 0));
                     int  level;
                     if (!name.empty() && 0 != str::toInetger(level, leveltok.data())) {
                         getLogger(name.data())->setLevel(level);
@@ -409,17 +409,17 @@ bool GN::util::SampleApp::checkCmdLine(int argc, const char * const argv[]) {
                     }
                 }
             } else if (0 == str::compareI("ww", a + 1)) {
-                std::string value = sGetOptionValue(argc, argv, i);
+                StrA value = sGetOptionValue(argc, argv, i);
                 if (value.empty()) return false;
 
                 if (!sParseInteger(mInitParam.ro.displayMode.width, a, value)) return false;
             } else if (0 == str::compareI("wh", a + 1)) {
-                std::string value = sGetOptionValue(argc, argv, i);
+                StrA value = sGetOptionValue(argc, argv, i);
                 if (value.empty()) return false;
 
                 if (!sParseInteger(mInitParam.ro.displayMode.height, a, value)) return false;
             } else if (0 == str::compareI("vsync", a + 1)) {
-                std::string value = sGetOptionValue(argc, argv, i);
+                StrA value = sGetOptionValue(argc, argv, i);
                 if (value.empty()) return false;
 
                 if (!sParseBool(mInitParam.ro.vsync, a, value)) return false;
@@ -493,7 +493,7 @@ void GN::util::SampleApp::drawHUD() {
     if (mShowHUD) {
         BitmapFont * font = engine::getDefaultFontRenderer();
 
-        std::wstring timeInfo = fmt::format(L"FPS: %.2f\tIdle: %.1f%%\n"
+        auto timeInfo = StrW::format(L"FPS: %.2f\tIdle: %.1f%%\n"
                                     L"(Press F1 for more helps)",
                                     mFps.fps(), mFrameIdlePercentage);
 
