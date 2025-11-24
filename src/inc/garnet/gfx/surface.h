@@ -97,7 +97,7 @@ struct TextureDesc {
         // check usage
         if (usage < 0 && usage >= TextureUsage::NUM_USAGES) {
             static Logger * sLocalLogger = getLogger("GN.gfx.TextureDesc");
-            GN_ERROR(sLocalLogger)("invalid texture usage: %d", usage.toRawEnum());
+            GN_ERROR(sLocalLogger)("invalid texture usage: %d", (int)usage.toRawEnum());
             return false;
         }
 

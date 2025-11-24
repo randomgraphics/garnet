@@ -18,25 +18,25 @@ namespace GN {
 ///
 struct GN_API File : public NoCopy {
     /// construct from input stream
-    File(std::istream & i, const std::string & name) {
+    File(std::istream & i, const StrA & name) {
         setStream(&i, nullptr);
         setName(name);
     }
 
     /// construct from output stream
-    File(std::ostream & o, const std::string & name) {
+    File(std::ostream & o, const StrA & name) {
         setStream(nullptr, &o);
         setName(name);
     }
 
     /// @brief Construct from input and output stream
-    File(std::istream & i, std::ostream & o, const std::string & name) {
+    File(std::istream & i, std::ostream & o, const StrA & name) {
         setStream(&i, &o);
         setName(name);
     }
 
     /// construct from iostream
-    File(std::iostream & s, const std::string & name) {
+    File(std::iostream & s, const StrA & name) {
         setStream(&s, &s);
         setName(name);
     }
@@ -45,7 +45,7 @@ struct GN_API File : public NoCopy {
     virtual ~File() {}
 
     /// return file name string
-    const std::string & name() const { return mName; }
+    const StrA & name() const { return mName; }
 
     // /// Get file operation caps
     // const FileOperationCaps & caps() const { return mCaps; }
@@ -97,7 +97,7 @@ protected:
     File() = default;
 
     /// Set file name
-    void setName(const std::string & name) { mName = name; }
+    void setName(const StrA & name) { mName = name; }
 
     void setStream(std::istream * i, std::ostream * o) {
         mInput  = i;
@@ -105,7 +105,7 @@ protected:
     }
 
 private:
-    std::string           mName;
+    StrA           mName;
     std::istream * mInput  = nullptr;
     std::ostream * mOutput = nullptr;
 };
@@ -127,7 +127,7 @@ public:
     ~DiskFile() { close(); }
 
     /// open a file
-    bool open(const std::string & filename, std::ios_base::openmode mode);
+    bool open(const StrA & filename, std::ios_base::openmode mode);
 
     /// close the file
     void close() throw();
@@ -159,7 +159,7 @@ private:
 ///
 class GN_API MemFile : public File {
 public:
-    MemFile(void * buf = 0, size_t size = 0, const std::string & name = "");
+    MemFile(void * buf = 0, size_t size = 0, const StrA & name = "");
 
 private:
     std::unique_ptr<std::streambuf> mBuf;

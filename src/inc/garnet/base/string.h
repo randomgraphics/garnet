@@ -10,8 +10,6 @@
 #include <ostream>
 #include <string.h>
 #include <string>
-#include <fmt/format.h>
-#include <fmt/xchar.h>
 
 namespace GN {
 
@@ -775,11 +773,6 @@ public:
     }
 
     ///
-    /// Define custom string literal operator
-    ///
-    friend Str operator"" _s(const CharType * s, size_t len) { return Str(s, len); }
-
-    ///
     /// equality operator(1)
     ///
     friend bool operator==(const CharType * s1, const Str & s2) { return 0 == str::compare(s1, s2.mPtr); }
@@ -957,6 +950,17 @@ typedef Str<char> StrA;
 /// wide-char string class
 ///
 typedef Str<wchar_t> StrW;
+
+///
+/// Define custom string literal operator
+///
+StrA operator "" _s(const char * s, size_t len) { return StrA(s, len); }
+
+///
+/// Define custom wide-char string literal operator
+///
+StrW operator "" _ws(const wchar_t * s, size_t len) { return StrW(s, len); }
+
 
 ///
 /// Fixed sized string that has no runtime memory allocation.

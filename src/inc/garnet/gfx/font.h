@@ -115,7 +115,7 @@ struct FontFaceCreationDesc {
     ///
     /// Font file name. Usually would be something like "font::/xxxx"
     ///
-    std::string fontname;
+    StrA fontname;
 
     ///
     /// Character width in pixel.

@@ -150,7 +150,7 @@ bool FontFaceFt2::init(const FontFaceCreationDesc & cd) {
     GN_ASSERT(sLib && sLib->lib);
 
     if (cd.quality < 0 || cd.quality >= FontFaceDesc::NUM_FONT_QUALITIES) {
-        GN_ERROR(sLogger)("Invalid font quality enumeration: %d", cd.quality);
+        GN_ERROR(sLogger)("Invalid font quality enumeration: %d", (int)cd.quality);
         return failure();
     }
 

@@ -11,8 +11,8 @@
 //
 //
 // -----------------------------------------------------------------------------
-GN_API void GN::fs::normalizePathSeparator(std::string & result, const std::string & path) {
-    std::string tmp;
+GN_API void GN::fs::normalizePathSeparator(StrA & result, const StrA & path) {
+    StrA tmp;
 
     // remove redundent separators, convert to unix style as well
     tmp.setCaps(path.size());
@@ -45,11 +45,11 @@ GN_API void GN::fs::normalizePathSeparator(std::string & result, const std::stri
 //
 //
 // -----------------------------------------------------------------------------
-GN_API void GN::fs::parentPath(std::string & result, const std::string & path) {
+GN_API void GN::fs::parentPath(StrA & result, const StrA & path) {
     struct Local {
         static bool isPathSeparator(char ch) { return '/' == ch; }
     };
-    std::string root, child;
+    StrA root, child;
     splitPath(path, root, child);
     child.trimRightUntil(Local::isPathSeparator);
     if (child.size() > 1) child.popback();
@@ -59,8 +59,8 @@ GN_API void GN::fs::parentPath(std::string & result, const std::string & path) {
 //
 //
 // -----------------------------------------------------------------------------
-GN_API void GN::fs::extName(std::string & result, const std::string & path) {
-    std::string tmp;
+GN_API void GN::fs::extName(StrA & result, const StrA & path) {
+    StrA tmp;
 
     normalizePathSeparator(tmp, path);
 
@@ -81,11 +81,11 @@ GN_API void GN::fs::extName(std::string & result, const std::string & path) {
 //
 //
 // -----------------------------------------------------------------------------
-GN_API void GN::fs::baseName(std::string & result, const std::string & path) {
-    std::string tmp;
+GN_API void GN::fs::baseName(StrA & result, const StrA & path) {
+    StrA tmp;
     normalizePathSeparator(tmp, path);
 
-    std::string dir, ext;
+    StrA dir, ext;
 
     dirName(dir, tmp);
     extName(ext, tmp);
@@ -99,15 +99,15 @@ GN_API void GN::fs::baseName(std::string & result, const std::string & path) {
 //
 //
 // -----------------------------------------------------------------------------
-GN_API void GN::fs::relPath(std::string & result, const std::string & path, const std::string & base) {
+GN_API void GN::fs::relPath(StrA & result, const StrA & path, const StrA & base) {
     GN_GUARD;
 
     struct Local {
-        std::string              input;
+        StrA              input;
         DynaArray<char>   buf;
         DynaArray<char *> parts;
 
-        void split(const std::string & path) {
+        void split(const StrA & path) {
             parts.clear();
             normalizePathSeparator(input, path);
             buf.resize(input.size() + 1);
@@ -166,10 +166,10 @@ GN_API void GN::fs::relPath(std::string & result, const std::string & path, cons
 //
 //
 // -----------------------------------------------------------------------------
-GN_API void GN::fs::joinPath2(std::string & result, const std::string & path1, const std::string & path2, const std::string & path3, const std::string & path4, const std::string & path5) {
-    std::string tmp;
+GN_API void GN::fs::joinPath2(StrA & result, const StrA & path1, const StrA & path2, const StrA & path3, const StrA & path4, const StrA & path5) {
+    StrA tmp;
 
-    const std::string * parts[] = {&path1, &path2, &path3, &path4, &path5};
+    const StrA * parts[] = {&path1, &path2, &path3, &path4, &path5};
 
     size_t n = sizeof(parts) / sizeof(parts[0]);
 
@@ -181,7 +181,7 @@ GN_API void GN::fs::joinPath2(std::string & result, const std::string & path1, c
     if (i < n) tmp = *parts[i], ++i;
 
     for (; i < n; ++i) {
-        const std::string & p = *parts[i];
+        const StrA & p = *parts[i];
         if (p.empty()) continue; // ignore empty parts
         tmp.append('/');
         tmp.append(p);
@@ -193,13 +193,13 @@ GN_API void GN::fs::joinPath2(std::string & result, const std::string & path1, c
 //
 //
 // -----------------------------------------------------------------------------
-GN_API void GN::fs::splitPath(const std::string & path, std::string & root, std::string & child) {
+GN_API void GN::fs::splitPath(const StrA & path, StrA & root, StrA & child) {
     root.clear();
     child.clear();
 
     if (path.empty()) return;
 
-    std::string tmpChild;
+    StrA tmpChild;
 
     size_t i       = 0;
     size_t n       = path.size() - 1;
@@ -232,7 +232,7 @@ GN_API void GN::fs::splitPath(const std::string & path, std::string & root, std:
 //
 //
 // -----------------------------------------------------------------------------
-GN_API void GN::fs::getCurrentDir(std::string & result) {
+GN_API void GN::fs::getCurrentDir(StrA & result) {
 #if GN_XBOX2 || GN_XBOX3
     result = "game:";
 #elif GN_WINPC
@@ -261,7 +261,7 @@ GN_API void GN::fs::getCurrentDir(std::string & result) {
 //
 //
 // -----------------------------------------------------------------------------
-GN_API void GN::fs::getCurrentDrive(std::string & result) {
+GN_API void GN::fs::getCurrentDrive(StrA & result) {
 #if GN_XBOX2 || GN_XBOX3
     result.clear();
 #elif GN_WINPC
@@ -281,14 +281,14 @@ GN_API void GN::fs::getCurrentDrive(std::string & result) {
 //
 //
 // -----------------------------------------------------------------------------
-GN_API void GN::fs::resolvePath(std::string & result, const std::string & base, const std::string & relpath) {
+GN_API void GN::fs::resolvePath(StrA & result, const StrA & base, const StrA & relpath) {
     // shortcut for empty path
     if (base.empty() || relpath.empty()) {
         result = relpath;
         return;
     }
 
-    std::string basefs, basec, relfs, relc;
+    StrA basefs, basec, relfs, relc;
     splitPath(base, basefs, basec);
     splitPath(relpath, relfs, relc);
 

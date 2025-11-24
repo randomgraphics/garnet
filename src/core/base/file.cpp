@@ -101,7 +101,7 @@ GN_API size_t GN::File::size() const {
 //
 //
 // -----------------------------------------------------------------------------
-GN_API bool GN::DiskFile::open(const std::string & filename, const std::ios_base::openmode mode) {
+GN_API bool GN::DiskFile::open(const StrA & filename, const std::ios_base::openmode mode) {
     close();
 
     // check parameter(s)
@@ -114,12 +114,9 @@ GN_API bool GN::DiskFile::open(const std::string & filename, const std::ios_base
     mFile.open(filename.data(), mode);
 
     if (!mFile) {
-        GN_ERROR(sLogger)("fail to open file '%s' : %s", filename.data(), mode, GN::errno2str(errno));
-        close();
+        GN_ERROR(sLogger)("fail to open file '%s' with mode %d : %s", filename.data(), (int)mode, GN::errno2str(errno));
         return false;
     }
-
-    // success
     setStream(&mFile, &mFile);
     setName(filename);
     return true;
@@ -293,7 +290,7 @@ public:
 //
 //
 // -----------------------------------------------------------------------------
-GN_API GN::MemFile::MemFile(void * buf, size_t size, const std::string & name): mBuf(std::make_unique<MemFileBuf>(buf, size)), mStream(mBuf.get()) {
+GN_API GN::MemFile::MemFile(void * buf, size_t size, const StrA & name): mBuf(std::make_unique<MemFileBuf>(buf, size)), mStream(mBuf.get()) {
     setName(name);
     setStream(&mStream, &mStream);
 }

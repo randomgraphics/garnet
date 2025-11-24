@@ -54,7 +54,7 @@ static const char * sEncodingToLocal(CharacterEncodingConverter::Encoding e) {
     if (0 <= e && e < (int) GN_ARRAY_COUNT(TABLE)) {
         return TABLE[e];
     } else {
-        GN_ERROR(sLogger)("Invalid character encoding: %d", e);
+        GN_ERROR(sLogger)("Invalid character encoding: %d", (int)e);
         return NULL;
     }
 }

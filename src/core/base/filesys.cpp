@@ -259,9 +259,8 @@ private:
         }
 
         // search in current directory
-        using namespace StrA_literals;
         CSimpleGlobA sg(SG_GLOB_ONLYFILE);
-        auto         p = joinPath(curDir, (useRegex ? "*.*"s : pattern));
+        auto         p = joinPath(curDir, (useRegex ? "*.*"_s : pattern));
         sg.Add(p.data());
         char ** files = sg.Files();
         int     c     = sg.FileCount();
