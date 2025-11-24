@@ -180,7 +180,7 @@ static void sParseUniform(EffectResourceDesc & desc, const XmlElement & node) {
 
     const char * type = sGetAttrib(node, "type");
     if (NULL == type) {
-        ud.size = sGetIntAttrib<uint32>(node, "size", 0);
+        ud.size = sGetIntAttrib<uint32_t>(node, "size", 0);
     } else {
         if (0 == str::compareI("matrix", type) || 0 == str::compareI("matrix4x4", type) || 0 == str::compareI("matrix44", type) ||
             0 == str::compareI("matrix4", type) || 0 == str::compareI("mat4", type) || 0 == str::compareI("float4x4", type)) {
@@ -221,7 +221,7 @@ static void sParseParameters(EffectResourceDesc & desc, const XmlNode & root) {
         else if ("attribute" == e->name)
             sParseAttribute(desc, *e);
         else
-            sPostError(*e, fmt::format("Unknown parameter '%s'. Ignored", e->name.data()));
+            sPostError(*e, StrA::format("Unknown parameter '%s'. Ignored", e->name.data()));
     }
 }
 
@@ -344,7 +344,7 @@ static void sParseGpuProgram(EffectResourceDesc & desc, const XmlElement & node)
             GN_UNEXPECTED();
             break;
         };
-        sPostWarning(node, fmt::format("shaderModel attribute is missing. Assume: %s", ShaderModel::sToString(sd.gpd.shaderModels).data()));
+        sPostWarning(node, StrA::format("shaderModel attribute is missing. Assume: %s", ShaderModel::sToString(sd.gpd.shaderModels).data()));
     } else {
         sd.gpd.shaderModels = ShaderModel::sFromString(models);
         if (0 == sd.gpd.shaderModels) {

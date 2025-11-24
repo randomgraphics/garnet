@@ -22,26 +22,26 @@ struct TextureUsage {
 
     GN_DEFINE_ENUM_CLASS_HELPERS(TextureUsage, Enum);
 };
-GN_CASSERT(sizeof(TextureUsage) == sizeof(uint32));
+GN_CASSERT(sizeof(TextureUsage) == sizeof(uint32_t));
 
 ///
 /// Texture descriptor
 ///
 struct TextureDesc {
     PixelFormat format; ///< pixel format.
-    uint32      width;  ///< basemap width
-    uint32      height; ///< basemap height
-    uint32      depth;  ///< basemap depth
-    uint32      faces;  ///< face count. When used as parameter of Gpu::createTexture(),
+    uint32_t    width;  ///< basemap width
+    uint32_t    height; ///< basemap height
+    uint32_t    depth;  ///< basemap depth
+    uint32_t    faces;  ///< face count. When used as parameter of Gpu::createTexture(),
                         ///< you may set it to 0 to use default face count: 6 for cubemap, 1 for others.
-    uint32 levels;      ///< mipmap level count. When used as parameter of Gpu::createTexture(),
+    uint32_t levels;    ///< mipmap level count. When used as parameter of Gpu::createTexture(),
                         ///< you may set it to 0 to create full mipmap chain (down to 1x1).
     TextureUsage usage; ///< texture usage
 
     ///
     /// get basemap size
     ///
-    const Vector3<uint32> & size() const { return *(Vector3<uint32> *) &width; }
+    const Vector3<uint32_t> & size() const { return *(Vector3<uint32_t> *) &width; }
 
     ///
     /// compose texture descriptor from image descriptor
@@ -62,8 +62,8 @@ struct TextureDesc {
     ///
     bool validate() {
         // calculate maximum mipmap levels
-        uint32 nx = 0, ny = 0, nz = 0;
-        uint32 maxLevels;
+        uint32_t nx = 0, ny = 0, nz = 0;
+        uint32_t maxLevels;
 
         maxLevels = width;
         while (maxLevels > 0) {
@@ -107,8 +107,8 @@ struct TextureDesc {
 };
 
 struct MipmapData {
-    uint32             rowPitch;
-    uint32             slicePitch;
+    uint32_t           rowPitch;
+    uint32_t           slicePitch;
     DynaArray<uint8_t> data;
 };
 
@@ -168,7 +168,7 @@ struct Texture : public RefCounter {
     ///
     /// get size of base map
     ///
-    const Vector3<uint32> & getBaseSize() const { return mDesc.size(); }
+    const Vector3<uint32_t> & getBaseSize() const { return mDesc.size(); }
 
     ///
     /// get size of base map
@@ -183,7 +183,7 @@ struct Texture : public RefCounter {
     ///
     /// get size of specific mip level
     ///
-    const Vector3<uint32> & getMipSize(uint32 level) const {
+    const Vector3<uint32_t> & getMipSize(uint32_t level) const {
         GN_ASSERT(level < mDesc.levels);
         return mMipSize[level];
     }
@@ -192,8 +192,8 @@ struct Texture : public RefCounter {
     /// get size of specific mip level
     ///
     template<typename T>
-    void getMipSize(uint32 level, T * sx, T * sy = 0, T * sz = 0) const {
-        const Vector3<uint32> & mipSize = getMipSize(level);
+    void getMipSize(uint32_t level, T * sx, T * sy = 0, T * sz = 0) const {
+        const Vector3<uint32_t> & mipSize = getMipSize(level);
         if (sx) *sx = (T) mipSize.x;
         if (sy) *sy = (T) mipSize.y;
         if (sz) *sz = (T) mipSize.z;
@@ -210,13 +210,13 @@ struct Texture : public RefCounter {
     ///                         The data must be the same format as the texture.
     /// \param flag             Updte flag. Must be one of SurfaceUpdateFlag.
     ///
-    virtual void updateMipmap(uint32 face, uint32 level, const Box<uint32> * area, uint32 rowPitch, uint32 slicePitch, const void * data,
+    virtual void updateMipmap(uint32_t face, uint32_t level, const Box<uint32_t> * area, uint32_t rowPitch, uint32_t slicePitch, const void * data,
                               SurfaceUpdateFlag flag = SurfaceUpdateFlag::DEFAULT) = 0;
 
     ///
     /// read mipmap content.
     ///
-    virtual void readMipmap(uint32 face, uint32 level, MipmapData & data) = 0;
+    virtual void readMipmap(uint32_t face, uint32_t level, MipmapData & data) = 0;
 
     ///
     /// generate content of all mipmap levels based on content in base level
@@ -258,29 +258,29 @@ protected:
     /// setup mip size
     ///
     template<typename T>
-    void setMipSize(uint32 level, T sx, T sy, T sz) {
+    void setMipSize(uint32_t level, T sx, T sy, T sz) {
         GN_ASSERT(level < mDesc.levels);
         GN_ASSERT(level > 0 || (sx == (T) mDesc.width && sy == (T) mDesc.height && sz == (T) mDesc.depth));
-        mMipSize[level].set((uint32) sx, (uint32) sy, (uint32) sz);
+        mMipSize[level].set((uint32_t) sx, (uint32_t) sy, (uint32_t) sz);
     }
 
     ///
     /// setup mip size
     ///
-    void setMipSize(uint32 level, const Vector3<uint32> & s) { setMipSize(level, s.x, s.y, s.z); }
+    void setMipSize(uint32_t level, const Vector3<uint32_t> & s) { setMipSize(level, s.x, s.y, s.z); }
 
 private:
-    TextureDesc                mDesc;    ///< descriptor
-    DynaArray<Vector3<uint32>> mMipSize; ///< mipmap size of each level
-    std::string                       mName;    ///< texture name. Only for debug purpose.
+    TextureDesc                  mDesc;    ///< descriptor
+    DynaArray<Vector3<uint32_t>> mMipSize; ///< mipmap size of each level
+    StrA                         mName;    ///< texture name. Only for debug purpose.
 };
 
 ///
 /// vertex buffer descriptor
 ///
 struct VtxBufDesc {
-    uint32 length;       ///< length in bytes of the vertex buffer
-    bool   fastCpuWrite; ///< support fast CPU write (rendering speed compromised)
+    uint32_t length;       ///< length in bytes of the vertex buffer
+    bool     fastCpuWrite; ///< support fast CPU write (rendering speed compromised)
 };
 
 ///
@@ -295,12 +295,12 @@ struct VtxBuf : public RefCounter {
     ///
     /// update vertex buffer content. offset and length are in number of bytes.
     ///
-    virtual void update(uint32 offset, uint32 length, const void * data, SurfaceUpdateFlag flag = SurfaceUpdateFlag::DEFAULT) = 0;
+    virtual void update(uint32_t offset, uint32_t length, const void * data, SurfaceUpdateFlag flag = SurfaceUpdateFlag::DEFAULT) = 0;
 
     ///
     /// Read buffer content.
     ///
-    virtual void readback(DynaArray<uint8> & data) = 0;
+    virtual void readback(DynaArray<uint8_t> & data) = 0;
 
 protected:
     ///
@@ -319,9 +319,9 @@ private:
 /// index buffer descriptor
 ///
 struct IdxBufDesc {
-    uint32 numidx;       ///< number of indices in index buffer
-    bool   bits32;       ///< is 32-bit index buffer or not.
-    bool   fastCpuWrite; ///< support fast CPU write (rendering speed compromised)
+    uint32_t numidx;       ///< number of indices in index buffer
+    bool     bits32;       ///< is 32-bit index buffer or not.
+    bool     fastCpuWrite; ///< support fast CPU write (rendering speed compromised)
 };
 
 ///
@@ -336,12 +336,12 @@ struct IdxBuf : public RefCounter {
     ///
     /// update index buffer content
     ///
-    virtual void update(uint32 startidx, uint32 numidx, const void * data, SurfaceUpdateFlag flag = SurfaceUpdateFlag::DEFAULT) = 0;
+    virtual void update(uint32_t startidx, uint32_t numidx, const void * data, SurfaceUpdateFlag flag = SurfaceUpdateFlag::DEFAULT) = 0;
 
     ///
     /// Read buffer content.
     ///
-    virtual void readback(DynaArray<uint8> & data) = 0;
+    virtual void readback(DynaArray<uint8_t> & data) = 0;
 
 protected:
     ///
@@ -367,11 +367,11 @@ struct BufferUsage {
 
     GN_DEFINE_ENUM_CLASS_HELPERS(BufferUsage, Enum);
 };
-GN_CASSERT(sizeof(TextureUsage) == sizeof(uint32));
+GN_CASSERT(sizeof(TextureUsage) == sizeof(uint32_t));
 
 struct BufferDesc {
-    uint32 sizeInBytes;
-    uint32 usages; // combination of BufferUsage flags.
+    uint32_t sizeInBytes;
+    uint32_t usages; // combination of BufferUsage flags.
 };
 
 struct Buffer : public RefCounter {
@@ -383,12 +383,12 @@ struct Buffer : public RefCounter {
     ///
     /// update index buffer content
     ///
-    virtual void update(uint32 startidx, uint32 numidx, const void * data) = 0;
+    virtual void update(uint32_t startidx, uint32_t numidx, const void * data) = 0;
 
     ///
     /// Read buffer content.
     ///
-    virtual void readback(DynaArray<uint8> & data) = 0;
+    virtual void readback(DynaArray<uint8_t> & data) = 0;
 
 protected:
     ///

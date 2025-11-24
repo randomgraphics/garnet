@@ -91,16 +91,16 @@ void GN::gfx::D3D11GpuProgramParameterDesc::clear() {
 // -----------------------------------------------------------------------------
 void GN::gfx::D3D11GpuProgramParameterDesc::buildParameterArrays() {
     mUniformArray       = mUniforms.data();
-    mUniformCount       = (uint32) mUniforms.size();
-    mUniformArrayStride = (uint32) sizeof(mUniforms[0]);
+    mUniformCount       = (uint32_t) mUniforms.size();
+    mUniformArrayStride = (uint32_t) sizeof(mUniforms[0]);
 
     mTextureArray       = mTextures.data();
-    mTextureCount       = (uint32) mTextures.size();
-    mTextureArrayStride = (uint32) sizeof(mTextures[0]);
+    mTextureCount       = (uint32_t) mTextures.size();
+    mTextureArrayStride = (uint32_t) sizeof(mTextures[0]);
 
     mAttributeArray       = mAttributes.data();
-    mAttributeCount       = (uint32) mAttributes.size();
-    mAttributeArrayStride = (uint32) sizeof(mAttributes[0]);
+    mAttributeCount       = (uint32_t) mAttributes.size();
+    mAttributeArrayStride = (uint32_t) sizeof(mAttributes[0]);
 }
 
 //
@@ -295,7 +295,7 @@ bool GN::gfx::D3D11GpuProgramHLSL::init(const GpuProgramDesc & desc) {
     GN_STDCLASS_INIT();
 
     // covert shader compile options
-    uint32 compileFlags;
+    uint32_t compileFlags;
     compileFlags = D3D10_SHADER_PACK_MATRIX_ROW_MAJOR; // use row major matrix all the time.
     if (!desc.optimize) compileFlags |= D3D10_SHADER_SKIP_OPTIMIZATION;
     if (!desc.debug) compileFlags |= D3D10_SHADER_DEBUG;
@@ -346,7 +346,7 @@ void GN::gfx::D3D11GpuProgramHLSL::quit() {
 //
 //
 // -----------------------------------------------------------------------------
-const char * GN::gfx::D3D11GpuProgramHLSL::getAttributeSemantic(uint32 attributeIndex, UINT * semanticIndex) const {
+const char * GN::gfx::D3D11GpuProgramHLSL::getAttributeSemantic(uint32_t attributeIndex, UINT * semanticIndex) const {
     if (attributeIndex >= mParamDesc.attributes.count()) {
         GN_ERROR(sLogger)("Invalid attribute index: %d", attributeIndex);
         if (semanticIndex) *semanticIndex = 0;
@@ -385,14 +385,14 @@ void GN::gfx::D3D11GpuProgramHLSL::apply() const {
 
         D3D11BindShader[s](cxt, shader.shader);
 
-        if (shader.constBufs.size() > 0) { D3D11BindConstBuffers[s](cxt, 0, (uint32) shader.constBufs.size(), &shader.constBufs[0]); }
+        if (shader.constBufs.size() > 0) { D3D11BindConstBuffers[s](cxt, 0, (uint32_t) shader.constBufs.size(), &shader.constBufs[0]); }
     }
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3D11GpuProgramHLSL::applyUniforms(const Uniform * const * uniforms, uint32 count, bool skipDirtyCheck) const {
+void GN::gfx::D3D11GpuProgramHLSL::applyUniforms(const Uniform * const * uniforms, uint32_t count, bool skipDirtyCheck) const {
     count = math::getmin(count, mParamDesc.uniforms.count());
 
     // dirty flags
@@ -413,8 +413,8 @@ void GN::gfx::D3D11GpuProgramHLSL::applyUniforms(const Uniform * const * uniform
     for (int s = 0; s < GN_ARRAY_COUNT(mShaders); ++s) {
         for (size_t i = 0; i < mShaders[s].constBufs.size(); ++i) {
             if (skipDirtyCheck || constDirty[s][i]) {
-                ID3D11Buffer &           buf  = *mShaders[s].constBufs[i];
-                const DynaArray<uint8> & data = mShaders[s].constData[i];
+                ID3D11Buffer &             buf  = *mShaders[s].constBufs[i];
+                const DynaArray<uint8_t> & data = mShaders[s].constData[i];
                 sUpdateD3D11ConstBuffer(cxt, buf, data.data(), data.size());
             }
         }
@@ -424,7 +424,7 @@ void GN::gfx::D3D11GpuProgramHLSL::applyUniforms(const Uniform * const * uniform
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3D11GpuProgramHLSL::applyTextures(const TextureBinding * bindings, uint32 count, bool skipDirtyCheck) const {
+void GN::gfx::D3D11GpuProgramHLSL::applyTextures(const TextureBinding * bindings, uint32_t count, bool skipDirtyCheck) const {
     const size_t NUM_STAGES = getGpu().caps().maxTextures;
 
     // allocate SRV array on stack, clear to zero.
@@ -483,7 +483,7 @@ void GN::gfx::D3D11GpuProgramHLSL::applyTextures(const TextureBinding * bindings
 //
 // -----------------------------------------------------------------------------
 template<int SHADER_STAGE>
-bool GN::gfx::D3D11GpuProgramHLSL::initShader(ShaderHLSL & shader, const ShaderCode & code, GpuProgramLanguage targetLanguage, uint32 compileFlags) {
+bool GN::gfx::D3D11GpuProgramHLSL::initShader(ShaderHLSL & shader, const ShaderCode & code, GpuProgramLanguage targetLanguage, uint32_t compileFlags) {
     // do nothing for empty shader code
     if (str::empty(code.source)) return true;
 
@@ -564,7 +564,7 @@ bool GN::gfx::D3D11GpuProgramHLSL::sInitConstBuffers(ID3D11Device & dev, ID3D11S
     // create constant buffers
     constBufs.resize(desc.ConstantBuffers);
     constData.resize(desc.ConstantBuffers);
-    for (uint32 i = 0; i < desc.ConstantBuffers; ++i) {
+    for (uint32_t i = 0; i < desc.ConstantBuffers; ++i) {
         ID3D11ShaderReflectionConstantBuffer * cb = reflection.GetConstantBufferByIndex(i);
         GN_ASSERT(cb);
 
@@ -600,9 +600,9 @@ void GN::gfx::D3D11GpuProgramHLSL::sUpdateD3D11ConstData(const D3D11UniformParam
         GN_WARN(sLogger)("parameter %s: value size(%d) differs from size defined in shader code(%d).", desc.name, uniform.size(), desc.size);
     }
 
-    DynaArray<uint8> &             cb = cbarray[ssp.cbidx];
-    SafeArrayAccessor<const uint8> src((const uint8 *) uniform.getval(), uniform.size());
-    SafeArrayAccessor<uint8>       dst(cb.data(), cb.size());
+    DynaArray<uint8_t> &             cb = cbarray[ssp.cbidx];
+    SafeArrayAccessor<const uint8_t> src((const uint8_t *) uniform.getval(), uniform.size());
+    SafeArrayAccessor<uint8_t>       dst(cb.data(), cb.size());
 
     // copy uniform data to system const buffer
     src.copyTo(0,          // src offset

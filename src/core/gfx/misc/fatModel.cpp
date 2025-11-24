@@ -12,12 +12,12 @@ static GN::Logger * sLogger = GN::getLogger("GN.gfx.FatModel");
 // FatVertexBuffer
 // *****************************************************************************
 
-const uint32 GN::gfx::FatVertexBuffer::MAX_TEXCOORDS = (uint32) (GN::gfx::FatVertexBuffer::TEXCOORD_LAST - GN::gfx::FatVertexBuffer::TEXCOORD0);
-const uint32 GN::gfx::FatVertexBuffer::POS_NORMAL_TEX =
+const uint32_t GN::gfx::FatVertexBuffer::MAX_TEXCOORDS = (uint32_t) (GN::gfx::FatVertexBuffer::TEXCOORD_LAST - GN::gfx::FatVertexBuffer::TEXCOORD0);
+const uint32_t GN::gfx::FatVertexBuffer::POS_NORMAL_TEX =
     (1 << GN::gfx::FatVertexBuffer::POSITION) | (1 << GN::gfx::FatVertexBuffer::NORMAL) | (1 << GN::gfx::FatVertexBuffer::TEXCOORD0);
-const uint32 GN::gfx::FatVertexBuffer::POS_NORMAL_TEX_SKINNING = (1 << GN::gfx::FatVertexBuffer::POSITION) | (1 << GN::gfx::FatVertexBuffer::NORMAL) |
-                                                                 (1 << GN::gfx::FatVertexBuffer::TEXCOORD0) | (1 << GN::gfx::FatVertexBuffer::JOINT_ID) |
-                                                                 (1 << GN::gfx::FatVertexBuffer::JOINT_WEIGHT);
+const uint32_t GN::gfx::FatVertexBuffer::POS_NORMAL_TEX_SKINNING = (1 << GN::gfx::FatVertexBuffer::POSITION) | (1 << GN::gfx::FatVertexBuffer::NORMAL) |
+                                                                   (1 << GN::gfx::FatVertexBuffer::TEXCOORD0) | (1 << GN::gfx::FatVertexBuffer::JOINT_ID) |
+                                                                   (1 << GN::gfx::FatVertexBuffer::JOINT_WEIGHT);
 
 //
 //
@@ -41,7 +41,7 @@ GN::gfx::FatVertexBuffer::Semantic GN::gfx::FatVertexBuffer::sString2Semantic(co
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::FatVertexBuffer::resize(uint32 layout, uint32 count) {
+bool GN::gfx::FatVertexBuffer::resize(uint32_t layout, uint32_t count) {
     if (0 == layout || 0 == count) {
         clear();
         return true;
@@ -123,7 +123,7 @@ void GN::gfx::FatVertexBuffer::endVertices() {
 void GN::gfx::FatVertexBuffer::GenerateMeshVertexFormat(MeshVertexFormat & mvf) const {
     mvf.clear();
 
-    uint8 offset = 0;
+    uint8_t offset = 0;
     for (int i = 0; i < (int) NUM_SEMANTICS; ++i) {
         if ((1 << i) & mLayout) {
             MeshVertexElement & e = mvf.elements[mvf.numElements];
@@ -144,13 +144,13 @@ void GN::gfx::FatVertexBuffer::GenerateMeshVertexFormat(MeshVertexFormat & mvf) 
 // -----------------------------------------------------------------------------
 bool GN::gfx::FatVertexBuffer::GenerateVertexStream(const MeshVertexFormat & mvf, size_t stream, size_t stride, void * buffer, size_t bufferSize) const {
     // Check parameters
-    uint32 numStreams = mvf.calcNumStreams();
+    uint32_t numStreams = mvf.calcNumStreams();
     if (stream >= numStreams) {
         GN_ERROR(sLogger)("Invalid stream.");
         return false;
     }
 
-    uint32 minStride = mvf.calcStreamStride((uint32) stream);
+    uint32_t minStride = mvf.calcStreamStride((uint32_t) stream);
     if (0 == stride) {
         stride = minStride;
     } else if (stride < minStride) {
@@ -190,7 +190,7 @@ bool GN::gfx::FatVertexBuffer::GenerateVertexStream(const MeshVertexFormat & mvf
 
         GN_ASSERT((e.offset + size) <= stride);
 
-        SafeArrayAccessor<uint8> dst((uint8 *) buffer + e.offset, (mCount * stride) - e.offset);
+        SafeArrayAccessor<uint8_t> dst((uint8_t *) buffer + e.offset, (mCount * stride) - e.offset);
 
         if (semantics[j] != INVALID) {
             SafeArrayAccessor<const VertexElement> src(mElements[semantics[j]].data(), mCount);
@@ -218,13 +218,13 @@ bool GN::gfx::FatVertexBuffer::GenerateVertexStream(const MeshVertexFormat & mvf
 //
 //
 // -----------------------------------------------------------------------------
-static void sPrintFatJointRecursivly(std::string & s, const FatJoint * joints, uint32 count, uint32 root, uint32 depth) {
-    for (uint32 i = 0; i < depth; ++i) { s += "  "; }
+static void sPrintFatJointRecursivly(StrA & s, const FatJoint * joints, uint32_t count, uint32_t root, uint32_t depth) {
+    for (uint32_t i = 0; i < depth; ++i) { s += "  "; }
 
     if (root < count) {
-        s += fmt::format("(%d) %s\n", depth, joints[root].name.data());
+        s += StrA::format("(%d) %s\n", depth, joints[root].name.data());
 
-        for (uint32 i = joints[root].child; i != FatJoint::NO_JOINT; i = joints[i].sibling) { sPrintFatJointRecursivly(s, joints, count, i, depth + 1); }
+        for (uint32_t i = joints[root].child; i != FatJoint::NO_JOINT; i = joints[i].sibling) { sPrintFatJointRecursivly(s, joints, count, i, depth + 1); }
     } else {
         s += fmt::format("(%d) ERROR: joint index out of range: %d\n", depth, root);
     }
@@ -246,16 +246,17 @@ void GN::gfx::FatSkeleton::printJointHierarchy(std::string & s) const {
 // *****************************************************************************
 
 struct SkinnedVertexKey {
-    uint32 vertexIndex; //< Index into vertex array
-    uint32 joints[4];   //< Remapped joint ID that associated with this vertex.
+    uint32_t vertexIndex; //< Index into vertex array
+    uint32_t joints[4];   //< Remapped joint ID that associated with this vertex.
 
     bool operator==(const SkinnedVertexKey & rhs) const {
         return vertexIndex == rhs.vertexIndex && joints[0] == rhs.joints[0] && joints[1] == rhs.joints[1] && joints[2] == rhs.joints[2] &&
                joints[3] == rhs.joints[3];
     }
 
-    static uint64 hash(const SkinnedVertexKey & k) {
-        uint64 h = ((uint64) k.vertexIndex) | (((uint64) (k.joints[0] | (k.joints[1] << 16))) << 32) | (((uint64) (k.joints[2] | (k.joints[3] << 16))) << 48);
+    static uint64_t hash(const SkinnedVertexKey & k) {
+        uint64_t h =
+            ((uint64_t) k.vertexIndex) | (((uint64_t) (k.joints[0] | (k.joints[1] << 16))) << 32) | (((uint64_t) (k.joints[2] | (k.joints[3] << 16))) << 48);
         return h;
     }
 };
@@ -267,14 +268,14 @@ struct hash<SkinnedVertexKey> {
 };
 } // namespace std
 
-typedef std::unordered_map<SkinnedVertexKey, uint32> SkinnedVertexMap;
+typedef std::unordered_map<SkinnedVertexKey, uint32_t> SkinnedVertexMap;
 
 //
 //
 // -----------------------------------------------------------------------------
-static void sJointSet2JointArray(DynaArray<uint32, uint32> & jarray, const std::set<uint32> & jset) {
+static void sJointSet2JointArray(DynaArray<uint32_t, uint32_t> & jarray, const std::set<uint32_t> & jset) {
     jarray.clear();
-    for (std::set<uint32>::const_iterator i = jset.begin(); i != jset.end(); ++i) { jarray.append(*i); }
+    for (std::set<uint32_t>::const_iterator i = jset.begin(); i != jset.end(); ++i) { jarray.append(*i); }
 }
 
 //
@@ -283,17 +284,17 @@ static void sJointSet2JointArray(DynaArray<uint32, uint32> & jarray, const std::
 //
 // Return true if there's at least one subset that gets split
 // -----------------------------------------------------------------------------
-static bool sSplitFatMeshSubsets(FatMesh & mesh, uint32 maxJointsPerSubset) {
+static bool sSplitFatMeshSubsets(FatMesh & mesh, uint32_t maxJointsPerSubset) {
     // ignore mesh without skeleton
     if (FatMesh::NO_SKELETON == mesh.skeleton) return false;
 
     // ignore mesh without skin information in vertex.
-    const uint32 * joints  = (uint32 *) mesh.vertices.getElementData(FatVertexBuffer::JOINT_ID);
-    float *        weights = (float *) mesh.vertices.getElementData(FatVertexBuffer::JOINT_WEIGHT);
+    const uint32_t * joints  = (uint32_t *) mesh.vertices.getElementData(FatVertexBuffer::JOINT_ID);
+    float *          weights = (float *) mesh.vertices.getElementData(FatVertexBuffer::JOINT_WEIGHT);
     if (NULL == joints || NULL == weights) return false;
 
     // cache mesh index buffer (might be NULL)
-    uint32 * indices = mesh.indices.data();
+    auto indices = mesh.indices.data();
 
     // Temporary array to hold newly created subset.
     DynaArray<FatMeshSubset> newSubsets;
@@ -303,7 +304,7 @@ static bool sSplitFatMeshSubsets(FatMesh & mesh, uint32 maxJointsPerSubset) {
     // split into smaller pieces to meet the joint number threshold. All
     // newly created subsets are stored in array "newSubsets".
     //
-    for (uint32 s = 0; s < mesh.subsets.size(); ++s) {
+    for (uint32_t s = 0; s < mesh.subsets.size(); ++s) {
         // This is the subset that we're currently looping through
         FatMeshSubset & subset = mesh.subsets[s];
 
@@ -314,16 +315,16 @@ static bool sSplitFatMeshSubsets(FatMesh & mesh, uint32 maxJointsPerSubset) {
         // Whenever number of joints exceeds the threshold, creates a new subset
         // and reset the joint count.
 
-        std::set<uint32> accumulatedJoints;
+        std::set<uint32_t> accumulatedJoints;
 
-        uint32 faceCount = (indices ? subset.numidx : subset.numvtx) / 3;
+        uint32_t faceCount = (indices ? subset.numidx : subset.numvtx) / 3;
 
-        for (uint32 i = 0; i < faceCount; ++i) {
+        for (uint32_t i = 0; i < faceCount; ++i) {
             // Collect joint of this face (triangle)
-            std::set<uint32> newJoints;
-            for (uint32 j = 0; j < 3; ++j) {
-                uint32         vertexIndex  = subset.basevtx + (indices ? indices[subset.startidx + i * 3 + j] : (i * 3 + j));
-                const uint32 * vertexJoints = joints + vertexIndex * 4;
+            std::set<uint32_t> newJoints;
+            for (uint32_t j = 0; j < 3; ++j) {
+                uint32_t         vertexIndex  = subset.basevtx + (indices ? indices[subset.startidx + i * 3 + j] : (i * 3 + j));
+                const uint32_t * vertexJoints = joints + vertexIndex * 4;
                 if (FatJoint::NO_JOINT != vertexJoints[0]) newJoints.insert(vertexJoints[0]);
                 if (FatJoint::NO_JOINT != vertexJoints[1]) newJoints.insert(vertexJoints[1]);
                 if (FatJoint::NO_JOINT != vertexJoints[2]) newJoints.insert(vertexJoints[2]);
@@ -331,7 +332,7 @@ static bool sSplitFatMeshSubsets(FatMesh & mesh, uint32 maxJointsPerSubset) {
             }
 
             // Merge current joints and new joints into a temporary set.
-            std::set<uint32> tempJointSet(accumulatedJoints);
+            std::set<uint32_t> tempJointSet(accumulatedJoints);
             tempJointSet.insert(newJoints.begin(), newJoints.end());
 
             // See if the size of the merged joint set exceeds the limit.
@@ -427,8 +428,8 @@ static bool sSplitFatMeshSubsets(FatMesh & mesh, uint32 maxJointsPerSubset) {
 //
 // -----------------------------------------------------------------------------
 static int sCompareUInt32(const void * a, const void * b) {
-    uint32 ia = *(const uint32 *) a;
-    uint32 ib = *(const uint32 *) b;
+    uint32_t ia = *(const uint32_t *) a;
+    uint32_t ib = *(const uint32_t *) b;
 
     if (ia < ib)
         return -1;
@@ -443,17 +444,17 @@ static int sCompareUInt32(const void * a, const void * b) {
 // The function assums that the joint ID does exist in the array,
 // or is FatJoint::NO_JOINT.
 // -----------------------------------------------------------------------------
-static inline uint32 sRemapJoint(const DynaArray<uint32, uint32> & joints, uint32 id) {
+static inline uint32_t sRemapJoint(const DynaArray<uint32_t, uint32_t> & joints, uint32_t id) {
     if (FatJoint::NO_JOINT == id) return FatJoint::NO_JOINT;
 
-    const uint32 * begin    = joints.begin();
-    const uint32 * end      = joints.end();
-    const uint32 * iterator = std::lower_bound(begin, end, id);
+    const uint32_t * begin    = joints.begin();
+    const uint32_t * end      = joints.end();
+    const uint32_t * iterator = std::lower_bound(begin, end, id);
 
     // Make sure we did find it.
     GN_ASSERT(begin <= iterator && iterator < end);
 
-    return (uint32) (iterator - begin);
+    return (uint32_t) (iterator - begin);
 }
 
 //
@@ -461,28 +462,28 @@ static inline uint32 sRemapJoint(const DynaArray<uint32, uint32> & joints, uint3
 // -----------------------------------------------------------------------------
 static bool sRemapFatMeshJointID(FatMesh & mesh) {
     // Ignore non skinned mesh
-    uint32 * originalJoints = (uint32 *) mesh.vertices.getElementData(FatVertexBuffer::JOINT_ID);
+    uint32_t * originalJoints = (uint32_t *) mesh.vertices.getElementData(FatVertexBuffer::JOINT_ID);
     if (NULL == originalJoints) return true;
 
     bool indexedMesh = !mesh.indices.empty();
 
     SkinnedVertexMap vmap(indexedMesh ? mesh.indices.size() : mesh.vertices.getVertexCount());
 
-    DynaArray<SkinnedVertexKey, uint32> newVertices;
-    DynaArray<uint32, uint32>           newIndices;
+    DynaArray<SkinnedVertexKey, uint32_t> newVertices;
+    DynaArray<uint32_t, uint32_t>         newIndices;
 
-    for (uint32 isubset = 0; isubset < mesh.subsets.size(); ++isubset) {
+    for (uint32_t isubset = 0; isubset < mesh.subsets.size(); ++isubset) {
         // Refernece the subset that we're currently working on
         FatMeshSubset & subset = mesh.subsets[isubset];
 
         // Sort joint array of the subset. So that we can binary search it later.
-        qsort(subset.joints.data(), subset.joints.size(), sizeof(uint32), sCompareUInt32);
+        qsort(subset.joints.data(), subset.joints.size(), sizeof(uint32_t), sCompareUInt32);
 
         // Remember how many new indices we have now. We'll use that later.
-        uint32 currentNewIndexCount = newIndices.size();
+        uint32_t currentNewIndexCount = newIndices.size();
 
         // Loop throuhg all faces.
-        uint32 start, end;
+        uint32_t start, end;
         if (indexedMesh) {
             start = subset.startidx;
             end   = subset.startidx + subset.numidx;
@@ -490,8 +491,8 @@ static bool sRemapFatMeshJointID(FatMesh & mesh) {
             start = subset.basevtx;
             end   = subset.basevtx + subset.numvtx;
         }
-        for (uint32 i = start; i < end; ++i) {
-            uint32 vertexIndex;
+        for (uint32_t i = start; i < end; ++i) {
+            uint32_t vertexIndex;
 
             if (indexedMesh) {
                 vertexIndex = mesh.indices[i] + subset.basevtx;
@@ -507,7 +508,7 @@ static bool sRemapFatMeshJointID(FatMesh & mesh) {
             key.joints[3]   = sRemapJoint(subset.joints, originalJoints[vertexIndex * 4 + 3]);
 
             // Is this an existing key or new key?
-            auto inserted            = vmap.insert({key, (uint32) vmap.size()});
+            auto inserted            = vmap.insert({key, (uint32_t) vmap.size()});
             auto isNewVertex         = inserted.second;
             auto remappedVertexIndex = inserted.first->second;
             if (isNewVertex) {
@@ -529,7 +530,7 @@ static bool sRemapFatMeshJointID(FatMesh & mesh) {
 
     // We have looped through all subsets in the mesh. And gathered all new vertices and indices.
     // It's time to update vertex count information for each subset.
-    for (uint32 isubset = 0; isubset < mesh.subsets.size(); ++isubset) {
+    for (uint32_t isubset = 0; isubset < mesh.subsets.size(); ++isubset) {
         FatMeshSubset & subset = mesh.subsets[isubset];
         subset.basevtx         = 0;
         subset.numvtx          = newVertices.size();
@@ -541,21 +542,21 @@ static bool sRemapFatMeshJointID(FatMesh & mesh) {
         GN_ERROR(sLogger)("Out of memory.");
         return false;
     }
-    for (uint32 s = 0; s < FatVertexBuffer::NUM_SEMANTICS; ++s) {
-        const uint32 * oldval = (const uint32 *) mesh.vertices.getElementData(s);
+    for (uint32_t s = 0; s < FatVertexBuffer::NUM_SEMANTICS; ++s) {
+        const uint32_t * oldval = (const uint32_t *) mesh.vertices.getElementData(s);
         if (NULL == oldval) continue;
 
         newvb.setElementFormat(s, mesh.vertices.getElementFormat(s));
 
-        uint32 * newval = (uint32 *) newvb.getElementData(s);
+        uint32_t * newval = (uint32_t *) newvb.getElementData(s);
         GN_ASSERT(newval);
 
         if (s == FatVertexBuffer::JOINT_ID) {
             // Use remapped joint ID in new VB.
-            for (uint32 i = 0; i < newVertices.size(); ++i) {
+            for (uint32_t i = 0; i < newVertices.size(); ++i) {
                 const SkinnedVertexKey & key = newVertices[i];
 
-                uint32 newOffset      = i * 4;
+                uint32_t newOffset    = i * 4;
                 newval[newOffset + 0] = key.joints[0];
                 newval[newOffset + 1] = key.joints[1];
                 newval[newOffset + 2] = key.joints[2];
@@ -563,13 +564,13 @@ static bool sRemapFatMeshJointID(FatMesh & mesh) {
             }
         } else {
             // If it is not joint ID, just copy it from old VB
-            for (uint32 i = 0; i < newVertices.size(); ++i) {
+            for (uint32_t i = 0; i < newVertices.size(); ++i) {
                 const SkinnedVertexKey & key = newVertices[i];
 
                 GN_ASSERT(key.vertexIndex < mesh.vertices.getVertexCount());
 
-                uint32 oldOffset = key.vertexIndex * 4;
-                uint32 newOffset = i * 4;
+                uint32_t oldOffset = key.vertexIndex * 4;
+                uint32_t newOffset = i * 4;
 
                 newval[newOffset + 0] = oldval[oldOffset + 0];
                 newval[newOffset + 1] = oldval[oldOffset + 1];
@@ -591,13 +592,13 @@ static bool sRemapFatMeshJointID(FatMesh & mesh) {
 // -----------------------------------------------------------------------------
 void GN::gfx::FatModel::calcBoundingBox() {
     bbox.clear();
-    for (uint32 i = 0; i < meshes.size(); ++i) { Boxf::sGetUnion(bbox, bbox, meshes[i].bbox); }
+    for (uint32_t i = 0; i < meshes.size(); ++i) { Boxf::sGetUnion(bbox, bbox, meshes[i].bbox); }
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::FatModel::splitSkinnedMesh(uint32 maxJointsPerSubset) {
+bool GN::gfx::FatModel::splitSkinnedMesh(uint32_t maxJointsPerSubset) {
     GN_SCOPE_PROFILER(FatModel_splitSkinnedMesh, "Split skinned mesh in FatModel.");
 
     if (maxJointsPerSubset < 12) {
@@ -608,7 +609,7 @@ bool GN::gfx::FatModel::splitSkinnedMesh(uint32 maxJointsPerSubset) {
     //
     // Loop through all meshes
     //
-    for (uint32 i = 0; i < meshes.size(); ++i) {
+    for (uint32_t i = 0; i < meshes.size(); ++i) {
         auto & mesh = meshes[i];
 
         // Split subsets in the mesh to ensure that every subset uses no more than

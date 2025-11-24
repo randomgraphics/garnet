@@ -2,22 +2,14 @@
 ====
 
 - Mordenization:
-  - depreicate/remove some old old code: like guard, icl support
-  - update 3rd party libraries using submodule:
-    - ft2
-  - replace custom types with standard STL types:
-    - AutoObjPtr
-    - custom containers: array, hashmap, dict
-    - string: TBD
-    - File -> std::iostream
   - replace some custom classes with 3rdparty library:
-    - math
     - delegate
-    - Spinlook=p -> std::mutex
+    - math -> glm (cons: no more custom field names like r/g/b/a)
     - custom log -> spdlog (https://github.com/gabime/spdlog)
     - format -> fmtlib (https://github.com/fmtlib/fmt )
-  - something keepers:
+  - keepers:
     - autoptr: it is much faster and more memory effecient than use std::shared_ptr directly.
+    - custom string and vector class: in case we need to avoid STL dependencies on interface.
 
 - fix Qt6 window build.
 
@@ -82,7 +74,7 @@
   - thread and sync objects unit tests.
   - update skinned mesh bounding box with animation
   - unit test:
-    - DynaArray<???,uint8>
+    - DynaArray<???,uint8_t>
   - New Engine module entity class
     - loop through all entities
     - loop through entities of specific type

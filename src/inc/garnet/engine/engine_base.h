@@ -143,7 +143,7 @@ public:
     ///
     /// get the raw pointer
     ///
-    XPTR rawptr() const { return (XPTR) mPtr; }
+    XPTR data() const { return (XPTR) mPtr; }
 
     ///
     /// check for empty reference
@@ -253,7 +253,7 @@ public:
     }
     //@}
 
-    // public: virtual void processEvent( uint32 eventid, uint64 param1, void * param2 ) = 0;
+    // public: virtual void processEvent( uint32_t eventid, uint64_t param1, void * param2 ) = 0;
 
 private:
     typedef std::unordered_map<EntityType, EntityRef<Entity>, EntityType::Hash> ComponentMap;

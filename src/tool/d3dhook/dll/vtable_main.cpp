@@ -100,7 +100,7 @@ int doEnter(const wchar_t * text, TraceTarget tt) {
         wchar_t ident[256] = {};
         wchar_t buf[256]   = {};
 
-        for (int i = 0; i < g_level && i < countof(ident); ++i) { ident[i] = L' '; }
+        for (int i = 0; i < g_level && i < std::size(ident); ++i) { ident[i] = L' '; }
         swprintf_s(buf, L"{thread:%d}[%d]", GetCurrentThreadId(), InterlockedIncrement(&g_count));
         wcscat_s(buf, ident);
         wcscat_s(buf, text);

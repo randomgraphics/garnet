@@ -57,11 +57,11 @@ GN_API GN::d3d9::D3D9ThickLineRenderer::D3D9ThickLineRenderer() {
     clear();
 
     // initialize index buffer
-    uint16 numpoly = MAX_VERTICES / 6;
-    for (uint16 i = 0; i < numpoly; ++i) {
-        uint16 * p = m_Indices + i * 12;
+    uint16_t numpoly = MAX_VERTICES / 6;
+    for (uint16_t i = 0; i < numpoly; ++i) {
+        uint16_t * p = m_Indices + i * 12;
 
-        uint16 v = i * 6;
+        uint16_t v = i * 6;
 
         // v1-v2
         // |   \           $
@@ -398,7 +398,7 @@ GN_API void GN::d3d9::D3D9ThickLineRenderer::calcEndPoint(EndPoint & endpoint, c
         float    half_size = m_Parameters.width / 2.0f * XMVectorGetW(center);
         XMVECTOR distance  = XMVectorSet(-half_size, half_size, 0.0f, 0.0f);
         XMVECTOR topleft   = XMVectorSet(XMVectorGetX(center) + XMVectorGetX(distance), XMVectorGetY(center) + XMVectorGetY(distance),
-                                       XMVectorGetZ(center) + XMVectorGetZ(distance), XMVectorGetW(center) + XMVectorGetW(distance));
+                                         XMVectorGetZ(center) + XMVectorGetZ(distance), XMVectorGetW(center) + XMVectorGetW(distance));
 
         // translate both center and left top into clip space
         center  = XMVector4Transform(center, m_Parameters.proj);

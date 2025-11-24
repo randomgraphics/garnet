@@ -234,7 +234,7 @@ bool GN::win::WindowX11::initDisplay(intptr_t handle) {
     GN_GUARD;
 
     if (0 == handle) {
-        std::string dispStr = getEnv("DISPLAY");
+        auto dispStr = getEnv("DISPLAY");
         mDisplay     = XOpenDisplay(dispStr.data());
         if (0 == mDisplay) {
             GN_ERROR(sLogger)("Fail to open display '%s'.", dispStr.data());

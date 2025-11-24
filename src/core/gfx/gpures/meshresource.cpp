@@ -26,9 +26,9 @@ bool GN::gfx::VertexFormatProperties::analyze(const MeshVertexFormat & vf) {
 
         used[e.stream] = true;
 
-        uint16 currentStride = minStrides[e.stream];
+        uint16_t currentStride = minStrides[e.stream];
 
-        uint16 newStride = e.offset + e.format.bytesPerBlock();
+        uint16_t newStride = e.offset + e.format.bytesPerBlock();
 
         if (newStride > currentStride) minStrides[e.stream] = newStride;
     }
@@ -67,8 +67,8 @@ void GN::gfx::MeshResource::Impl::applyToContext(GpuContext & context) const {
     GN_CASSERT(GN_ARRAY_COUNT(context.vtxbufs) == GN_ARRAY_COUNT(mVtxBufs));
     for (size_t i = 0; i < GN_ARRAY_COUNT(context.vtxbufs); ++i) {
         context.vtxbufs[i].vtxbuf = mVtxBufs[i].gpudata;
-        context.vtxbufs[i].stride = (uint16) mDesc.strides[i];
-        context.vtxbufs[i].offset = (uint32) mDesc.offsets[i];
+        context.vtxbufs[i].stride = (uint16_t) mDesc.strides[i];
+        context.vtxbufs[i].offset = (uint32_t) mDesc.offsets[i];
     }
 
     // index buffers
@@ -83,7 +83,7 @@ void GN::gfx::MeshResource::Impl::calculateBoundingBox(Box<float> & box) const {
 
     (MeshResourceDescBase) desc = mDesc;
 
-    DynaArray<uint8> buffers[GpuContext::MAX_VERTEX_BUFFERS];
+    DynaArray<uint8_t> buffers[GpuContext::MAX_VERTEX_BUFFERS];
     for (size_t i = 0; i < GpuContext::MAX_VERTEX_BUFFERS; ++i) {
         if (mVtxBufs[i].gpudata) { mVtxBufs[i].gpudata->readback(buffers[i]); }
 
@@ -101,7 +101,7 @@ void GN::gfx::MeshResource::Impl::calculateBoundingSphere(Sphere<float> & sphere
 
     (MeshResourceDescBase) desc = mDesc;
 
-    DynaArray<uint8> buffers[GpuContext::MAX_VERTEX_BUFFERS];
+    DynaArray<uint8_t> buffers[GpuContext::MAX_VERTEX_BUFFERS];
     for (size_t i = 0; i < GpuContext::MAX_VERTEX_BUFFERS; ++i) {
         if (mVtxBufs[i].gpudata) { mVtxBufs[i].gpudata->readback(buffers[i]); }
 
@@ -134,7 +134,7 @@ bool GN::gfx::MeshResource::Impl::create(const MeshResourceDesc & desc) {
             if (!vfp.used[i]) continue; // ignore unused vertex buffer
 
             // calculate vertex stride
-            uint16 stride;
+            uint16_t stride;
             if (0 == desc.strides[i]) {
                 stride = vfp.minStrides[i];
             } else if (desc.strides[i] >= vfp.minStrides[i]) {
@@ -146,7 +146,7 @@ bool GN::gfx::MeshResource::Impl::create(const MeshResourceDesc & desc) {
             mDesc.strides[i] = stride;
 
             // calculate vertex buffer size
-            uint32 vbsize;
+            uint32_t vbsize;
             vbsize = stride * desc.numvtx;
 
             // create GPU vertex buffer
@@ -162,7 +162,7 @@ bool GN::gfx::MeshResource::Impl::create(const MeshResourceDesc & desc) {
 
     // initialize index buffer
     if (desc.numidx > 0) {
-        IdxBufDesc ibd = {(uint32) desc.numidx, desc.idx32, desc.dynaib};
+        IdxBufDesc ibd = {(uint32_t) desc.numidx, desc.idx32, desc.dynaib};
         mIdxBuf.gpudata.attach(gpu.createIdxBuf(ibd));
         if (NULL == mIdxBuf.gpudata) return false;
 
@@ -255,8 +255,8 @@ AutoRef<MeshResource> GN::gfx::MeshResource::loadFromFile(GpuResourceDatabase & 
     if (m) return m;
 
     MeshResourceDesc desc;
-    AutoRef<Blob>    blob = desc.loadFromFile(filename);
-    if (!blob) return AutoRef<MeshResource>::NULLREF;
+    auto             blob = desc.loadFromFile(filename);
+    if (blob.empty()) return AutoRef<MeshResource>::NULLREF;
 
     m = db.createResource<MeshResource>(abspath);
     if (!m || !m->reset(&desc)) return AutoRef<MeshResource>::NULLREF;

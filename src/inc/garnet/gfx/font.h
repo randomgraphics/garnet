@@ -18,10 +18,10 @@ struct FontImage {
         RGBA,      //< RGBA_8_8_8_8 image
     };
 
-    uint32        width;  ///< bitmap width in pixel
-    uint32        height; ///< bitmap height in pixel
-    const uint8 * buffer; ///< bitmap data
-    PixelFormat   format; ///< pixel format
+    uint32_t        width;  ///< bitmap width in pixel
+    uint32_t        height; ///< bitmap height in pixel
+    const uint8_t * buffer; ///< bitmap data
+    PixelFormat     format; ///< pixel format
 
     /// \name per character metrics in unit of pixels,
     ///
@@ -78,10 +78,10 @@ struct FontFaceDesc {
     float vdistance;
 
     /// max width in pixels of all the glyphs.
-    uint16 maxGlyphWidth() const { return (uint16) ceil(xmax - xmin); }
+    uint16_t maxGlyphWidth() const { return (uint16_t) ceil(xmax - xmin); }
 
     /// max height in pixels of all the glyphs.
-    uint16 maxGlyphHeight() const { return (uint16) ceil(ymax - ymin); }
+    uint16_t maxGlyphHeight() const { return (uint16_t) ceil(ymax - ymin); }
 
     //@}
 };
@@ -120,12 +120,12 @@ struct FontFaceCreationDesc {
     ///
     /// Character width in pixel.
     ///
-    uint16 width;
+    uint16_t width;
 
     ///
     /// Character height in pixel
     ///
-    uint16 height;
+    uint16_t height;
 
     ///
     /// font quality
@@ -178,8 +178,8 @@ struct TextDesc {
     float           x;          ///< pen position of the first character
     float           y;          ///< pen position of the first character
     float           z;          ///< pen position of the first character
-    uint32          rgba;       ///< text color in R-G-B-A format.
-    uint32          alignment;  ///< combination of TextAlignment flags
+    uint32_t        rgba;       ///< text color in R-G-B-A format.
+    uint32_t        alignment;  ///< combination of TextAlignment flags
     bool            background; ///< draw background
     bool            kerning;    ///< enable text kerning
 };
@@ -272,7 +272,7 @@ private:
         ///
         /// texture index
         ///
-        uint8 texidx;
+        uint8_t texidx;
 
         ///
         /// offset value ( in pixel unit )
@@ -292,7 +292,7 @@ private:
         ///
         /// texture square( in pixel unit )
         ///
-        uint16 x, y, w, h;
+        uint16_t x, y, w, h;
     };
 
     // private constants
@@ -351,7 +351,7 @@ private:
     ///
     /// initialize font slots and font textures
     ///
-    bool slotInit(gfx::Gpu & gpu, uint16 fontw, uint16 fonth, size_t maxchars);
+    bool slotInit(gfx::Gpu & gpu, uint16_t fontw, uint16_t fonth, size_t maxchars);
 };
 } // namespace gfx
 } // namespace GN

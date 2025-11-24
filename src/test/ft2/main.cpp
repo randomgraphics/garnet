@@ -51,14 +51,14 @@ public:
         //加载一个字体,取默认的Face,一般为Regualer
         FontFaceCreationDesc defaultFont;
         defaultFont.fontname = font_file1;
-        defaultFont.width    = (uint16) _w;
-        defaultFont.height   = (uint16) _h;
+        defaultFont.width    = (uint16_t) _w;
+        defaultFont.height   = (uint16_t) _h;
         defaultFont.quality  = FontFaceDesc::ANTIALIASED;
 
         MixedFontCreationDesc asciiFont;
         asciiFont.font.fontname = font_file2;
-        asciiFont.font.width    = (uint16) _w;
-        asciiFont.font.height   = (uint16) _h;
+        asciiFont.font.width    = (uint16_t) _w;
+        asciiFont.font.height   = (uint16_t) _h;
         asciiFont.font.quality  = FontFaceDesc::ANTIALIASED;
         asciiFont.firstChar     = 0;
         asciiFont.numChars      = 127;
@@ -130,17 +130,17 @@ xCharTexture * getTextChar(wchar_t ch) {
     return &g_TexID[ch];
 }
 
-GN::std::wstring        g_text(L"文件格式：\n"
-                L"若不明确就标为未知\n"
-                L"表演者：	若不明确就标为未知\n"
-                L"专辑：		若不明确就标为未知\n"
-                L"持续时间：01:01:00超过1小时；\n"
-                L"09:09不足小时；00:09不足1分钟\n"
-                L"   glBindTexture(GL_TEXTURE_2D,pCharTex->m_texID);\n"
-                L"   glTexParameteri ( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );\n"
-                L"   glTexParameteri ( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );\n"
-                L"   glEnable(GL_BLEND);\n"
-                L"   glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);");
+GN::StrW        g_text(L"文件格式：\n"
+                       L"若不明确就标为未知\n"
+                       L"表演者：	若不明确就标为未知\n"
+                       L"专辑：		若不明确就标为未知\n"
+                       L"持续时间：01:01:00超过1小时；\n"
+                       L"09:09不足小时；00:09不足1分钟\n"
+                       L"   glBindTexture(GL_TEXTURE_2D,pCharTex->m_texID);\n"
+                       L"   glTexParameteri ( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );\n"
+                       L"   glTexParameteri ( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );\n"
+                       L"   glEnable(GL_BLEND);\n"
+                       L"   glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);");
 const wchar_t * g_UnicodeString = g_text.data();
 
 void drawText(const wchar_t * _strText, int x, int y, int maxW, int h) {
@@ -197,17 +197,17 @@ static const char * ascii_font  = "font::/lsans.ttf";
 static int          font_width  = 16;
 static int          font_height = 16;
 void                init(void) {
-    glShadeModel(GL_SMOOTH);              // Enable Smooth Shading
-    glClearColor(0.0f, 0.0f, 0.0f, 0.5f); // Black Background
-    glEnable(GL_COLOR_MATERIAL);
-    glColorMaterial(GL_FRONT, GL_AMBIENT_AND_DIFFUSE);
+                   glShadeModel(GL_SMOOTH);              // Enable Smooth Shading
+                   glClearColor(0.0f, 0.0f, 0.0f, 0.5f); // Black Background
+                   glEnable(GL_COLOR_MATERIAL);
+                   glColorMaterial(GL_FRONT, GL_AMBIENT_AND_DIFFUSE);
 
-    printf("load font %s %dx%d\n", font_face, font_width, font_height);
-    g_FreeTypeLib.load(font_face, ascii_font, font_width, font_height);
+                   printf("load font %s %dx%d\n", font_face, font_width, font_height);
+                   g_FreeTypeLib.load(font_face, ascii_font, font_width, font_height);
 
-    glDisable(GL_CULL_FACE);
+                   glDisable(GL_CULL_FACE);
 
-    // glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
+                   // glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
 }
 
 void reshape(int w, int h) {

@@ -262,7 +262,7 @@ static void sParseFail(ParseTracer * tracer, const char * errInfo) {
 static GN::XmlNode * sNewNode(ParseTracer * tracer, GN::XmlNodeType type) {
     GN::XmlNode * n = tracer->doc->createNode(type, NULL);
     if (0 == n) {
-        sParseFail(tracer, GN::fmt::format("Fail to create node with type of '%d'", type).data());
+        sParseFail(tracer, GN::str::format("Fail to create node with type of '%d'", type).data());
         return NULL;
     }
 
@@ -650,7 +650,7 @@ GN_API bool GN::XmlDocument::parse(XmlParseResult & result, File & fp) {
 GN_API bool GN::XmlDocument::writeToFile(File & file, const XmlNode & root, bool compact) {
     GN_GUARD;
 
-    // static const uint8 bom[3] = { 0xEF, 0xBB, 0xBF };
+    // static const uint8_t bom[3] = { 0xEF, 0xBB, 0xBF };
     // if( sizeof(bom) != file.write( bom, sizeof(bom) ) ) return false;
 
     file << "<?xml version=\"1.0\"?>";

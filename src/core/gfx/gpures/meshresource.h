@@ -15,7 +15,7 @@ namespace gfx {
 ///
 struct VertexFormatProperties {
     /// minimal strides for each stream
-    uint16 minStrides[GpuContext::MAX_VERTEX_BUFFERS];
+    uint16_t minStrides[GpuContext::MAX_VERTEX_BUFFERS];
 
     /// true means that stream is referenced by the vertex format.
     bool used[GpuContext::MAX_VERTEX_BUFFERS];
@@ -70,7 +70,7 @@ private:
     // ********************************
 private:
     GpuResourceDatabase & getGdb() const { return mOwner.getGdb(); }
-    const char *          getMeshName() const { return mOwner.getGdb().getResourceName(&mOwner)->rawptr(); }
+    const char *          getMeshName() const { return mOwner.getGdb().getResourceName(&mOwner)->data(); }
 
     bool create(const MeshResourceDesc & desc);
     void clear();

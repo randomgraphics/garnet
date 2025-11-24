@@ -32,7 +32,7 @@ static Logger * sLogger = getLogger("GN.base.filesys");
 //
 //
 // -----------------------------------------------------------------------------
-static bool sNativeIsDir(const std::string & path) {
+static bool sNativeIsDir(const StrA & path) {
     DIR * d = opendir(path.data());
     if (0 == d) return false;
     closedir(d);
@@ -42,7 +42,7 @@ static bool sNativeIsDir(const std::string & path) {
 //
 //
 // -----------------------------------------------------------------------------
-static bool sNativeExist(const std::string & path) {
+static bool sNativeExist(const StrA & path) {
     if (sNativeIsDir(path)) return true;
     FILE * fp = fopen(path.data(), "r");
     if (0 == fp) return false;
@@ -53,12 +53,12 @@ static bool sNativeExist(const std::string & path) {
 //
 //
 // -----------------------------------------------------------------------------
-static bool sNativeIsFile(const std::string & path) { return sNativeExist(path) && !sNativeIsDir(path); }
+static bool sNativeIsFile(const StrA & path) { return sNativeExist(path) && !sNativeIsDir(path); }
 
 //
 //
 // -----------------------------------------------------------------------------
-static bool sIsAbsPath(const std::string & path) { return !path.empty() && '/' == path[0]; }
+static bool sIsAbsPath(const StrA & path) { return !path.empty() && '/' == path[0]; }
 
 #endif
 
@@ -71,22 +71,22 @@ static bool sIsAbsPath(const std::string & path) { return !path.empty() && '/' =
 //
 //
 // -----------------------------------------------------------------------------
-static bool sNativeExist(const std::string & path) { return !!::PathFileExistsA(path.data()); }
+static bool sNativeExist(const StrA & path) { return !!::PathFileExistsA(path.data()); }
 
 //
 //
 // -----------------------------------------------------------------------------
-static bool sNativeIsDir(const std::string & path) { return !!::PathIsDirectoryA(path.data()); }
+static bool sNativeIsDir(const StrA & path) { return !!::PathIsDirectoryA(path.data()); }
 
 //
 //
 // -----------------------------------------------------------------------------
-static bool sNativeIsFile(const std::string & path) { return sNativeExist(path) && !sNativeIsDir(path); }
+static bool sNativeIsFile(const StrA & path) { return sNativeExist(path) && !sNativeIsDir(path); }
 
 //
 //
 // -----------------------------------------------------------------------------
-static bool sIsAbsPath(const std::string & path) {
+static bool sIsAbsPath(const StrA & path) {
     return (path.size() > 0 && '/' == path[0]) || (path.size() > 1 && ('a' <= path[0] && path[0] <= 'z' || 'A' <= path[0] && path[0] <= 'Z') && ':' == path[1]);
 }
 
@@ -101,7 +101,7 @@ static bool sIsAbsPath(const std::string & path) {
 //
 //
 // -----------------------------------------------------------------------------
-static bool sNativeExist(const std::string & path) {
+static bool sNativeExist(const StrA & path) {
     WIN32_FIND_DATAA wfd;
     HANDLE           fh = ::FindFirstFileA(path.data(), &wfd);
     if (INVALID_HANDLE_VALUE == fh) {
@@ -115,7 +115,7 @@ static bool sNativeExist(const std::string & path) {
 //
 //
 // -----------------------------------------------------------------------------
-static bool sNativeIsDir(const std::string & path) {
+static bool sNativeIsDir(const StrA & path) {
     WIN32_FIND_DATAA wfd;
     HANDLE           fh = ::FindFirstFileA(path.data(), &wfd);
     if (INVALID_HANDLE_VALUE == fh) {
@@ -129,12 +129,12 @@ static bool sNativeIsDir(const std::string & path) {
 //
 //
 // -----------------------------------------------------------------------------
-static bool sNativeIsFile(const std::string & path) { return sNativeExist(path) && !sNativeIsDir(path); }
+static bool sNativeIsFile(const StrA & path) { return sNativeExist(path) && !sNativeIsDir(path); }
 
 //
 //
 // -----------------------------------------------------------------------------
-static bool sIsAbsPath(const std::string & path) {
+static bool sIsAbsPath(const StrA & path) {
     return (path.size() > 0 && '/' == path[0]) ||
            (path.size() > 1 && ('a' <= path[0] && path[0] <= 'z' || 'A' <= path[0] && path[0] <= 'Z') && ':' == path[1]) ||
            (path.size() > 4 && "game:" == path.subString(0, 5));
@@ -148,16 +148,16 @@ static bool sIsAbsPath(const std::string & path) {
 
 class NativeFileSystem : public FileSystem {
 public:
-    bool exist(const std::string & path) { return sNativeExist(FileSystem::toNativeDiskFilePath(path)); }
+    bool exist(const StrA & path) { return sNativeExist(FileSystem::toNativeDiskFilePath(path)); }
 
-    bool isDir(const std::string & path) { return sNativeIsDir(FileSystem::toNativeDiskFilePath(path)); }
+    bool isDir(const StrA & path) { return sNativeIsDir(FileSystem::toNativeDiskFilePath(path)); }
 
-    bool isFile(const std::string & path) { return sNativeIsFile(FileSystem::toNativeDiskFilePath(path)); }
+    bool isFile(const StrA & path) { return sNativeIsFile(FileSystem::toNativeDiskFilePath(path)); }
 
-    bool isAbsPath(const std::string & path) { return sIsAbsPath(path); }
+    bool isAbsPath(const StrA & path) { return sIsAbsPath(path); }
 
-    void toNativeDiskFilePath(std::string & result, const std::string & path) {
-        std::string tmp;
+    void toNativeDiskFilePath(StrA & result, const StrA & path) {
+        StrA tmp;
 
         // normalize path separators
         normalizePathSeparator(tmp, path);
@@ -202,7 +202,7 @@ public:
         // TODO: resolve embbed environments
     }
 
-    DynaArray<std::string> & glob(DynaArray<std::string> & result, const std::string & dirName, const std::string & pattern, bool recursive, bool useRegex) {
+    DynaArray<StrA> & glob(DynaArray<StrA> & result, const StrA & dirName, const StrA & pattern, bool recursive, bool useRegex) {
         GN_GUARD;
 
         if (!exist(dirName)) {
@@ -222,8 +222,8 @@ public:
         GN_UNGUARD;
     }
 
-    std::unique_ptr<File> openFile(const std::string & name, std::ios_base::openmode mode) {
-        std::string nativeName;
+    std::unique_ptr<File> openFile(const StrA & name, std::ios_base::openmode mode) {
+        StrA nativeName;
         toNativeDiskFilePath(nativeName, name);
         auto fp = std::make_unique<DiskFile>();
         if (!fp->open(nativeName, mode)) return {};
@@ -234,7 +234,7 @@ private:
     //
     //
     // -----------------------------------------------------------------------------
-    void recursiveFind(DynaArray<std::string> & result, const std::string & dirName, const std::string & pattern, bool recursive, bool useRegex) {
+    void recursiveFind(DynaArray<StrA> & result, const StrA & dirName, const StrA & pattern, bool recursive, bool useRegex) {
         GN_GUARD;
 
         using namespace GN;
@@ -242,13 +242,13 @@ private:
         // validate dirName
         GN_ASSERT(exist(dirName) && isDir(dirName));
 
-        std::string curDir = FileSystem::toNativeDiskFilePath(dirName);
+        StrA curDir = FileSystem::toNativeDiskFilePath(dirName);
 
         // search in sub-directories
         if (recursive) {
             // TODO: ignore links/junctions
             CSimpleGlobA sg(SG_GLOB_ONLYDIR | SG_GLOB_NODOT);
-            std::string         p = joinPath(curDir, "*");
+            auto         p = joinPath(curDir, "*");
             sg.Add(p.data());
             char ** dirs = sg.Files();
             int     c    = sg.FileCount();
@@ -259,9 +259,9 @@ private:
         }
 
         // search in current directory
-        using namespace std::string_literals;
+        using namespace StrA_literals;
         CSimpleGlobA sg(SG_GLOB_ONLYFILE);
-        std::string         p = joinPath(curDir, (useRegex ? "*.*"s : pattern));
+        auto         p = joinPath(curDir, (useRegex ? "*.*"s : pattern));
         sg.Add(p.data());
         char ** files = sg.Files();
         int     c     = sg.FileCount();
@@ -277,7 +277,7 @@ private:
 
 class AppFileSystem : public FileSystem {
     NativeFileSystem & mNativeFs;
-    std::string               mRootDir;
+    StrA               mRootDir;
 
 public:
     AppFileSystem(NativeFileSystem & nfs): mNativeFs(nfs) {
@@ -301,21 +301,21 @@ public:
 #endif
     }
 
-    bool exist(const std::string & path) { return mNativeFs.exist(joinPath(mRootDir, path)); }
+    bool exist(const StrA & path) { return mNativeFs.exist(joinPath(mRootDir, path)); }
 
-    bool isDir(const std::string & path) { return mNativeFs.isDir(joinPath(mRootDir, path)); }
+    bool isDir(const StrA & path) { return mNativeFs.isDir(joinPath(mRootDir, path)); }
 
-    bool isFile(const std::string & path) { return mNativeFs.isFile(joinPath(mRootDir, path)); }
+    bool isFile(const StrA & path) { return mNativeFs.isFile(joinPath(mRootDir, path)); }
 
-    bool isAbsPath(const std::string & path) { return !path.empty() && '/' == path[0]; }
+    bool isAbsPath(const StrA & path) { return !path.empty() && '/' == path[0]; }
 
-    void toNativeDiskFilePath(std::string & result, const std::string & path) { mNativeFs.toNativeDiskFilePath(result, joinPath(mRootDir, path)); }
+    void toNativeDiskFilePath(StrA & result, const StrA & path) { mNativeFs.toNativeDiskFilePath(result, joinPath(mRootDir, path)); }
 
-    DynaArray<std::string> & glob(DynaArray<std::string> & result, const std::string & dirName, const std::string & pattern, bool recursive, bool useRegex) {
+    DynaArray<StrA> & glob(DynaArray<StrA> & result, const StrA & dirName, const StrA & pattern, bool recursive, bool useRegex) {
         return mNativeFs.glob(result, joinPath(mRootDir, dirName), pattern, recursive, useRegex);
     }
 
-    std::unique_ptr<File> openFile(const std::string & name, std::ios_base::openmode mode) { return mNativeFs.openFile(joinPath(mRootDir, name), mode); }
+    std::unique_ptr<File> openFile(const StrA & name, std::ios_base::openmode mode) { return mNativeFs.openFile(joinPath(mRootDir, name), mode); }
 };
 
 // *****************************************************************************
@@ -324,26 +324,26 @@ public:
 
 class StartupFileSystem : public FileSystem {
     NativeFileSystem & mNativeFs;
-    std::string               mRootDir;
+    StrA               mRootDir;
 
 public:
     StartupFileSystem(NativeFileSystem & nfs): mNativeFs(nfs), mRootDir(getCurrentDir()) {}
 
-    bool exist(const std::string & path) { return mNativeFs.exist(joinPath(mRootDir, path)); }
+    bool exist(const StrA & path) { return mNativeFs.exist(joinPath(mRootDir, path)); }
 
-    bool isDir(const std::string & path) { return mNativeFs.isDir(joinPath(mRootDir, path)); }
+    bool isDir(const StrA & path) { return mNativeFs.isDir(joinPath(mRootDir, path)); }
 
-    bool isFile(const std::string & path) { return mNativeFs.isFile(joinPath(mRootDir, path)); }
+    bool isFile(const StrA & path) { return mNativeFs.isFile(joinPath(mRootDir, path)); }
 
-    bool isAbsPath(const std::string & path) { return !path.empty() && '/' == path[0]; }
+    bool isAbsPath(const StrA & path) { return !path.empty() && '/' == path[0]; }
 
-    void toNativeDiskFilePath(std::string & result, const std::string & path) { mNativeFs.toNativeDiskFilePath(result, joinPath(mRootDir, path)); }
+    void toNativeDiskFilePath(StrA & result, const StrA & path) { mNativeFs.toNativeDiskFilePath(result, joinPath(mRootDir, path)); }
 
-    DynaArray<std::string> & glob(DynaArray<std::string> & result, const std::string & dirName, const std::string & pattern, bool recursive, bool useRegex) {
+    DynaArray<StrA> & glob(DynaArray<StrA> & result, const StrA & dirName, const StrA & pattern, bool recursive, bool useRegex) {
         return mNativeFs.glob(result, joinPath(mRootDir, dirName), pattern, recursive, useRegex);
     }
 
-    std::unique_ptr<File> openFile(const std::string & path, std::ios_base::openmode mode) { return mNativeFs.openFile(joinPath(mRootDir, path), mode); }
+    std::unique_ptr<File> openFile(const StrA & path, std::ios_base::openmode mode) { return mNativeFs.openFile(joinPath(mRootDir, path), mode); }
 };
 
 // *****************************************************************************
@@ -351,9 +351,9 @@ public:
 // *****************************************************************************
 
 class MultiRootsFileSystem : public FileSystem {
-    DynaArray<std::string> mRoots;
+    DynaArray<StrA> mRoots;
 
-    const std::string * findRoot(const std::string & path) {
+    const StrA * findRoot(const StrA & path) {
         for (size_t i = 0; i < mRoots.size(); ++i) {
             if (GN::fs::pathExist(joinPath(mRoots[i], path))) return &mRoots[i];
         }
@@ -363,37 +363,37 @@ class MultiRootsFileSystem : public FileSystem {
 public:
     MultiRootsFileSystem() {}
 
-    void addRoot(const std::string & root) { mRoots.append(root); }
+    void addRoot(const StrA & root) { mRoots.append(root); }
 
-    bool exist(const std::string & path) { return 0 != findRoot(path); }
+    bool exist(const StrA & path) { return 0 != findRoot(path); }
 
-    bool isDir(const std::string & path) {
-        const std::string * root = findRoot(path);
+    bool isDir(const StrA & path) {
+        const StrA * root = findRoot(path);
         if (!root) return false;
         return GN::fs::isDir(joinPath(*root, path));
     }
 
-    bool isFile(const std::string & path) {
-        const std::string * root = findRoot(path);
+    bool isFile(const StrA & path) {
+        const StrA * root = findRoot(path);
         if (!root) return false;
         return GN::fs::isFile(joinPath(*root, path));
     }
 
-    bool isAbsPath(const std::string & path) { return !path.empty() && '/' == path[0]; }
+    bool isAbsPath(const StrA & path) { return !path.empty() && '/' == path[0]; }
 
-    void toNativeDiskFilePath(std::string & result, const std::string & path) {
+    void toNativeDiskFilePath(StrA & result, const StrA & path) {
         result.clear();
-        const std::string * root = findRoot(path);
+        const StrA * root = findRoot(path);
         if (!root) return;
         GN::fs::toNativeDiskFilePath(result, joinPath(*root, path));
     }
 
-    DynaArray<std::string> & glob(DynaArray<std::string> & result, const std::string & dirName, const std::string & pattern, bool recursive, bool useRegex) {
+    DynaArray<StrA> & glob(DynaArray<StrA> & result, const StrA & dirName, const StrA & pattern, bool recursive, bool useRegex) {
         if (dirName.empty()) {
             for (size_t i = 0; i < mRoots.size(); ++i) {
-                const std::string & root = mRoots[i];
+                const StrA & root = mRoots[i];
 
-                DynaArray<std::string> tmp;
+                DynaArray<StrA> tmp;
 
                 GN::fs::glob(tmp, joinPath(root, dirName), pattern, recursive, useRegex);
 
@@ -402,7 +402,7 @@ public:
                 }
             }
         } else {
-            const std::string * root = findRoot(dirName);
+            const StrA * root = findRoot(dirName);
             if (!root) return result;
 
             GN::fs::glob(result, joinPath(*root, dirName), pattern, recursive, useRegex);
@@ -411,8 +411,8 @@ public:
         return result;
     }
 
-    std::unique_ptr<File> openFile(const std::string & path, std::ios_base::openmode mode) {
-        const std::string * root = findRoot(path);
+    std::unique_ptr<File> openFile(const StrA & path, std::ios_base::openmode mode) {
+        const StrA * root = findRoot(path);
         if (!root) {
             GN_ERROR(sLogger)("file '%s' not found!", path.data());
             return 0;
@@ -435,7 +435,7 @@ public:
         addRoot("app::media");
         auto gnroot = getEnv("GARNET_ROOT");
         if (!gnroot.empty()) {
-            addRoot(fmt::format("native::%s/media", gnroot.data()));
+            addRoot(StrA::format("native::%s/media", gnroot.data()));
         } else {
             addRoot("app::../../../../media");
         }
@@ -466,13 +466,13 @@ class FakeFileSystem : public FileSystem {
 public:
     FakeFileSystem() {}
 
-    bool                  exist(const std::string &) { return false; }
-    bool                  isDir(const std::string &) { return false; }
-    bool                  isFile(const std::string &) { return false; }
-    void                  toNativeDiskFilePath(std::string & result, const std::string & path) { result = path; }
-    bool                  isAbsPath(const std::string &) { return true; }
-    DynaArray<std::string> &     glob(DynaArray<std::string> & result, const std::string &, const std::string &, bool, bool) { return result; }
-    std::unique_ptr<File> openFile(const std::string &, std::ios_base::openmode) { return {}; }
+    bool                  exist(const StrA &) { return false; }
+    bool                  isDir(const StrA &) { return false; }
+    bool                  isFile(const StrA &) { return false; }
+    void                  toNativeDiskFilePath(StrA & result, const StrA & path) { result = path; }
+    bool                  isAbsPath(const StrA &) { return true; }
+    DynaArray<StrA> &     glob(DynaArray<StrA> & result, const StrA &, const StrA &, bool, bool) { return result; }
+    std::unique_ptr<File> openFile(const StrA &, std::ios_base::openmode) { return {}; }
 };
 
 // *****************************************************************************
@@ -502,7 +502,7 @@ struct FileSystemContainer {
 
     ~FileSystemContainer() {}
 
-    bool registerFs(const std::string & name, FileSystem * fs) {
+    bool registerFs(const StrA & name, FileSystem * fs) {
         // check name
         if (name.empty()) {
             GN_ERROR(sLogger)("File system name can't be empty!");
@@ -528,11 +528,11 @@ struct FileSystemContainer {
         return true;
     }
 
-    void UnregisterFs(const std::string & name) {
+    void UnregisterFs(const StrA & name) {
         if (mFileSystems.find(name)) { mFileSystems.remove(name); }
     }
 
-    FileSystem * getFs(const std::string & name) {
+    FileSystem * getFs(const StrA & name) {
         if (name.empty()) return &mNativeFs;
         FileSystem ** ppfs = mFileSystems.find(name);
         return (NULL != ppfs) ? *ppfs : &mFakeFs;
@@ -551,14 +551,14 @@ FileSystemContainer & sGetFileSystemContainer() {
 //
 //
 // -----------------------------------------------------------------------------
-GN_API bool GN::fs::registerFileSystem(const std::string & name, FileSystem * root) { return sGetFileSystemContainer().registerFs(name, root); }
+GN_API bool GN::fs::registerFileSystem(const StrA & name, FileSystem * root) { return sGetFileSystemContainer().registerFs(name, root); }
 
 //
 //
 // -----------------------------------------------------------------------------
-GN_API void GN::fs::UnregisterFileSystem(const std::string & name) { sGetFileSystemContainer().UnregisterFs(name); }
+GN_API void GN::fs::UnregisterFileSystem(const StrA & name) { sGetFileSystemContainer().UnregisterFs(name); }
 
 //
 //
 // -----------------------------------------------------------------------------
-GN_API FileSystem * GN::fs::getFileSystem(const std::string & name) { return sGetFileSystemContainer().getFs(name); }
+GN_API FileSystem * GN::fs::getFileSystem(const StrA & name) { return sGetFileSystemContainer().getFs(name); }

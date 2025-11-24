@@ -397,8 +397,8 @@ static AutoRef<EffectResource> sRegisterNormalMapEffect(GpuResourceDatabase & gd
 static AutoRef<TextureResource> sRegisterWhiteTexture(GpuResourceDatabase & gdb) {
     AutoRef<TextureResource> tr       = gdb.createResource<TextureResource>("@WHITE");
     AutoRef<Texture>         t        = attachTo(gdb.getGpu().create2DTexture(PixelFormat::RGBA8(), 2, 2));
-    uint32                   white[4] = {0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF};
-    t->updateMipmap(0, 0, NULL, sizeof(uint32) * 2, sizeof(uint32) * 4, white, SurfaceUpdateFlag::DEFAULT);
+    uint32_t                 white[4] = {0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF};
+    t->updateMipmap(0, 0, NULL, sizeof(uint32_t) * 2, sizeof(uint32_t) * 4, white, SurfaceUpdateFlag::DEFAULT);
     tr->setTexture(t);
     return tr;
 }
@@ -409,8 +409,8 @@ static AutoRef<TextureResource> sRegisterWhiteTexture(GpuResourceDatabase & gdb)
 static AutoRef<TextureResource> sRegisterBlackTexture(GpuResourceDatabase & gdb) {
     AutoRef<TextureResource> tr       = gdb.createResource<TextureResource>("@BLACK");
     AutoRef<Texture>         t        = attachTo(gdb.getGpu().create2DTexture(PixelFormat::RGBA8(), 2, 2));
-    uint32                   black[4] = {0, 0, 0, 0};
-    t->updateMipmap(0, 0, NULL, sizeof(uint32) * 2, sizeof(uint32) * 4, black, SurfaceUpdateFlag::DEFAULT);
+    uint32_t                 black[4] = {0, 0, 0, 0};
+    t->updateMipmap(0, 0, NULL, sizeof(uint32_t) * 2, sizeof(uint32_t) * 4, black, SurfaceUpdateFlag::DEFAULT);
     tr->setTexture(t);
     return tr;
 }
@@ -421,8 +421,8 @@ static AutoRef<TextureResource> sRegisterBlackTexture(GpuResourceDatabase & gdb)
 static AutoRef<TextureResource> sRegisterFlatNormalMap(GpuResourceDatabase & gdb) {
     AutoRef<TextureResource> tr    = gdb.createResource<TextureResource>("@FLAT_NORMAL_MAP");
     AutoRef<Texture>         t     = attachTo(gdb.getGpu().create2DTexture(PixelFormat::RG_16_16_UNORM(), 2, 2, 0));
-    uint32                   up[4] = {0x80008000, 0x80008000, 0x80008000, 0x80008000};
-    t->updateMipmap(0, 0, NULL, sizeof(uint32) * 2, sizeof(uint32) * 4, up, SurfaceUpdateFlag::DEFAULT);
+    uint32_t                 up[4] = {0x80008000, 0x80008000, 0x80008000, 0x80008000};
+    t->updateMipmap(0, 0, NULL, sizeof(uint32_t) * 2, sizeof(uint32_t) * 4, up, SurfaceUpdateFlag::DEFAULT);
     tr->setTexture(t);
     return tr;
 }
@@ -541,9 +541,9 @@ AutoRef<GpuResource> GpuResourceDatabase::Impl::createResource(const Guid & type
     newres->mImpl = resimpl;
 
     // create new handle
-    uint32 internalHandle = mgr->resources.add(name, resimpl);
+    uint32_t internalHandle = mgr->resources.add(name, resimpl);
     if (0 == internalHandle) return AutoRef<GpuResource>::NULLREF;
-    resimpl->handle.set((uint32) mgr->index, internalHandle);
+    resimpl->handle.set((uint32_t) mgr->index, internalHandle);
 
     // done
     return newres;
@@ -556,7 +556,7 @@ AutoRef<GpuResource> GpuResourceDatabase::Impl::findResource(const Guid & type, 
     const ResourceManager * mgr = getManager(type);
     if (NULL == mgr) return AutoRef<GpuResource>::NULLREF;
 
-    uint32 internalHandle = mgr->resources.name2handle(name);
+    uint32_t internalHandle = mgr->resources.name2handle(name);
     if (0 == internalHandle) return AutoRef<GpuResource>::NULLREF;
 
     GpuResource::Impl * resimpl = mgr->resources[internalHandle];
@@ -697,7 +697,7 @@ AutoRef<UniformResource> GpuResourceDatabase::Impl::getStandardUniformResource(i
 //
 //
 // -----------------------------------------------------------------------------
-void GpuResourceDatabase::Impl::setStandardUniform(int index, const void * data, uint32 dataSize) {
+void GpuResourceDatabase::Impl::setStandardUniform(int index, const void * data, uint32_t dataSize) {
     // check parameters
     if (!StandardUniform::sIsValidIndex(index)) {
         GN_ERROR(sLogger)("Invalid uniform type: %d", index);
@@ -821,7 +821,7 @@ GpuResourceDatabase::GpuResourceDatabase(Gpu & g): mImpl(NULL) {
 GpuResourceDatabase::~GpuResourceDatabase() { delete mImpl; }
 Gpu & GpuResourceDatabase::getGpu() const { return mImpl->getGpu(); }
 bool  GpuResourceDatabase::registerResourceFactory(const Guid & type, const char * desc, GpuResourceFactory factory) {
-    return mImpl->registerResourceFactory(type, desc, factory);
+     return mImpl->registerResourceFactory(type, desc, factory);
 }
 bool                 GpuResourceDatabase::hasResourceFactory(const Guid & type) { return mImpl->hasResourceFactory(type); }
 AutoRef<GpuResource> GpuResourceDatabase::createResource(const Guid & type, const char * name) { return mImpl->createResource(type, name); }
@@ -831,7 +831,7 @@ bool                 GpuResourceDatabase::validResource(const GpuResource * reso
 const std::string *         GpuResourceDatabase::getResourceName(const GpuResource * resource) const { return mImpl->getResourceName(resource); }
 const Guid *         GpuResourceDatabase::getResourceType(const GpuResource * resource) const { return mImpl->getResourceType(resource); }
 AutoRef<UniformResource> GpuResourceDatabase::getStandardUniformResource(int index) const { return mImpl->getStandardUniformResource(index); }
-void GpuResourceDatabase::setStandardUniform(int index, const void * data, uint32 dataSize) { return mImpl->setStandardUniform(index, data, dataSize); }
+void GpuResourceDatabase::setStandardUniform(int index, const void * data, uint32_t dataSize) { return mImpl->setStandardUniform(index, data, dataSize); }
 void GpuResourceDatabase::setTransform(const Matrix44f & proj, const Matrix44f & view) { return mImpl->setTransform(proj, view); }
 void GpuResourceDatabase::setLight0(const Vector4f & diffuse, const Vector4f & ambient, const Vector4f & specular, const Vector3f & position,
                                     const Vector3f & direction) {

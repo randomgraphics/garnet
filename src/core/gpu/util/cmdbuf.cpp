@@ -24,7 +24,7 @@ bool GN::CommandBuffer::init(size_t bufferSize) {
     }
 
     // allocate 16 byte aligned ring buffer (double sized, to handle rewind issue)
-    m_Buffer = (uint8 *) HeapMemory::alignedAlloc(bufferSize * 2, 16);
+    m_Buffer = (uint8_t *) HeapMemory::alignedAlloc(bufferSize * 2, 16);
     if (NULL == m_Buffer) return failure();
     m_Size = bufferSize;
 
@@ -69,7 +69,7 @@ void GN::CommandBuffer::quit() {
 
     // Invalidate tokenID, to unblock any thread that are waiting for consumption tokenID.
     // Note that tokenID value is 16 byte aligned. so -1 would never be a valid tokenID.
-    m_ReadenCursor = (uint32) -1;
+    m_ReadenCursor = (uint32_t) -1;
 
     // delete events
     m_NotEmpty.destroy();
@@ -117,12 +117,12 @@ GN::CommandBuffer::Fence GN::CommandBuffer::insertFence() {}
 GN::CommandBuffer::OperationResult GN::CommandBuffer::waitForFence(Fence fence) {
     /*for(;;)
     {
-        uint32 rf = m_ReadenCursor;
+        uint32_t rf = m_ReadenCursor;
         memoryBarrier();
 
         if( rf >= tokenID )
         {
-            return (uint32)-1 == rf ? OPERATION_CANCELLED : OPERATION_SUCCEEDED;
+            return (uint32_t)-1 == rf ? OPERATION_CANCELLED : OPERATION_SUCCEEDED;
         }
 
         // TODO: use a event to save some CPU.
@@ -135,14 +135,15 @@ GN::CommandBuffer::OperationResult GN::CommandBuffer::waitForFence(Fence fence) 
 //
 //
 // -----------------------------------------------------------------------------
-GN::CommandBuffer::OperationResult GN::CommandBuffer::beginProduce(uint16 command, uint16 parameterSize, Token * token, SyncEvent * optionalCompletionEvent) {
+GN::CommandBuffer::OperationResult GN::CommandBuffer::beginProduce(uint16_t command, uint16_t parameterSize, Token * token,
+                                                                   SyncEvent * optionalCompletionEvent) {
     // align command size to 16 bytes
     size_t cmdsize = (sizeof(TokenInternal) + parameterSize + 15) & ~15;
     if (cmdsize > m_Size) {
         GN_ERROR(sLogger)("Command size is too large.");
         return OPERATION_FAILED;
     }
-    parameterSize = (uint16) (cmdsize - sizeof(TokenInternal));
+    parameterSize = (uint16_t) (cmdsize - sizeof(TokenInternal));
 
     m_ProducerLock.lock();
 
@@ -164,8 +165,8 @@ GN::CommandBuffer::OperationResult GN::CommandBuffer::beginProduce(uint16 comman
         if (freeBytes >= cmdsize) {
             m_WritingToken                = (TokenInternal *) (m_Buffer + (wc % m_Size)); // TODO: align buffer size to power of 2 to save this mod operation.);
             m_WritingToken->commandId     = command;
-            m_WritingToken->parameterSize = (uint16) parameterSize;
-            m_WritingToken->endOffset     = (uint32) (wc + cmdsize);
+            m_WritingToken->parameterSize = (uint16_t) parameterSize;
+            m_WritingToken->endOffset     = (uint32_t) (wc + cmdsize);
             m_WritingToken->completionEvent = optionalCompletionEvent;
 
             if (token) {
@@ -234,7 +235,7 @@ GN::CommandBuffer::OperationResult GN::CommandBuffer::beginConsume(Token * token
     if (OPERATION_SUCCEEDED == hr) {
         for (;;) {
             // cache production fences
-            uint32 wc = m_WrittenCursor;
+            uint32_t wc = m_WrittenCursor;
             memoryBarrier();
 
             size_t usedBytes = wc - m_ReadenCursor;
@@ -264,7 +265,7 @@ GN::CommandBuffer::OperationResult GN::CommandBuffer::beginConsume(Token * token
 
 #if GN_ENABLE_ASSERT
         // full command including all parameters should have been written to command buffer.
-        uint32 wc = m_WrittenCursor;
+        uint32_t wc = m_WrittenCursor;
         memoryBarrier();
         size_t cmdsize = m_ReadingToken->parameterSize + sizeof(TokenInternal);
         GN_ASSERT(wc - m_ReadenCursor >= cmdsize);
@@ -303,7 +304,7 @@ void GN::CommandBuffer::endConsume() {
     // atomic operation.
     m_DataLock.lock();
     {
-        uint32 wf = m_WrittenCursor;
+        uint32_t wf = m_WrittenCursor;
         memoryBarrier();
         if (wf == m_ReadenCursor) { m_NotEmpty.unsignal(); }
     }

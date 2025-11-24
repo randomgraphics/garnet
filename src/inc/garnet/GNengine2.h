@@ -8,8 +8,11 @@
 
 namespace GN {
 namespace e2 {
-class Position {
-    sint64 x, y, z;
+
+/// Position is defined as 64-bit signed integer to support large open world.
+/// 1 unit = 1 um (micrometer) for better precision.
+struct Position {
+    int64_t x, y, z;
 };
 
 class Transformation {
@@ -20,8 +23,8 @@ class Transformation {
 
 class Entity : public RefCounter {
     // basic properties
-    uint64 _id;
-    std::string   _name;
+    uint64_t _id;
+    StrA     _name;
 };
 
 class SpacialEntity : public Entity {
@@ -48,7 +51,7 @@ class ImmutableGeometry : public VisualEntity {};
 class SceneGraph {
 public:
     void AddEntity(SpacialEntity *);
-    void RemoveEntity(uint64 id);
+    void RemoveEntity(uint64_t id);
 };
 
 class AsyncNofitication : RefCounter {
@@ -75,7 +78,7 @@ public:
 };
 
 class Universe {
-    uint64 GenerateUniqueId();
+    uint64_t GenerateUniqueId();
 };
 } // namespace e2
 } // namespace GN

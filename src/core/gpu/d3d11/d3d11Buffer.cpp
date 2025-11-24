@@ -11,7 +11,7 @@ static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.D3D11.Buffer");
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::D3D11Buffer::init(uint32 bytes, bool fastCpuWrite, uint32 bindFlags) {
+bool GN::gfx::D3D11Buffer::init(uint32_t bytes, bool fastCpuWrite, uint32_t bindFlags) {
     GN_GUARD;
 
     // standard init procedure
@@ -26,7 +26,7 @@ bool GN::gfx::D3D11Buffer::init(uint32 bytes, bool fastCpuWrite, uint32 bindFlag
     ID3D11Device & cxt = getDeviceRef();
 
     D3D11_BUFFER_DESC d3ddesc;
-    d3ddesc.ByteWidth      = (uint32) bytes;
+    d3ddesc.ByteWidth      = (uint32_t) bytes;
     d3ddesc.Usage          = fastCpuWrite ? D3D11_USAGE_DYNAMIC : D3D11_USAGE_DEFAULT;
     d3ddesc.BindFlags      = bindFlags;
     d3ddesc.CPUAccessFlags = fastCpuWrite ? D3D11_CPU_ACCESS_WRITE : 0;
@@ -72,7 +72,7 @@ static const D3D11_MAP SURFACE_UPDATE_FLAG_TO_D3D11_MAP[] = {
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3D11Buffer::update(uint32 offset, uint32 bytes, const void * data, SurfaceUpdateFlag flag) {
+void GN::gfx::D3D11Buffer::update(uint32_t offset, uint32_t bytes, const void * data, SurfaceUpdateFlag flag) {
     ID3D11DeviceContext & cxt = getDeviceContextRef();
 
     PIXPERF_FUNCTION_EVENT(cxt);
@@ -86,12 +86,12 @@ void GN::gfx::D3D11Buffer::update(uint32 offset, uint32 bytes, const void * data
         // update dynamic d3d buffer
         D3D11_MAPPED_SUBRESOURCE mapped;
         GN_DX_CHECK_RETURN(cxt.Map(mD3DBuffer, 0, SURFACE_UPDATE_FLAG_TO_D3D11_MAP[flag], 0, &mapped));
-        uint8 * dst = (uint8 *) mapped.pData;
+        uint8_t * dst = (uint8_t *) mapped.pData;
         memcpy(dst + offset, data, bytes);
         cxt.Unmap(mD3DBuffer, 0);
     } else {
         // update non-dynamic d3d buffer
-        D3D11_BOX box = {(uint32) offset, 0, 0, (uint32) (offset + bytes), 1, 1};
+        D3D11_BOX box = {(uint32_t) offset, 0, 0, (uint32_t) (offset + bytes), 1, 1};
         cxt.UpdateSubresource(mD3DBuffer,
                               0, // subresource
                               &box, data,
@@ -103,7 +103,7 @@ void GN::gfx::D3D11Buffer::update(uint32 offset, uint32 bytes, const void * data
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3D11Buffer::readback(DynaArray<uint8> & data) {
+void GN::gfx::D3D11Buffer::readback(DynaArray<uint8_t> & data) {
     PIXPERF_FUNCTION_EVENT(getDeviceContextRef());
 
     data.clear();

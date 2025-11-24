@@ -11,8 +11,8 @@ namespace gfx {
 ///
 /// Self-contained GPU program description: all string pointers point to internal data buffer
 ///
-class SelfContainedGpuProgramDesc : public Blob {
-    DynaArray<uint8> mBuffer;
+class SelfContainedGpuProgramDesc {
+    DynaArray<uint8_t> mBuffer;
 
     static inline bool sCheckShaderCode(const char *       type, ///< shader type
                                         const ShaderCode & sc, const char * begin, const char * end) {
@@ -49,8 +49,8 @@ public:
         // allocate buffer
         mBuffer.resize(length);
         GpuProgramDesc & copy  = *(GpuProgramDesc *) mBuffer.data();
-        uint8 *          start = mBuffer.data();
-        uint8 *          ptr   = start;
+        uint8_t *        start = mBuffer.data();
+        uint8_t *        ptr   = start;
 
         // copy header
         memcpy(ptr, &desc, sizeof(desc));
@@ -120,33 +120,33 @@ public:
 
     const GpuProgramDesc & getDesc() const { return *(const GpuProgramDesc *) mBuffer.data(); }
 
-    virtual void * data() const { return (void *) mBuffer.data(); }
-    virtual uint32 size() const { return (uint32) mBuffer.size(); }
+    virtual void *   data() const { return (void *) mBuffer.data(); }
+    virtual uint32_t size() const { return (uint32_t) mBuffer.size(); }
 };
 
 ///
 /// API agonize uniform (just a memory buffer with time stamp)
 ///
 class SysMemUniform : public Uniform {
-    const uint32 mSize;
-    sint32       mTimeStamp;
-    void *       mData;
+    const uint32_t mSize;
+    int32_t        mTimeStamp;
+    void *         mData;
 
 public:
     /// ctor
-    SysMemUniform(uint32 sz): mSize(0 == sz ? 1 : sz), mTimeStamp(0), mData(HeapMemory::alloc(mSize)) {}
+    SysMemUniform(uint32_t sz): mSize(0 == sz ? 1 : sz), mTimeStamp(0), mData(HeapMemory::alloc(mSize)) {}
 
     /// dtor
     ~SysMemUniform() { HeapMemory::dealloc(mData); }
 
     /// get parameter size
-    virtual uint32 size() const { return mSize; }
+    virtual uint32_t size() const { return mSize; }
 
     /// get current parameter value
     virtual const void * getval() const { return mData; }
 
     /// update parameter value
-    virtual void update(uint32 offset, uint32 length, const void * data) {
+    virtual void update(uint32_t offset, uint32_t length, const void * data) {
         if (offset >= mSize || (offset + length) > mSize) {
             GN_ERROR(getLogger("GN.gfx.Uniform"))("Out of range!");
             return;
@@ -155,7 +155,7 @@ public:
             GN_ERROR(getLogger("GN.gfx.Uniform"))("Null pointer!");
             return;
         }
-        memcpy((uint8 *) mData + offset, data, length);
+        memcpy((uint8_t *) mData + offset, data, length);
         ++mTimeStamp;
     }
 
@@ -166,7 +166,7 @@ public:
     }
 
     /// get current update time stamp
-    sint32 getTimeStamp() const { return mTimeStamp; }
+    int32_t getTimeStamp() const { return mTimeStamp; }
 };
 } // namespace gfx
 } // namespace GN

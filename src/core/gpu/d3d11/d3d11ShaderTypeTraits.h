@@ -37,7 +37,7 @@ struct D3D11ShaderTypeTraits<ShaderStage::VS> {
         }
     }
 
-    static ID3D11VertexShader * create(ID3D11Device & dev, const char * source, size_t len, uint32 flags, const char * entry, const char * profile,
+    static ID3D11VertexShader * create(ID3D11Device & dev, const char * source, size_t len, uint32_t flags, const char * entry, const char * profile,
                                        ID3DBlob ** signature) {
         AutoComPtr<ID3DBlob> bin = AutoComPtr<ID3DBlob>::sAttach(GN::d3d11::compileShader(profile, source, len, flags, entry));
         if (!bin) return NULL;
@@ -52,7 +52,7 @@ struct D3D11ShaderTypeTraits<ShaderStage::VS> {
 
     static void bindShader(ID3D11DeviceContext & cxt, ID3D11DeviceChild * shader) { cxt.VSSetShader((ShaderClass *) shader, NULL, 0); }
 
-    static void bindConstBuffers(ID3D11DeviceContext & cxt, uint32 startSlot, uint32 numBuffers, ID3D11Buffer * const * constBuffers) {
+    static void bindConstBuffers(ID3D11DeviceContext & cxt, uint32_t startSlot, uint32_t numBuffers, ID3D11Buffer * const * constBuffers) {
         cxt.VSSetConstantBuffers(startSlot, numBuffers, constBuffers);
     }
 
@@ -85,7 +85,7 @@ struct D3D11ShaderTypeTraits<ShaderStage::PS> {
         }
     }
 
-    static ID3D11PixelShader * create(ID3D11Device & dev, const char * source, size_t len, uint32 flags, const char * entry, const char * profile,
+    static ID3D11PixelShader * create(ID3D11Device & dev, const char * source, size_t len, uint32_t flags, const char * entry, const char * profile,
                                       ID3DBlob ** signature) {
         AutoComPtr<ID3DBlob> bin = AutoComPtr<ID3DBlob>::sAttach(GN::d3d11::compileShader(profile, source, len, flags, entry));
         if (!bin) return NULL;
@@ -100,7 +100,7 @@ struct D3D11ShaderTypeTraits<ShaderStage::PS> {
 
     static void bindShader(ID3D11DeviceContext & cxt, ID3D11DeviceChild * shader) { cxt.PSSetShader((ShaderClass *) shader, NULL, 0); }
 
-    static void bindConstBuffers(ID3D11DeviceContext & cxt, uint32 startSlot, uint32 numBuffers, ID3D11Buffer * const * constBuffers) {
+    static void bindConstBuffers(ID3D11DeviceContext & cxt, uint32_t startSlot, uint32_t numBuffers, ID3D11Buffer * const * constBuffers) {
         cxt.PSSetConstantBuffers(startSlot, numBuffers, constBuffers);
     }
 
@@ -126,7 +126,7 @@ struct D3D11ShaderTypeTraits<ShaderStage::GS> {
         }
     }
 
-    static ID3D11GeometryShader * create(ID3D11Device & dev, const char * source, size_t len, uint32 flags, const char * entry, const char * profile,
+    static ID3D11GeometryShader * create(ID3D11Device & dev, const char * source, size_t len, uint32_t flags, const char * entry, const char * profile,
                                          ID3DBlob ** signature) {
         AutoComPtr<ID3DBlob> bin = AutoComPtr<ID3DBlob>::sAttach(GN::d3d11::compileShader(profile, source, len, flags, entry));
         if (!bin) return NULL;
@@ -141,7 +141,7 @@ struct D3D11ShaderTypeTraits<ShaderStage::GS> {
 
     static void bindShader(ID3D11DeviceContext & cxt, ID3D11DeviceChild * shader) { cxt.GSSetShader((ShaderClass *) shader, NULL, 0); }
 
-    static void bindConstBuffers(ID3D11DeviceContext & cxt, uint32 startSlot, uint32 numBuffers, ID3D11Buffer * const * constBuffers) {
+    static void bindConstBuffers(ID3D11DeviceContext & cxt, uint32_t startSlot, uint32_t numBuffers, ID3D11Buffer * const * constBuffers) {
         cxt.GSSetConstantBuffers(startSlot, numBuffers, constBuffers);
     }
     //@}
@@ -162,7 +162,7 @@ struct D3D11ShaderTypeTraits<ShaderStage::HS> {
         }
     }
 
-    static ID3D11HullShader * create(ID3D11Device & dev, const char * source, size_t len, uint32 flags, const char * entry, const char * profile,
+    static ID3D11HullShader * create(ID3D11Device & dev, const char * source, size_t len, uint32_t flags, const char * entry, const char * profile,
                                      ID3DBlob ** signature) {
         AutoComPtr<ID3DBlob> bin = AutoComPtr<ID3DBlob>::sAttach(GN::d3d11::compileShader(profile, source, len, flags, entry));
         if (!bin) return NULL;
@@ -177,7 +177,7 @@ struct D3D11ShaderTypeTraits<ShaderStage::HS> {
 
     static void bindShader(ID3D11DeviceContext & cxt, ID3D11DeviceChild * shader) { cxt.HSSetShader((ShaderClass *) shader, NULL, 0); }
 
-    static void bindConstBuffers(ID3D11DeviceContext & cxt, uint32 startSlot, uint32 numBuffers, ID3D11Buffer * const * constBuffers) {
+    static void bindConstBuffers(ID3D11DeviceContext & cxt, uint32_t startSlot, uint32_t numBuffers, ID3D11Buffer * const * constBuffers) {
         cxt.HSSetConstantBuffers(startSlot, numBuffers, constBuffers);
     }
     //@}
@@ -198,7 +198,7 @@ struct D3D11ShaderTypeTraits<ShaderStage::DS> {
         }
     }
 
-    static ID3D11DomainShader * create(ID3D11Device & dev, const char * source, size_t len, uint32 flags, const char * entry, const char * profile,
+    static ID3D11DomainShader * create(ID3D11Device & dev, const char * source, size_t len, uint32_t flags, const char * entry, const char * profile,
                                        ID3DBlob ** signature) {
         AutoComPtr<ID3DBlob> bin = AutoComPtr<ID3DBlob>::sAttach(GN::d3d11::compileShader(profile, source, len, flags, entry));
         if (!bin) return NULL;
@@ -213,7 +213,7 @@ struct D3D11ShaderTypeTraits<ShaderStage::DS> {
 
     static void bindShader(ID3D11DeviceContext & cxt, ID3D11DeviceChild * shader) { cxt.DSSetShader((ShaderClass *) shader, NULL, 0); }
 
-    static void bindConstBuffers(ID3D11DeviceContext & cxt, uint32 startSlot, uint32 numBuffers, ID3D11Buffer * const * constBuffers) {
+    static void bindConstBuffers(ID3D11DeviceContext & cxt, uint32_t startSlot, uint32_t numBuffers, ID3D11Buffer * const * constBuffers) {
         cxt.DSSetConstantBuffers(startSlot, numBuffers, constBuffers);
     }
     //@}
@@ -225,7 +225,7 @@ static void (*D3D11BindShader[])(ID3D11DeviceContext & cxt, ID3D11DeviceChild * 
 };
 GN_CASSERT(GN_ARRAY_COUNT(D3D11BindShader) == ShaderStage::COUNT);
 
-static void (*D3D11BindConstBuffers[])(ID3D11DeviceContext & cxt, uint32 startSlot, uint32 numBuffers, ID3D11Buffer * const * constBuffers) = {
+static void (*D3D11BindConstBuffers[])(ID3D11DeviceContext & cxt, uint32_t startSlot, uint32_t numBuffers, ID3D11Buffer * const * constBuffers) = {
     D3D11ShaderTypeTraits<0>::bindConstBuffers, D3D11ShaderTypeTraits<1>::bindConstBuffers, D3D11ShaderTypeTraits<2>::bindConstBuffers,
     D3D11ShaderTypeTraits<3>::bindConstBuffers, D3D11ShaderTypeTraits<4>::bindConstBuffers,
 };

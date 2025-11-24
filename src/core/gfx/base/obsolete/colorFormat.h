@@ -53,12 +53,12 @@
 ///
 /// compose RGBA8 color constant
 ///
-#define GN_RGBA8(r, g, b, a) ((((uint32) (r) &0xFF) << 0) | (((uint32) (g) &0xFF) << 8) | (((uint32) (b) &0xFF) << 16) | (((uint32) (a) &0xFF) << 24))
+#define GN_RGBA8(r, g, b, a) ((((uint32_t) (r) &0xFF) << 0) | (((uint32_t) (g) &0xFF) << 8) | (((uint32_t) (b) &0xFF) << 16) | (((uint32_t) (a) &0xFF) << 24))
 
 ///
 /// compose BGRA8 color constant
 ///
-#define GN_BGRA8(r, g, b, a) ((((uint32) (b) &0xFF) << 0) | (((uint32) (g) &0xFF) << 8) | (((uint32) (r) &0xFF) << 16) | (((uint32) (a) &0xFF) << 24))
+#define GN_BGRA8(r, g, b, a) ((((uint32_t) (b) &0xFF) << 0) | (((uint32_t) (g) &0xFF) << 8) | (((uint32_t) (r) &0xFF) << 16) | (((uint32_t) (a) &0xFF) << 24))
 
 namespace GN {
 namespace gfx {
@@ -330,8 +330,8 @@ union GN_API ColorFormat {
         DXN_SNORM       = GN_MAKE_COLOR_FORMAT(LAYOUT_DXN, SIGN_SNORM, SWIZZLE_RGBA),
     };
 
-    uint32 u32;   ///< color format as unsigned integer
-    Alias  alias; ///< alias of the format
+    uint32_t u32;   ///< color format as unsigned integer
+    Alias    alias; ///< alias of the format
     struct {
 #if GN_LITTLE_ENDIAN
         unsigned int layout   : 6;
@@ -362,7 +362,7 @@ union GN_API ColorFormat {
     ///
     /// construct from unsigned integer
     ///
-    explicit ColorFormat(uint32 u): u32(u) {}
+    explicit ColorFormat(uint32_t u): u32(u) {}
 
     ///
     /// construct from alias
@@ -372,13 +372,13 @@ union GN_API ColorFormat {
     ///
     /// construct from individual properties
     ///
-    ColorFormat(uint32 l, uint32 si012, uint32 si3, uint32 sw0, uint32 sw1, uint32 sw2, uint32 sw3)
+    ColorFormat(uint32_t l, uint32_t si012, uint32_t si3, uint32_t sw0, uint32_t sw1, uint32_t sw2, uint32_t sw3)
         : layout(l), sign012(si012), sign3(si3), swizzle0(sw0), swizzle1(sw1), swizzle2(sw2), swizzle3(sw3), reserved(0) {}
 
     ///
     /// construct from individual properties
     ///
-    ColorFormat(uint32 l, uint32 si012, uint32 si3, Swizzle4 sw0123)
+    ColorFormat(uint32_t l, uint32_t si012, uint32_t si3, Swizzle4 sw0123)
         : layout(l), sign012(si012), sign3(si3), swizzle0((sw0123 >> 0) & 3), swizzle1((sw0123 >> 3) & 3), swizzle2((sw0123 >> 6) & 3),
           swizzle3((sw0123 >> 9) & 3), reserved(0) {}
 
@@ -398,12 +398,12 @@ union GN_API ColorFormat {
     ///
     /// Get bits-per-pixel
     ///
-    uint8 getBitsPerPixel() const { return ALL_COLOR_LAYOUTS[layout].bits; }
+    uint8_t getBitsPerPixel() const { return ALL_COLOR_LAYOUTS[layout].bits; }
 
     ///
     /// Get bytes-per-pixel-block
     ///
-    uint8 getBytesPerBlock() const { return ALL_COLOR_LAYOUTS[layout].blockBytes; }
+    uint8_t getBytesPerBlock() const { return ALL_COLOR_LAYOUTS[layout].blockBytes; }
 
     ///
     /// convert to string

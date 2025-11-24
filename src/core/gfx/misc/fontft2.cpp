@@ -90,10 +90,10 @@ public:
     // private variables
     // ********************************
 private:
-    FontFaceDesc     mDesc;
-    FT_Face          mFace;
-    FT_StreamRec     mStream;
-    DynaArray<uint8> mBitmapBuffer;
+    FontFaceDesc       mDesc;
+    FT_Face            mFace;
+    FT_StreamRec       mStream;
+    DynaArray<uint8_t> mBitmapBuffer;
 
     static Ft2Library * sLib;
 
@@ -272,16 +272,16 @@ bool FontFaceFt2::loadFontImage(FontImage & result, wchar_t ch) {
     //取道位图数据
 #if SUBPIXEL_RENDERING
     mBitmapBuffer.resize(width * height * 4);
-    uint8 * buf = mBitmapBuffer.data();
+    uint8_t * buf = mBitmapBuffer.data();
     switch (bitmap.pixel_mode) {
     case FT_PIXEL_MODE_MONO:
         for (size_t y = 0; y < height; ++y) {
             for (size_t x = 0; x < width; ++x) {
-                size_t k1       = x / 8 + pitch * y;
-                size_t k2       = 7 - x % 8;
-                uint8  _vl      = (uint8) (bitmap.buffer[k1] >> k2);
-                size_t offset   = (x + y * width) * 4;
-                uint8  color    = _vl & 0x1 ? 0xFF : 0;
+                size_t  k1      = x / 8 + pitch * y;
+                size_t  k2      = 7 - x % 8;
+                uint8_t _vl     = (uint8_t) (bitmap.buffer[k1] >> k2);
+                size_t  offset  = (x + y * width) * 4;
+                uint8_t color   = _vl & 0x1 ? 0xFF : 0;
                 buf[offset + 0] = color;
                 buf[offset + 1] = color;
                 buf[offset + 2] = color;
@@ -293,8 +293,8 @@ bool FontFaceFt2::loadFontImage(FontImage & result, wchar_t ch) {
     case FT_PIXEL_MODE_GRAY:
         for (size_t y = 0; y < height; ++y) {
             for (size_t x = 0; x < width; ++x) {
-                const uint8 * s = bitmap.buffer + pitch * y + x;
-                uint8 *       d = buf + (x + y * width) * 4;
+                const uint8_t * s = bitmap.buffer + pitch * y + x;
+                uint8_t *       d = buf + (x + y * width) * 4;
                 d[0] = d[1] = d[2] = 0xFF;
                 d[3]               = *s;
             }
@@ -305,15 +305,15 @@ bool FontFaceFt2::loadFontImage(FontImage & result, wchar_t ch) {
     case FT_PIXEL_MODE_LCD_V:
         for (size_t y = 0; y < height; ++y) {
             for (size_t x = 0; x < width; ++x) {
-                const uint8 * s = bitmap.buffer + pitch * y + x * 3;
-                uint8 *       d = buf + (x + y * width) * 4;
-                uint8         r = s[0];
-                uint8         g = s[1];
-                uint8         b = s[2];
-                d[0]            = r;
-                d[1]            = g;
-                d[2]            = b;
-                d[3]            = (uint8) (0.2989f * r + 0.5870f * g + 0.1140f * b);
+                const uint8_t * s = bitmap.buffer + pitch * y + x * 3;
+                uint8_t *       d = buf + (x + y * width) * 4;
+                uint8_t         r = s[0];
+                uint8_t         g = s[1];
+                uint8_t         b = s[2];
+                d[0]              = r;
+                d[1]              = g;
+                d[2]              = b;
+                d[3]              = (uint8_t) (0.2989f * r + 0.5870f * g + 0.1140f * b);
             }
         }
         break;
@@ -325,14 +325,14 @@ bool FontFaceFt2::loadFontImage(FontImage & result, wchar_t ch) {
     result.format = FontImage::RGBA;
 #else
     mBitmapBuffer.resize(width * height);
-    uint8 * buf = mBitmapBuffer.data();
+    uint8_t * buf = mBitmapBuffer.data();
     switch (bitmap.pixel_mode) {
     case FT_PIXEL_MODE_MONO:
         for (size_t j = 0; j < height; ++j) {
             for (size_t i = 0; i < width; ++i) {
-                size_t k1          = i / 8 + pitch * j;
-                size_t k2          = 7 - i % 8;
-                uint8  _vl         = (uint8) (bitmap.buffer[k1] >> k2);
+                size_t  k1         = i / 8 + pitch * j;
+                size_t  k2         = 7 - i % 8;
+                uint8_t _vl        = (uint8_t) (bitmap.buffer[k1] >> k2);
                 buf[i + j * width] = _vl & 0x1 ? 0xFF : 0;
             }
         }
@@ -350,8 +350,8 @@ bool FontFaceFt2::loadFontImage(FontImage & result, wchar_t ch) {
 #endif
 
     // copy glyph data to result structure
-    result.width        = (uint32) width;
-    result.height       = (uint32) height;
+    result.width        = (uint32_t) width;
+    result.height       = (uint32_t) height;
     result.buffer       = mBitmapBuffer.data();
     result.horiBearingX = (float) slot->bitmap_left;
     result.horiBearingY = (float) -slot->bitmap_top;

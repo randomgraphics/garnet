@@ -153,7 +153,6 @@ public:
 
     template<class X, class Y>
     inline void connect(Y * classPtr, R (X::*memFuncPtr)(PARAM_TYPES)) const {
-        GN_ASSERT(!IsConst<Y>::value); // Y can't be const class
         if (0 == classPtr || 0 == memFuncPtr) {
             GN_ERROR(sLogger)("Can't connect to NULL method pointer!");
             return;
@@ -161,7 +160,7 @@ public:
         SlotDesc desc;
         desc.func.bind(classPtr, memFuncPtr);
         desc.classPtr = classPtr;
-        desc.basePtr  = IsBaseAndDerived<SlotBase, Y>::value ? (const SlotBase *) classPtr : 0;
+        desc.basePtr  = std::is_base_of<SlotBase, Y>::value ? (const SlotBase *) classPtr : 0;
         addSlotItem(desc);
     }
 
@@ -174,7 +173,7 @@ public:
         SlotDesc desc;
         desc.func.bind(classPtr, memFuncPtr);
         desc.classPtr = classPtr;
-        desc.basePtr  = IsBaseAndDerived<SlotBase, Y>::value ? (const SlotBase *) classPtr : 0;
+        desc.basePtr  = std::is_base_of<SlotBase, Y>::value ? (const SlotBase *) classPtr : 0;
         addSlotItem(desc);
     }
 
@@ -200,7 +199,7 @@ public:
             if (slot == t->classPtr) mSlots.erase(t);
         }
 
-        if (IsBaseAndDerived<SlotBase, X>::value) {
+        if (std::is_base_of<SlotBase, X>::value) {
             // remove itself from target slot's singal array.
             disconnectFromSlotClass((const SlotBase &) *slot);
         }
@@ -315,6 +314,7 @@ GN::Logger * SIGNAL_NAME<R PARAM_COMMA PARAM_TYPES>::sLogger = getLogger("GN.bas
 
     #include <list>
     #include <algorithm>
+    #include <type_traits>
 
 namespace GN {
 class SlotBase;

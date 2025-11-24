@@ -23,8 +23,8 @@ sCopyFrameBufferTo( const GN::gfx::RenderTargetTexture & rtt )
     const OGLTexture * tex = safeCastPtr<const OGLTexture>( rtt.texture );
 
     // get texture size
-    uint32 sx, sy;
-    tex->getMipSize<uint32>( rtt.level, &sx, &sy );
+    uint32_t sx, sy;
+    tex->getMipSize<uint32_t>( rtt.level, &sx, &sy );
 
     // copy framebuffer to current (old) render target texture
     GLint currentTexID;
@@ -94,8 +94,8 @@ bool GN::gfx::OGLRTMgrCopyFrame::bind(const RenderTargetDesc & newrt, const Rend
     /*
 
     // bind color buffers
-    uint32 count = min( (uint32)RenderContext::NUM_COLOR_RENDER_TARGETS, mGpu.caps().maxRenderTargets ) );
-    for( uint32 i = 0; i < count; ++i )
+    uint32_t count = min( (uint32_t)RenderContext::NUM_COLOR_RENDER_TARGETS, mGpu.caps().maxRenderTargets ) );
+    for( uint32_t i = 0; i < count; ++i )
     {
         const RenderTargetTexture * oldc = i < oldrt.count ? oldrt.crts[i] : NULL;
         const RenderTargetTexture * newc = i < newrt.count ? newrt.crts[i] : NULL;
@@ -115,11 +115,11 @@ bool GN::gfx::OGLRTMgrCopyFrame::bind(const RenderTargetDesc & newrt, const Rend
             // update render target size
             if( 0 == i )
             {
-                uint32 oldw = mWidth;
-                uint32 oldh = mHeight;
+                uint32_t oldw = mWidth;
+                uint32_t oldh = mHeight;
                 if( newc && newc->texture )
                 {
-                    newc->texture->getMipSize<uint32>( newc->level, &mWidth, &mHeight );
+                    newc->texture->getMipSize<uint32_t>( newc->level, &mWidth, &mHeight );
                 }
                 else
                 {

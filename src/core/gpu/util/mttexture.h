@@ -49,12 +49,13 @@ public:
     // from Texture
     // ********************************
 public:
-    void   updateMipmap(uint32 face, uint32 level, const Box<uint32> * area, uint32 rowPitch, uint32 slicePitch, const void * data, SurfaceUpdateFlag flag);
-    void   readMipmap(uint32 face, uint32 level, MipmapData & data);
-    void   blobWrite(const void * data, uint32 length);
-    uint32 blobRead(void * data);
-    void   generateMipmapPyramid();
-    void * getAPIDependentData() const;
+    void     updateMipmap(uint32_t face, uint32_t level, const Box<uint32_t> * area, uint32_t rowPitch, uint32_t slicePitch, const void * data,
+                          SurfaceUpdateFlag flag);
+    void     readMipmap(uint32_t face, uint32_t level, MipmapData & data);
+    void     blobWrite(const void * data, uint32_t length);
+    uint32_t blobRead(void * data);
+    void     generateMipmapPyramid();
+    void *   getAPIDependentData() const;
 
     // ********************************
     // private variables

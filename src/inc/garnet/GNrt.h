@@ -110,18 +110,18 @@ public:
         Node *parent = nullptr, *left = nullptr, *right = nullptr;
         int   primitive = -1;
         bool  IsLeaf() const {
-            GN_ASSERT((left && right) || (!left && !right));
-            return nullptr == left;
+             GN_ASSERT((left && right) || (!left && !right));
+             return nullptr == left;
         }
     };
     typedef Node * NodePtr;
 
     // no copy
-    AABBTree(const AABBTree &) = delete;
+    AABBTree(const AABBTree &)             = delete;
     AABBTree & operator=(const AABBTree &) = delete;
 
     // can move
-    AABBTree(AABBTree &&) = default;
+    AABBTree(AABBTree &&)             = default;
     AABBTree & operator=(AABBTree &&) = default;
 
     AABBTree() = default;

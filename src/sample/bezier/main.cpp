@@ -104,7 +104,7 @@ MeshResource * createMesh(GpuResourceDatabase & gdb) {
     md.vertices[0] = vertices;
     md.strides[0]  = sizeof(BezierVertex);
 
-    uint16 indices[] = {
+    uint16_t indices[] = {
         0, 1, 2, 1, 3, 4, 1, 4, 2, 2, 4, 5, 3, 6, 7, 3, 7, 4, 4, 7, 8, 4, 8, 5, 5, 8, 9,
     };
     md.numidx  = GN_ARRAY_COUNT(indices);
@@ -362,7 +362,7 @@ class BezierApp : public SampleApp {
 
     void onQuit() { bezier.clear(); }
 
-    void onRenderWindowResize(intptr_t, uint32 width, uint32 height) { arcball.setMouseMoveWindow(0, 0, (int) width, (int) height); }
+    void onRenderWindowResize(intptr_t, uint32_t width, uint32_t height) { arcball.setMouseMoveWindow(0, 0, (int) width, (int) height); }
 
     void onAxisMove(Axis a, int d) {
         if (Axis::MOUSE_WHEEL_0 == a) {

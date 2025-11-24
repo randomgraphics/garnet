@@ -179,7 +179,7 @@ private:
                     if (NULL == value) return INVALID_COMMAND_LINE;
 
                     const char * MODES[]             = {"w", "b", "f"};
-                    rendererOptions.displayMode.mode = (gfx::DisplayMode::Mode) parseStrings(a, value, MODES, countof(MODES));
+                    rendererOptions.displayMode.mode = (gfx::DisplayMode::Mode) parseStrings(a, value, MODES, std::size(MODES));
                     if (rendererOptions.displayMode.mode < 0) return INVALID_COMMAND_LINE;
                 } else if (0 == str::compareI("mt", a + 1)) {
                     const char * value = getOptionValue(argc, argv, i);

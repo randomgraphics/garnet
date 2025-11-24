@@ -14,6 +14,7 @@
 #define GN_ICL   0 ///< If 1, means current compiler is intel c++ compiler
 #define GN_GNUC  0 ///< If 1, means current compiler is GNUC compilers (gcc, mingw, clang and etc.)
 #define GN_CLANG 0 ///< IF 1, means current compiler is clang
+#define GN_GCC   0 ///< If 1, means current compiler is gcc
 
 /// \def GN_COMPILER
 /// Indicate current compiler
@@ -39,7 +40,9 @@
 
 #elif defined(__GNUC__)
     #undef GN_GNUC
+    #undef GN_GCC
     #define GN_GNUC     1
+    #define GN_GCC      1
     #define GN_COMPILER gcc
 
 #else
@@ -274,8 +277,8 @@ public:                                                                     \
     const ENUM_TYPE & toRawEnum() const { return mValue; }                  \
                       operator const ENUM_TYPE &() const { return mValue; } \
     ENUM_CLASS &      operator++() {                                        \
-        mValue = (ENUM_TYPE) (mValue + 1);                             \
-        return *this;                                                  \
+             mValue = (ENUM_TYPE) (mValue + 1);                             \
+             return *this;                                                  \
     }                                                                       \
     ENUM_CLASS & operator--() {                                             \
         mValue = (ENUM_TYPE) (mValue - 1);                                  \
@@ -320,11 +323,11 @@ public:                                                                     \
 #if GN_PPC
     // big endian
     #define GN_MAKE_FOURCC(ch0, ch1, ch2, ch3) \
-        ((uint32) (uint8) (ch3) | ((uint32) (uint8) (ch2) << 8) | ((uint32) (uint8) (ch1) << 16) | ((uint32) (uint8) (ch0) << 24))
+        ((uint32_t) (uint8_t) (ch3) | ((uint32_t) (uint8_t) (ch2) << 8) | ((uint32_t) (uint8_t) (ch1) << 16) | ((uint32_t) (uint8_t) (ch0) << 24))
 #else
     // little endian
     #define GN_MAKE_FOURCC(ch0, ch1, ch2, ch3) \
-        ((uint32) (uint8) (ch0) | ((uint32) (uint8) (ch1) << 8) | ((uint32) (uint8) (ch2) << 16) | ((uint32) (uint8) (ch3) << 24))
+        ((uint32_t) (uint8_t) (ch0) | ((uint32_t) (uint8_t) (ch1) << 8) | ((uint32_t) (uint8_t) (ch2) << 16) | ((uint32_t) (uint8_t) (ch3) << 24))
 #endif
 
 ///
@@ -351,30 +354,34 @@ public:                                                                     \
 ///
 /// Delete copy methods of a class.
 ///
-#define GN_NO_COPY(x)      \
-    x(const x &) = delete; \
+#define GN_NO_COPY(x)                  \
+    x(const x &)             = delete; \
     x & operator=(const x &) = delete
 
 ///
 /// Delete move methods of a class
 ///
-#define GN_NO_MOVE(x)     \
-    x(x &&)     = delete; \
+#define GN_NO_MOVE(x)             \
+    x(x &&)             = delete; \
     x & operator=(x &&) = delete
 
 ///
 /// Define default copy methods
 ///
-#define GN_DEFAULT_COPY(x)  \
-    x(const x &) = default; \
+#define GN_DEFAULT_COPY(x)              \
+    x(const x &)             = default; \
     x & operator=(const x &) = default
 
 ///
 /// Define default move methods
 ///
-#define GN_DEFAULT_MOVE(x) \
-    x(x &&)     = default; \
+#define GN_DEFAULT_MOVE(x)         \
+    x(x &&)             = default; \
     x & operator=(x &&) = default
+
+#define GN_LIKELY
+
+#define GN_UNLIKELY
 
 namespace GN {
 ///

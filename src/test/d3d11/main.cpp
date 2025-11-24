@@ -47,7 +47,7 @@ public:
 
         // create mesh
         static SimpleMesh::Vertex vertices[24];
-        static uint16             indices[36];
+        static uint16_t           indices[36];
         gfx::createBox(1.0f, 1.0f, 1.0f, vertices[0].pos, sizeof(SimpleMesh::Vertex), vertices[0].tex, sizeof(SimpleMesh::Vertex), vertices[0].normal,
                        sizeof(SimpleMesh::Vertex), 0, 0, // tangent
                        0, 0,                             // binormal

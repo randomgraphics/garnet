@@ -20,14 +20,14 @@
 
 /// HRESULT error check macros
 //@{
-#define GN_DO_ON_HR_FAILED(func, do_something)                                                                                       \
-    if (true) {                                                                                                                      \
-        HRESULT __hr = func;                                                                                                         \
-        if (FAILED(__hr)) {                                                                                                          \
+#define GN_DO_ON_HR_FAILED(func, do_something)                                                                                     \
+    if (true) {                                                                                                                    \
+        HRESULT __hr = func;                                                                                                       \
+        if (FAILED(__hr)) {                                                                                                        \
             GN_ERROR(::GN::getLogger("GN.d3d11utils"))("HRESULT failed: (0x%X) %S", __hr, GN::d3d11::hresult2string(__hr).data()); \
-            do_something                                                                                                             \
-        }                                                                                                                            \
-    } else                                                                                                                           \
+            do_something                                                                                                           \
+        }                                                                                                                          \
+    } else                                                                                                                         \
         void(0)
 #if GN_BUILD_DEBUG_ENABLED
     #define GN_CHECK_HR(func) GN_DO_ON_HR_FAILED(func, )
@@ -151,15 +151,15 @@ inline ID3D11Buffer * createBuffer(ID3D11Device & dev, size_t bytes, D3D11_USAGE
 /// \name state dumper
 //@{
 
-GN_API ID3D11VertexShader * createDumpableVS(ID3D11Device & device, const void * binary, size_t bytes);
+GN_API ID3D11VertexShader *   createDumpableVS(ID3D11Device & device, const void * binary, size_t bytes);
 GN_API ID3D11GeometryShader * createDumpableGS(ID3D11Device & device, const void * binary, size_t bytes);
-GN_API ID3D11PixelShader * createDumpablePS(ID3D11Device & device, const void * binary, size_t bytes);
-GN_API ID3D11InputLayout * createDumpableIL(ID3D11Device & device, const D3D11_INPUT_ELEMENT_DESC * elements, size_t count, const void * signature,
-                                            size_t bytes);
+GN_API ID3D11PixelShader *    createDumpablePS(ID3D11Device & device, const void * binary, size_t bytes);
+GN_API ID3D11InputLayout *    createDumpableIL(ID3D11Device & device, const D3D11_INPUT_ELEMENT_DESC * elements, size_t count, const void * signature,
+                                               size_t bytes);
 
-GN_API void setDumpFilePrefix(const std::string &);
-GN_API void dumpDraw(ID3D11DeviceContext & devcxt, uint32 vertexCount, uint32 startVertex);
-GN_API void dumpDrawIndexed(ID3D11DeviceContext & devcxt, uint32 indexCount, uint32 startIndex, uint32 startVertex);
+GN_API void setDumpFilePrefix(const StrA &);
+GN_API void dumpDraw(ID3D11DeviceContext & devcxt, uint32_t vertexCount, uint32_t startVertex);
+GN_API void dumpDrawIndexed(ID3D11DeviceContext & devcxt, uint32_t indexCount, uint32_t startIndex, uint32_t startVertex);
 
 //@}
 

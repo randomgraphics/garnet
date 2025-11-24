@@ -55,7 +55,7 @@ void GN::gfx::OGLIdxBuf::quit() {
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLIdxBuf::update(uint32 startidx, uint32 numidx, const void * data, SurfaceUpdateFlag flag) {
+void GN::gfx::OGLIdxBuf::update(uint32_t startidx, uint32_t numidx, const void * data, SurfaceUpdateFlag flag) {
     GN_GUARD_SLOW;
 
     GN_ASSERT(ok());
@@ -72,7 +72,7 @@ void GN::gfx::OGLIdxBuf::update(uint32 startidx, uint32 numidx, const void * dat
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLIdxBuf::readback(DynaArray<uint8> & data) {
+void GN::gfx::OGLIdxBuf::readback(DynaArray<uint8_t> & data) {
     data.resize(mBuffer.length);
     mBuffer.getData<uint8_t>(data.data(), 0, mBuffer.length);
 }

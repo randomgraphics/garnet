@@ -9,6 +9,47 @@
 #include <vector>
 
 namespace GN {
+
+namespace details {
+template<class T>
+inline void inplaceDefaultConstructArray(size_t n, T * ptr) {
+    if (!ptr) GN_UNLIKELY return;
+    for (T * end = ptr + n; ptr < end; ++ptr) { new (ptr) T(); }
+}
+
+template<class T>
+inline void inplaceCopyConstructArray(size_t n, T * ptr, const T & from) {
+    if (!ptr) GN_UNLIKELY return;
+    for (T * end = ptr + n; ptr < end; ++ptr) { new (ptr) T(from); }
+}
+
+template<class T>
+inline void inplaceCopyConstructArray(size_t n, T * ptr, const T * from) {
+    if (!ptr || !from) GN_UNLIKELY return;
+    for (T * end = ptr + n; ptr < end; ++ptr, ++from) { new (ptr) T(*from); }
+}
+
+template<class T>
+inline void inplaceMoveConstructArray(size_t n, T * ptr, T * from) {
+    if (!ptr || !from) GN_UNLIKELY return;
+    for (T * end = ptr + n; ptr < end; ++ptr, ++from) { new (ptr) T(std::move(*from)); }
+}
+
+// Inplace destruct an array of objects. No memory\ freeing.
+template<class T>
+inline void inplaceDestructArray(size_t n, T * ptr) {
+    if constexpr (!std::is_pod<T>()) {
+        if (ptr && n) GN_LIKELY {
+                for (T * end = ptr + n; ptr < end; ++ptr) { ptr->T::~T(); }
+            }
+    } else {
+        // do nothing to POD like type.
+        (void) ptr;
+        (void) n;
+    }
+}
+} // namespace details
+
 ///
 /// Fixed sized array, which always has N elements.
 /// Behaves like C-style array, but with bound check in debug build.
@@ -25,12 +66,12 @@ public:
     ///
     /// convert to C pointer
     ///
-    const T * rawptr() const { return mElements; }
+    const T * data() const { return mElements; }
 
     ///
     /// convert to C pointer
     ///
-    T * rawptr() { return mElements; }
+    T * data() { return mElements; }
 
     ///
     /// return size of the array (always be MAX_SIZE)
@@ -55,14 +96,14 @@ public:
 };
 
 ///
-/// Fixed size array with supporting to common array operations
-/// like push, pop, insert, remove and etc.
+/// Resizable array array completely allocated on stack. No heap allocation. Support commonly used
+/// array operations like push, pop, insert, remove and etc.
 ///
 /// \todo Fix issues using with class with non-trival constructor and destructor
 ///
 template<class T, size_t N, typename SIZE_TYPE = size_t>
 class StackArray {
-    uint8     mBuffer[sizeof(T) * N];
+    uint8_t   mBuffer[sizeof(T) * N];
     SIZE_TYPE mCount;
 
     /// default constructor
@@ -81,13 +122,13 @@ class StackArray {
     }
 
     void doClear() {
-        T * p = rawptr();
+        T * p = data();
         for (SIZE_TYPE i = 0; i < mCount; ++i, ++p) { dtor(p); }
         mCount = 0;
     }
 
     void copyFrom(const StackArray & other) {
-        T *       dst = rawptr();
+        T *       dst = data();
         const T * src = other.data();
 
         SIZE_TYPE mincount = math::getmin<SIZE_TYPE>(mCount, other.mCount);
@@ -115,7 +156,7 @@ class StackArray {
             return;
         }
 
-        T * p = rawptr();
+        T * p = data();
 
         // construct last element
         ctor(p + mCount, 1);
@@ -137,7 +178,7 @@ class StackArray {
 
         --mCount;
 
-        T * p = rawptr();
+        T * p = data();
 
         // move elements
         for (SIZE_TYPE i = position; i < mCount; ++i) { p[i] = p[i + 1]; }
@@ -154,7 +195,7 @@ class StackArray {
             return;
         }
 
-        T * p = rawptr();
+        T * p = data();
 
         // destruct extra objects, only when count < mCount
         for (SIZE_TYPE i = count; i < mCount; ++i) { dtor(p + i); }
@@ -168,7 +209,7 @@ class StackArray {
     bool equal(const StackArray & other) const {
         if (mCount != other.mCount) return false;
 
-        const T * p1 = rawptr();
+        const T * p1 = data();
         const T * p2 = other.data();
 
         for (SIZE_TYPE i = 0; i < mCount; ++i) {
@@ -190,7 +231,7 @@ public:
     ///
     /// constructor with user-defined count.
     ///
-    explicit StackArray(SIZE_TYPE count): mCount(count) { ctor(rawptr(), count); }
+    explicit StackArray(SIZE_TYPE count): mCount(count) { ctor(data(), count); }
 
     ///
     /// copy constructor
@@ -208,30 +249,30 @@ public:
     void      append(const T & t) { doInsert(mCount, t); }
     const T & back() const {
         GN_ASSERT(mCount > 0);
-        return rawptr()[mCount - 1];
+        return data()[mCount - 1];
     }
     T & back() {
         GN_ASSERT(mCount > 0);
-        return rawptr()[mCount - 1];
+        return data()[mCount - 1];
     }
-    const T * begin() const { return rawptr(); }
-    T *       begin() { return rawptr(); }
+    const T * begin() const { return data(); }
+    T *       begin() { return data(); }
     void      clear() { doClear(); }
-    const T * rawptr() const { return (const T *) mBuffer; }
-    T *       rawptr() { return (T *) mBuffer; }
+    const T * data() const { return (const T *) mBuffer; }
+    T *       data() { return (T *) mBuffer; }
     bool      empty() const { return 0 == mCount; }
-    const T * end() const { return rawptr() + mCount; }
-    T *       end() { return rawptr() + mCount; }
+    const T * end() const { return data() + mCount; }
+    T *       end() { return data() + mCount; }
     /** do nothing if position is invalid or array is empty */
     void      eraseIdx(SIZE_TYPE position) { doErase(position); }
     void      erasePtr(const T * ptr) { doErase(ptr - mBuffer); }
     const T & front() const {
         GN_ASSERT(mCount > 0);
-        return rawptr()[0];
+        return data()[0];
     }
     T & front() {
         GN_ASSERT(mCount > 0);
-        return rawptr()[0];
+        return data()[0];
     }
     /** do nothing if position is invalid or array is full */
     void      insert(SIZE_TYPE position, const T & t) { doInsert(position, t); }
@@ -250,18 +291,18 @@ public:
     bool operator==(const StackArray & other) const { return equal(other); }
     bool operator!=(const StackArray & other) const { return !equal(other); }
     T &  operator[](SIZE_TYPE i) {
-        GN_ASSERT(i < mCount);
-        return rawptr()[i];
+         GN_ASSERT(i < mCount);
+         return data()[i];
     }
     const T & operator[](SIZE_TYPE i) const {
         GN_ASSERT(i < mCount);
-        return rawptr()[i];
+        return data()[i];
     }
     //@}
 };
 
 ///
-/// Resizeable array.
+/// Resizable array.
 ///
 template<class T, typename SIZE_TYPE = size_t, class OBJECT_ALLOCATOR = CxxObjectAllocator<T>>
 class DynaArray {
@@ -430,7 +471,7 @@ class DynaArray {
 
         // align caps to next power of 2
         GN_ASSERT(count > 0);
-        uint64 newCap = count - 1;
+        uint64_t newCap = count - 1;
         newCap |= newCap >> 32;
         newCap |= newCap >> 16;
         newCap |= newCap >> 8;
@@ -440,7 +481,7 @@ class DynaArray {
         newCap += 1;
 
         // Cap to maximum allowable value.
-        const uint64 MAX_CAPS = (uint64) (SIZE_TYPE) -1;
+        const uint64_t MAX_CAPS = (uint64_t) (SIZE_TYPE) -1;
         if (newCap > MAX_CAPS) newCap = MAX_CAPS;
 
         GN_ASSERT(count <= MAX_CAPS);
@@ -595,8 +636,6 @@ public:
     void      clear() { doClear(); }
     const T * data() const { return mElements; }
     T *       data() { return mElements; }
-    const T * rawptr() const { return mElements; } // obsolete
-    T *       rawptr() { return mElements; }       // oboslete
     bool      empty() const { return 0 == GetCount(); }
     const T * end() const { return mElements + GetCount(); }
     T *       end() { return mElements + GetCount(); }
@@ -646,8 +685,8 @@ public:
     bool operator==(const DynaArray & other) const { return equal(other); }
     bool operator!=(const DynaArray & other) const { return !equal(other); }
     T &  operator[](SIZE_TYPE i) {
-        GN_ASSERT(i < GetCount());
-        return mElements[i];
+         GN_ASSERT(i < GetCount());
+         return mElements[i];
     }
     const T & operator[](SIZE_TYPE i) const {
         GN_ASSERT(i < GetCount());
@@ -670,18 +709,50 @@ public:
 
     SafeArrayAccessor(T * data, size_t count): mBegin(data), mEnd(data + count), mPtr(data) {}
 
-    T * subrange(size_t index, size_t length) const {
+    bool empty() const { return mPtr == mEnd; }
+
+    size_t size() const { return mEnd - mPtr; }
+
+    T * data() const { return mPtr; }
+
+    T * begin() const { return mPtr; }
+
+    T * end() const { return mEnd; }
+
+    T & front() const {
+        GN_ASSERT(!empty());
+        return *mPtr;
+    }
+
+    T & back() const {
+        GN_ASSERT(!empty());
+        return *(mEnd - 1);
+    }
+
+    T * subrange(size_t index, size_t lengthInUnitOfT) const {
         GN_ASSERT(mBegin <= (mPtr + index));
         GN_ASSERT((mPtr + index) < mEnd);
-        GN_ASSERT((mPtr + index + length) <= mEnd);
-        GN_UNUSED_PARAM(length);
+        GN_ASSERT((mPtr + index + lengthInUnitOfT) <= mEnd);
+        GN_UNUSED_PARAM(lengthInUnitOfT);
         return mPtr + index;
     }
 
     template<typename T2>
-    void copyTo(size_t srcOffset, const SafeArrayAccessor<T2> & dest, size_t dstOffset, size_t bytes) {
-        GN_CASSERT(sizeof(T) == sizeof(T2));
-        memcpy(dest.subrange(dstOffset, bytes), subrange(srcOffset, bytes), bytes);
+    void copyTo(size_t srcOffset, const SafeArrayAccessor<T2> & dest, size_t dstOffset, size_t lengthInUnitOfT) {
+        const T * src = subrange(srcOffset, lengthInUnitOfT);
+        T2 *      dst = dest.subrange(dstOffset, lengthInUnitOfT);
+        if constexpr (std::is_trivially_copyable<T>::value && std::is_trivially_copyable<T2>::value) {
+            GN_CASSERT(sizeof(T) == sizeof(T2));
+            memcpy(dst, src, lengthInUnitOfT * sizeof(T));
+        } else {
+            for (size_t i = 0; i < lengthInUnitOfT; ++i) { dst[i] = src[i]; }
+        }
+    }
+
+    T & at(size_t index) const {
+        GN_ASSERT(mBegin <= (mPtr + index));
+        GN_ASSERT((mPtr + index) < mEnd);
+        return mPtr[index];
     }
 
     T * operator->() const {
@@ -689,11 +760,12 @@ public:
         return mPtr;
     }
 
-    T & operator[](size_t index) const {
-        GN_ASSERT(mBegin <= (mPtr + index));
-        GN_ASSERT((mPtr + index) < mEnd);
-        return mPtr[index];
+    T & operator*() const {
+        GN_ASSERT(mBegin <= mPtr && mPtr < mEnd);
+        return *mPtr;
     }
+
+    T & operator[](size_t index) const { return at(index); }
 
     SafeArrayAccessor & operator++() {
         ++mPtr;
@@ -718,11 +790,6 @@ public:
     //@}
 };
 
-// TODO: replace with std::size()
-template<typename T, std::size_t N>
-constexpr std::size_t countof(T const (&)[N]) noexcept {
-    return N;
-}
 } // namespace GN
 
 // *****************************************************************************

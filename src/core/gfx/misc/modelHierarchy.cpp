@@ -12,14 +12,7 @@
 #include <assimp/IOStream.hpp>
 #include <assimp/IOSystem.hpp>
 
-#ifdef HAS_FBX
-    #if GN_GNUC
-        #pragma GCC diagnostic ignored "-Wunused"
-    #endif
-    #pragma warning(disable : 4996) // 'x' was declared depreciated
-    #define FBXSDK_SHARED
-    #include <fbxsdk.h>
-#endif
+#include "fbx-settings.h"
 
 using namespace GN;
 using namespace GN::gfx;
@@ -67,35 +60,35 @@ static bool sStrEndWithI(const char * string, const char * suffix) {
 namespace xpr {
 
 struct XPRFileHeader {
-    uint32 tag;        ///< must be XPR2
-    uint32 size1;      ///< size tag 1
-    uint32 size2;      ///< size tag 2 (file size = size1+size2+12)
-    uint32 numObjects; ///< number of objects in this file
+    uint32_t tag;        ///< must be XPR2
+    uint32_t size1;      ///< size tag 1
+    uint32_t size2;      ///< size tag 2 (file size = size1+size2+12)
+    uint32_t numObjects; ///< number of objects in this file
 };
 
 struct XPRObjectHeader {
-    uint32 type;    ///< object type, could be "USER", "TX2D", "VBUF", "IBUF".
-    uint32 offset;  ///< object offset in bytes. The actual offset is this value + 12.
-    uint32 size;    ///< object size in bytes
-    uint32 unknown; ///< I don't know what this is for.
+    uint32_t type;    ///< object type, could be "USER", "TX2D", "VBUF", "IBUF".
+    uint32_t offset;  ///< object offset in bytes. The actual offset is this value + 12.
+    uint32_t size;    ///< object size in bytes
+    uint32_t unknown; ///< I don't know what this is for.
 };
 
 // XPR texture descriptor, 0x28 bytes
 struct XPRTex2DDesc {
     // 10 dwords
-    uint32 dwords[10];
+    uint32_t dwords[10];
 };
 GN_CASSERT(0x28 == sizeof(XPRTex2DDesc));
 
 /// XPR vertex buffer descriptor, 0x14 bytes
 struct XPRVBufDesc {
-    uint32 dwords[5];
+    uint32_t dwords[5];
 };
 GN_CASSERT(0x14 == sizeof(XPRVBufDesc));
 
 /// XPR index buffer descriptor, 0x14 bytes
 struct XPRIBufDesc {
-    uint32 dwords[5];
+    uint32_t dwords[5];
 };
 GN_CASSERT(0x14 == sizeof(XPRIBufDesc));
 
@@ -279,7 +272,7 @@ static bool sLoadModelHierarchyFromASE(ModelHierarchyDesc & desc, File & file) {
     }
     filename = fs::resolvePath(fs::getCurrentDir(), filename);
 
-#define FULL_MESH_NAME(n) fmt::format("%s.%s", filename.data(), n.data())
+#define FULL_MESH_NAME(n) StrA::format("%s.%s", filename.data(), n.data())
 
     // copy meshes. create nodes as well, since in ASE scene, one mesh is one node.
     for (size_t i = 0; i < ase.meshes.size(); ++i) {
@@ -307,7 +300,7 @@ static bool sLoadModelHierarchyFromASE(ModelHierarchyDesc & desc, File & file) {
     }
 
     // copy mesh data
-    desc.meshdata = ase.meshdata;
+    desc.meshdata = std::move(ase.meshdata);
 
     // create models
     for (size_t i = 0; i < ase.subsets.size(); ++i) {
@@ -330,7 +323,7 @@ static bool sLoadModelHierarchyFromASE(ModelHierarchyDesc & desc, File & file) {
         if (model.hasTexture("NORMAL_TEXTURE") && !am.mapbump.bitmap.empty()) { model.textures["NORMAL_TEXTURE"].resourceName = am.mapbump.bitmap; }
 
         // add the model to model list
-        std::string modelname = fmt::format("%s.%u", asemesh.name.data(), i);
+        StrA modelname = StrA::format("%s.%u", asemesh.name.data(), i);
         GN_ASSERT(NULL == desc.models.find(modelname));
         desc.models[modelname] = model;
 
@@ -523,7 +516,7 @@ struct hash<fbx::MeshVertexKey> {
 
 namespace fbx {
 
-typedef std::unordered_map<MeshVertexKey, uint32> MeshVertexHashMap;
+typedef std::unordered_map<MeshVertexKey, uint32_t> MeshVertexHashMap;
 
 //
 //
@@ -588,13 +581,10 @@ static void sLoadFbxMesh(ModelHierarchyDesc & desc, const std::string & filename
 
     // Create vertex blob that stores the final vertex buffer.
     AutoRef<DynaArrayBlob<MeshVertex>> vertexBlob = referenceTo(new DynaArrayBlob<MeshVertex>);
-    if (!vertexBlob->array().reserve(numidx)) {
-        GN_ERROR(sLogger)("Fail to load FBX mesh: out of memory.");
-        return;
-    }
+    vertexBlob->reserve(numidx);
 
     // Create index blob that stores the index buffer (assume 32-bit indices)
-    AutoRef<SimpleBlob> indexBlob = referenceTo(new SimpleBlob(numidx * sizeof(uint32)));
+    AutoRef<Blob> indexBlob = referenceTo(new SimpleBlob<uint32_t>(numidx));
     if (0 == indexBlob->size()) {
         GN_ERROR(sLogger)("Fail to load FBX mesh: out of memory.");
         return;
@@ -610,7 +600,7 @@ static void sLoadFbxMesh(ModelHierarchyDesc & desc, const std::string & filename
     int uvIndex     = 0;
     int normalIndex = 0;
     int lastMatID   = -1;
-    for (uint32 sortedPolygonIndex = 0; sortedPolygonIndex < sortedPolygons.size(); ++sortedPolygonIndex) {
+    for (uint32_t sortedPolygonIndex = 0; sortedPolygonIndex < sortedPolygons.size(); ++sortedPolygonIndex) {
         int polygonIndex = sortedPolygons[sortedPolygonIndex];
 
         int matid = nummat > 1 ? fbxMaterials->GetIndexArray().GetAt(polygonIndex) : 0;
@@ -667,7 +657,7 @@ static void sLoadFbxMesh(ModelHierarchyDesc & desc, const std::string & filename
             // If the key exists already, the pair will point to it.
             // If the key does not exisit, the pair will point to the newly inserted one.
             // Either way, pair->value should give us the correct index of the vertex.
-            auto inserted    = vhash.insert({key, (uint32) vhash.size()});
+            auto inserted    = vhash.insert({key, (uint32_t) vhash.size()});
             auto isNewVertex = inserted.second;
             auto vertexIndex = inserted.first->second;
 
@@ -681,13 +671,13 @@ static void sLoadFbxMesh(ModelHierarchyDesc & desc, const std::string & filename
                 vertex.normal = key.normal;
                 vertex.uv     = key.uv;
 
-                vertexBlob->array().append(vertex);
+                vertexBlob->append(vertex);
 
-                GN_ASSERT(vertexBlob->array().size() == (vertexIndex + 1));
+                GN_ASSERT(vertexBlob->count() == (vertexIndex + 1));
             }
 
             // add the vertex index into the final index buffer
-            uint32 * indices                    = (uint32 *) indexBlob->data();
+            uint32_t * indices                  = (uint32_t *) indexBlob->data();
             indices[sortedPolygonIndex * 3 + i] = vertexIndex;
         }
     }
@@ -696,37 +686,37 @@ static void sLoadFbxMesh(ModelHierarchyDesc & desc, const std::string & filename
     // We are almost there.
 
     // Compress index buffer to 16 bits, if possible.
-    if (vertexBlob->array().size() <= 0x10000) {
-        AutoRef<SimpleBlob> ib16 = referenceTo(new SimpleBlob(numidx * sizeof(uint16)));
+    if (vertexBlob->count() <= 0x10000) {
+        AutoRef<Blob> ib16 = referenceTo(new SimpleBlob<uint16_t>(numidx));
         if (0 == ib16->size()) {
             GN_ERROR(sLogger)("Fail to load FBX mesh: out of memory.");
             return;
         }
 
-        const uint32 * i32 = (const uint32 *) indexBlob->data();
-        uint16 *       i16 = (uint16 *) ib16->data();
-        for (size_t i = 0; i < (size_t) numidx; ++i) { i16[i] = (uint16) i32[i]; }
+        const uint32_t * i32 = (const uint32_t *) indexBlob->data();
+        uint16_t *       i16 = (uint16_t *) ib16->data();
+        for (size_t i = 0; i < (size_t) numidx; ++i) { i16[i] = (uint16_t) i32[i]; }
 
         indexBlob = ib16;
     }
 
     // calculate the bounding box of the mesh
-    const MeshVertex * vertices = vertexBlob->array().data();
-    Boxf               boundingBox;
+    auto vertices = (const MeshVertex *) vertexBlob->data();
+    Boxf boundingBox;
     calculateBoundingBox(boundingBox, &vertices->pos.x, sizeof(MeshVertex), &vertices->pos.y, sizeof(MeshVertex), &vertices->pos.z, sizeof(MeshVertex),
-                         vertexBlob->array().size());
+                         vertexBlob->count());
 
     // Fill up the rest of informations for each models.
     for (size_t i = 0; i < models.size(); ++i) {
         models[i].mesh          = meshName;
-        models[i].subset.numvtx = (uint32) vertexBlob->array().size();
+        models[i].subset.numvtx = (uint32_t) vertexBlob->count();
     }
 
     // Now copy everthing to the output descriptor. And we are done!
     MeshResourceDesc & gnmesh = desc.meshes[meshName];
     gnmesh                    = {};
     gnmesh.prim               = PrimitiveType::TRIANGLE_LIST;
-    gnmesh.numvtx             = (uint32) vertexBlob->array().size();
+    gnmesh.numvtx             = (uint32_t) vertexBlob->count();
     gnmesh.numidx             = numidx;
     gnmesh.idx32              = gnmesh.numvtx > 0x10000;
     gnmesh.vtxfmt             = MeshVertex::sGetVertexFormat();
@@ -779,7 +769,7 @@ static bool sLoadFbxNodeRecursivly(ModelHierarchyDesc & desc, const std::string 
 
     // we don't support skeleton mesh yet. So ignore skeleton node for now.
 
-    const FbxMatrix & localTransform = node->GetScene()->GetEvaluator()->GetNodeLocalTransform(node);
+    const FbxMatrix & localTransform = node->GetScene()->GetAnimationEvaluator()->GetNodeLocalTransform(node);
     FbxVector4        t, s, sh;
     double            sign;
     FbxQuaternion     q;
@@ -986,9 +976,8 @@ static bool sParseModel(ModelHierarchyDesc & desc, XmlElement & root, const std:
 
     if (NULL == desc.meshes.find(md.mesh)) {
         MeshResourceDesc mesh;
-        AutoRef<Blob>    blob = mesh.loadFromFile(fs::resolvePath(basedir, md.mesh));
-        if (!blob) return false;
-
+        auto             blob = mesh.loadFromFile(fs::resolvePath(basedir, md.mesh));
+        if (blob.empty()) return false;
         desc.meshes[md.mesh] = mesh;
         desc.meshdata.append(blob);
     }
@@ -1056,7 +1045,7 @@ static bool sParseNode(ModelHierarchyDesc & desc, XmlElement & root) {
 
                 node.models.append(a->value);
             } else {
-                sPostXMLError(*e, fmt::format("Unknown element: <%s>", e->name.data()));
+                sPostXMLError(*e, StrA::format("Unknown element: <%s>", e->name.data()));
             }
         }
     }
@@ -1112,7 +1101,7 @@ static bool sLoadModelHierarchyFromXML(ModelHierarchyDesc & desc, File & file) {
         if ("model" == e->name) {
             if (!sParseModel(desc, *e, basedir)) return false;
         } else {
-            sPostXMLError(*e, fmt::format("Ignore unknowned element: <%s>", e->name.data()));
+            sPostXMLError(*e, StrA::format("Ignore unknowned element: <%s>", e->name.data()));
         }
     }
 
@@ -1129,7 +1118,7 @@ static bool sLoadModelHierarchyFromXML(ModelHierarchyDesc & desc, File & file) {
         if ("node" == e->name) {
             if (!sParseNode(desc, *e)) return false;
         } else {
-            sPostXMLError(*e, fmt::format("Ignore unknowned element: <%s>", e->name.data()));
+            sPostXMLError(*e, StrA::format("Ignore unknowned element: <%s>", e->name.data()));
         }
     }
 
@@ -1165,7 +1154,7 @@ static bool sSaveModelHierarchyToXML(const ModelHierarchyDesc & desc, const char
         const std::string &             oldMeshName = i->key;
         const MeshResourceDesc & mesh        = i->value;
 
-        std::string newMeshName = fmt::format("%s.%d.mesh.bin", basename.data(), meshindex);
+        StrA newMeshName = StrA::format("%s.%d.mesh.bin", basename.data(), meshindex);
 
         if (!mesh.saveToFile(dirname + "\\" + newMeshName)) return false;
 
@@ -1287,8 +1276,8 @@ bool sLoadModelHierarchyFromMeshBinary(ModelHierarchyDesc & desc, File & fp) {
     const std::string & meshname = fp.name();
 
     MeshResourceDesc mesh;
-    AutoRef<Blob>    blob = mesh.loadFromFile(fp);
-    if (!blob) return false;
+    auto             blob = mesh.loadFromFile(fp);
+    if (blob.empty()) return false;
 
     // determine the model template
     const ModelResourceDesc * modelTemplate = ase::sDetermineBestModelTemplate(mesh);
@@ -1300,7 +1289,7 @@ bool sLoadModelHierarchyFromMeshBinary(ModelHierarchyDesc & desc, File & fp) {
 
     // add mesh and model to scene
     desc.meshes[meshname] = mesh;
-    desc.meshdata.append(blob);
+    desc.meshdata.append(std::move(blob));
     desc.models[meshname] = model;
 
     // create a node for the model

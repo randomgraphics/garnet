@@ -5,21 +5,21 @@ HINSTANCE           mHinst = 0, mHinstDLL = 0;
 extern "C" UINT_PTR mProcs[16] = {0};
 
 LPCSTR      mImportNames[] = {"D3DPERF_BeginEvent",
-                         "D3DPERF_EndEvent",
-                         "D3DPERF_GetStatus",
-                         "D3DPERF_QueryRepeatFrame",
-                         "D3DPERF_SetMarker",
-                         "D3DPERF_SetOptions",
-                         "D3DPERF_SetRegion",
-                         "DebugSetLevel",
-                         "DebugSetMute",
-                         "Direct3D9EnableMaximizedWindowedModeShim",
-                         "Direct3DCreate9",
-                         "Direct3DCreate9Ex",
-                         "Direct3DShaderValidatorCreate9",
-                         "PSGPError",
-                         "PSGPSampleTexture",
-                         (LPCSTR) 16};
+                              "D3DPERF_EndEvent",
+                              "D3DPERF_GetStatus",
+                              "D3DPERF_QueryRepeatFrame",
+                              "D3DPERF_SetMarker",
+                              "D3DPERF_SetOptions",
+                              "D3DPERF_SetRegion",
+                              "DebugSetLevel",
+                              "DebugSetMute",
+                              "Direct3D9EnableMaximizedWindowedModeShim",
+                              "Direct3DCreate9",
+                              "Direct3DCreate9Ex",
+                              "Direct3DShaderValidatorCreate9",
+                              "PSGPError",
+                              "PSGPSampleTexture",
+                              (LPCSTR) 16};
 BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID) {
     mHinst = hinstDLL;
     if (fdwReason == DLL_PROCESS_ATTACH) {

@@ -39,9 +39,9 @@ void CEGUI::GarnetTexture::loadFromMemory(const void * buffPtr, uint buffWidth, 
     if (0 == mMemBuffer) { GN_THROW_EX(RendererException("Failed to load texture from memory: D3D Texture creation failed.")); }
 
     // convert B-G-R-A to R-G-B-A
-    const GN::Vector4<uint8> * src = (const GN::Vector4<uint8> *) buffPtr;
-    GN::Vector4<uint8> *       dst = (GN::Vector4<uint8> *) mMemBuffer;
-    size_t                     n   = buffWidth * buffHeight;
+    const GN::Vector4<uint8_t> * src = (const GN::Vector4<uint8_t> *) buffPtr;
+    GN::Vector4<uint8_t> *       dst = (GN::Vector4<uint8_t> *) mMemBuffer;
+    size_t                       n   = buffWidth * buffHeight;
     for (size_t i = 0; i < n; ++i, ++src, ++dst) {
         dst->x = src->z;
         dst->y = src->y;
@@ -84,10 +84,10 @@ bool CEGUI::GarnetTexture::reload() {
         if (!tex->lock(tlr, 0, 0, 0, gfx::LOCK_DISCARD)) return false;
 
         // copy data
-        const Vector4<uint8> * src      = (const Vector4<uint8> *) mMemBuffer;
-        size_t                 srcPitch = mWidth * 4;
+        const Vector4<uint8_t> * src      = (const Vector4<uint8_t> *) mMemBuffer;
+        size_t                   srcPitch = mWidth * 4;
         GN_ASSERT(tlr.rowBytes >= srcPitch);
-        uint8 * dst = (uint8 *) tlr.data;
+        uint8_t * dst = (uint8_t *) tlr.data;
         if (srcPitch == tlr.rowBytes) {
             memcpy(dst, src, srcPitch * mHeight);
         } else
@@ -112,7 +112,7 @@ bool CEGUI::GarnetTexture::reload() {
         GN_TRACE(sLogger)("Load GUI texture: name(%s), group(%s).", mFileName.data(), mFileName.data());
 
         // load texture
-        MemFile<uint8> mf(rdc.getDataPtr(), rdc.getSize(), mFileName.data());
+        MemFile<uint8_t> mf(rdc.getDataPtr(), rdc.getSize(), mFileName.data());
         mGarnetTexture.attach(scene::createTextureFromFile(mf));
         if (!mGarnetTexture) return false;
 

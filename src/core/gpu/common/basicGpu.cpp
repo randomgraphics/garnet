@@ -89,7 +89,7 @@ void GN::gfx::BasicGpu::getBackBufferContent(BackBufferContent & c) {
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::BasicGpu::setUserData(const Guid & id, const void * data, uint32 length) {
+void GN::gfx::BasicGpu::setUserData(const Guid & id, const void * data, uint32_t length) {
     UserData * currentUserData = mUserData.find(id);
 
     if (NULL == data && 0 == length) {
@@ -104,13 +104,13 @@ void GN::gfx::BasicGpu::setUserData(const Guid & id, const void * data, uint32 l
 
         if (NULL != data && length > 0) {
             currentUserData->resize(length);
-            memcpy(currentUserData->rawptr(), data, length);
+            memcpy(currentUserData->data(), data, length);
         } else {
             currentUserData->clear();
         }
     } else {
         // add new data
-        DynaArray<uint8> & newUserData = mUserData[id];
+        DynaArray<uint8_t> & newUserData = mUserData[id];
 
         if (NULL != data && length > 0) {
             newUserData.resize(length);
@@ -122,13 +122,13 @@ void GN::gfx::BasicGpu::setUserData(const Guid & id, const void * data, uint32 l
 //
 //
 // -----------------------------------------------------------------------------
-const void * GN::gfx::BasicGpu::getUserData(const Guid & id, uint32 * length) const {
+const void * GN::gfx::BasicGpu::getUserData(const Guid & id, uint32_t * length) const {
     const UserData * currentUserData = mUserData.find(id);
 
     if (NULL != currentUserData) {
-        if (length) *length = (uint32) currentUserData->size();
+        if (length) *length = (uint32_t) currentUserData->size();
 
-        return currentUserData->rawptr();
+        return currentUserData->data();
     } else {
         GN_ERROR(sLogger)("Invalid user data GUID.");
 

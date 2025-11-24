@@ -65,8 +65,8 @@ public:
     virtual const GpuOptions & getOptions() const { return mOptions; }
     virtual const DispDesc &   getDispDesc() const { return mDispDesc; }
     virtual GN::win::Window &  getRenderWindow() const {
-        GN_ASSERT(mWindow);
-        return *mWindow;
+         GN_ASSERT(mWindow);
+         return *mWindow;
     }
 
 protected:
@@ -148,7 +148,7 @@ protected:
 
     //@{
 
-    void drawLines(uint32, const void *, uint32, uint32, uint32, const Matrix44f &, const Matrix44f &, const Matrix44f &) {
+    void drawLines(uint32_t, const void *, uint32_t, uint32_t, uint32_t, const Matrix44f &, const Matrix44f &, const Matrix44f &) {
         static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.common");
         GN_ERROR(sLogger)("obsolete functions. will be removed sooon.");
     }
@@ -166,8 +166,8 @@ protected:
 public:
     virtual GpuSignals & getSignals() { return mSignals; }
     virtual void         getBackBufferContent(BackBufferContent &);
-    virtual void         setUserData(const Guid & id, const void * data, uint32 length);
-    virtual const void * getUserData(const Guid & id, uint32 * length) const;
+    virtual void         setUserData(const Guid & id, const void * data, uint32_t length);
+    virtual const void * getUserData(const Guid & id, uint32_t * length) const;
     virtual bool         hasUserData(const Guid & id) const;
     virtual void         debugEnableParameterCheck(bool enable) { mParamCheckEnabled = enable; }
     virtual void         debugMarkBegin(const char *) {}
@@ -184,7 +184,7 @@ private:
     }
 
 private:
-    typedef DynaArray<uint8> UserData;
+    typedef DynaArray<uint8_t> UserData;
 
     typedef Dictionary<Guid, UserData> UserDataMap;
 
@@ -202,14 +202,14 @@ private:
 ///
 struct RenderTargetDesc {
     /// color render targets
-    StackArray<RenderTargetTexture, GpuContext::MAX_COLOR_RENDER_TARGETS, uint32> colortargets;
+    StackArray<RenderTargetTexture, GpuContext::MAX_COLOR_RENDER_TARGETS, uint32_t> colortargets;
 
     /// depth stencil render target
     RenderTargetTexture depthstencil;
 
     /// check for invalid description.
     bool valid() const {
-        for (uint32 i = 0; i < colortargets.size(); ++i) {
+        for (uint32_t i = 0; i < colortargets.size(); ++i) {
             if (!colortargets[i].texture) {
                 GN_ERROR(GN::getLogger("GN.gfx"))("NULL color render targets in render target array is not allowed.");
                 return false;
@@ -222,7 +222,7 @@ struct RenderTargetDesc {
     /// equality check
     bool operator==(const RenderTargetDesc & rhs) const {
         if (colortargets.size() != rhs.colortargets.size()) return false;
-        for (uint32 i = 0; i < colortargets.size(); ++i) {
+        for (uint32_t i = 0; i < colortargets.size(); ++i) {
             if (colortargets[i] != rhs.colortargets[i]) return false;
         }
         return depthstencil == rhs.depthstencil;

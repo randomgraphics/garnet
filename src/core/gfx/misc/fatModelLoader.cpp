@@ -16,15 +16,7 @@
 #include <assimp/IOStream.hpp>
 #include <assimp/IOSystem.hpp>
 
-#ifdef HAS_FBX
-    #if GN_GNUC
-        #pragma GCC diagnostic ignored "-Wunused"
-    #elif GN_MSVC
-        #pragma warning(disable : 4996) // 'x' was declared depreciated
-    #endif
-    #define FBXSDK_SHARED
-    #include <fbxsdk.h>
-#endif
+#include "fbx-settings.h"
 
 using namespace GN;
 using namespace GN::gfx;
@@ -50,19 +42,19 @@ static GN::Logger * sLogger = GN::getLogger("GN.gfx.FatModel");
 // *****************************************************************************
 
 struct JointLocation {
-    uint32 skeletonIndex;
-    uint32 jointIndex;
+    uint32_t skeletonIndex;
+    uint32_t jointIndex;
 };
 
 //
 //
 // -----------------------------------------------------------------------------
-static void sBuildJointMapFromSkeletons(StringMap<char, JointLocation> & jointMap, const DynaArray<FatSkeleton, uint32> & skeletons) {
+static void sBuildJointMapFromSkeletons(StringMap<char, JointLocation> & jointMap, const DynaArray<FatSkeleton, uint32_t> & skeletons) {
     jointMap.clear();
-    for (uint32 s = 0; s < skeletons.size(); ++s) {
+    for (uint32_t s = 0; s < skeletons.size(); ++s) {
         const FatSkeleton & fatsk = skeletons[s];
-        for (uint32 j = 0; j < fatsk.joints.size(); ++j) {
-            const std::string &  jointName = fatsk.joints[j].name;
+        for (uint32_t j = 0; j < fatsk.joints.size(); ++j) {
+            const StrA &  jointName = fatsk.joints[j].name;
             JointLocation location  = {s, j};
             jointMap.insert(jointName, location);
             // printf( "Insert joint %s to joint map.\n", jointName );
@@ -73,7 +65,7 @@ static void sBuildJointMapFromSkeletons(StringMap<char, JointLocation> & jointMa
 //
 // Search through all skeletons for joint with specific name.
 // -----------------------------------------------------------------------------
-static bool sSearchForNamedJoint(OUT uint32 & skeleton, OUT uint32 & joint, IN const StringMap<char, JointLocation> & jointMap, IN const char * jointName) {
+static bool sSearchForNamedJoint(OUT uint32_t & skeleton, OUT uint32_t & joint, IN const StringMap<char, JointLocation> & jointMap, IN const char * jointName) {
     const JointLocation * location = jointMap.find(jointName);
     if (location) {
         skeleton = location->skeletonIndex;
@@ -87,10 +79,10 @@ static bool sSearchForNamedJoint(OUT uint32 & skeleton, OUT uint32 & joint, IN c
 //
 //
 // -----------------------------------------------------------------------------
-template<uint32 MAX_JOINTS_PER_VERTEX>
-static void sAddNewBone(INOUT uint32 * joints, INOUT float * weights, IN uint32 newJoint, IN float newWeight,
+template<uint32_t MAX_JOINTS_PER_VERTEX>
+static void sAddNewBone(INOUT uint32_t * joints, INOUT float * weights, IN uint32_t newJoint, IN float newWeight,
                         // Parameters bellow are only used in error logging.
-                        IN uint32 vertexIndex, IN uint32 skeletonIndex) {
+                        IN uint32_t vertexIndex, IN uint32_t skeletonIndex) {
     // Add new bone and weight to the skinning structure, and keep the
     // joints in the desending order of weights. We support limited number
     // of joints per vertex. When too many joints are affecting a single
@@ -99,7 +91,7 @@ static void sAddNewBone(INOUT uint32 * joints, INOUT float * weights, IN uint32 
     // The loop index "j" is deliberately set to an unsigned integer.
     // When the loop reaches the end, j's value should be -1, which, in term
     // of unsigned int, is actually 0xFFFFFFFF.
-    for (uint32 j = MAX_JOINTS_PER_VERTEX - 1; j < MAX_JOINTS_PER_VERTEX; --j) {
+    for (uint32_t j = MAX_JOINTS_PER_VERTEX - 1; j < MAX_JOINTS_PER_VERTEX; --j) {
         if (FatJoint::NO_JOINT == joints[j] || weights[j] < newWeight) {
             // The new/current weight is larger than the existing weight in slot #j,
             // or there's no joint in slot #j. We need to move the existing joint
@@ -164,12 +156,12 @@ namespace ase {
 // -----------------------------------------------------------------------------
 template<typename SRC_VERTEX_TYPE>
 static void sCopyVertexElement(void * dst, const MeshResourceDesc & src, const MeshVertexElement & e) {
-    Vector4f *    d = (Vector4f *) dst;
-    const uint8 * s = (const uint8 *) src.vertices[e.stream] + src.offsets[e.stream] + e.offset;
+    Vector4f *      d = (Vector4f *) dst;
+    const uint8_t * s = (const uint8_t *) src.vertices[e.stream] + src.offsets[e.stream] + e.offset;
     for (size_t i = 0; i < src.numvtx; ++i) {
-        if (IsSameType<SRC_VERTEX_TYPE, Vector3f>::value) {
+        if constexpr (std::is_same<SRC_VERTEX_TYPE, Vector3f>::value) {
             d->set(*(const Vector3f *) s, 0.0f);
-        } else if (IsSameType<SRC_VERTEX_TYPE, Vector2f>::value) {
+        } else if constexpr (std::is_same<SRC_VERTEX_TYPE, Vector2f>::value) {
             d->set(*(const Vector2f *) s, 0.0f, 0.0f);
         }
         s += src.strides[e.stream];
@@ -188,8 +180,8 @@ static bool sLoadFromASE(FatModel & fatmodel, File & file, const std::string & f
     fatmodel.name = filename;
 
     // copy materials
-    fatmodel.materials.resize((uint32) ase.materials.size());
-    for (uint32 i = 0; i < ase.materials.size(); ++i) {
+    fatmodel.materials.resize((uint32_t) ase.materials.size());
+    for (uint32_t i = 0; i < ase.materials.size(); ++i) {
         const AseMaterial & src = ase.materials[i];
 
         FatMaterial & dst = fatmodel.materials[i];
@@ -203,8 +195,8 @@ static bool sLoadFromASE(FatModel & fatmodel, File & file, const std::string & f
     }
 
     // copy meshes
-    fatmodel.meshes.resize((uint32) ase.meshes.size());
-    for (uint32 i = 0; i < ase.meshes.size(); ++i) {
+    fatmodel.meshes.resize((uint32_t) ase.meshes.size());
+    for (uint32_t i = 0; i < ase.meshes.size(); ++i) {
         const AseMesh & src = ase.meshes[i];
 
         FatMesh dst;
@@ -213,8 +205,8 @@ static bool sLoadFromASE(FatModel & fatmodel, File & file, const std::string & f
         const MeshVertexElement * position = NULL;
         const MeshVertexElement * normal   = NULL;
         const MeshVertexElement * texcoord = NULL;
-        uint32                    vtxfmt   = 0;
-        for (uint32 e = 0; e < src.vtxfmt.numElements; ++e) {
+        uint32_t                  vtxfmt   = 0;
+        for (uint32_t e = 0; e < src.vtxfmt.numElements; ++e) {
             const MeshVertexElement & mve = src.vtxfmt.elements[e];
             if (0 == str::compare("POSITION", mve.semantic)) {
                 position = &mve;
@@ -254,8 +246,8 @@ static bool sLoadFromASE(FatModel & fatmodel, File & file, const std::string & f
         if (src.idx32) {
             memcpy(dst.indices.data(), src.indices, src.numidx * 4);
         } else {
-            const uint16 * s = (const uint16 *) src.indices;
-            uint32 *       d = dst.indices.data();
+            const uint16_t * s = (const uint16_t *) src.indices;
+            uint32_t *       d = dst.indices.data();
             for (size_t i = 0; i < src.numidx; ++i, ++s, ++d) { *d = *s; }
         }
         dst.primitive = PrimitiveType::TRIANGLE_LIST;
@@ -425,8 +417,8 @@ struct SortPolygonByMaterial {
 };
 
 struct Skinning {
-    uint32 joints[4];  //< Joint Index
-    float  weights[4]; //< Binding weight;
+    uint32_t joints[4];  //< Joint Index
+    float    weights[4]; //< Binding weight;
 
     bool operator==(const Skinning & rhs) const {
         for (int i = 0; i < 4; ++i) {
@@ -438,14 +430,14 @@ struct Skinning {
 };
 
 struct MeshVertexCache {
-    Vector3f                   pos;
-    DynaArray<Vector3f, uint8> normals;
-    DynaArray<Vector2f, uint8> tc0;
-    DynaArray<Skinning, uint8> skinnings;
+    Vector3f                     pos;
+    DynaArray<Vector3f, uint8_t> normals;
+    DynaArray<Vector2f, uint8_t> tc0;
+    DynaArray<Skinning, uint8_t> skinnings;
 
     template<typename T>
-    uint8 AddAttribute(DynaArray<T, uint8> & array, const T & value) {
-        for (uint8 i = 0; i < array.size(); ++i) {
+    uint8_t AddAttribute(DynaArray<T, uint8_t> & array, const T & value) {
+        for (uint8_t i = 0; i < array.size(); ++i) {
             if (array[i] == value) return i;
         }
         array.append(value);
@@ -454,10 +446,10 @@ struct MeshVertexCache {
 };
 
 struct MeshVertexKey {
-    int   pos      = -1;           //< Index of the the vertex in FBX mesh control point array.
-    uint8 normal   = (uint8_t) -1; //< Index into MeshVertexCache.normal.
-    uint8 tc0      = (uint8_t) -1; //< Index into MeshVertexCache.texcoord0.
-    uint8 skinning = (uint8_t) -1; //< Index into MeshVertexCache.skinning;
+    int     pos      = -1;           //< Index of the the vertex in FBX mesh control point array.
+    uint8_t normal   = (uint8_t) -1; //< Index into MeshVertexCache.normal.
+    uint8_t tc0      = (uint8_t) -1; //< Index into MeshVertexCache.texcoord0.
+    uint8_t skinning = (uint8_t) -1; //< Index into MeshVertexCache.skinning;
 
     bool operator==(const MeshVertexKey & rhs) const { return pos == rhs.pos && normal == rhs.normal && tc0 == rhs.tc0 && skinning == rhs.skinning; }
 };
@@ -479,7 +471,7 @@ struct hash<fbx::MeshVertexKey> {
 
 namespace fbx {
 
-typedef std::unordered_map<MeshVertexKey, uint32> MeshVertexMap;
+typedef std::unordered_map<MeshVertexKey, uint32_t> MeshVertexMap;
 
 //
 // Convert FBX matrix (column-major) to Garnet matrix (row-major)
@@ -511,7 +503,7 @@ static FbxSkeleton * sFbxNode2LimbNode(FbxNode * fbxnode) {
 //
 //
 // -----------------------------------------------------------------------------
-static void sLoadFbxLimbNodes(FatSkeleton & fatsk, uint32 parent, uint32 previousSibling, FbxNode * fbxnode) {
+static void sLoadFbxLimbNodes(FatSkeleton & fatsk, uint32_t parent, uint32_t previousSibling, FbxNode * fbxnode) {
     if (NULL == fbxnode) return;
 
     FbxSkeleton * limb = sFbxNode2LimbNode(fbxnode);
@@ -546,13 +538,13 @@ static void sLoadFbxLimbNodes(FatSkeleton & fatsk, uint32 parent, uint32 previou
 
     // Get the global transform of the node. Note that it is the transformation
     // from joint space to model space.
-    sFbxMatrix2GarnetMatrix(newjoint.bindPose.model2joint, fbxnode->GetScene()->GetEvaluator()->GetNodeGlobalTransform(fbxnode));
+    sFbxMatrix2GarnetMatrix(newjoint.bindPose.model2joint, fbxnode->GetScene()->GetAnimationEvaluator()->GetNodeGlobalTransform(fbxnode));
 
     // Inverse that to get the bind pose transfomration we want.
     newjoint.bindPose.model2joint.inverse();
 
     // Now get joint local transformations.
-    FbxMatrix     localTransform = fbxnode->GetScene()->GetEvaluator()->GetNodeLocalTransform(fbxnode);
+    FbxMatrix     localTransform = fbxnode->GetScene()->GetAnimationEvaluator()->GetNodeLocalTransform(fbxnode);
     FbxVector4    t, sh, s;
     FbxQuaternion r;
     double        sign;
@@ -567,16 +559,16 @@ static void sLoadFbxLimbNodes(FatSkeleton & fatsk, uint32 parent, uint32 previou
     fatsk.joints.append(newjoint);
 
     // recursively load subtrees
-    uint32 newParent      = fatsk.joints.size() - 1;
-    uint32 newPrevSibling = FatJoint::NO_JOINT;
-    int    count          = fbxnode->GetChildCount();
+    uint32_t newParent      = fatsk.joints.size() - 1;
+    uint32_t newPrevSibling = FatJoint::NO_JOINT;
+    int      count          = fbxnode->GetChildCount();
     for (int i = 0; i < count; ++i) {
-        uint32 oldJointCount = fatsk.joints.size();
+        uint32_t oldJointCount = fatsk.joints.size();
 
         // load subtree
         sLoadFbxLimbNodes(fatsk, newParent, newPrevSibling, fbxnode->GetChild(i));
 
-        uint32 newJointCount = fatsk.joints.size();
+        uint32_t newJointCount = fatsk.joints.size();
 
         // If sLoadFbxLimbNodes() creates more joints, then the first new joint must
         // be the root joint of the subtree, which is the previous sibling of the next
@@ -610,7 +602,7 @@ static void sLoadFbxSkeletons(FatModel & fatmodel, FbxNode * fbxnode) {
     // Print joint hierarchy
     if( fbxnode && fbxnode == fbxnode->GetScene()->GetRootNode() )
     {
-        for( uint32 i = 0; i < fatmodel.skeletons.size(); ++i )
+        for( uint32_t i = 0; i < fatmodel.skeletons.size(); ++i )
         {
             std::string s;
             fatmodel.skeletons[i].printJointHierarchy( s );
@@ -629,12 +621,12 @@ static void sLoadFbxAnimations( FatModel & fatmodel, FbxScene * fbxscene )
 }*/
 
 struct SkinningWeight {
-    uint32 skeleton;
-    uint32 joint;
-    double weight;
+    uint32_t skeleton;
+    uint32_t joint;
+    double   weight;
 };
 
-typedef std::map<uint32, GN::DynaArray<SkinningWeight>> SkinningMap;
+typedef std::map<uint32_t, GN::DynaArray<SkinningWeight>> SkinningMap;
 
 //
 // Get vertex skinning information for the vertex specified by controlPointIndex.
@@ -673,8 +665,8 @@ static void sBuildSkinningMap(OUT SkinningMap & sm, IN FbxSdkWrapper & sdk, IN c
             const int *    cpindices = cl->GetControlPointIndices();
             const double * weights   = cl->GetControlPointWeights();
             for (int iCpi = 0; iCpi < cpicount; ++iCpi) {
-                uint32 cpi = (uint32) cpindices[iCpi];
-                sw.weight  = weights[iCpi];
+                uint32_t cpi = (uint32_t) cpindices[iCpi];
+                sw.weight    = weights[iCpi];
                 if (sw.weight > 0) { sm[cpi].append(sw); }
             }
             // Done with the current cluster. Loop to next one.
@@ -686,7 +678,7 @@ static void sBuildSkinningMap(OUT SkinningMap & sm, IN FbxSdkWrapper & sdk, IN c
 //
 // Get vertex skinning information for the vertex specified by controlPointIndex.
 // -----------------------------------------------------------------------------
-static void sLoadFbxVertexSkinning(INOUT uint32 & skeleton, // Index into FatModel::skeleton arrayreturns the skeleton that of the joint
+static void sLoadFbxVertexSkinning(INOUT uint32_t & skeleton, // Index into FatModel::skeleton arrayreturns the skeleton that of the joint
                                    OUT Skinning & sk, IN SkinningMap & sm, IN int controlPointIndex, IN bool firstVertex) {
     if (firstVertex) {
         // Initialize the global skeleton value for the first vertex.
@@ -748,9 +740,9 @@ static void sLoadFbxVertexSkinning(INOUT uint32 & skeleton, // Index into FatMod
 //
 //
 // -----------------------------------------------------------------------------
-static bool sGenerateFatVertices(FatMesh & fatmesh, FbxNode * fbxnode, const MeshVertexCache * vertices, const MeshVertexKey * keys, uint32 numkeys) {
+static bool sGenerateFatVertices(FatMesh & fatmesh, FbxNode * fbxnode, const MeshVertexCache * vertices, const MeshVertexKey * keys, uint32_t numkeys) {
     // Compute the node's global position.
-    FbxMatrix globalTransform = fbxnode->GetScene()->GetEvaluator()->GetNodeGlobalTransform(fbxnode);
+    FbxMatrix globalTransform = fbxnode->GetScene()->GetAnimationEvaluator()->GetNodeGlobalTransform(fbxnode);
 
     // Geometry offset is not inherited by the children.
     FbxMatrix  geometryOffset;
@@ -768,8 +760,8 @@ static bool sGenerateFatVertices(FatMesh & fatmesh, FbxNode * fbxnode, const Mes
     Matrix44f itm44 = Matrix44f::sInvtrans(m44);
 
     // Determine vertex layout
-    uint32 layout   = FatVertexBuffer::POS_NORMAL_TEX;
-    bool   skinning = fatmesh.skeleton != FatMesh::NO_SKELETON;
+    uint32_t layout   = FatVertexBuffer::POS_NORMAL_TEX;
+    bool     skinning = fatmesh.skeleton != FatMesh::NO_SKELETON;
     if (skinning) layout |= (1 << FatVertexBuffer::JOINT_ID) | (1 << FatVertexBuffer::JOINT_WEIGHT);
 
     // Allocate fat vertex buffer.
@@ -845,19 +837,19 @@ static bool sBuildFatMeshSubsetJointList(FatMesh & mesh) {
     // Ignore non skinned mesh without skeleton
     if (FatMesh::NO_SKELETON == mesh.skeleton) return true;
 
-    const uint32 * joints = (const uint32 *) mesh.vertices.getJoints();
+    const uint32_t * joints = (const uint32_t *) mesh.vertices.getJoints();
     if (NULL == joints) return true;
 
-    const uint32 * indices = mesh.indices.data();
+    const uint32_t * indices = mesh.indices.data();
 
     // Loop through all subsets.
-    for (uint32 i = 0; i < mesh.subsets.size(); ++i) {
+    for (uint32_t i = 0; i < mesh.subsets.size(); ++i) {
         FatMeshSubset & subset = mesh.subsets[i];
 
-        std::set<uint32> accumulatedJoints;
+        std::set<uint32_t> accumulatedJoints;
 
         // Determine start and end of vertex loop (indexed or non-indexed mesh)
-        uint32 start, end;
+        uint32_t start, end;
         if (indices) {
             start = subset.startidx;
             end   = start + subset.numidx;
@@ -868,9 +860,9 @@ static bool sBuildFatMeshSubsetJointList(FatMesh & mesh) {
 
         // Loop through all vertices in the subset. Gather joint IDs
         // that are used in the subset.
-        for (uint32 i = start; i < end; ++i) {
+        for (uint32_t i = start; i < end; ++i) {
             // Get the vertex index (indexed or non-indexed mesh)
-            uint32 vertexIndex;
+            uint32_t vertexIndex;
             if (indices) {
                 vertexIndex = indices[i] + subset.basevtx;
             } else {
@@ -878,10 +870,10 @@ static bool sBuildFatMeshSubsetJointList(FatMesh & mesh) {
             }
 
             // For each joint in the vertex.
-            uint32 offset = vertexIndex * 4;
-            for (uint32 i = 0; i < 4; ++i) {
+            uint32_t offset = vertexIndex * 4;
+            for (uint32_t i = 0; i < 4; ++i) {
                 // If the joint is not NO_JOINT, add it to accumulated joint set.
-                uint32 joint = joints[offset + i];
+                uint32_t joint = joints[offset + i];
                 if (FatJoint::NO_JOINT != joint) { accumulatedJoints.insert(joint); }
             }
         }
@@ -891,14 +883,14 @@ static bool sBuildFatMeshSubsetJointList(FatMesh & mesh) {
         // joint array.
 
         // Allocate array memory first.
-        if (!subset.joints.resize((uint32) accumulatedJoints.size())) {
+        if (!subset.joints.resize((uint32_t) accumulatedJoints.size())) {
             GN_ERROR(sLogger)("Out of memory");
             return false;
         }
 
         // Copy joints from set to array. Not that joints in set are already sorted.
-        uint32 j = 0;
-        for (std::set<uint32>::const_iterator iter = accumulatedJoints.begin(); iter != accumulatedJoints.end(); ++iter, ++j) { subset.joints[j] = *iter; }
+        uint32_t j = 0;
+        for (std::set<uint32_t>::const_iterator iter = accumulatedJoints.begin(); iter != accumulatedJoints.end(); ++iter, ++j) { subset.joints[j] = *iter; }
     }
 
     return true;
@@ -990,15 +982,15 @@ static void sLoadFbxMesh(FatModel & fatmodel, const std::string & filename, FbxS
     FatMesh fatmesh;
 
     // Allocate index buffer
-    if (!fatmesh.indices.resize((uint32) numidx)) {
+    if (!fatmesh.indices.resize((uint32_t) numidx)) {
         GN_ERROR(sLogger)("Fail to load FBX mesh: out of memory.");
         return;
     }
 
     // Declare vertex cache array
-    DynaArray<MeshVertexCache, uint32> vcache;
-    int                                numpos = fbxmesh->GetControlPointsCount();
-    if (!vcache.resize((uint32) numpos)) {
+    DynaArray<MeshVertexCache, uint32_t> vcache;
+    int                                  numpos = fbxmesh->GetControlPointsCount();
+    if (!vcache.resize((uint32_t) numpos)) {
         GN_ERROR(sLogger)("Fail to load FBX mesh: out of memory.");
         return;
     }
@@ -1011,8 +1003,8 @@ static void sLoadFbxMesh(FatModel & fatmodel, const std::string & filename, FbxS
     MeshVertexMap vtxmap((size_t) numidx * 2);
 
     // Allocate another buffer to hold the final sequance of vertex keys
-    DynaArray<MeshVertexKey, uint32> vertexKeys;
-    if (!vertexKeys.reserve((uint32) numidx)) {
+    DynaArray<MeshVertexKey, uint32_t> vertexKeys;
+    if (!vertexKeys.reserve((uint32_t) numidx)) {
         GN_ERROR(sLogger)("Fail to load FBX mesh: out of memory.");
         return;
     }
@@ -1029,7 +1021,7 @@ static void sLoadFbxMesh(FatModel & fatmodel, const std::string & filename, FbxS
     int             normalIndex = 0;
     int             lastMatID   = -1;
     FatMeshSubset * lastSubset  = NULL;
-    for (uint32 sortedPolygonIndex = 0; sortedPolygonIndex < sortedPolygons.size(); ++sortedPolygonIndex) {
+    for (uint32_t sortedPolygonIndex = 0; sortedPolygonIndex < sortedPolygons.size(); ++sortedPolygonIndex) {
         int polygonIndex = sortedPolygons[sortedPolygonIndex];
 
         int matid = nummat > 1 ? fbxMaterials->GetIndexArray().GetAt(polygonIndex) : 0;
@@ -1046,7 +1038,7 @@ static void sLoadFbxMesh(FatModel & fatmodel, const std::string & filename, FbxS
                 return;
             }
             FatMeshSubset & subset = fatmesh.subsets.back();
-            subset.material        = (uint32) fatmatIndices[matid];
+            subset.material        = (uint32_t) fatmatIndices[matid];
             subset.startidx        = sortedPolygonIndex * 3;
             subset.numidx          = 0;
             subset.basevtx         = 0;
@@ -1106,7 +1098,7 @@ static void sLoadFbxMesh(FatModel & fatmodel, const std::string & filename, FbxS
             // If the key exists already, the pair will point to it.
             // If the key does not exisit, the pair will point to the newly inserted one.
             // Either way, pair->value should give us the correct index of the vertex.
-            auto inserted    = vtxmap.insert({key, (uint32) vtxmap.size()});
+            auto inserted    = vtxmap.insert({key, (uint32_t) vtxmap.size()});
             auto isNewVertex = inserted.second;
             auto vertexIndex = inserted.first->second;
 
@@ -1126,7 +1118,7 @@ static void sLoadFbxMesh(FatModel & fatmodel, const std::string & filename, FbxS
     // We are almost there.
 
     // Fill up the rest of informations for each subset
-    for (size_t i = 0; i < fatmesh.subsets.size(); ++i) { fatmesh.subsets[i].numvtx = (uint32) vertexKeys.size(); }
+    for (size_t i = 0; i < fatmesh.subsets.size(); ++i) { fatmesh.subsets[i].numvtx = (uint32_t) vertexKeys.size(); }
 
     // Now copy vertex data to fatmesh, and translate position and normal to global space.
     if (!sGenerateFatVertices(fatmesh, fbxnode, vcache.data(), vertexKeys.data(), vertexKeys.size())) return;
@@ -1497,15 +1489,15 @@ using namespace Assimp;
 //
 //
 // -----------------------------------------------------------------------------
-static void sLoadAiJointHierarchy(FatSkeleton & fatsk, uint32 parentJointIndex, const aiNode * ainode) {
+static void sLoadAiJointHierarchy(FatSkeleton & fatsk, uint32_t parentJointIndex, const aiNode * ainode) {
     if (NULL == ainode) return;
 
     // Store node name.
     const std::string & name = ainode->mName.data;
 
     // Search through joints for a joint with the same name as node name.
-    uint32 currentJointIndex = FatJoint::NO_JOINT;
-    for (uint32 i = 0; i < fatsk.joints.size(); ++i) {
+    uint32_t currentJointIndex = FatJoint::NO_JOINT;
+    for (uint32_t i = 0; i < fatsk.joints.size(); ++i) {
         if (fatsk.joints[i].name == name) {
             currentJointIndex = i;
             break;
@@ -1533,12 +1525,12 @@ static void sLoadAiJointHierarchy(FatSkeleton & fatsk, uint32 parentJointIndex, 
         }
 
         // Search through the subtree for more joints.
-        for (uint32 i = 0; i < ainode->mNumChildren; ++i) { sLoadAiJointHierarchy(fatsk, currentJointIndex, ainode->mChildren[i]); }
+        for (uint32_t i = 0; i < ainode->mNumChildren; ++i) { sLoadAiJointHierarchy(fatsk, currentJointIndex, ainode->mChildren[i]); }
     } else if (FatJoint::NO_JOINT == parentJointIndex) {
         // The current joint does not match any joints. Since the parent joint index,
         // is NO_JOINT too, it means that we havn't searched deep enough to even find
         // the root node of the skeleton. So keep searching...
-        for (uint32 i = 0; i < ainode->mNumChildren; ++i) { sLoadAiJointHierarchy(fatsk, currentJointIndex, ainode->mChildren[i]); }
+        for (uint32_t i = 0; i < ainode->mNumChildren; ++i) { sLoadAiJointHierarchy(fatsk, currentJointIndex, ainode->mChildren[i]); }
     } else {
         // If there's no joint in the skeleton that matches the current node.
         // It means the parent joint must be a leaf joint. So there's no need
@@ -1551,12 +1543,12 @@ static void sLoadAiJointHierarchy(FatSkeleton & fatsk, uint32 parentJointIndex, 
 // Find the root joint in the hierarchy. Return FatJoint::NO_JOINT,
 // if there's no root or more than one root found.
 // -----------------------------------------------------------------------------
-static uint32 sFindRootJoint(const FatSkeleton & fatsk) {
+static uint32_t sFindRootJoint(const FatSkeleton & fatsk) {
     // In an valid joint hierarchy, there should be one joint
     // and one joint only that has no parent.
-    uint32 jointArraySize = fatsk.joints.size();
-    uint32 root           = FatJoint::NO_JOINT;
-    for (uint32 i = 0; i < jointArraySize; ++i) {
+    uint32_t jointArraySize = fatsk.joints.size();
+    uint32_t root           = FatJoint::NO_JOINT;
+    for (uint32_t i = 0; i < jointArraySize; ++i) {
         const FatJoint & j = fatsk.joints[i];
 
         // make sure parent/child/sibling are in vaild range
@@ -1589,12 +1581,12 @@ static uint32 sFindRootJoint(const FatSkeleton & fatsk) {
     // It should equal size of the joint array.
     struct Local
     {
-        static void sCountJointRecursivly( const FatJoint * joints, uint32 arraySize, uint32 & counter, uint32 parent )
+        static void sCountJointRecursivly( const FatJoint * joints, uint32_t arraySize, uint32_t & counter, uint32_t parent )
         {
             GN_UNIMPL();
         }
     };
-    uint32 counter = 0;
+    uint32_t counter = 0;
     Local::sCountJointRecursivly( fatsk.joints.data(), fatsk.joints.size(), counter, fatsk.root );
     if( counter != fatsk.joints.size() )
     {
@@ -1625,7 +1617,7 @@ sSortJointHierarchy( FatMesh & mesh )// FatSkeleton & fatsk )
         // Now update indices in all joints:
         //   - if the index points to joint[root], reset it to joint[0]; or,
         //   - if the index points to joint[0], reset it to joint[root].
-        for( uint32 i = 0; i < fatsk.joints.size(); ++i )
+        for( uint32_t i = 0; i < fatsk.joints.size(); ++i )
         {
             FatJoint & j = fatsk.joints[i];
 
@@ -1665,7 +1657,7 @@ void sLoadAiMeshSkeleton(FatModel & fatmodel, FatMesh & fatmesh, const aiScene &
     aiMatrix4x4 invMeshTransform = meshTransform;
     invMeshTransform.Inverse();
 
-    for (uint32 i = 0; i < aimesh.mNumBones; ++i) {
+    for (uint32_t i = 0; i < aimesh.mNumBones; ++i) {
         const aiBone & aibone = *aimesh.mBones[i];
 
         FatJoint & fatjoint = fatsk.joints[i];
@@ -1693,7 +1685,7 @@ void sLoadAiMeshSkeleton(FatModel & fatmodel, FatMesh & fatmesh, const aiScene &
     if (FatJoint::NO_JOINT == fatsk.root) return;
 
     // Build local transformations of each node.
-    for (uint32 i = 0; i < aimesh.mNumBones; ++i) {
+    for (uint32_t i = 0; i < aimesh.mNumBones; ++i) {
         FatJoint & fatjoint = fatsk.joints[i];
 
         Matrix44f local2parent;
@@ -1734,13 +1726,13 @@ void sLoadAiMeshSkeleton(FatModel & fatmodel, FatMesh & fatmesh, const aiScene &
 //
 //
 // -----------------------------------------------------------------------------
-static uint32 sDetermineFatVertexLayout(const aiMesh * aimesh) {
-    uint32 layout = 1 << FatVertexBuffer::POSITION;
+static uint32_t sDetermineFatVertexLayout(const aiMesh * aimesh) {
+    uint32_t layout = 1 << FatVertexBuffer::POSITION;
 
     if (aimesh->mNormals) layout |= 1 << FatVertexBuffer::NORMAL;
 
-    uint32 maxtc = math::getmin<uint32>(GN_ARRAY_COUNT(aimesh->mTextureCoords), FatVertexBuffer::MAX_TEXCOORDS);
-    for (uint32 t = 0; t < maxtc; ++t) {
+    uint32_t maxtc = math::getmin<uint32_t>(GN_ARRAY_COUNT(aimesh->mTextureCoords), FatVertexBuffer::MAX_TEXCOORDS);
+    for (uint32_t t = 0; t < maxtc; ++t) {
         if (aimesh->mTextureCoords[t]) layout |= 1 << (FatVertexBuffer::TEXCOORD0 + t);
     }
 
@@ -1752,20 +1744,20 @@ static uint32 sDetermineFatVertexLayout(const aiMesh * aimesh) {
 //
 //
 // -----------------------------------------------------------------------------
-static void sLoadAiVertexSkinning(uint32 joints[], float weights[], uint32 vertexIndex, uint32 skeletonIndex, const aiMesh & aimesh) {
-    const uint32 MAX_JOINTS_PER_VERTEX = 4;
+static void sLoadAiVertexSkinning(uint32_t joints[], float weights[], uint32_t vertexIndex, uint32_t skeletonIndex, const aiMesh & aimesh) {
+    const uint32_t MAX_JOINTS_PER_VERTEX = 4;
 
     // setup default skinning: no bone, zero weight.
-    for (uint32 i = 0; i < MAX_JOINTS_PER_VERTEX; ++i) {
+    for (uint32_t i = 0; i < MAX_JOINTS_PER_VERTEX; ++i) {
         joints[i]  = FatJoint::NO_JOINT;
         weights[i] = 0.0f;
     }
 
     // Search through all bones for the bone that affects the vertex specified by "vertexIndex".
-    for (uint32 b = 0; b < aimesh.mNumBones; ++b) {
+    for (uint32_t b = 0; b < aimesh.mNumBones; ++b) {
         const aiBone & aibone = *aimesh.mBones[b];
 
-        for (uint32 w = 0; w <= aibone.mNumWeights; ++w) {
+        for (uint32_t w = 0; w <= aibone.mNumWeights; ++w) {
             const aiVertexWeight & aivw = aibone.mWeights[w];
 
             if (aivw.mVertexId != vertexIndex) continue;
@@ -1788,7 +1780,7 @@ static bool sLoadAiVertices(FatMesh & fatmesh,
                             const aiMesh * aimesh, const aiMatrix4x4 & transform) {
     FatVertexBuffer & fatvb = fatmesh.vertices;
 
-    uint32 fatlayout = sDetermineFatVertexLayout(aimesh);
+    uint32_t fatlayout = sDetermineFatVertexLayout(aimesh);
 
     if (!fatvb.resize(fatlayout, aimesh->mNumVertices)) return false;
 
@@ -1802,7 +1794,7 @@ static bool sLoadAiVertices(FatMesh & fatmesh,
     // TODO: get texcood format from aimesh.
     if (fattc0) fatvb.setElementFormat(FatVertexBuffer::TEXCOORD0, PixelFormat::FLOAT2());
 
-    Vector4<uint32> * fatjoint = (Vector4<uint32> *) fatvb.getElementData(FatVertexBuffer::JOINT_ID);
+    Vector4<uint32_t> * fatjoint = (Vector4<uint32_t> *) fatvb.getElementData(FatVertexBuffer::JOINT_ID);
     if (fatjoint) fatvb.setElementFormat(FatVertexBuffer::JOINT_ID, PixelFormat::UINT4());
 
     Vector4f * fatweight = (Vector4f *) fatvb.getElementData(FatVertexBuffer::JOINT_WEIGHT);
@@ -1816,7 +1808,7 @@ static bool sLoadAiVertices(FatMesh & fatmesh,
     bbmin.x = bbmin.y = bbmin.z = FLT_MAX;
     bbmax.x = bbmax.y = bbmax.z = FLT_MIN;
 
-    for (uint32 i = 0; i < aimesh->mNumVertices; ++i) {
+    for (uint32_t i = 0; i < aimesh->mNumVertices; ++i) {
         if (fatpos) {
             aiVector3D aipos = aimesh->mVertices[i];
             aiTransformVecByMatrix4(&aipos, &transform);
@@ -1870,8 +1862,8 @@ static bool sLoadAiVertices(FatMesh & fatmesh,
 //
 // -----------------------------------------------------------------------------
 static bool sLoadAiIndices(FatMesh & fatmesh, const aiMesh * aimesh) {
-    uint32 numidx = 0;
-    uint32 idxppt = 0; // indices per primitive.
+    uint32_t numidx = 0;
+    uint32_t idxppt = 0; // indices per primitive.
     switch (aimesh->mPrimitiveTypes) {
     case aiPrimitiveType_POINT:
         numidx            = aimesh->mNumFaces;
@@ -1902,10 +1894,10 @@ static bool sLoadAiIndices(FatMesh & fatmesh, const aiMesh * aimesh) {
         return false;
     }
 
-    for (uint32 f = 0; f < aimesh->mNumFaces; ++f) {
+    for (uint32_t f = 0; f < aimesh->mNumFaces; ++f) {
         const aiFace & aif = aimesh->mFaces[f];
 
-        for (uint32 i = 0; i < idxppt; ++i) { fatmesh.indices[f * idxppt + i] = aif.mIndices[i]; }
+        for (uint32_t i = 0; i < idxppt; ++i) { fatmesh.indices[f * idxppt + i] = aif.mIndices[i]; }
     }
 
     return true;
@@ -1920,7 +1912,7 @@ static void sLoadAiNodeRecursivly(FatModel & fatmodel, const aiScene * aiscene, 
     aiMatrix4x4 myTransform = parentTransform;
     aiMultiplyMatrix4(&myTransform, &ainode->mTransformation);
 
-    for (uint32 i = 0; i < ainode->mNumMeshes; ++i) {
+    for (uint32_t i = 0; i < ainode->mNumMeshes; ++i) {
         const aiMesh * aimesh = aiscene->mMeshes[ainode->mMeshes[i]];
 
         // create a new fat mesh instance
@@ -1945,14 +1937,14 @@ static void sLoadAiNodeRecursivly(FatModel & fatmodel, const aiScene * aiscene, 
         // Assume that the subset is using all joints in the mesh.
         if (FatMesh::NO_SKELETON != fatmesh.skeleton) {
             subset.joints.resize(fatmodel.skeletons[fatmesh.skeleton].joints.size());
-            for (uint32 i = 0; i < subset.joints.size(); ++i) { subset.joints[i] = i; }
+            for (uint32_t i = 0; i < subset.joints.size(); ++i) { subset.joints[i] = i; }
         }
 
         // Add the mesh to fat model.
         fatmodel.meshes.append(std::move(fatmesh));
     }
 
-    for (uint32 i = 0; i < ainode->mNumChildren; ++i) { sLoadAiNodeRecursivly(fatmodel, aiscene, ainode->mChildren[i], myTransform); }
+    for (uint32_t i = 0; i < ainode->mNumChildren; ++i) { sLoadAiNodeRecursivly(fatmodel, aiscene, ainode->mChildren[i], myTransform); }
 }
 
 //
@@ -1964,7 +1956,7 @@ static bool sLoadAiJointAnimation(FatModel & fatmodel, FatAnimation & fatanim, c
         GN_ERROR(sLogger)("Out of memory.");
         return false;
     }
-    for (uint32 i = 0; i < fatanim.skeletonAnimations.size(); ++i) {
+    for (uint32_t i = 0; i < fatanim.skeletonAnimations.size(); ++i) {
         if (!fatanim.skeletonAnimations[i].resize(fatmodel.skeletons[i].joints.size())) {
             GN_ERROR(sLogger)("Out of memory.");
             return false;
@@ -1988,11 +1980,11 @@ static bool sLoadAiJointAnimation(FatModel & fatmodel, FatAnimation & fatanim, c
 
     // Go through each animation channels. Each channel controls
     // one node in the scene.
-    for (uint32 c = 0; c < aianim.mNumChannels; ++c) {
+    for (uint32_t c = 0; c < aianim.mNumChannels; ++c) {
         const aiNodeAnim & aina = *aianim.mChannels[c];
 
         // See if there's a joint affected by the current node animation.
-        uint32 skeletonIndex, jointIndex;
+        uint32_t skeletonIndex, jointIndex;
         if (!sSearchForNamedJoint(skeletonIndex, jointIndex, jointMap, aina.mNodeName.data)) {
             // The animation channel does not link to a joint node.
             // Ignore it, since we care about skeleton animation only.
@@ -2014,7 +2006,7 @@ static bool sLoadAiJointAnimation(FatModel & fatmodel, FatAnimation & fatanim, c
         }
 
         // Load position key frames
-        for (uint32 k = 0; k < aina.mNumPositionKeys; ++k) {
+        for (uint32_t k = 0; k < aina.mNumPositionKeys; ++k) {
             const aiVectorKey &     aikey  = aina.mPositionKeys[k];
             FatKeyFrame<Vector3f> & fatkey = fatJointAnim.positions[k];
             fatkey.time                    = (float) (aikey.mTime * secondsPerTick);
@@ -2022,7 +2014,7 @@ static bool sLoadAiJointAnimation(FatModel & fatmodel, FatAnimation & fatanim, c
         }
 
         // Load rotation key frames
-        for (uint32 k = 0; k < aina.mNumRotationKeys; ++k) {
+        for (uint32_t k = 0; k < aina.mNumRotationKeys; ++k) {
             const aiQuatKey &          aikey  = aina.mRotationKeys[k];
             FatKeyFrame<Quaternionf> & fatkey = fatJointAnim.rotations[k];
             fatkey.time                       = (float) (aikey.mTime * secondsPerTick);
@@ -2033,7 +2025,7 @@ static bool sLoadAiJointAnimation(FatModel & fatmodel, FatAnimation & fatanim, c
         }
 
         // Load scaling key frames
-        for (uint32 k = 0; k < aina.mNumScalingKeys; ++k) {
+        for (uint32_t k = 0; k < aina.mNumScalingKeys; ++k) {
             const aiVectorKey &     aikey  = aina.mScalingKeys[k];
             FatKeyFrame<Vector3f> & fatkey = fatJointAnim.scalings[k];
             fatkey.time                    = (float) (aikey.mTime * secondsPerTick);
@@ -2060,7 +2052,7 @@ static void sLoadAiAnimations(FatModel & fatmodel, const aiScene & aiscene) {
 
     // Go through the animation list. Load them one by one. And for now,
     // we load node/joint animations only. Mesh animations are not supported yet.
-    for (uint32 a = 0; a < aiscene.mNumAnimations; ++a) {
+    for (uint32_t a = 0; a < aiscene.mNumAnimations; ++a) {
         // Reference the Assimp animation object
         const aiAnimation & aianim = *aiscene.mAnimations[a];
 
@@ -2092,7 +2084,7 @@ static bool sLoadFromAssimp(FatModel & fatmodel, const std::string & filename) {
     // Load materials
     std::string dirname = fs::dirName(filename);
     fatmodel.materials.resize(scene->mNumMaterials);
-    for (uint32 i = 0; i < fatmodel.materials.size(); ++i) {
+    for (uint32_t i = 0; i < fatmodel.materials.size(); ++i) {
         const aiMaterial * aimat = scene->mMaterials[i];
 
         FatMaterial & fatmat = fatmodel.materials[i];
@@ -2148,7 +2140,7 @@ static bool sPrintAiNodeHierarchy(std::string & hierarchy, const std::string & f
 
             hierarchy += "\n";
 
-            for (uint32 i = 0; i < node->mNumChildren; ++i) { sPrintRecursivly(hierarchy, node->mChildren[i], depth + 1); }
+            for (uint32_t i = 0; i < node->mNumChildren; ++i) { sPrintRecursivly(hierarchy, node->mChildren[i], depth + 1); }
         }
     };
 
@@ -2275,7 +2267,7 @@ bool GN::gfx::FatModel::loadFromFile(const std::string & filename) {
     if (noerr) {
         size_t totalVerts = 0;
         size_t totalFaces = 0;
-        for (uint32 i = 0; i < this->meshes.size(); ++i) {
+        for (uint32_t i = 0; i < this->meshes.size(); ++i) {
             const auto & m = this->meshes[i];
             totalVerts += m.vertices.getVertexCount();
             totalFaces += m.indices.size() / 3;

@@ -16,7 +16,7 @@ static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.OGL.GpuProgramGLSL");
 //
 //
 // -----------------------------------------------------------------------------
-static inline uint32 sGetUniformSize(GLenum type) {
+static inline uint32_t sGetUniformSize(GLenum type) {
     switch (type) {
     case GL_FLOAT:
         return sizeof(float);
@@ -69,7 +69,7 @@ static bool sIsTextureUniform(GLenum type) { return GL_SAMPLER_1D <= type && typ
 //
 //
 // -----------------------------------------------------------------------------
-static bool sGetOglVertexSemantic(OGLVertexSemantic & semanticName, uint8 & semanticIndex, const char * attributeName, GLuint attributeLocation) {
+static bool sGetOglVertexSemantic(OGLVertexSemantic & semanticName, uint8_t & semanticIndex, const char * attributeName, GLuint attributeLocation) {
     semanticIndex = 0;
 
     if (0 == str::compare("gl_Vertex", attributeName)) {
@@ -109,7 +109,7 @@ static bool sGetOglVertexSemantic(OGLVertexSemantic & semanticName, uint8 & sema
     } else if ((GLuint) -1 != attributeLocation) {
         // this is general vertex attribute
         semanticName  = VERTEX_SEMANTIC_ATTRIBUTE;
-        semanticIndex = (uint8) attributeLocation;
+        semanticIndex = (uint8_t) attributeLocation;
     } else {
         // never reach here
         GN_UNEXPECTED();
@@ -190,7 +190,7 @@ void GN::gfx::OGLGpuProgram::quit() {
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::OGLGpuProgram::getBindingDesc(OGLVertexBindingDesc & result, uint32 attributeIndex) const {
+bool GN::gfx::OGLGpuProgram::getBindingDesc(OGLVertexBindingDesc & result, uint32_t attributeIndex) const {
     if (attributeIndex >= mAttributes.size()) {
         GN_ERROR(sLogger)("Invalid attribute index: %u. Max value is %u", attributeIndex, mAttributes.size() - 1);
         result.index    = 255;
@@ -210,14 +210,14 @@ bool GN::gfx::OGLGpuProgram::getBindingDesc(OGLVertexBindingDesc & result, uint3
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLGpuProgram::applyUniforms(const Uniform * const * uniforms, uint32 count) const {
+void GN::gfx::OGLGpuProgram::applyUniforms(const Uniform * const * uniforms, uint32_t count) const {
     GN_GUARD_SLOW;
 
     if (count != mUniforms.size()) { GN_ERROR(sLogger)("Current GPU program requires %d uniforms. But %d are provided.", mUniforms.size(), count); }
 
     if (count > mUniforms.size()) count = mUniforms.size();
 
-    for (uint32 i = 0; i < count; ++i) {
+    for (uint32_t i = 0; i < count; ++i) {
         // get uniform pointer
         const SysMemUniform * uniform = (const SysMemUniform *) uniforms[i];
         if (NULL == uniform) {
@@ -311,17 +311,17 @@ void GN::gfx::OGLGpuProgram::applyUniforms(const Uniform * const * uniforms, uin
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLGpuProgram::applyTextures(const TextureBinding * textures, uint32 count) const {
+void GN::gfx::OGLGpuProgram::applyTextures(const TextureBinding * textures, uint32_t count) const {
     GN_GUARD_SLOW;
 
     OGLGpu & r = getGpu();
 
     // determine effective texture count
-    if (count > mTextures.size()) { count = (uint32) mTextures.size(); }
+    if (count > mTextures.size()) { count = (uint32_t) mTextures.size(); }
     GN_ASSERT(count <= r.caps().maxTextures);
 
     // apply textures to OpenGL, one by one
-    uint32 i;
+    uint32_t i;
     for (i = 0; i < count; ++i) {
         const TextureBinding & b = textures[i];
 
@@ -397,19 +397,19 @@ bool GN::gfx::OGLGpuProgram::enumParameters() {
     }
 
     // initialize name and size arrays
-    for (uint32 i = 0; i < mUniforms.size(); ++i) {
+    for (uint32_t i = 0; i < mUniforms.size(); ++i) {
         GLSLUniformOrTextureDesc & u = mUniforms[i];
         u.uniformDesc.name           = u.name.data();
         u.uniformDesc.size           = u.size;
     }
-    for (uint32 i = 0; i < mTextures.size(); ++i) {
+    for (uint32_t i = 0; i < mTextures.size(); ++i) {
         GLSLUniformOrTextureDesc & t = mTextures[i];
         t.textureDesc.name           = t.name.data();
     }
 
     // update parameter descriptor
-    if (mUniforms.size() > 0) { mParamDesc.setUniformArray(&mUniforms[0].uniformDesc, (uint32) mUniforms.size(), sizeof(GLSLUniformOrTextureDesc)); }
-    if (mTextures.size() > 0) { mParamDesc.setTextureArray(&mTextures[0].textureDesc, (uint32) mTextures.size(), sizeof(GLSLUniformOrTextureDesc)); }
+    if (mUniforms.size() > 0) { mParamDesc.setUniformArray(&mUniforms[0].uniformDesc, (uint32_t) mUniforms.size(), sizeof(GLSLUniformOrTextureDesc)); }
+    if (mTextures.size() > 0) { mParamDesc.setTextureArray(&mTextures[0].textureDesc, (uint32_t) mTextures.size(), sizeof(GLSLUniformOrTextureDesc)); }
 
     // check for texture capability
     OGLGpu & r = getGpu();
@@ -465,13 +465,13 @@ bool GN::gfx::OGLGpuProgram::enumAttributes() {
     }
 
     // initialize name and format arrays
-    for (uint32 i = 0; i < mAttributes.size(); ++i) {
+    for (uint32_t i = 0; i < mAttributes.size(); ++i) {
         GLSLAttributeDesc & a = mAttributes[i];
         a.desc.name           = a.name.data();
     }
 
     // update parameter descriptor
-    if (mAttributes.size() > 0) { mParamDesc.setAttributeArray(&mAttributes[0].desc, (uint32) mAttributes.size(), sizeof(GLSLAttributeDesc)); }
+    if (mAttributes.size() > 0) { mParamDesc.setAttributeArray(&mAttributes[0].desc, (uint32_t) mAttributes.size(), sizeof(GLSLAttributeDesc)); }
 
     return true;
 }

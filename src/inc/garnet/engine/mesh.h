@@ -69,7 +69,7 @@ class GN_API SkinnedMesh : public Entity {
 
 public:
     /// Get joint count threshold per draw.
-    static uint32 sGetMaxJointsPerDraw();
+    static uint32_t sGetMaxJointsPerDraw();
 
     /// constructor
     SkinnedMesh();
@@ -114,7 +114,7 @@ public:
     bool loadFromFile(const std::string & filename);
 
     /// Draw skeletons as line segments.
-    void drawSkeletons(uint32 colorInRGBA, const Matrix44f & transform);
+    void drawSkeletons(uint32_t colorInRGBA, const Matrix44f & transform);
 
 private:
     class SkinnedVisualComponent;
@@ -123,16 +123,16 @@ private:
 
     struct SkinnedSubset {
         /// Index of the skeleton into mSkeletons.
-        uint32 skeleton;
+        uint32_t skeleton;
 
         /// Joints used by the subset.
-        DynaArray<uint32, uint32> joints;
+        DynaArray<uint32_t, uint32_t> joints;
     };
 
     struct JointHierarchy {
-        uint32 parent;
-        uint32 child;
-        uint32 sibling;
+        uint32_t parent;
+        uint32_t child;
+        uint32_t sibling;
     };
 
     struct JointBindPose {
@@ -146,7 +146,7 @@ private:
     };
 
     struct Skeleton {
-        uint32 jointCount;
+        uint32_t jointCount;
 
         /// Joint hierarchy. The first joint is always the root.
         JointHierarchy * hierarchy;

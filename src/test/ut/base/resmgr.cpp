@@ -37,7 +37,7 @@ namespace GN {
 ///   - 一个常用的NameChecker就是检查该名字是否对应一个有效的磁盘文件. 这样, 当用户试图访问一个
 ///     不在资源管理器内, 但存在于磁盘上的资源时, 该资源就会被自动加入资源管理器.
 ///
-template<typename RES, typename HANDLE = uint32>
+template<typename RES, typename HANDLE = uint32_t>
 class ResourceManagerTempl {
 public:
     typedef HANDLE ResourceHandle; ///< resource Handle. 0 means invalid handle
@@ -570,7 +570,7 @@ GN::Logger * ResourceManagerTempl<RES, HANDLE>::sLogger = getLogger("GN.base.Res
 
 typedef GN::ResourceManagerTempl<int> ResMgr;
 
-bool defCreator(int & res, const std::string & name, void *) { return 0 != GN::str::toInetger<int>(res, name.data()); }
+bool defCreator(int & res, const GN::StrA & name, void *) { return 0 != GN::str::toInetger<int>(res, name.data()); }
 
 bool nullCreator(int & res, const std::string &, void *) {
     res = -1;

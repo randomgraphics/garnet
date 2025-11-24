@@ -16,8 +16,8 @@ class HandleManager : public NoCopy {
     /// Handle item used internally by manager
     ///
     struct Item {
-        uint8 buf[sizeof(T)];
-        bool  occupied;
+        uint8_t buf[sizeof(T)];
+        bool    occupied;
 
         T & t() const {
             GN_ASSERT(occupied);

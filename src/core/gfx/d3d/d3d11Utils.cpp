@@ -286,15 +286,15 @@ bool GN::d3d11::SimpleMesh::init(ID3D11DeviceContext & cxt) {
     cxt.GetDevice(&mDevice);
 
     // create a mini-shader (for its signature)
-    static const char * vscode = "struct VSInput \n"
-                                 "{ \n"
-                                 "   float4 p : POSITION0; \n"
-                                 "   float3 n : NORMAL0; \n"
-                                 "   float2 t : TEXCOORD0; \n"
-                                 "   float4 c : COLOR0; \n"
-                                 "   float4 u : USER0; \n"
-                                 "};\n"
-                                 "float4 main( VSInput i ) : SV_Position0 { return 0; }";
+    static const char *            vscode = "struct VSInput \n"
+                                            "{ \n"
+                                            "   float4 p : POSITION0; \n"
+                                            "   float3 n : NORMAL0; \n"
+                                            "   float2 t : TEXCOORD0; \n"
+                                            "   float4 c : COLOR0; \n"
+                                            "   float4 u : USER0; \n"
+                                            "};\n"
+                                            "float4 main( VSInput i ) : SV_Position0 { return 0; }";
     AutoComPtr<ID3D11VertexShader> vs;
     AutoComPtr<ID3DBlob>           signature;
     vs.attach(createVS(*mDevice, vscode, 0, 0, "main", "vs_4_0", &signature));
@@ -312,7 +312,7 @@ bool GN::d3d11::SimpleMesh::init(ID3D11DeviceContext & cxt) {
         {"USER", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
     };
     GN_RETURN_ON_HR_FAILED(
-        mDevice->CreateInputLayout(elements, (uint32_t) countof(elements), signature->GetBufferPointer(), signature->GetBufferSize(), &mLayout),
+        mDevice->CreateInputLayout(elements, (uint32_t) std::size(elements), signature->GetBufferPointer(), signature->GetBufferSize(), &mLayout),
         (quit(), false));
 
     // success

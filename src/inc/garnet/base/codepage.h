@@ -118,7 +118,7 @@ GN_API void wcs2mbs(std::string &, const wchar_t *, size_t);
 ///
 /// convert wide char string to multi-byte string in current system encoding
 ///
-inline void wcs2mbs(std::string & o, const std::wstring & i) { return wcs2mbs(o, i.data(), i.size()); }
+inline void wcs2mbs(StrA & o, const StrW & i) { return wcs2mbs(o, i.data(), i.size()); }
 
 ///
 /// convert wide char string to multi-byte string in current system encoding
@@ -132,7 +132,7 @@ inline std::string wcs2mbs(const wchar_t * i, size_t l) {
 ///
 /// convert wide char string to multi-byte string in current system encoding
 ///
-inline std::string wcs2mbs(const std::wstring & i) { return wcs2mbs(i.data(), i.size()); }
+inline StrA wcs2mbs(const StrW & i) { return wcs2mbs(i.data(), i.size()); }
 
 ///
 /// convert multi-byte string in current system code page to wide char string.
@@ -163,7 +163,7 @@ GN_API void mbs2wcs(std::wstring &, const char *, size_t);
 ///
 /// convert multi-byte string in current system code page to wide char string
 ///
-inline void mbs2wcs(std::wstring & o, const std::string & i) { return mbs2wcs(o, i.data(), i.size()); }
+inline void mbs2wcs(StrW & o, const StrA & i) { return mbs2wcs(o, i.data(), i.size()); }
 
 ///
 /// convert multi-byte string in current system code page to wide char string
@@ -177,8 +177,7 @@ inline std::wstring mbs2wcs(const char * i, size_t l) {
 ///
 /// convert multi-byte string in current system code page to wide char string
 ///
-inline std::wstring mbs2wcs(const std::string & i) { return mbs2wcs(i.data(), i.size()); }
-
+inline StrW mbs2wcs(const StrA & i) { return mbs2wcs(i.data(), i.size()); }
 } // namespace GN
 
 // *****************************************************************************

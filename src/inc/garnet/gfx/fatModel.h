@@ -41,13 +41,13 @@ public:
         INVALID = -1,
     };
 
-    static const uint32 MAX_TEXCOORDS; // = (uint32)(TEXCOORD_LAST - TEXCOORD0);
+    static const uint32_t MAX_TEXCOORDS; // = (uint32_t)(TEXCOORD_LAST - TEXCOORD0);
 
-    static const uint32 POS_NORMAL = (1 << POSITION) | (1 << NORMAL);
+    static const uint32_t POS_NORMAL = (1 << POSITION) | (1 << NORMAL);
 
-    static const uint32 POS_NORMAL_TEX; // = (1<<POSITION) | (1<<NORMAL) | (1<<TEXCOORD0);
+    static const uint32_t POS_NORMAL_TEX; // = (1<<POSITION) | (1<<NORMAL) | (1<<TEXCOORD0);
 
-    static const uint32 POS_NORMAL_TEX_SKINNING; // = (1<<POSITION) | (1<<NORMAL) | (1<<TEXCOORD0) | (1<<JOINT_ID) | (1<<JOINT_WEIGHT);
+    static const uint32_t POS_NORMAL_TEX_SKINNING; // = (1<<POSITION) | (1<<NORMAL) | (1<<TEXCOORD0) | (1<<JOINT_ID) | (1<<JOINT_WEIGHT);
 
     static const char * const SEMANTIC_NAMES[];
 
@@ -88,11 +88,11 @@ public:
     }
 
     /// If resizing fails, the function returns false. And the mesh content remains unchanged.
-    bool resize(uint32 layout, uint32 count);
+    bool resize(uint32_t layout, uint32_t count);
 
-    uint32 getLayout() const { return mLayout; }
+    uint32_t getLayout() const { return mLayout; }
 
-    uint32 getVertexCount() const { return mCount; }
+    uint32_t getVertexCount() const { return mCount; }
 
     VertexElement * getElementData(int semantic) {
         if (0 <= semantic && semantic < (int) NUM_SEMANTICS) {
@@ -142,8 +142,8 @@ public:
 private:
     DynaArray<VertexElement> mElements[NUM_SEMANTICS];
     PixelFormat              mFormats[NUM_SEMANTICS];
-    uint32                   mCount;
-    uint32                   mLayout;
+    uint32_t                 mCount;
+    uint32_t                 mLayout;
     DynaArray<VertexElement> mFatVertex; // temporary storage used to store the lastest vertex data between beginVertices() and endVerttices(),
 
     void moveFrom(FatVertexBuffer & other) {
@@ -162,15 +162,15 @@ private:
 };
 
 struct FatMeshSubset {
-    uint32 material {}; //< index into FatModel.materials array.
+    uint32_t material {}; //< index into FatModel.materials array.
 
     // Vertex range.
-    uint32 basevtx {};
-    uint32 numvtx {};
+    uint32_t basevtx {};
+    uint32_t numvtx {};
 
     // Index range. If the mesh has no index buffer, index range will be ignored.
-    uint32 startidx {};
-    uint32 numidx {};
+    uint32_t startidx {};
+    uint32_t numidx {};
 
     /// Joints used by the subset. This is also a joint ID remapping table for
     /// vertices used by this subset:
@@ -182,19 +182,19 @@ struct FatMeshSubset {
     /// vertex:
     ///
     ///    subset1.joints[TheVertex.jointID] == subset2.joints[TheVertex.jointID] == subset3....
-    DynaArray<uint32, uint32> joints {};
+    DynaArray<uint32_t, uint32_t> joints {};
 };
 
 struct FatMesh {
     /// Constant value indicating that the mesh has no skeleton.
-    static const uint32 NO_SKELETON = (uint32) -1;
+    static const uint32_t NO_SKELETON = (uint32_t) -1;
 
-    FatVertexBuffer           vertices {};
-    DynaArray<uint32, uint32> indices {};
-    PrimitiveType             primitive {};
-    DynaArray<FatMeshSubset>  subsets {};
-    uint32                    skeleton {}; ///< index into FatModel::skeletons, or NO_SKELETON if the mesh has no skeleton.
-    Boxf                      bbox {};
+    FatVertexBuffer               vertices {};
+    DynaArray<uint32_t, uint32_t> indices {};
+    PrimitiveType                 primitive {};
+    DynaArray<FatMeshSubset>      subsets {};
+    uint32_t                      skeleton {}; ///< index into FatModel::skeletons, or NO_SKELETON if the mesh has no skeleton.
+    Boxf                          bbox {};
 
     GN_NO_COPY(FatMesh);
     GN_DEFAULT_MOVE(FatMesh);
@@ -234,22 +234,22 @@ struct FatJointBindPose {
 };
 
 struct FatJoint {
-    static const uint32 NO_JOINT = (uint32) -1;
+    static const uint32_t NO_JOINT = (uint32_t) -1;
 
     std::string name {}; //< Joint name (unique in a skeleton).
 
     // Hierarchy
-    uint32 parent {};  //< parent joint index. NO_JOINT, if the joint has no parent.
-    uint32 child {};   //< first child joint index. NO_JOINT, if the joint has no child.
-    uint32 sibling {}; //< next sibling joing index. NO_JOINT, if the joint has no next sibling.
+    uint32_t parent {};  //< parent joint index. NO_JOINT, if the joint has no parent.
+    uint32_t child {};   //< first child joint index. NO_JOINT, if the joint has no child.
+    uint32_t sibling {}; //< next sibling joing index. NO_JOINT, if the joint has no next sibling.
 
     FatJointBindPose bindPose {}; //< Bind pose transformation.
 };
 
 struct GN_API FatSkeleton {
-    std::string                        name {};   //< name of the skeleton.
-    DynaArray<FatJoint, uint32> joints {}; //< Joint array.
-    uint32                      root {};   //< Index of the root joint.
+    StrA                          name {};   //< name of the skeleton.
+    DynaArray<FatJoint, uint32_t> joints {}; //< Joint array.
+    uint32_t                      root {};   //< Index of the root joint.
 
     /// Print joint hierarchy to a string.
     void printJointHierarchy(std::string &) const;
@@ -275,12 +275,12 @@ struct FatAnimation {
 };
 
 struct GN_API FatModel {
-    std::string                            name {};   //< name of the model. Usually the filename which the model is loaded from.
-    DynaArray<FatMesh, uint32>      meshes {}; //< Mesh array. Use FatMesh* to avoid expensive copy opertaion when the array is resized.
-    DynaArray<FatMaterial, uint32>  materials {};
-    DynaArray<FatSkeleton, uint32>  skeletons {};
-    DynaArray<FatAnimation, uint32> skinAnimations {};
-    Boxf                            bbox {};
+    StrA                              name {};   //< name of the model. Usually the filename which the model is loaded from.
+    DynaArray<FatMesh, uint32_t>      meshes {}; //< Mesh array. Use FatMesh* to avoid expensive copy opertaion when the array is resized.
+    DynaArray<FatMaterial, uint32_t>  materials {};
+    DynaArray<FatSkeleton, uint32_t>  skeletons {};
+    DynaArray<FatAnimation, uint32_t> skinAnimations {};
+    Boxf                              bbox {};
 
     GN_NO_COPY(FatModel);
     GN_DEFAULT_MOVE(FatModel);
@@ -306,7 +306,7 @@ struct GN_API FatModel {
     /// If the function fails (and returns false), the FatModel will be
     /// left in undefine state. User must call clear to reset the FatModel
     /// content and start over.
-    bool splitSkinnedMesh(uint32 maxJointsPerSubset);
+    bool splitSkinnedMesh(uint32_t maxJointsPerSubset);
 
     /// load fatmodel from file
     bool loadFromFile(const std::string & filename);

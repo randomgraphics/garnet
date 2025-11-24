@@ -82,7 +82,7 @@ GN::gfx::GpuProgram * GN::gfx::OGLGpu::createGpuProgram(const GpuProgramDesc & d
 //
 //
 // -----------------------------------------------------------------------------
-GN::gfx::Uniform * GN::gfx::OGLGpu::createUniform(uint32 size) {
+GN::gfx::Uniform * GN::gfx::OGLGpu::createUniform(uint32_t size) {
     Uniform * u = new SysMemUniform(size);
     u->incref();
     return u;

@@ -1,15 +1,24 @@
 [submodule "src/3rdparty/rapid-image"]
 	path = src/3rdparty/rapid-image
 	url = https://github.com/randomgraphics/rapid-image.git
+	shallow = true
 [submodule "src/3rdparty/assimp"]
 	path = src/3rdparty/assimp
 	url = https://github.com/assimp/assimp.git
+	shallow = true
 [submodule "src/eigen"]
 	path = src/3rdparty/eigen
 	url = https://gitlab.com/libeigen/eigen
+	shallow = true
 [submodule "src/3rdparty/stb"]
 	path = src/3rdparty/stb
 	url = https://github.com/nothings/stb.git
-[submodule "src/3rdparty/fmt"]
-	path = src/3rdparty/fmt
+	shallow = true
+[submodule "src/3rdparty/freetype"]
+	path = src/3rdparty/freetype
+	url = https://gitlab.freedesktop.org/freetype/freetype
+	shallow = true
+[submodule "src/test/3rdparty/fmt"]
+	path = src/test/3rdparty/fmt
 	url = https://github.com/fmtlib/fmt.git
+	shallow = true

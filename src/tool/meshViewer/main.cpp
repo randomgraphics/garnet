@@ -111,7 +111,7 @@ public:
 #endif
     }
 
-    void onRenderWindowResize(intptr_t, uint32 width, uint32 height) { arcball.setMouseMoveWindow(0, 0, (int) width, (int) height); }
+    void onRenderWindowResize(intptr_t, uint32_t width, uint32_t height) { arcball.setMouseMoveWindow(0, 0, (int) width, (int) height); }
 
     void onAxisMove(Axis a, int d) {
         if (Axis::MOUSE_WHEEL_0 == a) {

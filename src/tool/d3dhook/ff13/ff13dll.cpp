@@ -124,9 +124,9 @@ HRESULT STDMETHODCALLTYPE IDirect3D9Ex_CreateDeviceEx_Hook(IDirect3D9Ex * this_,
 static IDirect3D9 * Direct3DCreate9Hook(UINT SDKVersion);
 static HRESULT      Direct3DCreate9ExHook(UINT SDKVersion, IDirect3D9Ex ** ppD3D);
 static SDLLHook     D3DHook = {"d3d9.dll",
-                           false,
-                           NULL, // Default hook disabled, NULL function pointer.
-                           {{"Direct3DCreate9", Direct3DCreate9Hook}, {"Direct3DCreate9Ex", Direct3DCreate9ExHook}, {NULL, NULL}}};
+                               false,
+                               NULL, // Default hook disabled, NULL function pointer.
+                               {{"Direct3DCreate9", Direct3DCreate9Hook}, {"Direct3DCreate9Ex", Direct3DCreate9ExHook}, {NULL, NULL}}};
 
 // -----------------------------------------------------------------------------
 static IDirect3D9 * Direct3DCreate9Hook(UINT SDKVersion) {

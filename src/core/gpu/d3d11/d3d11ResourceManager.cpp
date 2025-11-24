@@ -70,7 +70,7 @@ GN::gfx::GpuProgram * GN::gfx::D3D11Gpu::createGpuProgram(const GpuProgramDesc &
 //
 //
 // -----------------------------------------------------------------------------
-GN::gfx::Uniform * GN::gfx::D3D11Gpu::createUniform(uint32 size) {
+GN::gfx::Uniform * GN::gfx::D3D11Gpu::createUniform(uint32_t size) {
     Uniform * result = new SysMemUniform(size);
     result->incref();
     return result;

@@ -2,11 +2,17 @@
 # generate feature header
 # =======================
 
-set(GN_BUILD_HAS_OGL ${OPENGL_FOUND})
-set(GN_BUILD_HAS_D3D9 ${D3D9_FOUND})
-set(GN_BUILD_HAS_D3D11 ${D3D11_FOUND})
-set(GN_BUILD_HAS_D3D11_1 ${D3D11_FOUND})
-set(GN_BUILD_HAS_D3D12 ${D3D12_FOUND})
+# if not mac os then enable OpenGL
+if (NOT CMAKE_SYSTEM_NAME STREQUAL "Darwin")
+    set(GN_BUILD_HAS_OGL ${OPENGL_FOUND})
+endif()
+# enable DirectX if on Windows
+if (CMAKE_SYSTEM_NAME STREQUAL "Windows")
+    set(GN_BUILD_HAS_D3D9 ${D3D9_FOUND})
+    set(GN_BUILD_HAS_D3D11 ${D3D11_FOUND})
+    set(GN_BUILD_HAS_D3D11_1 ${D3D11_FOUND})
+    set(GN_BUILD_HAS_D3D12 ${D3D12_FOUND})
+endif()
 set(GN_BUILD_HAS_XNAMATH OFF) # this is legacy flag that is available on pre-vista OS and Xbox2
 set(GN_BUILD_HAS_VULKAN ${VULKAN_FOUND})
 
@@ -55,7 +61,7 @@ GN_add_source_folder(sources util PCH_SOURCE util/pch.cpp)
 GN_add_source_folder(sources win PCH_SOURCE win/pch.cpp)
 
 # OpenGL GPU Sources
-if(OPENGL_FOUND)
+if(GN_BUILD_HAS_OGL)
     GN_add_source_folder(sources gpu/ogl PCH_SOURCE gpu/ogl/pch.cpp)
     GN_add_source_folder(sources gfx/ogl PCH_SOURCE gfx/ogl/pch.cpp)
 endif()
@@ -131,26 +137,52 @@ elseif(WIN32)
 endif()
 
 # X11
-if(X11_FOUND)
+if(X11_FOUND AND CMAKE_SYSTEM_NAME STREQUAL "Linux")
     target_compile_definitions(GNcore PRIVATE HAS_X11=1)
 endif()
 
 # FBX
 if(WIN32)
-    set(fbx_win_root_dir ${CMAKE_CURRENT_SOURCE_DIR}/../3rdparty/fbx/2014.1)
-
+    set(fbx_win_root_dir ${CMAKE_CURRENT_SOURCE_DIR}/../3rdparty/fbx/2014.2.1/win-vs2012)
     if(8 EQUAL CMAKE_SIZEOF_VOID_P)
-        set(fbx_win_lib_dir ${fbx_win_root_dir}/lib/vs2010/x64/release)
+        set(fbx_win_lib_dir ${fbx_win_root_dir}/lib/vs2012/x64/release)
     else()
-        set(fbx_win_lib_dir ${fbx_win_root_dir}/lib/vs2010/x86/release)
+        set(fbx_win_lib_dir ${fbx_win_root_dir}/lib/vs2012/x86/release)
     endif()
-
     target_include_directories(GNcore PRIVATE ${fbx_win_root_dir}/include)
     target_compile_definitions(GNcore PRIVATE HAS_FBX=1)
     add_core_libs(${fbx_win_lib_dir}/libfbxsdk.lib)
     file(COPY ${fbx_win_lib_dir}/libfbxsdk.dll DESTINATION "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/Debug")
     file(COPY ${fbx_win_lib_dir}/libfbxsdk.dll DESTINATION "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/RelWithDebInfo")
     file(COPY ${fbx_win_lib_dir}/libfbxsdk.dll DESTINATION "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/Release")
+elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    set(fbx_root_dir ${CMAKE_CURRENT_SOURCE_DIR}/../3rdparty/fbx/2014.2.1/linux)
+    message(STATUS "Use FBX SDK at ${fbx_root_dir}")
+    if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+        if(8 EQUAL CMAKE_SIZEOF_VOID_P)
+            set(fbx_lib_dir ${fbx_root_dir}/lib/gcc4/x64/release)
+        else()
+            set(fbx_lib_dir ${fbx_root_dir}/lib/gcc4/x86/release)
+        endif()
+        target_include_directories(GNcore PRIVATE ${fbx_root_dir}/include)
+        target_compile_definitions(GNcore PRIVATE HAS_FBX=1)
+        add_core_libs(${fbx_lib_dir}/libfbxsdk.a)
+        file(COPY ${fbx_lib_dir}/libfbxsdk.so DESTINATION "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}")
+    endif()
+elseif(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
+    # TODO: upgrade to newer FBX SDK to support apple chip.
+    # if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    #     set(fbx_root_dir ${CMAKE_CURRENT_SOURCE_DIR}/../3rdparty/fbx/2014.2.1/mac-clang)
+    #     set(fbx_lib_dir ${fbx_root_dir}/lib/clang/ub/release)
+    # else()
+    #     set(fbx_root_dir ${CMAKE_CURRENT_SOURCE_DIR}/../3rdparty/fbx/2014.2.1/mac-gcc)
+    #     set(fbx_lib_dir ${fbx_root_dir}/lib/gcc4/ub/release)
+    # endif()
+    # message(STATUS "Use FBX SDK at ${fbx_root_dir}")
+    # target_include_directories(GNcore PRIVATE ${fbx_root_dir}/include)
+    # target_compile_definitions(GNcore PRIVATE HAS_FBX=1)
+    # add_core_libs(${fbx_lib_dir}/libfbxsdk.a)
+    # file(COPY ${fbx_lib_dir}/libfbxsdk.dylib DESTINATION "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}")
 endif()
 
 # Vulkan
@@ -161,12 +193,17 @@ if(VULKAN_FOUND)
     target_include_directories(GNcore PUBLIC ${Vulkan_INCLUDE_DIRS})
 endif()
 
-# thread libraries
+# Other dependencies
 find_package(Threads REQUIRED)
 add_core_libs(Threads::Threads)
-
-# Assimp
 add_core_libs(assimp)
+add_core_libs(freetype)
+
+find_package(Iconv)
+if (Iconv_FOUND)
+    target_compile_definitions(GNcore PRIVATE HAS_ICONV=1)
+    add_core_libs(${Iconv_LIBRARIES})
+endif()
 
 # compiler specific setup
 if(MSVC)
@@ -175,7 +212,6 @@ if(MSVC)
         /Wv:18 # fix eigen warning. still needed?
     )
 else()
-    target_compile_definitions(GNcore PRIVATE HAS_ICONV=1)
     if (NOT GN_BUILD_IS_STATIC)
         target_compile_options(GNcore PRIVATE
             -fvisibility=hidden # hide symbols by default.

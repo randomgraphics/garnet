@@ -88,10 +88,10 @@ struct ShaderModel {
         GLSL_3_30 = 1 << 6, //< OpenGL Shading Language 3.30 (OpenGL 3.3+)
     };
 
-    static uint32 sFromString(const char * str) {
+    static uint32_t sFromString(const char * str) {
         if (NULL == str) return 0;
 
-        uint32 flags = 0;
+        uint32_t flags = 0;
 
         while (*str) {
             const char * s = str;
@@ -131,8 +131,8 @@ struct ShaderModel {
         return flags;
     }
 
-    static std::string sToString(uint32 flags) {
-        std::string str;
+    static StrA sToString(uint32_t flags) {
+        StrA str;
 
         if (flags & SM_2_0) {
             flags &= ~SM_2_0;
@@ -165,7 +165,7 @@ struct ShaderModel {
 
         if (flags) {
             if (!str.empty()) str += "|";
-            str += fmt::format("0x%X", flags);
+            str += StrA::format("0x%X", flags);
         }
 
         return str;
@@ -187,7 +187,7 @@ struct ShaderCode {
 ///
 struct GpuProgramDesc {
     GpuProgramLanguage lang;         //< shading language.
-    uint32             shaderModels; //< shader models that the program is written against.
+    uint32_t           shaderModels; //< shader models that the program is written against.
 
     union {
 
@@ -240,7 +240,7 @@ struct GpuProgramParameterType {
 ///
 struct GpuProgramUniformParameterDesc {
     const char * name; ///< uniform name
-    uint32       size; ///< uniform size in bytes
+    uint32_t     size; ///< uniform size in bytes
 };
 
 ///
@@ -258,7 +258,7 @@ struct GpuProgramAttributeParameterDesc {
 
 enum {
     /// indicate a invalid parameter index
-    GPU_PROGRAM_PARAMETER_NOT_FOUND = (uint16) -1
+    GPU_PROGRAM_PARAMETER_NOT_FOUND = (uint16_t) -1
 };
 
 ///
@@ -266,21 +266,21 @@ enum {
 ///
 template<class PARAMETER_DESC_CLASS>
 class GpuProgramParameterAccessor {
-    const uint8 *& mData;
-    const uint32 & mCount;
-    const uint32 & mStride;
+    const uint8_t *& mData;
+    const uint32_t & mCount;
+    const uint32_t & mStride;
 
 public:
     ///
     /// constructor
     ///
-    GpuProgramParameterAccessor(const PARAMETER_DESC_CLASS *& data, const uint32 & count, const uint32 & stride)
-        : mData((const uint8 *&) data), mCount(count), mStride(stride) {}
+    GpuProgramParameterAccessor(const PARAMETER_DESC_CLASS *& data, const uint32_t & count, const uint32_t & stride)
+        : mData((const uint8_t *&) data), mCount(count), mStride(stride) {}
 
     ///
     /// return number of parameters
     ///
-    uint32 count() const { return mCount; }
+    uint32_t count() const { return mCount; }
 
     ///
     /// bracket operator. index must be valid
@@ -300,22 +300,22 @@ public:
     ///
     /// Look up parameter with specific name, return GPU_PROGRAM_PARAMETER_NOT_FOUND for invalid name
     ///
-    uint16 operator[](const char * name) const {
+    uint16_t operator[](const char * name) const {
         // Note: stride must be larger than size of parameter class
         GN_ASSERT(mStride >= sizeof(PARAMETER_DESC_CLASS));
 
-        const uint8 * p = mData;
-        for (uint32 i = 0; i < mCount; ++i, p += mStride) {
+        const uint8_t * p = mData;
+        for (uint32_t i = 0; i < mCount; ++i, p += mStride) {
             /// Assume that the first member of PARAMETER_DESC_CLASS is always parameter name
             const char * paramName = *(const char * const *) p;
 
             if (0 == str::compare(name, paramName)) {
                 // got you!
-                return (uint16) i;
+                return (uint16_t) i;
             }
         }
         GN_ERROR(getLogger("GN.gfx.GpuProgram.GpuProgramParameterDesc"))("Invalid GPU program parameter name: %s", name ? name : "<NULLPTR>");
-        return (uint16) GPU_PROGRAM_PARAMETER_NOT_FOUND;
+        return (uint16_t) GPU_PROGRAM_PARAMETER_NOT_FOUND;
     }
 };
 
@@ -349,22 +349,22 @@ protected:
     /// uniform parameters
     //@{
     const GpuProgramUniformParameterDesc * mUniformArray;
-    uint32                                 mUniformCount;
-    uint32                                 mUniformArrayStride;
+    uint32_t                               mUniformCount;
+    uint32_t                               mUniformArrayStride;
     //@}
 
     /// texture parameters
     //@{
     const GpuProgramTextureParameterDesc * mTextureArray;
-    uint32                                 mTextureCount;
-    uint32                                 mTextureArrayStride;
+    uint32_t                               mTextureCount;
+    uint32_t                               mTextureArrayStride;
     //@}
 
     /// attribute parameters
     //@{
     const GpuProgramAttributeParameterDesc * mAttributeArray;
-    uint32                                   mAttributeCount;
-    uint32                                   mAttributeArrayStride;
+    uint32_t                                 mAttributeCount;
+    uint32_t                                 mAttributeArrayStride;
     //@}
 };
 

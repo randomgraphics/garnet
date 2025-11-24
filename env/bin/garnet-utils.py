@@ -119,7 +119,7 @@ def search_for_the_latest_binary_ex(path_template):
             c = path_template.format(variant=f"{pla}{com}{var}")
             p = pathlib.Path(c)
             if not p.is_absolute(): p = sdk_root_dir / p
-            if "mswin" == pla:
+            if "windows" == pla:
                 v = "Debug" if ".d" == var else "Release" if ".r" == var else "RelWithDebInfo"
                 p = pathlib.Path(c).with_suffix(".exe")
                 p = p.parent / v / p.name
@@ -135,7 +135,7 @@ def search_for_the_latest_binary(path_template):
         print(f"[ERROR] binary _NOT_ found: {path_template}. The following locations are searched:\n{pp.pformat(searched)}")
     return chosen
 
-def run_the_latest_binary(path_template, argv, check = True):
+def run_the_latest_binary(path_template, argv, check = True, **subprocess_kwargs):
     # search for the latest binary
     chosen, searched = search_for_the_latest_binary_ex(path_template)
     if chosen is None:
@@ -145,4 +145,4 @@ def run_the_latest_binary(path_template, argv, check = True):
     # Invoke the binary
     cmdline = [str(chosen)] + argv
     print(' '.join(cmdline))
-    return subprocess.run(cmdline, check=check)
+    return subprocess.run(cmdline, check=check, **subprocess_kwargs)
