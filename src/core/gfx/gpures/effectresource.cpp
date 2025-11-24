@@ -329,7 +329,7 @@ bool GN::gfx::EffectResource::Impl::initTechniques(const EffectResourceDesc & ef
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::EffectResource::Impl::initTech(const EffectResourceDesc & effectDesc, const std::string & techName, const EffectTechniqueDesc & techDesc) {
+bool GN::gfx::EffectResource::Impl::initTech(const EffectResourceDesc & effectDesc, const StrA & techName, const EffectTechniqueDesc & techDesc) {
     mPasses.resize(techDesc.passes.size());
 
     // get common render state for the technique
@@ -342,7 +342,7 @@ bool GN::gfx::EffectResource::Impl::initTech(const EffectResourceDesc & effectDe
     for (uint32_t ipass = 0; ipass < techDesc.passes.size(); ++ipass) {
         const EffectPassDesc & passDesc = techDesc.passes[ipass];
 
-        const std::string & programName = passDesc.gpuprogram; // shader techName alias for easy referencing
+        const StrA & programName = passDesc.gpuprogram; // shader techName alias for easy referencing
 
         RenderPass & p = mPasses[ipass];
 

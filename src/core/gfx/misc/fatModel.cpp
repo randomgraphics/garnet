@@ -233,7 +233,7 @@ static void sPrintFatJointRecursivly(StrA & s, const FatJoint * joints, uint32_t
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::FatSkeleton::printJointHierarchy(std::string & s) const {
+void GN::gfx::FatSkeleton::printJointHierarchy(StrA & s) const {
     if (joints.empty()) {
         s = "[Empty skeleton]";
     } else {

@@ -53,7 +53,7 @@ struct FontFaceDesc {
     ///
     /// font file name. Normally would be something like "font::/xxxx"
     ///
-    std::string fontname;
+    StrA fontname;
 
     ///
     /// font quality

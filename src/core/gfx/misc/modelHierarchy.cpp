@@ -265,7 +265,7 @@ static bool sLoadModelHierarchyFromASE(ModelHierarchyDesc & desc, File & file) {
     AseScene ase;
     if (!ase.loadFromFile(file)) return false;
 
-    std::string filename = file.name();
+    StrA filename = file.name();
     if (filename.empty()) {
         GN_WARN(sLogger)("Can not get filename");
         return false;
@@ -278,7 +278,7 @@ static bool sLoadModelHierarchyFromASE(ModelHierarchyDesc & desc, File & file) {
     for (size_t i = 0; i < ase.meshes.size(); ++i) {
         const AseMesh & src = ase.meshes[i];
 
-        const std::string & meshname = FULL_MESH_NAME(src.name);
+        const StrA & meshname = FULL_MESH_NAME(src.name);
 
         // copy mesh
         desc.meshes[meshname] = src;
@@ -521,7 +521,7 @@ typedef std::unordered_map<MeshVertexKey, uint32_t> MeshVertexHashMap;
 //
 //
 // -----------------------------------------------------------------------------
-static void sLoadFbxMesh(ModelHierarchyDesc & desc, const std::string & filename, ModelHierarchyDesc::NodeDesc & gnnode, FbxSdkWrapper & sdk, FbxNode * fbxnode,
+static void sLoadFbxMesh(ModelHierarchyDesc & desc, const StrA & filename, ModelHierarchyDesc::NodeDesc & gnnode, FbxSdkWrapper & sdk, FbxNode * fbxnode,
                          FbxMesh * fbxmesh, const char * meshName) {
     if (!fbxmesh->IsTriangleMesh()) {
         fbxmesh = sdk.converter->TriangulateMesh(fbxmesh);
@@ -621,7 +621,7 @@ static void sLoadFbxMesh(ModelHierarchyDesc & desc, const std::string & filename
             // get the texture associated with the material.
             FbxSurfaceMaterial * mat = fbxnode->GetMaterial(matid);
             if (mat) {
-                std::string         dirname = fs::dirName(filename);
+                StrA         dirname = fs::dirName(filename);
                 const char * diffuse = sGetTextureFileName(mat, FbxSurfaceMaterial::sDiffuse);
                 if (model.hasTexture("ALBEDO_TEXTURE") && diffuse) { model.textures["ALBEDO_TEXTURE"].resourceName = fs::resolvePath(dirname, diffuse); }
             }
@@ -737,7 +737,7 @@ static void sLoadFbxMesh(ModelHierarchyDesc & desc, const std::string & filename
         // skip empty models.
         if (model.effect.empty()) continue;
 
-        std::string modelName         = StrA::format("%s.%d", meshName, i);
+        StrA modelName         = StrA::format("%s.%d", meshName, i);
         desc.models[modelName] = model;
         gnnode.models.append(modelName);
     }
@@ -746,7 +746,7 @@ static void sLoadFbxMesh(ModelHierarchyDesc & desc, const std::string & filename
 //
 //
 // -----------------------------------------------------------------------------
-static bool sLoadFbxNodeRecursivly(ModelHierarchyDesc & desc, const std::string & filename, FbxSdkWrapper & sdk, FbxNode * node, FbxNode * parent) {
+static bool sLoadFbxNodeRecursivly(ModelHierarchyDesc & desc, const StrA & filename, FbxSdkWrapper & sdk, FbxNode * node, FbxNode * parent) {
     if (NULL == node) return true;
 
     // the node name should be unique
@@ -786,7 +786,7 @@ static bool sLoadFbxNodeRecursivly(ModelHierarchyDesc & desc, const std::string 
 
     if (FbxNodeAttribute::eMesh == type) {
         // load mesh node
-        std::string fullMeshName = filename + "." + name;
+        StrA fullMeshName = filename + "." + name;
         sLoadFbxMesh(desc, filename, gnnode, sdk, node, (FbxMesh *) attrib, fullMeshName);
     } else if (
         // Some nodes are ignored silently.
@@ -819,7 +819,7 @@ static bool sLoadModelHierarchyFromFBX(ModelHierarchyDesc & desc, File & file) {
     // TODO: setup file system.
 
     // detect file format
-    std::string filename    = fs::toNativeDiskFilePath(file.name());
+    StrA filename    = fs::toNativeDiskFilePath(file.name());
     int  lFileFormat = -1;
     if (!gSdkManager->GetIOPluginRegistry()->DetectReaderFileFormat(filename, lFileFormat)) {
         // Unrecognizable file format. Try to fall back to FbxImporter::eFBX_BINARY
@@ -871,7 +871,7 @@ static bool sLoadModelHierarchyFromFBX(ModelHierarchyDesc & desc, File & file) {
 
 // protected:
 //     // Constructor protected for private usage by MyIOSystem
-//     MyIOStream(const std::string & filename, const std::string & mode) { mFile = fs::openFile(filename.c_str(), mode.c_str()); }
+//     MyIOStream(const StrA & filename, const StrA & mode) { mFile = fs::openFile(filename.c_str(), mode.c_str()); }
 
 // public:
 //     ~MyIOStream() { mFile.reset(); }
@@ -927,13 +927,13 @@ static bool sLoadModelHierarchyFromFBX(ModelHierarchyDesc & desc, File & file) {
 //     ~MyIOSystem() {}
 
 //     // Check whether a specific file exists
-//     bool Exists(const std::string & filename) const { return GN::fs::pathExist(filename.c_str()); }
+//     bool Exists(const StrA & filename) const { return GN::fs::pathExist(filename.c_str()); }
 
 //     // Get the path delimiter character we'd like to see
 //     char GetOsSeparator() const { return '/'; }
 
 //     // ... and finally a method to open a custom stream
-//     Assimp::IOStream * Open(const std::string & file, const std::string & mode) { return new MyIOStream(file, mode); }
+//     Assimp::IOStream * Open(const StrA & file, const StrA & mode) { return new MyIOStream(file, mode); }
 
 //     void Close(Assimp::IOStream * pFile) { delete pFile; }
 // };
@@ -950,7 +950,7 @@ namespace xml {
 //
 // post error message
 // -----------------------------------------------------------------------------
-static void sPostXMLError(const XmlNode & node, const std::string & msg) {
+static void sPostXMLError(const XmlNode & node, const StrA & msg) {
     GN_UNUSED_PARAM(node);
     const XmlElement * e = node.toElement();
     if (e) {
@@ -963,7 +963,7 @@ static void sPostXMLError(const XmlNode & node, const std::string & msg) {
 //
 //
 // -----------------------------------------------------------------------------
-static bool sParseModel(ModelHierarchyDesc & desc, XmlElement & root, const std::string & basedir) {
+static bool sParseModel(ModelHierarchyDesc & desc, XmlElement & root, const StrA & basedir) {
     ModelResourceDesc md;
 
     if (!md.loadFromXml(root, basedir)) return false;
@@ -1072,7 +1072,7 @@ static bool sLoadModelHierarchyFromXML(ModelHierarchyDesc & desc, File & file) {
     }
     GN_ASSERT(xpr.root);
 
-    std::string basedir = fs::dirName(file.name());
+    StrA basedir = fs::dirName(file.name());
 
     XmlElement * root = xpr.root->toElement();
     if (!root || "modelHierarchy" != root->name) {
@@ -1137,10 +1137,10 @@ static bool sSaveModelHierarchyToXML(const ModelHierarchyDesc & desc, const char
     }
 
     // convert to full path
-    std::string fullpath = fs::resolvePath(fs::getCurrentDir(), filename);
+    StrA fullpath = fs::resolvePath(fs::getCurrentDir(), filename);
     filename      = fullpath;
-    std::string dirname  = fs::dirName(fullpath);
-    std::string basename = fs::baseName(fullpath);
+    StrA dirname  = fs::dirName(fullpath);
+    StrA basename = fs::baseName(fullpath);
 
     if (!fs::isDir(dirname)) {
         GN_ERROR(sLogger)("%s is not a directory", dirname.data());
@@ -1149,9 +1149,9 @@ static bool sSaveModelHierarchyToXML(const ModelHierarchyDesc & desc, const char
 
     // write meshes
     int                   meshindex = 0;
-    StringMap<char, std::string> meshNameMapping;
+    StringMap<char, StrA> meshNameMapping;
     for (const StringMap<char, MeshResourceDesc>::KeyValuePair * i = desc.meshes.first(); i != NULL; i = desc.meshes.next(i)) {
-        const std::string &             oldMeshName = i->key;
+        const StrA &             oldMeshName = i->key;
         const MeshResourceDesc & mesh        = i->value;
 
         StrA newMeshName = StrA::format("%s.%d.mesh.bin", basename.data(), meshindex);
@@ -1172,10 +1172,10 @@ static bool sSaveModelHierarchyToXML(const ModelHierarchyDesc & desc, const char
     XmlElement * models = xmldoc.createElement(root);
     models->name        = "models";
     for (const StringMap<char, gfx::ModelResourceDesc>::KeyValuePair * i = desc.models.first(); i != NULL; i = desc.models.next(i)) {
-        const std::string &      modelName = i->key;
+        const StrA &      modelName = i->key;
         ModelResourceDesc model     = i->value;
 
-        std::string * pNewMeshName = meshNameMapping.find(model.mesh);
+        StrA * pNewMeshName = meshNameMapping.find(model.mesh);
         if (NULL != pNewMeshName) { model.mesh = *pNewMeshName; }
 
         XmlElement * modelNode = model.saveToXml(*models, dirname);
@@ -1188,9 +1188,9 @@ static bool sSaveModelHierarchyToXML(const ModelHierarchyDesc & desc, const char
 
     // rename nodes
     int                   entityIndex = 0;
-    StringMap<char, std::string> entityNameMap;
+    StringMap<char, StrA> entityNameMap;
     for (const StringMap<char, ModelHierarchyDesc::NodeDesc>::KeyValuePair * i = desc.nodes.first(); i != NULL; i = desc.nodes.next(i)) {
-        const std::string & nodeName = i->key;
+        const StrA & nodeName = i->key;
 
         entityNameMap[nodeName] = StrA::format("%d", ++entityIndex);
     }
@@ -1199,7 +1199,7 @@ static bool sSaveModelHierarchyToXML(const ModelHierarchyDesc & desc, const char
     XmlElement * nodes = xmldoc.createElement(root);
     nodes->name        = "nodes";
     for (const StringMap<char, ModelHierarchyDesc::NodeDesc>::KeyValuePair * i = desc.nodes.first(); i != NULL; i = desc.nodes.next(i)) {
-        const std::string &                         nodeName = *entityNameMap.find(i->key);
+        const StrA &                         nodeName = *entityNameMap.find(i->key);
         const ModelHierarchyDesc::NodeDesc & nodeDesc = i->value;
 
         XmlElement * node = xmldoc.createElement(nodes);
@@ -1211,7 +1211,7 @@ static bool sSaveModelHierarchyToXML(const ModelHierarchyDesc & desc, const char
 
         a                        = xmldoc.createAttrib(node);
         a->name                  = "parent";
-        std::string * pParentEntityName = entityNameMap.find(nodeDesc.parent);
+        StrA * pParentEntityName = entityNameMap.find(nodeDesc.parent);
         if (NULL != pParentEntityName) {
             a->value = *pParentEntityName;
         } else if (!nodeDesc.parent.empty()) {
@@ -1273,7 +1273,7 @@ namespace bin {
 bool sLoadModelHierarchyFromMeshBinary(ModelHierarchyDesc & desc, File & fp) {
     desc.clear();
 
-    const std::string & meshname = fp.name();
+    const StrA & meshname = fp.name();
 
     MeshResourceDesc mesh;
     auto             blob = mesh.loadFromFile(fp);
@@ -1328,7 +1328,7 @@ GN_API bool GN::gfx::ModelHierarchyDesc::loadFromFile(const char * filename) {
     if (!fp) return false;
 
     // get file extension
-    std::string ext = fs::extName(filename);
+    StrA ext = fs::extName(filename);
 
     // do loading
     if (sStrEndWithI(filename, ".xml")) {

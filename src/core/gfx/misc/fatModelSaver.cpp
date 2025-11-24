@@ -7,7 +7,7 @@ using namespace GN::gfx;
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::FatModel::saveToFile(const std::string & filename) const {
+bool GN::gfx::FatModel::saveToFile(const StrA & filename) const {
     GN_UNUSED_PARAM(filename);
     GN_UNIMPL();
     return false;

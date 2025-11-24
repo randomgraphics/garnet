@@ -26,7 +26,7 @@ bool GN::gfx::BasicGpu::init(const GpuOptions & o) {
         if (GpuAPI::AUTO == o.api) {
             GN_ERROR(sLogger)("GpuAPI::AUTO must be changed to actual API value before initializing GPU.");
         } else {
-            GN_ERROR(sLogger)("Invalid API: %d", o.api.toRawEnum());
+            GN_ERROR(sLogger)("Invalid API: %d", o.api.toInt());
         }
 
         return failure();

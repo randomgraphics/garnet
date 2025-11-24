@@ -602,13 +602,13 @@ bool GpuResourceDatabase::Impl::validResource(const GpuResource * resource) cons
 //
 //
 // -----------------------------------------------------------------------------
-const std::string * GpuResourceDatabase::Impl::getResourceName(const GpuResource * resource) const {
+const StrA * GpuResourceDatabase::Impl::getResourceName(const GpuResource * resource) const {
     GpuResource::Impl * resimpl = getResourceImpl(resource);
     if (NULL == resimpl) return NULL;
 
     const ResourceManager & mgr = mManagers[resimpl->handle.managerIndex()];
 
-    const std::string * name = mgr.resources.handle2name(resimpl->handle.internalHandle());
+    const StrA * name = mgr.resources.handle2name(resimpl->handle.internalHandle());
 
     if (NULL == name) { GN_ERROR(sLogger)("Fail to get reosource name: Invalid resource pointer."); }
 
@@ -828,7 +828,7 @@ AutoRef<GpuResource> GpuResourceDatabase::createResource(const Guid & type, cons
 AutoRef<GpuResource> GpuResourceDatabase::findResource(const Guid & type, const char * name) const { return mImpl->findResource(type, name); }
 bool                 GpuResourceDatabase::validResource(const Guid & type, const GpuResource * resource) const { return mImpl->validResource(type, resource); }
 bool                 GpuResourceDatabase::validResource(const GpuResource * resource) const { return mImpl->validResource(resource); }
-const std::string *         GpuResourceDatabase::getResourceName(const GpuResource * resource) const { return mImpl->getResourceName(resource); }
+const StrA *         GpuResourceDatabase::getResourceName(const GpuResource * resource) const { return mImpl->getResourceName(resource); }
 const Guid *         GpuResourceDatabase::getResourceType(const GpuResource * resource) const { return mImpl->getResourceType(resource); }
 AutoRef<UniformResource> GpuResourceDatabase::getStandardUniformResource(int index) const { return mImpl->getStandardUniformResource(index); }
 void GpuResourceDatabase::setStandardUniform(int index, const void * data, uint32_t dataSize) { return mImpl->setStandardUniform(index, data, dataSize); }

@@ -74,7 +74,7 @@ private:
 
     struct ResourceManager {
         Guid               guid;
-        std::string               desc;
+        StrA               desc;
         size_t             index; // index into manager array
         GpuResourceFactory factory;
         ResourceMap        resources;
@@ -117,7 +117,7 @@ public:
     AutoRef<GpuResource> findResource(const Guid & type, const char * name) const;
     bool                 validResource(const Guid & type, const GpuResource * resource) const;
     bool                 validResource(const GpuResource * resource) const;
-    const std::string *         getResourceName(const GpuResource *) const;
+    const StrA *         getResourceName(const GpuResource *) const;
     const Guid *         getResourceType(const GpuResource *) const;
     //@}
 

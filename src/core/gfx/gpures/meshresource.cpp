@@ -247,7 +247,7 @@ AutoRef<MeshResource> GN::gfx::MeshResource::loadFromFile(GpuResourceDatabase & 
     if (m) return m;
 
     // convert to full (absolute) path
-    std::string abspath = fs::resolvePath(fs::getCurrentDir(), filename);
+    StrA abspath = fs::resolvePath(fs::getCurrentDir(), filename);
     filename     = abspath;
 
     // Try search for existing resource again with full path

@@ -37,7 +37,7 @@ namespace GN {
 /// custom exception class
 ///
 struct Exception {
-    std::string  msg;
+    StrA  msg;
     const char * func; ///< location of the exception
     const char * file; ///< location of the exception
     int          line; ///< location of the exception
@@ -45,7 +45,7 @@ struct Exception {
     ///
     /// constructor
     ///
-    Exception(const char * ifunc, const char * ifile, int iline, std::string && imsg) throw(): msg(std::move(imsg)), func(ifunc), file(ifile), line(iline) {}
+    Exception(const char * ifunc, const char * ifile, int iline, StrA && imsg) throw(): msg(std::move(imsg)), func(ifunc), file(ifile), line(iline) {}
 
     ///
     /// copy constructor
@@ -67,12 +67,12 @@ struct Exception {
 ///
 /// Dump current call stack to string
 ///
-GN_API std::string backtrace(bool includeSourceSnippet = GN_BUILD_DEBUG_ENABLED);
+GN_API StrA backtrace(bool includeSourceSnippet = GN_BUILD_DEBUG_ENABLED);
 
 ///
 /// Throw exception
 ///
-GN_API void throwException(const char * ifunc, const char * ifile, int iline, std::string && imsg);
+GN_API void throwException(const char * ifunc, const char * ifile, int iline, StrA && imsg);
 
 ///
 /// exception handler

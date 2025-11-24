@@ -13,7 +13,7 @@ static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpures");
 //
 //
 // -----------------------------------------------------------------------------
-static std::string sResolveResourcePath(const std::string & basedir, const std::string & path) {
+static StrA sResolveResourcePath(const StrA & basedir, const StrA & path) {
     if (path.size() > 1 && path[0] == '@') {
         return path;
     } else {
@@ -1145,7 +1145,7 @@ AutoRef<ModelResource> GN::gfx::ModelResource::loadFromFile(GpuResourceDatabase 
     if (m) return m;
 
     // convert to full (absolute) path
-    std::string abspath = fs::resolvePath(fs::getCurrentDir(), filename);
+    StrA abspath = fs::resolvePath(fs::getCurrentDir(), filename);
     filename     = abspath;
 
     // Try search for existing resource again with full path

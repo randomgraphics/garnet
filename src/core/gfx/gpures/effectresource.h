@@ -64,7 +64,7 @@ public:
     // ********************************
 private:
     struct GpuProgramItem {
-        std::string                name;
+        StrA                name;
         AutoRef<GpuProgram> prog;
     };
 
@@ -99,12 +99,12 @@ private:
 
     bool initGpuPrograms(const EffectResourceDesc & effectDesc);
 
-    bool initGpuProgram(const GN::gfx::EffectResourceDesc & effectDesc, const std::string & programName,
+    bool initGpuProgram(const GN::gfx::EffectResourceDesc & effectDesc, const StrA & programName,
                         const GN::gfx::EffectResourceDesc::EffectGpuProgramDesc & programDesc);
 
     bool initTechniques(const EffectResourceDesc & effectDesc);
 
-    bool initTech(const EffectResourceDesc & effectDesc, const std::string & techName, const EffectResourceDesc::EffectTechniqueDesc & techDesc);
+    bool initTech(const EffectResourceDesc & effectDesc, const StrA & techName, const EffectResourceDesc::EffectTechniqueDesc & techDesc);
 
     bool initTextures(const EffectResourceDesc & effectDesc);
 

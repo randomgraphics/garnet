@@ -554,7 +554,7 @@ public:
         }
 
         // not found. create new one.
-        AutoObjPtr<LoggerImpl> newLogger(new LoggerImpl(n, mMutex));
+        AutoObjPtr<LoggerImpl> newLogger(new LoggerImpl(n.data(), mMutex));
         mLoggers[n] = newLogger;
 
         // update logger tree

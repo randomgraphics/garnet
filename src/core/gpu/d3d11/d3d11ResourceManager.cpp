@@ -62,7 +62,7 @@ GN::gfx::GpuProgram * GN::gfx::D3D11Gpu::createGpuProgram(const GpuProgramDesc &
         if (!prog->init(desc)) return NULL;
         return prog.detach();
     } else {
-        GN_ERROR(sLogger)("Unsupported or invalid GPU program language: %d", desc.lang.toRawEnum());
+        GN_ERROR(sLogger)("Unsupported or invalid GPU program language: %d", desc.lang.toInt());
         return NULL;
     }
 }

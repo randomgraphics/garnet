@@ -19,7 +19,7 @@ static Logger * sLogger = getLogger("GN.base.exception");
 
 // ---------------------------------------------------------------------------------------------------------------------
 //
-GN_API std::string backtrace(bool includeSourceSnippet) {
+GN_API StrA backtrace(bool includeSourceSnippet) {
     (void) includeSourceSnippet; // this is to avoid unreferenced variable warning.
 #if GN_ANDROID
     struct android_backtrace_state {
@@ -38,11 +38,11 @@ GN_API std::string backtrace(bool includeSourceSnippet) {
             return _URC_NO_REASON;
         }
 
-        static std::string addr2symbol(const void * addr) {
+        static StrA addr2symbol(const void * addr) {
             // convert address to symbol
             Dl_info info;
             if (!dladdr(addr, &info) || !info.dli_sname) return {};
-            std::string result = info.dli_sname;
+            StrA result = info.dli_sname;
 
             // demangle c++ syntax
             int    status = 0;
@@ -58,7 +58,7 @@ GN_API std::string backtrace(bool includeSourceSnippet) {
 
     const int indent = 0;
 
-    std::string prefix;
+    StrA prefix;
     for (int i = 0; i < indent; ++i) prefix += ' ';
 
     std::stringstream ss;
@@ -107,13 +107,13 @@ GN_API std::string backtrace(bool includeSourceSnippet) {
         std::stringstream ss;
     };
     MyStackWalker sw(StackWalker::RetrieveLine | StackWalker::RetrieveSymbol);
-    return sw.ShowCallstack() ? sw.ss.str() : std::string {};
+    return sw.ShowCallstack() ? sw.ss.str() : StrA {};
 #else
     return {};
 #endif
 }
 
-GN_API void throwException(const char * func, const char * file, int line, std::string && msg) {
+GN_API void throwException(const char * func, const char * file, int line, StrA && msg) {
     // TODO: print callstack.
     auto bt = backtrace();
     GN_LOG_EX(sLogger, GN::Logger::ERROR_, func, file, line)("%s\n%s", msg.data(), bt.data());

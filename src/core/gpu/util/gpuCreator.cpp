@@ -58,7 +58,7 @@ GN_API Gpu * GN::gfx::createGpu(const GpuOptions & inputOptions, uint32_t creati
         GN_UNIMPL();
         return 0;
     default:
-        GN_ERROR(sLogger)("Invalid API(%d)", ro.api.toRawEnum());
+        GN_ERROR(sLogger)("Invalid API(%d)", ro.api.toInt());
         return 0;
     }
 }

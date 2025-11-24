@@ -514,7 +514,7 @@ AutoRef<Blob> sLoadFromMeshXMLFile(File & fp, MeshResourceDesc & desc) {
         return {};
     }
 
-    std::string basedir = fs::dirName(fp.name());
+    StrA basedir = fs::dirName(fp.name());
 
     // parse vtxbuf and idxbuf elements, again, to read, calculate mesh data size
     SafeArrayAccessor<uint8_t> meshData((uint8_t *) blob->data(), blob->size());

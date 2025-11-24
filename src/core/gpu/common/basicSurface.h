@@ -46,7 +46,7 @@ protected:
         // check flag
         if (flag >= SurfaceUpdateFlag::NUM_FLAGS) {
             static Logger * sLogger = getLogger("GN.gfx.gpu.common.BasicTexture");
-            GN_ERROR(sLogger)("invalid lock flag : %d", flag.toRawEnum());
+            GN_ERROR(sLogger)("invalid lock flag : %d", flag.toInt());
             return false;
         }
 
@@ -124,7 +124,7 @@ protected:
 
         if (flag >= SurfaceUpdateFlag::NUM_FLAGS) {
             static Logger * sLogger = getLogger("GN.gfx.gpu.common.BasicVtxBuffer");
-            GN_ERROR(sLogger)("Invalid update flag: %d.", flag.toRawEnum());
+            GN_ERROR(sLogger)("Invalid update flag: %d.", flag.toInt());
             return false;
         }
 
@@ -185,7 +185,7 @@ protected:
 
         if (flag >= SurfaceUpdateFlag::NUM_FLAGS) {
             static Logger * sLogger = getLogger("GN.gfx.gpu.common.BasicIdxBuffer");
-            GN_ERROR(sLogger)("Invalid update flag: %d.", flag.toRawEnum());
+            GN_ERROR(sLogger)("Invalid update flag: %d.", flag.toInt());
             return false;
         }
 

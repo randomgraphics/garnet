@@ -281,7 +281,7 @@ public:
         size_t newsize = oldsize + ssize;
         setCaps(newsize);
         setSize(newsize);
-        ::memcpy(mPtr + oldsize, s, ssize * sizeof(CharType));
+        ::memcpy(mPtr + oldsize, s.data(), ssize * sizeof(CharType));
         mPtr[newsize] = 0;
     }
 
@@ -703,14 +703,12 @@ public:
     }
 
     ///
-    /// type cast to C string
+    /// type cast to constant C style string. We can do this safely because the size of Str<CharType> is the same as the size of raw char pointer.
     ///
-    operator const CharType *() const { return mPtr; }
-
-    ///
-    /// type cast to C string
-    ///
-    operator CharType *() { return mPtr; }
+    operator const CharType *() const {
+        static_assert(sizeof(CharType*) == sizeof(Str<CharType>), "Str size must be the same as raw char pointer size");
+        return mPtr;
+    }
 
     ///
     /// assign operator
@@ -1065,10 +1063,16 @@ public:
     const T * find(const CHAR * text) const { return doFind(text); }
 
     /// find
+    const T * find(const Str<CHAR> & text) const { return doFind(text.c_str()); }
+
+    /// find
     const T * find(const std::basic_string<CHAR> & text) const { return doFind(text.c_str()); }
 
     /// find
     T * find(const CHAR * text) { return doFind(text); }
+
+    /// find
+    T * find(const Str<CHAR> & text) { return doFind(text.c_str()); }
 
     /// find
     T * find(const std::basic_string<CHAR> & text) { return doFind(text.c_str()); }
@@ -1111,11 +1115,23 @@ public:
     }
 
     /// indexing operator
+    T & operator[](const Str<CHAR> & text) { return operator[](text.data()); }
+
+    /// indexing operator
+    T & operator[](const std::basic_string<CHAR> & text) { return operator[](text.c_str()); }
+
+    /// indexing operator
     const T & operator[](const CHAR * text) const {
         const KeyValuePair * p = doFindPair(text);
         GN_ASSERT(p);
         return p->value;
     }
+
+    /// indexing operator
+    const T & operator[](const Str<CHAR> & text) const { return operator[](text.data()); }
+
+    /// indexing operator
+    const T & operator[](const std::basic_string<CHAR> & text) const { return operator[](text.c_str()); }
 
     // *****************************
     // private types
@@ -1440,19 +1456,9 @@ namespace str {
 /// @brief Check if a C style string is null or empty.
 inline bool empty(const char * s) { return 0 == s || 0 == *s; }
 
-/// @brief null pointer friendly string compare function
-inline int compare(const char * s1, const char * s2) {
-    if (!s1) return s2 ? -1 : 0;
-    if (!s2) return 1;
-    return 0 == strcmp(s1, s2);
-}
+/// @brief Check if a C style string is null or empty.
+inline bool empty(const wchar_t * s) { return 0 == s || 0 == *s; }
 
-/// @brief null pointer friendly string compare function
-inline int compareI(const char * s1, const char * s2) {
-    if (!s1) return s2 ? -1 : 0;
-    if (!s2) return 1;
-    return std::equal(s1, s1 + strlen(s1), s2, s2 + strlen(s2), [](char a, char b) { return tolower(a) == tolower(b); });
-}
 
 /// @brief null pointer friendly string length function
 inline size_t length(const char * s) { return s ? strlen(s) : 0; }

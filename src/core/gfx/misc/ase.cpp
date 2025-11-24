@@ -81,8 +81,8 @@ struct AseMeshInternal {
 /// ASE node (elemnet for mesh hierachy)
 ///
 struct AseNode {
-    std::string      parent;
-    std::string      name;
+    StrA      parent;
+    StrA      name;
     Matrix44f transform;
     Vector3f  pos;
     Vector3f  rotaxis;
@@ -117,7 +117,7 @@ struct AseFile {
     DynaArray<char> buf;
     char *          str;
     int             line;
-    std::string            filedir; // directory of the ASE file
+    StrA            filedir; // directory of the ASE file
 
     bool open(File & file) {
         // read ASE file
@@ -335,7 +335,7 @@ struct AseFile {
     //
     //
     // -----------------------------------------------------------------------------
-    bool readString(std::string & result, ScanOption option = 0) {
+    bool readString(StrA & result, ScanOption option = 0) {
         const char * s = readString(option);
         if (0 == s) return false;
         result = s;
@@ -345,8 +345,8 @@ struct AseFile {
     //
     //
     // -----------------------------------------------------------------------------
-    bool readAndResolveRelativePath(std::string & result, ScanOption option = 0) {
-        std::string relpath;
+    bool readAndResolveRelativePath(StrA & result, ScanOption option = 0) {
+        StrA relpath;
         if (!readString(relpath, option)) return false;
         GN::fs::resolvePath(result, filedir, relpath);
         return true;
@@ -355,7 +355,7 @@ struct AseFile {
     //
     // Note: symbol is a word w/o quotes and spaces.
     // -----------------------------------------------------------------------------
-    bool readSymbol(std::string & result, ScanOption option = 0) {
+    bool readSymbol(StrA & result, ScanOption option = 0) {
         const char * s = next(0, option);
         if (0 == s) return false;
         if (('a' <= *s && *s <= 'z') || ('A' <= *s && *s <= 'Z') || '_' == *s) {
@@ -997,7 +997,7 @@ static bool sReadAse(AseSceneInternal & scene, File & file) {
 //
 //
 // -----------------------------------------------------------------------------
-static AseGeoObject * sFindGeoObject(AseSceneInternal & scene, const std::string & name) {
+static AseGeoObject * sFindGeoObject(AseSceneInternal & scene, const StrA & name) {
     if (name.empty()) return &scene.root;
     for (AseGeoObject * o = scene.objects.begin(); o != scene.objects.end(); ++o) {
         if (name == o->node.name) return o;
@@ -1068,7 +1068,7 @@ static bool sBuildNodeTree(AseSceneInternal & scene) {
     n         = ttpre.first();
     int level = 0;
     while (n) {
-        std::string s("    ");
+        StrA s("    ");
 
         for (int i = 0; i < level; ++i) s += "- ";
         s += StrA::format("%s : bbox_pos(%f,%f,%f), bbox_size(%f,%f,%f)", n->node.name.data(), n->node.selfbbox.pos().x, n->node.selfbbox.pos().y,

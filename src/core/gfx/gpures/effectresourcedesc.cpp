@@ -157,13 +157,13 @@ static void sParseTexture(EffectResourceDesc & desc, const XmlElement & node) {
 
     SamplerDesc & sampler = texdesc.sampler;
 
-    const XmlAttrib * a = node.findAttrib("addressU", str::INSENSITIVE);
+    const XmlAttrib * a = node.findAttrib("addressU", false);
     if (a) sampler.addressU = sParseEnum(a->value, ADDRESS_MODE_TABLE, SamplerDesc::ADDRESS_REPEAT);
 
-    a = node.findAttrib("addressV", str::INSENSITIVE);
+    a = node.findAttrib("addressV", false);
     if (a) sampler.addressV = sParseEnum(a->value, ADDRESS_MODE_TABLE, SamplerDesc::ADDRESS_REPEAT);
 
-    a = node.findAttrib("addressW", str::INSENSITIVE);
+    a = node.findAttrib("addressW", false);
     if (a) sampler.addressW = sParseEnum(a->value, ADDRESS_MODE_TABLE, SamplerDesc::ADDRESS_REPEAT);
 
     GN_TODO("more samplers fields.");

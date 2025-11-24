@@ -202,9 +202,9 @@ struct FatMesh {
 };
 
 struct FatMaterial {
-    std::string     name {}; //< Material name
-    std::string     albedoTexture {};
-    std::string     normalTexture {};
+    StrA     name {}; //< Material name
+    StrA     albedoTexture {};
+    StrA     normalTexture {};
     Vector3f albedo {};
     Vector3f emmisive {};
     float    roughness = .0f;
@@ -236,7 +236,7 @@ struct FatJointBindPose {
 struct FatJoint {
     static const uint32_t NO_JOINT = (uint32_t) -1;
 
-    std::string name {}; //< Joint name (unique in a skeleton).
+    StrA name {}; //< Joint name (unique in a skeleton).
 
     // Hierarchy
     uint32_t parent {};  //< parent joint index. NO_JOINT, if the joint has no parent.
@@ -252,7 +252,7 @@ struct GN_API FatSkeleton {
     uint32_t                      root {};   //< Index of the root joint.
 
     /// Print joint hierarchy to a string.
-    void printJointHierarchy(std::string &) const;
+    void printJointHierarchy(StrA &) const;
 };
 
 template<typename T>
@@ -269,7 +269,7 @@ struct FatRigidAnimation {
 };
 
 struct FatAnimation {
-    std::string                                    name {};               //< Name of the animation.
+    StrA                                    name {};               //< Name of the animation.
     double                                  duration {};           //< Duration of the animation.
     DynaArray<DynaArray<FatRigidAnimation>> skeletonAnimations {}; //< 2D array that stores animations of each joint indexed by [skeletonIndex][jointIndex]
 };
@@ -309,10 +309,10 @@ struct GN_API FatModel {
     bool splitSkinnedMesh(uint32_t maxJointsPerSubset);
 
     /// load fatmodel from file
-    bool loadFromFile(const std::string & filename);
+    bool loadFromFile(const StrA & filename);
 
     /// save fatmodel to file.
-    bool saveToFile(const std::string & filename) const;
+    bool saveToFile(const StrA & filename) const;
 };
 
 // Misc. ulitities
@@ -321,7 +321,7 @@ struct GN_API FatModel {
 ///
 /// Print module file node hierarchy
 /// w
-GN_API void printModelFileNodeHierarchy(std::string & hierarchy, const std::string & filename);
+GN_API void printModelFileNodeHierarchy(StrA & hierarchy, const StrA & filename);
 
 //@}
 } // namespace gfx

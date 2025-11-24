@@ -103,7 +103,7 @@ public:
         // check GPU program language
         if (!desc.lang.valid()) {
             static Logger * sLogger = getLogger("GN.gfx.gpu.common");
-            GN_ERROR(sLogger)("invalid GPU program language: %d", desc.lang.toRawEnum());
+            GN_ERROR(sLogger)("invalid GPU program language: %d", desc.lang.toInt());
             return false;
         }
 

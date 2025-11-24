@@ -84,7 +84,7 @@ static bool sParseGpuAPI(GN::gfx::GpuAPI & result, const char * value) {
     StrA upperCase(value);
     upperCase.toUpper();
 
-    result = GpuAPI::sFromString(upperCase);
+    result = GpuAPI::sFromString(upperCase.data());
 
     if (GpuAPI::INVALID == result) {
         GN_ERROR(sLogger)("invalid renderer API: %s", value);
@@ -367,7 +367,7 @@ bool GN::util::SampleApp::checkCmdLine(int argc, const char * const argv[]) {
         if (0 == str::compareI("-h", a) || 0 == str::compareI("-?", a) || 0 == str::compareI("--help", a) || 0 == str::compareI("/help", a) ||
             0 == str::compareI("/h", a) || 0 == str::compareI("/?", a)) {
             StrA executableName = fs::baseName(argv[0]) + fs::extName(argv[0]);
-            onPrintHelpScreen(executableName);
+            onPrintHelpScreen(executableName.data());
             return false;
         } else if ('-' == *a
 #if GN_MSWIN
@@ -412,17 +412,17 @@ bool GN::util::SampleApp::checkCmdLine(int argc, const char * const argv[]) {
                 StrA value = sGetOptionValue(argc, argv, i);
                 if (value.empty()) return false;
 
-                if (!sParseInteger(mInitParam.ro.displayMode.width, a, value)) return false;
+                if (!sParseInteger(mInitParam.ro.displayMode.width, a, value.data())) return false;
             } else if (0 == str::compareI("wh", a + 1)) {
                 StrA value = sGetOptionValue(argc, argv, i);
                 if (value.empty()) return false;
 
-                if (!sParseInteger(mInitParam.ro.displayMode.height, a, value)) return false;
+                if (!sParseInteger(mInitParam.ro.displayMode.height, a, value.data())) return false;
             } else if (0 == str::compareI("vsync", a + 1)) {
                 StrA value = sGetOptionValue(argc, argv, i);
                 if (value.empty()) return false;
 
-                if (!sParseBool(mInitParam.ro.vsync, a, value)) return false;
+                if (!sParseBool(mInitParam.ro.vsync, a, value.data())) return false;
             } else {
                 // this is an extra option
                 unknownArgs.append(a);

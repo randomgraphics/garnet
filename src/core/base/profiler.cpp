@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "garnet/base/profiler.h"
 
-static StrA sTime2Str(double time) {
+static GN::StrA sTime2Str(double time) {
     using namespace GN;
 
     if (time < 0.000001) {

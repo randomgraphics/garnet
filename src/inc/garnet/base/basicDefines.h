@@ -275,6 +275,7 @@ public:                                                                     \
     template<typename T>                                                    \
     ENUM_CLASS(T t): mValue((ENUM_TYPE) t) {}                               \
     const ENUM_TYPE & toRawEnum() const { return mValue; }                  \
+    int               toInt() const { return (int) mValue; }                \
                       operator const ENUM_TYPE &() const { return mValue; } \
     ENUM_CLASS &      operator++() {                                        \
              mValue = (ENUM_TYPE) (mValue + 1);                             \
