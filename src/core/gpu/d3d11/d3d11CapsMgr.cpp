@@ -62,7 +62,7 @@ bool GN::gfx::D3D11Gpu::capsInit() {
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::D3D11Gpu::checkTextureFormatSupport(PixelFormat format, TextureUsage usage) const {
+bool GN::gfx::D3D11Gpu::checkTextureFormatSupport(img::PixelFormat format, TextureUsage usage) const {
     DXGI_FORMAT d3dfmt = (DXGI_FORMAT) format.toDXGI();
     if (DXGI_FORMAT_UNKNOWN == d3dfmt) return false;
 

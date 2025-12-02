@@ -257,7 +257,7 @@ bool GN::gfx::OGLGpu::capsInit() {
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::OGLGpu::checkTextureFormatSupport(PixelFormat /*format*/, TextureUsage /*usages*/) const {
+bool GN::gfx::OGLGpu::checkTextureFormatSupport(img::PixelFormat /*format*/, TextureUsage /*usages*/) const {
     GN_UNIMPL_WARNING();
     return true;
 }

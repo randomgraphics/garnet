@@ -152,39 +152,39 @@ bool GN::gfx::OGLVtxFmt::setupStateBindings(const OGLGpuProgram * gpuProgram) {
             return false;
         }
 
-        if (PixelFormat::FLOAT1() == e.format) {
+        if (img::PixelFormat::FLOAT1() == e.format) {
             ab.format        = GL_FLOAT;
             ab.components    = 1;
             ab.normalization = false;
-        } else if (PixelFormat::FLOAT2() == e.format) {
+        } else if (img::PixelFormat::FLOAT2() == e.format) {
             ab.format        = GL_FLOAT;
             ab.components    = 2;
             ab.normalization = false;
-        } else if (PixelFormat::FLOAT3() == e.format) {
+        } else if (img::PixelFormat::FLOAT3() == e.format) {
             ab.format        = GL_FLOAT;
             ab.components    = 3;
             ab.normalization = false;
-        } else if (PixelFormat::FLOAT4() == e.format) {
+        } else if (img::PixelFormat::FLOAT4() == e.format) {
             ab.format        = GL_FLOAT;
             ab.components    = 4;
             ab.normalization = false;
-        } else if (PixelFormat::RGBA8() == e.format) {
+        } else if (img::PixelFormat::RGBA8() == e.format) {
             ab.format        = GL_UNSIGNED_BYTE;
             ab.components    = 4;
             ab.normalization = true;
-        } else if (PixelFormat::USHORT4() == e.format) {
+        } else if (img::PixelFormat::USHORT4() == e.format) {
             ab.format        = GL_UNSIGNED_SHORT;
             ab.components    = 4;
             ab.normalization = false;
-        } else if (PixelFormat::SHORT4() == e.format) {
+        } else if (img::PixelFormat::SHORT4() == e.format) {
             ab.format        = GL_SHORT;
             ab.components    = 4;
             ab.normalization = false;
-        } else if (PixelFormat::UINT4() == e.format) {
+        } else if (img::PixelFormat::UINT4() == e.format) {
             ab.format        = GL_UNSIGNED_INT;
             ab.components    = 4;
             ab.normalization = false;
-        } else if (PixelFormat::SINT4() == e.format) {
+        } else if (img::PixelFormat::SINT4() == e.format) {
             ab.format        = GL_INT;
             ab.components    = 4;
             ab.normalization = false;

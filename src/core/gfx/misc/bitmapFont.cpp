@@ -367,7 +367,7 @@ bool GN::gfx::BitmapFont::slotInit(Gpu & gpu, uint16_t fontw, uint16_t fonth, si
     // std::fill( texels.begin(), texels.end(), 0 );
 
     // create font textures
-    TextureDesc td = {PixelFormat::RGBA_8_8_8_8_UNORM(), (uint32_t) texwidth, (uint32_t) texheight, 1, 1, 1, TextureUsage::DEFAULT};
+    TextureDesc td = {img::PixelFormat::RGBA_8_8_8_8_UNORM(), (uint32_t) texwidth, (uint32_t) texheight, 1, 1, 1, TextureUsage::DEFAULT};
     GN_ASSERT(texcount <= gpu.caps().maxTextures);
     mTextures.resize(texcount);
     for (size_t i = 0; i < texcount; ++i) {

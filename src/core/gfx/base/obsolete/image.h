@@ -13,7 +13,7 @@ namespace gfx {
 struct GN_API ImagePlaneDesc {
 
     /// pixel format
-    PixelFormat format = PixelFormat::UNKNOWN;
+    img::PixelFormat format = img::PixelFormat::UNKNOWN;
 
     /// Plane width in pixels
     uint32_t width = 0;

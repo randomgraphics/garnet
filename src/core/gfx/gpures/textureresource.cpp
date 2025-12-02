@@ -49,7 +49,7 @@ AutoRef<TextureResource> GN::gfx::TextureResource::loadFromFile(GpuResourceDatab
     if (!fp) return AutoRef<TextureResource>::NULLREF;
 
     // load image
-    auto image = Image::load(fp->input());
+    auto image = img::Image::load(fp->input());
     if (image.empty()) return AutoRef<TextureResource>::NULLREF;
 
     // create texture
@@ -61,7 +61,7 @@ AutoRef<TextureResource> GN::gfx::TextureResource::loadFromFile(GpuResourceDatab
     // update texture content
     for (uint32_t f = 0; f < td.faces; ++f)
         for (uint32_t l = 0; l < td.levels; ++l) {
-            auto   p  = PlaneCoord {0, f, l};
+            auto   p  = img::PlaneCoord {0, f, l};
             auto & md = image.plane(p);
             tex->updateMipmap(f, l, 0, md.pitch, md.slice, image.at(p), SurfaceUpdateFlag::DEFAULT);
         }

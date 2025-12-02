@@ -28,15 +28,15 @@ GN_CASSERT(sizeof(TextureUsage) == sizeof(uint32_t));
 /// Texture descriptor
 ///
 struct TextureDesc {
-    PixelFormat format; ///< pixel format.
-    uint32_t    width;  ///< basemap width
-    uint32_t    height; ///< basemap height
-    uint32_t    depth;  ///< basemap depth
-    uint32_t    faces;  ///< face count. When used as parameter of Gpu::createTexture(),
-                        ///< you may set it to 0 to use default face count: 6 for cubemap, 1 for others.
-    uint32_t levels;    ///< mipmap level count. When used as parameter of Gpu::createTexture(),
-                        ///< you may set it to 0 to create full mipmap chain (down to 1x1).
-    TextureUsage usage; ///< texture usage
+    img::PixelFormat format; ///< pixel format.
+    uint32_t         width;  ///< basemap width
+    uint32_t         height; ///< basemap height
+    uint32_t         depth;  ///< basemap depth
+    uint32_t         faces;  ///< face count. When used as parameter of Gpu::createTexture(),
+                             ///< you may set it to 0 to use default face count: 6 for cubemap, 1 for others.
+    uint32_t levels;         ///< mipmap level count. When used as parameter of Gpu::createTexture(),
+                             ///< you may set it to 0 to create full mipmap chain (down to 1x1).
+    TextureUsage usage;      ///< texture usage
 
     ///
     /// get basemap size
@@ -46,7 +46,7 @@ struct TextureDesc {
     ///
     /// compose texture descriptor from image descriptor
     ///
-    bool fromImageDesc(const ImageDesc & id) {
+    bool fromImageDesc(const img::ImageDesc & id) {
         format = id.format();
         width  = id.width();
         height = id.height();
