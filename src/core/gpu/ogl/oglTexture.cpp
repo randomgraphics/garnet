@@ -245,7 +245,7 @@ static inline bool sColorFormat2OGL(GLint & gl_internalformat, GLuint & gl_forma
             GN_ERROR(sLogger)("integer texture is not supported yet.");
             return false;
         }
-    } else if (PixelFormat::DXT1_UNORM() == clrfmt) {
+    } else if (PixelFormat::BC1_UNORM() == clrfmt) {
         if (GLEW_ARB_texture_compression && GLEW_EXT_texture_compression_s3tc) {
             gl_internalformat = GL_COMPRESSED_RGBA_S3TC_DXT1_EXT;
             gl_format         = GL_RGBA;
@@ -253,7 +253,7 @@ static inline bool sColorFormat2OGL(GLint & gl_internalformat, GLuint & gl_forma
             gl_compressed     = true;
             return true;
         }
-    } else if (PixelFormat::DXT3_UNORM() == clrfmt) {
+    } else if (PixelFormat::BC2_UNORM() == clrfmt) {
         if (GLEW_ARB_texture_compression && GLEW_EXT_texture_compression_s3tc) {
             gl_internalformat = GL_COMPRESSED_RGBA_S3TC_DXT3_EXT;
             gl_format         = GL_RGBA;
@@ -261,7 +261,7 @@ static inline bool sColorFormat2OGL(GLint & gl_internalformat, GLuint & gl_forma
             gl_compressed     = true;
             return true;
         }
-    } else if (PixelFormat::DXT5_UNORM() == clrfmt) {
+    } else if (PixelFormat::BC3_UNORM() == clrfmt) {
         if (GLEW_ARB_texture_compression && GLEW_EXT_texture_compression_s3tc) {
             gl_internalformat = GL_COMPRESSED_RGBA_S3TC_DXT5_EXT;
             gl_format         = GL_RGBA;

@@ -32,7 +32,7 @@ public:
         TS_ASSERT(7 == desc.height());
         TS_ASSERT(9 == desc.depth());
         TS_ASSERT(4 == desc.levels);
-        TS_ASSERT(3 == desc.layers);
+        TS_ASSERT(3 == desc.faces);
         TS_ASSERT(12 == desc.planes.size());
     }
 

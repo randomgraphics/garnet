@@ -51,7 +51,7 @@ struct TextureDesc {
         width  = id.width();
         height = id.height();
         depth  = id.depth();
-        faces  = id.layers;
+        faces  = id.faces;
         levels = id.levels;
         usage  = TextureUsage::DEFAULT;
         return validate();
