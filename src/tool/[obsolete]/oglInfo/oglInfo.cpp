@@ -74,13 +74,13 @@ void printOglInfo(intptr_t disp, int index) {
     const char * renderer = (const char *) glGetString(GL_RENDERER);
 
     info = GN::StrA::format("\n\n"
-                           "===================================================\n"
-                           "        OpenGL Implementation Informations(%d)\n"
-                           "---------------------------------------------------\n"
-                           "    OpenGL vendor      :    %s\n"
-                           "    OpenGL version     :    %s\n"
-                           "    OpenGL renderer    :    %s\n",
-                           index, vendor, version, renderer);
+                            "===================================================\n"
+                            "        OpenGL Implementation Informations(%d)\n"
+                            "---------------------------------------------------\n"
+                            "    OpenGL vendor      :    %s\n"
+                            "    OpenGL version     :    %s\n"
+                            "    OpenGL renderer    :    %s\n",
+                            index, vendor, version, renderer);
 
     // caps. info.
     GLint ts, tu;
@@ -90,9 +90,9 @@ void printOglInfo(intptr_t disp, int index) {
     else
         tu = 1;
     info += GN::StrA::format("---------------------------------------------------\n"
-                            "    Max size of texture             :    %d\n"
-                            "    Max number of texture stages    :    %d\n",
-                            ts, tu);
+                             "    Max size of texture             :    %d\n"
+                             "    Max number of texture stages    :    %d\n",
+                             ts, tu);
 
     // extension info.
     info += "---------------------------------------------------\n";

@@ -76,12 +76,16 @@ GN_API const WindowCreateParameters WCP_WINDOWED_RENDER_WINDOW = {
 };
 
 GN_API const WindowCreateParameters WCP_FULLSCREEN_RENDER_WINDOW = {
-    std::string(""), 640, 480, // size
-    0,        0,   0,   // no parent
-    false,              // border
-    false,              // titlebar
-    true,               // topmost
-    false,              // no close box
+    std::string(""),
+    640,
+    480, // size
+    0,
+    0,
+    0,     // no parent
+    false, // border
+    false, // titlebar
+    true,  // topmost
+    false, // no close box
 };
 
 //

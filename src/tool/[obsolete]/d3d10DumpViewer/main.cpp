@@ -155,7 +155,7 @@ struct D3D10BufferDump : BinaryComDump<ID3D10Buffer> {
 struct D3D10ConstBufferDump : public D3D10BufferDump {};
 
 struct D3D10InputLayoutDump {
-    StackArray<std::string, 256>               semantics;
+    StackArray<std::string, 256>        semantics;
     DynaArray<D3D10_INPUT_ELEMENT_DESC> elements;
     DynaArray<uint8_t>                  signature;
     AutoComPtr<ID3D10InputLayout>       comptr;

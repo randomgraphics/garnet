@@ -95,9 +95,9 @@ private:
     float               mFrameIdlePercentage;
 
     std::wstring mHelpText;
-    bool mShowHUD;  ///< show simple HUD over game scene
-    bool mShowHelp; ///< show detailed help text in HUD. No effect if mShowHUD is false.
-    bool mDone;     ///< Set to true to quit the application.
+    bool         mShowHUD;  ///< show simple HUD over game scene
+    bool         mShowHelp; ///< show detailed help text in HUD. No effect if mShowHUD is false.
+    bool         mDone;     ///< Set to true to quit the application.
 
     // ********************************
     // private functions

@@ -57,8 +57,8 @@ private:
 };
 
 struct SkinnedAnimationInfo {
-    std::string   name;
-    double duration;
+    std::string name;
+    double      duration;
 };
 
 ///

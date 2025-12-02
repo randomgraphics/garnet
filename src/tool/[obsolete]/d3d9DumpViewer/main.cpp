@@ -14,12 +14,12 @@ static GN::Logger * sLogger = GN::getLogger("GN.tool.D3D9DumpViewer");
 static std::string sDumpFileName;
 
 struct D3D9VsDump {
-    std::string                               source;
+    std::string                        source;
     AutoComPtr<IDirect3DVertexShader9> vs;
 };
 
 struct D3D9PsDump {
-    std::string                              source;
+    std::string                       source;
     AutoComPtr<IDirect3DPixelShader9> ps;
 };
 
@@ -43,7 +43,7 @@ struct D3D9IdxBufDump {
 };
 
 struct D3D9TextureDump {
-    std::string                              ref;
+    std::string                       ref;
     AutoComPtr<IDirect3DBaseTexture9> tex;
 };
 

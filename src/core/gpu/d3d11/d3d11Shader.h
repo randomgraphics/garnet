@@ -97,7 +97,7 @@ struct D3D11TextureParameterDesc : public GpuProgramTextureParameterDesc {
 
 struct D3D11AttributeParameterDesc : public GpuProgramAttributeParameterDesc {
     std::string semanticName;
-    UINT semanticIndex;
+    UINT        semanticIndex;
 
     /// ctor
     D3D11AttributeParameterDesc() { name = NULL; }

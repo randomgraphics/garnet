@@ -143,12 +143,13 @@ inline bool isEmpty(const CHAR * s) {
 /// format string to raw buffer with guaranteed null terminator.
 ///
 template<typename CHAR, typename... Args>
-inline size_t formatTo(CHAR * buf, size_t bufSizeInChar, const CHAR * fmt, Args&&... args) {
+inline size_t formatTo(CHAR * buf, size_t bufSizeInChar, const CHAR * fmt, Args &&... args) {
     const auto result = fmt::format_to_n(buf, bufSizeInChar, fmt, std::forward<Args>(args)...);
     if (result.size < bufSizeInChar) GN_LIKELY {
-        buf[result.size] = 0;
-        return result.size;
-    } else {
+            buf[result.size] = 0;
+            return result.size;
+        }
+    else {
         buf[bufSizeInChar - 1] = 0;
         return bufSizeInChar - 1;
     }
@@ -373,11 +374,9 @@ public:
     /// string formatting
     ///
     template<typename... Args>
-    Str<CharType> & formatInplace(const CharType * formatString, Args&&... args) {
+    Str<CharType> & formatInplace(const CharType * formatString, Args &&... args) {
         auto requiredLength = fmt::formatted_size(formatString, std::forward<Args>(args)...) + 1;
-        if (requiredLength > caps()) {
-            setCaps(requiredLength);
-        }
+        if (requiredLength > caps()) { setCaps(requiredLength); }
         auto newSize = str::formatTo<CharType>(mPtr, requiredLength, formatString, std::forward<Args>(args)...);
         GN_ASSERT(newSize <= caps() && mPtr[newSize] == 0);
         setSize(newSize);
@@ -717,7 +716,7 @@ public:
     /// type cast to constant C style string. We can do this safely because the size of Str<CharType> is the same as the size of raw char pointer.
     ///
     operator const CharType *() const {
-        static_assert(sizeof(CharType*) == sizeof(Str<CharType>), "Str size must be the same as raw char pointer size");
+        static_assert(sizeof(CharType *) == sizeof(Str<CharType>), "Str size must be the same as raw char pointer size");
         return mPtr;
     }
 
@@ -728,7 +727,7 @@ public:
         GN_ASSERT(index < size());
         return mPtr[index];
     }
-    
+
     ///
     /// Index operator
     ///
@@ -906,8 +905,8 @@ public:
     /// string formatting
     ///
     template<typename... Args>
-    static Str<CharType> format(const CharType * formatString, Args&&... args) {
-        auto requiredLength = fmt::formatted_size(formatString, std::forward<Args>(args)...);
+    static Str<CharType> format(const CharType * formatString, Args &&... args) {
+        auto          requiredLength = fmt::formatted_size(formatString, std::forward<Args>(args)...);
         Str<CharType> s;
         s.setCaps(requiredLength);
         auto newSize = str::formatTo<CharType>(s.mPtr, s.caps(), formatString, std::forward<Args>(args)...);
@@ -915,7 +914,6 @@ public:
         s.setSize(newSize);
         return s;
     }
-
 
 private:
     struct StringHeader {
@@ -979,13 +977,12 @@ typedef Str<wchar_t> StrW;
 ///
 /// Define custom string literal operator
 ///
-inline StrA operator "" _s(const char * s, size_t len) { return StrA(s, len); }
+inline StrA operator"" _s(const char * s, size_t len) { return StrA(s, len); }
 
 ///
 /// Define custom wide-char string literal operator
 ///
-inline StrW operator "" _ws(const wchar_t * s, size_t len) { return StrW(s, len); }
-
+inline StrW operator"" _ws(const wchar_t * s, size_t len) { return StrW(s, len); }
 
 ///
 /// Fixed sized string that has no runtime memory allocation.
@@ -1465,7 +1462,6 @@ inline bool empty(const char * s) { return 0 == s || 0 == *s; }
 
 /// @brief Check if a C style string is null or empty.
 inline bool empty(const wchar_t * s) { return 0 == s || 0 == *s; }
-
 
 /// @brief null pointer friendly string length function
 inline size_t length(const char * s) { return s ? strlen(s) : 0; }

@@ -262,7 +262,7 @@ static void sParseFail(ParseTracer * tracer, const char * errInfo) {
 static GN::XmlNode * sNewNode(ParseTracer * tracer, GN::XmlNodeType type) {
     GN::XmlNode * n = tracer->doc->createNode(type, NULL);
     if (0 == n) {
-        sParseFail(tracer, GN::StrA::format("Fail to create node with type of '%d'", (int)type).data());
+        sParseFail(tracer, GN::StrA::format("Fail to create node with type of '%d'", (int) type).data());
         return NULL;
     }
 
@@ -681,7 +681,7 @@ GN_API GN::XmlNode * GN::XmlDocument::createNode(XmlNodeType type, XmlNode * par
         p = new PooledNode<XmlElement>(*this);
         break;
     default:
-        GN_ERROR(sLogger)("invalid node type : %d", (int)type);
+        GN_ERROR(sLogger)("invalid node type : %d", (int) type);
         return NULL;
     }
     mNodes.append(p);

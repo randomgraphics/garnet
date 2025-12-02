@@ -114,7 +114,7 @@ GN_API bool GN::DiskFile::open(const StrA & filename, const std::ios_base::openm
     mFile.open(filename.data(), mode);
 
     if (!mFile) {
-        GN_ERROR(sLogger)("fail to open file '%s' with mode %d : %s", filename.data(), (int)mode, GN::errno2str(errno));
+        GN_ERROR(sLogger)("fail to open file '%s' with mode %d : %s", filename.data(), (int) mode, GN::errno2str(errno));
         return false;
     }
     setStream(&mFile, &mFile);

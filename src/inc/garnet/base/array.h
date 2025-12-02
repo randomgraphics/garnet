@@ -42,9 +42,10 @@ inline void inplaceDestructArray(size_t n, T * ptr) {
         // do nothing to POD like type.
         (void) ptr;
         (void) n;
-    } else if (ptr && n) GN_LIKELY {
-        for (T * end = ptr + n; ptr < end; ++ptr) { ptr->T::~T(); }
-    }
+    } else if (ptr && n)
+        GN_LIKELY {
+            for (T * end = ptr + n; ptr < end; ++ptr) { ptr->T::~T(); }
+        }
 }
 } // namespace details
 

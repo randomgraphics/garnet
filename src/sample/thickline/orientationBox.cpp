@@ -14,7 +14,7 @@ static GN::Logger * sLogger = GN::getLogger("GN.gfx.orientationbox");
 //
 //
 // -----------------------------------------------------------------------------
-template <typename... Args>
+template<typename... Args>
 static void LOG_ERROR(const char * format, Args &&... args) {
     GN_ERROR(sLogger)(format, std::forward<Args>(args)...);
 }

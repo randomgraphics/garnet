@@ -26,7 +26,7 @@ GN_API size_t GN::str::toSignedInteger(int64_t & result, int bits, int base, con
 #if GN_POSIX
     int64_t s64 = strtoll(s, &e, base);
 #else
-    int64_t s64 = _strtoi64(s, &e, base);
+    int64_t  s64 = _strtoi64(s, &e, base);
 #endif
 
     if (0 != errno || (0 == s64 && s == e)) return 0;

@@ -125,8 +125,7 @@ GN_API LPDIRECT3DVERTEXSHADER9 GN::d3d9::compileAndCreateVS(LPDIRECT3DDEVICE9 de
     HRESULT                 hr;
     #if GN_PLATFORM_HAS_D3D9X
     if (FAILED(hr = D3DXCompileShader(code, (UINT) (len ? len : str::length(code)), NULL, NULL, // no macros, no includes,
-                                      entry, str::empty(profile) ? D3DXGetVertexShaderProfile(dev) : profile, sRefineFlagsD3D9(flags), &bin, &err,
-                                      constTable)))
+                                      entry, str::empty(profile) ? D3DXGetVertexShaderProfile(dev) : profile, sRefineFlagsD3D9(flags), &bin, &err, constTable)))
     #else
     GN_UNUSED_PARAM(constTable);
     if (FAILED(hr = D3DCompile(code, (UINT) (len ? len : str::length(code)),
@@ -170,9 +169,8 @@ GN_API LPDIRECT3DPIXELSHADER9 GN::d3d9::compileAndCreatePS(LPDIRECT3DDEVICE9 dev
     AutoComPtr<ID3DXBuffer> err;
     HRESULT                 hr;
     #if GN_PLATFORM_HAS_D3D9X
-    if (FAILED(hr =
-                   D3DXCompileShader(code, (UINT) (len ? len : str::length(code)), NULL, NULL, // no macros, no includes,
-                                     entry, str::empty(profile) ? D3DXGetPixelShaderProfile(dev) : profile, sRefineFlagsD3D9(flags), &bin, &err, constTable)))
+    if (FAILED(hr = D3DXCompileShader(code, (UINT) (len ? len : str::length(code)), NULL, NULL, // no macros, no includes,
+                                      entry, str::empty(profile) ? D3DXGetPixelShaderProfile(dev) : profile, sRefineFlagsD3D9(flags), &bin, &err, constTable)))
     #else
     GN_UNUSED_PARAM(constTable);
     if (FAILED(hr = D3DCompile(code, (UINT) (len ? len : str::length(code)),

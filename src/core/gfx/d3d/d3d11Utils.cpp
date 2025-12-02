@@ -116,7 +116,7 @@ static void sPrintShaderCompileInfoD3D11(const char * hlsl, ID3DBlob * bin) {
 
 // -----------------------------------------------------------------------------
 GN_API GN::std::wstring GN::d3d11::hresult2string(HRESULT hr) {
-    std::wstring                   strMessage;
+    std::wstring           strMessage;
     WORD                   facility = HRESULT_FACILITY(hr);
     AutoComPtr<IErrorInfo> iei;
     if (S_OK == GetErrorInfo(0, &iei) && iei) {

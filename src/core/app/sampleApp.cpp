@@ -494,8 +494,8 @@ void GN::util::SampleApp::drawHUD() {
         BitmapFont * font = engine::getDefaultFontRenderer();
 
         auto timeInfo = StrW::format(L"FPS: %.2f\tIdle: %.1f%%\n"
-                                    L"(Press F1 for more helps)",
-                                    mFps.fps(), mFrameIdlePercentage);
+                                     L"(Press F1 for more helps)",
+                                     mFps.fps(), mFrameIdlePercentage);
 
         font->drawText(timeInfo.data(), 40, 40);
 

@@ -106,8 +106,8 @@ private:
 //@{
 GN_API size_t wcs2utf8(char * obuf, size_t ocount, const wchar_t * ibuf, size_t icount);
 GN_API size_t utf82wcs(wchar_t * obuf, size_t ocount, const char * ibuf, size_t icount);
-GN_API GN::StrA   wcs2utf8(const wchar_t * ibuf, size_t icount);
-GN_API GN::StrW   utf82wcs(const char * ibuf, size_t icount);
+GN_API GN::StrA wcs2utf8(const wchar_t * ibuf, size_t icount);
+GN_API GN::StrW utf82wcs(const char * ibuf, size_t icount);
 //@}
 
 ///

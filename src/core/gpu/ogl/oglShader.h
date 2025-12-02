@@ -119,8 +119,8 @@ public:
     // private variables
     // ********************************
 private:
-    uint64_t mID;
-    std::string     mName; // for debugging and logging only.
+    uint64_t    mID;
+    std::string mName; // for debugging and logging only.
 
     ///
     /// GLSL uniform parameter description
@@ -143,7 +143,7 @@ private:
     ///
     struct GLSLAttributeDesc {
         GpuProgramAttributeParameterDesc desc {}; ///< attribute parameter description
-        std::string                             name {}; ///< attribute name
+        std::string                      name {}; ///< attribute name
         OGLVertexSemantic                semanticName {};
         uint8_t                          semanticIndex {};
     };

@@ -37,7 +37,7 @@ namespace GN {
 /// custom exception class
 ///
 struct Exception {
-    StrA  msg;
+    StrA         msg;
     const char * func; ///< location of the exception
     const char * file; ///< location of the exception
     int          line; ///< location of the exception

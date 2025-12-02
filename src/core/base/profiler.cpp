@@ -80,10 +80,10 @@ GN_API void GN::ProfilerManager::toString(StrA & rval) const {
     for (i = mTimers.first(); i != NULL; i = mTimers.next(i)) {
         const ProfilerTimerImpl & t = i->value;
         rval += GN::StrA::format("    %s :\n"
-                                "        count(%d), sum(%s), ave(%s), min(%s), max(%s)\n"
-                                "\n",
-                                i->key, t.count, sTime2Str(t.timesum).data(), sTime2Str(0 == t.count ? 0 : (t.timesum / t.count)).data(),
-                                sTime2Str(0 == t.count ? 0 : t.timemin).data(), sTime2Str(0 == t.count ? 0 : t.timemax).data());
+                                 "        count(%d), sum(%s), ave(%s), min(%s), max(%s)\n"
+                                 "\n",
+                                 i->key, t.count, sTime2Str(t.timesum).data(), sTime2Str(0 == t.count ? 0 : (t.timesum / t.count)).data(),
+                                 sTime2Str(0 == t.count ? 0 : t.timemin).data(), sTime2Str(0 == t.count ? 0 : t.timemax).data());
     }
     rval += "=====================================================================\n"
             "\n";

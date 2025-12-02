@@ -792,7 +792,7 @@ static bool sLoadFbxNodeRecursivly(ModelHierarchyDesc & desc, const StrA & filen
         // Some nodes are ignored silently.
         FbxNodeAttribute::eNull != type && FbxNodeAttribute::eUnknown != type && FbxNodeAttribute::eLight != type && FbxNodeAttribute::eCamera != type &&
         FbxNodeAttribute::eSkeleton != type) {
-        GN_WARN(sLogger)("Ignore unsupported node: type={}, name={}", (int)type, name);
+        GN_WARN(sLogger)("Ignore unsupported node: type={}, name={}", (int) type, name);
     }
 
     // load children

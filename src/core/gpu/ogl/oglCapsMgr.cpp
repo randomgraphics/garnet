@@ -32,7 +32,9 @@ static void sGetTokens(DynaArray<std::string> & tokens, const char * str) {
 ///
 /// function use to determine a extension is supported or not
 // ------------------------------------------------------------------------
-static inline bool sFindExtension(const DynaArray<std::string> & glexts, const char * ext) { return glexts.end() != std::find(glexts.begin(), glexts.end(), ext); }
+static inline bool sFindExtension(const DynaArray<std::string> & glexts, const char * ext) {
+    return glexts.end() != std::find(glexts.begin(), glexts.end(), ext);
+}
 
 ///
 /// Get OpenGL version number
@@ -141,14 +143,14 @@ static void sOutputOGLInfo(intptr_t disp, const DynaArray<std::string> & glexts)
     if (major >= 2) { glsl = (const char *) glGetString(GL_SHADING_LANGUAGE_VERSION); }
 
     info = GN::StrA::format("\n\n"
-                           "===================================================\n"
-                           "        OpenGL Implementation Informations\n"
-                           "---------------------------------------------------\n"
-                           "    OpenGL vendor      :    %s\n"
-                           "    OpenGL version     :    %s\n"
-                           "    OpenGL renderer    :    %s\n"
-                           "    GLSL version       :    %s\n",
-                           vendor, version, renderer, glsl);
+                            "===================================================\n"
+                            "        OpenGL Implementation Informations\n"
+                            "---------------------------------------------------\n"
+                            "    OpenGL vendor      :    %s\n"
+                            "    OpenGL version     :    %s\n"
+                            "    OpenGL renderer    :    %s\n"
+                            "    GLSL version       :    %s\n",
+                            vendor, version, renderer, glsl);
 
     // caps. info.
     GLint ts, tu;
@@ -158,11 +160,11 @@ static void sOutputOGLInfo(intptr_t disp, const DynaArray<std::string> & glexts)
     else
         tu = 1;
     info += StrA::format("---------------------------------------------------\n"
-                        "    Max size of texture             :    %d\n"
-                        "    Max number of texture stages    :    %d\n"
-                        "===================================================\n"
-                        "\n\n",
-                        ts, tu);
+                         "    Max size of texture             :    %d\n"
+                         "    Max number of texture stages    :    %d\n"
+                         "===================================================\n"
+                         "\n\n",
+                         ts, tu);
     GN_INFO(sLogger)(info.data());
 
     // extension info.

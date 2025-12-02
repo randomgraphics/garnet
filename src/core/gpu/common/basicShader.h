@@ -61,10 +61,10 @@ public:
     copy.X.source = (X##CodeLen > 0) ? (const char *) (ptr - start) : 0; \
     ptr += X##CodeLen;
 
-#define COPY_ENTRY(X)                                                                    \
-    GN_ASSERT(X##EntryLen > 0);                                                          \
+#define COPY_ENTRY(X)                                                                  \
+    GN_ASSERT(X##EntryLen > 0);                                                        \
     memcpy(ptr, str::empty(desc.X.entry) ? DEFAULT_ENTRY : desc.X.entry, X##EntryLen); \
-    copy.X.entry = (const char *) (ptr - start);                                         \
+    copy.X.entry = (const char *) (ptr - start);                                       \
     ptr += X##EntryLen;
 
         // copy codes and entries

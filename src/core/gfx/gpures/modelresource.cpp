@@ -844,7 +844,7 @@ void GN::gfx::ModelResource::Impl::draw() const {
 
     // draw
     GN_GPU_DEBUG_MARK_BEGIN(&g, StrA::format("ModelResource::draw : %s (%s)", mOwner.name().data(),
-                                            (fs::baseName(mMeshResource->name()) + fs::extName(mMeshResource->name())).data()));
+                                             (fs::baseName(mMeshResource->name()) + fs::extName(mMeshResource->name())).data()));
     for (size_t i = 0; i < mPasses.size(); ++i) {
         const GpuContext & gc = mPasses[i].gc;
 

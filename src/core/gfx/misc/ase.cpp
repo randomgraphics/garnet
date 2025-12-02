@@ -1072,7 +1072,7 @@ static bool sBuildNodeTree(AseSceneInternal & scene) {
 
         for (int i = 0; i < level; ++i) s += "- ";
         s += StrA::format("%s : bbox_pos(%f,%f,%f), bbox_size(%f,%f,%f)", n->node.name.data(), n->node.selfbbox.pos().x, n->node.selfbbox.pos().y,
-                         n->node.selfbbox.pos().z, n->node.selfbbox.extend().x, n->node.selfbbox.extend().y, n->node.selfbbox.extend().z);
+                          n->node.selfbbox.pos().z, n->node.selfbbox.extend().x, n->node.selfbbox.extend().y, n->node.selfbbox.extend().z);
 
         GN_VERBOSE(sLogger)(s.data());
 

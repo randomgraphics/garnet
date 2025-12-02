@@ -58,16 +58,16 @@ public:
 /// Window creation parameters
 ///
 struct WindowCreateParameters {
-    std::string     caption;              ///< window title text.
-    size_t   clientWidth  = 0;     ///< client width. 0 means current display width.
-    size_t   clientHeight = 0;     ///< client height. 0 means current display height.
-    intptr_t display      = 0;     ///< display handle. X windows only. 0 means using default display handle.
-    intptr_t monitor      = 0;     ///< Monitor handle. 0 means default monitor.
-    intptr_t parent       = 0;     ///< Parent window.
-    bool     hasBorder    = true;  ///< has border or not
-    bool     hasTitleBar  = true;  ///< has title bar or not
-    bool     topMost      = false; ///< top-most(always on top) or not
-    bool     closebox     = true;  ///< close box is enabled.
+    std::string caption;              ///< window title text.
+    size_t      clientWidth  = 0;     ///< client width. 0 means current display width.
+    size_t      clientHeight = 0;     ///< client height. 0 means current display height.
+    intptr_t    display      = 0;     ///< display handle. X windows only. 0 means using default display handle.
+    intptr_t    monitor      = 0;     ///< Monitor handle. 0 means default monitor.
+    intptr_t    parent       = 0;     ///< Parent window.
+    bool        hasBorder    = true;  ///< has border or not
+    bool        hasTitleBar  = true;  ///< has title bar or not
+    bool        topMost      = false; ///< top-most(always on top) or not
+    bool        closebox     = true;  ///< close box is enabled.
 };
 
 struct WindowAttachingParameters {

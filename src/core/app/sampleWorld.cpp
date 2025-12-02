@@ -147,7 +147,7 @@ bool GN::util::SampleWorld::createEntites(const ModelHierarchyDesc & desc) {
     if (NULL == mRoot) return NULL;
 
     for (const StringMap<char, ModelHierarchyDesc::NodeDesc>::KeyValuePair * i = desc.nodes.first(); i != NULL; i = desc.nodes.next(i)) {
-        const std::string &                         entityName = i->key;
+        const std::string &                  entityName = i->key;
         const ModelHierarchyDesc::NodeDesc & entityDesc = i->value;
 
         if (NULL == sCreateEntity(mRoot, desc, mEntities, entityName, entityDesc)) {

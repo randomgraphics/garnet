@@ -10,7 +10,7 @@
 #include <sstream>
 
 #ifndef FMT_HEADER_ONLY
-#define FMT_HEADER_ONLY
+    #define FMT_HEADER_ONLY
 #endif
 #include <fmt/format.h>
 #include <fmt/xchar.h>
@@ -181,7 +181,7 @@ public:
         /// printf style log
         ///
         template<typename... Args>
-        void operator()(const char * format_, Args&&... args_) {
+        void operator()(const char * format_, Args &&... args_) {
             GN_ASSERT(mLogger);
             return mLogger->doLog(mDesc, LogFormatter<char>(format_, std::forward<Args>(args_)...).buffer);
         }
@@ -190,7 +190,7 @@ public:
         /// printf style log (wide char)
         ///
         template<typename... Args>
-        void operator()(const wchar_t * format_, Args&&... args_) {
+        void operator()(const wchar_t * format_, Args &&... args_) {
             GN_ASSERT(mLogger);
             return mLogger->doLog(mDesc, LogFormatter<wchar_t>(format_, std::forward<Args>(args_)...).buffer);
         }
@@ -218,29 +218,29 @@ public:
 
     template<typename CharType>
     struct LogFormatter {
-        static constexpr size_t PRE_ALLOCATED_BUFFER_SIZE = 1024;
+        static constexpr size_t             PRE_ALLOCATED_BUFFER_SIZE = 1024;
         inline static thread_local CharType PRE_ALLOCATED_BUFFER[PRE_ALLOCATED_BUFFER_SIZE];
-        CharType * buffer = nullptr;
-        bool isPreAllocated = true;
+        CharType *                          buffer         = nullptr;
+        bool                                isPreAllocated = true;
 
         template<typename... Args>
-        LogFormatter(const CharType * formatString, Args&&... args) {
+        LogFormatter(const CharType * formatString, Args &&... args) {
             auto requiredLength = fmt::formatted_size(formatString, std::forward<Args>(args)...);
             if (requiredLength < PRE_ALLOCATED_BUFFER_SIZE) {
-                buffer = PRE_ALLOCATED_BUFFER;
+                buffer         = PRE_ALLOCATED_BUFFER;
                 isPreAllocated = true;
             } else {
-                buffer = new CharType[requiredLength + 1];
+                buffer         = new CharType[requiredLength + 1];
                 isPreAllocated = false;
             }
-            auto result = fmt::format_to_n(buffer, requiredLength, formatString, std::forward<Args>(args)...);
+            auto result         = fmt::format_to_n(buffer, requiredLength, formatString, std::forward<Args>(args)...);
             buffer[result.size] = 0;
         }
 
         ~LogFormatter() {
             if (buffer && !isPreAllocated) {
                 delete[] buffer;
-                buffer = nullptr;
+                buffer         = nullptr;
                 isPreAllocated = true;
             }
         }
