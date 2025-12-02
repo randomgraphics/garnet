@@ -27,13 +27,13 @@ public:
         using namespace GN::gfx;
         auto base = img::PlaneDesc::make(img::PixelFormat::RGBA8(), {5, 7, 9});
         TS_ASSERT(base.valid());
-        auto desc = img::ImageDesc().reset(base, 3, 0); // construct full mipmap chain with 3 layers from the base map above.
-        TS_ASSERT(5 == desc.width());
-        TS_ASSERT(7 == desc.height());
-        TS_ASSERT(9 == desc.depth());
-        TS_ASSERT(4 == desc.levels);
-        TS_ASSERT(3 == desc.faces);
-        TS_ASSERT(12 == desc.planes.size());
+        auto desc = img::ImageDesc().reset(base, 1, 3, 0); // construct full mipmap chain with 3 layers from the base map above.
+        TS_ASSERT_EQUALS(5, desc.width());
+        TS_ASSERT_EQUALS(7, desc.height());
+        TS_ASSERT_EQUALS(9, desc.depth());
+        TS_ASSERT_EQUALS(4, desc.levels);
+        TS_ASSERT_EQUALS(3, desc.faces);
+        TS_ASSERT_EQUALS(12, desc.planes.size());
     }
 
     void testInvalidPNG() {

@@ -143,13 +143,13 @@ GN_API void putEnv(const char * name, const char * value);
 ///
 /// Get environment variable.
 ///
-GN_API void getEnv(std::string & result, const char * name);
+GN_API void getEnv(StrA & result, const char * name);
 
 ///
 /// Get environment variable.
 ///
-inline std::string getEnv(const char * name) {
-    std::string result;
+inline StrA getEnv(const char * name) {
+    StrA result;
     getEnv(result, name);
     return result;
 }
@@ -159,7 +159,7 @@ inline std::string getEnv(const char * name) {
 /// exists and the value is "1" or "yes" (case-insensitive).
 ///
 inline bool getEnvBoolean(const char * name) {
-    std::string result;
+    StrA result;
     getEnv(result, name);
     return "1" == result || 0 == str::compareI("yes", result.data()) || 0 == str::compareI("true", result.data());
 }

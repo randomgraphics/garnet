@@ -21,7 +21,7 @@ GN_API void GN::putEnv(const char * name, const char * value) {
     #if GN_POSIX
     if (0 != ::setenv(name, value, 1)) { GN_ERROR(sLogger)("fail to set environment '%s=%s'.", name, value); }
     #else
-    std::string s;
+    StrA s;
     if (str::empty(value)) {
         s.format("%s=", name);
     } else {
@@ -36,7 +36,7 @@ GN_API void GN::putEnv(const char * name, const char * value) {
 //
 //
 // -----------------------------------------------------------------------------
-GN_API void GN::getEnv(std::string & result, const char * name) {
+GN_API void GN::getEnv(StrA & result, const char * name) {
 #if GN_XBOX2 || GN_XBOX3
     // Xbox does not support getenv()
     GN_UNUSED_PARAM(name);

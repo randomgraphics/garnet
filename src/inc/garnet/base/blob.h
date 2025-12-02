@@ -38,6 +38,7 @@ public:
 
     bool empty() const { return mSize == 0; }
 
+    /// Get the size of the blob in bytes.
     size_t size() const { return mSize; }
 
     void * data() const { return mData; }
@@ -94,7 +95,7 @@ public:
             } else {
                 // default construct the data array.
                 details::inplaceDefaultConstructArray(count, (T *) Base::mData);
-                Base::mSize = count;
+                Base::mSize = count * sizeof(T);
                 Base::mImpl = new Impl(count, (T *) Base::mData);
             }
         }
