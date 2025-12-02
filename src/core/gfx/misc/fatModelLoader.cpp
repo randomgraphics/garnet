@@ -378,7 +378,7 @@ static inline int sGetLayerElementIndex(const FbxLayerElementTemplate<T> * eleme
     } else if (FbxLayerElement::eIndexToDirect == refmode) {
         return elements->GetIndexArray().GetAt(index);
     } else {
-        GN_ERROR(sLogger)("Unsupport reference mode: %d", refmode);
+        GN_ERROR(sLogger)("Unsupport reference mode: %d", (int) refmode);
         return -1;
     }
 }
@@ -399,7 +399,7 @@ static inline int sGetLayerElementIndex(const FbxLayerElementTemplate<T> * eleme
     } else if (FbxLayerElement::eByPolygon == mapmode) {
         return sGetLayerElementIndex(elements, polygonIndex);
     } else {
-        GN_ERROR(sLogger)("Invalid layer mapping mode: %d", mapmode);
+        GN_ERROR(sLogger)("Invalid layer mapping mode: %d", (int) mapmode);
         return -1;
     }
 }
@@ -938,8 +938,8 @@ static void sLoadFbxMesh(FatModel & fatmodel, const StrA & filename, FbxSdkWrapp
     } else {
         if (fbxMaterials && FbxLayerElement::eAllSame != fbxMaterials->GetMappingMode()) {
             GN_WARN(sLogger)
-            ("Unsupported FBX material layer: mapping mode=%d, reference mode=%d. It will be treated as eALL_SAME.", fbxMaterials->GetMappingMode(),
-             fbxMaterials->GetReferenceMode());
+            ("Unsupported FBX material layer: mapping mode=%d, reference mode=%d. It will be treated as eALL_SAME.", (int) fbxMaterials->GetMappingMode(),
+             (int) fbxMaterials->GetReferenceMode());
         }
 
         // one material
@@ -1375,7 +1375,7 @@ static void sPrintFBXNodeHierarchy(StrA & hierarchy, const StrA & filename) {
                 } else if (0 <= atype && atype < (int) GN_ARRAY_COUNT(sAttributeTypeNames)) {
                     hierarchy += sAttributeTypeNames[atype];
                 } else {
-                    hierarchy += StrA::format("[INVALID:%d]", atype);
+                    hierarchy += StrA::format("[INVALID:%d]", (int) atype);
                 }
             } else {
                 hierarchy += "[NULL]";

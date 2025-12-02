@@ -165,11 +165,11 @@ public:
 
         drawXYZCoordinateAxes(camera.proj * camera.view * arcball.getRotationMatrix44());
 
-        engine::getDefaultFontRenderer()->drawText(StrA::format(L"position : %f,\n"
-                                                               L"           %f,\n"
-                                                               L"           %f\n"
-                                                               L"radius   : %f",
-                                                               position.x, position.y, position.z, radius)
+        engine::getDefaultFontRenderer()->drawText(StrW::format(L"position : %f,\n"
+                                                                L"           %f,\n"
+                                                                L"           %f\n"
+                                                                L"radius   : %f",
+                                                                position.x, position.y, position.z, radius)
                                                        .data(),
                                                    (float) getGpu()->getDispDesc().width - 320, 40);
     }
@@ -189,7 +189,7 @@ public:
         }
 
         if (argc >= 2 && (0 == str::compare(argv[0], "-print") || 0 == str::compare(argv[0], "--print"))) {
-            std::string s;
+            StrA s;
             printModelFileNodeHierarchy(s, argv[1]);
             GN_INFO(sLogger)("%s", s.data());
             return false;

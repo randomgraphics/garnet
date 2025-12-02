@@ -139,3 +139,13 @@ GN_API size_t GN::str::toFloatArray(float * buffer, size_t maxCount, const char 
 
     return buffer - bufbegin;
 }
+
+GN_API void * GN::internal::emptyStringPointer() {
+    static EmptyString emptyString;
+    return &emptyString.eos;
+}
+
+GN_API void * GN::internal::empytStringInstance() {
+    static EmptyString emptyString;
+    return &emptyString.eos;
+}

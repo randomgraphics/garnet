@@ -29,7 +29,7 @@ public:
         }
         {
             GN::Variant var(std::string("a"));
-            std::string    v = var.gets();
+            auto    v = var.gets();
             TS_ASSERT_EQUALS("a", v);
         }
         {

@@ -6,8 +6,8 @@
 class StringTest : public CxxTest::TestSuite {
 public:
     void testEmptyStr() {
-        const auto & a = std::string::EMPTYSTR();
-        const auto & w = GN::std::wstring::EMPTYSTR();
+        const auto & a = GN::StrA::EMPTYSTR();
+        const auto & w = GN::StrW::EMPTYSTR();
         TS_ASSERT_EQUALS(a, "");
         TS_ASSERT_EQUALS(w, L"");
         TS_ASSERT_EQUALS((void *) &a, (void *) &w);
@@ -71,7 +71,7 @@ public:
     }
 
     void testAppend() {
-        GN::std::wstring s1;
+        GN::StrW s1;
 
         s1.append(L"1111", 3);
         TS_ASSERT_EQUALS(s1, L"111");
@@ -85,7 +85,7 @@ public:
         TS_ASSERT_EQUALS(s1, L"3333");
 
         s1.clear();
-        s1.append(GN::std::wstring(L"4444"));
+        s1.append(GN::StrW(L"4444"));
         TS_ASSERT_EQUALS(s1, L"4444");
 
         s1.append(L'5');
@@ -93,7 +93,7 @@ public:
     }
 
     void testTrim() {
-        GN::std::wstring s1(L" 123 "), s2(L"   ");
+        GN::StrW s1(L" 123 "), s2(L"   ");
         s1.trim(L' ');
         s2.trim(L' ');
         TS_ASSERT_EQUALS(s1, L"123");
@@ -101,7 +101,7 @@ public:
     }
 
     void testTrimLeft() {
-        GN::std::wstring s1(L" 123 "), s2(L"   ");
+        GN::StrW s1(L" 123 "), s2(L"   ");
         s1.trimLeft(L' ');
         s2.trimLeft(L' ');
         TS_ASSERT_EQUALS(s1, L"123 ");
@@ -109,7 +109,7 @@ public:
     }
 
     void testTrimRight() {
-        GN::std::wstring s1(L" 123 "), s2(L"   ");
+        GN::StrW s1(L" 123 "), s2(L"   ");
         s1.trimRight(L' ');
         s2.trimRight(L' ');
         TS_ASSERT_EQUALS(s1, L" 123");
@@ -123,7 +123,7 @@ public:
             static bool stop3(wchar_t ch) { return L'3' == ch; }
         };
 
-        GN::std::wstring s1(L"12345");
+        GN::StrW s1(L"12345");
         s1.trimRightUntil(&Local::stop3);
         TS_ASSERT_EQUALS(s1, L"123");
         s1.trimRightUntil(&Local::stop1);
@@ -133,7 +133,7 @@ public:
     }
 
     void testInsert() {
-        GN::std::wstring s1(L"123");
+        GN::StrW s1(L"123");
         s1.insert(0, L'0');
         TS_ASSERT_EQUALS(s1, L"0123");
         s1.insert(1, L' ');
@@ -145,7 +145,7 @@ public:
     }
 
     void testSubString() {
-        GN::std::wstring s1, s2;
+        GN::StrW s1, s2;
 
         //     012345
         s1 = L"abcdef";
@@ -281,7 +281,7 @@ public:
         n = s1.findFirstOf(L"cb");
         TS_ASSERT_EQUALS(n, 1);
         n = s1.findFirstOf(L"d");
-        TS_ASSERT_EQUALS(n, GN::std::wstring::NOT_FOUND);
+        TS_ASSERT_EQUALS(n, GN::StrW::NOT_FOUND);
         n = s1.findLastOf(L"ab");
         TS_ASSERT_EQUALS(n, 4);
         n = s1.findLastOf(L"bc");
@@ -289,7 +289,7 @@ public:
         n = s1.findLastOf(L"cb");
         TS_ASSERT_EQUALS(n, 5);
         n = s1.findLastOf(L"d");
-        TS_ASSERT_EQUALS(n, GN::std::wstring::NOT_FOUND);
+        TS_ASSERT_EQUALS(n, GN::StrW::NOT_FOUND);
     }
 
     void testEquality() {
@@ -328,8 +328,8 @@ public:
     }
 
     void testStrFunc() {
-        std::string s1("abcd");
-        GN::std::wstring s2;
+        GN::StrA s1("abcd");
+        GN::StrW s2;
 
         s2 = GN::mbs2wcs(s1);
         TS_ASSERT_EQUALS(s2, L"abcd");

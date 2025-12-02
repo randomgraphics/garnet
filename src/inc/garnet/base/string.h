@@ -315,6 +315,12 @@ public:
         }
     }
 
+    void resize(size_t newSize) {
+        setCaps(newSize);
+        setSize(newSize);
+        mPtr[newSize] = 0;
+    }
+
     ///
     /// begin iterator(1)
     ///
@@ -334,9 +340,14 @@ public:
     }
 
     ///
-    /// return c-style const char pointer
+    /// return constant pointer to string buffer. this method is for compatibility with std::string.
     ///
     const CharType * data() const { return mPtr; }
+
+    ///
+    /// return pointer to string buffer
+    ///
+    CharType * data() { return mPtr; }
 
     ///
     /// return c-style const char pointer in std::string compatible way.
@@ -711,6 +722,22 @@ public:
     }
 
     ///
+    /// Index operator
+    ///
+    CharType & operator[](size_t index) {
+        GN_ASSERT(index < size());
+        return mPtr[index];
+    }
+    
+    ///
+    /// Index operator
+    ///
+    const CharType & operator[](size_t index) const {
+        GN_ASSERT(index < size());
+        return mPtr[index];
+    }
+
+    ///
     /// assign operator
     ///
     Str & operator=(const Str & s) {
@@ -952,12 +979,12 @@ typedef Str<wchar_t> StrW;
 ///
 /// Define custom string literal operator
 ///
-StrA operator "" _s(const char * s, size_t len) { return StrA(s, len); }
+inline StrA operator "" _s(const char * s, size_t len) { return StrA(s, len); }
 
 ///
 /// Define custom wide-char string literal operator
 ///
-StrW operator "" _ws(const wchar_t * s, size_t len) { return StrW(s, len); }
+inline StrW operator "" _ws(const wchar_t * s, size_t len) { return StrW(s, len); }
 
 
 ///
@@ -1036,11 +1063,7 @@ public:
 
     /// get first element in the map
     /// \note elements are _NOT_ sorted yet.
-    const KeyValuePair * first() const { return doFirst(); }
-
-    /// get first element in the map
-    /// \note elements are _NOT_ sorted yet.
-    KeyValuePair * first() { return doFirst(); }
+    KeyValuePair * first() const { return doFirst(); }
 
     /// clear whole map
     void clear() { doClear(); }
@@ -1050,38 +1073,22 @@ public:
 
     /// Get next item
     /// \note elements are _NOT_ sorted yet.
-    const KeyValuePair * next(const KeyValuePair * p) const { return doNext(p); }
-
-    /// Get next item
-    /// \note elements are _NOT_ sorted yet.
-    KeyValuePair * next(const KeyValuePair * p) { return doNext(p); }
+    KeyValuePair * next(const KeyValuePair * p) const { return doNext(p); }
 
     /// erase by key
     void remove(const CHAR * text) { doRemove(text); }
 
     /// find
-    const T * find(const CHAR * text) const { return doFind(text); }
+    T * find(const CHAR * text) const { return doFind(text); }
 
     /// find
-    const T * find(const Str<CHAR> & text) const { return doFind(text.c_str()); }
+    T * find(const Str<CHAR> & text) const { return doFind(text.c_str()); }
 
     /// find
-    const T * find(const std::basic_string<CHAR> & text) const { return doFind(text.c_str()); }
+    T * find(const std::basic_string<CHAR> & text) const { return doFind(text.c_str()); }
 
     /// find
-    T * find(const CHAR * text) { return doFind(text); }
-
-    /// find
-    T * find(const Str<CHAR> & text) { return doFind(text.c_str()); }
-
-    /// find
-    T * find(const std::basic_string<CHAR> & text) { return doFind(text.c_str()); }
-
-    /// find
-    KeyValuePair * findPair(const CHAR * text) { return doFindPair(text); }
-
-    /// find
-    const KeyValuePair * findPair(const CHAR * text) const { return doFindPair(text); }
+    KeyValuePair * findPair(const CHAR * text) const { return doFindPair(text); }
 
     /// insert. Return the inserted key value pair or NULL.
     KeyValuePair * insert(const CHAR * text, const T & value) {

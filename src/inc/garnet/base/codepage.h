@@ -106,14 +106,14 @@ private:
 //@{
 GN_API size_t wcs2utf8(char * obuf, size_t ocount, const wchar_t * ibuf, size_t icount);
 GN_API size_t utf82wcs(wchar_t * obuf, size_t ocount, const char * ibuf, size_t icount);
-GN_API std::string   wcs2utf8(const wchar_t * ibuf, size_t icount);
-GN_API std::wstring   utf82wcs(const char * ibuf, size_t icount);
+GN_API GN::StrA   wcs2utf8(const wchar_t * ibuf, size_t icount);
+GN_API GN::StrW   utf82wcs(const char * ibuf, size_t icount);
 //@}
 
 ///
 /// convert wide char string to multi-byte string in current system encoding
 ///
-GN_API void wcs2mbs(std::string &, const wchar_t *, size_t);
+GN_API void wcs2mbs(GN::StrA &, const wchar_t *, size_t);
 
 ///
 /// convert wide char string to multi-byte string in current system encoding
@@ -123,8 +123,8 @@ inline void wcs2mbs(StrA & o, const StrW & i) { return wcs2mbs(o, i.data(), i.si
 ///
 /// convert wide char string to multi-byte string in current system encoding
 ///
-inline std::string wcs2mbs(const wchar_t * i, size_t l) {
-    std::string o;
+inline GN::StrA wcs2mbs(const wchar_t * i, size_t l) {
+    GN::StrA o;
     wcs2mbs(o, i, l);
     return o;
 }
@@ -158,7 +158,7 @@ GN_API size_t mbs2wcs(wchar_t * obuf, size_t ocount, const char * ibuf, size_t i
 ///
 /// convert multi-byte string in current system code page to wide char string
 ///
-GN_API void mbs2wcs(std::wstring &, const char *, size_t);
+GN_API void mbs2wcs(GN::StrW &, const char *, size_t);
 
 ///
 /// convert multi-byte string in current system code page to wide char string
@@ -168,8 +168,8 @@ inline void mbs2wcs(StrW & o, const StrA & i) { return mbs2wcs(o, i.data(), i.si
 ///
 /// convert multi-byte string in current system code page to wide char string
 ///
-inline std::wstring mbs2wcs(const char * i, size_t l) {
-    std::wstring o;
+inline GN::StrW mbs2wcs(const char * i, size_t l) {
+    GN::StrW o;
     mbs2wcs(o, i, l);
     return o;
 }

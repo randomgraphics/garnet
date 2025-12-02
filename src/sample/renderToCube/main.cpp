@@ -55,10 +55,10 @@ public:
         GpuResourceDatabase & gdb = *engine::getGdb();
 
         // load 2D faces
-        std::string name = "media::/texture/cube2/a.bmp";
+        StrA name = "media::/texture/cube2/a.bmp";
         for (unsigned char i = 0; i < 6; ++i) {
             name[22] = 'a' + i;
-            faces[i].attach(loadTextureFromFile(gpu, name));
+            faces[i].attach(loadTextureFromFile(gpu, name.data()));
             if (0 == faces[i]) return false;
         }
 

@@ -85,7 +85,7 @@ public:
     void showDefaultHelp() const {
         using namespace GN;
 
-        std::string executableName = fs::baseName(applicationName) + fs::extName(applicationName);
+        auto executableName = fs::baseName(applicationName) + fs::extName(applicationName);
 
         GN_INFO(logger)("Usage: %s [options]\n", executableName.data());
         showStandardCommandLineOptions();

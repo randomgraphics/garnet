@@ -120,8 +120,8 @@ GN_API size_t GN::utf82wcs(wchar_t * obuf, size_t ocount, const char * ibuf, siz
 //
 //
 // -----------------------------------------------------------------------------
-GN_API std::string GN::wcs2utf8(const wchar_t * ibuf, size_t icount) {
-    // TODO: Let CEC returns std::string directly to avoid extra memory copy
+GN_API GN::StrA GN::wcs2utf8(const wchar_t * ibuf, size_t icount) {
+    // TODO: Let CEC returns GN::StrA directly to avoid extra memory copy
     static auto     cec = CharacterEncodingConverter(CharacterEncodingConverter::WIDECHAR, CharacterEncodingConverter::UTF8);
     DynaArray<char> buffer((icount + 1) * sizeof(wchar_t));
     cec.convert(buffer.data(), buffer.size(), ibuf, icount * sizeof(wchar_t));
@@ -131,8 +131,8 @@ GN_API std::string GN::wcs2utf8(const wchar_t * ibuf, size_t icount) {
 //
 //
 // -----------------------------------------------------------------------------
-GN_API std::wstring GN::utf82wcs(const char * ibuf, size_t icount) {
-    // TODO: Let CEC returns std::wstring directly to avoid extra memory copy
+GN_API GN::StrW GN::utf82wcs(const char * ibuf, size_t icount) {
+    // TODO: Let CEC returns GN::StrW directly to avoid extra memory copy
     static auto        cec = CharacterEncodingConverter(CharacterEncodingConverter::UTF8, CharacterEncodingConverter::WIDECHAR);
     DynaArray<wchar_t> buffer(icount + 1);
     cec.convert(buffer.data(), buffer.size() * sizeof(wchar_t), ibuf, icount);
@@ -142,14 +142,14 @@ GN_API std::wstring GN::utf82wcs(const char * ibuf, size_t icount) {
 //
 //
 // -----------------------------------------------------------------------------
-GN_API void GN::wcs2mbs(std::string & o, const wchar_t * i, size_t l) {
+GN_API void GN::wcs2mbs(GN::StrA & o, const wchar_t * i, size_t l) {
     if (0 == i) {
         o.clear();
         return;
     }
     if (0 == l) l = str::length(i);
 
-    o.resize(l + 1);
+    o.setSize(l + 1);
 #if GN_MSVC
     size_t ol;
     ::wcstombs_s(&ol, o.data(), l + 1, i, l);
@@ -161,7 +161,7 @@ GN_API void GN::wcs2mbs(std::string & o, const wchar_t * i, size_t l) {
         o.clear();
     } else {
         o.resize(l);
-        o.data()[l] = 0;
+        o[l] = 0;
     }
 }
 
@@ -169,7 +169,7 @@ GN_API void GN::wcs2mbs(std::string & o, const wchar_t * i, size_t l) {
 //
 // -----------------------------------------------------------------------------
 GN_API size_t GN::mbs2wcs(wchar_t * o, size_t os, const char * i, size_t is) {
-    std::wstring wcs;
+    GN::StrW wcs;
     mbs2wcs(wcs, i, is);
 
     size_t n = wcs.size() + 1;
@@ -194,7 +194,7 @@ GN_API size_t GN::mbs2wcs(wchar_t * o, size_t os, const char * i, size_t is) {
 //
 //
 // -----------------------------------------------------------------------------
-GN_API void GN::mbs2wcs(std::wstring & o, const char * i, size_t l) {
+GN_API void GN::mbs2wcs(GN::StrW & o, const char * i, size_t l) {
     if (0 == i) {
         o.clear();
         return;

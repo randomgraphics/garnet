@@ -42,7 +42,7 @@ void GN::gfx::OGLGpu::resourceQuit() {
         GN_UNEXPECTED_EX("All graphics resouces have to be released, before renderer is destroied!");
         for (std::list<OGLResource *>::iterator i = mResourceList.begin(); i != mResourceList.end(); ++i) {
             const OGLResource * r = *i;
-            GN_ERROR(sLogger)("0x%p", r);
+            GN_ERROR(sLogger)("0x%p", (intptr_t) r);
         }
     }
 

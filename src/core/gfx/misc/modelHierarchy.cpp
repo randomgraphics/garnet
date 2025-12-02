@@ -443,7 +443,7 @@ static inline int sGetLayerElementIndex(const FbxLayerElementTemplate<T> * eleme
     } else if (FbxLayerElement::eIndexToDirect == refmode) {
         return elements->GetIndexArray().GetAt(index);
     } else {
-        GN_ERROR(sLogger)("Unsupport reference mode: %d", refmode);
+        GN_ERROR(sLogger)("Unsupport reference mode: %d", (int) refmode);
         return -1;
     }
 }
@@ -464,7 +464,7 @@ static inline int sGetLayerElementIndex(const FbxLayerElementTemplate<T> * eleme
     } else if (FbxLayerElement::eByPolygon == mapmode) {
         return sGetLayerElementIndex(elements, polygonIndex);
     } else {
-        GN_ERROR(sLogger)("Invalid layer mapping mode: %d", mapmode);
+        GN_ERROR(sLogger)("Invalid layer mapping mode: %d", (int) mapmode);
         return -1;
     }
 }
@@ -559,8 +559,8 @@ static void sLoadFbxMesh(ModelHierarchyDesc & desc, const StrA & filename, Model
     } else {
         if (fbxMaterials && FbxLayerElement::eAllSame != fbxMaterials->GetMappingMode()) {
             GN_WARN(sLogger)
-            ("Unsupported FBX material layer: mapping mode=%d, reference mode=%d. It will be treated as eAllSame.", fbxMaterials->GetMappingMode(),
-             fbxMaterials->GetReferenceMode());
+            ("Unsupported FBX material layer: mapping mode=%d, reference mode=%d. It will be treated as eAllSame.", (int) fbxMaterials->GetMappingMode(),
+             (int) fbxMaterials->GetReferenceMode());
         }
 
         // one material
@@ -792,7 +792,7 @@ static bool sLoadFbxNodeRecursivly(ModelHierarchyDesc & desc, const StrA & filen
         // Some nodes are ignored silently.
         FbxNodeAttribute::eNull != type && FbxNodeAttribute::eUnknown != type && FbxNodeAttribute::eLight != type && FbxNodeAttribute::eCamera != type &&
         FbxNodeAttribute::eSkeleton != type) {
-        GN_WARN(sLogger)("Ignore unsupported node: type=%d, name=%s", type, name);
+        GN_WARN(sLogger)("Ignore unsupported node: type={}, name={}", (int)type, name);
     }
 
     // load children

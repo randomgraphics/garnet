@@ -44,13 +44,13 @@ public:
 
     typedef RES Resource; ///< resource type
 
-    typedef Delegate3<bool, RES &, const std::string &, void *> Creator; ///< Resource creation functor
+    typedef Delegate3<bool, RES &, const StrA &, void *> Creator; ///< Resource creation functor
 
     typedef Delegate2<void, RES &, void *> Deletor; ///< Resource deletion functor
 
-    typedef Delegate2<void, std::string &, const std::string &> NameResolver; ///< Resource name resolver.
+    typedef Delegate2<void, StrA &, const StrA &> NameResolver; ///< Resource name resolver.
 
-    typedef Delegate1<bool, const std::string &> NameChecker; ///< Resource name checker.
+    typedef Delegate1<bool, const StrA &> NameChecker; ///< Resource name checker.
 
     ///
     /// Default constructor
@@ -165,8 +165,8 @@ public:
     ///
     /// Return true for valid resource name
     ///
-    bool validResourceName(const std::string & n) const {
-        std::string realname;
+    bool validResourceName(const StrA & n) const {
+        StrA realname;
         return mResNames.end() != mResNames.find(resolveName(realname, n));
     }
 
@@ -199,9 +199,9 @@ public:
     ///
     /// \sa getResourceHandle()
     ///
-    bool getResource(RES & result, const std::string & name, bool autoAddNewName = true) {
+    bool getResource(RES & result, const StrA & name, bool autoAddNewName = true) {
         GN_GUARD_SLOW;
-        std::string           realname;
+        StrA           realname;
         ResourceHandle h = getResourceHandle(resolveName(realname, name), autoAddNewName);
         return getResourceImpl(result, h, realname.data());
         GN_UNGUARD_SLOW;
@@ -214,10 +214,10 @@ public:
     ///
     /// \sa getResourceHandle()
     ///
-    RES getResource(const std::string & name, bool autoAddNewName = true) {
+    RES getResource(const StrA & name, bool autoAddNewName = true) {
         GN_GUARD_SLOW;
         RES  res;
-        std::string realname;
+        StrA realname;
         if (getResource(res, resolveName(realname, name), autoAddNewName))
             return res;
         else
@@ -235,9 +235,9 @@ public:
     ///       it'll be add to manager automatically, and a valid handle will be return.
     ///     - If false, return 0 for non-exist resource name.
     ///
-    ResourceHandle getResourceHandle(const std::string & name, bool autoAddNewName = true) {
+    ResourceHandle getResourceHandle(const StrA & name, bool autoAddNewName = true) {
         GN_GUARD_SLOW;
-        std::string             realname;
+        StrA             realname;
         ResourceHandle * handle = mResNames.find(resolveName(realname, name));
         if (NULL != handle) return *handle;
         if (autoAddNewName && (!mNameChecker || mNameChecker(realname))) return addResource(realname);
@@ -248,26 +248,26 @@ public:
     ///
     /// Get resource name
     ///
-    const std::string & getResourceName(ResourceHandle handle) const {
+    const StrA & getResourceName(ResourceHandle handle) const {
         GN_GUARD_SLOW;
         if (validResourceHandle(handle)) {
             GN_ASSERT(mResHandles.get(handle));
             return mResHandles.get(handle)->name;
         } else
-            return std::string::EMPTYSTR();
+            return StrA::EMPTYSTR();
         GN_UNGUARD_SLOW;
     }
 
     ///
     /// Add new resource item to manager
     ///
-    ResourceHandle addResource(const std::string & name, void * userData = 0, const Creator & creator = Creator(), const Creator & nullor = Creator(),
+    ResourceHandle addResource(const StrA & name, void * userData = 0, const Creator & creator = Creator(), const Creator & nullor = Creator(),
                                bool overrideExistingResource = false) {
         GN_GUARD;
 
         ResourceHandle   h;
         ResDesc *        item;
-        std::string             realname;
+        StrA             realname;
         ResourceHandle * handle = mResNames.find(resolveName(realname, name));
         if (NULL != handle) {
             if (!overrideExistingResource) {
@@ -315,11 +315,11 @@ public:
     ///
     /// Remove resource from manager (unimplemented)
     ///
-    void removeResourceByName(const std::string & name) {
+    void removeResourceByName(const StrA & name) {
         GN_GUARD;
 
         // find the resource
-        std::string             realname;
+        StrA             realname;
         ResourceHandle * handle = mResNames.find(resolveName(realname, name));
         if (NULL == handle) {
             GN_ERROR(sLogger)("invalid resource name: %s", realname.data());
@@ -367,9 +367,9 @@ public:
     ///
     /// Dispose specific resource
     ///
-    void disposeResourceByName(const std::string & name) {
+    void disposeResourceByName(const StrA & name) {
         GN_GUARD;
-        std::string             realname;
+        StrA             realname;
         ResourceHandle * h = mResNames.find(resolveName(realname, name));
         if (NULL == h) {
             GN_ERROR(sLogger)("invalid resource name: %s", realname.data());
@@ -427,7 +427,7 @@ private:
         Creator creator;
         Creator nullor; // Use to create per-resource "NULL" instance.
         RES     res;
-        std::string    name;
+        StrA    name;
         void *  userData;
         bool    disposed;
 
@@ -464,7 +464,7 @@ private:
     // *****************************
 
 private:
-    std::string & resolveName(std::string & out, const std::string & in) const {
+    StrA & resolveName(StrA & out, const StrA & in) const {
         if (mNameResolver)
             mNameResolver(out, in);
         else
@@ -572,12 +572,12 @@ typedef GN::ResourceManagerTempl<int> ResMgr;
 
 bool defCreator(int & res, const GN::StrA & name, void *) { return 0 != GN::str::toInetger<int>(res, name.data()); }
 
-bool nullCreator(int & res, const std::string &, void *) {
+bool nullCreator(int & res, const GN::StrA &, void *) {
     res = -1;
     return true;
 }
 
-bool failedCreator(int &, const std::string &, void *) { return false; }
+bool failedCreator(int &, const GN::StrA &, void *) { return false; }
 
 void defDeletor(int &, void *) {
     // do nothing
