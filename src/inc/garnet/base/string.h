@@ -143,16 +143,8 @@ inline bool isEmpty(const CHAR * s) {
 /// format string to raw buffer with guaranteed null terminator.
 ///
 template<typename CHAR, typename... Args>
-inline size_t formatTo(CHAR * buf, size_t bufSizeInChar, const CHAR * fmt, Args &&... args) {
-    const auto result = fmt::format_to_n(buf, bufSizeInChar, fmt, std::forward<Args>(args)...);
-    if (result.size < bufSizeInChar) GN_LIKELY {
-            buf[result.size] = 0;
-            return result.size;
-        }
-    else {
-        buf[bufSizeInChar - 1] = 0;
-        return bufSizeInChar - 1;
-    }
+inline void formatTo(CHAR * buf, size_t bufSizeInChar, const CHAR * fmt, Args &&... args) {
+    return internal::StringFormatter<CHAR>::formatOrPrintfToBuffer(buf, bufSizeInChar, fmt, std::forward<Args>(args)...);
 }
 
 ///
@@ -375,11 +367,9 @@ public:
     ///
     template<typename... Args>
     Str<CharType> & formatInplace(const CharType * formatString, Args &&... args) {
-        auto requiredLength = fmt::formatted_size(formatString, std::forward<Args>(args)...) + 1;
-        if (requiredLength > caps()) { setCaps(requiredLength); }
-        auto newSize = str::formatTo<CharType>(mPtr, requiredLength, formatString, std::forward<Args>(args)...);
-        GN_ASSERT(newSize <= caps() && mPtr[newSize] == 0);
-        setSize(newSize);
+        auto sf = internal::StringFormatter<CharType>(formatString, std::forward<Args>(args)...);
+        resize(sf.size());
+        ::memcpy(mPtr, sf.result(), sf.size() * sizeof(CharType));
         return *this;
     }
 
@@ -724,7 +714,7 @@ public:
     /// Index operator
     ///
     CharType & operator[](size_t index) {
-        GN_ASSERT(index < size());
+        GN_ASSERT(index <= size());
         return mPtr[index];
     }
 
@@ -732,7 +722,7 @@ public:
     /// Index operator
     ///
     const CharType & operator[](size_t index) const {
-        GN_ASSERT(index < size());
+        GN_ASSERT(index <= size());
         return mPtr[index];
     }
 
@@ -906,13 +896,8 @@ public:
     ///
     template<typename... Args>
     static Str<CharType> format(const CharType * formatString, Args &&... args) {
-        auto          requiredLength = fmt::formatted_size(formatString, std::forward<Args>(args)...);
-        Str<CharType> s;
-        s.setCaps(requiredLength);
-        auto newSize = str::formatTo<CharType>(s.mPtr, s.caps(), formatString, std::forward<Args>(args)...);
-        GN_ASSERT(newSize <= s.caps() && s.mPtr[newSize] == 0);
-        s.setSize(newSize);
-        return s;
+        auto sf = internal::StringFormatter<CharType>(formatString, std::forward<Args>(args)...);
+        return Str<CharType>(sf.result(), sf.size());
     }
 
 private:
@@ -959,9 +944,6 @@ private:
         // This is safe, as long as CharType is POD type.
         RAW_MEMORY_ALLOCATOR::sDeallocate(p);
     }
-
-    friend GN_API void wcs2mbs(Str<char> &, const wchar_t *, size_t);
-    friend GN_API void mbs2wcs(Str<wchar_t> &, const char *, size_t);
 };
 
 ///

@@ -146,6 +146,6 @@ GN_API void * GN::internal::emptyStringPointer() {
 }
 
 GN_API void * GN::internal::empytStringInstance() {
-    static EmptyString emptyString;
-    return &emptyString.eos;
+    static StrW emptyString;
+    return &emptyString;
 }

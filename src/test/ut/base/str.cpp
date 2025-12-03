@@ -7,12 +7,22 @@ class StringTest : public CxxTest::TestSuite {
 public:
     void testEmptyStr() {
         const auto & a = GN::StrA::EMPTYSTR();
-        const auto & w = GN::StrW::EMPTYSTR();
+        const auto & b = GN::StrA();
+        const auto & c = GN::StrW::EMPTYSTR();
+        const auto & d = GN::StrW();
+        TS_ASSERT_EQUALS('\0', a[0]);
+        TS_ASSERT_EQUALS('\0', b[0]);
+        TS_ASSERT_EQUALS(L'\0', c[0]);
+        TS_ASSERT_EQUALS(L'\0', d[0]);
         TS_ASSERT_EQUALS(a, "");
-        TS_ASSERT_EQUALS(w, L"");
-        TS_ASSERT_EQUALS((void *) &a, (void *) &w);
+        TS_ASSERT_EQUALS(b, "");
+        TS_ASSERT_EQUALS(c, L"");
+        TS_ASSERT_EQUALS(d, L"");
+        TS_ASSERT_EQUALS((void *) &a, (void *) &c);
         TS_ASSERT_EQUALS(a.data(), GN::internal::emptyStringPointer());
-        TS_ASSERT_EQUALS(w.data(), GN::internal::emptyStringPointer());
+        TS_ASSERT_EQUALS(b.data(), GN::internal::emptyStringPointer());
+        TS_ASSERT_EQUALS(c.data(), GN::internal::emptyStringPointer());
+        TS_ASSERT_EQUALS(d.data(), GN::internal::emptyStringPointer());
     }
 
     void testMbs2wcs() {
@@ -38,7 +48,18 @@ public:
         TS_ASSERT_EQUALS(wcs, L"abc");
     }
 
-    void testStrPrintf() {
+    void testStrFormatNullAndEmpty() {
+        char * null = nullptr;
+        char   buf[10];
+        // null or empty buffer should not crash the program
+        GN::str::formatTo(null, 0, "a");
+        GN::str::formatTo(buf, 0, "a");
+        GN::str::formatTo(buf, 10, null);
+        GN::str::formatTo(buf, 10, "");
+        GN::str::formatTo(buf, 10, "", 1);
+    }
+
+    void testFormatTo() {
         char   buf1[5] = {'\0', '\0', '\0', '4', '5'};
         char * s1      = buf1;
 
@@ -262,9 +283,9 @@ public:
 
         // format
 #if !GN_CYGWIN
-        s1.format(L"haha%d", 100);
+        s1.formatInplace(L"haha%d", 100);
         TS_ASSERT_EQUALS(s1, L"haha100");
-        s1.format(0, 100);
+        s1.formatInplace(0, 100);
         TS_ASSERT_EQUALS(s1, L"");
 #else
         TS_WARN("wide-char string formatting is not implemented on cygwin");

@@ -149,7 +149,7 @@ GN_API void GN::wcs2mbs(GN::StrA & o, const wchar_t * i, size_t l) {
     }
     if (0 == l) l = str::length(i);
 
-    o.setSize(l + 1);
+    o.resize(l + 1);
 #if GN_MSVC
     size_t ol;
     ::wcstombs_s(&ol, o.data(), l + 1, i, l);

@@ -14,6 +14,7 @@
 #endif
 #include <fmt/format.h>
 #include <fmt/xchar.h>
+#include <fmt/printf.h>
 
 ///
 /// General log macros, with user specified source code location
@@ -91,6 +92,118 @@
 //@}
 
 namespace GN {
+
+namespace internal {
+
+///
+/// String format utility class. Reserved for internal use only.
+///
+template<typename CHAR>
+class StringFormatter {
+    static bool checkForPrintf(const CHAR * fmt) {
+        if (!fmt) return false;
+
+        // Helper function to check if a character is a valid printf conversion specifier
+        auto isPrintfSpecifier = [](CHAR c) -> bool {
+            // Valid printf conversion specifiers: d, i, o, u, x, X, f, F, e, E, g, G, a, A, c, s, p, n
+            return (c == 'd' || c == 'i' || c == 'o' || c == 'u' || c == 'x' || c == 'X' || c == 'f' || c == 'F' || c == 'e' || c == 'E' || c == 'g' ||
+                    c == 'G' || c == 'a' || c == 'A' || c == 'c' || c == 's' || c == 'p' || c == 'n');
+        };
+
+        const CHAR * p = fmt;
+        while (*p) {
+            if (*p == '%') {
+                ++p;
+                // Handle escaped percent sign
+                if (*p == '%') {
+                    ++p;
+                    continue;
+                }
+
+                // Skip optional flags: -+ #0 space
+                while (*p == '-' || *p == '+' || *p == ' ' || *p == '#' || *p == '0') { ++p; }
+
+                // Skip optional width: digits or *
+                if (*p == '*') {
+                    ++p;
+                } else {
+                    while (*p >= '0' && *p <= '9') { ++p; }
+                }
+
+                // Skip optional precision: . followed by digits or *
+                if (*p == '.') {
+                    ++p;
+                    if (*p == '*') {
+                        ++p;
+                    } else {
+                        while (*p >= '0' && *p <= '9') { ++p; }
+                    }
+                }
+
+                // Skip optional length modifiers: h, hh, l, ll, j, z, t, L
+                if (*p == 'h') {
+                    ++p;
+                    if (*p == 'h') ++p; // hh
+                } else if (*p == 'l') {
+                    ++p;
+                    if (*p == 'l') ++p; // ll
+                } else if (*p == 'j' || *p == 'z' || *p == 't' || *p == 'L') {
+                    ++p;
+                }
+
+                // Check for conversion specifier
+                if (*p && isPrintfSpecifier(*p)) {
+                    return true; // Found printf-style format specifier
+                }
+            } else {
+                ++p;
+            }
+        }
+
+        return false; // No printf-style format specifiers found
+    }
+
+    std::basic_string<CHAR> mResult;
+
+public:
+    template<typename... Args>
+    static void formatOrPrintfToBuffer(CHAR * outputBuffer, size_t outputBufferSize, const CHAR * fmt, Args &&... args) {
+        // handle empty input and output buffer
+        if (!outputBuffer || 0 == outputBufferSize) return;
+        if (!fmt || !*fmt) {
+            outputBuffer[0] = 0;
+            return;
+        }
+
+        // check if the format string is a printf-style format specifier
+        if (checkForPrintf(fmt)) {
+            auto result = fmt::vsprintf(fmt::basic_string_view<CHAR>(fmt), fmt::make_printf_args<CHAR>(args...));
+            auto len    = std::min(result.size(), outputBufferSize - 1);
+            ::memcpy(outputBuffer, result.c_str(), len);
+            outputBuffer[len] = 0;
+        } else {
+            auto result       = fmt::format_to_n(outputBuffer, outputBufferSize - 1, fmt, std::forward<Args>(args)...);
+            auto len          = std::min(result.size, outputBufferSize - 1);
+            outputBuffer[len] = 0;
+        }
+    }
+
+    template<typename... Args>
+    StringFormatter(const CHAR * fmt, Args &&... args) {
+        if (!fmt || !*fmt) { return; }
+        if (checkForPrintf(fmt)) {
+            mResult = fmt::vsprintf(fmt::basic_string_view<CHAR>(fmt), fmt::make_printf_args<CHAR>(args...));
+        } else {
+            mResult = fmt::format(fmt, std::forward<Args>(args)...);
+        }
+    }
+
+    const CHAR * result() const { return mResult.c_str(); }
+    size_t       size() const { return mResult.size(); }
+};
+
+} // end of namespace internal
+
 ///
 /// Logger class
 ///
@@ -183,7 +296,7 @@ public:
         template<typename... Args>
         void operator()(const char * format_, Args &&... args_) {
             GN_ASSERT(mLogger);
-            return mLogger->doLog(mDesc, LogFormatter<char>(format_, std::forward<Args>(args_)...).buffer);
+            return mLogger->doLog(mDesc, internal::StringFormatter<char>(format_, std::forward<Args>(args_)...).result());
         }
 
         ///
@@ -192,7 +305,7 @@ public:
         template<typename... Args>
         void operator()(const wchar_t * format_, Args &&... args_) {
             GN_ASSERT(mLogger);
-            return mLogger->doLog(mDesc, LogFormatter<wchar_t>(format_, std::forward<Args>(args_)...).buffer);
+            return mLogger->doLog(mDesc, internal::StringFormatter<wchar_t>(format_, std::forward<Args>(args_)...).result());
         }
     };
 
@@ -214,36 +327,6 @@ public:
         /// deal with incoming UNICODE log message
         ///
         virtual void onLog(Logger &, const LogDesc &, const wchar_t *) = 0;
-    };
-
-    template<typename CharType>
-    struct LogFormatter {
-        static constexpr size_t             PRE_ALLOCATED_BUFFER_SIZE = 1024;
-        inline static thread_local CharType PRE_ALLOCATED_BUFFER[PRE_ALLOCATED_BUFFER_SIZE];
-        CharType *                          buffer         = nullptr;
-        bool                                isPreAllocated = true;
-
-        template<typename... Args>
-        LogFormatter(const CharType * formatString, Args &&... args) {
-            auto requiredLength = fmt::formatted_size(formatString, std::forward<Args>(args)...);
-            if (requiredLength < PRE_ALLOCATED_BUFFER_SIZE) {
-                buffer         = PRE_ALLOCATED_BUFFER;
-                isPreAllocated = true;
-            } else {
-                buffer         = new CharType[requiredLength + 1];
-                isPreAllocated = false;
-            }
-            auto result         = fmt::format_to_n(buffer, requiredLength, formatString, std::forward<Args>(args)...);
-            buffer[result.size] = 0;
-        }
-
-        ~LogFormatter() {
-            if (buffer && !isPreAllocated) {
-                delete[] buffer;
-                buffer         = nullptr;
-                isPreAllocated = true;
-            }
-        }
     };
 
     ///
