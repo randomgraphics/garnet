@@ -54,10 +54,10 @@ GN_API void GN::internal::handleAssertFailure(const char * msg, const char * fil
               "%s(%d)\n"
               "----------------------------------------------------------------\n"
               "%s\n"
-              "----------------------------------------------------------------\n"
+              "------------------------ [ call stack ] ------------------------\n"
               "%s\n"
               "================================================================\n",
-              file ? file : "", line, msg ? msg : "", backtrace().c_str());
+              file ? file : "", line, msg ? msg : "", backtrace(4).c_str());
 
     if (RAB_LOG_ONLY == sRuntimeAssertBehavior) return;
 

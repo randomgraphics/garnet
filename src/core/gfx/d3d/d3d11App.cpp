@@ -167,11 +167,11 @@ static void sPrintD3D11DeviceInfo(ID3D11Device * dev, const DXGI_SWAP_CHAIN_DESC
      "===================================================\n"
      "        D3D11 Implementation Information\n"
      "---------------------------------------------------\n"
-     "    Feature Level                  : %d.%d\n"
-     "    Backbuffer Size                : %d,%d\n"
-     "    Fullscreen                     : %s\n"
-     "    MSAA Sample Count              : %d\n"
-     "    MSAA Sample Quality            : %d\n"
+     "    Feature Level                  : {}.{}\n"
+     "    Backbuffer Size                : {},{}\n"
+     "    Fullscreen                     : {}\n"
+     "    MSAA Sample Count              : {}\n"
+     "    MSAA Sample Quality            : {}\n"
      "===================================================\n"
      "\n\n",
      (fl >> 12) & 0xF, (fl >> 8) & 0xF, scd.BufferDesc.Width, scd.BufferDesc.Height, scd.Windowed ? "False" : "True", scd.SampleDesc.Count,

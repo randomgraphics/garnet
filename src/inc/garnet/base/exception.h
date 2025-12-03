@@ -67,7 +67,7 @@ struct Exception {
 ///
 /// Dump current call stack to string
 ///
-GN_API StrA backtrace(bool includeSourceSnippet = GN_BUILD_DEBUG_ENABLED);
+GN_API StrA backtrace(int spaceIndent = 0, bool includeSourceSnippet = GN_BUILD_DEBUG_ENABLED);
 
 ///
 /// Throw exception

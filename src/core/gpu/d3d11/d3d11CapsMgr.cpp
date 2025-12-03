@@ -44,7 +44,7 @@ bool GN::gfx::D3D11Gpu::capsInit() {
      "===================================================\n"
      "         D3D11 Implementation Informations\n"
      "---------------------------------------------------\n"
-     "   Feature Level   : %u.%u\n"
+     "   Feature Level   : {}.{}\n"
      "===================================================\n"
      "\n\n",
      feature >> 12, (feature >> 8) & 0xF);

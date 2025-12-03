@@ -17,9 +17,41 @@ namespace GN {
 
 static Logger * sLogger = getLogger("GN.base.exception");
 
+/// Add certain number of spaces in front of each line of the string.
+static StrA indent(const StrA & s, int space) {
+    if (s.empty() || space <= 0) { return s; }
+
+    // Create the indentation prefix
+    StrA prefix;
+    for (int i = 0; i < space; ++i) { prefix += ' '; }
+
+    StrA         result;
+    const char * data  = s.data();
+    size_t       len   = s.size();
+    size_t       start = 0;
+
+    // Process each line
+    for (size_t i = 0; i <= len; ++i) {
+        // Check for end of line or end of string
+        if (i == len || data[i] == '\n') {
+            // Add prefix at the start of the line (if line is not empty)
+            if (i > start) {
+                result.append(prefix);
+                result.append(data + start, i - start);
+            }
+            // Add the newline character if present
+            if (i < len && data[i] == '\n') { result += '\n'; }
+            start = i + 1;
+        }
+    }
+
+    return result;
+}
+
 // ---------------------------------------------------------------------------------------------------------------------
 //
-GN_API StrA backtrace(bool includeSourceSnippet) {
+GN_API StrA backtrace(int spaceIndent, bool includeSourceSnippet) {
+    (void) spaceIndent;
     (void) includeSourceSnippet; // this is to avoid unreferenced variable warning.
 #if GN_ANDROID
     struct android_backtrace_state {
@@ -56,7 +88,7 @@ GN_API StrA backtrace(bool includeSourceSnippet) {
         }
     };
 
-    const int indent = 0;
+    const int indent = spaceIndent;
 
     StrA prefix;
     for (int i = 0; i < indent; ++i) prefix += ' ';
@@ -93,7 +125,7 @@ GN_API StrA backtrace(bool includeSourceSnippet) {
     Printer           p;
     p.snippet = includeSourceSnippet; // print code snippet in debug build only.
     p.print(st, ss);
-    return ss.str();
+    return indent(ss.str(), spaceIndent);
 #elif GN_MSWIN
     class MyStackWalker : public StackWalker {
     protected:
@@ -107,7 +139,7 @@ GN_API StrA backtrace(bool includeSourceSnippet) {
         std::stringstream ss;
     };
     MyStackWalker sw(StackWalker::RetrieveLine | StackWalker::RetrieveSymbol);
-    return sw.ShowCallstack() ? sw.ss.str() : StrA {};
+    return sw.ShowCallstack() ? indent(sw.ss.str(), spaceIndent) : StrA {};
 #else
     return {};
 #endif
