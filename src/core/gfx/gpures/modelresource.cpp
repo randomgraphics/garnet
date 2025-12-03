@@ -318,19 +318,19 @@ XmlElement * GN::gfx::ModelResourceDesc::saveToXml(XmlNode & root, const char * 
     {
         XmlAttrib * a = doc.createAttrib(subsetNode);
         a->name       = "basevtx";
-        a->value      = StrA::format("%u", subset.basevtx);
+        a->value      = StrA::format("{}", subset.basevtx);
 
         a        = doc.createAttrib(subsetNode);
         a->name  = "numvtx";
-        a->value = StrA::format("%u", subset.numvtx);
+        a->value = StrA::format("{}", subset.numvtx);
 
         a        = doc.createAttrib(subsetNode);
         a->name  = "startidx";
-        a->value = StrA::format("%u", subset.startidx);
+        a->value = StrA::format("{}", subset.startidx);
 
         a        = doc.createAttrib(subsetNode);
         a->name  = "numidx";
-        a->value = StrA::format("%u", subset.numidx);
+        a->value = StrA::format("{}", subset.numidx);
     }
 
     // create texture nodes
@@ -365,7 +365,7 @@ XmlElement * GN::gfx::ModelResourceDesc::saveToXml(XmlNode & root, const char * 
         if (unidesc.resourceName.empty()) {
             a        = doc.createAttrib(uniformNode);
             a->name  = "size";
-            a->value = StrA::format("%u", unidesc.size);
+            a->value = StrA::format("{}", unidesc.size);
 
             if (!unidesc.initialValue.empty()) {
                 XmlElement * bin = doc.createElement(uniformNode);
@@ -776,7 +776,7 @@ bool GN::gfx::ModelResource::Impl::setEffectResource(GpuResource * resource) {
 
         if (!texres) {
             const EffectResource::TextureProperties & tp      = mEffectResource->textureProperties(i);
-            StrA                                      texname = StrA::format("%s.texture.%s", getModelName(), tp.parameterName.data());
+            StrA                                      texname = StrA::format("{}.texture.{}", getModelName(), tp.parameterName.data());
             texres                                            = getGdb().findOrCreateResource<TextureResource>(texname);
             if (!texres) return false;
         }
@@ -795,7 +795,7 @@ bool GN::gfx::ModelResource::Impl::setEffectResource(GpuResource * resource) {
 
         if (!unires) {
             const EffectResource::UniformProperties & up      = mEffectResource->uniformProperties(i);
-            StrA                                      uniname = StrA::format("%s.uniform.%s", getModelName(), up.parameterName.data());
+            StrA                                      uniname = StrA::format("{}.uniform.{}", getModelName(), up.parameterName.data());
             unires                                            = getGdb().findOrCreateResource<UniformResource>(uniname);
             if (!unires) return false;
             AutoRef<Uniform> u = unires->uniform();
@@ -843,7 +843,7 @@ void GN::gfx::ModelResource::Impl::draw() const {
     if (0 == subset.startidx && 0 == subset.numidx) { subset.numidx = meshdesc.numidx; }
 
     // draw
-    GN_GPU_DEBUG_MARK_BEGIN(&g, StrA::format("ModelResource::draw : %s (%s)", mOwner.name().data(),
+    GN_GPU_DEBUG_MARK_BEGIN(&g, StrA::format("ModelResource::draw : {} ({})", mOwner.name().data(),
                                              (fs::baseName(mMeshResource->name()) + fs::extName(mMeshResource->name())).data()));
     for (size_t i = 0; i < mPasses.size(); ++i) {
         const GpuContext & gc = mPasses[i].gc;
@@ -913,7 +913,7 @@ bool GN::gfx::ModelResource::Impl::fromDesc(const ModelResourceDesc & desc) {
             if (!td->second.resourceName.empty()) {
                 texres = TextureResource::loadFromFile(db, td->second.resourceName);
             } else {
-                StrA texname = StrA::format("%s.texture.%s", getModelName(), tp.parameterName.data());
+                StrA texname = StrA::format("{}.texture.{}", getModelName(), tp.parameterName.data());
                 texres       = db.findOrCreateResource<TextureResource>(texname);
                 if (texres) texres->reset(&td->second.desc);
             }
@@ -944,7 +944,7 @@ bool GN::gfx::ModelResource::Impl::fromDesc(const ModelResourceDesc & desc) {
                 unires = db.findResource<UniformResource>(ud->second.resourceName);
                 if (!unires) { GN_ERROR(sLogger)("Invalid uniform resource name '%s' in model '%s'.", ud->second.resourceName.data(), getModelName()); }
             } else {
-                StrA uniname = StrA::format("%s.uniform.%s", getModelName(), up.parameterName.data());
+                StrA uniname = StrA::format("{}.uniform.{}", getModelName(), up.parameterName.data());
 
                 const void * initialValue = ud->second.initialValue.data();
                 if (!ud->second.initialValue.empty() && ud->second.initialValue.size() != ud->second.size) {

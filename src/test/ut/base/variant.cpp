@@ -155,7 +155,7 @@ public:
         var.setf(1.123f);
 
         s = var.gets();
-        TS_ASSERT_EQUALS("1.123000", s);
+        TS_ASSERT_EQUALS("1.123", s);
         TS_ASSERT(var.getb(b));
         TS_ASSERT_EQUALS(true, b);
         TS_ASSERT(var.geti(i));
@@ -170,7 +170,7 @@ public:
         var.setf(0.0f);
 
         s = var.gets();
-        TS_ASSERT_EQUALS("0.000000", s);
+        TS_ASSERT_EQUALS("0", s);
         TS_ASSERT(var.getb(b));
         TS_ASSERT_EQUALS(false, b);
         TS_ASSERT(var.geti(i));

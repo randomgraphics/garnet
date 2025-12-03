@@ -434,7 +434,7 @@ public:
         addRoot("app::media");
         auto gnroot = getEnv("GARNET_ROOT");
         if (!gnroot.empty()) {
-            addRoot(StrA::format("native::%s/media", gnroot.data()));
+            addRoot(StrA::format("native::{}/media", gnroot.data()));
         } else {
             addRoot("app::../../../../media");
         }

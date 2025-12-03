@@ -493,7 +493,7 @@ void GN::util::SampleApp::drawHUD() {
     if (mShowHUD) {
         BitmapFont * font = engine::getDefaultFontRenderer();
 
-        auto timeInfo = StrW::format(L"FPS: %.2f\tIdle: %.1f%%\n"
+        auto timeInfo = StrW::format(L"FPS: {:.2f}\tIdle: {:.1f}%\n"
                                      L"(Press F1 for more helps)",
                                      mFps.fps(), mFrameIdlePercentage);
 

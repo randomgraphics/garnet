@@ -128,7 +128,7 @@ static bool sGetBoolAttrib(const XmlElement & node, const char * attribName, boo
 static const char * sGetItemName(const XmlElement & node, const char * nodeType) {
     XmlAttrib * a = node.findAttrib("name");
     if (!a) {
-        sPostError(node, StrA::format("Unnamed %s node. Ignored.", nodeType));
+        sPostError(node, StrA::format("Unnamed {} node. Ignored.", nodeType));
         return 0;
     }
     return a->value.data();
@@ -189,7 +189,7 @@ static void sParseUniform(EffectResourceDesc & desc, const XmlElement & node) {
                    0 == str::compareI("float4", type)) {
             ud.size = sizeof(float) * 4;
         } else {
-            sPostError(node, StrA::format("Unrecognized uniform type: %s", type));
+            sPostError(node, StrA::format("Unrecognized uniform type: {}", type));
             ud.size = 0;
         }
     }
@@ -221,7 +221,7 @@ static void sParseParameters(EffectResourceDesc & desc, const XmlNode & root) {
         else if ("attribute" == e->name)
             sParseAttribute(desc, *e);
         else
-            sPostError(*e, StrA::format("Unknown parameter '%s'. Ignored", e->name.data()));
+            sPostError(*e, StrA::format("Unknown parameter '{}'. Ignored", e->name.data()));
     }
 }
 
@@ -320,7 +320,7 @@ static void sParseGpuProgram(EffectResourceDesc & desc, const XmlElement & node)
     const char * lang = sGetAttrib(node, "lang");
     sd.gpd.lang       = GpuProgramLanguage::sFromString(lang);
     if (!sd.gpd.lang.valid()) {
-        sPostError(node, StrA::format("invalid shading language: %s", lang ? lang : "<NULL>"));
+        sPostError(node, StrA::format("invalid shading language: {}", lang ? lang : "<NULL>"));
         return;
     }
 
@@ -344,11 +344,11 @@ static void sParseGpuProgram(EffectResourceDesc & desc, const XmlElement & node)
             GN_UNEXPECTED();
             break;
         };
-        sPostWarning(node, StrA::format("shaderModel attribute is missing. Assume: %s", ShaderModel::sToString(sd.gpd.shaderModels).data()));
+        sPostWarning(node, StrA::format("shaderModel attribute is missing. Assume: {}", ShaderModel::sToString(sd.gpd.shaderModels).data()));
     } else {
         sd.gpd.shaderModels = ShaderModel::sFromString(models);
         if (0 == sd.gpd.shaderModels) {
-            sPostError(node, StrA::format("Invalid shaderModel attribute: %s", models));
+            sPostError(node, StrA::format("Invalid shaderModel attribute: {}", models));
             return;
         }
     }

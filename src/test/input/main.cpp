@@ -61,7 +61,7 @@ class InputTest {
                     {
                         int x, y;
                         gInputPtr->getMousePosition( x, y );
-                        txt.format( "Mouse: %d, %d", x, y );
+                        txt.format( "Mouse: {}, {}", x, y );
                         TextOutA( dc, 0, 20, txt.data(), (INT)txt.size() );
                     }
 

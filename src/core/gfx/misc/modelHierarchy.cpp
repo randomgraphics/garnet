@@ -272,7 +272,7 @@ static bool sLoadModelHierarchyFromASE(ModelHierarchyDesc & desc, File & file) {
     }
     filename = fs::resolvePath(fs::getCurrentDir(), filename);
 
-#define FULL_MESH_NAME(n) StrA::format("%s.%s", filename.data(), n.data())
+#define FULL_MESH_NAME(n) StrA::format("{}.{}", filename.data(), n.data())
 
     // copy meshes. create nodes as well, since in ASE scene, one mesh is one node.
     for (size_t i = 0; i < ase.meshes.size(); ++i) {
@@ -323,7 +323,7 @@ static bool sLoadModelHierarchyFromASE(ModelHierarchyDesc & desc, File & file) {
         if (model.hasTexture("NORMAL_TEXTURE") && !am.mapbump.bitmap.empty()) { model.textures["NORMAL_TEXTURE"].resourceName = am.mapbump.bitmap; }
 
         // add the model to model list
-        StrA modelname = StrA::format("%s.%u", asemesh.name.data(), i);
+        StrA modelname = StrA::format("{}.{}", asemesh.name.data(), i);
         GN_ASSERT(NULL == desc.models.find(modelname));
         desc.models[modelname] = model;
 
@@ -737,7 +737,7 @@ static void sLoadFbxMesh(ModelHierarchyDesc & desc, const StrA & filename, Model
         // skip empty models.
         if (model.effect.empty()) continue;
 
-        StrA modelName         = StrA::format("%s.%d", meshName, i);
+        StrA modelName         = StrA::format("{}.{}", meshName, i);
         desc.models[modelName] = model;
         gnnode.models.append(modelName);
     }
@@ -1045,7 +1045,7 @@ static bool sParseNode(ModelHierarchyDesc & desc, XmlElement & root) {
 
                 node.models.append(a->value);
             } else {
-                sPostXMLError(*e, StrA::format("Unknown element: <%s>", e->name.data()));
+                sPostXMLError(*e, StrA::format("Unknown element: <{}>", e->name.data()));
             }
         }
     }
@@ -1101,7 +1101,7 @@ static bool sLoadModelHierarchyFromXML(ModelHierarchyDesc & desc, File & file) {
         if ("model" == e->name) {
             if (!sParseModel(desc, *e, basedir)) return false;
         } else {
-            sPostXMLError(*e, StrA::format("Ignore unknowned element: <%s>", e->name.data()));
+            sPostXMLError(*e, StrA::format("Ignore unknowned element: <{}>", e->name.data()));
         }
     }
 
@@ -1118,7 +1118,7 @@ static bool sLoadModelHierarchyFromXML(ModelHierarchyDesc & desc, File & file) {
         if ("node" == e->name) {
             if (!sParseNode(desc, *e)) return false;
         } else {
-            sPostXMLError(*e, StrA::format("Ignore unknowned element: <%s>", e->name.data()));
+            sPostXMLError(*e, StrA::format("Ignore unknowned element: <{}>", e->name.data()));
         }
     }
 
@@ -1154,7 +1154,7 @@ static bool sSaveModelHierarchyToXML(const ModelHierarchyDesc & desc, const char
         const StrA &             oldMeshName = i->key;
         const MeshResourceDesc & mesh        = i->value;
 
-        StrA newMeshName = StrA::format("%s.%d.mesh.bin", basename.data(), meshindex);
+        StrA newMeshName = StrA::format("{}.{}.mesh.bin", basename.data(), meshindex);
 
         if (!mesh.saveToFile(dirname + "\\" + newMeshName)) return false;
 
@@ -1192,7 +1192,7 @@ static bool sSaveModelHierarchyToXML(const ModelHierarchyDesc & desc, const char
     for (const StringMap<char, ModelHierarchyDesc::NodeDesc>::KeyValuePair * i = desc.nodes.first(); i != NULL; i = desc.nodes.next(i)) {
         const StrA & nodeName = i->key;
 
-        entityNameMap[nodeName] = StrA::format("%d", ++entityIndex);
+        entityNameMap[nodeName] = StrA::format("{}", ++entityIndex);
     }
 
     // write nodes
@@ -1220,19 +1220,19 @@ static bool sSaveModelHierarchyToXML(const ModelHierarchyDesc & desc, const char
 
         a        = xmldoc.createAttrib(node);
         a->name  = "position";
-        a->value = StrA::format("%f,%f,%f", nodeDesc.position.x, nodeDesc.position.y, nodeDesc.position.z);
+        a->value = StrA::format("{},{},{}", nodeDesc.position.x, nodeDesc.position.y, nodeDesc.position.z);
 
         a        = xmldoc.createAttrib(node);
         a->name  = "orientation";
-        a->value = StrA::format("%f,%f,%f,%f", nodeDesc.orientation.v.x, nodeDesc.orientation.v.y, nodeDesc.orientation.v.z, nodeDesc.orientation.w);
+        a->value = StrA::format("{},{},{},{}", nodeDesc.orientation.v.x, nodeDesc.orientation.v.y, nodeDesc.orientation.v.z, nodeDesc.orientation.w);
 
         a        = xmldoc.createAttrib(node);
         a->name  = "scaling";
-        a->value = StrA::format("%f,%f,%f", nodeDesc.scaling.x, nodeDesc.scaling.y, nodeDesc.scaling.z);
+        a->value = StrA::format("{},{},{}", nodeDesc.scaling.x, nodeDesc.scaling.y, nodeDesc.scaling.z);
 
         a        = xmldoc.createAttrib(node);
         a->name  = "bbox";
-        a->value = StrA::format("%f,%f,%f,%f,%f,%f", nodeDesc.bbox.x, nodeDesc.bbox.y, nodeDesc.bbox.z, nodeDesc.bbox.w, nodeDesc.bbox.h, nodeDesc.bbox.d);
+        a->value = StrA::format("{},{},{},{},{},{}", nodeDesc.bbox.x, nodeDesc.bbox.y, nodeDesc.bbox.z, nodeDesc.bbox.w, nodeDesc.bbox.h, nodeDesc.bbox.d);
 
         XmlElement * visual = xmldoc.createElement(node);
         visual->name        = "visual";
@@ -1250,7 +1250,7 @@ static bool sSaveModelHierarchyToXML(const ModelHierarchyDesc & desc, const char
     // write scene bounding box
     XmlAttrib * a = xmldoc.createAttrib(root->toElement());
     a->name       = "bbox";
-    a->value      = StrA::format("%f,%f,%f,%f,%f,%f", desc.bbox.x, desc.bbox.y, desc.bbox.z, desc.bbox.w, desc.bbox.h, desc.bbox.d);
+    a->value      = StrA::format("{},{},{},{},{},{}", desc.bbox.x, desc.bbox.y, desc.bbox.z, desc.bbox.w, desc.bbox.h, desc.bbox.d);
 #endif
 
     // write XML document

@@ -165,10 +165,10 @@ public:
 
         drawXYZCoordinateAxes(camera.proj * camera.view * arcball.getRotationMatrix44());
 
-        engine::getDefaultFontRenderer()->drawText(StrW::format(L"position : %f,\n"
-                                                                L"           %f,\n"
-                                                                L"           %f\n"
-                                                                L"radius   : %f",
+        engine::getDefaultFontRenderer()->drawText(StrW::format(L"position : {},\n"
+                                                                L"           {},\n"
+                                                                L"           {}\n"
+                                                                L"radius   : {}",
                                                                 position.x, position.y, position.z, radius)
                                                        .data(),
                                                    (float) getGpu()->getDispDesc().width - 320, 40);

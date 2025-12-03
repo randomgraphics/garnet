@@ -165,7 +165,7 @@ struct ShaderModel {
 
         if (flags) {
             if (!str.empty()) str += "|";
-            str += StrA::format("0x%X", flags);
+            str += StrA::format("0x{:X}", flags);
         }
 
         return str;

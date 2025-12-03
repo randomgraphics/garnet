@@ -146,10 +146,10 @@ static void sOutputOGLInfo(intptr_t disp, const DynaArray<std::string> & glexts)
                             "===================================================\n"
                             "        OpenGL Implementation Informations\n"
                             "---------------------------------------------------\n"
-                            "    OpenGL vendor      :    %s\n"
-                            "    OpenGL version     :    %s\n"
-                            "    OpenGL renderer    :    %s\n"
-                            "    GLSL version       :    %s\n",
+                            "    OpenGL vendor      :    {}\n"
+                            "    OpenGL version     :    {}\n"
+                            "    OpenGL renderer    :    {}\n"
+                            "    GLSL version       :    {}\n",
                             vendor, version, renderer, glsl);
 
     // caps. info.
@@ -160,8 +160,8 @@ static void sOutputOGLInfo(intptr_t disp, const DynaArray<std::string> & glexts)
     else
         tu = 1;
     info += StrA::format("---------------------------------------------------\n"
-                         "    Max size of texture             :    %d\n"
-                         "    Max number of texture stages    :    %d\n"
+                         "    Max size of texture             :    {}\n"
+                         "    Max number of texture stages    :    {}\n"
                          "===================================================\n"
                          "\n\n",
                          ts, tu);

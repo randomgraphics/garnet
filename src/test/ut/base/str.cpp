@@ -283,7 +283,7 @@ public:
 
         // format
 #if !GN_CYGWIN
-        s1.formatInplace(L"haha%d", 100);
+        s1.formatInplace(L"haha{}", 100);
         TS_ASSERT_EQUALS(s1, L"haha100");
         s1.formatInplace(0, 100);
         TS_ASSERT_EQUALS(s1, L"");

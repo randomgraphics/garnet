@@ -307,7 +307,7 @@ bool GN::win::WindowMsw::createWindow(const WindowCreateParameters & wcp) {
 
     // generate an unique window class name
     WNDCLASSEXW wcex = {};
-    do { mClassName.format(L"GNwindowMsw_%d", rand()); } while (::GetClassInfoExW(mModuleInstance, mClassName.data(), &wcex));
+    do { mClassName.format(L"GNwindowMsw_{}", rand()); } while (::GetClassInfoExW(mModuleInstance, mClassName.data(), &wcex));
 
     // register window class
     wcex.cbSize        = sizeof(WNDCLASSEXW);

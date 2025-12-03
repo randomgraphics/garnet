@@ -16,20 +16,20 @@ static GN::Logger * sLogger = GN::getLogger("GN.base.Variant");
 // set value
 // -----------------------------------------------------------------------------
 GN_API void GN::Variant::setb(bool b) { mValue = b ? "1" : "0"; }
-GN_API void GN::Variant::seti(int i) { mValue.formatInplace("%d", i); }
-GN_API void GN::Variant::setf(float f) { mValue.formatInplace("%f", f); }
+GN_API void GN::Variant::seti(int i) { mValue.formatInplace("{}", i); }
+GN_API void GN::Variant::setf(float f) { mValue.formatInplace("{}", f); }
 GN_API void GN::Variant::setp(void * p) {
     if (0 == p)
         mValue = "0";
     else
-        mValue.format("%p", p);
+        mValue.format("{}", p);
 }
-GN_API void GN::Variant::setv(const Vector4f & v) { mValue.formatInplace("%f,%f,%f,%f", v.x, v.y, v.z, v.w); }
+GN_API void GN::Variant::setv(const Vector4f & v) { mValue.formatInplace("{},{},{},{}", v.x, v.y, v.z, v.w); }
 GN_API void GN::Variant::setm(const Matrix44f & m) {
-    mValue.formatInplace("%f,%f,%f,%f,\n"
-                         "%f,%f,%f,%f,\n"
-                         "%f,%f,%f,%f,\n"
-                         "%f,%f,%f,%f",
+    mValue.formatInplace("{},{},{},{},\n"
+                         "{},{},{},{},\n"
+                         "{},{},{},{},\n"
+                         "{},{},{},{}",
                          m[0][0], m[0][1], m[0][2], m[0][3], m[1][0], m[1][1], m[1][2], m[1][3], m[2][0], m[2][1], m[2][2], m[2][3], m[3][0], m[3][1], m[3][2],
                          m[3][3]);
 }

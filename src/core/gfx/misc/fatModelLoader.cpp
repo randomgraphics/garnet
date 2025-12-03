@@ -1331,7 +1331,7 @@ static void sPrintFBXNodeHierarchy(StrA & hierarchy, const StrA & filename) {
 
             for (int i = 0; i < depth; ++i) { hierarchy += "  "; }
 
-            hierarchy += StrA::format("(%d) ", depth);
+            hierarchy += StrA::format("({}) ", depth);
 
             const char * name = node->GetName();
 
@@ -1375,7 +1375,7 @@ static void sPrintFBXNodeHierarchy(StrA & hierarchy, const StrA & filename) {
                 } else if (0 <= atype && atype < (int) GN_ARRAY_COUNT(sAttributeTypeNames)) {
                     hierarchy += sAttributeTypeNames[atype];
                 } else {
-                    hierarchy += StrA::format("[INVALID:%d]", (int) atype);
+                    hierarchy += StrA::format("[INVALID:{}]", (int) atype);
                 }
             } else {
                 hierarchy += "[NULL]";
@@ -2132,7 +2132,7 @@ static bool sPrintAiNodeHierarchy(StrA & hierarchy, const StrA & filename) {
 
             for (int i = 0; i < depth; ++i) { hierarchy += "  "; }
 
-            hierarchy += StrA::format("(%d) ", depth);
+            hierarchy += StrA::format("({}) ", depth);
 
             const char * name = node->mName.data;
 

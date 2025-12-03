@@ -823,7 +823,7 @@ bool GN::engine::SkinnedMesh::loadFromFatModel(const GN::gfx::FatModel & fatmode
     for (uint32_t mi = 0; mi < fatmodel.meshes.size(); ++mi) {
         const auto & fatmesh = fatmodel.meshes[mi];
 
-        auto meshName = StrA::format("%s.mesh.%d", fatmodel.name.data(), mi);
+        auto meshName = StrA::format("{}.mesh.{}", fatmodel.name.data(), mi);
 
         // use exising mesh, if possible
         AutoRef<MeshResource> mesh = gdb.findResource<MeshResource>(meshName);

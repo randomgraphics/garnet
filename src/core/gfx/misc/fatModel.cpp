@@ -222,11 +222,11 @@ static void sPrintFatJointRecursivly(StrA & s, const FatJoint * joints, uint32_t
     for (uint32_t i = 0; i < depth; ++i) { s += "  "; }
 
     if (root < count) {
-        s += StrA::format("(%d) %s\n", depth, joints[root].name.data());
+        s += StrA::format("({}) {}\n", depth, joints[root].name.data());
 
         for (uint32_t i = joints[root].child; i != FatJoint::NO_JOINT; i = joints[i].sibling) { sPrintFatJointRecursivly(s, joints, count, i, depth + 1); }
     } else {
-        s += StrA::format("(%d) ERROR: joint index out of range: %d\n", depth, root);
+        s += StrA::format("({}) ERROR: joint index out of range: {}\n", depth, root);
     }
 }
 
