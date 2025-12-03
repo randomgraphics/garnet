@@ -356,7 +356,7 @@ const char * GN::gfx::D3D11GpuProgramHLSL::getAttributeSemantic(uint32_t attribu
 
         if (semanticIndex) *semanticIndex = attribute.semanticIndex;
 
-        return attribute.semanticName;
+        return attribute.semanticName.c_str();
     }
 }
 

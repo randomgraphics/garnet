@@ -50,7 +50,7 @@ static HWND sCreateWindow(HWND parent, HMONITOR monitor, uint32_t width, uint32_
     const wchar_t * classname = L"d3dapp_mainwindow";
 
     // register window class
-    GN_TRACE(sLogger)("Register window class: {} (module handle: 0x{:X})", classname, module);
+    GN_TRACE(sLogger)(L"Register window class: {} (module handle: 0x{:X})", classname, (intptr_t) module);
     wcex.cbSize        = sizeof(wcex);
     wcex.style         = 0;
     wcex.lpfnWndProc   = (WNDPROC) &sStaticWindowProc;

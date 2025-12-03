@@ -34,7 +34,7 @@ static int sEncodingToCodePage(CharacterEncodingConverter::Encoding e) {
     if (0 <= e && e < GN_ARRAY_COUNT(TABLE)) {
         return TABLE[e];
     } else {
-        GN_ERROR(sLogger)("Invalid character encoding: {}", e);
+        GN_ERROR(sLogger)("Invalid character encoding: {}", (int) e);
         return -1;
     }
 }
@@ -134,7 +134,7 @@ size_t GN::CECImplMSWIN::convert(void * destBuffer, size_t destBufferSizeInBytes
 
         return sourceBufferSizeInBytes;
     } else {
-        GN_ERROR(sLogger)("Conversion to encoding \"{}\" is not supported yet.", mEncodingTo);
+        GN_ERROR(sLogger)("Conversion to encoding \"{}\" is not supported yet.", (int) mEncodingTo);
         return 0;
     }
 }

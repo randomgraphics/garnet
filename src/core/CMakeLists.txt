@@ -210,6 +210,7 @@ if(MSVC)
     target_compile_definitions(GNcore PUBLIC _UNICODE UNICODE) # REVIEW: why not private?
     target_compile_options(GNcore PUBLIC
         /Wv:18 # fix eigen warning. still needed?
+        /utf-8 # enable utf-8 encoding
     )
 else()
     if (NOT GN_BUILD_IS_STATIC)

@@ -69,12 +69,12 @@ public:
     // private variables
     // ********************************
 private:
-    std::wstring mClassName;
-    HINSTANCE    mModuleInstance;
-    HWND         mWindow;
-    HHOOK        mHook;
-    bool         mIsExternal;
-    bool         mInsideSizeMove;
+    StrW      mClassName;
+    HINSTANCE mModuleInstance;
+    HWND      mWindow;
+    HHOOK     mHook;
+    bool      mIsExternal;
+    bool      mInsideSizeMove;
 
     static Dictionary<void *, WindowMsw *> msInstanceMap;
 

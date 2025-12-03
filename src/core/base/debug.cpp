@@ -90,6 +90,17 @@ GN_API void GN::internal::handleAssertFailure(const char * msg, const char * fil
 //
 //
 // -----------------------------------------------------------------------------
+GN_API void GN::internal::handleAssertFailure(const wchar_t * msg, const char * file, int line, bool * ignoreForever) throw() {
+    StrA s;
+    try {
+        s = wcs2mbs(StrW(msg));
+    } catch (...) { s = "Exception thrown while converting assert message to narrow string."; }
+    handleAssertFailure(s.c_str(), file, line, ignoreForever);
+}
+
+//
+//
+// -----------------------------------------------------------------------------
 GN_API bool GN::isDebuggerAttached() {
 #if GN_MSWIN
     return ::IsDebuggerPresent();

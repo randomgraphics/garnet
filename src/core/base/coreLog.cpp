@@ -350,8 +350,8 @@ class DebugReceiver : public Logger::Receiver {
         if (desc.level >= GN::Logger::INFO) {
             str::formatTo(buf, 16384, L"{}\n", msg);
         } else {
-            str::formatTo(buf, 16384, L"{}({}) : name({}), level({}) : {}\n", sFormatPath(desc.file).data(), desc.line, logger.getName(),
-                          sLevel2Str(desc.level).data(), msg);
+            str::formatTo(buf, 16384, L"{}({}) : name({}), level({}) : {}\n", mbs2wcs(sFormatPath(desc.file)), desc.line, mbs2wcs(logger.getName()),
+                          mbs2wcs(sLevel2Str(desc.level)), msg);
         }
         ::OutputDebugStringW(buf);
 #else
@@ -569,7 +569,31 @@ public:
     }
 };
 
-LoggerContainer * msInstancePtr = 0;
+namespace internal {
+
+GN_API WideString::WideString(const char * msg) {
+    if (!msg || !*msg) GN_UNLIKELY {
+            wstr         = L"<EMPTY>";
+            needDeletion = false;
+            return;
+        }
+    try {
+        StrW w = mbs2wcs(StrA(msg));
+        wstr   = new wchar_t[w.size() + 1];
+        memcpy((void *) wstr, w.c_str(), w.size() + 1); // copy string content, including ending terminator.
+    } catch (...) {
+        wstr         = L"exception thrown while converting to wide string";
+        needDeletion = false;
+    }
+}
+
+GN_API WideString::~WideString() {
+    if (needDeletion) safeDeleteArray(wstr);
+    wstr         = nullptr;
+    needDeletion = false;
+}
+
+} // namespace internal
 
 //
 // Implement global log function.
@@ -587,4 +611,5 @@ GN_API Logger * getLogger(const char * name, bool usePrintfSyntax) {
     LoggerContainer & lc = sGetLoggerContainer();
     return lc.getLogger(name, usePrintfSyntax);
 }
+
 } // namespace GN

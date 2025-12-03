@@ -226,7 +226,7 @@ public:
 
         if ((UINT) type >= MAX_RS) {
             // Must be an invalid D3D9 render state type.
-            GN_ERROR(m_Logger)("Invalid D3D render state: {}", type);
+            GN_ERROR(m_Logger)("Invalid D3D render state: {}", (int) type);
             return;
         }
 
@@ -238,7 +238,7 @@ public:
                 m_Rs[type].currentValue = current;
                 m_Rs[type].got          = true;
             } else {
-                GN_ERROR(m_Logger)("Fail to get value of D3D render state: {}", type);
+                GN_ERROR(m_Logger)("Fail to get value of D3D render state: {}", (int) type);
             }
         }
 
@@ -253,7 +253,7 @@ public:
         if (NULL == m_Device) return;
 
         if (stage >= MAX_STAGES || (UINT) type >= MAX_TSS) {
-            GN_ERROR(m_Logger)("Invalid D3D texture stage state: stage({}), type({})", stage, type);
+            GN_ERROR(m_Logger)("Invalid D3D texture stage state: stage({}), type({})", stage, (int) type);
             return;
         }
 
@@ -265,7 +265,7 @@ public:
                 m_Tss[stage][type].currentValue = current;
                 m_Tss[stage][type].got          = true;
             } else {
-                GN_ERROR(m_Logger)("Fail to get value of D3D render state: {}", type);
+                GN_ERROR(m_Logger)("Fail to get value of D3D render state: {}", (int) type);
             }
         }
 
@@ -280,7 +280,7 @@ public:
         if (NULL == m_Device) return;
 
         if (stage >= MAX_STAGES || (UINT) type >= MAX_SS) {
-            GN_ERROR(m_Logger)("Invalid D3D sampler state: stage({}), type({})", stage, type);
+            GN_ERROR(m_Logger)("Invalid D3D sampler state: stage({}), type({})", stage, (int) type);
             return;
         }
 
@@ -292,7 +292,7 @@ public:
                 m_Ss[stage][type].currentValue = current;
                 m_Ss[stage][type].got          = true;
             } else {
-                GN_ERROR(m_Logger)("Fail to get value of D3D render state: {}", type);
+                GN_ERROR(m_Logger)("Fail to get value of D3D render state: {}", (int) type);
             }
         }
 

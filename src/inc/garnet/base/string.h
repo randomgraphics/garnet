@@ -1545,7 +1545,7 @@ struct fmt::formatter<GN::StrW> {
     constexpr auto parse(format_parse_context & ctx) { return ctx.begin(); }
     template<typename Context>
     constexpr auto format(GN::StrW const & foo, Context & ctx) const {
-        return format_to(ctx.out(), "{}", foo.c_str());
+        return format_to(ctx.out(), L"{}", foo.c_str());
     }
 };
 

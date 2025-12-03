@@ -142,26 +142,23 @@ else()
     set(GN_BUILD_PROFILING_ENABLED OFF)
 endif()
 
-# Set compiler specific options
+# Set compiler specific options for garnet library. Note that these
+# options are only applied to garnet library and its dependencies.
+# They won't get populated to client modules who depends on garnet library.
 if (MSVC)
     if (GN_BUILD_DISABLE_ALL_WARINGS)
-        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /w")
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /w")
+        add_compile_options(/w)
     else()
-        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /W4 /WX")
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W4 /WX")
+        add_compile_options(/W4 /WX)
     endif()
     # enable parallel build
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /MP")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /MP")
+    add_compile_options(/MP)
     # TODO: replace /EHsc with /EHa?
 else()
     if (GN_BUILD_DISABLE_ALL_WARINGS)
-        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -w")
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -w")
+        add_compile_options(-w)
     else()
-        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -Werror")
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Werror")
+        add_compile_options(-Wall -Wextra -Werror)
     endif()
 endif()
 

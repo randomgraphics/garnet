@@ -8,8 +8,6 @@
 
 #include <chrono>
 #include <sstream>
-#include <codecvt>
-#include <locale>
 
 #ifndef FMT_HEADER_ONLY
     #define FMT_HEADER_ONLY
@@ -97,6 +95,13 @@ namespace GN {
 
 namespace internal {
 
+struct GN_API WideString {
+    const wchar_t * wstr         = nullptr;
+    bool            needDeletion = false;
+    WideString(const char *);
+    ~WideString();
+};
+
 ///
 /// String format utility class. Reserved for internal use only.
 ///
@@ -172,8 +177,7 @@ class StringFormatter {
             auto s = fmt::format("Printf syntax is deprecated: {}", fmt);
             GN_ASSERT_EX(!lookForPrintfSpecifiers(fmt), s.c_str());
         } else if constexpr (std::is_same_v<CHAR, wchar_t>) {
-            std::wstring_convert<std::codecvt_utf8<wchar_t>> conv;
-            auto                                             s = fmt::format("Printf syntax is deprecated: {}", conv.to_bytes(fmt));
+            auto s = fmt::format(L"Printf syntax is deprecated: {}", fmt);
             GN_ASSERT_EX(!lookForPrintfSpecifiers(fmt), s.c_str());
         } else {
             GN_ASSERT_EX(!lookForPrintfSpecifiers(fmt), "Printf syntax is deprecated");
@@ -188,7 +192,7 @@ class StringFormatter {
         if constexpr (std::is_same_v<CHAR, char>) {
             GN_ASSERT_EX(false, fmt::format("{}: {}", what, fmt).c_str());
         } else if constexpr (std::is_same_v<CHAR, wchar_t>) {
-            GN_ASSERT_EX(false, fmt::format("{}: {}", what, std::wstring_convert<std::codecvt_utf8<wchar_t>>().to_bytes(fmt)).c_str());
+            GN_ASSERT_EX(false, fmt::format(L"{}: {}", WideString(what).wstr, fmt).c_str());
         }
     }
 
@@ -251,7 +255,7 @@ public:
             // get size of the formatted string
             auto r = fmt::formatted_size(fmt, std::forward<Args>(args)...);
 
-            constexpr size_t maxCharacters = std::size(mPreAllocatedBuffer) - 1; // needs one addtional space for the null terminator
+            constexpr size_t maxCharacters = sizeof(mPreAllocatedBuffer) / sizeof(CHAR) - 1; // needs one additional space for the null terminator
 
             if (r > maxCharacters) {
                 mIsPreallocated = false;
@@ -265,8 +269,7 @@ public:
             if constexpr (std::is_same_v<CHAR, char>) {
                 mResult = fmt::format("{}: {}", e.what(), fmt);
             } else if constexpr (std::is_same_v<CHAR, wchar_t>) {
-                std::wstring_convert<std::codecvt_utf8<wchar_t>> conv;
-                mResult = fmt::format(L"{}: {}", conv.from_bytes(e.what()), fmt);
+                mResult = fmt::format(L"{}: {}", WideString(e.what()).wstr, fmt);
             }
             mIsPreallocated = false;
         }
@@ -286,7 +289,7 @@ public:
     template<typename... Args>
     StringPrinter(const CHAR * fmt, Args &&... args) {
         if (!fmt || !*fmt) { return; }
-        mResult = fmt::vsprintf(fmt::basic_string_view<CHAR>(fmt), fmt::make_printf_args<CHAR>(args...));
+        mResult = fmt::vsprintf<CHAR>(fmt::basic_string_view<CHAR>(fmt), fmt::make_printf_args<CHAR>(args...));
     }
     const CHAR * result() const { return mResult.c_str(); }
     size_t       size() const { return mResult.size(); }

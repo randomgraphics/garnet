@@ -36,7 +36,7 @@ void GN::gfx::D3D11Gpu::resourceQuit() {
         std::list<D3D11Resource *>::iterator i = mResourceList.begin();
         while (i != mResourceList.end()) {
             D3D11Resource * r = *i;
-            GN_ERROR(sLogger)("0x{}", r);
+            GN_ERROR(sLogger)("0x{:X}", (intptr_t) r);
             ++i;
         }
     }

@@ -268,10 +268,16 @@ GN_API const char * getDXErrorInfo(int32_t hr) throw();
 GN_API const char * errno2str(int);
 
 namespace internal {
+
 ///
 /// Handle assert failure
 ///
 GN_API void handleAssertFailure(const char * msg, const char * file, int line, bool * ignoreForever) throw();
+
+///
+/// Handle assert failure
+///
+GN_API void handleAssertFailure(const wchar_t * msg, const char * file, int line, bool * ignoreForever) throw();
 
 } // namespace internal
 

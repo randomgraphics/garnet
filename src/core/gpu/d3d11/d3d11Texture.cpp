@@ -515,7 +515,7 @@ bool GN::gfx::D3D11Texture::createTexture() {
         GN_DX_CHECK_RETURN(dev.CreateTexture3D(&desc3d, 0, &tex3d), false);
         mTexture = tex3d;
     } else {
-        GN_ERROR(sLogger)("Invalid texture dimension: {}", mDimension);
+        GN_ERROR(sLogger)("Invalid texture dimension: {}", (int) mDimension);
         GN_UNEXPECTED();
         return false;
     }

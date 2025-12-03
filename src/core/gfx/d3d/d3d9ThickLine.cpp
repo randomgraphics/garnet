@@ -11,7 +11,7 @@ static GN::Logger * sLogger = GN::getLogger("GN.d3d9.thickline");
 //
 //
 // -----------------------------------------------------------------------------
-template<typeaname... ARGS>
+template<typename... ARGS>
 static void LOG_ERROR(const char * format, ARGS &&... args) {
     GN_ERROR(sLogger)(format, std::forward<ARGS>(args)...);
 }
