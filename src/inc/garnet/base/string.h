@@ -367,9 +367,9 @@ public:
     ///
     template<typename... Args>
     Str<CharType> & formatInplace(const CharType * formatString, Args &&... args) {
-        auto sf = internal::StringFormatter<CharType>(false, formatString, std::forward<Args>(args)...);
-        resize(sf.size());
-        ::memcpy(mPtr, sf.result(), sf.size() * sizeof(CharType));
+        auto numCharacters = internal::StringFormatter<CharType>::formattedSize(formatString, std::forward<Args>(args)...);
+        resize(numCharacters);
+        internal::StringFormatter<CharType>::formatToBuffer(mPtr, numCharacters + 1, formatString, std::forward<Args>(args)...);
         return *this;
     }
 
@@ -896,8 +896,11 @@ public:
     ///
     template<typename... Args>
     static Str<CharType> format(const CharType * formatString, Args &&... args) {
-        auto sf = internal::StringFormatter<CharType>(false, formatString, std::forward<Args>(args)...);
-        return Str<CharType>(sf.result(), sf.size());
+        auto          numCharacters = internal::StringFormatter<CharType>::formattedSize(formatString, std::forward<Args>(args)...);
+        Str<CharType> result;
+        result.resize(numCharacters);
+        internal::StringFormatter<CharType>::formatToBuffer(result.mPtr, numCharacters + 1, formatString, std::forward<Args>(args)...);
+        return result;
     }
 
 private:

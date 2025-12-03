@@ -163,9 +163,17 @@ class StringFormatter {
         return false; // No printf-style format specifiers found
     }
 
-    std::basic_string<CHAR> mResult;
+    std::basic_string<CHAR>         mResult;
+    bool                            mIsPreallocated = true;
+    static inline thread_local CHAR mPreAllocatedBuffer[1024];
 
 public:
+    /// @brief Format the string to the output buffer. The output string is guaranteed to be null terminated.
+    /// @tparam ...Args types of the arguments to the format string.
+    /// @param outputBuffer The output buffer.
+    /// @param outputBufferSize The size of the output buffer, including the null terminator.
+    /// @param fmt The format string.
+    /// @param ...args The arguments to the format string.
     template<typename... Args>
     static void formatToBuffer(CHAR * outputBuffer, size_t outputBufferSize, const CHAR * fmt, Args &&... args) {
         // handle empty input and output buffer
@@ -180,18 +188,55 @@ public:
         outputBuffer[len] = 0;
     }
 
+    /// Return size of the formatted string, not including the null terminator.
     template<typename... Args>
-    StringFormatter(bool usePrintfSyntax, const CHAR * fmt, Args &&... args) {
-        if (!fmt || !*fmt) { return; }
-        if (usePrintfSyntax) GN_UNLIKELY {
-                mResult = fmt::vsprintf(fmt::basic_string_view<CHAR>(fmt), fmt::make_printf_args<CHAR>(args...));
-            }
-        else {
-            GN_ASSERT(!checkForPrintf(fmt));
-            mResult = fmt::format(fmt, std::forward<Args>(args)...);
+    static size_t formattedSize(const CHAR * fmt, Args &&... args) {
+        if (!fmt || !*fmt) return 0;
+        GN_ASSERT(!checkForPrintf(fmt));
+        return fmt::formatted_size(fmt, std::forward<Args>(args)...);
+    }
+
+    template<typename... Args>
+    StringFormatter(const CHAR * fmt, Args &&... args) {
+        if (!fmt || !*fmt) {
+            mIsPreallocated        = true;
+            mPreAllocatedBuffer[0] = 0;
+            return;
+        }
+
+        GN_ASSERT(!checkForPrintf(fmt));
+
+        // get size of the formatted string
+        auto r = fmt::formatted_size(fmt, std::forward<Args>(args)...);
+
+        constexpr size_t maxCharacters = std::size(mPreAllocatedBuffer) - 1; // needs one addtional space for the null terminator
+
+        if (r > maxCharacters) {
+            mIsPreallocated = false;
+            mResult         = fmt::format(fmt, std::forward<Args>(args)...);
+        } else {
+            mIsPreallocated = true;
+            fmt::format_to_n(mPreAllocatedBuffer, maxCharacters, fmt, std::forward<Args>(args)...);
+            mPreAllocatedBuffer[std::min(r, maxCharacters)] = 0;
         }
     }
 
+    const CHAR * result() const { return mIsPreallocated ? mPreAllocatedBuffer : mResult.c_str(); }
+};
+
+///
+/// String formatter class using the old school printf syntax.
+///
+template<typename CHAR>
+class StringPrinter {
+    std::basic_string<CHAR> mResult;
+
+public:
+    template<typename... Args>
+    StringPrinter(const CHAR * fmt, Args &&... args) {
+        if (!fmt || !*fmt) { return; }
+        mResult = fmt::vsprintf(fmt::basic_string_view<CHAR>(fmt), fmt::make_printf_args<CHAR>(args...));
+    }
     const CHAR * result() const { return mResult.c_str(); }
     size_t       size() const { return mResult.size(); }
 };
@@ -290,7 +335,10 @@ public:
         template<typename... Args>
         void operator()(const char * format_, Args &&... args_) {
             GN_ASSERT(mLogger);
-            return mLogger->doLog(mDesc, internal::StringFormatter<char>(mLogger->isPrintfSyntax(), format_, std::forward<Args>(args_)...).result());
+            if (mLogger->isPrintfSyntax()) GN_UNLIKELY {
+                    return mLogger->doLog(mDesc, internal::StringPrinter<char>(format_, std::forward<Args>(args_)...).result());
+                }
+            else { return mLogger->doLog(mDesc, internal::StringFormatter<char>(format_, std::forward<Args>(args_)...).result()); }
         }
 
         ///
@@ -299,7 +347,10 @@ public:
         template<typename... Args>
         void operator()(const wchar_t * format_, Args &&... args_) {
             GN_ASSERT(mLogger);
-            return mLogger->doLog(mDesc, internal::StringFormatter<wchar_t>(mLogger->isPrintfSyntax(), format_, std::forward<Args>(args_)...).result());
+            if (mLogger->isPrintfSyntax()) GN_UNLIKELY {
+                    return mLogger->doLog(mDesc, internal::StringPrinter<wchar_t>(format_, std::forward<Args>(args_)...).result());
+                }
+            else { return mLogger->doLog(mDesc, internal::StringFormatter<wchar_t>(format_, std::forward<Args>(args_)...).result()); }
         }
     };
 
