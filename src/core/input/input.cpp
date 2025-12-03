@@ -95,7 +95,7 @@ GN_API bool GN::input::initializeInputSystem(InputAPI api) {
     }
 
     default:
-        GN_ERROR(sLogger)("unknow or unsupport API : %d", api.toInt());
+        GN_ERROR(sLogger)("unknow or unsupport API : {}", api.toInt());
         return 0;
     }
 

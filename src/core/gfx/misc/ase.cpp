@@ -136,9 +136,9 @@ struct AseFile {
         return true;
     }
 
-    void err(const StrA & msg) const { GN_ERROR(sLogger)("ASEFILE: line %d : %s", line, msg.data()); }
-    void warn(const StrA & msg) const { GN_WARN(sLogger)("ASEFILE: line %d : %s", line, msg.data()); }
-    void verbose(const StrA & msg) const { GN_VERBOSE(sLogger)("ASEFILE: line %d : %s", line, msg.data()); }
+    void err(const StrA & msg) const { GN_ERROR(sLogger)("ASEFILE: line {} : {}", line, msg.data()); }
+    void warn(const StrA & msg) const { GN_WARN(sLogger)("ASEFILE: line {} : {}", line, msg.data()); }
+    void verbose(const StrA & msg) const { GN_VERBOSE(sLogger)("ASEFILE: line {} : {}", line, msg.data()); }
 
     enum ScanOptionEnum {
         IN_CURRENT_BLOCK            = 0,
@@ -1029,7 +1029,7 @@ static bool sBuildNodeTree(AseSceneInternal & scene) {
         AseGeoObject * p = sFindGeoObject(scene, o.node.parent);
 
         if (0 == p) {
-            GN_ERROR(sLogger)("Object %s has invalid parent: %s. Replace it with \"root\".", o.node.name.data(), o.node.parent.data());
+            GN_ERROR(sLogger)("Object {} has invalid parent: {}. Replace it with \"root\".", o.node.name.data(), o.node.parent.data());
             p = &scene.root;
         }
 

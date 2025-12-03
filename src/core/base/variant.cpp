@@ -55,7 +55,7 @@ GN_API bool GN::Variant::getb(bool & b) const {
         b = .0f != f;
         return true;
     } else {
-        GN_ERROR(sLogger)("Can't convert string '%s' to boolean.", mValue.data());
+        GN_ERROR(sLogger)("Can't convert string '{}' to boolean.", mValue.data());
         return false;
     }
 }

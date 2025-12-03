@@ -79,7 +79,7 @@ static bool sCheckRequiredExtensions(const DynaArray<std::string> & extensions) 
     char const * const * p    = sRequiredExtensions;
     while (*p) {
         if (GL_TRUE != sFindExtension(extensions, *p)) {
-            GN_ERROR(sLogger)("Required extension '%s' was not supported!", *p);
+            GN_ERROR(sLogger)("Required extension '{}' was not supported!", *p);
             fail = true;
         }
         // next extension

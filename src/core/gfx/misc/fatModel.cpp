@@ -178,7 +178,7 @@ bool GN::gfx::FatVertexBuffer::GenerateVertexStream(const MeshVertexFormat & mvf
         } else {
             semantics[i] = sString2Semantic(s);
         }
-        if (INVALID == semantics[i]) { GN_WARN(sLogger)("unsupport semantic: %s", s); }
+        if (INVALID == semantics[i]) { GN_WARN(sLogger)("unsupport semantic: {}", s); }
     }
 
     // Copy vertex data

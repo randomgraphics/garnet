@@ -180,7 +180,7 @@ public:
         // convert to full path
         char absPath[MAX_PATH + 1];
         if (0 == _fullpath(absPath, tmp.data(), MAX_PATH)) {
-            GN_ERROR(sLogger)("invalid path '%s'.", path.data());
+            GN_ERROR(sLogger)("invalid path '{}'.", path.data());
             result.clear();
             return;
         }
@@ -206,12 +206,12 @@ public:
         GN_GUARD;
 
         if (!exist(dirName)) {
-            GN_TRACE(sLogger)("'%s' does not exist!", dirName.data());
+            GN_TRACE(sLogger)("'{}' does not exist!", dirName.data());
             return result;
         }
 
         if (!isDir(dirName)) {
-            GN_TRACE(sLogger)("'%s' is not directory!", dirName.data());
+            GN_TRACE(sLogger)("'{}' is not directory!", dirName.data());
             return result;
         }
 
@@ -291,7 +291,7 @@ public:
         char realPath[PATH_MAX + 1];
         str::formatTo(linkName, PATH_MAX, "/proc/%d/exe", getpid());
         if (0 == realpath(linkName, realPath)) {
-            GN_ERROR(sLogger)("Fail to get real path of file '%s'.", linkName);
+            GN_ERROR(sLogger)("Fail to get real path of file '{}'.", linkName);
         } else {
             mRootDir = parentPath(realPath);
         }
@@ -413,7 +413,7 @@ public:
     std::unique_ptr<File> openFile(const StrA & path, std::ios_base::openmode mode) {
         const StrA * root = findRoot(path);
         if (!root) {
-            GN_ERROR(sLogger)("file '%s' not found!", path.data());
+            GN_ERROR(sLogger)("file '{}' not found!", path.data());
             return 0;
         }
         return GN::fs::openFile(joinPath(*root, path), mode);
@@ -518,7 +518,7 @@ struct FileSystemContainer {
         }
 
         if (NULL != mFileSystems.find(name)) {
-            GN_ERROR(sLogger)("File system '%s' already exists!", name.data());
+            GN_ERROR(sLogger)("File system '{}' already exists!", name.data());
             return false;
         }
 

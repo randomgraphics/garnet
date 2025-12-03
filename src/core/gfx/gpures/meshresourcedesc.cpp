@@ -179,7 +179,7 @@ bool sGetMeshVertexPositions(MeshVertexPosition & pos, const MeshResourceDesc & 
         pos.y = vertices + 1;
         pos.z = vertices + 2;
     } else {
-        GN_ERROR(sLogger)("AABB calculation failed: unsupported vertex format %s", positionElement->format.toString().c_str());
+        GN_ERROR(sLogger)("AABB calculation failed: unsupported vertex format {}", positionElement->format.toString().c_str());
         return false;
     }
     pos.strideX = pos.strideY = pos.strideZ = desc.strides[positionElement->stream];
@@ -290,7 +290,7 @@ AutoRef<Blob> sLoadFromMeshBinaryFile(File & fp, MeshResourceDesc & desc) {
 static const XmlAttrib * sGetRequiredAttrib(const XmlElement & node, const char * attribName) {
     const XmlAttrib * a = node.findAttrib(attribName);
 
-    if (!a) { GN_ERROR(sLogger)("Element <%s>: attribute \"%s\" is missing.", node.name.data(), attribName ? attribName : "!!!NULLPTR!!!"); }
+    if (!a) { GN_ERROR(sLogger)("Element <{}>: attribute \"{}\" is missing.", node.name.data(), attribName ? attribName : "!!!NULLPTR!!!"); }
 
     return a;
 }
@@ -356,12 +356,12 @@ static bool sReadV1BinaryFile(MeshBinaryHeaderV1 & header, uint8_t * dst, size_t
     if (!fp) return false;
 
     if (sizeof(header) != fp->read(&header, sizeof(header))) {
-        GN_ERROR(sLogger)("Fail to read garnet binary file header: %s", filename);
+        GN_ERROR(sLogger)("Fail to read garnet binary file header: {}", filename);
         return false;
     }
 
     if (0 != memcmp(header.tag, MESH_BINARY_TAG_V1, sizeof(header.tag))) {
-        GN_ERROR(sLogger)("Invalid garnet V1 binary file: %s", filename);
+        GN_ERROR(sLogger)("Invalid garnet V1 binary file: {}", filename);
         return false;
     }
 

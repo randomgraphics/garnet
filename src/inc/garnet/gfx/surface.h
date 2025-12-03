@@ -90,14 +90,14 @@ struct TextureDesc {
         // check format
         if (!format.valid()) {
             static Logger * sLocalLogger = getLogger("GN.gfx.TextureDesc");
-            GN_ERROR(sLocalLogger)("invalid texture format: %s", format.toString().c_str());
+            GN_ERROR(sLocalLogger)("invalid texture format: {}", format.toString().c_str());
             return false;
         }
 
         // check usage
         if (usage < 0 && usage >= TextureUsage::NUM_USAGES) {
             static Logger * sLocalLogger = getLogger("GN.gfx.TextureDesc");
-            GN_ERROR(sLocalLogger)("invalid texture usage: %d", (int) usage.toRawEnum());
+            GN_ERROR(sLocalLogger)("invalid texture usage: {}", (int) usage.toRawEnum());
             return false;
         }
 

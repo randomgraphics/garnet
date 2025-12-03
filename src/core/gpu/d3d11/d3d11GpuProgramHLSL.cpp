@@ -16,7 +16,7 @@ D3D11_TEXTURE_ADDRESS_MODE sAdressModeToD3D11(unsigned short addr) {
     if (addr < GN_ARRAY_COUNT(mapping)) {
         return mapping[addr];
     } else {
-        GN_ERROR(sLogger)("Invalid garnet texture address mode: %d", addr);
+        GN_ERROR(sLogger)("Invalid garnet texture address mode: {}", addr);
         return D3D11_TEXTURE_ADDRESS_CLAMP;
     }
 }
@@ -348,7 +348,7 @@ void GN::gfx::D3D11GpuProgramHLSL::quit() {
 // -----------------------------------------------------------------------------
 const char * GN::gfx::D3D11GpuProgramHLSL::getAttributeSemantic(uint32_t attributeIndex, UINT * semanticIndex) const {
     if (attributeIndex >= mParamDesc.attributes.count()) {
-        GN_ERROR(sLogger)("Invalid attribute index: %d", attributeIndex);
+        GN_ERROR(sLogger)("Invalid attribute index: {}", attributeIndex);
         if (semanticIndex) *semanticIndex = 0;
         return NULL;
     } else {
@@ -597,7 +597,7 @@ void GN::gfx::D3D11GpuProgramHLSL::sUpdateD3D11ConstData(const D3D11UniformParam
     if (!ssp.used) return;
 
     if (desc.size != uniform.size()) {
-        GN_WARN(sLogger)("parameter %s: value size(%d) differs from size defined in shader code(%d).", desc.name, uniform.size(), desc.size);
+        GN_WARN(sLogger)("parameter {}: value size({}) differs from size defined in shader code({}).", desc.name, uniform.size(), desc.size);
     }
 
     DynaArray<uint8_t> &             cb = cbarray[ssp.cbidx];

@@ -20,7 +20,7 @@ static GN::Logger * sLogger = GN::getLogger("GN.util");
 // -----------------------------------------------------------------------------
 static const char * sGetOptionValue(int argc, const char * const * argv, int & i) {
     if (i + 1 == argc || '-' == *argv[i + 1]) {
-        GN_ERROR(sLogger)("Argument value of option %s is missing.", argv[i]);
+        GN_ERROR(sLogger)("Argument value of option {} is missing.", argv[i]);
         return NULL;
     }
 
@@ -37,7 +37,7 @@ static int sParseStrings(const char * option, const char * value, const char * s
         if (0 == str::compareI(strings[i], value)) return (int) i;
     }
 
-    GN_ERROR(sLogger)("Invalid argument value (%s) for option %s", value, option);
+    GN_ERROR(sLogger)("Invalid argument value ({}) for option {}", value, option);
     return -1;
 }
 
@@ -54,7 +54,7 @@ static bool sParseBool(bool & result, const char * option, const char * value) {
         result = false;
         return true;
     } else {
-        GN_ERROR(sLogger)("Invalid boolean argument value (%s) for option %s", value, option);
+        GN_ERROR(sLogger)("Invalid boolean argument value ({}) for option {}", value, option);
         return false;
     }
 }
@@ -69,7 +69,7 @@ static bool sParseInteger(T & result, const char * option, const char * value) {
     if (0 != str::toInetger(result, value)) {
         return true;
     } else {
-        GN_ERROR(sLogger)("Invalid integer argument value (%s) for option %s", value, option);
+        GN_ERROR(sLogger)("Invalid integer argument value ({}) for option {}", value, option);
         return false;
     }
 }
@@ -87,7 +87,7 @@ static bool sParseGpuAPI(GN::gfx::GpuAPI & result, const char * value) {
     result = GpuAPI::sFromString(upperCase.data());
 
     if (GpuAPI::INVALID == result) {
-        GN_ERROR(sLogger)("invalid renderer API: %s", value);
+        GN_ERROR(sLogger)("invalid renderer API: {}", value);
         return false;
     }
 

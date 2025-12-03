@@ -532,7 +532,7 @@ public:
          "    Logger Tree\n"
          "===================");
         printLoggerTree(loggerTree, 0, mRootLogger);
-        GN_VERBOSE(sLogger)("\n%s", loggerTree.data());
+        GN_VERBOSE(sLogger)("\n{}", loggerTree.data());
         for (LoggerMap::KeyValuePair * p = mLoggers.first(); NULL != p; p = mLoggers.next(p)) { delete p->value; }
     }
 

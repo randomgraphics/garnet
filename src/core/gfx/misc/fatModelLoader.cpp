@@ -378,7 +378,7 @@ static inline int sGetLayerElementIndex(const FbxLayerElementTemplate<T> * eleme
     } else if (FbxLayerElement::eIndexToDirect == refmode) {
         return elements->GetIndexArray().GetAt(index);
     } else {
-        GN_ERROR(sLogger)("Unsupport reference mode: %d", (int) refmode);
+        GN_ERROR(sLogger)("Unsupport reference mode: {}", (int) refmode);
         return -1;
     }
 }
@@ -399,7 +399,7 @@ static inline int sGetLayerElementIndex(const FbxLayerElementTemplate<T> * eleme
     } else if (FbxLayerElement::eByPolygon == mapmode) {
         return sGetLayerElementIndex(elements, polygonIndex);
     } else {
-        GN_ERROR(sLogger)("Invalid layer mapping mode: %d", (int) mapmode);
+        GN_ERROR(sLogger)("Invalid layer mapping mode: {}", (int) mapmode);
         return -1;
     }
 }
@@ -905,7 +905,7 @@ static void sLoadFbxMesh(FatModel & fatmodel, const StrA & filename, FbxSdkWrapp
     if (!fbxmesh->IsTriangleMesh()) {
         fbxmesh = sdk.converter->TriangulateMesh(fbxmesh);
         if (NULL == fbxmesh) {
-            GN_ERROR(sLogger)("Fail to triangulate fbxmesh node: %s", fbxnode->GetName());
+            GN_ERROR(sLogger)("Fail to triangulate fbxmesh node: {}", fbxnode->GetName());
             return;
         }
     }
@@ -913,7 +913,7 @@ static void sLoadFbxMesh(FatModel & fatmodel, const StrA & filename, FbxSdkWrapp
     // For now, we supports layer 0 only.
     FbxLayer * layer0 = fbxmesh->GetLayer(0);
     if (NULL == layer0) {
-        GN_ERROR(sLogger)("The fbxmesh does not have a layer: %s", fbxnode->GetName());
+        GN_ERROR(sLogger)("The fbxmesh does not have a layer: {}", fbxnode->GetName());
         return;
     }
     if (NULL == layer0->GetNormals()) { fbxmesh->ComputeVertexNormals(); }
@@ -1134,7 +1134,7 @@ static void sLoadFbxMesh(FatModel & fatmodel, const StrA & filename, FbxSdkWrapp
     // It's always triangle list.
     fatmesh.primitive = PrimitiveType::TRIANGLE_LIST;
 
-    GN_INFO(sLogger)("Load FBX mesh %s: %d vertices, %d faces", fbxnode->GetName(), fatmesh.vertices.getVertexCount(), fatmesh.indices.size());
+    GN_INFO(sLogger)("Load FBX mesh {}: {} vertices, {} faces", fbxnode->GetName(), fatmesh.vertices.getVertexCount(), fatmesh.indices.size());
 
     // finally, add the fatmesh to fatmodel. And we are done!
     fatmodel.meshes.append(std::move(fatmesh));
@@ -1198,7 +1198,7 @@ static void sLoadFbxAnimations(FatModel & fatmodel, FbxScene & fbxscene) {
 static bool sLoadFromFBX(FatModel & fatmodel, File & file, const StrA & filename) {
 #ifdef HAS_FBX
 
-    GN_INFO(sLogger)("Load FBX model from file: %s", filename.data());
+    GN_INFO(sLogger)("Load FBX model from file: {}", filename.data());
 
     FbxSdkWrapper sdk;
     if (!sdk.init()) return false;
@@ -1225,7 +1225,7 @@ static bool sLoadFromFBX(FatModel & fatmodel, File & file, const StrA & filename
     // Check file version
     int vmajor, vminor, vrev;
     gImporter->GetFileVersion(vmajor, vminor, vrev);
-    GN_INFO(sLogger)("FBX model version = %d.%d.%d", vmajor, vminor, vrev);
+    GN_INFO(sLogger)("FBX model version = {}.{}.{}", vmajor, vminor, vrev);
 
     // Import the scene
     FbxScene * gScene = FbxScene::Create(gSdkManager, "");
@@ -1278,7 +1278,7 @@ static bool sLoadFromFBX(FatModel & fatmodel, File & file, const StrA & filename
 
     fatmodel.clear();
     GN_UNUSED_PARAM(file);
-    GN_ERROR(sLogger)("Fail to load file %s: FBX is not supported.", filename.data());
+    GN_ERROR(sLogger)("Fail to load file {}: FBX is not supported.", filename.data());
     return false;
 
 #endif // HAS_FBX
@@ -1554,7 +1554,7 @@ static uint32_t sFindRootJoint(const FatSkeleton & fatsk) {
         // make sure parent/child/sibling are in vaild range
         if ((j.parent >= jointArraySize && FatJoint::NO_JOINT != j.parent) || (j.child >= jointArraySize && FatJoint::NO_JOINT != j.child) ||
             (j.sibling >= jointArraySize && FatJoint::NO_JOINT != j.sibling)) {
-            GN_ERROR(sLogger)("Invalid joint herarchy: joint %d contains invalid joint index.", i);
+            GN_ERROR(sLogger)("Invalid joint herarchy: joint {} contains invalid joint index.", i);
             return FatJoint::NO_JOINT;
         }
 
@@ -1885,7 +1885,7 @@ static bool sLoadAiIndices(FatMesh & fatmesh, const aiMesh * aimesh) {
 
     default:
         // Unsupported primitive.
-        GN_ERROR(sLogger)("Unsupported primitive: %d", aimesh->mPrimitiveTypes);
+        GN_ERROR(sLogger)("Unsupported primitive: {}", aimesh->mPrimitiveTypes);
         return false;
     }
 
@@ -2258,7 +2258,7 @@ bool GN::gfx::FatModel::loadFromFile(const StrA & filename) {
 
     default:
         if (!ai::sLoadFromAssimp(*this, fullFileName)) {
-            GN_ERROR(sLogger)("Unknown file format: %s", filename.data());
+            GN_ERROR(sLogger)("Unknown file format: {}", filename.data());
             noerr = false;
         }
         break;
@@ -2272,7 +2272,7 @@ bool GN::gfx::FatModel::loadFromFile(const StrA & filename) {
             totalVerts += m.vertices.getVertexCount();
             totalFaces += m.indices.size() / 3;
         }
-        GN_INFO(sLogger)("Total vertices: %d, faces: %d", totalVerts, totalFaces);
+        GN_INFO(sLogger)("Total vertices: {}, faces: {}", totalVerts, totalFaces);
     } else {
         clear();
     }

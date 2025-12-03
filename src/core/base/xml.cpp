@@ -434,7 +434,7 @@ static int XMLCALL sEncodingHandler(void * encodingHandlerData, const XML_Char *
 
         return 1;
     } else {
-        GN_ERROR(sLogger)("Unknown encoding: %s", name);
+        GN_ERROR(sLogger)("Unknown encoding: {}", name);
         return 0;
     }
 }
@@ -681,7 +681,7 @@ GN_API GN::XmlNode * GN::XmlDocument::createNode(XmlNodeType type, XmlNode * par
         p = new PooledNode<XmlElement>(*this);
         break;
     default:
-        GN_ERROR(sLogger)("invalid node type : %d", (int) type);
+        GN_ERROR(sLogger)("invalid node type : {}", (int) type);
         return NULL;
     }
     mNodes.append(p);

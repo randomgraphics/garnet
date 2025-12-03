@@ -101,7 +101,7 @@ bool GN::win::WindowMsw::init(const WindowAttachingParameters & wap) {
     // register a message hook to render window.
     mHook = ::SetWindowsHookEx(WH_CALLWNDPROC, &staticHookProc, 0, GetCurrentThreadId());
     if (0 == mHook) {
-        GN_ERROR(sLogger)("Fail to setup message hook : %s", getWin32LastErrorInfo());
+        GN_ERROR(sLogger)("Fail to setup message hook : {}", getWin32LastErrorInfo());
         return failure();
     }
 
@@ -126,7 +126,7 @@ void GN::win::WindowMsw::quit() {
     // destroy window
     if (::IsWindow(mWindow)) {
         if (!mIsExternal) {
-            GN_TRACE(sLogger)("Destroy window (handle: 0x%X)", mWindow);
+            GN_TRACE(sLogger)("Destroy window (handle: 0x{:X})", mWindow);
             ::DestroyWindow(mWindow);
         }
 
@@ -137,7 +137,7 @@ void GN::win::WindowMsw::quit() {
 
     // unregister window class
     if (!mClassName.empty()) {
-        GN_TRACE(sLogger)("Unregister window class: %S (module handle: 0x%X)", mClassName.data(), mModuleInstance);
+        GN_TRACE(sLogger)("Unregister window class: {} (module handle: 0x{:X})", mClassName.data(), mModuleInstance);
         GN_ASSERT(mModuleInstance);
         GN_MSW_CHECK(::UnregisterClassW(mClassName.data(), mModuleInstance));
         mClassName.clear();
@@ -323,10 +323,10 @@ bool GN::win::WindowMsw::createWindow(const WindowCreateParameters & wcp) {
     wcex.lpszClassName = mClassName.data();
     wcex.hIconSm       = LoadIcon(0, IDI_APPLICATION);
     if (0 == ::RegisterClassExW(&wcex)) {
-        GN_ERROR(sLogger)("fail to register window class, %s!", getWin32LastErrorInfo());
+        GN_ERROR(sLogger)("fail to register window class, {}!", getWin32LastErrorInfo());
         return false;
     }
-    GN_TRACE(sLogger)("Register window class: %S (module handle: 0x%X)", mClassName.data(), mModuleInstance);
+    GN_TRACE(sLogger)("Register window class: {} (module handle: 0x{:X})", mClassName.data(), mModuleInstance);
 
     // setup window style
     DWORD exStyle = 0;
@@ -354,10 +354,10 @@ bool GN::win::WindowMsw::createWindow(const WindowCreateParameters & wcp) {
                                 0, // no menu
                                 mModuleInstance, 0);
     if (0 == mWindow) {
-        GN_ERROR(sLogger)("fail to create window, %s!", getWin32LastErrorInfo());
+        GN_ERROR(sLogger)("fail to create window, {}!", getWin32LastErrorInfo());
         return false;
     }
-    GN_TRACE(sLogger)("Create window (handle: 0x%X)", mWindow);
+    GN_TRACE(sLogger)("Create window (handle: 0x{:X})", mWindow);
 
     // add window handle to instance map
     GN_ASSERT(NULL == msInstanceMap.find(mWindow) || this == *msInstanceMap.find(mWindow));
