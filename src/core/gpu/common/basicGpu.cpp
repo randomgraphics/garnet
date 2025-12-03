@@ -26,14 +26,14 @@ bool GN::gfx::BasicGpu::init(const GpuOptions & o) {
         if (GpuAPI::AUTO == o.api) {
             GN_ERROR(sLogger)("GpuAPI::AUTO must be changed to actual API value before initializing GPU.");
         } else {
-            GN_ERROR(sLogger)("Invalid API: %d", o.api.toInt());
+            GN_ERROR(sLogger)("Invalid API: {}", o.api.toInt());
         }
 
         return failure();
     }
 
     // sanity check: warning when render context size is larger than 2K bytes
-    if (sizeof(GpuContext) > 2048) { GN_WARN(sLogger)("GN::gfx::GpuContext is huge! (%u bytes)", sizeof(GpuContext)); }
+    if (sizeof(GpuContext) > 2048) { GN_WARN(sLogger)("GN::gfx::GpuContext is huge! ({} bytes)", sizeof(GpuContext)); }
 
     // initialize sub-components one by one
     if (!dispInit(o)) return failure();

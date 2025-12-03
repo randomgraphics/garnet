@@ -271,7 +271,7 @@ public:
         ResourceHandle * handle = mResNames.find(resolveName(realname, name));
         if (NULL != handle) {
             if (!overrideExistingResource) {
-                GN_ERROR(sLogger)("resource '%s' already exist!", realname.data());
+                GN_ERROR(sLogger)("resource '{}' already exist!", realname.data());
                 return 0;
             }
             GN_ASSERT(mResHandles.validHandle(*handle));
@@ -308,7 +308,7 @@ public:
         if (validResourceHandle(handle))
             removeResourceByName(mResHandles[handle]->name);
         else
-            GN_ERROR(sLogger)("invalid resource handle: %d", handle);
+            GN_ERROR(sLogger)("invalid resource handle: {}", handle);
         GN_UNGUARD;
     }
 
@@ -322,7 +322,7 @@ public:
         StrA             realname;
         ResourceHandle * handle = mResNames.find(resolveName(realname, name));
         if (NULL == handle) {
-            GN_ERROR(sLogger)("invalid resource name: %s", realname.data());
+            GN_ERROR(sLogger)("invalid resource name: {}", realname.data());
             return;
         }
 
@@ -357,7 +357,7 @@ public:
     void disposeResourceByHandle(ResourceHandle h) {
         GN_GUARD;
         if (!validResourceHandle(h)) {
-            GN_ERROR(sLogger)("invalid resource handle: %d", h);
+            GN_ERROR(sLogger)("invalid resource handle: {}", h);
             return;
         }
         doDispose(mResHandles[h]);
@@ -372,7 +372,7 @@ public:
         StrA             realname;
         ResourceHandle * h = mResNames.find(resolveName(realname, name));
         if (NULL == h) {
-            GN_ERROR(sLogger)("invalid resource name: %s", realname.data());
+            GN_ERROR(sLogger)("invalid resource name: {}", realname.data());
             return;
         }
         disposeResourceByHandle(*h);
@@ -411,7 +411,7 @@ public:
     ///
     void setUserData(ResourceHandle h, void * data) {
         if (!validResourceHandle(h)) {
-            GN_ERROR(sLogger)("invalid resource handle: %d", h);
+            GN_ERROR(sLogger)("invalid resource handle: {}", h);
             return;
         }
         GN_ASSERT(mResHandles[h]);
@@ -477,17 +477,17 @@ private:
 
         if (!validResourceHandle(handle)) {
             if (name)
-                GN_ERROR(sLogger)("Resource '%s' is invalid. Fall back to null instance...", name);
+                GN_ERROR(sLogger)("Resource '{}' is invalid. Fall back to null instance...", name);
             else
-                GN_ERROR(sLogger)("Resource handle '%d' is invalid. Fall back to null instance...", handle);
+                GN_ERROR(sLogger)("Resource handle '{}' is invalid. Fall back to null instance...", handle);
 
             if (0 == mNullInstance) {
                 RES * tmp = new RES;
                 if (!mNullor || !mNullor(*tmp, name, 0)) {
                     if (name)
-                        GN_ERROR(sLogger)("Fail to create null instance for resource '%s'.", name);
+                        GN_ERROR(sLogger)("Fail to create null instance for resource '{}'.", name);
                     else
-                        GN_ERROR(sLogger)("Fail to create null instance for resource handle '%d'.", handle);
+                        GN_ERROR(sLogger)("Fail to create null instance for resource handle '{}'.", handle);
                     delete tmp;
                     return false;
                 }
@@ -513,11 +513,11 @@ private:
             }
 
             if (!ok) {
-                GN_WARN(sLogger)("Fall back to null instance for resource '%s'.", item->name.data());
+                GN_WARN(sLogger)("Fall back to null instance for resource '{}'.", item->name);
                 if (item->nullor) { ok = item->nullor(item->res, item->name, item->userData); }
                 if (!ok && mNullor) { ok = mNullor(item->res, item->name, item->userData); }
                 if (!ok) {
-                    GN_ERROR(sLogger)("Fail to create NULL instance for resource '%s'.", item->name.data());
+                    GN_ERROR(sLogger)("Fail to create NULL instance for resource '{}'.", item->name);
                     return false;
                 }
             }

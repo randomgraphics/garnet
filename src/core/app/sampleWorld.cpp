@@ -44,7 +44,7 @@ static Entity * sCreateEntity(Entity * root, const ModelHierarchyDesc & worldDes
     if (!entityDesc.parent.empty()) {
         const ModelHierarchyDesc::NodeDesc * parentDesc = worldDesc.nodes.find(entityDesc.parent);
         if (NULL == parentDesc) {
-            GN_ERROR(sLogger)("Entity '%s' has a invalid parent: '%s'", entityName.data(), entityDesc.parent.data());
+            GN_ERROR(sLogger)("Entity '{}' has a invalid parent: '{}'", entityName.data(), entityDesc.parent.data());
         } else {
 
             parent = (SampleSpacialEntity *) sCreateEntity(root, worldDesc, entities, entityDesc.parent, *parentDesc);
@@ -77,7 +77,7 @@ static Entity * sCreateEntity(Entity * root, const ModelHierarchyDesc & worldDes
 
         const GN::gfx::ModelResourceDesc * pModelDesc = worldDesc.models.find(modelName);
         if (NULL == pModelDesc) {
-            GN_ERROR(sLogger)("Entity %s references invalid model named \"%s\".", entityName.data(), modelName.data());
+            GN_ERROR(sLogger)("Entity {} references invalid model named \"{}\".", entityName.data(), modelName.data());
             continue;
         }
 

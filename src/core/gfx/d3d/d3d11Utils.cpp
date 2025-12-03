@@ -50,7 +50,7 @@ static const char * sGetDefaultShaderProfile(ShaderType type) {
     case SHADER_TYPE_CS:
         return "cs_4_0";
     default:
-        GN_ERROR(sLogger)("Invalid shader type: %d", type);
+        GN_ERROR(sLogger)("Invalid shader type: {}", type);
         return nullptr;
     }
 }
@@ -231,7 +231,7 @@ GN_API ID3D11DeviceChild * GN::d3d11::createShader(ID3D11Device & dev, ShaderTyp
         return nullptr;
 
     default:
-        GN_ERROR(sLogger)("Invalid shader type: %d", type);
+        GN_ERROR(sLogger)("Invalid shader type: {}", type);
         return nullptr;
     }
 

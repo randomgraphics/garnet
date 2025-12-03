@@ -84,7 +84,7 @@ GLuint GN::ogl::linkProgram(const GLuint * shaders, size_t count, const char * o
         char infoLog[512];
         glGetProgramInfoLog(program, 512, NULL, infoLog);
         glDeleteProgram(program);
-        GN_ERROR(sLogger)("Failed to link program %s:\n%s", optionalProgramName ? optionalProgramName : "", infoLog);
+        GN_ERROR(sLogger)("Failed to link program {}:\n{}", optionalProgramName ? optionalProgramName : "", infoLog);
         return 0;
     }
 

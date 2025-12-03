@@ -510,7 +510,7 @@ AutoRef<GpuResource> GpuResourceDatabase::Impl::createResource(const Guid & type
     // get the manager for the resource type
     ResourceManager * mgr = getManager(type);
     if (NULL == mgr) {
-        GN_ERROR(sLogger)("Invalid resouce type: %s", type.toStr());
+        GN_ERROR(sLogger)("Invalid resouce type: {}", type.toStr());
         return AutoRef<GpuResource>::NULLREF;
     }
 
@@ -527,7 +527,7 @@ AutoRef<GpuResource> GpuResourceDatabase::Impl::createResource(const Guid & type
 
     // check if the resource with same name exisits already.
     if (mgr->resources.validName(name)) {
-        GN_ERROR(sLogger)("Resource named \"%s\" exists already.", name);
+        GN_ERROR(sLogger)("Resource named \"{}\" exists already.", name);
         return AutoRef<GpuResource>::NULLREF;
     }
 
@@ -688,7 +688,7 @@ bool GpuResourceDatabase::Impl::setupBuiltInResources() {
 // -----------------------------------------------------------------------------
 AutoRef<UniformResource> GpuResourceDatabase::Impl::getStandardUniformResource(int index) const {
     if (!StandardUniform::sIsValidIndex(index)) {
-        GN_ERROR(sLogger)("Invalid standard uniform index: %d", index);
+        GN_ERROR(sLogger)("Invalid standard uniform index: {}", index);
         return AutoRef<UniformResource>::NULLREF;
     }
     return mStdUniforms[index];
@@ -700,7 +700,7 @@ AutoRef<UniformResource> GpuResourceDatabase::Impl::getStandardUniformResource(i
 void GpuResourceDatabase::Impl::setStandardUniform(int index, const void * data, uint32_t dataSize) {
     // check parameters
     if (!StandardUniform::sIsValidIndex(index)) {
-        GN_ERROR(sLogger)("Invalid uniform type: %d", index);
+        GN_ERROR(sLogger)("Invalid uniform type: {}", index);
         return;
     }
     if (NULL == data) {
@@ -709,7 +709,7 @@ void GpuResourceDatabase::Impl::setStandardUniform(int index, const void * data,
     }
     const StandardUniform::Desc * desc = StandardUniform::sIndex2Desc(index);
     if (dataSize != desc->size) {
-        GN_ERROR(sLogger)("Incorrect uniform data size: expected=%d, actual=%d.", desc->size, dataSize);
+        GN_ERROR(sLogger)("Incorrect uniform data size: expected={}, actual={}.", desc->size, dataSize);
         return;
     }
 

@@ -144,7 +144,7 @@ inline bool isEmpty(const CHAR * s) {
 ///
 template<typename CHAR, typename... Args>
 inline void formatTo(CHAR * buf, size_t bufSizeInChar, const CHAR * fmt, Args &&... args) {
-    return internal::StringFormatter<CHAR>::formatOrPrintfToBuffer(buf, bufSizeInChar, fmt, std::forward<Args>(args)...);
+    return internal::StringFormatter<CHAR>::formatToBuffer(buf, bufSizeInChar, fmt, std::forward<Args>(args)...);
 }
 
 ///
@@ -367,7 +367,7 @@ public:
     ///
     template<typename... Args>
     Str<CharType> & formatInplace(const CharType * formatString, Args &&... args) {
-        auto sf = internal::StringFormatter<CharType>(formatString, std::forward<Args>(args)...);
+        auto sf = internal::StringFormatter<CharType>(false, formatString, std::forward<Args>(args)...);
         resize(sf.size());
         ::memcpy(mPtr, sf.result(), sf.size() * sizeof(CharType));
         return *this;
@@ -896,7 +896,7 @@ public:
     ///
     template<typename... Args>
     static Str<CharType> format(const CharType * formatString, Args &&... args) {
-        auto sf = internal::StringFormatter<CharType>(formatString, std::forward<Args>(args)...);
+        auto sf = internal::StringFormatter<CharType>(false, formatString, std::forward<Args>(args)...);
         return Str<CharType>(sf.result(), sf.size());
     }
 
@@ -1527,6 +1527,24 @@ GN_API size_t toFloatArray(float * buffer, size_t maxCount, const char * string,
 //@}
 } // namespace str
 } // namespace GN
+
+template<>
+struct fmt::formatter<GN::StrA> {
+    constexpr auto parse(format_parse_context & ctx) { return ctx.begin(); }
+    template<typename Context>
+    constexpr auto format(GN::StrA const & foo, Context & ctx) const {
+        return format_to(ctx.out(), "{}", foo.c_str());
+    }
+};
+
+template<>
+struct fmt::formatter<GN::StrW> {
+    constexpr auto parse(format_parse_context & ctx) { return ctx.begin(); }
+    template<typename Context>
+    constexpr auto format(GN::StrW const & foo, Context & ctx) const {
+        return format_to(ctx.out(), "{}", foo.c_str());
+    }
+};
 
 // *****************************************************************************
 //                 End of string.h

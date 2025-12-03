@@ -50,7 +50,7 @@ static HWND sCreateWindow(HWND parent, HMONITOR monitor, uint32_t width, uint32_
     const wchar_t * classname = L"d3dapp_mainwindow";
 
     // register window class
-    GN_TRACE(sLogger)("Register window class: %S (module handle: 0x%X)", classname, module);
+    GN_TRACE(sLogger)("Register window class: {} (module handle: 0x{:X})", classname, module);
     wcex.cbSize        = sizeof(wcex);
     wcex.style         = 0;
     wcex.lpfnWndProc   = (WNDPROC) &sStaticWindowProc;
@@ -64,7 +64,7 @@ static HWND sCreateWindow(HWND parent, HMONITOR monitor, uint32_t width, uint32_
     wcex.lpszClassName = classname;
     wcex.hIconSm       = LoadIcon(0, IDI_APPLICATION);
     if (0 == ::RegisterClassExW(&wcex)) {
-        GN_ERROR(sLogger)("fail to register window class, %s!", getWin32LastErrorInfo());
+        GN_ERROR(sLogger)("fail to register window class, {}!", getWin32LastErrorInfo());
         return 0;
     }
 
@@ -86,7 +86,7 @@ static HWND sCreateWindow(HWND parent, HMONITOR monitor, uint32_t width, uint32_
                                   0, // no menu
                                   module, 0);
     if (0 == hwnd) {
-        GN_ERROR(sLogger)("fail to create window, %s!", getWin32LastErrorInfo());
+        GN_ERROR(sLogger)("fail to create window, {}!", getWin32LastErrorInfo());
         return 0;
     }
 
@@ -355,7 +355,7 @@ GN_API bool GN::d3d9::D3D9Application::createDevice() {
     for (uint32_t i = 0; i < nAdapter; ++i) {
         D3DADAPTER_IDENTIFIER9 Identifier;
         GN_DX_CHECK(mD3D->GetAdapterIdentifier(i, 0, &Identifier));
-        GN_TRACE(sLogger)("Enumerating D3D adapters: %s", Identifier.Description);
+        GN_TRACE(sLogger)("Enumerating D3D adapters: {}", Identifier.Description);
         if (strstr(Identifier.Description, "PerfHUD")) {
             GN_TRACE(sLogger)("Found NVPerfHUD adapter. We will create D3D device using NVPerfHUD adapter.");
             mAdapter    = i;

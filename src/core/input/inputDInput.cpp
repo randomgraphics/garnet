@@ -166,14 +166,14 @@ bool GN::input::InputDInput::unacquire() {
     if (mKeyboard) {
         rval = mKeyboard->Unacquire();
         if (rval != DI_OK && rval != DI_NOEFFECT) {
-            GN_ERROR(sLogger)("Fail to unacquire keyboard, %s!", getDXErrorInfo(rval));
+            GN_ERROR(sLogger)("Fail to unacquire keyboard, {}!", getDXErrorInfo(rval));
             return false;
         }
     }
     if (mMouse) {
         rval = mMouse->Unacquire();
         if (rval != DI_OK && rval != DI_NOEFFECT) {
-            GN_ERROR(sLogger)("Fail to unacquire mouse, %s!", getDXErrorInfo(rval));
+            GN_ERROR(sLogger)("Fail to unacquire mouse, {}!", getDXErrorInfo(rval));
             return false;
         }
     }

@@ -272,7 +272,7 @@ static inline bool sColorFormat2OGL(GLint & gl_internalformat, GLuint & gl_forma
     }
 
     // failed
-    GN_ERROR(sLogger)("invalid or unsupported format '%s'!", clrfmt.toString().c_str());
+    GN_ERROR(sLogger)("invalid or unsupported format '{}'!", clrfmt.toString().c_str());
     return false;
 }
 
@@ -306,7 +306,7 @@ static inline GLint sTexWrap2OGL(uint32_t wrap) {
         }
 
     default: {
-        GN_ERROR(sLogger)("invaid texture address mode : %d!", wrap);
+        GN_ERROR(sLogger)("invaid texture address mode : {}!", wrap);
         return GL_REPEAT;
     }
     }

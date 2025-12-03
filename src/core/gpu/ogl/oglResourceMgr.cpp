@@ -42,7 +42,7 @@ void GN::gfx::OGLGpu::resourceQuit() {
         GN_UNEXPECTED_EX("All graphics resouces have to be released, before renderer is destroied!");
         for (std::list<OGLResource *>::iterator i = mResourceList.begin(); i != mResourceList.end(); ++i) {
             const OGLResource * r = *i;
-            GN_ERROR(sLogger)("0x%p", (intptr_t) r);
+            GN_ERROR(sLogger)("0x{}", (intptr_t) r);
         }
     }
 
@@ -60,7 +60,7 @@ GN::gfx::GpuProgram * GN::gfx::OGLGpu::createGpuProgram(const GpuProgramDesc & d
     GN_GUARD;
 
     if (0 == (desc.shaderModels & mCaps.shaderModels)) {
-        GN_ERROR(sLogger)("Unsupported GPU shader model: %s", ShaderModel::sToString(desc.shaderModels).data());
+        GN_ERROR(sLogger)("Unsupported GPU shader model: {}", ShaderModel::sToString(desc.shaderModels).data());
         return NULL;
     }
 
@@ -72,7 +72,7 @@ GN::gfx::GpuProgram * GN::gfx::OGLGpu::createGpuProgram(const GpuProgramDesc & d
     }
 
     default:
-        GN_ERROR(sLogger)("invalid or unsupported GPU program language: %s", desc.lang.toString());
+        GN_ERROR(sLogger)("invalid or unsupported GPU program language: {}", desc.lang.toString());
         return NULL;
     }
 

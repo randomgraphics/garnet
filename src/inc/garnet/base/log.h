@@ -167,33 +167,27 @@ class StringFormatter {
 
 public:
     template<typename... Args>
-    static void formatOrPrintfToBuffer(CHAR * outputBuffer, size_t outputBufferSize, const CHAR * fmt, Args &&... args) {
+    static void formatToBuffer(CHAR * outputBuffer, size_t outputBufferSize, const CHAR * fmt, Args &&... args) {
         // handle empty input and output buffer
         if (!outputBuffer || 0 == outputBufferSize) return;
         if (!fmt || !*fmt) {
             outputBuffer[0] = 0;
             return;
         }
-
-        // check if the format string is a printf-style format specifier
-        if (checkForPrintf(fmt)) {
-            auto result = fmt::vsprintf(fmt::basic_string_view<CHAR>(fmt), fmt::make_printf_args<CHAR>(args...));
-            auto len    = std::min(result.size(), outputBufferSize - 1);
-            ::memcpy(outputBuffer, result.c_str(), len);
-            outputBuffer[len] = 0;
-        } else {
-            auto result       = fmt::format_to_n(outputBuffer, outputBufferSize - 1, fmt, std::forward<Args>(args)...);
-            auto len          = std::min(result.size, outputBufferSize - 1);
-            outputBuffer[len] = 0;
-        }
+        GN_ASSERT(!checkForPrintf(fmt));
+        auto result       = fmt::format_to_n(outputBuffer, outputBufferSize - 1, fmt, std::forward<Args>(args)...);
+        auto len          = std::min(result.size, outputBufferSize - 1);
+        outputBuffer[len] = 0;
     }
 
     template<typename... Args>
-    StringFormatter(const CHAR * fmt, Args &&... args) {
+    StringFormatter(bool usePrintfSyntax, const CHAR * fmt, Args &&... args) {
         if (!fmt || !*fmt) { return; }
-        if (checkForPrintf(fmt)) {
-            mResult = fmt::vsprintf(fmt::basic_string_view<CHAR>(fmt), fmt::make_printf_args<CHAR>(args...));
-        } else {
+        if (usePrintfSyntax) GN_UNLIKELY {
+                mResult = fmt::vsprintf(fmt::basic_string_view<CHAR>(fmt), fmt::make_printf_args<CHAR>(args...));
+            }
+        else {
+            GN_ASSERT(!checkForPrintf(fmt));
             mResult = fmt::format(fmt, std::forward<Args>(args)...);
         }
     }
@@ -222,9 +216,9 @@ public:
     };
 
     ///
-    /// Log description structure
+    /// Log location in source code
     ///
-    struct LogDesc {
+    struct LogLocation {
         int          level; ///< Log level/severity (required)
         const char * func;  ///< Log location: function name (optional). Set to NULL if you don't need it.
         const char * file;  ///< Log location: file name (optional). Set to NULL if you don't need it.
@@ -233,22 +227,22 @@ public:
         ///
         /// Default constructor. Do nothing.
         ///
-        LogDesc() {}
+        LogLocation() {}
 
         ///
         /// Construct doLog descriptor
         ///
-        LogDesc(int lvl_, const char * func_, const char * file_, int line_): level(lvl_), func(func_), file(file_), line(line_) {}
+        LogLocation(int lvl_, const char * func_, const char * file_, int line_): level(lvl_), func(func_), file(file_), line(line_) {}
     };
 
     ///
     /// doLog helper
     ///
     struct GN_API LogHelper {
-        Logger * mLogger; ///< Logger instance pointer
-        LogDesc  mDesc;   ///< Logging descriptor
-        uint8_t  mStreamBuffer[sizeof(std::stringstream)];
-        bool     mStreamConstructed = false;
+        Logger *    mLogger; ///< Logger instance pointer
+        LogLocation mDesc;   ///< Logging descriptor
+        uint8_t     mStreamBuffer[sizeof(std::stringstream)];
+        bool        mStreamConstructed = false;
 
         std::stringstream * ss() {
             if (!mStreamConstructed) {
@@ -296,7 +290,7 @@ public:
         template<typename... Args>
         void operator()(const char * format_, Args &&... args_) {
             GN_ASSERT(mLogger);
-            return mLogger->doLog(mDesc, internal::StringFormatter<char>(format_, std::forward<Args>(args_)...).result());
+            return mLogger->doLog(mDesc, internal::StringFormatter<char>(mLogger->isPrintfSyntax(), format_, std::forward<Args>(args_)...).result());
         }
 
         ///
@@ -305,7 +299,7 @@ public:
         template<typename... Args>
         void operator()(const wchar_t * format_, Args &&... args_) {
             GN_ASSERT(mLogger);
-            return mLogger->doLog(mDesc, internal::StringFormatter<wchar_t>(format_, std::forward<Args>(args_)...).result());
+            return mLogger->doLog(mDesc, internal::StringFormatter<wchar_t>(mLogger->isPrintfSyntax(), format_, std::forward<Args>(args_)...).result());
         }
     };
 
@@ -321,12 +315,12 @@ public:
         ///
         /// deal with incoming log message
         ///
-        virtual void onLog(Logger &, const LogDesc &, const char *) = 0;
+        virtual void onLog(Logger &, const LogLocation &, const char *) = 0;
 
         ///
         /// deal with incoming UNICODE log message
         ///
-        virtual void onLog(Logger &, const LogDesc &, const wchar_t *) = 0;
+        virtual void onLog(Logger &, const LogLocation &, const wchar_t *) = 0;
     };
 
     ///
@@ -337,12 +331,12 @@ public:
     ///
     /// Do log
     ///
-    virtual void doLog(const LogDesc & desc, const char * msg) = 0;
+    virtual void doLog(const LogLocation & desc, const char * msg) = 0;
 
     ///
     /// Do log (UNICODE)
     ///
-    virtual void doLog(const LogDesc & desc, const wchar_t * msg) = 0;
+    virtual void doLog(const LogLocation & desc, const wchar_t * msg) = 0;
 
     ///
     /// change logger level.
@@ -398,6 +392,11 @@ public:
     }
 
     ///
+    /// is using printf syntax?
+    ///
+    bool isPrintfSyntax() const { return mUsePrintfSyntax; }
+
+    ///
     /// Fake logging. Do nothing.
     ///
     static inline void sFakeLog(...) {}
@@ -406,13 +405,14 @@ protected:
     ///
     /// protective constructor
     ///
-    Logger(const char * name): mName(name) {}
+    Logger(const char * name, bool usePrintfSyntax): mName(name), mUsePrintfSyntax(usePrintfSyntax) {}
 
     int  mLevel;   ///< doLog level
     bool mEnabled; ///< logger enabled or not.
 
 private:
     const char * mName;
+    bool         mUsePrintfSyntax;
 };
 
 /// \name Global doLog functions
@@ -424,7 +424,7 @@ private:
 /// \param name
 ///     Logger name (case insensitive)
 ///
-GN_API Logger * getLogger(const char * name);
+GN_API Logger * getLogger(const char * name, bool usePrintfSyntax = false);
 
 ///
 /// Get root logger

@@ -50,11 +50,11 @@ GN_API bool GN::SharedLib::load(const char * libName) {
     // load library
     mHandle = SHLIB_LOAD(filename.data());
     if (0 == mHandle) {
-        GN_ERROR(sLogger)("Fail to load library %s: %s!", filename.data(), SHLIB_ERROR());
+        GN_ERROR(sLogger)("Fail to load library {}: {}!", filename.data(), SHLIB_ERROR());
         return false;
     }
 
-    GN_TRACE(sLogger)("Load library '%s'.", filename.data());
+    GN_TRACE(sLogger)("Load library '{}'.", filename.data());
 
     // success
     mFileName = filename;

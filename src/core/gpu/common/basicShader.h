@@ -18,13 +18,13 @@ class SelfContainedGpuProgramDesc {
                                         const ShaderCode & sc, const char * begin, const char * end) {
         if (0 != sc.source && (sc.source < begin || sc.source >= end)) {
             static Logger * sLogger = getLogger("GN.gfx.gpu.common");
-            GN_ERROR(sLogger)("invalid %s shader source pointer.", type);
+            GN_ERROR(sLogger)("invalid {} shader source pointer.", type);
             return false;
         }
 
         if (0 != sc.entry && (sc.entry < begin || sc.entry >= end)) {
             static Logger * sLogger = getLogger("GN.gfx.gpu.common");
-            GN_ERROR(sLogger)("invalid %s shader entry pointer.", type);
+            GN_ERROR(sLogger)("invalid {} shader entry pointer.", type);
             return false;
         }
 
@@ -103,7 +103,7 @@ public:
         // check GPU program language
         if (!desc.lang.valid()) {
             static Logger * sLogger = getLogger("GN.gfx.gpu.common");
-            GN_ERROR(sLogger)("invalid GPU program language: %d", desc.lang.toInt());
+            GN_ERROR(sLogger)("invalid GPU program language: {}", desc.lang.toInt());
             return false;
         }
 

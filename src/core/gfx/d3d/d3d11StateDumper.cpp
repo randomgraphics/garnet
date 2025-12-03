@@ -113,7 +113,7 @@ static const GUID & IL1GUID() {
 static void sDumpBinary(const char * filename, const void * data, size_t bytes) {
     FILE * fp;
     if (0 != fopen_s(&fp, filename, "wb")) {
-        GN_ERROR(sLogger)("fail to open file : %s", filename);
+        GN_ERROR(sLogger)("fail to open file : {}", filename);
         return;
     }
 

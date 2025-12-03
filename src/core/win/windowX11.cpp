@@ -237,7 +237,7 @@ bool GN::win::WindowX11::initDisplay(intptr_t handle) {
         auto dispStr = getEnv("DISPLAY");
         mDisplay     = XOpenDisplay(dispStr.data());
         if (0 == mDisplay) {
-            GN_ERROR(sLogger)("Fail to open display '%s'.", dispStr.data());
+            GN_ERROR(sLogger)("Fail to open display '{}'.", dispStr.data());
             return false;
         }
         mUseExternalDisplay = false;

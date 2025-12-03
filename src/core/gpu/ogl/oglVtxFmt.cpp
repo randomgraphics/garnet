@@ -60,7 +60,7 @@ bool GN::gfx::OGLVtxFmt::bindBuffers(const VertexBufferBinding * bindings, size_
         auto & ab     = mAttribBindings[i];
         size_t stream = ab.stream;
         if (stream >= numbufs) {
-            GN_ERROR(sLogger)("Current vertex format requires at least %u vertex buffers. But only %u are provided.", stream + 1, numbufs);
+            GN_ERROR(sLogger)("Current vertex format requires at least {} vertex buffers. But only {} are provided.", stream + 1, numbufs);
             return false;
         }
         const VertexBufferBinding & b = bindings[stream];
@@ -86,7 +86,7 @@ bool GN::gfx::OGLVtxFmt::bindRawMemoryBuffer(const void * data, size_t stride) c
         auto & ab = mAttribBindings[i];
 
         if (ab.stream > 0) {
-            GN_ERROR(sLogger)("Current vertex format requires at least %u vertex buffers. But only 1 are provided.", ab.stream + 1);
+            GN_ERROR(sLogger)("Current vertex format requires at least {} vertex buffers. But only 1 are provided.", ab.stream + 1);
             return false;
         }
 
@@ -189,7 +189,7 @@ bool GN::gfx::OGLVtxFmt::setupStateBindings(const OGLGpuProgram * gpuProgram) {
             ab.components    = 4;
             ab.normalization = false;
         } else {
-            GN_ERROR(sLogger)("unsupport vertex format: %s", e.format.toString().c_str());
+            GN_ERROR(sLogger)("unsupport vertex format: {}", e.format.toString().c_str());
             return false;
         }
 

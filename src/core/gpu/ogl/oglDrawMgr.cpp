@@ -31,7 +31,7 @@ static inline GLenum sPrimitiveType2OGL(GN::gfx::PrimitiveType prim) {
     case GN::gfx::PrimitiveType::QUAD_LIST:
         return GL_QUADS;
     default:
-        GN_ERROR(sLogger)("unsupport primitve type %s!", prim.toString());
+        GN_ERROR(sLogger)("unsupport primitve type {}!", prim.toString());
         return GL_TRIANGLES;
     }
 }

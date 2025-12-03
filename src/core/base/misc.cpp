@@ -69,8 +69,8 @@ GN_API const char * GN::Guid::toStr() const {
     // GUID as string: {xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx}
     static GN_TLS char str[1 + 8 + 1 + 4 + 1 + 4 + 1 + 4 + 1 + 12 + 1 + 1];
 
-    str::formatTo(str, sizeof(str), "{%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x}", data1, data2, data3, data4[0], data4[1], data4[2], data4[3], data4[4],
-                  data4[5], data4[6], data4[7]);
+    str::formatTo(str, sizeof(str), "{{{:08x}-{:04x}-{:04x}-{:02x}{:02x}-{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}}}", data1, data2, data3, data4[0], data4[1],
+                  data4[2], data4[3], data4[4], data4[5], data4[6], data4[7]);
 
     return str;
 #endif

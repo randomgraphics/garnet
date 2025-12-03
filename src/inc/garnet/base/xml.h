@@ -312,7 +312,7 @@ inline bool loadFromXmlFile(T & t, const StrA & filename) {
     GN_GUARD;
 
     static Logger * sLocalLogger = getLogger("GN.base.xml");
-    GN_INFO(sLocalLogger)("Load '%s'", filename.data());
+    GN_INFO(sLocalLogger)("Load '{}'", filename.data());
 
     auto fp = fs::openFile(filename, std::ios::in);
     if (!fp) return false;

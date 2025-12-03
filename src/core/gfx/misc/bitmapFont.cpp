@@ -232,7 +232,7 @@ const GN::gfx::BitmapFont::FontSlot * GN::gfx::BitmapFont::createSlot(wchar_t ch
     FontImage fbm;
     if (!mFont->loadFontImage(fbm, ch)) {
         wchar_t s[] = {ch, L'\0'};
-        GN_ERROR(sLogger)(L"fail to get font bitmap for character '%s'!", s);
+        GN_ERROR(sLogger)(L"fail to get font bitmap for character '{}'!", s);
         return NULL;
     }
 
@@ -374,7 +374,7 @@ bool GN::gfx::BitmapFont::slotInit(Gpu & gpu, uint16_t fontw, uint16_t fonth, si
         mTextures[i].attach(gpu.createTexture(td));
 
         if (0 == mTextures[i]) {
-            GN_ERROR(sLogger)("fail to create font texture #%d!", i);
+            GN_ERROR(sLogger)("fail to create font texture #{}!", i);
             return failure();
         }
 

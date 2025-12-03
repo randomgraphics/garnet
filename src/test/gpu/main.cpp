@@ -189,7 +189,7 @@ int run(Gpu & gpu) {
 
 void showHelp(CommandLineArguments & ca) {
     StrA executableName = fs::baseName(ca.applicationName) + fs::extName(ca.applicationName);
-    GN_INFO(ca.logger)("Usage: %s [options]\n", executableName.data());
+    GN_INFO(ca.logger)("Usage: {} [options]\n", executableName.data());
     ca.showStandardCommandLineOptions();
     GN_INFO(ca.logger)("  -b                       Draw blank screen only. Do not create any graphics resources.\n");
 }
@@ -219,7 +219,7 @@ int main(int argc, const char * argv[]) {
         if (0 == str::compareI("-b", cmdargs.extraArgv[i])) {
             blankScreen = true;
         } else {
-            GN_ERROR(cmdargs.logger)("Invalid command line argument: %s", cmdargs.extraArgv[i]);
+            GN_ERROR(cmdargs.logger)("Invalid command line argument: {}", cmdargs.extraArgv[i]);
             showHelp(cmdargs);
             return -1;
         }

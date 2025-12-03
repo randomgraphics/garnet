@@ -366,7 +366,7 @@ static bool sReadV1BinaryFile(MeshBinaryHeaderV1 & header, uint8_t * dst, size_t
     }
 
     if (length != fp->read(dst, length)) {
-        GN_ERROR(sLogger)("Fail to read binary data from file: %s", filename);
+        GN_ERROR(sLogger)("Fail to read binary data from file: {}", filename);
         return false;
     }
 
@@ -427,7 +427,7 @@ AutoRef<Blob> sLoadFromMeshXMLFile(File & fp, MeshResourceDesc & desc) {
 
     const XmlAttrib * a = root->findAttrib("primtype");
     if (!a || PrimitiveType::INVALID == (desc.prim = PrimitiveType::sFromString(a->value))) {
-        GN_ERROR(sLogger)("Element <%s> attribute \"%s\": missing or invalid.", root->name.data(), "primtype");
+        GN_ERROR(sLogger)("Element <{}> attribute \"{}\": missing or invalid.", root->name.data(), "primtype");
         return {};
     }
 
@@ -450,7 +450,7 @@ AutoRef<Blob> sLoadFromMeshXMLFile(File & fp, MeshResourceDesc & desc) {
         if (!e) continue;
 
         if ("attrib" != e->name) {
-            GN_WARN(sLogger)("Ignore unrecognized vertex format element: <%s>.", e->name.data());
+            GN_WARN(sLogger)("Ignore unrecognized vertex format element: <{}>.", e->name.data());
             continue;
         }
 
@@ -504,7 +504,7 @@ AutoRef<Blob> sLoadFromMeshXMLFile(File & fp, MeshResourceDesc & desc) {
         } else if ("vtxfmt" == e->name) {
             // silently ignored, since it is handled already.
         } else {
-            GN_WARN(sLogger)("Ignore unrecognized element: <%s>.", e->name.data());
+            GN_WARN(sLogger)("Ignore unrecognized element: <{}>.", e->name.data());
         }
     }
 
@@ -561,7 +561,7 @@ AutoRef<Blob> sLoadFromMeshXMLFile(File & fp, MeshResourceDesc & desc) {
         } else if ("vtxfmt" == e->name) {
             // silently ignored, since it is handled already.
         } else {
-            GN_WARN(sLogger)("Ignore unrecognized element: <%s>.", e->name.data());
+            GN_WARN(sLogger)("Ignore unrecognized element: <{}>.", e->name.data());
         }
     }
 
@@ -647,7 +647,7 @@ AutoRef<Blob> GN::gfx::MeshResourceDesc::loadFromFile(File & fp) {
 //
 // -----------------------------------------------------------------------------
 AutoRef<Blob> GN::gfx::MeshResourceDesc::loadFromFile(const char * filename) {
-    GN_INFO(sLogger)("Load mesh from file: %s", filename ? filename : "<null filename>");
+    GN_INFO(sLogger)("Load mesh from file: {}", filename ? filename : "<null filename>");
 
     *this = {};
 
@@ -711,7 +711,7 @@ bool GN::gfx::MeshResourceDesc::saveToFile(File & fp) const {
     for (size_t i = 0; i < GpuContext::MAX_VERTEX_BUFFERS; ++i) {
         if (vfp.used[i]) {
             if (vbsizes[i] != fp.write(this->vertices[i], vbsizes[i])) {
-                GN_ERROR(sLogger)("Fail to write vertex buffer %i", i);
+                GN_ERROR(sLogger)("Fail to write vertex buffer {}", i);
                 return false;
             }
         }
@@ -732,7 +732,7 @@ bool GN::gfx::MeshResourceDesc::saveToFile(File & fp) const {
 //
 // -----------------------------------------------------------------------------
 bool GN::gfx::MeshResourceDesc::saveToFile(const char * filename) const {
-    GN_INFO(sLogger)("Save mesh to file: %s", filename ? filename : "<null filename>");
+    GN_INFO(sLogger)("Save mesh to file: {}", filename ? filename : "<null filename>");
 
     auto fp = fs::openFile(filename, std::ios::binary | std::ios::out);
     if (!fp) return false;

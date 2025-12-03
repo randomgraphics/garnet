@@ -105,7 +105,7 @@ static std::string sSaveCodeToTemporaryFile( const char * code, size_t len )
         return std::string::EMPTYSTR();
     }
 
-    GN_INFO(sLogger)( "save shader code to file '%s'", fname );
+    GN_INFO(sLogger)( "save shader code to file '{}'", fname );
     return fs::toNativeDiskFilePath(fname);
 }
     #endif

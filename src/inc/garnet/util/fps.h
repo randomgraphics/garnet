@@ -67,7 +67,7 @@ public:
             mLastCheckPoint         = mCurrentTime;
             mFrameCounter           = 0;
             static Logger * sLogger = getLogger("GN.util.fps");
-            GN_VERBOSE(sLogger)("FPS: %f", mFpsValue);
+            GN_VERBOSE(sLogger)("FPS: {}", mFpsValue);
         } else if (mBeforeFirstUpdate) {
             mFpsValue = (float) ((mCurrentTime - mLastCheckPoint) / mFrameCounter);
             mFpsString.formatInplace(mFormatString.data(), mFpsValue);
