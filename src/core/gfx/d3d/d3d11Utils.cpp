@@ -9,11 +9,11 @@ using namespace GN::d3d11;
 static Logger * sLogger = GN::getLogger("dxutils");
 
     #ifndef IFC
-        #define IFC(x)                                          \
-            hr = (x);                                           \
-            if (FAILED(hr)) {                                   \
-                GN_ERROR(sLogger)(#x " Failed: hr=0x%08X", hr); \
-                goto Cleanup;                                   \
+        #define IFC(x)                                            \
+            hr = (x);                                             \
+            if (FAILED(hr)) {                                     \
+                GN_ERROR(sLogger)(#x " Failed: hr=0x{:08X}", hr); \
+                goto Cleanup;                                     \
             }
     #endif
 
@@ -251,7 +251,7 @@ GN_API ID3D11DeviceChild * GN::d3d11::loadShaderFromFile(ID3D11Device & dev, Sha
 
     AutoFile file;
     if (_wfopen_s(&file.fp, fileName, L"rt")) {
-        GN_ERROR(sLogger)("Fail to open shader file: %S.", fileName);
+        GN_ERROR(sLogger)("Fail to open shader file: {}.", fileName);
         return nullptr;
     }
 
@@ -259,7 +259,7 @@ GN_API ID3D11DeviceChild * GN::d3d11::loadShaderFromFile(ID3D11Device & dev, Sha
     long fileSize = ftell(file.fp);
     fseek(file.fp, 0, SEEK_SET);
     if (fileSize <= 0) {
-        GN_ERROR(sLogger)("Fail to determine shader file size: %S", fileName);
+        GN_ERROR(sLogger)("Fail to determine shader file size: {}", fileName);
         return nullptr;
     }
 
@@ -267,7 +267,7 @@ GN_API ID3D11DeviceChild * GN::d3d11::loadShaderFromFile(ID3D11Device & dev, Sha
     std::vector<char> buffer(bytesToRead + 1);
     size_t            readen = fread(&buffer[0], 1, bytesToRead, file.fp);
     if (0 == readen) {
-        GN_ERROR(sLogger)("Fail to read shader file: %S", fileName);
+        GN_ERROR(sLogger)("Fail to read shader file: {}", fileName);
         return nullptr;
     }
     buffer[readen] = 0;

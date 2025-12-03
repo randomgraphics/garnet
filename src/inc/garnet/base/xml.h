@@ -291,10 +291,10 @@ inline bool loadFromXmlFile(T & t, File & fp, const StrA & basedir) {
     if (!doc.parse(xpr, fp)) {
         static Logger * sLocalLogger = getLogger("GN.base.xml");
         GN_ERROR(sLocalLogger)
-        ("Fail to parse XML file (%s):\n"
-         "    line   : %d\n"
-         "    column : %d\n"
-         "    error  : %s",
+        ("Fail to parse XML file ({}):\n"
+         "    line   : {}\n"
+         "    column : {}\n"
+         "    error  : {}",
          fp.name().data(), xpr.errLine, xpr.errColumn, xpr.errInfo.data());
         return false;
     }

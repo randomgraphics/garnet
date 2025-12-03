@@ -72,7 +72,7 @@ GN_API void GN::SharedLib::unload() {
     if (mHandle) {
         SHLIB_UNLOAD(mHandle);
         mHandle = 0;
-        GN_TRACE(sLogger)("Unload library '%s'.", mFileName.data());
+        GN_TRACE(sLogger)("Unload library '{}'.", mFileName.data());
     }
 
     GN_UNGUARD;
@@ -95,7 +95,7 @@ GN_API void * GN::SharedLib::getSymbol(const char * symbol) {
     }
 
     void * result = SHLIB_LOAD_SYMBOL(mHandle, symbol);
-    if (0 == result) { GN_ERROR(sLogger)("Failed to get symbol named '%s': %s.", symbol, SHLIB_ERROR()); }
+    if (0 == result) { GN_ERROR(sLogger)("Failed to get symbol named '{}': {}.", symbol, SHLIB_ERROR()); }
 
     return result;
 

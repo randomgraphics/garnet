@@ -8,6 +8,8 @@
 
 #include <chrono>
 #include <sstream>
+#include <codecvt>
+#include <locale>
 
 #ifndef FMT_HEADER_ONLY
     #define FMT_HEADER_ONLY
@@ -169,6 +171,10 @@ class StringFormatter {
         if constexpr (std::is_same_v<CHAR, char>) {
             auto s = fmt::format("Printf syntax is deprecated: {}", fmt);
             GN_ASSERT_EX(!lookForPrintfSpecifiers(fmt), s.c_str());
+        } else if constexpr (std::is_same_v<CHAR, wchar_t>) {
+            std::wstring_convert<std::codecvt_utf8<wchar_t>> conv;
+            auto                                             s = fmt::format("Printf syntax is deprecated: {}", conv.to_bytes(fmt));
+            GN_ASSERT_EX(!lookForPrintfSpecifiers(fmt), s.c_str());
         } else {
             GN_ASSERT_EX(!lookForPrintfSpecifiers(fmt), "Printf syntax is deprecated");
         }
@@ -177,6 +183,14 @@ class StringFormatter {
     // do nothing in release build
     static void checkForPrintf(const CHAR *) {}
 #endif
+
+    static void printInvalidFormatSyntax(const CHAR * fmt, const char * what) {
+        if constexpr (std::is_same_v<CHAR, char>) {
+            GN_ASSERT_EX(false, fmt::format("{}: {}", what, fmt).c_str());
+        } else if constexpr (std::is_same_v<CHAR, wchar_t>) {
+            GN_ASSERT_EX(false, fmt::format("{}: {}", what, std::wstring_convert<std::codecvt_utf8<wchar_t>>().to_bytes(fmt)).c_str());
+        }
+    }
 
     std::basic_string<CHAR>         mResult;
     bool                            mIsPreallocated = true;
@@ -198,9 +212,13 @@ public:
             return;
         }
         checkForPrintf(fmt);
-        auto result       = fmt::format_to_n(outputBuffer, outputBufferSize - 1, fmt, std::forward<Args>(args)...);
-        auto len          = std::min(result.size, outputBufferSize - 1);
-        outputBuffer[len] = 0;
+        try {
+            auto result       = fmt::format_to_n(outputBuffer, outputBufferSize - 1, fmt, std::forward<Args>(args)...);
+            auto len          = std::min(result.size, outputBufferSize - 1);
+            outputBuffer[len] = 0;
+        } catch (std::exception & e) { printInvalidFormatSyntax(fmt, e.what()); } catch (...) {
+            printInvalidFormatSyntax(fmt, "Unknown exception when formatting string");
+        }
     }
 
     /// Return size of the formatted string, not including the null terminator.
@@ -208,7 +226,15 @@ public:
     static size_t formattedSize(const CHAR * fmt, Args &&... args) {
         if (!fmt || !*fmt) return 0;
         checkForPrintf(fmt);
-        return fmt::formatted_size(fmt, std::forward<Args>(args)...);
+        try {
+            return fmt::formatted_size(fmt, std::forward<Args>(args)...);
+        } catch (std::exception & e) {
+            printInvalidFormatSyntax(fmt, e.what());
+            return 0;
+        } catch (...) {
+            printInvalidFormatSyntax(fmt, "Unknown exception when formatting string");
+            return 0;
+        }
     }
 
     template<typename... Args>
@@ -221,18 +247,28 @@ public:
 
         checkForPrintf(fmt);
 
-        // get size of the formatted string
-        auto r = fmt::formatted_size(fmt, std::forward<Args>(args)...);
+        try {
+            // get size of the formatted string
+            auto r = fmt::formatted_size(fmt, std::forward<Args>(args)...);
 
-        constexpr size_t maxCharacters = std::size(mPreAllocatedBuffer) - 1; // needs one addtional space for the null terminator
+            constexpr size_t maxCharacters = std::size(mPreAllocatedBuffer) - 1; // needs one addtional space for the null terminator
 
-        if (r > maxCharacters) {
+            if (r > maxCharacters) {
+                mIsPreallocated = false;
+                mResult         = fmt::format(fmt, std::forward<Args>(args)...);
+            } else {
+                mIsPreallocated = true;
+                fmt::format_to_n(mPreAllocatedBuffer, maxCharacters, fmt, std::forward<Args>(args)...);
+                mPreAllocatedBuffer[std::min(r, maxCharacters)] = 0;
+            }
+        } catch (const std::exception & e) {
+            if constexpr (std::is_same_v<CHAR, char>) {
+                mResult = fmt::format("{}: {}", e.what(), fmt);
+            } else if constexpr (std::is_same_v<CHAR, wchar_t>) {
+                std::wstring_convert<std::codecvt_utf8<wchar_t>> conv;
+                mResult = fmt::format(L"{}: {}", conv.from_bytes(e.what()), fmt);
+            }
             mIsPreallocated = false;
-            mResult         = fmt::format(fmt, std::forward<Args>(args)...);
-        } else {
-            mIsPreallocated = true;
-            fmt::format_to_n(mPreAllocatedBuffer, maxCharacters, fmt, std::forward<Args>(args)...);
-            mPreAllocatedBuffer[std::min(r, maxCharacters)] = 0;
         }
     }
 

@@ -7,7 +7,7 @@ static GN::Logger * sLogger = GN::getLogger("GN.gfx.test.pcre");
 
 int main(int argc, const char * argv[]) {
     if (argc < 3) {
-        GN_INFO(sLogger)("usage: %s <pattern> <string>", argv[0]);
+        GN_INFO(sLogger)("usage: {} <pattern> <string>", argv[0]);
         return -1;
     }
 

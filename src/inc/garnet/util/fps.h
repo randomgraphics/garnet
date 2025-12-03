@@ -27,7 +27,7 @@ public:
     ///
     /// Constructor
     ///
-    FpsCalculator(const wchar_t * format = L"FPS: %.2f"): mFormatString(format) { reset(); }
+    FpsCalculator(const wchar_t * format = L"FPS: {}"): mFormatString(format) { reset(); }
 
     ///
     /// Get time

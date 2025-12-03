@@ -60,7 +60,7 @@ private:
         const wchar_t * classname = L"d3d11app_mainwindow";
 
         // register window class
-        GN_VTRACE(sLogger)("Register window class: %S (module handle: 0x%X)", classname, module);
+        GN_VTRACE(sLogger)("Register window class: {} (module handle: 0x{:X})", classname, module);
         wcex.cbSize        = sizeof(wcex);
         wcex.style         = 0;
         wcex.lpfnWndProc   = (WNDPROC) &sStaticWindowProc;

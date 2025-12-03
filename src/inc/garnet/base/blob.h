@@ -86,7 +86,7 @@ public:
             // allocate raw memory
             Base::mData = static_cast<T *>(OBJECT_ALLOCATOR::sAllocate(count));
             if (!Base::mData) {
-                GN_ERROR(getLogger("GN.base.Blob"))("Failed to allocate memory for blob of %zu bytes", count * sizeof(T));
+                GN_ERROR(getLogger("GN.base.Blob"))("Failed to allocate memory for blob of {} bytes", count * sizeof(T));
             } else if (data) {
                 // copy construct the data array.
                 details::inplaceCopyConstructArray(count, (T *) Base::mData, data);

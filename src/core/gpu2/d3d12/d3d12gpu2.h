@@ -11,14 +11,14 @@
         if (FAILED(hr__)) GN::breakIntoDebugger(); \
     } else                                         \
         void(0)
-#define ReturnIfFailed(x, ...)                                 \
-    if (true) {                                                \
-        HRESULT hr__ = (x);                                    \
-        if (FAILED(hr__)) {                                    \
-            GN_ERROR(sLogger)(#x "failed, hr = 0x%08X", hr__); \
-            return __VA_ARGS__;                                \
-        }                                                      \
-    } else                                                     \
+#define ReturnIfFailed(x, ...)                                   \
+    if (true) {                                                  \
+        HRESULT hr__ = (x);                                      \
+        if (FAILED(hr__)) {                                      \
+            GN_ERROR(sLogger)(#x "failed, hr = 0x{:08X}", hr__); \
+            return __VA_ARGS__;                                  \
+        }                                                        \
+    } else                                                       \
         void(0)
 
 namespace GN {

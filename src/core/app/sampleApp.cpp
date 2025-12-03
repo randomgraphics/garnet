@@ -103,7 +103,7 @@ static bool sParseGpuAPI(GN::gfx::GpuAPI & result, const char * value) {
 //
 //
 // -----------------------------------------------------------------------------
-GN::util::SampleApp::SampleApp(): mFps(L"FPS: %.2f\n(Press F1 for help)"), mShowHUD(true), mShowHelp(false) {
+GN::util::SampleApp::SampleApp(): mFps(L"FPS: {}\n(Press F1 for help)"), mShowHUD(true), mShowHelp(false) {
     enableCRTMemoryCheck();
     mFps.reset();
 }
@@ -493,7 +493,7 @@ void GN::util::SampleApp::drawHUD() {
     if (mShowHUD) {
         BitmapFont * font = engine::getDefaultFontRenderer();
 
-        auto timeInfo = StrW::format(L"FPS: {:.2f}\tIdle: {:.1f}%\n"
+        auto timeInfo = StrW::format(L"FPS: {}\tIdle: {}%\n"
                                      L"(Press F1 for more helps)",
                                      mFps.fps(), mFrameIdlePercentage);
 
