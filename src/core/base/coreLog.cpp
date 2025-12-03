@@ -330,9 +330,9 @@ class DebugReceiver : public Logger::Receiver {
 #if GN_MSWIN
         char buf[16384];
         if (desc.level >= GN::Logger::INFO) {
-            str::formatTo(buf, 16384, "%s\n", msg);
+            str::formatTo(buf, 16384, "{}\n", msg);
         } else {
-            str::formatTo(buf, 16384, "%s(%d) : name(%s), level(%s) : %s\n", sFormatPath(desc.file).data(), desc.line, logger.getName(),
+            str::formatTo(buf, 16384, "{}({}) : name({}), level({}) : {}\n", sFormatPath(desc.file).data(), desc.line, logger.getName(),
                           sLevel2Str(desc.level).data(), msg);
         }
         ::OutputDebugStringA(buf);
@@ -348,9 +348,9 @@ class DebugReceiver : public Logger::Receiver {
 
         wchar_t buf[16384];
         if (desc.level >= GN::Logger::INFO) {
-            str::formatTo(buf, 16384, L"%S\n", msg);
+            str::formatTo(buf, 16384, L"{}\n", msg);
         } else {
-            str::formatTo(buf, 16384, L"%S(%d) : name(%S), level(%S) : %s\n", sFormatPath(desc.file).data(), desc.line, logger.getName(),
+            str::formatTo(buf, 16384, L"{}({}) : name({}), level({}) : {}\n", sFormatPath(desc.file).data(), desc.line, logger.getName(),
                           sLevel2Str(desc.level).data(), msg);
         }
         ::OutputDebugStringW(buf);

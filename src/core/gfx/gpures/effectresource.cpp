@@ -362,13 +362,13 @@ bool GN::gfx::EffectResource::Impl::initTech(const EffectResourceDesc & effectDe
                 // Note: it is expected scenario that some shaders are not supported by current hardware.
                 //       So here only a verbose, instead of error, message is issued.
                 GN_VERBOSE(sLogger)
-                ("Technique '%s' is skipped because shader '%s', which is referenced by the technique in pass %u, "
+                ("Technique '{}' is skipped because shader '{}', which is referenced by the technique in pass {}, "
                  "is not supported by current graphics hardware.",
                  techName.data(), programName.data(), ipass);
                 return false;
             } else {
                 GN_ERROR(sLogger)
-                ("Shader '%s' referenced by technique '%s' in pass %u is not properly initialized", programName.data(), techName.data(), ipass);
+                ("Shader '{}' referenced by technique '{}' in pass {} is not properly initialized", programName.data(), techName.data(), ipass);
             }
 
             return false;
@@ -472,7 +472,7 @@ bool GN::gfx::EffectResource::Impl::initAttributes(const EffectResourceDesc & ef
                         ap.bindings.append(b);
                     } else {
                         GN_ERROR(sLogger)
-                        ("Effect attribute '%s' is binding to invalid GPU program parameter '%s'", attributeName.data(), shaderParameterName.data());
+                        ("Effect attribute '{}' is binding to invalid GPU program parameter '{}'", attributeName.data(), shaderParameterName.data());
                     }
                 }
             }
@@ -584,10 +584,10 @@ AutoRef<EffectResource> GN::gfx::EffectResource::loadFromFile(GpuResourceDatabas
     XmlParseResult xpr;
     if (!doc.parse(xpr, *fp)) {
         GN_ERROR(sLogger)
-        ("Fail to parse XML file (%s):\n"
-         "    line   : %d\n"
-         "    column : %d\n"
-         "    error  : %s",
+        ("Fail to parse XML file ({}):\n"
+         "    line   : {}\n"
+         "    column : {}\n"
+         "    error  : {}",
          fp->name().data(), xpr.errLine, xpr.errColumn, xpr.errInfo.data());
         return AutoRef<EffectResource>::NULLREF;
     }

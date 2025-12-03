@@ -63,7 +63,7 @@ static std::string sAddLineCountD3D11(const char * source) {
         int line = 1;
         for (const char * s = source; *s; ++s) {
             if ('\n' == *s) {
-                out += (char *) GN::StrA::format("\n(%3d) : ", ++line);
+                out += (char *) GN::StrA::format("\n({:3}) : ", ++line);
             } else {
                 out += *s;
             }
@@ -82,9 +82,9 @@ static UINT sRefineFlagsD3D11(UINT flags) {
 static void sPrintShaderCompileErrorD3D11(const char * code, ID3DBlob * err) {
     GN_ERROR(sLogger)
     ("\n================== Shader compile failure ===============\n"
-     "%s\n"
+     "{}\n"
      "\n---------------------------------------------------------\n"
-     "%s\n"
+     "{}\n"
      "\n=========================================================\n",
      code ? sAddLineCountD3D11(code).c_str() : "Shader code: <EMPTY>", err ? (const char *) err->GetBufferPointer() : "Error: <EMPTY>");
 }
@@ -100,9 +100,9 @@ static void sPrintShaderCompileInfoD3D11(const char * hlsl, ID3DBlob * bin) {
 
     GN_VTRACE(sLogger)
     ("\n================== Shader compile success ===============\n"
-     "%s\n"
+     "{}\n"
      "\n---------------------------------------------------------\n"
-     "%s\n"
+     "{}\n"
      "\n=========================================================\n",
      sAddLineCountD3D11(hlsl).c_str(), sAddLineCountD3D11((const char *) asm_->GetBufferPointer()).c_str());
 }

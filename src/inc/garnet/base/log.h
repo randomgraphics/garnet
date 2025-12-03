@@ -100,7 +100,8 @@ namespace internal {
 ///
 template<typename CHAR>
 class StringFormatter {
-    static bool checkForPrintf(const CHAR * fmt) {
+#if GN_BUILD_DEBUG_ENABLED
+    static bool lookForPrintfSpecifiers(const CHAR * fmt) {
         if (!fmt) return false;
 
         // Helper function to check if a character is a valid printf conversion specifier
@@ -163,6 +164,20 @@ class StringFormatter {
         return false; // No printf-style format specifiers found
     }
 
+    static void checkForPrintf(const CHAR * fmt) {
+        if (!fmt || !*fmt) return;
+        if constexpr (std::is_same_v<CHAR, char>) {
+            auto s = fmt::format("Printf syntax is deprecated: {}", fmt);
+            GN_ASSERT_EX(!lookForPrintfSpecifiers(fmt), s.c_str());
+        } else {
+            GN_ASSERT_EX(!lookForPrintfSpecifiers(fmt), "Printf syntax is deprecated");
+        }
+    }
+#else
+    // do nothing in release build
+    static void checkForPrintf(const CHAR *) {}
+#endif
+
     std::basic_string<CHAR>         mResult;
     bool                            mIsPreallocated = true;
     static inline thread_local CHAR mPreAllocatedBuffer[1024];
@@ -182,7 +197,7 @@ public:
             outputBuffer[0] = 0;
             return;
         }
-        GN_ASSERT(!checkForPrintf(fmt));
+        checkForPrintf(fmt);
         auto result       = fmt::format_to_n(outputBuffer, outputBufferSize - 1, fmt, std::forward<Args>(args)...);
         auto len          = std::min(result.size, outputBufferSize - 1);
         outputBuffer[len] = 0;
@@ -192,7 +207,7 @@ public:
     template<typename... Args>
     static size_t formattedSize(const CHAR * fmt, Args &&... args) {
         if (!fmt || !*fmt) return 0;
-        GN_ASSERT(!checkForPrintf(fmt));
+        checkForPrintf(fmt);
         return fmt::formatted_size(fmt, std::forward<Args>(args)...);
     }
 
@@ -204,7 +219,7 @@ public:
             return;
         }
 
-        GN_ASSERT(!checkForPrintf(fmt));
+        checkForPrintf(fmt);
 
         // get size of the formatted string
         auto r = fmt::formatted_size(fmt, std::forward<Args>(args)...);

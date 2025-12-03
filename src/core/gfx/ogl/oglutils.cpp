@@ -29,7 +29,7 @@ static std::string addLineCount(const std::string & in) {
     int line = 1;
     for (auto ch : in) {
         if ('\n' == ch)
-            ss << GN::StrA::format("\n(%3d) : ", ++line);
+            ss << GN::StrA::format("\n({:3}) : ", ++line);
         else
             ss << ch;
     }
@@ -55,10 +55,10 @@ GLuint GN::ogl::loadShaderFromString(const char * source, size_t length, GLenum 
         glGetShaderInfoLog(shader, 512, NULL, infoLog);
         glDeleteShader(shader);
         GN_ERROR(sLogger)
-        ("\n================== Failed to compile %s shader '%s' ====================\n"
-         "%s\n"
+        ("\n================== Failed to compile {} shader '{}' ====================\n"
+         "{}\n"
          "\n============================= GLSL shader source ===============================\n"
-         "%s\n"
+         "{}\n"
          "\n================================================================================\n",
          shaderType2String(shaderType), optionalFilename ? optionalFilename : "<no-name>", infoLog, addLineCount(source).c_str());
         return 0;

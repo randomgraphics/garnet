@@ -137,7 +137,7 @@ bool GN::gfx::OGLGpuProgram::init(const GpuProgramDesc & desc) {
 
     GN_ASSERT(GpuProgramLanguage::GLSL == desc.lang);
 
-    mName = desc.name ? std::string(desc.name) : StrA::format("program %llu", mID);
+    mName = desc.name ? std::string(desc.name) : StrA::format("program {}", mID);
 
 #define COMPILE_SHADER(x, type)                                                   \
     if (desc.x.source) {                                                          \
@@ -382,7 +382,7 @@ bool GN::gfx::OGLGpuProgram::enumParameters() {
         size_t namelen = str::length(nameptr);
         if (namelen > 3 && 0 == str::compare("[0]", &nameptr[namelen - 3])) { nameptr[namelen - 3] = 0; }
 
-        GN_VTRACE(sLogger)("%s: found GLSL uniform %s", mName.data(), nameptr);
+        GN_VTRACE(sLogger)("{}: found GLSL uniform {}", mName.data(), nameptr);
 
         GN_OGL_CHECK_R(u.location = glGetUniformLocation(mProgram, nameptr), false);
 

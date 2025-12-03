@@ -49,7 +49,7 @@ class InputTest {
 
                     std::string txt;
                     txt.format(
-                        "%s%s%s%s %s",
+                        "{}{}{}{} {}",
                         mLastKeyEvent.status.ctrlDown()?"CTRL-":"",
                         mLastKeyEvent.status.shiftDown()?"SHIFT-":"",
                         mLastKeyEvent.status.altDown()?"ALT-":"",

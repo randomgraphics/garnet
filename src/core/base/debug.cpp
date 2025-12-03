@@ -51,11 +51,13 @@ GN_API void GN::internal::handleAssertFailure(const char * msg, const char * fil
     ::fprintf(stderr,
               "\n"
               "======================== ASSERT FAILURE ========================\n"
-              "%s(%d)\n"
+              "{}({})\n"
               "----------------------------------------------------------------\n"
-              "%s\n"
+              "{}\n"
+              "----------------------------------------------------------------\n"
+              "{}\n"
               "================================================================\n",
-              file ? file : "", line, msg ? msg : "");
+              file ? file : "", line, msg ? msg : "", backtrace().c_str());
 
     if (RAB_LOG_ONLY == sRuntimeAssertBehavior) return;
 
@@ -67,8 +69,8 @@ GN_API void GN::internal::handleAssertFailure(const char * msg, const char * fil
 #if GN_WINPC
         char buf[1024];
         str::formatTo(buf, 1024,
-                      "%s(%d)\n"
-                      "%s\n\n"
+                      "{}({})\n"
+                      "{}\n\n"
                       "Break into debugger?\n"
                       "(If canceled, this specific assert failure will not trigger debug break anymore)",
                       file ? file : "", line, msg ? msg : "");

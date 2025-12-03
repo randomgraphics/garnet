@@ -17,7 +17,7 @@ static std::string sAddLineCountD3D9(const std::string & in) {
     int line = 1;
     for (const char * s = in.data(); *s; ++s) {
         if ('\n' == *s) {
-            out.append(StrA::format("\n(%3d) : ", ++line));
+            out.append(StrA::format("\n({:3}) : ", ++line));
         } else {
             out.append(*s);
         }
@@ -44,11 +44,11 @@ static void sPrintShaderCompileErrorD3D9(HRESULT hr, const char * code, LPD3DXBU
 
     GN_ERROR(sLogger)
     ("\n================== Shader compile failure ===============\n"
-     "%s\n"
+     "{}\n"
      "\n---------------------------------------------------------\n"
-     "Error Code(08x%X) : %s\n"
+     "Error Code(0x{:08X}) : {}\n"
      "\n---------------------------------------------------------\n"
-     "%s\n"
+     "{}\n"
      "\n=========================================================\n",
      code ? sAddLineCountD3D9(code).data() : "Shader code: <EMPTY>", hr, GN::getDXErrorInfo(hr),
      err ? (const char *) err->GetBufferPointer() : "Error: <EMPTY>");
@@ -67,7 +67,7 @@ static void sPrintShaderCompileInfoD3D9(const char * hlsl, ID3DXBuffer * bin) {
 
     GN_VTRACE(sLogger)
     ("\n================== Shader compile success ===============\n"
-     "%s\n"
+     "{}\n"
      "\n=========================================================\n",
      sAddLineCountD3D9(hlsl).data());
 
