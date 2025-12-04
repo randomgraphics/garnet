@@ -25,7 +25,7 @@ class GN_API Registry {
         GN_GUARD_SLOW;
 
         if (!mItems.validHandle(key)) {
-            if (printError) { GN_ERROR(sLogger)("invalid key '%d' for item named '%s'", key, name ? name : "<UNKNOWN>"); }
+            if (printError) { GN_ERROR(sLogger)("invalid key '{}' for item named '{}'", key, name ? name : "<UNKNOWN>"); }
             return NULL;
         }
 

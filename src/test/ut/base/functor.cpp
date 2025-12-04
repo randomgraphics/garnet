@@ -3,10 +3,10 @@
     #include <boost/bind.hpp>
 #endif
 
-GN::DynaArray<GN::StrA> g_callSequence;
-GN::StrA                g_funcName;
-int                     g_int1 = 0;
-int                     g_int2 = 0;
+GN::DynaArray<std::string> g_callSequence;
+std::string                g_funcName;
+int                        g_int1 = 0;
+int                        g_int2 = 0;
 
 void foo1(int i1, int i2) {
     g_funcName = "foo1()";

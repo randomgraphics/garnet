@@ -11,7 +11,7 @@
 //
 //
 // -----------------------------------------------------------------------------
-GN_API void GN::fs::normalizePathSeparator(GN::StrA & result, const GN::StrA & path) {
+GN_API void GN::fs::normalizePathSeparator(StrA & result, const StrA & path) {
     StrA tmp;
 
     // remove redundent separators, convert to unix style as well

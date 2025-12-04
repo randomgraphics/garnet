@@ -13,7 +13,7 @@ namespace gfx {
 struct GN_API ImagePlaneDesc {
 
     /// pixel format
-    PixelFormat format = PixelFormat::UNKNOWN;
+    img::PixelFormat format = img::PixelFormat::UNKNOWN;
 
     /// Plane width in pixels
     uint32_t width = 0;
@@ -212,7 +212,7 @@ public:
     /// \name load & save
     //@{
     static RawImage load(File &);
-    static RawImage load(const StrA & filename) {
+    static RawImage load(const std::string & filename) {
         AutoObjPtr<File> fp(GN::fs::openFile(filename, "rb"));
         if (fp.empty()) return {};
         return load(*fp);

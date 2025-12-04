@@ -50,7 +50,7 @@ private:
 // *************************************************************************
 
 GN_API const WindowCreateParameters WCP_APPLICATION_WINDOW = {
-    StrA("Garnet Application"),
+    std::string("Garnet Application"),
     0,
     0, // default size
     0,
@@ -63,7 +63,7 @@ GN_API const WindowCreateParameters WCP_APPLICATION_WINDOW = {
 };
 
 GN_API const WindowCreateParameters WCP_WINDOWED_RENDER_WINDOW = {
-    StrA("Garnet Application"),
+    std::string("Garnet Application"),
     640,
     480, // size
     0,
@@ -76,12 +76,16 @@ GN_API const WindowCreateParameters WCP_WINDOWED_RENDER_WINDOW = {
 };
 
 GN_API const WindowCreateParameters WCP_FULLSCREEN_RENDER_WINDOW = {
-    StrA(""), 640, 480, // size
-    0,        0,   0,   // no parent
-    false,              // border
-    false,              // titlebar
-    true,               // topmost
-    false,              // no close box
+    std::string(""),
+    640,
+    480, // size
+    0,
+    0,
+    0,     // no parent
+    false, // border
+    false, // titlebar
+    true,  // topmost
+    false, // no close box
 };
 
 //

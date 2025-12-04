@@ -38,8 +38,10 @@ public:
 
     bool empty() const { return mSize == 0; }
 
+    /// Get the size of the blob in bytes.
     size_t size() const { return mSize; }
 
+    /// Get the pointer to the blob buffer.
     void * data() const { return mData; }
 
     // Clear the blob. Make it empty.
@@ -85,7 +87,7 @@ public:
             // allocate raw memory
             Base::mData = static_cast<T *>(OBJECT_ALLOCATOR::sAllocate(count));
             if (!Base::mData) {
-                GN_ERROR(getLogger("GN.base.Blob"))("Failed to allocate memory for blob of %zu bytes", count * sizeof(T));
+                GN_ERROR(getLogger("GN.base.Blob"))("Failed to allocate memory for blob of {} bytes", count * sizeof(T));
             } else if (data) {
                 // copy construct the data array.
                 details::inplaceCopyConstructArray(count, (T *) Base::mData, data);
@@ -94,7 +96,7 @@ public:
             } else {
                 // default construct the data array.
                 details::inplaceDefaultConstructArray(count, (T *) Base::mData);
-                Base::mSize = count;
+                Base::mSize = count * sizeof(T);
                 Base::mImpl = new Impl(count, (T *) Base::mData);
             }
         }

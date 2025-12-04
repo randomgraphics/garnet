@@ -37,20 +37,20 @@ class StringMapTest : public CxxTest::TestSuite {
         Perf hashmap;
 
         void print() const {
-            printf("%s", fmt::format("GN::Dictionary  - insert : {}\n", dict.insert.count()).c_str());
-            printf("%s", fmt::format("std::map        - insert : {}\n", stlmap.insert.count()).c_str());
-            printf("%s", fmt::format("StringMap       - insert : {}\n", strmap.insert.count()).c_str());
-            printf("%s", fmt::format("HashMap         - insert : {}\n", hashmap.insert.count()).c_str());
+            printf("%s", GN::StrA::format("GN::Dictionary  - insert : {}\n", dict.insert.count()).c_str());
+            printf("%s", GN::StrA::format("std::map        - insert : {}\n", stlmap.insert.count()).c_str());
+            printf("%s", GN::StrA::format("StringMap       - insert : {}\n", strmap.insert.count()).c_str());
+            printf("%s", GN::StrA::format("HashMap         - insert : {}\n", hashmap.insert.count()).c_str());
 
-            printf("%s", fmt::format("GN::Dictionary  - find   : {}\n", dict.find.count()).c_str());
-            printf("%s", fmt::format("std::map        - find   : {}\n", stlmap.find.count()).c_str());
-            printf("%s", fmt::format("StringMap       - find   : {}\n", strmap.find.count()).c_str());
-            printf("%s", fmt::format("HashMap         - find   : {}\n", hashmap.find.count()).c_str());
+            printf("%s", GN::StrA::format("GN::Dictionary  - find   : {}\n", dict.find.count()).c_str());
+            printf("%s", GN::StrA::format("std::map        - find   : {}\n", stlmap.find.count()).c_str());
+            printf("%s", GN::StrA::format("StringMap       - find   : {}\n", strmap.find.count()).c_str());
+            printf("%s", GN::StrA::format("HashMap         - find   : {}\n", hashmap.find.count()).c_str());
 
-            printf("%s", fmt::format("GN::Dictionary  - remove : {}\n", dict.remove.count()).c_str());
-            printf("%s", fmt::format("std::map        - remove : {}\n", stlmap.remove.count()).c_str());
-            printf("%s", fmt::format("StringMap       - remove : {}\n", strmap.remove.count()).c_str());
-            printf("%s", fmt::format("HashMap         - remove : {}\n", hashmap.remove.count()).c_str());
+            printf("%s", GN::StrA::format("GN::Dictionary  - remove : {}\n", dict.remove.count()).c_str());
+            printf("%s", GN::StrA::format("std::map        - remove : {}\n", stlmap.remove.count()).c_str());
+            printf("%s", GN::StrA::format("StringMap       - remove : {}\n", strmap.remove.count()).c_str());
+            printf("%s", GN::StrA::format("HashMap         - remove : {}\n", hashmap.remove.count()).c_str());
         }
     };
 
@@ -257,7 +257,7 @@ public:
     void testCaseInsensitive() {
         using namespace GN;
 
-        StringMap<char, int, str::INSENSITIVE> m;
+        StringMap<char, int> m(true);
 
         m["a,b,c"] = 1;
         m["a,B,c"] = 2;

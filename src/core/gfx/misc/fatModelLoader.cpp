@@ -227,15 +227,15 @@ static bool sLoadFromASE(FatModel & fatmodel, File & file, const StrA & filename
         }
         if (position) {
             sCopyVertexElement<Vector3f>(dst.vertices.getPosition(), src, *position);
-            dst.vertices.setElementFormat(FatVertexBuffer::POSITION, PixelFormat::FLOAT3());
+            dst.vertices.setElementFormat(FatVertexBuffer::POSITION, img::PixelFormat::FLOAT3());
         }
         if (normal) {
             sCopyVertexElement<Vector3f>(dst.vertices.getNormal(), src, *normal);
-            dst.vertices.setElementFormat(FatVertexBuffer::NORMAL, PixelFormat::FLOAT3());
+            dst.vertices.setElementFormat(FatVertexBuffer::NORMAL, img::PixelFormat::FLOAT3());
         }
         if (texcoord) {
             sCopyVertexElement<Vector2f>(dst.vertices.getTexcoord(0), src, *texcoord);
-            dst.vertices.setElementFormat(FatVertexBuffer::TEXCOORD0, PixelFormat::FLOAT2());
+            dst.vertices.setElementFormat(FatVertexBuffer::TEXCOORD0, img::PixelFormat::FLOAT2());
         }
 
         // copy index buffer
@@ -378,7 +378,7 @@ static inline int sGetLayerElementIndex(const FbxLayerElementTemplate<T> * eleme
     } else if (FbxLayerElement::eIndexToDirect == refmode) {
         return elements->GetIndexArray().GetAt(index);
     } else {
-        GN_ERROR(sLogger)("Unsupport reference mode: %d", refmode);
+        GN_ERROR(sLogger)("Unsupport reference mode: {}", (int) refmode);
         return -1;
     }
 }
@@ -399,7 +399,7 @@ static inline int sGetLayerElementIndex(const FbxLayerElementTemplate<T> * eleme
     } else if (FbxLayerElement::eByPolygon == mapmode) {
         return sGetLayerElementIndex(elements, polygonIndex);
     } else {
-        GN_ERROR(sLogger)("Invalid layer mapping mode: %d", mapmode);
+        GN_ERROR(sLogger)("Invalid layer mapping mode: {}", (int) mapmode);
         return -1;
     }
 }
@@ -768,12 +768,12 @@ static bool sGenerateFatVertices(FatMesh & fatmesh, FbxNode * fbxnode, const Mes
     FatVertexBuffer & fatvb = fatmesh.vertices;
     if (!fatvb.resize(layout, numkeys)) return false;
 
-    fatvb.setElementFormat(FatVertexBuffer::POSITION, PixelFormat::FLOAT3());
-    fatvb.setElementFormat(FatVertexBuffer::NORMAL, PixelFormat::FLOAT3());
-    fatvb.setElementFormat(FatVertexBuffer::TEXCOORD0, PixelFormat::FLOAT2());
+    fatvb.setElementFormat(FatVertexBuffer::POSITION, img::PixelFormat::FLOAT3());
+    fatvb.setElementFormat(FatVertexBuffer::NORMAL, img::PixelFormat::FLOAT3());
+    fatvb.setElementFormat(FatVertexBuffer::TEXCOORD0, img::PixelFormat::FLOAT2());
     if (skinning) {
-        fatvb.setElementFormat(FatVertexBuffer::JOINT_ID, PixelFormat::UINT4());
-        fatvb.setElementFormat(FatVertexBuffer::JOINT_WEIGHT, PixelFormat::FLOAT4());
+        fatvb.setElementFormat(FatVertexBuffer::JOINT_ID, img::PixelFormat::UINT4());
+        fatvb.setElementFormat(FatVertexBuffer::JOINT_WEIGHT, img::PixelFormat::FLOAT4());
     }
 
     Vector4f * pos     = (Vector4f *) fatvb.getPosition();
@@ -905,7 +905,7 @@ static void sLoadFbxMesh(FatModel & fatmodel, const StrA & filename, FbxSdkWrapp
     if (!fbxmesh->IsTriangleMesh()) {
         fbxmesh = sdk.converter->TriangulateMesh(fbxmesh);
         if (NULL == fbxmesh) {
-            GN_ERROR(sLogger)("Fail to triangulate fbxmesh node: %s", fbxnode->GetName());
+            GN_ERROR(sLogger)("Fail to triangulate fbxmesh node: {}", fbxnode->GetName());
             return;
         }
     }
@@ -913,7 +913,7 @@ static void sLoadFbxMesh(FatModel & fatmodel, const StrA & filename, FbxSdkWrapp
     // For now, we supports layer 0 only.
     FbxLayer * layer0 = fbxmesh->GetLayer(0);
     if (NULL == layer0) {
-        GN_ERROR(sLogger)("The fbxmesh does not have a layer: %s", fbxnode->GetName());
+        GN_ERROR(sLogger)("The fbxmesh does not have a layer: {}", fbxnode->GetName());
         return;
     }
     if (NULL == layer0->GetNormals()) { fbxmesh->ComputeVertexNormals(); }
@@ -938,8 +938,8 @@ static void sLoadFbxMesh(FatModel & fatmodel, const StrA & filename, FbxSdkWrapp
     } else {
         if (fbxMaterials && FbxLayerElement::eAllSame != fbxMaterials->GetMappingMode()) {
             GN_WARN(sLogger)
-            ("Unsupported FBX material layer: mapping mode=%d, reference mode=%d. It will be treated as eALL_SAME.", fbxMaterials->GetMappingMode(),
-             fbxMaterials->GetReferenceMode());
+            ("Unsupported FBX material layer: mapping mode=%d, reference mode=%d. It will be treated as eALL_SAME.", (int) fbxMaterials->GetMappingMode(),
+             (int) fbxMaterials->GetReferenceMode());
         }
 
         // one material
@@ -1134,7 +1134,7 @@ static void sLoadFbxMesh(FatModel & fatmodel, const StrA & filename, FbxSdkWrapp
     // It's always triangle list.
     fatmesh.primitive = PrimitiveType::TRIANGLE_LIST;
 
-    GN_INFO(sLogger)("Load FBX mesh %s: %d vertices, %d faces", fbxnode->GetName(), fatmesh.vertices.getVertexCount(), fatmesh.indices.size());
+    GN_INFO(sLogger)("Load FBX mesh {}: {} vertices, {} faces", fbxnode->GetName(), fatmesh.vertices.getVertexCount(), fatmesh.indices.size());
 
     // finally, add the fatmesh to fatmodel. And we are done!
     fatmodel.meshes.append(std::move(fatmesh));
@@ -1198,7 +1198,7 @@ static void sLoadFbxAnimations(FatModel & fatmodel, FbxScene & fbxscene) {
 static bool sLoadFromFBX(FatModel & fatmodel, File & file, const StrA & filename) {
 #ifdef HAS_FBX
 
-    GN_INFO(sLogger)("Load FBX model from file: %s", filename.data());
+    GN_INFO(sLogger)("Load FBX model from file: {}", filename.data());
 
     FbxSdkWrapper sdk;
     if (!sdk.init()) return false;
@@ -1225,7 +1225,7 @@ static bool sLoadFromFBX(FatModel & fatmodel, File & file, const StrA & filename
     // Check file version
     int vmajor, vminor, vrev;
     gImporter->GetFileVersion(vmajor, vminor, vrev);
-    GN_INFO(sLogger)("FBX model version = %d.%d.%d", vmajor, vminor, vrev);
+    GN_INFO(sLogger)("FBX model version = {}.{}.{}", vmajor, vminor, vrev);
 
     // Import the scene
     FbxScene * gScene = FbxScene::Create(gSdkManager, "");
@@ -1278,7 +1278,7 @@ static bool sLoadFromFBX(FatModel & fatmodel, File & file, const StrA & filename
 
     fatmodel.clear();
     GN_UNUSED_PARAM(file);
-    GN_ERROR(sLogger)("Fail to load file %s: FBX is not supported.", filename.data());
+    GN_ERROR(sLogger)("Fail to load file {}: FBX is not supported.", filename.data());
     return false;
 
 #endif // HAS_FBX
@@ -1331,11 +1331,11 @@ static void sPrintFBXNodeHierarchy(StrA & hierarchy, const StrA & filename) {
 
             for (int i = 0; i < depth; ++i) { hierarchy += "  "; }
 
-            hierarchy += str::format("(%d) ", depth);
+            hierarchy += StrA::format("({}) ", depth);
 
             const char * name = node->GetName();
 
-            hierarchy += str::isEmpty(name) ? "[UNNAMED]" : name;
+            hierarchy += str::empty(name) ? "[UNNAMED]" : name;
 
             hierarchy += " : ";
 
@@ -1375,7 +1375,7 @@ static void sPrintFBXNodeHierarchy(StrA & hierarchy, const StrA & filename) {
                 } else if (0 <= atype && atype < (int) GN_ARRAY_COUNT(sAttributeTypeNames)) {
                     hierarchy += sAttributeTypeNames[atype];
                 } else {
-                    hierarchy += str::format("[INVALID:%d]", atype);
+                    hierarchy += StrA::format("[INVALID:{}]", (int) atype);
                 }
             } else {
                 hierarchy += "[NULL]";
@@ -1419,7 +1419,7 @@ using namespace Assimp;
 
 // protected:
 //     // Constructor protected for private usage by MyIOSystem
-//     MyIOStream(const std::string & filename, const std::string & mode) { mFile.attach(fs::openFile(filename.c_str(), mode.c_str())); }
+//     MyIOStream(const StrA & filename, const StrA & mode) { mFile.attach(fs::openFile(filename.c_str(), mode.c_str())); }
 
 // public:
 //     ~MyIOStream() { mFile.clear(); }
@@ -1475,13 +1475,13 @@ using namespace Assimp;
 //     ~MyIOSystem() {}
 
 //     // Check whether a specific file exists
-//     bool Exists(const std::string & filename) const { return GN::fs::pathExist(filename.c_str()); }
+//     bool Exists(const StrA & filename) const { return GN::fs::pathExist(filename.c_str()); }
 
 //     // Get the path delimiter character we'd like to see
 //     char GetOsSeparator() const { return '/'; }
 
 //     // ... and finally a method to open a custom stream
-//     Assimp::IOStream * Open(const std::string & file, const std::string & mode) { return new MyIOStream(file, mode); }
+//     Assimp::IOStream * Open(const StrA & file, const StrA & mode) { return new MyIOStream(file, mode); }
 
 //     void Close(Assimp::IOStream * pFile) { delete pFile; }
 // };
@@ -1554,7 +1554,7 @@ static uint32_t sFindRootJoint(const FatSkeleton & fatsk) {
         // make sure parent/child/sibling are in vaild range
         if ((j.parent >= jointArraySize && FatJoint::NO_JOINT != j.parent) || (j.child >= jointArraySize && FatJoint::NO_JOINT != j.child) ||
             (j.sibling >= jointArraySize && FatJoint::NO_JOINT != j.sibling)) {
-            GN_ERROR(sLogger)("Invalid joint herarchy: joint %d contains invalid joint index.", i);
+            GN_ERROR(sLogger)("Invalid joint herarchy: joint {} contains invalid joint index.", i);
             return FatJoint::NO_JOINT;
         }
 
@@ -1785,20 +1785,20 @@ static bool sLoadAiVertices(FatMesh & fatmesh,
     if (!fatvb.resize(fatlayout, aimesh->mNumVertices)) return false;
 
     Vector4f * fatpos = (Vector4f *) fatvb.getPosition();
-    if (fatpos) fatvb.setElementFormat(FatVertexBuffer::POSITION, PixelFormat::FLOAT3());
+    if (fatpos) fatvb.setElementFormat(FatVertexBuffer::POSITION, img::PixelFormat::FLOAT3());
 
     Vector4f * fatnormal = (Vector4f *) fatvb.getNormal();
-    if (fatnormal) fatvb.setElementFormat(FatVertexBuffer::NORMAL, PixelFormat::FLOAT3());
+    if (fatnormal) fatvb.setElementFormat(FatVertexBuffer::NORMAL, img::PixelFormat::FLOAT3());
 
     Vector4f * fattc0 = (Vector4f *) fatvb.getTexcoord(0);
     // TODO: get texcood format from aimesh.
-    if (fattc0) fatvb.setElementFormat(FatVertexBuffer::TEXCOORD0, PixelFormat::FLOAT2());
+    if (fattc0) fatvb.setElementFormat(FatVertexBuffer::TEXCOORD0, img::PixelFormat::FLOAT2());
 
     Vector4<uint32_t> * fatjoint = (Vector4<uint32_t> *) fatvb.getElementData(FatVertexBuffer::JOINT_ID);
-    if (fatjoint) fatvb.setElementFormat(FatVertexBuffer::JOINT_ID, PixelFormat::UINT4());
+    if (fatjoint) fatvb.setElementFormat(FatVertexBuffer::JOINT_ID, img::PixelFormat::UINT4());
 
     Vector4f * fatweight = (Vector4f *) fatvb.getElementData(FatVertexBuffer::JOINT_WEIGHT);
-    if (fatweight) fatvb.setElementFormat(FatVertexBuffer::JOINT_WEIGHT, PixelFormat::FLOAT4());
+    if (fatweight) fatvb.setElementFormat(FatVertexBuffer::JOINT_WEIGHT, img::PixelFormat::FLOAT4());
 
     aiMatrix4x4 normalTransform = transform;
     normalTransform.Transpose();
@@ -1885,7 +1885,7 @@ static bool sLoadAiIndices(FatMesh & fatmesh, const aiMesh * aimesh) {
 
     default:
         // Unsupported primitive.
-        GN_ERROR(sLogger)("Unsupported primitive: %d", aimesh->mPrimitiveTypes);
+        GN_ERROR(sLogger)("Unsupported primitive: {}", aimesh->mPrimitiveTypes);
         return false;
     }
 
@@ -2132,11 +2132,11 @@ static bool sPrintAiNodeHierarchy(StrA & hierarchy, const StrA & filename) {
 
             for (int i = 0; i < depth; ++i) { hierarchy += "  "; }
 
-            hierarchy += str::format("(%d) ", depth);
+            hierarchy += StrA::format("({}) ", depth);
 
             const char * name = node->mName.data;
 
-            hierarchy += str::isEmpty(name) ? "[UNNAMED]" : name;
+            hierarchy += str::empty(name) ? "[UNNAMED]" : name;
 
             hierarchy += "\n";
 
@@ -2258,7 +2258,7 @@ bool GN::gfx::FatModel::loadFromFile(const StrA & filename) {
 
     default:
         if (!ai::sLoadFromAssimp(*this, fullFileName)) {
-            GN_ERROR(sLogger)("Unknown file format: %s", filename.data());
+            GN_ERROR(sLogger)("Unknown file format: {}", filename.data());
             noerr = false;
         }
         break;
@@ -2272,7 +2272,7 @@ bool GN::gfx::FatModel::loadFromFile(const StrA & filename) {
             totalVerts += m.vertices.getVertexCount();
             totalFaces += m.indices.size() / 3;
         }
-        GN_INFO(sLogger)("Total vertices: %d, faces: %d", totalVerts, totalFaces);
+        GN_INFO(sLogger)("Total vertices: {}, faces: {}", totalVerts, totalFaces);
     } else {
         clear();
     }

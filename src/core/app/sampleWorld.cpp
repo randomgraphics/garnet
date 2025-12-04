@@ -37,14 +37,14 @@ public:
 //
 //
 // -----------------------------------------------------------------------------
-static Entity * sCreateEntity(Entity * root, const ModelHierarchyDesc & worldDesc, StringMap<char, Entity *> & entities, const StrA & entityName,
+static Entity * sCreateEntity(Entity * root, const ModelHierarchyDesc & worldDesc, StringMap<char, Entity *> & entities, const std::string & entityName,
                               const ModelHierarchyDesc::NodeDesc & entityDesc) {
     // recursively populate parent entities
     SampleSpacialEntity * parent = NULL;
     if (!entityDesc.parent.empty()) {
         const ModelHierarchyDesc::NodeDesc * parentDesc = worldDesc.nodes.find(entityDesc.parent);
         if (NULL == parentDesc) {
-            GN_ERROR(sLogger)("Entity '%s' has a invalid parent: '%s'", entityName.data(), entityDesc.parent.data());
+            GN_ERROR(sLogger)("Entity '{}' has a invalid parent: '{}'", entityName.data(), entityDesc.parent.data());
         } else {
 
             parent = (SampleSpacialEntity *) sCreateEntity(root, worldDesc, entities, entityDesc.parent, *parentDesc);
@@ -73,11 +73,11 @@ static Entity * sCreateEntity(Entity * root, const ModelHierarchyDesc & worldDes
     e->spacial()->setSelfBoundingBox(entityDesc.bbox);
 
     for (size_t i = 0; i < entityDesc.models.size(); ++i) {
-        const StrA & modelName = entityDesc.models[i];
+        const std::string & modelName = entityDesc.models[i];
 
         const GN::gfx::ModelResourceDesc * pModelDesc = worldDesc.models.find(modelName);
         if (NULL == pModelDesc) {
-            GN_ERROR(sLogger)("Entity %s references invalid model named \"%s\".", entityName.data(), modelName.data());
+            GN_ERROR(sLogger)("Entity {} references invalid model named \"{}\".", entityName.data(), modelName.data());
             continue;
         }
 
@@ -147,7 +147,7 @@ bool GN::util::SampleWorld::createEntites(const ModelHierarchyDesc & desc) {
     if (NULL == mRoot) return NULL;
 
     for (const StringMap<char, ModelHierarchyDesc::NodeDesc>::KeyValuePair * i = desc.nodes.first(); i != NULL; i = desc.nodes.next(i)) {
-        const StrA &                         entityName = i->key;
+        const std::string &                  entityName = i->key;
         const ModelHierarchyDesc::NodeDesc & entityDesc = i->value;
 
         if (NULL == sCreateEntity(mRoot, desc, mEntities, entityName, entityDesc)) {

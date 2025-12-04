@@ -59,7 +59,7 @@ public:
 private:
     void * mHandle;
 
-    StrA mFileName;
+    std::string mFileName;
 
     // ********************************
     // private functions

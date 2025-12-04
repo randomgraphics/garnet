@@ -240,11 +240,11 @@ Matrix33<T> & Matrix33<T>::lookAtRh(const Vector3<T> & forward, const Vector3<T>
 // 将矩阵的内容打印到字符串中
 // -------------------------------------------------------------------------
 template<typename T>
-void Matrix33<T>::print(StrA & s) const {
-    s.format("%f,\t%f,\t%f\n"
-             "%f,\t%f,\t%f\n"
-             "%f,\t%f,\t%f\n",
-             rows[0][0], rows[0][1], rows[0][2], rows[1][0], rows[1][1], rows[1][2], rows[2][0], rows[2][1], rows[2][2]);
+StrA Matrix33<T>::print() const {
+    return StrA::format("{},\t{},\t{}\n"
+                        "{},\t{},\t{}\n"
+                        "{},\t{},\t{}\n",
+                        rows[0][0], rows[0][1], rows[0][2], rows[1][0], rows[1][1], rows[1][2], rows[2][0], rows[2][1], rows[2][2]);
 }
 
 // *************************************************************************
@@ -720,12 +720,12 @@ Matrix44<T> & Matrix44<T>::perspectiveD3DRh(T fovy, T ratio, T znear, T zfar) {
 //  将矩阵的内容打印到字符串中
 // -------------------------------------------------------------------------
 template<typename T>
-void Matrix44<T>::print(StrA & s) const {
-    s.format("%f,\t%f,\t%f,\t%f,\n"
-             "%f,\t%f,\t%f,\t%f,\n"
-             "%f,\t%f,\t%f,\t%f,\n"
-             "%f,\t%f,\t%f,\t%f,\n",
-             rows[0][0], rows[0][1], rows[0][2], rows[0][3], rows[1][0], rows[1][1], rows[1][2], rows[1][3], rows[2][0], rows[2][1], rows[2][2], rows[2][3],
-             rows[3][0], rows[3][1], rows[3][2], rows[3][3]);
+StrA Matrix44<T>::print() const {
+    return StrA::format("{},\t{},\t{},\t{},\n"
+                        "{},\t{},\t{},\t{},\n"
+                        "{},\t{},\t{},\t{},\n"
+                        "{},\t{},\t{},\t{},\n",
+                        rows[0][0], rows[0][1], rows[0][2], rows[0][3], rows[1][0], rows[1][1], rows[1][2], rows[1][3], rows[2][0], rows[2][1], rows[2][2],
+                        rows[2][3], rows[3][0], rows[3][1], rows[3][2], rows[3][3]);
 }
 } // namespace GN

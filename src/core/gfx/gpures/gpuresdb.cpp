@@ -396,7 +396,7 @@ static AutoRef<EffectResource> sRegisterNormalMapEffect(GpuResourceDatabase & gd
 // -----------------------------------------------------------------------------
 static AutoRef<TextureResource> sRegisterWhiteTexture(GpuResourceDatabase & gdb) {
     AutoRef<TextureResource> tr       = gdb.createResource<TextureResource>("@WHITE");
-    AutoRef<Texture>         t        = attachTo(gdb.getGpu().create2DTexture(PixelFormat::RGBA8(), 2, 2));
+    AutoRef<Texture>         t        = attachTo(gdb.getGpu().create2DTexture(img::PixelFormat::RGBA8(), 2, 2));
     uint32_t                 white[4] = {0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF};
     t->updateMipmap(0, 0, NULL, sizeof(uint32_t) * 2, sizeof(uint32_t) * 4, white, SurfaceUpdateFlag::DEFAULT);
     tr->setTexture(t);
@@ -408,7 +408,7 @@ static AutoRef<TextureResource> sRegisterWhiteTexture(GpuResourceDatabase & gdb)
 // -----------------------------------------------------------------------------
 static AutoRef<TextureResource> sRegisterBlackTexture(GpuResourceDatabase & gdb) {
     AutoRef<TextureResource> tr       = gdb.createResource<TextureResource>("@BLACK");
-    AutoRef<Texture>         t        = attachTo(gdb.getGpu().create2DTexture(PixelFormat::RGBA8(), 2, 2));
+    AutoRef<Texture>         t        = attachTo(gdb.getGpu().create2DTexture(img::PixelFormat::RGBA8(), 2, 2));
     uint32_t                 black[4] = {0, 0, 0, 0};
     t->updateMipmap(0, 0, NULL, sizeof(uint32_t) * 2, sizeof(uint32_t) * 4, black, SurfaceUpdateFlag::DEFAULT);
     tr->setTexture(t);
@@ -420,7 +420,7 @@ static AutoRef<TextureResource> sRegisterBlackTexture(GpuResourceDatabase & gdb)
 // -----------------------------------------------------------------------------
 static AutoRef<TextureResource> sRegisterFlatNormalMap(GpuResourceDatabase & gdb) {
     AutoRef<TextureResource> tr    = gdb.createResource<TextureResource>("@FLAT_NORMAL_MAP");
-    AutoRef<Texture>         t     = attachTo(gdb.getGpu().create2DTexture(PixelFormat::RG_16_16_UNORM(), 2, 2, 0));
+    AutoRef<Texture>         t     = attachTo(gdb.getGpu().create2DTexture(img::PixelFormat::RG_16_16_UNORM(), 2, 2, 0));
     uint32_t                 up[4] = {0x80008000, 0x80008000, 0x80008000, 0x80008000};
     t->updateMipmap(0, 0, NULL, sizeof(uint32_t) * 2, sizeof(uint32_t) * 4, up, SurfaceUpdateFlag::DEFAULT);
     tr->setTexture(t);
@@ -510,7 +510,7 @@ AutoRef<GpuResource> GpuResourceDatabase::Impl::createResource(const Guid & type
     // get the manager for the resource type
     ResourceManager * mgr = getManager(type);
     if (NULL == mgr) {
-        GN_ERROR(sLogger)("Invalid resouce type: %s", type.toStr());
+        GN_ERROR(sLogger)("Invalid resouce type: {}", type.toStr());
         return AutoRef<GpuResource>::NULLREF;
     }
 
@@ -519,7 +519,7 @@ AutoRef<GpuResource> GpuResourceDatabase::Impl::createResource(const Guid & type
     if (0 == name || 0 == *name) {
         static int i = 0;
         ++i;
-        str::formatTo(unnamed, GN_ARRAY_COUNT(unnamed), "Unnamed %s #%d", mgr->desc.data(), i);
+        str::formatTo(unnamed, GN_ARRAY_COUNT(unnamed), "Unnamed {} #{}", mgr->desc.data(), i);
         name = unnamed;
 
         GN_ASSERT(!mgr->resources.validName(name));
@@ -527,7 +527,7 @@ AutoRef<GpuResource> GpuResourceDatabase::Impl::createResource(const Guid & type
 
     // check if the resource with same name exisits already.
     if (mgr->resources.validName(name)) {
-        GN_ERROR(sLogger)("Resource named \"%s\" exists already.", name);
+        GN_ERROR(sLogger)("Resource named \"{}\" exists already.", name);
         return AutoRef<GpuResource>::NULLREF;
     }
 
@@ -688,7 +688,7 @@ bool GpuResourceDatabase::Impl::setupBuiltInResources() {
 // -----------------------------------------------------------------------------
 AutoRef<UniformResource> GpuResourceDatabase::Impl::getStandardUniformResource(int index) const {
     if (!StandardUniform::sIsValidIndex(index)) {
-        GN_ERROR(sLogger)("Invalid standard uniform index: %d", index);
+        GN_ERROR(sLogger)("Invalid standard uniform index: {}", index);
         return AutoRef<UniformResource>::NULLREF;
     }
     return mStdUniforms[index];
@@ -700,7 +700,7 @@ AutoRef<UniformResource> GpuResourceDatabase::Impl::getStandardUniformResource(i
 void GpuResourceDatabase::Impl::setStandardUniform(int index, const void * data, uint32_t dataSize) {
     // check parameters
     if (!StandardUniform::sIsValidIndex(index)) {
-        GN_ERROR(sLogger)("Invalid uniform type: %d", index);
+        GN_ERROR(sLogger)("Invalid uniform type: {}", index);
         return;
     }
     if (NULL == data) {
@@ -709,7 +709,7 @@ void GpuResourceDatabase::Impl::setStandardUniform(int index, const void * data,
     }
     const StandardUniform::Desc * desc = StandardUniform::sIndex2Desc(index);
     if (dataSize != desc->size) {
-        GN_ERROR(sLogger)("Incorrect uniform data size: expected=%d, actual=%d.", desc->size, dataSize);
+        GN_ERROR(sLogger)("Incorrect uniform data size: expected={}, actual={}.", desc->size, dataSize);
         return;
     }
 
@@ -815,7 +815,7 @@ inline GpuResource::Impl * GpuResourceDatabase::Impl::getResourceImpl(const GpuR
 GpuResourceDatabase::GpuResourceDatabase(Gpu & g): mImpl(NULL) {
     mImpl = new Impl(*this, g);
 
-    if (!mImpl->setupBuiltInResources()) { GN_THROW("%s", "Fail to setup built-in resources."); }
+    if (!mImpl->setupBuiltInResources()) { GN_THROW("{}", "Fail to setup built-in resources."); }
 }
 
 GpuResourceDatabase::~GpuResourceDatabase() { delete mImpl; }

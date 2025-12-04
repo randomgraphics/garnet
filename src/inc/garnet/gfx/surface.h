@@ -28,15 +28,15 @@ GN_CASSERT(sizeof(TextureUsage) == sizeof(uint32_t));
 /// Texture descriptor
 ///
 struct TextureDesc {
-    PixelFormat format; ///< pixel format.
-    uint32_t    width;  ///< basemap width
-    uint32_t    height; ///< basemap height
-    uint32_t    depth;  ///< basemap depth
-    uint32_t    faces;  ///< face count. When used as parameter of Gpu::createTexture(),
-                        ///< you may set it to 0 to use default face count: 6 for cubemap, 1 for others.
-    uint32_t levels;    ///< mipmap level count. When used as parameter of Gpu::createTexture(),
-                        ///< you may set it to 0 to create full mipmap chain (down to 1x1).
-    TextureUsage usage; ///< texture usage
+    img::PixelFormat format; ///< pixel format.
+    uint32_t         width;  ///< basemap width
+    uint32_t         height; ///< basemap height
+    uint32_t         depth;  ///< basemap depth
+    uint32_t         faces;  ///< face count. When used as parameter of Gpu::createTexture(),
+                             ///< you may set it to 0 to use default face count: 6 for cubemap, 1 for others.
+    uint32_t levels;         ///< mipmap level count. When used as parameter of Gpu::createTexture(),
+                             ///< you may set it to 0 to create full mipmap chain (down to 1x1).
+    TextureUsage usage;      ///< texture usage
 
     ///
     /// get basemap size
@@ -46,12 +46,12 @@ struct TextureDesc {
     ///
     /// compose texture descriptor from image descriptor
     ///
-    bool fromImageDesc(const ImageDesc & id) {
+    bool fromImageDesc(const img::ImageDesc & id) {
         format = id.format();
         width  = id.width();
         height = id.height();
         depth  = id.depth();
-        faces  = id.layers;
+        faces  = id.faces;
         levels = id.levels;
         usage  = TextureUsage::DEFAULT;
         return validate();
@@ -90,14 +90,14 @@ struct TextureDesc {
         // check format
         if (!format.valid()) {
             static Logger * sLocalLogger = getLogger("GN.gfx.TextureDesc");
-            GN_ERROR(sLocalLogger)("invalid texture format: %s", format.toString().c_str());
+            GN_ERROR(sLocalLogger)("invalid texture format: {}", format.toString().c_str());
             return false;
         }
 
         // check usage
         if (usage < 0 && usage >= TextureUsage::NUM_USAGES) {
             static Logger * sLocalLogger = getLogger("GN.gfx.TextureDesc");
-            GN_ERROR(sLocalLogger)("invalid texture usage: %d", usage.toRawEnum());
+            GN_ERROR(sLocalLogger)("invalid texture usage: {}", (int) usage.toRawEnum());
             return false;
         }
 

@@ -13,7 +13,7 @@ static GN::Logger * sLogger = GN::getLogger("GN.sample.ShadowMap");
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::SimpleShadowMap::init(const StrA & actorName) {
+bool GN::SimpleShadowMap::init(const std::string & actorName) {
     GN_GUARD;
 
     // standard init procedure
@@ -158,7 +158,7 @@ void GN::SimpleShadowMap::draw() {
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::SimpleShadowMap::loadActor(const StrA & name) {
+bool GN::SimpleShadowMap::loadActor(const std::string & name) {
     GN_ASSERT(0 == mShadowProjectors && 0 == mShadowReceivers);
 
     mShadowProjectors = mScene.loadActorHiearachyFromXmlFile(name, "root");

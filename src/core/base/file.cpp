@@ -14,18 +14,18 @@ static Logger * sLogger = getLogger("GN.base.File");
 GN_API size_t GN::File::read(void * buffer, size_t size) {
     // check parameter(s)
     if (0 == buffer && 0 != size) {
-        GN_ERROR(sLogger)("Failed to read file (%s): invalid parameter(s)!", name().data());
+        GN_ERROR(sLogger)("Failed to read file ({}): invalid parameter(s)!", name().data());
         return 0;
     }
 
     if (!readable()) {
-        GN_ERROR(sLogger)("Failed to read file (%s): the file is not readable!", name().data());
+        GN_ERROR(sLogger)("Failed to read file ({}): the file is not readable!", name().data());
         return 0;
     }
 
     auto & is = input();
     if (!is) {
-        GN_ERROR(sLogger)("Failed to read file (%s): the file is not in good state!", name().data());
+        GN_ERROR(sLogger)("Failed to read file ({}): the file is not in good state!", name().data());
         return 0;
     }
 
@@ -44,18 +44,18 @@ GN_API size_t GN::File::read(void * buffer, size_t size) {
 GN_API size_t GN::File::write(const void * buffer, size_t size) {
     // check parameter(s)
     if (0 == buffer && 0 != size) {
-        GN_ERROR(sLogger)("Failed to write to file (%s): invalid parameter(s)!", name().data());
+        GN_ERROR(sLogger)("Failed to write to file ({}): invalid parameter(s)!", name().data());
         return 0;
     }
 
     if (!writeable()) {
-        GN_ERROR(sLogger)("Failed to write to file (%s): the file is not writable!", name().data());
+        GN_ERROR(sLogger)("Failed to write to file ({}): the file is not writable!", name().data());
         return 0;
     }
 
     auto & os = output();
     if (!os) {
-        GN_ERROR(sLogger)("Failed to write to file (%s): the file is not in good state!", name().data());
+        GN_ERROR(sLogger)("Failed to write to file ({}): the file is not in good state!", name().data());
         return 0;
     }
 
@@ -114,12 +114,9 @@ GN_API bool GN::DiskFile::open(const StrA & filename, const std::ios_base::openm
     mFile.open(filename.data(), mode);
 
     if (!mFile) {
-        GN_ERROR(sLogger)("fail to open file '%s' : %s", filename.data(), mode, GN::errno2str(errno));
-        close();
+        GN_ERROR(sLogger)("fail to open file '{}' with mode {} : {}", filename.data(), (int) mode, GN::errno2str(errno));
         return false;
     }
-
-    // success
     setStream(&mFile, &mFile);
     setName(filename);
     return true;
@@ -246,13 +243,13 @@ GN_API bool GN::TempFile::open() {
 #if _MSC_VER
     auto err = tmpfile_s(&mFile);
     if (err) {
-        GN_ERROR(sLogger)("fail to open temporary file : %s", errno2str(err));
+        GN_ERROR(sLogger)("fail to open temporary file : {}", errno2str(err));
         return false;
     }
 #else
     mFile = std::tmpfile();
     if (0 == mFile) {
-        GN_ERROR(sLogger)("fail to open temporary file : %s", errno2str(errno));
+        GN_ERROR(sLogger)("fail to open temporary file : {}", errno2str(errno));
         return false;
     }
 #endif

@@ -86,12 +86,9 @@ struct GN_API File : public NoCopy {
     bool print(const StrA & s) { return write(s.data(), s.size()) == s.size(); }
 
     /// write formatted string to file
-    inline bool printf(const char * fmt, ...) {
-        StrA    s;
-        va_list arglist;
-        va_start(arglist, fmt);
-        s.formatv(fmt, arglist);
-        va_end(arglist);
+    template<typename... Args>
+    bool printf(const char * format, Args &&... args) {
+        auto s = StrA::format(format, std::forward<Args>(args)...);
         return print(s);
     }
 

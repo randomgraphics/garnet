@@ -32,21 +32,21 @@ protected:
         // check face
         if (face >= getDesc().faces) {
             static Logger * sLogger = getLogger("GN.gfx.gpu.common.BasicTexture");
-            GN_ERROR(sLogger)("invalid lock face : %d", face);
+            GN_ERROR(sLogger)("invalid lock face : {}", face);
             return false;
         }
 
         // check level
         if (level >= getDesc().levels) {
             static Logger * sLogger = getLogger("GN.gfx.gpu.common.BasicTexture");
-            GN_ERROR(sLogger)("invalid lock level : %d", level);
+            GN_ERROR(sLogger)("invalid lock level : {}", level);
             return false;
         }
 
         // check flag
         if (flag >= SurfaceUpdateFlag::NUM_FLAGS) {
             static Logger * sLogger = getLogger("GN.gfx.gpu.common.BasicTexture");
-            GN_ERROR(sLogger)("invalid lock flag : %d", flag.toRawEnum());
+            GN_ERROR(sLogger)("invalid lock flag : {}", flag.toInt());
             return false;
         }
 
@@ -124,7 +124,7 @@ protected:
 
         if (flag >= SurfaceUpdateFlag::NUM_FLAGS) {
             static Logger * sLogger = getLogger("GN.gfx.gpu.common.BasicVtxBuffer");
-            GN_ERROR(sLogger)("Invalid update flag: %d.", flag.toRawEnum());
+            GN_ERROR(sLogger)("Invalid update flag: {}.", flag.toInt());
             return false;
         }
 
@@ -185,7 +185,7 @@ protected:
 
         if (flag >= SurfaceUpdateFlag::NUM_FLAGS) {
             static Logger * sLogger = getLogger("GN.gfx.gpu.common.BasicIdxBuffer");
-            GN_ERROR(sLogger)("Invalid update flag: %d.", flag.toRawEnum());
+            GN_ERROR(sLogger)("Invalid update flag: {}.", flag.toInt());
             return false;
         }
 

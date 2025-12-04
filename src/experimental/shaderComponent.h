@@ -31,20 +31,20 @@ struct ShaderParameter {
         OUTPUT,
     };
 
-    Type      type;
-    Format    format;
-    StrA      name;
-    Direction direction;
-    StrA      description;
+    Type        type;
+    Format      format;
+    std::string name;
+    Direction   direction;
+    std::string description;
 };
 
 struct ShaderComponent {
     DynaArray<ShaderParameter> parameters;
     GpuProgramLanguage         lang;
-    StrA                       description;
+    std::string                description;
 
     // the component is either a chunk of shader code.
-    StrA code;
+    std::string code;
 
     // Or a group of components connected as DAG.
 };

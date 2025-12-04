@@ -19,7 +19,7 @@
 
 namespace GN {
 namespace ogl {
-using GN::gfx::PixelFormat;
+using gfx::img::PixelFormat;
 
 /// The 'optionalFilename' parameter is optional and is only used when printing
 /// shader compilation error.

@@ -37,31 +37,31 @@ MeshResource * createMesh(GpuResourceDatabase & gdb) {
 
     md.vtxfmt.numElements        = 7;
     md.vtxfmt.elements[0].stream = 0;
-    md.vtxfmt.elements[0].format = PixelFormat::FLOAT3();
+    md.vtxfmt.elements[0].format = img::PixelFormat::FLOAT3();
     md.vtxfmt.elements[0].offset = GN_FIELD_OFFSET(BezierVertex, p0);
     md.vtxfmt.elements[0].setSemantic("pos0");
     md.vtxfmt.elements[1].stream = 0;
-    md.vtxfmt.elements[1].format = PixelFormat::FLOAT3();
+    md.vtxfmt.elements[1].format = img::PixelFormat::FLOAT3();
     md.vtxfmt.elements[1].offset = GN_FIELD_OFFSET(BezierVertex, p1);
     md.vtxfmt.elements[1].setSemantic("pos1");
     md.vtxfmt.elements[2].stream = 0;
-    md.vtxfmt.elements[2].format = PixelFormat::FLOAT3();
+    md.vtxfmt.elements[2].format = img::PixelFormat::FLOAT3();
     md.vtxfmt.elements[2].offset = GN_FIELD_OFFSET(BezierVertex, p2);
     md.vtxfmt.elements[2].setSemantic("pos2");
     md.vtxfmt.elements[3].stream = 0;
-    md.vtxfmt.elements[3].format = PixelFormat::FLOAT3();
+    md.vtxfmt.elements[3].format = img::PixelFormat::FLOAT3();
     md.vtxfmt.elements[3].offset = GN_FIELD_OFFSET(BezierVertex, n0);
     md.vtxfmt.elements[3].setSemantic("nml");
     md.vtxfmt.elements[4].stream = 0;
-    md.vtxfmt.elements[4].format = PixelFormat::FLOAT3();
+    md.vtxfmt.elements[4].format = img::PixelFormat::FLOAT3();
     md.vtxfmt.elements[4].offset = GN_FIELD_OFFSET(BezierVertex, n1);
     md.vtxfmt.elements[4].setSemantic("nml1");
     md.vtxfmt.elements[5].stream = 0;
-    md.vtxfmt.elements[5].format = PixelFormat::FLOAT3();
+    md.vtxfmt.elements[5].format = img::PixelFormat::FLOAT3();
     md.vtxfmt.elements[5].offset = GN_FIELD_OFFSET(BezierVertex, n2);
     md.vtxfmt.elements[5].setSemantic("nml2");
     md.vtxfmt.elements[6].stream = 0;
-    md.vtxfmt.elements[6].format = PixelFormat::FLOAT2();
+    md.vtxfmt.elements[6].format = img::PixelFormat::FLOAT2();
     md.vtxfmt.elements[6].offset = GN_FIELD_OFFSET(BezierVertex, bc);
     md.vtxfmt.elements[6].setSemantic("bc");
 
@@ -389,9 +389,9 @@ class BezierApp : public SampleApp {
 
         drawCoords();
 
-        engine::getDefaultFontRenderer()->drawText(str::format(L"position : %f, %f, %f\n"
-                                                               L"radius   : %f",
-                                                               position.x, position.y, position.z, radius)
+        engine::getDefaultFontRenderer()->drawText(StrW::format(L"position : {}, {}, {}\n"
+                                                                L"radius   : {}",
+                                                                position.x, position.y, position.z, radius)
                                                        .data(),
                                                    0, 320);
     }

@@ -25,7 +25,7 @@ static DXGI_FORMAT sGetDepthReadingFormat(DXGI_FORMAT format) {
     case DXGI_FORMAT_R16_TYPELESS:
         return DXGI_FORMAT_R16_UNORM;
     default:
-        GN_ERROR(sLogger)("Format %s is not a valid typeless depth buffer format.", dxgi::getDXGIFormatDesc(format).name);
+        GN_ERROR(sLogger)("Format {} is not a valid typeless depth buffer format.", dxgi::getDXGIFormatDesc(format).name);
         return DXGI_FORMAT_UNKNOWN;
     }
 }
@@ -44,7 +44,7 @@ static DXGI_FORMAT sGetDepthWritingFormat(DXGI_FORMAT format) {
     case DXGI_FORMAT_R16_TYPELESS:
         return DXGI_FORMAT_D16_UNORM;
     default:
-        GN_ERROR(sLogger)("Format %s is not a valid depth buffer format.", dxgi::getDXGIFormatDesc(format).name);
+        GN_ERROR(sLogger)("Format {} is not a valid depth buffer format.", dxgi::getDXGIFormatDesc(format).name);
         return DXGI_FORMAT_UNKNOWN;
     }
 }
@@ -515,7 +515,7 @@ bool GN::gfx::D3D11Texture::createTexture() {
         GN_DX_CHECK_RETURN(dev.CreateTexture3D(&desc3d, 0, &tex3d), false);
         mTexture = tex3d;
     } else {
-        GN_ERROR(sLogger)("Invalid texture dimension: %d", mDimension);
+        GN_ERROR(sLogger)("Invalid texture dimension: {}", (int) mDimension);
         GN_UNEXPECTED();
         return false;
     }

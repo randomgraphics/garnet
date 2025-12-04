@@ -17,7 +17,7 @@ namespace fs {
 /// 2. remove redundent separators
 /// 3. convert to unix style
 ///
-GN_API void normalizePathSeparator(GN::StrA & result, const GN::StrA & path);
+GN_API void normalizePathSeparator(StrA & result, const StrA & path);
 
 ///
 /// Get the parent path (directory) of the path.

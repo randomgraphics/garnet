@@ -27,7 +27,7 @@ static int sChoosePixelFormat(HDC hdc) {
 
     GN_VERBOSE(sLogger)("Enumerating pixelformats...");
     int num = DescribePixelFormat(hdc, 1, 0, 0);
-    GN_VERBOSE(sLogger)("%d pixelformats in total.", num);
+    GN_VERBOSE(sLogger)("{} pixelformats in total.", num);
 
     int candidates[4] = {
         0, // ICD
@@ -38,7 +38,7 @@ static int sChoosePixelFormat(HDC hdc) {
 
     for (int i = 1; i <= num; i++) {
         if (!DescribePixelFormat(hdc, i, sizeof(pfd), &pfd)) {
-            GN_ERROR(sLogger)("can't get the description of the %dth pixelformat!", i);
+            GN_ERROR(sLogger)("can't get the description of the {}th pixelformat!", i);
             return 0;
         }
 
@@ -136,7 +136,7 @@ static bool sSetupPixelFormat(HDC hdc) {
     // choose pixel format
     int n = sChoosePixelFormat(hdc);
     if (0 == n) return false;
-    GN_VERBOSE(sLogger)("select pixelformat #%d.", n);
+    GN_VERBOSE(sLogger)("select pixelformat #{}.", n);
 
     // Set the pixel format for the device context
     if (!SetPixelFormat(hdc, n, &pfd)) {
@@ -250,7 +250,7 @@ bool GN::gfx::OGLGpu::dispInit() {
         GN_MSW_CHECK_RETURN(::GetMonitorInfoA(hmonitor, &mi), false);
 
         // move window to left-top of the monitor.
-        GN_TRACE(sLogger)("Move window to %d, %d", mi.rcWork.left, mi.rcWork.top);
+        GN_TRACE(sLogger)("Move window to {}, {}", mi.rcWork.left, mi.rcWork.top);
         GN_MSW_CHECK(::SetWindowPos(hwnd, HWND_TOP, mi.rcMonitor.left, mi.rcMonitor.top, 0, 0, SWP_NOSIZE));
 
         // trigger a redraw operation
@@ -266,7 +266,7 @@ bool GN::gfx::OGLGpu::dispInit() {
     msInstanceMap[getRenderWindowHandle()] = this;
     mHook                                  = ::SetWindowsHookExW(WH_CALLWNDPROC, &staticHookProc, 0, GetCurrentThreadId());
     if (0 == mHook) {
-        GN_ERROR(sLogger)("Fail to setup message hook : %s", getWin32LastErrorInfo());
+        GN_ERROR(sLogger)("Fail to setup message hook : {}", getWin32LastErrorInfo());
         return false;
     }
 
@@ -352,7 +352,7 @@ bool GN::gfx::OGLGpu::activateDisplayMode() {
         return false;
     }
     mDisplayModeActivated = true;
-    GN_INFO(sLogger)("Fullscreen mode activated: width(%d), height(%d), depth(%d), refrate(%d).", dd.width, dd.height, dd.depth, dd.refrate);
+    GN_INFO(sLogger)("Fullscreen mode activated: width({}), height({}), depth({}), refrate({}).", dd.width, dd.height, dd.depth, dd.refrate);
 
     // success
     return true;
@@ -373,7 +373,7 @@ void GN::gfx::OGLGpu::restoreDisplayMode() {
         ScopeBool ignoreHook(mIgnoreMsgHook);
 
         // restore display mode
-        if (DISP_CHANGE_SUCCESSFUL != ::ChangeDisplaySettings(0, 0)) { GN_ERROR(sLogger)("Failed to restore display mode: %s!", getWin32LastErrorInfo()); }
+        if (DISP_CHANGE_SUCCESSFUL != ::ChangeDisplaySettings(0, 0)) { GN_ERROR(sLogger)("Failed to restore display mode: {}!", getWin32LastErrorInfo()); }
 
         GN_INFO(sLogger)("Display mode restored.");
     }

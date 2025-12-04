@@ -47,9 +47,9 @@ class InputTest {
                     PAINTSTRUCT ps;
                     HDC dc = BeginPaint( hwnd, &ps );
 
-                    GN::StrA txt;
+                    std::string txt;
                     txt.format(
-                        "%s%s%s%s %s",
+                        "{}{}{}{} {}",
                         mLastKeyEvent.status.ctrlDown()?"CTRL-":"",
                         mLastKeyEvent.status.shiftDown()?"SHIFT-":"",
                         mLastKeyEvent.status.altDown()?"ALT-":"",
@@ -61,7 +61,7 @@ class InputTest {
                     {
                         int x, y;
                         gInputPtr->getMousePosition( x, y );
-                        txt.format( "Mouse: %d, %d", x, y );
+                        txt.format( "Mouse: {}, {}", x, y );
                         TextOutA( dc, 0, 20, txt.data(), (INT)txt.size() );
                     }
 

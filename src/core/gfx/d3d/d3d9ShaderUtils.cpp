@@ -9,17 +9,17 @@ static GN::Logger * sLogger = GN::getLogger("GN.d3d9.d3d9ShaderUtils");
 //
 //
 // -----------------------------------------------------------------------------
-static GN::StrA sAddLineCountD3D9(const GN::StrA & in) {
+static std::string sAddLineCountD3D9(const std::string & in) {
     using namespace GN;
 
-    GN::StrA out("(  1) : ");
+    std::string out("(  1) : ");
 
     int line = 1;
     for (const char * s = in.data(); *s; ++s) {
         if ('\n' == *s) {
-            out.append(str::format("\n(%3d) : ", ++line));
+            out += StrA::format("\n({:3}) : ", ++line).c_str();
         } else {
-            out.append(*s);
+            out += *s;
         }
     }
 
@@ -44,11 +44,11 @@ static void sPrintShaderCompileErrorD3D9(HRESULT hr, const char * code, LPD3DXBU
 
     GN_ERROR(sLogger)
     ("\n================== Shader compile failure ===============\n"
-     "%s\n"
+     "{}\n"
      "\n---------------------------------------------------------\n"
-     "Error Code(08x%X) : %s\n"
+     "Error Code(0x{:08X}) : {}\n"
      "\n---------------------------------------------------------\n"
-     "%s\n"
+     "{}\n"
      "\n=========================================================\n",
      code ? sAddLineCountD3D9(code).data() : "Shader code: <EMPTY>", hr, GN::getDXErrorInfo(hr),
      err ? (const char *) err->GetBufferPointer() : "Error: <EMPTY>");
@@ -67,7 +67,7 @@ static void sPrintShaderCompileInfoD3D9(const char * hlsl, ID3DXBuffer * bin) {
 
     GN_VTRACE(sLogger)
     ("\n================== Shader compile success ===============\n"
-     "%s\n"
+     "{}\n"
      "\n=========================================================\n",
      sAddLineCountD3D9(hlsl).data());
 
@@ -79,7 +79,7 @@ static void sPrintShaderCompileInfoD3D9(const char * hlsl, ID3DXBuffer * bin) {
 //
 // save shader code to temporary file
 // -----------------------------------------------------------------------------
-static GN::StrA sSaveCodeToTemporaryFile( const char * code, size_t len )
+static std::string sSaveCodeToTemporaryFile( const char * code, size_t len )
 {
     using namespace GN;
 
@@ -89,23 +89,23 @@ static GN::StrA sSaveCodeToTemporaryFile( const char * code, size_t len )
     if( 0 != _mktemp_s( fname, 13 ) )
     {
         GN_ERROR(sLogger)( "fail to generate temporary file name" );
-        return StrA::EMPTYSTR();
+        return std::string::EMPTYSTR();
     }
 
     AutoObjPtr<File> fp( core::openFile( fname, "wt" ) );
     if( 0 == fp )
     {
         GN_ERROR(sLogger)( "fail to open temporary file." );
-        return StrA::EMPTYSTR();
+        return std::string::EMPTYSTR();
     }
 
     if( !fp->write( code, len ? len : str::length(code), 0 ) )
     {
         GN_ERROR(sLogger)( "fail to write to temporary file." );
-        return StrA::EMPTYSTR();
+        return std::string::EMPTYSTR();
     }
 
-    GN_INFO(sLogger)( "save shader code to file '%s'", fname );
+    GN_INFO(sLogger)( "save shader code to file '{}'", fname );
     return fs::toNativeDiskFilePath(fname);
 }
     #endif
@@ -125,14 +125,13 @@ GN_API LPDIRECT3DVERTEXSHADER9 GN::d3d9::compileAndCreateVS(LPDIRECT3DDEVICE9 de
     HRESULT                 hr;
     #if GN_PLATFORM_HAS_D3D9X
     if (FAILED(hr = D3DXCompileShader(code, (UINT) (len ? len : str::length(code)), NULL, NULL, // no macros, no includes,
-                                      entry, str::isEmpty(profile) ? D3DXGetVertexShaderProfile(dev) : profile, sRefineFlagsD3D9(flags), &bin, &err,
-                                      constTable)))
+                                      entry, str::empty(profile) ? D3DXGetVertexShaderProfile(dev) : profile, sRefineFlagsD3D9(flags), &bin, &err, constTable)))
     #else
     GN_UNUSED_PARAM(constTable);
     if (FAILED(hr = D3DCompile(code, (UINT) (len ? len : str::length(code)),
                                "",         // source name
                                NULL, NULL, // no macros, no includes,
-                               entry, str::isEmpty(profile) ? "vs_2_0" : profile, sRefineFlagsD3D9(flags),
+                               entry, str::empty(profile) ? "vs_2_0" : profile, sRefineFlagsD3D9(flags),
                                0, // flags2
                                &bin, &err)))
     #endif
@@ -170,15 +169,14 @@ GN_API LPDIRECT3DPIXELSHADER9 GN::d3d9::compileAndCreatePS(LPDIRECT3DDEVICE9 dev
     AutoComPtr<ID3DXBuffer> err;
     HRESULT                 hr;
     #if GN_PLATFORM_HAS_D3D9X
-    if (FAILED(hr =
-                   D3DXCompileShader(code, (UINT) (len ? len : str::length(code)), NULL, NULL, // no macros, no includes,
-                                     entry, str::isEmpty(profile) ? D3DXGetPixelShaderProfile(dev) : profile, sRefineFlagsD3D9(flags), &bin, &err, constTable)))
+    if (FAILED(hr = D3DXCompileShader(code, (UINT) (len ? len : str::length(code)), NULL, NULL, // no macros, no includes,
+                                      entry, str::empty(profile) ? D3DXGetPixelShaderProfile(dev) : profile, sRefineFlagsD3D9(flags), &bin, &err, constTable)))
     #else
     GN_UNUSED_PARAM(constTable);
     if (FAILED(hr = D3DCompile(code, (UINT) (len ? len : str::length(code)),
                                "",         // source name
                                NULL, NULL, // no macros, no includes,
-                               entry, str::isEmpty(profile) ? "ps_2_0" : profile, sRefineFlagsD3D9(flags),
+                               entry, str::empty(profile) ? "ps_2_0" : profile, sRefineFlagsD3D9(flags),
                                0, // flags2
                                &bin, &err)))
     #endif

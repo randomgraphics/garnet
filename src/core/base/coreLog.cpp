@@ -110,7 +110,7 @@ static inline GN::StrA sLevel2Str(int level) {
     case GN::Logger::BABBLE:
         return "VERY_VERBOSE";
     default:
-        return GN::str::format("%d", level);
+        return GN::StrA::format("{}", level);
     }
 }
 
@@ -228,7 +228,7 @@ namespace GN {
 /// Log to console
 ///
 struct ConsoleReceiver : public Logger::Receiver {
-    virtual void onLog(Logger & logger, const Logger::LogDesc & desc, const char * msg) {
+    virtual void onLog(Logger & logger, const Logger::LogLocation & desc, const char * msg) {
         if (getEnvBoolean("GN_LOG_QUIET")) return;
 
         if (NULL == msg) msg = "";
@@ -244,7 +244,7 @@ struct ConsoleReceiver : public Logger::Receiver {
                       sFormatPath(desc.file).data(), desc.line, logger.getName(), sLevel2Str(desc.level).data(), msg);
         }
     };
-    virtual void onLog(Logger & logger, const Logger::LogDesc & desc, const wchar_t * msg) {
+    virtual void onLog(Logger & logger, const Logger::LogLocation & desc, const wchar_t * msg) {
         if (getEnvBoolean("GN_LOG_QUIET")) return;
 
         if (NULL == msg) msg = L"";
@@ -272,7 +272,7 @@ struct FileReceiver : public Logger::Receiver {
         FILE * fp;
         AutoFile(const StrA & name, const char * mode = "at"): fp(0) {
             if (name.empty()) return;
-#if GN_MSVC8
+#if GN_MSVC
             if (0 != ::fopen_s(&fp, name.data(), mode)) fp = 0;
 #else
             fp = ::fopen(name.data(), mode);
@@ -302,7 +302,7 @@ struct FileReceiver : public Logger::Receiver {
         ::fprintf(af.fp, "</srlog>\n");
     }
 
-    virtual void onLog(Logger & logger, const Logger::LogDesc & desc, const char * msg) {
+    virtual void onLog(Logger & logger, const Logger::LogLocation & desc, const char * msg) {
         AutoFile af(mFileName);
         if (!af.fp) return;
 
@@ -311,7 +311,7 @@ struct FileReceiver : public Logger::Receiver {
         ::fprintf(af.fp, "<log file=\"%s\" line=\"%d\" name=\"%s\" level=\"%s\"><![CDATA[%s]]></log>\n", sFormatPath(desc.file).data(), desc.line,
                   logger.getName(), sLevel2Str(desc.level).data(), msg);
     }
-    virtual void onLog(Logger & logger, const Logger::LogDesc & desc, const wchar_t * msg) {
+    virtual void onLog(Logger & logger, const Logger::LogLocation & desc, const wchar_t * msg) {
         AutoFile af(mFileName);
         if (!af.fp) return;
 
@@ -326,13 +326,13 @@ struct FileReceiver : public Logger::Receiver {
 /// Log to debugger
 ///
 class DebugReceiver : public Logger::Receiver {
-    virtual void onLog(Logger & logger, const Logger::LogDesc & desc, const char * msg) {
+    virtual void onLog(Logger & logger, const Logger::LogLocation & desc, const char * msg) {
 #if GN_MSWIN
         char buf[16384];
         if (desc.level >= GN::Logger::INFO) {
-            str::formatTo(buf, 16384, "%s\n", msg);
+            str::formatTo(buf, 16384, "{}\n", msg);
         } else {
-            str::formatTo(buf, 16384, "%s(%d) : name(%s), level(%s) : %s\n", sFormatPath(desc.file).data(), desc.line, logger.getName(),
+            str::formatTo(buf, 16384, "{}({}) : name({}), level({}) : {}\n", sFormatPath(desc.file).data(), desc.line, logger.getName(),
                           sLevel2Str(desc.level).data(), msg);
         }
         ::OutputDebugStringA(buf);
@@ -342,16 +342,16 @@ class DebugReceiver : public Logger::Receiver {
         GN_UNUSED_PARAM(msg);
 #endif
     }
-    virtual void onLog(Logger & logger, const Logger::LogDesc & desc, const wchar_t * msg) {
+    virtual void onLog(Logger & logger, const Logger::LogLocation & desc, const wchar_t * msg) {
 #if GN_MSWIN
         if (NULL == msg) msg = L"";
 
         wchar_t buf[16384];
         if (desc.level >= GN::Logger::INFO) {
-            str::formatTo(buf, 16384, L"%S\n", msg);
+            str::formatTo(buf, 16384, L"{}\n", msg);
         } else {
-            str::formatTo(buf, 16384, L"%S(%d) : name(%S), level(%S) : %s\n", sFormatPath(desc.file).data(), desc.line, logger.getName(),
-                          sLevel2Str(desc.level).data(), msg);
+            str::formatTo(buf, 16384, L"{}({}) : name({}), level({}) : {}\n", mbs2wcs(sFormatPath(desc.file)), desc.line, mbs2wcs(logger.getName()),
+                          mbs2wcs(sLevel2Str(desc.level)), msg);
         }
         ::OutputDebugStringW(buf);
 #else
@@ -367,7 +367,8 @@ class DebugReceiver : public Logger::Receiver {
 ///
 class LoggerImpl : public Logger, public LoggerTreeNode<LoggerImpl> {
 public:
-    LoggerImpl(const char * name, LocalMutex & mutex): Logger(sDuplicateName(name)), mGlobalMutex(mutex), mInheritLevel(true), mInheritEnabled(true) {}
+    LoggerImpl(const char * name, bool usePrintfSyntax, LocalMutex & mutex)
+        : Logger(sDuplicateName(name), usePrintfSyntax), mGlobalMutex(mutex), mInheritLevel(true), mInheritEnabled(true) {}
 
     ~LoggerImpl() {
         const char * name = getName();
@@ -393,12 +394,12 @@ public:
         mInheritEnabled = false;
     }
 
-    virtual void doLog(const LogDesc & desc, const char * msg) {
+    virtual void doLog(const LogLocation & desc, const char * msg) {
         std::lock_guard<LocalMutex> m(mGlobalMutex);
         recursiveLog(*this, desc, msg);
     }
 
-    virtual void doLog(const LogDesc & desc, const wchar_t * msg) {
+    virtual void doLog(const LogLocation & desc, const wchar_t * msg) {
         std::lock_guard<LocalMutex> m(mGlobalMutex);
         recursiveLog(*this, desc, msg);
     }
@@ -446,7 +447,7 @@ private:
     }
 
     template<typename CHAR>
-    void recursiveLog(Logger & logger, const LogDesc & desc, const CHAR * msg) {
+    void recursiveLog(Logger & logger, const LogLocation & desc, const CHAR * msg) {
         // call parent's logging
         LoggerImpl * p = parent();
         if (p) p->recursiveLog(logger, desc, msg);
@@ -479,7 +480,7 @@ private:
 ///
 class LoggerContainer {
     // Note: Logger map is case "insensitive"
-    typedef GN::StringMap<char, LoggerImpl *, GN::str::INSENSITIVE> LoggerMap;
+    typedef GN::StringMap<char, LoggerImpl *> LoggerMap;
 
     ConsoleReceiver mCr;
     FileReceiver    mFr;
@@ -501,7 +502,7 @@ class LoggerContainer {
     void printLoggerTree(StrA & str, int level, LoggerImpl & logger) {
         // print itself
         for (int i = 0; i < level; ++i) str.append("  ");
-        str.append(str::format("%s\n", logger.getName()));
+        str.append(StrA::format("{}\n", logger.getName()));
 
         // print children
         LoggerImpl * c = logger.firstChild();
@@ -512,7 +513,7 @@ class LoggerContainer {
     }
 
 public:
-    LoggerContainer(): mRootLogger("ROOT", mMutex) {
+    LoggerContainer(): mRootLogger("ROOT", false, mMutex) {
         // config root logger
         mRootLogger.setLevel(Logger::INFO);
         mRootLogger.setEnabled(true);
@@ -532,11 +533,11 @@ public:
          "    Logger Tree\n"
          "===================");
         printLoggerTree(loggerTree, 0, mRootLogger);
-        GN_VERBOSE(sLogger)("\n%s", loggerTree.data());
+        GN_VERBOSE(sLogger)("\n{}", loggerTree.data());
         for (LoggerMap::KeyValuePair * p = mLoggers.first(); NULL != p; p = mLoggers.next(p)) { delete p->value; }
     }
 
-    LoggerImpl * getLogger(const char * name) {
+    LoggerImpl * getLogger(const char * name, bool usePrintfSyntax = false) {
         std::lock_guard<LocalMutex> m(mMutex);
 
         // trip leading and trailing dots
@@ -554,7 +555,7 @@ public:
         }
 
         // not found. create new one.
-        AutoObjPtr<LoggerImpl> newLogger(new LoggerImpl(n, mMutex));
+        AutoObjPtr<LoggerImpl> newLogger(new LoggerImpl(n.data(), usePrintfSyntax, mMutex));
         mLoggers[n] = newLogger;
 
         // update logger tree
@@ -568,7 +569,31 @@ public:
     }
 };
 
-LoggerContainer * msInstancePtr = 0;
+namespace internal {
+
+GN_API WideString::WideString(const char * msg) {
+    if (!msg || !*msg) GN_UNLIKELY {
+            wstr         = L"<EMPTY>";
+            needDeletion = false;
+            return;
+        }
+    try {
+        StrW w = mbs2wcs(StrA(msg));
+        wstr   = new wchar_t[w.size() + 1];
+        memcpy((void *) wstr, w.c_str(), w.size() + 1); // copy string content, including ending terminator.
+    } catch (...) {
+        wstr         = L"exception thrown while converting to wide string";
+        needDeletion = false;
+    }
+}
+
+GN_API WideString::~WideString() {
+    if (needDeletion) safeDeleteArray(wstr);
+    wstr         = nullptr;
+    needDeletion = false;
+}
+
+} // namespace internal
 
 //
 // Implement global log function.
@@ -582,8 +607,9 @@ static LoggerContainer & sGetLoggerContainer() {
 //
 // Implement global log function.
 // -------------------------------------------------------------------------
-GN_API Logger * getLogger(const char * name) {
+GN_API Logger * getLogger(const char * name, bool usePrintfSyntax) {
     LoggerContainer & lc = sGetLoggerContainer();
-    return lc.getLogger(name);
+    return lc.getLogger(name, usePrintfSyntax);
 }
+
 } // namespace GN

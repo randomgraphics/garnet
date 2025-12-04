@@ -28,7 +28,7 @@ class BasicDebugVariable {
 public:
     //@{
 
-    BasicDebugVariable(size_t size, const StrA & name, const StrA & type);
+    BasicDebugVariable(size_t size, const std::string & name, const std::string & type);
 
     BasicDebugVariable(const BasicDebugVariable &);
 
@@ -42,9 +42,9 @@ public:
 
     const void * getValue() const { return mValue.data(); }
 
-    const StrA & getName() const { return mName; }
+    const std::string & getName() const { return mName; }
 
-    const StrA & getType() const { return mType; }
+    const std::string & getType() const { return mType; }
 
     //@}
 };
@@ -59,9 +59,9 @@ class DebugVar : public BasicDebugVariable {
 public:
     //@{
 
-    DebugVar(const StrA & name = StrA::EMPTYSTR());
+    DebugVar(const std::string & name = std::string::EMPTYSTR());
 
-    DebugVar(const T &, const StrA & name = StrA::EMPTYSTR());
+    DebugVar(const T &, const std::string & name = std::string::EMPTYSTR());
 
     //@}
 

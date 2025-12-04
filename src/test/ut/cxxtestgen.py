@@ -421,6 +421,13 @@ def writePreamble( output ):
     output.write( "#include <cxxtest/RealDescriptions.h>\n" )
     if runner:
         output.write( "#include <cxxtest/%s.h>\n" % runner )
+        if not gui:
+            # When using a runner (not GUI), we use TeeListener to track failures
+            output.write( "#include <cxxtest/TeeListener.h>\n" )
+            # Standard library is required for our FailedTestTracker
+            output.write( "#include <vector>\n" )
+            output.write( "#include <string>\n" )
+            output.write( "#include <iostream>\n" )
     if gui:
         output.write( "#include <cxxtest/%s.h>\n" % gui )
     output.write( "\n" )
@@ -429,6 +436,30 @@ def writePreamble( output ):
 def writeMain( output ):
     '''Write the main() function for the test runner'''
     output.write( 'extern int myInit( int argc, const char * argv[] );\n' )
+    
+    # Write custom TestListener class to track failed tests (only when using runner without GUI)
+    if runner and not gui:
+        output.write( 'namespace CxxTest {\n' )
+        output.write( 'class FailedTestTracker : public TestListener {\n' )
+        output.write( 'public:\n' )
+        output.write( '    std::vector<std::string> failedTests;\n' )
+        output.write( '    void leaveTest( const TestDescription &desc ) {\n' )
+        output.write( '        if ( tracker().testFailed() ) {\n' )
+        output.write( '            std::string name = std::string(desc.suiteName()) + "::" + desc.testName();\n' )
+        output.write( '            failedTests.push_back(name);\n' )
+        output.write( '        }\n' )
+        output.write( '    }\n' )
+        output.write( '    void leaveWorld( const WorldDescription & ) {\n' )
+        output.write( '        if ( !failedTests.empty() ) {\n' )
+        output.write( '            std::cout << "\\nFailed tests:\\n";\n' )
+        output.write( '            for ( size_t i = 0; i < failedTests.size(); ++i ) {\n' )
+        output.write( '                std::cout << "  " << failedTests[i] << "\\n";\n' )
+        output.write( '            }\n' )
+        output.write( '        }\n' )
+        output.write( '    }\n' )
+        output.write( '};\n' )
+        output.write( '}\n' )
+    
     output.write( 'int main( int argc, const char * argv[] ) {\n' )
     output.write( ' if( 0 != myInit(argc,argv) ) return -1;\n' )
     if noStaticInit:
@@ -436,7 +467,22 @@ def writeMain( output ):
     if gui:
         output.write( ' return CxxTest::GuiTuiRunner<CxxTest::%s, CxxTest::%s>( argc, argv ).run();\n' % (gui, runner) )
     elif runner:
-        output.write( ' return CxxTest::%s().run(argc,argv);\n' % runner )
+        # Use TeeListener to combine the specified runner with FailedTestTracker
+        output.write( ' CxxTest::%s printer;\n' % runner )
+        output.write( ' CxxTest::FailedTestTracker tracker;\n' )
+        output.write( ' CxxTest::TeeListener tee;\n' )
+        output.write( ' tee.setFirst(printer);\n' )
+        output.write( ' tee.setSecond(tracker);\n' )
+        output.write( ' if( argc < 2 ) {\n' )
+        output.write( '     CxxTest::TestRunner::runAllTests( tee, 0 );\n' )
+        output.write( ' } else {\n' )
+        output.write( '     for( int i = 1; i < argc; ++i ) {\n' )
+        output.write( '         CxxTest::TestRunner::runAllTests( tee, argv[i] );\n' )
+        output.write( '     }\n' )
+        output.write( ' }\n' )
+        output.write( ' // Print failed tests summary\n' )
+        output.write( ' tracker.leaveWorld(CxxTest::tracker().world());\n' )
+        output.write( ' return CxxTest::tracker().failedTests();\n' )
     output.write( '}\n' )
 
 wroteWorld = 0

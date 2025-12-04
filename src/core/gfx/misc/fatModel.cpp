@@ -53,7 +53,7 @@ bool GN::gfx::FatVertexBuffer::resize(uint32_t layout, uint32_t count) {
             mElements[i].resize(count);
         } else {
             mElements[i].clear();
-            mFormats[i] = PixelFormat::UNKNOWN();
+            mFormats[i] = img::PixelFormat::UNKNOWN();
         }
     }
 
@@ -76,7 +76,7 @@ bool GN::gfx::FatVertexBuffer::beginVertices(uint32_t layout, uint32_t estimated
 
     // reserve memory
     for (auto i = 0; i < NUM_SEMANTICS; ++i) {
-        mFormats[i] = PixelFormat::UNKNOWN();
+        mFormats[i] = img::PixelFormat::UNKNOWN();
         if (0 == ((1 << i) & layout)) continue;
         mElements[i].reserve(estimatedCount);
     }
@@ -172,13 +172,13 @@ bool GN::gfx::FatVertexBuffer::GenerateVertexStream(const MeshVertexFormat & mvf
     Semantic semantics[MeshVertexFormat::MAX_VERTEX_ELEMENTS];
     for (size_t i = 0; i < mvf.numElements; ++i) {
         const char * s = mvf.elements[i].semantic;
-        if (str::isEmpty(s)) {
+        if (str::empty(s)) {
             s            = "[EMPTY]";
             semantics[i] = INVALID;
         } else {
             semantics[i] = sString2Semantic(s);
         }
-        if (INVALID == semantics[i]) { GN_WARN(sLogger)("unsupport semantic: %s", s); }
+        if (INVALID == semantics[i]) { GN_WARN(sLogger)("unsupport semantic: {}", s); }
     }
 
     // Copy vertex data
@@ -222,11 +222,11 @@ static void sPrintFatJointRecursivly(StrA & s, const FatJoint * joints, uint32_t
     for (uint32_t i = 0; i < depth; ++i) { s += "  "; }
 
     if (root < count) {
-        s += str::format("(%d) %s\n", depth, joints[root].name.data());
+        s += StrA::format("({}) {}\n", depth, joints[root].name.data());
 
         for (uint32_t i = joints[root].child; i != FatJoint::NO_JOINT; i = joints[i].sibling) { sPrintFatJointRecursivly(s, joints, count, i, depth + 1); }
     } else {
-        s += str::format("(%d) ERROR: joint index out of range: %d\n", depth, root);
+        s += StrA::format("({}) ERROR: joint index out of range: {}\n", depth, root);
     }
 }
 

@@ -137,7 +137,7 @@ bool GN::gfx::OGLGpuProgram::init(const GpuProgramDesc & desc) {
 
     GN_ASSERT(GpuProgramLanguage::GLSL == desc.lang);
 
-    mName = desc.name ? StrA(desc.name) : str::format("program %llu", mID);
+    mName = desc.name ? std::string(desc.name) : StrA::format("program {}", mID);
 
 #define COMPILE_SHADER(x, type)                                                   \
     if (desc.x.source) {                                                          \
@@ -192,7 +192,7 @@ void GN::gfx::OGLGpuProgram::quit() {
 // -----------------------------------------------------------------------------
 bool GN::gfx::OGLGpuProgram::getBindingDesc(OGLVertexBindingDesc & result, uint32_t attributeIndex) const {
     if (attributeIndex >= mAttributes.size()) {
-        GN_ERROR(sLogger)("Invalid attribute index: %u. Max value is %u", attributeIndex, mAttributes.size() - 1);
+        GN_ERROR(sLogger)("Invalid attribute index: {}. Max value is {}", attributeIndex, mAttributes.size() - 1);
         result.index    = 255;
         result.semantic = (OGLVertexSemantic) -1;
         return false;
@@ -213,7 +213,7 @@ bool GN::gfx::OGLGpuProgram::getBindingDesc(OGLVertexBindingDesc & result, uint3
 void GN::gfx::OGLGpuProgram::applyUniforms(const Uniform * const * uniforms, uint32_t count) const {
     GN_GUARD_SLOW;
 
-    if (count != mUniforms.size()) { GN_ERROR(sLogger)("Current GPU program requires %d uniforms. But %d are provided.", mUniforms.size(), count); }
+    if (count != mUniforms.size()) { GN_ERROR(sLogger)("Current GPU program requires {} uniforms. But {} are provided.", mUniforms.size(), count); }
 
     if (count > mUniforms.size()) count = mUniforms.size();
 
@@ -222,7 +222,7 @@ void GN::gfx::OGLGpuProgram::applyUniforms(const Uniform * const * uniforms, uin
         const SysMemUniform * uniform = (const SysMemUniform *) uniforms[i];
         if (NULL == uniform) {
             const GpuProgramUniformParameterDesc & ud = mParamDesc.uniforms[i];
-            GN_ERROR(sLogger)("Null uniform pointer for GPU program uniform parameter #%d: %s.", i, ud.name);
+            GN_ERROR(sLogger)("Null uniform pointer for GPU program uniform parameter #{}: {}.", i, ud.name);
             continue;
         }
 
@@ -239,7 +239,7 @@ void GN::gfx::OGLGpuProgram::applyUniforms(const Uniform * const * uniforms, uin
         // check parameter size
         if (getGpu().paramCheckEnabled()) {
             if (uniform->size() != desc.size) {
-                GN_WARN(sLogger)("parameter %s: value size(%d) differs from size defined in shader code(%d).", desc.name.data(), uniform->size(), desc.size);
+                GN_WARN(sLogger)("parameter {}: value size({}) differs from size defined in shader code({}).", desc.name.data(), uniform->size(), desc.size);
             }
         }
 
@@ -331,7 +331,7 @@ void GN::gfx::OGLGpuProgram::applyTextures(const TextureBinding * textures, uint
         if (b.texture) {
             r.chooseTextureStage(i);
 
-            const OGLTexture * ogltexture = safeCastPtr<const OGLTexture>(b.texture.data());
+            auto ogltexture = b.texture.get<const OGLTexture>();
 
             // bind sampler. TODO: filter redundant sampler.
             ogltexture->setSampler(b.sampler);
@@ -382,7 +382,7 @@ bool GN::gfx::OGLGpuProgram::enumParameters() {
         size_t namelen = str::length(nameptr);
         if (namelen > 3 && 0 == str::compare("[0]", &nameptr[namelen - 3])) { nameptr[namelen - 3] = 0; }
 
-        GN_VTRACE(sLogger)("%s: found GLSL uniform %s", mName.data(), nameptr);
+        GN_VTRACE(sLogger)("{}: found GLSL uniform {}", mName.data(), nameptr);
 
         GN_OGL_CHECK_R(u.location = glGetUniformLocation(mProgram, nameptr), false);
 
@@ -414,7 +414,7 @@ bool GN::gfx::OGLGpuProgram::enumParameters() {
     // check for texture capability
     OGLGpu & r = getGpu();
     if (mTextures.size() > r.caps().maxTextures) {
-        GN_ERROR(sLogger)("%s: the program requires more textures than current hardware supports.", mName.data());
+        GN_ERROR(sLogger)("{}: the program requires more textures than current hardware supports.", mName.data());
         return false;
     }
 
@@ -446,7 +446,7 @@ bool GN::gfx::OGLGpuProgram::enumAttributes() {
         nameptr[maxLength] = 0;
         if (0 == *nameptr) {
             // ignore non-named attributes.
-            GN_WARN(sLogger)("Attribute %d has no name.", i);
+            GN_WARN(sLogger)("Attribute {} has no name.", i);
             continue;
         }
 
@@ -456,7 +456,7 @@ bool GN::gfx::OGLGpuProgram::enumAttributes() {
         GLSLAttributeDesc a;
         if (!sGetOglVertexSemantic(a.semanticName, a.semanticIndex, nameptr, location)) return false;
         if (a.semanticName != VERTEX_SEMANTIC_ATTRIBUTE) {
-            GN_ERROR(sLogger)("%s: client side pointer is not supported anymore.", mName.data());
+            GN_ERROR(sLogger)("{}: client side pointer is not supported anymore.", mName.data());
             return false;
         }
 

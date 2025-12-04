@@ -31,7 +31,7 @@ static inline GLenum sPrimitiveType2OGL(GN::gfx::PrimitiveType prim) {
     case GN::gfx::PrimitiveType::QUAD_LIST:
         return GL_QUADS;
     default:
-        GN_ERROR(sLogger)("unsupport primitve type %s!", prim.toString());
+        GN_ERROR(sLogger)("unsupport primitve type {}!", prim.toString());
         return GL_TRIANGLES;
     }
 }
@@ -147,7 +147,7 @@ void GN::gfx::OGLGpu::drawIndexed(PrimitiveType prim, uint32_t numidx, uint32_t 
 
     // get current index buffer
     GN_ASSERT(mContext.idxbuf);
-    const OGLIdxBuf * ib = safeCastPtr<const OGLIdxBuf>(mContext.idxbuf.data());
+    auto ib = mContext.idxbuf.get<const OGLIdxBuf>();
     ib->bind();
 
     GLenum oglPrim = sPrimitiveType2OGL(prim);

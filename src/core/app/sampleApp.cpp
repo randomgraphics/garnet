@@ -20,7 +20,7 @@ static GN::Logger * sLogger = GN::getLogger("GN.util");
 // -----------------------------------------------------------------------------
 static const char * sGetOptionValue(int argc, const char * const * argv, int & i) {
     if (i + 1 == argc || '-' == *argv[i + 1]) {
-        GN_ERROR(sLogger)("Argument value of option %s is missing.", argv[i]);
+        GN_ERROR(sLogger)("Argument value of option {} is missing.", argv[i]);
         return NULL;
     }
 
@@ -37,7 +37,7 @@ static int sParseStrings(const char * option, const char * value, const char * s
         if (0 == str::compareI(strings[i], value)) return (int) i;
     }
 
-    GN_ERROR(sLogger)("Invalid argument value (%s) for option %s", value, option);
+    GN_ERROR(sLogger)("Invalid argument value ({}) for option {}", value, option);
     return -1;
 }
 
@@ -54,7 +54,7 @@ static bool sParseBool(bool & result, const char * option, const char * value) {
         result = false;
         return true;
     } else {
-        GN_ERROR(sLogger)("Invalid boolean argument value (%s) for option %s", value, option);
+        GN_ERROR(sLogger)("Invalid boolean argument value ({}) for option {}", value, option);
         return false;
     }
 }
@@ -69,7 +69,7 @@ static bool sParseInteger(T & result, const char * option, const char * value) {
     if (0 != str::toInetger(result, value)) {
         return true;
     } else {
-        GN_ERROR(sLogger)("Invalid integer argument value (%s) for option %s", value, option);
+        GN_ERROR(sLogger)("Invalid integer argument value ({}) for option {}", value, option);
         return false;
     }
 }
@@ -84,10 +84,10 @@ static bool sParseGpuAPI(GN::gfx::GpuAPI & result, const char * value) {
     StrA upperCase(value);
     upperCase.toUpper();
 
-    result = GpuAPI::sFromString(upperCase);
+    result = GpuAPI::sFromString(upperCase.data());
 
     if (GpuAPI::INVALID == result) {
-        GN_ERROR(sLogger)("invalid renderer API: %s", value);
+        GN_ERROR(sLogger)("invalid renderer API: {}", value);
         return false;
     }
 
@@ -103,7 +103,7 @@ static bool sParseGpuAPI(GN::gfx::GpuAPI & result, const char * value) {
 //
 //
 // -----------------------------------------------------------------------------
-GN::util::SampleApp::SampleApp(): mFps(L"FPS: %.2f\n(Press F1 for help)"), mShowHUD(true), mShowHelp(false) {
+GN::util::SampleApp::SampleApp(): mFps(L"FPS: {}\n(Press F1 for help)"), mShowHUD(true), mShowHelp(false) {
     enableCRTMemoryCheck();
     mFps.reset();
 }
@@ -367,7 +367,7 @@ bool GN::util::SampleApp::checkCmdLine(int argc, const char * const argv[]) {
         if (0 == str::compareI("-h", a) || 0 == str::compareI("-?", a) || 0 == str::compareI("--help", a) || 0 == str::compareI("/help", a) ||
             0 == str::compareI("/h", a) || 0 == str::compareI("/?", a)) {
             StrA executableName = fs::baseName(argv[0]) + fs::extName(argv[0]);
-            onPrintHelpScreen(executableName);
+            onPrintHelpScreen(executableName.data());
             return false;
         } else if ('-' == *a
 #if GN_MSWIN
@@ -412,17 +412,17 @@ bool GN::util::SampleApp::checkCmdLine(int argc, const char * const argv[]) {
                 StrA value = sGetOptionValue(argc, argv, i);
                 if (value.empty()) return false;
 
-                if (!sParseInteger(mInitParam.ro.displayMode.width, a, value)) return false;
+                if (!sParseInteger(mInitParam.ro.displayMode.width, a, value.data())) return false;
             } else if (0 == str::compareI("wh", a + 1)) {
                 StrA value = sGetOptionValue(argc, argv, i);
                 if (value.empty()) return false;
 
-                if (!sParseInteger(mInitParam.ro.displayMode.height, a, value)) return false;
+                if (!sParseInteger(mInitParam.ro.displayMode.height, a, value.data())) return false;
             } else if (0 == str::compareI("vsync", a + 1)) {
                 StrA value = sGetOptionValue(argc, argv, i);
                 if (value.empty()) return false;
 
-                if (!sParseBool(mInitParam.ro.vsync, a, value)) return false;
+                if (!sParseBool(mInitParam.ro.vsync, a, value.data())) return false;
             } else {
                 // this is an extra option
                 unknownArgs.append(a);
@@ -493,9 +493,9 @@ void GN::util::SampleApp::drawHUD() {
     if (mShowHUD) {
         BitmapFont * font = engine::getDefaultFontRenderer();
 
-        StrW timeInfo = str::format(L"FPS: %.2f\tIdle: %.1f%%\n"
-                                    L"(Press F1 for more helps)",
-                                    mFps.fps(), mFrameIdlePercentage);
+        auto timeInfo = StrW::format(L"FPS: {}\tIdle: {}%\n"
+                                     L"(Press F1 for more helps)",
+                                     mFps.fps(), mFrameIdlePercentage);
 
         font->drawText(timeInfo.data(), 40, 40);
 

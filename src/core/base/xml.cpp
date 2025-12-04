@@ -262,7 +262,7 @@ static void sParseFail(ParseTracer * tracer, const char * errInfo) {
 static GN::XmlNode * sNewNode(ParseTracer * tracer, GN::XmlNodeType type) {
     GN::XmlNode * n = tracer->doc->createNode(type, NULL);
     if (0 == n) {
-        sParseFail(tracer, GN::str::format("Fail to create node with type of '%d'", type).data());
+        sParseFail(tracer, GN::StrA::format("Fail to create node with type of '{}'", (int) type).data());
         return NULL;
     }
 
@@ -279,7 +279,7 @@ static GN::XmlNode * sNewNode(ParseTracer * tracer, GN::XmlNodeType type) {
 //
 //
 // -----------------------------------------------------------------------------
-static GN::StrA sMangleText(const char * s, int len) {
+static std::string sMangleText(const char * s, int len) {
     // skip leading spaces
     while (len > 0 && (' ' == *s || '\t' == *s || '\n' == *s)) {
         ++s;
@@ -297,7 +297,7 @@ static GN::StrA sMangleText(const char * s, int len) {
 
     GN_TODO("convert special characters");
 
-    return GN::StrA(s, len);
+    return std::string(s, len);
 }
 
 //
@@ -381,9 +381,9 @@ static void XMLCALL sCharacterDataHandler(void * userData, const XML_Char * s, i
         GN::XmlCdata * t = tracer->parent->toCdata();
         t->text.append(s, len);
     } else {
-        GN::StrA text = sMangleText(s, len);
+        auto text = sMangleText(s, len);
         if (!text.empty() && tracer->parent->type == GN::XML_ELEMENT) {
-            GN::StrA & currentText = tracer->parent->toElement()->text;
+            auto & currentText = tracer->parent->toElement()->text;
 
             if (!currentText.empty()) currentText += ' ';
 
@@ -434,7 +434,7 @@ static int XMLCALL sEncodingHandler(void * encodingHandlerData, const XML_Char *
 
         return 1;
     } else {
-        GN_ERROR(sLogger)("Unknown encoding: %s", name);
+        GN_ERROR(sLogger)("Unknown encoding: {}", name);
         return 0;
     }
 }
@@ -681,7 +681,7 @@ GN_API GN::XmlNode * GN::XmlDocument::createNode(XmlNodeType type, XmlNode * par
         p = new PooledNode<XmlElement>(*this);
         break;
     default:
-        GN_ERROR(sLogger)("invalid node type : %d", type);
+        GN_ERROR(sLogger)("invalid node type : {}", (int) type);
         return NULL;
     }
     mNodes.append(p);

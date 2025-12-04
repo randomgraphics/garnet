@@ -70,12 +70,12 @@
 ///
 /// Output a warning message for unimplemented functionality
 ///
-#define GN_UNIMPL_WARNING() GN_DO_ONCE(GN_WARN(GN::getLogger("GN.base.todo"))("TODO: function %s is not implmented yet.", GN_FUNCTION));
+#define GN_UNIMPL_WARNING() GN_DO_ONCE(GN_WARN(GN::getLogger("GN.base.todo"))("TODO: function {} is not implmented yet.", GN_FUNCTION));
 
 ///
 /// Output a todo message.
 ///
-#define GN_TODO(msg) GN_DO_ONCE(GN_WARN(GN::getLogger("GN.base.todo"))("TODO: %s", msg));
+#define GN_TODO(msg) GN_DO_ONCE(GN_WARN(GN::getLogger("GN.base.todo"))("TODO: {}", msg));
 
 // *****************************************************************************
 /// \name error check macros
@@ -89,7 +89,7 @@
         GLenum err = glGetError();                                             \
         if (GL_NO_ERROR != err) {                                              \
             static GN::Logger * sOglLogger = GN::getLogger("GN.gfx.OGLError"); \
-            GN_ERROR(sOglLogger)("error=0x%x", err);                           \
+            GN_ERROR(sOglLogger)("error=0x{:x}", err);                         \
             __VA_ARGS__                                                        \
         }                                                                      \
     } else                                                                     \
@@ -162,15 +162,15 @@
 ///
 /// check return value of XLib function (general version)
 ///
-#define GN_X_CHECK_DO(func, something)                                               \
-    if (true) {                                                                      \
-        Status rr = (func);                                                          \
-        if (0 == rr) {                                                               \
-            static GN::Logger * sXLogger = GN::getLogger("GN.gfx.XLibError");        \
-            GN_ERROR(sXLogger)("XLib function %s failed: return(0x%X).", #func, rr); \
-            something                                                                \
-        }                                                                            \
-    } else                                                                           \
+#define GN_X_CHECK_DO(func, something)                                                 \
+    if (true) {                                                                        \
+        Status rr = (func);                                                            \
+        if (0 == rr) {                                                                 \
+            static GN::Logger * sXLogger = GN::getLogger("GN.gfx.XLibError");          \
+            GN_ERROR(sXLogger)("XLib function {} failed: return(0x{:X}).", #func, rr); \
+            something                                                                  \
+        }                                                                              \
+    } else                                                                             \
         void(0)
 
 ///
@@ -268,10 +268,16 @@ GN_API const char * getDXErrorInfo(int32_t hr) throw();
 GN_API const char * errno2str(int);
 
 namespace internal {
+
 ///
 /// Handle assert failure
 ///
 GN_API void handleAssertFailure(const char * msg, const char * file, int line, bool * ignoreForever) throw();
+
+///
+/// Handle assert failure
+///
+GN_API void handleAssertFailure(const wchar_t * msg, const char * file, int line, bool * ignoreForever) throw();
 
 } // namespace internal
 

@@ -45,7 +45,7 @@ static bool sParseEnum(RESULT_TYPE & result, const char * name, const EnumNames 
         ++table;
     }
 
-    GN_ERROR(sLogger)("Invalid %s value: %s", header->name, name);
+    GN_ERROR(sLogger)("Invalid {} value: {}", header->name, name);
     return false;
 }
 
@@ -65,9 +65,9 @@ static RESULT_TYPE sParseEnum(const char * name, const EnumNames * table, const 
 static void sPostError(const XmlNode & node, const StrA & msg) {
     const XmlElement * e = node.toElement();
     if (e) {
-        GN_ERROR(sLogger)("Effect XML error: element <%s> - %s", e->name.data(), msg.data());
+        GN_ERROR(sLogger)("Effect XML error: element <{}> - {}", e->name.data(), msg.data());
     } else {
-        GN_ERROR(sLogger)("Effect XML error: %s", msg.data());
+        GN_ERROR(sLogger)("Effect XML error: {}", msg.data());
     }
 }
 
@@ -77,9 +77,9 @@ static void sPostError(const XmlNode & node, const StrA & msg) {
 static void sPostWarning(const XmlNode & node, const StrA & msg) {
     const XmlElement * e = node.toElement();
     if (e) {
-        GN_WARN(sLogger)("Effect XML warning: element <%s> - %s", e->name.data(), msg.data());
+        GN_WARN(sLogger)("Effect XML warning: element <{}> - {}", e->name.data(), msg.data());
     } else {
-        GN_WARN(sLogger)("Effect XML warning: %s", msg.data());
+        GN_WARN(sLogger)("Effect XML warning: {}", msg.data());
     }
 }
 
@@ -128,7 +128,7 @@ static bool sGetBoolAttrib(const XmlElement & node, const char * attribName, boo
 static const char * sGetItemName(const XmlElement & node, const char * nodeType) {
     XmlAttrib * a = node.findAttrib("name");
     if (!a) {
-        sPostError(node, str::format("Unnamed %s node. Ignored.", nodeType));
+        sPostError(node, StrA::format("Unnamed {} node. Ignored.", nodeType));
         return 0;
     }
     return a->value.data();
@@ -157,13 +157,13 @@ static void sParseTexture(EffectResourceDesc & desc, const XmlElement & node) {
 
     SamplerDesc & sampler = texdesc.sampler;
 
-    const XmlAttrib * a = node.findAttrib("addressU", str::INSENSITIVE);
+    const XmlAttrib * a = node.findAttrib("addressU", false);
     if (a) sampler.addressU = sParseEnum(a->value, ADDRESS_MODE_TABLE, SamplerDesc::ADDRESS_REPEAT);
 
-    a = node.findAttrib("addressV", str::INSENSITIVE);
+    a = node.findAttrib("addressV", false);
     if (a) sampler.addressV = sParseEnum(a->value, ADDRESS_MODE_TABLE, SamplerDesc::ADDRESS_REPEAT);
 
-    a = node.findAttrib("addressW", str::INSENSITIVE);
+    a = node.findAttrib("addressW", false);
     if (a) sampler.addressW = sParseEnum(a->value, ADDRESS_MODE_TABLE, SamplerDesc::ADDRESS_REPEAT);
 
     GN_TODO("more samplers fields.");
@@ -189,7 +189,7 @@ static void sParseUniform(EffectResourceDesc & desc, const XmlElement & node) {
                    0 == str::compareI("float4", type)) {
             ud.size = sizeof(float) * 4;
         } else {
-            sPostError(node, str::format("Unrecognized uniform type: %s", type));
+            sPostError(node, StrA::format("Unrecognized uniform type: {}", type));
             ud.size = 0;
         }
     }
@@ -221,7 +221,7 @@ static void sParseParameters(EffectResourceDesc & desc, const XmlNode & root) {
         else if ("attribute" == e->name)
             sParseAttribute(desc, *e);
         else
-            sPostError(*e, str::format("Unknown parameter '%s'. Ignored", e->name.data()));
+            sPostError(*e, StrA::format("Unknown parameter '{}'. Ignored", e->name.data()));
     }
 }
 
@@ -320,7 +320,7 @@ static void sParseGpuProgram(EffectResourceDesc & desc, const XmlElement & node)
     const char * lang = sGetAttrib(node, "lang");
     sd.gpd.lang       = GpuProgramLanguage::sFromString(lang);
     if (!sd.gpd.lang.valid()) {
-        sPostError(node, str::format("invalid shading language: %s", lang ? lang : "<NULL>"));
+        sPostError(node, StrA::format("invalid shading language: {}", lang ? lang : "<NULL>"));
         return;
     }
 
@@ -344,11 +344,11 @@ static void sParseGpuProgram(EffectResourceDesc & desc, const XmlElement & node)
             GN_UNEXPECTED();
             break;
         };
-        sPostWarning(node, str::format("shaderModel attribute is missing. Assume: %s", ShaderModel::sToString(sd.gpd.shaderModels).data()));
+        sPostWarning(node, StrA::format("shaderModel attribute is missing. Assume: {}", ShaderModel::sToString(sd.gpd.shaderModels).data()));
     } else {
         sd.gpd.shaderModels = ShaderModel::sFromString(models);
         if (0 == sd.gpd.shaderModels) {
-            sPostError(node, str::format("Invalid shaderModel attribute: %s", models));
+            sPostError(node, StrA::format("Invalid shaderModel attribute: {}", models));
             return;
         }
     }
@@ -428,7 +428,7 @@ static void sParseRenderStates(EffectResourceDesc::EffectRenderStateDesc & rsdes
         if (0 == str::compareI("CULL_MODE", rsname)) {
             rsdesc.cullMode = sParseEnum(rsvalue, CULL_MODE_TABLE, GpuContext::CULL_BACK);
         } else {
-            GN_ERROR(sLogger)("Unknow render state name: %s.", rsname);
+            GN_ERROR(sLogger)("Unknow render state name: {}.", rsname);
         }
     }
 

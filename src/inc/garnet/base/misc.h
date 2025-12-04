@@ -103,38 +103,6 @@ struct MemoryEqual {
 };
 
 ///
-/// type cast function
-///
-/// perform dynamic cast in debug build, and reinterpret cast in release build.
-// ------------------------------------------------------------------------
-template<class TO, class FROM>
-GN_FORCE_INLINE TO & safeCastRef(FROM & from) {
-#if GN_BUILD_DEBUG_ENABLED && (!GN_MSVC || defined(_CPPRTTI))
-    return dynamic_cast<TO &>(from);
-#else
-    return reinterpret_cast<TO &>(from);
-#endif
-}
-
-///
-/// type cast function
-///
-/// perform dynamic cast in debug build, and reinterpret cast in release build.
-// ------------------------------------------------------------------------
-template<class TO, class FROM>
-GN_FORCE_INLINE TO * safeCastPtr(FROM * from) {
-#if GN_BUILD_DEBUG_ENABLED && (!GN_MSVC || defined(_CPPRTTI))
-    TO * to = dynamic_cast<TO *>(from);
-#else
-    TO * to = reinterpret_cast<TO *>(from);
-#endif
-
-    GN_ASSERT(0 == from || 0 != to);
-
-    return to;
-}
-
-///
 /// Set environment variable. Set value to empty or NULL to delete
 /// that environment variable.
 ///

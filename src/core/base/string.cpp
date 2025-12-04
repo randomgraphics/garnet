@@ -6,77 +6,6 @@ struct EmptyString {
     int64_t eos  = 0;
 };
 
-//
-//
-// -----------------------------------------------------------------------------
-GN_API void * GN::internal::emptyStringPointer() {
-    static EmptyString s;
-    return &s.eos;
-};
-
-//
-//
-// -----------------------------------------------------------------------------
-GN_API void * GN::internal::empytStringInstance() {
-    static void * s = emptyStringPointer();
-    GN_ASSERT(0 == *(int64_t *) s);
-    return &s;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-GN_API void GN::str::formatTo(char * buf, size_t bufSize, const char * fmt, ...) {
-    va_list arglist;
-    va_start(arglist, fmt);
-    str::formatvTo(buf, bufSize, fmt, arglist);
-    va_end(arglist);
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-GN_API void GN::str::formatTo(wchar_t * buf, size_t bufSize, const wchar_t * fmt, ...) {
-    va_list arglist;
-    va_start(arglist, fmt);
-    str::formatvTo(buf, bufSize, fmt, arglist);
-    va_end(arglist);
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-GN_API void GN::str::formatvTo(char * buf, size_t bufSize, const char * fmt, va_list args) {
-    if (buf && bufSize) {
-#if GN_MSVC8
-        _vsnprintf_s(buf, bufSize, _TRUNCATE, fmt, args);
-#elif GN_MSVC
-        _vsnprintf(buf, bufSize, fmt, args);
-#else
-        vsnprintf(buf, bufSize, fmt, args);
-#endif
-        buf[bufSize - 1] = 0;
-    }
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-GN_API void GN::str::formatvTo(wchar_t * buf, size_t bufSize, const wchar_t * fmt, va_list args) {
-    if (buf && bufSize) {
-#if GN_MSVC8
-        _vsnwprintf_s(buf, bufSize, _TRUNCATE, fmt, args);
-#elif GN_MSVC
-        _vsnwprintf(buf, bufSize, fmt, args);
-#elif GN_CYGWIN
-        buf[0] = 0; // no implementation on cygwin
-#elif GN_POSIX
-        vswprintf(buf, bufSize, fmt, args);
-#endif
-        buf[bufSize - 1] = 0;
-    }
-}
-
 // *****************************************************************************
 //
 // *****************************************************************************
@@ -88,7 +17,7 @@ GN_API size_t GN::str::toSignedInteger(int64_t & result, int bits, int base, con
     // check invalid parameters
     if (bits < 2 || bits > 64) return 0;
     if (base < 2) return 0;
-    if (isEmpty(s)) return 0;
+    if (empty(s)) return 0;
 
     errno = 0;
 
@@ -97,7 +26,7 @@ GN_API size_t GN::str::toSignedInteger(int64_t & result, int bits, int base, con
 #if GN_POSIX
     int64_t s64 = strtoll(s, &e, base);
 #else
-    int64_t s64 = _strtoi64(s, &e, base);
+    int64_t  s64 = _strtoi64(s, &e, base);
 #endif
 
     if (0 != errno || (0 == s64 && s == e)) return 0;
@@ -119,7 +48,7 @@ GN_API size_t GN::str::toUnsignedInteger(uint64_t & result, int bits, int base, 
     // check invalid parameters
     if (bits < 2 || bits > 64) return 0;
     if (base < 2) return 0;
-    if (isEmpty(s)) return 0;
+    if (empty(s)) return 0;
 
     errno = 0;
 
@@ -169,7 +98,7 @@ GN_API size_t GN::str::toFloat(float & i, const char * s) {
 //
 // -----------------------------------------------------------------------------
 GN_API size_t GN::str::toDouble(double & i, const char * s) {
-    if (isEmpty(s)) return 0;
+    if (empty(s)) return 0;
 
     char * e;
     double d = strtod(s, &e);
@@ -187,7 +116,7 @@ GN_API size_t GN::str::toDouble(double & i, const char * s) {
 // -----------------------------------------------------------------------------
 GN_API size_t GN::str::toFloatArray(float * buffer, size_t maxCount, const char * str, size_t length) {
     if (NULL == buffer) return 0;
-    if (isEmpty(str)) return 0;
+    if (empty(str)) return 0;
 
     if (0 == length) length = strlen(str);
 
@@ -209,4 +138,14 @@ GN_API size_t GN::str::toFloatArray(float * buffer, size_t maxCount, const char 
     }
 
     return buffer - bufbegin;
+}
+
+GN_API void * GN::internal::emptyStringPointer() {
+    static EmptyString emptyString;
+    return &emptyString.eos;
+}
+
+GN_API void * GN::internal::empytStringInstance() {
+    static StrW emptyString;
+    return &emptyString;
 }

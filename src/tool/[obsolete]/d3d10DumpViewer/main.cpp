@@ -11,7 +11,7 @@ using namespace GN::d3d10;
 
 static GN::Logger * sLogger = GN::getLogger("GN.tool.D3D10DumpViewer");
 
-static StrA sDumpFileName;
+static std::string sDumpFileName;
 
 /* *****************************************************************************
 // shader function templates
@@ -84,14 +84,14 @@ template<> struct ShaderFunc<ID3D10GeometryShader>
 // *****************************************************************************
 
 template<typename T>
-static bool sLoadBinary(const XmlElement & node, const StrA & attr, const StrA & basedir, DynaArray<T> & result) {
+static bool sLoadBinary(const XmlElement & node, const std::string & attr, const std::string & basedir, DynaArray<T> & result) {
     const XmlAttrib * a = node.findAttrib(attr);
     if (!a) {
         GN_ERROR(sLogger)("%s : attribute '%s' is missing!", node.getLocation(), attr.data());
         return false;
     }
 
-    StrA fullname = fs::resolvePath(basedir, a->value);
+    std::string fullname = fs::resolvePath(basedir, a->value);
 
     if (!fs::isFile(fullname)) { GN_WARN(sLogger)("%s : binary file not found :  %s!", node.getLocation(), fullname.data()); }
 
@@ -104,7 +104,7 @@ static bool sLoadBinary(const XmlElement & node, const StrA & attr, const StrA &
 }
 
 template<typename T>
-static bool sGetNumericAttr(const XmlElement & node, const StrA & attrname, T & result) {
+static bool sGetNumericAttr(const XmlElement & node, const std::string & attrname, T & result) {
     const XmlAttrib * a = node.findAttrib(attrname);
     if (!a || !str::toNumber<T>(result, a->value.data())) {
         GN_ERROR(sLogger)("%s : attribute '%s' is missing!", node.getLocation(), attrname.data());
@@ -131,7 +131,7 @@ struct BinaryComDump {
     DynaArray<uint8_t> binary;
     AutoComPtr<T>      comptr;
 
-    bool load(const XmlElement & node, const StrA & attr, const StrA & basedir) { return sLoadBinary(node, attr, basedir, binary); }
+    bool load(const XmlElement & node, const std::string & attr, const std::string & basedir) { return sLoadBinary(node, attr, basedir, binary); }
 
     void clear() { comptr.clear(); }
 };
@@ -155,12 +155,12 @@ struct D3D10BufferDump : BinaryComDump<ID3D10Buffer> {
 struct D3D10ConstBufferDump : public D3D10BufferDump {};
 
 struct D3D10InputLayoutDump {
-    StackArray<StrA, 256>               semantics;
+    StackArray<std::string, 256>        semantics;
     DynaArray<D3D10_INPUT_ELEMENT_DESC> elements;
     DynaArray<uint8_t>                  signature;
     AutoComPtr<ID3D10InputLayout>       comptr;
 
-    bool load(const XmlElement & node, const StrA & basedir) {
+    bool load(const XmlElement & node, const std::string & basedir) {
         XmlElement * e;
 
         D3D10_INPUT_ELEMENT_DESC desc;
@@ -218,7 +218,7 @@ struct D3D10ViewDump {
     AutoComPtr<ID3D10Resource> original; ///< store original resource data loaded from file
     AutoComPtr<ID3D10Resource> res;
 
-    bool load(const XmlElement & node, const StrA & basedir) {
+    bool load(const XmlElement & node, const std::string & basedir) {
         if (!sLoadBinary(node, "desc", basedir, desc)) return false;
         if (!sLoadBinary(node, "res", basedir, content)) return false;
         return true;
@@ -555,7 +555,7 @@ struct D3D10StateDump {
 
     //@{
 
-    bool loadFromXml(const XmlNode & root, const StrA & basedir) {
+    bool loadFromXml(const XmlNode & root, const std::string & basedir) {
         GN_GUARD;
 
         // check root name

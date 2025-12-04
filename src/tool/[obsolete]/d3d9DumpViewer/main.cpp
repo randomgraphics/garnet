@@ -11,15 +11,15 @@ using namespace GN::d3d9;
 
 static GN::Logger * sLogger = GN::getLogger("GN.tool.D3D9DumpViewer");
 
-static StrA sDumpFileName;
+static std::string sDumpFileName;
 
 struct D3D9VsDump {
-    StrA                               source;
+    std::string                        source;
     AutoComPtr<IDirect3DVertexShader9> vs;
 };
 
 struct D3D9PsDump {
-    StrA                              source;
+    std::string                       source;
     AutoComPtr<IDirect3DPixelShader9> ps;
 };
 
@@ -43,7 +43,7 @@ struct D3D9IdxBufDump {
 };
 
 struct D3D9TextureDump {
-    StrA                              ref;
+    std::string                       ref;
     AutoComPtr<IDirect3DBaseTexture9> tex;
 };
 
@@ -212,7 +212,7 @@ struct D3D9StateDump {
 
             if (td.ref.empty()) continue;
 
-            StrA filename = fs::toNativeDiskFilePath(td.ref);
+            std::string filename = fs::toNativeDiskFilePath(td.ref);
 
             D3DXIMAGE_INFO info;
 
@@ -358,7 +358,7 @@ struct D3D9StateDump {
         operation.draw(dev);
     }
 
-    bool loadFromXml(const XmlNode & root, const StrA & basedir) {
+    bool loadFromXml(const XmlNode & root, const std::string & basedir) {
         // check root name
         const XmlElement * e = root.toElement();
         if (0 == e || "D3D9StateDump" != e->name) {
@@ -437,7 +437,7 @@ struct D3D9StateDump {
     //@}
 
 private:
-    static bool sGetCdata(StrA & result, const XmlNode & node) {
+    static bool sGetCdata(std::string & result, const XmlNode & node) {
         for (const XmlNode * n = node.firstc; n; n = n->nexts) {
             const XmlCdata * c = n->toCdata();
             if (c) {
@@ -450,7 +450,7 @@ private:
     }
 
     template<typename T>
-    static bool sGetNumericAttr(const XmlElement & node, const StrA & attrname, T & result) {
+    static bool sGetNumericAttr(const XmlElement & node, const std::string & attrname, T & result) {
         const XmlAttrib * a = node.findAttrib(attrname);
         if (!a || !str::toNumber<T>(result, a->value.data())) {
             GN_ERROR(sLogger)("%s : attribute '%s' is missing!", node.getLocation(), attrname.data());
@@ -460,7 +460,7 @@ private:
         }
     }
 
-    static bool sGetRefString(const XmlElement & node, const StrA & basedir, StrA & result) {
+    static bool sGetRefString(const XmlElement & node, const std::string & basedir, std::string & result) {
         const XmlAttrib * a = node.findAttrib("ref");
         if (!a) {
             GN_ERROR(sLogger)("%s : attribute 'ref' is missing!", node.getLocation());
@@ -584,7 +584,7 @@ private:
         return true;
     }
 
-    bool loadVtxBuf(const XmlElement & node, const StrA & basedir) {
+    bool loadVtxBuf(const XmlElement & node, const std::string & basedir) {
         size_t stream;
         if (!sGetNumericAttr(node, "stream", stream)) return false;
         if (stream >= GN_ARRAY_COUNT(vtxbufs)) {
@@ -601,14 +601,14 @@ private:
         return true;
     }
 
-    bool loadIdxBuf(const XmlElement & node, const StrA & basedir) {
+    bool loadIdxBuf(const XmlElement & node, const std::string & basedir) {
         if (!sGetNumericAttr(node, "format", idxbuf.format)) return false;
         if (!sGetNumericAttr(node, "startvtx", idxbuf.startvtx)) return false;
         if (!sGetRefString(node, basedir, idxbuf.ref)) return false;
         return true;
     }
 
-    bool loadTexture(const XmlElement & node, const StrA & basedir) {
+    bool loadTexture(const XmlElement & node, const std::string & basedir) {
         size_t stage;
         if (!sGetNumericAttr(node, "stage", stage)) return false;
         if (stage >= GN_ARRAY_COUNT(textures)) {
@@ -623,7 +623,7 @@ private:
         return true;
     }
 
-    bool loadRenderTarget(const XmlElement & node, const StrA & basedir) {
+    bool loadRenderTarget(const XmlElement & node, const std::string & basedir) {
         size_t stage;
         if (!sGetNumericAttr(node, "stage", stage)) return false;
         if (stage >= GN_ARRAY_COUNT(rendertargets)) {
@@ -644,7 +644,7 @@ private:
         return true;
     }
 
-    bool loadDepthStencil(const XmlElement & node, const StrA & basedir) {
+    bool loadDepthStencil(const XmlElement & node, const std::string & basedir) {
         if (!sGetNumericAttr(node, "width", depthstencil.width)) return false;
         if (!sGetNumericAttr(node, "height", depthstencil.height)) return false;
         if (!sGetNumericAttr(node, "format", depthstencil.format)) return false;

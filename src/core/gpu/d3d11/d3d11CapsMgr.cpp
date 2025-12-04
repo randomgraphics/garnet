@@ -44,7 +44,7 @@ bool GN::gfx::D3D11Gpu::capsInit() {
      "===================================================\n"
      "         D3D11 Implementation Informations\n"
      "---------------------------------------------------\n"
-     "   Feature Level   : %u.%u\n"
+     "   Feature Level   : {}.{}\n"
      "===================================================\n"
      "\n\n",
      feature >> 12, (feature >> 8) & 0xF);
@@ -62,7 +62,7 @@ bool GN::gfx::D3D11Gpu::capsInit() {
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::D3D11Gpu::checkTextureFormatSupport(PixelFormat format, TextureUsage usage) const {
+bool GN::gfx::D3D11Gpu::checkTextureFormatSupport(img::PixelFormat format, TextureUsage usage) const {
     DXGI_FORMAT d3dfmt = (DXGI_FORMAT) format.toDXGI();
     if (DXGI_FORMAT_UNKNOWN == d3dfmt) return false;
 

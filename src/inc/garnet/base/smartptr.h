@@ -270,14 +270,16 @@ public:
     }
 
     ///
-    /// get internal raw pointer
+    /// get internal raw pointer, optionally cast to another, hopefully, compatible type.
     ///
-    XPTR get() const throw() { return mPtr; }
-
-    ///
-    /// get internal raw pointer
-    ///
-    XPTR data() const throw() { return mPtr; }
+    template<typename T = X>
+    T * get() const throw() {
+        if constexpr (std::is_convertible_v<X, T>) {
+            return mPtr;
+        } else {
+            return safeCastPtr<T, X>(mPtr);
+        }
+    }
 
     ///
     /// get address of internal pointer.
