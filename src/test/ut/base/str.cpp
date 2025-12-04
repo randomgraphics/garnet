@@ -25,27 +25,40 @@ public:
         TS_ASSERT_EQUALS(d.data(), GN::internal::emptyStringPointer());
     }
 
-    void testMbs2wcs() {
-        const char * mbs    = "abc";
-        wchar_t      wcs[6] = {L'\0', L'\0', L'\0', L'\0', L'5', L'\0'};
+    /// test for CharacterEncodingConverter
+    void testEncodingConverter() {}
 
-        TS_ASSERT_EQUALS(GN::mbs2wcs(wcs, 1, mbs, 0), 1);
+    void testMbs2wcs() {
+        const char * mbs = "abc";
+        GN::StrW     wcs;
+
+        wcs = GN::mbs2wcs(mbs, 0);
+        TS_ASSERT_EQUALS(wcs.size(), 0);
         TS_ASSERT_EQUALS(wcs, L"");
 
-        TS_ASSERT_EQUALS(GN::mbs2wcs(wcs, 2, mbs, 0), 2);
-        TS_ASSERT_EQUALS(wcs, L"a");
+        TS_ASSERT_EQUALS(GN::mbs2wcs(mbs, 1), L"a");
+        TS_ASSERT_EQUALS(GN::mbs2wcs(mbs, 2), L"ab");
+        TS_ASSERT_EQUALS(GN::mbs2wcs(mbs, 3), L"abc");
+        TS_ASSERT_EQUALS(GN::mbs2wcs(mbs, 4), L"abc");
+        TS_ASSERT_EQUALS(GN::mbs2wcs(mbs, 100), L"abc");
+    }
 
-        TS_ASSERT_EQUALS(GN::mbs2wcs(wcs, 3, mbs, 0), 3);
-        TS_ASSERT_EQUALS(wcs, L"ab");
+    void testWcs2utf8() {
+        const wchar_t * wcs = L"abc";
+        TS_ASSERT_EQUALS(GN::wcs2utf8(wcs, 0), "");
+        TS_ASSERT_EQUALS(GN::wcs2utf8(wcs, 1), "a");
+        TS_ASSERT_EQUALS(GN::wcs2utf8(wcs, 2), "ab");
+        TS_ASSERT_EQUALS(GN::wcs2utf8(wcs, 3), "abc");
+        TS_ASSERT_EQUALS(GN::wcs2utf8(wcs, 4), "abc");
+    }
 
-        TS_ASSERT_EQUALS(GN::mbs2wcs(wcs, 4, mbs, 0), 4);
-        TS_ASSERT_EQUALS(wcs, L"abc");
-
-        TS_ASSERT_EQUALS(GN::mbs2wcs(wcs, 5, mbs, 0), 4);
-        TS_ASSERT_EQUALS(wcs, L"abc");
-
-        TS_ASSERT_EQUALS(GN::mbs2wcs(wcs, 5, mbs, 100), 4);
-        TS_ASSERT_EQUALS(wcs, L"abc");
+    void testUtf82wcs() {
+        const char * utf8 = "abc";
+        TS_ASSERT_EQUALS(GN::utf82wcs(utf8, 0), L"");
+        TS_ASSERT_EQUALS(GN::utf82wcs(utf8, 1), L"a");
+        TS_ASSERT_EQUALS(GN::utf82wcs(utf8, 2), L"ab");
+        TS_ASSERT_EQUALS(GN::utf82wcs(utf8, 3), L"abc");
+        TS_ASSERT_EQUALS(GN::utf82wcs(utf8, 4), L"abc");
     }
 
     void testWcstombs() {
@@ -53,8 +66,8 @@ public:
         GN::StrA        mbs;
 
         mbs = GN::wcs2mbs(wcs, 0);
-        TS_ASSERT_EQUALS(mbs.size(), 3);
-        TS_ASSERT_EQUALS(mbs, "abc");
+        TS_ASSERT_EQUALS(mbs.size(), 0);
+        TS_ASSERT_EQUALS(mbs, "");
 
         mbs = GN::wcs2mbs(wcs, 1);
         TS_ASSERT_EQUALS(mbs.size(), 1);
@@ -380,14 +393,13 @@ public:
         s2 = GN::mbs2wcs(s1);
         TS_ASSERT_EQUALS(s2, L"abcd");
         s1 = "xyzw";
-        GN::mbs2wcs(s2, s1);
+        s2 = GN::mbs2wcs(s1);
         TS_ASSERT_EQUALS(s2, L"xyzw");
 
         s2 = L"bcda";
         s1 = GN::wcs2mbs(s2);
         TS_ASSERT_EQUALS(s1, "bcda");
         s2 = L"wzyx";
-        ;
         s1 = GN::wcs2mbs(s2);
         TS_ASSERT_EQUALS(s1, "wzyx");
     }

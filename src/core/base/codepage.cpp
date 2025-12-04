@@ -36,7 +36,7 @@ typedef GN::CECImplICONV CECImpl;
 GN_API const char * GN::CharacterEncodingConverter::sEncoding2Str(Encoding e) {
     switch (e) {
     case ASCII:
-        return "ascii";
+        return "ASCII";
     case ISO_8859_1:
         return "iso-8859-1";
     case UTF7:
@@ -105,27 +105,14 @@ GN_API size_t GN::CharacterEncodingConverter::convert(void * destBuffer, size_t 
 //
 //
 // -----------------------------------------------------------------------------
-GN_API size_t GN::wcs2utf8(char * obuf, size_t ocount, const wchar_t * ibuf, size_t icount) {
-    static auto cec = CharacterEncodingConverter(CharacterEncodingConverter::WIDECHAR, CharacterEncodingConverter::UTF8);
-    return cec.convert(obuf, ocount, ibuf, icount * sizeof(wchar_t));
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-GN_API size_t GN::utf82wcs(wchar_t * obuf, size_t ocount, const char * ibuf, size_t icount) {
-    static auto cec = CharacterEncodingConverter(CharacterEncodingConverter::UTF8, CharacterEncodingConverter::WIDECHAR);
-    return cec.convert(obuf, ocount * sizeof(wchar_t), ibuf, icount) / sizeof(wchar_t);
-}
-
-//
-//
-// -----------------------------------------------------------------------------
 GN_API GN::StrA GN::wcs2utf8(const wchar_t * ibuf, size_t icount) {
-    // TODO: Let CEC returns GN::StrA directly to avoid extra memory copy
-    static auto     cec = CharacterEncodingConverter(CharacterEncodingConverter::WIDECHAR, CharacterEncodingConverter::UTF8);
-    DynaArray<char> buffer((icount + 1) * sizeof(wchar_t));
-    cec.convert(buffer.data(), buffer.size(), ibuf, icount * sizeof(wchar_t));
+    static auto cec      = CharacterEncodingConverter(CharacterEncodingConverter::WIDECHAR, CharacterEncodingConverter::UTF8);
+    auto        inBytes  = icount * sizeof(wchar_t);
+    auto        outBytes = cec.convert(nullptr, 0, ibuf, inBytes);
+    if (0 == outBytes) return {};
+    DynaArray<char> buffer(outBytes + 1);
+    cec.convert(buffer.data(), buffer.size(), ibuf, inBytes);
+    buffer[outBytes] = 0; // ensure null termination.
     return buffer.data();
 }
 
@@ -133,75 +120,48 @@ GN_API GN::StrA GN::wcs2utf8(const wchar_t * ibuf, size_t icount) {
 //
 // -----------------------------------------------------------------------------
 GN_API GN::StrW GN::utf82wcs(const char * ibuf, size_t icount) {
-    // TODO: Let CEC returns GN::StrW directly to avoid extra memory copy
-    static auto        cec = CharacterEncodingConverter(CharacterEncodingConverter::UTF8, CharacterEncodingConverter::WIDECHAR);
-    DynaArray<wchar_t> buffer(icount + 1);
-    cec.convert(buffer.data(), buffer.size() * sizeof(wchar_t), ibuf, icount);
-    return buffer.data();
+    static auto cec      = CharacterEncodingConverter(CharacterEncodingConverter::UTF8, CharacterEncodingConverter::WIDECHAR);
+    auto        outBytes = cec.convert(nullptr, 0, ibuf, icount);
+    if (outBytes < sizeof(wchar_t)) return {};
+    DynaArray<wchar_t> buffer(outBytes / sizeof(wchar_t) + 1);
+    auto               outSize = buffer.size();
+    cec.convert(buffer.data(), outSize * sizeof(wchar_t), ibuf, icount);
+    buffer[outSize - 1] = 0; // ensure null termination
+    return (wchar_t *) buffer.data();
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-GN_API void GN::wcs2mbs(GN::StrA & o, const wchar_t * i, size_t l) {
-    if (0 == i) {
-        o.clear();
-        return;
-    }
-    if (0 == l) l = str::length(i);
+GN_API GN::StrA GN::wcs2mbs(const wchar_t * i, size_t l) {
+    GN::StrA o;
+    if (0 == i || 0 == l) return o;
 
     o.resize(l + 1);
 #if GN_MSVC
     if (::wcstombs_s(&l, o.data(), l + 1, i, l)) {
         o.clear();
-        return;
+        return o;
     }
     --l; // For MVCS (at least up to VS2022), l includes the null terminator.
 #else
     if (std::wcstombs_s(&l, o.data(), i, l)) {
         o.clear();
-        return;
+        return o;
     }
 #endif
     o.resize(l);
     o[l] = 0;
+    return o;
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-GN_API size_t GN::mbs2wcs(wchar_t * o, size_t os, const char * i, size_t is) {
-    GN::StrW wcs;
-    mbs2wcs(wcs, i, is);
+GN_API GN::StrW GN::mbs2wcs(const char * i, size_t l) {
+    GN::StrW o;
 
-    size_t n = wcs.size() + 1;
-
-    if (o) {
-        if (os > n) {
-            memcpy(o, wcs.data(), n);
-            GN_ASSERT(0 == o[n - 1]);
-            return n;
-        } else if (os > 0) {
-            memcpy(o, wcs.data(), sizeof(wchar_t) * (os - 1));
-            o[os - 1] = 0;
-            return os;
-        } else {
-            return 0;
-        }
-    } else {
-        return n;
-    }
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-GN_API void GN::mbs2wcs(GN::StrW & o, const char * i, size_t l) {
-    if (0 == i) {
-        o.clear();
-        return;
-    }
-    if (0 == l) l = str::length(i);
+    if (0 == i || 0 == l) return o;
 
     // N multi-bytes characters converts to at most N wide characters. So we resize the output string to N first,
     // to ensure there's enough space for conversion.
@@ -224,4 +184,6 @@ GN_API void GN::mbs2wcs(GN::StrW & o, const char * i, size_t l) {
         o.resize(l);
         o[l] = 0;
     }
+
+    return o;
 }
