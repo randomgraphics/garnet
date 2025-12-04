@@ -18,7 +18,7 @@ namespace GN {
 static Logger * sLogger = getLogger("GN.base.exception");
 
 /// Add certain number of spaces in front of each line of the string.
-static StrA indent(const StrA & s, int space) {
+[[maybe_unused]] static StrA indent(const StrA & s, int space) {
     if (s.empty() || space <= 0) { return s; }
 
     // Create the indentation prefix
@@ -88,13 +88,8 @@ GN_API StrA backtrace(int spaceIndent, bool includeSourceSnippet) {
         }
     };
 
-    const int indent = spaceIndent;
-
-    StrA prefix;
-    for (int i = 0; i < indent; ++i) prefix += ' ';
-
     std::stringstream ss;
-    ss << prefix << "android stack dump\n";
+    ss << "android stack dump\n";
 
     const int max = 100;
     void *    buffer[max];
@@ -111,12 +106,12 @@ GN_API StrA backtrace(int spaceIndent, bool includeSourceSnippet) {
         auto addr   = buffer[idx];
         auto symbol = android_backtrace_state::addr2symbol(addr);
         if (symbol.empty()) symbol = "<no symbol>";
-        ss << prefix << StrA::format("{:03d}: 0x{} {}\n", idx, addr, symbol.c_str());
+        ss << StrA::format("{:03d}: 0x{} {}\n", idx, addr, symbol.c_str());
     }
 
-    ss << prefix << "android stack dump done\n";
+    ss << "android stack dump done\n";
 
-    return ss.str();
+    return indent(ss.str(), spaceIndent);
 #elif GN_POSIX
     using namespace backward;
     StackTrace st;
