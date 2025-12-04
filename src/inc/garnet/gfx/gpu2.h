@@ -271,19 +271,19 @@ struct Gpu2 : public RefCounter {
     /// A one-time use command list to record GPU rendering commands. Once the command list is submitted to GPU (via kickOff() method),
     /// it becomes inaccessible and should not be used anymore.
     struct CommandList : public RefCounter {
-        // graphics commands (not valid on compute and copy command list)
+        // graphics commands
         //@{
-        virtual void begin(RenderPass &)                        = 0; ///< begin a new render pass. Must be paired with end() calls.
-        virtual void next()                                     = 0; ///< move to the next subpass. Must be called between begin() and end() calls.
-        virtual void end()                                      = 0; ///< end current render pass. Must be paired with begin() calls.
-        virtual void clear(const ClearRenderTargetParameters &) = 0; ///< clear an attachment. must be called between begin() and end() calls.
-        virtual void draw(const DrawParameters &)         = 0; ///< issue GPU draw command. must be called between begin() and end() calls.
+        virtual void begin(RenderPass &)                        = 0; ///< begin a new render pass. Must be paired with end().
+        virtual void next()                                     = 0; ///< move to the next subpass. Must be called between begin() and end().
+        virtual void end()                                      = 0; ///< end current render pass. Must be paired with begin().
+        virtual void clear(const ClearRenderTargetParameters &) = 0; ///< clear an attachment. must be called between begin() and end().
+        virtual void draw(const DrawParameters &)               = 0; ///< issue GPU graphics draw command. must be called between begin() and end().
         //@}
 
+        /// issue GPU compute command. Must be called outside of render pass.
+        virtual void compute(const ComputeParameters &) = 0;
 
-        virtual void comp(const ComputeParameters &)      = 0; ///< issue GPU compute command. Must be called outside of render pass.
-
-        // virtual void copy(const CopySurfaceParameters &)  = 0; ///< issue GPU copy command. Must be called outside of render pass.
+        // virtual void copy(const CopySurfaceParameters &)  = 0; ///< issue GPU-GPU copy command. Must be called outside of render pass.
         // void         copy(Surface * from, Surface * to) { copy({from, 0, uint64_t(~0), to, 0}); } ///< helper to copy entire surface. Must be called outside of render pass.
     };
 
