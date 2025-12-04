@@ -188,7 +188,7 @@ class StringFormatter {
     static void checkForPrintf(const CHAR *) {}
 #endif
 
-    static void printInvalidFormatSyntax(const CHAR * fmt, const char * what) {
+    static void printInvalidFormatSyntax([[maybe_unused]] const CHAR * fmt, [[maybe_unused]] const char * what) {
         if constexpr (std::is_same_v<CHAR, char>) {
             GN_ASSERT_EX(false, fmt::format("{}: {}", what, fmt).c_str());
         } else if constexpr (std::is_same_v<CHAR, wchar_t>) {
