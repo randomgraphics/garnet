@@ -445,7 +445,7 @@ void GN::gfx::D3D11GpuProgramHLSL::applyTextures(const TextureBinding * bindings
     for (size_t i = 0; i < count; ++i) {
         const TextureBinding & tb = bindings[i];
 
-        D3D11Texture * tex = (D3D11Texture *) tb.texture.data();
+        auto tex = tb.texture.get<D3D11Texture>();
 
         if (tex) {
             const D3D11TextureParameterDesc & texParam = (const D3D11TextureParameterDesc &) mParamDesc.textures[i];

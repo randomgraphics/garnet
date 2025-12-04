@@ -59,7 +59,7 @@ class DX12Triangle : public StdClass {
 
         // copy vertices to vb for rendering
         auto cl = _g.gpu->createCommandList({});
-        cl->copySurface(upload.data(), _vb.data());
+        cl->copySurface(upload.get(), _vb.get());
         _g.gpu->kickOff(*cl);
         _g.gpu->finish();
     }

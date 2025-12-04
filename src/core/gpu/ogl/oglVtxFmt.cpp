@@ -64,7 +64,7 @@ bool GN::gfx::OGLVtxFmt::bindBuffers(const VertexBufferBinding * bindings, size_
             return false;
         }
         const VertexBufferBinding & b = bindings[stream];
-        safeCastPtr<const OGLVtxBufVBO>(b.vtxbuf.data())->bind();
+        b.vtxbuf.get<const OGLVtxBufVBO>()->bind();
         glVertexAttribPointer(ab.index, ab.components, ab.format, ab.normalization, (GLsizei) b.stride,
                               (const uint8_t *) (intptr_t) (startvtx * b.stride + b.offset + ab.offset));
     }

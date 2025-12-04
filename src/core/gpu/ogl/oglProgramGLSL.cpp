@@ -331,7 +331,7 @@ void GN::gfx::OGLGpuProgram::applyTextures(const TextureBinding * textures, uint
         if (b.texture) {
             r.chooseTextureStage(i);
 
-            const OGLTexture * ogltexture = safeCastPtr<const OGLTexture>(b.texture.data());
+            auto ogltexture = b.texture.get<const OGLTexture>();
 
             // bind sampler. TODO: filter redundant sampler.
             ogltexture->setSampler(b.sampler);

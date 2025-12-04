@@ -41,6 +41,7 @@ public:
     /// Get the size of the blob in bytes.
     size_t size() const { return mSize; }
 
+    /// Get the pointer to the blob buffer.
     void * data() const { return mData; }
 
     // Clear the blob. Make it empty.

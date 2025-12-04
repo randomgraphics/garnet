@@ -1291,7 +1291,7 @@ static bool sWriteGeoObject(AseScene & dst, const AseSceneInternal & src, const 
         o.texcoord = Vector2f(srctexcoord.x, srctexcoord.y);
     }
     dstmesh.numvtx      = (uint32_t) vc.size();
-    dstmesh.vertices[0] = vertices.data();
+    dstmesh.vertices[0] = vertices->data();
     dst.meshdata.append(vertices);
 
     // copy index data into destination scene

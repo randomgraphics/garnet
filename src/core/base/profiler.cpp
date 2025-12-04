@@ -1,13 +1,17 @@
 #include "pch.h"
 #include "garnet/base/profiler.h"
 
+/// @brief Convert time, in seconds, to string.
 static GN::StrA sTime2Str(double time) {
     using namespace GN;
-
     if (time < 0.000001) {
-        return StrA::format("{}us", time * 1000000);
+        return StrA::format("{:.4}ns", time * 1000000000);
     } else if (time < 0.001) {
-        return StrA::format("{}ms", time * 1000);
+        return StrA::format("{:.4}us", time * 1000000);
+    } else if (time < 1.0) {
+        return StrA::format("{:.4}ms", time * 1000);
+    } else if (time < 9999) {
+        return StrA::format("{:.4}s", time);
     } else {
         return StrA::format("{}s", time);
     }
