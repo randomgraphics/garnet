@@ -151,8 +151,10 @@ if (MSVC)
     else()
         add_compile_options(/W4 /WX)
     endif()
-    # enable parallel build
-    add_compile_options(/MP)
+    add_compile_options(
+        /MP # enable parallel build
+        $<$<CONFIG:Debug>:/GR> # enable rtti, in debug build only.
+    )
     # TODO: replace /EHsc with /EHa?
 else()
     if (GN_BUILD_DISABLE_ALL_WARINGS)
