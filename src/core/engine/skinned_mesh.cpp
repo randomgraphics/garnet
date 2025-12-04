@@ -823,7 +823,7 @@ bool GN::engine::SkinnedMesh::loadFromFatModel(const GN::gfx::FatModel & fatmode
     for (uint32_t mi = 0; mi < fatmodel.meshes.size(); ++mi) {
         const auto & fatmesh = fatmodel.meshes[mi];
 
-        StrA meshName = str::format("%s.mesh.%d", fatmodel.name.data(), mi);
+        auto meshName = StrA::format("{}.mesh.{}", fatmodel.name.data(), mi);
 
         // use exising mesh, if possible
         AutoRef<MeshResource> mesh = gdb.findResource<MeshResource>(meshName);
@@ -851,8 +851,8 @@ bool GN::engine::SkinnedMesh::loadFromFatModel(const GN::gfx::FatModel & fatmode
             uint32_t jointSemanticIndex;
             if (merd.vtxfmt.hasSemantic("JOINT_ID", &jointSemanticIndex)) {
                 MeshVertexElement & mve = merd.vtxfmt.elements[jointSemanticIndex];
-                if (mve.format == PixelFormat::UINT4()) {
-                    mve.format  = PixelFormat::FLOAT4();
+                if (mve.format == img::PixelFormat::UINT4()) {
+                    mve.format  = img::PixelFormat::FLOAT4();
                     uint8_t * p = (uint8_t *) merd.vertices[0] + mve.offset;
                     for (uint32_t i = 0; i < merd.numvtx; ++i, p += merd.strides[0]) {
                         // Offset the value by 0.5 to avoid float to integer rounding error. Or else,
@@ -947,7 +947,7 @@ bool GN::engine::SkinnedMesh::loadFromFatModel(const GN::gfx::FatModel & fatmode
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::engine::SkinnedMesh::loadFromFile(const StrA & filename) {
+bool GN::engine::SkinnedMesh::loadFromFile(const std::string & filename) {
     FatModel fm;
     if (!fm.loadFromFile(filename)) return false;
     return loadFromFatModel(fm);

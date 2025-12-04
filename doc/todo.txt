@@ -9,7 +9,7 @@
     - format -> fmtlib (https://github.com/fmtlib/fmt )
   - keepers:
     - autoptr: it is much faster and more memory effecient than use std::shared_ptr directly.
-    - custom string and vector class: in case we need to avoid STL dependencies on interface.
+    - custom string and vector class: to keep an stable ABI across binaries and compilers.
 
 - fix Qt6 window build.
 

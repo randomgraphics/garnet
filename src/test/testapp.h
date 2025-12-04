@@ -85,9 +85,9 @@ public:
     void showDefaultHelp() const {
         using namespace GN;
 
-        StrA executableName = fs::baseName(applicationName) + fs::extName(applicationName);
+        auto executableName = fs::baseName(applicationName) + fs::extName(applicationName);
 
-        GN_INFO(logger)("Usage: %s [options]\n", executableName.data());
+        GN_INFO(logger)("Usage: {} [options]\n", executableName.data());
         showStandardCommandLineOptions();
     }
 
@@ -115,7 +115,7 @@ private:
             result = false;
             return true;
         } else {
-            GN_ERROR(logger)("Invalid boolean argument value (%s) for option %s", value, option);
+            GN_ERROR(logger)("Invalid boolean argument value ({}) for option {}", value, option);
             return false;
         }
     }
@@ -127,7 +127,7 @@ private:
             if (0 == str::compareI(strings[i], value)) return (int) i;
         }
 
-        GN_ERROR(logger)("Invalid argument value (%s) for option %s", value, option);
+        GN_ERROR(logger)("Invalid argument value ({}) for option {}", value, option);
         return -1;
     }
 
@@ -142,7 +142,7 @@ private:
         } else if (0 == str::compareI("d3d11", value)) {
             result = GpuAPI::D3D11;
         } else {
-            GN_ERROR(logger)("invalid renderer API: %s", value);
+            GN_ERROR(logger)("invalid renderer API: {}", value);
             return false;
         }
 
@@ -151,7 +151,7 @@ private:
 
     const char * getOptionValue(int argc, const char * argv[], int & i) {
         if (i + 1 == argc || '-' == *argv[i + 1]) {
-            GN_ERROR(logger)("Argument value of option %s is missing.", argv[i]);
+            GN_ERROR(logger)("Argument value of option {} is missing.", argv[i]);
             return NULL;
         }
 

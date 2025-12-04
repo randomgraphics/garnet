@@ -78,7 +78,7 @@ void GN::gfx::MultiThreadTexture::quit() {
 void GN::gfx::MultiThreadTexture::updateMipmap(uint32_t face, uint32_t level, const Box<uint32_t> * area, uint32_t rowPitch, uint32_t slicePitch,
                                                const void * data, SurfaceUpdateFlag flag) {
     if (level >= getDesc().levels) {
-        GN_ERROR(sLogger)("Invalid mipmap level: %d", level);
+        GN_ERROR(sLogger)("Invalid mipmap level: {}", level);
         return;
     }
 

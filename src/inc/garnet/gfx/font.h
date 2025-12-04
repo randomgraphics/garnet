@@ -251,6 +251,8 @@ public:
         drawText(td);
     }
 
+    void drawText(const std::wstring & text, float x, float y) { drawText(text.c_str(), x, y); }
+
     // ********************************
     // private variables
     // ********************************

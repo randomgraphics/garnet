@@ -18,13 +18,13 @@ class SelfContainedGpuProgramDesc {
                                         const ShaderCode & sc, const char * begin, const char * end) {
         if (0 != sc.source && (sc.source < begin || sc.source >= end)) {
             static Logger * sLogger = getLogger("GN.gfx.gpu.common");
-            GN_ERROR(sLogger)("invalid %s shader source pointer.", type);
+            GN_ERROR(sLogger)("invalid {} shader source pointer.", type);
             return false;
         }
 
         if (0 != sc.entry && (sc.entry < begin || sc.entry >= end)) {
             static Logger * sLogger = getLogger("GN.gfx.gpu.common");
-            GN_ERROR(sLogger)("invalid %s shader entry pointer.", type);
+            GN_ERROR(sLogger)("invalid {} shader entry pointer.", type);
             return false;
         }
 
@@ -39,11 +39,11 @@ public:
         // calculate buffer size
         size_t headerLen  = sizeof(desc);
         size_t vsCodeLen  = desc.vs.source ? (strlen(desc.vs.source) + 1) : 0;
-        size_t vsEntryLen = str::isEmpty(desc.vs.entry) ? sizeof(DEFAULT_ENTRY) : (strlen(desc.vs.entry) + 1);
+        size_t vsEntryLen = str::empty(desc.vs.entry) ? sizeof(DEFAULT_ENTRY) : (strlen(desc.vs.entry) + 1);
         size_t gsCodeLen  = desc.gs.source ? (strlen(desc.gs.source) + 1) : 0;
-        size_t gsEntryLen = str::isEmpty(desc.gs.entry) ? sizeof(DEFAULT_ENTRY) : (strlen(desc.gs.entry) + 1);
+        size_t gsEntryLen = str::empty(desc.gs.entry) ? sizeof(DEFAULT_ENTRY) : (strlen(desc.gs.entry) + 1);
         size_t psCodeLen  = desc.ps.source ? (strlen(desc.ps.source) + 1) : 0;
-        size_t psEntryLen = str::isEmpty(desc.ps.entry) ? sizeof(DEFAULT_ENTRY) : (strlen(desc.ps.entry) + 1);
+        size_t psEntryLen = str::empty(desc.ps.entry) ? sizeof(DEFAULT_ENTRY) : (strlen(desc.ps.entry) + 1);
         size_t length     = headerLen + vsCodeLen + vsEntryLen + gsCodeLen + gsEntryLen + psCodeLen + psEntryLen;
 
         // allocate buffer
@@ -61,10 +61,10 @@ public:
     copy.X.source = (X##CodeLen > 0) ? (const char *) (ptr - start) : 0; \
     ptr += X##CodeLen;
 
-#define COPY_ENTRY(X)                                                                    \
-    GN_ASSERT(X##EntryLen > 0);                                                          \
-    memcpy(ptr, str::isEmpty(desc.X.entry) ? DEFAULT_ENTRY : desc.X.entry, X##EntryLen); \
-    copy.X.entry = (const char *) (ptr - start);                                         \
+#define COPY_ENTRY(X)                                                                  \
+    GN_ASSERT(X##EntryLen > 0);                                                        \
+    memcpy(ptr, str::empty(desc.X.entry) ? DEFAULT_ENTRY : desc.X.entry, X##EntryLen); \
+    copy.X.entry = (const char *) (ptr - start);                                       \
     ptr += X##EntryLen;
 
         // copy codes and entries
@@ -103,7 +103,7 @@ public:
         // check GPU program language
         if (!desc.lang.valid()) {
             static Logger * sLogger = getLogger("GN.gfx.gpu.common");
-            GN_ERROR(sLogger)("invalid GPU program language: %d", desc.lang.toRawEnum());
+            GN_ERROR(sLogger)("invalid GPU program language: {}", desc.lang.toInt());
             return false;
         }
 

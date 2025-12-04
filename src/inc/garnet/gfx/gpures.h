@@ -138,10 +138,10 @@ protected:
 /// definition of single mesh vertex element
 ///
 struct MeshVertexElement {
-    PixelFormat format       = PixelFormat::UNKNOWN(); ///< the vertex element format.
-    uint8_t     stream       = 0;                      ///< vertex buffer index
-    uint8_t     offset       = 0;                      ///< offset of the element in the vertex.
-    char        semantic[16] = {};                     ///< Semantic name (null terminated string, 15 characters at most).
+    img::PixelFormat format       = img::PixelFormat::UNKNOWN(); ///< the vertex element format.
+    uint8_t          stream       = 0;                           ///< vertex buffer index
+    uint8_t          offset       = 0;                           ///< offset of the element in the vertex.
+    char             semantic[16] = {};                          ///< Semantic name (null terminated string, 15 characters at most).
 
     /// Set vertex element semantic.
     void setSemantic(const char * s) {
@@ -266,7 +266,7 @@ struct MeshVertexFormat {
         vf.numElements = 1;
 
         vf.elements[0].setSemantic("POSITION");
-        vf.elements[0].format = PixelFormat::FLOAT3();
+        vf.elements[0].format = img::PixelFormat::FLOAT3();
         vf.elements[0].stream = 0;
         vf.elements[0].offset = 0;
 
@@ -288,12 +288,12 @@ struct MeshVertexFormat {
         vf.numElements = 2;
 
         vf.elements[0].setSemantic("POSITION");
-        vf.elements[0].format = PixelFormat::FLOAT2();
+        vf.elements[0].format = img::PixelFormat::FLOAT2();
         vf.elements[0].stream = 0;
         vf.elements[0].offset = 0;
 
         vf.elements[1].setSemantic("TEXCOORD");
-        vf.elements[1].format = PixelFormat::FLOAT2();
+        vf.elements[1].format = img::PixelFormat::FLOAT2();
         vf.elements[1].stream = 0;
         vf.elements[1].offset = 8;
 
@@ -316,17 +316,17 @@ struct MeshVertexFormat {
         vf.numElements = 3;
 
         vf.elements[0].setSemantic("POSITION");
-        vf.elements[0].format = PixelFormat::FLOAT3();
+        vf.elements[0].format = img::PixelFormat::FLOAT3();
         vf.elements[0].stream = 0;
         vf.elements[0].offset = 0;
 
         vf.elements[1].setSemantic("NORMAL");
-        vf.elements[1].format = PixelFormat::FLOAT3();
+        vf.elements[1].format = img::PixelFormat::FLOAT3();
         vf.elements[1].stream = 0;
         vf.elements[1].offset = 12;
 
         vf.elements[2].setSemantic("TEXCOORD");
-        vf.elements[2].format = PixelFormat::FLOAT2();
+        vf.elements[2].format = img::PixelFormat::FLOAT2();
         vf.elements[2].stream = 0;
         vf.elements[2].offset = 24;
 

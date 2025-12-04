@@ -27,7 +27,7 @@ public:
     ///
     /// Constructor
     ///
-    FpsCalculator(const wchar_t * format = L"FPS: %.2f"): mFormatString(format) { reset(); }
+    FpsCalculator(const wchar_t * format = L"FPS: {}"): mFormatString(format) { reset(); }
 
     ///
     /// Get time
@@ -40,7 +40,7 @@ public:
     void reset() {
         mCurrentTime = mClock.seconds();
         mFpsValue    = 60.0f; // ensure non-zero FPS for the very first frame.
-        mFpsString.format(mFormatString.data(), 0);
+        mFpsString.formatInplace(mFormatString.data(), 0);
         mFrameCounter      = 0;
         mLastFrameElapsed  = 1.0f / mFpsValue;
         mLastFrameTime     = mCurrentTime - mLastFrameElapsed;
@@ -63,14 +63,14 @@ public:
         if (timeSinceLastCheckPoint >= 1.0f) {
             mBeforeFirstUpdate = false;
             mFpsValue          = (float) (mFrameCounter / timeSinceLastCheckPoint);
-            mFpsString.format(mFormatString.data(), mFpsValue);
+            mFpsString.formatInplace(mFormatString.data(), mFpsValue);
             mLastCheckPoint         = mCurrentTime;
             mFrameCounter           = 0;
             static Logger * sLogger = getLogger("GN.util.fps");
-            GN_VERBOSE(sLogger)("FPS: %f", mFpsValue);
+            GN_VERBOSE(sLogger)("FPS: {}", mFpsValue);
         } else if (mBeforeFirstUpdate) {
             mFpsValue = (float) ((mCurrentTime - mLastCheckPoint) / mFrameCounter);
-            mFpsString.format(mFormatString.data(), mFpsValue);
+            mFpsString.formatInplace(mFormatString.data(), mFpsValue);
         }
     }
 

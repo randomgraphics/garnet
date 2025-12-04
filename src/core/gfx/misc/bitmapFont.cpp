@@ -97,7 +97,7 @@ void GN::gfx::BitmapFont::quit() {
 void GN::gfx::BitmapFont::drawText(const TextDesc & td) {
     GN_GUARD_SLOW;
 
-    if (str::isEmpty(td.text)) return; // skip empty text.
+    if (str::empty(td.text)) return; // skip empty text.
 
     GN_ASSERT(mFont);
 
@@ -232,7 +232,7 @@ const GN::gfx::BitmapFont::FontSlot * GN::gfx::BitmapFont::createSlot(wchar_t ch
     FontImage fbm;
     if (!mFont->loadFontImage(fbm, ch)) {
         wchar_t s[] = {ch, L'\0'};
-        GN_ERROR(sLogger)(L"fail to get font bitmap for character '%s'!", s);
+        GN_ERROR(sLogger)(L"fail to get font bitmap for character '{}'!", s);
         return NULL;
     }
 
@@ -367,14 +367,14 @@ bool GN::gfx::BitmapFont::slotInit(Gpu & gpu, uint16_t fontw, uint16_t fonth, si
     // std::fill( texels.begin(), texels.end(), 0 );
 
     // create font textures
-    TextureDesc td = {PixelFormat::RGBA_8_8_8_8_UNORM(), (uint32_t) texwidth, (uint32_t) texheight, 1, 1, 1, TextureUsage::DEFAULT};
+    TextureDesc td = {img::PixelFormat::RGBA_8_8_8_8_UNORM(), (uint32_t) texwidth, (uint32_t) texheight, 1, 1, 1, TextureUsage::DEFAULT};
     GN_ASSERT(texcount <= gpu.caps().maxTextures);
     mTextures.resize(texcount);
     for (size_t i = 0; i < texcount; ++i) {
         mTextures[i].attach(gpu.createTexture(td));
 
         if (0 == mTextures[i]) {
-            GN_ERROR(sLogger)("fail to create font texture #%d!", i);
+            GN_ERROR(sLogger)("fail to create font texture #{}!", i);
             return failure();
         }
 

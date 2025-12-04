@@ -17,9 +17,41 @@ namespace GN {
 
 static Logger * sLogger = getLogger("GN.base.exception");
 
+/// Add certain number of spaces in front of each line of the string.
+[[maybe_unused]] static StrA indent(const StrA & s, int space) {
+    if (s.empty() || space <= 0) { return s; }
+
+    // Create the indentation prefix
+    StrA prefix;
+    for (int i = 0; i < space; ++i) { prefix += ' '; }
+
+    StrA         result;
+    const char * data  = s.data();
+    size_t       len   = s.size();
+    size_t       start = 0;
+
+    // Process each line
+    for (size_t i = 0; i <= len; ++i) {
+        // Check for end of line or end of string
+        if (i == len || data[i] == '\n') {
+            // Add prefix at the start of the line (if line is not empty)
+            if (i > start) {
+                result.append(prefix);
+                result.append(data + start, i - start);
+            }
+            // Add the newline character if present
+            if (i < len && data[i] == '\n') { result += '\n'; }
+            start = i + 1;
+        }
+    }
+
+    return result;
+}
+
 // ---------------------------------------------------------------------------------------------------------------------
 //
-GN_API StrA backtrace(bool includeSourceSnippet) {
+GN_API StrA backtrace(int spaceIndent, bool includeSourceSnippet) {
+    (void) spaceIndent;
     (void) includeSourceSnippet; // this is to avoid unreferenced variable warning.
 #if GN_ANDROID
     struct android_backtrace_state {
@@ -38,11 +70,11 @@ GN_API StrA backtrace(bool includeSourceSnippet) {
             return _URC_NO_REASON;
         }
 
-        static std::string addr2symbol(const void * addr) {
+        static StrA addr2symbol(const void * addr) {
             // convert address to symbol
             Dl_info info;
             if (!dladdr(addr, &info) || !info.dli_sname) return {};
-            std::string result = info.dli_sname;
+            StrA result = info.dli_sname;
 
             // demangle c++ syntax
             int    status = 0;
@@ -56,13 +88,8 @@ GN_API StrA backtrace(bool includeSourceSnippet) {
         }
     };
 
-    const int indent = 0;
-
-    std::string prefix;
-    for (int i = 0; i < indent; ++i) prefix += ' ';
-
     std::stringstream ss;
-    ss << prefix << "android stack dump\n";
+    ss << "android stack dump\n";
 
     const int max = 100;
     void *    buffer[max];
@@ -79,12 +106,12 @@ GN_API StrA backtrace(bool includeSourceSnippet) {
         auto addr   = buffer[idx];
         auto symbol = android_backtrace_state::addr2symbol(addr);
         if (symbol.empty()) symbol = "<no symbol>";
-        ss << prefix << str::format("%03d: 0x%p %s\n", idx, addr, symbol.c_str());
+        ss << StrA::format("{:03d}: 0x{} {}\n", idx, addr, symbol.c_str());
     }
 
-    ss << prefix << "android stack dump done\n";
+    ss << "android stack dump done\n";
 
-    return ss.str();
+    return indent(ss.str(), spaceIndent);
 #elif GN_POSIX
     using namespace backward;
     StackTrace st;
@@ -93,7 +120,7 @@ GN_API StrA backtrace(bool includeSourceSnippet) {
     Printer           p;
     p.snippet = includeSourceSnippet; // print code snippet in debug build only.
     p.print(st, ss);
-    return ss.str();
+    return indent(ss.str(), spaceIndent);
 #elif GN_MSWIN
     class MyStackWalker : public StackWalker {
     protected:
@@ -107,7 +134,7 @@ GN_API StrA backtrace(bool includeSourceSnippet) {
         std::stringstream ss;
     };
     MyStackWalker sw(StackWalker::RetrieveLine | StackWalker::RetrieveSymbol);
-    return sw.ShowCallstack() ? sw.ss.str() : std::string {};
+    return sw.ShowCallstack() ? indent(sw.ss.str(), spaceIndent) : StrA {};
 #else
     return {};
 #endif

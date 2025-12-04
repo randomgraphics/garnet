@@ -60,11 +60,11 @@ bool GN::gfx::OGLVtxFmt::bindBuffers(const VertexBufferBinding * bindings, size_
         auto & ab     = mAttribBindings[i];
         size_t stream = ab.stream;
         if (stream >= numbufs) {
-            GN_ERROR(sLogger)("Current vertex format requires at least %u vertex buffers. But only %u are provided.", stream + 1, numbufs);
+            GN_ERROR(sLogger)("Current vertex format requires at least {} vertex buffers. But only {} are provided.", stream + 1, numbufs);
             return false;
         }
         const VertexBufferBinding & b = bindings[stream];
-        safeCastPtr<const OGLVtxBufVBO>(b.vtxbuf.data())->bind();
+        b.vtxbuf.get<const OGLVtxBufVBO>()->bind();
         glVertexAttribPointer(ab.index, ab.components, ab.format, ab.normalization, (GLsizei) b.stride,
                               (const uint8_t *) (intptr_t) (startvtx * b.stride + b.offset + ab.offset));
     }
@@ -86,7 +86,7 @@ bool GN::gfx::OGLVtxFmt::bindRawMemoryBuffer(const void * data, size_t stride) c
         auto & ab = mAttribBindings[i];
 
         if (ab.stream > 0) {
-            GN_ERROR(sLogger)("Current vertex format requires at least %u vertex buffers. But only 1 are provided.", ab.stream + 1);
+            GN_ERROR(sLogger)("Current vertex format requires at least {} vertex buffers. But only 1 are provided.", ab.stream + 1);
             return false;
         }
 
@@ -152,44 +152,44 @@ bool GN::gfx::OGLVtxFmt::setupStateBindings(const OGLGpuProgram * gpuProgram) {
             return false;
         }
 
-        if (PixelFormat::FLOAT1() == e.format) {
+        if (img::PixelFormat::FLOAT1() == e.format) {
             ab.format        = GL_FLOAT;
             ab.components    = 1;
             ab.normalization = false;
-        } else if (PixelFormat::FLOAT2() == e.format) {
+        } else if (img::PixelFormat::FLOAT2() == e.format) {
             ab.format        = GL_FLOAT;
             ab.components    = 2;
             ab.normalization = false;
-        } else if (PixelFormat::FLOAT3() == e.format) {
+        } else if (img::PixelFormat::FLOAT3() == e.format) {
             ab.format        = GL_FLOAT;
             ab.components    = 3;
             ab.normalization = false;
-        } else if (PixelFormat::FLOAT4() == e.format) {
+        } else if (img::PixelFormat::FLOAT4() == e.format) {
             ab.format        = GL_FLOAT;
             ab.components    = 4;
             ab.normalization = false;
-        } else if (PixelFormat::RGBA8() == e.format) {
+        } else if (img::PixelFormat::RGBA8() == e.format) {
             ab.format        = GL_UNSIGNED_BYTE;
             ab.components    = 4;
             ab.normalization = true;
-        } else if (PixelFormat::USHORT4() == e.format) {
+        } else if (img::PixelFormat::USHORT4() == e.format) {
             ab.format        = GL_UNSIGNED_SHORT;
             ab.components    = 4;
             ab.normalization = false;
-        } else if (PixelFormat::SHORT4() == e.format) {
+        } else if (img::PixelFormat::SHORT4() == e.format) {
             ab.format        = GL_SHORT;
             ab.components    = 4;
             ab.normalization = false;
-        } else if (PixelFormat::UINT4() == e.format) {
+        } else if (img::PixelFormat::UINT4() == e.format) {
             ab.format        = GL_UNSIGNED_INT;
             ab.components    = 4;
             ab.normalization = false;
-        } else if (PixelFormat::SINT4() == e.format) {
+        } else if (img::PixelFormat::SINT4() == e.format) {
             ab.format        = GL_INT;
             ab.components    = 4;
             ab.normalization = false;
         } else {
-            GN_ERROR(sLogger)("unsupport vertex format: %s", e.format.toString().c_str());
+            GN_ERROR(sLogger)("unsupport vertex format: {}", e.format.toString().c_str());
             return false;
         }
 

@@ -162,9 +162,9 @@ struct GN_API XmlElement : public XmlNode {
     ///
     /// find specific attribute of element
     ///
-    XmlAttrib * findAttrib(const StrA & name_, str::CompareCase scc = str::SENSITIVE) const {
+    XmlAttrib * findAttrib(const StrA & name_, bool caseSensitive = true) const {
         for (XmlAttrib * a = firsta; a; a = a->next) {
-            if (str::SENSITIVE == scc) {
+            if (caseSensitive) {
                 if (name_ == a->name) return a;
             } else {
                 if (0 == str::compareI(name_.data(), a->name.data())) return a;
@@ -176,12 +176,11 @@ struct GN_API XmlElement : public XmlNode {
     ///
     /// find specific firstc of element
     ///
-    XmlElement * findChildElement(const StrA & name_, str::CompareCase scc = str::SENSITIVE) const {
+    XmlElement * findChildElement(const StrA & name_, bool caseSensitive = true) const {
         for (XmlNode * n = firstc; n; n = n->nexts) {
             XmlElement * e = n->toElement();
             if (!e) continue;
-
-            if (str::SENSITIVE == scc) {
+            if (caseSensitive) {
                 if (name_ == e->name) return e;
             } else {
                 if (0 == str::compareI(name_.data(), e->name.data())) return e;
@@ -292,10 +291,10 @@ inline bool loadFromXmlFile(T & t, File & fp, const StrA & basedir) {
     if (!doc.parse(xpr, fp)) {
         static Logger * sLocalLogger = getLogger("GN.base.xml");
         GN_ERROR(sLocalLogger)
-        ("Fail to parse XML file (%s):\n"
-         "    line   : %d\n"
-         "    column : %d\n"
-         "    error  : %s",
+        ("Fail to parse XML file ({}):\n"
+         "    line   : {}\n"
+         "    column : {}\n"
+         "    error  : {}",
          fp.name().data(), xpr.errLine, xpr.errColumn, xpr.errInfo.data());
         return false;
     }
@@ -313,7 +312,7 @@ inline bool loadFromXmlFile(T & t, const StrA & filename) {
     GN_GUARD;
 
     static Logger * sLocalLogger = getLogger("GN.base.xml");
-    GN_INFO(sLocalLogger)("Load '%s'", filename.data());
+    GN_INFO(sLocalLogger)("Load '{}'", filename.data());
 
     auto fp = fs::openFile(filename, std::ios::in);
     if (!fp) return false;

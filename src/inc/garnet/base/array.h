@@ -38,15 +38,14 @@ inline void inplaceMoveConstructArray(size_t n, T * ptr, T * from) {
 // Inplace destruct an array of objects. No memory\ freeing.
 template<class T>
 inline void inplaceDestructArray(size_t n, T * ptr) {
-    if constexpr (!std::is_pod<T>()) {
-        if (ptr && n) GN_LIKELY {
-                for (T * end = ptr + n; ptr < end; ++ptr) { ptr->T::~T(); }
-            }
-    } else {
+    if constexpr (std::is_trivially_destructible<T>::value) {
         // do nothing to POD like type.
         (void) ptr;
         (void) n;
-    }
+    } else if (ptr && n)
+        GN_LIKELY {
+            for (T * end = ptr + n; ptr < end; ++ptr) { ptr->T::~T(); }
+        }
 }
 } // namespace details
 

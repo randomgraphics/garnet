@@ -150,7 +150,7 @@ bool FontFaceFt2::init(const FontFaceCreationDesc & cd) {
     GN_ASSERT(sLib && sLib->lib);
 
     if (cd.quality < 0 || cd.quality >= FontFaceDesc::NUM_FONT_QUALITIES) {
-        GN_ERROR(sLogger)("Invalid font quality enumeration: %d", cd.quality);
+        GN_ERROR(sLogger)("Invalid font quality enumeration: {}", (int) cd.quality);
         return failure();
     }
 
@@ -174,7 +174,7 @@ bool FontFaceFt2::init(const FontFaceCreationDesc & cd) {
     // load font face
     FT_Error err = FT_Open_Face(sLib->lib, &oa, 0, &mFace);
     if (err) {
-        GN_ERROR(sLogger)("fail to load font face '%s' from file %s.", cd.fontname.data());
+        GN_ERROR(sLogger)("fail to load font face '{}' from file {}.", cd.fontname.data());
         return failure();
     }
 
@@ -319,7 +319,7 @@ bool FontFaceFt2::loadFontImage(FontImage & result, wchar_t ch) {
         break;
 
     default:
-        GN_WARN(sLogger)("Unsupported pixel mode: %d", bitmap.pixel_mode);
+        GN_WARN(sLogger)("Unsupported pixel mode: {}", bitmap.pixel_mode);
         break;
     };
     result.format = FontImage::RGBA;
@@ -343,7 +343,7 @@ bool FontFaceFt2::loadFontImage(FontImage & result, wchar_t ch) {
         break;
 
     default:
-        GN_WARN(sLogger)("Unsupported pixel mode: %d", bitmap.pixel_mode);
+        GN_WARN(sLogger)("Unsupported pixel mode: {}", bitmap.pixel_mode);
         break;
     };
     result.format = FontImage::GRAYSCALE;

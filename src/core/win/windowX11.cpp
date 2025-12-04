@@ -24,11 +24,11 @@ static int sXErrorHandler(Display * d, XErrorEvent * e) {
     XGetErrorText(d, e->error_code, buf, 4095);
 
     GN_ERROR(sLogger)
-    ("X error : %s"
-     "   Major opcode of failed request:  %d\n"
-     "   Minor opcode of failed request:  %d\n"
-     "   Serial number of failed request:  %d\n"
-     "   Resource ID:  0x%X",
+    ("X error : {}"
+     "   Major opcode of failed request:  {}\n"
+     "   Minor opcode of failed request:  {}\n"
+     "   Serial number of failed request:  {}\n"
+     "   Resource ID:  0x{:X}",
      buf, e->request_code, e->minor_code, e->serial, e->resourceid);
 
     return 0;
@@ -234,10 +234,10 @@ bool GN::win::WindowX11::initDisplay(intptr_t handle) {
     GN_GUARD;
 
     if (0 == handle) {
-        StrA dispStr = getEnv("DISPLAY");
+        auto dispStr = getEnv("DISPLAY");
         mDisplay     = XOpenDisplay(dispStr.data());
         if (0 == mDisplay) {
-            GN_ERROR(sLogger)("Fail to open display '%s'.", dispStr.data());
+            GN_ERROR(sLogger)("Fail to open display '{}'.", dispStr.data());
             return false;
         }
         mUseExternalDisplay = false;

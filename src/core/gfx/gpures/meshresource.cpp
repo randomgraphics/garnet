@@ -20,7 +20,7 @@ bool GN::gfx::VertexFormatProperties::analyze(const MeshVertexFormat & vf) {
         const MeshVertexElement & e = vf.elements[i];
 
         if (e.stream > GpuContext::MAX_VERTEX_BUFFERS) {
-            GN_ERROR(sLogger)("Invalid stream ID: %d", e.stream);
+            GN_ERROR(sLogger)("Invalid stream ID: {}", e.stream);
             return false;
         }
 
@@ -140,7 +140,7 @@ bool GN::gfx::MeshResource::Impl::create(const MeshResourceDesc & desc) {
             } else if (desc.strides[i] >= vfp.minStrides[i]) {
                 stride = desc.strides[i];
             } else {
-                GN_ERROR(sLogger)("stride for stream %u is too small.", i);
+                GN_ERROR(sLogger)("stride for stream {} is too small.", i);
                 return false;
             }
             mDesc.strides[i] = stride;

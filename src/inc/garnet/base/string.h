@@ -10,14 +10,11 @@
 #include <ostream>
 #include <string.h>
 #include <string>
+
 namespace GN {
-/// name space for string utilities.
+
+/// @brief Namespace for string utilities.
 namespace str {
-/// define enumerations for string compare
-enum CompareCase {
-    INSENSITIVE, // case insensitive comparision
-    SENSITIVE,   // case sensitive comparision
-};
 
 ///
 /// Get string length.
@@ -143,27 +140,12 @@ inline bool isEmpty(const CHAR * s) {
 }
 
 ///
-/// safe sprintf. This function always outputs null-terminated string,
-/// like StringCchPrintf(...)
+/// format string to raw buffer with guaranteed null terminator.
 ///
-GN_API void formatTo(char * buf, size_t bufSizeInChar, const char * fmt, ...);
-
-///
-/// safe sprintf. This function always outputs null-terminated string,
-/// like StringCchPrintf(...)
-///
-GN_API void formatTo(wchar_t * buf, size_t bufSizeInWchar, const wchar_t * fmt, ...);
-
-///
-/// safe sprintf. This function always outputs null-terminated string,
-/// like StringCchPrintf(...)
-///
-GN_API void formatvTo(char * buf, size_t bufSizeInChar, const char * fmt, va_list args);
-
-///
-/// printf-like format string (wide-char)
-///
-GN_API void formatvTo(wchar_t * buf, size_t bufSizeInWchar, const wchar_t * fmt, va_list args);
+template<typename CHAR, typename... Args>
+inline void formatTo(CHAR * buf, size_t bufSizeInChar, const CHAR * fmt, Args &&... args) {
+    return internal::StringFormatter<CHAR>::formatToBuffer(buf, bufSizeInChar, fmt, std::forward<Args>(args)...);
+}
 
 ///
 /// string hash function
@@ -292,7 +274,7 @@ public:
         size_t newsize = oldsize + ssize;
         setCaps(newsize);
         setSize(newsize);
-        ::memcpy(mPtr + oldsize, s, ssize * sizeof(CharType));
+        ::memcpy(mPtr + oldsize, s.data(), ssize * sizeof(CharType));
         mPtr[newsize] = 0;
     }
 
@@ -326,6 +308,12 @@ public:
         }
     }
 
+    void resize(size_t newSize) {
+        setCaps(newSize);
+        setSize(newSize);
+        mPtr[newSize] = 0;
+    }
+
     ///
     /// begin iterator(1)
     ///
@@ -345,9 +333,14 @@ public:
     }
 
     ///
-    /// return c-style const char pointer
+    /// return constant pointer to string buffer. this method is for compatibility with std::string.
     ///
     const CharType * data() const { return mPtr; }
+
+    ///
+    /// return pointer to string buffer
+    ///
+    CharType * data() { return mPtr; }
 
     ///
     /// return c-style const char pointer in std::string compatible way.
@@ -368,6 +361,17 @@ public:
     /// begin iterator(2)
     ///
     const CharType * end() const { return mPtr + size(); }
+
+    ///
+    /// string formatting
+    ///
+    template<typename... Args>
+    Str<CharType> & formatInplace(const CharType * formatString, Args &&... args) {
+        auto numCharacters = internal::StringFormatter<CharType>::formattedSize(formatString, std::forward<Args>(args)...);
+        resize(numCharacters);
+        internal::StringFormatter<CharType>::formatToBuffer(mPtr, numCharacters + 1, formatString, std::forward<Args>(args)...);
+        return *this;
+    }
 
     ///
     /// Searches through a string for the first character that matches any elements in user specified string
@@ -451,32 +455,6 @@ public:
     /// get first character of the string. If string is empty, return 0.
     ///
     CharType first() const { return mPtr[0]; }
-
-    ///
-    /// printf-like string formatting
-    ///
-    const CharType * format(const CharType * fmt, ...) {
-        va_list arglist;
-        va_start(arglist, fmt);
-        formatv(fmt, arglist);
-        va_end(arglist);
-        return mPtr;
-    }
-
-    ///
-    /// printf-like string formatting
-    ///
-    const CharType * formatv(const CharType * fmt, va_list args) {
-        if (str::isEmpty(fmt)) {
-            clear();
-        } else {
-            CharType buf[16384]; // 16k should be enough in most cases
-            str::formatvTo(buf, 16384, fmt, args);
-            buf[16383] = 0;
-            assign(buf);
-        }
-        return mPtr;
-    }
 
     ///
     /// get string caps
@@ -725,14 +703,28 @@ public:
     }
 
     ///
-    /// type cast to C string
+    /// type cast to constant C style string. We can do this safely because the size of Str<CharType> is the same as the size of raw char pointer.
     ///
-    operator const CharType *() const { return mPtr; }
+    operator const CharType *() const {
+        static_assert(sizeof(CharType *) == sizeof(Str<CharType>), "Str size must be the same as raw char pointer size");
+        return mPtr;
+    }
 
     ///
-    /// type cast to C string
+    /// Index operator
     ///
-    operator CharType *() { return mPtr; }
+    CharType & operator[](size_t index) {
+        GN_ASSERT(index <= size());
+        return mPtr[index];
+    }
+
+    ///
+    /// Index operator
+    ///
+    const CharType & operator[](size_t index) const {
+        GN_ASSERT(index <= size());
+        return mPtr[index];
+    }
 
     ///
     /// assign operator
@@ -899,6 +891,19 @@ public:
         uint64_t operator()(const Str & s) const { return str::hash(s.mPtr, s.size()); }
     };
 
+    ///
+    /// string formatting
+    ///
+    template<typename... Args>
+    [[nodiscard("The return value of this function is usually not discarded. Maybe formatInplace() is what you want?")]] static Str<CharType>
+    format(const CharType * formatString, Args &&... args) {
+        auto          numCharacters = internal::StringFormatter<CharType>::formattedSize(formatString, std::forward<Args>(args)...);
+        Str<CharType> result;
+        result.resize(numCharacters);
+        internal::StringFormatter<CharType>::formatToBuffer(result.mPtr, numCharacters + 1, formatString, std::forward<Args>(args)...);
+        return result;
+    }
+
 private:
     struct StringHeader {
         size_t caps; //< How many characters can the string hold, not including the null end.
@@ -943,9 +948,6 @@ private:
         // This is safe, as long as CharType is POD type.
         RAW_MEMORY_ALLOCATOR::sDeallocate(p);
     }
-
-    friend GN_API void wcs2mbs(Str<char> &, const wchar_t *, size_t);
-    friend GN_API void mbs2wcs(Str<wchar_t> &, const char *, size_t);
 };
 
 ///
@@ -957,6 +959,16 @@ typedef Str<char> StrA;
 /// wide-char string class
 ///
 typedef Str<wchar_t> StrW;
+
+///
+/// Define custom string literal operator
+///
+inline StrA operator"" _s(const char * s, size_t len) { return StrA(s, len); }
+
+///
+/// Define custom wide-char string literal operator
+///
+inline StrW operator"" _ws(const wchar_t * s, size_t len) { return StrW(s, len); }
 
 ///
 /// Fixed sized string that has no runtime memory allocation.
@@ -979,11 +991,12 @@ public:
             mCount  = 0;
             mBuf[0] = 0;
         } else {
-            if (0 == l) l = str::length(s);
+            if (0 == l) l = (s ? strlen(s) : 0);
             memcpy(mBuf, s, sValidateLength(l) * sizeof(CHAR));
         }
     }
     StackStr(const StackStr & s): mCount(s.mCount) { memcpy(mBuf, s.mBuf, sizeof(CHAR) * s.mCount); }
+    StackStr(const std::basic_string<CHAR> & s) { memcpy(mBuf, s.data(), sizeof(CHAR) * sValidateLength(s.size())); }
     StackStr(const Str<CHAR> & s) { memcpy(mBuf, s.data(), sizeof(CHAR) * sValidateLength(s.size())); }
     //@}
 };
@@ -1000,7 +1013,7 @@ public:
 //
 // TODO: sorted leaf list
 //
-template<class CHAR, class T, str::CompareCase COMPARE_CASE = str::SENSITIVE>
+template<class CHAR, class T>
 class StringMap {
     // *****************************
     // public types
@@ -1023,7 +1036,7 @@ public:
 
 public:
     /// default constructor
-    StringMap(): mRoot(NULL), mCount(0) {}
+    StringMap(bool caseInsensitive = false): mRoot(NULL), mCount(0), mCaseInsensitive(caseInsensitive) {}
 
     /// copy constructor
     StringMap(const StringMap & sm): mRoot(NULL), mCount(0) { doClone(sm); }
@@ -1033,11 +1046,7 @@ public:
 
     /// get first element in the map
     /// \note elements are _NOT_ sorted yet.
-    const KeyValuePair * first() const { return doFirst(); }
-
-    /// get first element in the map
-    /// \note elements are _NOT_ sorted yet.
-    KeyValuePair * first() { return doFirst(); }
+    KeyValuePair * first() const { return doFirst(); }
 
     /// clear whole map
     void clear() { doClear(); }
@@ -1047,26 +1056,22 @@ public:
 
     /// Get next item
     /// \note elements are _NOT_ sorted yet.
-    const KeyValuePair * next(const KeyValuePair * p) const { return doNext(p); }
-
-    /// Get next item
-    /// \note elements are _NOT_ sorted yet.
-    KeyValuePair * next(const KeyValuePair * p) { return doNext(p); }
+    KeyValuePair * next(const KeyValuePair * p) const { return doNext(p); }
 
     /// erase by key
     void remove(const CHAR * text) { doRemove(text); }
 
     /// find
-    const T * find(const CHAR * text) const { return doFind(text); }
+    T * find(const CHAR * text) const { return doFind(text); }
 
     /// find
-    T * find(const CHAR * text) { return doFind(text); }
+    T * find(const Str<CHAR> & text) const { return doFind(text.c_str()); }
 
     /// find
-    KeyValuePair * findPair(const CHAR * text) { return doFindPair(text); }
+    T * find(const std::basic_string<CHAR> & text) const { return doFind(text.c_str()); }
 
     /// find
-    const KeyValuePair * findPair(const CHAR * text) const { return doFindPair(text); }
+    KeyValuePair * findPair(const CHAR * text) const { return doFindPair(text); }
 
     /// insert. Return the inserted key value pair or NULL.
     KeyValuePair * insert(const CHAR * text, const T & value) {
@@ -1074,6 +1079,8 @@ public:
         KeyValuePair * p = doFindOrInsert(text, value, inserted);
         return inserted ? p : NULL;
     }
+
+    KeyValuePair * insert(const std::basic_string<CHAR> & text, const T & value) { return insert(text.c_str(), value); }
 
     /// return number of items in map
     size_t size() const { return mCount; }
@@ -1098,11 +1105,23 @@ public:
     }
 
     /// indexing operator
+    T & operator[](const Str<CHAR> & text) { return operator[](text.data()); }
+
+    /// indexing operator
+    T & operator[](const std::basic_string<CHAR> & text) { return operator[](text.c_str()); }
+
+    /// indexing operator
     const T & operator[](const CHAR * text) const {
         const KeyValuePair * p = doFindPair(text);
         GN_ASSERT(p);
         return p->value;
     }
+
+    /// indexing operator
+    const T & operator[](const Str<CHAR> & text) const { return operator[](text.data()); }
+
+    /// indexing operator
+    const T & operator[](const std::basic_string<CHAR> & text) const { return operator[](text.c_str()); }
 
     // *****************************
     // private types
@@ -1141,6 +1160,7 @@ private:
 private:
     Node *                              mRoot;
     size_t                              mCount; // number of items in map
+    bool                                mCaseInsensitive;
     FixSizedRawMemoryPool<sizeof(Node)> mNodePool;
     ObjectPool<Leaf>                    mLeafPool;
     DoubleLink                          mLeaves;
@@ -1217,7 +1237,7 @@ private:
         while (p) {
             int d;
 
-            if (str::INSENSITIVE == COMPARE_CASE) {
+            if (mCaseInsensitive) {
                 // conver both to upper case
                 CHAR t = *text;
                 CHAR s = p->splitchar;
@@ -1268,7 +1288,7 @@ private:
         while (NULL != *pp) {
             int d;
 
-            if (str::INSENSITIVE == COMPARE_CASE) {
+            if (mCaseInsensitive) {
                 // conver both to upper case
                 CHAR t = *text;
                 CHAR s = (*pp)->splitchar;
@@ -1423,36 +1443,17 @@ private:
 
 namespace str {
 
-///
-/// printf-like string format function (with zero args)`
-///
-template<typename CHAR>
-inline Str<CHAR> format(const CHAR * fmt) {
-    return Str<CHAR>(fmt);
-}
+/// @brief Check if a C style string is null or empty.
+inline bool empty(const char * s) { return 0 == s || 0 == *s; }
 
-///
-/// printf-like string format function.
-///
-template<typename CHAR>
-inline Str<CHAR> format(const CHAR * fmt, ...) {
-    Str<CHAR> s;
-    va_list   arglist;
-    va_start(arglist, fmt);
-    s.formatv(fmt, arglist);
-    va_end(arglist);
-    return s;
-}
+/// @brief Check if a C style string is null or empty.
+inline bool empty(const wchar_t * s) { return 0 == s || 0 == *s; }
 
-///
-/// printf-like string format function.
-///
-template<typename CHAR>
-inline Str<CHAR> formatv(const CHAR * fmt, va_list args) {
-    Str<CHAR> s;
-    s.formatv(fmt, args);
-    return s;
-}
+/// @brief null pointer friendly string length function
+inline size_t length(const char * s) { return s ? strlen(s) : 0; }
+
+/// @brief null pointer friendly string length function
+inline size_t length(const wchar_t * s) { return s ? wcslen(s) : 0; }
 
 /// \name string -> number conversion
 ///
@@ -1530,6 +1531,24 @@ GN_API size_t toFloatArray(float * buffer, size_t maxCount, const char * string,
 //@}
 } // namespace str
 } // namespace GN
+
+template<>
+struct fmt::formatter<GN::StrA> {
+    constexpr auto parse(format_parse_context & ctx) { return ctx.begin(); }
+    template<typename Context>
+    constexpr auto format(GN::StrA const & foo, Context & ctx) const {
+        return format_to(ctx.out(), "{}", foo.c_str());
+    }
+};
+
+template<>
+struct fmt::formatter<GN::StrW> {
+    constexpr auto parse(format_parse_context & ctx) { return ctx.begin(); }
+    template<typename Context>
+    constexpr auto format(GN::StrW const & foo, Context & ctx) const {
+        return format_to(ctx.out(), L"{}", foo.c_str());
+    }
+};
 
 // *****************************************************************************
 //                 End of string.h

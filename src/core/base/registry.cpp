@@ -28,7 +28,7 @@ GN_API GN::Registry::ItemKey GN::Registry::set(const StrA & name, const Variant 
         GN_ASSERT(mItems[key].name == name && *mNames.find(name) == key);
         mItems[key].value = value;
     } else {
-        GN_ERROR(sLogger)("Item '%s' is already existed.!", name.data());
+        GN_ERROR(sLogger)("Item '{}' is already existed.!", name.data());
         return 0;
     }
 

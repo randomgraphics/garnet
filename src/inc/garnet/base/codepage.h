@@ -31,7 +31,7 @@ public:
         UTF32_LE,
         UTF32_BE,
         UTF32,    ///< UTF32_LE on little endian system; UTF32_BE on big endian system.
-        WIDECHAR, ///< UTF16, if sizeof(wchar_t)==2; or UTF32, if sizeof(wchar_t)==4
+        WIDECHAR, ///< Platform dependent wide character mode. UTF16, if sizeof(wchar_t)==2; or UTF32, if sizeof(wchar_t)==4
 
         // Chinese
         GBK,  ///< Chinese
@@ -44,11 +44,6 @@ public:
 
 public:
     ///
-    /// Convert Encoding enum to string
-    ///
-    static const char * sEncoding2Str(Encoding);
-
-    ///
     /// constructor
     ///
     CharacterEncodingConverter(Encoding from, Encoding to);
@@ -59,23 +54,29 @@ public:
     ~CharacterEncodingConverter();
 
     ///
-    /// convert from source encoding to destination encoding
+    /// Convert from source encoding to destination encoding. Note that this method will _NOT_ treatment null
+    /// terminator any differently. It means:
+    ///     - If the source buffer is not null terminated, then the destination buffer is not too.
+    ///     - If the source buffer contains null terminator in the middle, the conversion will not stop at where
+    ///       the terminator is.
     ///
     /// \param destBuffer, destBufferSizeInBytes
-    ///     Specify destination buffer and size. destBuffer could be NULL.
-    ///     Note that destBuffer is null terminated, only if source buffer
-    ///     is null terminated too.
+    ///     Specify destination buffer and size. Set destBuffer to null to activate size query mode.
+    ///     In this mode, the function will return number of bytes need to hold the conversion output, or 0, if error
+    ///     is encountered. In this mode, the destBufferSizeInBytes parameter is ignored.
+    ///
+    ///     If the destination buffer is not large enough, the function will fill it as much as possible,
+    ///     return the converted bytes in return value.
     ///
     /// \param sourceBuffer, sourceBufferSizeInBytes
-    ///     Specify source buffer and size
+    ///     Specify source buffer and size. Note that the conversion will _NOT_ automatically stop at null terminators.
     ///
     /// \return
-    ///     1) Return 0 for failure.
+    ///     1) Return 0 for failure. Check log for error details.
     ///     2) If destBuffer is NULL, return number of bytes required
-    ///        to store convertion result. In this case, value of
+    ///        to store conversion result. In this case, value of
     ///        destBufferSizeInBytes is ignored.
-    ///     3) Return number of bytes filled into destination buffer,
-    ///        including null terminator.
+    ///     3) Return number of bytes filled into destination buffer.
     ///
     size_t convert(void * destBuffer, size_t destBufferSizeInBytes, const void * sourceBuffer, size_t sourceBufferSizeInBytes);
 
@@ -98,86 +99,39 @@ public:
 
     //@}
 
+    ///
+    /// Convert Encoding enum to string
+    ///
+    static const char * sEncoding2Str(Encoding);
+
+    /// helpers to convert between char and wchar_t
+    //@{
+    static size_t ascii2wcs(wchar_t * os, size_t on, const char * i, size_t in) {
+        static CharacterEncodingConverter cec(CharacterEncodingConverter::ASCII, CharacterEncodingConverter::WIDECHAR);
+        return cec.convert(os, on * sizeof(wchar_t), i, in);
+    }
+    static size_t wcs2ascii(char * os, size_t on, const wchar_t * i, size_t in) {
+        static CharacterEncodingConverter cec(CharacterEncodingConverter::WIDECHAR, CharacterEncodingConverter::ASCII);
+        return cec.convert(os, on, i, in * sizeof(wchar_t));
+    }
+    //@}
+
 private:
     void * mImpl; ///< implementation instance
 };
 
-/// conversion between utf-16 and utf-8
+/// Helper functions to convert between widechar and utf-8 string. Differ from the raw CharacterEncodingConverter,
+/// these helper functions will respect null terminators in the source buffer. It'll also always return a null
+/// terminated string, regardless if source buffer is null terminated or not.
 //@{
-GN_API size_t wcs2utf8(char * obuf, size_t ocount, const wchar_t * ibuf, size_t icount);
-GN_API size_t utf82wcs(wchar_t * obuf, size_t ocount, const char * ibuf, size_t icount);
-GN_API StrA   wcs2utf8(const wchar_t * ibuf, size_t icount);
-GN_API StrW   utf82wcs(const char * ibuf, size_t icount);
+GN_API GN::StrA wcs2utf8(const wchar_t * ibuf, size_t icount);
+GN_API GN::StrW utf82wcs(const char * ibuf, size_t icount);
+GN_API GN::StrA wcs2mbs(const wchar_t *, size_t);
+inline GN::StrA wcs2mbs(const StrW & i) { return wcs2mbs(i.data(), i.size()); }
+GN_API GN::StrW mbs2wcs(const char *, size_t);
+inline GN::StrW mbs2wcs(const StrA & i) { return mbs2wcs(i.data(), i.size()); }
 //@}
 
-///
-/// convert wide char string to multi-byte string in current system encoding
-///
-GN_API void wcs2mbs(StrA &, const wchar_t *, size_t);
-
-///
-/// convert wide char string to multi-byte string in current system encoding
-///
-inline void wcs2mbs(StrA & o, const StrW & i) { return wcs2mbs(o, i.data(), i.size()); }
-
-///
-/// convert wide char string to multi-byte string in current system encoding
-///
-inline StrA wcs2mbs(const wchar_t * i, size_t l) {
-    StrA o;
-    wcs2mbs(o, i, l);
-    return o;
-}
-
-///
-/// convert wide char string to multi-byte string in current system encoding
-///
-inline StrA wcs2mbs(const StrW & i) { return wcs2mbs(i.data(), i.size()); }
-
-///
-/// convert multi-byte string in current system code page to wide char string.
-///
-/// Normally, it returns number of wide characters written into output buffer, including the null terminator.
-/// If output wide-char buffer is NULL, it returns required size of wide-char buffer size in words, including the null terminator.
-/// If anything goes wrong, it'll return 0.
-///
-/// Note that ouput string is always null-terminated.
-///
-/// \param obuf
-///     Output buffer. If NULL, this function will return required size of output buffer in words.
-/// \param ocount
-///     Maximum of wide chars the ouput buffer can hold, including null terminator.
-/// \param ibuf
-///     Input buffer. If NULL, this function will return zero.
-/// \param icount
-///     character count in input buffer, not including null terminator. If zero,
-///     then input buffer must be a null-terminated string.
-///
-GN_API size_t mbs2wcs(wchar_t * obuf, size_t ocount, const char * ibuf, size_t icount);
-
-///
-/// convert multi-byte string in current system code page to wide char string
-///
-GN_API void mbs2wcs(StrW &, const char *, size_t);
-
-///
-/// convert multi-byte string in current system code page to wide char string
-///
-inline void mbs2wcs(StrW & o, const StrA & i) { return mbs2wcs(o, i.data(), i.size()); }
-
-///
-/// convert multi-byte string in current system code page to wide char string
-///
-inline StrW mbs2wcs(const char * i, size_t l) {
-    StrW o;
-    mbs2wcs(o, i, l);
-    return o;
-}
-
-///
-/// convert multi-byte string in current system code page to wide char string
-///
-inline StrW mbs2wcs(const StrA & i) { return mbs2wcs(i.data(), i.size()); }
 } // namespace GN
 
 // *****************************************************************************

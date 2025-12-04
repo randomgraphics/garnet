@@ -15,7 +15,7 @@ using namespace GN;
 
 static int sEncodingToCodePage(CharacterEncodingConverter::Encoding e) {
     static INT TABLE[] = {
-        437,   // ASCII
+        437,   // OEM United States
         1252,  // ISO_8859_1
         65000, // UTF7
         65001, // UTF8
@@ -34,7 +34,7 @@ static int sEncodingToCodePage(CharacterEncodingConverter::Encoding e) {
     if (0 <= e && e < GN_ARRAY_COUNT(TABLE)) {
         return TABLE[e];
     } else {
-        GN_ERROR(sLogger)("Invalid character encoding: %d", e);
+        GN_ERROR(sLogger)("Invalid character encoding: {}", (int) e);
         return -1;
     }
 }
@@ -89,6 +89,9 @@ void GN::CECImplMSWIN::quit() {
 size_t GN::CECImplMSWIN::convert(void * destBuffer, size_t destBufferSizeInBytes, const void * sourceBuffer, size_t sourceBufferSizeInBytes) {
     size_t converted = 0;
 
+    // check for size query mode
+    if (0 == destBuffer) destBufferSizeInBytes = 0;
+
     // convert from source encoding to widechar encoding
     DynaArray<wchar_t> tempBuffer;
     if (0 != mCodePageFrom) {
@@ -121,20 +124,16 @@ size_t GN::CECImplMSWIN::convert(void * destBuffer, size_t destBufferSizeInBytes
         }
 
         if (0 == sourceBuffer) {
-            GN_ERROR(sLogger)("NULL source buffer pointer!");
+            // Input buffer is empty. This is not an error.
             return 0;
         }
 
-        if (sourceBufferSizeInBytes > destBufferSizeInBytes) {
-            GN_ERROR(sLogger)("There's no enough space in destination buffer.");
-            return 0;
-        }
-
-        memcpy(destBuffer, sourceBuffer, sourceBufferSizeInBytes);
-
-        return sourceBufferSizeInBytes;
+        // Copy as much as we can into the destination buffer. Return copied bytes.
+        auto needToCopy = std::min(sourceBufferSizeInBytes, destBufferSizeInBytes);
+        if (needToCopy) GN_LIKELY memcpy(destBuffer, sourceBuffer, needToCopy);
+        return needToCopy;
     } else {
-        GN_ERROR(sLogger)("Conversion to encoding \"%d\" is not supported yet.", mEncodingTo);
+        GN_ERROR(sLogger)("Conversion to encoding \"{}\" is not supported yet.", (int) mEncodingTo);
         return 0;
     }
 }

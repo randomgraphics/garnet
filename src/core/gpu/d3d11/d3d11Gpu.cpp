@@ -109,7 +109,7 @@ void GN::gfx::D3D11Gpu::debugMarkBegin(const char * markerName) {
     if (NULL != markerName && gD3D11EnablePixPerf) {
         size_t    len = str::length(markerName);
         wchar_t * wcs = (wchar_t *) alloca(sizeof(wchar_t) * (len + 1));
-        mbs2wcs(wcs, len + 1, markerName, len);
+        CharacterEncodingConverter::ascii2wcs(wcs, len + 1, markerName, len);
         PIXPERF_BEGIN_EVENT_EX(mDeviceContext, 0xFFFFFFFF, wcs);
     }
 }
@@ -128,7 +128,7 @@ void GN::gfx::D3D11Gpu::debugMarkSet(const char * markerName) {
     if (NULL != markerName && gD3D11EnablePixPerf) {
         size_t    len = str::length(markerName);
         wchar_t * wcs = (wchar_t *) alloca(sizeof(wchar_t) * (len + 1));
-        mbs2wcs(wcs, len + 1, markerName, len);
+        CharacterEncodingConverter::ascii2wcs(wcs, len + 1, markerName, len);
         PIXPERF_SET_MARKER_EX(mDeviceContext, 0xFFFFFFFF, wcs);
     }
 }

@@ -165,7 +165,7 @@ struct ShaderModel {
 
         if (flags) {
             if (!str.empty()) str += "|";
-            str += str::format("0x%X", flags);
+            str += StrA::format("0x{:X}", flags);
         }
 
         return str;
@@ -314,7 +314,7 @@ public:
                 return (uint16_t) i;
             }
         }
-        GN_ERROR(getLogger("GN.gfx.GpuProgram.GpuProgramParameterDesc"))("Invalid GPU program parameter name: %s", name ? name : "<NULLPTR>");
+        GN_ERROR(getLogger("GN.gfx.GpuProgram.GpuProgramParameterDesc"))("Invalid GPU program parameter name: {}", name ? name : "<NULLPTR>");
         return (uint16_t) GPU_PROGRAM_PARAMETER_NOT_FOUND;
     }
 };

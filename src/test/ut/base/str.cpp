@@ -7,38 +7,97 @@ class StringTest : public CxxTest::TestSuite {
 public:
     void testEmptyStr() {
         const auto & a = GN::StrA::EMPTYSTR();
-        const auto & w = GN::StrW::EMPTYSTR();
+        const auto & b = GN::StrA();
+        const auto & c = GN::StrW::EMPTYSTR();
+        const auto & d = GN::StrW();
+        TS_ASSERT_EQUALS('\0', a[0]);
+        TS_ASSERT_EQUALS('\0', b[0]);
+        TS_ASSERT_EQUALS(L'\0', c[0]);
+        TS_ASSERT_EQUALS(L'\0', d[0]);
         TS_ASSERT_EQUALS(a, "");
-        TS_ASSERT_EQUALS(w, L"");
-        TS_ASSERT_EQUALS((void *) &a, (void *) &w);
+        TS_ASSERT_EQUALS(b, "");
+        TS_ASSERT_EQUALS(c, L"");
+        TS_ASSERT_EQUALS(d, L"");
+        TS_ASSERT_EQUALS((void *) &a, (void *) &c);
         TS_ASSERT_EQUALS(a.data(), GN::internal::emptyStringPointer());
-        TS_ASSERT_EQUALS(w.data(), GN::internal::emptyStringPointer());
+        TS_ASSERT_EQUALS(b.data(), GN::internal::emptyStringPointer());
+        TS_ASSERT_EQUALS(c.data(), GN::internal::emptyStringPointer());
+        TS_ASSERT_EQUALS(d.data(), GN::internal::emptyStringPointer());
     }
+
+    /// test for CharacterEncodingConverter
+    void testEncodingConverter() {}
 
     void testMbs2wcs() {
-        const char * mbs    = "abc";
-        wchar_t      wcs[6] = {L'\0', L'\0', L'\0', L'\0', L'5', L'\0'};
+        const char * mbs = "abc";
+        GN::StrW     wcs;
 
-        TS_ASSERT_EQUALS(GN::mbs2wcs(wcs, 1, mbs, 0), 1);
+        wcs = GN::mbs2wcs(mbs, 0);
+        TS_ASSERT_EQUALS(wcs.size(), 0);
         TS_ASSERT_EQUALS(wcs, L"");
 
-        TS_ASSERT_EQUALS(GN::mbs2wcs(wcs, 2, mbs, 0), 2);
-        TS_ASSERT_EQUALS(wcs, L"a");
-
-        TS_ASSERT_EQUALS(GN::mbs2wcs(wcs, 3, mbs, 0), 3);
-        TS_ASSERT_EQUALS(wcs, L"ab");
-
-        TS_ASSERT_EQUALS(GN::mbs2wcs(wcs, 4, mbs, 0), 4);
-        TS_ASSERT_EQUALS(wcs, L"abc");
-
-        TS_ASSERT_EQUALS(GN::mbs2wcs(wcs, 5, mbs, 0), 4);
-        TS_ASSERT_EQUALS(wcs, L"abc");
-
-        TS_ASSERT_EQUALS(GN::mbs2wcs(wcs, 5, mbs, 100), 4);
-        TS_ASSERT_EQUALS(wcs, L"abc");
+        TS_ASSERT_EQUALS(GN::mbs2wcs(mbs, 1), L"a");
+        TS_ASSERT_EQUALS(GN::mbs2wcs(mbs, 2), L"ab");
+        TS_ASSERT_EQUALS(GN::mbs2wcs(mbs, 3), L"abc");
+        TS_ASSERT_EQUALS(GN::mbs2wcs(mbs, 4), L"abc");
+        TS_ASSERT_EQUALS(GN::mbs2wcs(mbs, 100), L"abc");
     }
 
-    void testStrPrintf() {
+    void testWcs2utf8() {
+        const wchar_t * wcs = L"abc";
+        TS_ASSERT_EQUALS(GN::wcs2utf8(wcs, 0), "");
+        TS_ASSERT_EQUALS(GN::wcs2utf8(wcs, 1), "a");
+        TS_ASSERT_EQUALS(GN::wcs2utf8(wcs, 2), "ab");
+        TS_ASSERT_EQUALS(GN::wcs2utf8(wcs, 3), "abc");
+        TS_ASSERT_EQUALS(GN::wcs2utf8(wcs, 4), "abc");
+    }
+
+    void testUtf82wcs() {
+        const char * utf8 = "abc";
+        TS_ASSERT_EQUALS(GN::utf82wcs(utf8, 0), L"");
+        TS_ASSERT_EQUALS(GN::utf82wcs(utf8, 1), L"a");
+        TS_ASSERT_EQUALS(GN::utf82wcs(utf8, 2), L"ab");
+        TS_ASSERT_EQUALS(GN::utf82wcs(utf8, 3), L"abc");
+        TS_ASSERT_EQUALS(GN::utf82wcs(utf8, 4), L"abc");
+    }
+
+    void testWcstombs() {
+        const wchar_t * wcs = L"abc";
+        GN::StrA        mbs;
+
+        mbs = GN::wcs2mbs(wcs, 0);
+        TS_ASSERT_EQUALS(mbs.size(), 0);
+        TS_ASSERT_EQUALS(mbs, "");
+
+        mbs = GN::wcs2mbs(wcs, 1);
+        TS_ASSERT_EQUALS(mbs.size(), 1);
+        TS_ASSERT_EQUALS(mbs, "a");
+
+        mbs = GN::wcs2mbs(wcs, 2);
+        TS_ASSERT_EQUALS(mbs.size(), 2);
+        TS_ASSERT_EQUALS(mbs, "ab");
+
+        mbs = GN::wcs2mbs(wcs, 3);
+        TS_ASSERT_EQUALS(mbs.size(), 3);
+        TS_ASSERT_EQUALS(mbs, "abc");
+
+        mbs = GN::wcs2mbs(wcs, 100);
+        TS_ASSERT_EQUALS(mbs.size(), 3);
+        TS_ASSERT_EQUALS(mbs, "abc");
+    }
+
+    void testStrFormatNullAndEmpty() {
+        char * null = nullptr;
+        char   buf[10];
+        // null or empty buffer should not crash the program
+        GN::str::formatTo(null, 0, "a");
+        GN::str::formatTo(buf, 0, "a");
+        GN::str::formatTo(buf, 10, null);
+        GN::str::formatTo(buf, 10, "");
+        GN::str::formatTo(buf, 10, "", 1);
+    }
+
+    void testFormatTo() {
         char   buf1[5] = {'\0', '\0', '\0', '4', '5'};
         char * s1      = buf1;
 
@@ -262,9 +321,9 @@ public:
 
         // format
 #if !GN_CYGWIN
-        s1.format(L"haha%d", 100);
+        s1.formatInplace(L"haha{}", 100);
         TS_ASSERT_EQUALS(s1, L"haha100");
-        s1.format(0, 100);
+        s1.formatInplace(0, 100);
         TS_ASSERT_EQUALS(s1, L"");
 #else
         TS_WARN("wide-char string formatting is not implemented on cygwin");
@@ -334,14 +393,13 @@ public:
         s2 = GN::mbs2wcs(s1);
         TS_ASSERT_EQUALS(s2, L"abcd");
         s1 = "xyzw";
-        GN::mbs2wcs(s2, s1);
+        s2 = GN::mbs2wcs(s1);
         TS_ASSERT_EQUALS(s2, L"xyzw");
 
         s2 = L"bcda";
         s1 = GN::wcs2mbs(s2);
         TS_ASSERT_EQUALS(s1, "bcda");
         s2 = L"wzyx";
-        ;
         s1 = GN::wcs2mbs(s2);
         TS_ASSERT_EQUALS(s1, "wzyx");
     }

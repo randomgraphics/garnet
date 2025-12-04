@@ -289,7 +289,7 @@ GN_API GN::gfx::ColorFormat GN::gfx::ColorFormat::sFromString(const char * str) 
 //
 //
 // -----------------------------------------------------------------------------
-GN_API void GN::gfx::ColorFormat::toString(GN::StrA & s) const {
+GN_API void GN::gfx::ColorFormat::toString(std::string & s) const {
     struct Local {
         static inline const char * layout2str(size_t layout) {
             static const char * LAYOUT_STRING[] = {"LAYOUT_UNKNOWN",     "LAYOUT_1",           "LAYOUT_4_4",
@@ -325,8 +325,8 @@ GN_API void GN::gfx::ColorFormat::toString(GN::StrA & s) const {
         }
     };
 
-    s = str::format("%s-sign012(%s)-sign3(%s)-%s%s%s%s", Local::layout2str(layout), Local::sign2str(sign012), Local::sign2str(sign3),
-                    Local::swizzle2str(swizzle0), Local::swizzle2str(swizzle1), Local::swizzle2str(swizzle2), Local::swizzle2str(swizzle3));
+    s = StrA::format("{}-sign012({})-sign3({})-{}{}{}{}", Local::layout2str(layout), Local::sign2str(sign012), Local::sign2str(sign3),
+                     Local::swizzle2str(swizzle0), Local::swizzle2str(swizzle1), Local::swizzle2str(swizzle2), Local::swizzle2str(swizzle3));
 }
 
 // *****************************************************************************

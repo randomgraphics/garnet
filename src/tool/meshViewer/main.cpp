@@ -165,11 +165,11 @@ public:
 
         drawXYZCoordinateAxes(camera.proj * camera.view * arcball.getRotationMatrix44());
 
-        engine::getDefaultFontRenderer()->drawText(str::format(L"position : %f,\n"
-                                                               L"           %f,\n"
-                                                               L"           %f\n"
-                                                               L"radius   : %f",
-                                                               position.x, position.y, position.z, radius)
+        engine::getDefaultFontRenderer()->drawText(StrW::format(L"position : {},\n"
+                                                                L"           {},\n"
+                                                                L"           {}\n"
+                                                                L"radius   : {}",
+                                                                position.x, position.y, position.z, radius)
                                                        .data(),
                                                    (float) getGpu()->getDispDesc().width - 320, 40);
     }
@@ -191,7 +191,7 @@ public:
         if (argc >= 2 && (0 == str::compare(argv[0], "-print") || 0 == str::compare(argv[0], "--print"))) {
             StrA s;
             printModelFileNodeHierarchy(s, argv[1]);
-            GN_INFO(sLogger)("%s", s.data());
+            GN_INFO(sLogger)("{}", s.data());
             return false;
         } else {
             filename = argv[0];
@@ -200,7 +200,7 @@ public:
     }
 
     void onPrintHelpScreen(const char * executableName) {
-        GN_INFO(sLogger)("\nUsage: %s [options] meshfile\n", executableName);
+        GN_INFO(sLogger)("\nUsage: {} [options] meshfile\n", executableName);
         printStandardCommandLineOptions();
     }
 };

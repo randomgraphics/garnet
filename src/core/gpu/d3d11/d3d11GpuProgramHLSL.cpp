@@ -16,7 +16,7 @@ D3D11_TEXTURE_ADDRESS_MODE sAdressModeToD3D11(unsigned short addr) {
     if (addr < GN_ARRAY_COUNT(mapping)) {
         return mapping[addr];
     } else {
-        GN_ERROR(sLogger)("Invalid garnet texture address mode: %d", addr);
+        GN_ERROR(sLogger)("Invalid garnet texture address mode: {}", addr);
         return D3D11_TEXTURE_ADDRESS_CLAMP;
     }
 }
@@ -348,7 +348,7 @@ void GN::gfx::D3D11GpuProgramHLSL::quit() {
 // -----------------------------------------------------------------------------
 const char * GN::gfx::D3D11GpuProgramHLSL::getAttributeSemantic(uint32_t attributeIndex, UINT * semanticIndex) const {
     if (attributeIndex >= mParamDesc.attributes.count()) {
-        GN_ERROR(sLogger)("Invalid attribute index: %d", attributeIndex);
+        GN_ERROR(sLogger)("Invalid attribute index: {}", attributeIndex);
         if (semanticIndex) *semanticIndex = 0;
         return NULL;
     } else {
@@ -356,7 +356,7 @@ const char * GN::gfx::D3D11GpuProgramHLSL::getAttributeSemantic(uint32_t attribu
 
         if (semanticIndex) *semanticIndex = attribute.semanticIndex;
 
-        return attribute.semanticName;
+        return attribute.semanticName.c_str();
     }
 }
 
@@ -445,7 +445,7 @@ void GN::gfx::D3D11GpuProgramHLSL::applyTextures(const TextureBinding * bindings
     for (size_t i = 0; i < count; ++i) {
         const TextureBinding & tb = bindings[i];
 
-        D3D11Texture * tex = (D3D11Texture *) tb.texture.data();
+        auto tex = tb.texture.get<D3D11Texture>();
 
         if (tex) {
             const D3D11TextureParameterDesc & texParam = (const D3D11TextureParameterDesc &) mParamDesc.textures[i];
@@ -485,7 +485,7 @@ void GN::gfx::D3D11GpuProgramHLSL::applyTextures(const TextureBinding * bindings
 template<int SHADER_STAGE>
 bool GN::gfx::D3D11GpuProgramHLSL::initShader(ShaderHLSL & shader, const ShaderCode & code, GpuProgramLanguage targetLanguage, uint32_t compileFlags) {
     // do nothing for empty shader code
-    if (str::isEmpty(code.source)) return true;
+    if (str::empty(code.source)) return true;
 
     // define shader type traits
     typedef D3D11ShaderTypeTraits<SHADER_STAGE> Traits;
@@ -527,7 +527,7 @@ bool GN::gfx::D3D11GpuProgramHLSL::initShader(ShaderHLSL & shader, const ShaderC
             D3D11AttributeParameterDesc a;
             a.semanticName  = sig.SemanticName;
             a.semanticIndex = sig.SemanticIndex;
-            a.name          = sD3D11CloneString(str::format("%s%d", sig.SemanticName, sig.SemanticIndex));
+            a.name          = sD3D11CloneString(StrA::format("{}{}", sig.SemanticName, sig.SemanticIndex));
 
             // append to attribute array
             paramDesc.addAttribute(a);
@@ -597,7 +597,7 @@ void GN::gfx::D3D11GpuProgramHLSL::sUpdateD3D11ConstData(const D3D11UniformParam
     if (!ssp.used) return;
 
     if (desc.size != uniform.size()) {
-        GN_WARN(sLogger)("parameter %s: value size(%d) differs from size defined in shader code(%d).", desc.name, uniform.size(), desc.size);
+        GN_WARN(sLogger)("parameter {}: value size({}) differs from size defined in shader code({}).", desc.name, uniform.size(), desc.size);
     }
 
     DynaArray<uint8_t> &             cb = cbarray[ssp.cbidx];

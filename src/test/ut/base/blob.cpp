@@ -301,19 +301,20 @@ public:
 
         {
             DynaArrayBlob<Element> blob;
+            blob.reserve(2);
 
             // Test append with objects
             blob.append(Element(1));
             TS_ASSERT_EQUALS(1, Element::count);
             TS_ASSERT_EQUALS(1, Element::ctor);
-            TS_ASSERT_EQUALS(0, Element::cctor);
-            TS_ASSERT_EQUALS(0, Element::dtor);
+            TS_ASSERT_EQUALS(1, Element::cctor);
+            TS_ASSERT_EQUALS(1, Element::dtor);
 
             blob.append(Element(2));
             TS_ASSERT_EQUALS(2, Element::count);
             TS_ASSERT_EQUALS(2, Element::ctor);
-            TS_ASSERT_EQUALS(0, Element::cctor);
-            TS_ASSERT_EQUALS(0, Element::dtor);
+            TS_ASSERT_EQUALS(2, Element::cctor);
+            TS_ASSERT_EQUALS(2, Element::dtor);
 
             TS_ASSERT_EQUALS(2 * sizeof(Element), blob.size());
             TS_ASSERT(!blob.empty());
@@ -321,7 +322,7 @@ public:
 
         // All elements should be destroyed when blob goes out of scope
         TS_ASSERT_EQUALS(0, Element::count);
-        TS_ASSERT_EQUALS(2, Element::dtor);
+        TS_ASSERT_EQUALS(4, Element::dtor);
     }
 
     void testDynaArrayBlobResizeWithObjects() {
@@ -331,6 +332,7 @@ public:
 
         {
             DynaArrayBlob<Element> blob;
+            blob.reserve(5);
 
             // Test resize with objects
             blob.resize(3);
@@ -366,14 +368,14 @@ public:
         // Test method chaining
         blob.reserve(10).resize(3).append(1).append(2).append(3);
 
-        TS_ASSERT_EQUALS(3 * sizeof(int), blob.size());
+        TS_ASSERT_EQUALS(6 * sizeof(int), blob.size());
         TS_ASSERT(!blob.empty());
 
         auto accessor = blob.accessor<int>();
-        TS_ASSERT_EQUALS(3, accessor.size());
-        TS_ASSERT_EQUALS(1, accessor[0]);
-        TS_ASSERT_EQUALS(2, accessor[1]);
-        TS_ASSERT_EQUALS(3, accessor[2]);
+        TS_ASSERT_EQUALS(6, accessor.size());
+        TS_ASSERT_EQUALS(1, accessor[3]);
+        TS_ASSERT_EQUALS(2, accessor[4]);
+        TS_ASSERT_EQUALS(3, accessor[5]);
     }
 };
 
@@ -445,7 +447,5 @@ public:
         // Test that blob is properly destroyed when ref goes out of scope
         ref.clear();
         TS_ASSERT_EQUALS(1, blob->getref());
-
-        delete blob;
     }
 };

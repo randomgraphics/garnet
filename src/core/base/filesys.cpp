@@ -1,6 +1,6 @@
 #include "pch.h"
 
-#if GN_MSVC8
+#if GN_MSVC
     #pragma warning(disable : 4996)
     #include <SimpleGlob.h>
     #pragma warning(default : 4996)
@@ -180,7 +180,7 @@ public:
         // convert to full path
         char absPath[MAX_PATH + 1];
         if (0 == _fullpath(absPath, tmp.data(), MAX_PATH)) {
-            GN_ERROR(sLogger)("invalid path '%s'.", path.data());
+            GN_ERROR(sLogger)("invalid path '{}'.", path.data());
             result.clear();
             return;
         }
@@ -206,12 +206,12 @@ public:
         GN_GUARD;
 
         if (!exist(dirName)) {
-            GN_TRACE(sLogger)("'%s' does not exist!", dirName.data());
+            GN_TRACE(sLogger)("'{}' does not exist!", dirName.data());
             return result;
         }
 
         if (!isDir(dirName)) {
-            GN_TRACE(sLogger)("'%s' is not directory!", dirName.data());
+            GN_TRACE(sLogger)("'{}' is not directory!", dirName.data());
             return result;
         }
 
@@ -248,7 +248,7 @@ private:
         if (recursive) {
             // TODO: ignore links/junctions
             CSimpleGlobA sg(SG_GLOB_ONLYDIR | SG_GLOB_NODOT);
-            StrA         p = joinPath(curDir, "*");
+            auto         p = joinPath(curDir, "*");
             sg.Add(p.data());
             char ** dirs = sg.Files();
             int     c    = sg.FileCount();
@@ -259,9 +259,8 @@ private:
         }
 
         // search in current directory
-        using namespace std::string_literals;
         CSimpleGlobA sg(SG_GLOB_ONLYFILE);
-        StrA         p = joinPath(curDir, (useRegex ? "*.*"s : pattern));
+        auto         p = joinPath(curDir, (useRegex ? "*.*"_s : pattern));
         sg.Add(p.data());
         char ** files = sg.Files();
         int     c     = sg.FileCount();
@@ -290,9 +289,9 @@ public:
 #elif GN_POSIX
         char linkName[PATH_MAX + 1];
         char realPath[PATH_MAX + 1];
-        str::formatTo(linkName, PATH_MAX, "/proc/%d/exe", getpid());
+        str::formatTo(linkName, PATH_MAX, "/proc/{}/exe", getpid());
         if (0 == realpath(linkName, realPath)) {
-            GN_ERROR(sLogger)("Fail to get real path of file '%s'.", linkName);
+            GN_ERROR(sLogger)("Fail to get real path of file '{}'.", linkName);
         } else {
             mRootDir = parentPath(realPath);
         }
@@ -414,7 +413,7 @@ public:
     std::unique_ptr<File> openFile(const StrA & path, std::ios_base::openmode mode) {
         const StrA * root = findRoot(path);
         if (!root) {
-            GN_ERROR(sLogger)("file '%s' not found!", path.data());
+            GN_ERROR(sLogger)("file '{}' not found!", path.data());
             return 0;
         }
         return GN::fs::openFile(joinPath(*root, path), mode);
@@ -435,7 +434,7 @@ public:
         addRoot("app::media");
         auto gnroot = getEnv("GARNET_ROOT");
         if (!gnroot.empty()) {
-            addRoot(str::format("native::%s/media", gnroot.data()));
+            addRoot(StrA::format("native::{}/media", gnroot.data()));
         } else {
             addRoot("app::../../../../media");
         }
@@ -519,7 +518,7 @@ struct FileSystemContainer {
         }
 
         if (NULL != mFileSystems.find(name)) {
-            GN_ERROR(sLogger)("File system '%s' already exists!", name.data());
+            GN_ERROR(sLogger)("File system '{}' already exists!", name.data());
             return false;
         }
 

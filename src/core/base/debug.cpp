@@ -54,8 +54,10 @@ GN_API void GN::internal::handleAssertFailure(const char * msg, const char * fil
               "%s(%d)\n"
               "----------------------------------------------------------------\n"
               "%s\n"
+              "------------------------ [ call stack ] ------------------------\n"
+              "%s\n"
               "================================================================\n",
-              file ? file : "", line, msg ? msg : "");
+              file ? file : "", line, msg ? msg : "", backtrace(4).c_str());
 
     if (RAB_LOG_ONLY == sRuntimeAssertBehavior) return;
 
@@ -67,8 +69,8 @@ GN_API void GN::internal::handleAssertFailure(const char * msg, const char * fil
 #if GN_WINPC
         char buf[1024];
         str::formatTo(buf, 1024,
-                      "%s(%d)\n"
-                      "%s\n\n"
+                      "{}({})\n"
+                      "{}\n\n"
                       "Break into debugger?\n"
                       "(If canceled, this specific assert failure will not trigger debug break anymore)",
                       file ? file : "", line, msg ? msg : "");
@@ -83,6 +85,17 @@ GN_API void GN::internal::handleAssertFailure(const char * msg, const char * fil
     }
 
     if (debuggerBreak) { GN::breakIntoDebugger(); }
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+GN_API void GN::internal::handleAssertFailure(const wchar_t * msg, const char * file, int line, bool * ignoreForever) throw() {
+    StrA s;
+    try {
+        s = wcs2mbs(StrW(msg));
+    } catch (...) { s = "Exception thrown while converting assert message to narrow string."; }
+    handleAssertFailure(s.c_str(), file, line, ignoreForever);
 }
 
 //

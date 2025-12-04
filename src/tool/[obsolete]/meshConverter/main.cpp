@@ -114,11 +114,11 @@ int main(int argc, const char * argv[]) {
 
     const char * inputFile = argv[1];
 
-    StrA outputFile;
+    std::string outputFile;
     if (argc > 2) {
         outputFile = argv[2];
     } else {
-        outputFile = str::format("startup::%s.scene.xml", fs::baseName(inputFile).data());
+        outputFile = StrA::format("startup::{}.scene.xml", fs::baseName(inputFile).data());
     }
 
     ModelHierarchyDesc mhd;

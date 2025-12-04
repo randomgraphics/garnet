@@ -36,7 +36,7 @@ AutoRef<TextureResource> GN::gfx::TextureResource::loadFromFile(GpuResourceDatab
     if (texres) return texres;
 
     // convert to full (absolute) path
-    StrA abspath = fs::resolvePath(fs::getCurrentDir(), filename);
+    auto abspath = fs::resolvePath(fs::getCurrentDir(), filename);
     filename     = abspath;
 
     // Try search for existing resource again with full path
@@ -44,12 +44,12 @@ AutoRef<TextureResource> GN::gfx::TextureResource::loadFromFile(GpuResourceDatab
     if (texres) return texres;
 
     // load new texture from file
-    GN_INFO(sLogger)("Load texture from file: %s", filename);
+    GN_INFO(sLogger)("Load texture from file: {}", filename);
     auto fp = GN::fs::openFile(filename, std::ios::binary | std::ios::in);
     if (!fp) return AutoRef<TextureResource>::NULLREF;
 
     // load image
-    auto image = Image::load(fp->input());
+    auto image = img::Image::load(fp->input());
     if (image.empty()) return AutoRef<TextureResource>::NULLREF;
 
     // create texture
@@ -61,8 +61,9 @@ AutoRef<TextureResource> GN::gfx::TextureResource::loadFromFile(GpuResourceDatab
     // update texture content
     for (uint32_t f = 0; f < td.faces; ++f)
         for (uint32_t l = 0; l < td.levels; ++l) {
-            auto & md = image.plane(f, l);
-            tex->updateMipmap(f, l, 0, md.pitch, md.slice, image.data() + md.offset, SurfaceUpdateFlag::DEFAULT);
+            auto   p  = img::PlaneCoord {0, f, l};
+            auto & md = image.plane(p);
+            tex->updateMipmap(f, l, 0, md.pitch, md.slice, image.at(p), SurfaceUpdateFlag::DEFAULT);
         }
 
     // create new texture resource

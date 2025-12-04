@@ -16,7 +16,7 @@ GN_API DynaArray<uint8_t> GN::gfx::compileHLSL(const ShaderCompileParameters & p
     auto hr = D3DCompile(p.source, strlen(p.source), nullptr, nullptr, nullptr, p.entry, p.profile, 0, 0, &bin, &err);
 
     if (FAILED(hr)) {
-        GN_ERROR(sLogger)("failed to compile shader:\n%s", (const char *) err->GetBufferPointer());
+        GN_ERROR(sLogger)("failed to compile shader:\n{}", (const char *) err->GetBufferPointer());
         return {};
     }
 

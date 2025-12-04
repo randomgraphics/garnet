@@ -59,7 +59,7 @@ static D3D12_PRIMITIVE_TOPOLOGY tod3d(PrimitiveType p) {
     if (0 <= p && p < GN_ARRAY_COUNT(table))
         return table[p];
     else {
-        GN_ERROR(sLogger)("invalid primitive type: %d", p);
+        GN_ERROR(sLogger)("invalid primitive type: {}", (int) p);
         return D3D_PRIMITIVE_TOPOLOGY_UNDEFINED;
     }
 }

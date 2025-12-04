@@ -80,7 +80,7 @@ GN_API GN::gfx::ImagePlaneDesc GN::gfx::ImagePlaneDesc::make(ColorFormat format,
                                                              size_t slice, size_t alignment) {
 
     if (!format.valid()) {
-        GN_ERROR(sLogger)("invalid color format: 0x%X", format.u32);
+        GN_ERROR(sLogger)("invalid color format: 0x{:X}", format.u32);
         return {};
     }
 
@@ -144,7 +144,7 @@ GN_API bool GN::gfx::ImageDesc::valid() const {
             auto & m = plane(f, l);
 
             if (!m.valid()) {
-                GN_ERROR(sLogger)("plane descritor [%d] is invalid", index(f, l));
+                GN_ERROR(sLogger)("plane descritor [{}] is invalid", index(f, l));
                 return false;
             }
         }

@@ -174,7 +174,7 @@ inline bool GN::gfx::OGLGpu::bindContextShaders(const GpuContext & newContext, b
 
     GN_UNUSED_PARAM(skipDirtyCheck);
 
-    const OGLGpuProgram * newProgram = (const OGLGpuProgram *) newContext.gpuProgram.data();
+    auto newProgram = newContext.gpuProgram.get<const OGLGpuProgram>();
 
     // apply new program
     if (newProgram) {
@@ -354,7 +354,7 @@ inline bool GN::gfx::OGLGpu::bindContextResources(const GpuContext & newContext,
     // bind vertex format
     //
     if (skipDirtyCheck || newContext.vtxbind != mContext.vtxbind || newContext.gpuProgram != mContext.gpuProgram) {
-        mCurrentOGLVtxFmt = findOrCreateOGLVtxFmt(newContext.vtxbind, (const OGLGpuProgram *) newContext.gpuProgram.data());
+        mCurrentOGLVtxFmt = findOrCreateOGLVtxFmt(newContext.vtxbind, newContext.gpuProgram.get<const OGLGpuProgram>());
         if (!mCurrentOGLVtxFmt) return false;
         if (!mCurrentOGLVtxFmt->bindStates()) return false;
     }

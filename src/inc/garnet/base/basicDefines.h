@@ -11,7 +11,6 @@
 // *****************************************************************************
 
 #define GN_MSVC  0 ///< If 1, means current compiler is msvc (or icl)
-#define GN_MSVC8 0 ///< If 1, means current compiler is msvc 8+
 #define GN_ICL   0 ///< If 1, means current compiler is intel c++ compiler
 #define GN_GNUC  0 ///< If 1, means current compiler is GNUC compilers (gcc, mingw, clang and etc.)
 #define GN_CLANG 0 ///< IF 1, means current compiler is clang
@@ -22,18 +21,14 @@
 
 #if defined(_MSC_VER) && !defined(__ICL)
     #undef GN_MSVC
-    #undef GN_MSVC8
     #define GN_MSVC     1
-    #define GN_MSVC8    (_MSC_VER >= 1400)
     #define GN_COMPILER msvc
 
 #elif defined(__ICL)
     #undef GN_ICL
     #undef GN_MSVC
-    #undef GN_MSVC8
     #define GN_ICL      1
     #define GN_MSVC     1 // treat intel compiler as VC compiler
-    #define GN_MSVC8    (_MSC_VER >= 1400)
     #define GN_COMPILER icl
 
 #elif defined(__clang__)
@@ -280,6 +275,7 @@ public:                                                                     \
     template<typename T>                                                    \
     ENUM_CLASS(T t): mValue((ENUM_TYPE) t) {}                               \
     const ENUM_TYPE & toRawEnum() const { return mValue; }                  \
+    int               toInt() const { return (int) mValue; }                \
                       operator const ENUM_TYPE &() const { return mValue; } \
     ENUM_CLASS &      operator++() {                                        \
              mValue = (ENUM_TYPE) (mValue + 1);                             \
@@ -384,9 +380,9 @@ public:                                                                     \
     x(x &&)             = default; \
     x & operator=(x &&) = default
 
-#define GN_LIKELY
+#define GN_LIKELY [[likely]]
 
-#define GN_UNLIKELY
+#define GN_UNLIKELY [[unlikely]]
 
 namespace GN {
 ///
@@ -407,6 +403,36 @@ private: // emphasize the following members are private
     NoCopy(const NoCopy &);
     const NoCopy & operator=(const NoCopy &);
 };
+
+///
+/// type cast function
+///
+/// perform dynamic cast in debug build, and reinterpret cast in release build.
+// ------------------------------------------------------------------------
+template<class TO, class FROM>
+GN_FORCE_INLINE TO & safeCastRef(FROM & from) {
+#if GN_BUILD_DEBUG_ENABLED && (!GN_MSVC || defined(_CPPRTTI))
+    return dynamic_cast<TO &>(from);
+#else
+    return reinterpret_cast<TO &>(from);
+#endif
+}
+
+///
+/// type cast function
+///
+/// perform dynamic cast in debug build, and reinterpret cast in release build.
+// ------------------------------------------------------------------------
+template<class TO, class FROM>
+GN_FORCE_INLINE TO * safeCastPtr(FROM * from) {
+#if GN_BUILD_DEBUG_ENABLED && (!GN_MSVC || defined(_CPPRTTI))
+    TO * to = dynamic_cast<TO *>(from);
+#else
+    TO * to = reinterpret_cast<TO *>(from);
+#endif
+    return to;
+}
+
 } // namespace GN
 
 // *****************************************************************************

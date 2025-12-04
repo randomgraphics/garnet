@@ -19,13 +19,13 @@ public:
     void clear();
 
     bool loadFromFile(const wchar_t * filename);
-    bool reads(const char * section, const char * key, StrA & value);
+    bool reads(const char * section, const char * key, std::string & value);
     bool readi(const char * section, const char * key, int & value);
     bool readf(const char * section, const char * key, float & value);
     bool readb(const char * section, const char * key, bool & value);
 
-    StrA dreads(const char * section, const char * key, const char * defaultValue) {
-        StrA v;
+    std::string dreads(const char * section, const char * key, const char * defaultValue) {
+        std::string v;
         if (!reads(section, key, v)) v = defaultValue;
         return v;
     }

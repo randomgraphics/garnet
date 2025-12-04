@@ -32,7 +32,7 @@ const char * getCudaErrorString(cudaError_t r) { return cudaGetErrorString(r); }
     do {                                                                                                                  \
         auto result__ = (x);                                                                                              \
         if (CUDA_SUCCESS != result__) {                                                                                   \
-            GN_ERROR(sLogger)("CUDA function failed: (%s) %s", getCudaErrorName(result__), getCudaErrorString(result__)); \
+            GN_ERROR(sLogger)("CUDA function failed: ({}) {}", getCudaErrorName(result__), getCudaErrorString(result__)); \
             failed;                                                                                                       \
         }                                                                                                                 \
     } while (0)
@@ -43,7 +43,7 @@ const char * getCudaErrorString(cudaError_t r) { return cudaGetErrorString(r); }
     do {                                                                                                                     \
         OptixResult result__ = (x);                                                                                          \
         if (OPTIX_SUCCESS != result__) {                                                                                     \
-            GN_ERROR(sLogger)("OptiX function failed: (%s) %s", optixGetErrorName(result__), optixGetErrorString(result__)); \
+            GN_ERROR(sLogger)("OptiX function failed: ({}) {}", optixGetErrorName(result__), optixGetErrorString(result__)); \
             failed;                                                                                                          \
         }                                                                                                                    \
     } while (0)
@@ -129,7 +129,7 @@ struct OptixStats {
             static char log[2048];
             size_t      sizeof_log = sizeof(log);
             OPTIX_CHECK(optixModuleCreateFromPTX(context, &module_compile_options, &pipeline_compile_options, ptx, strlen(ptx), log, &sizeof_log, &m),
-                        GN_ERROR(sLogger)("failed to create optix module from PTX: %s", log);
+                        GN_ERROR(sLogger)("failed to create optix module from PTX: {}", log);
                         return false;);
             return true;
         }
@@ -156,7 +156,7 @@ struct OptixStats {
             OPTIX_CHECK(optixProgramGroupCreate(context, &desc,
                                                 1, // num program groups
                                                 &options, log, &sizeof_log, &g),
-                        GN_ERROR(sLogger)("failed to create program group: %s", log);
+                        GN_ERROR(sLogger)("failed to create program group: {}", log);
                         return false;);
             return true;
         }

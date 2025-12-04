@@ -300,7 +300,7 @@ public:
         if (CASE_INSENSITIVE) { GN_UNIMPL(); }
 
         if (NULL != mNames.find(name)) {
-            GN_ERROR(getLogger("GN.base.NamedHandleManager"))("name '%s' is not unique.", name.data());
+            GN_ERROR(getLogger("GN.base.NamedHandleManager"))("name '{}' is not unique.", name.data());
             return 0;
         }
 
@@ -327,7 +327,7 @@ public:
         if (CASE_INSENSITIVE) { GN_UNIMPL(); }
 
         if (NULL != mNames.find(name)) {
-            GN_ERROR(getLogger("GN.base.NamedHandleManager"))("name '%s' is not unique.", name.data());
+            GN_ERROR(getLogger("GN.base.NamedHandleManager"))("name '{}' is not unique.", name.data());
             return 0;
         }
 
@@ -348,7 +348,7 @@ public:
 
     void remove(H h) {
         if (!validHandle(h)) {
-            GN_ERROR(getLogger("GN.base.NamedHandleManager"))("invalid handle : %d.", h);
+            GN_ERROR(getLogger("GN.base.NamedHandleManager"))("invalid handle : {}.", h);
             return;
         }
 
@@ -366,7 +366,7 @@ public:
         if (CASE_INSENSITIVE) { GN_UNIMPL(); }
 
         if (!validName(name)) {
-            GN_ERROR(getLogger("GN.base.NamedHandleManager"))("invalid name: %s.", name.data());
+            GN_ERROR(getLogger("GN.base.NamedHandleManager"))("invalid name: {}.", name.data());
             return;
         }
 

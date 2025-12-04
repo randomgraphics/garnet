@@ -104,7 +104,7 @@ bool GN::gfx::D3D11RTMgr::bind(const RenderTargetDesc & oldrt, const RenderTarge
         for (uint32_t i = 0; i < newrt.colortargets.size(); ++i) {
             const RenderTargetTexture & rtt = newrt.colortargets[i];
 
-            D3D11Texture * tex = (D3D11Texture *) rtt.texture.data();
+            auto tex = rtt.texture.get<D3D11Texture>();
 
             GN_ASSERT(tex);
 
@@ -118,7 +118,7 @@ bool GN::gfx::D3D11RTMgr::bind(const RenderTargetDesc & oldrt, const RenderTarge
         mNumColors = newrt.colortargets.size();
 
         // Get depth stencil view
-        D3D11Texture * dstex = (D3D11Texture *) newrt.depthstencil.texture.data();
+        auto dstex = newrt.depthstencil.texture.get<D3D11Texture>();
         if (dstex) {
             mDepth = dstex->getDSView(newrt.depthstencil.face, newrt.depthstencil.level, newrt.depthstencil.slice);
             if (NULL == mDepth) { return false; }

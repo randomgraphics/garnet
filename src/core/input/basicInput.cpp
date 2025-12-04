@@ -89,7 +89,7 @@ void GN::input::BasicInput::triggerCharPress(char ch) {
     } else if (mHalfWideChar) {
         mHalfBytes[1] = ch;
         wchar_t wch[2];
-        mbs2wcs(wch, 2, mHalfBytes, 2);
+        CharacterEncodingConverter::ascii2wcs(wch, 2, mHalfBytes, 2);
 
         // GN_TRACE( "Char press: %s", StrA(mHalfBytes,2).data() );
         sigCharPress(wch[0]);

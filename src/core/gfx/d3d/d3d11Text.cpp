@@ -106,7 +106,7 @@ public:
     // -----------------------------------------------------------------------------
     void Draw2DText(ID3D11DeviceContext & cxt, const TextDesc & td) {
         // skip empty text.
-        if (str::isEmpty(td.text)) return;
+        if (str::empty(td.text)) return;
 
         auto rt = GetD2DRenderTarget(cxt);
         if (nullptr == rt) return;

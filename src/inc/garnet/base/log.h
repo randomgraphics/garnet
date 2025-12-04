@@ -9,6 +9,14 @@
 #include <chrono>
 #include <sstream>
 
+#ifndef FMT_HEADER_ONLY
+    #define FMT_HEADER_ONLY
+#endif
+#include <fmt/format.h>
+#include <fmt/xchar.h>
+#include <fmt/printf.h>
+
+///
 /// General log macros, with user specified source code location
 //@{
 #if GN_ENABLE_LOG
@@ -84,6 +92,211 @@
 //@}
 
 namespace GN {
+
+namespace internal {
+
+struct GN_API WideString {
+    const wchar_t * wstr         = nullptr;
+    bool            needDeletion = false;
+    WideString(const char *);
+    ~WideString();
+};
+
+///
+/// String format utility class. Reserved for internal use only.
+///
+template<typename CHAR>
+class StringFormatter {
+#if GN_BUILD_DEBUG_ENABLED
+    static bool lookForPrintfSpecifiers(const CHAR * fmt) {
+        if (!fmt) return false;
+
+        // Helper function to check if a character is a valid printf conversion specifier
+        auto isPrintfSpecifier = [](CHAR c) -> bool {
+            // Valid printf conversion specifiers: d, i, o, u, x, X, f, F, e, E, g, G, a, A, c, s, p, n
+            return (c == 'd' || c == 'i' || c == 'o' || c == 'u' || c == 'x' || c == 'X' || c == 'f' || c == 'F' || c == 'e' || c == 'E' || c == 'g' ||
+                    c == 'G' || c == 'a' || c == 'A' || c == 'c' || c == 's' || c == 'p' || c == 'n');
+        };
+
+        const CHAR * p = fmt;
+        while (*p) {
+            if (*p == '%') {
+                ++p;
+                // Handle escaped percent sign
+                if (*p == '%') {
+                    ++p;
+                    continue;
+                }
+
+                // Skip optional flags: -+ #0 space
+                while (*p == '-' || *p == '+' || *p == ' ' || *p == '#' || *p == '0') { ++p; }
+
+                // Skip optional width: digits or *
+                if (*p == '*') {
+                    ++p;
+                } else {
+                    while (*p >= '0' && *p <= '9') { ++p; }
+                }
+
+                // Skip optional precision: . followed by digits or *
+                if (*p == '.') {
+                    ++p;
+                    if (*p == '*') {
+                        ++p;
+                    } else {
+                        while (*p >= '0' && *p <= '9') { ++p; }
+                    }
+                }
+
+                // Skip optional length modifiers: h, hh, l, ll, j, z, t, L
+                if (*p == 'h') {
+                    ++p;
+                    if (*p == 'h') ++p; // hh
+                } else if (*p == 'l') {
+                    ++p;
+                    if (*p == 'l') ++p; // ll
+                } else if (*p == 'j' || *p == 'z' || *p == 't' || *p == 'L') {
+                    ++p;
+                }
+
+                // Check for conversion specifier
+                if (*p && isPrintfSpecifier(*p)) {
+                    return true; // Found printf-style format specifier
+                }
+            } else {
+                ++p;
+            }
+        }
+
+        return false; // No printf-style format specifiers found
+    }
+
+    static void checkForPrintf(const CHAR * fmt) {
+        if (!fmt || !*fmt) return;
+        if constexpr (std::is_same_v<CHAR, char>) {
+            auto s = fmt::format("Printf syntax is deprecated: {}", fmt);
+            GN_ASSERT_EX(!lookForPrintfSpecifiers(fmt), s.c_str());
+        } else if constexpr (std::is_same_v<CHAR, wchar_t>) {
+            auto s = fmt::format(L"Printf syntax is deprecated: {}", fmt);
+            GN_ASSERT_EX(!lookForPrintfSpecifiers(fmt), s.c_str());
+        } else {
+            GN_ASSERT_EX(!lookForPrintfSpecifiers(fmt), "Printf syntax is deprecated");
+        }
+    }
+#else
+    // do nothing in release build
+    static void checkForPrintf(const CHAR *) {}
+#endif
+
+    static void printInvalidFormatSyntax([[maybe_unused]] const CHAR * fmt, [[maybe_unused]] const char * what) {
+        if constexpr (std::is_same_v<CHAR, char>) {
+            GN_ASSERT_EX(false, fmt::format("{}: {}", what, fmt).c_str());
+        } else if constexpr (std::is_same_v<CHAR, wchar_t>) {
+            GN_ASSERT_EX(false, fmt::format(L"{}: {}", WideString(what).wstr, fmt).c_str());
+        }
+    }
+
+    std::basic_string<CHAR>         mResult;
+    bool                            mIsPreallocated = true;
+    static inline thread_local CHAR mPreAllocatedBuffer[1024];
+
+public:
+    /// @brief Format the string to the output buffer. The output string is guaranteed to be null terminated.
+    /// @tparam ...Args types of the arguments to the format string.
+    /// @param outputBuffer The output buffer.
+    /// @param outputBufferSize The size of the output buffer, including the null terminator.
+    /// @param fmt The format string.
+    /// @param ...args The arguments to the format string.
+    template<typename... Args>
+    static void formatToBuffer(CHAR * outputBuffer, size_t outputBufferSize, const CHAR * fmt, Args &&... args) {
+        // handle empty input and output buffer
+        if (!outputBuffer || 0 == outputBufferSize) return;
+        if (!fmt || !*fmt) {
+            outputBuffer[0] = 0;
+            return;
+        }
+        checkForPrintf(fmt);
+        try {
+            auto result       = fmt::format_to_n(outputBuffer, outputBufferSize - 1, fmt, std::forward<Args>(args)...);
+            auto len          = std::min(result.size, outputBufferSize - 1);
+            outputBuffer[len] = 0;
+        } catch (std::exception & e) { printInvalidFormatSyntax(fmt, e.what()); } catch (...) {
+            printInvalidFormatSyntax(fmt, "Unknown exception when formatting string");
+        }
+    }
+
+    /// Return size of the formatted string, not including the null terminator.
+    template<typename... Args>
+    static size_t formattedSize(const CHAR * fmt, Args &&... args) {
+        if (!fmt || !*fmt) return 0;
+        checkForPrintf(fmt);
+        try {
+            return fmt::formatted_size(fmt, std::forward<Args>(args)...);
+        } catch (std::exception & e) {
+            printInvalidFormatSyntax(fmt, e.what());
+            return 0;
+        } catch (...) {
+            printInvalidFormatSyntax(fmt, "Unknown exception when formatting string");
+            return 0;
+        }
+    }
+
+    template<typename... Args>
+    StringFormatter(const CHAR * fmt, Args &&... args) {
+        if (!fmt || !*fmt) {
+            mIsPreallocated        = true;
+            mPreAllocatedBuffer[0] = 0;
+            return;
+        }
+
+        checkForPrintf(fmt);
+
+        try {
+            // get size of the formatted string
+            auto r = fmt::formatted_size(fmt, std::forward<Args>(args)...);
+
+            constexpr size_t maxCharacters = sizeof(mPreAllocatedBuffer) / sizeof(CHAR) - 1; // needs one additional space for the null terminator
+
+            if (r > maxCharacters) {
+                mIsPreallocated = false;
+                mResult         = fmt::format(fmt, std::forward<Args>(args)...);
+            } else {
+                mIsPreallocated = true;
+                fmt::format_to_n(mPreAllocatedBuffer, maxCharacters, fmt, std::forward<Args>(args)...);
+                mPreAllocatedBuffer[std::min(r, maxCharacters)] = 0;
+            }
+        } catch (const std::exception & e) {
+            if constexpr (std::is_same_v<CHAR, char>) {
+                mResult = fmt::format("{}: {}", e.what(), fmt);
+            } else if constexpr (std::is_same_v<CHAR, wchar_t>) {
+                mResult = fmt::format(L"{}: {}", WideString(e.what()).wstr, fmt);
+            }
+            mIsPreallocated = false;
+        }
+    }
+
+    const CHAR * result() const { return mIsPreallocated ? mPreAllocatedBuffer : mResult.c_str(); }
+};
+
+///
+/// String formatter class using the old school printf syntax.
+///
+template<typename CHAR>
+class StringPrinter {
+    std::basic_string<CHAR> mResult;
+
+public:
+    template<typename... Args>
+    StringPrinter(const CHAR * fmt, Args &&... args) {
+        if (!fmt || !*fmt) { return; }
+        mResult = fmt::vsprintf<CHAR>(fmt::basic_string_view<CHAR>(fmt), fmt::make_printf_args<CHAR>(args...));
+    }
+    const CHAR * result() const { return mResult.c_str(); }
+    size_t       size() const { return mResult.size(); }
+};
+
+} // end of namespace internal
+
 ///
 /// Logger class
 ///
@@ -102,9 +315,9 @@ public:
     };
 
     ///
-    /// Log description structure
+    /// Log location in source code
     ///
-    struct LogDesc {
+    struct LogLocation {
         int          level; ///< Log level/severity (required)
         const char * func;  ///< Log location: function name (optional). Set to NULL if you don't need it.
         const char * file;  ///< Log location: file name (optional). Set to NULL if you don't need it.
@@ -113,22 +326,22 @@ public:
         ///
         /// Default constructor. Do nothing.
         ///
-        LogDesc() {}
+        LogLocation() {}
 
         ///
         /// Construct doLog descriptor
         ///
-        LogDesc(int lvl_, const char * func_, const char * file_, int line_): level(lvl_), func(func_), file(file_), line(line_) {}
+        LogLocation(int lvl_, const char * func_, const char * file_, int line_): level(lvl_), func(func_), file(file_), line(line_) {}
     };
 
     ///
     /// doLog helper
     ///
     struct GN_API LogHelper {
-        Logger * mLogger; ///< Logger instance pointer
-        LogDesc  mDesc;   ///< Logging descriptor
-        uint8_t  mStreamBuffer[sizeof(std::stringstream)];
-        bool     mStreamConstructed = false;
+        Logger *    mLogger; ///< Logger instance pointer
+        LogLocation mDesc;   ///< Logging descriptor
+        uint8_t     mStreamBuffer[sizeof(std::stringstream)];
+        bool        mStreamConstructed = false;
 
         std::stringstream * ss() {
             if (!mStreamConstructed) {
@@ -173,12 +386,26 @@ public:
         ///
         /// printf style log
         ///
-        void operator()(const char * fmt, ...);
+        template<typename... Args>
+        void operator()(const char * format_, Args &&... args_) {
+            GN_ASSERT(mLogger);
+            if (mLogger->isPrintfSyntax()) GN_UNLIKELY {
+                    return mLogger->doLog(mDesc, internal::StringPrinter<char>(format_, std::forward<Args>(args_)...).result());
+                }
+            else { return mLogger->doLog(mDesc, internal::StringFormatter<char>(format_, std::forward<Args>(args_)...).result()); }
+        }
 
         ///
         /// printf style log (wide char)
         ///
-        void operator()(const wchar_t * fmt, ...);
+        template<typename... Args>
+        void operator()(const wchar_t * format_, Args &&... args_) {
+            GN_ASSERT(mLogger);
+            if (mLogger->isPrintfSyntax()) GN_UNLIKELY {
+                    return mLogger->doLog(mDesc, internal::StringPrinter<wchar_t>(format_, std::forward<Args>(args_)...).result());
+                }
+            else { return mLogger->doLog(mDesc, internal::StringFormatter<wchar_t>(format_, std::forward<Args>(args_)...).result()); }
+        }
     };
 
     ///
@@ -193,12 +420,12 @@ public:
         ///
         /// deal with incoming log message
         ///
-        virtual void onLog(Logger &, const LogDesc &, const char *) = 0;
+        virtual void onLog(Logger &, const LogLocation &, const char *) = 0;
 
         ///
         /// deal with incoming UNICODE log message
         ///
-        virtual void onLog(Logger &, const LogDesc &, const wchar_t *) = 0;
+        virtual void onLog(Logger &, const LogLocation &, const wchar_t *) = 0;
     };
 
     ///
@@ -209,12 +436,12 @@ public:
     ///
     /// Do log
     ///
-    virtual void doLog(const LogDesc & desc, const char * msg) = 0;
+    virtual void doLog(const LogLocation & desc, const char * msg) = 0;
 
     ///
     /// Do log (UNICODE)
     ///
-    virtual void doLog(const LogDesc & desc, const wchar_t * msg) = 0;
+    virtual void doLog(const LogLocation & desc, const wchar_t * msg) = 0;
 
     ///
     /// change logger level.
@@ -270,6 +497,11 @@ public:
     }
 
     ///
+    /// is using printf syntax?
+    ///
+    bool isPrintfSyntax() const { return mUsePrintfSyntax; }
+
+    ///
     /// Fake logging. Do nothing.
     ///
     static inline void sFakeLog(...) {}
@@ -278,13 +510,14 @@ protected:
     ///
     /// protective constructor
     ///
-    Logger(const char * name): mName(name) {}
+    Logger(const char * name, bool usePrintfSyntax): mName(name), mUsePrintfSyntax(usePrintfSyntax) {}
 
     int  mLevel;   ///< doLog level
     bool mEnabled; ///< logger enabled or not.
 
 private:
     const char * mName;
+    bool         mUsePrintfSyntax;
 };
 
 /// \name Global doLog functions
@@ -296,7 +529,7 @@ private:
 /// \param name
 ///     Logger name (case insensitive)
 ///
-GN_API Logger * getLogger(const char * name);
+GN_API Logger * getLogger(const char * name, bool usePrintfSyntax = false);
 
 ///
 /// Get root logger
