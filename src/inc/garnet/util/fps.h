@@ -63,7 +63,7 @@ public:
         if (timeSinceLastCheckPoint >= 1.0f) {
             mBeforeFirstUpdate = false;
             mFpsValue          = (float) (mFrameCounter / timeSinceLastCheckPoint);
-            mFpsString.format(mFormatString.data(), mFpsValue);
+            mFpsString.formatInplace(mFormatString.data(), mFpsValue);
             mLastCheckPoint         = mCurrentTime;
             mFrameCounter           = 0;
             static Logger * sLogger = getLogger("GN.util.fps");

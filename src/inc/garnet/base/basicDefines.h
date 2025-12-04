@@ -380,9 +380,9 @@ public:                                                                     \
     x(x &&)             = default; \
     x & operator=(x &&) = default
 
-#define GN_LIKELY
+#define GN_LIKELY [[likely]]
 
-#define GN_UNLIKELY
+#define GN_UNLIKELY [[unlikely]]
 
 namespace GN {
 ///
@@ -403,6 +403,36 @@ private: // emphasize the following members are private
     NoCopy(const NoCopy &);
     const NoCopy & operator=(const NoCopy &);
 };
+
+///
+/// type cast function
+///
+/// perform dynamic cast in debug build, and reinterpret cast in release build.
+// ------------------------------------------------------------------------
+template<class TO, class FROM>
+GN_FORCE_INLINE TO & safeCastRef(FROM & from) {
+#if GN_BUILD_DEBUG_ENABLED && (!GN_MSVC || defined(_CPPRTTI))
+    return dynamic_cast<TO &>(from);
+#else
+    return reinterpret_cast<TO &>(from);
+#endif
+}
+
+///
+/// type cast function
+///
+/// perform dynamic cast in debug build, and reinterpret cast in release build.
+// ------------------------------------------------------------------------
+template<class TO, class FROM>
+GN_FORCE_INLINE TO * safeCastPtr(FROM * from) {
+#if GN_BUILD_DEBUG_ENABLED && (!GN_MSVC || defined(_CPPRTTI))
+    TO * to = dynamic_cast<TO *>(from);
+#else
+    TO * to = reinterpret_cast<TO *>(from);
+#endif
+    return to;
+}
+
 } // namespace GN
 
 // *****************************************************************************

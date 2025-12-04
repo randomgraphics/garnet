@@ -26,7 +26,7 @@ public:
         // Note: wide[3] should NOT be null-terminated since buffer is too small
 
         // fill wide with garbage data and do another test
-        memset(wide, 0xFF, sizeof(wide));
+        for (size_t i = 0; i < 4; ++i) wide[i] = (wchar_t) 0xEFFE;
 
         // set dest buffer size of 3, in this case, only 3 character should be
         // converted and dest buffer should not be null terminated.
@@ -37,7 +37,7 @@ public:
         TS_ASSERT_EQUALS(wide[0], L'a');
         TS_ASSERT_EQUALS(wide[1], L'b');
         TS_ASSERT_EQUALS(wide[2], L'c');
-        TS_ASSERT_EQUALS(wide[3], (wchar_t) 0xFFFF);
+        TS_ASSERT_EQUALS(wide[3], (wchar_t) 0xEFFE);
     }
 
     void testASCII_to_WIDECHAR() {
@@ -195,13 +195,13 @@ public:
 
         // ASCII -> WIDECHAR
         CharacterEncodingConverter c1(CharacterEncodingConverter::ASCII, CharacterEncodingConverter::WIDECHAR);
-        wchar_t                    wide[20];
+        wchar_t                    wide[20]   = {};
         size_t                     converted1 = c1(wide, original);
         TS_ASSERT(converted1 > 0);
 
         // WIDECHAR -> ASCII
         CharacterEncodingConverter c2(CharacterEncodingConverter::WIDECHAR, CharacterEncodingConverter::ASCII);
-        char                       result[20] = {0};
+        char                       result[20] = {(char) 0x7F};
         size_t                     converted2 = c2(result, wide);
         TS_ASSERT(converted2 > 0);
         TS_ASSERT_EQUALS(result, original);

@@ -2,6 +2,7 @@
 #include "codepageICONV.h"
 #include "codepageMSWIN.h"
 #include "codepageXenon.h"
+#include <stdlib.h>
 #include <cstdlib>
 
 static GN::Logger * sLogger = GN::getLogger("GN.base.codepage");
@@ -36,7 +37,7 @@ typedef GN::CECImplICONV CECImpl;
 GN_API const char * GN::CharacterEncodingConverter::sEncoding2Str(Encoding e) {
     switch (e) {
     case ASCII:
-        return "ASCII";
+        return "ascii";
     case ISO_8859_1:
         return "iso-8859-1";
     case UTF7:
@@ -137,7 +138,7 @@ GN_API GN::StrA GN::wcs2mbs(const wchar_t * i, size_t l) {
     GN::StrA o;
     if (0 == i || 0 == l) return o;
 
-    o.resize(l + 1);
+    o.resize(l);
 #if GN_MSVC
     if (::wcstombs_s(&l, o.data(), l + 1, i, l)) {
         o.clear();
@@ -145,7 +146,8 @@ GN_API GN::StrA GN::wcs2mbs(const wchar_t * i, size_t l) {
     }
     --l; // For MVCS (at least up to VS2022), l includes the null terminator.
 #else
-    if (std::wcstombs_s(&l, o.data(), i, l)) {
+    l = std::wcstombs(o.data(), i, l);
+    if (static_cast<std::size_t>(-1) == l) {
         o.clear();
         return o;
     }
@@ -168,22 +170,24 @@ GN_API GN::StrW GN::mbs2wcs(const char * i, size_t l) {
     o.resize(l);
 
 #if GN_MSVC
-    // For VS2022, std::mbstowcs_s does not exist yet.
     if (::mbstowcs_s(&l, o.data(), l + 1, i, l)) {
-#else
-    if (std::mbstowcs_s(&l, o.data(), l + 1, i, l)) {
-#endif
         // the function returns non-zero value, indicating conversion failed. Clear the output buffer and bail out.
         o.clear();
-    } else {
-        // MSVC and the rest of the world, don't agree with the meaning of l.
-        // For MSVC, l includes the null terminator, while C++ standard says otherwise.
-#if GN_MSVC
-        --l;
-#endif
-        o.resize(l);
-        o[l] = 0;
+        return o;
     }
+    // MSVC and the rest of the world, don't agree with the meaning of l.
+    // For MSVC, l includes the null terminator, while C++ standard says otherwise.
+    --l;
+#else
+    l = std::mbstowcs(o.data(), i, l);
+    if (static_cast<std::size_t>(-1) == l) {
+        o.clear();
+        return o;
+    }
+#endif
 
+    // done
+    o.resize(l);
+    o[l] = 0;
     return o;
 }

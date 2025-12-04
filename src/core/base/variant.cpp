@@ -22,7 +22,7 @@ GN_API void GN::Variant::setp(void * p) {
     if (0 == p)
         mValue = "0";
     else
-        mValue.format("{}", p);
+        mValue.formatInplace("{}", p);
 }
 GN_API void GN::Variant::setv(const Vector4f & v) { mValue.formatInplace("{},{},{},{}", v.x, v.y, v.z, v.w); }
 GN_API void GN::Variant::setm(const Matrix44f & m) {
