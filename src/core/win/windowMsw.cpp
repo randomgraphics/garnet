@@ -94,7 +94,7 @@ bool GN::win::WindowMsw::init(const WindowAttachingParameters & wap) {
     }
 
     if (NULL != msInstanceMap.find((HWND) wap.window)) {
-        GN_ERROR(sLogger)("You can't create multiple render window instance for single window handle.");
+        GN_ERROR(sLogger)("You can't create multiple render window instance for single window handle: 0x{:X}", (intptr_t) wap.window);
         return failure();
     }
 
