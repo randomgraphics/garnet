@@ -895,7 +895,8 @@ public:
     /// string formatting
     ///
     template<typename... Args>
-    static Str<CharType> format(const CharType * formatString, Args &&... args) {
+    [[nodiscard("The return value of this function is usually not discarded. Maybe formatInplace() is what you want?")]] static Str<CharType>
+    format(const CharType * formatString, Args &&... args) {
         auto          numCharacters = internal::StringFormatter<CharType>::formattedSize(formatString, std::forward<Args>(args)...);
         Str<CharType> result;
         result.resize(numCharacters);

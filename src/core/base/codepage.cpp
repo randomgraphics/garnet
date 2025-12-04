@@ -2,6 +2,7 @@
 #include "codepageICONV.h"
 #include "codepageMSWIN.h"
 #include "codepageXenon.h"
+#include <cstdlib>
 
 static GN::Logger * sLogger = GN::getLogger("GN.base.codepage");
 
@@ -151,18 +152,19 @@ GN_API void GN::wcs2mbs(GN::StrA & o, const wchar_t * i, size_t l) {
 
     o.resize(l + 1);
 #if GN_MSVC
-    size_t ol;
-    ::wcstombs_s(&ol, o.data(), l + 1, i, l);
-    l = ol;
-#else
-    l = ::wcstombs(o.data(), i, l);
-#endif
-    if ((size_t) -1 == l || 0 == l) {
+    if (::wcstombs_s(&l, o.data(), l + 1, i, l)) {
         o.clear();
-    } else {
-        o.resize(l);
-        o[l] = 0;
+        return;
     }
+    --l; // For MVCS (at least up to VS2022), l includes the null terminator.
+#else
+    if (std::wcstombs_s(&l, o.data(), i, l)) {
+        o.clear();
+        return;
+    }
+#endif
+    o.resize(l);
+    o[l] = 0;
 }
 
 //
@@ -201,23 +203,25 @@ GN_API void GN::mbs2wcs(GN::StrW & o, const char * i, size_t l) {
     }
     if (0 == l) l = str::length(i);
 
-    o.resize(l + 1);
+    // N multi-bytes characters converts to at most N wide characters. So we resize the output string to N first,
+    // to ensure there's enough space for conversion.
+    o.resize(l);
+
 #if GN_MSVC
-    size_t ol;
-    if (0 != ::mbstowcs_s(&ol, o.data(), l + 1, i, l)) {
-        o.clear();
-    } else {
-        o.resize(ol + 1);
-        o.data()[ol] = 0;
-        while (ol > 0 && 0 == o.data()[ol]) --ol;
-    }
+    // For VS2022, std::mbstowcs_s does not exist yet.
+    if (::mbstowcs_s(&l, o.data(), l + 1, i, l)) {
 #else
-    l = ::mbstowcs(o.data(), i, l);
-    if ((size_t) -1 == l || 0 == l) {
+    if (std::mbstowcs_s(&l, o.data(), l + 1, i, l)) {
+#endif
+        // the function returns non-zero value, indicating conversion failed. Clear the output buffer and bail out.
         o.clear();
     } else {
-        o.resize(l);
-        o.data()[l] = 0;
-    }
+        // MSVC and the rest of the world, don't agree with the meaning of l.
+        // For MSVC, l includes the null terminator, while C++ standard says otherwise.
+#if GN_MSVC
+        --l;
 #endif
+        o.resize(l);
+        o[l] = 0;
+    }
 }

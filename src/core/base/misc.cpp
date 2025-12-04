@@ -23,9 +23,9 @@ GN_API void GN::putEnv(const char * name, const char * value) {
     #else
     StrA s;
     if (str::empty(value)) {
-        s.format("{}=", name);
+        s.formatInplace("{}=", name);
     } else {
-        s.format("{}={}", name, value);
+        s.formatInplace("{}={}", name, value);
     }
 
     if (0 != _putenv(const_cast<char *>(s.data()))) { GN_ERROR(sLogger)("fail to set environment '{}'.", s.data()); }

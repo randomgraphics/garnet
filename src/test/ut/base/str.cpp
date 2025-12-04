@@ -48,6 +48,31 @@ public:
         TS_ASSERT_EQUALS(wcs, L"abc");
     }
 
+    void testWcstombs() {
+        const wchar_t * wcs = L"abc";
+        GN::StrA        mbs;
+
+        mbs = GN::wcs2mbs(wcs, 0);
+        TS_ASSERT_EQUALS(mbs.size(), 3);
+        TS_ASSERT_EQUALS(mbs, "abc");
+
+        mbs = GN::wcs2mbs(wcs, 1);
+        TS_ASSERT_EQUALS(mbs.size(), 1);
+        TS_ASSERT_EQUALS(mbs, "a");
+
+        mbs = GN::wcs2mbs(wcs, 2);
+        TS_ASSERT_EQUALS(mbs.size(), 2);
+        TS_ASSERT_EQUALS(mbs, "ab");
+
+        mbs = GN::wcs2mbs(wcs, 3);
+        TS_ASSERT_EQUALS(mbs.size(), 3);
+        TS_ASSERT_EQUALS(mbs, "abc");
+
+        mbs = GN::wcs2mbs(wcs, 100);
+        TS_ASSERT_EQUALS(mbs.size(), 3);
+        TS_ASSERT_EQUALS(mbs, "abc");
+    }
+
     void testStrFormatNullAndEmpty() {
         char * null = nullptr;
         char   buf[10];
