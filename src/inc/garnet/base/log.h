@@ -369,7 +369,7 @@ public:
         ///
         ~LogHelper() {
             if (mStreamConstructed) {
-                operator()(ss()->str().c_str());
+                if (mLogger) GN_LIKELY mLogger->doLog(mDesc, ss()->str().c_str());
                 dtor(ss());
             }
         }
