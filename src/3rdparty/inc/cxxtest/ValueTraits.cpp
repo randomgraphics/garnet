@@ -97,7 +97,7 @@ namespace CxxTest
     unsigned ValueTraits<const double>::requiredDigitsOnLeft( double t )
     {
         unsigned digits = 1;
-        for ( t = (t < 0.0) ? -t : t; t > 1.0; t /= BASE )
+        for ( t = (t < 0.0) ? -t : t; t > 1.0; t /= (double)BASE )
             ++ digits;
         return digits;
     }
@@ -127,12 +127,12 @@ namespace CxxTest
         s = doubleToString( t, s );
         s = copyString( s, "." );
         for ( unsigned i = 0; i < DIGITS_ON_RIGHT; ++ i )
-            s = numberToString( (unsigned)(t *= BASE) % BASE, s );
+            s = numberToString( (unsigned)(t *= (double)BASE) % BASE, s );
     }
 
     char *ValueTraits<const double>::doubleToString( double t, char *s, unsigned skip, unsigned max )
     {
-        return numberToString<double>( t, s, BASE, skip, max );
+        return numberToString<double>( t, s, (double)BASE, skip, max );
     }
 #endif // !CXXTEST_USER_VALUE_TRAITS
 };

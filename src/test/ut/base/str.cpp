@@ -92,7 +92,6 @@ public:
         // null or empty buffer should not crash the program
         GN::str::formatTo(null, 0, "a");
         GN::str::formatTo(buf, 0, "a");
-        GN::str::formatTo(buf, 10, null);
         GN::str::formatTo(buf, 10, "");
         GN::str::formatTo(buf, 10, "", 1);
     }
@@ -323,8 +322,6 @@ public:
 #if !GN_CYGWIN
         s1.formatInplace(L"haha{}", 100);
         TS_ASSERT_EQUALS(s1, L"haha100");
-        s1.formatInplace(0, 100);
-        TS_ASSERT_EQUALS(s1, L"");
 #else
         TS_WARN("wide-char string formatting is not implemented on cygwin");
 #endif

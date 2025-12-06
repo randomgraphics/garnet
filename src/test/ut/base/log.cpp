@@ -9,7 +9,5 @@ public:
         GN_ERROR(sLogger)(L"unicode error");
         GN_WARN(sLogger)(L"unicode warn");
         GN_INFO(sLogger)(L"unicode info");
-        GN_ERROR(sLogger)((const char *) NULL);
-        GN_ERROR(sLogger)((const wchar_t *) NULL);
     }
 };

@@ -165,7 +165,7 @@ static void sOutputOGLInfo(intptr_t disp, const DynaArray<std::string> & glexts)
                          "===================================================\n"
                          "\n\n",
                          ts, tu);
-    GN_INFO(sLogger)(info.data());
+    GN_INFO(sLogger)("{}", info.data());
 
     // extension info.
     info = "\n\n"
@@ -176,7 +176,7 @@ static void sOutputOGLInfo(intptr_t disp, const DynaArray<std::string> & glexts)
     info += "===================================================\n"
             "\n\n";
 
-    GN_VERBOSE(sLogger)(info.data());
+    GN_VERBOSE(sLogger)("{}", info.data());
 
     GN_UNGUARD;
 }

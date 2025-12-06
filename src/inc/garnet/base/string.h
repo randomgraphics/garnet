@@ -142,9 +142,22 @@ inline bool isEmpty(const CHAR * s) {
 ///
 /// format string to raw buffer with guaranteed null terminator.
 ///
-template<typename CHAR, typename... Args>
-inline void formatTo(CHAR * buf, size_t bufSizeInChar, const CHAR * fmt, Args &&... args) {
-    return internal::StringFormatter<CHAR>::formatToBuffer(buf, bufSizeInChar, fmt, std::forward<Args>(args)...);
+template<typename... Args>
+inline auto formatTo(char * buf, size_t bufSizeInChar, fmt::format_string<Args...> fmt, Args &&... args) {
+    return internal::StringFormatter<char>::formatToBuffer(buf, bufSizeInChar, fmt, std::forward<Args>(args)...);
+}
+
+///
+/// format string to raw buffer with guaranteed null terminator.
+///
+template<size_t N, typename... Args>
+inline auto formatTo(char (&buf)[N], fmt::format_string<Args...> fmt, Args &&... args) {
+    return internal::StringFormatter<char>::formatToBuffer(buf, N, fmt, std::forward<Args>(args)...);
+}
+
+template<typename... Args>
+inline auto formatTo(wchar_t * buf, size_t bufSizeInWChar, fmt::wformat_string<Args...> fmt, Args &&... args) {
+    return internal::StringFormatter<wchar_t>::formatToBuffer(buf, bufSizeInWChar, fmt, std::forward<Args>(args)...);
 }
 
 ///
@@ -363,13 +376,24 @@ public:
     const CharType * end() const { return mPtr + size(); }
 
     ///
-    /// string formatting
+    /// string formatting (narrow version)
     ///
-    template<typename... Args>
-    Str<CharType> & formatInplace(const CharType * formatString, Args &&... args) {
-        auto numCharacters = internal::StringFormatter<CharType>::formattedSize(formatString, std::forward<Args>(args)...);
-        resize(numCharacters);
-        internal::StringFormatter<CharType>::formatToBuffer(mPtr, numCharacters + 1, formatString, std::forward<Args>(args)...);
+    template<typename... Args, std::enable_if_t<(std::is_convertible<CharType, char>::value), bool> = true>
+    Str<CharType> & formatInplace(fmt::format_string<Args...>, Args &&...) {
+        // auto numCharacters = internal::StringFormatter<CharType>::formattedSize(formatString, std::forward<Args>(args)...);
+        // resize(numCharacters);
+        // internal::StringFormatter<CharType>::formatToBuffer(mPtr, numCharacters + 1, formatString, std::forward<Args>(args)...);
+        return *this;
+    }
+
+    ///
+    /// string formatting (wide version)
+    ///
+    template<typename... Args, std::enable_if_t<(std::is_convertible<CharType, wchar_t>::value), bool> = true>
+    Str<CharType> & formatInplace(fmt::wformat_string<Args...>, Args &&...) {
+        // auto numCharacters = internal::StringFormatter<CharType>::formattedSize(formatString, std::forward<Args>(args)...);
+        // resize(numCharacters);
+        // internal::StringFormatter<CharType>::formatToBuffer(mPtr, numCharacters + 1, formatString, std::forward<Args>(args)...);
         return *this;
     }
 
@@ -892,16 +916,45 @@ public:
     };
 
     ///
-    /// string formatting
+    /// string formatting (narrow version)
     ///
-    template<typename... Args>
+    template<typename... Args, std::enable_if_t<(std::is_convertible<CharType, char>::value), bool> = true>
     [[nodiscard("The return value of this function is usually not discarded. Maybe formatInplace() is what you want?")]] static Str<CharType>
-    format(const CharType * formatString, Args &&... args) {
-        auto          numCharacters = internal::StringFormatter<CharType>::formattedSize(formatString, std::forward<Args>(args)...);
-        Str<CharType> result;
-        result.resize(numCharacters);
-        internal::StringFormatter<CharType>::formatToBuffer(result.mPtr, numCharacters + 1, formatString, std::forward<Args>(args)...);
-        return result;
+    format(fmt::format_string<Args...>, Args &&...) {
+        // auto          numCharacters = internal::StringFormatter<CharType>::formattedSize(formatString, std::forward<Args>(args)...);
+        // Str<CharType> result;
+        // result.resize(numCharacters);
+        // internal::StringFormatter<CharType>::formatToBuffer(result.mPtr, numCharacters + 1, formatString, std::forward<Args>(args)...);
+        // return result;
+        // if constexpr (std::is_same_v<CharType, char>) {
+        //     return fmt::vformat(formatString, fmt::make_format_args(args...)).c_str();
+        // } else if constexpr (std::is_same_v<CharType, wchar_t>) {
+        //     return fmt::vformat(formatString, fmt::make_wformat_args(args...)).c_str();
+        // } else {
+        //     static_assert([]() { return false; }(), "Unsupported CharType in Str<CharType>::format()");
+        // }
+        return {};
+    }
+
+    ///
+    /// string formatting (wide version)
+    ///
+    template<typename... Args, std::enable_if_t<(std::is_convertible<CharType, wchar_t>::value), bool> = true>
+    [[nodiscard("The return value of this function is usually not discarded. Maybe formatInplace() is what you want?")]] static Str<CharType>
+    format(fmt::wformat_string<Args...>, Args &&...) {
+        // auto          numCharacters = internal::StringFormatter<CharType>::formattedSize(formatString, std::forward<Args>(args)...);
+        // Str<CharType> result;
+        // result.resize(numCharacters);
+        // internal::StringFormatter<CharType>::formatToBuffer(result.mPtr, numCharacters + 1, formatString, std::forward<Args>(args)...);
+        // return result;
+        // if constexpr (std::is_same_v<CharType, char>) {
+        //     return fmt::vformat(formatString, fmt::make_format_args(args...)).c_str();
+        // } else if constexpr (std::is_same_v<CharType, wchar_t>) {
+        //     return fmt::vformat(formatString, fmt::make_wformat_args(args...)).c_str();
+        // } else {
+        //     static_assert([]() { return false; }(), "Unsupported CharType in Str<CharType>::format()");
+        // }
+        return {};
     }
 
 private:

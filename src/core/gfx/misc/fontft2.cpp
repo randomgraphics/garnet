@@ -174,7 +174,7 @@ bool FontFaceFt2::init(const FontFaceCreationDesc & cd) {
     // load font face
     FT_Error err = FT_Open_Face(sLib->lib, &oa, 0, &mFace);
     if (err) {
-        GN_ERROR(sLogger)("fail to load font face '{}' from file {}.", cd.fontname.data());
+        GN_ERROR(sLogger)("fail to load font face {} from file.", cd.fontname);
         return failure();
     }
 

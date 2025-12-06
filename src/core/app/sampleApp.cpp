@@ -216,7 +216,7 @@ bool GN::util::SampleApp::onCheckExtraCmdlineArguments(const char * exename, int
             s += " ";
             s += argv[i];
         }
-        GN_ERROR(sLogger)(s.data());
+        GN_ERROR(sLogger)("%s", s.data());
     }
 
     return true;

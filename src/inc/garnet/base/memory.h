@@ -187,7 +187,7 @@ struct CxxObjectAllocator {
 
     /// Inplace destruct a single object. No memory freeing.
     static inline void sDestruct(T * ptr) {
-        if constexpr (!std::is_pod<T>()) {
+        if constexpr (!std::is_trivially_destructible<T>()) {
             if (ptr) GN_LIKELY ptr->T::~T();
         } else {
             // do nothing to POD type.

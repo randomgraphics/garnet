@@ -207,27 +207,43 @@ public:
     /// @param outputBufferSize The size of the output buffer, including the null terminator.
     /// @param fmt The format string.
     /// @param ...args The arguments to the format string.
-    template<typename... Args>
-    static void formatToBuffer(CHAR * outputBuffer, size_t outputBufferSize, const CHAR * fmt, Args &&... args) {
+    template<typename... Args, std::enable_if_t<(std::is_convertible<CHAR, char>::value), bool> = true>
+    constexpr static void formatToBuffer(CHAR * outputBuffer, size_t outputBufferSize, fmt::format_string<Args...> fmt, Args &&...) {
         // handle empty input and output buffer
         if (!outputBuffer || 0 == outputBufferSize) return;
-        if (!fmt || !*fmt) {
-            outputBuffer[0] = 0;
-            return;
-        }
-        checkForPrintf(fmt);
+        checkForPrintf(fmt.str.data());
         try {
-            auto result       = fmt::format_to_n(outputBuffer, outputBufferSize - 1, fmt, std::forward<Args>(args)...);
-            auto len          = std::min(result.size, outputBufferSize - 1);
-            outputBuffer[len] = 0;
-        } catch (std::exception & e) { printInvalidFormatSyntax(fmt, e.what()); } catch (...) {
-            printInvalidFormatSyntax(fmt, "Unknown exception when formatting string");
+            // auto result       = fmt::format_to_n(outputBuffer, outputBufferSize - 1, fmt, std::forward<Args>(args)...);
+            // auto len          = std::min(result.size, outputBufferSize - 1);
+            // outputBuffer[len] = 0;
+        } catch (std::exception & e) { printInvalidFormatSyntax(fmt.str.data(), e.what()); } catch (...) {
+            printInvalidFormatSyntax(fmt.str.data(), "Unknown exception when formatting string");
+        }
+    }
+
+    /// @brief Format the string to the output buffer. The output string is guaranteed to be null terminated.
+    /// @tparam ...Args types of the arguments to the format string.
+    /// @param outputBuffer The output buffer.
+    /// @param outputBufferSize The size of the output buffer, including the null terminator.
+    /// @param fmt The format string.
+    /// @param ...args The arguments to the format string.
+    template<typename... Args, std::enable_if_t<(std::is_convertible<CHAR, wchar_t>::value), bool> = true>
+    constexpr static void formatToBuffer(CHAR * outputBuffer, size_t outputBufferSize, fmt::wformat_string<Args...> fmt, Args &&...) {
+        // handle empty input and output buffer
+        if (!outputBuffer || 0 == outputBufferSize) return;
+        checkForPrintf(fmt.get().data());
+        try {
+            // auto result       = fmt::format_to_n(outputBuffer, outputBufferSize - 1, fmt, std::forward<Args>(args)...);
+            // auto len          = std::min(result.size, outputBufferSize - 1);
+            // outputBuffer[len] = 0;
+        } catch (std::exception & e) { printInvalidFormatSyntax(fmt.get().data(), e.what()); } catch (...) {
+            printInvalidFormatSyntax(fmt.get().data(), "Unknown exception when formatting string");
         }
     }
 
     /// Return size of the formatted string, not including the null terminator.
     template<typename... Args>
-    static size_t formattedSize(const CHAR * fmt, Args &&... args) {
+    constexpr static size_t formattedSize(const CHAR * fmt, Args &&... args) {
         if (!fmt || !*fmt) return 0;
         checkForPrintf(fmt);
         try {
@@ -242,7 +258,7 @@ public:
     }
 
     template<typename... Args>
-    StringFormatter(const CHAR * fmt, Args &&... args) {
+    constexpr StringFormatter(const CHAR * fmt, Args &&... args) {
         if (!fmt || !*fmt) {
             mIsPreallocated        = true;
             mPreAllocatedBuffer[0] = 0;
@@ -383,28 +399,22 @@ public:
             return *this;
         }
 
-        ///
-        /// printf style log
-        ///
         template<typename... Args>
-        void operator()(const char * format_, Args &&... args_) {
-            GN_ASSERT(mLogger);
-            if (mLogger->isPrintfSyntax()) GN_UNLIKELY {
-                    return mLogger->doLog(mDesc, internal::StringPrinter<char>(format_, std::forward<Args>(args_)...).result());
-                }
-            else { return mLogger->doLog(mDesc, internal::StringFormatter<char>(format_, std::forward<Args>(args_)...).result()); }
+        void operator()(fmt::format_string<Args...> format_, Args &&... args) const {
+            // if (mLogger->isPrintfSyntax()) GN_UNLIKELY {
+            //         return mLogger->doLog(mDesc, internal::StringPrinter<char>(format_, std::forward<Args>(args_)...).result());
+            //     }
+            // else { return mLogger->doLog(mDesc, internal::StringFormatter<char>(format_, std::forward<Args>(args_)...).result()); }
+            return mLogger->doLog(mDesc, fmt::format(format_, std::forward<Args>(args)...).c_str());
         }
 
-        ///
-        /// printf style log (wide char)
-        ///
         template<typename... Args>
-        void operator()(const wchar_t * format_, Args &&... args_) {
-            GN_ASSERT(mLogger);
-            if (mLogger->isPrintfSyntax()) GN_UNLIKELY {
-                    return mLogger->doLog(mDesc, internal::StringPrinter<wchar_t>(format_, std::forward<Args>(args_)...).result());
-                }
-            else { return mLogger->doLog(mDesc, internal::StringFormatter<wchar_t>(format_, std::forward<Args>(args_)...).result()); }
+        void operator()(fmt::wformat_string<Args...> format_, Args &&... args_) {
+            // if (mLogger->isPrintfSyntax()) GN_UNLIKELY {
+            //         return mLogger->doLog(mDesc, internal::StringPrinter<wchar_t>(format_, std::forward<Args>(args_)...).result());
+            //     }
+            // else { return mLogger->doLog(mDesc, internal::StringFormatter<wchar_t>(format_, std::forward<Args>(args_)...).result()); }
+            return mLogger->doLog(mDesc, fmt::format(format_, std::forward<Args>(args_)...).c_str());
         }
     };
 

@@ -150,6 +150,8 @@ GN_API void throwException(const char * func, const char * file, int line, StrA 
 ///
 /// exception handler
 ///
-GN_API void exceptionHandler(const char * msg, const char * func, const char * file, int line) { GN_LOG_EX(sLogger, Logger::FATAL, func, file, line)(msg); }
+GN_API void exceptionHandler(const char * msg, const char * func, const char * file, int line) {
+    GN_LOG_EX(sLogger, Logger::FATAL, func, file, line)("{}", msg);
+}
 
 } // namespace GN
