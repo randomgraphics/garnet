@@ -920,20 +920,12 @@ public:
     ///
     template<typename... Args, std::enable_if_t<(std::is_convertible<CharType, char>::value), bool> = true>
     [[nodiscard("The return value of this function is usually not discarded. Maybe formatInplace() is what you want?")]] static Str<CharType>
-    format(fmt::format_string<Args...>, Args &&...) {
-        // auto          numCharacters = internal::StringFormatter<CharType>::formattedSize(formatString, std::forward<Args>(args)...);
-        // Str<CharType> result;
-        // result.resize(numCharacters);
-        // internal::StringFormatter<CharType>::formatToBuffer(result.mPtr, numCharacters + 1, formatString, std::forward<Args>(args)...);
-        // return result;
-        // if constexpr (std::is_same_v<CharType, char>) {
-        //     return fmt::vformat(formatString, fmt::make_format_args(args...)).c_str();
-        // } else if constexpr (std::is_same_v<CharType, wchar_t>) {
-        //     return fmt::vformat(formatString, fmt::make_wformat_args(args...)).c_str();
-        // } else {
-        //     static_assert([]() { return false; }(), "Unsupported CharType in Str<CharType>::format()");
-        // }
-        return {};
+    format(fmt::format_string<Args...> formatString, Args &&... args) {
+        auto          numCharacters = internal::StringFormatter<CharType>::formattedSize(formatString, std::forward<Args>(args)...);
+        Str<CharType> result;
+        result.resize(numCharacters);
+        internal::StringFormatter<CharType>::formatToBuffer(result.mPtr, numCharacters + 1, formatString, std::forward<Args>(args)...);
+        return result;
     }
 
     ///
@@ -941,20 +933,12 @@ public:
     ///
     template<typename... Args, std::enable_if_t<(std::is_convertible<CharType, wchar_t>::value), bool> = true>
     [[nodiscard("The return value of this function is usually not discarded. Maybe formatInplace() is what you want?")]] static Str<CharType>
-    format(fmt::wformat_string<Args...>, Args &&...) {
-        // auto          numCharacters = internal::StringFormatter<CharType>::formattedSize(formatString, std::forward<Args>(args)...);
-        // Str<CharType> result;
-        // result.resize(numCharacters);
-        // internal::StringFormatter<CharType>::formatToBuffer(result.mPtr, numCharacters + 1, formatString, std::forward<Args>(args)...);
-        // return result;
-        // if constexpr (std::is_same_v<CharType, char>) {
-        //     return fmt::vformat(formatString, fmt::make_format_args(args...)).c_str();
-        // } else if constexpr (std::is_same_v<CharType, wchar_t>) {
-        //     return fmt::vformat(formatString, fmt::make_wformat_args(args...)).c_str();
-        // } else {
-        //     static_assert([]() { return false; }(), "Unsupported CharType in Str<CharType>::format()");
-        // }
-        return {};
+    format(fmt::wformat_string<Args...> formatString, Args &&... args) {
+        auto          numCharacters = internal::StringFormatter<CharType>::formattedSize(formatString, std::forward<Args>(args)...);
+        Str<CharType> result;
+        result.resize(numCharacters);
+        internal::StringFormatter<CharType>::formatToBuffer(result.mPtr, numCharacters + 1, formatString, std::forward<Args>(args)...);
+        return result;
     }
 
 private:
