@@ -291,7 +291,7 @@ public:
                 mPreAllocatedBuffer[std::min(r, maxCharacters)] = 0;
             }
         } catch (const std::exception & e) {
-            mResult = fmt::format("{}: {}", e.what(), formatString.get());
+            mResult         = fmt::format("{}: {}", e.what(), formatString.get());
             mIsPreallocated = false;
         }
     }
@@ -301,22 +301,12 @@ public:
         checkForPrintf(formatString.get().data());
 
         try {
-            // get size of the formatted string
-            auto r = fmt::formatted_size(formatString, std::forward<Args>(args)...);
-
-            constexpr size_t maxCharacters = sizeof(mPreAllocatedBuffer) / sizeof(CHAR) - 1; // needs one additional space for the null terminator
-
-            if (r > maxCharacters) {
-                mIsPreallocated = false;
-                mResult         = fmt::format(formatString, std::forward<Args>(args)...);
-            } else {
-                mIsPreallocated = true;
-                fmt::format_to_n(mPreAllocatedBuffer, maxCharacters, formatString, std::forward<Args>(args)...);
-                mPreAllocatedBuffer[std::min(r, maxCharacters)] = 0;
-            }
-        } catch (const std::exception & e) {
-            mResult = fmt::format(L"{}: {}", WideString(e.what()).wstr, formatString);
+            // fmtlib does not provide formatted_size for wide string yet. So we have to format the string to get the size.
             mIsPreallocated = false;
+            mResult         = fmt::format(formatString, std::forward<Args>(args)...);
+        } catch (const std::exception & e) {
+            mIsPreallocated = false;
+            mResult         = fmt::format(L"{}: {}", WideString(e.what()).wstr, formatString);
         }
     }
 
@@ -328,9 +318,12 @@ public:
 ///
 class StringPrinter {
     std::string mResult;
+
 public:
     template<typename... Args>
-    StringPrinter(fmt::format_string<Args...> formatString, Args &&... args) { mResult = fmt::sprintf(formatString, std::forward<Args>(args)...); }
+    StringPrinter(fmt::format_string<Args...> formatString, Args &&... args) {
+        mResult = fmt::sprintf(formatString, std::forward<Args>(args)...);
+    }
     const char * result() const { return mResult.c_str(); }
     size_t       size() const { return mResult.size(); }
 };
@@ -340,9 +333,12 @@ public:
 ///
 class WStringPrinter {
     std::wstring mResult;
+
 public:
     template<typename... Args>
-    WStringPrinter(fmt::wformat_string<Args...> formatString, Args &&... args) { mResult = fmt::sprintf(formatString, std::forward<Args>(args)...); }
+    WStringPrinter(fmt::wformat_string<Args...> formatString, Args &&... args) {
+        mResult = fmt::vsprintf(formatString.get(), fmt::make_printf_args<wchar_t>(args)...);
+    }
     const wchar_t * result() const { return mResult.c_str(); }
     size_t          size() const { return mResult.size(); }
 };
