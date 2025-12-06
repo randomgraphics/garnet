@@ -367,8 +367,7 @@ class DebugReceiver : public Logger::Receiver {
 ///
 class LoggerImpl : public Logger, public LoggerTreeNode<LoggerImpl> {
 public:
-    LoggerImpl(const char * name, bool usePrintfSyntax, LocalMutex & mutex)
-        : Logger(sDuplicateName(name), usePrintfSyntax), mGlobalMutex(mutex), mInheritLevel(true), mInheritEnabled(true) {}
+    LoggerImpl(const char * name, LocalMutex & mutex): Logger(sDuplicateName(name)), mGlobalMutex(mutex), mInheritLevel(true), mInheritEnabled(true) {}
 
     ~LoggerImpl() {
         const char * name = getName();
@@ -513,7 +512,7 @@ class LoggerContainer {
     }
 
 public:
-    LoggerContainer(): mRootLogger("ROOT", false, mMutex) {
+    LoggerContainer(): mRootLogger("ROOT", mMutex) {
         // config root logger
         mRootLogger.setLevel(Logger::INFO);
         mRootLogger.setEnabled(true);
@@ -537,7 +536,7 @@ public:
         for (LoggerMap::KeyValuePair * p = mLoggers.first(); NULL != p; p = mLoggers.next(p)) { delete p->value; }
     }
 
-    LoggerImpl * getLogger(const char * name, bool usePrintfSyntax = false) {
+    LoggerImpl * getLogger(const char * name) {
         std::lock_guard<LocalMutex> m(mMutex);
 
         // trip leading and trailing dots
@@ -555,7 +554,7 @@ public:
         }
 
         // not found. create new one.
-        AutoObjPtr<LoggerImpl> newLogger(new LoggerImpl(n.data(), usePrintfSyntax, mMutex));
+        AutoObjPtr<LoggerImpl> newLogger(new LoggerImpl(n.data(), mMutex));
         mLoggers[n] = newLogger;
 
         // update logger tree
@@ -607,9 +606,9 @@ static LoggerContainer & sGetLoggerContainer() {
 //
 // Implement global log function.
 // -------------------------------------------------------------------------
-GN_API Logger * getLogger(const char * name, bool usePrintfSyntax) {
+GN_API Logger * getLogger(const char * name) {
     LoggerContainer & lc = sGetLoggerContainer();
-    return lc.getLogger(name, usePrintfSyntax);
+    return lc.getLogger(name);
 }
 
 } // namespace GN

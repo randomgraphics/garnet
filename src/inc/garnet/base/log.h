@@ -23,11 +23,19 @@
     #define GN_LOG_EX(logger, level, func, file, line) \
         if (logger->isOff(level)) {                    \
         } else                                         \
-            GN::Logger::LogHelper(logger, level, func, file, line)
+            GN::Logger::LogHelper(logger, level, func, file, line).format
+    #define GN_PRINTF_EX(logger, level, func, file, line) \
+        if (logger->isOff(level)) {                       \
+        } else                                            \
+            GN::Logger::LogHelper(logger, level, func, file, line).printf
 #else
     #define GN_LOG_EX(logger, level, func, file, line) \
         if (1) {                                       \
         } else                                         \
+            GN::Logger::sFakeLog
+    #define GN_PRINTF_EX(logger, level, func, file, line) \
+        if (1) {                                          \
+        } else                                            \
             GN::Logger::sFakeLog
 #endif
 //@}
@@ -299,48 +307,17 @@ public:
     template<typename... Args, std::enable_if_t<(std::is_convertible<CHAR, wchar_t>::value), bool> = true>
     StringFormatter(fmt::wformat_string<Args...> formatString, Args &&... args) {
         checkForPrintf(formatString.get().data());
-
         try {
             // fmtlib does not provide formatted_size for wide string yet. So we have to format the string to get the size.
             mIsPreallocated = false;
             mResult         = fmt::format(formatString, std::forward<Args>(args)...);
         } catch (const std::exception & e) {
             mIsPreallocated = false;
-            mResult         = fmt::format(L"{}: {}", WideString(e.what()).wstr, formatString);
+            mResult         = fmt::format(L"{}: {}", WideString(e.what()).wstr, formatString.get());
         }
     }
 
     const CHAR * result() const { return mIsPreallocated ? mPreAllocatedBuffer : mResult.c_str(); }
-};
-
-///
-/// String formatter class using the old school printf syntax.
-///
-class StringPrinter {
-    std::string mResult;
-
-public:
-    template<typename... Args>
-    StringPrinter(fmt::format_string<Args...> formatString, Args &&... args) {
-        mResult = fmt::sprintf(formatString, std::forward<Args>(args)...);
-    }
-    const char * result() const { return mResult.c_str(); }
-    size_t       size() const { return mResult.size(); }
-};
-
-///
-/// String formatter class using the old school printf syntax.
-///
-class WStringPrinter {
-    std::wstring mResult;
-
-public:
-    template<typename... Args>
-    WStringPrinter(fmt::wformat_string<Args...> formatString, Args &&... args) {
-        mResult = fmt::vsprintf(formatString.get(), fmt::make_printf_args<wchar_t>(args)...);
-    }
-    const wchar_t * result() const { return mResult.c_str(); }
-    size_t          size() const { return mResult.size(); }
 };
 
 } // end of namespace internal
@@ -432,19 +409,23 @@ public:
         }
 
         template<typename... Args>
-        void operator()(fmt::format_string<Args...> formatString, Args &&... args) const {
-            if (mLogger->isPrintfSyntax()) GN_UNLIKELY {
-                    return mLogger->doLog(mDesc, internal::StringPrinter(formatString, std::forward<Args>(args)...).result());
-                }
-            else { return mLogger->doLog(mDesc, internal::StringFormatter<char>(formatString, std::forward<Args>(args)...).result()); }
+        void format(fmt::format_string<Args...> formatString, Args &&... args) const {
+            return mLogger->doLog(mDesc, internal::StringFormatter<char>(formatString, std::forward<Args>(args)...).result());
         }
 
         template<typename... Args>
-        void operator()(fmt::wformat_string<Args...> formatString, Args &&... args) {
-            if (mLogger->isPrintfSyntax()) GN_UNLIKELY {
-                    return mLogger->doLog(mDesc, internal::WStringPrinter(formatString, std::forward<Args>(args)...).result());
-                }
-            else { return mLogger->doLog(mDesc, internal::StringFormatter<wchar_t>(formatString, std::forward<Args>(args)...).result()); }
+        void format(fmt::wformat_string<Args...> formatString, Args &&... args) {
+            return mLogger->doLog(mDesc, internal::StringFormatter<wchar_t>(formatString, std::forward<Args>(args)...).result());
+        }
+
+        template<typename... Args>
+        void printf(fmt::format_string<Args...> formatString, Args &&... args) const {
+            return mLogger->doLog(mDesc, fmt::sprintf(formatString, std::forward<Args>(args)...).c_str());
+        }
+
+        template<typename... Args>
+        void printf(fmt::wformat_string<Args...> formatString, Args &&... args) {
+            return mLogger->doLog(mDesc, fmt::vsprintf(formatString.get(), fmt::make_printf_args<wchar_t>(args)...).c_str());
         }
     };
 
@@ -537,11 +518,6 @@ public:
     }
 
     ///
-    /// is using printf syntax?
-    ///
-    bool isPrintfSyntax() const { return mUsePrintfSyntax; }
-
-    ///
     /// Fake logging. Do nothing.
     ///
     static inline void sFakeLog(...) {}
@@ -550,14 +526,13 @@ protected:
     ///
     /// protective constructor
     ///
-    Logger(const char * name, bool usePrintfSyntax): mName(name), mUsePrintfSyntax(usePrintfSyntax) {}
+    Logger(const char * name): mName(name) {}
 
     int  mLevel;   ///< doLog level
     bool mEnabled; ///< logger enabled or not.
 
 private:
     const char * mName;
-    bool         mUsePrintfSyntax;
 };
 
 /// \name Global doLog functions
@@ -569,7 +544,7 @@ private:
 /// \param name
 ///     Logger name (case insensitive)
 ///
-GN_API Logger * getLogger(const char * name, bool usePrintfSyntax = false);
+GN_API Logger * getLogger(const char * name);
 
 ///
 /// Get root logger
