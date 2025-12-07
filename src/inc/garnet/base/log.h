@@ -425,7 +425,7 @@ public:
 
         template<typename... Args>
         void printf(fmt::wformat_string<Args...> formatString, Args &&... args) {
-            return mLogger->doLog(mDesc, fmt::vsprintf(formatString.get(), fmt::make_printf_args<wchar_t>(args)...).c_str());
+            return mLogger->doLog(mDesc, fmt::vsprintf(formatString.get(), fmt::make_printf_args<wchar_t>(args...)).c_str());
         }
     };
 

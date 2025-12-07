@@ -372,7 +372,7 @@ public:
     ~LoggerImpl() {
         const char * name = getName();
 
-        if (NULL != name && 0 != *name) { GN::HeapMemory::dealloc((void *) name); }
+        if (NULL != name && 0 != *name) { ::free((void*) name); name = nullptr; }
     }
 
     void reapplyAttributes() {
@@ -433,7 +433,7 @@ private:
         } else {
             size_t n = strlen(name);
 
-            char * p = (char *) HeapMemory::alloc(n + 1);
+            char * p = (char *) ::malloc(n + 1);
 
             if (p) {
                 memcpy(p, name, n + 1);

@@ -6,7 +6,10 @@
 GN_API GN::input::Input * GN::input::Input::msInstancePtr = 0;
 
 namespace GN {
-static Logger * sHeapLogger = getLogger("GN.core.heapAllocation");
+
+static Logger * sHeapLogger() {
+    return getLogger("GN.core.heapAllocation");
+}
 
 //
 //
@@ -43,7 +46,7 @@ GN_API void * HeapMemory::alignedAlloc(size_t sizeInBytes, size_t alignment) {
 #else
     void * ptr = _aligned_malloc(sizeInBytes, alignment);
 #endif
-    if (0 == ptr) { GN_ERROR(sHeapLogger)("out of memory!"); }
+    if (0 == ptr) { GN_ERROR(sHeapLogger())("out of memory!"); }
     return ptr;
 }
 
@@ -56,7 +59,7 @@ GN_API void * HeapMemory::alignedRealloc(void * ptr, size_t sizeInBytes, size_t 
     ptr = realloc(ptr, sizeInBytes);
 #else
     ptr = _aligned_realloc(ptr, sizeInBytes, alignment);
-    if (0 == ptr) { GN_ERROR(sHeapLogger)("out of memory!"); }
+    if (0 == ptr) { GN_ERROR(sHeapLogger())("out of memory!"); }
 #endif
     return ptr;
 }
