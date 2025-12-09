@@ -36,17 +36,27 @@ GN_API void * HeapMemory::alignedAlloc(size_t sizeInBytes, size_t alignment) {
     if (0 == alignment) alignment = sizeof(size_t);
 #if GN_DARWIN
     void * ptr;
-    if (posix_memalign(&ptr, sizeInBytes, alignment)) ptr = nullptr;
+    int    err = posix_memalign(&ptr, sizeInBytes, alignment);
+    if (err) {
+        if (EINVAL == err)
+            GN_ERROR(sHeapLogger())("invalid alignment value: {}", alignment);
+        else if (ENOMEM == err)
+            GN_ERROR(sHeapLogger())("out of memory!");
+        else
+            GN_ERROR(sHeapLogger())("unknown error code from posix_memalign: {}", err);
+        ptr = nullptr;
+    }
 #elif GN_POSIX
     void * ptr;
     if (1 == alignment)
         ptr = malloc(sizeInBytes);
     else
-        ptr = aligned_alloc(alignment, sizeInBytes);
+        ptr = aligned_alloc(alignment, nextMultiple(sizeInBytes));
+    if (0 == ptr) { GN_ERROR(sHeapLogger())("out of memory!"); }
 #else
     void * ptr = _aligned_malloc(sizeInBytes, alignment);
-#endif
     if (0 == ptr) { GN_ERROR(sHeapLogger())("out of memory!"); }
+#endif
     return ptr;
 }
 

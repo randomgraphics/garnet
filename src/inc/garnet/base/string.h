@@ -972,7 +972,7 @@ private:
     // Allocate a memory buffer that can hold at least 'count' characters, and one extra '\0'.
     static CharType * sAlloc(size_t count) {
         if (count <= 1) return sEmptyPtr();
-        // ALLOCATOR:sAllocate only allocates raw memory buffer. No constuctors are invoked.
+        // ALLOCATOR:sAllocate only allocates raw memory buffer. No constructors are invoked.
         // This is safe, as long as CharType is POD type.
         StringHeader * ptr = (StringHeader *) RAW_MEMORY_ALLOCATOR::sAllocate(sizeof(StringHeader) + sizeof(CharType) * (count + 1), sizeof(size_t));
         return (CharType *) (ptr + 1);

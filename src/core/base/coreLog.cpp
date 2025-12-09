@@ -95,7 +95,7 @@ typedef std::recursive_mutex LocalMutex;
 //
 //
 // -----------------------------------------------------------------------------
-static inline GN::StrA sLevel2Str(int level) {
+static inline std::string sLevel2Str(int level) {
     switch (level) {
     case GN::Logger::FATAL:
         return "FATAL";
@@ -110,15 +110,15 @@ static inline GN::StrA sLevel2Str(int level) {
     case GN::Logger::BABBLE:
         return "VERY_VERBOSE";
     default:
-        return GN::StrA::format("{}", level);
+        return fmt::format("{}", level);
     }
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-static GN::StrA sFormatPath(const char * path) {
-    GN::StrA s;
+static std::string sFormatPath(const char * path) {
+    std::string s;
 
     if (NULL == path) return s;
 
@@ -126,9 +126,9 @@ static GN::StrA sFormatPath(const char * path) {
         char c = *path;
 
 #if GN_MSWIN
-        s.append('/' == c ? '\\' : c);
+        s += '/' == c ? '\\' : c;
 #else
-        s.append('\\' == c ? '/' : c);
+        s += '\\' == c ? '/' : c;
 #endif
     }
 
@@ -266,11 +266,11 @@ struct ConsoleReceiver : public Logger::Receiver {
 /// Log to disk file
 ///
 struct FileReceiver : public Logger::Receiver {
-    StrA mFileName;
+    std::string mFileName;
 
     struct AutoFile {
         FILE * fp;
-        AutoFile(const StrA & name, const char * mode = "at"): fp(0) {
+        AutoFile(const std::string & name, const char * mode = "at"): fp(0) {
             if (name.empty()) return;
 #if GN_MSVC
             if (0 != ::fopen_s(&fp, name.data(), mode)) fp = 0;
@@ -479,7 +479,7 @@ private:
 ///
 class LoggerContainer {
     // Note: Logger map is case "insensitive"
-    typedef GN::StringMap<char, LoggerImpl *> LoggerMap;
+    typedef std::unordered_map<std::string, std::unique_ptr<LoggerImpl>> LoggerMap;
 
     ConsoleReceiver mCr;
     FileReceiver    mFr;
@@ -488,20 +488,20 @@ class LoggerContainer {
     LocalMutex      mMutex;
     LoggerMap       mLoggers;
 
-    LoggerImpl * findParent(const StrA & name) {
+    LoggerImpl * findParent(const std::string & name) {
         // get parent name
-        size_t n = name.findLastOf(".");
-        if (StrA::NOT_FOUND == n) return &mRootLogger; // shortcut for root logger
+        size_t n = name.find_last_of(".");
+        if (std::string::npos == n) return &mRootLogger; // shortcut for root logger
         GN_ASSERT(n > 0);
-        StrA parent = name.subString(0, n);
+        std::string parent = name.substr(0, n);
 
         return getLogger(parent.data());
     }
 
-    void printLoggerTree(StrA & str, int level, LoggerImpl & logger) {
+    void printLoggerTree(std::string & str, int level, LoggerImpl & logger) {
         // print itself
         for (int i = 0; i < level; ++i) str.append("  ");
-        str.append(StrA::format("{}\n", logger.getName()));
+        str.append(fmt::format("{}\n", logger.getName()));
 
         // print children
         LoggerImpl * c = logger.firstChild();
@@ -525,46 +525,44 @@ public:
 
     ~LoggerContainer() {
         static Logger * sLogger = getLogger("GN.core.LoggerContainer");
-        StrA            loggerTree;
-        GN_VERBOSE(sLogger)
-        ("\n"
-         "===================\n"
-         "    Logger Tree\n"
-         "===================");
+        std::string            loggerTree;
         printLoggerTree(loggerTree, 0, mRootLogger);
-        GN_VERBOSE(sLogger)("\n{}", loggerTree.data());
-        for (LoggerMap::KeyValuePair * p = mLoggers.first(); NULL != p; p = mLoggers.next(p)) { delete p->value; }
+        GN_VERBOSE(sLogger)("\n"
+                            "===================\n"
+                            "    Logger Tree\n"
+                            "===================\n"
+                            "{}", loggerTree.data());
+        mLoggers.clear();
     }
 
     LoggerImpl * getLogger(const char * name) {
         std::lock_guard<LocalMutex> m(mMutex);
 
         // trip leading and trailing dots
-        StrA n(name);
-        n.trim('.');
+        std::string n = name;
+        n.erase(n.begin(), std::find_if(n.begin(), n.end(), [](unsigned char ch) { return ch != '.' && !std::isspace(ch); }));
+        // trim trailing space and dots
+        n.erase(std::find_if(n.rbegin(), n.rend(), [](unsigned char ch) { return ch != '.' && !std::isspace(ch); }).base(), n.end());
 
         // shortcut for root logger
         if (n.empty() || 0 == str::compareI("ROOT", n.data())) return &mRootLogger;
 
         // find for existing logger
-        LoggerImpl ** pplogger = mLoggers.find(n);
-        if (NULL != pplogger) {
-            GN_ASSERT(*pplogger);
-            return *pplogger;
-        }
+        auto i = mLoggers.find(n);
+        if (mLoggers.end() != i) return i->second.get();
 
         // not found. create new one.
-        AutoObjPtr<LoggerImpl> newLogger(new LoggerImpl(n.data(), mMutex));
-        mLoggers[n] = newLogger;
+        auto & newLogger = mLoggers[n];
+        newLogger.reset(new LoggerImpl(n.data(), mMutex));
 
         // update logger tree
-        LoggerImpl * parent = findParent(n);
+        LoggerImpl * parent = findParent(newLogger->getName());
         GN_ASSERT(parent);
         newLogger->setParent(parent);
         parent->reapplyAttributes();
 
         // sucess
-        return newLogger.detach();
+        return newLogger.get();
     }
 };
 
@@ -577,7 +575,7 @@ GN_API WideString::WideString(const char * msg) {
             return;
         }
     try {
-        StrW w = mbs2wcs(StrA(msg));
+        StrW w = mbs2wcs(std::string(msg));
         wstr   = new wchar_t[w.size() + 1];
         memcpy((void *) wstr, w.c_str(), w.size() + 1); // copy string content, including ending terminator.
     } catch (...) {
