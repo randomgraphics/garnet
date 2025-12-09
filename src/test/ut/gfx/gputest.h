@@ -148,8 +148,8 @@ protected:
 
         // the renderer should be in same size as the external window client
         const DispDesc & dd = r.getDispDesc();
-        TS_ASSERT_EQUALS(dd.width, 511);
-        TS_ASSERT_EQUALS(dd.height, 236);
+        TS_ASSERT_EQUALS(dd.width, 511u);
+        TS_ASSERT_EQUALS(dd.height, 236u);
 
         r.clearScreen(Vector4f(1, 1, 0, 1));
 

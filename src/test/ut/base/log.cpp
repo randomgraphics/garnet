@@ -2,17 +2,12 @@
 
 class LogTest : public CxxTest::TestSuite {
 public:
-
     // A simple log receiver to receive test log message
     struct TestLogReceiver : public GN::Logger::Receiver {
-        GN::StrA message;
-        GN::StrW wmessage;
-        virtual void onLog(GN::Logger &, const GN::Logger::LogLocation &, const char * msg) {
-            message = msg;
-        }
-        virtual void onLog(GN::Logger &, const GN::Logger::LogLocation &, const wchar_t * msg) {
-            wmessage = msg;
-        }
+        GN::StrA     message;
+        GN::StrW     wmessage;
+        virtual void onLog(GN::Logger &, const GN::Logger::LogLocation &, const char * msg) { message = msg; }
+        virtual void onLog(GN::Logger &, const GN::Logger::LogLocation &, const wchar_t * msg) { wmessage = msg; }
     };
     TestLogReceiver mTestLogReceiver;
 
@@ -35,7 +30,7 @@ public:
         GN_INFO(sLogger)(L"unicode info");
     }
 
-    #define TEST_PRINTF GN_PRINTF_EX(sLogger, GN::Logger::INFO, GN_FUNCTION, __FILE__, __LINE__)
+#define TEST_PRINTF GN_PRINTF_EX(sLogger, GN::Logger::INFO, GN_FUNCTION, __FILE__, __LINE__)
 
     // Test printf variants for the log macro, verify that the log message is properly formatted by checking the receiver.
     void testLogPrintf() {

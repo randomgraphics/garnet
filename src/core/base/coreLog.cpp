@@ -372,7 +372,10 @@ public:
     ~LoggerImpl() {
         const char * name = getName();
 
-        if (NULL != name && 0 != *name) { ::free((void*) name); name = nullptr; }
+        if (NULL != name && 0 != *name) {
+            ::free((void *) name);
+            name = nullptr;
+        }
     }
 
     void reapplyAttributes() {
@@ -525,13 +528,15 @@ public:
 
     ~LoggerContainer() {
         static Logger * sLogger = getLogger("GN.core.LoggerContainer");
-        std::string            loggerTree;
+        std::string     loggerTree;
         printLoggerTree(loggerTree, 0, mRootLogger);
-        GN_VERBOSE(sLogger)("\n"
-                            "===================\n"
-                            "    Logger Tree\n"
-                            "===================\n"
-                            "{}", loggerTree.data());
+        GN_VERBOSE(sLogger)
+        ("\n"
+         "===================\n"
+         "    Logger Tree\n"
+         "===================\n"
+         "{}",
+         loggerTree.data());
         mLoggers.clear();
     }
 
@@ -539,7 +544,7 @@ public:
         std::lock_guard<LocalMutex> m(mMutex);
 
         // trip leading and trailing dots
-        std::string n = name;
+        std::string n = name ? std::string(name) : std::string();
         n.erase(n.begin(), std::find_if(n.begin(), n.end(), [](unsigned char ch) { return ch != '.' && !std::isspace(ch); }));
         // trim trailing space and dots
         n.erase(std::find_if(n.rbegin(), n.rend(), [](unsigned char ch) { return ch != '.' && !std::isspace(ch); }).base(), n.end());

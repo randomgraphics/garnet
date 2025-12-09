@@ -379,10 +379,10 @@ public:
     /// string formatting (narrow version)
     ///
     template<typename... Args, std::enable_if_t<(std::is_convertible<CharType, char>::value), bool> = true>
-    Str<CharType> & formatInplace(fmt::format_string<Args...>, Args &&...) {
-        // auto numCharacters = internal::StringFormatter<CharType>::formattedSize(formatString, std::forward<Args>(args)...);
-        // resize(numCharacters);
-        // internal::StringFormatter<CharType>::formatToBuffer(mPtr, numCharacters + 1, formatString, std::forward<Args>(args)...);
+    Str<CharType> & formatInplace(fmt::format_string<Args...> formatString, Args &&... args) {
+        auto numCharacters = internal::StringFormatter<CharType>::formattedSize(formatString, std::forward<Args>(args)...);
+        resize(numCharacters);
+        internal::StringFormatter<CharType>::formatToBuffer(mPtr, numCharacters + 1, formatString, std::forward<Args>(args)...);
         return *this;
     }
 
@@ -390,10 +390,10 @@ public:
     /// string formatting (wide version)
     ///
     template<typename... Args, std::enable_if_t<(std::is_convertible<CharType, wchar_t>::value), bool> = true>
-    Str<CharType> & formatInplace(fmt::wformat_string<Args...>, Args &&...) {
-        // auto numCharacters = internal::StringFormatter<CharType>::formattedSize(formatString, std::forward<Args>(args)...);
-        // resize(numCharacters);
-        // internal::StringFormatter<CharType>::formatToBuffer(mPtr, numCharacters + 1, formatString, std::forward<Args>(args)...);
+    Str<CharType> & formatInplace(fmt::wformat_string<Args...> formatString, Args &&... args) {
+        auto numCharacters = internal::StringFormatter<CharType>::formattedSize(formatString, std::forward<Args>(args)...);
+        resize(numCharacters);
+        internal::StringFormatter<CharType>::formatToBuffer(mPtr, numCharacters + 1, formatString, std::forward<Args>(args)...);
         return *this;
     }
 

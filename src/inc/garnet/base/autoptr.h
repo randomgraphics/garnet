@@ -348,20 +348,20 @@ public:
         return mPtr;
     }
 
-    ///
-    /// NOT operator
-    ///
-    bool operator!() const throw() { return mPtr == NULL; }
+    // ///
+    // /// NOT operator
+    // ///
+    // bool operator!() const throw() { return mPtr == NULL; }
 
-    ///
-    /// LESS operator
-    ///
-    bool operator<(T * pT) const throw() { return mPtr < pT; }
+    // ///
+    // /// LESS operator
+    // ///
+    // bool operator<(T * pT) const throw() { return mPtr < pT; }
 
-    ///
-    /// EQ operator
-    ///
-    bool operator==(T * pT) const throw() { return mPtr == pT; }
+    // ///
+    // /// EQ operator
+    // ///
+    // bool operator==(T * pT) const throw() { return mPtr == pT; }
 
     ///
     /// Is empty pointer?

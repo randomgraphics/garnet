@@ -216,14 +216,14 @@ public:
     /// @param fmt The format string.
     /// @param ...args The arguments to the format string.
     template<typename... Args, std::enable_if_t<(std::is_convertible<CHAR, char>::value), bool> = true>
-    constexpr static void formatToBuffer(CHAR * outputBuffer, size_t outputBufferSize, fmt::format_string<Args...> formatString, Args &&...) {
+    constexpr static void formatToBuffer(CHAR * outputBuffer, size_t outputBufferSize, fmt::format_string<Args...> formatString, Args &&... args) {
         // handle empty input and output buffer
         if (!outputBuffer || 0 == outputBufferSize) return;
         checkForPrintf(formatString.get().data());
         try {
-            // auto result       = fmt::format_to_n(outputBuffer, outputBufferSize - 1, fmt, std::forward<Args>(args)...);
-            // auto len          = std::min(result.size, outputBufferSize - 1);
-            // outputBuffer[len] = 0;
+            auto result       = fmt::format_to_n(outputBuffer, outputBufferSize - 1, formatString, std::forward<Args>(args)...);
+            auto len          = std::min(result.size, outputBufferSize - 1);
+            outputBuffer[len] = 0;
         } catch (std::exception & e) { printInvalidFormatSyntax(formatString.get().data(), e.what()); } catch (...) {
             printInvalidFormatSyntax(formatString.get().data(), "Unknown exception when formatting string");
         }
@@ -236,14 +236,14 @@ public:
     /// @param fmt The format string.
     /// @param ...args The arguments to the format string.
     template<typename... Args, std::enable_if_t<(std::is_convertible<CHAR, wchar_t>::value), bool> = true>
-    constexpr static void formatToBuffer(CHAR * outputBuffer, size_t outputBufferSize, fmt::wformat_string<Args...> formatString, Args &&...) {
+    constexpr static void formatToBuffer(CHAR * outputBuffer, size_t outputBufferSize, fmt::wformat_string<Args...> formatString, Args &&... args) {
         // handle empty input and output buffer
         if (!outputBuffer || 0 == outputBufferSize) return;
         checkForPrintf(formatString.get().data());
         try {
-            // auto result       = fmt::format_to_n(outputBuffer, outputBufferSize - 1, fmt, std::forward<Args>(args)...);
-            // auto len          = std::min(result.size, outputBufferSize - 1);
-            // outputBuffer[len] = 0;
+            auto result       = fmt::format_to_n<wchar_t>(outputBuffer, outputBufferSize - 1, formatString, std::forward<Args>(args)...);
+            auto len          = std::min(result.size, outputBufferSize - 1);
+            outputBuffer[len] = 0;
         } catch (std::exception & e) { printInvalidFormatSyntax(formatString.get().data(), e.what()); } catch (...) {
             printInvalidFormatSyntax(formatString.get().data(), "Unknown exception when formatting string");
         }

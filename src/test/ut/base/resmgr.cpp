@@ -682,9 +682,9 @@ public:
 
         // name -> handle
         TS_ASSERT_EQUALS(h1, rm.getResourceHandle("1"));
-        TS_ASSERT_EQUALS(0, rm.getResourceHandle("2", false));
+        TS_ASSERT_EQUALS(0u, rm.getResourceHandle("2", false));
         TS_ASSERT_DIFFERS(h1, rm.getResourceHandle("2"));
-        TS_ASSERT_DIFFERS(0, rm.getResourceHandle("2"));
+        TS_ASSERT_DIFFERS(0u, rm.getResourceHandle("2"));
         TS_ASSERT_EQUALS(rm.getResourceHandle("2"), rm.getResourceHandle("2"));
     }
 

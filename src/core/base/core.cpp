@@ -7,9 +7,7 @@ GN_API GN::input::Input * GN::input::Input::msInstancePtr = 0;
 
 namespace GN {
 
-static Logger * sHeapLogger() {
-    return getLogger("GN.core.heapAllocation");
-}
+static Logger * sHeapLogger() { return getLogger("GN.core.heapAllocation"); }
 
 //
 //
