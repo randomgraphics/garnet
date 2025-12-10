@@ -40,18 +40,12 @@ fi
 # Config GIT
 # ==========
 echo "Configuring GIT..."
-# setup local git config (prefix with double underscore indicating it is private to this script)
-__setup-local-git-config()
-{
-    if [ -d $1/.git ] || [ -f $1/.git ]; then
-        cd $1
-        git config --local include.path ${GARNET_ROOT}/.gitconfig
-        cd ->/dev/null
-    fi
-}
-__setup-local-git-config ${GARNET_ROOT}
-__setup-local-git-config ${GARNET_ROOT/src/3rdparty/rapid-image}
-
+# check if ../.gitconfig exists
+local_gitconfig="${GARNET_ROOT}/../.gitconfig"
+if [ -f "${local_gitconfig}" ] ; then
+    echo "Config GIT using GIT config file: ${local_gitconfig}"
+    git config include.path "${local_gitconfig}"
+fi
 
 # =====
 # alias
