@@ -45,13 +45,13 @@ public:
         TS_ASSERT_EQUALS(mTestLogReceiver.message, "info: hex=0xabcd");
 
         // wchar_t version
-        TEST_PRINTF(L"unicode error: value=%d, str=%ls", 88, L"world");
-        TS_ASSERT_EQUALS(mTestLogReceiver.message, "unicode error: value=88, str=world");
+        TEST_PRINTF(L"unicode error: value=%d, str=%s", 88, L"world");
+        TS_ASSERT_EQUALS(mTestLogReceiver.wmessage, L"unicode error: value=88, str=world");
 
         TEST_PRINTF(L"unicode warn: id=%08d", 123);
-        TS_ASSERT_EQUALS(mTestLogReceiver.message, "unicode warn: id=00000123");
+        TS_ASSERT_EQUALS(mTestLogReceiver.wmessage, L"unicode warn: id=00000123");
 
-        TEST_PRINTF(L"unicode info: %ls, val=%f", L"number", 9.81);
-        TS_ASSERT_EQUALS(mTestLogReceiver.message, "unicode info: number, val=9.810000");
+        TEST_PRINTF(L"unicode info: %s, val=%f", L"number", 9.81);
+        TS_ASSERT_EQUALS(mTestLogReceiver.wmessage, L"unicode info: number, val=9.810000");
     }
 };

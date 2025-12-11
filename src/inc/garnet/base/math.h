@@ -54,6 +54,21 @@ GN_FORCE_INLINE T rad2deg(T a) {
     return a * (T) 57.29577951f;
 }
 
+// ---------------------------------------------------------------------------------------------------------------------
+/// @brief Calculate next multiple of a number.
+template<typename T>
+static constexpr inline T nextMultiple(T value, T multiple) {
+    if (0 == multiple) [[unlikely]]
+        multiple = 1;
+    return value + (multiple - value % multiple) % multiple;
+}
+static_assert(0 == nextMultiple(0, 3));
+static_assert(3 == nextMultiple(1, 3));
+static_assert(3 == nextMultiple(2, 3));
+static_assert(3 == nextMultiple(3, 3));
+static_assert(6 == nextMultiple(4, 3));
+static_assert(5 == nextMultiple(5, 0));
+
 ///
 /// 检查n是否为2^n
 // --------------------------------------------------------------------

@@ -49,7 +49,7 @@ GN_API void * HeapMemory::alignedAlloc(size_t sizeInBytes, size_t alignment) {
     if (1 == alignment)
         ptr = malloc(sizeInBytes);
     else
-        ptr = aligned_alloc(alignment, nextMultiple(sizeInBytes));
+        ptr = aligned_alloc(alignment, math::nextMultiple(sizeInBytes, alignment));
     if (0 == ptr) { GN_ERROR(sHeapLogger())("out of memory!"); }
 #else
     void * ptr = _aligned_malloc(sizeInBytes, alignment);

@@ -241,7 +241,7 @@ public:
         if (!outputBuffer || 0 == outputBufferSize) return;
         checkForPrintf(formatString.get().data());
         try {
-            auto result       = fmt::format_to_n<wchar_t>(outputBuffer, outputBufferSize - 1, formatString, std::forward<Args>(args)...);
+            auto result       = fmt::format_to_n(outputBuffer, outputBufferSize - 1, formatString.get(), std::forward<Args>(args)...);
             auto len          = std::min(result.size, outputBufferSize - 1);
             outputBuffer[len] = 0;
         } catch (std::exception & e) { printInvalidFormatSyntax(formatString.get().data(), e.what()); } catch (...) {
@@ -269,8 +269,7 @@ public:
     constexpr static size_t formattedSize(fmt::wformat_string<Args...> formatString, Args &&... args) {
         checkForPrintf(formatString.get().data());
         try {
-            // fmt::formatted_size() does not support wide string yet. So we have to format the string to get the size.
-            return fmt::format(formatString, std::forward<Args>(args)...).size();
+            return fmt::formatted_size(formatString.get(), std::forward<Args>(args)...);
         } catch (std::exception & e) {
             printInvalidFormatSyntax(formatString.get().data(), e.what());
             return 0;
@@ -283,7 +282,6 @@ public:
     template<typename... Args, std::enable_if_t<(std::is_convertible<CHAR, char>::value), bool> = true>
     StringFormatter(fmt::format_string<Args...> formatString, Args &&... args) {
         checkForPrintf(formatString.get().data());
-
         try {
             // get size of the formatted string
             auto r = fmt::formatted_size(formatString, std::forward<Args>(args)...);
@@ -308,9 +306,19 @@ public:
     StringFormatter(fmt::wformat_string<Args...> formatString, Args &&... args) {
         checkForPrintf(formatString.get().data());
         try {
-            // fmtlib does not provide formatted_size for wide string yet. So we have to format the string to get the size.
-            mIsPreallocated = false;
-            mResult         = fmt::format(formatString, std::forward<Args>(args)...);
+            // get size of the formatted string
+            auto r = fmt::formatted_size(formatString.get(), std::forward<Args>(args)...);
+
+            constexpr size_t maxCharacters = sizeof(mPreAllocatedBuffer) / sizeof(CHAR) - 1; // needs one additional space for the null terminator
+
+            if (r > maxCharacters) {
+                mIsPreallocated = false;
+                mResult         = fmt::format(formatString, std::forward<Args>(args)...);
+            } else {
+                mIsPreallocated = true;
+                fmt::format_to_n(mPreAllocatedBuffer, maxCharacters, formatString.get(), std::forward<Args>(args)...);
+                mPreAllocatedBuffer[std::min(r, maxCharacters)] = 0;
+            }
         } catch (const std::exception & e) {
             mIsPreallocated = false;
             mResult         = fmt::format(L"{}: {}", WideString(e.what()).wstr, formatString.get());
