@@ -18,6 +18,10 @@
     #include <unistd.h>
 #endif
 
+#if GN_DARWIN
+    #include <mach-o/dyld.h>
+#endif
+
 using namespace GN;
 using namespace GN::fs;
 
@@ -286,6 +290,19 @@ public:
         char buf[MAX_PATH + 1];
         GN_MSW_CHECK(GetModuleFileNameA(0, buf, MAX_PATH));
         mRootDir = parentPath(buf);
+#elif GN_DARWIN
+        char buf[PATH_MAX + 1];
+        uint32_t size = PATH_MAX;
+        if (0 != _NSGetExecutablePath(buf, &size)) {
+            GN_ERROR(sLogger)("Buffer size {} is not enough to hold executable path!", size);
+        } else {
+            char realPath[PATH_MAX + 1];
+            if (0 == realpath(buf, realPath)) {
+                GN_ERROR(sLogger)("Fail to get real path of file '{}'.", buf);
+            } else {
+                mRootDir = parentPath(realPath);
+            }
+        }
 #elif GN_POSIX
         char linkName[PATH_MAX + 1];
         char realPath[PATH_MAX + 1];
