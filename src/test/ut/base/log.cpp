@@ -54,4 +54,20 @@ public:
         TEST_PRINTF(L"unicode info: %s, val=%f", L"number", 9.81);
         TS_ASSERT_EQUALS(mTestLogReceiver.wmessage, L"unicode info: number, val=9.810000");
     }
+
+    void testLogStringFormatter() {
+        // make sure StringFormatter is using preallocated buffer for small strings
+        GN::internal::StringFormatter<char> formatter("Hello, {}! The answer is {}.", "World", 42);
+        TS_ASSERT(formatter.isPreallocated());
+
+        // when string is too long, it should fall back to dynamic allocation
+        GN::internal::StringFormatter<char, 16> longFormatter("This is a long string: {} {} {}.", 1, 2, 3);
+        TS_ASSERT(!longFormatter.isPreallocated());
+
+        // do the same test for wchar_t version
+        GN::internal::StringFormatter<wchar_t> wformatter(L"Hello, {}! The answer is {}.", L"World", 42);
+        TS_ASSERT(wformatter.isPreallocated());
+        GN::internal::StringFormatter<wchar_t, 16> wlongFormatter(L"This is a long string: {} {} {}.", 1, 2, 3);
+        TS_ASSERT(!wlongFormatter.isPreallocated());
+    }
 };

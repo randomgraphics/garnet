@@ -113,7 +113,7 @@ struct GN_API WideString {
 ///
 /// String format utility class. Reserved for internal use only.
 ///
-template<typename CHAR>
+template<typename CHAR, size_t PREALLOCATED_CHARACTERS = 1024>
 class StringFormatter {
 #if GN_BUILD_DEBUG_ENABLED
     static bool lookForPrintfSpecifiers(const CHAR * formatString) {
@@ -206,7 +206,7 @@ class StringFormatter {
 
     std::basic_string<CHAR>         mResult;
     bool                            mIsPreallocated = true;
-    static inline thread_local CHAR mPreAllocatedBuffer[1024];
+    static inline thread_local CHAR mPreAllocatedBuffer[PREALLOCATED_CHARACTERS + 1]; // needs one additional space for the null terminator
 
 public:
     /// @brief Format the string to the output buffer. The output string is guaranteed to be null terminated.
@@ -326,6 +326,8 @@ public:
     }
 
     const CHAR * result() const { return mIsPreallocated ? mPreAllocatedBuffer : mResult.c_str(); }
+
+    bool isPreallocated() const { return mIsPreallocated; }
 };
 
 } // end of namespace internal
