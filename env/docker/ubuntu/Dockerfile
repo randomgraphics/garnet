@@ -1,4 +1,4 @@
-FROM randomgraphics/ubuntu-vulkan-android-dev:latest
+FROM randomgraphics/vulkan:android-2025.2.2.7
 LABEL description="garnet build environment"
 ARG DEBIAN_FRONTEND=noninteractive
 

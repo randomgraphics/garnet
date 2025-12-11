@@ -20,66 +20,106 @@ GN_API ProfilerManager & ProfilerManager::sGetGlobalInstance() {
 //
 //
 // -----------------------------------------------------------------------------
-GN_API void * HeapMemory::alloc(size_t sz) { return HeapMemory::alignedAlloc(sz, 0); }
+GN_API void * HeapMemory::alloc(size_t sz) { return HeapMemory::alignedAlloc(sz, 1); }
 
 //
 //
 // -----------------------------------------------------------------------------
-GN_API void * HeapMemory::realloc(void * ptr, size_t sz) { return HeapMemory::alignedRealloc(ptr, sz, 0); }
+GN_API void * HeapMemory::realloc(void * ptr, size_t sz) { return HeapMemory::alignedRealloc(ptr, sz, 1); }
 
-//
-//
+struct MemoryHeader {
+    size_t alignment;
+    size_t offset; // offset from the user visible memory to the actual memory allocated.
+    size_t size;   // size of the actual memory allocated.
+};
+
+/// platform independant aligned allocation by allocating extra bytes in front of the the returned pointer address to
+/// store extra informaton like the real heap address and alignment size and offsets.
 // -----------------------------------------------------------------------------
 GN_API void * HeapMemory::alignedAlloc(size_t sizeInBytes, size_t alignment) {
-    if (0 == alignment) alignment = sizeof(size_t);
-#if GN_DARWIN
-    void * ptr;
-    int    err = posix_memalign(&ptr, sizeInBytes, alignment);
-    if (err) {
-        if (EINVAL == err)
-            GN_ERROR(sHeapLogger())("invalid alignment value: {}", alignment);
-        else if (ENOMEM == err)
-            GN_ERROR(sHeapLogger())("out of memory!");
-        else
-            GN_ERROR(sHeapLogger())("unknown error code from posix_memalign: {}", err);
-        ptr = nullptr;
+    if (0 == alignment) GN_UNLIKELY alignment = sizeof(size_t);
+
+    if (0 == sizeInBytes) GN_UNLIKELY sizeInBytes = alignment;
+
+    // Need to allocate at least (sizeof(header) + a - 1) bytes to make sure we can align the address returned to user
+    // while still having enough space in front of user visible memory to store the header.
+    size_t additional = sizeof(MemoryHeader) + alignment - 1;
+    size_t totalSize  = additional + sizeInBytes;
+    auto   p          = (uintptr_t)::malloc(totalSize);
+    if (!p) {
+        GN_ERROR(sHeapLogger())("out of memory!");
+        return nullptr;
     }
-#elif GN_POSIX
-    void * ptr;
-    if (1 == alignment)
-        ptr = malloc(sizeInBytes);
-    else
-        ptr = aligned_alloc(alignment, math::nextMultiple(sizeInBytes, alignment));
-    if (0 == ptr) { GN_ERROR(sHeapLogger())("out of memory!"); }
-#else
-    void * ptr = _aligned_malloc(sizeInBytes, alignment);
-    if (0 == ptr) { GN_ERROR(sHeapLogger())("out of memory!"); }
-#endif
-    return ptr;
+
+    auto alignedAddress = math::nextMultiple(p + sizeof(MemoryHeader), alignment);
+    GN_ASSERT(0 == (alignedAddress % alignment));               // double check the alignment.
+    GN_ASSERT(alignedAddress >= (p + sizeof(MemoryHeader)));    // double check we have enough space for the header.
+    GN_ASSERT((alignedAddress - p + sizeInBytes) <= totalSize); // double check we have enough space for the user visible memory.
+
+    auto header       = (MemoryHeader *) alignedAddress - 1;
+    header->alignment = alignment;
+    header->offset    = alignedAddress - p;
+    header->size      = totalSize;
+
+    // done
+    return (void *) alignedAddress;
 }
 
 //
 //
 // -----------------------------------------------------------------------------
 GN_API void * HeapMemory::alignedRealloc(void * ptr, size_t sizeInBytes, size_t alignment) {
-    if (0 == alignment) alignment = sizeof(size_t);
-#if GN_POSIX
-    ptr = realloc(ptr, sizeInBytes);
-#else
-    ptr = _aligned_realloc(ptr, sizeInBytes, alignment);
-    if (0 == ptr) { GN_ERROR(sHeapLogger())("out of memory!"); }
-#endif
-    return ptr;
+    if (0 == alignment) GN_UNLIKELY alignment = sizeof(size_t);
+    if (0 == sizeInBytes) GN_UNLIKELY sizeInBytes = alignment;
+
+    auto header       = (MemoryHeader *) ptr - 1;
+    auto oldPtr       = (uintptr_t) ptr - header->offset;
+    auto newTotalSize = sizeof(MemoryHeader) + alignment - 1 + sizeInBytes;
+    auto newPtr       = (uintptr_t)::realloc((void *) oldPtr, newTotalSize);
+    if (!newPtr) {
+        GN_ERROR(sHeapLogger())("out of memory!");
+        return nullptr;
+    }
+
+    auto newAlignedAddress = math::nextMultiple(newPtr + sizeof(MemoryHeader), alignment);
+    GN_ASSERT(0 == (newAlignedAddress % alignment));                       // double check the alignment.
+    GN_ASSERT(newAlignedAddress >= (newPtr + sizeof(MemoryHeader)));       // double check we have enough space for the header.
+    GN_ASSERT((newAlignedAddress - newPtr + sizeInBytes) <= newTotalSize); // double check we have enough space for the user visible memory.
+
+    auto newHeader       = (MemoryHeader *) newAlignedAddress - 1;
+    newHeader->alignment = alignment;
+    newHeader->offset    = newAlignedAddress - newPtr;
+    newHeader->size      = newTotalSize;
+
+    // done
+    return (void *) newAlignedAddress;
 }
 
 //
 //
 // -----------------------------------------------------------------------------
 GN_API void HeapMemory::dealloc(void * ptr) {
-#if GN_POSIX
-    return ::free(ptr);
-#else
-    return _aligned_free(ptr);
-#endif
+    if (!ptr) GN_UNLIKELY return;
+    auto header  = (MemoryHeader *) ptr - 1;
+    auto realPtr = (uintptr_t) ptr - header->offset;
+    ::free((void *) realPtr);
 }
+
+//
+//
+// -----------------------------------------------------------------------------
+#if GN_MSVC
+    #include <crtdbg.h>
+GN_API void enableCRTMemoryCheck(long breakOnAllocID) {
+    int tmpDbgFlag;
+    tmpDbgFlag = _CrtSetDbgFlag(_CRTDBG_REPORT_FLAG);
+    tmpDbgFlag |= _CRTDBG_LEAK_CHECK_DF;
+    _CrtSetDbgFlag(tmpDbgFlag);
+
+    if (0 != breakOnAllocID) { _CrtSetBreakAlloc(breakOnAllocID); }
+}
+#else
+GN_API void enableCRTMemoryCheck(long) {}
+#endif
+
 } // namespace GN

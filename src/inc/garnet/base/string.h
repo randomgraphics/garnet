@@ -1000,12 +1000,12 @@ typedef Str<wchar_t> StrW;
 ///
 /// Define custom string literal operator
 ///
-inline StrA operator"" _s(const char * s, size_t len) { return StrA(s, len); }
+inline StrA operator""_s(const char * s, size_t len) { return StrA(s, len); }
 
 ///
 /// Define custom wide-char string literal operator
 ///
-inline StrW operator"" _ws(const wchar_t * s, size_t len) { return StrW(s, len); }
+inline StrW operator""_ws(const wchar_t * s, size_t len) { return StrW(s, len); }
 
 ///
 /// Fixed sized string that has no runtime memory allocation.
