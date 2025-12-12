@@ -39,13 +39,13 @@ public:
         void * p2 = a.alloc();
         void * p3 = a.alloc();
 
-#if GN_X64
-        TS_ASSERT_EQUALS(40, (uint8_t *) p0 - (uint8_t *) p1);
-        TS_ASSERT_EQUALS(40, (uint8_t *) p2 - (uint8_t *) p3);
-#else
-        TS_ASSERT_EQUALS(24, (uint8_t *) p0 - (uint8_t *) p1);
-        TS_ASSERT_EQUALS(24, (uint8_t *) p2 - (uint8_t *) p3);
-#endif
+        if constexpr (sizeof(void *) == 8) {
+            TS_ASSERT_EQUALS(40, (uint8_t *) p0 - (uint8_t *) p1);
+            TS_ASSERT_EQUALS(40, (uint8_t *) p2 - (uint8_t *) p3);
+        } else {
+            TS_ASSERT_EQUALS(24, (uint8_t *) p0 - (uint8_t *) p1);
+            TS_ASSERT_EQUALS(24, (uint8_t *) p2 - (uint8_t *) p3);
+        }
     }
 
     void testOneByteAllocator() {
