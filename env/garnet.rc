@@ -47,6 +47,24 @@ if [ -f "${local_gitconfig}" ] ; then
     git config include.path "${local_gitconfig}"
 fi
 
+# ================================
+# Setup Python Virtual Environment
+# ================================
+echo "Setting up Python virtual environment..."
+python3 -m venv ${GARNET_ROOT}/env/.pyvenv
+source ${GARNET_ROOT}/env/.pyvenv/bin/activate
+pip install --upgrade pip
+pip install -r ${GARNET_ROOT}/env/requirements.txt
+# pip install --upgrade pip
+# pip install --upgrade termcolor
+# pip install --upgrade cmake
+# pip install --upgrade ninja
+# pip install --upgrade vulkan-sdk
+# pip install --upgrade clang-15
+# pip install --upgrade clang-format-15
+# pip install --upgrade git-lfs
+# pip install --upgrade git
+
 # =====
 # alias
 # =====
