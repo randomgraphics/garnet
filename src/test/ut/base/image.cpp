@@ -28,12 +28,12 @@ public:
         auto base = img::PlaneDesc::make(img::PixelFormat::RGBA8(), {5, 7, 9});
         TS_ASSERT(base.valid());
         auto desc = img::ImageDesc().reset(base, 1, 3, 0); // construct full mipmap chain with 3 layers from the base map above.
-        TS_ASSERT_EQUALS(5, desc.width());
-        TS_ASSERT_EQUALS(7, desc.height());
-        TS_ASSERT_EQUALS(9, desc.depth());
-        TS_ASSERT_EQUALS(4, desc.levels);
-        TS_ASSERT_EQUALS(3, desc.faces);
-        TS_ASSERT_EQUALS(12, desc.planes.size());
+        TS_ASSERT_EQUALS(5u, desc.width());
+        TS_ASSERT_EQUALS(7u, desc.height());
+        TS_ASSERT_EQUALS(9u, desc.depth());
+        TS_ASSERT_EQUALS(4u, desc.levels);
+        TS_ASSERT_EQUALS(3u, desc.faces);
+        TS_ASSERT_EQUALS(12u, desc.planes.size());
     }
 
     void testInvalidPNG() {

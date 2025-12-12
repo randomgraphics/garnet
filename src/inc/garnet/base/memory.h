@@ -19,15 +19,6 @@
 
 namespace GN {
 namespace HeapMemory {
-///
-/// Allocate memory from heap. Can cross DLL boundary.
-///
-GN_API void * alloc(size_t sizeInBytes);
-
-///
-/// Re-allocate memory from heap. Can cross DLL boundary.
-///
-GN_API void * realloc(void * ptr, size_t sizeInBytes);
 
 ///
 /// Allocate aligned memory from heap. Can cross DLL boundary
@@ -35,14 +26,20 @@ GN_API void * realloc(void * ptr, size_t sizeInBytes);
 GN_API void * alignedAlloc(size_t sizeInBytes, size_t alignment);
 
 ///
-/// Re-allocate aligned memory from heap. Can cross DLL boundary
+/// Allocate memory from heap. Can cross DLL boundary.
 ///
-GN_API void * alignedRealloc(void * ptr, size_t sizeInBytes, size_t alignment);
+inline void * alloc(size_t sizeInBytes) { return HeapMemory::alignedAlloc(sizeInBytes, 1); }
 
 ///
-/// Free heap-allocated memory (aligned or unaligned). Can cross DLL boundary.
+/// Re-allocate memory from heap. Will respect the alignment of the original memory. Can cross DLL boundary.
+///
+GN_API void * realloc(void * ptr, size_t sizeInBytes);
+
+///
+/// Free heap-allocated memory allocated by alignedAlloc. Can cross DLL boundary.
 ///
 GN_API void dealloc(void * ptr);
+
 } // namespace HeapMemory
 } // namespace GN
 
@@ -187,7 +184,7 @@ struct CxxObjectAllocator {
 
     /// Inplace destruct a single object. No memory freeing.
     static inline void sDestruct(T * ptr) {
-        if constexpr (!std::is_pod<T>()) {
+        if constexpr (!std::is_trivially_destructible<T>()) {
             if (ptr) GN_LIKELY ptr->T::~T();
         } else {
             // do nothing to POD type.

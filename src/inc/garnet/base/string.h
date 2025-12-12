@@ -142,9 +142,22 @@ inline bool isEmpty(const CHAR * s) {
 ///
 /// format string to raw buffer with guaranteed null terminator.
 ///
-template<typename CHAR, typename... Args>
-inline void formatTo(CHAR * buf, size_t bufSizeInChar, const CHAR * fmt, Args &&... args) {
-    return internal::StringFormatter<CHAR>::formatToBuffer(buf, bufSizeInChar, fmt, std::forward<Args>(args)...);
+template<typename... Args>
+inline auto formatTo(char * buf, size_t bufSizeInChar, fmt::format_string<Args...> fmt, Args &&... args) {
+    return internal::StringFormatter<char>::formatToBuffer(buf, bufSizeInChar, fmt, std::forward<Args>(args)...);
+}
+
+///
+/// format string to raw buffer with guaranteed null terminator.
+///
+template<size_t N, typename... Args>
+inline auto formatTo(char (&buf)[N], fmt::format_string<Args...> fmt, Args &&... args) {
+    return internal::StringFormatter<char>::formatToBuffer(buf, N, fmt, std::forward<Args>(args)...);
+}
+
+template<typename... Args>
+inline auto formatTo(wchar_t * buf, size_t bufSizeInWChar, fmt::wformat_string<Args...> fmt, Args &&... args) {
+    return internal::StringFormatter<wchar_t>::formatToBuffer(buf, bufSizeInWChar, fmt, std::forward<Args>(args)...);
 }
 
 ///
@@ -363,10 +376,21 @@ public:
     const CharType * end() const { return mPtr + size(); }
 
     ///
-    /// string formatting
+    /// string formatting (narrow version)
     ///
-    template<typename... Args>
-    Str<CharType> & formatInplace(const CharType * formatString, Args &&... args) {
+    template<typename... Args, std::enable_if_t<(std::is_convertible<CharType, char>::value), bool> = true>
+    Str<CharType> & formatInplace(fmt::format_string<Args...> formatString, Args &&... args) {
+        auto numCharacters = internal::StringFormatter<CharType>::formattedSize(formatString, std::forward<Args>(args)...);
+        resize(numCharacters);
+        internal::StringFormatter<CharType>::formatToBuffer(mPtr, numCharacters + 1, formatString, std::forward<Args>(args)...);
+        return *this;
+    }
+
+    ///
+    /// string formatting (wide version)
+    ///
+    template<typename... Args, std::enable_if_t<(std::is_convertible<CharType, wchar_t>::value), bool> = true>
+    Str<CharType> & formatInplace(fmt::wformat_string<Args...> formatString, Args &&... args) {
         auto numCharacters = internal::StringFormatter<CharType>::formattedSize(formatString, std::forward<Args>(args)...);
         resize(numCharacters);
         internal::StringFormatter<CharType>::formatToBuffer(mPtr, numCharacters + 1, formatString, std::forward<Args>(args)...);
@@ -892,11 +916,24 @@ public:
     };
 
     ///
-    /// string formatting
+    /// string formatting (narrow version)
     ///
-    template<typename... Args>
+    template<typename... Args, std::enable_if_t<(std::is_convertible<CharType, char>::value), bool> = true>
     [[nodiscard("The return value of this function is usually not discarded. Maybe formatInplace() is what you want?")]] static Str<CharType>
-    format(const CharType * formatString, Args &&... args) {
+    format(fmt::format_string<Args...> formatString, Args &&... args) {
+        auto          numCharacters = internal::StringFormatter<CharType>::formattedSize(formatString, std::forward<Args>(args)...);
+        Str<CharType> result;
+        result.resize(numCharacters);
+        internal::StringFormatter<CharType>::formatToBuffer(result.mPtr, numCharacters + 1, formatString, std::forward<Args>(args)...);
+        return result;
+    }
+
+    ///
+    /// string formatting (wide version)
+    ///
+    template<typename... Args, std::enable_if_t<(std::is_convertible<CharType, wchar_t>::value), bool> = true>
+    [[nodiscard("The return value of this function is usually not discarded. Maybe formatInplace() is what you want?")]] static Str<CharType>
+    format(fmt::wformat_string<Args...> formatString, Args &&... args) {
         auto          numCharacters = internal::StringFormatter<CharType>::formattedSize(formatString, std::forward<Args>(args)...);
         Str<CharType> result;
         result.resize(numCharacters);
@@ -935,7 +972,7 @@ private:
     // Allocate a memory buffer that can hold at least 'count' characters, and one extra '\0'.
     static CharType * sAlloc(size_t count) {
         if (count <= 1) return sEmptyPtr();
-        // ALLOCATOR:sAllocate only allocates raw memory buffer. No constuctors are invoked.
+        // ALLOCATOR:sAllocate only allocates raw memory buffer. No constructors are invoked.
         // This is safe, as long as CharType is POD type.
         StringHeader * ptr = (StringHeader *) RAW_MEMORY_ALLOCATOR::sAllocate(sizeof(StringHeader) + sizeof(CharType) * (count + 1), sizeof(size_t));
         return (CharType *) (ptr + 1);
@@ -963,12 +1000,12 @@ typedef Str<wchar_t> StrW;
 ///
 /// Define custom string literal operator
 ///
-inline StrA operator"" _s(const char * s, size_t len) { return StrA(s, len); }
+inline StrA operator""_s(const char * s, size_t len) { return StrA(s, len); }
 
 ///
 /// Define custom wide-char string literal operator
 ///
-inline StrW operator"" _ws(const wchar_t * s, size_t len) { return StrW(s, len); }
+inline StrW operator""_ws(const wchar_t * s, size_t len) { return StrW(s, len); }
 
 ///
 /// Fixed sized string that has no runtime memory allocation.

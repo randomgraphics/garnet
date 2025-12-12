@@ -1218,7 +1218,7 @@ static bool sLoadFromFBX(FatModel & fatmodel, File & file, const StrA & filename
     FbxImporter * gImporter = FbxImporter::Create(gSdkManager, "");
     if (NULL == gImporter) return false;
     if (!gImporter->Initialize(filename, lFileFormat)) {
-        GN_ERROR(sLogger)(gImporter->GetStatus().GetErrorString());
+        GN_ERROR(sLogger)("{}", gImporter->GetStatus().GetErrorString());
         return false;
     }
 
@@ -1231,7 +1231,7 @@ static bool sLoadFromFBX(FatModel & fatmodel, File & file, const StrA & filename
     FbxScene * gScene = FbxScene::Create(gSdkManager, "");
     if (NULL == gScene) return false;
     if (!gImporter->Import(gScene)) {
-        GN_ERROR(sLogger)(gImporter->GetStatus().GetErrorString());
+        GN_ERROR(sLogger)("{}", gImporter->GetStatus().GetErrorString());
         return false;
     }
 

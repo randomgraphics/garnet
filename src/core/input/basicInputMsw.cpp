@@ -301,7 +301,7 @@ bool GN::input::BasicInputMsw::setupWindowHooks(HWND hwnd) {
     mMsgHook = ::SetWindowsHookEx(WH_GETMESSAGE, sMsgHookProc, 0, threadID);
     mCwpHook = ::SetWindowsHookEx(WH_CALLWNDPROC, sCwpHookProc, 0, threadID);
     if (0 == mMsgHook || 0 == mCwpHook) {
-        GN_ERROR(sLogger)(getWin32LastErrorInfo());
+        GN_ERROR(sLogger)("{}", getWin32LastErrorInfo());
         return false;
     }
 
