@@ -131,6 +131,24 @@ if( check_env_folder "JAVA_HOME" ) {
 }
 
 # ==============================================================================
+# Setup Python Virtula Environment
+# ==============================================================================
+# Setup Python Virtual Environment
+if (-not (Test-Path "$GARNET_ROOT\env\.pyvenv\Scripts\Activate.ps1")) {
+    # setup python virtual environment for the first time
+    write-host "Setting up python virtual environment..."
+    python3 -m venv $GARNET_ROOT\env\.pyvenv
+}
+if ( Test-Path "$GARNET_ROOT\env\.pyvenv\Scripts\Activate.ps1" ) {
+    & "$GARNET_ROOT\env\.pyvenv\Scripts\Activate.ps1"
+    write-host "Activated python virtual env: $GARNET_ROOT\.venv"
+    python.exe -m pip install --upgrade pip
+    python.exe -m pip install -r $GARNET_ROOT\env\requirements.txt
+} else {
+    warn "Python virtual environment is missing; cannot auto-activate at shell."
+}
+
+# ==============================================================================
 # setup aliases
 # ==============================================================================
 if( Test-Path -path "$GARNET_ROOT\env\alias.powershell.txt" )
