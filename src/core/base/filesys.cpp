@@ -291,7 +291,7 @@ public:
         GN_MSW_CHECK(GetModuleFileNameA(0, buf, MAX_PATH));
         mRootDir = parentPath(buf);
 #elif GN_DARWIN
-        char buf[PATH_MAX + 1];
+        char     buf[PATH_MAX + 1];
         uint32_t size = PATH_MAX;
         if (0 != _NSGetExecutablePath(buf, &size)) {
             GN_ERROR(sLogger)("Buffer size {} is not enough to hold executable path!", size);
