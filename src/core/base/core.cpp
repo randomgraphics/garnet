@@ -56,9 +56,24 @@ GN_API void * HeapMemory::alignedAlloc(size_t sizeInBytes, size_t alignment) {
 }
 
 //
+// a helper function to dump memory content for debug purpose.
+// -----------------------------------------------------------------------------
+[[maybe_unused]] static void dumpMemoryContent(const char * name, uintptr_t addr, size_t size) {
+    printf("Memory content of %s at address 0x%p, size %zu bytes:\n", name, (void *) addr, size);
+    for (size_t i = 0; i < size; ++i) {
+        printf("%02X ", ((unsigned char *) addr)[i]);
+        // insert \n every 16 bytes.
+        if ((i + 1) % 16 == 0) { printf("\n"); }
+    }
+    printf("\n");
+}
+
+//
 //
 // -----------------------------------------------------------------------------
 GN_API void * HeapMemory::realloc(void * ptr, size_t sizeInBytes) {
+    if (!ptr) return alignedAlloc(sizeInBytes, sizeof(size_t));
+
     // retrieve the original memory header.
     auto header    = (MemoryHeader *) ptr - 1;
     auto oldPtr    = (uintptr_t) ptr - header->offset;
@@ -66,9 +81,13 @@ GN_API void * HeapMemory::realloc(void * ptr, size_t sizeInBytes) {
     auto oldSize   = header->size - oldOffset; // old user visible memory size.
     auto alignment = header->alignment;
 
+    // dumpMemoryContent("before realloc", oldPtr, header->size);
+    // printf("before realloc: offset = %zu, total size = %zu, alignment: %zu\n", oldOffset, header->size, alignment);
+
     // validate input parameter range.
     if (0 == sizeInBytes) GN_UNLIKELY sizeInBytes = alignment;
 
+    // reallocate the memory block.
     auto newTotalSize = sizeof(MemoryHeader) + alignment - 1 + sizeInBytes;
     auto newPtr       = (uintptr_t)::realloc((void *) oldPtr, newTotalSize);
     if (!newPtr) {
@@ -76,23 +95,30 @@ GN_API void * HeapMemory::realloc(void * ptr, size_t sizeInBytes) {
         return nullptr;
     }
 
+    // calculate the new memory properties.
     auto newAlignedAddress = math::nextMultiple(newPtr + sizeof(MemoryHeader), alignment);
     GN_ASSERT(0 == (newAlignedAddress % alignment));                       // double check the alignment.
     GN_ASSERT(newAlignedAddress >= (newPtr + sizeof(MemoryHeader)));       // double check we have enough space for the header.
     GN_ASSERT((newAlignedAddress - newPtr + sizeInBytes) <= newTotalSize); // double check we have enough space for the user visible memory.
+    auto newOffset = newAlignedAddress - newPtr;
 
-    auto newHeader       = (MemoryHeader *) newAlignedAddress - 1;
-    newHeader->alignment = alignment;
-    newHeader->offset    = newAlignedAddress - newPtr;
-    newHeader->size      = newTotalSize;
+    // dumpMemoryContent("after realloc", newPtr, newTotalSize);
+    // printf("after realloc: offset = %zu, total size = %zu, alignment: %zu\n", newOffset, newTotalSize,
+    //        alignment);
 
     // if new offset is different from the old offset, we need to move the user visible memory to the new address.
-    if (newHeader->offset != oldOffset) {
+    if (newOffset != oldOffset) {
         auto dst        = (void *) newAlignedAddress;
         auto src        = (void *) (newPtr + oldOffset);
         auto sizeToMove = std::min(oldSize, sizeInBytes);
         memmove(dst, src, sizeToMove); // have to use memmove to handle the overlap.
     }
+
+    // Update the header info. Must do this after we move the memory content to avoid accidental overwrite the user data.
+    auto newHeader       = (MemoryHeader *) newAlignedAddress - 1;
+    newHeader->alignment = alignment;
+    newHeader->offset    = newOffset;
+    newHeader->size      = newTotalSize;
 
     // done
     return (void *) newAlignedAddress;
