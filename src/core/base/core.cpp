@@ -59,19 +59,14 @@ GN_API void * HeapMemory::alignedAlloc(size_t sizeInBytes, size_t alignment) {
 //
 // -----------------------------------------------------------------------------
 GN_API void * HeapMemory::realloc(void * ptr, size_t sizeInBytes) {
+    if (!ptr) return alignedAlloc(sizeInBytes, sizeof(size_t));
+
     // retrieve the original memory header.
-    MemoryHeader * header = nullptr;
-    uintptr_t oldPtr = 0;
-    size_t oldOffset = 1;
-    size_t oldSize   = 0;
-    size_t alignment = sizeof(size_t);
-    if (ptr) {
-        header = (MemoryHeader *) ptr - 1;
-        oldPtr = (uintptr_t) ptr - header->offset;
-        oldOffset = header->offset;
-        oldSize = header->size - oldOffset; // old user visible memory size.
-        alignment = header->alignment;
-    }
+    auto header    = (MemoryHeader *) ptr - 1;
+    auto oldPtr    = (uintptr_t) ptr - header->offset;
+    auto oldOffset = header->offset;
+    auto oldSize   = header->size - oldOffset; // old user visible memory size.
+    auto alignment = header->alignment;
 
     // validate input parameter range.
     if (0 == sizeInBytes) GN_UNLIKELY sizeInBytes = alignment;
