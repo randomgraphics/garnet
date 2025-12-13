@@ -485,29 +485,46 @@ class DynaArray {
 
         GN_ASSERT(count <= MAX_CAPS);
 
-        // allocate new buffer (unconstructed raw memory)
-        Header * newHeader = (Header *) OBJECT_ALLOCATOR::sAllocate((SIZE_TYPE) (newCap + sizeof(Header)));
-        if (NULL == newHeader) {
-            GN_ERROR(getLogger("GN.base.DynaArray"))("out of memory!");
-            return false;
-        }
-        newHeader->capacity = (SIZE_TYPE) newCap;
-        newHeader->count    = oldCount;
+        // calculate the size of the new buffer
+        size_t newBufferSizeInBytes   = newCap * sizeof(T) + sizeof(Header);
+        size_t newBufferSizeInObjects = (newBufferSizeInBytes + sizeof(T) - 1) / sizeof(T);
 
-        T * newBuf = (T *) (newHeader + 1);
-        for (SIZE_TYPE i = 0; i < oldCount; ++i) {
-            if constexpr (std::is_move_constructible<T>::value) {
-                OBJECT_ALLOCATOR::sConstruct(newBuf + i, std::move(mElements[i]));
-            } else {
-                OBJECT_ALLOCATOR::sConstruct(newBuf + i, mElements[i]);
+        // if the type is trivial copyable, we can use the realloc function to resize the buffer.
+        if constexpr (std::is_trivially_copyable_v<T>) {
+            auto newHeader = (Header *) OBJECT_ALLOCATOR::sReallocate((T *) oldHeader, newBufferSizeInObjects);
+            if (!newHeader) {
+                GN_ERROR(getLogger("GN.base.DynaArray"))("out of memory!");
+                return false;
             }
-        }
+            newHeader->capacity = (SIZE_TYPE) newCap;
+            newHeader->count    = oldCount;
+            mElements           = (T *) (newHeader + 1);
+        } else {
+            // allocate new buffer (unconstructed raw memory)
+            Header * newHeader = (Header *) OBJECT_ALLOCATOR::sAllocate(newBufferSizeInObjects);
+            if (NULL == newHeader) {
+                GN_ERROR(getLogger("GN.base.DynaArray"))("out of memory!");
+                return false;
+            }
+            newHeader->capacity = (SIZE_TYPE) newCap;
+            newHeader->count    = oldCount;
 
-        // deallocate old buffer
-        destroyAll();
+            T * newBuf = (T *) (newHeader + 1);
+            for (SIZE_TYPE i = 0; i < oldCount; ++i) {
+                if constexpr (std::is_move_constructible<T>::value) {
+                    OBJECT_ALLOCATOR::sConstruct(newBuf + i, std::move(mElements[i]));
+                } else {
+                    OBJECT_ALLOCATOR::sConstruct(newBuf + i, mElements[i]);
+                }
+            }
+
+            // deallocate old buffer
+            destroyAll();
+
+            mElements = newBuf;
+        }
 
         // done
-        mElements = newBuf;
         return true;
     }
 

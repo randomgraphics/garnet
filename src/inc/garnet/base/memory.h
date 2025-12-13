@@ -146,6 +146,9 @@ struct RawHeapMemoryAllocator {
 
     /// Deallocate raw memory buffer.
     static inline void sDeallocate(void * ptr) { HeapMemory::dealloc(ptr); }
+
+    /// Reallocate raw memory from heap.
+    static inline void * sReallocate(void * ptr, size_t sizeInBytes) { return HeapMemory::realloc(ptr, sizeInBytes); }
 };
 
 ///
@@ -153,6 +156,7 @@ struct RawHeapMemoryAllocator {
 ///
 template<typename T, typename RAW_MEMORY_ALLOCATOR = RawHeapMemoryAllocator>
 struct CxxObjectAllocator {
+
     /// Allocate raw memory from heap. No calling constructors
     static inline T * sAllocate(size_t objectCount, size_t alignmentInBytes = DefaultMemoryAlignment<sizeof(T)>::VALUE) {
         return (T *) RAW_MEMORY_ALLOCATOR::sAllocate(objectCount * sizeof(T), alignmentInBytes);
@@ -190,6 +194,12 @@ struct CxxObjectAllocator {
             // do nothing to POD type.
             (void) ptr;
         }
+    }
+
+    /// Reallocate raw memory from heap. This method is allowed only when T is trivially copyable.
+    template<typename = std::enable_if<std::is_trivially_copyable_v<T>>>
+    static inline T * sReallocate(T * ptr, size_t objectCount) {
+        return (T *) RAW_MEMORY_ALLOCATOR::sReallocate(ptr, objectCount * sizeof(T));
     }
 };
 
