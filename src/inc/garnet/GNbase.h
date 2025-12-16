@@ -74,7 +74,6 @@ namespace internal {}
 
 // delegate & callback
 #include "base/delegate.h"
-#include "base/sigslot.h"
 
 // array types
 #include "base/array.h"
