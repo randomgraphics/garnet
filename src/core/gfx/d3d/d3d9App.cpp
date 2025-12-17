@@ -308,9 +308,9 @@ GN_API void GN::d3d9::D3D9Application::quit() {
     safeRelease(mD3D);
 
     if (gInputPtr) {
-        gInput.sigKeyPress.disconnect(this);
-        gInput.sigCharPress.disconnect(this);
-        gInput.sigAxisMove.disconnect(this);
+        gInput.sigKeyPress.disconnect(*this);
+        gInput.sigCharPress.disconnect(*this);
+        gInput.sigAxisMove.disconnect(*this);
 
         if (mShutdownInputSystem) { input::shutdownInputSystem(); }
     }

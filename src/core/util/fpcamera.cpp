@@ -166,7 +166,7 @@ void FirstPersonCamera::connectToInput() {
 //
 // -----------------------------------------------------------------------------
 void FirstPersonCamera::disconnectFromInput() {
-    if (gInputPtr) { gInput.sigAxisMove.disconnect(this); }
+    if (gInputPtr) { gInput.sigAxisMove.disconnect(*this); }
 }
 
 // *****************************************************************************

@@ -57,8 +57,8 @@ void GN::util::ArcBall::connectToInput() {
 // -----------------------------------------------------------------------------
 void GN::util::ArcBall::disconnectFromInput() {
     if (gInputPtr) {
-        gInput.sigKeyPress.disconnect(this);
-        gInput.sigAxisMove.disconnect(this);
+        gInput.sigKeyPress.disconnect(*this);
+        gInput.sigAxisMove.disconnect(*this);
     }
 }
 

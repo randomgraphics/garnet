@@ -22,15 +22,17 @@ namespace GN {
 namespace internal {
 
 template<typename T>
-class FastDelegateBase;
+class delegate_base;
 
 template<typename RET, typename... PARAMS>
-class FastDelegateBase<RET(PARAMS...)> {
+class delegate_base<RET(PARAMS...)> {
+
 protected:
-    using StubType = RET (*)(void * this_ptr, PARAMS...);
+    using stub_type = RET (*)(void * this_ptr, PARAMS...);
+
     struct InvocationElement {
         InvocationElement() = default;
-        InvocationElement(void * this_ptr, StubType aStub): object(this_ptr), stub(aStub) {}
+        InvocationElement(void * this_ptr, stub_type aStub): object(this_ptr), stub(aStub) {}
         void Clone(InvocationElement & target) const {
             target.stub   = stub;
             target.object = object;
@@ -38,162 +40,159 @@ protected:
         bool      operator==(const InvocationElement & another) const { return another.stub == stub && another.object == object; } //==
         bool      operator!=(const InvocationElement & another) const { return another.stub != stub || another.object != object; } //!=
         void *    object = nullptr;
-        StubType stub   = nullptr;
+        stub_type stub   = nullptr;
     }; // InvocationElement
-};     // class internal::FastDelegateBase
 
-} // namespace internal
+}; // class delegate_base
 
 template<typename T>
-class FastDelegate;
+class delegate;
 template<typename T>
-class MulticastFastDelegate;
+class multicast_delegate;
 
 template<typename RET, typename... PARAMS>
-class FastDelegate<RET(PARAMS...)> final : private internal::FastDelegateBase<RET(PARAMS...)> {
+class delegate<RET(PARAMS...)> final : private delegate_base<RET(PARAMS...)> {
 public:
-    FastDelegate() = default;
+    delegate() = default;
 
-    FastDelegate(const FastDelegate & another) { another.invocation.Clone(invocation); }
+    bool isNull() const { return invocation.stub == nullptr; }
+    bool operator==(void * ptr) const { return (ptr == nullptr) && this->isNull(); }    // operator ==
+    bool operator!=(void * ptr) const { return (ptr != nullptr) || (!this->isNull()); } // operator !=
+
+    delegate(const delegate & another) { another.invocation.Clone(invocation); }
 
     template<typename LAMBDA>
-    FastDelegate(const LAMBDA & lambda) {
-        assign((void *) (&lambda), lambdaStub<LAMBDA>);
-    }
+    delegate(const LAMBDA & lambda) {
+        assign((void *) (&lambda), lambda_stub<LAMBDA>);
+    } // delegate
 
-    FastDelegate & operator=(const FastDelegate & another) {
+    delegate & operator=(const delegate & another) {
         another.invocation.Clone(invocation);
         return *this;
-    }
+    } // operator =
 
-    template<typename LAMBDA>
-    FastDelegate & operator=(const LAMBDA & instance) {
-        assign((void *) (&instance), lambdaStub<LAMBDA>);
+    template<typename LAMBDA> // template instantiation is not needed, will be deduced (inferred):
+    delegate & operator=(const LAMBDA & instance) {
+        assign((void *) (&instance), lambda_stub<LAMBDA>);
         return *this;
-    }
+    } // operator =
 
-    bool empty() const { return invocation.stub == nullptr; }
+    bool operator==(const delegate & another) const { return invocation == another.invocation; }
+    bool operator!=(const delegate & another) const { return invocation != another.invocation; }
 
-    bool operator==(void * ptr) const { return (ptr == nullptr) && this->empty(); }
-
-    bool operator!=(void * ptr) const { return (ptr != nullptr) || (!this->empty()); }
-
-    bool operator==(const FastDelegate & another) const { return invocation == another.invocation; }
-    bool operator!=(const FastDelegate & another) const { return invocation != another.invocation; }
-
-    bool operator==(const MulticastFastDelegate<RET(PARAMS...)> & another) const { return another == (*this); }
-    bool operator!=(const MulticastFastDelegate<RET(PARAMS...)> & another) const { return another != (*this); }
+    bool operator==(const multicast_delegate<RET(PARAMS...)> & another) const { return another == (*this); }
+    bool operator!=(const multicast_delegate<RET(PARAMS...)> & another) const { return another != (*this); }
 
     template<class T, RET (T::*TMethod)(PARAMS...)>
-    static FastDelegate create(T * instance) {
-        return FastDelegate(instance, methodStub<T, TMethod>);
-    }
+    static delegate create(T * instance) {
+        return delegate(instance, method_stub<T, TMethod>);
+    } // create
 
     template<class T, RET (T::*TMethod)(PARAMS...) const>
-    static FastDelegate create(T const * instance) {
-        return FastDelegate(const_cast<T *>(instance), constMethodStub<T, TMethod>);
-    }
+    static delegate create(T const * instance) {
+        return delegate(const_cast<T *>(instance), const_method_stub<T, TMethod>);
+    } // create
 
     template<RET (*TMethod)(PARAMS...)>
-    static FastDelegate create() {
-        return FastDelegate(nullptr, functionStub<TMethod>);
-    }
+    static delegate create() {
+        return delegate(nullptr, function_stub<TMethod>);
+    } // create
 
     template<typename LAMBDA>
-    static FastDelegate create(const LAMBDA & instance) {
-        return FastDelegate((void *) (&instance), lambdaStub<LAMBDA>);
-    }
+    static delegate create(const LAMBDA & instance) {
+        return delegate((void *) (&instance), lambda_stub<LAMBDA>);
+    } // create
 
-    RET operator()(PARAMS... arg) const { return (*invocation.stub)(invocation.object, arg...); }
+    RET operator()(PARAMS... arg) const { return (*invocation.stub)(invocation.object, arg...); } // operator()
 
 private:
-    FastDelegate(void * anObject, typename FastDelegateBase<RET(PARAMS...)>::StubType aStub) {
+    delegate(void * anObject, typename delegate_base<RET(PARAMS...)>::stub_type aStub) {
         invocation.object = anObject;
         invocation.stub   = aStub;
-    }
+    } // delegate
 
-    void assign(void * anObject, typename internal::FastDelegateBase<RET(PARAMS...)>::StubType aStub) {
+    void assign(void * anObject, typename delegate_base<RET(PARAMS...)>::stub_type aStub) {
         this->invocation.object = anObject;
         this->invocation.stub   = aStub;
-    }
+    } // assign
 
     template<class T, RET (T::*TMethod)(PARAMS...)>
-    static RET methodStub(void * this_ptr, PARAMS... params) {
+    static RET method_stub(void * this_ptr, PARAMS... params) {
         T * p = static_cast<T *>(this_ptr);
         return (p->*TMethod)(params...);
-    }
+    } // method_stub
 
     template<class T, RET (T::*TMethod)(PARAMS...) const>
-    static RET constMethodStub(void * this_ptr, PARAMS... params) {
+    static RET const_method_stub(void * this_ptr, PARAMS... params) {
         T * const p = static_cast<T *>(this_ptr);
         return (p->*TMethod)(params...);
-    }
+    } // const_method_stub
 
     template<RET (*TMethod)(PARAMS...)>
-    static RET functionStub(void * this_ptr, PARAMS... params) {
+    static RET function_stub(void * this_ptr, PARAMS... params) {
         return (TMethod) (params...);
-    }
+    } // function_stub
 
     template<typename LAMBDA>
-    static RET lambdaStub(void * this_ptr, PARAMS... arg) {
+    static RET lambda_stub(void * this_ptr, PARAMS... arg) {
         LAMBDA * p = static_cast<LAMBDA *>(this_ptr);
         return (p->operator())(arg...);
-    }
+    } // lambda_stub
 
-    friend class MulticastFastDelegate<RET(PARAMS...)>;
-    typename internal::FastDelegateBase<RET(PARAMS...)>::InvocationElement invocation;
-};
+    friend class multicast_delegate<RET(PARAMS...)>;
+    typename delegate_base<RET(PARAMS...)>::InvocationElement invocation;
+
+}; // class delegate
 
 template<typename RET, typename... PARAMS>
-class MulticastFastDelegate<RET(PARAMS...)> final : private internal::FastDelegateBase<RET(PARAMS...)> {
+class multicast_delegate<RET(PARAMS...)> final : private delegate_base<RET(PARAMS...)> {
 public:
-    MulticastFastDelegate() = default;
-    ~MulticastFastDelegate() {
+    multicast_delegate() = default;
+    ~multicast_delegate() {
         for (auto & element : invocationList) delete element;
         invocationList.clear();
-    } //~MulticastFastDelegate
+    } //~multicast_delegate
 
-    bool empty() const { return invocationList.size() < 1; }
-    bool operator==(void * ptr) const { return (ptr == nullptr) && this->empty(); }    // operator ==
-    bool operator!=(void * ptr) const { return (ptr != nullptr) || (!this->empty()); } // operator !=
+    bool isNull() const { return invocationList.size() < 1; }
+    bool operator==(void * ptr) const { return (ptr == nullptr) && this->isNull(); }    // operator ==
+    bool operator!=(void * ptr) const { return (ptr != nullptr) || (!this->isNull()); } // operator !=
 
     size_t size() const { return invocationList.size(); }
 
-    MulticastFastDelegate & operator=(const MulticastFastDelegate &) = delete;
-    MulticastFastDelegate(const MulticastFastDelegate &)             = delete;
+    multicast_delegate & operator=(const multicast_delegate &) = delete;
+    multicast_delegate(const multicast_delegate &)             = delete;
 
-    bool operator==(const MulticastFastDelegate & another) const {
+    bool operator==(const multicast_delegate & another) const {
         if (invocationList.size() != another.invocationList.size()) return false;
         auto anotherIt = another.invocationList.begin();
         for (auto it = invocationList.begin(); it != invocationList.end(); ++it)
             if (**it != **anotherIt) return false;
         return true;
     } //==
-    bool operator!=(const MulticastFastDelegate & another) const { return !(*this == another); }
+    bool operator!=(const multicast_delegate & another) const { return !(*this == another); }
 
-    bool operator==(const FastDelegate<RET(PARAMS...)> & another) const {
-        if (empty() && another.empty()) return true;
-        if (another.empty() || (size() != 1)) return false;
+    bool operator==(const delegate<RET(PARAMS...)> & another) const {
+        if (isNull() && another.isNull()) return true;
+        if (another.isNull() || (size() != 1)) return false;
         return (another.invocation == **invocationList.begin());
     } //==
-    bool operator!=(const FastDelegate<RET(PARAMS...)> & another) const { return !(*this == another); }
+    bool operator!=(const delegate<RET(PARAMS...)> & another) const { return !(*this == another); }
 
-    MulticastFastDelegate & operator+=(const MulticastFastDelegate & another) {
+    multicast_delegate & operator+=(const multicast_delegate & another) {
         for (auto & item : another.invocationList) // clone, not copy; flattens hierarchy:
-            this->invocationList.push_back(new typename internal::FastDelegateBase<RET(PARAMS...)>::InvocationElement(item->object, item->stub));
+            this->invocationList.push_back(new typename delegate_base<RET(PARAMS...)>::InvocationElement(item->object, item->stub));
         return *this;
     } // operator +=
 
     template<typename LAMBDA> // template instantiation is not neededm, will be deduced/inferred:
-    MulticastFastDelegate & operator+=(const LAMBDA & lambda) {
-        FastDelegate<RET(PARAMS...)> d = FastDelegate<RET(PARAMS...)>::template create<LAMBDA>(lambda);
+    multicast_delegate & operator+=(const LAMBDA & lambda) {
+        delegate<RET(PARAMS...)> d = delegate<RET(PARAMS...)>::template create<LAMBDA>(lambda);
         return *this += d;
     } // operator +=
 
-    MulticastFastDelegate & operator+=(const FastDelegate<RET(PARAMS...)> & another) {
-        if (another.empty()) return *this;
-        this->invocationList.push_back(
-            new typename internal::FastDelegateBase<RET(PARAMS...)>::InvocationElement(another.invocation.object, another.invocation.stub));
+    multicast_delegate & operator+=(const delegate<RET(PARAMS...)> & another) {
+        if (another.isNull()) return *this;
+        this->invocationList.push_back(new typename delegate_base<RET(PARAMS...)>::InvocationElement(another.invocation.object, another.invocation.stub));
         return *this;
     } // operator +=
 
@@ -213,13 +212,15 @@ public:
         } // loop
     }     // operator()
 
-    void operator()(PARAMS... arg, FastDelegate<void(size_t, RET *)> handler) const { operator()<decltype(handler)>(arg..., handler); }  // operator()
+    void operator()(PARAMS... arg, delegate<void(size_t, RET *)> handler) const { operator()<decltype(handler)>(arg..., handler); }      // operator()
     void operator()(PARAMS... arg, std::function<void(size_t, RET *)> handler) const { operator()<decltype(handler)>(arg..., handler); } // operator()
 
 private:
-    std::list<typename internal::FastDelegateBase<RET(PARAMS...)>::InvocationElement *> invocationList;
+    std::list<typename delegate_base<RET(PARAMS...)>::InvocationElement *> invocationList;
 
-}; // class MulticastFastDelegate
+}; // class multicast_delegate
+
+} // namespace internal
 
 ///
 /// Base slot class. Derive your class from this, if you want automatic
@@ -230,24 +231,74 @@ protected:
     SlotBase() {}
 
     virtual ~SlotBase() {
-        // disconnect with all signals
-        for (SignalContainer::iterator i = mSignals.begin(); i != mSignals.end(); ++i) { (*i)->removeBaseSlotClass(*this); }
-        mSignals.clear();
+        // // disconnect with all signals
+        // for (SignalContainer::iterator i = mSignals.begin(); i != mSignals.end(); ++i) { (*i)->removeBaseSlotClass(*this); }
+        // mSignals.clear();
     }
 
 public:
     /** 返回与当前slot连接的信号数 */
-    size_t getNumSignals() const { return mSignals.size(); }
+    size_t getNumSignals() const { return 0; } // mSignals.size(); }
 
 private:
-    friend class detail::SignalBase;
-    typedef std::list<const detail::SignalBase *> SignalContainer;
-    mutable SignalContainer                       mSignals;
+    // friend class detail::SignalBase;
+    // typedef std::list<const detail::SignalBase *> SignalContainer;
+    // mutable SignalContainer                       mSignals;
 };
 
-inline void detail::SignalBase::connectToSlotClass(const SlotBase & slot) const { slot.mSignals.push_back(this); }
+template<class>
+class Signal; // undefined.
 
-inline void detail::SignalBase::disconnectFromSlotClass(const SlotBase & slot) const { slot.mSignals.remove(this); }
+template<typename RET, typename... PARAMS>
+class Signal<RET(PARAMS...)> {
+public:
+    Signal() {}
+    ~Signal() {}
+
+    void connect(RET (*staticFuncPtr)(PARAMS...)) const { (void) staticFuncPtr; }
+
+    template<typename CLASS>
+    void connect(CLASS * classPtr, RET (CLASS::*memFuncPtr)(PARAMS...)) const {
+        (void) classPtr;
+        (void) memFuncPtr;
+    }
+
+    template<typename CLASS>
+    void connect(CLASS * classPtr, RET (CLASS::*memFuncPtr)(PARAMS...) const) const {
+        (void) classPtr;
+        (void) memFuncPtr;
+    }
+
+    void disconnect(RET (*staticFuncPtr)(PARAMS...)) const { (void) staticFuncPtr; }
+
+    template<typename CLASS>
+    void disconnect(CLASS * classPtr, RET (CLASS::*memFuncPtr)(PARAMS...)) const {
+        (void) classPtr;
+        (void) memFuncPtr;
+    }
+
+    template<typename CLASS>
+    void disconnect(CLASS * classPtr, RET (CLASS::*memFuncPtr)(PARAMS...) const) const {
+        (void) classPtr;
+        (void) memFuncPtr;
+    }
+
+    void disconnect(const SlotBase & slot) const { (void) slot; }
+
+    template<typename... ARGS>
+    RET emit(ARGS &&...) const {
+        return RET();
+    }
+
+    template<typename... ARGS>
+    RET operator()(ARGS &&... args) const {
+        return emit(std::forward<ARGS>(args)...);
+    }
+};
+
+// inline void detail::SignalBase::connectToSlotClass(const SlotBase & slot) const { slot.mSignals.push_back(this); }
+
+// inline void detail::SignalBase::disconnectFromSlotClass(const SlotBase & slot) const { slot.mSignals.remove(this); }
 
 } // namespace GN
 

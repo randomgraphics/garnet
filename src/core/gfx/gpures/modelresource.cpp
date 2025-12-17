@@ -405,7 +405,7 @@ void GN::gfx::ModelResource::Impl::TextureItem::setResource(Impl & owner, uint32
     if (mResource == newTexture) return;
 
     // disconnect from old handle
-    if (mResource) mResource->sigTextureChanged.disconnect(this);
+    if (mResource) mResource->sigTextureChanged.disconnect(*this);
 
     Texture * tex;
     if (newTexture) {
@@ -483,7 +483,7 @@ void GN::gfx::ModelResource::Impl::UniformItem::setResource(Impl & owner, uint32
     if (mResource == newUniform) return;
 
     // disconnect from old handle
-    if (mResource) mResource->sigUniformChanged.disconnect(this);
+    if (mResource) mResource->sigUniformChanged.disconnect(*this);
 
     Uniform * uniform;
     if (newUniform) {
@@ -693,7 +693,7 @@ bool GN::gfx::ModelResource::Impl::setMeshResource(GpuResource * resource, const
 
     // bind mesh signal with the old mesh
     if (mMeshResource != mesh) {
-        if (mMeshResource) mMeshResource->sigMeshChanged.disconnect(this);
+        if (mMeshResource) mMeshResource->sigMeshChanged.disconnect(*this);
         if (mesh) mesh->sigMeshChanged.connect(this, &Impl::onMeshChanged);
     }
 
@@ -740,7 +740,7 @@ bool GN::gfx::ModelResource::Impl::setEffectResource(GpuResource * resource) {
 
     // rebind changing signal
     if (effect != mEffectResource) {
-        if (mEffectResource) mEffectResource->sigEffectChanged.disconnect(this);
+        if (mEffectResource) mEffectResource->sigEffectChanged.disconnect(*this);
         if (effect) effect->sigEffectChanged.connect(this, &Impl::onEffectChanged);
     }
 
@@ -976,12 +976,12 @@ bool GN::gfx::ModelResource::Impl::fromDesc(const ModelResourceDesc & desc) {
 // -----------------------------------------------------------------------------
 void GN::gfx::ModelResource::Impl::clear() {
     if (mEffectResource) {
-        mEffectResource->sigEffectChanged.disconnect(this);
+        mEffectResource->sigEffectChanged.disconnect(*this);
         mEffectResource.clear();
     }
 
     if (mMeshResource) {
-        mMeshResource->sigMeshChanged.disconnect(this);
+        mMeshResource->sigMeshChanged.disconnect(*this);
         mMeshResource.clear();
     }
 
