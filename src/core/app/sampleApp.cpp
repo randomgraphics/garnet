@@ -457,15 +457,17 @@ bool GN::util::SampleApp::initEngine() {
     gio.defaultAsciiFont    = mInitParam.asciiFont;
     if (!engine::gfxInitialize(gio)) return false;
 
+    disconnectFromAllSignals(); // clear any previous connections just in case.
+
     // connect to renderer signal: post quit event, if render window is closed.
-    engine::getGpu()->getSignals().rendererWindowClose.connect(this, &SampleApp::postExitEvent);
-    engine::getGpu()->getSignals().rendererWindowSizeMove.connect(this, &SampleApp::onRenderWindowResize);
+    manageTether(engine::getGpu()->getSignals().rendererWindowClose.connect(this, &SampleApp::postExitEvent));
+    manageTether(engine::getGpu()->getSignals().rendererWindowSizeMove.connect(this, &SampleApp::onRenderWindowResize));
 
     // initialize input system
     if (!engine::inputInitialize(mInitParam.iapi)) return false;
-    gInput.sigKeyPress.connect(this, &SampleApp::onKeyPress);
-    gInput.sigCharPress.connect(this, &SampleApp::onCharPress);
-    gInput.sigAxisMove.connect(this, &SampleApp::onAxisMove);
+    manageTether(gInput.sigKeyPress.connect(this, &SampleApp::onKeyPress));
+    manageTether(gInput.sigCharPress.connect(this, &SampleApp::onCharPress));
+    manageTether(gInput.sigAxisMove.connect(this, &SampleApp::onAxisMove));
 
     // done
     return true;
@@ -478,6 +480,8 @@ bool GN::util::SampleApp::initEngine() {
 // -----------------------------------------------------------------------------
 void GN::util::SampleApp::quitEngine() {
     GN_GUARD;
+
+    disconnectFromAllSignals(); // clear any previous connections just in case.
 
     engine::shutdown();
 

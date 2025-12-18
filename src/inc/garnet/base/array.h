@@ -514,6 +514,7 @@ class DynaArray {
                 if constexpr (std::is_move_constructible<T>::value) {
                     OBJECT_ALLOCATOR::sConstruct(newBuf + i, std::move(mElements[i]));
                 } else {
+                    static_assert(std::is_copy_constructible_v<T>, "T must be copy constructible");
                     OBJECT_ALLOCATOR::sConstruct(newBuf + i, mElements[i]);
                 }
             }

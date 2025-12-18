@@ -5,7 +5,7 @@ static GN::Logger * sLogger = GN::getLogger("GN.gfx.test.input");
 ///
 /// input module test application
 ///
-class InputTest {
+class InputTest : public GN::SlotBase {
     GN::AutoObjPtr<GN::win::Window> mWin;
 
     bool mDone;
@@ -24,9 +24,10 @@ class InputTest {
         if (!gInputPtr->attachToWindow(0, mWin->getWindowHandle())) return false;
 
         // connect to input signals
-        gInput.sigKeyPress.connect(this, &InputTest::onKeyPress);
-        gInput.sigCharPress.connect(this, &InputTest::onCharPress);
-        gInput.sigAxisMove.connect(this, &InputTest::onAxisMove);
+        disconnectFromAllSignals();
+        manageTether(gInput.sigKeyPress.connect(this, &InputTest::onKeyPress));
+        manageTether(gInput.sigCharPress.connect(this, &InputTest::onCharPress));
+        manageTether(gInput.sigAxisMove.connect(this, &InputTest::onAxisMove));
 
         return true;
     }

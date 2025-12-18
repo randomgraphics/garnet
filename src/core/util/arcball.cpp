@@ -44,21 +44,12 @@ GN::util::ArcBall::ArcBall(Handness h)
 //
 // -----------------------------------------------------------------------------
 void GN::util::ArcBall::connectToInput() {
+    disconnectFromAllSignals();
     if (gInputPtr) {
-        gInput.sigKeyPress.connect(this, &ArcBall::onKeyPress);
-        gInput.sigAxisMove.connect(this, &ArcBall::onAxisMove);
+        manageTether(gInput.sigKeyPress.connect(this, &ArcBall::onKeyPress));
+        manageTether(gInput.sigAxisMove.connect(this, &ArcBall::onAxisMove));
     } else {
         GN_ERROR(sLogger)("Input module is not initialized.");
-    }
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-void GN::util::ArcBall::disconnectFromInput() {
-    if (gInputPtr) {
-        gInput.sigKeyPress.disconnect(*this);
-        gInput.sigAxisMove.disconnect(*this);
     }
 }
 

@@ -13,7 +13,7 @@
 #define __GN_BASE_DELEGATE_H__
 // *****************************************************************************
 /// \file
-/// \brief   fast delegate class
+/// \brief   fast signal and slot classes
 /// \author  chenlee (2005.5.14)
 // *****************************************************************************
 
@@ -222,68 +222,131 @@ private:
 
 } // namespace internal
 
-///
-/// Base slot class. Derive your class from this, if you want automatic
-/// management of connections between signal and slot.
-///
-class SlotBase {
+/// Base class of all signals.
+class SignalBase {
 protected:
-    SlotBase() {}
+    SignalBase()          = default;
+    virtual ~SignalBase() = default;
+};
 
-    virtual ~SlotBase() {
-        // // disconnect with all signals
-        // for (SignalContainer::iterator i = mSignals.begin(); i != mSignals.end(); ++i) { (*i)->removeBaseSlotClass(*this); }
-        // mSignals.clear();
+///
+/// Represents a connection between a signal and a slot. Destructing this object will disconnect the slot from the signal.
+///
+class Tether {
+public:
+    Tether() = default;
+
+    Tether(SignalBase * signal, std::function<void()> disconnFunc): mSignal(signal), mDisconnFunc(std::move(disconnFunc)) {}
+
+    ~Tether() {
+        mSignal = nullptr;
+        if (mDisconnFunc) { mDisconnFunc(); }
     }
 
-public:
-    /** 返回与当前slot连接的信号数 */
-    size_t getNumSignals() const { return 0; } // mSignals.size(); }
+    GN_NO_COPY(Tether); // Not copyable
+
+    /// move constructor
+    Tether(Tether && other): mSignal(other.mSignal), mDisconnFunc(std::move(other.mDisconnFunc)) {
+        other.mSignal      = nullptr;
+        other.mDisconnFunc = nullptr;
+    }
+
+    /// move assignment
+    Tether & operator=(Tether && other) {
+        if (this != &other) GN_LIKELY {
+                mSignal            = other.mSignal;
+                mDisconnFunc       = std::move(other.mDisconnFunc);
+                other.mSignal      = nullptr;
+                other.mDisconnFunc = nullptr;
+            }
+        return *this;
+    }
+
+    SignalBase * signal() const { return mSignal; }
+
+    void clear() {
+        mSignal      = nullptr;
+        mDisconnFunc = nullptr;
+    }
 
 private:
-    // friend class detail::SignalBase;
-    // typedef std::list<const detail::SignalBase *> SignalContainer;
-    // mutable SignalContainer                       mSignals;
+    SignalBase *          mSignal {};
+    std::function<void()> mDisconnFunc;
+};
+
+///
+/// Base slot class. Derive your class from this, if you want automatic management of connections between signal and slot.
+///
+/// Example:
+/// ```
+/// class MySlot : public SlotBase {
+/// public:
+///     void mySlotMethod(int value) {
+///         std::cout << "Signal received: " << value << std::endl;
+///     }
+///     void connectTo(const MySignal & signal) {
+///         // The connection to the signal is now managed by this class and will get automatically disconnected when this class is destroyed.
+///         manageTether(signal.connect(this, &MySlot::mySlotMethod));
+///     }
+/// };
+///
+/// ```
+class SlotBase {
+protected:
+    SlotBase() = default;
+
+    virtual ~SlotBase() = default;
+
+    GN_NO_COPY(SlotBase);
+
+    GN_DEFAULT_MOVE(SlotBase);
+
+public:
+    void manageTether(Tether && t) const { mTethers.push_back(std::move(t)); }
+
+    void disconnectFromSignal(const SignalBase & signal) const {
+        for (auto it = mTethers.begin(); it != mTethers.end();) {
+            if (it->signal() == &signal) {
+                it = mTethers.erase(it);
+            } else {
+                ++it;
+            }
+        }
+    }
+
+    void disconnectFromAllSignals() const { mTethers.clear(); }
+
+private:
+    mutable std::list<Tether> mTethers;
 };
 
 template<class>
 class Signal; // undefined.
 
 template<typename RET, typename... PARAMS>
-class Signal<RET(PARAMS...)> {
+class Signal<RET(PARAMS...)> : public SignalBase {
 public:
     Signal() {}
     ~Signal() {}
 
-    void connect(RET (*staticFuncPtr)(PARAMS...)) const { (void) staticFuncPtr; }
-
-    template<typename CLASS>
-    void connect(CLASS * classPtr, RET (CLASS::*memFuncPtr)(PARAMS...)) const {
-        (void) classPtr;
-        (void) memFuncPtr;
+    [[nodiscard]] Tether connect(RET (*staticFuncPtr)(PARAMS...)) const {
+        (void) staticFuncPtr;
+        return {};
     }
 
     template<typename CLASS>
-    void connect(CLASS * classPtr, RET (CLASS::*memFuncPtr)(PARAMS...) const) const {
+    [[nodiscard]] Tether connect(CLASS * classPtr, RET (CLASS::*memFuncPtr)(PARAMS...)) const {
         (void) classPtr;
         (void) memFuncPtr;
-    }
-
-    void disconnect(RET (*staticFuncPtr)(PARAMS...)) const { (void) staticFuncPtr; }
-
-    template<typename CLASS>
-    void disconnect(CLASS * classPtr, RET (CLASS::*memFuncPtr)(PARAMS...)) const {
-        (void) classPtr;
-        (void) memFuncPtr;
+        return {};
     }
 
     template<typename CLASS>
-    void disconnect(CLASS * classPtr, RET (CLASS::*memFuncPtr)(PARAMS...) const) const {
+    [[nodiscard]] Tether connect(CLASS * classPtr, RET (CLASS::*memFuncPtr)(PARAMS...) const) const {
         (void) classPtr;
         (void) memFuncPtr;
+        return {};
     }
-
-    void disconnect(const SlotBase & slot) const { (void) slot; }
 
     template<typename... ARGS>
     RET emit(ARGS &&...) const {
