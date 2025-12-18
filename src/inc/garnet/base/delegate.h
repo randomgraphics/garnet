@@ -144,83 +144,81 @@ private:
 
 }; // class delegate
 
-template<typename RET, typename... PARAMS>
-class multicast_delegate<RET(PARAMS...)> final : private delegate_base<RET(PARAMS...)> {
-public:
-    multicast_delegate() = default;
-    ~multicast_delegate() {
-        for (auto & element : invocationList) delete element;
-        invocationList.clear();
-    } //~multicast_delegate
+// template<typename RET, typename... PARAMS>
+// class multicast_delegate<RET(PARAMS...)> final : private delegate_base<RET(PARAMS...)> {
+// public:
+//     multicast_delegate() = default;
+//     ~multicast_delegate() {
+//         for (auto & element : invocationList) delete element;
+//         invocationList.clear();
+//     } //~multicast_delegate
 
-    bool isNull() const { return invocationList.size() < 1; }
-    bool operator==(void * ptr) const { return (ptr == nullptr) && this->isNull(); }    // operator ==
-    bool operator!=(void * ptr) const { return (ptr != nullptr) || (!this->isNull()); } // operator !=
+//     bool isNull() const { return invocationList.size() < 1; }
+//     bool operator==(void * ptr) const { return (ptr == nullptr) && this->isNull(); }    // operator ==
+//     bool operator!=(void * ptr) const { return (ptr != nullptr) || (!this->isNull()); } // operator !=
 
-    size_t size() const { return invocationList.size(); }
+//     size_t size() const { return invocationList.size(); }
 
-    multicast_delegate & operator=(const multicast_delegate &) = delete;
-    multicast_delegate(const multicast_delegate &)             = delete;
+//     multicast_delegate & operator=(const multicast_delegate &) = delete;
+//     multicast_delegate(const multicast_delegate &)             = delete;
 
-    bool operator==(const multicast_delegate & another) const {
-        if (invocationList.size() != another.invocationList.size()) return false;
-        auto anotherIt = another.invocationList.begin();
-        for (auto it = invocationList.begin(); it != invocationList.end(); ++it)
-            if (**it != **anotherIt) return false;
-        return true;
-    } //==
-    bool operator!=(const multicast_delegate & another) const { return !(*this == another); }
+//     bool operator==(const multicast_delegate & another) const {
+//         if (invocationList.size() != another.invocationList.size()) return false;
+//         auto anotherIt = another.invocationList.begin();
+//         for (auto it = invocationList.begin(); it != invocationList.end(); ++it)
+//             if (**it != **anotherIt) return false;
+//         return true;
+//     } //==
+//     bool operator!=(const multicast_delegate & another) const { return !(*this == another); }
 
-    bool operator==(const delegate<RET(PARAMS...)> & another) const {
-        if (isNull() && another.isNull()) return true;
-        if (another.isNull() || (size() != 1)) return false;
-        return (another.invocation == **invocationList.begin());
-    } //==
-    bool operator!=(const delegate<RET(PARAMS...)> & another) const { return !(*this == another); }
+//     bool operator==(const delegate<RET(PARAMS...)> & another) const {
+//         if (isNull() && another.isNull()) return true;
+//         if (another.isNull() || (size() != 1)) return false;
+//         return (another.invocation == **invocationList.begin());
+//     } //==
+//     bool operator!=(const delegate<RET(PARAMS...)> & another) const { return !(*this == another); }
 
-    multicast_delegate & operator+=(const multicast_delegate & another) {
-        for (auto & item : another.invocationList) // clone, not copy; flattens hierarchy:
-            this->invocationList.push_back(new typename delegate_base<RET(PARAMS...)>::InvocationElement(item->object, item->stub));
-        return *this;
-    } // operator +=
+//     multicast_delegate & operator+=(const multicast_delegate & another) {
+//         for (auto & item : another.invocationList) // clone, not copy; flattens hierarchy:
+//             this->invocationList.push_back(new typename delegate_base<RET(PARAMS...)>::InvocationElement(item->object, item->stub));
+//         return *this;
+//     } // operator +=
 
-    template<typename LAMBDA> // template instantiation is not neededm, will be deduced/inferred:
-    multicast_delegate & operator+=(const LAMBDA & lambda) {
-        delegate<RET(PARAMS...)> d = delegate<RET(PARAMS...)>::template create<LAMBDA>(lambda);
-        return *this += d;
-    } // operator +=
+//     template<typename LAMBDA> // template instantiation is not neededm, will be deduced/inferred:
+//     multicast_delegate & operator+=(const LAMBDA & lambda) {
+//         delegate<RET(PARAMS...)> d = delegate<RET(PARAMS...)>::template create<LAMBDA>(lambda);
+//         return *this += d;
+//     } // operator +=
 
-    multicast_delegate & operator+=(const delegate<RET(PARAMS...)> & another) {
-        if (another.isNull()) return *this;
-        this->invocationList.push_back(new typename delegate_base<RET(PARAMS...)>::InvocationElement(another.invocation.object, another.invocation.stub));
-        return *this;
-    } // operator +=
+//     multicast_delegate & operator+=(const delegate<RET(PARAMS...)> & another) {
+//         if (another.isNull()) return *this;
+//         this->invocationList.push_back(new typename delegate_base<RET(PARAMS...)>::InvocationElement(another.invocation.object, another.invocation.stub));
+//         return *this;
+//     } // operator +=
 
-    // will work even if RET is void, return values are ignored:
-    // (for handling return values, see operator(..., handler))
-    void operator()(PARAMS... arg) const {
-        for (auto & item : invocationList) (*(item->stub))(item->object, arg...);
-    } // operator()
+//     // will work even if RET is void, return values are ignored:
+//     // (for handling return values, see operator(..., handler))
+//     void operator()(PARAMS... arg) const {
+//         for (auto & item : invocationList) (*(item->stub))(item->object, arg...);
+//     } // operator()
 
-    template<typename HANDLER>
-    void operator()(PARAMS... arg, HANDLER handler) const {
-        size_t index = 0;
-        for (auto & item : invocationList) {
-            RET value = (*(item->stub))(item->object, arg...);
-            handler(index, &value);
-            ++index;
-        } // loop
-    }     // operator()
+//     template<typename HANDLER>
+//     void operator()(PARAMS... arg, HANDLER handler) const {
+//         size_t index = 0;
+//         for (auto & item : invocationList) {
+//             RET value = (*(item->stub))(item->object, arg...);
+//             handler(index, &value);
+//             ++index;
+//         } // loop
+//     }     // operator()
 
-    void operator()(PARAMS... arg, delegate<void(size_t, RET *)> handler) const { operator()<decltype(handler)>(arg..., handler); }      // operator()
-    void operator()(PARAMS... arg, std::function<void(size_t, RET *)> handler) const { operator()<decltype(handler)>(arg..., handler); } // operator()
+//     void operator()(PARAMS... arg, delegate<void(size_t, RET *)> handler) const { operator()<decltype(handler)>(arg..., handler); }      // operator()
+//     void operator()(PARAMS... arg, std::function<void(size_t, RET *)> handler) const { operator()<decltype(handler)>(arg..., handler); } // operator()
 
-private:
-    std::list<typename delegate_base<RET(PARAMS...)>::InvocationElement *> invocationList;
+// private:
+//     std::list<typename delegate_base<RET(PARAMS...)>::InvocationElement *> invocationList;
 
-}; // class multicast_delegate
-
-} // namespace internal
+// }; // class multicast_delegate
 
 /// Base class of all signals.
 class SignalBase {
@@ -228,6 +226,8 @@ protected:
     SignalBase()          = default;
     virtual ~SignalBase() = default;
 };
+    
+} // namespace internal
 
 ///
 /// Represents a connection between a signal and a slot. Destructing this object will disconnect the slot from the signal.
@@ -236,11 +236,11 @@ class Tether {
 public:
     Tether() = default;
 
-    Tether(SignalBase * signal, std::function<void()> disconnFunc): mSignal(signal), mDisconnFunc(std::move(disconnFunc)) {}
+    Tether(const internal::SignalBase * signal, std::function<void()> && disconnFunc) : mSignal(signal), mDisconnFunc(std::move(disconnFunc)) {}
 
     ~Tether() {
         mSignal = nullptr;
-        if (mDisconnFunc) { mDisconnFunc(); }
+        mDisconnFunc = nullptr;
     }
 
     GN_NO_COPY(Tether); // Not copyable
@@ -253,16 +253,15 @@ public:
 
     /// move assignment
     Tether & operator=(Tether && other) {
-        if (this != &other) GN_LIKELY {
-                mSignal            = other.mSignal;
-                mDisconnFunc       = std::move(other.mDisconnFunc);
-                other.mSignal      = nullptr;
-                other.mDisconnFunc = nullptr;
-            }
+        if (this == &other) GN_UNLIKELY return *this;
+        mSignal            = other.mSignal;
+        mDisconnFunc       = std::move(other.mDisconnFunc);
+        other.mSignal      = nullptr;
+        other.mDisconnFunc = nullptr;
         return *this;
     }
 
-    SignalBase * signal() const { return mSignal; }
+    auto signal() const { return mSignal; }
 
     void clear() {
         mSignal      = nullptr;
@@ -270,8 +269,8 @@ public:
     }
 
 private:
-    SignalBase *          mSignal {};
-    std::function<void()> mDisconnFunc;
+    const internal::SignalBase * mSignal {};
+    std::function<void()>        mDisconnFunc;
 };
 
 ///
@@ -302,9 +301,13 @@ protected:
     GN_DEFAULT_MOVE(SlotBase);
 
 public:
-    void manageTether(Tether && t) const { mTethers.push_back(std::move(t)); }
+    void manageTether(Tether && t) const {
+        auto lock = std::lock_guard(mLock);
+        mTethers.push_back(std::move(t));
+    }
 
-    void disconnectFromSignal(const SignalBase & signal) const {
+    void disconnectFromSignal(const internal::SignalBase & signal) const {
+        auto lock = std::lock_guard(mLock);
         for (auto it = mTethers.begin(); it != mTethers.end();) {
             if (it->signal() == &signal) {
                 it = mTethers.erase(it);
@@ -314,38 +317,44 @@ public:
         }
     }
 
-    void disconnectFromAllSignals() const { mTethers.clear(); }
+    void disconnectFromAllSignals() const {
+        auto lock = std::lock_guard(mLock);
+        mTethers.clear();
+    }
 
 private:
-    mutable std::list<Tether> mTethers;
+    mutable std::list<Tether>    mTethers;
+    mutable std::recursive_mutex mLock;
 };
 
 template<class>
 class Signal; // undefined.
 
 template<typename RET, typename... PARAMS>
-class Signal<RET(PARAMS...)> : public SignalBase {
+class Signal<RET(PARAMS...)> : public internal::SignalBase {
+    typedef internal::delegate<RET(PARAMS...)> DelegateType;
 public:
     Signal() {}
     ~Signal() {}
 
     [[nodiscard]] Tether connect(RET (*staticFuncPtr)(PARAMS...)) const {
-        (void) staticFuncPtr;
-        return {};
+        auto lock = std::lock_guard(mLock);
+        return addDelegate(DelegateType::create(staticFuncPtr));
     }
 
-    template<typename CLASS>
-    [[nodiscard]] Tether connect(CLASS * classPtr, RET (CLASS::*memFuncPtr)(PARAMS...)) const {
-        (void) classPtr;
-        (void) memFuncPtr;
-        return {};
+
+    template<typename CLASS, RET (CLASS::*METHOD)(PARAMS...)>
+    [[nodiscard]] Tether connect(CLASS * classPtr) const {
+        auto lock = std::lock_guard(mLock);
+        (void)classPtr;
+        return {}; // addDelegate(DelegateType::create<CLASS, METHOD>(classPtr));
     }
 
-    template<typename CLASS>
-    [[nodiscard]] Tether connect(CLASS * classPtr, RET (CLASS::*memFuncPtr)(PARAMS...) const) const {
-        (void) classPtr;
-        (void) memFuncPtr;
-        return {};
+    template<typename CLASS, RET (CLASS::*METHOD)(PARAMS...) const>
+    [[nodiscard]] Tether connect(const CLASS * classPtr) const {
+        auto lock = std::lock_guard(mLock);
+        (void)classPtr;
+        return {}; //return addDelegate(DelegateType::create<const CLASS, METHOD>(classPtr));
     }
 
     template<typename... ARGS>
@@ -356,6 +365,55 @@ public:
     template<typename... ARGS>
     RET operator()(ARGS &&... args) const {
         return emit(std::forward<ARGS>(args)...);
+    }
+
+private:
+    template <typename>
+    struct member_fn_traits; // primary
+
+    // non-const
+    template <typename C, typename R, typename... A>
+    struct member_fn_traits<R (C::*)(A...)> {
+        using class_type  = C;
+        using return_type = R;
+    };
+
+    // const
+    template <typename C, typename R, typename... A>
+    struct member_fn_traits<R (C::*)(A...) const> {
+        using class_type  = C;
+        using return_type = R;
+    };
+
+    // ref-qualifiers
+    template <typename C, typename R, typename... A>
+    struct member_fn_traits<R (C::*)(A...) &> : member_fn_traits<R (C::*)(A...)> {};
+
+    template <typename C, typename R, typename... A>
+    struct member_fn_traits<R (C::*)(A...) const&> : member_fn_traits<R (C::*)(A...) const> {};
+
+    template <typename C, typename R, typename... A>
+    struct member_fn_traits<R (C::*)(A...) &&> : member_fn_traits<R (C::*)(A...)> {};
+
+    template <typename C, typename R, typename... A>
+    struct member_fn_traits<R (C::*)(A...) const&&> : member_fn_traits<R (C::*)(A...) const> {};
+
+    // // noexcept variants (add if you use them)
+    // template <typename C, typename R, typename... A>
+    // struct member_fn_traits<R (C::*)(A...) noexcept> : member_fn_traits<R (C::*)(A...)> {};
+
+    // template <typename C, typename R, typename... A>
+    // struct member_fn_traits<R (C::*)(A...) const noexcept> : member_fn_traits<R (C::*)(A...) const> {}
+
+    mutable std::list<DelegateType>            mDelegates;
+    mutable std::recursive_mutex               mLock;
+
+    Tether addDelegate(DelegateType && delegate) const {
+        auto iter = mDelegates.insert(mDelegates.end(), std::move(delegate));
+        return Tether(this, std::function<void()>([this, iter]() {
+            auto lock = std::lock_guard(mLock);
+            mDelegates.erase(iter);
+        }));
     }
 };
 

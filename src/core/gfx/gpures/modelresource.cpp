@@ -410,7 +410,7 @@ void GN::gfx::ModelResource::Impl::TextureItem::setResource(Impl & owner, uint32
     Texture * tex;
     if (newTexture) {
         // connect to new handle
-        manageTether(newTexture->sigTextureChanged.connect(this, &TextureItem::onTextureChange));
+        manageTether(newTexture->sigTextureChanged.connect<TextureItem, &TextureItem::onTextureChange>(this));
 
         tex = newTexture->texture();
     } else {
@@ -488,7 +488,7 @@ void GN::gfx::ModelResource::Impl::UniformItem::setResource(Impl & owner, uint32
     Uniform * uniform;
     if (newUniform) {
         // connect to new handle
-        manageTether(newUniform->sigUniformChanged.connect(this, &UniformItem::onUniformChange));
+        manageTether(newUniform->sigUniformChanged.connect<UniformItem, &UniformItem::onUniformChange>(this));
 
         uniform = newUniform->uniform();
     } else {
