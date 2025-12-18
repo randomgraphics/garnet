@@ -694,7 +694,7 @@ bool GN::gfx::ModelResource::Impl::setMeshResource(GpuResource * resource, const
     // bind mesh signal with the new mesh
     if (mMeshResource != mesh) {
         if (mMeshResource) disconnectFromSignal(mMeshResource->sigMeshChanged);
-        if (mesh) manageTether(mesh->sigMeshChanged.connect(this, &Impl::onMeshChanged));
+        if (mesh) manageTether(mesh->sigMeshChanged.connect<Impl, &Impl::onMeshChanged>(this));
     }
 
     // update mesh resource pointer
@@ -741,7 +741,7 @@ bool GN::gfx::ModelResource::Impl::setEffectResource(GpuResource * resource) {
     // rebind changing signal
     if (effect != mEffectResource) {
         if (mEffectResource) disconnectFromSignal(mEffectResource->sigEffectChanged);
-        if (effect) manageTether(effect->sigEffectChanged.connect(this, &Impl::onEffectChanged));
+        if (effect) manageTether(effect->sigEffectChanged.connect<Impl, &Impl::onEffectChanged>(this));
     }
 
     // update effect resource pointer
