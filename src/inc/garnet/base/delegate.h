@@ -226,7 +226,7 @@ protected:
     SignalBase()          = default;
     virtual ~SignalBase() = default;
 };
-    
+
 } // namespace internal
 
 ///
@@ -236,10 +236,10 @@ class Tether {
 public:
     Tether() = default;
 
-    Tether(const internal::SignalBase * signal, std::function<void()> && disconnFunc) : mSignal(signal), mDisconnFunc(std::move(disconnFunc)) {}
+    Tether(const internal::SignalBase * signal, std::function<void()> && disconnFunc): mSignal(signal), mDisconnFunc(std::move(disconnFunc)) {}
 
     ~Tether() {
-        mSignal = nullptr;
+        mSignal      = nullptr;
         mDisconnFunc = nullptr;
     }
 
@@ -333,6 +333,7 @@ class Signal; // undefined.
 template<typename RET, typename... PARAMS>
 class Signal<RET(PARAMS...)> : public internal::SignalBase {
     typedef internal::delegate<RET(PARAMS...)> DelegateType;
+
 public:
     Signal() {}
     ~Signal() {}
@@ -342,19 +343,18 @@ public:
         return addDelegate(DelegateType::create(staticFuncPtr));
     }
 
-
     template<typename CLASS, RET (CLASS::*METHOD)(PARAMS...)>
     [[nodiscard]] Tether connect(CLASS * classPtr) const {
         auto lock = std::lock_guard(mLock);
-        (void)classPtr;
+        (void) classPtr;
         return {}; // addDelegate(DelegateType::create<CLASS, METHOD>(classPtr));
     }
 
     template<typename CLASS, RET (CLASS::*METHOD)(PARAMS...) const>
     [[nodiscard]] Tether connect(const CLASS * classPtr) const {
         auto lock = std::lock_guard(mLock);
-        (void)classPtr;
-        return {}; //return addDelegate(DelegateType::create<const CLASS, METHOD>(classPtr));
+        (void) classPtr;
+        return {}; // return addDelegate(DelegateType::create<const CLASS, METHOD>(classPtr));
     }
 
     template<typename... ARGS>
@@ -368,35 +368,35 @@ public:
     }
 
 private:
-    template <typename>
+    template<typename>
     struct member_fn_traits; // primary
 
     // non-const
-    template <typename C, typename R, typename... A>
+    template<typename C, typename R, typename... A>
     struct member_fn_traits<R (C::*)(A...)> {
         using class_type  = C;
         using return_type = R;
     };
 
     // const
-    template <typename C, typename R, typename... A>
+    template<typename C, typename R, typename... A>
     struct member_fn_traits<R (C::*)(A...) const> {
         using class_type  = C;
         using return_type = R;
     };
 
     // ref-qualifiers
-    template <typename C, typename R, typename... A>
+    template<typename C, typename R, typename... A>
     struct member_fn_traits<R (C::*)(A...) &> : member_fn_traits<R (C::*)(A...)> {};
 
-    template <typename C, typename R, typename... A>
-    struct member_fn_traits<R (C::*)(A...) const&> : member_fn_traits<R (C::*)(A...) const> {};
+    template<typename C, typename R, typename... A>
+    struct member_fn_traits<R (C::*)(A...) const &> : member_fn_traits<R (C::*)(A...) const> {};
 
-    template <typename C, typename R, typename... A>
+    template<typename C, typename R, typename... A>
     struct member_fn_traits<R (C::*)(A...) &&> : member_fn_traits<R (C::*)(A...)> {};
 
-    template <typename C, typename R, typename... A>
-    struct member_fn_traits<R (C::*)(A...) const&&> : member_fn_traits<R (C::*)(A...) const> {};
+    template<typename C, typename R, typename... A>
+    struct member_fn_traits<R (C::*)(A...) const &&> : member_fn_traits<R (C::*)(A...) const> {};
 
     // // noexcept variants (add if you use them)
     // template <typename C, typename R, typename... A>
@@ -405,15 +405,15 @@ private:
     // template <typename C, typename R, typename... A>
     // struct member_fn_traits<R (C::*)(A...) const noexcept> : member_fn_traits<R (C::*)(A...) const> {}
 
-    mutable std::list<DelegateType>            mDelegates;
-    mutable std::recursive_mutex               mLock;
+    mutable std::list<DelegateType> mDelegates;
+    mutable std::recursive_mutex    mLock;
 
     Tether addDelegate(DelegateType && delegate) const {
         auto iter = mDelegates.insert(mDelegates.end(), std::move(delegate));
         return Tether(this, std::function<void()>([this, iter]() {
-            auto lock = std::lock_guard(mLock);
-            mDelegates.erase(iter);
-        }));
+                          auto lock = std::lock_guard(mLock);
+                          mDelegates.erase(iter);
+                      }));
     }
 };
 
