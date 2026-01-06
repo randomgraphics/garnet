@@ -84,7 +84,7 @@ public:
     bool operator!=(const multicast_delegate<RET(PARAMS...)> & another) const { return another != (*this); }
 
     template<class T, RET (T::*TMethod)(PARAMS...)>
-    static delegate create(T * instance) {
+    static delegate createMethod(T * instance) {
         return delegate(instance, method_stub<T, TMethod>);
     } // create
 
@@ -94,12 +94,12 @@ public:
     } // create
 
     template<RET (*TMethod)(PARAMS...)>
-    static delegate create() {
+    static delegate createFunction() {
         return delegate(nullptr, function_stub<TMethod>);
     } // create
 
     template<typename LAMBDA>
-    static delegate create(const LAMBDA & instance) {
+    static delegate createLambda(const LAMBDA & instance) {
         return delegate((void *) (&instance), lambda_stub<LAMBDA>);
     } // create
 
@@ -340,21 +340,19 @@ public:
 
     [[nodiscard]] Tether connect(RET (*staticFuncPtr)(PARAMS...)) const {
         auto lock = std::lock_guard(mLock);
-        return addDelegate(DelegateType::create(staticFuncPtr));
+        return addDelegate(DelegateType::createFunction(staticFuncPtr));
     }
 
-    template<typename CLASS, RET (CLASS::*METHOD)(PARAMS...)>
-    [[nodiscard]] Tether connect(CLASS * classPtr) const {
+    template<typename CLASS_, RET (CLASS_::*METHOD)(PARAMS...)>
+    [[nodiscard]] Tether connect(CLASS_ * classPtr) const {
         auto lock = std::lock_guard(mLock);
-        (void) classPtr;
-        return {}; // addDelegate(DelegateType::create<CLASS, METHOD>(classPtr));
+        return addDelegate(DelegateType::createMethod<CLASS_, METHOD>(classPtr));
     }
 
-    template<typename CLASS, RET (CLASS::*METHOD)(PARAMS...) const>
-    [[nodiscard]] Tether connect(const CLASS * classPtr) const {
+    template<typename CLASS_, RET (CLASS_::*METHOD)(PARAMS...) const>
+    [[nodiscard]] Tether connect(const CLASS_ * classPtr) const {
         auto lock = std::lock_guard(mLock);
-        (void) classPtr;
-        return {}; // return addDelegate(DelegateType::create<const CLASS, METHOD>(classPtr));
+        return addDelegate(DelegateType::createMethod<CLASS_, METHOD>(classPtr));
     }
 
     template<typename... ARGS>

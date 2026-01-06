@@ -460,14 +460,14 @@ bool GN::util::SampleApp::initEngine() {
     disconnectFromAllSignals(); // clear any previous connections just in case.
 
     // connect to renderer signal: post quit event, if render window is closed.
-    manageTether(engine::getGpu()->getSignals().rendererWindowClose.connect<SampleApp, &SampleApp::postExitEvent>(this));
-    manageTether(engine::getGpu()->getSignals().rendererWindowSizeMove.connect<SampleApp, &SampleApp::onRenderWindowResize>(this));
+    manageTether(engine::getGpu()->getSignals().rendererWindowClose.connect<SampleApp, SampleApp::postExitEvent>(this));
+    manageTether(engine::getGpu()->getSignals().rendererWindowSizeMove.connect<SampleApp, SampleApp::onRenderWindowResize>(this));
 
     // initialize input system
     if (!engine::inputInitialize(mInitParam.iapi)) return false;
-    manageTether(gInput.sigKeyPress.connect<SampleApp, &SampleApp::onKeyPress>(this));
-    manageTether(gInput.sigCharPress.connect<SampleApp, &SampleApp::onCharPress>(this));
-    manageTether(gInput.sigAxisMove.connect<SampleApp, &SampleApp::onAxisMove>(this));
+    manageTether(gInput.sigKeyPress.connect<SampleApp, SampleApp::onKeyPress>(this));
+    manageTether(gInput.sigCharPress.connect<SampleApp, SampleApp::onCharPress>(this));
+    manageTether(gInput.sigAxisMove.connect<SampleApp, SampleApp::onAxisMove>(this));
 
     // done
     return true;

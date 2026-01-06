@@ -385,6 +385,12 @@ public:                                                                     \
 #define GN_UNLIKELY [[unlikely]]
 
 namespace GN {
+
+template<typename T>
+struct AlwaysFalse {
+    static constexpr bool value = false;
+};
+
 ///
 /// Disable copy semantic of all descendants.
 ///
