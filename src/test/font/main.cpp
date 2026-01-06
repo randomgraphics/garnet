@@ -132,7 +132,7 @@ struct InputInitiator : SlotBase {
         initializeInputSystem(InputAPI::NATIVE);
         const DispDesc & dd = r.getDispDesc();
         gInput.attachToWindow(dd.displayHandle, dd.windowHandle);
-        manageTether(gInput.sigKeyPress.connect(onKeyPress));
+        manageTether(gInput.sigKeyPress.connect<&onKeyPress>());
     }
 
     ~InputInitiator() { shutdownInputSystem(); }

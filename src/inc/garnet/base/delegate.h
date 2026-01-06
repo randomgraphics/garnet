@@ -129,8 +129,8 @@ private:
     } // const_method_stub
 
     template<RET (*TMethod)(PARAMS...)>
-    static RET function_stub(void * this_ptr, PARAMS... params) {
-        return (TMethod) (params...);
+    static RET function_stub(void *, PARAMS... params) {
+        return TMethod(params...);
     } // function_stub
 
     template<typename LAMBDA>
@@ -298,7 +298,20 @@ protected:
 
     GN_NO_COPY(SlotBase);
 
-    GN_DEFAULT_MOVE(SlotBase);
+    // movable
+    SlotBase(SlotBase && other) {
+        auto lock = std::lock_guard(other.mLock);
+        mTethers  = std::move(other.mTethers);
+        other.mTethers.clear();
+    }
+
+    // move operator
+    SlotBase & operator=(SlotBase && other) {
+        if (this == &other) GN_UNLIKELY return *this;
+        std::scoped_lock lock(mLock, other.mLock);
+        mTethers = std::move(other.mTethers);
+        return *this;
+    }
 
 public:
     void manageTether(Tether && t) const {
@@ -338,21 +351,22 @@ public:
     Signal() {}
     ~Signal() {}
 
-    [[nodiscard]] Tether connect(RET (*staticFuncPtr)(PARAMS...)) const {
+    template<RET (*STATIC_FUNCTION)(PARAMS...)>
+    [[nodiscard]] Tether connect() const {
         auto lock = std::lock_guard(mLock);
-        return addDelegate(DelegateType::createFunction(staticFuncPtr));
+        return addDelegate(DelegateType::template createFunction<STATIC_FUNCTION>());
     }
 
     template<typename CLASS_, RET (CLASS_::*METHOD)(PARAMS...)>
     [[nodiscard]] Tether connect(CLASS_ * classPtr) const {
         auto lock = std::lock_guard(mLock);
-        return addDelegate(DelegateType::createMethod<CLASS_, METHOD>(classPtr));
+        return addDelegate(DelegateType::template createMethod<CLASS_, METHOD>(classPtr));
     }
 
     template<typename CLASS_, RET (CLASS_::*METHOD)(PARAMS...) const>
     [[nodiscard]] Tether connect(const CLASS_ * classPtr) const {
         auto lock = std::lock_guard(mLock);
-        return addDelegate(DelegateType::createMethod<CLASS_, METHOD>(classPtr));
+        return addDelegate(DelegateType::template createMethod<CLASS_, METHOD>(classPtr));
     }
 
     template<typename... ARGS>
