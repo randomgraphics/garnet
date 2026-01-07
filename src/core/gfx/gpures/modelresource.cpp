@@ -410,7 +410,7 @@ void GN::gfx::ModelResource::Impl::TextureItem::setResource(Impl & owner, uint32
     Texture * tex;
     if (newTexture) {
         // connect to new handle
-        manageTether(newTexture->sigTextureChanged.connect<TextureItem, &TextureItem::onTextureChange>(this));
+        manageTether(newTexture->sigTextureChanged.connect<&TextureItem::onTextureChange>(this));
 
         tex = newTexture->texture();
     } else {
@@ -488,7 +488,7 @@ void GN::gfx::ModelResource::Impl::UniformItem::setResource(Impl & owner, uint32
     Uniform * uniform;
     if (newUniform) {
         // connect to new handle
-        manageTether(newUniform->sigUniformChanged.connect<UniformItem, &UniformItem::onUniformChange>(this));
+        manageTether(newUniform->sigUniformChanged.connect<&UniformItem::onUniformChange>(this));
 
         uniform = newUniform->uniform();
     } else {
@@ -694,7 +694,7 @@ bool GN::gfx::ModelResource::Impl::setMeshResource(GpuResource * resource, const
     // bind mesh signal with the new mesh
     if (mMeshResource != mesh) {
         if (mMeshResource) disconnectFromSignal(mMeshResource->sigMeshChanged);
-        if (mesh) manageTether(mesh->sigMeshChanged.connect<Impl, &Impl::onMeshChanged>(this));
+        if (mesh) manageTether(mesh->sigMeshChanged.connect<&Impl::onMeshChanged>(this));
     }
 
     // update mesh resource pointer
@@ -741,7 +741,7 @@ bool GN::gfx::ModelResource::Impl::setEffectResource(GpuResource * resource) {
     // rebind changing signal
     if (effect != mEffectResource) {
         if (mEffectResource) disconnectFromSignal(mEffectResource->sigEffectChanged);
-        if (effect) manageTether(effect->sigEffectChanged.connect<Impl, &Impl::onEffectChanged>(this));
+        if (effect) manageTether(effect->sigEffectChanged.connect<&Impl::onEffectChanged>(this));
     }
 
     // update effect resource pointer

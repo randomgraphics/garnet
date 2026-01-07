@@ -73,7 +73,7 @@ namespace internal {}
 #include "base/autoptr.h"
 
 // custom signal and slot library
-#include "base/delegate.h"
+#include "base/sigslot.h"
 
 // array types
 #include "base/array.h"

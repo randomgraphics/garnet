@@ -36,9 +36,9 @@ protected:
         void Clone(InvocationElement & target) const {
             target.stub   = stub;
             target.object = object;
-        }                                                                                                                          // Clone
-        bool      operator==(const InvocationElement & another) const { return another.stub == stub && another.object == object; } //==
-        bool      operator!=(const InvocationElement & another) const { return another.stub != stub || another.object != object; } //!=
+        }                                                                                                                             // Clone
+        bool         operator==(const InvocationElement & another) const { return another.stub == stub && another.object == object; } //==
+        bool         operator!=(const InvocationElement & another) const { return another.stub != stub || another.object != object; } //!=
         const void * object = nullptr;
         stub_type    stub   = nullptr;
     }; // InvocationElement
@@ -123,25 +123,25 @@ private:
 
     template<class T, RET (T::*TMethod)(PARAMS...)>
     static RET method_stub(const void * this_ptr, PARAMS... params) {
-        auto p = (T *)(this_ptr);
+        auto p = (T *) (this_ptr);
         return (p->*TMethod)(params...);
     } // method_stub
 
     template<class T, RET (T::*TMethod)(PARAMS...) const>
     static RET const_method_stub(const void * this_ptr, PARAMS... params) {
-        auto p = (T const *)(this_ptr);
+        auto p = (T const *) (this_ptr);
         return (p->*TMethod)(params...);
     } // const_method_stub
 
     template<class T, RET (T::*TMethod)(PARAMS...) volatile>
     static RET volatile_method_stub(const void * this_ptr, PARAMS... params) {
-        auto p = (volatile T *)(this_ptr);
+        auto p = (volatile T *) (this_ptr);
         return (p->*TMethod)(params...);
     } // volatile_method_stub
 
     template<class T, RET (T::*TMethod)(PARAMS...) const volatile>
     static RET volatile_const_method_stub(const void * this_ptr, PARAMS... params) {
-        auto p = (volatile T const *)(this_ptr);
+        auto p = (volatile T const *) (this_ptr);
         return (p->*TMethod)(params...);
     } // volatile_const_method_stub
 
@@ -152,7 +152,7 @@ private:
 
     template<typename LAMBDA>
     static RET lambda_stub(const void * this_ptr, PARAMS... arg) {
-        auto p = (const LAMBDA *)(this_ptr);
+        auto p = (const LAMBDA *) (this_ptr);
         return (p->operator())(arg...);
     } // lambda_stub
 
@@ -165,6 +165,50 @@ protected:
     SignalBase()          = default;
     virtual ~SignalBase() = default;
 };
+
+template<typename>
+struct member_fn_traits; // primary
+
+// non-const
+template<typename C, typename R, typename... A>
+struct member_fn_traits<R (C::*)(A...)> {
+    using class_type     = C;
+    using class_ptr_type = C *;
+};
+
+// const
+template<typename C, typename R, typename... A>
+struct member_fn_traits<R (C::*)(A...) const> {
+    using class_type     = C;
+    using class_ptr_type = const C *;
+};
+
+// volatile
+template<typename C, typename R, typename... A>
+struct member_fn_traits<R (C::*)(A...) volatile> {
+    using class_type     = C;
+    using class_ptr_type = volatile C *;
+};
+
+// volatile const
+template<typename C, typename R, typename... A>
+struct member_fn_traits<R (C::*)(A...) const volatile> {
+    using class_type     = C;
+    using class_ptr_type = volatile const C *;
+};
+
+// ref-qualifiers
+template<typename C, typename R, typename... A>
+struct member_fn_traits<R (C::*)(A...) &> : member_fn_traits<R (C::*)(A...)> {};
+
+template<typename C, typename R, typename... A>
+struct member_fn_traits<R (C::*)(A...) const &> : member_fn_traits<R (C::*)(A...) const> {};
+
+template<typename C, typename R, typename... A>
+struct member_fn_traits<R (C::*)(A...) &&> : member_fn_traits<R (C::*)(A...)> {};
+
+template<typename C, typename R, typename... A>
+struct member_fn_traits<R (C::*)(A...) const &&> : member_fn_traits<R (C::*)(A...) const> {};
 
 } // namespace internal
 
@@ -253,7 +297,6 @@ protected:
     }
 
 public:
-
     /// Manage the passed in tether. Automatically disconnect it, when this slot class is destroyed.
     void manageTether(Tether && t) const {
         auto lock = std::lock_guard(mLock);
@@ -299,29 +342,36 @@ public:
         return addDelegate(DelegateType::template createFunction<STATIC_FUNCTION>());
     }
 
-    template<typename CLASS_, RET (CLASS_::*METHOD)(PARAMS...)>
-    [[nodiscard]] Tether connect(CLASS_ * classPtr) const {
-        auto lock = std::lock_guard(mLock);
-        return addDelegate(DelegateType::template createMethod<CLASS_, METHOD>(classPtr));
+    template<auto MEMBER_FN, typename = std::enable_if_t<std::is_member_function_pointer_v<decltype(MEMBER_FN)>>>
+    [[nodiscard]] Tether connect(typename internal::member_fn_traits<decltype(MEMBER_FN)>::class_ptr_type object) const {
+        typedef typename internal::member_fn_traits<decltype(MEMBER_FN)>::class_type ClassType;
+        auto                                                                         lock = std::lock_guard(mLock);
+        return addDelegate(DelegateType::template createMethod<ClassType, MEMBER_FN>(object));
     }
 
-    template<typename CLASS_, RET (CLASS_::*METHOD)(PARAMS...) const>
-    [[nodiscard]] Tether connect(const CLASS_ * classPtr) const {
-        auto lock = std::lock_guard(mLock);
-        return addDelegate(DelegateType::template createMethod<CLASS_, METHOD>(classPtr));
-    }
+    // template<typename CLASS_, RET (CLASS_::*METHOD)(PARAMS...)>
+    // [[nodiscard]] Tether connect(CLASS_ * classPtr) const {
+    //     auto lock = std::lock_guard(mLock);
+    //     return addDelegate(DelegateType::template createMethod<CLASS_, METHOD>(classPtr));
+    // }
 
-    template<typename CLASS_, RET (CLASS_::*METHOD)(PARAMS...) volatile>
-    [[nodiscard]] Tether connect(volatile CLASS_ * classPtr) const {
-        auto lock = std::lock_guard(mLock);
-        return addDelegate(DelegateType::template createMethod<CLASS_, METHOD>(classPtr));
-    }
+    // template<typename CLASS_, RET (CLASS_::*METHOD)(PARAMS...) const>
+    // [[nodiscard]] Tether connect(const CLASS_ * classPtr) const {
+    //     auto lock = std::lock_guard(mLock);
+    //     return addDelegate(DelegateType::template createMethod<CLASS_, METHOD>(classPtr));
+    // }
 
-    template<typename CLASS_, RET (CLASS_::*METHOD)(PARAMS...) const volatile>
-    [[nodiscard]] Tether connect(volatile CLASS_ const * classPtr) const {
-        auto lock = std::lock_guard(mLock);
-        return addDelegate(DelegateType::template createMethod<CLASS_, METHOD>(classPtr));
-    }
+    // template<typename CLASS_, RET (CLASS_::*METHOD)(PARAMS...) volatile>
+    // [[nodiscard]] Tether connect(volatile CLASS_ * classPtr) const {
+    //     auto lock = std::lock_guard(mLock);
+    //     return addDelegate(DelegateType::template createMethod<CLASS_, METHOD>(classPtr));
+    // }
+
+    // template<typename CLASS_, RET (CLASS_::*METHOD)(PARAMS...) const volatile>
+    // [[nodiscard]] Tether connect(volatile CLASS_ const * classPtr) const {
+    //     auto lock = std::lock_guard(mLock);
+    //     return addDelegate(DelegateType::template createMethod<CLASS_, METHOD>(classPtr));
+    // }
 
     template<typename... ARGS>
     RET emit(ARGS &&...) const {
@@ -334,43 +384,6 @@ public:
     }
 
 private:
-    template<typename>
-    struct member_fn_traits; // primary
-
-    // non-const
-    template<typename C, typename R, typename... A>
-    struct member_fn_traits<R (C::*)(A...)> {
-        using class_type  = C;
-        using return_type = R;
-    };
-
-    // const
-    template<typename C, typename R, typename... A>
-    struct member_fn_traits<R (C::*)(A...) const> {
-        using class_type  = C;
-        using return_type = R;
-    };
-
-    // ref-qualifiers
-    template<typename C, typename R, typename... A>
-    struct member_fn_traits<R (C::*)(A...) &> : member_fn_traits<R (C::*)(A...)> {};
-
-    template<typename C, typename R, typename... A>
-    struct member_fn_traits<R (C::*)(A...) const &> : member_fn_traits<R (C::*)(A...) const> {};
-
-    template<typename C, typename R, typename... A>
-    struct member_fn_traits<R (C::*)(A...) &&> : member_fn_traits<R (C::*)(A...)> {};
-
-    template<typename C, typename R, typename... A>
-    struct member_fn_traits<R (C::*)(A...) const &&> : member_fn_traits<R (C::*)(A...) const> {};
-
-    // // noexcept variants (add if you use them)
-    // template <typename C, typename R, typename... A>
-    // struct member_fn_traits<R (C::*)(A...) noexcept> : member_fn_traits<R (C::*)(A...)> {};
-
-    // template <typename C, typename R, typename... A>
-    // struct member_fn_traits<R (C::*)(A...) const noexcept> : member_fn_traits<R (C::*)(A...) const> {}
-
     mutable std::list<DelegateType> mDelegates;
     mutable std::recursive_mutex    mLock;
 
