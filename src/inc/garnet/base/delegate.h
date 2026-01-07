@@ -1,4 +1,4 @@
-/*
+﻿/*
     Derived from the work by Sergey A Kryukov: "The Impossibly Fast C++ Delegates, Fixed", 2017
     https://www.codeproject.com/articles/The-Impossibly-Fast-Cplusplus-Delegates-Fixed,
 
@@ -9,8 +9,8 @@
     http://en.wikipedia.org/wiki/MIT_License
 */
 
-#ifndef __GN_BASE_DELEGATE_H__
-#define __GN_BASE_DELEGATE_H__
+#ifndef __GN_BASE_SIGSLOT_H__
+#define __GN_BASE_SIGSLOT_H__
 // *****************************************************************************
 /// \file
 /// \brief   fast signal and slot classes
@@ -28,27 +28,25 @@ template<typename RET, typename... PARAMS>
 class delegate_base<RET(PARAMS...)> {
 
 protected:
-    using stub_type = RET (*)(void * this_ptr, PARAMS...);
+    using stub_type = RET (*)(const void * this_ptr, PARAMS...);
 
     struct InvocationElement {
         InvocationElement() = default;
-        InvocationElement(void * this_ptr, stub_type aStub): object(this_ptr), stub(aStub) {}
+        InvocationElement(const void * this_ptr, stub_type aStub): object(this_ptr), stub(aStub) {}
         void Clone(InvocationElement & target) const {
             target.stub   = stub;
             target.object = object;
         }                                                                                                                          // Clone
         bool      operator==(const InvocationElement & another) const { return another.stub == stub && another.object == object; } //==
         bool      operator!=(const InvocationElement & another) const { return another.stub != stub || another.object != object; } //!=
-        void *    object = nullptr;
-        stub_type stub   = nullptr;
+        const void * object = nullptr;
+        stub_type    stub   = nullptr;
     }; // InvocationElement
 
 }; // class delegate_base
 
 template<typename T>
 class delegate;
-template<typename T>
-class multicast_delegate;
 
 template<typename RET, typename... PARAMS>
 class delegate<RET(PARAMS...)> final : private delegate_base<RET(PARAMS...)> {
@@ -56,14 +54,14 @@ public:
     delegate() = default;
 
     bool isNull() const { return invocation.stub == nullptr; }
-    bool operator==(void * ptr) const { return (ptr == nullptr) && this->isNull(); }    // operator ==
-    bool operator!=(void * ptr) const { return (ptr != nullptr) || (!this->isNull()); } // operator !=
+    bool operator==(const void * ptr) const { return (ptr == nullptr) && this->isNull(); }    // operator ==
+    bool operator!=(const void * ptr) const { return (ptr != nullptr) || (!this->isNull()); } // operator !=
 
     delegate(const delegate & another) { another.invocation.Clone(invocation); }
 
     template<typename LAMBDA>
     delegate(const LAMBDA & lambda) {
-        assign((void *) (&lambda), lambda_stub<LAMBDA>);
+        assign(&lambda, lambda_stub<LAMBDA>);
     } // delegate
 
     delegate & operator=(const delegate & another) {
@@ -73,15 +71,12 @@ public:
 
     template<typename LAMBDA> // template instantiation is not needed, will be deduced (inferred):
     delegate & operator=(const LAMBDA & instance) {
-        assign((void *) (&instance), lambda_stub<LAMBDA>);
+        assign(&instance, lambda_stub<LAMBDA>);
         return *this;
     } // operator =
 
     bool operator==(const delegate & another) const { return invocation == another.invocation; }
     bool operator!=(const delegate & another) const { return invocation != another.invocation; }
-
-    bool operator==(const multicast_delegate<RET(PARAMS...)> & another) const { return another == (*this); }
-    bool operator!=(const multicast_delegate<RET(PARAMS...)> & another) const { return another != (*this); }
 
     template<class T, RET (T::*TMethod)(PARAMS...)>
     static delegate createMethod(T * instance) {
@@ -90,7 +85,17 @@ public:
 
     template<class T, RET (T::*TMethod)(PARAMS...) const>
     static delegate create(T const * instance) {
-        return delegate(const_cast<T *>(instance), const_method_stub<T, TMethod>);
+        return delegate(instance, const_method_stub<T, TMethod>);
+    } // create
+
+    template<typename CLASS_, RET (CLASS_::*METHOD)(PARAMS...) volatile>
+    static delegate createMethod(volatile CLASS_ * instance) {
+        return delegate(instance, volatile_method_stub<CLASS_, METHOD>);
+    } // create
+
+    template<typename CLASS_, RET (CLASS_::*METHOD)(PARAMS...) const volatile>
+    static delegate create(volatile CLASS_ const * instance) {
+        return delegate(instance, volatile_const_method_stub<CLASS_, METHOD>);
     } // create
 
     template<RET (*TMethod)(PARAMS...)>
@@ -100,125 +105,59 @@ public:
 
     template<typename LAMBDA>
     static delegate createLambda(const LAMBDA & instance) {
-        return delegate((void *) (&instance), lambda_stub<LAMBDA>);
+        return delegate(&instance, lambda_stub<LAMBDA>);
     } // create
 
     RET operator()(PARAMS... arg) const { return (*invocation.stub)(invocation.object, arg...); } // operator()
 
 private:
-    delegate(void * anObject, typename delegate_base<RET(PARAMS...)>::stub_type aStub) {
+    delegate(const void * anObject, typename delegate_base<RET(PARAMS...)>::stub_type aStub) {
         invocation.object = anObject;
         invocation.stub   = aStub;
     } // delegate
 
-    void assign(void * anObject, typename delegate_base<RET(PARAMS...)>::stub_type aStub) {
+    void assign(const void * anObject, typename delegate_base<RET(PARAMS...)>::stub_type aStub) {
         this->invocation.object = anObject;
         this->invocation.stub   = aStub;
     } // assign
 
     template<class T, RET (T::*TMethod)(PARAMS...)>
-    static RET method_stub(void * this_ptr, PARAMS... params) {
-        T * p = static_cast<T *>(this_ptr);
+    static RET method_stub(const void * this_ptr, PARAMS... params) {
+        auto p = (T *)(this_ptr);
         return (p->*TMethod)(params...);
     } // method_stub
 
     template<class T, RET (T::*TMethod)(PARAMS...) const>
-    static RET const_method_stub(void * this_ptr, PARAMS... params) {
-        T * const p = static_cast<T *>(this_ptr);
+    static RET const_method_stub(const void * this_ptr, PARAMS... params) {
+        auto p = (T const *)(this_ptr);
         return (p->*TMethod)(params...);
     } // const_method_stub
 
+    template<class T, RET (T::*TMethod)(PARAMS...) volatile>
+    static RET volatile_method_stub(const void * this_ptr, PARAMS... params) {
+        auto p = (volatile T *)(this_ptr);
+        return (p->*TMethod)(params...);
+    } // volatile_method_stub
+
+    template<class T, RET (T::*TMethod)(PARAMS...) const volatile>
+    static RET volatile_const_method_stub(const void * this_ptr, PARAMS... params) {
+        auto p = (volatile T const *)(this_ptr);
+        return (p->*TMethod)(params...);
+    } // volatile_const_method_stub
+
     template<RET (*TMethod)(PARAMS...)>
-    static RET function_stub(void *, PARAMS... params) {
+    static RET function_stub(const void *, PARAMS... params) {
         return TMethod(params...);
     } // function_stub
 
     template<typename LAMBDA>
-    static RET lambda_stub(void * this_ptr, PARAMS... arg) {
-        LAMBDA * p = static_cast<LAMBDA *>(this_ptr);
+    static RET lambda_stub(const void * this_ptr, PARAMS... arg) {
+        auto p = (const LAMBDA *)(this_ptr);
         return (p->operator())(arg...);
     } // lambda_stub
 
-    friend class multicast_delegate<RET(PARAMS...)>;
     typename delegate_base<RET(PARAMS...)>::InvocationElement invocation;
-
 }; // class delegate
-
-// template<typename RET, typename... PARAMS>
-// class multicast_delegate<RET(PARAMS...)> final : private delegate_base<RET(PARAMS...)> {
-// public:
-//     multicast_delegate() = default;
-//     ~multicast_delegate() {
-//         for (auto & element : invocationList) delete element;
-//         invocationList.clear();
-//     } //~multicast_delegate
-
-//     bool isNull() const { return invocationList.size() < 1; }
-//     bool operator==(void * ptr) const { return (ptr == nullptr) && this->isNull(); }    // operator ==
-//     bool operator!=(void * ptr) const { return (ptr != nullptr) || (!this->isNull()); } // operator !=
-
-//     size_t size() const { return invocationList.size(); }
-
-//     multicast_delegate & operator=(const multicast_delegate &) = delete;
-//     multicast_delegate(const multicast_delegate &)             = delete;
-
-//     bool operator==(const multicast_delegate & another) const {
-//         if (invocationList.size() != another.invocationList.size()) return false;
-//         auto anotherIt = another.invocationList.begin();
-//         for (auto it = invocationList.begin(); it != invocationList.end(); ++it)
-//             if (**it != **anotherIt) return false;
-//         return true;
-//     } //==
-//     bool operator!=(const multicast_delegate & another) const { return !(*this == another); }
-
-//     bool operator==(const delegate<RET(PARAMS...)> & another) const {
-//         if (isNull() && another.isNull()) return true;
-//         if (another.isNull() || (size() != 1)) return false;
-//         return (another.invocation == **invocationList.begin());
-//     } //==
-//     bool operator!=(const delegate<RET(PARAMS...)> & another) const { return !(*this == another); }
-
-//     multicast_delegate & operator+=(const multicast_delegate & another) {
-//         for (auto & item : another.invocationList) // clone, not copy; flattens hierarchy:
-//             this->invocationList.push_back(new typename delegate_base<RET(PARAMS...)>::InvocationElement(item->object, item->stub));
-//         return *this;
-//     } // operator +=
-
-//     template<typename LAMBDA> // template instantiation is not neededm, will be deduced/inferred:
-//     multicast_delegate & operator+=(const LAMBDA & lambda) {
-//         delegate<RET(PARAMS...)> d = delegate<RET(PARAMS...)>::template create<LAMBDA>(lambda);
-//         return *this += d;
-//     } // operator +=
-
-//     multicast_delegate & operator+=(const delegate<RET(PARAMS...)> & another) {
-//         if (another.isNull()) return *this;
-//         this->invocationList.push_back(new typename delegate_base<RET(PARAMS...)>::InvocationElement(another.invocation.object, another.invocation.stub));
-//         return *this;
-//     } // operator +=
-
-//     // will work even if RET is void, return values are ignored:
-//     // (for handling return values, see operator(..., handler))
-//     void operator()(PARAMS... arg) const {
-//         for (auto & item : invocationList) (*(item->stub))(item->object, arg...);
-//     } // operator()
-
-//     template<typename HANDLER>
-//     void operator()(PARAMS... arg, HANDLER handler) const {
-//         size_t index = 0;
-//         for (auto & item : invocationList) {
-//             RET value = (*(item->stub))(item->object, arg...);
-//             handler(index, &value);
-//             ++index;
-//         } // loop
-//     }     // operator()
-
-//     void operator()(PARAMS... arg, delegate<void(size_t, RET *)> handler) const { operator()<decltype(handler)>(arg..., handler); }      // operator()
-//     void operator()(PARAMS... arg, std::function<void(size_t, RET *)> handler) const { operator()<decltype(handler)>(arg..., handler); } // operator()
-
-// private:
-//     std::list<typename delegate_base<RET(PARAMS...)>::InvocationElement *> invocationList;
-
-// }; // class multicast_delegate
 
 /// Base class of all signals.
 class SignalBase {
@@ -314,11 +253,14 @@ protected:
     }
 
 public:
+
+    /// Manage the passed in tether. Automatically disconnect it, when this slot class is destroyed.
     void manageTether(Tether && t) const {
         auto lock = std::lock_guard(mLock);
         mTethers.push_back(std::move(t));
     }
 
+    /// Explicitly disconnect the slot from specified signal.
     void disconnectFromSignal(const internal::SignalBase & signal) const {
         auto lock = std::lock_guard(mLock);
         for (auto it = mTethers.begin(); it != mTethers.end();) {
@@ -365,6 +307,18 @@ public:
 
     template<typename CLASS_, RET (CLASS_::*METHOD)(PARAMS...) const>
     [[nodiscard]] Tether connect(const CLASS_ * classPtr) const {
+        auto lock = std::lock_guard(mLock);
+        return addDelegate(DelegateType::template createMethod<CLASS_, METHOD>(classPtr));
+    }
+
+    template<typename CLASS_, RET (CLASS_::*METHOD)(PARAMS...) volatile>
+    [[nodiscard]] Tether connect(volatile CLASS_ * classPtr) const {
+        auto lock = std::lock_guard(mLock);
+        return addDelegate(DelegateType::template createMethod<CLASS_, METHOD>(classPtr));
+    }
+
+    template<typename CLASS_, RET (CLASS_::*METHOD)(PARAMS...) const volatile>
+    [[nodiscard]] Tether connect(volatile CLASS_ const * classPtr) const {
         auto lock = std::lock_guard(mLock);
         return addDelegate(DelegateType::template createMethod<CLASS_, METHOD>(classPtr));
     }
@@ -438,4 +392,4 @@ private:
 // *****************************************************************************
 //                                     EOF
 // *****************************************************************************
-#endif // __GN_BASE_DELEGATE_H__
+#endif // __GN_BASE_SIGSLOT_H__

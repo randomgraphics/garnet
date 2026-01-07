@@ -72,7 +72,7 @@ namespace internal {}
 // various auto pointers
 #include "base/autoptr.h"
 
-// delegate & callback
+// custom signal and slot library
 #include "base/delegate.h"
 
 // array types
