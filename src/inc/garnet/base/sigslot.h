@@ -84,7 +84,7 @@ public:
     } // create
 
     template<class T, RET (T::*TMethod)(PARAMS...) const>
-    static delegate create(T const * instance) {
+    static delegate createMethod(T const * instance) {
         return delegate(instance, const_method_stub<T, TMethod>);
     } // create
 
@@ -94,7 +94,7 @@ public:
     } // create
 
     template<typename CLASS_, RET (CLASS_::*METHOD)(PARAMS...) const volatile>
-    static delegate create(volatile CLASS_ const * instance) {
+    static delegate createMethod(volatile CLASS_ const * instance) {
         return delegate(instance, volatile_const_method_stub<CLASS_, METHOD>);
     } // create
 
@@ -221,10 +221,7 @@ public:
 
     Tether(const internal::SignalBase * signal, std::function<void()> && disconnFunc): mSignal(signal), mDisconnFunc(std::move(disconnFunc)) {}
 
-    ~Tether() {
-        mSignal      = nullptr;
-        mDisconnFunc = nullptr;
-    }
+    ~Tether() { clear(); }
 
     GN_NO_COPY(Tether); // Not copyable
 
@@ -247,6 +244,9 @@ public:
     auto signal() const { return mSignal; }
 
     void clear() {
+        if (mDisconnFunc) {
+            mDisconnFunc();
+        }
         mSignal      = nullptr;
         mDisconnFunc = nullptr;
     }
@@ -338,12 +338,14 @@ public:
 
     template<RET (*STATIC_FUNCTION)(PARAMS...)>
     [[nodiscard]] Tether connect() const {
+        // TODO: prevent re-entrancy here?
         auto lock = std::lock_guard(mLock);
         return addDelegate(DelegateType::template createFunction<STATIC_FUNCTION>());
     }
 
     template<auto MEMBER_FN, typename = std::enable_if_t<std::is_member_function_pointer_v<decltype(MEMBER_FN)>>>
     [[nodiscard]] Tether connect(typename internal::member_fn_traits<decltype(MEMBER_FN)>::class_ptr_type object) const {
+        // TODO: prevent re-entrancy here?
         typedef typename internal::member_fn_traits<decltype(MEMBER_FN)>::class_type ClassType;
         auto                                                                         lock = std::lock_guard(mLock);
         return addDelegate(DelegateType::template createMethod<ClassType, MEMBER_FN>(object));
@@ -373,11 +375,37 @@ public:
     //     return addDelegate(DelegateType::template createMethod<CLASS_, METHOD>(classPtr));
     // }
 
+    /// this is simpler form of emit() that returns the return value of the last delegate.
     template<typename... ARGS>
-    RET emit(ARGS &&...) const {
-        return RET();
+    RET emit(ARGS &&... args) const {
+        auto lock = std::lock_guard(mLock);
+        if constexpr (std::is_same_v<RET, void>) {
+            // For void return, all delegates get lvalue references to avoid moving rvalues multiple times
+            for (const auto & delegate : mDelegates) {
+                delegate(static_cast<std::remove_reference_t<ARGS> &>(args)...);
+            }
+        } else {
+            if (mDelegates.empty()) {
+                // Return default-constructed value - enables RVO (returning temporary)
+                return RET();
+            }
+            // For single delegate, forward arguments - enables move semantics for rvalues
+            if (mDelegates.size() == 1) {
+                return mDelegates.front()(std::forward<ARGS>(args)...);
+            }
+            // For multiple delegates: convert to lvalues to avoid moving rvalues multiple times.
+            // All delegates except the last receive lvalue references (safe for multiple calls).
+            // The last delegate gets forwarded arguments (can move if rvalues).
+            auto it = mDelegates.begin();
+            auto last = std::prev(mDelegates.end());
+            for (; it != last; ++it) {
+                (void) (*it)(static_cast<std::remove_reference_t<ARGS> &>(args)...); // force lvalue refs
+            }
+            return (*last)(std::forward<ARGS>(args)...); // forward on last call
+        }
     }
 
+    /// this is the operator form of emit().
     template<typename... ARGS>
     RET operator()(ARGS &&... args) const {
         return emit(std::forward<ARGS>(args)...);
