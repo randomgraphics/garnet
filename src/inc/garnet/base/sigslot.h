@@ -219,7 +219,7 @@ class Tether {
 public:
     Tether() = default;
 
-    Tether(const internal::SignalBase * signal, std::function<void()> && disconnFunc): mSignal(signal), mDisconnFunc(std::move(disconnFunc)) {}
+    Tether(const internal::SignalBase & signal, std::function<void()> && disconnFunc) : mSignal(&signal), mDisconnFunc(std::move(disconnFunc)) {}
 
     ~Tether() { clear(); }
 
@@ -244,9 +244,7 @@ public:
     auto signal() const { return mSignal; }
 
     void clear() {
-        if (mDisconnFunc) {
-            mDisconnFunc();
-        }
+        if (mDisconnFunc) { mDisconnFunc(); }
         mSignal      = nullptr;
         mDisconnFunc = nullptr;
     }
@@ -381,22 +379,18 @@ public:
         auto lock = std::lock_guard(mLock);
         if constexpr (std::is_same_v<RET, void>) {
             // For void return, all delegates get lvalue references to avoid moving rvalues multiple times
-            for (const auto & delegate : mDelegates) {
-                delegate(static_cast<std::remove_reference_t<ARGS> &>(args)...);
-            }
+            for (const auto & delegate : mDelegates) { delegate(static_cast<std::remove_reference_t<ARGS> &>(args)...); }
         } else {
             if (mDelegates.empty()) {
                 // Return default-constructed value - enables RVO (returning temporary)
                 return RET();
             }
             // For single delegate, forward arguments - enables move semantics for rvalues
-            if (mDelegates.size() == 1) {
-                return mDelegates.front()(std::forward<ARGS>(args)...);
-            }
+            if (mDelegates.size() == 1) { return mDelegates.front()(std::forward<ARGS>(args)...); }
             // For multiple delegates: convert to lvalues to avoid moving rvalues multiple times.
             // All delegates except the last receive lvalue references (safe for multiple calls).
             // The last delegate gets forwarded arguments (can move if rvalues).
-            auto it = mDelegates.begin();
+            auto it   = mDelegates.begin();
             auto last = std::prev(mDelegates.end());
             for (; it != last; ++it) {
                 (void) (*it)(static_cast<std::remove_reference_t<ARGS> &>(args)...); // force lvalue refs
@@ -412,8 +406,15 @@ public:
     }
 
 private:
-    mutable std::list<DelegateType> mDelegates;
-    mutable std::recursive_mutex    mLock;
+
+    struct Connection {
+        DelegateType          delegate;
+        std::function<void()> disconnect;
+    };
+
+
+    mutable std::list<Connection> mConnections;
+    mutable std::recursive_mutex  mLock;
 
     Tether addDelegate(DelegateType && delegate) const {
         auto iter = mDelegates.insert(mDelegates.end(), std::move(delegate));

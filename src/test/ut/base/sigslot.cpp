@@ -3,127 +3,121 @@
 
 // Test helper classes and functions
 namespace {
-    // Static function for delegate testing
-    static int staticFunction(int x, int y) { return x + y; }
+// Static function for delegate testing
+static int staticFunction(int x, int y) { return x + y; }
 
-    static void staticVoidFunction(int & value) { value = 42; }
+static void staticVoidFunction(int & value) { value = 42; }
 
-    static void staticHandler(int v) {
-        // This will be used in tests
-        (void) v; // suppress unused parameter warning
+static void staticHandler(int v) {
+    // This will be used in tests
+    (void) v; // suppress unused parameter warning
+}
+
+static int noParamFunc() { return 42; }
+
+static int  voidNoParamValue = 0;
+static void voidNoParamFunc() { voidNoParamValue = 100; }
+
+// Test class for member function delegates
+class TestClass {
+public:
+    int value;
+
+    TestClass(): value(0) {}
+
+    int add(int x, int y) { return x + y; }
+
+    int multiply(int x, int y) const { return x * y; }
+
+    void setValue(int v) { value = v; }
+
+    void setValueConst(int v) const { const_cast<TestClass *>(this)->value = v; }
+
+    int getValue() const { return value; }
+};
+
+// Test class for signal/slot testing
+class TestSlot : public GN::SlotBase {
+public:
+    int callCount;
+    int lastValue;
+
+    TestSlot(): callCount(0), lastValue(0) {}
+
+    void onSignal(int value) {
+        callCount++;
+        lastValue = value;
     }
 
-    static int noParamFunc() { return 42; }
+    void onSignalConst(int value) const { const_cast<TestSlot *>(this)->onSignal(value); }
+};
 
-    static int voidNoParamValue = 0;
-    static void voidNoParamFunc() { voidNoParamValue = 100; }
+// Helper class to track calls for emit() tests
+class CallTracker {
+public:
+    static int callCount;
+    static int lastValue;
+    static int sum;
 
-    // Test class for member function delegates
-    class TestClass {
-    public:
-        int value;
-
-        TestClass(): value(0) {}
-
-        int add(int x, int y) { return x + y; }
-
-        int multiply(int x, int y) const { return x * y; }
-
-        void setValue(int v) { value = v; }
-
-        void setValueConst(int v) const { const_cast<TestClass *>(this)->value = v; }
-
-        int getValue() const { return value; }
-    };
-
-    // Test class for signal/slot testing
-    class TestSlot : public GN::SlotBase {
-    public:
-        int callCount;
-        int lastValue;
-
-        TestSlot(): callCount(0), lastValue(0) {}
-
-        void onSignal(int value) {
-            callCount++;
-            lastValue = value;
-        }
-
-        void onSignalConst(int value) const { const_cast<TestSlot *>(this)->onSignal(value); }
-    };
-
-    // Helper class to track calls for emit() tests
-    class CallTracker {
-    public:
-        static int callCount;
-        static int lastValue;
-        static int sum;
-
-        static void reset() {
-            callCount = 0;
-            lastValue = 0;
-            sum = 0;
-        }
-
-        static void track(int value) {
-            callCount++;
-            lastValue = value;
-            sum += value;
-        }
-
-        static int trackAndReturn(int value) {
-            callCount++;
-            lastValue = value;
-            return value * 2; // Return different value to verify we get the last one
-        }
-    };
-
-    int CallTracker::callCount = 0;
-    int CallTracker::lastValue = 0;
-    int CallTracker::sum = 0;
-
-    // Static functions for signal emit tests
-    static void staticVoidHandler(int value) {
-        CallTracker::track(value);
+    static void reset() {
+        callCount = 0;
+        lastValue = 0;
+        sum       = 0;
     }
 
-    static int staticIntHandler(int value) {
-        return CallTracker::trackAndReturn(value);
+    static void track(int value) {
+        callCount++;
+        lastValue = value;
+        sum += value;
     }
 
-    static int staticTwoArgHandler(int x, int y) {
-        (void) x; // suppress unused parameter warning
-        (void) y;
-        return x + y;
+    static int trackAndReturn(int value) {
+        callCount++;
+        lastValue = value;
+        return value * 2; // Return different value to verify we get the last one
+    }
+};
+
+int CallTracker::callCount = 0;
+int CallTracker::lastValue = 0;
+int CallTracker::sum       = 0;
+
+// Static functions for signal emit tests
+static void staticVoidHandler(int value) { CallTracker::track(value); }
+
+static int staticIntHandler(int value) { return CallTracker::trackAndReturn(value); }
+
+static int staticTwoArgHandler(int x, int y) {
+    (void) x; // suppress unused parameter warning
+    (void) y;
+    return x + y;
+}
+
+static void staticRefHandler(int & v) { v = 99; }
+
+static void staticConstRefHandler(const int & v) {
+    (void) v; // suppress unused parameter warning
+}
+
+// Test class for member function emit tests
+class EmitTestClass {
+public:
+    int callCount;
+    int lastValue;
+
+    EmitTestClass(): callCount(0), lastValue(0) {}
+
+    void handler(int value) {
+        callCount++;
+        lastValue = value;
     }
 
-    static void staticRefHandler(int & v) {
-        v = 99;
+    int handlerWithReturn(int value) {
+        callCount++;
+        lastValue = value;
+        return value * 3;
     }
-
-    static void staticConstRefHandler(const int & v) {
-        (void) v; // suppress unused parameter warning
-    }
-
-    // Test class for member function emit tests
-    class EmitTestClass {
-    public:
-        int callCount;
-        int lastValue;
-
-        EmitTestClass(): callCount(0), lastValue(0) {}
-
-        void handler(int value) {
-            callCount++;
-            lastValue = value;
-        }
-
-        int handlerWithReturn(int value) {
-            callCount++;
-            lastValue = value;
-            return value * 3;
-        }
-    };
+};
 } // namespace
 
 class SigSlotTest : public CxxTest::TestSuite {
@@ -330,7 +324,7 @@ public:
 
     void testSignalEmitVoidMultipleDelegates() {
         CallTracker::reset();
-        TestSlot slot1, slot2;
+        TestSlot              slot1, slot2;
         GN::Signal<void(int)> signal;
 
         auto tether1 = signal.connect<staticVoidHandler>();
@@ -378,7 +372,7 @@ public:
 
     void testSignalEmitNonVoidMultipleDelegates() {
         CallTracker::reset();
-        EmitTestClass obj1, obj2;
+        EmitTestClass        obj1, obj2;
         GN::Signal<int(int)> signal;
 
         auto tether1 = signal.connect<staticIntHandler>();
@@ -401,7 +395,7 @@ public:
 
     void testSignalEmitWithMultipleArguments() {
         GN::Signal<int(int, int)> signal;
-        auto tether = signal.connect<staticTwoArgHandler>();
+        auto                      tether = signal.connect<staticTwoArgHandler>();
 
         int result = signal.emit(10, 20);
         TS_ASSERT_EQUALS(result, 30);
@@ -412,7 +406,7 @@ public:
 
     void testSignalEmitVoidWithReferenceArguments() {
         GN::Signal<void(int &)> signal;
-        auto tether = signal.connect<staticRefHandler>();
+        auto                    tether = signal.connect<staticRefHandler>();
 
         int testValue = 0;
         signal.emit(testValue);
@@ -425,7 +419,7 @@ public:
 
     void testSignalEmitDisconnectDuringEmit() {
         // Test that disconnecting a tether doesn't affect ongoing emit
-        TestSlot slot1, slot2;
+        TestSlot              slot1, slot2;
         GN::Signal<void(int)> signal;
 
         auto tether1 = signal.connect<&TestSlot::onSignal>(&slot1);
@@ -444,7 +438,7 @@ public:
     void testSignalEmitAllDelegatesCalled() {
         // Verify that all delegates are called even when some return values
         CallTracker::reset();
-        EmitTestClass obj1, obj2, obj3;
+        EmitTestClass        obj1, obj2, obj3;
         GN::Signal<int(int)> signal;
 
         auto tether1 = signal.connect<staticIntHandler>();
@@ -466,7 +460,7 @@ public:
 
     void testSignalEmitWithConstArguments() {
         GN::Signal<void(const int &)> signal;
-        auto tether = signal.connect<staticConstRefHandler>();
+        auto                          tether = signal.connect<staticConstRefHandler>();
 
         const int constValue = 123;
         signal.emit(constValue);
@@ -484,7 +478,7 @@ public:
     }
 
     void testTetherMove() {
-        TestSlot slot;
+        TestSlot              slot;
         GN::Signal<void(int)> signal;
 
         auto tether1 = signal.connect<&TestSlot::onSignal>(&slot);
@@ -495,7 +489,7 @@ public:
     }
 
     void testTetherMoveAssignment() {
-        TestSlot slot;
+        TestSlot              slot;
         GN::Signal<void(int)> signal1, signal2;
 
         auto tether1 = signal1.connect<&TestSlot::onSignal>(&slot);
@@ -511,7 +505,7 @@ public:
     }
 
     void testTetherClear() {
-        TestSlot slot;
+        TestSlot              slot;
         GN::Signal<void(int)> signal;
 
         auto tether = signal.connect<&TestSlot::onSignal>(&slot);
@@ -521,12 +515,30 @@ public:
         TS_ASSERT(tether.signal() == nullptr);
     }
 
+    void testTetherSignalDeletedBeforeTether() {
+        // Create signal and tether in a scope
+        GN::Tether tether;
+        {
+            TestSlot              slot;
+            GN::Signal<void(int)> signal;
+            tether = signal.connect<&TestSlot::onSignal>(&slot);
+            TS_ASSERT(tether.signal() == &signal);
+        }
+        // Signal is now deleted (out of scope)
+
+        // Tether should automatically been cleared when signal is gone.
+        TS_ASSERT(tether.signal() == nullptr);
+
+        // calling tether.clear() should not crash
+        tether.clear();
+    }
+
     // ========================================================================
     // SlotBase Tests
     // ========================================================================
 
     void testSlotBaseManageTether() {
-        TestSlot slot;
+        TestSlot              slot;
         GN::Signal<void(int)> signal1, signal2;
 
         auto tether1 = signal1.connect<&TestSlot::onSignal>(&slot);
@@ -541,7 +553,7 @@ public:
     }
 
     void testSlotBaseDisconnectFromSignal() {
-        TestSlot slot;
+        TestSlot              slot;
         GN::Signal<void(int)> signal1, signal2;
 
         auto tether1 = signal1.connect<&TestSlot::onSignal>(&slot);
@@ -556,7 +568,7 @@ public:
     }
 
     void testSlotBaseDisconnectFromAllSignals() {
-        TestSlot slot;
+        TestSlot              slot;
         GN::Signal<void(int)> signal1, signal2;
 
         auto tether1 = signal1.connect<&TestSlot::onSignal>(&slot);
@@ -571,7 +583,7 @@ public:
     }
 
     void testSlotBaseMove() {
-        TestSlot slot1;
+        TestSlot              slot1;
         GN::Signal<void(int)> signal;
 
         auto tether = signal.connect<&TestSlot::onSignal>(&slot1);
@@ -601,8 +613,8 @@ public:
     }
 
     void testSignalWithDifferentReturnTypes() {
-        GN::Signal<int()>   signal1;
-        GN::Signal<void()>  signal2;
+        GN::Signal<int()>          signal1;
+        GN::Signal<void()>         signal2;
         GN::Signal<bool(int, int)> signal3;
 
         // Signals should be constructible with different signatures
