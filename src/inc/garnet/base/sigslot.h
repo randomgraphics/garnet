@@ -266,9 +266,9 @@ private:
 ///     void mySlotMethod(int value) {
 ///         std::cout << "Signal received: " << value << std::endl;
 ///     }
-///     void connectTo(const MySignal & signal) {
+///     void foo(const MySignal & signal) {
 ///         // The connection to the signal is now managed by this class and will get automatically disconnected when this class is destroyed.
-///         manageTether(signal.connect(this, &MySlot::mySlotMethod));
+///         connectToSignal<&MySlot::mySlotMethod>(signal);
 ///     }
 /// };
 ///
@@ -297,10 +297,18 @@ protected:
     }
 
 public:
-    /// Manage the passed in tether. Automatically disconnect it, when this slot class is destroyed.
-    void manageTether(Tether && t) const {
+    /// Make a managed connection to signal. The connection will be automatically disconnected when this slot is destructed.
+    template<auto FUNCTION, typename CLASS, typename SIGNAL, typename = std::enable_if_t<std::is_member_function_pointer_v<decltype(FUNCTION)>>>
+    void connectToSignal(CLASS * classPtr, const SIGNAL & signal) {
         auto lock = std::lock_guard(mLock);
-        mTethers.push_back(std::move(t));
+        mTethers.push_back(signal.template connect<FUNCTION>(classPtr));
+    }
+
+    /// Make a managed connection to signal. The connection will be automatically disconnected when this slot is destructed.
+    template<auto FUNCTION, typename SIGNAL, typename = std::enable_if_t<std::is_function_v<decltype(FUNCTION)>>>
+    void connectToSignal(const SIGNAL & signal) {
+        auto lock = std::lock_guard(mLock);
+        mTethers.push_back(signal.template connect<FUNCTION>());
     }
 
     /// Explicitly disconnect the slot from specified signal.

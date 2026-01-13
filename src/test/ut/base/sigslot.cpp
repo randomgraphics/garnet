@@ -537,61 +537,27 @@ public:
     // SlotBase Tests
     // ========================================================================
 
-    void testSlotBaseManageTether() {
+    void testSlotBaseConnectToSignal() {
         TestSlot              slot;
         GN::Signal<void(int)> signal1, signal2;
 
-        auto tether1 = signal1.connect<&TestSlot::onSignal>(&slot);
-        auto tether2 = signal2.connect<&TestSlot::onSignal>(&slot);
+        slot.connectToSignal<&TestSlot::onSignal>(&slot, signal1);
+        slot.connectToSignal<&TestSlot::onSignal>(&slot, signal2);
 
-        slot.manageTether(std::move(tether1));
-        slot.manageTether(std::move(tether2));
+        signal1.emit(10);
+        TS_ASSERT_EQUALS(slot.callCount, 1);
+        TS_ASSERT_EQUALS(slot.lastValue, 10);
 
-        // Tethers should be managed by slot
-        TS_ASSERT(tether1.signal() == nullptr);
-        TS_ASSERT(tether2.signal() == nullptr);
-    }
-
-    void testSlotBaseDisconnectFromSignal() {
-        TestSlot              slot;
-        GN::Signal<void(int)> signal1, signal2;
-
-        auto tether1 = signal1.connect<&TestSlot::onSignal>(&slot);
-        auto tether2 = signal2.connect<&TestSlot::onSignal>(&slot);
-
-        slot.manageTether(std::move(tether1));
-        slot.manageTether(std::move(tether2));
-
-        slot.disconnectFromSignal(signal1);
-        // Should not crash
-        TS_ASSERT(true);
-    }
-
-    void testSlotBaseDisconnectFromAllSignals() {
-        TestSlot              slot;
-        GN::Signal<void(int)> signal1, signal2;
-
-        auto tether1 = signal1.connect<&TestSlot::onSignal>(&slot);
-        auto tether2 = signal2.connect<&TestSlot::onSignal>(&slot);
-
-        slot.manageTether(std::move(tether1));
-        slot.manageTether(std::move(tether2));
+        signal2.emit(20);
+        TS_ASSERT_EQUALS(slot.callCount, 2);
+        TS_ASSERT_EQUALS(slot.lastValue, 20);
 
         slot.disconnectFromAllSignals();
-        // Should not crash
-        TS_ASSERT(true);
-    }
 
-    void testSlotBaseMove() {
-        TestSlot              slot1;
-        GN::Signal<void(int)> signal;
-
-        auto tether = signal.connect<&TestSlot::onSignal>(&slot1);
-        slot1.manageTether(std::move(tether));
-
-        TestSlot slot2 = std::move(slot1);
-        // Should not crash
-        TS_ASSERT(true);
+        // trigger again to ensure disconnection
+        signal1.emit(30);
+        signal2.emit(40);
+        TS_ASSERT_EQUALS(slot.callCount, 2); // should not have increased
     }
 
     // ========================================================================

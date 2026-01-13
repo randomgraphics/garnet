@@ -25,9 +25,9 @@ class InputTest : public GN::SlotBase {
 
         // connect to input signals
         disconnectFromAllSignals();
-        manageTether(gInput.sigKeyPress.connect<&InputTest::onKeyPress>(this));
-        manageTether(gInput.sigCharPress.connect<&InputTest::onCharPress>(this));
-        manageTether(gInput.sigAxisMove.connect<&InputTest::onAxisMove>(this));
+        connectToSignal<&InputTest::onKeyPress>(this, gInput.sigKeyPress);
+        connectToSignal<&InputTest::onCharPress>(this, gInput.sigCharPress);
+        connectToSignal<&InputTest::onAxisMove>(this, gInput.sigAxisMove);
 
         return true;
     }

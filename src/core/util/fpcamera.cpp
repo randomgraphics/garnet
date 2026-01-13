@@ -157,7 +157,7 @@ void FirstPersonCamera::update(float timeslice) {
 void FirstPersonCamera::connectToInput() {
     disconnectFromAllSignals();
     if (gInputPtr) {
-        manageTether(gInput.sigAxisMove.connect<&FirstPersonCamera::onAxisMove>(this));
+        connectToSignal<&FirstPersonCamera::onAxisMove>(this, gInput.sigAxisMove);
     } else {
         GN_ERROR(sLogger)("Input module is not initialized.");
     }
