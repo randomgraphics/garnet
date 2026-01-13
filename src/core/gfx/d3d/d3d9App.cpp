@@ -281,9 +281,9 @@ GN_API bool GN::d3d9::D3D9Application::init() {
         mShutdownInputSystem = true;
     }
     if (!gInput.attachToWindow(0, (intptr_t) mWindow)) return false;
-    gInput.sigKeyPress.connect(this, &D3D9Application::onKeyPress);
-    gInput.sigCharPress.connect(this, &D3D9Application::onCharPress);
-    gInput.sigAxisMove.connect(this, &D3D9Application::onAxisMove);
+    manageTether(gInput.sigKeyPress.connect<&D3D9Application::onKeyPress>(this));
+    manageTether(gInput.sigCharPress.connect<&D3D9Application::onCharPress>(this));
+    manageTether(gInput.sigAxisMove.connect<&D3D9Application::onAxisMove>(this));
 
     // create D3D object
     mD3D = Direct3DCreate9(D3D_SDK_VERSION);
@@ -307,13 +307,7 @@ GN_API void GN::d3d9::D3D9Application::quit() {
 
     safeRelease(mD3D);
 
-    if (gInputPtr) {
-        gInput.sigKeyPress.disconnect(*this);
-        gInput.sigCharPress.disconnect(*this);
-        gInput.sigAxisMove.disconnect(*this);
-
-        if (mShutdownInputSystem) { input::shutdownInputSystem(); }
-    }
+    if (mShutdownInputSystem) { input::shutdownInputSystem(); }
 
     #if !GN_XBOX2
     sDestroyWindow(mWindow);
