@@ -17,6 +17,8 @@
 /// \author  chenlee (2005.5.14)
 // *****************************************************************************
 
+#include <memory>
+
 namespace GN {
 
 namespace internal {
@@ -219,7 +221,7 @@ class Tether {
 public:
     Tether() = default;
 
-    Tether(const internal::SignalBase & signal, std::function<void()> && disconnFunc) : mSignal(&signal), mDisconnFunc(std::move(disconnFunc)) {}
+    Tether(const internal::SignalBase * signal, std::function<void()> && disconnFunc): mSignal(signal), mDisconnFunc(std::move(disconnFunc)) {}
 
     ~Tether() { clear(); }
 
@@ -331,13 +333,13 @@ class Signal<RET(PARAMS...)> : public internal::SignalBase {
     typedef internal::delegate<RET(PARAMS...)> DelegateType;
 
 public:
-    Signal() {}
-    ~Signal() {}
+    Signal(): mControlBlock(std::make_shared<ControlBlock>()) {}
+    ~Signal() { mControlBlock.reset(); }
 
     template<RET (*STATIC_FUNCTION)(PARAMS...)>
     [[nodiscard]] Tether connect() const {
         // TODO: prevent re-entrancy here?
-        auto lock = std::lock_guard(mLock);
+        auto lock = std::lock_guard(mControlBlock->mutex);
         return addDelegate(DelegateType::template createFunction<STATIC_FUNCTION>());
     }
 
@@ -345,7 +347,8 @@ public:
     [[nodiscard]] Tether connect(typename internal::member_fn_traits<decltype(MEMBER_FN)>::class_ptr_type object) const {
         // TODO: prevent re-entrancy here?
         typedef typename internal::member_fn_traits<decltype(MEMBER_FN)>::class_type ClassType;
-        auto                                                                         lock = std::lock_guard(mLock);
+
+        auto lock = std::lock_guard(mControlBlock->mutex);
         return addDelegate(DelegateType::template createMethod<ClassType, MEMBER_FN>(object));
     }
 
@@ -376,22 +379,22 @@ public:
     /// this is simpler form of emit() that returns the return value of the last delegate.
     template<typename... ARGS>
     RET emit(ARGS &&... args) const {
-        auto lock = std::lock_guard(mLock);
+        auto lock = std::lock_guard(mControlBlock->mutex);
         if constexpr (std::is_same_v<RET, void>) {
             // For void return, all delegates get lvalue references to avoid moving rvalues multiple times
-            for (const auto & delegate : mDelegates) { delegate(static_cast<std::remove_reference_t<ARGS> &>(args)...); }
+            for (const auto & d : mControlBlock->delegates) { d(static_cast<std::remove_reference_t<ARGS> &>(args)...); }
         } else {
-            if (mDelegates.empty()) {
+            if (mControlBlock->delegates.empty()) {
                 // Return default-constructed value - enables RVO (returning temporary)
                 return RET();
             }
             // For single delegate, forward arguments - enables move semantics for rvalues
-            if (mDelegates.size() == 1) { return mDelegates.front()(std::forward<ARGS>(args)...); }
+            if (mControlBlock->delegates.size() == 1) { return mControlBlock->delegates.front()(std::forward<ARGS>(args)...); }
             // For multiple delegates: convert to lvalues to avoid moving rvalues multiple times.
             // All delegates except the last receive lvalue references (safe for multiple calls).
             // The last delegate gets forwarded arguments (can move if rvalues).
-            auto it   = mDelegates.begin();
-            auto last = std::prev(mDelegates.end());
+            auto it   = mControlBlock->delegates.begin();
+            auto last = std::prev(mControlBlock->delegates.end());
             for (; it != last; ++it) {
                 (void) (*it)(static_cast<std::remove_reference_t<ARGS> &>(args)...); // force lvalue refs
             }
@@ -406,28 +409,44 @@ public:
     }
 
 private:
+    // Control block that keeps the Signal's data alive even if the Signal object is destroyed
+    struct ControlBlock {
+        std::recursive_mutex    mutex;
+        std::list<DelegateType> delegates;
 
-    struct Connection {
-        DelegateType          delegate;
-        std::function<void()> disconnect;
+        ~ControlBlock() {
+            std::lock_guard<std::recursive_mutex> lock(mutex);
+            delegates.clear();
+        }
     };
 
-
-    mutable std::list<Connection> mConnections;
-    mutable std::recursive_mutex  mLock;
+    mutable std::shared_ptr<ControlBlock> mControlBlock;
 
     Tether addDelegate(DelegateType && delegate) const {
-        auto iter = mDelegates.insert(mDelegates.end(), std::move(delegate));
-        return Tether(this, std::function<void()>([this, iter]() {
-                          auto lock = std::lock_guard(mLock);
-                          mDelegates.erase(iter);
+        // Note: We don't need to lock here because addDelegate is only called from connect()
+        auto iter = mControlBlock->delegates.emplace(mControlBlock->delegates.end(), std::move(delegate));
+
+        // Capture a weak_ptr to the control block so we can check if it's still alive
+        std::weak_ptr<ControlBlock> weakControl = mControlBlock;
+
+        return Tether(this, std::function<void()>([weakControl, iter]() {
+                          // Try to lock the weak_ptr. If successful, the control block (and thus the signal data) is still alive.
+                          // The lock() operation is atomic, so this prevents the race condition.
+                          // Once we have the shared_ptr, the control block is guaranteed to stay alive for the duration
+                          // of this lambda execution, even if the Signal object itself is destroyed.
+                          if (auto control = weakControl.lock()) {
+                              // Acquire the lock atomically - no window for another thread to destroy the signal
+                              // The shared_ptr ensures the control block stays alive, and the lock ensures exclusive access
+                              std::lock_guard<std::recursive_mutex> lock(control->mutex);
+                              // The control block is alive and we hold the lock, so we can safely erase the connection.
+                              // The iterator remains valid until we erase it, and we hold the lock so no other thread
+                              // can modify the list concurrently.
+                              control->delegates.erase(iter);
+                          }
+                          // If the weak_ptr cannot be locked, the control block (and signal) has been destroyed, so we do nothing.
                       }));
     }
 };
-
-// inline void detail::SignalBase::connectToSlotClass(const SlotBase & slot) const { slot.mSignals.push_back(this); }
-
-// inline void detail::SignalBase::disconnectFromSlotClass(const SlotBase & slot) const { slot.mSignals.remove(this); }
 
 } // namespace GN
 
