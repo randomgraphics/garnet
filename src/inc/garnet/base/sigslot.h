@@ -306,8 +306,10 @@ public:
             static_assert(std::is_base_of_v<SlotBase, class_type>, "FUNCTION must be a member function of the derived class of SlotBase");
             class_type * classPtr = static_cast<class_type *>(this);
             mTethers.push_back(signal.template connect<FUNCTION>(classPtr));
-        } else {
+        } else if constexpr (std::is_pointer_v<decltype(FUNCTION)> && std::is_function_v<std::remove_pointer_t<decltype(FUNCTION)>>) {
             mTethers.push_back(signal.template connect<FUNCTION>());
+        } else {
+            static_assert(std::is_same_v<decltype(FUNCTION), void>, "FUNCTION must be a member function pointer or a function pointer or a function");
         }
     }
 
@@ -326,6 +328,11 @@ public:
     void disconnectFromAllSignals() const {
         auto lock = std::lock_guard(mLock);
         mTethers.clear();
+    }
+
+    void manageTether(Tether && tether) {
+        auto lock = std::lock_guard(mLock);
+        mTethers.push_back(std::move(tether));
     }
 
 private:
