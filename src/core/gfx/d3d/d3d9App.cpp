@@ -281,9 +281,9 @@ GN_API bool GN::d3d9::D3D9Application::init() {
         mShutdownInputSystem = true;
     }
     if (!gInput.attachToWindow(0, (intptr_t) mWindow)) return false;
-    connectToSignal<&D3D9Application::onKeyPress>(this, gInput.sigKeyPress);
-    connectToSignal<&D3D9Application::onCharPress>(this, gInput.sigCharPress);
-    connectToSignal<&D3D9Application::onAxisMove>(this, gInput.sigAxisMove);
+    connectToSignal<&D3D9Application::onKeyPress>(gInput.sigKeyPress);
+    connectToSignal<&D3D9Application::onCharPress>(gInput.sigCharPress);
+    connectToSignal<&D3D9Application::onAxisMove>(gInput.sigAxisMove);
 
     // create D3D object
     mD3D = Direct3DCreate9(D3D_SDK_VERSION);

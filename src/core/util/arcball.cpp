@@ -46,8 +46,8 @@ GN::util::ArcBall::ArcBall(Handness h)
 void GN::util::ArcBall::connectToInput() {
     disconnectFromAllSignals();
     if (gInputPtr) {
-        connectToSignal<&ArcBall::onKeyPress>(this, gInput.sigKeyPress);
-        connectToSignal<&ArcBall::onAxisMove>(this, gInput.sigAxisMove);
+        connectToSignal<&ArcBall::onKeyPress>(gInput.sigKeyPress);
+        connectToSignal<&ArcBall::onAxisMove>(gInput.sigAxisMove);
     } else {
         GN_ERROR(sLogger)("Input module is not initialized.");
     }

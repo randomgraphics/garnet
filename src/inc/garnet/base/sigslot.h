@@ -298,17 +298,17 @@ protected:
 
 public:
     /// Make a managed connection to signal. The connection will be automatically disconnected when this slot is destructed.
-    template<auto FUNCTION, typename CLASS, typename SIGNAL, typename = std::enable_if_t<std::is_member_function_pointer_v<decltype(FUNCTION)>>>
-    void connectToSignal(CLASS * classPtr, const SIGNAL & signal) {
-        auto lock = std::lock_guard(mLock);
-        mTethers.push_back(signal.template connect<FUNCTION>(classPtr));
-    }
-
-    /// Make a managed connection to signal. The connection will be automatically disconnected when this slot is destructed.
-    template<auto FUNCTION, typename SIGNAL, typename = std::enable_if_t<std::is_function_v<decltype(FUNCTION)>>>
+    template<auto FUNCTION, typename SIGNAL>
     void connectToSignal(const SIGNAL & signal) {
         auto lock = std::lock_guard(mLock);
-        mTethers.push_back(signal.template connect<FUNCTION>());
+        if constexpr (std::is_member_function_pointer_v<decltype(FUNCTION)>) {
+            using class_type = typename internal::member_fn_traits<decltype(FUNCTION)>::class_type;
+            static_assert(std::is_base_of_v<SlotBase, class_type>, "FUNCTION must be a member function of the derived class of SlotBase");
+            class_type * classPtr = static_cast<class_type *>(this);
+            mTethers.push_back(signal.template connect<FUNCTION>(classPtr));
+        } else {
+            mTethers.push_back(signal.template connect<FUNCTION>());
+        }
     }
 
     /// Explicitly disconnect the slot from specified signal.

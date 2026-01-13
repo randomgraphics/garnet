@@ -541,8 +541,8 @@ public:
         TestSlot              slot;
         GN::Signal<void(int)> signal1, signal2;
 
-        slot.connectToSignal<&TestSlot::onSignal>(&slot, signal1);
-        slot.connectToSignal<&TestSlot::onSignal>(&slot, signal2);
+        slot.connectToSignal<&TestSlot::onSignal>(signal1);
+        slot.connectToSignal<&TestSlot::onSignal>(signal2);
 
         signal1.emit(10);
         TS_ASSERT_EQUALS(slot.callCount, 1);

@@ -410,7 +410,7 @@ void GN::gfx::ModelResource::Impl::TextureItem::setResource(Impl & owner, uint32
     Texture * tex;
     if (newTexture) {
         // connect to new handle
-        connectToSignal<&TextureItem::onTextureChange>(this, newTexture->sigTextureChanged);
+        connectToSignal<&TextureItem::onTextureChange>(newTexture->sigTextureChanged);
         tex = newTexture->texture();
     } else {
         tex = NULL;
@@ -487,7 +487,7 @@ void GN::gfx::ModelResource::Impl::UniformItem::setResource(Impl & owner, uint32
     Uniform * uniform;
     if (newUniform) {
         // connect to new handle
-        connectToSignal<&UniformItem::onUniformChange>(this, newUniform->sigUniformChanged);
+        connectToSignal<&UniformItem::onUniformChange>(newUniform->sigUniformChanged);
         uniform = newUniform->uniform();
     } else {
         uniform = NULL;
@@ -692,7 +692,7 @@ bool GN::gfx::ModelResource::Impl::setMeshResource(GpuResource * resource, const
     // bind mesh signal with the new mesh
     if (mMeshResource != mesh) {
         if (mMeshResource) disconnectFromSignal(mMeshResource->sigMeshChanged);
-        if (mesh) connectToSignal<&Impl::onMeshChanged>(this, mesh->sigMeshChanged);
+        if (mesh) connectToSignal<&Impl::onMeshChanged>(mesh->sigMeshChanged);
     }
 
     // update mesh resource pointer
@@ -739,7 +739,7 @@ bool GN::gfx::ModelResource::Impl::setEffectResource(GpuResource * resource) {
     // rebind changing signal
     if (effect != mEffectResource) {
         if (mEffectResource) disconnectFromSignal(mEffectResource->sigEffectChanged);
-        if (effect) connectToSignal<&Impl::onEffectChanged>(this, effect->sigEffectChanged);
+        if (effect) connectToSignal<&Impl::onEffectChanged>(effect->sigEffectChanged);
     }
 
     // update effect resource pointer

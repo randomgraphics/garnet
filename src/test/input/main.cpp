@@ -25,9 +25,9 @@ class InputTest : public GN::SlotBase {
 
         // connect to input signals
         disconnectFromAllSignals();
-        connectToSignal<&InputTest::onKeyPress>(this, gInput.sigKeyPress);
-        connectToSignal<&InputTest::onCharPress>(this, gInput.sigCharPress);
-        connectToSignal<&InputTest::onAxisMove>(this, gInput.sigAxisMove);
+        connectToSignal<&InputTest::onKeyPress>(gInput.sigKeyPress);
+        connectToSignal<&InputTest::onCharPress>(gInput.sigCharPress);
+        connectToSignal<&InputTest::onAxisMove>(gInput.sigAxisMove);
 
         return true;
     }

@@ -460,14 +460,14 @@ bool GN::util::SampleApp::initEngine() {
     disconnectFromAllSignals(); // clear any previous connections just in case.
 
     // connect to renderer signal: post quit event, if render window is closed.
-    connectToSignal<&SampleApp::postExitEvent>(this, engine::getGpu()->getSignals().rendererWindowClose);
-    connectToSignal<&SampleApp::onRenderWindowResize>(this, engine::getGpu()->getSignals().rendererWindowSizeMove);
+    connectToSignal<&SampleApp::postExitEvent>(engine::getGpu()->getSignals().rendererWindowClose);
+    connectToSignal<&SampleApp::onRenderWindowResize>(engine::getGpu()->getSignals().rendererWindowSizeMove);
 
     // initialize input system
     if (!engine::inputInitialize(mInitParam.iapi)) return false;
-    connectToSignal<&SampleApp::onKeyPress>(this, gInput.sigKeyPress);
-    connectToSignal<&SampleApp::onCharPress>(this, gInput.sigCharPress);
-    connectToSignal<&SampleApp::onAxisMove>(this, gInput.sigAxisMove);
+    connectToSignal<&SampleApp::onKeyPress>(gInput.sigKeyPress);
+    connectToSignal<&SampleApp::onCharPress>(gInput.sigCharPress);
+    connectToSignal<&SampleApp::onAxisMove>(gInput.sigAxisMove);
 
     // done
     return true;
