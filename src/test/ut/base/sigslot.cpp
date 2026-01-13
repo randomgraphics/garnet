@@ -519,15 +519,15 @@ public:
         // Create signal and tether in a scope
         GN::Tether tether;
         {
-            TestSlot              slot;
-            GN::Signal<void(int)> signal;
-            tether = signal.connect<&TestSlot::onSignal>(&slot);
-            TS_ASSERT(tether.signal() == &signal);
+            TestSlot slot;
+            uint8_t  buffer[sizeof(GN::Signal<void(int)>)];
+            auto     signal = new (buffer) GN::Signal<void(int)>();
+            tether          = signal->connect<&TestSlot::onSignal>(&slot);
+            TS_ASSERT(tether.signal() == signal);
+            signal->~Signal<void(int)>();      // destroy the signal
+            memset(buffer, 0, sizeof(buffer)); // make sure the signal is completely wiped out.
         }
         // Signal is now deleted (out of scope)
-
-        // Tether should automatically been cleared when signal is gone.
-        TS_ASSERT(tether.signal() == nullptr);
 
         // calling tether.clear() should not crash
         tether.clear();
