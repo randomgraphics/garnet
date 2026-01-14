@@ -28,8 +28,8 @@ public:
         gSigRendererDispose.connect(this, &GarnetRenderer::onRendererDispose);
     }
     virtual ~GarnetRenderer() {
-        gSigRendererRestore.disconnect(this);
-        gSigRendererDispose.disconnect(this);
+        gSigRendererRestore.disconnect(*this);
+        gSigRendererDispose.disconnect(*this);
         destroyAllTextures();
     }
     //@}

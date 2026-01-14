@@ -459,7 +459,7 @@ class DynaArray {
     }
 
     bool doReserve(SIZE_TYPE count) {
-        if (0 == count) return true;
+        if (0 == count) GN_UNLIKELY return true;
 
         const Header * oldHeader = mElements ? &GetHeader() : nullptr;
         SIZE_TYPE      oldCap    = oldHeader ? oldHeader->capacity : 0;
@@ -469,7 +469,6 @@ class DynaArray {
         GN_ASSERT(count > oldCount);
 
         // align caps to next power of 2
-        GN_ASSERT(count > 0);
         uint64_t newCap = count - 1;
         newCap |= newCap >> 32;
         newCap |= newCap >> 16;
@@ -509,12 +508,15 @@ class DynaArray {
             newHeader->capacity = (SIZE_TYPE) newCap;
             newHeader->count    = oldCount;
 
+            // move & copy old elements to new buffer
             T * newBuf = (T *) (newHeader + 1);
             for (SIZE_TYPE i = 0; i < oldCount; ++i) {
                 if constexpr (std::is_move_constructible<T>::value) {
                     OBJECT_ALLOCATOR::sConstruct(newBuf + i, std::move(mElements[i]));
-                } else {
+                } else if constexpr (std::is_copy_constructible<T>::value) {
                     OBJECT_ALLOCATOR::sConstruct(newBuf + i, mElements[i]);
+                } else {
+                    GN_UNEXPECTED_EX("The element type is neither move-constructible nor copy-constructible.");
                 }
             }
 

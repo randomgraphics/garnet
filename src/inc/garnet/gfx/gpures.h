@@ -80,7 +80,7 @@ public:
 
     /// events
     //@{
-    Signal1<void, TextureResource &> sigTextureChanged;
+    Signal<void(TextureResource &)> sigTextureChanged;
     //@}
 
     /// Texture resource properties
@@ -115,7 +115,7 @@ public:
 
     /// events
     //@{
-    Signal1<void, UniformResource &> sigUniformChanged;
+    Signal<void(UniformResource &)> sigUniformChanged;
     //@}
 
     //@{
@@ -418,7 +418,7 @@ public:
 
     /// events
     //@{
-    Signal1<void, MeshResource &> sigMeshChanged;
+    Signal<void(MeshResource &)> sigMeshChanged;
     //@}
 
     //@{
@@ -703,7 +703,7 @@ public:
 
     /// events
     //@{
-    Signal1<void, EffectResource &> sigEffectChanged;
+    Signal<void(EffectResource &)> sigEffectChanged;
     //@}
 
     /// public properties

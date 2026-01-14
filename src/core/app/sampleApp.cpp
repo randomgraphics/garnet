@@ -457,15 +457,17 @@ bool GN::util::SampleApp::initEngine() {
     gio.defaultAsciiFont    = mInitParam.asciiFont;
     if (!engine::gfxInitialize(gio)) return false;
 
+    disconnectFromAllSignals(); // clear any previous connections just in case.
+
     // connect to renderer signal: post quit event, if render window is closed.
-    engine::getGpu()->getSignals().rendererWindowClose.connect(this, &SampleApp::postExitEvent);
-    engine::getGpu()->getSignals().rendererWindowSizeMove.connect(this, &SampleApp::onRenderWindowResize);
+    connectToSignal<&SampleApp::postExitEvent>(engine::getGpu()->getSignals().rendererWindowClose);
+    connectToSignal<&SampleApp::onRenderWindowResize>(engine::getGpu()->getSignals().rendererWindowSizeMove);
 
     // initialize input system
     if (!engine::inputInitialize(mInitParam.iapi)) return false;
-    gInput.sigKeyPress.connect(this, &SampleApp::onKeyPress);
-    gInput.sigCharPress.connect(this, &SampleApp::onCharPress);
-    gInput.sigAxisMove.connect(this, &SampleApp::onAxisMove);
+    connectToSignal<&SampleApp::onKeyPress>(gInput.sigKeyPress);
+    connectToSignal<&SampleApp::onCharPress>(gInput.sigCharPress);
+    connectToSignal<&SampleApp::onAxisMove>(gInput.sigAxisMove);
 
     // done
     return true;
@@ -478,6 +480,8 @@ bool GN::util::SampleApp::initEngine() {
 // -----------------------------------------------------------------------------
 void GN::util::SampleApp::quitEngine() {
     GN_GUARD;
+
+    disconnectFromAllSignals(); // clear any previous connections just in case.
 
     engine::shutdown();
 

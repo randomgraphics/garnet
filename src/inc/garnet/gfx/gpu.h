@@ -731,7 +731,7 @@ struct GpuSignals {
     ///
     /// D3D device is lost. The renderer, as well as all graphics resources, have to be recreated.
     ///
-    Signal0<void> deviceLost;
+    Signal<void()> deviceLost;
 
     ///
     /// Happens when render windows is resized or moved to another monitor.
@@ -741,7 +741,7 @@ struct GpuSignals {
     ///  - uint32_t clientWidth  : width of client area of render window
     ///  - uint32_t clientHeight : height of client area of render window
     ///
-    Signal3<void, intptr_t, uint32_t, uint32_t> rendererWindowSizeMove;
+    Signal<void(intptr_t, uint32_t, uint32_t)> rendererWindowSizeMove;
 
     ///
     /// 当用户试图关闭渲染窗口时被触发，如点击窗口的关闭按钮或者按ALT-F4。
@@ -759,7 +759,7 @@ struct GpuSignals {
     /// should have external window messages handled already somewhere else
     /// in your code. So you may safely ignore this signal.
     ///
-    Signal0<void> rendererWindowClose;
+    Signal<void()> rendererWindowClose;
 };
 
 ///

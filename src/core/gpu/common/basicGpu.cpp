@@ -211,8 +211,8 @@ void GN::gfx::BasicGpu::handleRenderWindowSizeMove() {
     if (mOptions.displayMode.mode == DisplayMode::FULL_SCREEN) return;
 
     // get client window size
-    auto s = mWindow->getClientSize();
-    auto m = mWindow->getMonitorHandle();
+    auto     s = mWindow->getClientSize();
+    intptr_t m = mWindow->getMonitorHandle();
 
     // compare with old window properties
     if (s != mOldWindowSize || m != mOldMonitor) {

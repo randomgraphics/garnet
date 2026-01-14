@@ -1,389 +1,469 @@
-﻿// *****************************************************************************
-/// \file
-/// \brief   signal slot implementation
-/// \author  chenlee (2005.5.6)
+﻿/*
+    Derived from the work by Sergey A Kryukov: "The Impossibly Fast C++ Delegates, Fixed", 2017
+    https://www.codeproject.com/articles/The-Impossibly-Fast-Cplusplus-Delegates-Fixed,
+
+    which is then based on the original work of Sergey Ryazanov: "The Impossibly Fast C++ Delegates", 18 Jul 2005
+    https://www.codeproject.com/articles/11015/the-impossibly-fast-c-delegates
+
+    MIT license:
+    http://en.wikipedia.org/wiki/MIT_License
+*/
+
+#ifndef __GN_BASE_SIGSLOT_H__
+#define __GN_BASE_SIGSLOT_H__
 // *****************************************************************************
-#ifdef GN_SIGSLOT_TEMPL_N
+/// \file
+/// \brief   fast signal and slot classes
+/// \author  chenlee (2005.5.14)
+// *****************************************************************************
 
-    #ifndef GN_JOIN
-        #define GN_JOIN(s1, s2)              GN_CONCATNATE_DIRECT(s1, s2)
-        #define GN_JOIN3(s1, s2, s3)         GN_JOIN(GN_JOIN(s1, s2), s3)
-        #define GN_JOIN4(s1, s2, s3, s4)     GN_JOIN(GN_JOIN3(s1, s2, s3), s4)
-        #define GN_CONCATNATE_DIRECT(s1, s2) s1##s2
-    #endif
-
-    #define PARAM_TEMPLS_0
-    #define PARAM_TEMPLS_1 class Param1
-    #define PARAM_TEMPLS_2 PARAM_TEMPLS_1, class Param2
-    #define PARAM_TEMPLS_3 PARAM_TEMPLS_2, class Param3
-    #define PARAM_TEMPLS_4 PARAM_TEMPLS_3, class Param4
-    #define PARAM_TEMPLS_5 PARAM_TEMPLS_4, class Param5
-    #define PARAM_TEMPLS_6 PARAM_TEMPLS_5, class Param6
-    #define PARAM_TEMPLS_7 PARAM_TEMPLS_6, class Param7
-    #define PARAM_TEMPLS_8 PARAM_TEMPLS_7, class Param8
-    #define PARAM_TEMPLS_9 PARAM_TEMPLS_8, class Param9
-    #define PARAM_TEMPLS   GN_JOIN(PARAM_TEMPLS_, GN_SIGSLOT_TEMPL_N)
-
-    #define PARAM_TYPES_0
-    #define PARAM_TYPES_1 Param1
-    #define PARAM_TYPES_2 PARAM_TYPES_1, Param2
-    #define PARAM_TYPES_3 PARAM_TYPES_2, Param3
-    #define PARAM_TYPES_4 PARAM_TYPES_3, Param4
-    #define PARAM_TYPES_5 PARAM_TYPES_4, Param5
-    #define PARAM_TYPES_6 PARAM_TYPES_5, Param6
-    #define PARAM_TYPES_7 PARAM_TYPES_6, Param7
-    #define PARAM_TYPES_8 PARAM_TYPES_7, Param8
-    #define PARAM_TYPES_9 PARAM_TYPES_8, Param9
-    #define PARAM_TYPES   GN_JOIN(PARAM_TYPES_, GN_SIGSLOT_TEMPL_N)
-
-    #define PARAM_VALUES_0
-    #define PARAM_VALUES_1 p1
-    #define PARAM_VALUES_2 PARAM_VALUES_1, p2
-    #define PARAM_VALUES_3 PARAM_VALUES_2, p3
-    #define PARAM_VALUES_4 PARAM_VALUES_3, p4
-    #define PARAM_VALUES_5 PARAM_VALUES_4, p5
-    #define PARAM_VALUES_6 PARAM_VALUES_5, p6
-    #define PARAM_VALUES_7 PARAM_VALUES_6, p7
-    #define PARAM_VALUES_8 PARAM_VALUES_7, p8
-    #define PARAM_VALUES_9 PARAM_VALUES_8, p9
-    #define PARAM_VALUES   GN_JOIN(PARAM_VALUES_, GN_SIGSLOT_TEMPL_N)
-
-    #define PARAM_LIST_0
-    #define PARAM_LIST_1 Param1 p1
-    #define PARAM_LIST_2 PARAM_LIST_1, Param2 p2
-    #define PARAM_LIST_3 PARAM_LIST_2, Param3 p3
-    #define PARAM_LIST_4 PARAM_LIST_3, Param4 p4
-    #define PARAM_LIST_5 PARAM_LIST_4, Param5 p5
-    #define PARAM_LIST_6 PARAM_LIST_5, Param6 p6
-    #define PARAM_LIST_7 PARAM_LIST_6, Param7 p7
-    #define PARAM_LIST_8 PARAM_LIST_7, Param8 p8
-    #define PARAM_LIST_9 PARAM_LIST_8, Param9 p9
-    #define PARAM_LIST   GN_JOIN(PARAM_LIST_, GN_SIGSLOT_TEMPL_N)
-
-    #define PARAM_COMMA_0
-    #define PARAM_COMMA_1 ,
-    #define PARAM_COMMA_2 ,
-    #define PARAM_COMMA_3 ,
-    #define PARAM_COMMA_4 ,
-    #define PARAM_COMMA_5 ,
-    #define PARAM_COMMA_6 ,
-    #define PARAM_COMMA_7 ,
-    #define PARAM_COMMA_8 ,
-    #define PARAM_COMMA_9 ,
-    #define PARAM_COMMA   GN_JOIN(PARAM_COMMA_, GN_SIGSLOT_TEMPL_N)
-
-    #define SIGNAL_NAME   GN_JOIN(Signal, GN_SIGSLOT_TEMPL_N)
-    #define DELEGATE_NAME GN_JOIN(Delegate, GN_SIGSLOT_TEMPL_N)
+#include <memory>
 
 namespace GN {
-///
-/// template signal class
-///
-template<typename R PARAM_COMMA PARAM_TEMPLS>
-class SIGNAL_NAME : public detail::SignalBase {
-    typedef DELEGATE_NAME<R PARAM_COMMA PARAM_TYPES> FunctorType;
 
-    struct SlotDesc {
-        FunctorType      func;
-        const void *     classPtr;
-        const SlotBase * basePtr;
-    };
+namespace internal {
 
-    typedef typename ::std::list<SlotDesc>         SlotContainer;
-    typedef typename SlotContainer::iterator       SlotIter;
-    typedef typename SlotContainer::const_iterator ConstSlotIter;
+template<typename T>
+class delegate_base;
 
-    template<class RetType, class ContainerType>
-    struct Emitter {
-        RetType emit(const ContainerType & slots PARAM_COMMA PARAM_LIST) {
-            RetType                                last;
-            typename ContainerType::const_iterator i = slots.begin();
-            while (i != slots.end()) {
-                last = (*i).func(PARAM_VALUES);
-                ++i;
-            }
-            return last;
-        }
-    };
-
-    template<class ContainerType>
-    struct Emitter<bool, ContainerType> {
-        bool emit(const ContainerType & slots PARAM_COMMA PARAM_LIST) {
-            typename ContainerType::const_iterator i = slots.begin();
-            while (i != slots.end()) {
-                if (!(*i).func(PARAM_VALUES)) return false;
-                ++i;
-            }
-            return true;
-        }
-    };
-
-    template<class ContainerType>
-    struct Emitter<void, ContainerType> {
-        void emit(const ContainerType & slots PARAM_COMMA PARAM_LIST) {
-            typename ContainerType::const_iterator i = slots.begin();
-            while (i != slots.end()) {
-                (*i).func(PARAM_VALUES);
-                ++i;
-            }
-        }
-    };
-
-    mutable SlotContainer mSlots;
-
-    static GN::Logger * sLogger;
-
-public:
-    ~SIGNAL_NAME() {
-        // disconnect with all slots
-        for (SlotIter i = mSlots.begin(); i != mSlots.end(); ++i) {
-            if ((*i).basePtr) disconnectFromSlotClass(*(*i).basePtr);
-        }
-        mSlots.clear();
-    }
-
-    void connect(R (*staticFuncPtr)(PARAM_TYPES)) const {
-        if (0 == staticFuncPtr) return;
-        SlotDesc desc;
-        desc.func.bind(staticFuncPtr);
-        desc.classPtr = 0;
-        desc.basePtr  = 0;
-        addSlotItem(desc);
-    }
-
-    template<class X, class Y>
-    inline void connect(Y * classPtr, R (X::*memFuncPtr)(PARAM_TYPES)) const {
-        if (0 == classPtr || 0 == memFuncPtr) {
-            GN_ERROR(sLogger)("Can't connect to NULL method pointer!");
-            return;
-        }
-        SlotDesc desc;
-        desc.func.bind(classPtr, memFuncPtr);
-        desc.classPtr = classPtr;
-        desc.basePtr  = std::is_base_of<SlotBase, Y>::value ? (const SlotBase *) classPtr : 0;
-        addSlotItem(desc);
-    }
-
-    template<class X, class Y>
-    inline void connect(const Y * classPtr, R (X::*memFuncPtr)(PARAM_TYPES) const) const {
-        if (0 == classPtr || 0 == memFuncPtr) {
-            GN_ERROR(sLogger)("Can't connect to NULL method pointer!");
-            return;
-        }
-        SlotDesc desc;
-        desc.func.bind(classPtr, memFuncPtr);
-        desc.classPtr = classPtr;
-        desc.basePtr  = std::is_base_of<SlotBase, Y>::value ? (const SlotBase *) classPtr : 0;
-        addSlotItem(desc);
-    }
-
-    void disconnect(R (*staticFuncPtr)(PARAM_TYPES)) const {
-        if (0 == staticFuncPtr) return;
-        SlotDesc desc;
-        desc.func.bind(staticFuncPtr);
-        desc.classPtr = 0;
-        desc.basePtr  = 0;
-        SlotIter i    = findSlotItem(desc);
-        if (i != mSlots.end()) mSlots.erase(i);
-    }
-
-    template<class X>
-    void disconnect(const X * slot) const {
-        if (0 == slot) return;
-
-        // remove the class from private slot list that has same class ptr
-        typename SlotContainer::iterator i, t, e = mSlots.end();
-        for (i = mSlots.begin(); i != e;) {
-            t = i;
-            ++i;
-            if (slot == t->classPtr) mSlots.erase(t);
-        }
-
-        if (std::is_base_of<SlotBase, X>::value) {
-            // remove itself from target slot's singal array.
-            disconnectFromSlotClass((const SlotBase &) *slot);
-        }
-    }
-
-    R emit(PARAM_LIST) const {
-        Emitter<R, SlotContainer> e;
-        return e.emit(mSlots PARAM_COMMA PARAM_VALUES);
-    }
-
-    size_t getNumSlots() const { return mSlots.size(); }
-
-    R operator()(PARAM_LIST) const { return emit(PARAM_VALUES); }
-
-private:
-    virtual void removeBaseSlotClass(const SlotBase & base) const {
-        // Remove slots that has same special base class
-        typename SlotContainer::iterator i, t, e = mSlots.end();
-        for (i = mSlots.begin(); i != e;) {
-            t = i;
-            ++i;
-            if (&base == t->basePtr) mSlots.erase(t);
-        }
-    }
-
-    void addSlotItem(const SlotDesc & desc) const {
-        if (mSlots.end() != findSlotItem(desc)) return;
-        mSlots.push_back(desc);
-        if (desc.basePtr) connectToSlotClass(*desc.basePtr);
-    }
-
-    SlotIter findSlotItem(const SlotDesc & desc) const {
-        SlotIter i;
-        for (i = mSlots.begin(); i != mSlots.end(); ++i) {
-            if ((*i).func == desc.func) return i;
-        }
-        return mSlots.end();
-    }
-};
-
-template<typename R PARAM_COMMA PARAM_TEMPLS>
-GN::Logger * SIGNAL_NAME<R PARAM_COMMA PARAM_TYPES>::sLogger = getLogger("GN.base.Sigslot");
-} // namespace GN
-
-    #undef PARAM_TEMPLS_0
-    #undef PARAM_TEMPLS_1
-    #undef PARAM_TEMPLS_2
-    #undef PARAM_TEMPLS_3
-    #undef PARAM_TEMPLS_4
-    #undef PARAM_TEMPLS_5
-    #undef PARAM_TEMPLS_6
-    #undef PARAM_TEMPLS_7
-    #undef PARAM_TEMPLS_8
-    #undef PARAM_TEMPLS_9
-    #undef PARAM_TEMPLS
-
-    #undef PARAM_TYPES_0
-    #undef PARAM_TYPES_1
-    #undef PARAM_TYPES_2
-    #undef PARAM_TYPES_3
-    #undef PARAM_TYPES_4
-    #undef PARAM_TYPES_5
-    #undef PARAM_TYPES_6
-    #undef PARAM_TYPES_7
-    #undef PARAM_TYPES_8
-    #undef PARAM_TYPES_9
-    #undef PARAM_TYPES
-
-    #undef PARAM_VALUES_0
-    #undef PARAM_VALUES_1
-    #undef PARAM_VALUES_2
-    #undef PARAM_VALUES_3
-    #undef PARAM_VALUES_4
-    #undef PARAM_VALUES_5
-    #undef PARAM_VALUES_6
-    #undef PARAM_VALUES_7
-    #undef PARAM_VALUES_8
-    #undef PARAM_VALUES_9
-    #undef PARAM_VALUES
-
-    #undef PARAM_LIST_0
-    #undef PARAM_LIST_1
-    #undef PARAM_LIST_2
-    #undef PARAM_LIST_3
-    #undef PARAM_LIST_4
-    #undef PARAM_LIST_5
-    #undef PARAM_LIST_6
-    #undef PARAM_LIST_7
-    #undef PARAM_LIST_8
-    #undef PARAM_LIST_9
-    #undef PARAM_LIST
-
-    #undef PARAM_COMMA_0
-    #undef PARAM_COMMA_1
-    #undef PARAM_COMMA_2
-    #undef PARAM_COMMA_3
-    #undef PARAM_COMMA_4
-    #undef PARAM_COMMA_5
-    #undef PARAM_COMMA_6
-    #undef PARAM_COMMA_7
-    #undef PARAM_COMMA_8
-    #undef PARAM_COMMA_9
-    #undef PARAM_COMMA
-
-    #undef SIGNAL_NAME
-    #undef DELEGATE_NAME
-
-    #undef GN_SIGSLOT_TEMPL_N
-
-#elif !defined(__GN_BASE_SIGSLOT_H__)
-    #define __GN_BASE_SIGSLOT_H__ ///< Include protector
-
-    #include <list>
-    #include <algorithm>
-    #include <type_traits>
-
-namespace GN {
-class SlotBase;
-
-namespace detail {
-///
-/// Base signal class
-///
-class SignalBase {
-    friend class GN::SlotBase;
-    /** remove slot from signal's private slot list */
-    virtual void removeBaseSlotClass(const SlotBase &) const {}
+template<typename RET, typename... PARAMS>
+class delegate_base<RET(PARAMS...)> {
 
 protected:
-    /** add itself to target slot's signal list */
-    void connectToSlotClass(const GN::SlotBase & slot) const;
-    /** remove itself from target slot's signal list */
-    void disconnectFromSlotClass(const GN::SlotBase & slot) const;
+    using stub_type = RET (*)(const void * this_ptr, PARAMS...);
 
+    struct InvocationElement {
+        InvocationElement() = default;
+        InvocationElement(const void * this_ptr, stub_type aStub): object(this_ptr), stub(aStub) {}
+        void Clone(InvocationElement & target) const {
+            target.stub   = stub;
+            target.object = object;
+        }                                                                                                                             // Clone
+        bool         operator==(const InvocationElement & another) const { return another.stub == stub && another.object == object; } //==
+        bool         operator!=(const InvocationElement & another) const { return another.stub != stub || another.object != object; } //!=
+        const void * object = nullptr;
+        stub_type    stub   = nullptr;
+    }; // InvocationElement
+
+}; // class delegate_base
+
+template<typename T>
+class delegate;
+
+template<typename RET, typename... PARAMS>
+class delegate<RET(PARAMS...)> final : private delegate_base<RET(PARAMS...)> {
 public:
-    virtual ~SignalBase() {}
+    delegate() = default;
+
+    bool isNull() const { return invocation.stub == nullptr; }
+    bool operator==(const void * ptr) const { return (ptr == nullptr) && this->isNull(); }    // operator ==
+    bool operator!=(const void * ptr) const { return (ptr != nullptr) || (!this->isNull()); } // operator !=
+
+    delegate(const delegate & another) { another.invocation.Clone(invocation); }
+
+    template<typename LAMBDA>
+    delegate(const LAMBDA & lambda) {
+        assign(&lambda, lambda_stub<LAMBDA>);
+    } // delegate
+
+    delegate & operator=(const delegate & another) {
+        another.invocation.Clone(invocation);
+        return *this;
+    } // operator =
+
+    template<typename LAMBDA> // template instantiation is not needed, will be deduced (inferred):
+    delegate & operator=(const LAMBDA & instance) {
+        assign(&instance, lambda_stub<LAMBDA>);
+        return *this;
+    } // operator =
+
+    bool operator==(const delegate & another) const { return invocation == another.invocation; }
+    bool operator!=(const delegate & another) const { return invocation != another.invocation; }
+
+    template<class T, RET (T::*TMethod)(PARAMS...)>
+    static delegate createMethod(T * instance) {
+        return delegate(instance, method_stub<T, TMethod>);
+    } // create
+
+    template<class T, RET (T::*TMethod)(PARAMS...) const>
+    static delegate createMethod(T const * instance) {
+        return delegate(instance, const_method_stub<T, TMethod>);
+    } // create
+
+    template<typename CLASS_, RET (CLASS_::*METHOD)(PARAMS...) volatile>
+    static delegate createMethod(volatile CLASS_ * instance) {
+        return delegate(instance, volatile_method_stub<CLASS_, METHOD>);
+    } // create
+
+    template<typename CLASS_, RET (CLASS_::*METHOD)(PARAMS...) const volatile>
+    static delegate createMethod(volatile CLASS_ const * instance) {
+        return delegate(instance, volatile_const_method_stub<CLASS_, METHOD>);
+    } // create
+
+    template<RET (*TMethod)(PARAMS...)>
+    static delegate createFunction() {
+        return delegate(nullptr, function_stub<TMethod>);
+    } // create
+
+    template<typename LAMBDA>
+    static delegate createLambda(const LAMBDA & instance) {
+        return delegate(&instance, lambda_stub<LAMBDA>);
+    } // create
+
+    RET operator()(PARAMS... arg) const { return (*invocation.stub)(invocation.object, arg...); } // operator()
+
+private:
+    delegate(const void * anObject, typename delegate_base<RET(PARAMS...)>::stub_type aStub) {
+        invocation.object = anObject;
+        invocation.stub   = aStub;
+    } // delegate
+
+    void assign(const void * anObject, typename delegate_base<RET(PARAMS...)>::stub_type aStub) {
+        this->invocation.object = anObject;
+        this->invocation.stub   = aStub;
+    } // assign
+
+    template<class T, RET (T::*TMethod)(PARAMS...)>
+    static RET method_stub(const void * this_ptr, PARAMS... params) {
+        auto p = (T *) (this_ptr);
+        return (p->*TMethod)(params...);
+    } // method_stub
+
+    template<class T, RET (T::*TMethod)(PARAMS...) const>
+    static RET const_method_stub(const void * this_ptr, PARAMS... params) {
+        auto p = (T const *) (this_ptr);
+        return (p->*TMethod)(params...);
+    } // const_method_stub
+
+    template<class T, RET (T::*TMethod)(PARAMS...) volatile>
+    static RET volatile_method_stub(const void * this_ptr, PARAMS... params) {
+        auto p = (volatile T *) (this_ptr);
+        return (p->*TMethod)(params...);
+    } // volatile_method_stub
+
+    template<class T, RET (T::*TMethod)(PARAMS...) const volatile>
+    static RET volatile_const_method_stub(const void * this_ptr, PARAMS... params) {
+        auto p = (volatile T const *) (this_ptr);
+        return (p->*TMethod)(params...);
+    } // volatile_const_method_stub
+
+    template<RET (*TMethod)(PARAMS...)>
+    static RET function_stub(const void *, PARAMS... params) {
+        return TMethod(params...);
+    } // function_stub
+
+    template<typename LAMBDA>
+    static RET lambda_stub(const void * this_ptr, PARAMS... arg) {
+        auto p = (const LAMBDA *) (this_ptr);
+        return (p->operator())(arg...);
+    } // lambda_stub
+
+    typename delegate_base<RET(PARAMS...)>::InvocationElement invocation;
+}; // class delegate
+
+/// Base class of all signals.
+class SignalBase {
+protected:
+    SignalBase()          = default;
+    virtual ~SignalBase() = default;
 };
-} // namespace detail
+
+template<typename>
+struct member_fn_traits; // primary
+
+// non-const
+template<typename C, typename R, typename... A>
+struct member_fn_traits<R (C::*)(A...)> {
+    using class_type     = C;
+    using class_ptr_type = C *;
+};
+
+// const
+template<typename C, typename R, typename... A>
+struct member_fn_traits<R (C::*)(A...) const> {
+    using class_type     = C;
+    using class_ptr_type = const C *;
+};
+
+// volatile
+template<typename C, typename R, typename... A>
+struct member_fn_traits<R (C::*)(A...) volatile> {
+    using class_type     = C;
+    using class_ptr_type = volatile C *;
+};
+
+// volatile const
+template<typename C, typename R, typename... A>
+struct member_fn_traits<R (C::*)(A...) const volatile> {
+    using class_type     = C;
+    using class_ptr_type = volatile const C *;
+};
+
+// ref-qualifiers
+template<typename C, typename R, typename... A>
+struct member_fn_traits<R (C::*)(A...) &> : member_fn_traits<R (C::*)(A...)> {};
+
+template<typename C, typename R, typename... A>
+struct member_fn_traits<R (C::*)(A...) const &> : member_fn_traits<R (C::*)(A...) const> {};
+
+template<typename C, typename R, typename... A>
+struct member_fn_traits<R (C::*)(A...) &&> : member_fn_traits<R (C::*)(A...)> {};
+
+template<typename C, typename R, typename... A>
+struct member_fn_traits<R (C::*)(A...) const &&> : member_fn_traits<R (C::*)(A...) const> {};
+
+} // namespace internal
 
 ///
-/// Base slot class. Derive your class from this, if you want automatic
-/// management of connections between signal and slot.
+/// Represents a connection between a signal and a slot. Destructing this object will disconnect the slot from the signal.
 ///
+class Tether {
+public:
+    Tether() = default;
+
+    Tether(const internal::SignalBase * signal, std::function<void()> && disconnFunc): mSignal(signal), mDisconnFunc(std::move(disconnFunc)) {}
+
+    ~Tether() { clear(); }
+
+    GN_NO_COPY(Tether); // Not copyable
+
+    /// move constructor
+    Tether(Tether && other): mSignal(other.mSignal), mDisconnFunc(std::move(other.mDisconnFunc)) {
+        other.mSignal      = nullptr;
+        other.mDisconnFunc = nullptr;
+    }
+
+    /// move assignment
+    Tether & operator=(Tether && other) {
+        if (this == &other) GN_UNLIKELY return *this;
+        mSignal            = other.mSignal;
+        mDisconnFunc       = std::move(other.mDisconnFunc);
+        other.mSignal      = nullptr;
+        other.mDisconnFunc = nullptr;
+        return *this;
+    }
+
+    auto signal() const { return mSignal; }
+
+    void clear() {
+        if (mDisconnFunc) { mDisconnFunc(); }
+        mSignal      = nullptr;
+        mDisconnFunc = nullptr;
+    }
+
+private:
+    const internal::SignalBase * mSignal {};
+    std::function<void()>        mDisconnFunc;
+};
+
+///
+/// Base slot class. Derive your class from this, if you want automatic management of connections between signal and slot.
+///
+/// Example:
+/// ```
+/// class MySlot : public SlotBase {
+/// public:
+///     void mySlotMethod(int value) {
+///         std::cout << "Signal received: " << value << std::endl;
+///     }
+///     void foo(const MySignal & signal) {
+///         // The connection to the signal is now managed by this class and will get automatically disconnected when this class is destroyed.
+///         connectToSignal<&MySlot::mySlotMethod>(signal);
+///     }
+/// };
+///
+/// ```
 class SlotBase {
 protected:
-    SlotBase() {}
+    SlotBase() = default;
 
-    virtual ~SlotBase() {
-        // disconnect with all signals
-        for (SignalContainer::iterator i = mSignals.begin(); i != mSignals.end(); ++i) { (*i)->removeBaseSlotClass(*this); }
-        mSignals.clear();
+    virtual ~SlotBase() = default;
+
+    GN_NO_COPY(SlotBase);
+
+    // movable
+    SlotBase(SlotBase && other) {
+        auto lock = std::lock_guard(other.mLock);
+        mTethers  = std::move(other.mTethers);
+        other.mTethers.clear();
+    }
+
+    // move operator
+    SlotBase & operator=(SlotBase && other) {
+        if (this == &other) GN_UNLIKELY return *this;
+        std::scoped_lock lock(mLock, other.mLock);
+        mTethers = std::move(other.mTethers);
+        return *this;
     }
 
 public:
-    /** 返回与当前slot连接的信号数 */
-    size_t getNumSignals() const { return mSignals.size(); }
+    /// Make a managed connection to signal. The connection will be automatically disconnected when this slot is destructed.
+    template<auto FUNCTION, typename SIGNAL>
+    void connectToSignal(const SIGNAL & signal) {
+        auto lock = std::lock_guard(mLock);
+        if constexpr (std::is_member_function_pointer_v<decltype(FUNCTION)>) {
+            using class_type = typename internal::member_fn_traits<decltype(FUNCTION)>::class_type;
+            static_assert(std::is_base_of_v<SlotBase, class_type>, "FUNCTION must be a member function of the derived class of SlotBase");
+            class_type * classPtr = static_cast<class_type *>(this);
+            mTethers.push_back(signal.template connect<FUNCTION>(classPtr));
+        } else if constexpr (std::is_pointer_v<decltype(FUNCTION)> && std::is_function_v<std::remove_pointer_t<decltype(FUNCTION)>>) {
+            mTethers.push_back(signal.template connect<FUNCTION>());
+        } else {
+            static_assert(std::is_same_v<decltype(FUNCTION), void>, "FUNCTION must be a member function pointer or a function pointer or a function");
+        }
+    }
+
+    /// Explicitly disconnect the slot from specified signal.
+    void disconnectFromSignal(const internal::SignalBase & signal) const {
+        auto lock = std::lock_guard(mLock);
+        for (auto it = mTethers.begin(); it != mTethers.end();) {
+            if (it->signal() == &signal) {
+                it = mTethers.erase(it);
+            } else {
+                ++it;
+            }
+        }
+    }
+
+    void disconnectFromAllSignals() const {
+        auto lock = std::lock_guard(mLock);
+        mTethers.clear();
+    }
+
+    void manageTether(Tether && tether) {
+        auto lock = std::lock_guard(mLock);
+        mTethers.push_back(std::move(tether));
+    }
 
 private:
-    friend class detail::SignalBase;
-    typedef std::list<const detail::SignalBase *> SignalContainer;
-    mutable SignalContainer                       mSignals;
+    mutable std::list<Tether>    mTethers;
+    mutable std::recursive_mutex mLock;
 };
 
-inline void detail::SignalBase::connectToSlotClass(const SlotBase & slot) const { slot.mSignals.push_back(this); }
-inline void detail::SignalBase::disconnectFromSlotClass(const SlotBase & slot) const { slot.mSignals.remove(this); }
+template<class>
+class Signal; // undefined.
+
+template<typename RET, typename... PARAMS>
+class Signal<RET(PARAMS...)> : public internal::SignalBase {
+    typedef internal::delegate<RET(PARAMS...)> DelegateType;
+
+public:
+    Signal(): mControlBlock(std::make_shared<ControlBlock>()) {}
+    ~Signal() { mControlBlock.reset(); }
+
+    template<RET (*STATIC_FUNCTION)(PARAMS...)>
+    [[nodiscard]] Tether connect() const {
+        // TODO: prevent re-entrancy here?
+        auto lock = std::lock_guard(mControlBlock->mutex);
+        return addDelegate(DelegateType::template createFunction<STATIC_FUNCTION>());
+    }
+
+    template<auto MEMBER_FN, typename = std::enable_if_t<std::is_member_function_pointer_v<decltype(MEMBER_FN)>>>
+    [[nodiscard]] Tether connect(typename internal::member_fn_traits<decltype(MEMBER_FN)>::class_ptr_type object) const {
+        // TODO: prevent re-entrancy here?
+        typedef typename internal::member_fn_traits<decltype(MEMBER_FN)>::class_type ClassType;
+
+        auto lock = std::lock_guard(mControlBlock->mutex);
+        return addDelegate(DelegateType::template createMethod<ClassType, MEMBER_FN>(object));
+    }
+
+    // template<typename CLASS_, RET (CLASS_::*METHOD)(PARAMS...)>
+    // [[nodiscard]] Tether connect(CLASS_ * classPtr) const {
+    //     auto lock = std::lock_guard(mLock);
+    //     return addDelegate(DelegateType::template createMethod<CLASS_, METHOD>(classPtr));
+    // }
+
+    // template<typename CLASS_, RET (CLASS_::*METHOD)(PARAMS...) const>
+    // [[nodiscard]] Tether connect(const CLASS_ * classPtr) const {
+    //     auto lock = std::lock_guard(mLock);
+    //     return addDelegate(DelegateType::template createMethod<CLASS_, METHOD>(classPtr));
+    // }
+
+    // template<typename CLASS_, RET (CLASS_::*METHOD)(PARAMS...) volatile>
+    // [[nodiscard]] Tether connect(volatile CLASS_ * classPtr) const {
+    //     auto lock = std::lock_guard(mLock);
+    //     return addDelegate(DelegateType::template createMethod<CLASS_, METHOD>(classPtr));
+    // }
+
+    // template<typename CLASS_, RET (CLASS_::*METHOD)(PARAMS...) const volatile>
+    // [[nodiscard]] Tether connect(volatile CLASS_ const * classPtr) const {
+    //     auto lock = std::lock_guard(mLock);
+    //     return addDelegate(DelegateType::template createMethod<CLASS_, METHOD>(classPtr));
+    // }
+
+    /// this is simpler form of emit() that returns the return value of the last delegate.
+    template<typename... ARGS>
+    RET emit(ARGS &&... args) const {
+        auto lock = std::lock_guard(mControlBlock->mutex);
+        if constexpr (std::is_same_v<RET, void>) {
+            // For void return, all delegates get lvalue references to avoid moving rvalues multiple times
+            for (const auto & d : mControlBlock->delegates) { d(static_cast<std::remove_reference_t<ARGS> &>(args)...); }
+        } else {
+            if (mControlBlock->delegates.empty()) {
+                // Return default-constructed value - enables RVO (returning temporary)
+                return RET();
+            }
+            // For single delegate, forward arguments - enables move semantics for rvalues
+            if (mControlBlock->delegates.size() == 1) { return mControlBlock->delegates.front()(std::forward<ARGS>(args)...); }
+            // For multiple delegates: convert to lvalues to avoid moving rvalues multiple times.
+            // All delegates except the last receive lvalue references (safe for multiple calls).
+            // The last delegate gets forwarded arguments (can move if rvalues).
+            auto it   = mControlBlock->delegates.begin();
+            auto last = std::prev(mControlBlock->delegates.end());
+            for (; it != last; ++it) {
+                (void) (*it)(static_cast<std::remove_reference_t<ARGS> &>(args)...); // force lvalue refs
+            }
+            return (*last)(std::forward<ARGS>(args)...); // forward on last call
+        }
+    }
+
+    /// this is the operator form of emit().
+    template<typename... ARGS>
+    RET operator()(ARGS &&... args) const {
+        return emit(std::forward<ARGS>(args)...);
+    }
+
+private:
+    // Control block that keeps the Signal's data alive even if the Signal object is destroyed
+    struct ControlBlock {
+        std::recursive_mutex    mutex;
+        std::list<DelegateType> delegates;
+
+        ~ControlBlock() {
+            std::lock_guard<std::recursive_mutex> lock(mutex);
+            delegates.clear();
+        }
+    };
+
+    mutable std::shared_ptr<ControlBlock> mControlBlock;
+
+    Tether addDelegate(DelegateType && delegate) const {
+        // Note: We don't need to lock here because addDelegate is only called from connect()
+        auto iter = mControlBlock->delegates.emplace(mControlBlock->delegates.end(), std::move(delegate));
+
+        // Capture a weak_ptr to the control block so we can check if it's still alive
+        std::weak_ptr<ControlBlock> weakControl = mControlBlock;
+
+        return Tether(this, std::function<void()>([weakControl, iter]() {
+                          // Try to lock the weak_ptr. If successful, the control block (and thus the signal data) is still alive.
+                          // The lock() operation is atomic, so this prevents the race condition.
+                          // Once we have the shared_ptr, the control block is guaranteed to stay alive for the duration
+                          // of this lambda execution, even if the Signal object itself is destroyed.
+                          if (auto control = weakControl.lock()) {
+                              // Acquire the lock atomically - no window for another thread to destroy the signal
+                              // The shared_ptr ensures the control block stays alive, and the lock ensures exclusive access
+                              std::lock_guard<std::recursive_mutex> lock(control->mutex);
+                              // The control block is alive and we hold the lock, so we can safely erase the connection.
+                              // The iterator remains valid until we erase it, and we hold the lock so no other thread
+                              // can modify the list concurrently.
+                              control->delegates.erase(iter);
+                          }
+                          // If the weak_ptr cannot be locked, the control block (and signal) has been destroyed, so we do nothing.
+                      }));
+    }
+};
+
 } // namespace GN
-
-    ///
-    /// Signal/Slot parameter count
-    ///
-    #define GN_SIGSLOT_TEMPL_N 0
-    #include "sigslot.h"
-
-    #define GN_SIGSLOT_TEMPL_N 1
-    #include "sigslot.h"
-
-    #define GN_SIGSLOT_TEMPL_N 2
-    #include "sigslot.h"
-
-    #define GN_SIGSLOT_TEMPL_N 3
-    #include "sigslot.h"
-
-    #define GN_SIGSLOT_TEMPL_N 4
-    #include "sigslot.h"
 
 // *****************************************************************************
 //                                     EOF
