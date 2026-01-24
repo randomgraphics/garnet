@@ -25,7 +25,7 @@ struct IntegerArtifact : public Artifact {
 
     int value = 0;
 
-    IntegerArtifact(const StrA & name, uint64_t seq) : Artifact({TYPE, name}, seq) {}
+    IntegerArtifact(const StrA & name, uint64_t seq) : Artifact(Artifact::Identification{TYPE, name}, seq) {}
 };
 
 // Define an action to initialize an integer artifact
@@ -36,9 +36,7 @@ struct InitIntegerAction : public Action {
 
     static const Parameter output = { IntegerArtifact::TYPE, "result", "w" };
 
-    InitIntegerAction(const StrA & name, int value) : Action({TYPE, name}, seq) {
-
-    }
+    InitIntegerAction(const StrA & name, int value, uint64_t seq) : Action(Artifact::Identification{TYPE, name}, seq), initValue(value) {}
 
     // Define parameters: one output parameter
     DynaArray<const Parameter *> parameters() const override {
@@ -67,7 +65,7 @@ struct AddIntegersAction : public Action {
     static const Parameter input2 = { IntegerArtifact::TYPE, "input2", "r" };
     static const Parameter output = { IntegerArtifact::TYPE, "result", "w" };
 
-    AddIntegersAction(const StrA & name, uint64_t seq) : Action({TYPE, name}, seq) {}
+    AddIntegersAction(const StrA & name, uint64_t seq) : Action(Artifact::Identification{TYPE, name}, seq) {}
 
     // Define parameters: two inputs, one output
     DynaArray<const Parameter *> parameters() const override {
@@ -102,7 +100,7 @@ struct MultiplyIntegersAction : public Action {
     static const Parameter input2 = { IntegerArtifact::TYPE, "input2", "r" };
     static const Parameter output = { IntegerArtifact::TYPE, "result", "w" };
 
-    MultiplyIntegersAction(const StrA & name, uint64_t seq) : Action(TYPE, name, seq) {}
+    MultiplyIntegersAction(const StrA & name, uint64_t seq) : Action(Artifact::Identification{TYPE, name}, seq) {}
 
     // Define parameters: two inputs, one output
     DynaArray<const Parameter *> parameters() const override {

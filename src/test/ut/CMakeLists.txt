@@ -5,7 +5,7 @@ if (NOT Python3_FOUND)
     return()
 endif()
 
-file(GLOB sources base/*.cpp gfx/*.cpp)
+file(GLOB sources base/*.cpp gfx/*.cpp render-graph/*.cpp)
 
 add_custom_command(
     OUTPUT ut.cpp

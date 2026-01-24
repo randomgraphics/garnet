@@ -60,6 +60,7 @@ GN_add_source_folder(sources input PCH_SOURCE input/pch.cpp)
 GN_add_source_folder(sources util PCH_SOURCE util/pch.cpp)
 GN_add_source_folder(sources win PCH_SOURCE win/pch.cpp)
 GN_add_source_folder(sources render-graph)
+GN_add_source_folder(sources render-graph/action)
 
 # OpenGL GPU Sources
 if(GN_BUILD_HAS_OGL)
