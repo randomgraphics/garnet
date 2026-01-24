@@ -19,15 +19,6 @@
 
 namespace GN {
 namespace HeapMemory {
-///
-/// Allocate memory from heap. Can cross DLL boundary.
-///
-GN_API void * alloc(size_t sizeInBytes);
-
-///
-/// Re-allocate memory from heap. Can cross DLL boundary.
-///
-GN_API void * realloc(void * ptr, size_t sizeInBytes);
 
 ///
 /// Allocate aligned memory from heap. Can cross DLL boundary
@@ -35,14 +26,20 @@ GN_API void * realloc(void * ptr, size_t sizeInBytes);
 GN_API void * alignedAlloc(size_t sizeInBytes, size_t alignment);
 
 ///
-/// Re-allocate aligned memory from heap. Can cross DLL boundary
+/// Allocate memory from heap. Can cross DLL boundary.
 ///
-GN_API void * alignedRealloc(void * ptr, size_t sizeInBytes, size_t alignment);
+inline void * alloc(size_t sizeInBytes) { return HeapMemory::alignedAlloc(sizeInBytes, 1); }
 
 ///
-/// Free heap-allocated memory (aligned or unaligned). Can cross DLL boundary.
+/// Re-allocate memory from heap. Will respect the alignment of the original memory. Can cross DLL boundary.
+///
+GN_API void * realloc(void * ptr, size_t sizeInBytes);
+
+///
+/// Free heap-allocated memory allocated by alignedAlloc. Can cross DLL boundary.
 ///
 GN_API void dealloc(void * ptr);
+
 } // namespace HeapMemory
 } // namespace GN
 
@@ -149,6 +146,9 @@ struct RawHeapMemoryAllocator {
 
     /// Deallocate raw memory buffer.
     static inline void sDeallocate(void * ptr) { HeapMemory::dealloc(ptr); }
+
+    /// Reallocate raw memory from heap.
+    static inline void * sReallocate(void * ptr, size_t sizeInBytes) { return HeapMemory::realloc(ptr, sizeInBytes); }
 };
 
 ///
@@ -156,6 +156,7 @@ struct RawHeapMemoryAllocator {
 ///
 template<typename T, typename RAW_MEMORY_ALLOCATOR = RawHeapMemoryAllocator>
 struct CxxObjectAllocator {
+
     /// Allocate raw memory from heap. No calling constructors
     static inline T * sAllocate(size_t objectCount, size_t alignmentInBytes = DefaultMemoryAlignment<sizeof(T)>::VALUE) {
         return (T *) RAW_MEMORY_ALLOCATOR::sAllocate(objectCount * sizeof(T), alignmentInBytes);
@@ -187,12 +188,18 @@ struct CxxObjectAllocator {
 
     /// Inplace destruct a single object. No memory freeing.
     static inline void sDestruct(T * ptr) {
-        if constexpr (!std::is_pod<T>()) {
+        if constexpr (!std::is_trivially_destructible<T>()) {
             if (ptr) GN_LIKELY ptr->T::~T();
         } else {
             // do nothing to POD type.
             (void) ptr;
         }
+    }
+
+    /// Reallocate raw memory from heap. This method is allowed only when T is trivially copyable.
+    template<typename = std::enable_if<std::is_trivially_copyable_v<T>>>
+    static inline T * sReallocate(T * ptr, size_t objectCount) {
+        return (T *) RAW_MEMORY_ALLOCATOR::sReallocate(ptr, objectCount * sizeof(T));
     }
 };
 

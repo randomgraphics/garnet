@@ -174,7 +174,6 @@ public:
     //@{
 
     void connectToInput();
-    void disconnectFromInput();
 
     void setTranslationSpeed(float s) { mMoveSpeed = s; }
 
@@ -267,7 +266,6 @@ public:
     //@{
 
     void connectToInput();
-    void disconnectFromInput();
 
     //@}
 

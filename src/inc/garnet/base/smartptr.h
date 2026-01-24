@@ -6,6 +6,8 @@
 /// \author  chen@@chenli-homepc (2011.4.9)
 // *****************************************************************************
 
+#include <type_traits>
+
 namespace GN {
 /// Reference counted smart pointer. Support both strong and weak reference.
 /// Note that behavior  of this class is different than the Windows COM pointer:
@@ -366,6 +368,8 @@ inline AutoRef<T> referenceTo(T * ptr) {
 // -------------------------------------------------------------------------
 template<typename X>
 class WeakRef {
+    static_assert(std::is_base_of_v<RefCounter, X>, "WeakRef<X> requires X to inherit from RefCounter");
+
     typedef X * XPTR;
     typedef X & XREF;
 

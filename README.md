@@ -19,11 +19,9 @@ Garnet 3D is lightweight crossplatform 3D rendering library. It supports Windows
 
 Build on Windows requires manual install of the following depencencies:
 
-- Visual Studio 2022
-- Git (with LFS support)
-- CMake (3.16.3+)
-- Python 3.8+ with pip
-  - also needs termcolor package: `python3.exe -m pip install --upgrade termcolor`
+- Visual Studio 2026 (with C++ game development component installed)
+- CMake 4.2+ (required to work with VS2026)
+- Python 3.8+
 - Vulkan SDK
 - Qt6 (optional)
 

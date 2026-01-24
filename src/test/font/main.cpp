@@ -127,12 +127,12 @@ int run(Gpu & gpu) {
     return 0;
 }
 
-struct InputInitiator {
+struct InputInitiator : SlotBase {
     InputInitiator(Gpu & r) {
         initializeInputSystem(InputAPI::NATIVE);
         const DispDesc & dd = r.getDispDesc();
         gInput.attachToWindow(dd.displayHandle, dd.windowHandle);
-        gInput.sigKeyPress.connect(onKeyPress);
+        connectToSignal<&onKeyPress>(gInput.sigKeyPress);
     }
 
     ~InputInitiator() { shutdownInputSystem(); }

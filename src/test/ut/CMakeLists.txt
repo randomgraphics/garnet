@@ -16,4 +16,6 @@ add_executable(GNtest-unit-tests ut.cpp testCommon.cpp testCommon.h)
 target_link_libraries(GNtest-unit-tests PRIVATE GNcore GNextern)
 if (IS_GNUC)
     target_compile_options(GNtest-unit-tests PRIVATE -Wno-ignored-qualifiers -Wno-sign-compare)
+elseif (MSVC)
+    target_compile_options(GNtest-unit-tests PRIVATE /bigobj) # required for profile and release builds.
 endif()

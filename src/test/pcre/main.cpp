@@ -18,7 +18,7 @@ int main(int argc, const char * argv[]) {
     pcrecpp::RE         re(pattern);
     const std::string & err = re.error();
     if (!err.empty()) {
-        GN_ERROR(sLogger)(err.c_str());
+        GN_ERROR(sLogger)("{}", err);
         return -1;
     }
 

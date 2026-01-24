@@ -29,10 +29,7 @@ public:
         clear();
         mCamera.connectToInput();
     }
-    virtual ~SimpleShadowMap() {
-        quit();
-        mCamera.disconnectFromInput();
-    }
+    virtual ~SimpleShadowMap() { quit(); }
     //@}
 
     // ********************************

@@ -58,6 +58,8 @@ private:
         TextureItem();
         ~TextureItem();
 
+        GN_DEFAULT_MOVE(TextureItem);
+
         void setResource(Impl & owner, uint32_t effectParameterIndex, TextureResource *);
 
         const AutoRef<TextureResource> & getResource() const { return mResource; }
@@ -80,6 +82,8 @@ private:
     public:
         UniformItem();
         ~UniformItem();
+
+        GN_DEFAULT_MOVE(UniformItem);
 
         void setResource(Impl & owner, uint32_t effectParameterIndex, UniformResource *);
 

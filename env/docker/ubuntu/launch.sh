@@ -92,7 +92,7 @@ if [ "${gpu}" == "nvidia" ]; then
 fi
 
 echo
-echo "Launching PhysRay Docker environment..."
+echo "Launching garnet Docker environment..."
 echo "  HOST        = $(hostname)"
 echo "  USER        = $(whoami)"
 echo "  HOME        = ${HOME}"
@@ -102,10 +102,10 @@ echo "  GPU         = ${gpu}"
 echo "  env_params  = ${env_params}"
 echo
 
-# Check if the docker image exists. If not, build it.
+# Check if the docker image exists. If not, retrieve it from docker hub.
 if [[ "$(docker images -q $image 2> /dev/null)" == "" ]]; then
-    echo "Docker image ${image} not found. Lets' build it."
-    $dir/build.sh
+    echo "Docker image ${image} not found. Lets' retrieve it from docker hub."
+    docker pull $image
 else
     echo "Docker image found: ${image}"
 fi

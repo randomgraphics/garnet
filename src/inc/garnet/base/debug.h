@@ -107,7 +107,7 @@
         intptr_t rr = (intptr_t) (func);                                        \
         if (0 == rr) {                                                          \
             static GN::Logger * sMswLogger = GN::getLogger("GN.base.MSWError"); \
-            GN_ERROR(sMswLogger)(::GN::getWin32LastErrorInfo());                \
+            GN_ERROR(sMswLogger)("{}", ::GN::getWin32LastErrorInfo());          \
             something                                                           \
         }                                                                       \
     } else                                                                      \
@@ -138,7 +138,7 @@
             HRESULT hr = func;                                                   \
             if (FAILED(hr)) {                                                    \
                 static GN::Logger * sDxLogger = GN::getLogger("GN.gfx.DXError"); \
-                GN_ERROR(sDxLogger)(GN::getDXErrorInfo(hr));                     \
+                GN_ERROR(sDxLogger)("{}", GN::getDXErrorInfo(hr));               \
                 something                                                        \
             }                                                                    \
         } else                                                                   \

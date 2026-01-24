@@ -405,13 +405,12 @@ void GN::gfx::ModelResource::Impl::TextureItem::setResource(Impl & owner, uint32
     if (mResource == newTexture) return;
 
     // disconnect from old handle
-    if (mResource) mResource->sigTextureChanged.disconnect(this);
+    disconnectFromAllSignals();
 
     Texture * tex;
     if (newTexture) {
         // connect to new handle
-        newTexture->sigTextureChanged.connect(this, &TextureItem::onTextureChange);
-
+        connectToSignal<&TextureItem::onTextureChange>(newTexture->sigTextureChanged);
         tex = newTexture->texture();
     } else {
         tex = NULL;
@@ -483,13 +482,12 @@ void GN::gfx::ModelResource::Impl::UniformItem::setResource(Impl & owner, uint32
     if (mResource == newUniform) return;
 
     // disconnect from old handle
-    if (mResource) mResource->sigUniformChanged.disconnect(this);
+    disconnectFromAllSignals();
 
     Uniform * uniform;
     if (newUniform) {
         // connect to new handle
-        newUniform->sigUniformChanged.connect(this, &UniformItem::onUniformChange);
-
+        connectToSignal<&UniformItem::onUniformChange>(newUniform->sigUniformChanged);
         uniform = newUniform->uniform();
     } else {
         uniform = NULL;
@@ -691,10 +689,10 @@ bool GN::gfx::ModelResource::Impl::setMeshResource(GpuResource * resource, const
 
     MeshResource * mesh = GpuResource::castTo<MeshResource>(resource);
 
-    // bind mesh signal with the old mesh
+    // bind mesh signal with the new mesh
     if (mMeshResource != mesh) {
-        if (mMeshResource) mMeshResource->sigMeshChanged.disconnect(this);
-        if (mesh) mesh->sigMeshChanged.connect(this, &Impl::onMeshChanged);
+        if (mMeshResource) disconnectFromSignal(mMeshResource->sigMeshChanged);
+        if (mesh) connectToSignal<&Impl::onMeshChanged>(mesh->sigMeshChanged);
     }
 
     // update mesh resource pointer
@@ -740,8 +738,8 @@ bool GN::gfx::ModelResource::Impl::setEffectResource(GpuResource * resource) {
 
     // rebind changing signal
     if (effect != mEffectResource) {
-        if (mEffectResource) mEffectResource->sigEffectChanged.disconnect(this);
-        if (effect) effect->sigEffectChanged.connect(this, &Impl::onEffectChanged);
+        if (mEffectResource) disconnectFromSignal(mEffectResource->sigEffectChanged);
+        if (effect) connectToSignal<&Impl::onEffectChanged>(effect->sigEffectChanged);
     }
 
     // update effect resource pointer
@@ -975,16 +973,9 @@ bool GN::gfx::ModelResource::Impl::fromDesc(const ModelResourceDesc & desc) {
 //
 // -----------------------------------------------------------------------------
 void GN::gfx::ModelResource::Impl::clear() {
-    if (mEffectResource) {
-        mEffectResource->sigEffectChanged.disconnect(this);
-        mEffectResource.clear();
-    }
-
-    if (mMeshResource) {
-        mMeshResource->sigMeshChanged.disconnect(this);
-        mMeshResource.clear();
-    }
-
+    disconnectFromAllSignals();
+    mEffectResource.clear();
+    mMeshResource.clear();
     mPasses.clear();
     mTextures.clear();
     mUniforms.clear();

@@ -44,13 +44,12 @@ public:
 
     typedef RES Resource; ///< resource type
 
-    typedef Delegate3<bool, RES &, const StrA &, void *> Creator; ///< Resource creation functor
+    typedef std::function<bool(RES &, const StrA &, void *)> Creator; ///< Resource creation functor
 
-    typedef Delegate2<void, RES &, void *> Deletor; ///< Resource deletion functor
+    typedef std::function<void(RES &, void *)> Deletor; ///< Resource deletion functor
 
-    typedef Delegate2<void, StrA &, const StrA &> NameResolver; ///< Resource name resolver.
-
-    typedef Delegate1<bool, const StrA &> NameChecker; ///< Resource name checker.
+    typedef std::function<void(StrA &, const StrA &)> NameResolver; ///< Resource name resolver.
+    typedef std::function<bool(const StrA &)>         NameChecker;  ///< Resource name checker.
 
     ///
     /// Default constructor
@@ -555,7 +554,7 @@ private:
         if (mNullInstance) {
             if (mNullDeletor) {
                 mNullDeletor(*mNullInstance, 0);
-                mNullDeletor.clear();
+                mNullDeletor = nullptr;
             }
             delete mNullInstance;
             mNullInstance = 0;
@@ -603,12 +602,12 @@ public:
         TS_ASSERT(!rm.getResource("2", false));
 
         // default nullor failure
-        rm.setNullor(GN::makeDelegate(&failedCreator));
+        rm.setNullor(&failedCreator);
         TS_ASSERT_EQUALS(0, rm.getResource("1"));
         TS_ASSERT_EQUALS(0, rm.getResource("2", false));
 
         // default nullor success
-        rm.setNullor(GN::makeDelegate(&nullCreator));
+        rm.setNullor(&nullCreator);
         TS_ASSERT_EQUALS(-1, rm.getResource("1"));
         TS_ASSERT_EQUALS(-1, rm.getResource("2", false));
         TS_ASSERT_EQUALS(-1, rm.getResource("2"));
@@ -619,11 +618,11 @@ public:
         ResMgr rm;
 
         // per-resource nullor failed
-        TS_ASSERT(rm.addResource("1", 0, ResMgr::Creator(), GN::makeDelegate(&failedCreator)));
+        TS_ASSERT(rm.addResource("1", 0, ResMgr::Creator(), &failedCreator));
         TS_ASSERT_EQUALS(0, rm.getResource("1"));
 
         // per-resource nullor success
-        TS_ASSERT(rm.addResource("2", 0, ResMgr::Creator(), GN::makeDelegate(&nullCreator)));
+        TS_ASSERT(rm.addResource("2", 0, ResMgr::Creator(), &nullCreator));
         TS_ASSERT_EQUALS(-1, rm.getResource("2"));
     }
 
@@ -634,12 +633,12 @@ public:
         TS_ASSERT(rm.addResource("1"));
 
         // default nullor failure
-        rm.setCreator(GN::makeDelegate(&failedCreator));
+        rm.setCreator(&failedCreator);
         TS_ASSERT_EQUALS(0, rm.getResource("1"));
 
         // default nullor success
         rm.disposeAll();
-        rm.setCreator(GN::makeDelegate(&defCreator));
+        rm.setCreator(&defCreator);
         TS_ASSERT_EQUALS(1, rm.getResource("1"));
     }
 
@@ -652,7 +651,7 @@ public:
     void testOverrideExistingResource() {
         ResMgr rm;
 
-        TS_ASSERT(rm.addResource("1", 0, GN::makeDelegate(&defCreator), ResMgr::Creator(), false));
+        TS_ASSERT(rm.addResource("1", 0, &defCreator, ResMgr::Creator(), false));
         TS_ASSERT_EQUALS(1, rm.getResource("1"));
 
         // default is not overriding
@@ -660,7 +659,7 @@ public:
         TS_ASSERT_EQUALS(1, rm.getResource("1"));
 
         // override existing
-        TS_ASSERT(rm.addResource("1", 0, GN::makeDelegate(&nullCreator), ResMgr::Creator(), true));
+        TS_ASSERT(rm.addResource("1", 0, &nullCreator, ResMgr::Creator(), true));
         TS_ASSERT_EQUALS(-1, rm.getResource("1"));
     }
 
@@ -682,9 +681,9 @@ public:
 
         // name -> handle
         TS_ASSERT_EQUALS(h1, rm.getResourceHandle("1"));
-        TS_ASSERT_EQUALS(0, rm.getResourceHandle("2", false));
+        TS_ASSERT_EQUALS(0u, rm.getResourceHandle("2", false));
         TS_ASSERT_DIFFERS(h1, rm.getResourceHandle("2"));
-        TS_ASSERT_DIFFERS(0, rm.getResourceHandle("2"));
+        TS_ASSERT_DIFFERS(0u, rm.getResourceHandle("2"));
         TS_ASSERT_EQUALS(rm.getResourceHandle("2"), rm.getResourceHandle("2"));
     }
 

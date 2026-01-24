@@ -1074,7 +1074,7 @@ static bool sBuildNodeTree(AseSceneInternal & scene) {
         s += StrA::format("{} : bbox_pos({},{},{}), bbox_size({},{},{})", n->node.name.data(), n->node.selfbbox.pos().x, n->node.selfbbox.pos().y,
                           n->node.selfbbox.pos().z, n->node.selfbbox.extend().x, n->node.selfbbox.extend().y, n->node.selfbbox.extend().z);
 
-        GN_VERBOSE(sLogger)(s.data());
+        GN_VERBOSE(sLogger)("{}", s.data());
 
         // next node
         n = ttpre.next(n, &level);

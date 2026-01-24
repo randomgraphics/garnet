@@ -348,20 +348,20 @@ public:
         return mPtr;
     }
 
-    ///
-    /// NOT operator
-    ///
-    bool operator!() const throw() { return mPtr == NULL; }
+    // ///
+    // /// NOT operator
+    // ///
+    // bool operator!() const throw() { return mPtr == NULL; }
 
-    ///
-    /// LESS operator
-    ///
-    bool operator<(T * pT) const throw() { return mPtr < pT; }
+    // ///
+    // /// LESS operator
+    // ///
+    // bool operator<(T * pT) const throw() { return mPtr < pT; }
 
-    ///
-    /// EQ operator
-    ///
-    bool operator==(T * pT) const throw() { return mPtr == pT; }
+    // ///
+    // /// EQ operator
+    // ///
+    // bool operator==(T * pT) const throw() { return mPtr == pT; }
 
     ///
     /// Is empty pointer?
@@ -436,7 +436,7 @@ public:
         *ppResult = NULL;
 
         if (mPtr) {
-            return mPtr->QueryInterface<T2>(ppResult);
+            return mPtr->QueryInterface(__uuidof(T2), (void **) ppResult);
         } else {
             return 0x80000005; // E_POINTER
         }
@@ -449,7 +449,7 @@ public:
     AutoComPtr<T2> as() throw() {
         auto           lock = std::lock_guard(mutex());
         AutoComPtr<T2> result;
-        if (mPtr) mPtr->QueryInterface<T2>(&result);
+        if (mPtr) mPtr->QueryInterface(__uuidof(T2), (void **) &result);
         return result;
     }
 #endif
