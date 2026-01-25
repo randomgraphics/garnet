@@ -1,4 +1,4 @@
-#include "../../inc/garnet/GNrender-graph.h"
+#include <garnet/GNrender-graph.h>
 
 namespace GN::rg {
 
@@ -11,7 +11,7 @@ namespace GN::rg {
 // 'O' or 'o' = optional parameter (not required)
 // 'R' or 'r' = reading access (input parameter)
 // 'W' or 'w' = writing access (output parameter)
-Action::Parameter::Parameter(const Guid & type, const StrA & name, const char * options)
+GN_API Action::Parameter::Parameter(const Guid & type, const StrA & name, const char * options)
     : type(type)
     , name(name)
 {
@@ -37,6 +37,9 @@ Action::Parameter::Parameter(const Guid & type, const StrA & name, const char * 
     }
 }
 
-
+GN_API ArtifactDatabase * createArtifactDatabase() {
+    // TODO: implement artifact database
+    return nullptr;
+}
 
 } // namespace GN::rg

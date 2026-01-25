@@ -16,7 +16,7 @@ public:
     }
 };
 
-RenderGraph * RenderGraph::create() {
+GN_API RenderGraph * createRenderGraph() {
     return new RenderGraphImpl();
 }
 

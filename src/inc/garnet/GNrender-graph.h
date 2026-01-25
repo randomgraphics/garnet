@@ -19,7 +19,7 @@ namespace GN::rg {
 //     - submit and execute all rendercing command lists
 
 /// Artifact represents an atomic resource that can be used as input or output of a task.
-struct Artifact : public RefCounter {
+struct GN_API Artifact : public RefCounter {
     struct Identification {
         const Guid & type;
         StrA         name;
@@ -109,8 +109,6 @@ protected:
 };
 
 struct RenderGraph {
-    static RenderGraph * create();
-
     /// Schedule a new task. Returns pointer to the task. MUlti thread safe.
     /// All task pointers are invalidated when execute() is called.
     virtual Task * schedule() = 0;
@@ -121,6 +119,12 @@ struct RenderGraph {
 
     virtual ~RenderGraph() = default;
 };
+
+/// Create a new render graph instance
+GN_API RenderGraph * createRenderGraph();
+
+/// Create a new artifact database instance
+GN_API ArtifactDatabase * createArtifactDatabase();
 
 // /// Texture represents a traditional graphics texture with full mipmap chain
 // struct Texture : public Artifact {

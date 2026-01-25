@@ -162,7 +162,7 @@ class RenderGraphTest : public CxxTest::TestSuite {
 public:
     void testRenderGraphArithmetic() {
         // Create a render graph instance
-        GN::rg::RenderGraph * renderGraph = GN::rg::RenderGraph::create();
+        GN::rg::RenderGraph * renderGraph = GN::rg::createRenderGraph();
         TS_ASSERT(renderGraph != nullptr);
 
         // Register our custom artifact and action types
@@ -184,61 +184,55 @@ public:
 
         // Task 1: Initialize values (1, 2, 3)
         {
-            GN::rg::Task initTask;
-            initTask.name = "initialize_values";
+            GN::rg::Task * initTask = renderGraph->schedule();
+            TS_ASSERT(initTask != nullptr);
+            initTask->name = "initialize_values";
 
             // Shard 1: Initialize 'one' to 1
             GN::rg::Task::Shard initOneShard;
             initOneShard.action = GN::rg::createAction<GN::rg::InitIntegerAction>("init_one", 1);
             initOneShard.arguments["output"] = one;
-            initTask.shards.append(initOneShard);
+            initTask->shards.append(initOneShard);
 
             // Shard 2: Initialize 'two' to 2
             GN::rg::Task::Shard initTwoShard;
             initTwoShard.action = GN::rg::createAction<GN::rg::InitIntegerAction>("init_two", 2);
             initTwoShard.arguments["output"] = two;
-            initTask.shards.append(initTwoShard);
+            initTask->shards.append(initTwoShard);
 
             // Shard 3: Initialize 'three' to 3
             GN::rg::Task::Shard initThreeShard;
             initThreeShard.action = GN::rg::createAction<GN::rg::InitIntegerAction>("init_three", 3);
             initThreeShard.arguments["output"] = three;
-            initTask.shards.append(initThreeShard);
-
-            // Note: schedule() API takes no parameters in current implementation
-            // renderGraph->schedule(initTask);
+            initTask->shards.append(initThreeShard);
         }
 
         // Task 2: Compute sum = 1 + 2
         {
-            GN::rg::Task addTask;
-            addTask.name = "compute_sum";
+            GN::rg::Task * addTask = renderGraph->schedule();
+            TS_ASSERT(addTask != nullptr);
+            addTask->name = "compute_sum";
 
             GN::rg::Task::Shard addShard;
             addShard.action = GN::rg::createAction<GN::rg::AddIntegersAction>("add_1_2");
             addShard.arguments["input1"] = one;
             addShard.arguments["input2"] = two;
             addShard.arguments["output"] = sum;
-            addTask.shards.append(addShard);
-
-            // Note: schedule() API takes no parameters in current implementation
-            // renderGraph->schedule(addTask);
+            addTask->shards.append(addShard);
         }
 
         // Task 3: Compute result = 3 * sum
         {
-            GN::rg::Task multiplyTask;
-            multiplyTask.name = "compute_result";
+            GN::rg::Task * multiplyTask = renderGraph->schedule();
+            TS_ASSERT(multiplyTask != nullptr);
+            multiplyTask->name = "compute_result";
 
             GN::rg::Task::Shard multiplyShard;
             multiplyShard.action = GN::rg::createAction<GN::rg::MultiplyIntegersAction>("multiply_3_sum");
             multiplyShard.arguments["input1"] = three;
             multiplyShard.arguments["input2"] = sum;
             multiplyShard.arguments["output"] = result;
-            multiplyTask.shards.append(multiplyShard);
-
-            // Note: schedule() API takes no parameters in current implementation
-            // renderGraph->schedule(multiplyTask);
+            multiplyTask->shards.append(multiplyShard);
         }
 
         // Execute all scheduled tasks
