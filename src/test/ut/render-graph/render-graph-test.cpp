@@ -11,6 +11,7 @@
  * A full implementation would require the complete GN library.
  */
 
+#include "../testCommon.h"
 #include <garnet/GNrender-graph.h>
 
 // ============================================================================
@@ -131,11 +132,14 @@ struct MultiplyIntegersAction : public Action {
 // TEST EXECUTION FLOW
 // ============================================================================
 
-int testRenderGraphArithmetic() {
-    // Create a render graph instance
-    std::unique_ptr<RenderGraph> renderGraph = RenderGraph::create();
+class RenderGraphTest : public CxxTest::TestSuite {
+public:
+    void testRenderGraphArithmetic() {
+        // Create a render graph instance
+        std::unique_ptr<RenderGraph> renderGraph = RenderGraph::create();
+        TS_ASSERT(renderGraph != nullptr);
 
-    // Register our custom artifact and action types
+        // Register our custom artifact and action types
     renderGraph->registerArtifactType(IntegerArtifact::TYPE,
         [](const StrA & name, uint64_t sequence) -> AutoRef<Artifact> {
             return new IntegerArtifact(name, sequence);
@@ -160,6 +164,13 @@ int testRenderGraphArithmetic() {
     AutoRef<Artifact> three = renderGraph->create({"three", IntegerArtifact::TYPE});
     AutoRef<Artifact> sum = renderGraph->create({"sum", IntegerArtifact::TYPE});
     AutoRef<Artifact> result = renderGraph->create({"result", IntegerArtifact::TYPE});
+    
+    // Verify artifacts are created
+    TS_ASSERT(one != nullptr);
+    TS_ASSERT(two != nullptr);
+    TS_ASSERT(three != nullptr);
+    TS_ASSERT(sum != nullptr);
+    TS_ASSERT(result != nullptr);
 
     // Task 1: Initialize values (1, 2, 3)
     {
@@ -215,12 +226,26 @@ int testRenderGraphArithmetic() {
     }
 
     // Execute all scheduled tasks
-    renderGraph->execute();
+    Action::ExecutionResult execResult = renderGraph->execute();
+    TS_ASSERT_EQUALS(execResult, Action::PASSED);
 
     // Verify result
     IntegerArtifact * resultArtifact = static_cast<IntegerArtifact *>(result.get());
+    TS_ASSERT(resultArtifact != nullptr);
     TS_ASSERT_EQUALS(resultArtifact->value, 9);
-}
+    
+    // Verify intermediate values are correct
+    IntegerArtifact * oneArtifact = static_cast<IntegerArtifact *>(one.get());
+    IntegerArtifact * twoArtifact = static_cast<IntegerArtifact *>(two.get());
+    IntegerArtifact * threeArtifact = static_cast<IntegerArtifact *>(three.get());
+    IntegerArtifact * sumArtifact = static_cast<IntegerArtifact *>(sum.get());
+    
+    TS_ASSERT_EQUALS(oneArtifact->value, 1);
+    TS_ASSERT_EQUALS(twoArtifact->value, 2);
+    TS_ASSERT_EQUALS(threeArtifact->value, 3);
+    TS_ASSERT_EQUALS(sumArtifact->value, 3);
+    }
+};
 
 } // namespace GN::rg
 
