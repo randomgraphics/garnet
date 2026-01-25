@@ -43,9 +43,11 @@ protected:
 
 struct ArtifactDatabase {
     virtual void registerArtifactType(const Guid & type, std::function<AutoRef<Artifact>(const StrA & name, uint64_t sequence)> && creator) = 0;
-    virtual AutoRef<Artifact> create(const Artifact::Identification &) = 0;
+    virtual AutoRef<Artifact> create(const Artifact::Identification &, bool returnExisting = false) = 0;
     virtual AutoRef<Artifact> search(const Artifact::Identification &) = 0;
     virtual AutoRef<Artifact> search(uint64_t) = 0;
+    virtual bool erase(const Artifact::Identification &) = 0;
+    virtual bool erase(uint64_t sequence) = 0;
 };
 
 /// Parameters for creating an artifact database
