@@ -1587,6 +1587,24 @@ struct fmt::formatter<GN::StrW> {
     }
 };
 
+// Specialize std::hash for StrA and StrW to support std::unordered_map
+namespace std {
+template<>
+struct hash<GN::StrA> {
+    size_t operator()(const GN::StrA & s) const {
+        return (size_t)s.hash();
+    }
+};
+template<>
+struct hash<GN::StrW> {
+    size_t operator()(const GN::StrW & s) const {
+        return (size_t)s.hash();
+    }
+};
+} // namespace std
+    
+    
+
 // *****************************************************************************
 //                 End of string.h
 // *****************************************************************************

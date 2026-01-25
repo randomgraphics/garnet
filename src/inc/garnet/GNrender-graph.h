@@ -48,6 +48,7 @@ struct ArtifactDatabase {
     virtual AutoRef<Artifact> search(uint64_t) = 0;
 };
 
+/// Base class of all actions
 struct Action : public Artifact {
     struct Parameter {
         const Guid & type; // type of the parameter.
@@ -75,10 +76,14 @@ struct Action : public Artifact {
     virtual SafeArrayAccessor<const Parameter> parameters() const = 0;
 
     /// Execute the action with the given arguments
-    virtual ExecutionResult execute(const SafeArrayAccessor<const Artifact> & arguments) = 0;
+    virtual ExecutionResult execute(SafeArrayAccessor<Artifact> arguments) = 0;
+
+protected:
+    /// Inherit constructor from Artifact
+    using Artifact::Artifact;
 };
 
-struct Task : Artifact {
+struct Task {
     struct Shard {
         AutoRef<Action> action;
         std::unordered_map<StrA, AutoRef<Artifact>> arguments;
@@ -94,6 +99,13 @@ struct Task : Artifact {
     /// global dependencies of the task. Each element in the array
     /// is the sequence number of the task that this task depends on.
     DynaArray<Task *> dependencies;
+
+protected:
+    /// Constructor for Task
+    Task() = default;
+    
+    /// Destructor for Task
+    ~Task() = default;
 };
 
 struct RenderGraph {
@@ -106,6 +118,8 @@ struct RenderGraph {
     /// Execute all scheduled tasks. Once the execution is complete,
     /// The render graph is reset to initial state and ready to schedule more tasks.
     virtual Action::ExecutionResult execute() = 0;
+
+    virtual ~RenderGraph() = default;
 };
 
 // /// Texture represents a traditional graphics texture with full mipmap chain
