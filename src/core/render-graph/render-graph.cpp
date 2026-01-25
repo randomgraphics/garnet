@@ -16,7 +16,8 @@ public:
     }
 };
 
-GN_API RenderGraph * createRenderGraph() {
+GN_API RenderGraph * createRenderGraph(const CreateRenderGraphParams & params) {
+    (void)params; // unused for now
     return new RenderGraphImpl();
 }
 

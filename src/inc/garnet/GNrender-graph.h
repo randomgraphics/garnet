@@ -48,6 +48,15 @@ struct ArtifactDatabase {
     virtual AutoRef<Artifact> search(uint64_t) = 0;
 };
 
+/// Parameters for creating an artifact database
+struct CreateArtifactDatabaseParams {
+    // Empty for now, can be expanded later
+};
+
+/// Create a new artifact database instance
+GN_API ArtifactDatabase * createArtifactDatabase(const CreateArtifactDatabaseParams & params);
+
+
 /// Base class of all actions
 struct Action : public Artifact {
     struct Parameter {
@@ -120,11 +129,13 @@ struct RenderGraph {
     virtual ~RenderGraph() = default;
 };
 
-/// Create a new render graph instance
-GN_API RenderGraph * createRenderGraph();
+/// Parameters for creating a render graph
+struct CreateRenderGraphParams {
+    // Empty for now, can be expanded later
+};
 
-/// Create a new artifact database instance
-GN_API ArtifactDatabase * createArtifactDatabase();
+/// Create a new render graph instance
+GN_API RenderGraph * createRenderGraph(const CreateRenderGraphParams & params);
 
 // /// Texture represents a traditional graphics texture with full mipmap chain
 // struct Texture : public Artifact {

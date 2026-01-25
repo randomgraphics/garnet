@@ -37,7 +37,8 @@ GN_API Action::Parameter::Parameter(const Guid & type, const StrA & name, const 
     }
 }
 
-GN_API ArtifactDatabase * createArtifactDatabase() {
+GN_API ArtifactDatabase * createArtifactDatabase(const CreateArtifactDatabaseParams & params) {
+    (void)params; // unused for now
     // TODO: implement artifact database
     return nullptr;
 }

@@ -162,7 +162,8 @@ class RenderGraphTest : public CxxTest::TestSuite {
 public:
     void testRenderGraphArithmetic() {
         // Create a render graph instance
-        GN::rg::RenderGraph * renderGraph = GN::rg::createRenderGraph();
+        GN::rg::CreateRenderGraphParams params;
+        GN::rg::RenderGraph * renderGraph = GN::rg::createRenderGraph(params);
         TS_ASSERT(renderGraph != nullptr);
 
         // Register our custom artifact and action types
