@@ -98,7 +98,6 @@ struct Task {
     struct Shard {
         AutoRef<Action> action;
         std::unordered_map<StrA, AutoRef<Artifact>> arguments;
-        DynaArray<Task *> dependencies; // dependencies of the shard.
     };
 
     /// name of the task. doesn't have to be unique. for logging and debugging.
@@ -120,13 +119,28 @@ protected:
 };
 
 struct RenderGraph {
+    /// Parameters for the execution.
+    struct ExecutionParams {
+        /// Set to true to generate debug statistics.
+        bool debug = false;
+    };
+
+    /// Result of the execution.
+    struct ExecutionResult {
+        Action::ExecutionResult result;
+
+        // The detailed stats of the execution. It contains full dump of
+        // execution status of each tasks and shards.
+        StrA debugStats;
+    };
+
     /// Schedule a new task. Returns pointer to the task. MUlti thread safe.
     /// All task pointers are invalidated when execute() is called.
     virtual Task * schedule() = 0;
 
     /// Execute all scheduled tasks. Once the execution is complete,
     /// The render graph is reset to initial state and ready to schedule more tasks.
-    virtual Action::ExecutionResult execute() = 0;
+    virtual ExecutionResult execute(const ExecutionParams & params) = 0;
 
     virtual ~RenderGraph() = default;
 };

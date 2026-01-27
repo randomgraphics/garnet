@@ -237,8 +237,10 @@ public:
         }
 
         // Execute all scheduled tasks
-        GN::rg::Action::ExecutionResult execResult = renderGraph->execute();
-        TS_ASSERT_EQUALS(execResult, GN::rg::Action::PASSED);
+        GN::rg::RenderGraph::ExecutionParams execParams;
+        execParams.debug = false;
+        GN::rg::RenderGraph::ExecutionResult execResult = renderGraph->execute(execParams);
+        TS_ASSERT_EQUALS(execResult.result, GN::rg::Action::PASSED);
 
         // Verify result
         GN::rg::IntegerArtifact * resultArtifact = static_cast<GN::rg::IntegerArtifact *>(result.get());
