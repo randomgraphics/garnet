@@ -36,30 +36,34 @@ struct InitIntegerAction : public Action {
     static inline const Guid TYPE = {0x11111111, 0x2222, 0x3333, {0x44, 0x44, 0x55, 0x55, 0x66, 0x66, 0x77, 0x77}};
 
     int initValue;
-    static Parameter outputParam;
 
     InitIntegerAction(const StrA & name, int value, uint64_t seq) : Action(Artifact::Identification{TYPE, name}, seq), initValue(value) {}
 
     // Define parameters: one output parameter
-    SafeArrayAccessor<const Parameter> parameters() const override {
-        return SafeArrayAccessor<const Parameter>(const_cast<Parameter*>(&outputParam), 1);
+    const std::unordered_map<StrA, const Parameter> & parameters() const override {
+        static const std::unordered_map<StrA, const Parameter> params = {
+            {"output", Parameter(IntegerArtifact::TYPE, "w")}
+        };
+        return params;
     }
 
     // Execute: set the output artifact's value
-    ExecutionResult execute(SafeArrayAccessor<Artifact> args) override {
-        // Verify arguments are correctly assigned (caller has verified size and type)
-        TS_ASSERT_EQUALS(args.size(), 1);
+    ExecutionResult execute(const std::unordered_map<StrA, AutoRef<Artifact>> & args) override {
+        // Look up output argument by name
+        auto outputIt = args.find("output");
+        TS_ASSERT(outputIt != args.end());
+        TS_ASSERT(outputIt->second != nullptr);
         
-        auto output_artifact = static_cast<IntegerArtifact*>(&args[0]);
+        auto output_artifact = static_cast<IntegerArtifact*>(outputIt->second.get());
         TS_ASSERT(output_artifact != nullptr);
         TS_ASSERT_EQUALS(&output_artifact->id.type, &IntegerArtifact::TYPE);
         
+        GN_INFO(GN::getLogger("GN.rg.test"))("InitIntegerAction: initializing integer output to {}", initValue);
         output_artifact->value = initValue;
         return Action::PASSED;
     }
 };
 
-InitIntegerAction::Parameter InitIntegerAction::outputParam(IntegerArtifact::TYPE, "result", "w");
 
 // Define an action to add two integers
 struct AddIntegersAction : public Action {
@@ -68,25 +72,32 @@ struct AddIntegersAction : public Action {
     AddIntegersAction(const StrA & name, uint64_t seq) : Action(Artifact::Identification{TYPE, name}, seq) {}
 
     // Define parameters: two inputs, one output
-    SafeArrayAccessor<const Parameter> parameters() const override {
-        // Note: Parameters are not contiguous, but SafeArrayAccessor needs contiguous memory
-        // This is a workaround - we'll access them individually
-        static Parameter params[3] = {
-            Parameter(IntegerArtifact::TYPE, "input1", "r"),
-            Parameter(IntegerArtifact::TYPE, "input2", "r"),
-            Parameter(IntegerArtifact::TYPE, "result", "w")
+    const std::unordered_map<StrA, const Parameter> & parameters() const override {
+        static const std::unordered_map<StrA, const Parameter> params = {
+            {"input1", Parameter(IntegerArtifact::TYPE, "r")},
+            {"input2", Parameter(IntegerArtifact::TYPE, "r")},
+            {"output", Parameter(IntegerArtifact::TYPE, "w")}
         };
-        return SafeArrayAccessor<const Parameter>(params, 3);
+        return params;
     }
 
     // Execute: input1.value + input2.value -> output.value
-    ExecutionResult execute(SafeArrayAccessor<Artifact> args) override {
-        // Verify arguments are correctly assigned (caller has verified size and type)
-        TS_ASSERT_EQUALS(args.size(), 3);
+    ExecutionResult execute(const std::unordered_map<StrA, AutoRef<Artifact>> & args) override {
+        // Look up arguments by name
+        auto input1It = args.find("input1");
+        auto input2It = args.find("input2");
+        auto outputIt = args.find("output");
         
-        auto input1_artifact = static_cast<IntegerArtifact*>(&args[0]);
-        auto input2_artifact = static_cast<IntegerArtifact*>(&args[1]);
-        auto output_artifact = static_cast<IntegerArtifact*>(&args[2]);
+        TS_ASSERT(input1It != args.end());
+        TS_ASSERT(input2It != args.end());
+        TS_ASSERT(outputIt != args.end());
+        TS_ASSERT(input1It->second != nullptr);
+        TS_ASSERT(input2It->second != nullptr);
+        TS_ASSERT(outputIt->second != nullptr);
+        
+        auto input1_artifact = static_cast<IntegerArtifact*>(input1It->second.get());
+        auto input2_artifact = static_cast<IntegerArtifact*>(input2It->second.get());
+        auto output_artifact = static_cast<IntegerArtifact*>(outputIt->second.get());
 
         TS_ASSERT(input1_artifact != nullptr);
         TS_ASSERT(input2_artifact != nullptr);
@@ -95,6 +106,9 @@ struct AddIntegersAction : public Action {
         TS_ASSERT_EQUALS(&input2_artifact->id.type, &IntegerArtifact::TYPE);
         TS_ASSERT_EQUALS(&output_artifact->id.type, &IntegerArtifact::TYPE);
 
+        GN_INFO(GN::getLogger("GN.rg.test"))("AddIntegersAction: {} + {} = {}", 
+            input1_artifact->value, input2_artifact->value, 
+            input1_artifact->value + input2_artifact->value);
         output_artifact->value = input1_artifact->value + input2_artifact->value;
         return Action::PASSED;
     }
@@ -107,25 +121,32 @@ struct MultiplyIntegersAction : public Action {
     MultiplyIntegersAction(const StrA & name, uint64_t seq) : Action(Artifact::Identification{TYPE, name}, seq) {}
 
     // Define parameters: two inputs, one output
-    SafeArrayAccessor<const Parameter> parameters() const override {
-        // Note: Parameters are not contiguous, but SafeArrayAccessor needs contiguous memory
-        // This is a workaround - we'll access them individually
-        static Parameter params[3] = {
-            Parameter(IntegerArtifact::TYPE, "input1", "r"),
-            Parameter(IntegerArtifact::TYPE, "input2", "r"),
-            Parameter(IntegerArtifact::TYPE, "result", "w")
+    const std::unordered_map<StrA, const Parameter> & parameters() const override {
+        static const std::unordered_map<StrA, const Parameter> params = {
+            {"input1", Parameter(IntegerArtifact::TYPE, "r")},
+            {"input2", Parameter(IntegerArtifact::TYPE, "r")},
+            {"output", Parameter(IntegerArtifact::TYPE, "w")}
         };
-        return SafeArrayAccessor<const Parameter>(params, 3);
+        return params;
     }
 
     // Execute: input1.value * input2.value -> output.value
-    ExecutionResult execute(SafeArrayAccessor<Artifact> args) override {
-        // Verify arguments are correctly assigned (caller has verified size and type)
-        TS_ASSERT_EQUALS(args.size(), 3);
+    ExecutionResult execute(const std::unordered_map<StrA, AutoRef<Artifact>> & args) override {
+        // Look up arguments by name
+        auto input1It = args.find("input1");
+        auto input2It = args.find("input2");
+        auto outputIt = args.find("output");
         
-        auto input1_artifact = static_cast<IntegerArtifact*>(&args[0]);
-        auto input2_artifact = static_cast<IntegerArtifact*>(&args[1]);
-        auto output_artifact = static_cast<IntegerArtifact*>(&args[2]);
+        TS_ASSERT(input1It != args.end());
+        TS_ASSERT(input2It != args.end());
+        TS_ASSERT(outputIt != args.end());
+        TS_ASSERT(input1It->second != nullptr);
+        TS_ASSERT(input2It->second != nullptr);
+        TS_ASSERT(outputIt->second != nullptr);
+        
+        auto input1_artifact = static_cast<IntegerArtifact*>(input1It->second.get());
+        auto input2_artifact = static_cast<IntegerArtifact*>(input2It->second.get());
+        auto output_artifact = static_cast<IntegerArtifact*>(outputIt->second.get());
 
         TS_ASSERT(input1_artifact != nullptr);
         TS_ASSERT(input2_artifact != nullptr);
@@ -134,6 +155,9 @@ struct MultiplyIntegersAction : public Action {
         TS_ASSERT_EQUALS(&input2_artifact->id.type, &IntegerArtifact::TYPE);
         TS_ASSERT_EQUALS(&output_artifact->id.type, &IntegerArtifact::TYPE);
 
+        GN_INFO(GN::getLogger("GN.rg.test"))("MultiplyIntegersAction: {} * {} = {}", 
+            input1_artifact->value, input2_artifact->value, 
+            input1_artifact->value * input2_artifact->value);
         output_artifact->value = input1_artifact->value * input2_artifact->value;
         return Action::PASSED;
     }

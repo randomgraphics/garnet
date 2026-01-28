@@ -62,20 +62,26 @@ GN_API ArtifactDatabase * createArtifactDatabase(const CreateArtifactDatabasePar
 /// Base class of all actions
 struct Action : public Artifact {
     struct Parameter {
-        const Guid & type; // type of the parameter.
-        StrA         name;
-        bool         optional = false;
-        bool         reading = false;
-        bool         writing = false;
+        /// type of artifacts that is allowed to be used as this parameter.
+        /// TODO: make it a list of acceptable types.
+        const Guid & type;
+
+        /// if true, the parameter is optional and can be omitted when executing the action.
+        bool optional = false;
+
+        /// if true, the parameter is a reading parameter and can be used as input to the action.
+        bool reading = false;
+
+        /// if true, the parameter is a writing parameter and can be used as output from the action.
+        bool writing = false;
 
         /// Constructor for parameter with type, name, and options
         /// @param type The GUID type of the artifact this parameter references
-        /// @param name The parameter name used for binding in action execution
         /// @param options String specifying parameter options:
         ///                'O' or 'o' = optional parameter (not required)
         ///                'R' or 'r' = reading access (input parameter)
         ///                'W' or 'w' = writing access (output parameter)
-        Parameter(const Guid & type, const StrA & name, const char * options = nullptr);
+        Parameter(const Guid & type, const char * options = nullptr);
     };
 
     enum ExecutionResult {
@@ -84,10 +90,13 @@ struct Action : public Artifact {
         WARNING, ///< the action executed successfully with some warnings.
     };
 
-    virtual SafeArrayAccessor<const Parameter> parameters() const = 0;
+    /// Get parameters as a hash map using parameter name as key
+    /// Returns a const reference to a map from parameter name to Parameter
+    virtual const std::unordered_map<StrA, const Parameter> & parameters() const = 0;
 
     /// Execute the action with the given arguments
-    virtual ExecutionResult execute(SafeArrayAccessor<Artifact> arguments) = 0;
+    /// Arguments are provided as a map from parameter name to artifact
+    virtual ExecutionResult execute(const std::unordered_map<StrA, AutoRef<Artifact>> & arguments) = 0;
 
 protected:
     /// Inherit constructor from Artifact

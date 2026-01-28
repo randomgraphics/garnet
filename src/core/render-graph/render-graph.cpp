@@ -36,22 +36,21 @@ class RenderGraphImpl : public RenderGraph {
             return false;
         }
         
-        // Get action parameters
-        SafeArrayAccessor<const Action::Parameter> params = shard.action->parameters();
+        // Get action parameters as a map
+        const std::unordered_map<StrA, const Action::Parameter> & params = shard.action->parameters();
         
-        // Build a map of provided arguments by name
-        std::unordered_map<StrA, AutoRef<Artifact>> providedArgs = shard.arguments;
-        
-        // Check each required parameter
-        for (size_t i = 0; i < params.size(); ++i) {
-            const Action::Parameter & param = params[i];
+        // Check each parameter against the arguments map
+        for (const auto & paramPair : params) {
+            const StrA & paramName = paramPair.first;
+            const Action::Parameter & param = paramPair.second;
             
-            auto argIt = providedArgs.find(param.name);
+            // Look up argument by parameter name
+            auto argIt = shard.arguments.find(paramName);
             
-            if (argIt == providedArgs.end()) {
+            if (argIt == shard.arguments.end()) {
                 // Argument not provided
                 if (!param.optional) {
-                    GN_ERROR(sLogger)("Task '{}' shard {}: required parameter '{}' is missing", taskName, shardIndex, param.name);
+                    GN_ERROR(sLogger)("Task '{}' shard {}: required parameter '{}' is missing", taskName, shardIndex, paramName);
                     return false;
                 }
                 // Optional parameter missing - OK
@@ -61,22 +60,22 @@ class RenderGraphImpl : public RenderGraph {
             // Check type match
             const Artifact * artifact = argIt->second.get();
             if (!artifact) {
-                GN_ERROR(sLogger)("Task '{}' shard {}: parameter '{}' has null artifact", taskName, shardIndex, param.name);
+                GN_ERROR(sLogger)("Task '{}' shard {}: parameter '{}' has null artifact", taskName, shardIndex, paramName);
                 return false;
             }
             
             if (&artifact->id.type != &param.type) {
-                GN_ERROR(sLogger)("Task '{}' shard {}: parameter '{}' type mismatch", taskName, shardIndex, param.name);
+                GN_ERROR(sLogger)("Task '{}' shard {}: parameter '{}' type mismatch", taskName, shardIndex, paramName);
                 return false;
             }
-            
-            // Remove from provided args to check for extra arguments later
-            providedArgs.erase(argIt);
         }
         
         // Check for extra arguments that weren't in the parameter list
-        if (!providedArgs.empty()) {
-            GN_TRACE(sLogger)("Task '{}' shard {}: extra arguments provided that don't match any parameters", taskName, shardIndex);
+        // (This is just a warning, not an error, as it might be intentional)
+        for (const auto & argPair : shard.arguments) {
+            if (params.find(argPair.first) == params.end()) {
+                GN_TRACE(sLogger)("Task '{}' shard {}: extra argument '{}' provided that doesn't match any parameter", taskName, shardIndex, argPair.first);
+            }
         }
         
         return true;
@@ -216,39 +215,8 @@ class RenderGraphImpl : public RenderGraph {
             return Action::ExecutionResult::FAILED;
         }
         
-        // Build argument array from the shard's arguments map
-        // Get action parameters to determine order
-        SafeArrayAccessor<const Action::Parameter> params = shard.action->parameters();
-        
-        // Create array of artifacts in parameter order
-        DynaArray<Artifact *> argArray;
-        argArray.resize(params.size());
-        
-        for (size_t i = 0; i < params.size(); ++i) {
-            const Action::Parameter & param = params[i];
-            auto argIt = shard.arguments.find(param.name);
-            
-            if (argIt != shard.arguments.end() && argIt->second) {
-                argArray[i] = argIt->second.get();
-            } else {
-                // Optional parameter missing - set to nullptr
-                argArray[i] = nullptr;
-            }
-        }
-        
-        // Execute the action
-        // SafeArrayAccessor expects Artifact*, but argArray stores Artifact* pointers
-        // So argArray.data() returns Artifact**. We cast it to Artifact* since the
-        // array contains pointers to Artifact objects, which is what SafeArrayAccessor expects
-        if (argArray.empty()) {
-            // Empty array - create empty SafeArrayAccessor
-            SafeArrayAccessor<Artifact> args(nullptr, 0);
-            return shard.action->execute(args);
-        } else {
-            // Cast Artifact** to Artifact* - the array contains pointers to Artifact objects
-            SafeArrayAccessor<Artifact> args(reinterpret_cast<Artifact*>(argArray.data()), argArray.size());
-            return shard.action->execute(args);
-        }
+        // Execute the action with the arguments map directly
+        return shard.action->execute(shard.arguments);
     }
     
     // Execute a single task (all its shards sequentially)
