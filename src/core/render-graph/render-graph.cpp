@@ -256,7 +256,7 @@ public:
         return newTask;
     }
 
-    RenderGraph::ExecutionResult execute(const ExecutionParams & params) override {
+    RenderGraph::ExecutionResult submit(const ExecutionParams & params) override {
         std::lock_guard<std::mutex> lock(mExecuteMutex);
 
         RenderGraph::ExecutionResult execResult;

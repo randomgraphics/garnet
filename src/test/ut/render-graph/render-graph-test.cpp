@@ -260,10 +260,10 @@ public:
             multiplyTask->shards.append(multiplyShard);
         }
 
-        // Execute all scheduled tasks
+        // Submit all scheduled tasks for execution
         GN::rg::RenderGraph::ExecutionParams execParams;
         execParams.debug = false;
-        GN::rg::RenderGraph::ExecutionResult execResult = renderGraph->execute(execParams);
+        GN::rg::RenderGraph::ExecutionResult execResult = renderGraph->submit(execParams);
         TS_ASSERT_EQUALS(execResult.result, GN::rg::Action::PASSED);
 
         // Verify result
