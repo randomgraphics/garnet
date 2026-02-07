@@ -1,6 +1,6 @@
 #pragma once
 
-#include "GNbase.h"
+#include "GNwin.h"
 #include "gfx/image.h"
 #include "gfx/gpures.h"
 #include "gfx/primitive.h"
@@ -27,8 +27,8 @@ namespace GN::rg {
 // - Action: contains the code/logic for an operation. Declares a set of predefined parameters (input and/or output).
 // - Task: one Action + one arguments value (an action-defined struct, type-erased as std::any) to run that action.
 // - Workflow: a sequence of tasks run in strict sequential order. A workflow can depend on completion of other workflows.
-// - RenderGraph: schedule workflows (thread-safe); execute() runs all scheduled workflows in a topological order that satisfies dependencies.
-//   After execute(), the graph is reset and all workflow pointers from schedule() are invalidated.
+// - RenderGraph: schedule workflows (thread-safe); submit() submits all scheduled workflows for async execution in a topological order that satisfies dependencies.
+//   After submit(), the graph is reset and all workflow pointers from schedule() are invalidated.
 
 /// Artifact represents an atomic resource that can be used as input or output of a task.
 struct GN_API Artifact : public RefCounter {
@@ -48,31 +48,79 @@ struct GN_API Artifact : public RefCounter {
 
     virtual ~Artifact() {};
 
+    template<typename T>
+    T * castTo() {
+        if (id.type == T::TYPE) GN_LIKELY return static_cast<T*>(this);
+        return nullptr;
+    }
+
+    template<typename T>
+    const T * castTo() const {
+        if (id.type == T::TYPE) GN_LIKELY return static_cast<const T*>(this);
+        return nullptr;
+    }
+
 protected:
     /// Constructor
     Artifact(const Identification & id_, uint64_t seq) : id(id_), sequence(seq) {}
 };
 
 struct ArtifactDatabase {
-    virtual void registerArtifactType(const Guid & type, std::function<AutoRef<Artifact>(const StrA & name, uint64_t sequence)> && creator) = 0;
-    virtual AutoRef<Artifact> create(const Artifact::Identification &, bool returnExistingIfFound = false) = 0;
-    virtual AutoRef<Artifact> search(const Artifact::Identification &) = 0;
-    virtual AutoRef<Artifact> search(uint64_t) = 0;
+    /// Parameters for creating an artifact database
+    struct CreateParameters {
+        // If true, then automatically register all built-in artifacts defined in this header. Or else, create an completely
+        // empty database w/o any artifact type registered.
+        bool autoAdmitAllBuiltInArtifacts = true;
+    };
+
+    /// Create a new artifact database instance
+    static GN_API AutoRef<ArtifactDatabase> create(const CreateParameters & params);
+
+    virtual ~ArtifactDatabase() = default;
+
+    /// Admit a new artifact type to the database.
+    virtual bool admit(const Guid & type, std::function<AutoRef<Artifact>(const StrA & name, uint64_t sequence)> && creator) = 0;
+
+    /// Spawn a new artifact instance of the given type. Fail if the ID exists already.
+    virtual auto spawn(const Artifact::Identification &) -> AutoRef<Artifact> = 0;
+
+    /// Search for an artifact instance by its ID.
+    virtual auto fetch(const Artifact::Identification &) -> AutoRef<Artifact> = 0;
+
+    /// Search for an artifact instance by its sequence number. Faster than search by ID.
+    virtual auto fetch(uint64_t) -> AutoRef<Artifact> = 0;
+
+    /// Erase an artifact instance by its ID.
     virtual bool erase(const Artifact::Identification &) = 0;
+
+    /// Erase an artifact instance by its sequence number. Faster than erase by ID.
     virtual bool erase(uint64_t sequence) = 0;
-};
 
-/// Parameters for creating an artifact database
-struct CreateArtifactDatabaseParams {
-    // Empty for now, can be expanded later
-};
+    // A helper template to create and reset certain type of artifact in one function call.
+    template<typename T, typename ... CREATE_ARGS>
+    AutoRef<T> spawnAndReset(const StrA & name, CREATE_ARGS&& ... args) {
+        auto a = spawn({T::TYPE, name});
+        if (!a) return {};
+        auto t = a->castTo<T>();
+        if (!t) return {};
+        if (!t->reset(std::forward<CREATE_ARGS>(args)...)) return {};
+        return AutoRef<T>(t);
+    }
 
-/// Create a new artifact database instance
-GN_API ArtifactDatabase * createArtifactDatabase(const CreateArtifactDatabaseParams & params);
+    // A helper template to create and load certain type of artifacts in one function call
+    template<typename T, typename... LOAD_ARGS>
+    AutoRef<T> spawnAndLoad(const StrA & name, LOAD_ARGS&&... args) {
+        auto a = spawn({T::TYPE, name});
+        if (!a) return {};
+        auto t = a->castTo<T>();
+        if (!t) return {};
+        if (!t->load(std::forward<LOAD_ARGS>(args)...)) return {};
+        return AutoRef<T>(t);
+    }
+};
 
 /// Base class of arguments for an action.
-struct GN_API Arguments : Artifact {
-
+struct Arguments : Artifact {
     enum Usage : uint32_t {
         OPTIONAL = 1 << 0,
         READING  = 1 << 1,
@@ -94,7 +142,8 @@ struct GN_API Arguments : Artifact {
 
         void set(const T & value) { mValue = value; }
         void reset() { mValue.reset(); }
-        const T * get() const { return mValue.has_value() ? &mValue.value() : nullptr; }
+        auto get() const -> const T * { return mValue.has_value() ? &mValue.value() : nullptr; }
+        auto get() -> T * { return mValue.has_value() ? &mValue.value() : nullptr; }
 
     private:
         std::optional<T> mValue;
@@ -171,7 +220,7 @@ protected:
 };
 
 /// Base class of all actions. An action holds the logic for an operation and declares its parameters (input/output).
-struct GN_API Action : public Artifact {
+struct Action : public Artifact {
     enum ExecutionResult {
         PASSED,  ///< the action executed successfully.
         FAILED,  ///< the action failed; dependents may be skipped.
@@ -188,7 +237,7 @@ protected:
 
 /// A workflow is a sequence of tasks run in strict sequential order. It can depend on completion of other workflows.
 /// The render graph runs workflows in a topological order that satisfies these dependencies.
-struct GN_API Workflow {
+struct Workflow {
     /// Name for logging and debugging (need not be unique).
     StrA name;
 
@@ -205,42 +254,92 @@ struct GN_API Workflow {
     DynaArray<Workflow *> dependencies;
 };
 
-/// Render graph: schedule workflows (thread-safe), then execute them in topological order.
-struct GN_API RenderGraph {
-    /// Parameters for execution.
-    struct ExecutionParams {
+struct Submission : RefCounter {
+    /// Parameters for submission.
+    struct Parameters {
         bool debug = false; ///< when true, generate debug statistics
     };
 
-    /// Result of execute().
-    struct ExecutionResult {
+    /// Result of execution
+    struct Result {
         Action::ExecutionResult result;
         StrA                    debugStats; ///< per-workflow/task stats when debug is true
     };
 
+    virtual ~Submission() = default;
+    
+    //// Check if submitted workflows are all finished.
+    virtual bool isFinished() = 0;
+
+    /// Get execution result of the submitted workflows. Will block calling thread until all workflows are finished.
+    virtual Result result() = 0;
+
+protected:
+    Submission() = default;
+};
+
+
+/// Render graph: schedule workflows (thread-safe), then submit them for async execution.
+struct RenderGraph {
+    struct CreateParameters {
+        // TBD
+    };
+
+    /// Create a new render graph instance
+    static GN_API AutoRef<RenderGraph> create(const CreateParameters & params);
+
+    /// @brief Destroy the render graph instance. This method will try its best to cancel all pending tasks and workflows.
+    /// Once the method returns, the render graph is no longer usable, all pointers returned from schedule() are invalidated,
+    /// all workflows are either finished or cancelled. The detailed result can be queried via the submission object returned by submit().
+    virtual ~RenderGraph() = default;
+
     /// Schedule a new workflow. Thread-safe; multiple threads may call schedule() in parallel.
-    /// Returns a pointer to the scheduled workflow. The pointer is valid until execute() is called.
-    /// After execute(), all pointers returned from schedule() are invalidated and the graph is reset.
+    /// Returns a pointer to the scheduled workflow. The pointer is valid until submit() is called.
+    /// After submit(), all pointers returned from schedule() are invalidated and the graph is ready to schedule new workflows.
     virtual Workflow * schedule() = 0;
 
-    /// Run all scheduled workflows in a topological order that satisfies workflow dependencies.
-    /// After completion, the graph is reset and ready for new scheduling.
-    virtual ExecutionResult execute(const ExecutionParams & params) = 0;
+    /// Submit all scheduled workflows for async execution in a topological order that satisfies workflow dependencies.
+    /// Returns immediately; execution may not be complete when this method returns.
+    /// After submission, the graph is reset to initial state and ready for new scheduling.
+    virtual AutoRef<Submission> submit(const Submission::Parameters & params) = 0;
 
-    virtual ~RenderGraph() = default;
+protected:
+    RenderGraph() = default;
 };
-
-/// Parameters for creating a render graph
-struct CreateRenderGraphParams {
-    // Empty for now, can be expanded later
-};
-
-/// Create a new render graph instance
-GN_API RenderGraph * createRenderGraph(const CreateRenderGraphParams & params);
 
 // =============================================================================
 // GPU artifact types
 // =============================================================================
+
+/// GpuContext represents a GPU context (wrapper of D3D/Vulkan context) that exposes display properties.
+struct GpuContext : public Artifact {
+    static inline const Guid TYPE = {0x3c4d5e6f, 0x7a8b, 0x9c0d, {0x1e, 0x2f, 0x3a, 0x4b, 0x5c, 0x6d, 0x7e, 0x8f}};
+
+    struct ResetParameters {
+        /// The target window. If null, then create GPU context in headless mode.
+        GN::win::Window * win = {};
+
+        /// display width. If 0, use window width. Must be positive for headless mode.
+        uint32_t width  = 0;
+
+        // display height. If 0, use window height. Must be positive for headless mode.
+        uint32_t height = 0;
+    };
+
+    /// Create a new instance of GpuContext.
+    static AutoRef<GpuContext> create();
+
+    /// Destroy the GPU context.
+    virtual ~GpuContext() = default;
+
+    virtual bool reset(const ResetParameters &) = 0;
+
+    /// Get display width and height
+    virtual std::pair<uint32_t, uint32_t> dimension() const = 0;
+
+protected:
+    using Artifact::Artifact;
+};
 
 /// Texture represents a 2D/3D/cube texture with optional mipmap and array layers.
 struct GN_API Texture : public Artifact {
@@ -248,18 +347,19 @@ struct GN_API Texture : public Artifact {
 
     /// Descriptor used when creating or declaring the texture (format, dimensions).
     struct Descriptor {
-        gfx::img::PixelFormat format = gfx::img::PixelFormat::UNKNOWN();
-        uint32_t              width  = 0;
-        uint32_t              height = 0;
-        uint32_t              depth  = 0;
-        uint32_t              faces  = 0;  ///< 0 = default (6 for cubemap, 1 for others)
-        uint32_t              levels = 0;  ///< 0 = full mipmap chain
+        gfx::img::PixelFormat format  = gfx::img::PixelFormat::UNKNOWN();
+        uint32_t              width   = 1;
+        uint32_t              height  = 1;
+        uint32_t              depth   = 1;  ///< 1 = 2D, >1 = 3D
+        uint32_t              faces   = 1;  ///< 1 = 2D, 6 = cubemap, >1 = array
+        uint32_t              levels  = 0;  ///< 0 = full mipmap chain, 1 = single level, >1 = mipmap chain with specified number of levels
+        uint32_t              samples = 1; ///< 1 = no multisampling
     };
 
     struct SubresourceIndex {
-        uint32_t mipLevel       = 0;
-        uint32_t arrayLayer    = 0;
-        uint32_t depthSlice    = 0;
+        uint32_t mip   = 0; ///< index into mipmap chain
+        uint32_t face  = 0; ///< index into array of faces
+        uint32_t slice = 0; ///< index into depth slice
     };
 
     struct SubresourceRange {
@@ -276,47 +376,33 @@ struct GN_API Texture : public Artifact {
     /// Return the current texture descriptor.
     virtual const Descriptor & descriptor() const = 0;
 
-    /// Create or recreate the underlying texture from the given descriptor. Returns true on success.
+    /// Create texture from the given descriptor. Discard old one. Returns true on success.
     virtual bool reset(const Descriptor & d) = 0;
+
+    /// Load texture from file. Discard old one. Returns true on success.
+    virtual bool load(const StrA & filename) = 0;
 
 protected:
     using Artifact::Artifact;
 };
 
 /// Backbuffer represents the a swapchain that can be present to screen.
-struct Backbuffer : public Artifact {
+struct GN_API Backbuffer : public Artifact {
     inline static constexpr Guid TYPE = {0x6ad8b59d, 0xe672, 0x4b5e, {0x8e, 0xec, 0xf7, 0xac, 0xd4, 0xf1, 0x99, 0xdd}};
-};
 
-// /// Buffer represents a linear GPU buffer (vertex, index, constant, UAV, etc.).
-// struct GN_API Buffer : public Artifact {
-//     static inline const Guid TYPE = {0x2b91c74e, 0xa153, 0x4d8f, {0xb2, 0x0c, 0x1e, 0x5f, 0xa8, 0x33, 0xcc, 0x77}};
+    /// Descriptor for backbuffer initialization.
+    struct Descriptor {
+        uint32_t width  = 0;
+        uint32_t height = 0;
+    };
 
-//     /// Descriptor for buffer creation (size only for now; usage hints can be added later).
-//     struct Descriptor {
-//         uint64_t sizeInBytes = 0;
-//     };
+    /// Create a new instance of Backbuffer.
+    static AutoRef<Backbuffer> create();
 
-//     virtual ~Buffer() = default;
+    virtual ~Backbuffer() = default;
 
-//     /// Return the current buffer descriptor.
-//     virtual const Descriptor & descriptor() const = 0;
-
-//     /// Create or recreate the underlying buffer from the given descriptor. Returns true on success.
-//     virtual bool reset(const Descriptor & d) = 0;
-
-// protected:
-//     using Artifact::Artifact;
-// };
-
-/// Mesh represents a 3D geometry with vertex and index data.
-struct GN_API Mesh : public Artifact {
-    static inline const Guid TYPE = {0x8c9d4a1f, 0xb284, 0x5d7f, {0x9a, 0xfe, 0x19, 0xce, 0xf6, 0x13, 0xbb, 0xff}};
-
-    /// Create a new instance of empty Mesh. The mesh is not bound to any GPU resource yet. Must call reset() at least once for the mesh to be valid to use.
-    static AutoRef<Mesh> create();
-
-    virtual ~Mesh() = default;
+    /// Initialize or reinitialize the backbuffer from the given descriptor. Returns true on success.
+    virtual bool reset(const Descriptor & d) = 0;
 
 protected:
     using Artifact::Artifact;
@@ -331,16 +417,16 @@ struct GN_API Sampler : public Artifact {
 
     /// Descriptor for sampler creation.
     struct Descriptor {
-        Filter     filterMin     = Filter::LINEAR;
-        Filter     filterMag     = Filter::LINEAR;
-        Filter     filterMip     = Filter::LINEAR;
-        AddressMode addressU     = AddressMode::REPEAT;
-        AddressMode addressV    = AddressMode::REPEAT;
-        AddressMode addressW    = AddressMode::REPEAT;
-        float      mipLodBias   = 0.f;
-        uint32_t   maxAnisotropy = 1;
-        float      minLod       = 0.f;
-        float      maxLod       = 0.f; ///< 0 often means "all mips"
+        Filter      filterMin     = Filter::LINEAR;
+        Filter      filterMag     = Filter::LINEAR;
+        Filter      filterMip     = Filter::LINEAR;
+        AddressMode addressU      = AddressMode::REPEAT;
+        AddressMode addressV      = AddressMode::REPEAT;
+        AddressMode addressW      = AddressMode::REPEAT;
+        float       mipLodBias    = 0.f;
+        uint32_t    maxAnisotropy = 1;
+        float       minLod        = 0.f;
+        float       maxLod        = 0.f; ///< 0 often means "all mips"
     };
 
     // Create a new instance of Sampler. Must call reset() at least once for the sampler to be valid to use.
@@ -358,6 +444,68 @@ protected:
     using Artifact::Artifact;
 };
 
+/// Buffer represents a GPU buffer (vertex, index, constant, storage, etc.).
+struct GN_API Buffer : public Artifact {
+    static inline const Guid TYPE = {0x1f2e3d4c, 0x5b6a, 0x7c8d, {0x9e, 0xaf, 0xb1, 0xc2, 0xd3, 0xe4, 0xf5, 0x06}};
+
+    /// Buffer usage flags.
+    enum Usage {
+        VERTEX,     ///< Vertex buffer
+        INDEX,      ///< Index buffer
+        CONSTANT,   ///< Constant/uniform buffer
+        STORAGE,    ///< Storage (RW) buffer
+        INDIRECT,   ///< Indirect command buffer
+        TRANSFER_SRC, ///< Can be used as transfer source
+        TRANSFER_DST  ///< Can be used as transfer destination
+    };
+
+    /// Buffer descriptor for creation/reset.
+    struct Descriptor {
+        size_t size = 0;            ///< Number of bytes for the buffer.
+        Usage  usage = VERTEX;      ///< Usage flag.
+        bool   cpuWritable = false; ///< CPU can write (mapped buffer).
+        bool   cpuReadable = false; ///< CPU can read (mapped buffer).
+    };
+
+    /// Create a new instance of empty Buffer. The buffer is not bound to any GPU resource yet.
+    /// Must call reset() at least once for the buffer to be valid to use.
+    static AutoRef<Buffer> create();
+
+    virtual ~Buffer() = default;
+
+    /// Return the current buffer descriptor.
+    virtual const Descriptor & descriptor() const = 0;
+
+    /// Create or recreate the underlying buffer from the given descriptor. Returns true on success.
+    virtual bool reset(const Descriptor & d) = 0;
+
+    /// Map the buffer memory for CPU read/write. Returns pointer on success, nullptr on failure.
+    virtual void * map() = 0;
+
+    /// Unmap the buffer memory (if previously mapped).
+    virtual void unmap() = 0;
+
+protected:
+    using Artifact::Artifact;
+};
+
+
+/// Mesh represents a 3D geometry with vertex and index data.
+struct GN_API Mesh : public Artifact {
+    static inline const Guid TYPE = {0x8c9d4a1f, 0xb284, 0x5d7f, {0x9a, 0xfe, 0x19, 0xce, 0xf6, 0x13, 0xbb, 0xff}};
+
+    /// Create a new instance of empty Mesh. The mesh is not bound to any GPU resource yet. Must call reset() or load() at least once for the mesh to be valid to use.
+    static AutoRef<Mesh> create();
+
+    virtual ~Mesh() = default;
+
+    /// Load mesh from file. Discard old one. Returns true on success.
+    virtual bool load(const StrA & filename) = 0;
+
+protected:
+    using Artifact::Artifact;
+};
+
 /// Render target is ether a subsurface of a texture or a back buffer
 struct RenderTarget {
     std::variant<AutoRef<Texture>, AutoRef<Backbuffer>> target;
@@ -369,15 +517,13 @@ struct ClearRenderTarget : public Action {
     
     struct A : public Arguments {
         inline static constexpr Guid TYPE = {0x6ad8b59d, 0xe672, 0x4b5e, {0x8e, 0xec, 0xf7, 0xac, 0xd4, 0xf1, 0x99, 0xdd}};
-        ReadOnly<Vector4f> color;
+        struct ClearColor {
+            struct { float r, g, b, a; };
+            struct { uint32_t x, y, z, w; };
+        };
+        ReadOnly<ClearColor> color;
         ReadWrite<RenderTarget> renderTarget;
     };
-
-    struct D {
-        // descriptor of the action
-    };
-
-    void reset(const D &);
 };
 
 struct ClearDepthStencil : public Action {
@@ -387,14 +533,6 @@ struct ClearDepthStencil : public Action {
         ReadOnly<float> depth;
         ReadOnly<uint8_t> stencil;
         ReadWrite<RenderTarget> depthStencil;
-    };
-};
-
-struct Present : public Action {
-    inline static constexpr Guid TYPE = {0x2e11e023, 0xd038, 0x47e4, {0xa8, 0x4d, 0x21, 0x4f, 0x22, 0x12, 0x3b, 0x0e}};
-    struct A : public Arguments {
-        inline static constexpr Guid TYPE = {0x2e11e023, 0xd038, 0x47e4, {0xa8, 0x4d, 0x21, 0x4f, 0x22, 0x12, 0x3b, 0x0e}};
-        ReadOnly<Backbuffer> backbuffer; // backbuffer to present
     };
 };
 
@@ -425,6 +563,82 @@ struct LoadTextureFromFile : public Action {
         WriteOnly<AutoRef<Texture>> texture;      // Output texture resource
     };
     virtual ~LoadTextureFromFile() = default;
+};
+
+struct PrepareBackbuffer : public Action {
+    inline static constexpr Guid TYPE = {0x3e4f5a6b, 0x7c8d, 0x9e0f, {0x1a, 0x2b, 0x3c, 0x4d, 0x5e, 0x6f, 0x7a, 0x8b}};
+    struct A : public Arguments {
+        inline static constexpr Guid TYPE = {0x3e4f5a6b, 0x7c8d, 0x9e0f, {0x1a, 0x2b, 0x3c, 0x4d, 0x5e, 0x6f, 0x7a, 0x8b}};
+        ReadWrite<Backbuffer> backbuffer;        // Backbuffer to prepare
+    };
+    virtual ~PrepareBackbuffer() = default;
+};
+
+struct PresentBackbuffer : public Action {
+    inline static constexpr Guid TYPE = {0x4f5a6b7c, 0x8d9e, 0x0f1a, {0x2b, 0x3c, 0x4d, 0x5e, 0x6f, 0x7a, 0x8b, 0x9c}};
+    struct A : public Arguments {
+        inline static constexpr Guid TYPE = {0x4f5a6b7c, 0x8d9e, 0x0f1a, {0x2b, 0x3c, 0x4d, 0x5e, 0x6f, 0x7a, 0x8b, 0x9c}};
+        ReadOnly<Backbuffer> backbuffer;          // Backbuffer to present
+    };
+    virtual ~PresentBackbuffer() = default;
+};
+
+struct TextureReadback : public Action {
+    inline static constexpr Guid TYPE = {0x5a6b7c8d, 0x9e0f, 0x1a2b, {0x3c, 0x4d, 0x5e, 0x6f, 0x7a, 0x8b, 0x9c, 0x0d}};
+    struct A : public Arguments {
+        inline static constexpr Guid TYPE = {0x5a6b7c8d, 0x9e0f, 0x1a2b, {0x3c, 0x4d, 0x5e, 0x6f, 0x7a, 0x8b, 0x9c, 0x0d}};
+        ReadOnly<AutoRef<Texture>> texture; ///< input texture
+        WriteOnly<gfx::img::Image> image;   ///< output image (will be cleared and filled with the texture content)
+    };
+    virtual ~TextureReadback() = default;
+};
+
+/// Generic compute action for quick GPU compute prototyping. It emphasizes ease of use and flexibility over extreme performance.
+struct GenericCompute : public Action {
+    inline static constexpr Guid TYPE = {0x5a6b7c8d, 0x9e0f, 0x1a2b, {0x3c, 0x4d, 0x5e, 0x6f, 0x7a, 0x8b, 0x9c, 0x0d}};
+    
+    struct ShaderResourceBinding {
+        uint32_t set = 0;
+        uint32_t slot = 0;
+    };
+
+    struct BufferParameter {
+        AutoRef<Buffer> buffer;
+        uint32_t        offset = 0;
+        uint32_t        size = 0;
+    };
+
+    struct ImageParameter {
+        AutoRef<Texture>          texture;
+        gfx::img::PixelFormat     format = gfx::img::PixelFormat::UNKNOWN();
+        Texture::SubresourceIndex subresourceIndex;
+    };
+
+    struct TextureParameter : public ImageParameter {
+        AutoRef<Sampler>          sampler;
+        Texture::SubresourceRange subresourceRange;
+    };
+
+    /// Dispatch dimensions (thread group counts)
+    struct DispatchSize {
+        uint32_t x = 1;
+        uint32_t y = 1;
+        uint32_t z = 1;
+    };
+
+    struct A : public Arguments {
+        inline static constexpr Guid TYPE = {0x5a6b7c8d, 0x9e0f, 0x1a2b, {0x3c, 0x4d, 0x5e, 0x6f, 0x7a, 0x8b, 0x9c, 0x0d}};
+        
+        std::unordered_map<ShaderResourceBinding, BufferParameter>  uniforms; ///< uniform buffers
+        std::unordered_map<ShaderResourceBinding, BufferParameter>  buffers;  ///< storage buffers
+        std::unordered_map<ShaderResourceBinding, ImageParameter>   images;   ///< images
+        std::unordered_map<ShaderResourceBinding, TextureParameter> textures; ///< textures
+        ReadOnly<DispatchSize>                                      groups;   ///< thread group counts
+    };
+    
+    virtual ~GenericCompute() = default;
+
+    virtual bool reset(AutoRef<Blob> shaderBinary, const StrA & entryPoint) = 0;
 };
 
 } // namespace GN::rg
