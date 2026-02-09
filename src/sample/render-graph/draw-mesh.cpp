@@ -12,9 +12,7 @@ int main(int argc, const char * argv[]) {
     // Parse command line
     CommandLineArguments cmdargs(argc, argv);
     if (cmdargs.status != CommandLineArguments::CONTINUE_EXECUTION) {
-        if (cmdargs.status == CommandLineArguments::SHOW_HELP) {
-            cmdargs.showDefaultHelp();
-        }
+        if (cmdargs.status == CommandLineArguments::SHOW_HELP) { cmdargs.showDefaultHelp(); }
         return cmdargs.status == CommandLineArguments::SHOW_HELP ? 0 : -1;
     }
 
@@ -48,17 +46,17 @@ int main(int argc, const char * argv[]) {
     }
 
     // Create and initialize backbuffer
-    auto backbuffer = db->spawnAndReset<Backbuffer>("backbuffer", Backbuffer::Descriptor{displayWidth, displayHeight});
+    auto backbuffer = db->spawnAndReset<Backbuffer>("backbuffer", Backbuffer::Descriptor {displayWidth, displayHeight});
     if (!backbuffer) {
         GN_ERROR(sLogger)("Failed to create and initialize backbuffer");
         return -1;
     }
 
     // Create and initialize depth texture
-    auto depthDesc = Texture::Descriptor{};
-    depthDesc.format = gfx::img::PixelFormat::D24S8();
-    depthDesc.width = displayWidth;
-    depthDesc.height = displayHeight;
+    auto depthDesc    = Texture::Descriptor {};
+    depthDesc.format  = gfx::img::PixelFormat::D24S8();
+    depthDesc.width   = displayWidth;
+    depthDesc.height  = displayHeight;
     auto depthTexture = db->spawnAndReset<Texture>("depth", depthDesc);
     if (!depthTexture) {
         GN_ERROR(sLogger)("Failed to create and initialize depth texture");
@@ -66,14 +64,14 @@ int main(int argc, const char * argv[]) {
     }
 
     // Create and initialize sampler
-    auto samplerDesc = Sampler::Descriptor{};
+    auto samplerDesc      = Sampler::Descriptor {};
     samplerDesc.filterMin = Sampler::Filter::LINEAR;
     samplerDesc.filterMag = Sampler::Filter::LINEAR;
     samplerDesc.filterMip = Sampler::Filter::LINEAR;
-    samplerDesc.addressU = Sampler::AddressMode::REPEAT;
-    samplerDesc.addressV = Sampler::AddressMode::REPEAT;
-    samplerDesc.addressW = Sampler::AddressMode::REPEAT;
-    auto sampler = db->spawnAndReset<Sampler>("sampler", samplerDesc);
+    samplerDesc.addressU  = Sampler::AddressMode::REPEAT;
+    samplerDesc.addressV  = Sampler::AddressMode::REPEAT;
+    samplerDesc.addressW  = Sampler::AddressMode::REPEAT;
+    auto sampler          = db->spawnAndReset<Sampler>("sampler", samplerDesc);
     if (!sampler) {
         GN_ERROR(sLogger)("Failed to create and initialize sampler");
         return -1;
@@ -127,88 +125,79 @@ int main(int argc, const char * argv[]) {
             renderWorkflow->name = "Render";
 
             // Task: Prepare backbuffer
-            auto prepareTask = Workflow::Task{};
+            auto prepareTask   = Workflow::Task {};
             prepareTask.action = prepareAction;
-            auto prepareArgs = AutoRef<PrepareBackbuffer::A>(
-                new PrepareBackbuffer::A(
-                    Artifact::Identification(PrepareBackbuffer::A::TYPE, "prepare_args"), 0));
+            auto prepareArgs = AutoRef<PrepareBackbuffer::A>(new PrepareBackbuffer::A(Artifact::Identification(PrepareBackbuffer::A::TYPE, "prepare_args"), 0));
             prepareArgs->backbuffer.set(backbuffer);
             prepareTask.arguments = prepareArgs;
             renderWorkflow->tasks.append(prepareTask);
 
             // Task: Clear render target
-            auto clearTask = Workflow::Task{};
+            auto clearTask   = Workflow::Task {};
             clearTask.action = clearAction;
 
-            auto clearArgs = AutoRef<ClearRenderTarget::A>(
-                new ClearRenderTarget::A(
-                    Artifact::Identification(ClearRenderTarget::A::TYPE, "clear_args"), 0));
-            
-            auto clearColor = ClearRenderTarget::A::ClearColor{};
-            clearColor.r = 0.2f;
-            clearColor.g = 0.3f;
-            clearColor.b = 0.4f;
-            clearColor.a = 1.0f;
+            auto clearArgs = AutoRef<ClearRenderTarget::A>(new ClearRenderTarget::A(Artifact::Identification(ClearRenderTarget::A::TYPE, "clear_args"), 0));
+
+            auto clearColor = ClearRenderTarget::A::ClearColor {};
+            clearColor.r    = 0.2f;
+            clearColor.g    = 0.3f;
+            clearColor.b    = 0.4f;
+            clearColor.a    = 1.0f;
             clearArgs->color.set(clearColor);
 
-            auto rt = RenderTarget{};
+            auto rt   = RenderTarget {};
             rt.target = backbuffer;
-            rt.sub = Texture::SubresourceIndex();
+            rt.sub    = Texture::SubresourceIndex();
             clearArgs->renderTarget.set(rt);
 
             clearTask.arguments = clearArgs;
             renderWorkflow->tasks.append(clearTask);
 
             // Task: Clear depth
-            auto clearDepthTask = Workflow::Task{};
+            auto clearDepthTask   = Workflow::Task {};
             clearDepthTask.action = clearDepthAction;
 
-            auto clearDepthArgs = AutoRef<ClearDepthStencil::A>(
-                new ClearDepthStencil::A(
-                    Artifact::Identification(ClearDepthStencil::A::TYPE, "clear_depth_args"), 0));
-            
+            auto clearDepthArgs =
+                AutoRef<ClearDepthStencil::A>(new ClearDepthStencil::A(Artifact::Identification(ClearDepthStencil::A::TYPE, "clear_depth_args"), 0));
+
             clearDepthArgs->depth.set(1.0f);
             clearDepthArgs->stencil.set(0);
 
-            auto depthRt = RenderTarget{};
+            auto depthRt   = RenderTarget {};
             depthRt.target = depthTexture;
-            depthRt.sub = Texture::SubresourceIndex();
+            depthRt.sub    = Texture::SubresourceIndex();
             clearDepthArgs->depthStencil.set(depthRt);
 
             clearDepthTask.arguments = clearDepthArgs;
             renderWorkflow->tasks.append(clearDepthTask);
 
             // Task: Compose (draw mesh with texture)
-            auto composeTask = Workflow::Task{};
+            auto composeTask   = Workflow::Task {};
             composeTask.action = composeAction;
 
-            auto composeArgs = AutoRef<Compose::A>(
-                new Compose::A(
-                    Artifact::Identification(Compose::A::TYPE, "compose_args"), 0));
-            
+            auto composeArgs = AutoRef<Compose::A>(new Compose::A(Artifact::Identification(Compose::A::TYPE, "compose_args"), 0));
+
             composeArgs->mesh.set(mesh);
             composeArgs->color.set(Vector4f(1.0f, 1.0f, 1.0f, 1.0f));
             composeArgs->textures.set(0, texture);
 
-            auto composeRt = RenderTarget{};
+            auto composeRt   = RenderTarget {};
             composeRt.target = backbuffer;
-            composeRt.sub = Texture::SubresourceIndex();
+            composeRt.sub    = Texture::SubresourceIndex();
             composeArgs->renderTargets.set(0, composeRt);
 
-            auto composeDepthRt = RenderTarget{};
+            auto composeDepthRt   = RenderTarget {};
             composeDepthRt.target = depthTexture;
-            composeDepthRt.sub = Texture::SubresourceIndex();
+            composeDepthRt.sub    = Texture::SubresourceIndex();
             composeArgs->depthStencil.set(composeDepthRt);
 
             composeTask.arguments = composeArgs;
             renderWorkflow->tasks.append(composeTask);
 
             // Task: Present backbuffer
-            auto presentTask = Workflow::Task{};
+            auto presentTask   = Workflow::Task {};
             presentTask.action = presentAction;
-            auto presentArgs = AutoRef<PresentBackbuffer::A>(
-                new PresentBackbuffer::A(
-                    Artifact::Identification(PresentBackbuffer::A::TYPE, "present_args"), 0));
+            auto presentArgs = AutoRef<PresentBackbuffer::A>(new PresentBackbuffer::A(Artifact::Identification(PresentBackbuffer::A::TYPE, "present_args"), 0));
             presentArgs->backbuffer.set(backbuffer);
             presentTask.arguments = presentArgs;
             renderWorkflow->tasks.append(presentTask);
@@ -230,9 +219,7 @@ int main(int argc, const char * argv[]) {
             break;
         }
 
-        if (result.result == Action::ExecutionResult::WARNING) {
-            GN_WARN(sLogger)("Render graph submission completed with warnings");
-        }
+        if (result.result == Action::ExecutionResult::WARNING) { GN_WARN(sLogger)("Render graph submission completed with warnings"); }
     }
 
     GN_INFO(sLogger)("Render graph draw mesh completed");

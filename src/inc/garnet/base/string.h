@@ -1591,19 +1591,13 @@ struct fmt::formatter<GN::StrW> {
 namespace std {
 template<>
 struct hash<GN::StrA> {
-    size_t operator()(const GN::StrA & s) const {
-        return (size_t)s.hash();
-    }
+    size_t operator()(const GN::StrA & s) const { return (size_t) s.hash(); }
 };
 template<>
 struct hash<GN::StrW> {
-    size_t operator()(const GN::StrW & s) const {
-        return (size_t)s.hash();
-    }
+    size_t operator()(const GN::StrW & s) const { return (size_t) s.hash(); }
 };
 } // namespace std
-    
-    
 
 // *****************************************************************************
 //                 End of string.h

@@ -23,11 +23,9 @@ int main(int argc, const char * argv[]) {
     }
 
     // Create and initialize headless GPU context
-    auto gpuContext = db->spawnAndReset<GpuContext>("gpu_context", GpuContext::ResetParameters{
-        .win = nullptr,  // null window = headless mode
-        .width = 1280,
-        .height = 720
-    });
+    auto gpuContext = db->spawnAndReset<GpuContext>("gpu_context", GpuContext::ResetParameters {.win    = nullptr, // null window = headless mode
+                                                                                                .width  = 1280,
+                                                                                                .height = 720});
     if (!gpuContext) {
         GN_ERROR(sLogger)("Failed to create and initialize GPU context");
         return -1;
@@ -35,7 +33,7 @@ int main(int argc, const char * argv[]) {
     auto [displayWidth, displayHeight] = gpuContext->dimension();
 
     // Create and initialize backbuffer
-    auto backbuffer = db->spawnAndReset<Backbuffer>("backbuffer", Backbuffer::Descriptor{displayWidth, displayHeight});
+    auto backbuffer = db->spawnAndReset<Backbuffer>("backbuffer", Backbuffer::Descriptor {displayWidth, displayHeight});
     if (!backbuffer) {
         GN_ERROR(sLogger)("Failed to create and initialize backbuffer");
         return -1;
@@ -66,43 +64,37 @@ int main(int argc, const char * argv[]) {
         renderWorkflow->name = "Render";
 
         // Task: Prepare backbuffer
-        auto prepareTask = Workflow::Task{};
+        auto prepareTask   = Workflow::Task {};
         prepareTask.action = prepareAction;
-        auto prepareArgs = AutoRef<PrepareBackbuffer::A>(
-            new PrepareBackbuffer::A(
-                Artifact::Identification(PrepareBackbuffer::A::TYPE, "prepare_args"), 0));
+        auto prepareArgs   = AutoRef<PrepareBackbuffer::A>(new PrepareBackbuffer::A(Artifact::Identification(PrepareBackbuffer::A::TYPE, "prepare_args"), 0));
         prepareArgs->backbuffer.set(backbuffer);
         prepareTask.arguments = prepareArgs;
         renderWorkflow->tasks.append(prepareTask);
 
         // Task: Clear render target
-        auto clearTask = Workflow::Task{};
+        auto clearTask   = Workflow::Task {};
         clearTask.action = clearAction;
-        auto clearArgs = AutoRef<ClearRenderTarget::A>(
-            new ClearRenderTarget::A(
-                Artifact::Identification(ClearRenderTarget::A::TYPE, "clear_args"), 0));
-        
-        auto color = ClearRenderTarget::A::ClearColor{};
-        color.r = 0.39f;
-        color.g = 0.58f;
-        color.b = 0.93f;
-        color.a = 1.0f;
+        auto clearArgs   = AutoRef<ClearRenderTarget::A>(new ClearRenderTarget::A(Artifact::Identification(ClearRenderTarget::A::TYPE, "clear_args"), 0));
+
+        auto color = ClearRenderTarget::A::ClearColor {};
+        color.r    = 0.39f;
+        color.g    = 0.58f;
+        color.b    = 0.93f;
+        color.a    = 1.0f;
         clearArgs->color.set(color);
 
-        auto rt = RenderTarget{};
+        auto rt   = RenderTarget {};
         rt.target = backbuffer;
-        rt.sub = Texture::SubresourceIndex();
+        rt.sub    = Texture::SubresourceIndex();
         clearArgs->renderTarget.set(rt);
 
         clearTask.arguments = clearArgs;
         renderWorkflow->tasks.append(clearTask);
 
         // Task: Present backbuffer
-        auto presentTask = Workflow::Task{};
+        auto presentTask   = Workflow::Task {};
         presentTask.action = presentAction;
-        auto presentArgs = AutoRef<PresentBackbuffer::A>(
-            new PresentBackbuffer::A(
-                Artifact::Identification(PresentBackbuffer::A::TYPE, "present_args"), 0));
+        auto presentArgs   = AutoRef<PresentBackbuffer::A>(new PresentBackbuffer::A(Artifact::Identification(PresentBackbuffer::A::TYPE, "present_args"), 0));
         presentArgs->backbuffer.set(backbuffer);
         presentTask.arguments = presentArgs;
         renderWorkflow->tasks.append(presentTask);
@@ -114,12 +106,11 @@ int main(int argc, const char * argv[]) {
         GN_ERROR(sLogger)("Failed to submit render graph");
         return -1;
     }
-    
+
     // Wait for completion and get result
     auto result = submission->result();
     if (result.result != Action::ExecutionResult::PASSED) {
-        GN_WARN(sLogger)("Render graph submission: {}", 
-            result.result == Action::ExecutionResult::FAILED ? "FAILED" : "WARNING");
+        GN_WARN(sLogger)("Render graph submission: {}", result.result == Action::ExecutionResult::FAILED ? "FAILED" : "WARNING");
     }
 
     GN_INFO(sLogger)("Render graph hello world completed");
