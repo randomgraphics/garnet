@@ -1,7 +1,5 @@
 #pragma once
 
-#include <variant>
-
 namespace GN::rdg {
 
 struct ClearRenderTarget : public Action {
