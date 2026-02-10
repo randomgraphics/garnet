@@ -4,23 +4,19 @@
  * This test demonstrates the render graph interface by showing how to:
  * 1. Define custom artifacts (IntegerArtifact)
  * 2. Define custom actions (InitIntegerAction, AddIntegersAction, MultiplyIntegersAction)
- * 3. Create tasks with shards
- * 4. Schedule and execute tasks through a render graph
- *
- * Note: This is a conceptual demonstration of the interface structure.
- * A full implementation would require the complete GN library.
+ * 3. Create workflows with tasks
+ * 4. Schedule and execute workflows through a render graph
  */
 
 #include "../testCommon.h"
 
-#include <garnet/GNrender-graph.h>
-#include <unordered_map>
+#include <garnet/GNrdg.h>
 
 // ============================================================================
-// CONCEPTUAL PSEUDO-CODE DEMONSTRATION
+// CUSTOM ARTIFACTS AND ACTIONS
 // ============================================================================
 
-namespace GN::rg {
+namespace GN::rdg {
 
 // Define a custom artifact that holds an integer
 struct IntegerArtifact : public Artifact {
@@ -28,266 +24,366 @@ struct IntegerArtifact : public Artifact {
 
     int value = 0;
 
-    IntegerArtifact(const StrA & name, uint64_t seq): Artifact(Artifact::Identification {TYPE, name}, seq) {}
+    IntegerArtifact(ArtifactDatabase & db, const Artifact::Identification & id, uint64_t seq): Artifact(db, id, seq) {}
 };
 
 // Define an action to initialize an integer artifact
 struct InitIntegerAction : public Action {
-    static inline const Guid TYPE = {0x11111111, 0x2222, 0x3333, {0x44, 0x44, 0x55, 0x55, 0x66, 0x66, 0x77, 0x77}};
+    inline static constexpr Guid TYPE = {0x11111111, 0x2222, 0x3333, {0x44, 0x44, 0x55, 0x55, 0x66, 0x66, 0x77, 0x77}};
 
-    int initValue;
+    int initValue = 0;
 
-    InitIntegerAction(const StrA & name, int value, uint64_t seq): Action(Artifact::Identification {TYPE, name}, seq), initValue(value) {}
+    InitIntegerAction(ArtifactDatabase & db, const Artifact::Identification & id, uint64_t seq): Action(db, id, seq) {}
 
-    // Define parameters: one output parameter
-    const std::unordered_map<StrA, const Parameter> & parameters() const override {
-        static const std::unordered_map<StrA, const Parameter> params = {{"output", Parameter(IntegerArtifact::TYPE, "w")}};
-        return params;
-    }
+    struct A : public Arguments {
+        inline static constexpr Guid        TYPE = {0x11111112, 0x2222, 0x3333, {0x44, 0x44, 0x55, 0x55, 0x66, 0x66, 0x77, 0x77}};
+        WriteOnly<AutoRef<IntegerArtifact>> output;
+        A(ArtifactDatabase & db, const Artifact::Identification & id, uint64_t seq): Arguments(db, id, seq) {}
+    };
 
     // Execute: set the output artifact's value
-    ExecutionResult execute(const std::unordered_map<StrA, AutoRef<Artifact>> & args) override {
-        // Look up output argument by name
-        auto outputIt = args.find("output");
-        TS_ASSERT(outputIt != args.end());
-        TS_ASSERT(outputIt->second != nullptr);
+    ExecutionResult execute(Arguments & args) override {
+        auto * a = args.castTo<A>();
+        TS_ASSERT(a != nullptr); // null means wrong type
+        auto * outputArtifact = a->output.get();
+        TS_ASSERT(outputArtifact != nullptr);
+        auto output = outputArtifact->get();
+        TS_ASSERT(output != nullptr);
 
-        auto output_artifact = static_cast<IntegerArtifact *>(outputIt->second.get());
-        TS_ASSERT(output_artifact != nullptr);
-        TS_ASSERT_EQUALS(&output_artifact->id.type, &IntegerArtifact::TYPE);
+        auto integerArtifact = output->castTo<IntegerArtifact>();
+        TS_ASSERT(integerArtifact != nullptr);
 
-        GN_INFO(GN::getLogger("GN.rg.test"))("InitIntegerAction: initializing integer output to {}", initValue);
-        output_artifact->value = initValue;
-        return Action::PASSED;
+        GN_INFO(GN::getLogger("GN.rdg.test"))("InitIntegerAction: initializing integer output to {}", initValue);
+        integerArtifact->value = initValue;
+        return PASSED;
     }
 };
 
 // Define an action to add two integers
 struct AddIntegersAction : public Action {
-    static inline const Guid TYPE = {0xaaaaaaaa, 0xbbbb, 0xcccc, {0xdd, 0xdd, 0xee, 0xee, 0xff, 0xff, 0x00, 0x00}};
+    inline static constexpr Guid TYPE = {0xaaaaaaaa, 0xbbbb, 0xcccc, {0xdd, 0xdd, 0xee, 0xee, 0xff, 0xff, 0x00, 0x00}};
 
-    AddIntegersAction(const StrA & name, uint64_t seq): Action(Artifact::Identification {TYPE, name}, seq) {}
+    AddIntegersAction(ArtifactDatabase & db, const Artifact::Identification & id, uint64_t seq): Action(db, id, seq) {}
 
-    // Define parameters: two inputs, one output
-    const std::unordered_map<StrA, const Parameter> & parameters() const override {
-        static const std::unordered_map<StrA, const Parameter> params = {{"input1", Parameter(IntegerArtifact::TYPE, "r")},
-                                                                         {"input2", Parameter(IntegerArtifact::TYPE, "r")},
-                                                                         {"output", Parameter(IntegerArtifact::TYPE, "w")}};
-        return params;
-    }
+    struct A : public Arguments {
+        inline static constexpr Guid        TYPE = {0xaaaaaaab, 0xbbbb, 0xcccc, {0xdd, 0xdd, 0xee, 0xee, 0xff, 0xff, 0x00, 0x00}};
+        ReadOnly<AutoRef<IntegerArtifact>>  input1;
+        ReadOnly<AutoRef<IntegerArtifact>>  input2;
+        WriteOnly<AutoRef<IntegerArtifact>> output;
+        A(ArtifactDatabase & db, const Artifact::Identification & id, uint64_t seq): Arguments(db, id, seq) {}
+    };
 
     // Execute: input1.value + input2.value -> output.value
-    ExecutionResult execute(const std::unordered_map<StrA, AutoRef<Artifact>> & args) override {
-        // Look up arguments by name
-        auto input1It = args.find("input1");
-        auto input2It = args.find("input2");
-        auto outputIt = args.find("output");
+    ExecutionResult execute(Arguments & args) override {
+        auto * a = args.castTo<A>();
+        TS_ASSERT(a != nullptr); // null means wrong type
+        auto * input1Artifact = a->input1.get();
+        auto * input2Artifact = a->input2.get();
+        auto * outputArtifact = a->output.get();
 
-        TS_ASSERT(input1It != args.end());
-        TS_ASSERT(input2It != args.end());
-        TS_ASSERT(outputIt != args.end());
-        TS_ASSERT(input1It->second != nullptr);
-        TS_ASSERT(input2It->second != nullptr);
-        TS_ASSERT(outputIt->second != nullptr);
+        TS_ASSERT(input1Artifact != nullptr);
+        TS_ASSERT(input2Artifact != nullptr);
+        TS_ASSERT(outputArtifact != nullptr);
 
-        auto input1_artifact = static_cast<IntegerArtifact *>(input1It->second.get());
-        auto input2_artifact = static_cast<IntegerArtifact *>(input2It->second.get());
-        auto output_artifact = static_cast<IntegerArtifact *>(outputIt->second.get());
+        auto input1 = input1Artifact->get();
+        auto input2 = input2Artifact->get();
+        auto output = outputArtifact->get();
 
-        TS_ASSERT(input1_artifact != nullptr);
-        TS_ASSERT(input2_artifact != nullptr);
-        TS_ASSERT(output_artifact != nullptr);
-        TS_ASSERT_EQUALS(&input1_artifact->id.type, &IntegerArtifact::TYPE);
-        TS_ASSERT_EQUALS(&input2_artifact->id.type, &IntegerArtifact::TYPE);
-        TS_ASSERT_EQUALS(&output_artifact->id.type, &IntegerArtifact::TYPE);
+        TS_ASSERT(input1 != nullptr);
+        TS_ASSERT(input2 != nullptr);
+        TS_ASSERT(output != nullptr);
 
-        GN_INFO(GN::getLogger("GN.rg.test"))
-        ("AddIntegersAction: {} + {} = {}", input1_artifact->value, input2_artifact->value, input1_artifact->value + input2_artifact->value);
-        output_artifact->value = input1_artifact->value + input2_artifact->value;
-        return Action::PASSED;
+        auto integerInput1 = input1->castTo<IntegerArtifact>();
+        auto integerInput2 = input2->castTo<IntegerArtifact>();
+        auto integerOutput = output->castTo<IntegerArtifact>();
+
+        TS_ASSERT(integerInput1 != nullptr);
+        TS_ASSERT(integerInput2 != nullptr);
+        TS_ASSERT(integerOutput != nullptr);
+
+        GN_INFO(GN::getLogger("GN.rdg.test"))
+        ("AddIntegersAction: {} + {} = {}", integerInput1->value, integerInput2->value, integerInput1->value + integerInput2->value);
+        integerOutput->value = integerInput1->value + integerInput2->value;
+        return PASSED;
     }
 };
 
 // Define an action to multiply two integers
 struct MultiplyIntegersAction : public Action {
-    static inline const Guid TYPE = {0x55555555, 0x6666, 0x7777, {0x88, 0x88, 0x99, 0x99, 0xaa, 0xaa, 0xbb, 0xbb}};
+    inline static constexpr Guid TYPE = {0x55555555, 0x6666, 0x7777, {0x88, 0x88, 0x99, 0x99, 0xaa, 0xaa, 0xbb, 0xbb}};
 
-    MultiplyIntegersAction(const StrA & name, uint64_t seq): Action(Artifact::Identification {TYPE, name}, seq) {}
+    MultiplyIntegersAction(ArtifactDatabase & db, const Artifact::Identification & id, uint64_t seq): Action(db, id, seq) {}
 
-    // Define parameters: two inputs, one output
-    const std::unordered_map<StrA, const Parameter> & parameters() const override {
-        static const std::unordered_map<StrA, const Parameter> params = {{"input1", Parameter(IntegerArtifact::TYPE, "r")},
-                                                                         {"input2", Parameter(IntegerArtifact::TYPE, "r")},
-                                                                         {"output", Parameter(IntegerArtifact::TYPE, "w")}};
-        return params;
-    }
+    struct A : public Arguments {
+        inline static constexpr Guid        TYPE = {0x55555556, 0x6666, 0x7777, {0x88, 0x88, 0x99, 0x99, 0xaa, 0xaa, 0xbb, 0xbb}};
+        ReadOnly<AutoRef<IntegerArtifact>>  input1;
+        ReadOnly<AutoRef<IntegerArtifact>>  input2;
+        WriteOnly<AutoRef<IntegerArtifact>> output;
+        A(ArtifactDatabase & db, const Artifact::Identification & id, uint64_t seq): Arguments(db, id, seq) {}
+    };
 
     // Execute: input1.value * input2.value -> output.value
-    ExecutionResult execute(const std::unordered_map<StrA, AutoRef<Artifact>> & args) override {
-        // Look up arguments by name
-        auto input1It = args.find("input1");
-        auto input2It = args.find("input2");
-        auto outputIt = args.find("output");
+    ExecutionResult execute(Arguments & args) override {
+        auto * a = args.castTo<A>();
+        TS_ASSERT(a != nullptr); // null means wrong type
+        auto * input1Artifact = a->input1.get();
+        auto * input2Artifact = a->input2.get();
+        auto * outputArtifact = a->output.get();
 
-        TS_ASSERT(input1It != args.end());
-        TS_ASSERT(input2It != args.end());
-        TS_ASSERT(outputIt != args.end());
-        TS_ASSERT(input1It->second != nullptr);
-        TS_ASSERT(input2It->second != nullptr);
-        TS_ASSERT(outputIt->second != nullptr);
+        TS_ASSERT(input1Artifact != nullptr);
+        TS_ASSERT(input2Artifact != nullptr);
+        TS_ASSERT(outputArtifact != nullptr);
 
-        auto input1_artifact = static_cast<IntegerArtifact *>(input1It->second.get());
-        auto input2_artifact = static_cast<IntegerArtifact *>(input2It->second.get());
-        auto output_artifact = static_cast<IntegerArtifact *>(outputIt->second.get());
+        auto input1 = input1Artifact->get();
+        auto input2 = input2Artifact->get();
+        auto output = outputArtifact->get();
 
-        TS_ASSERT(input1_artifact != nullptr);
-        TS_ASSERT(input2_artifact != nullptr);
-        TS_ASSERT(output_artifact != nullptr);
-        TS_ASSERT_EQUALS(&input1_artifact->id.type, &IntegerArtifact::TYPE);
-        TS_ASSERT_EQUALS(&input2_artifact->id.type, &IntegerArtifact::TYPE);
-        TS_ASSERT_EQUALS(&output_artifact->id.type, &IntegerArtifact::TYPE);
+        TS_ASSERT(input1 != nullptr);
+        TS_ASSERT(input2 != nullptr);
+        TS_ASSERT(output != nullptr);
 
-        GN_INFO(GN::getLogger("GN.rg.test"))
-        ("MultiplyIntegersAction: {} * {} = {}", input1_artifact->value, input2_artifact->value, input1_artifact->value * input2_artifact->value);
-        output_artifact->value = input1_artifact->value * input2_artifact->value;
-        return Action::PASSED;
+        auto integerInput1 = input1->castTo<IntegerArtifact>();
+        auto integerInput2 = input2->castTo<IntegerArtifact>();
+        auto integerOutput = output->castTo<IntegerArtifact>();
+
+        TS_ASSERT(integerInput1 != nullptr);
+        TS_ASSERT(integerInput2 != nullptr);
+        TS_ASSERT(integerOutput != nullptr);
+
+        GN_INFO(GN::getLogger("GN.rdg.test"))
+        ("MultiplyIntegersAction: {} * {} = {}", integerInput1->value, integerInput2->value, integerInput1->value * integerInput2->value);
+        integerOutput->value = integerInput1->value * integerInput2->value;
+        return PASSED;
     }
+
+    using Action::Action;
 };
 
-// Helper function to create actions
-template<typename ActionType>
-AutoRef<ActionType> createAction(const StrA & name) {
-    static uint64_t sequenceCounter = 1;
-    return AutoRef<ActionType>(new ActionType(name, sequenceCounter++));
-}
-
-template<typename ActionType>
-AutoRef<ActionType> createAction(const StrA & name, int initValue) {
-    static uint64_t sequenceCounter = 1;
-    return AutoRef<ActionType>(new ActionType(name, initValue, sequenceCounter++));
-}
-
-} // namespace GN::rg
+} // namespace GN::rdg
 
 // ============================================================================
 // TEST EXECUTION FLOW
 // ============================================================================
 
+// Template helper function to spawn a typed artifact
+template<typename T>
+GN::AutoRef<T> spawnTyped(GN::rdg::ArtifactDatabase & db, const GN::StrA & name) {
+    auto a = db.spawn({T::TYPE, name});
+    TS_ASSERT(a != nullptr);
+    auto t = a->template castTo<T>();
+    TS_ASSERT(t != nullptr);
+    return GN::AutoRef<T>(t);
+}
+
 class RenderGraphTest : public CxxTest::TestSuite {
 public:
     void testRenderGraphArithmetic() {
+        // Create an artifact database
+        GN::rdg::ArtifactDatabase::CreateParameters dbParams;
+        dbParams.autoAdmitAllBuiltInArtifacts = false; // We'll register our custom types manually
+        auto db                               = GN::rdg::ArtifactDatabase::create(dbParams);
+        TS_ASSERT(db != nullptr);
+
+        // Register custom artifact type
+        bool artifactRegistered = db->admit(GN::rdg::IntegerArtifact::TYPE, [db](const GN::StrA & name, uint64_t sequence) -> GN::AutoRef<GN::rdg::Artifact> {
+            return GN::AutoRef<GN::rdg::Artifact>(
+                new GN::rdg::IntegerArtifact(*db, GN::rdg::Artifact::Identification {GN::rdg::IntegerArtifact::TYPE, name}, sequence));
+        });
+        TS_ASSERT(artifactRegistered);
+
+        // Register custom action types
+        bool initActionRegistered =
+            db->admit(GN::rdg::InitIntegerAction::TYPE, [db](const GN::StrA & name, uint64_t sequence) -> GN::AutoRef<GN::rdg::Artifact> {
+                return GN::AutoRef<GN::rdg::Artifact>(
+                    new GN::rdg::InitIntegerAction(*db, GN::rdg::Artifact::Identification {GN::rdg::InitIntegerAction::TYPE, name}, sequence));
+            });
+        TS_ASSERT(initActionRegistered);
+
+        bool addActionRegistered =
+            db->admit(GN::rdg::AddIntegersAction::TYPE, [db](const GN::StrA & name, uint64_t sequence) -> GN::AutoRef<GN::rdg::Artifact> {
+                return GN::AutoRef<GN::rdg::Artifact>(
+                    new GN::rdg::AddIntegersAction(*db, GN::rdg::Artifact::Identification {GN::rdg::AddIntegersAction::TYPE, name}, sequence));
+            });
+        TS_ASSERT(addActionRegistered);
+
+        bool multiplyActionRegistered =
+            db->admit(GN::rdg::MultiplyIntegersAction::TYPE, [db](const GN::StrA & name, uint64_t sequence) -> GN::AutoRef<GN::rdg::Artifact> {
+                return GN::AutoRef<GN::rdg::Artifact>(
+                    new GN::rdg::MultiplyIntegersAction(*db, GN::rdg::Artifact::Identification {GN::rdg::MultiplyIntegersAction::TYPE, name}, sequence));
+            });
+        TS_ASSERT(multiplyActionRegistered);
+
+        // Register Arguments types for actions
+        bool initArgsRegistered =
+            db->admit(GN::rdg::InitIntegerAction::A::TYPE, [db](const GN::StrA & name, uint64_t sequence) -> GN::AutoRef<GN::rdg::Artifact> {
+                return GN::AutoRef<GN::rdg::Artifact>(
+                    new GN::rdg::InitIntegerAction::A(*db, GN::rdg::Artifact::Identification {GN::rdg::InitIntegerAction::A::TYPE, name}, sequence));
+            });
+        TS_ASSERT(initArgsRegistered);
+
+        bool addArgsRegistered =
+            db->admit(GN::rdg::AddIntegersAction::A::TYPE, [db](const GN::StrA & name, uint64_t sequence) -> GN::AutoRef<GN::rdg::Artifact> {
+                return GN::AutoRef<GN::rdg::Artifact>(
+                    new GN::rdg::AddIntegersAction::A(*db, GN::rdg::Artifact::Identification {GN::rdg::AddIntegersAction::A::TYPE, name}, sequence));
+            });
+        TS_ASSERT(addArgsRegistered);
+
+        bool multiplyArgsRegistered =
+            db->admit(GN::rdg::MultiplyIntegersAction::A::TYPE, [db](const GN::StrA & name, uint64_t sequence) -> GN::AutoRef<GN::rdg::Artifact> {
+                return GN::AutoRef<GN::rdg::Artifact>(
+                    new GN::rdg::MultiplyIntegersAction::A(*db, GN::rdg::Artifact::Identification {GN::rdg::MultiplyIntegersAction::A::TYPE, name}, sequence));
+            });
+        TS_ASSERT(multiplyArgsRegistered);
+
         // Create a render graph instance
-        GN::rg::CreateRenderGraphParams params;
-        GN::rg::RenderGraph *           renderGraph = GN::rg::createRenderGraph(params);
+        GN::rdg::RenderGraph::CreateParameters params;
+        auto                                   renderGraph = GN::rdg::RenderGraph::create(params);
         TS_ASSERT(renderGraph != nullptr);
 
-        // Register our custom artifact and action types
-        // Note: These APIs require RenderGraph to implement ArtifactDatabase interface
-        // For now, creating artifacts directly for testing
-        static uint64_t               artifactSeq = 1;
-        GN::AutoRef<GN::rg::Artifact> one         = GN::AutoRef<GN::rg::Artifact>(new GN::rg::IntegerArtifact("one", artifactSeq++));
-        GN::AutoRef<GN::rg::Artifact> two         = GN::AutoRef<GN::rg::Artifact>(new GN::rg::IntegerArtifact("two", artifactSeq++));
-        GN::AutoRef<GN::rg::Artifact> three       = GN::AutoRef<GN::rg::Artifact>(new GN::rg::IntegerArtifact("three", artifactSeq++));
-        GN::AutoRef<GN::rg::Artifact> sum         = GN::AutoRef<GN::rg::Artifact>(new GN::rg::IntegerArtifact("sum", artifactSeq++));
-        GN::AutoRef<GN::rg::Artifact> result      = GN::AutoRef<GN::rg::Artifact>(new GN::rg::IntegerArtifact("result", artifactSeq++));
+        // Create artifacts using the database
+        auto one    = spawnTyped<GN::rdg::IntegerArtifact>(*db, "one");
+        auto two    = spawnTyped<GN::rdg::IntegerArtifact>(*db, "two");
+        auto three  = spawnTyped<GN::rdg::IntegerArtifact>(*db, "three");
+        auto sum    = spawnTyped<GN::rdg::IntegerArtifact>(*db, "sum");
+        auto result = spawnTyped<GN::rdg::IntegerArtifact>(*db, "result");
 
-        // Verify artifacts are created
         TS_ASSERT(one != nullptr);
         TS_ASSERT(two != nullptr);
         TS_ASSERT(three != nullptr);
         TS_ASSERT(sum != nullptr);
         TS_ASSERT(result != nullptr);
 
-        // Task 1: Initialize values (1, 2, 3)
+        // Workflow 1: Initialize values (1, 2, 3)
         {
-            GN::rg::Task * initTask = renderGraph->schedule();
-            TS_ASSERT(initTask != nullptr);
-            initTask->name = "initialize_values";
+            auto * workflow = renderGraph->schedule();
+            TS_ASSERT(workflow != nullptr);
+            workflow->name = "initialize_values";
 
-            // Shard 1: Initialize 'one' to 1
-            GN::rg::Task::Shard initOneShard;
-            initOneShard.action              = GN::rg::createAction<GN::rg::InitIntegerAction>("init_one", 1);
-            initOneShard.arguments["output"] = one;
-            initTask->shards.append(initOneShard);
+            // Task 1: Initialize 'one' to 1
+            {
+                auto initAction = spawnTyped<GN::rdg::InitIntegerAction>(*db, "init_one");
+                TS_ASSERT(initAction != nullptr);
+                initAction->initValue = 1;
 
-            // Shard 2: Initialize 'two' to 2
-            GN::rg::Task::Shard initTwoShard;
-            initTwoShard.action              = GN::rg::createAction<GN::rg::InitIntegerAction>("init_two", 2);
-            initTwoShard.arguments["output"] = two;
-            initTask->shards.append(initTwoShard);
+                auto initArgs = spawnTyped<GN::rdg::InitIntegerAction::A>(*db, "init_one_args");
+                TS_ASSERT(initArgs != nullptr);
+                initArgs->output.set(one);
 
-            // Shard 3: Initialize 'three' to 3
-            GN::rg::Task::Shard initThreeShard;
-            initThreeShard.action              = GN::rg::createAction<GN::rg::InitIntegerAction>("init_three", 3);
-            initThreeShard.arguments["output"] = three;
-            initTask->shards.append(initThreeShard);
+                GN::rdg::Workflow::Task task;
+                task.action    = initAction;
+                task.arguments = initArgs;
+                workflow->tasks.append(task);
+            }
+
+            // Task 2: Initialize 'two' to 2
+            {
+                auto initAction = spawnTyped<GN::rdg::InitIntegerAction>(*db, "init_two");
+                TS_ASSERT(initAction != nullptr);
+                initAction->initValue = 2;
+
+                auto initArgs = spawnTyped<GN::rdg::InitIntegerAction::A>(*db, "init_two_args");
+                TS_ASSERT(initArgs != nullptr);
+                initArgs->output.set(two);
+
+                GN::rdg::Workflow::Task task;
+                task.action    = initAction;
+                task.arguments = initArgs;
+                workflow->tasks.append(task);
+            }
+
+            // Task 3: Initialize 'three' to 3
+            {
+                auto initAction = spawnTyped<GN::rdg::InitIntegerAction>(*db, "init_three");
+                TS_ASSERT(initAction != nullptr);
+                initAction->initValue = 3;
+
+                auto initArgs = spawnTyped<GN::rdg::InitIntegerAction::A>(*db, "init_three_args");
+                TS_ASSERT(initArgs != nullptr);
+                initArgs->output.set(three);
+
+                GN::rdg::Workflow::Task task;
+                task.action    = initAction;
+                task.arguments = initArgs;
+                workflow->tasks.append(task);
+            }
         }
 
-        // Task 2: Compute sum = 1 + 2
+        // Workflow 2: Compute sum = 1 + 2
         {
-            GN::rg::Task * addTask = renderGraph->schedule();
-            TS_ASSERT(addTask != nullptr);
-            addTask->name = "compute_sum";
+            auto * workflow = renderGraph->schedule();
+            TS_ASSERT(workflow != nullptr);
+            workflow->name = "compute_sum";
 
-            GN::rg::Task::Shard addShard;
-            addShard.action              = GN::rg::createAction<GN::rg::AddIntegersAction>("add_1_2");
-            addShard.arguments["input1"] = one;
-            addShard.arguments["input2"] = two;
-            addShard.arguments["output"] = sum;
-            addTask->shards.append(addShard);
+            auto addAction = spawnTyped<GN::rdg::AddIntegersAction>(*db, "add_1_2");
+            TS_ASSERT(addAction != nullptr);
+
+            auto addArgs = spawnTyped<GN::rdg::AddIntegersAction::A>(*db, "add_1_2_args");
+            TS_ASSERT(addArgs != nullptr);
+            addArgs->input1.set(one);
+            addArgs->input2.set(two);
+            addArgs->output.set(sum);
+
+            GN::rdg::Workflow::Task task;
+            task.action    = addAction;
+            task.arguments = addArgs;
+            workflow->tasks.append(task);
         }
 
-        // Task 3: Compute result = 3 * sum
+        // Workflow 3: Compute result = 3 * sum
         {
-            GN::rg::Task * multiplyTask = renderGraph->schedule();
-            TS_ASSERT(multiplyTask != nullptr);
-            multiplyTask->name = "compute_result";
+            auto * workflow = renderGraph->schedule();
+            TS_ASSERT(workflow != nullptr);
+            workflow->name = "compute_result";
 
-            GN::rg::Task::Shard multiplyShard;
-            multiplyShard.action              = GN::rg::createAction<GN::rg::MultiplyIntegersAction>("multiply_3_sum");
-            multiplyShard.arguments["input1"] = three;
-            multiplyShard.arguments["input2"] = sum;
-            multiplyShard.arguments["output"] = result;
-            multiplyTask->shards.append(multiplyShard);
+            auto multiplyAction = spawnTyped<GN::rdg::MultiplyIntegersAction>(*db, "multiply_3_sum");
+            TS_ASSERT(multiplyAction != nullptr);
+
+            auto multiplyArgs = spawnTyped<GN::rdg::MultiplyIntegersAction::A>(*db, "multiply_3_sum_args");
+            TS_ASSERT(multiplyArgs != nullptr);
+            multiplyArgs->input1.set(three);
+            multiplyArgs->input2.set(sum);
+            multiplyArgs->output.set(result);
+
+            GN::rdg::Workflow::Task task;
+            task.action    = multiplyAction;
+            task.arguments = multiplyArgs;
+            workflow->tasks.append(task);
         }
 
-        // Submit all scheduled tasks for execution
-        GN::rg::RenderGraph::ExecutionParams execParams;
-        execParams.debug                                = false;
-        GN::rg::RenderGraph::ExecutionResult execResult = renderGraph->submit(execParams);
-        TS_ASSERT_EQUALS(execResult.result, GN::rg::Action::PASSED);
+        // Submit all scheduled workflows for execution
+        GN::rdg::Submission::Parameters execParams;
+        execParams.debug = false;
+        auto submission  = renderGraph->submit(execParams);
+        TS_ASSERT(submission != nullptr);
+
+        // Wait for completion and get result
+        auto execResult = submission->result();
+        TS_ASSERT_EQUALS(execResult.result, GN::rdg::Action::PASSED);
 
         // Verify result
-        GN::rg::IntegerArtifact * resultArtifact = static_cast<GN::rg::IntegerArtifact *>(result.get());
-        TS_ASSERT(resultArtifact != nullptr);
-        TS_ASSERT_EQUALS(resultArtifact->value, 9);
+        TS_ASSERT_EQUALS(result->value, 9);
 
         // Verify intermediate values are correct
-        GN::rg::IntegerArtifact * oneArtifact   = static_cast<GN::rg::IntegerArtifact *>(one.get());
-        GN::rg::IntegerArtifact * twoArtifact   = static_cast<GN::rg::IntegerArtifact *>(two.get());
-        GN::rg::IntegerArtifact * threeArtifact = static_cast<GN::rg::IntegerArtifact *>(three.get());
-        GN::rg::IntegerArtifact * sumArtifact   = static_cast<GN::rg::IntegerArtifact *>(sum.get());
-
-        TS_ASSERT_EQUALS(oneArtifact->value, 1);
-        TS_ASSERT_EQUALS(twoArtifact->value, 2);
-        TS_ASSERT_EQUALS(threeArtifact->value, 3);
-        TS_ASSERT_EQUALS(sumArtifact->value, 3);
+        TS_ASSERT_EQUALS(one->value, 1);
+        TS_ASSERT_EQUALS(two->value, 2);
+        TS_ASSERT_EQUALS(three->value, 3);
+        TS_ASSERT_EQUALS(sum->value, 3);
     }
 };
 
 /*
  * EXPECTED OUTPUT:
  *
- * Executing task: initialize_values
- *   Executing shard: init_one -> one = 1
- *   Executing shard: init_two -> two = 2
- *   Executing shard: init_three -> three = 3
+ * Executing workflow: initialize_values
+ *   Executing task: init_one -> one = 1
+ *   Executing task: init_two -> two = 2
+ *   Executing task: init_three -> three = 3
  *
- * Executing task: compute_sum
- *   Executing shard: add_1_2 -> sum = 1 + 2 = 3
+ * Executing workflow: compute_sum
+ *   Executing task: add_1_2 -> sum = 1 + 2 = 3
  *
- * Executing task: compute_result
- *   Executing shard: multiply_3_sum -> result = 3 * 3 = 9
+ * Executing workflow: compute_result
+ *   Executing task: multiply_3_sum -> result = 3 * 3 = 9
  *
  * Final result: 9 (SUCCESS!)
  */
