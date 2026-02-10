@@ -88,6 +88,15 @@ struct ArtifactDatabase {
     /// Erase an artifact instance by its sequence number. Faster than erase by ID.
     virtual bool erase(uint64_t sequence) = 0;
 
+    template<typename T>
+    AutoRef<T> spawn(const StrA & name) {
+        auto a = spawn({T::TYPE, name});
+        if (!a) return {};
+        auto t = a->template castTo<T>();
+        if (!t) return {};
+        return AutoRef<T>(t);
+    }
+
     // A helper template to create and reset certain type of artifact in one function call.
     template<typename T, typename... CREATE_ARGS>
     AutoRef<T> spawnAndReset(const StrA & name, CREATE_ARGS &&... args) {

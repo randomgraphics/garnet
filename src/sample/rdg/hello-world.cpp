@@ -1,22 +1,22 @@
 #include "pch.h"
 
 using namespace GN;
-using namespace GN::rg;
+using namespace GN::rdg;
 
 static GN::Logger * sLogger = GN::getLogger("GN.sample.render-graph");
 
-int main(int argc, const char * argv[]) {
+int main(int, const char **) {
     enableCRTMemoryCheck();
 
     // Create artifact database with auto-registration of built-in artifacts
-    AutoRef<ArtifactDatabase> db = ArtifactDatabase::create({});
+    auto db = std::unique_ptr<ArtifactDatabase>(ArtifactDatabase::create({}));
     if (!db) {
         GN_ERROR(sLogger)("Failed to create artifact database");
         return -1;
     }
 
     // Create render graph
-    AutoRef<RenderGraph> renderGraph = RenderGraph::create({});
+    auto renderGraph = std::unique_ptr<RenderGraph>(RenderGraph::create({}));
     if (!renderGraph) {
         GN_ERROR(sLogger)("Failed to create render graph");
         return -1;
@@ -66,7 +66,7 @@ int main(int argc, const char * argv[]) {
         // Task: Prepare backbuffer
         auto prepareTask   = Workflow::Task {};
         prepareTask.action = prepareAction;
-        auto prepareArgs   = AutoRef<PrepareBackbuffer::A>(new PrepareBackbuffer::A(Artifact::Identification(PrepareBackbuffer::A::TYPE, "prepare_args"), 0));
+        auto prepareArgs   = db->spawn<PrepareBackbuffer::A>("prepare_args");
         prepareArgs->backbuffer.set(backbuffer);
         prepareTask.arguments = prepareArgs;
         renderWorkflow->tasks.append(prepareTask);
@@ -74,7 +74,7 @@ int main(int argc, const char * argv[]) {
         // Task: Clear render target
         auto clearTask   = Workflow::Task {};
         clearTask.action = clearAction;
-        auto clearArgs   = AutoRef<ClearRenderTarget::A>(new ClearRenderTarget::A(Artifact::Identification(ClearRenderTarget::A::TYPE, "clear_args"), 0));
+        auto clearArgs   = db->spawn<ClearRenderTarget::A>("clear_args");
 
         auto color = ClearRenderTarget::A::ClearColor {};
         color.r    = 0.39f;
@@ -94,7 +94,7 @@ int main(int argc, const char * argv[]) {
         // Task: Present backbuffer
         auto presentTask   = Workflow::Task {};
         presentTask.action = presentAction;
-        auto presentArgs   = AutoRef<PresentBackbuffer::A>(new PresentBackbuffer::A(Artifact::Identification(PresentBackbuffer::A::TYPE, "present_args"), 0));
+        auto presentArgs   = db->spawn<PresentBackbuffer::A>("present_args");
         presentArgs->backbuffer.set(backbuffer);
         presentTask.arguments = presentArgs;
         renderWorkflow->tasks.append(presentTask);

@@ -1,25 +1,25 @@
 #include "pch.h"
 
 using namespace GN;
-using namespace GN::rg;
+using namespace GN::rdg;
 using namespace GN::util;
 
 static GN::Logger * sLogger = GN::getLogger("GN.sample.render-graph");
 
-int main(int argc, const char * argv[]) {
+int main(int, const char **) {
     enableCRTMemoryCheck();
 
-    // Parse command line
-    CommandLineArguments cmdargs(argc, argv);
-    if (cmdargs.status != CommandLineArguments::CONTINUE_EXECUTION) {
-        if (cmdargs.status == CommandLineArguments::SHOW_HELP) { cmdargs.showDefaultHelp(); }
-        return cmdargs.status == CommandLineArguments::SHOW_HELP ? 0 : -1;
-    }
-
     // Create artifact database with auto-registration of built-in artifacts
-    AutoRef<ArtifactDatabase> db = ArtifactDatabase::create({});
+    auto db = std::unique_ptr<ArtifactDatabase>(ArtifactDatabase::create({}));
     if (!db) {
         GN_ERROR(sLogger)("Failed to create artifact database");
+        return -1;
+    }
+
+    // Create render graph
+    auto renderGraph = std::unique_ptr<RenderGraph>(RenderGraph::create({}));
+    if (!renderGraph) {
+        GN_ERROR(sLogger)("Failed to create render graph");
         return -1;
     }
 

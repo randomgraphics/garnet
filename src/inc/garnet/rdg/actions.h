@@ -21,6 +21,8 @@ struct ClearRenderTarget : public Action {
         ReadWrite<RenderTarget> renderTarget;
     };
 
+    virtual bool reset() = 0;
+
 protected:
     using Action::Action;
 };
@@ -34,6 +36,8 @@ struct ClearDepthStencil : public Action {
         ReadWrite<RenderTarget>      depthStencil;
     };
 
+    virtual bool reset() = 0;
+
 protected:
     using Action::Action;
 };
@@ -46,6 +50,8 @@ struct LoadTextureFromFile : public Action {
         WriteOnly<AutoRef<Texture>>  texture;  // Output texture resource
     };
 
+    virtual bool reset() = 0;
+
 protected:
     using Action::Action;
 };
@@ -56,6 +62,8 @@ struct PrepareBackbuffer : public Action {
         inline static constexpr Guid   TYPE = {0x3e4f5a6b, 0x7c8d, 0x9e0f, {0x1a, 0x2b, 0x3c, 0x4d, 0x5e, 0x6f, 0x7a, 0x8b}};
         ReadWrite<AutoRef<Backbuffer>> backbuffer; // Backbuffer to prepare
     };
+
+    virtual bool reset() = 0;
 
 protected:
     using Action::Action;
@@ -68,6 +76,8 @@ struct PresentBackbuffer : public Action {
         ReadOnly<AutoRef<Backbuffer>> backbuffer; // Backbuffer to present
     };
 
+    virtual bool reset() = 0;
+
 protected:
     using Action::Action;
 };
@@ -79,6 +89,8 @@ struct TextureReadback : public Action {
         ReadOnly<AutoRef<Texture>>   texture; ///< input texture
         WriteOnly<gfx::img::Image>   image;   ///< output image (will be cleared and filled with the texture content)
     };
+
+    virtual bool reset() = 0;
 
 protected:
     using Action::Action;
@@ -214,6 +226,8 @@ struct SetupRenderStates : public Action {
         ReadOnly<RenderStateDesc>    renderStates; ///< render state descriptor
     };
 
+    virtual bool reset() = 0;
+
 protected:
     using Action::Action;
 };
@@ -243,6 +257,8 @@ struct ShaderAction : public Action {
         Texture::SubresourceRange subresourceRange;
     };
 
+    virtual bool reset() = 0;
+
 protected:
     using Action::Action;
 };
@@ -261,6 +277,8 @@ struct Compose : public ShaderAction {
         ReadWriteArray<RenderTarget, 8, Arguments::OPTIONAL>    renderTargets;
         ReadWrite<RenderTarget>                                 depthStencil;
     };
+
+    virtual bool reset() = 0;
 
 protected:
     using ShaderAction::ShaderAction;

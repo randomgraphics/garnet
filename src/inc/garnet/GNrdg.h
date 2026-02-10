@@ -4,5 +4,5 @@
 namespace GN::rdg {};
 
 #include "rdg/dependency-graph.h"
-//#include "rdg/artifacts.h"
-//#include "rdg/actions.h"
+#include "rdg/artifacts.h"
+#include "rdg/actions.h"
