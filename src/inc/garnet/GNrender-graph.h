@@ -30,8 +30,10 @@ namespace GN::rg {
 // dependencies.
 //   After submit(), the graph is reset and all workflow pointers from schedule() are invalidated.
 
+struct ArtifactDatabase;
+
 /// Artifact represents an atomic resource that can be used as input or output of a task.
-struct GN_API Artifact : public RefCounter {
+struct Artifact : public RefCounter {
     struct Identification {
         const Guid & type;
         StrA         name;
@@ -43,6 +45,7 @@ struct GN_API Artifact : public RefCounter {
         Identification(Identification && other): type(other.type), name(std::move(other.name)) {}
     };
 
+    ArtifactDatabase &   database;
     const Identification id;
     const uint64_t       sequence; ///< unique number of the artifact in the artifact database.
 
@@ -62,7 +65,9 @@ struct GN_API Artifact : public RefCounter {
 
 protected:
     /// Constructor
-    Artifact(const Identification & id_, uint64_t seq): id(id_), sequence(seq) {}
+    Artifact(ArtifactDatabase & db, const Identification & id_, uint64_t seq): database(db), id(id_), sequence(seq) {}
+
+private:
 };
 
 struct ArtifactDatabase {
@@ -331,10 +336,7 @@ struct GpuContext : public Artifact {
     };
 
     /// Create a new instance of GpuContext.
-    static AutoRef<GpuContext> create();
-
-    /// Destroy the GPU context.
-    virtual ~GpuContext() = default;
+    static GN_API AutoRef<GpuContext> create(ArtifactDatabase & db);
 
     virtual bool reset(const ResetParameters &) = 0;
 
@@ -346,9 +348,8 @@ protected:
 };
 
 /// Texture represents a 2D/3D/cube texture with optional mipmap and array layers.
-struct GN_API Texture : public Artifact {
+struct Texture : public Artifact {
     static inline const Guid TYPE = {0x6ad8b59d, 0xe672, 0x4b5e, {0x8e, 0xec, 0xf7, 0xac, 0xd4, 0xf1, 0x99, 0xdd}};
-
     /// Descriptor used when creating or declaring the texture (format, dimensions).
     struct Descriptor {
         gfx::img::PixelFormat format  = gfx::img::PixelFormat::UNKNOWN();
@@ -372,17 +373,15 @@ struct GN_API Texture : public Artifact {
         uint32_t numDepthSlices = (uint32_t) -1; ///< -1 means all depth slices
     };
 
-    /// Create a new instance of empty Texture The texture is not bound to any GPU resource yet. Must call reset() at least once for the texture to be valid to
-    /// use.
-    static AutoRef<Texture> create();
-
-    virtual ~Texture() = default;
-
     /// Return the current texture descriptor.
     virtual const Descriptor & descriptor() const = 0;
 
     /// Create texture from the given descriptor. Discard old one. Returns true on success.
     virtual bool reset(const Descriptor & d) = 0;
+
+    /// Create a new instance of empty Texture The texture is not bound to any GPU resource yet. Must call reset() at least once for the texture to be valid to
+    /// use.
+    static GN_API AutoRef<Texture> create(ArtifactDatabase & db);
 
     /// Load texture from file. Discard old one. Returns true on success.
     virtual bool load(const StrA & filename) = 0;
@@ -392,9 +391,8 @@ protected:
 };
 
 /// Backbuffer represents the a swapchain that can be present to screen.
-struct GN_API Backbuffer : public Artifact {
+struct Backbuffer : public Artifact {
     inline static constexpr Guid TYPE = {0x6ad8b59d, 0xe672, 0x4b5e, {0x8e, 0xec, 0xf7, 0xac, 0xd4, 0xf1, 0x99, 0xdd}};
-
     /// Descriptor for backbuffer initialization.
     struct Descriptor {
         uint32_t width  = 0;
@@ -402,9 +400,7 @@ struct GN_API Backbuffer : public Artifact {
     };
 
     /// Create a new instance of Backbuffer.
-    static AutoRef<Backbuffer> create();
-
-    virtual ~Backbuffer() = default;
+    static GN_API AutoRef<Backbuffer> create(ArtifactDatabase & db);
 
     /// Initialize or reinitialize the backbuffer from the given descriptor. Returns true on success.
     virtual bool reset(const Descriptor & d) = 0;
@@ -414,9 +410,8 @@ protected:
 };
 
 /// Sampler represents GPU sampler state (filtering, addressing, LOD, anisotropy).
-struct GN_API Sampler : public Artifact {
+struct Sampler : public Artifact {
     static inline const Guid TYPE = {0x7be9c60e, 0xf783, 0x5c6f, {0x9f, 0xed, 0x08, 0xbd, 0xe5, 0x02, 0xaa, 0xee}};
-
     enum class Filter { POINT, LINEAR, ANISOTROPIC };
     enum class AddressMode { REPEAT, MIRROR_REPEAT, CLAMP_TO_EDGE, CLAMP_TO_BORDER, MIRROR_CLAMP_TO_EDGE };
 
@@ -434,10 +429,8 @@ struct GN_API Sampler : public Artifact {
         float       maxLod        = 0.f; ///< 0 often means "all mips"
     };
 
-    // Create a new instance of Sampler. Must call reset() at least once for the sampler to be valid to use.
-    static AutoRef<Sampler> create();
-
-    virtual ~Sampler() = default;
+    /// Create a new instance of Sampler. Must call reset() at least once for the sampler to be valid to use.
+    static GN_API AutoRef<Sampler> create(ArtifactDatabase & db);
 
     /// Return the current buffer descriptor.
     virtual const Descriptor & descriptor() const = 0;
@@ -450,9 +443,8 @@ protected:
 };
 
 /// Buffer represents a GPU buffer (vertex, index, constant, storage, etc.).
-struct GN_API Buffer : public Artifact {
+struct Buffer : public Artifact {
     static inline const Guid TYPE = {0x1f2e3d4c, 0x5b6a, 0x7c8d, {0x9e, 0xaf, 0xb1, 0xc2, 0xd3, 0xe4, 0xf5, 0x06}};
-
     /// Buffer usage flags.
     enum Usage {
         VERTEX,       ///< Vertex buffer
@@ -474,9 +466,7 @@ struct GN_API Buffer : public Artifact {
 
     /// Create a new instance of empty Buffer. The buffer is not bound to any GPU resource yet.
     /// Must call reset() at least once for the buffer to be valid to use.
-    static AutoRef<Buffer> create();
-
-    virtual ~Buffer() = default;
+    static GN_API AutoRef<Buffer> create(ArtifactDatabase & db);
 
     /// Return the current buffer descriptor.
     virtual const Descriptor & descriptor() const = 0;
@@ -488,15 +478,35 @@ protected:
     using Artifact::Artifact;
 };
 
-/// Mesh represents a 3D geometry with vertex and index data.
-struct GN_API Mesh : public Artifact {
-    static inline const Guid TYPE = {0x8c9d4a1f, 0xb284, 0x5d7f, {0x9a, 0xfe, 0x19, 0xce, 0xf6, 0x13, 0xbb, 0xff}};
+/// Base class of all mesh types.
+/// Meshes can be either indexed (using an index buffer) or non-indexed (drawing vertices directly).
+struct Mesh : public Artifact {
+    static inline constexpr Guid TYPE = {0x8c9d4a1f, 0xb284, 0x5d7f, {0x9a, 0xfe, 0x19, 0xce, 0xf6, 0x13, 0xbb, 0xff}};
 
-    /// Create a new instance of empty Mesh. The mesh is not bound to any GPU resource yet. Must call reset() or load() at least once for the mesh to be valid
-    /// to use.
-    static AutoRef<Mesh> create();
+    struct VertexBuffer {
+        AutoRef<Buffer>       buffer;
+        gfx::img::PixelFormat format;     ///< pixel format of the vertex
+        uint32_t              offset = 0; ///< offset in bytes from beginning of the buffer to the first vertex
+        uint32_t              stride = 0; ///< vertex stride in bytes
+    };
 
-    virtual ~Mesh() = default;
+    /// Complete mesh descriptor containing all vertex and index data information
+    struct Descriptor {
+        std::unordered_map<StrA, VertexBuffer> vertices;    ///< vertices, key is semantic name
+        uint32_t                               vertexCount; ///< number of vertices in the mesh
+        AutoRef<Buffer>                        indexBuffer; ///< index buffer. Null if mesh is non-indexed.
+        uint32_t                               indexCount;  ///< number of indices. Undefined if non-indexed.
+        uint32_t indexOffset; ///< offset in bytes from beginning of the index buffer to the first index. Undefined if non-indexed.
+    };
+
+    /// Create a new instance of Mesh.
+    static GN_API AutoRef<Mesh> create(ArtifactDatabase & db);
+
+    /// Get the complete mesh descriptor containing all vertex and index data.
+    virtual const Descriptor & descriptor() const = 0;
+
+    /// Initialie the mesh. Discard old one. Returns true on success.
+    virtual bool reset(const Descriptor &) = 0;
 
     /// Load mesh from file. Discard old one. Returns true on success.
     virtual bool load(const StrA & filename) = 0;
@@ -527,6 +537,9 @@ struct ClearRenderTarget : public Action {
         ReadOnly<ClearColor>    color;
         ReadWrite<RenderTarget> renderTarget;
     };
+
+protected:
+    using Action::Action;
 };
 
 struct ClearDepthStencil : public Action {
@@ -536,22 +549,6 @@ struct ClearDepthStencil : public Action {
         ReadOnly<float>              depth;
         ReadOnly<uint8_t>            stencil;
         ReadWrite<RenderTarget>      depthStencil;
-    };
-};
-
-/// Composes one solid color and a set of textures into a single output texture.
-/// Inputs: one color (set on the action) and up to MAX_INPUT_TEXTURES texture parameters.
-/// Output: one texture (parameter "output").
-struct Compose : public Action {
-    inline static constexpr Guid TYPE = {0x6ad8b59d, 0xe672, 0x4b5e, {0x8e, 0xec, 0xf7, 0xac, 0xd4, 0xf1, 0x99, 0xdd}};
-
-    struct A : public Arguments {
-        inline static constexpr Guid                 TYPE = {0x6ad8b59d, 0xe672, 0x4b5e, {0x8e, 0xec, 0xf7, 0xac, 0xd4, 0xf1, 0x99, 0xdd}};
-        ReadOnly<AutoRef<Mesh>>                      mesh;
-        ReadOnly<Vector4f>                           color;
-        ReadOnlyArray<AutoRef<Texture>, 8, OPTIONAL> textures;
-        ReadWriteArray<RenderTarget, 8, OPTIONAL>    renderTargets;
-        ReadWrite<RenderTarget>                      depthStencil;
     };
 
 protected:
@@ -565,6 +562,9 @@ struct LoadTextureFromFile : public Action {
         ReadOnly<StrA>               filename; // Path to texture file
         WriteOnly<AutoRef<Texture>>  texture;  // Output texture resource
     };
+
+protected:
+    using Action::Action;
 };
 
 struct PrepareBackbuffer : public Action {
@@ -573,6 +573,9 @@ struct PrepareBackbuffer : public Action {
         inline static constexpr Guid TYPE = {0x3e4f5a6b, 0x7c8d, 0x9e0f, {0x1a, 0x2b, 0x3c, 0x4d, 0x5e, 0x6f, 0x7a, 0x8b}};
         ReadWrite<Backbuffer>        backbuffer; // Backbuffer to prepare
     };
+
+protected:
+    using Action::Action;
 };
 
 struct PresentBackbuffer : public Action {
@@ -581,6 +584,9 @@ struct PresentBackbuffer : public Action {
         inline static constexpr Guid TYPE = {0x4f5a6b7c, 0x8d9e, 0x0f1a, {0x2b, 0x3c, 0x4d, 0x5e, 0x6f, 0x7a, 0x8b, 0x9c}};
         ReadOnly<Backbuffer>         backbuffer; // Backbuffer to present
     };
+
+protected:
+    using Action::Action;
 };
 
 struct TextureReadback : public Action {
@@ -590,6 +596,9 @@ struct TextureReadback : public Action {
         ReadOnly<AutoRef<Texture>>   texture; ///< input texture
         WriteOnly<gfx::img::Image>   image;   ///< output image (will be cleared and filled with the texture content)
     };
+
+protected:
+    using Action::Action;
 };
 
 /// Setup render states action for configuring GPU render pipeline state.
@@ -721,17 +730,13 @@ struct SetupRenderStates : public Action {
         inline static constexpr Guid TYPE = {0x7c8d9e0f, 0x1a2b, 0x3c4d, {0x5e, 0x6f, 0x7a, 0x8b, 0x9c, 0x0d, 0x1e, 0x2f}};
         ReadOnly<RenderStateDesc>    renderStates; ///< render state descriptor
     };
+
+protected:
+    using Action::Action;
 };
 
 /// Base class for generic shader actions (draw and compute). Contains common shader resource binding definitions.
-struct GenericShaderAction : public Action {
-    struct ShaderResourceBinding {
-        uint32_t set  = 0;
-        uint32_t slot = 0;
-
-        bool operator==(const ShaderResourceBinding & other) const { return set == other.set && slot == other.slot; }
-    };
-
+struct ShaderAction : public Action {
     struct BufferParameter {
         AutoRef<Buffer> buffer;
         uint32_t        offset = 0;
@@ -748,33 +753,40 @@ struct GenericShaderAction : public Action {
         AutoRef<Sampler>          sampler;
         Texture::SubresourceRange subresourceRange;
     };
+};
+
+/// Composes one solid color and a set of textures into a single output texture.
+/// Inputs: one color (set on the action) and up to MAX_INPUT_TEXTURES texture parameters.
+/// Output: one texture (parameter "output").
+struct Compose : public ShaderAction {
+    inline static constexpr Guid TYPE = {0x6ad8b59d, 0xe672, 0x4b5e, {0x8e, 0xec, 0xf7, 0xac, 0xd4, 0xf1, 0x99, 0xdd}};
+
+    struct A : public Arguments {
+        inline static constexpr Guid                 TYPE = {0x6ad8b59d, 0xe672, 0x4b5e, {0x8e, 0xec, 0xf7, 0xac, 0xd4, 0xf1, 0x99, 0xdd}};
+        ReadONly<Mesh>                               mesh;
+        ReadOnly<Vector4f>                           color;
+        ReadOnlyArray<AutoRef<Texture>, 8, OPTIONAL> textures;
+        ReadWriteArray<RenderTarget, 8, OPTIONAL>    renderTargets;
+        ReadWrite<RenderTarget>                      depthStencil;
+    };
 
 protected:
-    using Action::Action;
+    using ShaderAction::ShaderAction;
 };
 
 /// Generic draw action for quick GPU draw prototyping. It emphasizes ease of use and flexibility over extreme performance.
-struct GenericDraw : public GenericShaderAction {
+struct GenericDraw : public ShaderAction {
     inline static constexpr Guid TYPE = {0x6b7c8d9e, 0x0f1a, 0x2b3c, {0x4d, 0x5e, 0x6f, 0x7a, 0x8b, 0x9c, 0x0d, 0x1e}};
-
-    /// Draw parameters
-    struct DrawParams {
-        uint32_t vertexCount   = 0; ///< number of vertices to draw
-        uint32_t instanceCount = 1; ///< number of instances to draw
-        uint32_t firstVertex   = 0; ///< first vertex index
-        uint32_t firstInstance = 0; ///< first instance index
-    };
 
     struct A : public Arguments {
         inline static constexpr Guid TYPE = {0x6b7c8d9e, 0x0f1a, 0x2b3c, {0x4d, 0x5e, 0x6f, 0x7a, 0x8b, 0x9c, 0x0d, 0x1e}};
 
-        ReadOnlyMap<GenericShaderAction::ShaderResourceBinding, GenericShaderAction::BufferParameter>  uniforms; ///< uniform buffers
-        ReadOnlyMap<GenericShaderAction::ShaderResourceBinding, GenericShaderAction::TextureParameter> textures; ///< textures
-        ReadOnlyMap<StrA, BufferParameter>                                                             vertices;
-        ReadOnlyParameter<BufferParameter>                                                             indices;
-        ReadOnly<DrawParams>                                                                           drawParams;    ///< draw parameters
-        ReadWriteArray<RenderTarget, 8, OPTIONAL>                                                      renderTargets; ///< color render targets
-        ReadWrite<RenderTarget, OPTIONAL>                                                              depthStencil; ///< depth/stencil render target (optional)
+        ReadONly<Mesh>                            mesh;
+        ReadOnlyMap<StrA, BufferParameter>        uniforms;      ///< uniform buffers, key is shader variable name
+        ReadOnlyMap<StrA, TextureParameter>       textures;      ///< textures, key is shader variable name
+        ReadOnly<DrawParams>                      drawParams;    ///< draw parameters
+        ReadWriteArray<RenderTarget, 8, OPTIONAL> renderTargets; ///< color render targets
+        ReadWrite<RenderTarget, OPTIONAL>         depthStencil;  ///< depth/stencil render target (optional)
     };
 
     /// Shader stage description
@@ -791,10 +803,13 @@ struct GenericDraw : public GenericShaderAction {
                        const std::optional<ShaderStageDesc> & gs = {}, ///< geometry shader
                        const std::optional<ShaderStageDesc> & ps = {}  ///< pixel shader
                        ) = 0;
+
+protected:
+    using ShaderAction::ShaderAction;
 };
 
 /// Generic compute action for quick GPU compute prototyping. It emphasizes ease of use and flexibility over extreme performance.
-struct GenericCompute : public GenericShaderAction {
+struct GenericCompute : public ShaderAction {
     inline static constexpr Guid TYPE = {0x5a6b7c8d, 0x9e0f, 0x1a2b, {0x3c, 0x4d, 0x5e, 0x6f, 0x7a, 0x8b, 0x9c, 0x0d}};
 
     /// Dispatch dimensions (thread group counts)
@@ -807,14 +822,17 @@ struct GenericCompute : public GenericShaderAction {
     struct A : public Arguments {
         inline static constexpr Guid TYPE = {0x5a6b7c8d, 0x9e0f, 0x1a2b, {0x3c, 0x4d, 0x5e, 0x6f, 0x7a, 0x8b, 0x9c, 0x0d}};
 
-        ReadOnlyMap<GenericShaderAction::ShaderResourceBinding, GenericShaderAction::BufferParameter>  uniforms; ///< uniform buffers
-        ReadOnlyMap<GenericShaderAction::ShaderResourceBinding, GenericShaderAction::TextureParameter> textures; ///< textures
-        ReadWriteMap<GenericShaderAction::ShaderResourceBinding, GenericShaderAction::BufferParameter> buffers;  ///< storage buffers
-        ReadWriteMap<GenericShaderAction::ShaderResourceBinding, GenericShaderAction::ImageParameter>  images;   ///< storage images
-        ReadOnly<DispatchSize>                                                                         groups;   ///< thread group counts
+        ReadOnlyMap<ShaderResourceBinding, BufferParameter>  uniforms; ///< uniform buffers
+        ReadOnlyMap<ShaderResourceBinding, TextureParameter> textures; ///< textures
+        ReadWriteMap<ShaderResourceBinding, BufferParameter> buffers;  ///< storage buffers
+        ReadWriteMap<ShaderResourceBinding, ImageParameter>  images;   ///< storage images
+        ReadOnly<DispatchSize>                               groups;   ///< thread group counts
     };
 
     virtual bool reset(AutoRef<Blob> shaderBinary, const StrA & entryPoint) = 0;
+
+protected:
+    using ShaderAction::ShaderAction;
 };
 
 } // namespace GN::rg
@@ -822,8 +840,8 @@ struct GenericCompute : public GenericShaderAction {
 // Hash specialization for ShaderResourceBinding to use as key in std::unordered_map
 namespace std {
 template<>
-struct hash<GN::rg::GenericShaderAction::ShaderResourceBinding> {
-    size_t operator()(const GN::rg::GenericShaderAction::ShaderResourceBinding & binding) const {
+struct hash<GN::rg::ShaderResourceBinding> {
+    size_t operator()(const GN::rg::ShaderResourceBinding & binding) const {
         return std::hash<uint64_t> {}((static_cast<uint64_t>(binding.set) << 32) | binding.slot);
     }
 };
