@@ -263,27 +263,6 @@ protected:
     using Action::Action;
 };
 
-/// Composes one solid color and a set of textures into a single output texture.
-/// Inputs: one color (set on the action) and up to MAX_INPUT_TEXTURES texture parameters.
-/// Output: one texture (parameter "output").
-struct Compose : public ShaderAction {
-    inline static constexpr Guid TYPE = {0x6ad8b59d, 0xe672, 0x4b5e, {0x8e, 0xec, 0xf7, 0xac, 0xd4, 0xf1, 0x99, 0xdd}};
-
-    struct A : public Arguments {
-        inline static constexpr Guid                            TYPE = {0x6ad8b59d, 0xe672, 0x4b5e, {0x8e, 0xec, 0xf7, 0xac, 0xd4, 0xf1, 0x99, 0xdd}};
-        ReadOnly<AutoRef<Mesh>>                                 mesh;
-        ReadOnly<Vector4f>                                      color;
-        ReadOnlyArray<AutoRef<Texture>, 8, Arguments::OPTIONAL> textures;
-        ReadWriteArray<RenderTarget, 8, Arguments::OPTIONAL>    renderTargets;
-        ReadWrite<RenderTarget>                                 depthStencil;
-    };
-
-    virtual bool reset() = 0;
-
-protected:
-    using ShaderAction::ShaderAction;
-};
-
 /// Generic draw action for quick GPU draw prototyping. It emphasizes ease of use and flexibility over extreme performance.
 struct GenericDraw : public ShaderAction {
     inline static constexpr Guid TYPE = {0x6b7c8d9e, 0x0f1a, 0x2b3c, {0x4d, 0x5e, 0x6f, 0x7a, 0x8b, 0x9c, 0x0d, 0x1e}};
@@ -352,5 +331,134 @@ struct GenericCompute : public ShaderAction {
 protected:
     using ShaderAction::ShaderAction;
 };
+
+// /// Composes one solid color and a set of textures into a single output texture.
+// /// Inputs: one color (set on the action) and up to MAX_INPUT_TEXTURES texture parameters.
+// /// Output: one texture (parameter "output").
+// struct Compose : public ShaderAction {
+//     inline static constexpr Guid TYPE = {0x6ad8b59d, 0xe672, 0x4b5e, {0x8e, 0xec, 0xf7, 0xac, 0xd4, 0xf1, 0x99, 0xdd}};
+
+//     struct A : public Arguments {
+//         inline static constexpr Guid                            TYPE = {0x6ad8b59d, 0xe672, 0x4b5e, {0x8e, 0xec, 0xf7, 0xac, 0xd4, 0xf1, 0x99, 0xdd}};
+//         ReadOnly<AutoRef<Mesh>>                                 mesh;
+//         ReadOnly<Vector4f>                                      color;
+//         ReadOnlyArray<AutoRef<Texture>, 8, Arguments::OPTIONAL> textures;
+//         ReadWriteArray<RenderTarget, 8, Arguments::OPTIONAL>    renderTargets;
+//         ReadWrite<RenderTarget>                                 depthStencil;
+//     };
+
+//     virtual bool reset() = 0;
+
+// protected:
+//     using ShaderAction::ShaderAction;
+// };
+
+// /// Physically Based Rendering (PBR) action using Disney PBR shading model.
+// /// Renders objects with realistic material properties including base color, metallic, roughness, and normal mapping.
+// struct PBRShading : public ShaderAction {
+//     inline static constexpr Guid TYPE = {0x8b9c0d1e, 0x2f3a, 0x4b5c, {0x6d, 0x7e, 0x8f, 0x9a, 0x0b, 0x1c, 0x2d, 0x3e}};
+
+//     /// Light types for PBR lighting
+//     enum LightType {
+//         LIGHT_DIRECTIONAL = 0, ///< Directional light (sun)
+//         LIGHT_POINT,           ///< Point light (bulb)
+//         LIGHT_SPOT,            ///< Spot light (flashlight)
+//     };
+
+//     /// Light source definition
+//     struct Light {
+//         LightType type = LIGHT_DIRECTIONAL; ///< light type
+//         Vector4f   color = {1.0f, 1.0f, 1.0f, 1.0f}; ///< light color (RGB) and intensity (A)
+//         Vector4f   position = {0.0f, 0.0f, 0.0f, 1.0f}; ///< light position (for point/spot) or direction (for directional, w=0)
+//         Vector4f   direction = {0.0f, 0.0f, -1.0f, 0.0f}; ///< light direction (for spot/directional)
+//         float      range = 100.0f; ///< light range (for point/spot)
+//         float      innerConeAngle = 0.0f; ///< inner cone angle in radians (for spot)
+//         float      outerConeAngle = 0.0f; ///< outer cone angle in radians (for spot)
+//     };
+
+//     /// Material properties for Disney PBR
+//     struct MaterialParams {
+//         Vector4f baseColor = {1.0f, 1.0f, 1.0f, 1.0f}; ///< base color (albedo)
+//         float    metallic = 0.0f;                       ///< metallic factor (0 = dielectric, 1 = metal)
+//         float    roughness = 0.5f;                     ///< roughness factor (0 = smooth, 1 = rough)
+//         float    specular = 0.5f;                      ///< specular factor (for non-metals)
+//         float    specularTint = 0.0f;                  ///< specular tint (0 = white, 1 = tinted)
+//         float    sheen = 0.0f;                         ///< sheen factor (for cloth)
+//         float    sheenTint = 0.5f;                     ///< sheen tint
+//         float    clearcoat = 0.0f;                     ///< clearcoat factor
+//         float    clearcoatGloss = 1.0f;                ///< clearcoat glossiness
+//         float    subsurface = 0.0f;                    ///< subsurface scattering factor
+//         float    subsurfaceColorR = 1.0f;               ///< subsurface color R
+//         float    subsurfaceColorG = 1.0f;               ///< subsurface color G
+//         float    subsurfaceColorB = 1.0f;              ///< subsurface color B
+//         float    anisotropic = 0.0f;                  ///< anisotropy factor
+//         float    anisotropicRotation = 0.0f;           ///< anisotropy rotation
+//         float    transmission = 0.0f;                  ///< transmission factor (for glass)
+//         float    ior = 1.5f;                           ///< index of refraction
+//         Vector4f emissive = {0.0f, 0.0f, 0.0f, 0.0f}; ///< emissive color and intensity
+//     };
+
+//     /// Camera/view parameters
+//     struct CameraParams {
+//         Matrix44f viewMatrix;      ///< view matrix (world to view)
+//         Matrix44f projMatrix;      ///< projection matrix (view to clip)
+//         Matrix44f viewProjMatrix; ///< combined view-projection matrix
+//         Vector4f  cameraPosition; ///< camera position in world space (xyz, w=1)
+//     };
+
+//     struct A : public Arguments {
+//         inline static constexpr Guid TYPE = {0x8b9c0d1e, 0x2f3a, 0x4b5c, {0x6d, 0x7e, 0x8f, 0x9a, 0x0b, 0x1c, 0x2d, 0x3e}};
+
+//         ReadOnly<AutoRef<Mesh>> mesh; ///< mesh to render
+
+//         // Material properties
+//         ReadOnly<MaterialParams> material; ///< material parameters
+
+//         // Material textures (optional - if not provided, use material parameter values)
+//         ReadOnly<TextureParameter, Arguments::OPTIONAL> baseColorTexture;     ///< base color texture (albedo)
+//         ReadOnly<TextureParameter, Arguments::OPTIONAL> metallicRoughnessTexture; ///< metallic (R) and roughness (G) packed texture
+//         ReadOnly<TextureParameter, Arguments::OPTIONAL> normalTexture;       ///< normal map texture
+//         ReadOnly<TextureParameter, Arguments::OPTIONAL> emissiveTexture;     ///< emissive texture
+//         ReadOnly<TextureParameter, Arguments::OPTIONAL> occlusionTexture;    ///< ambient occlusion texture
+//         ReadOnly<TextureParameter, Arguments::OPTIONAL> clearcoatTexture;     ///< clearcoat texture
+//         ReadOnly<TextureParameter, Arguments::OPTIONAL> clearcoatRoughnessTexture; ///< clearcoat roughness texture
+
+//         // Lighting
+//         ReadOnlyArray<Light, 8, Arguments::OPTIONAL> lights; ///< light sources (up to 8 lights)
+//         ReadOnly<TextureParameter, Arguments::OPTIONAL> environmentMap; ///< environment map for IBL (cubemap)
+//         ReadOnly<TextureParameter, Arguments::OPTIONAL> irradianceMap; ///< pre-computed irradiance map for IBL (cubemap)
+//         ReadOnly<TextureParameter, Arguments::OPTIONAL> prefilteredMap; ///< pre-filtered environment map for IBL (cubemap)
+//         ReadOnly<TextureParameter, Arguments::OPTIONAL> brdfLUT; ///< BRDF lookup texture for IBL
+
+//         // Camera/view
+//         ReadOnly<CameraParams> camera; ///< camera parameters
+
+//         // Transform
+//         ReadOnly<Matrix44f> modelMatrix; ///< model-to-world transformation matrix
+//         ReadOnly<Matrix44f, Arguments::OPTIONAL> normalMatrix; ///< normal transformation matrix (if not provided, derived from modelMatrix)
+
+//         // Render targets
+//         ReadWriteArray<RenderTarget, 8, Arguments::OPTIONAL> renderTargets; ///< color render targets
+//         ReadWrite<RenderTarget, Arguments::OPTIONAL> depthStencil;         ///< depth/stencil render target (optional)
+//     };
+
+//     /// Shader stage description
+//     struct ShaderStageDesc {
+//         AutoRef<Blob> shaderBinary; ///< shader binary code
+//         StrA          entryPoint;    ///< entry point name
+//     };
+
+//     /// Reset the PBR shading action with shader binaries for different stages.
+//     /// All parameters are optional - only provided stages will be set.
+//     virtual bool reset(const std::optional<ShaderStageDesc> & vs = {}, ///< vertex shader
+//                        const std::optional<ShaderStageDesc> & ds = {}, ///< domain shader
+//                        const std::optional<ShaderStageDesc> & hs = {}, ///< hull shader
+//                        const std::optional<ShaderStageDesc> & gs = {}, ///< geometry shader
+//                        const std::optional<ShaderStageDesc> & ps = {}  ///< pixel shader
+//                        ) = 0;
+
+// protected:
+//     using ShaderAction::ShaderAction;
+// };
 
 } // namespace GN::rdg
