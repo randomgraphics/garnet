@@ -21,48 +21,33 @@ struct ArtifactDatabase;
 
 /// Artifact represents an atomic resource that can be used as input or output of a task.
 struct Artifact : public RefCounter {
-    struct Identification {
-        const Guid & type;
-        StrA         name;
+    ArtifactDatabase & database;
+    const Guid &       type;
+    const StrA         name;
+    const uint64_t     sequence; ///< the unique integer identifier of the artifact in the artifact database.
 
-        Identification(const Guid & type, const StrA & name): type(type), name(name) {}
-
-        Identification(const Identification & other): type(other.type), name(other.name) {}
-
-        Identification(Identification && other): type(other.type), name(std::move(other.name)) {}
-    };
-
-    ArtifactDatabase &   database;
-    const Identification id;
-    const uint64_t       sequence; ///< unique number of the artifact in the artifact database.
-
-    virtual ~Artifact() {};
+    virtual ~Artifact() {}
 
     template<typename T>
     T * castTo() {
-        if (id.type == T::TYPE) GN_LIKELY return static_cast<T *>(this);
+        if (type == T::TYPE) GN_LIKELY return static_cast<T *>(this);
         return nullptr;
     }
 
     template<typename T>
     const T * castTo() const {
-        if (id.type == T::TYPE) GN_LIKELY return static_cast<const T *>(this);
+        if (type == T::TYPE) GN_LIKELY return static_cast<const T *>(this);
         return nullptr;
     }
 
 protected:
     /// Constructor
-    Artifact(ArtifactDatabase & db, const Identification & id_, uint64_t seq): database(db), id(id_), sequence(seq) {}
-
-private:
+    Artifact(ArtifactDatabase & db, const Guid & type, const StrA & name);
 };
 
 struct ArtifactDatabase {
-    /// Parameters for creating an artifact database
     struct CreateParameters {
-        // If true, then automatically register all built-in artifacts defined in this header. Or else, create an completely
-        // empty database w/o any artifact type registered.
-        bool autoAdmitAllBuiltInArtifacts = true;
+        // TBD
     };
 
     /// Create a new artifact database instance
@@ -70,55 +55,27 @@ struct ArtifactDatabase {
 
     virtual ~ArtifactDatabase() = default;
 
-    /// Admit a new artifact type to the database.
-    virtual bool admit(const Guid & type, std::function<AutoRef<Artifact>(const StrA & name, uint64_t sequence)> && creator) = 0;
+    /// Acquire a new unique sequence number for the resource.
+    /// \return the non-zero sequence number if successful, 0 if the type and name combination exists already and/or artifact pointer is null.
+    /// \note this method is called by Artifact::constructor only. Artifact create()/load() must check artifact.sequence after construction;
+    ///       if 0 (duplicate type+name), delete the new instance and return null.
+    virtual uint64_t admit(Artifact * artifact) = 0;
 
-    /// Spawn a new artifact instance of the given type. Fail if the ID exists already.
-    virtual auto spawn(const Artifact::Identification &) -> AutoRef<Artifact> = 0;
-
-    /// Search for an artifact instance by its ID.
-    virtual auto fetch(const Artifact::Identification &) -> AutoRef<Artifact> = 0;
-
-    /// Search for an artifact instance by its sequence number. Faster than search by ID.
-    virtual auto fetch(uint64_t) -> AutoRef<Artifact> = 0;
-
-    /// Erase an artifact instance by its ID.
-    virtual bool erase(const Artifact::Identification &) = 0;
-
-    /// Erase an artifact instance by its sequence number. Faster than erase by ID.
+    /// Erase an artifact instance by its sequence number.
     virtual bool erase(uint64_t sequence) = 0;
 
-    template<typename T>
-    AutoRef<T> spawn(const StrA & name) {
-        auto a = spawn({T::TYPE, name});
-        if (!a) return {};
-        auto t = a->template castTo<T>();
-        if (!t) return {};
-        return AutoRef<T>(t);
-    }
+    /// Search for an artifact instance by type and name.
+    virtual auto fetch(const Guid & type, const StrA & name) -> AutoRef<Artifact> = 0;
 
-    // A helper template to create and reset certain type of artifact in one function call.
-    template<typename T, typename... CREATE_ARGS>
-    AutoRef<T> spawnAndReset(const StrA & name, CREATE_ARGS &&... args) {
-        auto a = spawn({T::TYPE, name});
-        if (!a) return {};
-        auto t = a->template castTo<T>();
-        if (!t) return {};
-        if (!t->reset(std::forward<CREATE_ARGS>(args)...)) return {};
-        return AutoRef<T>(t);
-    }
+    /// Search for an artifact instance by its sequence number. Faster than search by ID.
+    virtual auto fetch(uint64_t sequence) -> AutoRef<Artifact> = 0;
 
-    // A helper template to create and load certain type of artifacts in one function call
-    template<typename T, typename... LOAD_ARGS>
-    AutoRef<T> spawnAndLoad(const StrA & name, LOAD_ARGS &&... args) {
-        auto a = spawn({T::TYPE, name});
-        if (!a) return {};
-        auto t = a->template castTo<T>();
-        if (!t) return {};
-        if (!t->load(std::forward<LOAD_ARGS>(args)...)) return {};
-        return AutoRef<T>(t);
-    }
+protected:
+    ArtifactDatabase() = default;
 };
+
+inline Artifact::Artifact(ArtifactDatabase & db, const Guid & type, const StrA & name)
+: database(db), type(type), name(name), sequence(database.admit(this)) {}
 
 /// Base class of arguments for an action.
 struct Arguments : Artifact {
