@@ -122,24 +122,33 @@ struct ArtifactDatabase {
 
 /// Base class of arguments for an action.
 struct Arguments : Artifact {
-    enum Usage : uint32_t {
+    enum class Usage {
+        NONE     = 0,
         OPTIONAL = 1 << 0,
         READING  = 1 << 1,
         WRITING  = 1 << 2,
+        // Aliases for convenience
+        N = NONE,
+        O = OPTIONAL,
+        R = READING,
+        W = WRITING,
     };
 
+    friend constexpr Usage operator|(Usage a, Usage b) { return Usage(uint32_t(a) | uint32_t(b)); }
+    friend constexpr Usage operator&(Usage a, Usage b) { return Usage(uint32_t(a) & uint32_t(b)); }
+
     /// Base class of all typed parameters (for use by concrete action implementations).
-    template<uint32_t Usage = 0>
+    template<Usage USAGE = Usage::NONE>
     struct Parameter {
-        static constexpr bool OPTIONAL = (Usage & Arguments::OPTIONAL) != 0;
-        static constexpr bool REQUIRED = !(Usage & Arguments::OPTIONAL);
-        static constexpr bool READING  = (Usage & Arguments::READING) != 0;
-        static constexpr bool WRITING  = (Usage & Arguments::WRITING) != 0;
+        static constexpr bool IS_OPTIONAL = (USAGE & Usage::OPTIONAL) != Usage::NONE;
+        static constexpr bool IS_REQUIRED = (USAGE & Usage::OPTIONAL) == Usage::NONE;
+        static constexpr bool IS_READING  = (USAGE & Usage::READING) != Usage::NONE;
+        static constexpr bool IS_WRITING  = (USAGE & Usage::WRITING) != Usage::NONE;
     };
 
     /// Represents a single parameter of an action.
-    template<typename T, uint32_t Usage>
-    struct SingleParameter : public Parameter<Usage> {
+    template<typename T, Usage USAGE = Usage::NONE>
+    struct SingleParameter : public Parameter<USAGE> {
         void set(const T & value) { mValue = value; }
         void reset() { mValue.reset(); }
         auto get() const -> const T * { return mValue.has_value() ? &mValue.value() : nullptr; }
@@ -149,17 +158,17 @@ struct Arguments : Artifact {
         std::optional<T> mValue;
     };
 
-    template<typename T, uint32_t Usage = 0>
-    using ReadOnly = SingleParameter<T, Usage | READING>;
+    template<typename T, Usage USAGE = Usage::NONE>
+    using ReadOnly = SingleParameter<T, USAGE | Usage::READING>;
 
-    template<typename T, uint32_t Usage = 0>
-    using WriteOnly = SingleParameter<T, Usage | WRITING>;
+    template<typename T, Usage USAGE = Usage::NONE>
+    using WriteOnly = SingleParameter<T, USAGE | Usage::WRITING>;
 
-    template<typename T, uint32_t Usage = 0>
-    using ReadWrite = SingleParameter<T, Usage | READING | WRITING>;
+    template<typename T, Usage USAGE = Usage::NONE>
+    using ReadWrite = SingleParameter<T, USAGE | Usage::READING | Usage::WRITING>;
 
-    template<typename T, size_t Count, uint32_t Usage>
-    struct ArrayParameter : public Parameter<Usage> {
+    template<typename T, size_t Count, Usage USAGE = Usage::NONE>
+    struct ArrayParameter : public Parameter<USAGE> {
         void set(size_t index, const T & value) {
             if (index >= Count) GN_UNLIKELY {
                     GN_ERROR(getLogger("GN.rg"))("ArrayParameter: index out of range");
@@ -200,8 +209,8 @@ struct Arguments : Artifact {
         std::optional<T> mStorage[Count] = {};
     };
 
-    template<typename Key, typename Value, uint32_t Usage = 0>
-    struct MapParameter : public Parameter<Usage> {
+    template<typename Key, typename Value, Usage USAGE = Usage::NONE>
+    struct MapParameter : public Parameter<USAGE> {
         void set(const Key & key, const Value & value) { mValue[key] = value; }
         void reset() { mValue.reset(); }
         void reset(const Key & key) { mValue.erase(key); }
@@ -212,23 +221,23 @@ struct Arguments : Artifact {
         std::unordered_map<Key, Value> mValue;
     };
 
-    template<typename T, size_t Count, uint32_t Usage = 0>
-    using ReadOnlyArray = ArrayParameter<T, Count, Usage | READING>;
+    template<typename T, size_t COUNT, Usage USAGE = Usage::NONE>
+    using ReadOnlyArray = ArrayParameter<T, COUNT, USAGE | Usage::READING>;
 
-    template<typename T, size_t Count, uint32_t Usage = 0>
-    using WriteOnlyArray = ArrayParameter<T, Count, Usage | WRITING>;
+    template<typename T, size_t COUNT, Usage USAGE = Usage::NONE>
+    using WriteOnlyArray = ArrayParameter<T, COUNT, USAGE | Usage::WRITING>;
 
-    template<typename T, size_t Count, uint32_t Usage = 0>
-    using ReadWriteArray = ArrayParameter<T, Count, Usage | READING | WRITING>;
+    template<typename T, size_t COUNT, Usage USAGE = Usage::NONE>
+    using ReadWriteArray = ArrayParameter<T, COUNT, USAGE | Usage::READING | Usage::WRITING>;
 
-    template<typename Key, typename Value, uint32_t Usage = 0>
-    using ReadOnlyMap = MapParameter<Key, Value, Usage | READING>;
+    template<typename Key, typename Value, Usage USAGE = Usage::NONE>
+    using ReadOnlyMap = MapParameter<Key, Value, USAGE | Usage::READING>;
 
-    template<typename Key, typename Value, uint32_t Usage = 0>
-    using WriteOnlyMap = MapParameter<Key, Value, Usage | WRITING>;
+    template<typename Key, typename Value, Usage USAGE = Usage::NONE>
+    using WriteOnlyMap = MapParameter<Key, Value, USAGE | Usage::WRITING>;
 
-    template<typename Key, typename Value, uint32_t Usage = 0>
-    using ReadWriteMap = MapParameter<Key, Value, Usage | READING | WRITING>;
+    template<typename Key, typename Value, Usage USAGE = Usage::NONE>
+    using ReadWriteMap = MapParameter<Key, Value, USAGE | Usage::READING | Usage::WRITING>;
 
 protected:
     using Artifact::Artifact;

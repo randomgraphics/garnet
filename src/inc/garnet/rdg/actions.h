@@ -280,8 +280,8 @@ struct GenericDraw : public ShaderAction {
         ReadOnlyMap<StrA, BufferParameter>        uniforms;      ///< uniform buffers, key is shader variable name
         ReadOnlyMap<StrA, TextureParameter>       textures;      ///< textures, key is shader variable name
         ReadOnly<DrawParams>                      drawParams;    ///< draw parameters
-        ReadWriteArray<RenderTarget, 8, OPTIONAL> renderTargets; ///< color render targets
-        ReadWrite<RenderTarget, OPTIONAL>         depthStencil;  ///< depth/stencil render target (optional)
+        ReadWriteArray<RenderTarget, 8, Usage::O> renderTargets; ///< color render targets
+        ReadWrite<RenderTarget, Usage::O>         depthStencil;  ///< depth/stencil render target (optional)
     };
 
     /// Shader stage description
