@@ -16,6 +16,9 @@ struct GpuContext : public Artifact {
     static inline const Guid TYPE = {0x3c4d5e6f, 0x7a8b, 0x9c0d, {0x1e, 0x2f, 0x3a, 0x4b, 0x5c, 0x6d, 0x7e, 0x8f}};
 
     struct ResetParameters {
+        /// The graphics API
+        StrA api = "auto";
+
         /// The target window. If null, then create GPU context in headless mode.
         GN::win::Window * win = {};
 

@@ -23,42 +23,46 @@ int main(int, const char **) {
         return -1;
     }
 
-    // Create and initialize GPU context
-    auto gpuContext = db->spawnAndReset<GpuContext>("gpu_context");
+    // Create GPU context (artifact creates itself and registers via admit()), then reset
+    auto gpuContext = GpuContext::create(*db);
     if (!gpuContext) {
-        GN_ERROR(sLogger)("Failed to create and initialize GPU context");
+        GN_ERROR(sLogger)("Failed to create GPU context");
+        return -1;
+    }
+    if (!gpuContext->reset(GpuContext::ResetParameters {})) {
+        GN_ERROR(sLogger)("Failed to initialize GPU context");
         return -1;
     }
     auto [displayWidth, displayHeight] = gpuContext->dimension();
 
     // Create and load texture
-    auto texture = db->spawnAndLoad<Texture>("texture", "media::texture/earth.jpg");
-    if (!texture) {
+    auto texture = Texture::create(*db);
+    if (!texture || !texture->load("media::texture/earth.jpg")) {
         GN_ERROR(sLogger)("Failed to create and load texture");
         return -1;
     }
 
     // Create and load mesh
-    auto mesh = db->spawnAndLoad<Mesh>("mesh", "media::cube/cube.model.xml");
-    if (!mesh) {
+    auto mesh = Mesh::create(*db);
+    if (!mesh || !mesh->load("media::cube/cube.model.xml")) {
         GN_ERROR(sLogger)("Failed to create and load mesh");
         return -1;
     }
 
-    // Create and initialize backbuffer
-    auto backbuffer = db->spawnAndReset<Backbuffer>("backbuffer", Backbuffer::Descriptor {displayWidth, displayHeight});
-    if (!backbuffer) {
+    // Create backbuffer and reset
+    auto backbuffer = Backbuffer::create(*db);
+    if (!backbuffer || !backbuffer->reset(Backbuffer::Descriptor {displayWidth, displayHeight})) {
         GN_ERROR(sLogger)("Failed to create and initialize backbuffer");
         return -1;
     }
 
     // Create and initialize depth texture
-    auto depthDesc    = Texture::Descriptor {};
-    depthDesc.format  = gfx::img::PixelFormat::D24S8();
-    depthDesc.width   = displayWidth;
-    depthDesc.height  = displayHeight;
-    auto depthTexture = db->spawnAndReset<Texture>("depth", depthDesc);
-    if (!depthTexture) {
+    auto depthDesc   = Texture::Descriptor {};
+    depthDesc.format = gfx::img::PixelFormat::D24S8();
+    depthDesc.width  = displayWidth;
+    depthDesc.height = displayHeight;
+    auto depthTexture = Texture::create(*db);
+    if (!depthTexture || !depthTexture->reset(depthDesc)) {
         GN_ERROR(sLogger)("Failed to create and initialize depth texture");
         return -1;
     }
@@ -71,46 +75,33 @@ int main(int, const char **) {
     samplerDesc.addressU  = Sampler::AddressMode::REPEAT;
     samplerDesc.addressV  = Sampler::AddressMode::REPEAT;
     samplerDesc.addressW  = Sampler::AddressMode::REPEAT;
-    auto sampler          = db->spawnAndReset<Sampler>("sampler", samplerDesc);
-    if (!sampler) {
+    auto sampler          = Sampler::create(*db);
+    if (!sampler || !sampler->reset(samplerDesc)) {
         GN_ERROR(sLogger)("Failed to create and initialize sampler");
         return -1;
     }
 
-    // Create render graph
-    AutoRef<RenderGraph> renderGraph = RenderGraph::create({});
-    if (!renderGraph) {
-        GN_ERROR(sLogger)("Failed to create render graph");
-        return -1;
-    }
-
-    // Create and initialize actions
-    auto prepareAction = db->spawnAndReset<PrepareBackbuffer>("prepare_action");
-    if (!prepareAction) {
+    // Create and initialize actions (each creates itself and registers via admit())
+    auto prepareAction = PrepareBackbuffer::create(*db, "prepare_action");
+    if (!prepareAction || !prepareAction->reset()) {
         GN_ERROR(sLogger)("Failed to create and initialize PrepareBackbuffer action");
         return -1;
     }
 
-    auto clearAction = db->spawnAndReset<ClearRenderTarget>("clear_action");
-    if (!clearAction) {
+    auto clearAction = ClearRenderTarget::create(*db, "clear_action");
+    if (!clearAction || !clearAction->reset()) {
         GN_ERROR(sLogger)("Failed to create and initialize ClearRenderTarget action");
         return -1;
     }
 
-    auto clearDepthAction = db->spawnAndReset<ClearDepthStencil>("clear_depth_action");
-    if (!clearDepthAction) {
+    auto clearDepthAction = ClearDepthStencil::create(*db, "clear_depth_action");
+    if (!clearDepthAction || !clearDepthAction->reset()) {
         GN_ERROR(sLogger)("Failed to create and initialize ClearDepthStencil action");
         return -1;
     }
 
-    auto composeAction = db->spawnAndReset<Compose>("compose_action");
-    if (!composeAction) {
-        GN_ERROR(sLogger)("Failed to create and initialize Compose action");
-        return -1;
-    }
-
-    auto presentAction = db->spawnAndReset<PresentBackbuffer>("present_action");
-    if (!presentAction) {
+    auto presentAction = PresentBackbuffer::create(*db, "present_action");
+    if (!presentAction || !presentAction->reset()) {
         GN_ERROR(sLogger)("Failed to create and initialize PresentBackbuffer action");
         return -1;
     }
@@ -127,7 +118,7 @@ int main(int, const char **) {
             // Task: Prepare backbuffer
             auto prepareTask   = Workflow::Task {};
             prepareTask.action = prepareAction;
-            auto prepareArgs = AutoRef<PrepareBackbuffer::A>(new PrepareBackbuffer::A(Artifact::Identification(PrepareBackbuffer::A::TYPE, "prepare_args"), 0));
+            auto prepareArgs   = AutoRef<PrepareBackbuffer::A>(new PrepareBackbuffer::A(*db, "prepare_args"));
             prepareArgs->backbuffer.set(backbuffer);
             prepareTask.arguments = prepareArgs;
             renderWorkflow->tasks.append(prepareTask);
@@ -136,7 +127,7 @@ int main(int, const char **) {
             auto clearTask   = Workflow::Task {};
             clearTask.action = clearAction;
 
-            auto clearArgs = AutoRef<ClearRenderTarget::A>(new ClearRenderTarget::A(Artifact::Identification(ClearRenderTarget::A::TYPE, "clear_args"), 0));
+            auto clearArgs = AutoRef<ClearRenderTarget::A>(new ClearRenderTarget::A(*db, "clear_args"));
 
             auto clearColor = ClearRenderTarget::A::ClearColor {};
             clearColor.r    = 0.2f;
@@ -157,8 +148,7 @@ int main(int, const char **) {
             auto clearDepthTask   = Workflow::Task {};
             clearDepthTask.action = clearDepthAction;
 
-            auto clearDepthArgs =
-                AutoRef<ClearDepthStencil::A>(new ClearDepthStencil::A(Artifact::Identification(ClearDepthStencil::A::TYPE, "clear_depth_args"), 0));
+            auto clearDepthArgs = AutoRef<ClearDepthStencil::A>(new ClearDepthStencil::A(*db, "clear_depth_args"));
 
             clearDepthArgs->depth.set(1.0f);
             clearDepthArgs->stencil.set(0);
@@ -171,33 +161,16 @@ int main(int, const char **) {
             clearDepthTask.arguments = clearDepthArgs;
             renderWorkflow->tasks.append(clearDepthTask);
 
-            // Task: Compose (draw mesh with texture)
-            auto composeTask   = Workflow::Task {};
-            composeTask.action = composeAction;
-
-            auto composeArgs = AutoRef<Compose::A>(new Compose::A(Artifact::Identification(Compose::A::TYPE, "compose_args"), 0));
-
-            composeArgs->mesh.set(mesh);
-            composeArgs->color.set(Vector4f(1.0f, 1.0f, 1.0f, 1.0f));
-            composeArgs->textures.set(0, texture);
-
-            auto composeRt   = RenderTarget {};
-            composeRt.target = backbuffer;
-            composeRt.sub    = Texture::SubresourceIndex();
-            composeArgs->renderTargets.set(0, composeRt);
-
-            auto composeDepthRt   = RenderTarget {};
-            composeDepthRt.target = depthTexture;
-            composeDepthRt.sub    = Texture::SubresourceIndex();
-            composeArgs->depthStencil.set(composeDepthRt);
-
-            composeTask.arguments = composeArgs;
-            renderWorkflow->tasks.append(composeTask);
+            // Task: Compose (draw mesh with texture) - disabled until Compose is uncommented in actions.h
+            // auto composeTask = Workflow::Task {};
+            // composeTask.action = composeAction;
+            // auto composeArgs = AutoRef<Compose::A>(new Compose::A(*db, "compose_args"));
+            // ... set composeArgs and append composeTask
 
             // Task: Present backbuffer
             auto presentTask   = Workflow::Task {};
             presentTask.action = presentAction;
-            auto presentArgs = AutoRef<PresentBackbuffer::A>(new PresentBackbuffer::A(Artifact::Identification(PresentBackbuffer::A::TYPE, "present_args"), 0));
+            auto presentArgs   = AutoRef<PresentBackbuffer::A>(new PresentBackbuffer::A(*db, "present_args"));
             presentArgs->backbuffer.set(backbuffer);
             presentTask.arguments = presentArgs;
             renderWorkflow->tasks.append(presentTask);

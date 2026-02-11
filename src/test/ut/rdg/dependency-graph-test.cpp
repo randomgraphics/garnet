@@ -24,7 +24,13 @@ struct IntegerArtifact : public Artifact {
 
     int value = 0;
 
-    IntegerArtifact(ArtifactDatabase & db, const Artifact::Identification & id, uint64_t seq): Artifact(db, id, seq) {}
+    IntegerArtifact(ArtifactDatabase & db, const StrA & name): Artifact(db, TYPE, name) {}
+
+    static GN::AutoRef<IntegerArtifact> create(ArtifactDatabase & db, const StrA & name) {
+        auto * p = new IntegerArtifact(db, name);
+        if (p->sequence == 0) { delete p; return {}; }
+        return GN::AutoRef<IntegerArtifact>(p);
+    }
 };
 
 // Define an action to initialize an integer artifact
@@ -33,12 +39,23 @@ struct InitIntegerAction : public Action {
 
     int initValue = 0;
 
-    InitIntegerAction(ArtifactDatabase & db, const Artifact::Identification & id, uint64_t seq): Action(db, id, seq) {}
+    InitIntegerAction(ArtifactDatabase & db, const StrA & name): Action(db, TYPE, name) {}
+
+    static GN::AutoRef<InitIntegerAction> create(ArtifactDatabase & db, const StrA & name) {
+        auto * p = new InitIntegerAction(db, name);
+        if (p->sequence == 0) { delete p; return {}; }
+        return GN::AutoRef<InitIntegerAction>(p);
+    }
 
     struct A : public Arguments {
         inline static constexpr Guid        TYPE = {0x11111112, 0x2222, 0x3333, {0x44, 0x44, 0x55, 0x55, 0x66, 0x66, 0x77, 0x77}};
         WriteOnly<AutoRef<IntegerArtifact>> output;
-        A(ArtifactDatabase & db, const Artifact::Identification & id, uint64_t seq): Arguments(db, id, seq) {}
+        A(ArtifactDatabase & db, const StrA & name): Arguments(db, A::TYPE, name) {}
+        static GN::AutoRef<A> create(ArtifactDatabase & db, const StrA & name) {
+            auto * p = new A(db, name);
+            if (p->sequence == 0) { delete p; return {}; }
+            return GN::AutoRef<A>(p);
+        }
     };
 
     // Execute: set the output artifact's value
@@ -63,14 +80,25 @@ struct InitIntegerAction : public Action {
 struct AddIntegersAction : public Action {
     inline static constexpr Guid TYPE = {0xaaaaaaaa, 0xbbbb, 0xcccc, {0xdd, 0xdd, 0xee, 0xee, 0xff, 0xff, 0x00, 0x00}};
 
-    AddIntegersAction(ArtifactDatabase & db, const Artifact::Identification & id, uint64_t seq): Action(db, id, seq) {}
+    AddIntegersAction(ArtifactDatabase & db, const StrA & name): Action(db, TYPE, name) {}
+
+    static GN::AutoRef<AddIntegersAction> create(ArtifactDatabase & db, const StrA & name) {
+        auto * p = new AddIntegersAction(db, name);
+        if (p->sequence == 0) { delete p; return {}; }
+        return GN::AutoRef<AddIntegersAction>(p);
+    }
 
     struct A : public Arguments {
         inline static constexpr Guid        TYPE = {0xaaaaaaab, 0xbbbb, 0xcccc, {0xdd, 0xdd, 0xee, 0xee, 0xff, 0xff, 0x00, 0x00}};
         ReadOnly<AutoRef<IntegerArtifact>>  input1;
         ReadOnly<AutoRef<IntegerArtifact>>  input2;
         WriteOnly<AutoRef<IntegerArtifact>> output;
-        A(ArtifactDatabase & db, const Artifact::Identification & id, uint64_t seq): Arguments(db, id, seq) {}
+        A(ArtifactDatabase & db, const StrA & name): Arguments(db, A::TYPE, name) {}
+        static GN::AutoRef<A> create(ArtifactDatabase & db, const StrA & name) {
+            auto * p = new A(db, name);
+            if (p->sequence == 0) { delete p; return {}; }
+            return GN::AutoRef<A>(p);
+        }
     };
 
     // Execute: input1.value + input2.value -> output.value
@@ -112,14 +140,25 @@ struct AddIntegersAction : public Action {
 struct MultiplyIntegersAction : public Action {
     inline static constexpr Guid TYPE = {0x55555555, 0x6666, 0x7777, {0x88, 0x88, 0x99, 0x99, 0xaa, 0xaa, 0xbb, 0xbb}};
 
-    MultiplyIntegersAction(ArtifactDatabase & db, const Artifact::Identification & id, uint64_t seq): Action(db, id, seq) {}
+    MultiplyIntegersAction(ArtifactDatabase & db, const StrA & name): Action(db, TYPE, name) {}
+
+    static GN::AutoRef<MultiplyIntegersAction> create(ArtifactDatabase & db, const StrA & name) {
+        auto * p = new MultiplyIntegersAction(db, name);
+        if (p->sequence == 0) { delete p; return {}; }
+        return GN::AutoRef<MultiplyIntegersAction>(p);
+    }
 
     struct A : public Arguments {
         inline static constexpr Guid        TYPE = {0x55555556, 0x6666, 0x7777, {0x88, 0x88, 0x99, 0x99, 0xaa, 0xaa, 0xbb, 0xbb}};
         ReadOnly<AutoRef<IntegerArtifact>>  input1;
         ReadOnly<AutoRef<IntegerArtifact>>  input2;
         WriteOnly<AutoRef<IntegerArtifact>> output;
-        A(ArtifactDatabase & db, const Artifact::Identification & id, uint64_t seq): Arguments(db, id, seq) {}
+        A(ArtifactDatabase & db, const StrA & name): Arguments(db, A::TYPE, name) {}
+        static GN::AutoRef<A> create(ArtifactDatabase & db, const StrA & name) {
+            auto * p = new A(db, name);
+            if (p->sequence == 0) { delete p; return {}; }
+            return GN::AutoRef<A>(p);
+        }
     };
 
     // Execute: input1.value * input2.value -> output.value
@@ -165,87 +204,24 @@ struct MultiplyIntegersAction : public Action {
 // TEST EXECUTION FLOW
 // ============================================================================
 
-// Template helper function to spawn a typed artifact
-template<typename T>
-GN::AutoRef<T> spawnTyped(GN::rdg::ArtifactDatabase & db, const GN::StrA & name) {
-    auto a = db.spawn({T::TYPE, name});
-    TS_ASSERT(a != nullptr);
-    auto t = a->template castTo<T>();
-    TS_ASSERT(t != nullptr);
-    return GN::AutoRef<T>(t);
-}
-
 class RenderGraphTest : public CxxTest::TestSuite {
 public:
     void testRenderGraphArithmetic() {
-        // Create an artifact database
-        GN::rdg::ArtifactDatabase::CreateParameters dbParams;
-        dbParams.autoAdmitAllBuiltInArtifacts = false; // We'll register our custom types manually
-        auto db                               = GN::rdg::ArtifactDatabase::create(dbParams);
+        // Create an artifact database (no type registration; each artifact creates itself and admits via Artifact ctor)
+        auto db = std::unique_ptr<GN::rdg::ArtifactDatabase>(GN::rdg::ArtifactDatabase::create(GN::rdg::ArtifactDatabase::CreateParameters {}));
         TS_ASSERT(db != nullptr);
-
-        // Register custom artifact type
-        bool artifactRegistered = db->admit(GN::rdg::IntegerArtifact::TYPE, [db](const GN::StrA & name, uint64_t sequence) -> GN::AutoRef<GN::rdg::Artifact> {
-            return GN::AutoRef<GN::rdg::Artifact>(
-                new GN::rdg::IntegerArtifact(*db, GN::rdg::Artifact::Identification {GN::rdg::IntegerArtifact::TYPE, name}, sequence));
-        });
-        TS_ASSERT(artifactRegistered);
-
-        // Register custom action types
-        bool initActionRegistered =
-            db->admit(GN::rdg::InitIntegerAction::TYPE, [db](const GN::StrA & name, uint64_t sequence) -> GN::AutoRef<GN::rdg::Artifact> {
-                return GN::AutoRef<GN::rdg::Artifact>(
-                    new GN::rdg::InitIntegerAction(*db, GN::rdg::Artifact::Identification {GN::rdg::InitIntegerAction::TYPE, name}, sequence));
-            });
-        TS_ASSERT(initActionRegistered);
-
-        bool addActionRegistered =
-            db->admit(GN::rdg::AddIntegersAction::TYPE, [db](const GN::StrA & name, uint64_t sequence) -> GN::AutoRef<GN::rdg::Artifact> {
-                return GN::AutoRef<GN::rdg::Artifact>(
-                    new GN::rdg::AddIntegersAction(*db, GN::rdg::Artifact::Identification {GN::rdg::AddIntegersAction::TYPE, name}, sequence));
-            });
-        TS_ASSERT(addActionRegistered);
-
-        bool multiplyActionRegistered =
-            db->admit(GN::rdg::MultiplyIntegersAction::TYPE, [db](const GN::StrA & name, uint64_t sequence) -> GN::AutoRef<GN::rdg::Artifact> {
-                return GN::AutoRef<GN::rdg::Artifact>(
-                    new GN::rdg::MultiplyIntegersAction(*db, GN::rdg::Artifact::Identification {GN::rdg::MultiplyIntegersAction::TYPE, name}, sequence));
-            });
-        TS_ASSERT(multiplyActionRegistered);
-
-        // Register Arguments types for actions
-        bool initArgsRegistered =
-            db->admit(GN::rdg::InitIntegerAction::A::TYPE, [db](const GN::StrA & name, uint64_t sequence) -> GN::AutoRef<GN::rdg::Artifact> {
-                return GN::AutoRef<GN::rdg::Artifact>(
-                    new GN::rdg::InitIntegerAction::A(*db, GN::rdg::Artifact::Identification {GN::rdg::InitIntegerAction::A::TYPE, name}, sequence));
-            });
-        TS_ASSERT(initArgsRegistered);
-
-        bool addArgsRegistered =
-            db->admit(GN::rdg::AddIntegersAction::A::TYPE, [db](const GN::StrA & name, uint64_t sequence) -> GN::AutoRef<GN::rdg::Artifact> {
-                return GN::AutoRef<GN::rdg::Artifact>(
-                    new GN::rdg::AddIntegersAction::A(*db, GN::rdg::Artifact::Identification {GN::rdg::AddIntegersAction::A::TYPE, name}, sequence));
-            });
-        TS_ASSERT(addArgsRegistered);
-
-        bool multiplyArgsRegistered =
-            db->admit(GN::rdg::MultiplyIntegersAction::A::TYPE, [db](const GN::StrA & name, uint64_t sequence) -> GN::AutoRef<GN::rdg::Artifact> {
-                return GN::AutoRef<GN::rdg::Artifact>(
-                    new GN::rdg::MultiplyIntegersAction::A(*db, GN::rdg::Artifact::Identification {GN::rdg::MultiplyIntegersAction::A::TYPE, name}, sequence));
-            });
-        TS_ASSERT(multiplyArgsRegistered);
 
         // Create a render graph instance
         GN::rdg::RenderGraph::CreateParameters params;
         auto                                   renderGraph = GN::rdg::RenderGraph::create(params);
         TS_ASSERT(renderGraph != nullptr);
 
-        // Create artifacts using the database
-        auto one    = spawnTyped<GN::rdg::IntegerArtifact>(*db, "one");
-        auto two    = spawnTyped<GN::rdg::IntegerArtifact>(*db, "two");
-        auto three  = spawnTyped<GN::rdg::IntegerArtifact>(*db, "three");
-        auto sum    = spawnTyped<GN::rdg::IntegerArtifact>(*db, "sum");
-        auto result = spawnTyped<GN::rdg::IntegerArtifact>(*db, "result");
+        // Create artifacts (each creates its own instance and registers via admit() in Artifact ctor)
+        auto one    = GN::rdg::IntegerArtifact::create(*db, "one");
+        auto two    = GN::rdg::IntegerArtifact::create(*db, "two");
+        auto three  = GN::rdg::IntegerArtifact::create(*db, "three");
+        auto sum    = GN::rdg::IntegerArtifact::create(*db, "sum");
+        auto result = GN::rdg::IntegerArtifact::create(*db, "result");
 
         TS_ASSERT(one != nullptr);
         TS_ASSERT(two != nullptr);
@@ -261,11 +237,11 @@ public:
 
             // Task 1: Initialize 'one' to 1
             {
-                auto initAction = spawnTyped<GN::rdg::InitIntegerAction>(*db, "init_one");
+                auto initAction = GN::rdg::InitIntegerAction::create(*db, "init_one");
                 TS_ASSERT(initAction != nullptr);
                 initAction->initValue = 1;
 
-                auto initArgs = spawnTyped<GN::rdg::InitIntegerAction::A>(*db, "init_one_args");
+                auto initArgs = GN::rdg::InitIntegerAction::A::create(*db, "init_one_args");
                 TS_ASSERT(initArgs != nullptr);
                 initArgs->output.set(one);
 
@@ -277,11 +253,11 @@ public:
 
             // Task 2: Initialize 'two' to 2
             {
-                auto initAction = spawnTyped<GN::rdg::InitIntegerAction>(*db, "init_two");
+                auto initAction = GN::rdg::InitIntegerAction::create(*db, "init_two");
                 TS_ASSERT(initAction != nullptr);
                 initAction->initValue = 2;
 
-                auto initArgs = spawnTyped<GN::rdg::InitIntegerAction::A>(*db, "init_two_args");
+                auto initArgs = GN::rdg::InitIntegerAction::A::create(*db, "init_two_args");
                 TS_ASSERT(initArgs != nullptr);
                 initArgs->output.set(two);
 
@@ -293,11 +269,11 @@ public:
 
             // Task 3: Initialize 'three' to 3
             {
-                auto initAction = spawnTyped<GN::rdg::InitIntegerAction>(*db, "init_three");
+                auto initAction = GN::rdg::InitIntegerAction::create(*db, "init_three");
                 TS_ASSERT(initAction != nullptr);
                 initAction->initValue = 3;
 
-                auto initArgs = spawnTyped<GN::rdg::InitIntegerAction::A>(*db, "init_three_args");
+                auto initArgs = GN::rdg::InitIntegerAction::A::create(*db, "init_three_args");
                 TS_ASSERT(initArgs != nullptr);
                 initArgs->output.set(three);
 
@@ -314,10 +290,10 @@ public:
             TS_ASSERT(workflow != nullptr);
             workflow->name = "compute_sum";
 
-            auto addAction = spawnTyped<GN::rdg::AddIntegersAction>(*db, "add_1_2");
+            auto addAction = GN::rdg::AddIntegersAction::create(*db, "add_1_2");
             TS_ASSERT(addAction != nullptr);
 
-            auto addArgs = spawnTyped<GN::rdg::AddIntegersAction::A>(*db, "add_1_2_args");
+            auto addArgs = GN::rdg::AddIntegersAction::A::create(*db, "add_1_2_args");
             TS_ASSERT(addArgs != nullptr);
             addArgs->input1.set(one);
             addArgs->input2.set(two);
@@ -335,10 +311,10 @@ public:
             TS_ASSERT(workflow != nullptr);
             workflow->name = "compute_result";
 
-            auto multiplyAction = spawnTyped<GN::rdg::MultiplyIntegersAction>(*db, "multiply_3_sum");
+            auto multiplyAction = GN::rdg::MultiplyIntegersAction::create(*db, "multiply_3_sum");
             TS_ASSERT(multiplyAction != nullptr);
 
-            auto multiplyArgs = spawnTyped<GN::rdg::MultiplyIntegersAction::A>(*db, "multiply_3_sum_args");
+            auto multiplyArgs = GN::rdg::MultiplyIntegersAction::A::create(*db, "multiply_3_sum_args");
             TS_ASSERT(multiplyArgs != nullptr);
             multiplyArgs->input1.set(three);
             multiplyArgs->input2.set(sum);
@@ -368,6 +344,24 @@ public:
         TS_ASSERT_EQUALS(two->value, 2);
         TS_ASSERT_EQUALS(three->value, 3);
         TS_ASSERT_EQUALS(sum->value, 3);
+    }
+
+    void testCreateDuplicateTypeNameReturnsNull() {
+        auto db = GN::rdg::ArtifactDatabase::create(GN::rdg::ArtifactDatabase::CreateParameters {});
+        TS_ASSERT(db != nullptr);
+
+        auto first = GN::rdg::IntegerArtifact::create(*db, "unique_name");
+        TS_ASSERT(first != nullptr);
+        TS_ASSERT(first->sequence != 0);
+
+        // Duplicate type+name must cause create() to return null (sequence was 0, instance deleted)
+        auto duplicate = GN::rdg::IntegerArtifact::create(*db, "unique_name");
+        TS_ASSERT(duplicate == nullptr);
+
+        // First instance still valid and fetchable
+        auto fetched = db->fetch(GN::rdg::IntegerArtifact::TYPE, "unique_name");
+        TS_ASSERT(fetched != nullptr);
+        TS_ASSERT(fetched->sequence == first->sequence);
     }
 };
 

@@ -226,13 +226,27 @@ private:
 
             return false;
         }
+
+        bool operator==(const VertexFormatKey & rhs) const { return vtxbind == rhs.vtxbind && shaderID == rhs.shaderID; }
+
+        bool operator!=(const VertexFormatKey & rhs) const { return vtxbind != rhs.vtxbind || shaderID != rhs.shaderID; }
+
+        struct Hash {
+            size_t operator()(const VertexFormatKey & k) const {
+                size_t h = std::hash<uint64_t>()(k.shaderID);
+                for (size_t i = 0; i < k.vtxbind.size(); ++i) { GN::combineHash(h, k.vtxbind[i]); }
+                return h;
+            }
+        };
     };
 
-    GN::Dictionary<VertexFormatKey, D3D11VertexLayout> mVertexLayouts;
-    D3D11VertexLayout *                                mCurrentVertexLayout;
-    AutoComPtr<ID3D11SamplerState>                     mDefaultSampler;
-    D3D11StateObjectManager *                          mSOMgr;
-    D3D11RTMgr *                                       mRTMgr;
+    typedef Dictionary<VertexFormatKey, D3D11VertexLayout, VertexFormatKey::Hash> VertexFormatDict;
+
+    VertexFormatDict               mVertexLayouts;
+    D3D11VertexLayout *            mCurrentVertexLayout;
+    AutoComPtr<ID3D11SamplerState> mDefaultSampler;
+    D3D11StateObjectManager *      mSOMgr;
+    D3D11RTMgr *                   mRTMgr;
 
     //@}
 

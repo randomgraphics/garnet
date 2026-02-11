@@ -22,38 +22,44 @@ int main(int, const char **) {
         return -1;
     }
 
-    // Create and initialize headless GPU context
-    auto gpuContext = db->spawnAndReset<GpuContext>("gpu_context", GpuContext::ResetParameters {.win    = nullptr, // null window = headless mode
-                                                                                                .width  = 1280,
-                                                                                                .height = 720});
+    // Create GPU context (artifact creates itself and registers via admit() in Artifact ctor), then reset
+    auto gpuContext = GpuContext::create(*db);
     if (!gpuContext) {
-        GN_ERROR(sLogger)("Failed to create and initialize GPU context");
+        GN_ERROR(sLogger)("Failed to create GPU context");
+        return -1;
+    }
+    if (!gpuContext->reset(GpuContext::ResetParameters {.win = nullptr, .width = 1280, .height = 720})) {
+        GN_ERROR(sLogger)("Failed to initialize GPU context");
         return -1;
     }
     auto [displayWidth, displayHeight] = gpuContext->dimension();
 
-    // Create and initialize backbuffer
-    auto backbuffer = db->spawnAndReset<Backbuffer>("backbuffer", Backbuffer::Descriptor {displayWidth, displayHeight});
+    // Create backbuffer and reset
+    auto backbuffer = Backbuffer::create(*db);
     if (!backbuffer) {
-        GN_ERROR(sLogger)("Failed to create and initialize backbuffer");
+        GN_ERROR(sLogger)("Failed to create backbuffer");
+        return -1;
+    }
+    if (!backbuffer->reset(Backbuffer::Descriptor {displayWidth, displayHeight})) {
+        GN_ERROR(sLogger)("Failed to initialize backbuffer");
         return -1;
     }
 
-    // Create and initialize actions
-    auto prepareAction = db->spawnAndReset<PrepareBackbuffer>("prepare_action");
-    if (!prepareAction) {
+    // Create actions (each creates itself and registers via admit()), then reset
+    auto prepareAction = PrepareBackbuffer::create(*db, "prepare_action");
+    if (!prepareAction || !prepareAction->reset()) {
         GN_ERROR(sLogger)("Failed to create and initialize PrepareBackbuffer action");
         return -1;
     }
 
-    auto clearAction = db->spawnAndReset<ClearRenderTarget>("clear_action");
-    if (!clearAction) {
+    auto clearAction = ClearRenderTarget::create(*db, "clear_action");
+    if (!clearAction || !clearAction->reset()) {
         GN_ERROR(sLogger)("Failed to create and initialize ClearRenderTarget action");
         return -1;
     }
 
-    auto presentAction = db->spawnAndReset<PresentBackbuffer>("present_action");
-    if (!presentAction) {
+    auto presentAction = PresentBackbuffer::create(*db, "present_action");
+    if (!presentAction || !presentAction->reset()) {
         GN_ERROR(sLogger)("Failed to create and initialize PresentBackbuffer action");
         return -1;
     }
@@ -66,7 +72,7 @@ int main(int, const char **) {
         // Task: Prepare backbuffer
         auto prepareTask   = Workflow::Task {};
         prepareTask.action = prepareAction;
-        auto prepareArgs   = db->spawn<PrepareBackbuffer::A>("prepare_args");
+        auto prepareArgs   = AutoRef<PrepareBackbuffer::A>(new PrepareBackbuffer::A(*db, "prepare_args"));
         prepareArgs->backbuffer.set(backbuffer);
         prepareTask.arguments = prepareArgs;
         renderWorkflow->tasks.append(prepareTask);
@@ -74,7 +80,7 @@ int main(int, const char **) {
         // Task: Clear render target
         auto clearTask   = Workflow::Task {};
         clearTask.action = clearAction;
-        auto clearArgs   = db->spawn<ClearRenderTarget::A>("clear_args");
+        auto clearArgs   = AutoRef<ClearRenderTarget::A>(new ClearRenderTarget::A(*db, "clear_args"));
 
         auto color = ClearRenderTarget::A::ClearColor {};
         color.r    = 0.39f;
@@ -94,7 +100,7 @@ int main(int, const char **) {
         // Task: Present backbuffer
         auto presentTask   = Workflow::Task {};
         presentTask.action = presentAction;
-        auto presentArgs   = db->spawn<PresentBackbuffer::A>("present_args");
+        auto presentArgs   = AutoRef<PresentBackbuffer::A>(new PresentBackbuffer::A(*db, "present_args"));
         presentArgs->backbuffer.set(backbuffer);
         presentTask.arguments = presentArgs;
         renderWorkflow->tasks.append(presentTask);

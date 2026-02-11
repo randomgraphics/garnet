@@ -13,27 +13,25 @@ namespace GN::rdg {
 // ArtifactDatabase implementation
 // ============================================================================
 
-// Hash function for Artifact::Identification
-struct IdentificationHash {
-    size_t operator()(const Artifact::Identification & id) const {
-        // Combine hash of Guid and name
+// Key for lookup by type and name (artifact admits itself via admit(Artifact*))
+struct TypeNameKey {
+    const Guid & type;
+    const StrA & name;
+    bool operator==(const TypeNameKey & o) const { return type == o.type && name == o.name; }
+    bool operator!=(const TypeNameKey & o) const { return !(*this == o); }
+};
+
+struct TypeNameKeyHash {
+    size_t operator()(const TypeNameKey & k) const {
         Guid::Hash      guidHash;
         std::hash<StrA> nameHash;
-        return guidHash(id.type) ^ (nameHash(id.name) << 1);
+        return guidHash(k.type) ^ (nameHash(k.name) << 1);
     }
 };
 
-// Equality function for Artifact::Identification
-struct IdentificationEqual {
-    bool operator()(const Artifact::Identification & a, const Artifact::Identification & b) const { return &a.type == &b.type && a.name == b.name; }
-};
-
 class ArtifactDatabaseImpl : public ArtifactDatabase {
-    // Map from artifact type GUID to creator function
-    std::unordered_map<Guid, std::function<AutoRef<Artifact>(const StrA &, uint64_t)>, Guid::Hash> mCreators;
-
-    // Map from Identification to artifact (for search by Identification)
-    std::unordered_map<Artifact::Identification, AutoRef<Artifact>, IdentificationHash, IdentificationEqual> mArtifactsById;
+    // Map from (type, name) to artifact
+    std::unordered_map<TypeNameKey, AutoRef<Artifact>, TypeNameKeyHash> mArtifactsById;
 
     // Map from sequence number to artifact (for fast lookup by sequence)
     std::unordered_map<uint64_t, AutoRef<Artifact>> mArtifactsBySeq;
@@ -48,60 +46,28 @@ public:
     ArtifactDatabaseImpl()  = default;
     ~ArtifactDatabaseImpl() = default;
 
-    bool admit(const Guid & type, std::function<AutoRef<Artifact>(const StrA & name, uint64_t sequence)> && creator) override {
+    uint64_t admit(Artifact * artifact) override {
+        if (!artifact) return 0;
         std::lock_guard<std::mutex> lock(mMutex);
 
-        // Check if type is already registered
-        if (mCreators.find(type) != mCreators.end()) {
-            // Type already registered, redundant registration not allowed
-            GN_ERROR(sLogger)("Artifact type already registered: {}", type.toStr());
-            return false;
+        TypeNameKey key{artifact->type, artifact->name};
+        if (mArtifactsById.find(key) != mArtifactsById.end()) {
+            GN_ERROR(sLogger)("Failed to admit artifact: type and name already exist: type={}, name={}", artifact->type.toStr(), artifact->name);
+            return 0;
         }
 
-        mCreators[type] = std::move(creator);
-        return true;
+        uint64_t seq = mNextSequence++;
+        AutoRef<Artifact> ref(artifact);
+        mArtifactsById[key] = ref;
+        mArtifactsBySeq[seq] = ref;
+        return seq;
     }
 
-    auto spawn(const Artifact::Identification & id) -> AutoRef<Artifact> override {
+    auto fetch(const Guid & type, const StrA & name) -> AutoRef<Artifact> override {
         std::lock_guard<std::mutex> lock(mMutex);
 
-        // Check if artifact already exists
-        auto it = mArtifactsById.find(id);
-        if (it != mArtifactsById.end()) {
-            // ID already exists, fail
-            GN_ERROR(sLogger)("Failed to spawn artifact: artifact already exists: type={}, name={}", id.type.toStr(), id.name);
-            return AutoRef<Artifact>();
-        }
-
-        // Find creator for this type
-        auto creatorIt = mCreators.find(id.type);
-        if (creatorIt == mCreators.end()) {
-            // No creator registered for this type
-            GN_ERROR(sLogger)("Failed to spawn artifact: type not registered: type={}, name={}", id.type.toStr(), id.name);
-            return AutoRef<Artifact>();
-        }
-
-        // Create new artifact with next sequence number
-        uint64_t          seq      = mNextSequence++;
-        AutoRef<Artifact> artifact = creatorIt->second(id.name, seq);
-
-        if (!artifact) {
-            // Creator returned null
-            GN_ERROR(sLogger)("Failed to spawn artifact: creator returned null: type={}, name={}", id.type.toStr(), id.name);
-            return AutoRef<Artifact>();
-        }
-
-        // Store in both maps
-        mArtifactsById[id]   = artifact;
-        mArtifactsBySeq[seq] = artifact;
-
-        return artifact;
-    }
-
-    auto fetch(const Artifact::Identification & id) -> AutoRef<Artifact> override {
-        std::lock_guard<std::mutex> lock(mMutex);
-
-        auto it = mArtifactsById.find(id);
+        TypeNameKey key{type, name};
+        auto it = mArtifactsById.find(key);
         if (it != mArtifactsById.end()) { return it->second; }
         return AutoRef<Artifact>();
     }
@@ -114,55 +80,25 @@ public:
         return AutoRef<Artifact>();
     }
 
-    bool erase(const Artifact::Identification & id) override {
-        std::lock_guard<std::mutex> lock(mMutex);
-
-        auto it = mArtifactsById.find(id);
-        if (it == mArtifactsById.end()) {
-            // Artifact not found
-            return false;
-        }
-
-        // Get the sequence number before erasing
-        uint64_t seq = it->second->sequence;
-
-        // Erase from both maps
-        mArtifactsById.erase(it);
-        mArtifactsBySeq.erase(seq);
-
-        return true;
-    }
-
     bool erase(uint64_t sequence) override {
         std::lock_guard<std::mutex> lock(mMutex);
 
         auto it = mArtifactsBySeq.find(sequence);
         if (it == mArtifactsBySeq.end()) {
-            // Artifact not found
             return false;
         }
 
-        // Get the identification before erasing
-        const Artifact::Identification & id = it->second->id;
-
-        // Erase from both maps
+        Artifact * a    = it->second;
+        TypeNameKey key{a->type, a->name};
         mArtifactsBySeq.erase(it);
-        mArtifactsById.erase(id);
-
+        mArtifactsById.erase(key);
         return true;
     }
 };
 
 ArtifactDatabase * ArtifactDatabase::create(const CreateParameters & params) {
-    auto impl = std::make_unique<ArtifactDatabaseImpl>();
-
-    // If autoAdmitAllBuiltInArtifacts is true, register all built-in artifact types
-    if (params.autoAdmitAllBuiltInArtifacts) {
-        // TODO: Register built-in artifact types here
-        // For now, this is a placeholder
-    }
-
-    return impl.release();
+    (void) params;
+    return new ArtifactDatabaseImpl();
 }
 
 // ============================================================================

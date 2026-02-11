@@ -1,12 +1,21 @@
 #pragma once
 
+#include "garnet/rdg/artifacts.h"
 namespace GN::rdg {
 
 struct ClearRenderTarget : public Action {
     inline static constexpr Guid TYPE = {0x6ad8b59d, 0xe672, 0x4b5e, {0x8e, 0xec, 0xf7, 0xac, 0xd4, 0xf1, 0x99, 0xdd}};
 
+    struct CreateParameters {
+        AutoRef<GpuContext> context;
+    };
+
+    /// Create a new instance and register to the database via admit(). Implementation provided by backend.
+    static GN_API AutoRef<ClearRenderTarget> create(ArtifactDatabase & db, const StrA & name, const CreateParameters & params);
+
     struct A : public Arguments {
         inline static constexpr Guid TYPE = {0x6ad8b59d, 0xe672, 0x4b5e, {0x8e, 0xec, 0xf7, 0xac, 0xd4, 0xf1, 0x99, 0xdd}};
+        A(ArtifactDatabase & db, const StrA & name): Arguments(db, TYPE, name) {}
         struct ClearColor {
             struct {
                 float r, g, b, a;
@@ -19,16 +28,23 @@ struct ClearRenderTarget : public Action {
         ReadWrite<RenderTarget> renderTarget;
     };
 
-    virtual bool reset() = 0;
-
 protected:
     using Action::Action;
 };
 
 struct ClearDepthStencil : public Action {
     inline static constexpr Guid TYPE = {0xdb3ab1ef, 0xafc0, 0x4eca, {0x80, 0xfa, 0x49, 0xde, 0x23, 0x3c, 0xdf, 0x18}};
+
+    struct CreateParameters {
+        AutoRef<GpuContext> context;
+    };
+
+    /// Create a new instance and register to the database via admit(). Implementation provided by backend.
+    static GN_API AutoRef<ClearDepthStencil> create(ArtifactDatabase & db, const StrA & name, const CreateParameters & params);
+
     struct A : public Arguments {
         inline static constexpr Guid TYPE = {0x6ad8b59d, 0xe672, 0x4b5e, {0x8e, 0xec, 0xf7, 0xac, 0xd4, 0xf1, 0x99, 0xdd}};
+        A(ArtifactDatabase & db, const StrA & name): Arguments(db, TYPE, name) {}
         ReadOnly<float>              depth;
         ReadOnly<uint8_t>            stencil;
         ReadWrite<RenderTarget>      depthStencil;
@@ -56,8 +72,13 @@ protected:
 
 struct PrepareBackbuffer : public Action {
     inline static constexpr Guid TYPE = {0x3e4f5a6b, 0x7c8d, 0x9e0f, {0x1a, 0x2b, 0x3c, 0x4d, 0x5e, 0x6f, 0x7a, 0x8b}};
+
+    /// Create a new instance and register to the database via admit(). Implementation provided by backend.
+    static GN_API AutoRef<PrepareBackbuffer> create(ArtifactDatabase & db, const StrA & name);
+
     struct A : public Arguments {
         inline static constexpr Guid   TYPE = {0x3e4f5a6b, 0x7c8d, 0x9e0f, {0x1a, 0x2b, 0x3c, 0x4d, 0x5e, 0x6f, 0x7a, 0x8b}};
+        A(ArtifactDatabase & db, const StrA & name): Arguments(db, TYPE, name) {}
         ReadWrite<AutoRef<Backbuffer>> backbuffer; // Backbuffer to prepare
     };
 
@@ -69,8 +90,13 @@ protected:
 
 struct PresentBackbuffer : public Action {
     inline static constexpr Guid TYPE = {0x4f5a6b7c, 0x8d9e, 0x0f1a, {0x2b, 0x3c, 0x4d, 0x5e, 0x6f, 0x7a, 0x8b, 0x9c}};
+
+    /// Create a new instance and register to the database via admit(). Implementation provided by backend.
+    static GN_API AutoRef<PresentBackbuffer> create(ArtifactDatabase & db, const StrA & name);
+
     struct A : public Arguments {
         inline static constexpr Guid  TYPE = {0x4f5a6b7c, 0x8d9e, 0x0f1a, {0x2b, 0x3c, 0x4d, 0x5e, 0x6f, 0x7a, 0x8b, 0x9c}};
+        A(ArtifactDatabase & db, const StrA & name): Arguments(db, TYPE, name) {}
         ReadOnly<AutoRef<Backbuffer>> backbuffer; // Backbuffer to present
     };
 

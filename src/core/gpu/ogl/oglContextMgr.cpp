@@ -105,7 +105,7 @@ void GN::gfx::OGLGpu::contextQuit() {
     mContext.clear();
 
     // delete all vertex formats
-    for (Dictionary<VertexFormatKey, OGLVtxFmt *>::Iterator i = mVertexFormats.begin(); i != mVertexFormats.end(); ++i) { delete i->value(); }
+    for (auto i = mVertexFormats.begin(); i != mVertexFormats.end(); ++i) { delete i->value(); }
     mVertexFormats.clear();
 
     // delete render target manager
