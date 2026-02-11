@@ -1,5 +1,5 @@
 #ifndef __GN_ENGINE2_GNENGINE2_H__
-    #define __GN_ENGINE2_GNENGINE2_H__
+#define __GN_ENGINE2_GNENGINE2_H__
 // *****************************************************************************
 /// \file
 /// \brief   main interface of engine v2
@@ -87,4 +87,3 @@ class Universe {
 //                                     EOF
 // *****************************************************************************
 #endif // __GN_ENGINE2_GNENGINE2_H__
-#include "pch.h"
