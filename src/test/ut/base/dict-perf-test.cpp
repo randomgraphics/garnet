@@ -165,12 +165,12 @@ public:
 
     // Benchmark a specific operation (returns pair of time and value)
     template<typename Func>
-    std::pair<double, typename std::result_of<Func()>::type::second_type> benchmarkWithValue(Func && func) {
+    std::pair<double, typename std::invoke_result_t<Func>::second_type> benchmarkWithValue(Func && func) {
         // Warmup
         for (int i = 0; i < WARMUP_ITERATIONS; ++i) { func(); }
         // Actual benchmark
-        double                                             total = 0.0;
-        typename std::result_of<Func()>::type::second_type value = 0;
+        double                                           total = 0.0;
+        typename std::invoke_result_t<Func>::second_type value = 0;
         for (int i = 0; i < BENCHMARK_ITERATIONS; ++i) {
             auto result = func();
             total += result.first;

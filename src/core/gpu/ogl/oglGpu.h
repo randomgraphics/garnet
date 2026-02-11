@@ -235,9 +235,8 @@ private:
 
         struct Hash {
             size_t operator()(const VertexFormatKey & k) const {
-                size_t h = 0;
-                for (size_t i = 0; i < k.vtxbind.size(); ++i) { GN::combineHash(h, VertexElement::Hash()(k.vtxbind[i])); }
-                GN::combineHash(h, k.shaderID);
+                size_t h = std::hash<uint64_t>()(k.shaderID);
+                for (size_t i = 0; i < k.vtxbind.size(); ++i) { GN::combineHash(h, k.vtxbind[i]); }
                 return h;
             }
         };

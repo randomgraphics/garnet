@@ -1275,6 +1275,21 @@ GN_API void deleteGpu(gfx::Gpu *);
     #define GN_GPU_DEBUG_MARK_SET(gpu, name)   void(0)
 #endif
 
+namespace std {
+
+template<>
+struct hash<GN::gfx::VertexElement> {
+    size_t operator()(const GN::gfx::VertexElement & k) const {
+        size_t h = std::hash<uint32_t>()(k.format.u32);
+        GN::combineHash(h, k.stream);
+        GN::combineHash(h, k.offset);
+        GN::combineHash(h, k.attribute);
+        return h;
+    }
+};
+
+}; // namespace std
+
 // *****************************************************************************
 //                                     EOF
 // *****************************************************************************
