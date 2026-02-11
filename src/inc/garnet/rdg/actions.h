@@ -280,8 +280,8 @@ struct GenericDraw : public ShaderAction {
         ReadOnlyMap<StrA, BufferParameter>        uniforms;      ///< uniform buffers, key is shader variable name
         ReadOnlyMap<StrA, TextureParameter>       textures;      ///< textures, key is shader variable name
         ReadOnly<DrawParams>                      drawParams;    ///< draw parameters
-        ReadWriteArray<RenderTarget, 8, Usage::O> renderTargets; ///< color render targets
-        ReadWrite<RenderTarget, Usage::O>         depthStencil;  ///< depth/stencil render target (optional)
+        ReadWriteArray<RenderTarget, 8, UsageFlag::O> renderTargets; ///< color render targets
+        ReadWrite<RenderTarget, UsageFlag::O>         depthStencil;  ///< depth/stencil render target (optional)
     };
 
     /// Shader stage description
@@ -340,8 +340,8 @@ protected:
 //         inline static constexpr Guid                            TYPE = {0x6ad8b59d, 0xe672, 0x4b5e, {0x8e, 0xec, 0xf7, 0xac, 0xd4, 0xf1, 0x99, 0xdd}};
 //         ReadOnly<AutoRef<Mesh>>                                 mesh;
 //         ReadOnly<Vector4f>                                      color;
-//         ReadOnlyArray<AutoRef<Texture>, 8, Arguments::OPTIONAL> textures;
-//         ReadWriteArray<RenderTarget, 8, Arguments::OPTIONAL>    renderTargets;
+//         ReadOnlyArray<AutoRef<Texture>, 8, Arguments::Optional> textures;
+//         ReadWriteArray<RenderTarget, 8, Arguments::Optional>    renderTargets;
 //         ReadWrite<RenderTarget>                                 depthStencil;
 //     };
 
@@ -413,31 +413,31 @@ protected:
 //         ReadOnly<MaterialParams> material; ///< material parameters
 
 //         // Material textures (optional - if not provided, use material parameter values)
-//         ReadOnly<TextureParameter, Arguments::OPTIONAL> baseColorTexture;     ///< base color texture (albedo)
-//         ReadOnly<TextureParameter, Arguments::OPTIONAL> metallicRoughnessTexture; ///< metallic (R) and roughness (G) packed texture
-//         ReadOnly<TextureParameter, Arguments::OPTIONAL> normalTexture;       ///< normal map texture
-//         ReadOnly<TextureParameter, Arguments::OPTIONAL> emissiveTexture;     ///< emissive texture
-//         ReadOnly<TextureParameter, Arguments::OPTIONAL> occlusionTexture;    ///< ambient occlusion texture
-//         ReadOnly<TextureParameter, Arguments::OPTIONAL> clearcoatTexture;     ///< clearcoat texture
-//         ReadOnly<TextureParameter, Arguments::OPTIONAL> clearcoatRoughnessTexture; ///< clearcoat roughness texture
+//         ReadOnly<TextureParameter, Arguments::Optional> baseColorTexture;     ///< base color texture (albedo)
+//         ReadOnly<TextureParameter, Arguments::Optional> metallicRoughnessTexture; ///< metallic (R) and roughness (G) packed texture
+//         ReadOnly<TextureParameter, Arguments::Optional> normalTexture;       ///< normal map texture
+//         ReadOnly<TextureParameter, Arguments::Optional> emissiveTexture;     ///< emissive texture
+//         ReadOnly<TextureParameter, Arguments::Optional> occlusionTexture;    ///< ambient occlusion texture
+//         ReadOnly<TextureParameter, Arguments::Optional> clearcoatTexture;     ///< clearcoat texture
+//         ReadOnly<TextureParameter, Arguments::Optional> clearcoatRoughnessTexture; ///< clearcoat roughness texture
 
 //         // Lighting
-//         ReadOnlyArray<Light, 8, Arguments::OPTIONAL> lights; ///< light sources (up to 8 lights)
-//         ReadOnly<TextureParameter, Arguments::OPTIONAL> environmentMap; ///< environment map for IBL (cubemap)
-//         ReadOnly<TextureParameter, Arguments::OPTIONAL> irradianceMap; ///< pre-computed irradiance map for IBL (cubemap)
-//         ReadOnly<TextureParameter, Arguments::OPTIONAL> prefilteredMap; ///< pre-filtered environment map for IBL (cubemap)
-//         ReadOnly<TextureParameter, Arguments::OPTIONAL> brdfLUT; ///< BRDF lookup texture for IBL
+//         ReadOnlyArray<Light, 8, Arguments::Optional> lights; ///< light sources (up to 8 lights)
+//         ReadOnly<TextureParameter, Arguments::Optional> environmentMap; ///< environment map for IBL (cubemap)
+//         ReadOnly<TextureParameter, Arguments::Optional> irradianceMap; ///< pre-computed irradiance map for IBL (cubemap)
+//         ReadOnly<TextureParameter, Arguments::Optional> prefilteredMap; ///< pre-filtered environment map for IBL (cubemap)
+//         ReadOnly<TextureParameter, Arguments::Optional> brdfLUT; ///< BRDF lookup texture for IBL
 
 //         // Camera/view
 //         ReadOnly<CameraParams> camera; ///< camera parameters
 
 //         // Transform
 //         ReadOnly<Matrix44f> modelMatrix; ///< model-to-world transformation matrix
-//         ReadOnly<Matrix44f, Arguments::OPTIONAL> normalMatrix; ///< normal transformation matrix (if not provided, derived from modelMatrix)
+//         ReadOnly<Matrix44f, Arguments::Optional> normalMatrix; ///< normal transformation matrix (if not provided, derived from modelMatrix)
 
 //         // Render targets
-//         ReadWriteArray<RenderTarget, 8, Arguments::OPTIONAL> renderTargets; ///< color render targets
-//         ReadWrite<RenderTarget, Arguments::OPTIONAL> depthStencil;         ///< depth/stencil render target (optional)
+//         ReadWriteArray<RenderTarget, 8, Arguments::Optional> renderTargets; ///< color render targets
+//         ReadWrite<RenderTarget, Arguments::Optional> depthStencil;         ///< depth/stencil render target (optional)
 //     };
 
 //     /// Shader stage description

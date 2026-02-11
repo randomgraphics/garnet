@@ -122,33 +122,33 @@ struct ArtifactDatabase {
 
 /// Base class of arguments for an action.
 struct Arguments : Artifact {
-    enum class Usage {
-        NONE     = 0,
-        OPTIONAL = 1 << 0,
-        READING  = 1 << 1,
-        WRITING  = 1 << 2,
+    enum class UsageFlag {
+        None = 0,
+        Optional = 1 << 0,
+        Reading  = 1 << 1,
+        Writing  = 1 << 2,
         // Aliases for convenience
-        N = NONE,
-        O = OPTIONAL,
-        R = READING,
-        W = WRITING,
+        N = None,
+        O = Optional,
+        R = Reading,
+        W = Writing,
     };
 
-    friend constexpr Usage operator|(Usage a, Usage b) { return Usage(uint32_t(a) | uint32_t(b)); }
-    friend constexpr Usage operator&(Usage a, Usage b) { return Usage(uint32_t(a) & uint32_t(b)); }
+    friend constexpr UsageFlag operator|(UsageFlag a, UsageFlag b) { return UsageFlag(uint32_t(a) | uint32_t(b)); }
+    friend constexpr UsageFlag operator&(UsageFlag a, UsageFlag b) { return UsageFlag(uint32_t(a) & uint32_t(b)); }
 
     /// Base class of all typed parameters (for use by concrete action implementations).
-    template<Usage USAGE = Usage::NONE>
+    template<UsageFlag UFlags = UsageFlag::None>
     struct Parameter {
-        static constexpr bool IS_OPTIONAL = (USAGE & Usage::OPTIONAL) != Usage::NONE;
-        static constexpr bool IS_REQUIRED = (USAGE & Usage::OPTIONAL) == Usage::NONE;
-        static constexpr bool IS_READING  = (USAGE & Usage::READING) != Usage::NONE;
-        static constexpr bool IS_WRITING  = (USAGE & Usage::WRITING) != Usage::NONE;
+        static constexpr bool IS_OPTIONAL = (UFlags & UsageFlag::Optional) != UsageFlag::None;
+        static constexpr bool IS_REQUIRED = (UFlags & UsageFlag::Optional) == UsageFlag::None;
+        static constexpr bool IS_Reading  = (UFlags & UsageFlag::Reading) != UsageFlag::None;
+        static constexpr bool IS_Writing  = (UFlags & UsageFlag::Writing) != UsageFlag::None;
     };
 
     /// Represents a single parameter of an action.
-    template<typename T, Usage USAGE = Usage::NONE>
-    struct SingleParameter : public Parameter<USAGE> {
+    template<typename T, UsageFlag UFlags = UsageFlag::None>
+    struct SingleParameter : public Parameter<UFlags> {
         void set(const T & value) { mValue = value; }
         void reset() { mValue.reset(); }
         auto get() const -> const T * { return mValue.has_value() ? &mValue.value() : nullptr; }
@@ -158,17 +158,17 @@ struct Arguments : Artifact {
         std::optional<T> mValue;
     };
 
-    template<typename T, Usage USAGE = Usage::NONE>
-    using ReadOnly = SingleParameter<T, USAGE | Usage::READING>;
+    template<typename T, UsageFlag UFlags = UsageFlag::None>
+    using ReadOnly = SingleParameter<T, UFlags | UsageFlag::Reading>;
 
-    template<typename T, Usage USAGE = Usage::NONE>
-    using WriteOnly = SingleParameter<T, USAGE | Usage::WRITING>;
+    template<typename T, UsageFlag UFlags = UsageFlag::None>
+    using WriteOnly = SingleParameter<T, UFlags | UsageFlag::Writing>;
 
-    template<typename T, Usage USAGE = Usage::NONE>
-    using ReadWrite = SingleParameter<T, USAGE | Usage::READING | Usage::WRITING>;
+    template<typename T, UsageFlag UFlags = UsageFlag::None>
+    using ReadWrite = SingleParameter<T, UFlags | UsageFlag::Reading | UsageFlag::Writing>;
 
-    template<typename T, size_t Count, Usage USAGE = Usage::NONE>
-    struct ArrayParameter : public Parameter<USAGE> {
+    template<typename T, size_t Count, UsageFlag UFlags = UsageFlag::None>
+    struct ArrayParameter : public Parameter<UFlags> {
         void set(size_t index, const T & value) {
             if (index >= Count) GN_UNLIKELY {
                     GN_ERROR(getLogger("GN.rg"))("ArrayParameter: index out of range");
@@ -209,8 +209,8 @@ struct Arguments : Artifact {
         std::optional<T> mStorage[Count] = {};
     };
 
-    template<typename Key, typename Value, Usage USAGE = Usage::NONE>
-    struct MapParameter : public Parameter<USAGE> {
+    template<typename Key, typename Value, UsageFlag UFlags = UsageFlag::None>
+    struct MapParameter : public Parameter<UFlags> {
         void set(const Key & key, const Value & value) { mValue[key] = value; }
         void reset() { mValue.reset(); }
         void reset(const Key & key) { mValue.erase(key); }
@@ -221,23 +221,23 @@ struct Arguments : Artifact {
         std::unordered_map<Key, Value> mValue;
     };
 
-    template<typename T, size_t COUNT, Usage USAGE = Usage::NONE>
-    using ReadOnlyArray = ArrayParameter<T, COUNT, USAGE | Usage::READING>;
+    template<typename T, size_t COUNT, UsageFlag UFlags = UsageFlag::None>
+    using ReadOnlyArray = ArrayParameter<T, COUNT, UFlags | UsageFlag::Reading>;
 
-    template<typename T, size_t COUNT, Usage USAGE = Usage::NONE>
-    using WriteOnlyArray = ArrayParameter<T, COUNT, USAGE | Usage::WRITING>;
+    template<typename T, size_t COUNT, UsageFlag UFlags = UsageFlag::None>
+    using WriteOnlyArray = ArrayParameter<T, COUNT, UFlags | UsageFlag::Writing>;
 
-    template<typename T, size_t COUNT, Usage USAGE = Usage::NONE>
-    using ReadWriteArray = ArrayParameter<T, COUNT, USAGE | Usage::READING | Usage::WRITING>;
+    template<typename T, size_t COUNT, UsageFlag UFlags = UsageFlag::None>
+    using ReadWriteArray = ArrayParameter<T, COUNT, UFlags | UsageFlag::Reading | UsageFlag::Writing>;
 
-    template<typename Key, typename Value, Usage USAGE = Usage::NONE>
-    using ReadOnlyMap = MapParameter<Key, Value, USAGE | Usage::READING>;
+    template<typename Key, typename Value, UsageFlag UFlags = UsageFlag::None>
+    using ReadOnlyMap = MapParameter<Key, Value, UFlags | UsageFlag::Reading>;
 
-    template<typename Key, typename Value, Usage USAGE = Usage::NONE>
-    using WriteOnlyMap = MapParameter<Key, Value, USAGE | Usage::WRITING>;
+    template<typename Key, typename Value, UsageFlag UFlags = UsageFlag::None>
+    using WriteOnlyMap = MapParameter<Key, Value, UFlags | UsageFlag::Writing>;
 
-    template<typename Key, typename Value, Usage USAGE = Usage::NONE>
-    using ReadWriteMap = MapParameter<Key, Value, USAGE | Usage::READING | Usage::WRITING>;
+    template<typename Key, typename Value, UsageFlag UFlags = UsageFlag::None>
+    using ReadWriteMap = MapParameter<Key, Value, UFlags | UsageFlag::Reading | UsageFlag::Writing>;
 
 protected:
     using Artifact::Artifact;
