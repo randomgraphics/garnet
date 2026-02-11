@@ -12,13 +12,6 @@ struct RenderTarget {
 struct ClearRenderTarget : public Action {
     inline static constexpr Guid TYPE = {0x6ad8b59d, 0xe672, 0x4b5e, {0x8e, 0xec, 0xf7, 0xac, 0xd4, 0xf1, 0x99, 0xdd}};
 
-    struct CreateParameters {
-        AutoRef<GpuContext> context;
-    };
-
-    /// Create a new instance and register to the database via admit(). Implementation provided by backend.
-    static GN_API AutoRef<ClearRenderTarget> create(ArtifactDatabase & db, const StrA & name, const CreateParameters & params);
-
     struct A : public Arguments {
         inline static constexpr Guid TYPE = {0x6ad8b59d, 0xe672, 0x4b5e, {0x8e, 0xec, 0xf7, 0xac, 0xd4, 0xf1, 0x99, 0xdd}};
         A(): Arguments(TYPE) {}
@@ -34,19 +27,19 @@ struct ClearRenderTarget : public Action {
         ReadWrite<RenderTarget> renderTarget;
     };
 
+    struct CreateParameters {
+        AutoRef<GpuContext> context;
+    };
+
+    /// Create a new instance and register to the database via admit(). Implementation provided by backend.
+    static GN_API AutoRef<ClearRenderTarget> create(ArtifactDatabase & db, const StrA & name, const CreateParameters & params);
+
 protected:
     using Action::Action;
 };
 
 struct ClearDepthStencil : public Action {
     inline static constexpr Guid TYPE = {0xdb3ab1ef, 0xafc0, 0x4eca, {0x80, 0xfa, 0x49, 0xde, 0x23, 0x3c, 0xdf, 0x18}};
-
-    struct CreateParameters {
-        AutoRef<GpuContext> context;
-    };
-
-    /// Create a new instance and register to the database via admit(). Implementation provided by backend.
-    static GN_API AutoRef<ClearDepthStencil> create(ArtifactDatabase & db, const StrA & name, const CreateParameters & params);
 
     struct A : public Arguments {
         inline static constexpr Guid TYPE = {0x6ad8b59d, 0xe672, 0x4b5e, {0x8e, 0xec, 0xf7, 0xac, 0xd4, 0xf1, 0x99, 0xdd}};
@@ -56,18 +49,19 @@ struct ClearDepthStencil : public Action {
         ReadWrite<RenderTarget> depthStencil;
     };
 
+    struct CreateParameters {
+        AutoRef<GpuContext> context;
+    };
+
+    /// Create a new instance and register to the database via admit(). Implementation provided by backend.
+    static GN_API AutoRef<ClearDepthStencil> create(ArtifactDatabase & db, const StrA & name, const CreateParameters & params);
+
 protected:
     using Action::Action;
 };
 
 struct TextureLoader : public Action {
     inline static constexpr Guid TYPE = {0x825a7724, 0xfecb, 0x49e2, {0xb7, 0x1f, 0xfc, 0x9d, 0x3a, 0xa2, 0x8b, 0x11}};
-
-    struct CreateParameters {
-        // For future use
-    };
-
-    static GN_API AutoRef<TextureLoader> create(ArtifactDatabase & db, const StrA & name, const CreateParameters & params);
 
     struct A : public Arguments {
         inline static constexpr Guid TYPE = {0x825a7724, 0xfecb, 0x49e2, {0xb7, 0x1f, 0xfc, 0x9d, 0x3a, 0xa2, 0x8b, 0x11}};
@@ -76,12 +70,24 @@ struct TextureLoader : public Action {
         ReadOnly<StrA>              filename; // Path to texture file
     };
 
+    struct CreateParameters {
+        // For future use
+    };
+
+    static GN_API AutoRef<TextureLoader> create(ArtifactDatabase & db, const StrA & name, const CreateParameters & params);
+
 protected:
     using Action::Action;
 };
 
 struct PrepareBackbuffer : public Action {
     inline static constexpr Guid TYPE = {0x3e4f5a6b, 0x7c8d, 0x9e0f, {0x1a, 0x2b, 0x3c, 0x4d, 0x5e, 0x6f, 0x7a, 0x8b}};
+
+    struct A : public Arguments {
+        inline static constexpr Guid TYPE = {0x3e4f5a6b, 0x7c8d, 0x9e0f, {0x1a, 0x2b, 0x3c, 0x4d, 0x5e, 0x6f, 0x7a, 0x8b}};
+        A(): Arguments(TYPE) {}
+        ReadWrite<AutoRef<Backbuffer>> backbuffer; // Backbuffer to prepare
+    };
 
     struct CreateParameters {
         AutoRef<GpuContext> context;
@@ -90,19 +96,18 @@ struct PrepareBackbuffer : public Action {
     /// Create a new instance and register to the database via admit(). Implementation provided by backend.
     static GN_API AutoRef<PrepareBackbuffer> create(ArtifactDatabase & db, const StrA & name, const CreateParameters & params);
 
-    struct A : public Arguments {
-        inline static constexpr Guid TYPE = {0x3e4f5a6b, 0x7c8d, 0x9e0f, {0x1a, 0x2b, 0x3c, 0x4d, 0x5e, 0x6f, 0x7a, 0x8b}};
-        A(): Arguments(TYPE) {}
-        ReadWrite<AutoRef<Backbuffer>> backbuffer; // Backbuffer to prepare
-    };
-    virtual bool reset() = 0;
-
 protected:
     using Action::Action;
 };
 
 struct PresentBackbuffer : public Action {
     inline static constexpr Guid TYPE = {0x4f5a6b7c, 0x8d9e, 0x0f1a, {0x2b, 0x3c, 0x4d, 0x5e, 0x6f, 0x7a, 0x8b, 0x9c}};
+
+    struct A : public Arguments {
+        inline static constexpr Guid TYPE = {0x4f5a6b7c, 0x8d9e, 0x0f1a, {0x2b, 0x3c, 0x4d, 0x5e, 0x6f, 0x7a, 0x8b, 0x9c}};
+        A(): Arguments(TYPE) {}
+        ReadOnly<AutoRef<Backbuffer>> backbuffer; // Backbuffer to present
+    };
 
     struct CreateParameters {
         AutoRef<GpuContext> context;
@@ -111,18 +116,13 @@ struct PresentBackbuffer : public Action {
     /// Create a new instance and register to the database via admit(). Implementation provided by backend.
     static GN_API AutoRef<PresentBackbuffer> create(ArtifactDatabase & db, const StrA & name, const CreateParameters & params);
 
-    struct A : public Arguments {
-        inline static constexpr Guid TYPE = {0x4f5a6b7c, 0x8d9e, 0x0f1a, {0x2b, 0x3c, 0x4d, 0x5e, 0x6f, 0x7a, 0x8b, 0x9c}};
-        A(): Arguments(TYPE) {}
-        ReadOnly<AutoRef<Backbuffer>> backbuffer; // Backbuffer to present
-    };
-
 protected:
     using Action::Action;
 };
 
 struct TextureReadback : public Action {
     inline static constexpr Guid TYPE = {0x5a6b7c8d, 0x9e0f, 0x1a2b, {0x3c, 0x4d, 0x5e, 0x6f, 0x7a, 0x8b, 0x9c, 0x0d}};
+
     struct A : public Arguments {
         inline static constexpr Guid TYPE = {0x5a6b7c8d, 0x9e0f, 0x1a2b, {0x3c, 0x4d, 0x5e, 0x6f, 0x7a, 0x8b, 0x9c, 0x0d}};
         A(): Arguments(TYPE) {}
@@ -130,7 +130,11 @@ struct TextureReadback : public Action {
         WriteOnly<gfx::img::Image> image;   ///< output image (will be cleared and filled with the texture content)
     };
 
-    virtual bool reset() = 0;
+    struct CreateParameters {
+        AutoRef<GpuContext> context;
+    };
+
+    static GN_API AutoRef<TextureReadback> create(ArtifactDatabase & db, const StrA & name, const CreateParameters & params);
 
 protected:
     using Action::Action;
@@ -267,7 +271,11 @@ struct SetupRenderStates : public Action {
         ReadOnly<RenderStateDesc> renderStates; ///< render state descriptor
     };
 
-    virtual bool reset() = 0;
+    struct CreateParameters {
+        AutoRef<GpuContext> context;
+    };
+
+    static GN_API AutoRef<SetupRenderStates> create(ArtifactDatabase & db, const StrA & name, const CreateParameters & params);
 
 protected:
     using Action::Action;
@@ -300,8 +308,6 @@ struct ShaderAction : public Action {
         AutoRef<Sampler>          sampler;
         Texture::SubresourceRange subresourceRange;
     };
-
-    virtual bool reset() = 0;
 
 protected:
     using Action::Action;
@@ -354,14 +360,16 @@ struct GenericDraw : public ShaderAction {
         StrA          entryPoint;   ///< entry point name
     };
 
-    /// Reset the draw action with shader binaries for different stages.
-    /// All parameters are optional - only provided stages will be set.
-    virtual bool reset(const std::optional<ShaderStageDesc> & vs = {}, ///< vertex shader
-                       const std::optional<ShaderStageDesc> & ds = {}, ///< domain shader
-                       const std::optional<ShaderStageDesc> & hs = {}, ///< hull shader
-                       const std::optional<ShaderStageDesc> & gs = {}, ///< geometry shader
-                       const std::optional<ShaderStageDesc> & ps = {}  ///< pixel shader
-                       ) = 0;
+    struct CreateParameters {
+        AutoRef<GpuContext>            context;
+        std::optional<ShaderStageDesc> vs; ///< vertex shader
+        std::optional<ShaderStageDesc> ds; ///< domain shader
+        std::optional<ShaderStageDesc> hs; ///< hull shader
+        std::optional<ShaderStageDesc> gs; ///< geometry shader
+        std::optional<ShaderStageDesc> ps; ///< pixel shader
+    };
+
+    static GN_API AutoRef<GenericDraw> create(ArtifactDatabase & db, const StrA & name, const CreateParameters & params);
 
 protected:
     using ShaderAction::ShaderAction;
@@ -389,7 +397,11 @@ struct GenericCompute : public ShaderAction {
         ReadOnly<DispatchSize>                               groups;   ///< thread group counts
     };
 
-    virtual bool reset(AutoRef<Blob> shaderBinary, const StrA & entryPoint) = 0;
+    struct CreateParameters {
+        AutoRef<GpuContext> context;
+    };
+
+    static GN_API AutoRef<GenericCompute> create(ArtifactDatabase & db, const StrA & name, const CreateParameters & params);
 
 protected:
     using ShaderAction::ShaderAction;

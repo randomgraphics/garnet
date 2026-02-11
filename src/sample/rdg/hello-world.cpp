@@ -28,23 +28,19 @@ int main(int, const char **) {
     auto [displayWidth, displayHeight] = gpuContext->dimension();
 
     // Create backbuffer and reset
-    auto backbuffer = Backbuffer::create(*db, "backbuffer", Backbuffer::Descriptor {displayWidth, displayHeight});
+    auto backbuffer = Backbuffer::create(
+        *db, "backbuffer", Backbuffer::CreateParameters {.context = gpuContext, .descriptor = Backbuffer::Descriptor {displayWidth, displayHeight}});
     if (!backbuffer) return -1;
 
     // Create actions (each creates itself and registers via admit()), then reset
     auto prepareAction = PrepareBackbuffer::create(*db, "prepare_action", PrepareBackbuffer::CreateParameters {.context = gpuContext});
+    if (!prepareAction) return -1;
 
-    auto clearAction = ClearRenderTarget::create(*db, "clear_action");
-    if (!clearAction || !clearAction->reset()) {
-        GN_ERROR(sLogger)("Failed to create and initialize ClearRenderTarget action");
-        return -1;
-    }
+    auto clearAction = ClearRenderTarget::create(*db, "clear_action", ClearRenderTarget::CreateParameters {.context = gpuContext});
+    if (!clearAction) return -1;
 
-    auto presentAction = PresentBackbuffer::create(*db, "present_action");
-    if (!presentAction || !presentAction->reset()) {
-        GN_ERROR(sLogger)("Failed to create and initialize PresentBackbuffer action");
-        return -1;
-    }
+    auto presentAction = PresentBackbuffer::create(*db, "present_action", PresentBackbuffer::CreateParameters {.context = gpuContext});
+    if (!presentAction) return -1;
 
     // Schedule render workflow
     auto renderWorkflow = renderGraph->schedule();

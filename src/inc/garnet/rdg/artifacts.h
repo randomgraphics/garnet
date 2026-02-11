@@ -29,11 +29,11 @@ struct GpuContext : public Artifact {
         uint32_t height = 0;
     };
 
-    /// Create a new instance of GpuContext.
-    static GN_API AutoRef<GpuContext> create(ArtifactDatabase & db, const StrA & name, const CreateParameters & params);
-
     /// Get display width and height
     virtual std::pair<uint32_t, uint32_t> dimension() const = 0;
+
+    /// Create a new instance of GpuContext.
+    static GN_API AutoRef<GpuContext> create(ArtifactDatabase & db, const StrA & name, const CreateParameters & params);
 
 protected:
     using Artifact::Artifact;
@@ -65,15 +65,26 @@ struct Texture : public Artifact {
         uint32_t numDepthSlices = (uint32_t) -1; ///< -1 means all depth slices
     };
 
+    struct CreateParameters {
+        AutoRef<GpuContext> context;
+        Descriptor          descriptor;
+    };
+
+    struct LoadParameters {
+        AutoRef<GpuContext> context;
+        StrA                filename;
+    };
+
     /// Return the current texture descriptor.
     virtual const Descriptor & descriptor() const = 0;
 
     /// Create a new instance of empty Texture The texture is not bound to any GPU resource yet. Must call reset() at least once for the texture to be valid to
     /// use.
-    static GN_API AutoRef<Texture> create(ArtifactDatabase & db, const Descriptor & d);
+    static GN_API AutoRef<Texture> create(ArtifactDatabase & db, const StrA & name, const CreateParameters & params);
 
-    /// Load texture from file. Discard old one. Returns true on success.
-    static GN_API AutoRef<Texture> load(ArtifactDatabase & db, const StrA & filename);
+    /// Load texture from file. Returns a texture artifact named after the file name.
+    /// If the file has been loaded before, return the existing artifact.
+    static GN_API AutoRef<Texture> load(ArtifactDatabase & db, const LoadParameters & params);
 
 protected:
     using Artifact::Artifact;
@@ -88,8 +99,13 @@ struct Backbuffer : public Artifact {
         uint32_t height = 0;
     };
 
+    struct CreateParameters {
+        AutoRef<GpuContext> context;
+        Descriptor          descriptor;
+    };
+
     /// Create a new instance of Backbuffer.
-    static GN_API AutoRef<Backbuffer> create(ArtifactDatabase & db, const Descriptor & d);
+    static GN_API AutoRef<Backbuffer> create(ArtifactDatabase & db, const StrA & name, const CreateParameters & params);
 
 protected:
     using Artifact::Artifact;
@@ -115,11 +131,16 @@ struct Sampler : public Artifact {
         float       maxLod        = 0.f; ///< 0 often means "all mips"
     };
 
-    /// Create a new instance of Sampler. Must call reset() at least once for the sampler to be valid to use.
-    static GN_API AutoRef<Sampler> create(ArtifactDatabase & db, const Descriptor & d);
+    struct CreateParameters {
+        AutoRef<GpuContext> context;
+        Descriptor          descriptor;
+    };
 
-    /// Return the current buffer descriptor.
+    /// Return the current sampler descriptor.
     virtual const Descriptor & descriptor() const = 0;
+
+    /// Create a new instance of Sampler. Must call reset() at least once for the sampler to be valid to use.
+    static GN_API AutoRef<Sampler> create(ArtifactDatabase & db, const StrA & name, const CreateParameters & params);
 
 protected:
     using Artifact::Artifact;
@@ -147,12 +168,17 @@ struct Buffer : public Artifact {
         bool   cpuReadable = false;  ///< CPU can read (mapped buffer).
     };
 
-    /// Create a new instance of empty Buffer. The buffer is not bound to any GPU resource yet.
-    /// Must call reset() at least once for the buffer to be valid to use.
-    static GN_API AutoRef<Buffer> create(ArtifactDatabase & db, const Descriptor & d);
+    struct CreateParameters {
+        AutoRef<GpuContext> context;
+        Descriptor          descriptor;
+    };
 
     /// Return the current buffer descriptor.
     virtual const Descriptor & descriptor() const = 0;
+
+    /// Create a new instance of empty Buffer. The buffer is not bound to any GPU resource yet.
+    /// Must call reset() at least once for the buffer to be valid to use.
+    static GN_API AutoRef<Buffer> create(ArtifactDatabase & db, const StrA & name, const CreateParameters & params);
 
 protected:
     using Artifact::Artifact;
@@ -179,14 +205,25 @@ struct Mesh : public Artifact {
         uint32_t indexOffset; ///< offset in bytes from beginning of the index buffer to the first index. Undefined if non-indexed.
     };
 
-    /// Create a new instance of Mesh.
-    static GN_API AutoRef<Mesh> create(ArtifactDatabase & db, const Descriptor & d);
+    struct CreateParameters {
+        AutoRef<GpuContext> context;
+        Descriptor          descriptor;
+    };
 
-    /// Load mesh from file. Discard old one. Returns true on success.
-    static GN_API AutoRef<Mesh> load(ArtifactDatabase & db, const StrA & filename);
+    struct LoadParameters {
+        AutoRef<GpuContext> context;
+        StrA                filename;
+    };
 
     /// Get the complete mesh descriptor containing all vertex and index data.
     virtual const Descriptor & descriptor() const = 0;
+
+    /// Create a new instance of Mesh.
+    static GN_API AutoRef<Mesh> create(ArtifactDatabase & db, const StrA & name, const CreateParameters & params);
+
+    /// Load mesh from file. Returns a mesh artifact named after the file name.
+    /// If the file has been loaded before, return the existing artifact.
+    static GN_API AutoRef<Mesh> load(ArtifactDatabase & db, const LoadParameters & params);
 
 protected:
     using Artifact::Artifact;

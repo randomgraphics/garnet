@@ -23,49 +23,31 @@ int main(int, const char **) {
         return -1;
     }
 
-    // Create GPU context (artifact creates itself and registers via admit()), then reset
-    auto gpuContext = GpuContext::create(*db);
-    if (!gpuContext) {
-        GN_ERROR(sLogger)("Failed to create GPU context");
-        return -1;
-    }
-    if (!gpuContext->reset(GpuContext::ResetParameters {})) {
-        GN_ERROR(sLogger)("Failed to initialize GPU context");
-        return -1;
-    }
+    // Create a headless GPU context
+    auto gpuContext = GpuContext::create(*db, "gpu_context", GpuContext::CreateParameters {.win = nullptr, .width = 1280, .height = 720});
+    if (!gpuContext) return -1;
     auto [displayWidth, displayHeight] = gpuContext->dimension();
 
     // Create and load texture
-    auto texture = Texture::create(*db);
-    if (!texture || !texture->load("media::texture/earth.jpg")) {
-        GN_ERROR(sLogger)("Failed to create and load texture");
-        return -1;
-    }
+    auto texture = Texture::load(*db, Texture::LoadParameters {.context = gpuContext, .filename = "media::texture/earth.jpg"});
+    if (!texture) return -1;
 
     // Create and load mesh
-    auto mesh = Mesh::create(*db);
-    if (!mesh || !mesh->load("media::cube/cube.model.xml")) {
-        GN_ERROR(sLogger)("Failed to create and load mesh");
-        return -1;
-    }
+    auto mesh = Mesh::load(*db, Mesh::LoadParameters {.context = gpuContext, .filename = "media::cube/cube.fbx"});
+    if (!mesh) return -1;
 
     // Create backbuffer and reset
-    auto backbuffer = Backbuffer::create(*db);
-    if (!backbuffer || !backbuffer->reset(Backbuffer::Descriptor {displayWidth, displayHeight})) {
-        GN_ERROR(sLogger)("Failed to create and initialize backbuffer");
-        return -1;
-    }
+    auto backbuffer = Backbuffer::create(
+        *db, "backbuffer", Backbuffer::CreateParameters {.context = gpuContext, .descriptor = Backbuffer::Descriptor {displayWidth, displayHeight}});
+    if (!backbuffer) return -1;
 
     // Create and initialize depth texture
     auto depthDesc    = Texture::Descriptor {};
     depthDesc.format  = gfx::img::PixelFormat::RG_24_UNORM_8_UINT();
     depthDesc.width   = displayWidth;
     depthDesc.height  = displayHeight;
-    auto depthTexture = Texture::create(*db);
-    if (!depthTexture || !depthTexture->reset(depthDesc)) {
-        GN_ERROR(sLogger)("Failed to create and initialize depth texture");
-        return -1;
-    }
+    auto depthTexture = Texture::create(*db, "depth_texture", Texture::CreateParameters {.context = gpuContext, .descriptor = depthDesc});
+    if (!depthTexture) return -1;
 
     // Create and initialize sampler
     auto samplerDesc      = Sampler::Descriptor {};
@@ -75,36 +57,21 @@ int main(int, const char **) {
     samplerDesc.addressU  = Sampler::AddressMode::REPEAT;
     samplerDesc.addressV  = Sampler::AddressMode::REPEAT;
     samplerDesc.addressW  = Sampler::AddressMode::REPEAT;
-    auto sampler          = Sampler::create(*db);
-    if (!sampler || !sampler->reset(samplerDesc)) {
-        GN_ERROR(sLogger)("Failed to create and initialize sampler");
-        return -1;
-    }
+    auto sampler          = Sampler::create(*db, "sampler", Sampler::CreateParameters {.context = gpuContext, .descriptor = samplerDesc});
+    if (!sampler) return -1;
 
     // Create and initialize actions (each creates itself and registers via admit())
-    auto prepareAction = PrepareBackbuffer::create(*db, "prepare_action");
-    if (!prepareAction || !prepareAction->reset()) {
-        GN_ERROR(sLogger)("Failed to create and initialize PrepareBackbuffer action");
-        return -1;
-    }
+    auto prepareAction = PrepareBackbuffer::create(*db, "prepare_action", PrepareBackbuffer::CreateParameters {.context = gpuContext});
+    if (!prepareAction) return -1;
 
-    auto clearAction = ClearRenderTarget::create(*db, "clear_action");
-    if (!clearAction || !clearAction->reset()) {
-        GN_ERROR(sLogger)("Failed to create and initialize ClearRenderTarget action");
-        return -1;
-    }
+    auto clearAction = ClearRenderTarget::create(*db, "clear_action", ClearRenderTarget::CreateParameters {.context = gpuContext});
+    if (!clearAction) return -1;
 
-    auto clearDepthAction = ClearDepthStencil::create(*db, "clear_depth_action");
-    if (!clearDepthAction || !clearDepthAction->reset()) {
-        GN_ERROR(sLogger)("Failed to create and initialize ClearDepthStencil action");
-        return -1;
-    }
+    auto clearDepthAction = ClearDepthStencil::create(*db, "clear_depth_action", ClearDepthStencil::CreateParameters {.context = gpuContext});
+    if (!clearDepthAction) return -1;
 
-    auto presentAction = PresentBackbuffer::create(*db, "present_action");
-    if (!presentAction || !presentAction->reset()) {
-        GN_ERROR(sLogger)("Failed to create and initialize PresentBackbuffer action");
-        return -1;
-    }
+    auto presentAction = PresentBackbuffer::create(*db, "present_action", PresentBackbuffer::CreateParameters {.context = gpuContext});
+    if (!presentAction) return -1;
 
     GN_INFO(sLogger)("Starting render loop...");
 
