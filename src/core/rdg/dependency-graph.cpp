@@ -17,8 +17,8 @@ namespace GN::rdg {
 struct TypeNameKey {
     const Guid & type;
     const StrA & name;
-    bool operator==(const TypeNameKey & o) const { return type == o.type && name == o.name; }
-    bool operator!=(const TypeNameKey & o) const { return !(*this == o); }
+    bool         operator==(const TypeNameKey & o) const { return type == o.type && name == o.name; }
+    bool         operator!=(const TypeNameKey & o) const { return !(*this == o); }
 };
 
 struct TypeNameKeyHash {
@@ -50,15 +50,15 @@ public:
         if (!artifact) return 0;
         std::lock_guard<std::mutex> lock(mMutex);
 
-        TypeNameKey key{artifact->type, artifact->name};
+        TypeNameKey key {artifact->type, artifact->name};
         if (mArtifactsById.find(key) != mArtifactsById.end()) {
             GN_ERROR(sLogger)("Failed to admit artifact: type and name already exist: type={}, name={}", artifact->type.toStr(), artifact->name);
             return 0;
         }
 
-        uint64_t seq = mNextSequence++;
+        uint64_t          seq = mNextSequence++;
         AutoRef<Artifact> ref(artifact);
-        mArtifactsById[key] = ref;
+        mArtifactsById[key]  = ref;
         mArtifactsBySeq[seq] = ref;
         return seq;
     }
@@ -66,8 +66,8 @@ public:
     auto fetch(const Guid & type, const StrA & name) -> AutoRef<Artifact> override {
         std::lock_guard<std::mutex> lock(mMutex);
 
-        TypeNameKey key{type, name};
-        auto it = mArtifactsById.find(key);
+        TypeNameKey key {type, name};
+        auto        it = mArtifactsById.find(key);
         if (it != mArtifactsById.end()) { return it->second; }
         return AutoRef<Artifact>();
     }
@@ -84,12 +84,10 @@ public:
         std::lock_guard<std::mutex> lock(mMutex);
 
         auto it = mArtifactsBySeq.find(sequence);
-        if (it == mArtifactsBySeq.end()) {
-            return false;
-        }
+        if (it == mArtifactsBySeq.end()) { return false; }
 
-        Artifact * a    = it->second;
-        TypeNameKey key{a->type, a->name};
+        Artifact *  a = it->second;
+        TypeNameKey key {a->type, a->name};
         mArtifactsBySeq.erase(it);
         mArtifactsById.erase(key);
         return true;

@@ -337,6 +337,15 @@ public:
         mPtr     = 0;
         return tmp;
     }
+
+    ///
+    /// Creates an AutoRef by constructing X with the given arguments.
+    /// Similar to std::make_shared.
+    ///
+    template<typename... Args>
+    static AutoRef<X> make(Args &&... args) {
+        return AutoRef<X>(new X(std::forward<Args>(args)...));
+    }
 };
 
 template<typename X>

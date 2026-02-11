@@ -15,7 +15,7 @@ namespace GN::rdg {
 struct GpuContext : public Artifact {
     static inline const Guid TYPE = {0x3c4d5e6f, 0x7a8b, 0x9c0d, {0x1e, 0x2f, 0x3a, 0x4b, 0x5c, 0x6d, 0x7e, 0x8f}};
 
-    struct ResetParameters {
+    struct CreateParameters {
         /// The graphics API
         StrA api = "auto";
 
@@ -30,9 +30,7 @@ struct GpuContext : public Artifact {
     };
 
     /// Create a new instance of GpuContext.
-    static GN_API AutoRef<GpuContext> create(ArtifactDatabase & db);
-
-    virtual bool reset(const ResetParameters &) = 0;
+    static GN_API AutoRef<GpuContext> create(ArtifactDatabase & db, const StrA & name, const CreateParameters & params);
 
     /// Get display width and height
     virtual std::pair<uint32_t, uint32_t> dimension() const = 0;
@@ -70,15 +68,12 @@ struct Texture : public Artifact {
     /// Return the current texture descriptor.
     virtual const Descriptor & descriptor() const = 0;
 
-    /// Create texture from the given descriptor. Discard old one. Returns true on success.
-    virtual bool reset(const Descriptor & d) = 0;
-
     /// Create a new instance of empty Texture The texture is not bound to any GPU resource yet. Must call reset() at least once for the texture to be valid to
     /// use.
-    static GN_API AutoRef<Texture> create(ArtifactDatabase & db);
+    static GN_API AutoRef<Texture> create(ArtifactDatabase & db, const Descriptor & d);
 
     /// Load texture from file. Discard old one. Returns true on success.
-    virtual bool load(const StrA & filename) = 0;
+    static GN_API AutoRef<Texture> load(ArtifactDatabase & db, const StrA & filename);
 
 protected:
     using Artifact::Artifact;
@@ -94,10 +89,7 @@ struct Backbuffer : public Artifact {
     };
 
     /// Create a new instance of Backbuffer.
-    static GN_API AutoRef<Backbuffer> create(ArtifactDatabase & db);
-
-    /// Initialize or reinitialize the backbuffer from the given descriptor. Returns true on success.
-    virtual bool reset(const Descriptor & d) = 0;
+    static GN_API AutoRef<Backbuffer> create(ArtifactDatabase & db, const Descriptor & d);
 
 protected:
     using Artifact::Artifact;
@@ -124,13 +116,10 @@ struct Sampler : public Artifact {
     };
 
     /// Create a new instance of Sampler. Must call reset() at least once for the sampler to be valid to use.
-    static GN_API AutoRef<Sampler> create(ArtifactDatabase & db);
+    static GN_API AutoRef<Sampler> create(ArtifactDatabase & db, const Descriptor & d);
 
     /// Return the current buffer descriptor.
     virtual const Descriptor & descriptor() const = 0;
-
-    /// Create or recreate the underlying buffer from the given descriptor. Returns true on success.
-    virtual bool reset(const Descriptor & d) = 0;
 
 protected:
     using Artifact::Artifact;
@@ -160,13 +149,10 @@ struct Buffer : public Artifact {
 
     /// Create a new instance of empty Buffer. The buffer is not bound to any GPU resource yet.
     /// Must call reset() at least once for the buffer to be valid to use.
-    static GN_API AutoRef<Buffer> create(ArtifactDatabase & db);
+    static GN_API AutoRef<Buffer> create(ArtifactDatabase & db, const Descriptor & d);
 
     /// Return the current buffer descriptor.
     virtual const Descriptor & descriptor() const = 0;
-
-    /// Create or recreate the underlying buffer from the given descriptor. Returns true on success.
-    virtual bool reset(const Descriptor & d) = 0;
 
 protected:
     using Artifact::Artifact;
@@ -194,25 +180,16 @@ struct Mesh : public Artifact {
     };
 
     /// Create a new instance of Mesh.
-    static GN_API AutoRef<Mesh> create(ArtifactDatabase & db);
+    static GN_API AutoRef<Mesh> create(ArtifactDatabase & db, const Descriptor & d);
+
+    /// Load mesh from file. Discard old one. Returns true on success.
+    static GN_API AutoRef<Mesh> load(ArtifactDatabase & db, const StrA & filename);
 
     /// Get the complete mesh descriptor containing all vertex and index data.
     virtual const Descriptor & descriptor() const = 0;
 
-    /// Initialie the mesh. Discard old one. Returns true on success.
-    virtual bool reset(const Descriptor &) = 0;
-
-    /// Load mesh from file. Discard old one. Returns true on success.
-    virtual bool load(const StrA & filename) = 0;
-
 protected:
     using Artifact::Artifact;
-};
-
-/// Render target is ether a subsurface of a texture or a back buffer
-struct RenderTarget {
-    std::variant<AutoRef<Texture>, AutoRef<Backbuffer>> target;
-    Texture::SubresourceIndex                           sub; ///< only used for texture targets
 };
 
 } // namespace GN::rdg

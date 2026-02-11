@@ -57,10 +57,10 @@ int main(int, const char **) {
     }
 
     // Create and initialize depth texture
-    auto depthDesc   = Texture::Descriptor {};
-    depthDesc.format = gfx::img::PixelFormat::D24S8();
-    depthDesc.width  = displayWidth;
-    depthDesc.height = displayHeight;
+    auto depthDesc    = Texture::Descriptor {};
+    depthDesc.format  = gfx::img::PixelFormat::RG_24_UNORM_8_UINT();
+    depthDesc.width   = displayWidth;
+    depthDesc.height  = displayHeight;
     auto depthTexture = Texture::create(*db);
     if (!depthTexture || !depthTexture->reset(depthDesc)) {
         GN_ERROR(sLogger)("Failed to create and initialize depth texture");
@@ -118,7 +118,7 @@ int main(int, const char **) {
             // Task: Prepare backbuffer
             auto prepareTask   = Workflow::Task {};
             prepareTask.action = prepareAction;
-            auto prepareArgs   = AutoRef<PrepareBackbuffer::A>(new PrepareBackbuffer::A(*db, "prepare_args"));
+            auto prepareArgs   = AutoRef<PrepareBackbuffer::A>(new PrepareBackbuffer::A());
             prepareArgs->backbuffer.set(backbuffer);
             prepareTask.arguments = prepareArgs;
             renderWorkflow->tasks.append(prepareTask);
@@ -127,7 +127,7 @@ int main(int, const char **) {
             auto clearTask   = Workflow::Task {};
             clearTask.action = clearAction;
 
-            auto clearArgs = AutoRef<ClearRenderTarget::A>(new ClearRenderTarget::A(*db, "clear_args"));
+            auto clearArgs = AutoRef<ClearRenderTarget::A>(new ClearRenderTarget::A());
 
             auto clearColor = ClearRenderTarget::A::ClearColor {};
             clearColor.r    = 0.2f;
@@ -148,7 +148,7 @@ int main(int, const char **) {
             auto clearDepthTask   = Workflow::Task {};
             clearDepthTask.action = clearDepthAction;
 
-            auto clearDepthArgs = AutoRef<ClearDepthStencil::A>(new ClearDepthStencil::A(*db, "clear_depth_args"));
+            auto clearDepthArgs = AutoRef<ClearDepthStencil::A>(new ClearDepthStencil::A());
 
             clearDepthArgs->depth.set(1.0f);
             clearDepthArgs->stencil.set(0);
@@ -164,13 +164,13 @@ int main(int, const char **) {
             // Task: Compose (draw mesh with texture) - disabled until Compose is uncommented in actions.h
             // auto composeTask = Workflow::Task {};
             // composeTask.action = composeAction;
-            // auto composeArgs = AutoRef<Compose::A>(new Compose::A(*db, "compose_args"));
+            // auto composeArgs = AutoRef<Compose::A>(new Compose::A());
             // ... set composeArgs and append composeTask
 
             // Task: Present backbuffer
             auto presentTask   = Workflow::Task {};
             presentTask.action = presentAction;
-            auto presentArgs   = AutoRef<PresentBackbuffer::A>(new PresentBackbuffer::A(*db, "present_args"));
+            auto presentArgs   = AutoRef<PresentBackbuffer::A>(new PresentBackbuffer::A());
             presentArgs->backbuffer.set(backbuffer);
             presentTask.arguments = presentArgs;
             renderWorkflow->tasks.append(presentTask);

@@ -74,13 +74,12 @@ protected:
     ArtifactDatabase() = default;
 };
 
-inline Artifact::Artifact(ArtifactDatabase & db, const Guid & type, const StrA & name)
-: database(db), type(type), name(name), sequence(database.admit(this)) {}
+inline Artifact::Artifact(ArtifactDatabase & db, const Guid & type, const StrA & name): database(db), type(type), name(name), sequence(database.admit(this)) {}
 
-/// Base class of arguments for an action.
-struct Arguments : Artifact {
+/// Base class of arguments for an action. This is not a subclass of Artifact, since it is means to be one time use: create, pass to action, and forget.
+struct Arguments : RefCounter {
     enum class UsageFlag {
-        None = 0,
+        None     = 0,
         Optional = 1 << 0,
         Reading  = 1 << 1,
         Writing  = 1 << 2,
@@ -196,8 +195,22 @@ struct Arguments : Artifact {
     template<typename Key, typename Value, UsageFlag UFlags = UsageFlag::None>
     using ReadWriteMap = MapParameter<Key, Value, UFlags | UsageFlag::Reading | UsageFlag::Writing>;
 
+    const Guid & type;
+
+    template<typename T>
+    T * castTo() {
+        if (type == T::TYPE) GN_LIKELY return static_cast<T *>(this);
+        return nullptr;
+    }
+
+    template<typename T>
+    const T * castTo() const {
+        if (type == T::TYPE) GN_LIKELY return static_cast<const T *>(this);
+        return nullptr;
+    }
+
 protected:
-    using Artifact::Artifact;
+    Arguments(const Guid & type): type(type) {}
 };
 
 /// Base class of all actions. An action holds the logic for an operation and declares its parameters (input/output).

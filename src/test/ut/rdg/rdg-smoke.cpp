@@ -28,7 +28,10 @@ struct IntegerArtifact : public Artifact {
 
     static GN::AutoRef<IntegerArtifact> create(ArtifactDatabase & db, const StrA & name) {
         auto * p = new IntegerArtifact(db, name);
-        if (p->sequence == 0) { delete p; return {}; }
+        if (p->sequence == 0) {
+            delete p;
+            return {};
+        }
         return GN::AutoRef<IntegerArtifact>(p);
     }
 };
@@ -43,19 +46,17 @@ struct InitIntegerAction : public Action {
 
     static GN::AutoRef<InitIntegerAction> create(ArtifactDatabase & db, const StrA & name) {
         auto * p = new InitIntegerAction(db, name);
-        if (p->sequence == 0) { delete p; return {}; }
+        if (p->sequence == 0) {
+            delete p;
+            return {};
+        }
         return GN::AutoRef<InitIntegerAction>(p);
     }
 
     struct A : public Arguments {
-        inline static constexpr Guid        TYPE = {0x11111112, 0x2222, 0x3333, {0x44, 0x44, 0x55, 0x55, 0x66, 0x66, 0x77, 0x77}};
+        inline static constexpr Guid TYPE = {0x11111112, 0x2222, 0x3333, {0x44, 0x44, 0x55, 0x55, 0x66, 0x66, 0x77, 0x77}};
+        A(): Arguments(TYPE) {}
         WriteOnly<AutoRef<IntegerArtifact>> output;
-        A(ArtifactDatabase & db, const StrA & name): Arguments(db, A::TYPE, name) {}
-        static GN::AutoRef<A> create(ArtifactDatabase & db, const StrA & name) {
-            auto * p = new A(db, name);
-            if (p->sequence == 0) { delete p; return {}; }
-            return GN::AutoRef<A>(p);
-        }
     };
 
     // Execute: set the output artifact's value
@@ -84,21 +85,19 @@ struct AddIntegersAction : public Action {
 
     static GN::AutoRef<AddIntegersAction> create(ArtifactDatabase & db, const StrA & name) {
         auto * p = new AddIntegersAction(db, name);
-        if (p->sequence == 0) { delete p; return {}; }
+        if (p->sequence == 0) {
+            delete p;
+            return {};
+        }
         return GN::AutoRef<AddIntegersAction>(p);
     }
 
     struct A : public Arguments {
-        inline static constexpr Guid        TYPE = {0xaaaaaaab, 0xbbbb, 0xcccc, {0xdd, 0xdd, 0xee, 0xee, 0xff, 0xff, 0x00, 0x00}};
+        inline static constexpr Guid TYPE = {0xaaaaaaab, 0xbbbb, 0xcccc, {0xdd, 0xdd, 0xee, 0xee, 0xff, 0xff, 0x00, 0x00}};
+        A(): Arguments(TYPE) {}
         ReadOnly<AutoRef<IntegerArtifact>>  input1;
         ReadOnly<AutoRef<IntegerArtifact>>  input2;
         WriteOnly<AutoRef<IntegerArtifact>> output;
-        A(ArtifactDatabase & db, const StrA & name): Arguments(db, A::TYPE, name) {}
-        static GN::AutoRef<A> create(ArtifactDatabase & db, const StrA & name) {
-            auto * p = new A(db, name);
-            if (p->sequence == 0) { delete p; return {}; }
-            return GN::AutoRef<A>(p);
-        }
     };
 
     // Execute: input1.value + input2.value -> output.value
@@ -144,21 +143,19 @@ struct MultiplyIntegersAction : public Action {
 
     static GN::AutoRef<MultiplyIntegersAction> create(ArtifactDatabase & db, const StrA & name) {
         auto * p = new MultiplyIntegersAction(db, name);
-        if (p->sequence == 0) { delete p; return {}; }
+        if (p->sequence == 0) {
+            delete p;
+            return {};
+        }
         return GN::AutoRef<MultiplyIntegersAction>(p);
     }
 
     struct A : public Arguments {
-        inline static constexpr Guid        TYPE = {0x55555556, 0x6666, 0x7777, {0x88, 0x88, 0x99, 0x99, 0xaa, 0xaa, 0xbb, 0xbb}};
+        inline static constexpr Guid TYPE = {0x55555556, 0x6666, 0x7777, {0x88, 0x88, 0x99, 0x99, 0xaa, 0xaa, 0xbb, 0xbb}};
+        A(): Arguments(TYPE) {}
         ReadOnly<AutoRef<IntegerArtifact>>  input1;
         ReadOnly<AutoRef<IntegerArtifact>>  input2;
         WriteOnly<AutoRef<IntegerArtifact>> output;
-        A(ArtifactDatabase & db, const StrA & name): Arguments(db, A::TYPE, name) {}
-        static GN::AutoRef<A> create(ArtifactDatabase & db, const StrA & name) {
-            auto * p = new A(db, name);
-            if (p->sequence == 0) { delete p; return {}; }
-            return GN::AutoRef<A>(p);
-        }
     };
 
     // Execute: input1.value * input2.value -> output.value
@@ -241,7 +238,7 @@ public:
                 TS_ASSERT(initAction != nullptr);
                 initAction->initValue = 1;
 
-                auto initArgs = GN::rdg::InitIntegerAction::A::create(*db, "init_one_args");
+                auto initArgs = GN::AutoRef<GN::rdg::InitIntegerAction::A>::make();
                 TS_ASSERT(initArgs != nullptr);
                 initArgs->output.set(one);
 
@@ -257,7 +254,7 @@ public:
                 TS_ASSERT(initAction != nullptr);
                 initAction->initValue = 2;
 
-                auto initArgs = GN::rdg::InitIntegerAction::A::create(*db, "init_two_args");
+                auto initArgs = GN::AutoRef<GN::rdg::InitIntegerAction::A>::make();
                 TS_ASSERT(initArgs != nullptr);
                 initArgs->output.set(two);
 
@@ -273,7 +270,7 @@ public:
                 TS_ASSERT(initAction != nullptr);
                 initAction->initValue = 3;
 
-                auto initArgs = GN::rdg::InitIntegerAction::A::create(*db, "init_three_args");
+                auto initArgs = GN::AutoRef<GN::rdg::InitIntegerAction::A>::make();
                 TS_ASSERT(initArgs != nullptr);
                 initArgs->output.set(three);
 
@@ -293,7 +290,7 @@ public:
             auto addAction = GN::rdg::AddIntegersAction::create(*db, "add_1_2");
             TS_ASSERT(addAction != nullptr);
 
-            auto addArgs = GN::rdg::AddIntegersAction::A::create(*db, "add_1_2_args");
+            auto addArgs = GN::AutoRef<GN::rdg::AddIntegersAction::A>::make();
             TS_ASSERT(addArgs != nullptr);
             addArgs->input1.set(one);
             addArgs->input2.set(two);
@@ -314,7 +311,7 @@ public:
             auto multiplyAction = GN::rdg::MultiplyIntegersAction::create(*db, "multiply_3_sum");
             TS_ASSERT(multiplyAction != nullptr);
 
-            auto multiplyArgs = GN::rdg::MultiplyIntegersAction::A::create(*db, "multiply_3_sum_args");
+            auto multiplyArgs = GN::AutoRef<GN::rdg::MultiplyIntegersAction::A>::make();
             TS_ASSERT(multiplyArgs != nullptr);
             multiplyArgs->input1.set(three);
             multiplyArgs->input2.set(sum);
