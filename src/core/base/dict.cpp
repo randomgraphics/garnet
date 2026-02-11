@@ -33,6 +33,14 @@ public:
     }
 
     bool operator<(const MapKey & rhs) const { return mTraits.less(mData, rhs.mData); }
+
+    bool operator==(const MapKey & rhs) const { return mTraits.equal(mData, rhs.mData); }
+
+    size_t hash() const { return mTraits.hash(mData); }
+
+    struct Hash {
+        size_t operator()(const MapKey & k) const { return k.hash(); }
+    };
 };
 
 class MapValue {
@@ -79,10 +87,10 @@ struct TypeProxy {
     operator const T &() const { return *(const T *) this; }
 };
 
-typedef std::map<MapKey, MapValue>           MapType;
-typedef std::map<MapKey, MapValue>::iterator MapIterator;
-typedef TypeProxy<MapKey>                    KeyProxy;
-typedef TypeProxy<MapValue>                  ValueProxy;
+typedef std::unordered_map<MapKey, MapValue, MapKey::Hash> MapType;
+typedef MapType::iterator                                  MapIterator;
+typedef TypeProxy<MapKey>                                  KeyProxy;
+typedef TypeProxy<MapValue>                                ValueProxy;
 
 // *****************************************************************************
 // TypelessDict::Iterator

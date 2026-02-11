@@ -6,6 +6,8 @@
 /// \author  chenli@@REDMOND (2010.2.27)
 // *****************************************************************************
 
+#include <functional>
+
 namespace GN {
 /// Typeless dictionary class.
 class GN_API TypelessDict {
@@ -36,16 +38,18 @@ public:
         typedef void (*AssignFunc)(void *, const void *);
         typedef bool (*EqualFunc)(const void *, const void *);
         typedef bool (*LessFunc)(const void *, const void *);
+        typedef size_t (*HashFunc)(const void *);
         //@}
 
         //@{
-        size_t       size;
-        CtorFunc     ctor;
-        CopyCtorFunc cctor;
-        DtorFunc     dtor;
-        AssignFunc   assign;
-        EqualFunc    equal;
-        LessFunc     less;
+        size_t       size   = 0;
+        CtorFunc     ctor   = nullptr;
+        CopyCtorFunc cctor  = nullptr;
+        DtorFunc     dtor   = nullptr;
+        AssignFunc   assign = nullptr;
+        EqualFunc    equal  = nullptr;
+        LessFunc     less   = nullptr;
+        HashFunc     hash   = nullptr;
         //@}
     };
 
@@ -74,13 +78,9 @@ private:
     Impl * mImpl;
 };
 
-template<typename T>
-struct DictionaryUtil_LessOperator {
-    bool operator()(const T & a, const T & b) { return a < b; }
-};
-
 /// Dictionary template
-template<typename KEY_TYPE, typename VALUE_TYPE, typename KEY_LESS_FUNC = DictionaryUtil_LessOperator<KEY_TYPE>>
+template<typename KEY_TYPE, typename VALUE_TYPE, typename KEY_HASH_FUNC = std::hash<KEY_TYPE>, typename KEY_LESS_FUNC = std::less<KEY_TYPE>,
+         typename KEY_EQUAL_FUNC = std::equal_to<KEY_TYPE>>
 class Dictionary {
 public:
     class Iterator;
@@ -277,8 +277,9 @@ private:
             tt.cctor  = copyConstruct;
             tt.dtor   = destruct;
             tt.assign = assign;
-            tt.equal  = NULL; // equal;
-            tt.less   = &less;
+            tt.equal  = equal;
+            tt.less   = less;
+            tt.hash   = hash;
 
             return tt;
         }
@@ -290,11 +291,6 @@ private:
             tt.ctor  = NULL; // construct; // ctor is required for [] operator only
             tt.cctor = copyConstruct;
             tt.dtor  = destruct;
-
-            // value type requires no operator
-            tt.assign = NULL; // assign;
-            tt.equal  = NULL; // equal;
-            tt.less   = NULL; //&less;
 
             return tt;
         }
@@ -320,13 +316,17 @@ private:
 
         static bool equal(const void * a, const void * b) {
             GN_ASSERT(a && b);
-            return (*(const T *) a) == (*(const T *) b);
+            return KEY_EQUAL_FUNC()(*(const T *) a, *(const T *) b);
         }
 
         static bool less(const void * a, const void * b) {
             GN_ASSERT(a && b);
-            KEY_LESS_FUNC lessFunc;
-            return lessFunc(*(const T *) a, *(const T *) b);
+            return KEY_LESS_FUNC()(*(const T *) a, *(const T *) b);
+        }
+
+        static size_t hash(const void * a) {
+            GN_ASSERT(a);
+            return KEY_HASH_FUNC()(*(const T *) a);
         }
     };
 

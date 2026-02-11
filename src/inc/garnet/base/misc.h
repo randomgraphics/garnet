@@ -316,6 +316,29 @@ public:
 } // namespace detail
 } // namespace GN
 
+namespace std {
+
+// hash function for GN::Guid
+template<>
+struct hash<GN::Guid> {
+    size_t operator()(const GN::Guid & guid) const {
+        auto h = std::hash<uint64_t>()(guid.data1);
+        GN::combineHash(h, guid.data2);
+        GN::combineHash(h, guid.data3);
+        GN::combineHash(h, guid.data4[0]);
+        GN::combineHash(h, guid.data4[1]);
+        GN::combineHash(h, guid.data4[2]);
+        GN::combineHash(h, guid.data4[3]);
+        GN::combineHash(h, guid.data4[4]);
+        GN::combineHash(h, guid.data4[5]);
+        GN::combineHash(h, guid.data4[6]);
+        GN::combineHash(h, guid.data4[7]);
+        return h;
+    }
+};
+
+} // namespace std
+
 // *****************************************************************************
 //                                     EOF
 // *****************************************************************************
