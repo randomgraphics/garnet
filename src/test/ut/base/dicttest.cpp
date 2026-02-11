@@ -62,15 +62,27 @@ public:
 
     // key type needs no default constructor
     struct KeyType {
-        explicit KeyType(int) { ++kc; }
+        int value;
+        explicit KeyType(int v): value(v) { ++kc; }
 
-        KeyType(const KeyType &) { ++kc; }
+        KeyType(const KeyType & k): value(k.value) { ++kc; }
 
         ~KeyType() { --kc; }
 
-        KeyType & operator=(const KeyType &) { return *this; }
+        KeyType & operator=(const KeyType & k) {
+            value = k.value;
+            return *this;
+        }
 
-        bool operator<(const KeyType &) const { return false; }
+        bool operator<(const KeyType & k) const { return value < k.value; }
+
+        bool operator==(const KeyType & k) const { return value == k.value; }
+
+        bool operator!=(const KeyType & k) const { return value != k.value; }
+
+        struct Hash {
+            size_t operator()(const KeyType & k) const { return std::hash<int>()(k.value); }
+        };
     };
 
     /// value type w/o default contructor
@@ -95,8 +107,8 @@ public:
     void testObject() {
         using namespace GN;
 
-        typedef Dictionary<KeyType, ValueTypeNC> Dict1;
-        typedef Dictionary<KeyType, ValueType>   Dict2;
+        typedef Dictionary<KeyType, ValueTypeNC, KeyType::Hash> Dict1;
+        typedef Dictionary<KeyType, ValueType, KeyType::Hash>   Dict2;
 
         {
             Dict1 d1;

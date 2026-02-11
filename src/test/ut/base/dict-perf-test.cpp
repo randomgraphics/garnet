@@ -27,30 +27,26 @@ static std::string formatTime(double seconds) {
 template<typename Func>
 double measureTime(Func && func, int iterations = 1) {
     auto start = std::chrono::high_resolution_clock::now();
-    for (int i = 0; i < iterations; ++i) {
-        func();
-    }
-    auto end = std::chrono::high_resolution_clock::now();
+    for (int i = 0; i < iterations; ++i) { func(); }
+    auto end      = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start);
     return duration.count() / 1e9 / iterations; // Return time in seconds per iteration
 }
 
 class TestDictPerf : public CxxTest::TestSuite {
 public:
-    static const int TEST_SIZE = 10000;
-    static const int WARMUP_ITERATIONS = 3;
+    static const int TEST_SIZE            = 10000;
+    static const int WARMUP_ITERATIONS    = 3;
     static const int BENCHMARK_ITERATIONS = 5;
 
     // Generate test data
     std::vector<int> generateIntKeys(int count) {
         std::vector<int> keys;
         keys.reserve(count);
-        for (int i = 0; i < count; ++i) {
-            keys.push_back(i);
-        }
+        for (int i = 0; i < count; ++i) { keys.push_back(i); }
         // Shuffle to avoid ordered insertion
         std::random_device rd;
-        std::mt19937 g(rd());
+        std::mt19937       g(rd());
         std::shuffle(keys.begin(), keys.end(), g);
         return keys;
     }
@@ -65,7 +61,7 @@ public:
         }
         // Shuffle to avoid ordered insertion
         std::random_device rd;
-        std::mt19937 g(rd());
+        std::mt19937       g(rd());
         std::shuffle(keys.begin(), keys.end(), g);
         return keys;
     }
@@ -84,12 +80,10 @@ public:
     // Test find performance for GN::Dictionary
     template<typename KeyType>
     std::pair<double, int> testFindDict(const Dictionary<KeyType, int> & dict, const std::vector<KeyType> & keys) {
-        int sum = 0;
+        int    sum  = 0;
         double time = measureTime([&]() {
             for (const auto & key : keys) {
-                if (dict.find(key) != nullptr) {
-                    sum += 1;
-                }
+                if (dict.find(key) != nullptr) { sum += 1; }
             }
         });
         return std::make_pair(time, sum);
@@ -98,13 +92,11 @@ public:
     // Test find performance for std containers
     template<typename DictType, typename KeyType>
     std::pair<double, int> testFindStd(const DictType & dict, const std::vector<KeyType> & keys) {
-        int sum = 0;
+        int    sum  = 0;
         double time = measureTime([&]() {
             for (const auto & key : keys) {
                 auto it = dict.find(key);
-                if (it != dict.end()) {
-                    sum += 1;
-                }
+                if (it != dict.end()) { sum += 1; }
             }
         });
         return std::make_pair(time, sum);
@@ -114,7 +106,7 @@ public:
     template<typename KeyType>
     std::pair<double, size_t> testIterateDict(const Dictionary<KeyType, int> & dict) {
         size_t count = 0;
-        double time = measureTime([&]() {
+        double time  = measureTime([&]() {
             for (auto it = dict.begin(); it != dict.end(); ++it) {
                 count += 1;
                 // Access key/value to make it more realistic
@@ -131,7 +123,7 @@ public:
     template<typename DictType>
     std::pair<double, size_t> testIterateStd(const DictType & dict) {
         size_t count = 0;
-        double time = measureTime([&]() {
+        double time  = measureTime([&]() {
             for (auto it = dict.begin(); it != dict.end(); ++it) {
                 count += 1;
                 // Access key/value to make it more realistic
@@ -148,9 +140,7 @@ public:
     template<typename KeyType>
     double testRemoveDict(Dictionary<KeyType, int> & dict, const std::vector<KeyType> & keys) {
         return measureTime([&]() {
-            for (const auto & key : keys) {
-                dict.remove(key);
-            }
+            for (const auto & key : keys) { dict.remove(key); }
         });
     }
 
@@ -158,9 +148,7 @@ public:
     template<typename DictType, typename KeyType>
     double testRemoveStd(DictType & dict, const std::vector<KeyType> & keys) {
         return measureTime([&]() {
-            for (const auto & key : keys) {
-                dict.erase(key);
-            }
+            for (const auto & key : keys) { dict.erase(key); }
         });
     }
 
@@ -168,14 +156,10 @@ public:
     template<typename Func>
     double benchmark(Func && func) {
         // Warmup
-        for (int i = 0; i < WARMUP_ITERATIONS; ++i) {
-            func();
-        }
+        for (int i = 0; i < WARMUP_ITERATIONS; ++i) { func(); }
         // Actual benchmark
         double total = 0.0;
-        for (int i = 0; i < BENCHMARK_ITERATIONS; ++i) {
-            total += func();
-        }
+        for (int i = 0; i < BENCHMARK_ITERATIONS; ++i) { total += func(); }
         return total / BENCHMARK_ITERATIONS;
     }
 
@@ -183,11 +167,9 @@ public:
     template<typename Func>
     std::pair<double, typename std::result_of<Func()>::type::second_type> benchmarkWithValue(Func && func) {
         // Warmup
-        for (int i = 0; i < WARMUP_ITERATIONS; ++i) {
-            func();
-        }
+        for (int i = 0; i < WARMUP_ITERATIONS; ++i) { func(); }
         // Actual benchmark
-        double total = 0.0;
+        double                                             total = 0.0;
         typename std::result_of<Func()>::type::second_type value = 0;
         for (int i = 0; i < BENCHMARK_ITERATIONS; ++i) {
             auto result = func();
@@ -200,8 +182,8 @@ public:
     void testIntKeyInsert() {
         auto keys = generateIntKeys(TEST_SIZE);
 
-        double gnDictTime = benchmark([&]() { return testInsert<Dictionary<int, int>>(keys); });
-        double stdMapTime = benchmark([&]() { return testInsert<std::map<int, int>>(keys); });
+        double gnDictTime          = benchmark([&]() { return testInsert<Dictionary<int, int>>(keys); });
+        double stdMapTime          = benchmark([&]() { return testInsert<std::map<int, int>>(keys); });
         double stdUnorderedMapTime = benchmark([&]() { return testInsert<std::unordered_map<int, int>>(keys); });
 
         printf("\n=== Integer Key Insert Performance (size: %d) ===\n", TEST_SIZE);
@@ -215,18 +197,18 @@ public:
     void testIntKeyFind() {
         auto keys = generateIntKeys(TEST_SIZE);
 
-        Dictionary<int, int> gnDict;
-        std::map<int, int> stdMap;
+        Dictionary<int, int>         gnDict;
+        std::map<int, int>           stdMap;
         std::unordered_map<int, int> stdUnorderedMap;
 
         for (const auto & key : keys) {
-            gnDict[key] = key;
-            stdMap[key] = key;
+            gnDict[key]          = key;
+            stdMap[key]          = key;
             stdUnorderedMap[key] = key;
         }
 
-        auto gnDictResult = benchmarkWithValue([&]() { return testFindDict(gnDict, keys); });
-        auto stdMapResult = benchmarkWithValue([&]() { return testFindStd(stdMap, keys); });
+        auto gnDictResult          = benchmarkWithValue([&]() { return testFindDict(gnDict, keys); });
+        auto stdMapResult          = benchmarkWithValue([&]() { return testFindStd(stdMap, keys); });
         auto stdUnorderedMapResult = benchmarkWithValue([&]() { return testFindStd(stdUnorderedMap, keys); });
 
         printf("\n=== Integer Key Find Performance (size: %d) ===\n", TEST_SIZE);
@@ -240,18 +222,18 @@ public:
     void testIntKeyIterate() {
         auto keys = generateIntKeys(TEST_SIZE);
 
-        Dictionary<int, int> gnDict;
-        std::map<int, int> stdMap;
+        Dictionary<int, int>         gnDict;
+        std::map<int, int>           stdMap;
         std::unordered_map<int, int> stdUnorderedMap;
 
         for (const auto & key : keys) {
-            gnDict[key] = key;
-            stdMap[key] = key;
+            gnDict[key]          = key;
+            stdMap[key]          = key;
             stdUnorderedMap[key] = key;
         }
 
-        auto gnDictResult = benchmarkWithValue([&]() { return testIterateDict(gnDict); });
-        auto stdMapResult = benchmarkWithValue([&]() { return testIterateStd(stdMap); });
+        auto gnDictResult          = benchmarkWithValue([&]() { return testIterateDict(gnDict); });
+        auto stdMapResult          = benchmarkWithValue([&]() { return testIterateStd(stdMap); });
         auto stdUnorderedMapResult = benchmarkWithValue([&]() { return testIterateStd(stdUnorderedMap); });
 
         printf("\n=== Integer Key Iterate Performance (size: %d) ===\n", TEST_SIZE);
@@ -267,25 +249,19 @@ public:
 
         double gnDictTime = benchmark([&]() {
             Dictionary<int, int> dict;
-            for (const auto & key : keys) {
-                dict[key] = key;
-            }
+            for (const auto & key : keys) { dict[key] = key; }
             return testRemoveDict(dict, keys);
         });
 
         double stdMapTime = benchmark([&]() {
             std::map<int, int> dict;
-            for (const auto & key : keys) {
-                dict[key] = key;
-            }
+            for (const auto & key : keys) { dict[key] = key; }
             return testRemoveStd(dict, keys);
         });
 
         double stdUnorderedMapTime = benchmark([&]() {
             std::unordered_map<int, int> dict;
-            for (const auto & key : keys) {
-                dict[key] = key;
-            }
+            for (const auto & key : keys) { dict[key] = key; }
             return testRemoveStd(dict, keys);
         });
 
@@ -300,8 +276,8 @@ public:
     void testStringKeyInsert() {
         auto keys = generateStringKeys(TEST_SIZE);
 
-        double gnDictTime = benchmark([&]() { return testInsert<Dictionary<std::string, int>>(keys); });
-        double stdMapTime = benchmark([&]() { return testInsert<std::map<std::string, int>>(keys); });
+        double gnDictTime          = benchmark([&]() { return testInsert<Dictionary<std::string, int>>(keys); });
+        double stdMapTime          = benchmark([&]() { return testInsert<std::map<std::string, int>>(keys); });
         double stdUnorderedMapTime = benchmark([&]() { return testInsert<std::unordered_map<std::string, int>>(keys); });
 
         printf("\n=== String Key Insert Performance (size: %d) ===\n", TEST_SIZE);
@@ -315,18 +291,18 @@ public:
     void testStringKeyFind() {
         auto keys = generateStringKeys(TEST_SIZE);
 
-        Dictionary<std::string, int> gnDict;
-        std::map<std::string, int> stdMap;
+        Dictionary<std::string, int>         gnDict;
+        std::map<std::string, int>           stdMap;
         std::unordered_map<std::string, int> stdUnorderedMap;
 
         for (const auto & key : keys) {
-            gnDict[key] = 1;
-            stdMap[key] = 1;
+            gnDict[key]          = 1;
+            stdMap[key]          = 1;
             stdUnorderedMap[key] = 1;
         }
 
-        auto gnDictResult = benchmarkWithValue([&]() { return testFindDict(gnDict, keys); });
-        auto stdMapResult = benchmarkWithValue([&]() { return testFindStd(stdMap, keys); });
+        auto gnDictResult          = benchmarkWithValue([&]() { return testFindDict(gnDict, keys); });
+        auto stdMapResult          = benchmarkWithValue([&]() { return testFindStd(stdMap, keys); });
         auto stdUnorderedMapResult = benchmarkWithValue([&]() { return testFindStd(stdUnorderedMap, keys); });
 
         printf("\n=== String Key Find Performance (size: %d) ===\n", TEST_SIZE);
@@ -340,18 +316,18 @@ public:
     void testStringKeyIterate() {
         auto keys = generateStringKeys(TEST_SIZE);
 
-        Dictionary<std::string, int> gnDict;
-        std::map<std::string, int> stdMap;
+        Dictionary<std::string, int>         gnDict;
+        std::map<std::string, int>           stdMap;
         std::unordered_map<std::string, int> stdUnorderedMap;
 
         for (const auto & key : keys) {
-            gnDict[key] = 1;
-            stdMap[key] = 1;
+            gnDict[key]          = 1;
+            stdMap[key]          = 1;
             stdUnorderedMap[key] = 1;
         }
 
-        auto gnDictResult = benchmarkWithValue([&]() { return testIterateDict(gnDict); });
-        auto stdMapResult = benchmarkWithValue([&]() { return testIterateStd(stdMap); });
+        auto gnDictResult          = benchmarkWithValue([&]() { return testIterateDict(gnDict); });
+        auto stdMapResult          = benchmarkWithValue([&]() { return testIterateStd(stdMap); });
         auto stdUnorderedMapResult = benchmarkWithValue([&]() { return testIterateStd(stdUnorderedMap); });
 
         printf("\n=== String Key Iterate Performance (size: %d) ===\n", TEST_SIZE);
@@ -367,25 +343,19 @@ public:
 
         double gnDictTime = benchmark([&]() {
             Dictionary<std::string, int> dict;
-            for (const auto & key : keys) {
-                dict[key] = 1;
-            }
+            for (const auto & key : keys) { dict[key] = 1; }
             return testRemoveDict(dict, keys);
         });
 
         double stdMapTime = benchmark([&]() {
             std::map<std::string, int> dict;
-            for (const auto & key : keys) {
-                dict[key] = 1;
-            }
+            for (const auto & key : keys) { dict[key] = 1; }
             return testRemoveStd(dict, keys);
         });
 
         double stdUnorderedMapTime = benchmark([&]() {
             std::unordered_map<std::string, int> dict;
-            for (const auto & key : keys) {
-                dict[key] = 1;
-            }
+            for (const auto & key : keys) { dict[key] = 1; }
             return testRemoveStd(dict, keys);
         });
 

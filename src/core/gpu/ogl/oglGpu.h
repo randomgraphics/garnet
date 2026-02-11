@@ -228,11 +228,26 @@ private:
 
             return false;
         }
+
+        bool operator==(const VertexFormatKey & rhs) const { return vtxbind == rhs.vtxbind && shaderID == rhs.shaderID; }
+
+        bool operator!=(const VertexFormatKey & rhs) const { return vtxbind != rhs.vtxbind || shaderID != rhs.shaderID; }
+
+        struct Hash {
+            size_t operator()(const VertexFormatKey & k) const {
+                size_t h = 0;
+                for (size_t i = 0; i < k.vtxbind.size(); ++i) { GN::combineHash(h, VertexElement::Hash()(k.vtxbind[i])); }
+                GN::combineHash(h, k.shaderID);
+                return h;
+            }
+        };
     };
 
-    Dictionary<VertexFormatKey, OGLVtxFmt *> mVertexFormats;
-    OGLVtxFmt *                              mCurrentOGLVtxFmt;
-    OGLBasicRTMgr *                          mRTMgr;
+    typedef Dictionary<VertexFormatKey, OGLVtxFmt *, VertexFormatKey::Hash> VertexFormatDict;
+
+    VertexFormatDict mVertexFormats;
+    OGLVtxFmt *      mCurrentOGLVtxFmt;
+    OGLBasicRTMgr *  mRTMgr;
 
     //@}
 

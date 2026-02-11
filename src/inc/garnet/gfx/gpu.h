@@ -363,6 +363,19 @@ struct VertexElement {
 
     bool operator>(const VertexElement & rhs) const { return *(const uint64_t *) this > *(const uint64_t *) &rhs; }
     //@}
+
+    struct Hash {
+        size_t operator()(const VertexElement & k) const {
+            auto     h   = std::hash<uint32_t>()(k.format.u32);
+            uint32_t u32 = k.stream;
+            u32 <<= 8;
+            u32 |= k.offset;
+            u32 <<= 16;
+            u32 |= k.attribute;
+            combineHash(h, u32);
+            return h;
+        }
+    };
 };
 GN_CASSERT(sizeof(VertexElement) == sizeof(uint64_t));
 
