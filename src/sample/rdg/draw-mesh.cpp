@@ -23,10 +23,9 @@ int main(int, const char **) {
         return -1;
     }
 
-    // Create a headless GPU context
-    auto gpuContext = GpuContext::create(*db, "gpu_context", GpuContext::CreateParameters {.win = nullptr, .width = 1280, .height = 720});
+    // Create GPU context (no window/size; those live on Backbuffer)
+    auto gpuContext = GpuContext::create(*db, "gpu_context", GpuContext::CreateParameters {});
     if (!gpuContext) return -1;
-    auto [displayWidth, displayHeight] = gpuContext->dimension();
 
     // Create and load texture
     auto texture = Texture::load(*db, Texture::LoadParameters {.context = gpuContext, .filename = "media::texture/earth.jpg"});
@@ -36,16 +35,20 @@ int main(int, const char **) {
     auto mesh = Mesh::load(*db, Mesh::LoadParameters {.context = gpuContext, .filename = "media::cube/cube.fbx"});
     if (!mesh) return -1;
 
-    // Create backbuffer and reset
-    auto backbuffer = Backbuffer::create(
-        *db, "backbuffer", Backbuffer::CreateParameters {.context = gpuContext, .descriptor = Backbuffer::Descriptor {displayWidth, displayHeight}});
-    if (!backbuffer) return -1;
+    // Create a main window of 1280x720
+    auto window = win::createWindow(win::WindowCreateParameters {.caption = "Garnet 3D - Rendering Demo", .clientWidth = 1280, .clientHeight = 720});
+    if (!window) return -1;
 
-    // Create and initialize depth texture
+    // Create backbuffer (window and size are part of Backbuffer descriptor)
+    auto backbuffer = Backbuffer::create(*db, "backbuffer", Backbuffer::CreateParameters {.context = gpuContext, .descriptor = {.win = window}});
+    if (!backbuffer) return -1;
+    const auto & backbufferDesc = backbuffer->descriptor();
+
+    // Create and initialize depth texture (match backbuffer size)
     auto depthDesc    = Texture::Descriptor {};
     depthDesc.format  = gfx::img::PixelFormat::RG_24_UNORM_8_UINT();
-    depthDesc.width   = displayWidth;
-    depthDesc.height  = displayHeight;
+    depthDesc.width   = backbufferDesc.width;
+    depthDesc.height  = backbufferDesc.height;
     auto depthTexture = Texture::create(*db, "depth_texture", Texture::CreateParameters {.context = gpuContext, .descriptor = depthDesc});
     if (!depthTexture) return -1;
 

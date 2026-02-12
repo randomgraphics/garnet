@@ -189,9 +189,10 @@ endif()
 # Vulkan
 if(VULKAN_FOUND)
     target_compile_definitions(GNcore PRIVATE HAS_VULKAN=1)
-    # only include Vulkan headers. Do not link to Vulkan libraries, since it
-    # will be conflict with the symbols defined in volk.h
+    # only include Vulkan headers. Do not link to Vulkan libraries. We'll use a loader to load all Vulkan functions.
     target_include_directories(GNcore PUBLIC ${Vulkan_INCLUDE_DIRS})
+    # rapid-vulkan (randomgraphics/rapid-vulkan) for Vulkan instance/device setup
+    target_include_directories(GNcore PRIVATE ${CMAKE_SOURCE_DIR}/src/3rdparty/rapid-vulkan/inc)
 endif()
 
 # Other dependencies

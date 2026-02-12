@@ -22,17 +22,18 @@ int main(int, const char **) {
         return -1;
     }
 
-    // Create GPU context (artifact creates itself and registers via admit() in Artifact ctor), then reset
-    auto gpuContext = GpuContext::create(*db, "gpu_context", GpuContext::CreateParameters {.win = nullptr, .width = 1280, .height = 720});
+    // Create GPU context (artifact creates itself and registers via admit() in Artifact ctor)
+    auto gpuContext = GpuContext::create(*db, "gpu_context", GpuContext::CreateParameters {});
     if (!gpuContext) return -1;
-    auto [displayWidth, displayHeight] = gpuContext->dimension();
 
-    // Create backbuffer and reset
-    auto backbuffer = Backbuffer::create(
-        *db, "backbuffer", Backbuffer::CreateParameters {.context = gpuContext, .descriptor = Backbuffer::Descriptor {displayWidth, displayHeight}});
+    // Create backbuffer (window and size are part of Backbuffer descriptor)
+    const uint32_t displayWidth = 1280, displayHeight = 720;
+    auto           backbuffer = Backbuffer::create(
+                  *db, "backbuffer",
+                  Backbuffer::CreateParameters {.context = gpuContext, .descriptor = {.win = nullptr, .width = displayWidth, .height = displayHeight}});
     if (!backbuffer) return -1;
 
-    // Create actions (each creates itself and registers via admit()), then reset
+    // Create actions
     auto prepareAction = PrepareBackbuffer::create(*db, "prepare_action", PrepareBackbuffer::CreateParameters {.context = gpuContext});
     if (!prepareAction) return -1;
 

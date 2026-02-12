@@ -11,26 +11,14 @@ namespace GN::rdg {
 // GPU artifact types
 // =============================================================================
 
-/// GpuContext represents a GPU context (wrapper of D3D/Vulkan context) that exposes display properties.
+/// GpuContext represents a GPU context (wrapper of D3D/Vulkan context).
 struct GpuContext : public Artifact {
     static inline const Guid TYPE = {0x3c4d5e6f, 0x7a8b, 0x9c0d, {0x1e, 0x2f, 0x3a, 0x4b, 0x5c, 0x6d, 0x7e, 0x8f}};
 
     struct CreateParameters {
-        /// The graphics API
+        /// The graphics API ("auto" = platform default; "vulkan", "d3d12", "metal").
         StrA api = "auto";
-
-        /// The target window. If null, then create GPU context in headless mode.
-        GN::win::Window * win = {};
-
-        /// display width. If 0, use window width. Must be positive for headless mode.
-        uint32_t width = 0;
-
-        // display height. If 0, use window height. Must be positive for headless mode.
-        uint32_t height = 0;
     };
-
-    /// Get display width and height
-    virtual std::pair<uint32_t, uint32_t> dimension() const = 0;
 
     /// Create a new instance of GpuContext.
     static GN_API AutoRef<GpuContext> create(ArtifactDatabase & db, const StrA & name, const CreateParameters & params);
@@ -90,19 +78,26 @@ protected:
     using Artifact::Artifact;
 };
 
-/// Backbuffer represents the a swapchain that can be present to screen.
+/// Backbuffer represents the swapchain that can be presented to screen.
 struct Backbuffer : public Artifact {
-    inline static constexpr Guid TYPE = {0x6ad8b59d, 0xe672, 0x4b5e, {0x8e, 0xec, 0xf7, 0xac, 0xd4, 0xf1, 0x99, 0xdd}};
-    /// Descriptor for backbuffer initialization.
+    inline static constexpr Guid TYPE = {0x2b3c4d5e, 0x6f7a, 0x8b9c, {0x0d, 0x1e, 0x2f, 0x3a, 0x4b, 0x5c, 0x6d, 0x7e}};
+
+    /// Window and size (and format) for backbuffer. If win is null, headless; width/height must be positive.
+    /// If win is non-null and width/height are 0, use window client size.
+    /// If format is UNKNOWN(), automatically select the best back buffer format.
     struct Descriptor {
-        uint32_t width  = 0;
-        uint32_t height = 0;
+        GN::win::Window *     win    = {};
+        gfx::img::PixelFormat format = gfx::img::PixelFormat::UNKNOWN();
+        uint32_t              width  = 0;
+        uint32_t              height = 0;
     };
 
     struct CreateParameters {
         AutoRef<GpuContext> context;
         Descriptor          descriptor;
     };
+
+    virtual const Descriptor & descriptor() const = 0;
 
     /// Create a new instance of Backbuffer.
     static GN_API AutoRef<Backbuffer> create(ArtifactDatabase & db, const StrA & name, const CreateParameters & params);
