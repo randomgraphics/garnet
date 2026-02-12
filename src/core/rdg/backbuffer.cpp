@@ -9,7 +9,7 @@ namespace GN::rdg {
 // Context from GpuContext::create() is always GpuContextCommon; cast and query api().
 // =============================================================================
 
-AutoRef<Backbuffer> Backbuffer::create(ArtifactDatabase & db, const StrA & name, const CreateParameters & params) {
+GN_API AutoRef<Backbuffer> Backbuffer::create(ArtifactDatabase & db, const StrA & name, const CreateParameters & params) {
     if (!params.context) {
         GN_ERROR(sLogger)("Backbuffer::create: context is null, name='{}'", name);
         return {};

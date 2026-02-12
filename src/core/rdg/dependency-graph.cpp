@@ -94,7 +94,7 @@ public:
     }
 };
 
-ArtifactDatabase * ArtifactDatabase::create(const CreateParameters & params) {
+GN_API ArtifactDatabase * ArtifactDatabase::create(const CreateParameters & params) {
     (void) params;
     return new ArtifactDatabaseImpl();
 }
@@ -382,7 +382,7 @@ public:
     }
 };
 
-RenderGraph * RenderGraph::create(const CreateParameters & params) {
+GN_API RenderGraph * RenderGraph::create(const CreateParameters & params) {
     (void) params; // unused for now
     return new RenderGraphImpl();
 }

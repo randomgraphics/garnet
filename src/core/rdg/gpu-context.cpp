@@ -27,7 +27,7 @@ static StrA resolveApi(const StrA & api) {
 // GpuContext::create() - API-neutral dispatch to backend-specific factories
 // =============================================================================
 
-AutoRef<GpuContext> GpuContext::create(ArtifactDatabase & db, const StrA & name, const CreateParameters & params) {
+GN_API AutoRef<GpuContext> GpuContext::create(ArtifactDatabase & db, const StrA & name, const CreateParameters & params) {
     StrA api = resolveApi(params.api);
 
     if (api == "vulkan") { return createVulkanGpuContext(db, name, params); }

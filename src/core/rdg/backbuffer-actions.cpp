@@ -34,7 +34,7 @@ public:
     }
 };
 
-AutoRef<PrepareBackbuffer> PrepareBackbuffer::create(ArtifactDatabase & db, const StrA & name, const CreateParameters & params) {
+GN_API AutoRef<PrepareBackbuffer> PrepareBackbuffer::create(ArtifactDatabase & db, const StrA & name, const CreateParameters & params) {
     (void) params;
     auto * p = new PrepareBackbufferImpl(db, name);
     if (p->sequence == 0) {
@@ -74,7 +74,7 @@ public:
     }
 };
 
-AutoRef<PresentBackbuffer> PresentBackbuffer::create(ArtifactDatabase & db, const StrA & name, const CreateParameters & params) {
+GN_API AutoRef<PresentBackbuffer> PresentBackbuffer::create(ArtifactDatabase & db, const StrA & name, const CreateParameters & params) {
     (void) params;
     auto * p = new PresentBackbufferImpl(db, name);
     if (p->sequence == 0) {
