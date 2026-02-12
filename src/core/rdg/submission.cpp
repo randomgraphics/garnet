@@ -6,8 +6,7 @@ static GN::Logger * sLogger = GN::getLogger("GN.rdg");
 
 namespace GN::rdg {
 
-SubmissionImpl::SubmissionImpl(DynaArray<Workflow *> pendingWorkflows, const Parameters & params)
-    : mResult(Action::ExecutionResult::PASSED), mFinished(false) {
+SubmissionImpl::SubmissionImpl(DynaArray<Workflow *> pendingWorkflows, const Parameters & params): mResult(Action::ExecutionResult::PASSED), mFinished(false) {
     mWorkflows = std::move(pendingWorkflows);
     mFuture    = std::async(std::launch::async, [this, params]() { run(params); });
 }
@@ -25,14 +24,12 @@ void SubmissionImpl::cleanup() {
     mDependencyGraph.clear();
 }
 
-bool SubmissionImpl::isFinished() {
-    return mFuture.valid() && mFuture.wait_for(std::chrono::seconds(0)) == std::future_status::ready;
-}
+bool SubmissionImpl::isFinished() { return mFuture.valid() && mFuture.wait_for(std::chrono::seconds(0)) == std::future_status::ready; }
 
 Submission::Result SubmissionImpl::result() {
     if (mFuture.valid()) mFuture.get();
     std::lock_guard<std::mutex> lock(mResultMutex);
-    Result r;
+    Result                      r;
     r.result     = mResult;
     r.debugStats = mDebugStats;
     return r;
@@ -96,9 +93,7 @@ DynaArray<size_t> SubmissionImpl::topologicalSort() {
     reverseGraph.resize(mValidatedWorkflows.size());
 
     for (size_t i = 0; i < mDependencyGraph.size(); ++i) {
-        for (size_t depIdx : mDependencyGraph[i]) {
-            reverseGraph[depIdx].append(i);
-        }
+        for (size_t depIdx : mDependencyGraph[i]) { reverseGraph[depIdx].append(i); }
     }
 
     DynaArray<size_t> inDegree(mValidatedWorkflows.size(), 0);
@@ -165,7 +160,7 @@ Action::ExecutionResult SubmissionImpl::executeWorkflow(size_t workflowIndex) {
 
 void SubmissionImpl::run(Parameters params) {
     cleanup(); // clean up any residual data from previous runs.
-    
+
     auto setResult = [this](Action::ExecutionResult result, StrA debugStats) {
         std::lock_guard<std::mutex> lock(mResultMutex);
         mResult     = result;
@@ -194,8 +189,7 @@ void SubmissionImpl::run(Parameters params) {
 
         if (result == Action::ExecutionResult::FAILED) {
             GN_ERROR(sLogger)("Workflow '{}' execution failed, stopping execution", mValidatedWorkflows[workflowIdx]->name);
-            setResult(Action::ExecutionResult::FAILED,
-                      params.debug ? StrA::format("Execution failed at workflow index {}", workflowIdx) : StrA());
+            setResult(Action::ExecutionResult::FAILED, params.debug ? StrA::format("Execution failed at workflow index {}", workflowIdx) : StrA());
             cleanup();
             return;
         }

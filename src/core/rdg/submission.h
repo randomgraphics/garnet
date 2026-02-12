@@ -15,7 +15,7 @@ public:
 
     ~SubmissionImpl() override;
 
-    bool isFinished() override;
+    bool   isFinished() override;
     Result result() override;
 
 private:
@@ -35,12 +35,12 @@ private:
     // For each workflow index, indices of workflows it depends on
     DynaArray<DynaArray<size_t>> mDependencyGraph;
 
-    bool validateTask(const Workflow::Task & task, const StrA & workflowName, size_t taskIndex);
-    bool validateAndBuildDependencyGraph();
-    DynaArray<size_t> topologicalSort();
+    bool                    validateTask(const Workflow::Task & task, const StrA & workflowName, size_t taskIndex);
+    bool                    validateAndBuildDependencyGraph();
+    DynaArray<size_t>       topologicalSort();
     Action::ExecutionResult executeTask(const Workflow::Task & task, Workflow * workflow, size_t taskIndex);
     Action::ExecutionResult executeWorkflow(size_t workflowIndex);
-    void run(Parameters params);
+    void                    run(Parameters params);
 };
 
 } // namespace GN::rdg
