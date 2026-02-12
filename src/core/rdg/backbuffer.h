@@ -1,0 +1,24 @@
+#pragma once
+
+#include <garnet/GNrdg.h>
+
+namespace GN::rdg {
+
+// BackbufferCommon is the "common impl" base for the Backbuffer artifact: it extends the
+// public artifact (Backbuffer) with an API-neutral frame interface (prepare/present) that
+// backend-specific implementations (BackbufferVulkan, etc.) inherit and implement.
+
+/// Common base for API-specific Backbuffer implementations (Vulkan, D3D12, Metal).
+/// Adds frame boundaries: prepare() = beginning of frame, present() = end of frame.
+class BackbufferCommon : public Backbuffer {
+public:
+    /// Beginning of a frame. Acquire backbuffer image; call before rendering.
+    virtual void prepare() = 0;
+    /// End of a frame. Present to display; call after rendering.
+    virtual void present() = 0;
+
+protected:
+    BackbufferCommon(ArtifactDatabase & db, const StrA & name): Backbuffer(db, TYPE, name) {}
+};
+
+} // namespace GN::rdg

@@ -30,9 +30,7 @@ static StrA resolveApi(const StrA & api) {
 AutoRef<GpuContext> GpuContext::create(ArtifactDatabase & db, const StrA & name, const CreateParameters & params) {
     StrA api = resolveApi(params.api);
 
-    if (api == "vulkan") {
-        return createVulkanGpuContext(db, name, params);
-    }
+    if (api == "vulkan") { return createVulkanGpuContext(db, name, params); }
 
     if (api == "d3d12") {
         GN_ERROR(sLogger)("GpuContext::create: D3D12 backend not implemented yet");

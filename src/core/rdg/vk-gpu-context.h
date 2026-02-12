@@ -15,9 +15,9 @@ public:
     GpuContextVulkan(ArtifactDatabase & db, const StrA & name, const CreateParameters & params);
     const rapid_vulkan::GlobalInfo * globalInfo() const {
         if (!mDevice.has_value() || !mDevice.value().gi()) GN_UNLIKELY {
-            GN_ERROR(getLogger("GN.rdg.vk"))("Failed to retrieve Vulkan GlobalInfo: The GPU context is not property initialized, name='{}'", name);
-            return nullptr;
-        }
+                GN_ERROR(getLogger("GN.rdg.vk"))("Failed to retrieve Vulkan GlobalInfo: The GPU context is not property initialized, name='{}'", name);
+                return nullptr;
+            }
         return mDevice.value().gi();
     }
     rapid_vulkan::Device *   device() { return mDevice ? &*mDevice : nullptr; }
