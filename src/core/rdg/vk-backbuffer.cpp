@@ -6,9 +6,6 @@
 #endif
 
 #include "vk-backbuffer.h"
-#if defined(_WIN32)
-    #include <vulkan/vulkan_win32.h>
-#endif
 
 static GN::Logger * sLogger = GN::getLogger("GN.rdg.vk");
 
@@ -17,12 +14,17 @@ namespace GN::rdg {
 namespace {
 
 vk::UniqueSurfaceKHR createSurfaceFromWindow(vk::Instance instance, GN::win::Window * win) {
-#if GN_WINPC
     if (!win) return {};
+#if GN_WINPC
     vk::Win32SurfaceCreateInfoKHR info = {};
     info.hinstance                     = reinterpret_cast<HINSTANCE>(win->getModuleHandle());
     info.hwnd                          = reinterpret_cast<HWND>(win->getWindowHandle());
     return instance.createWin32SurfaceKHRUnique(info);
+#elif GN_LINUX
+    vk::WaylandSurfaceCreateInfoKHR info = {};
+    info.display                         = reinterpret_cast<wl_display *>(win->getDisplayHandle());
+    info.surface                         = reinterpret_cast<wl_surface *>(win->getWindowHandle());
+    return instance.createWaylandSurfaceKHRUnique(info);
 #else
     (void) instance;
     (void) win;
@@ -66,12 +68,10 @@ bool BackbufferVulkan::init(const Backbuffer::CreateParameters & params) {
     }
 
     vk::SurfaceKHR surfaceHandle = {};
-#if GN_WINPC
     if (mDescriptor.win) {
         mSurface = createSurfaceFromWindow(gi->instance, mDescriptor.win);
         if (mSurface) surfaceHandle = mSurface.get();
     }
-#endif
 
     rapid_vulkan::Swapchain::ConstructParameters scp;
     scp.setDevice(*dev);

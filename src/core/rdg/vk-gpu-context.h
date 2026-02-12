@@ -1,6 +1,9 @@
 #pragma once
 
 #include "gpu-context.h"
+#if GN_LINUX
+    #define VK_USE_PLATFORM_WAYLAND_KHR 1
+#endif
 #include <rapid-vulkan/rapid-vulkan.h>
 #include <optional>
 

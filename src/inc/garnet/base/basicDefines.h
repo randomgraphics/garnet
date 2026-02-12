@@ -59,6 +59,7 @@
 #define GN_XBOX2   0 ///< If 1, means Xbox 360
 #define GN_XBOX3   0 ///< If 1, means Xbox One
 #define GN_POSIX   0 ///< If 1, means POSIX compatible platform, such as linux/mac/unix/android and Cygwin
+#define GN_LINUX   0 ///< If 1, means Linux platform
 #define GN_DARWIN  0 ///< true when running on mac os.
 #define GN_CYGWIN  0 ///< If 1, means Cygwin
 #define GN_ANDROID 0 ///< If 1, means Android
@@ -98,6 +99,13 @@
     #undef GN_DARWIN
     #define GN_DARWIN        1
     #define GN_PLATFORM_NAME darwin
+
+#elif defined(__linux__)
+    #undef GN_POSIX
+    #define GN_POSIX         1
+    #define GN_PLATFORM_NAME linux
+    #undef GN_LINUX
+    #define GN_LINUX 1
 
 // Android
 #elif defined(__ANDROID__)
