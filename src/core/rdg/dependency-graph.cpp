@@ -332,8 +332,7 @@ public:
             return submission;
         }
 
-        // step 2: execute the workflow graph sequentially based on topological order
-        // Perform topological sort to determine execution order
+        // step 2: sort workflows based on dependencies.
         DynaArray<size_t> executionOrder = topologicalSort();
         if (executionOrder.empty()) {
             GN_ERROR(sLogger)("Failed to determine workflow execution order");
@@ -342,7 +341,9 @@ public:
             return submission;
         }
 
-        // Execute workflows sequentially in topological order
+        // TODO: scan throgh the all tasks in order of execution, to give each task a chance to gather global information, like render pass.
+
+        // step 3: execute workflows sequentially in topological order
         bool         hasWarning     = false;
         const size_t totalWorkflows = executionOrder.size();
 
