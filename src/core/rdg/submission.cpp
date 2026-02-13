@@ -6,9 +6,10 @@ static GN::Logger * sLogger = GN::getLogger("GN.rdg");
 
 namespace GN::rdg {
 
-SubmissionImpl::SubmissionImpl(DynaArray<Workflow *> pendingWorkflows, const Parameters & params): mResult(Action::ExecutionResult::PASSED), mFinished(false) {
+SubmissionImpl::SubmissionImpl(DynaArray<Workflow *> pendingWorkflows, const Parameters & params) {
+    GN_VERBOSE(sLogger)("SubmissionImpl constructor: {} workflows.", pendingWorkflows.size());
     mWorkflows = std::move(pendingWorkflows);
-    mFuture    = std::async(std::launch::async, [this, params]() { run(params); });
+    mFuture    = std::async(std::launch::async, [this, params]() -> Result { return run(params); });
 }
 
 SubmissionImpl::~SubmissionImpl() {
@@ -17,22 +18,23 @@ SubmissionImpl::~SubmissionImpl() {
     cleanup();
 }
 
-void SubmissionImpl::cleanup() {
-    for (Workflow * w : mWorkflows) delete w;
-    mWorkflows.clear();
-    mValidatedWorkflows.clear();
-    mDependencyGraph.clear();
+void SubmissionImpl::cleanup(bool cleanupPendingWorkflows) noexcept {
+    try {
+        if (cleanupPendingWorkflows) {
+            for (Workflow * w : mWorkflows) delete w;
+            mWorkflows.clear();
+        }
+        mValidatedWorkflows.clear();
+        mDependencyGraph.clear();
+    } catch (...) { GN_ERROR(sLogger)("Exception occurred during cleanup."); }
 }
 
 bool SubmissionImpl::isFinished() { return mFuture.valid() && mFuture.wait_for(std::chrono::seconds(0)) == std::future_status::ready; }
 
 Submission::Result SubmissionImpl::result() {
-    if (mFuture.valid()) mFuture.get();
     std::lock_guard<std::mutex> lock(mResultMutex);
-    Result                      r;
-    r.result     = mResult;
-    r.debugStats = mDebugStats;
-    return r;
+    if (mFuture.valid()) mResult = std::move(mFuture.get());
+    return mResult;
 }
 
 bool SubmissionImpl::validateTask(const Workflow::Task & task, const StrA & workflowName, size_t taskIndex) {
@@ -60,6 +62,8 @@ bool SubmissionImpl::validateAndBuildDependencyGraph() {
         mValidatedWorkflows.append(workflow);
     }
 
+    GN_VERBOSE(sLogger)("Validated {} workflows.", mValidatedWorkflows.size());
+
     mDependencyGraph.resize(mValidatedWorkflows.size());
 
     for (size_t workflowIdx = 0; workflowIdx < mValidatedWorkflows.size(); ++workflowIdx) {
@@ -83,6 +87,7 @@ bool SubmissionImpl::validateAndBuildDependencyGraph() {
         }
     }
 
+    GN_VERBOSE(sLogger)("Dependency graph built: {} workflows.", mValidatedWorkflows.size());
     return true;
 }
 
@@ -125,95 +130,85 @@ DynaArray<size_t> SubmissionImpl::topologicalSort() {
     return result;
 }
 
-Action::ExecutionResult SubmissionImpl::executeTask(const Workflow::Task & task, Workflow * workflow, size_t taskIndex) {
-    if (!task.action) {
-        GN_ERROR(sLogger)("Workflow '{}' task {}: action is null", workflow->name, taskIndex);
-        return Action::ExecutionResult::FAILED;
-    }
-    if (!task.arguments) {
-        GN_ERROR(sLogger)("Workflow '{}' task {}: arguments is null", workflow->name, taskIndex);
-        return Action::ExecutionResult::FAILED;
-    }
-    return task.action->execute(*task.arguments);
-}
+Submission::Result SubmissionImpl::run(Parameters) {
+    cleanup(false); // clean up any residual data from previous runs, but keep pending workflows.
 
-Action::ExecutionResult SubmissionImpl::executeWorkflow(size_t workflowIndex) {
-    Workflow * workflow = mValidatedWorkflows[workflowIndex];
-    GN_ASSERT(workflow);
-
-    for (size_t taskIdx = 0; taskIdx < workflow->tasks.size(); ++taskIdx) {
-        const Workflow::Task &  task   = workflow->tasks[taskIdx];
-        Action::ExecutionResult result = executeTask(task, workflow, taskIdx);
-
-        if (result == Action::ExecutionResult::FAILED) {
-            GN_ERROR(sLogger)("Workflow '{}' task {} execution failed", workflow->name, taskIdx);
-            return Action::ExecutionResult::FAILED;
-        }
-
-        if (result == Action::ExecutionResult::WARNING) {
-            GN_WARN(sLogger)("Workflow '{}' task {} execution completed with warnings", workflow->name, taskIdx);
-        }
-    }
-
-    return Action::ExecutionResult::PASSED;
-}
-
-void SubmissionImpl::run(Parameters params) {
-    cleanup(); // clean up any residual data from previous runs.
-
-    auto setResult = [this](Action::ExecutionResult result, StrA debugStats) {
-        std::lock_guard<std::mutex> lock(mResultMutex);
-        mResult     = result;
-        mDebugStats = std::move(debugStats);
-        mFinished   = true;
+    auto setResult = [this](Action::ExecutionResult executionResult) -> Result {
+        Result r;
+        r.executionResult = executionResult;
+        return r;
     };
 
-    if (!validateAndBuildDependencyGraph()) {
-        setResult(Action::ExecutionResult::FAILED, "Workflow graph compilation failed");
-        cleanup();
-        return;
+    // shortcut for empty workflows.
+    if (mWorkflows.empty()) {
+        GN_VERBOSE(sLogger)("No workflows to execute, returning PASSED.");
+        return setResult(Action::ExecutionResult::PASSED);
     }
 
-    DynaArray<size_t> executionOrder = topologicalSort();
-    if (executionOrder.empty()) {
-        setResult(Action::ExecutionResult::FAILED, "Topological sort failed - circular dependency detected");
-        cleanup();
-        return;
-    }
-
-    bool         hasWarning     = false;
-    const size_t totalWorkflows = executionOrder.size();
-
-    for (size_t workflowIdx : executionOrder) {
-        Action::ExecutionResult result = executeWorkflow(workflowIdx);
-
-        if (result == Action::ExecutionResult::FAILED) {
-            GN_ERROR(sLogger)("Workflow '{}' execution failed, stopping execution", mValidatedWorkflows[workflowIdx]->name);
-            setResult(Action::ExecutionResult::FAILED, params.debug ? StrA::format("Execution failed at workflow index {}", workflowIdx) : StrA());
+    try {
+        // step 1: validate and build dependency graph.
+        if (!validateAndBuildDependencyGraph()) {
             cleanup();
-            return;
+            return setResult(Action::ExecutionResult::FAILED);
         }
 
-        if (result == Action::ExecutionResult::WARNING) {
-            GN_WARN(sLogger)("Workflow '{}' execution completed with warnings", mValidatedWorkflows[workflowIdx]->name);
-            hasWarning = true;
+        // step 2: topological sort.
+        DynaArray<size_t> executionOrder = topologicalSort();
+        if (executionOrder.empty()) {
+            GN_ERROR(sLogger)("Topological sort failed - circular dependency detected");
+            cleanup();
+            return setResult(Action::ExecutionResult::FAILED);
         }
-    }
 
-    Action::ExecutionResult finalResult = hasWarning ? Action::ExecutionResult::WARNING : Action::ExecutionResult::PASSED;
-    if (hasWarning) {
-        GN_TRACE(sLogger)("Successfully executed {} workflows sequentially with warnings", totalWorkflows);
-    } else {
-        GN_TRACE(sLogger)("Successfully executed {} workflows sequentially", totalWorkflows);
-    }
+        // step 3: prepare all tasks in topological order.
+        bool hasWarning = false;
+        for (size_t workflowIdx : executionOrder) {
+            Workflow * workflow = mValidatedWorkflows[workflowIdx];
+            GN_ASSERT(workflow);
+            for (size_t taskIdx = 0; taskIdx < workflow->tasks.size(); ++taskIdx) {
+                const Workflow::Task & task = workflow->tasks[taskIdx];
+                GN_ASSERT(task.action && task.arguments); // have been validated in validateTask().
+                auto result = task.action->prepare(*task.arguments);
+                if (result == Action::ExecutionResult::FAILED) {
+                    GN_ERROR(sLogger)("Task '{}' preparation failed", task.action->name);
+                    return setResult(Action::ExecutionResult::FAILED);
+                }
+                if (result == Action::ExecutionResult::WARNING) {
+                    GN_VERBOSE(sLogger)("Task '{}' preparation completed with warnings", task.action->name);
+                    hasWarning = true;
+                }
+            }
+        }
 
-    StrA debugStats;
-    if (params.debug) {
-        debugStats = StrA::format("Executed {} workflows successfully", totalWorkflows);
-        if (hasWarning) { debugStats += " (with warnings)"; }
+        // step 4: execute workflows sequentially in topological order.
+        for (size_t workflowIdx : executionOrder) {
+            Workflow * workflow = mValidatedWorkflows[workflowIdx];
+            GN_ASSERT(workflow);
+            for (size_t taskIdx = 0; taskIdx < workflow->tasks.size(); ++taskIdx) {
+                const Workflow::Task & task = workflow->tasks[taskIdx];
+                GN_ASSERT(task.action && task.arguments); // have been validated in validateTask().
+                auto result = task.action->execute(*task.arguments);
+                if (result == Action::ExecutionResult::FAILED) {
+                    GN_ERROR(sLogger)("Task '{}' execution failed", task.action->name);
+                    return setResult(Action::ExecutionResult::FAILED);
+                } else if (result == Action::ExecutionResult::WARNING) {
+                    GN_VERBOSE(sLogger)("Task '{}' execution completed with warnings", task.action->name);
+                    hasWarning = true;
+                }
+            }
+        }
+
+        // Done
+        return setResult(hasWarning ? Action::ExecutionResult::WARNING : Action::ExecutionResult::PASSED);
+    } catch (const std::exception & e) {
+        GN_ERROR(sLogger)("Exception occurred during submission: {}", e.what());
+        cleanup();
+        return setResult(Action::ExecutionResult::FAILED);
+    } catch (...) {
+        GN_ERROR(sLogger)("Exception occurred during submission.");
+        cleanup();
+        return setResult(Action::ExecutionResult::FAILED);
     }
-    setResult(finalResult, std::move(debugStats));
-    cleanup();
 }
 
 } // namespace GN::rdg

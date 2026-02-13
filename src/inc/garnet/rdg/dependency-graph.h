@@ -217,9 +217,12 @@ protected:
 struct Action : public Artifact {
     enum ExecutionResult {
         PASSED,  ///< the action executed successfully.
+        WARNING, ///< the action executed successfully, but with warnings.
         FAILED,  ///< the action failed; dependents may be skipped.
-        WARNING, ///< the action executed with warnings.
     };
+
+    /// Prepare for execution.
+    virtual ExecutionResult prepare(Arguments & arguments) = 0;
 
     /// Execute the action with the given arguments.
     virtual ExecutionResult execute(Arguments & arguments) = 0;
@@ -251,13 +254,13 @@ struct Workflow {
 struct Submission : RefCounter {
     /// Parameters for submission.
     struct Parameters {
-        bool debug = false; ///< when true, generate debug statistics
+        // For future use
     };
 
     /// Result of execution
     struct Result {
-        Action::ExecutionResult result;
-        StrA                    debugStats; ///< per-workflow/task stats when debug is true
+        Action::ExecutionResult executionResult {};
+        // for future extension, like individual task result, etc.
     };
 
     virtual ~Submission() = default;

@@ -15,32 +15,27 @@ public:
 
     ~SubmissionImpl() override;
 
-    bool   isFinished() override;
+    bool isFinished() override;
+
     Result result() override;
 
 private:
     /// Deletes all work items and clears intermediate data (workflows, dependency graph). Safe to call multiple times.
-    void cleanup();
+    void cleanup(bool cleanupPendingWorkflows = true) noexcept;
 
-    std::future<void>       mFuture;
-    std::mutex              mResultMutex;
-    Action::ExecutionResult mResult;
-    StrA                    mDebugStats;
-    bool                    mFinished;
+    std::future<Result> mFuture;
+    Result              mResult;
+    std::mutex          mResultMutex;
 
     // Owned workflows (taken from graph on construction)
-    DynaArray<Workflow *> mWorkflows;
-    // Validated workflows (subset / reordered for execution)
-    DynaArray<Workflow *> mValidatedWorkflows;
-    // For each workflow index, indices of workflows it depends on
+    DynaArray<Workflow *>        mWorkflows;
+    DynaArray<Workflow *>        mValidatedWorkflows;
     DynaArray<DynaArray<size_t>> mDependencyGraph;
 
-    bool                    validateTask(const Workflow::Task & task, const StrA & workflowName, size_t taskIndex);
-    bool                    validateAndBuildDependencyGraph();
-    DynaArray<size_t>       topologicalSort();
-    Action::ExecutionResult executeTask(const Workflow::Task & task, Workflow * workflow, size_t taskIndex);
-    Action::ExecutionResult executeWorkflow(size_t workflowIndex);
-    void                    run(Parameters params);
+    bool              validateTask(const Workflow::Task & task, const StrA & workflowName, size_t taskIndex);
+    bool              validateAndBuildDependencyGraph();
+    DynaArray<size_t> topologicalSort();
+    Result            run(Parameters params);
 };
 
 } // namespace GN::rdg

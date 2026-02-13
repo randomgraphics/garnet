@@ -119,7 +119,8 @@ public:
 
     AutoRef<Submission> submit(const Submission::Parameters & params) override {
         std::lock_guard<std::mutex> lock(mMutex);
-        auto                        submission = AutoRef<Submission>(new SubmissionImpl(std::move(mPendingWorkflows), params));
+        GN_VERBOSE(sLogger)("Submitting {} workflows.", mPendingWorkflows.size());
+        auto submission = AutoRef<Submission>(new SubmissionImpl(std::move(mPendingWorkflows), params));
         GN_ASSERT(mPendingWorkflows.empty());
         return submission;
     }

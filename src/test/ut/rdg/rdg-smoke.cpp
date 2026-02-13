@@ -59,6 +59,8 @@ struct InitIntegerAction : public Action {
         WriteOnly<AutoRef<IntegerArtifact>> output;
     };
 
+    ExecutionResult prepare(Arguments &) override { return PASSED; }
+
     // Execute: set the output artifact's value
     ExecutionResult execute(Arguments & args) override {
         auto * a = args.castTo<A>();
@@ -99,6 +101,8 @@ struct AddIntegersAction : public Action {
         ReadOnly<AutoRef<IntegerArtifact>>  input2;
         WriteOnly<AutoRef<IntegerArtifact>> output;
     };
+
+    ExecutionResult prepare(Arguments &) override { return PASSED; }
 
     // Execute: input1.value + input2.value -> output.value
     ExecutionResult execute(Arguments & args) override {
@@ -157,6 +161,8 @@ struct MultiplyIntegersAction : public Action {
         ReadOnly<AutoRef<IntegerArtifact>>  input2;
         WriteOnly<AutoRef<IntegerArtifact>> output;
     };
+
+    ExecutionResult prepare(Arguments &) override { return PASSED; }
 
     // Execute: input1.value * input2.value -> output.value
     ExecutionResult execute(Arguments & args) override {
@@ -324,14 +330,12 @@ public:
         }
 
         // Submit all scheduled workflows for execution
-        GN::rdg::Submission::Parameters execParams;
-        execParams.debug = false;
-        auto submission  = renderGraph->submit(execParams);
+        auto submission = renderGraph->submit({});
         TS_ASSERT(submission != nullptr);
 
         // Wait for completion and get result
-        auto execResult = submission->result();
-        TS_ASSERT_EQUALS(execResult.result, GN::rdg::Action::PASSED);
+        auto submissionResult = submission->result();
+        TS_ASSERT_EQUALS(submissionResult.executionResult, GN::rdg::Action::PASSED);
 
         // Verify result
         TS_ASSERT_EQUALS(result->value, 9);

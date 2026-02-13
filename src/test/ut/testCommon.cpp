@@ -39,7 +39,12 @@ int myInit(int argc, const char * argv[]) {
     }
 
     // setup environment variables to control log behavior.
-    if (!verbose) { GN::putEnv("GN_LOG_QUIET", "1"); }
+    if (verbose) {
+        GN::getRootLogger()->setLevel(GN::Logger::VERBOSE);
+    } else {
+        // can't disable root logger here. Doing that will fail logger unit test.
+        GN::putEnv("GN_LOG_QUIET", "1");
+    }
 
     return 0;
 }
