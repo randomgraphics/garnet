@@ -6,6 +6,8 @@ static GN::Logger * sLogger = GN::getLogger("GN.rdg");
 
 namespace GN::rdg {
 
+void SubmissionImpl::setRenderPassManager(AutoRef<RenderPassManager> renderPassManager) { mRenderPassManager = std::move(renderPassManager); }
+
 SubmissionImpl::SubmissionImpl(DynaArray<Workflow *> pendingWorkflows, const Parameters & params) {
     GN_VERBOSE(sLogger)("SubmissionImpl constructor: {} workflows.", pendingWorkflows.size());
     mWorkflows = std::move(pendingWorkflows);
@@ -168,7 +170,7 @@ Submission::Result SubmissionImpl::run(Parameters) {
             for (size_t taskIdx = 0; taskIdx < workflow->tasks.size(); ++taskIdx) {
                 const Workflow::Task & task = workflow->tasks[taskIdx];
                 GN_ASSERT(task.action && task.arguments); // have been validated in validateTask().
-                auto result = task.action->prepare(*task.arguments);
+                auto result = task.action->prepare(*this, *task.arguments);
                 if (result == Action::ExecutionResult::FAILED) {
                     GN_ERROR(sLogger)("Task '{}' preparation failed", task.action->name);
                     return setResult(Action::ExecutionResult::FAILED);
@@ -187,7 +189,7 @@ Submission::Result SubmissionImpl::run(Parameters) {
             for (size_t taskIdx = 0; taskIdx < workflow->tasks.size(); ++taskIdx) {
                 const Workflow::Task & task = workflow->tasks[taskIdx];
                 GN_ASSERT(task.action && task.arguments); // have been validated in validateTask().
-                auto result = task.action->execute(*task.arguments);
+                auto result = task.action->execute(*this, *task.arguments);
                 if (result == Action::ExecutionResult::FAILED) {
                     GN_ERROR(sLogger)("Task '{}' execution failed", task.action->name);
                     return setResult(Action::ExecutionResult::FAILED);

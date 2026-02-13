@@ -213,6 +213,8 @@ protected:
     Arguments(const Guid & type): type(type) {}
 };
 
+struct Submission;
+
 /// Base class of all actions. An action holds the logic for an operation and declares its parameters (input/output).
 struct Action : public Artifact {
     enum ExecutionResult {
@@ -222,10 +224,10 @@ struct Action : public Artifact {
     };
 
     /// Prepare for execution.
-    virtual ExecutionResult prepare(Arguments & arguments) = 0;
+    virtual ExecutionResult prepare(Submission & submission, Arguments & arguments) = 0;
 
     /// Execute the action with the given arguments.
-    virtual ExecutionResult execute(Arguments & arguments) = 0;
+    virtual ExecutionResult execute(Submission & submission, Arguments & arguments) = 0;
 
 protected:
     /// Inherit constructor from Artifact
@@ -265,7 +267,8 @@ struct Submission : RefCounter {
 
     virtual ~Submission() = default;
 
-    //// Check if submitted workflows are all finished.
+    /// Check if submitted workflows are all finished.
+    /// \todo: is this finished on CPU or finished on GPU? Maybe add a new method isProcessed() for CPU-only check.
     virtual bool isFinished() = 0;
 
     /// Get execution result of the submitted workflows. Will block calling thread until all workflows are finished.
@@ -278,7 +281,7 @@ protected:
 /// Render graph: schedule workflows (thread-safe), then submit them for async execution.
 struct RenderGraph {
     struct CreateParameters {
-        // TBD
+        // AutoRef<GpuContext> gpu; ///< the GPU context this graph is associated with.
     };
 
     /// Create a new render graph instance

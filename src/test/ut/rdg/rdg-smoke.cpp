@@ -59,10 +59,10 @@ struct InitIntegerAction : public Action {
         WriteOnly<AutoRef<IntegerArtifact>> output;
     };
 
-    ExecutionResult prepare(Arguments &) override { return PASSED; }
+    ExecutionResult prepare(Submission &, Arguments &) override { return PASSED; }
 
     // Execute: set the output artifact's value
-    ExecutionResult execute(Arguments & args) override {
+    ExecutionResult execute(Submission &, Arguments & args) override {
         auto * a = args.castTo<A>();
         TS_ASSERT(a != nullptr); // null means wrong type
         auto * outputArtifact = a->output.get();
@@ -102,10 +102,10 @@ struct AddIntegersAction : public Action {
         WriteOnly<AutoRef<IntegerArtifact>> output;
     };
 
-    ExecutionResult prepare(Arguments &) override { return PASSED; }
+    ExecutionResult prepare(Submission &, Arguments &) override { return PASSED; }
 
     // Execute: input1.value + input2.value -> output.value
-    ExecutionResult execute(Arguments & args) override {
+    ExecutionResult execute(Submission &, Arguments & args) override {
         auto * a = args.castTo<A>();
         TS_ASSERT(a != nullptr); // null means wrong type
         auto * input1Artifact = a->input1.get();
@@ -162,10 +162,10 @@ struct MultiplyIntegersAction : public Action {
         WriteOnly<AutoRef<IntegerArtifact>> output;
     };
 
-    ExecutionResult prepare(Arguments &) override { return PASSED; }
+    ExecutionResult prepare(Submission &, Arguments &) override { return PASSED; }
 
     // Execute: input1.value * input2.value -> output.value
-    ExecutionResult execute(Arguments & args) override {
+    ExecutionResult execute(Submission &, Arguments & args) override {
         auto * a = args.castTo<A>();
         TS_ASSERT(a != nullptr); // null means wrong type
         auto * input1Artifact = a->input1.get();

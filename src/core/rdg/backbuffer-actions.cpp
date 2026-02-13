@@ -13,9 +13,9 @@ class PrepareBackbufferImpl : public PrepareBackbuffer {
 public:
     PrepareBackbufferImpl(ArtifactDatabase & db, const StrA & name): PrepareBackbuffer(db, TYPE, name) {}
 
-    ExecutionResult prepare(Arguments &) override { return PASSED; }
+    ExecutionResult prepare(Submission &, Arguments &) override { return PASSED; }
 
-    ExecutionResult execute(Arguments & arguments) override {
+    ExecutionResult execute(Submission &, Arguments & arguments) override {
         auto * a = arguments.castTo<PrepareBackbuffer::A>();
         if (!a) {
             GN_ERROR(sLogger)("PrepareBackbuffer::execute: invalid arguments");
@@ -55,9 +55,9 @@ class PresentBackbufferImpl : public PresentBackbuffer {
 public:
     PresentBackbufferImpl(ArtifactDatabase & db, const StrA & name): PresentBackbuffer(db, TYPE, name) {}
 
-    ExecutionResult prepare(Arguments &) override { return PASSED; }
+    ExecutionResult prepare(Submission &, Arguments &) override { return PASSED; }
 
-    ExecutionResult execute(Arguments & arguments) override {
+    ExecutionResult execute(Submission &, Arguments & arguments) override {
         auto * a = arguments.castTo<PresentBackbuffer::A>();
         if (!a) GN_UNLIKELY {
                 GN_ERROR(sLogger)("PresentBackbuffer::execute: invalid arguments");
