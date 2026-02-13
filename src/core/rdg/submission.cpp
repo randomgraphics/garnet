@@ -33,7 +33,7 @@ bool SubmissionImpl::isFinished() { return mFuture.valid() && mFuture.wait_for(s
 
 Submission::Result SubmissionImpl::result() {
     std::lock_guard<std::mutex> lock(mResultMutex);
-    if (mFuture.valid()) mResult = std::move(mFuture.get());
+    if (mFuture.valid()) mResult = mFuture.get();
     return mResult;
 }
 
@@ -133,7 +133,7 @@ DynaArray<size_t> SubmissionImpl::topologicalSort() {
 Submission::Result SubmissionImpl::run(Parameters) {
     cleanup(false); // clean up any residual data from previous runs, but keep pending workflows.
 
-    auto setResult = [this](Action::ExecutionResult executionResult) -> Result {
+    auto setResult = [](Action::ExecutionResult executionResult) -> Result {
         Result r;
         r.executionResult = executionResult;
         return r;
