@@ -6,8 +6,6 @@ static GN::Logger * sLogger = GN::getLogger("GN.rdg");
 
 namespace GN::rdg {
 
-void SubmissionImpl::setRenderPassManager(AutoRef<RenderPassManager> renderPassManager) { mRenderPassManager = std::move(renderPassManager); }
-
 SubmissionImpl::SubmissionImpl(DynaArray<Workflow *> pendingWorkflows, const Parameters & params) {
     GN_VERBOSE(sLogger)("SubmissionImpl constructor: {} workflows.", pendingWorkflows.size());
     mWorkflows = std::move(pendingWorkflows);
@@ -163,14 +161,20 @@ Submission::Result SubmissionImpl::run(Parameters) {
         }
 
         // step 3: prepare all tasks in topological order.
+        struct PendingTask {
+            Workflow::Task * task;
+            std::unique_ptr<Action::ExecutionContext> context;
+        };
+        DynaArray<PendingTask> pendingTasks;
         bool hasWarning = false;
         for (size_t workflowIdx : executionOrder) {
             Workflow * workflow = mValidatedWorkflows[workflowIdx];
             GN_ASSERT(workflow);
             for (size_t taskIdx = 0; taskIdx < workflow->tasks.size(); ++taskIdx) {
-                const Workflow::Task & task = workflow->tasks[taskIdx];
+                Workflow::Task & task = workflow->tasks[taskIdx];
                 GN_ASSERT(task.action && task.arguments); // have been validated in validateTask().
-                auto result = task.action->prepare(*this, *task.arguments);
+                auto [result, context] = task.action->prepare(*this, *task.arguments);
+                auto contextPtr = std::unique_ptr<Action::ExecutionContext>(context);
                 if (result == Action::ExecutionResult::FAILED) {
                     GN_ERROR(sLogger)("Task '{}' preparation failed", task.action->name);
                     return setResult(Action::ExecutionResult::FAILED);
@@ -179,24 +183,20 @@ Submission::Result SubmissionImpl::run(Parameters) {
                     GN_VERBOSE(sLogger)("Task '{}' preparation completed with warnings", task.action->name);
                     hasWarning = true;
                 }
+                pendingTasks.append(PendingTask {&task, std::move(contextPtr)});
             }
         }
 
         // step 4: execute workflows sequentially in topological order.
-        for (size_t workflowIdx : executionOrder) {
-            Workflow * workflow = mValidatedWorkflows[workflowIdx];
-            GN_ASSERT(workflow);
-            for (size_t taskIdx = 0; taskIdx < workflow->tasks.size(); ++taskIdx) {
-                const Workflow::Task & task = workflow->tasks[taskIdx];
-                GN_ASSERT(task.action && task.arguments); // have been validated in validateTask().
-                auto result = task.action->execute(*this, *task.arguments);
-                if (result == Action::ExecutionResult::FAILED) {
-                    GN_ERROR(sLogger)("Task '{}' execution failed", task.action->name);
-                    return setResult(Action::ExecutionResult::FAILED);
-                } else if (result == Action::ExecutionResult::WARNING) {
-                    GN_VERBOSE(sLogger)("Task '{}' execution completed with warnings", task.action->name);
-                    hasWarning = true;
-                }
+        for (auto & pt : pendingTasks) {
+            auto result = pt.task->action->execute(*this, *pt.task->arguments, pt.context.get());
+            if (result == Action::ExecutionResult::FAILED) {
+                GN_ERROR(sLogger)("Task '{}' execution failed", pt.task->action->name);
+                return setResult(Action::ExecutionResult::FAILED);
+            }
+            if (result == Action::ExecutionResult::WARNING) {
+                GN_VERBOSE(sLogger)("Task '{}' execution completed with warnings", pt.task->action->name);
+                hasWarning = true;
             }
         }
 

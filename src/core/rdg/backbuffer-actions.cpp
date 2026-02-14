@@ -9,13 +9,18 @@ namespace GN::rdg {
 // PrepareBackbuffer - API-neutral impl (uses BackbufferCommon::prepare())
 // =============================================================================
 
+/// \note
+///  - Can't use this as a mark of beginning of a frame, since it could be called very late in the frame, like
+///    in a deferred rendering pipeline.
 class PrepareBackbufferImpl : public PrepareBackbuffer {
 public:
     PrepareBackbufferImpl(ArtifactDatabase & db, const StrA & name): PrepareBackbuffer(db, TYPE, name) {}
 
-    ExecutionResult prepare(Submission &, Arguments &) override { return PASSED; }
+    std::pair<ExecutionResult, ExecutionContext *> prepare(Submission &, Arguments &) override {
+        return std::make_pair(PASSED, nullptr);
+    }
 
-    ExecutionResult execute(Submission &, Arguments & arguments) override {
+    ExecutionResult execute(Submission &, Arguments & arguments, ExecutionContext *) override {
         auto * a = arguments.castTo<PrepareBackbuffer::A>();
         if (!a) {
             GN_ERROR(sLogger)("PrepareBackbuffer::execute: invalid arguments");
@@ -55,9 +60,11 @@ class PresentBackbufferImpl : public PresentBackbuffer {
 public:
     PresentBackbufferImpl(ArtifactDatabase & db, const StrA & name): PresentBackbuffer(db, TYPE, name) {}
 
-    ExecutionResult prepare(Submission &, Arguments &) override { return PASSED; }
+    std::pair<ExecutionResult, ExecutionContext *> prepare(Submission &, Arguments &) override {
+        return std::make_pair(PASSED, nullptr);
+    }
 
-    ExecutionResult execute(Submission &, Arguments & arguments) override {
+    ExecutionResult execute(Submission &, Arguments & arguments, ExecutionContext *) override {
         auto * a = arguments.castTo<PresentBackbuffer::A>();
         if (!a) GN_UNLIKELY {
                 GN_ERROR(sLogger)("PresentBackbuffer::execute: invalid arguments");

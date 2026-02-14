@@ -6,18 +6,11 @@
 
 namespace GN::rdg {
 
-struct RenderPassManager : RefCounter {
-public:
-    virtual ~RenderPassManager() = default;
-protected:
-    RenderPassManager() = default;
-};
-
 /// Implementation of Submission. Holds all intermediate data and context for a single submit.
 /// Processes workflows asynchronously: validate, build dependency graph, topological sort, execute.
 class SubmissionImpl : public Submission {
 public:
-    struct Context : RefCounter {
+    struct Context : RefCounter, RuntimeType {
     public:
         virtual ~Context() = default;
     protected:
@@ -33,8 +26,23 @@ public:
 
     Result result() override;
 
-    auto setRenderPassManager(AutoRef<RenderPassManager> renderPassManager) -> void;
-    auto getRenderPassManager() const -> AutoRef<RenderPassManager> { return mRenderPassManager; }
+    template<typename T>
+    AutoRef<T> getExecutionContext() {
+        auto ctx = mExecutionContexts.find(T::TYPE);
+        if (ctx == mExecutionContexts.end()) {
+            return {};
+        }
+        GN_ASSERT(ctx->second->type == T::TYPE);
+        return AutoRef<T>(ctx->second->template castTo<T>());
+    }
+
+    void setExecutionContext(AutoRef<Context> ctx) {
+        if (!ctx) GN_UNLIKELY {
+            GN_ERROR(GN::getLogger("GN.rdg"))("SubmissionImpl::setExecutionContext: context is null");
+            return;
+        }
+        mExecutionContexts[ctx->type] = ctx;
+    }
 
 private:
     /// Deletes all work items and clears intermediate data (workflows, dependency graph). Safe to call multiple times.
@@ -44,7 +52,7 @@ private:
     Result              mResult;
     std::mutex          mResultMutex;
 
-    AutoRef<RenderPassManager>   mRenderPassManager;
+    std::unordered_map<Guid, AutoRef<Context>> mExecutionContexts;
 
     // Owned workflows (taken from graph on construction)
     DynaArray<Workflow *>        mWorkflows;

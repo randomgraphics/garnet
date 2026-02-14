@@ -5,8 +5,18 @@
 namespace GN::rdg {
 
 struct RenderTarget {
-    std::variant<AutoRef<Texture>, AutoRef<Backbuffer>> target;
-    Texture::SubresourceIndex                           sub; ///< only used for texture targets
+    struct ColorTarget {
+        std::variant<std::monostate,AutoRef<Texture>,AutoRef<Backbuffer>> target;
+        Texture::SubresourceIndex                                         subresourceIndex; ///< only used for texture targets
+    };
+
+    struct DepthStencil {
+        std::variant<std::monostate,AutoRef<Texture>> target;
+        Texture::SubresourceIndex                     subresourceIndex;
+    };
+
+    StackArray<ColorTarget, 8> colors;
+    DepthStencil               depthStencil;
 };
 
 struct ClearRenderTarget : public Action {
@@ -15,16 +25,17 @@ struct ClearRenderTarget : public Action {
     struct A : public Arguments {
         inline static constexpr Guid TYPE = {0x6ad8b59d, 0xe672, 0x4b5e, {0x8e, 0xec, 0xf7, 0xac, 0xd4, 0xf1, 0x99, 0xdd}};
         A(): Arguments(TYPE) {}
-        struct ClearColor {
-            struct {
-                float r, g, b, a;
-            };
-            struct {
-                uint32_t x, y, z, w;
-            };
+        struct ClearValues {
+            union {
+                float    f4[4];
+                uint32_t u4[4];
+                int32_t  i4[4];
+            } colors[8];
+            float    depth;
+            uint32_t stencil;
         };
-        ReadOnly<ClearColor>    color;
-        ReadWrite<RenderTarget> renderTarget;
+        ReadOnly<ClearValues> clearValues;
+        ReadWrite<RenderTarget>  renderTarget;
     };
 
     struct CreateParameters {
@@ -33,28 +44,6 @@ struct ClearRenderTarget : public Action {
 
     /// Create a new instance and register to the database via admit(). Implementation provided by backend.
     static GN_API AutoRef<ClearRenderTarget> create(ArtifactDatabase & db, const StrA & name, const CreateParameters & params);
-
-protected:
-    using Action::Action;
-};
-
-struct ClearDepthStencil : public Action {
-    inline static constexpr Guid TYPE = {0xdb3ab1ef, 0xafc0, 0x4eca, {0x80, 0xfa, 0x49, 0xde, 0x23, 0x3c, 0xdf, 0x18}};
-
-    struct A : public Arguments {
-        inline static constexpr Guid TYPE = {0x6ad8b59d, 0xe672, 0x4b5e, {0x8e, 0xec, 0xf7, 0xac, 0xd4, 0xf1, 0x99, 0xdd}};
-        A(): Arguments(TYPE) {}
-        ReadOnly<float>         depth;
-        ReadOnly<uint8_t>       stencil;
-        ReadWrite<RenderTarget> depthStencil;
-    };
-
-    struct CreateParameters {
-        AutoRef<GpuContext> context;
-    };
-
-    /// Create a new instance and register to the database via admit(). Implementation provided by backend.
-    static GN_API AutoRef<ClearDepthStencil> create(ArtifactDatabase & db, const StrA & name, const CreateParameters & params);
 
 protected:
     using Action::Action;

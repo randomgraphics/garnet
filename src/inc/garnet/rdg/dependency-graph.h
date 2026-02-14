@@ -19,14 +19,9 @@ namespace GN::rdg {
 
 struct ArtifactDatabase;
 
-/// Artifact represents an atomic resource that can be used as input or output of a task.
-struct Artifact : public RefCounter {
-    ArtifactDatabase & database;
-    const Guid &       type;
-    const StrA         name;
-    const uint64_t     sequence; ///< the unique integer identifier of the artifact in the artifact database.
 
-    virtual ~Artifact() {}
+struct RuntimeType {
+    const Guid & type;
 
     template<typename T>
     T * castTo() {
@@ -41,10 +36,23 @@ struct Artifact : public RefCounter {
     }
 
 protected:
+    RuntimeType(const Guid & type): type(type) {}
+};
+
+/// Artifact represents an atomic resource that can be used as input or output of a task.
+struct Artifact : public RefCounter, public RuntimeType {
+    ArtifactDatabase & database;
+    const StrA         name;
+    const uint64_t     sequence; ///< the unique integer identifier of the artifact in the artifact database.
+
+    virtual ~Artifact() {}
+
+protected:
     /// Constructor
     Artifact(ArtifactDatabase & db, const Guid & type, const StrA & name);
 };
 
+/// Database of all artifacts. Artifact is uniquly identified by its type and name, or by its sequence number.
 struct ArtifactDatabase {
     struct CreateParameters {
         // TBD
@@ -74,10 +82,10 @@ protected:
     ArtifactDatabase() = default;
 };
 
-inline Artifact::Artifact(ArtifactDatabase & db, const Guid & type, const StrA & name): database(db), type(type), name(name), sequence(database.admit(this)) {}
+inline Artifact::Artifact(ArtifactDatabase & db, const Guid & type, const StrA & name): RuntimeType(type), database(db), name(name), sequence(database.admit(this)) {}
 
 /// Base class of arguments for an action. This is not a subclass of Artifact, since it is means to be one time use: create, pass to action, and forget.
-struct Arguments : RefCounter {
+struct Arguments : RefCounter, public RuntimeType {
     enum class UsageFlag {
         None     = 0,
         Optional = 1 << 0,
@@ -195,22 +203,8 @@ struct Arguments : RefCounter {
     template<typename Key, typename Value, UsageFlag UFlags = UsageFlag::None>
     using ReadWriteMap = MapParameter<Key, Value, UFlags | UsageFlag::Reading | UsageFlag::Writing>;
 
-    const Guid & type;
-
-    template<typename T>
-    T * castTo() {
-        if (type == T::TYPE) GN_LIKELY return static_cast<T *>(this);
-        return nullptr;
-    }
-
-    template<typename T>
-    const T * castTo() const {
-        if (type == T::TYPE) GN_LIKELY return static_cast<const T *>(this);
-        return nullptr;
-    }
-
 protected:
-    Arguments(const Guid & type): type(type) {}
+    Arguments(const Guid & type): RuntimeType(type) {}
 };
 
 struct Submission;
@@ -223,11 +217,18 @@ struct Action : public Artifact {
         FAILED,  ///< the action failed; dependents may be skipped.
     };
 
-    /// Prepare for execution.
-    virtual ExecutionResult prepare(Submission & submission, Arguments & arguments) = 0;
+    /// A action might be used in multiple tasks. So we need a context structure to store data associated to a particular task.
+    struct ExecutionContext : public RuntimeType {
+        virtual ~ExecutionContext() = default;
+    protected:
+        ExecutionContext(const Guid & type): RuntimeType(type) {}
+    };
+
+    /// Prepare for execution. The execution context is optional. If can be null, if the action does not need an context.
+    virtual std::pair<ExecutionResult, ExecutionContext *> prepare(Submission & submission, Arguments & arguments) = 0;
 
     /// Execute the action with the given arguments.
-    virtual ExecutionResult execute(Submission & submission, Arguments & arguments) = 0;
+    virtual ExecutionResult execute(Submission & submission, Arguments & arguments, ExecutionContext * context) = 0;
 
 protected:
     /// Inherit constructor from Artifact

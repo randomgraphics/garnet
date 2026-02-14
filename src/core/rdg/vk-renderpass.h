@@ -2,34 +2,39 @@
 #include "submission.h"
 #include "vk-gpu-context.h"
 
-
 namespace GN::rdg {
 
-class RenderPassManagerVulkan : public RenderPassManager {
+class RenderPassManagerVulkan : public SubmissionImpl::Context {
 public:
+    inline static constexpr Guid TYPE = {0x6ad8b59d, 0xe672, 0x4b5e, {0x8e, 0xec, 0xf7, 0xac, 0xd4, 0xf1, 0x99, 0xdd}};
+
+    RenderPassManagerVulkan() : Submission::Context(TYPE) {}
+
     struct ConstructParameters {
         AutoRef<GpuContext> context;
     };
 
     struct RenderPass {
-        rapid_vulkan::RenderPass renderPass {};
+        rapid_vulkan::RenderPass & renderPass {};
         std::optional<vk::RenderPassBeginInfo> beginInfo {}; // If has value, we must call renderPass.cmdBegin() before drawing to the render target.
         bool next {}; // If true, we must call renderPass.cmdNext() before drawing to the render target.
         bool end {}; // If true, we must call renderPass.cmdEnd() after drawing to the render target.
     };
 
     RenderPassManagerVulkan(const ConstructParameters & params);
+
     ~RenderPassManagerVulkan() override;
 
-    /// Add a render target to the render pass manager.
-    /// \return Return a unique identifier for the render target. 0 for failure.
-    /// - If the same render target is added multiple times, w/o other render targets in between,
-    ///   the same identifier will be returned.
-    /// - this method is only allowed to be called before the first call to getRenderPass().
-    auto prepare(const RenderTarget & renderTarget) -> uint64_t;
+    /// Called by task in prepare pass to request to render to a render target.
+    /// \return Return a unique identifier to represent this request. 0 for failure.
+    uint64_t prepare(const RenderTarget & renderTarget);
 
-    /// Returns the render pass information that a draw action can act on.
-    RenderPass execute(uint64_t renderTargetId) const;
+    /// Called by task in execution pass to retrieve the render target requested in prepare() pass.
+    /// \return Returns the render pass information that a draw action can act on.
+    /// - If the beginInfo has value, the caller must call renderPass.cmdBegin() before issue any draw commands.
+    /// - If the next flag is true, the caller must call renderPass.cmdNext() before issue any draw commands.
+    /// - If the end flag is true, the caller must call renderPass.cmdEnd() after issue all draw commands.
+    RenderPass execute(uint64_t renderTargetId);
 };
 
 } // namespace GN::rdg
