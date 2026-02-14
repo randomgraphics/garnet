@@ -52,7 +52,7 @@ protected:
     Artifact(ArtifactDatabase & db, const Guid & type, const StrA & name);
 };
 
-/// Database of all artifacts. Artifact is uniquly identified by its type and name, or by its sequence number.
+/// Database of all artifacts. Artifact is uniquely identified by its type and name, or by its sequence number.
 struct ArtifactDatabase {
     struct CreateParameters {
         // TBD
