@@ -19,7 +19,6 @@ namespace GN::rdg {
 
 struct ArtifactDatabase;
 
-
 struct RuntimeType {
     const Guid & type;
 
@@ -82,7 +81,8 @@ protected:
     ArtifactDatabase() = default;
 };
 
-inline Artifact::Artifact(ArtifactDatabase & db, const Guid & type, const StrA & name): RuntimeType(type), database(db), name(name), sequence(database.admit(this)) {}
+inline Artifact::Artifact(ArtifactDatabase & db, const Guid & type, const StrA & name)
+    : RuntimeType(type), database(db), name(name), sequence(database.admit(this)) {}
 
 /// Base class of arguments for an action. This is not a subclass of Artifact, since it is means to be one time use: create, pass to action, and forget.
 struct Arguments : RefCounter, public RuntimeType {
@@ -114,9 +114,14 @@ struct Arguments : RefCounter, public RuntimeType {
     template<typename T, UsageFlag UFlags = UsageFlag::None>
     struct SingleParameter : public Parameter<UFlags> {
         void set(const T & value) { mValue = value; }
+        void set(T && value) { mValue = std::move(value); }
         void reset() { mValue.reset(); }
         auto get() const -> const T * { return mValue.has_value() ? &mValue.value() : nullptr; }
         auto get() -> T * { return mValue.has_value() ? &mValue.value() : nullptr; }
+        auto operator->() const -> const T * { return get(); }
+        auto operator->() -> T * { return get(); }
+        auto operator*() const -> const T & { return mValue.value(); }
+        auto operator*() -> T & { return mValue.value(); }
 
     private:
         std::optional<T> mValue;
@@ -220,6 +225,7 @@ struct Action : public Artifact {
     /// A action might be used in multiple tasks. So we need a context structure to store data associated to a particular task.
     struct ExecutionContext : public RuntimeType {
         virtual ~ExecutionContext() = default;
+
     protected:
         ExecutionContext(const Guid & type): RuntimeType(type) {}
     };

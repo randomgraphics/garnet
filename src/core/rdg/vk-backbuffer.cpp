@@ -46,14 +46,13 @@ BackbufferVulkan::BackbufferVulkan(ArtifactDatabase & db, const StrA & name): Ba
 bool BackbufferVulkan::init(const Backbuffer::CreateParameters & params) {
     if (0 == sequence) return false;
 
-    mDescriptor                            = params.descriptor;
-    auto *                           ctxVk = static_cast<GpuContextVulkan *>(params.context.get());
-    rapid_vulkan::Device *           dev   = ctxVk->device();
-    const rapid_vulkan::GlobalInfo * gi    = ctxVk->globalInfo();
-    if (!dev || !gi) {
-        GN_ERROR(sLogger)("BackbufferVulkan::init: context has no Vulkan device/global info, name='{}'", name);
-        return false;
-    }
+    // store GPU context and descriptor.
+    mGpuContext.set(static_cast<GpuContextVulkan *>(params.context.get()));
+    mDescriptor = params.descriptor;
+
+    auto         ctxVk = static_cast<GpuContextVulkan *>(params.context.get());
+    const auto & inst  = ctxVk->instance();
+    const auto & dev   = ctxVk->device();
 
     size_t w = mDescriptor.width;
     size_t h = mDescriptor.height;
@@ -69,12 +68,12 @@ bool BackbufferVulkan::init(const Backbuffer::CreateParameters & params) {
 
     vk::SurfaceKHR surfaceHandle = {};
     if (mDescriptor.win) {
-        mSurface = createSurfaceFromWindow(gi->instance, mDescriptor.win);
+        mSurface = createSurfaceFromWindow(inst.handle(), mDescriptor.win);
         if (mSurface) surfaceHandle = mSurface.get();
     }
 
     rapid_vulkan::Swapchain::ConstructParameters scp;
-    scp.setDevice(*dev);
+    scp.setDevice(dev);
     scp.setDimensions(w, h);
     if (surfaceHandle) scp.setSurface(surfaceHandle);
     scp.depthStencilFormat.mode = rapid_vulkan::Swapchain::DepthStencilFormat::DISABLED; // do not automatically create depth buffer

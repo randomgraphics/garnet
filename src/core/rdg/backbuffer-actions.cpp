@@ -16,9 +16,7 @@ class PrepareBackbufferImpl : public PrepareBackbuffer {
 public:
     PrepareBackbufferImpl(ArtifactDatabase & db, const StrA & name): PrepareBackbuffer(db, TYPE, name) {}
 
-    std::pair<ExecutionResult, ExecutionContext *> prepare(Submission &, Arguments &) override {
-        return std::make_pair(PASSED, nullptr);
-    }
+    std::pair<ExecutionResult, ExecutionContext *> prepare(Submission &, Arguments &) override { return std::make_pair(PASSED, nullptr); }
 
     ExecutionResult execute(Submission &, Arguments & arguments, ExecutionContext *) override {
         auto * a = arguments.castTo<PrepareBackbuffer::A>();
@@ -60,9 +58,7 @@ class PresentBackbufferImpl : public PresentBackbuffer {
 public:
     PresentBackbufferImpl(ArtifactDatabase & db, const StrA & name): PresentBackbuffer(db, TYPE, name) {}
 
-    std::pair<ExecutionResult, ExecutionContext *> prepare(Submission &, Arguments &) override {
-        return std::make_pair(PASSED, nullptr);
-    }
+    std::pair<ExecutionResult, ExecutionContext *> prepare(Submission &, Arguments &) override { return std::make_pair(PASSED, nullptr); }
 
     ExecutionResult execute(Submission &, Arguments & arguments, ExecutionContext *) override {
         auto * a = arguments.castTo<PresentBackbuffer::A>();

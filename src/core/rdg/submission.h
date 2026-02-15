@@ -13,8 +13,9 @@ public:
     struct Context : RefCounter, RuntimeType {
     public:
         virtual ~Context() = default;
+
     protected:
-        Context() = default;
+        using RuntimeType::RuntimeType;
     };
 
     /// Construct and start the submission asynchronously. Takes ownership of \p pendingWorkflows (pointers).
@@ -29,18 +30,16 @@ public:
     template<typename T>
     AutoRef<T> getExecutionContext() {
         auto ctx = mExecutionContexts.find(T::TYPE);
-        if (ctx == mExecutionContexts.end()) {
-            return {};
-        }
+        if (ctx == mExecutionContexts.end()) { return {}; }
         GN_ASSERT(ctx->second->type == T::TYPE);
         return AutoRef<T>(ctx->second->template castTo<T>());
     }
 
     void setExecutionContext(AutoRef<Context> ctx) {
         if (!ctx) GN_UNLIKELY {
-            GN_ERROR(GN::getLogger("GN.rdg"))("SubmissionImpl::setExecutionContext: context is null");
-            return;
-        }
+                GN_ERROR(GN::getLogger("GN.rdg"))("SubmissionImpl::setExecutionContext: context is null");
+                return;
+            }
         mExecutionContexts[ctx->type] = ctx;
     }
 

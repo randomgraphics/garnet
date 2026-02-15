@@ -43,47 +43,61 @@ int main(int, const char **) {
     auto presentAction = PresentBackbuffer::create(*db, "present_action", PresentBackbuffer::CreateParameters {.context = gpuContext});
     if (!presentAction) return -1;
 
+    auto textureReadbackAction = TextureReadback::create(*db, "texture_readback_action", TextureReadback::CreateParameters {.context = gpuContext});
+    if (!textureReadbackAction) return -1;
+
     // Schedule render workflow
     auto renderWorkflow = renderGraph->schedule();
-    if (renderWorkflow) {
-        renderWorkflow->name = "Render";
-
-        // Task: Prepare backbuffer
-        auto prepareTask   = Workflow::Task {};
-        prepareTask.action = prepareAction;
-        auto prepareArgs   = AutoRef<PrepareBackbuffer::A>(new PrepareBackbuffer::A());
-        prepareArgs->backbuffer.set(backbuffer);
-        prepareTask.arguments = prepareArgs;
-        renderWorkflow->tasks.append(prepareTask);
-
-        // Task: Clear render target
-        auto clearTask   = Workflow::Task {};
-        clearTask.action = clearAction;
-        auto clearArgs   = AutoRef<ClearRenderTarget::A>(new ClearRenderTarget::A());
-
-        auto color = ClearRenderTarget::A::ClearColor {};
-        color.r    = 0.39f;
-        color.g    = 0.58f;
-        color.b    = 0.93f;
-        color.a    = 1.0f;
-        clearArgs->color.set(color);
-
-        auto rt   = RenderTarget {};
-        rt.target = backbuffer;
-        rt.sub    = Texture::SubresourceIndex();
-        clearArgs->renderTarget.set(rt);
-
-        clearTask.arguments = clearArgs;
-        renderWorkflow->tasks.append(clearTask);
-
-        // Task: Present backbuffer
-        auto presentTask   = Workflow::Task {};
-        presentTask.action = presentAction;
-        auto presentArgs   = AutoRef<PresentBackbuffer::A>(new PresentBackbuffer::A());
-        presentArgs->backbuffer.set(backbuffer);
-        presentTask.arguments = presentArgs;
-        renderWorkflow->tasks.append(presentTask);
+    if (!renderWorkflow) {
+        GN_ERROR(sLogger)("Failed to schedule render workflow");
+        return -1;
     }
+
+    renderWorkflow->name = "Render";
+
+    // Task: Prepare backbuffer
+    auto prepareTask   = Workflow::Task {};
+    prepareTask.action = prepareAction;
+    auto prepareArgs   = AutoRef<PrepareBackbuffer::A>(new PrepareBackbuffer::A());
+    prepareArgs->backbuffer.set(backbuffer);
+    prepareTask.arguments = prepareArgs;
+    renderWorkflow->tasks.append(prepareTask);
+
+    // Task: Clear render target
+    auto clearTask   = Workflow::Task {};
+    clearTask.action = clearAction;
+    auto clearArgs   = AutoRef<ClearRenderTarget::A>(new ClearRenderTarget::A());
+
+    auto color = ClearRenderTarget::A::ClearColor {};
+    color.r    = 0.39f;
+    color.g    = 0.58f;
+    color.b    = 0.93f;
+    color.a    = 1.0f;
+    clearArgs->color.set(color);
+
+    auto rt   = RenderTarget {};
+    rt.target = backbuffer;
+    rt.sub    = Texture::SubresourceIndex();
+    clearArgs->renderTarget.set(rt);
+
+    clearTask.arguments = clearArgs;
+    renderWorkflow->tasks.append(clearTask);
+
+    // Task: Present backbuffer
+    auto presentTask   = Workflow::Task {};
+    presentTask.action = presentAction;
+    auto presentArgs   = AutoRef<PresentBackbuffer::A>(new PresentBackbuffer::A());
+    presentArgs->backbuffer.set(backbuffer);
+    presentTask.arguments = presentArgs;
+    renderWorkflow->tasks.append(presentTask);
+
+    // Read back buffer context back into an image.
+    auto textureReadbackTask   = Workflow::Task {};
+    textureReadbackTask.action = textureReadbackAction;
+    auto textureReadbackArgs   = AutoRef<TextureReadback::A>(new TextureReadback::A());
+    textureReadbackArgs->texture.set(backbuffer);
+    textureReadbackTask.arguments = textureReadbackArgs;
+    renderWorkflow->tasks.append(textureReadbackTask);
 
     // Submit render graph for execution
     auto submission = renderGraph->submit({});
@@ -97,6 +111,14 @@ int main(int, const char **) {
     if (result.result != Action::ExecutionResult::PASSED) {
         GN_WARN(sLogger)("Render graph submission: {}", result.result == Action::ExecutionResult::FAILED ? "FAILED" : "WARNING");
     }
+
+    // save the image to file.
+    auto image = textureReadbackArgs->image.get();
+    if (!image) {
+        GN_ERROR(sLogger)("Failed to get image from texture readback action");
+        return -1;
+    }
+    image->save("output.png");
 
     GN_INFO(sLogger)("Render graph hello world completed");
     return 0;

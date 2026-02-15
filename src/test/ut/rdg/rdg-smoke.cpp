@@ -59,9 +59,7 @@ struct InitIntegerAction : public Action {
         WriteOnly<AutoRef<IntegerArtifact>> output;
     };
 
-    std::pair<ExecutionResult, ExecutionContext *> prepare(Submission &, Arguments &) override {
-        return std::make_pair(PASSED, nullptr);
-    }
+    std::pair<ExecutionResult, ExecutionContext *> prepare(Submission &, Arguments &) override { return std::make_pair(PASSED, nullptr); }
 
     // Execute: set the output artifact's value
     ExecutionResult execute(Submission &, Arguments & args, ExecutionContext *) override {
@@ -104,9 +102,7 @@ struct AddIntegersAction : public Action {
         WriteOnly<AutoRef<IntegerArtifact>> output;
     };
 
-    std::pair<ExecutionResult, ExecutionContext *> prepare(Submission &, Arguments &) override {
-        return std::make_pair(PASSED, nullptr);
-    }
+    std::pair<ExecutionResult, ExecutionContext *> prepare(Submission &, Arguments &) override { return std::make_pair(PASSED, nullptr); }
 
     // Execute: input1.value + input2.value -> output.value
     ExecutionResult execute(Submission &, Arguments & args, ExecutionContext *) override {
@@ -166,9 +162,7 @@ struct MultiplyIntegersAction : public Action {
         WriteOnly<AutoRef<IntegerArtifact>> output;
     };
 
-    std::pair<ExecutionResult, ExecutionContext *> prepare(Submission &, Arguments &) override {
-        return std::make_pair(PASSED, nullptr);
-    }
+    std::pair<ExecutionResult, ExecutionContext *> prepare(Submission &, Arguments &) override { return std::make_pair(PASSED, nullptr); }
 
     // Execute: input1.value * input2.value -> output.value
     ExecutionResult execute(Submission &, Arguments & args, ExecutionContext *) override {

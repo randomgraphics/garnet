@@ -16,15 +16,21 @@ class GpuContextVulkan : public GpuContextCommon {
 
 public:
     GpuContextVulkan(ArtifactDatabase & db, const StrA & name, const CreateParameters & params);
-    const rapid_vulkan::GlobalInfo * globalInfo() const {
-        if (!mDevice.has_value() || !mDevice.value().gi()) GN_UNLIKELY {
-                GN_ERROR(getLogger("GN.rdg.vk"))("Failed to retrieve Vulkan GlobalInfo: The GPU context is not property initialized, name='{}'", name);
-                return nullptr;
-            }
-        return mDevice.value().gi();
+
+    const rapid_vulkan::Instance & instance() const {
+        GN_ASSERT(mInstance.has_value() && mInstance.value().handle());
+        return mInstance.value();
     }
-    rapid_vulkan::Device *   device() { return mDevice ? &*mDevice : nullptr; }
-    rapid_vulkan::Instance * instance() { return mInstance ? &*mInstance : nullptr; }
+
+    const rapid_vulkan::Device & device() const {
+        GN_ASSERT(mDevice.has_value() && mDevice.value().handle());
+        return mDevice.value();
+    }
+
+    const rapid_vulkan::GlobalInfo & globalInfo() const {
+        GN_ASSERT(mDevice.has_value() && mDevice.value().gi());
+        return *mDevice.value().gi();
+    }
 };
 
 /// Create a Vulkan-backed GpuContext. Called from GpuContext::create() when api is "vulkan".

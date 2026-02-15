@@ -27,8 +27,16 @@ protected:
     using Artifact::Artifact;
 };
 
+/// Base class for all GPU resources.
+struct GpuResource : public Artifact {
+    virtual GpuContext & gpu() const = 0;
+
+protected:
+    using Artifact::Artifact;
+};
+
 /// Texture represents a 2D/3D/cube texture with optional mipmap and array layers.
-struct Texture : public Artifact {
+struct Texture : public GpuResource {
     static inline const Guid TYPE = {0x6ad8b59d, 0xe672, 0x4b5e, {0x8e, 0xec, 0xf7, 0xac, 0xd4, 0xf1, 0x99, 0xdd}};
     /// Descriptor used when creating or declaring the texture (format, dimensions).
     struct Descriptor {
@@ -75,11 +83,11 @@ struct Texture : public Artifact {
     static GN_API AutoRef<Texture> load(ArtifactDatabase & db, const LoadParameters & params);
 
 protected:
-    using Artifact::Artifact;
+    using GpuResource::GpuResource;
 };
 
 /// Backbuffer represents the swapchain that can be presented to screen.
-struct Backbuffer : public Artifact {
+struct Backbuffer : public GpuResource {
     inline static constexpr Guid TYPE = {0x2b3c4d5e, 0x6f7a, 0x8b9c, {0x0d, 0x1e, 0x2f, 0x3a, 0x4b, 0x5c, 0x6d, 0x7e}};
 
     /// Window and size (and format) for backbuffer. If win is null, headless; width/height must be positive.
@@ -97,17 +105,18 @@ struct Backbuffer : public Artifact {
         Descriptor          descriptor;
     };
 
+    /// Return the current backbuffer descriptor.
     virtual const Descriptor & descriptor() const = 0;
 
     /// Create a new instance of Backbuffer.
     static GN_API AutoRef<Backbuffer> create(ArtifactDatabase & db, const StrA & name, const CreateParameters & params);
 
 protected:
-    using Artifact::Artifact;
+    using GpuResource::GpuResource;
 };
 
 /// Sampler represents GPU sampler state (filtering, addressing, LOD, anisotropy).
-struct Sampler : public Artifact {
+struct Sampler : public GpuResource {
     static inline const Guid TYPE = {0x7be9c60e, 0xf783, 0x5c6f, {0x9f, 0xed, 0x08, 0xbd, 0xe5, 0x02, 0xaa, 0xee}};
     enum class Filter { POINT, LINEAR, ANISOTROPIC };
     enum class AddressMode { REPEAT, MIRROR_REPEAT, CLAMP_TO_EDGE, CLAMP_TO_BORDER, MIRROR_CLAMP_TO_EDGE };
@@ -138,11 +147,11 @@ struct Sampler : public Artifact {
     static GN_API AutoRef<Sampler> create(ArtifactDatabase & db, const StrA & name, const CreateParameters & params);
 
 protected:
-    using Artifact::Artifact;
+    using GpuResource::GpuResource;
 };
 
 /// Buffer represents a GPU buffer (vertex, index, constant, storage, etc.).
-struct Buffer : public Artifact {
+struct Buffer : public GpuResource {
     static inline const Guid TYPE = {0x1f2e3d4c, 0x5b6a, 0x7c8d, {0x9e, 0xaf, 0xb1, 0xc2, 0xd3, 0xe4, 0xf5, 0x06}};
     /// Buffer usage flags.
     enum Usage {
@@ -176,12 +185,12 @@ struct Buffer : public Artifact {
     static GN_API AutoRef<Buffer> create(ArtifactDatabase & db, const StrA & name, const CreateParameters & params);
 
 protected:
-    using Artifact::Artifact;
+    using GpuResource::GpuResource;
 };
 
 /// Base class of all mesh types.
 /// Meshes can be either indexed (using an index buffer) or non-indexed (drawing vertices directly).
-struct Mesh : public Artifact {
+struct Mesh : public GpuResource {
     static inline constexpr Guid TYPE = {0x8c9d4a1f, 0xb284, 0x5d7f, {0x9a, 0xfe, 0x19, 0xce, 0xf6, 0x13, 0xbb, 0xff}};
 
     struct VertexBuffer {
@@ -221,7 +230,7 @@ struct Mesh : public Artifact {
     static GN_API AutoRef<Mesh> load(ArtifactDatabase & db, const LoadParameters & params);
 
 protected:
-    using Artifact::Artifact;
+    using GpuResource::GpuResource;
 };
 
 } // namespace GN::rdg

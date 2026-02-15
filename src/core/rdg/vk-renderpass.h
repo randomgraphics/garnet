@@ -8,17 +8,17 @@ class RenderPassManagerVulkan : public SubmissionImpl::Context {
 public:
     inline static constexpr Guid TYPE = {0x6ad8b59d, 0xe672, 0x4b5e, {0x8e, 0xec, 0xf7, 0xac, 0xd4, 0xf1, 0x99, 0xdd}};
 
-    RenderPassManagerVulkan() : Submission::Context(TYPE) {}
+    RenderPassManagerVulkan(): SubmissionImpl::Context(TYPE) {}
 
     struct ConstructParameters {
-        AutoRef<GpuContext> context;
+        AutoRef<GpuContext> gpu;
     };
 
     struct RenderPass {
-        rapid_vulkan::RenderPass & renderPass {};
-        std::optional<vk::RenderPassBeginInfo> beginInfo {}; // If has value, we must call renderPass.cmdBegin() before drawing to the render target.
-        bool next {}; // If true, we must call renderPass.cmdNext() before drawing to the render target.
-        bool end {}; // If true, we must call renderPass.cmdEnd() after drawing to the render target.
+        rapid_vulkan::Ref<rapid_vulkan::RenderPass> renderPass;
+        std::optional<vk::RenderPassBeginInfo>      beginInfo {}; // If has value, we must call renderPass.cmdBegin() before drawing to the render target.
+        bool                                        next {};      // If true, we must call renderPass.cmdNext() before drawing to the render target.
+        bool                                        end {};       // If true, we must call renderPass.cmdEnd() after drawing to the render target.
     };
 
     RenderPassManagerVulkan(const ConstructParameters & params);

@@ -7,6 +7,7 @@ namespace GN::rdg {
 
 /// Vulkan backbuffer: wraps a rapid-vulkan Swapchain (and optional Win32 surface).
 class BackbufferVulkan : public BackbufferCommon {
+    AutoRef<GpuContext>                        mGpuContext;
     Backbuffer::Descriptor                     mDescriptor;
     vk::UniqueSurfaceKHR                       mSurface;
     rapid_vulkan::Ref<rapid_vulkan::Swapchain> mSwapchain;
@@ -17,7 +18,8 @@ public:
     /// Initialize swapchain and optional surface. Call once after construction. Returns false on failure.
     bool init(const Backbuffer::CreateParameters & params);
 
-    const Descriptor & descriptor() const override { return mDescriptor; }
+    auto gpu() const -> GpuContext & override { return *mGpuContext; }
+    auto descriptor() const -> const Backbuffer::Descriptor & override { return mDescriptor; }
 
     void prepare() override;
     void present() override;

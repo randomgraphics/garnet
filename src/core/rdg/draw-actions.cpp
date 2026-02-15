@@ -10,15 +10,15 @@ namespace GN::rdg {
 // =============================================================================
 
 GN_API AutoRef<ClearRenderTarget> ClearRenderTarget::create(ArtifactDatabase & db, const StrA & name, const CreateParameters & params) {
-    if (!params.context) GN_UNLIKELY {
-        GN_ERROR(sLogger)("ClearRenderTarget::create: context is null, name='{}'", name);
-        return {};
-    }
-    auto * common = params.context.get()->castTo<GpuContextCommon>();
+    if (!params.gpu) GN_UNLIKELY {
+            GN_ERROR(sLogger)("ClearRenderTarget::create: context is null, name='{}'", name);
+            return {};
+        }
+    auto common = params.gpu->castTo<GpuContextCommon>();
     if (!common) GN_UNLIKELY {
-        GN_ERROR(sLogger)("ClearRenderTarget::create: context is not a GpuContextCommon");
-        return {};
-    }
+            GN_ERROR(sLogger)("ClearRenderTarget::create: context is not a GpuContextCommon");
+            return {};
+        }
     switch (common->api()) {
     case GpuContextCommon::Api::Vulkan:
         return createVulkanClearRenderTarget(db, name, params);

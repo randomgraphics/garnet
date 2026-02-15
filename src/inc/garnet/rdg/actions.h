@@ -6,17 +6,30 @@ namespace GN::rdg {
 
 struct RenderTarget {
     struct ColorTarget {
-        std::variant<std::monostate,AutoRef<Texture>,AutoRef<Backbuffer>> target;
-        Texture::SubresourceIndex                                         subresourceIndex; ///< only used for texture targets
+        std::variant<AutoRef<Texture>, AutoRef<Backbuffer>> target;
+        Texture::SubresourceIndex                           subresourceIndex; ///< only used for texture targets
     };
 
     struct DepthStencil {
-        std::variant<std::monostate,AutoRef<Texture>> target;
-        Texture::SubresourceIndex                     subresourceIndex;
+        std::variant<AutoRef<Texture>> target;
+        Texture::SubresourceIndex      subresourceIndex;
     };
 
     StackArray<ColorTarget, 8> colors;
     DepthStencil               depthStencil;
+
+    /// Retrieve the GPU context that the render target is bound to.
+    AutoRef<GpuContext> gpu() const {
+        for (const auto & color : colors) {
+            auto t = std::get_if<AutoRef<Texture>>(&color.target);
+            if (t && *t) return AutoRef<GpuContext> {&(*t)->gpu()};
+            auto b = std::get_if<AutoRef<Backbuffer>>(&color.target);
+            if (b && *b) return AutoRef<GpuContext> {&(*b)->gpu()};
+        }
+        auto d = std::get_if<AutoRef<Texture>>(&depthStencil.target);
+        if (d && *d) return AutoRef<GpuContext> {&(*d)->gpu()};
+        return {};
+    }
 };
 
 struct ClearRenderTarget : public Action {
@@ -34,12 +47,12 @@ struct ClearRenderTarget : public Action {
             float    depth;
             uint32_t stencil;
         };
-        ReadOnly<ClearValues> clearValues;
-        ReadWrite<RenderTarget>  renderTarget;
+        ReadOnly<ClearValues>   clearValues;
+        ReadWrite<RenderTarget> renderTarget;
     };
 
     struct CreateParameters {
-        AutoRef<GpuContext> context;
+        AutoRef<GpuContext> gpu;
     };
 
     /// Create a new instance and register to the database via admit(). Implementation provided by backend.
@@ -79,7 +92,7 @@ struct PrepareBackbuffer : public Action {
     };
 
     struct CreateParameters {
-        AutoRef<GpuContext> context;
+        AutoRef<GpuContext> gpu;
     };
 
     /// Create a new instance and register to the database via admit(). Implementation provided by backend.
@@ -99,7 +112,7 @@ struct PresentBackbuffer : public Action {
     };
 
     struct CreateParameters {
-        AutoRef<GpuContext> context;
+        AutoRef<GpuContext> gpu;
     };
 
     /// Create a new instance and register to the database via admit(). Implementation provided by backend.
@@ -115,12 +128,12 @@ struct TextureReadback : public Action {
     struct A : public Arguments {
         inline static constexpr Guid TYPE = {0x5a6b7c8d, 0x9e0f, 0x1a2b, {0x3c, 0x4d, 0x5e, 0x6f, 0x7a, 0x8b, 0x9c, 0x0d}};
         A(): Arguments(TYPE) {}
-        ReadOnly<AutoRef<Texture>> texture; ///< input texture
-        WriteOnly<gfx::img::Image> image;   ///< output image (will be cleared and filled with the texture content)
+        ReadOnly<std::variant<AutoRef<Texture>, AutoRef<Backbuffer>>> texture; ///< input texture/backbuffer
+        WriteOnly<gfx::img::Image>                                    image;   ///< output image (will be cleared and filled with the texture content)
     };
 
     struct CreateParameters {
-        AutoRef<GpuContext> context;
+        AutoRef<GpuContext> gpu;
     };
 
     static GN_API AutoRef<TextureReadback> create(ArtifactDatabase & db, const StrA & name, const CreateParameters & params);
@@ -261,7 +274,7 @@ struct SetupRenderStates : public Action {
     };
 
     struct CreateParameters {
-        AutoRef<GpuContext> context;
+        AutoRef<GpuContext> gpu;
     };
 
     static GN_API AutoRef<SetupRenderStates> create(ArtifactDatabase & db, const StrA & name, const CreateParameters & params);
@@ -387,7 +400,7 @@ struct GenericCompute : public ShaderAction {
     };
 
     struct CreateParameters {
-        AutoRef<GpuContext> context;
+        AutoRef<GpuContext> gpu;
     };
 
     static GN_API AutoRef<GenericCompute> create(ArtifactDatabase & db, const StrA & name, const CreateParameters & params);

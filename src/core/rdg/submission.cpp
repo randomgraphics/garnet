@@ -162,11 +162,11 @@ Submission::Result SubmissionImpl::run(Parameters) {
 
         // step 3: prepare all tasks in topological order.
         struct PendingTask {
-            Workflow::Task * task;
+            Workflow::Task *                          task;
             std::unique_ptr<Action::ExecutionContext> context;
         };
         DynaArray<PendingTask> pendingTasks;
-        bool hasWarning = false;
+        bool                   hasWarning = false;
         for (size_t workflowIdx : executionOrder) {
             Workflow * workflow = mValidatedWorkflows[workflowIdx];
             GN_ASSERT(workflow);
@@ -174,7 +174,7 @@ Submission::Result SubmissionImpl::run(Parameters) {
                 Workflow::Task & task = workflow->tasks[taskIdx];
                 GN_ASSERT(task.action && task.arguments); // have been validated in validateTask().
                 auto [result, context] = task.action->prepare(*this, *task.arguments);
-                auto contextPtr = std::unique_ptr<Action::ExecutionContext>(context);
+                auto contextPtr        = std::unique_ptr<Action::ExecutionContext>(context);
                 if (result == Action::ExecutionResult::FAILED) {
                     GN_ERROR(sLogger)("Task '{}' preparation failed", task.action->name);
                     return setResult(Action::ExecutionResult::FAILED);

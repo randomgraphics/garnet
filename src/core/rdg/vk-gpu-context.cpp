@@ -11,9 +11,16 @@ namespace GN::rdg {
 
 GpuContextVulkan::GpuContextVulkan(ArtifactDatabase & db, const StrA & name, const CreateParameters & /* params */)
     : GpuContextCommon(db, name, GpuContextCommon::Api::Vulkan) {
-    if (0 == sequence) return;
+    if (0 == sequence) {
+        GN_ERROR(sLogger)("GpuContextVulkan::GpuContextVulkan: duplicate type+name, name='{}'", name);
+        return;
+    }
     rapid_vulkan::Instance::ConstructParameters ip;
     mInstance.emplace(ip);
+    if (!mInstance->handle()) {
+        GN_ERROR(sLogger)("GpuContextVulkan::GpuContextVulkan: failed to create Vulkan instance, name='{}'", name);
+        return;
+    }
     rapid_vulkan::Device::ConstructParameters dp;
     dp.setInstance(mInstance->handle());
     mDevice.emplace(dp);
@@ -24,13 +31,9 @@ GpuContextVulkan::GpuContextVulkan(ArtifactDatabase & db, const StrA & name, con
 // =============================================================================
 
 AutoRef<GpuContext> createVulkanGpuContext(ArtifactDatabase & db, const StrA & name, const GpuContext::CreateParameters & params) {
-    auto * p = new GpuContextVulkan(db, name, params);
-    if (p->sequence == 0) {
-        GN_ERROR(sLogger)("createVulkanGpuContext: duplicate type+name, name='{}'", name);
-        delete p;
-        return {};
-    }
-    return AutoRef<GpuContext>(p);
+    auto p = std::make_unique<GpuContextVulkan>(db, name, params);
+    if (p->sequence == 0 || !p->instance().handle() || !p->device().handle()) return {};
+    return AutoRef<GpuContext>(p.release());
 }
 
 } // namespace GN::rdg
