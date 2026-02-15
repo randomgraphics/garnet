@@ -1,6 +1,6 @@
 #include "vk-draw-actions.h"
-#include "vk-commandbuffer.h"
-#include "vk-renderpass.h"
+#include "vk-command-buffer.h"
+#include "vk-render-pass.h"
 #include "submission.h"
 
 namespace GN::rdg {
