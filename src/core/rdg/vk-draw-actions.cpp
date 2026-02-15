@@ -131,7 +131,7 @@ public:
     }
 };
 
-AutoRef<ClearRenderTarget> ClearRenderTarget::create(ArtifactDatabase & db, const StrA & name, const CreateParameters &) {
+AutoRef<ClearRenderTarget> createVulkanClearRenderTarget(ArtifactDatabase & db, const StrA & name, const ClearRenderTarget::CreateParameters &) {
     return AutoRef<ClearRenderTarget>(new ClearRenderTargetVulkan(db, name));
 }
 

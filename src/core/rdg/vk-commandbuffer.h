@@ -1,6 +1,7 @@
 #pragma once
 #include "submission.h"
 #include "vk-gpu-context.h"
+#include <garnet/base/array.h>
 
 namespace GN::rdg {
 
@@ -35,6 +36,22 @@ public:
     /// Called by task in execution pass to retrieve the requested command buffer.
     /// If the submit flag is set, the caller must submit the command buffer to the queue, or drop it on failure.
     CommandBuffer execute(uint64_t commandBufferId);
+
+private:
+    struct Entry {
+        CommandBufferType                                      type {};
+        bool                                                   submit {};
+        rapid_vulkan::Ref<rapid_vulkan::CommandQueue>          queue;
+        rapid_vulkan::CommandBuffer                            commandBuffer;
+    };
+
+    rapid_vulkan::Ref<rapid_vulkan::CommandQueue> getQueueForType(CommandBufferType type) const;
+
+    AutoRef<GpuContextVulkan>                                               mGpu;
+    rapid_vulkan::Ref<rapid_vulkan::CommandQueue>                           mGraphicsQueue;
+    rapid_vulkan::Ref<rapid_vulkan::CommandQueue>                           mComputeQueue;
+    rapid_vulkan::Ref<rapid_vulkan::CommandQueue>                           mTransferQueue;
+    DynaArray<Entry>                                                        mEntries;
 };
 
 } // namespace GN::rdg
