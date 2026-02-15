@@ -12,7 +12,7 @@ struct RenderTarget {
 
     struct DepthStencil {
         std::variant<AutoRef<Texture>> target;
-        Texture::SubresourceIndex      subresourceIndex;
+        Texture::SubresourceIndex      subresourceIndex {};
     };
 
     StackArray<ColorTarget, 8> colors;
@@ -128,8 +128,8 @@ struct TextureReadback : public Action {
     struct A : public Arguments {
         inline static constexpr Guid TYPE = {0x5a6b7c8d, 0x9e0f, 0x1a2b, {0x3c, 0x4d, 0x5e, 0x6f, 0x7a, 0x8b, 0x9c, 0x0d}};
         A(): Arguments(TYPE) {}
-        ReadOnly<std::variant<AutoRef<Texture>, AutoRef<Backbuffer>>> texture; ///< input texture/backbuffer
-        WriteOnly<gfx::img::Image>                                    image;   ///< output image (will be cleared and filled with the texture content)
+        ReadOnly<std::variant<AutoRef<Texture>, AutoRef<Backbuffer>>> source;      ///< input texture/backbuffer
+        WriteOnly<gfx::img::Image>                                    destination; ///< output image (will be cleared and filled with the texture content)
     };
 
     struct CreateParameters {

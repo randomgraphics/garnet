@@ -34,16 +34,16 @@ int main(int, const char **) {
     if (!backbuffer) return -1;
 
     // Create actions
-    auto prepareAction = PrepareBackbuffer::create(*db, "prepare_action", PrepareBackbuffer::CreateParameters {.context = gpuContext});
+    auto prepareAction = PrepareBackbuffer::create(*db, "prepare_action", PrepareBackbuffer::CreateParameters {.gpu = gpuContext});
     if (!prepareAction) return -1;
 
-    auto clearAction = ClearRenderTarget::create(*db, "clear_action", ClearRenderTarget::CreateParameters {.context = gpuContext});
+    auto clearAction = ClearRenderTarget::create(*db, "clear_action", ClearRenderTarget::CreateParameters {.gpu = gpuContext});
     if (!clearAction) return -1;
 
-    auto presentAction = PresentBackbuffer::create(*db, "present_action", PresentBackbuffer::CreateParameters {.context = gpuContext});
+    auto presentAction = PresentBackbuffer::create(*db, "present_action", PresentBackbuffer::CreateParameters {.gpu = gpuContext});
     if (!presentAction) return -1;
 
-    auto textureReadbackAction = TextureReadback::create(*db, "texture_readback_action", TextureReadback::CreateParameters {.context = gpuContext});
+    auto textureReadbackAction = TextureReadback::create(*db, "texture_readback_action", TextureReadback::CreateParameters {.gpu = gpuContext});
     if (!textureReadbackAction) return -1;
 
     // Schedule render workflow
@@ -68,16 +68,15 @@ int main(int, const char **) {
     clearTask.action = clearAction;
     auto clearArgs   = AutoRef<ClearRenderTarget::A>(new ClearRenderTarget::A());
 
-    auto color = ClearRenderTarget::A::ClearColor {};
-    color.r    = 0.39f;
-    color.g    = 0.58f;
-    color.b    = 0.93f;
-    color.a    = 1.0f;
-    clearArgs->color.set(color);
+    auto color = ClearRenderTarget::A::ClearValues {};
+    color.colors[0].f4[0]    = 0.39f;
+    color.colors[0].f4[1]    = 0.58f;
+    color.colors[0].f4[2]    = 0.93f;
+    color.colors[0].f4[3]    = 1.0f;
+    clearArgs->clearValues.set(color);
 
     auto rt   = RenderTarget {};
-    rt.target = backbuffer;
-    rt.sub    = Texture::SubresourceIndex();
+    rt.colors[0].target = backbuffer;
     clearArgs->renderTarget.set(rt);
 
     clearTask.arguments = clearArgs;
@@ -95,7 +94,7 @@ int main(int, const char **) {
     auto textureReadbackTask   = Workflow::Task {};
     textureReadbackTask.action = textureReadbackAction;
     auto textureReadbackArgs   = AutoRef<TextureReadback::A>(new TextureReadback::A());
-    textureReadbackArgs->texture.set(backbuffer);
+    textureReadbackArgs->source.set(backbuffer);
     textureReadbackTask.arguments = textureReadbackArgs;
     renderWorkflow->tasks.append(textureReadbackTask);
 
@@ -108,12 +107,16 @@ int main(int, const char **) {
 
     // Wait for completion and get result
     auto result = submission->result();
-    if (result.result != Action::ExecutionResult::PASSED) {
-        GN_WARN(sLogger)("Render graph submission: {}", result.result == Action::ExecutionResult::FAILED ? "FAILED" : "WARNING");
+    if (Action::ExecutionResult::FAILED == result.executionResult) {
+        GN_ERROR(sLogger)("Render graph submission failed");
+        return -1;
+    }
+    if (Action::ExecutionResult::WARNING == result.executionResult) {
+        GN_WARN(sLogger)("Render graph submission completed with warnings");
     }
 
     // save the image to file.
-    auto image = textureReadbackArgs->image.get();
+    auto image = textureReadbackArgs->destination.get();
     if (!image) {
         GN_ERROR(sLogger)("Failed to get image from texture readback action");
         return -1;
