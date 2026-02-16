@@ -41,6 +41,9 @@ rapid_vulkan::Ref<rapid_vulkan::CommandQueue> CommandBufferManagerVulkan::getQue
     return mGraphicsQueue;
 }
 
+// Prepares a command buffer for recording: obtains or reuses a primary command buffer
+// for the given type (graphics/compute/transfer). Starts a new buffer when the type
+// changes or when there are no entries. Returns a 1-based command buffer ID, or 0 on failure.
 uint64_t CommandBufferManagerVulkan::prepare(CommandBufferType type) {
     rapid_vulkan::Ref<rapid_vulkan::CommandQueue> queue = getQueueForType(type);
     if (queue.empty()) GN_UNLIKELY {
@@ -66,6 +69,8 @@ uint64_t CommandBufferManagerVulkan::prepare(CommandBufferType type) {
     return static_cast<uint64_t>(mEntries.size());
 }
 
+// Resolves a 1-based command buffer ID to a CommandBuffer handle for recording.
+// Marks the last entry in the batch for submission. Returns an empty handle on invalid ID.
 CommandBufferManagerVulkan::CommandBuffer CommandBufferManagerVulkan::execute(uint64_t commandBufferId) {
     if (commandBufferId == 0) GN_UNLIKELY {
             GN_ERROR(sLogger)("CommandBufferManagerVulkan::execute: invalid commandBufferId 0");
