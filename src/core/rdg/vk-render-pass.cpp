@@ -11,11 +11,13 @@ RenderPassManagerVulkan::RenderPassManagerVulkan(const ConstructParameters &): S
 RenderPassManagerVulkan::~RenderPassManagerVulkan() {}
 
 uint64_t RenderPassManagerVulkan::prepare(const RenderTarget & renderTarget) {
+    GN_ERROR(sLogger)("RenderPassManagerVulkan::prepare: not implemented");
     (void) renderTarget;
     return 0;
 }
 
 RenderPassManagerVulkan::RenderPass RenderPassManagerVulkan::execute(uint64_t renderPassId) {
+    GN_ERROR(sLogger)("RenderPassManagerVulkan::execute: not implemented");
     (void) renderPassId;
     return RenderPass();
 }

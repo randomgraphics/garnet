@@ -10,13 +10,13 @@ namespace GN::rdg {
 
 static StrA resolveApi(const StrA & api) {
     if (api.empty() || api == "auto") {
-#if GN_WINPC
-        return "d3d12";
-#elif GN_DARWIN
-        return "metal";
-#else
+        // #if GN_WINPC
+        //         return "d3d12";
+        // #elif GN_DARWIN
+        //         return "metal";
+        // #else
         return "vulkan";
-#endif
+        // #endif
     }
     StrA out = api;
     out.toLower();

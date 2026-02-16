@@ -72,7 +72,8 @@ int main(int, const char **) {
     color.colors[0].f4[3] = 1.0f;
     clearArgs->clearValues.set(color);
 
-    auto rt             = RenderTarget {};
+    auto rt = RenderTarget {};
+    rt.colors.resize(1);
     rt.colors[0].target = backbuffer;
     clearArgs->renderTarget.set(rt);
 
