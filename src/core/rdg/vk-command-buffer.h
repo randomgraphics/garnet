@@ -39,19 +39,19 @@ public:
 
 private:
     struct Entry {
-        CommandBufferType                                      type {};
-        bool                                                   submit {};
-        rapid_vulkan::Ref<rapid_vulkan::CommandQueue>          queue;
-        rapid_vulkan::CommandBuffer                            commandBuffer;
+        CommandBufferType                             type {};
+        bool                                          submit {};
+        rapid_vulkan::Ref<rapid_vulkan::CommandQueue> queue;
+        rapid_vulkan::CommandBuffer                   commandBuffer;
     };
 
     rapid_vulkan::Ref<rapid_vulkan::CommandQueue> getQueueForType(CommandBufferType type) const;
 
-    AutoRef<GpuContextVulkan>                                               mGpu;
-    rapid_vulkan::Ref<rapid_vulkan::CommandQueue>                           mGraphicsQueue;
-    rapid_vulkan::Ref<rapid_vulkan::CommandQueue>                           mComputeQueue;
-    rapid_vulkan::Ref<rapid_vulkan::CommandQueue>                           mTransferQueue;
-    DynaArray<Entry>                                                        mEntries;
+    AutoRef<GpuContextVulkan>                     mGpu;
+    rapid_vulkan::Ref<rapid_vulkan::CommandQueue> mGraphicsQueue;
+    rapid_vulkan::Ref<rapid_vulkan::CommandQueue> mComputeQueue;
+    rapid_vulkan::Ref<rapid_vulkan::CommandQueue> mTransferQueue;
+    DynaArray<Entry>                              mEntries;
 };
 
 } // namespace GN::rdg

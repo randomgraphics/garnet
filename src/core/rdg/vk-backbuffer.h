@@ -20,6 +20,7 @@ public:
 
     auto gpu() const -> GpuContext & override { return *mGpuContext; }
     auto descriptor() const -> const Backbuffer::Descriptor & override { return mDescriptor; }
+    auto readback() const -> gfx::img::Image override;
 
     void prepare() override;
     void present() override;

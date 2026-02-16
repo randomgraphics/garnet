@@ -122,26 +122,6 @@ protected:
     using Action::Action;
 };
 
-struct TextureReadback : public Action {
-    inline static constexpr Guid TYPE = {0x5a6b7c8d, 0x9e0f, 0x1a2b, {0x3c, 0x4d, 0x5e, 0x6f, 0x7a, 0x8b, 0x9c, 0x0d}};
-
-    struct A : public Arguments {
-        inline static constexpr Guid TYPE = {0x5a6b7c8d, 0x9e0f, 0x1a2b, {0x3c, 0x4d, 0x5e, 0x6f, 0x7a, 0x8b, 0x9c, 0x0d}};
-        A(): Arguments(TYPE) {}
-        ReadOnly<std::variant<AutoRef<Texture>, AutoRef<Backbuffer>>> source;      ///< input texture/backbuffer
-        WriteOnly<gfx::img::Image>                                    destination; ///< output image (will be cleared and filled with the texture content)
-    };
-
-    struct CreateParameters {
-        AutoRef<GpuContext> gpu;
-    };
-
-    static GN_API AutoRef<TextureReadback> create(ArtifactDatabase & db, const StrA & name, const CreateParameters & params);
-
-protected:
-    using Action::Action;
-};
-
 /// Setup render states action for configuring GPU render pipeline state.
 struct SetupRenderStates : public Action {
     inline static constexpr Guid TYPE = {0x7c8d9e0f, 0x1a2b, 0x3c4d, {0x5e, 0x6f, 0x7a, 0x8b, 0x9c, 0x0d, 0x1e, 0x2f}};

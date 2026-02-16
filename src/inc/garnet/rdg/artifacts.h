@@ -74,6 +74,9 @@ struct Texture : public GpuResource {
     /// Return the current texture descriptor.
     virtual const Descriptor & descriptor() const = 0;
 
+    /// Read the texture content into an image.
+    virtual gfx::img::Image readback() const = 0;
+
     /// Create a new instance of empty Texture The texture is not bound to any GPU resource yet. Must call reset() at least once for the texture to be valid to
     /// use.
     static GN_API AutoRef<Texture> create(ArtifactDatabase & db, const StrA & name, const CreateParameters & params);
@@ -107,6 +110,9 @@ struct Backbuffer : public GpuResource {
 
     /// Return the current backbuffer descriptor.
     virtual const Descriptor & descriptor() const = 0;
+
+    /// Read the content into an image.
+    virtual gfx::img::Image readback() const = 0;
 
     /// Create a new instance of Backbuffer.
     static GN_API AutoRef<Backbuffer> create(ArtifactDatabase & db, const StrA & name, const CreateParameters & params);

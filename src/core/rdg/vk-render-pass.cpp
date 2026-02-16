@@ -4,7 +4,7 @@ namespace GN::rdg {
 
 static GN::Logger * sLogger = GN::getLogger("GN.rdg");
 
-RenderPassManagerVulkan::RenderPassManagerVulkan(const ConstructParameters &) : SubmissionImpl::Context(TYPE) {
+RenderPassManagerVulkan::RenderPassManagerVulkan(const ConstructParameters &): SubmissionImpl::Context(TYPE) {
     // to be implemented
 }
 

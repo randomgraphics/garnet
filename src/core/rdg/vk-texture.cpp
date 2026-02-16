@@ -24,6 +24,12 @@ bool TextureVulkan::init(const Texture::CreateParameters & params) {
     return true;
 }
 
+gfx::img::Image TextureVulkan::readback() const {
+    // TODO: read back the texture content into an image
+    GN_ERROR(sLogger)("TextureVulkan::readback: not implemented");
+    return gfx::img::Image();
+}
+
 AutoRef<Texture> createVulkanTexture(ArtifactDatabase & db, const StrA & name, const Texture::CreateParameters & params) {
     auto * p = new TextureVulkan(db, name);
     if (p->sequence == 0) {
@@ -52,8 +58,8 @@ bool TextureVulkan::initFromLoad(const Texture::LoadParameters & params) {
 }
 
 AutoRef<Texture> loadVulkanTexture(ArtifactDatabase & db, const Texture::LoadParameters & params) {
-    StrA name = params.filename;
-    auto * p  = new TextureVulkan(db, name);
+    StrA   name = params.filename;
+    auto * p    = new TextureVulkan(db, name);
     if (p->sequence == 0) {
         GN_ERROR(sLogger)("loadVulkanTexture: duplicate type+name, name='{}'", name);
         delete p;
@@ -64,45 +70,6 @@ AutoRef<Texture> loadVulkanTexture(ArtifactDatabase & db, const Texture::LoadPar
         return {};
     }
     return AutoRef<Texture>(p);
-}
-
-// =============================================================================
-// TextureReadbackVulkan
-// =============================================================================
-
-TextureReadbackVulkan::TextureReadbackVulkan(ArtifactDatabase & db, const StrA & name): TextureReadback(db, TYPE, name) {}
-
-std::pair<Action::ExecutionResult, Action::ExecutionContext *> TextureReadbackVulkan::prepare(Submission &, Arguments &) {
-    // TODO: allocate staging buffer / record copy texture-to-buffer
-    return std::make_pair(Action::PASSED, nullptr);
-}
-
-Action::ExecutionResult TextureReadbackVulkan::execute(Submission &, Arguments & arguments, ExecutionContext *) {
-    auto * a = arguments.castTo<TextureReadback::A>();
-    if (!a) {
-        GN_ERROR(sLogger)("TextureReadbackVulkan::execute: invalid arguments");
-        return FAILED;
-    }
-    auto * src = a->source.get();
-    auto * dst = a->destination.get();
-    if (!src || !dst) {
-        GN_ERROR(sLogger)("TextureReadbackVulkan::execute: source or destination not set");
-        return FAILED;
-    }
-    // TODO: copy from texture/backbuffer to staging, then to gfx::img::Image
-    (void) src;
-    (void) dst;
-    return Action::PASSED;
-}
-
-AutoRef<TextureReadback> createVulkanTextureReadback(ArtifactDatabase & db, const StrA & name, const TextureReadback::CreateParameters &) {
-    auto * p = new TextureReadbackVulkan(db, name);
-    if (p->sequence == 0) {
-        GN_ERROR(sLogger)("createVulkanTextureReadback: duplicate type+name, name='{}'", name);
-        delete p;
-        return {};
-    }
-    return AutoRef<TextureReadback>(p);
 }
 
 } // namespace GN::rdg

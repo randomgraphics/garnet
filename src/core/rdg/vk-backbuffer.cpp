@@ -87,6 +87,12 @@ bool BackbufferVulkan::init(const Backbuffer::CreateParameters & params) {
     return true;
 }
 
+gfx::img::Image BackbufferVulkan::readback() const {
+    // TODO: read back the backbuffer content into an image
+    GN_ERROR(sLogger)("BackbufferVulkan::readback: not implemented");
+    return gfx::img::Image();
+}
+
 void BackbufferVulkan::prepare() {
     if (mSwapchain.valid()) mSwapchain->beginFrame();
 }
