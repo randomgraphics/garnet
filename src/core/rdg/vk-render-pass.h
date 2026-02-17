@@ -11,7 +11,7 @@ public:
     RenderPassManagerVulkan(): SubmissionImpl::Context(TYPE) {}
 
     struct ConstructParameters {
-        AutoRef<GpuContext> gpu;
+        AutoRef<GpuContextVulkan> gpu;
     };
 
     struct RenderPass {

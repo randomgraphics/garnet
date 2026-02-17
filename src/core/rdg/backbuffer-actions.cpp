@@ -18,7 +18,12 @@ public:
 
     std::pair<ExecutionResult, ExecutionContext *> prepare(Submission &, Arguments &) override { return std::make_pair(PASSED, nullptr); }
 
-    ExecutionResult execute(Submission &, Arguments & arguments, ExecutionContext *) override {
+    ExecutionResult execute(Submission & submission, Arguments & arguments, ExecutionContext *) override {
+        auto submissionImpl = static_cast<SubmissionImpl *>(&submission);
+        if (!submissionImpl) GN_UNLIKELY {
+                GN_ERROR(sLogger)("PrepareBackbuffer::execute: submission is not SubmissionImpl");
+                return FAILED;
+            }
         auto * a = arguments.castTo<PrepareBackbuffer::A>();
         if (!a) {
             GN_ERROR(sLogger)("PrepareBackbuffer::execute: invalid arguments");
@@ -34,7 +39,7 @@ public:
             GN_ERROR(sLogger)("PrepareBackbuffer::execute: backbuffer is not BackbufferCommon");
             return FAILED;
         }
-        common->prepare();
+        common->prepare(*submissionImpl);
         return PASSED;
     }
 };
@@ -60,7 +65,12 @@ public:
 
     std::pair<ExecutionResult, ExecutionContext *> prepare(Submission &, Arguments &) override { return std::make_pair(PASSED, nullptr); }
 
-    ExecutionResult execute(Submission &, Arguments & arguments, ExecutionContext *) override {
+    ExecutionResult execute(Submission & submission, Arguments & arguments, ExecutionContext *) override {
+        auto submissionImpl = static_cast<SubmissionImpl *>(&submission);
+        if (!submissionImpl) GN_UNLIKELY {
+                GN_ERROR(sLogger)("PresentBackbuffer::execute: submission is not SubmissionImpl");
+                return FAILED;
+            }
         auto * a = arguments.castTo<PresentBackbuffer::A>();
         if (!a) GN_UNLIKELY {
                 GN_ERROR(sLogger)("PresentBackbuffer::execute: invalid arguments");
@@ -76,7 +86,7 @@ public:
                 GN_ERROR(sLogger)("PresentBackbuffer::execute: backbuffer is not BackbufferCommon");
                 return FAILED;
             }
-        common->present();
+        common->present(*submissionImpl);
         return PASSED;
     }
 };

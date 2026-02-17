@@ -93,15 +93,43 @@ gfx::img::Image BackbufferVulkan::readback() const {
     return gfx::img::Image();
 }
 
-void BackbufferVulkan::prepare() {
-    if (mSwapchain.valid()) mSwapchain->beginFrame();
+Action::ExecutionResult BackbufferVulkan::prepare(SubmissionImpl & submission) {
+    if (!mSwapchain.valid()) GN_UNLIKELY {
+            GN_ERROR(sLogger)("BackbufferVulkan::prepare: swapchain not initialized");
+            return Action::ExecutionResult::FAILED;
+        }
+    // Retrieve or create the FrameExecutionContext for this submission
+    auto & ctx = submission.ensureExecutionContext<FrameExecutionContextVulkan>();
+    if (ctx.bb2frame.find(this->sequence) != ctx.bb2frame.end()) GN_UNLIKELY {
+            GN_WARN(sLogger)("BackbufferVulkan::prepare: already prepared. Redundant call is ignored.");
+            return Action::ExecutionResult::WARNING;
+        }
+    // Call beginFrame and store the mapping from 'this' backbuffer to the frame pointer
+    const auto * frame = mSwapchain->beginFrame();
+    if (!frame) GN_UNLIKELY {
+            GN_ERROR(sLogger)("BackbufferVulkan::prepare: beginFrame failed");
+            return Action::ExecutionResult::FAILED;
+        }
+    ctx.bb2frame[this->sequence] = frame;
+    return Action::ExecutionResult::PASSED;
 }
 
-void BackbufferVulkan::present() {
-    if (mSwapchain.valid()) {
-        rapid_vulkan::Swapchain::PresentParameters pp;
-        mSwapchain->present(pp);
-    }
+Action::ExecutionResult BackbufferVulkan::present(SubmissionImpl & submission) {
+    if (!mSwapchain.valid()) GN_UNLIKELY {
+            GN_ERROR(sLogger)("BackbufferVulkan::present: swapchain not initialized");
+            return Action::ExecutionResult::FAILED;
+        }
+    // Retrieve or create the FrameExecutionContext for this submission
+    auto & ctx = submission.ensureExecutionContext<FrameExecutionContextVulkan>();
+    if (ctx.bb2frame.find(this->sequence) == ctx.bb2frame.end()) GN_UNLIKELY {
+            GN_ERROR(sLogger)("BackbufferVulkan::present: frame is not prepared yet. Call prepare() first.");
+            return Action::ExecutionResult::FAILED;
+        }
+    // Call present and remove the mapping from 'this' backbuffer to the frame pointer
+    ctx.bb2frame.erase(this->sequence);
+    rapid_vulkan::Swapchain::PresentParameters pp;
+    mSwapchain->present(pp);
+    return Action::ExecutionResult::PASSED;
 }
 
 // =============================================================================

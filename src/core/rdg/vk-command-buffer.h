@@ -10,7 +10,7 @@ public:
     inline static constexpr Guid TYPE = {0x6ad8b59d, 0xe672, 0x4b5e, {0x8e, 0xec, 0xf7, 0xac, 0xd4, 0xf1, 0x99, 0xdd}};
 
     struct ConstructParameters {
-        AutoRef<GpuContext> gpu;
+        AutoRef<GpuContextVulkan> gpu;
     };
 
     enum CommandBufferType {

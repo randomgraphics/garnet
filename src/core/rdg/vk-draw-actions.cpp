@@ -1,6 +1,9 @@
 #include "vk-draw-actions.h"
 #include "vk-command-buffer.h"
 #include "vk-render-pass.h"
+#include "vk-resource-tracker.h"
+#include "vk-backbuffer.h"
+#include "vk-texture.h"
 #include "submission.h"
 
 namespace GN::rdg {
@@ -23,9 +26,14 @@ public:
                 GN_ERROR(sLogger)("ClearRenderTargetVulkan::prepare: arguments is not ClearRenderTarget::A");
                 return std::make_pair(FAILED, nullptr);
             }
+        auto renderTarget = a->renderTarget.get();
+        if (!renderTarget) GN_UNLIKELY {
+                GN_ERROR(sLogger)("ClearRenderTargetVulkan::prepare: render target is null");
+                return std::make_pair(FAILED, nullptr);
+            }
 
         // acquire GpuContextVulkan from the a->target
-        auto gpu = a->renderTarget->gpu();
+        auto gpu = a->renderTarget->gpu().castTo<GpuContextVulkan>();
         if (!gpu) GN_UNLIKELY {
                 // The clear target is empty, this is allowed. But we still want to issue a warning.
                 GN_VERBOSE(sLogger)("ClearRenderTargetVulkan( name = '{}')::prepare: clear target is empty. Is this intentional?", name);
@@ -35,24 +43,25 @@ public:
         auto ctx = std::make_unique<DrawActionContextVulkan>();
 
         // prepare command buffer.
-        auto cbm = submissionImpl->getExecutionContext<CommandBufferManagerVulkan>();
-        if (!cbm) GN_UNLIKELY {
-                cbm = AutoRef<CommandBufferManagerVulkan>::make(CommandBufferManagerVulkan::ConstructParameters {.gpu = gpu});
-                submissionImpl->setExecutionContext(cbm);
-            }
-        ctx->commandBufferId = cbm->prepare(CommandBufferManagerVulkan::GRAPHICS);
+
+        auto & cbm           = submissionImpl->ensureExecutionContext<CommandBufferManagerVulkan>(CommandBufferManagerVulkan::ConstructParameters {.gpu = gpu});
+        ctx->commandBufferId = cbm.prepare(CommandBufferManagerVulkan::GRAPHICS);
         if (!ctx->commandBufferId) GN_UNLIKELY {
                 GN_ERROR(sLogger)("ClearRenderTargetVulkan::prepare: failed to prepare command buffer");
                 return std::make_pair(FAILED, nullptr);
             }
 
-        // prepare render pass
-        auto rpm = submissionImpl->getExecutionContext<RenderPassManagerVulkan>();
-        if (!rpm) GN_UNLIKELY {
-                rpm = AutoRef<RenderPassManagerVulkan>::make(RenderPassManagerVulkan::ConstructParameters {.gpu = gpu});
-                submissionImpl->setExecutionContext(rpm);
+        // call resource tracker to prepare the render target for the clear action.
+        auto & rt              = submissionImpl->ensureExecutionContext<ResourceTrackerVulkan>(ResourceTrackerVulkan::ConstructParameters {.gpu = gpu});
+        ctx->resourceTrackerId = rt.prepare(ResourceTrackerVulkan::ActionParameters {.renderTarget = renderTarget});
+        if (!ctx->resourceTrackerId) GN_UNLIKELY {
+                GN_ERROR(sLogger)("ClearRenderTargetVulkan::prepare: failed to prepare resource tracker");
+                return std::make_pair(FAILED, nullptr);
             }
-        ctx->renderPassId = rpm->prepare(*a->renderTarget.get());
+
+        // prepare render pass
+        auto & rpm        = submissionImpl->ensureExecutionContext<RenderPassManagerVulkan>(RenderPassManagerVulkan::ConstructParameters {.gpu = gpu});
+        ctx->renderPassId = rpm.prepare(*a->renderTarget.get());
         if (!ctx->renderPassId) GN_UNLIKELY {
                 GN_ERROR(sLogger)("ClearRenderTargetVulkan::prepare: failed to prepare render pass");
                 return std::make_pair(FAILED, nullptr);
@@ -92,6 +101,17 @@ public:
         auto cb = cbm->execute(ctx->commandBufferId);
         if (!cb.queue || !cb.commandBuffer) GN_UNLIKELY {
                 GN_ERROR(sLogger)("ClearRenderTargetVulkan::execute: failed to acquire command buffer");
+                return FAILED;
+            }
+
+        // execute resource tracker to update GPU resource layout and memory usage.
+        auto rt = submissionImpl->getExecutionContext<ResourceTrackerVulkan>();
+        if (!rt) GN_UNLIKELY {
+                GN_ERROR(sLogger)("ClearRenderTargetVulkan::execute: ResourceTrackerVulkan not found");
+                return FAILED;
+            }
+        if (!rt->execute(ctx->resourceTrackerId, cb.commandBuffer->handle())) GN_UNLIKELY {
+                GN_ERROR(sLogger)("ClearRenderTargetVulkan::execute: failed to execute resource tracker");
                 return FAILED;
             }
 

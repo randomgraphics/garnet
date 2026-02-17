@@ -50,15 +50,13 @@ struct Texture : public GpuResource {
     };
 
     struct SubresourceIndex {
-        uint32_t mip   = 0; ///< index into mipmap chain
-        uint32_t face  = 0; ///< index into array of faces
-        uint32_t slice = 0; ///< index into depth slice
+        uint32_t mip  = 0; ///< index into mipmap chain
+        uint32_t face = 0; ///< index into array of faces
     };
 
     struct SubresourceRange {
         uint32_t numMipLevels   = (uint32_t) -1; ///< -1 means all mip levels
         uint32_t numArrayLayers = (uint32_t) -1; ///< -1 means all array layers
-        uint32_t numDepthSlices = (uint32_t) -1; ///< -1 means all depth slices
     };
 
     struct CreateParameters {

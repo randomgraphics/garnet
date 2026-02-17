@@ -43,6 +43,15 @@ public:
         mExecutionContexts[ctx->type] = ctx;
     }
 
+    template<typename T, typename... Args>
+    T & ensureExecutionContext(Args... args) {
+        auto ctx = mExecutionContexts.find(T::TYPE);
+        if (ctx != mExecutionContexts.end()) { return *ctx->second->template castTo<T>(); }
+        auto newCtx                 = AutoRef<T>(new T(args...));
+        mExecutionContexts[T::TYPE] = newCtx;
+        return *newCtx;
+    }
+
 private:
     /// Deletes all work items and clears intermediate data (workflows, dependency graph). Safe to call multiple times.
     void cleanup(bool cleanupPendingWorkflows = true) noexcept;

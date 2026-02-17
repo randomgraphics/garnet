@@ -284,11 +284,11 @@ struct ShaderAction : public Action {
         AutoRef<Texture>          texture;
         gfx::img::PixelFormat     format = gfx::img::PixelFormat::UNKNOWN();
         Texture::SubresourceIndex subresourceIndex;
+        Texture::SubresourceRange subresourceRange;
     };
 
     struct TextureParameter : public ImageParameter {
-        AutoRef<Sampler>          sampler;
-        Texture::SubresourceRange subresourceRange;
+        AutoRef<Sampler> sampler;
     };
 
 protected:

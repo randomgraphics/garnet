@@ -8,6 +8,13 @@ namespace GN::rdg {
 // TextureVulkan
 // =============================================================================
 
+static rapid_vulkan::Ref<rapid_vulkan::Image> createVkImage(const Texture::Descriptor & descriptor) {
+    // TODO: create VkImage and allocate memory for the descriptor
+    GN_ERROR(sLogger)("createVkImage: not implemented");
+    (void) descriptor;
+    return {};
+}
+
 TextureVulkan::TextureVulkan(ArtifactDatabase & db, const StrA & name): TextureCommon(db, name) {
     if (sequence == 0) { GN_ERROR(sLogger)("TextureVulkan::TextureVulkan: duplicate type+name, name='{}'", name); }
 }
@@ -21,7 +28,8 @@ bool TextureVulkan::init(const Texture::CreateParameters & params) {
     mGpuContext.set(params.context.get());
     mDescriptor = params.descriptor;
     // TODO: create VkImage and allocate memory for the descriptor
-    return true;
+    mImage = createVkImage(mDescriptor);
+    return mImage && mImage->handle();
 }
 
 gfx::img::Image TextureVulkan::readback() const {

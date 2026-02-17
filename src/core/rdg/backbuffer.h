@@ -1,6 +1,7 @@
 #pragma once
 
 #include <garnet/GNrdg.h>
+#include "submission.h"
 
 namespace GN::rdg {
 
@@ -13,9 +14,9 @@ namespace GN::rdg {
 class BackbufferCommon : public Backbuffer {
 public:
     /// Beginning of a frame. Acquire backbuffer image; call before rendering.
-    virtual void prepare() = 0;
+    virtual Action::ExecutionResult prepare(SubmissionImpl & submission) = 0;
     /// End of a frame. Present to display; call after rendering.
-    virtual void present() = 0;
+    virtual Action::ExecutionResult present(SubmissionImpl & submission) = 0;
 
 protected:
     BackbufferCommon(ArtifactDatabase & db, const StrA & name): Backbuffer(db, TYPE, name) {}

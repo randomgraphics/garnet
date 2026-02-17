@@ -7,8 +7,9 @@ namespace GN::rdg {
 
 /// Vulkan texture: holds descriptor and GPU context; actual VkImage creation can be deferred or done in init().
 class TextureVulkan : public TextureCommon {
-    AutoRef<GpuContext> mGpuContext;
-    Texture::Descriptor mDescriptor;
+    AutoRef<GpuContext>                    mGpuContext;
+    Texture::Descriptor                    mDescriptor;
+    rapid_vulkan::Ref<rapid_vulkan::Image> mImage;
 
 public:
     TextureVulkan(ArtifactDatabase & db, const StrA & name);
@@ -18,6 +19,8 @@ public:
 
     /// Initialize from load parameters (create + load from file). Returns false on failure.
     bool initFromLoad(const Texture::LoadParameters & params);
+
+    vk::Image handle() const { return mImage.valid() ? mImage->handle() : vk::Image {}; }
 
     GpuContext &                gpu() const override { return *mGpuContext; }
     const Texture::Descriptor & descriptor() const override { return mDescriptor; }
