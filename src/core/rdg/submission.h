@@ -28,7 +28,7 @@ public:
     Result result() override;
 
     template<typename T>
-    AutoRef<T> getExecutionContext() {
+    AutoRef<T> getExecutionContext() const {
         auto ctx = mExecutionContexts.find(T::TYPE);
         if (ctx == mExecutionContexts.end()) { return {}; }
         GN_ASSERT(ctx->second->type == T::TYPE);

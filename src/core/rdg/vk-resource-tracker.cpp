@@ -1,5 +1,6 @@
 #include "vk-resource-tracker.h"
 #include "vk-texture.h"
+#include "vk-backbuffer.h"
 
 namespace GN::rdg {
 
@@ -67,6 +68,35 @@ private:
     uint32_t            mNumLayers = 0;
 };
 
+static inline std::pair<bool, vk::Image> getBackbufferImage(const SubmissionImpl & submission, const AutoRef<Backbuffer> * backbuffer) {
+    if (!backbuffer) {
+        // this is not an error, empty render target is allowed.
+        return {true, {}};
+    }
+    auto backbufferVk = backbuffer->castTo<BackbufferVulkan>();
+    auto ctx          = submission.getExecutionContext<FrameExecutionContextVulkan>();
+    if (!ctx) GN_UNLIKELY {
+            GN_ERROR(sLogger)
+            ("failed to get vk::Image from backbuffer: no frame execution context found. This is most likely due to rendering to a unprepared backbuffer.");
+            return {false, {}};
+        }
+    auto iter = ctx->bb2frame.find(backbufferVk->sequence);
+    if (iter == ctx->bb2frame.end()) {
+        GN_ERROR(sLogger)("failed to get vk::Image from backbuffer: the backbuffer {} is not prepared yet.", backbufferVk->name);
+        return {false, {}};
+    }
+    if (!iter->second->backbuffer || !iter->second->backbuffer->image) {
+        GN_ERROR(sLogger)("failed to get vk::Image from backbuffer: the backbuffer {} is not properly initialized or prepared.", backbufferVk->name);
+        return {false, {}};
+    }
+    auto image = iter->second->backbuffer->image->handle();
+    if (!image) {
+        GN_ERROR(sLogger)("failed to get vk::Image from backbuffer: backbuffer image is null.");
+        return {false, {}};
+    }
+    return {true, image};
+}
+
 // ---------------------------------------------------------------------------------------------------------------------
 // Layout/access/stage mapping from ResourceUsage (implementation detail)
 // ---------------------------------------------------------------------------------------------------------------------
@@ -130,7 +160,8 @@ static vk::ImageAspectFlags imageAspectFromUsage(ResourceTrackerVulkan::Resource
 // ResourceTrackerVulkan
 // ---------------------------------------------------------------------------------------------------------------------
 
-ResourceTrackerVulkan::ResourceTrackerVulkan(const ConstructParameters & params): SubmissionImpl::Context(TYPE), mGpu(params.gpu) {}
+ResourceTrackerVulkan::ResourceTrackerVulkan(const ConstructParameters & params)
+    : SubmissionImpl::Context(TYPE), mSubmission(params.submission), mGpu(params.gpu) {}
 
 ResourceTrackerVulkan::~ResourceTrackerVulkan() = default;
 
@@ -165,8 +196,8 @@ bool ResourceTrackerVulkan::execute(const ActionParameters & action, vk::Command
             [&](uint32_t mip, uint32_t face) {
                 const ResourceTrackerVulkan::ImageKey key = {image, mip, face};
                 auto                                  it  = mImageState.find(key);
-                ImageState                            cur;
-                if (it != mImageState.end()) { cur = it->second; }
+                ImageState                            cur; // default to undefined state.
+                if (it != mImageState.end()) { cur = it->second.curr; }
 
                 if (cur.layout != newLayout || (cur.layout == vk::ImageLayout::eUndefined)) {
                     vk::AccessFlags srcAccess = cur.access;
@@ -175,10 +206,7 @@ bool ResourceTrackerVulkan::execute(const ActionParameters & action, vk::Command
                     combinedDstStage |= newStage;
                     const vk::ImageSubresourceRange range(aspect, mip, 1, face, 1);
                     barrier.i(image, srcAccess, newAccess, cur.layout, newLayout, range);
-                    cur.layout       = newLayout;
-                    cur.access       = newAccess;
-                    cur.stage        = newStage;
-                    mImageState[key] = cur;
+                    it->second.transitTo({newLayout, newAccess, newStage});
                 }
                 return true;
             },
@@ -196,6 +224,38 @@ bool ResourceTrackerVulkan::execute(const ActionParameters & action, vk::Command
         barrier.s(combinedSrcStage, combinedDstStage);
         barrier.cmdWrite(commandBuffer);
     }
+
+    // determine the render target usage and layout
+    if (action.renderTarget) {
+        for (const auto & color : action.renderTarget->colors) {
+            auto t = std::get_if<AutoRef<Texture>>(&color.target);
+            if (t) {
+                // we are rendering into a render target texture.
+                auto * texVk = dynamic_cast<TextureVulkan *>(t->get());
+                if (texVk && texVk->handle()) GN_LIKELY {
+                        // Mark this image to COLOR_ATTACHMENT_OPTIMAL layout.
+                        // We don't actually do layout transition here. The render pass manager will do it.
+                        vk::Image      image = texVk->handle();
+                        const ImageKey key   = {image, color.subresourceIndex.mip, color.subresourceIndex.face};
+                        mImageState[key].transitTo({vk::ImageLayout::eColorAttachmentOptimal,
+                                                    vk::AccessFlagBits::eColorAttachmentRead | vk::AccessFlagBits::eColorAttachmentWrite,
+                                                    vk::PipelineStageFlagBits::eColorAttachmentOutput});
+                    }
+                else { GN_VERBOSE(sLogger)("ResourceTrackerVulkan::execute: render target texture is null."); }
+            } else {
+                auto [success, image] = getBackbufferImage(mSubmission, std::get_if<AutoRef<Backbuffer>>(&color.target));
+                if (!success) GN_UNLIKELY return false;
+                if (image) {
+                    const ImageKey key = {image, color.subresourceIndex.mip, color.subresourceIndex.face};
+                    mImageState[key].transitTo({vk::ImageLayout::eColorAttachmentOptimal,
+                                                vk::AccessFlagBits::eColorAttachmentRead | vk::AccessFlagBits::eColorAttachmentWrite,
+                                                vk::PipelineStageFlagBits::eColorAttachmentOutput});
+                }
+            }
+        }
+    }
+
+    // done.
     return true;
 }
 

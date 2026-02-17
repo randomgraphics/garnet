@@ -15,6 +15,7 @@ public:
     inline static constexpr Guid TYPE = {0x8d9e0f1a, 0x2b3c, 0x4d5e, {0x6f, 0x7a, 0x8b, 0x9c, 0x0d, 0x1e, 0x2f, 0x3a}};
 
     struct ConstructParameters {
+        SubmissionImpl &          submission;
         AutoRef<GpuContextVulkan> gpu;
     };
 
@@ -61,15 +62,44 @@ public:
         const RenderTarget *          renderTarget = nullptr;
     };
 
+    struct ImageState {
+        vk::ImageLayout        layout = vk::ImageLayout::eUndefined;
+        vk::AccessFlags        access {};
+        vk::PipelineStageFlags stage = vk::PipelineStageFlagBits::eTopOfPipe;
+
+        bool operator==(const ImageState & other) const { return layout == other.layout && access == other.access && stage == other.stage; }
+        bool operator!=(const ImageState & other) const { return !operator==(other); }
+    };
+
+    struct ImageStateTransition {
+        ImageState prev;
+        ImageState curr;
+        void       transitTo(const ImageState & newState) {
+                  if (curr != newState) {
+                      prev = curr;
+                      curr = newState;
+            }
+        }
+    };
+
     ResourceTrackerVulkan(const ConstructParameters & params);
     ~ResourceTrackerVulkan() override;
 
-    /// Execute pass: record barriers on \p commandBuffer so resources used by the action \p actionId
-    /// are in the correct layout/access. Call this from the action's execute() before using the resources.
+    /// Execute pass: record barriers on \p commandBuffer to transition resources to the correct layout/access.
+    /// Call this from the action's execute() before using the resources.
+    /// \param prepareId     The unique identifier returned from prepare() pass.
     /// \param params        The parameters of the action to track.
     /// \param commandBuffer Command buffer to record barriers into.
     /// \return true if barriers were recorded (or none needed), false on invalid \p actionId.
     bool execute(const ActionParameters & params, vk::CommandBuffer commandBuffer);
+
+    /// Query the current state of an image.
+    const ImageStateTransition * queryImageState(const vk::Image & image, uint32_t mip, uint32_t arrayLayer) const {
+        const ImageKey key = {image, mip, arrayLayer};
+        auto           it  = mImageState.find(key);
+        if (it == mImageState.end()) GN_UNLIKELY return nullptr;
+        return &it->second;
+    }
 
 private:
     struct ImageKey {
@@ -87,12 +117,6 @@ private:
         }
     };
 
-    struct ImageState {
-        vk::ImageLayout        layout = vk::ImageLayout::eUndefined;
-        vk::AccessFlags        access {};
-        vk::PipelineStageFlags stage = vk::PipelineStageFlagBits::eTopOfPipe;
-    };
-
     struct BufferKeyHash {
         size_t operator()(vk::Buffer b) const { return std::hash<uintptr_t>()(reinterpret_cast<uintptr_t>(static_cast<VkBuffer>(b))); }
     };
@@ -102,9 +126,10 @@ private:
         vk::PipelineStageFlags stage = vk::PipelineStageFlagBits::eTopOfPipe;
     };
 
-    AutoRef<GpuContextVulkan>                                  mGpu;
-    std::unordered_map<ImageKey, ImageState, ImageKeyHash>     mImageState;
-    std::unordered_map<vk::Buffer, BufferState, BufferKeyHash> mBufferState;
+    SubmissionImpl &                                                 mSubmission;
+    AutoRef<GpuContextVulkan>                                        mGpu;
+    std::unordered_map<ImageKey, ImageStateTransition, ImageKeyHash> mImageState;
+    std::unordered_map<vk::Buffer, BufferState, BufferKeyHash>       mBufferState;
 };
 
 } // namespace GN::rdg
