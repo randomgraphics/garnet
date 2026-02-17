@@ -17,21 +17,11 @@ struct RenderTarget {
 
     StackArray<ColorTarget, 8> colors;
     DepthStencil               depthStencil;
-
-    /// Retrieve the GPU context that the render target is bound to.
-    AutoRef<GpuContext> gpu() const {
-        for (const auto & color : colors) {
-            auto t = std::get_if<AutoRef<Texture>>(&color.target);
-            if (t && *t) return AutoRef<GpuContext> {&(*t)->gpu()};
-            auto b = std::get_if<AutoRef<Backbuffer>>(&color.target);
-            if (b && *b) return AutoRef<GpuContext> {&(*b)->gpu()};
-        }
-        auto d = std::get_if<AutoRef<Texture>>(&depthStencil.target);
-        if (d && *d) return AutoRef<GpuContext> {&(*d)->gpu()};
-        return {};
-    }
 };
 
+/// Clear render target to certain value. Discard existing content.
+/// This is the recommended first action to start rendering to a render target.
+/// It tells GPU to discard existing content thus avoid expensive image layout transitions.
 struct ClearRenderTarget : public Action {
     inline static constexpr Guid TYPE = {0x6ad8b59d, 0xe672, 0x4b5e, {0x8e, 0xec, 0xf7, 0xac, 0xd4, 0xf1, 0x99, 0xdd}};
 
@@ -62,25 +52,25 @@ protected:
     using Action::Action;
 };
 
-struct TextureLoader : public Action {
-    inline static constexpr Guid TYPE = {0x825a7724, 0xfecb, 0x49e2, {0xb7, 0x1f, 0xfc, 0x9d, 0x3a, 0xa2, 0x8b, 0x11}};
+// struct TextureLoader : public Action {
+//     inline static constexpr Guid TYPE = {0x825a7724, 0xfecb, 0x49e2, {0xb7, 0x1f, 0xfc, 0x9d, 0x3a, 0xa2, 0x8b, 0x11}};
 
-    struct A : public Arguments {
-        inline static constexpr Guid TYPE = {0x825a7724, 0xfecb, 0x49e2, {0xb7, 0x1f, 0xfc, 0x9d, 0x3a, 0xa2, 0x8b, 0x11}};
-        A(): Arguments(TYPE) {}
-        WriteOnly<AutoRef<Texture>> texture;  // Output texture resource
-        ReadOnly<StrA>              filename; // Path to texture file
-    };
+//     struct A : public Arguments {
+//         inline static constexpr Guid TYPE = {0x825a7724, 0xfecb, 0x49e2, {0xb7, 0x1f, 0xfc, 0x9d, 0x3a, 0xa2, 0x8b, 0x11}};
+//         A(): Arguments(TYPE) {}
+//         WriteOnly<AutoRef<Texture>> texture;  // Output texture resource
+//         ReadOnly<StrA>              filename; // Path to texture file
+//     };
 
-    struct CreateParameters {
-        // For future use
-    };
+//     struct CreateParameters {
+//         // For future use
+//     };
 
-    static GN_API AutoRef<TextureLoader> create(ArtifactDatabase & db, const StrA & name, const CreateParameters & params);
+//     static GN_API AutoRef<TextureLoader> create(ArtifactDatabase & db, const StrA & name, const CreateParameters & params);
 
-protected:
-    using Action::Action;
-};
+// protected:
+//     using Action::Action;
+// };
 
 struct PrepareBackbuffer : public Action {
     inline static constexpr Guid TYPE = {0x3e4f5a6b, 0x7c8d, 0x9e0f, {0x1a, 0x2b, 0x3c, 0x4d, 0x5e, 0x6f, 0x7a, 0x8b}};

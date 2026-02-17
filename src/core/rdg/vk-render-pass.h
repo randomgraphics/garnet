@@ -16,9 +16,7 @@ public:
 
     struct RenderPass {
         rapid_vulkan::Ref<rapid_vulkan::RenderPass> renderPass;
-        std::optional<vk::RenderPassBeginInfo>      beginInfo {}; // If has value, we must call renderPass.cmdBegin() before drawing to the render target.
-        bool                                        next {};      // If true, we must call renderPass.cmdNext() before drawing to the render target.
-        bool                                        end {};       // If true, we must call renderPass.cmdEnd() after drawing to the render target.
+        bool                                        end {}; // If true, we must call renderPass.cmdEnd() after drawing to the render target.
     };
 
     RenderPassManagerVulkan(const ConstructParameters & params);
@@ -34,7 +32,7 @@ public:
     /// - If the beginInfo has value, the caller must call renderPass.cmdBegin() before issue any draw commands.
     /// - If the next flag is true, the caller must call renderPass.cmdNext() before issue any draw commands.
     /// - If the end flag is true, the caller must call renderPass.cmdEnd() after issue all draw commands.
-    RenderPass execute(uint64_t renderTargetId);
+    RenderPass execute(uint64_t renderTargetId, vk::CommandBuffer commandBuffer);
 };
 
 } // namespace GN::rdg

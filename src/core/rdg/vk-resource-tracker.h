@@ -64,20 +64,12 @@ public:
     ResourceTrackerVulkan(const ConstructParameters & params);
     ~ResourceTrackerVulkan() override;
 
-    /// Prepare pass: register resource uses for the calling GPU action.
-    /// \param imageUses    Optional array of image uses (can be null if numImageUses == 0).
-    /// \param numImageUses Number of image uses.
-    /// \param bufferUses   Optional array of buffer uses (can be null if numBufferUses == 0).
-    /// \param numBufferUses Number of buffer uses.
-    /// \return Unique action ID (1-based). 0 on error.
-    uint64_t prepare(const ActionParameters & params);
-
     /// Execute pass: record barriers on \p commandBuffer so resources used by the action \p actionId
     /// are in the correct layout/access. Call this from the action's execute() before using the resources.
-    /// \param actionId      Action ID returned from prepare().
+    /// \param params        The parameters of the action to track.
     /// \param commandBuffer Command buffer to record barriers into.
     /// \return true if barriers were recorded (or none needed), false on invalid \p actionId.
-    bool execute(uint64_t actionId, vk::CommandBuffer commandBuffer);
+    bool execute(const ActionParameters & params, vk::CommandBuffer commandBuffer);
 
 private:
     struct ImageKey {
@@ -111,7 +103,6 @@ private:
     };
 
     AutoRef<GpuContextVulkan>                                  mGpu;
-    DynaArray<ActionParameters>                                mActions;
     std::unordered_map<ImageKey, ImageState, ImageKeyHash>     mImageState;
     std::unordered_map<vk::Buffer, BufferState, BufferKeyHash> mBufferState;
 };

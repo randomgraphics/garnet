@@ -230,10 +230,10 @@ struct Action : public Artifact {
         ExecutionContext(const Guid & type): RuntimeType(type) {}
     };
 
-    /// Prepare for execution. The execution context is optional. If can be null, if the action does not need an context.
+    /// Prepare for execution. Returns success code and an optional execution context that will be later passed to execute().
     virtual std::pair<ExecutionResult, ExecutionContext *> prepare(Submission & submission, Arguments & arguments) = 0;
 
-    /// Execute the action with the given arguments.
+    /// Execute the action with the given arguments. The context is the same as the one returned from prepare().
     virtual ExecutionResult execute(Submission & submission, Arguments & arguments, ExecutionContext * context) = 0;
 
 protected:

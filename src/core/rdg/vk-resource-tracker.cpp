@@ -134,32 +134,15 @@ ResourceTrackerVulkan::ResourceTrackerVulkan(const ConstructParameters & params)
 
 ResourceTrackerVulkan::~ResourceTrackerVulkan() = default;
 
-uint64_t ResourceTrackerVulkan::prepare(const ActionParameters & params) {
-    if (!mActions.append(params)) GN_UNLIKELY {
-            return 0;
-        }
-    return static_cast<uint64_t>(mActions.size());
-}
-
-bool ResourceTrackerVulkan::execute(uint64_t actionId, vk::CommandBuffer commandBuffer) {
-    if (actionId == 0) GN_UNLIKELY {
-            GN_ERROR(sLogger)("ResourceTrackerVulkan::execute: invalid actionId 0");
-            return false;
-        }
-    size_t index = static_cast<size_t>(actionId - 1);
-    if (index >= mActions.size()) GN_UNLIKELY {
-            GN_ERROR(sLogger)("ResourceTrackerVulkan::execute: actionId {} out of range", actionId);
-            return false;
-        }
+bool ResourceTrackerVulkan::execute(const ActionParameters & action, vk::CommandBuffer commandBuffer) {
     if (!commandBuffer) GN_UNLIKELY {
             GN_ERROR(sLogger)("ResourceTrackerVulkan::execute: null command buffer");
             return false;
         }
 
-    const ActionParameters & action = mActions[index];
-    rapid_vulkan::Barrier    barrier;
-    vk::PipelineStageFlags   combinedSrcStage {};
-    vk::PipelineStageFlags   combinedDstStage {};
+    rapid_vulkan::Barrier  barrier;
+    vk::PipelineStageFlags combinedSrcStage {};
+    vk::PipelineStageFlags combinedDstStage {};
 
     for (const TextureResourceUse & use : action.textures) {
         if (!use.texture) GN_UNLIKELY continue;

@@ -22,9 +22,10 @@ uint64_t RenderPassManagerVulkan::prepare(const RenderTarget & renderTarget) {
 
 // Retrieve the render pass information for a given ID (which is 1-based index into the internal render pass entry array)
 // Mark the last entry as need-to-end.
-RenderPassManagerVulkan::RenderPass RenderPassManagerVulkan::execute(uint64_t renderPassId) {
+RenderPassManagerVulkan::RenderPass RenderPassManagerVulkan::execute(uint64_t renderPassId, vk::CommandBuffer commandBuffer) {
     GN_ERROR(sLogger)("RenderPassManagerVulkan::execute: not implemented");
     (void) renderPassId;
+    (void) commandBuffer;
     return RenderPass();
 }
 

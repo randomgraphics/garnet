@@ -11,8 +11,10 @@ namespace GN::rdg {
 static GN::Logger * sLogger = getLogger("GN.rdg");
 
 class ClearRenderTargetVulkan : public ClearRenderTarget {
+    AutoRef<GpuContextVulkan> mGpu;
+
 public:
-    ClearRenderTargetVulkan(ArtifactDatabase & db, const StrA & name): ClearRenderTarget(db, TYPE, name) {}
+    ClearRenderTargetVulkan(ArtifactDatabase & db, const StrA & name, AutoRef<GpuContextVulkan> gpu): ClearRenderTarget(db, TYPE, name), mGpu(gpu) {}
 
     std::pair<ExecutionResult, ExecutionContext *> prepare(Submission & submission, Arguments & arguments) override {
         auto submissionImpl = static_cast<SubmissionImpl *>(&submission);
@@ -32,35 +34,19 @@ public:
                 return std::make_pair(FAILED, nullptr);
             }
 
-        // acquire GpuContextVulkan from the a->target
-        auto gpu = a->renderTarget->gpu().castTo<GpuContextVulkan>();
-        if (!gpu) GN_UNLIKELY {
-                // The clear target is empty, this is allowed. But we still want to issue a warning.
-                GN_VERBOSE(sLogger)("ClearRenderTargetVulkan( name = '{}')::prepare: clear target is empty. Is this intentional?", name);
-                return std::make_pair(WARNING, nullptr);
-            }
-
         auto ctx = std::make_unique<DrawActionContextVulkan>();
 
         // prepare command buffer.
 
-        auto & cbm           = submissionImpl->ensureExecutionContext<CommandBufferManagerVulkan>(CommandBufferManagerVulkan::ConstructParameters {.gpu = gpu});
+        auto & cbm = submissionImpl->ensureExecutionContext<CommandBufferManagerVulkan>(CommandBufferManagerVulkan::ConstructParameters {.gpu = mGpu});
         ctx->commandBufferId = cbm.prepare(CommandBufferManagerVulkan::GRAPHICS);
         if (!ctx->commandBufferId) GN_UNLIKELY {
                 GN_ERROR(sLogger)("ClearRenderTargetVulkan::prepare: failed to prepare command buffer");
                 return std::make_pair(FAILED, nullptr);
             }
 
-        // call resource tracker to prepare the render target for the clear action.
-        auto & rt              = submissionImpl->ensureExecutionContext<ResourceTrackerVulkan>(ResourceTrackerVulkan::ConstructParameters {.gpu = gpu});
-        ctx->resourceTrackerId = rt.prepare(ResourceTrackerVulkan::ActionParameters {.renderTarget = renderTarget});
-        if (!ctx->resourceTrackerId) GN_UNLIKELY {
-                GN_ERROR(sLogger)("ClearRenderTargetVulkan::prepare: failed to prepare resource tracker");
-                return std::make_pair(FAILED, nullptr);
-            }
-
         // prepare render pass
-        auto & rpm        = submissionImpl->ensureExecutionContext<RenderPassManagerVulkan>(RenderPassManagerVulkan::ConstructParameters {.gpu = gpu});
+        auto & rpm        = submissionImpl->ensureExecutionContext<RenderPassManagerVulkan>(RenderPassManagerVulkan::ConstructParameters {.gpu = mGpu});
         ctx->renderPassId = rpm.prepare(*a->renderTarget.get());
         if (!ctx->renderPassId) GN_UNLIKELY {
                 GN_ERROR(sLogger)("ClearRenderTargetVulkan::prepare: failed to prepare render pass");
@@ -82,7 +68,12 @@ public:
 
         auto a = arguments.castTo<ClearRenderTarget::A>();
         if (!a) GN_UNLIKELY {
-                GN_ERROR(sLogger)("ClearRenderTargetVulkan::execute: arguments is not ClearRenderTarget::A");
+                GN_ERROR(sLogger)("ClearRenderTargetVulkan::prepare: arguments is not ClearRenderTarget::A");
+                return FAILED;
+            }
+        auto renderTarget = a->renderTarget.get();
+        if (!renderTarget) GN_UNLIKELY {
+                GN_ERROR(sLogger)("ClearRenderTargetVulkan::prepare: render target is null");
                 return FAILED;
             }
 
@@ -105,12 +96,8 @@ public:
             }
 
         // execute resource tracker to update GPU resource layout and memory usage.
-        auto rt = submissionImpl->getExecutionContext<ResourceTrackerVulkan>();
-        if (!rt) GN_UNLIKELY {
-                GN_ERROR(sLogger)("ClearRenderTargetVulkan::execute: ResourceTrackerVulkan not found");
-                return FAILED;
-            }
-        if (!rt->execute(ctx->resourceTrackerId, cb.commandBuffer->handle())) GN_UNLIKELY {
+        auto & rt = submissionImpl->ensureExecutionContext<ResourceTrackerVulkan>(ResourceTrackerVulkan::ConstructParameters {.gpu = mGpu});
+        if (!rt.execute(ResourceTrackerVulkan::ActionParameters {.renderTarget = renderTarget}, cb.commandBuffer->handle())) GN_UNLIKELY {
                 GN_ERROR(sLogger)("ClearRenderTargetVulkan::execute: failed to execute resource tracker");
                 return FAILED;
             }
@@ -121,24 +108,13 @@ public:
                 GN_ERROR(sLogger)("ClearRenderTargetVulkan::execute: RenderPassManagerVulkan not found");
                 return FAILED;
             }
-        auto rp = rpm->execute(ctx->renderPassId);
+        auto rp = rpm->execute(ctx->renderPassId, cb.commandBuffer->handle());
         if (!rp.renderPass) GN_UNLIKELY {
                 GN_ERROR(sLogger)("ClearRenderTargetVulkan::execute: failed to acquire render pass");
                 return FAILED;
             }
 
-        // begin render pass, if asked to do so.
-        if (rp.beginInfo.has_value()) {
-            rp.renderPass->cmdBegin(cb.commandBuffer->handle(), rp.beginInfo.value());
-        } else {
-            // TODO: clear render target in the middle of a render pass.
-            GN_ERROR(sLogger)("ClearRenderTargetVulkan::execute: clear render target in the middle of a render pass is not supported");
-            (void) a;
-            hasWarning = true;
-        }
-
-        // forward to next subpass, if asked to do so.
-        if (rp.next) rp.renderPass->cmdNext(cb.commandBuffer->handle());
+        // TODO: do more graphics commands here.
 
         // end render pass, if asked to do so.
         if (rp.end) rp.renderPass->cmdEnd(cb.commandBuffer->handle());
@@ -151,8 +127,13 @@ public:
     }
 };
 
-AutoRef<ClearRenderTarget> createVulkanClearRenderTarget(ArtifactDatabase & db, const StrA & name, const ClearRenderTarget::CreateParameters &) {
-    return AutoRef<ClearRenderTarget>(new ClearRenderTargetVulkan(db, name));
+AutoRef<ClearRenderTarget> createVulkanClearRenderTarget(ArtifactDatabase & db, const StrA & name, const ClearRenderTarget::CreateParameters & params) {
+    auto gpu = params.gpu.castTo<GpuContextVulkan>();
+    if (!gpu) GN_UNLIKELY {
+            GN_ERROR(sLogger)("createVulkanClearRenderTarget: gpu is empty, name='{}'", name);
+            return {};
+        }
+    return AutoRef<ClearRenderTarget>(new ClearRenderTargetVulkan(db, name, gpu));
 }
 
 } // namespace GN::rdg
