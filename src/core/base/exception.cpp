@@ -8,6 +8,10 @@
     #include <sys/system_properties.h>
     #include <android/trace.h>
 #elif GN_POSIX || GN_MSWIN
+    #ifdef _MSC_VER
+    #pragma warning(disable: 4267) // conversion from 'size_t' to 'int', possible loss of data
+    #pragma warning(disable: 4996) // 'function': was declared deprecated
+    #endif
     #include <backward.hpp>
 #endif
 
