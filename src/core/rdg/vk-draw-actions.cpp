@@ -88,7 +88,7 @@ public:
         // execute resource tracker to update GPU resource layout and memory usage.
         auto & rt = submissionImpl.ensureExecutionContext<ResourceTrackerVulkan>(
             ResourceTrackerVulkan::ConstructParameters {.submission = submissionImpl, .gpu = mGpu});
-        if (!rt.execute(ResourceTrackerVulkan::ActionParameters {.renderTarget = a->renderTarget.get()}, cb.commandBuffer->handle())) GN_UNLIKELY {
+        if (!rt.execute(ResourceTrackerVulkan::ActionParameters().setRenderTarget(a->renderTarget.get()), cb.commandBuffer->handle())) GN_UNLIKELY {
                 GN_ERROR(sLogger)("ClearRenderTargetVulkan::execute: failed to execute resource tracker");
                 return FAILED;
             }

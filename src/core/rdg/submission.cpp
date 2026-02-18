@@ -175,11 +175,12 @@ Submission::Result SubmissionImpl::run(Parameters) {
             for (size_t taskIdx = 0; taskIdx < workflow->tasks.size(); ++taskIdx) {
                 Workflow::Task & task = workflow->tasks[taskIdx];
                 GN_ASSERT(task.action && task.arguments); // have been validated in validateTask().
-                pendingTasks.append(PendingTask {.task = &task,
-                                                 .info = TaskInfo {.submission = *this,
-                                                                   .workflow   = workflow->name.empty() ? StrA("[unnamed workflow]") : workflow->name,
-                                                                   .task       = task.name.empty() ? StrA("[unnamed task]") : task.name,
-                                                                   .index      = (uint64_t) pendingTasks.size()}});
+                pendingTasks.append(PendingTask {.task    = &task,
+                                                 .info    = TaskInfo {.submission = *this,
+                                                                      .workflow   = workflow->name.empty() ? StrA("[unnamed workflow]") : workflow->name,
+                                                                      .task       = task.name.empty() ? StrA("[unnamed task]") : task.name,
+                                                                      .index      = (uint64_t) pendingTasks.size()},
+                                                 .context = {}});
                 auto & pt              = pendingTasks.back();
                 auto [result, context] = task.action->prepare(pt.info, *task.arguments);
                 pt.context             = std::unique_ptr<Action::ExecutionContext>(context);

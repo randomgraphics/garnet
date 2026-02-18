@@ -58,6 +58,21 @@ public:
         DynaArray<TextureResourceUse> textures;
         DynaArray<BufferResourceUse>  buffers;
         const RenderTarget *          renderTarget = nullptr;
+
+        ActionParameters & addTexture(const TextureResourceUse & texture) {
+            textures.append(texture);
+            return *this;
+        }
+
+        ActionParameters & addBuffer(const BufferResourceUse & buffer) {
+            buffers.append(buffer);
+            return *this;
+        }
+
+        ActionParameters & setRenderTarget(const RenderTarget * renderTarget) {
+            this->renderTarget = renderTarget;
+            return *this;
+        }
     };
 
     struct ImageState {
