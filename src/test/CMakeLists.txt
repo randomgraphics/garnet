@@ -6,11 +6,19 @@ function(add_simple_test folder)
         set(test_name ${folder})
     endif()
 
-    # create target executable
-    #message("create simple app = ${folder} ${test_name}")
-    GN_setup_pch(${folder}/main.cpp PCH_SOURCE ${folder}/pch.cpp)
     string(CONCAT target_name GNtest- ${test_name})
-    add_executable(${target_name} ${folder}/main.cpp ${folder}/pch.cpp ${folder}/pch.h)
+    set(folder_path ${CMAKE_CURRENT_SOURCE_DIR}/${folder})
+    set(pch_h ${folder_path}/pch.h)
+    set(pch_cpp ${folder_path}/pch.cpp)
+
+    if (EXISTS ${pch_h} AND EXISTS ${pch_cpp})
+        # use precompiled header
+        add_executable(${target_name} ${folder}/main.cpp ${folder}/pch.cpp ${folder}/pch.h)
+        GN_setup_pch(${folder}/main.cpp PCH_SOURCE ${folder}/pch.cpp)
+    else()
+        # no PCH: compile main.cpp only
+        add_executable(${target_name} ${folder}/main.cpp)
+    endif()
     target_link_libraries(${target_name} GNcore)
 endfunction()
 
@@ -31,6 +39,7 @@ endif()
 if (D3D12_FOUND)
     add_simple_test(d3d12)
 endif()
+add_simple_test(stack-dump)
 add_simple_test(engine)
 add_simple_test(font)
 if (GLUT_FOUND)
