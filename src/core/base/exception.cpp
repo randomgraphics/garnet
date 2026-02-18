@@ -7,12 +7,15 @@
     #include <dlfcn.h>
     #include <sys/system_properties.h>
     #include <android/trace.h>
-#elif GN_POSIX || GN_MSWIN
+#else
     #ifdef _MSC_VER
-    #pragma warning(disable: 4267) // conversion from 'size_t' to 'int', possible loss of data
-    #pragma warning(disable: 4996) // 'function': was declared deprecated
+        #pragma warning(disable : 4267) // conversion from 'size_t' to 'int', possible loss of data
+        #pragma warning(disable : 4996) // 'function': was declared deprecated
     #endif
     #include <backward.hpp>
+namespace backward {
+backward::SignalHandling sh;
+} // namespace backward
 #endif
 
 namespace GN {
