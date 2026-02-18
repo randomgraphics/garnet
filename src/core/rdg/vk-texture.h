@@ -20,7 +20,7 @@ public:
     /// Initialize from load parameters (create + load from file). Returns false on failure.
     bool initFromLoad(const Texture::LoadParameters & params);
 
-    vk::Image handle() const { return mImage.valid() ? mImage->handle() : vk::Image {}; }
+    const rapid_vulkan::Image * image() const { return mImage.get(); }
 
     GpuContext &                gpu() const override { return *mGpuContext; }
     const Texture::Descriptor & descriptor() const override { return mDescriptor; }

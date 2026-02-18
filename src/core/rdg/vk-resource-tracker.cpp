@@ -68,34 +68,36 @@ private:
     uint32_t            mNumLayers = 0;
 };
 
-static inline std::pair<bool, vk::Image> getBackbufferImage(const SubmissionImpl & submission, const AutoRef<Backbuffer> * backbuffer) {
-    if (!backbuffer) {
-        // this is not an error, empty render target is allowed.
-        return {true, {}};
-    }
-    auto backbufferVk = backbuffer->castTo<BackbufferVulkan>();
-    auto ctx          = submission.getExecutionContext<FrameExecutionContextVulkan>();
-    if (!ctx) GN_UNLIKELY {
-            GN_ERROR(sLogger)
-            ("failed to get vk::Image from backbuffer: no frame execution context found. This is most likely due to rendering to a unprepared backbuffer.");
-            return {false, {}};
-        }
-    auto iter = ctx->bb2frame.find(backbufferVk->sequence);
-    if (iter == ctx->bb2frame.end()) {
-        GN_ERROR(sLogger)("failed to get vk::Image from backbuffer: the backbuffer {} is not prepared yet.", backbufferVk->name);
-        return {false, {}};
-    }
-    if (!iter->second->backbuffer || !iter->second->backbuffer->image) {
-        GN_ERROR(sLogger)("failed to get vk::Image from backbuffer: the backbuffer {} is not properly initialized or prepared.", backbufferVk->name);
-        return {false, {}};
-    }
-    auto image = iter->second->backbuffer->image->handle();
-    if (!image) {
-        GN_ERROR(sLogger)("failed to get vk::Image from backbuffer: backbuffer image is null.");
-        return {false, {}};
-    }
-    return {true, image};
-}
+// std::pair<bool, rapid_vulkan::Image *> getColorTargetBackbufferImage(const SubmissionImpl & submission, const AutoRef<Backbuffer> * backbuffer) {
+//     if (!backbuffer) {
+//         // this is not an error, empty render target is allowed.
+//         return {true, {}};
+//     }
+//     auto backbufferVk = backbuffer->castTo<BackbufferVulkan>();
+//     auto ctx          = submission.getExecutionContext<FrameExecutionContextVulkan>();
+//     if (!ctx) GN_UNLIKELY {
+//             GN_ERROR(sLogger)
+//             ("failed to get vk::Image from backbuffer: no frame execution context found. This is most likely due to rendering to a unprepared backbuffer.");
+//             return {false, {}};
+//         }
+//     auto iter = ctx->bb2frame.find(backbufferVk->sequence);
+//     if (iter == ctx->bb2frame.end()) {
+//         GN_ERROR(sLogger)("failed to get vk::Image from backbuffer: the backbuffer {} is not prepared yet.", backbufferVk->name);
+//         return {false, {}};
+//     }
+//     if (!iter->second->backbuffer || !iter->second->backbuffer->image) {
+//         GN_ERROR(sLogger)("failed to get vk::Image from backbuffer: the backbuffer {} is not properly initialized or prepared.", backbufferVk->name);
+//         return {false, {}};
+//     }
+//     auto image = iter->second->backbuffer->image->handle();
+//     if (!image) {
+//         GN_ERROR(sLogger)("failed to get vk::Image from backbuffer: backbuffer image is null.");
+//         return {false, {}};
+//     }
+//     return {true, image};
+// }
+
+const rapid_vulkan::Image * getColorTargetImage(const RenderTarget::ColorTarget & color, size_t stage, SubmissionImpl & submission);
 
 // ---------------------------------------------------------------------------------------------------------------------
 // Layout/access/stage mapping from ResourceUsage (implementation detail)
@@ -178,10 +180,10 @@ bool ResourceTrackerVulkan::execute(const ActionParameters & action, vk::Command
     for (const TextureResourceUse & use : action.textures) {
         if (!use.texture) GN_UNLIKELY continue;
 
-        auto * texVk = dynamic_cast<TextureVulkan *>(use.texture.get());
+        auto texVk = dynamic_cast<TextureVulkan *>(use.texture.get());
         if (!texVk) GN_UNLIKELY continue;
 
-        vk::Image image = texVk->handle();
+        auto image = texVk->image()->handle();
         if (!image) GN_UNLIKELY continue;
 
         vk::ImageLayout        newLayout;
@@ -225,33 +227,28 @@ bool ResourceTrackerVulkan::execute(const ActionParameters & action, vk::Command
         barrier.cmdWrite(commandBuffer);
     }
 
-    // determine the render target usage and layout
+    // Update the render target usage and layout. We don't actually do layout transition here. The render pass manager will do it.
+    // TODO: consider move this part to the render pass manager.
     if (action.renderTarget) {
-        for (const auto & color : action.renderTarget->colors) {
-            auto t = std::get_if<AutoRef<Texture>>(&color.target);
-            if (t) {
-                // we are rendering into a render target texture.
-                auto * texVk = dynamic_cast<TextureVulkan *>(t->get());
-                if (texVk && texVk->handle()) GN_LIKELY {
-                        // Mark this image to COLOR_ATTACHMENT_OPTIMAL layout.
-                        // We don't actually do layout transition here. The render pass manager will do it.
-                        vk::Image      image = texVk->handle();
-                        const ImageKey key   = {image, color.subresourceIndex.mip, color.subresourceIndex.face};
-                        mImageState[key].transitTo({vk::ImageLayout::eColorAttachmentOptimal,
-                                                    vk::AccessFlagBits::eColorAttachmentRead | vk::AccessFlagBits::eColorAttachmentWrite,
-                                                    vk::PipelineStageFlagBits::eColorAttachmentOutput});
-                    }
-                else { GN_VERBOSE(sLogger)("ResourceTrackerVulkan::execute: render target texture is null."); }
-            } else {
-                auto [success, image] = getBackbufferImage(mSubmission, std::get_if<AutoRef<Backbuffer>>(&color.target));
-                if (!success) GN_UNLIKELY return false;
-                if (image) {
-                    const ImageKey key = {image, color.subresourceIndex.mip, color.subresourceIndex.face};
-                    mImageState[key].transitTo({vk::ImageLayout::eColorAttachmentOptimal,
-                                                vk::AccessFlagBits::eColorAttachmentRead | vk::AccessFlagBits::eColorAttachmentWrite,
-                                                vk::PipelineStageFlagBits::eColorAttachmentOutput});
-                }
-            }
+        for (size_t i = 0; i < action.renderTarget->colors.size(); i++) {
+            const auto & color = action.renderTarget->colors[i];
+            auto         image = getColorTargetImage(color, i, mSubmission);
+            if (!image) GN_UNLIKELY continue;
+            const ImageKey key = {image->handle(), color.subresourceIndex.mip, color.subresourceIndex.face};
+            // TODO: determine the best layout and access flag based on render states (like if color target is read only)
+            mImageState[key].transitTo({vk::ImageLayout::eColorAttachmentOptimal,
+                                        vk::AccessFlagBits::eColorAttachmentRead | vk::AccessFlagBits::eColorAttachmentWrite,
+                                        vk::PipelineStageFlagBits::eColorAttachmentOutput});
+        }
+        auto depth = action.renderTarget->depthStencil.target.castTo<TextureVulkan>().get();
+        if (depth && depth->image()) {
+            auto           image = depth->image();
+            const ImageKey key   = {image->handle(), action.renderTarget->depthStencil.subresourceIndex.mip,
+                                    action.renderTarget->depthStencil.subresourceIndex.face};
+            // TODO: determine the best layout and access flag based on render states (like if depth is read only)
+            mImageState[key].transitTo({vk::ImageLayout::eDepthStencilAttachmentOptimal,
+                                        vk::AccessFlagBits::eDepthStencilAttachmentRead | vk::AccessFlagBits::eDepthStencilAttachmentWrite,
+                                        vk::PipelineStageFlagBits::eEarlyFragmentTests | vk::PipelineStageFlagBits::eLateFragmentTests});
         }
     }
 

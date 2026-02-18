@@ -2,8 +2,6 @@
 
 #include "submission.h"
 #include "vk-gpu-context.h"
-#include <garnet/base/array.h>
-#include <rapid-vulkan/rapid-vulkan.h>
 #include <unordered_map>
 
 namespace GN::rdg {

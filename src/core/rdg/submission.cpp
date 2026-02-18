@@ -159,10 +159,12 @@ Submission::Result SubmissionImpl::run(Parameters) {
             cleanup();
             return setResult(Action::ExecutionResult::FAILED);
         }
+        GN_ASSERT(executionOrder.size() == mValidatedWorkflows.size());
 
         // step 3: prepare all tasks in topological order.
         struct PendingTask {
             Workflow::Task *                          task;
+            TaskInfo                                  info;
             std::unique_ptr<Action::ExecutionContext> context;
         };
         DynaArray<PendingTask> pendingTasks;
@@ -173,29 +175,35 @@ Submission::Result SubmissionImpl::run(Parameters) {
             for (size_t taskIdx = 0; taskIdx < workflow->tasks.size(); ++taskIdx) {
                 Workflow::Task & task = workflow->tasks[taskIdx];
                 GN_ASSERT(task.action && task.arguments); // have been validated in validateTask().
-                auto [result, context] = task.action->prepare(*this, *task.arguments);
-                auto contextPtr        = std::unique_ptr<Action::ExecutionContext>(context);
+                pendingTasks.append(PendingTask {.task = &task,
+                                                 .info = TaskInfo {.submission = *this,
+                                                                   .workflow   = workflow->name.empty() ? StrA("[unnamed workflow]") : workflow->name,
+                                                                   .task       = task.name.empty() ? StrA("[unnamed task]") : task.name,
+                                                                   .index      = (uint64_t) pendingTasks.size()}});
+                auto & pt              = pendingTasks.back();
+                auto [result, context] = task.action->prepare(pt.info, *task.arguments);
+                pt.context             = std::unique_ptr<Action::ExecutionContext>(context);
                 if (result == Action::ExecutionResult::FAILED) {
-                    GN_ERROR(sLogger)("Task '{}' preparation failed", task.action->name);
+                    GN_ERROR(sLogger)("Workflow '{}' task '{}' preparation failed", pt.info.workflow, pt.info.task);
                     return setResult(Action::ExecutionResult::FAILED);
                 }
                 if (result == Action::ExecutionResult::WARNING) {
-                    GN_VERBOSE(sLogger)("Task '{}' preparation completed with warnings", task.action->name);
+                    GN_VERBOSE(sLogger)("Workflow '{}' task '{}' preparation completed with warnings", pt.info.workflow, pt.info.task);
                     hasWarning = true;
                 }
-                pendingTasks.append(PendingTask {&task, std::move(contextPtr)});
             }
         }
 
         // step 4: execute workflows sequentially in topological order.
-        for (auto & pt : pendingTasks) {
-            auto result = pt.task->action->execute(*this, *pt.task->arguments, pt.context.get());
+        for (size_t i = 0; i < pendingTasks.size(); ++i) {
+            auto & pt     = pendingTasks[i];
+            auto   result = pt.task->action->execute(pt.info, *pt.task->arguments, pt.context.get());
             if (result == Action::ExecutionResult::FAILED) {
-                GN_ERROR(sLogger)("Task '{}' execution failed", pt.task->action->name);
+                GN_ERROR(sLogger)("Workflow '{}' task '{}' execution failed", pt.info.workflow, pt.info.task);
                 return setResult(Action::ExecutionResult::FAILED);
             }
             if (result == Action::ExecutionResult::WARNING) {
-                GN_VERBOSE(sLogger)("Task '{}' execution completed with warnings", pt.task->action->name);
+                GN_VERBOSE(sLogger)("Workflow '{}' task '{}' execution completed with warnings", pt.info.workflow, pt.info.task);
                 hasWarning = true;
             }
         }

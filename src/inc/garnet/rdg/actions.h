@@ -7,16 +7,48 @@ namespace GN::rdg {
 struct RenderTarget {
     struct ColorTarget {
         std::variant<AutoRef<Texture>, AutoRef<Backbuffer>> target;
-        Texture::SubresourceIndex                           subresourceIndex; ///< only used for texture targets
+        Texture::SubresourceIndex                           subresourceIndex; ///< only used for non-empty texture targets
+
+        bool empty() const { return target.index() == 1 && std::get<1>(target) == nullptr; }
+
+        bool operator==(const ColorTarget & other) const {
+            if (target.index() != other.target.index()) return false;
+            if (target.index() == 0) {
+                auto t0 = std::get<0>(target);
+                auto t1 = std::get<0>(other.target);
+                if (t0 != t1) return false;
+                if (t0 && subresourceIndex != other.subresourceIndex) return false; // only check subresource index for non-empty texture targets
+                return true;
+            } else {
+                return std::get<1>(target) == std::get<1>(other.target);
+            }
+        }
+
+        bool operator!=(const ColorTarget & other) const { return !operator==(other); }
     };
 
     struct DepthStencil {
-        std::variant<AutoRef<Texture>> target;
-        Texture::SubresourceIndex      subresourceIndex {};
+        AutoRef<Texture>          target;
+        Texture::SubresourceIndex subresourceIndex {};
+
+        bool empty() const { return !target; }
+
+        bool operator==(const DepthStencil & other) const {
+            if (target != other.target) return false;
+            if (target && subresourceIndex != other.subresourceIndex) return false; // only check subresource index for non-empty texture targets
+            return true;
+        }
+
+        bool operator!=(const DepthStencil & other) const { return !operator==(other); }
     };
 
     StackArray<ColorTarget, 8> colors;
     DepthStencil               depthStencil;
+
+    bool empty() const { return colors.empty() && depthStencil.empty(); }
+
+    bool operator==(const RenderTarget & other) const { return colors == other.colors && depthStencil == other.depthStencil; }
+    bool operator!=(const RenderTarget & other) const { return !operator==(other); }
 };
 
 /// Clear render target to certain value. Discard existing content.
@@ -318,12 +350,11 @@ struct GenericDraw : public ShaderAction {
         inline static constexpr Guid TYPE = {0x6b7c8d9e, 0x0f1a, 0x2b3c, {0x4d, 0x5e, 0x6f, 0x7a, 0x8b, 0x9c, 0x0d, 0x1e}};
         A(): Arguments(TYPE) {}
 
-        ReadOnly<AutoRef<Mesh>>                       mesh;
-        ReadOnlyMap<StrA, BufferParameter>            uniforms;      ///< uniform buffers, key is shader variable name
-        ReadOnlyMap<StrA, TextureParameter>           textures;      ///< textures, key is shader variable name
-        ReadOnly<DrawParams>                          drawParams;    ///< draw parameters
-        ReadWriteArray<RenderTarget, 8, UsageFlag::O> renderTargets; ///< color render targets
-        ReadWrite<RenderTarget, UsageFlag::O>         depthStencil;  ///< depth/stencil render target (optional)
+        ReadOnly<AutoRef<Mesh>>             mesh;
+        ReadOnlyMap<StrA, BufferParameter>  uniforms;     ///< uniform buffers, key is shader variable name
+        ReadOnlyMap<StrA, TextureParameter> textures;     ///< textures, key is shader variable name
+        ReadOnly<DrawParams>                drawParams;   ///< draw parameters
+        ReadWrite<RenderTarget>             renderTarget; ///< render target
     };
 
     /// Shader stage description

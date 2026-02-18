@@ -1,8 +1,10 @@
 #pragma once
-#include "submission.h"
 #include "vk-gpu-context.h"
+#include "submission.h"
 
 namespace GN::rdg {
+
+class ResourceTrackerVulkan;
 
 class RenderPassManagerVulkan : public SubmissionImpl::Context {
 public:
@@ -15,24 +17,29 @@ public:
     };
 
     struct RenderPass {
-        rapid_vulkan::Ref<rapid_vulkan::RenderPass> renderPass;
-        bool                                        end {}; // If true, we must call renderPass.cmdEnd() after drawing to the render target.
+        uint64_t firstTaskIndex = 0;
+        uint64_t lastTaskIndex  = 0;
     };
 
     RenderPassManagerVulkan(const ConstructParameters & params);
 
     ~RenderPassManagerVulkan() override;
 
-    /// Called by task in prepare pass to request to render to a render target.
-    /// \return Return a unique identifier to represent this request. 0 for failure.
-    uint64_t prepare(const RenderTarget & renderTarget);
+    // /// Called by task in prepare pass to request to render to a render target.
+    bool prepare(TaskInfo & taskInfo, const RenderTarget & renderTarget);
 
     /// Called by task in execution pass to retrieve the render target requested in prepare() pass.
-    /// \return Returns the render pass information that a draw action can act on.
-    /// - If the beginInfo has value, the caller must call renderPass.cmdBegin() before issue any draw commands.
-    /// - If the next flag is true, the caller must call renderPass.cmdNext() before issue any draw commands.
-    /// - If the end flag is true, the caller must call renderPass.cmdEnd() after issue all draw commands.
-    RenderPass execute(uint64_t renderTargetId, vk::CommandBuffer commandBuffer);
+    /// \param renderTarget The render target to render to.
+    /// \param taskIndex The task index of the render pass.
+    /// \param rt The resource tracker to get the image layout of the render target before the render pass.
+    /// \param commandBuffer The command buffer to record the render pass into.
+    /// \return Returns the render pass information that a draw action can act on. Or empty for failure.
+    const RenderPass * execute(TaskInfo & taskInfo, const RenderTarget & renderTarget, const ResourceTrackerVulkan & rt, vk::CommandBuffer commandBuffer);
+
+private:
+    AutoRef<GpuContextVulkan> mGpu;
+    const RenderTarget *      mPrevRenderTarget = nullptr;
+    std::vector<RenderPass>   mRenderPasses;
 };
 
 } // namespace GN::rdg

@@ -213,6 +213,7 @@ protected:
 };
 
 struct Submission;
+struct TaskInfo;
 
 /// Base class of all actions. An action holds the logic for an operation and declares its parameters (input/output).
 struct Action : public Artifact {
@@ -231,10 +232,19 @@ struct Action : public Artifact {
     };
 
     /// Prepare for execution. Returns success code and an optional execution context that will be later passed to execute().
-    virtual std::pair<ExecutionResult, ExecutionContext *> prepare(Submission & submission, Arguments & arguments) = 0;
+    /// \param submission The submission that is executing the action.
+    /// \param taskInfo The information of the task that is executing the action.
+    /// \param arguments The arguments for the action.
+    /// \return A pair of execution result and an optional execution context.
+    virtual std::pair<ExecutionResult, ExecutionContext *> prepare(TaskInfo & taskInfo, Arguments & arguments) = 0;
 
     /// Execute the action with the given arguments. The context is the same as the one returned from prepare().
-    virtual ExecutionResult execute(Submission & submission, Arguments & arguments, ExecutionContext * context) = 0;
+    /// \param submission The submission that is executing the action.
+    /// \param taskInfo Same as the one passed to prepare().
+    /// \param arguments Same as the one passed to prepare().
+    /// \param context The context returned from prepare().
+    /// \return The execution result.
+    virtual ExecutionResult execute(TaskInfo & taskInfo, Arguments & arguments, ExecutionContext * context) = 0;
 
 protected:
     /// Inherit constructor from Artifact
@@ -244,11 +254,12 @@ protected:
 /// A workflow is a sequence of tasks run in strict sequential order. It can depend on completion of other workflows.
 /// The render graph runs workflows in a topological order that satisfies these dependencies.
 struct Workflow {
-    /// Name for logging and debugging (need not be unique).
+    /// Name for logging and debugging (not required, but recommended. No need to be unique).
     StrA name;
 
     /// Represents a single task in the workflow. This is the atomic execution unit of the render graph.
     struct Task {
+        StrA               name; //< name for logging and debugging (not required, but recommended. No need to be unique).
         AutoRef<Action>    action;
         AutoRef<Arguments> arguments;
     };
@@ -260,10 +271,16 @@ struct Workflow {
     DynaArray<Workflow *> dependencies;
 };
 
+struct TaskInfo {
+    Submission &   submission; ///< the submission that the task belongs to.
+    const StrA     workflow;   ///< name of the workflow that the task belongs to.
+    const StrA     task;       ///< name of the task.
+    const uint64_t index;      ///< index of the task within the entire submission. Can also be used as the unique identifier of the task within the submission.
+};
+
 struct Submission : RefCounter {
-    /// Parameters for submission.
     struct Parameters {
-        // For future use
+        StrA name; ///< name of the submission.
     };
 
     /// Result of execution
@@ -288,7 +305,7 @@ protected:
 /// Render graph: schedule workflows (thread-safe), then submit them for async execution.
 struct RenderGraph {
     struct CreateParameters {
-        // AutoRef<GpuContext> gpu; ///< the GPU context this graph is associated with.
+        // For future use
     };
 
     /// Create a new render graph instance

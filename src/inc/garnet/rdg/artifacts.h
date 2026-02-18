@@ -52,11 +52,17 @@ struct Texture : public GpuResource {
     struct SubresourceIndex {
         uint32_t mip  = 0; ///< index into mipmap chain
         uint32_t face = 0; ///< index into array of faces
+
+        bool operator==(const SubresourceIndex & other) const { return mip == other.mip && face == other.face; }
+        bool operator!=(const SubresourceIndex & other) const { return !operator==(other); }
     };
 
     struct SubresourceRange {
         uint32_t numMipLevels   = (uint32_t) -1; ///< -1 means all mip levels
         uint32_t numArrayLayers = (uint32_t) -1; ///< -1 means all array layers
+
+        bool operator==(const SubresourceRange & other) const { return numMipLevels == other.numMipLevels && numArrayLayers == other.numArrayLayers; }
+        bool operator!=(const SubresourceRange & other) const { return !operator==(other); }
     };
 
     struct CreateParameters {
