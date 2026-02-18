@@ -1,0 +1,105 @@
+# Tasks: Replace StackWalker/backward with backward-cpp submodule, assert callstack, crash handler
+
+Done: 2025-02-18 — backward-cpp submodule (v1.6) integrated; StackWalker/old backward removed; assert and crash handler use backward-cpp; build + cit pass on Linux.
+
+Goal: Remove StackWalker.h and old backward.hpp from 3rdparty/inc; use backward-cpp as a submodule; make assert print full callstack; install crash handler to dump full callstack on crash.
+
+--- PROGRESS (resume from "Last completed" / "In progress") ---
+Last completed: Task 4.1
+In progress: (none)
+--- END PROGRESS ---
+
+Reference:
+- Garnet uses: src/3rdparty/inc/StackWalker.h, src/3rdparty/inc/backward.hpp
+- Backtrace is implemented in: src/core/base/exception.cpp (backtrace(); uses backward on POSIX, StackWalker on MSWIN)
+- Assert handler in: src/core/base/debug.cpp (handleAssertFailure calls backtrace(4))
+- GNextern builds: src/3rdparty/src (includes StackWalker/*.cpp), exposes src/3rdparty/inc
+- backward-cpp repo: https://github.com/bombela/backward-cpp (use latest release tag, e.g. v1.6)
+
+Build/CI (run from repo root). Use project skills in .cursor/skills/ when running these:
+- Build: see .cursor/skills/use-build-py/SKILL.md  (build.py d/p/r, --clang, -a for Android).
+- Lint+test: see .cursor/skills/run-cit/SKILL.md   (env/bin/cit.py, cit.py -l, cit.py -t).
+- Android docker: see .cursor/skills/run-android-docker/SKILL.md  (docker ... build.py -a d).
+- Format/style: see .cursor/skills/format-coding-style/SKILL.md    (format-all-sources.py, cit.py -l).
+- Linux: source env/garnet.rc && build.py d && env/bin/cit.py. Windows: . env\garnet.ps1; b <variant>.
+
+---
+PHASE 1: Add backward-cpp submodule (header-only, no build)
+---
+
+[x] Task 1.1 — Add backward-cpp as git submodule (latest release)
+    - Add submodule at src/3rdparty/backward-cpp, track latest release tag (e.g. v1.6).
+    - Commands: git submodule add https://github.com/bombela/backward-cpp.git src/3rdparty/backward-cpp; then cd src/3rdparty/backward-cpp && git checkout v1.6 (or latest tag).
+    - Verification: `git submodule status` shows src/3rdparty/backward-cpp; directory contains backward.hpp and backward.cpp.
+    - Build+CI: source env/garnet.rc && build.py d && env/bin/cit.py  (must pass). Then verify Android: docker run -it --rm -v $(pwd):/root/project -w /root/project randomgraphics/garnet:latest bash -c "source env/garnet.rc && build.py -a d"  (must pass). After task: update PROGRESS to "Last completed: Task 1.1".
+
+[x] Task 1.2 — Add backward-cpp as header-only to CMake (no building backward)
+    - Treat backward-cpp as header-only: do NOT add_subdirectory(backward-cpp) and do NOT build/link backward as a library.
+    - Add the submodule directory to include path so code can #include <backward.hpp> or <backward/backward.hpp> (e.g. target_include_directories(GNcore PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../3rdparty/backward-cpp) or equivalent so that backward.hpp is found).
+    - No BACKWARD_* definitions required for header-only use of StackTrace/Printer; any optional defines can be added later if needed.
+    - Verification: Build succeeds (old StackWalker/backward still in place); no link step for backward.
+    - Build+CI: source env/garnet.rc && build.py d && env/bin/cit.py  (must pass). Android: docker run ... build.py -a d  (must pass). After task: update PROGRESS to "Last completed: Task 1.2".
+
+---
+PHASE 2: Remove old StackWalker and backward.hpp, switch to submodule
+---
+
+[x] Task 2.1 — Update exception.cpp to use only backward-cpp (all platforms)
+    - Replace GN_POSIX/GN_MSWIN branches: use backward-cpp's API (backward::StackTrace, backward::Printer) for both POSIX and Windows; remove #include <StackWalker.h> and the MyStackWalker class.
+    - Keep GN_ANDROID branch as-is (or later consider using backward on Android if applicable).
+    - Include path: use backward/backward.hpp from submodule (e.g. #include <backward/backward.hpp> or ensure include dir is submodule root).
+    - Verification: Build succeeds on at least one platform (Linux or Windows).
+    - Build+CI: build.py d && env/bin/cit.py  (must pass). Android: docker ... build.py -a d  (must pass). After task: update PROGRESS to "Last completed: Task 2.1".
+
+[x] Task 2.2 — Remove StackWalker from build and 3rdparty/inc
+    - Remove StackWalker/*.cpp from src/3rdparty/src/CMakeLists.txt (file GLOB).
+    - Delete or stop building src/3rdparty/src/StackWalker/ (StackWalker.cpp) if present.
+    - Delete src/3rdparty/inc/StackWalker.h.
+    - Delete src/3rdparty/inc/backward.hpp.
+    - Verification: Build succeeds; no references to StackWalker or old backward.hpp remain in codebase (grep).
+    - Build+CI: build.py d && env/bin/cit.py  (must pass). Android: docker ... build.py -a d  (must pass). After task: update PROGRESS to "Last completed: Task 2.2".
+
+[x] Task 2.3 — Clean up any remaining references
+    - Grep for "StackWalker", "backward.hpp" (old path), "3rdparty/inc" references to backward/StackWalker; fix if any.
+    - Verification: Build succeeds; run a small test or sample that uses backtrace (e.g. throw or assert).
+    - Build+CI: build.py d && env/bin/cit.py  (must pass). Android: docker ... build.py -a d  (must pass). After task: update PROGRESS to "Last completed: Task 2.3".
+
+---
+PHASE 3: Assert prints full callstack
+---
+
+[x] Task 3.1 — Ensure assert failure prints full callstack
+    - debug.cpp already calls backtrace(4) in handleAssertFailure. Confirm backtrace() now uses backward-cpp and returns a full stack (many frames).
+    - If backtrace() has a frame limit (e.g. load_here(32)), consider increasing or exposing it for assert path so "full" callstack is shown.
+    - Verification: Trigger an assert (e.g. GN_ASSERT(false) in a test or sample); run and confirm stderr/log shows a multi-line callstack with symbols/lines (not just one line).
+    - Build+CI: build.py d && env/bin/cit.py  (must pass). Android: docker ... build.py -a d  (must pass). After task: update PROGRESS to "Last completed: Task 3.1".
+
+---
+PHASE 4: Crash handler for core dump / uncaught crash
+---
+
+[x] Task 4.1 — Install crash handler by inlining backward.cpp into our source (no linking)
+    - Do NOT link to a backward library. Instead, duplicate what's in backward-cpp's backward.cpp into our own source file (e.g. src/core/base/backward_signal.cpp or similar): #include the submodule's backward.hpp and define the backward::SignalHandling static object (same as in backward.cpp). Add this new .cpp to GNcore (or appropriate target) so it is compiled and linked into the executable.
+    - This keeps build simple: one extra .cpp in our tree, no add_subdirectory or FindBackward, no separate backward library to link.
+    - Verification: Run a test that deliberately crashes (e.g. *(int*)0 = 0 or abort()); confirm output or log contains a full stack trace before exit/crash.
+    - Build+CI: build.py d && env/bin/cit.py  (must pass). Android: docker ... build.py -a d  (must pass). After task: update PROGRESS to "Last completed: Task 4.1".
+
+---
+PHASE 5: Final checks
+---
+
+[ ] Task 5.1 — Build and test on all supported platforms (if feasible)
+    - Linux: build + assert test + crash test.
+    - Windows: build + assert test + crash test (e.g. run GitHub Actions / local with env\garnet.ps1; b d).
+    - Android: verify with provided docker (docker ... build.py -a d).
+    - Verification: No regressions; callstacks appear as expected on each platform. Build+CI must pass (build.py d && cit.py; Android docker build).
+
+[ ] Task 5.2 — Update this file
+    - Mark all tasks done; set "Last completed: Task 5.2"; add one-line "Done" summary and date at top of this file.
+
+---
+Notes
+- If any task is too tricky (e.g. backward-cpp CMake doesn't integrate cleanly, or signal handling conflicts), stop and ask for human intervention.
+- Prefer doing one task at a time and re-running build/tests before moving on.
+- After completing each task: run build + cit (and Android docker where applicable), then update the PROGRESS block (Last completed: Task X.Y) so work can be resumed if interrupted.
+- To resume: read PROGRESS; start from the task after "Last completed". When starting a task, set "In progress: Task X.Y"; when finishing it, set "Last completed: Task X.Y" and clear "In progress".
