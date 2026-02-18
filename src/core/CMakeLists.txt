@@ -113,6 +113,7 @@ target_include_directories(GNcore PUBLIC
 )
 target_include_directories(GNcore PRIVATE
     ../3rdparty/stb
+    ../3rdparty/backward-cpp
 )
 target_link_libraries(GNcore PUBLIC GNextern)
 target_compile_features(GNcore PUBLIC cxx_std_20)

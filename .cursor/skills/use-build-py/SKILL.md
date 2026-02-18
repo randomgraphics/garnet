@@ -3,33 +3,50 @@ name: use-build-py
 description: Builds the garnet project using build.py instead of invoking cmake directly. Use when building the project, compiling, or when the user asks to build, make, or run cmake.
 ---
 
-# Use build.py to Build
+# Garnet build (build.py)
 
-## Rule
+## When to use
 
-**Use `build.py` to build the project.** Do not invoke `cmake` (or `cmake --build`) directly.
+Use `build.py` (or alias `b`) for any garnet build. Do not run cmake directly from the project root.
 
-The project provides `env/bin/build.py`, which configures and runs the build with the correct options, variants, and paths.
+## Commands (run from repo root)
 
-## How to Build
-
-From the project root (garnet repo root):
+**Linux / WSL:** Source the environment first, then build.
 
 ```bash
-./env/bin/build.py [variant] [target...]
+source env/garnet.rc
+build.py <variant> [options]
 ```
 
-Or:
+**Windows (PowerShell):** Use the garnet script and alias.
+
+```powershell
+. env\garnet.ps1
+b <variant>
+```
+
+## Variants
+
+| Short | Long     | CMake build type   |
+|-------|----------|--------------------|
+| `d`   | `debug`  | Debug              |
+| `p`   | `profile`| RelWithDebInfo     |
+| `r`   | `release`| Release            |
+
+## Common options
+
+- **Clang (Linux):** `build.py --clang d` (or `p`, `r`)
+- **Android:** `build.py -a d` (or `-a p`, `-a r`). Requires `ANDROID_SDK_ROOT`, `ANDROID_NDK_ROOT`, `JAVA_HOME` (or use Android docker).
+
+## Examples
 
 ```bash
-python env/bin/build.py [variant] [target...]
+source env/garnet.rc
+build.py d              # Debug build (GCC on Linux)
+build.py --clang d      # Debug with Clang
+build.py -a d           # Android debug (needs NDK/SDK)
 ```
 
-- **variant**: e.g. `d`/`debug`, `r`/`release`, `p`/`profile`. Default or common is often `d` for debug.
-- **target**: optional build target(s). Omit to build the default/all target.
+## Verification
 
-## Do Not
-
-- Do not run `cmake -S . -B build` or `cmake ..` to configure.
-- Do not run `cmake --build <dir>` directly.
-- Use `build.py` for any project build step so the same variant, generator, and paths are used consistently.
+Build output goes under `build/<system><suffix>/` (e.g. `build/linux.d/`). Success = cmake + compile finish without errors.

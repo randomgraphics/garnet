@@ -33,7 +33,6 @@ file(GLOB sources
     pcre/*.c
     pcre/*.cc
     png/*.c
-	StackWalker/*.cpp
     tinyxml/*.c
     zlib/*.c
 )

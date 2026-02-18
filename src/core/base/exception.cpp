@@ -7,10 +7,15 @@
     #include <dlfcn.h>
     #include <sys/system_properties.h>
     #include <android/trace.h>
-#elif GN_POSIX
+#else
+    #ifdef _MSC_VER
+        #pragma warning(disable : 4267) // conversion from 'size_t' to 'int', possible loss of data
+        #pragma warning(disable : 4996) // 'function': was declared deprecated
+    #endif
     #include <backward.hpp>
-#elif GN_MSWIN
-    #include <StackWalker.h>
+namespace backward {
+backward::SignalHandling sh;
+} // namespace backward
 #endif
 
 namespace GN {
@@ -112,29 +117,15 @@ GN_API StrA backtrace(int spaceIndent, bool includeSourceSnippet) {
     ss << "android stack dump done\n";
 
     return indent(ss.str(), spaceIndent);
-#elif GN_POSIX
+#elif GN_POSIX || GN_MSWIN
     using namespace backward;
     StackTrace st;
     st.load_here(32);
     std::stringstream ss;
     Printer           p;
-    p.snippet = includeSourceSnippet; // print code snippet in debug build only.
+    p.snippet = includeSourceSnippet;
     p.print(st, ss);
     return indent(ss.str(), spaceIndent);
-#elif GN_MSWIN
-    class MyStackWalker : public StackWalker {
-    protected:
-        void OnLoadModule(LPCSTR, LPCSTR, DWORD64, DWORD, DWORD, LPCSTR, LPCSTR, ULONGLONG) override {}
-        void OnDbgHelpErr(LPCSTR, DWORD, DWORD64) override {}
-        void OnSymInit(LPCSTR, DWORD, LPCSTR) override {}
-        void OnOutput(LPCSTR szText) override { ss << szText; }
-
-    public:
-        using StackWalker::StackWalker;
-        std::stringstream ss;
-    };
-    MyStackWalker sw(StackWalker::RetrieveLine | StackWalker::RetrieveSymbol);
-    return sw.ShowCallstack() ? indent(sw.ss.str(), spaceIndent) : StrA {};
 #else
     return {};
 #endif
