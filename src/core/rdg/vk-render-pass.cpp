@@ -136,8 +136,7 @@ static vk::Format getStencilViewFormat(vk::Format format) {
 }
 
 static vk::ImageView getDepthTargetImageView(const RenderTarget::DepthStencil & depthStencil) {
-    auto                        depth = depthStencil.target.castTo<TextureVulkan>().get();
-    vk::RenderingAttachmentInfo depthAttachment, stencilAttachment;
+    auto depth = depthStencil.target.castTo<TextureVulkan>().get();
     if (!depth) GN_UNLIKELY return {};
 
     auto image = depth->image();
