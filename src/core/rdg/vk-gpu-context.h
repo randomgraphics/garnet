@@ -1,9 +1,15 @@
 #pragma once
 
 #include "gpu-context.h"
+
+#ifdef RAPID_VULKAN_H_
+    #error "rapid-vulkan.h is already included"
+#endif
 #if GN_LINUX
     #define VK_USE_PLATFORM_WAYLAND_KHR 1
 #endif
+#define RAPID_VULKAN_ENABLE_DEBUG_BUILD GN_BUILD_DEBUG_ENABLED
+// TODO: hook rapid_vulkan log with GN::Logger
 #include <rapid-vulkan/rapid-vulkan.h>
 #include <optional>
 
