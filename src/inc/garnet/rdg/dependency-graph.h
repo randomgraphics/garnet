@@ -20,7 +20,7 @@ namespace GN::rdg {
 struct ArtifactDatabase;
 
 struct RuntimeType {
-    const Guid & type;
+    const uint64_t type;
 
     template<typename T>
     T * castTo() {
@@ -35,7 +35,10 @@ struct RuntimeType {
     }
 
 protected:
-    RuntimeType(const Guid & type): type(type) {}
+    RuntimeType(uint64_t type): type(type) {}
+
+    /// Called by subclasses tp get a unique type id.
+    GN_API static uint64_t getNextUniqueTypeId();
 };
 
 /// Artifact represents an atomic resource that can be used as input or output of a task.
@@ -48,7 +51,7 @@ struct Artifact : public RefCounter, public RuntimeType {
 
 protected:
     /// Constructor
-    Artifact(ArtifactDatabase & db, const Guid & type, const StrA & name);
+    Artifact(ArtifactDatabase & db, uint64_t type, const StrA & name);
 };
 
 /// Database of all artifacts. Artifact is uniquely identified by its type and name, or by its sequence number.
@@ -72,7 +75,7 @@ struct ArtifactDatabase {
     virtual bool erase(uint64_t sequence) = 0;
 
     /// Search for an artifact instance by type and name.
-    virtual auto fetch(const Guid & type, const StrA & name) -> AutoRef<Artifact> = 0;
+    virtual auto fetch(uint64_t type, const StrA & name) -> AutoRef<Artifact> = 0;
 
     /// Search for an artifact instance by its sequence number. Faster than search by ID.
     virtual auto fetch(uint64_t sequence) -> AutoRef<Artifact> = 0;
@@ -81,7 +84,7 @@ protected:
     ArtifactDatabase() = default;
 };
 
-inline Artifact::Artifact(ArtifactDatabase & db, const Guid & type, const StrA & name)
+inline Artifact::Artifact(ArtifactDatabase & db, uint64_t type, const StrA & name)
     : RuntimeType(type), database(db), name(name), sequence(database.admit(this)) {}
 
 /// Base class of arguments for an action. This is not a subclass of Artifact, since it is means to be one time use: create, pass to action, and forget.
@@ -209,7 +212,7 @@ struct Arguments : RefCounter, public RuntimeType {
     using ReadWriteMap = MapParameter<Key, Value, UFlags | UsageFlag::Reading | UsageFlag::Writing>;
 
 protected:
-    Arguments(const Guid & type): RuntimeType(type) {}
+    Arguments(uint64_t type): RuntimeType(type) {}
 };
 
 struct Submission;
@@ -228,7 +231,7 @@ struct Action : public Artifact {
         virtual ~ExecutionContext() = default;
 
     protected:
-        ExecutionContext(const Guid & type): RuntimeType(type) {}
+        ExecutionContext(uint64_t type): RuntimeType(type) {}
     };
 
     /// Prepare for execution. Returns success code and an optional execution context that will be later passed to execute().

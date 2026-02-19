@@ -8,23 +8,28 @@ static GN::Logger * sLogger = GN::getLogger("GN.rdg");
 
 namespace GN::rdg {
 
+GN_API uint64_t RuntimeType::getNextUniqueTypeId() {
+    static std::atomic<uint64_t> nextId = 1;
+    return nextId.fetch_add(1, std::memory_order_relaxed);
+}
+
 // ============================================================================
 // ArtifactDatabase implementation
 // ============================================================================
 
 // Key for lookup by type and name (artifact admits itself via admit(Artifact*))
 struct TypeNameKey {
-    const Guid & type;
-    const StrA & name;
-    bool         operator==(const TypeNameKey & o) const { return type == o.type && name == o.name; }
-    bool         operator!=(const TypeNameKey & o) const { return !(*this == o); }
+    const uint64_t type;
+    const StrA &   name;
+    bool           operator==(const TypeNameKey & o) const { return type == o.type && name == o.name; }
+    bool           operator!=(const TypeNameKey & o) const { return !(*this == o); }
 };
 
 struct TypeNameKeyHash {
     size_t operator()(const TypeNameKey & k) const {
-        Guid::Hash      guidHash;
-        std::hash<StrA> nameHash;
-        return guidHash(k.type) ^ (nameHash(k.name) << 1);
+        size_t h = std::hash<uint64_t>()(k.type);
+        combineHash(h, k.name);
+        return h;
     }
 };
 
@@ -51,7 +56,7 @@ public:
 
         TypeNameKey key {artifact->type, artifact->name};
         if (mArtifactsById.find(key) != mArtifactsById.end()) {
-            GN_ERROR(sLogger)("Failed to admit artifact: type and name already exist: type={}, name={}", artifact->type.toStr(), artifact->name);
+            GN_ERROR(sLogger)("Failed to admit artifact: type and name already exist: type={}, name={}", artifact->type, artifact->name);
             return 0;
         }
 
@@ -62,7 +67,7 @@ public:
         return seq;
     }
 
-    auto fetch(const Guid & type, const StrA & name) -> AutoRef<Artifact> override {
+    auto fetch(uint64_t type, const StrA & name) -> AutoRef<Artifact> override {
         std::lock_guard<std::mutex> lock(mMutex);
 
         TypeNameKey key {type, name};

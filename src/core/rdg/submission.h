@@ -60,7 +60,7 @@ private:
     Result              mResult;
     std::mutex          mResultMutex;
 
-    std::unordered_map<Guid, AutoRef<Context>> mExecutionContexts;
+    std::unordered_map<uint64_t, AutoRef<Context>> mExecutionContexts;
 
     // Owned workflows (taken from graph on construction)
     DynaArray<Workflow *>        mWorkflows;

@@ -201,9 +201,11 @@ static vk::ImageView getStencilTargetImageView(const RenderTarget::DepthStencil 
 bool RenderPassManagerVulkan::prepare(TaskInfo & taskInfo, const RenderTarget & renderTarget) {
     bool changed = !mPrevRenderTarget || *mPrevRenderTarget != renderTarget;
     if (changed) {
+        GN_INFO(sLogger)("RenderPassManagerVulkan::prepare: render target changed, starting a new render pass.");
         mRenderPasses.push_back(RenderPass {.firstTaskIndex = taskInfo.index, .lastTaskIndex = taskInfo.index});
     } else {
         mRenderPasses.back().lastTaskIndex = taskInfo.index;
+        GN_INFO(sLogger)("RenderPassManagerVulkan::prepare: render target not changed, continuing the current render pass.");
     }
     return true;
 }
@@ -212,6 +214,7 @@ const RenderPassManagerVulkan::RenderPass * RenderPassManagerVulkan::execute(Tas
                                                                              [[maybe_unused]] const ResourceTrackerVulkan & rt,
                                                                              vk::CommandBuffer                              commandBuffer) {
     // Find the render pass that the task belongs to.
+    GN_INFO(sLogger)("RenderPassManagerVulkan::execute: {} render pass(es) found.", mRenderPasses.size());
     RenderPass * rp = nullptr;
     for (size_t i = 0; i < mRenderPasses.size(); i++) {
         if (mRenderPasses[i].firstTaskIndex <= taskInfo.index && mRenderPasses[i].lastTaskIndex >= taskInfo.index) { rp = &mRenderPasses[i]; }

@@ -20,7 +20,7 @@ namespace GN::rdg {
 
 // Define a custom artifact that holds an integer
 struct IntegerArtifact : public Artifact {
-    static inline const Guid TYPE = {0x12345678, 0xabcd, 0xef01, {0x23, 0x45, 0x67, 0x89, 0xab, 0xcd, 0xef, 0x01}};
+    inline static const uint64_t TYPE = RuntimeType::getNextUniqueTypeId();
 
     int value = 0;
 
@@ -38,7 +38,7 @@ struct IntegerArtifact : public Artifact {
 
 // Define an action to initialize an integer artifact
 struct InitIntegerAction : public Action {
-    inline static constexpr Guid TYPE = {0x11111111, 0x2222, 0x3333, {0x44, 0x44, 0x55, 0x55, 0x66, 0x66, 0x77, 0x77}};
+    inline static const uint64_t TYPE = RuntimeType::getNextUniqueTypeId();
 
     int initValue = 0;
 
@@ -54,7 +54,7 @@ struct InitIntegerAction : public Action {
     }
 
     struct A : public Arguments {
-        inline static constexpr Guid TYPE = {0x11111112, 0x2222, 0x3333, {0x44, 0x44, 0x55, 0x55, 0x66, 0x66, 0x77, 0x77}};
+        inline static const uint64_t TYPE = RuntimeType::getNextUniqueTypeId();
         A(): Arguments(TYPE) {}
         WriteOnly<AutoRef<IntegerArtifact>> output;
     };
@@ -81,7 +81,7 @@ struct InitIntegerAction : public Action {
 
 // Define an action to add two integers
 struct AddIntegersAction : public Action {
-    inline static constexpr Guid TYPE = {0xaaaaaaaa, 0xbbbb, 0xcccc, {0xdd, 0xdd, 0xee, 0xee, 0xff, 0xff, 0x00, 0x00}};
+    inline static const uint64_t TYPE = RuntimeType::getNextUniqueTypeId();
 
     AddIntegersAction(ArtifactDatabase & db, const StrA & name): Action(db, TYPE, name) {}
 
@@ -95,7 +95,7 @@ struct AddIntegersAction : public Action {
     }
 
     struct A : public Arguments {
-        inline static constexpr Guid TYPE = {0xaaaaaaab, 0xbbbb, 0xcccc, {0xdd, 0xdd, 0xee, 0xee, 0xff, 0xff, 0x00, 0x00}};
+        inline static const uint64_t TYPE = RuntimeType::getNextUniqueTypeId();
         A(): Arguments(TYPE) {}
         ReadOnly<AutoRef<IntegerArtifact>>  input1;
         ReadOnly<AutoRef<IntegerArtifact>>  input2;
@@ -141,7 +141,7 @@ struct AddIntegersAction : public Action {
 
 // Define an action to multiply two integers
 struct MultiplyIntegersAction : public Action {
-    inline static constexpr Guid TYPE = {0x55555555, 0x6666, 0x7777, {0x88, 0x88, 0x99, 0x99, 0xaa, 0xaa, 0xbb, 0xbb}};
+    inline static const uint64_t TYPE = RuntimeType::getNextUniqueTypeId();
 
     MultiplyIntegersAction(ArtifactDatabase & db, const StrA & name): Action(db, TYPE, name) {}
 
@@ -155,7 +155,7 @@ struct MultiplyIntegersAction : public Action {
     }
 
     struct A : public Arguments {
-        inline static constexpr Guid TYPE = {0x55555556, 0x6666, 0x7777, {0x88, 0x88, 0x99, 0x99, 0xaa, 0xaa, 0xbb, 0xbb}};
+        inline static const uint64_t TYPE = RuntimeType::getNextUniqueTypeId();
         A(): Arguments(TYPE) {}
         ReadOnly<AutoRef<IntegerArtifact>>  input1;
         ReadOnly<AutoRef<IntegerArtifact>>  input2;

@@ -13,7 +13,7 @@ namespace GN::rdg {
 
 /// GpuContext represents a GPU context (wrapper of D3D/Vulkan context).
 struct GpuContext : public Artifact {
-    static inline const Guid TYPE = {0x3c4d5e6f, 0x7a8b, 0x9c0d, {0x1e, 0x2f, 0x3a, 0x4b, 0x5c, 0x6d, 0x7e, 0x8f}};
+    static inline const uint64_t TYPE = RuntimeType::getNextUniqueTypeId();
 
     struct CreateParameters {
         /// The graphics API ("auto" = platform default; "vulkan", "d3d12", "metal").
@@ -37,7 +37,7 @@ protected:
 
 /// Texture represents a 2D/3D/cube texture with optional mipmap and array layers.
 struct Texture : public GpuResource {
-    static inline const Guid TYPE = {0x6ad8b59d, 0xe672, 0x4b5e, {0x8e, 0xec, 0xf7, 0xac, 0xd4, 0xf1, 0x99, 0xdd}};
+    static inline const uint64_t TYPE = RuntimeType::getNextUniqueTypeId();
     /// Descriptor used when creating or declaring the texture (format, dimensions).
     struct Descriptor {
         gfx::img::PixelFormat format  = gfx::img::PixelFormat::UNKNOWN();
@@ -95,7 +95,7 @@ protected:
 
 /// Backbuffer represents the swapchain that can be presented to screen.
 struct Backbuffer : public GpuResource {
-    inline static constexpr Guid TYPE = {0x2b3c4d5e, 0x6f7a, 0x8b9c, {0x0d, 0x1e, 0x2f, 0x3a, 0x4b, 0x5c, 0x6d, 0x7e}};
+    inline static const uint64_t TYPE = RuntimeType::getNextUniqueTypeId();
 
     /// Window and size (and format) for backbuffer. If win is null, headless; width/height must be positive.
     /// If win is non-null and width/height are 0, use window client size.
@@ -127,7 +127,7 @@ protected:
 
 /// Sampler represents GPU sampler state (filtering, addressing, LOD, anisotropy).
 struct Sampler : public GpuResource {
-    static inline const Guid TYPE = {0x7be9c60e, 0xf783, 0x5c6f, {0x9f, 0xed, 0x08, 0xbd, 0xe5, 0x02, 0xaa, 0xee}};
+    static inline const uint64_t TYPE = RuntimeType::getNextUniqueTypeId();
     enum class Filter { POINT, LINEAR, ANISOTROPIC };
     enum class AddressMode { REPEAT, MIRROR_REPEAT, CLAMP_TO_EDGE, CLAMP_TO_BORDER, MIRROR_CLAMP_TO_EDGE };
 
@@ -162,7 +162,7 @@ protected:
 
 /// Buffer represents a GPU buffer (vertex, index, constant, storage, etc.).
 struct Buffer : public GpuResource {
-    static inline const Guid TYPE = {0x1f2e3d4c, 0x5b6a, 0x7c8d, {0x9e, 0xaf, 0xb1, 0xc2, 0xd3, 0xe4, 0xf5, 0x06}};
+    static inline const uint64_t TYPE = RuntimeType::getNextUniqueTypeId();
     /// Buffer usage flags.
     enum Usage {
         VERTEX,       ///< Vertex buffer
@@ -201,7 +201,7 @@ protected:
 /// Base class of all mesh types.
 /// Meshes can be either indexed (using an index buffer) or non-indexed (drawing vertices directly).
 struct Mesh : public GpuResource {
-    static inline constexpr Guid TYPE = {0x8c9d4a1f, 0xb284, 0x5d7f, {0x9a, 0xfe, 0x19, 0xce, 0xf6, 0x13, 0xbb, 0xff}};
+    static inline const uint64_t TYPE = RuntimeType::getNextUniqueTypeId();
 
     struct VertexBuffer {
         AutoRef<Buffer>       buffer;

@@ -10,7 +10,7 @@ namespace GN::rdg {
 /// resource uses per action; execute() records barriers to transition resources to the right layout.
 class ResourceTrackerVulkan : public SubmissionImpl::Context {
 public:
-    inline static constexpr Guid TYPE = {0x8d9e0f1a, 0x2b3c, 0x4d5e, {0x6f, 0x7a, 0x8b, 0x9c, 0x0d, 0x1e, 0x2f, 0x3a}};
+    inline static const uint64_t TYPE = RuntimeType::getNextUniqueTypeId();
 
     struct ConstructParameters {
         SubmissionImpl &          submission;
