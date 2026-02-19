@@ -181,7 +181,8 @@ Submission::Result SubmissionImpl::run(Parameters) {
                                                                       .task       = task.name.empty() ? StrA("[unnamed task]") : task.name,
                                                                       .index      = (uint64_t) pendingTasks.size()},
                                                  .context = {}});
-                auto & pt              = pendingTasks.back();
+                auto & pt = pendingTasks.back();
+                GN_VERBOSE(sLogger)("Preparing workflow '{}' task '{}'", pt.info.workflow, pt.info.task);
                 auto [result, context] = task.action->prepare(pt.info, *task.arguments);
                 pt.context             = std::unique_ptr<Action::ExecutionContext>(context);
                 if (result == Action::ExecutionResult::FAILED) {
@@ -197,8 +198,9 @@ Submission::Result SubmissionImpl::run(Parameters) {
 
         // step 4: execute workflows sequentially in topological order.
         for (size_t i = 0; i < pendingTasks.size(); ++i) {
-            auto & pt     = pendingTasks[i];
-            auto   result = pt.task->action->execute(pt.info, *pt.task->arguments, pt.context.get());
+            auto & pt = pendingTasks[i];
+            GN_VERBOSE(sLogger)("Executing workflow '{}' task '{}'", pt.info.workflow, pt.info.task);
+            auto result = pt.task->action->execute(pt.info, *pt.task->arguments, pt.context.get());
             if (result == Action::ExecutionResult::FAILED) {
                 GN_ERROR(sLogger)("Workflow '{}' task '{}' execution failed", pt.info.workflow, pt.info.task);
                 return setResult(Action::ExecutionResult::FAILED);

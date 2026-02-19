@@ -47,20 +47,20 @@ static void sGetOpenGLVersion(const char * version, int * major, int * minor, in
     // get major version
     const char * p = version;
     while ('.' != *p) ++p;
-    if (major) *major = str::toInetger<int>(StrA(version, p - version).data(), 0);
+    if (major) *major = str::toInteger<int>(StrA(version, p - version).data(), 0);
 
     // get minor version
     version = p + 1;
     p       = version;
     while (*p && '.' != *p && ' ' != *p) ++p;
-    if (minor) *minor = str::toInetger<int>(StrA(version, p - version).data(), 0);
+    if (minor) *minor = str::toInteger<int>(StrA(version, p - version).data(), 0);
 
     // get release version
     if (*p && '.' == *p) {
         version = p + 1;
         p       = version;
         while (*p && ' ' != *p) ++p;
-        if (release) *release = str::toInetger<int>(StrA(version, p - version).data(), 0);
+        if (release) *release = str::toInteger<int>(StrA(version, p - version).data(), 0);
     } else {
         if (release) *release = 0;
     }

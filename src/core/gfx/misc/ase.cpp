@@ -395,7 +395,7 @@ struct AseFile {
         const char * token = next(0, option);
         if (0 == token) return false;
 
-        if (0 == str::toInetger<INT_TYPE>(result, token)) {
+        if (0 == str::toInteger<INT_TYPE>(result, token)) {
             if (!option.silence) err(StrA::format("Not valid integer : {}", token));
             return false;
         }

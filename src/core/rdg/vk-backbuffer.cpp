@@ -43,6 +43,8 @@ BackbufferVulkan::BackbufferVulkan(ArtifactDatabase & db, const StrA & name): Ba
     if (0 == sequence) { GN_ERROR(sLogger)("BackbufferVulkan::BackbufferVulkan: duplicate type+name, name='{}'", name); }
 }
 
+BackbufferVulkan::~BackbufferVulkan() { GN_INFO(sLogger)("Destorying Vulkan backbuffer, name='{}'", name); }
+
 bool BackbufferVulkan::init(const Backbuffer::CreateParameters & params) {
     if (0 == sequence) return false;
 
@@ -105,6 +107,7 @@ Action::ExecutionResult BackbufferVulkan::prepare(SubmissionImpl & submission) {
             return Action::ExecutionResult::WARNING;
         }
     // Call beginFrame and store the mapping from 'this' backbuffer to the frame pointer
+    GN_VERBOSE(sLogger)("BackbufferVulkan::prepare: beginFrame");
     const auto * frame = mSwapchain->beginFrame();
     if (!frame) GN_UNLIKELY {
             GN_ERROR(sLogger)("BackbufferVulkan::prepare: beginFrame failed");
@@ -128,6 +131,7 @@ Action::ExecutionResult BackbufferVulkan::present(SubmissionImpl & submission) {
     // Call present and remove the mapping from 'this' backbuffer to the frame pointer
     ctx.bb2frame.erase(this->sequence);
     rapid_vulkan::Swapchain::PresentParameters pp;
+    GN_VERBOSE(sLogger)("BackbufferVulkan::present: present frame");
     mSwapchain->present(pp);
     return Action::ExecutionResult::PASSED;
 }

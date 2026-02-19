@@ -110,9 +110,10 @@ public:
     RenderGraphImpl() {}
     ~RenderGraphImpl() {}
 
-    Workflow * schedule() override {
+    Workflow * schedule(StrA name) override {
         std::lock_guard<std::mutex> lock(mMutex);
         Workflow *                  newWorkflow = new Workflow();
+        newWorkflow->name                       = std::move(name);
         mPendingWorkflows.append(newWorkflow);
         return newWorkflow;
     }

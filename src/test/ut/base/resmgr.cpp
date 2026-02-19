@@ -569,7 +569,7 @@ GN::Logger * ResourceManagerTempl<RES, HANDLE>::sLogger = getLogger("GN.base.Res
 
 typedef GN::ResourceManagerTempl<int> ResMgr;
 
-bool defCreator(int & res, const GN::StrA & name, void *) { return 0 != GN::str::toInetger<int>(res, name.data()); }
+bool defCreator(int & res, const GN::StrA & name, void *) { return 0 != GN::str::toInteger<int>(res, name.data()); }
 
 bool nullCreator(int & res, const GN::StrA &, void *) {
     res = -1;

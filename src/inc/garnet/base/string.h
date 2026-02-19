@@ -1501,7 +1501,7 @@ GN_API size_t toSignedInteger(int64_t & result, int bits, int base, const char *
 GN_API size_t toUnsignedInteger(uint64_t & result, int bits, int base, const char * s);
 
 template<typename T>
-inline size_t toInetger(T & i, const char * s, int base = 10) {
+inline size_t toInteger(T & i, const char * s, int base = 10) {
     size_t n;
 
     if constexpr (std::is_signed<T>::value) {
@@ -1518,9 +1518,9 @@ inline size_t toInetger(T & i, const char * s, int base = 10) {
 }
 
 template<typename T>
-T toInetger(const char * s, T defaultValue, int base = 10) {
+T toInteger(const char * s, T defaultValue, int base = 10) {
     T result;
-    if (0 == toInetger<T>(result, s, base)) {
+    if (0 == toInteger<T>(result, s, base)) {
         return defaultValue;
     } else {
         return result;
@@ -1533,7 +1533,7 @@ GN_API size_t toDouble(double & i, const char * s);
 
 template<typename T>
 inline size_t toNumber(T & i, const char * s) {
-    return toInetger<T>(i, s, 10);
+    return toInteger<T>(i, s, 10);
 }
 template<>
 inline size_t toNumber<float>(float & i, const char * s) {

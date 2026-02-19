@@ -259,6 +259,7 @@ struct Workflow {
 
     /// Represents a single task in the workflow. This is the atomic execution unit of the render graph.
     struct Task {
+        explicit Task(const StrA & name): name(name) {}
         StrA               name; //< name for logging and debugging (not required, but recommended. No need to be unique).
         AutoRef<Action>    action;
         AutoRef<Arguments> arguments;
@@ -317,9 +318,10 @@ struct RenderGraph {
     virtual ~RenderGraph() = default;
 
     /// Schedule a new workflow. Thread-safe; multiple threads may call schedule() in parallel.
+    /// \param name The name of the workflow.
     /// Returns a pointer to the scheduled workflow. The pointer is valid until submit() is called.
     /// After submit(), all pointers returned from schedule() are invalidated and the graph is ready to schedule new workflows.
-    virtual Workflow * schedule() = 0;
+    virtual Workflow * schedule(StrA name) = 0;
 
     /// Submit all scheduled workflows for async execution in a topological order that satisfies workflow dependencies.
     /// Returns immediately; execution may not be complete when this method returns.

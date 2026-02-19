@@ -27,6 +27,8 @@ GpuContextVulkan::GpuContextVulkan(ArtifactDatabase & db, const StrA & name, con
     mDevice.emplace(dp);
 }
 
+GpuContextVulkan::~GpuContextVulkan() { GN_INFO(sLogger)("Destorying Vulkan GPU context, name='{}'", name); }
+
 // =============================================================================
 // createVulkanGpuContext - API-specific factory
 // =============================================================================

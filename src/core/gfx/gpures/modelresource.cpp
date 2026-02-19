@@ -67,7 +67,7 @@ static void sApplyRenderStates(GN::gfx::GpuContext::RenderStates & dst, const GN
 template<typename T>
 static bool sGetRequiredIntAttrib(T & result, const XmlElement & node, const char * attribName) {
     const XmlAttrib * a = node.findAttrib(attribName);
-    if (!a || 0 == str::toInetger<T>(result, a->value.data())) {
+    if (!a || 0 == str::toInteger<T>(result, a->value.data())) {
         GN_ERROR(sLogger)("Integer attribute \"{}\" of element <{}> is either missing or invalid.", attribName, node.name.data());
         return false;
     } else {
@@ -243,7 +243,7 @@ bool GN::gfx::ModelResourceDesc::loadFromXml(const XmlNode & root, const char * 
                 GN_ERROR(sLogger)("\"size\" attribute of <uniform> element is missing.");
                 return false;
             }
-            if (0 == str::toInetger(ud.size, a->value)) {
+            if (0 == str::toInteger(ud.size, a->value)) {
                 GN_ERROR(sLogger)("\"size\" attribute of <uniform> element is not a valid integer.");
                 return false;
             }

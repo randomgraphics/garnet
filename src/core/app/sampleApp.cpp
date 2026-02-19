@@ -66,7 +66,7 @@ template<typename T>
 static bool sParseInteger(T & result, const char * option, const char * value) {
     using namespace GN;
 
-    if (0 != str::toInetger(result, value)) {
+    if (0 != str::toInteger(result, value)) {
         return true;
     } else {
         GN_ERROR(sLogger)("Invalid integer argument value ({}) for option {}", value, option);
@@ -402,7 +402,7 @@ bool GN::util::SampleApp::checkCmdLine(int argc, const char * const argv[]) {
                     StrA name(value.subString(0, k));
                     StrA leveltok(value.subString(k + 1, 0));
                     int  level;
-                    if (!name.empty() && 0 != str::toInetger(level, leveltok.data())) {
+                    if (!name.empty() && 0 != str::toInteger(level, leveltok.data())) {
                         getLogger(name.data())->setLevel(level);
                     } else {
                         GN_ERROR(sLogger)("Log level must be in format of 'name:level'");

@@ -15,6 +15,8 @@ class BackbufferVulkan : public BackbufferCommon {
 public:
     BackbufferVulkan(ArtifactDatabase & db, const StrA & name);
 
+    ~BackbufferVulkan() override;
+
     /// Initialize swapchain and optional surface. Call once after construction. Returns false on failure.
     bool init(const Backbuffer::CreateParameters & params);
 

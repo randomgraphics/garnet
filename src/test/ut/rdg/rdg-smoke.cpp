@@ -239,9 +239,8 @@ public:
 
         // Workflow 1: Initialize values (1, 2, 3)
         {
-            auto * workflow = renderGraph->schedule();
+            auto * workflow = renderGraph->schedule("initialize_values");
             TS_ASSERT(workflow != nullptr);
-            workflow->name = "initialize_values";
 
             // Task 1: Initialize 'one' to 1
             {
@@ -253,7 +252,7 @@ public:
                 TS_ASSERT(initArgs != nullptr);
                 initArgs->output.set(one);
 
-                GN::rdg::Workflow::Task task;
+                GN::rdg::Workflow::Task task("init_one");
                 task.action    = initAction;
                 task.arguments = initArgs;
                 workflow->tasks.append(task);
@@ -269,7 +268,7 @@ public:
                 TS_ASSERT(initArgs != nullptr);
                 initArgs->output.set(two);
 
-                GN::rdg::Workflow::Task task;
+                GN::rdg::Workflow::Task task("init_two");
                 task.action    = initAction;
                 task.arguments = initArgs;
                 workflow->tasks.append(task);
@@ -285,7 +284,7 @@ public:
                 TS_ASSERT(initArgs != nullptr);
                 initArgs->output.set(three);
 
-                GN::rdg::Workflow::Task task;
+                GN::rdg::Workflow::Task task("init_three");
                 task.action    = initAction;
                 task.arguments = initArgs;
                 workflow->tasks.append(task);
@@ -294,9 +293,8 @@ public:
 
         // Workflow 2: Compute sum = 1 + 2
         {
-            auto * workflow = renderGraph->schedule();
+            auto * workflow = renderGraph->schedule("compute_sum");
             TS_ASSERT(workflow != nullptr);
-            workflow->name = "compute_sum";
 
             auto addAction = GN::rdg::AddIntegersAction::create(*db, "add_1_2");
             TS_ASSERT(addAction != nullptr);
@@ -307,7 +305,7 @@ public:
             addArgs->input2.set(two);
             addArgs->output.set(sum);
 
-            GN::rdg::Workflow::Task task;
+            GN::rdg::Workflow::Task task("add_1_2");
             task.action    = addAction;
             task.arguments = addArgs;
             workflow->tasks.append(task);
@@ -315,9 +313,8 @@ public:
 
         // Workflow 3: Compute result = 3 * sum
         {
-            auto * workflow = renderGraph->schedule();
+            auto * workflow = renderGraph->schedule("compute_result");
             TS_ASSERT(workflow != nullptr);
-            workflow->name = "compute_result";
 
             auto multiplyAction = GN::rdg::MultiplyIntegersAction::create(*db, "multiply_3_sum");
             TS_ASSERT(multiplyAction != nullptr);
@@ -328,7 +325,7 @@ public:
             multiplyArgs->input2.set(sum);
             multiplyArgs->output.set(result);
 
-            GN::rdg::Workflow::Task task;
+            GN::rdg::Workflow::Task task("multiply_3_sum");
             task.action    = multiplyAction;
             task.arguments = multiplyArgs;
             workflow->tasks.append(task);

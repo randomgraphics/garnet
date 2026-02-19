@@ -126,10 +126,21 @@ inline StrA getEnv(const char * name) {
 /// Get environment variable as boolean variable. Return true only when the variable
 /// exists and the value is "1" or "yes" (case-insensitive).
 ///
-inline bool getEnvBoolean(const char * name) {
+inline bool getEnvBoolean(const char * name, bool defaultValue = false) {
     StrA result;
     getEnv(result, name);
+    if (result.empty()) return defaultValue;
     return "1" == result || 0 == str::compareI("yes", result.data()) || 0 == str::compareI("true", result.data());
+}
+
+///
+/// Get environment variable as integer variable. Return the default value if the variable
+/// does not exist or is not a valid integer.
+///
+inline int getEnvInteger(const char * name, int defaultValue) {
+    StrA result;
+    getEnv(result, name);
+    return str::toInteger(result.data(), defaultValue);
 }
 
 ///

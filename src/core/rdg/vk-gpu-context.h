@@ -17,6 +17,8 @@ class GpuContextVulkan : public GpuContextCommon {
 public:
     GpuContextVulkan(ArtifactDatabase & db, const StrA & name, const CreateParameters & params);
 
+    ~GpuContextVulkan() override;
+
     const rapid_vulkan::Instance & instance() const {
         GN_ASSERT(mInstance.has_value() && mInstance.value().handle());
         return mInstance.value();
