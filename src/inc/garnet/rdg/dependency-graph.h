@@ -36,9 +36,6 @@ struct RuntimeType {
 
 protected:
     RuntimeType(uint64_t type): type(type) {}
-
-    /// Called by subclasses tp get a unique type id.
-    GN_API static uint64_t getNextUniqueTypeId();
 };
 
 /// Artifact represents an atomic resource that can be used as input or output of a task.

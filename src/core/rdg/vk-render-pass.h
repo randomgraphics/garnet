@@ -8,7 +8,7 @@ class ResourceTrackerVulkan;
 
 class RenderPassManagerVulkan : public SubmissionImpl::Context {
 public:
-    inline static const uint64_t TYPE = RuntimeType::getNextUniqueTypeId();
+    inline static const uint64_t TYPE = getNextUniqueTypeId();
 
     RenderPassManagerVulkan(): SubmissionImpl::Context(TYPE) {}
 

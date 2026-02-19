@@ -31,7 +31,7 @@ public:
 
 // Create a frame execution context to store mapping from backbuffer artifact to frame pointer.
 struct FrameExecutionContextVulkan : SubmissionImpl::Context {
-    inline static const uint64_t                                         TYPE = RuntimeType::getNextUniqueTypeId();
+    inline static const uint64_t                                         TYPE = getNextUniqueTypeId();
     std::unordered_map<uint64_t, const rapid_vulkan::Swapchain::Frame *> bb2frame;
     FrameExecutionContextVulkan(): SubmissionImpl::Context(TYPE) {}
 };

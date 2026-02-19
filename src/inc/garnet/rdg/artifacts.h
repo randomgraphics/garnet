@@ -13,7 +13,8 @@ namespace GN::rdg {
 
 /// GpuContext represents a GPU context (wrapper of D3D/Vulkan context).
 struct GpuContext : public Artifact {
-    static inline const uint64_t TYPE = RuntimeType::getNextUniqueTypeId();
+    GN_API static const uint64_t TYPE;
+    ;
 
     struct CreateParameters {
         /// The graphics API ("auto" = platform default; "vulkan", "d3d12", "metal").
@@ -37,7 +38,8 @@ protected:
 
 /// Texture represents a 2D/3D/cube texture with optional mipmap and array layers.
 struct Texture : public GpuResource {
-    static inline const uint64_t TYPE = RuntimeType::getNextUniqueTypeId();
+    GN_API static const uint64_t TYPE;
+    ;
     /// Descriptor used when creating or declaring the texture (format, dimensions).
     struct Descriptor {
         gfx::img::PixelFormat format  = gfx::img::PixelFormat::UNKNOWN();
@@ -95,7 +97,7 @@ protected:
 
 /// Backbuffer represents the swapchain that can be presented to screen.
 struct Backbuffer : public GpuResource {
-    inline static const uint64_t TYPE = RuntimeType::getNextUniqueTypeId();
+    GN_API static const uint64_t TYPE;
 
     /// Window and size (and format) for backbuffer. If win is null, headless; width/height must be positive.
     /// If win is non-null and width/height are 0, use window client size.
@@ -127,7 +129,8 @@ protected:
 
 /// Sampler represents GPU sampler state (filtering, addressing, LOD, anisotropy).
 struct Sampler : public GpuResource {
-    static inline const uint64_t TYPE = RuntimeType::getNextUniqueTypeId();
+    GN_API static const uint64_t TYPE;
+    ;
     enum class Filter { POINT, LINEAR, ANISOTROPIC };
     enum class AddressMode { REPEAT, MIRROR_REPEAT, CLAMP_TO_EDGE, CLAMP_TO_BORDER, MIRROR_CLAMP_TO_EDGE };
 
@@ -162,7 +165,8 @@ protected:
 
 /// Buffer represents a GPU buffer (vertex, index, constant, storage, etc.).
 struct Buffer : public GpuResource {
-    static inline const uint64_t TYPE = RuntimeType::getNextUniqueTypeId();
+    GN_API static const uint64_t TYPE;
+    ;
     /// Buffer usage flags.
     enum Usage {
         VERTEX,       ///< Vertex buffer
@@ -201,7 +205,8 @@ protected:
 /// Base class of all mesh types.
 /// Meshes can be either indexed (using an index buffer) or non-indexed (drawing vertices directly).
 struct Mesh : public GpuResource {
-    static inline const uint64_t TYPE = RuntimeType::getNextUniqueTypeId();
+    GN_API static const uint64_t TYPE;
+    ;
 
     struct VertexBuffer {
         AutoRef<Buffer>       buffer;

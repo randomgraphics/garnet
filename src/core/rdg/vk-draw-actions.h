@@ -1,11 +1,12 @@
 #pragma once
 
 #include "vk-gpu-context.h"
+#include "runtime-type.h"
 
 namespace GN::rdg {
 
 struct DrawActionContextVulkan : public Action::ExecutionContext {
-    inline static const uint64_t TYPE = RuntimeType::getNextUniqueTypeId();
+    inline static const uint64_t TYPE = getNextUniqueTypeId();
 
     uint64_t commandBufferId {};
 

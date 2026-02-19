@@ -8,11 +8,6 @@ static GN::Logger * sLogger = GN::getLogger("GN.rdg");
 
 namespace GN::rdg {
 
-GN_API uint64_t RuntimeType::getNextUniqueTypeId() {
-    static std::atomic<uint64_t> nextId = 1;
-    return nextId.fetch_add(1, std::memory_order_relaxed);
-}
-
 // ============================================================================
 // ArtifactDatabase implementation
 // ============================================================================

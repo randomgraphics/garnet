@@ -2,6 +2,7 @@
 
 #include "submission.h"
 #include "vk-gpu-context.h"
+#include "runtime-type.h"
 #include <unordered_map>
 
 namespace GN::rdg {
@@ -10,7 +11,7 @@ namespace GN::rdg {
 /// resource uses per action; execute() records barriers to transition resources to the right layout.
 class ResourceTrackerVulkan : public SubmissionImpl::Context {
 public:
-    inline static const uint64_t TYPE = RuntimeType::getNextUniqueTypeId();
+    inline static const uint64_t TYPE = getNextUniqueTypeId();
 
     struct ConstructParameters {
         SubmissionImpl &          submission;

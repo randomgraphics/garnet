@@ -3,6 +3,7 @@
 #include <garnet/GNrdg.h>
 #include <future>
 #include <mutex>
+#include "runtime-type.h"
 
 namespace GN::rdg {
 

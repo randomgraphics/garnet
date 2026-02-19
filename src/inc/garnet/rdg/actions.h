@@ -55,10 +55,10 @@ struct RenderTarget {
 /// This is the recommended first action to start rendering to a render target.
 /// It tells GPU to discard existing content thus avoid expensive image layout transitions.
 struct ClearRenderTarget : public Action {
-    inline static const uint64_t TYPE = RuntimeType::getNextUniqueTypeId();
+    GN_API static const uint64_t TYPE;
 
     struct A : public Arguments {
-        inline static const uint64_t TYPE = RuntimeType::getNextUniqueTypeId();
+        GN_API static const uint64_t TYPE;
         A(): Arguments(TYPE) {}
         struct ClearValues {
             union {
@@ -85,10 +85,10 @@ protected:
 };
 
 // struct TextureLoader : public Action {
-//     inline static const uint64_t TYPE = RuntimeType::getNextUniqueTypeId();
+//     GN_API static const uint64_t TYPE;
 
 //     struct A : public Arguments {
-//         inline static const uint64_t TYPE = RuntimeType::getNextUniqueTypeId();
+//         GN_API static const uint64_t TYPE;
 //         A(): Arguments(TYPE) {}
 //         WriteOnly<AutoRef<Texture>> texture;  // Output texture resource
 //         ReadOnly<StrA>              filename; // Path to texture file
@@ -105,10 +105,10 @@ protected:
 // };
 
 struct PrepareBackbuffer : public Action {
-    inline static const uint64_t TYPE = RuntimeType::getNextUniqueTypeId();
+    GN_API static const uint64_t TYPE;
 
     struct A : public Arguments {
-        inline static const uint64_t TYPE = RuntimeType::getNextUniqueTypeId();
+        GN_API static const uint64_t TYPE;
         A(): Arguments(TYPE) {}
         ReadWrite<AutoRef<Backbuffer>> backbuffer; // Backbuffer to prepare
     };
@@ -125,10 +125,10 @@ protected:
 };
 
 struct PresentBackbuffer : public Action {
-    inline static const uint64_t TYPE = RuntimeType::getNextUniqueTypeId();
+    GN_API static const uint64_t TYPE;
 
     struct A : public Arguments {
-        inline static const uint64_t TYPE = RuntimeType::getNextUniqueTypeId();
+        GN_API static const uint64_t TYPE;
         A(): Arguments(TYPE) {}
         ReadOnly<AutoRef<Backbuffer>> backbuffer; // Backbuffer to present
     };
@@ -146,7 +146,7 @@ protected:
 
 /// Setup render states action for configuring GPU render pipeline state.
 struct SetupRenderStates : public Action {
-    inline static const uint64_t TYPE = RuntimeType::getNextUniqueTypeId();
+    GN_API static const uint64_t TYPE;
 
     enum FillMode {
         FILL_SOLID = 0,
@@ -270,7 +270,7 @@ struct SetupRenderStates : public Action {
     };
 
     struct A : public Arguments {
-        inline static const uint64_t TYPE = RuntimeType::getNextUniqueTypeId();
+        GN_API static const uint64_t TYPE;
         A(): Arguments(TYPE) {}
         ReadOnly<RenderStateDesc> renderStates; ///< render state descriptor
     };
@@ -336,7 +336,7 @@ namespace GN::rdg {
 
 /// Generic draw action for quick GPU draw prototyping. It emphasizes ease of use and flexibility over extreme performance.
 struct GenericDraw : public ShaderAction {
-    inline static const uint64_t TYPE = RuntimeType::getNextUniqueTypeId();
+    GN_API static const uint64_t TYPE;
 
     /// Draw parameters
     struct DrawParams {
@@ -347,7 +347,7 @@ struct GenericDraw : public ShaderAction {
     };
 
     struct A : public Arguments {
-        inline static const uint64_t TYPE = RuntimeType::getNextUniqueTypeId();
+        GN_API static const uint64_t TYPE;
         A(): Arguments(TYPE) {}
 
         ReadOnly<AutoRef<Mesh>>             mesh;
@@ -380,7 +380,7 @@ protected:
 
 /// Generic compute action for quick GPU compute prototyping. It emphasizes ease of use and flexibility over extreme performance.
 struct GenericCompute : public ShaderAction {
-    inline static const uint64_t TYPE = RuntimeType::getNextUniqueTypeId();
+    GN_API static const uint64_t TYPE;
 
     /// Dispatch dimensions (thread group counts)
     struct DispatchSize {
@@ -390,7 +390,7 @@ struct GenericCompute : public ShaderAction {
     };
 
     struct A : public Arguments {
-        inline static const uint64_t TYPE = RuntimeType::getNextUniqueTypeId();
+        GN_API static const uint64_t TYPE;
         A(): Arguments(TYPE) {}
 
         ReadOnlyMap<ShaderResourceBinding, BufferParameter>  uniforms; ///< uniform buffers
@@ -414,10 +414,10 @@ protected:
 // /// Inputs: one color (set on the action) and up to MAX_INPUT_TEXTURES texture parameters.
 // /// Output: one texture (parameter "output").
 // struct Compose : public ShaderAction {
-//     inline static const uint64_t TYPE = RuntimeType::getNextUniqueTypeId();
+//     GN_API static const uint64_t TYPE;
 
 //     struct A : public Arguments {
-//         inline static const uint64_t                            TYPE = RuntimeType::getNextUniqueTypeId();
+//         GN_API static const uint64_t TYPE;
 //         ReadOnly<AutoRef<Mesh>>                                 mesh;
 //         ReadOnly<Vector4f>                                      color;
 //         ReadOnlyArray<AutoRef<Texture>, 8, Arguments::Optional> textures;
@@ -434,7 +434,7 @@ protected:
 // /// Physically Based Rendering (PBR) action using Disney PBR shading model.
 // /// Renders objects with realistic material properties including base color, metallic, roughness, and normal mapping.
 // struct PBRShading : public ShaderAction {
-//     inline static const uint64_t TYPE = RuntimeType::getNextUniqueTypeId();
+//     GN_API static const uint64_t TYPE;
 
 //     /// Light types for PBR lighting
 //     enum LightType {
@@ -485,7 +485,7 @@ protected:
 //     };
 
 //     struct A : public Arguments {
-//         inline static const uint64_t TYPE = RuntimeType::getNextUniqueTypeId();
+//         GN_API static const uint64_t TYPE;
 
 //         ReadOnly<AutoRef<Mesh>> mesh; ///< mesh to render
 

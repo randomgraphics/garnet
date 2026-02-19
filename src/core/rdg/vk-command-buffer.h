@@ -7,7 +7,7 @@ namespace GN::rdg {
 
 class CommandBufferManagerVulkan : public SubmissionImpl::Context {
 public:
-    inline static const uint64_t TYPE = RuntimeType::getNextUniqueTypeId();
+    inline static const uint64_t TYPE = getNextUniqueTypeId();
 
     struct ConstructParameters {
         AutoRef<GpuContextVulkan> gpu;

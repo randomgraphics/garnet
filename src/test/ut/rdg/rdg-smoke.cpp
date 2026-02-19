@@ -18,9 +18,14 @@
 
 namespace GN::rdg {
 
+static inline uint64_t getTestTypeId() {
+    static std::atomic<uint64_t> nextId = 1;
+    return nextId.fetch_add(1, std::memory_order_relaxed);
+}
+
 // Define a custom artifact that holds an integer
 struct IntegerArtifact : public Artifact {
-    inline static const uint64_t TYPE = RuntimeType::getNextUniqueTypeId();
+    inline static const uint64_t TYPE = getTestTypeId();
 
     int value = 0;
 
@@ -38,7 +43,7 @@ struct IntegerArtifact : public Artifact {
 
 // Define an action to initialize an integer artifact
 struct InitIntegerAction : public Action {
-    inline static const uint64_t TYPE = RuntimeType::getNextUniqueTypeId();
+    inline static const uint64_t TYPE = getTestTypeId();
 
     int initValue = 0;
 
@@ -54,7 +59,7 @@ struct InitIntegerAction : public Action {
     }
 
     struct A : public Arguments {
-        inline static const uint64_t TYPE = RuntimeType::getNextUniqueTypeId();
+        inline static const uint64_t TYPE = getTestTypeId();
         A(): Arguments(TYPE) {}
         WriteOnly<AutoRef<IntegerArtifact>> output;
     };
@@ -81,7 +86,7 @@ struct InitIntegerAction : public Action {
 
 // Define an action to add two integers
 struct AddIntegersAction : public Action {
-    inline static const uint64_t TYPE = RuntimeType::getNextUniqueTypeId();
+    inline static const uint64_t TYPE = getTestTypeId();
 
     AddIntegersAction(ArtifactDatabase & db, const StrA & name): Action(db, TYPE, name) {}
 
@@ -95,7 +100,7 @@ struct AddIntegersAction : public Action {
     }
 
     struct A : public Arguments {
-        inline static const uint64_t TYPE = RuntimeType::getNextUniqueTypeId();
+        inline static const uint64_t TYPE = getTestTypeId();
         A(): Arguments(TYPE) {}
         ReadOnly<AutoRef<IntegerArtifact>>  input1;
         ReadOnly<AutoRef<IntegerArtifact>>  input2;
@@ -141,7 +146,7 @@ struct AddIntegersAction : public Action {
 
 // Define an action to multiply two integers
 struct MultiplyIntegersAction : public Action {
-    inline static const uint64_t TYPE = RuntimeType::getNextUniqueTypeId();
+    inline static const uint64_t TYPE = getTestTypeId();
 
     MultiplyIntegersAction(ArtifactDatabase & db, const StrA & name): Action(db, TYPE, name) {}
 
@@ -155,7 +160,7 @@ struct MultiplyIntegersAction : public Action {
     }
 
     struct A : public Arguments {
-        inline static const uint64_t TYPE = RuntimeType::getNextUniqueTypeId();
+        inline static const uint64_t TYPE = getTestTypeId();
         A(): Arguments(TYPE) {}
         ReadOnly<AutoRef<IntegerArtifact>>  input1;
         ReadOnly<AutoRef<IntegerArtifact>>  input2;
