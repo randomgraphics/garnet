@@ -18,6 +18,7 @@
 // *****************************************************************************
 
 #include <memory>
+#include <optional>
 
 namespace GN {
 
@@ -343,6 +344,14 @@ private:
 template<class>
 class Signal; // undefined.
 
+template<typename RET>
+struct SignalResults {
+    DynaArray<RET> results;
+};
+
+template<>
+struct SignalResults<void> {};
+
 template<typename RET, typename... PARAMS>
 class Signal<RET(PARAMS...)> : public internal::SignalBase {
     typedef internal::delegate<RET(PARAMS...)> DelegateType;
@@ -393,33 +402,32 @@ public:
 
     /// this is simpler form of emit() that returns the return value of the last delegate.
     template<typename... ARGS>
-    RET emit(ARGS &&... args) const {
-        auto lock = std::lock_guard(mControlBlock->mutex);
+    SignalResults<RET> emit(ARGS &&... args) const {
+        auto               lock = std::lock_guard(mControlBlock->mutex);
+        SignalResults<RET> results;
         if constexpr (std::is_same_v<RET, void>) {
             // For void return, all delegates get lvalue references to avoid moving rvalues multiple times
             for (const auto & d : mControlBlock->delegates) { d(static_cast<std::remove_reference_t<ARGS> &>(args)...); }
+            return results;
         } else {
             if (mControlBlock->delegates.empty()) {
                 // Return default-constructed value - enables RVO (returning temporary)
-                return RET();
+                return results;
             }
-            // For single delegate, forward arguments - enables move semantics for rvalues
-            if (mControlBlock->delegates.size() == 1) { return mControlBlock->delegates.front()(std::forward<ARGS>(args)...); }
+            // // For single delegate, forward arguments - enables move semantics for rvalues
+            // if (mControlBlock->delegates.size() == 1) { return mControlBlock->delegates.front()(std::forward<ARGS>(args)...); }
             // For multiple delegates: convert to lvalues to avoid moving rvalues multiple times.
             // All delegates except the last receive lvalue references (safe for multiple calls).
             // The last delegate gets forwarded arguments (can move if rvalues).
-            auto it   = mControlBlock->delegates.begin();
-            auto last = std::prev(mControlBlock->delegates.end());
-            for (; it != last; ++it) {
-                (void) (*it)(static_cast<std::remove_reference_t<ARGS> &>(args)...); // force lvalue refs
-            }
-            return (*last)(std::forward<ARGS>(args)...); // forward on last call
+            results.results.reserve(mControlBlock->delegates.size());
+            for (const auto & d : mControlBlock->delegates) { results.results.append(d(static_cast<std::remove_reference_t<ARGS> &>(args)...)); }
+            return results;
         }
     }
 
     /// this is the operator form of emit().
     template<typename... ARGS>
-    RET operator()(ARGS &&... args) const {
+    SignalResults<RET> operator()(ARGS &&... args) const {
         return emit(std::forward<ARGS>(args)...);
     }
 

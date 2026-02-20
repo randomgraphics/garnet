@@ -53,6 +53,12 @@ public:
         return *newCtx;
     }
 
+    // Signaled after all pending tasks are successfully prepared.
+    Signal<Action::ExecutionResult(SubmissionImpl &)> allTasksPrepared;
+
+    // Signaled after all pending tasks are successfully executed.
+    Signal<Action::ExecutionResult(SubmissionImpl &)> allTasksExecuted;
+
 private:
     /// Deletes all work items and clears intermediate data (workflows, dependency graph). Safe to call multiple times.
     void cleanup(bool cleanupPendingWorkflows = true) noexcept;

@@ -108,9 +108,14 @@ public:
         // TODO: do more graphics commands here.
 
         // end render pass, if this is the last task of the render pass.
-        if (rp->lastTaskIndex == taskInfo.index) cb.commandBuffer->handle().endRendering();
+        if (rp->lastTaskIndex == taskInfo.index) {
+            // Not like old render pass, dynamic rendering does not implicitly updates the render target's layout.
+            // So here weon't have to call resource tracker to update the layout either.
+            cb.commandBuffer->handle().endRendering();
+        }
 
         // submit command buffer, if asked to do so.
+        // TODO: we need to remember the submission somewhere.
         if (cb.submit) cb.queue->submit(rapid_vulkan::CommandQueue::SubmitParameters {.commandBuffers = {*cb.commandBuffer}});
 
         // done

@@ -244,6 +244,7 @@ public:
 
     /// \name Common array operations.
     ///
+    /// \note adding methods with rvalue arguments.
     //@{
     void      append(const T & t) { doInsert(mCount, t); }
     const T & back() const {

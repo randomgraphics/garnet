@@ -100,7 +100,7 @@ const rapid_vulkan::Image * getColorTargetImage(const RenderTarget::ColorTarget 
                 ("RenderPassManagerVulkan::execute: can't fine the frame for backbuffer. This is most likely due to rendering to a unprepared backbuffer.");
                 return {};
             }
-        image = frameIter->second->backbuffer->image.get();
+        image = frameIter->second->backbuffer().image;
         if (!image) GN_UNLIKELY {
                 GN_ERROR(sLogger)("RenderPassManagerVulkan::execute: the backbuffer is not properly initialized.", stage);
                 return {};

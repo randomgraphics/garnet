@@ -79,9 +79,9 @@ public:
     struct ImageState {
         vk::ImageLayout        layout = vk::ImageLayout::eUndefined;
         vk::AccessFlags        access {};
-        vk::PipelineStageFlags stage = vk::PipelineStageFlagBits::eTopOfPipe;
+        vk::PipelineStageFlags stages = vk::PipelineStageFlagBits::eBottomOfPipe;
 
-        bool operator==(const ImageState & other) const { return layout == other.layout && access == other.access && stage == other.stage; }
+        bool operator==(const ImageState & other) const { return layout == other.layout && access == other.access && stages == other.stages; }
         bool operator!=(const ImageState & other) const { return !operator==(other); }
     };
 
@@ -106,6 +106,13 @@ public:
     /// \param commandBuffer Command buffer to record barriers into.
     /// \return true if barriers were recorded (or none needed), false on invalid \p actionId.
     bool execute(const ActionParameters & params, vk::CommandBuffer commandBuffer);
+
+    /// Update the state of an image. Can only be called in execution pass.
+    void setImageState(const vk::Image & image, uint32_t mip, uint32_t arrayLayer, const ImageState & state) {
+        // TODO: verify this is indeed the execution pass.
+        const ImageKey key = {image, mip, arrayLayer};
+        mImageState[key].transitTo(state);
+    }
 
     /// Query the current state of an image.
     const ImageStateTransition * queryImageState(const vk::Image & image, uint32_t mip, uint32_t arrayLayer) const {

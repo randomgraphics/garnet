@@ -184,7 +184,7 @@ Submission::Result SubmissionImpl::run(Parameters) {
                 auto & pt = pendingTasks.back();
                 GN_VERBOSE(sLogger)("Preparing workflow '{}' task '{}'", pt.info.workflow, pt.info.task);
                 auto [result, context] = task.action->prepare(pt.info, *task.arguments);
-                pt.context             = std::unique_ptr<Action::ExecutionContext>(context);
+                pt.context = std::unique_ptr<Action::ExecutionContext>(context); // need to do this before error check to ensure it is released even on error.
                 if (result == Action::ExecutionResult::FAILED) {
                     GN_ERROR(sLogger)("Workflow '{}' task '{}' preparation failed", pt.info.workflow, pt.info.task);
                     return setResult(Action::ExecutionResult::FAILED);
@@ -194,6 +194,13 @@ Submission::Result SubmissionImpl::run(Parameters) {
                     hasWarning = true;
                 }
             }
+        }
+
+        // Emit prepare signal and check for errors.
+        auto signalResults = allTasksPrepared.emit(*this);
+        for (auto r : signalResults.results) {
+            if (r == Action::ExecutionResult::FAILED) { return setResult(Action::ExecutionResult::FAILED); }
+            if (r == Action::ExecutionResult::WARNING) { hasWarning = true; }
         }
 
         // step 4: execute workflows sequentially in topological order.
@@ -209,6 +216,13 @@ Submission::Result SubmissionImpl::run(Parameters) {
                 GN_VERBOSE(sLogger)("Workflow '{}' task '{}' execution completed with warnings", pt.info.workflow, pt.info.task);
                 hasWarning = true;
             }
+        }
+
+        // Emit execute signal and check for errors.
+        signalResults = allTasksExecuted.emit(*this);
+        for (auto r : signalResults.results) {
+            if (r == Action::ExecutionResult::FAILED) { return setResult(Action::ExecutionResult::FAILED); }
+            if (r == Action::ExecutionResult::WARNING) { hasWarning = true; }
         }
 
         // Done

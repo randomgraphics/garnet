@@ -204,7 +204,7 @@ bool ResourceTrackerVulkan::execute(const ActionParameters & action, vk::Command
                 if (cur.layout != newLayout || (cur.layout == vk::ImageLayout::eUndefined)) {
                     vk::AccessFlags srcAccess = cur.access;
                     if (cur.layout == vk::ImageLayout::eUndefined) { srcAccess = vk::AccessFlagBits::eNone; }
-                    combinedSrcStage |= cur.stage;
+                    combinedSrcStage |= cur.stages;
                     combinedDstStage |= newStage;
                     const vk::ImageSubresourceRange range(aspect, mip, 1, face, 1);
                     barrier.i(image, srcAccess, newAccess, cur.layout, newLayout, range);

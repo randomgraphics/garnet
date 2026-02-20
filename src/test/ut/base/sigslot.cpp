@@ -345,12 +345,12 @@ public:
     void testSignalEmitNonVoidNoDelegates() {
         GN::Signal<int(int)> signal;
 
-        // Should return default-constructed value
-        int result = signal.emit(42);
-        TS_ASSERT_EQUALS(result, 0);
+        // Should return empty results when no delegates
+        auto results = signal.emit(42);
+        TS_ASSERT(results.results.empty());
 
-        result = signal(100); // Test operator() form
-        TS_ASSERT_EQUALS(result, 0);
+        results = signal(100); // Test operator() form
+        TS_ASSERT(results.results.empty());
     }
 
     void testSignalEmitNonVoidSingleDelegate() {
@@ -359,15 +359,17 @@ public:
 
         auto tether = signal.connect<staticIntHandler>();
 
-        int result = signal.emit(5);
+        auto results = signal.emit(5);
         TS_ASSERT_EQUALS(CallTracker::callCount, 1);
         TS_ASSERT_EQUALS(CallTracker::lastValue, 5);
-        TS_ASSERT_EQUALS(result, 10); // staticIntHandler returns value * 2
+        TS_ASSERT_EQUALS(results.results.size(), 1);
+        TS_ASSERT_EQUALS(results.results[0], 10); // staticIntHandler returns value * 2
 
-        result = signal(7); // Test operator() form
+        results = signal(7); // Test operator() form
         TS_ASSERT_EQUALS(CallTracker::callCount, 2);
         TS_ASSERT_EQUALS(CallTracker::lastValue, 7);
-        TS_ASSERT_EQUALS(result, 14);
+        TS_ASSERT_EQUALS(results.results.size(), 1);
+        TS_ASSERT_EQUALS(results.results[0], 14);
     }
 
     void testSignalEmitNonVoidMultipleDelegates() {
@@ -379,7 +381,7 @@ public:
         auto tether2 = signal.connect<&EmitTestClass::handlerWithReturn>(&obj1);
         auto tether3 = signal.connect<&EmitTestClass::handlerWithReturn>(&obj2);
 
-        int result = signal.emit(3);
+        auto results = signal.emit(3);
 
         // All delegates should be called
         TS_ASSERT_EQUALS(CallTracker::callCount, 1);
@@ -389,19 +391,24 @@ public:
         TS_ASSERT_EQUALS(obj2.callCount, 1);
         TS_ASSERT_EQUALS(obj2.lastValue, 3);
 
-        // Should return the last delegate's result (obj2 returns value * 3 = 9)
-        TS_ASSERT_EQUALS(result, 9);
+        // Should return all delegate results: [6, 9, 9] (staticIntHandler*2, obj1*3, obj2*3). Last is 9.
+        TS_ASSERT_EQUALS(results.results.size(), 3);
+        TS_ASSERT_EQUALS(results.results[0], 6);
+        TS_ASSERT_EQUALS(results.results[1], 9);
+        TS_ASSERT_EQUALS(results.results[2], 9);
     }
 
     void testSignalEmitWithMultipleArguments() {
         GN::Signal<int(int, int)> signal;
         auto                      tether = signal.connect<staticTwoArgHandler>();
 
-        int result = signal.emit(10, 20);
-        TS_ASSERT_EQUALS(result, 30);
+        auto results = signal.emit(10, 20);
+        TS_ASSERT_EQUALS(results.results.size(), 1);
+        TS_ASSERT_EQUALS(results.results[0], 30);
 
-        result = signal(5, 15); // Test operator() form
-        TS_ASSERT_EQUALS(result, 20);
+        results = signal(5, 15); // Test operator() form
+        TS_ASSERT_EQUALS(results.results.size(), 1);
+        TS_ASSERT_EQUALS(results.results[0], 20);
     }
 
     void testSignalEmitVoidWithReferenceArguments() {
@@ -446,7 +453,7 @@ public:
         auto tether3 = signal.connect<&EmitTestClass::handlerWithReturn>(&obj2);
         auto tether4 = signal.connect<&EmitTestClass::handlerWithReturn>(&obj3);
 
-        int result = signal.emit(4);
+        auto results = signal.emit(4);
 
         // Verify all were called
         TS_ASSERT_EQUALS(CallTracker::callCount, 1);
@@ -454,8 +461,10 @@ public:
         TS_ASSERT_EQUALS(obj2.callCount, 1);
         TS_ASSERT_EQUALS(obj3.callCount, 1);
 
-        // Result should be from last delegate (obj3: 4 * 3 = 12)
-        TS_ASSERT_EQUALS(result, 12);
+        // Results: [8, 12, 12, 12] (staticIntHandler*2, obj1*3, obj2*3, obj3*3). Last is 12.
+        TS_ASSERT_EQUALS(results.results.size(), 4);
+        TS_ASSERT_EQUALS(results.results[0], 8);
+        TS_ASSERT_EQUALS(results.results.back(), 12);
     }
 
     void testSignalEmitWithConstArguments() {
