@@ -1,6 +1,5 @@
 #include "pch.h"
 #include "vk-backbuffer.h"
-#include "vk-resource-tracker.h"
 
 static GN::Logger * sLogger = GN::getLogger("GN.rdg.vk");
 
@@ -44,12 +43,11 @@ bool BackbufferVulkan::init(const Backbuffer::CreateParameters & params) {
     if (0 == sequence) return false;
 
     // store GPU context and descriptor.
-    mGpuContext.set(static_cast<GpuContextVulkan *>(params.context.get()));
+    mGpuContext = params.context.castTo<GpuContextVulkan>();
     mDescriptor = params.descriptor;
 
-    auto         ctxVk = static_cast<GpuContextVulkan *>(params.context.get());
-    const auto & inst  = ctxVk->instance();
-    const auto & dev   = ctxVk->device();
+    const auto & inst = mGpuContext->instance();
+    const auto & dev  = mGpuContext->device();
 
     size_t w = mDescriptor.width;
     size_t h = mDescriptor.height;
@@ -81,6 +79,7 @@ bool BackbufferVulkan::init(const Backbuffer::CreateParameters & params) {
         GN_ERROR(sLogger)("BackbufferVulkan::init: Swapchain creation failed: {}, name='{}'", e.what(), name);
         return false;
     }
+
     return true;
 }
 
@@ -90,83 +89,59 @@ gfx::img::Image BackbufferVulkan::readback() const {
     return gfx::img::Image();
 }
 
-Action::ExecutionResult BackbufferVulkan::prepare(SubmissionImpl & submission) {
+Action::ExecutionResult BackbufferVulkan::prepare(SubmissionImpl &) {
     if (!mSwapchain.valid()) GN_UNLIKELY {
             GN_ERROR(sLogger)("BackbufferVulkan::prepare: swapchain not initialized");
             return Action::ExecutionResult::FAILED;
         }
-    // Retrieve or create the FrameExecutionContext for this submission
-    auto & ctx = submission.ensureExecutionContext<FrameExecutionContextVulkan>();
-    if (ctx.bb2frame.find(this->sequence) != ctx.bb2frame.end()) GN_UNLIKELY {
-            GN_WARN(sLogger)("BackbufferVulkan::prepare: already prepared. Redundant call is ignored.");
+    // Check if the backbuffer is already prepared.
+    if (mActiveFrame) GN_UNLIKELY {
+            GN_VERBOSE(sLogger)("BackbufferVulkan::prepare: already prepared. Redundant call is ignored.");
             return Action::ExecutionResult::WARNING;
         }
-    // Call beginFrame and store the mapping from 'this' backbuffer to the frame pointer
+
+    // Call beginFrame and store the frame pointer.
     GN_VERBOSE(sLogger)("BackbufferVulkan::prepare: beginFrame");
-    auto frame = mSwapchain->beginFrame();
-    if (!frame) GN_UNLIKELY {
+    mActiveFrame = mSwapchain->beginFrame();
+    if (!mActiveFrame) GN_UNLIKELY {
             GN_ERROR(sLogger)("BackbufferVulkan::prepare: beginFrame failed");
             return Action::ExecutionResult::FAILED;
         }
 
-    if (ctx.bb2frame.find(this->sequence) != ctx.bb2frame.end()) {
-        GN_VERBOSE(sLogger)("BackbufferVulkan::prepare: already prepared. Redundant call is ignored.");
-        return Action::ExecutionResult::WARNING;
-    }
+    // Update backbuffer state
+    auto initialState = TextureVulkan::ImageState {vk::ImageLayout::eUndefined, vk::AccessFlagBits::eNone, vk::PipelineStageFlagBits::eBottomOfPipe};
+    trackImageState(initialState);
 
-    // Initialize the frame state
-    auto & frameState = ctx.bb2frame[this->sequence];
-    frameState.frame  = frame;
-    frameState.pendingSemaphores.append(frame->imageAvailable());
-
-    // Call resource tracker to set the initial state of the backbuffer image.
-    auto & rt = submission.ensureExecutionContext<ResourceTrackerVulkan>(
-        ResourceTrackerVulkan::ConstructParameters {.submission = submission, .gpu = mGpuContext.castTo<GpuContextVulkan>()});
-    auto initialState = ResourceTrackerVulkan::ImageState {vk::ImageLayout::eUndefined, vk::AccessFlagBits::eNone, vk::PipelineStageFlagBits::eBottomOfPipe};
-    rt.setImageState(frame->backbuffer().image->handle(), 0, 0, initialState);
+    // Update the pending semaphores.
+    mPendingSemaphores.clear();
+    mPendingSemaphores.append(mActiveFrame->imageAvailable());
 
     // done
     return Action::ExecutionResult::PASSED;
 }
 
-Action::ExecutionResult BackbufferVulkan::present(SubmissionImpl & submission) {
+Action::ExecutionResult BackbufferVulkan::present(SubmissionImpl &) {
     if (!mSwapchain.valid()) GN_UNLIKELY {
             GN_ERROR(sLogger)("BackbufferVulkan::present: swapchain not initialized");
             return Action::ExecutionResult::FAILED;
         }
 
-    // Retrieve or create the FrameExecutionContext for this submission
-    auto & ctx       = submission.ensureExecutionContext<FrameExecutionContextVulkan>();
-    auto   frameIter = ctx.bb2frame.find(this->sequence);
-    if (frameIter == ctx.bb2frame.end()) GN_UNLIKELY {
-            GN_VERBOSE(sLogger)("BackbufferVulkan::present: not paired with backbuffer prepare action. Ignored.");
+    // Check if the backbuffer is already prepared. If not, ignore this present call.
+    if (!mActiveFrame) GN_UNLIKELY {
+            GN_VERBOSE(sLogger)("BackbufferVulkan::present: ignore. The backbuffer is not prepared yet.");
             return Action::ExecutionResult::WARNING;
         }
-    auto & frameState = frameIter->second;
 
-    // Call resource tracker to get the final state of the backbuffer image.
-    auto rt = submission.getExecutionContext<ResourceTrackerVulkan>();
-    if (!rt) GN_UNLIKELY {
-            GN_ERROR(sLogger)("BackbufferVulkan::present: ResourceTrackerVulkan not found. This is most likely due to rendering to a unprepared backbuffer.");
-            return Action::ExecutionResult::FAILED;
-        }
-    auto backbufferState = rt->queryImageState(frameState.frame->backbuffer().image->handle(), 0, 0);
-    if (!backbufferState) GN_UNLIKELY {
-            GN_ERROR(sLogger)("BackbufferVulkan::present: backbuffer state not found. This is most likely due to rendering to a unprepared backbuffer.");
-            return Action::ExecutionResult::FAILED;
-        }
-
-    // Call present to end the frame.
+    // Call present() and update the image state to post-present layout.
     GN_VERBOSE(sLogger)("BackbufferVulkan::present: present frame");
     auto pp = rapid_vulkan::Swapchain::PresentParameters(
-        rapid_vulkan::Swapchain::BackbufferStatus {backbufferState->curr.layout, backbufferState->curr.access, backbufferState->curr.stages});
-    pp.setRenderFinished(vk::ArrayProxy<vk::Semaphore>((uint32_t) frameState.pendingSemaphores.size(), frameState.pendingSemaphores.data()));
-    rt->setBackbufferState(frameState.backbufferImage(), mSwapchain->present(pp));
+        rapid_vulkan::Swapchain::BackbufferStatus {mBackbufferState.curr.layout, mBackbufferState.curr.access, mBackbufferState.curr.stages});
+    pp.setRenderFinished(vk::ArrayProxy<vk::Semaphore>((uint32_t) mPendingSemaphores.size(), mPendingSemaphores.data()));
+    auto newStatus = mSwapchain->present(pp);
+    trackImageState({newStatus.layout, newStatus.access, newStatus.stages});
 
-    // This frame is ended. Remove this frame from the frame buffer manager.
-    ctx.bb2frame.erase(this->sequence);
-
-    // done
+    // We are don. Close the frame
+    mActiveFrame = nullptr;
     return Action::ExecutionResult::PASSED;
 }
 

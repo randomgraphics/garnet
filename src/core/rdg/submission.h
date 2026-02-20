@@ -29,14 +29,14 @@ public:
     Result result() override;
 
     template<typename T>
-    AutoRef<T> getExecutionContext() const {
+    AutoRef<T> getSumissionContext() const {
         auto ctx = mExecutionContexts.find(T::TYPE);
         if (ctx == mExecutionContexts.end()) { return {}; }
         GN_ASSERT(ctx->second->type == T::TYPE);
         return AutoRef<T>(ctx->second->template castTo<T>());
     }
 
-    void setExecutionContext(AutoRef<Context> ctx) {
+    void setSubmissionContext(AutoRef<Context> ctx) {
         if (!ctx) GN_UNLIKELY {
                 GN_ERROR(GN::getLogger("GN.rdg"))("SubmissionImpl::setExecutionContext: context is null");
                 return;
@@ -45,10 +45,10 @@ public:
     }
 
     template<typename T, typename... Args>
-    T & ensureExecutionContext(Args... args) {
+    T & ensureSubmissionContext(Args &&... args) {
         auto ctx = mExecutionContexts.find(T::TYPE);
         if (ctx != mExecutionContexts.end()) { return *ctx->second->template castTo<T>(); }
-        auto newCtx                 = AutoRef<T>(new T(args...));
+        auto newCtx                 = AutoRef<T>(new T(std::forward<Args>(args)...));
         mExecutionContexts[T::TYPE] = newCtx;
         return *newCtx;
     }

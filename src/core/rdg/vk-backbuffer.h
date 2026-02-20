@@ -2,16 +2,12 @@
 
 #include "backbuffer.h"
 #include "vk-gpu-context.h"
+#include "vk-texture.h"
 
 namespace GN::rdg {
 
 /// Vulkan backbuffer: wraps a rapid-vulkan Swapchain (and optional Win32 surface).
 class BackbufferVulkan : public BackbufferCommon {
-    AutoRef<GpuContext>                        mGpuContext;
-    Backbuffer::Descriptor                     mDescriptor;
-    vk::UniqueSurfaceKHR                       mSurface;
-    rapid_vulkan::Ref<rapid_vulkan::Swapchain> mSwapchain;
-
 public:
     BackbufferVulkan(ArtifactDatabase & db, const StrA & name);
 
@@ -22,39 +18,34 @@ public:
 
     auto gpu() const -> GpuContext & override { return *mGpuContext; }
     auto descriptor() const -> const Backbuffer::Descriptor & override { return mDescriptor; }
+    auto swapchain() -> rapid_vulkan::Swapchain * { return mSwapchain.valid() ? mSwapchain.get() : nullptr; }
+    auto swapchain() const -> const rapid_vulkan::Swapchain * { return mSwapchain.valid() ? mSwapchain.get() : nullptr; }
+    auto backBufferImage() const -> const rapid_vulkan::Image * { return mActiveFrame ? mActiveFrame->backbuffer().image : nullptr; }
+
+    auto getImageState() const -> const TextureVulkan::ImageStateTransition & { return mBackbufferState; }
+    auto trackImageState(const TextureVulkan::ImageState & newState) -> TextureVulkan::ImageStateTransition { return mBackbufferState.transitTo(newState); }
+
+    auto prepare(SubmissionImpl & submission) -> Action::ExecutionResult override;
+    auto present(SubmissionImpl & submission) -> Action::ExecutionResult override;
     auto readback() const -> gfx::img::Image override;
 
-    Action::ExecutionResult prepare(SubmissionImpl & submission) override;
-    Action::ExecutionResult present(SubmissionImpl & submission) override;
+    // /// Utility to get the handle of the backbuffer image.
+    // vk::Image backbufferImage() const {
+    //     GN_ASSERT(frame != nullptr);
+    //     GN_ASSERT(frame->backbuffer().image);
+    //     auto handle = frame->backbuffer().image->handle();
+    //     GN_ASSERT(handle);
+    //     return handle;
+    // }
 
-    rapid_vulkan::Swapchain *       swapchain() { return mSwapchain.valid() ? mSwapchain.get() : nullptr; }
-    const rapid_vulkan::Swapchain * swapchain() const { return mSwapchain.valid() ? mSwapchain.get() : nullptr; }
-};
-
-struct FrameState {
-    const rapid_vulkan::Swapchain::Frame * frame = nullptr;
-
-    /// List of semaphores that present() call should wait on.
-    DynaArray<vk::Semaphore> pendingSemaphores;
-
-    /// Utility to get the handle of the backbuffer image.
-    vk::Image backbufferImage() const {
-        GN_ASSERT(frame != nullptr);
-        GN_ASSERT(frame->backbuffer().image);
-        auto handle = frame->backbuffer().image->handle();
-        GN_ASSERT(handle);
-        return handle;
-    }
-};
-
-// Create a frame execution context to store graphics frame related information
-struct FrameExecutionContextVulkan : SubmissionImpl::Context {
-    inline static const uint64_t TYPE = getNextUniqueTypeId();
-
-    // mapping from backbuffer artifact to frame pointer.
-    std::unordered_map<uint64_t, FrameState> bb2frame;
-
-    FrameExecutionContextVulkan(): SubmissionImpl::Context(TYPE) {}
+private:
+    AutoRef<GpuContextVulkan>                  mGpuContext;
+    Backbuffer::Descriptor                     mDescriptor;
+    vk::UniqueSurfaceKHR                       mSurface;
+    rapid_vulkan::Ref<rapid_vulkan::Swapchain> mSwapchain;
+    TextureVulkan::ImageStateTransition        mBackbufferState;
+    const rapid_vulkan::Swapchain::Frame *     mActiveFrame = nullptr;
+    DynaArray<vk::Semaphore>                   mPendingSemaphores;
 };
 
 /// Create a Vulkan-backed Backbuffer. Called from Backbuffer::create() when context is Vulkan.

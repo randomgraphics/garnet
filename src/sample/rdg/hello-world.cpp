@@ -62,19 +62,16 @@ int main(int, const char **) {
     // auto clearTask   = Workflow::Task("Clear render target");
     // clearTask.action = clearAction;
     // auto clearArgs   = AutoRef<ClearRenderTarget::A>(new ClearRenderTarget::A());
-
     // auto color            = ClearRenderTarget::A::ClearValues {};
     // color.colors[0].f4[0] = 0.39f;
     // color.colors[0].f4[1] = 0.58f;
     // color.colors[0].f4[2] = 0.93f;
     // color.colors[0].f4[3] = 1.0f;
     // clearArgs->clearValues.set(color);
-
     // auto rt = RenderTarget {};
     // rt.colors.resize(1);
     // rt.colors[0].target = backbuffer;
     // clearArgs->renderTarget.set(rt);
-
     // clearTask.arguments = clearArgs;
     // renderWorkflow->tasks.append(clearTask);
 

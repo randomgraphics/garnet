@@ -1,15 +1,45 @@
 #include "pch.h"
 #include "vk-draw-actions.h"
-#include "vk-command-buffer.h"
-#include "vk-render-pass.h"
-#include "vk-resource-tracker.h"
+#include "vk-submission-context.h"
 #include "vk-backbuffer.h"
 #include "vk-texture.h"
-#include "submission.h"
 
 namespace GN::rdg {
 
 static GN::Logger * sLogger = getLogger("GN.rdg");
+
+static void trackRenderTargetState(const RenderTarget * renderTarget) {
+    if (!renderTarget) GN_UNLIKELY return;
+
+    // track the state of the color targets.
+    for (size_t i = 0; i < renderTarget->colors.size(); i++) {
+        const auto & color = renderTarget->colors[i];
+        if (0 == color.target.index()) {
+            // this color target is a texture.
+            auto tex = std::get<0>(color.target).castTo<TextureVulkan>().get();
+            if (tex)
+                tex->trackImageState(color.subresourceIndex.mip, 1, color.subresourceIndex.face, 1,
+                                     {vk::ImageLayout::eColorAttachmentOptimal,
+                                      vk::AccessFlagBits::eColorAttachmentRead | vk::AccessFlagBits::eColorAttachmentWrite,
+                                      vk::PipelineStageFlagBits::eColorAttachmentOutput});
+        } else {
+            // this color target is a backbuffer.
+            auto bb = std::get<1>(color.target).castTo<BackbufferVulkan>().get();
+            if (bb)
+                bb->trackImageState({vk::ImageLayout::eColorAttachmentOptimal,
+                                     vk::AccessFlagBits::eColorAttachmentRead | vk::AccessFlagBits::eColorAttachmentWrite,
+                                     vk::PipelineStageFlagBits::eColorAttachmentOutput});
+        }
+    }
+
+    // track the state of the depth stencil target.
+    auto depth = renderTarget->depthStencil.target.castTo<TextureVulkan>().get();
+    if (depth)
+        depth->trackImageState(renderTarget->depthStencil.subresourceIndex.mip, 1, renderTarget->depthStencil.subresourceIndex.face, 1,
+                               {vk::ImageLayout::eDepthStencilAttachmentOptimal,
+                                vk::AccessFlagBits::eDepthStencilAttachmentRead | vk::AccessFlagBits::eDepthStencilAttachmentWrite,
+                                vk::PipelineStageFlagBits::eEarlyFragmentTests | vk::PipelineStageFlagBits::eLateFragmentTests});
+}
 
 class ClearRenderTargetVulkan : public ClearRenderTarget {
     AutoRef<GpuContextVulkan> mGpu;
@@ -31,25 +61,24 @@ public:
                 return std::make_pair(FAILED, nullptr);
             }
 
-        auto ctx = std::make_unique<DrawActionContextVulkan>();
+        auto taskContext = std::make_unique<DrawActionContextVulkan>();
 
         // prepare command buffer.
-        auto & cbm           = submissionImpl.ensureExecutionContext<CommandBufferManagerVulkan>(CommandBufferManagerVulkan::ConstructParameters {.gpu = mGpu});
-        ctx->commandBufferId = cbm.prepare(CommandBufferManagerVulkan::GRAPHICS);
-        if (!ctx->commandBufferId) GN_UNLIKELY {
+        auto & submissionContext     = SubmissionContextVulkan::get(submissionImpl, mGpu);
+        taskContext->commandBufferId = submissionContext.commandBufferManager.prepare(CommandBufferManagerVulkan::GRAPHICS);
+        if (!taskContext->commandBufferId) GN_UNLIKELY {
                 GN_ERROR(sLogger)("ClearRenderTargetVulkan::prepare: failed to prepare command buffer");
                 return std::make_pair(FAILED, nullptr);
             }
 
         // prepare render pass
-        auto & rpm = submissionImpl.ensureExecutionContext<RenderPassManagerVulkan>(RenderPassManagerVulkan::ConstructParameters {.gpu = mGpu});
-        if (!rpm.prepare(taskInfo, *a->renderTarget.get())) GN_UNLIKELY {
+        if (!submissionContext.renderPassManager.prepare(taskInfo, *a->renderTarget.get())) GN_UNLIKELY {
                 GN_ERROR(sLogger)("ClearRenderTargetVulkan::prepare: failed to prepare render pass");
                 return std::make_pair(FAILED, nullptr);
             }
 
         // done
-        return std::make_pair(PASSED, ctx.release());
+        return std::make_pair(PASSED, taskContext.release());
     }
 
     ExecutionResult execute(TaskInfo & taskInfo, Arguments & arguments, ExecutionContext * context) override {
@@ -75,32 +104,18 @@ public:
             }
 
         // acquire command buffer.
-        auto cbm = submissionImpl.getExecutionContext<CommandBufferManagerVulkan>();
-        if (!cbm) GN_UNLIKELY {
-                GN_ERROR(sLogger)("ClearRenderTargetVulkan::execute: CommandBufferManagerVulkan not found");
-                return FAILED;
-            }
-        auto cb = cbm->execute(ctx->commandBufferId);
+        auto & sc = SubmissionContextVulkan::get(submissionImpl, mGpu);
+        auto   cb = sc.commandBufferManager.execute(ctx->commandBufferId);
         if (!cb.queue || !cb.commandBuffer) GN_UNLIKELY {
                 GN_ERROR(sLogger)("ClearRenderTargetVulkan::execute: failed to acquire command buffer");
                 return FAILED;
             }
 
         // execute resource tracker to update GPU resource layout and memory usage.
-        auto & rt = submissionImpl.ensureExecutionContext<ResourceTrackerVulkan>(
-            ResourceTrackerVulkan::ConstructParameters {.submission = submissionImpl, .gpu = mGpu});
-        if (!rt.execute(ResourceTrackerVulkan::ActionParameters().setRenderTarget(a->renderTarget.get()), cb.commandBuffer->handle())) GN_UNLIKELY {
-                GN_ERROR(sLogger)("ClearRenderTargetVulkan::execute: failed to execute resource tracker");
-                return FAILED;
-            }
+        trackRenderTargetState(a->renderTarget.get());
 
         // acquire render pass.
-        auto rpm = submissionImpl.getExecutionContext<RenderPassManagerVulkan>();
-        if (!rpm) GN_UNLIKELY {
-                GN_ERROR(sLogger)("ClearRenderTargetVulkan::execute: RenderPassManagerVulkan not found");
-                return FAILED;
-            }
-        auto rp = rpm->execute(taskInfo, *renderTarget, rt, cb.commandBuffer->handle());
+        auto rp = sc.renderPassManager.execute(taskInfo, *renderTarget, cb.commandBuffer->handle());
         if (!rp) GN_UNLIKELY {
                 GN_ERROR(sLogger)("ClearRenderTargetVulkan::execute: failed to acquire render pass");
                 return FAILED;
@@ -111,7 +126,7 @@ public:
         // end render pass, if this is the last task of the render pass.
         if (rp->lastTaskIndex == taskInfo.index) {
             // Not like old render pass, dynamic rendering does not implicitly updates the render target's layout.
-            // So here weon't have to call resource tracker to update the layout either.
+            // So here we don't have to call resource tracker to update the layout either.
             cb.commandBuffer->handle().endRendering();
         }
 

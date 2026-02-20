@@ -24,11 +24,12 @@ GpuContextVulkan::GpuContextVulkan(ArtifactDatabase & db, const StrA & name, con
         return;
     }
     rapid_vulkan::Device::ConstructParameters dp;
+    dp.addFeature(vk::PhysicalDeviceVulkan13Features().setDynamicRendering(true));
     dp.setInstance(mInstance->handle());
     mDevice.emplace(dp);
 }
 
-GpuContextVulkan::~GpuContextVulkan() { GN_INFO(sLogger)("Destorying Vulkan GPU context, name='{}'", name); }
+GpuContextVulkan::~GpuContextVulkan() { GN_INFO(sLogger)("Destroying Vulkan GPU context, name='{}'", name); }
 
 // =============================================================================
 // createVulkanGpuContext - API-specific factory

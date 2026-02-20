@@ -5,7 +5,7 @@
 
 namespace GN::rdg {
 
-class CommandBufferManagerVulkan : public SubmissionImpl::Context {
+class CommandBufferManagerVulkan {
 public:
     inline static const uint64_t TYPE = getNextUniqueTypeId();
 
@@ -27,7 +27,7 @@ public:
 
     CommandBufferManagerVulkan(const ConstructParameters & params);
 
-    ~CommandBufferManagerVulkan() override;
+    ~CommandBufferManagerVulkan();
 
     /// Called by task in prepare pass to ask for certain type of command buffer.
     /// \return Returns a unique identifier for this request. 0 for failure.

@@ -9,6 +9,42 @@ namespace GN::rdg {
 // TextureVulkan
 // =============================================================================
 
+inline static constexpr const uint32_t calculateMaxMips(const uint32_t & width, const uint32_t & height, const uint32_t & depth) {
+    auto maxDimension = width;
+    if (height > maxDimension) maxDimension = height;
+    if (depth > maxDimension) maxDimension = depth;
+    uint32_t numMips = 0;
+    while (maxDimension > 0) {
+        maxDimension >>= 1;
+        numMips++;
+    }
+    return numMips;
+}
+static_assert(calculateMaxMips(1, 1, 1) == 1, "calculateMaxMips(1, 1, 1) should return 1");
+static_assert(calculateMaxMips(2, 4, 8) == 4, "calculateMaxMips(2, 4, 8) should return 4");
+
+/// Validate the texture descriptor. If failed, returns an descriptor with width == 0.
+static Texture::Descriptor validateDesc(const Texture::Descriptor & desc) {
+    Texture::Descriptor result = desc;
+    if (0 == result.width || 0 == result.height || 0 == result.depth || 0 == result.faces || 0 == result.samples) {
+        GN_ERROR(sLogger)
+        ("validateDesc: invalid descriptor: zero dimension: (width={}, height={}, depth={}, faces={}, samples={}).", result.width, result.height, result.depth,
+         result.faces, result.samples);
+        result.width   = 0;
+        result.height  = 0;
+        result.depth   = 0;
+        result.faces   = 0;
+        result.samples = 0;
+        return result;
+    }
+
+    // calculate the number of mip levels based on the width, height and depth.
+    if (0 == result.levels) result.levels = calculateMaxMips(result.width, result.height, result.depth);
+
+    // done
+    return result;
+}
+
 static rapid_vulkan::Ref<rapid_vulkan::Image> createVkImage(const Texture::Descriptor & descriptor) {
     // TODO: create VkImage and allocate memory for the descriptor
     GN_ERROR(sLogger)("createVkImage: not implemented");
@@ -27,10 +63,14 @@ bool TextureVulkan::init(const Texture::CreateParameters & params) {
         return false;
     }
     mGpuContext.set(params.context.get());
-    mDescriptor = params.descriptor;
-    // TODO: create VkImage and allocate memory for the descriptor
+    mDescriptor = validateDesc(params.descriptor);
+    if (0 == mDescriptor.width) return false;
     mImage = createVkImage(mDescriptor);
-    return mImage && mImage->handle();
+    if (!mImage && mImage->handle()) return false;
+
+    // initialize the subresource image state array.
+    mSubresourceStates.resize(mDescriptor.levels * mDescriptor.faces);
+    return true;
 }
 
 gfx::img::Image TextureVulkan::readback() const {
@@ -80,5 +120,57 @@ AutoRef<Texture> loadVulkanTexture(ArtifactDatabase & db, const Texture::LoadPar
     }
     return AutoRef<Texture>(p);
 }
+
+bool TextureVulkan::trackImageState(uint32_t mip, uint32_t levels, uint32_t arrayLayer, uint32_t layers, const ImageState & newState) {
+    if (mip >= mDescriptor.levels || arrayLayer >= mDescriptor.faces) {
+        GN_ERROR(sLogger)
+        ("TextureVulkan::trackImageState: invalid subresource index and/or range: (mip={}, levels={}, face={}, layers={}).", mip, levels, arrayLayer, layers);
+        return false;
+    }
+    auto mipEnd        = mip + levels;
+    auto arrayLayerEnd = arrayLayer + layers;
+    if (mipEnd > mDescriptor.levels || arrayLayerEnd > mDescriptor.faces) {
+        GN_ERROR(sLogger)
+        ("TextureVulkan::trackImageState: invalid subresource index and/or range: (mip={}, levels={}, face={}, layers={}).", mip, levels, arrayLayer, layers);
+        return false;
+    }
+    for (uint32_t i = mip; i < mipEnd; i++) {
+        for (uint32_t j = arrayLayer; j < arrayLayerEnd; j++) {
+            size_t index = subResourceIndex(i, j);
+            GN_ASSERT(index < mSubresourceStates.size());
+            mSubresourceStates[index].transitTo(newState);
+        }
+    }
+    return true;
+}
+
+// SubresourceIterator(const Texture::Descriptor & desc, const Texture::SubresourceIndex & index, const Texture::SubresourceRange & range)
+// : mDesc(desc) {
+//     if (0 == desc.levels) mDesc.levels = calculateMaxMips(desc.width, desc.height, desc.depth);
+
+//     const uint32_t maxMips   = mDesc.levels;
+//     const uint32_t maxLayers = mDesc.faces;
+
+//     if (index.mip >= maxMips || index.face >= maxLayers) {
+//         GN_VERBOSE(sLogger)("SubresourceIterator: invalid subresource index (mip={}, face={}). There's nothing to iterate over.", index.mip, index.face);
+//         mBaseMip   = 0;
+//         mBaseFace  = 0;
+//         mNumMips   = 0;
+//         mNumLayers = 0;
+//         return;
+//     }
+
+//     mBaseMip  = index.mip >= maxMips ? maxMips - 1u : index.mip;
+//     mBaseFace = index.face >= maxLayers ? maxLayers - 1u : index.face;
+
+//     uint32_t numMips   = (range.numMipLevels == (uint32_t) -1) ? (maxMips - mBaseMip) : range.numMipLevels;
+//     uint32_t numLayers = (range.numArrayLayers == (uint32_t) -1) ? (maxLayers - mBaseFace) : range.numArrayLayers;
+
+//     if (mBaseMip + numMips > maxMips || mBaseFace + numLayers > maxLayers) {
+//         GN_VERBOSE(sLogger)("SubresourceIterator: invalid subresource range, clamping");
+//     }
+//     mNumMips   = (mBaseMip + numMips > maxMips) ? (maxMips - mBaseMip) : numMips;
+//     mNumLayers = (mBaseFace + numLayers > maxLayers) ? (maxLayers - mBaseFace) : numLayers;
+// }
 
 } // namespace GN::rdg

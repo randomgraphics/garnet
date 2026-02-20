@@ -48,7 +48,8 @@
 #define GN_ASSERT(exp) GN_ASSERT_EX(exp, #exp)
 
 ///
-/// verify macro (do check even in release build.)
+/// verify macro (do check even in release build.).
+/// \todo: rename to GN_REQUIRE()
 ///
 #define GN_VERIFY(exp) GN_VERIFY_EX(exp, #exp)
 
@@ -70,7 +71,7 @@
 ///
 /// Output a warning message for unimplemented functionality
 ///
-#define GN_UNIMPL_WARNING() GN_DO_ONCE(GN_WARN(GN::getLogger("GN.base.todo"))("TODO: function {} is not implmented yet.", GN_FUNCTION));
+#define GN_UNIMPL_WARNING() GN_DO_ONCE(GN_WARN(GN::getLogger("GN.base.todo"))("TODO: function {} is not implemented yet.", GN_FUNCTION));
 
 ///
 /// Output a todo message.
