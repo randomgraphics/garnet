@@ -108,9 +108,8 @@ Action::ExecutionResult BackbufferVulkan::prepare(SubmissionImpl &) {
             return Action::ExecutionResult::FAILED;
         }
 
-    // Update backbuffer state
-    auto initialState = TextureVulkan::ImageState {vk::ImageLayout::eUndefined, vk::AccessFlagBits::eNone, vk::PipelineStageFlagBits::eBottomOfPipe};
-    trackImageState(initialState);
+    // Update backbuffer state (transition needed when frame is new).
+    trackImageState(TextureVulkan::ImageState::UNDEFINED());
 
     // Update the pending semaphores.
     mPendingSemaphores.clear();
@@ -140,7 +139,7 @@ Action::ExecutionResult BackbufferVulkan::present(SubmissionImpl &) {
     auto newStatus = mSwapchain->present(pp);
     trackImageState({newStatus.layout, newStatus.access, newStatus.stages});
 
-    // We are don. Close the frame
+    // We are done. Close the frame
     mActiveFrame = nullptr;
     return Action::ExecutionResult::PASSED;
 }
@@ -148,6 +147,12 @@ Action::ExecutionResult BackbufferVulkan::present(SubmissionImpl &) {
 // =============================================================================
 // createVulkanBackbuffer - API-specific factory
 // =============================================================================
+
+bool BackbufferVulkan::trackImageState(const TextureVulkan::ImageState & newState, TextureVulkan::ImageStateTransitionFlags flags) {
+    if (mBackbufferState.curr == newState) return false;
+    mBackbufferState.transitTo(newState, flags);
+    return true;
+}
 
 AutoRef<Backbuffer> createVulkanBackbuffer(ArtifactDatabase & db, const StrA & name, const Backbuffer::CreateParameters & params) {
     auto * p = new BackbufferVulkan(db, name);

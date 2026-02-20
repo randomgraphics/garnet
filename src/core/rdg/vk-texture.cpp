@@ -9,20 +9,6 @@ namespace GN::rdg {
 // TextureVulkan
 // =============================================================================
 
-inline static constexpr const uint32_t calculateMaxMips(const uint32_t & width, const uint32_t & height, const uint32_t & depth) {
-    auto maxDimension = width;
-    if (height > maxDimension) maxDimension = height;
-    if (depth > maxDimension) maxDimension = depth;
-    uint32_t numMips = 0;
-    while (maxDimension > 0) {
-        maxDimension >>= 1;
-        numMips++;
-    }
-    return numMips;
-}
-static_assert(calculateMaxMips(1, 1, 1) == 1, "calculateMaxMips(1, 1, 1) should return 1");
-static_assert(calculateMaxMips(2, 4, 8) == 4, "calculateMaxMips(2, 4, 8) should return 4");
-
 /// Validate the texture descriptor. If failed, returns an descriptor with width == 0.
 static Texture::Descriptor validateDesc(const Texture::Descriptor & desc) {
     Texture::Descriptor result = desc;
@@ -39,7 +25,7 @@ static Texture::Descriptor validateDesc(const Texture::Descriptor & desc) {
     }
 
     // calculate the number of mip levels based on the width, height and depth.
-    if (0 == result.levels) result.levels = calculateMaxMips(result.width, result.height, result.depth);
+    if (0 == result.levels) result.levels = rapid_vulkan::calculateMaxMips(result.width, result.height, result.depth);
 
     // done
     return result;
@@ -121,7 +107,28 @@ AutoRef<Texture> loadVulkanTexture(ArtifactDatabase & db, const Texture::LoadPar
     return AutoRef<Texture>(p);
 }
 
-bool TextureVulkan::trackImageState(uint32_t mip, uint32_t levels, uint32_t arrayLayer, uint32_t layers, const ImageState & newState) {
+vk::Extent3D TextureVulkan::dimensions(uint32_t mip) const {
+    if (mip >= mDescriptor.levels) {
+        GN_ERROR(sLogger)
+        ("TextureVulkan::dimension(): invalid subresource index: (mip={}).", mip);
+        return {0, 0, 0};
+    }
+    vk::Extent3D dim(mDescriptor.width, mDescriptor.height, mDescriptor.depth);
+    dim.width  = std::max(1u, dim.width >> mip);
+    dim.height = std::max(1u, dim.height >> mip);
+    dim.depth  = std::max(1u, dim.depth >> mip);
+    return dim;
+}
+
+const TextureVulkan::ImageStateTransition * TextureVulkan::getImageState(uint32_t mip, uint32_t arrayLayer) const {
+    if (mip >= mDescriptor.levels || arrayLayer >= mDescriptor.faces) return nullptr;
+    size_t index = subResourceIndex(mip, arrayLayer);
+    GN_ASSERT(index < mSubresourceStates.size());
+    return &mSubresourceStates[index];
+}
+
+bool TextureVulkan::trackImageState(uint32_t mip, uint32_t levels, uint32_t arrayLayer, uint32_t layers, const ImageState & newState,
+                                    ImageStateTransitionFlags flags) {
     if (mip >= mDescriptor.levels || arrayLayer >= mDescriptor.faces) {
         GN_ERROR(sLogger)
         ("TextureVulkan::trackImageState: invalid subresource index and/or range: (mip={}, levels={}, face={}, layers={}).", mip, levels, arrayLayer, layers);
@@ -134,14 +141,18 @@ bool TextureVulkan::trackImageState(uint32_t mip, uint32_t levels, uint32_t arra
         ("TextureVulkan::trackImageState: invalid subresource index and/or range: (mip={}, levels={}, face={}, layers={}).", mip, levels, arrayLayer, layers);
         return false;
     }
+    bool anyChange = false;
     for (uint32_t i = mip; i < mipEnd; i++) {
         for (uint32_t j = arrayLayer; j < arrayLayerEnd; j++) {
             size_t index = subResourceIndex(i, j);
             GN_ASSERT(index < mSubresourceStates.size());
-            mSubresourceStates[index].transitTo(newState);
+            if (mSubresourceStates[index].curr != newState) {
+                anyChange = true;
+                mSubresourceStates[index].transitTo(newState, flags);
+            }
         }
     }
-    return true;
+    return anyChange;
 }
 
 // SubresourceIterator(const Texture::Descriptor & desc, const Texture::SubresourceIndex & index, const Texture::SubresourceRange & range)

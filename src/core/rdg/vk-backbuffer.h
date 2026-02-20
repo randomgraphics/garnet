@@ -23,7 +23,8 @@ public:
     auto backBufferImage() const -> const rapid_vulkan::Image * { return mActiveFrame ? mActiveFrame->backbuffer().image : nullptr; }
 
     auto getImageState() const -> const TextureVulkan::ImageStateTransition & { return mBackbufferState; }
-    auto trackImageState(const TextureVulkan::ImageState & newState) -> TextureVulkan::ImageStateTransition { return mBackbufferState.transitTo(newState); }
+    /// Returns true if a layout/access transition is needed (state was updated); false if already in newState (redundant).
+    bool trackImageState(const TextureVulkan::ImageState & newState, TextureVulkan::ImageStateTransitionFlags flags = {});
 
     auto prepare(SubmissionImpl & submission) -> Action::ExecutionResult override;
     auto present(SubmissionImpl & submission) -> Action::ExecutionResult override;

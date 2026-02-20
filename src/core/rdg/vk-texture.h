@@ -15,15 +15,29 @@ public:
 
         bool operator==(const ImageState & other) const { return layout == other.layout && access == other.access && stages == other.stages; }
         bool operator!=(const ImageState & other) const { return !operator==(other); }
+
+        inline static constexpr const ImageState UNDEFINED() {
+            return {vk::ImageLayout::eUndefined, vk::AccessFlagBits::eNone, vk::PipelineStageFlagBits::eBottomOfPipe};
+        };
+    };
+
+    struct ImageStateTransitionFlags {
+        /// @brief Set to true to discard the content of the image during the transition.
+        /// This effectively will set the source layout of the iamge to UNDEFINED.
+        bool discardContent : 1 = false;
     };
 
     struct ImageStateTransition {
         ImageState prev;
         ImageState curr;
 
-        ImageStateTransition & transitTo(const ImageState & newState) {
+        ImageStateTransition & transitTo(const ImageState & newState, ImageStateTransitionFlags flags) {
             if (curr != newState) {
-                prev = curr;
+                if (flags.discardContent) {
+                    prev = ImageState::UNDEFINED();
+                } else {
+                    prev = curr;
+                }
                 curr = newState;
             }
             return *this;
@@ -41,9 +55,11 @@ public:
     auto gpu() const -> GpuContext & override { return *mGpuContext; }
     auto descriptor() const -> const Texture::Descriptor & override { return mDescriptor; }
     auto image() const -> const rapid_vulkan::Image * { return mImage.get(); }
+    auto dimensions(uint32_t mip) const -> vk::Extent3D;
 
     auto getImageState(uint32_t mip, uint32_t arrayLayer) const -> const ImageStateTransition *;
-    bool trackImageState(uint32_t mip, uint32_t levels, uint32_t arrayLayer, uint32_t layers, const ImageState & newState);
+    bool trackImageState(uint32_t mip, uint32_t levels, uint32_t arrayLayer, uint32_t layers, const ImageState & newState,
+                         ImageStateTransitionFlags flags = {});
 
     auto readback() const -> gfx::img::Image override;
 
