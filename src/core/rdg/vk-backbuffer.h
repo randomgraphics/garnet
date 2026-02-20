@@ -31,10 +31,29 @@ public:
     const rapid_vulkan::Swapchain * swapchain() const { return mSwapchain.valid() ? mSwapchain.get() : nullptr; }
 };
 
-// Create a frame execution context to store mapping from backbuffer artifact to frame pointer.
+struct FrameState {
+    const rapid_vulkan::Swapchain::Frame * frame = nullptr;
+
+    /// List of semaphores that present() call should wait on.
+    DynaArray<vk::Semaphore> pendingSemaphores;
+
+    /// Utility to get the handle of the backbuffer image.
+    vk::Image backbufferImage() const {
+        GN_ASSERT(frame != nullptr);
+        GN_ASSERT(frame->backbuffer().image);
+        auto handle = frame->backbuffer().image->handle();
+        GN_ASSERT(handle);
+        return handle;
+    }
+};
+
+// Create a frame execution context to store graphics frame related information
 struct FrameExecutionContextVulkan : SubmissionImpl::Context {
-    inline static const uint64_t                                         TYPE = getNextUniqueTypeId();
-    std::unordered_map<uint64_t, const rapid_vulkan::Swapchain::Frame *> bb2frame;
+    inline static const uint64_t TYPE = getNextUniqueTypeId();
+
+    // mapping from backbuffer artifact to frame pointer.
+    std::unordered_map<uint64_t, FrameState> bb2frame;
+
     FrameExecutionContextVulkan(): SubmissionImpl::Context(TYPE) {}
 };
 

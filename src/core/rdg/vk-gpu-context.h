@@ -8,6 +8,10 @@
 #if GN_LINUX
     #define VK_USE_PLATFORM_WAYLAND_KHR 1
 #endif
+#if GN_MSWIN
+    #define VK_USE_PLATFORM_WIN32_KHR 1
+    #define NOMINMAX
+#endif
 #define RAPID_VULKAN_ENABLE_DEBUG_BUILD GN_BUILD_DEBUG_ENABLED
 // TODO: hook rapid_vulkan log with GN::Logger
 #include <rapid-vulkan/rapid-vulkan.h>

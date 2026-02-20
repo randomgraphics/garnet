@@ -1,3 +1,4 @@
+#include "pch.h"
 #define RAPID_VULKAN_IMPLEMENTATION
 #include "vk-gpu-context.h"
 

@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "vk-gpu-context.h"
 
 static GN::Logger * sLogger = GN::getLogger("GN.rdg");

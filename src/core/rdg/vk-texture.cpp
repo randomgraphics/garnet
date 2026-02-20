@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "vk-texture.h"
 
 static GN::Logger * sLogger = GN::getLogger("GN.rdg.vk");

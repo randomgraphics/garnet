@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "vk-render-pass.h"
 #include "vk-texture.h"
 #include "vk-resource-tracker.h"
@@ -100,7 +101,7 @@ const rapid_vulkan::Image * getColorTargetImage(const RenderTarget::ColorTarget 
                 ("RenderPassManagerVulkan::execute: can't fine the frame for backbuffer. This is most likely due to rendering to a unprepared backbuffer.");
                 return {};
             }
-        image = frameIter->second->backbuffer().image;
+        image = frameIter->second.frame->backbuffer().image;
         if (!image) GN_UNLIKELY {
                 GN_ERROR(sLogger)("RenderPassManagerVulkan::execute: the backbuffer is not properly initialized.", stage);
                 return {};

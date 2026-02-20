@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "vk-resource-tracker.h"
 #include "vk-texture.h"
 #include "vk-backbuffer.h"

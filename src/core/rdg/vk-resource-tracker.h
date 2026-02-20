@@ -114,6 +114,11 @@ public:
         mImageState[key].transitTo(state);
     }
 
+    void setBackbufferState(const vk::Image & backBufferImage, const rapid_vulkan::Swapchain::BackbufferStatus & state) {
+        const ImageKey key = {backBufferImage, 0, 0};
+        mImageState[key].transitTo(ImageState {state.layout, state.access, state.stages});
+    }
+
     /// Query the current state of an image.
     const ImageStateTransition * queryImageState(const vk::Image & image, uint32_t mip, uint32_t arrayLayer) const {
         const ImageKey key = {image, mip, arrayLayer};
