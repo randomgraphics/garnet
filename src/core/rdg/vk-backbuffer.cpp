@@ -152,8 +152,9 @@ Action::ExecutionResult BackbufferVulkan::present(SubmissionImpl & submission) {
 
     // Call present to end the frame.
     GN_VERBOSE(sLogger)("BackbufferVulkan::present: present frame");
-    auto newState = mSwapchain->present(
-        rapid_vulkan::Swapchain::PresentParameters(rapid_vulkan::Swapchain::BackbufferStatus {state->curr.layout, state->curr.access, state->curr.stages}));
+    auto pp = rapid_vulkan::Swapchain::PresentParameters(rapid_vulkan::Swapchain::BackbufferStatus {state->curr.layout, state->curr.access, state->curr.stages});
+    // TODO: set up semaphore for present to wait on.
+    auto newState = mSwapchain->present(pp);
     rt->setImageState(frame->backbuffer().image->handle(), 0, 0, {newState.layout, newState.access, newState.stages});
 
     // done
