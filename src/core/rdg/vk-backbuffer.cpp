@@ -83,10 +83,85 @@ bool BackbufferVulkan::init(const Backbuffer::CreateParameters & params) {
     return true;
 }
 
+namespace {
+
+gfx::img::PixelFormat vkFormatToPixelFormat(vk::Format vkFmt) {
+    switch (vkFmt) {
+    case vk::Format::eR8G8B8A8Unorm:
+        return gfx::img::PixelFormat::RGBA_8_8_8_8_UNORM();
+    case vk::Format::eR8G8B8A8Srgb:
+        return gfx::img::PixelFormat::RGBA_8_8_8_8_SRGB();
+    case vk::Format::eB8G8R8A8Unorm:
+        return gfx::img::PixelFormat::BGRA_8_8_8_8_UNORM();
+    case vk::Format::eB8G8R8A8Srgb:
+        return gfx::img::PixelFormat::BGRA_8_8_8_8_UNORM(); // no BGRA sRGB in rapid-image; use UNORM
+    default:
+        return gfx::img::PixelFormat::UNKNOWN();
+    }
+}
+
+gfx::img::Image contentToImage(const rapid_vulkan::Image::Content & content) {
+    if (content.subresources.empty() || content.storage.empty()) return gfx::img::Image();
+    gfx::img::PixelFormat pf = vkFormatToPixelFormat(content.format);
+    if (pf == gfx::img::PixelFormat::UNKNOWN()) return gfx::img::Image();
+    const auto & sub = content.subresources[0];
+    uint32_t     w   = sub.extent.width;
+    uint32_t     h   = sub.extent.height;
+    uint32_t     d   = sub.extent.depth;
+    if (w == 0 || h == 0) return gfx::img::Image();
+    gfx::img::Extent3D extent;
+    extent.set(w, h, d);
+    gfx::img::PlaneDesc planeDesc = gfx::img::PlaneDesc::make(pf, extent);
+    gfx::img::ImageDesc imageDesc = gfx::img::ImageDesc::make(planeDesc, 1, 1, 1);
+    return gfx::img::Image(imageDesc, content.storage.data(), content.storage.size());
+}
+
+} // namespace
+
 gfx::img::Image BackbufferVulkan::readback() const {
-    // TODO: read back the backbuffer content into an image
+    if (!mSwapchain.valid()) GN_UNLIKELY {
+            GN_ERROR(sLogger)("BackbufferVulkan::readback: swapchain not initialized");
+            return gfx::img::Image();
+        }
+    return (mActiveFrame) ? readbackInsideRenderPass() : readbackOutsideRenderPass();
+}
+
+gfx::img::Image BackbufferVulkan::readbackInsideRenderPass() const {
+    // Inside a render pass (mActiveFrame != nullptr). Sync with current pass and layout transitions are more complex.
     GN_UNIMPL();
     return gfx::img::Image();
+}
+
+gfx::img::Image BackbufferVulkan::readbackOutsideRenderPass() const {
+    GN_ASSERT(mActiveFrame == nullptr); // can only be called when not actively rendering to the backbuffer.
+    if (!mLastPresentedImage) GN_UNLIKELY {
+            GN_ERROR(sLogger)("BackbufferVulkan::readbackOutsideRenderPass: no last presented image (present at least one frame first)");
+            return gfx::img::Image();
+        }
+
+    const rapid_vulkan::Device & dev = mGpuContext->device();
+    rapid_vulkan::CommandQueue * gq  = dev.graphics();
+    const rapid_vulkan::Image *  img = mLastPresentedImage;
+
+    dev.waitIdle();
+
+    rapid_vulkan::Image::ReadContentParameters readParams;
+    readParams.setQueue(*gq);
+    auto content = img->readContent(readParams);
+
+    // Restore the backbuffer image to its layout after present so normal rendering is unaffected.
+    auto cb = gq->begin("readback restore layout", vk::CommandBufferLevel::ePrimary);
+    if (cb) {
+        rapid_vulkan::Barrier()
+            .i(img->handle(), vk::AccessFlagBits::eTransferRead, mLastPresentedBackbufferState.access, vk::ImageLayout::eTransferSrcOptimal,
+               mLastPresentedBackbufferState.layout, vk::ImageAspectFlagBits::eColor)
+            .s(vk::PipelineStageFlagBits::eTransfer, mLastPresentedBackbufferState.stages)
+            .cmdWrite(cb.handle());
+        gq->submit(rapid_vulkan::CommandQueue::SubmitParameters {.commandBuffers = {cb}});
+    }
+
+    dev.waitIdle();
+    return contentToImage(content);
 }
 
 Action::ExecutionResult BackbufferVulkan::prepare(SubmissionImpl &) {
@@ -138,6 +213,10 @@ Action::ExecutionResult BackbufferVulkan::present(SubmissionImpl &) {
     pp.setRenderFinished(vk::ArrayProxy<vk::Semaphore>((uint32_t) mPendingSemaphores.size(), mPendingSemaphores.data()));
     auto newStatus = mSwapchain->present(pp);
     trackImageState({newStatus.layout, newStatus.access, newStatus.stages});
+
+    // Remember the backbuffer image and its post-present state for readbackOutsideRenderPass() (before frame is invalidated).
+    mLastPresentedImage           = mActiveFrame->backbuffer().image;
+    mLastPresentedBackbufferState = {newStatus.layout, newStatus.access, newStatus.stages};
 
     // We are done. Close the frame
     mActiveFrame = nullptr;

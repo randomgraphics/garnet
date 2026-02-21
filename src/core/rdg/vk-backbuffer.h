@@ -47,6 +47,14 @@ private:
     TextureVulkan::ImageStateTransition        mBackbufferState;
     const rapid_vulkan::Swapchain::Frame *     mActiveFrame = nullptr;
     DynaArray<vk::Semaphore>                   mPendingSemaphores;
+
+    /// Last presented backbuffer image (set in present()). Used by readbackOutsideRenderPass().
+    const rapid_vulkan::Image * mLastPresentedImage = nullptr;
+    /// Layout/access/stages of the last presented image after present (so we can restore after readback).
+    TextureVulkan::ImageState mLastPresentedBackbufferState;
+
+    auto readbackOutsideRenderPass() const -> gfx::img::Image;
+    auto readbackInsideRenderPass() const -> gfx::img::Image;
 };
 
 /// Create a Vulkan-backed Backbuffer. Called from Backbuffer::create() when context is Vulkan.

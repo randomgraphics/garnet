@@ -9,16 +9,20 @@ description: Builds the garnet project using build.py instead of invoking cmake 
 
 Use `build.py` (or alias `b`) for any garnet build. Do not run cmake directly from the project root.
 
+## Prerequisites: Python virtual environment
+
+You must set up and activate the project’s Python virtual environment before running the build script. The environment scripts below create the venv (e.g. `env/.pyvenv`) if missing, activate it, and install dependencies from `env/requirements.txt`.
+
 ## Commands (run from repo root)
 
-**Linux / WSL:** Source the environment first, then build.
+**Linux / WSL:** Source the environment (sets up/activates venv), then build.
 
 ```bash
 source env/garnet.rc
 build.py <variant> [options]
 ```
 
-**Windows (PowerShell):** Use the garnet script and alias.
+**Windows (PowerShell):** Run the garnet script (sets up/activates venv), then use the build alias.
 
 ```powershell
 . env\garnet.ps1
@@ -39,6 +43,8 @@ b <variant>
 - **Android:** `build.py -a d` (or `-a p`, `-a r`). Requires `ANDROID_SDK_ROOT`, `ANDROID_NDK_ROOT`, `JAVA_HOME` (or use Android docker).
 
 ## Examples
+
+Always activate the environment first (this sets up the Python venv if needed), then build:
 
 ```bash
 source env/garnet.rc

@@ -58,15 +58,15 @@ int main(int, const char **) {
     prepareTask.arguments = prepareArgs;
     renderWorkflow->tasks.append(prepareTask);
 
-    // Task: Clear render target
+    // Task: Clear render target (solid red for easy verification of readback/save)
     auto clearTask        = Workflow::Task("Clear render target");
     clearTask.action      = clearAction;
     auto clearArgs        = AutoRef<ClearRenderTarget::A>(new ClearRenderTarget::A());
     auto color            = ClearRenderTarget::A::ClearValues {};
-    color.colors[0].f4[0] = 0.39f;
-    color.colors[0].f4[1] = 0.58f;
-    color.colors[0].f4[2] = 0.93f;
-    color.colors[0].f4[3] = 1.0f;
+    color.colors[0].f4[0] = 1.0f; // R
+    color.colors[0].f4[1] = 0.0f; // G
+    color.colors[0].f4[2] = 0.0f; // B
+    color.colors[0].f4[3] = 1.0f; // A
     clearArgs->clearValues.set(color);
     auto rt = RenderTarget {};
     rt.colors.resize(1);
@@ -104,7 +104,25 @@ int main(int, const char **) {
         GN_ERROR(sLogger)("Failed to get image from texture readback action");
         return -1;
     }
-    image.save("output.png");
+    // image.save("output.png");
+
+    // Verify content: clear color is solid red (1, 0, 0, 1). Backbuffer may be RGBA or BGRA.
+    {
+        size_t          cx = image.width() / 2, cy = image.height() / 2;
+        const uint8_t * p    = image.at({}, (size_t) cx, (size_t) cy, 0);
+        uint32_t        step = (uint32_t) image.step();
+        if (step >= 3) {
+            // Expect either RGBA red (255,0,0,255) or BGRA red (0,0,255,255)
+            bool isRedRGBA = (p[0] == 255 && p[1] == 0 && p[2] == 0);
+            bool isRedBGRA = (p[0] == 0 && p[1] == 0 && p[2] == 255);
+            if (isRedRGBA || isRedBGRA) {
+                GN_INFO(sLogger)("output.png verified: center pixel matches clear color (red)");
+            } else {
+                GN_ERROR(sLogger)("output.png center pixel ({},{},{}) - expected red (255,0,0) or (0,0,255)", (int) p[0], (int) p[1], (int) p[2]);
+                return -1;
+            }
+        }
+    }
 
     GN_INFO(sLogger)("Render graph hello world completed");
     return 0;
