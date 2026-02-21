@@ -32,8 +32,7 @@ static Texture::Descriptor validateDesc(const Texture::Descriptor & desc) {
 }
 
 static rapid_vulkan::Ref<rapid_vulkan::Image> createVkImage(const Texture::Descriptor & descriptor) {
-    // TODO: create VkImage and allocate memory for the descriptor
-    GN_ERROR(sLogger)("createVkImage: not implemented");
+    GN_UNIMPL();
     (void) descriptor;
     return {};
 }
@@ -61,7 +60,7 @@ bool TextureVulkan::init(const Texture::CreateParameters & params) {
 
 gfx::img::Image TextureVulkan::readback() const {
     // TODO: read back the texture content into an image
-    GN_ERROR(sLogger)("TextureVulkan::readback: not implemented");
+    GN_UNIMPL();
     return gfx::img::Image();
 }
 
@@ -80,6 +79,7 @@ AutoRef<Texture> createVulkanTexture(ArtifactDatabase & db, const StrA & name, c
 }
 
 bool TextureVulkan::initFromLoad(const Texture::LoadParameters & params) {
+    GN_UNIMPL();
     if (sequence == 0) return false;
     if (!params.context) {
         GN_ERROR(sLogger)("TextureVulkan::initFromLoad: context is null");
@@ -89,7 +89,7 @@ bool TextureVulkan::initFromLoad(const Texture::LoadParameters & params) {
     mDescriptor = Texture::Descriptor {}; // placeholder until load fills it
     // TODO: load image from file, create VkImage, upload pixels
     (void) params;
-    return true;
+    return false;
 }
 
 AutoRef<Texture> loadVulkanTexture(ArtifactDatabase & db, const Texture::LoadParameters & params) {

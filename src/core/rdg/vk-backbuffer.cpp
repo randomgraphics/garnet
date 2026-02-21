@@ -85,7 +85,7 @@ bool BackbufferVulkan::init(const Backbuffer::CreateParameters & params) {
 
 gfx::img::Image BackbufferVulkan::readback() const {
     // TODO: read back the backbuffer content into an image
-    GN_ERROR(sLogger)("BackbufferVulkan::readback: not implemented");
+    GN_UNIMPL();
     return gfx::img::Image();
 }
 

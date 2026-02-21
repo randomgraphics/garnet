@@ -7,11 +7,15 @@
     #include <dlfcn.h>
     #include <sys/system_properties.h>
     #include <android/trace.h>
+#elif GN_MSWIN
+    #include <windows.h>
+    #include <dbghelp.h>
+    #pragma comment(lib, "dbghelp.lib")
+    #include <sstream>
+    #include <vector>
+    #include <iomanip>
+    #include <fstream>
 #else
-    #ifdef _MSC_VER
-        #pragma warning(disable : 4267) // conversion from 'size_t' to 'int', possible loss of data
-        #pragma warning(disable : 4996) // 'function': was declared deprecated
-    #endif
     #include <backward.hpp>
 namespace backward {
 backward::SignalHandling sh;
@@ -117,7 +121,92 @@ GN_API StrA backtrace(int spaceIndent, bool includeSourceSnippet) {
     ss << "android stack dump done\n";
 
     return indent(ss.str(), spaceIndent);
-#elif GN_POSIX || GN_MSWIN
+#elif GN_MSWIN
+    // backward-cpp is not well supported on Windows (can't get symbols). Implement a custom full native
+    // stack trace implementation here using Windows API.
+    // Implementation of stack trace on Windows using native API
+
+    // Helper to try to get one line of source file (if possible), similar to what backward-cpp does
+    auto try_read_source_line = [](const char * filename, DWORD lineNumber) -> std::string {
+        if (!filename) return "";
+        std::ifstream file(filename);
+        if (!file.is_open()) return "";
+        std::string content;
+        for (DWORD i = 1; i <= lineNumber; ++i) {
+            if (!std::getline(file, content)) return "";
+        }
+        return content;
+    };
+
+    // Demangle MSVC-style decorated symbols (very basic).
+    auto msvc_demangle = [](const char * name) -> std::string {
+        char demangled[1024];
+        if (UnDecorateSymbolName(name, demangled, sizeof(demangled), UNDNAME_COMPLETE)) return demangled;
+        return name ? name : "";
+    };
+
+    std::stringstream ss;
+
+    ss << "windows stack dump\n";
+
+    HANDLE process = GetCurrentProcess();
+
+    // Load symbols for process
+    SymSetOptions(SYMOPT_LOAD_LINES | SYMOPT_UNDNAME);
+    if (!SymInitialize(process, NULL, TRUE)) {
+        ss << "Error: Failed to initialize symbols\n";
+        return indent(ss.str(), spaceIndent);
+    }
+
+    // Capture stack
+    void * stack[64];
+    USHORT frames = CaptureStackBackTrace(0, 64, stack, NULL);
+
+    std::vector<std::string> outLines;
+
+    for (USHORT i = 0; i < frames; ++i) {
+        DWORD64      address = (DWORD64) (stack[i]);
+        char         buf[sizeof(SYMBOL_INFO) + 256 * sizeof(char)];
+        PSYMBOL_INFO symbol = (PSYMBOL_INFO) buf;
+        memset(symbol, 0, sizeof(buf));
+        symbol->SizeOfStruct = sizeof(SYMBOL_INFO);
+        symbol->MaxNameLen   = 255;
+
+        std::string symbolName;
+        if (SymFromAddr(process, address, 0, symbol)) {
+            symbolName = msvc_demangle(symbol->Name);
+        } else {
+            symbolName = "<unknown symbol>";
+        }
+
+        // Try source file line
+        IMAGEHLP_LINE64 lineInfo;
+        DWORD           displacement = 0;
+        memset(&lineInfo, 0, sizeof(lineInfo));
+        lineInfo.SizeOfStruct = sizeof(IMAGEHLP_LINE64);
+
+        std::string location;
+        std::string sourceLine;
+        if (SymGetLineFromAddr64(process, address, &displacement, &lineInfo)) {
+            // Found source location
+            location = StrA::format("{}:{}", lineInfo.FileName, lineInfo.LineNumber);
+            // Try reading line text
+            std::string lineText = try_read_source_line(lineInfo.FileName, lineInfo.LineNumber);
+            if (!lineText.empty()) { sourceLine = StrA::format("    > {}\n", lineText); }
+        } else {
+            location = "<no source info>";
+        }
+
+        ss << StrA::format("{:03d}: 0x{:p} {} [{}]\n", i, (void *) address, symbolName.c_str(), location.c_str());
+        if (!sourceLine.empty()) ss << sourceLine;
+    }
+
+    SymCleanup(process);
+
+    ss << "windows stack dump done\n";
+
+    return indent(ss.str(), spaceIndent);
+#else
     using namespace backward;
     StackTrace st;
     st.load_here(32);
@@ -126,8 +215,6 @@ GN_API StrA backtrace(int spaceIndent, bool includeSourceSnippet) {
     p.snippet = includeSourceSnippet;
     p.print(st, ss);
     return indent(ss.str(), spaceIndent);
-#else
-    return {};
 #endif
 }
 

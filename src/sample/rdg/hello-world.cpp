@@ -98,13 +98,13 @@ int main(int, const char **) {
     }
     if (Action::ExecutionResult::WARNING == result.executionResult) { GN_WARN(sLogger)("Render graph submission completed with warnings"); }
 
-    // // Read texture back into an image, then save the image to file.
-    // auto image = backbuffer->readback();
-    // if (image.empty()) {
-    //     GN_ERROR(sLogger)("Failed to get image from texture readback action");
-    //     return -1;
-    // }
-    // image.save("output.png");
+    // Read texture back into an image, then save the image to file.
+    auto image = backbuffer->readback();
+    if (image.empty()) {
+        GN_ERROR(sLogger)("Failed to get image from texture readback action");
+        return -1;
+    }
+    image.save("output.png");
 
     GN_INFO(sLogger)("Render graph hello world completed");
     return 0;
