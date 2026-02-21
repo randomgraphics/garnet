@@ -21,7 +21,7 @@ public:
 
     struct CommandBuffer {
         rapid_vulkan::Ref<rapid_vulkan::CommandQueue> queue;
-        rapid_vulkan::CommandBuffer *                 commandBuffer {};
+        rapid_vulkan::CommandBuffer                   commandBuffer {};
         bool                                          submit {};
     };
 

@@ -115,7 +115,12 @@ public:
         trackRenderTargetState(a->renderTarget.get());
 
         // acquire render pass.
-        auto rp = sc.renderPassManager.execute(taskInfo, *renderTarget, cb.commandBuffer->handle());
+        RenderPassManagerVulkan::RenderPassArguments rpa {
+            .renderTarget  = *renderTarget,
+            .commandBuffer = cb.commandBuffer.handle(),
+            .clearValues   = a->clearValues.getAsOptional(),
+        };
+        auto rp = sc.renderPassManager.execute(taskInfo, rpa);
         if (!rp) GN_UNLIKELY {
                 GN_ERROR(sLogger)("ClearRenderTargetVulkan::execute: failed to acquire render pass");
                 return FAILED;
@@ -127,12 +132,12 @@ public:
         if (rp->lastTaskIndex == taskInfo.index) {
             // Not like old render pass, dynamic rendering does not implicitly updates the render target's layout.
             // So here we don't have to call resource tracker to update the layout either.
-            cb.commandBuffer->handle().endRendering();
+            cb.commandBuffer.handle().endRendering();
         }
 
         // submit command buffer, if asked to do so.
         // TODO: we need to remember the submission somewhere.
-        if (cb.submit) cb.queue->submit(rapid_vulkan::CommandQueue::SubmitParameters {.commandBuffers = {*cb.commandBuffer}});
+        if (cb.submit) cb.queue->submit(rapid_vulkan::CommandQueue::SubmitParameters {.commandBuffers = {cb.commandBuffer}});
 
         // done
         return hasWarning ? WARNING : PASSED;

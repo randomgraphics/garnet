@@ -85,7 +85,7 @@ CommandBufferManagerVulkan::CommandBuffer CommandBufferManagerVulkan::execute(ui
         }
     Entry & e = mEntries[index];
     if (index == mEntries.size() - 1) { e.submit = true; }
-    return CommandBuffer {e.queue, &e.commandBuffer, e.submit};
+    return CommandBuffer {e.queue, e.commandBuffer, e.submit};
 }
 
 } // namespace GN::rdg

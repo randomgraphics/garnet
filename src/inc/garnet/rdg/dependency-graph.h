@@ -118,6 +118,8 @@ struct Arguments : RefCounter, public RuntimeType {
         void reset() { mValue.reset(); }
         auto get() const -> const T * { return mValue.has_value() ? &mValue.value() : nullptr; }
         auto get() -> T * { return mValue.has_value() ? &mValue.value() : nullptr; }
+        auto getAsOptional() const -> const std::optional<T> & { return mValue; }
+        auto getAsOptional() -> std::optional<T> & { return mValue; }
         auto operator->() const -> const T * { return get(); }
         auto operator->() -> T * { return get(); }
         auto operator*() const -> const T & { return mValue.value(); }

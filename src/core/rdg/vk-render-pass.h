@@ -26,17 +26,27 @@ public:
     // /// Called by task in prepare pass to request to render to a render target.
     bool prepare(TaskInfo & taskInfo, const RenderTarget & renderTarget);
 
+    struct RenderPassArguments {
+        // The render target to render to.
+        const RenderTarget & renderTarget;
+
+        // The command buffer that record the vulkan commands into. Can't be null.
+        vk::CommandBuffer commandBuffer;
+
+        // Optional. If set, we need to clear the render target to the specified values.
+        std::optional<ClearRenderTarget::A::ClearValues> clearValues;
+    };
+
     /// Called by task in execution pass to retrieve the render target requested in prepare() pass.
-    /// \param renderTarget The render target to render to.
-    /// \param taskIndex The task index of the render pass.
-    /// \param commandBuffer The command buffer to record the render pass into.
     /// \return Returns the render pass information that a draw action can act on. Or empty for failure.
-    const RenderPass * execute(TaskInfo & taskInfo, const RenderTarget & renderTarget, vk::CommandBuffer commandBuffer);
+    const RenderPass * execute(TaskInfo & taskInfo, const RenderPassArguments & arguments);
 
 private:
     AutoRef<GpuContextVulkan> mGpu;
     const RenderTarget *      mPrevRenderTarget = nullptr;
     std::vector<RenderPass>   mRenderPasses;
+
+    bool beginRenderPass(const RenderPassArguments & arguments);
 };
 
 } // namespace GN::rdg
