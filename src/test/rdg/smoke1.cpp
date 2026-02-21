@@ -1,9 +1,9 @@
-#include "pch.h"
+#include <garnet/GNrdg.h>
 
 using namespace GN;
 using namespace GN::rdg;
 
-static GN::Logger * sLogger = GN::getLogger("GN.sample.render-graph");
+static GN::Logger * sLogger = GN::getLogger("GN.test.rdg.smoke1");
 
 int main(int, const char **) {
     enableCRTMemoryCheck();
@@ -124,6 +124,6 @@ int main(int, const char **) {
         }
     }
 
-    GN_INFO(sLogger)("Render graph hello world completed");
+    GN_INFO(sLogger)("RDG smoke1 completed");
     return 0;
 }
