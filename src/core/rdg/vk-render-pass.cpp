@@ -188,7 +188,7 @@ bool RenderPassManagerVulkan::beginRenderPass(const RenderPassArguments & argume
     layoutBarrier.s(vk::PipelineStageFlagBits::eTopOfPipe, vk::PipelineStageFlagBits::eColorAttachmentOutput | vk::PipelineStageFlagBits::eEarlyFragmentTests);
 
     // setup color attachments (and add layout barriers when trackImageState indicates a transition is needed).
-    vk::Rect2D                               renderArea(vk::Offset2D(0, 0), vk::Extent2D({~0u, ~0u}));
+    vk::Rect2D                               renderArea(vk::Offset2D(0, 0), vk::Extent2D(~0u, ~0u));
     std::vector<vk::RenderingAttachmentInfo> colorAttachments;
     colorAttachments.reserve(renderTarget.colors.size());
     for (size_t i = 0; i < renderTarget.colors.size(); i++) {

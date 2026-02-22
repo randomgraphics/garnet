@@ -25,6 +25,8 @@ public:
         /// @brief Set to true to discard the content of the image during the transition.
         /// This effectively will set the source layout of the iamge to UNDEFINED.
         bool discardContent : 1 = false;
+
+        inline static constexpr const ImageStateTransitionFlags DEFAULT() { return {false}; };
     };
 
     struct ImageStateTransition {
@@ -59,7 +61,7 @@ public:
 
     auto getImageState(uint32_t mip, uint32_t arrayLayer) const -> const ImageStateTransition *;
     bool trackImageState(uint32_t mip, uint32_t levels, uint32_t arrayLayer, uint32_t layers, const ImageState & newState,
-                         ImageStateTransitionFlags flags = {});
+                         ImageStateTransitionFlags flags = ImageStateTransitionFlags::DEFAULT());
 
     auto readback() const -> gfx::img::Image override;
 
@@ -80,8 +82,8 @@ private:
     // };
 
     size_t subResourceIndex(uint32_t mip, uint32_t arrayLayer) const {
-        GN_ASSERT(0 <= mip && mip < mDescriptor.levels);
-        GN_ASSERT(0 <= arrayLayer && arrayLayer < mDescriptor.faces);
+        GN_ASSERT(mip < mDescriptor.levels);
+        GN_ASSERT(arrayLayer < mDescriptor.faces);
         return mip * mDescriptor.faces + arrayLayer; // layer major order
     }
 
