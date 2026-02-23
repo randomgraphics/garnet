@@ -121,6 +121,22 @@ int main(int, const char **) {
             clearTask.arguments = clearArgs;
             renderWorkflow->tasks.append(clearTask);
 
+            // Task: Draw solid triangle (GenericDraw; pipeline created in Phase 6)
+            auto drawTask  = Workflow::Task("DrawTriangle");
+            drawTask.action = genericDrawAction;
+            auto drawArgs  = AutoRef<GenericDraw::A>(new GenericDraw::A());
+            GenericDraw::DrawParams dp {};
+            dp.vertexCount   = 3;
+            dp.instanceCount = 1;
+            dp.firstVertex   = 0;
+            dp.firstInstance = 0;
+            drawArgs->drawParams.set(dp);
+            RenderTarget drawRt {};
+            drawRt.colors.append(RenderTarget::ColorTarget {.target = backbuffer, .subresourceIndex = {}});
+            drawArgs->renderTarget.set(drawRt);
+            drawTask.arguments = drawArgs;
+            renderWorkflow->tasks.append(drawTask);
+
             // Task: Present backbuffer
             auto presentTask   = Workflow::Task("Present");
             presentTask.action = presentAction;
