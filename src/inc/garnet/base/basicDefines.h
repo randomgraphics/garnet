@@ -70,13 +70,11 @@
     #define GN_MSWIN 1
     #if defined(_XBOX_VER) && _XBOX_VER == 200
         #undef GN_XBOX2
-        #define GN_XBOX2 1
-        #undef GN_PLATFORM_NAME
+        #define GN_XBOX2         1
         #define GN_PLATFORM_NAME xbox2
     #elif defined(_DURANGO)
         #undef GN_XBOX3
-        #define GN_XBOX3 1
-        #undef GN_PLATFORM_NAME
+        #define GN_XBOX3         1
         #define GN_PLATFORM_NAME xbox3
     #else
         #undef GN_WINPC
@@ -87,32 +85,34 @@
 // Cygwin platform
 #elif defined(__CYGWIN__)
     #undef GN_CYGWIN
-    #define GN_CYGWIN 1
     #undef GN_POSIX
+    #define GN_CYGWIN        1
     #define GN_POSIX         1 // cygwin also provides some posix compabilities
     #define GN_PLATFORM_NAME cygwin
 
 // Mac OS
 #elif defined(__APPLE__)
     #undef GN_POSIX
-    #define GN_POSIX 1
     #undef GN_DARWIN
+    #define GN_POSIX         1
     #define GN_DARWIN        1
     #define GN_PLATFORM_NAME darwin
-
-#elif defined(__linux__)
-    #undef GN_POSIX
-    #define GN_POSIX         1
-    #define GN_PLATFORM_NAME linux
-    #undef GN_LINUX
-    #define GN_LINUX 1
 
 // Android
 #elif defined(__ANDROID__)
     #undef GN_POSIX
     #undef GN_ANDROID
-    #define GN_POSIX   1
-    #define GN_ANDROID 1
+    #define GN_POSIX         1
+    #define GN_ANDROID       1
+    #define GN_PLATFORM_NAME android
+
+// Linux (must be after Android, since Android build also defines __linux__)
+#elif defined(__linux__)
+    #undef GN_POSIX
+    #undef GN_LINUX
+    #define GN_POSIX         1
+    #define GN_LINUX         1
+    #define GN_PLATFORM_NAME linux
 
 // other unix/linux platform
 #elif defined(__unix) || defined(__unix__)
