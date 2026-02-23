@@ -41,12 +41,6 @@ static void trackRenderTargetState(const RenderTarget * renderTarget) {
                                 vk::PipelineStageFlagBits::eEarlyFragmentTests | vk::PipelineStageFlagBits::eLateFragmentTests});
 }
 
-struct DrawActionContextVulkan : public Action::ExecutionContext {
-    inline static const uint64_t TYPE            = getNextUniqueTypeId();
-    uint64_t                     commandBufferId = 0;
-    DrawActionContextVulkan(): Action::ExecutionContext(TYPE) {}
-};
-
 class ClearRenderTargetVulkan : public ClearRenderTarget {
     AutoRef<GpuContextVulkan> mGpu;
 

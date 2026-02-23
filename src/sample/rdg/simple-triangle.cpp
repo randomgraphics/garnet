@@ -95,10 +95,6 @@ int main(int, const char **) {
         if (renderWorkflow) {
             renderWorkflow->name = "Render";
 
-            // TODO(Phase 5): Re-enable workflow tasks with current APIs. Workflow::Task requires name;
-            // ClearRenderTarget::A uses clearValues + renderTarget (colors/depthStencil); ClearDepthStencil does not exist yet.
-            // Prepare / Clear / Present tasks will be re-added in Task 5.1.
-#if 0
             // Task: Prepare backbuffer
             auto prepareTask   = Workflow::Task("Prepare");
             prepareTask.action = prepareAction;
@@ -107,35 +103,23 @@ int main(int, const char **) {
             prepareTask.arguments = prepareArgs;
             renderWorkflow->tasks.append(prepareTask);
 
-            // Task: Clear render target (old API - commented until Task 5.1)
-            auto clearTask   = Workflow::Task("Clear");
+            // Task: Clear render target (clearValues + renderTarget; no depth/stencil clear for solid triangle)
+            auto clearTask  = Workflow::Task("Clear");
             clearTask.action = clearAction;
-            auto clearArgs = AutoRef<ClearRenderTarget::A>(new ClearRenderTarget::A());
-            auto clearColor = ClearRenderTarget::A::ClearColor {};
-            clearColor.r    = 0.2f;
-            clearColor.g    = 0.3f;
-            clearColor.b    = 0.4f;
-            clearColor.a    = 1.0f;
-            clearArgs->color.set(clearColor);
-            auto rt   = RenderTarget {};
-            rt.target = backbuffer;
-            rt.sub    = Texture::SubresourceIndex();
-            clearArgs->renderTarget.set(rt);
+            auto clearArgs  = AutoRef<ClearRenderTarget::A>(new ClearRenderTarget::A());
+            ClearRenderTarget::A::ClearValues clearVals {};
+            clearVals.colors[0].f4[0] = 0.2f;
+            clearVals.colors[0].f4[1] = 0.3f;
+            clearVals.colors[0].f4[2] = 0.4f;
+            clearVals.colors[0].f4[3] = 1.0f;
+            clearVals.depth            = 1.0f;
+            clearVals.stencil          = 0;
+            clearArgs->clearValues.set(clearVals);
+            RenderTarget clearRt {};
+            clearRt.colors.append(RenderTarget::ColorTarget {.target = backbuffer, .subresourceIndex = {}});
+            clearArgs->renderTarget.set(clearRt);
             clearTask.arguments = clearArgs;
             renderWorkflow->tasks.append(clearTask);
-
-            // Task: Clear depth (ClearDepthStencil not in actions.h)
-            auto clearDepthTask   = Workflow::Task("ClearDepth");
-            clearDepthTask.action = clearDepthAction;
-            auto clearDepthArgs = AutoRef<ClearDepthStencil::A>(new ClearDepthStencil::A());
-            clearDepthArgs->depth.set(1.0f);
-            clearDepthArgs->stencil.set(0);
-            auto depthRt   = RenderTarget {};
-            depthRt.target = depthTexture;
-            depthRt.sub    = Texture::SubresourceIndex();
-            clearDepthArgs->depthStencil.set(depthRt);
-            clearDepthTask.arguments = clearDepthArgs;
-            renderWorkflow->tasks.append(clearDepthTask);
 
             // Task: Present backbuffer
             auto presentTask   = Workflow::Task("Present");
@@ -144,7 +128,6 @@ int main(int, const char **) {
             presentArgs->backbuffer.set(backbuffer);
             presentTask.arguments = presentArgs;
             renderWorkflow->tasks.append(presentTask);
-#endif
         }
 
         // Submit render graph for execution

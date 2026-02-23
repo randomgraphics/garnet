@@ -15,5 +15,7 @@ GN_API const uint64_t PresentBackbuffer::A::TYPE = getNextUniqueTypeId();
 GN_API const uint64_t PresentBackbuffer::TYPE    = getNextUniqueTypeId();
 GN_API const uint64_t Backbuffer::TYPE           = getNextUniqueTypeId();
 GN_API const uint64_t ClearRenderTarget::TYPE    = getNextUniqueTypeId();
+GN_API const uint64_t GenericDraw::TYPE         = getNextUniqueTypeId();
+GN_API const uint64_t GenericDraw::A::TYPE       = getNextUniqueTypeId();
 
 } // namespace GN::rdg
