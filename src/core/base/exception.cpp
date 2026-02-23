@@ -1,6 +1,5 @@
 #include "pch.h"
 
-// headers to generate backtrace
 #if GN_ANDROID
     #include <unwind.h>
     #include <cxxabi.h>

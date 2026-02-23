@@ -6,7 +6,11 @@
     #error "rapid-vulkan.h is already included"
 #endif
 #if GN_LINUX
-    #define VK_USE_PLATFORM_WAYLAND_KHR 1
+    #if HAS_X11
+        #define VK_USE_PLATFORM_XLIB_KHR 1
+    #else
+        #define VK_USE_PLATFORM_WAYLAND_KHR 1
+    #endif
 #endif
 #if GN_MSWIN
     #define VK_USE_PLATFORM_WIN32_KHR 1

@@ -1,0 +1,2 @@
+# SPIR-V binaries from compile_shaders.py; only .spv.h headers are committed
+*.spv
