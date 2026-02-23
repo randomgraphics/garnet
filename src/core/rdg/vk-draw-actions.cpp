@@ -333,6 +333,13 @@ public:
 
         createPipelineIfNeeded();
 
+        // Task 7.1: if vs/ps were provided but pipeline is missing (creation failed), fail the task.
+        const bool requiredShaders = mCreateParams.vs && mCreateParams.ps && mCreateParams.vs->shaderBinary && mCreateParams.ps->shaderBinary;
+        if (requiredShaders && !mPipeline) GN_UNLIKELY {
+                GN_ERROR(sLogger)("GenericDrawVulkan::execute: vs/ps provided but pipeline not created, name='{}'", name);
+                return FAILED;
+            }
+
         // When pipeline is valid: set viewport/scissor from render target extent, then bind and draw (Task 3.3 / 6.4).
         if (mPipeline) {
             uint32_t extentW = 0, extentH = 0;
