@@ -4,7 +4,7 @@ Goal: (1) Complete the GenericDraw Vulkan backend so it can execute a draw (pipe
 
 --- PROGRESS (resume from "Last completed" / "In progress") ---
 Last completed: Task 4.2
-In progress: (none)
+In progress: Task 4.3
 --- END PROGRESS ---
 
 Reference:
@@ -28,6 +28,7 @@ Workflow / Conventions:
 - Before starting a new step: pull from GitHub to incorporate others' changes. If there are merge conflicts, add a pre-step to the current task to fix merge conflicts; resolve, verify build, commit, then continue.
 - When starting a task: mark the task as in progress in PROGRESS, then commit the task file (e.g. "chore(agent): start Task X.Y") so everyone sees that work has begun.
 - After starting a task and after completing it: push the repo to GitHub so progress is not lost if the local machine is unavailable.
+- Run the sample once the initial version of the sample app exists, and after each step that touches the sample or GenericDraw: the run must complete without crash and without any Vulkan error. If there is a crash or Vulkan error, fix it before continuing to the next task.
 
 ---
 PRE: Branch first, then fix build and commit
@@ -139,6 +140,7 @@ PHASE 5: Sample app — simple-triangle using GenericDraw
 
 [ ] Task 5.3 — Final verification and cleanup
     - Run the sample from the build directory; confirm window shows a clear background and a solid-color triangle. No Vulkan validation errors (if validation layers are on). Close window and confirm clean exit.
+    - Final visual verification: use a backbuffer readback action (or equivalent) to capture what was rendered; take a screenshot (or save the readback image). Inspect the content to ensure it matches the goal: a solid-color triangle (e.g. red) in the middle (or expected region) of the screen. If the result is not what you expect, try to root cause and fix (e.g. viewport, NDC, clear vs draw order). If it turns out to be too difficult to fix, raise the issue to the human and we can figure it out together.
     - Run env/bin/cit.py; fix any new lint issues in touched files.
     - Update this file PROGRESS to "Last completed: Task 5.3".
     - After task: commit with message e.g. "chore(agent): mark GenericDraw solid-triangle sample complete".
