@@ -37,9 +37,9 @@ GN_API AutoRef<ClearRenderTarget> ClearRenderTarget::create(ArtifactDatabase & d
 
 GN_API AutoRef<GenericDraw> GenericDraw::create(ArtifactDatabase & db, const StrA & name, const CreateParameters & params) {
     if (!params.context) GN_UNLIKELY {
-        GN_ERROR(sLogger)("GenericDraw::create: context is null, name='{}'", name);
-        return {};
-    }
+            GN_ERROR(sLogger)("GenericDraw::create: context is null, name='{}'", name);
+            return {};
+        }
     auto common = static_cast<GpuContextCommon *>(params.context.get());
     switch (common->api()) {
     case GpuContextCommon::Api::Vulkan:

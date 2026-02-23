@@ -154,8 +154,8 @@ AutoRef<ClearRenderTarget> createVulkanClearRenderTarget(ArtifactDatabase & db, 
 }
 
 class GenericDrawVulkan : public GenericDraw {
-    AutoRef<GpuContextVulkan>      mGpu;
-    GenericDraw::CreateParameters  mCreateParams {};
+    AutoRef<GpuContextVulkan>     mGpu;
+    GenericDraw::CreateParameters mCreateParams {};
     vk::ShaderModule              mVertModule {};
     vk::ShaderModule              mFragModule {};
     vk::PipelineLayout            mPipelineLayout {};
@@ -186,14 +186,14 @@ class GenericDrawVulkan : public GenericDraw {
             {vk::PipelineShaderStageCreateFlags(), vk::ShaderStageFlagBits::eFragment, mFragModule, fragEntry},
         };
 
-        vk::PipelineVertexInputStateCreateInfo vertexInput {};
+        vk::PipelineVertexInputStateCreateInfo   vertexInput {};
         vk::PipelineInputAssemblyStateCreateInfo inputAssembly {{}, vk::PrimitiveTopology::eTriangleList};
         vk::PipelineRasterizationStateCreateInfo rasterization {};
         rasterization.lineWidth = 1.0f;
         vk::PipelineColorBlendAttachmentState blendAttachment {};
-        blendAttachment.colorWriteMask = vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG |
-                                         vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA;
-        vk::PipelineColorBlendStateCreateInfo colorBlend {{}, false, {}, blendAttachment};
+        blendAttachment.colorWriteMask =
+            vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG | vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA;
+        vk::PipelineColorBlendStateCreateInfo  colorBlend {{}, false, {}, blendAttachment};
         vk::PipelineMultisampleStateCreateInfo multisample {};
         multisample.rasterizationSamples = vk::SampleCountFlagBits::e1;
 
@@ -201,11 +201,11 @@ class GenericDrawVulkan : public GenericDraw {
         viewportState.viewportCount = 1;
         viewportState.scissorCount  = 1;
 
-        vk::DynamicState dynamicStates[] = {vk::DynamicState::eViewport, vk::DynamicState::eScissor};
+        vk::DynamicState                   dynamicStates[] = {vk::DynamicState::eViewport, vk::DynamicState::eScissor};
         vk::PipelineDynamicStateCreateInfo dynamicState {{}, 2, dynamicStates};
 
         vk::PipelineRenderingCreateInfo renderingCi {};
-        vk::Format colorFormat = vk::Format::eB8G8R8A8Unorm; // common swapchain format
+        vk::Format                      colorFormat = vk::Format::eB8G8R8A8Unorm; // common swapchain format
         renderingCi.setColorAttachmentFormats(colorFormat);
 
         vk::GraphicsPipelineCreateInfo pipeCi {};
@@ -223,11 +223,11 @@ class GenericDrawVulkan : public GenericDraw {
 
         auto result = dev.createGraphicsPipeline(nullptr, pipeCi);
         if (result.result != vk::Result::eSuccess) GN_UNLIKELY {
-            GN_ERROR(sLogger)("GenericDrawVulkan: createGraphicsPipeline failed, name='{}'", name);
-            dev.destroyPipelineLayout(mPipelineLayout);
-            mPipelineLayout = nullptr;
-            return;
-        }
+                GN_ERROR(sLogger)("GenericDrawVulkan: createGraphicsPipeline failed, name='{}'", name);
+                dev.destroyPipelineLayout(mPipelineLayout);
+                mPipelineLayout = nullptr;
+                return;
+            }
         mPipeline = result.value;
     }
 
@@ -235,15 +235,11 @@ public:
     GenericDrawVulkan(ArtifactDatabase & db, const StrA & name, AutoRef<GpuContextVulkan> gpu, const GenericDraw::CreateParameters & params)
         : GenericDraw(db, TYPE, name), mGpu(gpu), mCreateParams(params) {
         const auto dev = mGpu->device().handle();
-        if (params.vs && params.vs->shaderBinary)
-            mVertModule = createShaderModule(dev, params.vs->shaderBinary.get());
-        if (params.ps && params.ps->shaderBinary)
-            mFragModule = createShaderModule(dev, params.ps->shaderBinary.get());
+        if (params.vs && params.vs->shaderBinary) mVertModule = createShaderModule(dev, params.vs->shaderBinary.get());
+        if (params.ps && params.ps->shaderBinary) mFragModule = createShaderModule(dev, params.ps->shaderBinary.get());
         bool vsFail = (params.vs && params.vs->shaderBinary && !mVertModule);
         bool psFail = (params.ps && params.ps->shaderBinary && !mFragModule);
-        if (vsFail || psFail) {
-            GN_WARN(sLogger)("GenericDrawVulkan: failed to create one or more shader modules, name='{}'", name);
-        }
+        if (vsFail || psFail) { GN_WARN(sLogger)("GenericDrawVulkan: failed to create one or more shader modules, name='{}'", name); }
     }
 
     ~GenericDrawVulkan() override {
@@ -343,8 +339,8 @@ public:
                     auto tex = std::get<0>(c0.target).castTo<TextureVulkan>().get();
                     if (tex) {
                         auto dim = tex->dimensions(c0.subresourceIndex.mip);
-                        extentW = dim.width;
-                        extentH = dim.height;
+                        extentW  = dim.width;
+                        extentH  = dim.height;
                     }
                 } else {
                     auto bb = std::get<1>(c0.target).castTo<BackbufferVulkan>().get();
@@ -360,13 +356,12 @@ public:
                 cb.commandBuffer.handle().setScissor(0, vk::Rect2D {{0, 0}, {extentW, extentH}});
             }
             cb.commandBuffer.handle().bindPipeline(vk::PipelineBindPoint::eGraphics, mPipeline);
-            const auto * dp = a->drawParams.get();
+            const auto *   dp            = a->drawParams.get();
             const uint32_t vertexCount   = dp ? dp->vertexCount : 0;
             const uint32_t instanceCount = dp ? dp->instanceCount : 1;
             const uint32_t firstVertex   = dp ? dp->firstVertex : 0;
             const uint32_t firstInstance = dp ? dp->firstInstance : 0;
-            if (vertexCount > 0)
-                cb.commandBuffer.handle().draw(vertexCount, instanceCount, firstVertex, firstInstance);
+            if (vertexCount > 0) cb.commandBuffer.handle().draw(vertexCount, instanceCount, firstVertex, firstInstance);
         }
 
         // end render pass, if this is the last task of the render pass.

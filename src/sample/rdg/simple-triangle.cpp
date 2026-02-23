@@ -77,12 +77,12 @@ int main(int, const char **) {
     if (!presentAction) return -1;
 
     // GenericDraw with SPIR-V from compiled headers (Phase 4); workflow task added in Phase 5.
-    auto vertBlob = referenceTo(new SimpleBlob<unsigned int>(kSolidTriangleVertSpvSize, kSolidTriangleVertSpv));
-    auto fragBlob = referenceTo(new SimpleBlob<unsigned int>(kSolidTriangleFragSpvSize, kSolidTriangleFragSpv));
+    auto                          vertBlob = referenceTo(new SimpleBlob<unsigned int>(kSolidTriangleVertSpvSize, kSolidTriangleVertSpv));
+    auto                          fragBlob = referenceTo(new SimpleBlob<unsigned int>(kSolidTriangleFragSpvSize, kSolidTriangleFragSpv));
     GenericDraw::CreateParameters drawParams {};
-    drawParams.context = gpuContext;
-    drawParams.vs      = GenericDraw::ShaderStageDesc {.shaderBinary = vertBlob, .entryPoint = "main"};
-    drawParams.ps      = GenericDraw::ShaderStageDesc {.shaderBinary = fragBlob, .entryPoint = "main"};
+    drawParams.context     = gpuContext;
+    drawParams.vs          = GenericDraw::ShaderStageDesc {.shaderBinary = vertBlob, .entryPoint = "main"};
+    drawParams.ps          = GenericDraw::ShaderStageDesc {.shaderBinary = fragBlob, .entryPoint = "main"};
     auto genericDrawAction = GenericDraw::create(*db, "draw_triangle", drawParams);
     if (!genericDrawAction) return -1;
 
@@ -104,16 +104,16 @@ int main(int, const char **) {
             renderWorkflow->tasks.append(prepareTask);
 
             // Task: Clear render target (clearValues + renderTarget; no depth/stencil clear for solid triangle)
-            auto clearTask  = Workflow::Task("Clear");
-            clearTask.action = clearAction;
-            auto clearArgs  = AutoRef<ClearRenderTarget::A>(new ClearRenderTarget::A());
+            auto clearTask                              = Workflow::Task("Clear");
+            clearTask.action                            = clearAction;
+            auto                              clearArgs = AutoRef<ClearRenderTarget::A>(new ClearRenderTarget::A());
             ClearRenderTarget::A::ClearValues clearVals {};
             clearVals.colors[0].f4[0] = 0.2f;
             clearVals.colors[0].f4[1] = 0.3f;
             clearVals.colors[0].f4[2] = 0.4f;
             clearVals.colors[0].f4[3] = 1.0f;
-            clearVals.depth            = 1.0f;
-            clearVals.stencil          = 0;
+            clearVals.depth           = 1.0f;
+            clearVals.stencil         = 0;
             clearArgs->clearValues.set(clearVals);
             RenderTarget clearRt {};
             clearRt.colors.append(RenderTarget::ColorTarget {.target = backbuffer, .subresourceIndex = {}});
@@ -122,9 +122,9 @@ int main(int, const char **) {
             renderWorkflow->tasks.append(clearTask);
 
             // Task: Draw solid triangle (GenericDraw; pipeline created in Phase 6)
-            auto drawTask  = Workflow::Task("DrawTriangle");
-            drawTask.action = genericDrawAction;
-            auto drawArgs  = AutoRef<GenericDraw::A>(new GenericDraw::A());
+            auto drawTask                    = Workflow::Task("DrawTriangle");
+            drawTask.action                  = genericDrawAction;
+            auto                    drawArgs = AutoRef<GenericDraw::A>(new GenericDraw::A());
             GenericDraw::DrawParams dp {};
             dp.vertexCount   = 3;
             dp.instanceCount = 1;
