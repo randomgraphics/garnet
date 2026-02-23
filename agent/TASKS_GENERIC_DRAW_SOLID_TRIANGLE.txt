@@ -7,6 +7,13 @@ Last completed: Task 7.2
 In progress: (none)
 --- END PROGRESS ---
 
+--- WORKLOG / INVESTIGATION ---
+2025-02-22 (session end):
+- Ran GNsample-rdg-simple-triangle to verify sample. First run crashed: depth texture created with backbufferDesc.width/height (0x0 at create time) -> validateDesc "zero dimension" -> RefCounter assert on failed texture. Second attempt: used fixed 1280x720 for depth; then createVkImage hit GN_UNIMPL() (Texture Vulkan path not fully implemented). Removed depth texture creation from sample so it can run (current workflow only clears and draws to backbuffer; depth not used).
+- Sample now starts and render loop runs (window opens). Vulkan validation reports every frame: VUID-VkRenderingInfo-None-08994 (renderArea.extent.width is zero), VUID-vkCmdDraw viewport/scissor not set. Root cause: backbuffer reports 0x0 extent when beginRendering runs (swapchain/window size not yet valid on first frames). GenericDrawVulkan only sets viewport/scissor when extentW > 0 && extentH > 0, so with 0 extent we skip them -> validation errors. Follow-up: either skip rendering when backbuffer extent is 0, or ensure backbuffer gets valid extent before first render (investigate PrepareBackbuffer / swapchain timing).
+- Pushed all task commits (6.5, format, 6.6, 7.1, 7.2). User requested push after each task going forward.
+--- END WORKLOG ---
+
 Reference:
 - GenericDraw action: src/inc/garnet/rdg/actions.h (GenericDraw, GenericDraw::A, CreateParameters with vs/ps, renderTarget, mesh, drawParams).
 - Vulkan implementation: src/core/rdg/vk-draw-actions.cpp (GenericDrawVulkan after Task 1.1; currently has TODO "do more graphics commands here").

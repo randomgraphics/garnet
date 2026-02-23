@@ -45,15 +45,9 @@ int main(int, const char **) {
     // Create backbuffer (window and size are part of Backbuffer descriptor)
     auto backbuffer = Backbuffer::create(*db, "backbuffer", Backbuffer::CreateParameters {.context = gpuContext, .descriptor = {.win = window}});
     if (!backbuffer) return -1;
-    const auto & backbufferDesc = backbuffer->descriptor();
 
-    // Create and initialize depth texture (match backbuffer size)
-    auto depthDesc    = Texture::Descriptor {};
-    depthDesc.format  = gfx::img::PixelFormat::RG_24_UNORM_8_UINT();
-    depthDesc.width   = backbufferDesc.width;
-    depthDesc.height  = backbufferDesc.height;
-    auto depthTexture = Texture::create(*db, "depth_texture", Texture::CreateParameters {.context = gpuContext, .descriptor = depthDesc});
-    if (!depthTexture) return -1;
+    // Depth texture not used by current workflow (clear + draw triangle to backbuffer only); skip until Texture::create path is implemented.
+    // auto depthTexture = Texture::create(*db, "depth_texture", ...);
 
     // Create and initialize sampler (commented out until Sampler::create is implemented/linked)
     // auto samplerDesc      = Sampler::Descriptor {};
