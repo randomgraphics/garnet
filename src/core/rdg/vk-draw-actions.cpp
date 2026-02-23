@@ -41,6 +41,12 @@ static void trackRenderTargetState(const RenderTarget * renderTarget) {
                                 vk::PipelineStageFlagBits::eEarlyFragmentTests | vk::PipelineStageFlagBits::eLateFragmentTests});
 }
 
+struct DrawActionContextVulkan : public Action::ExecutionContext {
+    inline static const uint64_t TYPE            = getNextUniqueTypeId();
+    uint64_t                     commandBufferId = 0;
+    DrawActionContextVulkan(): Action::ExecutionContext(TYPE) {}
+};
+
 class ClearRenderTargetVulkan : public ClearRenderTarget {
     AutoRef<GpuContextVulkan> mGpu;
 
@@ -151,6 +157,111 @@ AutoRef<ClearRenderTarget> createVulkanClearRenderTarget(ArtifactDatabase & db, 
             return {};
         }
     return AutoRef<ClearRenderTarget>(new ClearRenderTargetVulkan(db, name, gpu));
+}
+
+class GenericDrawVulkan : public GenericDraw {
+    AutoRef<GpuContextVulkan> mGpu;
+
+public:
+    GenericDrawVulkan(ArtifactDatabase & db, const StrA & name, AutoRef<GpuContextVulkan> gpu): GenericDraw(db, TYPE, name), mGpu(gpu) {}
+
+    std::pair<ExecutionResult, ExecutionContext *> prepare(TaskInfo & taskInfo, Arguments & arguments) override {
+        auto & submissionImpl = static_cast<SubmissionImpl &>(taskInfo.submission);
+
+        auto a = arguments.castTo<GenericDraw::A>();
+        if (!a) GN_UNLIKELY {
+                GN_ERROR(sLogger)("GenericDrawVulkan::prepare: arguments is not GenericDraw::A");
+                return std::make_pair(FAILED, nullptr);
+            }
+        auto renderTarget = a->renderTarget.get();
+        if (!renderTarget) GN_UNLIKELY {
+                GN_ERROR(sLogger)("GenericDrawVulkan::prepare: render target is null");
+                return std::make_pair(FAILED, nullptr);
+            }
+
+        auto taskContext = std::make_unique<DrawActionContextVulkan>();
+
+        // prepare command buffer.
+        auto & submissionContext     = SubmissionContextVulkan::get(submissionImpl, mGpu);
+        taskContext->commandBufferId = submissionContext.commandBufferManager.prepare(CommandBufferManagerVulkan::GRAPHICS);
+        if (!taskContext->commandBufferId) GN_UNLIKELY {
+                GN_ERROR(sLogger)("GenericDrawVulkan::prepare: failed to prepare command buffer");
+                return std::make_pair(FAILED, nullptr);
+            }
+
+        // prepare render pass
+        if (!submissionContext.renderPassManager.prepare(taskInfo, *a->renderTarget.get())) GN_UNLIKELY {
+                GN_ERROR(sLogger)("GenericDrawVulkan::prepare: failed to prepare render pass");
+                return std::make_pair(FAILED, nullptr);
+            }
+
+        return std::make_pair(PASSED, taskContext.release());
+    }
+
+    ExecutionResult execute(TaskInfo & taskInfo, Arguments & arguments, ExecutionContext * context) override {
+        bool hasWarning = false;
+
+        auto & submissionImpl = static_cast<SubmissionImpl &>(taskInfo.submission);
+
+        auto a = arguments.castTo<GenericDraw::A>();
+        if (!a) GN_UNLIKELY {
+                GN_ERROR(sLogger)("GenericDrawVulkan::execute: arguments is not GenericDraw::A");
+                return FAILED;
+            }
+        auto renderTarget = a->renderTarget.get();
+        if (!renderTarget) GN_UNLIKELY {
+                GN_ERROR(sLogger)("GenericDrawVulkan::execute: render target is null");
+                return FAILED;
+            }
+
+        auto ctx = static_cast<DrawActionContextVulkan *>(context);
+        if (!ctx) GN_UNLIKELY {
+                GN_ERROR(sLogger)("GenericDrawVulkan::execute: context is not DrawActionContextVulkan");
+                return FAILED;
+            }
+
+        // acquire command buffer.
+        auto & sc = SubmissionContextVulkan::get(submissionImpl, mGpu);
+        auto   cb = sc.commandBufferManager.execute(ctx->commandBufferId);
+        if (!cb.queue || !cb.commandBuffer) GN_UNLIKELY {
+                GN_ERROR(sLogger)("GenericDrawVulkan::execute: failed to acquire command buffer");
+                return FAILED;
+            }
+
+        // execute resource tracker to update GPU resource layout and memory usage.
+        trackRenderTargetState(a->renderTarget.get());
+
+        // acquire render pass (no clear values for generic draw).
+        RenderPassManagerVulkan::RenderPassArguments rpa {
+            .renderTarget  = *renderTarget,
+            .commandBuffer = cb.commandBuffer.handle(),
+            .clearValues   = std::nullopt,
+        };
+        auto rp = sc.renderPassManager.execute(taskInfo, rpa);
+        if (!rp) GN_UNLIKELY {
+                GN_ERROR(sLogger)("GenericDrawVulkan::execute: failed to acquire render pass");
+                return FAILED;
+            }
+
+        // TODO: do more graphics commands here (e.g. bind pipeline, draw).
+
+        // end render pass, if this is the last task of the render pass.
+        if (rp->lastTaskIndex == taskInfo.index) { cb.commandBuffer.handle().endRendering(); }
+
+        // submit command buffer, if asked to do so.
+        if (cb.submit) cb.queue->submit(rapid_vulkan::CommandQueue::SubmitParameters {.commandBuffers = {cb.commandBuffer}});
+
+        return hasWarning ? WARNING : PASSED;
+    }
+};
+
+AutoRef<GenericDraw> createVulkanGenericDrawAction(ArtifactDatabase & db, const StrA & name, const GenericDraw::CreateParameters & params) {
+    auto gpu = params.context.castTo<GpuContextVulkan>();
+    if (!gpu) GN_UNLIKELY {
+            GN_ERROR(sLogger)("createVulkanGenericDrawAction: gpu is empty, name='{}'", name);
+            return {};
+        }
+    return AutoRef<GenericDraw>(new GenericDrawVulkan(db, name, gpu));
 }
 
 } // namespace GN::rdg
