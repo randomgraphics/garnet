@@ -160,11 +160,13 @@ AutoRef<ClearRenderTarget> createVulkanClearRenderTarget(ArtifactDatabase & db, 
 }
 
 class GenericDrawVulkan : public GenericDraw {
-    AutoRef<GpuContextVulkan> mGpu;
-    vk::Pipeline             mPipeline {}; // null until pipeline creation is implemented (Task 3.2)
+    AutoRef<GpuContextVulkan>       mGpu;
+    GenericDraw::CreateParameters  mCreateParams {};
+    vk::Pipeline                   mPipeline {}; // null until pipeline creation (Phase 6 / Task 6.3)
 
 public:
-    GenericDrawVulkan(ArtifactDatabase & db, const StrA & name, AutoRef<GpuContextVulkan> gpu): GenericDraw(db, TYPE, name), mGpu(gpu) {}
+    GenericDrawVulkan(ArtifactDatabase & db, const StrA & name, AutoRef<GpuContextVulkan> gpu, const GenericDraw::CreateParameters & params)
+        : GenericDraw(db, TYPE, name), mGpu(gpu), mCreateParams(params) {}
 
     std::pair<ExecutionResult, ExecutionContext *> prepare(TaskInfo & taskInfo, Arguments & arguments) override {
         auto & submissionImpl = static_cast<SubmissionImpl &>(taskInfo.submission);
@@ -265,7 +267,7 @@ AutoRef<GenericDraw> createVulkanGenericDrawAction(ArtifactDatabase & db, const 
             GN_ERROR(sLogger)("createVulkanGenericDrawAction: gpu is empty, name='{}'", name);
             return {};
         }
-    return AutoRef<GenericDraw>(new GenericDrawVulkan(db, name, gpu));
+    return AutoRef<GenericDraw>(new GenericDrawVulkan(db, name, gpu, params));
 }
 
 } // namespace GN::rdg
