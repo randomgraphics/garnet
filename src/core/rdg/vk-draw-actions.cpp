@@ -246,9 +246,16 @@ public:
                 return FAILED;
             }
 
-        // When pipeline is valid: bind pipeline and issue draw (Task 3.2/3.3). Dummy path: skip and still return PASSED.
+        // When pipeline is valid: bind pipeline and issue draw (Task 3.3).
         if (mPipeline) {
-            // cb.commandBuffer.handle().bindPipeline(...); vkCmdDraw(...);
+            cb.commandBuffer.handle().bindPipeline(vk::PipelineBindPoint::eGraphics, mPipeline);
+            const auto * dp = a->drawParams.get();
+            const uint32_t vertexCount   = dp ? dp->vertexCount : 0;
+            const uint32_t instanceCount = dp ? dp->instanceCount : 1;
+            const uint32_t firstVertex   = dp ? dp->firstVertex : 0;
+            const uint32_t firstInstance = dp ? dp->firstInstance : 0;
+            if (vertexCount > 0)
+                cb.commandBuffer.handle().draw(vertexCount, instanceCount, firstVertex, firstInstance);
         }
 
         // end render pass, if this is the last task of the render pass.
