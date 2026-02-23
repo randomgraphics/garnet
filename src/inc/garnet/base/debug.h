@@ -7,13 +7,13 @@
 // *****************************************************************************
 
 ///
-/// Assert failture
+/// Assert failure
 ///
-#define GN_ASSERT_FAILURE(desc)                                                                                  \
-    if (true) {                                                                                                  \
-        static bool sIgnoredForever = false;                                                                     \
-        if (!sIgnoredForever) { GN::internal::handleAssertFailure(desc, __FILE__, __LINE__, &sIgnoredForever); } \
-    } else                                                                                                       \
+#define GN_ASSERT_FAILURE(desc)                                                                                               \
+    if (true) {                                                                                                               \
+        static bool sIgnoredForever = false;                                                                                  \
+        if (!sIgnoredForever) { GN::internal::handleAssertFailure(desc, __FILE__, __LINE__, GN_FUNCTION, &sIgnoredForever); } \
+    } else                                                                                                                    \
         void(0)
 
 ///
@@ -48,7 +48,8 @@
 #define GN_ASSERT(exp) GN_ASSERT_EX(exp, #exp)
 
 ///
-/// verify macro (do check even in release build.)
+/// verify macro (do check even in release build.).
+/// \todo: rename to GN_REQUIRE()
 ///
 #define GN_VERIFY(exp) GN_VERIFY_EX(exp, #exp)
 
@@ -70,7 +71,7 @@
 ///
 /// Output a warning message for unimplemented functionality
 ///
-#define GN_UNIMPL_WARNING() GN_DO_ONCE(GN_WARN(GN::getLogger("GN.base.todo"))("TODO: function {} is not implmented yet.", GN_FUNCTION));
+#define GN_UNIMPL_WARNING() GN_DO_ONCE(GN_WARN(GN::getLogger("GN.base.todo"))("TODO: function {} is not implemented yet.", GN_FUNCTION));
 
 ///
 /// Output a todo message.
@@ -272,12 +273,12 @@ namespace internal {
 ///
 /// Handle assert failure
 ///
-GN_API void handleAssertFailure(const char * msg, const char * file, int line, bool * ignoreForever) throw();
+GN_API void handleAssertFailure(const char * msg, const char * file, int line, const char * func, bool * ignoreForever) throw();
 
 ///
 /// Handle assert failure
 ///
-GN_API void handleAssertFailure(const wchar_t * msg, const char * file, int line, bool * ignoreForever) throw();
+GN_API void handleAssertFailure(const wchar_t * msg, const char * file, int line, const char * func, bool * ignoreForever) throw();
 
 } // namespace internal
 

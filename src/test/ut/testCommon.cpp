@@ -7,6 +7,10 @@ static void sPrintUsage() {
            "   -v          Verbose mode.\n");
 };
 
+namespace GN {
+GN_API void disableConsoleLog(); // a test only function defined in coreLog.cpp
+} // namespace GN
+
 //
 // Note:
 //  - This function will be called before any test cases.
@@ -39,7 +43,12 @@ int myInit(int argc, const char * argv[]) {
     }
 
     // setup environment variables to control log behavior.
-    if (!verbose) { GN::putEnv("GN_LOG_QUIET", "1"); }
+    if (verbose) {
+        GN::getRootLogger()->setLevel(GN::Logger::VERBOSE);
+    } else {
+        // can't disable root logger here. Doing that will fail logger unit test.
+        GN::disableConsoleLog();
+    }
 
     return 0;
 }

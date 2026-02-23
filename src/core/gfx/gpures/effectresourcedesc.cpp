@@ -100,7 +100,7 @@ static T sGetIntAttrib(const XmlElement & node, const char * attribName, T defau
 
     T result;
 
-    if (!a || 0 == str::toInetger<T>(result, a->value.data()))
+    if (!a || 0 == str::toInteger<T>(result, a->value.data()))
         return defaultValue;
     else
         return result;

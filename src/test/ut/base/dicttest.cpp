@@ -40,6 +40,9 @@ public:
             keys.append(i->key());
             values.append(i->value());
         }
+        // sort keys and values (they could be in random order if the dictionary is hash based)
+        std::sort(keys.begin(), keys.end());
+        std::sort(values.begin(), values.end());
         for (int i = 0; i < 3; ++i) {
             TS_ASSERT_EQUALS(i, keys[i]);
             TS_ASSERT_EQUALS(i + 1, values[i]);

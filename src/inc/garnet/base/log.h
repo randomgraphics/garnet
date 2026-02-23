@@ -485,7 +485,7 @@ public:
     virtual void setLevel(int level) = 0;
 
     ///
-    /// enable or disable this logger
+    /// enable or disable this logger and all sub-loggers
     ///
     virtual void setEnabled(bool) = 0;
 

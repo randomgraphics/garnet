@@ -405,38 +405,38 @@ public:
         using namespace GN;
 
         uint8_t u8 = 123;
-        TS_ASSERT(!str::toInetger(u8, "-1"));
-        TS_ASSERT(str::toInetger(u8, "0"));
+        TS_ASSERT(!str::toInteger(u8, "-1"));
+        TS_ASSERT(str::toInteger(u8, "0"));
         TS_ASSERT_EQUALS(u8, 0);
-        TS_ASSERT(str::toInetger(u8, "255"));
+        TS_ASSERT(str::toInteger(u8, "255"));
         TS_ASSERT_EQUALS(u8, 255);
-        TS_ASSERT(!str::toInetger(u8, "256"));
+        TS_ASSERT(!str::toInteger(u8, "256"));
 
         int8_t s8 = 123;
-        TS_ASSERT(!str::toInetger(s8, "-129"));
-        TS_ASSERT(str::toInetger(s8, "-128"));
+        TS_ASSERT(!str::toInteger(s8, "-129"));
+        TS_ASSERT(str::toInteger(s8, "-128"));
         TS_ASSERT_EQUALS(s8, -128);
-        TS_ASSERT(str::toInetger(s8, "127"));
+        TS_ASSERT(str::toInteger(s8, "127"));
         TS_ASSERT_EQUALS(s8, 127);
-        TS_ASSERT(!str::toInetger(s8, "128"));
+        TS_ASSERT(!str::toInteger(s8, "128"));
 
         uint64_t u64 = 123;
-        TS_ASSERT(!str::toInetger(u64, "-1"));
-        TS_ASSERT(str::toInetger(u64, "0"));
+        TS_ASSERT(!str::toInteger(u64, "-1"));
+        TS_ASSERT(str::toInteger(u64, "0"));
         TS_ASSERT_EQUALS(u64, 0);
-        TS_ASSERT(str::toInetger(u64, "0xFFFFFFFFFFFFFFFF", 16));
+        TS_ASSERT(str::toInteger(u64, "0xFFFFFFFFFFFFFFFF", 16));
         TS_ASSERT_EQUALS(u64, 0xFFFFFFFFFFFFFFFFLL);
-        TS_ASSERT(!str::toInetger(u64, "0x10000000000000000", 16));
+        TS_ASSERT(!str::toInteger(u64, "0x10000000000000000", 16));
 
         const int64_t i64min = (-0x7fffffffffffffffLL - 1);
         const int64_t i64max = 0x7fffffffffffffffLL; // Note: 0x7FFFFFFFFFFFFFFF = 9223372036854775807
         int64_t       s64    = 123;
-        TS_ASSERT(!str::toInetger(s64, "-9223372036854775809"));
-        TS_ASSERT(str::toInetger(s64, "-9223372036854775808"));
+        TS_ASSERT(!str::toInteger(s64, "-9223372036854775809"));
+        TS_ASSERT(str::toInteger(s64, "-9223372036854775808"));
         TS_ASSERT_EQUALS(s64, i64min);
-        TS_ASSERT(str::toInetger(s64, "9223372036854775807"));
+        TS_ASSERT(str::toInteger(s64, "9223372036854775807"));
         TS_ASSERT_EQUALS(s64, i64max);
-        TS_ASSERT(!str::toInetger(s64, "9223372036854775808"));
+        TS_ASSERT(!str::toInteger(s64, "9223372036854775808"));
     }
 
     void testMove() {

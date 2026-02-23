@@ -337,6 +337,23 @@ public:
         mPtr     = 0;
         return tmp;
     }
+
+    ///
+    /// Cast to another type. Caller is responsible for ensuring the cast is valid.
+    ///
+    template<typename T2>
+    AutoRef<T2> castTo() const {
+        return AutoRef<T2>(static_cast<T2 *>(mPtr));
+    }
+
+    ///
+    /// Creates an AutoRef by constructing X with the given arguments.
+    /// Similar to std::make_shared.
+    ///
+    template<typename... Args>
+    static AutoRef<X> make(Args &&... args) {
+        return AutoRef<X>(new X(std::forward<Args>(args)...));
+    }
 };
 
 template<typename X>

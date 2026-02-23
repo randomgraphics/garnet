@@ -72,12 +72,12 @@ namespace internal {}
 // various auto pointers
 #include "base/autoptr.h"
 
-// custom signal and slot library
-#include "base/sigslot.h"
-
 // array types
 #include "base/array.h"
 #include "base/blob.h"
+
+// custom signal and slot library
+#include "base/sigslot.h"
 
 // dictionary type
 #include "base/dict.h"

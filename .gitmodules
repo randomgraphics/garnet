@@ -22,6 +22,11 @@
 	path = src/3rdparty/fmt
 	url = https://github.com/fmtlib/fmt.git
 	shallow = true
+[submodule "src/3rdparty/rapid-vulkan"]
+	path = src/3rdparty/rapid-vulkan
+	url = https://github.com/randomgraphics/rapid-vulkan.git
+	shallow = true
 [submodule "src/3rdparty/backward-cpp"]
 	path = src/3rdparty/backward-cpp
 	url = https://github.com/bombela/backward-cpp.git
+	shallow = true

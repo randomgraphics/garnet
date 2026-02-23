@@ -301,7 +301,7 @@ static const XmlAttrib * sGetRequiredAttrib(const XmlElement & node, const char 
 template<typename T>
 static bool sGetIntAttrib(T & result, const XmlElement & node, const char * attribName) {
     const XmlAttrib * a = node.findAttrib(attribName);
-    return a && 0 != str::toInetger<T>(result, a->value.data());
+    return a && 0 != str::toInteger<T>(result, a->value.data());
 }
 
 //
@@ -323,7 +323,7 @@ static T sGetIntAttrib(const XmlElement & node, const char * attribName, T defau
 template<typename T>
 static bool sGetRequiredIntAttrib(T & result, const XmlElement & node, const char * attribName) {
     const XmlAttrib * a = node.findAttrib(attribName);
-    if (!a || 0 == str::toInetger<T>(result, a->value.data())) {
+    if (!a || 0 == str::toInteger<T>(result, a->value.data())) {
         GN_ERROR(sLogger)
         ("Element <%s>: attribute \"%s\" is missing or is not a valid integer.", node.name.data(), attribName ? attribName : "!!!NULLPTR!!!");
         return false;

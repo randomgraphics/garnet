@@ -229,8 +229,6 @@ namespace GN {
 ///
 struct ConsoleReceiver : public Logger::Receiver {
     virtual void onLog(Logger & logger, const Logger::LogLocation & desc, const char * msg) {
-        if (getEnvBoolean("GN_LOG_QUIET")) return;
-
         if (NULL == msg) msg = "";
 
         ConsoleColor cc(desc.level);
@@ -245,8 +243,6 @@ struct ConsoleReceiver : public Logger::Receiver {
         }
     };
     virtual void onLog(Logger & logger, const Logger::LogLocation & desc, const wchar_t * msg) {
-        if (getEnvBoolean("GN_LOG_QUIET")) return;
-
         if (NULL == msg) msg = L"";
 
         ConsoleColor cc(desc.level);
@@ -517,8 +513,8 @@ class LoggerContainer {
 public:
     LoggerContainer(): mRootLogger("ROOT", mMutex) {
         // config root logger
-        mRootLogger.setLevel(Logger::INFO);
-        mRootLogger.setEnabled(true);
+        mRootLogger.setLevel(getEnvInteger("GN_LOG_LEVEL", (int) Logger::INFO));
+        mRootLogger.setEnabled(getEnvBoolean("GN_LOG_ENABLED", true));
 #if !GN_XBOX2
         mRootLogger.addReceiver(&mCr);
 #endif
@@ -539,6 +535,8 @@ public:
          loggerTree.data());
         mLoggers.clear();
     }
+
+    void disableConsoleLog() { mRootLogger.removeReceiver(&mCr); }
 
     LoggerImpl * getLogger(const char * name) {
         std::lock_guard<LocalMutex> m(mMutex);
@@ -613,5 +611,10 @@ GN_API Logger * getLogger(const char * name) {
     LoggerContainer & lc = sGetLoggerContainer();
     return lc.getLogger(name);
 }
+
+//
+// A function called by unit test to disable console log.
+// -------------------------------------------------------------------------
+GN_API void disableConsoleLog() { sGetLoggerContainer().disableConsoleLog(); }
 
 } // namespace GN

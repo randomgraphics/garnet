@@ -60,12 +60,12 @@ GN_API bool GN::Variant::getb(bool & b) const {
     }
 }
 //
-GN_API bool GN::Variant::geti(int & i) const { return 0 != str::toInetger<int>(i, mValue.data()); }
+GN_API bool GN::Variant::geti(int & i) const { return 0 != str::toInteger<int>(i, mValue.data()); }
 //
 GN_API bool GN::Variant::getf(float & f) const { return 0 != str::toFloat(f, mValue.data()); }
 //
 GN_API bool GN::Variant::getp(void *& p) const {
-    bool b = 0 != str::toInetger<size_t>((size_t &) p, mValue.data());
+    bool b = 0 != str::toInteger<size_t>((size_t &) p, mValue.data());
     if (!b) p = NULL;
     return b;
 }
