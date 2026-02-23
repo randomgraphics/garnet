@@ -1,7 +1,7 @@
 #include "pch.h"
 
-#include "solid_triangle_vert.spv.h"
-#include "solid_triangle_frag.spv.h"
+#include "solid-triangle-vert.spv.h"
+#include "solid-triangle-frag.spv.h"
 
 using namespace GN;
 using namespace GN::rdg;

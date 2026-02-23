@@ -3,7 +3,7 @@
 add_custom_target(rdg-simple-triangle-shaders
   COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/compile_shaders.py
   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-  COMMENT "Compiling solid_triangle GLSL to SPIR-V headers"
+  COMMENT "Compiling solid-triangle GLSL to SPIR-V headers"
 )
 
 GN_setup_pch(simple-triangle.cpp pch.cpp PCH_SOURCE pch.cpp)

@@ -2,7 +2,7 @@
 """
 Compile GLSL shaders under src/sample/rdg/ to SPIR-V and emit C++ header files.
 Uses glslc (Vulkan SDK or PATH). Run from repo root or from this directory.
-Output: solid_triangle_vert.spv.h, solid_triangle_frag.spv.h (intermediate .spv files removed).
+Output: solid-triangle-vert.spv.h, solid-triangle-frag.spv.h (intermediate .spv files removed).
 """
 
 import argparse
@@ -47,7 +47,7 @@ def spv_to_header(spv_path: pathlib.Path, var_name: str, out_path: pathlib.Path)
 
 
 def main():
-    ap = argparse.ArgumentParser(description="Compile solid_triangle GLSL to SPIR-V headers.")
+    ap = argparse.ArgumentParser(description="Compile solid-triangle GLSL to SPIR-V headers.")
     ap.add_argument(
         "--script-dir",
         type=pathlib.Path,
@@ -65,8 +65,8 @@ def main():
     out_dir = args.out_dir if args.out_dir is not None else script_dir
 
     glslc = find_glslc()
-    vert_src = script_dir / "solid_triangle.vert"
-    frag_src = script_dir / "solid_triangle.frag"
+    vert_src = script_dir / "solid-triangle.vert"
+    frag_src = script_dir / "solid-triangle.frag"
     for src in (vert_src, frag_src):
         if not src.is_file():
             print(f"Missing shader source: {src}", file=sys.stderr)
@@ -74,7 +74,7 @@ def main():
 
     # compile .vert -> .vert.spv, .frag -> .frag.spv
     for src in (vert_src, frag_src):
-        spv = out_dir / (src.name + ".spv")  # solid_triangle.vert.spv, solid_triangle.frag.spv
+        spv = out_dir / (src.name + ".spv")  # solid-triangle.vert.spv, solid-triangle.frag.spv
         cmd = [glslc, str(src), "-o", str(spv), "-O"]
         r = subprocess.run(cmd)
         if r.returncode != 0:
@@ -82,13 +82,13 @@ def main():
             sys.exit(r.returncode)
 
     # emit headers: kSolidTriangleVertSpv, kSolidTriangleFragSpv; remove .spv after each
-    vert_spv = out_dir / "solid_triangle.vert.spv"
-    frag_spv = out_dir / "solid_triangle.frag.spv"
-    spv_to_header(vert_spv, "kSolidTriangleVertSpv", out_dir / "solid_triangle_vert.spv.h")
+    vert_spv = out_dir / "solid-triangle.vert.spv"
+    frag_spv = out_dir / "solid-triangle.frag.spv"
+    spv_to_header(vert_spv, "kSolidTriangleVertSpv", out_dir / "solid-triangle-vert.spv.h")
     vert_spv.unlink()
-    spv_to_header(frag_spv, "kSolidTriangleFragSpv", out_dir / "solid_triangle_frag.spv.h")
+    spv_to_header(frag_spv, "kSolidTriangleFragSpv", out_dir / "solid-triangle-frag.spv.h")
     frag_spv.unlink()
-    print("Generated solid_triangle_vert.spv.h and solid_triangle_frag.spv.h")
+    print("Generated solid-triangle-vert.spv.h and solid-triangle-frag.spv.h")
 
 
 if __name__ == "__main__":
