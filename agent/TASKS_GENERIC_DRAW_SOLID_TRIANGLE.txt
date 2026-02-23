@@ -4,7 +4,7 @@ Goal: (1) Complete the GenericDraw Vulkan backend so it can execute a draw (pipe
 
 --- PROGRESS (resume from "Last completed" / "In progress") ---
 Last completed: Task 4.1
-In progress: (none)
+In progress: Task 4.2
 --- END PROGRESS ---
 
 Reference:
