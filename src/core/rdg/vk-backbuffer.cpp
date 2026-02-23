@@ -1,8 +1,5 @@
 #include "pch.h"
 #include "vk-backbuffer.h"
-#if GN_LINUX && HAS_X11
-    #include <X11/Xlib.h>
-#endif
 
 static GN::Logger * sLogger = GN::getLogger("GN.rdg.vk");
 

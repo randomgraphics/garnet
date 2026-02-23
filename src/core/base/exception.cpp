@@ -1,10 +1,5 @@
 #include "pch.h"
 
-// headers to generate backtrace
-#if !GN_ANDROID
-// non-Android: use backward.hpp or platform-specific path below
-#endif
-
 #if GN_ANDROID
     #include <unwind.h>
     #include <cxxabi.h>
