@@ -4,7 +4,7 @@ Goal: (1) Complete the GenericDraw Vulkan backend so it can execute a draw (pipe
 
 --- PROGRESS (resume from "Last completed" / "In progress") ---
 Last completed: Task 3.1
-In progress: (none)
+In progress: Task 3.2
 --- END PROGRESS ---
 
 Reference:
@@ -25,6 +25,9 @@ Workflow / Conventions:
 - Prefer passing the build after every task. If it is genuinely hard or would require a large, tangled change to keep the build green, you may relax this and note in the commit or PROGRESS why the build is temporarily broken; prefer small, buildable steps where practical.
 - If blocked (e.g. missing API, unclear design, or build cannot be fixed in a reasonable way), stop and ask for human help rather than guessing.
 - If a task is too complex or difficult, or the code change to finish the task or fix the build is not converging: pause, consider rolling back and trying a different approach (e.g. smaller step, different design), or simply stop and ask for human help.
+- Before starting a new step: pull from GitHub to incorporate others' changes. If there are merge conflicts, add a pre-step to the current task to fix merge conflicts; resolve, verify build, commit, then continue.
+- When starting a task: mark the task as in progress in PROGRESS, then commit the task file (e.g. "chore(agent): start Task X.Y") so everyone sees that work has begun.
+- After starting a task and after completing it: push the repo to GitHub so progress is not lost if the local machine is unavailable.
 
 ---
 PRE: Branch first, then fix build and commit
