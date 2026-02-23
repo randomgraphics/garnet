@@ -56,6 +56,8 @@ bool BackbufferVulkan::init(const Backbuffer::CreateParameters & params) {
         if (w == 0) w = sz.x;
         if (h == 0) h = sz.y;
     }
+    mDescriptor.width  = static_cast<uint32_t>(w);
+    mDescriptor.height = static_cast<uint32_t>(h);
     if (w == 0 || h == 0) {
         GN_ERROR(sLogger)("BackbufferVulkan::init: invalid dimensions {}x{}, name='{}'", w, h, name);
         return false;

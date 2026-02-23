@@ -3,7 +3,7 @@
 Goal: (1) Complete the GenericDraw Vulkan backend so it can execute a draw (pipeline bind + draw call). (2) Add a sample app (based on simple-triangle.cpp) that uses GenericDraw to draw a solid-color triangle on screen. No coding until the plan is reviewed.
 
 --- PROGRESS (resume from "Last completed" / "In progress") ---
-Last completed: Task 7.2
+Last completed: Task 7.3
 In progress: (none)
 --- END PROGRESS ---
 
@@ -12,6 +12,8 @@ In progress: (none)
 - Ran GNsample-rdg-simple-triangle to verify sample. First run crashed: depth texture created with backbufferDesc.width/height (0x0 at create time) -> validateDesc "zero dimension" -> RefCounter assert on failed texture. Second attempt: used fixed 1280x720 for depth; then createVkImage hit GN_UNIMPL() (Texture Vulkan path not fully implemented). Removed depth texture creation from sample so it can run (current workflow only clears and draws to backbuffer; depth not used).
 - Sample now starts and render loop runs (window opens). Vulkan validation reports every frame: VUID-VkRenderingInfo-None-08994 (renderArea.extent.width is zero), VUID-vkCmdDraw viewport/scissor not set. Root cause: backbuffer reports 0x0 extent when beginRendering runs (swapchain/window size not yet valid on first frames). GenericDrawVulkan only sets viewport/scissor when extentW > 0 && extentH > 0, so with 0 extent we skip them -> validation errors. Follow-up: either skip rendering when backbuffer extent is 0, or ensure backbuffer gets valid extent before first render (investigate PrepareBackbuffer / swapchain timing).
 - Pushed all task commits (6.5, format, 6.6, 7.1, 7.2). User requested push after each task going forward.
+2025-02-23 (resume):
+- Resumed from Task 7.2 complete. Added Task 7.3: fix 0x0 backbuffer extent. Root cause: BackbufferVulkan::init() computed w,h from window but never set mDescriptor.width/height. Fixed in vk-backbuffer.cpp by setting mDescriptor.width/height after computing w,h. Lint passes; unit test binary has pre-existing symbol error (handleAssertFailure).
 --- END WORKLOG ---
 
 Reference:
@@ -204,6 +206,12 @@ PHASE 7: (Optional) Robustness and edge cases
     - If backend currently requires vertex buffers for vkCmdDraw, create a minimal Mesh (or use a tiny vertex buffer) for 3 vertices; sample sets mesh in GenericDraw::A and drawParams accordingly. Otherwise leave mesh optional and use non-indexed draw without vertex buffer (if Vulkan allows with vertexCount=3 and gl_VertexIndex in the shader).
     - Verification: Triangle still renders; no validation errors.
 
+[x] Task 7.3 — Fix 0x0 backbuffer extent (VUID-VkRenderingInfo-None-08994, viewport/scissor)
+    - Root cause (from worklog): backbuffer reports 0x0 extent when beginRendering runs because BackbufferVulkan::init() computes w,h from window but never stores them in mDescriptor; descriptor() is used by render pass and GenericDraw for extent.
+    - In BackbufferVulkan::init(), after computing w and h (from window when descriptor has 0), set mDescriptor.width and mDescriptor.height so descriptor() returns the correct extent.
+    - Verification: Build succeeds. Run sample; no Vulkan validation errors for renderArea extent or viewport/scissor. Triangle visible.
+    - After task: commit with message e.g. "fix(rdg): set backbuffer descriptor extent in init() to fix 0x0 validation errors".
+
 ---
 Summary of files to touch (for review)
 ---
@@ -212,5 +220,6 @@ Summary of files to touch (for review)
 - src/core/rdg/draw-actions.cpp — add GenericDraw::create().
 - src/sample/rdg/ — Phase 4: shader sources (.vert, .frag), compile script (compile_shaders.py or .sh), generated SPIR-V headers (.spv.h); CMake to run script and/or include headers. Sample includes headers and uses arrays as Blob for GenericDraw.
 - src/sample/rdg/simple-triangle.cpp — update clear API; remove ClearDepthStencil; add GenericDraw::create and GenericDraw task with renderTarget + drawParams + shaders from SPIR-V headers.
+- src/core/rdg/vk-backbuffer.cpp — Task 7.3: set mDescriptor.width/height in init() from computed w,h.
 
 No other files required unless we introduce ClearDepthStencil or new public API.
