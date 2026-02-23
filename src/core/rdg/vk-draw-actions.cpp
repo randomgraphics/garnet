@@ -158,6 +158,7 @@ class GenericDrawVulkan : public GenericDraw {
     GenericDraw::CreateParameters  mCreateParams {};
     vk::ShaderModule              mVertModule {};
     vk::ShaderModule              mFragModule {};
+    vk::PipelineLayout            mPipelineLayout {};
     vk::Pipeline                  mPipeline {}; // null until pipeline creation (Phase 6 / Task 6.3)
 
     static vk::ShaderModule createShaderModule(vk::Device device, const Blob * blob) {
@@ -166,6 +167,68 @@ class GenericDrawVulkan : public GenericDraw {
         ci.codeSize = blob->size();
         ci.pCode    = reinterpret_cast<const uint32_t *>(blob->data());
         return device.createShaderModule(ci);
+    }
+
+    void createPipelineIfNeeded() {
+        if (mPipeline || !mVertModule || !mFragModule) return;
+        const auto dev = mGpu->device().handle();
+
+        // Pipeline layout: no descriptor sets, no push constants (Task 6.2)
+        vk::PipelineLayoutCreateInfo layoutCi {};
+        mPipelineLayout = dev.createPipelineLayout(layoutCi);
+        if (!mPipelineLayout) GN_UNLIKELY return;
+
+        const char * vertEntry = (mCreateParams.vs && !mCreateParams.vs->entryPoint.empty()) ? mCreateParams.vs->entryPoint.c_str() : "main";
+        const char * fragEntry = (mCreateParams.ps && !mCreateParams.ps->entryPoint.empty()) ? mCreateParams.ps->entryPoint.c_str() : "main";
+
+        vk::PipelineShaderStageCreateInfo stages[2] = {
+            {vk::PipelineShaderStageCreateFlags(), vk::ShaderStageFlagBits::eVertex, mVertModule, vertEntry},
+            {vk::PipelineShaderStageCreateFlags(), vk::ShaderStageFlagBits::eFragment, mFragModule, fragEntry},
+        };
+
+        vk::PipelineVertexInputStateCreateInfo vertexInput {};
+        vk::PipelineInputAssemblyStateCreateInfo inputAssembly {{}, vk::PrimitiveTopology::eTriangleList};
+        vk::PipelineRasterizationStateCreateInfo rasterization {};
+        rasterization.lineWidth = 1.0f;
+        vk::PipelineColorBlendAttachmentState blendAttachment {};
+        blendAttachment.colorWriteMask = vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG |
+                                         vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA;
+        vk::PipelineColorBlendStateCreateInfo colorBlend {{}, false, {}, blendAttachment};
+        vk::PipelineMultisampleStateCreateInfo multisample {};
+        multisample.rasterizationSamples = vk::SampleCountFlagBits::e1;
+
+        vk::PipelineViewportStateCreateInfo viewportState {};
+        viewportState.viewportCount = 1;
+        viewportState.scissorCount  = 1;
+
+        vk::DynamicState dynamicStates[] = {vk::DynamicState::eViewport, vk::DynamicState::eScissor};
+        vk::PipelineDynamicStateCreateInfo dynamicState {{}, 2, dynamicStates};
+
+        vk::PipelineRenderingCreateInfo renderingCi {};
+        vk::Format colorFormat = vk::Format::eB8G8R8A8Unorm; // common swapchain format
+        renderingCi.setColorAttachmentFormats(colorFormat);
+
+        vk::GraphicsPipelineCreateInfo pipeCi {};
+        pipeCi.setPNext(&renderingCi);
+        pipeCi.setStages(stages);
+        pipeCi.setPVertexInputState(&vertexInput);
+        pipeCi.setPInputAssemblyState(&inputAssembly);
+        pipeCi.setPRasterizationState(&rasterization);
+        pipeCi.setPViewportState(&viewportState);
+        pipeCi.setPDynamicState(&dynamicState);
+        pipeCi.setPColorBlendState(&colorBlend);
+        pipeCi.setPMultisampleState(&multisample);
+        pipeCi.setLayout(mPipelineLayout);
+        pipeCi.setRenderPass(nullptr); // dynamic rendering
+
+        auto result = dev.createGraphicsPipeline(nullptr, pipeCi);
+        if (result.result != vk::Result::eSuccess) GN_UNLIKELY {
+            GN_ERROR(sLogger)("GenericDrawVulkan: createGraphicsPipeline failed, name='{}'", name);
+            dev.destroyPipelineLayout(mPipelineLayout);
+            mPipelineLayout = nullptr;
+            return;
+        }
+        mPipeline = result.value;
     }
 
 public:
@@ -186,6 +249,7 @@ public:
     ~GenericDrawVulkan() override {
         const auto dev = mGpu->device().handle();
         if (mPipeline) dev.destroyPipeline(mPipeline);
+        if (mPipelineLayout) dev.destroyPipelineLayout(mPipelineLayout);
         if (mVertModule) dev.destroyShaderModule(mVertModule);
         if (mFragModule) dev.destroyShaderModule(mFragModule);
     }
@@ -268,8 +332,33 @@ public:
                 return FAILED;
             }
 
-        // When pipeline is valid: bind pipeline and issue draw (Task 3.3).
+        createPipelineIfNeeded();
+
+        // When pipeline is valid: set viewport/scissor from render target extent, then bind and draw (Task 3.3 / 6.4).
         if (mPipeline) {
+            uint32_t extentW = 0, extentH = 0;
+            if (renderTarget->colors.size() > 0) {
+                const auto & c0 = renderTarget->colors[0];
+                if (c0.target.index() == 0) {
+                    auto tex = std::get<0>(c0.target).castTo<TextureVulkan>().get();
+                    if (tex) {
+                        auto dim = tex->dimensions(c0.subresourceIndex.mip);
+                        extentW = dim.width;
+                        extentH = dim.height;
+                    }
+                } else {
+                    auto bb = std::get<1>(c0.target).castTo<BackbufferVulkan>().get();
+                    if (bb) {
+                        extentW = bb->descriptor().width;
+                        extentH = bb->descriptor().height;
+                    }
+                }
+            }
+            if (extentW > 0 && extentH > 0) {
+                vk::Viewport vp {0.0f, 0.0f, (float) extentW, (float) extentH, 0.0f, 1.0f};
+                cb.commandBuffer.handle().setViewport(0, vp);
+                cb.commandBuffer.handle().setScissor(0, vk::Rect2D {{0, 0}, {extentW, extentH}});
+            }
             cb.commandBuffer.handle().bindPipeline(vk::PipelineBindPoint::eGraphics, mPipeline);
             const auto * dp = a->drawParams.get();
             const uint32_t vertexCount   = dp ? dp->vertexCount : 0;
