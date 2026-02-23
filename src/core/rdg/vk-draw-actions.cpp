@@ -366,6 +366,7 @@ public:
                 cb.commandBuffer.handle().setScissor(0, vk::Rect2D {{0, 0}, {extentW, extentH}});
             }
             cb.commandBuffer.handle().bindPipeline(vk::PipelineBindPoint::eGraphics, mPipeline);
+            // Task 7.2: mesh is optional; draw uses gl_VertexIndex in shader, no vertex buffer bound.
             const auto *   dp            = a->drawParams.get();
             const uint32_t vertexCount   = dp ? dp->vertexCount : 0;
             const uint32_t instanceCount = dp ? dp->instanceCount : 1;
