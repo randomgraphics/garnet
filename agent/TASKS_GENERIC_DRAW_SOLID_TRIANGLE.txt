@@ -3,7 +3,7 @@
 Goal: (1) Complete the GenericDraw Vulkan backend so it can execute a draw (pipeline bind + draw call). (2) Add a sample app (based on simple-triangle.cpp) that uses GenericDraw to draw a solid-color triangle on screen. No coding until the plan is reviewed.
 
 --- PROGRESS (resume from "Last completed" / "In progress") ---
-Last completed: Task 6.5
+Last completed: Task 6.6
 In progress: (none)
 --- END PROGRESS ---
 

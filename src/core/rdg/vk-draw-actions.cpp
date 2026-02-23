@@ -176,7 +176,10 @@ class GenericDrawVulkan : public GenericDraw {
         // Pipeline layout: no descriptor sets, no push constants (Task 6.2)
         vk::PipelineLayoutCreateInfo layoutCi {};
         mPipelineLayout = dev.createPipelineLayout(layoutCi);
-        if (!mPipelineLayout) GN_UNLIKELY return;
+        if (!mPipelineLayout) GN_UNLIKELY {
+                GN_WARN(sLogger)("GenericDrawVulkan: createPipelineLayout failed, name='{}'", name);
+                return;
+            }
 
         const char * vertEntry = (mCreateParams.vs && !mCreateParams.vs->entryPoint.empty()) ? mCreateParams.vs->entryPoint.c_str() : "main";
         const char * fragEntry = (mCreateParams.ps && !mCreateParams.ps->entryPoint.empty()) ? mCreateParams.ps->entryPoint.c_str() : "main";
