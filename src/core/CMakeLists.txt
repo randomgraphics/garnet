@@ -141,6 +141,8 @@ endif()
 # X11
 if(X11_FOUND AND CMAKE_SYSTEM_NAME STREQUAL "Linux")
     target_compile_definitions(GNcore PRIVATE HAS_X11=1)
+    # Vulkan Xlib surface (for backbuffer when using X11 window)
+    target_compile_definitions(GNcore PRIVATE VK_USE_PLATFORM_XLIB_KHR=1)
 endif()
 
 # FBX

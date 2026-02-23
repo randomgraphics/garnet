@@ -1,5 +1,8 @@
 #include "pch.h"
 #include "vk-backbuffer.h"
+#if GN_LINUX && HAS_X11
+    #include <X11/Xlib.h>
+#endif
 
 static GN::Logger * sLogger = GN::getLogger("GN.rdg.vk");
 
@@ -15,10 +18,18 @@ vk::UniqueSurfaceKHR createSurfaceFromWindow(vk::Instance instance, GN::win::Win
     info.hwnd                          = reinterpret_cast<HWND>(win->getWindowHandle());
     return instance.createWin32SurfaceKHRUnique(info);
 #elif GN_LINUX
+    #if HAS_X11
+    // Garnet uses X11 window (WindowX11) on Linux; create Xlib surface.
+    vk::XlibSurfaceCreateInfoKHR info = {};
+    info.dpy                          = reinterpret_cast<Display *>(win->getDisplayHandle());
+    info.window                       = static_cast<Window>(win->getWindowHandle());
+    return instance.createXlibSurfaceKHRUnique(info);
+    #else
     vk::WaylandSurfaceCreateInfoKHR info = {};
     info.display                         = reinterpret_cast<wl_display *>(win->getDisplayHandle());
     info.surface                         = reinterpret_cast<wl_surface *>(win->getWindowHandle());
     return instance.createWaylandSurfaceKHRUnique(info);
+    #endif
 #else
     (void) instance;
     (void) win;
