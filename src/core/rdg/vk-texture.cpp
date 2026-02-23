@@ -51,7 +51,7 @@ bool TextureVulkan::init(const Texture::CreateParameters & params) {
     mDescriptor = validateDesc(params.descriptor);
     if (0 == mDescriptor.width) return false;
     mImage = createVkImage(mDescriptor);
-    if (!mImage && mImage->handle()) return false;
+    if (!mImage || !mImage->handle()) return false;
 
     // initialize the subresource image state array.
     mSubresourceStates.resize(mDescriptor.levels * mDescriptor.faces);
