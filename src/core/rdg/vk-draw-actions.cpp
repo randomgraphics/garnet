@@ -161,6 +161,7 @@ AutoRef<ClearRenderTarget> createVulkanClearRenderTarget(ArtifactDatabase & db, 
 
 class GenericDrawVulkan : public GenericDraw {
     AutoRef<GpuContextVulkan> mGpu;
+    vk::Pipeline             mPipeline {}; // null until pipeline creation is implemented (Task 3.2)
 
 public:
     GenericDrawVulkan(ArtifactDatabase & db, const StrA & name, AutoRef<GpuContextVulkan> gpu): GenericDraw(db, TYPE, name), mGpu(gpu) {}
@@ -243,7 +244,10 @@ public:
                 return FAILED;
             }
 
-        // TODO: do more graphics commands here (e.g. bind pipeline, draw).
+        // When pipeline is valid: bind pipeline and issue draw (Task 3.2/3.3). Dummy path: skip and still return PASSED.
+        if (mPipeline) {
+            // cb.commandBuffer.handle().bindPipeline(...); vkCmdDraw(...);
+        }
 
         // end render pass, if this is the last task of the render pass.
         if (rp->lastTaskIndex == taskInfo.index) { cb.commandBuffer.handle().endRendering(); }
