@@ -3,8 +3,8 @@
 Goal: (1) Complete the GenericDraw Vulkan backend so it can execute a draw (pipeline bind + draw call). (2) Add a sample app (based on simple-triangle.cpp) that uses GenericDraw to draw a solid-color triangle on screen. No coding until the plan is reviewed.
 
 --- PROGRESS (resume from "Last completed" / "In progress") ---
-Last completed: Task 4.2
-In progress: Task 4.3
+Last completed: Task 4.3
+In progress: (none)
 --- END PROGRESS ---
 
 Reference:
@@ -18,6 +18,7 @@ Reference:
 Build/CI (run from repo root):
 - Build: source env/garnet.rc && build.py d  (see .cursor/skills/use-build-py/SKILL.md).
 - Lint+test: env/bin/cit.py  (see .cursor/skills/run-cit/SKILL.md).
+- Run sample: from build dir (e.g. build/linux.gcc.d), ./bin/GNsample-rdg-simple-triangle. Requires a display (Wayland/X11); headless runs may crash in Backbuffer/window init.
 
 Workflow / Conventions:
 - Keep the repo buildable at the end of each task. If needed, introduce dummy or stub implementations (e.g. empty class, return nullptr, or no-op) so that the project still compiles and links.

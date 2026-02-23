@@ -1,5 +1,8 @@
 #include "pch.h"
 
+#include "solid_triangle_vert.spv.h"
+#include "solid_triangle_frag.spv.h"
+
 using namespace GN;
 using namespace GN::rdg;
 using namespace GN::util;
@@ -72,6 +75,16 @@ int main(int, const char **) {
 
     auto presentAction = PresentBackbuffer::create(*db, "present_action", PresentBackbuffer::CreateParameters {.gpu = gpuContext});
     if (!presentAction) return -1;
+
+    // GenericDraw with SPIR-V from compiled headers (Phase 4); workflow task added in Phase 5.
+    auto vertBlob = referenceTo(new SimpleBlob<unsigned int>(kSolidTriangleVertSpvSize, kSolidTriangleVertSpv));
+    auto fragBlob = referenceTo(new SimpleBlob<unsigned int>(kSolidTriangleFragSpvSize, kSolidTriangleFragSpv));
+    GenericDraw::CreateParameters drawParams {};
+    drawParams.context = gpuContext;
+    drawParams.vs      = GenericDraw::ShaderStageDesc {.shaderBinary = vertBlob, .entryPoint = "main"};
+    drawParams.ps      = GenericDraw::ShaderStageDesc {.shaderBinary = fragBlob, .entryPoint = "main"};
+    auto genericDrawAction = GenericDraw::create(*db, "draw_triangle", drawParams);
+    if (!genericDrawAction) return -1;
 
     GN_INFO(sLogger)("Starting render loop...");
 
