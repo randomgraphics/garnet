@@ -2,7 +2,7 @@
 """
 Compile GLSL shaders under src/sample/rdg/ to SPIR-V and emit C++ header files.
 Uses glslc (Vulkan SDK or PATH). Run from repo root or from this directory.
-Output: solid_triangle_vert.spv.h, solid_triangle_frag.spv.h with uint32_t[] and size.
+Output: solid_triangle_vert.spv.h, solid_triangle_frag.spv.h (intermediate .spv files removed).
 """
 
 import argparse
@@ -81,17 +81,13 @@ def main():
             print(f"glslc failed: {' '.join(cmd)}", file=sys.stderr)
             sys.exit(r.returncode)
 
-    # emit headers: kSolidTriangleVertSpv, kSolidTriangleFragSpv
-    spv_to_header(
-        out_dir / "solid_triangle.vert.spv",
-        "kSolidTriangleVertSpv",
-        out_dir / "solid_triangle_vert.spv.h",
-    )
-    spv_to_header(
-        out_dir / "solid_triangle.frag.spv",
-        "kSolidTriangleFragSpv",
-        out_dir / "solid_triangle_frag.spv.h",
-    )
+    # emit headers: kSolidTriangleVertSpv, kSolidTriangleFragSpv; remove .spv after each
+    vert_spv = out_dir / "solid_triangle.vert.spv"
+    frag_spv = out_dir / "solid_triangle.frag.spv"
+    spv_to_header(vert_spv, "kSolidTriangleVertSpv", out_dir / "solid_triangle_vert.spv.h")
+    vert_spv.unlink()
+    spv_to_header(frag_spv, "kSolidTriangleFragSpv", out_dir / "solid_triangle_frag.spv.h")
+    frag_spv.unlink()
     print("Generated solid_triangle_vert.spv.h and solid_triangle_frag.spv.h")
 
 
