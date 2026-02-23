@@ -8,7 +8,7 @@
 #if GN_LINUX
     #if HAS_X11
         #define VK_USE_PLATFORM_XLIB_KHR 1
-    #else   
+    #else
         #define VK_USE_PLATFORM_WAYLAND_KHR 1
     #endif
 #endif
