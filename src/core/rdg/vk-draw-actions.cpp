@@ -154,13 +154,41 @@ AutoRef<ClearRenderTarget> createVulkanClearRenderTarget(ArtifactDatabase & db, 
 }
 
 class GenericDrawVulkan : public GenericDraw {
-    AutoRef<GpuContextVulkan>       mGpu;
+    AutoRef<GpuContextVulkan>      mGpu;
     GenericDraw::CreateParameters  mCreateParams {};
-    vk::Pipeline                   mPipeline {}; // null until pipeline creation (Phase 6 / Task 6.3)
+    vk::ShaderModule              mVertModule {};
+    vk::ShaderModule              mFragModule {};
+    vk::Pipeline                  mPipeline {}; // null until pipeline creation (Phase 6 / Task 6.3)
+
+    static vk::ShaderModule createShaderModule(vk::Device device, const Blob * blob) {
+        if (!blob || blob->size() == 0 || (blob->size() % 4) != 0) return {};
+        vk::ShaderModuleCreateInfo ci {};
+        ci.codeSize = blob->size();
+        ci.pCode    = reinterpret_cast<const uint32_t *>(blob->data());
+        return device.createShaderModule(ci);
+    }
 
 public:
     GenericDrawVulkan(ArtifactDatabase & db, const StrA & name, AutoRef<GpuContextVulkan> gpu, const GenericDraw::CreateParameters & params)
-        : GenericDraw(db, TYPE, name), mGpu(gpu), mCreateParams(params) {}
+        : GenericDraw(db, TYPE, name), mGpu(gpu), mCreateParams(params) {
+        const auto dev = mGpu->device().handle();
+        if (params.vs && params.vs->shaderBinary)
+            mVertModule = createShaderModule(dev, params.vs->shaderBinary.get());
+        if (params.ps && params.ps->shaderBinary)
+            mFragModule = createShaderModule(dev, params.ps->shaderBinary.get());
+        bool vsFail = (params.vs && params.vs->shaderBinary && !mVertModule);
+        bool psFail = (params.ps && params.ps->shaderBinary && !mFragModule);
+        if (vsFail || psFail) {
+            GN_WARN(sLogger)("GenericDrawVulkan: failed to create one or more shader modules, name='{}'", name);
+        }
+    }
+
+    ~GenericDrawVulkan() override {
+        const auto dev = mGpu->device().handle();
+        if (mPipeline) dev.destroyPipeline(mPipeline);
+        if (mVertModule) dev.destroyShaderModule(mVertModule);
+        if (mFragModule) dev.destroyShaderModule(mFragModule);
+    }
 
     std::pair<ExecutionResult, ExecutionContext *> prepare(TaskInfo & taskInfo, Arguments & arguments) override {
         auto & submissionImpl = static_cast<SubmissionImpl &>(taskInfo.submission);
