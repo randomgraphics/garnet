@@ -23,8 +23,8 @@ Build/CI:
 
 Workflow:
 - One task at a time; run build (and cit when applicable) after each task; update PROGRESS.
-- Only change src/core/rdg, src/test/ut/rdg, and this agent file. Do not change other modules’ headers.
-- For each task, add or extend a unit test that verifies the task’s functionality.
+- Only change src/core/rdg, src/test/ut/rdg, and this agent file. Do not change other modules' headers.
+- For each task, add or extend a unit test that verifies the task's functionality.
 
 ---
 PHASE 1: Header compatibility and schedule
@@ -42,7 +42,7 @@ PHASE 1: Header compatibility and schedule
     - Verification: Build passes; new or updated test passes. Stop after this task for review before continuing.
 
 [x] Task 1.3 — Assign workflow sequence in schedule()
-    - In RenderGraphImpl::schedule(), set the new workflow’s sequence to a monotonically increasing value (e.g. member int64_t mNextSequence; newWorkflow->sequence = mNextSequence++).
+    - In RenderGraphImpl::schedule(), set the new workflow's sequence to a monotonically increasing value (e.g. member int64_t mNextSequence; newWorkflow->sequence = mNextSequence++).
     - Unit test: In rdg-smoke, add testWorkflowSequenceOrder: create RenderGraph, schedule("w1"), schedule("w2"), schedule("w3"); assert w1->sequence < w2->sequence and w2->sequence < w3->sequence, and all sequences are distinct. Optionally assert sequence values are positive.
     - Verification: Build passes; testWorkflowSequenceOrder passes.
 
@@ -76,11 +76,11 @@ PHASE 3: Final verification
 
 [x] Task 3.1 — Full build and CI
     - build.py d and env/bin/cit.py. Fix any remaining lint or test failures in rdg or dependent code.
-    - Unit test: cit passes (full test suite as the “test” for this task).
+    - Unit test: cit passes (full test suite as the "test" for this task).
     - Verification: Build green; cit passes.
 
 [x] Task 3.2 — Update this assignment file
-    - Mark all tasks done; set Last completed to Task 3.2; add one-line “Done” summary and date at top.
+    - Mark all tasks done; set Last completed to Task 3.2; add one-line "Done" summary and date at top.
 
 ---
 Summary of files to touch
