@@ -97,7 +97,7 @@ struct ClearRenderTarget : public Action {
             uint32_t stencil;
         };
         RenderTargetArgument renderTarget = {auto_reflection, "renderTarget"};
-        ClearValues           clearValues;
+        ClearValues          clearValues;
     };
 
     struct CreateParameters {
@@ -442,12 +442,12 @@ struct GenericDraw : public ShaderAction {
         GN_API static const uint64_t TYPE;
         A(): Arguments(TYPE) {}
 
-        MeshParameter         mesh         = {auto_reflection, "mesh"};
-        BufferViewMap         buffers      = {auto_reflection, "buffers"};      ///< buffer views, key is shader variable name
-        ImageViewMap          images       = {auto_reflection, "images"};       ///< image views, key is shader variable name
-        TextureViewMap        textures     = {auto_reflection, "textures"};     ///< texture views, key is shader variable name
-        RenderTargetArgument  renderTarget = {auto_reflection, "renderTarget"}; ///< render target
-        DrawArguments         drawParams;                                       ///< draw parameters
+        MeshParameter        mesh         = {auto_reflection, "mesh"};
+        BufferViewMap        buffers      = {auto_reflection, "buffers"};      ///< buffer views, key is shader variable name
+        ImageViewMap         images       = {auto_reflection, "images"};       ///< image views, key is shader variable name
+        TextureViewMap       textures     = {auto_reflection, "textures"};     ///< texture views, key is shader variable name
+        RenderTargetArgument renderTarget = {auto_reflection, "renderTarget"}; ///< render target
+        DrawArguments        drawParams;                                       ///< draw parameters
     };
 
     /// Shader stage description

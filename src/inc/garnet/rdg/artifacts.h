@@ -38,7 +38,7 @@ protected:
 /// Texture represents a 2D/3D/cube texture with optional mipmap and array layers.
 struct Texture : public GpuResource {
     GN_API static const uint64_t TYPE;
-    
+
     /// Descriptor used when creating or declaring the texture (format, dimensions).
     struct Descriptor {
         gfx::img::PixelFormat format  = gfx::img::PixelFormat::UNKNOWN();
@@ -129,7 +129,7 @@ protected:
 /// Sampler represents GPU sampler state (filtering, addressing, LOD, anisotropy).
 struct Sampler : public GpuResource {
     GN_API static const uint64_t TYPE;
-   
+
     enum class Filter { POINT, LINEAR, ANISOTROPIC };
     enum class AddressMode { REPEAT, MIRROR_REPEAT, CLAMP_TO_EDGE, CLAMP_TO_BORDER, MIRROR_CLAMP_TO_EDGE };
 
@@ -165,7 +165,7 @@ protected:
 /// Buffer represents a GPU buffer (vertex, index, constant, storage, etc.).
 struct Buffer : public GpuResource {
     GN_API static const uint64_t TYPE;
-    
+
     /// Buffer usage flags.
     enum Usage {
         VERTEX,       ///< Vertex buffer

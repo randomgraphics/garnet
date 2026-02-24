@@ -108,28 +108,19 @@ public:
     friend constexpr UsageFlag operator|(UsageFlag a, UsageFlag b) { return UsageFlag(uint32_t(a) | uint32_t(b)); }
     friend constexpr UsageFlag operator&(UsageFlag a, UsageFlag b) { return UsageFlag(uint32_t(a) & uint32_t(b)); }
 
-    /// Type-erased base for artifact parameters. Enables iteration and dependency analysis without knowing concrete argument types.
-    struct Argument {
-        virtual ~Argument() {}
-
-        const char * name() const { return mName; }
-        UsageFlag    usage() const { return mUsage; }
-
-        virtual SafeArrayAccessor<const Artifact *> artifacts() const = 0;
+    /// Base class of all parameters that references one or more artifacts
+    struct ArtifactArgument {
+        virtual ~ArtifactArgument() {}
+        auto         name() const -> const char * { return mName; }
+        auto         usage() const -> UsageFlag { return mUsage; }
+        virtual auto artifacts() const -> SafeArrayAccessor<const Artifact *> = 0;
 
     protected:
-        Argument(ReflectionRegister & rr, const char * name, UsageFlag usageFlags): mName(name), mUsage(usageFlags) { rr.enlist(this); }
+        ArtifactArgument(ReflectionRegister & rr, const char * name, UsageFlag usage): mName(name), mUsage(usage) { rr.enlist(this); }
 
     private:
         const char * mName;
         UsageFlag    mUsage;
-    };
-
-    /// Base class of all parameters that references one or more artifacts
-    template<UsageFlag UFlags = UsageFlag::None>
-    struct ArtifactArgument : Argument {
-    protected:
-        ArtifactArgument(ReflectionRegister & rr, const char * name) : Argument(rr, name, UFlags) {}
     };
 
     /// Represents a single artifact parameter of an action.
@@ -170,13 +161,14 @@ public:
     template<typename T, size_t COUNT, UsageFlag UFlags = UsageFlag::None>
     using ReadWriteArray = ArrayArtifact<T, COUNT, UFlags | UsageFlag::Reading | UsageFlag::Writing>;
 
-    SafeArrayAccessor<const Argument *> arguments() const { return auto_reflection.enlistments; }
+    /// Returns list of all artifact arguments defined in this class.
+    SafeArrayAccessor<const ArtifactArgument *> artifactArguments() const { return auto_reflection.enlistments; }
 
 protected:
     struct ArgumentReflection {
-        DynaArray<Argument *> enlistments;
+        DynaArray<const ArtifactArgument *> enlistments;
 
-        void enlist(Argument * arg) {
+        void enlist(const ArtifactArgument * arg) {
             GN_ASSERT(arg);
             GN_ASSERT(arg->name() != nullptr);
             GN_ASSERT(arg->usage() != UsageFlag::None);
@@ -189,7 +181,6 @@ protected:
     /// This is the member variable that register artifact arguments defined in subclasses to an internal list
     /// that submission class can query.
     ArgumentReflection auto_reflection;
-
 };
 
 struct Submission;
