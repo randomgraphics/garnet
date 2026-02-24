@@ -301,6 +301,11 @@ struct Submission : RefCounter {
         // for future extension, like individual task result, etc.
     };
 
+    struct State {
+        StrA                                            state;
+        std::unordered_map<uint64_t, DynaArray<size_t>> workflowDependencies;
+    };
+
     virtual ~Submission() = default;
 
     /// Check if submitted workflows are all finished.
@@ -312,7 +317,7 @@ struct Submission : RefCounter {
 
     /// Dump detailed state and status of the submission to a human-readable string.
     /// Includes per-task name, execution status, dependencies, validation, warnings, skipped, and finished state.
-    virtual StrA dumpState() const = 0;
+    virtual State dumpState() const = 0;
 
 protected:
     Submission() = default;

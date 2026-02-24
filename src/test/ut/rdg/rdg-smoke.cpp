@@ -179,7 +179,42 @@ struct MultiplyIntegersAction : public Action {
     using Action::Action;
 };
 
+// Read-only action (one ReadOnly<IntegerArtifact>) for dependency read-read tests.
+struct ReadIntegerAction : public Action {
+    inline static const uint64_t TYPE_ID = getTestTypeId();
+
+    ReadIntegerAction(ArtifactDatabase & db, const StrA & name): Action(db, TYPE_ID, "ReadIntegerAction", name) {}
+
+    static GN::AutoRef<ReadIntegerAction> create(ArtifactDatabase & db, const StrA & name) {
+        auto * p = new ReadIntegerAction(db, name);
+        if (p->sequence == 0) {
+            delete p;
+            return {};
+        }
+        return GN::AutoRef<ReadIntegerAction>(p);
+    }
+
+    struct A : public Arguments {
+        inline static const uint64_t         TYPE      = getTestTypeId();
+        inline static constexpr const char * TYPE_NAME = "ReadIntegerAction::A";
+        A(): Arguments(TYPE, TYPE_NAME) {}
+        ReadOnly<IntegerArtifact> input = {this, "input"};
+    };
+
+    std::pair<ExecutionResult, ExecutionContext *> prepare(TaskInfo &, Arguments &) override { return std::make_pair(PASSED, nullptr); }
+    ExecutionResult                                execute(TaskInfo &, Arguments &, ExecutionContext *) override { return PASSED; }
+};
+
 } // namespace GN::rdg
+
+// Helper: true if state.workflowDependencies[workflowIdx] contains requiredDep.
+static bool workflowDependsOn(const std::unordered_map<uint64_t, GN::DynaArray<size_t>> & deps, size_t workflowIdx, size_t requiredDep) {
+    auto it = deps.find((uint64_t) workflowIdx);
+    if (it == deps.end()) return false;
+    for (size_t k = 0; k < it->second.size(); ++k)
+        if (it->second[k] == requiredDep) return true;
+    return false;
+}
 
 // ============================================================================
 // TEST EXECUTION FLOW
@@ -313,8 +348,8 @@ public:
         TS_ASSERT_EQUALS(submissionResult.executionResult, GN::rdg::Action::PASSED);
 
         // Dump submission state to stdout
-        GN::StrA dumpStr = submission->dumpState();
-        fprintf(stdout, "%s", dumpStr.c_str());
+        auto dumpState = submission->dumpState();
+        fprintf(stdout, "%s", dumpState.state.c_str());
         fflush(stdout);
 
         // Verify result
@@ -375,6 +410,173 @@ public:
         n                 = 0;
         for (const GN::rdg::Arguments::ArtifactArgument * p = multiplyArgs->firstArtifactArgument(); p; p = p->next()) ++n;
         TS_ASSERT_EQUALS(n, 3u);
+    }
+
+    // Dependency tests: verify dumpState().workflowDependencies matches dependency-graph.h rules
+    // (A depends on B when A is newer than B and: A reads/writes artifact B writes, or A writes artifact B reads)
+
+    void testDependencyWriteWrite() {
+        auto db = std::unique_ptr<GN::rdg::ArtifactDatabase>(GN::rdg::ArtifactDatabase::create(GN::rdg::ArtifactDatabase::CreateParameters {}));
+        TS_ASSERT(db != nullptr);
+        auto renderGraph = GN::rdg::RenderGraph::create(GN::rdg::RenderGraph::CreateParameters {});
+        TS_ASSERT(renderGraph != nullptr);
+        auto x = GN::rdg::IntegerArtifact::create(*db, "x");
+        TS_ASSERT(x != nullptr);
+
+        auto * w0 = renderGraph->schedule("writer_first");
+        TS_ASSERT(w0 != nullptr);
+        auto init0          = GN::rdg::InitIntegerAction::create(*db, "init0");
+        init0->initValue    = 1;
+        auto args0          = GN::AutoRef<GN::rdg::InitIntegerAction::A>::make();
+        args0->output.value = x;
+        w0->tasks.append(GN::rdg::Workflow::Task("init0"));
+        w0->tasks.back().action    = init0;
+        w0->tasks.back().arguments = args0;
+
+        auto * w1 = renderGraph->schedule("writer_second");
+        TS_ASSERT(w1 != nullptr);
+        auto init1          = GN::rdg::InitIntegerAction::create(*db, "init1");
+        init1->initValue    = 2;
+        auto args1          = GN::AutoRef<GN::rdg::InitIntegerAction::A>::make();
+        args1->output.value = x;
+        w1->tasks.append(GN::rdg::Workflow::Task("init1"));
+        w1->tasks.back().action    = init1;
+        w1->tasks.back().arguments = args1;
+
+        auto submission = renderGraph->submit({});
+        TS_ASSERT(submission != nullptr);
+        submission->result();
+        auto state = submission->dumpState();
+        TS_ASSERT_EQUALS(state.workflowDependencies.size(), 2u);
+        TS_ASSERT(workflowDependsOn(state.workflowDependencies, 1, 0)); // w1 (newer) depends on w0 (older) when both write same artifact
+    }
+
+    void testDependencyReadWrite() {
+        auto db = std::unique_ptr<GN::rdg::ArtifactDatabase>(GN::rdg::ArtifactDatabase::create(GN::rdg::ArtifactDatabase::CreateParameters {}));
+        TS_ASSERT(db != nullptr);
+        auto renderGraph = GN::rdg::RenderGraph::create(GN::rdg::RenderGraph::CreateParameters {});
+        TS_ASSERT(renderGraph != nullptr);
+        auto x = GN::rdg::IntegerArtifact::create(*db, "x");
+        auto y = GN::rdg::IntegerArtifact::create(*db, "y");
+        TS_ASSERT(x != nullptr);
+        TS_ASSERT(y != nullptr);
+
+        auto * w0 = renderGraph->schedule("writer");
+        TS_ASSERT(w0 != nullptr);
+        auto init0          = GN::rdg::InitIntegerAction::create(*db, "init_x");
+        init0->initValue    = 10;
+        auto args0          = GN::AutoRef<GN::rdg::InitIntegerAction::A>::make();
+        args0->output.value = x;
+        w0->tasks.append(GN::rdg::Workflow::Task("init_x"));
+        w0->tasks.back().action    = init0;
+        w0->tasks.back().arguments = args0;
+
+        auto * w1 = renderGraph->schedule("reader");
+        TS_ASSERT(w1 != nullptr);
+        auto add1           = GN::rdg::AddIntegersAction::create(*db, "add");
+        auto args1          = GN::AutoRef<GN::rdg::AddIntegersAction::A>::make();
+        args1->input1.value = x;
+        args1->input2.value = x;
+        args1->output.value = y;
+        w1->tasks.append(GN::rdg::Workflow::Task("add"));
+        w1->tasks.back().action    = add1;
+        w1->tasks.back().arguments = args1;
+
+        auto submission = renderGraph->submit({});
+        TS_ASSERT(submission != nullptr);
+        submission->result();
+        auto state = submission->dumpState();
+        TS_ASSERT_EQUALS(state.workflowDependencies.size(), 2u);
+        TS_ASSERT(workflowDependsOn(state.workflowDependencies, 1, 0)); // reader (newer) depends on writer (older)
+        TS_ASSERT_EQUALS(y->value, 20);
+    }
+
+    void testDependencyWriteRead() {
+        auto db = std::unique_ptr<GN::rdg::ArtifactDatabase>(GN::rdg::ArtifactDatabase::create(GN::rdg::ArtifactDatabase::CreateParameters {}));
+        TS_ASSERT(db != nullptr);
+        auto renderGraph = GN::rdg::RenderGraph::create(GN::rdg::RenderGraph::CreateParameters {});
+        TS_ASSERT(renderGraph != nullptr);
+        auto x = GN::rdg::IntegerArtifact::create(*db, "x");
+        auto y = GN::rdg::IntegerArtifact::create(*db, "y");
+        TS_ASSERT(x != nullptr);
+        TS_ASSERT(y != nullptr);
+
+        auto * w0           = renderGraph->schedule("writer");
+        auto   init0        = GN::rdg::InitIntegerAction::create(*db, "init_x");
+        init0->initValue    = 1;
+        auto args0          = GN::AutoRef<GN::rdg::InitIntegerAction::A>::make();
+        args0->output.value = x;
+        w0->tasks.append(GN::rdg::Workflow::Task("init_x"));
+        w0->tasks.back().action    = init0;
+        w0->tasks.back().arguments = args0;
+
+        auto * w1          = renderGraph->schedule("reader");
+        auto   read1       = GN::rdg::ReadIntegerAction::create(*db, "read_x");
+        auto   args1       = GN::AutoRef<GN::rdg::ReadIntegerAction::A>::make();
+        args1->input.value = x;
+        w1->tasks.append(GN::rdg::Workflow::Task("read_x"));
+        w1->tasks.back().action    = read1;
+        w1->tasks.back().arguments = args1;
+
+        auto * w2           = renderGraph->schedule("writer_second");
+        auto   init2        = GN::rdg::InitIntegerAction::create(*db, "overwrite_x");
+        init2->initValue    = 2;
+        auto args2          = GN::AutoRef<GN::rdg::InitIntegerAction::A>::make();
+        args2->output.value = x;
+        w2->tasks.append(GN::rdg::Workflow::Task("overwrite_x"));
+        w2->tasks.back().action    = init2;
+        w2->tasks.back().arguments = args2;
+
+        auto submission = renderGraph->submit({});
+        TS_ASSERT(submission != nullptr);
+        submission->result();
+        auto state = submission->dumpState();
+        TS_ASSERT_EQUALS(state.workflowDependencies.size(), 3u);
+        TS_ASSERT(workflowDependsOn(state.workflowDependencies, 1, 0)); // reader depends on first writer
+        TS_ASSERT(workflowDependsOn(state.workflowDependencies, 2, 1)); // second writer depends on reader (write-read: newer writes what older reads)
+    }
+
+    void testDependencyReadRead() {
+        auto db = std::unique_ptr<GN::rdg::ArtifactDatabase>(GN::rdg::ArtifactDatabase::create(GN::rdg::ArtifactDatabase::CreateParameters {}));
+        TS_ASSERT(db != nullptr);
+        auto renderGraph = GN::rdg::RenderGraph::create(GN::rdg::RenderGraph::CreateParameters {});
+        TS_ASSERT(renderGraph != nullptr);
+        auto x = GN::rdg::IntegerArtifact::create(*db, "x");
+        TS_ASSERT(x != nullptr);
+
+        auto * w0           = renderGraph->schedule("writer");
+        auto   init0        = GN::rdg::InitIntegerAction::create(*db, "init_x");
+        init0->initValue    = 5;
+        auto args0          = GN::AutoRef<GN::rdg::InitIntegerAction::A>::make();
+        args0->output.value = x;
+        w0->tasks.append(GN::rdg::Workflow::Task("init_x"));
+        w0->tasks.back().action    = init0;
+        w0->tasks.back().arguments = args0;
+
+        auto * w1          = renderGraph->schedule("reader1");
+        auto   read1       = GN::rdg::ReadIntegerAction::create(*db, "read1");
+        auto   args1       = GN::AutoRef<GN::rdg::ReadIntegerAction::A>::make();
+        args1->input.value = x;
+        w1->tasks.append(GN::rdg::Workflow::Task("read1"));
+        w1->tasks.back().action    = read1;
+        w1->tasks.back().arguments = args1;
+
+        auto * w2          = renderGraph->schedule("reader2");
+        auto   read2       = GN::rdg::ReadIntegerAction::create(*db, "read2");
+        auto   args2       = GN::AutoRef<GN::rdg::ReadIntegerAction::A>::make();
+        args2->input.value = x;
+        w2->tasks.append(GN::rdg::Workflow::Task("read2"));
+        w2->tasks.back().action    = read2;
+        w2->tasks.back().arguments = args2;
+
+        auto submission = renderGraph->submit({});
+        TS_ASSERT(submission != nullptr);
+        submission->result();
+        auto state = submission->dumpState();
+        TS_ASSERT_EQUALS(state.workflowDependencies.size(), 3u);
+        TS_ASSERT(workflowDependsOn(state.workflowDependencies, 1, 0));  // reader1 depends on writer
+        TS_ASSERT(workflowDependsOn(state.workflowDependencies, 2, 0));  // reader2 depends on writer
+        TS_ASSERT(!workflowDependsOn(state.workflowDependencies, 2, 1)); // reader2 does NOT depend on reader1 (read-read: no dependency)
     }
 
     void testCreateDuplicateTypeNameReturnsNull() {

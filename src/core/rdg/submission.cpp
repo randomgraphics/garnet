@@ -92,7 +92,10 @@ bool SubmissionImpl::validateAndBuildDependencyGraph() {
         }
     }
 
-    // A depends on B (B must run before A) when A.sequence > B.sequence and (A reads/writes artifact B writes, or A writes artifact B reads).
+    // Build edges: A depends on B (B must run before A) per dependency-graph.h Task comments:
+    // "Task A depends on task B only if A is newer than B and any of: (1) A reads or writes an artifact B writes to,
+    //  (2) A writes an artifact B reads from." So for workflow i (newer) and j (older): i depends on j when
+    // (i reads or writes X and j writes X) or (i writes X and j reads X).
     for (size_t i = 0; i < mValidatedWorkflows.size(); ++i) {
         for (size_t j = 0; j < mValidatedWorkflows.size(); ++j) {
             if (i == j) continue;
@@ -183,10 +186,11 @@ static StrA usageFlagStr(Arguments::UsageFlag u) {
     return s;
 }
 
-StrA SubmissionImpl::dumpState() const {
+Submission::State SubmissionImpl::dumpState() const {
     std::lock_guard<std::mutex> lock(mStateMutex);
 
-    StrA out;
+    Submission::State result;
+    StrA &            out = result.state;
     out += "========== Submission State ==========\n";
     out += StrA::format("  Finished:        {}\n", mRunResult.has_value() ? "yes" : "no");
     if (mRunResult) {
@@ -201,7 +205,7 @@ StrA SubmissionImpl::dumpState() const {
     if (mExecutionOrder.empty() && mTaskStates.empty()) {
         out += "  (No task state yet - submission may not have started or validation failed.)\n";
         out += "==========================================\n";
-        return out;
+        return result;
     }
 
     // Dump by execution order: for each workflow in mExecutionOrder, list its tasks from mTaskStates.
@@ -276,7 +280,9 @@ StrA SubmissionImpl::dumpState() const {
     }
 
     out += "\n==========================================\n";
-    return out;
+
+    for (size_t i = 0; i < mDependencyGraph.size(); ++i) result.workflowDependencies[(uint64_t) i] = mDependencyGraph[i];
+    return result;
 }
 
 Submission::Result SubmissionImpl::run(Parameters) {

@@ -29,7 +29,7 @@ public:
 
     Result result() override;
 
-    StrA dumpState() const override;
+    Submission::State dumpState() const override;
 
     template<typename T>
     AutoRef<T> getSumissionContext() const {

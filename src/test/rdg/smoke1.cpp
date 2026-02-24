@@ -98,8 +98,8 @@ int main(int, const char **) {
     if (Action::ExecutionResult::WARNING == result.executionResult) { GN_WARN(sLogger)("Render graph submission completed with warnings"); }
 
     // Dump submission state to stdout
-    GN::StrA dumpStr = submission->dumpState();
-    GN_INFO(sLogger)("Submission state:\n{}", dumpStr);
+    auto dumpState = submission->dumpState();
+    GN_INFO(sLogger)("Submission state:\n{}", dumpState.state);
 
     // Read texture back into an image, then save the image to file.
     auto image = backbuffer->readback();
