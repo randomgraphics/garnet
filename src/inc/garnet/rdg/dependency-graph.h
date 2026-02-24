@@ -1,6 +1,5 @@
 #pragma once
 
-#include "garnet/base/array.h"
 #include <garnet/GNbase.h>
 
 #include <concepts>
@@ -108,19 +107,38 @@ public:
     friend constexpr UsageFlag operator|(UsageFlag a, UsageFlag b) { return UsageFlag(uint32_t(a) | uint32_t(b)); }
     friend constexpr UsageFlag operator&(UsageFlag a, UsageFlag b) { return UsageFlag(uint32_t(a) & uint32_t(b)); }
 
-    /// Base class of all parameters that references one or more artifacts
+    /// Base class of all parameters that references one or more artifacts.
+    /// Enlisted into a doubly linked list via DoubleLink member for zero-allocation iteration; no vector.
     struct ArtifactArgument {
         virtual ~ArtifactArgument() {}
-        auto         name() const -> const char * { return mName; }
-        auto         usage() const -> UsageFlag { return mUsage; }
+
+        auto name() const -> const char * { return mName; }
+        auto usage() const -> UsageFlag { return mUsage; }
+
+        /// Returns list of artifacts referenced by this argument.
         virtual auto artifacts() const -> SafeArrayAccessor<const Artifact *> = 0;
 
+        /// Linked-list iteration (no allocation). \c nullptr when no next/prev.
+        const ArtifactArgument * next() const { return mLink.next ? static_cast<const ArtifactArgument *>(mLink.next->context) : nullptr; }
+        const ArtifactArgument * prev() const { return mLink.prev ? static_cast<const ArtifactArgument *>(mLink.prev->context) : nullptr; }
+
     protected:
-        ArtifactArgument(ReflectionRegister & rr, const char * name, UsageFlag usage): mName(name), mUsage(usage) { rr.enlist(this); }
+        ArtifactArgument(ReflectionRegister & rr, const char * name, UsageFlag usage): mName(name), mUsage(usage) {
+            mLink.context = this;
+            rr.enlist(this);
+        }
 
     private:
         const char * mName;
         UsageFlag    mUsage;
+        DoubleLink   mLink;
+        friend struct ArgumentReflection;
+    };
+
+    template<UsageFlag UFlags>
+    struct ArtifactArgument<UFlags> : ArtifactArgument {
+    public:
+        ArtifactArgument<UFlags>(ReflectionRegister & rr, const char * name): ArtifactArgument(rr, name, UFlags) {}
     };
 
     /// Represents a single artifact parameter of an action.
@@ -161,25 +179,37 @@ public:
     template<typename T, size_t COUNT, UsageFlag UFlags = UsageFlag::None>
     using ReadWriteArray = ArrayArtifact<T, COUNT, UFlags | UsageFlag::Reading | UsageFlag::Writing>;
 
-    /// Returns list of all artifact arguments defined in this class.
-    SafeArrayAccessor<const ArtifactArgument *> artifactArguments() const { return auto_reflection.enlistments; }
+    /// Returns the first artifact argument in the enlistment list. Iterate with \c p->next() until \c nullptr. No allocation.
+    const ArtifactArgument * firstArtifactArgument() const {
+        return auto_reflection.mHead ? static_cast<const ArtifactArgument *>(auto_reflection.mHead->context) : nullptr;
+    }
 
 protected:
+    using ReflectionRegister = ArgumentReflection;
+
     struct ArgumentReflection {
-        DynaArray<const ArtifactArgument *> enlistments;
+        DoubleLink * mHead = nullptr;
 
         void enlist(const ArtifactArgument * arg) {
             GN_ASSERT(arg);
             GN_ASSERT(arg->name() != nullptr);
             GN_ASSERT(arg->usage() != UsageFlag::None);
-            enlistments.append(arg);
+            DoubleLink * link = const_cast<DoubleLink *>(&arg->mLink);
+            GN_ASSERT(link->prev == nullptr && link->next == nullptr);
+
+            if (!mHead)
+                mHead = link;
+            else {
+                GN_ASSERT(mHead->prev == nullptr);
+                link->linkBefore(mHead);
+                mHead = link;
+            }
         }
     };
 
     Arguments(uint64_t type): RuntimeType(type) {}
 
-    /// This is the member variable that register artifact arguments defined in subclasses to an internal list
-    /// that submission class can query.
+    /// Registers artifact arguments defined in subclasses into a linked list for zero-allocation iteration.
     ArgumentReflection auto_reflection;
 };
 

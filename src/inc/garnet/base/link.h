@@ -10,7 +10,7 @@ namespace GN {
 struct DoubleLink {
     DoubleLink * prev    = nullptr;
     DoubleLink * next    = nullptr;
-    void *       context = nullptr; //< A user defined pointer that is not used by the DoubeLink class.
+    void *       context = nullptr; //< A user defined pointer that is not used by the DoubleLink class.
 
     GN_NO_COPY(DoubleLink);
 

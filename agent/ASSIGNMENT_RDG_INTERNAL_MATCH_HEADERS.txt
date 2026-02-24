@@ -1,76 +1,81 @@
 # Assignment: RDG internal code and tests — match new public headers
 
-Goal: Update RDG implementation (src/core/rdg) and RDG tests (src/test/ut/rdg) so they compile, run, and behave correctly with the new public headers (Arguments::Argument / ArtifactArgument, forEachArtifactParameter, workflow dependency from artifact usage, no workflow.dependencies).
+Goal: Update RDG implementation (src/core/rdg) and RDG tests (src/test/ut/rdg) so they compile, run, and behave correctly with the current public headers. Discovery uses Arguments::firstArtifactArgument() and ArtifactArgument::next() (linked list, zero allocation); workflow dependencies are derived from artifact usage at submit time; Workflow has no dependencies field; schedule() must assign sequence.
 
-Done looks like: Build passes, rdg-smoke test passes (testRenderGraphArithmetic, testCreateDuplicateTypeNameReturnsNull), submission builds workflow dependencies from task artifact usage (read/write) and workflow order (sequence), and no references to removed or renamed APIs.
+Done looks like: Build passes, all RDG unit tests pass, submission builds workflow dependencies from task artifact usage (via firstArtifactArgument()/next()), and no references to removed APIs (e.g. forEachArtifactParameter, workflow->dependencies).
 
 --- PROGRESS (resume from "Last completed" / "In progress") ---
-Last completed: (none)
+Last completed: Task 1.2 (linked list; stop for review before continuing)
 In progress: (none)
 --- END PROGRESS ---
 
 Reference:
 - Public headers: src/inc/garnet/rdg/dependency-graph.h, actions.h, artifacts.h
-- RDG core: src/core/rdg/ (dependency-graph.cpp, submission.cpp, submission.h, backbuffer-actions.cpp, vk-draw-actions.cpp, vk-render-pass.*, pch.h)
+- Current API: Arguments::ArgumentReflection (mHead, mTail, enlist links into list); Arguments::firstArtifactArgument() and ArtifactArgument::next()/prev() for iteration (no allocation). ArtifactArgument is the base (no separate Argument type); ArtifactArgument<UFlags> template for SingleArtifact/ArrayArtifact. ReflectionRegister = ArgumentReflection. Workflow: name, sequence, tasks only.
+- RDG core: src/core/rdg/ (dependency-graph.cpp, submission.cpp, submission.h, …)
 - RDG test: src/test/ut/rdg/rdg-smoke.cpp
-- Key API: Arguments::Argument, Arguments::ArtifactArgument<UFlags>, Arguments::forEachArtifactParameter(std::function<void(Argument const &)>), Workflow (name, sequence, tasks only — no dependencies field), schedule() assigns sequence; dependencies are derived at submit from artifact usage.
 
-Build/CI (run from repo root):
-- Build: .cursor/skills/use-build-py/SKILL.md  — e.g. build.py d
-- Lint + test: .cursor/skills/run-cit/SKILL.md — env/bin/cit.py (or cit.py -l, cit.py -t)
-- RDG unit test: run test binary with rdg suite or filter for rdg-smoke
+Build/CI:
+- Build: build.py d (see .cursor/skills/use-build-py/SKILL.md)
+- Lint + test: env/bin/cit.py (see .cursor/skills/run-cit/SKILL.md)
 
-Workflow / conventions:
-- One task at a time; run build (and cit if possible) after each task.
-- Update PROGRESS after each task (In progress when starting, Last completed when done).
-- Only change files under src/core/rdg and src/test/ut/rdg (and agent file). Do not change other modules’ headers.
-- If something is ambiguous (e.g. reflection implementation location), prefer minimal change and note in the assignment file.
+Workflow:
+- One task at a time; run build (and cit when applicable) after each task; update PROGRESS.
+- Only change src/core/rdg, src/test/ut/rdg, and this agent file. Do not change other modules’ headers.
+- For each task, add or extend a unit test that verifies the task’s functionality.
 
 ---
-PHASE 1: Submission and dependency graph (compile and correct behavior)
+PHASE 1: Header compatibility and schedule
 ---
 
-[ ] Task 1.1 — Implement Arguments::ReflectionRegister::reflect
-    - Public header declares ReflectionRegister::reflect(void* arg, const char* name) but there is no definition in the repo; ArtifactArgument constructors call it.
-    - Add a definition (e.g. in src/core/rdg/dependency-graph.cpp or a small rdg reflection unit). No-op body is sufficient for now (reflection used only for registration; discovery uses forEachArtifactParameter overrides).
-    - Verification: Build links without undefined reference to reflect; existing rdg code that constructs Argument types still compiles and links.
+[ ] Task 1.1 — Ensure Arguments reflection compiles and is testable (ArtifactArgument as the only base)
+    - No separate base class: use ArtifactArgument as the base. Add in dependency-graph.h (protected section of Arguments): using ReflectionRegister = ArgumentReflection; so that ArtifactArgument(ReflectionRegister & rr, ...) compiles when subclasses pass auto_reflection. Add template<UsageFlag UFlags> struct ArtifactArgument<UFlags> : ArtifactArgument with 2-arg ctor (rr, name) that passes UFlags to the base.
+    - Unit test: In rdg-smoke (or a new test case testArgumentsArtifactArgumentsDiscovery), create a minimal Arguments subclass with one WriteOnly<IntegerArtifact> member initialized with (auto_reflection, "output"). Construct it, call firstArtifactArgument(), assert non-null, name() equals "output", usage() includes Writing, and next() is nullptr. Ensures reflection/enlist and firstArtifactArgument() work.
+    - Verification: Build passes; new or updated test passes.
 
-[ ] Task 1.2 — Assign workflow sequence in schedule()
-    - In RenderGraphImpl::schedule(), set the new workflow’s sequence to a monotonically increasing value (e.g. member mNextSequence++). Public Workflow has int64_t sequence; “newer” workflow has larger sequence.
-    - Verification: Build passes; after scheduling N workflows, each has a distinct sequence and order matches schedule order.
+[ ] Task 1.2 — ArgumentReflection: linked list with next/prev, no runtime allocation (critical)
+    - Replace DynaArray in ArgumentReflection with a doubly linked list: ArtifactArgument gets mutable next/prev pointers; ArgumentReflection holds mHead and mTail only. enlist(arg) links arg into the list (set arg->mPrev = mTail, arg->mNext = nullptr; update mTail->mNext and mTail / mHead). No vector/enlistments, no allocation.
+    - Discovery API: replace artifactArguments() with firstArtifactArgument() returning const ArtifactArgument*; add ArtifactArgument::next() and prev() for iteration. Consumers iterate with for (auto* p = args->firstArtifactArgument(); p; p = p->next()) { ... }.
+    - Unit test: In rdg-smoke, extend testArgumentsArtifactArgumentsDiscovery (or add testArtifactArgumentLinkedList): for an Arguments with 3 artifact params, iterate firstArtifactArgument() and next() and count nodes; assert count == 3 and order matches enlist order. Ensures zero-allocation list and iteration.
+    - Verification: Build passes; new or updated test passes. Stop after this task for review before continuing.
 
-[ ] Task 1.3 — Build dependency graph from artifact usage (remove workflow->dependencies)
-    - submission.cpp currently uses workflow->dependencies (which does not exist in the new header). Replace that with computed dependencies:
-      - For each workflow and each of its tasks, call task.arguments->forEachArtifactParameter(callback). In the callback, use param.artifacts() and param.usageFlags() to record (artifact*, read/write) for that task.
-      - Build workflow-level dependency edges: workflow A depends on workflow B (B must run before A) when A.sequence > B.sequence and some task in A uses an artifact (read or write) that some task in B writes to, or A writes to an artifact that B reads from.
-      - Fill mDependencyGraph[workflowIdx] with indices of workflows that must complete before this one (same as current graph direction: “this workflow depends on these”).
-    - Keep validateTask() and the rest of validateAndBuildDependencyGraph (validation of non-null action/arguments, then building mDependencyGraph). Remove any reference to workflow->dependencies.
-    - Verification: Build passes; rdg-smoke test still passes (dependencies are derived correctly so order of execution is valid).
+[ ] Task 1.3 — Assign workflow sequence in schedule()
+    - In RenderGraphImpl::schedule(), set the new workflow’s sequence to a monotonically increasing value (e.g. member int64_t mNextSequence; newWorkflow->sequence = mNextSequence++).
+    - Unit test: In rdg-smoke, add testWorkflowSequenceOrder: create RenderGraph, schedule("w1"), schedule("w2"), schedule("w3"); assert w1->sequence < w2->sequence and w2->sequence < w3->sequence, and all sequences are distinct. Optionally assert sequence values are positive.
+    - Verification: Build passes; testWorkflowSequenceOrder passes.
+
+[ ] Task 1.4 — Build dependency graph from artifact usage (remove workflow->dependencies)
+    - In submission.cpp, remove all use of workflow->dependencies. In validateAndBuildDependencyGraph(), after validating tasks (non-null action/arguments), build mDependencyGraph from artifact usage: for each workflow and each task, iterate arguments with for (auto* p = arguments->firstArtifactArgument(); p; p = p->next()) and use p->artifacts() and p->usage() to record (artifact*, read/write) for that task. Then add an edge workflow A depends on workflow B (B must run before A) when A.sequence > B.sequence and some task in A uses an artifact that a task in B writes to, or A writes to an artifact that B reads from. Store in mDependencyGraph[workflowIdx] the indices of workflows that must complete before this one.
+    - Unit test: Rely on existing testRenderGraphArithmetic: it schedules workflows that have artifact dependencies (init one/two/three, then add, then multiply). After this task, submission must derive dependencies so execution order is correct and result is 9. Add or keep a test that asserts submission->result().executionResult == PASSED and result->value == 9. Optionally add testDependencyGraphFromArtifacts: schedule two workflows where second reads artifact first writes; assert submission runs and completes without error (implicitly verifies dependency was applied).
+    - Verification: Build passes; testRenderGraphArithmetic (and any new dependency test) passes.
 
 ---
-PHASE 2: RDG unit test (match new Argument types and API)
+PHASE 2: RDG unit test updates (match new Argument types and API)
 ---
 
 [ ] Task 2.1 — Fix test argument types and initializers (rdg-smoke.cpp)
-    - Public header: ReadOnly<T> / WriteOnly<T> require T to be DerivedFromArtifact (the artifact type), not AutoRef<T>. SingleArtifact has member AutoRef<T> value.
-    - In rdg-smoke.cpp, change InitIntegerAction::A and AddIntegersAction::A and MultiplyIntegersAction::A to use ReadOnly<IntegerArtifact> / WriteOnly<IntegerArtifact> (not ReadOnly<AutoRef<IntegerArtifact>>). Add brace-initializers for each artifact parameter: { auto_reflection, "name" } (e.g. output = { auto_reflection, "output" }, input1 = { auto_reflection, "input1" }, …).
-    - Verification: Build passes; test binary links.
+    - Use ReadOnly<IntegerArtifact> / WriteOnly<IntegerArtifact> (not ReadOnly<AutoRef<IntegerArtifact>>). SingleArtifact has member AutoRef<T> value. Initialize each artifact parameter with (auto_reflection, "name", usage): e.g. output = { auto_reflection, "output", Arguments::UsageFlag::Writing }, input1 = { auto_reflection, "input1", Arguments::UsageFlag::Reading }. ArtifactArgument ctor is 3-arg (rr, name, usage). If the header only exposes a 2-arg ctor for SingleArtifact (rr, name), then usage comes from UFlags and initializers may be 2-arg; match the header as-is.
+    - Unit test: Build and run testRenderGraphArithmetic; assert it passes (correct types and initializers allow execution and firstArtifactArgument()/next() to see parameters).
+    - Verification: Build passes; testRenderGraphArithmetic passes.
 
-[ ] Task 2.2 — Add forEachArtifactParameter overrides in test Argument structs
-    - Each test Arguments struct (InitIntegerAction::A, AddIntegersAction::A, MultiplyIntegersAction::A) must override forEachArtifactParameter and call the callback for each artifact parameter (e.g. f(output); f(input1); f(input2); as appropriate).
-    - Verification: Build passes; submission can discover artifacts from these argument types.
+[ ] Task 2.2 — Ensure test Argument structs are discoverable via firstArtifactArgument()/next()
+    - Discovery is firstArtifactArgument() and next(). Registration happens when ArtifactArgument members are constructed with (auto_reflection, "name") or (auto_reflection, "name", usage), which calls enlist(). Ensure InitIntegerAction::A, AddIntegersAction::A, MultiplyIntegersAction::A each have their artifact parameter members correctly initialized so the linked list contains them.
+    - Unit test: In rdg-smoke, add testArgumentDiscoveryCounts (or fold into testArgumentsArtifactArgumentsDiscovery): for InitIntegerAction::A(), iterate firstArtifactArgument()/next() and assert count == 1; for AddIntegersAction::A(), count == 3; for MultiplyIntegersAction::A(), count == 3. Ensures enlistment works for test types.
+    - Verification: Build passes; new discovery test(s) pass.
 
-[ ] Task 2.3 — Fix test argument assignment (value vs set)
-    - SingleArtifact has AutoRef<T> value. If the test currently uses .set(artifact), keep it if AutoRef has set(); otherwise use .value = artifact. Ensure test still sets inputs/outputs correctly so testRenderGraphArithmetic produces 9 and testCreateDuplicateTypeNameReturnsNull still passes.
-    - Verification: Run rdg-smoke test; testRenderGraphArithmetic and testCreateDuplicateTypeNameReturnsNull pass.
+[ ] Task 2.3 — Fix test argument assignment and existing scenarios
+    - SingleArtifact has AutoRef<T> value. Use .value = artifact or .set(artifact) as per AutoRef API so test code sets inputs/outputs correctly.
+    - Unit test: testRenderGraphArithmetic still passes (result 9); testCreateDuplicateTypeNameReturnsNull still passes.
+    - Verification: Run rdg-smoke; testRenderGraphArithmetic and testCreateDuplicateTypeNameReturnsNull pass.
 
 ---
 PHASE 3: Final verification
 ---
 
 [ ] Task 3.1 — Full build and CI
-    - build.py d (or project default) and env/bin/cit.py (or equivalent). Fix any remaining lint or test failures in rdg or dependent code.
-    - Verification: Build green, cit passes.
+    - build.py d and env/bin/cit.py. Fix any remaining lint or test failures in rdg or dependent code.
+    - Unit test: cit passes (full test suite as the “test” for this task).
+    - Verification: Build green; cit passes.
 
 [ ] Task 3.2 — Update this assignment file
     - Mark all tasks done; set Last completed to Task 3.2; add one-line “Done” summary and date at top.
@@ -78,11 +83,9 @@ PHASE 3: Final verification
 ---
 Summary of files to touch
 ---
-- src/core/rdg/dependency-graph.cpp   (workflow sequence in schedule; possibly reflect() definition)
-- src/core/rdg/submission.cpp         (validateAndBuildDependencyGraph: build deps from forEachArtifactParameter + usage; remove workflow->dependencies)
-- src/core/rdg/submission.h           (only if member or signature changes needed)
-- src/test/ut/rdg/rdg-smoke.cpp       (Argument types, initializers, forEachArtifactParameter overrides, assignment API)
+- src/inc/garnet/rdg/dependency-graph.h   (ReflectionRegister; ArtifactArgument base + template; linked list next/prev, firstArtifactArgument, ArgumentReflection mHead/mTail)
+- src/core/rdg/dependency-graph.cpp       (workflow sequence in schedule)
+- src/core/rdg/submission.cpp             (build deps from firstArtifactArgument()/next() + usage; remove workflow->dependencies)
+- src/core/rdg/submission.h               (only if needed for member/signature changes)
+- src/test/ut/rdg/rdg-smoke.cpp           (argument types, initializers, discovery tests, assignment API)
 - agent/ASSIGNMENT_RDG_INTERNAL_MATCH_HEADERS.txt (this file; progress updates)
-
-Optional / if needed:
-- New file for ReflectionRegister::reflect (e.g. src/core/rdg/reflection.cpp) if not in dependency-graph.cpp
