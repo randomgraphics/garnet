@@ -107,11 +107,6 @@ public:
     friend constexpr UsageFlag operator|(UsageFlag a, UsageFlag b) { return UsageFlag(uint32_t(a) | uint32_t(b)); }
     friend constexpr UsageFlag operator&(UsageFlag a, UsageFlag b) { return UsageFlag(uint32_t(a) & uint32_t(b)); }
 
-protected:
-    struct ArgumentReflection;
-    using ReflectionRegister = ArgumentReflection;
-
-public:
     /// Base class of all parameters that references one or more artifacts.
     /// Enlisted into a doubly linked list via DoubleLink member for zero-allocation iteration; no vector.
     struct ArtifactArgument {
@@ -121,38 +116,35 @@ public:
         auto usage() const -> UsageFlag { return mUsage; }
 
         /// Returns list of artifacts referenced by this argument.
-        virtual auto artifacts() const -> SafeArrayAccessor<const Artifact *> = 0;
+        virtual auto artifacts() const -> SafeArrayAccessor<const Artifact * const> = 0;
 
         /// Linked-list iteration (no allocation). \c nullptr when no next/prev.
         const ArtifactArgument * next() const { return mLink.next ? static_cast<const ArtifactArgument *>(mLink.next->context) : nullptr; }
         const ArtifactArgument * prev() const { return mLink.prev ? static_cast<const ArtifactArgument *>(mLink.prev->context) : nullptr; }
 
     protected:
-        ArtifactArgument(ReflectionRegister & rr, const char * name, UsageFlag usage): mName(name), mUsage(usage) {
+        ArtifactArgument(Arguments * owner, const char * name, UsageFlag usage): mName(name), mUsage(usage) {
             mLink.context = this;
-            rr.enlist(this);
+            owner->enlist(this);
         }
 
     private:
         const char * mName;
         UsageFlag    mUsage;
         DoubleLink   mLink;
-        friend struct ArgumentReflection;
-    };
-
-    template<UsageFlag UFlags>
-    struct ArtifactArgument<UFlags> : ArtifactArgument {
-    public:
-        ArtifactArgument<UFlags>(ReflectionRegister & rr, const char * name): ArtifactArgument(rr, name, UFlags) {}
+        friend class Arguments;
     };
 
     /// Represents a single artifact parameter of an action.
     /// T must be a subclass of Artifact.
     template<DerivedFromArtifact T, UsageFlag UFlags = UsageFlag::None>
-    struct SingleArtifact : public ArtifactArgument<UFlags> {
-        using ArtifactArgument<UFlags>::ArtifactArgument;
+    struct SingleArtifact : public ArtifactArgument {
+        SingleArtifact(Arguments * owner, const char * name): ArtifactArgument(owner, name, UFlags) {}
 
-        SafeArrayAccessor<const Artifact *> artifacts() const override { return SafeArrayAccessor<const Artifact *>(value.addr(), 1); }
+        SafeArrayAccessor<const Artifact * const> artifacts() const override {
+            const T * const * a = value.addr();
+            return SafeArrayAccessor<const Artifact * const>(a, 1);
+        }
 
         AutoRef<T> value;
     };
@@ -167,8 +159,8 @@ public:
     using ReadWrite = SingleArtifact<T, UFlags | UsageFlag::Reading | UsageFlag::Writing>;
 
     template<DerivedFromArtifact T, size_t Count, UsageFlag UFlags = UsageFlag::None>
-    struct ArrayArtifact : public ArtifactArgument<UFlags> {
-        using ArtifactArgument<UFlags>::ArtifactArgument;
+    struct ArrayArtifact : public ArtifactArgument {
+    ArrayArtifact(Arguments * owner, const char * name): ArtifactArgument(owner, name, UFlags) {}
 
         SafeArrayAccessor<const Artifact *> artifacts() const override { return SafeArrayAccessor<const Artifact *>(values, Count); }
 
@@ -186,34 +178,33 @@ public:
 
     /// Returns the first artifact argument in the enlistment list. Iterate with \c p->next() until \c nullptr. No allocation.
     const ArtifactArgument * firstArtifactArgument() const {
-        return auto_reflection.mHead ? static_cast<const ArtifactArgument *>(auto_reflection.mHead->context) : nullptr;
+        return mHead ? static_cast<const ArtifactArgument *>(mHead->context) : nullptr;
     }
 
 protected:
-    struct ArgumentReflection {
-        DoubleLink * mHead = nullptr;
+    using RuntimeType::RuntimeType;
 
-        void enlist(const ArtifactArgument * arg) {
-            GN_ASSERT(arg);
-            GN_ASSERT(arg->name() != nullptr);
-            GN_ASSERT(arg->usage() != UsageFlag::None);
-            DoubleLink * link = const_cast<DoubleLink *>(&arg->mLink);
-            GN_ASSERT(link->prev == nullptr && link->next == nullptr);
+private:
+    DoubleLink * mHead = nullptr;
 
-            if (!mHead)
-                mHead = link;
-            else {
-                GN_ASSERT(mHead->prev == nullptr);
-                link->linkBefore(mHead);
-                mHead = link;
-            }
+    /// Only called by ArtifactArgument constructor to enlist the argument into the list.
+    void enlist(ArtifactArgument * arg) {
+        GN_ASSERT(arg);
+        GN_ASSERT(arg->name() != nullptr);
+        GN_ASSERT(arg->usage() != UsageFlag::None);
+        DoubleLink * link = const_cast<DoubleLink *>(&arg->mLink);
+        GN_ASSERT(link->prev == nullptr && link->next == nullptr);
+
+        if (!mHead)
+            mHead = link;
+        else {
+            GN_ASSERT(mHead->prev == nullptr);
+            link->linkBefore(mHead);
+            mHead = link;
         }
-    };
+    }
 
-    Arguments(uint64_t type): RuntimeType(type) {}
-
-    /// Registers artifact arguments defined in subclasses into a linked list for zero-allocation iteration.
-    ArgumentReflection auto_reflection;
+    friend struct ArtifactArgument;
 };
 
 struct Submission;

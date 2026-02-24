@@ -11,19 +11,14 @@ struct RenderTarget {
 
         bool empty() const { return target.index() == 1 && std::get<1>(target) == nullptr; }
 
-        AutoRef<Artifact> artifact() const { return target.index() == 0 ? std::get<0>(target) : std::get<1>(target); }
+        AutoRef<Artifact> artifact() const {
+            if (target.index() == 0) return std::get<0>(target);
+            if (target.index() == 1) return std::get<1>(target);
+            return {};
+        }
 
         bool operator==(const ColorTarget & other) const {
-            if (target.index() != other.target.index()) return false;
-            if (target.index() == 0) {
-                auto t0 = std::get<0>(target);
-                auto t1 = std::get<0>(other.target);
-                if (t0 != t1) return false;
-                if (t0 && subresourceIndex != other.subresourceIndex) return false; // only check subresource index for non-empty texture targets
-                return true;
-            } else {
-                return std::get<1>(target) == std::get<1>(other.target);
-            }
+            return target == other.target && subresourceIndex == other.subresourceIndex;
         }
 
         bool operator!=(const ColorTarget & other) const { return !operator==(other); }
@@ -53,26 +48,24 @@ struct RenderTarget {
     bool operator!=(const RenderTarget & other) const { return !operator==(other); }
 };
 
-struct RenderTargetArgument : public Arguments::ArtifactArgument<Arguments::UsageFlag::Writing | Arguments::UsageFlag::Reading> {
-    using Arguments::ArtifactArgument<Arguments::UsageFlag::Writing | Arguments::UsageFlag::Reading>::ArtifactArgument;
+struct RenderTargetArgument : public Arguments::ArtifactArgument {
+    RenderTargetArgument(Arguments * owner, const char * name): Arguments::ArtifactArgument(owner, name, Arguments::UsageFlag::Writing | Arguments::UsageFlag::Reading) {}
 
-    SafeArrayAccessor<const Artifact *> artifacts() const override {
+    SafeArrayAccessor<const Artifact * const> artifacts() const override {
         mArtifacts.reserve(8 + 1);
         mArtifacts.clear();
-        if (value) {
-            const auto & colors = value->colors;
-            for (size_t i = 0; i < colors.size(); ++i) {
-                if (!colors[i].empty()) {
-                    auto a = colors[i].artifact();
-                    if (a) mArtifacts.append(a.get());
-                }
+        const auto & colors = value.colors;
+        for (size_t i = 0; i < colors.size(); ++i) {
+            if (!colors[i].empty()) {
+                auto a = colors[i].artifact();
+                if (a) mArtifacts.append(a.get());
             }
-            if (!value->depthStencil.empty()) mArtifacts.append(value->depthStencil.target.get());
         }
+        if (!value.depthStencil.empty()) mArtifacts.append(value.depthStencil.target.get());
         return mArtifacts;
     };
 
-    AutoRef<RenderTarget> value;
+    RenderTarget value;
 
 private:
     mutable DynaArray<const Artifact *> mArtifacts;
@@ -96,7 +89,7 @@ struct ClearRenderTarget : public Action {
             float    depth;
             uint32_t stencil;
         };
-        RenderTargetArgument renderTarget = {auto_reflection, "renderTarget"};
+        RenderTargetArgument renderTarget = {this, "renderTarget"};
         ClearValues          clearValues;
     };
 
@@ -118,7 +111,7 @@ struct PrepareBackbuffer : public Action {
         GN_API static const uint64_t TYPE;
         A(): Arguments(TYPE) {}
 
-        ReadWrite<Backbuffer> backbuffer = {auto_reflection, "backbuffer"}; // Backbuffer to prepare
+        ReadWrite<Backbuffer> backbuffer = {this, "backbuffer"}; // Backbuffer to prepare
     };
 
     struct CreateParameters {
@@ -138,7 +131,7 @@ struct PresentBackbuffer : public Action {
     struct A : public Arguments {
         GN_API static const uint64_t TYPE;
         A(): Arguments(TYPE) {}
-        ReadOnly<Backbuffer> backbuffer = {auto_reflection, "backbuffer"}; // Backbuffer to present
+        ReadOnly<Backbuffer> backbuffer = {this, "backbuffer"}; // Backbuffer to present
     };
 
     struct CreateParameters {
@@ -310,10 +303,10 @@ struct ShaderAction : public Action {
     };
 
     template<Arguments::UsageFlag UFlags = Arguments::UsageFlag::Reading>
-    struct BufferViewMap : public Arguments::ArtifactArgument<UFlags> {
-        using Arguments::ArtifactArgument<UFlags>::ArtifactArgument;
+    struct BufferViewMap : public Arguments::ArtifactArgument {
+        BufferViewMap(Arguments * owner, const char * name): Arguments::ArtifactArgument(owner, name, UFlags) {}
 
-        SafeArrayAccessor<const Artifact *> artifacts() const override {
+        SafeArrayAccessor<const Artifact * const> artifacts() const override {
             mArtifacts.reserve(value.size());
             mArtifacts.clear();
             for (const auto & [name, view] : value) {
@@ -337,10 +330,10 @@ struct ShaderAction : public Action {
     };
 
     template<Arguments::UsageFlag UFlags = Arguments::UsageFlag::Reading>
-    struct ImageViewMap : public Arguments::ArtifactArgument<UFlags> {
-        using Arguments::ArtifactArgument<UFlags>::ArtifactArgument;
+    struct ImageViewMap : public Arguments::ArtifactArgument {
+        ImageViewMap(Arguments * owner, const char * name): Arguments::ArtifactArgument(owner, name, UFlags) {}
 
-        SafeArrayAccessor<const Artifact *> artifacts() const override {
+        SafeArrayAccessor<const Artifact * const> artifacts() const override {
             mArtifacts.clear();
             for (const auto & [name, view] : value) {
                 (void) name;
@@ -361,10 +354,10 @@ struct ShaderAction : public Action {
     };
 
     template<Arguments::UsageFlag UFlags = Arguments::UsageFlag::Reading>
-    struct TextureViewMap : public Arguments::ArtifactArgument<UFlags> {
-        using Arguments::ArtifactArgument<UFlags>::ArtifactArgument;
+    struct TextureViewMap : public Arguments::ArtifactArgument {
+        TextureViewMap(Arguments * owner, const char * name): Arguments::ArtifactArgument(owner, name, UFlags) {}
 
-        SafeArrayAccessor<const Artifact *> artifacts() const override {
+        SafeArrayAccessor<const Artifact * const> artifacts() const override {
             mArtifacts.clear();
             for (const auto & [name, view] : value) {
                 (void) name;
@@ -416,10 +409,10 @@ struct GenericDraw : public ShaderAction {
         uint32_t firstInstance = 0; ///< first instance index
     };
 
-    struct MeshParameter : public Arguments::ArtifactArgument<Arguments::UsageFlag::Reading> {
-        using Arguments::ArtifactArgument<Arguments::UsageFlag::Reading>::ArtifactArgument;
+    struct MeshParameter : public Arguments::ArtifactArgument {
+        MeshParameter(Arguments * owner, const char * name): Arguments::ArtifactArgument(owner, name, Arguments::UsageFlag::Reading) {}
 
-        SafeArrayAccessor<const Artifact *> artifacts() const override {
+        SafeArrayAccessor<const Artifact * const> artifacts() const override {
             if (!value) return {};
             const auto & desc = value->descriptor();
             mArtifacts.clear();
@@ -442,11 +435,11 @@ struct GenericDraw : public ShaderAction {
         GN_API static const uint64_t TYPE;
         A(): Arguments(TYPE) {}
 
-        MeshParameter        mesh         = {auto_reflection, "mesh"};
-        BufferViewMap        buffers      = {auto_reflection, "buffers"};      ///< buffer views, key is shader variable name
-        ImageViewMap         images       = {auto_reflection, "images"};       ///< image views, key is shader variable name
-        TextureViewMap       textures     = {auto_reflection, "textures"};     ///< texture views, key is shader variable name
-        RenderTargetArgument renderTarget = {auto_reflection, "renderTarget"}; ///< render target
+        MeshParameter        mesh         = {this, "mesh"};
+        BufferViewMap<>      buffers      = {this, "buffers"};      ///< buffer views, key is shader variable name
+        ImageViewMap<>       images       = {this, "images"};       ///< image views, key is shader variable name
+        TextureViewMap<>     textures     = {this, "textures"};     ///< texture views, key is shader variable name
+        RenderTargetArgument renderTarget = {this, "renderTarget"}; ///< render target
         DrawArguments        drawParams;                                       ///< draw parameters
     };
 
@@ -486,10 +479,10 @@ struct GenericCompute : public ShaderAction {
         GN_API static const uint64_t TYPE;
         A(): Arguments(TYPE) {}
 
-        BufferViewMap                           uniforms; ///< uniform buffers
-        TextureViewMap                          textures; ///< textures
-        BufferViewMap<Arguments::UsageFlag::RW> buffers;  ///< storage buffers
-        ImageViewMap<Arguments::UsageFlag::RW>  images;   ///< storage images
+        BufferViewMap<>                         uniforms = {this, "uniforms"}; ///< uniform buffers
+        TextureViewMap<>                        textures = {this, "textures"}; ///< textures
+        BufferViewMap<Arguments::UsageFlag::RW> buffers  = {this, "buffers"};  ///< storage buffers
+        ImageViewMap<Arguments::UsageFlag::RW>  images   = {this, "images"};   ///< storage images
         DispatchSize                            groups;   ///< thread group counts
     };
 
