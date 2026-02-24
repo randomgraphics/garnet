@@ -146,12 +146,7 @@ public:
     struct SingleArtifact : public ArtifactArgument {
         SingleArtifact(Arguments * owner, const char * name): ArtifactArgument(owner, name, UFlags) {}
 
-        SafeArrayAccessor<const Artifact * const> artifacts() const override {
-            mArtifacts.reserve(1);
-            mArtifacts.clear();
-            if (value) mArtifacts.append(value.get());
-            return mArtifacts;
-        }
+        SafeArrayAccessor<const Artifact * const> artifacts() const override { return {(const Artifact * const *) value.addr(), 1}; }
 
         AutoRef<T> value;
 
@@ -169,22 +164,22 @@ public:
     using ReadWrite = SingleArtifact<T, UFlags | UsageFlag::Reading | UsageFlag::Writing>;
 
     template<DerivedFromArtifact T, size_t Count, UsageFlag UFlags = UsageFlag::None>
-    struct ArrayArtifact : public ArtifactArgument {
-        ArrayArtifact(Arguments * owner, const char * name): ArtifactArgument(owner, name, UFlags) {}
+    struct ArtifactArray : public ArtifactArgument {
+        ArtifactArray(Arguments * owner, const char * name): ArtifactArgument(owner, name, UFlags) {}
 
-        SafeArrayAccessor<const Artifact *> artifacts() const override { return SafeArrayAccessor<const Artifact *>(values, Count); }
+        SafeArrayAccessor<const Artifact * const> artifacts() const override { return {(const Artifact * const *) values[0].addr(), Count}; }
 
         AutoRef<T> values[Count];
     };
 
     template<typename T, size_t COUNT, UsageFlag UFlags = UsageFlag::None>
-    using ReadOnlyArray = ArrayArtifact<T, COUNT, UFlags | UsageFlag::Reading>;
+    using ReadOnlyArray = ArtifactArray<T, COUNT, UFlags | UsageFlag::Reading>;
 
     template<typename T, size_t COUNT, UsageFlag UFlags = UsageFlag::None>
-    using WriteOnlyArray = ArrayArtifact<T, COUNT, UFlags | UsageFlag::Writing>;
+    using WriteOnlyArray = ArtifactArray<T, COUNT, UFlags | UsageFlag::Writing>;
 
     template<typename T, size_t COUNT, UsageFlag UFlags = UsageFlag::None>
-    using ReadWriteArray = ArrayArtifact<T, COUNT, UFlags | UsageFlag::Reading | UsageFlag::Writing>;
+    using ReadWriteArray = ArtifactArray<T, COUNT, UFlags | UsageFlag::Reading | UsageFlag::Writing>;
 
     /// Returns the first artifact argument in the enlistment list. Iterate with \c p->next() until \c nullptr. No allocation.
     const ArtifactArgument * firstArtifactArgument() const { return mHead ? static_cast<const ArtifactArgument *>(mHead->context) : nullptr; }

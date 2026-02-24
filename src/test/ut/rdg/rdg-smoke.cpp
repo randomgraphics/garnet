@@ -596,6 +596,12 @@ public:
         TS_ASSERT(fetched != nullptr);
         TS_ASSERT(fetched->sequence == first->sequence);
     }
+
+    void testArrayArtifactArgument() {
+        struct A : public GN::rdg::Arguments {
+            GN::rdg::Arguments::ArtifactArray<GN::rdg::IntegerArtifact, 3> array = {this, "array"};
+        };
+    }
 };
 
 /*
