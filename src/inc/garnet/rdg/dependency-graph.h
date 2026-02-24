@@ -142,11 +142,16 @@ public:
         SingleArtifact(Arguments * owner, const char * name): ArtifactArgument(owner, name, UFlags) {}
 
         SafeArrayAccessor<const Artifact * const> artifacts() const override {
-            const T * const * a = value.addr();
-            return SafeArrayAccessor<const Artifact * const>(a, 1);
+            mArtifacts.reserve(1);
+            mArtifacts.clear();
+            if (value) mArtifacts.append(value.get());
+            return mArtifacts;
         }
 
         AutoRef<T> value;
+
+    private:
+        mutable DynaArray<const Artifact *> mArtifacts;
     };
 
     template<DerivedFromArtifact T, UsageFlag UFlags = UsageFlag::None>
@@ -160,7 +165,7 @@ public:
 
     template<DerivedFromArtifact T, size_t Count, UsageFlag UFlags = UsageFlag::None>
     struct ArrayArtifact : public ArtifactArgument {
-    ArrayArtifact(Arguments * owner, const char * name): ArtifactArgument(owner, name, UFlags) {}
+        ArrayArtifact(Arguments * owner, const char * name): ArtifactArgument(owner, name, UFlags) {}
 
         SafeArrayAccessor<const Artifact *> artifacts() const override { return SafeArrayAccessor<const Artifact *>(values, Count); }
 
@@ -177,9 +182,7 @@ public:
     using ReadWriteArray = ArrayArtifact<T, COUNT, UFlags | UsageFlag::Reading | UsageFlag::Writing>;
 
     /// Returns the first artifact argument in the enlistment list. Iterate with \c p->next() until \c nullptr. No allocation.
-    const ArtifactArgument * firstArtifactArgument() const {
-        return mHead ? static_cast<const ArtifactArgument *>(mHead->context) : nullptr;
-    }
+    const ArtifactArgument * firstArtifactArgument() const { return mHead ? static_cast<const ArtifactArgument *>(mHead->context) : nullptr; }
 
 protected:
     using RuntimeType::RuntimeType;

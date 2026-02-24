@@ -17,9 +17,7 @@ struct RenderTarget {
             return {};
         }
 
-        bool operator==(const ColorTarget & other) const {
-            return target == other.target && subresourceIndex == other.subresourceIndex;
-        }
+        bool operator==(const ColorTarget & other) const { return target == other.target && subresourceIndex == other.subresourceIndex; }
 
         bool operator!=(const ColorTarget & other) const { return !operator==(other); }
     };
@@ -49,7 +47,8 @@ struct RenderTarget {
 };
 
 struct RenderTargetArgument : public Arguments::ArtifactArgument {
-    RenderTargetArgument(Arguments * owner, const char * name): Arguments::ArtifactArgument(owner, name, Arguments::UsageFlag::Writing | Arguments::UsageFlag::Reading) {}
+    RenderTargetArgument(Arguments * owner, const char * name)
+        : Arguments::ArtifactArgument(owner, name, Arguments::UsageFlag::Writing | Arguments::UsageFlag::Reading) {}
 
     SafeArrayAccessor<const Artifact * const> artifacts() const override {
         mArtifacts.reserve(8 + 1);
@@ -131,6 +130,7 @@ struct PresentBackbuffer : public Action {
     struct A : public Arguments {
         GN_API static const uint64_t TYPE;
         A(): Arguments(TYPE) {}
+
         ReadOnly<Backbuffer> backbuffer = {this, "backbuffer"}; // Backbuffer to present
     };
 
@@ -440,7 +440,7 @@ struct GenericDraw : public ShaderAction {
         ImageViewMap<>       images       = {this, "images"};       ///< image views, key is shader variable name
         TextureViewMap<>     textures     = {this, "textures"};     ///< texture views, key is shader variable name
         RenderTargetArgument renderTarget = {this, "renderTarget"}; ///< render target
-        DrawArguments        drawParams;                                       ///< draw parameters
+        DrawArguments        drawParams;                            ///< draw parameters
     };
 
     /// Shader stage description
@@ -483,7 +483,7 @@ struct GenericCompute : public ShaderAction {
         TextureViewMap<>                        textures = {this, "textures"}; ///< textures
         BufferViewMap<Arguments::UsageFlag::RW> buffers  = {this, "buffers"};  ///< storage buffers
         ImageViewMap<Arguments::UsageFlag::RW>  images   = {this, "images"};   ///< storage images
-        DispatchSize                            groups;   ///< thread group counts
+        DispatchSize                            groups;                        ///< thread group counts
     };
 
     struct CreateParameters {

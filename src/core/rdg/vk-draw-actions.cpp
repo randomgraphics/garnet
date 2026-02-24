@@ -8,12 +8,10 @@ namespace GN::rdg {
 
 static GN::Logger * sLogger = getLogger("GN.rdg");
 
-static void trackRenderTargetState(const RenderTarget * renderTarget) {
-    if (!renderTarget) GN_UNLIKELY return;
-
+static void trackRenderTargetState(const RenderTarget & renderTarget) {
     // track the state of the color targets.
-    for (size_t i = 0; i < renderTarget->colors.size(); i++) {
-        const auto & color = renderTarget->colors[i];
+    for (size_t i = 0; i < renderTarget.colors.size(); i++) {
+        const auto & color = renderTarget.colors[i];
         if (0 == color.target.index()) {
             // this color target is a texture.
             auto tex = std::get<0>(color.target).castTo<TextureVulkan>().get();
@@ -33,9 +31,9 @@ static void trackRenderTargetState(const RenderTarget * renderTarget) {
     }
 
     // track the state of the depth stencil target.
-    auto depth = renderTarget->depthStencil.target.castTo<TextureVulkan>().get();
+    auto depth = renderTarget.depthStencil.target.castTo<TextureVulkan>().get();
     if (depth)
-        depth->trackImageState(renderTarget->depthStencil.subresourceIndex.mip, 1, renderTarget->depthStencil.subresourceIndex.face, 1,
+        depth->trackImageState(renderTarget.depthStencil.subresourceIndex.mip, 1, renderTarget.depthStencil.subresourceIndex.face, 1,
                                {vk::ImageLayout::eDepthStencilAttachmentOptimal,
                                 vk::AccessFlagBits::eDepthStencilAttachmentRead | vk::AccessFlagBits::eDepthStencilAttachmentWrite,
                                 vk::PipelineStageFlagBits::eEarlyFragmentTests | vk::PipelineStageFlagBits::eLateFragmentTests});
@@ -55,11 +53,6 @@ public:
                 GN_ERROR(sLogger)("ClearRenderTargetVulkan::prepare: arguments is not ClearRenderTarget::A");
                 return std::make_pair(FAILED, nullptr);
             }
-        auto renderTarget = a->renderTarget.get();
-        if (!renderTarget) GN_UNLIKELY {
-                GN_ERROR(sLogger)("ClearRenderTargetVulkan::prepare: render target is null");
-                return std::make_pair(FAILED, nullptr);
-            }
 
         auto taskContext = std::make_unique<DrawActionContextVulkan>();
 
@@ -72,7 +65,7 @@ public:
             }
 
         // prepare render pass
-        if (!submissionContext.renderPassManager.prepare(taskInfo, *a->renderTarget.get())) GN_UNLIKELY {
+        if (!submissionContext.renderPassManager.prepare(taskInfo, a->renderTarget.value)) GN_UNLIKELY {
                 GN_ERROR(sLogger)("ClearRenderTargetVulkan::prepare: failed to prepare render pass");
                 return std::make_pair(FAILED, nullptr);
             }
@@ -91,11 +84,6 @@ public:
                 GN_ERROR(sLogger)("ClearRenderTargetVulkan::prepare: arguments is not ClearRenderTarget::A");
                 return FAILED;
             }
-        auto renderTarget = a->renderTarget.get();
-        if (!renderTarget) GN_UNLIKELY {
-                GN_ERROR(sLogger)("ClearRenderTargetVulkan::prepare: render target is null");
-                return FAILED;
-            }
 
         auto ctx = static_cast<DrawActionContextVulkan *>(context);
         if (!ctx) GN_UNLIKELY {
@@ -112,11 +100,11 @@ public:
             }
 
         // execute resource tracker to update GPU resource layout and memory usage.
-        trackRenderTargetState(a->renderTarget.get());
+        trackRenderTargetState(a->renderTarget.value);
 
         // acquire render pass.
         RenderPassManagerVulkan::RenderPassArguments rpa {
-            .renderTarget  = *renderTarget,
+            .renderTarget  = a->renderTarget.value,
             .commandBuffer = cb.commandBuffer.handle(),
             .clearValues   = a->clearValues.getAsOptional(),
         };
@@ -261,11 +249,6 @@ public:
                 GN_ERROR(sLogger)("GenericDrawVulkan::prepare: arguments is not GenericDraw::A");
                 return std::make_pair(FAILED, nullptr);
             }
-        auto renderTarget = a->renderTarget.get();
-        if (!renderTarget) GN_UNLIKELY {
-                GN_ERROR(sLogger)("GenericDrawVulkan::prepare: render target is null");
-                return std::make_pair(FAILED, nullptr);
-            }
 
         auto taskContext = std::make_unique<DrawActionContextVulkan>();
 
@@ -278,7 +261,7 @@ public:
             }
 
         // prepare render pass
-        if (!submissionContext.renderPassManager.prepare(taskInfo, *a->renderTarget.get())) GN_UNLIKELY {
+        if (!submissionContext.renderPassManager.prepare(taskInfo, a->renderTarget.value)) GN_UNLIKELY {
                 GN_ERROR(sLogger)("GenericDrawVulkan::prepare: failed to prepare render pass");
                 return std::make_pair(FAILED, nullptr);
             }
@@ -296,11 +279,7 @@ public:
                 GN_ERROR(sLogger)("GenericDrawVulkan::execute: arguments is not GenericDraw::A");
                 return FAILED;
             }
-        auto renderTarget = a->renderTarget.get();
-        if (!renderTarget) GN_UNLIKELY {
-                GN_ERROR(sLogger)("GenericDrawVulkan::execute: render target is null");
-                return FAILED;
-            }
+        auto & renderTarget = a->renderTarget.value;
 
         auto ctx = static_cast<DrawActionContextVulkan *>(context);
         if (!ctx) GN_UNLIKELY {
@@ -317,11 +296,11 @@ public:
             }
 
         // execute resource tracker to update GPU resource layout and memory usage.
-        trackRenderTargetState(a->renderTarget.get());
+        trackRenderTargetState(renderTarget);
 
         // acquire render pass (no clear values for generic draw).
         RenderPassManagerVulkan::RenderPassArguments rpa {
-            .renderTarget  = *renderTarget,
+            .renderTarget  = renderTarget,
             .commandBuffer = cb.commandBuffer.handle(),
             .clearValues   = std::nullopt,
         };
@@ -343,8 +322,8 @@ public:
         // When pipeline is valid: set viewport/scissor from render target extent, then bind and draw (Task 3.3 / 6.4).
         if (mPipeline) {
             uint32_t extentW = 0, extentH = 0;
-            if (renderTarget->colors.size() > 0) {
-                const auto & c0 = renderTarget->colors[0];
+            if (renderTarget.colors.size() > 0) {
+                const auto & c0 = renderTarget.colors[0];
                 if (c0.target.index() == 0) {
                     auto tex = std::get<0>(c0.target).castTo<TextureVulkan>().get();
                     if (tex) {

@@ -61,7 +61,7 @@ struct InitIntegerAction : public Action {
     struct A : public Arguments {
         inline static const uint64_t TYPE = getTestTypeId();
         A(): Arguments(TYPE) {}
-        WriteOnly<IntegerArtifact> output = { auto_reflection, "output" };
+        WriteOnly<IntegerArtifact> output = {auto_reflection, "output"};
     };
 
     std::pair<ExecutionResult, ExecutionContext *> prepare(TaskInfo &, Arguments &) override { return std::make_pair(PASSED, nullptr); }
@@ -100,9 +100,9 @@ struct AddIntegersAction : public Action {
     struct A : public Arguments {
         inline static const uint64_t TYPE = getTestTypeId();
         A(): Arguments(TYPE) {}
-        ReadOnly<IntegerArtifact>  input1 = { auto_reflection, "input1" };
-        ReadOnly<IntegerArtifact>  input2 = { auto_reflection, "input2" };
-        WriteOnly<IntegerArtifact> output = { auto_reflection, "output" };
+        ReadOnly<IntegerArtifact>  input1 = {auto_reflection, "input1"};
+        ReadOnly<IntegerArtifact>  input2 = {auto_reflection, "input2"};
+        WriteOnly<IntegerArtifact> output = {auto_reflection, "output"};
     };
 
     std::pair<ExecutionResult, ExecutionContext *> prepare(TaskInfo &, Arguments &) override { return std::make_pair(PASSED, nullptr); }
@@ -144,9 +144,9 @@ struct MultiplyIntegersAction : public Action {
     struct A : public Arguments {
         inline static const uint64_t TYPE = getTestTypeId();
         A(): Arguments(TYPE) {}
-        ReadOnly<IntegerArtifact>  input1 = { auto_reflection, "input1" };
-        ReadOnly<IntegerArtifact>  input2 = { auto_reflection, "input2" };
-        WriteOnly<IntegerArtifact> output = { auto_reflection, "output" };
+        ReadOnly<IntegerArtifact>  input1 = {auto_reflection, "input1"};
+        ReadOnly<IntegerArtifact>  input2 = {auto_reflection, "input2"};
+        WriteOnly<IntegerArtifact> output = {auto_reflection, "output"};
     };
 
     std::pair<ExecutionResult, ExecutionContext *> prepare(TaskInfo &, Arguments &) override { return std::make_pair(PASSED, nullptr); }
@@ -319,7 +319,7 @@ public:
         auto db = std::unique_ptr<GN::rdg::ArtifactDatabase>(GN::rdg::ArtifactDatabase::create(GN::rdg::ArtifactDatabase::CreateParameters {}));
         TS_ASSERT(db != nullptr);
         GN::rdg::RenderGraph::CreateParameters params;
-        auto renderGraph = GN::rdg::RenderGraph::create(params);
+        auto                                   renderGraph = GN::rdg::RenderGraph::create(params);
         TS_ASSERT(renderGraph != nullptr);
 
         GN::rdg::Workflow * w1 = renderGraph->schedule("w1");
@@ -349,22 +349,19 @@ public:
         auto db = std::unique_ptr<GN::rdg::ArtifactDatabase>(GN::rdg::ArtifactDatabase::create(GN::rdg::ArtifactDatabase::CreateParameters {}));
         TS_ASSERT(db != nullptr);
 
-        auto initArgs = GN::AutoRef<GN::rdg::InitIntegerAction::A>::make();
-        size_t n = 0;
-        for (const GN::rdg::Arguments::ArtifactArgument * p = initArgs->firstArtifactArgument(); p; p = p->next())
-            ++n;
+        auto   initArgs = GN::AutoRef<GN::rdg::InitIntegerAction::A>::make();
+        size_t n        = 0;
+        for (const GN::rdg::Arguments::ArtifactArgument * p = initArgs->firstArtifactArgument(); p; p = p->next()) ++n;
         TS_ASSERT_EQUALS(n, 1u);
 
         auto addArgs = GN::AutoRef<GN::rdg::AddIntegersAction::A>::make();
-        n = 0;
-        for (const GN::rdg::Arguments::ArtifactArgument * p = addArgs->firstArtifactArgument(); p; p = p->next())
-            ++n;
+        n            = 0;
+        for (const GN::rdg::Arguments::ArtifactArgument * p = addArgs->firstArtifactArgument(); p; p = p->next()) ++n;
         TS_ASSERT_EQUALS(n, 3u);
 
         auto multiplyArgs = GN::AutoRef<GN::rdg::MultiplyIntegersAction::A>::make();
-        n = 0;
-        for (const GN::rdg::Arguments::ArtifactArgument * p = multiplyArgs->firstArtifactArgument(); p; p = p->next())
-            ++n;
+        n                 = 0;
+        for (const GN::rdg::Arguments::ArtifactArgument * p = multiplyArgs->firstArtifactArgument(); p; p = p->next()) ++n;
         TS_ASSERT_EQUALS(n, 3u);
     }
 

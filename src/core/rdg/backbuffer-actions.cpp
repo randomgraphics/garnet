@@ -21,17 +21,16 @@ public:
 
     ExecutionResult execute(TaskInfo & taskInfo, Arguments & arguments, ExecutionContext *) override {
         auto & submissionImpl = static_cast<SubmissionImpl &>(taskInfo.submission);
-        auto * a              = arguments.castTo<PrepareBackbuffer::A>();
+        auto   a              = arguments.castTo<PrepareBackbuffer::A>();
         if (!a) {
             GN_ERROR(sLogger)("PrepareBackbuffer::execute: invalid arguments");
             return FAILED;
         }
-        auto * backbufferRef = a->backbuffer.get();
-        if (!backbufferRef || !backbufferRef->get()) {
+        if (!a->backbuffer.value) {
             GN_ERROR(sLogger)("PrepareBackbuffer::execute: backbuffer not set");
             return FAILED;
         }
-        auto * common = backbufferRef->get()->castTo<BackbufferCommon>();
+        auto common = a->backbuffer.value->castTo<BackbufferCommon>();
         if (!common) {
             GN_ERROR(sLogger)("PrepareBackbuffer::execute: backbuffer is not BackbufferCommon");
             return FAILED;
@@ -69,12 +68,12 @@ public:
                 GN_ERROR(sLogger)("PresentBackbuffer::execute: invalid arguments");
                 return FAILED;
             }
-        auto * backbufferRef = a->backbuffer.get();
-        if (!backbufferRef || !backbufferRef->get()) GN_UNLIKELY {
+        auto & backbuffer = a->backbuffer.value;
+        if (!backbuffer) GN_UNLIKELY {
                 GN_ERROR(sLogger)("PresentBackbuffer::execute: backbuffer not set");
                 return FAILED;
             }
-        auto * common = backbufferRef->get()->castTo<BackbufferCommon>();
+        auto common = backbuffer->castTo<BackbufferCommon>();
         if (!common) GN_UNLIKELY {
                 GN_ERROR(sLogger)("PresentBackbuffer::execute: backbuffer is not BackbufferCommon");
                 return FAILED;

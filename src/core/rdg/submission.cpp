@@ -99,11 +99,17 @@ bool SubmissionImpl::validateAndBuildDependencyGraph() {
             if (mValidatedWorkflows[i]->sequence <= mValidatedWorkflows[j]->sequence) continue;
             bool conflict = false;
             for (const Artifact * a : workflowWrites[j]) {
-                if (workflowReads[i].count(a) || workflowWrites[i].count(a)) { conflict = true; break; }
+                if (workflowReads[i].count(a) || workflowWrites[i].count(a)) {
+                    conflict = true;
+                    break;
+                }
             }
             if (!conflict) {
                 for (const Artifact * a : workflowReads[j]) {
-                    if (workflowWrites[i].count(a)) { conflict = true; break; }
+                    if (workflowWrites[i].count(a)) {
+                        conflict = true;
+                        break;
+                    }
                 }
             }
             if (conflict) mDependencyGraph[i].append(j);
