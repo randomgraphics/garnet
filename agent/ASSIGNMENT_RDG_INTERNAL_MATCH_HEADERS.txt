@@ -1,13 +1,13 @@
 # Assignment: RDG internal code and tests — match new public headers
 
-Done (2025-02-23): Phase 1–2 implementation and tests in place; header fix (ReflectionRegister forward decl); submission builds deps from artifact usage; rdg-smoke types/initializers/discovery/assignment updated; testWorkflowSequenceOrder, testArgumentsArtifactArgumentsDiscovery, testArgumentDiscoveryCounts added. Build on Windows may still hit rapid-image/namespace std when building RDG PCH (pre-existing); run cit on Linux or after resolving that.
+Done (2025-02-24): Phase 1–3 complete. Full build and cit pass on Linux. Sample/smoke and core aligned to current public API: SingleArtifact/RenderTargetArgument use .value (no .set); ClearValues and DrawArguments are plain structs; rdg-smoke uses this not auto_reflection; vk-draw-actions uses std::make_optional(clearValues) and direct drawParams reference. Format applied.
 
 Goal: Update RDG implementation (src/core/rdg) and RDG tests (src/test/ut/rdg) so they compile, run, and behave correctly with the current public headers. Discovery uses Arguments::firstArtifactArgument() and ArtifactArgument::next() (linked list, zero allocation); workflow dependencies are derived from artifact usage at submit time; Workflow has no dependencies field; schedule() must assign sequence.
 
 Done looks like: Build passes, all RDG unit tests pass, submission builds workflow dependencies from task artifact usage (via firstArtifactArgument()/next()), and no references to removed APIs (e.g. forEachArtifactParameter, workflow->dependencies).
 
 --- PROGRESS (resume from "Last completed" / "In progress") ---
-Last completed: Task 2.3 (argument assignment and scenarios). Task 3.1 (full build/cit) blocked on Windows by rapid-image namespace issue in RDG PCH.
+Last completed: Task 3.2
 In progress: (none)
 --- END PROGRESS ---
 
@@ -74,12 +74,12 @@ PHASE 2: RDG unit test updates (match new Argument types and API)
 PHASE 3: Final verification
 ---
 
-[ ] Task 3.1 — Full build and CI
+[x] Task 3.1 — Full build and CI
     - build.py d and env/bin/cit.py. Fix any remaining lint or test failures in rdg or dependent code.
     - Unit test: cit passes (full test suite as the “test” for this task).
     - Verification: Build green; cit passes.
 
-[ ] Task 3.2 — Update this assignment file
+[x] Task 3.2 — Update this assignment file
     - Mark all tasks done; set Last completed to Task 3.2; add one-line “Done” summary and date at top.
 
 ---
@@ -89,5 +89,8 @@ Summary of files to touch
 - src/core/rdg/dependency-graph.cpp       (workflow sequence in schedule)
 - src/core/rdg/submission.cpp             (build deps from firstArtifactArgument()/next() + usage; remove workflow->dependencies)
 - src/core/rdg/submission.h               (only if needed for member/signature changes)
-- src/test/ut/rdg/rdg-smoke.cpp           (argument types, initializers, discovery tests, assignment API)
+- src/test/ut/rdg/rdg-smoke.cpp           (argument types, initializers, discovery tests, assignment API; auto_reflection -> this)
+- src/core/rdg/vk-draw-actions.cpp        (clearValues: std::make_optional; drawParams: direct reference)
+- src/sample/rdg/simple-triangle.cpp      (argument API: .value, plain structs)
+- src/test/rdg/smoke1.cpp                 (argument API: .value, plain structs, rt.colors.append)
 - agent/ASSIGNMENT_RDG_INTERNAL_MATCH_HEADERS.txt (this file; progress updates)

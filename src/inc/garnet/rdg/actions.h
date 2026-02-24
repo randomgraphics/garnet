@@ -74,11 +74,13 @@ private:
 /// This is the recommended first action to start rendering to a render target.
 /// It tells GPU to discard existing content thus avoid expensive image layout transitions.
 struct ClearRenderTarget : public Action {
-    GN_API static const uint64_t TYPE;
+    GN_API static const uint64_t         TYPE_ID;
+    inline static constexpr const char * TYPE_NAME = "ClearRenderTarget";
 
     struct A : public Arguments {
-        GN_API static const uint64_t TYPE;
-        A(): Arguments(TYPE) {}
+        GN_API static const uint64_t         TYPE_ID;
+        inline static constexpr const char * TYPE_NAME = "ClearRenderTarget::A";
+        A(): Arguments(TYPE_ID, TYPE_NAME) {}
         struct ClearValues {
             union {
                 float    f4[4];
@@ -104,11 +106,13 @@ protected:
 };
 
 struct PrepareBackbuffer : public Action {
-    GN_API static const uint64_t TYPE;
+    GN_API static const uint64_t         TYPE_ID;
+    inline static constexpr const char * TYPE_NAME = "PrepareBackbuffer";
 
     struct A : public Arguments {
-        GN_API static const uint64_t TYPE;
-        A(): Arguments(TYPE) {}
+        GN_API static const uint64_t         TYPE_ID;
+        inline static constexpr const char * TYPE_NAME = "PrepareBackbuffer::A";
+        A(): Arguments(TYPE_ID, TYPE_NAME) {}
 
         ReadWrite<Backbuffer> backbuffer = {this, "backbuffer"}; // Backbuffer to prepare
     };
@@ -125,11 +129,13 @@ protected:
 };
 
 struct PresentBackbuffer : public Action {
-    GN_API static const uint64_t TYPE;
+    GN_API static const uint64_t         TYPE_ID;
+    inline static constexpr const char * TYPE_NAME = "PresentBackbuffer";
 
     struct A : public Arguments {
-        GN_API static const uint64_t TYPE;
-        A(): Arguments(TYPE) {}
+        GN_API static const uint64_t         TYPE_ID;
+        inline static constexpr const char * TYPE_NAME = "PresentBackbuffer::A";
+        A(): Arguments(TYPE_ID, TYPE_NAME) {}
 
         ReadOnly<Backbuffer> backbuffer = {this, "backbuffer"}; // Backbuffer to present
     };
@@ -147,7 +153,8 @@ protected:
 
 /// Setup render states action for configuring GPU render pipeline state.
 struct SetupRenderStates : public Action {
-    GN_API static const uint64_t TYPE;
+    GN_API static const uint64_t         TYPE_ID;
+    inline static constexpr const char * TYPE_NAME = "SetupRenderStates";
 
     enum FillMode {
         FILL_SOLID = 0,
@@ -270,8 +277,9 @@ struct SetupRenderStates : public Action {
     };
 
     struct A : public Arguments {
-        GN_API static const uint64_t TYPE;
-        A(): Arguments(TYPE) {}
+        GN_API static const uint64_t         TYPE_ID;
+        inline static constexpr const char * TYPE_NAME = "SetupRenderStates::A";
+        A(): Arguments(TYPE_ID, TYPE_NAME) {}
         RenderStateDesc renderStates; ///< render state descriptor
     };
 
@@ -399,7 +407,8 @@ namespace GN::rdg {
 
 /// Generic draw action for quick GPU draw prototyping. It emphasizes ease of use and flexibility over extreme performance.
 struct GenericDraw : public ShaderAction {
-    GN_API static const uint64_t TYPE;
+    GN_API static const uint64_t         TYPE_ID;
+    inline static constexpr const char * TYPE_NAME = "GenericDraw";
 
     /// Draw parameters
     struct DrawArguments {
@@ -432,8 +441,9 @@ struct GenericDraw : public ShaderAction {
     };
 
     struct A : public Arguments {
-        GN_API static const uint64_t TYPE;
-        A(): Arguments(TYPE) {}
+        GN_API static const uint64_t         TYPE_ID;
+        inline static constexpr const char * TYPE_NAME = "GenericDraw::A";
+        A(): Arguments(TYPE_ID, TYPE_NAME) {}
 
         MeshParameter        mesh         = {this, "mesh"};
         BufferViewMap<>      buffers      = {this, "buffers"};      ///< buffer views, key is shader variable name
@@ -466,7 +476,8 @@ protected:
 
 /// Generic compute action for quick GPU compute prototyping. It emphasizes ease of use and flexibility over extreme performance.
 struct GenericCompute : public ShaderAction {
-    GN_API static const uint64_t TYPE;
+    GN_API static const uint64_t         TYPE_ID;
+    inline static constexpr const char * TYPE_NAME = "GenericCompute";
 
     /// Dispatch dimensions (thread group counts)
     struct DispatchSize {
@@ -476,8 +487,9 @@ struct GenericCompute : public ShaderAction {
     };
 
     struct A : public Arguments {
-        GN_API static const uint64_t TYPE;
-        A(): Arguments(TYPE) {}
+        GN_API static const uint64_t         TYPE_ID;
+        inline static constexpr const char * TYPE_NAME = "GenericCompute::A";
+        A(): Arguments(TYPE_ID, TYPE_NAME) {}
 
         BufferViewMap<>                         uniforms = {this, "uniforms"}; ///< uniform buffers
         TextureViewMap<>                        textures = {this, "textures"}; ///< textures

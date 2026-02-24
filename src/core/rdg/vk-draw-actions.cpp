@@ -43,7 +43,8 @@ class ClearRenderTargetVulkan : public ClearRenderTarget {
     AutoRef<GpuContextVulkan> mGpu;
 
 public:
-    ClearRenderTargetVulkan(ArtifactDatabase & db, const StrA & name, AutoRef<GpuContextVulkan> gpu): ClearRenderTarget(db, TYPE, name), mGpu(gpu) {}
+    ClearRenderTargetVulkan(ArtifactDatabase & db, const StrA & name, AutoRef<GpuContextVulkan> gpu)
+        : ClearRenderTarget(db, TYPE_ID, TYPE_NAME, name), mGpu(gpu) {}
 
     std::pair<ExecutionResult, ExecutionContext *> prepare(TaskInfo & taskInfo, Arguments & arguments) override {
         auto & submissionImpl = static_cast<SubmissionImpl &>(taskInfo.submission);
@@ -106,7 +107,7 @@ public:
         RenderPassManagerVulkan::RenderPassArguments rpa {
             .renderTarget  = a->renderTarget.value,
             .commandBuffer = cb.commandBuffer.handle(),
-            .clearValues   = a->clearValues.getAsOptional(),
+            .clearValues   = std::make_optional(a->clearValues),
         };
         auto rp = sc.renderPassManager.execute(taskInfo, rpa);
         if (!rp) GN_UNLIKELY {
@@ -224,7 +225,7 @@ class GenericDrawVulkan : public GenericDraw {
 
 public:
     GenericDrawVulkan(ArtifactDatabase & db, const StrA & name, AutoRef<GpuContextVulkan> gpu, const GenericDraw::CreateParameters & params)
-        : GenericDraw(db, TYPE, name), mGpu(gpu), mCreateParams(params) {
+        : GenericDraw(db, TYPE_ID, TYPE_NAME, name), mGpu(gpu), mCreateParams(params) {
         const auto dev = mGpu->device().handle();
         if (params.vs && params.vs->shaderBinary) mVertModule = createShaderModule(dev, params.vs->shaderBinary.get());
         if (params.ps && params.ps->shaderBinary) mFragModule = createShaderModule(dev, params.ps->shaderBinary.get());
@@ -346,11 +347,11 @@ public:
             }
             cb.commandBuffer.handle().bindPipeline(vk::PipelineBindPoint::eGraphics, mPipeline);
             // Task 7.2: mesh is optional; draw uses gl_VertexIndex in shader, no vertex buffer bound.
-            const auto *   dp            = a->drawParams.get();
-            const uint32_t vertexCount   = dp ? dp->vertexCount : 0;
-            const uint32_t instanceCount = dp ? dp->instanceCount : 1;
-            const uint32_t firstVertex   = dp ? dp->firstVertex : 0;
-            const uint32_t firstInstance = dp ? dp->firstInstance : 0;
+            const auto &   dp            = a->drawParams;
+            const uint32_t vertexCount   = dp.vertexCount;
+            const uint32_t instanceCount = dp.instanceCount;
+            const uint32_t firstVertex   = dp.firstVertex;
+            const uint32_t firstInstance = dp.firstInstance;
             if (vertexCount > 0) cb.commandBuffer.handle().draw(vertexCount, instanceCount, firstVertex, firstInstance);
         }
 

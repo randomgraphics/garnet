@@ -19,7 +19,7 @@ public:
     virtual Action::ExecutionResult present(SubmissionImpl & submission) = 0;
 
 protected:
-    BackbufferCommon(ArtifactDatabase & db, const StrA & name): Backbuffer(db, TYPE, name) {}
+    BackbufferCommon(ArtifactDatabase & db, const StrA & name): Backbuffer(db, TYPE_ID, TYPE_NAME, name) {}
 };
 
 } // namespace GN::rdg

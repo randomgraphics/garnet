@@ -50,9 +50,9 @@ public:
         if (!artifact) return 0;
         std::lock_guard<std::mutex> lock(mMutex);
 
-        TypeNameKey key {artifact->type, artifact->name};
+        TypeNameKey key {artifact->typeId, artifact->name};
         if (mArtifactsById.find(key) != mArtifactsById.end()) {
-            GN_ERROR(sLogger)("Failed to admit artifact: type and name already exist: type={}, name={}", artifact->type, artifact->name);
+            GN_ERROR(sLogger)("Failed to admit artifact: type and name already exist: type={}, name={}", artifact->typeId, artifact->name);
             return 0;
         }
 
@@ -87,7 +87,7 @@ public:
         if (it == mArtifactsBySeq.end()) { return false; }
 
         Artifact *  a = it->second;
-        TypeNameKey key {a->type, a->name};
+        TypeNameKey key {a->typeId, a->name};
         mArtifactsBySeq.erase(it);
         mArtifactsById.erase(key);
         return true;

@@ -15,7 +15,7 @@ namespace GN::rdg {
 ///    in a deferred rendering pipeline.
 class PrepareBackbufferImpl : public PrepareBackbuffer {
 public:
-    PrepareBackbufferImpl(ArtifactDatabase & db, const StrA & name): PrepareBackbuffer(db, TYPE, name) {}
+    PrepareBackbufferImpl(ArtifactDatabase & db, const StrA & name): PrepareBackbuffer(db, TYPE_ID, TYPE_NAME, name) {}
 
     std::pair<ExecutionResult, ExecutionContext *> prepare(TaskInfo &, Arguments &) override { return std::make_pair(PASSED, nullptr); }
 
@@ -57,7 +57,7 @@ GN_API AutoRef<PrepareBackbuffer> PrepareBackbuffer::create(ArtifactDatabase & d
 
 class PresentBackbufferImpl : public PresentBackbuffer {
 public:
-    PresentBackbufferImpl(ArtifactDatabase & db, const StrA & name): PresentBackbuffer(db, TYPE, name) {}
+    PresentBackbufferImpl(ArtifactDatabase & db, const StrA & name): PresentBackbuffer(db, TYPE_ID, TYPE_NAME, name) {}
 
     std::pair<ExecutionResult, ExecutionContext *> prepare(TaskInfo &, Arguments &) override { return std::make_pair(PASSED, nullptr); }
 

@@ -25,11 +25,12 @@ static inline uint64_t getTestTypeId() {
 
 // Define a custom artifact that holds an integer
 struct IntegerArtifact : public Artifact {
-    inline static const uint64_t TYPE = getTestTypeId();
+    inline static const uint64_t         TYPE_ID   = getTestTypeId();
+    inline static constexpr const char * TYPE_NAME = "IntegerArtifact";
 
     int value = 0;
 
-    IntegerArtifact(ArtifactDatabase & db, const StrA & name): Artifact(db, TYPE, name) {}
+    IntegerArtifact(ArtifactDatabase & db, const StrA & name): Artifact(db, TYPE_ID, TYPE_NAME, name) {}
 
     static GN::AutoRef<IntegerArtifact> create(ArtifactDatabase & db, const StrA & name) {
         auto * p = new IntegerArtifact(db, name);
@@ -43,11 +44,12 @@ struct IntegerArtifact : public Artifact {
 
 // Define an action to initialize an integer artifact
 struct InitIntegerAction : public Action {
-    inline static const uint64_t TYPE = getTestTypeId();
+    inline static const uint64_t         TYPE_ID   = getTestTypeId();
+    inline static constexpr const char * TYPE_NAME = "InitIntegerAction";
 
     int initValue = 0;
 
-    InitIntegerAction(ArtifactDatabase & db, const StrA & name): Action(db, TYPE, name) {}
+    InitIntegerAction(ArtifactDatabase & db, const StrA & name): Action(db, TYPE_ID, TYPE_NAME, name) {}
 
     static GN::AutoRef<InitIntegerAction> create(ArtifactDatabase & db, const StrA & name) {
         auto * p = new InitIntegerAction(db, name);
@@ -59,9 +61,10 @@ struct InitIntegerAction : public Action {
     }
 
     struct A : public Arguments {
-        inline static const uint64_t TYPE = getTestTypeId();
-        A(): Arguments(TYPE) {}
-        WriteOnly<IntegerArtifact> output = {auto_reflection, "output"};
+        inline static const uint64_t         TYPE_ID   = getTestTypeId();
+        inline static constexpr const char * TYPE_NAME = "InitIntegerAction::A";
+        A(): Arguments(TYPE_ID, TYPE_NAME) {}
+        WriteOnly<IntegerArtifact> output = {this, "output"};
     };
 
     std::pair<ExecutionResult, ExecutionContext *> prepare(TaskInfo &, Arguments &) override { return std::make_pair(PASSED, nullptr); }
@@ -84,9 +87,10 @@ struct InitIntegerAction : public Action {
 
 // Define an action to add two integers
 struct AddIntegersAction : public Action {
-    inline static const uint64_t TYPE = getTestTypeId();
+    inline static const uint64_t         TYPE_ID   = getTestTypeId();
+    inline static constexpr const char * TYPE_NAME = "AddIntegersAction";
 
-    AddIntegersAction(ArtifactDatabase & db, const StrA & name): Action(db, TYPE, name) {}
+    AddIntegersAction(ArtifactDatabase & db, const StrA & name): Action(db, TYPE_ID, TYPE_NAME, name) {}
 
     static GN::AutoRef<AddIntegersAction> create(ArtifactDatabase & db, const StrA & name) {
         auto * p = new AddIntegersAction(db, name);
@@ -98,11 +102,12 @@ struct AddIntegersAction : public Action {
     }
 
     struct A : public Arguments {
-        inline static const uint64_t TYPE = getTestTypeId();
-        A(): Arguments(TYPE) {}
-        ReadOnly<IntegerArtifact>  input1 = {auto_reflection, "input1"};
-        ReadOnly<IntegerArtifact>  input2 = {auto_reflection, "input2"};
-        WriteOnly<IntegerArtifact> output = {auto_reflection, "output"};
+        inline static const uint64_t         TYPE_ID   = getTestTypeId();
+        inline static constexpr const char * TYPE_NAME = "AddIntegersAction::A";
+        A(): Arguments(TYPE_ID, TYPE_NAME) {}
+        ReadOnly<IntegerArtifact>  input1 = {this, "input1"};
+        ReadOnly<IntegerArtifact>  input2 = {this, "input2"};
+        WriteOnly<IntegerArtifact> output = {this, "output"};
     };
 
     std::pair<ExecutionResult, ExecutionContext *> prepare(TaskInfo &, Arguments &) override { return std::make_pair(PASSED, nullptr); }
@@ -128,9 +133,10 @@ struct AddIntegersAction : public Action {
 
 // Define an action to multiply two integers
 struct MultiplyIntegersAction : public Action {
-    inline static const uint64_t TYPE = getTestTypeId();
+    inline static const uint64_t         TYPE_ID   = getTestTypeId();
+    inline static constexpr const char * TYPE_NAME = "MultiplyIntegersAction";
 
-    MultiplyIntegersAction(ArtifactDatabase & db, const StrA & name): Action(db, TYPE, name) {}
+    MultiplyIntegersAction(ArtifactDatabase & db, const StrA & name): Action(db, TYPE_ID, TYPE_NAME, name) {}
 
     static GN::AutoRef<MultiplyIntegersAction> create(ArtifactDatabase & db, const StrA & name) {
         auto * p = new MultiplyIntegersAction(db, name);
@@ -142,11 +148,12 @@ struct MultiplyIntegersAction : public Action {
     }
 
     struct A : public Arguments {
-        inline static const uint64_t TYPE = getTestTypeId();
-        A(): Arguments(TYPE) {}
-        ReadOnly<IntegerArtifact>  input1 = {auto_reflection, "input1"};
-        ReadOnly<IntegerArtifact>  input2 = {auto_reflection, "input2"};
-        WriteOnly<IntegerArtifact> output = {auto_reflection, "output"};
+        inline static const uint64_t         TYPE_ID   = getTestTypeId();
+        inline static constexpr const char * TYPE_NAME = "MultiplyIntegersAction::A";
+        A(): Arguments(TYPE_ID, TYPE_NAME) {}
+        ReadOnly<IntegerArtifact>  input1 = {this, "input1"};
+        ReadOnly<IntegerArtifact>  input2 = {this, "input2"};
+        WriteOnly<IntegerArtifact> output = {this, "output"};
     };
 
     std::pair<ExecutionResult, ExecutionContext *> prepare(TaskInfo &, Arguments &) override { return std::make_pair(PASSED, nullptr); }
@@ -305,6 +312,11 @@ public:
         auto submissionResult = submission->result();
         TS_ASSERT_EQUALS(submissionResult.executionResult, GN::rdg::Action::PASSED);
 
+        // Dump submission state to stdout
+        GN::StrA dumpStr = submission->dumpState();
+        fprintf(stdout, "%s", dumpStr.c_str());
+        fflush(stdout);
+
         // Verify result
         TS_ASSERT_EQUALS(result->value, 9);
 
@@ -378,7 +390,7 @@ public:
         TS_ASSERT(duplicate == nullptr);
 
         // First instance still valid and fetchable
-        auto fetched = db->fetch(GN::rdg::IntegerArtifact::TYPE, "unique_name");
+        auto fetched = db->fetch(GN::rdg::IntegerArtifact::TYPE_ID, "unique_name");
         TS_ASSERT(fetched != nullptr);
         TS_ASSERT(fetched->sequence == first->sequence);
     }

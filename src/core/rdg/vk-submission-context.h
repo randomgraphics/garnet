@@ -11,14 +11,15 @@ namespace GN::rdg {
 /// on demand when being asked for by a vulkan specific action, and
 /// destroyed when the submission is finished.
 struct SubmissionContextVulkan : public SubmissionImpl::Context {
-    inline static const uint64_t TYPE = getNextUniqueTypeId();
+    inline static const uint64_t         TYPE_ID   = getNextUniqueTypeId();
+    inline static constexpr const char * TYPE_NAME = "SubmissionContextVulkan";
 
     static SubmissionContextVulkan & get(SubmissionImpl & submission, AutoRef<GpuContextVulkan> gpu) {
         return submission.ensureSubmissionContext<SubmissionContextVulkan>(submission, gpu);
     }
 
     SubmissionContextVulkan(SubmissionImpl & submission_, AutoRef<GpuContextVulkan> gpu_)
-        : SubmissionImpl::Context(TYPE), submission(submission_), gpu(gpu_), renderPassManager({gpu_}), commandBufferManager({gpu_}) {}
+        : SubmissionImpl::Context(TYPE_ID, TYPE_NAME), submission(submission_), gpu(gpu_), renderPassManager({gpu_}), commandBufferManager({gpu_}) {}
 
     SubmissionImpl &           submission;
     AutoRef<GpuContextVulkan>  gpu;

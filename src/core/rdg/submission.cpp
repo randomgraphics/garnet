@@ -159,6 +159,126 @@ DynaArray<size_t> SubmissionImpl::topologicalSort() {
     return result;
 }
 
+static const char * executionResultStr(Action::ExecutionResult r) {
+    switch (r) {
+    case Action::ExecutionResult::PASSED:
+        return "PASSED";
+    case Action::ExecutionResult::WARNING:
+        return "WARNING";
+    case Action::ExecutionResult::FAILED:
+        return "FAILED";
+    default:
+        return "?";
+    }
+}
+
+static StrA usageFlagStr(Arguments::UsageFlag u) {
+    using F = Arguments::UsageFlag;
+    if (u == F::None) return "None";
+    StrA s;
+    if ((u & F::Optional) != F::None) s += "Optional|";
+    if ((u & F::Reading) != F::None) s += "Reading|";
+    if ((u & F::Writing) != F::None) s += "Writing|";
+    if (!s.empty()) s.popback(); // trailing |
+    return s;
+}
+
+StrA SubmissionImpl::dumpState() const {
+    std::lock_guard<std::mutex> lock(mStateMutex);
+
+    StrA out;
+    out += "========== Submission State ==========\n";
+    out += StrA::format("  Finished:        {}\n", mRunResult.has_value() ? "yes" : "no");
+    if (mRunResult) {
+        out += StrA::format("  Overall result:  {}\n", executionResultStr(*mRunResult));
+    } else {
+        out += "  Overall result:  (not yet completed or not yet retrieved)\n";
+    }
+    out += StrA::format("  Workflows:       {} total, {} validated\n", mWorkflows.size(), mValidatedWorkflows.size());
+    out += StrA::format("  Tasks recorded:  {}\n", mTaskStates.size());
+    out += "--------------------------------------\n";
+
+    if (mExecutionOrder.empty() && mTaskStates.empty()) {
+        out += "  (No task state yet - submission may not have started or validation failed.)\n";
+        out += "==========================================\n";
+        return out;
+    }
+
+    // Dump by execution order: for each workflow in mExecutionOrder, list its tasks from mTaskStates.
+    for (size_t orderIdx = 0; orderIdx < mExecutionOrder.size(); ++orderIdx) {
+        size_t wfIdx = mExecutionOrder[orderIdx];
+        if (wfIdx >= mValidatedWorkflows.size()) continue;
+        Workflow * w = mValidatedWorkflows[wfIdx];
+        if (!w) continue;
+
+        out += StrA::format("\n--- Workflow [{}] \"{}\" (sequence={}, order={}) ---\n", wfIdx, w->name.empty() ? "[unnamed]" : w->name.c_str(),
+                            (long long) w->sequence, (unsigned long) orderIdx);
+
+        // Dependencies (workflows that must run before this one)
+        if (wfIdx < mDependencyGraph.size() && !mDependencyGraph[wfIdx].empty()) {
+            out += "  Depends on workflows: ";
+            for (size_t k = 0; k < mDependencyGraph[wfIdx].size(); ++k) {
+                if (k > 0) out += ", ";
+                out += StrA::format("{}", (unsigned long) mDependencyGraph[wfIdx][k]);
+            }
+            out += "\n";
+        }
+
+        // Tasks in this workflow: iterate actual tasks to get arguments, match ts by name for state.
+        const StrA wfName = w->name.empty() ? StrA("[unnamed workflow]") : w->name;
+        for (size_t taskIdx = 0; taskIdx < w->tasks.size(); ++taskIdx) {
+            const Workflow::Task & task  = w->tasks[taskIdx];
+            const StrA             tName = task.name.empty() ? StrA("[unnamed task]") : task.name;
+
+            // Find matching TaskExecutionState
+            const TaskExecutionState * ts = nullptr;
+            for (const auto & t : mTaskStates) {
+                if (t.workflowName == wfName && t.taskName == tName) {
+                    ts = &t;
+                    break;
+                }
+            }
+
+            out += StrA::format("  Task [{}] \"{}\":\n", ts ? (unsigned long) ts->index : (unsigned long) taskIdx, tName.empty() ? "[unnamed]" : tName.c_str());
+            if (ts) {
+                out += StrA::format("      validation passed:  {}\n", ts->validationPassed ? "yes" : "no");
+                out += StrA::format("      prepare:             {}\n", ts->prepareDone ? executionResultStr(ts->prepareResult) : "(skipped/not run)");
+                out += StrA::format("      execute:             {}\n", ts->executeDone ? executionResultStr(ts->executeResult) : "(skipped/not run)");
+                out += StrA::format("      has warning:         {}\n",
+                                    (ts->prepareResult == Action::ExecutionResult::WARNING || ts->executeResult == Action::ExecutionResult::WARNING) ? "yes"
+                                                                                                                                                     : "no");
+                out += StrA::format("      finished:             {}\n", ts->executeDone ? "yes" : "no");
+            }
+
+            // Artifact arguments: arg name, usage; per-artifact: type (id & name), artifact name, sequence
+            if (task.arguments) {
+                const Arguments * args = task.arguments.get();
+                out += "      artifact arguments:\n";
+                for (const Arguments::ArtifactArgument * p = args->firstArtifactArgument(); p; p = p->next()) {
+                    const char * argName  = p->name() ? p->name() : "[unnamed]";
+                    StrA         usageStr = usageFlagStr(p->usage());
+                    const auto   arts     = p->artifacts();
+                    if (arts.size() == 0) {
+                        out += StrA::format("        - \"{}\"  usage={}  (no artifact bound)\n", argName, usageStr.c_str());
+                    } else {
+                        out += StrA::format("        - \"{}\"  usage={}\n", argName, usageStr.c_str());
+                        for (size_t k = 0; k < arts.size(); ++k) {
+                            const Artifact * a = arts[k];
+                            if (!a) continue;
+                            const char * typeName = a->typeName ? a->typeName : "(unknown)";
+                            out += StrA::format("            artifact: type=0x{:x} ({}), name=\"{}\", sequence={}\n", (unsigned long) a->typeId, typeName,
+                                                a->name.c_str(), (unsigned long) a->sequence);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    out += "\n==========================================\n";
+    return out;
+}
+
 Submission::Result SubmissionImpl::run(Parameters) {
     cleanup(false); // clean up any residual data from previous runs, but keep pending workflows.
 
@@ -171,6 +291,10 @@ Submission::Result SubmissionImpl::run(Parameters) {
     // shortcut for empty workflows.
     if (mWorkflows.empty()) {
         GN_VERBOSE(sLogger)("No workflows to execute, returning PASSED.");
+        std::lock_guard<std::mutex> lock(mStateMutex);
+        mTaskStates.clear();
+        mExecutionOrder.clear();
+        mRunResult = Action::ExecutionResult::PASSED;
         return setResult(Action::ExecutionResult::PASSED);
     }
 
@@ -178,6 +302,10 @@ Submission::Result SubmissionImpl::run(Parameters) {
         // step 1: validate and build dependency graph.
         if (!validateAndBuildDependencyGraph()) {
             cleanup();
+            std::lock_guard<std::mutex> lock(mStateMutex);
+            mTaskStates.clear();
+            mExecutionOrder.clear();
+            mRunResult = Action::ExecutionResult::FAILED;
             return setResult(Action::ExecutionResult::FAILED);
         }
 
@@ -186,9 +314,18 @@ Submission::Result SubmissionImpl::run(Parameters) {
         if (executionOrder.empty()) {
             GN_ERROR(sLogger)("Topological sort failed - circular dependency detected");
             cleanup();
+            std::lock_guard<std::mutex> lock(mStateMutex);
+            mTaskStates.clear();
+            mExecutionOrder.clear();
+            mRunResult = Action::ExecutionResult::FAILED;
             return setResult(Action::ExecutionResult::FAILED);
         }
         GN_ASSERT(executionOrder.size() == mValidatedWorkflows.size());
+
+        {
+            std::lock_guard<std::mutex> lock(mStateMutex);
+            mExecutionOrder = executionOrder;
+        }
 
         // step 3: prepare all tasks in topological order.
         struct PendingTask {
@@ -204,18 +341,30 @@ Submission::Result SubmissionImpl::run(Parameters) {
             for (size_t taskIdx = 0; taskIdx < workflow->tasks.size(); ++taskIdx) {
                 Workflow::Task & task = workflow->tasks[taskIdx];
                 GN_ASSERT(task.action && task.arguments); // have been validated in validateTask().
-                pendingTasks.append(PendingTask {.task    = &task,
-                                                 .info    = TaskInfo {.submission = *this,
-                                                                      .workflow   = workflow->name.empty() ? StrA("[unnamed workflow]") : workflow->name,
-                                                                      .task       = task.name.empty() ? StrA("[unnamed task]") : task.name,
-                                                                      .index      = (uint64_t) pendingTasks.size()},
-                                                 .context = {}});
+                StrA     wfName = workflow->name.empty() ? StrA("[unnamed workflow]") : workflow->name;
+                StrA     tName  = task.name.empty() ? StrA("[unnamed task]") : task.name;
+                uint64_t idx    = (uint64_t) pendingTasks.size();
+                pendingTasks.append(
+                    PendingTask {.task = &task, .info = TaskInfo {.submission = *this, .workflow = wfName, .task = tName, .index = idx}, .context = {}});
+                {
+                    std::lock_guard<std::mutex> lock(mStateMutex);
+                    mTaskStates.append(TaskExecutionState {.workflowName = wfName, .taskName = tName, .index = idx, .validationPassed = true});
+                }
                 auto & pt = pendingTasks.back();
                 GN_VERBOSE(sLogger)("Preparing workflow '{}' task '{}'", pt.info.workflow, pt.info.task);
                 auto [result, context] = task.action->prepare(pt.info, *task.arguments);
                 pt.context = std::unique_ptr<Action::ExecutionContext>(context); // need to do this before error check to ensure it is released even on error.
+                {
+                    std::lock_guard<std::mutex> lock(mStateMutex);
+                    if (pt.info.index < mTaskStates.size()) {
+                        mTaskStates[pt.info.index].prepareDone   = true;
+                        mTaskStates[pt.info.index].prepareResult = result;
+                    }
+                }
                 if (result == Action::ExecutionResult::FAILED) {
                     GN_ERROR(sLogger)("Workflow '{}' task '{}' preparation failed", pt.info.workflow, pt.info.task);
+                    std::lock_guard<std::mutex> lock2(mStateMutex);
+                    mRunResult = Action::ExecutionResult::FAILED;
                     return setResult(Action::ExecutionResult::FAILED);
                 }
                 if (result == Action::ExecutionResult::WARNING) {
@@ -228,7 +377,11 @@ Submission::Result SubmissionImpl::run(Parameters) {
         // Emit prepare signal and check for errors.
         auto signalResults = allTasksPrepared.emit(*this);
         for (auto r : signalResults.results) {
-            if (r == Action::ExecutionResult::FAILED) { return setResult(Action::ExecutionResult::FAILED); }
+            if (r == Action::ExecutionResult::FAILED) {
+                std::lock_guard<std::mutex> lock(mStateMutex);
+                mRunResult = Action::ExecutionResult::FAILED;
+                return setResult(Action::ExecutionResult::FAILED);
+            }
             if (r == Action::ExecutionResult::WARNING) { hasWarning = true; }
         }
 
@@ -237,8 +390,17 @@ Submission::Result SubmissionImpl::run(Parameters) {
             auto & pt = pendingTasks[i];
             GN_VERBOSE(sLogger)("Executing workflow '{}' task '{}'", pt.info.workflow, pt.info.task);
             auto result = pt.task->action->execute(pt.info, *pt.task->arguments, pt.context.get());
+            {
+                std::lock_guard<std::mutex> lock(mStateMutex);
+                if (pt.info.index < mTaskStates.size()) {
+                    mTaskStates[pt.info.index].executeDone   = true;
+                    mTaskStates[pt.info.index].executeResult = result;
+                }
+            }
             if (result == Action::ExecutionResult::FAILED) {
                 GN_ERROR(sLogger)("Workflow '{}' task '{}' execution failed", pt.info.workflow, pt.info.task);
+                std::lock_guard<std::mutex> lock(mStateMutex);
+                mRunResult = Action::ExecutionResult::FAILED;
                 return setResult(Action::ExecutionResult::FAILED);
             }
             if (result == Action::ExecutionResult::WARNING) {
@@ -250,19 +412,36 @@ Submission::Result SubmissionImpl::run(Parameters) {
         // Emit execute signal and check for errors.
         signalResults = allTasksExecuted.emit(*this);
         for (auto r : signalResults.results) {
-            if (r == Action::ExecutionResult::FAILED) { return setResult(Action::ExecutionResult::FAILED); }
+            if (r == Action::ExecutionResult::FAILED) {
+                std::lock_guard<std::mutex> lock(mStateMutex);
+                mRunResult = Action::ExecutionResult::FAILED;
+                return setResult(Action::ExecutionResult::FAILED);
+            }
             if (r == Action::ExecutionResult::WARNING) { hasWarning = true; }
         }
 
         // Done
-        return setResult(hasWarning ? Action::ExecutionResult::WARNING : Action::ExecutionResult::PASSED);
+        Action::ExecutionResult finalResult = hasWarning ? Action::ExecutionResult::WARNING : Action::ExecutionResult::PASSED;
+        {
+            std::lock_guard<std::mutex> lock(mStateMutex);
+            mRunResult = finalResult;
+        }
+        return setResult(finalResult);
     } catch (const std::exception & e) {
         GN_ERROR(sLogger)("Exception occurred during submission: {}", e.what());
         cleanup();
+        std::lock_guard<std::mutex> lock(mStateMutex);
+        mTaskStates.clear();
+        mExecutionOrder.clear();
+        mRunResult = Action::ExecutionResult::FAILED;
         return setResult(Action::ExecutionResult::FAILED);
     } catch (...) {
         GN_ERROR(sLogger)("Exception occurred during submission.");
         cleanup();
+        std::lock_guard<std::mutex> lock(mStateMutex);
+        mTaskStates.clear();
+        mExecutionOrder.clear();
+        mRunResult = Action::ExecutionResult::FAILED;
         return setResult(Action::ExecutionResult::FAILED);
     }
 }

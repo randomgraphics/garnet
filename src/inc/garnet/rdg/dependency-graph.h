@@ -21,22 +21,27 @@ namespace GN::rdg {
 struct ArtifactDatabase;
 
 struct RuntimeType {
-    const uint64_t type;
+    /// The unique identifier of the type.
+    const uint64_t typeId;
+
+    /// The name of the type. For debugging and logging. No need to be unique.
+    /// Must be a static constant string literal.
+    const char * const typeName;
 
     template<typename T>
     T * castTo() {
-        if (type == T::TYPE) GN_LIKELY return static_cast<T *>(this);
+        if (typeId == T::TYPE_ID) GN_LIKELY return static_cast<T *>(this);
         return nullptr;
     }
 
     template<typename T>
     const T * castTo() const {
-        if (type == T::TYPE) GN_LIKELY return static_cast<const T *>(this);
+        if (typeId == T::TYPE_ID) GN_LIKELY return static_cast<const T *>(this);
         return nullptr;
     }
 
 protected:
-    RuntimeType(uint64_t type): type(type) {}
+    RuntimeType(uint64_t typeId_, const char * typeName_): typeId(typeId_), typeName(typeName_) {}
 };
 
 /// Artifact represents an atomic resource that can be used as input or output of a task.
@@ -49,7 +54,7 @@ struct Artifact : public RefCounter, public RuntimeType {
 
 protected:
     /// Constructor
-    Artifact(ArtifactDatabase & db, uint64_t type, const StrA & name);
+    Artifact(ArtifactDatabase & db, uint64_t typeId, const char * typeName, const StrA & name);
 };
 
 template<class T>
@@ -85,8 +90,8 @@ protected:
     ArtifactDatabase() = default;
 };
 
-inline Artifact::Artifact(ArtifactDatabase & db, uint64_t type, const StrA & name)
-    : RuntimeType(type), database(db), name(name), sequence(database.admit(this)) {}
+inline Artifact::Artifact(ArtifactDatabase & db, uint64_t typeId, const char * typeName, const StrA & name)
+    : RuntimeType(typeId, typeName), database(db), name(name), sequence(database.admit(this)) {}
 
 /// Base class of arguments for an action. This is not a subclass of Artifact, since it is means to be one time use: create, pass to action, and forget.
 class Arguments : public RefCounter, public RuntimeType {
@@ -226,7 +231,7 @@ struct Action : public Artifact {
         virtual ~ExecutionContext() = default;
 
     protected:
-        ExecutionContext(uint64_t type): RuntimeType(type) {}
+        ExecutionContext(uint64_t typeId, const char * typeName): RuntimeType(typeId, typeName) {}
     };
 
     /// Prepare for execution. Returns success code and an optional execution context that will be later passed to execute().
@@ -304,6 +309,10 @@ struct Submission : RefCounter {
 
     /// Get execution result of the submitted workflows. Will block calling thread until all workflows are finished.
     virtual Result result() = 0;
+
+    /// Dump detailed state and status of the submission to a human-readable string.
+    /// Includes per-task name, execution status, dependencies, validation, warnings, skipped, and finished state.
+    virtual StrA dumpState() const = 0;
 
 protected:
     Submission() = default;
