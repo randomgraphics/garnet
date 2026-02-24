@@ -91,15 +91,6 @@ inline Artifact::Artifact(ArtifactDatabase & db, uint64_t type, const StrA & nam
 
 /// Base class of arguments for an action. This is not a subclass of Artifact, since it is means to be one time use: create, pass to action, and forget.
 class Arguments : public RefCounter, public RuntimeType {
-
-protected:
-    struct ReflectionRegister {
-        // \enlist the argument to internal reflection registry.
-        void reflect(void * arg, const char * name);
-    };
-
-    ReflectionRegister auto_reflection;
-
 public:
     enum class UsageFlag {
         None     = 0,
@@ -121,29 +112,24 @@ public:
     struct Argument {
         virtual ~Argument() {}
 
-        UsageFlag usageFlags() const { return mUsageFlags; }
-
-        bool isOptional() const { return (mUsageFlags & UsageFlag::Optional) != UsageFlag::None; }
-        bool isRequired() const { return (mUsageFlags & UsageFlag::Optional) == UsageFlag::None; }
-        bool isReading() const { return (mUsageFlags & UsageFlag::Reading) != UsageFlag::None; }
-        bool isWriting() const { return (mUsageFlags & UsageFlag::Writing) != UsageFlag::None; }
+        const char * name() const { return mName; }
+        UsageFlag    usage() const { return mUsage; }
 
         virtual SafeArrayAccessor<const Artifact *> artifacts() const = 0;
 
     protected:
-        Argument(UsageFlag usageFlags): mUsageFlags(usageFlags) {}
+        Argument(ReflectionRegister & rr, const char * name, UsageFlag usageFlags): mName(name), mUsage(usageFlags) { rr.enlist(this); }
 
     private:
-        UsageFlag mUsageFlags;
+        const char * mName;
+        UsageFlag    mUsage;
     };
 
     /// Base class of all parameters that references one or more artifacts
     template<UsageFlag UFlags = UsageFlag::None>
-    struct ArtifactArgument : public Argument {
-
+    struct ArtifactArgument : Argument {
     protected:
-        ArtifactArgument(ReflectionRegister & rr, const char * name) : Argument(UFlags) { rr.reflect(this, name); }
-        ArtifactArgument(ReflectionRegister & rr, const char * name, UsageFlag usageFlags) : Argument(usageFlags) { rr.reflect(this, name); }
+        ArtifactArgument(ReflectionRegister & rr, const char * name) : Argument(rr, name, UFlags) {}
     };
 
     /// Represents a single artifact parameter of an action.
@@ -184,13 +170,26 @@ public:
     template<typename T, size_t COUNT, UsageFlag UFlags = UsageFlag::None>
     using ReadWriteArray = ArrayArtifact<T, COUNT, UFlags | UsageFlag::Reading | UsageFlag::Writing>;
 
-    /// Enumerate all artifact parameters so submission/schedule can discover referenced artifacts and their usage (read/write).
-    /// Callback is invoked once per artifact parameter; use param.artifacts() and param.usageFlags() for dependency analysis.
-    /// Default implementation does nothing; override in concrete Argument types (or use reflection) to support discovery.
-    virtual void forEachArtifactParameter(std::function<void(Argument const &)>) const {}
+    SafeArrayAccessor<const Argument *> arguments() const { return auto_reflection.enlistments; }
 
 protected:
+    struct ArgumentReflection {
+        DynaArray<Argument *> enlistments;
+
+        void enlist(Argument * arg) {
+            GN_ASSERT(arg);
+            GN_ASSERT(arg->name() != nullptr);
+            GN_ASSERT(arg->usage() != UsageFlag::None);
+            enlistments.append(arg);
+        }
+    };
+
     Arguments(uint64_t type): RuntimeType(type) {}
+
+    /// This is the member variable that register artifact arguments defined in subclasses to an internal list
+    /// that submission class can query.
+    ArgumentReflection auto_reflection;
+
 };
 
 struct Submission;

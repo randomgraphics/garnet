@@ -446,8 +446,8 @@ struct GenericDraw : public ShaderAction {
         BufferViewMap         buffers      = {auto_reflection, "buffers"};      ///< buffer views, key is shader variable name
         ImageViewMap          images       = {auto_reflection, "images"};       ///< image views, key is shader variable name
         TextureViewMap        textures     = {auto_reflection, "textures"};     ///< texture views, key is shader variable name
-        RenderTargetArgument renderTarget = {auto_reflection, "renderTarget"}; ///< render target
-        DrawArguments        drawParams;                                       ///< draw parameters
+        RenderTargetArgument  renderTarget = {auto_reflection, "renderTarget"}; ///< render target
+        DrawArguments         drawParams;                                       ///< draw parameters
     };
 
     /// Shader stage description
