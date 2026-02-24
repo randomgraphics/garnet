@@ -89,12 +89,12 @@ int main(int, const char **) {
         if (renderWorkflow) {
             renderWorkflow->name = "Render";
 
-            // Task: Prepare backbuffer
-            auto prepareTask   = Workflow::Task("Prepare");
-            prepareTask.action = prepareAction;
-            auto prepareArgs   = AutoRef<PrepareBackbuffer::A>(new PrepareBackbuffer::A());
-            prepareArgs->backbuffer.set(backbuffer);
-            prepareTask.arguments = prepareArgs;
+            // Task: Prepare backbufferg
+            auto prepareTask              = Workflow::Task("Prepare");
+            prepareTask.action            = prepareAction;
+            auto prepareArgs              = AutoRef<PrepareBackbuffer::A>(new PrepareBackbuffer::A());
+            prepareArgs->backbuffer.value = backbuffer;
+            prepareTask.arguments         = prepareArgs;
             renderWorkflow->tasks.append(prepareTask);
 
             // Task: Clear render target (clearValues + renderTarget; no depth/stencil clear for solid triangle)
@@ -108,35 +108,34 @@ int main(int, const char **) {
             clearVals.colors[0].f4[3] = 1.0f;
             clearVals.depth           = 1.0f;
             clearVals.stencil         = 0;
-            clearArgs->clearValues.set(clearVals);
+            clearArgs->clearValues    = clearVals;
             RenderTarget clearRt {};
             clearRt.colors.append(RenderTarget::ColorTarget {.target = backbuffer, .subresourceIndex = {}});
-            clearArgs->renderTarget.set(clearRt);
-            clearTask.arguments = clearArgs;
+            clearArgs->renderTarget.value = clearRt;
+            clearTask.arguments           = clearArgs;
             renderWorkflow->tasks.append(clearTask);
 
             // Task: Draw solid triangle (GenericDraw; pipeline created in Phase 6)
-            auto drawTask                    = Workflow::Task("DrawTriangle");
-            drawTask.action                  = genericDrawAction;
-            auto                    drawArgs = AutoRef<GenericDraw::A>(new GenericDraw::A());
-            GenericDraw::DrawParams dp {};
-            dp.vertexCount   = 3;
-            dp.instanceCount = 1;
-            dp.firstVertex   = 0;
-            dp.firstInstance = 0;
-            drawArgs->drawParams.set(dp);
+            auto drawTask                         = Workflow::Task("DrawTriangle");
+            drawTask.action                       = genericDrawAction;
+            auto                         drawArgs = AutoRef<GenericDraw::A>(new GenericDraw::A());
+            GenericDraw::DrawArguments & dp       = drawArgs->drawParams;
+            dp.vertexCount                        = 3;
+            dp.instanceCount                      = 1;
+            dp.firstVertex                        = 0;
+            dp.firstInstance                      = 0;
             RenderTarget drawRt {};
             drawRt.colors.append(RenderTarget::ColorTarget {.target = backbuffer, .subresourceIndex = {}});
-            drawArgs->renderTarget.set(drawRt);
-            drawTask.arguments = drawArgs;
+            drawArgs->renderTarget.value = drawRt;
+            drawTask.arguments           = drawArgs;
             renderWorkflow->tasks.append(drawTask);
 
             // Task: Present backbuffer
-            auto presentTask   = Workflow::Task("Present");
-            presentTask.action = presentAction;
-            auto presentArgs   = AutoRef<PresentBackbuffer::A>(new PresentBackbuffer::A());
-            presentArgs->backbuffer.set(backbuffer);
-            presentTask.arguments = presentArgs;
+            auto presentTask              = Workflow::Task("Present");
+            presentTask.action            = presentAction;
+            auto presentArgs              = AutoRef<PresentBackbuffer::A>(new PresentBackbuffer::A());
+            presentArgs->backbuffer.value = backbuffer;
+            presentTask.arguments         = presentArgs;
             renderWorkflow->tasks.append(presentTask);
         }
 

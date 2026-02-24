@@ -51,36 +51,35 @@ int main(int, const char **) {
     }
 
     // Task: Prepare backbuffer
-    auto prepareTask   = Workflow::Task("Prepare backbuffer");
-    prepareTask.action = prepareAction;
-    auto prepareArgs   = AutoRef<PrepareBackbuffer::A>(new PrepareBackbuffer::A());
-    prepareArgs->backbuffer.set(backbuffer);
-    prepareTask.arguments = prepareArgs;
+    auto prepareTask              = Workflow::Task("Prepare backbuffer");
+    prepareTask.action            = prepareAction;
+    auto prepareArgs              = AutoRef<PrepareBackbuffer::A>(new PrepareBackbuffer::A());
+    prepareArgs->backbuffer.value = backbuffer;
+    prepareTask.arguments         = prepareArgs;
     renderWorkflow->tasks.append(prepareTask);
 
     // Task: Clear render target (solid red for easy verification of readback/save)
-    auto clearTask        = Workflow::Task("Clear render target");
-    clearTask.action      = clearAction;
-    auto clearArgs        = AutoRef<ClearRenderTarget::A>(new ClearRenderTarget::A());
-    auto color            = ClearRenderTarget::A::ClearValues {};
-    color.colors[0].f4[0] = 1.0f; // R
-    color.colors[0].f4[1] = 0.0f; // G
-    color.colors[0].f4[2] = 0.0f; // B
-    color.colors[0].f4[3] = 1.0f; // A
-    clearArgs->clearValues.set(color);
-    auto rt = RenderTarget {};
-    rt.colors.resize(1);
-    rt.colors[0].target = backbuffer;
-    clearArgs->renderTarget.set(rt);
-    clearTask.arguments = clearArgs;
+    auto clearTask         = Workflow::Task("Clear render target");
+    clearTask.action       = clearAction;
+    auto clearArgs         = AutoRef<ClearRenderTarget::A>(new ClearRenderTarget::A());
+    auto color             = ClearRenderTarget::A::ClearValues {};
+    color.colors[0].f4[0]  = 1.0f; // R
+    color.colors[0].f4[1]  = 0.0f; // G
+    color.colors[0].f4[2]  = 0.0f; // B
+    color.colors[0].f4[3]  = 1.0f; // A
+    clearArgs->clearValues = color;
+    auto rt                = RenderTarget {};
+    rt.colors.append(RenderTarget::ColorTarget {.target = backbuffer, .subresourceIndex = {}});
+    clearArgs->renderTarget.value = rt;
+    clearTask.arguments           = clearArgs;
     renderWorkflow->tasks.append(clearTask);
 
     // Task: Present backbuffer
-    auto presentTask   = Workflow::Task("Present backbuffer");
-    presentTask.action = presentAction;
-    auto presentArgs   = AutoRef<PresentBackbuffer::A>(new PresentBackbuffer::A());
-    presentArgs->backbuffer.set(backbuffer);
-    presentTask.arguments = presentArgs;
+    auto presentTask              = Workflow::Task("Present backbuffer");
+    presentTask.action            = presentAction;
+    auto presentArgs              = AutoRef<PresentBackbuffer::A>(new PresentBackbuffer::A());
+    presentArgs->backbuffer.value = backbuffer;
+    presentTask.arguments         = presentArgs;
     renderWorkflow->tasks.append(presentTask);
 
     // Submit render graph for execution
@@ -97,6 +96,10 @@ int main(int, const char **) {
         return -1;
     }
     if (Action::ExecutionResult::WARNING == result.executionResult) { GN_WARN(sLogger)("Render graph submission completed with warnings"); }
+
+    // Dump submission state to stdout
+    auto dumpState = submission->dumpState();
+    GN_INFO(sLogger)("Submission state:\n{}", dumpState.state);
 
     // Read texture back into an image, then save the image to file.
     auto image = backbuffer->readback();

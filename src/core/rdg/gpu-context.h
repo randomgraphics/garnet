@@ -25,7 +25,7 @@ public:
 protected:
     Api mApi;
 
-    GpuContextCommon(ArtifactDatabase & db, const StrA & name, Api api): GpuContext(db, TYPE, name), mApi(api) {}
+    GpuContextCommon(ArtifactDatabase & db, const StrA & name, Api api): GpuContext(db, TYPE_ID, TYPE_NAME, name), mApi(api) {}
 };
 
 } // namespace GN::rdg

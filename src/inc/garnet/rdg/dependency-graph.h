@@ -2,9 +2,10 @@
 
 #include <garnet/GNbase.h>
 
+#include <concepts>
 #include <functional>
-#include <unordered_map>
 #include <optional>
+#include <unordered_map>
 
 namespace GN::rdg {
 
@@ -20,22 +21,27 @@ namespace GN::rdg {
 struct ArtifactDatabase;
 
 struct RuntimeType {
-    const uint64_t type;
+    /// The unique identifier of the type.
+    const uint64_t typeId;
+
+    /// The name of the type. For debugging and logging. No need to be unique.
+    /// Must be a static constant string literal.
+    const char * const typeName;
 
     template<typename T>
     T * castTo() {
-        if (type == T::TYPE) GN_LIKELY return static_cast<T *>(this);
+        if (typeId == T::TYPE_ID) GN_LIKELY return static_cast<T *>(this);
         return nullptr;
     }
 
     template<typename T>
     const T * castTo() const {
-        if (type == T::TYPE) GN_LIKELY return static_cast<const T *>(this);
+        if (typeId == T::TYPE_ID) GN_LIKELY return static_cast<const T *>(this);
         return nullptr;
     }
 
 protected:
-    RuntimeType(uint64_t type): type(type) {}
+    RuntimeType(uint64_t typeId_, const char * typeName_): typeId(typeId_), typeName(typeName_) {}
 };
 
 /// Artifact represents an atomic resource that can be used as input or output of a task.
@@ -48,8 +54,11 @@ struct Artifact : public RefCounter, public RuntimeType {
 
 protected:
     /// Constructor
-    Artifact(ArtifactDatabase & db, uint64_t type, const StrA & name);
+    Artifact(ArtifactDatabase & db, uint64_t typeId, const char * typeName, const StrA & name);
 };
+
+template<class T>
+concept DerivedFromArtifact = std::derived_from<T, Artifact>;
 
 /// Database of all artifacts. Artifact is uniquely identified by its type and name, or by its sequence number.
 struct ArtifactDatabase {
@@ -81,137 +90,124 @@ protected:
     ArtifactDatabase() = default;
 };
 
-inline Artifact::Artifact(ArtifactDatabase & db, uint64_t type, const StrA & name)
-    : RuntimeType(type), database(db), name(name), sequence(database.admit(this)) {}
+inline Artifact::Artifact(ArtifactDatabase & db, uint64_t typeId, const char * typeName, const StrA & name)
+    : RuntimeType(typeId, typeName), database(db), name(name), sequence(database.admit(this)) {}
 
 /// Base class of arguments for an action. This is not a subclass of Artifact, since it is means to be one time use: create, pass to action, and forget.
-struct Arguments : RefCounter, public RuntimeType {
+class Arguments : public RefCounter, public RuntimeType {
+public:
     enum class UsageFlag {
         None     = 0,
         Optional = 1 << 0,
         Reading  = 1 << 1,
         Writing  = 1 << 2,
         // Aliases for convenience
-        N = None,
-        O = Optional,
-        R = Reading,
-        W = Writing,
+        N  = None,
+        O  = Optional,
+        R  = Reading,
+        W  = Writing,
+        RW = Reading | Writing,
     };
 
     friend constexpr UsageFlag operator|(UsageFlag a, UsageFlag b) { return UsageFlag(uint32_t(a) | uint32_t(b)); }
     friend constexpr UsageFlag operator&(UsageFlag a, UsageFlag b) { return UsageFlag(uint32_t(a) & uint32_t(b)); }
 
-    /// Base class of all typed parameters (for use by concrete action implementations).
-    template<UsageFlag UFlags = UsageFlag::None>
-    struct Parameter {
-        static constexpr bool IS_OPTIONAL = (UFlags & UsageFlag::Optional) != UsageFlag::None;
-        static constexpr bool IS_REQUIRED = (UFlags & UsageFlag::Optional) == UsageFlag::None;
-        static constexpr bool IS_Reading  = (UFlags & UsageFlag::Reading) != UsageFlag::None;
-        static constexpr bool IS_Writing  = (UFlags & UsageFlag::Writing) != UsageFlag::None;
-    };
+    /// Base class of all parameters that references one or more artifacts.
+    /// Enlisted into a doubly linked list via DoubleLink member for zero-allocation iteration; no vector.
+    struct ArtifactArgument {
+        virtual ~ArtifactArgument() {}
 
-    /// Represents a single parameter of an action.
-    template<typename T, UsageFlag UFlags = UsageFlag::None>
-    struct SingleParameter : public Parameter<UFlags> {
-        void set(const T & value) { mValue = value; }
-        void set(T && value) { mValue = std::move(value); }
-        void reset() { mValue.reset(); }
-        auto get() const -> const T * { return mValue.has_value() ? &mValue.value() : nullptr; }
-        auto get() -> T * { return mValue.has_value() ? &mValue.value() : nullptr; }
-        auto getAsOptional() const -> const std::optional<T> & { return mValue; }
-        auto getAsOptional() -> std::optional<T> & { return mValue; }
-        auto operator->() const -> const T * { return get(); }
-        auto operator->() -> T * { return get(); }
-        auto operator*() const -> const T & { return mValue.value(); }
-        auto operator*() -> T & { return mValue.value(); }
+        auto name() const -> const char * { return mName; }
+        auto usage() const -> UsageFlag { return mUsage; }
+
+        /// Returns list of artifacts referenced by this argument.
+        virtual auto artifacts() const -> SafeArrayAccessor<const Artifact * const> = 0;
+
+        /// Linked-list iteration (no allocation). \c nullptr when no next/prev.
+        const ArtifactArgument * next() const { return mLink.next ? static_cast<const ArtifactArgument *>(mLink.next->context) : nullptr; }
+        const ArtifactArgument * prev() const { return mLink.prev ? static_cast<const ArtifactArgument *>(mLink.prev->context) : nullptr; }
+
+    protected:
+        ArtifactArgument(Arguments * owner, const char * name, UsageFlag usage): mName(name), mUsage(usage) {
+            mLink.context = this;
+            owner->enlist(this);
+        }
 
     private:
-        std::optional<T> mValue;
+        const char * mName;
+        UsageFlag    mUsage;
+        DoubleLink   mLink;
+        friend class Arguments;
     };
 
-    template<typename T, UsageFlag UFlags = UsageFlag::None>
-    using ReadOnly = SingleParameter<T, UFlags | UsageFlag::Reading>;
+    /// Represents a single artifact parameter of an action.
+    /// T must be a subclass of Artifact.
+    template<DerivedFromArtifact T, UsageFlag UFlags = UsageFlag::None>
+    struct SingleArtifact : public ArtifactArgument {
+        SingleArtifact(Arguments * owner, const char * name): ArtifactArgument(owner, name, UFlags) {}
 
-    template<typename T, UsageFlag UFlags = UsageFlag::None>
-    using WriteOnly = SingleParameter<T, UFlags | UsageFlag::Writing>;
+        SafeArrayAccessor<const Artifact * const> artifacts() const override { return {(const Artifact * const *) value.addr(), 1}; }
 
-    template<typename T, UsageFlag UFlags = UsageFlag::None>
-    using ReadWrite = SingleParameter<T, UFlags | UsageFlag::Reading | UsageFlag::Writing>;
-
-    template<typename T, size_t Count, UsageFlag UFlags = UsageFlag::None>
-    struct ArrayParameter : public Parameter<UFlags> {
-        void set(size_t index, const T & value) {
-            if (index >= Count) GN_UNLIKELY {
-                    GN_ERROR(getLogger("GN.rg"))("ArrayParameter: index out of range");
-                    return;
-                }
-            mStorage[index] = value;
-            mValues[index]  = &mStorage[index].value();
-        }
-
-        void reset(size_t index) {
-            if (index >= Count) GN_UNLIKELY {
-                    GN_ERROR(getLogger("GN.rg"))("ArrayParameter: index out of range");
-                    return;
-                }
-            mValues[index] = nullptr;
-            mStorage[index].reset();
-        }
-
-        void reset() {
-            for (size_t i = 0; i < Count; ++i) {
-                mValues[i] = nullptr;
-                mStorage[i].reset();
-            }
-        }
-
-        const T * get(size_t index) const {
-            if (index >= Count) GN_UNLIKELY {
-                    GN_ERROR(getLogger("GN.rg"))("ArrayParameter: index out of range");
-                    return nullptr;
-                }
-            return mValues[index];
-        }
-
-        const T * const * get() const { return mValues; }
+        AutoRef<T> value;
 
     private:
-        T *              mValues[Count]  = {};
-        std::optional<T> mStorage[Count] = {};
+        mutable DynaArray<const Artifact *> mArtifacts;
     };
 
-    template<typename Key, typename Value, UsageFlag UFlags = UsageFlag::None>
-    struct MapParameter : public Parameter<UFlags> {
-        void set(const Key & key, const Value & value) { mValue[key] = value; }
-        void reset() { mValue.reset(); }
-        void reset(const Key & key) { mValue.erase(key); }
-        auto get(const Key & key) const -> const Value * { return mValue.find(key) != mValue.end() ? &mValue.find(key)->second : nullptr; }
-        auto get(const Key & key) -> Value * { return mValue.find(key) != mValue.end() ? &mValue.find(key)->second : nullptr; }
+    template<DerivedFromArtifact T, UsageFlag UFlags = UsageFlag::None>
+    using ReadOnly = SingleArtifact<T, UFlags | UsageFlag::Reading>;
 
-    private:
-        std::unordered_map<Key, Value> mValue;
+    template<DerivedFromArtifact T, UsageFlag UFlags = UsageFlag::None>
+    using WriteOnly = SingleArtifact<T, UFlags | UsageFlag::Writing>;
+
+    template<DerivedFromArtifact T, UsageFlag UFlags = UsageFlag::None>
+    using ReadWrite = SingleArtifact<T, UFlags | UsageFlag::Reading | UsageFlag::Writing>;
+
+    template<DerivedFromArtifact T, size_t Count, UsageFlag UFlags = UsageFlag::None>
+    struct ArtifactArray : public ArtifactArgument {
+        ArtifactArray(Arguments * owner, const char * name): ArtifactArgument(owner, name, UFlags) {}
+
+        SafeArrayAccessor<const Artifact * const> artifacts() const override { return {(const Artifact * const *) values[0].addr(), Count}; }
+
+        AutoRef<T> values[Count];
     };
 
     template<typename T, size_t COUNT, UsageFlag UFlags = UsageFlag::None>
-    using ReadOnlyArray = ArrayParameter<T, COUNT, UFlags | UsageFlag::Reading>;
+    using ReadOnlyArray = ArtifactArray<T, COUNT, UFlags | UsageFlag::Reading>;
 
     template<typename T, size_t COUNT, UsageFlag UFlags = UsageFlag::None>
-    using WriteOnlyArray = ArrayParameter<T, COUNT, UFlags | UsageFlag::Writing>;
+    using WriteOnlyArray = ArtifactArray<T, COUNT, UFlags | UsageFlag::Writing>;
 
     template<typename T, size_t COUNT, UsageFlag UFlags = UsageFlag::None>
-    using ReadWriteArray = ArrayParameter<T, COUNT, UFlags | UsageFlag::Reading | UsageFlag::Writing>;
+    using ReadWriteArray = ArtifactArray<T, COUNT, UFlags | UsageFlag::Reading | UsageFlag::Writing>;
 
-    template<typename Key, typename Value, UsageFlag UFlags = UsageFlag::None>
-    using ReadOnlyMap = MapParameter<Key, Value, UFlags | UsageFlag::Reading>;
-
-    template<typename Key, typename Value, UsageFlag UFlags = UsageFlag::None>
-    using WriteOnlyMap = MapParameter<Key, Value, UFlags | UsageFlag::Writing>;
-
-    template<typename Key, typename Value, UsageFlag UFlags = UsageFlag::None>
-    using ReadWriteMap = MapParameter<Key, Value, UFlags | UsageFlag::Reading | UsageFlag::Writing>;
+    /// Returns the first artifact argument in the enlistment list. Iterate with \c p->next() until \c nullptr. No allocation.
+    const ArtifactArgument * firstArtifactArgument() const { return mHead ? static_cast<const ArtifactArgument *>(mHead->context) : nullptr; }
 
 protected:
-    Arguments(uint64_t type): RuntimeType(type) {}
+    using RuntimeType::RuntimeType;
+
+private:
+    DoubleLink * mHead = nullptr;
+
+    /// Only called by ArtifactArgument constructor to enlist the argument into the list.
+    void enlist(ArtifactArgument * arg) {
+        GN_ASSERT(arg);
+        GN_ASSERT(arg->name() != nullptr);
+        GN_ASSERT(arg->usage() != UsageFlag::None);
+        DoubleLink * link = const_cast<DoubleLink *>(&arg->mLink);
+        GN_ASSERT(link->prev == nullptr && link->next == nullptr);
+
+        if (!mHead)
+            mHead = link;
+        else {
+            GN_ASSERT(mHead->prev == nullptr);
+            link->linkBefore(mHead);
+            mHead = link;
+        }
+    }
+
+    friend struct ArtifactArgument;
 };
 
 struct Submission;
@@ -230,7 +226,7 @@ struct Action : public Artifact {
         virtual ~ExecutionContext() = default;
 
     protected:
-        ExecutionContext(uint64_t type): RuntimeType(type) {}
+        ExecutionContext(uint64_t typeId, const char * typeName): RuntimeType(typeId, typeName) {}
     };
 
     /// Prepare for execution. Returns success code and an optional execution context that will be later passed to execute().
@@ -259,7 +255,19 @@ struct Workflow {
     /// Name for logging and debugging (not required, but recommended. No need to be unique).
     StrA name;
 
+    /// The unique monotonically increasing sequence number of the workflow.
+    /// If (A->sequence - B->sequence) > 0, then A is considered newer than, or "after", B.
+    /// We use signed integer as the sequence number. So it can overflow safely.
+    int64_t sequence;
+
     /// Represents a single task in the workflow. This is the atomic execution unit of the render graph.
+    /// \note
+    /// - Task A is considered newer than task B, if any of the following is true:
+    ///   - A and B belong to same workflow. A's index is greater than B's index in the tasks array.
+    ///   - A and B belong to different workflows. A's workflow is newer than B's.
+    /// - Task A is considered to depend on task B, only if A is newer than B and any of the following is true:
+    ///   - A is reading or writing to an artifact that B is writing to.
+    ///   - A is writing to an artifact that B is reading from.
     struct Task {
         explicit Task(const StrA & name): name(name) {}
         StrA               name; //< name for logging and debugging (not required, but recommended. No need to be unique).
@@ -267,11 +275,7 @@ struct Workflow {
         AutoRef<Arguments> arguments;
     };
 
-    /// Tasks in this workflow; executed in order.
     DynaArray<Task> tasks;
-
-    /// Other workflows that must complete before this workflow runs.
-    DynaArray<Workflow *> dependencies;
 };
 
 struct TaskInfo {
@@ -292,6 +296,11 @@ struct Submission : RefCounter {
         // for future extension, like individual task result, etc.
     };
 
+    struct State {
+        StrA                                            state;
+        std::unordered_map<uint64_t, DynaArray<size_t>> workflowDependencies;
+    };
+
     virtual ~Submission() = default;
 
     /// Check if submitted workflows are all finished.
@@ -300,6 +309,10 @@ struct Submission : RefCounter {
 
     /// Get execution result of the submitted workflows. Will block calling thread until all workflows are finished.
     virtual Result result() = 0;
+
+    /// Dump detailed state and status of the submission to a human-readable string.
+    /// Includes per-task name, execution status, dependencies, validation, warnings, skipped, and finished state.
+    virtual State dumpState() const = 0;
 
 protected:
     Submission() = default;
@@ -319,10 +332,15 @@ struct RenderGraph {
     /// all workflows are either finished or cancelled. The detailed result can be queried via the submission object returned by submit().
     virtual ~RenderGraph() = default;
 
-    /// Schedule a new workflow. Thread-safe; multiple threads may call schedule() in parallel.
+    /// Schedule a new workflow.
     /// \param name The name of the workflow.
-    /// Returns a pointer to the scheduled workflow. The pointer is valid until submit() is called.
-    /// After submit(), all pointers returned from schedule() are invalidated and the graph is ready to schedule new workflows.
+    /// \return a pointer to the scheduled workflow. The pointer is valid until submit() is called.
+    /// \note
+    ///  - The returned workflow is free to modify until submit() is called.
+    ///  - Call to submit() will invalidate all scheduled workflow pointers.
+    ///  - Modifying workflow that has been submitted is undefined behavior.
+    ///  - A newly scheduled workflow is always considered newer than any previously scheduled workflow.
+    ///  - A task in newer workflow might depend on a task in older workflow, but never vise versa.
     virtual Workflow * schedule(StrA name) = 0;
 
     /// Submit all scheduled workflows for async execution in a topological order that satisfies workflow dependencies.

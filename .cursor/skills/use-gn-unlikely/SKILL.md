@@ -20,7 +20,7 @@ Use **`GN_LIKELY`** on the branch that is expected to be taken in hot paths (e.g
 
 ## When to Use GN_LIKELY
 
-- **Hot-path success**: `if (type == T::TYPE) GN_LIKELY return static_cast<T*>(this);`
+- **Hot-path success**: `if (type == T::TYPE_ID) GN_LIKELY return static_cast<T*>(this);`
 - **Expected-true conditions** in performance-sensitive code where the condition is almost always true
 
 ## Syntax

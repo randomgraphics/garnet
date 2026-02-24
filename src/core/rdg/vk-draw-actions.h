@@ -6,11 +6,12 @@
 namespace GN::rdg {
 
 struct DrawActionContextVulkan : public Action::ExecutionContext {
-    inline static const uint64_t TYPE = getNextUniqueTypeId();
+    inline static const uint64_t         TYPE_ID   = getNextUniqueTypeId();
+    inline static constexpr const char * TYPE_NAME = "DrawActionContextVulkan";
 
     uint64_t commandBufferId {};
 
-    DrawActionContextVulkan(): Action::ExecutionContext(TYPE) {}
+    DrawActionContextVulkan(): Action::ExecutionContext(TYPE_ID, TYPE_NAME) {}
 };
 
 /// Create Vulkan-backed ClearRenderTarget. Called from ClearRenderTarget::create() when context is Vulkan.
