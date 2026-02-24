@@ -61,7 +61,7 @@ struct InitIntegerAction : public Action {
     struct A : public Arguments {
         inline static const uint64_t TYPE = getTestTypeId();
         A(): Arguments(TYPE) {}
-        WriteOnly<AutoRef<IntegerArtifact>> output;
+        WriteOnly<IntegerArtifact> output = { auto_reflection, "output" };
     };
 
     std::pair<ExecutionResult, ExecutionContext *> prepare(TaskInfo &, Arguments &) override { return std::make_pair(PASSED, nullptr); }
@@ -70,12 +70,10 @@ struct InitIntegerAction : public Action {
     ExecutionResult execute(TaskInfo &, Arguments & args, ExecutionContext *) override {
         auto * a = args.castTo<A>();
         TS_ASSERT(a != nullptr); // null means wrong type
-        auto * outputArtifact = a->output.get();
+        auto * outputArtifact = a->output.value.get();
         TS_ASSERT(outputArtifact != nullptr);
-        auto output = outputArtifact->get();
-        TS_ASSERT(output != nullptr);
 
-        auto integerArtifact = output->castTo<IntegerArtifact>();
+        auto integerArtifact = outputArtifact->castTo<IntegerArtifact>();
         TS_ASSERT(integerArtifact != nullptr);
 
         GN_INFO(GN::getLogger("GN.rdg.test"))("InitIntegerAction: initializing integer output to {}", initValue);
@@ -102,9 +100,9 @@ struct AddIntegersAction : public Action {
     struct A : public Arguments {
         inline static const uint64_t TYPE = getTestTypeId();
         A(): Arguments(TYPE) {}
-        ReadOnly<AutoRef<IntegerArtifact>>  input1;
-        ReadOnly<AutoRef<IntegerArtifact>>  input2;
-        WriteOnly<AutoRef<IntegerArtifact>> output;
+        ReadOnly<IntegerArtifact>  input1 = { auto_reflection, "input1" };
+        ReadOnly<IntegerArtifact>  input2 = { auto_reflection, "input2" };
+        WriteOnly<IntegerArtifact> output = { auto_reflection, "output" };
     };
 
     std::pair<ExecutionResult, ExecutionContext *> prepare(TaskInfo &, Arguments &) override { return std::make_pair(PASSED, nullptr); }
@@ -113,25 +111,9 @@ struct AddIntegersAction : public Action {
     ExecutionResult execute(TaskInfo &, Arguments & args, ExecutionContext *) override {
         auto * a = args.castTo<A>();
         TS_ASSERT(a != nullptr); // null means wrong type
-        auto * input1Artifact = a->input1.get();
-        auto * input2Artifact = a->input2.get();
-        auto * outputArtifact = a->output.get();
-
-        TS_ASSERT(input1Artifact != nullptr);
-        TS_ASSERT(input2Artifact != nullptr);
-        TS_ASSERT(outputArtifact != nullptr);
-
-        auto input1 = input1Artifact->get();
-        auto input2 = input2Artifact->get();
-        auto output = outputArtifact->get();
-
-        TS_ASSERT(input1 != nullptr);
-        TS_ASSERT(input2 != nullptr);
-        TS_ASSERT(output != nullptr);
-
-        auto integerInput1 = input1->castTo<IntegerArtifact>();
-        auto integerInput2 = input2->castTo<IntegerArtifact>();
-        auto integerOutput = output->castTo<IntegerArtifact>();
+        auto * integerInput1 = a->input1.value.get() ? a->input1.value.get()->castTo<IntegerArtifact>() : nullptr;
+        auto * integerInput2 = a->input2.value.get() ? a->input2.value.get()->castTo<IntegerArtifact>() : nullptr;
+        auto * integerOutput = a->output.value.get() ? a->output.value.get()->castTo<IntegerArtifact>() : nullptr;
 
         TS_ASSERT(integerInput1 != nullptr);
         TS_ASSERT(integerInput2 != nullptr);
@@ -162,9 +144,9 @@ struct MultiplyIntegersAction : public Action {
     struct A : public Arguments {
         inline static const uint64_t TYPE = getTestTypeId();
         A(): Arguments(TYPE) {}
-        ReadOnly<AutoRef<IntegerArtifact>>  input1;
-        ReadOnly<AutoRef<IntegerArtifact>>  input2;
-        WriteOnly<AutoRef<IntegerArtifact>> output;
+        ReadOnly<IntegerArtifact>  input1 = { auto_reflection, "input1" };
+        ReadOnly<IntegerArtifact>  input2 = { auto_reflection, "input2" };
+        WriteOnly<IntegerArtifact> output = { auto_reflection, "output" };
     };
 
     std::pair<ExecutionResult, ExecutionContext *> prepare(TaskInfo &, Arguments &) override { return std::make_pair(PASSED, nullptr); }
@@ -173,25 +155,9 @@ struct MultiplyIntegersAction : public Action {
     ExecutionResult execute(TaskInfo &, Arguments & args, ExecutionContext *) override {
         auto * a = args.castTo<A>();
         TS_ASSERT(a != nullptr); // null means wrong type
-        auto * input1Artifact = a->input1.get();
-        auto * input2Artifact = a->input2.get();
-        auto * outputArtifact = a->output.get();
-
-        TS_ASSERT(input1Artifact != nullptr);
-        TS_ASSERT(input2Artifact != nullptr);
-        TS_ASSERT(outputArtifact != nullptr);
-
-        auto input1 = input1Artifact->get();
-        auto input2 = input2Artifact->get();
-        auto output = outputArtifact->get();
-
-        TS_ASSERT(input1 != nullptr);
-        TS_ASSERT(input2 != nullptr);
-        TS_ASSERT(output != nullptr);
-
-        auto integerInput1 = input1->castTo<IntegerArtifact>();
-        auto integerInput2 = input2->castTo<IntegerArtifact>();
-        auto integerOutput = output->castTo<IntegerArtifact>();
+        auto * integerInput1 = a->input1.value.get() ? a->input1.value.get()->castTo<IntegerArtifact>() : nullptr;
+        auto * integerInput2 = a->input2.value.get() ? a->input2.value.get()->castTo<IntegerArtifact>() : nullptr;
+        auto * integerOutput = a->output.value.get() ? a->output.value.get()->castTo<IntegerArtifact>() : nullptr;
 
         TS_ASSERT(integerInput1 != nullptr);
         TS_ASSERT(integerInput2 != nullptr);
@@ -250,7 +216,7 @@ public:
 
                 auto initArgs = GN::AutoRef<GN::rdg::InitIntegerAction::A>::make();
                 TS_ASSERT(initArgs != nullptr);
-                initArgs->output.set(one);
+                initArgs->output.value = one;
 
                 GN::rdg::Workflow::Task task("init_one");
                 task.action    = initAction;
@@ -266,7 +232,7 @@ public:
 
                 auto initArgs = GN::AutoRef<GN::rdg::InitIntegerAction::A>::make();
                 TS_ASSERT(initArgs != nullptr);
-                initArgs->output.set(two);
+                initArgs->output.value = two;
 
                 GN::rdg::Workflow::Task task("init_two");
                 task.action    = initAction;
@@ -282,7 +248,7 @@ public:
 
                 auto initArgs = GN::AutoRef<GN::rdg::InitIntegerAction::A>::make();
                 TS_ASSERT(initArgs != nullptr);
-                initArgs->output.set(three);
+                initArgs->output.value = three;
 
                 GN::rdg::Workflow::Task task("init_three");
                 task.action    = initAction;
@@ -301,9 +267,9 @@ public:
 
             auto addArgs = GN::AutoRef<GN::rdg::AddIntegersAction::A>::make();
             TS_ASSERT(addArgs != nullptr);
-            addArgs->input1.set(one);
-            addArgs->input2.set(two);
-            addArgs->output.set(sum);
+            addArgs->input1.value = one;
+            addArgs->input2.value = two;
+            addArgs->output.value = sum;
 
             GN::rdg::Workflow::Task task("add_1_2");
             task.action    = addAction;
@@ -321,9 +287,9 @@ public:
 
             auto multiplyArgs = GN::AutoRef<GN::rdg::MultiplyIntegersAction::A>::make();
             TS_ASSERT(multiplyArgs != nullptr);
-            multiplyArgs->input1.set(three);
-            multiplyArgs->input2.set(sum);
-            multiplyArgs->output.set(result);
+            multiplyArgs->input1.value = three;
+            multiplyArgs->input2.value = sum;
+            multiplyArgs->output.value = result;
 
             GN::rdg::Workflow::Task task("multiply_3_sum");
             task.action    = multiplyAction;
@@ -347,6 +313,59 @@ public:
         TS_ASSERT_EQUALS(two->value, 2);
         TS_ASSERT_EQUALS(three->value, 3);
         TS_ASSERT_EQUALS(sum->value, 3);
+    }
+
+    void testWorkflowSequenceOrder() {
+        auto db = std::unique_ptr<GN::rdg::ArtifactDatabase>(GN::rdg::ArtifactDatabase::create(GN::rdg::ArtifactDatabase::CreateParameters {}));
+        TS_ASSERT(db != nullptr);
+        GN::rdg::RenderGraph::CreateParameters params;
+        auto renderGraph = GN::rdg::RenderGraph::create(params);
+        TS_ASSERT(renderGraph != nullptr);
+
+        GN::rdg::Workflow * w1 = renderGraph->schedule("w1");
+        GN::rdg::Workflow * w2 = renderGraph->schedule("w2");
+        GN::rdg::Workflow * w3 = renderGraph->schedule("w3");
+        TS_ASSERT(w1 != nullptr);
+        TS_ASSERT(w2 != nullptr);
+        TS_ASSERT(w3 != nullptr);
+        TS_ASSERT(w1->sequence < w2->sequence);
+        TS_ASSERT(w2->sequence < w3->sequence);
+    }
+
+    void testArgumentsArtifactArgumentsDiscovery() {
+        auto db = std::unique_ptr<GN::rdg::ArtifactDatabase>(GN::rdg::ArtifactDatabase::create(GN::rdg::ArtifactDatabase::CreateParameters {}));
+        TS_ASSERT(db != nullptr);
+        auto initArgs = GN::AutoRef<GN::rdg::InitIntegerAction::A>::make();
+        TS_ASSERT(initArgs != nullptr);
+
+        const GN::rdg::Arguments::ArtifactArgument * p = initArgs->firstArtifactArgument();
+        TS_ASSERT(p != nullptr);
+        TS_ASSERT_EQUALS(p->name(), "output");
+        TS_ASSERT((p->usage() & GN::rdg::Arguments::UsageFlag::Writing) != GN::rdg::Arguments::UsageFlag::None);
+        TS_ASSERT(p->next() == nullptr);
+    }
+
+    void testArgumentDiscoveryCounts() {
+        auto db = std::unique_ptr<GN::rdg::ArtifactDatabase>(GN::rdg::ArtifactDatabase::create(GN::rdg::ArtifactDatabase::CreateParameters {}));
+        TS_ASSERT(db != nullptr);
+
+        auto initArgs = GN::AutoRef<GN::rdg::InitIntegerAction::A>::make();
+        size_t n = 0;
+        for (const GN::rdg::Arguments::ArtifactArgument * p = initArgs->firstArtifactArgument(); p; p = p->next())
+            ++n;
+        TS_ASSERT_EQUALS(n, 1u);
+
+        auto addArgs = GN::AutoRef<GN::rdg::AddIntegersAction::A>::make();
+        n = 0;
+        for (const GN::rdg::Arguments::ArtifactArgument * p = addArgs->firstArtifactArgument(); p; p = p->next())
+            ++n;
+        TS_ASSERT_EQUALS(n, 3u);
+
+        auto multiplyArgs = GN::AutoRef<GN::rdg::MultiplyIntegersAction::A>::make();
+        n = 0;
+        for (const GN::rdg::Arguments::ArtifactArgument * p = multiplyArgs->firstArtifactArgument(); p; p = p->next())
+            ++n;
+        TS_ASSERT_EQUALS(n, 3u);
     }
 
     void testCreateDuplicateTypeNameReturnsNull() {

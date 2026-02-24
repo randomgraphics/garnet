@@ -2,6 +2,7 @@
 #include "submission.h"
 #include <limits>
 #include <chrono>
+#include <unordered_set>
 
 static GN::Logger * sLogger = GN::getLogger("GN.rdg");
 
@@ -67,24 +68,45 @@ bool SubmissionImpl::validateAndBuildDependencyGraph() {
 
     mDependencyGraph.resize(mValidatedWorkflows.size());
 
-    for (size_t workflowIdx = 0; workflowIdx < mValidatedWorkflows.size(); ++workflowIdx) {
-        Workflow * workflow = mValidatedWorkflows[workflowIdx];
-
-        for (Workflow * depWorkflow : workflow->dependencies) {
-            size_t depWorkflowIdx = std::numeric_limits<size_t>::max();
-            for (size_t i = 0; i < mValidatedWorkflows.size(); ++i) {
-                if (mValidatedWorkflows[i] == depWorkflow) {
-                    depWorkflowIdx = i;
-                    break;
+    // Collect per-workflow: artifacts read and written (from task arguments via firstArtifactArgument/next).
+    using ArtifactSet = std::unordered_set<const Artifact *>;
+    DynaArray<ArtifactSet> workflowReads(mValidatedWorkflows.size());
+    DynaArray<ArtifactSet> workflowWrites(mValidatedWorkflows.size());
+    for (size_t i = 0; i < mValidatedWorkflows.size(); ++i) {
+        Workflow * w = mValidatedWorkflows[i];
+        for (const Workflow::Task & task : w->tasks) {
+            Arguments * args = task.arguments.get();
+            if (!args) continue;
+            for (const Arguments::ArtifactArgument * p = args->firstArtifactArgument(); p; p = p->next()) {
+                const auto usage = p->usage();
+                const bool read  = (usage & Arguments::UsageFlag::Reading) != Arguments::UsageFlag::None;
+                const bool write = (usage & Arguments::UsageFlag::Writing) != Arguments::UsageFlag::None;
+                const auto arts  = p->artifacts();
+                for (size_t k = 0; k < arts.size(); ++k) {
+                    const Artifact * a = arts[k];
+                    if (!a) continue;
+                    if (read) workflowReads[i].insert(a);
+                    if (write) workflowWrites[i].insert(a);
                 }
             }
+        }
+    }
 
-            if (depWorkflowIdx == std::numeric_limits<size_t>::max()) {
-                GN_ERROR(sLogger)("Workflow '{}' depends on workflow that is not in the validated workflow list", workflow->name);
-                return false;
+    // A depends on B (B must run before A) when A.sequence > B.sequence and (A reads/writes artifact B writes, or A writes artifact B reads).
+    for (size_t i = 0; i < mValidatedWorkflows.size(); ++i) {
+        for (size_t j = 0; j < mValidatedWorkflows.size(); ++j) {
+            if (i == j) continue;
+            if (mValidatedWorkflows[i]->sequence <= mValidatedWorkflows[j]->sequence) continue;
+            bool conflict = false;
+            for (const Artifact * a : workflowWrites[j]) {
+                if (workflowReads[i].count(a) || workflowWrites[i].count(a)) { conflict = true; break; }
             }
-
-            mDependencyGraph[workflowIdx].append(depWorkflowIdx);
+            if (!conflict) {
+                for (const Artifact * a : workflowReads[j]) {
+                    if (workflowWrites[i].count(a)) { conflict = true; break; }
+                }
+            }
+            if (conflict) mDependencyGraph[i].append(j);
         }
     }
 

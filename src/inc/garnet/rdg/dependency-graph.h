@@ -107,6 +107,11 @@ public:
     friend constexpr UsageFlag operator|(UsageFlag a, UsageFlag b) { return UsageFlag(uint32_t(a) | uint32_t(b)); }
     friend constexpr UsageFlag operator&(UsageFlag a, UsageFlag b) { return UsageFlag(uint32_t(a) & uint32_t(b)); }
 
+protected:
+    struct ArgumentReflection;
+    using ReflectionRegister = ArgumentReflection;
+
+public:
     /// Base class of all parameters that references one or more artifacts.
     /// Enlisted into a doubly linked list via DoubleLink member for zero-allocation iteration; no vector.
     struct ArtifactArgument {
@@ -185,8 +190,6 @@ public:
     }
 
 protected:
-    using ReflectionRegister = ArgumentReflection;
-
     struct ArgumentReflection {
         DoubleLink * mHead = nullptr;
 

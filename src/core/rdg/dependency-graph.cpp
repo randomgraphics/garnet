@@ -105,6 +105,7 @@ GN_API ArtifactDatabase * ArtifactDatabase::create(const CreateParameters & para
 
 class RenderGraphImpl : public RenderGraph {
     DynaArray<Workflow *> mPendingWorkflows;
+    int64_t               mNextSequence = 0;
     mutable std::mutex    mMutex;
 
 public:
@@ -115,6 +116,7 @@ public:
         std::lock_guard<std::mutex> lock(mMutex);
         Workflow *                  newWorkflow = new Workflow();
         newWorkflow->name                       = std::move(name);
+        newWorkflow->sequence                   = mNextSequence++;
         mPendingWorkflows.append(newWorkflow);
         return newWorkflow;
     }
