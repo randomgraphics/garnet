@@ -11,6 +11,8 @@ struct RenderTarget {
 
         bool empty() const { return target.index() == 1 && std::get<1>(target) == nullptr; }
 
+        AutoRef<Artifact> artifact() const { return target.index() == 0 ? std::get<0>(target) : std::get<1>(target); }
+
         bool operator==(const ColorTarget & other) const {
             if (target.index() != other.target.index()) return false;
             if (target.index() == 0) {
@@ -51,8 +53,8 @@ struct RenderTarget {
     bool operator!=(const RenderTarget & other) const { return !operator==(other); }
 };
 
-struct RenderTargetParameter : public Arguments::ArtifactParameter<Arguments::UsageFlag::Writing | Arguments::UsageFlag::Reading> {
-    using Arguments::ArtifactParameter<Arguments::UsageFlag::Writing | Arguments::UsageFlag::Reading>::ArtifactParameter;
+struct RenderTargetArgument : public Arguments::ArtifactArgument<Arguments::UsageFlag::Writing | Arguments::UsageFlag::Reading> {
+    using Arguments::ArtifactArgument<Arguments::UsageFlag::Writing | Arguments::UsageFlag::Reading>::ArtifactArgument;
 
     SafeArrayAccessor<const Artifact *> artifacts() const override {
         mArtifacts.reserve(8 + 1);
@@ -60,9 +62,12 @@ struct RenderTargetParameter : public Arguments::ArtifactParameter<Arguments::Us
         if (value) {
             const auto & colors = value->colors;
             for (size_t i = 0; i < colors.size(); ++i) {
-                if (!colors[i].empty()) { mArtifacts.append(colors[i].target.get()); }
+                if (!colors[i].empty()) {
+                    auto a = colors[i].artifact();
+                    if (a) mArtifacts.append(a.get());
+                }
             }
-            if (!value->depthStencil.empty()) { mArtifacts.append(value->depthStencil.target.get()); }
+            if (!value->depthStencil.empty()) mArtifacts.append(value->depthStencil.target.get());
         }
         return mArtifacts;
     };
@@ -91,7 +96,7 @@ struct ClearRenderTarget : public Action {
             float    depth;
             uint32_t stencil;
         };
-        RenderTargetParameter renderTarget = {auto_reflection, "renderTarget"};
+        RenderTargetArgument renderTarget = {auto_reflection, "renderTarget"};
         ClearValues           clearValues;
     };
 
@@ -189,7 +194,7 @@ struct SetupRenderStates : public Action {
         STENCIL_INC,
         STENCIL_DEC,
     };
-    Action enum BlendArg {
+    enum BlendArg {
         BLEND_ZERO = 0,
         BLEND_ONE,
         BLEND_SRC_COLOR,
@@ -305,8 +310,8 @@ struct ShaderAction : public Action {
     };
 
     template<Arguments::UsageFlag UFlags = Arguments::UsageFlag::Reading>
-    struct BufferViewMap : public Arguments::ArtifactParameter<UFlags> {
-        using Arguments::ArtifactParameter<UFlags>::ArtifactParameter;
+    struct BufferViewMap : public Arguments::ArtifactArgument<UFlags> {
+        using Arguments::ArtifactArgument<UFlags>::ArtifactArgument;
 
         SafeArrayAccessor<const Artifact *> artifacts() const override {
             mArtifacts.reserve(value.size());
@@ -329,11 +334,11 @@ struct ShaderAction : public Action {
         gfx::img::PixelFormat     format = gfx::img::PixelFormat::UNKNOWN();
         Texture::SubresourceIndex subresourceIndex;
         Texture::SubresourceRange subresourceRange;
-    }
+    };
 
     template<Arguments::UsageFlag UFlags = Arguments::UsageFlag::Reading>
-    struct ImageViewMap : public Arguments::ArtifactParameter<UFlags> {
-        using Arguments::ArtifactParameter<UFlags>::ArtifactParameter;
+    struct ImageViewMap : public Arguments::ArtifactArgument<UFlags> {
+        using Arguments::ArtifactArgument<UFlags>::ArtifactArgument;
 
         SafeArrayAccessor<const Artifact *> artifacts() const override {
             mArtifacts.clear();
@@ -345,6 +350,9 @@ struct ShaderAction : public Action {
         }
 
         std::map<StrA, ImageView> value;
+
+    private:
+        mutable DynaArray<const Artifact *> mArtifacts;
     };
 
     struct TextureView : ImageView {
@@ -353,8 +361,8 @@ struct ShaderAction : public Action {
     };
 
     template<Arguments::UsageFlag UFlags = Arguments::UsageFlag::Reading>
-    struct TextureViewMap : public Arguments::ArtifactParameter<UFlags> {
-        using Arguments::ArtifactParameter<UFlags>::ArtifactParameter;
+    struct TextureViewMap : public Arguments::ArtifactArgument<UFlags> {
+        using Arguments::ArtifactArgument<UFlags>::ArtifactArgument;
 
         SafeArrayAccessor<const Artifact *> artifacts() const override {
             mArtifacts.clear();
@@ -370,6 +378,9 @@ struct ShaderAction : public Action {
         }
 
         std::map<StrA, TextureView> value;
+
+    private:
+        mutable DynaArray<const Artifact *> mArtifacts;
     };
 
 protected:
@@ -398,15 +409,15 @@ struct GenericDraw : public ShaderAction {
     GN_API static const uint64_t TYPE;
 
     /// Draw parameters
-    struct DrawParameters {
+    struct DrawArguments {
         uint32_t vertexCount   = 0; ///< number of vertices to draw
         uint32_t instanceCount = 1; ///< number of instances to draw
         uint32_t firstVertex   = 0; ///< first vertex index
         uint32_t firstInstance = 0; ///< first instance index
     };
 
-    strict MeshParameter : Arguments::ArtifactParameter<Arguments::UsageFlag::Reading> {
-        using Arguments::ArtifactParameter<Arguments::UsageFlag::Reading>::ArtifactParameter;
+    struct MeshParameter : public Arguments::ArtifactArgument<Arguments::UsageFlag::Reading> {
+        using Arguments::ArtifactArgument<Arguments::UsageFlag::Reading>::ArtifactArgument;
 
         SafeArrayAccessor<const Artifact *> artifacts() const override {
             if (!value) return {};
@@ -435,8 +446,8 @@ struct GenericDraw : public ShaderAction {
         BufferViewMap         buffers      = {auto_reflection, "buffers"};      ///< buffer views, key is shader variable name
         ImageViewMap          images       = {auto_reflection, "images"};       ///< image views, key is shader variable name
         TextureViewMap        textures     = {auto_reflection, "textures"};     ///< texture views, key is shader variable name
-        RenderTargetParameter renderTarget = {auto_reflection, "renderTarget"}; ///< render target
-        DrawParameters        drawParams;                                       ///< draw parameters
+        RenderTargetArgument renderTarget = {auto_reflection, "renderTarget"}; ///< render target
+        DrawArguments        drawParams;                                       ///< draw parameters
     };
 
     /// Shader stage description
@@ -477,8 +488,8 @@ struct GenericCompute : public ShaderAction {
 
         BufferViewMap                           uniforms; ///< uniform buffers
         TextureViewMap                          textures; ///< textures
-        BufferViewMap<Argument::UsageFlags::RW> buffers;  ///< storage buffers
-        ImageViewMap<Argument::UsageFlags::RW>  images;   ///< storage images
+        BufferViewMap<Arguments::UsageFlag::RW> buffers;  ///< storage buffers
+        ImageViewMap<Arguments::UsageFlag::RW>  images;   ///< storage images
         DispatchSize                            groups;   ///< thread group counts
     };
 

@@ -3,10 +3,10 @@
 #include "garnet/base/array.h"
 #include <garnet/GNbase.h>
 
-#include <functional>
-#include <unordered_map>
-#include <optional>
 #include <concepts>
+#include <functional>
+#include <optional>
+#include <unordered_map>
 
 namespace GN::rdg {
 
@@ -117,25 +117,40 @@ public:
     friend constexpr UsageFlag operator|(UsageFlag a, UsageFlag b) { return UsageFlag(uint32_t(a) | uint32_t(b)); }
     friend constexpr UsageFlag operator&(UsageFlag a, UsageFlag b) { return UsageFlag(uint32_t(a) & uint32_t(b)); }
 
-    /// Base class of all parameters that references one or more artifacts
-    template<UsageFlag UFlags = UsageFlag::None>
-    struct ArtifactParameter {
-        static constexpr bool IS_OPTIONAL = (UFlags & UsageFlag::Optional) != UsageFlag::None;
-        static constexpr bool IS_REQUIRED = (UFlags & UsageFlag::Optional) == UsageFlag::None;
-        static constexpr bool IS_Reading  = (UFlags & UsageFlag::Reading) != UsageFlag::None;
-        static constexpr bool IS_Writing  = (UFlags & UsageFlag::Writing) != UsageFlag::None;
+    /// Type-erased base for artifact parameters. Enables iteration and dependency analysis without knowing concrete argument types.
+    struct Argument {
+        virtual ~Argument() {}
+
+        UsageFlag usageFlags() const { return mUsageFlags; }
+
+        bool isOptional() const { return (mUsageFlags & UsageFlag::Optional) != UsageFlag::None; }
+        bool isRequired() const { return (mUsageFlags & UsageFlag::Optional) == UsageFlag::None; }
+        bool isReading() const { return (mUsageFlags & UsageFlag::Reading) != UsageFlag::None; }
+        bool isWriting() const { return (mUsageFlags & UsageFlag::Writing) != UsageFlag::None; }
 
         virtual SafeArrayAccessor<const Artifact *> artifacts() const = 0;
 
     protected:
-        ArtifactParameter(ReflectionRegister & rr, const char * name) { rr.reflect(this, name); }
+        Argument(UsageFlag usageFlags): mUsageFlags(usageFlags) {}
+
+    private:
+        UsageFlag mUsageFlags;
+    };
+
+    /// Base class of all parameters that references one or more artifacts
+    template<UsageFlag UFlags = UsageFlag::None>
+    struct ArtifactArgument : public Argument {
+
+    protected:
+        ArtifactArgument(ReflectionRegister & rr, const char * name) : Argument(UFlags) { rr.reflect(this, name); }
+        ArtifactArgument(ReflectionRegister & rr, const char * name, UsageFlag usageFlags) : Argument(usageFlags) { rr.reflect(this, name); }
     };
 
     /// Represents a single artifact parameter of an action.
     /// T must be a subclass of Artifact.
     template<DerivedFromArtifact T, UsageFlag UFlags = UsageFlag::None>
-    struct SingleArtifact : public ArtifactParameter<UFlags> {
-        using ArtifactParameter<UFlags>::ArtifactParameter;
+    struct SingleArtifact : public ArtifactArgument<UFlags> {
+        using ArtifactArgument<UFlags>::ArtifactArgument;
 
         SafeArrayAccessor<const Artifact *> artifacts() const override { return SafeArrayAccessor<const Artifact *>(value.addr(), 1); }
 
@@ -152,8 +167,8 @@ public:
     using ReadWrite = SingleArtifact<T, UFlags | UsageFlag::Reading | UsageFlag::Writing>;
 
     template<DerivedFromArtifact T, size_t Count, UsageFlag UFlags = UsageFlag::None>
-    struct ArrayArtifact : public ArtifactParameter<UFlags> {
-        using ArtifactParameter<UFlags>::ArtifactParameter;
+    struct ArrayArtifact : public ArtifactArgument<UFlags> {
+        using ArtifactArgument<UFlags>::ArtifactArgument;
 
         SafeArrayAccessor<const Artifact *> artifacts() const override { return SafeArrayAccessor<const Artifact *>(values, Count); }
 
@@ -168,6 +183,11 @@ public:
 
     template<typename T, size_t COUNT, UsageFlag UFlags = UsageFlag::None>
     using ReadWriteArray = ArrayArtifact<T, COUNT, UFlags | UsageFlag::Reading | UsageFlag::Writing>;
+
+    /// Enumerate all artifact parameters so submission/schedule can discover referenced artifacts and their usage (read/write).
+    /// Callback is invoked once per artifact parameter; use param.artifacts() and param.usageFlags() for dependency analysis.
+    /// Default implementation does nothing; override in concrete Argument types (or use reflection) to support discovery.
+    virtual void forEachArtifactParameter(std::function<void(Argument const &)>) const {}
 
 protected:
     Arguments(uint64_t type): RuntimeType(type) {}
@@ -219,15 +239,16 @@ struct Workflow {
     StrA name;
 
     /// The unique monotonically increasing sequence number of the workflow.
-    /// If (A->sequence - B->sequence) > 0, then A is scheduled after B.
+    /// If (A->sequence - B->sequence) > 0, then A is considered newer than, or "after", B.
+    /// We use signed integer as the sequence number. So it can overflow safely.
     int64_t sequence;
 
     /// Represents a single task in the workflow. This is the atomic execution unit of the render graph.
     /// \note
-    /// - Task A is considered "after" task B, if any the following is true:
-    ///   - A and B belong to same workflow and A's index is greater than B's index in the tasks array.
-    ///   - A and B belong to different workflows and A's workflow's sequence is greater than B's workflow's sequence.
-    /// - Task A is considered to depend on task B, only if A is after B and any of the following conditions are met:
+    /// - Task A is considered newer than task B, if any of the following is true:
+    ///   - A and B belong to same workflow. A's index is greater than B's index in the tasks array.
+    ///   - A and B belong to different workflows. A's workflow is newer than B's.
+    /// - Task A is considered to depend on task B, only if A is newer than B and any of the following is true:
     ///   - A is reading or writing to an artifact that B is writing to.
     ///   - A is writing to an artifact that B is reading from.
     struct Task {
@@ -292,11 +313,8 @@ struct RenderGraph {
     ///  - The returned workflow is free to modify until submit() is called.
     ///  - Call to submit() will invalidate all scheduled workflow pointers.
     ///  - Modifying workflow that has been submitted is undefined behavior.
-    ///  - A newly scheduled workflow A will depends on a previously scheduled workflow B, if any of the follwoing conditions are met:
-    ///    - A is reading or writing to an artifact that B is writing to.
-    ///    - A is writing to an artifact that B is reading from.
-    ///  - Workflow dependency can cross submit boundary. A workflow can depend on a workflow scheduled and submitted long ago.
-    ///
+    ///  - A newly scheduled workflow is always considered newer than any previously scheduled workflow.
+    ///  - A task in newer workflow might depend on a task in older workflow, but never vise versa.
     virtual Workflow * schedule(StrA name) = 0;
 
     /// Submit all scheduled workflows for async execution in a topological order that satisfies workflow dependencies.

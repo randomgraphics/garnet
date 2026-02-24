@@ -14,7 +14,6 @@ namespace GN::rdg {
 /// GpuContext represents a GPU context (wrapper of D3D/Vulkan context).
 struct GpuContext : public Artifact {
     GN_API static const uint64_t TYPE;
-    ;
 
     struct CreateParameters {
         /// The graphics API ("auto" = platform default; "vulkan", "d3d12", "metal").
@@ -39,7 +38,7 @@ protected:
 /// Texture represents a 2D/3D/cube texture with optional mipmap and array layers.
 struct Texture : public GpuResource {
     GN_API static const uint64_t TYPE;
-    ;
+    
     /// Descriptor used when creating or declaring the texture (format, dimensions).
     struct Descriptor {
         gfx::img::PixelFormat format  = gfx::img::PixelFormat::UNKNOWN();
@@ -130,7 +129,7 @@ protected:
 /// Sampler represents GPU sampler state (filtering, addressing, LOD, anisotropy).
 struct Sampler : public GpuResource {
     GN_API static const uint64_t TYPE;
-    ;
+   
     enum class Filter { POINT, LINEAR, ANISOTROPIC };
     enum class AddressMode { REPEAT, MIRROR_REPEAT, CLAMP_TO_EDGE, CLAMP_TO_BORDER, MIRROR_CLAMP_TO_EDGE };
 
@@ -166,7 +165,7 @@ protected:
 /// Buffer represents a GPU buffer (vertex, index, constant, storage, etc.).
 struct Buffer : public GpuResource {
     GN_API static const uint64_t TYPE;
-    ;
+    
     /// Buffer usage flags.
     enum Usage {
         VERTEX,       ///< Vertex buffer
@@ -206,7 +205,6 @@ protected:
 /// Meshes can be either indexed (using an index buffer) or non-indexed (drawing vertices directly).
 struct Mesh : public GpuResource {
     GN_API static const uint64_t TYPE;
-    ;
 
     struct VertexBuffer {
         AutoRef<Buffer>       buffer;
