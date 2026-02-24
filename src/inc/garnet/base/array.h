@@ -725,8 +725,26 @@ class SafeArrayAccessor {
 
 public:
     //@{
+    /// default constructor
+    SafeArrayAccessor(): mBegin(nullptr), mEnd(nullptr), mPtr(nullptr) {}
 
-    SafeArrayAccessor(T * data, size_t count): mBegin(data), mEnd(data + count), mPtr(data) {}
+    template<typename T2>
+    SafeArrayAccessor(T2 * data, size_t count): mBegin(data), mEnd(data + count), mPtr(data) {}
+
+    template<typename T2>
+    SafeArrayAccessor(const DynaArray<T2> & v): mBegin(v.data()), mEnd(v.data() + v.size()), mPtr(v.data()) {}
+
+    template<typename T2>
+    SafeArrayAccessor(const std::vector<T2> & v): mBegin(v.data()), mEnd(v.data() + v.size()), mPtr(v.data()) {}
+
+    template<typename T2, size_t N>
+    SafeArrayAccessor(const FixedArray<T2, N> & v): mBegin(v.data()), mEnd(v.data() + v.size()), mPtr(v.data()) {}
+
+    template<typename T2, size_t N>
+    SafeArrayAccessor(const T2 v[N]): mBegin(v), mEnd(v + N), mPtr(v) {}
+
+    template<typename T2>
+    SafeArrayAccessor(const std::initializer_list<T2> & v): mBegin(v.begin()), mEnd(v.end()), mPtr(v.begin()) {}
 
     bool empty() const { return mPtr == mEnd; }
 

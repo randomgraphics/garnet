@@ -356,6 +356,10 @@ public:
     }
 };
 
+// Make sure the size of AutoRef is the same as the size of the pointer it holds.
+// This is important. So that we can cast an array of AutoRef to an array of pointer safely.
+static_assert(sizeof(AutoRef<int>) == sizeof(int *));
+
 template<typename X>
 AutoRef<X> AutoRef<X>::NULLREF;
 

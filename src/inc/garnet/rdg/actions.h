@@ -51,6 +51,28 @@ struct RenderTarget {
     bool operator!=(const RenderTarget & other) const { return !operator==(other); }
 };
 
+struct RenderTargetParameter : public Arguments::ArtifactParameter<Arguments::UsageFlag::Writing | Arguments::UsageFlag::Reading> {
+    using Arguments::ArtifactParameter<Arguments::UsageFlag::Writing | Arguments::UsageFlag::Reading>::ArtifactParameter;
+
+    SafeArrayAccessor<const Artifact *> artifacts() const override {
+        mArtifacts.reserve(8 + 1);
+        mArtifacts.clear();
+        if (value) {
+            const auto & colors = value->colors;
+            for (size_t i = 0; i < colors.size(); ++i) {
+                if (!colors[i].empty()) { mArtifacts.append(colors[i].target.get()); }
+            }
+            if (!value->depthStencil.empty()) { mArtifacts.append(value->depthStencil.target.get()); }
+        }
+        return mArtifacts;
+    };
+
+    AutoRef<RenderTarget> value;
+
+private:
+    mutable DynaArray<const Artifact *> mArtifacts;
+};
+
 /// Clear render target to certain value. Discard existing content.
 /// This is the recommended first action to start rendering to a render target.
 /// It tells GPU to discard existing content thus avoid expensive image layout transitions.
@@ -69,8 +91,8 @@ struct ClearRenderTarget : public Action {
             float    depth;
             uint32_t stencil;
         };
-        ReadOnly<ClearValues>   clearValues;
-        ReadWrite<RenderTarget> renderTarget;
+        RenderTargetParameter renderTarget = {auto_reflection, "renderTarget"};
+        ClearValues           clearValues;
     };
 
     struct CreateParameters {
@@ -84,33 +106,14 @@ protected:
     using Action::Action;
 };
 
-// struct TextureLoader : public Action {
-//     GN_API static const uint64_t TYPE;
-
-//     struct A : public Arguments {
-//         GN_API static const uint64_t TYPE;
-//         A(): Arguments(TYPE) {}
-//         WriteOnly<AutoRef<Texture>> texture;  // Output texture resource
-//         ReadOnly<StrA>              filename; // Path to texture file
-//     };
-
-//     struct CreateParameters {
-//         // For future use
-//     };
-
-//     static GN_API AutoRef<TextureLoader> create(ArtifactDatabase & db, const StrA & name, const CreateParameters & params);
-
-// protected:
-//     using Action::Action;
-// };
-
 struct PrepareBackbuffer : public Action {
     GN_API static const uint64_t TYPE;
 
     struct A : public Arguments {
         GN_API static const uint64_t TYPE;
         A(): Arguments(TYPE) {}
-        ReadWrite<AutoRef<Backbuffer>> backbuffer; // Backbuffer to prepare
+
+        ReadWrite<Backbuffer> backbuffer = {auto_reflection, "backbuffer"}; // Backbuffer to prepare
     };
 
     struct CreateParameters {
@@ -130,7 +133,7 @@ struct PresentBackbuffer : public Action {
     struct A : public Arguments {
         GN_API static const uint64_t TYPE;
         A(): Arguments(TYPE) {}
-        ReadOnly<AutoRef<Backbuffer>> backbuffer; // Backbuffer to present
+        ReadOnly<Backbuffer> backbuffer = {auto_reflection, "backbuffer"}; // Backbuffer to present
     };
 
     struct CreateParameters {
@@ -186,8 +189,7 @@ struct SetupRenderStates : public Action {
         STENCIL_INC,
         STENCIL_DEC,
     };
-
-    enum BlendArg {
+    Action enum BlendArg {
         BLEND_ZERO = 0,
         BLEND_ONE,
         BLEND_SRC_COLOR,
@@ -272,7 +274,7 @@ struct SetupRenderStates : public Action {
     struct A : public Arguments {
         GN_API static const uint64_t TYPE;
         A(): Arguments(TYPE) {}
-        ReadOnly<RenderStateDesc> renderStates; ///< render state descriptor
+        RenderStateDesc renderStates; ///< render state descriptor
     };
 
     struct CreateParameters {
@@ -296,21 +298,78 @@ struct ShaderAction : public Action {
         bool operator<(const ShaderResourceBinding & other) const { return (set < other.set) || (set == other.set && slot < other.slot); }
     };
 
-    struct BufferParameter {
+    struct BufferView {
         AutoRef<Buffer> buffer;
         uint32_t        offset = 0;
         uint32_t        size   = 0;
     };
 
-    struct ImageParameter {
+    template<Arguments::UsageFlag UFlags = Arguments::UsageFlag::Reading>
+    struct BufferViewMap : public Arguments::ArtifactParameter<UFlags> {
+        using Arguments::ArtifactParameter<UFlags>::ArtifactParameter;
+
+        SafeArrayAccessor<const Artifact *> artifacts() const override {
+            mArtifacts.reserve(value.size());
+            mArtifacts.clear();
+            for (const auto & [name, view] : value) {
+                (void) name;
+                if (view.buffer) { mArtifacts.append(view.buffer.get()); }
+            }
+            return mArtifacts;
+        }
+
+        std::map<StrA, BufferView> value;
+
+    private:
+        mutable DynaArray<const Artifact *> mArtifacts;
+    };
+
+    struct ImageView {
         AutoRef<Texture>          texture;
         gfx::img::PixelFormat     format = gfx::img::PixelFormat::UNKNOWN();
         Texture::SubresourceIndex subresourceIndex;
         Texture::SubresourceRange subresourceRange;
+    }
+
+    template<Arguments::UsageFlag UFlags = Arguments::UsageFlag::Reading>
+    struct ImageViewMap : public Arguments::ArtifactParameter<UFlags> {
+        using Arguments::ArtifactParameter<UFlags>::ArtifactParameter;
+
+        SafeArrayAccessor<const Artifact *> artifacts() const override {
+            mArtifacts.clear();
+            for (const auto & [name, view] : value) {
+                (void) name;
+                if (view.texture) { mArtifacts.append(view.texture.get()); }
+            }
+            return mArtifacts;
+        }
+
+        std::map<StrA, ImageView> value;
     };
 
-    struct TextureParameter : public ImageParameter {
+    struct TextureView : ImageView {
+        AutoRef<Texture> texture;
         AutoRef<Sampler> sampler;
+    };
+
+    template<Arguments::UsageFlag UFlags = Arguments::UsageFlag::Reading>
+    struct TextureViewMap : public Arguments::ArtifactParameter<UFlags> {
+        using Arguments::ArtifactParameter<UFlags>::ArtifactParameter;
+
+        SafeArrayAccessor<const Artifact *> artifacts() const override {
+            mArtifacts.clear();
+            for (const auto & [name, view] : value) {
+                (void) name;
+                if (view.texture) {
+                    mArtifacts.append(view.texture.get());
+                    // check sampler only if texture is not empty
+                    if (view.sampler) { mArtifacts.append(view.sampler.get()); }
+                }
+            }
+            return mArtifacts;
+        }
+
+        std::map<StrA, TextureView> value;
     };
 
 protected:
@@ -339,22 +398,45 @@ struct GenericDraw : public ShaderAction {
     GN_API static const uint64_t TYPE;
 
     /// Draw parameters
-    struct DrawParams {
+    struct DrawParameters {
         uint32_t vertexCount   = 0; ///< number of vertices to draw
         uint32_t instanceCount = 1; ///< number of instances to draw
         uint32_t firstVertex   = 0; ///< first vertex index
         uint32_t firstInstance = 0; ///< first instance index
     };
 
+    strict MeshParameter : Arguments::ArtifactParameter<Arguments::UsageFlag::Reading> {
+        using Arguments::ArtifactParameter<Arguments::UsageFlag::Reading>::ArtifactParameter;
+
+        SafeArrayAccessor<const Artifact *> artifacts() const override {
+            if (!value) return {};
+            const auto & desc = value->descriptor();
+            mArtifacts.clear();
+            for (const auto & [name, vertex] : desc.vertices) {
+                (void) name;
+                if (!vertex.buffer) continue;
+                mArtifacts.append(vertex.buffer.get());
+            }
+            if (desc.indexBuffer) { mArtifacts.append(desc.indexBuffer.get()); }
+            return mArtifacts;
+        }
+
+        AutoRef<Mesh> value;
+
+    private:
+        mutable DynaArray<const Artifact *> mArtifacts;
+    };
+
     struct A : public Arguments {
         GN_API static const uint64_t TYPE;
         A(): Arguments(TYPE) {}
 
-        ReadOnly<AutoRef<Mesh>>             mesh;
-        ReadOnlyMap<StrA, BufferParameter>  uniforms;     ///< uniform buffers, key is shader variable name
-        ReadOnlyMap<StrA, TextureParameter> textures;     ///< textures, key is shader variable name
-        ReadOnly<DrawParams>                drawParams;   ///< draw parameters
-        ReadWrite<RenderTarget>             renderTarget; ///< render target
+        MeshParameter         mesh         = {auto_reflection, "mesh"};
+        BufferViewMap         buffers      = {auto_reflection, "buffers"};      ///< buffer views, key is shader variable name
+        ImageViewMap          images       = {auto_reflection, "images"};       ///< image views, key is shader variable name
+        TextureViewMap        textures     = {auto_reflection, "textures"};     ///< texture views, key is shader variable name
+        RenderTargetParameter renderTarget = {auto_reflection, "renderTarget"}; ///< render target
+        DrawParameters        drawParams;                                       ///< draw parameters
     };
 
     /// Shader stage description
@@ -393,11 +475,11 @@ struct GenericCompute : public ShaderAction {
         GN_API static const uint64_t TYPE;
         A(): Arguments(TYPE) {}
 
-        ReadOnlyMap<ShaderResourceBinding, BufferParameter>  uniforms; ///< uniform buffers
-        ReadOnlyMap<ShaderResourceBinding, TextureParameter> textures; ///< textures
-        ReadWriteMap<ShaderResourceBinding, BufferParameter> buffers;  ///< storage buffers
-        ReadWriteMap<ShaderResourceBinding, ImageParameter>  images;   ///< storage images
-        ReadOnly<DispatchSize>                               groups;   ///< thread group counts
+        BufferViewMap                           uniforms; ///< uniform buffers
+        TextureViewMap                          textures; ///< textures
+        BufferViewMap<Argument::UsageFlags::RW> buffers;  ///< storage buffers
+        ImageViewMap<Argument::UsageFlags::RW>  images;   ///< storage images
+        DispatchSize                            groups;   ///< thread group counts
     };
 
     struct CreateParameters {
