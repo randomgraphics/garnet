@@ -304,15 +304,19 @@ struct ShaderAction : public Action {
         bool operator<(const ShaderResourceBinding & other) const { return (set < other.set) || (set == other.set && slot < other.slot); }
     };
 
+    struct ConstantArguments {
+        std::map<StrA, AutoRef<Blob>> value;
+    };
+
     struct BufferView {
         AutoRef<Buffer> buffer;
         uint32_t        offset = 0;
         uint32_t        size   = 0;
     };
 
-    template<Arguments::UsageFlag UFlags = Arguments::UsageFlag::Reading>
+    template<Arguments::UsageFlag UFlags>
     struct BufferViewMap : public Arguments::ArtifactArgument {
-        BufferViewMap(Arguments * owner, const char * name): Arguments::ArtifactArgument(owner, name, UFlags) {}
+        BufferViewMap(Arguments * owner, const char * name): Arguments::ArtifactArgument(owner, name, UFlags | Arguments::UsageFlag::Optional) {}
 
         SafeArrayAccessor<const Artifact * const> artifacts() const override {
             mArtifacts.reserve(value.size());
@@ -337,9 +341,9 @@ struct ShaderAction : public Action {
         Texture::SubresourceRange subresourceRange;
     };
 
-    template<Arguments::UsageFlag UFlags = Arguments::UsageFlag::Reading>
+    template<Arguments::UsageFlag UFlags>
     struct ImageViewMap : public Arguments::ArtifactArgument {
-        ImageViewMap(Arguments * owner, const char * name): Arguments::ArtifactArgument(owner, name, UFlags) {}
+        ImageViewMap(Arguments * owner, const char * name): Arguments::ArtifactArgument(owner, name, UFlags | Arguments::UsageFlag::Optional) {}
 
         SafeArrayAccessor<const Artifact * const> artifacts() const override {
             mArtifacts.clear();
@@ -361,9 +365,9 @@ struct ShaderAction : public Action {
         AutoRef<Sampler> sampler;
     };
 
-    template<Arguments::UsageFlag UFlags = Arguments::UsageFlag::Reading>
+    template<Arguments::UsageFlag UFlags>
     struct TextureViewMap : public Arguments::ArtifactArgument {
-        TextureViewMap(Arguments * owner, const char * name): Arguments::ArtifactArgument(owner, name, UFlags) {}
+        TextureViewMap(Arguments * owner, const char * name): Arguments::ArtifactArgument(owner, name, UFlags | Arguments::UsageFlag::Optional) {}
 
         SafeArrayAccessor<const Artifact * const> artifacts() const override {
             mArtifacts.clear();
@@ -383,6 +387,11 @@ struct ShaderAction : public Action {
     private:
         mutable DynaArray<const Artifact *> mArtifacts;
     };
+
+    using UniformArguments   = BufferViewMap<Arguments::UsageFlag::Reading>;
+    using RwBuffersArguments = BufferViewMap<Arguments::UsageFlag::RW>;
+    using RwImagesArguments  = ImageViewMap<Arguments::UsageFlag::RW>;
+    using TexturesArguments  = TextureViewMap<Arguments::UsageFlag::Reading>;
 
 protected:
     using Action::Action;
@@ -410,20 +419,26 @@ struct GenericDraw : public ShaderAction {
     GN_API static const uint64_t         TYPE_ID;
     inline static constexpr const char * TYPE_NAME = "GenericDraw";
 
-    /// Draw parameters
-    struct DrawArguments {
-        uint32_t vertexCount   = 0; ///< number of vertices to draw
-        uint32_t instanceCount = 1; ///< number of instances to draw
-        uint32_t firstVertex   = 0; ///< first vertex index
-        uint32_t firstInstance = 0; ///< first instance index
+    struct Submesh {
+        uint32_t firstInstance = 0;   ///< first instance index
+        uint32_t instanceCount = ~0u; ///< number of instances to draw. ~0u means all instances.
+        uint32_t firstVertex   = 0;   ///< first vertex index
+        uint32_t vertexCount   = ~0u; ///< number of vertices to draw. ~0u means all vertices.
+        uint32_t firstIndex    = 0;   ///< Index of the first index to draw. Ignored if mesh is non-indexed.
+        uint32_t indexCount    = ~0u; ///< number of indices to draw. ~0u means all indices. Ignored if mesh is non-indexed.
     };
 
-    struct MeshParameter : public Arguments::ArtifactArgument {
-        MeshParameter(Arguments * owner, const char * name): Arguments::ArtifactArgument(owner, name, Arguments::UsageFlag::Reading) {}
+    struct MeshView {
+        AutoRef<Mesh> mesh;
+        Submesh       sub;
+    };
+
+    struct MeshArgument : public Arguments::ArtifactArgument {
+        MeshArgument(Arguments * owner, const char * name): Arguments::ArtifactArgument(owner, name, Arguments::UsageFlag::Reading) {}
 
         SafeArrayAccessor<const Artifact * const> artifacts() const override {
-            if (!value) return {};
-            const auto & desc = value->descriptor();
+            if (!value.mesh) return {};
+            const auto & desc = value.mesh->descriptor();
             mArtifacts.clear();
             for (const auto & [name, vertex] : desc.vertices) {
                 (void) name;
@@ -434,7 +449,7 @@ struct GenericDraw : public ShaderAction {
             return mArtifacts;
         }
 
-        AutoRef<Mesh> value;
+        MeshView value;
 
     private:
         mutable DynaArray<const Artifact *> mArtifacts;
@@ -445,12 +460,12 @@ struct GenericDraw : public ShaderAction {
         inline static constexpr const char * TYPE_NAME = "GenericDraw::A";
         A(): Arguments(TYPE_ID, TYPE_NAME) {}
 
-        MeshParameter        mesh         = {this, "mesh"};
-        BufferViewMap<>      buffers      = {this, "buffers"};      ///< buffer views, key is shader variable name
-        ImageViewMap<>       images       = {this, "images"};       ///< image views, key is shader variable name
-        TextureViewMap<>     textures     = {this, "textures"};     ///< texture views, key is shader variable name
+        ConstantArguments    constants; // immediate constants
+        MeshArgument         mesh         = {this, "mesh"};
+        UniformArguments     uniforms     = {this, "uniforms"};     ///< buffer views, key is shader variable name
+        TexturesArguments    textures     = {this, "textures"};     ///< texture views, key is shader variable name
+        RwImagesArguments    images       = {this, "images"};       ///< image views, key is shader variable name
         RenderTargetArgument renderTarget = {this, "renderTarget"}; ///< render target
-        DrawArguments        drawParams;                            ///< draw parameters
     };
 
     /// Shader stage description
@@ -491,11 +506,12 @@ struct GenericCompute : public ShaderAction {
         inline static constexpr const char * TYPE_NAME = "GenericCompute::A";
         A(): Arguments(TYPE_ID, TYPE_NAME) {}
 
-        BufferViewMap<>                         uniforms = {this, "uniforms"}; ///< uniform buffers
-        TextureViewMap<>                        textures = {this, "textures"}; ///< textures
-        BufferViewMap<Arguments::UsageFlag::RW> buffers  = {this, "buffers"};  ///< storage buffers
-        ImageViewMap<Arguments::UsageFlag::RW>  images   = {this, "images"};   ///< storage images
-        DispatchSize                            groups;                        ///< thread group counts
+        UniformArguments   uniforms = {this, "uniforms"}; ///< uniform buffers
+        TexturesArguments  textures = {this, "textures"}; ///< textures
+        RwBuffersArguments buffers  = {this, "buffers"};  ///< storage buffers
+        RwImagesArguments  images   = {this, "images"};   ///< storage images
+        ConstantArguments  constants;                     ///< immediate constants
+        DispatchSize       groups;                        ///< thread group counts
     };
 
     struct CreateParameters {

@@ -31,12 +31,14 @@ static void trackRenderTargetState(const RenderTarget & renderTarget) {
     }
 
     // track the state of the depth stencil target.
-    auto depth = renderTarget.depthStencil.target.castTo<TextureVulkan>().get();
-    if (depth)
-        depth->trackImageState(renderTarget.depthStencil.subresourceIndex.mip, 1, renderTarget.depthStencil.subresourceIndex.face, 1,
-                               {vk::ImageLayout::eDepthStencilAttachmentOptimal,
-                                vk::AccessFlagBits::eDepthStencilAttachmentRead | vk::AccessFlagBits::eDepthStencilAttachmentWrite,
-                                vk::PipelineStageFlagBits::eEarlyFragmentTests | vk::PipelineStageFlagBits::eLateFragmentTests});
+    if (!renderTarget.depthStencil.empty()) {
+        auto depth = renderTarget.depthStencil.target.castTo<TextureVulkan>().get();
+        if (depth)
+            depth->trackImageState(renderTarget.depthStencil.subresourceIndex.mip, 1, renderTarget.depthStencil.subresourceIndex.face, 1,
+                                   {vk::ImageLayout::eDepthStencilAttachmentOptimal,
+                                    vk::AccessFlagBits::eDepthStencilAttachmentRead | vk::AccessFlagBits::eDepthStencilAttachmentWrite,
+                                    vk::PipelineStageFlagBits::eEarlyFragmentTests | vk::PipelineStageFlagBits::eLateFragmentTests});
+    }
 }
 
 class ClearRenderTargetVulkan : public ClearRenderTarget {
@@ -347,11 +349,11 @@ public:
             }
             cb.commandBuffer.handle().bindPipeline(vk::PipelineBindPoint::eGraphics, mPipeline);
             // Task 7.2: mesh is optional; draw uses gl_VertexIndex in shader, no vertex buffer bound.
-            const auto &   dp            = a->drawParams;
-            const uint32_t vertexCount   = dp.vertexCount;
-            const uint32_t instanceCount = dp.instanceCount;
-            const uint32_t firstVertex   = dp.firstVertex;
-            const uint32_t firstInstance = dp.firstInstance;
+            const auto &   sub           = a->mesh.value.sub;
+            const uint32_t vertexCount   = sub.vertexCount;
+            const uint32_t instanceCount = sub.instanceCount;
+            const uint32_t firstVertex   = sub.firstVertex;
+            const uint32_t firstInstance = sub.firstInstance;
             if (vertexCount > 0) cb.commandBuffer.handle().draw(vertexCount, instanceCount, firstVertex, firstInstance);
         }
 
