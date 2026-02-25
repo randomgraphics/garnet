@@ -221,11 +221,20 @@ struct Mesh : public GpuResource {
 
     /// Complete mesh descriptor containing all vertex and index data information
     struct Descriptor {
-        std::unordered_map<StrA, VertexBuffer> vertices;    ///< vertices, key is semantic name
-        uint32_t                               vertexCount; ///< number of vertices in the mesh
-        AutoRef<Buffer>                        indexBuffer; ///< index buffer. Null if mesh is non-indexed.
-        uint32_t                               indexCount;  ///< number of indices. Undefined if non-indexed.
-        uint32_t indexOffset; ///< offset in bytes from beginning of the index buffer to the first index. Undefined if non-indexed.
+        /// vertices, key is semantic name
+        std::unordered_map<StrA, VertexBuffer> vertices;
+
+        /// number of vertices in the mesh
+        uint32_t vertexCount;
+
+        /// index buffer. Null if mesh is non-indexed.
+        AutoRef<Buffer> indexBuffer;
+
+        /// number of indices. Undefined if non-indexed.
+        uint32_t indexCount;
+
+        /// offset in bytes from beginning of the index buffer to the first index. Undefined if non-indexed.
+        uint32_t indexOffset;
     };
 
     struct CreateParameters {
