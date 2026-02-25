@@ -4,10 +4,57 @@
 
 namespace GN::rdg {
 
+struct BufferView {
+    AutoRef<Buffer> buffer;
+    uint32_t        offset = 0;
+    uint32_t        size   = 0;
+};
+
+struct ImageView {
+    struct SubresourceIndex {
+        uint32_t mip  = 0; ///< index into mipmap chain
+        uint32_t face = 0; ///< index into array of faces
+
+        bool operator==(const SubresourceIndex & other) const { return mip == other.mip && face == other.face; }
+        bool operator!=(const SubresourceIndex & other) const { return !operator==(other); }
+    };
+
+    struct SubresourceRange {
+        uint32_t numMipLevels   = (uint32_t) -1; ///< -1 means all mip levels
+        uint32_t numArrayLayers = (uint32_t) -1; ///< -1 means all array layers
+
+        bool operator==(const SubresourceRange & other) const { return numMipLevels == other.numMipLevels && numArrayLayers == other.numArrayLayers; }
+        bool operator!=(const SubresourceRange & other) const { return !operator==(other); }
+    };
+
+    AutoRef<Texture>          texture;
+    gfx::img::PixelFormat     format = gfx::img::PixelFormat::UNKNOWN();
+    SubresourceIndex      subresourceIndex;
+    SubresourceRange subresourceRange;
+};
+
+struct TextureView : ImageView {
+    AutoRef<Sampler> sampler;
+};
+
+struct MeshView {
+    struct Submesh {
+        uint32_t firstInstance = 0;   ///< first instance index
+        uint32_t instanceCount = ~0u; ///< number of instances to draw. ~0u means all instances.
+        uint32_t firstVertex   = 0;   ///< first vertex index
+        uint32_t vertexCount   = ~0u; ///< number of vertices to draw. ~0u means all vertices.
+        uint32_t firstIndex    = 0;   ///< Index of the first index to draw. Ignored if mesh is non-indexed.
+        uint32_t indexCount    = ~0u; ///< number of indices to draw. ~0u means all indices. Ignored if mesh is non-indexed.
+    };
+        
+    AutoRef<Mesh> mesh;
+    Submesh       sub;
+};
+
 struct RenderTarget {
     struct ColorTarget {
-        std::variant<AutoRef<Texture>, AutoRef<Backbuffer>> target;
-        Texture::SubresourceIndex                           subresourceIndex; ///< only used for non-empty texture targets
+        std::variant<AutoRef<Texture>, AutoRef<Backbuffer>>   target;
+        ImageView::SubresourceIndex                           subresourceIndex; ///< only used for non-empty texture targets
 
         bool empty() const { return target.index() == 1 && std::get<1>(target) == nullptr; }
 
@@ -23,8 +70,8 @@ struct RenderTarget {
     };
 
     struct DepthStencil {
-        AutoRef<Texture>          target;
-        Texture::SubresourceIndex subresourceIndex {};
+        AutoRef<Texture>            target;
+        ImageView::SubresourceIndex subresourceIndex {};
 
         bool empty() const { return !target; }
 
@@ -304,12 +351,6 @@ struct ShaderAction : public Action {
         bool operator<(const ShaderResourceBinding & other) const { return (set < other.set) || (set == other.set && slot < other.slot); }
     };
 
-    struct BufferView {
-        AutoRef<Buffer> buffer;
-        uint32_t        offset = 0;
-        uint32_t        size   = 0;
-    };
-
     template<Arguments::UsageFlag UFlags>
     struct BufferViewMap : public Arguments::ArtifactArgument {
         BufferViewMap(Arguments * owner, const char * name): Arguments::ArtifactArgument(owner, name, UFlags | Arguments::UsageFlag::Optional) {}
@@ -330,13 +371,6 @@ struct ShaderAction : public Action {
         mutable DynaArray<const Artifact *> mArtifacts;
     };
 
-    struct ImageView {
-        AutoRef<Texture>          texture;
-        gfx::img::PixelFormat     format = gfx::img::PixelFormat::UNKNOWN();
-        Texture::SubresourceIndex subresourceIndex;
-        Texture::SubresourceRange subresourceRange;
-    };
-
     template<Arguments::UsageFlag UFlags>
     struct ImageViewMap : public Arguments::ArtifactArgument {
         ImageViewMap(Arguments * owner, const char * name): Arguments::ArtifactArgument(owner, name, UFlags | Arguments::UsageFlag::Optional) {}
@@ -354,11 +388,6 @@ struct ShaderAction : public Action {
 
     private:
         mutable DynaArray<const Artifact *> mArtifacts;
-    };
-
-    struct TextureView : ImageView {
-        AutoRef<Texture> texture;
-        AutoRef<Sampler> sampler;
     };
 
     template<Arguments::UsageFlag UFlags>
@@ -414,20 +443,6 @@ namespace GN::rdg {
 struct GenericDraw : public ShaderAction {
     GN_API static const uint64_t         TYPE_ID;
     inline static constexpr const char * TYPE_NAME = "GenericDraw";
-
-    struct Submesh {
-        uint32_t firstInstance = 0;   ///< first instance index
-        uint32_t instanceCount = ~0u; ///< number of instances to draw. ~0u means all instances.
-        uint32_t firstVertex   = 0;   ///< first vertex index
-        uint32_t vertexCount   = ~0u; ///< number of vertices to draw. ~0u means all vertices.
-        uint32_t firstIndex    = 0;   ///< Index of the first index to draw. Ignored if mesh is non-indexed.
-        uint32_t indexCount    = ~0u; ///< number of indices to draw. ~0u means all indices. Ignored if mesh is non-indexed.
-    };
-
-    struct MeshView {
-        AutoRef<Mesh> mesh;
-        Submesh       sub;
-    };
 
     struct MeshArgument : public Arguments::ArtifactArgument {
         MeshArgument(Arguments * owner, const char * name): Arguments::ArtifactArgument(owner, name, Arguments::UsageFlag::Reading) {}

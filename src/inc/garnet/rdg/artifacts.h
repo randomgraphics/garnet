@@ -85,22 +85,6 @@ struct Texture : public GpuResource {
         uint32_t              samples = 1; ///< 1 = no multisampling
     };
 
-    struct SubresourceIndex {
-        uint32_t mip  = 0; ///< index into mipmap chain
-        uint32_t face = 0; ///< index into array of faces
-
-        bool operator==(const SubresourceIndex & other) const { return mip == other.mip && face == other.face; }
-        bool operator!=(const SubresourceIndex & other) const { return !operator==(other); }
-    };
-
-    struct SubresourceRange {
-        uint32_t numMipLevels   = (uint32_t) -1; ///< -1 means all mip levels
-        uint32_t numArrayLayers = (uint32_t) -1; ///< -1 means all array layers
-
-        bool operator==(const SubresourceRange & other) const { return numMipLevels == other.numMipLevels && numArrayLayers == other.numArrayLayers; }
-        bool operator!=(const SubresourceRange & other) const { return !operator==(other); }
-    };
-
     struct CreateParameters {
         AutoRef<GpuContext> context;
         Descriptor          descriptor;
@@ -134,33 +118,33 @@ struct Sampler : public GpuResource {
     GN_API static const uint64_t         TYPE_ID;
     inline static constexpr const char * TYPE_NAME = "Sampler";
 
-    enum class Filter { POINT, LINEAR, ANISOTROPIC };
-    enum class AddressMode { REPEAT, MIRROR_REPEAT, CLAMP_TO_EDGE, CLAMP_TO_BORDER, MIRROR_CLAMP_TO_EDGE };
+    // enum class Filter { POINT, LINEAR, ANISOTROPIC };
+    // enum class AddressMode { REPEAT, MIRROR_REPEAT, CLAMP_TO_EDGE, CLAMP_TO_BORDER, MIRROR_CLAMP_TO_EDGE };
 
-    /// Descriptor for sampler creation.
-    struct Descriptor {
-        Filter      filterMin     = Filter::LINEAR;
-        Filter      filterMag     = Filter::LINEAR;
-        Filter      filterMip     = Filter::LINEAR;
-        AddressMode addressU      = AddressMode::REPEAT;
-        AddressMode addressV      = AddressMode::REPEAT;
-        AddressMode addressW      = AddressMode::REPEAT;
-        float       mipLodBias    = 0.f;
-        uint32_t    maxAnisotropy = 1;
-        float       minLod        = 0.f;
-        float       maxLod        = 0.f; ///< 0 often means "all mips"
-    };
+    // /// Descriptor for sampler creation.
+    // struct Descriptor {
+    //     Filter      filterMin     = Filter::LINEAR;
+    //     Filter      filterMag     = Filter::LINEAR;
+    //     Filter      filterMip     = Filter::LINEAR;
+    //     AddressMode addressU      = AddressMode::REPEAT;
+    //     AddressMode addressV      = AddressMode::REPEAT;
+    //     AddressMode addressW      = AddressMode::REPEAT;
+    //     float       mipLodBias    = 0.f;
+    //     uint32_t    maxAnisotropy = 1;
+    //     float       minLod        = 0.f;
+    //     float       maxLod        = 0.f; ///< 0 often means "all mips"
+    // };
 
-    struct CreateParameters {
-        AutoRef<GpuContext> context;
-        Descriptor          descriptor;
-    };
+    // struct CreateParameters {
+    //     AutoRef<GpuContext> context;
+    //     Descriptor          descriptor;
+    // };
 
-    /// Return the current sampler descriptor.
-    virtual const Descriptor & descriptor() const = 0;
+    // /// Return the current sampler descriptor.
+    // virtual const Descriptor & descriptor() const = 0;
 
-    /// Create a new instance of Sampler. Must call reset() at least once for the sampler to be valid to use.
-    static GN_API AutoRef<Sampler> create(ArtifactDatabase & db, const StrA & name, const CreateParameters & params);
+    // /// Create a new instance of Sampler. Must call reset() at least once for the sampler to be valid to use.
+    // static GN_API AutoRef<Sampler> create(ArtifactDatabase & db, const StrA & name, const CreateParameters & params);
 
 protected:
     using GpuResource::GpuResource;
@@ -206,52 +190,53 @@ protected:
     using GpuResource::GpuResource;
 };
 
+
 /// Base class of all mesh types.
 /// Meshes can be either indexed (using an index buffer) or non-indexed (drawing vertices directly).
 struct Mesh : public GpuResource {
     GN_API static const uint64_t         TYPE_ID;
     inline static constexpr const char * TYPE_NAME = "Mesh";
 
-    struct VertexBuffer {
-        // AutoRef<Buffer>       buffer;
-        gfx::img::PixelFormat format;     ///< pixel format of the vertex
-        uint32_t              offset = 0; ///< offset in bytes from beginning of the buffer to the first vertex
-        uint32_t              stride = 0; ///< vertex stride in bytes
-    };
+    // struct VertexBuffer {
+    //     // AutoRef<Buffer>       buffer;
+    //     gfx::img::PixelFormat format;     ///< pixel format of the vertex
+    //     uint32_t              offset = 0; ///< offset in bytes from beginning of the buffer to the first vertex
+    //     uint32_t              stride = 0; ///< vertex stride in bytes
+    // };
 
-    /// Complete mesh descriptor containing all vertex and index data information
-    struct Descriptor {
-        /// vertices, key is semantic name
-        std::unordered_map<StrA, VertexBuffer> vertices;
+    // /// Complete mesh descriptor containing all vertex and index data information
+    // struct Descriptor {
+    //     /// vertices, key is semantic name
+    //     std::unordered_map<StrA, VertexBuffer> vertices;
 
-        /// number of vertices in the mesh
-        uint32_t vertexCount;
+    //     /// number of vertices in the mesh
+    //     uint32_t vertexCount;
 
-        /// index buffer. Null if mesh is non-indexed.
-        // AutoRef<Buffer> indexBuffer;
+    //     /// index buffer. Null if mesh is non-indexed.
+    //     // AutoRef<Buffer> indexBuffer;
 
-        /// number of indices. 0, if non-indexed.
-        uint32_t indexCount;
+    //     /// number of indices. 0, if non-indexed.
+    //     uint32_t indexCount;
 
-        /// offset in bytes from beginning of the index buffer to the first index. Ignored if indexCount is 0.
-        uint32_t indexOffset;
-    };
+    //     /// offset in bytes from beginning of the index buffer to the first index. Ignored if indexCount is 0.
+    //     uint32_t indexOffset;
+    // };
 
-    struct CreateParameters {
-        AutoRef<GpuContext> context;
-        Descriptor          descriptor;
-    };
+    // struct CreateParameters {
+    //     AutoRef<GpuContext> context;
+    //     Descriptor          descriptor;
+    // };
 
     struct LoadParameters {
         AutoRef<GpuContext> context;
         StrA                filename;
     };
 
-    /// Get the complete mesh descriptor containing all vertex and index data.
-    virtual const Descriptor & descriptor() const = 0;
+    // /// Get the complete mesh descriptor containing all vertex and index data.
+    // virtual const Descriptor & descriptor() const = 0;
 
-    /// Create a new instance of Mesh.
-    static GN_API AutoRef<Mesh> create(ArtifactDatabase & db, const StrA & name, const CreateParameters & params);
+    // /// Create a new instance of Mesh.
+    // static GN_API AutoRef<Mesh> create(ArtifactDatabase & db, const StrA & name, const CreateParameters & params);
 
     /// Load mesh from file. Returns a mesh artifact named after the file name.
     /// If the file has been loaded before, return the existing artifact.
