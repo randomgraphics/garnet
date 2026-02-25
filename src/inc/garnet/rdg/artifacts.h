@@ -190,7 +190,6 @@ protected:
     using GpuResource::GpuResource;
 };
 
-
 /// Base class of all mesh types.
 /// Meshes can be either indexed (using an index buffer) or non-indexed (drawing vertices directly).
 struct Mesh : public GpuResource {

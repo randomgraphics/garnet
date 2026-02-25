@@ -27,10 +27,10 @@ struct ImageView {
         bool operator!=(const SubresourceRange & other) const { return !operator==(other); }
     };
 
-    AutoRef<Texture>          texture;
-    gfx::img::PixelFormat     format = gfx::img::PixelFormat::UNKNOWN();
+    AutoRef<Texture>      texture;
+    gfx::img::PixelFormat format = gfx::img::PixelFormat::UNKNOWN();
     SubresourceIndex      subresourceIndex;
-    SubresourceRange subresourceRange;
+    SubresourceRange      subresourceRange;
 };
 
 struct TextureView : ImageView {
@@ -46,15 +46,15 @@ struct MeshView {
         uint32_t firstIndex    = 0;   ///< Index of the first index to draw. Ignored if mesh is non-indexed.
         uint32_t indexCount    = ~0u; ///< number of indices to draw. ~0u means all indices. Ignored if mesh is non-indexed.
     };
-        
+
     AutoRef<Mesh> mesh;
     Submesh       sub;
 };
 
 struct RenderTarget {
     struct ColorTarget {
-        std::variant<AutoRef<Texture>, AutoRef<Backbuffer>>   target;
-        ImageView::SubresourceIndex                           subresourceIndex; ///< only used for non-empty texture targets
+        std::variant<AutoRef<Texture>, AutoRef<Backbuffer>> target;
+        ImageView::SubresourceIndex                         subresourceIndex; ///< only used for non-empty texture targets
 
         bool empty() const { return target.index() == 1 && std::get<1>(target) == nullptr; }
 
