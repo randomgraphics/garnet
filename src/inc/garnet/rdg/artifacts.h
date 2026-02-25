@@ -36,6 +36,39 @@ protected:
     using Artifact::Artifact;
 };
 
+/// Backbuffer represents the swapchain that can be presented to screen.
+struct Backbuffer : public GpuResource {
+    GN_API static const uint64_t         TYPE_ID;
+    inline static constexpr const char * TYPE_NAME = "Backbuffer";
+
+    /// Window and size (and format) for backbuffer. If win is null, headless; width/height must be positive.
+    /// If win is non-null and width/height are 0, use window client size.
+    /// If format is UNKNOWN(), automatically select the best back buffer format.
+    struct Descriptor {
+        GN::win::Window *     win    = {};
+        gfx::img::PixelFormat format = gfx::img::PixelFormat::UNKNOWN();
+        uint32_t              width  = 0;
+        uint32_t              height = 0;
+    };
+
+    struct CreateParameters {
+        AutoRef<GpuContext> context;
+        Descriptor          descriptor;
+    };
+
+    /// Return the current backbuffer descriptor.
+    virtual const Descriptor & descriptor() const = 0;
+
+    /// Read the content into an image.
+    virtual gfx::img::Image readback() const = 0;
+
+    /// Create a new instance of Backbuffer.
+    static GN_API AutoRef<Backbuffer> create(ArtifactDatabase & db, const StrA & name, const CreateParameters & params);
+
+protected:
+    using GpuResource::GpuResource;
+};
+
 /// Texture represents a 2D/3D/cube texture with optional mipmap and array layers.
 struct Texture : public GpuResource {
     GN_API static const uint64_t         TYPE_ID;
@@ -96,39 +129,6 @@ protected:
     using GpuResource::GpuResource;
 };
 
-/// Backbuffer represents the swapchain that can be presented to screen.
-struct Backbuffer : public GpuResource {
-    GN_API static const uint64_t         TYPE_ID;
-    inline static constexpr const char * TYPE_NAME = "Backbuffer";
-
-    /// Window and size (and format) for backbuffer. If win is null, headless; width/height must be positive.
-    /// If win is non-null and width/height are 0, use window client size.
-    /// If format is UNKNOWN(), automatically select the best back buffer format.
-    struct Descriptor {
-        GN::win::Window *     win    = {};
-        gfx::img::PixelFormat format = gfx::img::PixelFormat::UNKNOWN();
-        uint32_t              width  = 0;
-        uint32_t              height = 0;
-    };
-
-    struct CreateParameters {
-        AutoRef<GpuContext> context;
-        Descriptor          descriptor;
-    };
-
-    /// Return the current backbuffer descriptor.
-    virtual const Descriptor & descriptor() const = 0;
-
-    /// Read the content into an image.
-    virtual gfx::img::Image readback() const = 0;
-
-    /// Create a new instance of Backbuffer.
-    static GN_API AutoRef<Backbuffer> create(ArtifactDatabase & db, const StrA & name, const CreateParameters & params);
-
-protected:
-    using GpuResource::GpuResource;
-};
-
 /// Sampler represents GPU sampler state (filtering, addressing, LOD, anisotropy).
 struct Sampler : public GpuResource {
     GN_API static const uint64_t         TYPE_ID;
@@ -166,41 +166,41 @@ protected:
     using GpuResource::GpuResource;
 };
 
-/// Buffer represents a GPU buffer (vertex, index, constant, storage, etc.).
+/// Buffer represents a GPU buffer
 struct Buffer : public GpuResource {
     GN_API static const uint64_t         TYPE_ID;
     inline static constexpr const char * TYPE_NAME = "Buffer";
 
-    /// Buffer usage flags.
-    enum Usage {
-        VERTEX,       ///< Vertex buffer
-        INDEX,        ///< Index buffer
-        CONSTANT,     ///< Constant/uniform buffer
-        STORAGE,      ///< Storage (RW) buffer
-        INDIRECT,     ///< Indirect command buffer
-        TRANSFER_SRC, ///< Can be used as transfer source
-        TRANSFER_DST  ///< Can be used as transfer destination
-    };
+    // /// Buffer usage flags.
+    // enum Usage {
+    //     VERTEX,       ///< Vertex buffer
+    //     INDEX,        ///< Index buffer
+    //     CONSTANT,     ///< Constant/uniform buffer
+    //     STORAGE,      ///< Storage (RW) buffer
+    //     INDIRECT,     ///< Indirect command buffer
+    //     TRANSFER_SRC, ///< Can be used as transfer source
+    //     TRANSFER_DST  ///< Can be used as transfer destination
+    // };
 
-    /// Buffer descriptor for creation/reset.
-    struct Descriptor {
-        size_t size        = 0;      ///< Number of bytes for the buffer.
-        Usage  usage       = VERTEX; ///< Usage flag.
-        bool   cpuWritable = false;  ///< CPU can write (mapped buffer).
-        bool   cpuReadable = false;  ///< CPU can read (mapped buffer).
-    };
+    // /// Buffer descriptor for creation/reset.
+    // struct Descriptor {
+    //     size_t size        = 0;      ///< Number of bytes for the buffer.
+    //     Usage  usage       = VERTEX; ///< Usage flag.
+    //     bool   cpuWritable = false;  ///< CPU can write (mapped buffer).
+    //     bool   cpuReadable = false;  ///< CPU can read (mapped buffer).
+    // };
 
-    struct CreateParameters {
-        AutoRef<GpuContext> context;
-        Descriptor          descriptor;
-    };
+    // struct CreateParameters {
+    //     AutoRef<GpuContext> context;
+    //     Descriptor          descriptor;
+    // };
 
-    /// Return the current buffer descriptor.
-    virtual const Descriptor & descriptor() const = 0;
+    // /// Return the current buffer descriptor.
+    // virtual const Descriptor & descriptor() const = 0;
 
-    /// Create a new instance of empty Buffer. The buffer is not bound to any GPU resource yet.
-    /// Must call reset() at least once for the buffer to be valid to use.
-    static GN_API AutoRef<Buffer> create(ArtifactDatabase & db, const StrA & name, const CreateParameters & params);
+    // /// Create a new instance of empty Buffer. The buffer is not bound to any GPU resource yet.
+    // /// Must call reset() at least once for the buffer to be valid to use.
+    // static GN_API AutoRef<Buffer> create(ArtifactDatabase & db, const StrA & name, const CreateParameters & params);
 
 protected:
     using GpuResource::GpuResource;
@@ -213,7 +213,7 @@ struct Mesh : public GpuResource {
     inline static constexpr const char * TYPE_NAME = "Mesh";
 
     struct VertexBuffer {
-        AutoRef<Buffer>       buffer;
+        // AutoRef<Buffer>       buffer;
         gfx::img::PixelFormat format;     ///< pixel format of the vertex
         uint32_t              offset = 0; ///< offset in bytes from beginning of the buffer to the first vertex
         uint32_t              stride = 0; ///< vertex stride in bytes
@@ -228,12 +228,12 @@ struct Mesh : public GpuResource {
         uint32_t vertexCount;
 
         /// index buffer. Null if mesh is non-indexed.
-        AutoRef<Buffer> indexBuffer;
+        // AutoRef<Buffer> indexBuffer;
 
-        /// number of indices. Undefined if non-indexed.
+        /// number of indices. 0, if non-indexed.
         uint32_t indexCount;
 
-        /// offset in bytes from beginning of the index buffer to the first index. Undefined if non-indexed.
+        /// offset in bytes from beginning of the index buffer to the first index. Ignored if indexCount is 0.
         uint32_t indexOffset;
     };
 

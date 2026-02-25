@@ -304,10 +304,6 @@ struct ShaderAction : public Action {
         bool operator<(const ShaderResourceBinding & other) const { return (set < other.set) || (set == other.set && slot < other.slot); }
     };
 
-    struct ConstantArguments {
-        std::map<StrA, AutoRef<Blob>> value;
-    };
-
     struct BufferView {
         AutoRef<Buffer> buffer;
         uint32_t        offset = 0;
@@ -437,16 +433,17 @@ struct GenericDraw : public ShaderAction {
         MeshArgument(Arguments * owner, const char * name): Arguments::ArtifactArgument(owner, name, Arguments::UsageFlag::Reading) {}
 
         SafeArrayAccessor<const Artifact * const> artifacts() const override {
-            if (!value.mesh) return {};
-            const auto & desc = value.mesh->descriptor();
-            mArtifacts.clear();
-            for (const auto & [name, vertex] : desc.vertices) {
-                (void) name;
-                if (!vertex.buffer) continue;
-                mArtifacts.append(vertex.buffer.get());
-            }
-            if (desc.indexBuffer) { mArtifacts.append(desc.indexBuffer.get()); }
-            return mArtifacts;
+            return {(Artifact **) value.mesh.addr(), 1};
+            // if (!value.mesh) return {};
+            // const auto & desc = value.mesh->descriptor();
+            // mArtifacts.clear();
+            // for (const auto & [name, vertex] : desc.vertices) {
+            //     (void) name;
+            //     if (!vertex.buffer) continue;
+            //     mArtifacts.append(vertex.buffer.get());
+            // }
+            // if (desc.indexBuffer) { mArtifacts.append(desc.indexBuffer.get()); }
+            // return mArtifacts;
         }
 
         MeshView value;
@@ -460,7 +457,6 @@ struct GenericDraw : public ShaderAction {
         inline static constexpr const char * TYPE_NAME = "GenericDraw::A";
         A(): Arguments(TYPE_ID, TYPE_NAME) {}
 
-        ConstantArguments    constants; // immediate constants
         MeshArgument         mesh         = {this, "mesh"};
         UniformArguments     uniforms     = {this, "uniforms"};     ///< buffer views, key is shader variable name
         TexturesArguments    textures     = {this, "textures"};     ///< texture views, key is shader variable name
@@ -510,7 +506,6 @@ struct GenericCompute : public ShaderAction {
         TexturesArguments  textures = {this, "textures"}; ///< textures
         RwBuffersArguments buffers  = {this, "buffers"};  ///< storage buffers
         RwImagesArguments  images   = {this, "images"};   ///< storage images
-        ConstantArguments  constants;                     ///< immediate constants
         DispatchSize       groups;                        ///< thread group counts
     };
 
