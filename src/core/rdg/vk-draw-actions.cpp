@@ -353,7 +353,9 @@ public:
             uint32_t instanceCount = 1;
             uint32_t firstVertex   = 0;
             uint32_t firstInstance = 0;
-            if (!a->mesh.vertices.empty() && a->mesh.vertices[0].stride > 0) { vertexCount = (uint32_t) a->mesh.vertices[0].count(); }
+            if (!a->geometry.value.vertices.empty() && a->geometry.value.vertices[0].stride > 0) {
+                vertexCount = (uint32_t) a->geometry.value.vertices[0].count();
+            }
             if (vertexCount > 0) cb.commandBuffer.handle().draw(vertexCount, instanceCount, firstVertex, firstInstance);
         }
 

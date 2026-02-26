@@ -4,7 +4,7 @@ namespace GN::rdg {
 
 struct FrameInfo {
     /// Core frame info
-    uint64_t    frameCounter  = 0; // A monotonically increasing counter of the frame.
+    uint64_t    frameCounter  = 0;              // A monotonically increasing counter of the frame.
     Nanoseconds frameDuration = Nanoseconds(0); // duration of the last known good frame in nanoseconds.
     Nanoseconds engineUptime  = Nanoseconds(0); // total run time since the engine started in nanoseconds.
 };
@@ -38,10 +38,10 @@ struct LightingInfo {
         };
 
         struct SpotLight {
-            Location     location = {};
-            Orientation  orientation = {};
-            IntensityRGB intensity = {1.0f, 1.0f, 1.0f, 1.0f};
-            WorldUnit    range = {};
+            Location     location          = {};
+            Orientation  orientation       = {};
+            IntensityRGB intensity         = {1.0f, 1.0f, 1.0f, 1.0f};
+            WorldUnit    range             = {};
             float        cosInnerConeAngle = 1.0f;
             float        cosOuterConeAngle = 1.0f;
         } spot;
@@ -49,11 +49,11 @@ struct LightingInfo {
         struct PointLight {
             Location     location;
             IntensityRGB intensity;
-            float range = 0.0f;
+            float        range = 0.0f;
         } point;
 
         struct DirectionalLight {
-            Orientation  orientation;
+            Orientation   orientation;
             IrradianceRGB irradiance;
         } directional;
 
@@ -74,7 +74,7 @@ struct EnvironmentMap : public GpuResource {
     GN_API static const uint64_t         TYPE_ID;
     inline static constexpr const char * TYPE_NAME = "Environment";
 
-    IrradianceRGB    ambient = { 1.0f, 1.0f, 1.0f, 300.0f }; // default to 300 lux (normal office lighting).
+    IrradianceRGB    ambient = {1.0f, 1.0f, 1.0f, 300.0f}; // default to 300 lux (normal office lighting).
     AutoRef<Texture> skybox;
 
     // TODO: more environment map types, like irradiance map, prefiltered map, etc.
@@ -96,10 +96,10 @@ struct EnvironmentMap : public GpuResource {
 };
 
 struct GN_API EffectContext {
-    FrameInfo      frame;
-    CameraInfo     camera;
-    LightingInfo   lighting;
-    EnvironmentMap env;
+    FrameInfo               frame;
+    CameraInfo              camera;
+    LightingInfo            lighting;
+    AutoRef<EnvironmentMap> environmentMap;
 };
 
 struct PbrShading : public GpuResource {
@@ -124,9 +124,9 @@ struct PbrShading : public GpuResource {
     };
 
     struct BuildParameters {
-        AutoRef<Material>    material;
-        GpuGeometry          geometry;
-        RenderTarget         renderTarget;
+        AutoRef<Material> material;
+        GpuGeometry       geometry;
+        RenderTarget      renderTarget;
     };
 
     struct CreateParameters {
@@ -162,7 +162,5 @@ struct SkyBox : public GpuResource {
 protected:
     using GpuResource::GpuResource;
 };
-
-
 
 } // namespace GN::rdg

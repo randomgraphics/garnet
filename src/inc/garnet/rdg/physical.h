@@ -13,8 +13,8 @@ struct WorldUnit {
     int64_t _value = 0; ///< Distance in micrometers.
 
 public:
-    constexpr WorldUnit() : _value(0) {}
-    constexpr WorldUnit(int64_t value) : _value(value) {}
+    constexpr WorldUnit(): _value(0) {}
+    constexpr WorldUnit(int64_t value): _value(value) {}
 
     constexpr WorldUnit operator+(const WorldUnit & other) const { return WorldUnit(_value + other._value); }
     constexpr WorldUnit operator-(const WorldUnit & other) const { return WorldUnit(_value - other._value); }
@@ -36,15 +36,21 @@ inline static constexpr WorldUnit operator""_yard(unsigned long long value) { re
 using Location    = Vector3<WorldUnit>;
 using Orientation = Quaternionf;
 
-struct Candela        { float value; }; ///< Intensity unit [cd].
-struct Lux            { float value; }; ///< Unit of illuminance [lx] = 1 lumen / m^2.
-struct CandelaPerM2   { float value; }; ///< Radiance (Luminance) in unit of [cd/m^2].
+struct Candela {
+    float value;
+}; ///< Intensity unit [cd].
+struct Lux {
+    float value;
+}; ///< Unit of illuminance [lx] = 1 lumen / m^2.
+struct CandelaPerM2 {
+    float value;
+}; ///< Radiance (Luminance) in unit of [cd/m^2].
 
 /// Photometric Intensity (I). Usually used to represent point and spot light color.
 /// - Radiometric I = [W/sr]
 /// - Photometric I = [cd]
 struct IntensityRGB {
-    float r, g, b;     // RGB ratio normalized to [0, 1].
+    float   r, g, b;   // RGB ratio normalized to [0, 1].
     Candela intensity; // luminous intensity in candela.
 };
 
@@ -54,7 +60,7 @@ struct IntensityRGB {
 /// - For uniform hemisphere emission, E = L * π.
 /// - For surece lit by a point light, E = I / r^2 * dot(n, l).
 struct IrradianceRGB {
-    float r, g, b;  // RGB ratio normalized to [0, 1].
+    float r, g, b;    // RGB ratio normalized to [0, 1].
     Lux   irradiance; // irradiance in lux.
 };
 
@@ -62,7 +68,7 @@ struct IrradianceRGB {
 /// - Radiometric L = [W/sr/m^2]
 /// - Photometric L = [cd/m^2]
 struct RadianceRGB {
-    float r, g, b; // RGB ratio normalized to [0, 1].
+    float        r, g, b;   // RGB ratio normalized to [0, 1].
     CandelaPerM2 luminance; // luminance in candela per square meter.
 };
 

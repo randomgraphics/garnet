@@ -322,7 +322,7 @@ protected:
 };
 
 /// Represent a GPU renderable geometry.
-struct GpuGemetry {
+struct GpuGeometry {
     struct VertexFormat {
         // TBD
     };
@@ -548,7 +548,7 @@ protected:
 // };
 
 // } // namespace std
-    
+
 // /// Composes one solid color and a set of textures into a single output texture.
 // /// Inputs: one color (set on the action) and up to MAX_INPUT_TEXTURES texture parameters.
 // /// Output: one texture (parameter "output").
