@@ -52,6 +52,10 @@ struct Artifact : public RefCounter, public RuntimeType {
 
     virtual ~Artifact() {}
 
+    /// An artifact can reference or alias other artifacts. This method returns a list of artifacts that this artifact references or aliases.
+    /// This allows the depedency build to have a full picture of the dependencies between artifacts.
+    virtual SafeArrayAccessor<const Artifact * const> references() const = 0;
+
 protected:
     /// Constructor
     Artifact(ArtifactDatabase & db, uint64_t typeId, const char * typeName, const StrA & name);
