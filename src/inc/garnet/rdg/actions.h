@@ -4,7 +4,9 @@
 
 namespace GN::rdg {
 
-struct ImageView {
+// Representa a view to a GPU image. Could be a texture or a backbuffer.
+struct GpuImageView {
+
     struct SubresourceIndex {
         uint32_t mip  = 0; ///< index into mipmap chain
         uint32_t face = 0; ///< index into array of faces
@@ -21,37 +23,37 @@ struct ImageView {
         bool operator!=(const SubresourceRange & other) const { return !operator==(other); }
     };
 
-    AutoRef<Texture>      texture;
-    gfx::img::PixelFormat format = gfx::img::PixelFormat::UNKNOWN();
-    SubresourceIndex      subresourceIndex;
-    SubresourceRange      subresourceRange;
+    std::variant<AutoRef<Texture>, AutoRef<Backbuffer>> image;
+    gfx::img::PixelFormat                               format = gfx::img::PixelFormat::UNKNOWN();
+    SubresourceIndex                                    subresourceIndex;
+    SubresourceRange                                    subresourceRange;
+
+    bool empty() const { return 0 == image.index() ? std::get<0>(image) == nullptr : std::get<1>(image) == nullptr; }
+    bool isTexture() const { return image.index() == 0; }
+    bool isBackbuffer() const { return image.index() == 1; }
+
+    AutoRef<Artifact> artifact() const {
+        if (image.index() == 0)
+            return std::get<0>(image);
+        else
+            return std::get<1>(image);
+    }
+
+    bool operator==(const GpuImageView & other) const {
+        return image == other.image && format == other.format && subresourceIndex == other.subresourceIndex && subresourceRange == other.subresourceRange;
+    }
+    bool operator!=(const GpuImageView & other) const { return !operator==(other); }
 };
 
-struct TextureView : ImageView {
+struct TextureView : GpuImageView {
     AutoRef<Sampler> sampler;
 };
 
 struct RenderTarget {
-    struct ColorTarget {
-        std::variant<AutoRef<Texture>, AutoRef<Backbuffer>> target;
-        ImageView::SubresourceIndex                         subresourceIndex; ///< only used for non-empty texture targets
-
-        bool empty() const { return target.index() == 1 && std::get<1>(target) == nullptr; }
-
-        AutoRef<Artifact> artifact() const {
-            if (target.index() == 0) return std::get<0>(target);
-            if (target.index() == 1) return std::get<1>(target);
-            return {};
-        }
-
-        bool operator==(const ColorTarget & other) const { return target == other.target && subresourceIndex == other.subresourceIndex; }
-
-        bool operator!=(const ColorTarget & other) const { return !operator==(other); }
-    };
-
     struct DepthStencil {
-        AutoRef<Texture>            target;
-        ImageView::SubresourceIndex subresourceIndex {};
+        AutoRef<Texture>               target;
+        gfx::img::PixelFormat          format = gfx::img::PixelFormat::UNKNOWN();
+        GpuImageView::SubresourceIndex subresourceIndex {};
 
         bool empty() const { return !target; }
 
@@ -64,8 +66,8 @@ struct RenderTarget {
         bool operator!=(const DepthStencil & other) const { return !operator==(other); }
     };
 
-    StackArray<ColorTarget, 8> colors;
-    DepthStencil               depthStencil;
+    StackArray<GpuImageView, 8> colors;
+    DepthStencil                depthStencil;
 
     bool empty() const { return colors.empty() && depthStencil.empty(); }
 
@@ -359,12 +361,13 @@ struct GpuShaderAction : public Action {
             mArtifacts.clear();
             for (const auto & [name, view] : value) {
                 (void) name;
-                if (view.texture) { mArtifacts.append(view.texture.get()); }
+                auto artifact = view.artifact();
+                if (artifact) { mArtifacts.append(artifact.get()); }
             }
             return mArtifacts;
         }
 
-        std::map<StrA, ImageView> value;
+        std::map<StrA, GpuImageView> value;
 
     private:
         mutable DynaArray<const Artifact *> mArtifacts;
@@ -378,11 +381,9 @@ struct GpuShaderAction : public Action {
             mArtifacts.clear();
             for (const auto & [name, view] : value) {
                 (void) name;
-                if (view.texture) {
-                    mArtifacts.append(view.texture.get());
-                    // check sampler only if texture is not empty
-                    if (view.sampler) { mArtifacts.append(view.sampler.get()); }
-                }
+                auto artifact = view.artifact();
+                if (artifact) { mArtifacts.append(artifact.get()); }
+                if (view.sampler) { mArtifacts.append(view.sampler.get()); }
             }
             return mArtifacts;
         }

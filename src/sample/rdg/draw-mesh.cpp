@@ -101,7 +101,7 @@ int main(int, const char **) {
             clearVals.stencil                           = 0;
             clearArgs->clearValues                      = clearVals;
             RenderTarget rt                             = {};
-            rt.colors.append(RenderTarget::ColorTarget {.target = backbuffer, .subresourceIndex = {}});
+            rt.colors.append(GpuImageView {.image = backbuffer, .subresourceIndex = {}, .subresourceRange = {}});
             rt.depthStencil.target           = depthTexture;
             rt.depthStencil.subresourceIndex = {};
             clearArgs->renderTarget.value    = rt;

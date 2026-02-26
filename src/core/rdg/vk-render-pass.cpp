@@ -14,12 +14,12 @@ static GN::Logger * sLogger = GN::getLogger("GN.rdg");
 //     return vk::Format::eR8G8B8A8Unorm;
 // }
 
-std::pair<const rapid_vulkan::Image *, vk::Extent2D> getColorTargetImage(const RenderTarget::ColorTarget & color, [[maybe_unused]] size_t stage) {
+std::pair<const rapid_vulkan::Image *, vk::Extent2D> getColorTargetImage(const GpuImageView & color, [[maybe_unused]] size_t stage) {
     const rapid_vulkan::Image * image  = nullptr;
     vk::Extent2D                extent = {0, 0};
-    if (color.target.index() == 0) {
+    if (color.image.index() == 0) {
         // this color target is a texture.
-        auto tex = std::get<0>(color.target).castTo<TextureVulkan>().get();
+        auto tex = std::get<0>(color.image).castTo<TextureVulkan>().get();
         if (!tex) GN_UNLIKELY {
                 GN_ERROR(sLogger)("RenderPassManagerVulkan::execute: render target texture is not set for stage {}", stage);
                 return {};
@@ -34,7 +34,7 @@ std::pair<const rapid_vulkan::Image *, vk::Extent2D> getColorTargetImage(const R
         extent.height = dim.height;
     } else {
         // this color target is a backbuffer.
-        auto bb = std::get<1>(color.target).castTo<BackbufferVulkan>().get();
+        auto bb = std::get<1>(color.image).castTo<BackbufferVulkan>().get();
         if (!bb) {
             GN_ERROR(sLogger)("RenderPassManagerVulkan::execute: render target backbuffer is not set for stage {}", stage);
             return {};
@@ -58,13 +58,12 @@ static constexpr TextureVulkan::ImageState COLOR_ATTACHMENT_STATE {
 };
 static constexpr TextureVulkan::ImageStateTransitionFlags DISCARD_CONTENT {.discardContent = true};
 
-static std::pair<vk::ImageView, vk::Extent2D> getColorTargetImageView(const RenderTarget::ColorTarget & color, size_t stage,
-                                                                      rapid_vulkan::Barrier * barrier = nullptr) {
+static std::pair<vk::ImageView, vk::Extent2D> getColorTargetImageView(const GpuImageView & color, size_t stage, rapid_vulkan::Barrier * barrier = nullptr) {
     auto [image, baseExtent] = getColorTargetImage(color, stage);
     if (!image) GN_UNLIKELY return {nullptr, {0, 0}};
 
-    if (color.target.index() == 0) {
-        auto * tex = std::get<0>(color.target).castTo<TextureVulkan>().get();
+    if (color.image.index() == 0) {
+        auto * tex = std::get<0>(color.image).castTo<TextureVulkan>().get();
         if (tex && tex->trackImageState(color.subresourceIndex.mip, 1, color.subresourceIndex.face, 1, COLOR_ATTACHMENT_STATE, DISCARD_CONTENT)) {
             const auto * st = tex->getImageState(color.subresourceIndex.mip, color.subresourceIndex.face);
             if (st) {
@@ -73,7 +72,7 @@ static std::pair<vk::ImageView, vk::Extent2D> getColorTargetImageView(const Rend
             }
         }
     } else {
-        auto * bb = std::get<1>(color.target).castTo<BackbufferVulkan>().get();
+        auto * bb = std::get<1>(color.image).castTo<BackbufferVulkan>().get();
         if (bb && bb->trackImageState(COLOR_ATTACHMENT_STATE, DISCARD_CONTENT)) {
             const auto &              st = bb->getImageState();
             vk::ImageSubresourceRange range(vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1);

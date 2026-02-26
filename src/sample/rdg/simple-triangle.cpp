@@ -110,7 +110,7 @@ int main(int, const char **) {
             clearVals.stencil         = 0;
             clearArgs->clearValues    = clearVals;
             RenderTarget clearRt {};
-            clearRt.colors.append(RenderTarget::ColorTarget {.target = backbuffer, .subresourceIndex = {}});
+            clearRt.colors.append(GpuImageView {.image = backbuffer, .subresourceIndex = {}, .subresourceRange = {}});
             clearArgs->renderTarget.value = clearRt;
             clearTask.arguments           = clearArgs;
             renderWorkflow->tasks.append(clearTask);
@@ -120,7 +120,7 @@ int main(int, const char **) {
             drawTask.action       = drawAction;
             auto         drawArgs = AutoRef<GpuDraw::A>(new GpuDraw::A());
             RenderTarget drawRt {};
-            drawRt.colors.append(RenderTarget::ColorTarget {.target = backbuffer, .subresourceIndex = {}});
+            drawRt.colors.append(GpuImageView {.image = backbuffer, .subresourceIndex = {}, .subresourceRange = {}});
             drawArgs->renderTarget.value = drawRt;
             drawTask.arguments           = drawArgs;
             renderWorkflow->tasks.append(drawTask);

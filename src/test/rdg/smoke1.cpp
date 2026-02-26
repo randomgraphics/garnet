@@ -69,7 +69,7 @@ int main(int, const char **) {
     color.colors[0].f4[3]  = 1.0f; // A
     clearArgs->clearValues = color;
     auto rt                = RenderTarget {};
-    rt.colors.append(RenderTarget::ColorTarget {.target = backbuffer, .subresourceIndex = {}});
+    rt.colors.append(GpuImageView {.image = backbuffer, .subresourceIndex = {}, .subresourceRange = {}});
     clearArgs->renderTarget.value = rt;
     clearTask.arguments           = clearArgs;
     renderWorkflow->tasks.append(clearTask);

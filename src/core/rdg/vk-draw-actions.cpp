@@ -12,9 +12,9 @@ static void trackRenderTargetState(const RenderTarget & renderTarget) {
     // track the state of the color targets.
     for (size_t i = 0; i < renderTarget.colors.size(); i++) {
         const auto & color = renderTarget.colors[i];
-        if (0 == color.target.index()) {
+        if (0 == color.image.index()) {
             // this color target is a texture.
-            auto tex = std::get<0>(color.target).castTo<TextureVulkan>().get();
+            auto tex = std::get<0>(color.image).castTo<TextureVulkan>().get();
             if (tex)
                 tex->trackImageState(color.subresourceIndex.mip, 1, color.subresourceIndex.face, 1,
                                      {vk::ImageLayout::eColorAttachmentOptimal,
@@ -22,7 +22,7 @@ static void trackRenderTargetState(const RenderTarget & renderTarget) {
                                       vk::PipelineStageFlagBits::eColorAttachmentOutput});
         } else {
             // this color target is a backbuffer.
-            auto bb = std::get<1>(color.target).castTo<BackbufferVulkan>().get();
+            auto bb = std::get<1>(color.image).castTo<BackbufferVulkan>().get();
             if (bb)
                 bb->trackImageState({vk::ImageLayout::eColorAttachmentOptimal,
                                      vk::AccessFlagBits::eColorAttachmentRead | vk::AccessFlagBits::eColorAttachmentWrite,
@@ -327,15 +327,15 @@ public:
             uint32_t extentW = 0, extentH = 0;
             if (renderTarget.colors.size() > 0) {
                 const auto & c0 = renderTarget.colors[0];
-                if (c0.target.index() == 0) {
-                    auto tex = std::get<0>(c0.target).castTo<TextureVulkan>().get();
+                if (c0.image.index() == 0) {
+                    auto tex = std::get<0>(c0.image).castTo<TextureVulkan>().get();
                     if (tex) {
                         auto dim = tex->dimensions(c0.subresourceIndex.mip);
                         extentW  = dim.width;
                         extentH  = dim.height;
                     }
                 } else {
-                    auto bb = std::get<1>(c0.target).castTo<BackbufferVulkan>().get();
+                    auto bb = std::get<1>(c0.image).castTo<BackbufferVulkan>().get();
                     if (bb) {
                         extentW = bb->descriptor().width;
                         extentH = bb->descriptor().height;
