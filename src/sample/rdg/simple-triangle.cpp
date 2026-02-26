@@ -70,15 +70,15 @@ int main(int, const char **) {
     auto presentAction = PresentBackbuffer::create(*db, "present_action", PresentBackbuffer::CreateParameters {.gpu = gpuContext});
     if (!presentAction) return -1;
 
-    // GenericDraw with SPIR-V from compiled headers (Phase 4); workflow task added in Phase 5.
-    auto                          vertBlob = referenceTo(new SimpleBlob<unsigned int>(kSolidTriangleVertSpvSize, kSolidTriangleVertSpv));
-    auto                          fragBlob = referenceTo(new SimpleBlob<unsigned int>(kSolidTriangleFragSpvSize, kSolidTriangleFragSpv));
-    GenericDraw::CreateParameters drawParams {};
-    drawParams.context     = gpuContext;
-    drawParams.vs          = GenericDraw::ShaderStageDesc {.shaderBinary = vertBlob, .entryPoint = "main"};
-    drawParams.ps          = GenericDraw::ShaderStageDesc {.shaderBinary = fragBlob, .entryPoint = "main"};
-    auto genericDrawAction = GenericDraw::create(*db, "draw_triangle", drawParams);
-    if (!genericDrawAction) return -1;
+    // GpuDraw with SPIR-V from compiled headers (Phase 4); workflow task added in Phase 5.
+    auto                      vertBlob = referenceTo(new SimpleBlob<unsigned int>(kSolidTriangleVertSpvSize, kSolidTriangleVertSpv));
+    auto                      fragBlob = referenceTo(new SimpleBlob<unsigned int>(kSolidTriangleFragSpvSize, kSolidTriangleFragSpv));
+    GpuDraw::CreateParameters drawParams {};
+    drawParams.context = gpuContext;
+    drawParams.vs      = {.binary = vertBlob->data(), .size = vertBlob->size(), .entry = "main"};
+    drawParams.ps      = {.binary = fragBlob->data(), .size = fragBlob->size(), .entry = "main"};
+    auto drawAction    = GpuDraw::create(*db, "draw_triangle", drawParams);
+    if (!drawAction) return -1;
 
     GN_INFO(sLogger)("Starting render loop...");
 
@@ -115,14 +115,10 @@ int main(int, const char **) {
             clearTask.arguments           = clearArgs;
             renderWorkflow->tasks.append(clearTask);
 
-            // Task: Draw solid triangle (GenericDraw; pipeline created in Phase 6)
-            auto drawTask                          = Workflow::Task("DrawTriangle");
-            drawTask.action                        = genericDrawAction;
-            auto drawArgs                          = AutoRef<GenericDraw::A>(new GenericDraw::A());
-            drawArgs->mesh.value.sub.vertexCount   = 3;
-            drawArgs->mesh.value.sub.instanceCount = 1;
-            drawArgs->mesh.value.sub.firstVertex   = 0;
-            drawArgs->mesh.value.sub.firstInstance = 0;
+            // Task: Draw solid triangle (GpuDraw; pipeline created in Phase 6). Mesh optional; no vertex buffer uses 3 vertices.
+            auto drawTask         = Workflow::Task("DrawTriangle");
+            drawTask.action       = drawAction;
+            auto         drawArgs = AutoRef<GpuDraw::A>(new GpuDraw::A());
             RenderTarget drawRt {};
             drawRt.colors.append(RenderTarget::ColorTarget {.target = backbuffer, .subresourceIndex = {}});
             drawArgs->renderTarget.value = drawRt;

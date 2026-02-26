@@ -32,26 +32,26 @@ GN_API AutoRef<ClearRenderTarget> ClearRenderTarget::create(ArtifactDatabase & d
 }
 
 // =============================================================================
-// GenericDraw::create() - API-neutral dispatch by context's backend
+// GpuDraw::create() - API-neutral dispatch by context's backend
 // =============================================================================
 
-GN_API AutoRef<GenericDraw> GenericDraw::create(ArtifactDatabase & db, const StrA & name, const CreateParameters & params) {
+GN_API AutoRef<GpuDraw> GpuDraw::create(ArtifactDatabase & db, const StrA & name, const CreateParameters & params) {
     if (!params.context) GN_UNLIKELY {
-            GN_ERROR(sLogger)("GenericDraw::create: context is null, name='{}'", name);
+            GN_ERROR(sLogger)("GpuDraw::create: context is null, name='{}'", name);
             return {};
         }
     auto common = static_cast<GpuContextCommon *>(params.context.get());
     switch (common->api()) {
     case GpuContextCommon::Api::Vulkan:
-        return createVulkanGenericDrawAction(db, name, params);
+        return createVulkanGpuDraw(db, name, params);
     case GpuContextCommon::Api::D3D12:
-        GN_ERROR(sLogger)("GenericDraw::create: D3D12 backend not implemented yet");
+        GN_ERROR(sLogger)("GpuDraw::create: D3D12 backend not implemented yet");
         return {};
     case GpuContextCommon::Api::Metal:
-        GN_ERROR(sLogger)("GenericDraw::create: Metal backend not implemented yet");
+        GN_ERROR(sLogger)("GpuDraw::create: Metal backend not implemented yet");
         return {};
     default:
-        GN_ERROR(sLogger)("GenericDraw::create: unknown API, name='{}'", name);
+        GN_ERROR(sLogger)("GpuDraw::create: unknown API, name='{}'", name);
         return {};
     }
 }

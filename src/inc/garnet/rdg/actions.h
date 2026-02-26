@@ -4,12 +4,6 @@
 
 namespace GN::rdg {
 
-struct BufferView {
-    AutoRef<Buffer> buffer;
-    uint32_t        offset = 0;
-    uint32_t        size   = 0;
-};
-
 struct ImageView {
     struct SubresourceIndex {
         uint32_t mip  = 0; ///< index into mipmap chain
@@ -35,20 +29,6 @@ struct ImageView {
 
 struct TextureView : ImageView {
     AutoRef<Sampler> sampler;
-};
-
-struct MeshView {
-    struct Submesh {
-        uint32_t firstInstance = 0;   ///< first instance index
-        uint32_t instanceCount = ~0u; ///< number of instances to draw. ~0u means all instances.
-        uint32_t firstVertex   = 0;   ///< first vertex index
-        uint32_t vertexCount   = ~0u; ///< number of vertices to draw. ~0u means all vertices.
-        uint32_t firstIndex    = 0;   ///< Index of the first index to draw. Ignored if mesh is non-indexed.
-        uint32_t indexCount    = ~0u; ///< number of indices to draw. ~0u means all indices. Ignored if mesh is non-indexed.
-    };
-
-    AutoRef<Mesh> mesh;
-    Submesh       sub;
 };
 
 struct RenderTarget {
@@ -341,7 +321,7 @@ protected:
 };
 
 /// Base class for generic shader actions (draw and compute). Contains common shader resource binding definitions.
-struct ShaderAction : public Action {
+struct GpuShaderAction : public Action {
     struct ShaderResourceBinding {
         uint32_t set  = 0;
         uint32_t slot = 0;
@@ -390,9 +370,9 @@ struct ShaderAction : public Action {
         mutable DynaArray<const Artifact *> mArtifacts;
     };
 
-    template<Arguments::UsageFlag UFlags>
-    struct TextureViewMap : public Arguments::ArtifactArgument {
-        TextureViewMap(Arguments * owner, const char * name): Arguments::ArtifactArgument(owner, name, UFlags | Arguments::UsageFlag::Optional) {}
+    struct TextureMap : public Arguments::ArtifactArgument {
+        TextureMap(Arguments * owner, const char * name)
+            : Arguments::ArtifactArgument(owner, name, Arguments::UsageFlag::Reading | Arguments::UsageFlag::Optional) {}
 
         SafeArrayAccessor<const Artifact * const> artifacts() const override {
             mArtifacts.clear();
@@ -413,10 +393,21 @@ struct ShaderAction : public Action {
         mutable DynaArray<const Artifact *> mArtifacts;
     };
 
-    using UniformArguments   = BufferViewMap<Arguments::UsageFlag::Reading>;
-    using RwBuffersArguments = BufferViewMap<Arguments::UsageFlag::RW>;
-    using RwImagesArguments  = ImageViewMap<Arguments::UsageFlag::RW>;
-    using TexturesArguments  = TextureViewMap<Arguments::UsageFlag::Reading>;
+    /// Shader binary that can be used to create the actual GPU shader program.
+    struct ShaderBinary {
+        void *       binary = nullptr; ///< pointer to the shader binary code.
+        size_t       size   = 0;       ///< size of the shader binary code.
+        const char * entry  = nullptr; ///< entry point name.
+
+        bool empty() const { return binary == nullptr || size == 0 || entry == nullptr; }
+        bool valid() const { return binary != nullptr && size > 0 && entry != nullptr; }
+    };
+
+    using UniformMap  = BufferViewMap<Arguments::UsageFlag::Reading>;
+    using RwBufferMap = BufferViewMap<Arguments::UsageFlag::RW>;
+    using RoBufferMap = BufferViewMap<Arguments::UsageFlag::Reading>;
+    using RwImagesMap = ImageViewMap<Arguments::UsageFlag::RW>;
+    using RoImagesMap = ImageViewMap<Arguments::UsageFlag::Reading>;
 
 protected:
     using Action::Action;
@@ -427,8 +418,8 @@ protected:
 namespace std {
 
 template<>
-struct hash<GN::rdg::ShaderAction::ShaderResourceBinding> {
-    size_t operator()(const GN::rdg::ShaderAction::ShaderResourceBinding & key) const {
+struct hash<GN::rdg::GpuShaderAction::ShaderResourceBinding> {
+    size_t operator()(const GN::rdg::GpuShaderAction::ShaderResourceBinding & key) const {
         auto hash = std::hash<uint32_t>()(key.set);
         GN::combineHash(hash, key.slot);
         return hash;
@@ -439,29 +430,46 @@ struct hash<GN::rdg::ShaderAction::ShaderResourceBinding> {
 
 namespace GN::rdg {
 
-/// Generic draw action for quick GPU draw prototyping. It emphasizes ease of use and flexibility over extreme performance.
-struct GenericDraw : public ShaderAction {
+/// Generic GPU draw action. This is the building block of all other draw actions and effects.
+struct GpuDraw : public GpuShaderAction {
     GN_API static const uint64_t         TYPE_ID;
-    inline static constexpr const char * TYPE_NAME = "GenericDraw";
+    inline static constexpr const char * TYPE_NAME = "GpuDraw";
+
+    struct VertexFormat {
+        // TBD
+    };
+
+    struct GeometryBuffer : BufferView {
+        /// For vertex buffers, this is the size of the vertex in bytes.
+        /// For index buffers, this is the size of the index in bytes. Must be 2 or 4.
+        /// For instanced buffers, this is the size of the instance in bytes.
+        uint32_t stride = 0;
+
+        /// Number of elements in the buffer.
+        size_t count() const { return size / stride; }
+    };
 
     struct MeshArgument : public Arguments::ArtifactArgument {
-        MeshArgument(Arguments * owner, const char * name): Arguments::ArtifactArgument(owner, name, Arguments::UsageFlag::Reading) {}
+        MeshArgument(Arguments * owner, const char * name)
+            : Arguments::ArtifactArgument(owner, name, Arguments::UsageFlag::Reading | Arguments::UsageFlag::Optional) {}
 
         SafeArrayAccessor<const Artifact * const> artifacts() const override {
-            return {(Artifact **) value.mesh.addr(), 1};
-            // if (!value.mesh) return {};
-            // const auto & desc = value.mesh->descriptor();
-            // mArtifacts.clear();
-            // for (const auto & [name, vertex] : desc.vertices) {
-            //     (void) name;
-            //     if (!vertex.buffer) continue;
-            //     mArtifacts.append(vertex.buffer.get());
-            // }
-            // if (desc.indexBuffer) { mArtifacts.append(desc.indexBuffer.get()); }
-            // return mArtifacts;
+            mArtifacts.reserve(instances.size() + vertices.size() + 1);
+            mArtifacts.clear();
+            for (const auto & vb : instances) {
+                if (vb.buffer) { mArtifacts.append(vb.buffer.get()); }
+            }
+            for (const auto & vb : vertices) {
+                if (vb.buffer) { mArtifacts.append(vb.buffer.get()); }
+            }
+            if (indices.buffer) { mArtifacts.append(indices.buffer.get()); }
+            return mArtifacts;
         }
 
-        MeshView value;
+        VertexFormat              format;
+        DynaArray<GeometryBuffer> instances;
+        DynaArray<GeometryBuffer> vertices;
+        GeometryBuffer            indices;
 
     private:
         mutable DynaArray<const Artifact *> mArtifacts;
@@ -469,39 +477,42 @@ struct GenericDraw : public ShaderAction {
 
     struct A : public Arguments {
         GN_API static const uint64_t         TYPE_ID;
-        inline static constexpr const char * TYPE_NAME = "GenericDraw::A";
+        inline static constexpr const char * TYPE_NAME = "GpuDraw::A";
         A(): Arguments(TYPE_ID, TYPE_NAME) {}
 
-        MeshArgument         mesh         = {this, "mesh"};
-        UniformArguments     uniforms     = {this, "uniforms"};     ///< buffer views, key is shader variable name
-        TexturesArguments    textures     = {this, "textures"};     ///< texture views, key is shader variable name
-        RwImagesArguments    images       = {this, "images"};       ///< image views, key is shader variable name
-        RenderTargetArgument renderTarget = {this, "renderTarget"}; ///< render target
-    };
+        struct GeometryView : BufferView {
+            /// For vertex buffers, this is the size of the vertex in bytes.
+            /// For index buffers, this is the size of the index in bytes. Must be 2 or 4.
+            uint32_t stride = 0;
+        };
 
-    /// Shader stage description
-    struct ShaderStageDesc {
-        AutoRef<Blob> shaderBinary; ///< shader binary code
-        StrA          entryPoint;   ///< entry point name
+        UniformMap           uniforms     = {this, "uniforms"};           ///< uniforms
+        TextureMap           textures     = {this, "textures"};           ///< textures
+        RwImagesMap          images       = {this, "read-write images"};  ///< read-write images
+        RoImagesMap          roImages     = {this, "read-only images"};   ///< read-only images
+        RwBufferMap          buffers      = {this, "read-write buffers"}; ///< read-write random access buffers
+        RoBufferMap          roBuffers    = {this, "read-only buffers"};  ///< read-only random access buffers
+        MeshArgument         mesh         = {this, "mesh"};               ///< mesh
+        RenderTargetArgument renderTarget = {this, "renderTarget"};       ///< render target
     };
 
     struct CreateParameters {
-        AutoRef<GpuContext>            context;
-        std::optional<ShaderStageDesc> vs; ///< vertex shader
-        std::optional<ShaderStageDesc> ds; ///< domain shader
-        std::optional<ShaderStageDesc> hs; ///< hull shader
-        std::optional<ShaderStageDesc> gs; ///< geometry shader
-        std::optional<ShaderStageDesc> ps; ///< pixel shader
+        AutoRef<GpuContext> context;
+        ShaderBinary        vs; ///< vertex shader
+        ShaderBinary        ds; ///< domain shader
+        ShaderBinary        hs; ///< hull shader
+        ShaderBinary        gs; ///< geometry shader
+        ShaderBinary        ps; ///< pixel shader
     };
 
-    static GN_API AutoRef<GenericDraw> create(ArtifactDatabase & db, const StrA & name, const CreateParameters & params);
+    static GN_API AutoRef<GpuDraw> create(ArtifactDatabase & db, const StrA & name, const CreateParameters & params);
 
 protected:
-    using ShaderAction::ShaderAction;
+    using GpuShaderAction::GpuShaderAction;
 };
 
-/// Generic compute action for quick GPU compute prototyping. It emphasizes ease of use and flexibility over extreme performance.
-struct GenericCompute : public ShaderAction {
+/// Generic GPU compute action. It is the building block of all GPU compute operations.
+struct GpuCompute : public GpuShaderAction {
     GN_API static const uint64_t         TYPE_ID;
     inline static constexpr const char * TYPE_NAME = "GenericCompute";
 
@@ -517,27 +528,30 @@ struct GenericCompute : public ShaderAction {
         inline static constexpr const char * TYPE_NAME = "GenericCompute::A";
         A(): Arguments(TYPE_ID, TYPE_NAME) {}
 
-        UniformArguments   uniforms = {this, "uniforms"}; ///< uniform buffers
-        TexturesArguments  textures = {this, "textures"}; ///< textures
-        RwBuffersArguments buffers  = {this, "buffers"};  ///< storage buffers
-        RwImagesArguments  images   = {this, "images"};   ///< storage images
-        DispatchSize       groups;                        ///< thread group counts
+        UniformMap   uniforms  = {this, "uniforms"};           ///< uniform buffers
+        TextureMap   textures  = {this, "textures"};           ///< textures
+        RwBufferMap  buffers   = {this, "read-write buffers"}; ///< read-write random access buffers
+        RoBufferMap  roBuffers = {this, "read-only buffers"};  ///< read-only random access buffers
+        RwImagesMap  images    = {this, "read-write images"};  ///< read-write images
+        RoImagesMap  roImages  = {this, "read-only images"};   ///< read-only images
+        DispatchSize groups;                                   ///< thread group counts
     };
 
     struct CreateParameters {
         AutoRef<GpuContext> gpu;
+        ShaderBinary        cs; ///< compute shader
     };
 
-    static GN_API AutoRef<GenericCompute> create(ArtifactDatabase & db, const StrA & name, const CreateParameters & params);
+    static GN_API AutoRef<GpuCompute> create(ArtifactDatabase & db, const StrA & name, const CreateParameters & params);
 
 protected:
-    using ShaderAction::ShaderAction;
+    using GpuShaderAction::GpuShaderAction;
 };
 
 // /// Composes one solid color and a set of textures into a single output texture.
 // /// Inputs: one color (set on the action) and up to MAX_INPUT_TEXTURES texture parameters.
 // /// Output: one texture (parameter "output").
-// struct Compose : public ShaderAction {
+// struct Compose : public GpuShaderAction {
 //     GN_API static const uint64_t TYPE;
 
 //     struct A : public Arguments {
@@ -552,12 +566,12 @@ protected:
 //     virtual bool reset() = 0;
 
 // protected:
-//     using ShaderAction::ShaderAction;
+//     using GpuShaderAction::GpuShaderAction;
 // };
 
 // /// Physically Based Rendering (PBR) action using Disney PBR shading model.
 // /// Renders objects with realistic material properties including base color, metallic, roughness, and normal mapping.
-// struct PBRShading : public ShaderAction {
+// struct PBRShading : public GpuShaderAction {
 //     GN_API static const uint64_t TYPE;
 
 //     /// Light types for PBR lighting
@@ -660,7 +674,7 @@ protected:
 //                        ) = 0;
 
 // protected:
-//     using ShaderAction::ShaderAction;
+//     using GpuShaderAction::GpuShaderAction;
 // };
 
 } // namespace GN::rdg

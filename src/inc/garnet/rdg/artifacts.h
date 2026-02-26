@@ -190,59 +190,86 @@ protected:
     using GpuResource::GpuResource;
 };
 
-/// Base class of all mesh types.
-/// Meshes can be either indexed (using an index buffer) or non-indexed (drawing vertices directly).
-struct Mesh : public GpuResource {
-    GN_API static const uint64_t         TYPE_ID;
-    inline static constexpr const char * TYPE_NAME = "Mesh";
+struct BufferView {
+    /// The buffer that contains the geometry data.
+    AutoRef<Buffer> buffer;
 
-    // struct VertexBuffer {
-    //     // AutoRef<Buffer>       buffer;
-    //     gfx::img::PixelFormat format;     ///< pixel format of the vertex
-    //     uint32_t              offset = 0; ///< offset in bytes from beginning of the buffer to the first vertex
-    //     uint32_t              stride = 0; ///< vertex stride in bytes
-    // };
+    /// offset in bytes from beginning of the buffer to the first element.
+    uint64_t offset = 0;
 
-    // /// Complete mesh descriptor containing all vertex and index data information
-    // struct Descriptor {
-    //     /// vertices, key is semantic name
-    //     std::unordered_map<StrA, VertexBuffer> vertices;
-
-    //     /// number of vertices in the mesh
-    //     uint32_t vertexCount;
-
-    //     /// index buffer. Null if mesh is non-indexed.
-    //     // AutoRef<Buffer> indexBuffer;
-
-    //     /// number of indices. 0, if non-indexed.
-    //     uint32_t indexCount;
-
-    //     /// offset in bytes from beginning of the index buffer to the first index. Ignored if indexCount is 0.
-    //     uint32_t indexOffset;
-    // };
-
-    // struct CreateParameters {
-    //     AutoRef<GpuContext> context;
-    //     Descriptor          descriptor;
-    // };
-
-    struct LoadParameters {
-        AutoRef<GpuContext> context;
-        StrA                filename;
-    };
-
-    // /// Get the complete mesh descriptor containing all vertex and index data.
-    // virtual const Descriptor & descriptor() const = 0;
-
-    // /// Create a new instance of Mesh.
-    // static GN_API AutoRef<Mesh> create(ArtifactDatabase & db, const StrA & name, const CreateParameters & params);
-
-    /// Load mesh from file. Returns a mesh artifact named after the file name.
-    /// If the file has been loaded before, return the existing artifact.
-    static GN_API AutoRef<Mesh> load(ArtifactDatabase & db, const LoadParameters & params);
-
-protected:
-    using GpuResource::GpuResource;
+    /// size of the data in the buffer in bytes, starting from offset.
+    uint64_t size = 0;
 };
+
+// /// Allocate a block of memory for uploading dynamic data to GPU. The allocated slice will be released when the transient arena is deleted.
+// struct GpuTransientUploader : public TransientArena {
+
+//     struct Slice {
+//         void * data = nullptr; ///< pointer to the allocated data.
+//         size_t size = 0; ///< size of the allocated data in bytes.
+//     protected:
+//         Slice(void * data_, size_t size_): data(data_), size(size_) {}
+//     };
+
+//     virtual Slice allocate(size_t size) = 0;
+
+// protected:
+//     using TransientArena::TransientArena;
+// };
+
+// /// Base class of all mesh types.
+// /// Meshes can be either indexed (using an index buffer) or non-indexed (drawing vertices directly).
+// struct Mesh : public GpuResource {
+//     GN_API static const uint64_t         TYPE_ID;
+//     inline static constexpr const char * TYPE_NAME = "Mesh";
+
+//     // struct VertexBuffer {
+//     //     // AutoRef<Buffer>       buffer;
+//     //     gfx::img::PixelFormat format;     ///< pixel format of the vertex
+//     //     uint32_t              offset = 0; ///< offset in bytes from beginning of the buffer to the first vertex
+//     //     uint32_t              stride = 0; ///< vertex stride in bytes
+//     // };
+
+//     // /// Complete mesh descriptor containing all vertex and index data information
+//     // struct Descriptor {
+//     //     /// vertices, key is semantic name
+//     //     std::unordered_map<StrA, VertexBuffer> vertices;
+
+//     //     /// number of vertices in the mesh
+//     //     uint32_t vertexCount;
+
+//     //     /// index buffer. Null if mesh is non-indexed.
+//     //     // AutoRef<Buffer> indexBuffer;
+
+//     //     /// number of indices. 0, if non-indexed.
+//     //     uint32_t indexCount;
+
+//     //     /// offset in bytes from beginning of the index buffer to the first index. Ignored if indexCount is 0.
+//     //     uint32_t indexOffset;
+//     // };
+
+//     // struct CreateParameters {
+//     //     AutoRef<GpuContext> context;
+//     //     Descriptor          descriptor;
+//     // };
+
+//     struct LoadParameters {
+//         AutoRef<GpuContext> context;
+//         StrA                filename;
+//     };
+
+//     // /// Get the complete mesh descriptor containing all vertex and index data.
+//     // virtual const Descriptor & descriptor() const = 0;
+
+//     // /// Create a new instance of Mesh.
+//     // static GN_API AutoRef<Mesh> create(ArtifactDatabase & db, const StrA & name, const CreateParameters & params);
+
+//     /// Load mesh from file. Returns a mesh artifact named after the file name.
+//     /// If the file has been loaded before, return the existing artifact.
+//     static GN_API AutoRef<Mesh> load(ArtifactDatabase & db, const LoadParameters & params);
+
+// protected:
+//     using GpuResource::GpuResource;
+// };
 
 } // namespace GN::rdg

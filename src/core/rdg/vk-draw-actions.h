@@ -18,7 +18,7 @@ struct DrawActionContextVulkan : public Action::ExecutionContext {
 /// Returns null on failure or duplicate type+name.
 AutoRef<ClearRenderTarget> createVulkanClearRenderTarget(ArtifactDatabase & db, const StrA & name, const ClearRenderTarget::CreateParameters & params);
 
-/// Create Vulkan-backed GenericDraw. Called from GenericDraw::create() when context is Vulkan.
-AutoRef<GenericDraw> createVulkanGenericDrawAction(ArtifactDatabase & db, const StrA & name, const GenericDraw::CreateParameters & params);
+/// Create Vulkan-backed GpuDraw. Called from GpuDraw::create() when context is Vulkan.
+AutoRef<GpuDraw> createVulkanGpuDraw(ArtifactDatabase & db, const StrA & name, const GpuDraw::CreateParameters & params);
 
 } // namespace GN::rdg

@@ -181,6 +181,24 @@ public:
     template<typename T, size_t COUNT, UsageFlag UFlags = UsageFlag::None>
     using ReadWriteArray = ArtifactArray<T, COUNT, UFlags | UsageFlag::Reading | UsageFlag::Writing>;
 
+    template<typename T, UsageFlag UFlags = UsageFlag::None>
+    struct ArtifactVector : public ArtifactArgument {
+        ArtifactVector(Arguments * owner, const char * name): ArtifactArgument(owner, name, UFlags) {}
+
+        SafeArrayAccessor<const Artifact * const> artifacts() const override { return {(const Artifact * const *) values[0].addr(), values.size()}; }
+
+        DynaArray<AutoRef<T>> values;
+    };
+
+    template<typename T, UsageFlag UFlags = UsageFlag::None>
+    using ReadOnlyVector = ArtifactVector<T, UFlags | UsageFlag::Reading>;
+
+    template<typename T, UsageFlag UFlags = UsageFlag::None>
+    using WriteOnlyVector = ArtifactVector<T, UFlags | UsageFlag::Writing>;
+
+    template<typename T, UsageFlag UFlags = UsageFlag::None>
+    using ReadWriteVector = ArtifactVector<T, UFlags | UsageFlag::Reading | UsageFlag::Writing>;
+
     /// Returns the first artifact argument in the enlistment list. Iterate with \c p->next() until \c nullptr. No allocation.
     const ArtifactArgument * firstArtifactArgument() const { return mHead ? static_cast<const ArtifactArgument *>(mHead->context) : nullptr; }
 
@@ -318,6 +336,19 @@ protected:
     Submission() = default;
 };
 
+// /// A transient arena is a temporary memory pool that is used to allocate memory for the tasks that are executed.
+// /// It will be automatically deleted, along with all allocated memory, after the next submission is completed or cancelled.
+// /// Accessing the added arena after calling submit() is prohibited and will result in undefined behavior.
+// struct TransientArena {
+//     virtual ~TransientArena() = default;
+
+//     GN_NO_COPY(TransientArena);
+//     GN_NO_MOVE(TransientArena);
+
+// protected:
+//     TransientArena() = default;
+// };
+
 /// Render graph: schedule workflows (thread-safe), then submit them for async execution.
 struct RenderGraph {
     struct CreateParameters {
@@ -342,6 +373,12 @@ struct RenderGraph {
     ///  - A newly scheduled workflow is always considered newer than any previously scheduled workflow.
     ///  - A task in newer workflow might depend on a task in older workflow, but never vise versa.
     virtual Workflow * schedule(StrA name) = 0;
+
+    // /// Add a transient arena to the render graph. The arena is used to allocate temporary used only by the the next submission.
+    // /// It will be automatically deleted, along with all allocated memory, after the next submission is completed or cancelled.
+    // /// Accessing the added arena after calling submit() is prohibited and will result in undefined behavior.
+    // /// \param arena The transient arena to add.
+    // virtual void addTransientArena(TransientArena * arena) = 0;
 
     /// Submit all scheduled workflows for async execution in a topological order that satisfies workflow dependencies.
     /// Returns immediately; execution may not be complete when this method returns.

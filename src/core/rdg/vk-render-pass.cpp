@@ -29,8 +29,9 @@ std::pair<const rapid_vulkan::Image *, vk::Extent2D> getColorTargetImage(const R
                 GN_ERROR(sLogger)("RenderPassManagerVulkan::execute: the render target texture for stage {} is not properly initialized.", stage);
                 return {};
             }
-        auto dim     = tex->dimensions(color.subresourceIndex.mip);
-        extent.width = std::min(dim.width, extent.width);
+        auto dim      = tex->dimensions(color.subresourceIndex.mip);
+        extent.width  = dim.width;
+        extent.height = dim.height;
     } else {
         // this color target is a backbuffer.
         auto bb = std::get<1>(color.target).castTo<BackbufferVulkan>().get();
