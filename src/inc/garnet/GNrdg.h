@@ -12,6 +12,7 @@ namespace GN::rdg {};
 #include "rdg/actions.h"
 
 // Defines reusable high level rendering pipeline components. Such shadow mapping, PBR rendering, anti aliasing, tone mapping, etc.
+#include "rdg/physical.h"
 #include "rdg/pipeline.h"
 
 // Top level scene management

@@ -6,7 +6,6 @@ namespace GN::rdg {
 
 // Representa a view to a GPU image. Could be a texture or a backbuffer.
 struct GpuImageView {
-
     struct SubresourceIndex {
         uint32_t mip  = 0; ///< index into mipmap chain
         uint32_t face = 0; ///< index into array of faces
@@ -322,16 +321,38 @@ protected:
     using Action::Action;
 };
 
+/// Represent a GPU renderable geometry.
+struct GpuGemetry {
+    struct VertexFormat {
+        // TBD
+    };
+
+    struct GeometryBuffer : BufferView {
+        /// For vertex buffers, this is the size of the vertex in bytes.
+        /// For index buffers, this is the size of the index in bytes. Must be 2 or 4.
+        /// For instanced buffers, this is the size of the instance in bytes.
+        uint32_t stride = 0;
+
+        /// Number of elements in the buffer.
+        size_t count() const { return size / stride; }
+    };
+
+    VertexFormat              format;
+    DynaArray<GeometryBuffer> instances;
+    DynaArray<GeometryBuffer> vertices;
+    GeometryBuffer            indices;
+};
+
 /// Base class for generic shader actions (draw and compute). Contains common shader resource binding definitions.
 struct GpuShaderAction : public Action {
-    struct ShaderResourceBinding {
-        uint32_t set  = 0;
-        uint32_t slot = 0;
+    // struct ShaderResourceBinding {
+    //     uint32_t set  = 0;
+    //     uint32_t slot = 0;
 
-        bool operator==(const ShaderResourceBinding & other) const { return set == other.set && slot == other.slot; }
-        bool operator!=(const ShaderResourceBinding & other) const { return !operator==(other); }
-        bool operator<(const ShaderResourceBinding & other) const { return (set < other.set) || (set == other.set && slot < other.slot); }
-    };
+    //     bool operator==(const ShaderResourceBinding & other) const { return set == other.set && slot == other.slot; }
+    //     bool operator!=(const ShaderResourceBinding & other) const { return !operator==(other); }
+    //     bool operator<(const ShaderResourceBinding & other) const { return (set < other.set) || (set == other.set && slot < other.slot); }
+    // };
 
     template<Arguments::UsageFlag UFlags>
     struct BufferViewMap : public Arguments::ArtifactArgument {
@@ -414,63 +435,29 @@ protected:
     using Action::Action;
 };
 
-} // namespace GN::rdg
-
-namespace std {
-
-template<>
-struct hash<GN::rdg::GpuShaderAction::ShaderResourceBinding> {
-    size_t operator()(const GN::rdg::GpuShaderAction::ShaderResourceBinding & key) const {
-        auto hash = std::hash<uint32_t>()(key.set);
-        GN::combineHash(hash, key.slot);
-        return hash;
-    }
-};
-
-} // namespace std
-
-namespace GN::rdg {
-
 /// Generic GPU draw action. This is the building block of all other draw actions and effects.
 struct GpuDraw : public GpuShaderAction {
     GN_API static const uint64_t         TYPE_ID;
     inline static constexpr const char * TYPE_NAME = "GpuDraw";
 
-    struct VertexFormat {
-        // TBD
-    };
-
-    struct GeometryBuffer : BufferView {
-        /// For vertex buffers, this is the size of the vertex in bytes.
-        /// For index buffers, this is the size of the index in bytes. Must be 2 or 4.
-        /// For instanced buffers, this is the size of the instance in bytes.
-        uint32_t stride = 0;
-
-        /// Number of elements in the buffer.
-        size_t count() const { return size / stride; }
-    };
-
-    struct MeshArgument : public Arguments::ArtifactArgument {
-        MeshArgument(Arguments * owner, const char * name)
+    struct GeometryArgument : public Arguments::ArtifactArgument {
+        GeometryArgument(Arguments * owner, const char * name)
             : Arguments::ArtifactArgument(owner, name, Arguments::UsageFlag::Reading | Arguments::UsageFlag::Optional) {}
 
         SafeArrayAccessor<const Artifact * const> artifacts() const override {
-            mArtifacts.reserve(instances.size() + vertices.size() + 1);
+            mArtifacts.reserve(value.instances.size() + value.vertices.size() + 1);
             mArtifacts.clear();
-            for (const auto & vb : instances) {
+            for (const auto & vb : value.instances) {
                 if (vb.buffer) { mArtifacts.append(vb.buffer.get()); }
             }
-            for (const auto & vb : vertices) {
+            for (const auto & vb : value.vertices) {
                 if (vb.buffer) { mArtifacts.append(vb.buffer.get()); }
             }
-            if (indices.buffer) { mArtifacts.append(indices.buffer.get()); }
+            if (value.indices.buffer) { mArtifacts.append(value.indices.buffer.get()); }
             return mArtifacts;
         }
 
-        VertexFormat              format;
-        DynaArray<GeometryBuffer> instances;
-        DynaArray<GeometryBuffer> vertices;
-        GeometryBuffer            indices;
+        GpuGeometry value;
 
     private:
         mutable DynaArray<const Artifact *> mArtifacts;
@@ -493,7 +480,7 @@ struct GpuDraw : public GpuShaderAction {
         RoImagesMap          roImages     = {this, "read-only images"};   ///< read-only images
         RwBufferMap          buffers      = {this, "read-write buffers"}; ///< read-write random access buffers
         RoBufferMap          roBuffers    = {this, "read-only buffers"};  ///< read-only random access buffers
-        MeshArgument         mesh         = {this, "mesh"};               ///< mesh
+        GeometryArgument     geometry     = {this, "geometry"};           ///< geometry
         RenderTargetArgument renderTarget = {this, "renderTarget"};       ///< render target
     };
 
@@ -549,6 +536,19 @@ protected:
     using GpuShaderAction::GpuShaderAction;
 };
 
+// namespace std {
+
+// template<>
+// struct hash<GN::rdg::GpuShaderAction::ShaderResourceBinding> {
+//     size_t operator()(const GN::rdg::GpuShaderAction::ShaderResourceBinding & key) const {
+//         auto hash = std::hash<uint32_t>()(key.set);
+//         GN::combineHash(hash, key.slot);
+//         return hash;
+//     }
+// };
+
+// } // namespace std
+    
 // /// Composes one solid color and a set of textures into a single output texture.
 // /// Inputs: one color (set on the action) and up to MAX_INPUT_TEXTURES texture parameters.
 // /// Output: one texture (parameter "output").

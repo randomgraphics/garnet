@@ -8,7 +8,6 @@
 
 - Mordenization:
   - replace some custom classes with 3rdparty library:
-    - math -> glm (cons: no more custom field names like r/g/b/a)
     - custom log -> spdlog (https://github.com/gabime/spdlog)
     - remove custom Dictionary, since it is significantly slower than std counterparts.
   - keepers:
@@ -21,6 +20,7 @@
     - custom vector class: DynaArray<T>
       - memory footprint compatible with raw pointer. An array of DynaArray can be safely cast to
         array of raw pointers.
+    - custom 2d/3d/4d vector class: do support custom lenght unit: like Vector3<MyWorldUnit>
 
 - fix Qt6 window build.
 

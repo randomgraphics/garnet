@@ -21,11 +21,14 @@ namespace GN::rdg {
 struct ArtifactDatabase;
 
 struct RuntimeType {
-    /// The unique identifier of the type.
+    /// The unique identifier of the type for fast lookup and comparison.
+    /// This is a runtime ID generated each time application starts.
+    /// It is guaranteed to be unique within the entire application, even across DLL boundaries.
+    /// But DO NOT use it in external assets or files, since they are not stable and will change from session to session.
     const uint64_t typeId;
 
-    /// The name of the type. For debugging and logging. No need to be unique.
-    /// Must be a static constant string literal.
+    /// The name of the type. No need to be unique, for now.
+    /// \note We could enforce uniqueness of the name too, if we want a stable ID for each type in the future.
     const char * const typeName;
 
     template<typename T>
@@ -51,10 +54,6 @@ struct Artifact : public RefCounter, public RuntimeType {
     const uint64_t     sequence; ///< the unique integer identifier of the artifact in the artifact database.
 
     virtual ~Artifact() {}
-
-    /// An artifact can reference or alias other artifacts. This method returns a list of artifacts that this artifact references or aliases.
-    /// This allows the depedency build to have a full picture of the dependencies between artifacts.
-    virtual SafeArrayAccessor<const Artifact * const> references() const = 0;
 
 protected:
     /// Constructor
