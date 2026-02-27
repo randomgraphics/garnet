@@ -8,6 +8,22 @@
 
 namespace GN::rdg {
 
+struct WorkflowImpl : public Workflow {
+    /// The unique monotonically increasing sequence number of the workflow.
+    /// If (A->sequence - B->sequence) > 0, then A is considered newer than, or "after", B.
+    /// We use signed integer as the sequence number. So it can overflow safely.
+    /// It is assigned at submit() time.
+    mutable int64_t sequence = 0;
+
+    static WorkflowImpl * create(const StrA & name) {
+        return new WorkflowImpl(name);
+    }
+
+    static WorkflowImpl * promote(Workflow * workflow) {
+        return static_cast<WorkflowImpl *>(workflow);
+    }
+};
+    
 /// Implementation of Submission. Holds all intermediate data and context for a single submit.
 /// Processes workflows asynchronously: validate, build dependency graph, topological sort, execute.
 class SubmissionImpl : public Submission {
@@ -21,7 +37,7 @@ public:
     };
 
     /// Construct and start the submission asynchronously. Takes ownership of \p pendingWorkflows (pointers).
-    SubmissionImpl(DynaArray<Workflow *> pendingWorkflows, const Parameters & params);
+    SubmissionImpl(DynaArray<WorkflowImpl*> pendingWorkflows, const Parameters & params);
 
     ~SubmissionImpl() override;
 
@@ -85,8 +101,8 @@ private:
     std::unordered_map<uint64_t, AutoRef<Context>> mExecutionContexts;
 
     // Owned workflows (taken from graph on construction)
-    DynaArray<Workflow *>        mWorkflows;
-    DynaArray<Workflow *>        mValidatedWorkflows;
+    DynaArray<WorkflowImpl*>        mWorkflows;
+    DynaArray<WorkflowImpl*>        mValidatedWorkflows;
     DynaArray<DynaArray<size_t>> mDependencyGraph;
 
     // State for dumpState() (written by run(), read by dumpState())

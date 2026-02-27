@@ -276,11 +276,6 @@ struct Workflow {
     /// Name for logging and debugging (not required, but recommended. No need to be unique).
     StrA name;
 
-    /// The unique monotonically increasing sequence number of the workflow.
-    /// If (A->sequence - B->sequence) > 0, then A is considered newer than, or "after", B.
-    /// We use signed integer as the sequence number. So it can overflow safely.
-    int64_t sequence;
-
     /// Represents a single task in the workflow. This is the atomic execution unit of the render graph.
     /// \note
     /// - Task A is considered newer than task B, if any of the following is true:
@@ -307,10 +302,6 @@ struct TaskInfo {
 };
 
 struct Submission : RefCounter {
-    struct Parameters {
-        StrA name; ///< name of the submission.
-    };
-
     /// Result of execution
     struct Result {
         Action::ExecutionResult executionResult {};
@@ -358,6 +349,16 @@ struct RenderGraph {
         // For future use
     };
 
+    struct SubmitParameters {
+        /// name of the submission.
+        StrA name;
+        
+        /// The order of the workflow is important. A workflow in front of the array (smaller index)
+        /// is considered older than the ones in the back of the array (larger index).
+        /// Also, a workflow is always newer than any previously submitted workflows.
+        SafeArrayAccessor<Workflow*> workflows;
+    };
+
     /// Create a new render graph instance
     static GN_API RenderGraph * create(const CreateParameters & params);
 
@@ -373,8 +374,8 @@ struct RenderGraph {
     ///  - The returned workflow is free to modify until submit() is called.
     ///  - Call to submit() will invalidate all scheduled workflow pointers.
     ///  - Modifying workflow that has been submitted is undefined behavior.
-    ///  - A newly scheduled workflow is always considered newer than any previously scheduled workflow.
-    ///  - A task in newer workflow might depend on a task in older workflow, but never vise versa.
+    /// \todo rename it to createWorkFlow(). it just creates a new empty workflow. Workflow order should
+    ///       be determined at submit() time.
     virtual Workflow * schedule(StrA name) = 0;
 
     // /// Add a transient arena to the render graph. The arena is used to allocate temporary used only by the the next submission.
@@ -386,7 +387,7 @@ struct RenderGraph {
     /// Submit all scheduled workflows for async execution in a topological order that satisfies workflow dependencies.
     /// Returns immediately; execution may not be complete when this method returns.
     /// After submission, the graph is reset to initial state and ready for new scheduling.
-    virtual AutoRef<Submission> submit(const Submission::Parameters & params) = 0;
+    virtual AutoRef<Submission> submit(const SubmitParameters & params) = 0;
 
 protected:
     RenderGraph() = default;

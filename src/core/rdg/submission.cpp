@@ -73,7 +73,7 @@ bool SubmissionImpl::validateAndBuildDependencyGraph() {
     DynaArray<ArtifactSet> workflowReads(mValidatedWorkflows.size());
     DynaArray<ArtifactSet> workflowWrites(mValidatedWorkflows.size());
     for (size_t i = 0; i < mValidatedWorkflows.size(); ++i) {
-        Workflow * w = mValidatedWorkflows[i];
+        auto w = mValidatedWorkflows[i];
         for (const Workflow::Task & task : w->tasks) {
             Arguments * args = task.arguments.get();
             if (!args) continue;

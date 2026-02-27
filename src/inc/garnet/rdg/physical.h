@@ -33,9 +33,6 @@ inline static constexpr WorldUnit operator""_foot(unsigned long long value) { re
 inline static constexpr WorldUnit operator""_mile(unsigned long long value) { return WorldUnit(value * 1609344000); }
 inline static constexpr WorldUnit operator""_yard(unsigned long long value) { return WorldUnit(value * 914400); }
 
-using Location    = Vector3<WorldUnit>;
-using Orientation = Quaternionf;
-
 struct Candela {
     float value;
 }; ///< Intensity unit [cd].

@@ -104,7 +104,6 @@ GN_API ArtifactDatabase * ArtifactDatabase::create(const CreateParameters & para
 // ============================================================================
 
 class RenderGraphImpl : public RenderGraph {
-    DynaArray<Workflow *> mPendingWorkflows;
     int64_t               mNextSequence = 0;
     mutable std::mutex    mMutex;
 
@@ -114,18 +113,23 @@ public:
 
     Workflow * schedule(StrA name) override {
         std::lock_guard<std::mutex> lock(mMutex);
-        Workflow *                  newWorkflow = new Workflow();
-        newWorkflow->name                       = std::move(name);
-        newWorkflow->sequence                   = mNextSequence++;
-        mPendingWorkflows.append(newWorkflow);
-        return newWorkflow;
+        return WorkflowImpl::create(name);
     }
 
     AutoRef<Submission> submit(const Submission::Parameters & params) override {
         std::lock_guard<std::mutex> lock(mMutex);
-        GN_VERBOSE(sLogger)("Submitting {} workflows.", mPendingWorkflows.size());
-        auto submission = AutoRef<Submission>(new SubmissionImpl(std::move(mPendingWorkflows), params));
-        GN_ASSERT(mPendingWorkflows.empty());
+        DynaArray<WorkflowImpl*> pending;
+        pending.reserve(params.workflows.size());
+        for (auto w : params.workflows) {
+            auto p = WorkflowImpl::promote(w);
+            if (p) {
+                p->sequence = mNextSequence++;
+                pending.append(p);
+            }
+        }
+        GN_VERBOSE(sLogger)("Submitting {} workflows.", pending.size());
+        auto submission = AutoRef<Submission>(new SubmissionImpl(std::move(pending), params));
+        GN_ASSERT(pending.empty());
         return submission;
     }
 };
