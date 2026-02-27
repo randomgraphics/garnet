@@ -8,7 +8,7 @@ static GN::Logger * sLogger = GN::getLogger("GN.rdg");
 
 namespace GN::rdg {
 
-SubmissionImpl::SubmissionImpl(DynaArray<Workflow *> pendingWorkflows, const Parameters & params) {
+SubmissionImpl::SubmissionImpl(DynaArray<WorkflowImpl *> pendingWorkflows, const RenderGraph::SubmitParameters & params) {
     GN_VERBOSE(sLogger)("SubmissionImpl constructor: {} workflows.", pendingWorkflows.size());
     mWorkflows = std::move(pendingWorkflows);
     mFuture    = std::async(std::launch::async, [this, params]() -> Result { return run(params); });
@@ -53,7 +53,7 @@ bool SubmissionImpl::validateTask(const Workflow::Task & task, const StrA & work
 
 bool SubmissionImpl::validateAndBuildDependencyGraph() {
     for (size_t workflowIdx = 0; workflowIdx < mWorkflows.size(); ++workflowIdx) {
-        Workflow * workflow = mWorkflows[workflowIdx];
+        auto workflow = mWorkflows[workflowIdx];
         GN_ASSERT(workflow);
 
         for (size_t taskIdx = 0; taskIdx < workflow->tasks.size(); ++taskIdx) {
@@ -212,7 +212,7 @@ Submission::State SubmissionImpl::dumpState() const {
     for (size_t orderIdx = 0; orderIdx < mExecutionOrder.size(); ++orderIdx) {
         size_t wfIdx = mExecutionOrder[orderIdx];
         if (wfIdx >= mValidatedWorkflows.size()) continue;
-        Workflow * w = mValidatedWorkflows[wfIdx];
+        auto w = mValidatedWorkflows[wfIdx];
         if (!w) continue;
 
         out += StrA::format("\n--- Workflow [{}] \"{}\" (sequence={}, order={}) ---\n", wfIdx, w->name.empty() ? "[unnamed]" : w->name.c_str(),
@@ -285,7 +285,7 @@ Submission::State SubmissionImpl::dumpState() const {
     return result;
 }
 
-Submission::Result SubmissionImpl::run(Parameters) {
+Submission::Result SubmissionImpl::run(const RenderGraph::SubmitParameters &) {
     cleanup(false); // clean up any residual data from previous runs, but keep pending workflows.
 
     auto setResult = [](Action::ExecutionResult executionResult) -> Result {

@@ -44,11 +44,11 @@ protected:
     using Artifact::Artifact;
 };
 
-/// Represents lighing information of the surrounding world.
+/// Represents lighting information of the surrounding world.
 /// Can be, but not limited to, skybox, reflection probes, global illumination etc.
-struct EnviromentalLighting : public RenderGraphBuilder {
+struct EnvironmentalLighting : public RenderGraphBuilder {
     GN_API static const uint64_t         TYPE_ID;
-    inline static constexpr const char * TYPE_NAME = "EnviromentalLighting";
+    inline static constexpr const char * TYPE_NAME = "EnvironmentalLighting";
 
     /// Sky lighting. If skybox texture is not provided, use the ambient as fallback.
     /// \todo: no need to put them here. move them to backend implementation.
@@ -68,10 +68,10 @@ struct EnviromentalLighting : public RenderGraphBuilder {
     };
 
     /// Create a new blank (full black) environment resource.
-    static GN_API AutoRef<EnvironmentMap> create(ArtifactDatabase & db, const StrA & name, const CreateParameters & params);
+    static GN_API AutoRef<EnvironmentalLighting> create(ArtifactDatabase & db, const StrA & name, const CreateParameters & params);
 
     /// Load a Pbr environment resource from external file.
-    static GN_API AutoRef<EnvironmentMap> load(ArtifactDatabase & db, const StrA & name, const LoadParameters & params);
+    static GN_API AutoRef<EnvironmentalLighting> load(ArtifactDatabase & db, const StrA & name, const LoadParameters & params);
 
 protected:
     using RenderGraphBuilder::RenderGraphBuilder;
@@ -90,9 +90,9 @@ protected:
 // };
 
 
-/// Store shadow relate information for all active lights, to be used
+/// Store shadow related information for all active lights, to be used
 /// to determine whether a surface point is in shadow or not.
-struct ShadowVisbility : public RenderGraphBuilder {
+struct ShadowVisibility : public RenderGraphBuilder {
     GN_API static const uint64_t         TYPE_ID;
     inline static constexpr const char * TYPE_NAME = "ShadowVisibility";
 
@@ -100,49 +100,27 @@ struct ShadowVisbility : public RenderGraphBuilder {
         // tbd
     };
 
-    static GN_API AutoRef<ShadowVisbility> create(ArtifactDatabase & db, const StrA & name, const CreateParameters & params);
+    static GN_API AutoRef<ShadowVisibility> create(ArtifactDatabase & db, const StrA & name, const CreateParameters & params);
 
 protected:
     using RenderGraphBuilder::RenderGraphBuilder;
 };
 
-// struct EffectContext : public Artifact {
-//     GN_API static const uint64_t         TYPE_ID;
-//     inline static constexpr const char * TYPE_NAME = "EffectContext";
-
-//     // // Frame specific information
-//     // uint64_t    frameCounter  = 0;              // A monotonically increasing counter of the frame.
-//     // Nanoseconds frameDuration = Nanoseconds(0); // duration of the last known good frame in nanoseconds.
-//     // Nanoseconds engineUptime  = Nanoseconds(0); // total run time since the engine started in nanoseconds.
-
-//     // // Caemra information
-//     // WorldToClipTransform worldToClip;
-
-//     // // Lighting information
-//     // DynaArray<SimpleLight>    lights;             /// lists off available/significant/visible lights for the current view.
-//     // AutoRef<ShadowVisibility> shadowVisibility;   /// the shadow visibility information for the current view.
-//     // AutoRef<EnvironmentMap>   environmentMap;     /// the environment map to be used for the current view.
-
-//     struct CreateParameters {
-//         RenderGraph renderGraph;
-// };
-
-
 struct SimpleForwardShadingPipeline : public Artifact {
     struct CreateParameters {
-        RenderGraph renderGraph;
+        RenderGraph * renderGraph = nullptr;
     };
 
-    /// Direct lighint information. For now, is just a ist of active lights.
-    /// Later can be expanded to a dedicated DirectLighing artifact and workflows.
+    /// Direct lighting information. For now, is just a list of active lights.
+    /// Later can be expanded to a dedicated DirectLighting artifact and workflows.
     DynaArray<SimpleLight> lights;
 
     /// The stage to render shadow maps
-    DynaArray<Workflow*> shadowPass = nullptr;
+    DynaArray<Workflow *> shadowPass;
     AutoRef<ShadowVisibility> shadowVisibility;
 
     /// The state to render/update environment maps.
-    DynaArray<Workflow*> environmentalPass = nullptr;
+    DynaArray<Workflow *> environmentalPass;
     AutoRef<EnvironmentalLighting> environmentalLighting;
 
     /// \todo The stage to render depth prepass (maybe motion vector as well)
@@ -187,13 +165,13 @@ struct PbrShading : public GpuResource {
     };
 
     struct BuildParameters {
-        AutoRef<Material>    material;
-        AutoRef<GpuGeometry> geometry;
-        AffineTransform      modelToWorld;
-        WorldToClipTransform worldToClip;
+        AutoRef<Material>              material;
+        GpuGeometry                    geometry;
+        AffineTransform                modelToWorld;
+        WorldToClipTransformChain      worldToClip;
         AutoRef<EnvironmentalLighting> env;
-        AutoRef<ShadowVisibility> shadow;
-        RenderTarget         renderTarget;
+        AutoRef<ShadowVisibility>      shadow;
+        RenderTarget                   renderTarget;
     };
 
     struct CreateParameters {
@@ -222,7 +200,7 @@ struct SkyBox : public GpuResource {
     };
 
     /// Add task graphs into the workflow to render a sky box.
-    virtual Action::ExecutionResult build(Workflow & workflow, const EffectContext & context, const BuildParameters & params);
+    virtual Action::ExecutionResult build(Workflow & workflow, const BuildParameters & params);
 
     static GN_API AutoRef<SkyBox> create(ArtifactDatabase & db, const StrA & name, const CreateParameters & params);
 

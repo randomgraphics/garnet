@@ -9,14 +9,10 @@
 namespace GN::rdg {
 
 struct WorkflowImpl : public Workflow {
-    /// The unique monotonically increasing sequence number of the workflow.
-    /// If (A->sequence - B->sequence) > 0, then A is considered newer than, or "after", B.
-    /// We use signed integer as the sequence number. So it can overflow safely.
-    /// It is assigned at submit() time.
-    mutable int64_t sequence = 0;
+    explicit WorkflowImpl(const StrA & name_) { name = name_; }
 
-    static WorkflowImpl * create(const StrA & name) {
-        return new WorkflowImpl(name);
+    static WorkflowImpl * create(const StrA & name_) {
+        return new WorkflowImpl(name_);
     }
 
     static WorkflowImpl * promote(Workflow * workflow) {
@@ -37,7 +33,7 @@ public:
     };
 
     /// Construct and start the submission asynchronously. Takes ownership of \p pendingWorkflows (pointers).
-    SubmissionImpl(DynaArray<WorkflowImpl*> pendingWorkflows, const Parameters & params);
+    SubmissionImpl(DynaArray<WorkflowImpl*> pendingWorkflows, const RenderGraph::SubmitParameters & params);
 
     ~SubmissionImpl() override;
 
@@ -114,7 +110,7 @@ private:
     bool              validateTask(const Workflow::Task & task, const StrA & workflowName, size_t taskIndex);
     bool              validateAndBuildDependencyGraph();
     DynaArray<size_t> topologicalSort();
-    Result            run(Parameters params);
+    Result            run(const RenderGraph::SubmitParameters & params);
 };
 
 } // namespace GN::rdg

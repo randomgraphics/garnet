@@ -104,8 +104,8 @@ GN_API ArtifactDatabase * ArtifactDatabase::create(const CreateParameters & para
 // ============================================================================
 
 class RenderGraphImpl : public RenderGraph {
-    int64_t               mNextSequence = 0;
-    mutable std::mutex    mMutex;
+    int64_t            mNextSequence = 0;
+    mutable std::mutex mMutex;
 
 public:
     RenderGraphImpl() {}
@@ -113,18 +113,31 @@ public:
 
     Workflow * schedule(StrA name) override {
         std::lock_guard<std::mutex> lock(mMutex);
-        return WorkflowImpl::create(name);
+        auto * w = WorkflowImpl::create(name);
+        if (w) {
+            w->sequence = mNextSequence++;
+            mScheduledWorkflows.append(w);
+        }
+        return w;
     }
 
-    AutoRef<Submission> submit(const Submission::Parameters & params) override {
+    AutoRef<Submission> submit(const SubmitParameters & params) override {
         std::lock_guard<std::mutex> lock(mMutex);
-        DynaArray<WorkflowImpl*> pending;
-        pending.reserve(params.workflows.size());
-        for (auto w : params.workflows) {
-            auto p = WorkflowImpl::promote(w);
-            if (p) {
-                p->sequence = mNextSequence++;
-                pending.append(p);
+        DynaArray<WorkflowImpl *> pending;
+        if (params.workflows.size() > 0) {
+            pending.reserve(params.workflows.size());
+            for (auto * w : params.workflows) {
+                auto * p = WorkflowImpl::promote(w);
+                if (p) {
+                    p->sequence = mNextSequence++;
+                    pending.append(p);
+                }
+            }
+        } else {
+            pending = std::move(mScheduledWorkflows);
+            mScheduledWorkflows.clear();
+            for (size_t i = 0; i < pending.size(); ++i) {
+                pending[i]->sequence = mNextSequence++;
             }
         }
         GN_VERBOSE(sLogger)("Submitting {} workflows.", pending.size());

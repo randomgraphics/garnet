@@ -2,7 +2,8 @@
 
 namespace GN::rdg {
 
-using Location = Vector3<WorldUnit>;
+using Location    = Vector3<WorldUnit>;
+using Orientation = Quaternionf;
 
 /// General affine transform: translation, rotation and scaling. It can be represented by a 4x4 matrix.
 /// But internally, it could use other more efficient representations, such as quaternion, etc.
@@ -10,9 +11,9 @@ struct AffineTransform {
     /// reset to identity transform.
     void reset() {
         mPosition = {0.0f, 0.0f, 0.0f};
-        mRotation = Quaternionf::identity();
+        mRotation = Quaternionf::sIdentity();
         mScale    = {1.0f, 1.0f, 1.0f};
-        mMatrix   = Matrix44f::identity();
+        mMatrix   = Matrix44f::sIdentity();
         mIsDirty  = false;
     }
 
@@ -35,13 +36,15 @@ struct AffineTransform {
 
 private:
     Vector3f    mPosition = {0.0f, 0.0f, 0.0f};
-    Quaternionf mRotation = Quaternionf::identity();
+    Quaternionf mRotation = Quaternionf::sIdentity();
     Vector3f    mScale    = {1.0f, 1.0f, 1.0f};
-    Matrix44f   mMatrix   = Matrix44f::identity();
+    Matrix44f   mMatrix   = Matrix44f::sIdentity();
     bool        mIsDirty  = false;
 };
 
 /// The conventional world -> view -> clip transformation.
-struct WorldToClipTransform {
+struct WorldToClipTransformChain {
     /// \todo: to be implemented.
+};
+
 } // namespace GN::rdg
