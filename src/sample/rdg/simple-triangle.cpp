@@ -85,57 +85,55 @@ int main(int, const char **) {
     // Render loop: prepare, clear, compose, present until prepare fails
     while (true) {
         // Schedule render workflow
-        auto renderWorkflow = renderGraph->schedule("Render");
-        if (renderWorkflow) {
-            renderWorkflow->name = "Render";
+        auto renderWorkflow  = renderGraph->createWorkflow("Render");
+        renderWorkflow->name = "Render";
 
-            // Task: Prepare backbufferg
-            auto prepareTask              = Workflow::Task("Prepare");
-            prepareTask.action            = prepareAction;
-            auto prepareArgs              = AutoRef<PrepareBackbuffer::A>(new PrepareBackbuffer::A());
-            prepareArgs->backbuffer.value = backbuffer;
-            prepareTask.arguments         = prepareArgs;
-            renderWorkflow->tasks.append(prepareTask);
+        // Task: Prepare backbufferg
+        auto prepareTask              = Workflow::Task("Prepare");
+        prepareTask.action            = prepareAction;
+        auto prepareArgs              = AutoRef<PrepareBackbuffer::A>(new PrepareBackbuffer::A());
+        prepareArgs->backbuffer.value = backbuffer;
+        prepareTask.arguments         = prepareArgs;
+        renderWorkflow->tasks.append(prepareTask);
 
-            // Task: Clear render target (clearValues + renderTarget; no depth/stencil clear for solid triangle)
-            auto clearTask                              = Workflow::Task("Clear");
-            clearTask.action                            = clearAction;
-            auto                              clearArgs = AutoRef<ClearRenderTarget::A>(new ClearRenderTarget::A());
-            ClearRenderTarget::A::ClearValues clearVals {};
-            clearVals.colors[0].f4[0] = 0.2f;
-            clearVals.colors[0].f4[1] = 0.3f;
-            clearVals.colors[0].f4[2] = 0.4f;
-            clearVals.colors[0].f4[3] = 1.0f;
-            clearVals.depth           = 1.0f;
-            clearVals.stencil         = 0;
-            clearArgs->clearValues    = clearVals;
-            RenderTarget clearRt {};
-            clearRt.colors.append(GpuImageView {.image = backbuffer, .subresourceIndex = {}, .subresourceRange = {}});
-            clearArgs->renderTarget.value = clearRt;
-            clearTask.arguments           = clearArgs;
-            renderWorkflow->tasks.append(clearTask);
+        // Task: Clear render target (clearValues + renderTarget; no depth/stencil clear for solid triangle)
+        auto clearTask                              = Workflow::Task("Clear");
+        clearTask.action                            = clearAction;
+        auto                              clearArgs = AutoRef<ClearRenderTarget::A>(new ClearRenderTarget::A());
+        ClearRenderTarget::A::ClearValues clearVals {};
+        clearVals.colors[0].f4[0] = 0.2f;
+        clearVals.colors[0].f4[1] = 0.3f;
+        clearVals.colors[0].f4[2] = 0.4f;
+        clearVals.colors[0].f4[3] = 1.0f;
+        clearVals.depth           = 1.0f;
+        clearVals.stencil         = 0;
+        clearArgs->clearValues    = clearVals;
+        RenderTarget clearRt {};
+        clearRt.colors.append(GpuImageView {.image = backbuffer, .subresourceIndex = {}, .subresourceRange = {}});
+        clearArgs->renderTarget.value = clearRt;
+        clearTask.arguments           = clearArgs;
+        renderWorkflow->tasks.append(clearTask);
 
-            // Task: Draw solid triangle (GpuDraw; pipeline created in Phase 6). Mesh optional; no vertex buffer uses 3 vertices.
-            auto drawTask         = Workflow::Task("DrawTriangle");
-            drawTask.action       = drawAction;
-            auto         drawArgs = AutoRef<GpuDraw::A>(new GpuDraw::A());
-            RenderTarget drawRt {};
-            drawRt.colors.append(GpuImageView {.image = backbuffer, .subresourceIndex = {}, .subresourceRange = {}});
-            drawArgs->renderTarget.value = drawRt;
-            drawTask.arguments           = drawArgs;
-            renderWorkflow->tasks.append(drawTask);
+        // Task: Draw solid triangle (GpuDraw; pipeline created in Phase 6). Mesh optional; no vertex buffer uses 3 vertices.
+        auto drawTask         = Workflow::Task("DrawTriangle");
+        drawTask.action       = drawAction;
+        auto         drawArgs = AutoRef<GpuDraw::A>(new GpuDraw::A());
+        RenderTarget drawRt {};
+        drawRt.colors.append(GpuImageView {.image = backbuffer, .subresourceIndex = {}, .subresourceRange = {}});
+        drawArgs->renderTarget.value = drawRt;
+        drawTask.arguments           = drawArgs;
+        renderWorkflow->tasks.append(drawTask);
 
-            // Task: Present backbuffer
-            auto presentTask              = Workflow::Task("Present");
-            presentTask.action            = presentAction;
-            auto presentArgs              = AutoRef<PresentBackbuffer::A>(new PresentBackbuffer::A());
-            presentArgs->backbuffer.value = backbuffer;
-            presentTask.arguments         = presentArgs;
-            renderWorkflow->tasks.append(presentTask);
-        }
+        // Task: Present backbuffer
+        auto presentTask              = Workflow::Task("Present");
+        presentTask.action            = presentAction;
+        auto presentArgs              = AutoRef<PresentBackbuffer::A>(new PresentBackbuffer::A());
+        presentArgs->backbuffer.value = backbuffer;
+        presentTask.arguments         = presentArgs;
+        renderWorkflow->tasks.append(presentTask);
 
         // Submit render graph for execution
-        auto submission = renderGraph->submit({});
+        auto submission = renderGraph->submit({.workflows = {&renderWorkflow, 1}});
         if (!submission) {
             GN_ERROR(sLogger)("Failed to submit render graph");
             break;

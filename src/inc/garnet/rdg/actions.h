@@ -2,6 +2,7 @@
 
 #include <variant>
 #include <map>
+#include <optional>
 
 namespace GN::rdg {
 

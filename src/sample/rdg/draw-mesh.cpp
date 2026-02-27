@@ -78,7 +78,7 @@ int main(int, const char **) {
     // Render loop: prepare, clear, compose, present until prepare fails
     while (true) {
         // Schedule render workflow
-        auto renderWorkflow = renderGraph->schedule("Render");
+        auto renderWorkflow = renderGraph->createWorkflow("Render");
         if (renderWorkflow) {
             // Task: Prepare backbuffer
             auto prepareTask              = Workflow::Task("Prepare");

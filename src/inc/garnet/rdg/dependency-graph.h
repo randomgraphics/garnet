@@ -4,19 +4,17 @@
 
 #include <concepts>
 #include <functional>
-#include <optional>
 #include <unordered_map>
 
 namespace GN::rdg {
 
-// Render graph: workflows are scheduled (possibly from multiple threads), then executed in topological order.
+// Render graph: workflows are created (possibly from multiple threads), then executed in topological order.
 //
 // - Action: contains the code/logic for an operation. Declares a set of predefined parameters (input and/or output).
 // - Task: one Action + one arguments value (an action-defined struct, type-erased as std::any) to run that action.
 // - Workflow: a sequence of tasks run in strict sequential order. A workflow can depend on completion of other workflows.
-// - RenderGraph: schedule workflows (thread-safe); submit() submits all scheduled workflows for async execution in a topological order that satisfies
+// - RenderGraph: create workflows (thread-safe); submit() submits selected list of workflows for async execution in a topological order that satisfies
 // dependencies.
-//   After submit(), the graph is reset and all workflow pointers from schedule() are invalidated.
 
 struct ArtifactDatabase;
 
@@ -343,7 +341,7 @@ protected:
 //     TransientArena() = default;
 // };
 
-/// Render graph: schedule workflows (thread-safe), then submit them for async execution.
+/// Render graph: create workflows (thread-safe), then submit them for async execution.
 struct RenderGraph {
     struct CreateParameters {
         // For future use
@@ -363,20 +361,15 @@ struct RenderGraph {
     static GN_API RenderGraph * create(const CreateParameters & params);
 
     /// @brief Destroy the render graph instance. This method will try its best to cancel all pending tasks and workflows.
-    /// Once the method returns, the render graph is no longer usable, all pointers returned from schedule() are invalidated,
+    /// Once the method returns, the render graph is no longer usable, all pointers returned from createWorkflow() are invalidated,
     /// all workflows are either finished or cancelled. The detailed result can be queried via the submission object returned by submit().
     virtual ~RenderGraph() = default;
 
-    /// Schedule a new workflow.
+    /// Create a new workflow.
     /// \param name The name of the workflow.
-    /// \return a pointer to the scheduled workflow. The pointer is valid until submit() is called.
-    /// \note
-    ///  - The returned workflow is free to modify until submit() is called.
-    ///  - Call to submit() will invalidate all scheduled workflow pointers.
-    ///  - Modifying workflow that has been submitted is undefined behavior.
-    /// \todo rename it to createWorkFlow(). it just creates a new empty workflow. Workflow order should
-    ///       be determined at submit() time.
-    virtual Workflow * schedule(StrA name) = 0;
+    /// \return a pointer to the created workflow. The pointer is valid after passed to submit().
+    ///         Modifying submitted workflow is undefined behavior.
+    virtual Workflow * createWorkflow(StrA name) = 0;
 
     // /// Add a transient arena to the render graph. The arena is used to allocate temporary used only by the the next submission.
     // /// It will be automatically deleted, along with all allocated memory, after the next submission is completed or cancelled.
@@ -384,9 +377,7 @@ struct RenderGraph {
     // /// \param arena The transient arena to add.
     // virtual void addTransientArena(TransientArena * arena) = 0;
 
-    /// Submit all scheduled workflows for async execution in a topological order that satisfies workflow dependencies.
-    /// Returns immediately; execution may not be complete when this method returns.
-    /// After submission, the graph is reset to initial state and ready for new scheduling.
+    /// Submit workflows for <b>blocking</b> async execution in a topological order that satisfies workflow dependencies.
     virtual AutoRef<Submission> submit(const SubmitParameters & params) = 0;
 
     /// Helper function to properly drop a workflow.

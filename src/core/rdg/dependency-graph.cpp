@@ -111,7 +111,7 @@ public:
     RenderGraphImpl() {}
     ~RenderGraphImpl() {}
 
-    Workflow * schedule(StrA name) override { return new WorkflowImpl(name); }
+    Workflow * createWorkflow(StrA name) override { return new WorkflowImpl(name); }
 
     AutoRef<Submission> submit(const SubmitParameters & params) override {
         std::lock_guard<std::mutex> lock(mMutex);

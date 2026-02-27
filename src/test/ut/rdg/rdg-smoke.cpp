@@ -248,7 +248,7 @@ public:
         // Workflow 1: Initialize values (1, 2, 3)
         DynaArray<GN::rdg::Workflow *> workflows;
         {
-            auto * workflow = renderGraph->schedule("initialize_values");
+            auto * workflow = renderGraph->createWorkflow("initialize_values");
             TS_ASSERT(workflow != nullptr);
 
             // Task 1: Initialize 'one' to 1
@@ -304,7 +304,7 @@ public:
 
         // Workflow 2: Compute sum = 1 + 2
         {
-            auto * workflow = renderGraph->schedule("compute_sum");
+            auto * workflow = renderGraph->createWorkflow("compute_sum");
             TS_ASSERT(workflow != nullptr);
 
             auto addAction = GN::rdg::AddIntegersAction::create(*db, "add_1_2");
@@ -326,7 +326,7 @@ public:
 
         // Workflow 3: Compute result = 3 * sum
         {
-            auto * workflow = renderGraph->schedule("compute_result");
+            auto * workflow = renderGraph->createWorkflow("compute_result");
             TS_ASSERT(workflow != nullptr);
 
             auto multiplyAction = GN::rdg::MultiplyIntegersAction::create(*db, "multiply_3_sum");
@@ -346,8 +346,8 @@ public:
             workflows.append(workflow);
         }
 
-        // Submit all scheduled workflows for execution
-        auto submission = renderGraph->submit({.workflows = {workflows.data(), workflows.size()}});
+        // Submit all created workflows for execution
+        auto submission = renderGraph->submit({.workflows = workflows});
         TS_ASSERT(submission != nullptr);
 
         // Wait for completion and get result
@@ -376,9 +376,9 @@ public:
         auto                                   renderGraph = GN::rdg::RenderGraph::create(params);
         TS_ASSERT(renderGraph != nullptr);
 
-        GN::rdg::Workflow * w1 = renderGraph->schedule("w1");
-        GN::rdg::Workflow * w2 = renderGraph->schedule("w2");
-        GN::rdg::Workflow * w3 = renderGraph->schedule("w3");
+        GN::rdg::Workflow * w1 = renderGraph->createWorkflow("w1");
+        GN::rdg::Workflow * w2 = renderGraph->createWorkflow("w2");
+        GN::rdg::Workflow * w3 = renderGraph->createWorkflow("w3");
         TS_ASSERT(w1 != nullptr);
         TS_ASSERT(w2 != nullptr);
         TS_ASSERT(w3 != nullptr);
@@ -428,7 +428,7 @@ public:
         auto x = GN::rdg::IntegerArtifact::create(*db, "x");
         TS_ASSERT(x != nullptr);
 
-        auto * w0 = renderGraph->schedule("writer_first");
+        auto * w0 = renderGraph->createWorkflow("writer_first");
         TS_ASSERT(w0 != nullptr);
         auto init0          = GN::rdg::InitIntegerAction::create(*db, "init0");
         init0->initValue    = 1;
@@ -438,7 +438,7 @@ public:
         w0->tasks.back().action    = init0;
         w0->tasks.back().arguments = args0;
 
-        auto * w1 = renderGraph->schedule("writer_second");
+        auto * w1 = renderGraph->createWorkflow("writer_second");
         TS_ASSERT(w1 != nullptr);
         auto init1          = GN::rdg::InitIntegerAction::create(*db, "init1");
         init1->initValue    = 2;
@@ -466,7 +466,7 @@ public:
         TS_ASSERT(x != nullptr);
         TS_ASSERT(y != nullptr);
 
-        auto w0 = renderGraph->schedule("writer");
+        auto w0 = renderGraph->createWorkflow("writer");
         TS_ASSERT(w0 != nullptr);
         auto init0          = GN::rdg::InitIntegerAction::create(*db, "init_x");
         init0->initValue    = 10;
@@ -476,7 +476,7 @@ public:
         w0->tasks.back().action    = init0;
         w0->tasks.back().arguments = args0;
 
-        auto w1 = renderGraph->schedule("reader");
+        auto w1 = renderGraph->createWorkflow("reader");
         TS_ASSERT(w1 != nullptr);
         auto add1           = GN::rdg::AddIntegersAction::create(*db, "add");
         auto args1          = GN::AutoRef<GN::rdg::AddIntegersAction::A>::make();
@@ -507,7 +507,7 @@ public:
         TS_ASSERT(x != nullptr);
         TS_ASSERT(y != nullptr);
 
-        auto * w0           = renderGraph->schedule("writer");
+        auto * w0           = renderGraph->createWorkflow("writer");
         auto   init0        = GN::rdg::InitIntegerAction::create(*db, "init_x");
         init0->initValue    = 1;
         auto args0          = GN::AutoRef<GN::rdg::InitIntegerAction::A>::make();
@@ -516,7 +516,7 @@ public:
         w0->tasks.back().action    = init0;
         w0->tasks.back().arguments = args0;
 
-        auto * w1          = renderGraph->schedule("reader");
+        auto * w1          = renderGraph->createWorkflow("reader");
         auto   read1       = GN::rdg::ReadIntegerAction::create(*db, "read_x");
         auto   args1       = GN::AutoRef<GN::rdg::ReadIntegerAction::A>::make();
         args1->input.value = x;
@@ -524,7 +524,7 @@ public:
         w1->tasks.back().action    = read1;
         w1->tasks.back().arguments = args1;
 
-        auto * w2           = renderGraph->schedule("writer_second");
+        auto * w2           = renderGraph->createWorkflow("writer_second");
         auto   init2        = GN::rdg::InitIntegerAction::create(*db, "overwrite_x");
         init2->initValue    = 2;
         auto args2          = GN::AutoRef<GN::rdg::InitIntegerAction::A>::make();
@@ -550,7 +550,7 @@ public:
         auto x = GN::rdg::IntegerArtifact::create(*db, "x");
         TS_ASSERT(x != nullptr);
 
-        auto * w0           = renderGraph->schedule("writer");
+        auto * w0           = renderGraph->createWorkflow("writer");
         auto   init0        = GN::rdg::InitIntegerAction::create(*db, "init_x");
         init0->initValue    = 5;
         auto args0          = GN::AutoRef<GN::rdg::InitIntegerAction::A>::make();
@@ -559,7 +559,7 @@ public:
         w0->tasks.back().action    = init0;
         w0->tasks.back().arguments = args0;
 
-        auto * w1          = renderGraph->schedule("reader1");
+        auto * w1          = renderGraph->createWorkflow("reader1");
         auto   read1       = GN::rdg::ReadIntegerAction::create(*db, "read1");
         auto   args1       = GN::AutoRef<GN::rdg::ReadIntegerAction::A>::make();
         args1->input.value = x;
@@ -567,7 +567,7 @@ public:
         w1->tasks.back().action    = read1;
         w1->tasks.back().arguments = args1;
 
-        auto * w2          = renderGraph->schedule("reader2");
+        auto * w2          = renderGraph->createWorkflow("reader2");
         auto   read2       = GN::rdg::ReadIntegerAction::create(*db, "read2");
         auto   args2       = GN::AutoRef<GN::rdg::ReadIntegerAction::A>::make();
         args2->input.value = x;
@@ -575,7 +575,7 @@ public:
         w2->tasks.back().action    = read2;
         w2->tasks.back().arguments = args2;
 
-        auto submission = renderGraph->submit({});
+        auto submission = renderGraph->submit({DynaArray<GN::rdg::Workflow *>({w0, w1, w2})});
         TS_ASSERT(submission != nullptr);
         submission->result();
         auto state = submission->dumpState();

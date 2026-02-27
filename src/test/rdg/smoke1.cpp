@@ -44,9 +44,9 @@ int main(int, const char **) {
     if (!presentAction) return -1;
 
     // Schedule render workflow
-    auto renderWorkflow = renderGraph->schedule("Render");
+    auto renderWorkflow = renderGraph->createWorkflow("Render");
     if (!renderWorkflow) {
-        GN_ERROR(sLogger)("Failed to schedule render workflow");
+        GN_ERROR(sLogger)("Failed to create render workflow");
         return -1;
     }
 
@@ -83,7 +83,7 @@ int main(int, const char **) {
     renderWorkflow->tasks.append(presentTask);
 
     // Submit render graph for execution
-    auto submission = renderGraph->submit({});
+    auto submission = renderGraph->submit({.workflows = {&renderWorkflow, 1}});
     if (!submission) {
         GN_ERROR(sLogger)("Failed to submit render graph");
         return -1;
