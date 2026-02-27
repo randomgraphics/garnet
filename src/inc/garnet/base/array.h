@@ -617,6 +617,11 @@ public:
     DynaArray(const T * begin, const T * end): mElements(0) { doAppend(begin, end - begin); }
 
     ///
+    /// construct from initializer list
+    ///
+    DynaArray(std::initializer_list<T> list): mElements(0) { doAppend(list.begin(), list.size()); }
+
+    ///
     /// copy constructor
     ///
     DynaArray(const DynaArray & other): mElements(0) { copyFrom(other); }
@@ -732,19 +737,37 @@ public:
     SafeArrayAccessor(T2 * data, size_t count): mBegin(data), mEnd(data + count), mPtr(data) {}
 
     template<typename T2>
-    SafeArrayAccessor(const DynaArray<T2> & v): mBegin(v.data()), mEnd(v.data() + v.size()), mPtr(v.data()) {}
+    SafeArrayAccessor(DynaArray<T2> & v): mBegin(v.data()), mEnd(v.data() + v.size()), mPtr(v.data()) {}
 
     template<typename T2>
-    SafeArrayAccessor(const std::vector<T2> & v): mBegin(v.data()), mEnd(v.data() + v.size()), mPtr(v.data()) {}
-
-    template<typename T2, size_t N>
-    SafeArrayAccessor(const FixedArray<T2, N> & v): mBegin(v.data()), mEnd(v.data() + v.size()), mPtr(v.data()) {}
-
-    template<typename T2, size_t N>
-    SafeArrayAccessor(const T2 v[N]): mBegin(v), mEnd(v + N), mPtr(v) {}
+    SafeArrayAccessor(DynaArray<T2> && v): mBegin(v.data()), mEnd(v.data() + v.size()), mPtr(v.data()) {}
 
     template<typename T2>
-    SafeArrayAccessor(const std::initializer_list<T2> & v): mBegin(v.begin()), mEnd(v.end()), mPtr(v.begin()) {}
+    requires std::is_const_v<T> SafeArrayAccessor(const DynaArray<T2> & v): mBegin(v.data()), mEnd(v.data() + v.size()), mPtr(v.data()) {}
+
+    template<typename T2>
+    SafeArrayAccessor(std::vector<T2> & v): mBegin(v.data()), mEnd(v.data() + v.size()), mPtr(v.data()) {}
+
+    template<typename T2>
+    SafeArrayAccessor(std::vector<T2> && v): mBegin(v.data()), mEnd(v.data() + v.size()), mPtr(v.data()) {}
+
+    template<typename T2>
+    requires std::is_const_v<T> SafeArrayAccessor(const std::vector<T2> & v): mBegin(v.data()), mEnd(v.data() + v.size()), mPtr(v.data()) {}
+
+    template<typename T2, size_t N>
+    SafeArrayAccessor(FixedArray<T2, N> & v): mBegin(v.data()), mEnd(v.data() + v.size()), mPtr(v.data()) {}
+
+    template<typename T2, size_t N>
+    SafeArrayAccessor(FixedArray<T2, N> && v): mBegin(v.data()), mEnd(v.data() + v.size()), mPtr(v.data()) {}
+
+    template<typename T2, size_t N>
+    requires std::is_const_v<T> SafeArrayAccessor(const FixedArray<T2, N> & v): mBegin(v.data()), mEnd(v.data() + v.size()), mPtr(v.data()) {}
+
+    template<typename T2, size_t N>
+    SafeArrayAccessor(T2 v[N]): mBegin(v), mEnd(v + N), mPtr(v) {}
+
+    template<typename T2, size_t N>
+    requires std::is_const_v<T> SafeArrayAccessor(const T2 v[N]): mBegin(v), mEnd(v + N), mPtr(v) {}
 
     bool empty() const { return mPtr == mEnd; }
 

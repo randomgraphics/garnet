@@ -16,7 +16,7 @@ struct SimpleLight : public Artifact {
     struct SpotLight {
         Location     location          = {};
         Orientation  orientation       = {};
-        IntensityRGB intensity         = {1.0f, 1.0f, 1.0f, 1.0f};
+        IntensityRGB intensity         = {1.0f, 1.0f, 1.0f, {1.0f}};
         WorldUnit    range             = {};
         float        cosInnerConeAngle = 1.0f;
         float        cosOuterConeAngle = 1.0f;
@@ -33,7 +33,7 @@ struct SimpleLight : public Artifact {
         IrradianceRGB irradiance;
     } directional;
 
-    bool active = true;
+    bool active        = true;
     bool castingShadow = false;
 };
 
@@ -53,7 +53,7 @@ struct EnvironmentalLighting : public RenderGraphBuilder {
     /// Sky lighting. If skybox texture is not provided, use the ambient as fallback.
     /// \todo: no need to put them here. move them to backend implementation.
     AutoRef<Texture> skybox;
-    IrradianceRGB    ambient = {1.0f, 1.0f, 1.0f, 300.0f}; /// default to 300 lux (normal office lighting).
+    IrradianceRGB    ambient = {1.0f, 1.0f, 1.0f, {300.0f}}; /// default to 300 lux (normal office lighting).
 
     // TODO: more environment map types, like irradiance map, prefiltered map, etc.
 
@@ -89,7 +89,6 @@ protected:
 //     using RenderGraphBuilder::RenderGraphBuilder;
 // };
 
-
 /// Store shadow related information for all active lights, to be used
 /// to determine whether a surface point is in shadow or not.
 struct ShadowVisibility : public RenderGraphBuilder {
@@ -116,17 +115,17 @@ struct SimpleForwardShadingPipeline : public Artifact {
     DynaArray<SimpleLight> lights;
 
     /// The stage to render shadow maps
-    DynaArray<Workflow *> shadowPass;
+    DynaArray<Workflow *>     shadowPass;
     AutoRef<ShadowVisibility> shadowVisibility;
 
     /// The state to render/update environment maps.
-    DynaArray<Workflow *> environmentalPass;
+    DynaArray<Workflow *>          environmentalPass;
     AutoRef<EnvironmentalLighting> environmentalLighting;
 
     /// \todo The stage to render depth prepass (maybe motion vector as well)
 
     /// The main stage for forward color pass.
-    DynaArray<Workflow*> mainColorPass;
+    DynaArray<Workflow *> mainColorPass;
 
     /// \todo The stage to perform post processing: tone mapping, anti-aliasing, etc.
 

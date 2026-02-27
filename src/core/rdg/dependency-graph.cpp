@@ -111,33 +111,17 @@ public:
     RenderGraphImpl() {}
     ~RenderGraphImpl() {}
 
-    Workflow * schedule(StrA name) override {
-        std::lock_guard<std::mutex> lock(mMutex);
-        auto * w = WorkflowImpl::create(name);
-        if (w) {
-            w->sequence = mNextSequence++;
-            mScheduledWorkflows.append(w);
-        }
-        return w;
-    }
+    Workflow * schedule(StrA name) override { return new WorkflowImpl(name); }
 
     AutoRef<Submission> submit(const SubmitParameters & params) override {
         std::lock_guard<std::mutex> lock(mMutex);
-        DynaArray<WorkflowImpl *> pending;
-        if (params.workflows.size() > 0) {
-            pending.reserve(params.workflows.size());
-            for (auto * w : params.workflows) {
-                auto * p = WorkflowImpl::promote(w);
-                if (p) {
-                    p->sequence = mNextSequence++;
-                    pending.append(p);
-                }
-            }
-        } else {
-            pending = std::move(mScheduledWorkflows);
-            mScheduledWorkflows.clear();
-            for (size_t i = 0; i < pending.size(); ++i) {
-                pending[i]->sequence = mNextSequence++;
+        DynaArray<WorkflowImpl *>   pending;
+        pending.reserve(params.workflows.size());
+        for (auto * w : params.workflows) {
+            auto * p = WorkflowImpl::promote(w);
+            if (p) {
+                p->sequence = mNextSequence++;
+                pending.append(p);
             }
         }
         GN_VERBOSE(sLogger)("Submitting {} workflows.", pending.size());

@@ -18,7 +18,7 @@ struct AffineTransform {
     }
 
     /// move the transform by a delta vector.
-    void setLocation(Vector3f position);    
+    void setLocation(Vector3f position);
 
     /// rotate the transform by a angle around an axis.
     void setRotation(Quaternionf rotation);

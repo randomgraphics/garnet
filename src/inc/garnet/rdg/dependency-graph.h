@@ -350,13 +350,13 @@ struct RenderGraph {
     };
 
     struct SubmitParameters {
-        /// name of the submission.
-        StrA name;
-        
         /// The order of the workflow is important. A workflow in front of the array (smaller index)
         /// is considered older than the ones in the back of the array (larger index).
         /// Also, a workflow is always newer than any previously submitted workflows.
-        SafeArrayAccessor<Workflow*> workflows;
+        SafeArrayAccessor<Workflow *> workflows;
+
+        /// name of the submission. For logging and debugging.
+        StrA name = "[unnamed submission]"_s;
     };
 
     /// Create a new render graph instance
@@ -388,6 +388,14 @@ struct RenderGraph {
     /// Returns immediately; execution may not be complete when this method returns.
     /// After submission, the graph is reset to initial state and ready for new scheduling.
     virtual AutoRef<Submission> submit(const SubmitParameters & params) = 0;
+
+    /// Helper function to properly drop a workflow.
+    /// \note You can't drop an already submitted workflow. That'll cause undefined behavior.
+    void dropWorkflow(Workflow * workflow) {
+        if (!workflow) return;
+        workflow->tasks.clear();
+        submit({.workflows = {&workflow, 1}, .name = StrA::format("Dropped workflow {}", workflow->name)});
+    }
 
 protected:
     RenderGraph() = default;

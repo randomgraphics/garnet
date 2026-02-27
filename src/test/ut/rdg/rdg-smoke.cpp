@@ -246,6 +246,7 @@ public:
         TS_ASSERT(result != nullptr);
 
         // Workflow 1: Initialize values (1, 2, 3)
+        DynaArray<GN::rdg::Workflow *> workflows;
         {
             auto * workflow = renderGraph->schedule("initialize_values");
             TS_ASSERT(workflow != nullptr);
@@ -297,6 +298,8 @@ public:
                 task.arguments = initArgs;
                 workflow->tasks.append(task);
             }
+
+            workflows.append(workflow);
         }
 
         // Workflow 2: Compute sum = 1 + 2
@@ -317,6 +320,8 @@ public:
             task.action    = addAction;
             task.arguments = addArgs;
             workflow->tasks.append(task);
+
+            workflows.append(workflow);
         }
 
         // Workflow 3: Compute result = 3 * sum
@@ -337,10 +342,12 @@ public:
             task.action    = multiplyAction;
             task.arguments = multiplyArgs;
             workflow->tasks.append(task);
+
+            workflows.append(workflow);
         }
 
         // Submit all scheduled workflows for execution
-        auto submission = renderGraph->submit({});
+        auto submission = renderGraph->submit({.workflows = {workflows.data(), workflows.size()}});
         TS_ASSERT(submission != nullptr);
 
         // Wait for completion and get result
@@ -375,8 +382,6 @@ public:
         TS_ASSERT(w1 != nullptr);
         TS_ASSERT(w2 != nullptr);
         TS_ASSERT(w3 != nullptr);
-        TS_ASSERT(w1->sequence < w2->sequence);
-        TS_ASSERT(w2->sequence < w3->sequence);
     }
 
     void testArgumentsArtifactArgumentsDiscovery() {
@@ -443,7 +448,7 @@ public:
         w1->tasks.back().action    = init1;
         w1->tasks.back().arguments = args1;
 
-        auto submission = renderGraph->submit({});
+        auto submission = renderGraph->submit({.workflows = GN::DynaArray<GN::rdg::Workflow *>({w0, w1})});
         TS_ASSERT(submission != nullptr);
         submission->result();
         auto state = submission->dumpState();
@@ -461,7 +466,7 @@ public:
         TS_ASSERT(x != nullptr);
         TS_ASSERT(y != nullptr);
 
-        auto * w0 = renderGraph->schedule("writer");
+        auto w0 = renderGraph->schedule("writer");
         TS_ASSERT(w0 != nullptr);
         auto init0          = GN::rdg::InitIntegerAction::create(*db, "init_x");
         init0->initValue    = 10;
@@ -471,7 +476,7 @@ public:
         w0->tasks.back().action    = init0;
         w0->tasks.back().arguments = args0;
 
-        auto * w1 = renderGraph->schedule("reader");
+        auto w1 = renderGraph->schedule("reader");
         TS_ASSERT(w1 != nullptr);
         auto add1           = GN::rdg::AddIntegersAction::create(*db, "add");
         auto args1          = GN::AutoRef<GN::rdg::AddIntegersAction::A>::make();
@@ -482,7 +487,8 @@ public:
         w1->tasks.back().action    = add1;
         w1->tasks.back().arguments = args1;
 
-        auto submission = renderGraph->submit({});
+        auto workflows  = std::vector<GN::rdg::Workflow *>({w0, w1});
+        auto submission = renderGraph->submit({.workflows = workflows});
         TS_ASSERT(submission != nullptr);
         submission->result();
         auto state = submission->dumpState();
@@ -527,7 +533,7 @@ public:
         w2->tasks.back().action    = init2;
         w2->tasks.back().arguments = args2;
 
-        auto submission = renderGraph->submit({});
+        auto submission = renderGraph->submit({.workflows = GN::DynaArray<GN::rdg::Workflow *>({w0, w1, w2})});
         TS_ASSERT(submission != nullptr);
         submission->result();
         auto state = submission->dumpState();

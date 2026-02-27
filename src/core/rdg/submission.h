@@ -9,17 +9,13 @@
 namespace GN::rdg {
 
 struct WorkflowImpl : public Workflow {
+    mutable uint64_t sequence = 0;
+
     explicit WorkflowImpl(const StrA & name_) { name = name_; }
 
-    static WorkflowImpl * create(const StrA & name_) {
-        return new WorkflowImpl(name_);
-    }
-
-    static WorkflowImpl * promote(Workflow * workflow) {
-        return static_cast<WorkflowImpl *>(workflow);
-    }
+    static WorkflowImpl * promote(Workflow * workflow) { return static_cast<WorkflowImpl *>(workflow); }
 };
-    
+
 /// Implementation of Submission. Holds all intermediate data and context for a single submit.
 /// Processes workflows asynchronously: validate, build dependency graph, topological sort, execute.
 class SubmissionImpl : public Submission {
@@ -33,7 +29,7 @@ public:
     };
 
     /// Construct and start the submission asynchronously. Takes ownership of \p pendingWorkflows (pointers).
-    SubmissionImpl(DynaArray<WorkflowImpl*> pendingWorkflows, const RenderGraph::SubmitParameters & params);
+    SubmissionImpl(DynaArray<WorkflowImpl *> pendingWorkflows, const RenderGraph::SubmitParameters & params);
 
     ~SubmissionImpl() override;
 
@@ -97,8 +93,8 @@ private:
     std::unordered_map<uint64_t, AutoRef<Context>> mExecutionContexts;
 
     // Owned workflows (taken from graph on construction)
-    DynaArray<WorkflowImpl*>        mWorkflows;
-    DynaArray<WorkflowImpl*>        mValidatedWorkflows;
+    DynaArray<WorkflowImpl *>    mWorkflows;
+    DynaArray<WorkflowImpl *>    mValidatedWorkflows;
     DynaArray<DynaArray<size_t>> mDependencyGraph;
 
     // State for dumpState() (written by run(), read by dumpState())
