@@ -107,7 +107,7 @@ endfunction()
 target_include_directories(GNcore PUBLIC
     ${BUILD_HEADER_INC}
     ../inc
-    ../3rdparty/eigen
+    ../3rdparty/glm
     ../3rdparty/rapid-image/inc
     ../3rdparty/fmt/include
 )
@@ -212,7 +212,6 @@ endif()
 if(MSVC)
     target_compile_definitions(GNcore PUBLIC _UNICODE UNICODE) # REVIEW: why not private?
     target_compile_options(GNcore PUBLIC
-        /Wv:18 # fix eigen warning. still needed?
         /utf-8 # enable utf-8 encoding
     )
 else()

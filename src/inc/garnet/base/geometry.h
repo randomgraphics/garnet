@@ -9,7 +9,11 @@
 #ifdef _MSC_VER
     #pragma warning(disable : 4819) // unicode file name warning
 #endif
-#include <Eigen/Eigen>
+#include <glm/glm.hpp>
+// #include <glm/gtc/matrix_transform.hpp>
+// #include <glm/gtc/type_ptr.hpp>
+// #include <glm/gtx/string_cast.hpp>
+// #include <cmath>
 
 // Garnet system uses right hand system by default. Define this macro to 1 to
 // use left hand system.
@@ -32,7 +36,8 @@ inline void swap(T & a, T & b) {
 } // namespace detail
 
 ///
-/// 表示一个二维矢量（比如贴图坐标）。
+/// Represents a 2D vector.
+/// \note We keep this custom vector class to support special type vector that is not simple numeric type.
 ///
 template<typename T>
 class Vector2 {
@@ -292,7 +297,7 @@ public:
     Vector3() {}
     template<typename TX, typename TY, typename TZ>
     Vector3(TX ix, TY iy, TZ iz): x((T) ix), y((T) iy), z((T) iz) {}
-    Vector3(const Eigen::Matrix<T, 3, 1> & v): x(v.x()), y(v.y()), z(v.z()) {}
+    Vector3(const glm::vec3 & v): x(v.x), y(v.y), z(v.z) {}
     Vector3(const Vector2<T> & v, T iz): x(v.x), y(v.y), z(iz) {}
     GN_DEFAULT_COPY(Vector3);
     //@}
@@ -1244,14 +1249,14 @@ public:
         return *(&v.x + i);
     }
     ///
-    /// concatnate
+    /// concatenate
     ///
     Quaternion & operator*=(const Quaternion & q) {
         *this = (*this) * q;
         return *this;
     }
     ///
-    /// concatnate
+    /// concatenate
     ///
     friend Quaternion operator*(const Quaternion & q1, const Quaternion & q2) {
         Quaternion result;
@@ -1460,7 +1465,7 @@ public:
     ///
     void toMatrix44(Matrix44<T> & out) const;
     ///
-    /// convert to matrix33
+    /// convert to matrix44
     ///
     Matrix44<T> toMatrix44() const {
         Matrix44<T> out;
