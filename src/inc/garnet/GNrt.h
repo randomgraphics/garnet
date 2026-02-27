@@ -12,13 +12,13 @@
 namespace GN {
 namespace rt {
 using namespace gfx;
+using glm::mat4;
 using glm::vec3;
 using glm::vec4;
-using glm::mat4;
 
 struct AABB {
     vec3 min;
-    int      rope = 0;
+    int  rope = 0;
     vec3 max;
     int : 32;
     int left = 0, right = 0;
@@ -47,9 +47,7 @@ struct AABB {
         return min.x <= a.min.x && a.max.x <= max.x && min.y <= a.min.y && a.max.y <= max.y && min.z <= a.min.z && a.max.z <= max.z;
     }
 
-    bool Enclose(const vec3 & v) const {
-        return min.x <= v.x && v.x <= max.x && min.y <= v.y && v.y <= max.y && min.z <= v.z && v.z <= max.z;
-    }
+    bool Enclose(const vec3 & v) const { return min.x <= v.x && v.x <= max.x && min.y <= v.y && v.y <= max.y && min.z <= v.z && v.z <= max.z; }
 
     vec3 GetCenter() const { return (min + max) / 2.0f; }
 

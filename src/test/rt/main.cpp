@@ -52,14 +52,14 @@ static void AddRectFace(FatModel & model, const vec3 * v, int a, int b, int c, i
 }
 
 static void CreateCornellBox(FatModel & m, float dimension) {
-    float           l   = -dimension / 2.0f; // left
-    float           r   = +dimension / 2.0f; // right
-    float           t   = +dimension / 2.0f; // top
-    float           b   = -dimension / 2.0f; // bottom
-    float           f   = +dimension / 2.0f; // front
-    float           k   = -dimension / 2.0f; // back
-    vec3 v[] = {
-        {l, b, f}, {r, b, f}, {r, t, f}, {l, t, f}, {l, b, k}, {r, b, k}, {r, t, k}, {l, t, k},
+    float l   = -dimension / 2.0f; // left
+    float r   = +dimension / 2.0f; // right
+    float t   = +dimension / 2.0f; // top
+    float b   = -dimension / 2.0f; // bottom
+    float f   = +dimension / 2.0f; // front
+    float k   = -dimension / 2.0f; // back
+    vec3  v[] = {
+         {l, b, f}, {r, b, f}, {r, t, f}, {l, t, f}, {l, b, k}, {r, b, k}, {r, t, k}, {l, t, k},
     };
     AddRectFace(m, v, 5, 4, 7, 6, {0, 0, 1}, LAMBERT_WHITE);  // back
     AddRectFace(m, v, 3, 2, 6, 7, {0, -1, 0}, LAMBERT_WHITE); // top
