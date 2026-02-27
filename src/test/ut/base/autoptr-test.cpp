@@ -134,25 +134,25 @@ public:
     void testAutoComPtrAttach() {
         using namespace GN;
 
-        FakeComClass c;
-        c.ref                       = 1;
-        AutoComPtr<FakeComClass> p1 = AutoComPtr<FakeComClass>::sAttach(&c);
-        TS_ASSERT_EQUALS(c.ref, 1);
+        FakeComClass f;
+        f.ref                       = 1;
+        AutoComPtr<FakeComClass> p1 = AutoComPtr<FakeComClass>::sAttach(&f);
+        TS_ASSERT_EQUALS(f.ref, 1);
     }
 
     void testAutoComPtrAssignment() {
         using namespace GN;
 
-        FakeComClass c;
+        FakeComClass f;
 
         AutoComPtr<FakeComClass> p1;
         AutoComPtr<FakeComClass> p2;
-        p1.set(&c);
+        p1.set(&f);
         p2 = p1;
-        TS_ASSERT_EQUALS(c.ref, 2);
+        TS_ASSERT_EQUALS(f.ref, 2);
         p2.clear();
-        TS_ASSERT_EQUALS(c.ref, 1);
+        TS_ASSERT_EQUALS(f.ref, 1);
         p1.clear();
-        TS_ASSERT_EQUALS(c.ref, 0);
+        TS_ASSERT_EQUALS(f.ref, 0);
     }
 };

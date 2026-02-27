@@ -17,8 +17,8 @@
 /// \author  chenlee (2005.5.14)
 // *****************************************************************************
 
+#include <list>
 #include <memory>
-#include <optional>
 
 namespace GN {
 

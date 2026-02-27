@@ -34,7 +34,7 @@ struct Distance {
         GN_ASSERT(a != b);
         AABB box(a->box, b->box);
         auto size = box.max - box.min;
-        return {a, b, size.dot(size)};
+        return {a, b, glm::dot(size, size)};
     }
 };
 struct DistanceMap {
@@ -51,7 +51,7 @@ struct DistanceMap {
         for (auto n : nodes) {
             AABB box(n->box, newNode->box);
             auto size = box.max - box.min;
-            auto d    = size.dot(size);
+            auto d    = glm::dot(size, size);
             distances.insert({d, {n, newNode, d}});
         }
         nodes.insert(nodes.end(), newNode);
@@ -157,8 +157,8 @@ struct DistanceMap {
 
 class NodeGrid {
     std::vector<std::list<AABBTree::Node *>> _cells;
-    Eigen::Vector3f                          _worldMin = {}, _worldMax = {};
-    Eigen::Vector3f                          _cellSize = {};
+    vec3                                     _worldMin = {}, _worldMax = {};
+    vec3                                     _cellSize = {};
     size_t                                   _gridSize = 0, _gridSizeSquare = 0;
 
     static size_t GetCellCoord(float x, float min, float size) {
@@ -185,7 +185,7 @@ public:
 
     NodeGrid() {}
 
-    void Allocate(Eigen::Vector3f worldMin, Eigen::Vector3f worldMax, size_t gridSize) {
+    void Allocate(vec3 worldMin, vec3 worldMax, size_t gridSize) {
         _cells.clear();
         _cells.resize(gridSize * gridSize * gridSize);
         _worldMin       = worldMin;
@@ -205,7 +205,7 @@ public:
         return n;
     }
 
-    const Eigen::Vector3f & CellSize() const { return _cellSize; }
+    const vec3 & CellSize() const { return _cellSize; }
 
     Cell * GetCell(size_t x, size_t y, size_t z) {
         GN_ASSERT(x < _gridSize && y < _gridSize && z < _gridSize);
@@ -213,18 +213,18 @@ public:
     };
 
     size_t GridX(float x) {
-        GN_ASSERT(_worldMin.x() <= x && x <= _worldMax.x());
-        return GetCellCoord(x, _worldMin.x(), _cellSize.x());
+        GN_ASSERT(_worldMin.x <= x && x <= _worldMax.x);
+        return GetCellCoord(x, _worldMin.x, _cellSize.x);
     };
 
     size_t GridY(float y) {
-        GN_ASSERT(_worldMin.y() <= y && y <= _worldMax.y());
-        return GetCellCoord(y, _worldMin.y(), _cellSize.y());
+        GN_ASSERT(_worldMin.y <= y && y <= _worldMax.y);
+        return GetCellCoord(y, _worldMin.y, _cellSize.y);
     };
 
     size_t GridZ(float z) {
-        GN_ASSERT(_worldMin.z() <= z && z <= _worldMax.z());
-        return GetCellCoord(z, _worldMin.z(), _cellSize.z());
+        GN_ASSERT(_worldMin.z <= z && z <= _worldMax.z);
+        return GetCellCoord(z, _worldMin.z, _cellSize.z);
     };
 };
 
@@ -308,7 +308,7 @@ static void BuildBranches(std::vector<AABBTree::Node *> & nodes) {
 
         auto MergePrimitivesInCell = [&](NodeGrid::Cell & cell) {
             if (cell.size() <= 1) return;
-            auto                cellDiag = grid.CellSize().norm();
+            auto                cellDiag = glm::length(grid.CellSize());
             std::vector<Node *> candidates;
             for (auto iter = cell.begin(); iter != cell.end();) {
                 auto p = *iter;
@@ -328,9 +328,9 @@ static void BuildBranches(std::vector<AABBTree::Node *> & nodes) {
         // build the intial grids.
         for (const auto & n : nodes) {
             const auto & b  = n->box;
-            size_t       x1 = grid.GridX(b.min.x());
-            size_t       y1 = grid.GridY(b.min.y());
-            size_t       z1 = grid.GridZ(b.min.z());
+            size_t       x1 = grid.GridX(b.min.x);
+            size_t       y1 = grid.GridY(b.min.y);
+            size_t       z1 = grid.GridZ(b.min.z);
             grid.GetCell(x1, y1, z1)->push_back(n);
         }
 
@@ -367,13 +367,13 @@ static void BuildBranches(std::vector<AABBTree::Node *> & nodes) {
 template<typename T>
 struct PrimitiveTraits {};
 template<>
-struct PrimitiveTraits<Eigen::Vector3f> {
-    typedef Eigen::Vector3f InputType;
-    static const size_t     ELEMENT_COUNT_PER_PRIMITIVE = 3;
-    static AABB             Construct(const Eigen::Vector3f * v) {
-                    GN_ASSERT(isfinite(v[0].x()) && isfinite(v[1].y()) && isfinite(v[2].z()) && isfinite(v[0].x()) && isfinite(v[1].y()) && isfinite(v[2].z()) &&
-                              isfinite(v[0].x()) && isfinite(v[1].y()) && isfinite(v[2].z()));
-                    return {v[0], v[1], v[2]};
+struct PrimitiveTraits<vec3> {
+    typedef vec3        InputType;
+    static const size_t ELEMENT_COUNT_PER_PRIMITIVE = 3;
+    static AABB         Construct(const vec3 * v) {
+                GN_ASSERT(isfinite(v[0].x) && isfinite(v[1].y) && isfinite(v[2].z) && isfinite(v[0].x) && isfinite(v[1].y) && isfinite(v[2].z) && isfinite(v[0].x) &&
+                          isfinite(v[1].y) && isfinite(v[2].z));
+                return {v[0], v[1], v[2]};
     }
 };
 template<>
@@ -540,7 +540,7 @@ AABBTree::AABBTree(std::vector<AABBTree> && subtrees) {
     size_t              subtreeNodeCount = 0;
     for (size_t i = 0; i < subtrees.size(); ++i) {
         auto & t = subtrees[i];
-        TREE_GN_VERIFY(VerifyAABBTree<Eigen::Vector3f>(t._nodes, t._nodes.back(), nullptr, 0, 0));
+        TREE_GN_VERIFY(VerifyAABBTree<vec3>(t._nodes, t._nodes.back(), nullptr, 0, 0));
         if (!t.Empty()) {
             tlas.push_back(t._nodes.back());
             // tlas.back()->box.model = (int)i + 1;
@@ -564,7 +564,7 @@ AABBTree::AABBTree(std::vector<AABBTree> && subtrees) {
     // append TLAS at the end. This ensures that root node is the last node
     _nodes.insert(_nodes.end(), tlas.begin(), tlas.end());
     GN_ASSERT(_nodes.size() == subtreeNodeCount + tlas.size());
-    TREE_GN_VERIFY(VerifyAABBTree<Eigen::Vector3f>(_nodes, _nodes.back(), nullptr, 0, 0));
+    TREE_GN_VERIFY(VerifyAABBTree<vec3>(_nodes, _nodes.back(), nullptr, 0, 0));
     subtrees.clear();
 }
 
@@ -577,7 +577,7 @@ void AABBTree::Clear() {
 
 // -----------------------------------------------------------------------------
 //
-void AABBTree::Rebuild(const Eigen::Vector3f * vertices, size_t triangleCount, size_t startTriangleIndex) {
+void AABBTree::Rebuild(const vec3 * vertices, size_t triangleCount, size_t startTriangleIndex) {
     Clear();
 
     // added leaf nodes

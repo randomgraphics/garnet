@@ -6,9 +6,9 @@
 	path = src/3rdparty/assimp
 	url = https://github.com/assimp/assimp.git
 	shallow = true
-[submodule "src/eigen"]
-	path = src/3rdparty/eigen
-	url = https://gitlab.com/libeigen/eigen
+[submodule "src/3rdparty/glm"]
+	path = src/3rdparty/glm
+	url = https://github.com/g-truc/glm.git
 	shallow = true
 [submodule "src/3rdparty/stb"]
 	path = src/3rdparty/stb

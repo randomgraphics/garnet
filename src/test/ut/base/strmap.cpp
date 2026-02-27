@@ -118,7 +118,10 @@ class StringMapTest : public CxxTest::TestSuite {
 
             // StrHashMap find
             t = c.now();
-            for (size_t i = 0; i < strings.size(); ++i) { hmap.find(strings[i]); }
+            for (size_t i = 0; i < strings.size(); ++i) {
+                auto aaa = hmap.find(strings[i]);
+                (void) aaa;
+            }
             perfs.hashmap.find += c.now() - t;
 
             // Dictionary erasing

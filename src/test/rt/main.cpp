@@ -2,6 +2,7 @@
 #include <garnet/GNrt.h>
 #include <garnet/GNutil.h>
 #include <garnet/gfx/fatModel.h>
+#include <glm/gtc/matrix_transform.hpp>
 #include <CLI/CLI.hpp>
 #include <chrono>
 
@@ -27,7 +28,8 @@ std::vector<FatMaterial> GetBuiltInMaterials() {
     };
 };
 
-static void AddRectFace(FatModel & model, const Eigen::Vector3f * v, int a, int b, int c, int d, const Eigen::Vector3f & normal, uint32_t material) {
+static void AddRectFace(FatModel & model, const vec3 * v, int a, int b, int c, int d, const vec3 & normal, uint32_t material) {
+    static_assert(sizeof(vec3) == 12); // make sure vec3 is indeed 3 floats (not padded to 16 bytes)
     model.meshes.resize(model.meshes.size() + 1);
     auto & mesh = model.meshes.back();
 
@@ -36,27 +38,28 @@ static void AddRectFace(FatModel & model, const Eigen::Vector3f * v, int a, int 
     mesh.vertices.setElementFormat(FatVertexBuffer::NORMAL, img::PixelFormat::FLOAT3());
     auto p    = mesh.vertices.getPosition();
     auto n    = mesh.vertices.getNormal();
-    p[0].v3() = v[a];
-    p[1].v3() = v[b];
-    p[2].v3() = v[c];
-    p[3].v3() = v[a];
-    p[4].v3() = v[c];
-    p[5].v3() = v[d];
-    for (int i = 0; i < 6; ++i, ++n) n->v3() = normal;
+    auto toV3 = [](const vec3 & u) { return GN::Vector3f(u.x, u.y, u.z); };
+    p[0].v3() = toV3(v[a]);
+    p[1].v3() = toV3(v[b]);
+    p[2].v3() = toV3(v[c]);
+    p[3].v3() = toV3(v[a]);
+    p[4].v3() = toV3(v[c]);
+    p[5].v3() = toV3(v[d]);
+    for (int i = 0; i < 6; ++i, ++n) n->v3() = toV3(normal);
 
     // create one subset
     mesh.subsets.append({material, 0, 6});
 }
 
 static void CreateCornellBox(FatModel & m, float dimension) {
-    float           l   = -dimension / 2.0f; // left
-    float           r   = +dimension / 2.0f; // right
-    float           t   = +dimension / 2.0f; // top
-    float           b   = -dimension / 2.0f; // bottom
-    float           f   = +dimension / 2.0f; // front
-    float           k   = -dimension / 2.0f; // back
-    Eigen::Vector3f v[] = {
-        {l, b, f}, {r, b, f}, {r, t, f}, {l, t, f}, {l, b, k}, {r, b, k}, {r, t, k}, {l, t, k},
+    float l   = -dimension / 2.0f; // left
+    float r   = +dimension / 2.0f; // right
+    float t   = +dimension / 2.0f; // top
+    float b   = -dimension / 2.0f; // bottom
+    float f   = +dimension / 2.0f; // front
+    float k   = -dimension / 2.0f; // back
+    vec3  v[] = {
+         {l, b, f}, {r, b, f}, {r, t, f}, {l, t, f}, {l, b, k}, {r, b, k}, {r, t, k}, {l, t, k},
     };
     AddRectFace(m, v, 5, 4, 7, 6, {0, 0, 1}, LAMBERT_WHITE);  // back
     AddRectFace(m, v, 3, 2, 6, 7, {0, -1, 0}, LAMBERT_WHITE); // top
@@ -75,16 +78,18 @@ FatModel LoadSimpleCornellBox() {
 struct Scene {
     // currently, rect light only
     struct Light {
-        Vec4 position;
-        Vec4 edges[2];
+        vec4 position;
+        vec4 edges[2];
     };
 
-    struct Position : public Eigen::Vector3f {
-        int primitive;
+    struct Position {
+        vec3 v;
+        int  primitive;
     };
 
-    struct Normal : public Eigen::Vector3f {
-        int material;
+    struct Normal {
+        vec3 v;
+        int  material;
     };
 
     struct Material {
@@ -138,8 +143,8 @@ struct Scene {
     }
 
     struct DrawFrameParameters {
-        Matrix44f proj {};
-        Matrix44f view {};
+        glm::mat4 proj {};
+        glm::mat4 view {};
         float     frameDuration {};
     };
 
@@ -148,8 +153,8 @@ struct Scene {
 
 struct OrbitCamera {
     GN::util::ArcBall arcball {};
-    Matrix44f         proj {};
-    Matrix44f         view {};
+    glm::mat4         proj {};
+    glm::mat4         view {};
 
 public:
     OrbitCamera() {
@@ -159,8 +164,9 @@ public:
     void reset(const AABB & bb) {
         // setup default view and proj matrices.
         float radius = bb.GetDiagonalDistance();
-        view.lookAtRh(GN::Vector3f(0, 0, radius), GN::Vector3f(0, 0, 0), GN::Vector3f(0, 1, 0));
-        proj.perspectiveD3D(GN_PI / 4.0f, 16.0f / 9.0f, radius / 100.0f, radius * 2.0f);
+        vec3  eye(0, 0, radius), to(0, 0, 0), up(0, 1, 0);
+        view = glm::lookAtRH(eye, to, up);
+        proj = glm::perspectiveRH_ZO(GN_PI / 4.0f, 16.0f / 9.0f, radius / 100.0f, radius * 2.0f);
     }
 };
 
@@ -187,7 +193,10 @@ int main(int argc, const char * argv[]) {
 
     // main camera
     OrbitCamera camera;
-    camera.reset(s.bvh[0]);
+    AABB        worldBox;
+    worldBox.min = vec3(-1, -1, -1);
+    worldBox.max = vec3(1, 1, 1);
+    camera.reset(worldBox);
 
     // start the main loop
     // float frameDuration = 1.0f / 30.0f;
