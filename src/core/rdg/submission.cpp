@@ -175,7 +175,7 @@ static const char * executionResultStr(Action::ExecutionResult r) {
     }
 }
 
-static StrA usageFlagStr(Arguments::UsageFlag u) {
+static StrA usageFlagStr(Arguments::UsageBits u) {
     StrA s;
     if (u.optional) s += "Optional|";
     if (u.reading) s += "Reading|";

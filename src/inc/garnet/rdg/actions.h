@@ -356,7 +356,7 @@ struct GpuShaderAction : public Action {
     //     bool operator<(const ShaderResourceBinding & other) const { return (set < other.set) || (set == other.set && slot < other.slot); }
     // };
 
-    template<Arguments::UsageFlag UFlags>
+    template<Arguments::UsageBits UFlags>
     struct BufferViewMap : public Arguments::ArtifactArgument {
         BufferViewMap(Arguments * owner, const char * name): Arguments::ArtifactArgument(owner, name, UFlags + Arguments::Usage::Optional) {}
 
@@ -376,7 +376,7 @@ struct GpuShaderAction : public Action {
         mutable DynaArray<const Artifact *> mArtifacts;
     };
 
-    template<Arguments::UsageFlag UFlags>
+    template<Arguments::UsageBits UFlags>
     struct ImageViewMap : public Arguments::ArtifactArgument {
         ImageViewMap(Arguments * owner, const char * name): Arguments::ArtifactArgument(owner, name, UFlags + Arguments::Usage::Optional) {}
 

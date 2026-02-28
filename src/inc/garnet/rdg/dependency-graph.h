@@ -141,34 +141,34 @@ private:
 /// Base class of arguments for an action. This is not a subclass of Artifact, since it is means to be one time use: create, pass to action, and forget.
 class Arguments : public RefCounter, public RuntimeType {
 public:
-    struct UsageFlag {
+    struct UsageBits {
         bool optional : 1 = false;
         bool reading  : 1 = false;
         bool writing  : 1 = false;
 
-        constexpr bool operator==(const UsageFlag & other) const { return optional == other.optional && reading == other.reading && writing == other.writing; }
-        constexpr bool operator!=(const UsageFlag & other) const { return optional != other.optional || reading != other.reading || writing != other.writing; }
+        constexpr bool operator==(const UsageBits & other) const { return optional == other.optional && reading == other.reading && writing == other.writing; }
+        constexpr bool operator!=(const UsageBits & other) const { return optional != other.optional || reading != other.reading || writing != other.writing; }
 
-        constexpr UsageFlag & operator+=(const UsageFlag & other) {
+        constexpr UsageBits & operator+=(const UsageBits & other) {
             optional &= other.optional;
             reading |= other.reading;
             writing |= other.writing;
             return *this;
         }
 
-        friend constexpr UsageFlag operator+(UsageFlag a, const UsageFlag & b) { return a += b; }
+        friend constexpr UsageBits operator+(UsageBits a, const UsageBits & b) { return a += b; }
     };
 
     struct Usage {
-        inline static constexpr UsageFlag None           = {false, false, false};
-        inline static constexpr UsageFlag Optional       = {true, false, false};
-        inline static constexpr UsageFlag Reading        = {false, true, false};
-        inline static constexpr UsageFlag Writing        = {false, false, true};
-        inline static constexpr UsageFlag ReadingWriting = {false, true, true};
-        inline static constexpr UsageFlag O              = Optional;
-        inline static constexpr UsageFlag R              = Reading;
-        inline static constexpr UsageFlag W              = Writing;
-        inline static constexpr UsageFlag RW             = ReadingWriting;
+        inline static constexpr UsageBits None           = {false, false, false};
+        inline static constexpr UsageBits Optional       = {true, false, false};
+        inline static constexpr UsageBits Reading        = {false, true, false};
+        inline static constexpr UsageBits Writing        = {false, false, true};
+        inline static constexpr UsageBits ReadingWriting = {false, true, true};
+        inline static constexpr UsageBits O              = Optional;
+        inline static constexpr UsageBits R              = Reading;
+        inline static constexpr UsageBits W              = Writing;
+        inline static constexpr UsageBits RW             = ReadingWriting;
     };
 
     /// Base class of all parameters that references one or more artifacts.
@@ -177,7 +177,7 @@ public:
         virtual ~ArtifactArgument() {}
 
         auto name() const -> const char * { return mName; }
-        auto usage() const -> UsageFlag { return mUsage; }
+        auto usage() const -> UsageBits { return mUsage; }
 
         /// Returns list of artifacts referenced by this argument.
         virtual auto artifacts() const -> SafeArrayAccessor<const Artifact * const> = 0;
@@ -187,21 +187,21 @@ public:
         const ArtifactArgument * prev() const { return mLink.prev ? static_cast<const ArtifactArgument *>(mLink.prev->context) : nullptr; }
 
     protected:
-        ArtifactArgument(Arguments * owner, const char * name, UsageFlag usage): mName(name), mUsage(usage) {
+        ArtifactArgument(Arguments * owner, const char * name, UsageBits usage): mName(name), mUsage(usage) {
             mLink.context = this;
             owner->enlist(this);
         }
 
     private:
         const char * mName;
-        UsageFlag    mUsage;
+        UsageBits    mUsage;
         DoubleLink   mLink;
         friend class Arguments;
     };
 
     /// Represents a single artifact parameter of an action.
     /// T must be a subclass of Artifact.
-    template<DerivedFromArtifact T, UsageFlag UFlags = Usage::None>
+    template<DerivedFromArtifact T, UsageBits UFlags = Usage::None>
     struct SingleArtifact : public ArtifactArgument {
         SingleArtifact(Arguments * owner, const char * name): ArtifactArgument(owner, name, UFlags) {}
 
@@ -213,16 +213,16 @@ public:
         mutable DynaArray<const Artifact *> mArtifacts;
     };
 
-    template<DerivedFromArtifact T, UsageFlag UFlags = Usage::None>
+    template<DerivedFromArtifact T, UsageBits UFlags = Usage::None>
     using ReadOnlyArtifact = SingleArtifact<T, UFlags + Usage::Reading>;
 
-    template<DerivedFromArtifact T, UsageFlag UFlags = Usage::None>
+    template<DerivedFromArtifact T, UsageBits UFlags = Usage::None>
     using WriteOnlyArtifact = SingleArtifact<T, UFlags + Usage::Writing>;
 
-    template<DerivedFromArtifact T, UsageFlag UFlags = Usage::None>
+    template<DerivedFromArtifact T, UsageBits UFlags = Usage::None>
     using ReadWriteArtifact = SingleArtifact<T, UFlags + Usage::Reading + Usage::Writing>;
 
-    template<DerivedFromArtifact T, size_t Count, UsageFlag UFlags = Usage::None>
+    template<DerivedFromArtifact T, size_t Count, UsageBits UFlags = Usage::None>
     struct ArtifactArray : public ArtifactArgument {
         ArtifactArray(Arguments * owner, const char * name): ArtifactArgument(owner, name, UFlags) {}
 
@@ -231,16 +231,16 @@ public:
         AutoRef<T> values[Count];
     };
 
-    template<typename T, size_t COUNT, UsageFlag UFlags = Usage::None>
+    template<typename T, size_t COUNT, UsageBits UFlags = Usage::None>
     using ReadOnlyArray = ArtifactArray<T, COUNT, UFlags + Usage::Reading>;
 
-    template<typename T, size_t COUNT, UsageFlag UFlags = Usage::None>
+    template<typename T, size_t COUNT, UsageBits UFlags = Usage::None>
     using WriteOnlyArray = ArtifactArray<T, COUNT, UFlags + Usage::Writing>;
 
-    template<typename T, size_t COUNT, UsageFlag UFlags = Usage::None>
+    template<typename T, size_t COUNT, UsageBits UFlags = Usage::None>
     using ReadWriteArray = ArtifactArray<T, COUNT, UFlags + Usage::Reading + Usage::Writing>;
 
-    template<typename T, UsageFlag UFlags = Usage::None>
+    template<typename T, UsageBits UFlags = Usage::None>
     struct ArtifactVector : public ArtifactArgument {
         ArtifactVector(Arguments * owner, const char * name): ArtifactArgument(owner, name, UFlags) {}
 
@@ -249,13 +249,13 @@ public:
         DynaArray<AutoRef<T>> values;
     };
 
-    template<typename T, UsageFlag UFlags = Usage::None>
+    template<typename T, UsageBits UFlags = Usage::None>
     using ReadOnlyVector = ArtifactVector<T, UFlags + Usage::Reading>;
 
-    template<typename T, UsageFlag UFlags = Usage::None>
+    template<typename T, UsageBits UFlags = Usage::None>
     using WriteOnlyVector = ArtifactVector<T, UFlags + Usage::Writing>;
 
-    template<typename T, UsageFlag UFlags = Usage::None>
+    template<typename T, UsageBits UFlags = Usage::None>
     using ReadWriteVector = ArtifactVector<T, UFlags + Usage::Reading + Usage::Writing>;
 
     /// Returns the first artifact argument in the enlistment list. Iterate with \c p->next() until \c nullptr. No allocation.
@@ -350,8 +350,8 @@ struct Workflow {
     DynaArray<Task> tasks;
 
     /// Collect usage of all artifacts
-    std::unordered_map<uint64_t, Arguments::UsageFlag> collectArtifactArguments() const {
-        std::unordered_map<uint64_t, Arguments::UsageFlag> result;
+    std::unordered_map<uint64_t, Arguments::UsageBits> collectArtifactArguments() const {
+        std::unordered_map<uint64_t, Arguments::UsageBits> result;
         for (const Task & task : tasks) {
             if (!task.arguments) GN_LIKELY continue;
             for (const Arguments::ArtifactArgument * p = task.arguments->firstArtifactArgument(); p; p = p->next()) {
